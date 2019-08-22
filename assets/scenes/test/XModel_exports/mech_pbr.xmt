@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<XMaterials maps_path="C:\dev\rt-xengine\assets\import-data\mech_pbr\textures">
+
+	<!--Materials file generated from blender xmd/xmt exporter script
+therefore maps_path may be wrong and there may be missing/misplaced maps and/or invalid default material values-->
+
+	<XMaterial name="default.003">
+
+		<Albedo default="0.5879999995231628, 0.5879999995231628, 0.5879999995231628">default_albedo.jpg</Albedo>
+		<Emission default="0.0, 0.0, 0.0">default_emissive.jpg</Emission>
+		<Reflectivity default="0.5" />
+		<Roughness default="0.01"></Roughness>
+		<Metallic default="0"></Metallic>
+		<Translucency default="0.0" />
+		<Opacity default="0.0" />
+		<AmbientOcclusion default="1">default_AO.jpg</AmbientOcclusion>
+		<Height default="0" />
+		<Normal>default_normal.jpg</Normal>
+
+	</XMaterial>
+
+</XMaterials>
+

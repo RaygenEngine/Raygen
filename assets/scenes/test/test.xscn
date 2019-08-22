@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--asset path gives priority to searching in this specific path (and subfolders) for asset loading requests from this world
+	if relative path is given the path system will search from inside the "scenes" root directory, otherwise (absolute path) this "hint" will be ignored-->
+<world name="tester" background="0, 0, 0.4" ambient="0, 0, 0.4" asset_path="XModel_exports\">
+
+	<!-- <oculus_user name="oc_user" -->
+		<!-- translation="0, 5, 0" -->
+		<!-- navigation="head_based"> -->
+
+		oculus head adjust camera data based on tracking
+		<!-- <head name="head"> -->
+	
+			<!-- <left_eye name="left_eye"/> -->
+				
+			<!-- <right_eye name="right_eye"/> -->
+			
+		<!-- </head> -->
+		
+
+		
+		<!-- <!-- controllers? -->
+		<!-- <hand name="hand1" .../> -->
+		<!-- <hand name="hand2" .../> -->
+		<!-- --> -->
+
+	<!-- </oculus_user> -->
+	
+	
+	<freeform_user name="user2"
+		translation="0, 15, 30"
+		lookat="0, 0, -5">
+	
+		<camera name="cam1"
+		    focal_length="1"
+			fov="60.0"/>
+		
+	</freeform_user>
+	
+
+	<sky_hdr name="sky1"
+		hdr_texture="CedarCity.hdr"/>
+		 
+	<!-- Load cubemaps by giving one of their sides -->	 
+	<!-- <sky_cube name="sky2" -->
+		<!-- cube_map="sky_ft.jpg"/> -->
+
+	<light name="l1" 
+		   translation="0.0, 25.0, 0" 
+		   color="0.9450, 0.8549, 0.6431"/>
+	
+	<!-- <trimesh_geometry name="center"  -->
+	          <!-- translation="13.0, 10.0, 0" -->
+			  <!-- scale="0.5, 0.5, 0.5" -->
+			  <!-- file="ink_pbr.xmd"/> -->
+			  
+		  
+	<!-- <trimesh_geometry name="sofa"  -->
+			  <!-- translation="5.0, 10.0, 0" -->
+			  <!-- euler_pyr="0, 45, 0" -->
+              <!-- scale="3, 3, 3" -->
+			  <!-- file="sofa_pbr.xmd"/> -->
+			  
+	<trimesh_geometry name="room" 
+		translation="0.0, 0.0, -4.0"
+		scale="0.02, 0.02, 0.02" 
+		file="room_pbr.xmd"/> 
+		
+			<!-- <trimesh_geometry name="sponza"  -->
+		<!-- translation="0.0, 0.0, .0" -->
+		<!-- scale="0.01, 0.01, 0.01"  -->
+		<!-- file="sponza_correct.xmd"/>  -->
+
+		<trimesh_geometry name="center" 
+			  translation="0, 5, 0"
+			  scale="2, 2, 2" 
+			  file="ball.xmd"/>
+			  
+			  		<!-- <trimesh_geometry name="center"  -->
+			  <!-- translation="0, 0, 0" -->
+			  <!-- scale="50, 50, 50"  -->
+			  <!-- file="cornel.xmd"/> -->
+			  
+			  
+			  
+			  	<!-- <trimesh_geometry name="center"  -->
+			  <!-- translation="0, 10, 0" -->
+			  <!-- file="cube.xmd"/> -->
+			  
+			  
+			  
+	<!--Creates instancing group-->
+	<!--Final instance count = matrix_width * matrix_height-->
+	<!-- <trimesh_geometry_instanced_matrix name="hamech_pbrl_army"  -->
+		<!-- matrix_width = "1" -->
+		<!-- matrix_height = "1" -->
+		
+		<!-- interval = "3" -->
+		
+		<!-- translation = "10, 40, 0" -->
+		
+		<!-- file="mech_pbr.xmd"/>  -->
+		
+	<!-- <trimesh_geometry name="center"  -->
+			  <!-- translation="0, -0, 40" -->
+			  <!-- scale="2, 2, 2"  -->
+			  <!-- file="cube3.xmd"/> -->
+			  
+			  
+	<!-- <trimesh_geometry name="center"  -->
+			  <!-- translation="10, 0, 40" -->
+			  <!-- scale="2, 2, 2"  -->
+			  <!-- file="cube2.xmd"/> -->
+			  
+
+			  
+	<!-- <trimesh_geometry name="center"  -->
+			<!-- scale="0.3, 0.3, 0.3" -->
+			  <!-- translation="0, 3, 0" -->
+			  <!-- file="mavis.xmd"/> -->
+
+		
+	<!-- <trimesh_geometry_instanced name="directions" -->
+				  <!-- file="mavis.xmd">   -->
+		
+		<!-- <instance name="up"  -->
+		<!-- scale="0.2, 0.2, 0.2" -->
+				  <!-- translation="0, 3, 0"/> -->
+				  
+		<!-- <instance name="center"  -->
+		<!-- scale="0.2, 0.2, 0.2" -->
+				  <!-- translation="0, 0, 0"/> -->
+				  
+		<!-- <instance name="right"  -->
+		<!-- scale="0.2, 0.2, 0.2" -->
+				  <!-- translation="3, 0, 0"/> -->
+				  
+		<!-- <instance name="left"  -->
+		<!-- scale="0.2, 0.2, 0.2" -->
+				  <!-- translation="-3, 0, 0"/> -->
+				  
+		<!-- <instance name="front"  -->
+		<!-- scale="0.2, 0.2, 0.2" -->
+				  <!-- translation="0, 0, 3"/> -->
+				  
+	    <!-- <instance name="back"  -->
+		<!-- scale="0.2, 0.2, 0.2" -->
+				  <!-- translation="0, 0, -3"/> -->
+				  
+	<!-- </trimesh_geometry_instanced> -->
+	
+
+</world>
+
