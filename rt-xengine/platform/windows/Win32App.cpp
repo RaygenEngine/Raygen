@@ -5,10 +5,8 @@
 
 #include "TranslateWin32VirtualKeys.h"
 
-#include "renderer/renderers/optix/test/OptixTestRenderer.h"
 #include "renderer/renderers/opengl/test/GLTestRenderer.h"
 using namespace Renderer::OpenGL;
-using namespace Renderer::Optix;
 
 namespace Platform
 {
@@ -155,7 +153,6 @@ namespace Platform
 	{
 		// Register one or more renderers (more than one requires switching logic)
 		auto glTestRendererHandle = RegisterRenderer<GLTestRenderer>();
-		auto optixTestRendererHandle = RegisterRenderer<OptixTestRenderer>();
 
 		auto currentRenderer = glTestRendererHandle;
 
@@ -188,16 +185,16 @@ namespace Platform
 				::DispatchMessage(&msg);
 
 				// Basic registered renderer switching logic
-				if (msg.message == WM_KEYDOWN && msg.wParam == VK_TAB)
-				{
-					currentRenderer = currentRenderer == glTestRendererHandle ? optixTestRendererHandle : glTestRendererHandle;
-					// Start renderer
-					if (!StartRenderer(currentRenderer))
-					{
-						RT_XENGINE_LOG_FATAL("Failed to create Renderer!");
-						return -1;
-					}
-				}
+				//if (msg.message == WM_KEYDOWN && msg.wParam == VK_TAB)
+				//{
+				//	currentRenderer = currentRenderer == glTestRendererHandle ? optixTestRendererHandle : glTestRendererHandle;
+				//	// Start renderer
+				//	if (!StartRenderer(currentRenderer))
+				//	{
+				//		RT_XENGINE_LOG_FATAL("Failed to create Renderer!");
+				//		return -1;
+				//	}
+				//}
 			}
 			// update world 
 			m_engine->GetWorld()->Update();

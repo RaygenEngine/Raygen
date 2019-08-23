@@ -41,24 +41,6 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/test/GLTestRenderer.cpp
 	renderer/renderers/opengl/test/GLTestGeometry.cpp
 
-	renderer/renderers/optix/OptixAsset.cpp
-	renderer/renderers/optix/OptixRendererBase.cpp
-	renderer/renderers/optix/assets/OptixInstancedModel.cpp
-	renderer/renderers/optix/assets/OptixMaterial.cpp
-	renderer/renderers/optix/assets/OptixMesh.cpp
-	renderer/renderers/optix/assets/OptixModel.cpp
-	renderer/renderers/optix/assets/OptixProgram.cpp
-	renderer/renderers/optix/assets/OptixTexture.cpp
-	renderer/renderers/optix/assets/OptixCubeMap.cpp
-	
-	renderer/renderers/optix/test/OptixTestRenderer.cpp
-	renderer/renderers/optix/test/OptixTestGeometry.cpp
-	
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerGeometry.cpp
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerHead.cpp
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerLight.cpp
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerRenderer.cpp
-	
 	system/Engine.cpp
 	system/EngineObject.cpp
 	system/EventListener.cpp
@@ -143,25 +125,6 @@ set(HEADER_FILES
 	renderer/renderers/opengl/test/GLTestRenderer.h
 	renderer/renderers/opengl/test/GLTestGeometry.h
 	
-	renderer/renderers/optix/OptixAsset.h
-	renderer/renderers/optix/OptixRendererBase.h
-	renderer/renderers/optix/OptixUtil.h
-	renderer/renderers/optix/assets/OptixInstancedModel.h
-	renderer/renderers/optix/assets/OptixMaterial.h
-	renderer/renderers/optix/assets/OptixMesh.h
-	renderer/renderers/optix/assets/OptixModel.h
-	renderer/renderers/optix/assets/OptixProgram.h
-	renderer/renderers/optix/assets/OptixTexture.h
-	renderer/renderers/optix/assets/OptixCubeMap.h
-	
-	renderer/renderers/optix/test/OptixTestRenderer.h
-	renderer/renderers/optix/test/OptixTestGeometry.h
-	
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerGeometry.h
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerHead.h
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerLight.h
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerRenderer.h
-	
 	system/Engine.h
 	system/EngineObject.h
 	system/EventListener.h
@@ -229,9 +192,7 @@ add_executable(rt-xengine ${SOURCE_FILES} ${HEADER_FILES})
 
 # 3rd party libraries
 target_link_libraries(rt-xengine
-	optix.6.0.0.lib
-	optixu.6.0.0.lib
-	GLAD.lib
+	glad.lib
 	tinyxml2.lib
 	opengl32.lib
 	XInput.lib
@@ -242,23 +203,31 @@ add_compile_definitions(GLAD_GLAPI_EXPORT)
 
 # dependencies (build order)
 add_dependencies(rt-xengine 
-	cuda-ptx
-	copy-ptx
 	glad-dll-gen
 )
 
 # 3rd party includes
-include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/CUDA)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY})
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/GLAD)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/GLM)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/KHR)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/nlohmann)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/spdlog)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/stb_image)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/tinygltf)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/tinyxml2)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/pch)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 # for generated exports file
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # enforce cpp17
 set_property(TARGET rt-xengine PROPERTY CXX_STANDARD 17)
 set_property(TARGET rt-xengine PROPERTY CXX_STANDARD_REQUIRED ON)
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX ${PROJECT_NAME} FILES ${HEADER_FILES} ${SOURCE_FILES})
 
 # multi-core compilation
 if(MSVC)

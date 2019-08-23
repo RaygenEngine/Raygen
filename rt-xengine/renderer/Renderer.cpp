@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "Renderer.h"
 
-#include "renderers/optix/vr-pathtracer/OptixVRPathTracerRenderer.h"
-
 namespace Renderer
 {
 	Renderer::Renderer(System::Engine* context)

@@ -4,18 +4,9 @@
 #include "renderer/Renderer.h"
 #include "Win32App.h"
 
-
-
 #include <windowsx.h>
 
 #include "TranslateWin32VirtualKeys.h"
-
-#include "renderer/renderers/opengl/test/GLTestRenderer.h"
-#include "renderer/renderers/optix/test/OptixTestRenderer.h"
-
-using namespace Renderer::OpenGL;
-using namespace Renderer::Optix;
-
 
 namespace Platform
 {
