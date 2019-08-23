@@ -105,7 +105,7 @@ namespace World
 
 				RT_XENGINE_LOG_INFO("World loaded succesfully, id: {}", this->GetObjectId());
 
-				RT_XENGINE_LOG_DEBUG("Scenegraph: \n\n{0}", this->PrintWorldTree(true));
+				RT_XENGINE_LOG_ERROR("Scenegraph: \n\n{0}", this->PrintWorldTree(true));
 
 				return true;
 			}
@@ -156,7 +156,7 @@ namespace World
 		// Update after input and delta calculation
 		for (auto* nodes : m_nodes)
 			nodes->Update();
-
+		
 		// Update dirty leaf node instances
 		for (auto* dirtyLeafNode : m_dirtyLeafNodes)
 			dirtyLeafNode->CacheWorldTransform();

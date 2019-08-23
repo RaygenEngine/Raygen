@@ -7,7 +7,6 @@
 #include <GLM/ext/quaternion_float.hpp>
 #include "system/EngineObject.h"
 
-
 namespace World
 {
 	class Node : public System::EngineObject
@@ -29,6 +28,7 @@ namespace World
 
 	protected:
 		std::string m_name;
+		std::string m_type;
 
 		Node* m_parent;
 
@@ -62,15 +62,23 @@ namespace World
 		glm::vec3 GetFront() const { return GetWorldOrientation() * glm::vec3(0.f, 0.f, -1.f); }
 
 		bool IsLeaf() const { return m_children.empty(); }
-		std::string GetName() const { return m_name; }
+		const std::string& GetName() const { return m_name; }
+		const std::string& GetType() const { return m_type; }
 
 		void AddChild(std::shared_ptr<Node> child) { m_children.emplace_back(child); }
 		
 		bool LoadFromXML(const tinyxml2::XMLElement* xmlData);
 
 		virtual bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData);
-		virtual bool LoadChildrenFromXML(const tinyxml2::XMLElement* xmlData);
+		
+		// Override loading of a specific child. 
+		// If you return a non null pointer here the default node creation will be skipped for this child
+		virtual Node* LoadSpecificChild(const tinyxml2::XMLElement* childXmlData) { return nullptr; }
 
+		// Called after all children have been loaded from the scene file.
+		// You can use this to track 'custom' children in 
+		virtual bool PostChildrenLoaded() { return true; }
+		
 		// mark dirty self and children
 		void MarkDirty();
 		// cache world transform bottom up (and where needed to be updated)
@@ -90,7 +98,106 @@ namespace World
 		void OrientWithoutRoll(float yaw, float pitch);
 
 		void OrientYaw(float yaw);
-		
+
+
+		//
+		// Child Getter Utilities
+		//
+
+		// Returns a valid child if it is the ONLY child of this class
+		// Only checks first level children
+		template<class NodeClass>
+		NodeClass* GetUniqueChildOfClass() const 
+		{
+			NodeClass* first = nullptr;
+			for (auto child : m_children) 
+			{
+				auto ptr = dynamic_cast<NodeClass*>(child.get());
+				if (ptr) 
+				{
+					// check if we already found something
+					if (first)
+					{
+						return nullptr;
+					}
+					else 
+					{
+						first = ptr;
+					}
+				}
+			}
+			return first;
+		}
+
+		// Only checks first level children
+		template<class NodeClass>
+		NodeClass* GetFirstChildOfClass() const 
+		{
+			for (auto child : m_children) 
+			{
+				auto ptr = dynamic_cast<NodeClass*>(child.get());
+				if (ptr) 
+				{
+					return ptr;
+				}
+			}
+			return nullptr;
+		}
+
+		// Returns a valid child if it is the only child of this (class AND type)
+		// 
+		// eg: 
+		// | - VRHead Head
+		// | 1 -- CameraNode* "RightEye"
+		// | 2 -- CameraNode* "LeftEye"
+		// 
+		// GetUniqueChildWithType<CameraNode>("rightEye") == *1
+		// 
+		// You can use the non templated version to not check for the actual cpp class type.
+		// Only checks first level children
+		//
+		template<class NodeClass = Node>
+		NodeClass* GetUniqueChildWithType(const std::string& type) const
+		{
+			NodeClass* first = nullptr;
+			for (auto child : m_children)
+			{
+				auto ptr = dynamic_cast<NodeClass*>(child.get());
+				if (ptr && ptr->GetType() == type)
+				{
+					// check if we already found something
+					if (first)
+					{
+						return nullptr;
+					}
+					else
+					{
+						first = ptr;
+					}
+				}
+			}
+			return first;
+		}
+
+		// Child must match both NodeClass AND type
+		// You can use the non templated version to not check for the actual cpp class type.
+		// Only checks first level children
+		template<class NodeClass = Node>
+		NodeClass* GetFirstChildOfType(const std::string& type) const
+		{
+			auto it = std::find_if(m_children.begin(), m_children.end(), [&](auto child) 
+			{
+				return child->GetType() == type && dynamic_cast<NodeClass*>(child.get());
+			});
+
+			if (it == m_children.end()) 
+			{
+				return nullptr;
+			}
+			return dynamic_cast<NodeClass*>(child.get());
+		}
+
+
 	protected:
 		virtual std::string ToString(bool verbose, uint depth) const;
 	};

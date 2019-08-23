@@ -38,23 +38,23 @@ namespace World
 
 		return true;
 	}
-	bool OculusUserNode::LoadChildrenFromXML(const tinyxml2::XMLElement * xmlData)
-	{
-		// children
-		for (auto* xmdChildElement = xmlData->FirstChildElement(); xmdChildElement != nullptr;
-			xmdChildElement = xmdChildElement->NextSiblingElement())
-		{
-			const std::string type = xmdChildElement->Name();
-			if (type == "head")
-			{
-				m_head = GetWorld()->LoadNode<OculusHeadNode>(this, xmdChildElement);
-			}
-		}
 
-		// if head loaded successfully
-		return m_head != nullptr;
+	Node* OculusUserNode::LoadSpecificChild(const tinyxml2::XMLElement* xmlChildData)
+	{
+		const std::string type = xmlChildData->Name();
+		if (type == "head")
+		{
+			m_head = GetWorld()->LoadNode<OculusHeadNode>(this, xmlChildData);
+			return m_head;
+		}
+		return nullptr;
 	}
 
+	bool OculusUserNode::PostChildrenLoaded()
+	{
+		return m_head != nullptr;
+	}
+	
 	//void OculusUserNode::OnUpdate(const CTickEvent& event)
 	//{
 	//	//auto& keyboard = GetKeyboard();

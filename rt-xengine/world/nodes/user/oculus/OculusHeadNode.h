@@ -23,7 +23,8 @@ namespace World
 
 	public:
 		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
-		bool LoadChildrenFromXML(const tinyxml2::XMLElement* xmlData) override;
+		Node* LoadSpecificChild(const tinyxml2::XMLElement* xmlChildData) override;
+		bool PostChildrenLoaded() override;
 	};
 
 }

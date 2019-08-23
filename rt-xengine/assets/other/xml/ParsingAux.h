@@ -40,7 +40,7 @@ namespace Assets
 			return true;
 		}
 
-		RT_XENGINE_LOG_WARN("Missing XML attribute: \"{0}\", defaulting", attribute);
+		RT_XENGINE_LOG_INFO("Missing XML attribute: \"{0}\", defaulting", attribute);
 		return false;
 	}
 
@@ -54,7 +54,7 @@ namespace Assets
 			return true;
 		}
 
-		RT_XENGINE_LOG_WARN("Missing string attribute \"{0}\", defaulting", attribute);
+		RT_XENGINE_LOG_INFO("Missing string attribute \"{0}\", defaulting", attribute);
 		return false;
 	}
 
@@ -70,6 +70,12 @@ namespace Assets
 		RT_XENGINE_LOG_WARN("Missing XML Entity / Node name, defaulting to {}", entityName);
 
 		return false;
+	}
+
+	inline bool ReadFillEntityType(const tinyxml2::XMLElement* xmlElement, std::string& entityType)
+	{
+		entityType = std::string(xmlElement->Name());
+		return true;
 	}
 }
 

@@ -51,7 +51,8 @@ set(SOURCE_FILES
 	event/Event.cpp
 	
 	world/World.cpp
-
+	world/NodeFactory.cpp
+	
 	world/nodes/Node.cpp
 	world/nodes/TransformNode.cpp
 	
@@ -141,6 +142,7 @@ set(HEADER_FILES
 	event/Event.h
 
 	world/World.h
+	world/NodeFactory.h
 	
 	world/nodes/Node.h
 	world/nodes/TransformNode.h

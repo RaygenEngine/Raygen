@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "OculusHeadNode.h"
 
-
 #include "world/World.h"
 
 namespace World
@@ -22,24 +21,24 @@ namespace World
 		return Node::LoadAttributesFromXML(xmlData);
 	}
 
-	bool OculusHeadNode::LoadChildrenFromXML(const tinyxml2::XMLElement* xmlData)
+	Node* OculusHeadNode::LoadSpecificChild(const tinyxml2::XMLElement* xmlChildData)
 	{
-		// children
-		for (auto* xmdChildElement = xmlData->FirstChildElement(); xmdChildElement != nullptr;
-			xmdChildElement = xmdChildElement->NextSiblingElement())
+		const std::string type = xmlChildData->Name();
+		if (type == "left_eye")
 		{
-			const std::string type = xmdChildElement->Name();
-			if (type == "left_eye")
-			{
-				m_eyes[ET_LEFT] = GetWorld()->LoadNode<CameraNode>(this, xmdChildElement);
-			}
-			else if (type == "right_eye")
-			{
-				m_eyes[ET_RIGHT] = GetWorld()->LoadNode<CameraNode>(this, xmdChildElement);
-			}
+			m_eyes[ET_LEFT] = GetWorld()->LoadNode<CameraNode>(this, xmlChildData);
+			return m_eyes[ET_LEFT];
 		}
+		else if (type == "right_eye")
+		{
+			m_eyes[ET_RIGHT] = GetWorld()->LoadNode<CameraNode>(this, xmlChildData);
+			return m_eyes[ET_RIGHT];
+		}
+		return nullptr;
+	}
 
-		// if both eyes loaded correctly
+	bool OculusHeadNode::PostChildrenLoaded()
+	{
 		return m_eyes[ET_LEFT] && m_eyes[ET_RIGHT];
 	}
 

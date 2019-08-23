@@ -32,20 +32,9 @@ namespace World
 		return true;
 	}
 
-	bool FreeformUserNode::LoadChildrenFromXML(const tinyxml2::XMLElement* xmlData)
+	bool FreeformUserNode::PostChildrenLoaded()
 	{
-		// children
-		for (auto* xmdChildElement = xmlData->FirstChildElement(); xmdChildElement != nullptr;
-			xmdChildElement = xmdChildElement->NextSiblingElement())
-		{
-			const std::string type = xmdChildElement->Name();
-			if (type == "camera")
-			{
-				m_camera = GetWorld()->LoadNode<CameraNode>(this, xmdChildElement);
-			}
-		}
-
-		// if head loaded successfully
+		m_camera = GetUniqueChildOfClass<CameraNode>();
 		return m_camera != nullptr;
 	}
 
@@ -55,6 +44,7 @@ namespace World
 		auto& input = GetInput();
 
 		auto speed = m_movementSpeed; // 0,01
+		auto cam = GetWorld()->GetAnyAvailableNode<CameraNode>();
 
 		// user buffs
 		if (input.IsKeyRepeat(XVK_LSHIFT))
@@ -77,9 +67,9 @@ namespace World
 
 		if (input.IsRightThumbMoving())
 		{
-			const auto yaw = -input.GetRightThumbDirection().x * input.GetRightThumbMagnitude() * 2.5 * m_turningSpeed;
+			const auto yaw = -input.GetRightThumbDirection().x * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed;
 			// upside down with regards to the cursor dragging
-			const auto pitch = input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5 * m_turningSpeed;
+			const auto pitch = input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed;
 
 			OrientWithoutRoll(yaw, pitch);
 		}

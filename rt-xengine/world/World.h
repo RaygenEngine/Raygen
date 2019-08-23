@@ -26,7 +26,7 @@ namespace World
 		mutable std::unordered_set<LightNode*> m_lights;
 		mutable std::unordered_set<CameraNode*> m_cameras;
 		mutable std::unordered_set<UserNode*> m_users;
-	
+
 		// load path hint
 		std::string m_loaderPathHint;
 		
@@ -123,8 +123,8 @@ namespace World
 		glm::vec3 GetAmbientColor() const { return m_ambient; }
 
 		// SetIdentificationFromAssociatedDiskAssetIdentification node to world and as child, and return observer (maybe required for special inter-node handling)
-		template <typename ChildType, typename ParentType>
-		ChildType* LoadNode(ParentType* parent, const tinyxml2::XMLElement* xmlData)
+		template <typename ChildType>
+		ChildType* LoadNode(Node* parent, const tinyxml2::XMLElement* xmlData)
 		{
 			std::shared_ptr<ChildType> node = std::shared_ptr<ChildType>(new ChildType(parent), [&](ChildType* assetPtr)
 			{
