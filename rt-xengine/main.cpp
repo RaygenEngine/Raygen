@@ -39,7 +39,7 @@ int32 main(int32 argc, char* argv[])
 	}
 
 	// Create world
-	if (!app.CreateWorldFromFile("test.xscn"))
+	if (!app.CreateWorldFromFile(argc > 1 ? argv[1] : "test.xscn"))
 	{
 		RT_XENGINE_LOG_FATAL("Failed to create World!");
 		return -1;
