@@ -11,8 +11,8 @@ AppBase::AppBase()
 
 	m_windowTitle = "RT-XEngine";
 
-	m_windowHeight = 1920;
-	m_windowWidth = 1080;
+	m_windowWidth = 1920;
+	m_windowHeight = 1080;
 
 	m_handleControllers = false;
 	m_lockMouse = false;
@@ -31,7 +31,8 @@ int AppBase::Main(int argc, char* argv[])
 	RT_XENGINE_LOG_FATAL("Running app: {}", m_name);
 
 	std::unique_ptr<System::Engine> engine = CreateEngine();
-	std::unique_ptr<Platform::Window> window = Platform::Win32Window::CreateWin32Window(engine.get());
+	std::unique_ptr<Platform::Window> window = CreateAppWindow(engine.get());
+	
 	RegisterRenderers(engine.get());
 	
 	// Init engine file system.
