@@ -7,12 +7,6 @@
 
 class App : public AppBase {
 public:
-	App()
-		: AppBase()
-	{
-		m_handleControllers = true;
-	}
-
 };
 
 #endif //APP_H
