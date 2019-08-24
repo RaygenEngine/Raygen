@@ -22,11 +22,14 @@
 #include "pch.h"
 
 #include "platform/windows/Win32App.h"
+#include "game.h"
 
 int32 main(int32 argc, char* argv[])
 {
 	// Init logger (global access, not engine, app or window bound)
 	RT_XENGINE_LOGGER_INIT(LLT_WARN);
+
+	delete CreateGameNodeFactory();
 
 	// Create app
 	Platform::Win32App app;

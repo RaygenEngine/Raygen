@@ -171,6 +171,19 @@ set(HEADER_FILES
 	platform/windows/TranslateWin32VirtualKeys.h
 )
 
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/game/CMakeLists.txt" AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/game/game.h")
+	set(GAME_DIR "game")
+	message(STATUS "Detected game header at 'rt-xengine/game'. Using custom game files.") 
+else()
+	set(GAME_DIR "game-default")
+	message(STATUS "No specific game files detected. Using game-default.")
+endif()
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/${GAME_DIR})
+include(${GAME_DIR}/CMakeLists.txt)
+
+
 # add pch for msvc 
 if(MSVC)
 

@@ -44,7 +44,6 @@ namespace World
 		auto& input = GetInput();
 
 		auto speed = m_movementSpeed; // 0,01
-		auto cam = GetWorld()->GetAnyAvailableNode<CameraNode>();
 
 		// user buffs
 		if (input.IsKeyRepeat(XVK_LSHIFT))
