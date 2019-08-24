@@ -7,6 +7,7 @@
 
 class App : public AppBase {
 public:
+	
 };
 
 #endif //APP_H
