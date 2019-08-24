@@ -72,9 +72,9 @@ set(SOURCE_FILES
 	world/nodes/user/UserNode.cpp
 	
 	main.cpp
-	GameBase.cpp
+	AppBase.cpp
 
-	platform/windows/Win32App.cpp
+	platform/Window.cpp
 	platform/windows/Win32Window.cpp
 )
 
@@ -167,24 +167,24 @@ set(HEADER_FILES
 
 	pch/pch.h
 	
-	GameBase.h
+	AppBase.h
 	
-	platform/windows/Win32App.h
+	platform/Window.h
 	platform/windows/Win32Window.h
 	platform/windows/TranslateWin32VirtualKeys.h
 )
 
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/game/CMakeLists.txt" AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/game/game.h")
-	set(GAME_DIR "game")
-	message(STATUS "Detected game header at 'rt-xengine/game'. Using custom game files.") 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/CMakeLists.txt" AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/App.h")
+	set(APP_DIR "app")
+	message(STATUS "Detected app header at 'rt-xengine/app'. Using custom app files.") 
 else()
-	set(GAME_DIR "game-default")
-	message(STATUS "No specific game files detected. Using game-default.")
+	set(APP_DIR "app-default")
+	message(STATUS "No specific app files detected. Using app-default.")
 endif()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/${GAME_DIR})
-include(${GAME_DIR}/CMakeLists.txt)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/${APP_DIR})
+include(${APP_DIR}/CMakeLists.txt)
 
 
 # add pch for msvc 

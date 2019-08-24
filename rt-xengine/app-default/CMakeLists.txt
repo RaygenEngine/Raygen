@@ -1,8 +1,8 @@
 list (APPEND SOURCE_FILES 
-	${GAME_DIR}/game.cpp 
+	${APP_DIR}/App.cpp 
 
 ) 
 
 list (APPEND HEADER_FILES 
-	${GAME_DIR}/game.h 
+	${APP_DIR}/App.h 
 ) 

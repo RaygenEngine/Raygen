@@ -2,29 +2,23 @@
 #define WIN32WINDOW_H
 
 #include <windows.h>
+#include <system/Engine.h>
+#include <platform/Window.h>
 
 namespace Platform
 {
-	class Win32Window 
+	class Win32Window : public Window
 	{
 		WNDCLASSEX m_wcex;
-
 		HWND m_hWnd;
-
-		bool m_focused;
-		bool m_closed;
-
-		int32 m_width;
-		int32 m_height;
-
-		DWORD m_controllerIndex;
 
 	public:
 
 		// Attach input before creating window
-		Win32Window();
+		Win32Window(System::Engine* engineRef);
 		~Win32Window();
 
+	protected:
 		// Window class styles. This is a combination of one or more Window Class Styles
 		// Window class name. This class name is used by several functions to retrieve window information at run time.
 		// Window background brush color. A brush handle representing the background color.
@@ -46,20 +40,36 @@ namespace Platform
 			LPCSTR title, 
 			LONG style);
 
-		int32 GetWidth() const { return m_width; }
-		int32 GetHeight() const { return m_height; }
+	public:
+
+		static std::unique_ptr<Win32Window> CreateWin32Window(
+			System::Engine* engineRef,
+			const std::string& title = std::string("Win32 Window"),
+			int32 xpos = 150,
+			int32 ypox = 150,
+			int32 width = 1920,
+			int32 height = 1080,
+			LONG cstyle = WS_OVERLAPPEDWINDOW,
+			UINT style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC | CS_DBLCLKS,
+			LPCSTR name = TEXT("RTXENGINEWINDOWCLASS"),
+			HBRUSH backgroundBrushColor = (HBRUSH)(COLOR_WINDOW + 1),
+			LPCSTR cursorName = IDC_ARROW
+		);
 
 		HWND GetHWND() const { return m_hWnd; }
-
 		HINSTANCE GetHInstance() const { return m_wcex.hInstance; }
 
-		bool IsClosed() const { return m_closed; }
-		bool IsFocused() const { return m_focused; }
+		void RestrictMouseMovement() override;
+		void ReleaseMouseMovement() override;
 
-		void RestrictMouseMovement();
-		void ReleaseMouseMovement();
+		void Show() override;
 
-		void Display();
+		bool StartRenderer(System::RendererRegistrationIndex index) override;
+		void HandleEvents(bool shouldHandleControllers) override;
+
+		void SetTitle(const std::string& newTitle) override;
+
+		void GenerateXInputControllerMessages();
 
 		friend LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	};

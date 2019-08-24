@@ -20,42 +20,14 @@
 // Note: if your work does not require dynamic updates, is not resource intensive, etc. you can avoid some of the steps shown above 
 
 #include "pch.h"
+#include "App.h"
 
-#include "platform/windows/Win32App.h"
-#include "game.h"
-
-int32 main(int32 argc, char* argv[])
+int main(int argc, char* argv[])
 {
 	// Init logger (global access, not engine, app or window bound)
 	RT_XENGINE_LOGGER_INIT(LLT_WARN);
 
-	auto game = new Game();
-	RT_XENGINE_LOG_FATAL("Running game: {}", game->GetGameName());
-	delete game;
-
-	// Create app
-	Platform::Win32App app;
-
-	// Create engine and file/path system
-	if(!app.CreateEngine(argv[0], "assets"))
-	{
-		RT_XENGINE_LOG_FATAL("Failed to create Engine!");
-		return -1;
-	}
-
-	// Create world
-	if (!app.CreateWorldFromFile(argc > 1 ? argv[1] : "test.xscn"))
-	{
-		RT_XENGINE_LOG_FATAL("Failed to create World!");
-		return -1;
-	}
-
-	// Create window
-	if (!app.CreateWin32Window())
-	{
-		RT_XENGINE_LOG_FATAL("Failed to create Window!");
-		return -1;
-	}
-
-	return app.MainLoop();
+	App app;
+	app.PreMainInit(argc, argv);
+	return app.Main(argc, argv);
 }
