@@ -72,6 +72,7 @@ set(SOURCE_FILES
 	world/nodes/user/UserNode.cpp
 	
 	main.cpp
+	GameBase.cpp
 
 	platform/windows/Win32App.cpp
 	platform/windows/Win32Window.cpp
@@ -165,6 +166,8 @@ set(HEADER_FILES
 	world/nodes/user/UserNode.h
 
 	pch/pch.h
+	
+	GameBase.h
 	
 	platform/windows/Win32App.h
 	platform/windows/Win32Window.h
