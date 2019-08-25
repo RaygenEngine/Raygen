@@ -42,7 +42,7 @@ namespace Platform
 		m_wcex.lpszClassName = name;
 		m_wcex.hbrBackground = backgroundBrushColor;
 		m_wcex.hCursor = cursor;
-		m_wcex.lpfnWndProc = WndProc;
+		m_wcex.lpfnWndProc = windowHandleFunction;
 		m_wcex.hInstance = instance;
 
 		// Register window and ensure registration success.
