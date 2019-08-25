@@ -18,7 +18,7 @@ AppBase::AppBase()
 	m_lockMouse = false;
 }
 
-void AppBase::PreMainInit(int argc, char* argv[])
+void AppBase::PreMainInit(int32 argc, char* argv[])
 {
 	if (argc > 1) 
 	{
@@ -26,7 +26,7 @@ void AppBase::PreMainInit(int argc, char* argv[])
 	}
 }
 
-int AppBase::Main(int argc, char* argv[])
+int32 AppBase::Main(int32 argc, char* argv[])
 {
 	RT_XENGINE_LOG_FATAL("Running app: {}", m_name);
 

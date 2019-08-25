@@ -18,8 +18,8 @@ protected:
 
 
 	std::string m_windowTitle;
-	int m_windowHeight;
-	int m_windowWidth;
+	int32 m_windowHeight;
+	int32 m_windowWidth;
 
 	bool m_handleControllers;
 
@@ -30,8 +30,8 @@ public:
 	virtual ~AppBase() = default;
 
 public:
-	virtual void PreMainInit(int argc, char* argv[]);
-	virtual int Main(int argc, char* argv[]);
+	virtual void PreMainInit(int32 argc, char* argv[]);
+	virtual int32 Main(int32 argc, char* argv[]);
 
 	
 	virtual void RegisterRenderers(System::Engine* engine);
