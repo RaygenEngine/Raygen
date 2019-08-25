@@ -31,6 +31,7 @@ namespace Platform
 		LPCSTR name,
 		HBRUSH backgroundBrushColor,
 		HCURSOR cursor,
+		WNDPROC windowHandleFunction,
 		HINSTANCE instance)
 	{
 		// Setup window class attributes.
@@ -96,6 +97,7 @@ namespace Platform
 		int32 width,
 		int32 height,
 		LONG cstyle,
+		WNDPROC windowHandleFunction,
 		UINT style,
 		LPCSTR name,
 		HBRUSH backgroundBrushColor,
@@ -107,7 +109,7 @@ namespace Platform
 		auto window = std::make_unique<Win32Window>(engineRef);
 		
 		if (!window->Register(style, name, backgroundBrushColor,
-							  LoadCursor(NULL, cursorName), hInstance))
+							  LoadCursor(NULL, cursorName), windowHandleFunction, hInstance))
 		{
 			RT_XENGINE_LOG_FATAL("Failed to register application window!");
 			return std::unique_ptr<Win32Window>{};
@@ -264,7 +266,7 @@ namespace Platform
 			m_engineRef->GetRenderer()->InitScene(GetWidth(), GetHeight());
 	}
 
-	LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+	LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		LRESULT result = NULL;
 

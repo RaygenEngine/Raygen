@@ -30,6 +30,7 @@ namespace Platform
 			LPCSTR name,
 			HBRUSH backgroundBrushColor,
 			HCURSOR cursor,
+			WNDPROC windowHandleFunction,
 			HINSTANCE instance);
 
 		bool Create(
@@ -50,6 +51,7 @@ namespace Platform
 			int32 width = 1920,
 			int32 height = 1080,
 			LONG cstyle = WS_OVERLAPPEDWINDOW,
+			WNDPROC windowHandleFunction = WndProc,
 			UINT style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC | CS_DBLCLKS,
 			LPCSTR name = TEXT("RTXENGINEWINDOWCLASS"),
 			HBRUSH backgroundBrushColor = (HBRUSH)(COLOR_WINDOW + 1),
@@ -71,7 +73,7 @@ namespace Platform
 
 		void GenerateXInputControllerMessages();
 
-		friend LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+		static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	};
 
 }

@@ -33,6 +33,7 @@ public:
 	virtual void PreMainInit(int32 argc, char* argv[]);
 	virtual int32 Main(int32 argc, char* argv[]);
 
+	virtual void MainLoop(System::Engine* engine, Platform::Window* window);
 	
 	virtual void RegisterRenderers(System::Engine* engine);
 

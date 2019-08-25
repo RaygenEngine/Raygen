@@ -70,11 +70,19 @@ int32 AppBase::Main(int32 argc, char* argv[])
 		window->RestrictMouseMovement();
 	}
 
+	MainLoop(engine.get(), window.get());
+
+	window->ReleaseMouseMovement();
+	return 0;
+}
+
+void AppBase::MainLoop(System::Engine* engine, Platform::Window* window)
+{
 	while (!window->IsClosed())
 	{
 		// clear input soft state (pressed keys, etc.)
 		engine->GetInput().ClearSoftState();
-		
+
 		// Let our window handle any events.
 		window->HandleEvents(m_handleControllers);
 
@@ -85,9 +93,6 @@ int32 AppBase::Main(int32 argc, char* argv[])
 		// render
 		engine->GetRenderer()->Render();
 	}
-
-	window->ReleaseMouseMovement();
-	return 0;
 }
 
 void AppBase::RegisterRenderers(System::Engine* engine) 
