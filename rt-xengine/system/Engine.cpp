@@ -3,6 +3,7 @@
 
 
 #include "renderer/Renderer.h"
+#include "world/NodeFactory.h"
 
 namespace System
 {
@@ -23,9 +24,9 @@ namespace System
 		return m_diskAssetManager->Init(applicationPath, dataDirectoryName);
 	}
 
-	bool Engine::CreateWorldFromFile(const std::string& filename)
+	bool Engine::CreateWorldFromFile(const std::string& filename, World::NodeFactory* factory)
 	{
-		m_world = std::make_unique<World::World>(this);
+		m_world = std::make_unique<World::World>(this, factory);
 
 		// load scene file
 		const auto sceneXML = m_diskAssetManager->LoadFileAsset<Assets::XMLDoc>(filename);

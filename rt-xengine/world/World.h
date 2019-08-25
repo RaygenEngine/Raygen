@@ -42,9 +42,11 @@ namespace World
 		float m_worldTime;
 		float m_lastTime;
 
+		NodeFactory* m_nodeFactory;
+
 	public:
 
-		World(System::Engine* engine);
+		World(System::Engine* engine, NodeFactory* factory);
 		~World();
 
 		std::string PrintWorldTree(bool verbose = false);
@@ -155,6 +157,8 @@ namespace World
 		void WindowResize(int32 width, int32 height) override;
 
 		bool LoadAndPrepareWorldFromXML(Assets::XMLDoc* sceneXML);
+
+		NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
 
 	protected:
 		std::string ToString(bool verbose, uint depth) const override;

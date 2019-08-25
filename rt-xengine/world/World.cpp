@@ -2,6 +2,7 @@
 #include "World.h"
 
 #include "system/Engine.h"
+#include "world/NodeFactory.h"
 
 namespace World
 {
@@ -16,13 +17,14 @@ namespace World
 	}
 
 
-	World::World(System::Engine* engine)
+	World::World(System::Engine* engine, NodeFactory* factory)
 		: Node(engine),
 		m_background(0.f, 0.f, 0.4f),
 	    m_ambient(0.4f, 0.4f, 0.4f),
 		m_deltaTime(0),
 		m_worldTime(GetTimeMs()),
-		m_lastTime(GetTimeMs())
+		m_lastTime(GetTimeMs()),
+		m_nodeFactory(factory)
 	{
 		RT_XENGINE_LOG_INFO("Created World context, id: {}", EngineObject::GetObjectId());
 	}

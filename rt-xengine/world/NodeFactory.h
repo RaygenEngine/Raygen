@@ -14,6 +14,9 @@ namespace World
 		bool LoadChildren(const tinyxml2::XMLElement* xmlData, Node* parentNode);
 
 	protected:
+
+		Node* LoadChildSpecificNode(const std::string& type, Node* parentNode, const tinyxml2::XMLElement* xmlChild);
+
 		virtual Node* LoadNodeFromType(const std::string& type, Node* parentNode, const tinyxml2::XMLElement* xmlChild);
 	};
 }

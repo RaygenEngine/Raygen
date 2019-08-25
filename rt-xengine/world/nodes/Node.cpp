@@ -123,14 +123,10 @@ namespace World
 
 		RT_XENGINE_LOG_INFO("Loading {0} named {1}", m_type, m_name);
 
+		NodeFactory* factory = GetWorld()->GetNodeFactory();
 
-		// TODO: Add factory override possibility
-		auto factory = new NodeFactory();
-		
 		const auto status = LoadAttributesFromXML(xmlData) && factory->LoadChildren(xmlData, this);
 		
-		delete factory;
-
 		// calculate local matrix after loading
 		m_localMatrix = Core::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
 

@@ -40,7 +40,7 @@ public:
 
 	virtual std::unique_ptr<Platform::Window> CreateAppWindow(System::Engine* engine);
 
-	virtual World::NodeFactory* MakeNodeFactory();
+	virtual std::unique_ptr<World::NodeFactory> MakeNodeFactory();
 
 };
 

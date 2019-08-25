@@ -14,22 +14,29 @@ namespace World
 			 xmdChildElement = xmdChildElement->NextSiblingElement())
 		{
 			const std::string type = xmdChildElement->Name();
-			Node* loaded = LoadNodeFromType(type, parent, xmdChildElement);
 
-			RT_XENGINE_CLOG_ERROR(loaded, "Failed to load a child with type: {0}", type);
+			Node* created = LoadChildSpecificNode(type, parent, xmdChildElement);
+
+			if (!created)
+			{
+				created = LoadNodeFromType(type, parent, xmdChildElement);
+			}
+
+			RT_XENGINE_CLOG_ERROR(created, "Failed to load a child with type: {0}", type);
 		}
 
 		return parent->PostChildrenLoaded();
 	}
 
+	Node* NodeFactory::LoadChildSpecificNode(const std::string& type, Node* parentNode, const tinyxml2::XMLElement* xmdChildElement)
+	{
+		Node* custom = parentNode->LoadSpecificChild(xmdChildElement);
+		return custom;
+	}
+
 	Node* NodeFactory::LoadNodeFromType(const std::string& type, Node* parent, const tinyxml2::XMLElement* xmdChildElement)
 	{
-		Node* custom = parent->LoadSpecificChild(xmdChildElement);
-		if (custom)
-		{
-			return custom;
-		}
-
+	
 		World* world = parent->GetWorld();
 		if (type == "freeform_user")
 		{
@@ -76,7 +83,6 @@ namespace World
 			return world->LoadNode<SkyHDRNode>(parent, xmdChildElement);
 		}
 
-		RT_XENGINE_LOG_WARN("Node of type {0} missed all possible class types, defaulting class.", type);
-		return world->LoadNode<Node>(parent, xmdChildElement);
+		return nullptr;
 	}
 }

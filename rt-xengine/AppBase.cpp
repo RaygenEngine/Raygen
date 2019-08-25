@@ -41,8 +41,9 @@ int32 AppBase::Main(int32 argc, char* argv[])
 		RT_XENGINE_LOG_FATAL("Failed to create Engine!");
 		return -1;
 	}
-
-	if (!engine->CreateWorldFromFile(m_initialScene))
+	
+	std::unique_ptr<World::NodeFactory> factory = MakeNodeFactory();
+	if (!engine->CreateWorldFromFile(m_initialScene, factory.get()))
 	{
 		RT_XENGINE_LOG_FATAL("Failed to create World!");
 		return -1;
@@ -108,9 +109,9 @@ std::unique_ptr<Platform::Window> AppBase::CreateAppWindow(System::Engine* engin
 	));
 }
 
-World::NodeFactory* AppBase::MakeNodeFactory()
+std::unique_ptr<World::NodeFactory> AppBase::MakeNodeFactory()
 {
-	return new World::NodeFactory();
+	return std::make_unique<World::NodeFactory>(World::NodeFactory());
 }
 
 
