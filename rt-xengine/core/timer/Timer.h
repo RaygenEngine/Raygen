@@ -1,7 +1,7 @@
-#ifndef TIMER_H
-#define TIMER_H
+#pragma once
 
 #include <chrono>
+
 // TODO: make or use an actual timer
 #define TIMING
 #ifdef TIMING
@@ -14,5 +14,3 @@
 #define START_TIMER
 #define STOP_TIMER(name)
 #endif
-
-#endif // TIMER_H

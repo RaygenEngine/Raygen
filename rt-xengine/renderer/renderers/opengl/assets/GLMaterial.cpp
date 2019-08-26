@@ -1,16 +1,17 @@
 #include "pch.h"
-#include "GLMaterial.h"
+
+#include "renderer/renderers/opengl/assets/GLMaterial.h"
 
 namespace Renderer::OpenGL
 {
-	GLMaterial::GLMaterial(GLRendererBase* renderer)
-		: GLAsset(renderer)
+	GLMaterial::GLMaterial(GLRendererBase* renderer, const std::string& name)
+		: GLAsset(renderer, name)
 	{
 	}
 
-	bool GLMaterial::Load(Assets::XMaterial* data)
+	bool GLMaterial::Load(Assets::Material* data)
 	{
-		SetIdentificationFromAssociatedDiskAssetIdentification(data->GetLabel());
+		/*SetIdentificationFromAssociatedDiskAssetIdentification(data->GetLabel());
 
 		m_textSurfaceAlbedo = GetRenderer()->RequestGLTexture(data->GetMapSurfaceAlbedo());
 		
@@ -18,7 +19,7 @@ namespace Renderer::OpenGL
 
 		m_textSurfaceSpecularParameters = GetRenderer()->RequestGLTexture(data->GetMapSurfaceSpecularParameters());
 
-		m_textSurfaceBump = GetRenderer()->RequestGLTexture(data->GetMapSurfaceBump());
+		m_textSurfaceBump = GetRenderer()->RequestGLTexture(data->GetMapSurfaceBump());*/
 
 		return true;
 	}

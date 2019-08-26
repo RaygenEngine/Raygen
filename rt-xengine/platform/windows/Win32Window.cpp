@@ -1,12 +1,10 @@
 #include "pch.h"
 
-#include "Win32Window.h"
-#include "renderer/Renderer.h"
-#include "Win32App.h"
+#include "platform/windows/Win32Window.h"
+#include "platform/windows/Win32App.h"
+#include "platform/windows/TranslateWin32VirtualKeys.h"
 
 #include <windowsx.h>
-
-#include "TranslateWin32VirtualKeys.h"
 
 namespace Platform
 {

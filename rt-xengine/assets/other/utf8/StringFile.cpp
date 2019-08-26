@@ -1,21 +1,16 @@
 #include "pch.h"
-#include "StringFile.h"
 
-#include "assets/DiskAssetManager.h"
-
-#include <fstream>
+#include "assets/other/utf8/StringFile.h"
 
 namespace Assets
 {
-	StringFile::StringFile(DiskAssetManager* context)
-		: DiskAsset(context)
+	StringFile::StringFile(DiskAssetManager* context, const std::string& path)
+		: DiskAsset(context, path)
 	{
 	}
 
 	bool StringFile::Load(const std::string& path)
 	{
-		SetIdentificationFromPath(path);
-
 		std::ifstream t(path);
 
 		if (!t.is_open())

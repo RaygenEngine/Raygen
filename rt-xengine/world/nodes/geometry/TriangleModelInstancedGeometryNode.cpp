@@ -1,5 +1,6 @@
 #include "pch.h"
-#include "TriangleModelInstancedGeometryNode.h"
+
+#include "world/nodes/geometry/TriangleModelInstancedGeometryNode.h"
 
 namespace World
 {

@@ -1,8 +1,7 @@
-#ifndef TRIANGLEMODELINSTANCEDGEOMETRYNODE_H
-#define TRIANGLEMODELINSTANCEDGEOMETRYNODE_H
+#pragma once
 
-#include "TriangleModelGeometryNode.h"
-#include "Instancing.h"
+#include "world/nodes/geometry/TriangleModelGeometryNode.h"
+#include "world/nodes/geometry/Instancing.h"
 
 namespace World
 {
@@ -30,5 +29,3 @@ namespace World
 	};
 
 }
-
-#endif // TRIANGLEMODELINSTANCEDGEOMETRYNODE_H

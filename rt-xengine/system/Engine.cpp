@@ -1,8 +1,7 @@
 #include "pch.h"
-#include "Engine.h"
 
-
-#include "renderer/Renderer.h"
+#include "system/Engine.h"
+#include "assets/other/xml/XMLDoc.h"
 
 namespace System
 {
@@ -46,18 +45,5 @@ namespace System
 	void Engine::UnloadDiskAssets()
 	{
 		m_diskAssetManager->UnloadAssets();
-	}
-
-	void Engine::SetEventCallback(std::function<void(Event::Event&)> fn)
-	{
-		m_callbacks.push_back(fn);
-	}
-
-	void Engine::ProcessEvent(Event::Event& e)
-	{
-		//SetEventCallback([](Event::Eventb& a){});
-
-		for (auto& callback : m_callbacks)
-			callback(e);
 	}
 }

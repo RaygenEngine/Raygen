@@ -1,7 +1,6 @@
 #include "pch.h"
-#include "EngineObject.h"
 
-#include "Engine.h"
+#include "system/EngineObject.h"
 
 namespace System
 {

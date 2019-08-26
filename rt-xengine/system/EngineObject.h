@@ -1,10 +1,5 @@
-#ifndef ENGINEOBJECT_H
-#define ENGINEOBJECT_H
+#pragma once
 
-#include "core/uuid/UUIDGenerator.h"
-#include "EventListener.h" 
-#include "input/Input.h"
-#include "event/Event.h"
 #include "system/Engine.h"
 
 namespace Renderer
@@ -24,7 +19,7 @@ namespace Assets
 
 namespace System
 {
-	class EngineObject : public EventListener
+	class EngineObject
 	{
 		Engine* m_engine;
 		EngineObject* m_parentObject;
@@ -40,9 +35,7 @@ namespace System
 	public:
 
 		Engine* GetEngine() const { return m_engine; }
-		Assets::DiskAssetManager* GetDiskAssetManager() const {
-			return m_engine->GetDiskAssetManager();
-		}
+		Assets::DiskAssetManager* GetDiskAssetManager() const { return m_engine->GetDiskAssetManager(); }
 
 		Renderer::Renderer* GetRenderer() const { return m_engine->GetRenderer(); }
 		World::World* GetWorld() const { return m_engine->GetWorld(); }
@@ -52,12 +45,10 @@ namespace System
 
 		Core::UID GetObjectId() const { return m_id; }
 
-		virtual void ToString(std::ostream& os) const { os << "asset-type: EngineObject, name: " << GetObjectId(); }
+		virtual void ToString(std::ostream& os) const { os << "object-type: EngineObject, id: " << GetObjectId(); }
 
 		// Part of engine object
 		virtual void Update();
 		virtual void WindowResize(int32 width, int32 height);
 	};
 }
-
-#endif // ENGINEOBJECT_H

@@ -1,11 +1,12 @@
 #include "pch.h"
-#include "GLTexture.h"
+
+#include "renderer/renderers/opengl/assets/GLTexture.h"
 
 namespace Renderer::OpenGL
 {
 
-	GLTexture::GLTexture(GLRendererBase* renderer)
-		: GLAsset(renderer),
+	GLTexture::GLTexture(GLRendererBase* renderer, const std::string& name)
+		: GLAsset(renderer, name),
 		  m_textureId(0)
 	{
 	}
@@ -17,8 +18,6 @@ namespace Renderer::OpenGL
 
 	bool GLTexture::Load(Assets::Texture* data, GLint wrapFlag, bool mipMapping)
 	{
-		SetIdentificationFromAssociatedDiskAssetIdentification(data->GetLabel());
-
 		glGenTextures(1, &m_textureId);
 		glBindTexture(GL_TEXTURE_2D, m_textureId);
 
@@ -39,12 +38,12 @@ namespace Renderer::OpenGL
 		switch (data->GetType())
 		{
 
-		case Assets::DR_HIGH:
+		case DR_HIGH:
 			type = GL_FLOAT;
 			internalFormat = GL_RGBA32F;
 			break;
 
-		case Assets::DR_LOW:
+		case DR_LOW:
 		default:
 			type = GL_UNSIGNED_BYTE;
 			internalFormat = GL_RGBA;

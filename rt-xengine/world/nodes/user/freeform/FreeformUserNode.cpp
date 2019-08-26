@@ -1,9 +1,7 @@
 ﻿#include "pch.h"
 
-#include "FreeformUserNode.h"
-
-#include "world/World.h"
-
+#include "world/nodes/user/freeform/FreeformUserNode.h"
+#include "assets/other/xml/ParsingAux.h"
 
 namespace World
 {
@@ -77,9 +75,9 @@ namespace World
 
 		if (input.IsRightThumbMoving())
 		{
-			const auto yaw = -input.GetRightThumbDirection().x * input.GetRightThumbMagnitude() * 2.5 * m_turningSpeed;
+			const auto yaw = -input.GetRightThumbDirection().x * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed;
 			// upside down with regards to the cursor dragging
-			const auto pitch = input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5 * m_turningSpeed;
+			const auto pitch = input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed;
 
 			OrientWithoutRoll(yaw, pitch);
 		}

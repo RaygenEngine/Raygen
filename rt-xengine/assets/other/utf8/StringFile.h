@@ -1,9 +1,6 @@
-#ifndef STRINGFILE_H
-#define STRINGFILE_H
+#pragma once
 
 #include "assets/DiskAsset.h"
-
-#include <string>
 
 namespace Assets
 {
@@ -14,7 +11,7 @@ namespace Assets
 		std::string m_data;
 
 	public:
-		StringFile(DiskAssetManager* context);
+		StringFile(DiskAssetManager* context, const std::string& path);
 		~StringFile() = default;
 
 		bool Load(const std::string& path);
@@ -22,8 +19,6 @@ namespace Assets
 
 		const std::string& GetFileData() const { return m_data; }
 
-		void ToString(std::ostream& os) const override { os << "type: StringFile, name: " << m_label; }
+		void ToString(std::ostream& os) const override { os << "type: StringFile, name: " << m_name; }
 	};
 }
-
-#endif // STRINGFILE_H

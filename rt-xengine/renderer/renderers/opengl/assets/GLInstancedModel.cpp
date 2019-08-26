@@ -1,11 +1,11 @@
 #include "pch.h"
-#include "GLInstancedModel.h"
 
+#include "renderer/renderers/opengl/assets/GLInstancedModel.h"
 
 namespace Renderer::OpenGL
 {
-	GLInstancedModel::GLInstancedModel(GLRendererBase* renderer)
-		: GLModel(renderer),
+	GLInstancedModel::GLInstancedModel(GLRendererBase* renderer, const std::string& name)
+		: GLModel(renderer, name),
 		  m_instanceCount(0),
 		  m_instanceMatricesVbo(0)
 	{
@@ -16,11 +16,11 @@ namespace Renderer::OpenGL
 		glDeleteBuffers(1, &m_instanceMatricesVbo);
 	}
 
-	bool GLInstancedModel::Load(Assets::XModel* data, World::TriangleModelInstancedGeometryNode* nodeInstancer)
+	bool GLInstancedModel::Load(World::TriangleModelInstancedGeometryNode* nodeInstancer)
 	{
 		// if base model is not loaded
-		if (!GLModel::Load(data))
-			return false;
+		//if (!GLModel::Load(nodeInstancer->GetModel()))
+		//	return false;
 
 		m_instanceCount = nodeInstancer->GetInstanceGroup().GetCount();
 

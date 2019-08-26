@@ -1,7 +1,4 @@
-﻿#ifndef TRANSLATEWIN32VIRTUALKEYS_H
-#define TRANSLATEWIN32VIRTUALKEYS_H
-
-#include <system/shared/InputEnums.h>
+﻿#pragma once
 
 inline bool MapLeftRightKeys(WPARAM& virtualKey, LPARAM lParam)
 {
@@ -344,5 +341,3 @@ inline XVirtualKey TranslateWin32VirtualKeys(WPARAM vkey)
 	default:									return XVK_UNASSIGNED;
 	}
 }
-
-#endif // TRANSLATEWIN32VIRTUALKEYS_H

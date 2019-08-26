@@ -1,10 +1,7 @@
-#ifndef FREEFORMUSERNODE_H
-#define FREEFORMUSERNODE_H
+#pragma once
 
-#include "world/nodes/Node.h"
-#include "world/nodes/camera/CameraNode.h"
 #include "world/nodes/user/UserNode.h"
-
+#include "world/nodes/camera/CameraNode.h"
 
 namespace World
 {
@@ -28,5 +25,3 @@ namespace World
 	};
 
 }
-
-#endif // FREEFORMUSERNODE_H

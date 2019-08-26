@@ -1,5 +1,4 @@
-#ifndef SKYHDRNODE_H
-#define SKYHDRNODE_H
+#pragma once
 
 #include "world/nodes/Node.h"
 #include "assets/texture/Texture.h"
@@ -13,7 +12,7 @@ namespace World
 	public:
 		SkyHDRNode(Node* parent);
 		~SkyHDRNode() = default;
-
+		
 		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 
 		Assets::Texture* GetSkyHDR() const { return m_hdrTexture.get(); }
@@ -22,5 +21,3 @@ namespace World
 		std::string ToString(bool verbose, uint depth) const override;
 	};
 }
-
-#endif // SKYHDRNODE_H

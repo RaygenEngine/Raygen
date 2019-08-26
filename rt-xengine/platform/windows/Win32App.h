@@ -1,8 +1,6 @@
-#ifndef WIN32APP_H
-#define WIN32APP_H
+#pragma once
 
-#include "system/Engine.h"
-#include "Win32Window.h"
+#include "platform/windows/Win32Window.h"
 
 namespace Platform
 {
@@ -48,5 +46,3 @@ namespace Platform
 	};
 
 }
-
-#endif // WIN32APP_H

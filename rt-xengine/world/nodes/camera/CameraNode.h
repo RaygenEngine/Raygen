@@ -1,5 +1,4 @@
-#ifndef CAMERANODE_H
-#define CAMERANODE_H
+#pragma once
 
 #include "world/nodes/Node.h"
 
@@ -51,4 +50,3 @@ namespace World
 	};
 }
 
-#endif // CAMERANODE_H

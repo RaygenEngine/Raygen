@@ -1,8 +1,5 @@
-#ifndef RENDERER_H
-#define RENDERER_H
+#pragma once
 
-#include "system/EngineObject.h"
-#include "world/World.h"
 #include "renderer/NodeObserver.h"
 
 namespace Renderer
@@ -18,7 +15,6 @@ namespace Renderer
 		{ \
 	        return std::string(#Class); \
 	    } \
-
 
 	class Renderer : public System::EngineObject
 	{
@@ -58,5 +54,3 @@ namespace Renderer
 		virtual void Render() = 0;
 	};
 }
-
-#endif // RENDERER_H

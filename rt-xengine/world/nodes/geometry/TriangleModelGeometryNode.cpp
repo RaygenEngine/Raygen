@@ -1,8 +1,6 @@
 #include "pch.h"
+
 #include "TriangleModelGeometryNode.h"
-
-
-#include "world/World.h"
 
 namespace World
 {
@@ -24,17 +22,18 @@ namespace World
 		Assets::ReadStringAttribute(xmlData, "type", type); 
 		
 		// default geom is static
-		auto modelGeomType = Assets::GT_STATIC;
+		auto modelGeomType = GU_STATIC;
 		if(!type.empty() && Core::CaseInsensitiveCompare(type, "dynamic"))
-			modelGeomType = Assets::GT_DYNAMIC;
+			modelGeomType = GU_DYNAMIC;
 		
-		m_model = GetDiskAssetManager()->LoadFileAsset<Assets::XModel>(xmlData->Attribute("file"), GetWorld()->GetAssetLoadPathHint());
+		m_model = GetDiskAssetManager()->LoadFileAsset<Assets::Model>(xmlData->Attribute("file"), GetWorld()->GetAssetLoadPathHint());
 
 		// missing model
 		if (!m_model)
 			return false;
-		
-		m_model->SetType(modelGeomType);
+
+		// TODO, set
+		//m_model->SetType(modelGeomType);
 
 		return true;
 	}

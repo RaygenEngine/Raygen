@@ -1,13 +1,11 @@
 #include "pch.h"
 
-#include "Node.h"
-
-#include "world/World.h"
-
+#include "world/nodes/Node.h"
 #include "world/nodes/MetaNodeTranslation.h"
+#include "assets/other/xml/ParsingAux.h"
+#include "user/freeform/FreeformUserNode.h"
 #include "sky/SkyCubeNode.h"
 #include "sky/SkyHDRNode.h"
-
 
 namespace World
 {
@@ -30,16 +28,16 @@ namespace World
 	}
 
 	Node::Node(Node* pNode)
-		: EngineObject(pNode->GetWorld()),
+		: EngineObject(pNode),
 		  m_localTranslation(0.f, 0.f, 0.f),
 		  m_localOrientation(1.f, 0.f, 0.f, 0.f),
 		  // note w, x, y, z
 		  m_localScale(1.f, 1.f, 1.f),
-		  m_localMatrix(glm::mat4(1)),
+		  m_localMatrix(glm::mat4(1.f)),
 		  m_worldTranslation(0.f, 0.f, 0.f),
 		  m_worldOrientation(1.f, 0.f, 0.f, 0.f),
 		  m_worldScale(1.f, 1.f, 1.f),
-		  m_worldMatrix(glm::mat4(1)),
+		  m_worldMatrix(glm::mat4(1.f)),
 		  m_dirty(false),
 		  m_updateLocalMatrix(true),
 	      // update local on first iter
@@ -166,6 +164,7 @@ namespace World
 			}
 			else if (type == "baked_trimesh_geometry")
 			{
+				// TODO
 				//node = LoadNode<BakedTriangleMeshGeometryNode>(this, xmdChildElement);
 			}
 			else if (type == "transform")
@@ -174,7 +173,8 @@ namespace World
 			}
 			else if (type == "oculus_user")
 			{
-				GetWorld()->LoadNode<OculusUserNode>(this, xmdChildElement);
+				// TODO
+				//GetWorld()->LoadNode<OculusUserNode>(this, xmdChildElement);
 			}
 			else if (type == "trimesh_geometry_instanced_matrix")
 			{

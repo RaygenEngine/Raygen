@@ -1,9 +1,8 @@
-#ifndef GLCUBEMAP_H
-#define GLCUBEMAP_H
+#pragma once
 
 #include "renderer/renderers/opengl/GLAsset.h"
 
-#include "glad/glad.h"
+#include "GLAD/glad.h"
 
 namespace Renderer::OpenGL
 {
@@ -13,15 +12,13 @@ namespace Renderer::OpenGL
 		GLuint m_cubeTextureId;
 
 	public:
-		GLCubeMap(GLRendererBase* renderer);
+		GLCubeMap(GLRendererBase* renderer, const std::string& name);
 		~GLCubeMap();
 
 		bool Load(Assets::CubeMap* data, GLint wrapFlag, bool mipMapping);
 
 		GLuint GetGLHandle() const { return m_cubeTextureId; }
 
-		void ToString(std::ostream& os) const override { os << "asset-type: GLCubeTexture, name: " << m_associatedDescription; }
+		void ToString(std::ostream& os) const override { os << "asset-type: GLCubeTexture, name: " << m_name; }
 	};
 }
-
-#endif // GLCUBEMAP_H

@@ -1,9 +1,8 @@
-#ifndef GLMATERIAL_H
-#define GLMATERIAL_H
+#pragma once
 
 #include "renderer/renderers/opengl/GLAsset.h"
-#include "GLTexture.h"
-
+#include "renderer/renderers/opengl/assets/GLTexture.h"
+#include "assets/model/Material.h"
 
 namespace Renderer::OpenGL
 {
@@ -20,19 +19,17 @@ namespace Renderer::OpenGL
 
 	public:
 
-		GLMaterial(GLRendererBase* renderer);
+		GLMaterial(GLRendererBase* renderer, const std::string& name);
 		~GLMaterial() = default;
 
-		bool Load(Assets::XMaterial* data);
+		bool Load(Assets::Material* data);
 
 		GLTexture* GetTextureSurfaceAlbedo() const { return m_textSurfaceAlbedo.get(); }
 		GLTexture* GetTextureSurfaceEmission() const { return m_textSurfaceEmission.get(); }
 		GLTexture* GetTextureSurfaceSpecularParameters() const { return m_textSurfaceSpecularParameters.get(); }
 		GLTexture* GetTextureSurfaceBump() const { return m_textSurfaceBump.get(); }
 
-		void ToString(std::ostream& os) const override { os << "asset-type: GLMaterial, name: " << m_associatedDescription; }
+		void ToString(std::ostream& os) const override { os << "asset-type: GLMaterial, name: " << m_name; }
 	};
 
 }
-
-#endif // GLMATERIAL_H

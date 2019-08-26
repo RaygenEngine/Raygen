@@ -1,7 +1,6 @@
 #include "pch.h"
-#include "World.h"
 
-#include "system/Engine.h"
+#include "world/World.h"
 
 namespace World
 {
@@ -88,7 +87,7 @@ namespace World
 	{
 		if (sceneXML)
 		{
-			RT_XENGINE_LOG_INFO("Loading World data from XML: \'{}\'", sceneXML->GetPath());
+			RT_XENGINE_LOG_INFO("Loading World data from XML: \'{}\'", sceneXML->GetFilePath());
 
 			auto* worldElement = sceneXML->GetRootElement();
 
@@ -154,8 +153,8 @@ namespace World
 		m_lastTime = timestamp;
 
 		// Update after input and delta calculation
-		for (auto* nodes : m_nodes)
-			nodes->Update();
+		for (auto* node : m_nodes)
+			node->Update();
 
 		// Update dirty leaf node instances
 		for (auto* dirtyLeafNode : m_dirtyLeafNodes)
@@ -164,7 +163,7 @@ namespace World
 
 	void World::WindowResize(int32 width, int32 height)
 	{
-		for (auto* nodes : m_nodes)
-			nodes->WindowResize(width, height);
+		for (auto* node : m_nodes)
+			node->WindowResize(width, height);
 	}
 }

@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "CameraNode.h"
 
+#include "world/nodes/camera/CameraNode.h"
 #include "assets/other/xml/ParsingAux.h"
 
 namespace World

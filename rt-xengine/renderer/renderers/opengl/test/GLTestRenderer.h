@@ -1,14 +1,7 @@
-#ifndef GLTESTRENDERER_H
-#define GLTESTRENDERER_H
-
-
-#include "system/shared/Shared.h"
+#pragma once
 
 #include "renderer/renderers/opengl/GLRendererBase.h"
-#include "system/shared/Types.h"
-#include "system/Engine.h"
-#include <memory>
-#include <vector>
+#include "world/nodes/camera/CameraNode.h"
 
 namespace Renderer::OpenGL
 {
@@ -42,5 +35,3 @@ namespace Renderer::OpenGL
 		void Update() override;
 	};
 }
-
-#endif // GLTESTRENDERER_H

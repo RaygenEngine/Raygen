@@ -1,11 +1,9 @@
 #include "pch.h"
 
-#include "Win32App.h"
-#include "renderer/Renderer.h"
-
-#include "TranslateWin32VirtualKeys.h"
-
+#include "platform/windows/Win32App.h"
+#include "platform/windows/TranslateWin32VirtualKeys.h"
 #include "renderer/renderers/opengl/test/GLTestRenderer.h"
+
 using namespace Renderer::OpenGL;
 
 namespace Platform

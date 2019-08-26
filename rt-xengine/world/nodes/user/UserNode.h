@@ -1,5 +1,4 @@
-#ifndef USERNODE_H
-#define USERNODE_H
+#pragma once
 
 #include "world/nodes/Node.h"
 
@@ -19,5 +18,3 @@ namespace World
 		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 	};
 }
-
-#endif // USERNODE_H

@@ -1,8 +1,4 @@
-#ifndef GLUTIL_H
-#define GLUTIL_H
-
-#include "glad/glad.h"
-#include <string>              
+#pragma once
 
 #define GLCheckError() GLCheckError_(__FILE__, __LINE__) 
 
@@ -55,5 +51,3 @@ namespace Renderer::OpenGL
 		RT_XENGINE_LOG_DEBUG(baseMessage);
 	}
 }
-
-#endif // GLUTIL_H

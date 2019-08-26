@@ -1,5 +1,4 @@
-#ifndef UUIDGENERATOR_H
-#define UUIDGENERATOR_H
+#pragma once
 
 #include <mutex>
 
@@ -34,5 +33,3 @@ namespace Core
 		void operator=(UUIDGenerator const&) = delete;
 	};
 }
-
-#endif // UUIDGENERATOR_H

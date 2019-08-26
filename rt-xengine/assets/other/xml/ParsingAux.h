@@ -1,12 +1,6 @@
-#ifndef PARSINGAUX_H
-#define PARSINGAUX_H
-
-#include "core/auxiliary/StringAux.h"
-
-#include "core/uuid/UUIDGenerator.h"
+#pragma once
 
 #include "tinyxml2/tinyxml2.h"
-#include <string>               
 
 namespace Assets
 {
@@ -72,5 +66,3 @@ namespace Assets
 		return false;
 	}
 }
-
-#endif // PARSINGAUX_H

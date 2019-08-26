@@ -1,25 +1,21 @@
-#include "GLTestRenderer.h"
-#include "GLTestGeometry.h"
+#include "pch.h"
 
-#include "renderer/renderers/opengl/assets/GLInstancedModel.h"
-#include "renderer/renderers/opengl/assets/GLShader.h"
-#include "renderer/renderers/opengl/GLUtil.h"
+#include "renderer/renderers/opengl/test/GLTestRenderer.h"
+#include "renderer/renderers/opengl/test/GLTestGeometry.h"
+#include "world/nodes/user/freeform/FreeformUserNode.h"
+#include "world/nodes/geometry/TriangleModelGeometryNode.h"
 #include "world/nodes/sky/SkyHDRNode.h"
-
-#include "input/Input.h"
 
 
 namespace Renderer::OpenGL
 {
 	GLTestRenderer::GLTestRenderer(System::Engine* context)
-		: GLRendererBase(context), m_camera(nullptr), m_previewMode(PM_ALBEDO)
+		: GLRendererBase(context), m_camera(nullptr), m_previewMode(PT_ALBEDO)
 	{
 	}
 
 	bool GLTestRenderer::InitScene(int32 width, int32 height)
 	{
-		RT_XENGINE_LOG_INFO("Preview Mode set to: {}", SurfacePreviewTargetModeString(m_previewMode));
-
 		auto vertexSimpleShaderSource = GetDiskAssetManager()->LoadFileAsset<Assets::StringFile>("test/test.vert");
 		auto vertexInstancedShaderSource = GetDiskAssetManager()->LoadFileAsset<Assets::StringFile>("test/test_instanced.vert");
 		auto fragmentShaderSource = GetDiskAssetManager()->LoadFileAsset<Assets::StringFile>("test/test.frag");
@@ -54,8 +50,9 @@ namespace Renderer::OpenGL
 
 		m_camera = user->GetCamera();
 
-		for (auto* geometryNode : GetWorld()->GetNodeMap<World::TriangleModelInstancedGeometryNode>())
-			m_instancedGeometries.emplace_back(RequestGLInstancedModel(geometryNode));
+		// TODO: fix instanced geometry
+		//for (auto* geometryNode : GetWorld()->GetNodeMap<World::TriangleModelInstancedGeometryNode>())
+		//	m_instancedGeometries.emplace_back(RequestGLInstancedModel(geometryNode));
 
 		for (auto* geometryNode : GetWorld()->GetNodeMap<World::TriangleModelGeometryNode>())
 			m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, GLTestGeometry>(this, geometryNode));
@@ -158,7 +155,7 @@ namespace Renderer::OpenGL
 
 			glUniformMatrix4fv(m_nonInstancedShader->GetUniformLocation("mvp"), 1, GL_FALSE, &mvp[0][0]);
 			glUniformMatrix4fv(m_nonInstancedShader->GetUniformLocation("m"), 1, GL_FALSE, &m[0][0]);
-			glUniformMatrix3fv(m_nonInstancedShader->GetUniformLocation("normal_matrix"), 1, GL_FALSE, &transpose(inverse(glm::mat3(m)))[0][0]);
+			glUniformMatrix3fv(m_nonInstancedShader->GetUniformLocation("normal_matrix"), 1, GL_FALSE, &glm::transpose(glm::inverse(glm::mat3(m)))[0][0]);
 
 			for (auto& rm : geometry->glModel->GetRenderMeshes())
 			{
@@ -205,13 +202,13 @@ namespace Renderer::OpenGL
 	{
 		if (GetInput().IsKeyPressed(XVK_1))
 		{
-			m_previewMode = m_previewMode - 1 < 0 ? PM_COUNT - 1 : m_previewMode - 1;
-			RT_XENGINE_LOG_INFO("Preview Mode set to: {}", SurfacePreviewTargetModeString(m_previewMode));
+			m_previewMode = m_previewMode - 1 < 0 ? PT_COUNT - 1 : m_previewMode - 1; // TODO
+			RT_XENGINE_LOG_INFO("Preview Mode set to: {}"/*, SurfacePreviewTargetModeString(m_previewMode)*/);
 		}
 		else if (GetInput().IsKeyPressed(XVK_2))
 		{
-			++m_previewMode %= PM_COUNT;
-			RT_XENGINE_LOG_INFO("Preview Mode set to: {}", SurfacePreviewTargetModeString(m_previewMode));
+			++m_previewMode %= PT_COUNT;
+			RT_XENGINE_LOG_INFO("Preview Mode set to: {}"/*, SurfacePreviewTargetModeString(m_previewMode)*/);
 		}
 	}
 }

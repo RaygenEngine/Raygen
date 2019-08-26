@@ -1,8 +1,10 @@
-#ifndef GLMODEL_H
-#define GLMODEL_H
+#pragma once
 
 #include "renderer/renderers/opengl/GLAsset.h"
-#include "GLMesh.h"
+#include "renderer/renderers/opengl/assets/GLMesh.h"
+#include "assets/model/Model.h"
+
+#include "GLAD/glad.h"
 
 namespace Renderer::OpenGL
 {
@@ -12,7 +14,7 @@ namespace Renderer::OpenGL
 		std::shared_ptr<GLMesh> mesh;
 	};
 
-	// can contain multiple meshes (typically tho one but depends on the XModel)
+	// can contain multiple meshes (typically tho one but depends on the Model)
 	class GLModel : public GLAsset
 	{
 	protected:
@@ -20,16 +22,14 @@ namespace Renderer::OpenGL
 		std::vector<GLRenderMesh> m_renderMeshes;
 
 	public:
-		GLModel(GLRendererBase* renderer);
+		GLModel(GLRendererBase* renderer, const std::string& name);
 		virtual ~GLModel();
 
-		bool Load(Assets::XModel* data);
+		bool Load(Assets::Model* data);
 
 		std::vector<GLRenderMesh>& GetRenderMeshes() { return m_renderMeshes; }
 
-		void ToString(std::ostream& os) const override { os << "asset-type: GLModel, name: " << m_associatedDescription; }
+		void ToString(std::ostream& os) const override { os << "asset-type: GLModel, name: " << m_name; }
 	};
 
 }
-
-#endif // GLMODEL_H

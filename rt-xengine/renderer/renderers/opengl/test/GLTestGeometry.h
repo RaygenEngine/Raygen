@@ -1,10 +1,7 @@
-#ifndef GLTESTGEOMETRY_H
-#define GLTESTGEOMETRY_H
+#pragma once
 
-#include "system/shared/Shared.h"
-
-#include "GLTestRenderer.h"
 #include "renderer/NodeObserver.h"
+#include "renderer/renderers/opengl/test/GLTestRenderer.h"
 #include "world/nodes/geometry/TriangleModelGeometryNode.h"
 
 namespace Renderer::OpenGL
@@ -17,5 +14,3 @@ namespace Renderer::OpenGL
 		~GLTestGeometry() = default;
 	};
 }
-
-#endif // GLTESTGEOMETRY_H

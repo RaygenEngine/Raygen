@@ -1,5 +1,4 @@
-#ifndef LIGHTNODE_H
-#define LIGHTNODE_H
+#pragma once
 
 #include "world/nodes/Node.h"
 
@@ -20,5 +19,3 @@ namespace World
 		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 	};
 }
-
-#endif // LIGHTNODE_H

@@ -1,11 +1,4 @@
-#ifndef ENGINE_H
-#define ENGINE_H
-
-#include "event/Event.h"	
-
-#include <memory>
-#include "core/uuid/UUIDGenerator.h"
-#include "input/Input.h"
+#pragma once
 
 namespace Renderer
 {
@@ -28,8 +21,6 @@ namespace System
 
 	class Engine
 	{
-		std::vector<std::function<void(Event::Event&)>> m_callbacks;
-
 		struct RendererMetadata 
 		{
 			std::string name;
@@ -75,11 +66,5 @@ namespace System
 
 			return static_cast<RendererRegistrationIndex>(m_rendererRegistrations.size() - 1);
 		}
-
-		// bind a fn for specific event
-		void SetEventCallback(std::function<void(Event::Event&)> fn);
-		void ProcessEvent(Event::Event& e);
 	};
 }
-
-#endif // ENGINE_H

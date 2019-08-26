@@ -20,13 +20,12 @@
 // Note: if your work does not require dynamic updates, is not resource intensive, etc. you can avoid some of the steps shown above 
 
 #include "pch.h"
-
 #include "platform/windows/Win32App.h"
 
 int32 main(int32 argc, char* argv[])
 {
 	// Init logger (global access, not engine, app or window bound)
-	RT_XENGINE_LOGGER_INIT(LLT_WARN);
+	RT_XENGINE_LOGGER_INIT(LLT_INFO);
 
 	// Create app
 	Platform::Win32App app;

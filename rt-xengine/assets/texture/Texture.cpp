@@ -1,14 +1,13 @@
 #include "pch.h"
-#include "Texture.h"
 
+#include "assets/texture/Texture.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image/stb_image.h"
 
-
 namespace Assets
 {
-	Texture::Texture(DiskAssetManager* context)
-		: DiskAsset(context),
+	Texture::Texture(DiskAssetManager* context, const std::string& path)
+		: DiskAsset(context, path),
 		  m_width(0),
 		  m_height(0),
 		  m_components(0),
@@ -22,10 +21,8 @@ namespace Assets
 		Unload();
 	}
 
-	bool Texture::Load(const std::string& path, DYNAMIC_RANGE dr, bool flipVertically)
+	bool Texture::Load(const std::string& path, DynamicRange dr, bool flipVertically)
 	{
-		SetIdentificationFromPath(path);
-
 		int32 width;
 		int32 height;
 		int32 components;
@@ -40,11 +37,11 @@ namespace Assets
 		switch (m_dynamicRange)
 		{
 		case DR_LOW:
-			imageData = stbi_load(m_path.c_str(), &width, &height, &components, STBI_rgb_alpha);
+			imageData = stbi_load(path.c_str(), &width, &height, &components, STBI_rgb_alpha);
 			break;
 
 		case DR_HIGH:
-			imageData = stbi_loadf(m_path.c_str(), &width, &height, &components, STBI_rgb_alpha);
+			imageData = stbi_loadf(path.c_str(), &width, &height, &components, STBI_rgb_alpha);
 			break;
 
 		default:
@@ -57,7 +54,7 @@ namespace Assets
 
 		if (!imageData || (width == 0) || (height == 0))
 		{
-			RT_XENGINE_LOG_WARN("Texture loading failed --> filepath: {}, data_empty: {} width: {} height: {}", m_path,
+			RT_XENGINE_LOG_WARN("Texture loading failed --> filepath: {}, data_empty: {} width: {} height: {}", path,
 				static_cast<bool>(imageData), width, height);
 
 			return false;
@@ -78,20 +75,19 @@ namespace Assets
 	}
 
 	std::unique_ptr<Texture> Texture::CreateDefaultTexture(DiskAssetManager* context, void* texelValue, uint32 width,
-		uint32 height, uint32 components, DYNAMIC_RANGE dr, const std::string& defaultName)
+		uint32 height, uint32 components, DynamicRange dr, const std::string& defaultName)
 	{
 		RT_XENGINE_LOG_DEBUG("Creating default texture, name:{}, width: {}, height: {}, components: {}, type: {}", defaultName, width, height, components, TexelEnumToString(dr));
 
 		RT_XENGINE_ASSERT(components <= 4, "Couldn't create default texture, name:{}", defaultName);
 
-		std::unique_ptr<Texture> texture = std::make_unique<Texture>(context);
+		std::unique_ptr<Texture> texture = std::make_unique<Texture>(context, defaultName);
 
 		texture->m_width = width;
 		texture->m_height = height;
 		texture->m_components = components;
 		texture->m_dynamicRange = dr;
 
-		texture->SetIdentificationFromPath(defaultName);
 
 		const auto size = 4 * texture->m_width*texture->m_height;
 

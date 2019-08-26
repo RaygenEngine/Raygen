@@ -1,10 +1,7 @@
-#ifndef XMLDOC_H
-#define XMLDOC_H
+#pragma once
 
 #include "assets/DiskAsset.h"
-
-#include "tinyxml2/tinyxml2.h"
-#include <string>
+#include "assets/other/xml/ParsingAux.h"
 
 namespace Assets
 {
@@ -13,16 +10,14 @@ namespace Assets
 		tinyxml2::XMLDocument m_document;
 
 	public:
-		XMLDoc(DiskAssetManager* context);
+		XMLDoc(DiskAssetManager* context, const std::string& path);
 		~XMLDoc() = default;
-	
+
 		bool Load(const std::string& path);
 		void Clear() override;
 
 		const tinyxml2::XMLElement* GetRootElement() const { return m_document.RootElement(); }
 
-		void ToString(std::ostream& os) const override { os << "asset-type: XMLDocument, name: " << m_label; }
+		void ToString(std::ostream& os) const override { os << "asset-type: XMLDocument, name: " << m_name; }
 	};
 }
-
-#endif // XMLDOC_H

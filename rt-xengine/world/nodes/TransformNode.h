@@ -1,7 +1,6 @@
-#ifndef TRANSFORMNODE_H
-#define TRANSFORMNODE_H
+#pragma once
 
-#include "Node.h"
+#include "world/nodes/Node.h"
 
 namespace World
 {
@@ -15,5 +14,3 @@ namespace World
 		std::string ToString(bool verbose, uint depth) const override;
 	};
 }
-
-#endif // TRANSFORMNODE_H

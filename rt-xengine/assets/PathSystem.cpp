@@ -1,10 +1,6 @@
 #include "pch.h"
 
-#include "PathSystem.h"
-#include "core/auxiliary/StringAux.h"
-
 #include <filesystem>
-
 
 namespace fs = std::filesystem;
 
