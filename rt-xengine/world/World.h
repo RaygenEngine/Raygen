@@ -122,7 +122,10 @@ namespace World
 		std::string GetAssetLoadPathHint() const { return m_loaderPathHint; }
 
 		glm::vec3 GetBackgroundColor() const { return m_background; }
+		void SetBackgroundColor(const glm::vec3& color) { m_background = color; }
+
 		glm::vec3 GetAmbientColor() const { return m_ambient; }
+		void SetAmbientColor(const glm::vec3& color) { m_ambient = color; }
 
 		// SetIdentificationFromAssociatedDiskAssetIdentification node to world and as child, and return observer (maybe required for special inter-node handling)
 		template <typename ChildType>
