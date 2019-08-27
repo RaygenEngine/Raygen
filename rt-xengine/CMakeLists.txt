@@ -45,6 +45,8 @@ set(SOURCE_FILES
 	system/EngineObject.cpp
 	system/EventListener.cpp
 	
+	system/reflection/Reflection.cpp
+	
 	input/Input.cpp
 	input/OculusHMD.cpp
 	
@@ -131,6 +133,9 @@ set(HEADER_FILES
 	system/EngineObject.h
 	system/EventListener.h
 
+	system/reflection/Reflection.h
+
+
 	input/Input.h
 	input/OculusHMD.h
 	
@@ -139,7 +144,7 @@ set(HEADER_FILES
 	system/shared/RenderTarget.h
 	system/shared/TargetEnums.h
 	system/shared/Types.h
-
+	
 	event/Event.h
 
 	world/World.h

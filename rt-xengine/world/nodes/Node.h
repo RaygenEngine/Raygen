@@ -11,6 +11,7 @@ namespace World
 {
 	class Node : public System::EngineObject
 	{
+	protected:
 		// local
 		glm::vec3 m_localTranslation;
 		glm::quat m_localOrientation;
@@ -26,7 +27,6 @@ namespace World
 		bool m_dirty;
 		bool m_updateLocalMatrix;
 
-	protected:
 		std::string m_name;
 		std::string m_type;
 
