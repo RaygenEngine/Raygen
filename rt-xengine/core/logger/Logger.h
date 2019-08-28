@@ -53,5 +53,12 @@ namespace Core
 #define RT_XENGINE_LOG_ERROR(...)     Core::Log::GetLogger()->error(__VA_ARGS__)
 #define RT_XENGINE_LOG_FATAL(...)     Core::Log::GetLogger()->critical(__VA_ARGS__)
 
+#define RT_XENGINE_CLOG_TRACE(condition, ...)     do { if (!(condition)) { Core::Log::GetLogger()->trace(__VA_ARGS__) 	; } } while(0)
+#define RT_XENGINE_CLOG_DEBUG(condition, ...)     do { if (!(condition)) { Core::Log::GetLogger()->debug(__VA_ARGS__) 	; } } while(0)
+#define RT_XENGINE_CLOG_INFO(condition, ...)      do { if (!(condition)) { Core::Log::GetLogger()->info(__VA_ARGS__)	; } } while(0)
+#define RT_XENGINE_CLOG_WARN(condition, ...)      do { if (!(condition)) { Core::Log::GetLogger()->warn(__VA_ARGS__) 	; } } while(0)
+#define RT_XENGINE_CLOG_ERROR(condition, ...)     do { if (!(condition)) { Core::Log::GetLogger()->error(__VA_ARGS__) 	; } } while(0)
+#define RT_XENGINE_CLOG_FATAL(condition, ...)     do { if (!(condition)) { Core::Log::GetLogger()->critical(__VA_ARGS__); } } while(0)
+
 #define RT_XENGINE_ASSERT(condition, ...) do { if(!(condition)) { RT_XENGINE_LOG_FATAL("Assertation failed: (" #condition "): " __VA_ARGS__ ); abort(); } } while(0)
 #define RT_XENGINE_ASSERT_RETURN_FALSE(condition, ...) do { if(!(condition)) { RT_XENGINE_LOG_FATAL("Assertation failed: (" #condition "): " __VA_ARGS__ ); return false; } } while(0)

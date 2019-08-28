@@ -12,9 +12,7 @@ namespace World
 		  m_hFov(45.f),
 		  m_near(0.2f),
 		  m_far(1000.0f),
-		  m_viewMatrix(),
-		  m_projectionMatrix(),
-		  m_viewProjectionMatrix()
+		  m_projectionMatrix()
 	{
 	}
 
@@ -37,19 +35,11 @@ namespace World
 		u *= tanHHalfFov * m_focalLength;
 	}
 
-	void CameraNode::Update()
-	{
-		m_viewMatrix = glm::lookAt(GetWorldTranslation(), GetLookAt(), GetUp());
-		m_viewProjectionMatrix = m_projectionMatrix * m_viewMatrix;
-	}
-
 	void CameraNode::WindowResize(int32 width, int32 height)
 	{
 		auto ar = static_cast<float>(width) / static_cast<float>(height);
 
 		m_projectionMatrix = glm::perspective(glm::radians(m_vFov), ar, m_near, m_far);
-		m_viewProjectionMatrix = m_projectionMatrix * m_viewMatrix;
-
 		m_hFov = glm::degrees(2 * atan(ar * tan(glm::radians(m_vFov) * 0.5f)));
 	}
 
@@ -61,8 +51,6 @@ namespace World
 		Assets::ReadFloatsAttribute(xmlData, "focal_length", m_focalLength);
 		Assets::ReadFloatsAttribute(xmlData, "near", m_near);
 		Assets::ReadFloatsAttribute(xmlData, "far", m_far);
-
-		m_viewMatrix = glm::lookAt(GetWorldTranslation(), GetLookAt(), GetUp());
 
 		return true;
 	}

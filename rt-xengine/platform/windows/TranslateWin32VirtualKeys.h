@@ -1,5 +1,8 @@
 ﻿#pragma once
 
+#include <Xinput.h>
+
+
 inline bool MapLeftRightKeys(WPARAM& virtualKey, LPARAM lParam)
 {
 	const UINT scanCode = (lParam & 0x00ff0000) >> 16;
@@ -33,9 +36,6 @@ inline WPARAM MapExtraMouseButtons(WPARAM wParam)
 	}
 }
 
-#ifdef XINPUT_CONTROLLER_ENABLED
-
-#include <Xinput.h>
 inline XVirtualKey TranslateXInputVirtualKeys(WORD vkey)
 {
 	switch (vkey)
@@ -76,7 +76,6 @@ inline XVirtualKey TranslateXInputVirtualKeys(WORD vkey)
 	default:						return XVK_UNASSIGNED;
 	}
 }
-#endif
 
 inline XVirtualKey TranslateWin32VirtualKeys(WPARAM vkey)
 {

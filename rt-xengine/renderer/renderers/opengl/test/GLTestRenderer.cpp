@@ -78,6 +78,9 @@ namespace Renderer::OpenGL
 	void GLTestRenderer::Render()
 	{
 		auto bgcl = GetWorld()->GetBackgroundColor();
+
+		glm::mat4 vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
+
 		glClearColor(bgcl.r, bgcl.g, bgcl.b, 1.0);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -95,7 +98,7 @@ namespace Renderer::OpenGL
 		glUniform1i(m_instancedShader->GetUniformLocation("skyHDRSampler"), 4);
 		glUniform1i(m_instancedShader->GetUniformLocation("depthSampler"), 5);
 
-		glUniformMatrix4fv(m_instancedShader->GetUniformLocation("vp"), 1, GL_FALSE, &m_camera->GetViewProjectionMatrix()[0][0]);
+		glUniformMatrix4fv(m_instancedShader->GetUniformLocation("vp"), 1, GL_FALSE, &vp[0][0]);
 
 		glUniform3fv(m_instancedShader->GetUniformLocation("viewPos"), 1, &m_camera->GetWorldTranslation()[0]);
 		glUniform1i(m_instancedShader->GetUniformLocation("mode"), m_previewMode);
@@ -153,7 +156,7 @@ namespace Renderer::OpenGL
 		for (auto& geometry : m_geometryObservers)
 		{
 			auto m = geometry->GetNode()->GetWorldMatrix();
-			auto mvp = m_camera->GetViewProjectionMatrix() * m;
+			auto mvp = vp * m;
 
 			glUniformMatrix4fv(m_nonInstancedShader->GetUniformLocation("mvp"), 1, GL_FALSE, &mvp[0][0]);
 			glUniformMatrix4fv(m_nonInstancedShader->GetUniformLocation("m"), 1, GL_FALSE, &m[0][0]);

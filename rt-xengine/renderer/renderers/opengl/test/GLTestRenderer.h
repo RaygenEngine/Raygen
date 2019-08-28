@@ -9,6 +9,7 @@ namespace Renderer::OpenGL
 
 	class GLTestRenderer :  public GLRendererBase
 	{
+	protected:
 		std::shared_ptr<GLShader> m_instancedShader;
 		std::shared_ptr<GLShader> m_nonInstancedShader;
 

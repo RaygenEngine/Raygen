@@ -56,7 +56,8 @@ set(SOURCE_FILES
 	event/Event.cpp
 	
 	world/World.cpp
-
+	world/NodeFactory.cpp
+	
 	world/nodes/Node.cpp
 	world/nodes/TransformNode.cpp
 	
@@ -76,8 +77,9 @@ set(SOURCE_FILES
 	world/nodes/user/UserNode.cpp
 	
 	main.cpp
+	AppBase.cpp
 
-	platform/windows/Win32App.cpp
+	platform/Window.cpp
 	platform/windows/Win32Window.cpp
 )
 
@@ -155,6 +157,7 @@ set(HEADER_FILES
 	event/Event.h
 
 	world/World.h
+	world/NodeFactory.h
 	
 	world/nodes/Node.h
 	world/nodes/TransformNode.h
@@ -178,10 +181,25 @@ set(HEADER_FILES
 
 	pch/pch.h
 	
-	platform/windows/Win32App.h
+	AppBase.h
+	
+	platform/Window.h
 	platform/windows/Win32Window.h
 	platform/windows/TranslateWin32VirtualKeys.h
 )
+
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/CMakeLists.txt" AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/App.h")
+	set(APP_DIR "app")
+	message(STATUS "Detected app header at 'rt-xengine/app'. Using custom app files.") 
+else()
+	set(APP_DIR "app-default")
+	message(STATUS "No specific app files detected. Using app-default.")
+endif()
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/${APP_DIR})
+include(${APP_DIR}/CMakeLists.txt)
+
 
 # add pch for msvc 
 if(MSVC)

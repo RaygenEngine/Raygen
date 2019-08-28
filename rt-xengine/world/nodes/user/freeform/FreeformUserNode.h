@@ -17,7 +17,7 @@ namespace World
 		std::string ToString(bool verbose, uint depth) const override;
 		
 		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
-		bool LoadChildrenFromXML(const tinyxml2::XMLElement* xmlData) override;
+		bool PostChildrenLoaded() override;
 
 		CameraNode* GetCamera() const { return m_camera; }
 

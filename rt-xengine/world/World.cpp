@@ -1,6 +1,8 @@
 #include "pch.h"
 
 #include "world/World.h"
+#include "system/Engine.h"
+#include "world/NodeFactory.h"
 
 namespace World
 {
@@ -15,13 +17,14 @@ namespace World
 	}
 
 
-	World::World(System::Engine* engine)
+	World::World(System::Engine* engine, NodeFactory* factory)
 		: Node(engine),
-		  m_background(0.f, 0.f, 0.4f),
-	      m_ambient(0.4f, 0.4f, 0.4f),
-		  m_deltaTime(0),
-		  m_worldTime(GetTimeMs()),
-		  m_lastTime(GetTimeMs())
+		m_background(0.f, 0.f, 0.4f),
+	    m_ambient(0.4f, 0.4f, 0.4f),
+		m_deltaTime(0),
+		m_worldTime(GetTimeMs()),
+		m_lastTime(GetTimeMs()),
+		m_nodeFactory(factory)
 	{
 	}
 
@@ -103,7 +106,7 @@ namespace World
 
 				RT_XENGINE_LOG_INFO("World loaded succesfully, id: {}", this->GetObjectId());
 
-				RT_XENGINE_LOG_FATAL("Scenegraph: \n\n{0}", this->PrintWorldTree(true));
+				RT_XENGINE_LOG_ERROR("Scenegraph: \n\n{0}", this->PrintWorldTree(true));
 
 				return true;
 			}

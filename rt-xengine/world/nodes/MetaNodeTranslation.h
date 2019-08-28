@@ -6,7 +6,7 @@
 
 namespace World
 {
-	inline void LoadInstancingMatrixMetaNode(Node* parent, const tinyxml2::XMLElement* xmlElement)
+	inline TriangleModelInstancedGeometryNode* LoadInstancingMatrixMetaNode(Node* parent, const tinyxml2::XMLElement* xmlElement)
 	{
 		RT_XENGINE_LOG_INFO("Loading instancing matrix meta node");
 
@@ -56,6 +56,6 @@ namespace World
 			}
 		}
 
-		parent->GetWorld()->LoadNode<TriangleModelInstancedGeometryNode>(parent, triGeomInstancedNode);
+		return parent->GetWorld()->LoadNode<TriangleModelInstancedGeometryNode>(parent, triGeomInstancedNode);
 	}
 }

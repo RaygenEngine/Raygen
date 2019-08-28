@@ -31,20 +31,9 @@ namespace World
 		return true;
 	}
 
-	bool FreeformUserNode::LoadChildrenFromXML(const tinyxml2::XMLElement* xmlData)
+	bool FreeformUserNode::PostChildrenLoaded()
 	{
-		// children
-		for (auto* xmdChildElement = xmlData->FirstChildElement(); xmdChildElement != nullptr;
-			xmdChildElement = xmdChildElement->NextSiblingElement())
-		{
-			const std::string type = xmdChildElement->Name();
-			if (type == "camera")
-			{
-				m_camera = GetWorld()->LoadNode<CameraNode>(this, xmdChildElement);
-			}
-		}
-
-		// if head loaded successfully
+		m_camera = GetUniqueChildOfClass<CameraNode>();
 		return m_camera != nullptr;
 	}
 

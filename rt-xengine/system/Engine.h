@@ -10,6 +10,7 @@ namespace Renderer
 namespace World
 {
 	class World;
+	class NodeFactory;
 }
 
 namespace Assets
@@ -48,7 +49,7 @@ namespace System
 		Renderer::Renderer* GetRenderer() const { return m_renderer.get(); }
 		World::World* GetWorld() const { return m_world.get(); }
 
-		bool CreateWorldFromFile(const std::string& filename);
+		bool CreateWorldFromFile(const std::string& filename, World::NodeFactory* factory);
 
 		// if another renderer is already active, then destroy old and 
 		// then activate the next

@@ -23,7 +23,7 @@ namespace World
 		mutable std::unordered_set<LightNode*> m_lights;
 		mutable std::unordered_set<CameraNode*> m_cameras;
 		mutable std::unordered_set<UserNode*> m_users;
-	
+
 		// load path hint
 		std::string m_loaderPathHint;
 		
@@ -39,9 +39,11 @@ namespace World
 		float m_worldTime;
 		float m_lastTime;
 
+		NodeFactory* m_nodeFactory;
+
 	public:
 
-		World(System::Engine* engine);
+		World(System::Engine* engine, NodeFactory* factory);
 		~World();
 
 		std::string PrintWorldTree(bool verbose = false);
@@ -117,11 +119,14 @@ namespace World
 		std::string GetAssetLoadPathHint() const { return m_loaderPathHint; }
 
 		glm::vec3 GetBackgroundColor() const { return m_background; }
+		void SetBackgroundColor(const glm::vec3& color) { m_background = color; }
+
 		glm::vec3 GetAmbientColor() const { return m_ambient; }
+		void SetAmbientColor(const glm::vec3& color) { m_ambient = color; }
 
 		// SetIdentificationFromAssociatedDiskAssetIdentification node to world and as child, and return observer (maybe required for special inter-node handling)
-		template <typename ChildType, typename ParentType>
-		ChildType* LoadNode(ParentType* parent, const tinyxml2::XMLElement* xmlData)
+		template <typename ChildType>
+		ChildType* LoadNode(Node* parent, const tinyxml2::XMLElement* xmlData)
 		{
 			std::shared_ptr<ChildType> node = std::shared_ptr<ChildType>(new ChildType(parent), [&](ChildType* assetPtr)
 			{
@@ -152,6 +157,8 @@ namespace World
 		void WindowResize(int32 width, int32 height) override;
 
 		bool LoadAndPrepareWorldFromXML(Assets::XMLDoc* sceneXML);
+
+		NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
 
 	protected:
 		std::string ToString(bool verbose, uint depth) const override;

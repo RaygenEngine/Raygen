@@ -208,6 +208,9 @@ __pycache__/
 /assets/scenes/*
 !/assets/scenes/test
 
+# Ignore custom app folder
+rt-xengine/app/*
+
 x64/
 x86/
 
