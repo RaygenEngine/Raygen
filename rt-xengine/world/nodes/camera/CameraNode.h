@@ -21,6 +21,8 @@ namespace World
 
 		glm::mat4 m_projectionMatrix;
 
+		int32 m_viewportWidth;
+		int32 m_viewportHeight;
 	public:
 		CameraNode(Node* parent);
 		~CameraNode() = default;
@@ -33,6 +35,10 @@ namespace World
 
 		float GetNear() const { return m_near; }
 		float GetFar() const { return m_far; }
+
+		void RecalculateProjectionFov();
+
+		virtual void CacheWorldTransform() override;
 
 		std::string ToString(bool verbose, uint depth) const override;
 

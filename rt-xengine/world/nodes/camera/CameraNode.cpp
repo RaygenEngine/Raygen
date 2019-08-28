@@ -14,6 +14,25 @@ namespace World
 		  m_far(1000.0f),
 		  m_projectionMatrix()
 	{
+		REFLECT_VAR(m_focalLength);
+		REFLECT_VAR(m_vFov);
+		REFLECT_VAR(m_hFov);
+		REFLECT_VAR(m_near);
+		REFLECT_VAR(m_far);
+	}
+
+	void CameraNode::RecalculateProjectionFov()
+	{
+		auto ar = static_cast<float>(m_viewportWidth) / static_cast<float>(m_viewportHeight);
+
+		m_projectionMatrix = glm::perspective(glm::radians(m_vFov), ar, m_near, m_far);
+		m_hFov = glm::degrees(2 * atan(ar * tan(glm::radians(m_vFov) * 0.5f)));
+	}
+
+	void CameraNode::CacheWorldTransform()
+	{
+		Node::CacheWorldTransform();
+		RecalculateProjectionFov();
 	}
 
 	std::string CameraNode::ToString(bool verbose, uint depth) const
@@ -37,10 +56,9 @@ namespace World
 
 	void CameraNode::WindowResize(int32 width, int32 height)
 	{
-		auto ar = static_cast<float>(width) / static_cast<float>(height);
-
-		m_projectionMatrix = glm::perspective(glm::radians(m_vFov), ar, m_near, m_far);
-		m_hFov = glm::degrees(2 * atan(ar * tan(glm::radians(m_vFov) * 0.5f)));
+		m_viewportWidth = width;
+		m_viewportHeight = height;
+		RecalculateProjectionFov();
 	}
 
 	bool CameraNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)

@@ -9,7 +9,7 @@ namespace World
 {
 	FreeformUserNode::FreeformUserNode(Node* parent)
 		: UserNode(parent),
-		  m_camera(nullptr)
+		m_camera(nullptr)
 	{
 	}
 
@@ -99,10 +99,10 @@ namespace World
 		if (input.IsAnyOfKeysRepeat(XVK_A, XVK_GAMEPAD_DPAD_LEFT))
 			MoveLeft(speed);
 
-		if (input.IsAnyOfKeysRepeat(XVK_PAGEUP, XVK_GAMEPAD_LEFT_SHOULDER))
+		if (input.IsAnyOfKeysRepeat(XVK_E, XVK_GAMEPAD_LEFT_SHOULDER))
 			MoveUp(speed);
 
-		if (input.IsAnyOfKeysRepeat(XVK_PAGEDOWN, XVK_GAMEPAD_RIGHT_SHOULDER))
+		if (input.IsAnyOfKeysRepeat(XVK_Q, XVK_GAMEPAD_RIGHT_SHOULDER))
 			MoveDown(speed);
 	}
 }

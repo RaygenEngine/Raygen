@@ -120,6 +120,7 @@ namespace World
 	{
 		Assets::ReadFillEntityName(xmlData, m_name);
 		Assets::ReadFillEntityType(xmlData, m_type);
+		m_reflector.SetName(m_type + "." + m_name + "." + std::to_string(GetObjectId()));
 
 		RT_XENGINE_LOG_INFO("Loading {0} named {1}", m_type, m_name);
 
@@ -129,7 +130,6 @@ namespace World
 		
 		// calculate local matrix after loading
 		m_localMatrix = Core::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
-
 		return status;
 	}
 

@@ -12,7 +12,6 @@ namespace World
 	class FreeformUserNode : public UserNode
 	{
 		CameraNode* m_camera;
-
 	public:
 		FreeformUserNode(Node* parent);
 		~FreeformUserNode() = default;

@@ -11,7 +11,9 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include "core/auxiliary/MetaTemplates.h"
 #include <type_traits>
+
 
 // A reflection system that uses offsetof would be better but for simplicity we just initialize the reflector
 // for every instance of the objects we want to reflect. Therefore we can save pointers directly.
@@ -106,25 +108,29 @@ public:
 	}
 
 	template<typename IntF, typename BoolF, typename FloatF, typename Vec3F, typename StringF>
-	void SwitchOnType(IntF Int, BoolF Bool, FloatF Float, Vec3F Vec3, StringF String)
+	auto SwitchOnType(IntF Int, BoolF Bool, FloatF Float, Vec3F Vec3, StringF String) -> return_type_t<IntF>
 	{
 		switch (m_type)
 		{
 		case PropertyType::Int:
-			Int(GetRef<int32>());
+			return Int(GetRef<int32>());
 			break;
 		case PropertyType::Bool:
-			Bool(GetRef<bool>());
+			return Bool(GetRef<bool>());
 			break;
 		case PropertyType::Float:
-			Float(GetRef<float>());
+			return Float(GetRef<float>());
 			break;
 		case PropertyType::Vec3:
-			Vec3(GetRef<glm::vec3>());
+			return Vec3(GetRef<glm::vec3>());
 			break;
 		case PropertyType::String:
-			String(GetRef<std::string>());
+			return String(GetRef<std::string>());
 			break;
+		}
+
+		if constexpr (!std::is_void_v<return_type_t<IntF>>) {
+			return {};
 		}
 	}
 };

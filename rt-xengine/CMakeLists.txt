@@ -99,6 +99,7 @@ set(HEADER_FILES
 
 	core/auxiliary/FileAux.h
 	core/auxiliary/GraphicsMathAux.h
+	core/auxiliary/MetaTemplates.h
 	core/auxiliary/SmartPtrAux.h
 	core/auxiliary/StringAux.h
 	core/data/BasicLight.h

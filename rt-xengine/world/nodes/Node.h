@@ -6,12 +6,15 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <GLM/ext/quaternion_float.hpp>
 #include "system/EngineObject.h"
+#include "system/reflection/Reflection.h"
 
 namespace World
 {
 	class Node : public System::EngineObject
 	{
-	protected:
+	public:
+		Reflector m_reflector;
+
 		// local
 		glm::vec3 m_localTranslation;
 		glm::quat m_localOrientation;
@@ -64,6 +67,8 @@ namespace World
 		bool IsLeaf() const { return m_children.empty(); }
 		const std::string& GetName() const { return m_name; }
 		const std::string& GetType() const { return m_type; }
+
+		const std::vector<std::shared_ptr<Node>>& GetChildren() { return m_children; };
 
 		void AddChild(std::shared_ptr<Node> child) { m_children.emplace_back(child); }
 		

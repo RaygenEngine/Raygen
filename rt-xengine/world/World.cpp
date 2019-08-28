@@ -26,6 +26,13 @@ namespace World
 		m_lastTime(GetTimeMs()),
 		m_nodeFactory(factory)
 	{
+		REFLECT_VAR(m_background);
+		REFLECT_VAR(m_ambient);
+		REFLECT_VAR(m_deltaTime);
+		REFLECT_VAR(m_worldTime);
+		REFLECT_VAR(m_lastTime);
+
+
 		RT_XENGINE_LOG_INFO("Created World context, id: {}", EngineObject::GetObjectId());
 	}
 
