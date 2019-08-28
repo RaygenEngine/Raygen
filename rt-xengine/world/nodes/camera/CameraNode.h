@@ -47,6 +47,8 @@ namespace World
 		void WindowResize(int32 width, int32 height) override;
 
 		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
+
+		void ToString(std::ostream& os) const override { os << "node-type: CameraNode, name: " << m_name; }
 	};
 }
 

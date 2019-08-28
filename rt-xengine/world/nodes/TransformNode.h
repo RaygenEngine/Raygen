@@ -12,5 +12,7 @@ namespace World
 		~TransformNode() = default;
 
 		std::string ToString(bool verbose, uint depth) const override;
+
+		void ToString(std::ostream& os) const override { os << "node-type: TransformNode, name: " << m_name; }
 	};
 }

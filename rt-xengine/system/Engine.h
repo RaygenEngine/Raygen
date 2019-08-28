@@ -1,5 +1,7 @@
 #pragma once
 
+#include "input/Input.h"
+
 namespace Renderer
 {
 	class Renderer;
@@ -36,12 +38,10 @@ namespace System
 
 		Input::Input m_input;
 
-		Core::UID m_id;
-
 	public:
 		Engine();
 		~Engine();
-
+		
 		bool InitDirectories(const std::string& applicationPath, const std::string& dataDirectoryName);
 
 		Assets::DiskAssetManager* GetDiskAssetManager() const { return m_diskAssetManager.get(); }

@@ -1,6 +1,9 @@
 #include "pch.h"
 
-#include "TriangleModelGeometryNode.h"
+#include "world/nodes/geometry/TriangleModelGeometryNode.h"
+#include "world/World.h"
+#include "assets/DiskAssetManager.h"
+#include "assets/other/xml/ParsingAux.h"
 
 namespace World
 {
@@ -26,15 +29,8 @@ namespace World
 		if(!type.empty() && Core::CaseInsensitiveCompare(type, "dynamic"))
 			modelGeomType = GU_DYNAMIC;
 		
-		m_model = GetDiskAssetManager()->LoadFileAsset<Assets::Model>(xmlData->Attribute("file"), GetWorld()->GetAssetLoadPathHint());
+		m_model = GetDiskAssetManager()->LoadModelAsset(xmlData->Attribute("file"), modelGeomType, GetWorld()->GetAssetLoadPathHint());
 
-		// missing model
-		if (!m_model)
-			return false;
-
-		// TODO, set
-		//m_model->SetType(modelGeomType);
-
-		return true;
+		return static_cast<bool>(m_model.get());
 	}
 }

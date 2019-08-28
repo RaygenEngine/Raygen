@@ -1,6 +1,8 @@
 #pragma once
 
 #include "assets/other/xml/ParsingAux.h"
+#include "world/World.h"
+#include "world/nodes/geometry/TriangleModelInstancedGeometryNode.h"
 
 namespace World
 {

@@ -17,18 +17,17 @@ namespace World
 
 	World::World(System::Engine* engine)
 		: Node(engine),
-		m_background(0.f, 0.f, 0.4f),
-	    m_ambient(0.4f, 0.4f, 0.4f),
-		m_deltaTime(0),
-		m_worldTime(GetTimeMs()),
-		m_lastTime(GetTimeMs())
+		  m_background(0.f, 0.f, 0.4f),
+	      m_ambient(0.4f, 0.4f, 0.4f),
+		  m_deltaTime(0),
+		  m_worldTime(GetTimeMs()),
+		  m_lastTime(GetTimeMs())
 	{
-		RT_XENGINE_LOG_INFO("Created World context, id: {}", EngineObject::GetObjectId());
 	}
 
 	World::~World()
 	{
-		RT_XENGINE_LOG_INFO("Destroyed World context, id: {}", EngineObject::GetObjectId());
+		// TODO check this
 		// clear children before destruction - otherwise they would be cleared at the base node class causing issues with world's node maps
 		m_children.clear();
 	}
@@ -104,7 +103,7 @@ namespace World
 
 				RT_XENGINE_LOG_INFO("World loaded succesfully, id: {}", this->GetObjectId());
 
-				RT_XENGINE_LOG_DEBUG("Scenegraph: \n\n{0}", this->PrintWorldTree(true));
+				RT_XENGINE_LOG_FATAL("Scenegraph: \n\n{0}", this->PrintWorldTree(true));
 
 				return true;
 			}

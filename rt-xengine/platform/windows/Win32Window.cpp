@@ -3,6 +3,8 @@
 #include "platform/windows/Win32Window.h"
 #include "platform/windows/Win32App.h"
 #include "platform/windows/TranslateWin32VirtualKeys.h"
+#include "world/World.h"
+#include "renderer/Renderer.h"
 
 #include <windowsx.h>
 

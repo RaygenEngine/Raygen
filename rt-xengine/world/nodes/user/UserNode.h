@@ -16,5 +16,7 @@ namespace World
 		~UserNode() = default;
 
 		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
+
+		void ToString(std::ostream& os) const { os << "node-type: UserNode, name: " << m_name; }
 	};
 }

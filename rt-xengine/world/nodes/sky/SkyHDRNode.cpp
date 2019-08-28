@@ -2,6 +2,7 @@
 
 #include "world/nodes/sky/SkyHDRNode.h"
 #include "assets/other/xml/ParsingAux.h"
+#include "assets/DiskAssetManager.h"
 
 namespace World
 {

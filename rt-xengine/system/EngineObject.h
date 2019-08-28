@@ -45,10 +45,10 @@ namespace System
 
 		Core::UID GetObjectId() const { return m_id; }
 
-		virtual void ToString(std::ostream& os) const { os << "object-type: EngineObject, id: " << GetObjectId(); }
-
 		// Part of engine object
 		virtual void Update();
 		virtual void WindowResize(int32 width, int32 height);
+
+		virtual void ToString(std::ostream& os) const { os << "object-type: EngineObject, id: " << GetObjectId(); }
 	};
 }

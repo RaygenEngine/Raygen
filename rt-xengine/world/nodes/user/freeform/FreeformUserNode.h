@@ -15,13 +15,15 @@ namespace World
 		~FreeformUserNode() = default;
 
 		std::string ToString(bool verbose, uint depth) const override;
-
+		
 		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 		bool LoadChildrenFromXML(const tinyxml2::XMLElement* xmlData) override;
 
 		CameraNode* GetCamera() const { return m_camera; }
 
 		void Update() override;
+
+		void ToString(std::ostream& os) const override { os << "node-type: FreeformUserNode, name: " << m_name; }
 	};
 
 }

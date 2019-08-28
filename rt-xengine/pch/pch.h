@@ -9,6 +9,7 @@
 #include "core/enum/TargetEnums.h"
 #include "core/enum/TextureEnums.h"
 #include "core/enum/GeometryEnums.h"
+#include "core/enum/BufferEnums.h"
 
 // c friendly data structs
 #include "core/data/BasicLight.h"
@@ -24,11 +25,3 @@
 #include "core/auxiliary/GraphicsMathAux.h"
 #include "core/auxiliary/SmartPtrAux.h"
 #include "core/auxiliary/StringAux.h"
-#include "core/auxiliary/CachingAux.h"
-
-// contexts
-#include "input/Input.h"
-#include "assets/DiskAssetManager.h"
-#include "world/World.h"
-#include "renderer/Renderer.h"
-#include "system/Engine.h"

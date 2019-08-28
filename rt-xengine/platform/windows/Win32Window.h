@@ -1,5 +1,4 @@
-#ifndef WIN32WINDOW_H
-#define WIN32WINDOW_H
+#pragma once
 
 #include <windows.h>
 
@@ -65,5 +64,3 @@ namespace Platform
 	};
 
 }
-
-#endif // WIN32WINDOW_H

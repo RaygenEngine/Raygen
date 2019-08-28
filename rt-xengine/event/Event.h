@@ -1,5 +1,4 @@
-#ifndef EVENT2_H
-#define EVENT2_H
+#pragma once
 
 namespace Event
 { 
@@ -32,5 +31,3 @@ namespace Event
 	};
 
 }
-
-#endif // ENGINE2_H

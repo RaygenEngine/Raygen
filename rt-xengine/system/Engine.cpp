@@ -2,18 +2,18 @@
 
 #include "system/Engine.h"
 #include "assets/other/xml/XMLDoc.h"
+#include "assets/DiskAssetManager.h"
+#include "world/World.h"
+#include "renderer/Renderer.h"
 
 namespace System
 {
 	Engine::Engine()
-		: m_id(Core::UUIDGenerator::GenerateUUID())
 	{
-		RT_XENGINE_LOG_INFO("Created Engine context, id: {}", m_id);
 	}
 
 	Engine::~Engine()
 	{
-		RT_XENGINE_LOG_INFO("Destroyed Engine context, id: {}", m_id);
 	}
 
 	bool Engine::InitDirectories(const std::string& applicationPath, const std::string& dataDirectoryName)
@@ -27,7 +27,7 @@ namespace System
 		m_world = std::make_unique<World::World>(this);
 
 		// load scene file
-		const auto sceneXML = m_diskAssetManager->LoadFileAsset<Assets::XMLDoc>(filename);
+		const auto sceneXML = m_diskAssetManager->LoadXMLDocAsset(filename);
 
 		return m_world->LoadAndPrepareWorldFromXML(sceneXML.get());
 	}

@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 
 #include "world/nodes/user/freeform/FreeformUserNode.h"
+#include "world/World.h"
 #include "assets/other/xml/ParsingAux.h"
 
 namespace World

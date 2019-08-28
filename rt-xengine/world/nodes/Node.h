@@ -89,6 +89,10 @@ namespace World
 		
 	protected:
 		virtual std::string ToString(bool verbose, uint depth) const;
+
+	public:
+
+		virtual void ToString(std::ostream& os) const { os << "object-type: Node, id: " << GetObjectId(); }
 	};
 }
 

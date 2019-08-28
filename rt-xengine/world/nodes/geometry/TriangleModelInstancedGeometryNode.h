@@ -24,8 +24,7 @@ namespace World
 		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 		bool LoadChildrenFromXML(const tinyxml2::XMLElement* xmlData);
 
-	public:
-		void ToString(std::ostream& os) const { os << "asset-type: TriangleModelInstancedGeometryNode, name: " << m_name; }
+		void ToString(std::ostream& os) const { os << "node-type: TriangleModelInstancedGeometryNode, name: " << m_name; }
 	};
 
 }

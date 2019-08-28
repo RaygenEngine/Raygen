@@ -3,6 +3,8 @@
 #include "platform/windows/Win32App.h"
 #include "platform/windows/TranslateWin32VirtualKeys.h"
 #include "renderer/renderers/opengl/test/GLTestRenderer.h"
+#include "world/World.h"
+#include "renderer/Renderer.h"
 
 using namespace Renderer::OpenGL;
 

@@ -27,7 +27,8 @@ set(SOURCE_FILES
 	assets/model/Model.cpp
 	assets/model/GeometryGroup.cpp
 	assets/model/Sampler.cpp
-
+	assets/model/Buffer.cpp
+	
 	core/logger/Logger.cpp
 	
 	renderer/Renderer.cpp
@@ -87,6 +88,7 @@ set(HEADER_FILES
 	assets/DiskAssetManager.h
 	assets/PathSystem.h
 	assets/DiskAssetPart.h
+    assets/CachingAux.h
 		
 	assets/other/utf8/StringFile.h
 	assets/other/xml/ParsingAux.h
@@ -100,14 +102,14 @@ set(HEADER_FILES
 	assets/model/Mesh.h
 	assets/model/Sampler.h
 	assets/model/Model.h
-	assets/model/GltfAuxiliary.h
+	assets/model/GltfAux.h
 	assets/model/GeometryGroup.h
+	assets/model/Buffer.h
 
 	core/auxiliary/FileAux.h
 	core/auxiliary/GraphicsMathAux.h
 	core/auxiliary/SmartPtrAux.h
 	core/auxiliary/StringAux.h
-	core/auxiliary/CachingAux.h
 
 	core/data/BasicLight.h
 	core/data/Vertex.h
@@ -116,6 +118,7 @@ set(HEADER_FILES
 	core/enum/TargetEnums.h
 	core/enum/TextureEnums.h
 	core/enum/GeometryEnums.h
+	core/enum/BufferEnums.h
 	
 	core/logger/Logger.h
 	

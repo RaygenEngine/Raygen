@@ -155,5 +155,8 @@ namespace World
 
 	protected:
 		std::string ToString(bool verbose, uint depth) const override;
+
+	public:
+		void ToString(std::ostream& os) const { os << "object-type: World, name: " << m_name << ", id: " << GetObjectId(); }
 	};
 }
