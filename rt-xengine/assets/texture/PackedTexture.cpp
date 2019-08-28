@@ -4,8 +4,8 @@
 
 namespace Assets
 {
-	PackedTexture::PackedTexture(DiskAssetManager* context, const std::string& path)
-		: Texture(context, path)
+	PackedTexture::PackedTexture(EngineObject* pObject, const std::string& path)
+		: Texture(pObject, path)
 	{
 	}
 

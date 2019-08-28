@@ -2,9 +2,11 @@
 
 #include "renderer/renderers/opengl/test/GLTestRenderer.h"
 #include "renderer/renderers/opengl/test/GLTestGeometry.h"
+#include "world/World.h"
 #include "world/nodes/user/freeform/FreeformUserNode.h"
 #include "world/nodes/geometry/TriangleModelGeometryNode.h"
 #include "world/nodes/sky/SkyHDRNode.h"
+#include "assets/DiskAssetManager.h"
 
 
 namespace Renderer::OpenGL
@@ -16,9 +18,9 @@ namespace Renderer::OpenGL
 
 	bool GLTestRenderer::InitScene(int32 width, int32 height)
 	{
-		auto vertexSimpleShaderSource = GetDiskAssetManager()->LoadFileAsset<Assets::StringFile>("test/test.vert");
-		auto vertexInstancedShaderSource = GetDiskAssetManager()->LoadFileAsset<Assets::StringFile>("test/test_instanced.vert");
-		auto fragmentShaderSource = GetDiskAssetManager()->LoadFileAsset<Assets::StringFile>("test/test.frag");
+		auto vertexSimpleShaderSource = GetDiskAssetManager()->LoadStringFileAsset("test/test.vert");
+		auto vertexInstancedShaderSource = GetDiskAssetManager()->LoadStringFileAsset("test/test_instanced.vert");
+		auto fragmentShaderSource = GetDiskAssetManager()->LoadStringFileAsset("test/test.frag");
 
 		m_instancedShader = RequestGLShader(vertexInstancedShaderSource.get(), fragmentShaderSource.get());
 		m_instancedShader->SetUniformLocation("albedoSampler");
@@ -108,7 +110,7 @@ namespace Renderer::OpenGL
 				for (auto& gg : rm.mesh->GetGeometryGroups())
 				{
 
-					glActiveTexture(GL_TEXTURE0);
+	/*				glActiveTexture(GL_TEXTURE0);
 					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceAlbedo()->GetGLHandle());
 
 					glActiveTexture(GL_TEXTURE1);
@@ -118,7 +120,7 @@ namespace Renderer::OpenGL
 					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceSpecularParameters()->GetGLHandle());
 
 					glActiveTexture(GL_TEXTURE3);
-					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceBump()->GetGLHandle());
+					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceBump()->GetGLHandle());*/
 
 					glActiveTexture(GL_TEXTURE4);
 					glBindTexture(GL_TEXTURE_2D, m_skyTexture->GetGLHandle());
@@ -164,17 +166,17 @@ namespace Renderer::OpenGL
 	
 				for (auto& gg : rm.mesh->GetGeometryGroups())
 				{
-					glActiveTexture(GL_TEXTURE0);
-					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceAlbedo()->GetGLHandle());
+					//glActiveTexture(GL_TEXTURE0);
+					//glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceAlbedo()->GetGLHandle());
 
-					glActiveTexture(GL_TEXTURE1);
-					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceEmission()->GetGLHandle());
+					//glActiveTexture(GL_TEXTURE1);
+					//glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceEmission()->GetGLHandle());
 
-					glActiveTexture(GL_TEXTURE2);
-					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceSpecularParameters()->GetGLHandle());
+					//glActiveTexture(GL_TEXTURE2);
+					//glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceSpecularParameters()->GetGLHandle());
 
-					glActiveTexture(GL_TEXTURE3);
-					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceBump()->GetGLHandle());
+					//glActiveTexture(GL_TEXTURE3);
+					//glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceBump()->GetGLHandle());
 
 					glActiveTexture(GL_TEXTURE4);
 					glBindTexture(GL_TEXTURE_2D, m_skyTexture->GetGLHandle());

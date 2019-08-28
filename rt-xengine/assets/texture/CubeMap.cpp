@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "assets/texture/CubeMap.h"
+#include "assets/DiskAssetManager.h"
 
 namespace Assets
 {

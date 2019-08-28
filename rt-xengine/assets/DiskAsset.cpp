@@ -1,19 +1,16 @@
 #include "pch.h"
-#include "DiskAsset.h"
 
-#include "DiskAssetManager.h"
+#include "assets/DiskAsset.h"
+#include "assets/DiskAssetManager.h"
 
 namespace Assets
 {
-	DiskAsset::DiskAsset(DiskAssetManager* diskAssetManager)
-		: Asset(diskAssetManager),
-		  m_manager(diskAssetManager)
+	DiskAsset::DiskAsset(EngineObject* pObject, const std::string& path)
+	     // asset name of disk assets contains their extension
+		: Asset(pObject, PathSystem::GetNameWithExtension(path)),
+		  m_directoryPath(PathSystem::GetParentPath(path)),
+		  m_filePath(path),
+	      m_fileName(PathSystem::GetNameWithExtension(path))
 	{
-	}
-
-	void DiskAsset::SetIdentificationFromPath(const std::string& path)
-	{
-		m_path = path;
-		m_label = PathSystem::GetNameWithExtension(m_path);
 	}
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderer/renderers/opengl/GLAsset.h"
+#include "assets/texture/Texture.h"
 
 #include "GLAD/glad.h"
 

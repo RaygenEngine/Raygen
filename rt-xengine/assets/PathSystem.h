@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_set>
+
 namespace Assets
 {
 	class PathSystem

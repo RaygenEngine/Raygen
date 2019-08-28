@@ -11,16 +11,13 @@ namespace Renderer::OpenGL
 
 	bool GLMaterial::Load(Assets::Material* data)
 	{
-		/*SetIdentificationFromAssociatedDiskAssetIdentification(data->GetLabel());
+		//m_baseColorTexture = GetRenderer()->RequestGLTexture(data->GetMapSurfaceAlbedo());
+		//m_metallicRoughnessTexture = GetRenderer()->RequestGLTexture(data->GetMapSurfaceEmission());
 
-		m_textSurfaceAlbedo = GetRenderer()->RequestGLTexture(data->GetMapSurfaceAlbedo());
-		
-		m_textSurfaceEmission = GetRenderer()->RequestGLTexture(data->GetMapSurfaceEmission());
-
-		m_textSurfaceSpecularParameters = GetRenderer()->RequestGLTexture(data->GetMapSurfaceSpecularParameters());
-
-		m_textSurfaceBump = GetRenderer()->RequestGLTexture(data->GetMapSurfaceBump());*/
-
+		//m_normalTexture;
+		//m_occlusionTexture;
+		//m_emissiveTexture;
+	
 		return true;
 	}
 }

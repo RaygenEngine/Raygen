@@ -1,31 +1,19 @@
-#ifndef DISKASSETPART_H
-#define DISKASSETPART_H
+#pragma once
 
-#include "DiskAsset.h"
-
-#include "DiskAssetManager.h"
+#include "assets/DiskAsset.h"
 
 namespace Assets
 {
-	// Assets that are part of DiskAssets (loaded from data provided by the disk asset)
-	class DiskAssetPart : public Asset
+	// File assets loaded from the disk
+	class DiskAssetPart : public DiskAsset
 	{
-	protected:
-		DiskAsset* m_parent;
-		std::string m_label;
-
 	public:
-		DiskAssetPart(DiskAsset* parent)
-			: Asset(parent->GetDiskAssetManager()),
-			m_parent(parent)
-		{
-		}
+		DiskAssetPart(DiskAsset* pAsset, const std::string& name);
 		virtual ~DiskAssetPart() = default;
 
-		// absolute path <unique>
-		DiskAsset* GetParent() const { return m_parent; }
-		std::string GetLabel() const { return m_label; }
+		// asset parts can be renamed
+		void RenameAssetPart(const std::string& name);
+
+		void ToString(std::ostream& os) const override { os << "asset-type: DiskAssetPart, name: " << m_name; }
 	};
 }
-
-#endif // DISKASSETPART_H

@@ -4,8 +4,8 @@
 
 namespace Assets
 {
-	XMLDoc::XMLDoc(DiskAssetManager* context, const std::string& path)
-		: DiskAsset(context, path)
+	XMLDoc::XMLDoc(EngineObject* pObject, const std::string& path)
+		: DiskAsset(pObject, path)
 	{
 	}
 

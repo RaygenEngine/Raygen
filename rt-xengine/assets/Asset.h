@@ -1,5 +1,4 @@
-#ifndef ASSET_H
-#define ASSET_H
+#pragma once
 
 #include "system/EngineObject.h"
 
@@ -9,11 +8,11 @@ namespace Assets
 	class Asset : public System::EngineObject
 	{
 		bool m_loaded;
+		
+	protected:
 		std::string m_name;
 
-	protected:
-
-		Asset(System::EngineObject* pObject);
+		Asset(EngineObject* pObject, const std::string& name);
 		virtual ~Asset() = default;
 
 		// clear asset's inner data
@@ -29,9 +28,9 @@ namespace Assets
 		// clear only if loaded
 		void Unload();
 
-		void ToString(std::ostream& os) const override { os << "asset-type: Asset, id: " << GetObjectId(); }
+		std::string GetName() const { return m_name; }
+
+		void ToString(std::ostream& os) const override { os << "object-type: Asset, name: " << m_name; }
 	};
 
 }
-
-#endif // ASSET_H

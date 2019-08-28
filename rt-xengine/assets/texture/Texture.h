@@ -27,11 +27,8 @@ namespace Assets
 
 		void* m_data;
 
-		template<typename T>
-		static void CopyValueTypedToTextureBuffer(T* textureBuffer, T* valueBuffer, uint32 size, uint32 components, T extra);
-
 	public:
-		Texture(DiskAssetManager* context, const std::string& path);
+		Texture(EngineObject* pObject, const std::string& path);
 		virtual ~Texture();
 
 		bool Load(const std::string& path, DynamicRange dr, bool flipVertically);
@@ -45,12 +42,12 @@ namespace Assets
 		DynamicRange GetType() const { return m_dynamicRange; }
 
 		// creates default rgba texture
-		static std::unique_ptr<Texture> CreateDefaultTexture(DiskAssetManager* context, void* texelValue, uint32 width,
+		static std::unique_ptr<Texture> CreateDefaultTexture(EngineObject* pObject, void* texelValue, uint32 width,
 			uint32 height, uint32 components, DynamicRange dr, const std::string& defaultName = "DefaultTexture");
 		
-		void ToString(std::ostream& os) const override { os << "asset-type: Texture, name: " << m_name << ", type: " << TexelEnumToString(m_dynamicRange); }
-
 		// use this instead of malloc or new, it uses stbi_malloc and texture will clean up correctly when deleted
 		void ReserveTextureDataMemory(uint32 size);
+
+		void ToString(std::ostream& os) const override { os << "asset-type: Texture, name: " << m_name << ", type: " << TexelEnumToString(m_dynamicRange); }
 	};
 }

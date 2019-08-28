@@ -4,6 +4,17 @@
 
 namespace Renderer::OpenGL
 {
+	inline GLenum GetGLUsage(GeometryUsage geomUsage)
+	{
+		switch (geomUsage)
+		{
+		case GU_DYNAMIC: return GL_DYNAMIC_DRAW;
+		case GU_STATIC:  return GL_STATIC_DRAW;
+		case GU_INVALID: return GL_INVALID_ENUM;
+		default:		 return GL_INVALID_ENUM;
+		}
+	}
+	
 	inline GLenum GLCheckError_(const char *file, int line)
 	{
 		GLenum errorCode;

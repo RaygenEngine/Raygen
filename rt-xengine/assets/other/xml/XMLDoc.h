@@ -10,7 +10,7 @@ namespace Assets
 		tinyxml2::XMLDocument m_document;
 
 	public:
-		XMLDoc(DiskAssetManager* context, const std::string& path);
+		XMLDoc(EngineObject* pObject, const std::string& path);
 		~XMLDoc() = default;
 
 		bool Load(const std::string& path);

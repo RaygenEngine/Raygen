@@ -5,7 +5,7 @@
 namespace Renderer::OpenGL
 {
 	GLMesh::GLMesh(GLRendererBase* renderer, const std::string& name)
-		: GLAsset(renderer, name), \
+		: GLAsset(renderer, name),
 	      m_vbo(0),
 	      m_ebo(0)
 	{

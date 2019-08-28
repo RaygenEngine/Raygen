@@ -76,34 +76,24 @@ namespace Renderer::OpenGL
 	std::shared_ptr<GLCubeMap> GLRendererBase::RequestGLCubeMap(Assets::CubeMap* cubeMap, GLint wrapFlag,
 		bool mipMapping)
 	{
-		return Core::LoadAssetAtMultiKeyCache<GLCubeMap>(m_glCubeMaps, this, cubeMap->GetName(), cubeMap, wrapFlag, mipMapping);
+		return Assets::LoadAssetAtMultiKeyCache<GLCubeMap>(m_glCubeMaps, this, cubeMap->GetName(), cubeMap, wrapFlag, mipMapping);
 	}
 
 	std::shared_ptr<GLTexture> GLRendererBase::RequestGLTexture(Assets::Texture* texture, GLint wrapFlag, bool mipMapping)
 	{
-		return Core::LoadAssetAtMultiKeyCache<GLTexture>(m_glTextures, this, texture->GetName(), texture, wrapFlag, mipMapping);
+		return Assets::LoadAssetAtMultiKeyCache<GLTexture>(m_glTextures, this, texture->GetName(), texture, wrapFlag, mipMapping);
 	}
 
 	std::shared_ptr<GLShader> GLRendererBase::RequestGLShader(Assets::StringFile* vertexFile, Assets::StringFile* fragmentFile)
 	{
 		const auto name = "vert> " + vertexFile->GetFileName() + "frag> " + fragmentFile->GetFileName();
 		
-		return Core::LoadAssetAtMultiKeyCache<GLShader>(m_glShaders, this, name, vertexFile, fragmentFile);
-	}
-
-	std::shared_ptr<GLMaterial> GLRendererBase::RequestGLMaterial(Assets::Material* material)
-	{
-		return Core::LoadAssetAtMultiKeyCache<GLMaterial>(m_glMaterials, this, material->GetName(), material);
-	}
-
-	std::shared_ptr<GLMesh> GLRendererBase::RequestGLMesh(Assets::Mesh* mesh, GLenum usage)
-	{
-		return Core::LoadAssetAtMultiKeyCache<GLMesh>(m_glMeshes, this, mesh->GetName(), mesh, usage);
+		return Assets::LoadAssetAtMultiKeyCache<GLShader>(m_glShaders, this, name, vertexFile, fragmentFile);
 	}
 
 	std::shared_ptr<GLModel> GLRendererBase::RequestGLModel(Assets::Model* model)
 	{
-		return Core::LoadAssetAtMultiKeyCache<GLModel>(m_glModels, this, model->GetName(), model);
+		return Assets::LoadAssetAtMultiKeyCache<GLModel>(m_glModels, this, model->GetName(), model);
 	}
 
 	// TODO: caching may not work correctly with instancing, check this out

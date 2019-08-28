@@ -4,8 +4,8 @@
 
 namespace Assets
 {
-	StringFile::StringFile(DiskAssetManager* context, const std::string& path)
-		: DiskAsset(context, path)
+	StringFile::StringFile(EngineObject* pObject, const std::string& path)
+		: DiskAsset(pObject, path)
 	{
 	}
 

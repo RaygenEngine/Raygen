@@ -65,7 +65,6 @@ namespace Renderer::OpenGL
 				data->GetWidth(), data->GetHeight(), 0, format, type, data->GetFace(static_cast<CubeMapFace>(i))->GetData());
 		}
 
-		
 		return true;
 	}
 }

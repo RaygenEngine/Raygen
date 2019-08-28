@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#include "assets/PathSystem.h"
+
 #include <filesystem>
 
 namespace fs = std::filesystem;

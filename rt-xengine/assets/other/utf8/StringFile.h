@@ -11,7 +11,7 @@ namespace Assets
 		std::string m_data;
 
 	public:
-		StringFile(DiskAssetManager* context, const std::string& path);
+		StringFile(EngineObject* pObject, const std::string& path);
 		~StringFile() = default;
 
 		bool Load(const std::string& path);

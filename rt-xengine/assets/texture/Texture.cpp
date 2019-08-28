@@ -6,8 +6,52 @@
 
 namespace Assets
 {
-	Texture::Texture(DiskAssetManager* context, const std::string& path)
-		: DiskAsset(context, path),
+	// When loading a texture, we force the following conversions at rgba
+	// image_cmp, forced_cmp
+	//(1, 4) { dest[0] = dest[1] = dest[2] = src[0], dest[3] = 255; } break; R -> RRR1
+	//(2, 4) { dest[0] = dest[1] = dest[2] = src[0], dest[3] = src[1]; } break; RG -> RRRG
+	//(3, 4) { dest[0] = src[0], dest[1] = src[1], dest[2] = src[2], dest[3] = 255; } break; RGB -> RGB1
+	template<typename T>
+	inline void CopyValueTypedToTextureBuffer(T* textureBuffer, T* valueBuffer, uint32 size, uint32 components, T extra)
+	{
+		for (auto i = 0u; i < size; i += 4)
+		{
+			switch (components)
+			{
+
+			case 1: // R -> RRR1
+				textureBuffer[i] = valueBuffer[0];
+				textureBuffer[i + 1] = valueBuffer[0];
+				textureBuffer[i + 2] = valueBuffer[0];
+				textureBuffer[i + 3] = extra;
+				break;
+
+			case 2: // RG -> RRRG (R is value and G is Alpha)
+				textureBuffer[i] = valueBuffer[0];
+				textureBuffer[i + 1] = valueBuffer[0];
+				textureBuffer[i + 2] = valueBuffer[0];
+				textureBuffer[i + 3] = valueBuffer[1];
+				break;
+
+			case 3: // RGB -> RGB1
+				textureBuffer[i] = valueBuffer[0];
+				textureBuffer[i + 1] = valueBuffer[1];
+				textureBuffer[i + 2] = valueBuffer[2];
+				textureBuffer[i + 3] = extra;
+				break;
+
+			case 4: // RGBA -> RGBA
+				textureBuffer[i] = valueBuffer[0];
+				textureBuffer[i + 1] = valueBuffer[1];
+				textureBuffer[i + 2] = valueBuffer[2];
+				textureBuffer[i + 3] = valueBuffer[3];
+				break;
+			}
+		}
+	}
+	
+	Texture::Texture(EngineObject* pObject, const std::string& path)
+		: DiskAsset(pObject, path),
 		  m_width(0),
 		  m_height(0),
 		  m_components(0),
@@ -74,14 +118,14 @@ namespace Assets
 		stbi_image_free(m_data);
 	}
 
-	std::unique_ptr<Texture> Texture::CreateDefaultTexture(DiskAssetManager* context, void* texelValue, uint32 width,
+	std::unique_ptr<Texture> Texture::CreateDefaultTexture(EngineObject* pObject, void* texelValue, uint32 width,
 		uint32 height, uint32 components, DynamicRange dr, const std::string& defaultName)
 	{
 		RT_XENGINE_LOG_DEBUG("Creating default texture, name:{}, width: {}, height: {}, components: {}, type: {}", defaultName, width, height, components, TexelEnumToString(dr));
 
 		RT_XENGINE_ASSERT(components <= 4, "Couldn't create default texture, name:{}", defaultName);
 
-		std::unique_ptr<Texture> texture = std::make_unique<Texture>(context, defaultName);
+		std::unique_ptr<Texture> texture = std::make_unique<Texture>(pObject, defaultName);
 
 		texture->m_width = width;
 		texture->m_height = height;
@@ -113,49 +157,5 @@ namespace Assets
 	void Texture::ReserveTextureDataMemory(uint32 size)
 	{
 		m_data = STBI_MALLOC(size);
-	}
-
-	// When loading a texture, we force the following conversions at rgba
-	// image_cmp, forced_cmp
-	//(1, 4) { dest[0] = dest[1] = dest[2] = src[0], dest[3] = 255; } break; R -> RRR1
-	//(2, 4) { dest[0] = dest[1] = dest[2] = src[0], dest[3] = src[1]; } break; RG -> RRRG
-	//(3, 4) { dest[0] = src[0], dest[1] = src[1], dest[2] = src[2], dest[3] = 255; } break; RGB -> RGB1
-	template<typename T>
-	void Texture::CopyValueTypedToTextureBuffer(T* textureBuffer, T* valueBuffer, uint32 size, uint32 components, T extra)
-	{
-		for (auto i = 0u; i < size; i += 4)
-		{
-			switch (components)
-			{
-
-			case 1: // R -> RRR1
-				textureBuffer[i] = valueBuffer[0];
-				textureBuffer[i+1] = valueBuffer[0];
-				textureBuffer[i+2] = valueBuffer[0];
-				textureBuffer[i+3] = extra;
-				break;
-
-			case 2: // RG -> RRRG (R is value and G is Alpha)
-				textureBuffer[i] = valueBuffer[0];
-				textureBuffer[i + 1] = valueBuffer[0];
-				textureBuffer[i + 2] = valueBuffer[0];
-				textureBuffer[i + 3] = valueBuffer[1];
-				break;
-
-			case 3: // RGB -> RGB1
-				textureBuffer[i] = valueBuffer[0];
-				textureBuffer[i + 1] = valueBuffer[1];
-				textureBuffer[i + 2] = valueBuffer[2];
-				textureBuffer[i + 3] = extra;
-				break;
-
-			case 4: // RGBA -> RGBA
-				textureBuffer[i] = valueBuffer[0];
-				textureBuffer[i + 1] = valueBuffer[1];
-				textureBuffer[i + 2] = valueBuffer[2];
-				textureBuffer[i + 3] = valueBuffer[3];
-				break;
-			}
-		}
 	}
 }

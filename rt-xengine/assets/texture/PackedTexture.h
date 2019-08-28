@@ -13,7 +13,7 @@ namespace Assets
 		bool LoadChannels(uint32 targetChannel, Texture* text, uint32 actualComponents);
 
 	public:
-		PackedTexture(DiskAssetManager* context, const std::string& path);
+		PackedTexture(EngineObject* pObject, const std::string& path);
 		~PackedTexture() = default;
 
 		// pack at most 4 textures into a single one, copying channels based on actual texture components,
