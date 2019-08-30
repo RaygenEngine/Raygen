@@ -79,9 +79,10 @@ namespace Renderer::OpenGL
 		return Assets::LoadAssetAtMultiKeyCache<GLCubeMap>(m_glCubeMaps, this, cubeMap->GetName(), cubeMap, wrapFlag, mipMapping);
 	}
 
-	std::shared_ptr<GLTexture> GLRendererBase::RequestGLTexture(Assets::Texture* texture, GLint wrapFlag, bool mipMapping)
+	std::shared_ptr<GLTexture> GLRendererBase::RequestGLTexture(Assets::Texture* texture, GLint minFilter,
+		GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR)
 	{
-		return Assets::LoadAssetAtMultiKeyCache<GLTexture>(m_glTextures, this, texture->GetName(), texture, wrapFlag, mipMapping);
+		return Assets::LoadAssetAtMultiKeyCache<GLTexture>(m_glTextures, this, texture->GetName(), texture, minFilter, magFilter, wrapS, wrapT, wrapR);
 	}
 
 	std::shared_ptr<GLShader> GLRendererBase::RequestGLShader(Assets::StringFile* vertexFile, Assets::StringFile* fragmentFile)

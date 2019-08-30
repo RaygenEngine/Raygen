@@ -10,6 +10,7 @@ namespace tinygltf
 
 namespace Assets
 {
+	// RTTI buffer
 	class Buffer : public DiskAssetPart
 	{
 		BufferComponentType m_componentType;

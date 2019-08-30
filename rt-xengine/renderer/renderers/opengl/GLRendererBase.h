@@ -27,7 +27,7 @@ namespace Renderer::OpenGL
 		HGLRC m_hglrc;
 		
 		Assets::MultiKeyAssetCache<GLCubeMap, Assets::CubeMap*, GLint, bool> m_glCubeMaps;
-		Assets::MultiKeyAssetCache<GLTexture, Assets::Texture*, GLint, bool> m_glTextures;
+		Assets::MultiKeyAssetCache<GLTexture, Assets::Texture*, GLint, GLint, GLint, GLint, GLint> m_glTextures;
 		Assets::MultiKeyAssetCache<GLShader, Assets::StringFile*, Assets::StringFile*> m_glShaders;
 		Assets::MultiKeyAssetCache<GLModel, Assets::Model*> m_glModels;
 		//Assets::MultiKeyAssetCache<GLInstancedModel, Assets::Model*, World::TriangleModelInstancedGeometryNode*> m_glInstancedModels;
@@ -42,7 +42,7 @@ namespace Renderer::OpenGL
 		void SwapBuffers();
 
 		std::shared_ptr<GLCubeMap> RequestGLCubeMap(Assets::CubeMap* cubeMap, GLint wrapFlag = GL_REPEAT, bool mipMapping = false);
-		std::shared_ptr<GLTexture> RequestGLTexture(Assets::Texture* texture, GLint wrapFlag = GL_REPEAT, bool mipMapping = false);
+		std::shared_ptr<GLTexture> RequestGLTexture(Assets::Texture* texture, GLint minFilter = GL_LINEAR, GLint magFilter = GL_LINEAR, GLint wrapS = GL_REPEAT, GLint wrapT = GL_REPEAT, GLint wrapR = GL_REPEAT);
 		std::shared_ptr<GLShader> RequestGLShader(Assets::StringFile* vertexFile, Assets::StringFile* fragmentFile);
 		std::shared_ptr<GLModel> RequestGLModel(Assets::Model* model);
 		// TODO: fix this one

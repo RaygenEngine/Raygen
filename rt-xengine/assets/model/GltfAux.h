@@ -29,6 +29,8 @@ namespace Assets
 		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST:  return TF_LINEAR_MIPMAP_NEAREST;
 		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR:  return TF_NEAREST_MIPMAP_LINEAR;
 		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR:   return TF_LINEAR_MIPMAP_LINEAR;
+			// not defined -> used linear					
+		case -1:											 return TF_LINEAR;
 		default:                                             return TF_INVALID;
 		}
 	};

@@ -39,16 +39,9 @@ namespace Assets
 
 		STOP_TIMER("loading");
 		
-		if (!warn.empty())
-		{
-			RT_XENGINE_LOG_WARN(warn.c_str());
-		}
-
-		if (!err.empty())
-		{
-			RT_XENGINE_LOG_ERROR(err.c_str());
-		}
-
+		RT_XENGINE_CLOG_WARN(warn.empty(), warn.c_str());
+		RT_XENGINE_CLOG_ERROR(err.empty(), err.c_str());
+		
 		if (!ret) return false;
 
 		START_TIMER;
@@ -60,10 +53,15 @@ namespace Assets
 
 		for (auto& gltfMesh : gltfModel.meshes)
 		{
-			Mesh mesh{this, Core::UnnamedDescription(gltfMesh.name) };
-			mesh.LoadFromGltfData(gltfModel, gltfMesh);
+			std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>(this, Core::UnnamedDescription(gltfMesh.name));
 
-			m_meshes.emplace_back(mesh);
+			if (!mesh->Load(gltfModel, gltfMesh))
+			{
+				RT_XENGINE_LOG_ERROR("Failed to load mesh, {}", mesh);
+				return false;
+			}
+
+			m_meshes.emplace_back(std::move(mesh));
 		}
 
 		STOP_TIMER("copying");

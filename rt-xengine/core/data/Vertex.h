@@ -30,8 +30,8 @@ namespace Core
 		FLOAT2 textCoord0;
 		// 2 * 4 bytes
 		FLOAT2 textCoord1;
-		// 3 * 4 bytes
-		FLOAT3 color0;
+
+		// TODO joints/weights
 	};
 
 #if defined(__cplusplus)

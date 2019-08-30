@@ -10,19 +10,27 @@ namespace Assets
 	{
 	}
 
-	void Mesh::LoadFromGltfData(const tinygltf::Model& modelData, const tinygltf::Mesh& meshData)
+	bool Mesh::Load(const tinygltf::Model& modelData, const tinygltf::Mesh& meshData)
 	{
 		// primitives
 		auto i = 0;
 		for (auto& gltfPrimitive : meshData.primitives)
 		{
 			const auto name = "geom_group" + std::to_string(i++);
-			GeometryGroup geometryGroup{this, name };
-			geometryGroup.LoadFromGltfData(modelData, gltfPrimitive);
+			std::unique_ptr<GeometryGroup> geomGroup = std::make_unique<GeometryGroup>(this, name);
+	
+			
+			if(!geomGroup->Load(modelData, gltfPrimitive))
+			{
+				RT_XENGINE_LOG_ERROR("Failed to load geometry group, {}", geomGroup);
+				return false;
+			}
 
-			m_geometryGroups.emplace_back(geometryGroup);
+			m_geometryGroups.emplace_back(std::move(geomGroup));
 		}
 
 		// TODO: weights
+
+		return true;
 	}
 }

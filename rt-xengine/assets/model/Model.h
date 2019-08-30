@@ -18,7 +18,7 @@ namespace Assets
 			std::string copyright;
 		} m_info;
 		
-		std::vector<Mesh> m_meshes;
+		std::vector<std::unique_ptr<Mesh>> m_meshes;
 		
 	public:
 		
@@ -29,7 +29,7 @@ namespace Assets
 
 		const Info& GetInfo() const { return m_info; }
 
-		const std::vector<Mesh>& GetMeshes() const { return m_meshes; }
+		const std::vector<std::unique_ptr<Mesh>>& GetMeshes() const { return m_meshes; }
 		
 		GeometryUsage GetUsage() const { return m_usage; }
 

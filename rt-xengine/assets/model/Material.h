@@ -63,13 +63,13 @@ namespace Assets
 	public:
 		Material(DiskAsset* pAsset, const std::string& name);
 
-		void LoadFromGltfData(const tinygltf::Model& modelData, const tinygltf::Material& materialData);
+		void Load(const tinygltf::Model& modelData, const tinygltf::Material& materialData);
 		
-		/*const Sampler& GetBaseColorTextureSamplerInfo() const { return m_baseColorTextureSampler; }
-		const Sampler& GetMetallicRoughnessTextureSamplerInfo() const { return m_metallicRoughnessTextureSampler; }
-		const Sampler& GetNormalTextureSamplerInfo() const { return m_normalTextureSampler; }
-		const Sampler& GetOcclusionTextureSamplerInfo() const { return m_occlusionTextureSampler; }
-		const Sampler& GetEmissiveTextureSamplerInfo() const { return m_emissiveTextureSampler; }*/
+		const Sampler& GetBaseColorTextureSampler() const { return m_baseColorTextureSampler; }
+		const Sampler& GetMetallicRoughnessTextureSampler() const { return m_metallicRoughnessTextureSampler; }
+		const Sampler& GetNormalTextureSampler() const { return m_normalTextureSampler; }
+		const Sampler& GetOcclusionTextureSampler() const { return m_occlusionTextureSampler; }
+		const Sampler& GetEmissiveTextureSampler() const { return m_emissiveTextureSampler; }
 
 		const glm::vec4& GetBaseColorFactor() const { return m_baseColorFactor; }
 		const glm::vec3& GetEmissiveFactor() const { return m_emissiveFactor; }

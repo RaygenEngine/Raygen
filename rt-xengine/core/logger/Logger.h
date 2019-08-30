@@ -8,11 +8,8 @@
 template<class T>
 auto operator<<(std::ostream& os, const T& t) -> decltype(t.ToString(os), os)
 {
-	if (t)
-		t->ToString(os);
-	else
-		os << "nullptr";
-
+	t.ToString(os);
+	
 	return os;
 }
 

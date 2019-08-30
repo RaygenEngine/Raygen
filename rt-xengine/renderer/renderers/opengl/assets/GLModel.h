@@ -8,26 +8,21 @@
 
 namespace Renderer::OpenGL
 {
-	struct GLRenderMesh
-	{
-		GLuint vao;
-		std::shared_ptr<GLMesh> mesh;
-	};
-
 	// can contain multiple meshes (typically tho one but depends on the Model)
 	class GLModel : public GLAsset
 	{
 	protected:
 		uint32 m_usage;
-		std::vector<GLRenderMesh> m_renderMeshes;
+
+		std::vector<std::unique_ptr<GLMesh>> m_meshes;
 
 	public:
 		GLModel(GLRendererBase* renderer, const std::string& name);
-		virtual ~GLModel();
+		virtual ~GLModel() = default;
 
 		bool Load(Assets::Model* data);
 
-		std::vector<GLRenderMesh>& GetRenderMeshes() { return m_renderMeshes; }
+		const std::vector<std::unique_ptr<GLMesh>>& GetGLMeshes() const { return m_meshes; }
 
 		void ToString(std::ostream& os) const override { os << "asset-type: GLModel, name: " << m_name; }
 	};

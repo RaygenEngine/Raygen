@@ -9,7 +9,7 @@
 
 namespace Platform
 {
-	LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+	//LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 	Win32Window::Win32Window(System::Engine* engineRef)
 		: Window(engineRef),

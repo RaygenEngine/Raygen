@@ -15,7 +15,9 @@ namespace Renderer::OpenGL
 		GLTexture(GLRendererBase* renderer, const std::string& name);
 		~GLTexture();
 
-		bool Load(Assets::Texture* data, GLint wrapFlag, bool mipMapping);
+		int32 m_texCoordIndex;
+		
+		bool Load(Assets::Texture* data, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR);
 
 		GLuint GetGLHandle() const { return m_textureId; }
 

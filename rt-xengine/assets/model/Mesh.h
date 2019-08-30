@@ -13,15 +13,15 @@ namespace Assets
 {
 	class Mesh : public DiskAssetPart
 	{
-		std::vector<GeometryGroup> m_geometryGroups;
+		std::vector<std::unique_ptr<GeometryGroup>> m_geometryGroups;
 
 	public:
 
 		Mesh(DiskAsset* pAsset, const std::string& name);
 
-		void LoadFromGltfData(const tinygltf::Model& modelData, const tinygltf::Mesh& meshData);
+		bool Load(const tinygltf::Model& modelData, const tinygltf::Mesh& meshData);
 
-		const std::vector<GeometryGroup>& GetGeometryGroups() const { return m_geometryGroups; }
+		const std::vector<std::unique_ptr<GeometryGroup>>& GetGeometryGroups() const { return m_geometryGroups; }
 
 		void ToString(std::ostream& os) const override { os << "asset-type: Mesh, name: " << m_name; }
 	};

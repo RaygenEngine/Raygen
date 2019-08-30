@@ -18,7 +18,7 @@ namespace Assets
 	{
 	}
 
-	void Sampler::LoadFromGltfData(const tinygltf::Model& modelData, int32 gltfTextureIndex, int32 gltfTexCoordTarget, bool loadDefaultTexture)
+	void Sampler::Load(const tinygltf::Model& modelData, int32 gltfTextureIndex, int32 gltfTexCoordTarget, bool loadDefaultTexture)
 	{
 		const auto textureIndex = gltfTextureIndex;
 

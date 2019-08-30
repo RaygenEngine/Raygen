@@ -10,14 +10,14 @@ namespace Renderer::OpenGL
 	class GLTestRenderer :  public GLRendererBase
 	{
 	protected:
-		std::shared_ptr<GLShader> m_instancedShader;
+		//std::shared_ptr<GLShader> m_instancedShader;
 		std::shared_ptr<GLShader> m_nonInstancedShader;
 
 		std::vector<std::shared_ptr<GLTestGeometry>> m_geometryObservers;
 
-		std::vector<std::shared_ptr<GLInstancedModel>> m_instancedGeometries;
+		//std::vector<std::shared_ptr<GLInstancedModel>> m_instancedGeometries;
 
-		std::shared_ptr<GLTexture> m_skyTexture;
+		//std::shared_ptr<GLTexture> m_skyTexture;
 
 		World::CameraNode* m_camera;
 

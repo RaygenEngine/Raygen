@@ -29,7 +29,7 @@ namespace Assets
 		
 		Sampler(DiskAsset* pAsset, const std::string& name);
 
-		void LoadFromGltfData(const tinygltf::Model& modelData, int32 gltfTextureIndex, int32 gltfTexCoordTarget, bool loadDefaultTexture = true);
+		void Load(const tinygltf::Model& modelData, int32 gltfTextureIndex, int32 gltfTexCoordTarget, bool loadDefaultTexture = true);
 
 		TextureFiltering GetMinFilter() const { return m_minFilter; }
 		TextureFiltering GetMagFilter() const { return m_magFilter; }

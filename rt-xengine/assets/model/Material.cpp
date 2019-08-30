@@ -24,7 +24,7 @@ namespace Assets
 	{
 	}
 
-	void Material::LoadFromGltfData(const tinygltf::Model& modelData, const tinygltf::Material& materialData)
+	void Material::Load(const tinygltf::Model& modelData, const tinygltf::Material& materialData)
 	{
 		// factors
 		auto bFactor = materialData.pbrMetallicRoughness.baseColorFactor;
@@ -47,19 +47,19 @@ namespace Assets
 
 		// samplers
 		auto& baseColorTextureInfo = materialData.pbrMetallicRoughness.baseColorTexture;
-		m_baseColorTextureSampler.LoadFromGltfData(modelData, baseColorTextureInfo.index, baseColorTextureInfo.texCoord);
+		m_baseColorTextureSampler.Load(modelData, baseColorTextureInfo.index, baseColorTextureInfo.texCoord);
 		
 		auto& metallicRougnessTextureInfo = materialData.pbrMetallicRoughness.metallicRoughnessTexture;
-		m_metallicRoughnessTextureSampler.LoadFromGltfData(modelData, metallicRougnessTextureInfo.index, metallicRougnessTextureInfo.texCoord);
+		m_metallicRoughnessTextureSampler.Load(modelData, metallicRougnessTextureInfo.index, metallicRougnessTextureInfo.texCoord);
 		
 		auto& emissiveTextureInfo = materialData.emissiveTexture;
-		m_emissiveTextureSampler.LoadFromGltfData(modelData, emissiveTextureInfo.index, emissiveTextureInfo.texCoord);
+		m_emissiveTextureSampler.Load(modelData, emissiveTextureInfo.index, emissiveTextureInfo.texCoord);
 		
 		auto& normalTextureInfo = materialData.normalTexture;
-		m_normalTextureSampler.LoadFromGltfData(modelData, normalTextureInfo.index, normalTextureInfo.texCoord, false);
+		m_normalTextureSampler.Load(modelData, normalTextureInfo.index, normalTextureInfo.texCoord, false);
 		
 		auto& occlusionTextureInfo = materialData.occlusionTexture;
-		m_occlusionTextureSampler.LoadFromGltfData(modelData, occlusionTextureInfo.index, occlusionTextureInfo.texCoord, false);
+		m_occlusionTextureSampler.Load(modelData, occlusionTextureInfo.index, occlusionTextureInfo.texCoord, false);
 	}
 };
 
