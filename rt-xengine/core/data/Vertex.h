@@ -28,12 +28,19 @@ namespace Core
 		FLOAT3 bitangents;
 		// 2 * 4 bytes
 		FLOAT2 textCoord0;
+	};
+
+	struct VertexExtension
+	{
 		// 2 * 4 bytes
 		FLOAT2 textCoord1;
 
-		// TODO joints/weights
-	};
+		FLOAT4 color0;
 
+		FLOAT4 weights;
+
+		glm::u16vec4 joints;
+	};
 #if defined(__cplusplus)
 }
 #endif

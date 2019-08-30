@@ -12,19 +12,25 @@ namespace Renderer::OpenGL
 	class GLModel : public GLAsset
 	{
 	protected:
-		uint32 m_usage;
+		GLenum m_usage;
 
-		std::vector<std::unique_ptr<GLMesh>> m_meshes;
+		std::vector<GLMesh*> m_meshes;
 
 	public:
 		GLModel(GLRendererBase* renderer, const std::string& name);
-		virtual ~GLModel() = default;
+		//virtual ~GLModel() = default;
 
 		bool Load(Assets::Model* data);
 
-		const std::vector<std::unique_ptr<GLMesh>>& GetGLMeshes() const { return m_meshes; }
+		std::vector<GLMesh*>& GetGLMeshes() { return m_meshes; }
 
 		void ToString(std::ostream& os) const override { os << "asset-type: GLModel, name: " << m_name; }
+		
+		virtual ~GLModel() {
+			for (auto ptr : m_meshes) {
+				delete ptr;
+			}
+		}
 	};
 
 }

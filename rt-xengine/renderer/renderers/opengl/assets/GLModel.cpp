@@ -24,9 +24,9 @@ namespace Renderer::OpenGL
 		{
 			for (auto& geometryGroup : mesh->GetGeometryGroups())
 			{
-				std::unique_ptr<GLMesh> me = std::make_unique<GLMesh>(GetGLRenderer(), this->GetName());
-				me->Load(geometryGroup.get(), m_usage);
-				m_meshes.emplace_back(std::move(me));
+				GLMesh* ptr = new GLMesh(GetGLRenderer(), this->GetName());
+				ptr->Load(geometryGroup.get(), m_usage);
+				m_meshes.emplace_back(ptr);
 			}
 		}
 	
