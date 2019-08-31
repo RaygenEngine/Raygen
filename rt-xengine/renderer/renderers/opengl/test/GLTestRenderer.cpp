@@ -13,7 +13,7 @@
 namespace Renderer::OpenGL
 {
 	GLTestRenderer::GLTestRenderer(System::Engine* context)
-		: GLRendererBase(context), m_camera(nullptr), m_previewMode(PT_ALBEDO)
+		: GLRendererBase(context), m_camera(nullptr), m_previewMode(PT_BASE_COLOR_MAP)
 	{
 	}
 
@@ -50,10 +50,19 @@ namespace Renderer::OpenGL
 		//m_nonInstancedShader->SetUniformLocation("emissiveSampler");
 		m_nonInstancedShader->SetUniformLocation("mvp");
 		m_nonInstancedShader->SetUniformLocation("m");
-		m_nonInstancedShader->SetUniformLocation("normal_matrix");
-		m_nonInstancedShader->SetUniformLocation("viewPos");
+		m_nonInstancedShader->SetUniformLocation("normalMatrix");
 		m_nonInstancedShader->SetUniformLocation("mode");
-
+		m_nonInstancedShader->SetUniformLocation("viewPos");
+		m_nonInstancedShader->SetUniformLocation("baseColorFactor");
+		m_nonInstancedShader->SetUniformLocation("emissiveFactor");
+		m_nonInstancedShader->SetUniformLocation("metallicFactor");
+		m_nonInstancedShader->SetUniformLocation("roughnessFactor");
+		m_nonInstancedShader->SetUniformLocation("normalScale");
+		m_nonInstancedShader->SetUniformLocation("occlusionStrength");
+		m_nonInstancedShader->SetUniformLocation("alphaMode");
+		m_nonInstancedShader->SetUniformLocation("alphaCutoff");
+		m_nonInstancedShader->SetUniformLocation("doubleSided");
+	
 		auto* user = GetWorld()->GetAvailableNodeSpecificSubType<World::FreeformUserNode>();
 
 		RT_XENGINE_ASSERT_RETURN_FALSE(user, "Missing freeform user node!");
@@ -149,8 +158,8 @@ namespace Renderer::OpenGL
 
 		glUseProgram(m_nonInstancedShader->GetGLHandle());
 
-		glUniform1i(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), 0);
-		glUniform1i(m_nonInstancedShader->GetUniformLocation("metallicRoughnessSampler"), 1);
+		//glUniform1i(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), 0);
+		//glUniform1i(m_nonInstancedShader->GetUniformLocation("metallicRoughnessSampler"), 1);
 		//glUniform1i(m_nonInstancedShader->GetUniformLocation("normalSampler"), 2);
 		//glUniform1i(m_nonInstancedShader->GetUniformLocation("occlusionSampler"), 3);
 		//glUniform1i(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), 4);
@@ -167,17 +176,29 @@ namespace Renderer::OpenGL
 
 			glUniformMatrix4fv(m_nonInstancedShader->GetUniformLocation("mvp"), 1, GL_FALSE, &mvp[0][0]);
 			glUniformMatrix4fv(m_nonInstancedShader->GetUniformLocation("m"), 1, GL_FALSE, &m[0][0]);
-			glUniformMatrix3fv(m_nonInstancedShader->GetUniformLocation("normal_matrix"), 1, GL_FALSE, &glm::transpose(glm::inverse(glm::mat3(m)))[0][0]);
+			glUniformMatrix3fv(m_nonInstancedShader->GetUniformLocation("normalMatrix"), 1, GL_FALSE, &glm::transpose(glm::inverse(glm::mat3(m)))[0][0]);
 
 			for (auto& glMesh : geometry->glModel->GetGLMeshes())
 			{
 				glBindVertexArray(glMesh->GetVAO());
+
+				auto& glMaterial = glMesh->GetMaterial();
+				
+				glUniform4fv(m_nonInstancedShader->GetUniformLocation("baseColorFactor"), 1, &glMaterial.GetBaseColorFactor()[0]);
+				glUniform3fv(m_nonInstancedShader->GetUniformLocation("emissiveFactor"), 1, &glMaterial.GetEmissiveFactor()[0]);
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("metallicFactor"), glMaterial.GetMetallicFactor());
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("roughnessFactor"), glMaterial.GetRoughnessFactor());
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("normalScale"), glMaterial.GetNormalScale());
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("occlusionStrength"), glMaterial.GetOcclusionStrength());
+				glUniform1i(m_nonInstancedShader->GetUniformLocation("alphaMode"), glMaterial.GetAlphaMode());
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("alphaCutoff"), glMaterial.GetAlphaCutoff());
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("doubleSided"), glMaterial.IsDoubleSided());
 	
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, glMesh->GetMaterial().GetBaseColorTexture()->GetGLHandle());
+				glBindTexture(GL_TEXTURE_2D, glMaterial.GetBaseColorTexture()->GetGLHandle());
 	
 				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, glMesh->GetMaterial().GetMetallicRoughnessTexture()->GetGLHandle());
+				glBindTexture(GL_TEXTURE_2D, glMaterial.GetMetallicRoughnessTexture()->GetGLHandle());
 
 				//glActiveTexture(GL_TEXTURE2);
 				//glBindTexture(GL_TEXTURE_2D, glMesh.GetMaterial().GetNormalTexture()->GetGLHandle());
@@ -209,13 +230,13 @@ namespace Renderer::OpenGL
 	{
 		if (GetInput().IsKeyPressed(XVK_1))
 		{
-			m_previewMode = m_previewMode - 1 < 0 ? PT_COUNT - 1 : m_previewMode - 1; // TODO
-			RT_XENGINE_LOG_INFO("Preview Mode set to: {}"/*, SurfacePreviewTargetModeString(m_previewMode)*/);
+			m_previewMode = m_previewMode - 1 < 0 ? PT_COUNT - 1 : m_previewMode - 1;
+			RT_XENGINE_LOG_INFO("Preview Mode set to: {}({})", SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
 		}
 		else if (GetInput().IsKeyPressed(XVK_2))
 		{
 			++m_previewMode %= PT_COUNT;
-			RT_XENGINE_LOG_INFO("Preview Mode set to: {}"/*, SurfacePreviewTargetModeString(m_previewMode)*/);
+			RT_XENGINE_LOG_INFO("Preview Mode set to: {}({})", SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
 		}
 	}
 }

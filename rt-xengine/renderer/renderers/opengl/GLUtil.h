@@ -102,6 +102,6 @@ namespace Renderer::OpenGL
 
 			}
 		}
-		RT_XENGINE_LOG_ERROR(baseMessage);
+		RT_XENGINE_LOG_DEBUG(baseMessage);
 	}
 }
