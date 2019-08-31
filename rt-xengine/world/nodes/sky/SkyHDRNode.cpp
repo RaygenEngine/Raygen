@@ -17,7 +17,7 @@ namespace World
 
 		if (Assets::AttributeExists(xmlData, "hdr_texture"))
 		{
-			m_hdrTexture = GetDiskAssetManager()->LoadTextureAsset(xmlData->Attribute("hdr_texture"), DR_HIGH);
+			m_hdrTexture = GetDiskAssetManager()->LoadTextureAsset(xmlData->Attribute("hdr_texture"), DynamicRange::HIGH);
 
 			if (!m_hdrTexture)
 				return false;

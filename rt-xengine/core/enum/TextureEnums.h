@@ -1,25 +1,25 @@
 #pragma once
 
-typedef enum
+enum class TextureFiltering
 {
-	TF_NEAREST,
-	TF_LINEAR,
-	TF_NEAREST_MIPMAP_NEAREST,
-	TF_NEAREST_MIPMAP_LINEAR,
-	TF_LINEAR_MIPMAP_NEAREST,
-	TF_LINEAR_MIPMAP_LINEAR,
-	TF_INVALID
-} TextureFiltering;
+	NEAREST,
+	LINEAR,
+	NEAREST_MIPMAP_NEAREST,
+	NEAREST_MIPMAP_LINEAR,
+	LINEAR_MIPMAP_NEAREST,
+	LINEAR_MIPMAP_LINEAR,
+	INVALID
+};
 
-typedef enum
+enum class TextureWrapping
 {
-	TW_CLAMP_TO_EDGE,
-	TW_MIRRORED_REPEAT,
-	TW_REPEAT,
-	TW_INVALID
-} TextureWrapping;
+	CLAMP_TO_EDGE,
+	MIRRORED_REPEAT,
+	REPEAT,
+	INVALID
+};
 
-typedef enum
+enum CubeMapFace : int32
 {
 	CMF_RIGHT = 0,
 	CMF_LEFT,
@@ -28,23 +28,23 @@ typedef enum
 	CMF_FRONT,
 	CMF_BACK,
 	CMF_COUNT
-} CubeMapFace;
+};
 
 // Low dynamic range textures are loaded as byte (8 bits per channel)
 // High dynamic range textures are loaded as float32 (32 bits per channel)
 // TODO: expand this
-typedef enum
+enum class DynamicRange
 {
-	DR_LOW = 0,
-	DR_HIGH
-} DynamicRange;
+	LOW = 0,
+	HIGH
+};
 
 inline const char* TexelEnumToString(DynamicRange dr)
 {
 	switch (dr)
 	{
-	case DR_LOW: return "LDR";
-	case DR_HIGH: return "HDR";
+	case DynamicRange::LOW: return "LDR";
+	case DynamicRange::HIGH: return "HDR";
 	default:  return "invalid";
 	}
 }

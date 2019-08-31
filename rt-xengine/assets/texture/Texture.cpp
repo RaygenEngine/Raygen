@@ -80,11 +80,11 @@ namespace Assets
 
 		switch (m_dynamicRange)
 		{
-		case DR_LOW:
+		case DynamicRange::LOW:
 			imageData = stbi_load(path.c_str(), &width, &height, &components, STBI_rgb_alpha);
 			break;
 
-		case DR_HIGH:
+		case DynamicRange::HIGH:
 			imageData = stbi_loadf(path.c_str(), &width, &height, &components, STBI_rgb_alpha);
 			break;
 
@@ -138,12 +138,12 @@ namespace Assets
 		switch (texture->m_dynamicRange)
 		{
 
-		case DR_LOW:
+		case DynamicRange::LOW:
 			texture->ReserveTextureDataMemory(sizeof(byte) * size);
 			CopyValueTypedToTextureBuffer(static_cast<byte*>(texture->m_data), static_cast<byte*>(texelValue), size, components, static_cast<byte>(255));
 			break;
 
-		case DR_HIGH:
+		case DynamicRange::HIGH:
 			texture->ReserveTextureDataMemory(sizeof(float) * size);
 			CopyValueTypedToTextureBuffer(static_cast<float*>(texture->m_data), static_cast<float*>(texelValue), size, components, 1.0f);
 			break;

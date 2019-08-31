@@ -9,11 +9,11 @@ namespace Assets
 	Sampler::Sampler(DiskAsset* pAsset, const std::string& name)
 		: DiskAssetPart(pAsset, name),
 		  m_texture(nullptr),
-		  m_minFilter(TF_LINEAR),
-		  m_magFilter(TF_LINEAR),
-		  m_wrapS(TW_REPEAT),
-		  m_wrapT(TW_REPEAT),
-		  m_wrapR(TW_REPEAT),
+		  m_minFilter(TextureFiltering::LINEAR),
+		  m_magFilter(TextureFiltering::LINEAR),
+		  m_wrapS(TextureWrapping::REPEAT),
+		  m_wrapT(TextureWrapping::REPEAT),
+		  m_wrapR(TextureWrapping::REPEAT),
 		  m_texCoordIndex(0)
 	{
 	}
@@ -35,7 +35,7 @@ namespace Assets
 				// TODO check image settings
 				auto& gltfImage = modelData.images.at(imageIndex);
 
-				m_texture = GetDiskAssetManager()->LoadTextureAsset(GetDirectoryPath() + "\\" + gltfImage.uri, DR_LOW, false);
+				m_texture = GetDiskAssetManager()->LoadTextureAsset(GetDirectoryPath() + "\\" + gltfImage.uri, DynamicRange::LOW, false);
 			}
 
 			const auto samplerIndex = gltfTexture.sampler;
@@ -58,7 +58,7 @@ namespace Assets
 			// LOW DR
 			// gltf = if texture missing all values of default will be equal to 1, therefore the factor is the final value
 			byte cDefVal[4] = { 255, 255, 255, 255 };
-			m_texture = Texture::CreateDefaultTexture(this, &cDefVal, 1u, 1u, 4u, DR_LOW);
+			m_texture = Texture::CreateDefaultTexture(this, &cDefVal, 1u, 1u, 4u, DynamicRange::LOW);
 		}
 
 		m_texCoordIndex = gltfTexCoordTarget;

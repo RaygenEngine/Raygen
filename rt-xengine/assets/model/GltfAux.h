@@ -8,14 +8,14 @@ namespace Assets
 	{
 		switch (gltfMode)
 		{
-		case TINYGLTF_MODE_POINTS:         return GM_POINTS;
-		case TINYGLTF_MODE_LINE:           return GM_LINE;
-		case TINYGLTF_MODE_LINE_LOOP:      return GM_LINE_LOOP;
-		case TINYGLTF_MODE_LINE_STRIP:     return GM_LINE_STRIP;
-		case TINYGLTF_MODE_TRIANGLES:      return GM_TRIANGLES;
-		case TINYGLTF_MODE_TRIANGLE_STRIP: return GM_TRIANGLE_STRIP;
-		case TINYGLTF_MODE_TRIANGLE_FAN:   return GM_TRIANGLE_FAN;
-		default:						   return GM_INVALID;
+		case TINYGLTF_MODE_POINTS:         return GeometryMode::POINTS;
+		case TINYGLTF_MODE_LINE:           return GeometryMode::LINE;
+		case TINYGLTF_MODE_LINE_LOOP:      return GeometryMode::LINE_LOOP;
+		case TINYGLTF_MODE_LINE_STRIP:     return GeometryMode::LINE_STRIP;
+		case TINYGLTF_MODE_TRIANGLES:      return GeometryMode::TRIANGLES;
+		case TINYGLTF_MODE_TRIANGLE_STRIP: return GeometryMode::TRIANGLE_STRIP;
+		case TINYGLTF_MODE_TRIANGLE_FAN:   return GeometryMode::TRIANGLE_FAN;
+		default:						   return GeometryMode::INVALID;
 		}
 	}
 
@@ -23,15 +23,13 @@ namespace Assets
 	{
 		switch (gltfFiltering)
 		{
-		case TINYGLTF_TEXTURE_FILTER_NEAREST:                return TF_NEAREST;
-		case TINYGLTF_TEXTURE_FILTER_LINEAR:                 return TF_LINEAR;
-		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST: return TF_NEAREST_MIPMAP_NEAREST;
-		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST:  return TF_LINEAR_MIPMAP_NEAREST;
-		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR:  return TF_NEAREST_MIPMAP_LINEAR;
-		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR:   return TF_LINEAR_MIPMAP_LINEAR;
-			// not defined -> used linear					
-		case -1:											 return TF_LINEAR;
-		default:                                             return TF_INVALID;
+		case TINYGLTF_TEXTURE_FILTER_NEAREST:                return TextureFiltering::NEAREST;
+		case TINYGLTF_TEXTURE_FILTER_LINEAR:                 return TextureFiltering::LINEAR;
+		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST: return TextureFiltering::NEAREST_MIPMAP_NEAREST;
+		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST:  return TextureFiltering::LINEAR_MIPMAP_NEAREST;
+		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR:  return TextureFiltering::NEAREST_MIPMAP_LINEAR;
+		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR:   return TextureFiltering::LINEAR_MIPMAP_LINEAR;
+		default:                                             return TextureFiltering::INVALID;
 		}
 	};
 
@@ -39,10 +37,10 @@ namespace Assets
 	{
 		switch (gltfWrapping)
 		{
-		case TINYGLTF_TEXTURE_WRAP_REPEAT:          return TW_REPEAT;
-		case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE:   return TW_CLAMP_TO_EDGE;
-		case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT: return TW_MIRRORED_REPEAT;
-		default:                                    return TW_INVALID;
+		case TINYGLTF_TEXTURE_WRAP_REPEAT:          return TextureWrapping::REPEAT;
+		case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE:   return TextureWrapping::CLAMP_TO_EDGE;
+		case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT: return TextureWrapping::MIRRORED_REPEAT;
+		default:                                    return TextureWrapping::INVALID;
 		}
 	};
 
@@ -54,7 +52,7 @@ namespace Assets
 			return AM_MASK;
 		if (Core::CaseInsensitiveCompare(gltfAlphaMode, "BLEND"))
 			return AM_BLEND;
-
+		// not defined -> repeat
 		return AM_INVALID;
 	}
 
@@ -62,14 +60,14 @@ namespace Assets
 	{
 		switch (gltfElementType)
 		{
-		case TINYGLTF_TYPE_SCALAR: return BET_SCALAR;
-		case TINYGLTF_TYPE_VEC2:   return BET_VEC2;
-		case TINYGLTF_TYPE_VEC3:   return BET_VEC3;
-		case TINYGLTF_TYPE_VEC4:   return BET_VEC4;
-		case TINYGLTF_TYPE_MAT2:   return BET_MAT2;
-		case TINYGLTF_TYPE_MAT3:   return BET_MAT3;
-		case TINYGLTF_TYPE_MAT4:   return BET_MAT4;
-		default:                   return BET_INVALID;
+		case TINYGLTF_TYPE_SCALAR: return BufferElementType::SCALAR;
+		case TINYGLTF_TYPE_VEC2:   return BufferElementType::VEC2;
+		case TINYGLTF_TYPE_VEC3:   return BufferElementType::VEC3;
+		case TINYGLTF_TYPE_VEC4:   return BufferElementType::VEC4;
+		case TINYGLTF_TYPE_MAT2:   return BufferElementType::MAT2;
+		case TINYGLTF_TYPE_MAT3:   return BufferElementType::MAT3;
+		case TINYGLTF_TYPE_MAT4:   return BufferElementType::MAT4;
+		default:                   return BufferElementType::INVALID;
 		}
 	}
 
@@ -77,15 +75,15 @@ namespace Assets
 	{
 		switch (gltfComponentType)
 		{
-		case TINYGLTF_COMPONENT_TYPE_BYTE:			 return BCT_BYTE;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:  return BCT_UNSIGNED_BYTE;
-		case TINYGLTF_COMPONENT_TYPE_SHORT:			 return BCT_SHORT;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: return BCT_UNSIGNED_SHORT;
-		case TINYGLTF_COMPONENT_TYPE_INT:			 return BCT_INT;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:   return BCT_UNSIGNED_INT;
-		case TINYGLTF_COMPONENT_TYPE_FLOAT:			 return BCT_FLOAT;
-		case TINYGLTF_COMPONENT_TYPE_DOUBLE:		 return BCT_DOUBLE;
-		default:									 return BCT_INVALID;
+		case TINYGLTF_COMPONENT_TYPE_BYTE:			 return BufferComponentType::BYTE;
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:  return BufferComponentType::UNSIGNED_BYTE;
+		case TINYGLTF_COMPONENT_TYPE_SHORT:			 return BufferComponentType::SHORT;
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: return BufferComponentType::UNSIGNED_SHORT;
+		case TINYGLTF_COMPONENT_TYPE_INT:			 return BufferComponentType::INT;
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:   return BufferComponentType::UNSIGNED_INT;
+		case TINYGLTF_COMPONENT_TYPE_FLOAT:			 return BufferComponentType::FLOAT;
+		case TINYGLTF_COMPONENT_TYPE_DOUBLE:		 return BufferComponentType::DOUBLE;
+		default:									 return BufferComponentType::INVALID;
 		}
 	}
 }

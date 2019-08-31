@@ -7,7 +7,7 @@ namespace Assets
 {
 	GeometryGroup::GeometryGroup(DiskAsset* pAsset, const std::string& name)
 		: DiskAssetPart(pAsset, name),
-		  m_mode(GM_INVALID),
+		  m_mode(GeometryMode::TRIANGLES),
 	      m_material(this, "default-mat")
 	{
 	}
@@ -41,16 +41,16 @@ namespace Assets
 				{
 					switch (componentType)
 					{
-					case BCT_UNSIGNED_BYTE:
+					case BufferComponentType::UNSIGNED_BYTE:
 						target[i][c] = (&buffer.data[byteOffset + dataOffset + strideOffset])[c];
 						break;
-					case BCT_UNSIGNED_SHORT:
+					case BufferComponentType::UNSIGNED_SHORT:
 						target[i][c] = reinterpret_cast<const uint16*>(&buffer.data[byteOffset + dataOffset + strideOffset])[c];
 						break;
-					case BCT_UNSIGNED_INT:
+					case BufferComponentType::UNSIGNED_INT:
 						target[i][c] = reinterpret_cast<const uint32*>(&buffer.data[byteOffset + dataOffset + strideOffset])[c];
 						break;
-					case BCT_FLOAT:
+					case BufferComponentType::FLOAT:
 						target[i][c] = reinterpret_cast<const float*>(&buffer.data[byteOffset + dataOffset + strideOffset])[c];
 						break;
 					default:

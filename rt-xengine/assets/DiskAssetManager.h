@@ -37,7 +37,7 @@ namespace Assets
 
 		std::shared_ptr<XMLDoc> LoadXMLDocAsset(const std::string& xmlDocPath, const std::string& pathHint = "");
 		
-		std::shared_ptr<Model> LoadModelAsset(const std::string& modelPath, GeometryUsage usage = GU_STATIC, const std::string& pathHint = "");
+		std::shared_ptr<Model> LoadModelAsset(const std::string& modelPath, GeometryUsage usage = GeometryUsage::STATIC, const std::string& pathHint = "");
 
 		// OpenGL, Optix and many more require textures vertically flipped, if your api doesn't then flipVertically should be set to false
 		std::shared_ptr<Texture> LoadTextureAsset(const std::string& texturePath, DynamicRange dr, bool flipVertically = true, const std::string& pathHint = "");

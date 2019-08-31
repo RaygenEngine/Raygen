@@ -1,25 +1,25 @@
 #pragma once
 
-typedef enum
+enum class LogLevelTarget
 {
-	LLT_TRACE = 0,
-	LLT_DEBUG,
-	LLT_INFO,
-	LLT_WARN,
-	LLT_ERROR,
-	LLT_CRITICAL,
-	LLT_OFF
-} LogLevelTarget;
+	TRACE = 0,
+	DEBUG,
+	INFO,
+	WARN,
+	ERR,
+	CRITICAL,
+	OFF
+};
 
-typedef enum
+enum ChannelTarget : int32
 {
 	CT_RED = 0,
 	CT_GREEN,
 	CT_BLUE,
 	CT_ALPHA
-} ChannelTarget;
+};
 
-typedef enum
+enum PreviewTarget : int32
 {
 	// base color
 	PT_BASE_COLOR_MAP = 0,
@@ -65,7 +65,7 @@ typedef enum
 	// double sidedness
 	PT_DOUBLE_SIDEDNESS,
 	PT_COUNT
-} PreviewTarget;
+};
 
 inline const char* SurfacePreviewTargetModeString(int32 pt)
 {

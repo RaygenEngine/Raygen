@@ -13,7 +13,7 @@
 namespace Renderer::OpenGL
 {
 	GLTestRenderer::GLTestRenderer(System::Engine* context)
-		: GLRendererBase(context), m_camera(nullptr), m_previewMode(PT_BASE_COLOR_MAP)
+		: GLRendererBase(context), m_camera(nullptr), m_previewMode(0)
 	{
 	}
 
@@ -228,12 +228,12 @@ namespace Renderer::OpenGL
 
 	void GLTestRenderer::Update()
 	{
-		if (GetInput().IsKeyPressed(XVK_1))
+		if (GetInput().IsKeyPressed(XVirtualKey::K1))
 		{
 			m_previewMode = m_previewMode - 1 < 0 ? PT_COUNT - 1 : m_previewMode - 1;
 			RT_XENGINE_LOG_INFO("Preview Mode set to: {}({})", SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
 		}
-		else if (GetInput().IsKeyPressed(XVK_2))
+		else if (GetInput().IsKeyPressed(XVirtualKey::K2))
 		{
 			++m_previewMode %= PT_COUNT;
 			RT_XENGINE_LOG_INFO("Preview Mode set to: {}({})", SurfacePreviewTargetModeString(m_previewMode), m_previewMode);

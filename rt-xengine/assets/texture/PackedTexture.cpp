@@ -65,7 +65,7 @@ namespace Assets
 
 		switch (m_dynamicRange)
 		{
-			case DR_LOW:
+			case DynamicRange::LOW:
 			
 				ReserveTextureDataMemory(sizeof(byte) * 4 * m_width * m_height);
 				for (const auto& t : textures)
@@ -75,7 +75,7 @@ namespace Assets
 				}
 				break;
 
-			case DR_HIGH:
+			case DynamicRange::HIGH:
 				ReserveTextureDataMemory(sizeof(float) * 4 * m_width * m_height);
 				for (const auto& t : textures)
 				{
@@ -114,19 +114,19 @@ namespace Assets
 			switch (actualComponents)
 			{
 			case 1: // RRR1 -> target = R
-				packedData[i + targetChannel + CT_RED] = textData[j + CT_RED];
+				packedData[i + targetChannel] = textData[j];
 				break;
 				
 			case 2: // RRRG -> target = R | target + 1 = G
-				packedData[i + targetChannel + CT_RED] = textData[j + CT_RED];
-				packedData[i + targetChannel + CT_GREEN] = textData[j + CT_ALPHA];
+				packedData[i + targetChannel] = textData[j];
+				packedData[i + targetChannel + 1] = textData[j + 3];
 				break;
 
 			case 3: // RGB1 -> target = R | target + 1 = G |  target + 2 = B
 			case 4: // RGBA -> target = R | target + 1 = G |  target + 2 = B (lose the Alpha - note: otherwise no point in packing this texture)
-				packedData[i + targetChannel + CT_RED] = textData[j + CT_RED];
-				packedData[i + targetChannel + CT_GREEN] = textData[j + CT_GREEN];
-				packedData[i + targetChannel + CT_BLUE] = textData[j + CT_BLUE];
+				packedData[i + targetChannel] = textData[j];
+				packedData[i + targetChannel + 1] = textData[j + 1];
+				packedData[i + targetChannel + 2] = textData[j + 2];
 				break;
 
 			default:

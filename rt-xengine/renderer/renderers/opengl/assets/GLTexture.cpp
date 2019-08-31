@@ -33,12 +33,12 @@ namespace Renderer::OpenGL
 		switch (data->GetType())
 		{
 
-		case DR_HIGH:
+		case DynamicRange::HIGH:
 			type = GL_FLOAT;
 			internalFormat = GL_RGBA32F;
 			break;
 
-		case DR_LOW:
+		case DynamicRange::LOW:
 		default:
 			type = GL_UNSIGNED_BYTE;
 			internalFormat = GL_RGBA;
