@@ -47,7 +47,7 @@ namespace World
 		// user buffs
 		if (input.IsKeyRepeat(XVK_LSHIFT))
 			speed *= 10.f;
-		if (input.IsKeyRepeat(XVK_C))
+		if (input.IsKeyRepeat(XVK_CTRL))
 			speed /= 10.f;
 		if (input.IsRightTriggerMoving())
 			speed *= 10.f * glm::exp(input.GetRightTriggerMagnitude());
