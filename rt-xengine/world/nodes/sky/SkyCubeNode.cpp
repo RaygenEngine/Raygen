@@ -17,7 +17,7 @@ namespace World
 
 		if (Assets::AttributeExists(xmlData, "cube_map"))
 		{
-			m_cubeMap = GetDiskAssetManager()->LoadCubeMapAsset(xmlData->Attribute("cube_map"), DR_LOW, false);
+			m_cubeMap = GetDiskAssetManager()->LoadCubeMapAsset(xmlData->Attribute("cube_map"), DynamicRange::LOW, false);
 
 			if (!m_cubeMap)
 				return false;

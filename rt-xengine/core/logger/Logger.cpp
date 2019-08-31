@@ -17,31 +17,31 @@ namespace Core
 
 		switch(level)
 		{
-			case LLT_TRACE:
+			case LogLevelTarget::TRACE:
 				s_logger->set_level(spdlog::level::level_enum::trace);
 				break;
 
-			case LLT_DEBUG:
+			case LogLevelTarget::DEBUG:
 				s_logger->set_level(spdlog::level::level_enum::debug);
 				break;
 
-			case LLT_INFO:
+			case LogLevelTarget::INFO:
 				s_logger->set_level(spdlog::level::level_enum::info);
 				break;
 
-			case LLT_WARN:
+			case LogLevelTarget::WARN:
 				s_logger->set_level(spdlog::level::level_enum::warn);
 				break;
 
-			case LLT_ERROR:
+			case LogLevelTarget::ERR:
 				s_logger->set_level(spdlog::level::level_enum::err);
 				break;
 
-			case LLT_CRITICAL:
+			case LogLevelTarget::CRITICAL:
 				s_logger->set_level(spdlog::level::level_enum::critical);
 				break;
 
-			case LLT_OFF: default:
+			case LogLevelTarget::OFF: default:
 				s_logger->set_level(spdlog::level::level_enum::off);
 				break;
 		}

@@ -1,25 +1,25 @@
 #pragma once
 
-typedef enum
+enum class GeometryMode
 {
-	GM_POINTS,
-	GM_LINE,
-	GM_LINE_LOOP,
-	GM_LINE_STRIP,
-	GM_TRIANGLES,
-	GM_TRIANGLE_STRIP,
-	GM_TRIANGLE_FAN,
-	GM_INVALID
-} GeometryMode;
+	POINTS,
+	LINE,
+	LINE_LOOP,
+	LINE_STRIP,
+	TRIANGLES,
+	TRIANGLE_STRIP,
+	TRIANGLE_FAN,
+	INVALID
+};
 
-typedef enum
+enum class GeometryUsage
 {
-	GU_DYNAMIC,
-	GU_STATIC,
-	GU_INVALID
-} GeometryUsage;
+	DYNAMIC,
+	STATIC,
+	INVALID
+};
 
-typedef enum
+enum AlphaMode : int32
 {
 	// The rendered output is fully opaque and any alpha value is ignored.
 	AM_OPAQUE,
@@ -30,4 +30,4 @@ typedef enum
 	// This mode is used to simulate geometry such as guaze cloth or animal fur.
 	AM_BLEND,
 	AM_INVALID
-} AlphaMode;
+};

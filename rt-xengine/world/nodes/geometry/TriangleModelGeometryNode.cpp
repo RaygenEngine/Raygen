@@ -25,9 +25,9 @@ namespace World
 		Assets::ReadStringAttribute(xmlData, "type", type); 
 		
 		// default geom is static
-		auto modelGeomType = GU_STATIC;
+		auto modelGeomType = GeometryUsage::STATIC;
 		if(!type.empty() && Core::CaseInsensitiveCompare(type, "dynamic"))
-			modelGeomType = GU_DYNAMIC;
+			modelGeomType = GeometryUsage::DYNAMIC;
 		
 		m_model = GetDiskAssetManager()->LoadModelAsset(xmlData->Attribute("file"), modelGeomType, GetWorld()->GetAssetLoadPathHint());
 
