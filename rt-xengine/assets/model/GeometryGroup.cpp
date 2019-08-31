@@ -11,76 +11,144 @@ namespace Assets
 	      m_material(this, "default-mat")
 	{
 	}
+	
+	
+	namespace
+	{
+		namespace tg = tinygltf;
 
+		template<typename Output, typename ComponentType>
+		void ExtractBufferData(const tg::Model& modelData, int32 accessorIndex, std::vector<Output>& result)
+		{
+			//
+			// Actual example of a possible complex gltf buffer:
+			//                                              |     STRIDE  |
+			// [{vertexIndexes} * 1000] [{normals} * 1000] [{uv0, position} * 1000]
+			//													  ^ beginPtr for Position.
+			//
+
+			size_t elementCount;		// How many elements there are to read
+			size_t componentCount;		// How many components of type ComponentType there are to each element.
+			
+			size_t strideByteOffset;	// The number of bytes to move in the buffer after each read to get the next element.
+										// This may be more bytes than the actual sizeof(ComponentType) * componentCount
+										// if the data is strided.
+			
+			byte* beginPtr;				// Pointer to the first byte we care about.
+										// This may not be the actual start of the buffer of the binary file.
+
+			{
+				size_t beginByteOffset;
+				const tinygltf::Accessor& accessor = modelData.accessors.at(accessorIndex);
+				const tinygltf::BufferView& bufferView = modelData.bufferViews.at(accessor.bufferView);
+				const tinygltf::Buffer& gltfBuffer = modelData.buffers.at(bufferView.buffer);
+
+				elementCount = accessor.count;
+				beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
+				strideByteOffset = accessor.ByteStride(bufferView);
+				componentCount = GetElementComponentCount(GetElementTypeFromGltf(accessor.type));
+				beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
+			}
+
+			result.resize(elementCount);
+
+			for (int32 i = 0; i < elementCount; ++i)
+			{
+				byte* elementPtr = &beginPtr[strideByteOffset * i];
+
+				// Component Count can be templated and specialized later for per type & count optmizations (ie vectorization)
+				ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
+				for (int32 c = 0; c < componentCount; ++c)
+				{
+					result[i][c] = data[c]; // normal type conversion, should be able to convert even ints to floats
+				}
+			}
+		}
+
+		// Extracts the type of the out vector and attempts to load any type of data at accessorIndex to this vector.
+		template<typename Output>
+		void ExtractBufferDataInto(const tg::Model& modelData, int32 accessorIndex, std::vector<Output>& out)
+		{
+			const tinygltf::Accessor& accessor = modelData.accessors.at(accessorIndex);
+			BufferComponentType componentType = GetComponentTypeFromGltf(accessor.componentType);
+			
+			// This will generate EVERY possible mapping of Output -> ComponentType conversion
+			// fix this later and provide empty specializations of "incompatible" types (eg: float -> int)
+			// TODO: This code will produce warnings for every type conversion that is considered 'unsafe'
+
+			switch (componentType)
+			{
+			case BufferComponentType::BYTE:
+				ExtractBufferData<Output, char>(modelData, accessorIndex, out);
+				return;
+			case BufferComponentType::UNSIGNED_BYTE:
+				ExtractBufferData<Output, unsigned char>(modelData, accessorIndex, out);
+				return;
+			case BufferComponentType::SHORT:
+				ExtractBufferData<Output, short>(modelData, accessorIndex, out);
+				return;
+			case BufferComponentType::UNSIGNED_SHORT:
+				ExtractBufferData<Output, unsigned short>(modelData, accessorIndex, out);
+				return;
+			case BufferComponentType::INT:
+				ExtractBufferData<Output, int32>(modelData, accessorIndex, out);
+				return;
+			case BufferComponentType::UNSIGNED_INT:
+				ExtractBufferData<Output, unsigned int>(modelData, accessorIndex, out);
+				return;
+			case BufferComponentType::FLOAT:
+				ExtractBufferData<Output, float>(modelData, accessorIndex, out);
+				return;
+			case BufferComponentType::DOUBLE:
+				ExtractBufferData<Output, double>(modelData, accessorIndex, out);
+				return;
+			case BufferComponentType::INVALID:
+				return;
+			}
+			return;
+		}
+	}
+	
 	bool GeometryGroup::Load(const tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData)
 	{
 		// mode
 		m_mode = GetGeometryModeFromGltf(primitiveData.mode);		
-		const auto CopyBufferDataFromGltfAccessor = [&](int32 accessorIndex, auto& target)
-		{
-			auto& accessor = modelData.accessors.at(accessorIndex);
-			auto& bufferView = modelData.bufferViews.at(accessor.bufferView);
-			auto& buffer = modelData.buffers.at(bufferView.buffer);
-
-			auto elementType = GetElementTypeFromGltf(accessor.type);
-			auto componentType = GetComponentTypeFromGltf(accessor.componentType);
-
-			const auto byteOffset = accessor.byteOffset + bufferView.byteOffset;
-
-			auto componentCount = GetElementComponentCount(elementType);
-			auto elementBytes = (GetComponentTypeByteCount(componentType) * GetElementComponentCount(elementType));
-			auto elementCount = accessor.count;
-
-			target.resize(elementCount);
-
-			uint64 strideOffset = 0;
-			uint64 dataOffset = 0;
-			for (uint64 i = 0; i < elementCount; ++i, dataOffset += elementBytes, strideOffset += bufferView.byteStride)
-			{
-				for (auto c = 0; c < componentCount; ++c)
-				{
-					switch (componentType)
-					{
-					case BufferComponentType::UNSIGNED_BYTE:
-						target[i][c] = (&buffer.data[byteOffset + dataOffset + strideOffset])[c];
-						break;
-					case BufferComponentType::UNSIGNED_SHORT:
-						target[i][c] = reinterpret_cast<const uint16*>(&buffer.data[byteOffset + dataOffset + strideOffset])[c];
-						break;
-					case BufferComponentType::UNSIGNED_INT:
-						target[i][c] = reinterpret_cast<const uint32*>(&buffer.data[byteOffset + dataOffset + strideOffset])[c];
-						break;
-					case BufferComponentType::FLOAT:
-						target[i][c] = reinterpret_cast<const float*>(&buffer.data[byteOffset + dataOffset + strideOffset])[c];
-						break;
-					default:
-						RT_XENGINE_ASSERT(false, "wrong model");
-					}
-				}
-			}
-		};
 		
 		// indexing
 		const auto indicesIndex = primitiveData.indices;
 
 		if (indicesIndex != -1)
 		{
-			CopyBufferDataFromGltfAccessor(indicesIndex, m_indices);
+			ExtractBufferDataInto(modelData, indicesIndex, m_indices);
 		}
 		
 		// attributes
 		for (auto& attribute : primitiveData.attributes)
 		{
-			if (Core::CaseInsensitiveCompare(attribute.first, "POSITION"))
-				CopyBufferDataFromGltfAccessor(attribute.second, m_positions);
-			else if (Core::CaseInsensitiveCompare(attribute.first, "NORMAL"))
-				CopyBufferDataFromGltfAccessor(attribute.second, m_normals);
-			else if (Core::CaseInsensitiveCompare(attribute.first, "TANGENT"))
-				CopyBufferDataFromGltfAccessor(attribute.second, m_tangents);
-			else if (Core::CaseInsensitiveCompare(attribute.first, "TEXCOORD_0"))
-				CopyBufferDataFromGltfAccessor(attribute.second, m_textCoords0);
-			else if (Core::CaseInsensitiveCompare(attribute.first, "TEXCOORD_1"))
-				CopyBufferDataFromGltfAccessor(attribute.second, m_textCoords1);
+			const auto& attrName = attribute.first;
+			int32 index = attribute.second;
+
+			if (Core::CaseInsensitiveCompare(attrName, "POSITION"))
+			{
+				ExtractBufferDataInto(modelData, index, m_positions);
+			}
+			else if (Core::CaseInsensitiveCompare(attrName, "NORMAL"))
+			{
+				ExtractBufferDataInto(modelData, index, m_normals);
+			}
+			else if (Core::CaseInsensitiveCompare(attrName, "TANGENT"))
+			{
+				ExtractBufferDataInto(modelData, index, m_tangents);
+			}
+			else if (Core::CaseInsensitiveCompare(attrName, "TEXCOORD_0"))
+			{
+				ExtractBufferDataInto(modelData, index, m_textCoords0);
+			}
+			else if (Core::CaseInsensitiveCompare(attrName, "TEXCOORD_1"))
+			{
+				ExtractBufferDataInto(modelData, index, m_textCoords1);
+			}
+
 		}
 
 		// material
