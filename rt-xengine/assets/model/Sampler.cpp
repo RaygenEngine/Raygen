@@ -35,7 +35,7 @@ namespace Assets
 				// TODO check image settings
 				auto& gltfImage = modelData.images.at(imageIndex);
 
-				m_texture = GetDiskAssetManager()->LoadTextureAsset(GetDirectoryPath() + "\\" + gltfImage.uri, DR_LOW);
+				m_texture = GetDiskAssetManager()->LoadTextureAsset(GetDirectoryPath() + "\\" + gltfImage.uri, DR_LOW, false);
 			}
 
 			const auto samplerIndex = gltfTexture.sampler;

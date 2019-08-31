@@ -1,7 +1,6 @@
 #include "pch.h"
 
 #include "renderer/renderers/opengl/assets/GLTexture.h"
-#include "renderer/renderers/opengl/GLUtil.h"
 
 namespace Renderer::OpenGL
 {
@@ -26,7 +25,6 @@ namespace Renderer::OpenGL
 		glBindTexture(GL_TEXTURE_2D, m_textureId);
 
 		// If you don't use one of the filter values that include mipmaps (like GL_LINEAR_MIPMAP_LINEAR), your mipmaps will not be used in any way.
-		glGenerateMipmap(GL_TEXTURE_2D);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
 
@@ -51,7 +49,14 @@ namespace Renderer::OpenGL
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, wrapR);
 		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, data->GetWidth(), data->GetHeight(), 0, GL_RGBA, type, data->GetData());
-	
+
+
+		if (minFilter == GL_NEAREST_MIPMAP_NEAREST ||
+			minFilter == GL_LINEAR_MIPMAP_NEAREST ||
+			minFilter == GL_NEAREST_MIPMAP_LINEAR ||
+			minFilter == GL_LINEAR_MIPMAP_LINEAR)
+			glGenerateMipmap(GL_TEXTURE_2D);
+
 		return true;
 	}
 }
