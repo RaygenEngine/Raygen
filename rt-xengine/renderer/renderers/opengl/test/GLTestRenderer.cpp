@@ -45,9 +45,9 @@ namespace Renderer::OpenGL
 		m_nonInstancedShader = RequestGLShader(vertexSimpleShaderSource.get(), fragmentShaderSource.get());
 		m_nonInstancedShader->SetUniformLocation("baseColorSampler");
 		m_nonInstancedShader->SetUniformLocation("metallicRoughnessSampler");
+		m_nonInstancedShader->SetUniformLocation("emissiveSampler");
 		//m_nonInstancedShader->SetUniformLocation("normalSampler");
 		//m_nonInstancedShader->SetUniformLocation("occlusionSampler");
-		//m_nonInstancedShader->SetUniformLocation("emissiveSampler");
 		m_nonInstancedShader->SetUniformLocation("mvp");
 		m_nonInstancedShader->SetUniformLocation("m");
 		m_nonInstancedShader->SetUniformLocation("normalMatrix");
@@ -158,11 +158,12 @@ namespace Renderer::OpenGL
 
 		glUseProgram(m_nonInstancedShader->GetGLHandle());
 
-		//glUniform1i(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), 0);
-		//glUniform1i(m_nonInstancedShader->GetUniformLocation("metallicRoughnessSampler"), 1);
+		glUniform1i(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), 0);
+		glUniform1i(m_nonInstancedShader->GetUniformLocation("metallicRoughnessSampler"), 1);
+		glUniform1i(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), 2);
 		//glUniform1i(m_nonInstancedShader->GetUniformLocation("normalSampler"), 2);
 		//glUniform1i(m_nonInstancedShader->GetUniformLocation("occlusionSampler"), 3);
-		//glUniform1i(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), 4);
+
 
 		glUniform3fv(m_nonInstancedShader->GetUniformLocation("viewPos"), 1, &m_camera->GetWorldTranslation()[0]);
 
@@ -200,8 +201,8 @@ namespace Renderer::OpenGL
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, glMaterial.GetMetallicRoughnessTexture()->GetGLHandle());
 
-				//glActiveTexture(GL_TEXTURE2);
-				//glBindTexture(GL_TEXTURE_2D, glMesh.GetMaterial().GetNormalTexture()->GetGLHandle());
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, glMaterial.GetEmissiveTexture()->GetGLHandle());
 
 				//glActiveTexture(GL_TEXTURE3);
 				//glBindTexture(GL_TEXTURE_2D, glMesh.GetMaterial().GetOcclusionTexture()->GetGLHandle());

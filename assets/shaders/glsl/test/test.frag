@@ -27,9 +27,9 @@ uniform int doubleSided;
 
 uniform sampler2D baseColorSampler;
 uniform sampler2D metallicRoughnessSampler;
+uniform sampler2D emissiveSampler;
 //uniform sampler2D normalSampler;
 //uniform sampler2D occlusionSampler;
-//uniform sampler2D emissiveSampler;
 
 #define M_1_PIf 0.318309886183790671538f
 #define M_PIf 3.14159265358979323846f
@@ -50,7 +50,7 @@ void main()
 
 	const vec4 baseColor = texture(baseColorSampler, dataIn.textCoord0);
 	const vec4 metallicRoughness = texture(metallicRoughnessSampler, dataIn.textCoord0);
-	//const vec4 emission = texture(emissionSampler, UV);
+	const vec4 emissive = texture(emissiveSampler, dataIn.textCoord0);
 	//const vec4 bump = texture(bumpSampler, UV);
 	//const vec4 specular_parameters = texture(specularParametersSampler, UV);
 
@@ -132,7 +132,7 @@ void main()
 			break;
 			
 		case 19: // emissive map TODO
-
+			out_color = vec4(vec3(emissive), 1.0);
 			break;
 			
 		case 20: // emissive factor
@@ -140,7 +140,7 @@ void main()
 			break;
 			
 		case 21: // emissive final
-
+			out_color = vec4(vec3(emissive)*emissiveFactor, 1.0);
 			break;
 			
 		case 22: // opacity map
