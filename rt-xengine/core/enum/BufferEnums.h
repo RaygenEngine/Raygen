@@ -21,7 +21,7 @@ inline int32 GetComponentTypeByteCount(BufferComponentType bct)
 	case BufferComponentType::UNSIGNED_BYTE:  return 1;
 	case BufferComponentType::SHORT:		  return 2;
 	case BufferComponentType::UNSIGNED_SHORT: return 2;
-	case BufferComponentType::INT:			  return 2;
+	case BufferComponentType::INT:			  return 4;
 	case BufferComponentType::UNSIGNED_INT:   return 4;
 	case BufferComponentType::FLOAT:		  return 4;
 	case BufferComponentType::DOUBLE:		  return 8;

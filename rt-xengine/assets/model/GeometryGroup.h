@@ -16,8 +16,9 @@ namespace Assets
 	class GeometryGroup : public DiskAssetPart
 	{
 		// TODO uint32
-		std::vector<glm::uvec1> m_indices;
-		
+		std::vector<uint32> m_indices;
+
+
 		std::vector<glm::vec3> m_positions;
 		std::vector<glm::vec3> m_normals;
 		std::vector<glm::vec4> m_tangents;
@@ -43,7 +44,7 @@ namespace Assets
 
 		bool UsesIndexing() const { return !m_indices.empty(); }
 
-		const std::vector<glm::uvec1>& GetIndices() const { return m_indices; }
+		const std::vector<glm::uint32>& GetIndices() const { return m_indices; }
 		const std::vector<glm::vec3>& GetPositions() const { return m_positions; }
 		const std::vector<glm::vec3>& GetNormals() const { return m_normals; }
 		const std::vector<glm::vec4>& GetTangents() const { return m_tangents; }
