@@ -37,9 +37,7 @@ namespace Renderer::OpenGL
 		~GLRendererBase();
 
 		bool InitRendering(HWND assochWnd, HINSTANCE instance) override;
-		
-		// TODO: thanks OpenGL, where do I put this...?
-		void SwapBuffers();
+		void SwapBuffers() override;
 
 		std::shared_ptr<GLCubeMap> RequestGLCubeMap(Assets::CubeMap* cubeMap, GLint wrapFlag = GL_REPEAT, bool mipMapping = false);
 		std::shared_ptr<GLTexture> RequestGLTexture(Assets::Texture* texture, GLint minFilter = GL_LINEAR, GLint magFilter = GL_LINEAR, GLint wrapS = GL_REPEAT, GLint wrapT = GL_REPEAT, GLint wrapR = GL_REPEAT);

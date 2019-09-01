@@ -223,8 +223,6 @@ namespace Renderer::OpenGL
 
 		glUseProgram(0);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		SwapBuffers();
 	}
 
 	void GLTestRenderer::Update()

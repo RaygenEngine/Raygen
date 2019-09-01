@@ -93,6 +93,7 @@ void AppBase::MainLoop(System::Engine* engine, Platform::Window* window)
 		engine->GetRenderer()->Update();
 		// render
 		engine->GetRenderer()->Render();
+		engine->GetRenderer()->SwapBuffers();
 	}
 }
 

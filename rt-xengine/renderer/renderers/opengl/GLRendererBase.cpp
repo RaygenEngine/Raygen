@@ -68,8 +68,6 @@ namespace Renderer::OpenGL
 
 	void GLRendererBase::SwapBuffers()
 	{
-		// TODO: do i need this?
-		//glFinish();
 		::SwapBuffers(m_hdc);
 	}
 
