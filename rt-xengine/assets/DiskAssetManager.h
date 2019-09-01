@@ -2,7 +2,6 @@
 
 #include "system/EngineObject.h"
 #include "assets/PathSystem.h"
-#include "assets/DiskAsset.h"
 #include "assets/texture/Texture.h"
 #include "assets/texture/CubeMap.h"
 #include "assets/texture/PackedTexture.h"
@@ -19,31 +18,20 @@ namespace Assets
 		PathSystem m_pathSystem;
 
 		MultiKeyAssetCache<StringFile, std::string> m_stringFiles;
-
 		MultiKeyAssetCache<XMLDoc, std::string> m_xmlDocs;
-
 		MultiKeyAssetCache<Model, std::string, GeometryUsage> m_models;
-		// Files that require path and texel type as key
 		MultiKeyAssetCache<Texture, std::string, DynamicRange, bool> m_textures;
-		// Files that require path and texel type as key
 		MultiKeyAssetCache<CubeMap, std::string, DynamicRange, bool> m_cubeMaps;
-
 		MultiKeyAssetCache<PackedTexture, Texture*, uint32, Texture*, uint32, Texture*, uint32, Texture*, uint32, DynamicRange> m_packedTextures;
 
 	public:
 		DiskAssetManager(System::Engine* engine);
 
 		std::shared_ptr<StringFile> LoadStringFileAsset(const std::string& stringFilePath, const std::string& pathHint = "");
-
 		std::shared_ptr<XMLDoc> LoadXMLDocAsset(const std::string& xmlDocPath, const std::string& pathHint = "");
-		
 		std::shared_ptr<Model> LoadModelAsset(const std::string& modelPath, GeometryUsage usage = GeometryUsage::STATIC, const std::string& pathHint = "");
-
-		// OpenGL, Optix and many more require textures vertically flipped, if your api doesn't then flipVertically should be set to false
 		std::shared_ptr<Texture> LoadTextureAsset(const std::string& texturePath, DynamicRange dr, bool flipVertically = true, const std::string& pathHint = "");
-
 		std::shared_ptr<CubeMap> LoadCubeMapAsset(const std::string& texturePath, DynamicRange dr, bool flipVertically = true, const std::string& pathHint = "");
-
 		std::shared_ptr<PackedTexture> LoadPackedTexture(Texture* textTargetRChannel, uint32 actualComponents0,
 			                                             Texture* textTargetGChannel, uint32 actualComponents1,
 			                                             Texture* textTargetBChannel, uint32 actualComponents2,
