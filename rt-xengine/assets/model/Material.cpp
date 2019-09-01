@@ -54,12 +54,12 @@ namespace Assets
 		
 		auto& emissiveTextureInfo = materialData.emissiveTexture;
 		m_emissiveTextureSampler.Load(modelData, emissiveTextureInfo.index, emissiveTextureInfo.texCoord);
+
+		auto& occlusionTextureInfo = materialData.occlusionTexture;
+		m_occlusionTextureSampler.Load(modelData, occlusionTextureInfo.index, occlusionTextureInfo.texCoord);
 		
 		auto& normalTextureInfo = materialData.normalTexture;
 		m_normalTextureSampler.Load(modelData, normalTextureInfo.index, normalTextureInfo.texCoord, false);
-		
-		auto& occlusionTextureInfo = materialData.occlusionTexture;
-		m_occlusionTextureSampler.Load(modelData, occlusionTextureInfo.index, occlusionTextureInfo.texCoord, false);
 	}
 };
 
