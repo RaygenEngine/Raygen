@@ -42,7 +42,7 @@ namespace Renderer::OpenGL
 		std::shared_ptr<GLTexture> m_occlusionTexture;
 		std::shared_ptr<GLTexture> m_emissiveTexture;
 		
-		m_nonInstancedShader = RequestGLShader(vertexSimpleShaderSource.get(), fragmentShaderSource.get());
+		m_nonInstancedShader = GetGLAssetManager()->RequestGLShader(vertexSimpleShaderSource.get(), fragmentShaderSource.get());
 		m_nonInstancedShader->SetUniformLocation("baseColorSampler");
 		m_nonInstancedShader->SetUniformLocation("metallicRoughnessSampler");
 		m_nonInstancedShader->SetUniformLocation("emissiveSampler");

@@ -5,8 +5,8 @@
 namespace Renderer::OpenGL
 {
 
-	GLTexture::GLTexture(GLRendererBase* renderer, const std::string& name)
-		: GLAsset(renderer, name),
+	GLTexture::GLTexture(GLAssetManager* glAssetManager, const std::string& name)
+		: GLAsset(glAssetManager, name),
 		  m_textureId(0)
 	{
 	}

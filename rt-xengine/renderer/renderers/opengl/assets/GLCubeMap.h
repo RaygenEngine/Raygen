@@ -13,7 +13,7 @@ namespace Renderer::OpenGL
 		GLuint m_cubeTextureId;
 
 	public:
-		GLCubeMap(GLRendererBase* renderer, const std::string& name);
+		GLCubeMap(GLAssetManager* glAssetManager, const std::string& name);
 		~GLCubeMap();
 
 		bool Load(Assets::CubeMap* data, GLint wrapFlag, bool mipMapping);

@@ -18,7 +18,7 @@ namespace Renderer::OpenGL
 		std::unordered_map<std::string, GLint> m_uniformLocations;
 
 	public:
-		GLShader(GLRendererBase* renderer, const std::string& name);
+		GLShader(GLAssetManager* glAssetManager, const std::string& name);
 		~GLShader();
 
 		bool Load(Assets::StringFile* vertexSource, Assets::StringFile* fragmentSource);

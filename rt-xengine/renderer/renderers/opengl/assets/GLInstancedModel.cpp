@@ -4,8 +4,8 @@
 
 namespace Renderer::OpenGL
 {
-	GLInstancedModel::GLInstancedModel(GLRendererBase* renderer, const std::string& name)
-		: GLModel(renderer, name),
+	GLInstancedModel::GLInstancedModel(GLAssetManager* glAssetManager, const std::string& name)
+		: GLModel(glAssetManager, name),
 		  m_instanceCount(0),
 		  m_instanceMatricesVbo(0)
 	{

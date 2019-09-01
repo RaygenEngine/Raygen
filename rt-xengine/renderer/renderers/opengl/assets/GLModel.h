@@ -17,7 +17,7 @@ namespace Renderer::OpenGL
 		std::vector<GLMesh*> m_meshes;
 
 	public:
-		GLModel(GLRendererBase* renderer, const std::string& name);
+		GLModel(GLAssetManager* glAssetManager, const std::string& name);
 		//virtual ~GLModel() = default;
 
 		bool Load(Assets::Model* data);

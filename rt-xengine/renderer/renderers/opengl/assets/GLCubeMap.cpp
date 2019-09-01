@@ -5,8 +5,8 @@
 namespace Renderer::OpenGL
 {
 
-	GLCubeMap::GLCubeMap(GLRendererBase* renderer, const std::string& name)
-		: GLAsset(renderer, name),
+	GLCubeMap::GLCubeMap(GLAssetManager* glAssetManager, const std::string& name)
+		: GLAsset(glAssetManager, name),
 		  m_cubeTextureId(0)
 	{
 	}

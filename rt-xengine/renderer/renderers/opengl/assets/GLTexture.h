@@ -12,7 +12,7 @@ namespace Renderer::OpenGL
 		GLuint m_textureId;
 
 	public:
-		GLTexture(GLRendererBase* renderer, const std::string& name);
+		GLTexture(GLAssetManager* glAssetManager, const std::string& name);
 		~GLTexture();
 
 		int32 m_texCoordIndex;

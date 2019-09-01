@@ -4,8 +4,8 @@
 
 namespace Renderer::OpenGL
 {
-	GLShader::GLShader(GLRendererBase* renderer, const std::string& name)
-		: GLAsset(renderer, name),
+	GLShader::GLShader(GLAssetManager* glAssetManager, const std::string& name)
+		: GLAsset(glAssetManager, name),
 	      m_programId(0)
 	{
 	}
