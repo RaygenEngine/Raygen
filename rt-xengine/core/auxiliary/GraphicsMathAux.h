@@ -1,11 +1,22 @@
-#ifndef GRAPHICSMATHAUX_H
-#define GRAPHICSMATHAUX_H
+#pragma once
 
 namespace Core
 {
+	template<typename T>
+	inline bool EqualsZero(T value)
+	{
+		return glm::epsilonEqual(value, 0.f, glm::epsilon<T>());
+	}
+
+	template<typename T>
+	inline bool EqualsValue(T input, T value)
+	{
+		return glm::epsilonEqual(input, value, glm::epsilon<T>());
+	}
+	
 	inline glm::mat4 GetTransformMat(const glm::vec3& translation, const glm::quat& orientation, const glm::vec3& scale)
 	{
-		glm::mat4 transMat(1); 
+		glm::mat4 transMat(1.f); 
 		// T
 		transMat = glm::translate(transMat, translation); 
 		// T * R * S
@@ -41,7 +52,8 @@ namespace Core
 		return glm::frustum(left, right, bottom, top, _near, _far);
 	}
 
-	inline glm::mat4 GetProjectionMatrix(const XFov& xfov, float _near, float _far)
+	// TODO
+	/*inline glm::mat4 GetProjectionMatrix(const XFov& xfov, float _near, float _far)
 	{
 		const auto top = _near * xfov.topTan;
 		const auto bottom = -_near * xfov.bottomTan;
@@ -49,7 +61,5 @@ namespace Core
 		const auto left = -_near * xfov.leftTan;
 
 		return glm::frustum(left, right, bottom, top, _near, _far);
-	}
+	}*/
 }
-
-#endif // GRAPHICSMATHAUX_H

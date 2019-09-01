@@ -1,12 +1,9 @@
-#ifndef NODE_H
-#define NODE_H
+#pragma once
 
-#include "tinyxml2/tinyxml2.h"
-#include <GLM/vec3.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <GLM/ext/quaternion_float.hpp>
 #include "system/EngineObject.h"
 #include "system/reflection/Reflection.h"
+
+#include "tinyxml2/tinyxml2.h"
 
 namespace World
 {
@@ -205,7 +202,10 @@ namespace World
 
 	protected:
 		virtual std::string ToString(bool verbose, uint depth) const;
+
+	public:
+
+		virtual void ToString(std::ostream& os) const { os << "object-type: Node, id: " << GetObjectId(); }
 	};
 }
 
-#endif // NODE_H

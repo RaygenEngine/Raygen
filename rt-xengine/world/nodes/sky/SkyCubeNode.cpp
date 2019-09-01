@@ -1,7 +1,8 @@
 #include "pch.h"
 
-#include "SkyCubeNode.h"
-#include "world/World.h"
+#include "world/nodes/sky/SkyCubeNode.h"
+#include "assets/other/xml/ParsingAux.h"
+#include "assets/DiskAssetManager.h"
 
 namespace World
 {
@@ -16,7 +17,7 @@ namespace World
 
 		if (Assets::AttributeExists(xmlData, "cube_map"))
 		{
-			m_cubeMap = GetDiskAssetManager()->LoadCubeMapAsset(xmlData->Attribute("cube_map"), Assets::DR_LOW, false);
+			m_cubeMap = GetDiskAssetManager()->LoadCubeMapAsset(xmlData->Attribute("cube_map"), DynamicRange::LOW, false);
 
 			if (!m_cubeMap)
 				return false;

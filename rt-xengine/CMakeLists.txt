@@ -13,18 +13,24 @@ set(SOURCE_FILES
 	assets/DiskAsset.cpp
 	assets/DiskAssetManager.cpp
 	assets/PathSystem.cpp
+	assets/DiskAssetPart.cpp
+	
 	assets/other/utf8/StringFile.cpp
 	assets/other/xml/XMLDoc.cpp
+	
 	assets/texture/PackedTexture.cpp
 	assets/texture/Texture.cpp
 	assets/texture/CubeMap.cpp
-	assets/xasset/XMaterial.cpp
-	assets/xasset/XMesh.cpp
-	assets/xasset/XModel.cpp
+	
+	assets/model/Material.cpp
+	assets/model/Mesh.cpp
+	assets/model/Model.cpp
+	assets/model/GeometryGroup.cpp
+	assets/model/Sampler.cpp
+	assets/model/Buffer.cpp
 	
 	core/logger/Logger.cpp
 	
-	renderer/GPUAsset.cpp
 	renderer/Renderer.cpp
 	renderer/NodeObserver.cpp
 	
@@ -43,7 +49,6 @@ set(SOURCE_FILES
 
 	system/Engine.cpp
 	system/EngineObject.cpp
-	system/EventListener.cpp
 	
 	system/reflection/Reflection.cpp
 	
@@ -81,38 +86,54 @@ set(SOURCE_FILES
 )
 
 set(HEADER_FILES 
+
 	assets/Asset.h
 	assets/DiskAsset.h
 	assets/DiskAssetManager.h
-	assets/DiskAssetPart.h
-	assets/MultiKeyAssetCacheHashing.h
 	assets/PathSystem.h
+	assets/DiskAssetPart.h
+    assets/CachingAux.h
+		
 	assets/other/utf8/StringFile.h
 	assets/other/xml/ParsingAux.h
 	assets/other/xml/XMLDoc.h
+	
 	assets/texture/PackedTexture.h
 	assets/texture/Texture.h
 	assets/texture/CubeMap.h
-	assets/xasset/XMaterial.h
-	assets/xasset/XMesh.h
-	assets/xasset/XModel.h
+	
+	assets/model/Material.h
+	assets/model/Mesh.h
+	assets/model/Sampler.h
+	assets/model/Model.h
+	assets/model/GltfAux.h
+	assets/model/GeometryGroup.h
+	assets/model/Buffer.h
 
 	core/auxiliary/FileAux.h
 	core/auxiliary/GraphicsMathAux.h
 	core/auxiliary/MetaTemplates.h
 	core/auxiliary/SmartPtrAux.h
 	core/auxiliary/StringAux.h
+
 	core/data/BasicLight.h
 	core/data/Vertex.h
-	core/data/Eye.h
+	
+	core/enum/InputEnums.h
+	core/enum/TargetEnums.h
+	core/enum/TextureEnums.h
+	core/enum/GeometryEnums.h
+	core/enum/BufferEnums.h
+	
 	core/logger/Logger.h
+	
 	core/timer/Timer.h
+	
+	core/type/IntegerTypes.h
+	core/type/MathTypes.h
+	
 	core/uuid/UUIDGenerator.h
 	
-	include/rt-xengine.h
-	include/common-structs.h
-
-	renderer/GPUAsset.h
 	renderer/Renderer.h
 	renderer/NodeObserver.h
 	
@@ -132,19 +153,12 @@ set(HEADER_FILES
 	
 	system/Engine.h
 	system/EngineObject.h
-	system/EventListener.h
 
 	system/reflection/Reflection.h
 
 
 	input/Input.h
 	input/OculusHMD.h
-	
-	system/shared/Event.h
-	system/shared/InputEnums.h
-	system/shared/RenderTarget.h
-	system/shared/TargetEnums.h
-	system/shared/Types.h
 	
 	event/Event.h
 

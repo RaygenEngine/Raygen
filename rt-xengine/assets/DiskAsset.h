@@ -1,33 +1,26 @@
-#ifndef DISKASSET_H
-#define DISKASSET_H
+#pragma once
 
-#include "Asset.h"
+#include "assets/Asset.h"
 
 namespace Assets
 {
-	class DiskAssetManager;
-
 	// File assets loaded from the disk
 	class DiskAsset : public Asset
 	{
 	protected:
 		// file path
-		std::string m_path;
-		std::string m_label;
-
-		// manager than manages this asset
-		DiskAssetManager* m_manager;
+		std::string m_directoryPath;
+		std::string m_filePath;
+		std::string m_fileName;
 
 	public:
-		DiskAsset(DiskAssetManager* diskAssetManager);
+		DiskAsset(EngineObject* pObject, const std::string& path);
 		virtual ~DiskAsset() = default;
 
-		void SetIdentificationFromPath(const std::string& path);
+		std::string GetDirectoryPath() const { return m_directoryPath; }
+		std::string GetFilePath() const { return m_filePath; }
+		std::string GetFileName() const { return m_fileName; }
 
-		// absolute path <unique>
-		std::string GetPath() const { return m_path; }
-		std::string GetLabel() const { return m_label; }
+		void ToString(std::ostream& os) const override { os << "asset-type: DiskAsset, name: " << m_name; }
 	};
 }
-
-#endif // DISKASSET_H

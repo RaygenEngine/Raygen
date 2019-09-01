@@ -1,7 +1,9 @@
-#ifndef GLINSTANCEDMODEL_H
-#define GLINSTANCEDMODEL_H
+#pragma once
 
-#include "GLModel.h"
+#include "renderer/renderers/opengl/assets/GLModel.h"
+#include "world/nodes/geometry/TriangleModelInstancedGeometryNode.h"
+
+#include "GLAD/glad.h"
 
 namespace Renderer::OpenGL
 {
@@ -12,16 +14,14 @@ namespace Renderer::OpenGL
 		GLuint m_instanceMatricesVbo;
 
 	public:
-		GLInstancedModel(GLRendererBase* renderer);
+		GLInstancedModel(GLRendererBase* renderer, const std::string& name);
 		~GLInstancedModel();
 
-		bool Load(Assets::XModel* data, World::TriangleModelInstancedGeometryNode* nodeInstancer);
+		bool Load(World::TriangleModelInstancedGeometryNode* nodeInstancer);
 
 		uint32 GetInstancesCount() const { return m_instanceCount; }
 
-		void ToString(std::ostream& os) const override { os << "asset-type: GLModel, name: " << m_associatedDescription; }
+		void ToString(std::ostream& os) const override { os << "asset-type: GLModel, name: " << m_name; }
 	};
 
 }
-
-#endif // GLINSTANCEDMODEL_H

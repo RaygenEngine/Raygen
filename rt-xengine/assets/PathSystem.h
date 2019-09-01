@@ -1,8 +1,5 @@
-#ifndef PATHSYSTEM_H
-#define PATHSYSTEM_H
+#pragma once
 
-#include <string>
-#include <vector>
 #include <unordered_set>
 
 namespace Assets
@@ -19,7 +16,7 @@ namespace Assets
 
 		std::string m_scenesRootPath;
 		std::vector<std::string> m_scenesPaths;
-		std::unordered_set<std::string> m_sceneExtensions = { ".xscn", ".xmd", ".jpg", ".jpeg", ".png", ".tga" };
+		std::unordered_set<std::string> m_sceneExtensions = { ".xscn", ".gltf", ".glb", ".bin", ".jpg", ".jpeg", ".png", ".tga" };
 
 		inline bool SetCurrentDir(const std::string& path) const;
 		void GatherSubDirectories(const std::string& directoryPath, std::vector<std::string>& dirList) const;
@@ -42,7 +39,6 @@ namespace Assets
 		// search asset
 		std::string SearchAsset(const std::string& relativeAssetPath, const std::string& pathHint = "") const;
 
-
 		static bool FileExists(const std::string& filepath);
 		static std::string GetNameWithExtension(const std::string& filepath);
 		static std::string GetNameWithoutExtension(const std::string& filepath);
@@ -52,5 +48,3 @@ namespace Assets
 		static std::string GetExtension(const std::string& filepath);
 	};
 }
-
-#endif // PATHSYSTEM_H

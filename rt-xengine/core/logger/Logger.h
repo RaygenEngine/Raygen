@@ -1,9 +1,29 @@
-#ifndef LOGGER_H
-#define LOGGER_H
+#pragma once
 
 #include "spdlog/logger.h" 
 // include for custom formats (override ToString(std::ostream& os) const from engine object)
 #include "spdlog/fmt/ostr.h"
+
+// custom formatting
+template<class T>
+auto operator<<(std::ostream& os, const T& t) -> decltype(t.ToString(os), os)
+{
+	t.ToString(os);
+	
+	return os;
+}
+
+// custom formatting
+template<class T>
+auto operator<<(std::ostream& os, T* t) -> decltype(t->ToString(os), os)
+{
+	if (t)
+		t->ToString(os);
+	else
+		os << "nullptr";
+
+	return os;
+}
 
 namespace Core
 {
@@ -39,5 +59,3 @@ namespace Core
 
 #define RT_XENGINE_ASSERT(condition, ...) do { if(!(condition)) { RT_XENGINE_LOG_FATAL("Assertation failed: (" #condition "): " __VA_ARGS__ ); abort(); } } while(0)
 #define RT_XENGINE_ASSERT_RETURN_FALSE(condition, ...) do { if(!(condition)) { RT_XENGINE_LOG_FATAL("Assertation failed: (" #condition "): " __VA_ARGS__ ); return false; } } while(0)
-
-#endif // LOGGER_H

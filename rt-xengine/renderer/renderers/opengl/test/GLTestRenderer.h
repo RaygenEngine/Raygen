@@ -1,14 +1,7 @@
-#ifndef GLTESTRENDERER_H
-#define GLTESTRENDERER_H
-
-
-#include "system/shared/Shared.h"
+#pragma once
 
 #include "renderer/renderers/opengl/GLRendererBase.h"
-#include "system/shared/Types.h"
-#include "system/Engine.h"
-#include <memory>
-#include <vector>
+#include "world/nodes/camera/CameraNode.h"
 
 namespace Renderer::OpenGL
 {
@@ -17,14 +10,14 @@ namespace Renderer::OpenGL
 	class GLTestRenderer :  public GLRendererBase
 	{
 	protected:
-		std::shared_ptr<GLShader> m_instancedShader;
+		//std::shared_ptr<GLShader> m_instancedShader;
 		std::shared_ptr<GLShader> m_nonInstancedShader;
 
 		std::vector<std::shared_ptr<GLTestGeometry>> m_geometryObservers;
 
-		std::vector<std::shared_ptr<GLInstancedModel>> m_instancedGeometries;
+		//std::vector<std::shared_ptr<GLInstancedModel>> m_instancedGeometries;
 
-		std::shared_ptr<GLTexture> m_skyTexture;
+		//std::shared_ptr<GLTexture> m_skyTexture;
 
 		World::CameraNode* m_camera;
 
@@ -43,5 +36,3 @@ namespace Renderer::OpenGL
 		void Update() override;
 	};
 }
-
-#endif // GLTESTRENDERER_H

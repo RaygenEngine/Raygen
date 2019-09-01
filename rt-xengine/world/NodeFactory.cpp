@@ -1,9 +1,11 @@
 #include "pch.h"
+
 #include "NodeFactory.h"
 #include "world/nodes/sky/SkyCubeNode.h"
 #include "world/nodes/sky/SkyHDRNode.h"
 #include "world/nodes/MetaNodeTranslation.h"
-#include "World.h"
+#include "world/World.h"
+#include "world/nodes/user/freeform/FreeformUserNode.h"
 
 namespace World
 {
@@ -64,7 +66,7 @@ namespace World
 		}
 		if (type == "oculus_user")
 		{
-			return world->LoadNode<OculusUserNode>(parent, xmdChildElement);
+			//return world->LoadNode<OculusUserNode>(parent, xmdChildElement);
 		}
 		if (type == "trimesh_geometry_instanced_matrix")
 		{

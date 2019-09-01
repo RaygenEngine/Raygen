@@ -1,7 +1,8 @@
-#ifndef METANODETRANSLATION_H
-#define METANODETRANSLATION_H
+#pragma once
 
+#include "assets/other/xml/ParsingAux.h"
 #include "world/World.h"
+#include "world/nodes/geometry/TriangleModelInstancedGeometryNode.h"
 
 namespace World
 {
@@ -58,5 +59,3 @@ namespace World
 		return parent->GetWorld()->LoadNode<TriangleModelInstancedGeometryNode>(parent, triGeomInstancedNode);
 	}
 }
-
-#endif // METANODETRANSLATION_H

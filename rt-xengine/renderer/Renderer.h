@@ -1,8 +1,5 @@
-#ifndef RENDERER_H
-#define RENDERER_H
+#pragma once
 
-#include "system/EngineObject.h"
-#include "world/World.h"
 #include "renderer/NodeObserver.h"
 
 namespace Renderer
@@ -19,7 +16,6 @@ namespace Renderer
 		{ \
 	        return std::string(#Class); \
 	    } \
-
 
 	class Renderer : public System::EngineObject
 	{
@@ -45,7 +41,7 @@ namespace Renderer
 		bool IsObserverDirty(NodeObserver* obs) const { return m_dirtyObservers.find(obs) != m_dirtyObservers.end(); }
 
 	public:
-		Renderer(System::Engine* context);
+		Renderer(System::Engine* engine);
 		virtual ~Renderer(); 
 
 		// Windows based init rendering (implement in "context"-base renderers)
@@ -57,7 +53,7 @@ namespace Renderer
 		// Render, on the render target stored by SwitchRenderTarget from InitRendering/UpdateRendering (don't pass render target
 		// as Render() parameter, its not "safe") 
 		virtual void Render() = 0;
+
+		virtual void ToString(std::ostream& os) const { os << "object-type: Renderer, id: " << GetObjectId(); }
 	};
 }
-
-#endif // RENDERER_H

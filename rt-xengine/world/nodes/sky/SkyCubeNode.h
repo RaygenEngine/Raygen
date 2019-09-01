@@ -1,17 +1,10 @@
-#ifndef SKYCUBENODE_H
-#define SKYCUBENODE_H
+#pragma once
 
 #include "world/nodes/Node.h"
 #include "assets/texture/CubeMap.h"
 
 namespace World
 {
-	enum MAPPING_METHOD
-	{
-		MM_CUBE_MAP = 0,
-		MM_HDR
-	};
-
 	class SkyCubeNode : public Node
 	{
 		std::shared_ptr<Assets::CubeMap> m_cubeMap;
@@ -26,7 +19,9 @@ namespace World
 
 	protected:
 		std::string ToString(bool verbose, uint depth) const override;
+
+	public:
+
+		void ToString(std::ostream& os) const override { os << "node-type: SkyCubeNode, name: " << m_name; }
 	};
 }
-
-#endif // SKYCUBENODE_H

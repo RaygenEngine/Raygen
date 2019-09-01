@@ -1,5 +1,4 @@
-#ifndef USERNODE_H
-#define USERNODE_H
+#pragma once
 
 #include "world/nodes/Node.h"
 
@@ -17,7 +16,7 @@ namespace World
 		~UserNode() = default;
 
 		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
+
+		void ToString(std::ostream& os) const { os << "node-type: UserNode, name: " << m_name; }
 	};
 }
-
-#endif // USERNODE_H

@@ -1,20 +1,20 @@
 #include "pch.h"
-#include "EngineObject.h"
 
-#include "Engine.h"
+#include "system/EngineObject.h"
 
 namespace System
 {
-	EngineObject::EngineObject(Engine* engine)
-		: m_engine(engine), 
-		m_parentObject(nullptr), 
-		m_id(Core::UUIDGenerator::GenerateUUID())
+	EngineObject::EngineObject(Engine* context)
+		: m_engine(context),
+		  m_parentObject(nullptr),
+	      m_id(Core::UUIDGenerator::GenerateUUID())
 	{
 	}
 
 	EngineObject::EngineObject(EngineObject* pObject)
-		: m_engine(pObject->GetEngine()), m_parentObject(pObject),
-		m_id(Core::UUIDGenerator::GenerateUUID())
+		: m_engine(pObject->GetEngine()),
+	      m_parentObject(pObject),
+		  m_id(Core::UUIDGenerator::GenerateUUID())
 	{
 	}
 

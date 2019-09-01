@@ -1,66 +1,36 @@
 #include "pch.h"
-#include "GLModel.h"
 
+#include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/GLUtil.h"
+#include "renderer/renderers/opengl/GLRendererBase.h"
 
 namespace Renderer::OpenGL
 {
-	GLModel::GLModel(GLRendererBase* renderer)
-		: GLAsset(renderer), m_usage(GL_STATIC_DRAW)
+	GLModel::GLModel(GLRendererBase* renderer, const std::string& name)
+		: GLAsset(renderer, name),
+	      m_usage(GL_STATIC_DRAW)
 	{
 	}
 
-	GLModel::~GLModel()
+	bool GLModel::Load(Assets::Model* data)
 	{
-		for (auto& rm : m_renderMeshes)
-			glDeleteVertexArrays(1, &rm.vao);
-	}
+		INIT_TIMER;
 
-	bool GLModel::Load(Assets::XModel* data)
-	{
-		SetIdentificationFromAssociatedDiskAssetIdentification(data->GetLabel());
-
-		switch (data->GetType())
-		{
-		case Assets::GT_DYNAMIC:
-			m_usage = GL_STATIC_DRAW;
-			break;
-		case Assets::GT_STATIC:
-			m_usage = GL_DYNAMIC_DRAW;
-			break;
-		}
+		START_TIMER;
+		
+		m_usage = GetGLUsage(data->GetUsage());
 
 		for (auto& mesh : data->GetMeshes())
 		{
-			GLRenderMesh grm;
-			glGenVertexArrays(1, &grm.vao);
-
-			glBindVertexArray(grm.vao);
-
-			grm.mesh = GetRenderer()->RequestGLMesh(mesh, m_usage);
-
-			glBindBuffer(GL_ARRAY_BUFFER, grm.mesh->GetVBO());
-
-			// vertex positions
-			glEnableVertexAttribArray(0);
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Core::Vertex), (void*)0);
-
-			// vertex normals
-			glEnableVertexAttribArray(1);
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Core::Vertex), (void*)offsetof(Core::Vertex, normal));
-
-			// vertex texture coords
-			glEnableVertexAttribArray(2);
-			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Core::Vertex), (void*)offsetof(Core::Vertex, uv));
-
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, grm.mesh->GetEBO());
-
-			DebugBoundVAO(m_associatedDescription);
-
-			glBindVertexArray(0);
-
-			m_renderMeshes.push_back(grm);
+			for (auto& geometryGroup : mesh->GetGeometryGroups())
+			{
+				GLMesh* ptr = new GLMesh(GetGLRenderer(), this->GetName());
+				ptr->Load(geometryGroup.get(), m_usage);
+				m_meshes.emplace_back(ptr);
+			}
 		}
+	
+		STOP_TIMER("uploading");
 
 		return true;
 	}

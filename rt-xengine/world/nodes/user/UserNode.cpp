@@ -1,7 +1,7 @@
 #include "pch.h"
 
-#include "UserNode.h"
-#include "world/World.h"
+#include "world/nodes/user/UserNode.h"
+#include "assets/other/xml/ParsingAux.h"
 
 namespace World
 {

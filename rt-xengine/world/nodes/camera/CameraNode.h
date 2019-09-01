@@ -1,5 +1,4 @@
-#ifndef CAMERANODE_H
-#define CAMERANODE_H
+#pragma once
 
 #include "world/nodes/Node.h"
 
@@ -50,7 +49,8 @@ namespace World
 		void WindowResize(int32 width, int32 height) override;
 
 		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
+
+		void ToString(std::ostream& os) const override { os << "node-type: CameraNode, name: " << m_name; }
 	};
 }
 
-#endif // CAMERANODE_H

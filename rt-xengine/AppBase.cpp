@@ -2,6 +2,7 @@
 #include "AppBase.h"
 #include "platform/windows/Win32Window.h"
 #include "renderer/renderers/opengl/test/GLTestRenderer.h"
+#include "world/World.h"
 
 AppBase::AppBase()
 {

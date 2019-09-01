@@ -1,15 +1,17 @@
-#ifndef STRINGAUX_H
-#define STRINGAUX_H
+#pragma once
 
-#include <string>
-#include <algorithm>
-#include <cctype>
-#include <string>    
-#include <utility>  
-#include <locale>
+#include <sstream>
+#include <iterator>
 
 namespace Core
 {
+	inline std::string Repeat(const std::string& input, size_t num)
+	{
+		std::ostringstream os;
+		std::fill_n(std::ostream_iterator<std::string>(os), num, input);
+		return os.str();
+	}
+
 	template <typename T>
 	inline bool SplitStringIntoTArray(T* arr, int arrSize, const std::string& str, char delimiter)
 	{
@@ -61,6 +63,14 @@ namespace Core
 		std::transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
 		return temp;
 	}
+
+	inline std::string UnnamedDescription(const std::string& str)
+	{
+		return str.empty() ? "<unnamed>" : str;
+	}
 }
 
-#endif // STRINGAUX_H
+inline std::string operator*(std::string str, std::size_t n)
+{
+	return Core::Repeat(str, n);
+}

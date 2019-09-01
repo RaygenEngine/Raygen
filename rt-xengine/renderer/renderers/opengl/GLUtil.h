@@ -1,13 +1,59 @@
-#ifndef GLUTIL_H
-#define GLUTIL_H
-
-#include "glad/glad.h"
-#include <string>              
+#pragma once
 
 #define GLCheckError() GLCheckError_(__FILE__, __LINE__) 
 
 namespace Renderer::OpenGL
 {
+	inline GLenum GetGLUsage(GeometryUsage geomUsage)
+	{
+		switch (geomUsage)
+		{
+		case GeometryUsage::DYNAMIC: return GL_DYNAMIC_DRAW;
+		case GeometryUsage::STATIC:  return GL_STATIC_DRAW;
+		default:					 return GL_INVALID_ENUM;
+		}
+	}
+
+	inline GLint GetGLWrapping(TextureWrapping textWrapping)
+	{
+		switch (textWrapping)
+		{
+		case TextureWrapping::CLAMP_TO_EDGE:	 return GL_CLAMP_TO_EDGE;
+		case TextureWrapping::MIRRORED_REPEAT:	 return GL_MIRRORED_REPEAT;
+		case TextureWrapping::REPEAT:			 return GL_REPEAT;
+		default:								 return GL_INVALID_ENUM;
+		}
+	}
+
+	inline GLint GetGLFiltering(TextureFiltering textFiltering)
+	{
+		switch (textFiltering)
+		{
+		case TextureFiltering::NEAREST:				   return GL_NEAREST;
+		case TextureFiltering::LINEAR:				   return GL_LINEAR;
+		case TextureFiltering::NEAREST_MIPMAP_NEAREST: return GL_NEAREST_MIPMAP_NEAREST;
+		case TextureFiltering::NEAREST_MIPMAP_LINEAR:  return GL_NEAREST_MIPMAP_LINEAR;
+		case TextureFiltering::LINEAR_MIPMAP_NEAREST:  return GL_LINEAR_MIPMAP_NEAREST;
+		case TextureFiltering::LINEAR_MIPMAP_LINEAR:   return GL_LINEAR_MIPMAP_LINEAR;
+		default:									   return GL_INVALID_ENUM;
+		}
+	}
+
+	inline GLint GetGLGeometryMode(GeometryMode geomMode)
+	{
+		switch (geomMode)
+		{
+		case GeometryMode::POINTS:	       return GL_POINTS;
+		case GeometryMode::LINE:           return GL_LINE;
+		case GeometryMode::LINE_LOOP:      return GL_LINE_LOOP;
+		case GeometryMode::LINE_STRIP:     return GL_LINE_STRIP;
+		case GeometryMode::TRIANGLES:      return GL_TRIANGLES;
+		case GeometryMode::TRIANGLE_STRIP: return GL_TRIANGLE_STRIP;
+		case GeometryMode::TRIANGLE_FAN:   return GL_TRIANGLE_FAN;
+		default:						   return GL_INVALID_ENUM;
+		}
+	}
+	
 	inline GLenum GLCheckError_(const char *file, int line)
 	{
 		GLenum errorCode;
@@ -24,7 +70,7 @@ namespace Renderer::OpenGL
 			case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
 			case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
 			}
-			RT_XENGINE_LOG_DEBUG("{} | {} ( {} )", error, file, line);
+			RT_XENGINE_LOG_ERROR("{} | {} ( {} )", error, file, line);
 		}
 		return errorCode;
 	}
@@ -55,5 +101,3 @@ namespace Renderer::OpenGL
 		RT_XENGINE_LOG_DEBUG(baseMessage);
 	}
 }
-
-#endif // GLUTIL_H

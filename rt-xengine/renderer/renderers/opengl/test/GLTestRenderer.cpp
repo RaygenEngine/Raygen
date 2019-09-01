@@ -1,70 +1,86 @@
-#include "GLTestRenderer.h"
-#include "GLTestGeometry.h"
+#include "pch.h"
 
-#include "renderer/renderers/opengl/assets/GLInstancedModel.h"
-#include "renderer/renderers/opengl/assets/GLShader.h"
-#include "renderer/renderers/opengl/GLUtil.h"
+#include "renderer/renderers/opengl/test/GLTestRenderer.h"
+#include "renderer/renderers/opengl/test/GLTestGeometry.h"
+#include "world/World.h"
+#include "world/nodes/user/freeform/FreeformUserNode.h"
+#include "world/nodes/geometry/TriangleModelGeometryNode.h"
 #include "world/nodes/sky/SkyHDRNode.h"
-
-#include "input/Input.h"
+#include "assets/DiskAssetManager.h"
+#include "renderer/renderers/opengl/GLUtil.h"
 
 
 namespace Renderer::OpenGL
 {
 	GLTestRenderer::GLTestRenderer(System::Engine* context)
-		: GLRendererBase(context), m_camera(nullptr), m_previewMode(PM_ALBEDO)
+		: GLRendererBase(context), m_camera(nullptr), m_previewMode(0)
 	{
 	}
 
 	bool GLTestRenderer::InitScene(int32 width, int32 height)
 	{
-		RT_XENGINE_LOG_INFO("Preview Mode set to: {}", SurfacePreviewTargetModeString(m_previewMode));
+		auto vertexSimpleShaderSource = GetDiskAssetManager()->LoadStringFileAsset("test/test.vert");
+		//auto vertexInstancedShaderSource = GetDiskAssetManager()->LoadStringFileAsset("test/test_instanced.vert");
+		auto fragmentShaderSource = GetDiskAssetManager()->LoadStringFileAsset("test/test.frag");
 
-		auto vertexSimpleShaderSource = GetDiskAssetManager()->LoadFileAsset<Assets::StringFile>("test/test.vert");
-		auto vertexInstancedShaderSource = GetDiskAssetManager()->LoadFileAsset<Assets::StringFile>("test/test_instanced.vert");
-		auto fragmentShaderSource = GetDiskAssetManager()->LoadFileAsset<Assets::StringFile>("test/test.frag");
+		//m_instancedShader = RequestGLShader(vertexInstancedShaderSource.get(), fragmentShaderSource.get());
+		//m_instancedShader->SetUniformLocation("albedoSampler");
+		//m_instancedShader->SetUniformLocation("emissionSampler");
+		//m_instancedShader->SetUniformLocation("specularParametersSampler");
+		//m_instancedShader->SetUniformLocation("bumpSampler");
+		//m_instancedShader->SetUniformLocation("skyHDRSampler");
+		//m_instancedShader->SetUniformLocation("depthSampler");
+		//m_instancedShader->SetUniformLocation("vp");
+		//m_instancedShader->SetUniformLocation("viewPos");
+		//m_instancedShader->SetUniformLocation("mode");
 
-		m_instancedShader = RequestGLShader(vertexInstancedShaderSource.get(), fragmentShaderSource.get());
-		m_instancedShader->SetUniformLocation("albedoSampler");
-		m_instancedShader->SetUniformLocation("emissionSampler");
-		m_instancedShader->SetUniformLocation("specularParametersSampler");
-		m_instancedShader->SetUniformLocation("bumpSampler");
-		m_instancedShader->SetUniformLocation("skyHDRSampler");
-		m_instancedShader->SetUniformLocation("depthSampler");
-		m_instancedShader->SetUniformLocation("vp");
-		m_instancedShader->SetUniformLocation("viewPos");
-		m_instancedShader->SetUniformLocation("mode");
-
+				// RGB: Albedo A: Opacity
+		std::shared_ptr<GLTexture> m_baseColorTexture;
+		// R: empty, G: Roughness, B: Metal, A: empty
+		std::shared_ptr<GLTexture> m_metallicRoughnessTexture;
+		std::shared_ptr<GLTexture> m_normalTexture;
+		std::shared_ptr<GLTexture> m_occlusionTexture;
+		std::shared_ptr<GLTexture> m_emissiveTexture;
+		
 		m_nonInstancedShader = RequestGLShader(vertexSimpleShaderSource.get(), fragmentShaderSource.get());
-		m_nonInstancedShader->SetUniformLocation("albedoSampler");
-		m_nonInstancedShader->SetUniformLocation("emissionSampler");
-		m_nonInstancedShader->SetUniformLocation("specularParametersSampler");
-		m_nonInstancedShader->SetUniformLocation("bumpSampler");
-		m_nonInstancedShader->SetUniformLocation("skyHDRSampler");
-		m_nonInstancedShader->SetUniformLocation("depthSampler");
+		m_nonInstancedShader->SetUniformLocation("baseColorSampler");
+		m_nonInstancedShader->SetUniformLocation("metallicRoughnessSampler");
+		//m_nonInstancedShader->SetUniformLocation("normalSampler");
+		//m_nonInstancedShader->SetUniformLocation("occlusionSampler");
+		//m_nonInstancedShader->SetUniformLocation("emissiveSampler");
 		m_nonInstancedShader->SetUniformLocation("mvp");
 		m_nonInstancedShader->SetUniformLocation("m");
-		m_nonInstancedShader->SetUniformLocation("normal_matrix");
-		m_nonInstancedShader->SetUniformLocation("viewPos");
+		m_nonInstancedShader->SetUniformLocation("normalMatrix");
 		m_nonInstancedShader->SetUniformLocation("mode");
-
+		m_nonInstancedShader->SetUniformLocation("viewPos");
+		m_nonInstancedShader->SetUniformLocation("baseColorFactor");
+		m_nonInstancedShader->SetUniformLocation("emissiveFactor");
+		m_nonInstancedShader->SetUniformLocation("metallicFactor");
+		m_nonInstancedShader->SetUniformLocation("roughnessFactor");
+		m_nonInstancedShader->SetUniformLocation("normalScale");
+		m_nonInstancedShader->SetUniformLocation("occlusionStrength");
+		m_nonInstancedShader->SetUniformLocation("alphaMode");
+		m_nonInstancedShader->SetUniformLocation("alphaCutoff");
+		m_nonInstancedShader->SetUniformLocation("doubleSided");
+	
 		auto* user = GetWorld()->GetAvailableNodeSpecificSubType<World::FreeformUserNode>();
 
 		RT_XENGINE_ASSERT_RETURN_FALSE(user, "Missing freeform user node!");
 
 		m_camera = user->GetCamera();
 
-		for (auto* geometryNode : GetWorld()->GetNodeMap<World::TriangleModelInstancedGeometryNode>())
-			m_instancedGeometries.emplace_back(RequestGLInstancedModel(geometryNode));
+		// TODO: fix instanced geometry
+		//for (auto* geometryNode : GetWorld()->GetNodeMap<World::TriangleModelInstancedGeometryNode>())
+		//	m_instancedGeometries.emplace_back(RequestGLInstancedModel(geometryNode));
 
 		for (auto* geometryNode : GetWorld()->GetNodeMap<World::TriangleModelGeometryNode>())
 			m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, GLTestGeometry>(this, geometryNode));
 
-		auto* sky = GetWorld()->GetAvailableNodeSpecificSubType<World::SkyHDRNode>();
+		//auto* sky = GetWorld()->GetAvailableNodeSpecificSubType<World::SkyHDRNode>();
 
-		RT_XENGINE_ASSERT_RETURN_FALSE(sky, "Missing freeform user node!");
+		//RT_XENGINE_ASSERT_RETURN_FALSE(sky, "Missing freeform user node!");
 
-		m_skyTexture = RequestGLTexture(sky->GetSkyHDR());
+		//m_skyTexture = RequestGLTexture(sky->GetSkyHDR());
 
 		glViewport(0, 0, width, height);
 
@@ -86,68 +102,67 @@ namespace Renderer::OpenGL
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glUseProgram(m_instancedShader->GetGLHandle());
-
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LEQUAL);
 		glEnable(GL_CULL_FACE);
 
-		glUniform1i(m_instancedShader->GetUniformLocation("albedoSampler"), 0);
-		glUniform1i(m_instancedShader->GetUniformLocation("emissionSampler"), 1);
-		glUniform1i(m_instancedShader->GetUniformLocation("specularParametersSampler"), 2);
-		glUniform1i(m_instancedShader->GetUniformLocation("bumpSampler"), 3);
-		glUniform1i(m_instancedShader->GetUniformLocation("skyHDRSampler"), 4);
-		glUniform1i(m_instancedShader->GetUniformLocation("depthSampler"), 5);
+		//glUseProgram(m_instancedShader->GetGLHandle());
+		
+		//glUniform1i(m_instancedShader->GetUniformLocation("albedoSampler"), 0);
+		//glUniform1i(m_instancedShader->GetUniformLocation("emissionSampler"), 1);
+		//glUniform1i(m_instancedShader->GetUniformLocation("specularParametersSampler"), 2);
+		//glUniform1i(m_instancedShader->GetUniformLocation("bumpSampler"), 3);
+		//glUniform1i(m_instancedShader->GetUniformLocation("skyHDRSampler"), 4);
+		//glUniform1i(m_instancedShader->GetUniformLocation("depthSampler"), 5);
 
-		glUniformMatrix4fv(m_instancedShader->GetUniformLocation("vp"), 1, GL_FALSE, &vp[0][0]);
+		//glUniformMatrix4fv(m_instancedShader->GetUniformLocation("vp"), 1, GL_FALSE, &vp[0][0]);
 
-		glUniform3fv(m_instancedShader->GetUniformLocation("viewPos"), 1, &m_camera->GetWorldTranslation()[0]);
-		glUniform1i(m_instancedShader->GetUniformLocation("mode"), m_previewMode);
+		//glUniform3fv(m_instancedShader->GetUniformLocation("viewPos"), 1, &m_camera->GetWorldTranslation()[0]);
+		//glUniform1i(m_instancedShader->GetUniformLocation("mode"), m_previewMode);
 
-		// render instanced geometry
-		for (auto& glInstancedModel : m_instancedGeometries)
-		{
-			for (auto& rm : glInstancedModel->GetRenderMeshes())
-			{
-				glBindVertexArray(rm.vao);
+		// TODO render instanced geometry
+	//	for (auto& glInstancedModel : m_instancedGeometries)
+	//	{
+	//		for (auto& rm : glInstancedModel->GetRenderMeshes())
+	//		{
+	//			//glBindVertexArray(rm.vao);
 
-				for (auto& gg : rm.mesh->GetGeometryGroups())
-				{
+	//			//for (auto& gg : rm.mesh->GetGeometryGroups())
+	//			{
 
-					glActiveTexture(GL_TEXTURE0);
-					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceAlbedo()->GetGLHandle());
+	///*				glActiveTexture(GL_TEXTURE0);
+	//				glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceAlbedo()->GetGLHandle());
 
-					glActiveTexture(GL_TEXTURE1);
-					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceEmission()->GetGLHandle());
+	//				glActiveTexture(GL_TEXTURE1);
+	//				glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceEmission()->GetGLHandle());
 
-					glActiveTexture(GL_TEXTURE2);
-					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceSpecularParameters()->GetGLHandle());
+	//				glActiveTexture(GL_TEXTURE2);
+	//				glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceSpecularParameters()->GetGLHandle());
 
-					glActiveTexture(GL_TEXTURE3);
-					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceBump()->GetGLHandle());
+	//				glActiveTexture(GL_TEXTURE3);
+	//				glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceBump()->GetGLHandle());*/
 
-					glActiveTexture(GL_TEXTURE4);
-					glBindTexture(GL_TEXTURE_2D, m_skyTexture->GetGLHandle());
+	//				glActiveTexture(GL_TEXTURE4);
+	//				glBindTexture(GL_TEXTURE_2D, m_skyTexture->GetGLHandle());
 
-					// draw every gg instanced
-					glDrawElementsInstanced(GL_TRIANGLES, sizeof(glm::u32vec3) * gg.indicesCount,
-						GL_UNSIGNED_INT, (GLvoid*)(sizeof(glm::u32vec3) * gg.indicesOffset), glInstancedModel->GetInstancesCount());
-				}
+	//				// draw every gg instanced
+	//				//glDrawElementsInstanced(GL_TRIANGLES, sizeof(glm::u32vec3) * gg.indicesCount,
+	//				//	GL_UNSIGNED_INT, (GLvoid*)(sizeof(glm::u32vec3) * gg.indicesOffset), glInstancedModel->GetInstancesCount());
+	//			}
 
-				glActiveTexture(GL_TEXTURE0);
+	//			glActiveTexture(GL_TEXTURE0);
 
-				glBindVertexArray(0);
-			}
-		}
+	//			glBindVertexArray(0);
+	//		}
+	//	}
 
 		glUseProgram(m_nonInstancedShader->GetGLHandle());
 
-		glUniform1i(m_nonInstancedShader->GetUniformLocation("albedoSampler"), 0);
-		glUniform1i(m_nonInstancedShader->GetUniformLocation("emissionSampler"), 1);
-		glUniform1i(m_nonInstancedShader->GetUniformLocation("specularParametersSampler"), 2);
-		glUniform1i(m_nonInstancedShader->GetUniformLocation("bumpSampler"), 3);
-		glUniform1i(m_nonInstancedShader->GetUniformLocation("skyHDRSampler"), 4);
-		glUniform1i(m_nonInstancedShader->GetUniformLocation("depthSampler"), 5);
+		//glUniform1i(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), 0);
+		//glUniform1i(m_nonInstancedShader->GetUniformLocation("metallicRoughnessSampler"), 1);
+		//glUniform1i(m_nonInstancedShader->GetUniformLocation("normalSampler"), 2);
+		//glUniform1i(m_nonInstancedShader->GetUniformLocation("occlusionSampler"), 3);
+		//glUniform1i(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), 4);
 
 		glUniform3fv(m_nonInstancedShader->GetUniformLocation("viewPos"), 1, &m_camera->GetWorldTranslation()[0]);
 
@@ -161,34 +176,41 @@ namespace Renderer::OpenGL
 
 			glUniformMatrix4fv(m_nonInstancedShader->GetUniformLocation("mvp"), 1, GL_FALSE, &mvp[0][0]);
 			glUniformMatrix4fv(m_nonInstancedShader->GetUniformLocation("m"), 1, GL_FALSE, &m[0][0]);
-			glUniformMatrix3fv(m_nonInstancedShader->GetUniformLocation("normal_matrix"), 1, GL_FALSE, &transpose(inverse(glm::mat3(m)))[0][0]);
+			glUniformMatrix3fv(m_nonInstancedShader->GetUniformLocation("normalMatrix"), 1, GL_FALSE, &glm::transpose(glm::inverse(glm::mat3(m)))[0][0]);
 
-			for (auto& rm : geometry->glModel->GetRenderMeshes())
+			for (auto& glMesh : geometry->glModel->GetGLMeshes())
 			{
-				glBindVertexArray(rm.vao);
+				glBindVertexArray(glMesh->GetVAO());
 
+				auto& glMaterial = glMesh->GetMaterial();
+				
+				glUniform4fv(m_nonInstancedShader->GetUniformLocation("baseColorFactor"), 1, &glMaterial.GetBaseColorFactor()[0]);
+				glUniform3fv(m_nonInstancedShader->GetUniformLocation("emissiveFactor"), 1, &glMaterial.GetEmissiveFactor()[0]);
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("metallicFactor"), glMaterial.GetMetallicFactor());
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("roughnessFactor"), glMaterial.GetRoughnessFactor());
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("normalScale"), glMaterial.GetNormalScale());
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("occlusionStrength"), glMaterial.GetOcclusionStrength());
+				glUniform1i(m_nonInstancedShader->GetUniformLocation("alphaMode"), glMaterial.GetAlphaMode());
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("alphaCutoff"), glMaterial.GetAlphaCutoff());
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("doubleSided"), glMaterial.IsDoubleSided());
 	
-				for (auto& gg : rm.mesh->GetGeometryGroups())
-				{
-					glActiveTexture(GL_TEXTURE0);
-					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceAlbedo()->GetGLHandle());
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, glMaterial.GetBaseColorTexture()->GetGLHandle());
+	
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, glMaterial.GetMetallicRoughnessTexture()->GetGLHandle());
 
-					glActiveTexture(GL_TEXTURE1);
-					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceEmission()->GetGLHandle());
+				//glActiveTexture(GL_TEXTURE2);
+				//glBindTexture(GL_TEXTURE_2D, glMesh.GetMaterial().GetNormalTexture()->GetGLHandle());
 
-					glActiveTexture(GL_TEXTURE2);
-					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceSpecularParameters()->GetGLHandle());
+				//glActiveTexture(GL_TEXTURE3);
+				//glBindTexture(GL_TEXTURE_2D, glMesh.GetMaterial().GetOcclusionTexture()->GetGLHandle());
 
-					glActiveTexture(GL_TEXTURE3);
-					glBindTexture(GL_TEXTURE_2D, gg.material->GetTextureSurfaceBump()->GetGLHandle());
+				//glActiveTexture(GL_TEXTURE4);
+				//glBindTexture(GL_TEXTURE_2D, glMesh.GetMaterial().GetEmissiveTexture()->GetGLHandle());
 
-					glActiveTexture(GL_TEXTURE4);
-					glBindTexture(GL_TEXTURE_2D, m_skyTexture->GetGLHandle());
-
-
-					glDrawElements(GL_TRIANGLES, sizeof(glm::u32vec3) * gg.indicesCount,
-						GL_UNSIGNED_INT, (GLvoid*)(sizeof(glm::u32vec3) * gg.indicesOffset));
-				}
+				glDrawElements(GL_TRIANGLES, glMesh->GetCount(), GL_UNSIGNED_INT, (GLvoid*)0);
+			
 				glActiveTexture(GL_TEXTURE0);
 
 				glBindVertexArray(0);
@@ -206,15 +228,15 @@ namespace Renderer::OpenGL
 
 	void GLTestRenderer::Update()
 	{
-		if (GetInput().IsKeyPressed(XVK_1))
+		if (GetInput().IsKeyPressed(XVirtualKey::K1))
 		{
-			m_previewMode = m_previewMode - 1 < 0 ? PM_COUNT - 1 : m_previewMode - 1;
-			RT_XENGINE_LOG_INFO("Preview Mode set to: {}", SurfacePreviewTargetModeString(m_previewMode));
+			m_previewMode = m_previewMode - 1 < 0 ? PT_COUNT - 1 : m_previewMode - 1;
+			RT_XENGINE_LOG_INFO("Preview Mode set to: {}({})", SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
 		}
-		else if (GetInput().IsKeyPressed(XVK_2))
+		else if (GetInput().IsKeyPressed(XVirtualKey::K2))
 		{
-			++m_previewMode %= PM_COUNT;
-			RT_XENGINE_LOG_INFO("Preview Mode set to: {}", SurfacePreviewTargetModeString(m_previewMode));
+			++m_previewMode %= PT_COUNT;
+			RT_XENGINE_LOG_INFO("Preview Mode set to: {}({})", SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
 		}
 	}
 }

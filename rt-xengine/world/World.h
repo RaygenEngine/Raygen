@@ -1,16 +1,13 @@
-#ifndef WORLD_H
-#define WORLD_H
+#pragma once
 
-#include "nodes/Node.h"
-
+#include "world/nodes/Node.h"
 #include "nodes/geometry/TriangleModelGeometryNode.h"
 #include "nodes/geometry/TriangleModelInstancedGeometryNode.h"
 #include "nodes/TransformNode.h"
 #include "nodes/light/LightNode.h"
 #include "nodes/camera/CameraNode.h"
-#include "nodes/user/oculus/OculusUserNode.h"
-#include "nodes/user/freeform/FreeformUserNode.h"
-#include "input/Input.h"
+#include "nodes/user/UserNode.h"
+#include "assets/other/xml/XMLDoc.h"
 
 namespace World
 {
@@ -101,7 +98,7 @@ namespace World
 			// general nodes
 			else if constexpr (std::is_base_of<Node, NodeType>::value) { return m_nodes; }
 
-			static_assert(true, "Incorrect types!");
+			static_assert("Incorrect types!");
 		}
 
 		void AddDirtyNode(Node* node);
@@ -165,7 +162,8 @@ namespace World
 
 	protected:
 		std::string ToString(bool verbose, uint depth) const override;
+
+	public:
+		void ToString(std::ostream& os) const { os << "object-type: World, name: " << m_name << ", id: " << GetObjectId(); }
 	};
 }
-
-#endif // WORLD_H

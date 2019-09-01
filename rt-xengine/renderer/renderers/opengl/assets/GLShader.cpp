@@ -1,11 +1,12 @@
 #include "pch.h"
-#include "GLShader.h"
 
+#include "renderer/renderers/opengl/assets/GLShader.h"
 
 namespace Renderer::OpenGL
 {
-	GLShader::GLShader(GLRendererBase* renderer)
-		: GLAsset(renderer), m_programId(0)
+	GLShader::GLShader(GLRendererBase* renderer, const std::string& name)
+		: GLAsset(renderer, name),
+	      m_programId(0)
 	{
 	}
 
@@ -16,8 +17,6 @@ namespace Renderer::OpenGL
 
 	bool GLShader::Load(Assets::StringFile* vertexSource, Assets::StringFile* fragmentSource)
 	{
-		SetIdentificationFromAssociatedDiskAssetIdentification(vertexSource->GetLabel() + " " + fragmentSource->GetLabel());
-
 		GLint Result = GL_FALSE;
 		int32 infoLogLength;
 

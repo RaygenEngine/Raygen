@@ -1,7 +1,6 @@
-#ifndef TRANSFORMNODE_H
-#define TRANSFORMNODE_H
+#pragma once
 
-#include "Node.h"
+#include "world/nodes/Node.h"
 
 namespace World
 {
@@ -13,7 +12,7 @@ namespace World
 		~TransformNode() = default;
 
 		std::string ToString(bool verbose, uint depth) const override;
+
+		void ToString(std::ostream& os) const override { os << "node-type: TransformNode, name: " << m_name; }
 	};
 }
-
-#endif // TRANSFORMNODE_H

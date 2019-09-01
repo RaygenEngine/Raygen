@@ -1,15 +1,15 @@
 #include "pch.h"
 
-#include "Win32Window.h"
+#include "platform/windows/Win32Window.h"
+#include "platform/windows/TranslateWin32VirtualKeys.h"
+#include "world/World.h"
 #include "renderer/Renderer.h"
 
 #include <windowsx.h>
 
-#include "TranslateWin32VirtualKeys.h"
-
 namespace Platform
 {
-	LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+	//LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 	Win32Window::Win32Window(System::Engine* engineRef)
 		: Window(engineRef),
@@ -317,15 +317,15 @@ namespace Platform
 			break;
 
 		case WM_LBUTTONDOWN:
-			input.UpdateKeyPressed(XVK_LBUTTON);
+			input.UpdateKeyPressed(XVirtualKey::LBUTTON);
 			break;
 
 		case WM_RBUTTONDOWN:
-			input.UpdateKeyPressed(XVK_RBUTTON);
+			input.UpdateKeyPressed(XVirtualKey::RBUTTON);
 			break;
 
 		case WM_MBUTTONDOWN:
-			input.UpdateKeyPressed(XVK_MBUTTON);
+			input.UpdateKeyPressed(XVirtualKey::MBUTTON);
 			break;
 
 		case WM_XBUTTONDOWN:
@@ -333,15 +333,15 @@ namespace Platform
 			break;
 
 		case WM_LBUTTONUP:
-			input.UpdateKeyReleased(XVK_LBUTTON);
+			input.UpdateKeyReleased(XVirtualKey::LBUTTON);
 			break;
 
 		case WM_RBUTTONUP:
-			input.UpdateKeyReleased(XVK_RBUTTON);
+			input.UpdateKeyReleased(XVirtualKey::RBUTTON);
 			break;
 
 		case WM_MBUTTONUP:
-			input.UpdateKeyReleased(XVK_MBUTTON);
+			input.UpdateKeyReleased(XVirtualKey::MBUTTON);
 			break;
 
 		case WM_XBUTTONUP:

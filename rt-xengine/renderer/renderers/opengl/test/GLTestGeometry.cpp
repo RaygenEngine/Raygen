@@ -1,4 +1,6 @@
-#include "GLTestGeometry.h"
+#include "pch.h"
+
+#include "renderer/renderers/opengl/test/GLTestGeometry.h"
 
 namespace Renderer::OpenGL
 {

@@ -1,5 +1,4 @@
-#ifndef LIGHTNODE_H
-#define LIGHTNODE_H
+#pragma once
 
 #include "world/nodes/Node.h"
 
@@ -18,7 +17,7 @@ namespace World
 		std::string ToString(bool verbose, uint depth) const override;
 
 		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
+
+		void ToString(std::ostream& os) const override { os << "node-type: LightNode, name: " << m_name; }
 	};
 }
-
-#endif // LIGHTNODE_H

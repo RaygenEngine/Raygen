@@ -1,9 +1,8 @@
 ﻿#include "pch.h"
 
-#include "FreeformUserNode.h"
-
+#include "world/nodes/user/freeform/FreeformUserNode.h"
 #include "world/World.h"
-
+#include "assets/other/xml/ParsingAux.h"
 
 namespace World
 {
@@ -46,9 +45,9 @@ namespace World
 		auto speed = m_movementSpeed; // 0,01
 
 		// user buffs
-		if (input.IsKeyRepeat(XVK_LSHIFT))
+		if (input.IsKeyRepeat(XVirtualKey::LSHIFT))
 			speed *= 10.f;
-		if (input.IsKeyRepeat(XVK_C))
+		if (input.IsKeyRepeat(XVirtualKey::CTRL))
 			speed /= 10.f;
 		if (input.IsRightTriggerMoving())
 			speed *= 10.f * glm::exp(input.GetRightTriggerMagnitude());
@@ -56,7 +55,7 @@ namespace World
 			speed /= 10.f * glm::exp(input.GetLeftTriggerMagnitude());
 
 		// user rotation
-		if (input.IsCursorDragged() && input.IsKeyRepeat(XVK_RBUTTON))
+		if (input.IsCursorDragged() && input.IsKeyRepeat(XVirtualKey::RBUTTON))
 		{
 			const float yaw = -input.GetCursorRelativePosition().x * m_turningSpeed;
 			const float pitch = -input.GetCursorRelativePosition().y * m_turningSpeed;
@@ -87,22 +86,22 @@ namespace World
 			Move(moveDir, speed * input.GetLeftThumbMagnitude());
 		}
 
-		if (input.IsAnyOfKeysRepeat(XVK_W, XVK_GAMEPAD_DPAD_UP))
+		if (input.IsAnyOfKeysRepeat(XVirtualKey::W, XVirtualKey::GAMEPAD_DPAD_UP))
 			MoveFront(speed);
 
-		if (input.IsAnyOfKeysRepeat(XVK_S, XVK_GAMEPAD_DPAD_DOWN))
+		if (input.IsAnyOfKeysRepeat(XVirtualKey::S, XVirtualKey::GAMEPAD_DPAD_DOWN))
 			MoveBack(speed);
 
-		if (input.IsAnyOfKeysRepeat(XVK_D, XVK_GAMEPAD_DPAD_RIGHT))
+		if (input.IsAnyOfKeysRepeat(XVirtualKey::D, XVirtualKey::GAMEPAD_DPAD_RIGHT))
 			MoveRight(speed);
 
-		if (input.IsAnyOfKeysRepeat(XVK_A, XVK_GAMEPAD_DPAD_LEFT))
+		if (input.IsAnyOfKeysRepeat(XVirtualKey::A, XVirtualKey::GAMEPAD_DPAD_LEFT))
 			MoveLeft(speed);
 
-		if (input.IsAnyOfKeysRepeat(XVK_E, XVK_GAMEPAD_LEFT_SHOULDER))
+		if (input.IsAnyOfKeysRepeat(XVirtualKey::E, XVK_GAMEPAD_LEFT_SHOULDER))
 			MoveUp(speed);
 
-		if (input.IsAnyOfKeysRepeat(XVK_Q, XVK_GAMEPAD_RIGHT_SHOULDER))
+		if (input.IsAnyOfKeysRepeat(XVirtualKey::Q, XVK_GAMEPAD_RIGHT_SHOULDER))
 			MoveDown(speed);
 	}
 }
