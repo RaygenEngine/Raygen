@@ -6,14 +6,14 @@ namespace Renderer::OpenGL
 {
 
 	GLTexture::GLTexture(GLAssetManager* glAssetManager, const std::string& name)
-		: GLAsset(glAssetManager, name),
-		  m_textureId(0)
+		: GLAsset(glAssetManager, name), m_bindlessHandle(0),
+		  m_Id(0), m_texCoordIndex(0)
 	{
 	}
 
 	GLTexture::~GLTexture()
 	{
-		glDeleteTextures(1, &m_textureId);
+		glDeleteTextures(1, &m_Id);
 	}
 
 	bool GLTexture::Load(Assets::Texture* data, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR)
@@ -21,8 +21,8 @@ namespace Renderer::OpenGL
 		// TODO: where should i store this?>
 		m_texCoordIndex = 0;
 
-		glGenTextures(1, &m_textureId);
-		glBindTexture(GL_TEXTURE_2D, m_textureId);
+		glGenTextures(1, &m_Id);
+		glBindTexture(GL_TEXTURE_2D, m_Id);
 
 		// If you don't use one of the filter values that include mipmaps (like GL_LINEAR_MIPMAP_LINEAR), your mipmaps will not be used in any way.
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
@@ -57,6 +57,10 @@ namespace Renderer::OpenGL
 			minFilter == GL_LINEAR_MIPMAP_LINEAR)
 			glGenerateMipmap(GL_TEXTURE_2D);
 
+		// TODO if bindless?
+		m_bindlessHandle = glGetTextureHandleARB(m_Id);
+		glMakeTextureHandleResidentARB(m_bindlessHandle);
+		
 		return true;
 	}
 }
