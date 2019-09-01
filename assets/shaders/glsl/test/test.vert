@@ -14,6 +14,7 @@ out Data
 	vec3 bitangent;
 	vec2 textCoord0;
 	vec2 textCoord1;
+	mat3 TBN;
 } dataOut;
 
 uniform mat4 mvp;
@@ -30,4 +31,10 @@ void main()
 	dataOut.bitangent = bitangent; 
 	dataOut.textCoord0 = textCoord0; 
 	dataOut.textCoord1 = textCoord1; 
+	
+	// TODO: tangentPos/light/view/etc
+    vec3 T = normalize(vec3(m * vec4(tangent.xyz,   0.0)));
+    vec3 B = normalize(vec3(m * vec4(bitangent, 0.0)));
+    vec3 N = normalize(vec3(m * vec4(normal,    0.0)));
+    dataOut.TBN = mat3(T, B, N);
 }
