@@ -17,8 +17,73 @@ namespace Assets
 	{
 		namespace tg = tinygltf;
 
-		template<typename Output, typename ComponentType>
-		void ExtractBufferData(const tg::Model& modelData, int32 accessorIndex, std::vector<Output>& result)
+		// TODO: This code has high maintenance cost due to its complexity.
+		// the complexity here is mostly used to protect against 'incompatible' conversion types. 
+		// The maintenance cost may not be worth the 'safe' conversions.
+
+		// Copy with strides from a C array-like to a vector while performing normal type conversion.
+		template<typename ComponentType, typename OutputType>
+		void CopyToVector(std::vector<OutputType>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount, size_t componentCount)
+		{
+			for (int32 i = 0; i < elementCount; ++i)
+			{
+				byte* elementPtr = &beginPtr[perElementOffset * i];
+				ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
+
+				for (uint32 c = 0; c < componentCount; ++c)
+				{
+					if constexpr (std::is_same_v<double, ComponentType>)
+					{
+						result[i][c] = static_cast<float>(data[c]); // explicitly convert any double input to float.
+					}
+					else 
+					{
+						result[i][c] = data[c]; // normal type conversion, should be able to convert most of the required stuff
+					}
+				}
+			}
+		}
+
+		// Empty specialization for conversions between types that should never happen.
+		template<> void CopyToVector<uint32, glm::vec2>(std::vector<glm::vec2>&, byte*, size_t, size_t, size_t) { assert(false); }
+		template<> void CopyToVector<uint32, glm::vec3>(std::vector<glm::vec3>&, byte*, size_t, size_t, size_t) { assert(false); }
+		template<> void CopyToVector<uint32, glm::vec4>(std::vector<glm::vec4>&, byte*, size_t, size_t, size_t) { assert(false); }
+
+		// Uint32 specialization. Expects componentCount == 1.
+		template<>
+		void CopyToVector<unsigned short>(std::vector<uint32>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount, size_t componentCount)
+		{
+			assert(componentCount == 1);
+			for (uint32 i = 0; i < elementCount; ++i)
+			{
+				byte* elementPtr = &beginPtr[perElementOffset * i];
+				unsigned short* data = reinterpret_cast<unsigned short*>(elementPtr);
+				result[i] = *data;
+			}
+		}
+
+		// Uint32 specialization. Expects componentCount == 1.
+		template<>
+		void CopyToVector<unsigned int>(std::vector<uint32>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount, size_t componentCount)
+		{
+			assert(componentCount == 1);
+			for (uint32 i = 0; i < elementCount; ++i)
+			{
+				byte* elementPtr = &beginPtr[perElementOffset * i];
+				unsigned int* data = reinterpret_cast<unsigned int*>(elementPtr);
+				result[i] = *data;
+			}
+		}
+		
+		// Uint32 empty specializations. runtime assert just in case
+		template<> void CopyToVector<float> (std::vector<uint32>&, byte*, size_t, size_t, size_t) { assert(false); }
+		template<> void CopyToVector<double>(std::vector<uint32>&, byte*, size_t, size_t, size_t) { assert(false); }
+		template<> void CopyToVector<byte>  (std::vector<uint32>&, byte*, size_t, size_t, size_t) { assert(false); }
+
+
+		// Extracts the type of the out vector and attempts to load any type of data at accessorIndex to this vector.
+		template<typename Output>
+		void ExtractBufferDataInto(const tg::Model& modelData, int32 accessorIndex, std::vector<Output>& out)
 		{
 			//
 			// Actual example of a possible complex gltf buffer:
@@ -29,13 +94,15 @@ namespace Assets
 
 			size_t elementCount;		// How many elements there are to read
 			size_t componentCount;		// How many components of type ComponentType there are to each element.
-			
+
 			size_t strideByteOffset;	// The number of bytes to move in the buffer after each read to get the next element.
 										// This may be more bytes than the actual sizeof(ComponentType) * componentCount
 										// if the data is strided.
-			
+
 			byte* beginPtr;				// Pointer to the first byte we care about.
 										// This may not be the actual start of the buffer of the binary file.
+
+			BufferComponentType componentType; // this particular model's underlying buffer type to read as.
 
 			{
 				size_t beginByteOffset;
@@ -43,6 +110,8 @@ namespace Assets
 				const tinygltf::BufferView& bufferView = modelData.bufferViews.at(accessor.bufferView);
 				const tinygltf::Buffer& gltfBuffer = modelData.buffers.at(bufferView.buffer);
 
+
+				componentType = GetComponentTypeFromGltf(accessor.componentType);
 				elementCount = accessor.count;
 				beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
 				strideByteOffset = accessor.ByteStride(bufferView);
@@ -50,57 +119,34 @@ namespace Assets
 				beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
 			}
 
-			result.resize(elementCount);
+			out.resize(elementCount);
 
-			for (int32 i = 0; i < elementCount; ++i)
-			{
-				byte* elementPtr = &beginPtr[strideByteOffset * i];
-
-				// Component Count can be templated and specialized later for per type & count optmizations (ie vectorization)
-				ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
-				for (int32 c = 0; c < componentCount; ++c)
-				{
-					result[i][c] = data[c]; // normal type conversion, should be able to convert even ints to floats
-				}
-			}
-		}
-
-		// Extracts the type of the out vector and attempts to load any type of data at accessorIndex to this vector.
-		template<typename Output>
-		void ExtractBufferDataInto(const tg::Model& modelData, int32 accessorIndex, std::vector<Output>& out)
-		{
-			const tinygltf::Accessor& accessor = modelData.accessors.at(accessorIndex);
-			BufferComponentType componentType = GetComponentTypeFromGltf(accessor.componentType);
-			
 			// This will generate EVERY possible mapping of Output -> ComponentType conversion
 			// fix this later and provide empty specializations of "incompatible" types (eg: float -> int)
 			// TODO: This code will produce warnings for every type conversion that is considered 'unsafe'
 
 			switch (componentType)
 			{
-			case BufferComponentType::BYTE:
-				ExtractBufferData<Output, char>(modelData, accessorIndex, out);
-				return;
+			// Conversions from signed to unsigned types are "implementation defined".
+			// This code assumes the implementation will not do any bit arethmitic from signed x to unsigned x.
+
+			case BufferComponentType::BYTE:				// Fallthrough
 			case BufferComponentType::UNSIGNED_BYTE:
-				ExtractBufferData<Output, unsigned char>(modelData, accessorIndex, out);
+				CopyToVector<unsigned char>(out, beginPtr, strideByteOffset, elementCount, componentCount);
 				return;
-			case BufferComponentType::SHORT:
-				ExtractBufferData<Output, short>(modelData, accessorIndex, out);
-				return;
+			case BufferComponentType::SHORT:			// Fallthrough 
 			case BufferComponentType::UNSIGNED_SHORT:
-				ExtractBufferData<Output, unsigned short>(modelData, accessorIndex, out);
+				CopyToVector<unsigned short>(out, beginPtr, strideByteOffset, elementCount, componentCount);
 				return;
 			case BufferComponentType::INT:
-				ExtractBufferData<Output, int32>(modelData, accessorIndex, out);
-				return;
-			case BufferComponentType::UNSIGNED_INT:
-				ExtractBufferData<Output, unsigned int>(modelData, accessorIndex, out);
+			case BufferComponentType::UNSIGNED_INT:		// Fallthrough
+				CopyToVector<uint32>(out, beginPtr, strideByteOffset, elementCount, componentCount);
 				return;
 			case BufferComponentType::FLOAT:
-				ExtractBufferData<Output, float>(modelData, accessorIndex, out);
+				CopyToVector<float>(out, beginPtr, strideByteOffset, elementCount, componentCount);
 				return;
 			case BufferComponentType::DOUBLE:
-				ExtractBufferData<Output, double>(modelData, accessorIndex, out);
+				CopyToVector<double>(out, beginPtr, strideByteOffset, elementCount, componentCount);
 				return;
 			case BufferComponentType::INVALID:
 				return;
@@ -171,37 +217,30 @@ namespace Assets
 		{
 			m_normals.resize(m_positions.size());
 			
+			auto makeNormals = [&](std::function<uint32(int32)> getIndex)
+			{
+				for (int32 i = 0; i < m_indices.size(); i += 3)
+				{
+					// triangle
+					auto p0 = m_positions[getIndex(i)];
+					auto p1 = m_positions[getIndex(i + 1)];
+					auto p2 = m_positions[getIndex(i + 2)];
+
+					glm::vec3 n = glm::cross(p1 - p0, p2 - p0);
+
+					m_normals[getIndex(i)] += n;
+					m_normals[getIndex(i + 1)] += n;
+					m_normals[getIndex(i + 2)] += n;
+				}
+			};
+
 			if(UsesIndexing())
 			{
-				for (int32 i = 0; i < m_indices.size(); i+=3)
-				{					
-					// triangle
-					auto p0 = m_positions[m_indices[i].x];
-					auto p1 = m_positions[m_indices[i+1].x];
-					auto p2 = m_positions[m_indices[i+2].x];
-					
-					glm::vec3 n = glm::cross(p1 - p0, p2 - p0);
-					
-					m_normals[m_indices[i].x] += n;
-					m_normals[m_indices[i+1].x] += n;
-					m_normals[m_indices[i+2].x] += n;
-				}	
+				makeNormals([&](int32 i) { return m_indices[i]; });
 			}
 			else
 			{
-				for (int32 i = 0; i < m_positions.size(); ++i)
-				{					
-					// triangle
-					auto p0 = m_positions[i];
-					auto p1 = m_positions[i+1];
-					auto p2 = m_positions[i+2];
-
-					glm::vec3 n = glm::cross(p1 - p0, p2 - p0);    // p1 is the 'base' here
-
-					m_normals[i] += n;
-					m_normals[i+1] += n;
-					m_normals[i+2] += n;
-				}
+				makeNormals([](int32 i) { return i; });
 			}
 
 			std::for_each(m_normals.begin(), m_normals.end(), [](glm::vec3& normal) { normal = glm::normalize(normal); });
