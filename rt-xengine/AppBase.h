@@ -24,6 +24,8 @@ protected:
 	bool m_handleControllers;
 
 	bool m_lockMouse;
+
+	bool m_enableEditor;
 public:
 	AppBase();
 

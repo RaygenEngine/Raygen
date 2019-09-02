@@ -21,7 +21,6 @@ namespace World
 		std::string ToString(bool verbose, uint depth) const override;
 
 	public:
-		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 		bool LoadChildrenFromXML(const tinyxml2::XMLElement* xmlData);
 
 		void ToString(std::ostream& os) const { os << "node-type: TriangleModelInstancedGeometryNode, name: " << m_name; }

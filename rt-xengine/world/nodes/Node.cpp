@@ -146,6 +146,31 @@ namespace World
 		return true;
 	}
 
+	void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
+	{
+		for (auto& prop : m_reflector.GetProperties())
+		{
+			auto str = prop.GetName().c_str();
+			prop.SwitchOnType(
+				[&](int& ref) {
+				xmlData->QueryIntAttribute(str, &ref);
+			},
+				[&](bool& ref) {
+				xmlData->QueryBoolAttribute(str, &ref);
+			},
+				[&](float& ref) {
+				xmlData->QueryFloatAttribute(str, &ref);
+			},
+				[&](glm::vec3& ref) {
+				Assets::ReadFloatsAttribute(xmlData, str, ref);
+			},
+				[&](std::string& ref) {
+				Assets::ReadStringAttribute(xmlData, str, ref);
+			});
+		}
+		LoadAttributesFromXML(xmlData);
+	}
+
 	void Node::Move(const glm::vec3& direction, float magnitude)
 	{
 		m_localTranslation += direction * magnitude * GetWorld()->GetDeltaTime();

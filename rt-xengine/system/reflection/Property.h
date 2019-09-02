@@ -2,7 +2,7 @@
 
 namespace PropertyFlags
 {
-	using Type = uint32;
+	using Type = uint64;
 	
 	constexpr Type NoSave	= (1 << 0);
 	constexpr Type NoLoad	= (1 << 1);
@@ -19,6 +19,12 @@ protected:
 	// As noted this is a direct pointer to the memory of the mapped object.
 	void* m_ptr;
 
+	std::string m_name;
+public:
+	const std::string& GetName() { return m_name;  }
+
+
+	
 public:
 	bool IsA(PropertyType type)
 	{
@@ -44,13 +50,14 @@ public:
 	}
 
 	template<typename Type>
-	static Property MakeProperty(Type& Variable)
+	static Property MakeProperty(Type& variable,const std::string& name)
 	{
 		static_assert(IsReflected<Type>, "This type is not supported for reflection.");
 
 		Property created;
 		created.m_type = ReflectionFromType<Type>;
-		created.m_ptr = &Variable;
+		created.m_ptr = &variable;
+		created.m_name = name;
 		return created;
 	}
 

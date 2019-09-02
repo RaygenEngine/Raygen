@@ -72,7 +72,7 @@ Reflector m_reflector = {#Class};  \
 private:						  // Restore private specifier.
 
 // ALWAYS expected to run in member function
-#define REFLECT_VAR(Variable) GetReflector(this).AddProperty(#Variable, Variable);
+#define REFLECT_VAR(Variable) GetReflector(this).AutoAddProperty(#Variable, Variable);
 
 
 #endif // REFLECTION_H

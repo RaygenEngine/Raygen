@@ -31,6 +31,9 @@ set(SOURCE_FILES
 	
 	core/logger/Logger.cpp
 	
+	editor/Editor.cpp
+	editor/imgui/ImguiImpl.cpp
+		
 	renderer/Renderer.cpp
 	renderer/NodeObserver.cpp
 	
@@ -134,6 +137,10 @@ set(HEADER_FILES
 	core/type/MathTypes.h
 	
 	core/uuid/UUIDGenerator.h
+	
+	editor/Editor.h
+	editor/imgui/ImguiImpl.h
+	editor/imgui/ImguiExtensions.h
 	
 	renderer/Renderer.h
 	renderer/NodeObserver.h

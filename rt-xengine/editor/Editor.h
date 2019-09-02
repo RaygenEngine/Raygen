@@ -1,0 +1,34 @@
+#pragma once
+
+#include "system/EngineObject.h"
+
+namespace World
+{
+	class Node;
+}
+
+namespace Editor {
+	class Editor : public System::EngineObject
+	{
+	protected:
+		bool m_updateWorld;
+		World::Node* m_selectedNode;
+
+	public:
+		Editor(System::Engine* engine);
+
+		virtual ~Editor() = default;
+
+		void UpdateEditor();
+
+		bool ShouldUpdateWorld() const 
+		{
+			return m_updateWorld;
+		}
+
+	private:
+		void Outliner();
+		void PropertyEditor(World::Node* activeNode);
+	};
+
+}

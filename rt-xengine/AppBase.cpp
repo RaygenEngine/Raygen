@@ -1,8 +1,10 @@
 #include "pch.h"
 #include "AppBase.h"
 #include "platform/windows/Win32Window.h"
-#include "renderer/renderers/opengl/test/GLTestRenderer.h"
+#include "system/Engine.h"
+#include "renderer/Renderer.h"
 #include "world/World.h"
+#include "editor/Editor.h"
 
 AppBase::AppBase()
 {
@@ -17,6 +19,8 @@ AppBase::AppBase()
 
 	m_handleControllers = false;
 	m_lockMouse = false;
+
+	m_enableEditor = true;
 }
 
 void AppBase::PreMainInit(int32 argc, char* argv[])
@@ -64,6 +68,8 @@ int32 AppBase::Main(int32 argc, char* argv[])
 		return -1;
 	}
 
+	engine->InitEditor();
+
 	window->Show();
 
 	if (m_lockMouse) 
@@ -86,11 +92,14 @@ void AppBase::MainLoop(System::Engine* engine, Platform::Window* window)
 
 		// Let our window handle any events.
 		window->HandleEvents(m_handleControllers);
-
+		
 		// update world 
 		engine->GetWorld()->Update();
+		
+		// TODO: this should be a single call to renderer: UpdateAndRender() that also swaps buffers
 		// update renderer (also checks world updates, eg. camera/ entity moved, light color changed)
 		engine->GetRenderer()->Update();
+		
 		// render
 		engine->GetRenderer()->Render();
 		engine->GetRenderer()->SwapBuffers();

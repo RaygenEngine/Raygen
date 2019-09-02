@@ -3,6 +3,7 @@
 #include "world/World.h"
 #include "system/Engine.h"
 #include "world/NodeFactory.h"
+#include "editor/Editor.h"
 
 namespace World
 {
@@ -63,7 +64,7 @@ namespace World
 			if (node->GetName() == name)
 				nodes.push_back(node);
 
-		return nodes;
+return nodes;
 	}
 
 	Node* World::GetNodeByName(const std::string& name) const
@@ -129,7 +130,7 @@ namespace World
 		return false;
 	}
 
-	bool World::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
+	bool World::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 	{
 		Node::LoadAttributesFromXML(xmlData);
 
@@ -162,9 +163,17 @@ namespace World
 		m_worldTime += m_deltaTime;
 		m_lastTime = timestamp;
 
-		// Update after input and delta calculation
-		for (auto* node : m_nodes)
-			node->Update();
+		if (GetEngine()->ShouldUpdateWorld())
+		{
+			// Update after input and delta calculation
+			for (auto* node : m_nodes)
+				node->Update();
+		}
+		
+		if (GetEngine()->IsUsingEditor())
+		{
+			GetEngine()->GetEditor()->UpdateEditor();
+		}
 
 		// Update dirty leaf node instances
 		for (auto* dirtyLeafNode : m_dirtyLeafNodes)

@@ -6,6 +6,7 @@
 #include "world/World.h"
 #include "renderer/Renderer.h"
 #include "world/NodeFactory.h"
+#include "editor/Editor.h"
 
 namespace System
 {
@@ -51,5 +52,25 @@ namespace System
 	void Engine::UnloadDiskAssets()
 	{
 		m_diskAssetManager->UnloadAssets();
+	}
+	
+	bool Engine::ShouldUpdateWorld() const
+	{
+		if (m_editor.get())
+		{
+			return m_editor->ShouldUpdateWorld();
+		}
+		return true;
+	}
+	
+	bool Engine::IsUsingEditor() const
+	{
+		// TODO: in the future disable editor with this flag.
+		return m_editor.get();
+	}
+	
+	void Engine::InitEditor()
+	{
+		m_editor = std::make_unique<Editor::Editor>(this);
 	}
 }

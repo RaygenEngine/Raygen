@@ -8,17 +8,17 @@ namespace World
 	CameraNode::CameraNode(Node* parent)
 		: Node(parent),
 		  m_focalLength(1.f),
-		  m_vFov(45.f), 
+		  m_vFov(60.f), 
 		  m_hFov(45.f),
 		  m_near(0.2f),
 		  m_far(1000.0f),
 		  m_projectionMatrix()
 	{
+		REFLECT_VAR(m_far);
 		REFLECT_VAR(m_focalLength);
 		REFLECT_VAR(m_vFov);
 		REFLECT_VAR(m_hFov);
 		REFLECT_VAR(m_near);
-		REFLECT_VAR(m_far);
 	}
 
 	void CameraNode::RecalculateProjectionFov()
@@ -59,17 +59,5 @@ namespace World
 		m_viewportWidth = width;
 		m_viewportHeight = height;
 		RecalculateProjectionFov();
-	}
-
-	bool CameraNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
-	{
-		Node::LoadAttributesFromXML(xmlData);
-
-		Assets::ReadFloatsAttribute(xmlData, "fov", m_vFov);
-		Assets::ReadFloatsAttribute(xmlData, "focal_length", m_focalLength);
-		Assets::ReadFloatsAttribute(xmlData, "near", m_near);
-		Assets::ReadFloatsAttribute(xmlData, "far", m_far);
-
-		return true;
 	}
 }

@@ -23,11 +23,6 @@ namespace World
 		return std::string("    ") * depth + "|--TMIgeometry instances: " + std::to_string(m_instanceGroup.GetCount()) + " " + Node::ToString(verbose, depth);
 	}
 
-	bool TriangleModelInstancedGeometryNode::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
-	{
-		return TriangleModelGeometryNode::LoadAttributesFromXML(xmlData);
-	}
-
 	bool TriangleModelInstancedGeometryNode::LoadChildrenFromXML(const tinyxml2::XMLElement * xmlData)
 	{
 		// children

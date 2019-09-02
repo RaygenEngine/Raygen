@@ -18,6 +18,11 @@ namespace Assets
 	class DiskAssetManager;
 }
 
+namespace Editor
+{
+	class Editor;
+}
+
 namespace System
 {
 	using RendererRegistrationIndex = uint32;
@@ -36,6 +41,7 @@ namespace System
 
 		std::unique_ptr<World::World> m_world;
 		std::unique_ptr<Renderer::Renderer> m_renderer;
+		std::unique_ptr<Editor::Editor> m_editor;
 
 		Input::Input m_input;
 
@@ -48,6 +54,7 @@ namespace System
 		Assets::DiskAssetManager* GetDiskAssetManager() const { return m_diskAssetManager.get(); }
 		Renderer::Renderer* GetRenderer() const { return m_renderer.get(); }
 		World::World* GetWorld() const { return m_world.get(); }
+		Editor::Editor* GetEditor() const { return m_editor.get(); }
 
 		bool CreateWorldFromFile(const std::string& filename, World::NodeFactory* factory);
 
@@ -67,5 +74,9 @@ namespace System
 
 			return static_cast<RendererRegistrationIndex>(m_rendererRegistrations.size() - 1);
 		}
+
+		bool ShouldUpdateWorld() const;
+		bool IsUsingEditor() const;
+		void InitEditor();
 	};
 }

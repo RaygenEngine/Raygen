@@ -9,19 +9,11 @@ namespace World
 		: Node(parent),
 		  m_color()
 	{
+		REFLECT_VAR(m_color);
 	}
 
 	std::string LightNode::ToString(bool verbose, uint depth) const
 	{
 		return std::string("    ") * depth + "|--light " + Node::ToString(verbose, depth);
-	}
-
-	bool LightNode::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
-	{
-		Node::LoadAttributesFromXML(xmlData);
-
-		Assets::ReadFloatsAttribute(xmlData, "color", m_color);
-
-		return true;
 	}
 }

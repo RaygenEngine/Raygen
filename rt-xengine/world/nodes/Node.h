@@ -9,9 +9,7 @@ namespace World
 {
 	class Node : public System::EngineObject
 	{
-	public:
-		Reflector m_reflector;
-
+	protected:
 		// local
 		glm::vec3 m_localTranslation;
 		glm::quat m_localOrientation;
@@ -27,13 +25,17 @@ namespace World
 		bool m_dirty;
 		bool m_updateLocalMatrix;
 
-		std::string m_name;
-		std::string m_type;
-
 		Node* m_parent;
 
 		// for now ownership is given to parent nodes (later on, world should be manager) 
 		std::vector<std::shared_ptr<Node>> m_children;
+
+		std::string m_name;
+		std::string m_type;
+
+	public:
+		Reflector m_reflector;
+		friend Editor::Editor;
 
 	public:
 		// World initializes with Engine
@@ -68,11 +70,17 @@ namespace World
 		const std::vector<std::shared_ptr<Node>>& GetChildren() { return m_children; };
 
 		void AddChild(std::shared_ptr<Node> child) { m_children.emplace_back(child); }
-		
+
+
+		//
+		// LOADING
+		//
 		bool LoadFromXML(const tinyxml2::XMLElement* xmlData);
 
 		virtual bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData);
-		
+		virtual void LoadReflectedProperties(const tinyxml2::XMLElement* xmlData);
+
+
 		// Override loading of a specific child. 
 		// If you return a non null pointer here the default node creation will be skipped for this child
 		virtual Node* LoadSpecificChild(const tinyxml2::XMLElement* childXmlData) { return nullptr; }
@@ -81,6 +89,7 @@ namespace World
 		// You can use this to track 'custom' children in 
 		virtual bool PostChildrenLoaded() { return true; }
 		
+
 		// mark dirty self and children
 		void MarkDirty();
 		// cache world transform bottom up (and where needed to be updated)
