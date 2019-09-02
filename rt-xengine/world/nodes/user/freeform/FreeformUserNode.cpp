@@ -98,10 +98,10 @@ namespace World
 		if (input.IsAnyOfKeysRepeat(XVirtualKey::A, XVirtualKey::GAMEPAD_DPAD_LEFT))
 			MoveLeft(speed);
 
-		if (input.IsAnyOfKeysRepeat(XVirtualKey::E, XVK_GAMEPAD_LEFT_SHOULDER))
+		if (input.IsAnyOfKeysRepeat(XVirtualKey::E, XVirtualKey::GAMEPAD_LEFT_SHOULDER))
 			MoveUp(speed);
 
-		if (input.IsAnyOfKeysRepeat(XVirtualKey::Q, XVK_GAMEPAD_RIGHT_SHOULDER))
+		if (input.IsAnyOfKeysRepeat(XVirtualKey::Q, XVirtualKey::GAMEPAD_RIGHT_SHOULDER))
 			MoveDown(speed);
 	}
 }

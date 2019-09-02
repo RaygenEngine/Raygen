@@ -157,6 +157,8 @@ set(HEADER_FILES
 	system/EngineObject.h
 
 	system/reflection/Reflection.h
+	system/reflection/Reflector.h
+	system/reflection/Property.h
 
 
 	input/Input.h
