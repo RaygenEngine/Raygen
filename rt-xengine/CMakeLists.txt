@@ -35,6 +35,7 @@ set(SOURCE_FILES
 	renderer/NodeObserver.cpp
 	
 	renderer/renderers/opengl/GLAsset.cpp
+	renderer/renderers/opengl/GLAssetManager.cpp
 	renderer/renderers/opengl/GLRendererBase.cpp
 	renderer/renderers/opengl/assets/GLInstancedModel.cpp
 	renderer/renderers/opengl/assets/GLMaterial.cpp
@@ -138,6 +139,7 @@ set(HEADER_FILES
 	renderer/NodeObserver.h
 	
 	renderer/renderers/opengl/GLAsset.h
+	renderer/renderers/opengl/GLAssetManager.h
 	renderer/renderers/opengl/GLRendererBase.h
 	renderer/renderers/opengl/GLUtil.h
 	renderer/renderers/opengl/assets/GLInstancedModel.h

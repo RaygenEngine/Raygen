@@ -6,8 +6,8 @@
 
 namespace Renderer::OpenGL
 {
-	GLMaterial::GLMaterial(GLRendererBase* renderer, const std::string& name)
-		: GLAsset(renderer, name),
+	GLMaterial::GLMaterial(GLAssetManager* glAssetManager, const std::string& name)
+		: GLAsset(glAssetManager, name),
 		  m_baseColorFactor(1.f, 1.f, 1.f, 1.f),
 		  m_emissiveFactor(0.f, 0.f, 0.f),
 		  m_metallicFactor(1.f),
@@ -37,7 +37,7 @@ namespace Renderer::OpenGL
 			auto text = sampler.GetTexture();
 			
 			if(text)
-				texture = GetGLRenderer()->RequestGLTexture(text, GetGLFiltering(sampler.GetMinFilter()),
+				texture = GetGLAssetManager()->RequestGLTexture(text, GetGLFiltering(sampler.GetMinFilter()),
 					GetGLFiltering(sampler.GetMagFilter()), GetGLWrapping(sampler.GetWrapS()), GetGLWrapping(sampler.GetWrapT()), GetGLWrapping(sampler.GetWrapR()));
 		};
 

@@ -38,8 +38,7 @@ namespace Renderer::OpenGL
 		
 	public:
 
-		GLMaterial(GLRendererBase* renderer, const std::string& name);
-
+		GLMaterial(GLAssetManager* glAssetManager, const std::string& name);
 
 		GLMaterial(const GLMaterial& other) = delete;
 

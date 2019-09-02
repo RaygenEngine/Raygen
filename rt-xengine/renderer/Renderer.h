@@ -54,6 +54,8 @@ namespace Renderer
 		// as Render() parameter, its not "safe") 
 		virtual void Render() = 0;
 
+		virtual void SwapBuffers() { };
+
 		virtual void ToString(std::ostream& os) const { os << "object-type: Renderer, id: " << GetObjectId(); }
 	};
 }

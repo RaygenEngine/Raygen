@@ -4,16 +4,17 @@
 
 namespace Renderer::OpenGL
 {
-	class GLRendererBase;
-
+	class GLAssetManager;
+	
 	class GLAsset : public Assets::Asset
 	{
-
+		GLAssetManager* m_glAssetManager;
+		
 	public:
-		GLAsset(GLRendererBase* renderer, const std::string& name);
+		GLAsset(GLAssetManager* glAssetManager, const std::string& name);
 		virtual ~GLAsset() = default;
 
-		GLRendererBase* GetGLRenderer() const;
+		GLAssetManager* GetGLAssetManager() const { return m_glAssetManager; }
 
 		void ToString(std::ostream& os) const override { os << "asset-type: GLAsset, name: " << m_name; }
 	};

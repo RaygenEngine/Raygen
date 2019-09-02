@@ -6,8 +6,8 @@
 
 namespace Renderer::OpenGL
 {
-	GLModel::GLModel(GLRendererBase* renderer, const std::string& name)
-		: GLAsset(renderer, name),
+	GLModel::GLModel(GLAssetManager* glAssetManager, const std::string& name)
+		: GLAsset(glAssetManager, name),
 	      m_usage(GL_STATIC_DRAW)
 	{
 	}
@@ -24,7 +24,7 @@ namespace Renderer::OpenGL
 		{
 			for (auto& geometryGroup : mesh->GetGeometryGroups())
 			{
-				GLMesh* ptr = new GLMesh(GetGLRenderer(), this->GetName());
+				GLMesh* ptr = new GLMesh(GetGLAssetManager(), this->GetName());
 				ptr->Load(geometryGroup.get(), m_usage);
 				m_meshes.emplace_back(ptr);
 			}

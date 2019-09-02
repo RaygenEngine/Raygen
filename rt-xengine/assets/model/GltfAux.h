@@ -29,7 +29,7 @@ namespace Assets
 		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST:  return TextureFiltering::LINEAR_MIPMAP_NEAREST;
 		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR:  return TextureFiltering::NEAREST_MIPMAP_LINEAR;
 		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR:   return TextureFiltering::LINEAR_MIPMAP_LINEAR;
-		default:                                             return TextureFiltering::INVALID;
+		default:                                             return TextureFiltering::LINEAR;
 		}
 	};
 
@@ -40,7 +40,7 @@ namespace Assets
 		case TINYGLTF_TEXTURE_WRAP_REPEAT:          return TextureWrapping::REPEAT;
 		case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE:   return TextureWrapping::CLAMP_TO_EDGE;
 		case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT: return TextureWrapping::MIRRORED_REPEAT;
-		default:                                    return TextureWrapping::INVALID;
+		default:                                    return TextureWrapping::REPEAT;
 		}
 	};
 

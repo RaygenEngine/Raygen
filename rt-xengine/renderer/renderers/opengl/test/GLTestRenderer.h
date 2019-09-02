@@ -13,6 +13,7 @@ namespace Renderer::OpenGL
 		//std::shared_ptr<GLShader> m_instancedShader;
 		std::shared_ptr<GLShader> m_nonInstancedShader;
 
+		
 		std::vector<std::shared_ptr<GLTestGeometry>> m_geometryObservers;
 
 		//std::vector<std::shared_ptr<GLInstancedModel>> m_instancedGeometries;

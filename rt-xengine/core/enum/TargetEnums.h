@@ -98,10 +98,10 @@ inline const char* SurfacePreviewTargetModeString(int32 pt)
 	case PT_OPACITY_FINAL:		 return "opacity final";
 	case PT_TEXTURE_COORDINATE0: return "texture coordinate 0";
 	case PT_TEXTURE_COORDINATE1: return "texture coordinate 1";
-	case PT_ALPHA_MODE:			 return "alpha mode";
+	case PT_ALPHA_MODE:			 return "alpha mode (red: opaque, green: mask, blue: blend)";
 	case PT_ALPHA_CUTOFF:		 return "alpha cutoff";
-	case PT_ALPHA_MASK:			 return "alpha mask";
-	case PT_DOUBLE_SIDEDNESS:	 return "double sidedness";
+	case PT_ALPHA_MASK:			 return "alpha mask (if mask enabled> black: opaque, white: transparent)";
+	case PT_DOUBLE_SIDEDNESS:	 return "double sidedness (black: false, white: true)";
 	default:					 return "invalid";
 	}
 }

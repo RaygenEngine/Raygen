@@ -5,8 +5,8 @@
 
 namespace Renderer::OpenGL
 {
-	GLMesh::GLMesh(GLRendererBase* renderer, const std::string& name)
-		: GLAsset(renderer, name),
+	GLMesh::GLMesh(GLAssetManager* glAssetManager, const std::string& name)
+		: GLAsset(glAssetManager, name),
 		  m_vao(0),
 		  m_ebo(0),
 		  m_positionsVBO(0),
@@ -15,7 +15,7 @@ namespace Renderer::OpenGL
 		  m_bitangentsVBO(0),
 		  m_textCoords0VBO(0),
 		  m_textCoords1VBO(0),
-		  m_material(GetGLRenderer(), name),
+		  m_material(glAssetManager, name),
 	      m_geometryMode(0),
 	      m_count(0)
 	{

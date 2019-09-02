@@ -9,17 +9,20 @@ namespace Renderer::OpenGL
 {
 	class GLTexture : public GLAsset
 	{
-		GLuint m_textureId;
+		// bindless
+		GLuint64 m_bindlessHandle;
+		GLuint m_glId;
 
 	public:
-		GLTexture(GLRendererBase* renderer, const std::string& name);
+		GLTexture(GLAssetManager* glAssetManager, const std::string& name);
 		~GLTexture();
 
 		int32 m_texCoordIndex;
 		
 		bool Load(Assets::Texture* data, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR);
 
-		GLuint GetGLHandle() const { return m_textureId; }
+		GLuint GetGLId() const { return m_glId; }
+		GLuint64 GetGLBindlessHandle() const { return m_bindlessHandle; }
 
 		void ToString(std::ostream& os) const override { os << "asset-type: GLTexture, name: " << m_name; }
 	};

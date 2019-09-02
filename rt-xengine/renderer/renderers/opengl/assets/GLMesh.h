@@ -28,7 +28,7 @@ namespace Renderer::OpenGL
 		uint32 m_count;
 		
 	public:
-		GLMesh(GLRendererBase* renderer, const std::string& name);
+		GLMesh(GLAssetManager* glAssetManager, const std::string& name);
 		~GLMesh();
 		GLMesh(GLMesh&&) = default;
 		GLMesh(const GLMesh&) = default;
