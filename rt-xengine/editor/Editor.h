@@ -26,9 +26,11 @@ namespace Editor {
 			return m_updateWorld;
 		}
 
+		void SaveScene(const std::string& filename);
 	private:
 		void Outliner();
 		void PropertyEditor(World::Node* activeNode);
+		
 	};
 
 }

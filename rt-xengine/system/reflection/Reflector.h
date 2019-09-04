@@ -39,7 +39,7 @@ public:
 
 	
 	template<typename Type>
-	void AddProperty(std::string&& name, Type& variable)
+	Property& AddProperty(std::string&& name, Type& variable)
 	{
 		static_assert(IsReflected<Type>, "This type is not supported for reflection.");
 
@@ -48,17 +48,17 @@ public:
 		const size_t insertIndex = m_properties.size();
 		Property inserted = Property::MakeProperty(variable, name);
 		
-		m_properties.emplace_back(inserted);
 		m_hashTable.insert({ std::move(copy), insertIndex });
+		return m_properties.emplace_back(inserted);
 	}
 
 	// Internal version to remove m_ prefix from variables added through the macro
 	template<typename Type>
-	void AutoAddProperty(char* name, Type& variable)
+	Property& AutoAddProperty(char* name, Type& variable)
 	{
 		static_assert(IsReflected<Type>, "This type is not supported for reflection.");
 		name = (name + 2);
-		AddProperty(std::string(name), variable);
+		return AddProperty(std::string(name), variable);
 	}
 
 

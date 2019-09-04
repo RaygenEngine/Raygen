@@ -27,11 +27,13 @@ namespace World
 		m_lastTime(GetTimeMs()),
 		m_nodeFactory(factory)
 	{
-		REFLECT_VAR(m_background);
-		REFLECT_VAR(m_ambient);
-		REFLECT_VAR(m_deltaTime);
-		REFLECT_VAR(m_worldTime);
-		REFLECT_VAR(m_lastTime);
+		using namespace PropertyFlags;
+		
+		REFLECT_VAR(m_background, Color);
+		REFLECT_VAR(m_ambient, Color);
+		REFLECT_VAR(m_deltaTime, Transient);
+		REFLECT_VAR(m_worldTime, Transient);
+		REFLECT_VAR(m_lastTime, Transient);
 
 
 		RT_XENGINE_LOG_INFO("Created World context, id: {}", EngineObject::GetObjectId());

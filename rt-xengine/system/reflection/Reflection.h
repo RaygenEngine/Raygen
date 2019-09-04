@@ -66,13 +66,13 @@ template<> struct TypeFromReflection<PropertyType::String> { using type = std::s
 #include "system/reflection/Property.h"
 #include "system/reflection/Reflector.h"
 
-// ALWAYS expected right at the beginning of a class declaration body
-#define REFLECT(Class)	public: \
-Reflector m_reflector = {#Class};  \
-private:						  // Restore private specifier.
+//// ALWAYS expected right at the beginning of a class declaration body
+//#define REFLECT(Class)	public: \
+//Reflector m_reflector = {#Class};  \
+//private:						  // Restore private specifier.
 
 // ALWAYS expected to run in member function
-#define REFLECT_VAR(Variable) GetReflector(this).AutoAddProperty(#Variable, Variable);
+#define REFLECT_VAR(Variable, ...) GetReflector(this).AutoAddProperty(#Variable, Variable).InitFlags(PropertyFlags::Pack(__VA_ARGS__));
 
 
 #endif // REFLECTION_H

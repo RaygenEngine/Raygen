@@ -1,8 +1,9 @@
 #pragma once
 
 #include "tinyxml2/tinyxml2.h"
+#include <string>
 
-namespace Assets
+namespace Assets // TODO: uuuh
 {
 
 	inline bool AttributeExists(const tinyxml2::XMLElement* xmlElement, const char* attribute)
@@ -70,5 +71,19 @@ namespace Assets
 	{
 		entityType = std::string(xmlElement->Name());
 		return true;
+	}
+
+	template <typename T>
+	std::string FloatsToString(T& floats)
+	{
+		//static_assert(std::is_same_v<glm::vec, T>, "Expects a glm type"); // find how to do this for glm
+		std::string result = std::to_string(floats[0]);
+		
+		for (int32 i = 1; i < floats.length(); ++i)
+		{
+			result += ", ";
+			result += std::to_string(floats[i]);
+		}
+		return result;
 	}
 }

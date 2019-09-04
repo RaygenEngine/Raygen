@@ -9,7 +9,7 @@ namespace World
 		: Node(parent),
 		  m_color()
 	{
-		REFLECT_VAR(m_color);
+		REFLECT_VAR(m_color, PropertyFlags::Color);
 	}
 
 	std::string LightNode::ToString(bool verbose, uint depth) const
