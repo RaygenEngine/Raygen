@@ -10,10 +10,8 @@ link_directories(${LIB_DEPENDENCIES_DIRECTORY})
 set(SOURCE_FILES 
 
 	assets/Asset.cpp
-	assets/DiskAsset.cpp
-	assets/DiskAssetManager.cpp
+	assets/AssetManager.cpp
 	assets/PathSystem.cpp
-	assets/DiskAssetPart.cpp
 	
 	assets/other/utf8/StringFile.cpp
 	assets/other/xml/XMLDoc.cpp
@@ -86,10 +84,8 @@ set(SOURCE_FILES
 set(HEADER_FILES 
 
 	assets/Asset.h
-	assets/DiskAsset.h
-	assets/DiskAssetManager.h
+	assets/AssetManager.h
 	assets/PathSystem.h
-	assets/DiskAssetPart.h
     assets/CachingAux.h
 		
 	assets/other/utf8/StringFile.h
