@@ -35,7 +35,10 @@ namespace Assets
 		if (Core::CaseInsensitiveCompare(ext, ".gltf"))
 			ret = loader.LoadASCIIFromFile(&gltfModel, &err, &warn, path);
 		else if (Core::CaseInsensitiveCompare(ext, ".glb"))
+		{
+			RT_XENGINE_ASSERT(false, "glb data is not handled yet");
 			ret = loader.LoadBinaryFromFile(&gltfModel, &err, &warn, path);
+		}
 
 		STOP_TIMER("loading");
 		
@@ -51,22 +54,88 @@ namespace Assets
 		m_info.minVersion = gltfModel.asset.minVersion;
 		m_info.copyright = gltfModel.asset.copyright;
 
-		for (auto& gltfMesh : gltfModel.meshes)
+		// loads meshes in default scene (scene = model)
+		auto& defaultScene = gltfModel.scenes.at(gltfModel.defaultScene);
+
+		std::function<bool(const std::vector<int>&, glm::mat4)> RecurseChildren;
+		RecurseChildren = [&] (const std::vector<int>& childrenIndices, glm::mat4 parentTransformMat)
 		{
-			std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>(this, Core::UnnamedDescription(gltfMesh.name));
+			for (auto& nodeIndex : childrenIndices)
+			{		
+				auto& childNode = gltfModel.nodes.at(nodeIndex);
+				
+				glm::mat4 localTransformMat = glm::mat4(1.f);
+				
+				// When matrix is defined, it must be decomposable to TRS.
+				if (!childNode.matrix.empty())
+				{
+					for (int32 row = 0; row < 4; ++row)
+						for (int32 column = 0; column < 4; ++column)
+							localTransformMat[row][column] = static_cast<float>(childNode.matrix[column + 4 * row]);
+				}
+				else
+				{
+					glm::vec3 translation = glm::vec3(0.f);
+					glm::quat orientation = { 1.f, 0.f, 0.f, 0.f };
+					glm::vec3 scale = glm::vec3(1.f);
 
-			if (!mesh->Load(gltfModel, gltfMesh))
-			{
-				RT_XENGINE_LOG_ERROR("Failed to load mesh, {}", mesh);
-				return false;
+					if(!childNode.translation.empty())
+					{
+						translation[0] = static_cast<float>(childNode.translation[0]);
+						translation[1] = static_cast<float>(childNode.translation[1]);
+						translation[2] = static_cast<float>(childNode.translation[2]);
+					}
+
+					if (!childNode.rotation.empty())
+					{
+						orientation[0] = static_cast<float>(childNode.rotation[0]);
+						orientation[1] = static_cast<float>(childNode.rotation[1]);
+						orientation[2] = static_cast<float>(childNode.rotation[2]);
+						orientation[3] = static_cast<float>(childNode.rotation[3]);
+					}
+
+					if (!childNode.scale.empty())
+					{
+						scale[0] = static_cast<float>(childNode.scale[0]);
+						scale[1] = static_cast<float>(childNode.scale[1]);
+						scale[2] = static_cast<float>(childNode.scale[2]);
+					}
+					
+					localTransformMat = Core::GetTransformMat(translation, orientation, scale);
+				}
+
+				localTransformMat = parentTransformMat * localTransformMat;
+				
+				// load mesh if exists
+				if (childNode.mesh != -1)
+				{
+					auto& gltfMesh = gltfModel.meshes.at(childNode.mesh);
+					
+					std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>(this, Core::UnnamedDescription(gltfMesh.name));
+
+					if (!mesh->Load(gltfModel, gltfMesh, localTransformMat))
+					{
+						RT_XENGINE_LOG_ERROR("Failed to load mesh, {}", mesh);
+						return false;
+					}
+
+					m_meshes.emplace_back(std::move(mesh));
+				}
+				
+				//load child's children
+				if(!childNode.children.empty())
+					if (!RecurseChildren(childNode.children, localTransformMat))
+						return false;
 			}
-
-			m_meshes.emplace_back(std::move(mesh));
-		}
-
+			
+			return true;
+		};
+		
+		auto res = RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
+		// TODO use scope timer
 		STOP_TIMER("copying");
 
-		return true;
+		return res;
 	}
 
 	void Model::Clear()

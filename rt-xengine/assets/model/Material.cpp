@@ -9,7 +9,7 @@ namespace Assets
 		: DiskAssetPart(pAsset, name),
 	      m_baseColorTextureSampler(this, "baseColorSampler"),
 	      m_metallicRoughnessTextureSampler(this, "metallicRoughnessSampler"),
-		  m_normalTextureSampler(this, "normalSampler"),
+		  m_normalTextureSampler(this, "normalSampler", false),
 		  m_occlusionTextureSampler(this, "occlusionSampler"),
 		  m_emissiveTextureSampler(this, "emissiveSampler"),
 		  m_baseColorFactor(1.f, 1.f, 1.f, 1.f),
@@ -59,7 +59,7 @@ namespace Assets
 		m_occlusionTextureSampler.Load(modelData, occlusionTextureInfo.index, occlusionTextureInfo.texCoord);
 		
 		auto& normalTextureInfo = materialData.normalTexture;
-		m_normalTextureSampler.Load(modelData, normalTextureInfo.index, normalTextureInfo.texCoord, false);
+		m_normalTextureSampler.Load(modelData, normalTextureInfo.index, normalTextureInfo.texCoord);
 	}
 };
 

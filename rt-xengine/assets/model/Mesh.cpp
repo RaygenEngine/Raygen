@@ -10,7 +10,7 @@ namespace Assets
 	{
 	}
 
-	bool Mesh::Load(const tinygltf::Model& modelData, const tinygltf::Mesh& meshData)
+	bool Mesh::Load(const tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
 	{
 		// primitives
 		auto i = 0;
@@ -20,7 +20,7 @@ namespace Assets
 			std::unique_ptr<GeometryGroup> geomGroup = std::make_unique<GeometryGroup>(this, name);
 	
 			
-			if(!geomGroup->Load(modelData, gltfPrimitive))
+			if(!geomGroup->Load(modelData, gltfPrimitive, transformMat))
 			{
 				RT_XENGINE_LOG_ERROR("Failed to load geometry group, {}", geomGroup);
 				return false;

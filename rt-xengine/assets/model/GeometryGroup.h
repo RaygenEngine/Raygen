@@ -36,7 +36,7 @@ namespace Assets
 
 		GeometryGroup(DiskAsset* pAsset, const std::string& name);
 		
-		bool Load(const tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData);
+		bool Load(const tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat);
 		
 		GeometryMode GetGeometryMode() const { return m_mode; }
 

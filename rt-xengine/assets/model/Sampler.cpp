@@ -6,19 +6,27 @@
 
 namespace Assets
 {
-	Sampler::Sampler(DiskAsset* pAsset, const std::string& name)
+	Sampler::Sampler(DiskAsset* pAsset, const std::string& name, bool loadDefaultTexture)
 		: DiskAssetPart(pAsset, name),
-		  m_texture(nullptr),
-		  m_minFilter(TextureFiltering::LINEAR),
-		  m_magFilter(TextureFiltering::LINEAR),
-		  m_wrapS(TextureWrapping::REPEAT),
-		  m_wrapT(TextureWrapping::REPEAT),
-		  m_wrapR(TextureWrapping::REPEAT),
-		  m_texCoordIndex(0)
+		m_texture(nullptr),
+		m_minFilter(TextureFiltering::LINEAR),
+		m_magFilter(TextureFiltering::LINEAR),
+		m_wrapS(TextureWrapping::REPEAT),
+		m_wrapT(TextureWrapping::REPEAT),
+		m_wrapR(TextureWrapping::REPEAT),
+		m_texCoordIndex(0)
 	{
+		// TODO, make this constexpr?
+		if (loadDefaultTexture)
+		{
+			// LOW DR
+			// gltf = if texture missing all values of default will be equal to 1, therefore the factor is the final value
+			byte cDefVal[4] = { 255, 255, 255, 255 };
+			m_texture = Texture::CreateDefaultTexture(this, &cDefVal, 1u, 1u, 4u, DynamicRange::LOW);
+		}
 	}
 
-	void Sampler::Load(const tinygltf::Model& modelData, int32 gltfTextureIndex, int32 gltfTexCoordTarget, bool loadDefaultTexture)
+	void Sampler::Load(const tinygltf::Model& modelData, int32 gltfTextureIndex, int32 gltfTexCoordTarget)
 	{
 		const auto textureIndex = gltfTextureIndex;
 
@@ -52,15 +60,7 @@ namespace Assets
 				m_wrapR = GetTextureWrappingFromGltf(gltfSampler.wrapR);
 			}
 		}
-		// if texture doesn't exists
-		else if (loadDefaultTexture)
-		{
-			// LOW DR
-			// gltf = if texture missing all values of default will be equal to 1, therefore the factor is the final value
-			byte cDefVal[4] = { 255, 255, 255, 255 };
-			m_texture = Texture::CreateDefaultTexture(this, &cDefVal, 1u, 1u, 4u, DynamicRange::LOW);
-		}
-
+		
 		m_texCoordIndex = gltfTexCoordTarget;
 	}
 }

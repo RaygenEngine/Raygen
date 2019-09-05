@@ -26,10 +26,10 @@ namespace Assets
 		int32 m_texCoordIndex;
 
 	public:
-		
-		Sampler(DiskAsset* pAsset, const std::string& name);
 
-		void Load(const tinygltf::Model& modelData, int32 gltfTextureIndex, int32 gltfTexCoordTarget, bool loadDefaultTexture = true);
+		Sampler(DiskAsset* pAsset, const std::string& name, bool loadDefaultTexture = true);
+
+		void Load(const tinygltf::Model& modelData, int32 gltfTextureIndex, int32 gltfTexCoordTarget);
 
 		TextureFiltering GetMinFilter() const { return m_minFilter; }
 		TextureFiltering GetMagFilter() const { return m_magFilter; }

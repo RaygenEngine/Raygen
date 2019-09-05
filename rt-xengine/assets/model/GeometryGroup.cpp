@@ -49,7 +49,7 @@ namespace Assets
 		template<> void CopyToVector<uint32, glm::vec3>(std::vector<glm::vec3>&, byte*, size_t, size_t, size_t) { assert(false); }
 		template<> void CopyToVector<uint32, glm::vec4>(std::vector<glm::vec4>&, byte*, size_t, size_t, size_t) { assert(false); }
 
-		// Uint32 specialization. Expects componentCount == 1.
+		// Uint16 specialization. Expects componentCount == 1.
 		template<>
 		void CopyToVector<unsigned short>(std::vector<uint32>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount, size_t componentCount)
 		{
@@ -155,7 +155,7 @@ namespace Assets
 		}
 	}
 	
-	bool GeometryGroup::Load(const tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData)
+	bool GeometryGroup::Load(const tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat)
 	{
 		// mode
 		m_mode = GetGeometryModeFromGltf(primitiveData.mode);		
@@ -167,7 +167,7 @@ namespace Assets
 		{
 			ExtractBufferDataInto(modelData, indicesIndex, m_indices);
 		}
-		
+
 		// attributes
 		for (auto& attribute : primitiveData.attributes)
 		{
@@ -195,6 +195,19 @@ namespace Assets
 				ExtractBufferDataInto(modelData, index, m_textCoords1);
 			}
 
+		}
+
+
+		// TODO: speed up those calcs
+		for(auto& pos : m_positions)
+		{
+			pos = transformMat * glm::vec4(pos,1.f);
+		}
+
+		const auto invTransMat = glm::transpose(glm::inverse(glm::mat3(transformMat)));
+		for (auto& normal : m_normals)
+		{
+			normal = invTransMat * normal;
 		}
 
 		// material

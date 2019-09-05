@@ -19,7 +19,7 @@ namespace Assets
 
 		Mesh(DiskAsset* pAsset, const std::string& name);
 
-		bool Load(const tinygltf::Model& modelData, const tinygltf::Mesh& meshData);
+		bool Load(const tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat);
 
 		const std::vector<std::unique_ptr<GeometryGroup>>& GetGeometryGroups() const { return m_geometryGroups; }
 
