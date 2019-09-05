@@ -42,9 +42,21 @@ void ImguiImpl::Cleanup()
 	ImGui::DestroyContext();
 }
 
-LRESULT ImguiImpl::WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT ImguiImpl::WndProcHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	return ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+	{
+		return true;
+	}
+
+	// Imgui handles keys but also forwards them so we manually check if we should forward them to the main window handler.
+	if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureKeyboard &&
+		(message == WM_KEYDOWN || message == WM_SYSKEYDOWN || message == WM_KEYUP || message == WM_SYSKEYUP))
+	{
+		return true;
+	}
+
+	return false;
 }
 
 // TODO: when transfered to the engine side make this a static lib generated seperately
