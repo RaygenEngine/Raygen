@@ -10,6 +10,7 @@ namespace World
 	TriangleModelGeometryNode::TriangleModelGeometryNode(Node* parent)
 		: Node(parent)
 	{
+		REFLECT_VAR(m_model);
 	}
 
 	std::string TriangleModelGeometryNode::ToString(bool verbose, uint depth) const
@@ -21,7 +22,7 @@ namespace World
 	{
 		Node::LoadAttributesFromXML(xmlData);
 
-		std::string type;
+	/*	std::string type;
 		Assets::ReadStringAttribute(xmlData, "type", type); 
 		
 		// default geom is static
@@ -32,5 +33,7 @@ namespace World
 		m_model = GetDiskAssetManager()->LoadModelAsset(xmlData->Attribute("file"), modelGeomType, GetWorld()->GetAssetLoadPathHint());
 
 		return static_cast<bool>(m_model.get());
+		*/
+		return true;
 	}
 }

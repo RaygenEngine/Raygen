@@ -33,6 +33,7 @@ set(SOURCE_FILES
 	
 	editor/Editor.cpp
 	editor/imgui/ImguiImpl.cpp
+	editor/imgui/ImguiDemo.cpp
 		
 	renderer/Renderer.cpp
 	renderer/NodeObserver.cpp

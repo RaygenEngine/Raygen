@@ -14,6 +14,12 @@
 #include "core/auxiliary/MetaTemplates.h"
 #include <type_traits>
 
+namespace Assets
+{
+	class Model;
+}
+
+using ReflectedAsset = std::shared_ptr<Assets::Model>;
 
 // A reflection system that uses offsetof would be better but for simplicity we just initialize the reflector
 // for every instance of the objects we want to reflect. Therefore we can save pointers directly.
@@ -26,7 +32,8 @@ enum class PropertyType
 	Bool,
 	Float,
 	Vec3,
-	String
+	String,
+	Asset,
 };
 
 static std::vector<std::string> PropertyTypeName = {
@@ -35,7 +42,8 @@ static std::vector<std::string> PropertyTypeName = {
 	"Bool",
 	"Float",
 	"Vec3",
-	"String"
+	"String",
+	"Asset"
 };
 
 // IsReflected to compile time check if a type can be reflected.
@@ -46,6 +54,7 @@ template<> constexpr bool IsReflected<bool> = true;
 template<> constexpr bool IsReflected<float> = true;
 template<> constexpr bool IsReflected<glm::vec3> = true;
 template<> constexpr bool IsReflected<std::string> = true;
+template<> constexpr bool IsReflected<ReflectedAsset> = true;
 
 template<typename Type>
 constexpr PropertyType ReflectionFromType = PropertyType::NONE;
@@ -54,6 +63,7 @@ template<> PropertyType ReflectionFromType<bool> = PropertyType::Bool;
 template<> PropertyType ReflectionFromType<float> = PropertyType::Float;
 template<> PropertyType ReflectionFromType<glm::vec3> = PropertyType::Vec3;
 template<> PropertyType ReflectionFromType<std::string> = PropertyType::String;
+template<> PropertyType ReflectionFromType<ReflectedAsset> = PropertyType::Asset;
 
 template<PropertyType Type>
 struct TypeFromReflection { static_assert("Expected a value of the enum PropertyType."); };
@@ -62,6 +72,7 @@ template<> struct TypeFromReflection<PropertyType::Bool> { using type = bool; };
 template<> struct TypeFromReflection<PropertyType::Float> { using type = float; };
 template<> struct TypeFromReflection<PropertyType::Vec3> { using type = glm::vec3; };
 template<> struct TypeFromReflection<PropertyType::String> { using type = std::string; };
+template<> struct TypeFromReflection<PropertyType::Asset> { using type = ReflectedAsset; };
 
 #include "system/reflection/Property.h"
 #include "system/reflection/Reflector.h"

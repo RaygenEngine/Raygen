@@ -1,6 +1,7 @@
 #pragma once
 
 #include "system/EngineObject.h"
+#include "platform/Window.h"
 
 namespace World
 {
@@ -13,7 +14,6 @@ namespace Editor {
 	protected:
 		bool m_updateWorld;
 		World::Node* m_selectedNode;
-
 	public:
 		Editor(System::Engine* engine);
 
@@ -27,6 +27,7 @@ namespace Editor {
 		}
 
 		void SaveScene(const std::string& filename);
+
 	private:
 		void Outliner();
 		void PropertyEditor(World::Node* activeNode);

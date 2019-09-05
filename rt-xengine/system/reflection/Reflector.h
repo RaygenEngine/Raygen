@@ -89,3 +89,9 @@ Reflector& GetReflector(ReflectedClass* object)
 
 	return object->m_reflector;
 }
+
+
+class AssetReflector : public Reflector
+{
+
+};

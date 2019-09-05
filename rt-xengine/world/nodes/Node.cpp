@@ -7,6 +7,7 @@
 #include "sky/SkyCubeNode.h"
 #include "sky/SkyHDRNode.h"
 #include "world/NodeFactory.h"
+#include "assets/DiskAssetManager.h"
 
 namespace World
 {
@@ -125,7 +126,8 @@ namespace World
 
 		NodeFactory* factory = GetWorld()->GetNodeFactory();
 
-		const auto status = LoadAttributesFromXML(xmlData) && factory->LoadChildren(xmlData, this);
+		LoadReflectedProperties(xmlData);
+		const auto status = factory->LoadChildren(xmlData, this);
 		
 		// calculate local matrix after loading
 		m_localMatrix = Core::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
@@ -166,7 +168,24 @@ namespace World
 			},
 				[&](std::string& ref) {
 				Assets::ReadStringAttribute(xmlData, str, ref);
-			});
+			},
+				[&](ReflectedAsset& ref) {
+				std::string type;
+				Assets::ReadStringAttribute(xmlData, "type", type);
+
+				// default geom is static
+				auto modelGeomType = GeometryUsage::STATIC;
+				if (!type.empty() && Core::CaseInsensitiveCompare(type, "dynamic"))
+					modelGeomType = GeometryUsage::DYNAMIC;
+
+				std::string fileStr;
+				Assets::ReadStringAttribute(xmlData, str, fileStr);
+
+				ref = GetDiskAssetManager()->LoadModelAsset(fileStr,
+															modelGeomType, 
+															GetWorld()->GetAssetLoadPathHint());
+			}
+			);
 		}
 		LoadAttributesFromXML(xmlData);
 	}

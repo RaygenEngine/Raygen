@@ -12,9 +12,11 @@ namespace Assets
 	protected:
 		std::string m_name;
 
+	public:
 		Asset(EngineObject* pObject, const std::string& name);
 		virtual ~Asset() = default;
 
+	protected:
 		// clear asset's inner data
 		// TODO: pure virtual, every asset must be able to clean itself (gpu or cpu)
 		virtual void Clear();

@@ -52,7 +52,7 @@
 	<trimesh_geometry name="box" 
 		translation="0.0, 0.0, -4.0"
 		scale="0.02, 0.02, 0.02" 
-		file="Sponza.gltf"/> 
+		model="Sponza.gltf"/> 
 
 
 			  

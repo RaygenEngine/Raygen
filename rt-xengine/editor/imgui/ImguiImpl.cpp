@@ -7,7 +7,6 @@
 // forward declare this in our own file because its commented out in the imgui impl header.
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-
 void ImguiImpl::Init(HWND hWnd)
 {
 	ImGui::CreateContext();

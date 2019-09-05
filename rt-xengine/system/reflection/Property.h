@@ -15,7 +15,7 @@ namespace PropertyFlags
 	constexpr Type Multiline = (1 << 4);
 
 	template<typename ...Flags>
-	PropertyFlags::Type Pack(Flags ...f)
+	constexpr PropertyFlags::Type Pack(Flags ...f)
 	{
 		static_assert((std::is_same_v<PropertyFlags::Type, Flags> && ...));
 		return (f | ...);
@@ -83,8 +83,8 @@ public:
 	}
 
 	// Calls one depending on the type of the property. Forwards a type& as a single lambda param. (eg: int& PropValue)
-	template<typename IntF, typename BoolF, typename FloatF, typename Vec3F, typename StringF>
-	auto SwitchOnType(IntF Int, BoolF Bool, FloatF Float, Vec3F Vec3, StringF String) -> return_type_t<IntF>
+	template<typename IntF, typename BoolF, typename FloatF, typename Vec3F, typename StringF, typename AssetF>
+	auto SwitchOnType(IntF Int, BoolF Bool, FloatF Float, Vec3F Vec3, StringF String, AssetF Asset) -> return_type_t<IntF>
 	{
 		switch (m_type)
 		{
@@ -102,6 +102,9 @@ public:
 			break;
 		case PropertyType::String:
 			return String(GetRef<std::string>());
+			break;
+		case PropertyType::Asset:
+			return Asset(GetRef<ReflectedAsset>());
 			break;
 		}
 

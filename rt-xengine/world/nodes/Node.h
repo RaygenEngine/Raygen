@@ -46,6 +46,7 @@ namespace World
 
 		glm::vec3 GetLocalTranslation() const { return m_localTranslation; }
 		glm::quat GetLocalOrientation() const { return m_localOrientation; }
+		glm::vec3 GetLocalPYR() const { return glm::degrees(glm::eulerAngles(m_localOrientation)); }
 		glm::vec3 GetLocalScale() const { return m_localScale; }		
 		glm::mat4 GetLocalMatrix() const { return m_localMatrix; }
 

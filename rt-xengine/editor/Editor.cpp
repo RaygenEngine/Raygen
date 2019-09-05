@@ -7,6 +7,7 @@
 #include "editor/imgui/ImguiImpl.h"
 #include "tinyxml2/tinyxml2.h"
 #include "imgui_ext/imfilebrowser.h"
+#include "platform/windows/Win32Window.h"
 
 namespace Editor
 {
@@ -62,9 +63,10 @@ using World::Node;
 		ImguiImpl::NewFrame();
 
 		// TODO: static fix this
-		static ImGui::FileBrowser fb;
-
-
+		static ImGui::FileBrowser sfb = ImGui::FileBrowser(
+			ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_EnterNewFilename
+			| ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CreateNewDir
+			| ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CloseOnEsc);
 
 		ImGui::ShowDemoWindow();
 		
@@ -75,16 +77,18 @@ using World::Node;
 		ImGui::SameLine();
 		if (ImGui::Button("Save"))
 		{
-			fb.Open();
+			sfb.SetTitle("Save World");
+			sfb.Open();
 		}
 
-		fb.Display();
+		sfb.Display();
 
-		if (fb.HasSelected())
+		if (sfb.HasSelected())
 		{
-			SaveScene(fb.GetSelected().string());
-			fb.ClearSelected();
+			SaveScene(sfb.GetSelected().string());
+			sfb.ClearSelected();
 		}
+
 
 		if (ImGui::CollapsingHeader("Outliner", ImGuiTreeNodeFlags_DefaultOpen))
 		{
@@ -130,24 +134,32 @@ using World::Node;
 				auto str = prop.GetName().c_str();
 
 				dirty |= prop.SwitchOnType(
-					[&str](int& ref) {
+				[&str](int& ref) {
 					return ImGui::DragInt(str, &ref, 0.1f);
 				},
-					[&str](bool& ref) {
+				[&str](bool& ref) {
 					return ImGui::Checkbox(str, &ref);
 				},
-					[&str](float& ref) {
+				[&str](float& ref) {
 					return ImGui::DragFloat(str, &ref, 0.01f);
 				},
-					[&str, &prop](glm::vec3& ref) {
+				[&str, &prop](glm::vec3& ref) {
 					if (prop.HasFlags(PropertyFlags::Color))
 					{
 						return ImGui::ColorEdit3(str, ImUtil::FromVec3(ref), ImGuiColorEditFlags_DisplayHSV);
 					}
 					return ImGui::DragFloat3(str, ImUtil::FromVec3(ref), 0.01f);
 				},
-					[&str](std::string& ref) {
+				[&str](std::string& ref) {
 					return ImGui::InputText(str, &ref);
+				},
+				[&str](ReflectedAsset& ref) {
+					std::string s = "No Asset";
+					if (ref.get()) 
+					{
+						s = ref->GetFileName();
+					}
+					return ImGui::InputText(str, &s);
 				});
 			}
 			return dirty;
@@ -200,6 +212,10 @@ using World::Node;
 			xmlElem = document.NewElement(node->GetType().c_str());
 			xmlElem->SetAttribute("name", node->GetName().c_str());
 
+			xmlElem->SetAttribute("translation", Assets::FloatsToString(node->GetLocalTranslation()).c_str());
+			xmlElem->SetAttribute("euler_pyr", Assets::FloatsToString(node->GetLocalPYR()).c_str());
+			xmlElem->SetAttribute("scale", Assets::FloatsToString(node->GetLocalScale()).c_str());
+
 			for (auto& p : GetReflector(node).GetProperties())
 			{
 				if (!p.HasFlags(PropertyFlags::NoSave))
@@ -219,6 +235,14 @@ using World::Node;
 					},
 						[&](std::string& v) {
 						xmlElem->SetAttribute(p.GetName().c_str(), v.c_str());
+					},
+						[&](auto& v) {
+						if (v.get())
+						{
+							std::string assetFile;
+							assetFile = v->GetFileName();
+							xmlElem->SetAttribute(p.GetName().c_str(), assetFile.c_str());
+						}
 					});
 				}
 			}
@@ -228,15 +252,14 @@ using World::Node;
 
 	void Editor::SaveScene(const std::string& filename)
 	{
-
 		using namespace tinyxml2;
 		XMLDocument xmlDoc;
-	
+
 		std::unordered_map<Node*, XMLElement*> nodeXmlElements;
 
 		auto root = GenerateNodeXML(GetWorld(), xmlDoc);
 		xmlDoc.InsertFirstChild(root);
-		
+
 		nodeXmlElements.insert({ GetWorld(), root });
 
 
@@ -246,7 +269,7 @@ using World::Node;
 			{
 				return;
 			}
-			
+
 			auto xmlElem = GenerateNodeXML(node, xmlDoc);
 			nodeXmlElements.insert({ node, xmlElem });
 
@@ -254,7 +277,17 @@ using World::Node;
 			nodeXmlElements[parent]->InsertEndChild(xmlElem);
 		});
 
-		xmlDoc.Print();
-	}
+		
 
+		FILE* fp;
+		if (fopen_s(&fp, filename.c_str(), "w") == 0)
+		{
+			xmlDoc.SaveFile(fp);
+			fclose(fp);
+		}
+		else
+		{
+			RT_XENGINE_LOG_ERROR("Failed to open file for saving scene.");
+		}
+	}
 }
