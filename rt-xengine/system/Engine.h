@@ -5,7 +5,7 @@
 #include "renderer/Renderer.h"
 #include "world/World.h"
 #include "world/NodeFactory.h"
-
+class Renderer;
 namespace Assets
 {
 	class DiskAssetManager;

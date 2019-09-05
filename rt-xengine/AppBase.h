@@ -1,5 +1,4 @@
-#ifndef APPBASE_H
-#define APPBASE_H
+#pragma once
 
 // Base class for the custom and default "Game" class.
 // Game class provides overrides for the most important classes, functions and settings of the base engine.
@@ -33,17 +32,14 @@ public:
 	virtual void PreMainInit(int32 argc, char* argv[]);
 	virtual int32 Main(int32 argc, char* argv[]);
 
-	virtual void MainLoop(System::Engine* engine, Platform::Window* window);
+	virtual void MainLoop(Engine* engine, Window* window);
 	
-	virtual void RegisterRenderers(System::Engine* engine);
+	virtual void RegisterRenderers(Engine* engine);
 
-	virtual std::unique_ptr<System::Engine> CreateEngine();
+	virtual std::unique_ptr<Engine> CreateEngine();
 
-	virtual std::unique_ptr<Platform::Window> CreateAppWindow(System::Engine* engine);
+	virtual std::unique_ptr<Window> CreateAppWindow(Engine* engine);
 
-	virtual std::unique_ptr<World::NodeFactory> MakeNodeFactory();
+	virtual std::unique_ptr<NodeFactory> MakeNodeFactory();
 
 };
-
-
-#endif //APPBASE_H

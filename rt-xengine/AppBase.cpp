@@ -31,8 +31,8 @@ int32 AppBase::Main(int32 argc, char* argv[])
 {
 	LOG_FATAL("Running app: {}", m_name);
 
-	std::unique_ptr<System::Engine> engine = CreateEngine();
-	std::unique_ptr<Platform::Window> window = CreateAppWindow(engine.get());
+	std::unique_ptr<Engine> engine = CreateEngine();
+	std::unique_ptr<Window> window = CreateAppWindow(engine.get());
 	
 	RegisterRenderers(engine.get());
 	
@@ -43,7 +43,7 @@ int32 AppBase::Main(int32 argc, char* argv[])
 		return -1;
 	}
 	
-	std::unique_ptr<World::NodeFactory> factory = MakeNodeFactory();
+	std::unique_ptr<NodeFactory> factory = MakeNodeFactory();
 	if (!engine->CreateWorldFromFile(m_initialScene, factory.get()))
 	{
 		LOG_FATAL("Failed to create World!");
@@ -77,7 +77,7 @@ int32 AppBase::Main(int32 argc, char* argv[])
 	return 0;
 }
 
-void AppBase::MainLoop(System::Engine* engine, Platform::Window* window)
+void AppBase::MainLoop(Engine* engine, Window* window)
 {
 	while (!window->IsClosed())
 	{
@@ -97,28 +97,28 @@ void AppBase::MainLoop(System::Engine* engine, Platform::Window* window)
 	}
 }
 
-void AppBase::RegisterRenderers(System::Engine* engine) 
+void AppBase::RegisterRenderers(Engine* engine) 
 {
 	// NOTE:
 	// Default behavior for an app is to start the FIRST renderer registered here.
 	engine->RegisterRenderer<Renderer::OpenGL::GLTestRenderer>();
 }
 
-std::unique_ptr<System::Engine> AppBase::CreateEngine()
+std::unique_ptr<Engine> AppBase::CreateEngine()
 {
-	return std::make_unique<System::Engine>();
+	return std::make_unique<Engine>();
 }
 
-std::unique_ptr<Platform::Window> AppBase::CreateAppWindow(System::Engine* engineRef)
+std::unique_ptr<Window> AppBase::CreateAppWindow(Engine* engineRef)
 {
-	return std::move(Platform::Win32Window::CreateWin32Window(
+	return std::move(Win32Window::CreateWin32Window(
 		engineRef, m_windowTitle, 150, 150, m_windowWidth, m_windowHeight
 	));
 }
 
-std::unique_ptr<World::NodeFactory> AppBase::MakeNodeFactory()
+std::unique_ptr<NodeFactory> AppBase::MakeNodeFactory()
 {
-	return std::make_unique<World::NodeFactory>(World::NodeFactory());
+	return std::make_unique<NodeFactory>(NodeFactory());
 }
 
 

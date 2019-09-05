@@ -6,16 +6,16 @@ namespace Renderer
 {
 	class NodeObserver
 	{
-		World::Node* m_nodeBase;
+		Node* m_nodeBase;
 
 	public:
 
-		NodeObserver(World::Node* node);
+		NodeObserver(Node* node);
 		virtual ~NodeObserver() = default;
 
 		virtual void UpdateFromNode();
 
-		World::Node* GetNodeBase() const { return m_nodeBase; }
+		Node* GetNodeBase() const { return m_nodeBase; }
 	};
 
 	// saves the time of writing a base observer for each new and existing node type

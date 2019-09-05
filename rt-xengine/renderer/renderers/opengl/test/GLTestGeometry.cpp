@@ -4,8 +4,8 @@
 
 namespace Renderer::OpenGL
 {
-	GLTestGeometry::GLTestGeometry(GLTestRenderer* renderer, World::TriangleModelGeometryNode* node)
-		: TypedNodeObserver<GLTestRenderer, World::TriangleModelGeometryNode>(renderer, node)
+	GLTestGeometry::GLTestGeometry(GLTestRenderer* renderer, TriangleModelGeometryNode* node)
+		: TypedNodeObserver<GLTestRenderer, TriangleModelGeometryNode>(renderer, node)
 	{
 		glModel = GetRenderer()->GetGLAssetManager()->RequestGLModel(node->GetModel());
 	}

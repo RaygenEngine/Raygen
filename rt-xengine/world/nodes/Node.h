@@ -202,9 +202,3 @@ public:
 
 	virtual void ToString(std::ostream& os) const { os << "object-type: Node, id: " << GetUID(); }
 };
-
-template<>
-Engine* GetEngine<Node*>(Node* objectContext) 
-{
-	return objectContext->GetWorld()->GetEngine();
-}

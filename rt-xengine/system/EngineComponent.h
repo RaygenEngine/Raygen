@@ -4,6 +4,7 @@ class Engine;
 
 class EngineComponent
 {
+protected:
 	Engine* m_engine;
 public:
 	EngineComponent(Engine* engine)

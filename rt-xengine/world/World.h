@@ -9,6 +9,10 @@
 #include "nodes/user/UserNode.h"
 #include "assets/other/xml/XMLDoc.h"
 #include "system/EngineComponent.h"
+#include "system/Input.h"
+#include "system/Engine.h"
+
+class NodeFactory;
 
 // TODO:
 class Root : public Node
@@ -18,6 +22,14 @@ class Root : public Node
 
 class World : public EngineComponent, public Node
 {
+
+	//Engine* GetEngine() {
+	//	return m_engine;
+	//}
+
+	Input& GetInput() {
+		return GetEngine()->GetInput();
+	}
 
 	glm::vec3 m_background;
 	glm::vec3 m_ambient;
@@ -172,4 +184,3 @@ protected:
 public:
 	void ToString(std::ostream& os) const { os << "object-type: World, name: " << m_name << ", id: " << GetUID(); }
 };
-

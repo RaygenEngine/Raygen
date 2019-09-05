@@ -6,11 +6,11 @@
 
 namespace Renderer::OpenGL
 {
-	struct GLTestGeometry : TypedNodeObserver<GLTestRenderer, World::TriangleModelGeometryNode>
+	struct GLTestGeometry : TypedNodeObserver<GLTestRenderer, TriangleModelGeometryNode>
 	{
 		std::shared_ptr<GLModel> glModel;
 
-		GLTestGeometry(GLTestRenderer* renderer, World::TriangleModelGeometryNode* node);
+		GLTestGeometry(GLTestRenderer* renderer, TriangleModelGeometryNode* node);
 		~GLTestGeometry() = default;
 	};
 }

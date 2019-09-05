@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "NodeFactory.h"
+#include "world/NodeFactory.h"
 #include "world/nodes/sky/SkyCubeNode.h"
 #include "world/nodes/sky/SkyHDRNode.h"
 #include "world/nodes/MetaNodeTranslation.h"

@@ -4,7 +4,7 @@
 
 namespace Renderer
 {
-	NodeObserver::NodeObserver(World::Node* node)
+	NodeObserver::NodeObserver(Node* node)
 		: m_nodeBase(node)
 	{
 	}
