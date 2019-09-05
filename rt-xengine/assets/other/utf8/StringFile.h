@@ -1,24 +1,21 @@
 #pragma once
 
-#include "assets/DiskAsset.h"
+#include "assets/Asset.h"
 
-namespace Assets
+class StringFile : public Asset
 {
-	class DiskAssetManager;
+	std::string m_data;
 
-	class StringFile : public DiskAsset
-	{
-		std::string m_data;
+public:
+	StringFile(AssetManager* assetManager, const std::string& path)
+		: Asset(assetManager, path) {}
+	~StringFile() = default;
 
-	public:
-		StringFile(EngineObject* pObject, const std::string& path);
-		~StringFile() = default;
+	bool Load(const std::string& path);
+	void Clear() override;
 
-		bool Load(const std::string& path);
-		void Clear() override;
+	const std::string& GetFileData() const { return m_data; }
 
-		const std::string& GetFileData() const { return m_data; }
+	void ToString(std::ostream& os) const override { os << "type: StringFile, name: " << m_fileName; }
+};
 
-		void ToString(std::ostream& os) const override { os << "type: StringFile, name: " << m_name; }
-	};
-}

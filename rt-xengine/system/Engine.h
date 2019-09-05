@@ -8,7 +8,7 @@
 class Renderer;
 namespace Assets
 {
-	class DiskAssetManager;
+	class AssetManager;
 }
 
 using RendererRegistrationIndex = uint32;
@@ -32,7 +32,7 @@ private:
 	// TODO: implement non deletable engineComponent on stack
 	
 
-	std::unique_ptr<Assets::DiskAssetManager> m_diskAssetManager;
+	std::unique_ptr<Assets::AssetManager> m_diskAssetManager;
 	std::unique_ptr<World> m_world;
 	std::unique_ptr<Renderer> m_renderer;
 	WindowType m_window;
@@ -45,7 +45,7 @@ public:
 		
 	bool InitDirectories(const std::string& applicationPath, const std::string& dataDirectoryName);
 
-	Assets::DiskAssetManager* GetDiskAssetManager() const { return m_diskAssetManager.get(); }
+	Assets::AssetManager* GetDiskAssetManager() const { return m_diskAssetManager.get(); }
 
 	Renderer* GetRenderer() const { return m_renderer.get(); }
 	World* GetWorld() const { return m_world.get(); }

@@ -2,20 +2,12 @@
 
 #include "assets/other/xml/XMLDoc.h"
 
-namespace Assets
+bool XMLDoc::Load(const std::string& path)
 {
-	XMLDoc::XMLDoc(EngineObject* pObject, const std::string& path)
-		: DiskAsset(pObject, path)
-	{
-	}
+	return m_document.LoadFile(path.c_str()) == tinyxml2::XML_SUCCESS;
+}
 
-	bool XMLDoc::Load(const std::string& path)
-	{
-		return m_document.LoadFile(path.c_str()) == tinyxml2::XML_SUCCESS;
-	}
-
-	void XMLDoc::Clear()
-	{
-		m_document.Clear();
-	}
+void XMLDoc::Clear()
+{
+	m_document.Clear();
 }

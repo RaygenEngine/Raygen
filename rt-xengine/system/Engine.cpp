@@ -18,7 +18,7 @@ Engine::~Engine()
 
 bool Engine::InitDirectories(const std::string& applicationPath, const std::string& dataDirectoryName)
 {
-	m_diskAssetManager = std::make_unique<Assets::DiskAssetManager>(this);
+	m_diskAssetManager = std::make_unique<Assets::AssetManager>(this);
 	return m_diskAssetManager->Init(applicationPath, dataDirectoryName);
 }
 
