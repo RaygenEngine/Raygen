@@ -15,7 +15,7 @@ namespace Assets
 
 		if (!t.is_open())
 		{
-			RT_XENGINE_LOG_WARN("Unable to open string file, path: {}", path);
+			LOG_WARN("Unable to open string file, path: {}", path);
 			return false;
 		}
 

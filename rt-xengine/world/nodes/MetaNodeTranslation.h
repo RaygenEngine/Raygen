@@ -8,7 +8,7 @@ namespace World
 {
 	inline TriangleModelInstancedGeometryNode* LoadInstancingMatrixMetaNode(Node* parent, const tinyxml2::XMLElement* xmlElement)
 	{
-		RT_XENGINE_LOG_INFO("Loading instancing matrix meta node");
+		LOG_INFO("Loading instancing matrix meta node");
 
 		uint32 matWidth = 1u;
 		xmlElement->QueryUnsignedAttribute("matrix_width", &matWidth);

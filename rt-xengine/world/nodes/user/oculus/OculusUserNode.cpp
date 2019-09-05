@@ -65,7 +65,7 @@
 //	//	//{
 //	//	//	uint32 m_curr = m_navigationMode;
 //	//	//	++m_curr %= ONM_COUNT;
-//	//	//	RT_XENGINE_LOG_INFO("Switch oculus user navigation mode");
+//	//	//	LOG_INFO("Switch oculus user navigation mode");
 //	//	//	m_navigationMode = static_cast<OCULUS_NAVIGATION_MODE>(m_curr);
 //	//	//}
 //

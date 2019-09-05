@@ -1,14 +1,9 @@
-#ifndef WINDOW_H
-#define WINDOW_H
-
-
-#include <system/Engine.h>
-
-namespace Platform
-{
+#pragma once
+#include "system/Engine.h"
+#include "system/EngineComponent.h"
 
 // Base class for a platform independant window
-class Window
+class Window : public EngineComponent
 {
 protected:
 	bool m_focused;
@@ -17,17 +12,15 @@ protected:
 	int m_width;
 	int m_height;
 
-	// Non owning pointer to the engine object.
-	System::Engine* m_engineRef;
-
 public:
 
 	// Attach input before creating window
-	Window(System::Engine* engineRef)
-		: m_engineRef(engineRef),
+	Window(Engine* engine)
+		: EngineComponent(engine),
 		  m_focused(false),
-		  m_closed(false), m_width(0), m_height(0)
-	{ };
+		  m_closed(false), 
+		  m_width(0), 
+		  m_height(0) {}
 
 	virtual ~Window() = default;
 
@@ -42,14 +35,10 @@ public:
 
 	virtual void Show() { }
 	
-	virtual bool StartRenderer(System::RendererRegistrationIndex index) { return false; }
+	virtual bool StartRenderer(RendererRegistrationIndex index) { return false; }
 
 	virtual void SetTitle(const std::string& newTitle) { };
 
 	// Called in the main loop
 	virtual void HandleEvents(bool shouldHandleControllers) { };
 };
-
-}
-
-#endif // WINDOW_H

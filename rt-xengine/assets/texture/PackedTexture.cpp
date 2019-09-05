@@ -20,22 +20,22 @@ namespace Assets
 		if (textTargetRChannel)
 			textures.emplace_back(CT_RED, textTargetRChannel, actualComponents0);
 		else if (actualComponents0 != 0)
-			RT_XENGINE_LOG_ERROR("Null texture with channel target RED and actual components value != 0, cache miss danger!");
+			LOG_ERROR("Null texture with channel target RED and actual components value != 0, cache miss danger!");
 
 		if(textTargetGChannel)
 			textures.emplace_back(CT_GREEN, textTargetGChannel, actualComponents1);
 		else if (actualComponents1 != 0)
-			RT_XENGINE_LOG_ERROR("Null texture with channel target GREEN and actual components value != 0, cache miss danger!");
+			LOG_ERROR("Null texture with channel target GREEN and actual components value != 0, cache miss danger!");
 
 		if (textTargetBChannel)
 			textures.emplace_back(CT_BLUE, textTargetBChannel, actualComponents2);
 		else if (actualComponents2 != 0)
-			RT_XENGINE_LOG_ERROR("Null texture with channel target BLUE and actual components value != 0, cache miss danger!");
+			LOG_ERROR("Null texture with channel target BLUE and actual components value != 0, cache miss danger!");
 
 		if (textTargetAChannel)
 			textures.emplace_back(CT_ALPHA, textTargetAChannel, actualComponents3);
 		else if (actualComponents3 != 0)
-			RT_XENGINE_LOG_ERROR("Null texture with channel target ALPHA and actual components value != 0, cache miss danger!");
+			LOG_ERROR("Null texture with channel target ALPHA and actual components value != 0, cache miss danger!");
 
 		m_dynamicRange = dr;
 		m_components = 4; // actual components of packed always 4?
@@ -44,7 +44,7 @@ namespace Assets
 		{
 			if(m_dynamicRange != std::get<1>(t)->GetType())
 			{
-				RT_XENGINE_LOG_ERROR("Cannot pack different typed textures together (hdr with ldr)");
+				LOG_ERROR("Cannot pack different typed textures together (hdr with ldr)");
 				return false;
 			}
 
@@ -52,7 +52,7 @@ namespace Assets
 			if (std::get<1>(t)->GetWidth() > 1 && m_width > 1 && m_width != std::get<1>(t)->GetWidth() ||
 				std::get<1>(t)->GetHeight() > 1 && m_height > 1 && m_height != std::get<1>(t)->GetHeight())
 			{
-				RT_XENGINE_LOG_ERROR("Trying to pack different sized textures!");
+				LOG_ERROR("Trying to pack different sized textures!");
 				return false;
 			}
 
@@ -95,7 +95,7 @@ namespace Assets
 		// will this packing fit?
 		if (fitCheck > 4)
 		{
-			RT_XENGINE_LOG_ERROR("Cannot fit packing, target channel: {}, actual components: {}", targetChannel, actualComponents);
+			LOG_ERROR("Cannot fit packing, target channel: {}, actual components: {}", targetChannel, actualComponents);
 			return false;
 		}
 
@@ -130,7 +130,7 @@ namespace Assets
 				break;
 
 			default:
-				RT_XENGINE_LOG_ERROR("Actual components must be <= 4");
+				LOG_ERROR("Actual components must be <= 4");
 				return false;
 			}
 		}

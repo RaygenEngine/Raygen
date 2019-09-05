@@ -22,7 +22,7 @@ namespace Assets
 			
 			if(!geomGroup->Load(modelData, gltfPrimitive, transformMat))
 			{
-				RT_XENGINE_LOG_ERROR("Failed to load geometry group, {}", geomGroup);
+				LOG_ERROR("Failed to load geometry group, {}", geomGroup);
 				return false;
 			}
 

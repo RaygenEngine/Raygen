@@ -29,7 +29,7 @@ void AppBase::PreMainInit(int32 argc, char* argv[])
 
 int32 AppBase::Main(int32 argc, char* argv[])
 {
-	RT_XENGINE_LOG_FATAL("Running app: {}", m_name);
+	LOG_FATAL("Running app: {}", m_name);
 
 	std::unique_ptr<System::Engine> engine = CreateEngine();
 	std::unique_ptr<Platform::Window> window = CreateAppWindow(engine.get());
@@ -39,28 +39,28 @@ int32 AppBase::Main(int32 argc, char* argv[])
 	// Init engine file system.
 	if (!engine->InitDirectories(argv[0], m_assetPath))
 	{
-		RT_XENGINE_LOG_FATAL("Failed to create Engine!");
+		LOG_FATAL("Failed to create Engine!");
 		return -1;
 	}
 	
 	std::unique_ptr<World::NodeFactory> factory = MakeNodeFactory();
 	if (!engine->CreateWorldFromFile(m_initialScene, factory.get()))
 	{
-		RT_XENGINE_LOG_FATAL("Failed to create World!");
+		LOG_FATAL("Failed to create World!");
 		return -1;
 	}
 
 	// Create window
 	if (!window)
 	{
-		RT_XENGINE_LOG_FATAL("Failed to create Window!");
+		LOG_FATAL("Failed to create Window!");
 		return -1;
 	}
 
 	// Start the renderer
 	if (!window->StartRenderer(0))
 	{
-		RT_XENGINE_LOG_FATAL("Failed to create Renderer!");
+		LOG_FATAL("Failed to create Renderer!");
 		return -1;
 	}
 

@@ -43,7 +43,7 @@ namespace World
 			}
 			else
 			{
-				RT_XENGINE_LOG_WARN("Unexpected entity type '{0}', expected \'instance\', skipping...", type);
+				LOG_WARN("Unexpected entity type '{0}', expected \'instance\', skipping...", type);
 				continue;
 			}
 		}

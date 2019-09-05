@@ -147,12 +147,12 @@ namespace Renderer::OpenGL
 		if (GetInput().IsKeyPressed(XVirtualKey::K1))
 		{
 			m_previewMode = m_previewMode - 1 < 0 ? PT_COUNT - 1 : m_previewMode - 1;
-			RT_XENGINE_LOG_INFO("Preview Mode set to: {}({})", SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
+			LOG_INFO("Preview Mode set to: {}({})", SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
 		}
 		else if (GetInput().IsKeyPressed(XVirtualKey::K2))
 		{
 			++m_previewMode %= PT_COUNT;
-			RT_XENGINE_LOG_INFO("Preview Mode set to: {}({})", SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
+			LOG_INFO("Preview Mode set to: {}({})", SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
 		}
 	}
 }

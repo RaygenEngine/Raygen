@@ -49,10 +49,9 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/test/GLTestGeometry.cpp
 
 	system/Engine.cpp
-	system/EngineObject.cpp
-	
-	input/Input.cpp
-	input/OculusHMD.cpp
+	system/EngineComponent.cpp
+	system/Object.cpp
+	system/Input.cpp
 	
 	event/Event.cpp
 	
@@ -151,10 +150,9 @@ set(HEADER_FILES
 	renderer/renderers/opengl/test/GLTestGeometry.h
 	
 	system/Engine.h
-	system/EngineObject.h
-
-	input/Input.h
-	input/OculusHMD.h
+	system/EngineComponent.h
+	system/Object.h
+	system/Input.h
 	
 	event/Event.h
 

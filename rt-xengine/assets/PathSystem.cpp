@@ -19,7 +19,7 @@ namespace Assets
 		std::vector<std::string>& dirList) const
 	{
 		dirList.push_back(directoryPath);
-		RT_XENGINE_LOG_TRACE("\'{}\'", directoryPath);
+		LOG_TRACE("\'{}\'", directoryPath);
 		for (const auto& entry : fs::directory_iterator(directoryPath))
 		{
 			if (fs::is_directory(entry.status()))
@@ -32,7 +32,7 @@ namespace Assets
 
 	bool PathSystem::Init(const std::string& applicationPath, const std::string& dataDirectoryName)
 	{
-		RT_XENGINE_LOG_INFO("Initializing Paths System");
+		LOG_INFO("Initializing Paths System");
 
 		auto appParentPath = fs::path(applicationPath);
 
@@ -41,12 +41,12 @@ namespace Assets
 		appParentPath = appParentPath.parent_path();
 		RT_XENGINE_ASSERT_RETURN_FALSE(SetCurrentDir(appParentPath.string()), "Couldn't set work directory!");
 
-		RT_XENGINE_LOG_DEBUG("Searching for directory: \'{}\'", dataDirectoryName); // search recursively for the data folder
+		LOG_DEBUG("Searching for directory: \'{}\'", dataDirectoryName); // search recursively for the data folder
 		bool found = false;
 		for (auto currPath = fs::current_path(); !found && currPath != fs::current_path().parent_path(); fs::
 			current_path(fs::current_path().parent_path()), currPath = fs::current_path())
 		{
-			RT_XENGINE_LOG_TRACE("searching in: \'{}\'", currPath.string());
+			LOG_TRACE("searching in: \'{}\'", currPath.string());
 			for (const auto& entry : fs::directory_iterator(currPath))
 			{
 				if (fs::is_directory(entry.status()))
@@ -55,7 +55,7 @@ namespace Assets
 					dataPath += fs::path("\\" + dataDirectoryName);
 					if (dataPath == entry.path())
 					{
-						RT_XENGINE_LOG_DEBUG("found in: \'{}\'", entry.path().string());
+						LOG_DEBUG("found in: \'{}\'", entry.path().string());
 						m_assetsRootPath = entry.path().string();
 						found = true;
 						break;
@@ -66,22 +66,22 @@ namespace Assets
 
 		RT_XENGINE_ASSERT_RETURN_FALSE(!m_assetsRootPath.empty(), "Couldn't locate assets root directory!");
 		RT_XENGINE_ASSERT_RETURN_FALSE(SetCurrentDir(m_assetsRootPath), "Couldn't locate assets root directory!");
-		RT_XENGINE_LOG_TRACE("Assets Sub-dirs:");
+		LOG_TRACE("Assets Sub-dirs:");
 		GatherSubDirectories(m_assetsRootPath, m_assetsPaths);
 
 		m_shadersRootPath = m_assetsRootPath + "\\shaders";
 		RT_XENGINE_ASSERT_RETURN_FALSE(SetCurrentDir(m_shadersRootPath), "Couldn't locate shaders root directory!");
-		RT_XENGINE_LOG_TRACE("Shaders Sub-dirs:");
+		LOG_TRACE("Shaders Sub-dirs:");
 		GatherSubDirectories(m_shadersRootPath, m_shadersPaths);
 
 		m_scenesRootPath = m_assetsRootPath + "\\scenes";
 		RT_XENGINE_ASSERT_RETURN_FALSE(SetCurrentDir(m_scenesRootPath), "Couldn't locate scenes root directory!");
-		RT_XENGINE_LOG_TRACE("Scenes Sub-dirs:");
+		LOG_TRACE("Scenes Sub-dirs:");
 		GatherSubDirectories(m_scenesRootPath, m_scenesPaths);
 
-		RT_XENGINE_LOG_INFO("Assets root directory: \'{}\'", m_assetsRootPath);
-		RT_XENGINE_LOG_INFO("Shaders root directory: \'{}\'", m_shadersRootPath);
-		RT_XENGINE_LOG_INFO("Scenes root directory: \'{}\'", m_scenesRootPath);
+		LOG_INFO("Assets root directory: \'{}\'", m_assetsRootPath);
+		LOG_INFO("Shaders root directory: \'{}\'", m_shadersRootPath);
+		LOG_INFO("Scenes root directory: \'{}\'", m_scenesRootPath);
 
 		return true;
 	}
@@ -99,7 +99,7 @@ namespace Assets
 				return fsPath.string();
 		}
 
-		RT_XENGINE_LOG_WARN("Couldn't locate asset in shaders sub-dirs, asset: \'{}\'", relativeAssetPath);
+		LOG_WARN("Couldn't locate asset in shaders sub-dirs, asset: \'{}\'", relativeAssetPath);
 
 		return "";
 	}
@@ -117,7 +117,7 @@ namespace Assets
 				return fsPath.string();
 		}
 
-		RT_XENGINE_LOG_WARN("Couldn't locate asset in scenes sub-dirs, asset: \'{}\'", relativeAssetPath);
+		LOG_WARN("Couldn't locate asset in scenes sub-dirs, asset: \'{}\'", relativeAssetPath);
 
 		return "";
 	}
@@ -148,9 +148,9 @@ namespace Assets
 		}
 
 		if (absoluteHintMask.empty())
-			RT_XENGINE_LOG_WARN("Couldn't locate asset in any asset sub-dirs, asset: \'{}\'", relativeAssetPath);
+			LOG_WARN("Couldn't locate asset in any asset sub-dirs, asset: \'{}\'", relativeAssetPath);
 		if (!absoluteHintMask.empty())
-			RT_XENGINE_LOG_WARN("Couldn't locate asset in any asset sub-dirs with absolute mask, asset: \'{}\', mask: \'{}\'", relativeAssetPath, absoluteHintMask);
+			LOG_WARN("Couldn't locate asset in any asset sub-dirs with absolute mask, asset: \'{}\', mask: \'{}\'", relativeAssetPath, absoluteHintMask);
 
 		return "";
 	}
@@ -161,7 +161,7 @@ namespace Assets
 		auto pcopy = relativeAssetPath;
 		Core::Trim(pcopy);
 
-		RT_XENGINE_LOG_TRACE("Searching for asset, given path: \'{}\', given path hint: \'{}\'", pcopy, pathHint);
+		LOG_TRACE("Searching for asset, given path: \'{}\', given path hint: \'{}\'", pcopy, pathHint);
 
 		auto path = fs::path(pcopy);
 		
@@ -175,7 +175,7 @@ namespace Assets
 			if (!error && fs::exists(shortenAbsPath))
 				return shortenAbsPath.string();
 
-			RT_XENGINE_LOG_WARN("Couldn't locate asset given in absolute path, path: \'{}\'", pcopy);
+			LOG_WARN("Couldn't locate asset given in absolute path, path: \'{}\'", pcopy);
 
 			// otherwise we won't find it anywhere
 			return "";
@@ -224,7 +224,7 @@ namespace Assets
 				return res;
 		}
 
-		RT_XENGINE_LOG_WARN("Couldn't locate asset searching specific sub-dirs by extension, searching in every subdirectory of assets root, path: \'{}\'", relativeAssetPath);
+		LOG_WARN("Couldn't locate asset searching specific sub-dirs by extension, searching in every subdirectory of assets root, path: \'{}\'", relativeAssetPath);
 		// search everywhere
 		return SearchAssetInAssetsDirectories(pcopy);
 	}

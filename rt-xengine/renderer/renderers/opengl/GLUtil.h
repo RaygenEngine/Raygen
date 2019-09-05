@@ -70,7 +70,7 @@ namespace Renderer::OpenGL
 			case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
 			case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
 			}
-			RT_XENGINE_LOG_ERROR("{} | {} ( {} )", error, file, line);
+			LOG_ERROR("{} | {} ( {} )", error, file, line);
 		}
 		return errorCode;
 	}
@@ -98,6 +98,6 @@ namespace Renderer::OpenGL
 
 			}
 		}
-		RT_XENGINE_LOG_DEBUG(baseMessage);
+		LOG_DEBUG(baseMessage);
 	}
 }

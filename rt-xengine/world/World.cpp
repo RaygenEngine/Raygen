@@ -89,7 +89,7 @@ namespace World
 	{
 		if (sceneXML)
 		{
-			RT_XENGINE_LOG_INFO("Loading World data from XML: \'{}\'", sceneXML->GetFilePath());
+			LOG_INFO("Loading World data from XML: \'{}\'", sceneXML->GetFilePath());
 
 			auto* worldElement = sceneXML->GetRootElement();
 
@@ -104,19 +104,19 @@ namespace World
 					dirtyLeafNode->CacheWorldTransform();
 
 
-				RT_XENGINE_LOG_INFO("World loaded succesfully, id: {}", this->GetObjectId());
+				LOG_INFO("World loaded succesfully, id: {}", this->GetObjectId());
 
-				RT_XENGINE_LOG_ERROR("Scenegraph: \n\n{0}", this->PrintWorldTree(true));
+				LOG_ERROR("Scenegraph: \n\n{0}", this->PrintWorldTree(true));
 
 				return true;
 			}
 
-			RT_XENGINE_LOG_FATAL("Incorrect world format!");
+			LOG_FATAL("Incorrect world format!");
 
 			return false;
 		}
 
-		RT_XENGINE_LOG_FATAL("Missing World scene XML data file!");
+		LOG_FATAL("Missing World scene XML data file!");
 
 		return false;
 	}

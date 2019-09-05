@@ -89,7 +89,7 @@ namespace Assets
 			break;
 
 		default:
-			RT_XENGINE_LOG_ERROR("Texel data type should be either DR_LOW or DR_HIGH");
+			LOG_ERROR("Texel data type should be either DR_LOW or DR_HIGH");
 			return false;
 		}
 
@@ -98,7 +98,7 @@ namespace Assets
 
 		if (!imageData || (width == 0) || (height == 0))
 		{
-			RT_XENGINE_LOG_WARN("Texture loading failed --> filepath: {}, data_empty: {} width: {} height: {}", path,
+			LOG_WARN("Texture loading failed --> filepath: {}, data_empty: {} width: {} height: {}", path,
 				static_cast<bool>(imageData), width, height);
 
 			return false;
@@ -121,7 +121,7 @@ namespace Assets
 	std::unique_ptr<Texture> Texture::CreateDefaultTexture(EngineObject* pObject, void* texelValue, uint32 width,
 		uint32 height, uint32 components, DynamicRange dr, const std::string& defaultName)
 	{
-		RT_XENGINE_LOG_DEBUG("Creating default texture, name:{}, width: {}, height: {}, components: {}, type: {}", defaultName, width, height, components, TexelEnumToString(dr));
+		LOG_DEBUG("Creating default texture, name:{}, width: {}, height: {}, components: {}, type: {}", defaultName, width, height, components, TexelEnumToString(dr));
 
 		RT_XENGINE_ASSERT(components <= 4, "Couldn't create default texture, name:{}", defaultName);
 

@@ -13,7 +13,7 @@ namespace Assets
 
 	void Asset::MarkLoaded()
 	{
-		RT_XENGINE_LOG_DEBUG("Loaded asset's data in memory, {}", this);
+		LOG_DEBUG("Loaded asset's data in memory, {}", this);
 		m_loaded = true;
 	}
 
@@ -26,7 +26,7 @@ namespace Assets
 	{
 		if (m_loaded)
 		{
-			RT_XENGINE_LOG_DEBUG("Unloaded asset's data from memory, {}", this);
+			LOG_DEBUG("Unloaded asset's data from memory, {}", this);
 			m_loaded = false;
 			Clear();
 		}

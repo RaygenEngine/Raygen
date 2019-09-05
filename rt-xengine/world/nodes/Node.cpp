@@ -120,7 +120,7 @@ namespace World
 		Assets::ReadFillEntityName(xmlData, m_name);
 		Assets::ReadFillEntityType(xmlData, m_type);
 
-		RT_XENGINE_LOG_INFO("Loading {0} named {1}", m_type, m_name);
+		LOG_INFO("Loading {0} named {1}", m_type, m_name);
 
 		NodeFactory* factory = GetWorld()->GetNodeFactory();
 

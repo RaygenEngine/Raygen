@@ -42,8 +42,8 @@ namespace Assets
 
 		STOP_TIMER("loading");
 		
-		RT_XENGINE_CLOG_WARN(warn.empty(), warn.c_str());
-		RT_XENGINE_CLOG_ERROR(err.empty(), err.c_str());
+		CLOG_WARN(!warn.empty(), warn.c_str());
+		CLOG_ERROR(!err.empty(), err.c_str());
 		
 		if (!ret) return false;
 
@@ -115,7 +115,7 @@ namespace Assets
 
 					if (!mesh->Load(gltfModel, gltfMesh, localTransformMat))
 					{
-						RT_XENGINE_LOG_ERROR("Failed to load mesh, {}", mesh);
+						LOG_ERROR("Failed to load mesh, {}", mesh);
 						return false;
 					}
 
