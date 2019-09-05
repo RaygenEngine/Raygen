@@ -1,7 +1,5 @@
-#ifndef INPUT_H
-#define INPUT_H
+#pragma once
 
-#include "system/EventListener.h"
 #include <unordered_set>
 
 namespace Input
@@ -22,7 +20,7 @@ namespace Input
 		float triggerR;
 	};
 
-	class Input : public System::EventListener
+	class Input
 	{
 		std::unordered_set<XVirtualKey> m_keysPressed;
 		std::unordered_set<XVirtualKey> m_keysRepeat;
@@ -107,21 +105,19 @@ namespace Input
 		glm::vec2 GetLeftThumbDirection() const { return m_analogState.thumbL.direction; }
 		glm::vec2 GetRightThumbDirection() const { return m_analogState.thumbR.direction; }
 
-		bool IsLeftTriggerResting() const { return EqualsZero(m_analogState.triggerL); }
-		bool IsRightTriggerResting() const { return EqualsZero(m_analogState.triggerR); }
+		bool IsLeftTriggerResting() const { return Core::EqualsZero(m_analogState.triggerL); }
+		bool IsRightTriggerResting() const { return Core::EqualsZero(m_analogState.triggerR); }
 
-		bool IsLeftThumbResting() const { return EqualsZero(m_analogState.thumbL.magnitude); }
-		bool IsRightThumbResting() const { return EqualsZero(m_analogState.thumbR.magnitude); }
+		bool IsLeftThumbResting() const { return Core::EqualsZero(m_analogState.thumbL.magnitude); }
+		bool IsRightThumbResting() const { return Core::EqualsZero(m_analogState.thumbR.magnitude); }
 
-		bool IsLeftTriggerMoving() const { return !EqualsZero(m_analogState.triggerL); }
-		bool IsRightTriggerMoving() const { return !EqualsZero(m_analogState.triggerR); }
+		bool IsLeftTriggerMoving() const { return !Core::EqualsZero(m_analogState.triggerL); }
+		bool IsRightTriggerMoving() const { return !Core::EqualsZero(m_analogState.triggerR); }
 
-		bool IsLeftThumbMoving() const { return !EqualsZero(m_analogState.thumbL.magnitude); }
-		bool IsRightThumbMoving() const { return !EqualsZero(m_analogState.thumbR.magnitude); }
+		bool IsLeftThumbMoving() const { return !Core::EqualsZero(m_analogState.thumbL.magnitude); }
+		bool IsRightThumbMoving() const { return !Core::EqualsZero(m_analogState.thumbR.magnitude); }
 
 		void ClearSoftState();
 	};
 
 }
-
-#endif // INPUT_H

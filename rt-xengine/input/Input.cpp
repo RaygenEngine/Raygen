@@ -1,5 +1,6 @@
 #include "pch.h"
-#include "Input.h"
+
+#include "input/Input.h"
 
 namespace Input
 {

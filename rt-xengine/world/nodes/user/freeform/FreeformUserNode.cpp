@@ -1,9 +1,8 @@
 ﻿#include "pch.h"
 
-#include "FreeformUserNode.h"
-
+#include "world/nodes/user/freeform/FreeformUserNode.h"
 #include "world/World.h"
-
+#include "assets/other/xml/ParsingAux.h"
 
 namespace World
 {
@@ -32,20 +31,9 @@ namespace World
 		return true;
 	}
 
-	bool FreeformUserNode::LoadChildrenFromXML(const tinyxml2::XMLElement* xmlData)
+	bool FreeformUserNode::PostChildrenLoaded()
 	{
-		// children
-		for (auto* xmdChildElement = xmlData->FirstChildElement(); xmdChildElement != nullptr;
-			xmdChildElement = xmdChildElement->NextSiblingElement())
-		{
-			const std::string type = xmdChildElement->Name();
-			if (type == "camera")
-			{
-				m_camera = GetWorld()->LoadNode<CameraNode>(this, xmdChildElement);
-			}
-		}
-
-		// if head loaded successfully
+		m_camera = GetUniqueChildOfClass<CameraNode>();
 		return m_camera != nullptr;
 	}
 
@@ -57,9 +45,9 @@ namespace World
 		auto speed = m_movementSpeed; // 0,01
 
 		// user buffs
-		if (input.IsKeyRepeat(XVK_LSHIFT))
+		if (input.IsKeyRepeat(XVirtualKey::LSHIFT))
 			speed *= 10.f;
-		if (input.IsKeyRepeat(XVK_C))
+		if (input.IsKeyRepeat(XVirtualKey::CTRL))
 			speed /= 10.f;
 		if (input.IsRightTriggerMoving())
 			speed *= 10.f * glm::exp(input.GetRightTriggerMagnitude());
@@ -67,7 +55,7 @@ namespace World
 			speed /= 10.f * glm::exp(input.GetLeftTriggerMagnitude());
 
 		// user rotation
-		if (input.IsCursorDragged() && input.IsKeyRepeat(XVK_RBUTTON))
+		if (input.IsCursorDragged() && input.IsKeyRepeat(XVirtualKey::RBUTTON))
 		{
 			const float yaw = -input.GetCursorRelativePosition().x * m_turningSpeed;
 			const float pitch = -input.GetCursorRelativePosition().y * m_turningSpeed;
@@ -77,9 +65,9 @@ namespace World
 
 		if (input.IsRightThumbMoving())
 		{
-			const auto yaw = -input.GetRightThumbDirection().x * input.GetRightThumbMagnitude() * 2.5 * m_turningSpeed;
+			const auto yaw = -input.GetRightThumbDirection().x * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed;
 			// upside down with regards to the cursor dragging
-			const auto pitch = input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5 * m_turningSpeed;
+			const auto pitch = input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed;
 
 			OrientWithoutRoll(yaw, pitch);
 		}
@@ -98,22 +86,22 @@ namespace World
 			Move(moveDir, speed * input.GetLeftThumbMagnitude());
 		}
 
-		if (input.IsAnyOfKeysRepeat(XVK_W, XVK_GAMEPAD_DPAD_UP))
+		if (input.IsAnyOfKeysRepeat(XVirtualKey::W, XVirtualKey::GAMEPAD_DPAD_UP))
 			MoveFront(speed);
 
-		if (input.IsAnyOfKeysRepeat(XVK_S, XVK_GAMEPAD_DPAD_DOWN))
+		if (input.IsAnyOfKeysRepeat(XVirtualKey::S, XVirtualKey::GAMEPAD_DPAD_DOWN))
 			MoveBack(speed);
 
-		if (input.IsAnyOfKeysRepeat(XVK_D, XVK_GAMEPAD_DPAD_RIGHT))
+		if (input.IsAnyOfKeysRepeat(XVirtualKey::D, XVirtualKey::GAMEPAD_DPAD_RIGHT))
 			MoveRight(speed);
 
-		if (input.IsAnyOfKeysRepeat(XVK_A, XVK_GAMEPAD_DPAD_LEFT))
+		if (input.IsAnyOfKeysRepeat(XVirtualKey::A, XVirtualKey::GAMEPAD_DPAD_LEFT))
 			MoveLeft(speed);
 
-		if (input.IsAnyOfKeysRepeat(XVK_PAGEUP, XVK_GAMEPAD_LEFT_SHOULDER))
+		if (input.IsAnyOfKeysRepeat(XVirtualKey::PAGEUP, XVirtualKey::GAMEPAD_LEFT_SHOULDER))
 			MoveUp(speed);
 
-		if (input.IsAnyOfKeysRepeat(XVK_PAGEDOWN, XVK_GAMEPAD_RIGHT_SHOULDER))
+		if (input.IsAnyOfKeysRepeat(XVirtualKey::PAGEDOWN, XVirtualKey::GAMEPAD_RIGHT_SHOULDER))
 			MoveDown(speed);
 	}
 }

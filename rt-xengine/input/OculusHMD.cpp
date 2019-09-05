@@ -1,7 +1,5 @@
 #include "pch.h"
 
-#include "OculusHMD.h"
-
 namespace Input
 {
 	//void OculusHMD::OnOculusTrackingStateChanged(const COculusTrackingStateChangedEvent& event)

@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "NodeObserver.h"
 
+#include "renderer/NodeObserver.h"
 
 namespace Renderer
 {
@@ -10,10 +10,6 @@ namespace Renderer
 	}
 
 	void NodeObserver::UpdateFromNode()
-	{
-	}
-
-	void NodeObserver::UpdateFromVisual(RenderTarget* target)
 	{
 	}
 }

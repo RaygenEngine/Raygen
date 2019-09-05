@@ -1,24 +1,10 @@
-#ifndef CUBEMAP_H
-#define CUBEMAP_H
+#pragma once
 
 #include "assets/DiskAsset.h"
-
-#include "Texture.h"
+#include "assets/texture/Texture.h"
 
 namespace Assets
 {
-	// gl cubemap based ordering
-	enum CUBE_MAP_FACE
-	{
-		CMF_RIGHT = 0,
-		CMF_LEFT,
-		CMF_UP,
-		CMF_DOWN,
-		CMF_FRONT,
-		CMF_BACK,
-		CMF_COUNT
-	};
-
 	// rgba T(float, byte, short - w/e stb supports) texture
 	class CubeMap : public DiskAsset
 	{
@@ -28,23 +14,21 @@ namespace Assets
 		uint32 m_width;
 		uint32 m_height;
 
-		DYNAMIC_RANGE m_dynamicRange;
+		DynamicRange m_dynamicRange;
 
 	public:
-		CubeMap(DiskAssetManager* context);
+		CubeMap(DiskAssetManager* context, const std::string& path);
 
-		bool Load(const std::string& path, DYNAMIC_RANGE dr, bool flipVertically);
+		bool Load(const std::string& path, DynamicRange dr, bool flipVertically);
 		void Clear() override;
 
 		uint32 GetWidth() const { return m_width; }
 		uint32 GetHeight() const { return m_height; }
 
-		Texture* GetFace(CUBE_MAP_FACE faceIndex) const { return m_faces[faceIndex].get(); }
+		Texture* GetFace(CubeMapFace faceIndex) const { return m_faces[faceIndex].get(); }
 
-		DYNAMIC_RANGE GetType() const { return m_dynamicRange; }
+		DynamicRange GetType() const { return m_dynamicRange; }
 
-		void ToString(std::ostream& os) const override { os << "asset-type: CubeMap, name: " << m_label << ", type: " << TexelEnumToString(m_dynamicRange); }
+		void ToString(std::ostream& os) const override { os << "asset-type: CubeMap, name: " << m_name << ", type: " << TexelEnumToString(m_dynamicRange); }
 	};
 }
-
-#endif // CUBEMAP_H

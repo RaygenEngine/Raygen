@@ -10,7 +10,6 @@ set(BIN_DEPENDENCIES_DIRECTORY "${DEPENDENCIES_DIRECTORY}/bin")
 set(INCLUDE_DEPENDENCIES_DIRECTORY "${DEPENDENCIES_DIRECTORY}/include")
 
 add_subdirectory (rt-xengine) 
-add_subdirectory (extra-tools/cuda-ptx)
 add_subdirectory (extra-tools/glad-dll-gen)
 
 

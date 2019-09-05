@@ -1,13 +1,12 @@
 #include "pch.h"
 
-#include "Node.h"
-
-#include "world/World.h"
-
+#include "world/nodes/Node.h"
 #include "world/nodes/MetaNodeTranslation.h"
+#include "assets/other/xml/ParsingAux.h"
+#include "user/freeform/FreeformUserNode.h"
 #include "sky/SkyCubeNode.h"
 #include "sky/SkyHDRNode.h"
-
+#include "world/NodeFactory.h"
 
 namespace World
 {
@@ -30,16 +29,16 @@ namespace World
 	}
 
 	Node::Node(Node* pNode)
-		: EngineObject(pNode->GetWorld()),
+		: EngineObject(pNode),
 		  m_localTranslation(0.f, 0.f, 0.f),
 		  m_localOrientation(1.f, 0.f, 0.f, 0.f),
 		  // note w, x, y, z
 		  m_localScale(1.f, 1.f, 1.f),
-		  m_localMatrix(glm::mat4(1)),
+		  m_localMatrix(glm::mat4(1.f)),
 		  m_worldTranslation(0.f, 0.f, 0.f),
 		  m_worldOrientation(1.f, 0.f, 0.f, 0.f),
 		  m_worldScale(1.f, 1.f, 1.f),
-		  m_worldMatrix(glm::mat4(1)),
+		  m_worldMatrix(glm::mat4(1.f)),
 		  m_dirty(false),
 		  m_updateLocalMatrix(true),
 	      // update local on first iter
@@ -83,7 +82,7 @@ namespace World
 		// root
 		if (!m_parent)
 			return;
-
+		
 		if (!m_dirty)
 			return;
 
@@ -101,6 +100,7 @@ namespace World
 
 		m_dirty = false;
 		m_updateLocalMatrix = false;
+
 	}
 
 	void Node::MarkDirty()
@@ -118,12 +118,14 @@ namespace World
 	bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 	{
 		Assets::ReadFillEntityName(xmlData, m_name);
+		Assets::ReadFillEntityType(xmlData, m_type);
 
-		RT_XENGINE_LOG_INFO("Loading {0}", m_name);
+		RT_XENGINE_LOG_INFO("Loading {0} named {1}", m_type, m_name);
 
-		// virtual calls
-		const auto status = LoadAttributesFromXML(xmlData) && LoadChildrenFromXML(xmlData);
+		NodeFactory* factory = GetWorld()->GetNodeFactory();
 
+		const auto status = LoadAttributesFromXML(xmlData) && factory->LoadChildren(xmlData, this);
+		
 		// calculate local matrix after loading
 		m_localMatrix = Core::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
 
@@ -144,64 +146,6 @@ namespace World
 		return true;
 	}
 
-	bool Node::LoadChildrenFromXML(const tinyxml2::XMLElement * xmlData)
-	{
-		// children
-		for (auto* xmdChildElement = xmlData->FirstChildElement(); xmdChildElement != nullptr;
-			xmdChildElement = xmdChildElement->NextSiblingElement())
-		{
-			const std::string type = xmdChildElement->Name();
-
-			if (type == "freeform_user")
-			{
-				GetWorld()->LoadNode<FreeformUserNode>(this, xmdChildElement);
-			}
-			else if (type == "light")
-			{
-				GetWorld()->LoadNode<LightNode>(this, xmdChildElement);
-			}
-			else if (type == "trimesh_geometry")
-			{
-				GetWorld()->LoadNode<TriangleModelGeometryNode>(this, xmdChildElement);
-			}
-			else if (type == "baked_trimesh_geometry")
-			{
-				//node = LoadNode<BakedTriangleMeshGeometryNode>(this, xmdChildElement);
-			}
-			else if (type == "transform")
-			{
-				GetWorld()->LoadNode<TransformNode>(this, xmdChildElement);
-			}
-			else if (type == "oculus_user")
-			{
-				GetWorld()->LoadNode<OculusUserNode>(this, xmdChildElement);
-			}
-			else if (type == "trimesh_geometry_instanced_matrix")
-			{
-				LoadInstancingMatrixMetaNode(GetWorld(), xmdChildElement);
-			}
-			else if (type == "trimesh_geometry_instanced")
-			{
-				GetWorld()->LoadNode<TriangleModelInstancedGeometryNode>(this, xmdChildElement);
-			}
-			else if (type == "sky_cube")
-			{
-				GetWorld()->LoadNode<SkyCubeNode>(this, xmdChildElement);
-			}
-			else if (type == "sky_hdr")
-			{
-				GetWorld()->LoadNode<SkyHDRNode>(this, xmdChildElement);
-			}
-			else
-			{
-				RT_XENGINE_LOG_WARN("Unrecognized entity type '{0}' skipping...", type);
-			}	
-		}
-
-		return true;
-	}
-
-
 	void Node::Move(const glm::vec3& direction, float magnitude)
 	{
 		m_localTranslation += direction * magnitude * GetWorld()->GetDeltaTime();
@@ -212,7 +156,7 @@ namespace World
 
 	void Node::MoveUp(float magnitude)
 	{
-		m_localTranslation += GetUp() * magnitude * GetWorld()->GetDeltaTime();;
+		m_localTranslation += GetUp() * magnitude * GetWorld()->GetDeltaTime();
 
 		m_updateLocalMatrix = true;
 		MarkDirty();
@@ -220,7 +164,7 @@ namespace World
 
 	void Node::MoveDown(float magnitude)
 	{
-		m_localTranslation += -GetUp() * magnitude * GetWorld()->GetDeltaTime();;
+		m_localTranslation += -GetUp() * magnitude * GetWorld()->GetDeltaTime();
 
 		m_updateLocalMatrix = true;
 		MarkDirty();
@@ -228,7 +172,7 @@ namespace World
 
 	void Node::MoveRight(float magnitude)
 	{
-		m_localTranslation += GetRight() * magnitude * GetWorld()->GetDeltaTime();;
+		m_localTranslation += GetRight() * magnitude * GetWorld()->GetDeltaTime();
 
 		m_updateLocalMatrix = true;
 		MarkDirty();
@@ -236,7 +180,7 @@ namespace World
 
 	void Node::MoveLeft(float magnitude)
 	{
-		m_localTranslation += -GetRight() * magnitude * GetWorld()->GetDeltaTime();;
+		m_localTranslation += -GetRight() * magnitude * GetWorld()->GetDeltaTime();
 
 		m_updateLocalMatrix = true;
 		MarkDirty();
@@ -252,7 +196,7 @@ namespace World
 
 	void Node::MoveBack(float magnitude)
 	{
-		m_localTranslation += -GetFront() * magnitude * GetWorld()->GetDeltaTime();;
+		m_localTranslation += -GetFront() * magnitude * GetWorld()->GetDeltaTime();
 
 		m_updateLocalMatrix = true;
 		MarkDirty();

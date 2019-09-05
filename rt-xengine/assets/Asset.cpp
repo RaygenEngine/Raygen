@@ -1,11 +1,13 @@
 #include "pch.h"
-#include "Asset.h"
+
+#include "assets/Asset.h"
 
 namespace Assets
 {
-	Asset::Asset(System::EngineObject* pObject)
+	Asset::Asset(EngineObject* pObject, const std::string& name)
 		: EngineObject(pObject),
-		m_loaded(false)
+	      m_loaded(false),
+		  m_name(name)
 	{
 	}
 

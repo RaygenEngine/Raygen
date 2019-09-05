@@ -48,105 +48,16 @@
 		   translation="0.0, 25.0, 0" 
 		   color="0.9450, 0.8549, 0.6431"/>
 	
-	<!-- <trimesh_geometry name="center"  -->
-	          <!-- translation="13.0, 10.0, 0" -->
-			  <!-- scale="0.5, 0.5, 0.5" -->
-			  <!-- file="ink_pbr.xmd"/> -->
-			  
-		  
-	<!-- <trimesh_geometry name="sofa"  -->
-			  <!-- translation="5.0, 10.0, 0" -->
-			  <!-- euler_pyr="0, 45, 0" -->
-              <!-- scale="3, 3, 3" -->
-			  <!-- file="sofa_pbr.xmd"/> -->
-			  
-	<trimesh_geometry name="room" 
+		
+	<trimesh_geometry name="box" 
 		translation="0.0, 0.0, -4.0"
 		scale="0.02, 0.02, 0.02" 
-		file="room_pbr.xmd"/> 
-		
-			<!-- <trimesh_geometry name="sponza"  -->
-		<!-- translation="0.0, 0.0, .0" -->
-		<!-- scale="0.01, 0.01, 0.01"  -->
-		<!-- file="sponza_correct.xmd"/>  -->
+		file="Sponza.gltf"/> 
 
-		<trimesh_geometry name="center" 
-			  translation="0, 5, 0"
-			  scale="2, 2, 2" 
-			  file="ball.xmd"/>
-			  
-			  		<!-- <trimesh_geometry name="center"  -->
-			  <!-- translation="0, 0, 0" -->
-			  <!-- scale="50, 50, 50"  -->
-			  <!-- file="cornel.xmd"/> -->
-			  
-			  
-			  
-			  	<!-- <trimesh_geometry name="center"  -->
-			  <!-- translation="0, 10, 0" -->
-			  <!-- file="cube.xmd"/> -->
-			  
-			  
-			  
-	<!--Creates instancing group-->
-	<!--Final instance count = matrix_width * matrix_height-->
-	<!-- <trimesh_geometry_instanced_matrix name="hamech_pbrl_army"  -->
-		<!-- matrix_width = "1" -->
-		<!-- matrix_height = "1" -->
-		
-		<!-- interval = "3" -->
-		
-		<!-- translation = "10, 40, 0" -->
-		
-		<!-- file="mech_pbr.xmd"/>  -->
-		
-	<!-- <trimesh_geometry name="center"  -->
-			  <!-- translation="0, -0, 40" -->
-			  <!-- scale="2, 2, 2"  -->
-			  <!-- file="cube3.xmd"/> -->
-			  
-			  
-	<!-- <trimesh_geometry name="center"  -->
-			  <!-- translation="10, 0, 40" -->
-			  <!-- scale="2, 2, 2"  -->
-			  <!-- file="cube2.xmd"/> -->
-			  
 
 			  
-	<!-- <trimesh_geometry name="center"  -->
-			<!-- scale="0.3, 0.3, 0.3" -->
-			  <!-- translation="0, 3, 0" -->
-			  <!-- file="mavis.xmd"/> -->
 
-		
-	<!-- <trimesh_geometry_instanced name="directions" -->
-				  <!-- file="mavis.xmd">   -->
-		
-		<!-- <instance name="up"  -->
-		<!-- scale="0.2, 0.2, 0.2" -->
-				  <!-- translation="0, 3, 0"/> -->
-				  
-		<!-- <instance name="center"  -->
-		<!-- scale="0.2, 0.2, 0.2" -->
-				  <!-- translation="0, 0, 0"/> -->
-				  
-		<!-- <instance name="right"  -->
-		<!-- scale="0.2, 0.2, 0.2" -->
-				  <!-- translation="3, 0, 0"/> -->
-				  
-		<!-- <instance name="left"  -->
-		<!-- scale="0.2, 0.2, 0.2" -->
-				  <!-- translation="-3, 0, 0"/> -->
-				  
-		<!-- <instance name="front"  -->
-		<!-- scale="0.2, 0.2, 0.2" -->
-				  <!-- translation="0, 0, 3"/> -->
-				  
-	    <!-- <instance name="back"  -->
-		<!-- scale="0.2, 0.2, 0.2" -->
-				  <!-- translation="0, 0, -3"/> -->
-				  
-	<!-- </trimesh_geometry_instanced> -->
+			 
 	
 
 </world>

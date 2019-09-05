@@ -1,8 +1,6 @@
-#ifndef INSTANCING_H
-#define INSTANCING_H
+#pragma once
 
 #include "assets/other/xml/ParsingAux.h"
-#include "core/auxiliary/GraphicsMathAux.h"
 
 namespace World
 {
@@ -102,5 +100,3 @@ namespace World
 		auto cend() const { return m_instances.end(); }
 	};
 }
-
-#endif // INSTANCING_H

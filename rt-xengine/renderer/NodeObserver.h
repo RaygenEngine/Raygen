@@ -1,5 +1,4 @@
-#ifndef NODEOBSERVER_H
-#define NODEOBSERVER_H
+#pragma once
 
 #include "world/nodes/Node.h"
 
@@ -15,7 +14,6 @@ namespace Renderer
 		virtual ~NodeObserver() = default;
 
 		virtual void UpdateFromNode();
-		virtual void UpdateFromVisual(RenderTarget* target);
 
 		World::Node* GetNodeBase() const { return m_nodeBase; }
 	};
@@ -45,5 +43,3 @@ namespace Renderer
 		RendererType* GetRenderer() const { return m_renderer; }
 	};
 }
-
-#endif // NODEOBSERVER_H

@@ -1,8 +1,7 @@
-#ifndef TRIANGLEMODELINSTANCEDGEOMETRYNODE_H
-#define TRIANGLEMODELINSTANCEDGEOMETRYNODE_H
+#pragma once
 
-#include "TriangleModelGeometryNode.h"
-#include "Instancing.h"
+#include "world/nodes/geometry/TriangleModelGeometryNode.h"
+#include "world/nodes/geometry/Instancing.h"
 
 namespace World
 {
@@ -25,10 +24,7 @@ namespace World
 		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 		bool LoadChildrenFromXML(const tinyxml2::XMLElement* xmlData);
 
-	public:
-		void ToString(std::ostream& os) const { os << "asset-type: TriangleModelInstancedGeometryNode, name: " << m_name; }
+		void ToString(std::ostream& os) const { os << "node-type: TriangleModelInstancedGeometryNode, name: " << m_name; }
 	};
 
 }
-
-#endif // TRIANGLEMODELINSTANCEDGEOMETRYNODE_H

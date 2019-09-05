@@ -1,11 +1,12 @@
-#ifndef METANODETRANSLATION_H
-#define METANODETRANSLATION_H
+#pragma once
 
+#include "assets/other/xml/ParsingAux.h"
 #include "world/World.h"
+#include "world/nodes/geometry/TriangleModelInstancedGeometryNode.h"
 
 namespace World
 {
-	inline void LoadInstancingMatrixMetaNode(Node* parent, const tinyxml2::XMLElement* xmlElement)
+	inline TriangleModelInstancedGeometryNode* LoadInstancingMatrixMetaNode(Node* parent, const tinyxml2::XMLElement* xmlElement)
 	{
 		RT_XENGINE_LOG_INFO("Loading instancing matrix meta node");
 
@@ -55,8 +56,6 @@ namespace World
 			}
 		}
 
-		parent->GetWorld()->LoadNode<TriangleModelInstancedGeometryNode>(parent, triGeomInstancedNode);
+		return parent->GetWorld()->LoadNode<TriangleModelInstancedGeometryNode>(parent, triGeomInstancedNode);
 	}
 }
-
-#endif // METANODETRANSLATION_H

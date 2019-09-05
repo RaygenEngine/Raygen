@@ -1,23 +1,21 @@
 #include "pch.h"
-#include "CubeMap.h"
 
+#include "assets/texture/CubeMap.h"
 #include "assets/DiskAssetManager.h"
-#include <stb_image/stb_image.h>
 
 namespace Assets
 {
-	CubeMap::CubeMap(DiskAssetManager* context)
-		: DiskAsset(context),
+	CubeMap::CubeMap(DiskAssetManager* context, const std::string& path)
+		: DiskAsset(context, path),
 		  m_width(0),
 	      m_height(0),
 	      m_dynamicRange()
 	{
 	}
 
-	bool CubeMap::Load(const std::string& path, DYNAMIC_RANGE dr, bool flipVertically)
+	bool CubeMap::Load(const std::string& path, DynamicRange dr, bool flipVertically)
 	{
-		SetIdentificationFromPath(path);
-
+		// TODO from system
 		auto onePath = PathSystem::GetPathWithoutExtension(path);
 		const auto generalPath = onePath.substr(0, onePath.size() - 3);
 

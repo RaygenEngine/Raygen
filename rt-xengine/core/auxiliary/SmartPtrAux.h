@@ -1,9 +1,7 @@
-#ifndef SMARTPTRAUX_H
-#define SMARTPTRAUX_H
+#pragma once
 
-#include "xutility"  
-#include <algorithm>
 #include <vector>
+#include <algorithm>
 
 // TODO: create a smart pointer container with dereference iterators
 //template <class BaseIterator>
@@ -68,5 +66,3 @@ namespace Core
 		return rPtrVec;
 	}
 }
-
-#endif // SMARTPTRAUX_H

@@ -1,19 +1,16 @@
 #include "pch.h"
-#include "Renderer.h"
 
-#include "renderers/optix/vr-pathtracer/OptixVRPathTracerRenderer.h"
+#include "renderer/Renderer.h"
 
 namespace Renderer
 {
-	Renderer::Renderer(System::Engine* context)
-		: EngineObject(context)
+	Renderer::Renderer(System::Engine* engine)
+		: EngineObject(engine)
 	{
-		RT_XENGINE_LOG_INFO("Created Renderer, id: {}", GetObjectId());
 	}
 
 	Renderer::~Renderer()
 	{
-		RT_XENGINE_LOG_INFO("Destroyed Renderer, id: {}", GetObjectId());
 	}
 
 	bool Renderer::InitRendering(HWND assochWnd, HINSTANCE instance)

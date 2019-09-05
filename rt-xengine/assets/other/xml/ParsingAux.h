@@ -1,12 +1,6 @@
-#ifndef PARSINGAUX_H
-#define PARSINGAUX_H
-
-#include "core/auxiliary/StringAux.h"
-
-#include "core/uuid/UUIDGenerator.h"
+#pragma once
 
 #include "tinyxml2/tinyxml2.h"
-#include <string>               
 
 namespace Assets
 {
@@ -40,7 +34,7 @@ namespace Assets
 			return true;
 		}
 
-		RT_XENGINE_LOG_WARN("Missing XML attribute: \"{0}\", defaulting", attribute);
+		RT_XENGINE_LOG_INFO("Missing XML attribute: \"{0}\", defaulting", attribute);
 		return false;
 	}
 
@@ -54,7 +48,7 @@ namespace Assets
 			return true;
 		}
 
-		RT_XENGINE_LOG_WARN("Missing string attribute \"{0}\", defaulting", attribute);
+		RT_XENGINE_LOG_INFO("Missing string attribute \"{0}\", defaulting", attribute);
 		return false;
 	}
 
@@ -71,6 +65,10 @@ namespace Assets
 
 		return false;
 	}
-}
 
-#endif // PARSINGAUX_H
+	inline bool ReadFillEntityType(const tinyxml2::XMLElement* xmlElement, std::string& entityType)
+	{
+		entityType = std::string(xmlElement->Name());
+		return true;
+	}
+}

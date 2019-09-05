@@ -1,10 +1,5 @@
-#ifndef ENGINE_H
-#define ENGINE_H
+#pragma once
 
-#include "event/Event.h"	
-
-#include <memory>
-#include "core/uuid/UUIDGenerator.h"
 #include "input/Input.h"
 
 namespace Renderer
@@ -15,6 +10,7 @@ namespace Renderer
 namespace World
 {
 	class World;
+	class NodeFactory;
 }
 
 namespace Assets
@@ -28,8 +24,6 @@ namespace System
 
 	class Engine
 	{
-		std::vector<std::function<void(Event::Event&)>> m_callbacks;
-
 		struct RendererMetadata 
 		{
 			std::string name;
@@ -45,19 +39,17 @@ namespace System
 
 		Input::Input m_input;
 
-		Core::UID m_id;
-
 	public:
 		Engine();
 		~Engine();
-
+		
 		bool InitDirectories(const std::string& applicationPath, const std::string& dataDirectoryName);
 
 		Assets::DiskAssetManager* GetDiskAssetManager() const { return m_diskAssetManager.get(); }
 		Renderer::Renderer* GetRenderer() const { return m_renderer.get(); }
 		World::World* GetWorld() const { return m_world.get(); }
 
-		bool CreateWorldFromFile(const std::string& filename);
+		bool CreateWorldFromFile(const std::string& filename, World::NodeFactory* factory);
 
 		// if another renderer is already active, then destroy old and 
 		// then activate the next
@@ -75,11 +67,5 @@ namespace System
 
 			return static_cast<RendererRegistrationIndex>(m_rendererRegistrations.size() - 1);
 		}
-
-		// bind a fn for specific event
-		void SetEventCallback(std::function<void(Event::Event&)> fn);
-		void ProcessEvent(Event::Event& e);
 	};
 }
-
-#endif // ENGINE_H

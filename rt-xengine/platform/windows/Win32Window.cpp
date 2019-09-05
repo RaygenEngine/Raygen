@@ -1,31 +1,20 @@
 #include "pch.h"
 
-#include "Win32Window.h"
+#include "platform/windows/Win32Window.h"
+#include "platform/windows/TranslateWin32VirtualKeys.h"
+#include "world/World.h"
 #include "renderer/Renderer.h"
-#include "Win32App.h"
-
-
 
 #include <windowsx.h>
 
-#include "TranslateWin32VirtualKeys.h"
-
-#include "renderer/renderers/opengl/test/GLTestRenderer.h"
-#include "renderer/renderers/optix/test/OptixTestRenderer.h"
-
-using namespace Renderer::OpenGL;
-using namespace Renderer::Optix;
-
-
 namespace Platform
 {
-	LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+	//LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-	Win32Window::Win32Window()
-		: m_wcex(),
-		  m_hWnd(nullptr),
-		  m_focused(false),
-		  m_closed(false), m_width(0), m_height(0)
+	Win32Window::Win32Window(System::Engine* engineRef)
+		: Window(engineRef),
+		  m_wcex(),
+		  m_hWnd(nullptr)
 	{
 	}
 
@@ -42,6 +31,7 @@ namespace Platform
 		LPCSTR name,
 		HBRUSH backgroundBrushColor,
 		HCURSOR cursor,
+		WNDPROC windowHandleFunction,
 		HINSTANCE instance)
 	{
 		// Setup window class attributes.
@@ -52,19 +42,20 @@ namespace Platform
 		m_wcex.lpszClassName = name;
 		m_wcex.hbrBackground = backgroundBrushColor;
 		m_wcex.hCursor = cursor;
-		m_wcex.lpfnWndProc = WndProc;
+		m_wcex.lpfnWndProc = windowHandleFunction;
 		m_wcex.hInstance = instance;
 
 		// Register window and ensure registration success.
 		return static_cast<bool>(RegisterClassEx(&m_wcex));
 	}
 
+
 	bool Win32Window::Create(
-		int32 xpos, 
-		int32 ypox, 
-		int32 width, 
-		int32 height, 
-		LPCSTR title, 
+		int32 xpos,
+		int32 ypox,
+		int32 width,
+		int32 height,
+		LPCSTR title,
 		LONG style)
 	{
 		// Setup window initialization attributes.
@@ -98,6 +89,45 @@ namespace Platform
 		return m_hWnd;
 	}
 
+	std::unique_ptr<Win32Window> Win32Window::CreateWin32Window(
+		System::Engine* engineRef,
+		const std::string& title,
+		int32 xpos,
+		int32 ypox,
+		int32 width,
+		int32 height,
+		LONG cstyle,
+		WNDPROC windowHandleFunction,
+		UINT style,
+		LPCSTR name,
+		HBRUSH backgroundBrushColor,
+		LPCSTR cursorName)
+	{
+		HINSTANCE hInstance = GetModuleHandle(nullptr);
+
+		// attach engine to window
+		auto window = std::make_unique<Win32Window>(engineRef);
+		
+		if (!window->Register(style, name, backgroundBrushColor,
+							  LoadCursor(NULL, cursorName), windowHandleFunction, hInstance))
+		{
+			RT_XENGINE_LOG_FATAL("Failed to register application window!");
+			return std::unique_ptr<Win32Window>{};
+		}
+
+
+		if (!window->Create(xpos, ypox, width, height, title.c_str(), cstyle))
+		{
+			RT_XENGINE_LOG_FATAL("Failed to create application window!");
+			return std::unique_ptr<Win32Window>{};
+		}
+
+		// pass self pointer inside the hwnd userdata (minor hack for callbacks)
+		SetWindowLongPtr(window->GetHWND(), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window.get()));
+
+		return std::move(window);
+	}
+
 	void Win32Window::RestrictMouseMovement()
 	{
 		// restrict mouse inside window
@@ -119,36 +149,147 @@ namespace Platform
 		ClipCursor(NULL);
 	}
 
-	void Win32Window::Display()
+	void Win32Window::Show()
 	{
 		::ShowWindow(m_hWnd, SW_SHOWDEFAULT);
 		::UpdateWindow(m_hWnd);
 	}
 
-	LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+	void Win32Window::GenerateXInputControllerMessages()
+	{
+		const auto FindAvailableController = []() -> int
+		{
+			DWORD controllerIndex = 0;
+			for (; controllerIndex < XUSER_MAX_COUNT; controllerIndex++)
+			{
+				XINPUT_STATE state;
+				ZeroMemory(&state, sizeof(XINPUT_STATE));
+
+				if (XInputGetState(controllerIndex, &state) == ERROR_SUCCESS)
+				{
+					RT_XENGINE_LOG_INFO("Found active XInput controller, index: {}", controllerIndex);
+					break;
+				}
+			}
+
+			return controllerIndex;
+		};
+
+
+		// send changes directly to engine input, don't post messages its slow
+		auto& input = m_engineRef->GetInput();
+
+		// first active controller index
+		static DWORD controllerIndex = FindAvailableController();
+
+		XINPUT_STATE state;
+		ZeroMemory(&state, sizeof(XINPUT_STATE));
+		XInputGetState(controllerIndex, &state);
+
+		const auto CalculateThumb = [](const glm::vec2& point, int32 deadZone)
+		{
+			Input::Thumb thumb{};
+
+			const float magnitude = glm::length(point);
+			thumb.direction = glm::normalize(point);
+
+			// clamp and normalize
+			magnitude > deadZone ? thumb.magnitude = (glm::min(magnitude, 32767.f) - deadZone) / (32767 - deadZone) : thumb.magnitude = 0.0f;
+
+			return thumb;
+		};
+
+		Input::AnalogState analogState{};
+
+		analogState.thumbL = CalculateThumb({ state.Gamepad.sThumbLX , state.Gamepad.sThumbLY }, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+		analogState.thumbR = CalculateThumb({ state.Gamepad.sThumbRX , state.Gamepad.sThumbRY }, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+
+		const auto CalculateTrigger = [](BYTE magnitude, int32 deadZone)
+		{
+			return magnitude > deadZone ? (glm::min(static_cast<float>(magnitude), 255.f) - deadZone) / (255.f - deadZone) : 0.f;
+		};
+
+		analogState.triggerL = CalculateTrigger(state.Gamepad.bLeftTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
+		analogState.triggerR = CalculateTrigger(state.Gamepad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
+
+		input.UpdateAnalogState(analogState);
+
+		// check for keystrokes
+		XINPUT_KEYSTROKE keystroke;
+		ZeroMemory(&keystroke, sizeof(XINPUT_KEYSTROKE));
+		XInputGetKeystroke(controllerIndex, {}, &keystroke);
+
+		UINT msg{};
+
+		switch (keystroke.Flags)
+		{
+			// we only handle the keydown and keyup events, repeat is handled internally by the engine 
+		case XINPUT_KEYSTROKE_KEYDOWN:
+			input.UpdateKeyPressed(TranslateXInputVirtualKeys(keystroke.VirtualKey));
+			break;
+
+		case XINPUT_KEYSTROKE_KEYUP:
+			input.UpdateKeyReleased(TranslateXInputVirtualKeys(keystroke.VirtualKey));
+			break;
+
+		case XINPUT_KEYSTROKE_REPEAT:
+		default:;
+			// if no keystrokes, repeat is handled in engine - don't send repeat messages
+		}
+	}
+
+	void Win32Window::HandleEvents(bool shouldHandleControllers)
+	{
+		MSG msg;
+
+		if (shouldHandleControllers) 
+		{
+			GenerateXInputControllerMessages();
+		}
+
+		while (::PeekMessage(&msg, GetHWND(), 0, 0, PM_REMOVE) > 0)
+		{
+			::TranslateMessage(&msg);
+			::DispatchMessage(&msg);
+		}
+	}
+
+	void Win32Window::SetTitle(const std::string& newTitle)
+	{
+		SetWindowText(GetHWND(), newTitle.c_str());
+	}
+
+	bool Win32Window::StartRenderer(System::RendererRegistrationIndex index) 
+	{
+		return m_engineRef->SwitchRenderer(index) &&
+			m_engineRef->GetRenderer()->InitRendering(GetHWND(), GetHInstance()) &&
+			m_engineRef->GetRenderer()->InitScene(GetWidth(), GetHeight());
+	}
+
+	LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		LRESULT result = NULL;
 
-		auto* app = reinterpret_cast<Win32App*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+		auto* window = reinterpret_cast<Win32Window*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
-		if(!app) return DefWindowProc(hWnd, message, wParam, lParam);
+		if(!window) return DefWindowProc(hWnd, message, wParam, lParam);
 
-		auto& input = app->m_engine->GetInput();
+		auto& input = window->m_engineRef->GetInput();
 
 		switch (message)
 		{
 		case WM_SETFOCUS:
 			SetFocus(hWnd);
-			app->m_window->m_focused = true;
+			window->m_focused = true;
 			break;
 
 		case WM_KILLFOCUS:
-			app->m_window->m_focused = false;
+			window->m_focused = false;
 			break;
 
 		case WM_CLOSE:
 		case WM_DESTROY:
-			app->m_window->m_closed = true;
+			window->m_closed = true;
 			PostQuitMessage(0);
 			break;
 
@@ -157,7 +298,7 @@ namespace Platform
 			// escape loses focus - use to resize, close, etc.
 			// also propagated in input
 			if (wParam == VK_ESCAPE)
-				app->m_window->ReleaseMouseMovement();
+				window->ReleaseMouseMovement();
 
 			// translate generic key press 
 			input.UpdateKeyPressed(TranslateWin32VirtualKeys(wParam));
@@ -176,15 +317,15 @@ namespace Platform
 			break;
 
 		case WM_LBUTTONDOWN:
-			input.UpdateKeyPressed(XVK_LBUTTON);
+			input.UpdateKeyPressed(XVirtualKey::LBUTTON);
 			break;
 
 		case WM_RBUTTONDOWN:
-			input.UpdateKeyPressed(XVK_RBUTTON);
+			input.UpdateKeyPressed(XVirtualKey::RBUTTON);
 			break;
 
 		case WM_MBUTTONDOWN:
-			input.UpdateKeyPressed(XVK_MBUTTON);
+			input.UpdateKeyPressed(XVirtualKey::MBUTTON);
 			break;
 
 		case WM_XBUTTONDOWN:
@@ -192,15 +333,15 @@ namespace Platform
 			break;
 
 		case WM_LBUTTONUP:
-			input.UpdateKeyReleased(XVK_LBUTTON);
+			input.UpdateKeyReleased(XVirtualKey::LBUTTON);
 			break;
 
 		case WM_RBUTTONUP:
-			input.UpdateKeyReleased(XVK_RBUTTON);
+			input.UpdateKeyReleased(XVirtualKey::RBUTTON);
 			break;
 
 		case WM_MBUTTONUP:
-			input.UpdateKeyReleased(XVK_MBUTTON);
+			input.UpdateKeyReleased(XVirtualKey::MBUTTON);
 			break;
 
 		case WM_XBUTTONUP:
@@ -211,7 +352,7 @@ namespace Platform
 		case WM_RBUTTONDBLCLK:
 		case WM_MBUTTONDBLCLK:
 		case WM_XBUTTONDBLCLK:
-			app->m_window->RestrictMouseMovement();
+			window->RestrictMouseMovement();
 			input.UpdateDoubleClick();
 			break;
 
@@ -236,11 +377,11 @@ namespace Platform
 			if (LOWORD(lParam) == 0 || HIWORD(lParam) == 0)
 				break;
 
-			app->m_window->m_width = LOWORD(lParam);
-			app->m_window->m_height = HIWORD(lParam);
+			window->m_width = LOWORD(lParam);
+			window->m_height = HIWORD(lParam);
 
-			app->m_engine->GetWorld()->WindowResize(LOWORD(lParam), HIWORD(lParam));
-			app->m_engine->GetRenderer()->WindowResize(LOWORD(lParam), HIWORD(lParam));
+			window->m_engineRef->GetWorld()->WindowResize(LOWORD(lParam), HIWORD(lParam));
+			window->m_engineRef->GetRenderer()->WindowResize(LOWORD(lParam), HIWORD(lParam));
 			break;
 
 		default:

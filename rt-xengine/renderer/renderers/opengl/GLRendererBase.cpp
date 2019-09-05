@@ -1,16 +1,16 @@
 #include "pch.h"
-#include "GLRendererBase.h"
 
-#include "assets/GLShader.h"
-#include "assets/GLInstancedModel.h"
-#include "assets/GLCubeMap.h"
-
+#include "renderer/renderers/opengl/GLRendererBase.h"
 
 namespace Renderer::OpenGL
 {
 
 	GLRendererBase::GLRendererBase(System::Engine* context)
-		: Renderer(context), m_assochWnd(nullptr), m_hdc(nullptr), m_hglrc(nullptr)
+		: Renderer(context),
+		  m_assochWnd(nullptr),
+		  m_hdc(nullptr),
+		  m_hglrc(nullptr),
+	      m_glAssetManager(this)
 	{
 	}
 
@@ -72,44 +72,6 @@ namespace Renderer::OpenGL
 
 	void GLRendererBase::SwapBuffers()
 	{
-		// TODO: do i need this?
-		//glFinish();
 		::SwapBuffers(m_hdc);
-	}
-
-	std::shared_ptr<GLCubeMap> GLRendererBase::RequestGLCubeMap(Assets::CubeMap* cubeMap, GLint wrapFlag,
-		bool mipMapping)
-	{
-		return Assets::LoadAssetAtMultiKeyCache<GLCubeMap>(m_glCubeMaps, this, cubeMap, wrapFlag, mipMapping);
-	}
-
-	std::shared_ptr<GLTexture> GLRendererBase::RequestGLTexture(Assets::Texture* texture, GLint wrapFlag, bool mipMapping)
-	{
-		return Assets::LoadAssetAtMultiKeyCache<GLTexture>(m_glTextures, this, texture, wrapFlag, mipMapping);
-	}
-
-	std::shared_ptr<GLShader> GLRendererBase::RequestGLShader(Assets::StringFile* vertexFile, Assets::StringFile* fragmentFile)
-	{
-		return Assets::LoadAssetAtMultiKeyCache<GLShader>(m_glShaders, this, vertexFile, fragmentFile);
-	}
-
-	std::shared_ptr<GLMaterial> GLRendererBase::RequestGLMaterial(Assets::XMaterial* material)
-	{
-		return Assets::LoadAssetAtMultiKeyCache<GLMaterial>(m_glMaterials, this, material);
-	}
-
-	std::shared_ptr<GLMesh> GLRendererBase::RequestGLMesh(Assets::XMesh* mesh, GLenum usage)
-	{
-		return Assets::LoadAssetAtMultiKeyCache<GLMesh>(m_glMeshes, this, mesh, usage);
-	}
-
-	std::shared_ptr<GLModel> GLRendererBase::RequestGLModel(Assets::XModel* model)
-	{
-		return Assets::LoadAssetAtMultiKeyCache<GLModel>(m_glModels, this, model);
-	}
-
-	std::shared_ptr<GLInstancedModel> GLRendererBase::RequestGLInstancedModel(World::TriangleModelInstancedGeometryNode* nodeInstancer)
-	{
-		return Assets::LoadAssetAtMultiKeyCache<GLInstancedModel>(m_glInstancedModels, this, nodeInstancer->GetModel(), nodeInstancer);
 	}
 }

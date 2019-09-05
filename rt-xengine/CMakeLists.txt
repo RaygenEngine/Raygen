@@ -13,22 +13,29 @@ set(SOURCE_FILES
 	assets/DiskAsset.cpp
 	assets/DiskAssetManager.cpp
 	assets/PathSystem.cpp
+	assets/DiskAssetPart.cpp
+	
 	assets/other/utf8/StringFile.cpp
 	assets/other/xml/XMLDoc.cpp
+	
 	assets/texture/PackedTexture.cpp
 	assets/texture/Texture.cpp
 	assets/texture/CubeMap.cpp
-	assets/xasset/XMaterial.cpp
-	assets/xasset/XMesh.cpp
-	assets/xasset/XModel.cpp
+	
+	assets/model/Material.cpp
+	assets/model/Mesh.cpp
+	assets/model/Model.cpp
+	assets/model/GeometryGroup.cpp
+	assets/model/Sampler.cpp
+	assets/model/Buffer.cpp
 	
 	core/logger/Logger.cpp
 	
-	renderer/GPUAsset.cpp
 	renderer/Renderer.cpp
 	renderer/NodeObserver.cpp
 	
 	renderer/renderers/opengl/GLAsset.cpp
+	renderer/renderers/opengl/GLAssetManager.cpp
 	renderer/renderers/opengl/GLRendererBase.cpp
 	renderer/renderers/opengl/assets/GLInstancedModel.cpp
 	renderer/renderers/opengl/assets/GLMaterial.cpp
@@ -41,27 +48,8 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/test/GLTestRenderer.cpp
 	renderer/renderers/opengl/test/GLTestGeometry.cpp
 
-	renderer/renderers/optix/OptixAsset.cpp
-	renderer/renderers/optix/OptixRendererBase.cpp
-	renderer/renderers/optix/assets/OptixInstancedModel.cpp
-	renderer/renderers/optix/assets/OptixMaterial.cpp
-	renderer/renderers/optix/assets/OptixMesh.cpp
-	renderer/renderers/optix/assets/OptixModel.cpp
-	renderer/renderers/optix/assets/OptixProgram.cpp
-	renderer/renderers/optix/assets/OptixTexture.cpp
-	renderer/renderers/optix/assets/OptixCubeMap.cpp
-	
-	renderer/renderers/optix/test/OptixTestRenderer.cpp
-	renderer/renderers/optix/test/OptixTestGeometry.cpp
-	
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerGeometry.cpp
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerHead.cpp
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerLight.cpp
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerRenderer.cpp
-	
 	system/Engine.cpp
 	system/EngineObject.cpp
-	system/EventListener.cpp
 	
 	input/Input.cpp
 	input/OculusHMD.cpp
@@ -69,7 +57,8 @@ set(SOURCE_FILES
 	event/Event.cpp
 	
 	world/World.cpp
-
+	world/NodeFactory.cpp
+	
 	world/nodes/Node.cpp
 	world/nodes/TransformNode.cpp
 	
@@ -89,47 +78,65 @@ set(SOURCE_FILES
 	world/nodes/user/UserNode.cpp
 	
 	main.cpp
+	AppBase.cpp
 
-	platform/windows/Win32App.cpp
+	platform/Window.cpp
 	platform/windows/Win32Window.cpp
 )
 
 set(HEADER_FILES 
+
 	assets/Asset.h
 	assets/DiskAsset.h
 	assets/DiskAssetManager.h
-	assets/DiskAssetPart.h
-	assets/MultiKeyAssetCacheHashing.h
 	assets/PathSystem.h
+	assets/DiskAssetPart.h
+    assets/CachingAux.h
+		
 	assets/other/utf8/StringFile.h
 	assets/other/xml/ParsingAux.h
 	assets/other/xml/XMLDoc.h
+	
 	assets/texture/PackedTexture.h
 	assets/texture/Texture.h
 	assets/texture/CubeMap.h
-	assets/xasset/XMaterial.h
-	assets/xasset/XMesh.h
-	assets/xasset/XModel.h
+	
+	assets/model/Material.h
+	assets/model/Mesh.h
+	assets/model/Sampler.h
+	assets/model/Model.h
+	assets/model/GltfAux.h
+	assets/model/GeometryGroup.h
+	assets/model/Buffer.h
 
 	core/auxiliary/FileAux.h
 	core/auxiliary/GraphicsMathAux.h
 	core/auxiliary/SmartPtrAux.h
 	core/auxiliary/StringAux.h
+
 	core/data/BasicLight.h
 	core/data/Vertex.h
-	core/data/Eye.h
+	
+	core/enum/InputEnums.h
+	core/enum/TargetEnums.h
+	core/enum/TextureEnums.h
+	core/enum/GeometryEnums.h
+	core/enum/BufferEnums.h
+	
 	core/logger/Logger.h
+	
 	core/timer/Timer.h
+	
+	core/type/IntegerTypes.h
+	core/type/MathTypes.h
+	
 	core/uuid/UUIDGenerator.h
 	
-	include/rt-xengine.h
-	include/common-structs.h
-
-	renderer/GPUAsset.h
 	renderer/Renderer.h
 	renderer/NodeObserver.h
 	
 	renderer/renderers/opengl/GLAsset.h
+	renderer/renderers/opengl/GLAssetManager.h
 	renderer/renderers/opengl/GLRendererBase.h
 	renderer/renderers/opengl/GLUtil.h
 	renderer/renderers/opengl/assets/GLInstancedModel.h
@@ -143,41 +150,16 @@ set(HEADER_FILES
 	renderer/renderers/opengl/test/GLTestRenderer.h
 	renderer/renderers/opengl/test/GLTestGeometry.h
 	
-	renderer/renderers/optix/OptixAsset.h
-	renderer/renderers/optix/OptixRendererBase.h
-	renderer/renderers/optix/OptixUtil.h
-	renderer/renderers/optix/assets/OptixInstancedModel.h
-	renderer/renderers/optix/assets/OptixMaterial.h
-	renderer/renderers/optix/assets/OptixMesh.h
-	renderer/renderers/optix/assets/OptixModel.h
-	renderer/renderers/optix/assets/OptixProgram.h
-	renderer/renderers/optix/assets/OptixTexture.h
-	renderer/renderers/optix/assets/OptixCubeMap.h
-	
-	renderer/renderers/optix/test/OptixTestRenderer.h
-	renderer/renderers/optix/test/OptixTestGeometry.h
-	
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerGeometry.h
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerHead.h
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerLight.h
-	renderer/renderers/optix/vr-pathtracer/OptixVRPathTracerRenderer.h
-	
 	system/Engine.h
 	system/EngineObject.h
-	system/EventListener.h
 
 	input/Input.h
 	input/OculusHMD.h
 	
-	system/shared/Event.h
-	system/shared/InputEnums.h
-	system/shared/RenderTarget.h
-	system/shared/TargetEnums.h
-	system/shared/Types.h
-
 	event/Event.h
 
 	world/World.h
+	world/NodeFactory.h
 	
 	world/nodes/Node.h
 	world/nodes/TransformNode.h
@@ -201,10 +183,25 @@ set(HEADER_FILES
 
 	pch/pch.h
 	
-	platform/windows/Win32App.h
+	AppBase.h
+	
+	platform/Window.h
 	platform/windows/Win32Window.h
 	platform/windows/TranslateWin32VirtualKeys.h
 )
+
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/CMakeLists.txt" AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/App.h")
+	set(APP_DIR "app")
+	message(STATUS "Detected app header at 'rt-xengine/app'. Using custom app files.") 
+else()
+	set(APP_DIR "app-default")
+	message(STATUS "No specific app files detected. Using app-default.")
+endif()
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/${APP_DIR})
+include(${APP_DIR}/CMakeLists.txt)
+
 
 # add pch for msvc 
 if(MSVC)
@@ -229,9 +226,7 @@ add_executable(rt-xengine ${SOURCE_FILES} ${HEADER_FILES})
 
 # 3rd party libraries
 target_link_libraries(rt-xengine
-	optix.6.0.0.lib
-	optixu.6.0.0.lib
-	GLAD.lib
+	glad.lib
 	tinyxml2.lib
 	opengl32.lib
 	XInput.lib
@@ -242,23 +237,31 @@ add_compile_definitions(GLAD_GLAPI_EXPORT)
 
 # dependencies (build order)
 add_dependencies(rt-xengine 
-	cuda-ptx
-	copy-ptx
 	glad-dll-gen
 )
 
 # 3rd party includes
-include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/CUDA)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY})
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/GLAD)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/GLM)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/KHR)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/nlohmann)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/spdlog)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/stb_image)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/tinygltf)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/tinyxml2)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/pch)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 # for generated exports file
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # enforce cpp17
 set_property(TARGET rt-xengine PROPERTY CXX_STANDARD 17)
 set_property(TARGET rt-xengine PROPERTY CXX_STANDARD_REQUIRED ON)
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX ${PROJECT_NAME} FILES ${HEADER_FILES} ${SOURCE_FILES})
 
 # multi-core compilation
 if(MSVC)

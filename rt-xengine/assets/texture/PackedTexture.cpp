@@ -1,42 +1,39 @@
 #include "pch.h"
-#include "PackedTexture.h"
 
-#include "assets/DiskAssetManager.h"
-
-
+#include "assets/texture/PackedTexture.h"
 
 namespace Assets
 {
-	PackedTexture::PackedTexture(DiskAssetManager* context)
-		: Texture(context)
+	PackedTexture::PackedTexture(EngineObject* pObject, const std::string& path)
+		: Texture(pObject, path)
 	{
 	}
 
 	bool PackedTexture::Load(Texture* textTargetRChannel, uint32 actualComponents0,
 							 Texture* textTargetGChannel, uint32 actualComponents1,
 							 Texture* textTargetBChannel, uint32 actualComponents2,
-							 Texture* textTargetAChannel, uint32 actualComponents3, DYNAMIC_RANGE dr)
+							 Texture* textTargetAChannel, uint32 actualComponents3, DynamicRange dr)
 	{
 		// helps check stuff about the textures you want to pack
 		std::vector<std::tuple<uint32, Texture*, uint32>> textures;
 
 		if (textTargetRChannel)
-			textures.emplace_back(TC_RED, textTargetRChannel, actualComponents0);
+			textures.emplace_back(CT_RED, textTargetRChannel, actualComponents0);
 		else if (actualComponents0 != 0)
 			RT_XENGINE_LOG_ERROR("Null texture with channel target RED and actual components value != 0, cache miss danger!");
 
 		if(textTargetGChannel)
-			textures.emplace_back(TC_GREEN, textTargetGChannel, actualComponents1);
+			textures.emplace_back(CT_GREEN, textTargetGChannel, actualComponents1);
 		else if (actualComponents1 != 0)
 			RT_XENGINE_LOG_ERROR("Null texture with channel target GREEN and actual components value != 0, cache miss danger!");
 
 		if (textTargetBChannel)
-			textures.emplace_back(TC_BLUE, textTargetBChannel, actualComponents2);
+			textures.emplace_back(CT_BLUE, textTargetBChannel, actualComponents2);
 		else if (actualComponents2 != 0)
 			RT_XENGINE_LOG_ERROR("Null texture with channel target BLUE and actual components value != 0, cache miss danger!");
 
 		if (textTargetAChannel)
-			textures.emplace_back(TC_ALPHA, textTargetAChannel, actualComponents3);
+			textures.emplace_back(CT_ALPHA, textTargetAChannel, actualComponents3);
 		else if (actualComponents3 != 0)
 			RT_XENGINE_LOG_ERROR("Null texture with channel target ALPHA and actual components value != 0, cache miss danger!");
 
@@ -68,7 +65,7 @@ namespace Assets
 
 		switch (m_dynamicRange)
 		{
-			case DR_LOW:
+			case DynamicRange::LOW:
 			
 				ReserveTextureDataMemory(sizeof(byte) * 4 * m_width * m_height);
 				for (const auto& t : textures)
@@ -78,7 +75,7 @@ namespace Assets
 				}
 				break;
 
-			case DR_HIGH:
+			case DynamicRange::HIGH:
 				ReserveTextureDataMemory(sizeof(float) * 4 * m_width * m_height);
 				for (const auto& t : textures)
 				{
@@ -117,19 +114,19 @@ namespace Assets
 			switch (actualComponents)
 			{
 			case 1: // RRR1 -> target = R
-				packedData[i + targetChannel + TC_RED] = textData[j + TC_RED];
+				packedData[i + targetChannel] = textData[j];
 				break;
 				
 			case 2: // RRRG -> target = R | target + 1 = G
-				packedData[i + targetChannel + TC_RED] = textData[j + TC_RED];
-				packedData[i + targetChannel + TC_GREEN] = textData[j + TC_ALPHA];
+				packedData[i + targetChannel] = textData[j];
+				packedData[i + targetChannel + 1] = textData[j + 3];
 				break;
 
 			case 3: // RGB1 -> target = R | target + 1 = G |  target + 2 = B
 			case 4: // RGBA -> target = R | target + 1 = G |  target + 2 = B (lose the Alpha - note: otherwise no point in packing this texture)
-				packedData[i + targetChannel + TC_RED] = textData[j + TC_RED];
-				packedData[i + targetChannel + TC_GREEN] = textData[j + TC_GREEN];
-				packedData[i + targetChannel + TC_BLUE] = textData[j + TC_BLUE];
+				packedData[i + targetChannel] = textData[j];
+				packedData[i + targetChannel + 1] = textData[j + 1];
+				packedData[i + targetChannel + 2] = textData[j + 2];
 				break;
 
 			default:

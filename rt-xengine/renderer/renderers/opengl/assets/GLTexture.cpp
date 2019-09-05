@@ -1,63 +1,66 @@
 #include "pch.h"
-#include "GLTexture.h"
+
+#include "renderer/renderers/opengl/assets/GLTexture.h"
 
 namespace Renderer::OpenGL
 {
 
-	GLTexture::GLTexture(GLRendererBase* renderer)
-		: GLAsset(renderer),
-		  m_textureId(0)
+	GLTexture::GLTexture(GLAssetManager* glAssetManager, const std::string& name)
+		: GLAsset(glAssetManager, name), m_bindlessHandle(0),
+		  m_glId(0), m_texCoordIndex(0)
 	{
 	}
 
 	GLTexture::~GLTexture()
 	{
-		glDeleteTextures(1, &m_textureId);
+		glDeleteTextures(1, &m_glId);
 	}
 
-	bool GLTexture::Load(Assets::Texture* data, GLint wrapFlag, bool mipMapping)
+	bool GLTexture::Load(Assets::Texture* data, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR)
 	{
-		SetIdentificationFromAssociatedDiskAssetIdentification(data->GetLabel());
+		// TODO: where should i store this?>
+		m_texCoordIndex = 0;
 
-		glGenTextures(1, &m_textureId);
-		glBindTexture(GL_TEXTURE_2D, m_textureId);
+		glGenTextures(1, &m_glId);
+		glBindTexture(GL_TEXTURE_2D, m_glId);
 
-		if (mipMapping)
-		{
-			glGenerateMipmap(GL_TEXTURE_2D);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		}
-		else
-		{
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		}
+		// If you don't use one of the filter values that include mipmaps (like GL_LINEAR_MIPMAP_LINEAR), your mipmaps will not be used in any way.
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
 
 		GLenum type;
 		GLint internalFormat;
 		switch (data->GetType())
 		{
 
-		case Assets::DR_HIGH:
+		case DynamicRange::HIGH:
 			type = GL_FLOAT;
 			internalFormat = GL_RGBA32F;
 			break;
 
-		case Assets::DR_LOW:
+		case DynamicRange::LOW:
 		default:
 			type = GL_UNSIGNED_BYTE;
 			internalFormat = GL_RGBA;
 			break;
 		}
 
-		// format is RGBA (stb)
-		const GLenum format = GL_RGBA;
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, wrapR);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, data->GetWidth(), data->GetHeight(), 0, GL_RGBA, type, data->GetData());
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapFlag);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapFlag);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, data->GetWidth(), data->GetHeight(), 0, format, type, data->GetData());
 
+		if (minFilter == GL_NEAREST_MIPMAP_NEAREST ||
+			minFilter == GL_LINEAR_MIPMAP_NEAREST ||
+			minFilter == GL_NEAREST_MIPMAP_LINEAR ||
+			minFilter == GL_LINEAR_MIPMAP_LINEAR)
+			glGenerateMipmap(GL_TEXTURE_2D);
+
+		// TODO if bindless?
+		m_bindlessHandle = glGetTextureHandleARB(m_glId);
+		glMakeTextureHandleResidentARB(m_bindlessHandle);
+		
 		return true;
 	}
 }

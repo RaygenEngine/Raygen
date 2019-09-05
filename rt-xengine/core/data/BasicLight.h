@@ -1,5 +1,4 @@
-#ifndef BASICLIGHT_H
-#define BASICLIGHT_H
+#pragma once
 
 // Do not re-arrange this struct without permission! 
 #if defined(__cplusplus)
@@ -28,5 +27,3 @@ namespace Core
 #if defined(__cplusplus)
 }
 #endif
-
-#endif // BASICLIGHT_H

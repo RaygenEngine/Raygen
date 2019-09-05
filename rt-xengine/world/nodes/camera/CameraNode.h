@@ -1,5 +1,4 @@
-#ifndef CAMERANODE_H
-#define CAMERANODE_H
+#pragma once
 
 #include "world/nodes/Node.h"
 
@@ -19,9 +18,7 @@ namespace World
 		float m_near;
 		float m_far;
 
-		glm::mat4 m_viewMatrix;
 		glm::mat4 m_projectionMatrix;
-		glm::mat4 m_viewProjectionMatrix;
 
 	public:
 		CameraNode(Node* parent);
@@ -38,17 +35,16 @@ namespace World
 
 		std::string ToString(bool verbose, uint depth) const override;
 
-		const glm::mat4& GetViewMatrix() const { return m_viewMatrix; }
-		const glm::mat4& GetProjectionMatrix() const { return m_projectionMatrix; }
-		const glm::mat4& GetViewProjectionMatrix() const { return m_viewProjectionMatrix; }
-
+		glm::mat4 GetViewMatrix() const { return glm::lookAt(GetWorldTranslation(), GetLookAt(), GetUp()); }
+		glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
+		
 		void GetTracingVariables(glm::vec3& u, glm::vec3& v, glm::vec3& w);
 
-		void Update() override;
 		void WindowResize(int32 width, int32 height) override;
 
 		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
+
+		void ToString(std::ostream& os) const override { os << "node-type: CameraNode, name: " << m_name; }
 	};
 }
 
-#endif // CAMERANODE_H

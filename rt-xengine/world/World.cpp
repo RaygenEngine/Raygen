@@ -1,7 +1,8 @@
 #include "pch.h"
-#include "World.h"
 
+#include "world/World.h"
 #include "system/Engine.h"
+#include "world/NodeFactory.h"
 
 namespace World
 {
@@ -16,20 +17,20 @@ namespace World
 	}
 
 
-	World::World(System::Engine* engine)
+	World::World(System::Engine* engine, NodeFactory* factory)
 		: Node(engine),
 		m_background(0.f, 0.f, 0.4f),
 	    m_ambient(0.4f, 0.4f, 0.4f),
 		m_deltaTime(0),
 		m_worldTime(GetTimeMs()),
-		m_lastTime(GetTimeMs())
+		m_lastTime(GetTimeMs()),
+		m_nodeFactory(factory)
 	{
-		RT_XENGINE_LOG_INFO("Created World context, id: {}", EngineObject::GetObjectId());
 	}
 
 	World::~World()
 	{
-		RT_XENGINE_LOG_INFO("Destroyed World context, id: {}", EngineObject::GetObjectId());
+		// TODO check this
 		// clear children before destruction - otherwise they would be cleared at the base node class causing issues with world's node maps
 		m_children.clear();
 	}
@@ -88,7 +89,7 @@ namespace World
 	{
 		if (sceneXML)
 		{
-			RT_XENGINE_LOG_INFO("Loading World data from XML: \'{}\'", sceneXML->GetPath());
+			RT_XENGINE_LOG_INFO("Loading World data from XML: \'{}\'", sceneXML->GetFilePath());
 
 			auto* worldElement = sceneXML->GetRootElement();
 
@@ -105,7 +106,7 @@ namespace World
 
 				RT_XENGINE_LOG_INFO("World loaded succesfully, id: {}", this->GetObjectId());
 
-				RT_XENGINE_LOG_DEBUG("Scenegraph: \n\n{0}", this->PrintWorldTree(true));
+				RT_XENGINE_LOG_ERROR("Scenegraph: \n\n{0}", this->PrintWorldTree(true));
 
 				return true;
 			}
@@ -154,8 +155,8 @@ namespace World
 		m_lastTime = timestamp;
 
 		// Update after input and delta calculation
-		for (auto* nodes : m_nodes)
-			nodes->Update();
+		for (auto* node : m_nodes)
+			node->Update();
 
 		// Update dirty leaf node instances
 		for (auto* dirtyLeafNode : m_dirtyLeafNodes)
@@ -164,7 +165,7 @@ namespace World
 
 	void World::WindowResize(int32 width, int32 height)
 	{
-		for (auto* nodes : m_nodes)
-			nodes->WindowResize(width, height);
+		for (auto* node : m_nodes)
+			node->WindowResize(width, height);
 	}
 }

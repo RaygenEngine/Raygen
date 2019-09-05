@@ -1,17 +1,16 @@
 #include "pch.h"
-#include "XMLDoc.h"
+
+#include "assets/other/xml/XMLDoc.h"
 
 namespace Assets
 {
-	XMLDoc::XMLDoc(DiskAssetManager* context)
-		: DiskAsset(context)
+	XMLDoc::XMLDoc(EngineObject* pObject, const std::string& path)
+		: DiskAsset(pObject, path)
 	{
 	}
 
 	bool XMLDoc::Load(const std::string& path)
 	{
-		SetIdentificationFromPath(path);
-
 		return m_document.LoadFile(path.c_str()) == tinyxml2::XML_SUCCESS;
 	}
 

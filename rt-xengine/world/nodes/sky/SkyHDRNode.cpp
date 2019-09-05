@@ -1,7 +1,8 @@
 #include "pch.h"
 
-#include "SkyHDRNode.h"
-#include "world/World.h"
+#include "world/nodes/sky/SkyHDRNode.h"
+#include "assets/other/xml/ParsingAux.h"
+#include "assets/DiskAssetManager.h"
 
 namespace World
 {
@@ -16,7 +17,7 @@ namespace World
 
 		if (Assets::AttributeExists(xmlData, "hdr_texture"))
 		{
-			m_hdrTexture = GetDiskAssetManager()->LoadTextureAsset(xmlData->Attribute("hdr_texture"), Assets::DR_HIGH);
+			m_hdrTexture = GetDiskAssetManager()->LoadTextureAsset(xmlData->Attribute("hdr_texture"), DynamicRange::HIGH);
 
 			if (!m_hdrTexture)
 				return false;

@@ -1,16 +1,13 @@
-#ifndef WORLD_H
-#define WORLD_H
+#pragma once
 
-#include "nodes/Node.h"
-
+#include "world/nodes/Node.h"
 #include "nodes/geometry/TriangleModelGeometryNode.h"
 #include "nodes/geometry/TriangleModelInstancedGeometryNode.h"
 #include "nodes/TransformNode.h"
 #include "nodes/light/LightNode.h"
 #include "nodes/camera/CameraNode.h"
-#include "nodes/user/oculus/OculusUserNode.h"
-#include "nodes/user/freeform/FreeformUserNode.h"
-#include "input/Input.h"
+#include "nodes/user/UserNode.h"
+#include "assets/other/xml/XMLDoc.h"
 
 namespace World
 {
@@ -26,7 +23,7 @@ namespace World
 		mutable std::unordered_set<LightNode*> m_lights;
 		mutable std::unordered_set<CameraNode*> m_cameras;
 		mutable std::unordered_set<UserNode*> m_users;
-	
+
 		// load path hint
 		std::string m_loaderPathHint;
 		
@@ -42,9 +39,11 @@ namespace World
 		float m_worldTime;
 		float m_lastTime;
 
+		NodeFactory* m_nodeFactory;
+
 	public:
 
-		World(System::Engine* engine);
+		World(System::Engine* engine, NodeFactory* factory);
 		~World();
 
 		std::string PrintWorldTree(bool verbose = false);
@@ -99,7 +98,7 @@ namespace World
 			// general nodes
 			else if constexpr (std::is_base_of<Node, NodeType>::value) { return m_nodes; }
 
-			static_assert(true, "Incorrect types!");
+			static_assert("Incorrect types!");
 		}
 
 		void AddDirtyNode(Node* node);
@@ -120,11 +119,14 @@ namespace World
 		std::string GetAssetLoadPathHint() const { return m_loaderPathHint; }
 
 		glm::vec3 GetBackgroundColor() const { return m_background; }
+		void SetBackgroundColor(const glm::vec3& color) { m_background = color; }
+
 		glm::vec3 GetAmbientColor() const { return m_ambient; }
+		void SetAmbientColor(const glm::vec3& color) { m_ambient = color; }
 
 		// SetIdentificationFromAssociatedDiskAssetIdentification node to world and as child, and return observer (maybe required for special inter-node handling)
-		template <typename ChildType, typename ParentType>
-		ChildType* LoadNode(ParentType* parent, const tinyxml2::XMLElement* xmlData)
+		template <typename ChildType>
+		ChildType* LoadNode(Node* parent, const tinyxml2::XMLElement* xmlData)
 		{
 			std::shared_ptr<ChildType> node = std::shared_ptr<ChildType>(new ChildType(parent), [&](ChildType* assetPtr)
 			{
@@ -156,9 +158,12 @@ namespace World
 
 		bool LoadAndPrepareWorldFromXML(Assets::XMLDoc* sceneXML);
 
+		NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
+
 	protected:
 		std::string ToString(bool verbose, uint depth) const override;
+
+	public:
+		void ToString(std::ostream& os) const { os << "object-type: World, name: " << m_name << ", id: " << GetObjectId(); }
 	};
 }
-
-#endif // WORLD_H

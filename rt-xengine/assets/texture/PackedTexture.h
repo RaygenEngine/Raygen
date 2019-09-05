@@ -1,8 +1,6 @@
-#ifndef PACKEDTEXTURE_H
-#define PACKEDTEXTURE_H
+#pragma once
 
-#include "assets/DiskAsset.h"
-#include "Texture.h"
+#include "assets/texture/Texture.h"
 
 namespace Assets
 {
@@ -15,16 +13,14 @@ namespace Assets
 		bool LoadChannels(uint32 targetChannel, Texture* text, uint32 actualComponents);
 
 	public:
-		PackedTexture(DiskAssetManager* context);
+		PackedTexture(EngineObject* pObject, const std::string& path);
 		~PackedTexture() = default;
 
 		// pack at most 4 textures into a single one, copying channels based on actual texture components,
 		// if less than 4 textures used, pass nullptr and actual components value 0, if not enough space for packing, packed texture will not be loaded
 		bool Load(Texture* textTargetRChannel, uint32 actualComponents0,
-			      Texture* textTargetGChannel, uint32 actualComponents1,
-			      Texture* textTargetBChannel, uint32 actualComponents2,
-			      Texture* textTargetAChannel, uint32 actualComponents3, DYNAMIC_RANGE dr);
+			Texture* textTargetGChannel, uint32 actualComponents1,
+			Texture* textTargetBChannel, uint32 actualComponents2,
+			Texture* textTargetAChannel, uint32 actualComponents3, DynamicRange dr);
 	};
 }
-
-#endif // PACKEDTEXTURE_H

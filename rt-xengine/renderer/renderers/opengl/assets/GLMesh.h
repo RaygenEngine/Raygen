@@ -1,40 +1,49 @@
-#ifndef GLMESH_H
-#define GLMESH_H
+#pragma once
 
 #include "renderer/renderers/opengl/GLAsset.h"
 #include "renderer/renderers/opengl/assets/GLMaterial.h"
+#include "assets/model/Mesh.h"
+
+#include "GLAD/glad.h"
 
 namespace Renderer::OpenGL
 {
-
-	struct GLMeshGeometryGroup
-	{
-		uint32 indicesOffset;
-		uint32 indicesCount;
-		std::shared_ptr<GLMaterial> material;
-	};
-
 	class GLMesh : public GLAsset
 	{
-		GLuint m_vbo;
+		GLuint m_vao;
 		GLuint m_ebo;
 
-		std::vector<GLMeshGeometryGroup> m_groups;
+		// TODO: may use single in the future
+		GLuint m_positionsVBO;
+		GLuint m_normalsVBO;
+		GLuint m_tangentsVBO;
+		GLuint m_bitangentsVBO;
+		GLuint m_textCoords0VBO;
+		GLuint m_textCoords1VBO;
+		
+		GLMaterial m_material;
 
+		GLint m_geometryMode;
+
+		uint32 m_count;
+		
 	public:
-		GLMesh(GLRendererBase* renderer);
+		GLMesh(GLAssetManager* glAssetManager, const std::string& name);
 		~GLMesh();
+		GLMesh(GLMesh&&) = default;
+		GLMesh(const GLMesh&) = default;
+		GLMesh& operator=(GLMesh&&) = default;
+		GLMesh& operator=(const GLMesh&) = default;
+		
+		bool Load(Assets::GeometryGroup* data, GLenum usage);
 
-		bool Load(Assets::XMesh* data, GLenum usage);
+		const GLMaterial& GetMaterial() const { return m_material; }
 
-		const std::vector<GLMeshGeometryGroup>& GetGeometryGroups() const { return m_groups; }
+		GLuint GetVAO() const { return m_vao; }
 
-		GLuint GetVBO() const { return m_vbo; };
-		GLuint GetEBO() const { return m_ebo; };
-
-		void ToString(std::ostream& os) const override { os << "asset-type: GLMesh, name: " << m_associatedDescription; }
+		uint32 GetCount() const { return m_count; }
+		 
+		void ToString(std::ostream& os) const override { os << "asset-type: GLMesh, name: " << m_name; }
 	};
 
 }
-
-#endif // GLMESH_H

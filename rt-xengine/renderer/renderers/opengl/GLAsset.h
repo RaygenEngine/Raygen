@@ -1,24 +1,22 @@
-#ifndef GLASSET_H
-#define GLASSET_H
+#pragma once
 
-#include "GLRendererBase.h"
-#include "renderer/GPUAsset.h"
-
+#include "assets/Asset.h"
 
 namespace Renderer::OpenGL
 {
-
-	class GLAsset : public GPUAsset
+	class GLAssetManager;
+	
+	class GLAsset : public Assets::Asset
 	{
-		GLRendererBase* m_renderer;
-
+		GLAssetManager* m_glAssetManager;
+		
 	public:
-		GLAsset(GLRendererBase* renderer);
+		GLAsset(GLAssetManager* glAssetManager, const std::string& name);
 		virtual ~GLAsset() = default;
 
-	    GLRendererBase* GetRenderer() const { return m_renderer; }
+		GLAssetManager* GetGLAssetManager() const { return m_glAssetManager; }
+
+		void ToString(std::ostream& os) const override { os << "asset-type: GLAsset, name: " << m_name; }
 	};
 
 }
-
-#endif // GLASSET_H
