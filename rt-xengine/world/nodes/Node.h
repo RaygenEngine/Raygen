@@ -1,8 +1,11 @@
 #pragma once
 
 #include "tinyxml2/tinyxml2.h"
+#include "system/Object.h"
 
-class Node
+class World;
+
+class Node : public Object
 {
 	// local
 	glm::vec3 m_localTranslation;
@@ -22,7 +25,8 @@ class Node
 protected:
 	std::string m_name;
 	std::string m_type;
-
+	
+	World* m_world;
 	Node* m_parent;
 
 	// for now ownership is given to parent nodes (later on, world should be manager) 
@@ -32,6 +36,8 @@ public:
 	// Nodes have pObject = parentNode->GetWorld() = World
 	Node(Node* pNode);
 	virtual ~Node() = default;
+
+	World* GetWorld() const { return m_world; }
 
 	glm::vec3 GetLocalTranslation() const { return m_localTranslation; }
 	glm::quat GetLocalOrientation() const { return m_localOrientation; }
@@ -194,7 +200,11 @@ protected:
 
 public:
 
-	virtual void ToString(std::ostream& os) const { os << "object-type: Node, id: " << GetObjectId(); }
+	virtual void ToString(std::ostream& os) const { os << "object-type: Node, id: " << GetUID(); }
 };
 
-
+template<>
+Engine* GetEngine<Node*>(Node* objectContext) 
+{
+	return objectContext->GetWorld()->GetEngine();
+}

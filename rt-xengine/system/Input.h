@@ -2,24 +2,27 @@
 
 #include <unordered_set>
 
-struct Thumb
-{
-	float magnitude;
-	glm::vec2 direction;
-};
-
-struct AnalogState
-{
-	Thumb thumbL;
-	Thumb thumbR;
-
-	// normalized analog value
-	float triggerL;
-	float triggerR;
-};
 
 class Input
 {
+public:
+	struct Thumb
+	{
+		float magnitude;
+		glm::vec2 direction;
+	};
+
+	struct AnalogState
+	{
+		Thumb thumbL;
+		Thumb thumbR;
+
+		// normalized analog value
+		float triggerL;
+		float triggerR;
+	};
+
+private:
 	std::unordered_set<XVirtualKey> m_keysPressed;
 	std::unordered_set<XVirtualKey> m_keysRepeat;
 	std::unordered_set<XVirtualKey> m_keysReleased;

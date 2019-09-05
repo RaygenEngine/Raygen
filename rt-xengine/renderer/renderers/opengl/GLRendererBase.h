@@ -23,7 +23,7 @@ namespace Renderer::OpenGL
 
 		GLAssetManager* GetGLAssetManager() { return &m_glAssetManager; }
 
-		void ToString(std::ostream& os) const override { os << "renderer-type: GLRendererBase, id: " << GetObjectId(); }
+		void ToString(std::ostream& os) const override { os << "renderer-type: GLRendererBase, id: " << GetUID(); }
 	};
 
 }

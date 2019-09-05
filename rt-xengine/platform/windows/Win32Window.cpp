@@ -271,7 +271,7 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 
 	if(!window) return DefWindowProc(hWnd, message, wParam, lParam);
 
-	auto& input = window->m_engineRef->GetInput();
+	auto& input = window->GetEngine(window)->GetInput();
 
 	switch (message)
 	{
@@ -377,8 +377,8 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 		window->m_width = LOWORD(lParam);
 		window->m_height = HIWORD(lParam);
 
-		window->m_engineRef->GetWorld()->WindowResize(LOWORD(lParam), HIWORD(lParam));
-		window->m_engineRef->GetRenderer()->WindowResize(LOWORD(lParam), HIWORD(lParam));
+		window->GetEngine(window)->GetWorld()->WindowResize(LOWORD(lParam), HIWORD(lParam));
+		window->GetEngine(window)->GetRenderer()->WindowResize(LOWORD(lParam), HIWORD(lParam));
 		break;
 
 	default:

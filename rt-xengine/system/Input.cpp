@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "input/Input.h"
+#include "system/Input.h"
 
 Input::Input(): m_doubleClicked(false), m_cursorDragged(false), m_cursorPosition(),
 	            m_cursorRelativePosition(), m_wheelDelta(0)

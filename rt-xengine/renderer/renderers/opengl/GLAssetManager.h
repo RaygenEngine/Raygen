@@ -29,7 +29,7 @@ namespace Renderer::OpenGL
 		//std::shared_ptr<GLInstancedModel> RequestGLInstancedModel(World::TriangleModelInstancedGeometryNode* nodeInstancer);
 		//
 
-		void ToString(std::ostream& os) const override { os << "object-type: GLAssetManager, name: " << GetObjectId(); }
+		void ToString(std::ostream& os) const override { os << "object-type: GLAssetManager, name: " << GetUID(); }
 	};
 
 }

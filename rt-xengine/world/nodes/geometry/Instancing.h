@@ -2,101 +2,98 @@
 
 #include "assets/other/xml/ParsingAux.h"
 
-namespace World
+struct Instance
 {
-	struct Instance
+	glm::vec3 localTranslation;
+	glm::quat localOrientation;
+	glm::vec3 localScale;
+	glm::mat4 localMatrix;
+
+	glm::vec3 worldTranslation;
+	glm::quat worldOrientation;
+	glm::vec3 worldScale;
+	glm::mat4 worldMatrix;
+
+	Instance()
+		: localTranslation(0.f, 0.f, 0.f),
+			localOrientation(0.f, 0.f, 0.f, 1.f),
+			localScale(1.f, 1.f, 1.f),
+			localMatrix(glm::mat4(1)),
+			worldTranslation(0.f, 0.f, 0.f),
+			worldOrientation(0.f, 0.f, 0.f, 1.f),
+			worldScale(1.f, 1.f, 1.f),
+			worldMatrix(glm::mat4(1))
 	{
-		glm::vec3 localTranslation;
-		glm::quat localOrientation;
-		glm::vec3 localScale;
-		glm::mat4 localMatrix;
+	}
 
-		glm::vec3 worldTranslation;
-		glm::quat worldOrientation;
-		glm::vec3 worldScale;
-		glm::mat4 worldMatrix;
-
-		Instance()
-			: localTranslation(0.f, 0.f, 0.f),
-			  localOrientation(0.f, 0.f, 0.f, 1.f),
-			  localScale(1.f, 1.f, 1.f),
-			  localMatrix(glm::mat4(1)),
-			  worldTranslation(0.f, 0.f, 0.f),
-			  worldOrientation(0.f, 0.f, 0.f, 1.f),
-			  worldScale(1.f, 1.f, 1.f),
-			  worldMatrix(glm::mat4(1))
-		{
-		}
-
-		void LoadFromXML(const tinyxml2::XMLElement* xmlData)
-		{
-			Assets::ReadFloatsAttribute(xmlData, "translation", localTranslation);
-			glm::vec3 eulerPYR{0.f, 0.f, 0.f};
-			Assets::ReadFloatsAttribute(xmlData, "euler_pyr", eulerPYR);
-			localOrientation = glm::quat(glm::radians(eulerPYR));
-			Assets::ReadFloatsAttribute(xmlData, "scale", localScale);
-
-			// calculate local matrix after loading
-			localMatrix = Core::GetTransformMat(localTranslation, localOrientation, localScale);
-		}
-
-		void Update(const glm::mat4& parentMat)
-		{
-			worldMatrix = parentMat * localMatrix;
-
-			// TODO: optimize
-			glm::vec3 skew; glm::vec4 persp;
-			glm::decompose(worldMatrix, worldScale, worldOrientation, worldTranslation, skew, persp);
-		}
-	};
-
-	// TODO dirty instances on geom moves
-	class InstanceGroup
+	void LoadFromXML(const tinyxml2::XMLElement* xmlData)
 	{
-		std::unordered_map<std::string, Instance> m_instances;
+		Assets::ReadFloatsAttribute(xmlData, "translation", localTranslation);
+		glm::vec3 eulerPYR{0.f, 0.f, 0.f};
+		Assets::ReadFloatsAttribute(xmlData, "euler_pyr", eulerPYR);
+		localOrientation = glm::quat(glm::radians(eulerPYR));
+		Assets::ReadFloatsAttribute(xmlData, "scale", localScale);
 
-	public:
-		InstanceGroup() = default;
-		~InstanceGroup() = default;
+		// calculate local matrix after loading
+		localMatrix = Core::GetTransformMat(localTranslation, localOrientation, localScale);
+	}
 
-		uint32 GetCount() const { return static_cast<uint32>(m_instances.size()); }
+	void Update(const glm::mat4& parentMat)
+	{
+		worldMatrix = parentMat * localMatrix;
 
-		// TODO optimize this
-		std::vector<glm::mat4> GetMatricesBlock() const
-		{
-			std::vector<glm::mat4> mats;
-			for (auto& ins : m_instances)
-				mats.push_back(ins.second.worldMatrix);
+		// TODO: optimize
+		glm::vec3 skew; glm::vec4 persp;
+		glm::decompose(worldMatrix, worldScale, worldOrientation, worldTranslation, skew, persp);
+	}
+};
 
-			return mats;
-		}
+// TODO dirty instances on geom moves
+class InstanceGroup
+{
+	std::unordered_map<std::string, Instance> m_instances;
 
-		void AddInstanceFromXML(const tinyxml2::XMLElement* xmlData)
-		{
-			std::string name;
-			Assets::ReadFillEntityName(xmlData, name);
+public:
+	InstanceGroup() = default;
+	~InstanceGroup() = default;
 
-			Instance inst{};
+	uint32 GetCount() const { return static_cast<uint32>(m_instances.size()); }
 
-			inst.LoadFromXML(xmlData);
+	// TODO optimize this
+	std::vector<glm::mat4> GetMatricesBlock() const
+	{
+		std::vector<glm::mat4> mats;
+		for (auto& ins : m_instances)
+			mats.push_back(ins.second.worldMatrix);
 
-			m_instances[name] = inst;
-		}
+		return mats;
+	}
 
-		void UpdateInstances(const glm::mat4& parentMat)
-		{
-			for (auto& ins : m_instances)
-				ins.second.Update(parentMat);
-		}
+	void AddInstanceFromXML(const tinyxml2::XMLElement* xmlData)
+	{
+		std::string name;
+		Assets::ReadFillEntityName(xmlData, name);
 
-		// iterators
-		auto begin() { return m_instances.begin(); }
-		auto end() { return m_instances.end(); }
+		Instance inst{};
 
-		auto begin() const { return m_instances.begin(); }
-		auto end() const { return m_instances.end(); }
+		inst.LoadFromXML(xmlData);
 
-		auto cbegin() const { return m_instances.begin(); }
-		auto cend() const { return m_instances.end(); }
-	};
-}
+		m_instances[name] = inst;
+	}
+
+	void UpdateInstances(const glm::mat4& parentMat)
+	{
+		for (auto& ins : m_instances)
+			ins.second.Update(parentMat);
+	}
+
+	// iterators
+	auto begin() { return m_instances.begin(); }
+	auto end() { return m_instances.end(); }
+
+	auto begin() const { return m_instances.begin(); }
+	auto end() const { return m_instances.end(); }
+
+	auto cbegin() const { return m_instances.begin(); }
+	auto cend() const { return m_instances.end(); }
+};

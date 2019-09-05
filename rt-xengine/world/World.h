@@ -49,7 +49,7 @@ class World : public EngineComponent, public Node
 
 public:
 
-	World(System::Engine* engine, NodeFactory* factory);
+	World(Engine* engine, NodeFactory* factory);
 	~World();
 
 	std::string PrintWorldTree(bool verbose = false);
@@ -159,8 +159,8 @@ public:
 
 	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 
-	void Update() override;
-	void WindowResize(int32 width, int32 height) override;
+	void Update();
+	//void WindowResize(int32 width, int32 height) override;
 
 	bool LoadAndPrepareWorldFromXML(Assets::XMLDoc* sceneXML);
 
@@ -170,6 +170,6 @@ protected:
 	std::string ToString(bool verbose, uint depth) const override;
 
 public:
-	void ToString(std::ostream& os) const { os << "object-type: World, name: " << m_name << ", id: " << GetObjectId(); }
+	void ToString(std::ostream& os) const { os << "object-type: World, name: " << m_name << ", id: " << GetUID(); }
 };
 

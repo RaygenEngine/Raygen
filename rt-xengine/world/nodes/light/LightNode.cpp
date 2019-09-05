@@ -3,25 +3,23 @@
 #include "world/nodes/light/LightNode.h"
 #include "assets/other/xml/ParsingAux.h"
 
-namespace World
+
+LightNode::LightNode(Node* parent)
+	: Node(parent),
+		m_color()
 {
-	LightNode::LightNode(Node* parent)
-		: Node(parent),
-		  m_color()
-	{
-	}
+}
 
-	std::string LightNode::ToString(bool verbose, uint depth) const
-	{
-		return std::string("    ") * depth + "|--light " + Node::ToString(verbose, depth);
-	}
+std::string LightNode::ToString(bool verbose, uint depth) const
+{
+	return std::string("    ") * depth + "|--light " + Node::ToString(verbose, depth);
+}
 
-	bool LightNode::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
-	{
-		Node::LoadAttributesFromXML(xmlData);
+bool LightNode::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
+{
+	Node::LoadAttributesFromXML(xmlData);
 
-		Assets::ReadFloatsAttribute(xmlData, "color", m_color);
+	Assets::ReadFloatsAttribute(xmlData, "color", m_color);
 
-		return true;
-	}
+	return true;
 }

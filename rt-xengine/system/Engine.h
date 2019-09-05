@@ -72,5 +72,3 @@ public:
 		return static_cast<RendererRegistrationIndex>(m_rendererRegistrations.size() - 1);
 	}
 };
-
-Engine::WindowType a;

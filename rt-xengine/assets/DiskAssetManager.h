@@ -41,6 +41,6 @@ namespace Assets
 
 		void UnloadAssets();
 
-		void ToString(std::ostream& os) const override { os << "object-type: DiskAssetManager, id: " << GetObjectId(); }
+		void ToString(std::ostream& os) const override { os << "object-type: DiskAssetManager, id: " << GetUID(); }
 	};
 }
