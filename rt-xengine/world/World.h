@@ -17,11 +17,9 @@ class NodeFactory;
 class RootNode : public Node
 {
 public:
-	RootNode(World* world)
+	RootNode()
 		: Node(nullptr)
-	{
-		m_world = world;
-	}
+	{}
 
 	glm::vec3 m_background;
 	glm::vec3 m_ambient;

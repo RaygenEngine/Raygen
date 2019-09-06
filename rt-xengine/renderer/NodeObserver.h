@@ -1,44 +1,35 @@
 #pragma once
 
 #include "world/nodes/Node.h"
+#include "system/Engine.h"
 
-class NodeObserver
+template<typename RendererT>
+class RendererObject : public Object
 {
-	Node* m_nodeBase;
-
-public:
-
-	NodeObserver(Node* node)
-		: m_nodeBase(node) {}
-	virtual ~NodeObserver() = default;
-
-	virtual void UpdateFromNode() {};
-
-	Node* GetNodeBase() const { return m_nodeBase; }
+/*	static_assert(!std::is_base_of_v<RendererT, Renderer>,
+				  "Renderer object should refer to a valid renderer type");*/
+	using Type = RendererT;
 };
 
 // saves the time of writing a base observer for each new and existing node type
 template <typename RendererType, typename NodeType>
-class TypedNodeObserver : public NodeObserver
+class NodeObserver : public RendererObject<RendererType>
 {
 public:
 	using NT = NodeType;
 
 protected:
 	NodeType* m_node;
-	RendererType* m_renderer;
 
 public:
-	TypedNodeObserver(RendererType* renderer, NodeType* node)
-		: NodeObserver(node),
-		  m_node(node), 
-	      m_renderer(renderer)
-	{
-	}
+	NodeObserver(NodeType* node)
+		  : m_node(node)
+	{}
 
-	virtual ~TypedNodeObserver() = default;
+	virtual void UpdateFromNode() {};
+
+	virtual ~NodeObserver() = default;
 
 	const NodeType* GetNode() const { return m_node; }
-	RendererType* GetRenderer() const { return m_renderer; }
 };
 

@@ -3,6 +3,7 @@
 #include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/GLUtil.h"
 #include "renderer/renderers/opengl/GLRendererBase.h"
+#include "system/Engine.h"
 
 namespace OpenGL
 {
@@ -26,7 +27,7 @@ namespace OpenGL
 			auto text = sampler.texture;
 
 			if (text)
-				texture = GetGLAssetManager()->RequestGLTexture(text.get(), GetGLFiltering(sampler.minFilter),
+				texture = GetGLAssetManager(this)->RequestGLTexture(text.get(), GetGLFiltering(sampler.minFilter),
 					GetGLFiltering(sampler.magFilter), GetGLWrapping(sampler.wrapS), GetGLWrapping(sampler.wrapT), GetGLWrapping(sampler.wrapR));
 		};
 

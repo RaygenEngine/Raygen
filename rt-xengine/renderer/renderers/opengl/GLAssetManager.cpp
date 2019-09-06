@@ -1,6 +1,10 @@
 #include "pch.h"
 
 #include "renderer/renderers/opengl/GLAssetManager.h"
+#include "renderer/renderers/opengl/assets/GLCubeMap.h"
+#include "renderer/renderers/opengl/assets/GLModel.h"
+#include "renderer/renderers/opengl/assets/GLShader.h"
+#include "renderer/renderers/opengl/assets/GLTexture.h"
 
 namespace OpenGL
 {

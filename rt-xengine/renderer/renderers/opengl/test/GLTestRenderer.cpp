@@ -10,6 +10,11 @@
 #include "renderer/renderers/opengl/GLUtil.h"
 #include "system/Engine.h"
 
+#include "renderer/renderers/opengl/assets/GLCubeMap.h"
+#include "renderer/renderers/opengl/assets/GLModel.h"
+#include "renderer/renderers/opengl/assets/GLShader.h"
+#include "renderer/renderers/opengl/assets/GLTexture.h"
+
 namespace OpenGL
 {
 	bool GLTestRenderer::InitScene(int32 width, int32 height)

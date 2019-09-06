@@ -3,6 +3,8 @@
 #include "renderer/NodeObserver.h"
 
 #include <unordered_set>
+#include <type_traits>
+
 
 // For sub-renderer registration
 #define MAKE_METADATA(Class) \
@@ -18,8 +20,8 @@
 
 class Renderer
 {
-	std::unordered_set<NodeObserver*> m_observers;
-	std::unordered_set<NodeObserver*> m_dirtyObservers;
+//	std::unordered_set<NodeObserver*> m_observers;
+//	std::unordered_set<NodeObserver*> m_dirtyObservers;
 
 protected:
 	template <typename RendererType, typename ObserverType>
@@ -27,17 +29,17 @@ protected:
 	{
 		std::shared_ptr<ObserverType> observer = std::shared_ptr<ObserverType>(new ObserverType(renderer, typedNode), [&](ObserverType* assetPtr)
 		{
-			m_observers.erase(assetPtr);
-			m_dirtyObservers.erase(assetPtr);
+			//m_observers.erase(assetPtr);
+			//m_dirtyObservers.erase(assetPtr);
 			delete assetPtr;
 		});
 
-		m_observers.insert(observer.get());
+		//m_observers.insert(observer.get());
 
 		return observer;
 	}
 
-	bool IsObserverDirty(NodeObserver* obs) const { return m_dirtyObservers.find(obs) != m_dirtyObservers.end(); }
+	//bool IsObserverDirty(NodeObserver* obs) const { return m_dirtyObservers.find(obs) != m_dirtyObservers.end(); }
 
 public:
 	virtual ~Renderer() {}

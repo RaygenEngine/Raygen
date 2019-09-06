@@ -90,7 +90,7 @@ bool World::LoadAndPrepareWorldFromXML(XMLDoc* sceneXML)
 
 		auto* worldElement = sceneXML->GetRootElement();
 
-		m_root = std::make_unique<RootNode>(this);
+		m_root = std::make_unique<RootNode>();
 	
 		if (m_root->LoadFromXML(worldElement))
 		{

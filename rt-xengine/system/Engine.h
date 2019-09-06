@@ -1,5 +1,4 @@
 #pragma once
-
 class Win32Window;
 using WindowType = Win32Window;
 
@@ -9,6 +8,7 @@ class Window;
 class World;
 class Input;
 
+// TODO:
 class NodeFactory;
 
 class Engine
@@ -30,7 +30,7 @@ public:
 	}
 
 	[[nodiscard]] 
-	static Win32Window* GetWindow()
+	static Win32Window* GetMainWindow()
 	{
 		return Get().m_window;
 	}
@@ -41,11 +41,6 @@ public:
 		return Get().m_assetManager;
 	}
 
-	[[nodiscard]] 
-	static Renderer* GetRenderer()
-	{
-		return Get().m_renderer;
-	}
 	
 	[[nodiscard]] 
 	static Input* GetInput()
@@ -53,6 +48,21 @@ public:
 		return Get().m_input;
 	}
 
+	template<typename AsRenderer = Renderer>
+	[[nodiscard]]
+	static AsRenderer* GetRenderer()
+	{
+		return dynamic_cast<AsRenderer*>(Get().m_renderer);
+	}
+
+	/* TODO:
+	template<typename RendererObject, typename RenderT = typename RendererObject::Type>
+	[[nodiscard]]
+	static RenderT* GetRenderer(RendererObject* context)
+	{
+		return dynamic_cast<RenderT*>(:GetRenderer());
+	}
+	*/
 
 public:
 	Engine(Engine const&) = delete;

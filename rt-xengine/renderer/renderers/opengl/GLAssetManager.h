@@ -1,13 +1,15 @@
 #pragma once
 
-#include "assets/GLCubeMap.h"
-#include "assets/GLTexture.h"
-#include "assets/GLShader.h"
-#include "assets/GLModel.h"
 #include "assets/AssetManager.h"
+#include "glad/glad.h"
 
 namespace OpenGL
 {
+	class GLCubeMap;
+	class GLTexture;
+	class GLShader; 
+	class GLModel;
+		
 	class GLAssetManager
 	{
 		CachingAux::MultiKeyAssetCache<GLCubeMap, CubeMap*, GLint, bool> m_glCubeMaps;

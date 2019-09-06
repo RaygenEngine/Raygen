@@ -9,8 +9,7 @@
 #include "world/NodeFactory.h"
 
 Node::Node(Node* pNode)
-	: Object(),
-		m_localTranslation(0.f, 0.f, 0.f),
+		: m_localTranslation(0.f, 0.f, 0.f),
 		m_localOrientation(1.f, 0.f, 0.f, 0.f),
 		// note w, x, y, z
 		m_localScale(1.f, 1.f, 1.f),
@@ -24,9 +23,6 @@ Node::Node(Node* pNode)
 	    // update local on first iter
 	    m_parent(pNode)
 {
-	if (pNode) {
-		m_world = pNode->GetWorld();
-	}
 }
 
 void Node::SetLocalTranslation(const glm::vec3& lt)
@@ -93,7 +89,7 @@ void Node::MarkDirty()
 
 	m_dirty = true;
 
-	GetWorld()->AddDirtyNode(this);
+	Engine::GetWorld()->AddDirtyNode(this);
 	for (auto& child : m_children)
 		child->MarkDirty();
 }
@@ -105,7 +101,7 @@ bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 
 	LOG_INFO("Loading {0} named {1}", m_type, m_name);
 
-	NodeFactory* factory = GetWorld()->GetNodeFactory();
+	NodeFactory* factory = Engine::GetWorld()->GetNodeFactory();
 
 	const auto status = LoadAttributesFromXML(xmlData) && factory->LoadChildren(xmlData, this);
 		
@@ -131,7 +127,7 @@ bool Node::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
 
 void Node::Move(const glm::vec3& direction, float magnitude)
 {
-	m_localTranslation += direction * magnitude * GetWorld()->GetDeltaTime();
+	m_localTranslation += direction * magnitude * Engine::GetWorld()->GetDeltaTime();
 
 	m_updateLocalMatrix = true;
 	MarkDirty();
@@ -139,7 +135,7 @@ void Node::Move(const glm::vec3& direction, float magnitude)
 
 void Node::MoveUp(float magnitude)
 {
-	m_localTranslation += GetUp() * magnitude * GetWorld()->GetDeltaTime();
+	m_localTranslation += GetUp() * magnitude * Engine::GetWorld()->GetDeltaTime();
 
 	m_updateLocalMatrix = true;
 	MarkDirty();
@@ -147,7 +143,7 @@ void Node::MoveUp(float magnitude)
 
 void Node::MoveDown(float magnitude)
 {
-	m_localTranslation += -GetUp() * magnitude * GetWorld()->GetDeltaTime();
+	m_localTranslation += -GetUp() * magnitude * Engine::GetWorld()->GetDeltaTime();
 
 	m_updateLocalMatrix = true;
 	MarkDirty();
@@ -155,7 +151,7 @@ void Node::MoveDown(float magnitude)
 
 void Node::MoveRight(float magnitude)
 {
-	m_localTranslation += GetRight() * magnitude * GetWorld()->GetDeltaTime();
+	m_localTranslation += GetRight() * magnitude * Engine::GetWorld()->GetDeltaTime();
 
 	m_updateLocalMatrix = true;
 	MarkDirty();
@@ -163,7 +159,7 @@ void Node::MoveRight(float magnitude)
 
 void Node::MoveLeft(float magnitude)
 {
-	m_localTranslation += -GetRight() * magnitude * GetWorld()->GetDeltaTime();
+	m_localTranslation += -GetRight() * magnitude * Engine::GetWorld()->GetDeltaTime();
 
 	m_updateLocalMatrix = true;
 	MarkDirty();
@@ -171,7 +167,7 @@ void Node::MoveLeft(float magnitude)
 
 void Node::MoveFront(float magnitude)
 {
-	m_localTranslation += GetFront() * magnitude * GetWorld()->GetDeltaTime();
+	m_localTranslation += GetFront() * magnitude * Engine::GetWorld()->GetDeltaTime();
 
 	m_updateLocalMatrix = true;
 	MarkDirty();
@@ -179,7 +175,7 @@ void Node::MoveFront(float magnitude)
 
 void Node::MoveBack(float magnitude)
 {
-	m_localTranslation += -GetFront() * magnitude * GetWorld()->GetDeltaTime();
+	m_localTranslation += -GetFront() * magnitude * Engine::GetWorld()->GetDeltaTime();
 
 	m_updateLocalMatrix = true;
 	MarkDirty();

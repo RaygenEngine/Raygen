@@ -8,8 +8,6 @@ class World;
 
 class Node : public Object
 {
-public:
-	AssetManager* GetAssetManager() const;
 protected:
 	// local
 	glm::vec3 m_localTranslation;
@@ -30,7 +28,6 @@ protected:
 	std::string m_name;
 	std::string m_type;
 	
-	World* m_world;
 	Node* m_parent;
 
 	// for now ownership is given to parent nodes (later on, world should be manager) 
@@ -40,8 +37,6 @@ public:
 	// Nodes have pObject = parentNode->GetWorld() = World
 	Node(Node* pNode);
 	virtual ~Node() = default;
-
-	World* GetWorld() const { return m_world; }
 
 	glm::vec3 GetLocalTranslation() const { return m_localTranslation; }
 	glm::quat GetLocalOrientation() const { return m_localOrientation; }

@@ -6,7 +6,7 @@
 
 namespace OpenGL
 {
-	struct GLTestGeometry : TypedNodeObserver<GLTestRenderer, TriangleModelGeometryNode>
+	struct GLTestGeometry : public NodeObserver<GLTestRenderer, TriangleModelGeometryNode>
 	{
 		std::shared_ptr<GLModel> glModel;
 

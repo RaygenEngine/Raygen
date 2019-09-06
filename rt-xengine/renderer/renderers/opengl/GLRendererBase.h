@@ -2,7 +2,7 @@
 
 #include "renderer/Renderer.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
-
+#include "system/Engine.h"
 
 namespace OpenGL
 {
@@ -13,7 +13,7 @@ namespace OpenGL
 		HGLRC m_hglrc;
 
 		GLAssetManager m_glAssetManager;
-		
+
 	public:
 		GLRendererBase();
 		~GLRendererBase();
@@ -21,7 +21,16 @@ namespace OpenGL
 		bool InitRendering(HWND assochWnd, HINSTANCE instance) override;
 		void SwapBuffers() override;
 
-		GLAssetManager* GetGLAssetManager() { return &m_glAssetManager; }
+		GLAssetManager* GetGLAssetManager() 
+		{
+			return &m_glAssetManager;
+		}
 	};
 
+	template<typename GlRenderer>
+	GLAssetManager* GetGLAssetManager(RendererObject<GlRenderer>* context)
+	{
+		return Engine::GetRenderer<GLRendererBase>()->GetGLAssetManager();
+		//return &Engine::GetRenderer<RendererObject<GLRendererBase>, GLRendererBase>(context)->m_glAssetManager;
+	}
 }
