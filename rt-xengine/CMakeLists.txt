@@ -20,12 +20,7 @@ set(SOURCE_FILES
 	assets/texture/Texture.cpp
 	assets/texture/CubeMap.cpp
 	
-	assets/model/Material.cpp
-	assets/model/Mesh.cpp
 	assets/model/Model.cpp
-	assets/model/GeometryGroup.cpp
-	assets/model/Sampler.cpp
-	assets/model/Buffer.cpp
 	
 	core/logger/Logger.cpp
 	
@@ -36,8 +31,6 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/GLAssetManager.cpp
 	renderer/renderers/opengl/GLRendererBase.cpp
 	renderer/renderers/opengl/assets/GLInstancedModel.cpp
-	renderer/renderers/opengl/assets/GLMaterial.cpp
-	renderer/renderers/opengl/assets/GLMesh.cpp
 	renderer/renderers/opengl/assets/GLModel.cpp
 	renderer/renderers/opengl/assets/GLShader.cpp
 	renderer/renderers/opengl/assets/GLTexture.cpp
@@ -96,13 +89,8 @@ set(HEADER_FILES
 	assets/texture/Texture.h
 	assets/texture/CubeMap.h
 	
-	assets/model/Material.h
-	assets/model/Mesh.h
-	assets/model/Sampler.h
 	assets/model/Model.h
 	assets/model/GltfAux.h
-	assets/model/GeometryGroup.h
-	assets/model/Buffer.h
 
 	core/auxiliary/FileAux.h
 	core/auxiliary/GraphicsMathAux.h
@@ -135,8 +123,6 @@ set(HEADER_FILES
 	renderer/renderers/opengl/GLRendererBase.h
 	renderer/renderers/opengl/GLUtil.h
 	renderer/renderers/opengl/assets/GLInstancedModel.h
-	renderer/renderers/opengl/assets/GLMaterial.h
-	renderer/renderers/opengl/assets/GLMesh.h
 	renderer/renderers/opengl/assets/GLModel.h
 	renderer/renderers/opengl/assets/GLShader.h
 	renderer/renderers/opengl/assets/GLTexture.h
