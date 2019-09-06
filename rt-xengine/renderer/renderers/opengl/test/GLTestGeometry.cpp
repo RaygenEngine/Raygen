@@ -2,7 +2,7 @@
 
 #include "renderer/renderers/opengl/test/GLTestGeometry.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
 	GLTestGeometry::GLTestGeometry(GLTestRenderer* renderer, TriangleModelGeometryNode* node)
 		: TypedNodeObserver<GLTestRenderer, TriangleModelGeometryNode>(renderer, node)

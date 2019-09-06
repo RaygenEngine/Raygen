@@ -101,7 +101,7 @@ void AppBase::RegisterRenderers(Engine* engine)
 {
 	// NOTE:
 	// Default behavior for an app is to start the FIRST renderer registered here.
-	engine->RegisterRenderer<Renderer::OpenGL::GLTestRenderer>();
+	engine->RegisterRenderer<OpenGL::GLTestRenderer>();
 }
 
 std::unique_ptr<Engine> AppBase::CreateEngine()
