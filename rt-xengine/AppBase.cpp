@@ -31,20 +31,19 @@ int32 AppBase::Main(int32 argc, char* argv[])
 {
 	LOG_FATAL("Running app: {}", m_name);
 
-	std::unique_ptr<Engine> engine = CreateEngine();
-	std::unique_ptr<Window> window = CreateAppWindow(engine.get());
+	std::unique_ptr<Window> window = CreateAppWindow();
 	
-	RegisterRenderers(engine.get());
+	RegisterRenderers();
 	
 	// Init engine file system.
-	if (!engine->InitDirectories(argv[0], m_assetPath))
+	if (!Engine::Get().InitDirectories(argv[0], m_assetPath))
 	{
 		LOG_FATAL("Failed to create Engine!");
 		return -1;
 	}
 	
 	std::unique_ptr<NodeFactory> factory = MakeNodeFactory();
-	if (!engine->CreateWorldFromFile(m_initialScene, factory.get()))
+	if (!Engine::Get().CreateWorldFromFile(m_initialScene, factory.get()))
 	{
 		LOG_FATAL("Failed to create World!");
 		return -1;
@@ -71,48 +70,44 @@ int32 AppBase::Main(int32 argc, char* argv[])
 		window->RestrictMouseMovement();
 	}
 
-	MainLoop(engine.get(), window.get());
+	MainLoop(window.get());
 
 	window->ReleaseMouseMovement();
 	return 0;
 }
 
-void AppBase::MainLoop(Engine* engine, Window* window)
+void AppBase::MainLoop(Window* window)
 {
 	while (!window->IsClosed())
 	{
 		// clear input soft state (pressed keys, etc.)
-		engine->GetInput().ClearSoftState();
+		Engine::GetInput()->ClearSoftState();
 
 		// Let our window handle any events.
 		window->HandleEvents(m_handleControllers);
 
 		// update world 
-		engine->GetWorld()->Update();
+		Engine::GetWorld()->Update();
 		// update renderer (also checks world updates, eg. camera/ entity moved, light color changed)
-		engine->GetRenderer()->Update();
+		
+		Engine::GetRenderer()->Update();
 		// render
-		engine->GetRenderer()->Render();
-		engine->GetRenderer()->SwapBuffers();
+		Engine::GetRenderer()->Render();
+		Engine::GetRenderer()->SwapBuffers();
 	}
 }
 
-void AppBase::RegisterRenderers(Engine* engine) 
+void AppBase::RegisterRenderers() 
 {
 	// NOTE:
 	// Default behavior for an app is to start the FIRST renderer registered here.
-	engine->RegisterRenderer<OpenGL::GLTestRenderer>();
+	Engine::Get().RegisterRenderer<OpenGL::GLTestRenderer>();
 }
 
-std::unique_ptr<Engine> AppBase::CreateEngine()
-{
-	return std::make_unique<Engine>();
-}
-
-std::unique_ptr<Window> AppBase::CreateAppWindow(Engine* engineRef)
+std::unique_ptr<Window> AppBase::CreateAppWindow()
 {
 	return std::move(Win32Window::CreateWin32Window(
-		engineRef, m_windowTitle, 150, 150, m_windowWidth, m_windowHeight
+		m_windowTitle, 150, 150, m_windowWidth, m_windowHeight
 	));
 }
 

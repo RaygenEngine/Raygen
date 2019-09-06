@@ -1,22 +1,22 @@
 #pragma once
 
 #include "renderer/NodeObserver.h"
-#include "system/EngineComponent.h"
-#include <unordered_set> // REFACT:
+
+#include <unordered_set>
+
 // For sub-renderer registration
-// TODO: Add static assert for missing constructor with engine as parameter.
 #define MAKE_METADATA(Class) \
 	public:\
-	    static Renderer* MetaConstruct(Engine* context) \
+	    static Renderer* MetaConstruct() \
 		{ \
-	         return new Class(context); \
+	         return new Class(); \
 	    }\
 	    static std::string MetaName() \
 		{ \
 	        return std::string(#Class); \
 	    } \
 
-class Renderer : public EngineComponent
+class Renderer
 {
 	std::unordered_set<NodeObserver*> m_observers;
 	std::unordered_set<NodeObserver*> m_dirtyObservers;
@@ -39,13 +39,8 @@ protected:
 
 	bool IsObserverDirty(NodeObserver* obs) const { return m_dirtyObservers.find(obs) != m_dirtyObservers.end(); }
 
-	// TODO:
-	AssetManager* GetAssetManager() const;
 public:
-	Renderer::Renderer(Engine* engine)
-		: EngineComponent(engine) {}
-
-	virtual Renderer::~Renderer() {}
+	virtual ~Renderer() {}
 
 	// Windows based init rendering (implement in "context"-base renderers)
 	virtual bool InitRendering(HWND assochWnd, HINSTANCE instance);

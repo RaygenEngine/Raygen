@@ -32,14 +32,11 @@ public:
 	virtual void PreMainInit(int32 argc, char* argv[]);
 	virtual int32 Main(int32 argc, char* argv[]);
 
-	virtual void MainLoop(Engine* engine, Window* window);
+	virtual void MainLoop(Window* window);
 	
-	virtual void RegisterRenderers(Engine* engine);
+	virtual void RegisterRenderers();
 
-	virtual std::unique_ptr<Engine> CreateEngine();
-
-	virtual std::unique_ptr<Window> CreateAppWindow(Engine* engine);
+	virtual std::unique_ptr<Window> CreateAppWindow();
 
 	virtual std::unique_ptr<NodeFactory> MakeNodeFactory();
-
 };

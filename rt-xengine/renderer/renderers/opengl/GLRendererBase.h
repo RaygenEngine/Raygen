@@ -15,7 +15,7 @@ namespace OpenGL
 		GLAssetManager m_glAssetManager;
 		
 	public:
-		GLRendererBase(Engine* engine);
+		GLRendererBase();
 		~GLRendererBase();
 
 		bool InitRendering(HWND assochWnd, HINSTANCE instance) override;

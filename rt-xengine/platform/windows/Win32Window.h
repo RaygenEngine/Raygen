@@ -12,7 +12,7 @@ class Win32Window : public Window
 public:
 
 	// Attach input before creating window
-	Win32Window(Engine* engine);
+	Win32Window();
 	~Win32Window();
 
 protected:
@@ -39,9 +39,8 @@ protected:
 		LONG style);
 
 public:
-
+	// Returns a pointer you should delete manually later.
 	static std::unique_ptr<Win32Window> CreateWin32Window(
-		Engine* engine,
 		const std::string& title = std::string("Win32 Window"),
 		int32 xpos = 150,
 		int32 ypox = 150,

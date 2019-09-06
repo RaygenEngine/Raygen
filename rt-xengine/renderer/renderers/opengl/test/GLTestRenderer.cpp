@@ -14,9 +14,9 @@ namespace OpenGL
 {
 	bool GLTestRenderer::InitScene(int32 width, int32 height)
 	{
-		auto vertexSimpleShaderSource = GetAssetManager()->LoadStringFileAsset("test/test.vert");
+		auto vertexSimpleShaderSource = Engine::GetAssetManager()->LoadStringFileAsset("test/test.vert");
 		//auto vertexInstancedShaderSource = GetDiskAssetManager()->LoadStringFileAsset("test/test_instanced.vert");
-		auto fragmentShaderSource = GetAssetManager()->LoadStringFileAsset("test/test.frag");
+		auto fragmentShaderSource = Engine::GetAssetManager()->LoadStringFileAsset("test/test.frag");
 
 		m_nonInstancedShader = GetGLAssetManager()->RequestGLShader(vertexSimpleShaderSource.get(), fragmentShaderSource.get());
 		m_nonInstancedShader->SetUniformLocation("mvp");
@@ -39,7 +39,7 @@ namespace OpenGL
 		m_nonInstancedShader->SetUniformLocation("normalSampler");
 		m_nonInstancedShader->SetUniformLocation("occlusionSampler");
 	
-		auto* user = GetWorld()->GetAvailableNodeSpecificSubType<FreeformUserNode>();
+		auto* user = Engine::GetWorld()->GetAvailableNodeSpecificSubType<FreeformUserNode>();
 
 		RT_XENGINE_ASSERT_RETURN_FALSE(user, "Missing freeform user node!");
 
@@ -49,7 +49,7 @@ namespace OpenGL
 		//for (auto* geometryNode : GetWorld()->GetNodeMap<World::TriangleModelInstancedGeometryNode>())
 		//	m_instancedGeometries.emplace_back(RequestGLInstancedModel(geometryNode));
 
-		for (auto* geometryNode : GetWorld()->GetNodeMap<TriangleModelGeometryNode>())
+		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<TriangleModelGeometryNode>())
 			m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, GLTestGeometry>(this, geometryNode));
 
 		//auto* sky = GetWorld()->GetAvailableNodeSpecificSubType<World::SkyHDRNode>();
@@ -71,7 +71,7 @@ namespace OpenGL
 
 	void GLTestRenderer::Render()
 	{
-		auto bgcl = GetWorld()->GetRoot()->GetBackgroundColor();
+		auto bgcl = Engine::GetWorld()->GetRoot()->GetBackgroundColor();
 
 		glm::mat4 vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
 
@@ -140,12 +140,12 @@ namespace OpenGL
 
 	void GLTestRenderer::Update()
 	{
-		if (GetEngine()->GetInput().IsKeyPressed(XVirtualKey::K1))
+		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K1))
 		{
 			m_previewMode = m_previewMode - 1 < 0 ? PT_COUNT - 1 : m_previewMode - 1;
 			LOG_INFO("Preview Mode set to: {}({})", SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
 		}
-		else if (GetEngine()->GetInput().IsKeyPressed(XVirtualKey::K2))
+		else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K2))
 		{
 			++m_previewMode %= PT_COUNT;
 			LOG_INFO("Preview Mode set to: {}({})", SurfacePreviewTargetModeString(m_previewMode), m_previewMode);

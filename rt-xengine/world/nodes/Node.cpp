@@ -8,11 +8,6 @@
 #include "sky/SkyHDRNode.h"
 #include "world/NodeFactory.h"
 
-AssetManager* Node::GetAssetManager() const
-{
-	return GetWorld()->GetAssetManager();
-}
-
 Node::Node(Node* pNode)
 	: Object(),
 		m_localTranslation(0.f, 0.f, 0.f),

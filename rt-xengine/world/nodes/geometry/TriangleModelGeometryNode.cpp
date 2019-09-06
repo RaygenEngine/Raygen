@@ -4,6 +4,8 @@
 #include "world/World.h"
 #include "assets/AssetManager.h"
 #include "assets/other/xml/ParsingAux.h"
+#include "assets/AssetManager.h"
+#include "system/Engine.h"
 
 TriangleModelGeometryNode::TriangleModelGeometryNode(Node* parent)
 	: Node(parent)
@@ -27,7 +29,8 @@ bool TriangleModelGeometryNode::LoadAttributesFromXML(const tinyxml2::XMLElement
 	if(!type.empty() && Core::CaseInsensitiveCompare(type, "dynamic"))
 		modelGeomType = GeometryUsage::DYNAMIC;
 		
-	m_model = GetAssetManager()->LoadModelAsset(xmlData->Attribute("file"), modelGeomType);
+	m_model = Engine::GetAssetManager()->LoadModelAsset(xmlData->Attribute("file"), modelGeomType);
 
 	return static_cast<bool>(m_model.get());
 }
+

@@ -11,7 +11,7 @@
 #include "assets/CachingAux.h"
 
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
-class AssetManager : public EngineComponent
+class AssetManager
 {
 	PathSystem m_pathSystem;
 
@@ -23,9 +23,6 @@ class AssetManager : public EngineComponent
 	CachingAux::MultiKeyAssetCache<PackedTexture, Texture*, uint32, Texture*, uint32, Texture*, uint32, Texture*, uint32, DynamicRange> m_packedTextures;
 
 public:
-	AssetManager(Engine* engine)
-		: EngineComponent(engine) {}
-
 	std::shared_ptr<StringFile> LoadStringFileAsset(const std::string& stringFilePath, const std::string& pathHint = "");
 	std::shared_ptr<XMLDoc> LoadXMLDocAsset(const std::string& xmlDocPath, const std::string& pathHint = "");
 	std::shared_ptr<Model> LoadModelAsset(const std::string& modelPath, GeometryUsage usage = GeometryUsage::STATIC, const std::string& pathHint = "");

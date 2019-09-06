@@ -33,10 +33,13 @@ public:
 	void SetAmbientColor(const glm::vec3& color) { m_ambient = color; }
 
 	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
-
+	
+	~RootNode() {
+		m_children.clear();
+	}
 };
 
-class World : public EngineComponent
+class World
 {
 	mutable std::unordered_set<Node*> m_nodes;
 	mutable std::unordered_set<TriangleModelGeometryNode*> m_triangleModelGeometries;
@@ -62,10 +65,9 @@ class World : public EngineComponent
 
 	std::unique_ptr<RootNode> m_root;
 public:
-	Input& GetInput();
 	[[nodiscard]] RootNode* GetRoot() const { return m_root.get();  }
 
-	World(Engine* engine, NodeFactory* factory);
+	World(NodeFactory* factory);
 	~World();
 
 
@@ -162,8 +164,6 @@ public:
 		// return observer
 		return node.get();
 	}
-
-	[[nodiscard]] AssetManager* GetAssetManager() const;
 
 	void Update();
 	//void WindowResize(int32 width, int32 height) override;

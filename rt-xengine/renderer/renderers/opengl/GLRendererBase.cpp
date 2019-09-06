@@ -5,9 +5,8 @@
 namespace OpenGL
 {
 
-	GLRendererBase::GLRendererBase(Engine* engine)
-		: Renderer(engine),
-		  m_assochWnd(nullptr),
+	GLRendererBase::GLRendererBase()
+		: m_assochWnd(nullptr),
 		  m_hdc(nullptr),
 		  m_hglrc(nullptr)
 	{

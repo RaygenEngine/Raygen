@@ -19,28 +19,14 @@ bool RootNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 {
 	Node::LoadAttributesFromXML(xmlData);
 
-	std::string assetPath{};
-	ParsingAux::ReadStringAttribute(xmlData, "asset_path", assetPath);
-	// TODO:
-	//this->SetAssetLoadPathHint("scenes\\" + assetPath);
-
 	ParsingAux::ReadFloatsAttribute(xmlData, "background", m_background);
 	ParsingAux::ReadFloatsAttribute(xmlData, "ambient", m_ambient);
 
 	return true;
 }
 
-
-
-
-Input& World::GetInput()
-{
-	return m_engine->GetInput();
-}
-
-World::World(Engine* engine, NodeFactory* factory)
-	: EngineComponent(engine),
-	  m_deltaTime(0),
+World::World(NodeFactory* factory)
+	: m_deltaTime(0),
 	  m_worldTime(GetTimeMs()),
 	  m_lastTime(GetTimeMs()),
 	  m_nodeFactory(factory)
@@ -134,10 +120,6 @@ bool World::LoadAndPrepareWorldFromXML(XMLDoc* sceneXML)
 	return false;
 }
 
-AssetManager* World::GetAssetManager() const
-{
-	return GetEngine()->GetAssetManager();
-}
 
 void World::Update()
 {

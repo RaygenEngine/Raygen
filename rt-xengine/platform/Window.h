@@ -2,7 +2,7 @@
 #include "system/EngineComponent.h"
 
 // Base class for a platform independant window
-class Window : public EngineComponent
+class Window
 {
 protected:
 	bool m_focused;
@@ -14,9 +14,8 @@ protected:
 public:
 
 	// Attach input before creating window
-	Window(Engine* engine)
-		: EngineComponent(engine),
-		  m_focused(false),
+	Window()
+		: m_focused(false),
 		  m_closed(false), 
 		  m_width(0), 
 		  m_height(0) {}

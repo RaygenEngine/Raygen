@@ -4,11 +4,11 @@
 #include "platform/windows/TranslateWin32VirtualKeys.h"
 #include "world/World.h"
 #include "system/Engine.h"
+#include "renderer/Renderer.h"
 #include <windowsx.h>
 
-Win32Window::Win32Window(Engine* engineRef)
-	: Window(engineRef),
-		m_wcex(),
+Win32Window::Win32Window()
+		: m_wcex(),
 		m_hWnd(nullptr)
 {
 }
@@ -85,7 +85,6 @@ bool Win32Window::Create(
 }
 
 std::unique_ptr<Win32Window> Win32Window::CreateWin32Window(
-	Engine* engineRef,
 	const std::string& title,
 	int32 xpos,
 	int32 ypox,
@@ -100,8 +99,7 @@ std::unique_ptr<Win32Window> Win32Window::CreateWin32Window(
 {
 	HINSTANCE hInstance = GetModuleHandle(nullptr);
 
-	// attach engine to window
-	auto window = std::make_unique<Win32Window>(engineRef);
+	auto window = std::make_unique<Win32Window>();
 		
 	if (!window->Register(style, name, backgroundBrushColor,
 							LoadCursor(NULL, cursorName), windowHandleFunction, hInstance))
@@ -172,7 +170,7 @@ void Win32Window::GenerateXInputControllerMessages()
 
 
 	// send changes directly to engine input, don't post messages its slow
-	auto& input = GetEngine()->GetInput();
+	auto& input = *Engine::GetInput();
 
 	// first active controller index
 	static DWORD controllerIndex = FindAvailableController();
@@ -256,10 +254,10 @@ void Win32Window::SetTitle(const std::string& newTitle)
 
 bool Win32Window::StartRenderer(uint32 index) 
 {
-	auto eng = GetEngine(this);
-	return eng->SwitchRenderer(index) &&
-		eng->GetRenderer()->InitRendering(GetHWND(), GetHInstance()) &&
-		eng->GetRenderer()->InitScene(GetWidth(), GetHeight());
+	auto& eng = Engine::Get();
+	return eng.SwitchRenderer(index) &&
+		Engine::GetRenderer()->InitRendering(GetHWND(), GetHInstance()) &&
+		Engine::GetRenderer()->InitScene(GetWidth(), GetHeight());
 }
 
 LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -270,7 +268,7 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 
 	if(!window) return DefWindowProc(hWnd, message, wParam, lParam);
 
-	auto& input = window->GetEngine(window)->GetInput();
+	auto& input = *Engine::GetInput();
 
 	switch (message)
 	{

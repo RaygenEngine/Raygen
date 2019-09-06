@@ -25,8 +25,9 @@ namespace OpenGL
 		int32 m_previewMode;
 
 	public:
-		GLTestRenderer(Engine* engine)
-			: GLRendererBase(engine), m_camera(nullptr), m_previewMode(0) {}
+		GLTestRenderer()
+			: m_camera(nullptr), m_previewMode(0) {}
+
 		~GLTestRenderer() = default;
 
 		bool InitScene(int32 width, int32 height) override;

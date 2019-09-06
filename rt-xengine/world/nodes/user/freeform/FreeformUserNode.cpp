@@ -3,6 +3,8 @@
 #include "world/nodes/user/freeform/FreeformUserNode.h"
 #include "world/World.h"
 #include "assets/other/xml/ParsingAux.h"
+#include "system/Engine.h"
+#include "system/Input.h"
 
 
 FreeformUserNode::FreeformUserNode(Node* parent)
@@ -39,7 +41,7 @@ bool FreeformUserNode::PostChildrenLoaded()
 // TODO: speed and turning speed adjustments
 void FreeformUserNode::Update(float deltaTime)
 {
-	auto& input = GetWorld()->GetInput();
+	auto& input = *Engine::GetInput();
 
 	auto speed = m_movementSpeed; // 0,01
 

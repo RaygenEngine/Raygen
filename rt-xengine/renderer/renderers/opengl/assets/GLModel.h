@@ -60,7 +60,7 @@ namespace OpenGL
 
 			GLint geometryMode = 0u;
 
-			uint32 count = 0u;
+			uint64 count = 0u;
 		};
 
 	private:
