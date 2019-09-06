@@ -126,11 +126,11 @@ bool World::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
 	Node::LoadAttributesFromXML(xmlData);
 
 	std::string assetPath{};
-	ReadStringAttribute(xmlData, "asset_path", assetPath);
+	ParsingAux::ReadStringAttribute(xmlData, "asset_path", assetPath);
 	this->SetAssetLoadPathHint("scenes\\" + assetPath);
 
-	ReadFloatsAttribute(xmlData, "background", m_background);
-	ReadFloatsAttribute(xmlData, "ambient", m_ambient);
+	ParsingAux::ReadFloatsAttribute(xmlData, "background", m_background);
+	ParsingAux::ReadFloatsAttribute(xmlData, "ambient", m_ambient);
 
 	return true;
 }
