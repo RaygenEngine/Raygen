@@ -5,7 +5,7 @@
 
 #include "GLAD/glad.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
 	class GLTexture : public GLAsset
 	{
@@ -19,7 +19,7 @@ namespace Renderer::OpenGL
 
 		int32 m_texCoordIndex;
 		
-		bool Load(Assets::Texture* data, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR);
+		bool Load(Texture* data, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR);
 
 		GLuint GetGLId() const { return m_glId; }
 		GLuint64 GetGLBindlessHandle() const { return m_bindlessHandle; }

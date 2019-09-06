@@ -5,7 +5,7 @@
 
 #include "GLAD/glad.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
 
 	class GLShader : public GLAsset
@@ -19,7 +19,7 @@ namespace Renderer::OpenGL
 		GLShader(GLAssetManager* glAssetManager, const std::string& name);
 		~GLShader();
 
-		bool Load(Assets::StringFile* vertexSource, Assets::StringFile* fragmentSource);
+		bool Load(StringFile* vertexSource, StringFile* fragmentSource);
 
 		GLuint GetGLHandle() const { return m_glId; }
 

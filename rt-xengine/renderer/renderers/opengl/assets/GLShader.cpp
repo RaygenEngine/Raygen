@@ -2,7 +2,7 @@
 
 #include "renderer/renderers/opengl/assets/GLShader.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
 	GLShader::GLShader(GLAssetManager* glAssetManager, const std::string& name)
 		: GLAsset(glAssetManager, name),
@@ -15,7 +15,7 @@ namespace Renderer::OpenGL
 		glDeleteProgram(m_glId);
 	}
 
-	bool GLShader::Load(Assets::StringFile* vertexSource, Assets::StringFile* fragmentSource)
+	bool GLShader::Load(StringFile* vertexSource, StringFile* fragmentSource)
 	{
 		GLint Result = GL_FALSE;
 		int32 infoLogLength;
@@ -23,7 +23,7 @@ namespace Renderer::OpenGL
 		const GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 
 		// Compile Vertex Shader
-		LOG_TRACE("Compiling shader : {}", vertexSource->GetName());
+		LOG_TRACE("Compiling shader : {}", vertexSource->GetFileName());
 		char const* VertexSourcePointer = vertexSource->GetFileData().c_str();
 		glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
 		glCompileShader(VertexShaderID); // Check Vertex Shader
@@ -34,14 +34,14 @@ namespace Renderer::OpenGL
 		{
 			std::vector<char> VertexShaderErrorMessage(infoLogLength + 1);
 			glGetShaderInfoLog(VertexShaderID, infoLogLength, NULL, &VertexShaderErrorMessage[0]);
-			LOG_WARN("{}:\n{}", vertexSource->GetName(), &VertexShaderErrorMessage[0]);
+			LOG_WARN("{}:\n{}", vertexSource->GetFileName(), &VertexShaderErrorMessage[0]);
 
 			return false;
 		}
 		const GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
 		// Compile Fragment Shader
-		LOG_TRACE("Compiling shader : {}", fragmentSource->GetName());
+		LOG_TRACE("Compiling shader : {}", fragmentSource->GetFileName());
 		char const* FragmentSourcePointer = fragmentSource->GetFileData().c_str();
 		glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
 		glCompileShader(FragmentShaderID); // Check Fragment Shader
@@ -52,7 +52,7 @@ namespace Renderer::OpenGL
 		{
 			std::vector<char> FragmentShaderErrorMessage(infoLogLength + 1);
 			glGetShaderInfoLog(FragmentShaderID, infoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-			LOG_WARN("{}:\n{}", fragmentSource->GetName(), &FragmentShaderErrorMessage[0]);
+			LOG_WARN("{}:\n{}", fragmentSource->GetFileName(), &FragmentShaderErrorMessage[0]);
 
 			return false;
 		}
