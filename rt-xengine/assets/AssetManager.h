@@ -15,12 +15,12 @@ class AssetManager : public EngineComponent
 {
 	PathSystem m_pathSystem;
 
-	MultiKeyAssetCache<StringFile, std::string> m_stringFiles;
-	MultiKeyAssetCache<XMLDoc, std::string> m_xmlDocs;
-	MultiKeyAssetCache<Model, std::string, GeometryUsage> m_models;
-	MultiKeyAssetCache<Texture, std::string, DynamicRange, bool> m_textures;
-	MultiKeyAssetCache<CubeMap, std::string, DynamicRange, bool> m_cubeMaps;
-	MultiKeyAssetCache<PackedTexture, Texture*, uint32, Texture*, uint32, Texture*, uint32, Texture*, uint32, DynamicRange> m_packedTextures;
+	CachingAux::MultiKeyAssetCache<StringFile, std::string> m_stringFiles;
+	CachingAux::MultiKeyAssetCache<XMLDoc, std::string> m_xmlDocs;
+	CachingAux::MultiKeyAssetCache<Model, std::string, GeometryUsage> m_models;
+	CachingAux::MultiKeyAssetCache<Texture, std::string, DynamicRange, bool> m_textures;
+	CachingAux::MultiKeyAssetCache<CubeMap, std::string, DynamicRange, bool> m_cubeMaps;
+	CachingAux::MultiKeyAssetCache<PackedTexture, Texture*, uint32, Texture*, uint32, Texture*, uint32, Texture*, uint32, DynamicRange> m_packedTextures;
 
 public:
 	AssetManager(Engine* engine)

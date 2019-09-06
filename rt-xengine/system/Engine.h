@@ -6,10 +6,7 @@
 #include "world/World.h"
 #include "world/NodeFactory.h"
 class Renderer;
-namespace Assets
-{
-	class AssetManager;
-}
+class AssetManager;
 
 using RendererRegistrationIndex = uint32;
 
@@ -32,7 +29,7 @@ private:
 	// TODO: implement non deletable engineComponent on stack
 	
 
-	std::unique_ptr<Assets::AssetManager> m_diskAssetManager;
+	std::unique_ptr<AssetManager> m_assetManager;
 	std::unique_ptr<World> m_world;
 	std::unique_ptr<Renderer> m_renderer;
 	WindowType m_window;
@@ -45,7 +42,7 @@ public:
 		
 	bool InitDirectories(const std::string& applicationPath, const std::string& dataDirectoryName);
 
-	Assets::AssetManager* GetDiskAssetManager() const { return m_diskAssetManager.get(); }
+	AssetManager* GetDiskAssetManager() const { return m_assetManager.get(); }
 
 	Renderer* GetRenderer() const { return m_renderer.get(); }
 	World* GetWorld() const { return m_world.get(); }

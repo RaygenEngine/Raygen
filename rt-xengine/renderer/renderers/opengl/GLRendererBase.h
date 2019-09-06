@@ -4,7 +4,7 @@
 #include "renderer/renderers/opengl/GLAssetManager.h"
 
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
 	class GLRendererBase : public Renderer
 	{
@@ -15,15 +15,13 @@ namespace Renderer::OpenGL
 		GLAssetManager m_glAssetManager;
 		
 	public:
-		GLRendererBase(System::Engine* context);
+		GLRendererBase(Engine* engine);
 		~GLRendererBase();
 
 		bool InitRendering(HWND assochWnd, HINSTANCE instance) override;
 		void SwapBuffers() override;
 
 		GLAssetManager* GetGLAssetManager() { return &m_glAssetManager; }
-
-		void ToString(std::ostream& os) const override { os << "renderer-type: GLRendererBase, id: " << GetUID(); }
 	};
 
 }

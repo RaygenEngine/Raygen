@@ -16,20 +16,20 @@ inline TriangleModelInstancedGeometryNode* LoadInstancingMatrixMetaNode(Node* pa
 	xmlElement->QueryUnsignedAttribute("matrix_height", &matHeight);
 
 	auto interval = 5.f;
-	Assets::ReadFloatsAttribute<float>(xmlElement, "interval", interval);
+	ParsingAux::ReadFloatsAttribute<float>(xmlElement, "interval", interval);
 
 	glm::vec3 translation{ 0.f, 0.f, 0.f };
-	Assets::ReadFloatsAttribute(xmlElement, "translation", translation);
+	ParsingAux::ReadFloatsAttribute(xmlElement, "translation", translation);
 	glm::vec3 eulerPYR{ 0.f, 0.f, 0.f };
-	Assets::ReadFloatsAttribute(xmlElement, "euler_pyr", eulerPYR);
+	ParsingAux::ReadFloatsAttribute(xmlElement, "euler_pyr", eulerPYR);
 	auto orientation = glm::quat(glm::radians(eulerPYR));
 	glm::vec3 scale{ 1.f, 1.f, 1.f };
-	Assets::ReadFloatsAttribute(xmlElement, "scale", scale);
+	ParsingAux::ReadFloatsAttribute(xmlElement, "scale", scale);
 
 	std::string name = {};
-	Assets::ReadStringAttribute(xmlElement, "name", name);
+	ParsingAux::ReadStringAttribute(xmlElement, "name", name);
 	std::string file = {};
-	Assets::ReadStringAttribute(xmlElement, "file", file);
+	ParsingAux::ReadStringAttribute(xmlElement, "file", file);
 
 	// create trimesh_geometry_instanced node
 	tinyxml2::XMLElement* triGeomInstancedNode = const_cast<tinyxml2::XMLElement*>(xmlElement)->GetDocument()->NewElement("trimesh_geometry_instanced");

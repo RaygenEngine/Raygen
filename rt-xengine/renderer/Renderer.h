@@ -3,6 +3,8 @@
 #include "renderer/NodeObserver.h"
 #include "system/EngineComponent.h"
 
+#include <unordered_set>
+
 // For sub-renderer registration
 // TODO: Add static assert for missing constructor with engine as parameter.
 #define MAKE_METADATA(Class) \

@@ -6,22 +6,17 @@
 #include "world/nodes/user/freeform/FreeformUserNode.h"
 #include "world/nodes/geometry/TriangleModelGeometryNode.h"
 #include "world/nodes/sky/SkyHDRNode.h"
-#include "assets/DiskAssetManager.h"
+#include "assets/AssetManager.h"
 #include "renderer/renderers/opengl/GLUtil.h"
 
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
-	GLTestRenderer::GLTestRenderer(System::Engine* context)
-		: GLRendererBase(context), m_camera(nullptr), m_previewMode(0)
-	{
-	}
-
 	bool GLTestRenderer::InitScene(int32 width, int32 height)
 	{
-		auto vertexSimpleShaderSource = GetDiskAssetManager()->LoadStringFileAsset("test/test.vert");
+		auto vertexSimpleShaderSource = GetAssetManager()->LoadStringFileAsset("test/test.vert");
 		//auto vertexInstancedShaderSource = GetDiskAssetManager()->LoadStringFileAsset("test/test_instanced.vert");
-		auto fragmentShaderSource = GetDiskAssetManager()->LoadStringFileAsset("test/test.frag");
+		auto fragmentShaderSource = GetAssetManager()->LoadStringFileAsset("test/test.frag");
 
 		m_nonInstancedShader = GetGLAssetManager()->RequestGLShader(vertexSimpleShaderSource.get(), fragmentShaderSource.get());
 		m_nonInstancedShader->SetUniformLocation("mvp");
@@ -44,7 +39,7 @@ namespace Renderer::OpenGL
 		m_nonInstancedShader->SetUniformLocation("normalSampler");
 		m_nonInstancedShader->SetUniformLocation("occlusionSampler");
 	
-		auto* user = GetWorld()->GetAvailableNodeSpecificSubType<World::FreeformUserNode>();
+		auto* user = GetWorld()->GetAvailableNodeSpecificSubType<FreeformUserNode>();
 
 		RT_XENGINE_ASSERT_RETURN_FALSE(user, "Missing freeform user node!");
 
@@ -54,7 +49,7 @@ namespace Renderer::OpenGL
 		//for (auto* geometryNode : GetWorld()->GetNodeMap<World::TriangleModelInstancedGeometryNode>())
 		//	m_instancedGeometries.emplace_back(RequestGLInstancedModel(geometryNode));
 
-		for (auto* geometryNode : GetWorld()->GetNodeMap<World::TriangleModelGeometryNode>())
+		for (auto* geometryNode : GetWorld()->GetNodeMap<TriangleModelGeometryNode>())
 			m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, GLTestGeometry>(this, geometryNode));
 
 		//auto* sky = GetWorld()->GetAvailableNodeSpecificSubType<World::SkyHDRNode>();
@@ -104,32 +99,32 @@ namespace Renderer::OpenGL
 
 			for (auto& glMesh : geometry->glModel->GetGLMeshes())
 			{
-				glBindVertexArray(glMesh->GetVAO());
+				glBindVertexArray(glMesh.vao);
 
-				auto& glMaterial = glMesh->GetMaterial();
+				auto& glMaterial = glMesh.material;
 				
-				glUniform4fv(m_nonInstancedShader->GetUniformLocation("baseColorFactor"), 1, &glMaterial.GetBaseColorFactor()[0]);
-				glUniform3fv(m_nonInstancedShader->GetUniformLocation("emissiveFactor"), 1, &glMaterial.GetEmissiveFactor()[0]);
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("metallicFactor"), glMaterial.GetMetallicFactor());
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("roughnessFactor"), glMaterial.GetRoughnessFactor());
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("normalScale"), glMaterial.GetNormalScale());
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("occlusionStrength"), glMaterial.GetOcclusionStrength());
-				glUniform1i(m_nonInstancedShader->GetUniformLocation("alphaMode"), glMaterial.GetAlphaMode());
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("alphaCutoff"), glMaterial.GetAlphaCutoff());
-				glUniform1i(m_nonInstancedShader->GetUniformLocation("doubleSided"), glMaterial.IsDoubleSided());
+				glUniform4fv(m_nonInstancedShader->GetUniformLocation("baseColorFactor"), 1, &glMaterial.baseColorFactor[0]);
+				glUniform3fv(m_nonInstancedShader->GetUniformLocation("emissiveFactor"), 1, &glMaterial.emissiveFactor[0]);
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("metallicFactor"), glMaterial.metallicFactor);
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("roughnessFactor"), glMaterial.roughnessFactor);
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("normalScale"), glMaterial.normalScale);
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("occlusionStrength"), glMaterial.occlusionStrength);
+				glUniform1i(m_nonInstancedShader->GetUniformLocation("alphaMode"), glMaterial.alphaMode);
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("alphaCutoff"), glMaterial.alphaCutoff);
+				glUniform1i(m_nonInstancedShader->GetUniformLocation("doubleSided"), glMaterial.doubleSided);
 				
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), glMaterial.GetBaseColorTexture()->GetGLBindlessHandle());
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("metallicRoughnessSampler"), glMaterial.GetMetallicRoughnessTexture()->GetGLBindlessHandle());
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), glMaterial.GetEmissiveTexture()->GetGLBindlessHandle());
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("occlusionSampler"), glMaterial.GetOcclusionTexture()->GetGLBindlessHandle());
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), glMaterial.baseColorTexture->GetGLBindlessHandle());
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("metallicRoughnessSampler"), glMaterial.metallicRoughnessTexture->GetGLBindlessHandle());
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), glMaterial.emissiveTexture->GetGLBindlessHandle());
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("occlusionSampler"), glMaterial.occlusionTexture->GetGLBindlessHandle());
 
 				// may not exist
-				const auto normalText = glMaterial.GetNormalTexture();
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("normalSampler"), normalText ? glMaterial.GetNormalTexture()->GetGLBindlessHandle() : 0);
+				const auto normalText = glMaterial.normalTexture;
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("normalSampler"), normalText ? normalText->GetGLBindlessHandle() : 0);
 
-				glMaterial.IsDoubleSided() ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
+				glMaterial.doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 									
-				glDrawElements(GL_TRIANGLES, glMesh->GetCount(), GL_UNSIGNED_INT, (GLvoid*)0);
+				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
 		
 				glBindVertexArray(0);
 			}

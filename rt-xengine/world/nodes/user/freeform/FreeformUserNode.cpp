@@ -21,7 +21,7 @@ bool FreeformUserNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData
 	UserNode::LoadAttributesFromXML(xmlData);
 
 	glm::vec3 localLookat{};
-	if (Assets::ReadFloatsAttribute(xmlData, "lookat", localLookat))
+	if (ParsingAux::ReadFloatsAttribute(xmlData, "lookat", localLookat))
 	{
 		// if lookat read overwrite following
 		SetLocalOrientation(Core::GetOrientationFromLookAtAndPosition(localLookat, GetLocalTranslation()));

@@ -3,7 +3,7 @@
 #include "renderer/renderers/opengl/GLRendererBase.h"
 #include "world/nodes/camera/CameraNode.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
 	struct GLTestGeometry;
 
@@ -20,12 +20,13 @@ namespace Renderer::OpenGL
 
 		//std::shared_ptr<GLTexture> m_skyTexture;
 
-		World::CameraNode* m_camera;
+		CameraNode* m_camera;
 
 		int32 m_previewMode;
 
 	public:
-		GLTestRenderer(System::Engine* context);
+		GLTestRenderer(Engine* engine)
+			: GLRendererBase(engine), m_camera(nullptr), m_previewMode(0) {}
 		~GLTestRenderer() = default;
 
 		bool InitScene(int32 width, int32 height) override;

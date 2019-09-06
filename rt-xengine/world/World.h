@@ -174,7 +174,7 @@ public:
 	void Update();
 	//void WindowResize(int32 width, int32 height) override;
 
-	bool LoadAndPrepareWorldFromXML(Assets::XMLDoc* sceneXML);
+	bool LoadAndPrepareWorldFromXML(XMLDoc* sceneXML);
 
 	NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
 

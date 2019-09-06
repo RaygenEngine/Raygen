@@ -17,13 +17,14 @@ extern float GetTimeMs()
 
 
 World::World(Engine* engine, NodeFactory* factory)
-	: Node(engine),
-	m_background(0.f, 0.f, 0.4f),
-	m_ambient(0.4f, 0.4f, 0.4f),
-	m_deltaTime(0),
-	m_worldTime(GetTimeMs()),
-	m_lastTime(GetTimeMs()),
-	m_nodeFactory(factory)
+	: EngineComponent(engine),
+      Node(nullptr),
+	  m_background(0.f, 0.f, 0.4f),
+	  m_ambient(0.4f, 0.4f, 0.4f),
+	  m_deltaTime(0),
+	  m_worldTime(GetTimeMs()),
+	  m_lastTime(GetTimeMs()),
+	  m_nodeFactory(factory)
 {
 }
 
@@ -84,7 +85,7 @@ Node* World::GetNodeById(uint32 id) const
 	return nullptr;
 }
 
-bool World::LoadAndPrepareWorldFromXML(Assets::XMLDoc* sceneXML)
+bool World::LoadAndPrepareWorldFromXML(XMLDoc* sceneXML)
 {
 	if (sceneXML)
 	{
@@ -125,11 +126,11 @@ bool World::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
 	Node::LoadAttributesFromXML(xmlData);
 
 	std::string assetPath{};
-	Assets::ReadStringAttribute(xmlData, "asset_path", assetPath);
+	ReadStringAttribute(xmlData, "asset_path", assetPath);
 	this->SetAssetLoadPathHint("scenes\\" + assetPath);
 
-	Assets::ReadFloatsAttribute(xmlData, "background", m_background);
-	Assets::ReadFloatsAttribute(xmlData, "ambient", m_ambient);
+	ReadFloatsAttribute(xmlData, "background", m_background);
+	ReadFloatsAttribute(xmlData, "ambient", m_ambient);
 
 	return true;
 }

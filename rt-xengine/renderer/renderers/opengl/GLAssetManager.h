@@ -10,11 +10,10 @@ namespace OpenGL
 {
 	class GLAssetManager
 	{
-
-		MultiKeyAssetCache<GLCubeMap, CubeMap*, GLint, bool> m_glCubeMaps;
-		MultiKeyAssetCache<GLTexture, Texture*, GLint, GLint, GLint, GLint, GLint> m_glTextures;
-		MultiKeyAssetCache<GLShader, StringFile*, StringFile*> m_glShaders;
-		MultiKeyAssetCache<GLModel, Model*> m_glModels;
+		CachingAux::MultiKeyAssetCache<GLCubeMap, CubeMap*, GLint, bool> m_glCubeMaps;
+		CachingAux::MultiKeyAssetCache<GLTexture, Texture*, GLint, GLint, GLint, GLint, GLint> m_glTextures;
+		CachingAux::MultiKeyAssetCache<GLShader, StringFile*, StringFile*> m_glShaders;
+		CachingAux::MultiKeyAssetCache<GLModel, Model*> m_glModels;
 		//Assets::MultiKeyAssetCache<GLInstancedModel, Assets::Model*, World::TriangleModelInstancedGeometryNode*> m_glInstancedModels;
 
 	public:

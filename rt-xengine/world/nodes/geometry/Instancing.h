@@ -28,11 +28,11 @@ struct Instance
 
 	void LoadFromXML(const tinyxml2::XMLElement* xmlData)
 	{
-		Assets::ReadFloatsAttribute(xmlData, "translation", localTranslation);
+		ParsingAux::ReadFloatsAttribute(xmlData, "translation", localTranslation);
 		glm::vec3 eulerPYR{0.f, 0.f, 0.f};
-		Assets::ReadFloatsAttribute(xmlData, "euler_pyr", eulerPYR);
+		ParsingAux::ReadFloatsAttribute(xmlData, "euler_pyr", eulerPYR);
 		localOrientation = glm::quat(glm::radians(eulerPYR));
-		Assets::ReadFloatsAttribute(xmlData, "scale", localScale);
+		ParsingAux::ReadFloatsAttribute(xmlData, "scale", localScale);
 
 		// calculate local matrix after loading
 		localMatrix = Core::GetTransformMat(localTranslation, localOrientation, localScale);
@@ -72,7 +72,7 @@ public:
 	void AddInstanceFromXML(const tinyxml2::XMLElement* xmlData)
 	{
 		std::string name;
-		Assets::ReadFillEntityName(xmlData, name);
+		ParsingAux::ReadFillEntityName(xmlData, name);
 
 		Instance inst{};
 

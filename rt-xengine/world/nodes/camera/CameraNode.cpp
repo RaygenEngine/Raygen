@@ -46,10 +46,10 @@ bool CameraNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 {
 	Node::LoadAttributesFromXML(xmlData);
 
-	Assets::ReadFloatsAttribute(xmlData, "fov", m_vFov);
-	Assets::ReadFloatsAttribute(xmlData, "focal_length", m_focalLength);
-	Assets::ReadFloatsAttribute(xmlData, "near", m_near);
-	Assets::ReadFloatsAttribute(xmlData, "far", m_far);
+	ParsingAux::ReadFloatsAttribute(xmlData, "fov", m_vFov);
+	ParsingAux::ReadFloatsAttribute(xmlData, "focal_length", m_focalLength);
+	ParsingAux::ReadFloatsAttribute(xmlData, "near", m_near);
+	ParsingAux::ReadFloatsAttribute(xmlData, "far", m_far);
 
 	return true;
 }
