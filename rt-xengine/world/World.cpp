@@ -15,12 +15,31 @@ extern float GetTimeMs()
 	return static_cast<float>((Clock::now() - t_start).count() / 1000000.f);
 }
 
+bool RootNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
+{
+	Node::LoadAttributesFromXML(xmlData);
+
+	std::string assetPath{};
+	ParsingAux::ReadStringAttribute(xmlData, "asset_path", assetPath);
+	// TODO:
+	//this->SetAssetLoadPathHint("scenes\\" + assetPath);
+
+	ParsingAux::ReadFloatsAttribute(xmlData, "background", m_background);
+	ParsingAux::ReadFloatsAttribute(xmlData, "ambient", m_ambient);
+
+	return true;
+}
+
+
+
+
+Input& World::GetInput()
+{
+	return m_engine->GetInput();
+}
 
 World::World(Engine* engine, NodeFactory* factory)
 	: EngineComponent(engine),
-      Node(nullptr),
-	  m_background(0.f, 0.f, 0.4f),
-	  m_ambient(0.4f, 0.4f, 0.4f),
 	  m_deltaTime(0),
 	  m_worldTime(GetTimeMs()),
 	  m_lastTime(GetTimeMs()),
@@ -30,14 +49,6 @@ World::World(Engine* engine, NodeFactory* factory)
 
 World::~World()
 {
-	// TODO check this
-	// clear children before destruction - otherwise they would be cleared at the base node class causing issues with world's node maps
-	m_children.clear();
-}
-
-std::string World::PrintWorldTree(bool verbose)
-{
-	return ToString(verbose, 0);
 }
 
 void World::AddDirtyNode(Node* node)
@@ -93,20 +104,22 @@ bool World::LoadAndPrepareWorldFromXML(XMLDoc* sceneXML)
 
 		auto* worldElement = sceneXML->GetRootElement();
 
-		if (this->LoadFromXML(worldElement))
+		m_root = std::make_unique<RootNode>(this);
+	
+		if (m_root->LoadFromXML(worldElement))
 		{
 			// mark dirty (everything) to cache initial instance data 
 			// world will keep dirty leafs too for optimization
-			this->MarkDirty();
+			m_root->MarkDirty();
 
 			// Cache transform data bottom up from leaf nodes
 			for (auto* dirtyLeafNode : this->m_dirtyLeafNodes)
 				dirtyLeafNode->CacheWorldTransform();
 
 
-			LOG_INFO("World loaded succesfully, id: {}", this->GetUID());
+			LOG_INFO("World loaded succesfully");
 
-			LOG_ERROR("Scenegraph: \n\n{0}", this->PrintWorldTree(true));
+			//LOG_ERROR("Scenegraph", PrintWorldTree(true));
 
 			return true;
 		}
@@ -121,23 +134,9 @@ bool World::LoadAndPrepareWorldFromXML(XMLDoc* sceneXML)
 	return false;
 }
 
-bool World::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
+AssetManager* World::GetAssetManager() const
 {
-	Node::LoadAttributesFromXML(xmlData);
-
-	std::string assetPath{};
-	ParsingAux::ReadStringAttribute(xmlData, "asset_path", assetPath);
-	this->SetAssetLoadPathHint("scenes\\" + assetPath);
-
-	ParsingAux::ReadFloatsAttribute(xmlData, "background", m_background);
-	ParsingAux::ReadFloatsAttribute(xmlData, "ambient", m_ambient);
-
-	return true;
-}
-
-std::string World::ToString(bool verbose, uint depth) const
-{
-	return std::string("    ") * depth + "|--root " + Node::ToString(verbose, depth);
+	return GetEngine()->GetAssetManager();
 }
 
 void World::Update()
@@ -156,12 +155,13 @@ void World::Update()
 
 	// Update after input and delta calculation
 	for (auto* node : m_nodes)
-		node->Update();
+		node->Update(m_deltaTime);
 
 	// Update dirty leaf node instances
 	for (auto* dirtyLeafNode : m_dirtyLeafNodes)
 		dirtyLeafNode->CacheWorldTransform();
 }
+
 
 //void World::WindowResize(int32 width, int32 height)
 //{

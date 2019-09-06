@@ -9,7 +9,7 @@ class World;
 class Node : public Object
 {
 public:
-	AssetManager* GetDiskAssetManager() const;
+	AssetManager* GetAssetManager() const;
 protected:
 	// local
 	glm::vec3 m_localTranslation;
@@ -100,7 +100,7 @@ public:
 
 	void OrientYaw(float yaw);
 
-	virtual void Update();
+	virtual void Update(float deltaTime);
 
 	//
 	// Child Getter Utilities

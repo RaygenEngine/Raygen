@@ -36,7 +36,6 @@ Node* NodeFactory::LoadChildSpecificNode(const std::string& type, Node* parentNo
 
 Node* NodeFactory::LoadNodeFromType(const std::string& type, Node* parent, const tinyxml2::XMLElement* xmdChildElement)
 {
-	
 	World* world = parent->GetWorld();
 	if (type == "freeform_user")
 	{

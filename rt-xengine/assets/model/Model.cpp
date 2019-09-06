@@ -4,7 +4,7 @@
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define TINYGLTF_NO_EXTERNAL_IMAGE
-#include "tinygltf/tiny_gltf.h"
+//#include "stb_image/stb_image_write.h"
 #include "assets/PathSystem.h"
 #include "assets/model/GltfAux.h"
 #include "assets/AssetManager.h"
@@ -107,11 +107,11 @@ namespace
 			const tinygltf::Buffer& gltfBuffer = modelData.buffers.at(bufferView.buffer);
 
 
-			componentType = GetComponentTypeFromGltf(accessor.componentType);
+			componentType = GltfAux::GetComponentTypeFromGltf(accessor.componentType);
 			elementCount = accessor.count;
 			beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
 			strideByteOffset = accessor.ByteStride(bufferView);
-			componentCount = GetElementComponentCount(GetElementTypeFromGltf(accessor.type));
+			componentCount = GetElementComponentCount(GltfAux::GetElementTypeFromGltf(accessor.type));
 			beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
 		}
 
@@ -187,11 +187,11 @@ Model::Sampler Model::LoadSampler(const tinygltf::Model& modelData, int32 gltfTe
 		{
 			auto& gltfSampler = modelData.samplers.at(samplerIndex);
 
-			sampler.minFilter = GetTextureFilteringFromGltf(gltfSampler.minFilter);
-			sampler.magFilter = GetTextureFilteringFromGltf(gltfSampler.magFilter);
-			sampler.wrapS = GetTextureWrappingFromGltf(gltfSampler.wrapS);
-			sampler.wrapT = GetTextureWrappingFromGltf(gltfSampler.wrapT);
-			sampler.wrapR = GetTextureWrappingFromGltf(gltfSampler.wrapR);
+			sampler.minFilter = GltfAux::GetTextureFilteringFromGltf(gltfSampler.minFilter);
+			sampler.magFilter = GltfAux::GetTextureFilteringFromGltf(gltfSampler.magFilter);
+			sampler.wrapS =  GltfAux::GetTextureWrappingFromGltf(gltfSampler.wrapS);
+			sampler.wrapT =  GltfAux::GetTextureWrappingFromGltf(gltfSampler.wrapT);
+			sampler.wrapR =  GltfAux::GetTextureWrappingFromGltf(gltfSampler.wrapR);
 		}
 	}
 
@@ -217,7 +217,7 @@ Model::Material Model::LoadMaterial(const tinygltf::Model& modelData, const tiny
 	material.occlusionStrength = static_cast<float>(materialData.occlusionTexture.strength);
 
 	// alpha
-	material.alphaMode = GetAlphaModeFromGltf(materialData.alphaMode);
+	material.alphaMode = GltfAux::GetAlphaModeFromGltf(materialData.alphaMode);
 
 	material.alphaCutoff = static_cast<float>(materialData.alphaCutoff);
 	// doublesided-ness
@@ -248,7 +248,7 @@ std::optional<Model::GeometryGroup> Model::LoadGeometryGroup(const tinygltf::Mod
 	GeometryGroup geom{};
 	
 	// mode
-	geom.mode = GetGeometryModeFromGltf(primitiveData.mode);
+	geom.mode = GltfAux::GetGeometryModeFromGltf(primitiveData.mode);
 
 	// indexing
 	const auto indicesIndex = primitiveData.indices;
@@ -509,17 +509,17 @@ bool Model::Load(const std::string& path, GeometryUsage usage)
 			if (childNode.mesh != -1)
 			{
 				auto& gltfMesh = gltfModel.meshes.at(childNode.mesh);
-				
+
 				auto mesh = LoadMesh(gltfModel, gltfMesh, localTransformMat);
 
 				// if missing mesh
 				if (!mesh.has_value())
 				{
-					LOG_ERROR("Failed to load mesh, {}", mesh);
+					//LOG_ERROR("Failed to load mesh, {}", mesh);
 					return false;
 				}
 
-				m_meshes.emplace_back(std::move(mesh));
+				m_meshes.emplace_back(std::move(mesh.value()));
 			}
 			
 			//load child's children

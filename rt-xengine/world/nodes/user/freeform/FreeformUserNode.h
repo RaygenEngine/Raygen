@@ -19,7 +19,7 @@ public:
 
 	CameraNode* GetCamera() const { return m_camera; }
 
-	void Update() override;
+	void Update(float deltaTime) override;
 
 	void ToString(std::ostream& os) const override { os << "node-type: FreeformUserNode, name: " << m_name; }
 };

@@ -30,7 +30,9 @@ namespace OpenGL
 		~GLTestRenderer() = default;
 
 		bool InitScene(int32 width, int32 height) override;
-		void WindowResize(int32 width, int32 height) override;
+		
+		// REFACT:
+		//void WindowResize(int32 width, int32 height) override;
 		void Render() override;
 
 		MAKE_METADATA(GLTestRenderer)

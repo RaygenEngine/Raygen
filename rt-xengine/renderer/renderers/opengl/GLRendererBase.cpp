@@ -9,8 +9,7 @@ namespace OpenGL
 		: Renderer(engine),
 		  m_assochWnd(nullptr),
 		  m_hdc(nullptr),
-		  m_hglrc(nullptr),
-	      m_glAssetManager(this)
+		  m_hglrc(nullptr)
 	{
 	}
 

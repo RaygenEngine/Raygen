@@ -20,6 +20,10 @@ namespace OpenGL
 
 		GLAssetManager* GetGLAssetManager() const { return m_glAssetManager; }
 
+		// TODO:
+		virtual bool IsLoaded() const { return false; }
+		virtual void MarkLoaded() { }
+
 		void ToString(std::ostream& os) const override { os << "asset-type: GLAsset, name: " << m_name; }
 	};
 

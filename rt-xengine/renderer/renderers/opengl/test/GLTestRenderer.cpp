@@ -8,7 +8,7 @@
 #include "world/nodes/sky/SkyHDRNode.h"
 #include "assets/AssetManager.h"
 #include "renderer/renderers/opengl/GLUtil.h"
-
+#include "system/Engine.h"
 
 namespace OpenGL
 {
@@ -63,14 +63,15 @@ namespace OpenGL
 		return true;
 	}
 
-	void GLTestRenderer::WindowResize(int32 width, int32 height)
-	{
-		glViewport(0, 0, width, height);
-	}
+	// REFACT:
+	//void GLTestRenderer::WindowResize(int32 width, int32 height)
+	//{
+	//	glViewport(0, 0, width, height);
+	//}
 
 	void GLTestRenderer::Render()
 	{
-		auto bgcl = GetWorld()->GetBackgroundColor();
+		auto bgcl = GetWorld()->GetRoot()->GetBackgroundColor();
 
 		glm::mat4 vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
 
@@ -139,12 +140,12 @@ namespace OpenGL
 
 	void GLTestRenderer::Update()
 	{
-		if (GetInput().IsKeyPressed(XVirtualKey::K1))
+		if (GetEngine()->GetInput().IsKeyPressed(XVirtualKey::K1))
 		{
 			m_previewMode = m_previewMode - 1 < 0 ? PT_COUNT - 1 : m_previewMode - 1;
 			LOG_INFO("Preview Mode set to: {}({})", SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
 		}
-		else if (GetInput().IsKeyPressed(XVirtualKey::K2))
+		else if (GetEngine()->GetInput().IsKeyPressed(XVirtualKey::K2))
 		{
 			++m_previewMode %= PT_COUNT;
 			LOG_INFO("Preview Mode set to: {}({})", SurfacePreviewTargetModeString(m_previewMode), m_previewMode);

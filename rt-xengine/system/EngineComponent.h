@@ -1,6 +1,7 @@
 #pragma once
 
 class Engine;
+class World;
 
 class EngineComponent
 {
@@ -15,4 +16,6 @@ public:
 
 	// TODO: 
 	// std::vector<ComponentSubobject> 
+
+	[[nodiscard]] World* GetWorld() const;
 };

@@ -10,30 +10,34 @@
 #include "assets/other/xml/XMLDoc.h"
 #include "system/EngineComponent.h"
 #include "system/Input.h"
-#include "system/Engine.h"
 
 class NodeFactory;
 
 // TODO:
-class Root : public Node
+class RootNode : public Node
 {
-
-};
-
-class World : public EngineComponent, public Node
-{
-
-	//Engine* GetEngine() {
-	//	return m_engine;
-	//}
-
-	Input& GetInput() {
-		return m_engine->GetInput();
+public:
+	RootNode(World* world)
+		: Node(nullptr)
+	{
+		m_world = world;
 	}
 
 	glm::vec3 m_background;
 	glm::vec3 m_ambient;
 
+	glm::vec3 GetBackgroundColor() const { return m_background; }
+	void SetBackgroundColor(const glm::vec3& color) { m_background = color; }
+
+	glm::vec3 GetAmbientColor() const { return m_ambient; }
+	void SetAmbientColor(const glm::vec3& color) { m_ambient = color; }
+
+	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
+
+};
+
+class World : public EngineComponent
+{
 	mutable std::unordered_set<Node*> m_nodes;
 	mutable std::unordered_set<TriangleModelGeometryNode*> m_triangleModelGeometries;
 	mutable std::unordered_set<TriangleModelInstancedGeometryNode*> m_triangleModelInstancedGeometries;
@@ -41,9 +45,6 @@ class World : public EngineComponent, public Node
 	mutable std::unordered_set<LightNode*> m_lights;
 	mutable std::unordered_set<CameraNode*> m_cameras;
 	mutable std::unordered_set<UserNode*> m_users;
-
-	// load path hint
-	std::string m_loaderPathHint;
 		
 	// dirty nodes
 	std::unordered_set<Node*> m_dirtyNodes; 
@@ -59,12 +60,14 @@ class World : public EngineComponent, public Node
 
 	NodeFactory* m_nodeFactory;
 
+	std::unique_ptr<RootNode> m_root;
 public:
+	Input& GetInput();
+	[[nodiscard]] RootNode* GetRoot() const { return m_root.get();  }
 
 	World(Engine* engine, NodeFactory* factory);
 	~World();
 
-	std::string PrintWorldTree(bool verbose = false);
 
 	template <typename NodeType>
 	void AddNode(NodeType* node)
@@ -133,15 +136,6 @@ public:
 	float GetDeltaTime() const { return m_deltaTime; }
 	float GetWorldTime() const { return m_worldTime; }
 
-	void SetAssetLoadPathHint(const std::string& path) { m_loaderPathHint = path; }
-	std::string GetAssetLoadPathHint() const { return m_loaderPathHint; }
-
-	glm::vec3 GetBackgroundColor() const { return m_background; }
-	void SetBackgroundColor(const glm::vec3& color) { m_background = color; }
-
-	glm::vec3 GetAmbientColor() const { return m_ambient; }
-	void SetAmbientColor(const glm::vec3& color) { m_ambient = color; }
-
 	// SetIdentificationFromAssociatedDiskAssetIdentification node to world and as child, and return observer (maybe required for special inter-node handling)
 	template <typename ChildType>
 	ChildType* LoadNode(Node* parent, const tinyxml2::XMLElement* xmlData)
@@ -169,7 +163,7 @@ public:
 		return node.get();
 	}
 
-	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
+	[[nodiscard]] AssetManager* GetAssetManager() const;
 
 	void Update();
 	//void WindowResize(int32 width, int32 height) override;
@@ -177,10 +171,4 @@ public:
 	bool LoadAndPrepareWorldFromXML(XMLDoc* sceneXML);
 
 	NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
-
-protected:
-	std::string ToString(bool verbose, uint depth) const override;
-
-public:
-	void ToString(std::ostream& os) const { os << "object-type: World, name: " << m_name << ", id: " << GetUID(); }
 };

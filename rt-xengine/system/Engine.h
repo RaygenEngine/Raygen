@@ -1,7 +1,6 @@
 #pragma once
 
 #include "system/Input.h"
-#include "platform/windows/Win32Window.h"
 #include "renderer/Renderer.h"
 #include "world/World.h"
 #include "world/NodeFactory.h"
@@ -9,6 +8,8 @@ class Renderer;
 class AssetManager;
 
 using RendererRegistrationIndex = uint32;
+
+class Win32Window;
 
 class Engine
 {
@@ -32,7 +33,7 @@ private:
 	std::unique_ptr<AssetManager> m_assetManager;
 	std::unique_ptr<World> m_world;
 	std::unique_ptr<Renderer> m_renderer;
-	WindowType m_window;
+	WindowType* m_window;
 
 	Input m_input;
 
@@ -42,11 +43,11 @@ public:
 		
 	bool InitDirectories(const std::string& applicationPath, const std::string& dataDirectoryName);
 
-	AssetManager* GetDiskAssetManager() const { return m_assetManager.get(); }
+	AssetManager* GetAssetManager() const { return m_assetManager.get(); }
 
 	Renderer* GetRenderer() const { return m_renderer.get(); }
 	World* GetWorld() const { return m_world.get(); }
-	WindowType* GetWindow() { return &m_window; }
+	WindowType* GetWindow() { return m_window; }
 
 	// Can return nullptr
 	//Editor* GetEditor() { return m_editor; }

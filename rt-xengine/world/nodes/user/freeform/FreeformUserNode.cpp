@@ -37,9 +37,9 @@ bool FreeformUserNode::PostChildrenLoaded()
 }
 
 // TODO: speed and turning speed adjustments
-void FreeformUserNode::Update()
+void FreeformUserNode::Update(float deltaTime)
 {
-	auto& input = GetInput();
+	auto& input = GetWorld()->GetInput();
 
 	auto speed = m_movementSpeed; // 0,01
 

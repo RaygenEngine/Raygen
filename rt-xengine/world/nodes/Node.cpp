@@ -8,9 +8,13 @@
 #include "sky/SkyHDRNode.h"
 #include "world/NodeFactory.h"
 
+AssetManager* Node::GetAssetManager() const
+{
+	return GetWorld()->GetAssetManager();
+}
+
 Node::Node(Node* pNode)
 	: Object(),
-		m_world(pNode->GetWorld()),
 		m_localTranslation(0.f, 0.f, 0.f),
 		m_localOrientation(1.f, 0.f, 0.f, 0.f),
 		// note w, x, y, z
@@ -25,6 +29,9 @@ Node::Node(Node* pNode)
 	    // update local on first iter
 	    m_parent(pNode)
 {
+	if (pNode) {
+		m_world = pNode->GetWorld();
+	}
 }
 
 void Node::SetLocalTranslation(const glm::vec3& lt)
@@ -215,6 +222,11 @@ void Node::OrientYaw(float yaw)
 
 	m_updateLocalMatrix = true;
 	MarkDirty();
+}
+
+void Node::Update(float deltaTime)
+{
+
 }
 
 std::string Node::ToString(bool verbose, uint depth) const

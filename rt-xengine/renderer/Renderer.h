@@ -39,6 +39,8 @@ protected:
 
 	bool IsObserverDirty(NodeObserver* obs) const { return m_dirtyObservers.find(obs) != m_dirtyObservers.end(); }
 
+	// TODO:
+	AssetManager* GetAssetManager() const;
 public:
 	Renderer::Renderer(Engine* engine)
 		: EngineComponent(engine) {}
@@ -50,6 +52,8 @@ public:
 
 	// Init Scene (shaders/ upload stuff etc.);
 	virtual bool InitScene(int32 width, int32 height) = 0;
+
+	virtual void Update() = 0;
 
 	// Render, on the render target stored by SwitchRenderTarget from InitRendering/UpdateRendering (don't pass render target
 	// as Render() parameter, its not "safe") 
