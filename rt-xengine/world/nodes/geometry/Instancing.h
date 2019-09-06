@@ -35,7 +35,7 @@ struct Instance
 		ParsingAux::ReadFloatsAttribute(xmlData, "scale", localScale);
 
 		// calculate local matrix after loading
-		localMatrix = Core::GetTransformMat(localTranslation, localOrientation, localScale);
+		localMatrix = utl::GetTransformMat(localTranslation, localOrientation, localScale);
 	}
 
 	void Update(const glm::mat4& parentMat)

@@ -192,6 +192,8 @@ Model::Sampler Model::LoadSampler(const tinygltf::Model& modelData, int32 gltfTe
 			sampler.wrapS =  GltfAux::GetTextureWrappingFromGltf(gltfSampler.wrapS);
 			sampler.wrapT =  GltfAux::GetTextureWrappingFromGltf(gltfSampler.wrapT);
 			sampler.wrapR =  GltfAux::GetTextureWrappingFromGltf(gltfSampler.wrapR);
+
+			sampler.name = gltfSampler.name;
 		}
 	}
 
@@ -203,6 +205,7 @@ Model::Sampler Model::LoadSampler(const tinygltf::Model& modelData, int32 gltfTe
 Model::Material Model::LoadMaterial(const tinygltf::Model& modelData, const tinygltf::Material& materialData)
 {
 	Material material{};
+	material.name = materialData.name;
 	
 	// factors
 	auto bFactor = materialData.pbrMetallicRoughness.baseColorFactor;
@@ -264,39 +267,39 @@ std::optional<Model::GeometryGroup> Model::LoadGeometryGroup(const tinygltf::Mod
 		const auto& attrName = attribute.first;
 		int32 index = attribute.second;
 
-		if (Core::CaseInsensitiveCompare(attrName, "POSITION"))
+		if (utl::CaseInsensitiveCompare(attrName, "POSITION"))
 		{
 			ExtractBufferDataInto(modelData, index, geom.positions);
 		}
-		else if (Core::CaseInsensitiveCompare(attrName, "NORMAL"))
+		else if (utl::CaseInsensitiveCompare(attrName, "NORMAL"))
 		{
 			ExtractBufferDataInto(modelData, index, geom.normals);
 		}
-		else if (Core::CaseInsensitiveCompare(attrName, "TANGENT"))
+		else if (utl::CaseInsensitiveCompare(attrName, "TANGENT"))
 		{
 			ExtractBufferDataInto(modelData, index, geom.tangents);
 		}
-		else if (Core::CaseInsensitiveCompare(attrName, "TEXCOORD_0"))
+		else if (utl::CaseInsensitiveCompare(attrName, "TEXCOORD_0"))
 		{
 			ExtractBufferDataInto(modelData, index, geom.textCoords0);
 		}
-		else if (Core::CaseInsensitiveCompare(attrName, "TEXCOORD_1"))
+		else if (utl::CaseInsensitiveCompare(attrName, "TEXCOORD_1"))
 		{
 			ExtractBufferDataInto(modelData, index, geom.textCoords1);
 		}
 
 	}
 
-	// TODO if missing positions
+	// if missing positions
 	if (geom.positions.empty())
 		return {};
 
-	// TODO: speed up those calcs
+	// PERF: speed up those calcs
 	for (auto& pos : geom.positions)
 	{
 		pos = transformMat * glm::vec4(pos, 1.f);
 	}
-
+	// PERF: speed up those calcs
 	const auto invTransMat = glm::transpose(glm::inverse(glm::mat3(transformMat)));
 	for (auto& normal : geom.normals)
 	{
@@ -391,20 +394,26 @@ std::optional<Model::GeometryGroup> Model::LoadGeometryGroup(const tinygltf::Mod
 std::optional<Model::Mesh> Model::LoadMesh(const tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
 {
 	Mesh mesh{};
-
+	mesh.name = meshData.name;
+	
 	mesh.geometryGroups.resize(meshData.primitives.size());
 	
 	// primitives
 	for (int32 i = 0; i < mesh.geometryGroups.size(); ++i)
 	{
-		const auto name = "geom_group" + std::to_string(i);
+		const auto geomName = "geom_group" + std::to_string(i);
 
-		auto geom = LoadGeometryGroup(modelData, meshData.primitives.at(i), transformMat);
-
-		// if one of the geometry groups fails to load
-		if (!geom.has_value())
-			return {};
+		auto& primitiveData = meshData.primitives.at(i);
 		
+		auto geom = LoadGeometryGroup(modelData, primitiveData, transformMat);
+		// if one of the geometry groups fails to load
+		if (!geom)
+		{
+			LOG_ERROR("Failed to load geometry group, name: {}", geomName);
+			return {};
+		}
+		
+		geom.value().name = geomName;
 		mesh.geometryGroups[i] = geom.value();
 	}
 	// TODO: weights
@@ -425,27 +434,24 @@ bool Model::Load(const std::string& path, GeometryUsage usage)
 
 	auto ext = PathSystem::GetExtension(path);
 
-	INIT_TIMER;
-
-	START_TIMER;
-	
 	bool ret = false;
-	if (Core::CaseInsensitiveCompare(ext, ".gltf"))
-		ret = loader.LoadASCIIFromFile(&gltfModel, &err, &warn, path);
-	else if (Core::CaseInsensitiveCompare(ext, ".glb"))
-	{
-		RT_XENGINE_ASSERT(false, "glb data is not handled yet");
-		ret = loader.LoadBinaryFromFile(&gltfModel, &err, &warn, path);
-	}
 
-	STOP_TIMER("loading");
+	{
+		TIMER_STATIC_SCOPE("load model time");
+
+		if (utl::CaseInsensitiveCompare(ext, ".gltf"))
+			ret = loader.LoadASCIIFromFile(&gltfModel, &err, &warn, path);
+		else if (utl::CaseInsensitiveCompare(ext, ".glb"))
+		{
+			RT_XENGINE_ASSERT(false, "glb data is not handled yet");
+			ret = loader.LoadBinaryFromFile(&gltfModel, &err, &warn, path);
+		}
+	}
 	
 	CLOG_WARN(!warn.empty(), warn.c_str());
 	CLOG_ERROR(!err.empty(), err.c_str());
 	
 	if (!ret) return false;
-
-	START_TIMER;
 
 	m_info.version = gltfModel.asset.version;
 	m_info.generator = gltfModel.asset.generator;
@@ -499,7 +505,7 @@ bool Model::Load(const std::string& path, GeometryUsage usage)
 					scale[2] = static_cast<float>(childNode.scale[2]);
 				}
 				
-				localTransformMat = Core::GetTransformMat(translation, orientation, scale);
+				localTransformMat = utl::GetTransformMat(translation, orientation, scale);
 			}
 
 			localTransformMat = parentTransformMat * localTransformMat;
@@ -513,9 +519,9 @@ bool Model::Load(const std::string& path, GeometryUsage usage)
 				auto mesh = LoadMesh(gltfModel, gltfMesh, localTransformMat);
 
 				// if missing mesh
-				if (!mesh.has_value())
+				if (!mesh)
 				{
-					//LOG_ERROR("Failed to load mesh, {}", mesh);
+					LOG_ERROR("Failed to load mesh, name: {}", gltfMesh.name);
 					return false;
 				}
 
@@ -530,12 +536,10 @@ bool Model::Load(const std::string& path, GeometryUsage usage)
 		
 		return true;
 	};
-	
-	auto res = RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
-	// TODO use scope timer
-	STOP_TIMER("copying");
 
-	return res;
+	TIMER_STATIC_SCOPE("copying model time");
+
+	return RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
 }
 
 void Model::Clear()

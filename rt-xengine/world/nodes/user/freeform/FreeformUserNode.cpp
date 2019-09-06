@@ -24,7 +24,7 @@ bool FreeformUserNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData
 	if (ParsingAux::ReadFloatsAttribute(xmlData, "lookat", localLookat))
 	{
 		// if lookat read overwrite following
-		SetLocalOrientation(Core::GetOrientationFromLookAtAndPosition(localLookat, GetLocalTranslation()));
+		SetLocalOrientation(utl::GetOrientationFromLookAtAndPosition(localLookat, GetLocalTranslation()));
 	}
 
 	return true;

@@ -14,6 +14,8 @@ namespace OpenGL
 		
 		struct GLMaterial
 		{
+			std::string name;
+			
 			// RGB: Albedo A: Opacity
 			std::shared_ptr<GLTexture> baseColorTexture;
 			// R: empty, G: Roughness, B: Metal, A: empty
@@ -45,6 +47,8 @@ namespace OpenGL
 		
 		struct GLMesh
 		{
+			std::string name;
+			
 			GLuint vao = 0u;
 			GLuint ebo = 0u;
 

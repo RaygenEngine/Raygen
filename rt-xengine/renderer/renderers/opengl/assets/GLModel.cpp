@@ -98,9 +98,7 @@ namespace OpenGL
 
 	bool GLModel::Load(Model* data)
 	{
-		INIT_TIMER;
-
-		START_TIMER;
+		TIMER_STATIC_SCOPE("uploading model time");
 		
 		m_usage = GetGLUsage(data->GetUsage());
 
@@ -112,8 +110,6 @@ namespace OpenGL
 			}
 		}
 	
-		STOP_TIMER("uploading");
-
 		return true;
 	}
 }

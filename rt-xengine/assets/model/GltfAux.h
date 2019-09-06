@@ -46,11 +46,11 @@ namespace GltfAux
 
 	inline AlphaMode GetAlphaModeFromGltf(const std::string& gltfAlphaMode)
 	{
-		if (Core::CaseInsensitiveCompare(gltfAlphaMode, "OPAQUE"))
+		if (utl::CaseInsensitiveCompare(gltfAlphaMode, "OPAQUE"))
 			return AM_OPAQUE;
-		if (Core::CaseInsensitiveCompare(gltfAlphaMode, "MASK"))
+		if (utl::CaseInsensitiveCompare(gltfAlphaMode, "MASK"))
 			return AM_MASK;
-		if (Core::CaseInsensitiveCompare(gltfAlphaMode, "BLEND"))
+		if (utl::CaseInsensitiveCompare(gltfAlphaMode, "BLEND"))
 			return AM_BLEND;
 		// not defined -> repeat
 		return AM_INVALID;
