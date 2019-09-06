@@ -3,7 +3,7 @@
 #include <sstream>
 #include <iterator>
 
-namespace Core
+namespace utl
 {
 	inline std::string Repeat(const std::string& input, size_t num)
 	{
@@ -72,5 +72,5 @@ namespace Core
 
 inline std::string operator*(std::string str, std::size_t n)
 {
-	return Core::Repeat(str, n);
+	return utl::Repeat(str, n);
 }

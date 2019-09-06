@@ -108,17 +108,17 @@ public:
 	glm::vec2 GetLeftThumbDirection() const { return m_analogState.thumbL.direction; }
 	glm::vec2 GetRightThumbDirection() const { return m_analogState.thumbR.direction; }
 
-	bool IsLeftTriggerResting() const { return Core::EqualsZero(m_analogState.triggerL); }
-	bool IsRightTriggerResting() const { return Core::EqualsZero(m_analogState.triggerR); }
+	bool IsLeftTriggerResting() const { return utl::EqualsZero(m_analogState.triggerL); }
+	bool IsRightTriggerResting() const { return utl::EqualsZero(m_analogState.triggerR); }
 
-	bool IsLeftThumbResting() const { return Core::EqualsZero(m_analogState.thumbL.magnitude); }
-	bool IsRightThumbResting() const { return Core::EqualsZero(m_analogState.thumbR.magnitude); }
+	bool IsLeftThumbResting() const { return utl::EqualsZero(m_analogState.thumbL.magnitude); }
+	bool IsRightThumbResting() const { return utl::EqualsZero(m_analogState.thumbR.magnitude); }
 
-	bool IsLeftTriggerMoving() const { return !Core::EqualsZero(m_analogState.triggerL); }
-	bool IsRightTriggerMoving() const { return !Core::EqualsZero(m_analogState.triggerR); }
+	bool IsLeftTriggerMoving() const { return !utl::EqualsZero(m_analogState.triggerL); }
+	bool IsRightTriggerMoving() const { return !utl::EqualsZero(m_analogState.triggerR); }
 
-	bool IsLeftThumbMoving() const { return !Core::EqualsZero(m_analogState.thumbL.magnitude); }
-	bool IsRightThumbMoving() const { return !Core::EqualsZero(m_analogState.thumbR.magnitude); }
+	bool IsLeftThumbMoving() const { return !utl::EqualsZero(m_analogState.thumbL.magnitude); }
+	bool IsRightThumbMoving() const { return !utl::EqualsZero(m_analogState.thumbR.magnitude); }
 
 	void ClearSoftState();
 };

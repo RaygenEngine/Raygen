@@ -26,7 +26,7 @@ bool TriangleModelGeometryNode::LoadAttributesFromXML(const tinyxml2::XMLElement
 		
 	// default geom is static
 	auto modelGeomType = GeometryUsage::STATIC;
-	if(!type.empty() && Core::CaseInsensitiveCompare(type, "dynamic"))
+	if(!type.empty() && utl::CaseInsensitiveCompare(type, "dynamic"))
 		modelGeomType = GeometryUsage::DYNAMIC;
 		
 	m_model = Engine::GetAssetManager()->LoadModelAsset(xmlData->Attribute("file"), modelGeomType);

@@ -14,7 +14,7 @@ namespace ParsingAux
 	{
 		const auto count = sizeof(T) / sizeof(float);
 		float parts[count];
-		if (data && Core::SplitStringIntoTArray(parts, count, data, ','))
+		if (data && utl::SplitStringIntoTArray(parts, count, data, ','))
 		{
 			floats = reinterpret_cast<T&>(parts);
 			return true;
@@ -59,7 +59,7 @@ namespace ParsingAux
 			return true;
 		}
 
-		entityName = "unnamed$uid$" + std::to_string(Core::UUIDGenerator::GenerateUUID());
+		entityName = "unnamed$uid$" + std::to_string(utl::UUIDGenerator::GenerateUUID());
 		LOG_WARN("Missing XML Entity / Node name, defaulting to {}", entityName);
 
 		return false;

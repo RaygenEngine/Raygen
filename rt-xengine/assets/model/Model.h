@@ -20,6 +20,8 @@ public:
 
 	struct Sampler
 	{
+		std::string name;
+		
 		std::shared_ptr<Texture> texture = nullptr;
 
 		TextureFiltering minFilter = TextureFiltering::LINEAR;
@@ -36,6 +38,8 @@ public:
 	// glTF-based material (not all extensions included) (comments in this file -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0)
 	struct Material
 	{
+		std::string name;
+		
 		// The value for each property(baseColor, metallic, roughness) can be defined using factors or textures.
 
 		// If a texture is not given, all respective texture components within this material model are assumed to have a value of 1.0.
@@ -83,6 +87,8 @@ public:
 	
 	struct GeometryGroup
 	{
+		std::string name;
+		
 		std::vector<uint32> indices;
 
 		std::vector<glm::vec3> positions;
@@ -102,6 +108,8 @@ public:
 	
 	struct Mesh
 	{
+		std::string name;
+		
 		std::vector<GeometryGroup> geometryGroups;
 	};
 	

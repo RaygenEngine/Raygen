@@ -73,7 +73,7 @@ void Node::CacheWorldTransform()
 	m_parent->CacheWorldTransform();
 
 	if(m_updateLocalMatrix)
-		m_localMatrix = Core::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
+		m_localMatrix = utl::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
 
 	m_worldMatrix = m_parent->GetWorldMatrix() * m_localMatrix;
 
@@ -110,7 +110,7 @@ bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 	const auto status = LoadAttributesFromXML(xmlData) && factory->LoadChildren(xmlData, this);
 		
 	// calculate local matrix after loading
-	m_localMatrix = Core::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
+	m_localMatrix = utl::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
 
 	return status;
 }

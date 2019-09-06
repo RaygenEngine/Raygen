@@ -34,13 +34,13 @@ void CameraNode::GetTracingVariables(glm::vec3& u, glm::vec3& v, glm::vec3& w)
 	u *= tanHHalfFov * m_focalLength;
 }
 
-//void CameraNode::WindowResize(int32 width, int32 height)
-//{
-//	auto ar = static_cast<float>(width) / static_cast<float>(height);
-//
-//	m_projectionMatrix = glm::perspective(glm::radians(m_vFov), ar, m_near, m_far);
-//	m_hFov = glm::degrees(2 * atan(ar * tan(glm::radians(m_vFov) * 0.5f)));
-//}
+void CameraNode::WindowResize(int32 width, int32 height)
+{
+	auto ar = static_cast<float>(width) / static_cast<float>(height);
+
+	m_projectionMatrix = glm::perspective(glm::radians(m_vFov), ar, m_near, m_far);
+	m_hFov = glm::degrees(2 * atan(ar * tan(glm::radians(m_vFov) * 0.5f)));
+}
 
 bool CameraNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 {

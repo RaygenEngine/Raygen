@@ -130,7 +130,7 @@ std::string PathSystem::SearchAssetInAssetsDirectories(const std::string& relati
 			auto maskPart = path.substr(0, absoluteHintMask.size());
 
 			// skip based on mask
-			if (!Core::CaseInsensitiveCompare(maskPart, absoluteHintMask))
+			if (!utl::CaseInsensitiveCompare(maskPart, absoluteHintMask))
 			{
 				continue;
 			}
@@ -157,7 +157,7 @@ std::string PathSystem::SearchAsset(const std::string& relativeAssetPath, const 
 {
 	// Trim
 	auto pcopy = relativeAssetPath;
-	Core::Trim(pcopy);
+	utl::Trim(pcopy);
 
 	LOG_TRACE("Searching for asset, given path: \'{}\', given path hint: \'{}\'", pcopy, pathHint);
 
@@ -203,7 +203,7 @@ std::string PathSystem::SearchAsset(const std::string& relativeAssetPath, const 
 	const auto extension = path.extension().string();
 
 	// search based on shader extensions
-	if (m_shaderExtensions.find(Core::ToLower(extension)) != m_shaderExtensions.end())
+	if (m_shaderExtensions.find(utl::ToLower(extension)) != m_shaderExtensions.end())
 	{
 		auto res = SearchAssetInShadersDirectories(pcopy);
 
@@ -213,7 +213,7 @@ std::string PathSystem::SearchAsset(const std::string& relativeAssetPath, const 
 	} 
 	
 	// search based on scene extensions
-	if (m_sceneExtensions.find(Core::ToLower(extension)) != m_sceneExtensions.end())
+	if (m_sceneExtensions.find(utl::ToLower(extension)) != m_sceneExtensions.end())
 	{
 		auto res = SearchAssetInScenesDirectories(pcopy);
 

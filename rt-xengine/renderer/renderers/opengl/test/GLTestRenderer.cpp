@@ -73,6 +73,9 @@ namespace OpenGL
 	{
 		auto bgcl = Engine::GetWorld()->GetRoot()->GetBackgroundColor();
 
+		glViewport(0, 0, 1920, 1080);
+
+		m_camera->WindowResize(1920, 1080);
 		glm::mat4 vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
 
 		glClearColor(bgcl.r, bgcl.g, bgcl.b, 1.0);
@@ -126,7 +129,7 @@ namespace OpenGL
 				glMaterial.doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 									
 				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
-		
+			
 				glBindVertexArray(0);
 			}
 		}
