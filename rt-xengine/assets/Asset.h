@@ -42,6 +42,10 @@ public:
 	void Unload();
 
 	AssetManager* GetAssetManager() const { return m_assetManager; }
+
+	std::string GetFileName() const { return m_fileName; }
+	std::string GetDirectory() const { return m_directoryPath; }
+	std::string GetFilePath() const { return m_filePath; }
 	
 	void ToString(std::ostream& os) const override { os << "object-type: Asset, name: " << m_fileName; }
 };

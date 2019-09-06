@@ -1,35 +1,30 @@
 #pragma once
 
-#include "system/EngineObject.h"
-#include "assets/DiskAssetManager.h"
 #include "assets/GLCubeMap.h"
 #include "assets/GLTexture.h"
 #include "assets/GLShader.h"
 #include "assets/GLModel.h"
+#include "assets/AssetManager.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
-	class GLAssetManager : public System::EngineObject
+	class GLAssetManager
 	{
 
-		Assets::MultiKeyAssetCache<GLCubeMap, Assets::CubeMap*, GLint, bool> m_glCubeMaps;
-		Assets::MultiKeyAssetCache<GLTexture, Assets::Texture*, GLint, GLint, GLint, GLint, GLint> m_glTextures;
-		Assets::MultiKeyAssetCache<GLShader, Assets::StringFile*, Assets::StringFile*> m_glShaders;
-		Assets::MultiKeyAssetCache<GLModel, Assets::Model*> m_glModels;
+		MultiKeyAssetCache<GLCubeMap, CubeMap*, GLint, bool> m_glCubeMaps;
+		MultiKeyAssetCache<GLTexture, Texture*, GLint, GLint, GLint, GLint, GLint> m_glTextures;
+		MultiKeyAssetCache<GLShader, StringFile*, StringFile*> m_glShaders;
+		MultiKeyAssetCache<GLModel, Model*> m_glModels;
 		//Assets::MultiKeyAssetCache<GLInstancedModel, Assets::Model*, World::TriangleModelInstancedGeometryNode*> m_glInstancedModels;
 
 	public:
-		GLAssetManager(EngineObject* pObject);
-
-		std::shared_ptr<GLCubeMap> RequestGLCubeMap(Assets::CubeMap* cubeMap, GLint wrapFlag = GL_REPEAT, bool mipMapping = false);
-		std::shared_ptr<GLTexture> RequestGLTexture(Assets::Texture* texture, GLint minFilter = GL_LINEAR, GLint magFilter = GL_LINEAR, GLint wrapS = GL_REPEAT, GLint wrapT = GL_REPEAT, GLint wrapR = GL_REPEAT);
-		std::shared_ptr<GLShader> RequestGLShader(Assets::StringFile* vertexFile, Assets::StringFile* fragmentFile);
-		std::shared_ptr<GLModel> RequestGLModel(Assets::Model* model);
+		std::shared_ptr<GLCubeMap> RequestGLCubeMap(CubeMap* cubeMap, GLint wrapFlag = GL_REPEAT, bool mipMapping = false);
+		std::shared_ptr<GLTexture> RequestGLTexture(Texture* texture, GLint minFilter = GL_LINEAR, GLint magFilter = GL_LINEAR, GLint wrapS = GL_REPEAT, GLint wrapT = GL_REPEAT, GLint wrapR = GL_REPEAT);
+		std::shared_ptr<GLShader> RequestGLShader(StringFile* vertexFile, StringFile* fragmentFile);
+		std::shared_ptr<GLModel> RequestGLModel(Model* model);
 		// TODO: fix this one
 		//std::shared_ptr<GLInstancedModel> RequestGLInstancedModel(World::TriangleModelInstancedGeometryNode* nodeInstancer);
 		//
-
-		void ToString(std::ostream& os) const override { os << "object-type: GLAssetManager, name: " << GetUID(); }
 	};
 
 }
