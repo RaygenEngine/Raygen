@@ -30,7 +30,6 @@ namespace OpenGL
 	template<typename GlRenderer>
 	GLAssetManager* GetGLAssetManager(RendererObject<GlRenderer>* context)
 	{
-		return Engine::GetRenderer<GLRendererBase>()->GetGLAssetManager();
-		//return &Engine::GetRenderer<RendererObject<GLRendererBase>, GLRendererBase>(context)->m_glAssetManager;
+		return Engine::GetRenderer(context)->GetGLAssetManager();
 	}
 }

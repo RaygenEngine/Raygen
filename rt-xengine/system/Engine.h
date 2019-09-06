@@ -55,14 +55,13 @@ public:
 		return dynamic_cast<AsRenderer*>(Get().m_renderer);
 	}
 
-	/* TODO:
-	template<typename RendererObject, typename RenderT = typename RendererObject::Type>
+	template<template<class> typename RendererObject, typename RenderT>
 	[[nodiscard]]
-	static RenderT* GetRenderer(RendererObject* context)
+	static RenderT* GetRenderer(RendererObject<RenderT>* contextRendererObject)
 	{
-		return dynamic_cast<RenderT*>(:GetRenderer());
+		return dynamic_cast<RenderT*>(GetRenderer());
 	}
-	*/
+	
 
 public:
 	Engine(Engine const&) = delete;
