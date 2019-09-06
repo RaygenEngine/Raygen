@@ -10,7 +10,7 @@ std::shared_ptr<StringFile> AssetManager::LoadStringFileAsset(const std::string&
 	if (path.empty())
 		return nullptr;
 
-	return LoadAssetAtMultiKeyCache<StringFile>(m_stringFiles, this, path, path);
+	return CachingAux::LoadAssetAtMultiKeyCache<StringFile>(m_stringFiles, this, path, path);
 }
 
 std::shared_ptr<XMLDoc> AssetManager::LoadXMLDocAsset(const std::string& xmlDocPath,
@@ -21,7 +21,7 @@ std::shared_ptr<XMLDoc> AssetManager::LoadXMLDocAsset(const std::string& xmlDocP
 	if (path.empty())
 		return nullptr;
 
-	return LoadAssetAtMultiKeyCache<XMLDoc>(m_xmlDocs, this, path, path);
+	return CachingAux::LoadAssetAtMultiKeyCache<XMLDoc>(m_xmlDocs, this, path, path);
 }
 
 std::shared_ptr<Texture> AssetManager::LoadTextureAsset(const std::string& texturePath, DynamicRange dr, bool flipVertically,
@@ -32,7 +32,7 @@ std::shared_ptr<Texture> AssetManager::LoadTextureAsset(const std::string& textu
 	if (path.empty())
 		return nullptr;
 
-	return LoadAssetAtMultiKeyCache<Texture>(m_textures, this, path, path, dr, flipVertically);
+	return CachingAux::LoadAssetAtMultiKeyCache<Texture>(m_textures, this, path, path, dr, flipVertically);
 }
 
 std::shared_ptr<Model> AssetManager::LoadModelAsset(const std::string& modelPath, GeometryUsage usage,
@@ -43,7 +43,7 @@ std::shared_ptr<Model> AssetManager::LoadModelAsset(const std::string& modelPath
 	if (path.empty())
 		return nullptr;
 
-	return LoadAssetAtMultiKeyCache<Model>(m_models, this, path, path, usage);
+	return CachingAux::LoadAssetAtMultiKeyCache<Model>(m_models, this, path, path, usage);
 }
 
 std::shared_ptr<CubeMap> AssetManager::LoadCubeMapAsset(const std::string& texturePath, DynamicRange dr, bool flipVertically, const std::string& pathHint)
@@ -53,7 +53,7 @@ std::shared_ptr<CubeMap> AssetManager::LoadCubeMapAsset(const std::string& textu
 	if (path.empty())
 		return nullptr;
 
-	return LoadAssetAtMultiKeyCache<CubeMap>(m_cubeMaps, this, path, path, dr, flipVertically);
+	return CachingAux::LoadAssetAtMultiKeyCache<CubeMap>(m_cubeMaps, this, path, path, dr, flipVertically);
 }
 
 std::shared_ptr<PackedTexture> AssetManager::LoadPackedTexture(Texture* textTargetRChannel,

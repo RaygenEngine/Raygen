@@ -21,7 +21,7 @@ bool FreeformUserNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData
 	UserNode::LoadAttributesFromXML(xmlData);
 
 	glm::vec3 localLookat{};
-	if (ReadFloatsAttribute(xmlData, "lookat", localLookat))
+	if (ParsingAux::ReadFloatsAttribute(xmlData, "lookat", localLookat))
 	{
 		// if lookat read overwrite following
 		SetLocalOrientation(Core::GetOrientationFromLookAtAndPosition(localLookat, GetLocalTranslation()));
@@ -39,8 +39,7 @@ bool FreeformUserNode::PostChildrenLoaded()
 // TODO: speed and turning speed adjustments
 void FreeformUserNode::Update()
 {
-	// REFACT:
-	auto& input = GetWorld()->GetEngine()->GetInput();
+	auto& input = GetInput();
 
 	auto speed = m_movementSpeed; // 0,01
 

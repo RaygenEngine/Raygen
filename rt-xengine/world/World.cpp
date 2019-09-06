@@ -17,14 +17,14 @@ extern float GetTimeMs()
 
 
 World::World(Engine* engine, NodeFactory* factory)
-	: Node(nullptr),
-	EngineComponent(engine),
-	m_background(0.f, 0.f, 0.4f),
-	m_ambient(0.4f, 0.4f, 0.4f),
-	m_deltaTime(0),
-	m_worldTime(GetTimeMs()),
-	m_lastTime(GetTimeMs()),
-	m_nodeFactory(factory)
+	: EngineComponent(engine),
+      Node(nullptr),
+	  m_background(0.f, 0.f, 0.4f),
+	  m_ambient(0.4f, 0.4f, 0.4f),
+	  m_deltaTime(0),
+	  m_worldTime(GetTimeMs()),
+	  m_lastTime(GetTimeMs()),
+	  m_nodeFactory(factory)
 {
 }
 
@@ -89,8 +89,7 @@ bool World::LoadAndPrepareWorldFromXML(XMLDoc* sceneXML)
 {
 	if (sceneXML)
 	{
-		// REFACT:
-		//LOG_INFO("Loading World data from XML: \'{}\'", sceneXML->GetFilePath());
+		LOG_INFO("Loading World data from XML: \'{}\'", sceneXML->GetFilePath());
 
 		auto* worldElement = sceneXML->GetRootElement();
 

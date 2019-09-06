@@ -14,9 +14,9 @@ bool SkyHDRNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 {
 	Node::LoadAttributesFromXML(xmlData);
 
-	if (AttributeExists(xmlData, "hdr_texture"))
+	if (ParsingAux::AttributeExists(xmlData, "hdr_texture"))
 	{
-		m_hdrTexture = GetDiskAssetManager()->LoadTextureAsset(xmlData->Attribute("hdr_texture"), DynamicRange::HIGH);
+		m_hdrTexture = GetAssetManager()->LoadTextureAsset(xmlData->Attribute("hdr_texture"), DynamicRange::HIGH);
 
 		if (!m_hdrTexture)
 			return false;

@@ -33,23 +33,23 @@ void CameraNode::GetTracingVariables(glm::vec3& u, glm::vec3& v, glm::vec3& w)
 	v *= tanVHalfFov * m_focalLength;
 	u *= tanHHalfFov * m_focalLength;
 }
-// REFACT:
-//void CameraNode::WindowResize(int32 width, int32 height)
-//{
-//	auto ar = static_cast<float>(width) / static_cast<float>(height);
-//
-//	m_projectionMatrix = glm::perspective(glm::radians(m_vFov), ar, m_near, m_far);
-//	m_hFov = glm::degrees(2 * atan(ar * tan(glm::radians(m_vFov) * 0.5f)));
-//}
+
+void CameraNode::WindowResize(int32 width, int32 height)
+{
+	auto ar = static_cast<float>(width) / static_cast<float>(height);
+
+	m_projectionMatrix = glm::perspective(glm::radians(m_vFov), ar, m_near, m_far);
+	m_hFov = glm::degrees(2 * atan(ar * tan(glm::radians(m_vFov) * 0.5f)));
+}
 
 bool CameraNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 {
 	Node::LoadAttributesFromXML(xmlData);
 
-	ReadFloatsAttribute(xmlData, "fov", m_vFov);
-	ReadFloatsAttribute(xmlData, "focal_length", m_focalLength);
-	ReadFloatsAttribute(xmlData, "near", m_near);
-	ReadFloatsAttribute(xmlData, "far", m_far);
+	ParsingAux::ReadFloatsAttribute(xmlData, "fov", m_vFov);
+	ParsingAux::ReadFloatsAttribute(xmlData, "focal_length", m_focalLength);
+	ParsingAux::ReadFloatsAttribute(xmlData, "near", m_near);
+	ParsingAux::ReadFloatsAttribute(xmlData, "far", m_far);
 
 	return true;
 }

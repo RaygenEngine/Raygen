@@ -8,11 +8,6 @@
 #include "sky/SkyHDRNode.h"
 #include "world/NodeFactory.h"
 
-AssetManager* Node::GetDiskAssetManager() const
-{
-	return GetWorld()->GetEngine()->GetDiskAssetManager();
-}
-
 Node::Node(Node* pNode)
 	: Object(),
 		m_world(pNode->GetWorld()),
@@ -103,8 +98,8 @@ void Node::MarkDirty()
 
 bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 {
-	ReadFillEntityName(xmlData, m_name);
-	ReadFillEntityType(xmlData, m_type);
+	ParsingAux::ReadFillEntityName(xmlData, m_name);
+	ParsingAux::ReadFillEntityType(xmlData, m_type);
 
 	LOG_INFO("Loading {0} named {1}", m_type, m_name);
 
@@ -120,11 +115,11 @@ bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 
 bool Node::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
 {
-	ReadFloatsAttribute(xmlData, "translation", m_localTranslation);
+	ParsingAux::ReadFloatsAttribute(xmlData, "translation", m_localTranslation);
 	glm::vec3 eulerPYR{ 0.f, 0.f, 0.f };
-	ReadFloatsAttribute(xmlData, "euler_pyr", eulerPYR);
+	ParsingAux::ReadFloatsAttribute(xmlData, "euler_pyr", eulerPYR);
 	m_localOrientation = glm::quat(glm::radians(eulerPYR));
-	ReadFloatsAttribute(xmlData, "scale", m_localScale);
+	ParsingAux::ReadFloatsAttribute(xmlData, "scale", m_localScale);
 
 	m_updateLocalMatrix = true;
 	MarkDirty();

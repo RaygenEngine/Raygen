@@ -2,7 +2,7 @@
 
 #define GLCheckError() GLCheckError_(__FILE__, __LINE__) 
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
 	inline GLenum GetGLUsage(GeometryUsage geomUsage)
 	{

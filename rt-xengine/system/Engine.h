@@ -3,15 +3,16 @@
 #include "system/Input.h"
 #include "platform/windows/Win32Window.h"
 #include "renderer/Renderer.h"
+#include "world/World.h"
 #include "world/NodeFactory.h"
-#include "assets/AssetManager.h"
+class Renderer;
+class AssetManager;
 
-class World;
+using RendererRegistrationIndex = uint32;
 
 class Engine
 {
 public:
-	using RendererRegistrationIndex = uint32;
 	using WindowType = Win32Window;
 
 private:
@@ -28,10 +29,10 @@ private:
 	// TODO: implement non deletable engineComponent on stack
 	
 
-	std::unique_ptr<AssetManager> m_diskAssetManager;
+	std::unique_ptr<AssetManager> m_assetManager;
 	std::unique_ptr<World> m_world;
 	std::unique_ptr<Renderer> m_renderer;
-	WindowType* m_window;
+	WindowType m_window;
 
 	Input m_input;
 
@@ -41,11 +42,11 @@ public:
 		
 	bool InitDirectories(const std::string& applicationPath, const std::string& dataDirectoryName);
 
-	AssetManager* GetDiskAssetManager() const { return m_diskAssetManager.get(); }
+	AssetManager* GetDiskAssetManager() const { return m_assetManager.get(); }
 
 	Renderer* GetRenderer() const { return m_renderer.get(); }
 	World* GetWorld() const { return m_world.get(); }
-	WindowType* GetWindow() { return m_window; }
+	WindowType* GetWindow() { return &m_window; }
 
 	// Can return nullptr
 	//Editor* GetEditor() { return m_editor; }

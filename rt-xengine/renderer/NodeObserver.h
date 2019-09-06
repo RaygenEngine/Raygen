@@ -2,17 +2,17 @@
 
 #include "world/nodes/Node.h"
 
-
 class NodeObserver
 {
 	Node* m_nodeBase;
 
 public:
 
-	NodeObserver(Node* node);
+	NodeObserver(Node* node)
+		: m_nodeBase(node) {}
 	virtual ~NodeObserver() = default;
 
-	virtual void UpdateFromNode();
+	virtual void UpdateFromNode() {};
 
 	Node* GetNodeBase() const { return m_nodeBase; }
 };
@@ -31,8 +31,8 @@ protected:
 public:
 	TypedNodeObserver(RendererType* renderer, NodeType* node)
 		: NodeObserver(node),
-			m_node(node), 
-		    m_renderer(renderer)
+		  m_node(node), 
+	      m_renderer(renderer)
 	{
 	}
 
@@ -41,3 +41,4 @@ public:
 	const NodeType* GetNode() const { return m_node; }
 	RendererType* GetRenderer() const { return m_renderer; }
 };
+

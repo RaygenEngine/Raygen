@@ -19,7 +19,7 @@ bool LightNode::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
 {
 	Node::LoadAttributesFromXML(xmlData);
 
-	ReadFloatsAttribute(xmlData, "color", m_color);
+	ParsingAux::ReadFloatsAttribute(xmlData, "color", m_color);
 
 	return true;
 }

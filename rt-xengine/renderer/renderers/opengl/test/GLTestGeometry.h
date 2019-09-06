@@ -4,7 +4,7 @@
 #include "renderer/renderers/opengl/test/GLTestRenderer.h"
 #include "world/nodes/geometry/TriangleModelGeometryNode.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
 	struct GLTestGeometry : TypedNodeObserver<GLTestRenderer, TriangleModelGeometryNode>
 	{

@@ -20,14 +20,14 @@ bool TriangleModelGeometryNode::LoadAttributesFromXML(const tinyxml2::XMLElement
 	Node::LoadAttributesFromXML(xmlData);
 
 	std::string type;
-	ReadStringAttribute(xmlData, "type", type); 
+	ParsingAux::ReadStringAttribute(xmlData, "type", type);
 		
 	// default geom is static
 	auto modelGeomType = GeometryUsage::STATIC;
 	if(!type.empty() && Core::CaseInsensitiveCompare(type, "dynamic"))
 		modelGeomType = GeometryUsage::DYNAMIC;
 		
-	m_model = GetDiskAssetManager()->LoadModelAsset(xmlData->Attribute("file"), modelGeomType, GetWorld()->GetAssetLoadPathHint());
+	m_model = GetAssetManager()->LoadModelAsset(xmlData->Attribute("file"), modelGeomType, GetWorld()->GetAssetLoadPathHint());
 
 	return static_cast<bool>(m_model.get());
 }

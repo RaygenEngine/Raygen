@@ -2,11 +2,11 @@
 
 #include "renderer/renderers/opengl/GLRendererBase.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
 
-	GLRendererBase::GLRendererBase(System::Engine* context)
-		: Renderer(context),
+	GLRendererBase::GLRendererBase(Engine* engine)
+		: Renderer(engine),
 		  m_assochWnd(nullptr),
 		  m_hdc(nullptr),
 		  m_hglrc(nullptr),

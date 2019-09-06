@@ -14,9 +14,9 @@ bool SkyCubeNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 {
 	Node::LoadAttributesFromXML(xmlData);
 
-	if (AttributeExists(xmlData, "cube_map"))
+	if (ParsingAux::AttributeExists(xmlData, "cube_map"))
 	{
-		m_cubeMap = GetDiskAssetManager()->LoadCubeMapAsset(xmlData->Attribute("cube_map"), DynamicRange::LOW, false);
+		m_cubeMap = GetAssetManager()->LoadCubeMapAsset(xmlData->Attribute("cube_map"), DynamicRange::LOW, false);
 
 		if (!m_cubeMap)
 			return false;

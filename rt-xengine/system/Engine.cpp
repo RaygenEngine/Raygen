@@ -18,8 +18,8 @@ Engine::~Engine()
 
 bool Engine::InitDirectories(const std::string& applicationPath, const std::string& dataDirectoryName)
 {
-	m_diskAssetManager = std::make_unique<AssetManager>(this);
-	return m_diskAssetManager->Init(applicationPath, dataDirectoryName);
+	m_assetManager = std::make_unique<AssetManager>(this);
+	return m_assetManager->Init(applicationPath, dataDirectoryName);
 }
 
 bool Engine::CreateWorldFromFile(const std::string& filename, NodeFactory* factory)
@@ -27,7 +27,7 @@ bool Engine::CreateWorldFromFile(const std::string& filename, NodeFactory* facto
 	m_world = std::make_unique<World>(this, factory);
 
 	// load scene file
-	const auto sceneXML = m_diskAssetManager->LoadXMLDocAsset(filename);
+	const auto sceneXML = m_assetManager->LoadXMLDocAsset(filename);
 
 	return m_world->LoadAndPrepareWorldFromXML(sceneXML.get());
 }
@@ -49,5 +49,5 @@ bool Engine::SwitchRenderer(RendererRegistrationIndex registrationIndex)
 
 void Engine::UnloadDiskAssets()
 {
-	m_diskAssetManager->UnloadAssets();
+	m_assetManager->UnloadAssets();
 }
