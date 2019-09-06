@@ -1,5 +1,4 @@
 #pragma once
-#include "system/Engine.h"
 #include "system/EngineComponent.h"
 
 // Base class for a platform independant window
@@ -35,7 +34,7 @@ public:
 
 	virtual void Show() { }
 	
-	virtual bool StartRenderer(RendererRegistrationIndex index) { return false; }
+	virtual bool StartRenderer(uint32 index) { return false; }
 
 	virtual void SetTitle(const std::string& newTitle) { };
 

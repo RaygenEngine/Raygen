@@ -17,7 +17,8 @@ extern float GetTimeMs()
 
 
 World::World(Engine* engine, NodeFactory* factory)
-	: Node(engine),
+	: Node(nullptr),
+	EngineComponent(engine),
 	m_background(0.f, 0.f, 0.4f),
 	m_ambient(0.4f, 0.4f, 0.4f),
 	m_deltaTime(0),
@@ -84,11 +85,12 @@ Node* World::GetNodeById(uint32 id) const
 	return nullptr;
 }
 
-bool World::LoadAndPrepareWorldFromXML(Assets::XMLDoc* sceneXML)
+bool World::LoadAndPrepareWorldFromXML(XMLDoc* sceneXML)
 {
 	if (sceneXML)
 	{
-		LOG_INFO("Loading World data from XML: \'{}\'", sceneXML->GetFilePath());
+		// REFACT:
+		//LOG_INFO("Loading World data from XML: \'{}\'", sceneXML->GetFilePath());
 
 		auto* worldElement = sceneXML->GetRootElement();
 
@@ -125,11 +127,11 @@ bool World::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
 	Node::LoadAttributesFromXML(xmlData);
 
 	std::string assetPath{};
-	Assets::ReadStringAttribute(xmlData, "asset_path", assetPath);
+	ReadStringAttribute(xmlData, "asset_path", assetPath);
 	this->SetAssetLoadPathHint("scenes\\" + assetPath);
 
-	Assets::ReadFloatsAttribute(xmlData, "background", m_background);
-	Assets::ReadFloatsAttribute(xmlData, "ambient", m_ambient);
+	ReadFloatsAttribute(xmlData, "background", m_background);
+	ReadFloatsAttribute(xmlData, "ambient", m_ambient);
 
 	return true;
 }

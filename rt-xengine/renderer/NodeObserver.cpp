@@ -2,14 +2,11 @@
 
 #include "renderer/NodeObserver.h"
 
-namespace Renderer
+NodeObserver::NodeObserver(Node* node)
+	: m_nodeBase(node)
 {
-	NodeObserver::NodeObserver(Node* node)
-		: m_nodeBase(node)
-	{
-	}
+}
 
-	void NodeObserver::UpdateFromNode()
-	{
-	}
+void NodeObserver::UpdateFromNode()
+{
 }

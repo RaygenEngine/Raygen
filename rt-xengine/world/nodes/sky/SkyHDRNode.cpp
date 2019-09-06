@@ -2,7 +2,7 @@
 
 #include "world/nodes/sky/SkyHDRNode.h"
 #include "assets/other/xml/ParsingAux.h"
-#include "assets/DiskAssetManager.h"
+#include "assets/AssetManager.h"
 
 
 SkyHDRNode::SkyHDRNode(Node* parent)
@@ -14,7 +14,7 @@ bool SkyHDRNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 {
 	Node::LoadAttributesFromXML(xmlData);
 
-	if (Assets::AttributeExists(xmlData, "hdr_texture"))
+	if (AttributeExists(xmlData, "hdr_texture"))
 	{
 		m_hdrTexture = GetDiskAssetManager()->LoadTextureAsset(xmlData->Attribute("hdr_texture"), DynamicRange::HIGH);
 

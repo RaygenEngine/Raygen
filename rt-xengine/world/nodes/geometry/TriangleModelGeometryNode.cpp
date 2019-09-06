@@ -2,7 +2,7 @@
 
 #include "world/nodes/geometry/TriangleModelGeometryNode.h"
 #include "world/World.h"
-#include "assets/DiskAssetManager.h"
+#include "assets/AssetManager.h"
 #include "assets/other/xml/ParsingAux.h"
 
 TriangleModelGeometryNode::TriangleModelGeometryNode(Node* parent)
@@ -20,7 +20,7 @@ bool TriangleModelGeometryNode::LoadAttributesFromXML(const tinyxml2::XMLElement
 	Node::LoadAttributesFromXML(xmlData);
 
 	std::string type;
-	Assets::ReadStringAttribute(xmlData, "type", type); 
+	ReadStringAttribute(xmlData, "type", type); 
 		
 	// default geom is static
 	auto modelGeomType = GeometryUsage::STATIC;

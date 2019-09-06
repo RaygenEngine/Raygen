@@ -2,7 +2,7 @@
 
 #include "system/Engine.h"
 #include "assets/other/xml/XMLDoc.h"
-#include "assets/DiskAssetManager.h"
+#include "assets/AssetManager.h"
 #include "world/World.h"
 #include "renderer/Renderer.h"
 #include "world/NodeFactory.h"
@@ -18,7 +18,7 @@ Engine::~Engine()
 
 bool Engine::InitDirectories(const std::string& applicationPath, const std::string& dataDirectoryName)
 {
-	m_diskAssetManager = std::make_unique<Assets::AssetManager>(this);
+	m_diskAssetManager = std::make_unique<AssetManager>(this);
 	return m_diskAssetManager->Init(applicationPath, dataDirectoryName);
 }
 

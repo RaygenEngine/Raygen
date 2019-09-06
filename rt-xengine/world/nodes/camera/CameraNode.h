@@ -38,7 +38,8 @@ public:
 		
 	void GetTracingVariables(glm::vec3& u, glm::vec3& v, glm::vec3& w);
 
-	void WindowResize(int32 width, int32 height) override;
+	// REFACT: 
+	//void WindowResize(int32 width, int32 height) override;
 
 	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 

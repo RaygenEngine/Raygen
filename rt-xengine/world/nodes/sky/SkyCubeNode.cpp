@@ -2,7 +2,7 @@
 
 #include "world/nodes/sky/SkyCubeNode.h"
 #include "assets/other/xml/ParsingAux.h"
-#include "assets/DiskAssetManager.h"
+#include "assets/AssetManager.h"
 
 
 SkyCubeNode::SkyCubeNode(Node* parent)
@@ -14,7 +14,7 @@ bool SkyCubeNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 {
 	Node::LoadAttributesFromXML(xmlData);
 
-	if (Assets::AttributeExists(xmlData, "cube_map"))
+	if (AttributeExists(xmlData, "cube_map"))
 	{
 		m_cubeMap = GetDiskAssetManager()->LoadCubeMapAsset(xmlData->Attribute("cube_map"), DynamicRange::LOW, false);
 

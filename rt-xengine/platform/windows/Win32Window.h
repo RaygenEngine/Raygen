@@ -63,7 +63,7 @@ public:
 
 	void Show() override;
 
-	bool StartRenderer(RendererRegistrationIndex index) override;
+	bool StartRenderer(uint32 index) override;
 	void HandleEvents(bool shouldHandleControllers) override;
 
 	void SetTitle(const std::string& newTitle) override;

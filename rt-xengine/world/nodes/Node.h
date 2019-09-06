@@ -3,10 +3,14 @@
 #include "tinyxml2/tinyxml2.h"
 #include "system/Object.h"
 
+class AssetManager;
 class World;
 
 class Node : public Object
 {
+public:
+	AssetManager* GetDiskAssetManager() const;
+protected:
 	// local
 	glm::vec3 m_localTranslation;
 	glm::quat m_localOrientation;
@@ -96,6 +100,7 @@ public:
 
 	void OrientYaw(float yaw);
 
+	virtual void Update();
 
 	//
 	// Child Getter Utilities

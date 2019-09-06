@@ -3,7 +3,6 @@
 #include "platform/windows/Win32Window.h"
 #include "platform/windows/TranslateWin32VirtualKeys.h"
 #include "world/World.h"
-#include "renderer/Renderer.h"
 #include "system/Engine.h"
 #include <windowsx.h>
 
@@ -255,7 +254,7 @@ void Win32Window::SetTitle(const std::string& newTitle)
 	SetWindowText(GetHWND(), newTitle.c_str());
 }
 
-bool Win32Window::StartRenderer(RendererRegistrationIndex index) 
+bool Win32Window::StartRenderer(uint32 index) 
 {
 	auto eng = GetEngine(this);
 	return eng->SwitchRenderer(index) &&
@@ -377,8 +376,9 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 		window->m_width = LOWORD(lParam);
 		window->m_height = HIWORD(lParam);
 
-		window->GetEngine(window)->GetWorld()->WindowResize(LOWORD(lParam), HIWORD(lParam));
-		window->GetEngine(window)->GetRenderer()->WindowResize(LOWORD(lParam), HIWORD(lParam));
+		// REFACT:
+		//window->GetEngine(window)->GetWorld()->WindowResize(LOWORD(lParam), HIWORD(lParam));
+		//window->GetEngine(window)->GetRenderer()->WindowResize(LOWORD(lParam), HIWORD(lParam));
 		break;
 
 	default:
