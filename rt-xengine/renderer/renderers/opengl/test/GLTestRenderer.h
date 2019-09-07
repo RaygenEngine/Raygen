@@ -9,6 +9,8 @@ namespace OpenGL
 
 	class GLTestRenderer :  public GLRendererBase
 	{
+		MAKE_METADATA(GLTestRenderer)
+
 	protected:
 		//std::shared_ptr<GLShader> m_instancedShader;
 		std::shared_ptr<GLShader> m_nonInstancedShader;
@@ -25,18 +27,21 @@ namespace OpenGL
 		int32 m_previewMode;
 
 	public:
+		DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
+		
 		GLTestRenderer()
-			: m_camera(nullptr), m_previewMode(0) {}
+			: m_camera(nullptr), m_previewMode(0) 
+		{
+			m_resizeListener.BindMember(this, &GLTestRenderer::WindowResize);
+		}
 
 		~GLTestRenderer() = default;
 
 		bool InitScene(int32 width, int32 height) override;
 		
-		// REFACT:
-		//void WindowResize(int32 width, int32 height) override;
+		void WindowResize(int32 width, int32 height);
 		void Render() override;
 
-		MAKE_METADATA(GLTestRenderer)
 
 		void Update() override;
 	};

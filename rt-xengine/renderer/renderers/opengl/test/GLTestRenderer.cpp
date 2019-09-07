@@ -19,6 +19,7 @@ namespace OpenGL
 {
 	bool GLTestRenderer::InitScene(int32 width, int32 height)
 	{
+
 		auto vertexSimpleShaderSource = Engine::GetAssetManager()->LoadStringFileAsset("test/test.vert");
 		//auto vertexInstancedShaderSource = GetDiskAssetManager()->LoadStringFileAsset("test/test_instanced.vert");
 		auto fragmentShaderSource = Engine::GetAssetManager()->LoadStringFileAsset("test/test.frag");
@@ -63,22 +64,17 @@ namespace OpenGL
 
 		//m_skyTexture = RequestGLTexture(sky->GetSkyHDR());
 
-		glViewport(0, 0, width, height);
-
 		return true;
 	}
 
-	// REFACT:
-	//void GLTestRenderer::WindowResize(int32 width, int32 height)
-	//{
-	//	glViewport(0, 0, width, height);
-	//}
+	void GLTestRenderer::WindowResize(int32 width, int32 height)
+	{
+		glViewport(0, 0, width, height);
+	}
 
 	void GLTestRenderer::Render()
 	{
 		auto bgcl = Engine::GetWorld()->GetRoot()->GetBackgroundColor();
-
-		glViewport(0, 0, 1920, 1080);
 
 		glm::mat4 vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
 
