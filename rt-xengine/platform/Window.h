@@ -14,9 +14,7 @@ protected:
 
 public:
 
-	// OnResize(int32 width, int32 height)
-	MulticastEvent<int32, int32> m_onResize;
-
+	
 	// Attach input before creating window
 	Window()
 		: m_focused(false),

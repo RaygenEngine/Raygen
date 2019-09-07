@@ -3,6 +3,7 @@
 #include "world/nodes/Node.h"
 #include "platform/windows/Win32Window.h"
 #include "system/Engine.h"
+#include "system/EngineEvents.h"
 
 // Window dependant // TODO: non-window dependant (e.g. oculus virtual eye)
 class CameraNode : public Node
@@ -21,7 +22,7 @@ class CameraNode : public Node
 	glm::mat4 m_projectionMatrix;
 
 public:
-	decltype(Window::m_onResize)::Listener m_onResize{ Engine::GetMainWindow()->m_onResize };
+	DECLARE_EVENT_LISTENER(OnWindowResize);
 
 	CameraNode(Node* parent);
 	~CameraNode() = default;

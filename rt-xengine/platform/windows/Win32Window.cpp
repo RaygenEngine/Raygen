@@ -364,7 +364,7 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 		window->m_width = LOWORD(lParam);
 		window->m_height = HIWORD(lParam);
 
-		window->m_onResize.Broadcast(window->m_width, window->m_height);
+		Event::OnWindowResize.Broadcast(window->m_width, window->m_height);
 	break;
 
 	default:

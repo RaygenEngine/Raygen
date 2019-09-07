@@ -135,6 +135,7 @@ set(HEADER_FILES
 	system/EngineComponent.h
 	system/Object.h
 	system/Input.h
+	system/EngineEvents.h
 	
 	event/Event.h
 

@@ -13,25 +13,15 @@ struct MulticastEvent {
 	// As such you can always capture [this](){} in your lambdas, never unbind and always be sure "this" is not a dangling reference
 	struct Listener
 	{
+	private:
 		bool m_registered{ false };
 		FunctionType m_callback;
 		MulticastEvent& m_event;
-
+	public:
 		Listener(MulticastEvent& event)
 			: m_event(event)
 		{}
 
-	private:
-		void Unregister()
-		{
-			if (m_registered)
-			{
-				m_event.Unbind(this);
-				m_registered = false;
-			}
-		}
-
-	public:
 		// Bind a lambda here that will run when the event gets broadcasted.
 		void Bind(FunctionType callback)
 		{
@@ -43,9 +33,27 @@ struct MulticastEvent {
 			m_callback = callback;
 		}
 
+		template<typename T>
+		using MemberFunc = void (T::*)(Args...);
+
+		template<typename T>
+		void BindMember(T* ref, MemberFunc<T> callback)
+		{
+			Bind(
+				[=](Args... args) 
+				{ 
+					std::invoke(callback, ref, args...);
+				}
+			);
+		}
+		
 		void Unbind()
 		{
-			Unregister();
+			if (m_registered)
+			{
+				m_event.Unbind(this);
+				m_registered = false;
+			}
 		}
 
 		[[nodiscard]]
@@ -56,7 +64,7 @@ struct MulticastEvent {
 
 		~Listener()
 		{
-			Unregister();
+			Unbind();
 		}
 	};
 
