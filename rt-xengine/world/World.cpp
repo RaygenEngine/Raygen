@@ -35,6 +35,7 @@ World::World(NodeFactory* factory)
 
 World::~World()
 {
+	delete m_nodeFactory;
 }
 
 void World::AddDirtyNode(Node* node)
@@ -84,40 +85,37 @@ Node* World::GetNodeById(uint32 id) const
 
 bool World::LoadAndPrepareWorldFromXML(XMLDoc* sceneXML)
 {
-	if (sceneXML)
+	if (!sceneXML)
 	{
-		LOG_INFO("Loading World data from XML: \'{}\'", sceneXML->GetFilePath());
-
-		auto* worldElement = sceneXML->GetRootElement();
-
-		m_root = std::make_unique<RootNode>();
-	
-		if (m_root->LoadFromXML(worldElement))
-		{
-			// mark dirty (everything) to cache initial instance data 
-			// world will keep dirty leafs too for optimization
-			m_root->MarkDirty();
-
-			// Cache transform data bottom up from leaf nodes
-			for (auto* dirtyLeafNode : this->m_dirtyLeafNodes)
-				dirtyLeafNode->CacheWorldTransform();
-
-
-			LOG_INFO("World loaded succesfully");
-
-			//LOG_ERROR("Scenegraph", PrintWorldTree(true));
-
-			return true;
-		}
-
-		LOG_FATAL("Incorrect world format!");
-
+		LOG_FATAL("Missing World scene XML data file!");
 		return false;
 	}
 
-	LOG_FATAL("Missing World scene XML data file!");
 
-	return false;
+	LOG_INFO("Loading World data from XML: \'{}\'", sceneXML->GetFilePath());
+
+	auto* rootNode = sceneXML->GetRootElement();
+
+	m_root = std::make_unique<RootNode>();
+	
+	if (!m_root->LoadFromXML(rootNode))
+	{
+		LOG_FATAL("Incorrect world format!");
+		return false;
+	}
+
+	// mark dirty (everything) to cache initial instance data 
+	// world will keep dirty leafs too for optimization
+	m_root->MarkDirty();
+
+	// Cache transform data bottom up from leaf nodes
+	for (auto* dirtyLeafNode : this->m_dirtyLeafNodes)
+	{
+		dirtyLeafNode->CacheWorldTransform();
+	}
+
+	LOG_INFO("World loaded succesfully");
+	return true;
 }
 
 

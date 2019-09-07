@@ -2,7 +2,8 @@
 
 #include "world/nodes/camera/CameraNode.h"
 #include "assets/other/xml/ParsingAux.h"
-
+#include "system/Engine.h"
+#include "platform/windows/Win32Window.h"
 
 CameraNode::CameraNode(Node* parent)
 	: Node(parent),
@@ -12,7 +13,9 @@ CameraNode::CameraNode(Node* parent)
 		m_near(0.2f),
 		m_far(1000.0f),
 		m_projectionMatrix()
+//		, m_onResize(Engine::GetMainWindow()->m_onResize)
 {
+	m_onResize.Bind([&](int32 x, int32 y) { WindowResize(x, y); });
 }
 
 std::string CameraNode::ToString(bool verbose, uint depth) const
@@ -36,6 +39,8 @@ void CameraNode::GetTracingVariables(glm::vec3& u, glm::vec3& v, glm::vec3& w)
 
 void CameraNode::WindowResize(int32 width, int32 height)
 {
+	LOG_ERROR("OnResize1");
+
 	auto ar = static_cast<float>(width) / static_cast<float>(height);
 
 	m_projectionMatrix = glm::perspective(glm::radians(m_vFov), ar, m_near, m_far);

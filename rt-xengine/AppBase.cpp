@@ -17,10 +17,16 @@ AppBase::AppBase()
 
 	m_handleControllers = false;
 	m_lockMouse = false;
+
+	m_argc = 1;
 }
 
 void AppBase::PreMainInit(int32 argc, char* argv[])
 {
+	// Copy the arguments for later use.
+	m_argc = argc;
+	m_argv = argv;
+
 	if (argc > 1) 
 	{
 		m_initialScene = argv[1];
@@ -31,53 +37,39 @@ int32 AppBase::Main(int32 argc, char* argv[])
 {
 	LOG_FATAL("Running app: {}", m_name);
 
-	std::unique_ptr<Window> window = CreateAppWindow();
-	
-	RegisterRenderers();
-	
-	// Init engine file system.
-	if (!Engine::Get().InitDirectories(argv[0], m_assetPath))
-	{
-		LOG_FATAL("Failed to create Engine!");
-		return -1;
-	}
-	
-	std::unique_ptr<NodeFactory> factory = MakeNodeFactory();
-	if (!Engine::Get().CreateWorldFromFile(m_initialScene, factory.get()))
+	Engine& engine = Engine::Get(); 
+
+	engine.InitEngine(this);
+
+	if (!engine.CreateWorldFromFile(m_initialScene))
 	{
 		LOG_FATAL("Failed to create World!");
 		return -1;
 	}
 
-	// Create window
-	if (!window)
-	{
-		LOG_FATAL("Failed to create Window!");
-		return -1;
-	}
-
 	// Start the renderer
-	if (!window->StartRenderer(0))
-	{
-		LOG_FATAL("Failed to create Renderer!");
-		return -1;
-	}
+	engine.SwitchRenderer(0);
 
+
+	Window* window = Engine::GetMainWindow();
+	// Show the window
 	window->Show();
 
-	if (m_lockMouse) 
+	if (m_lockMouse)
 	{
 		window->RestrictMouseMovement();
 	}
 
-	MainLoop(window.get());
+	MainLoop();
 
 	window->ReleaseMouseMovement();
+
 	return 0;
 }
 
-void AppBase::MainLoop(Window* window)
+void AppBase::MainLoop()
 {
+	Window* window = Engine::GetMainWindow();
 	while (!window->IsClosed())
 	{
 		// clear input soft state (pressed keys, etc.)
@@ -101,19 +93,19 @@ void AppBase::RegisterRenderers()
 {
 	// NOTE:
 	// Default behavior for an app is to start the FIRST renderer registered here.
-	Engine::Get().RegisterRenderer<OpenGL::GLTestRenderer>();
+	Engine::RegisterRenderer<OpenGL::GLTestRenderer>();
 }
 
-std::unique_ptr<Window> AppBase::CreateAppWindow()
+Win32Window* AppBase::CreateAppWindow()
 {
-	return std::move(Win32Window::CreateWin32Window(
+	return Win32Window::CreateWin32Window(
 		m_windowTitle, 150, 150, m_windowWidth, m_windowHeight
-	));
+	);
 }
 
-std::unique_ptr<NodeFactory> AppBase::MakeNodeFactory()
+NodeFactory* AppBase::MakeNodeFactory()
 {
-	return std::make_unique<NodeFactory>(NodeFactory());
+	return new NodeFactory();
 }
 
 

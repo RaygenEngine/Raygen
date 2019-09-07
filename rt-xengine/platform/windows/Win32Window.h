@@ -39,8 +39,10 @@ protected:
 		LONG style);
 
 public:
-	// Returns a pointer you should delete manually later.
-	static std::unique_ptr<Win32Window> CreateWin32Window(
+	// Returns 'new' constructed window. 
+	// In most cases you should call this from inside your App's CreateWindow(). 
+	// In that case the lifetime of this will be handled by the engine object itself.
+	static Win32Window* CreateWin32Window(
 		const std::string& title = std::string("Win32 Window"),
 		int32 xpos = 150,
 		int32 ypox = 150,
@@ -62,7 +64,6 @@ public:
 
 	void Show() override;
 
-	bool StartRenderer(uint32 index) override;
 	void HandleEvents(bool shouldHandleControllers) override;
 
 	void SetTitle(const std::string& newTitle) override;

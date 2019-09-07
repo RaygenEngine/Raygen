@@ -80,7 +80,6 @@ namespace OpenGL
 
 		glViewport(0, 0, 1920, 1080);
 
-		m_camera->WindowResize(1920, 1080);
 		glm::mat4 vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
 
 		glClearColor(bgcl.r, bgcl.g, bgcl.b, 1.0);

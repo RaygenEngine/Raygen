@@ -84,7 +84,7 @@ bool Win32Window::Create(
 	return m_hWnd;
 }
 
-std::unique_ptr<Win32Window> Win32Window::CreateWin32Window(
+Win32Window* Win32Window::CreateWin32Window(
 	const std::string& title,
 	int32 xpos,
 	int32 ypox,
@@ -99,26 +99,24 @@ std::unique_ptr<Win32Window> Win32Window::CreateWin32Window(
 {
 	HINSTANCE hInstance = GetModuleHandle(nullptr);
 
-	auto window = std::make_unique<Win32Window>();
+	auto window = new Win32Window();
 		
 	if (!window->Register(style, name, backgroundBrushColor,
 							LoadCursor(NULL, cursorName), windowHandleFunction, hInstance))
 	{
 		LOG_FATAL("Failed to register application window!");
-		return std::unique_ptr<Win32Window>{};
+		delete window;
+		return nullptr;
 	}
-
 
 	if (!window->Create(xpos, ypox, width, height, title.c_str(), cstyle))
 	{
 		LOG_FATAL("Failed to create application window!");
-		return std::unique_ptr<Win32Window>{};
+		delete window;
+		return nullptr;
 	}
 
-	// pass self pointer inside the hwnd userdata (minor hack for callbacks)
-	SetWindowLongPtr(window->GetHWND(), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window.get()));
-
-	return std::move(window);
+	return window;
 }
 
 void Win32Window::RestrictMouseMovement()
@@ -252,19 +250,11 @@ void Win32Window::SetTitle(const std::string& newTitle)
 	SetWindowText(GetHWND(), newTitle.c_str());
 }
 
-bool Win32Window::StartRenderer(uint32 index) 
-{
-	auto& eng = Engine::Get();
-	return eng.SwitchRenderer(index) &&
-		Engine::GetRenderer()->InitRendering(GetHWND(), GetHInstance()) &&
-		Engine::GetRenderer()->InitScene(GetWidth(), GetHeight());
-}
-
 LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	LRESULT result = NULL;
 
-	auto* window = reinterpret_cast<Win32Window*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+	Win32Window* window = Engine::GetMainWindow(); //reinterpret_cast<Win32Window*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
 	if(!window) return DefWindowProc(hWnd, message, wParam, lParam);
 
@@ -374,10 +364,8 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 		window->m_width = LOWORD(lParam);
 		window->m_height = HIWORD(lParam);
 
-		// REFACT:
-		//window->GetEngine(window)->GetWorld()->WindowResize(LOWORD(lParam), HIWORD(lParam));
-		//window->GetEngine(window)->GetRenderer()->WindowResize(LOWORD(lParam), HIWORD(lParam));
-		break;
+		window->m_onResize.Broadcast(window->m_width, window->m_height);
+	break;
 
 	default:
 		result = DefWindowProc(hWnd, message, wParam, lParam);

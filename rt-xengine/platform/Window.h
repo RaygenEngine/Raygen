@@ -1,5 +1,6 @@
 #pragma once
 #include "system/EngineComponent.h"
+#include "event/Event.h"
 
 // Base class for a platform independant window
 class Window
@@ -12,6 +13,9 @@ protected:
 	int m_height;
 
 public:
+
+	// OnResize(int32 width, int32 height)
+	MulticastEvent<int32, int32> m_onResize;
 
 	// Attach input before creating window
 	Window()
@@ -33,8 +37,6 @@ public:
 
 	virtual void Show() { }
 	
-	virtual bool StartRenderer(uint32 index) { return false; }
-
 	virtual void SetTitle(const std::string& newTitle) { };
 
 	// Called in the main loop

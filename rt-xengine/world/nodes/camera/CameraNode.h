@@ -1,6 +1,8 @@
 #pragma once
 
 #include "world/nodes/Node.h"
+#include "platform/windows/Win32Window.h"
+#include "system/Engine.h"
 
 // Window dependant // TODO: non-window dependant (e.g. oculus virtual eye)
 class CameraNode : public Node
@@ -19,6 +21,8 @@ class CameraNode : public Node
 	glm::mat4 m_projectionMatrix;
 
 public:
+	decltype(Window::m_onResize)::Listener m_onResize{ Engine::GetMainWindow()->m_onResize };
+
 	CameraNode(Node* parent);
 	~CameraNode() = default;
 
@@ -38,9 +42,10 @@ public:
 		
 	void GetTracingVariables(glm::vec3& u, glm::vec3& v, glm::vec3& w);
 
-	// REFACT: 
+private:
 	void WindowResize(int32 width, int32 height);
 
+public:
 	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 
 	void ToString(std::ostream& os) const override { os << "node-type: CameraNode, name: " << m_name; }

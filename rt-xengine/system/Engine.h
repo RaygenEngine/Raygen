@@ -8,6 +8,8 @@ class Window;
 class World;
 class Input;
 
+class AppBase;
+
 // TODO:
 class NodeFactory;
 
@@ -24,31 +26,37 @@ public:
 		return instance;
 	}
 	
+	// Not guaranteed to exist at all times. 
+	// TODO: provide event guarantees for world validility.
 	[[nodiscard]] 
 	static World* GetWorld()
 	{
 		return Get().m_world;
 	}
 
+	// It is HIGHLY recommended to validate this result in your code for future compatibility
+	// Window will not be guaranteed to exist in the future (possible use: Headless Server)
 	[[nodiscard]] 
 	static Win32Window* GetMainWindow()
 	{
 		return Get().m_window;
 	}
 
+	// Asset manager will be valid forever after initialization.
 	[[nodiscard]] 
 	static AssetManager* GetAssetManager()
 	{
 		return Get().m_assetManager;
 	}
-
 	
+	// Input will be valid forever after initialization.
 	[[nodiscard]] 
 	static Input* GetInput()
 	{
 		return Get().m_input;
 	}
 
+	// TODO: possibly get rid of this to avoid getting renderers from random locations.
 	template<typename AsRenderer = Renderer>
 	[[nodiscard]]
 	static AsRenderer* GetRenderer()
@@ -60,7 +68,7 @@ public:
 	[[nodiscard]]
 	static RenderT* GetRenderer(RendererObject<RenderT>* contextRendererObject)
 	{
-		return dynamic_cast<RenderT*>(GetRenderer());
+		return GetRenderer<RenderT>();
 	}
 	
 
@@ -80,28 +88,49 @@ private:
 
 	std::vector<RendererMetadata> m_rendererRegistrations;
 
-
+	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
 	AssetManager* m_assetManager;
-	World* m_world;
-	Renderer* m_renderer;
+
+	// Owning Pointer, Expected to be valid 'forever' after InitEngine at this time.
 	WindowType* m_window;
+
+	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
 	Input* m_input;
 
-public:
-	bool InitDirectories(const std::string& applicationPath, const std::string& dataDirectoryName);
+	// Owning Pointer. No guarantees can be made for world pointer. 
+	// It may be invalidated during runtime when loading other worlds etc.
+	World* m_world;
 
-	bool CreateWorldFromFile(const std::string& filename, NodeFactory* factory);
+	// Owning Pointer. This pointer will NEVER be valid without a valid World existing.
+	// It will get invalidated when switching renderers / loading worlds.
+	Renderer* m_renderer;
+
+	// Non owning pointer, expected to be valid for the whole program execution
+	AppBase* m_app;
+public:
+
+	// Init the internal engine systems.
+	// You MUST run this to properly init the engine
+	//
+	// Expects a non-owning pointer to the external App object.
+	//
+	void InitEngine(AppBase* app);
+
+	bool CreateWorldFromFile(const std::string& filename);
 
 	// if another renderer is already active, then destroy old and 
 	// then activate the next
-	bool SwitchRenderer(uint32 registrationIndex);
+	void SwitchRenderer(uint32 registrationIndex);
 
 	void UnloadDiskAssets();
 
 	template<typename RendererClass>
-	uint32 RegisterRenderer()
+	static uint32 RegisterRenderer()
 	{
-		m_rendererRegistrations.push_back({ RendererClass::MetaName(), &RendererClass::MetaConstruct });
-		return static_cast<uint32>(m_rendererRegistrations.size() - 1);
+		Engine::Get().m_rendererRegistrations.push_back({ RendererClass::MetaName(), &RendererClass::MetaConstruct });
+		return static_cast<uint32>(Engine::Get().m_rendererRegistrations.size() - 1);
 	}
+
+	// Avoid this if possible and always refactor cmd debug features to normal features.
+	static bool HasCmdArgument(const std::string& argument);
 };

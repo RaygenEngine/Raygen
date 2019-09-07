@@ -23,6 +23,9 @@ protected:
 	bool m_handleControllers;
 
 	bool m_lockMouse;
+
+	int32 m_argc;
+	char** m_argv;
 public:
 	AppBase();
 
@@ -32,11 +35,16 @@ public:
 	virtual void PreMainInit(int32 argc, char* argv[]);
 	virtual int32 Main(int32 argc, char* argv[]);
 
-	virtual void MainLoop(Window* window);
+	virtual void MainLoop();
 	
+	// Override here to register your custom renderer
 	virtual void RegisterRenderers();
 
-	virtual std::unique_ptr<Window> CreateAppWindow();
+	// Return a 'new Win32Window()' with your parameters
+	virtual Win32Window* CreateAppWindow();
 
-	virtual std::unique_ptr<NodeFactory> MakeNodeFactory();
+	// Return a 'new NodeFactory()' subtype of node factory with your own factory
+	virtual NodeFactory* MakeNodeFactory();
+
+	friend class Engine;
 };
