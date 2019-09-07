@@ -14,7 +14,7 @@ CameraNode::CameraNode(Node* parent)
 		m_far(1000.0f),
 		m_projectionMatrix()
 {
-	OnWindowResize.BindMember(this, &CameraNode::WindowResize);
+	m_resizeListener.BindMember(this, &CameraNode::WindowResize);
 }
 
 std::string CameraNode::ToString(bool verbose, uint depth) const

@@ -5,7 +5,6 @@
 
 template<class... Args>
 struct MulticastEvent {
-
 	using FunctionType =  std::function<void(Args...)>;
 
 	// Declare this as a member in your class to be able attach to the specific event.
@@ -14,6 +13,7 @@ struct MulticastEvent {
 	struct Listener
 	{
 	private:
+		friend MulticastEvent;
 		bool m_registered{ false };
 		FunctionType m_callback;
 		MulticastEvent& m_event;

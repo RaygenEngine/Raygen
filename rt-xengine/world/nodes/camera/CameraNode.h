@@ -22,7 +22,7 @@ class CameraNode : public Node
 	glm::mat4 m_projectionMatrix;
 
 public:
-	DECLARE_EVENT_LISTENER(OnWindowResize);
+	DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
 
 	CameraNode(Node* parent);
 	~CameraNode() = default;
