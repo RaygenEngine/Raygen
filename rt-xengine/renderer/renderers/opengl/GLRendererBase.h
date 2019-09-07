@@ -28,8 +28,10 @@ namespace OpenGL
 	};
 
 	template<typename GlRenderer>
-	GLAssetManager* GetGLAssetManager(RendererObject<GlRenderer>* context)
+	[[nodiscard]]
+	GLAssetManager* GetGLAssetManager(RendererObject<GlRenderer>* glRendererObjectContext)
 	{
-		return Engine::GetRenderer(context)->GetGLAssetManager();
+		static_assert(std::is_base_of_v<GLRendererBase, GlRenderer>, "This call expects a Gl Renderer Object.");
+		return Engine::GetRenderer(glRendererObjectContext)->GetGLAssetManager();
 	}
 }

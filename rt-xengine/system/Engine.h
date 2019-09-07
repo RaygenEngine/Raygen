@@ -17,6 +17,7 @@ private:
 	Engine();
 
 public:
+	[[nodiscard]]
 	static Engine& Get()
 	{
 		static Engine instance;
@@ -80,8 +81,6 @@ private:
 	std::vector<RendererMetadata> m_rendererRegistrations;
 
 
-	// TODO: implement non deletable engineComponent on stack
-	
 	AssetManager* m_assetManager;
 	World* m_world;
 	Renderer* m_renderer;
