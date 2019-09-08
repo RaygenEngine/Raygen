@@ -40,7 +40,7 @@ namespace OpenGL
 		m_nonInstancedShader->SetUniformLocation("alphaCutoff");
 		m_nonInstancedShader->SetUniformLocation("doubleSided");
 		m_nonInstancedShader->SetUniformLocation("baseColorSampler");
-		m_nonInstancedShader->SetUniformLocation("metallicRoughnessSampler");
+		m_nonInstancedShader->SetUniformLocation("occlusionMetallicRoughnessSampler");
 		m_nonInstancedShader->SetUniformLocation("emissiveSampler");
 		m_nonInstancedShader->SetUniformLocation("normalSampler");
 		m_nonInstancedShader->SetUniformLocation("occlusionSampler");
@@ -117,10 +117,9 @@ namespace OpenGL
 				glUniform1f(m_nonInstancedShader->GetUniformLocation("alphaCutoff"), glMaterial.alphaCutoff);
 				glUniform1i(m_nonInstancedShader->GetUniformLocation("doubleSided"), glMaterial.doubleSided);
 				
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), glMaterial.baseColorTexture->GetGLBindlessHandle());
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("metallicRoughnessSampler"), glMaterial.metallicRoughnessTexture->GetGLBindlessHandle());
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), glMaterial.emissiveTexture->GetGLBindlessHandle());
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("occlusionSampler"), glMaterial.occlusionTexture->GetGLBindlessHandle());
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), glMaterial.GetBaseColorTexture()->GetGLBindlessHandle());
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("occlusionMetallicRoughnessSampler"), glMaterial.GetOcclusionMetallicRoughnessTexture()->GetGLBindlessHandle());
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), glMaterial.GetEmissiveTexture()->GetGLBindlessHandle());
 
 				// may not exist
 				const auto normalText = glMaterial.normalTexture;

@@ -30,7 +30,10 @@ namespace Assets
 		Sampler(DiskAsset* pAsset, const std::string& name, bool loadDefaultTexture = true);
 
 		void Load(const tinygltf::Model& modelData, int32 gltfTextureIndex, int32 gltfTexCoordTarget);
-
+		// useful gltf
+		void LoadPacked(const tinygltf::Model& modelData, int32 gltfTextureIndex0, TextureChannel targets0, int32 gltfTexCoordTarget0,
+			int32 gltfTextureIndex1, TextureChannel targets1, int32 gltfTexCoordTarget1);
+		
 		TextureFiltering GetMinFilter() const { return m_minFilter; }
 		TextureFiltering GetMagFilter() const { return m_magFilter; }
 		TextureWrapping GetWrapS() const { return m_wrapS; }

@@ -30,7 +30,7 @@ namespace OpenGL
 
 		GLenum type;
 		GLint internalFormat;
-		switch (data->GetType())
+		switch (data->GetDynamicRange())
 		{
 
 		case DynamicRange::HIGH:

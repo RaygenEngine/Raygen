@@ -17,6 +17,14 @@ enum class TextureWrapping
 	REPEAT
 };
 
+enum TextureChannel : int32
+{
+	TC_RED = BIT(0),
+	TC_GREEN = BIT(1),
+	TC_BLUE = BIT(2),
+	TC_ALPHA = BIT(3)
+};
+
 enum CubeMapFace : int32
 {
 	CMF_RIGHT = 0,

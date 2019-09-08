@@ -29,12 +29,10 @@ namespace Assets
 		// R-red, G-green, B-blue, A-alpha
 		Sampler m_baseColorTextureSampler;
 		// The metallic and roughness properties are packed together in a single texture called metallicRoughnessTexture.
-		// R-empty, G-roughness, B-metal, A-empty
-		Sampler m_metallicRoughnessTextureSampler;
+		// R-occlusion, G-roughness, B-metal, A-empty
+		Sampler m_occlusionMetallicRoughnessTextureSampler;
 		// A tangent space normal map
 		Sampler m_normalTextureSampler;
-		// The occlusion map indicating areas of indirect lighting
-		Sampler m_occlusionTextureSampler;
 		// The emissive map controls the color and intensity of the light being emitted by the material.
 		Sampler m_emissiveTextureSampler;
 
@@ -66,9 +64,8 @@ namespace Assets
 		void Load(const tinygltf::Model& modelData, const tinygltf::Material& materialData);
 		
 		const Sampler& GetBaseColorTextureSampler() const { return m_baseColorTextureSampler; }
-		const Sampler& GetMetallicRoughnessTextureSampler() const { return m_metallicRoughnessTextureSampler; }
+		const Sampler& GetOcclusionMetallicRoughnessTextureSampler() const { return m_occlusionMetallicRoughnessTextureSampler; }
 		const Sampler& GetNormalTextureSampler() const { return m_normalTextureSampler; }
-		const Sampler& GetOcclusionTextureSampler() const { return m_occlusionTextureSampler; }
 		const Sampler& GetEmissiveTextureSampler() const { return m_emissiveTextureSampler; }
 
 		const glm::vec4& GetBaseColorFactor() const { return m_baseColorFactor; }

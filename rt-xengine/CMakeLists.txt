@@ -92,6 +92,7 @@ set(HEADER_FILES
 	assets/model/Model.h
 	assets/model/GltfAux.h
 
+	core/auxiliary/FlagAux.h
 	core/auxiliary/FileAux.h
 	core/auxiliary/GraphicsMathAux.h
 	core/auxiliary/SmartPtrAux.h

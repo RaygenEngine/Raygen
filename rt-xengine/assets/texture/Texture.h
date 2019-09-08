@@ -37,7 +37,7 @@ public:
 	uint32 GetComponents() const { return m_components; }
 	void* GetData() const { return m_data; }
 
-	DynamicRange GetType() const { return m_dynamicRange; }
+		DynamicRange GetDynamicRange() const { return m_dynamicRange; }
 
 	// creates default rgba texture
 	static std::unique_ptr<Texture> CreateDefaultTexture(AssetManager* assetManager, void* texelValue, uint32 width,

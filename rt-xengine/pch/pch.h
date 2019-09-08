@@ -21,6 +21,7 @@
 #include "core/uuid/UUIDGenerator.h"
 
 // auxiliary
+#include "core/auxiliary/FlagAux.h"
 #include "core/auxiliary/FileAux.h"
 #include "core/auxiliary/GraphicsMathAux.h"
 #include "core/auxiliary/SmartPtrAux.h"

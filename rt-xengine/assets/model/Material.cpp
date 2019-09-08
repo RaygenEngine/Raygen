@@ -8,9 +8,8 @@ namespace Assets
 	Material::Material(DiskAsset* pAsset, const std::string& name)
 		: DiskAssetPart(pAsset, name),
 	      m_baseColorTextureSampler(this, "baseColorSampler"),
-	      m_metallicRoughnessTextureSampler(this, "metallicRoughnessSampler"),
+	      m_occlusionMetallicRoughnessTextureSampler(this, "occlusionMetallicRoughnessSampler"),
 		  m_normalTextureSampler(this, "normalSampler", false),
-		  m_occlusionTextureSampler(this, "occlusionSampler"),
 		  m_emissiveTextureSampler(this, "emissiveSampler"),
 		  m_baseColorFactor(1.f, 1.f, 1.f, 1.f),
 		  m_emissiveFactor(0.f, 0.f, 0.f),
@@ -48,18 +47,31 @@ namespace Assets
 		// samplers
 		auto& baseColorTextureInfo = materialData.pbrMetallicRoughness.baseColorTexture;
 		m_baseColorTextureSampler.Load(modelData, baseColorTextureInfo.index, baseColorTextureInfo.texCoord);
-		
-		auto& metallicRougnessTextureInfo = materialData.pbrMetallicRoughness.metallicRoughnessTexture;
-		m_metallicRoughnessTextureSampler.Load(modelData, metallicRougnessTextureInfo.index, metallicRougnessTextureInfo.texCoord);
-		
+
 		auto& emissiveTextureInfo = materialData.emissiveTexture;
 		m_emissiveTextureSampler.Load(modelData, emissiveTextureInfo.index, emissiveTextureInfo.texCoord);
 
-		auto& occlusionTextureInfo = materialData.occlusionTexture;
-		m_occlusionTextureSampler.Load(modelData, occlusionTextureInfo.index, occlusionTextureInfo.texCoord);
-		
 		auto& normalTextureInfo = materialData.normalTexture;
 		m_normalTextureSampler.Load(modelData, normalTextureInfo.index, normalTextureInfo.texCoord);
+
+		// handle occlusion metallic roughness packing
+		auto& metallicRougnessTextureInfo = materialData.pbrMetallicRoughness.metallicRoughnessTexture;
+		auto& occlusionTextureInfo = materialData.occlusionTexture;
+
+		// packed together in a single image
+		if (metallicRougnessTextureInfo.index == occlusionTextureInfo.index)
+		{
+			m_occlusionMetallicRoughnessTextureSampler.Load(modelData, metallicRougnessTextureInfo.index, metallicRougnessTextureInfo.texCoord);
+		}
+		// otherwise we need to pack them manually
+		else
+		{
+			// pack occlusion texture in red channel
+			// pack metallic and roughness to blue and green
+			m_occlusionMetallicRoughnessTextureSampler.LoadPacked(modelData, 
+				occlusionTextureInfo.index, TC_RED, occlusionTextureInfo.texCoord,
+			    metallicRougnessTextureInfo.index, static_cast<TextureChannel>(TC_BLUE | TC_GREEN), metallicRougnessTextureInfo.texCoord);
+		}
 	}
 };
 

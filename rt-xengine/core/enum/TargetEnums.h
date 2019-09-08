@@ -11,14 +11,6 @@ enum class LogLevelTarget
 	OFF
 };
 
-enum ChannelTarget : int32
-{
-	CT_RED = 0,
-	CT_GREEN,
-	CT_BLUE,
-	CT_ALPHA
-};
-
 enum PreviewTarget : int32
 {
 	// base color
