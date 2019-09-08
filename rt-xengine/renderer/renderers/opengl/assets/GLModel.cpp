@@ -32,9 +32,8 @@ namespace OpenGL
 		};
 
 		LoadTextureFromSampler(glMaterial.baseColorTexture, data.baseColorTextureSampler);
-		LoadTextureFromSampler(glMaterial.metallicRoughnessTexture, data.metallicRoughnessTextureSampler);
+		LoadTextureFromSampler(glMaterial.occlusionMetallicRoughnessTexture, data.occlusionMetallicRoughnessTextureSampler);
 		LoadTextureFromSampler(glMaterial.normalTexture, data.normalTextureSampler);
-		LoadTextureFromSampler(glMaterial.occlusionTexture, data.occlusionTextureSampler);
 		LoadTextureFromSampler(glMaterial.emissiveTexture, data.emissiveTextureSampler);
 
 		return glMaterial;

@@ -18,10 +18,9 @@ namespace OpenGL
 			
 			// RGB: Albedo A: Opacity
 			std::shared_ptr<GLTexture> baseColorTexture;
-			// R: empty, G: Roughness, B: Metal, A: empty
-			std::shared_ptr<GLTexture> metallicRoughnessTexture;
+			// R: occlusion, G: Roughness, B: Metal, A: empty
+			std::shared_ptr<GLTexture> occlusionMetallicRoughnessTexture;
 			std::shared_ptr<GLTexture> normalTexture;
-			std::shared_ptr<GLTexture> occlusionTexture;
 			std::shared_ptr<GLTexture> emissiveTexture;
 
 			glm::vec4 baseColorFactor = { 1.f, 1.f, 1.f, 1.f };

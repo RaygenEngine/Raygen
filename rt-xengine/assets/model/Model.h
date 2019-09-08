@@ -54,12 +54,10 @@ public:
 		// R-red, G-green, B-blue, A-alpha
 		Sampler baseColorTextureSampler;
 		// The metallic and roughness properties are packed together in a single texture called metallicRoughnessTexture.
-		// R-empty, G-roughness, B-metal, A-empty
-		Sampler metallicRoughnessTextureSampler;
+		// R-occlusion, G-roughness, B-metal, A-empty
+		Sampler occlusionMetallicRoughnessTextureSampler;
 		// A tangent space normal map
 		Sampler normalTextureSampler;
-		// The occlusion map indicating areas of indirect lighting
-		Sampler occlusionTextureSampler;
 		// The emissive map controls the color and intensity of the light being emitted by the material.
 		Sampler emissiveTextureSampler;
 

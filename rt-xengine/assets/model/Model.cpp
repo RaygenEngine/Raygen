@@ -230,17 +230,15 @@ Model::Material Model::LoadMaterial(const tinygltf::Model& modelData, const tiny
 	auto& baseColorTextureInfo = materialData.pbrMetallicRoughness.baseColorTexture;
 	material.baseColorTextureSampler = LoadSampler<true>(modelData, baseColorTextureInfo.index, baseColorTextureInfo.texCoord);
 
-	auto& metallicRougnessTextureInfo = materialData.pbrMetallicRoughness.metallicRoughnessTexture;
-	material.metallicRoughnessTextureSampler = LoadSampler<true>(modelData, metallicRougnessTextureInfo.index, metallicRougnessTextureInfo.texCoord);
-
 	auto& emissiveTextureInfo = materialData.emissiveTexture;
 	material.emissiveTextureSampler = LoadSampler<true>(modelData, emissiveTextureInfo.index, emissiveTextureInfo.texCoord);
 
-	auto& occlusionTextureInfo = materialData.occlusionTexture;
-	material.occlusionTextureSampler = LoadSampler<true>(modelData, occlusionTextureInfo.index, occlusionTextureInfo.texCoord);
-
 	auto& normalTextureInfo = materialData.normalTexture;
 	material.normalTextureSampler = LoadSampler<false>(modelData, normalTextureInfo.index, normalTextureInfo.texCoord);
+
+	// TODO: pack if different
+	auto& metallicRougnessTextureInfo = materialData.pbrMetallicRoughness.metallicRoughnessTexture;
+	material.occlusionMetallicRoughnessTextureSampler = LoadSampler<true>(modelData, metallicRougnessTextureInfo.index, metallicRougnessTextureInfo.texCoord);
 
 	return material;
 }
