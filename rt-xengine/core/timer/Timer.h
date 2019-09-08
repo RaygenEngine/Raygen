@@ -18,46 +18,46 @@
 
 
 #include "core/logger/Logger.h"
-namespace Timer
+namespace utl
 {
-namespace ch = std::chrono;
-class Debug
-{
-public:
-	ch::time_point<ch::system_clock> m_startTime;
-	long long m_total{ 0 };
-
-	void Start()
+	namespace ch = std::chrono;
+	class Debug
 	{
-		m_startTime = ch::system_clock::now();
-	}
+	public:
+		ch::time_point<ch::system_clock> m_startTime;
+		long long m_total{ 0 };
 
-	void Stop(const std::string& str)
-	{
-		long long last = ch::duration_cast<ch::microseconds>(ch::system_clock::now() - m_startTime).count();
-		m_total += last;
-		RT_XENGINE_LOG_AT_LOWEST_LEVEL("{0}: {1} micros \tTotal: {2} micros", str, last, m_total);
-	}
-};
+		void Start()
+		{
+			m_startTime = ch::system_clock::now();
+		}
 
-class Scope
-{
-public:
-	Debug& m_timer;
-	std::string m_str;
-	Scope(Debug& timer, const std::string& str)
-		:m_timer(timer)
-		, m_str(str)
-	{
-		m_timer.Start();
-	}
+		void Stop(const std::string& str)
+		{
+			long long last = ch::duration_cast<ch::microseconds>(ch::system_clock::now() - m_startTime).count();
+			m_total += last;
+			RT_XENGINE_LOG_AT_LOWEST_LEVEL("{0}: {1} micros \tTotal: {2} micros", str, last, m_total);
+		}
+	};
 
-	~Scope() 
+	class Scope
 	{
-		m_timer.Stop(m_str);
-	}
-};
+	public:
+		Debug& m_timer;
+		std::string m_str;
+		Scope(Debug& timer, const std::string& str)
+			:m_timer(timer)
+			, m_str(str)
+		{
+			m_timer.Start();
+		}
+
+		~Scope() 
+		{
+			m_timer.Stop(m_str);
+		}
+	};
 }
 
 #define TIMER_STATIC_SCOPE(Name) \
-static Timer::Debug scope_timer____LINE__; Timer::Scope scope_timer____LINE__scope(scope_timer____LINE__, Name)
+static utl::Debug scope_timer____LINE__; utl::Scope scope_timer____LINE__scope(scope_timer____LINE__, Name)

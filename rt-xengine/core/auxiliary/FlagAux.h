@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Core
+namespace utl
 {
 	inline int32 CountSetBits(int32 i)
 	{

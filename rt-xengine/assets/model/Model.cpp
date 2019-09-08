@@ -107,11 +107,11 @@ namespace
 			const tinygltf::Buffer& gltfBuffer = modelData.buffers.at(bufferView.buffer);
 
 
-			componentType = GltfAux::GetComponentTypeFromGltf(accessor.componentType);
+			componentType = GltfAux::GetComponentType(accessor.componentType);
 			elementCount = accessor.count;
 			beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
 			strideByteOffset = accessor.ByteStride(bufferView);
-			componentCount = GetElementComponentCount(GltfAux::GetElementTypeFromGltf(accessor.type));
+			componentCount = utl::GetElementComponentCount(GltfAux::GetElementType(accessor.type));
 			beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
 		}
 
@@ -158,8 +158,8 @@ Model::Sampler Model::LoadSampler(const tinygltf::Model& modelData, int32 gltfTe
 
 	if constexpr (LoadDefault)
 	{
-		byte cDefVal[4] = { 255, 255, 255, 255 };
-		sampler.texture = Texture::CreateDefaultTexture(GetAssetManager(), &cDefVal, 1u, 1u, 4u, DynamicRange::LOW);
+		const glm::u8vec4 cDefVal{ 255, 255, 255, 255 };
+		sampler.texture = Texture::CreateDefaultTexture(GetAssetManager(), cDefVal, 1u, 1u);
 	}
 	
 	const auto textureIndex = gltfTextureIndex;
@@ -177,7 +177,7 @@ Model::Sampler Model::LoadSampler(const tinygltf::Model& modelData, int32 gltfTe
 			// TODO check image settings
 			auto& gltfImage = modelData.images.at(imageIndex);
 
-			sampler.texture = GetAssetManager()->LoadTextureAsset(GetDirectory() + "\\" + gltfImage.uri, DynamicRange::LOW, false);
+			sampler.texture = GetAssetManager()->LoadTextureAsset(GetDirectory() + "\\" + gltfImage.uri);
 		}
 
 		const auto samplerIndex = gltfTexture.sampler;
@@ -187,11 +187,11 @@ Model::Sampler Model::LoadSampler(const tinygltf::Model& modelData, int32 gltfTe
 		{
 			auto& gltfSampler = modelData.samplers.at(samplerIndex);
 
-			sampler.minFilter = GltfAux::GetTextureFilteringFromGltf(gltfSampler.minFilter);
-			sampler.magFilter = GltfAux::GetTextureFilteringFromGltf(gltfSampler.magFilter);
-			sampler.wrapS =  GltfAux::GetTextureWrappingFromGltf(gltfSampler.wrapS);
-			sampler.wrapT =  GltfAux::GetTextureWrappingFromGltf(gltfSampler.wrapT);
-			sampler.wrapR =  GltfAux::GetTextureWrappingFromGltf(gltfSampler.wrapR);
+			sampler.minFilter = GltfAux::GetTextureFiltering(gltfSampler.minFilter);
+			sampler.magFilter = GltfAux::GetTextureFiltering(gltfSampler.magFilter);
+			sampler.wrapS =  GltfAux::GetTextureWrapping(gltfSampler.wrapS);
+			sampler.wrapT =  GltfAux::GetTextureWrapping(gltfSampler.wrapT);
+			sampler.wrapR =  GltfAux::GetTextureWrapping(gltfSampler.wrapR);
 
 			sampler.name = gltfSampler.name;
 		}
@@ -220,7 +220,7 @@ Model::Material Model::LoadMaterial(const tinygltf::Model& modelData, const tiny
 	material.occlusionStrength = static_cast<float>(materialData.occlusionTexture.strength);
 
 	// alpha
-	material.alphaMode = GltfAux::GetAlphaModeFromGltf(materialData.alphaMode);
+	material.alphaMode = GltfAux::GetAlphaMode(materialData.alphaMode);
 
 	material.alphaCutoff = static_cast<float>(materialData.alphaCutoff);
 	// doublesided-ness
@@ -249,7 +249,7 @@ std::optional<Model::GeometryGroup> Model::LoadGeometryGroup(const tinygltf::Mod
 	GeometryGroup geom{};
 	
 	// mode
-	geom.mode = GltfAux::GetGeometryModeFromGltf(primitiveData.mode);
+	geom.mode = GltfAux::GetGeometryMode(primitiveData.mode);
 
 	// indexing
 	const auto indicesIndex = primitiveData.indices;

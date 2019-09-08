@@ -16,4 +16,3 @@ typedef uint8	byte;
 typedef uint32	uint;
 
 #define BIT(x) (1 << x)
-#define CHECK_BIT(var,pos) ((var) & (1<<(m_cursorPosition)))

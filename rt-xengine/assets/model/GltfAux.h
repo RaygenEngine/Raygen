@@ -4,7 +4,7 @@
 
 namespace GltfAux
 {
-	inline GeometryMode GetGeometryModeFromGltf(int32 gltfMode)
+	inline GeometryMode GetGeometryMode(int32 gltfMode)
 	{
 		switch (gltfMode)
 		{
@@ -19,7 +19,7 @@ namespace GltfAux
 		}
 	}
 
-	inline TextureFiltering GetTextureFilteringFromGltf(int32 gltfFiltering)
+	inline TextureFiltering GetTextureFiltering(int32 gltfFiltering)
 	{
 		switch (gltfFiltering)
 		{
@@ -33,7 +33,7 @@ namespace GltfAux
 		}
 	};
 
-	inline TextureWrapping GetTextureWrappingFromGltf(int32 gltfWrapping)
+	inline TextureWrapping GetTextureWrapping(int32 gltfWrapping)
 	{
 		switch (gltfWrapping)
 		{
@@ -44,7 +44,7 @@ namespace GltfAux
 		}
 	};
 
-	inline AlphaMode GetAlphaModeFromGltf(const std::string& gltfAlphaMode)
+	inline AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
 	{
 		if (utl::CaseInsensitiveCompare(gltfAlphaMode, "OPAQUE"))
 			return AM_OPAQUE;
@@ -56,7 +56,7 @@ namespace GltfAux
 		return AM_INVALID;
 	}
 
-	inline BufferElementType GetElementTypeFromGltf(int32 gltfElementType)
+	inline BufferElementType GetElementType(int32 gltfElementType)
 	{
 		switch (gltfElementType)
 		{
@@ -71,7 +71,7 @@ namespace GltfAux
 		}
 	}
 
-	inline BufferComponentType GetComponentTypeFromGltf(int32 gltfComponentType)
+	inline BufferComponentType GetComponentType(int32 gltfComponentType)
 	{
 		switch (gltfComponentType)
 		{
