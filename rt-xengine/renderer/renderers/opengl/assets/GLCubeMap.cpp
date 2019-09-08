@@ -2,9 +2,8 @@
 
 #include "renderer/renderers/opengl/assets/GLCubeMap.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
-
 	GLCubeMap::GLCubeMap(GLAssetManager* glAssetManager, const std::string& name)
 		: GLAsset(glAssetManager, name),
 		  m_glId(0)
@@ -16,7 +15,7 @@ namespace Renderer::OpenGL
 		glDeleteTextures(1, &m_glId);
 	}
 
-	bool GLCubeMap::Load(Assets::CubeMap* data, GLint wrapFlag, bool mipMapping)
+	bool GLCubeMap::Load(CubeMap* data, GLint wrapFlag, bool mipMapping)
 	{
 		glGenTextures(1, &m_glId);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_glId);

@@ -47,7 +47,7 @@
 //	std::vector<SmartPtr> smartPtrs;
 //};
 
-namespace Core
+namespace utl
 {
 	template <typename SmartPtr>
 	using SVectorType = typename SmartPtr::element_type;

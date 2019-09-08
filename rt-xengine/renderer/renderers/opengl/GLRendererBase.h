@@ -2,9 +2,9 @@
 
 #include "renderer/Renderer.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
+#include "system/Engine.h"
 
-
-namespace Renderer::OpenGL
+namespace OpenGL
 {
 	class GLRendererBase : public Renderer
 	{
@@ -13,17 +13,25 @@ namespace Renderer::OpenGL
 		HGLRC m_hglrc;
 
 		GLAssetManager m_glAssetManager;
-		
+
 	public:
-		GLRendererBase(System::Engine* context);
+		GLRendererBase();
 		~GLRendererBase();
 
 		bool InitRendering(HWND assochWnd, HINSTANCE instance) override;
 		void SwapBuffers() override;
 
-		GLAssetManager* GetGLAssetManager() { return &m_glAssetManager; }
-
-		void ToString(std::ostream& os) const override { os << "renderer-type: GLRendererBase, id: " << GetObjectId(); }
+		GLAssetManager* GetGLAssetManager() 
+		{
+			return &m_glAssetManager;
+		}
 	};
 
+	template<typename GlRenderer>
+	[[nodiscard]]
+	GLAssetManager* GetGLAssetManager(RendererObject<GlRenderer>* glRendererObjectContext)
+	{
+		static_assert(std::is_base_of_v<GLRendererBase, GlRenderer>, "This call expects a Gl Renderer Object.");
+		return Engine::GetRenderer(glRendererObjectContext)->GetGLAssetManager();
+	}
 }

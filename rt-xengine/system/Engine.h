@@ -1,71 +1,136 @@
 #pragma once
+class Win32Window;
+using WindowType = Win32Window;
 
-#include "input/Input.h"
+class AssetManager;
+class Renderer;
+class Window;
+class World;
+class Input;
 
-namespace Renderer
+class AppBase;
+
+// TODO:
+class NodeFactory;
+
+class Engine
 {
-	class Renderer;
-}
+private:
+	Engine();
 
-namespace World
-{
-	class World;
-	class NodeFactory;
-}
-
-namespace Assets
-{
-	class DiskAssetManager;
-}
-
-namespace System
-{
-	using RendererRegistrationIndex = uint32;
-
-	class Engine
+public:
+	[[nodiscard]]
+	static Engine& Get()
 	{
-		struct RendererMetadata 
-		{
-			std::string name;
-			std::function<Renderer::Renderer*(Engine*)> Construct;
-		};
+		static Engine instance;
+		return instance;
+	}
+	
+	// Not guaranteed to exist at all times. 
+	// TODO: provide event guarantees for world validility.
+	[[nodiscard]] 
+	static World* GetWorld()
+	{
+		return Get().m_world;
+	}
 
-		std::vector<RendererMetadata> m_rendererRegistrations;
+	// It is HIGHLY recommended to validate this result in your code for future compatibility
+	// Window will not be guaranteed to exist in the future (possible use: Headless Server)
+	[[nodiscard]] 
+	static Win32Window* GetMainWindow()
+	{
+		return Get().m_window;
+	}
 
-		std::unique_ptr<Assets::DiskAssetManager> m_diskAssetManager;
+	// Asset manager will be valid forever after initialization.
+	[[nodiscard]] 
+	static AssetManager* GetAssetManager()
+	{
+		return Get().m_assetManager;
+	}
+	
+	// Input will be valid forever after initialization.
+	[[nodiscard]] 
+	static Input* GetInput()
+	{
+		return Get().m_input;
+	}
 
-		std::unique_ptr<World::World> m_world;
-		std::unique_ptr<Renderer::Renderer> m_renderer;
+	// TODO: possibly get rid of this to avoid getting renderers from random locations.
+	template<typename AsRenderer = Renderer>
+	[[nodiscard]]
+	static AsRenderer* GetRenderer()
+	{
+		return dynamic_cast<AsRenderer*>(Get().m_renderer);
+	}
 
-		Input::Input m_input;
+	template<template<class> typename RendererObject, typename RenderT>
+	[[nodiscard]]
+	static RenderT* GetRenderer(RendererObject<RenderT>* contextRendererObject)
+	{
+		return GetRenderer<RenderT>();
+	}
+	
 
-	public:
-		Engine();
-		~Engine();
-		
-		bool InitDirectories(const std::string& applicationPath, const std::string& dataDirectoryName);
+public:
+	Engine(Engine const&) = delete;
+	void operator=(Engine const&) = delete;
+	
+	~Engine();
 
-		Assets::DiskAssetManager* GetDiskAssetManager() const { return m_diskAssetManager.get(); }
-		Renderer::Renderer* GetRenderer() const { return m_renderer.get(); }
-		World::World* GetWorld() const { return m_world.get(); }
+private:
 
-		bool CreateWorldFromFile(const std::string& filename, World::NodeFactory* factory);
-
-		// if another renderer is already active, then destroy old and 
-		// then activate the next
-		bool SwitchRenderer(RendererRegistrationIndex registrationIndex);
-
-		// non const ref (access from engine allows stuff like clearing of softstates, etc)
-		Input::Input& GetInput() { return m_input; }
-
-		void UnloadDiskAssets();
-
-		template<typename RendererClass>
-		RendererRegistrationIndex RegisterRenderer()
-		{
-			m_rendererRegistrations.push_back({ RendererClass::MetaName(), &RendererClass::MetaConstruct });
-
-			return static_cast<RendererRegistrationIndex>(m_rendererRegistrations.size() - 1);
-		}
+	struct RendererMetadata 
+	{
+		std::string name;
+		std::function<Renderer*()> Construct;
 	};
-}
+
+	std::vector<RendererMetadata> m_rendererRegistrations;
+
+	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
+	AssetManager* m_assetManager;
+
+	// Owning Pointer, Expected to be valid 'forever' after InitEngine at this time.
+	WindowType* m_window;
+
+	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
+	Input* m_input;
+
+	// Owning Pointer. No guarantees can be made for world pointer. 
+	// It may be invalidated during runtime when loading other worlds etc.
+	World* m_world;
+
+	// Owning Pointer. This pointer will NEVER be valid without a valid World existing.
+	// It will get invalidated when switching renderers / loading worlds.
+	Renderer* m_renderer;
+
+	// Non owning pointer, expected to be valid for the whole program execution
+	AppBase* m_app;
+public:
+
+	// Init the internal engine systems.
+	// You MUST run this to properly init the engine
+	//
+	// Expects a non-owning pointer to the external App object.
+	//
+	void InitEngine(AppBase* app);
+
+	bool CreateWorldFromFile(const std::string& filename);
+
+	// if another renderer is already active, then destroy old and 
+	// then activate the next
+	void SwitchRenderer(uint32 registrationIndex);
+
+	void UnloadDiskAssets();
+
+	template<typename RendererClass>
+	static uint32 RegisterRenderer()
+	{
+		Engine::Get().m_rendererRegistrations.push_back({ RendererClass::MetaName(), &RendererClass::MetaConstruct });
+		return static_cast<uint32>(Engine::Get().m_rendererRegistrations.size() - 1);
+	}
+
+	// Avoid this if possible and always refactor cmd debug features to normal features.
+	static bool HasCmdArgument(const std::string& argument);
+};

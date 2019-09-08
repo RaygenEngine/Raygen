@@ -1,13 +1,9 @@
 #include "pch.h"
 
 #include "renderer/renderers/opengl/GLAsset.h"
-#include "renderer/renderers/opengl/GLAssetManager.h"
 
-namespace Renderer::OpenGL
+void OpenGL::GLAsset::MarkLoaded()
 {
-	GLAsset::GLAsset(GLAssetManager* glAssetManager, const std::string& name)
-		: Asset(glAssetManager, name),
-		  m_glAssetManager(glAssetManager)
-	{
-	}
+	LOG_DEBUG("Loaded asset's data in memory, {}", this);
+	m_loaded = true;
 }

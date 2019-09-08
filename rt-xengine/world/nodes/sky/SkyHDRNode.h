@@ -3,25 +3,22 @@
 #include "world/nodes/Node.h"
 #include "assets/texture/Texture.h"
 
-namespace World
+class SkyHDRNode : public Node
 {
-	class SkyHDRNode : public Node
-	{
-		std::shared_ptr<Assets::Texture> m_hdrTexture;
+	std::shared_ptr<Texture> m_hdrTexture;
 
-	public:
-		SkyHDRNode(Node* parent);
-		~SkyHDRNode() = default;
+public:
+	SkyHDRNode(Node* parent);
+	~SkyHDRNode() = default;
 		
-		bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
+	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 
-		Assets::Texture* GetSkyHDR() const { return m_hdrTexture.get(); }
+	Texture* GetSkyHDR() const { return m_hdrTexture.get(); }
 
-	protected:
-		std::string ToString(bool verbose, uint depth) const override;
+protected:
+	std::string ToString(bool verbose, uint depth) const override;
 
-	public:
+public:
 
-		void ToString(std::ostream& os) const override { os << "node-type: SkyHDRNode, name: " << m_name; }
-	};
-}
+	void ToString(std::ostream& os) const override { os << "node-type: SkyHDRNode, name: " << m_name; }
+};

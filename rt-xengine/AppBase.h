@@ -1,5 +1,4 @@
-#ifndef APPBASE_H
-#define APPBASE_H
+#pragma once
 
 // Base class for the custom and default "Game" class.
 // Game class provides overrides for the most important classes, functions and settings of the base engine.
@@ -24,6 +23,9 @@ protected:
 	bool m_handleControllers;
 
 	bool m_lockMouse;
+
+	int32 m_argc;
+	char** m_argv;
 public:
 	AppBase();
 
@@ -33,17 +35,16 @@ public:
 	virtual void PreMainInit(int32 argc, char* argv[]);
 	virtual int32 Main(int32 argc, char* argv[]);
 
-	virtual void MainLoop(System::Engine* engine, Platform::Window* window);
+	virtual void MainLoop();
 	
-	virtual void RegisterRenderers(System::Engine* engine);
+	// Override here to register your custom renderer
+	virtual void RegisterRenderers();
 
-	virtual std::unique_ptr<System::Engine> CreateEngine();
+	// Return a 'new Win32Window()' with your parameters
+	virtual Win32Window* CreateAppWindow();
 
-	virtual std::unique_ptr<Platform::Window> CreateAppWindow(System::Engine* engine);
+	// Return a 'new NodeFactory()' subtype of node factory with your own factory
+	virtual NodeFactory* MakeNodeFactory();
 
-	virtual std::unique_ptr<World::NodeFactory> MakeNodeFactory();
-
+	friend class Engine;
 };
-
-
-#endif //APPBASE_H

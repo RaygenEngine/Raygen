@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Core
+namespace utl
 {
 	template<typename T>
 	inline bool EqualsZero(T value)

@@ -2,9 +2,8 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-namespace Assets
+namespace ParsingAux
 {
-
 	inline bool AttributeExists(const tinyxml2::XMLElement* xmlElement, const char* attribute)
 	{
 		return xmlElement->FindAttribute(attribute);
@@ -15,7 +14,7 @@ namespace Assets
 	{
 		const auto count = sizeof(T) / sizeof(float);
 		float parts[count];
-		if (data && Core::SplitStringIntoTArray(parts, count, data, ','))
+		if (data && utl::SplitStringIntoTArray(parts, count, data, ','))
 		{
 			floats = reinterpret_cast<T&>(parts);
 			return true;
@@ -26,7 +25,7 @@ namespace Assets
 	template <typename T>
 	bool ReadFloatsAttribute(const tinyxml2::XMLElement* xmlElement, const char* attribute, T& floats)
 	{
-		RT_XENGINE_LOG_TRACE("Reading XML attribute: \"{0}\"", attribute);
+		LOG_TRACE("Reading XML attribute: \"{0}\"", attribute);
 
 		if (AttributeExists(xmlElement, attribute))
 		{
@@ -34,13 +33,13 @@ namespace Assets
 			return true;
 		}
 
-		RT_XENGINE_LOG_INFO("Missing XML attribute: \"{0}\", defaulting", attribute);
+		LOG_INFO("Missing XML attribute: \"{0}\", defaulting", attribute);
 		return false;
 	}
 
 	inline bool ReadStringAttribute(const tinyxml2::XMLElement* xmlElement, const char* attribute, std::string& str)
 	{
-		RT_XENGINE_LOG_TRACE("Reading attribute \"{0}\"", attribute);
+		LOG_TRACE("Reading attribute \"{0}\"", attribute);
 
 		if (AttributeExists(xmlElement, attribute))
 		{
@@ -48,7 +47,7 @@ namespace Assets
 			return true;
 		}
 
-		RT_XENGINE_LOG_INFO("Missing string attribute \"{0}\", defaulting", attribute);
+		LOG_INFO("Missing string attribute \"{0}\", defaulting", attribute);
 		return false;
 	}
 
@@ -60,8 +59,8 @@ namespace Assets
 			return true;
 		}
 
-		entityName = "unnamed$uid$" + std::to_string(Core::UUIDGenerator::GenerateUUID());
-		RT_XENGINE_LOG_WARN("Missing XML Entity / Node name, defaulting to {}", entityName);
+		entityName = "unnamed$uid$" + std::to_string(utl::UUIDGenerator::GenerateUUID());
+		LOG_WARN("Missing XML Entity / Node name, defaulting to {}", entityName);
 
 		return false;
 	}

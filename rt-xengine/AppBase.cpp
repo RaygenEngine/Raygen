@@ -17,10 +17,16 @@ AppBase::AppBase()
 
 	m_handleControllers = false;
 	m_lockMouse = false;
+
+	m_argc = 1;
 }
 
 void AppBase::PreMainInit(int32 argc, char* argv[])
 {
+	// Copy the arguments for later use.
+	m_argc = argc;
+	m_argv = argv;
+
 	if (argc > 1) 
 	{
 		m_initialScene = argv[1];
@@ -29,96 +35,77 @@ void AppBase::PreMainInit(int32 argc, char* argv[])
 
 int32 AppBase::Main(int32 argc, char* argv[])
 {
-	RT_XENGINE_LOG_FATAL("Running app: {}", m_name);
+	LOG_FATAL("Running app: {}", m_name);
 
-	std::unique_ptr<System::Engine> engine = CreateEngine();
-	std::unique_ptr<Platform::Window> window = CreateAppWindow(engine.get());
-	
-	RegisterRenderers(engine.get());
-	
-	// Init engine file system.
-	if (!engine->InitDirectories(argv[0], m_assetPath))
-	{
-		RT_XENGINE_LOG_FATAL("Failed to create Engine!");
-		return -1;
-	}
-	
-	std::unique_ptr<World::NodeFactory> factory = MakeNodeFactory();
-	if (!engine->CreateWorldFromFile(m_initialScene, factory.get()))
-	{
-		RT_XENGINE_LOG_FATAL("Failed to create World!");
-		return -1;
-	}
+	Engine& engine = Engine::Get(); 
 
-	// Create window
-	if (!window)
+	engine.InitEngine(this);
+
+	if (!engine.CreateWorldFromFile(m_initialScene))
 	{
-		RT_XENGINE_LOG_FATAL("Failed to create Window!");
+		LOG_FATAL("Failed to create World!");
 		return -1;
 	}
 
 	// Start the renderer
-	if (!window->StartRenderer(0))
-	{
-		RT_XENGINE_LOG_FATAL("Failed to create Renderer!");
-		return -1;
-	}
+	engine.SwitchRenderer(0);
 
+
+	Window* window = Engine::GetMainWindow();
+	// Show the window
 	window->Show();
 
-	if (m_lockMouse) 
+	if (m_lockMouse)
 	{
 		window->RestrictMouseMovement();
 	}
 
-	MainLoop(engine.get(), window.get());
+	MainLoop();
 
 	window->ReleaseMouseMovement();
+
 	return 0;
 }
 
-void AppBase::MainLoop(System::Engine* engine, Platform::Window* window)
+void AppBase::MainLoop()
 {
+	Window* window = Engine::GetMainWindow();
 	while (!window->IsClosed())
 	{
 		// clear input soft state (pressed keys, etc.)
-		engine->GetInput().ClearSoftState();
+		Engine::GetInput()->ClearSoftState();
 
 		// Let our window handle any events.
 		window->HandleEvents(m_handleControllers);
 
 		// update world 
-		engine->GetWorld()->Update();
+		Engine::GetWorld()->Update();
 		// update renderer (also checks world updates, eg. camera/ entity moved, light color changed)
-		engine->GetRenderer()->Update();
+		
+		Engine::GetRenderer()->Update();
 		// render
-		engine->GetRenderer()->Render();
-		engine->GetRenderer()->SwapBuffers();
+		Engine::GetRenderer()->Render();
+		Engine::GetRenderer()->SwapBuffers();
 	}
 }
 
-void AppBase::RegisterRenderers(System::Engine* engine) 
+void AppBase::RegisterRenderers() 
 {
 	// NOTE:
 	// Default behavior for an app is to start the FIRST renderer registered here.
-	engine->RegisterRenderer<Renderer::OpenGL::GLTestRenderer>();
+	Engine::RegisterRenderer<OpenGL::GLTestRenderer>();
 }
 
-std::unique_ptr<System::Engine> AppBase::CreateEngine()
+Win32Window* AppBase::CreateAppWindow()
 {
-	return std::make_unique<System::Engine>();
+	return Win32Window::CreateWin32Window(
+		m_windowTitle, 150, 150, m_windowWidth, m_windowHeight
+	);
 }
 
-std::unique_ptr<Platform::Window> AppBase::CreateAppWindow(System::Engine* engineRef)
+NodeFactory* AppBase::MakeNodeFactory()
 {
-	return std::move(Platform::Win32Window::CreateWin32Window(
-		engineRef, m_windowTitle, 150, 150, m_windowWidth, m_windowHeight
-	));
-}
-
-std::unique_ptr<World::NodeFactory> AppBase::MakeNodeFactory()
-{
-	return std::make_unique<World::NodeFactory>(World::NodeFactory());
+	return new NodeFactory();
 }
 
 

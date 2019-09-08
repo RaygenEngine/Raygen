@@ -2,7 +2,7 @@
 
 // Do not re-arrange this struct without permission! 
 #if defined(__cplusplus)
-namespace Core
+namespace utl
 {
 #endif
 

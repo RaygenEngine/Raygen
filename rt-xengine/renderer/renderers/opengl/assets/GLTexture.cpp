@@ -2,7 +2,7 @@
 
 #include "renderer/renderers/opengl/assets/GLTexture.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
 
 	GLTexture::GLTexture(GLAssetManager* glAssetManager, const std::string& name)
@@ -16,7 +16,7 @@ namespace Renderer::OpenGL
 		glDeleteTextures(1, &m_glId);
 	}
 
-	bool GLTexture::Load(Assets::Texture* data, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR)
+	bool GLTexture::Load(Texture* data, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR)
 	{
 		// TODO: where should i store this?>
 		m_texCoordIndex = 0;

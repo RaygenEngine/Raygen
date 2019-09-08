@@ -1,16 +1,14 @@
 #include "pch.h"
-
 #include "renderer/renderers/opengl/GLRendererBase.h"
+#include "system/Engine.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
 
-	GLRendererBase::GLRendererBase(System::Engine* context)
-		: Renderer(context),
-		  m_assochWnd(nullptr),
+	GLRendererBase::GLRendererBase()
+		: m_assochWnd(nullptr),
 		  m_hdc(nullptr),
-		  m_hglrc(nullptr),
-	      m_glAssetManager(this)
+		  m_hglrc(nullptr)
 	{
 	}
 
@@ -74,4 +72,6 @@ namespace Renderer::OpenGL
 	{
 		::SwapBuffers(m_hdc);
 	}
+	
+
 }

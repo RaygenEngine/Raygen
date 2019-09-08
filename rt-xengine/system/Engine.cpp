@@ -2,54 +2,106 @@
 
 #include "system/Engine.h"
 #include "assets/other/xml/XMLDoc.h"
-#include "assets/DiskAssetManager.h"
+#include "assets/AssetManager.h"
 #include "world/World.h"
 #include "renderer/Renderer.h"
 #include "world/NodeFactory.h"
+#include "platform/windows/Win32Window.h"
+#include "AppBase.h"
 
-namespace System
+// Leave this empty, use InitEngine.
+// Having a different function here enables us to 'construct' engine with parameters.
+Engine::Engine()
+	: m_assetManager(nullptr),
+	m_world(nullptr),
+	m_renderer(nullptr),
+	m_window(nullptr),
+	m_input(nullptr)
+{}
+
+Engine::~Engine()
+{			
+	// NOTE: It is REALLY important to remember the reverse order here
+	if (m_renderer) delete m_renderer;
+	if (m_world) delete m_world;
+	if (m_window) delete m_window;
+
+	delete m_assetManager;
+	delete m_input;
+}
+
+void Engine::InitEngine(AppBase* app)
 {
-	Engine::Engine()
+	m_app = app;
+
+	m_input = new Input();
+	m_assetManager = new AssetManager();
+	
+	m_assetManager->Init(app->m_argv[0], app->m_assetPath);
+
+	app->RegisterRenderers();
+
+	m_window = app->CreateAppWindow();
+}
+
+bool Engine::CreateWorldFromFile(const std::string& filename)
+{
+	if (m_world) 
 	{
+		delete m_world;
+	}
+	m_world = new World(m_app->MakeNodeFactory());
+
+	// load scene file
+	const auto sceneXML = m_assetManager->LoadXMLDocAsset(filename);
+
+	return m_world->LoadAndPrepareWorldFromXML(sceneXML.get());
+}
+
+void Engine::SwitchRenderer(uint32 registrationIndex)
+{
+	Engine& eng = Engine::Get();
+
+	if (!Engine::GetWorld()) 
+	{
+		LOG_ERROR("Attempted to start a renderer without world.");
+		return;
 	}
 
-	Engine::~Engine()
+	if (registrationIndex < 0 || registrationIndex >= eng.m_rendererRegistrations.size())
 	{
+		LOG_WARN("Attempted to switch to incorrect renderer index: {} of total registered: {}", registrationIndex, eng.m_rendererRegistrations.size());
+		return;
 	}
 
-	bool Engine::InitDirectories(const std::string& applicationPath, const std::string& dataDirectoryName)
+	if (eng.m_renderer)
 	{
-		m_diskAssetManager = std::make_unique<Assets::DiskAssetManager>(this);
-		return m_diskAssetManager->Init(applicationPath, dataDirectoryName);
+		delete eng.m_renderer;
 	}
 
-	bool Engine::CreateWorldFromFile(const std::string& filename, World::NodeFactory* factory)
+	eng.m_renderer = eng.m_rendererRegistrations[registrationIndex].Construct();
+
+	eng.m_renderer->InitRendering(eng.m_window->GetHWND(), eng.m_window->GetHInstance());
+	eng.m_renderer->InitScene(eng.m_window->GetWidth(), eng.m_window->GetHeight());
+}
+
+void Engine::UnloadDiskAssets()
+{
+	m_assetManager->UnloadAssets();
+}
+
+bool Engine::HasCmdArgument(const std::string& argument)
+{
+	Engine& eng = Engine::Get();
+
+	int32 argc = eng.m_app->m_argc;
+	char** argv = eng.m_app->m_argv;
+	for (int32 i = 0; i < argc; ++i) 
 	{
-		m_world = std::make_unique<World::World>(this, factory);
-
-		// load scene file
-		const auto sceneXML = m_diskAssetManager->LoadXMLDocAsset(filename);
-
-		return m_world->LoadAndPrepareWorldFromXML(sceneXML.get());
-	}
-
-	bool Engine::SwitchRenderer(RendererRegistrationIndex registrationIndex)
-	{
-		if (registrationIndex < 0 || registrationIndex >= m_rendererRegistrations.size()) 
+		if (strcmp(argv[i], argument.c_str()))
 		{
-			RT_XENGINE_LOG_WARN("Attempted to switch to incorrect renderer index: {} of total registered: {}", registrationIndex, m_rendererRegistrations.size());
-			return false;
+			return true;
 		}
-
-		// replacing the old renderer will destroy it
-		// construct renderer
-		m_renderer = std::unique_ptr<Renderer::Renderer>(m_rendererRegistrations[registrationIndex].Construct(this));
-
-		return m_renderer.get();
 	}
-
-	void Engine::UnloadDiskAssets()
-	{
-		m_diskAssetManager->UnloadAssets();
-	}
+	return false;
 }

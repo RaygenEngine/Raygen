@@ -5,9 +5,8 @@
 
 #include "GLAD/glad.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
-
 	class GLInstancedModel : public GLModel
 	{
 		uint32 m_instanceCount;
@@ -17,7 +16,7 @@ namespace Renderer::OpenGL
 		GLInstancedModel(GLAssetManager* glAssetManager, const std::string& name);
 		~GLInstancedModel();
 
-		bool Load(World::TriangleModelInstancedGeometryNode* nodeInstancer);
+		bool Load(TriangleModelInstancedGeometryNode* nodeInstancer);
 
 		uint32 GetInstancesCount() const { return m_instanceCount; }
 

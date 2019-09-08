@@ -9,7 +9,8 @@
 // to add additional supported types inject std::hash<newType>()(item) similarly to the way it is done below (also you 
 // need operator== overloading) otherwise break your types into primitives(do not use floating-point number keys) or don't use them as keys at all
 // with a multi key hashing map you can create asset caches for each renderer, or even renderers that share the same rendering contexts
-namespace Assets
+
+namespace CachingAux
 {
 	template <typename... Types>
 	struct Keys
@@ -64,7 +65,7 @@ namespace Assets
 				// if couldn't load
 				if (!ptr->Load(args...))
 				{
-					//RT_XENGINE_LOG_WARN("Failed to load asset's data in memory, type: {}, args: " + tp, typeid(AssetType).name(), args...);
+					//LOG_WARN("Failed to load asset's data in memory, type: {}, args: " + tp, typeid(AssetType).name(), args...);
 					// remove dangling ptr
 					cache.erase(key);
 					return nullptr;
@@ -73,20 +74,20 @@ namespace Assets
 				ptr->MarkLoaded();
 			}
 
-			RT_XENGINE_LOG_TRACE("Cache hit!");
+			LOG_TRACE("Cache hit!");
 			// return cast: we may group some assets together (e.g disk asset)
 			return ptr;
 		}
 
 		// placeholder not found, add placeholder and load asset
 
-		RT_XENGINE_LOG_TRACE("Cache size increased, size: {}", cache.size());
+		LOG_TRACE("Cache size increased, size: {}", cache.size());
 
 		// make asset, custom deleter to free asset cache from this asset (when ref count == 0)
 		auto asset = std::shared_ptr<AssetType>(new AssetType(context, description), [key, &cache](AssetType* assetPtr)
 			{
-				RT_XENGINE_LOG_DEBUG("Unregistering asset, {}", assetPtr);
-				RT_XENGINE_LOG_TRACE("Cache size decreased, size: {}", cache.size());
+				LOG_DEBUG("Unregistering asset, {}", assetPtr);
+				LOG_TRACE("Cache size decreased, size: {}", cache.size());
 				cache.erase(key);
 
 				delete assetPtr;
@@ -95,12 +96,12 @@ namespace Assets
 		// check load state
 		if (!asset->Load(args...))
 		{
-			//	RT_XENGINE_LOG_WARN(("Failed to load asset's data in memory, {}, args: " + tp).c_str(), asset.get(), args...);
+			//	LOG_WARN(("Failed to load asset's data in memory, {}, args: " + tp).c_str(), asset.get(), args...);
 			return nullptr;
 		}
 
 		// asset will be registered only if loaded successfully
-		//RT_XENGINE_LOG_DEBUG("Registering asset, {}, args: " tp, asset.get(), args...);
+		//LOG_DEBUG("Registering asset, {}, args: " tp, asset.get(), args...);
 
 
 		// is loaded == true
@@ -117,8 +118,8 @@ namespace Assets
 // inject key hasher in std
 namespace std
 {
-	using namespace Assets;
-
+	using namespace CachingAux;
+	
 	template <typename... Types>
 	struct hash<Keys<Types...>>
 	{
