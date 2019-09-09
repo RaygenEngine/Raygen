@@ -16,24 +16,12 @@ extern float GetTimeMs()
 	return static_cast<float>((Clock::now() - t_start).count() / 1000000.f);
 }
 
-bool RootNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
-{
-	Node::LoadAttributesFromXML(xmlData);
-
 World::World(NodeFactory* factory)
-	: Node(),
-	m_deltaTime(0),
+	: m_deltaTime(0),
 	m_worldTime(GetTimeMs()),
 	m_lastTime(GetTimeMs()),
 	m_nodeFactory(factory)
 {
-	using namespace PropertyFlags;
-		
-	//REFLECT_VAR(m_background, Color);
-	//REFLECT_VAR(m_ambient, Color);
-	REFLECT_VAR(m_deltaTime, Transient);
-	REFLECT_VAR(m_worldTime, Transient);
-	REFLECT_VAR(m_lastTime, Transient);
 }
 
 World::~World()
@@ -136,16 +124,16 @@ void World::Update()
 	m_worldTime += m_deltaTime;
 	m_lastTime = timestamp;
 
-		if (GetEngine()->ShouldUpdateWorld())
+		if (Engine::Get().ShouldUpdateWorld())
 		{
 			// Update after input and delta calculation
 			for (auto* node : m_nodes)
 				node->Update(m_deltaTime);
 		}
 		
-		if (GetEngine()->IsUsingEditor())
+		if (Engine::Get().IsUsingEditor())
 		{
-			GetEngine()->GetEditor()->UpdateEditor();
+			Engine::GetEditor()->UpdateEditor();
 		}
 
 	// Update dirty leaf node instances

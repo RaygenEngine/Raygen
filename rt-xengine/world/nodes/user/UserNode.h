@@ -14,4 +14,4 @@ public:
 	~UserNode() = default;
 
 	void ToString(std::ostream& os) const { os << "node-type: UserNode, name: " << m_name; }
-}
+};

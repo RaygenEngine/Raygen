@@ -7,7 +7,7 @@
 #include "sky/SkyCubeNode.h"
 #include "sky/SkyHDRNode.h"
 #include "world/NodeFactory.h"
-#include "assets/DiskAssetManager.h"
+#include "assets/AssetManager.h"
 
 Node::Node(Node* pNode)
 		: m_localTranslation(0.f, 0.f, 0.f),
@@ -97,9 +97,9 @@ void Node::MarkDirty()
 
 bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 {
-	Assets::ReadFillEntityName(xmlData, m_name);
-	Assets::ReadFillEntityType(xmlData, m_type);
-	m_reflector.SetName(m_type + "." + m_name + "." + std::to_string(GetObjectId()));
+	ParsingAux::ReadFillEntityName(xmlData, m_name);
+	ParsingAux::ReadFillEntityType(xmlData, m_type);
+	m_reflector.SetName(m_type + "." + m_name + "." + std::to_string(GetUID()));
 
 	LOG_INFO("Loading {0} named {1}", m_type, m_name);
 
@@ -109,7 +109,7 @@ bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 	const auto status = factory->LoadChildren(xmlData, this);
 		
 	// calculate local matrix after loading
-	m_localMatrix = Core::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
+	m_localMatrix = utl::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
 	return status;
 }
 
@@ -129,6 +129,8 @@ bool Node::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
 
 void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 {
+	using namespace ParsingAux;
+
 	for (auto& prop : m_reflector.GetProperties())
 	{
 		auto str = prop.GetName().c_str();
@@ -143,26 +145,25 @@ void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 			xmlData->QueryFloatAttribute(str, &ref);
 		},
 			[&](glm::vec3& ref) {
-			Assets::ReadFloatsAttribute(xmlData, str, ref);
+			ReadFloatsAttribute(xmlData, str, ref);
 		},
 			[&](std::string& ref) {
-			Assets::ReadStringAttribute(xmlData, str, ref);
+			ReadStringAttribute(xmlData, str, ref);
 		},
 			[&](ReflectedAsset& ref) {
 			std::string type;
-			Assets::ReadStringAttribute(xmlData, "type", type);
+			ReadStringAttribute(xmlData, "type", type);
 
 			// default geom is static
 			auto modelGeomType = GeometryUsage::STATIC;
-			if (!type.empty() && Core::CaseInsensitiveCompare(type, "dynamic"))
+			if (!type.empty() && utl::CaseInsensitiveCompare(type, "dynamic"))
 				modelGeomType = GeometryUsage::DYNAMIC;
 
 			std::string fileStr;
-			Assets::ReadStringAttribute(xmlData, str, fileStr);
+			ReadStringAttribute(xmlData, str, fileStr);
 
-			ref = GetDiskAssetManager()->LoadModelAsset(fileStr,
-														modelGeomType, 
-														GetWorld()->GetAssetLoadPathHint());
+			ref = Engine::GetAssetManager()->LoadModelAsset(fileStr,
+														modelGeomType);
 		}
 		);
 	}
@@ -171,7 +172,7 @@ void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 
 void Node::Move(const glm::vec3& direction, float magnitude)
 {
-	m_localTranslation += direction * magnitude * GetWorld()->GetDeltaTime();
+	m_localTranslation += direction * magnitude;
 
 	m_updateLocalMatrix = true;
 	MarkDirty();
@@ -179,7 +180,7 @@ void Node::Move(const glm::vec3& direction, float magnitude)
 
 void Node::MoveUp(float magnitude)
 {
-	m_localTranslation += GetUp() * magnitude * Engine::GetWorld()->GetDeltaTime();
+	m_localTranslation += GetUp() * magnitude;
 
 	m_updateLocalMatrix = true;
 	MarkDirty();
@@ -187,7 +188,7 @@ void Node::MoveUp(float magnitude)
 
 void Node::MoveDown(float magnitude)
 {
-	m_localTranslation += -GetUp() * magnitude * Engine::GetWorld()->GetDeltaTime();
+	m_localTranslation += -GetUp() * magnitude;
 
 	m_updateLocalMatrix = true;
 	MarkDirty();
@@ -195,7 +196,7 @@ void Node::MoveDown(float magnitude)
 
 void Node::MoveRight(float magnitude)
 {
-	m_localTranslation += GetRight() * magnitude * Engine::GetWorld()->GetDeltaTime();
+	m_localTranslation += GetRight() * magnitude;
 
 	m_updateLocalMatrix = true;
 	MarkDirty();
@@ -203,7 +204,7 @@ void Node::MoveRight(float magnitude)
 
 void Node::MoveLeft(float magnitude)
 {
-	m_localTranslation += -GetRight() * magnitude * Engine::GetWorld()->GetDeltaTime();
+	m_localTranslation += -GetRight() * magnitude;
 
 	m_updateLocalMatrix = true;
 	MarkDirty();
@@ -211,7 +212,7 @@ void Node::MoveLeft(float magnitude)
 
 void Node::MoveFront(float magnitude)
 {
-	m_localTranslation += GetFront() * magnitude * Engine::GetWorld()->GetDeltaTime();
+	m_localTranslation += GetFront() * magnitude;
 
 	m_updateLocalMatrix = true;
 	MarkDirty();
@@ -219,7 +220,7 @@ void Node::MoveFront(float magnitude)
 
 void Node::MoveBack(float magnitude)
 {
-	m_localTranslation += -GetFront() * magnitude * Engine::GetWorld()->GetDeltaTime();
+	m_localTranslation += -GetFront() * magnitude;
 
 	m_updateLocalMatrix = true;
 	MarkDirty();

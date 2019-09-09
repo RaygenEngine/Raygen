@@ -7,6 +7,7 @@ class Renderer;
 class Window;
 class World;
 class Input;
+class Editor;
 
 class AppBase;
 
@@ -71,6 +72,12 @@ public:
 		return GetRenderer<RenderT>();
 	}
 	
+	// ALWAYS, ALWAYS check this return value. Editor may not be initialized at all in some cases.
+	[[nodiscard]]
+	static Editor* GetEditor()
+	{
+		return Get().m_editor;
+	}
 
 public:
 	Engine(Engine const&) = delete;
@@ -136,7 +143,6 @@ public:
 	// Avoid this if possible and always refactor cmd debug features to normal features.
 	static bool HasCmdArgument(const std::string& argument);
 
-	bool ShouldUpdateWorld() const;
-	bool IsUsingEditor() const;
-	void InitEditor();
+	[[nodiscard]] bool ShouldUpdateWorld() const;
+	[[nodiscard]] bool IsUsingEditor() const;
 };

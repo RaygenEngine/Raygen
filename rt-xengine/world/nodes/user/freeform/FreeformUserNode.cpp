@@ -45,6 +45,8 @@ void FreeformUserNode::Update(float deltaTime)
 
 	auto speed = m_movementSpeed; // 0,01
 
+	speed *= deltaTime;
+
 	// user buffs
 	if (input.IsKeyRepeat(XVirtualKey::LSHIFT))
 		speed *= 10.f;

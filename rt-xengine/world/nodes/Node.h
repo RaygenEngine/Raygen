@@ -37,7 +37,7 @@ protected:
 		
 public:
 	Reflector m_reflector;
-	friend Editor::Editor;
+	friend class Editor;
 
 public:
 	Node();
@@ -69,6 +69,9 @@ public:
 	const std::string& GetType() const { return m_type; }
 
 	const std::vector<std::shared_ptr<Node>>& GetChildren() { return m_children; };
+	
+	// Returns nullptr IF AND ONLY IF "this" node is the root node.
+	[[nodiscard]] Node* GetParent() const { return m_parent; }
 
 	void AddChild(std::shared_ptr<Node> child) { m_children.emplace_back(child); }
 

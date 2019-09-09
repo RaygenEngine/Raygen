@@ -1,37 +1,30 @@
 #pragma once
 
-#include "system/EngineObject.h"
 #include "platform/Window.h"
 
-namespace World
+class Node;
+
+class Editor
 {
-	class Node;
-}
+protected:
+	bool m_updateWorld;
+	Node* m_selectedNode;
+public:
+	Editor();
 
-namespace Editor {
-	class Editor : public System::EngineObject
+	virtual ~Editor() = default;
+
+	void UpdateEditor();
+
+	bool ShouldUpdateWorld() const 
 	{
-	protected:
-		bool m_updateWorld;
-		World::Node* m_selectedNode;
-	public:
-		Editor(System::Engine* engine);
+		return m_updateWorld;
+	}
 
-		virtual ~Editor() = default;
+	void SaveScene(const std::string& filename);
 
-		void UpdateEditor();
-
-		bool ShouldUpdateWorld() const 
-		{
-			return m_updateWorld;
-		}
-
-		void SaveScene(const std::string& filename);
-
-	private:
-		void Outliner();
-		void PropertyEditor(World::Node* activeNode);
+private:
+	void Outliner();
+	void PropertyEditor(Node* activeNode);
 		
-	};
-
-}
+};

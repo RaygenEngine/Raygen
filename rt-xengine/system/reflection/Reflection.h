@@ -14,12 +14,10 @@
 #include "core/auxiliary/MetaTemplates.h"
 #include <type_traits>
 
-namespace Assets
-{
-	class Model;
-}
+class Model;
 
-using ReflectedAsset = std::shared_ptr<Assets::Model>;
+
+using ReflectedAsset = std::shared_ptr<Model>;
 
 // A reflection system that uses offsetof would be better but for simplicity we just initialize the reflector
 // for every instance of the objects we want to reflect. Therefore we can save pointers directly.

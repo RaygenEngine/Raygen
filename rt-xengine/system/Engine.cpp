@@ -43,6 +43,11 @@ void Engine::InitEngine(AppBase* app)
 	app->RegisterRenderers();
 
 	m_window = app->CreateAppWindow();
+
+	if (app->m_enableEditor)
+	{
+		m_editor = new Editor();
+	}
 }
 
 bool Engine::CreateWorldFromFile(const std::string& filename)
@@ -104,11 +109,12 @@ bool Engine::HasCmdArgument(const std::string& argument)
 			return true;
 		}
 	}
+	return false;
 }
 
 bool Engine::ShouldUpdateWorld() const
 {
-	if (m_editor.get())
+	if (m_editor)
 	{
 		return m_editor->ShouldUpdateWorld();
 	}
@@ -118,10 +124,5 @@ bool Engine::ShouldUpdateWorld() const
 bool Engine::IsUsingEditor() const
 {
 	// TODO: in the future disable editor with this flag.
-	return m_editor.get();
-}
-
-void Engine::InitEditor()
-{
-	m_editor = std::make_unique<Editor::Editor>(this);
+	return m_editor != nullptr;
 }

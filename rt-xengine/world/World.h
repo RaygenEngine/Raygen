@@ -19,7 +19,10 @@ class RootNode : public Node
 public:
 	RootNode()
 		: Node(nullptr)
-	{}
+	{
+		REFLECT_VAR(m_background, PropertyFlags::Color);
+		REFLECT_VAR(m_ambient, PropertyFlags::Color);
+	}
 
 	glm::vec3 m_background;
 	glm::vec3 m_ambient;
@@ -30,8 +33,6 @@ public:
 	glm::vec3 GetAmbientColor() const { return m_ambient; }
 	void SetAmbientColor(const glm::vec3& color) { m_ambient = color; }
 
-	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
-	
 	~RootNode() {
 		m_children.clear();
 	}
