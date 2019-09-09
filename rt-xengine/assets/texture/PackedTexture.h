@@ -2,25 +2,25 @@
 
 #include "assets/texture/Texture.h"
 
-namespace Assets
+// pack textures as disk assets and not as gpu assets - avoid creating packed textures for each gpu context
+class PackedTexture : public Texture
 {
+	// caching
+	std::vector<std::shared_ptr<Texture>> m_parts;
 
-	// pack textures as disk assets and not as gpu assets - avoid creating packed textures for each gpu context
-	class PackedTexture : public Texture
-	{
+	// inits based on first input
+	bool m_init;
+	// 0 - 4 (data is packed sequentially)
+	uint32 m_availableChannel;
 
-		template<typename T>
-		bool LoadChannels(uint32 targetChannel, Texture* text, uint32 actualComponents);
+public:
+	PackedTexture(const std::string& path)
+		: Texture(path),
+	      m_init(false),
+	      m_availableChannel(0) {}
 
-	public:
-		PackedTexture(EngineObject* pObject, const std::string& path);
-		~PackedTexture() = default;
+	~PackedTexture() = default;
+	
+	bool LoadTextureAtChannelTarget(std::shared_ptr<Texture>& texture, TextureChannel srcChannels, bool cacheOriginal = false);
+};
 
-		// pack at most 4 textures into a single one, copying channels based on actual texture components,
-		// if less than 4 textures used, pass nullptr and actual components value 0, if not enough space for packing, packed texture will not be loaded
-		bool Load(Texture* textTargetRChannel, uint32 actualComponents0,
-			Texture* textTargetGChannel, uint32 actualComponents1,
-			Texture* textTargetBChannel, uint32 actualComponents2,
-			Texture* textTargetAChannel, uint32 actualComponents3, DynamicRange dr);
-	};
-}

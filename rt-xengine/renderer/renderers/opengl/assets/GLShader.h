@@ -5,9 +5,8 @@
 
 #include "GLAD/glad.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
-
 	class GLShader : public GLAsset
 	{
 		GLuint m_glId;
@@ -16,10 +15,12 @@ namespace Renderer::OpenGL
 		std::unordered_map<std::string, GLint> m_uniformLocations;
 
 	public:
-		GLShader(GLAssetManager* glAssetManager, const std::string& name);
+		GLShader(const std::string& name)
+			: GLAsset(name),
+			  m_glId(0) {}
 		~GLShader();
 
-		bool Load(Assets::StringFile* vertexSource, Assets::StringFile* fragmentSource);
+		bool Load(StringFile* vertexSource, StringFile* fragmentSource);
 
 		GLuint GetGLHandle() const { return m_glId; }
 

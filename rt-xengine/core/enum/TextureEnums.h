@@ -17,6 +17,14 @@ enum class TextureWrapping
 	REPEAT
 };
 
+enum TextureChannel : int32
+{
+	TC_RED = BIT(0),
+	TC_GREEN = BIT(1),
+	TC_BLUE = BIT(2),
+	TC_ALPHA = BIT(3)
+};
+
 enum CubeMapFace : int32
 {
 	CMF_RIGHT = 0,
@@ -27,22 +35,3 @@ enum CubeMapFace : int32
 	CMF_BACK,
 	CMF_COUNT
 };
-
-// Low dynamic range textures are loaded as byte (8 bits per channel)
-// High dynamic range textures are loaded as float32 (32 bits per channel)
-// TODO: expand this
-enum class DynamicRange
-{
-	LOW = 0,
-	HIGH
-};
-
-inline const char* TexelEnumToString(DynamicRange dr)
-{
-	switch (dr)
-	{
-	case DynamicRange::LOW: return "LDR";
-	case DynamicRange::HIGH: return "HDR";
-	default:  return "invalid";
-	}
-}

@@ -5,7 +5,7 @@
 
 #include "GLAD/glad.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
 	// TODO: This asset has not been tested in a renderer, if it doesn't work please implement it correctly, if it works, remove this comment
 	class GLCubeMap : public GLAsset
@@ -13,10 +13,12 @@ namespace Renderer::OpenGL
 		GLuint m_glId;
 
 	public:
-		GLCubeMap(GLAssetManager* glAssetManager, const std::string& name);
+		GLCubeMap(const std::string& name)
+			: GLAsset(name),
+			  m_glId(0) {}
 		~GLCubeMap();
 
-		bool Load(Assets::CubeMap* data, GLint wrapFlag, bool mipMapping);
+		bool Load(CubeMap* data, GLint wrapFlag, bool mipMapping);
 
 		GLuint GetGLId() const { return m_glId; }
 

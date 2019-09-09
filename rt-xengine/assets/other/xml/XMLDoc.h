@@ -1,23 +1,21 @@
 #pragma once
 
-#include "assets/DiskAsset.h"
-#include "assets/other/xml/ParsingAux.h"
+#include "assets/FileAsset.h"
+#include "tinyxml2/tinyxml2.h"
 
-namespace Assets
+class XMLDoc : public FileAsset
 {
-	class XMLDoc : public DiskAsset
-	{
-		tinyxml2::XMLDocument m_document;
+	tinyxml2::XMLDocument m_document;
 
-	public:
-		XMLDoc(EngineObject* pObject, const std::string& path);
-		~XMLDoc() = default;
+public:
+	XMLDoc(const std::string& path)
+		: FileAsset(path) {}
+	~XMLDoc() = default;
 
-		bool Load(const std::string& path);
-		void Clear() override;
+	bool Load(const std::string& path);
+	void Clear() override;
 
-		const tinyxml2::XMLElement* GetRootElement() const { return m_document.RootElement(); }
+	const tinyxml2::XMLElement* GetRootElement() const { return m_document.RootElement(); }
 
-		void ToString(std::ostream& os) const override { os << "asset-type: XMLDocument, name: " << m_name; }
-	};
-}
+	void ToString(std::ostream& os) const override { os << "asset-type: XMLDocument, name: " << m_fileName; }
+};

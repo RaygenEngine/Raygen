@@ -5,7 +5,7 @@
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
-namespace Core
+namespace utl
 {
 	std::shared_ptr<spdlog::logger> Log::s_logger;
 

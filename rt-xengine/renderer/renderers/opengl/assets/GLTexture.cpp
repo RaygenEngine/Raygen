@@ -2,21 +2,15 @@
 
 #include "renderer/renderers/opengl/assets/GLTexture.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
-
-	GLTexture::GLTexture(GLAssetManager* glAssetManager, const std::string& name)
-		: GLAsset(glAssetManager, name), m_bindlessHandle(0),
-		  m_glId(0), m_texCoordIndex(0)
-	{
-	}
 
 	GLTexture::~GLTexture()
 	{
 		glDeleteTextures(1, &m_glId);
 	}
 
-	bool GLTexture::Load(Assets::Texture* data, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR)
+	bool GLTexture::Load(Texture* data, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR)
 	{
 		// TODO: where should i store this?>
 		m_texCoordIndex = 0;
@@ -30,21 +24,18 @@ namespace Renderer::OpenGL
 
 		GLenum type;
 		GLint internalFormat;
-		switch (data->GetType())
-		{
 
-		case DynamicRange::HIGH:
+		if(data->IsHdr())
+		{
 			type = GL_FLOAT;
 			internalFormat = GL_RGBA32F;
-			break;
-
-		case DynamicRange::LOW:
-		default:
+		}
+		else
+		{
 			type = GL_UNSIGNED_BYTE;
 			internalFormat = GL_RGBA;
-			break;
 		}
-
+		
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, wrapR);

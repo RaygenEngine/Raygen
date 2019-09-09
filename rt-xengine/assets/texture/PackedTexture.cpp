@@ -1,140 +1,117 @@
 #include "pch.h"
 
 #include "assets/texture/PackedTexture.h"
+#include "assets/AssetManager.h"
 
-namespace Assets
+namespace
 {
-	PackedTexture::PackedTexture(EngineObject* pObject, const std::string& path)
-		: Texture(pObject, path)
-	{
-	}
-
-	bool PackedTexture::Load(Texture* textTargetRChannel, uint32 actualComponents0,
-							 Texture* textTargetGChannel, uint32 actualComponents1,
-							 Texture* textTargetBChannel, uint32 actualComponents2,
-							 Texture* textTargetAChannel, uint32 actualComponents3, DynamicRange dr)
-	{
-		// helps check stuff about the textures you want to pack
-		std::vector<std::tuple<uint32, Texture*, uint32>> textures;
-
-		if (textTargetRChannel)
-			textures.emplace_back(CT_RED, textTargetRChannel, actualComponents0);
-		else if (actualComponents0 != 0)
-			RT_XENGINE_LOG_ERROR("Null texture with channel target RED and actual components value != 0, cache miss danger!");
-
-		if(textTargetGChannel)
-			textures.emplace_back(CT_GREEN, textTargetGChannel, actualComponents1);
-		else if (actualComponents1 != 0)
-			RT_XENGINE_LOG_ERROR("Null texture with channel target GREEN and actual components value != 0, cache miss danger!");
-
-		if (textTargetBChannel)
-			textures.emplace_back(CT_BLUE, textTargetBChannel, actualComponents2);
-		else if (actualComponents2 != 0)
-			RT_XENGINE_LOG_ERROR("Null texture with channel target BLUE and actual components value != 0, cache miss danger!");
-
-		if (textTargetAChannel)
-			textures.emplace_back(CT_ALPHA, textTargetAChannel, actualComponents3);
-		else if (actualComponents3 != 0)
-			RT_XENGINE_LOG_ERROR("Null texture with channel target ALPHA and actual components value != 0, cache miss danger!");
-
-		m_dynamicRange = dr;
-		m_components = 4; // actual components of packed always 4?
-
-		for(const auto& t : textures)
-		{
-			if(m_dynamicRange != std::get<1>(t)->GetType())
-			{
-				RT_XENGINE_LOG_ERROR("Cannot pack different typed textures together (hdr with ldr)");
-				return false;
-			}
-
-			// not first or default texture, difference in width or height, trying to pack different sized textures 
-			if (std::get<1>(t)->GetWidth() > 1 && m_width > 1 && m_width != std::get<1>(t)->GetWidth() ||
-				std::get<1>(t)->GetHeight() > 1 && m_height > 1 && m_height != std::get<1>(t)->GetHeight())
-			{
-				RT_XENGINE_LOG_ERROR("Trying to pack different sized textures!");
-				return false;
-			}
-
-			if (m_width < std::get<1>(t)->GetWidth())
-				m_width = std::get<1>(t)->GetWidth();
-
-			if (m_height < std::get<1>(t)->GetHeight())
-				m_height = std::get<1>(t)->GetHeight();
-		}
-
-		switch (m_dynamicRange)
-		{
-			case DynamicRange::LOW:
-			
-				ReserveTextureDataMemory(sizeof(byte) * 4 * m_width * m_height);
-				for (const auto& t : textures)
-				{
-					if (!LoadChannels<byte>(std::get<0>(t), std::get<1>(t), std::get<2>(t)))
-						return false;
-				}
-				break;
-
-			case DynamicRange::HIGH:
-				ReserveTextureDataMemory(sizeof(float) * 4 * m_width * m_height);
-				for (const auto& t : textures)
-				{
-					if (!LoadChannels<float>(std::get<0>(t), std::get<1>(t), std::get<2>(t)))
-						return false;
-				}
-				break;
-		}
-		
-		return true;
-	}
 
 	template<typename T>
-	bool PackedTexture::LoadChannels(uint32 targetChannel, Texture* text, uint32 actualComponents)
+	void LoadDataToChannels(T* srcData, TextureChannel srcChannels, T* dstData, int32 size, int32 components, int32 availableChannel)
 	{
-		const auto fitCheck = targetChannel + (actualComponents >= 4 ? 3 : actualComponents);
-		// will this packing fit?
-		if (fitCheck > 4)
+		for (int32 i = 0; i < size; i += components)
 		{
-			RT_XENGINE_LOG_ERROR("Cannot fit packing, target channel: {}, actual components: {}", targetChannel, actualComponents);
+			auto targetChannel = availableChannel;
+
+			if (srcChannels & TC_RED)
+			{
+				dstData[i + targetChannel++] = srcData[i];
+			}
+
+			if (srcChannels & TC_GREEN)
+			{
+				dstData[i + targetChannel++] = srcData[i + 1];
+			}
+
+			if (srcChannels & TC_BLUE)
+			{
+				dstData[i + targetChannel++] = srcData[i + 2];
+			}
+
+			if (srcChannels & TC_ALPHA)
+			{
+				dstData[i + targetChannel++] = srcData[i + 3];
+			}
+		}
+	}
+
+}
+
+bool PackedTexture::LoadTextureAtChannelTarget(std::shared_ptr<Texture>& texture, TextureChannel srcChannels, bool cacheOriginal)
+{
+	const auto srcChannelCount = utl::CountSetBits(srcChannels);
+	
+	if(srcChannelCount + m_availableChannel > 4)
+	{
+		LOG_ERROR("Not enough channels to store source channels");
+		return false;
+	}
+
+	
+	// init based on the first texture 
+	if(!m_init)
+	{
+		//m_dynamicRange = texture->GetDynamicRange();
+		// packed texture 4 components
+		m_components = 4;
+
+		m_width = texture->GetWidth();
+		m_height = texture->GetHeight();
+
+		//switch (m_dynamicRange)
+		//{
+		//case DynamicRange::LOW:
+		//	ReserveTextureDataMemory(sizeof(byte) * m_components * m_width * m_height);
+		//	break;
+
+		//case DynamicRange::HIGH:
+		//	ReserveTextureDataMemory(sizeof(float) * m_components * m_width * m_height);
+		//	break;
+		//}
+
+		m_init = true;
+	}
+	
+	else
+	{
+		//if(m_dynamicRange != texture->GetDynamicRange())
+		//{
+		//	LOG_ERROR("Missmatched dynamic range in packed texture");
+		//	return false;
+		//}
+
+		if (m_width != texture->GetWidth())
+		{
+			LOG_ERROR("Missmatched width in packed texture");
 			return false;
 		}
 
-		auto* packedData = reinterpret_cast<T*>(m_data);
-		auto* textData = reinterpret_cast<T*>(text->GetData());
-
-		bool isDefault = false;
-		// if from default texture
-		if (text->GetHeight() * text->GetWidth() == 1)
-			isDefault = true;
-
-		for(auto i = 0u; i < 4 * m_width * m_height; i+= 4)
+		if (m_height != texture->GetHeight())
 		{
-			const auto j = isDefault ? 0 : i;
-
-			switch (actualComponents)
-			{
-			case 1: // RRR1 -> target = R
-				packedData[i + targetChannel] = textData[j];
-				break;
-				
-			case 2: // RRRG -> target = R | target + 1 = G
-				packedData[i + targetChannel] = textData[j];
-				packedData[i + targetChannel + 1] = textData[j + 3];
-				break;
-
-			case 3: // RGB1 -> target = R | target + 1 = G |  target + 2 = B
-			case 4: // RGBA -> target = R | target + 1 = G |  target + 2 = B (lose the Alpha - note: otherwise no point in packing this texture)
-				packedData[i + targetChannel] = textData[j];
-				packedData[i + targetChannel + 1] = textData[j + 1];
-				packedData[i + targetChannel + 2] = textData[j + 2];
-				break;
-
-			default:
-				RT_XENGINE_LOG_ERROR("Actual components must be <= 4");
-				return false;
-			}
+			LOG_ERROR("Missmatched height in packed texture");
+			return false;
 		}
-		// all good
-		return true;
 	}
+	
+
+	//switch (m_dynamicRange)
+	//{
+	//case DynamicRange::LOW:
+	//	LoadDataToChannels<byte>(reinterpret_cast<byte*>(texture->GetData()), srcChannels, reinterpret_cast<byte*>(m_data),
+	//		m_width * m_height * m_components, m_components, m_availableChannel);
+	//	break;
+
+	//case DynamicRange::HIGH:
+	//	LoadDataToChannels<float>(reinterpret_cast<float*>(texture->GetData()), srcChannels, reinterpret_cast<float*>(m_data),
+	//		m_width * m_height * m_components, m_components, m_availableChannel);
+	//	break;
+	//}
+
+	m_availableChannel += srcChannelCount;
+
+	if (cacheOriginal)
+		m_parts.emplace_back(texture);
+	
+	return true;
 }
+

@@ -2,21 +2,14 @@
 
 #include "renderer/renderers/opengl/assets/GLCubeMap.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
-
-	GLCubeMap::GLCubeMap(GLAssetManager* glAssetManager, const std::string& name)
-		: GLAsset(glAssetManager, name),
-		  m_glId(0)
-	{
-	}
-
 	GLCubeMap::~GLCubeMap()
 	{
 		glDeleteTextures(1, &m_glId);
 	}
 
-	bool GLCubeMap::Load(Assets::CubeMap* data, GLint wrapFlag, bool mipMapping)
+	bool GLCubeMap::Load(CubeMap* data, GLint wrapFlag, bool mipMapping)
 	{
 		glGenTextures(1, &m_glId);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_glId);
@@ -35,20 +28,15 @@ namespace Renderer::OpenGL
 
 		GLenum type;
 		GLint internalFormat;
-		switch (data->GetType())
+		if (data->IsHdr())
 		{
-
-			// considered hdr - shader doesn't normalize
-		case DynamicRange::HIGH:
 			type = GL_FLOAT;
 			internalFormat = GL_RGBA32F;
-			break;
-
-		case DynamicRange::LOW:
-		default:
+		}
+		else
+		{
 			type = GL_UNSIGNED_BYTE;
 			internalFormat = GL_RGBA;
-			break;
 		}
 
 		// format is RGBA (stb)

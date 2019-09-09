@@ -3,14 +3,11 @@
 #include "world/nodes/user/UserNode.h"
 #include "assets/other/xml/ParsingAux.h"
 
-namespace World
+UserNode::UserNode(Node* parent)
+	: Node(parent),
+		m_movementSpeed(0.01f), 
+		m_turningSpeed(0.003f)
 {
-	UserNode::UserNode(Node* parent)
-		: Node(parent),
-		  m_movementSpeed(0.01f), 
-		  m_turningSpeed(0.003f)
-	{
-		REFLECT_VAR(m_movementSpeed);
-		REFLECT_VAR(m_turningSpeed);
-	}
+	REFLECT_VAR(m_movementSpeed);
+	REFLECT_VAR(m_turningSpeed);
 }

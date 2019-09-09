@@ -1,20 +1,27 @@
 #pragma once
 
-#include "assets/Asset.h"
+#include "renderer/renderers/opengl/GLRendererBase.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
-	class GLAssetManager;
 	
-	class GLAsset : public Assets::Asset
-	{
-		GLAssetManager* m_glAssetManager;
-		
+	class GLAsset : public RendererObject<GLRendererBase>
+	{	
+		bool m_loaded;
+
 	public:
-		GLAsset(GLAssetManager* glAssetManager, const std::string& name);
+		GLAsset(const std::string& name)
+			: m_loaded(false)
+		{
+			SetName(name);
+		}
+
 		virtual ~GLAsset() = default;
 
-		GLAssetManager* GetGLAssetManager() const { return m_glAssetManager; }
+		bool IsLoaded() const { return m_loaded; }
+
+		// call this in case of successful loading
+		void MarkLoaded();
 
 		void ToString(std::ostream& os) const override { os << "asset-type: GLAsset, name: " << m_name; }
 	};

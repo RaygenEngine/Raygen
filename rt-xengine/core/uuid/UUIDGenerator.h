@@ -5,7 +5,7 @@
 #define INVALID_ID 0u
 #define FIRST_VALID_ID 1u
 
-namespace Core
+namespace utl
 {
 	using UID = uint32;
 

@@ -2,11 +2,11 @@
 
 #include "renderer/renderers/opengl/test/GLTestGeometry.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
-	GLTestGeometry::GLTestGeometry(GLTestRenderer* renderer, World::TriangleModelGeometryNode* node)
-		: TypedNodeObserver<GLTestRenderer, World::TriangleModelGeometryNode>(renderer, node)
+	GLTestGeometry::GLTestGeometry(GLTestRenderer* renderer, TriangleModelGeometryNode* node)
+		: NodeObserver<GLTestRenderer, TriangleModelGeometryNode>(node)
 	{
-		glModel = GetRenderer()->GetGLAssetManager()->RequestGLModel(node->GetModel());
+		glModel = GetGLAssetManager(this)->RequestGLModel(node->GetModel());
 	}
 }

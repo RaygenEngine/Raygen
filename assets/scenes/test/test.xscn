@@ -1,30 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--asset path gives priority to searching in this specific path (and subfolders) for asset loading requests from this world
 	if relative path is given the path system will search from inside the "scenes" root directory, otherwise (absolute path) this "hint" will be ignored-->
-<world name="tester" background="0, 0, 0.4" ambient="0, 0, 0.4" asset_path="XModel_exports\">
-
-	<!-- <oculus_user name="oc_user" -->
-		<!-- translation="0, 5, 0" -->
-		<!-- navigation="head_based"> -->
-
-		oculus head adjust camera data based on tracking
-		<!-- <head name="head"> -->
-	
-			<!-- <left_eye name="left_eye"/> -->
-				
-			<!-- <right_eye name="right_eye"/> -->
-			
-		<!-- </head> -->
-		
-
-		
-		<!-- <!-- controllers? -->
-		<!-- <hand name="hand1" .../> -->
-		<!-- <hand name="hand2" .../> -->
-		<!-- --> -->
-
-	<!-- </oculus_user> -->
-	
+<root name="roots" background="0, 0, 0.4" ambient="0, 0, 0.4">
 	
 	<freeform_user name="user2"
 		translation="0, 15, 30"
@@ -39,11 +16,7 @@
 
 	<sky_hdr name="sky1"
 		hdr_texture="CedarCity.hdr"/>
-		 
-	<!-- Load cubemaps by giving one of their sides -->	 
-	<!-- <sky_cube name="sky2" -->
-		<!-- cube_map="sky_ft.jpg"/> -->
-
+		
 	<light name="l1" 
 		   translation="0.0, 25.0, 0" 
 		   color="0.9450, 0.8549, 0.6431"/>
@@ -60,5 +33,5 @@
 			 
 	
 
-</world>
+</root>
 

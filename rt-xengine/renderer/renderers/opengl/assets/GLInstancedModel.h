@@ -5,19 +5,21 @@
 
 #include "GLAD/glad.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
-
 	class GLInstancedModel : public GLModel
 	{
 		uint32 m_instanceCount;
 		GLuint m_instanceMatricesVbo;
 
 	public:
-		GLInstancedModel(GLAssetManager* glAssetManager, const std::string& name);
+		GLInstancedModel(const std::string& name)
+			: GLModel(name),
+			  m_instanceCount(0),
+			  m_instanceMatricesVbo(0) {}
 		~GLInstancedModel();
 
-		bool Load(World::TriangleModelInstancedGeometryNode* nodeInstancer);
+		bool Load(TriangleModelInstancedGeometryNode* nodeInstancer);
 
 		uint32 GetInstancesCount() const { return m_instanceCount; }
 

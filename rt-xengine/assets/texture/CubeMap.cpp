@@ -1,62 +1,28 @@
 #include "pch.h"
 
 #include "assets/texture/CubeMap.h"
-#include "assets/DiskAssetManager.h"
+#include "assets/AssetManager.h"
+#include "system/Engine.h"
 
-namespace Assets
+bool CubeMap::LoadFaceTexture(CubeMapFace index, const std::string& path)
 {
-	CubeMap::CubeMap(DiskAssetManager* context, const std::string& path)
-		: DiskAsset(context, path),
-		  m_width(0),
-	      m_height(0),
-	      m_dynamicRange()
-	{
-	}
+	m_faces[index] = Engine::GetAssetManager()->LoadTextureAsset(path);
 
-	bool CubeMap::Load(const std::string& path, DynamicRange dr, bool flipVertically)
-	{
-		// TODO from system
-		auto onePath = PathSystem::GetPathWithoutExtension(path);
-		const auto generalPath = onePath.substr(0, onePath.size() - 3);
-
-		const auto extension = PathSystem::GetExtension(path);
-
-		std::string paths[CMF_COUNT];
-
-		paths[CMF_RIGHT] = generalPath + "_rt" + extension;
-		paths[CMF_LEFT]  = generalPath + "_lf" + extension;
-		paths[CMF_UP]    = generalPath + "_up" + extension;
-		paths[CMF_DOWN]  = generalPath + "_dn" + extension;
-		paths[CMF_FRONT] = generalPath + "_ft" + extension;
-		paths[CMF_BACK]  = generalPath + "_bk" + extension;
-
-		for(auto i = 0; i < CMF_COUNT; ++i)
+	if (!m_faces[index])
+		return false; // failed
+	
+	std::call_once(m_initFlag, [&]()
 		{
-			// paths here will be in absolute format (already calculated for the cube-map itself)
-			m_faces[i] = GetDiskAssetManager()->LoadTextureAsset(paths[i], dr, flipVertically);
+			m_width = m_faces[index]->GetWidth();
+			m_height = m_faces[index]->GetHeight();
+			m_hdr = m_faces[index]->IsHdr();
+		});
 
-			if(!m_faces[i])
-				return false; // failed
+	// all texture must have same w/h/hdr status
+	if (m_width != m_faces[index]->GetWidth()   ||
+		m_height != m_faces[index]->GetHeight() ||
+		m_hdr != m_faces[index]->IsHdr())
+		return false; // failed
 
-			// all texture must have same w/h
-			if (m_width == 0)
-				m_width = m_faces[i]->GetWidth();
-			else if (m_width != m_faces[i]->GetWidth())
-				return false; // failed
-
-			if(m_height == 0)
-				m_height = m_faces[i]->GetHeight();
-			else if (m_height != m_faces[i]->GetHeight())
-				return false; // failed
-
-		}
-
-		return true;
-	}
-
-	void CubeMap::Clear()
-	{
-		for (auto i = 0; i < CMF_COUNT; ++i)
-			m_faces[i]->Unload();
-	}
+	return true;
 }

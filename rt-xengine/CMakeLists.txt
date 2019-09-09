@@ -9,11 +9,9 @@ link_directories(${LIB_DEPENDENCIES_DIRECTORY})
 
 set(SOURCE_FILES 
 
-	assets/Asset.cpp
-	assets/DiskAsset.cpp
-	assets/DiskAssetManager.cpp
+	assets/FileAsset.cpp
+	assets/AssetManager.cpp
 	assets/PathSystem.cpp
-	assets/DiskAssetPart.cpp
 	
 	assets/other/utf8/StringFile.cpp
 	assets/other/xml/XMLDoc.cpp
@@ -21,13 +19,9 @@ set(SOURCE_FILES
 	assets/texture/PackedTexture.cpp
 	assets/texture/Texture.cpp
 	assets/texture/CubeMap.cpp
+	assets/texture/Sampler.cpp
 	
-	assets/model/Material.cpp
-	assets/model/Mesh.cpp
 	assets/model/Model.cpp
-	assets/model/GeometryGroup.cpp
-	assets/model/Sampler.cpp
-	assets/model/Buffer.cpp
 	
 	core/logger/Logger.cpp
 	
@@ -42,8 +36,6 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/GLAssetManager.cpp
 	renderer/renderers/opengl/GLRendererBase.cpp
 	renderer/renderers/opengl/assets/GLInstancedModel.cpp
-	renderer/renderers/opengl/assets/GLMaterial.cpp
-	renderer/renderers/opengl/assets/GLMesh.cpp
 	renderer/renderers/opengl/assets/GLModel.cpp
 	renderer/renderers/opengl/assets/GLShader.cpp
 	renderer/renderers/opengl/assets/GLTexture.cpp
@@ -53,12 +45,11 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/test/GLTestGeometry.cpp
 
 	system/Engine.cpp
-	system/EngineObject.cpp
+	system/EngineComponent.cpp
+	system/Object.cpp
+	system/Input.cpp
 	
 	system/reflection/Reflection.cpp
-	
-	input/Input.cpp
-	input/OculusHMD.cpp
 	
 	event/Event.cpp
 	
@@ -92,11 +83,9 @@ set(SOURCE_FILES
 
 set(HEADER_FILES 
 
-	assets/Asset.h
-	assets/DiskAsset.h
-	assets/DiskAssetManager.h
+	assets/FileAsset.h
+	assets/AssetManager.h
 	assets/PathSystem.h
-	assets/DiskAssetPart.h
     assets/CachingAux.h
 		
 	assets/other/utf8/StringFile.h
@@ -106,15 +95,12 @@ set(HEADER_FILES
 	assets/texture/PackedTexture.h
 	assets/texture/Texture.h
 	assets/texture/CubeMap.h
+	assets/texture/Sampler.h
 	
-	assets/model/Material.h
-	assets/model/Mesh.h
-	assets/model/Sampler.h
 	assets/model/Model.h
 	assets/model/GltfAux.h
-	assets/model/GeometryGroup.h
-	assets/model/Buffer.h
 
+	core/auxiliary/FlagAux.h
 	core/auxiliary/FileAux.h
 	core/auxiliary/GraphicsMathAux.h
 	core/auxiliary/MetaTemplates.h
@@ -151,8 +137,6 @@ set(HEADER_FILES
 	renderer/renderers/opengl/GLRendererBase.h
 	renderer/renderers/opengl/GLUtil.h
 	renderer/renderers/opengl/assets/GLInstancedModel.h
-	renderer/renderers/opengl/assets/GLMaterial.h
-	renderer/renderers/opengl/assets/GLMesh.h
 	renderer/renderers/opengl/assets/GLModel.h
 	renderer/renderers/opengl/assets/GLShader.h
 	renderer/renderers/opengl/assets/GLTexture.h
@@ -162,15 +146,14 @@ set(HEADER_FILES
 	renderer/renderers/opengl/test/GLTestGeometry.h
 	
 	system/Engine.h
-	system/EngineObject.h
+	system/EngineComponent.h
+	system/Object.h
+	system/Input.h
+	system/EngineEvents.h
 
 	system/reflection/Reflection.h
 	system/reflection/Reflector.h
 	system/reflection/Property.h
-
-
-	input/Input.h
-	input/OculusHMD.h
 	
 	event/Event.h
 

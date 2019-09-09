@@ -1,5 +1,4 @@
-#ifndef APP_H
-#define APP_H
+#pragma once
 
 #include "AppBase.h"
 
@@ -9,5 +8,3 @@ class App : public AppBase {
 public:
 	
 };
-
-#endif //APP_H

@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-namespace Core
+namespace utl
 {
 	template <typename T>
 	inline void ReadValueLittleEndianFromFile(std::ifstream& file, T& value)

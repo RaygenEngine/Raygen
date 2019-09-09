@@ -2,21 +2,14 @@
 
 #include "renderer/renderers/opengl/assets/GLInstancedModel.h"
 
-namespace Renderer::OpenGL
+namespace OpenGL
 {
-	GLInstancedModel::GLInstancedModel(GLAssetManager* glAssetManager, const std::string& name)
-		: GLModel(glAssetManager, name),
-		  m_instanceCount(0),
-		  m_instanceMatricesVbo(0)
-	{
-	}
-
 	GLInstancedModel::~GLInstancedModel()
 	{
 		glDeleteBuffers(1, &m_instanceMatricesVbo);
 	}
 
-	bool GLInstancedModel::Load(World::TriangleModelInstancedGeometryNode* nodeInstancer)
+	bool GLInstancedModel::Load(TriangleModelInstancedGeometryNode* nodeInstancer)
 	{
 		// if base model is not loaded
 		//if (!GLModel::Load(nodeInstancer->GetModel()))

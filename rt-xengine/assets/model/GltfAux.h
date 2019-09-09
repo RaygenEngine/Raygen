@@ -2,9 +2,9 @@
 
 #include "tinygltf/tiny_gltf.h"
 
-namespace Assets
+namespace GltfAux
 {
-	inline GeometryMode GetGeometryModeFromGltf(int32 gltfMode)
+	inline GeometryMode GetGeometryMode(int32 gltfMode)
 	{
 		switch (gltfMode)
 		{
@@ -19,7 +19,7 @@ namespace Assets
 		}
 	}
 
-	inline TextureFiltering GetTextureFilteringFromGltf(int32 gltfFiltering)
+	inline TextureFiltering GetTextureFiltering(int32 gltfFiltering)
 	{
 		switch (gltfFiltering)
 		{
@@ -33,7 +33,7 @@ namespace Assets
 		}
 	};
 
-	inline TextureWrapping GetTextureWrappingFromGltf(int32 gltfWrapping)
+	inline TextureWrapping GetTextureWrapping(int32 gltfWrapping)
 	{
 		switch (gltfWrapping)
 		{
@@ -44,19 +44,19 @@ namespace Assets
 		}
 	};
 
-	inline AlphaMode GetAlphaModeFromGltf(const std::string& gltfAlphaMode)
+	inline AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
 	{
-		if (Core::CaseInsensitiveCompare(gltfAlphaMode, "OPAQUE"))
+		if (utl::CaseInsensitiveCompare(gltfAlphaMode, "OPAQUE"))
 			return AM_OPAQUE;
-		if (Core::CaseInsensitiveCompare(gltfAlphaMode, "MASK"))
+		if (utl::CaseInsensitiveCompare(gltfAlphaMode, "MASK"))
 			return AM_MASK;
-		if (Core::CaseInsensitiveCompare(gltfAlphaMode, "BLEND"))
+		if (utl::CaseInsensitiveCompare(gltfAlphaMode, "BLEND"))
 			return AM_BLEND;
 		// not defined -> repeat
 		return AM_INVALID;
 	}
 
-	inline BufferElementType GetElementTypeFromGltf(int32 gltfElementType)
+	inline BufferElementType GetElementType(int32 gltfElementType)
 	{
 		switch (gltfElementType)
 		{
@@ -71,7 +71,7 @@ namespace Assets
 		}
 	}
 
-	inline BufferComponentType GetComponentTypeFromGltf(int32 gltfComponentType)
+	inline BufferComponentType GetComponentType(int32 gltfComponentType)
 	{
 		switch (gltfComponentType)
 		{
