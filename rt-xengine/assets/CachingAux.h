@@ -36,15 +36,15 @@ namespace CachingAux
 		}
 	};
 
-	// AssetType should derive from Asset
+	// AssetType should derive from FileAsset
 	template <typename AssetType, typename... KeyTypes>
 	using MultiKeyAssetCache = std::unordered_map<Keys<KeyTypes...>, std::weak_ptr<AssetType>>;
 
-	// AssetType must derive from MapAssetType (MapAssetType from Asset)
-	template <typename AssetType, typename MapAssetType, typename ContextType, typename... Args>
-	std::shared_ptr<AssetType> LoadAssetAtMultiKeyCache(MultiKeyAssetCache<MapAssetType, Args...>& cache, ContextType* context, const std::string& description, Args ...args)
+	// AssetType must derive from MapAssetType (MapAssetType from FileAsset)
+	template <typename AssetType, typename MapAssetType, typename... Args>
+	std::shared_ptr<AssetType> LoadAssetAtMultiKeyCache(MultiKeyAssetCache<MapAssetType, Args...>& cache, const std::string& description, Args ...args)
 	{
-		//static_assert(std::is_base_of<Asset, MapAssetType>::value);
+		//static_assert(std::is_base_of<FileAsset, MapAssetType>::value);
 		static_assert(std::is_base_of<MapAssetType, AssetType>::value);
 
 		auto key = Keys(args...);
@@ -84,7 +84,7 @@ namespace CachingAux
 		LOG_TRACE("Cache size increased, size: {}", cache.size());
 
 		// make asset, custom deleter to free asset cache from this asset (when ref count == 0)
-		auto asset = std::shared_ptr<AssetType>(new AssetType(context, description), [key, &cache](AssetType* assetPtr)
+		auto asset = std::shared_ptr<AssetType>(new AssetType(description), [key, &cache](AssetType* assetPtr)
 			{
 				LOG_DEBUG("Unregistering asset, {}", assetPtr);
 				LOG_TRACE("Cache size decreased, size: {}", cache.size());

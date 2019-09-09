@@ -7,7 +7,6 @@
 
 namespace OpenGL
 {
-
 	class GLShader : public GLAsset
 	{
 		GLuint m_glId;
@@ -16,7 +15,9 @@ namespace OpenGL
 		std::unordered_map<std::string, GLint> m_uniformLocations;
 
 	public:
-		GLShader(GLAssetManager* glAssetManager, const std::string& name);
+		GLShader(const std::string& name)
+			: GLAsset(name),
+			  m_glId(0) {}
 		~GLShader();
 
 		bool Load(StringFile* vertexSource, StringFile* fragmentSource);

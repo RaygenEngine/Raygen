@@ -11,5 +11,5 @@ public:
 
 	std::string ToString(bool verbose, uint depth) const override;
 
-	void ToString(std::ostream& os) const override { os << "node-type: TransformNode, name: " << m_name; }
+	void ToString(std::ostream& os) const override { os << "node-type: TransformNode, name: " << GetName(); }
 };

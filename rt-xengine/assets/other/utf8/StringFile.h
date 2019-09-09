@@ -1,14 +1,14 @@
 #pragma once
 
-#include "assets/Asset.h"
+#include "assets/FileAsset.h"
 
-class StringFile : public Asset
+class StringFile : public FileAsset
 {
 	std::string m_data;
 
 public:
-	StringFile(AssetManager* assetManager, const std::string& path)
-		: Asset(assetManager, path) {}
+	StringFile(const std::string& path)
+		: FileAsset(path) {}
 	~StringFile() = default;
 
 	bool Load(const std::string& path);

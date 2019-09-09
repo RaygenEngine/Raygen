@@ -39,45 +39,46 @@ namespace
 
 bool PackedTexture::LoadTextureAtChannelTarget(std::shared_ptr<Texture>& texture, TextureChannel srcChannels, bool cacheOriginal)
 {
-	const auto srcChannelCount = Core::CountSetBits(srcChannels);
+	const auto srcChannelCount = utl::CountSetBits(srcChannels);
 	
 	if(srcChannelCount + m_availableChannel > 4)
 	{
 		LOG_ERROR("Not enough channels to store source channels");
 		return false;
 	}
+
 	
 	// init based on the first texture 
 	if(!m_init)
 	{
-		m_dynamicRange = texture->GetDynamicRange();
+		//m_dynamicRange = texture->GetDynamicRange();
 		// packed texture 4 components
 		m_components = 4;
 
 		m_width = texture->GetWidth();
 		m_height = texture->GetHeight();
 
-		switch (m_dynamicRange)
-		{
-		case DynamicRange::LOW:
-			ReserveTextureDataMemory(sizeof(byte) * m_components * m_width * m_height);
-			break;
+		//switch (m_dynamicRange)
+		//{
+		//case DynamicRange::LOW:
+		//	ReserveTextureDataMemory(sizeof(byte) * m_components * m_width * m_height);
+		//	break;
 
-		case DynamicRange::HIGH:
-			ReserveTextureDataMemory(sizeof(float) * m_components * m_width * m_height);
-			break;
-		}
+		//case DynamicRange::HIGH:
+		//	ReserveTextureDataMemory(sizeof(float) * m_components * m_width * m_height);
+		//	break;
+		//}
 
 		m_init = true;
 	}
 	
 	else
 	{
-		if(m_dynamicRange != texture->GetDynamicRange())
-		{
-			LOG_ERROR("Missmatched dynamic range in packed texture");
-			return false;
-		}
+		//if(m_dynamicRange != texture->GetDynamicRange())
+		//{
+		//	LOG_ERROR("Missmatched dynamic range in packed texture");
+		//	return false;
+		//}
 
 		if (m_width != texture->GetWidth())
 		{
@@ -93,18 +94,18 @@ bool PackedTexture::LoadTextureAtChannelTarget(std::shared_ptr<Texture>& texture
 	}
 	
 
-	switch (m_dynamicRange)
-	{
-	case DynamicRange::LOW:
-		LoadDataToChannels<byte>(reinterpret_cast<byte*>(texture->GetData()), srcChannels, reinterpret_cast<byte*>(m_data),
-			m_width * m_height * m_components, m_components, m_availableChannel);
-		break;
+	//switch (m_dynamicRange)
+	//{
+	//case DynamicRange::LOW:
+	//	LoadDataToChannels<byte>(reinterpret_cast<byte*>(texture->GetData()), srcChannels, reinterpret_cast<byte*>(m_data),
+	//		m_width * m_height * m_components, m_components, m_availableChannel);
+	//	break;
 
-	case DynamicRange::HIGH:
-		LoadDataToChannels<float>(reinterpret_cast<float*>(texture->GetData()), srcChannels, reinterpret_cast<float*>(m_data),
-			m_width * m_height * m_components, m_components, m_availableChannel);
-		break;
-	}
+	//case DynamicRange::HIGH:
+	//	LoadDataToChannels<float>(reinterpret_cast<float*>(texture->GetData()), srcChannels, reinterpret_cast<float*>(m_data),
+	//		m_width * m_height * m_components, m_components, m_availableChannel);
+	//	break;
+	//}
 
 	m_availableChannel += srcChannelCount;
 

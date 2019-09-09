@@ -1,6 +1,5 @@
 #pragma once
 
-#include "assets/Asset.h"
 #include "renderer/renderers/opengl/GLRendererBase.h"
 
 namespace OpenGL
@@ -10,12 +9,13 @@ namespace OpenGL
 	{	
 		bool m_loaded;
 
-	protected:
-		std::string m_name;
-		
 	public:
-		GLAsset(GLAssetManager* glAssetManager, const std::string& name)
-			  : m_loaded(false) {}
+		GLAsset(const std::string& name)
+			: m_loaded(false)
+		{
+			SetName(name);
+		}
+
 		virtual ~GLAsset() = default;
 
 		bool IsLoaded() const { return m_loaded; }

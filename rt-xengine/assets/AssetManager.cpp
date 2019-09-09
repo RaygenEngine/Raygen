@@ -10,7 +10,7 @@ std::shared_ptr<StringFile> AssetManager::LoadStringFileAsset(const std::string&
 	if (path.empty())
 		return nullptr;
 
-	return CachingAux::LoadAssetAtMultiKeyCache<StringFile>(m_stringFiles, this, path, path);
+	return CachingAux::LoadAssetAtMultiKeyCache<StringFile>(m_stringFiles, path, path);
 }
 
 std::shared_ptr<XMLDoc> AssetManager::LoadXMLDocAsset(const std::string& xmlDocPath,
@@ -21,10 +21,10 @@ std::shared_ptr<XMLDoc> AssetManager::LoadXMLDocAsset(const std::string& xmlDocP
 	if (path.empty())
 		return nullptr;
 
-	return CachingAux::LoadAssetAtMultiKeyCache<XMLDoc>(m_xmlDocs, this, path, path);
+	return CachingAux::LoadAssetAtMultiKeyCache<XMLDoc>(m_xmlDocs, path, path);
 }
 
-std::shared_ptr<Texture> AssetManager::LoadTextureAsset(const std::string& texturePath, DynamicRange dr, bool flipVertically,
+std::shared_ptr<Texture> AssetManager::LoadTextureAsset(const std::string& texturePath,
 	const std::string& pathHint)
 {
 	const auto path = m_pathSystem.SearchAsset(texturePath, pathHint);
@@ -32,7 +32,7 @@ std::shared_ptr<Texture> AssetManager::LoadTextureAsset(const std::string& textu
 	if (path.empty())
 		return nullptr;
 
-	return CachingAux::LoadAssetAtMultiKeyCache<Texture>(m_textures, this, path, path, dr, flipVertically);
+	return CachingAux::LoadAssetAtMultiKeyCache<Texture>(m_textures, path, path);
 }
 
 std::shared_ptr<Model> AssetManager::LoadModelAsset(const std::string& modelPath, GeometryUsage usage,
@@ -43,26 +43,7 @@ std::shared_ptr<Model> AssetManager::LoadModelAsset(const std::string& modelPath
 	if (path.empty())
 		return nullptr;
 
-	return CachingAux::LoadAssetAtMultiKeyCache<Model>(m_models, this, path, path, usage);
-}
-
-std::shared_ptr<CubeMap> AssetManager::LoadCubeMapAsset(const std::string& texturePath, DynamicRange dr, bool flipVertically, const std::string& pathHint)
-{
-	const auto path = m_pathSystem.SearchAsset(texturePath, pathHint);
-
-	if (path.empty())
-		return nullptr;
-
-	return CachingAux::LoadAssetAtMultiKeyCache<CubeMap>(m_cubeMaps, this, path, path, dr, flipVertically);
-}
-
-std::shared_ptr<PackedTexture> AssetManager::LoadPackedTexture(Texture* textTargetRChannel,
-	uint32 actualComponents0, Texture* textTargetGChannel, uint32 actualComponents1, Texture* textTargetBChannel,
-	uint32 actualComponents2, Texture* textTargetAChannel, uint32 actualComponents3, DynamicRange dr)
-{
-	//return LoadAssetAtMultiKeyCache<PackedTexture>(m_packedTextures, this, textTargetRChannel, actualComponents0, textTargetGChannel, actualComponents1,
-	//	textTargetBChannel, actualComponents2, textTargetAChannel, actualComponents3, dr);
-	return nullptr;
+	return CachingAux::LoadAssetAtMultiKeyCache<Model>(m_models, path, path, usage);
 }
 
 bool AssetManager::Init(const std::string& applicationPath, const std::string& dataDirectoryName)
@@ -85,6 +66,4 @@ void AssetManager::UnloadAssets()
 	Unload(m_stringFiles);
 	Unload(m_xmlDocs);
 	Unload(m_textures);
-	Unload(m_cubeMaps);
-	Unload(m_packedTextures);
 }

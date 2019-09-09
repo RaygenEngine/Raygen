@@ -5,7 +5,7 @@
 
 class SkyCubeNode : public Node
 {
-	std::shared_ptr<CubeMap> m_cubeMap;
+	CubeMap m_cubeMap;
 
 public:
 	SkyCubeNode(Node* parent);
@@ -13,12 +13,12 @@ public:
 
 	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 
-	CubeMap* GetSkyMap() const { return m_cubeMap.get(); }
+	CubeMap& GetSkyMap() { return m_cubeMap; }
 
 protected:
 	std::string ToString(bool verbose, uint depth) const override;
 
 public:
 
-	void ToString(std::ostream& os) const override { os << "node-type: SkyCubeNode, name: " << m_name; }
+	void ToString(std::ostream& os) const override { os << "node-type: SkyCubeNode, name: " << GetName(); }
 };

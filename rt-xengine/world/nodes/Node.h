@@ -25,7 +25,6 @@ protected:
 	bool m_updateLocalMatrix;
 
 protected:
-	std::string m_name;
 	std::string m_type;
 	
 	Node* m_parent;
@@ -58,7 +57,6 @@ public:
 	glm::vec3 GetFront() const { return GetWorldOrientation() * glm::vec3(0.f, 0.f, -1.f); }
 
 	bool IsLeaf() const { return m_children.empty(); }
-	const std::string& GetName() const { return m_name; }
 	const std::string& GetType() const { return m_type; }
 
 	void AddChild(std::shared_ptr<Node> child) { m_children.emplace_back(child); }

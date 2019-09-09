@@ -23,8 +23,10 @@ protected:
 
 public:
 	NodeObserver(NodeType* node)
-		  : m_node(node)
-	{}
+		: m_node(node)
+	{
+		SetName(node->GetName());
+	}
 
 	virtual void UpdateFromNode() {};
 

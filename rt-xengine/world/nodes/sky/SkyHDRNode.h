@@ -20,5 +20,5 @@ protected:
 
 public:
 
-	void ToString(std::ostream& os) const override { os << "node-type: SkyHDRNode, name: " << m_name; }
+	void ToString(std::ostream& os) const override { os << "node-type: SkyHDRNode, name: " << GetName(); }
 };

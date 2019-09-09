@@ -4,12 +4,6 @@
 
 namespace OpenGL
 {
-	GLCubeMap::GLCubeMap(GLAssetManager* glAssetManager, const std::string& name)
-		: GLAsset(glAssetManager, name),
-		  m_glId(0)
-	{
-	}
-
 	GLCubeMap::~GLCubeMap()
 	{
 		glDeleteTextures(1, &m_glId);
@@ -34,20 +28,15 @@ namespace OpenGL
 
 		GLenum type;
 		GLint internalFormat;
-		switch (data->GetType())
+		if (data->IsHdr())
 		{
-
-			// considered hdr - shader doesn't normalize
-		case DynamicRange::HIGH:
 			type = GL_FLOAT;
 			internalFormat = GL_RGBA32F;
-			break;
-
-		case DynamicRange::LOW:
-		default:
+		}
+		else
+		{
 			type = GL_UNSIGNED_BYTE;
 			internalFormat = GL_RGBA;
-			break;
 		}
 
 		// format is RGBA (stb)

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "assets/Asset.h"
-#include "assets/texture/Texture.h"
+#include "assets/FileAsset.h"
+#include "assets/texture/Sampler.h"
 
 #include <optional>
 
@@ -14,32 +14,14 @@ namespace tinygltf
 }
 
 // glTF-based model (not all extensions included) 
-class Model : public Asset
+class Model : public FileAsset
 {
 public:
 
-	struct Sampler
-	{
-		std::string name;
-		
-		std::shared_ptr<Texture> texture = nullptr;
-
-		TextureFiltering minFilter = TextureFiltering::LINEAR;
-		TextureFiltering magFilter = TextureFiltering::LINEAR;
-
-		TextureWrapping wrapS = TextureWrapping::REPEAT;
-		TextureWrapping wrapT = TextureWrapping::REPEAT;
-		TextureWrapping wrapR = TextureWrapping::REPEAT;
-
-		int32 texCoordIndex = 0;
-	};
-	
 	// Note: assets of this class (Textures) are not cached directly as they are part of a cached Model anyway
 	// glTF-based material (not all extensions included) (comments in this file -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0)
-	struct Material
+	struct Material : Object
 	{
-		std::string name;
-		
 		// The value for each property(baseColor, metallic, roughness) can be defined using factors or textures.
 
 		// If a texture is not given, all respective texture components within this material model are assumed to have a value of 1.0.
@@ -83,10 +65,8 @@ public:
 		bool doubleSided = false;
 	};
 	
-	struct GeometryGroup
+	struct GeometryGroup : Object
 	{
-		std::string name;
-		
 		std::vector<uint32> indices;
 
 		std::vector<glm::vec3> positions;
@@ -104,10 +84,8 @@ public:
 	};
 
 	
-	struct Mesh
+	struct Mesh : Object
 	{
-		std::string name;
-		
 		std::vector<GeometryGroup> geometryGroups;
 	};
 	
@@ -133,8 +111,8 @@ private:
 	
 public:
 	
-	Model(AssetManager* assetManager, const std::string& path)
-		: Asset(assetManager, path),
+	Model(const std::string& path)
+		: FileAsset(path),
           m_usage(GeometryUsage::STATIC) {}
 
 	bool Load(const std::string& path, GeometryUsage usage);

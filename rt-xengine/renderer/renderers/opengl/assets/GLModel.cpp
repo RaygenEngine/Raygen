@@ -96,6 +96,22 @@ namespace OpenGL
 		return glMesh;
 	}
 
+	GLModel::~GLModel()
+	{
+		for (auto& mesh : m_meshes)
+		{
+			glDeleteBuffers(1, &mesh.positionsVBO);
+			glDeleteBuffers(1, &mesh.normalsVBO);
+			glDeleteBuffers(1, &mesh.tangentsVBO);
+			glDeleteBuffers(1, &mesh.bitangentsVBO);
+			glDeleteBuffers(1, &mesh.textCoords0VBO);
+			glDeleteBuffers(1, &mesh.textCoords1VBO);
+			glDeleteBuffers(1, &mesh.ebo);
+
+			glDeleteVertexArrays(1, &mesh.vao);
+		}
+	}
+
 	bool GLModel::Load(Model* data)
 	{
 		TIMER_STATIC_SCOPE("uploading model time");

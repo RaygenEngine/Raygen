@@ -1,19 +1,19 @@
 #include "pch.h"
 
-#include "assets/Asset.h"
+#include "assets/FileAsset.h"
 
-void Asset::MarkLoaded()
+void FileAsset::MarkLoaded()
 {
 	LOG_DEBUG("Loaded asset's data in memory, {}", this);
 	m_loaded = true;
 }
 
-void Asset::Clear()
+void FileAsset::Clear()
 {
 
 }
 
-void Asset::Unload()
+void FileAsset::Unload()
 {
 	if (m_loaded)
 	{

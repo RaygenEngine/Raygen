@@ -1,6 +1,6 @@
 #pragma once
 
-#include "assets/Asset.h"
+#include "assets/FileAsset.h"
 
 // TODO: expand (bpp, bpc, load in the file format, etc.)
 
@@ -11,7 +11,7 @@
 //(3, 4) { dest[0] = src[0], dest[1] = src[1], dest[2] = src[2], dest[3] = 255; } break; RGB -> RGB1
 
 // rgba T(float, byte, short - w/e stb supports) texture
-class Texture : public Asset
+class Texture : public FileAsset
 {
 protected:
 	uint32 m_width;
@@ -21,31 +21,94 @@ protected:
 	// therefore this value isn't very useful 
 	uint32 m_components;
 
-	DynamicRange m_dynamicRange;
-
+	// use malloc and free
 	void* m_data;
 
+	bool m_hdr;
+
 public:
-	Texture(AssetManager* assetManager, const std::string& path);
+	Texture(const std::string& path)
+		: FileAsset(path),
+		  m_width(0),
+		  m_height(0),
+		  m_components(0),
+		  m_data(nullptr),
+		  m_hdr(false) {}
 	virtual ~Texture();
 
-	bool Load(const std::string& path, DynamicRange dr, bool flipVertically);
+	bool Load(const std::string& path);
 	void Clear() override;
 
-	uint32 GetWidth() const { return m_width; }
-	uint32 GetHeight() const { return m_height; }
-	uint32 GetComponents() const { return m_components; }
-	void* GetData() const { return m_data; }
+	[[nodiscard]] uint32 GetWidth() const { return m_width; }
+	[[nodiscard]] uint32 GetHeight() const { return m_height; }
+	[[nodiscard]] uint32 GetComponents() const { return m_components; }
+	[[nodiscard]] void* GetData() const { return m_data; }
 
-		DynamicRange GetDynamicRange() const { return m_dynamicRange; }
+	[[nodiscard]] bool IsHdr() const { return m_hdr; }
 
 	// creates default rgba texture
-	static std::unique_ptr<Texture> CreateDefaultTexture(AssetManager* assetManager, void* texelValue, uint32 width,
-		uint32 height, uint32 components, DynamicRange dr, const std::string& defaultName = "DefaultTexture");
-	
-	// use this instead of malloc or new, it uses stbi_malloc and texture will clean up correctly when deleted
-	void ReserveTextureDataMemory(uint32 size);
+	// must be of type glm::Tvec
+	template<typename T>
+	static std::unique_ptr<Texture> CreateDefaultTexture(const T& defaultValue, uint32 width,
+		uint32 height, const std::string& defaultName = "DefaultTexture")
 
-	void ToString(std::ostream& os) const override { os << "asset-type: Texture, name: " << m_fileName << ", type: " << TexelEnumToString(m_dynamicRange); }
+	{
+		using value_type = typename T::value_type;
+		
+		std::unique_ptr<Texture> texture = std::make_unique<Texture>(defaultName);
+
+		texture->m_width = width;
+		texture->m_height = height;
+		texture->m_components = T::length();
+		texture->m_hdr = std::is_floating_point_v<value_type>;
+
+		LOG_INFO("Creating default texture, name:{}, width: {}, height: {}, components: {}, hdr: {}", defaultName, width, height, texture->m_components, texture->m_hdr);
+		
+		const auto size = 4 * texture->m_width * texture->m_height;
+
+		texture->m_data = malloc(sizeof(value_type) * size);
+		auto textureBuffer = static_cast<value_type*>(texture->m_data);
+		
+		for (auto i = 0u; i < size; i += 4)
+		{
+			switch (texture->m_components)
+			{
+
+			case 1: // R -> RRR1
+				textureBuffer[i] = defaultValue[0];
+				textureBuffer[i + 1] = defaultValue[0];
+				textureBuffer[i + 2] = defaultValue[0];
+				textureBuffer[i + 3] = static_cast<value_type>(1);
+				break;
+
+			case 2: // RG -> RRRG (R is value and G is Alpha)
+				textureBuffer[i] = defaultValue[0];
+				textureBuffer[i + 1] = defaultValue[0];
+				textureBuffer[i + 2] = defaultValue[0];
+				textureBuffer[i + 3] = defaultValue[1];
+				break;
+
+			case 3: // RGB -> RGB1
+				textureBuffer[i] = defaultValue[0];
+				textureBuffer[i + 1] = defaultValue[1];
+				textureBuffer[i + 2] = defaultValue[2];
+				textureBuffer[i + 3] = static_cast<value_type>(1);
+				break;
+
+			case 4: // RGBA -> RGBA
+				textureBuffer[i] = defaultValue[0];
+				textureBuffer[i + 1] = defaultValue[1];
+				textureBuffer[i + 2] = defaultValue[2];
+				textureBuffer[i + 3] = defaultValue[3];
+				break;
+			}
+		}
+		
+		texture->MarkLoaded();
+
+		return texture;
+	}
+	
+	void ToString(std::ostream& os) const override { os << "asset-type: Texture, name: " << m_fileName << ", type: " << (m_hdr ? "hdr" : "ldr"); }
 };
 

@@ -4,12 +4,6 @@
 
 namespace OpenGL
 {
-	GLShader::GLShader(GLAssetManager* glAssetManager, const std::string& name)
-		: GLAsset(glAssetManager, name),
-	      m_glId(0)
-	{
-	}
-
 	GLShader::~GLShader()
 	{
 		glDeleteProgram(m_glId);

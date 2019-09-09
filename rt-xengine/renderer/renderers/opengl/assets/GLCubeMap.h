@@ -13,7 +13,9 @@ namespace OpenGL
 		GLuint m_glId;
 
 	public:
-		GLCubeMap(GLAssetManager* glAssetManager, const std::string& name);
+		GLCubeMap(const std::string& name)
+			: GLAsset(name),
+			  m_glId(0) {}
 		~GLCubeMap();
 
 		bool Load(CubeMap* data, GLint wrapFlag, bool mipMapping);

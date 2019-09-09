@@ -21,6 +21,6 @@ public:
 
 	void Update(float deltaTime) override;
 
-	void ToString(std::ostream& os) const override { os << "node-type: FreeformUserNode, name: " << m_name; }
+	void ToString(std::ostream& os) const override { os << "node-type: FreeformUserNode, name: " << GetName(); }
 };
 

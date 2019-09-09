@@ -13,7 +13,10 @@ namespace OpenGL
 		GLuint m_instanceMatricesVbo;
 
 	public:
-		GLInstancedModel(GLAssetManager* glAssetManager, const std::string& name);
+		GLInstancedModel(const std::string& name)
+			: GLModel(name),
+			  m_instanceCount(0),
+			  m_instanceMatricesVbo(0) {}
 		~GLInstancedModel();
 
 		bool Load(TriangleModelInstancedGeometryNode* nodeInstancer);

@@ -8,6 +8,7 @@
 #include "assets/PathSystem.h"
 #include "assets/model/GltfAux.h"
 #include "assets/AssetManager.h"
+#include "system/Engine.h"
 
 namespace
 {
@@ -152,14 +153,14 @@ namespace
 }
 
 template<bool LoadDefault>
-Model::Sampler Model::LoadSampler(const tinygltf::Model& modelData, int32 gltfTextureIndex, int32 gltfTexCoordTarget)
+Sampler Model::LoadSampler(const tinygltf::Model& modelData, int32 gltfTextureIndex, int32 gltfTexCoordTarget)
 {
 	Sampler sampler{};
 
 	if constexpr (LoadDefault)
 	{
 		const glm::u8vec4 cDefVal{ 255, 255, 255, 255 };
-		sampler.texture = Texture::CreateDefaultTexture(GetAssetManager(), cDefVal, 1u, 1u);
+		sampler.texture = Texture::CreateDefaultTexture(cDefVal, 1u, 1u);
 	}
 	
 	const auto textureIndex = gltfTextureIndex;
@@ -177,7 +178,7 @@ Model::Sampler Model::LoadSampler(const tinygltf::Model& modelData, int32 gltfTe
 			// TODO check image settings
 			auto& gltfImage = modelData.images.at(imageIndex);
 
-			sampler.texture = GetAssetManager()->LoadTextureAsset(GetDirectory() + "\\" + gltfImage.uri);
+			sampler.texture = Engine::GetAssetManager()->LoadTextureAsset(GetDirectory() + "\\" + gltfImage.uri);
 		}
 
 		const auto samplerIndex = gltfTexture.sampler;
@@ -193,7 +194,7 @@ Model::Sampler Model::LoadSampler(const tinygltf::Model& modelData, int32 gltfTe
 			sampler.wrapT =  GltfAux::GetTextureWrapping(gltfSampler.wrapT);
 			sampler.wrapR =  GltfAux::GetTextureWrapping(gltfSampler.wrapR);
 
-			sampler.name = gltfSampler.name;
+			sampler.SetName(gltfSampler.name);
 		}
 	}
 
@@ -205,7 +206,7 @@ Model::Sampler Model::LoadSampler(const tinygltf::Model& modelData, int32 gltfTe
 Model::Material Model::LoadMaterial(const tinygltf::Model& modelData, const tinygltf::Material& materialData)
 {
 	Material material{};
-	material.name = materialData.name;
+	material.SetName(materialData.name);
 	
 	// factors
 	auto bFactor = materialData.pbrMetallicRoughness.baseColorFactor;
@@ -238,8 +239,16 @@ Model::Material Model::LoadMaterial(const tinygltf::Model& modelData, const tiny
 
 	// TODO: pack if different
 	auto& metallicRougnessTextureInfo = materialData.pbrMetallicRoughness.metallicRoughnessTexture;
-	material.occlusionMetallicRoughnessTextureSampler = LoadSampler<true>(modelData, metallicRougnessTextureInfo.index, metallicRougnessTextureInfo.texCoord);
+	auto& occlusionTextureInfo = materialData.occlusionTexture;
 
+	// same texture no need of packing
+	//if(metallicRougnessTextureInfo.index == occlusionTextureInfo.index)
+	{
+		material.occlusionMetallicRoughnessTextureSampler = LoadSampler<true>(modelData, metallicRougnessTextureInfo.index, metallicRougnessTextureInfo.texCoord);
+	}
+	
+
+	
 	return material;
 }
 
@@ -392,7 +401,7 @@ std::optional<Model::GeometryGroup> Model::LoadGeometryGroup(const tinygltf::Mod
 std::optional<Model::Mesh> Model::LoadMesh(const tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
 {
 	Mesh mesh{};
-	mesh.name = meshData.name;
+	mesh.SetName(meshData.name);
 	
 	mesh.geometryGroups.resize(meshData.primitives.size());
 	
@@ -411,7 +420,7 @@ std::optional<Model::Mesh> Model::LoadMesh(const tinygltf::Model& modelData, con
 			return {};
 		}
 		
-		geom.value().name = geomName;
+		geom.value().SetName(geomName);
 		mesh.geometryGroups[i] = geom.value();
 	}
 	// TODO: weights

@@ -42,7 +42,7 @@ public:
 		return Get().m_window;
 	}
 
-	// Asset manager will be valid forever after initialization.
+	// FileAsset manager will be valid forever after initialization.
 	[[nodiscard]] 
 	static AssetManager* GetAssetManager()
 	{

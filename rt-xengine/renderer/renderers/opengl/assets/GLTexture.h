@@ -14,7 +14,11 @@ namespace OpenGL
 		GLuint m_glId;
 
 	public:
-		GLTexture(GLAssetManager* glAssetManager, const std::string& name);
+		GLTexture(const std::string& name)
+			: GLAsset(name),
+		      m_bindlessHandle(0),
+			  m_glId(0),
+		      m_texCoordIndex(0) {}
 		~GLTexture();
 
 		int32 m_texCoordIndex;

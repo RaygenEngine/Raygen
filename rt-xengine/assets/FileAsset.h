@@ -6,28 +6,30 @@
 class AssetManager;
 
 // asset works as a placeholder to the wrapped data
-class Asset : public Object
-{
-	AssetManager* m_assetManager;
-	
+class FileAsset : public Object
+{	
 	bool m_loaded;
 
 protected:
 
-	// file path
+	// parent directory path
 	std::string m_directoryPath;
+	// path with file name and extension
 	std::string m_filePath;
+	// file name and extension
 	std::string m_fileName;
 		
 public:
-	Asset(AssetManager* assetManager, const std::string& path)
-		: m_assetManager(assetManager),
-	      m_loaded(false),
+	FileAsset(const std::string& path)
+		: m_loaded(false),
 		  m_directoryPath(PathSystem::GetParentPath(path)),
 		  m_filePath(path),
-		  m_fileName(PathSystem::GetNameWithExtension(path)) {}
+		  m_fileName(PathSystem::GetNameWithExtension(path))
+	{
+		SetName(PathSystem::GetNameWithoutExtension(path));
+	}
 
-	virtual ~Asset() = default;
+	virtual ~FileAsset() = default;
 
 	// clear asset's inner data
 	// TODO: pure virtual, every asset must be able to clean itself (gpu or cpu)
@@ -40,9 +42,7 @@ public:
 
 	// clear only if loaded
 	void Unload();
-
-	AssetManager* GetAssetManager() const { return m_assetManager; }
-
+	
 	std::string GetFileName() const { return m_fileName; }
 	std::string GetDirectory() const { return m_directoryPath; }
 	std::string GetFilePath() const { return m_filePath; }

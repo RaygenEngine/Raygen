@@ -18,7 +18,7 @@
 
 
 #include "core/logger/Logger.h"
-namespace utl
+namespace Timer
 {
 	namespace ch = std::chrono;
 	class Debug
@@ -60,4 +60,4 @@ namespace utl
 }
 
 #define TIMER_STATIC_SCOPE(Name) \
-static utl::Debug scope_timer____LINE__; utl::Scope scope_timer____LINE__scope(scope_timer____LINE__, Name)
+static Timer::Debug scope_timer____LINE__; Timer::Scope scope_timer____LINE__scope(scope_timer____LINE__, Name)

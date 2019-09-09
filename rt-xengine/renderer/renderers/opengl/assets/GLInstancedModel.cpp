@@ -4,13 +4,6 @@
 
 namespace OpenGL
 {
-	GLInstancedModel::GLInstancedModel(GLAssetManager* glAssetManager, const std::string& name)
-		: GLModel(glAssetManager, name),
-		  m_instanceCount(0),
-		  m_instanceMatricesVbo(0)
-	{
-	}
-
 	GLInstancedModel::~GLInstancedModel()
 	{
 		glDeleteBuffers(1, &m_instanceMatricesVbo);

@@ -1,7 +1,10 @@
 #pragma once
 
-#include "assets/AssetManager.h"
-#include "glad/glad.h"
+#include "GLAD/glad.h"
+#include "assets/texture/CubeMap.h"
+#include "assets/other/utf8/StringFile.h"
+#include "assets/model/Model.h"
+#include "assets/CachingAux.h"
 
 namespace OpenGL
 {

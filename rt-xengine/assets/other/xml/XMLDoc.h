@@ -1,15 +1,15 @@
 #pragma once
 
-#include "assets/Asset.h"
+#include "assets/FileAsset.h"
 #include "tinyxml2/tinyxml2.h"
 
-class XMLDoc : public Asset
+class XMLDoc : public FileAsset
 {
 	tinyxml2::XMLDocument m_document;
 
 public:
-	XMLDoc(AssetManager* assetManager, const std::string& path)
-		: Asset(assetManager, path) {}
+	XMLDoc(const std::string& path)
+		: FileAsset(path) {}
 	~XMLDoc() = default;
 
 	bool Load(const std::string& path);

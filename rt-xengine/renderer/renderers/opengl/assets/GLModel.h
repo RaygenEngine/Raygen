@@ -77,24 +77,10 @@ namespace OpenGL
 		std::vector<GLMesh> m_meshes;
 
 	public:
-		GLModel(GLAssetManager* glAssetManager, const std::string& name)
-			: GLAsset(glAssetManager, name),
-			m_usage(GL_STATIC_DRAW) {}
-		virtual ~GLModel()
-		{
-			for(auto& mesh : m_meshes)
-			{
-				glDeleteBuffers(1, &mesh.positionsVBO);
-				glDeleteBuffers(1, &mesh.normalsVBO);
-				glDeleteBuffers(1, &mesh.tangentsVBO);
-				glDeleteBuffers(1, &mesh.bitangentsVBO);
-				glDeleteBuffers(1, &mesh.textCoords0VBO);
-				glDeleteBuffers(1, &mesh.textCoords1VBO);
-				glDeleteBuffers(1, &mesh.ebo);
-
-				glDeleteVertexArrays(1, &mesh.vao);
-			}
-		}
+		GLModel(const std::string& name)
+			: GLAsset(name),
+			  m_usage(GL_STATIC_DRAW) {}
+		virtual ~GLModel();
 
 		bool Load(Model* data);
 

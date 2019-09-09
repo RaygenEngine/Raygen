@@ -9,7 +9,7 @@ link_directories(${LIB_DEPENDENCIES_DIRECTORY})
 
 set(SOURCE_FILES 
 
-	assets/Asset.cpp
+	assets/FileAsset.cpp
 	assets/AssetManager.cpp
 	assets/PathSystem.cpp
 	
@@ -19,6 +19,7 @@ set(SOURCE_FILES
 	assets/texture/PackedTexture.cpp
 	assets/texture/Texture.cpp
 	assets/texture/CubeMap.cpp
+	assets/texture/Sampler.cpp
 	
 	assets/model/Model.cpp
 	
@@ -76,7 +77,7 @@ set(SOURCE_FILES
 
 set(HEADER_FILES 
 
-	assets/Asset.h
+	assets/FileAsset.h
 	assets/AssetManager.h
 	assets/PathSystem.h
     assets/CachingAux.h
@@ -88,6 +89,7 @@ set(HEADER_FILES
 	assets/texture/PackedTexture.h
 	assets/texture/Texture.h
 	assets/texture/CubeMap.h
+	assets/texture/Sampler.h
 	
 	assets/model/Model.h
 	assets/model/GltfAux.h
