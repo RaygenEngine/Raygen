@@ -4,6 +4,7 @@
 #include "platform/windows/TranslateWin32VirtualKeys.h"
 #include "world/World.h"
 #include "system/Engine.h"
+#include "editor/imgui/ImguiImpl.h"
 #include "renderer/Renderer.h"
 #include <windowsx.h>
 
@@ -100,7 +101,7 @@ Win32Window* Win32Window::CreateWin32Window(
 	HINSTANCE hInstance = GetModuleHandle(nullptr);
 
 	auto window = new Win32Window();
-		
+	
 	if (!window->Register(style, name, backgroundBrushColor,
 							LoadCursor(NULL, cursorName), windowHandleFunction, hInstance))
 	{
@@ -257,6 +258,15 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 	Win32Window* window = Engine::GetMainWindow(); //reinterpret_cast<Win32Window*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
 	if(!window) return DefWindowProc(hWnd, message, wParam, lParam);
+
+	// TODO:
+	if (Engine::GetEditor())
+	{
+		if (ImguiImpl::WndProcHandler(hWnd, message, wParam, lParam))
+		{
+			return true;
+		}
+	}
 
 	auto& input = *Engine::GetInput();
 

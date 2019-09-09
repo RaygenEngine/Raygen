@@ -46,8 +46,12 @@ Editor::Editor()
 	: m_selectedNode(nullptr)
 	, m_updateWorld(true)
 {
-	// TODO: imgui init would be called here if HWND was accessible
-	// ImguiImpl::Init();
+	ImguiImpl::InitContext();
+}
+
+Editor::~Editor()
+{
+	ImguiImpl::CleanupContext();
 }
 	
 void Editor::UpdateEditor()

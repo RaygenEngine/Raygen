@@ -28,7 +28,8 @@ set(SOURCE_FILES
 	editor/Editor.cpp
 	editor/imgui/ImguiImpl.cpp
 	editor/imgui/ImguiDemo.cpp
-		
+	editor/renderer/EditorRenderer.cpp
+
 	renderer/Renderer.cpp
 	renderer/NodeObserver.cpp
 	
@@ -128,6 +129,7 @@ set(HEADER_FILES
 	editor/Editor.h
 	editor/imgui/ImguiImpl.h
 	editor/imgui/ImguiExtensions.h
+	editor/renderer/EditorRenderer.h
 	
 	renderer/Renderer.h
 	renderer/NodeObserver.h

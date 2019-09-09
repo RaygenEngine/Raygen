@@ -5,6 +5,7 @@
 #include "renderer/Renderer.h"
 #include "world/World.h"
 #include "editor/Editor.h"
+#include "editor/renderer/EditorRenderer.h"
 
 AppBase::AppBase()
 {
@@ -97,7 +98,15 @@ void AppBase::RegisterRenderers()
 {
 	// NOTE:
 	// Default behavior for an app is to start the FIRST renderer registered here.
-	Engine::RegisterRenderer<OpenGL::GLTestRenderer>();
+
+	if (m_enableEditor)
+	{
+		Engine::RegisterRenderer<EditorRenderer>();
+	}
+	else 
+	{
+		Engine::RegisterRenderer<OpenGL::GLTestRenderer>();
+	}
 }
 
 Win32Window* AppBase::CreateAppWindow()

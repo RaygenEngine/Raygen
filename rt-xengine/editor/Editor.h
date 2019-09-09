@@ -12,7 +12,7 @@ protected:
 public:
 	Editor();
 
-	virtual ~Editor() = default;
+	virtual ~Editor();
 
 	void UpdateEditor();
 

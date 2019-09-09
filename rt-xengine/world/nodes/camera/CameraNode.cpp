@@ -19,6 +19,11 @@ CameraNode::CameraNode(Node* parent)
 	REFLECT_VAR(m_vFov);
 	REFLECT_VAR(m_hFov);
 	REFLECT_VAR(m_near);
+
+	REFLECT_VAR(m_viewportWidth);
+	REFLECT_VAR(m_viewportHeight);
+
+	m_resizeListener.BindMember(this, &CameraNode::WindowResize);
 }
 
 void CameraNode::RecalculateProjectionFov()

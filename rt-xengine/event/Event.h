@@ -36,13 +36,16 @@ struct MulticastEvent {
 		template<typename T>
 		using MemberFunc = void (T::*)(Args...);
 
+		// First parameter is the objInstance to call the function for. (Usually 'this')
+		// Second is the member function
+		// eg call: BindMember(this, &CameraNode::OnResize);
 		template<typename T>
-		void BindMember(T* ref, MemberFunc<T> callback)
+		void BindMember(T* objInstance, MemberFunc<T> callback)
 		{
 			Bind(
 				[=](Args... args) 
 				{ 
-					std::invoke(callback, ref, args...);
+					std::invoke(callback, objInstance, args...);
 				}
 			);
 		}

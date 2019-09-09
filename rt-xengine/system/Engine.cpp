@@ -24,6 +24,7 @@ Engine::~Engine()
 {			
 	// NOTE: It is REALLY important to remember the reverse order here
 	if (m_renderer) delete m_renderer;
+	if (m_editor) delete m_editor;
 	if (m_world) delete m_world;
 	if (m_window) delete m_window;
 
