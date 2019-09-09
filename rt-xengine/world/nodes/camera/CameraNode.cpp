@@ -20,8 +20,8 @@ CameraNode::CameraNode(Node* parent)
 	REFLECT_VAR(m_hFov);
 	REFLECT_VAR(m_near);
 
-	REFLECT_VAR(m_viewportWidth);
-	REFLECT_VAR(m_viewportHeight);
+	REFLECT_VAR(m_viewportWidth, PropertyFlags::Transient);
+	REFLECT_VAR(m_viewportHeight, PropertyFlags::Transient);
 
 	m_resizeListener.BindMember(this, &CameraNode::WindowResize);
 }

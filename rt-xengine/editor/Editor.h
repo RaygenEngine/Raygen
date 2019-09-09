@@ -9,7 +9,10 @@ class Editor
 protected:
 	bool m_updateWorld;
 	Node* m_selectedNode;
+	
 public:
+	std::string m_sceneToLoad{};
+
 	Editor();
 
 	virtual ~Editor();
@@ -23,8 +26,10 @@ public:
 
 	void SaveScene(const std::string& filename);
 
+	void PreBeginFrame();
+
 private:
 	void Outliner();
 	void PropertyEditor(Node* activeNode);
-		
+	void LoadScene(const std::string& scenefile);
 };

@@ -55,6 +55,11 @@ bool Engine::CreateWorldFromFile(const std::string& filename)
 {
 	if (m_world) 
 	{
+		if (m_renderer)
+		{
+			delete m_renderer;
+			m_renderer = nullptr;
+		}
 		delete m_world;
 	}
 	m_world = new World(m_app->MakeNodeFactory());

@@ -124,17 +124,17 @@ void World::Update()
 	m_worldTime += m_deltaTime;
 	m_lastTime = timestamp;
 
-		if (Engine::Get().ShouldUpdateWorld())
-		{
-			// Update after input and delta calculation
-			for (auto* node : m_nodes)
-				node->Update(m_deltaTime);
-		}
+	if (Engine::Get().ShouldUpdateWorld())
+	{
+		// Update after input and delta calculation
+		for (auto* node : m_nodes)
+			node->Update(m_deltaTime);
+	}
 		
-		if (Engine::Get().IsUsingEditor())
-		{
-			Engine::GetEditor()->UpdateEditor();
-		}
+	if (Engine::Get().IsUsingEditor())
+	{
+		Engine::GetEditor()->UpdateEditor();
+	}
 
 	// Update dirty leaf node instances
 	for (auto* dirtyLeafNode : m_dirtyLeafNodes)

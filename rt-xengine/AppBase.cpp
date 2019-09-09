@@ -77,6 +77,10 @@ void AppBase::MainLoop()
 	Window* window = Engine::GetMainWindow();
 	while (!window->IsClosed())
 	{
+		if (Engine::GetEditor()) 
+		{
+			Engine::GetEditor()->PreBeginFrame();
+		}
 		// clear input soft state (pressed keys, etc.)
 		Engine::GetInput()->ClearSoftState();
 

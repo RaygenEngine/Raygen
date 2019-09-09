@@ -8,7 +8,7 @@
 #include "tinyxml2/tinyxml2.h"
 #include "imgui_ext/imfilebrowser.h"
 #include "platform/windows/Win32Window.h"
-
+#include "system/EngineEvents.h"
 
 namespace {
 template<typename Lambda>
@@ -64,6 +64,9 @@ void Editor::UpdateEditor()
 		| ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CreateNewDir
 		| ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CloseOnEsc);
 
+	static ImGui::FileBrowser lfb = ImGui::FileBrowser(
+		ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CloseOnEsc);
+
 	ImGui::ShowDemoWindow();
 		
 	static bool open = true;
@@ -73,16 +76,30 @@ void Editor::UpdateEditor()
 	ImGui::SameLine();
 	if (ImGui::Button("Save"))
 	{
-		sfb.SetTitle("Save World");
+		sfb.SetTitle("Save World"); 
 		sfb.Open();
+	}
+	ImGui::SameLine();
+	
+	if (ImGui::Button("Load"))
+	{
+		lfb.SetTitle("Load World"); 
+		lfb.Open();
 	}
 
 	sfb.Display();
+	lfb.Display();
 
 	if (sfb.HasSelected())
 	{
 		SaveScene(sfb.GetSelected().string());
 		sfb.ClearSelected();
+	}
+
+	if (lfb.HasSelected()) 
+	{
+		m_sceneToLoad = lfb.GetSelected().string();
+		lfb.ClearSelected();
 	}
 
 
@@ -195,7 +212,15 @@ void Editor::PropertyEditor(Node* node)
 		node->MarkDirty();
 	}
 }
-	
+
+void Editor::LoadScene(const std::string& scenefile)
+{
+	Engine::Get().CreateWorldFromFile(scenefile);
+	Engine::Get().SwitchRenderer(0);
+
+	m_selectedNode = nullptr;
+	Event::OnWindowResize.Broadcast(Engine::GetMainWindow()->GetWidth(), Engine::GetMainWindow()->GetHeight());
+}
 	
 namespace
 {
@@ -283,6 +308,15 @@ void Editor::SaveScene(const std::string& filename)
 	else
 	{
 		LOG_ERROR("Failed to open file for saving scene.");
+	}
+}
+
+void Editor::PreBeginFrame()
+{
+	if (m_sceneToLoad.size() > 0)
+	{
+		LoadScene(m_sceneToLoad);
+		m_sceneToLoad = "";
 	}
 }
 
