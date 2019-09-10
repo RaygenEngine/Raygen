@@ -72,8 +72,8 @@ template<> struct TypeFromReflection<PropertyType::Vec3> { using type = glm::vec
 template<> struct TypeFromReflection<PropertyType::String> { using type = std::string; };
 template<> struct TypeFromReflection<PropertyType::Asset> { using type = ReflectedAsset; };
 
-#include "system/reflection/Property.h"
-#include "system/reflection/Reflector.h"
+//#include "system/reflection/Property.h"
+//#include "system/reflection/Reflector.h"
 
 //// ALWAYS expected right at the beginning of a class declaration body
 //#define REFLECT(Class)	public: \
