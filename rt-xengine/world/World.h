@@ -9,6 +9,7 @@
 #include "nodes/user/UserNode.h"
 #include "assets/other/xml/XMLDoc.h"
 #include "system/EngineComponent.h"
+#include "assets/AssetManager.h"
 #include "system/Input.h"
 
 class NodeFactory;
@@ -22,7 +23,10 @@ public:
 	{
 		REFLECT_VAR(m_background, PropertyFlags::Color);
 		REFLECT_VAR(m_ambient, PropertyFlags::Color);
+		REFLECT_VAR(m_bgAsset);
 	}
+
+	BackgroundColorAsset* m_bgAsset;
 
 	glm::vec3 m_background;
 	glm::vec3 m_ambient;

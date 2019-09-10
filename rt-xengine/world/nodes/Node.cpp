@@ -151,19 +151,18 @@ void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 			ReadStringAttribute(xmlData, str, ref);
 		},
 			[&](ReflectedAsset& ref) {
-			std::string type;
-			ReadStringAttribute(xmlData, "type", type);
+			//std::string type;
+			//ReadStringAttribute(xmlData, "type", type);
 
-			// default geom is static
-			auto modelGeomType = GeometryUsage::STATIC;
-			if (!type.empty() && utl::CaseInsensitiveCompare(type, "dynamic"))
-				modelGeomType = GeometryUsage::DYNAMIC;
+			//// default geom is static
+			//auto modelGeomType = GeometryUsage::STATIC;
+			//if (!type.empty() && utl::CaseInsensitiveCompare(type, "dynamic"))
+			//	modelGeomType = GeometryUsage::DYNAMIC;
 
 			std::string fileStr;
 			ReadStringAttribute(xmlData, str, fileStr);
-
-			ref = Engine::GetAssetManager()->LoadModelAsset(fileStr,
-														modelGeomType);
+			ref = Engine::GetAssetManager()->MaybeGenerateAsset<BackgroundColorAsset>(fileStr);
+			Engine::GetAssetManager()->Load(ref);
 		}
 		);
 	}

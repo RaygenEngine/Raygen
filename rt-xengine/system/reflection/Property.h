@@ -73,7 +73,7 @@ public:
 	template<typename Type>
 	static Property MakeProperty(Type& variable,const std::string& name)
 	{
-		static_assert(IsReflected<Type>, "This type is not supported for reflection.");
+		//static_assert(IsReflected<Type>, "This type is not supported for reflection.");
 
 		Property created;
 		created.m_type = ReflectionFromType<Type>;
@@ -142,3 +142,22 @@ public:
 		return ((m_flags & flags) == flags);
 	}
 };
+
+
+namespace DirtyFlags
+{
+constexpr uint32 NoEdit =    (1 << 2)  ;
+constexpr uint32 Color =     (1 << 3) ;
+constexpr uint32 Multiline = (1 << 4) ;
+
+
+}
+
+namespace ColorFlags
+{
+constexpr uint32 NoEdit = (1 << 2);
+constexpr uint32 Color = (1 << 3);
+constexpr uint32 Multiline = (1 << 4);
+
+
+}

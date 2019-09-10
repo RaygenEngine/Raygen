@@ -14,10 +14,9 @@
 #include "core/auxiliary/MetaTemplates.h"
 #include <type_traits>
 
-class Model;
+class BackgroundColorAsset;
 
-
-using ReflectedAsset = std::shared_ptr<Model>;
+using ReflectedAsset = BackgroundColorAsset*;
 
 // A reflection system that uses offsetof would be better but for simplicity we just initialize the reflector
 // for every instance of the objects we want to reflect. Therefore we can save pointers directly.

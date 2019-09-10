@@ -16,6 +16,9 @@
 namespace fs = std::filesystem;
 
 class Asset {
+public:
+	[[nodiscard]] fs::path GetUri() const { return m_uri; }
+
 protected:
 	Asset(fs::path uri)
 		: m_uri(uri)
@@ -79,7 +82,8 @@ public:
 	template<typename AssetT>
 	void Unload(AssetT* asset)
 	{
-		assert(false);
+		asset->m_isLoaded = false;
+		//assert(false);
 	}
 
 
@@ -163,3 +167,26 @@ public:
 //	}
 //
 //};
+
+#include <iostream>
+class BackgroundColorAsset : public Asset
+{
+public:
+	BackgroundColorAsset(fs::path uri)
+		: Asset(uri) {}
+	glm::vec3 m_color;
+
+private:
+	bool Load() override 
+	{
+		//std::cout << "Give x, y, z:" << std::endl;
+		//std::cin >> m_color.x >> m_color.y >> m_color.z;
+		m_color = { 0.1, 0.2, 0.4 };
+		return true;
+	}
+
+	void Unload() override 
+	{
+
+	}
+};

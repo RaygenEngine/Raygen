@@ -167,10 +167,22 @@ bool AddReflector(Reflector& reflector)
 		},
 		[&str](ReflectedAsset& ref) {
 			std::string s = "No Asset";
-			if (ref.get()) 
+			if (ref) 
 			{
-				s = ref->GetFileName();
+				s = ref->GetUri().string();
 			}
+			
+			if (ImGui::Button("Unload"))
+			{
+				Engine::GetAssetManager()->Unload(ref);
+			}
+			ImGui::SameLine();
+
+			if (ImGui::Button("Reload"))
+			{
+				Engine::GetAssetManager()->Load(ref);
+			}
+			ImGui::SameLine();
 			return ImGui::InputText(str, &s);
 		});
 	}
@@ -256,10 +268,10 @@ namespace
 					xmlElem->SetAttribute(p.GetName().c_str(), v.c_str());
 				},
 					[&](auto& v) {
-					if (v.get())
+					if (v)
 					{
 						std::string assetFile;
-						assetFile = v->GetFileName();
+						assetFile = v->GetUri().string();
 						xmlElem->SetAttribute(p.GetName().c_str(), assetFile.c_str());
 					}
 				});
