@@ -140,10 +140,3 @@ void World::Update()
 	for (auto* dirtyLeafNode : m_dirtyLeafNodes)
 		dirtyLeafNode->CacheWorldTransform();
 }
-
-
-//void World::WindowResize(int32 width, int32 height)
-//{
-//	for (auto* node : m_nodes)
-//		node->WindowResize(width, height);
-//}
