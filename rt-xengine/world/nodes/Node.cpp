@@ -159,15 +159,12 @@ void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 			if (!type.empty() && utl::CaseInsensitiveCompare(type, "dynamic"))
 				modelGeomType = GeometryUsage::DYNAMIC;
 
-			if (dynamic_cast<Model*>(ref))
-			{
-				std::string fileStr;
-				ReadStringAttribute(xmlData, str, fileStr);
+			std::string fileStr;
+			ReadStringAttribute(xmlData, str, fileStr);
 
-				ref = Engine::GetAssetManager()->MaybeGenerateAsset<Model>(fileStr);
-				Engine::GetAssetManager()->Load(ref);
-			}
-
+			auto p = Engine::GetAssetManager()->m_pathSystem.SearchAsset(fileStr);
+			ref = Engine::GetAssetManager()->MaybeGenerateAsset<Model>(p / "model");
+			Engine::GetAssetManager()->Load(ref);
 		}
 		);
 	}

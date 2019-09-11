@@ -1,4 +1,5 @@
 #pragma once
+#include "system/reflection/Reflector.h"
 
 #include <filesystem>
 
@@ -6,6 +7,10 @@ namespace fs = std::filesystem;
 
 class Asset
 {
+public:
+	AssetReflector m_reflector;
+
+	fs::path GetUri() const { return m_uri; }
 protected:
 	Asset(const fs::path& uri)
 		: m_uri(uri)
@@ -24,3 +29,8 @@ private:
 
 	friend class AssetManager;
 };
+
+inline AssetReflector& GetReflector(Asset* object)
+{
+	return object->m_reflector;
+}

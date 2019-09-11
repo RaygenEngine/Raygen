@@ -153,7 +153,7 @@ std::string PathSystem::SearchAssetInAssetsDirectories(const std::string& relati
 	return "";
 }
 
-std::string PathSystem::SearchAsset(const std::string& relativeAssetPath, const std::string& pathHint) const
+fs::path PathSystem::SearchAsset(const std::string& relativeAssetPath, const std::string& pathHint) const
 {
 	// Trim
 	auto pcopy = relativeAssetPath;

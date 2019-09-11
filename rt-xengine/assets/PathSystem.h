@@ -1,9 +1,11 @@
 #pragma once
 
 #include <unordered_set>
+#include <filesystem>
 
 class PathSystem
 {
+
 	// assets root path
 	std::string m_assetsRootPath;
 	std::vector<std::string> m_assetsPaths;
@@ -35,5 +37,5 @@ public:
 	bool Init(const std::string& applicationPath, const std::string& dataDirectoryName);
 
 	// search asset
-	std::string SearchAsset(const std::string& relativeAssetPath, const std::string& pathHint = "") const;
+	std::filesystem::path SearchAsset(const std::string& relativeAssetPath, const std::string& pathHint = "") const;
 };

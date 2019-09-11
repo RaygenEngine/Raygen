@@ -77,9 +77,7 @@ namespace OpenGL
 
 	void GLTestRenderer::Render()
 	{
-		//auto bgcl = Engine::GetWorld()->GetRoot()->GetBackgroundColor();
-
-		auto bgcl = Engine::GetWorld()->GetRoot()->m_bgAsset->m_color;
+		auto bgcl = Engine::GetWorld()->GetRoot()->GetBackgroundColor();
 
 		glm::mat4 vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
 

@@ -173,7 +173,7 @@ bool AddReflector(Reflector& reflector, int32 depth = 0)
 				std::string s = "No Asset";
 				if (ref)
 				{
-					s = ref->GetUri().string();
+					s = ref->GetUri().relative_path().string();//.string();
 				}
 
 				if (ImGui::Button("Unload"))
