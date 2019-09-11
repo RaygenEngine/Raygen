@@ -65,9 +65,12 @@ bool Engine::CreateWorldFromFile(const std::string& filename)
 	m_world = new World(m_app->MakeNodeFactory());
 
 	// load scene file
-	const auto sceneXML = m_assetManager->LoadXMLDocAsset(filename);
+	auto finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAsset(filename);
+	XMLDoc* sceneXML = m_assetManager->MaybeGenerateAsset<XMLDoc>(finalPath);
+	if (!m_assetManager->Load(sceneXML))
+		return false;
 
-	return m_world->LoadAndPrepareWorldFromXML(sceneXML.get());
+	return m_world->LoadAndPrepareWorldFromXML(sceneXML);
 }
 
 void Engine::SwitchRenderer(uint32 registrationIndex)
@@ -95,11 +98,6 @@ void Engine::SwitchRenderer(uint32 registrationIndex)
 
 	eng.m_renderer->InitRendering(eng.m_window->GetHWND(), eng.m_window->GetHInstance());
 	eng.m_renderer->InitScene(eng.m_window->GetWidth(), eng.m_window->GetHeight());
-}
-
-void Engine::UnloadDiskAssets()
-{
-	m_assetManager->UnloadAssets();
 }
 
 bool Engine::HasCmdArgument(const std::string& argument)

@@ -5,15 +5,17 @@
 
 class SkyCubeNode : public Node
 {
-	CubeMap m_cubeMap;
+	CubeMap* m_cubeMap;
 
 public:
-	SkyCubeNode(Node* parent);
+	SkyCubeNode(Node* parent)
+		: Node(parent),
+		m_cubeMap(nullptr) {}
 	~SkyCubeNode() = default;
 
 	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 
-	CubeMap& GetSkyMap() { return m_cubeMap; }
+	CubeMap* GetSkyMap() const { return m_cubeMap; }
 
 protected:
 	std::string ToString(bool verbose, uint depth) const override;

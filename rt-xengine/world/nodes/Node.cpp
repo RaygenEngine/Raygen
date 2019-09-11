@@ -162,8 +162,9 @@ void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 			std::string fileStr;
 			ReadStringAttribute(xmlData, str, fileStr);
 
-			ref = Engine::GetAssetManager()->LoadModelAsset(fileStr,
-														modelGeomType);
+			// TODO:
+			//ref = Engine::GetAssetManager()->LoadModelAsset(fileStr,
+			//											modelGeomType);
 		}
 		);
 	}

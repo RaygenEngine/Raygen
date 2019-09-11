@@ -68,8 +68,8 @@ namespace OpenGL
 
 	private:
 
-		GLMaterial LoadGLMaterial(const Model::Material& data);
-		GLMesh LoadGLMesh(const Model::GeometryGroup& data, GLenum usage);
+		GLMaterial LoadGLMaterial(const Material& data);
+		GLMesh LoadGLMesh(const Model::Mesh::GeometryGroup& data, GLenum usage);
 		
 	protected:
 		GLenum m_usage;

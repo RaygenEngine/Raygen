@@ -5,7 +5,7 @@
 
 class SkyHDRNode : public Node
 {
-	std::shared_ptr<Texture> m_hdrTexture;
+	Texture* m_hdrTexture;
 
 public:
 	SkyHDRNode(Node* parent);
@@ -13,7 +13,7 @@ public:
 		
 	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 
-	Texture* GetSkyHDR() const { return m_hdrTexture.get(); }
+	Texture* GetSkyHDR() const { return m_hdrTexture; }
 
 protected:
 	std::string ToString(bool verbose, uint depth) const override;

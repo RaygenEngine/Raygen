@@ -6,13 +6,13 @@
 
 class TriangleModelGeometryNode : public Node
 {
-	std::shared_ptr<Model> m_model;
+	Model* m_model;
 
 public:
 	TriangleModelGeometryNode(Node* parent);
 	~TriangleModelGeometryNode() = default;
 
-	Model* GetModel() const { return m_model.get(); }
+	Model* GetModel() const { return m_model; }
 
 	std::string ToString(bool verbose, uint depth) const override;
 

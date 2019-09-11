@@ -17,19 +17,19 @@ namespace OpenGL
 	std::shared_ptr<GLTexture> GLAssetManager::RequestGLTexture(Texture* texture, GLint minFilter,
 		GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR)
 	{
-		return CachingAux::LoadAssetAtMultiKeyCache<GLTexture>(m_glTextures, texture->GetFileName(), texture, minFilter, magFilter, wrapS, wrapT, wrapR);
+		return CachingAux::LoadAssetAtMultiKeyCache<GLTexture>(m_glTextures, "", texture, minFilter, magFilter, wrapS, wrapT, wrapR);
 	}
 
 	std::shared_ptr<GLShader> GLAssetManager::RequestGLShader(StringFile* vertexFile, StringFile* fragmentFile)
 	{
-		const auto name = "vert> " + vertexFile->GetFileName() + "frag> " + fragmentFile->GetFileName();
+		//const auto name = "vert> " + "frag> " + "";
 
-		return CachingAux::LoadAssetAtMultiKeyCache<GLShader>(m_glShaders, name, vertexFile, fragmentFile);
+		return CachingAux::LoadAssetAtMultiKeyCache<GLShader>(m_glShaders, "", vertexFile, fragmentFile);
 	}
 
 	std::shared_ptr<GLModel> GLAssetManager::RequestGLModel(Model* model)
 	{
-		return CachingAux::LoadAssetAtMultiKeyCache<GLModel>(m_glModels, model->GetFileName(), model);
+		return CachingAux::LoadAssetAtMultiKeyCache<GLModel>(m_glModels, "", model);
 	}
 
 	// TODO: caching may not work correctly with instancing, check this out

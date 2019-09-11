@@ -169,7 +169,8 @@ bool AddReflector(Reflector& reflector)
 			std::string s = "No Asset";
 			if (ref.get()) 
 			{
-				s = ref->GetFileName();
+				// TODO:
+				//s = ref->GetFileName();
 			}
 			return ImGui::InputText(str, &s);
 		});
@@ -259,7 +260,7 @@ namespace
 					if (v.get())
 					{
 						std::string assetFile;
-						assetFile = v->GetFileName();
+						//assetFile = v->GetFileName();
 						xmlElem->SetAttribute(p.GetName().c_str(), assetFile.c_str());
 					}
 				});

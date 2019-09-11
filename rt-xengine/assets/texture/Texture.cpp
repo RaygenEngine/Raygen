@@ -1,47 +1,87 @@
 #include "pch.h"
 
 #include "assets/texture/Texture.h"
+#include "assets/other/gltf/GltfFile.h"
+#include "system/Engine.h"
+#include "assets/AssetManager.h"
+#include "assets/other/gltf/GltfAux.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image/stb_image.h"
+#include "tinygltf/tiny_gltf.h"
 
-Texture::~Texture()
+bool Texture::Load()
 {
-	Unload();
-}
-
-bool Texture::Load(const std::string& path)
-{
-	int32 width;
-	int32 height;
-	int32 components;
-
-	void* imageData = nullptr;
-
-	m_hdr = stbi_is_hdr(path.c_str()) == 1;
-
-	if(!m_hdr)
-		imageData = stbi_load(path.c_str(), &width, &height, &components, STBI_rgb_alpha);
-	else
-		imageData = stbi_loadf(path.c_str(), &width, &height, &components, STBI_rgb_alpha);
+	auto finalPath = m_uri;
 	
-	if (!imageData || (width == 0) || (height == 0))
+	// TODO check if sub asset
+	// 
+	// if sub asset
+	const auto parentAssetPath = m_uri.parent_path();
+
+	// gltf parent TODO: use a loader
+	if (parentAssetPath.extension().compare(".gltf") == 0)
 	{
-		LOG_WARN("Texture loading failed, filepath: {}, data_empty: {} width: {} height: {}", path,
-			static_cast<bool>(imageData), width, height);
+		GltfFile* gltfFile = Engine::GetAssetManager()->MaybeGenerateAsset<GltfFile>(parentAssetPath);
+		if (!Engine::GetAssetManager()->Load(gltfFile))
+			return false;
+
+		auto gltfData = gltfFile->GetGltfData();
+		const auto thisPath = m_uri.filename();
+		const auto index = std::stoi(thisPath);
+
+		auto& textureData = gltfData->textures.at(index);
+
+		const auto imageIndex = textureData.source;
+
+		// if image exists
+		if (imageIndex != -1)
+		{
+			// TODO check image settings
+			auto& gltfImage = gltfData->images.at(imageIndex);
+
+			finalPath = parentAssetPath.parent_path() / gltfImage.uri;
+		}
+
+		const auto samplerIndex = textureData.sampler;
+
+		// if sampler exists
+		if (samplerIndex != -1)
+		{
+			auto& gltfSampler = gltfData->samplers.at(samplerIndex);
+
+			m_minFilter = GltfAux::GetTextureFiltering(gltfSampler.minFilter);
+			m_magFilter = GltfAux::GetTextureFiltering(gltfSampler.magFilter);
+			m_wrapS = GltfAux::GetTextureWrapping(gltfSampler.wrapS);
+			m_wrapT = GltfAux::GetTextureWrapping(gltfSampler.wrapT);
+			m_wrapR = GltfAux::GetTextureWrapping(gltfSampler.wrapR);
+		}
+		//else keep default values
+
+
+	}
+
+	m_hdr = stbi_is_hdr(finalPath.string().c_str()) == 1;
+
+	if (!m_hdr)
+		m_data = stbi_load(finalPath.string().c_str(), &m_width, &m_height, &m_components, STBI_rgb_alpha);
+	else
+		m_data = stbi_loadf(finalPath.string().c_str(), &m_width, &m_height, &m_components, STBI_rgb_alpha);
+
+	if (!m_data || (m_width == 0) || (m_height == 0))
+	{
+		LOG_WARN("Texture loading failed, filepath: {}, data_empty: {} width: {} height: {}", finalPath,
+			static_cast<bool>(m_data), m_width, m_height);
 
 		return false;
 	}
 
-	m_width = width;
-	m_height = height;
-	m_components = components;
-
-	m_data = imageData;
+	return true;
 
 	return true;
 }
 
-void Texture::Clear()
+void Texture::Unload()
 {
 	free(m_data);
 }

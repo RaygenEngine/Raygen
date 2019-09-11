@@ -2,13 +2,13 @@
 
 #include "assets/other/utf8/StringFile.h"
 
-bool StringFile::Load(const std::string& path)
+bool StringFile::Load()
 {
-	std::ifstream t(path);
+	std::ifstream t(m_uri);
 
 	if (!t.is_open())
 	{
-		LOG_WARN("Unable to open string file, path: {}", path);
+		LOG_WARN("Unable to open string file, path: {}", m_uri);
 		return false;
 	}
 
@@ -20,7 +20,7 @@ bool StringFile::Load(const std::string& path)
 	return true;
 }
 
-void StringFile::Clear()
+void StringFile::Unload()
 {
 	std::string().swap(m_data);
 }

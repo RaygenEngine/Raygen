@@ -2,12 +2,12 @@
 
 #include "assets/other/xml/XMLDoc.h"
 
-bool XMLDoc::Load(const std::string& path)
+bool XMLDoc::Load()
 {
-	return m_document.LoadFile(path.c_str()) == tinyxml2::XML_SUCCESS;
+	return m_document.LoadFile(m_uri.string().c_str()) == tinyxml2::XML_SUCCESS;
 }
 
-void XMLDoc::Clear()
+void XMLDoc::Unload()
 {
 	m_document.Clear();
 }
