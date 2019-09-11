@@ -9,7 +9,7 @@ namespace ParsingAux
 	{
 		return xmlElement->FindAttribute(attribute);
 	}
-
+	// TODO: glm::make_vec
 	template <typename T>
 	bool ReadFloats(const char* data, T& floats)
 	{

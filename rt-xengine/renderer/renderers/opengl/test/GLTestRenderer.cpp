@@ -90,6 +90,8 @@ namespace OpenGL
 
 		glUseProgram(m_nonInstancedShader->GetGLHandle());
 
+
+		// TODO: glm::value_ptr
 		// global uniforms
 		glUniform3fv(m_nonInstancedShader->GetUniformLocation("viewPos"), 1, &m_camera->GetWorldTranslation()[0]);
 		glUniform1i(m_nonInstancedShader->GetUniformLocation("mode"), m_previewMode);
