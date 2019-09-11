@@ -5,9 +5,7 @@
 #include "world/World.h"
 #include "world/nodes/user/freeform/FreeformUserNode.h"
 #include "world/nodes/geometry/TriangleModelGeometryNode.h"
-#include "world/nodes/sky/SkyHDRNode.h"
 #include "assets/AssetManager.h"
-#include "renderer/renderers/opengl/GLUtil.h"
 #include "system/Engine.h"
 
 #include "renderer/renderers/opengl/assets/GLCubeMap.h"
@@ -19,12 +17,17 @@ namespace OpenGL
 {
 	bool GLTestRenderer::InitScene(int32 width, int32 height)
 	{
+		auto finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAsset("test/test.vert");
+		StringFile* vertexSimpleShaderSource = Engine::GetAssetManager()->MaybeGenerateAsset<StringFile>(finalPath);
+		if (!Engine::GetAssetManager()->Load(vertexSimpleShaderSource))
+			return false;
 
-		auto vertexSimpleShaderSource = Engine::GetAssetManager()->LoadStringFileAsset("test/test.vert");
-		//auto vertexInstancedShaderSource = GetDiskAssetManager()->LoadStringFileAsset("test/test_instanced.vert");
-		auto fragmentShaderSource = Engine::GetAssetManager()->LoadStringFileAsset("test/test.frag");
-
-		m_nonInstancedShader = GetGLAssetManager()->RequestGLShader(vertexSimpleShaderSource.get(), fragmentShaderSource.get());
+	    finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAsset("test/test.frag");
+		StringFile* fragmentShaderSource = Engine::GetAssetManager()->MaybeGenerateAsset<StringFile>(finalPath);
+		if (!Engine::GetAssetManager()->Load(fragmentShaderSource))
+			return false;
+		
+		m_nonInstancedShader = GetGLAssetManager()->RequestGLShader(vertexSimpleShaderSource, fragmentShaderSource);
 		m_nonInstancedShader->SetUniformLocation("mvp");
 		m_nonInstancedShader->SetUniformLocation("m");
 		m_nonInstancedShader->SetUniformLocation("normalMatrix");
@@ -120,8 +123,8 @@ namespace OpenGL
 				glUniform1i(m_nonInstancedShader->GetUniformLocation("doubleSided"), glMaterial.doubleSided);
 				
 				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), glMaterial.baseColorTexture->GetGLBindlessHandle());
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("occlusionMetallicRoughnessSampler"), glMaterial.occlusionMetallicRoughnessTexture->GetGLBindlessHandle());
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), glMaterial.emissiveTexture->GetGLBindlessHandle());
+				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("occlusionMetallicRoughnessSampler"), glMaterial.occlusionMetallicRoughnessTexture->GetGLBindlessHandle());
+				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), glMaterial.emissiveTexture->GetGLBindlessHandle());
 
 				// may not exist
 				const auto normalText = glMaterial.normalTexture;

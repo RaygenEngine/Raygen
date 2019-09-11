@@ -36,12 +36,4 @@ public:
 
 	// search asset
 	std::string SearchAsset(const std::string& relativeAssetPath, const std::string& pathHint = "") const;
-
-	static bool FileExists(const std::string& filepath);
-	static std::string GetNameWithExtension(const std::string& filepath);
-	static std::string GetNameWithoutExtension(const std::string& filepath);
-	static std::string GetRootDirectory(const std::string& filepath);
-	static std::string GetParentPath(const std::string& filepath);
-	static std::string GetPathWithoutExtension(const std::string& filepath);
-	static std::string GetExtension(const std::string& filepath);
 };

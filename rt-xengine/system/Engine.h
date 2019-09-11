@@ -131,8 +131,6 @@ public:
 	// then activate the next
 	void SwitchRenderer(uint32 registrationIndex);
 
-	void UnloadDiskAssets();
-
 	template<typename RendererClass>
 	static uint32 RegisterRenderer()
 	{

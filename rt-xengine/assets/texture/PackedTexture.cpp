@@ -53,10 +53,10 @@ bool PackedTexture::LoadTextureAtChannelTarget(std::shared_ptr<Texture>& texture
 	{
 		//m_dynamicRange = texture->GetDynamicRange();
 		// packed texture 4 components
-		m_components = 4;
+		//m_components = 4;
 
-		m_width = texture->GetWidth();
-		m_height = texture->GetHeight();
+		//m_width = texture->GetWidth();
+		//m_height = texture->GetHeight();
 
 		//switch (m_dynamicRange)
 		//{
@@ -80,7 +80,7 @@ bool PackedTexture::LoadTextureAtChannelTarget(std::shared_ptr<Texture>& texture
 		//	return false;
 		//}
 
-		if (m_width != texture->GetWidth())
+		/*if (m_width != texture->GetWidth())
 		{
 			LOG_ERROR("Missmatched width in packed texture");
 			return false;
@@ -90,7 +90,7 @@ bool PackedTexture::LoadTextureAtChannelTarget(std::shared_ptr<Texture>& texture
 		{
 			LOG_ERROR("Missmatched height in packed texture");
 			return false;
-		}
+		}*/
 	}
 	
 

@@ -1,0 +1,26 @@
+#pragma once
+
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
+class Asset
+{
+protected:
+	Asset(const fs::path& uri)
+		: m_uri(uri)
+	{
+		assert(!uri.string().empty());
+	}
+
+	fs::path m_uri;
+	bool m_isLoaded{ false };
+
+	virtual bool Load() = 0;
+	virtual void Unload() = 0;
+private:
+	bool FriendLoad() { return Load(); }
+	void FriendUnload() { Unload(); }
+
+	friend class AssetManager;
+};

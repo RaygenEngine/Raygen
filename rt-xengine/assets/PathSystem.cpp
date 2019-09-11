@@ -227,37 +227,3 @@ std::string PathSystem::SearchAsset(const std::string& relativeAssetPath, const 
 	return SearchAssetInAssetsDirectories(pcopy);
 }
 
-bool PathSystem::FileExists(const std::string& filepath)
-{
-	return fs::exists(filepath);
-}
-
-std::string PathSystem::GetNameWithExtension(const std::string& filepath)
-{
-	return fs::path(filepath).filename().string();
-}
-
-std::string PathSystem::GetNameWithoutExtension(const std::string& filepath)
-{
-	return fs::path(filepath).stem().string();
-}
-
-std::string PathSystem::GetRootDirectory(const std::string& filepath)
-{
-	return fs::path(filepath).root_directory().string();
-}
-
-std::string PathSystem::GetParentPath(const std::string& filepath)
-{
-	return fs::path(filepath).parent_path().string();
-}
-
-std::string PathSystem::GetPathWithoutExtension(const std::string& filepath)
-{
-	return GetParentPath(filepath) + "\\" + GetNameWithoutExtension(filepath);
-}
-
-std::string PathSystem::GetExtension(const std::string& filepath)
-{
-	return fs::path(filepath).extension().string();
-}

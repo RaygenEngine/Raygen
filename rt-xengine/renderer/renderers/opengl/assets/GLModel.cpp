@@ -3,43 +3,42 @@
 #include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/GLUtil.h"
 #include "renderer/renderers/opengl/GLRendererBase.h"
+#include "assets/model/Material.h"
 #include "system/Engine.h"
 
 namespace OpenGL
 {
-	GLModel::GLMaterial GLModel::LoadGLMaterial(const Model::Material& data)
+	GLModel::GLMaterial GLModel::LoadGLMaterial(const Material& data)
 	{
 		GLMaterial glMaterial;
 
 		// TODO: should I better keep a material ref instead of copy (also important for editor updates)
-		glMaterial.baseColorFactor = data.baseColorFactor;
-		glMaterial.emissiveFactor = data.emissiveFactor;
-		glMaterial.metallicFactor = data.metallicFactor;
-		glMaterial.roughnessFactor = data.roughnessFactor;
-		glMaterial.normalScale = data.normalScale;
-		glMaterial.occlusionStrength = data.occlusionStrength;
-		glMaterial.alphaMode = data.alphaMode;
-		glMaterial.alphaCutoff = data.alphaCutoff;
-		glMaterial.doubleSided = data.doubleSided;
+		glMaterial.baseColorFactor = data.GetBaseColorFactor();
+		glMaterial.emissiveFactor = data.GetEmissiveFactor();
+		glMaterial.metallicFactor = data.GetMetallicFactor();
+		glMaterial.roughnessFactor = data.GetRoughnessFactor();
+		glMaterial.normalScale = data.GetNormalScale();
+		glMaterial.occlusionStrength = data.GetOcclusionStrength();
+		glMaterial.alphaMode = data.GetAlphaMode();
+		glMaterial.alphaCutoff = data.GetAlphaCutoff();
+		glMaterial.doubleSided = data.IsDoubleSided();
 
-		const auto LoadTextureFromSampler = [&](auto& texture, auto& sampler)
+		const auto LoadTextureFromSampler = [&](auto& texture, Texture* cpuText)
 		{
-			auto text = sampler.texture;
-
-			if (text)
-				texture = GetGLAssetManager(this)->RequestGLTexture(text.get(), GetGLFiltering(sampler.minFilter),
-					GetGLFiltering(sampler.magFilter), GetGLWrapping(sampler.wrapS), GetGLWrapping(sampler.wrapT), GetGLWrapping(sampler.wrapR));
+			if (cpuText)
+				texture = GetGLAssetManager(this)->RequestGLTexture(cpuText, GetGLFiltering(cpuText->GetMinFilter()),
+					GetGLFiltering(cpuText->GetMagFilter()), GetGLWrapping(cpuText->GetWrapS()), GetGLWrapping(cpuText->GetWrapT()), GetGLWrapping(cpuText->GetWrapR()));
 		};
 
-		LoadTextureFromSampler(glMaterial.baseColorTexture, data.baseColorTextureSampler);
-		LoadTextureFromSampler(glMaterial.occlusionMetallicRoughnessTexture, data.occlusionMetallicRoughnessTextureSampler);
-		LoadTextureFromSampler(glMaterial.normalTexture, data.normalTextureSampler);
-		LoadTextureFromSampler(glMaterial.emissiveTexture, data.emissiveTextureSampler);
+		LoadTextureFromSampler(glMaterial.baseColorTexture, data.GetBaseColorTexture());
+		LoadTextureFromSampler(glMaterial.occlusionMetallicRoughnessTexture, data.GetOcclusionMetallicRoughnessTexture());
+		LoadTextureFromSampler(glMaterial.normalTexture, data.GetNormalTexture());
+		LoadTextureFromSampler(glMaterial.emissiveTexture, data.GetEmissiveTexture());
 
 		return glMaterial;
 	}
 
-	GLModel::GLMesh GLModel::LoadGLMesh(const Model::GeometryGroup& data, GLenum usage)
+	GLModel::GLMesh GLModel::LoadGLMesh(const Model::Mesh::GeometryGroup& data, GLenum usage)
 	{
 		GLMesh glMesh{};
 		
@@ -87,7 +86,7 @@ namespace OpenGL
 
 		glMesh.count = data.indices.size();
 
-		glMesh.material = LoadGLMaterial(data.material);
+		glMesh.material = LoadGLMaterial(*data.material);
 
 		DebugBoundVAO("name");
 
@@ -116,8 +115,9 @@ namespace OpenGL
 	{
 		TIMER_STATIC_SCOPE("uploading model time");
 		
-		m_usage = GetGLUsage(data->GetUsage());
-
+		//m_usage = GetGLUsage(data->GetUsage());
+		m_usage = GL_STATIC_DRAW;
+		
 		for (auto& mesh : data->GetMeshes())
 		{
 			for (auto& geometryGroup : mesh.geometryGroups)
