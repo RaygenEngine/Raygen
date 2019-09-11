@@ -18,7 +18,7 @@ bool SkyHDRNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 	if (ParsingAux::AttributeExists(xmlData, "hdr_texture"))
 	{
 		auto finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAsset(xmlData->Attribute("hdr_texture"));
-		m_hdrTexture = Engine::GetAssetManager()->MaybeGenerateAsset<Texture>(finalPath);
+		m_hdrTexture = Engine::GetAssetManager()->MaybeGenerateAsset<TextureAsset>(finalPath);
 		if (!Engine::GetAssetManager()->Load(m_hdrTexture) || !m_hdrTexture->IsHdr())
 			return false;
 	}

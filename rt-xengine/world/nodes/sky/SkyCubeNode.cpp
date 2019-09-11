@@ -11,7 +11,7 @@ bool SkyCubeNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 	if (ParsingAux::AttributeExists(xmlData, "cube_map"))
 	{
 		auto finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAsset(xmlData->Attribute("cube_map"));
-		m_cubeMap = Engine::GetAssetManager()->MaybeGenerateAsset<CubeMap>(finalPath);
+		m_cubeMap = Engine::GetAssetManager()->MaybeGenerateAsset<CubeMapAsset>(finalPath);
 		if (!Engine::GetAssetManager()->Load(m_cubeMap))
 			return false;
 	}

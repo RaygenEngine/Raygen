@@ -18,12 +18,12 @@ namespace OpenGL
 	bool GLTestRenderer::InitScene(int32 width, int32 height)
 	{
 		auto finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAsset("test/test.vert");
-		StringFile* vertexSimpleShaderSource = Engine::GetAssetManager()->MaybeGenerateAsset<StringFile>(finalPath);
+		StringFileAsset* vertexSimpleShaderSource = Engine::GetAssetManager()->MaybeGenerateAsset<StringFileAsset>(finalPath);
 		if (!Engine::GetAssetManager()->Load(vertexSimpleShaderSource))
 			return false;
 
 	    finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAsset("test/test.frag");
-		StringFile* fragmentShaderSource = Engine::GetAssetManager()->MaybeGenerateAsset<StringFile>(finalPath);
+		StringFileAsset* fragmentShaderSource = Engine::GetAssetManager()->MaybeGenerateAsset<StringFileAsset>(finalPath);
 		if (!Engine::GetAssetManager()->Load(fragmentShaderSource))
 			return false;
 		

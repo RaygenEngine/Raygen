@@ -1,7 +1,7 @@
 #include "pch.h"
 
-#include "assets/texture/Texture.h"
-#include "assets/other/gltf/GltfFile.h"
+#include "assets/texture/TextureAsset.h"
+#include "assets/other/gltf/GltfFileAsset.h"
 #include "system/Engine.h"
 #include "assets/AssetManager.h"
 #include "assets/other/gltf/GltfAux.h"
@@ -10,7 +10,7 @@
 #include "stb_image/stb_image.h"
 #include "tinygltf/tiny_gltf.h"
 
-bool Texture::Load()
+bool TextureAsset::Load()
 {
 	auto finalPath = m_uri;
 	
@@ -22,7 +22,7 @@ bool Texture::Load()
 	// gltf parent TODO: use a loader
 	if (parentAssetPath.extension().compare(".gltf") == 0)
 	{
-		GltfFile* gltfFile = Engine::GetAssetManager()->MaybeGenerateAsset<GltfFile>(parentAssetPath);
+		GltfFileAsset* gltfFile = Engine::GetAssetManager()->MaybeGenerateAsset<GltfFileAsset>(parentAssetPath);
 		if (!Engine::GetAssetManager()->Load(gltfFile))
 			return false;
 
@@ -70,7 +70,7 @@ bool Texture::Load()
 
 	if (!m_data || (m_width == 0) || (m_height == 0))
 	{
-		LOG_WARN("Texture loading failed, filepath: {}, data_empty: {} width: {} height: {}", finalPath,
+		LOG_WARN("TextureAsset loading failed, filepath: {}, data_empty: {} width: {} height: {}", finalPath,
 			static_cast<bool>(m_data), m_width, m_height);
 
 		return false;
@@ -81,7 +81,7 @@ bool Texture::Load()
 	return true;
 }
 
-void Texture::Unload()
+void TextureAsset::Unload()
 {
 	free(m_data);
 }

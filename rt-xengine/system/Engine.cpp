@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include "system/Engine.h"
-#include "assets/other/xml/XMLDoc.h"
+#include "assets/other/xml/XMLDocAsset.h"
 #include "assets/AssetManager.h"
 #include "world/World.h"
 #include "renderer/Renderer.h"
@@ -66,7 +66,7 @@ bool Engine::CreateWorldFromFile(const std::string& filename)
 
 	// load scene file
 	auto finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAsset(filename);
-	XMLDoc* sceneXML = m_assetManager->MaybeGenerateAsset<XMLDoc>(finalPath);
+	XMLDocAsset* sceneXML = m_assetManager->MaybeGenerateAsset<XMLDocAsset>(finalPath);
 	if (!m_assetManager->Load(sceneXML))
 		return false;
 

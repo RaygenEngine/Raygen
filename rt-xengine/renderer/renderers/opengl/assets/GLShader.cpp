@@ -9,7 +9,7 @@ namespace OpenGL
 		glDeleteProgram(m_glId);
 	}
 
-	bool GLShader::Load(StringFile* vertexSource, StringFile* fragmentSource)
+	bool GLShader::Load(StringFileAsset* vertexSource, StringFileAsset* fragmentSource)
 	{
 		GLint Result = GL_FALSE;
 		int32 infoLogLength;

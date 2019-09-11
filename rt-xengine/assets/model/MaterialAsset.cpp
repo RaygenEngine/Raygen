@@ -1,14 +1,14 @@
 #include "pch.h"
 
-#include "assets/model/Material.h"
+#include "assets/model/MaterialAsset.h"
 #include "system/Engine.h"
 #include "assets/AssetManager.h"
-#include "assets/other/gltf/GltfFile.h"
+#include "assets/other/gltf/GltfFileAsset.h"
 #include "assets/other/gltf/GltfAux.h"
 
 #include "tinygltf/tiny_gltf.h"
 
-bool Material::Load()
+bool MaterialAsset::Load()
 {
 	// TODO check if sub asset
 
@@ -19,7 +19,7 @@ bool Material::Load()
 	// gltf parent TODO: use a loader
 	if (parentAssetPath.extension().compare(".gltf") == 0)
 	{
-		GltfFile* gltfFile = Engine::GetAssetManager()->MaybeGenerateAsset<GltfFile>(parentAssetPath);
+		GltfFileAsset* gltfFile = Engine::GetAssetManager()->MaybeGenerateAsset<GltfFileAsset>(parentAssetPath);
 		if (!Engine::GetAssetManager()->Load(gltfFile))
 			return false;
 
@@ -49,7 +49,7 @@ bool Material::Load()
 		m_doubleSided = materialData.doubleSided;
 
 
-		auto LoadTexture = [&](auto textureInfo, Texture*& texture, int32& textCoordIndex)
+		auto LoadTexture = [&](auto textureInfo, TextureAsset*& texture, int32& textCoordIndex)
 		{
 			if (textureInfo.index != -1)
 			{
@@ -61,7 +61,7 @@ bool Material::Load()
 
 				fs::path subPartPath = parentAssetPath / subAssetPath;
 
-				auto textureAsset = Engine::GetAssetManager()->MaybeGenerateAsset<Texture>(subPartPath);
+				auto textureAsset = Engine::GetAssetManager()->MaybeGenerateAsset<TextureAsset>(subPartPath);
 				if (!Engine::GetAssetManager()->Load(textureAsset))
 					return false;
 
@@ -97,6 +97,6 @@ bool Material::Load()
 	return true;
 }
 
-void Material::Unload()
+void MaterialAsset::Unload()
 {
 }

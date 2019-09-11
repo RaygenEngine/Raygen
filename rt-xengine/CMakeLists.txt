@@ -13,16 +13,16 @@ set(SOURCE_FILES
 	assets/AssetManager.cpp
 	assets/PathSystem.cpp
 	
-	assets/other/utf8/StringFile.cpp
-	assets/other/xml/XMLDoc.cpp
-	assets/other/gltf/GltfFile.cpp
+	assets/other/utf8/StringFileAsset.cpp
+	assets/other/xml/XMLDocAsset.cpp
+	assets/other/gltf/GltfFileAsset.cpp
 	
-	assets/texture/PackedTexture.cpp
-	assets/texture/Texture.cpp
-	assets/texture/CubeMap.cpp
+	assets/texture/PackedTextureAsset.cpp
+	assets/texture/TextureAsset.cpp
+	assets/texture/CubeMapAsset.cpp
 	
-	assets/model/Model.cpp	
-	assets/model/Material.cpp
+	assets/model/ModelAsset.cpp	
+	assets/model/MaterialAsset.cpp
 	
 	core/logger/Logger.cpp
 	
@@ -90,18 +90,18 @@ set(HEADER_FILES
 	assets/PathSystem.h
     assets/CachingAux.h
 		
-	assets/other/utf8/StringFile.h
+	assets/other/utf8/StringFileAsset.h
 	assets/other/xml/ParsingAux.h
-	assets/other/xml/XMLDoc.h
-	assets/other/gltf/GltfFile.h
+	assets/other/xml/XMLDocAsset.h
+	assets/other/gltf/GltfFileAsset.h
 	assets/other/gltf/GltfAux.h
 	
-	assets/texture/PackedTexture.h
-	assets/texture/Texture.h
-	assets/texture/CubeMap.h
+	assets/texture/PackedTextureAsset.h
+	assets/texture/TextureAsset.h
+	assets/texture/CubeMapAsset.h
 	
-	assets/model/Model.h	
-	assets/model/Material.h
+	assets/model/ModelAsset.h	
+	assets/model/MaterialAsset.h
 
 	core/auxiliary/FlagAux.h
 	core/auxiliary/FileAux.h

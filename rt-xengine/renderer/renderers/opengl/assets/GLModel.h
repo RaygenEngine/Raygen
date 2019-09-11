@@ -2,7 +2,7 @@
 
 #include "renderer/renderers/opengl/GLAsset.h"
 #include "renderer/renderers/opengl/assets/GLTexture.h"
-#include "assets/model/Model.h"
+#include "assets/model/ModelAsset.h"
 
 #include "GLAD/glad.h"
 
@@ -68,8 +68,8 @@ namespace OpenGL
 
 	private:
 
-		GLMaterial LoadGLMaterial(const Material& data);
-		GLMesh LoadGLMesh(const Model::Mesh::GeometryGroup& data, GLenum usage);
+		GLMaterial LoadGLMaterial(const MaterialAsset& data);
+		GLMesh LoadGLMesh(const ModelAsset::Mesh::GeometryGroup& data, GLenum usage);
 		
 	protected:
 		GLenum m_usage;
@@ -82,7 +82,7 @@ namespace OpenGL
 			  m_usage(GL_STATIC_DRAW) {}
 		virtual ~GLModel();
 
-		bool Load(Model* data);
+		bool Load(ModelAsset* data);
 
 		std::vector<GLMesh>& GetGLMeshes() { return m_meshes; }
 

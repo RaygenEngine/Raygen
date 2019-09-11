@@ -1,10 +1,10 @@
 #include "pch.h"
 
-#include "assets/texture/CubeMap.h"
+#include "assets/texture/CubeMapAsset.h"
 #include "system/Engine.h"
 #include "assets/AssetManager.h"
 
-bool CubeMap::Load()
+bool CubeMapAsset::Load()
 {
 	const fs::path without_ext = m_uri.filename();
 
@@ -23,7 +23,7 @@ bool CubeMap::Load()
 
 		textPath += m_uri.extension();
 
-		m_faces[i] = Engine::GetAssetManager()->MaybeGenerateAsset<Texture>(textPath);
+		m_faces[i] = Engine::GetAssetManager()->MaybeGenerateAsset<TextureAsset>(textPath);
 		if (!Engine::GetAssetManager()->Load(m_faces[i]))
 			return false;
 
@@ -44,7 +44,7 @@ bool CubeMap::Load()
 	return true;
 }
 
-void CubeMap::Unload()
+void CubeMapAsset::Unload()
 {
 	//for (auto face : m_faces)
 	//face->Unload();

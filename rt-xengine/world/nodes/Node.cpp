@@ -163,7 +163,7 @@ void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 			ReadStringAttribute(xmlData, str, fileStr);
 
 			auto p = Engine::GetAssetManager()->m_pathSystem.SearchAsset(fileStr);
-			ref = Engine::GetAssetManager()->MaybeGenerateAsset<Model>(p / "model");
+			ref = Engine::GetAssetManager()->MaybeGenerateAsset<ModelAsset>(p / "model");
 			Engine::GetAssetManager()->Load(ref);
 		}
 		);

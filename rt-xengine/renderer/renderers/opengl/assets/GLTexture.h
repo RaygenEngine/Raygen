@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/renderers/opengl/GLAsset.h"
-#include "assets/texture/Texture.h"
+#include "assets/texture/TextureAsset.h"
 
 #include "GLAD/glad.h"
 
@@ -23,7 +23,7 @@ namespace OpenGL
 
 		int32 m_texCoordIndex;
 		
-		bool Load(Texture* data, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR);
+		bool Load(TextureAsset* data, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR);
 
 		GLuint GetGLId() const { return m_glId; }
 		GLuint64 GetGLBindlessHandle() const { return m_bindlessHandle; }

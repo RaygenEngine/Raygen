@@ -10,7 +10,7 @@ namespace OpenGL
 		glDeleteTextures(1, &m_glId);
 	}
 
-	bool GLTexture::Load(Texture* data, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR)
+	bool GLTexture::Load(TextureAsset* data, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR)
 	{
 		// TODO: where should i store this?>
 		m_texCoordIndex = 0;

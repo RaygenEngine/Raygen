@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/renderers/opengl/GLAsset.h"
-#include "assets/texture/CubeMap.h"
+#include "assets/texture/CubeMapAsset.h"
 
 #include "GLAD/glad.h"
 
@@ -18,7 +18,7 @@ namespace OpenGL
 			  m_glId(0) {}
 		~GLCubeMap();
 
-		bool Load(CubeMap* data, GLint wrapFlag, bool mipMapping);
+		bool Load(CubeMapAsset* data, GLint wrapFlag, bool mipMapping);
 
 		GLuint GetGLId() const { return m_glId; }
 

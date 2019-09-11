@@ -1,9 +1,9 @@
 #pragma once
 
 #include "assets/Asset.h"
-#include "assets/model/Material.h"
+#include "assets/model/MaterialAsset.h"
 
-class Model : public Asset
+class ModelAsset : public Asset
 {
 public:
 	struct Mesh
@@ -23,7 +23,7 @@ public:
 
 			GeometryMode mode{ GeometryMode::TRIANGLES };
 
-			Material* material{ nullptr };
+			MaterialAsset* material{ nullptr };
 		};
 
 		std::vector<GeometryGroup> geometryGroups;
@@ -36,7 +36,7 @@ private:
 	
 public:
 	
-	Model(const fs::path& path)
+	ModelAsset(const fs::path& path)
 		: Asset(path) {}
 
 	[[nodiscard]] std::vector<Mesh> GetMeshes() const { return m_meshes; }

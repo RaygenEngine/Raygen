@@ -1,18 +1,18 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "assets/model/Model.h"
+#include "assets/model/ModelAsset.h"
 
 
 class TriangleModelGeometryNode : public Node
 {
-	Model* m_model;
+	ModelAsset* m_model;
 
 public:
 	TriangleModelGeometryNode(Node* parent);
 	~TriangleModelGeometryNode() = default;
 
-	Model* GetModel() const { return m_model; }
+	ModelAsset* GetModel() const { return m_model; }
 
 	std::string ToString(bool verbose, uint depth) const override;
 

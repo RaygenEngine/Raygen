@@ -9,7 +9,7 @@ namespace OpenGL
 		glDeleteTextures(1, &m_glId);
 	}
 
-	bool GLCubeMap::Load(CubeMap* data, GLint wrapFlag, bool mipMapping)
+	bool GLCubeMap::Load(CubeMapAsset* data, GLint wrapFlag, bool mipMapping)
 	{
 		glGenTextures(1, &m_glId);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_glId);

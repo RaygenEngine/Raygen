@@ -107,15 +107,15 @@ void Editor::UpdateEditor()
 
 
 	static std::string model;
-	ImGui::InputText("Model to load:", &model);
+	ImGui::InputText("ModelAsset to load:", &model);
 	ImGui::SameLine();
 	if (ImGui::Button("Create Asset"))
 	{
 		auto added =  Engine::GetWorld()->LoadNode<TriangleModelGeometryNode>(Engine::GetWorld()->GetRoot());
 		
 		auto path = Engine::GetAssetManager()->m_pathSystem.SearchAsset(model);
-		auto asset = Engine::GetAssetManager()->MaybeGenerateAsset<Model>(path / "model");
-		GetReflector(added).GetPropertyByName("model")->GetRef<Model*>() = asset;
+		auto asset = Engine::GetAssetManager()->MaybeGenerateAsset<ModelAsset>(path / "model");
+		GetReflector(added).GetPropertyByName("model")->GetRef<ModelAsset*>() = asset;
 		Engine::GetAssetManager()->Load(asset);
 		
 		Event::OnWorldNodeAdded.Broadcast(added);

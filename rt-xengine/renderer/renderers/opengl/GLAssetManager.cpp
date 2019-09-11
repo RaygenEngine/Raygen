@@ -8,26 +8,26 @@
 
 namespace OpenGL
 {
-	std::shared_ptr<GLCubeMap> GLAssetManager::RequestGLCubeMap(CubeMap* cubeMap, GLint wrapFlag,
+	std::shared_ptr<GLCubeMap> GLAssetManager::RequestGLCubeMap(CubeMapAsset* cubeMap, GLint wrapFlag,
 		bool mipMapping)
 	{
 		return CachingAux::LoadAssetAtMultiKeyCache<GLCubeMap>(m_glCubeMaps, {}, cubeMap, wrapFlag, mipMapping);
 	}
 
-	std::shared_ptr<GLTexture> GLAssetManager::RequestGLTexture(Texture* texture, GLint minFilter,
+	std::shared_ptr<GLTexture> GLAssetManager::RequestGLTexture(TextureAsset* texture, GLint minFilter,
 		GLint magFilter, GLint wrapS, GLint wrapT, GLint wrapR)
 	{
 		return CachingAux::LoadAssetAtMultiKeyCache<GLTexture>(m_glTextures, "", texture, minFilter, magFilter, wrapS, wrapT, wrapR);
 	}
 
-	std::shared_ptr<GLShader> GLAssetManager::RequestGLShader(StringFile* vertexFile, StringFile* fragmentFile)
+	std::shared_ptr<GLShader> GLAssetManager::RequestGLShader(StringFileAsset* vertexFile, StringFileAsset* fragmentFile)
 	{
 		//const auto name = "vert> " + "frag> " + "";
 
 		return CachingAux::LoadAssetAtMultiKeyCache<GLShader>(m_glShaders, "", vertexFile, fragmentFile);
 	}
 
-	std::shared_ptr<GLModel> GLAssetManager::RequestGLModel(Model* model)
+	std::shared_ptr<GLModel> GLAssetManager::RequestGLModel(ModelAsset* model)
 	{
 		return CachingAux::LoadAssetAtMultiKeyCache<GLModel>(m_glModels, "", model);
 	}

@@ -1,10 +1,10 @@
 #include "pch.h"
 
-#include "assets/model/Model.h"
+#include "assets/model/ModelAsset.h"
 #include "assets/AssetManager.h"
 #include "system/Engine.h"
-#include "assets/model/Material.h"
-#include "assets/other/gltf/GltfFile.h"
+#include "assets/model/MaterialAsset.h"
+#include "assets/other/gltf/GltfFileAsset.h"
 #include "assets/other/gltf/GltfAux.h"
 
 #include "tinygltf/tiny_gltf.h"
@@ -151,10 +151,10 @@ namespace
 		return;
 	}
 
-	std::optional<Model::Mesh::GeometryGroup> LoadGeometryGroup(const fs::path& parentAssetPath, const tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData,
+	std::optional<ModelAsset::Mesh::GeometryGroup> LoadGeometryGroup(const fs::path& parentAssetPath, const tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData,
 		const glm::mat4& transformMat)
 	{
-		Model::Mesh::GeometryGroup geom{};
+		ModelAsset::Mesh::GeometryGroup geom{};
 
 		// mode
 		geom.mode = GltfAux::GetGeometryMode(primitiveData.mode);
@@ -225,7 +225,7 @@ namespace
 
 			const fs::path subPartPath = parentAssetPath / subAssetPath;
 
-			auto materialAsset = Engine::GetAssetManager()->MaybeGenerateAsset<Material>(subPartPath);
+			auto materialAsset = Engine::GetAssetManager()->MaybeGenerateAsset<MaterialAsset>(subPartPath);
 			if (!Engine::GetAssetManager()->Load(materialAsset))
 				return {};
 
@@ -308,9 +308,9 @@ namespace
 	}
 
 
-	std::optional<Model::Mesh> LoadMesh(const fs::path& parentAssetPath, const tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
+	std::optional<ModelAsset::Mesh> LoadMesh(const fs::path& parentAssetPath, const tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
 	{
-		Model::Mesh mesh{};
+		ModelAsset::Mesh mesh{};
 
 		mesh.geometryGroups.resize(meshData.primitives.size());
 
@@ -337,7 +337,7 @@ namespace
 	}
 }
 
-bool Model::Load()
+bool ModelAsset::Load()
 {
 	// TODO check if sub asset
 
@@ -347,7 +347,7 @@ bool Model::Load()
 	// gltf parent TODO: use a loader
 	if (parentAssetPath.extension().compare(".gltf") == 0)
 	{
-		GltfFile* gltfFile = Engine::GetAssetManager()->MaybeGenerateAsset<GltfFile>(parentAssetPath);
+		GltfFileAsset* gltfFile = Engine::GetAssetManager()->MaybeGenerateAsset<GltfFileAsset>(parentAssetPath);
 		if (!Engine::GetAssetManager()->Load(gltfFile))
 			return false;
 
@@ -439,6 +439,6 @@ bool Model::Load()
 	return true;
 }
 
-void Model::Unload()
+void ModelAsset::Unload()
 {
 }

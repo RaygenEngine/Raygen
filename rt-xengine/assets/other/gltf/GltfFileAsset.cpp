@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "assets/other/gltf/GltfFile.h"
+#include "assets/other/gltf/GltfFileAsset.h"
 
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -8,7 +8,7 @@
 #include "tinygltf/tiny_gltf.h"
 
 
-bool GltfFile::Load()
+bool GltfFileAsset::Load()
 {
 	tinygltf::TinyGLTF loader;
 	std::string err;
@@ -45,7 +45,7 @@ bool GltfFile::Load()
 	return true;
 }
 
-void GltfFile::Unload()
+void GltfFileAsset::Unload()
 {
 	delete m_gltfData;
 }

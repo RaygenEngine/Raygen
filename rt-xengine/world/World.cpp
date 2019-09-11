@@ -74,7 +74,7 @@ Node* World::GetNodeById(uint32 id) const
 	return nullptr;
 }
 
-bool World::LoadAndPrepareWorldFromXML(XMLDoc* sceneXML)
+bool World::LoadAndPrepareWorldFromXML(XMLDocAsset* sceneXML)
 {
 	if (!sceneXML)
 	{

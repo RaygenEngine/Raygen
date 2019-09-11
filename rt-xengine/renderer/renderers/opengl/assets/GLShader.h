@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/renderers/opengl/GLAsset.h"
-#include "assets/other/utf8/StringFile.h"
+#include "assets/other/utf8/StringFileAsset.h"
 
 #include "GLAD/glad.h"
 
@@ -20,7 +20,7 @@ namespace OpenGL
 			  m_glId(0) {}
 		~GLShader();
 
-		bool Load(StringFile* vertexSource, StringFile* fragmentSource);
+		bool Load(StringFileAsset* vertexSource, StringFileAsset* fragmentSource);
 
 		GLuint GetGLHandle() const { return m_glId; }
 

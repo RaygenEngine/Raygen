@@ -1,11 +1,11 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "assets/texture/CubeMap.h"
+#include "assets/texture/CubeMapAsset.h"
 
 class SkyCubeNode : public Node
 {
-	CubeMap* m_cubeMap;
+	CubeMapAsset* m_cubeMap;
 
 public:
 	SkyCubeNode(Node* parent)
@@ -15,7 +15,7 @@ public:
 
 	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 
-	CubeMap* GetSkyMap() const { return m_cubeMap; }
+	CubeMapAsset* GetSkyMap() const { return m_cubeMap; }
 
 protected:
 	std::string ToString(bool verbose, uint depth) const override;

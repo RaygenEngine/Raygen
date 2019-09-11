@@ -1,11 +1,11 @@
 #pragma once
 
 #include "assets/Asset.h"
-#include "assets/texture/Texture.h"
+#include "assets/texture/TextureAsset.h"
 
-// Note: assets of this class (Textures) are not cached directly as they are part of a cached Model anyway
+// Note: assets of this class (Textures) are not cached directly as they are part of a cached ModelAsset anyway
 // glTF-based material (not all extensions included) (comments in this file -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0)
-class Material : public Asset
+class MaterialAsset : public Asset
 {
 	// The value for each property(baseColor, metallic, roughness) can be defined using factors or textures.
 
@@ -19,17 +19,17 @@ class Material : public Asset
 	// In this model it is not possible to specify a F0 value for non-metals, and a linear value of 4% (0.04) is used.
 	// The baseColorTexture uses the sRGB transfer function and must be converted to linear space before it is used for any computations.
 	// R-red, G-green, B-blue, A-alpha
-	Texture* m_baseColorTexture;
+	TextureAsset* m_baseColorTexture;
 	int32 m_baseColorTexCoordIndex;
 	// The metallic and roughness properties are packed together in a single texture called metallicRoughnessTexture.
 	// R-occlusion, G-roughness, B-metal, A-empty
-	Texture* m_occlusionMetallicRoughnessTexture;
+	TextureAsset* m_occlusionMetallicRoughnessTexture;
 	int32 m_occlusionMetallicRoughnessTexCoordIndex;
 	// A tangent space normal map
-	Texture* m_normalTexture;
+	TextureAsset* m_normalTexture;
 	int32 m_normalTexCoordIndex;
 	// The emissive map controls the color and intensity of the light being emitted by the material.
-	Texture* m_emissiveTexture;
+	TextureAsset* m_emissiveTexture;
 	int32 m_emissiveTexCoordIndex;
 
 	// Factor values act as linear multipliers for the corresponding texture values.
@@ -55,7 +55,7 @@ class Material : public Asset
 
 public:
 	
-	Material(const fs::path& path)
+	MaterialAsset(const fs::path& path)
 		: Asset(path),
 		  m_baseColorTexture(nullptr),
 	      m_baseColorTexCoordIndex(0),
@@ -78,10 +78,10 @@ public:
 	}
 
 
-	Texture* GetBaseColorTexture() const { return m_baseColorTexture; }
-	Texture* GetOcclusionMetallicRoughnessTexture() const { return m_occlusionMetallicRoughnessTexture; }
-	Texture* GetNormalTexture() const { return m_normalTexture; }
-	Texture* GetEmissiveTexture() const { return m_emissiveTexture; }
+	TextureAsset* GetBaseColorTexture() const { return m_baseColorTexture; }
+	TextureAsset* GetOcclusionMetallicRoughnessTexture() const { return m_occlusionMetallicRoughnessTexture; }
+	TextureAsset* GetNormalTexture() const { return m_normalTexture; }
+	TextureAsset* GetEmissiveTexture() const { return m_emissiveTexture; }
 
 	int32 GetBaseColorTexCoordIndex() const { return m_baseColorTexCoordIndex; }
 	int32 GetOcclusionMetallicRoughnessTexCoordIndex() const { return m_occlusionMetallicRoughnessTexCoordIndex; }

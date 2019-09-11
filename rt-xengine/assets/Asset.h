@@ -17,6 +17,7 @@ protected:
 	{
 		assert(!uri.string().empty());
 	}
+	virtual ~Asset() = default;
 
 	fs::path m_uri;
 	bool m_isLoaded{ false };

@@ -1,11 +1,11 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "assets/texture/Texture.h"
+#include "assets/texture/TextureAsset.h"
 
 class SkyHDRNode : public Node
 {
-	Texture* m_hdrTexture;
+	TextureAsset* m_hdrTexture;
 
 public:
 	SkyHDRNode(Node* parent);
@@ -13,7 +13,7 @@ public:
 		
 	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 
-	Texture* GetSkyHDR() const { return m_hdrTexture; }
+	TextureAsset* GetSkyHDR() const { return m_hdrTexture; }
 
 protected:
 	std::string ToString(bool verbose, uint depth) const override;

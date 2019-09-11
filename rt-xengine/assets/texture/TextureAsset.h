@@ -2,7 +2,7 @@
 
 #include "assets/Asset.h"
 
-class Texture : public Asset
+class TextureAsset : public Asset
 {
 	int32 m_width;
 	int32 m_height;
@@ -25,7 +25,7 @@ class Texture : public Asset
 
 
 public:
-	Texture(const fs::path& path)
+	TextureAsset(const fs::path& path)
 		: Asset(path),
 		  m_data(nullptr),
 		  m_minFilter(TextureFiltering::LINEAR),

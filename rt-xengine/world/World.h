@@ -7,7 +7,7 @@
 #include "nodes/light/LightNode.h"
 #include "nodes/camera/CameraNode.h"
 #include "nodes/user/UserNode.h"
-#include "assets/other/xml/XMLDoc.h"
+#include "assets/other/xml/XMLDocAsset.h"
 #include "system/EngineComponent.h"
 #include "assets/AssetManager.h"
 #include "system/Input.h"
@@ -186,7 +186,7 @@ public:
 	void Update();
 	//void WindowResize(int32 width, int32 height) override;
 
-	bool LoadAndPrepareWorldFromXML(XMLDoc* sceneXML);
+	bool LoadAndPrepareWorldFromXML(XMLDocAsset* sceneXML);
 
 	NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
 };

@@ -3,12 +3,12 @@
 #include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/GLUtil.h"
 #include "renderer/renderers/opengl/GLRendererBase.h"
-#include "assets/model/Material.h"
+#include "assets/model/MaterialAsset.h"
 #include "system/Engine.h"
 
 namespace OpenGL
 {
-	GLModel::GLMaterial GLModel::LoadGLMaterial(const Material& data)
+	GLModel::GLMaterial GLModel::LoadGLMaterial(const MaterialAsset& data)
 	{
 		GLMaterial glMaterial;
 
@@ -23,7 +23,7 @@ namespace OpenGL
 		glMaterial.alphaCutoff = data.GetAlphaCutoff();
 		glMaterial.doubleSided = data.IsDoubleSided();
 
-		const auto LoadTextureFromSampler = [&](auto& texture, Texture* cpuText)
+		const auto LoadTextureFromSampler = [&](auto& texture, TextureAsset* cpuText)
 		{
 			if (cpuText)
 				texture = GetGLAssetManager(this)->RequestGLTexture(cpuText, GetGLFiltering(cpuText->GetMinFilter()),
@@ -38,7 +38,7 @@ namespace OpenGL
 		return glMaterial;
 	}
 
-	GLModel::GLMesh GLModel::LoadGLMesh(const Model::Mesh::GeometryGroup& data, GLenum usage)
+	GLModel::GLMesh GLModel::LoadGLMesh(const ModelAsset::Mesh::GeometryGroup& data, GLenum usage)
 	{
 		GLMesh glMesh{};
 		
@@ -111,7 +111,7 @@ namespace OpenGL
 		}
 	}
 
-	bool GLModel::Load(Model* data)
+	bool GLModel::Load(ModelAsset* data)
 	{
 		TIMER_STATIC_SCOPE("uploading model time");
 		

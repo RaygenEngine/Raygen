@@ -3,14 +3,14 @@
 #include "assets/Asset.h"
 #include "tinyxml2/tinyxml2.h"
 
-class XMLDoc : public Asset
+class XMLDocAsset : public Asset
 {
 	tinyxml2::XMLDocument m_document;
 
 public:
-	XMLDoc(const fs::path& path)
+	XMLDocAsset(const fs::path& path)
 		: Asset(path) {}
-	~XMLDoc() = default;
+	~XMLDocAsset() = default;
 
 	const tinyxml2::XMLElement* GetRootElement() const { return m_document.RootElement(); }
 

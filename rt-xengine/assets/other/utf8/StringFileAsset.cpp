@@ -1,8 +1,8 @@
 #include "pch.h"
 
-#include "assets/other/utf8/StringFile.h"
+#include "assets/other/utf8/StringFileAsset.h"
 
-bool StringFile::Load()
+bool StringFileAsset::Load()
 {
 	std::ifstream t(m_uri);
 
@@ -20,7 +20,7 @@ bool StringFile::Load()
 	return true;
 }
 
-void StringFile::Unload()
+void StringFileAsset::Unload()
 {
 	std::string().swap(m_data);
 }

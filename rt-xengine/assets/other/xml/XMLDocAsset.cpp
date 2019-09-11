@@ -1,13 +1,13 @@
 #include "pch.h"
 
-#include "assets/other/xml/XMLDoc.h"
+#include "assets/other/xml/XMLDocAsset.h"
 
-bool XMLDoc::Load()
+bool XMLDocAsset::Load()
 {
 	return m_document.LoadFile(m_uri.string().c_str()) == tinyxml2::XML_SUCCESS;
 }
 
-void XMLDoc::Unload()
+void XMLDocAsset::Unload()
 {
 	m_document.Clear();
 }
