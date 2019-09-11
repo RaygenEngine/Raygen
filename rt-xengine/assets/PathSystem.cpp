@@ -91,7 +91,7 @@ std::string PathSystem::SearchAssetInShadersDirectories(const std::string& relat
 		auto fsPath = fs::path(path + "\\" + relativeAssetPath);
 
 		std::error_code error;
-		fsPath = fs::absolute(fsPath, error);
+		fsPath = fs::relative(fsPath, error);
 
 		if (!error && fs::exists(fsPath))
 			return fsPath.string();
@@ -109,7 +109,7 @@ std::string PathSystem::SearchAssetInScenesDirectories(const std::string& relati
 		auto fsPath = fs::path(path + "\\" + relativeAssetPath);
 
 		std::error_code error;
-		fsPath = fs::absolute(fsPath, error);
+		fsPath = fs::relative(fsPath, error);
 
 		if (!error && fs::exists(fsPath))
 			return fsPath.string();
@@ -139,7 +139,7 @@ std::string PathSystem::SearchAssetInAssetsDirectories(const std::string& relati
 		auto fsPath = fs::path(path + "\\" + relativeAssetPath);
 
 		std::error_code error;
-		fsPath = fs::absolute(fsPath, error);
+		fsPath = fs::relative(fsPath);
 
 		if (!error && fs::exists(fsPath))
 			return fsPath.string();

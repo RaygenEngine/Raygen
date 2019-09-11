@@ -28,7 +28,7 @@ namespace OpenGL
 
 	public:
 		DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
-		
+
 		GLTestRenderer()
 			: m_camera(nullptr), m_previewMode(0) 
 		{

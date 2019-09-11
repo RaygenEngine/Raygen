@@ -165,6 +165,24 @@ public:
 		return node.get();
 	}
 
+	template <typename ChildType>
+	ChildType* LoadNode(Node* parent)
+	{
+		std::shared_ptr<ChildType> node = std::shared_ptr<ChildType>(new ChildType(parent), [&](ChildType* assetPtr)
+		{
+			// custom deleter to remove node from world when it is deleted
+			this->RemoveNode(assetPtr);
+			delete assetPtr;
+		}); //
+
+		// add it to world maps
+		this->AddNode(node.get());
+		parent->AddChild(node);
+		// return observer
+		return node.get();
+	}
+
+
 	void Update();
 	//void WindowResize(int32 width, int32 height) override;
 

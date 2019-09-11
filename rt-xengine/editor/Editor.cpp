@@ -10,6 +10,8 @@
 #include "platform/windows/Win32Window.h"
 #include "system/EngineEvents.h"
 
+#include <filesystem>
+
 namespace {
 template<typename Lambda>
 void RecurseNodes(Node* root, Lambda f, int32 depth = 0)
@@ -90,6 +92,7 @@ void Editor::UpdateEditor()
 	sfb.Display();
 	lfb.Display();
 
+
 	if (sfb.HasSelected())
 	{
 		SaveScene(sfb.GetSelected().string());
@@ -103,6 +106,21 @@ void Editor::UpdateEditor()
 	}
 
 
+	static std::string model;
+	ImGui::InputText("Model to load:", &model);
+	ImGui::SameLine();
+	if (ImGui::Button("Create Asset"))
+	{
+		auto added =  Engine::GetWorld()->LoadNode<TriangleModelGeometryNode>(Engine::GetWorld()->GetRoot());
+		
+		auto path = Engine::GetAssetManager()->m_pathSystem.SearchAsset(model);
+		auto asset = Engine::GetAssetManager()->MaybeGenerateAsset<Model>(path / "model");
+		GetReflector(added).GetPropertyByName("model")->GetRef<Model*>() = asset;
+		Engine::GetAssetManager()->Load(asset);
+		
+		Event::OnWorldNodeAdded.Broadcast(added);
+	}
+
 	if (ImGui::CollapsingHeader("Outliner", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		Outliner();
@@ -114,6 +132,22 @@ void Editor::UpdateEditor()
 			PropertyEditor(m_selectedNode);
 		}
 	}
+
+
+
+	if (ImGui::CollapsingHeader("Assets"))
+	{
+		ImGui::Indent();
+		std::string text;
+		for (auto& assetPair : Engine::GetAssetManager()->m_assetMap)
+		{
+			ImGui::Text(assetPair.first.c_str());
+
+			//text += assetPair.first + "\n";
+		}
+	}
+
+
 
 	ImGui::End();
 
@@ -173,7 +207,7 @@ bool AddReflector(Reflector& reflector, int32 depth = 0)
 				std::string s = "No Asset";
 				if (ref)
 				{
-					s = ref->GetUri().relative_path().string();//.string();
+					s = fs::relative(ref->GetUri()).string();//.string();
 				}
 
 				if (ImGui::Button("Unload"))
@@ -223,6 +257,13 @@ void Editor::PropertyEditor(Node* node)
 	{
 		dirtyMatrix = true;
 	}
+
+	
+	if (ImGui::DragFloat3("AbsScale", ImUtil::FromVec3(node->m_worldScale), 0.01f))
+	{
+		dirtyMatrix = true;
+	}
+
 	ImGui::Separator();
 	bool dirty = AddReflector(node->m_reflector);
 	ImGui::EndChild();

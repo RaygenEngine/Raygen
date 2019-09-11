@@ -10,7 +10,7 @@
 class AssetManager
 {
 	std::unordered_map<std::string, Asset*> m_assetMap;
-
+	friend class Editor;
 public:
 	template<typename AssetT>
 	bool Load(AssetT* asset)

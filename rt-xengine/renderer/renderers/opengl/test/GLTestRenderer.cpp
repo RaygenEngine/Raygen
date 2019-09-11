@@ -120,7 +120,7 @@ namespace OpenGL
 				glUniform1f(m_nonInstancedShader->GetUniformLocation("alphaCutoff"), glMaterial.alphaCutoff);
 				glUniform1i(m_nonInstancedShader->GetUniformLocation("doubleSided"), glMaterial.doubleSided);
 				
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), glMaterial.baseColorTexture->GetGLBindlessHandle());
+				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), glMaterial.baseColorTexture->GetGLBindlessHandle());
 				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("occlusionMetallicRoughnessSampler"), glMaterial.occlusionMetallicRoughnessTexture->GetGLBindlessHandle());
 				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), glMaterial.emissiveTexture->GetGLBindlessHandle());
 
