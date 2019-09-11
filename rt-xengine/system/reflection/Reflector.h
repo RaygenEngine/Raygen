@@ -68,28 +68,21 @@ public:
 
 };
 
-template <typename T, typename = int>
-struct HasReflector : std::false_type { };
-
-template <typename T>
-struct HasReflector<T, decltype((void)T::m_reflector, 0)> : std::true_type { };
-
 template<typename ReflectedClass>
 Reflector& GetReflector(ReflectedClass* object)
 {
-	static_assert(HasReflector<ReflectedClass>::value,
+	static_assert(HasReflector<ReflectedClass>,
 				  "This class is not reflected."
 				  "If you are trying to setup a class for reflection use the Reflect macros"
 				  );
 
-	static_assert(std::is_same_v<decltype(object->m_reflector), Reflector>,
+	static_assert(std::is_base_of_v<Reflector, decltype(object->m_reflector)>,
 				  "This object's reflector is an incorrect type."
 				  "If you are trying to setup a class for reflection use the Reflect macros"
 				  );
 
 	return object->m_reflector;
 }
-
 
 class AssetReflector : public Reflector
 {

@@ -150,7 +150,7 @@ void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 			[&](std::string& ref) {
 			ReadStringAttribute(xmlData, str, ref);
 		},
-			[&](ReflectedAsset& ref) {
+			[&](Asset*& ref) {
 			//std::string type;
 			//ReadStringAttribute(xmlData, "type", type);
 

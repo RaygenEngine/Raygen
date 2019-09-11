@@ -17,8 +17,8 @@ namespace fs = std::filesystem;
 
 class Asset {
 public:
+	AssetReflector m_reflector;
 	[[nodiscard]] fs::path GetUri() const { return m_uri; }
-
 protected:
 	Asset(fs::path uri)
 		: m_uri(uri)
@@ -113,75 +113,28 @@ public:
 	void UnloadAssets();
 };
 
-//class TextureAsset : public Asset
-//{
-//public:
-//	TextureAsset(fs::path uri)
-//		: Asset(uri) {}
-//
-//	std::vector<byte> buffer;
-//
-//private:
-//	bool Load() override 
-//	{
-//		buffer = std::vector<byte>({ 1,2,3 });
-//	}
-//
-//	void Unload() override 
-//	{
-//		buffer.swap(std::vector<byte>());
-// 	}
-//};
-//
-//class CubemapAsset : public Asset
-//{
-//public:
-//	CubemapAsset(fs::path uri)
-//		: Asset(uri) {}
-//
-//	TextureAsset* m_sides[6];
-//
-//private:
-//	bool Load() override
-//	{
-//		fs::path without_ext = m_uri.filename();
-//
-//		for (int32 i = 0; i < 6; i++)
-//		{
-//			fs::path thisfile = without_ext;
-//
-//			thisfile += std::vector({
-//				"RIGHT",
-//				"LEFT",
-//				"UP",
-//				"DOWN",
-//				"FRONT",
-//				"BACK"
-//			})[i];
-//
-//			thisfile += m_uri.extension();
-//
-//			m_sides[i] = GetAM()->MaybeGenerateAsset<TextureAsset>(thisfile);
-//			GetAM()->Load(m_sides[i]);
-//		}
-//	}
-//
-//};
+inline AssetReflector& GetReflector(Asset* object)
+{
+	return object->m_reflector;
+}
 
-#include <iostream>
 class BackgroundColorAsset : public Asset
 {
 public:
 	BackgroundColorAsset(fs::path uri)
-		: Asset(uri) {}
+		: Asset(uri) 
+	{
+		REFLECT_VAR(m_color, PropertyFlags::Color);
+		REFLECT_VAR(m_self);
+	}
 	glm::vec3 m_color;
+	BackgroundColorAsset* m_self;
 
 private:
 	bool Load() override 
 	{
-		//std::cout << "Give x, y, z:" << std::endl;
-		//std::cin >> m_color.x >> m_color.y >> m_color.z;
-		m_color = { 0.1, 0.2, 0.4 };
+		m_self = this;
+		m_color = { (std::rand() % 6) * 0.1f ,  (std::rand() % 6) * 0.1f, 0.4 };
 		return true;
 	}
 

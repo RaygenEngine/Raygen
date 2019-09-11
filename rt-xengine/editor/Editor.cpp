@@ -138,9 +138,10 @@ void Editor::Outliner()
 
 namespace
 {
-bool AddReflector(Reflector& reflector)
+bool AddReflector(Reflector& reflector, int32 depth = 0)
 {
 	bool dirty = false;
+
 	for (auto& prop : reflector.GetProperties())
 	{
 		auto str = prop.GetName().c_str();
@@ -165,25 +166,36 @@ bool AddReflector(Reflector& reflector)
 		[&str](std::string& ref) {
 			return ImGui::InputText(str, &ref);
 		},
-		[&str](ReflectedAsset& ref) {
-			std::string s = "No Asset";
-			if (ref) 
+		[&str, depth](Asset*& ref) {
+			if (ImGui::CollapsingHeader((std::string(str) + "##" + std::to_string(depth)).c_str()))
 			{
-				s = ref->GetUri().string();
-			}
-			
-			if (ImGui::Button("Unload"))
-			{
-				Engine::GetAssetManager()->Unload(ref);
-			}
-			ImGui::SameLine();
+				ImGui::Indent();
+				std::string s = "No Asset";
+				if (ref)
+				{
+					s = ref->GetUri().string();
+				}
 
-			if (ImGui::Button("Reload"))
-			{
-				Engine::GetAssetManager()->Load(ref);
+				if (ImGui::Button("Unload"))
+				{
+					Engine::GetAssetManager()->Unload(ref);
+				}
+				ImGui::SameLine();
+
+				if (ImGui::Button("Reload"))
+				{
+					Engine::GetAssetManager()->Load(ref);
+				}
+				ImGui::SameLine();
+				ImGui::InputText("", &s);
+
+				if (ref)
+				{
+					ImGui::Indent();
+					AddReflector(GetReflector(ref), depth + 1);
+				}
 			}
-			ImGui::SameLine();
-			return ImGui::InputText(str, &s);
+			return true;
 		});
 	}
 	return dirty;
@@ -267,7 +279,7 @@ namespace
 					[&](std::string& v) {
 					xmlElem->SetAttribute(p.GetName().c_str(), v.c_str());
 				},
-					[&](auto& v) {
+					[&](Asset*& v) {
 					if (v)
 					{
 						std::string assetFile;

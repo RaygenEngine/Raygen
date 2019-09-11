@@ -28,7 +28,6 @@ namespace PropertyFlags
 	}
 }
 
-
 // a generic property that can be of any type.
 struct Property
 {
@@ -63,7 +62,7 @@ public:
 	template<typename As>
 	As& GetRef()
 	{
-		static_assert(IsReflected<As>,
+		static_assert(IsReflected<As> && !std::is_base_of_v<Reflector, As>,
 					  "This type is not supported for reflection and the conversion will always fail.");
 
 		assert(IsA<As>());
@@ -73,7 +72,7 @@ public:
 	template<typename Type>
 	static Property MakeProperty(Type& variable,const std::string& name)
 	{
-		//static_assert(IsReflected<Type>, "This type is not supported for reflection.");
+		static_assert(IsReflected<Type>, "This type is not supported for reflection.");
 
 		Property created;
 		created.m_type = ReflectionFromType<Type>;
@@ -84,8 +83,8 @@ public:
 	}
 
 	// Calls one depending on the type of the property. Forwards a type& as a single lambda param. (eg: int& PropValue)
-	template<typename IntF, typename BoolF, typename FloatF, typename Vec3F, typename StringF, typename AssetF>
-	auto SwitchOnType(IntF Int, BoolF Bool, FloatF Float, Vec3F Vec3, StringF String, AssetF Asset) -> return_type_t<IntF>
+	template<typename IntF, typename BoolF, typename FloatF, typename Vec3F, typename StringF, typename AssetPtrF>
+	auto SwitchOnType(IntF Int, BoolF Bool, FloatF Float, Vec3F Vec3, StringF String, AssetPtrF assetPtr) -> return_type_t<IntF>
 	{
 		switch (m_type)
 		{
@@ -104,12 +103,13 @@ public:
 		case PropertyType::String:
 			return String(GetRef<std::string>());
 			break;
-		case PropertyType::Asset:
-			return Asset(GetRef<ReflectedAsset>());
+		case PropertyType::AssetPtr:
+			return assetPtr(GetRef<Asset*>());
 			break;
 		}
 
-		if constexpr (!std::is_void_v<return_type_t<IntF>>) {
+		if constexpr (!std::is_void_v<return_type_t<IntF>>) 
+		{
 			return {};
 		}
 	}
@@ -142,22 +142,3 @@ public:
 		return ((m_flags & flags) == flags);
 	}
 };
-
-
-namespace DirtyFlags
-{
-constexpr uint32 NoEdit =    (1 << 2)  ;
-constexpr uint32 Color =     (1 << 3) ;
-constexpr uint32 Multiline = (1 << 4) ;
-
-
-}
-
-namespace ColorFlags
-{
-constexpr uint32 NoEdit = (1 << 2);
-constexpr uint32 Color = (1 << 3);
-constexpr uint32 Multiline = (1 << 4);
-
-
-}

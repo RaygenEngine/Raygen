@@ -1,5 +1,4 @@
-#ifndef REFLECTION_H
-#define REFLECTION_H
+#pragma once
 
 // Basic reflection system based on "concepts" and template stuff
 // 
@@ -14,9 +13,8 @@
 #include "core/auxiliary/MetaTemplates.h"
 #include <type_traits>
 
-class BackgroundColorAsset;
 
-using ReflectedAsset = BackgroundColorAsset*;
+class Reflector;
 
 // A reflection system that uses offsetof would be better but for simplicity we just initialize the reflector
 // for every instance of the objects we want to reflect. Therefore we can save pointers directly.
@@ -30,7 +28,7 @@ enum class PropertyType
 	Float,
 	Vec3,
 	String,
-	Asset,
+	AssetPtr,
 };
 
 static std::vector<std::string> PropertyTypeName = {
@@ -40,47 +38,48 @@ static std::vector<std::string> PropertyTypeName = {
 	"Float",
 	"Vec3",
 	"String",
-	"Asset"
+	"AssetPtr"
 };
+
+class AssetReflector;
+class Asset;
+
+template<typename T>
+constexpr bool HasReflector = std::is_base_of_v<Reflector, decltype(T::m_reflector)>;
+
+template<typename T>
+constexpr bool HasAssetReflector = std::is_base_of_v<AssetReflector, decltype(T::m_reflector)>;
 
 // IsReflected to compile time check if a type can be reflected.
 template<typename Type> 
-constexpr bool IsReflected = false;
+constexpr bool IsReflected = HasAssetReflector<std::remove_pointer_t<Type>>;
 template<> constexpr bool IsReflected<int32> = true;
 template<> constexpr bool IsReflected<bool> = true;
 template<> constexpr bool IsReflected<float> = true;
 template<> constexpr bool IsReflected<glm::vec3> = true;
 template<> constexpr bool IsReflected<std::string> = true;
-template<> constexpr bool IsReflected<ReflectedAsset> = true;
+template<> constexpr bool IsReflected<Asset*> = true;
+
 
 template<typename Type>
-constexpr PropertyType ReflectionFromType = PropertyType::NONE;
+constexpr PropertyType ReflectionFromType = HasAssetReflector<std::remove_pointer_t<Type>> ? PropertyType::AssetPtr : PropertyType::NONE;
 template<> PropertyType ReflectionFromType<int32> = PropertyType::Int;
 template<> PropertyType ReflectionFromType<bool> = PropertyType::Bool;
 template<> PropertyType ReflectionFromType<float> = PropertyType::Float;
 template<> PropertyType ReflectionFromType<glm::vec3> = PropertyType::Vec3;
 template<> PropertyType ReflectionFromType<std::string> = PropertyType::String;
-template<> PropertyType ReflectionFromType<ReflectedAsset> = PropertyType::Asset;
+template<> PropertyType ReflectionFromType<Asset*> = PropertyType::AssetPtr;
 
-template<PropertyType Type>
-struct TypeFromReflection { static_assert("Expected a value of the enum PropertyType."); };
-template<> struct TypeFromReflection<PropertyType::Int> { using type = int32; };
-template<> struct TypeFromReflection<PropertyType::Bool> { using type = bool; };
-template<> struct TypeFromReflection<PropertyType::Float> { using type = float; };
-template<> struct TypeFromReflection<PropertyType::Vec3> { using type = glm::vec3; };
-template<> struct TypeFromReflection<PropertyType::String> { using type = std::string; };
-template<> struct TypeFromReflection<PropertyType::Asset> { using type = ReflectedAsset; };
+//template<PropertyType Type>
+//struct TypeFromReflection { static_assert("Expected a value of the enum PropertyType."); };
+//template<> struct TypeFromReflection<PropertyType::Int> { using type = int32; };
+//template<> struct TypeFromReflection<PropertyType::Bool> { using type = bool; };
+//template<> struct TypeFromReflection<PropertyType::Float> { using type = float; };
+//template<> struct TypeFromReflection<PropertyType::Vec3> { using type = glm::vec3; };
+//template<> struct TypeFromReflection<PropertyType::String> { using type = std::string; };
+//template<> struct TypeFromReflection<PropertyType::ReflectorOwner> { using type = Reflector; };
 
-//#include "system/reflection/Property.h"
-//#include "system/reflection/Reflector.h"
 
-//// ALWAYS expected right at the beginning of a class declaration body
-//#define REFLECT(Class)	public: \
-//Reflector m_reflector = {#Class};  \
-//private:						  // Restore private specifier.
 
 // ALWAYS expected to run in member function
 #define REFLECT_VAR(Variable, ...) GetReflector(this).AutoAddProperty(#Variable, Variable).InitFlags(PropertyFlags::Pack(__VA_ARGS__));
-
-
-#endif // REFLECTION_H
