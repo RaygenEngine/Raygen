@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "renderer/renderers/opengl/assets/GLShader.h"
+#include "assets/AssetManager.h"
 
 namespace OpenGL
 {
@@ -8,9 +9,15 @@ namespace OpenGL
 	{
 		glDeleteProgram(m_glId);
 	}
-
-	bool GLShader::Load(StringFileAsset* vertexSource, StringFileAsset* fragmentSource)
+	
+	bool GLShader::Load()
 	{
+		if (!Engine::GetAssetManager()->Load(m_sources))
+			return false;
+
+		const auto vertexSource = m_sources->GetFileData().at(".vert");
+		const auto fragmentSource = m_sources->GetFileData().at(".frag");
+		
 		GLint Result = GL_FALSE;
 		int32 infoLogLength;
 
@@ -77,6 +84,11 @@ namespace OpenGL
 		glDeleteShader(FragmentShaderID);
 
 		return true;
+	}
+
+	void GLShader::Unload()
+	{
+		glDeleteProgram(m_glId);
 	}
 
 	void GLShader::SetUniformLocation(const std::string& name)

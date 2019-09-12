@@ -10,7 +10,8 @@ class SkyCubeNode : public Node
 public:
 	SkyCubeNode(Node* parent)
 		: Node(parent),
-		m_cubeMap(nullptr) {}
+	      m_cubeMap(nullptr) {}
+
 	~SkyCubeNode() = default;
 
 	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;

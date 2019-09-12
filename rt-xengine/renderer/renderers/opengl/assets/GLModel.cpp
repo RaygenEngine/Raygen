@@ -2,52 +2,22 @@
 
 #include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/GLUtil.h"
-#include "renderer/renderers/opengl/GLRendererBase.h"
-#include "assets/model/MaterialAsset.h"
 #include "system/Engine.h"
+#include "assets/AssetManager.h"
 
 namespace OpenGL
 {
-	GLModel::GLMaterial GLModel::LoadGLMaterial(const MaterialAsset& data)
-	{
-		GLMaterial glMaterial;
 
-		// TODO: should I better keep a material ref instead of copy (also important for editor updates)
-		glMaterial.baseColorFactor = data.GetBaseColorFactor();
-		glMaterial.emissiveFactor = data.GetEmissiveFactor();
-		glMaterial.metallicFactor = data.GetMetallicFactor();
-		glMaterial.roughnessFactor = data.GetRoughnessFactor();
-		glMaterial.normalScale = data.GetNormalScale();
-		glMaterial.occlusionStrength = data.GetOcclusionStrength();
-		glMaterial.alphaMode = data.GetAlphaMode();
-		glMaterial.alphaCutoff = data.GetAlphaCutoff();
-		glMaterial.doubleSided = data.IsDoubleSided();
-
-		const auto LoadTextureFromSampler = [&](auto& texture, TextureAsset* cpuText)
-		{
-			if (cpuText)
-				texture = GetGLAssetManager(this)->RequestGLTexture(cpuText, GetGLFiltering(cpuText->GetMinFilter()),
-					GetGLFiltering(cpuText->GetMagFilter()), GetGLWrapping(cpuText->GetWrapS()), GetGLWrapping(cpuText->GetWrapT()), GetGLWrapping(cpuText->GetWrapR()));
-		};
-
-		LoadTextureFromSampler(glMaterial.baseColorTexture, data.GetBaseColorTexture());
-		LoadTextureFromSampler(glMaterial.occlusionMetallicRoughnessTexture, data.GetOcclusionMetallicRoughnessTexture());
-		LoadTextureFromSampler(glMaterial.normalTexture, data.GetNormalTexture());
-		LoadTextureFromSampler(glMaterial.emissiveTexture, data.GetEmissiveTexture());
-
-		return glMaterial;
-	}
-
-	GLModel::GLMesh GLModel::LoadGLMesh(const ModelAsset::Mesh::GeometryGroup& data, GLenum usage)
+	std::optional<GLModel::GLMesh> GLModel::LoadGLMesh(const ModelAsset::Mesh::GeometryGroup& data, GLenum usage)
 	{
 		GLMesh glMesh{};
-		
+
 		glMesh.geometryMode = GetGLGeometryMode(data.mode);
 
 		glGenVertexArrays(1, &glMesh.vao);
 		glBindVertexArray(glMesh.vao);
 
-		auto CreateUploadBuffer = [](GLuint& bufferId, auto& data, GLenum usage)
+		const auto CreateUploadBuffer = [](GLuint& bufferId, auto& data, GLenum usage)
 		{
 			glGenBuffers(1, &bufferId);
 			glBindBuffer(GL_ARRAY_BUFFER, bufferId);
@@ -86,8 +56,12 @@ namespace OpenGL
 
 		glMesh.count = data.indices.size();
 
-		glMesh.material = LoadGLMaterial(*data.material);
-
+		if (!Engine::GetAssetManager()->Load(data.material))
+			return {};
+		glMesh.material = GetGLAssetManager(this)->MaybeGenerateAsset<GLMaterial>(data.material);
+		if (!GetGLAssetManager(this)->Load(glMesh.material))
+			return {};
+		
 		DebugBoundVAO("name");
 
 		glBindVertexArray(0);
@@ -111,21 +85,44 @@ namespace OpenGL
 		}
 	}
 
-	bool GLModel::Load(ModelAsset* data)
+	bool GLModel::Load()
 	{
-		TIMER_STATIC_SCOPE("uploading model time");
+		if (!Engine::GetAssetManager()->Load(m_model))
+			return false;
 		
+		TIMER_STATIC_SCOPE("uploading model time");
+
 		//m_usage = GetGLUsage(data->GetUsage());
 		m_usage = GL_STATIC_DRAW;
-		
-		for (auto& mesh : data->GetMeshes())
+
+		for (auto& mesh : m_model->GetMeshes())
 		{
 			for (auto& geometryGroup : mesh.geometryGroups)
 			{
-				m_meshes.emplace_back(LoadGLMesh(geometryGroup, m_usage));
+				auto glMesh = LoadGLMesh(geometryGroup, m_usage);
+				if (!glMesh)
+					return false;
+				
+				m_meshes.emplace_back(glMesh.value());
 			}
 		}
-	
+
 		return true;
+	}
+
+	void GLModel::Unload()
+	{
+		for (auto& mesh : m_meshes)
+		{
+			glDeleteBuffers(1, &mesh.positionsVBO);
+			glDeleteBuffers(1, &mesh.normalsVBO);
+			glDeleteBuffers(1, &mesh.tangentsVBO);
+			glDeleteBuffers(1, &mesh.bitangentsVBO);
+			glDeleteBuffers(1, &mesh.textCoords0VBO);
+			glDeleteBuffers(1, &mesh.textCoords1VBO);
+			glDeleteBuffers(1, &mesh.ebo);
+
+			glDeleteVertexArrays(1, &mesh.vao);
+		}
 	}
 }

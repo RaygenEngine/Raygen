@@ -3,12 +3,13 @@
 #include "renderer/NodeObserver.h"
 #include "renderer/renderers/opengl/test/GLTestRenderer.h"
 #include "world/nodes/geometry/TriangleModelGeometryNode.h"
+#include "renderer/renderers/opengl/assets/GLModel.h"
 
 namespace OpenGL
 {
 	struct GLTestGeometry : public NodeObserver<GLTestRenderer, TriangleModelGeometryNode>
 	{
-		std::shared_ptr<GLModel> glModel;
+		GLModel* glModel;
 
 		GLTestGeometry(GLTestRenderer* renderer, TriangleModelGeometryNode* node);
 		~GLTestGeometry() = default;

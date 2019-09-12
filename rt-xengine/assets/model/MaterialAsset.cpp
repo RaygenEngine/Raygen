@@ -12,20 +12,19 @@ bool MaterialAsset::Load()
 {
 	// TODO check if sub asset
 
-
 	// if sub asset
 	const auto parentAssetPath = m_uri.parent_path();
 
 	// gltf parent TODO: use a loader
 	if (parentAssetPath.extension().compare(".gltf") == 0)
 	{
-		GltfFileAsset* gltfFile = Engine::GetAssetManager()->MaybeGenerateAsset<GltfFileAsset>(parentAssetPath);
+		GltfFileAsset* gltfFile = Engine::GetAssetManager()->RequestAsset<GltfFileAsset>(parentAssetPath);
 		if (!Engine::GetAssetManager()->Load(gltfFile))
 			return false;
 
 		auto gltfData = gltfFile->GetGltfData();
-		const auto thisPath = m_uri.filename();
-		const auto index = std::stoi(thisPath);
+		const auto ext = m_uri.extension();
+		const auto index = std::stoi(&ext.string()[1]);
 
 		auto& materialData = gltfData->materials.at(index);
 
@@ -49,19 +48,19 @@ bool MaterialAsset::Load()
 		m_doubleSided = materialData.doubleSided;
 
 
-		auto LoadTexture = [&](auto textureInfo, TextureAsset*& texture, int32& textCoordIndex)
+		auto LoadTexture = [&](auto textureInfo, TextureAsset*& texture, int32& textCoordIndex, bool useDefaultIfMissing = true)
 		{
 			if (textureInfo.index != -1)
 			{
 				auto& gltfTexture = gltfData->textures.at(textureInfo.index);
 				
-				fs::path subAssetPath = std::to_string(textureInfo.index) + ".";
+				fs::path subAssetPath = fs::path("texture" + (!gltfTexture.name.empty() ? "_" + gltfTexture.name : "")); 
 
-				subAssetPath += fs::path("texture_" + gltfTexture.name);
+				subAssetPath += "." + std::to_string(textureInfo.index);
 
 				fs::path subPartPath = parentAssetPath / subAssetPath;
 
-				auto textureAsset = Engine::GetAssetManager()->MaybeGenerateAsset<TextureAsset>(subPartPath);
+				auto textureAsset = Engine::GetAssetManager()->RequestAsset<TextureAsset>(subPartPath);
 				if (!Engine::GetAssetManager()->Load(textureAsset))
 					return false;
 
@@ -69,7 +68,11 @@ bool MaterialAsset::Load()
 
 				textCoordIndex = textureInfo.texCoord;
 			}
-			// TODO: else default
+			else if(useDefaultIfMissing)
+			{
+				texture = Engine::GetAssetManager()->RequestAsset<TextureAsset>(__default__textureWhite);
+			}
+			
 			return true;
 		};
 		
@@ -81,7 +84,7 @@ bool MaterialAsset::Load()
 		LoadTexture(emissiveTextureInfo, m_emissiveTexture, m_emissiveTexCoordIndex);
 
 		auto& normalTextureInfo = materialData.normalTexture;
-		LoadTexture(normalTextureInfo, m_normalTexture, m_normalTexCoordIndex);
+		LoadTexture(normalTextureInfo, m_normalTexture, m_normalTexCoordIndex, false);
 
 		// TODO: pack if different
 		auto& metallicRougnessTextureInfo = materialData.pbrMetallicRoughness.metallicRoughnessTexture;

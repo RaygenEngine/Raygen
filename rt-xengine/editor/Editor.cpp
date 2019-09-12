@@ -113,8 +113,8 @@ void Editor::UpdateEditor()
 	{
 		auto added =  Engine::GetWorld()->LoadNode<TriangleModelGeometryNode>(Engine::GetWorld()->GetRoot());
 		
-		auto path = Engine::GetAssetManager()->m_pathSystem.SearchAsset(model);
-		auto asset = Engine::GetAssetManager()->MaybeGenerateAsset<ModelAsset>(path / "model");
+		auto path = Engine::GetAssetManager()->m_pathSystem.SearchAssetPath(model);
+		auto asset = Engine::GetAssetManager()->RequestAsset<ModelAsset>(path / "model");
 		GetReflector(added).GetPropertyByName("model")->GetRef<ModelAsset*>() = asset;
 		Engine::GetAssetManager()->Load(asset);
 		

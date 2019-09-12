@@ -1,34 +1,57 @@
 #pragma once
 
-#include "GLAD/glad.h"
-#include "assets/texture/CubeMapAsset.h"
-#include "assets/other/utf8/StringFileAsset.h"
-#include "assets/model/ModelAsset.h"
-#include "assets/CachingAux.h"
+#include "assets/Asset.h"
 
 namespace OpenGL
 {
-	class GLCubeMap;
-	class GLTexture;
-	class GLShader; 
-	class GLModel;
-		
+	class GLAsset;
+	
 	class GLAssetManager
-	{
-		CachingAux::MultiKeyAssetCache<GLCubeMap, CubeMapAsset*, GLint, bool> m_glCubeMaps;
-		CachingAux::MultiKeyAssetCache<GLTexture, TextureAsset*, GLint, GLint, GLint, GLint, GLint> m_glTextures;
-		CachingAux::MultiKeyAssetCache<GLShader, StringFileAsset*, StringFileAsset*> m_glShaders;
-		CachingAux::MultiKeyAssetCache<GLModel, ModelAsset*> m_glModels;
-		//Assets::MultiKeyAssetCache<GLInstancedModel, Assets::ModelAsset*, World::TriangleModelInstancedGeometryNode*> m_glInstancedModels;
+	{		
+		std::unordered_map<Asset*, GLAsset*> m_assetMap;
 
 	public:
-		std::shared_ptr<GLCubeMap> RequestGLCubeMap(CubeMapAsset* cubeMap, GLint wrapFlag = GL_REPEAT, bool mipMapping = false);
-		std::shared_ptr<GLTexture> RequestGLTexture(TextureAsset* texture, GLint minFilter = GL_LINEAR, GLint magFilter = GL_LINEAR, GLint wrapS = GL_REPEAT, GLint wrapT = GL_REPEAT, GLint wrapR = GL_REPEAT);
-		std::shared_ptr<GLShader> RequestGLShader(StringFileAsset* vertexFile, StringFileAsset* fragmentFile);
-		std::shared_ptr<GLModel> RequestGLModel(ModelAsset* model);
-		// TODO: fix this one
-		//std::shared_ptr<GLInstancedModel> RequestGLInstancedModel(World::TriangleModelInstancedGeometryNode* nodeInstancer);
-		//
+
+		template<typename AssetT>
+		bool Load(AssetT* asset)
+		{
+			assert(asset);
+			assert(m_assetMap.find(asset->m_asset) != m_assetMap.end());
+
+			if (asset->m_isLoaded)
+			{
+				return true;
+			}
+
+			if (asset->FriendLoad())
+			{
+				asset->m_isLoaded = true;
+			}
+			return asset->m_isLoaded;
+		}
+
+		// If this returns null, an asset of a different type already exists at this key asset
+		template<typename AssetT, typename AssetK>
+		AssetT* MaybeGenerateAsset(AssetK* keyAsset)
+		{
+			auto it = m_assetMap.find(keyAsset);
+			if (it != m_assetMap.end())
+			{
+				return dynamic_cast<AssetT*>(it->second);
+			}
+			AssetT* result = new AssetT(keyAsset);
+			m_assetMap.emplace(keyAsset, result);
+			return result;
+		}
+
+
+		// todo:
+		template<typename AssetT>
+		void Unload(AssetT* asset)
+		{
+			asset->m_isLoaded = false;
+			//assert(false);
+		}
 	};
 
 }

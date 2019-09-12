@@ -6,6 +6,9 @@
 #include "assets/PathSystem.h"
 #include "assets/Asset.h"
 
+constexpr auto __default__textureWhite = "__default__texture-white.jpg";
+constexpr auto __default__textureMissing = "__default__texture-missing.jpg";
+
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
 class AssetManager
 {
@@ -32,7 +35,7 @@ public:
 
 	// If this returns null, an asset of a different type already exists at this uri
 	template<typename AssetT>
-	AssetT* MaybeGenerateAsset(const fs::path& path)
+	AssetT* RequestAsset(const fs::path& path)
 	{
 		auto it = m_assetMap.find(path.string());
 		if (it != m_assetMap.end())

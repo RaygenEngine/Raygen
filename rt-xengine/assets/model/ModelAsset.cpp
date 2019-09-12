@@ -219,13 +219,14 @@ namespace
 		{
 			auto& mat = modelData.materials.at(materialIndex);
 
-			fs::path subAssetPath = std::to_string(materialIndex) + ".";
 
-			subAssetPath += fs::path("material_" + mat.name);
+			fs::path subAssetPath = fs::path("texture" + (!mat.name.empty() ? "_" + mat.name : ""));
 
+			subAssetPath += "." + std::to_string(materialIndex);
+			
 			const fs::path subPartPath = parentAssetPath / subAssetPath;
 
-			auto materialAsset = Engine::GetAssetManager()->MaybeGenerateAsset<MaterialAsset>(subPartPath);
+			auto materialAsset = Engine::GetAssetManager()->RequestAsset<MaterialAsset>(subPartPath);
 			if (!Engine::GetAssetManager()->Load(materialAsset))
 				return {};
 
@@ -347,7 +348,7 @@ bool ModelAsset::Load()
 	// gltf parent TODO: use a loader
 	if (parentAssetPath.extension().compare(".gltf") == 0)
 	{
-		GltfFileAsset* gltfFile = Engine::GetAssetManager()->MaybeGenerateAsset<GltfFileAsset>(parentAssetPath);
+		GltfFileAsset* gltfFile = Engine::GetAssetManager()->RequestAsset<GltfFileAsset>(parentAssetPath);
 		if (!Engine::GetAssetManager()->Load(gltfFile))
 			return false;
 

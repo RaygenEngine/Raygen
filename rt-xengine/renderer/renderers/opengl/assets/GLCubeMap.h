@@ -10,18 +10,28 @@ namespace OpenGL
 	// TODO: This asset has not been tested in a renderer, if it doesn't work please implement it correctly, if it works, remove this comment
 	class GLCubeMap : public GLAsset
 	{
+		CubeMapAsset* m_cubeMapData;
+		
+		// bindless
+		GLuint64 m_bindlessHandle;
 		GLuint m_glId;
 
 	public:
-		GLCubeMap(const std::string& name)
-			: GLAsset(name),
-			  m_glId(0) {}
+		GLCubeMap(CubeMapAsset* cubeMapData)
+			: GLAsset(cubeMapData),
+			  m_cubeMapData(cubeMapData),
+		      m_bindlessHandle(0),
+			  m_glId(0)
+		{
+		}
+
 		~GLCubeMap();
 
-		bool Load(CubeMapAsset* data, GLint wrapFlag, bool mipMapping);
+		[[nodiscard]] GLuint GetGLId() const { return m_glId; }
+		[[nodiscard]] GLuint64 GetGLBindlessHandle() const { return m_bindlessHandle; }
 
-		GLuint GetGLId() const { return m_glId; }
-
-		void ToString(std::ostream& os) const override { os << "asset-type: GLCubeTexture, name: " << m_name; }
+	protected:
+		bool Load() override;
+		void Unload() override;
 	};
 }

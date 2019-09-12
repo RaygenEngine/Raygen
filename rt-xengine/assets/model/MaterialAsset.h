@@ -77,7 +77,6 @@ public:
 	{
 	}
 
-
 	TextureAsset* GetBaseColorTexture() const { return m_baseColorTexture; }
 	TextureAsset* GetOcclusionMetallicRoughnessTexture() const { return m_occlusionMetallicRoughnessTexture; }
 	TextureAsset* GetNormalTexture() const { return m_normalTexture; }

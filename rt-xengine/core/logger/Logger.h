@@ -38,7 +38,7 @@ namespace utl
 	};
 }
 
-#define RT_XENGINE_LOGGER_INIT(level) utl::Log::Init(level)
+#define LOGGER_INIT(level) utl::Log::Init(level)
 
 // force log by matching the log level of the logger - except when level is LL_OFF
 #define RT_XENGINE_LOG_AT_LOWEST_LEVEL(...)     utl::Log::GetLogger()->log(utl::Log::GetLogger()->level(), __VA_ARGS__)

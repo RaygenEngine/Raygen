@@ -2,6 +2,7 @@
 
 #include "renderer/renderers/opengl/GLRendererBase.h"
 #include "world/nodes/camera/CameraNode.h"
+#include "renderer/renderers/opengl/assets/GLShader.h"
 
 namespace OpenGL
 {
@@ -13,7 +14,7 @@ namespace OpenGL
 
 	protected:
 		//std::shared_ptr<GLShader> m_instancedShader;
-		std::shared_ptr<GLShader> m_nonInstancedShader;
+		GLShader* m_nonInstancedShader;
 
 		
 		std::vector<std::shared_ptr<GLTestGeometry>> m_geometryObservers;

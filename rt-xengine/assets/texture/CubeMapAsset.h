@@ -2,28 +2,29 @@
 
 #include "assets/texture/TextureAsset.h"
 
+// TODO: rename to CubeMapContainer
 class CubeMapAsset : public Asset
 {
 	TextureAsset* m_faces[CMF_COUNT];
 
-	uint32 m_width;
-	uint32 m_height;
+	int32 m_width;
+	int32 m_height;
 
 	bool m_hdr;
 
 public:
 	CubeMapAsset(const fs::path& path)
 		: Asset(path),
-	      m_faces{nullptr},
+		  m_faces{nullptr},
 		  m_width(0),
 		  m_height(0),
 		  m_hdr(false) {}
 
-	uint32 GetWidth() const { return m_width; }
-	uint32 GetHeight() const { return m_height; }
-	bool IsHdr() const { return m_hdr; }
+	[[nodiscard]] int32 GetWidth() const { return m_width; }
+	[[nodiscard]] int32 GetHeight() const { return m_height; }
+	[[nodiscard]] bool IsHdr() const { return m_hdr; }
 
-	TextureAsset* GetFace(CubeMapFace faceIndex) const { return m_faces[faceIndex]; }
+	[[nodiscard]] TextureAsset* GetFace(CubeMapFace faceIndex) const { return m_faces[faceIndex]; }
 	
 protected:
 	bool Load() override;

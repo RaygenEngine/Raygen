@@ -27,7 +27,7 @@ bool TriangleModelGeometryNode::LoadAttributesFromXML(const tinyxml2::XMLElement
 	//if (ParsingAux::AttributeExists(xmlData, "model"))
 	//{
 	//	auto finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAsset(xmlData->Attribute("model"));
-	//	m_model = Engine::GetAssetManager()->MaybeGenerateAsset<ModelAsset>(finalPath / fs::path("model"));
+	//	m_model = Engine::GetAssetManager()->RequestAsset<ModelAsset>(finalPath / fs::path("model"));
 	//	if (!Engine::GetAssetManager()->Load(m_model))
 	//		return false;
 	//}

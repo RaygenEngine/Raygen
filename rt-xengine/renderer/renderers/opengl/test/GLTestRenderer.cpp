@@ -17,17 +17,17 @@ namespace OpenGL
 {
 	bool GLTestRenderer::InitScene(int32 width, int32 height)
 	{
-		auto finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAsset("test/test.vert");
-		StringFileAsset* vertexSimpleShaderSource = Engine::GetAssetManager()->MaybeGenerateAsset<StringFileAsset>(finalPath);
-		if (!Engine::GetAssetManager()->Load(vertexSimpleShaderSource))
+		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<TriangleModelGeometryNode>())
+			m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, GLTestGeometry>(this, geometryNode));
+		auto finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAssetPath("test/test.frag");
+		const auto sources = Engine::GetAssetManager()->RequestAsset<MultiStringFileAsset>(finalPath);
+		if (!Engine::GetAssetManager()->Load(sources))
 			return false;
 
-	    finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAsset("test/test.frag");
-		StringFileAsset* fragmentShaderSource = Engine::GetAssetManager()->MaybeGenerateAsset<StringFileAsset>(finalPath);
-		if (!Engine::GetAssetManager()->Load(fragmentShaderSource))
-			return false;
 		
-		m_nonInstancedShader = GetGLAssetManager()->RequestGLShader(vertexSimpleShaderSource, fragmentShaderSource);
+		m_nonInstancedShader = GetGLAssetManager()->MaybeGenerateAsset<GLShader>(sources);
+		if (!GetGLAssetManager()->Load(m_nonInstancedShader))
+			return false;
 		m_nonInstancedShader->SetUniformLocation("mvp");
 		m_nonInstancedShader->SetUniformLocation("m");
 		m_nonInstancedShader->SetUniformLocation("normalMatrix");
@@ -58,8 +58,7 @@ namespace OpenGL
 		//for (auto* geometryNode : GetWorld()->GetNodeMap<World::TriangleModelInstancedGeometryNode>())
 		//	m_instancedGeometries.emplace_back(RequestGLInstancedModel(geometryNode));
 
-		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<TriangleModelGeometryNode>())
-			m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, GLTestGeometry>(this, geometryNode));
+	
 
 		//auto* sky = GetWorld()->GetAvailableNodeSpecificSubType<World::SkyHDRNode>();
 
@@ -111,26 +110,28 @@ namespace OpenGL
 				glBindVertexArray(glMesh.vao);
 
 				auto& glMaterial = glMesh.material;
+
+				auto materialData = glMaterial->GetMaterialAsset();
 				
-				glUniform4fv(m_nonInstancedShader->GetUniformLocation("baseColorFactor"), 1, &glMaterial.baseColorFactor[0]);
-				glUniform3fv(m_nonInstancedShader->GetUniformLocation("emissiveFactor"), 1, &glMaterial.emissiveFactor[0]);
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("metallicFactor"), glMaterial.metallicFactor);
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("roughnessFactor"), glMaterial.roughnessFactor);
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("normalScale"), glMaterial.normalScale);
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("occlusionStrength"), glMaterial.occlusionStrength);
-				glUniform1i(m_nonInstancedShader->GetUniformLocation("alphaMode"), glMaterial.alphaMode);
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("alphaCutoff"), glMaterial.alphaCutoff);
-				glUniform1i(m_nonInstancedShader->GetUniformLocation("doubleSided"), glMaterial.doubleSided);
+				glUniform4fv(m_nonInstancedShader->GetUniformLocation("baseColorFactor"), 1, glm::value_ptr(materialData->GetBaseColorFactor()));
+				glUniform3fv(m_nonInstancedShader->GetUniformLocation("emissiveFactor"), 1, glm::value_ptr(materialData->GetEmissiveFactor()));
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("metallicFactor"), materialData->GetMetallicFactor());
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("roughnessFactor"), materialData->GetRoughnessFactor());
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("normalScale"), materialData->GetNormalScale());
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("occlusionStrength"), materialData->GetOcclusionStrength());
+				glUniform1i(m_nonInstancedShader->GetUniformLocation("alphaMode"), materialData->GetAlphaMode());
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("alphaCutoff"), materialData->GetAlphaCutoff());
+				glUniform1i(m_nonInstancedShader->GetUniformLocation("doubleSided"), materialData->IsDoubleSided());
 				
 				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), glMaterial.baseColorTexture->GetGLBindlessHandle());
 				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("occlusionMetallicRoughnessSampler"), glMaterial.occlusionMetallicRoughnessTexture->GetGLBindlessHandle());
 				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), glMaterial.emissiveTexture->GetGLBindlessHandle());
 
 				// may not exist
-				const auto normalText = glMaterial.normalTexture;
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("normalSampler"), normalText ? normalText->GetGLBindlessHandle() : 0);
+				//const auto normalText = glMaterial.normalTexture;
+				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("normalSampler"), normalText ? normalText->GetGLBindlessHandle() : 0);
 
-				glMaterial.doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
+				materialData->IsDoubleSided() ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 									
 				glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(glMesh.count), GL_UNSIGNED_INT, (GLvoid*)0);
 			

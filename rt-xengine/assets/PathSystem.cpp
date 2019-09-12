@@ -6,26 +6,73 @@
 
 namespace fs = std::filesystem;
 
-inline bool PathSystem::SetCurrentDir(const std::string& path) const
+fs::path PathSystem::SearchPathUpRecursivelyFromCurrent(const fs::path& subPath)
 {
-	std::error_code error;
-	fs::current_path(path, error);
-	return !error;
-}
-
-void PathSystem::GatherSubDirectories(const std::string& directoryPath,
-	std::vector<std::string>& dirList) const
-{
-	dirList.push_back(directoryPath);
-	LOG_TRACE("\'{}\'", directoryPath);
-	for (const auto& entry : fs::directory_iterator(directoryPath))
+	LOG_DEBUG("Searching for path: \'{}\', recurse: upwards", subPath);
+	for (auto currPath = fs::current_path(); ; currPath = currPath.parent_path())
 	{
-		if (fs::is_directory(entry.status()))
+		LOG_TRACE("searching in: \'{}\', {}", currPath.string(), currPath.parent_path().string());
+		for (const auto& entry : fs::directory_iterator(currPath))
 		{
-			GatherSubDirectories(entry.path().string(), dirList);
+			auto dataPath = entry.path() / subPath;
+
+			if (fs::exists(dataPath))
+			{
+				LOG_DEBUG("found in: \'{}\'", dataPath.string());
+				return dataPath;
+			}
+		}
+
+		// reached end, check C 
+		if (currPath == currPath.parent_path())
+		{
+			auto dataPath = currPath / subPath;
+
+			if (fs::exists(dataPath))
+			{
+				LOG_DEBUG("found in: \'{}\'", currPath.string());
+				return dataPath;
+			}
+			break;
 		}
 	}
 
+	return {};
+}
+
+fs::path PathSystem::SearchPathDownRecursivelyFromPath(const fs::path& subPath, const fs::path& searchPath)
+{
+	LOG_DEBUG("Searching for path: \'{}\', recurse: downwards", subPath);
+
+	// if the search path is empty search in the current path
+	const auto currPath = searchPath.empty() ? fs::current_path() : searchPath;
+
+	// check self
+	{
+		auto dataPath = currPath / subPath;
+
+		if (fs::exists(dataPath))
+		{
+			dataPath = fs::relative(dataPath);
+			LOG_DEBUG("found in: \'{}\'", dataPath.string());
+			return dataPath;
+		}
+	}
+
+	for (const auto& entry : fs::recursive_directory_iterator(currPath))
+	{
+		//LOG_TRACE("searching in: \'{}\'", entry.path().string());
+		auto dataPath = entry.path() / subPath;
+
+		if (fs::exists(dataPath))
+		{
+			dataPath = fs::relative(dataPath);
+			LOG_DEBUG("found in: \'{}\'", dataPath.string());
+			return dataPath;
+		}
+	}
+
+	return {};
 }
 
 bool PathSystem::Init(const std::string& applicationPath, const std::string& dataDirectoryName)
@@ -34,196 +81,44 @@ bool PathSystem::Init(const std::string& applicationPath, const std::string& dat
 
 	auto appParentPath = fs::path(applicationPath);
 
-	RT_XENGINE_ASSERT_RETURN_FALSE(appParentPath.has_parent_path(), "Couldn't retrieve application's parent directory!");
-
-	appParentPath = appParentPath.parent_path();
-	RT_XENGINE_ASSERT_RETURN_FALSE(SetCurrentDir(appParentPath.string()), "Couldn't set work directory!");
-
-	LOG_DEBUG("Searching for directory: \'{}\'", dataDirectoryName); // search recursively for the data folder
-	bool found = false;
-	for (auto currPath = fs::current_path(); !found && currPath != fs::current_path().parent_path(); fs::
-		current_path(fs::current_path().parent_path()), currPath = fs::current_path())
+	if(!appParentPath.has_parent_path())
 	{
-		LOG_TRACE("searching in: \'{}\'", currPath.string());
-		for (const auto& entry : fs::directory_iterator(currPath))
-		{
-			if (fs::is_directory(entry.status()))
-			{
-				auto dataPath = entry.path().parent_path();
-				dataPath += fs::path("\\" + dataDirectoryName);
-				if (dataPath == entry.path())
-				{
-					LOG_DEBUG("found in: \'{}\'", entry.path().string());
-					m_assetsRootPath = entry.path().string();
-					found = true;
-					break;
-				}
-			}
-		}
+		LOG_FATAL("Couldn't retrieve application's parent directory!");
+		return false; 
 	}
 
-	RT_XENGINE_ASSERT_RETURN_FALSE(!m_assetsRootPath.empty(), "Couldn't locate assets root directory!");
-	RT_XENGINE_ASSERT_RETURN_FALSE(SetCurrentDir(m_assetsRootPath), "Couldn't locate assets root directory!");
-	LOG_TRACE("Assets Sub-dirs:");
-	GatherSubDirectories(m_assetsRootPath, m_assetsPaths);
+	appParentPath = appParentPath.parent_path();
 
-	m_shadersRootPath = m_assetsRootPath + "\\shaders";
-	RT_XENGINE_ASSERT_RETURN_FALSE(SetCurrentDir(m_shadersRootPath), "Couldn't locate shaders root directory!");
-	LOG_TRACE("Shaders Sub-dirs:");
-	GatherSubDirectories(m_shadersRootPath, m_shadersPaths);
+	std::error_code error;
+	fs::current_path(appParentPath, error);
+	if (error)
+	{
+		LOG_FATAL("Couldn't set work directory!");
+		return false;
+	}
 
-	m_scenesRootPath = m_assetsRootPath + "\\scenes";
-	RT_XENGINE_ASSERT_RETURN_FALSE(SetCurrentDir(m_scenesRootPath), "Couldn't locate scenes root directory!");
-	LOG_TRACE("Scenes Sub-dirs:");
-	GatherSubDirectories(m_scenesRootPath, m_scenesPaths);
+	m_assetsRootPath = SearchPathUpRecursivelyFromCurrent(dataDirectoryName);
+
+	fs::current_path(m_assetsRootPath, error);
+	if (error)
+	{
+		LOG_ERROR("Couldn't locate assets root directory!");
+		return false;
+	}
+
+	//auto xsn = SearchPathDownRecursivelyFromCurrent("scenes/test/test.xscn");
 
 	LOG_INFO("Assets root directory: \'{}\'", m_assetsRootPath);
-	LOG_INFO("Shaders root directory: \'{}\'", m_shadersRootPath);
-	LOG_INFO("Scenes root directory: \'{}\'", m_scenesRootPath);
 
 	return true;
 }
 
-std::string PathSystem::SearchAssetInShadersDirectories(const std::string& relativeAssetPath) const
+fs::path PathSystem::SearchAssetPath(const fs::path& asset)
 {
-	for (auto& path : m_shadersPaths)
-	{
-		auto fsPath = fs::path(path + "\\" + relativeAssetPath);
+	auto ret = SearchPathDownRecursivelyFromPath(asset);
 
-		std::error_code error;
-		fsPath = fs::relative(fsPath, error);
-
-		if (!error && fs::exists(fsPath))
-			return fsPath.string();
-	}
-
-	LOG_WARN("Couldn't locate asset in shaders sub-dirs, asset: \'{}\'", relativeAssetPath);
-
-	return "";
-}
-
-std::string PathSystem::SearchAssetInScenesDirectories(const std::string& relativeAssetPath) const
-{
-	for (auto& path : m_scenesPaths)
-	{
-		auto fsPath = fs::path(path + "\\" + relativeAssetPath);
-
-		std::error_code error;
-		fsPath = fs::relative(fsPath, error);
-
-		if (!error && fs::exists(fsPath))
-			return fsPath.string();
-	}
-
-	LOG_WARN("Couldn't locate asset in scenes sub-dirs, asset: \'{}\'", relativeAssetPath);
-
-	return "";
-}
-
-std::string PathSystem::SearchAssetInAssetsDirectories(const std::string& relativeAssetPath, const std::string& absoluteHintMask) const
-{
-	for (auto& path : m_assetsPaths)
-	{
-		// a hint was given
-		if (!absoluteHintMask.empty())
-		{
-			auto maskPart = path.substr(0, absoluteHintMask.size());
-
-			// skip based on mask
-			if (!utl::CaseInsensitiveCompare(maskPart, absoluteHintMask))
-			{
-				continue;
-			}
-		}
-
-		auto fsPath = fs::path(path + "\\" + relativeAssetPath);
-
-		std::error_code error;
-		fsPath = fs::relative(fsPath);
-
-		if (!error && fs::exists(fsPath))
-			return fsPath.string();
-	}
-
-	if (absoluteHintMask.empty())
-		LOG_WARN("Couldn't locate asset in any asset sub-dirs, asset: \'{}\'", relativeAssetPath);
-	if (!absoluteHintMask.empty())
-		LOG_WARN("Couldn't locate asset in any asset sub-dirs with absolute mask, asset: \'{}\', mask: \'{}\'", relativeAssetPath, absoluteHintMask);
-
-	return "";
-}
-
-fs::path PathSystem::SearchAsset(const std::string& relativeAssetPath, const std::string& pathHint) const
-{
-	// Trim
-	auto pcopy = relativeAssetPath;
-	utl::Trim(pcopy);
-
-	LOG_TRACE("Searching for asset, given path: \'{}\', given path hint: \'{}\'", pcopy, pathHint);
-
-	auto path = fs::path(pcopy);
+	if (ret.empty())
+		LOG_WARN("Could not locate asset, path: {}", asset.string());
 	
-	// if path is absolute shorten it and return it if it is valid
-	if (path.is_absolute())
-	{
-		std::error_code error;
-		auto shortenAbsPath = fs::absolute(path, error);
-
-		// if path exists return it 
-		if (!error && fs::exists(shortenAbsPath))
-			return shortenAbsPath.string();
-
-		LOG_WARN("Couldn't locate asset given in absolute path, path: \'{}\'", pcopy);
-
-		// otherwise we won't find it anywhere
-		return "";
-	}
-
-	// if it is relative
-
-	// search by hint
-	// path hint only works for relative hints (root is scenes folder)
-	if (!pathHint.empty() && fs::path(pathHint).is_relative())
-	{
-		std::string finalHint = pathHint;
-
-		finalHint.erase(std::remove_if(finalHint.end()-1, finalHint.end(),
-			[](byte x) {return x == '\\'; }), finalHint.end());
-
-		const auto pathHintMask = fs::path(m_assetsRootPath + "\\" + finalHint).string();
-		
-		auto res = SearchAssetInAssetsDirectories(pcopy, pathHintMask);
-
-		// if found in scenes
-		if (!res.empty())
-			return res;
-	}
-
-	// search by extension
-	const auto extension = path.extension().string();
-
-	// search based on shader extensions
-	if (m_shaderExtensions.find(utl::ToLower(extension)) != m_shaderExtensions.end())
-	{
-		auto res = SearchAssetInShadersDirectories(pcopy);
-
-		// if found in shaders
-		if(!res.empty())
-			return res;
-	} 
-	
-	// search based on scene extensions
-	if (m_sceneExtensions.find(utl::ToLower(extension)) != m_sceneExtensions.end())
-	{
-		auto res = SearchAssetInScenesDirectories(pcopy);
-
-		// if found in scenes
-		if (!res.empty())
-			return res;
-	}
-
-	LOG_WARN("Couldn't locate asset searching specific sub-dirs by extension, searching in every subdirectory of assets root, path: \'{}\'", relativeAssetPath);
-	// search everywhere
-	return SearchAssetInAssetsDirectories(pcopy);
+	return ret;
 }
-

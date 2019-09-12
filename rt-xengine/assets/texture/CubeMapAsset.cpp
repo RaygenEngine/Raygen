@@ -19,11 +19,11 @@ bool CubeMapAsset::Load()
 			"_dn",
 			"_ft",
 			"_bk"
-		})[i];
+			})[i];
 
 		textPath += m_uri.extension();
 
-		m_faces[i] = Engine::GetAssetManager()->MaybeGenerateAsset<TextureAsset>(textPath);
+		m_faces[i] = Engine::GetAssetManager()->RequestAsset<TextureAsset>(textPath);
 		if (!Engine::GetAssetManager()->Load(m_faces[i]))
 			return false;
 
@@ -36,8 +36,8 @@ bool CubeMapAsset::Load()
 		}
 		// all texture must have same w/h/hdr status
 		else if (m_width != m_faces[i]->GetWidth() ||
-			     m_height != m_faces[i]->GetHeight() ||
-			     m_hdr != m_faces[i]->IsHdr())
+			m_height != m_faces[i]->GetHeight() ||
+			m_hdr != m_faces[i]->IsHdr())
 			return false; // failed
 	}
 

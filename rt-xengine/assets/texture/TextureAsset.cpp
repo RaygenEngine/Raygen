@@ -22,13 +22,13 @@ bool TextureAsset::Load()
 	// gltf parent TODO: use a loader
 	if (parentAssetPath.extension().compare(".gltf") == 0)
 	{
-		GltfFileAsset* gltfFile = Engine::GetAssetManager()->MaybeGenerateAsset<GltfFileAsset>(parentAssetPath);
+		GltfFileAsset* gltfFile = Engine::GetAssetManager()->RequestAsset<GltfFileAsset>(parentAssetPath);
 		if (!Engine::GetAssetManager()->Load(gltfFile))
 			return false;
 
 		auto gltfData = gltfFile->GetGltfData();
-		const auto thisPath = m_uri.filename();
-		const auto index = std::stoi(thisPath);
+		const auto ext = m_uri.extension();
+		const auto index = std::stoi(&ext.string()[1]);
 
 		auto& textureData = gltfData->textures.at(index);
 
@@ -75,8 +75,6 @@ bool TextureAsset::Load()
 
 		return false;
 	}
-
-	return true;
 
 	return true;
 }
