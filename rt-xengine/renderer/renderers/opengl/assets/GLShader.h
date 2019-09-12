@@ -29,7 +29,6 @@ namespace OpenGL
 		void SetUniformLocation(const std::string& name);
 		GLint GetUniformLocation(const std::string& name);
 
-	protected:
 		bool Load() override;
 		void Unload() override;
 	};

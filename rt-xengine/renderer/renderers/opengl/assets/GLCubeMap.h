@@ -30,7 +30,6 @@ namespace OpenGL
 		[[nodiscard]] GLuint GetGLId() const { return m_glId; }
 		[[nodiscard]] GLuint64 GetGLBindlessHandle() const { return m_bindlessHandle; }
 
-	protected:
 		bool Load() override;
 		void Unload() override;
 	};

@@ -21,8 +21,7 @@ public:
 	static ImageAsset* GetDefaultWhite();
 	static ImageAsset* GetDefaultMissing();
 
-	template<typename AssetT>
-	bool Load(AssetT* asset)
+	bool Load(Asset* asset)
 	{
 		assert(asset);
 		assert(m_assetMap.find(asset->m_uri.string()) != m_assetMap.end());
@@ -91,6 +90,15 @@ public:
 	static bool IsCpuPath(const fs::path& path)
 	{
 		return false;
+	}
+
+	template<typename ...Args>
+	bool LoadAssetList(Args... args)
+	{
+		using namespace std;
+		//static_assert(conjunction_v< (conjunction_v < is_pointer_v<Args>, is_base_of_v<std::remove_pointer_t<Args>, Asset>), ... >, "Not all argument types are pointers of assets.");
+
+		return ((Load(args) && ...));
 	}
 
 	//template<typename AssetT>

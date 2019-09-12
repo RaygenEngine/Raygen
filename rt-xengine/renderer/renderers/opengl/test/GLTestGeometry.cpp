@@ -7,7 +7,9 @@ namespace OpenGL
 	GLTestGeometry::GLTestGeometry(GLTestRenderer* renderer, TriangleModelGeometryNode* node)
 		: NodeObserver<GLTestRenderer, TriangleModelGeometryNode>(node)
 	{
-		glModel = GetGLAssetManager(this)->MaybeGenerateAsset<GLModel>(node->GetModel());
-		GetGLAssetManager(this)->Load(glModel);
+		glModel = new GLModel(node->GetModel());
+		glModel->Load();
+		//	GetGLAssetManager(this)->MaybeGenerateAsset<GLModel>(node->GetModel());
+		//GetGLAssetManager(this)->Load(glModel);
 	}
 }

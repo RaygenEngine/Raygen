@@ -9,11 +9,11 @@ namespace OpenGL
 	class GLAsset : public RendererObject<GLRendererBase>
 	{	
 	protected:
-		GLAsset(Asset* asset)
-			: m_asset(asset) {}
+		GLAsset(void* asset)
+			: m_cacher(asset) {}
 		virtual ~GLAsset() = default;
 
-		Asset* m_asset;
+		void* m_cacher;
 		bool m_isLoaded{ false };
 
 		virtual bool Load() = 0;

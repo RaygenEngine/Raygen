@@ -207,6 +207,7 @@ __pycache__/
 # Ignore all scenes except "test"
 /assets/scenes/*
 !/assets/scenes/test
+/assets/imgui.ini
 
 # Ignore custom app folder
 rt-xengine/app/*

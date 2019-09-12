@@ -19,7 +19,8 @@ set(SOURCE_FILES
 	asset/assets/CubemapAsset.cpp
 	asset/assets/ShaderAsset.cpp
 	asset/assets/ModelAsset.cpp	
-
+	
+	asset/util/DependenciesImpl.cpp
 	
 	core/logger/Logger.cpp
 	
@@ -39,6 +40,8 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/assets/GLShader.cpp
 	renderer/renderers/opengl/assets/GLTexture.cpp
 	renderer/renderers/opengl/assets/GLCubeMap.cpp
+	renderer/renderers/opengl/assets/GLMaterial.cpp
+
 	
 	renderer/renderers/opengl/test/GLTestRenderer.cpp
 	renderer/renderers/opengl/test/GLTestGeometry.cpp

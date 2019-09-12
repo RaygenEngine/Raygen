@@ -11,7 +11,7 @@ TriangleModelGeometryNode::TriangleModelGeometryNode(Node* parent)
 	: Node(parent),
       m_model(nullptr)
 {
-//	REFLECT_VAR(m_model);
+	REFLECT_VAR(m_model);
 }
 
 std::string TriangleModelGeometryNode::ToString(bool verbose, uint depth) const

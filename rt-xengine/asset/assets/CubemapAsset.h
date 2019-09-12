@@ -32,7 +32,9 @@ public:
 	[[nodiscard]] bool IsHdr() const { return m_hdr; }
 
 	[[nodiscard]] SamplerPod& GetFace(CubeMapFace faceIndex) { return m_sides[faceIndex]; }
+	[[nodiscard]] SamplerPod& GetFace(int32 faceIndex) { return m_sides[faceIndex]; }
 	
+	static bool LoadAll(CubemapAsset* asset);
 protected:
 	bool Load() override;
 	void Unload() override;

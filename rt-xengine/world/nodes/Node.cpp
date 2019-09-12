@@ -162,8 +162,7 @@ void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 			std::string fileStr;
 			ReadStringAttribute(xmlData, str, fileStr);
 
-			auto p = Engine::GetAssetManager()->m_pathSystem.SearchAssetPath(fileStr);
-			ref = Engine::GetAssetManager()->RequestSearchAsset<ModelAsset>(p);
+			ref = Engine::GetAssetManager()->RequestSearchAsset<ModelAsset>(fileStr);
 			Engine::GetAssetManager()->Load(ref);
 		}
 		);
