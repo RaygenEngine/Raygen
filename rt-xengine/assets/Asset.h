@@ -31,6 +31,11 @@ private:
 	friend class AssetManager;
 };
 
+class ReflectableAssetPod
+{
+	PodReflector m_reflector;
+};
+
 inline AssetReflector& GetReflector(Asset* object)
 {
 	return object->m_reflector;

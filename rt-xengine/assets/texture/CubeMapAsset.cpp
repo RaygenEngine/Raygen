@@ -3,49 +3,47 @@
 #include "assets/texture/CubeMapAsset.h"
 #include "system/Engine.h"
 #include "assets/AssetManager.h"
+#include <iostream>
 
-bool CubeMapAsset::Load()
+bool CubemapAsset::Load()
 {
-	const fs::path without_ext = m_uri.filename();
+	std::ifstream t(m_uri);
+
+	if (!t.is_open())
+	{
+		LOG_WARN("Unable to open string file, path: {}", m_uri);
+		return false;
+	}
+
 
 	for (int32 i = 0; i < CMF_COUNT; ++i)
 	{
-		fs::path textPath = without_ext;
+		char name[256];
+		t.getline(name, 256);
 
-		textPath += std::vector({
-			"_rt",
-			"_lf",
-			"_up",
-			"_dn",
-			"_ft",
-			"_bk"
-			})[i];
-
-		textPath += m_uri.extension();
-
-		m_faces[i] = Engine::GetAssetManager()->RequestAsset<TextureAsset>(textPath);
-		if (!Engine::GetAssetManager()->Load(m_faces[i]))
-			return false;
-
+		m_faces[i] = Engine::GetAssetManager()->RequestSearchAsset<TextureAsset>(std::string(name));
+		
 		// every texture must match the right face
-		if(i == CMF_RIGHT)
+		if (i == CMF_RIGHT)
 		{
 			m_width = m_faces[i]->GetWidth();
 			m_height = m_faces[i]->GetHeight();
 			m_hdr = m_faces[i]->IsHdr();
 		}
+		// TODO: remove limitation
 		// all texture must have same w/h/hdr status
 		else if (m_width != m_faces[i]->GetWidth() ||
-			m_height != m_faces[i]->GetHeight() ||
-			m_hdr != m_faces[i]->IsHdr())
+				 m_height != m_faces[i]->GetHeight() ||
+				 m_hdr != m_faces[i]->IsHdr())
+		{
 			return false; // failed
+		}
 	}
 
 	return true;
 }
 
-void CubeMapAsset::Unload()
+void CubemapAsset::Unload()
 {
-	//for (auto face : m_faces)
-	//face->Unload();
+
 }

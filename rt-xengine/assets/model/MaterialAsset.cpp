@@ -8,7 +8,7 @@
 
 #include "tinygltf/tiny_gltf.h"
 
-bool MaterialAsset::Load()
+bool MaterialPod::Load()
 {
 	// TODO check if sub asset
 
@@ -98,8 +98,4 @@ bool MaterialAsset::Load()
 	}
 	
 	return true;
-}
-
-void MaterialAsset::Unload()
-{
 }

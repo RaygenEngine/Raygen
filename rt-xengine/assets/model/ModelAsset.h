@@ -23,7 +23,7 @@ public:
 
 			GeometryMode mode{ GeometryMode::TRIANGLES };
 
-			MaterialAsset* material{ nullptr };
+			MaterialPod* material{ nullptr };
 		};
 
 		std::vector<GeometryGroup> geometryGroups;

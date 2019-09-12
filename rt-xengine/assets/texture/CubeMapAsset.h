@@ -3,7 +3,7 @@
 #include "assets/texture/TextureAsset.h"
 
 // TODO: rename to CubeMapContainer
-class CubeMapAsset : public Asset
+class CubemapAsset : public Asset
 {
 	TextureAsset* m_faces[CMF_COUNT];
 
@@ -13,12 +13,13 @@ class CubeMapAsset : public Asset
 	bool m_hdr;
 
 public:
-	CubeMapAsset(const fs::path& path)
+	CubemapAsset(const fs::path& path)
 		: Asset(path),
 		  m_faces{nullptr},
 		  m_width(0),
 		  m_height(0),
-		  m_hdr(false) {}
+		  m_hdr(false) 
+	{}
 
 	[[nodiscard]] int32 GetWidth() const { return m_width; }
 	[[nodiscard]] int32 GetHeight() const { return m_height; }

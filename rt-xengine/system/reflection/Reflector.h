@@ -88,3 +88,8 @@ class AssetReflector : public Reflector
 {
 
 };
+
+class PodReflector : public Reflector
+{
+
+};

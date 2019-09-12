@@ -33,19 +33,47 @@ public:
 		return asset->m_isLoaded;
 	}
 
-	// If this returns null, an asset of a different type already exists at this uri
+	//// If this returns null, an asset of a different type already exists at this uri
+	//template<typename AssetT>
+	//AssetT* RequestAsset(const fs::path& path)
+	//{
+	//	auto it = m_assetMap.find(path.string());
+	//	if (it != m_assetMap.end())
+	//	{
+	//		return dynamic_cast<AssetT*>(it->second);
+	//	}
+	//	AssetT* result = new AssetT(path);
+	//	m_assetMap.emplace(path.string(), result);
+	//	return result;
+	//}
+
 	template<typename AssetT>
-	AssetT* RequestAsset(const fs::path& path)
+	AssetT* RequestSearchAsset(const fs::path& path)
 	{
-		auto it = m_assetMap.find(path.string());
+		// PERF:
+		fs::path p;
+		if (IsCpuPath(path))
+		{
+			p = path;
+		}
+		else 
+		{
+			p = m_pathSystem.SearchAssetPath(path);
+			assert(!p.empty());
+		}
+
+		auto it = m_assetMap.find(p.string());
 		if (it != m_assetMap.end())
 		{
-			return dynamic_cast<AssetT*>(it->second);
+			auto* p = dynamic_cast<AssetT*>(it->second);
+			assert(p);
+			return p;
 		}
-		AssetT* result = new AssetT(path);
-		m_assetMap.emplace(path.string(), result);
+		AssetT* result = new AssetT(p);
+		m_assetMap.emplace(p.string(), result);
 		return result;
 	}
+
 
 
 	// todo:
@@ -56,6 +84,10 @@ public:
 		//assert(false);
 	}
 
+	static bool IsCpuPath(const fs::path& path)
+	{
+		return false;
+	}
 
 	//template<typename AssetT>
 	//AssetT* GenerateAndLoad(const fs::path& path)

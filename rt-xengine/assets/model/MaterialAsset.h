@@ -5,7 +5,7 @@
 
 // Note: assets of this class (Textures) are not cached directly as they are part of a cached ModelAsset anyway
 // glTF-based material (not all extensions included) (comments in this file -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0)
-class MaterialAsset : public Asset
+class MaterialPod : public ReflectableAssetPod
 {
 	// The value for each property(baseColor, metallic, roughness) can be defined using factors or textures.
 
@@ -53,11 +53,9 @@ class MaterialAsset : public Asset
 	// back-face culling is disabled and double sided lighting is enabled. The back-face must have its normals reversed before the lighting equation is evaluated.
 	bool m_doubleSided;
 
-public:
 	
-	MaterialAsset(const fs::path& path)
-		: Asset(path),
-		  m_baseColorTexture(nullptr),
+	MaterialPod()
+		: m_baseColorTexture(nullptr),
 	      m_baseColorTexCoordIndex(0),
 		  m_occlusionMetallicRoughnessTexture(nullptr),
 	      m_occlusionMetallicRoughnessTexCoordIndex(0),
@@ -97,7 +95,4 @@ public:
 	float GetAlphaCutoff() const { return m_alphaCutoff; }
 	bool IsDoubleSided() const { return m_doubleSided; }
 
-protected:
-	bool Load() override;
-	void Unload() override;
 };
