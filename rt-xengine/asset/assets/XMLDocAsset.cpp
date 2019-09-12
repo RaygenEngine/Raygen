@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "assets/other/xml/XMLDocAsset.h"
+#include "asset/assets/XMLDocAsset.h"
 
 bool XMLDocAsset::Load()
 {

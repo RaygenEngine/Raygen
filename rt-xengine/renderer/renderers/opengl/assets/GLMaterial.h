@@ -2,13 +2,13 @@
 
 #include "renderer/renderers/opengl/GLAsset.h"
 #include "renderer/renderers/opengl/assets/GLTexture.h"
-#include "assets/model/MaterialAsset.h"
+#include "asset/pods/MaterialPod.h"
 
 namespace OpenGL
 {
 	class GLMaterial : public GLAsset
 	{
-		MaterialAsset* m_materialData;
+		MaterialPod* m_materialData;
 		
 		// RGB: Albedo A: Opacity
 		GLTexture* m_baseColorTexture;
@@ -18,7 +18,7 @@ namespace OpenGL
 		GLTexture* m_emissiveTexture;
 		
 	public:
-		GLMaterial(MaterialAsset* materialData)
+		GLMaterial(MaterialPod* materialData)
 			: GLAsset(materialData),
 			m_materialData(materialData),
 			m_baseColorTexture(nullptr),
@@ -31,7 +31,7 @@ namespace OpenGL
 		[[nodiscard]] GLTexture* GetNormalTexture() const { return m_normalTexture; }
 		[[nodiscard]] GLTexture* GetEmissiveTexture() const { return m_emissiveTexture; }
 
-		MaterialAsset* GetMaterialAsset() const { return m_materialData; }
+		MaterialPod* GetMaterialAsset() const { return m_materialData; }
 		
 	protected:
 		bool Load() override;

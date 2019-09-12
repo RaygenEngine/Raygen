@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include "world/nodes/camera/CameraNode.h"
-#include "assets/other/xml/ParsingAux.h"
+#include "asset/util/ParsingAux.h"
 #include "system/Engine.h"
 #include "platform/windows/Win32Window.h"
 

@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include "world/nodes/light/LightNode.h"
-#include "assets/other/xml/ParsingAux.h"
+
 
 LightNode::LightNode(Node* parent)
 	: Node(parent),

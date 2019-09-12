@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/renderers/opengl/GLAsset.h"
-#include "assets/other/utf8/MultiStringFileAsset.h"
+#include "asset/assets/ShaderAsset.h"
 
 #include "GLAD/glad.h"
 
@@ -9,7 +9,7 @@ namespace OpenGL
 {
 	class GLShader : public GLAsset
 	{
-		MultiStringFileAsset* m_sources;
+		ShaderAsset* m_sources;
 		
 		GLuint m_glId;
 
@@ -17,7 +17,7 @@ namespace OpenGL
 		std::unordered_map<std::string, GLint> m_uniformLocations;
 
 	public:
-		GLShader(MultiStringFileAsset* sources)
+		GLShader(ShaderAsset* sources)
 			: GLAsset(sources),
 			  m_sources(sources),
 			  m_glId(0) {}

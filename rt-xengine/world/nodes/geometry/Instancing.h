@@ -1,6 +1,6 @@
 #pragma once
 
-#include "assets/other/xml/ParsingAux.h"
+#include "asset/util/ParsingAux.h"
 
 struct Instance
 {

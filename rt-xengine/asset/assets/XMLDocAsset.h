@@ -1,6 +1,6 @@
 #pragma once
 
-#include "assets/Asset.h"
+#include "asset/Asset.h"
 #include "tinyxml2/tinyxml2.h"
 
 class XMLDocAsset : public Asset

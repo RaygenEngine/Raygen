@@ -3,7 +3,7 @@
 #include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/GLUtil.h"
 #include "system/Engine.h"
-#include "assets/AssetManager.h"
+#include "asset/AssetManager.h"
 
 namespace OpenGL
 {

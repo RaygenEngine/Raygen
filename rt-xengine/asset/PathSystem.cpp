@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "assets/PathSystem.h"
+#include "asset/PathSystem.h"
 
 #include <filesystem>
 

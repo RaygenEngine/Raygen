@@ -1,6 +1,6 @@
 #pragma once
 
-#include "assets/other/xml/ParsingAux.h"
+#include "asset/util/ParsingAux.h"
 #include "world/World.h"
 #include "world/nodes/geometry/TriangleModelInstancedGeometryNode.h"
 #include "system/Engine.h"

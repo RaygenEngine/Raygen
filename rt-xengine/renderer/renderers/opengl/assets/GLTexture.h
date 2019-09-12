@@ -1,8 +1,8 @@
 #pragma once
 
 #include "renderer/renderers/opengl/GLAsset.h"
-#include "assets/texture/TextureAsset.h"
-#include "assets/Asset.h"
+#include "asset/assets/ImageAsset.h"
+#include "asset/Asset.h"
 
 #include "GLAD/glad.h"
 
@@ -10,14 +10,14 @@ namespace OpenGL
 {
 	class GLTexture : public GLAsset
 	{
-		TextureAsset* m_textureData;
+		ImageAsset* m_textureData;
 		
 		// bindless
 		GLuint64 m_bindlessHandle;
 		GLuint m_glId;
 
 	public:
-		GLTexture(TextureAsset* textureData)
+		GLTexture(ImageAsset* textureData)
 			: GLAsset(textureData),
 			  m_textureData(textureData),
 			  m_bindlessHandle(0),

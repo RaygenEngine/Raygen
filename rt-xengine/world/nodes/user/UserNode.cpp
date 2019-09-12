@@ -1,7 +1,6 @@
 #include "pch.h"
 
 #include "world/nodes/user/UserNode.h"
-#include "assets/other/xml/ParsingAux.h"
 
 UserNode::UserNode(Node* parent)
 	: Node(parent),

@@ -5,7 +5,7 @@
 #include "world/World.h"
 #include "world/nodes/user/freeform/FreeformUserNode.h"
 #include "world/nodes/geometry/TriangleModelGeometryNode.h"
-#include "assets/AssetManager.h"
+#include "asset/AssetManager.h"
 #include "system/Engine.h"
 
 #include "renderer/renderers/opengl/assets/GLCubeMap.h"

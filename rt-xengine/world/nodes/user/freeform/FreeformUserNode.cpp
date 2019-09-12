@@ -2,7 +2,7 @@
 
 #include "world/nodes/user/freeform/FreeformUserNode.h"
 #include "world/World.h"
-#include "assets/other/xml/ParsingAux.h"
+#include "asset/util/ParsingAux.h"
 #include "system/Engine.h"
 #include "system/Input.h"
 

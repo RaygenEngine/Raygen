@@ -1,8 +1,7 @@
 #pragma once
+#include "asset/Asset.h"
 
-#include "assets/Asset.h"
-
-class TextureAsset : public Asset
+class ImageAsset : public Asset
 {
 	int32 m_width;
 	int32 m_height;
@@ -16,30 +15,11 @@ class TextureAsset : public Asset
 
 	bool m_hdr;
 
-	TextureFiltering m_minFilter;
-	TextureFiltering m_magFilter;
-
-	TextureWrapping m_wrapS;
-	TextureWrapping m_wrapT;
-	TextureWrapping m_wrapR;
-
-
 public:
-	TextureAsset(const fs::path& path)
+	ImageAsset(const fs::path& path)
 		: Asset(path),
-		  m_data(nullptr),
-		  m_minFilter(TextureFiltering::LINEAR),
-		  m_magFilter(TextureFiltering::LINEAR),
-		  m_wrapS(TextureWrapping::REPEAT),
-		  m_wrapT(TextureWrapping::REPEAT),
-		  m_wrapR(TextureWrapping::REPEAT) {}
-
-
-	[[nodiscard]] TextureFiltering GetMinFilter() const { return m_minFilter; }
-	[[nodiscard]] TextureFiltering GetMagFilter() const { return m_magFilter; }
-	[[nodiscard]] TextureWrapping GetWrapS() const { return m_wrapS; }
-	[[nodiscard]] TextureWrapping GetWrapT() const { return m_wrapT; }
-	[[nodiscard]] TextureWrapping GetWrapR() const { return m_wrapR; }
+		  m_data(nullptr)
+		 {}
 
 	[[nodiscard]] int32 GetWidth() const { return m_width; }
 	[[nodiscard]] int32 GetHeight() const { return m_height; }

@@ -9,20 +9,17 @@ link_directories(${LIB_DEPENDENCIES_DIRECTORY})
 
 set(SOURCE_FILES 
 
-	assets/Asset.cpp
-	assets/AssetManager.cpp
-	assets/PathSystem.cpp
+	asset/Asset.cpp
+	asset/AssetManager.cpp
+	asset/PathSystem.cpp
 	
-	assets/other/utf8/StringFileAsset.cpp
-	assets/other/xml/XMLDocAsset.cpp
-	assets/other/gltf/GltfFileAsset.cpp
-	
-	assets/texture/PackedTextureAsset.cpp
-	assets/texture/TextureAsset.cpp
-	assets/texture/CubeMapAsset.cpp
-	
-	assets/model/ModelAsset.cpp	
-	assets/model/MaterialAsset.cpp
+	asset/assets/TextAsset.cpp
+	asset/assets/XMLDocAsset.cpp
+	asset/assets/ImageAsset.cpp
+	asset/assets/CubemapAsset.cpp
+	asset/assets/ShaderAsset.cpp
+	asset/assets/ModelAsset.cpp	
+
 	
 	core/logger/Logger.cpp
 	
@@ -85,23 +82,23 @@ set(SOURCE_FILES
 
 set(HEADER_FILES 
 
-	assets/Asset.h
-	assets/AssetManager.h
-	assets/PathSystem.h
-    assets/CachingAux.h
-		
-	assets/other/utf8/StringFileAsset.h
-	assets/other/xml/ParsingAux.h
-	assets/other/xml/XMLDocAsset.h
-	assets/other/gltf/GltfFileAsset.h
-	assets/other/gltf/GltfAux.h
-	
-	assets/texture/PackedTextureAsset.h
-	assets/texture/TextureAsset.h
-	assets/texture/CubeMapAsset.h
-	
-	assets/model/ModelAsset.h	
-	assets/model/MaterialAsset.h
+	asset/Asset.h
+	asset/AssetPod.h
+	asset/AssetManager.h
+	asset/PathSystem.h
+
+	asset/assets/TextAsset.h
+	asset/assets/XMLDocAsset.h
+	asset/assets/ImageAsset.h
+	asset/assets/CubemapAsset.h
+	asset/assets/ShaderAsset.h
+	asset/assets/ModelAsset.h
+
+	asset/pods/SamplerPod.h
+	asset/pods/MaterialPod.h
+
+	asset/util/GltfAux.h
+	asset/util/ParsingAux.h
 
 	core/auxiliary/FlagAux.h
 	core/auxiliary/FileAux.h

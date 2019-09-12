@@ -3,11 +3,13 @@
 #include "system/EngineComponent.h"
 #include "system/reflection/Reflector.h"
 #include "system/Engine.h"
-#include "assets/PathSystem.h"
-#include "assets/Asset.h"
+#include "asset/PathSystem.h"
+#include "asset/Asset.h"
 
 constexpr auto __default__textureWhite = "__default__texture-white.jpg";
 constexpr auto __default__textureMissing = "__default__texture-missing.jpg";
+
+class ImageAsset;
 
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
 class AssetManager
@@ -15,6 +17,10 @@ class AssetManager
 	std::unordered_map<std::string, Asset*> m_assetMap;
 	friend class Editor;
 public:
+
+	static ImageAsset* GetDefaultWhite();
+	static ImageAsset* GetDefaultMissing();
+
 	template<typename AssetT>
 	bool Load(AssetT* asset)
 	{
@@ -73,8 +79,6 @@ public:
 		m_assetMap.emplace(p.string(), result);
 		return result;
 	}
-
-
 
 	// todo:
 	template<typename AssetT>

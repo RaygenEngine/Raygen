@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include "renderer/renderers/opengl/assets/GLShader.h"
-#include "assets/AssetManager.h"
+#include "asset/AssetManager.h"
 
 namespace OpenGL
 {

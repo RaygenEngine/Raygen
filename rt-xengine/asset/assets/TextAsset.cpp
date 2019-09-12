@@ -1,8 +1,8 @@
 #include "pch.h"
 
-#include "assets/other/utf8/StringFileAsset.h"
+#include "asset/assets/TextAsset.h"
 
-bool StringFileAsset::Load()
+bool TextAsset::Load()
 {
 	std::ifstream t(m_uri);
 
@@ -14,13 +14,14 @@ bool StringFileAsset::Load()
 
 	t.seekg(0, std::ios::end);
 	m_data.reserve(t.tellg());
+	
 	t.seekg(0, std::ios::beg);
 	m_data.assign((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 
 	return true;
 }
 
-void StringFileAsset::Unload()
+void TextAsset::Unload()
 {
 	std::string().swap(m_data);
 }

@@ -1,8 +1,8 @@
 #include "pch.h"
 
 #include "world/nodes/sky/SkyCubeNode.h"
-#include "assets/other/xml/ParsingAux.h"
-#include "assets/AssetManager.h"
+#include "asset/util/ParsingAux.h"
+#include "asset/AssetManager.h"
 
 bool SkyCubeNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 {
@@ -10,8 +10,7 @@ bool SkyCubeNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 
 	if (ParsingAux::AttributeExists(xmlData, "cube_map"))
 	{
-		auto finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAsset(xmlData->Attribute("cube_map"));
-		m_cubeMap = Engine::GetAssetManager()->MaybeGenerateAsset<CubeMapAsset>(finalPath);
+		m_cubeMap = Engine::GetAssetManager()->RequestSearchAsset<CubemapAsset>(xmlData->Attribute("cube_map"));
 		if (!Engine::GetAssetManager()->Load(m_cubeMap))
 			return false;
 	}

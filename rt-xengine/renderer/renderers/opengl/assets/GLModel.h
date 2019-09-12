@@ -2,7 +2,7 @@
 
 #include "renderer/renderers/opengl/GLAsset.h"
 #include "renderer/renderers/opengl/assets/GLMaterial.h"
-#include "assets/model/ModelAsset.h"
+#include "asset/assets/ModelAsset.h"
 
 #include "GLAD/glad.h"
 #include <optional>

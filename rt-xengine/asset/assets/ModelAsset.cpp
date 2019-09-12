@@ -1,11 +1,9 @@
 #include "pch.h"
 
-#include "assets/model/ModelAsset.h"
-#include "assets/AssetManager.h"
+#include "asset/assets/ModelAsset.h"
+#include "asset/AssetManager.h"
 #include "system/Engine.h"
-#include "assets/model/MaterialAsset.h"
-#include "assets/other/gltf/GltfFileAsset.h"
-#include "assets/other/gltf/GltfAux.h"
+#include "asset/util/GltfAux.h"
 
 #include "tinygltf/tiny_gltf.h"
 #include <optional>
@@ -76,7 +74,6 @@ namespace
 	template<> void CopyToVector<float>(std::vector<uint32>&, byte*, size_t, size_t, size_t) { assert(false); }
 	template<> void CopyToVector<double>(std::vector<uint32>&, byte*, size_t, size_t, size_t) { assert(false); }
 	template<> void CopyToVector<byte>(std::vector<uint32>&, byte*, size_t, size_t, size_t) { assert(false); }
-
 
 	// Extracts the type of the out vector and attempts to load any type of data at accessorIndex to this vector.
 	template<typename Output>
@@ -151,11 +148,105 @@ namespace
 		return;
 	}
 
-	std::optional<ModelAsset::Mesh::GeometryGroup> LoadGeometryGroup(const fs::path& parentAssetPath, const tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData,
+	bool LoadSampler(SamplerPod& outPod, const tg::Model& model, const tg::Texture& textureData, bool loadDefaultIfMissing = true)
+	{
+		bool didLoad = false;
+		const auto imageIndex = textureData.source;
+
+		// if image exists
+		if (imageIndex != -1)
+		{
+			// TODO check image settings
+			auto& gltfImage = model.images.at(imageIndex);
+
+			outPod.image = Engine::GetAssetManager()->RequestSearchAsset<ImageAsset>(gltfImage.uri);
+			didLoad = true;
+		}
+
+		const auto samplerIndex = textureData.sampler;
+		// if sampler exists
+		if (samplerIndex != -1)
+		{
+			auto& gltfSampler = model.samplers.at(samplerIndex);
+
+			outPod.minFilter = GltfAux::GetTextureFiltering(gltfSampler.minFilter);
+			outPod.magFilter = GltfAux::GetTextureFiltering(gltfSampler.magFilter);
+			outPod.wrapS = GltfAux::GetTextureWrapping(gltfSampler.wrapS);
+			outPod.wrapT = GltfAux::GetTextureWrapping(gltfSampler.wrapT);
+			outPod.wrapR = GltfAux::GetTextureWrapping(gltfSampler.wrapR);
+		}
+		//else keep default values
+		return didLoad;
+	}
+
+
+	bool LoadMaterial(MaterialPod& outMaterial, tg::Model& model, const tg::Material& materialData)
+	{
+		// factors
+		auto bFactor = materialData.pbrMetallicRoughness.baseColorFactor;
+		outMaterial.baseColorFactor = { bFactor[0], bFactor[1], bFactor[2], bFactor[3] };
+		outMaterial.metallicFactor = static_cast<float>(materialData.pbrMetallicRoughness.metallicFactor);
+		outMaterial.roughnessFactor = static_cast<float>(materialData.pbrMetallicRoughness.roughnessFactor);
+		auto eFactor = materialData.emissiveFactor;
+		outMaterial.emissiveFactor = { eFactor[0], eFactor[1], eFactor[2] };
+
+		// scales/strenghts
+		outMaterial.normalScale = static_cast<float>(materialData.normalTexture.scale);
+		outMaterial.occlusionStrength = static_cast<float>(materialData.occlusionTexture.strength);
+
+		// alpha
+		outMaterial.alphaMode = GltfAux::GetAlphaMode(materialData.alphaMode);
+
+		outMaterial.alphaCutoff = static_cast<float>(materialData.alphaCutoff);
+		// doublesided-ness
+		outMaterial.doubleSided = materialData.doubleSided;
+
+
+		auto LoadTexture = [&](auto textureInfo, SamplerPod& sampler, int32& textCoordIndex, bool useDefaultIfMissing = true)
+		{
+			bool didLoad = false;
+			if (textureInfo.index != -1)
+			{
+				tg::Texture& gltfTexture = model.textures.at(textureInfo.index);
+				
+				didLoad = LoadSampler(sampler, model, gltfTexture, useDefaultIfMissing);
+
+				textCoordIndex = textureInfo.texCoord;
+			}
+			
+			if (useDefaultIfMissing && !didLoad)
+			{
+				sampler.image = AssetManager::GetDefaultWhite();
+			}
+
+			return true;
+		};
+
+		// samplers
+		auto& baseColorTextureInfo = materialData.pbrMetallicRoughness.baseColorTexture;
+		LoadTexture(baseColorTextureInfo, outMaterial.baseColorTexture, outMaterial.baseColorTexCoordIndex);
+
+		auto& emissiveTextureInfo = materialData.emissiveTexture;
+		LoadTexture(emissiveTextureInfo, outMaterial.emissiveTexture, outMaterial.emissiveTexCoordIndex);
+
+		auto& normalTextureInfo = materialData.normalTexture;
+		LoadTexture(normalTextureInfo, outMaterial.normalTexture, outMaterial.normalTexCoordIndex, false);
+
+		// TODO: pack if different
+		auto& metallicRougnessTextureInfo = materialData.pbrMetallicRoughness.metallicRoughnessTexture;
+		auto& occlusionTextureInfo = materialData.occlusionTexture;
+
+		// same texture no need of packing
+		//if(metallicRougnessTextureInfo.index == occlusionTextureInfo.index)
+		{
+			LoadTexture(metallicRougnessTextureInfo, outMaterial.occlusionMetallicRoughnessTexture, outMaterial.occlusionMetallicRoughnessTexCoordIndex);
+		}
+		return true;
+	}
+
+	bool LoadGeometryGroup(GeometryGroupPod& geom, tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData,
 		const glm::mat4& transformMat)
 	{
-		ModelAsset::Mesh::GeometryGroup geom{};
-
 		// mode
 		geom.mode = GltfAux::GetGeometryMode(primitiveData.mode);
 
@@ -198,7 +289,7 @@ namespace
 
 		// if missing positions
 		if (geom.positions.empty())
-			return {};
+			return false;
 
 		// PERF: speed up those calcs
 		for (auto& pos : geom.positions)
@@ -218,19 +309,10 @@ namespace
 		if (materialIndex != -1)
 		{
 			auto& mat = modelData.materials.at(materialIndex);
-
-
-			fs::path subAssetPath = fs::path("texture" + (!mat.name.empty() ? "_" + mat.name : ""));
-
-			subAssetPath += "." + std::to_string(materialIndex);
-			
-			const fs::path subPartPath = parentAssetPath / subAssetPath;
-
-			auto materialAsset = Engine::GetAssetManager()->RequestAsset<MaterialAsset>(subPartPath);
-			if (!Engine::GetAssetManager()->Load(materialAsset))
-				return {};
-
-			geom.material = materialAsset;
+			if (!LoadMaterial(geom.material, modelData, mat))
+			{
+				return false;
+			}
 		}
 
 		// calculate missing normals (flat)
@@ -305,14 +387,13 @@ namespace
 		}
 
 		// calculate other baked data
-		return geom;
+		return true;
 	}
 
 
-	std::optional<ModelAsset::Mesh> LoadMesh(const fs::path& parentAssetPath, const tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
+	bool LoadMesh(MeshPod& mesh, tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
 	{
-		ModelAsset::Mesh mesh{};
-
+		
 		mesh.geometryGroups.resize(meshData.primitives.size());
 
 		// primitives
@@ -322,121 +403,134 @@ namespace
 
 			auto& primitiveData = meshData.primitives.at(i);
 
-			auto geom = LoadGeometryGroup(parentAssetPath, modelData, primitiveData, transformMat);
 			// if one of the geometry groups fails to load
-			if (!geom)
+			if (!LoadGeometryGroup(mesh.geometryGroups[i], modelData, primitiveData, transformMat))
 			{
 				LOG_ERROR("Failed to load geometry group, name: {}", geomName);
-				return {};
+				return false;
 			}
-			
-			mesh.geometryGroups[i] = geom.value();
 		}
-		// TODO: weights
-
-		return mesh;
+		return true;
 	}
+
+
 }
+
+bool ModelAsset::LoadFromGltfImpl()
+{
+	namespace tg = tinygltf;
+
+	tg::TinyGLTF loader;
+	tg::Model model; 
+	
+	std::string err;
+	std::string warn;
+
+	auto ext = m_uri.extension();
+
+	bool ret = false;
+
+
+	if (ext.compare(".gltf") == 0)
+	{
+		ret = loader.LoadASCIIFromFile(&model, &err, &warn, m_uri.string());
+	}
+
+	CLOG_WARN(!warn.empty(), warn.c_str());
+	CLOG_ERROR(!err.empty(), err.c_str());
+
+	if (!ret)
+	{
+		return false;
+	}
+
+	auto& defaultScene = model.scenes.at(model.defaultScene);
+
+	std::function<bool(const std::vector<int>&, glm::mat4)> RecurseChildren;
+	RecurseChildren = [&](const std::vector<int>& childrenIndices, glm::mat4 parentTransformMat)
+	{
+		for (auto& nodeIndex : childrenIndices)
+		{
+			auto& childNode = model.nodes.at(nodeIndex);
+
+			glm::mat4 localTransformMat = glm::mat4(1.f);
+
+			// When matrix is defined, it must be decomposable to TRS.
+			if (!childNode.matrix.empty())
+			{
+				for (int32 row = 0; row < 4; ++row)
+					for (int32 column = 0; column < 4; ++column)
+						localTransformMat[row][column] = static_cast<float>(childNode.matrix[column + 4 * row]);
+			}
+			else
+			{
+				glm::vec3 translation = glm::vec3(0.f);
+				glm::quat orientation = { 1.f, 0.f, 0.f, 0.f };
+				glm::vec3 scale = glm::vec3(1.f);
+
+				if (!childNode.translation.empty())
+				{
+					translation[0] = static_cast<float>(childNode.translation[0]);
+					translation[1] = static_cast<float>(childNode.translation[1]);
+					translation[2] = static_cast<float>(childNode.translation[2]);
+				}
+
+				if (!childNode.rotation.empty())
+				{
+					orientation[0] = static_cast<float>(childNode.rotation[0]);
+					orientation[1] = static_cast<float>(childNode.rotation[1]);
+					orientation[2] = static_cast<float>(childNode.rotation[2]);
+					orientation[3] = static_cast<float>(childNode.rotation[3]);
+				}
+
+				if (!childNode.scale.empty())
+				{
+					scale[0] = static_cast<float>(childNode.scale[0]);
+					scale[1] = static_cast<float>(childNode.scale[1]);
+					scale[2] = static_cast<float>(childNode.scale[2]);
+				}
+
+				localTransformMat = utl::GetTransformMat(translation, orientation, scale);
+			}
+
+			localTransformMat = parentTransformMat * localTransformMat;
+
+			// TODO: check instancing cases
+			// load mesh if exists
+			if (childNode.mesh != -1)
+			{
+				auto& gltfMesh = model.meshes.at(childNode.mesh);
+
+				MeshPod mesh;
+
+				// if missing mesh
+				if (!LoadMesh(mesh, model, gltfMesh, localTransformMat))
+				{
+					LOG_ERROR("Failed to load mesh, name: {}", gltfMesh.name);
+					return false;
+				}
+				m_meshes.emplace_back(mesh);
+			}
+
+			//load child's children
+			if (!childNode.children.empty())
+				if (!RecurseChildren(childNode.children, localTransformMat))
+					return false;
+		}
+		return true;
+	};
+
+	return RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
+}
+
 
 bool ModelAsset::Load()
 {
-	// TODO check if sub asset
-
-	// if sub asset
-	const auto parentAssetPath = m_uri.parent_path();
-
-	// gltf parent TODO: use a loader
-	if (parentAssetPath.extension().compare(".gltf") == 0)
+	if (m_uri.extension().compare(".gltf") == 0)
 	{
-		GltfFileAsset* gltfFile = Engine::GetAssetManager()->RequestAsset<GltfFileAsset>(parentAssetPath);
-		if (!Engine::GetAssetManager()->Load(gltfFile))
-			return false;
-
-		auto gltfData = gltfFile->GetGltfData();
-
-		// PERF: register meshes only in default scene (scene = model)
-		auto& defaultScene = gltfData->scenes.at(gltfData->defaultScene);
-		
-		std::function<bool(const std::vector<int>&, glm::mat4)> RecurseChildren;
-		RecurseChildren = [&](const std::vector<int>& childrenIndices, glm::mat4 parentTransformMat)
-		{
-			for (auto& nodeIndex : childrenIndices)
-			{
-				auto& childNode = gltfData->nodes.at(nodeIndex);
-
-				glm::mat4 localTransformMat = glm::mat4(1.f);
-
-				// When matrix is defined, it must be decomposable to TRS.
-				if (!childNode.matrix.empty())
-				{
-					for (int32 row = 0; row < 4; ++row)
-						for (int32 column = 0; column < 4; ++column)
-							localTransformMat[row][column] = static_cast<float>(childNode.matrix[column + 4 * row]);
-				}
-				else
-				{
-					glm::vec3 translation = glm::vec3(0.f);
-					glm::quat orientation = { 1.f, 0.f, 0.f, 0.f };
-					glm::vec3 scale = glm::vec3(1.f);
-
-					if (!childNode.translation.empty())
-					{
-						translation[0] = static_cast<float>(childNode.translation[0]);
-						translation[1] = static_cast<float>(childNode.translation[1]);
-						translation[2] = static_cast<float>(childNode.translation[2]);
-					}
-					
-					if (!childNode.rotation.empty())
-					{
-						orientation[0] = static_cast<float>(childNode.rotation[0]);
-						orientation[1] = static_cast<float>(childNode.rotation[1]);
-						orientation[2] = static_cast<float>(childNode.rotation[2]);
-						orientation[3] = static_cast<float>(childNode.rotation[3]);
-					}
-
-					if (!childNode.scale.empty())
-					{
-						scale[0] = static_cast<float>(childNode.scale[0]);
-						scale[1] = static_cast<float>(childNode.scale[1]);
-						scale[2] = static_cast<float>(childNode.scale[2]);
-					}
-
-					localTransformMat = utl::GetTransformMat(translation, orientation, scale);
-				}
-
-				localTransformMat = parentTransformMat * localTransformMat;
-
-				// TODO: check instancing cases
-				// load mesh if exists
-				if (childNode.mesh != -1)
-				{
-					auto& gltfMesh = gltfData->meshes.at(childNode.mesh);
-
-					auto mesh = LoadMesh(parentAssetPath, *gltfData, gltfMesh, localTransformMat);
-
-					// if missing mesh
-					if (!mesh)
-					{
-						LOG_ERROR("Failed to load mesh, name: {}", gltfMesh.name);
-						return false;
-					}
-
-					m_meshes.emplace_back(std::move(mesh.value()));
-				}
-
-				//load child's children
-				if (!childNode.children.empty())
-					if (!RecurseChildren(childNode.children, localTransformMat))
-						return false;
-			}
-			return true;
-		};
-
-		TIMER_STATIC_SCOPE("copying model time");
-
-		return RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
+		TIMER_STATIC_SCOPE("gltf model load");
+		return LoadFromGltfImpl();
 	}
-
 	return true;
 }
 

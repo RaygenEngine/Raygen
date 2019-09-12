@@ -2,12 +2,12 @@
 
 #include "world/nodes/Node.h"
 #include "world/nodes/MetaNodeTranslation.h"
-#include "assets/other/xml/ParsingAux.h"
+#include "asset/util/ParsingAux.h"
 #include "user/freeform/FreeformUserNode.h"
 #include "sky/SkyCubeNode.h"
 #include "sky/SkyHDRNode.h"
 #include "world/NodeFactory.h"
-#include "assets/AssetManager.h"
+#include "asset/AssetManager.h"
 
 Node::Node(Node* pNode)
 		: m_localTranslation(0.f, 0.f, 0.f),
@@ -163,7 +163,7 @@ void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 			ReadStringAttribute(xmlData, str, fileStr);
 
 			auto p = Engine::GetAssetManager()->m_pathSystem.SearchAssetPath(fileStr);
-			ref = Engine::GetAssetManager()->RequestAsset<ModelAsset>(p / "model");
+			ref = Engine::GetAssetManager()->RequestSearchAsset<ModelAsset>(p);
 			Engine::GetAssetManager()->Load(ref);
 		}
 		);

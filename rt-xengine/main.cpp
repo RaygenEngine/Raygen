@@ -25,7 +25,7 @@
 int32 main(int32 argc, char* argv[])
 {
 	// Init logger (global access, not engine, app or window bound)
-	RT_XENGINE_LOGGER_INIT(LogLevelTarget::INFO);
+	LOGGER_INIT(LogLevelTarget::INFO);
 
 	App app;
 	app.PreMainInit(argc, argv);

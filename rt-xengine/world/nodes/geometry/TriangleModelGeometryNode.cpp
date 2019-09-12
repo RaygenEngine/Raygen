@@ -2,16 +2,16 @@
 
 #include "world/nodes/geometry/TriangleModelGeometryNode.h"
 #include "world/World.h"
-#include "assets/AssetManager.h"
-#include "assets/other/xml/ParsingAux.h"
-#include "assets/AssetManager.h"
+#include "asset/AssetManager.h"
+#include "asset/assets/ModelAsset.h"
+#include "asset/AssetManager.h"
 #include "system/Engine.h"
 
 TriangleModelGeometryNode::TriangleModelGeometryNode(Node* parent)
 	: Node(parent),
       m_model(nullptr)
 {
-	REFLECT_VAR(m_model);
+//	REFLECT_VAR(m_model);
 }
 
 std::string TriangleModelGeometryNode::ToString(bool verbose, uint depth) const

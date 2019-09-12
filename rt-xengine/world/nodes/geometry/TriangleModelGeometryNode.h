@@ -1,7 +1,7 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "assets/model/ModelAsset.h"
+#include "asset/assets/ModelAsset.h"
 
 
 class TriangleModelGeometryNode : public Node

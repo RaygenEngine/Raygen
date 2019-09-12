@@ -7,9 +7,9 @@
 #include "nodes/light/LightNode.h"
 #include "nodes/camera/CameraNode.h"
 #include "nodes/user/UserNode.h"
-#include "assets/other/xml/XMLDocAsset.h"
+#include "asset/assets/XMLDocAsset.h"
 #include "system/EngineComponent.h"
-#include "assets/AssetManager.h"
+#include "asset/AssetManager.h"
 #include "system/Input.h"
 
 class NodeFactory;

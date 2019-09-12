@@ -1,6 +1,6 @@
 #pragma once
 
-#include "assets/Asset.h"
+#include "asset/Asset.h"
 
 namespace OpenGL
 {

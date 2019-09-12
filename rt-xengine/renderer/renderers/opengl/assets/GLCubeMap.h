@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/renderers/opengl/GLAsset.h"
-#include "assets/texture/CubeMapAsset.h"
+#include "asset/assets/CubemapAsset.h"
 
 #include "GLAD/glad.h"
 
@@ -10,14 +10,14 @@ namespace OpenGL
 	// TODO: This asset has not been tested in a renderer, if it doesn't work please implement it correctly, if it works, remove this comment
 	class GLCubeMap : public GLAsset
 	{
-		CubeMapAsset* m_cubeMapData;
+		CubemapAsset* m_cubeMapData;
 		
 		// bindless
 		GLuint64 m_bindlessHandle;
 		GLuint m_glId;
 
 	public:
-		GLCubeMap(CubeMapAsset* cubeMapData)
+		GLCubeMap(CubemapAsset* cubeMapData)
 			: GLAsset(cubeMapData),
 			  m_cubeMapData(cubeMapData),
 		      m_bindlessHandle(0),

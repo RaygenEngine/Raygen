@@ -109,7 +109,7 @@ void Editor::UpdateEditor()
 	static std::string model;
 	ImGui::InputText("ModelAsset to load:", &model);
 	ImGui::SameLine();
-	if (ImGui::Button("Create Asset"))
+	/*if (ImGui::Button("Create Asset"))
 	{
 		auto added =  Engine::GetWorld()->LoadNode<TriangleModelGeometryNode>(Engine::GetWorld()->GetRoot());
 		
@@ -119,7 +119,7 @@ void Editor::UpdateEditor()
 		Engine::GetAssetManager()->Load(asset);
 		
 		Event::OnWorldNodeAdded.Broadcast(added);
-	}
+	}*/
 
 	if (ImGui::CollapsingHeader("Outliner", ImGuiTreeNodeFlags_DefaultOpen))
 	{
