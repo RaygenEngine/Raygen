@@ -42,37 +42,42 @@ fs::path PathSystem::SearchPathUpRecursivelyFromCurrent(const fs::path& subPath)
 
 fs::path PathSystem::SearchPathDownRecursivelyFromPath(const fs::path& subPath, const fs::path& searchPath)
 {
+	TIMER_STATIC_SCOPE("Resolve recursive path search");
+	
 	LOG_DEBUG("Searching for path: \'{}\', recurse: downwards", subPath);
 
 	// if the search path is empty search in the current path
 	const auto currPath = searchPath.empty() ? fs::current_path() : searchPath;
 
-	// check self
-	{
-		auto dataPath = currPath / subPath;
-
-		if (fs::exists(dataPath))
-		{
-			dataPath = fs::relative(dataPath);
-			LOG_DEBUG("found in: \'{}\'", dataPath.string());
-			return dataPath;
-		}
-	}
-
 	for (const auto& entry : fs::recursive_directory_iterator(currPath))
 	{
-		//LOG_TRACE("searching in: \'{}\'", entry.path().string());
-		auto dataPath = entry.path() / subPath;
-
-		if (fs::exists(dataPath))
+		// Case sensitive compare.
+		if (entry.path().filename() == subPath)
 		{
-			dataPath = fs::relative(dataPath);
-			LOG_DEBUG("found in: \'{}\'", dataPath.string());
-			return dataPath;
+			return entry;
 		}
 	}
 
 	return {};
+}
+
+void PathSystem::CacheAssetFilenames()
+{
+	Timer::DebugTimer<std::chrono::milliseconds> timer(true);
+
+	for (const auto& entry : fs::recursive_directory_iterator(fs::current_path()))
+	{
+		if (entry.is_directory())
+		{
+			continue;
+		}
+		auto filename = entry.path().filename().string();
+		if (!m_fileCache.count(filename))
+		{
+			m_fileCache.insert({ utl::force_move(filename), entry.path().string() });
+		}
+	}
+	LOG_INFO("Cached {} asset filenames in {} ms.", m_fileCache.size(), timer.Get());
 }
 
 bool PathSystem::Init(const std::string& applicationPath, const std::string& dataDirectoryName)
@@ -105,16 +110,19 @@ bool PathSystem::Init(const std::string& applicationPath, const std::string& dat
 		LOG_ERROR("Couldn't locate assets root directory!");
 		return false;
 	}
-
-	//auto xsn = SearchPathDownRecursivelyFromCurrent("scenes/test/test.xscn");
-
 	LOG_INFO("Assets root directory: \'{}\'", m_assetsRootPath);
 
+	CacheAssetFilenames();
 	return true;
 }
 
 fs::path PathSystem::SearchAssetPath(const fs::path& asset)
 {
+	auto it = m_fileCache.find(asset.string());
+	if (it != m_fileCache.end())
+	{
+		return fs::path(it->second);
+	}
 	auto ret = SearchPathDownRecursivelyFromPath(asset);
 
 	if (ret.empty())

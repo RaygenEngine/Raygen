@@ -1,7 +1,6 @@
 #pragma once
-
+#include "renderer/NodeObserver.h"
 #include "renderer/renderers/opengl/GLRendererBase.h"
-
 
 namespace OpenGL
 {
@@ -9,18 +8,19 @@ namespace OpenGL
 	class GLAsset : public RendererObject<GLRendererBase>
 	{	
 	protected:
-		GLAsset(void* asset)
-			: m_cacher(asset) {}
+		GLAsset() {}
 		virtual ~GLAsset() = default;
 
-		void* m_cacher;
 		bool m_isLoaded{ false };
 
 		virtual bool Load() = 0;
-		virtual void Unload() = 0;
+
 	private:
-		bool FriendLoad() { return Load(); }
-		void FriendUnload() { Unload(); }
+		bool FriendLoad() 
+		{ 
+			m_isLoaded = Load(); 
+			return m_isLoaded;
+		}
 
 		friend class GLAssetManager;
 	};

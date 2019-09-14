@@ -25,12 +25,12 @@
 	<trimesh_geometry name="box" 
 		translation="0.0, 0.0, -4.0"
 		scale="1, 1, 1" 
-		model="sponza.gltf"/> 
+		model="Sponza.gltf"/> 
 
 	<trimesh_geometry name="box" 
 		translation="0.0, 0.0, -4.0"
 		scale="1, 1, 1" 
-		model="sponza.gltf"/> 
+		model="Sponza.gltf"/> 
 
 </root>
 

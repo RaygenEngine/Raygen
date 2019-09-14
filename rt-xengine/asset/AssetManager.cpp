@@ -22,7 +22,7 @@ ImageAsset* AssetManager::GetDefaultWhite()
 	return Engine::GetAssetManager()->RequestSearchAsset<ImageAsset>(__default__textureWhite);
 }
 
-ImageAsset* GetDefaultMissing()
+ImageAsset* AssetManager::GetDefaultMissing()
 {
 	// PERF
 	return Engine::GetAssetManager()->RequestSearchAsset<ImageAsset>(__default__textureMissing);

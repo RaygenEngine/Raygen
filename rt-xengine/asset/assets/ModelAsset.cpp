@@ -150,6 +150,7 @@ namespace
 
 	bool LoadSampler(SamplerPod& outPod, const tg::Model& model, const tg::Texture& textureData, bool loadDefaultIfMissing = true)
 	{
+
 		bool didLoad = false;
 		const auto imageIndex = textureData.source;
 
@@ -182,6 +183,7 @@ namespace
 
 	bool LoadMaterial(MaterialPod& outMaterial, tg::Model& model, const tg::Material& materialData)
 	{
+
 		// factors
 		auto bFactor = materialData.pbrMetallicRoughness.baseColorFactor;
 		outMaterial.baseColorFactor = { bFactor[0], bFactor[1], bFactor[2], bFactor[3] };
@@ -204,6 +206,7 @@ namespace
 
 		auto LoadTexture = [&](auto textureInfo, SamplerPod& sampler, int32& textCoordIndex, bool useDefaultIfMissing = true)
 		{
+
 			bool didLoad = false;
 			if (textureInfo.index != -1)
 			{
@@ -247,6 +250,7 @@ namespace
 	bool LoadGeometryGroup(GeometryGroupPod& geom, tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData,
 		const glm::mat4& transformMat)
 	{
+
 		// mode
 		geom.mode = GltfAux::GetGeometryMode(primitiveData.mode);
 
@@ -393,7 +397,7 @@ namespace
 
 	bool LoadMesh(MeshPod& mesh, tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
 	{
-		
+
 		mesh.geometryGroups.resize(meshData.primitives.size());
 
 		// primitives
@@ -402,9 +406,9 @@ namespace
 			const auto geomName = "geom_group" + std::to_string(i);
 
 			auto& primitiveData = meshData.primitives.at(i);
-
+			mesh.geometryGroups[i] = new GeometryGroupPod();
 			// if one of the geometry groups fails to load
-			if (!LoadGeometryGroup(mesh.geometryGroups[i], modelData, primitiveData, transformMat))
+			if (!LoadGeometryGroup(*mesh.geometryGroups[i], modelData, primitiveData, transformMat))
 			{
 				LOG_ERROR("Failed to load geometry group, name: {}", geomName);
 				return false;
@@ -419,6 +423,7 @@ namespace
 bool ModelAsset::LoadFromGltfImpl()
 {
 	namespace tg = tinygltf;
+
 
 	tg::TinyGLTF loader;
 	tg::Model model; 
@@ -451,10 +456,10 @@ bool ModelAsset::LoadFromGltfImpl()
 	{
 		for (auto& nodeIndex : childrenIndices)
 		{
+
 			auto& childNode = model.nodes.at(nodeIndex);
 
 			glm::mat4 localTransformMat = glm::mat4(1.f);
-
 			// When matrix is defined, it must be decomposable to TRS.
 			if (!childNode.matrix.empty())
 			{
@@ -501,17 +506,16 @@ bool ModelAsset::LoadFromGltfImpl()
 			{
 				auto& gltfMesh = model.meshes.at(childNode.mesh);
 
-				MeshPod mesh;
+				m_meshes.push_back(new MeshPod());
 
 				// if missing mesh
-				if (!LoadMesh(mesh, model, gltfMesh, localTransformMat))
+				if (!LoadMesh(*m_meshes.back(), model, gltfMesh, localTransformMat))
 				{
 					LOG_ERROR("Failed to load mesh, name: {}", gltfMesh.name);
 					return false;
 				}
-				m_meshes.emplace_back(mesh);
 			}
-
+			
 			//load child's children
 			if (!childNode.children.empty())
 				if (!RecurseChildren(childNode.children, localTransformMat))

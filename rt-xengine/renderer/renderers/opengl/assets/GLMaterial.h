@@ -17,25 +17,22 @@ namespace OpenGL
 		GLTexture* m_normalTexture;
 		GLTexture* m_emissiveTexture;
 		
-	public:
 		GLMaterial(MaterialPod* materialData)
-			: GLAsset(materialData),
-			m_materialData(materialData),
+			: m_materialData(materialData),
 			m_baseColorTexture(nullptr),
 			m_occlusionMetallicRoughnessTexture(nullptr),
 			m_normalTexture(nullptr),
 			m_emissiveTexture(nullptr) {}
 
+		bool Load() override;
+		friend class GLAssetManager;
+	public:
 		[[nodiscard]] GLTexture* GetBaseColorTexture() const { return m_baseColorTexture; }
 		[[nodiscard]] GLTexture* GetOcclusionMetallicRoughnessTexture() const { return m_occlusionMetallicRoughnessTexture; }
 		[[nodiscard]] GLTexture* GetNormalTexture() const { return m_normalTexture; }
 		[[nodiscard]] GLTexture* GetEmissiveTexture() const { return m_emissiveTexture; }
 
 		MaterialPod* GetMaterialAsset() const { return m_materialData; }
-		
-	protected:
-		bool Load() override;
-		void Unload() override;
 	};
 
 }

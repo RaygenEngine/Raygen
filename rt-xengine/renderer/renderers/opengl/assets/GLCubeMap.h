@@ -16,21 +16,18 @@ namespace OpenGL
 		GLuint64 m_bindlessHandle;
 		GLuint m_glId;
 
-	public:
 		GLCubeMap(CubemapAsset* cubeMapData)
-			: GLAsset(cubeMapData),
-			  m_cubeMapData(cubeMapData),
+			: m_cubeMapData(cubeMapData),
 		      m_bindlessHandle(0),
-			  m_glId(0)
-		{
-		}
+			  m_glId(0) {}
 
+		bool Load() override;
+		friend class GLAssetManager;
+	public:
 		~GLCubeMap();
 
 		[[nodiscard]] GLuint GetGLId() const { return m_glId; }
 		[[nodiscard]] GLuint64 GetGLBindlessHandle() const { return m_bindlessHandle; }
 
-		bool Load() override;
-		void Unload() override;
 	};
 }

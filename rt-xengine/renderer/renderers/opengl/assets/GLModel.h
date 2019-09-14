@@ -36,29 +36,25 @@ namespace OpenGL
 
 	private:
 
-		std::optional<GLMesh> LoadGLMesh(const ModelAsset::Mesh::GeometryGroup& data, GLenum usage);
+		bool LoadGLMesh(GLMesh& mesh, GeometryGroupPod& data, GLenum usage);
 		
 		ModelAsset* m_model;
-
-	protected:
 		GLenum m_usage;
 
 		std::vector<GLMesh> m_meshes;
 
-	public:
 		GLModel(ModelAsset* model)
-			: GLAsset(model),
-		      m_model(model),
+			: m_model(model),
 			  m_usage(GL_STATIC_DRAW) {}
+		bool Load() override;
 
+		friend class GLAssetManager;
+	public:
 		virtual ~GLModel();
 
 		std::vector<GLMesh>& GetGLMeshes() { return m_meshes; }
 
-	protected:
 		
-		bool Load() override;
-		void Unload() override;
 	};
 
 }

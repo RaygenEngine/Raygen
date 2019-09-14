@@ -145,6 +145,7 @@ set(HEADER_FILES
 	renderer/renderers/opengl/assets/GLShader.h
 	renderer/renderers/opengl/assets/GLTexture.h
 	renderer/renderers/opengl/assets/GLCubeMap.h
+	renderer/renderers/opengl/assets/GLMaterial.h
 
 	renderer/renderers/opengl/test/GLTestRenderer.h
 	renderer/renderers/opengl/test/GLTestGeometry.h

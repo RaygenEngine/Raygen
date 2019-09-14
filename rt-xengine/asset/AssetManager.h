@@ -55,18 +55,17 @@ public:
 	template<typename AssetT>
 	AssetT* RequestSearchAsset(const fs::path& path)
 	{
-		// PERF:
 		fs::path p;
 		if (IsCpuPath(path))
 		{
 			p = path;
 		}
-		else 
+		else
 		{
 			p = m_pathSystem.SearchAssetPath(path);
 			assert(!p.empty());
 		}
-
+	
 		auto it = m_assetMap.find(p.string());
 		if (it != m_assetMap.end())
 		{

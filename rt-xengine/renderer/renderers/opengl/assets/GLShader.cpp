@@ -91,11 +91,6 @@ namespace OpenGL
 		return true;
 	}
 
-	void GLShader::Unload()
-	{
-		glDeleteProgram(m_glId);
-	}
-
 	void GLShader::SetUniformLocation(const std::string& name)
 	{
 		m_uniformLocations[name] = glGetUniformLocation(m_glId, name.c_str());

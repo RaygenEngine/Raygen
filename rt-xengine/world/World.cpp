@@ -83,7 +83,7 @@ bool World::LoadAndPrepareWorldFromXML(XMLDocAsset* sceneXML)
 	}
 
 
-	//LOG_INFO("Loading World data from XML: \'{}\'", sceneXML->GetFilePath());
+	LOG_INFO("Loading World from XML: \'{}\'", sceneXML->GetUri());
 
 	auto* rootNode = sceneXML->GetRootElement();
 

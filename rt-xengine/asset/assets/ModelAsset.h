@@ -21,7 +21,7 @@ struct GeometryGroupPod
 
 struct MeshPod
 {
-	std::vector<GeometryGroupPod> geometryGroups;
+	std::vector<GeometryGroupPod*> geometryGroups;
 };
 
 class ModelAsset : public Asset
@@ -29,7 +29,7 @@ class ModelAsset : public Asset
 public:
 
 private:
-	std::vector<MeshPod> m_meshes;
+	std::vector<MeshPod*> m_meshes;
 	
 
 	bool LoadFromGltfImpl();
@@ -38,7 +38,7 @@ public:
 	ModelAsset(const fs::path& path)
 		: Asset(path) {}
 
-	[[nodiscard]] std::vector<MeshPod>& GetMeshes() { return m_meshes; }
+	[[nodiscard]] std::vector<MeshPod*>& GetMeshes() { return m_meshes; }
 	
 protected:
 	bool Load() override;

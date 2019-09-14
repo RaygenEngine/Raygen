@@ -10,6 +10,8 @@ class PathSystem
 	// assets root path
 	fs::path m_assetsRootPath;
 
+	std::unordered_map<std::string, std::string> m_fileCache;
+
 public:
 	PathSystem() = default;
 	~PathSystem() = default;
@@ -24,4 +26,7 @@ public:
 
 	// Unsafe, searches everywhere
 	fs::path SearchAssetPath(const fs::path& asset);
+
+private:
+	void CacheAssetFilenames();
 };

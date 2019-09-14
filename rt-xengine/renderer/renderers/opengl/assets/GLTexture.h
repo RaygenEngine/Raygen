@@ -18,20 +18,20 @@ namespace OpenGL
 		GLuint64 m_bindlessHandle;
 		GLuint m_glId;
 
-	public:
 		GLTexture(SamplerPod* sampler)
-			: GLAsset(sampler->image),
-			m_sampler(sampler),
-			  m_bindlessHandle(0),
-			  m_glId(0)
+			: m_sampler(sampler),
+			m_bindlessHandle(0),
+			m_glId(0)
 		{
 		}
-		~GLTexture();
+
+		bool Load() override;
+
+		friend class GLAssetManager;
+	public:
+		virtual ~GLTexture();
 	
 		[[nodiscard]] GLuint GetGLId() const { return m_glId; }
 		[[nodiscard]] GLuint64 GetGLBindlessHandle() const { return m_bindlessHandle; }
-
-		bool Load() override;
-		void Unload() override;
 	};
 }

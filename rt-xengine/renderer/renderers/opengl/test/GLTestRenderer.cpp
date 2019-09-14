@@ -22,11 +22,9 @@ namespace OpenGL
 			return false;
 
 		
-		m_nonInstancedShader = new GLShader(sources);
+		m_nonInstancedShader = GetGLAssetManager()->GetOrMakeFromPtr<GLShader>(sources);
 
-		if (!m_nonInstancedShader->Load())
-			return false;
-		
+
 		m_nonInstancedShader->SetUniformLocation("mvp");
 		m_nonInstancedShader->SetUniformLocation("m");
 		m_nonInstancedShader->SetUniformLocation("normalMatrix");
@@ -112,9 +110,9 @@ namespace OpenGL
 			{
 				glBindVertexArray(glMesh.vao);
 
-				GLMaterial& glMaterial = glMesh.material;
+				GLMaterial& glMaterial = *glMesh.material;
 
-				MaterialPod* materialData = &model->GetMaterial(glMaterial.materialIndex);
+				MaterialPod* materialData = glMaterial.GetMaterialAsset();
 				
 				glUniform4fv(m_nonInstancedShader->GetUniformLocation("baseColorFactor"), 1, glm::value_ptr(materialData->baseColorFactor));
 				glUniform3fv(m_nonInstancedShader->GetUniformLocation("emissiveFactor"), 1, glm::value_ptr(materialData->emissiveFactor));

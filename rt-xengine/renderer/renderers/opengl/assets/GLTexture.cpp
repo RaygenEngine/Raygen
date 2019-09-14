@@ -15,9 +15,15 @@ namespace OpenGL
 
 	bool GLTexture::Load()
 	{
+		if (!m_sampler->image)
+		{
+			return false;
+		}
+
 		if (!Engine::GetAssetManager()->Load(m_sampler->image))
 			return false;
 
+	
 		glGenTextures(1, &m_glId);
 		glBindTexture(GL_TEXTURE_2D, m_glId);
 
@@ -58,11 +64,5 @@ namespace OpenGL
 		glMakeTextureHandleResidentARB(m_bindlessHandle);
 
 		return true;
-	}
-
-	void GLTexture::Unload()
-	{
-		// TODO: handle bind-less
-		glDeleteTextures(1, &m_glId);
 	}
 }
