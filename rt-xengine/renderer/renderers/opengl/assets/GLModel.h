@@ -36,9 +36,9 @@ namespace OpenGL
 
 	private:
 
-		std::optional<GLMesh> LoadGLMesh(GeometryGroup& data, GLenum usage);
+		bool LoadGLMesh(GLMesh& mesh, GeometryGroupPod& data, GLenum usage);
+		
 
-	protected:
 		GLenum m_usage;
 
 		std::vector<GLMesh> m_meshes;
@@ -47,15 +47,15 @@ namespace OpenGL
 		GLModel(const fs::path& assocPath)
 			: GLAsset(assocPath),
 			  m_usage(GL_STATIC_DRAW) {}
+		bool Load() override;
 
+		friend class GLAssetManager;
+	public:
 		virtual ~GLModel();
 
 		std::vector<GLMesh>& GetGLMeshes() { return m_meshes; }
 
-	protected:
 		
-		bool Load() override;
-		void Unload() override;
 	};
 
 }

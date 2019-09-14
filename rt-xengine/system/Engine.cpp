@@ -64,9 +64,8 @@ bool Engine::CreateWorldFromFile(const std::string& filename)
 	}
 	m_world = new World(m_app->MakeNodeFactory());
 
-	// load scene file
-	auto finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAssetPath(filename);
-	XMLDocAsset* sceneXML = m_assetManager->RequestSearchAsset<XMLDocAsset>(finalPath);
+
+	XMLDocAsset* sceneXML = m_assetManager->RequestSearchAsset<XMLDocAsset>(filename);
 	if (!m_assetManager->Load(sceneXML))
 		return false;
 

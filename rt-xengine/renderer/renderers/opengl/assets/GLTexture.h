@@ -6,6 +6,8 @@
 #include "asset/pods/TexturePod.h"
 
 #include "GLAD/glad.h"
+#include "asset/pods/SamplerPod.h"
+#
 
 namespace OpenGL
 {
@@ -22,13 +24,14 @@ namespace OpenGL
 			  m_glId(0)
 		{
 		}
-		~GLTexture();
+
+		bool Load() override;
+
+		friend class GLAssetManager;
+	public:
+		virtual ~GLTexture();
 	
 		[[nodiscard]] GLuint GetGLId() const { return m_glId; }
 		[[nodiscard]] GLuint64 GetGLBindlessHandle() const { return m_bindlessHandle; }
-
-	protected:
-		bool Load() override;
-		void Unload() override;
 	};
 }

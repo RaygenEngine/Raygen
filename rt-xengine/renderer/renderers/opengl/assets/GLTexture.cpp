@@ -60,10 +60,4 @@ namespace OpenGL
 
 		return true;
 	}
-
-	void GLTexture::Unload()
-	{
-		// TODO: handle bind-less
-		glDeleteTextures(1, &m_glId);
-	}
 }

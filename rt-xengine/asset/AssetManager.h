@@ -71,13 +71,12 @@ public:
 	template<typename AssetT>
 	AssetT* RequestSearchAsset(const fs::path& path)
 	{
-		// PERF:
 		fs::path p;
 		if (IsCpuPath(path))
 		{
 			p = path;
 		}
-		else 
+		else
 		{
 			// PERF:
 			p = m_pathSystem.SearchAssetPath(path);
@@ -118,6 +117,22 @@ public:
 		return false;
 	}
 
+	//template<typename ...Args>
+	//bool LoadAssetList(Args... args)
+	//{
+	//	using namespace std;
+	//	//static_assert(conjunction_v< (conjunction_v < is_pointer_v<Args>, is_base_of_v<std::remove_pointer_t<Args>, Asset>), ... >, "Not all argument types are pointers of assets.");
+
+	//	return ((Load(args) && ...));
+	//}
+
+	////template<typename AssetT>
+	////AssetT* GenerateAndLoad(const fs::path& path)
+	////{
+	////	auto r = GenerateAsset(path);
+	////	Load(r);
+	////	return r;
+	////}
 	PathSystem m_pathSystem;
 	bool Init(const std::string& applicationPath, const std::string& dataDirectoryName);
 };

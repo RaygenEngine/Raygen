@@ -72,9 +72,4 @@ namespace OpenGL
 
 		return true;
 	}
-
-	void GLCubeMap::Unload()
-	{
-		glDeleteTextures(1, &m_glId);
-	}
 }

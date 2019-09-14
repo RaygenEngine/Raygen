@@ -96,17 +96,19 @@ namespace OpenGL
 			auto m = geometry->GetNode()->GetWorldMatrix();
 			auto mvp = vp * m;
 
+			GLModel* model = geometry->glModel;
+
 			glUniformMatrix4fv(m_nonInstancedShader->GetUniformLocation("mvp"), 1, GL_FALSE, &mvp[0][0]);
 			glUniformMatrix4fv(m_nonInstancedShader->GetUniformLocation("m"), 1, GL_FALSE, &m[0][0]);
 			glUniformMatrix3fv(m_nonInstancedShader->GetUniformLocation("normalMatrix"), 1, GL_FALSE, &glm::transpose(glm::inverse(glm::mat3(m)))[0][0]);
-
+			
 			for (auto& glMesh : geometry->glModel->GetGLMeshes())
 			{
 				glBindVertexArray(glMesh.vao);
 
-				auto& glMaterial = glMesh.material;
+				GLMaterial& glMaterial = *glMesh.material;
 
-				auto materialData = glMaterial->GetMaterialAsset();
+				MaterialPod* materialData = glMaterial.GetMaterialAsset();
 				
 				glUniform4fv(m_nonInstancedShader->GetUniformLocation("baseColorFactor"), 1, glm::value_ptr(materialData->baseColorFactor));
 				glUniform3fv(m_nonInstancedShader->GetUniformLocation("emissiveFactor"), 1, glm::value_ptr(materialData->emissiveFactor));

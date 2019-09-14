@@ -8,57 +8,53 @@ namespace OpenGL
 {
 	class GLAssetManager
 	{		
-		std::unordered_map<std::string, GLAsset*> m_assetMap;
+		std::unordered_map<uint64, GLAsset*> m_assetMap;
 
 	public:
-
-		bool Load(GLAsset* asset)
+		// This will also instantly load the GPU asset.
+		// constructorArguments are forwarded to the AssetT constructor ONLY IF the element is created.
+		template<typename AssetT, typename ...Args>
+		AssetT* GetOrMake(uint64 cacheHash, Args&& ...constructorArguments)
 		{
-			assert(asset);
-			assert(m_assetMap.find(asset->m_assetManagerPodPath.string()) != m_assetMap.end());
-
-			if (asset->m_isLoaded)
-			{
-				return true;
-			}
-
-			if (asset->FriendLoad())
-			{
-				asset->m_isLoaded = true;
-			}
-			else
-			{
-				asset->m_isLoaded = false;
-			}
-			
-			return asset->m_isLoaded;
-		}
-
-		template<typename AssetT>
-		AssetT* RequestLoadAsset(const fs::path& assetManagerPodPath)
-		{
-			auto it = m_assetMap.find(assetManagerPodPath.string());
+			static_assert(std::is_base_of_v<GLAsset, AssetT>, "Expected a child of GLAsset.");
+			auto it = m_assetMap.find(cacheHash);
 			if (it != m_assetMap.end())
 			{
-				auto* p = dynamic_cast<AssetT*>(it->second);
-				assert(p);
-				return p;
+				return dynamic_cast<AssetT*>(it->second);
 			}
-			AssetT* result = new AssetT(assetManagerPodPath);
-			m_assetMap.emplace(assetManagerPodPath.string(), result);
-
-			assert(Load(result));
-			
+			AssetT* result = new AssetT(std::forward<Args>(constructorArguments)...);
+			m_assetMap.emplace(cacheHash, result);
+			result->FriendLoad();
 			return result;
 		}
 
-		void Unload(GLAsset* asset)
+		// This will also instantly load the GPU asset.
+		// constructorArguments are forwarded to the AssetT constructor ONLY IF the element is created.
+		template<typename AssetT, typename PtrT, typename ...Args>
+		AssetT* GetOrMake(PtrT* cacheHash, Args&& ...constructorArguments)
 		{
-			if (asset->m_isLoaded)
-			{
-				asset->Unload();
-			}
-			asset->m_isLoaded = false;
+			assert(pointer != nullptr);
+			return GetOrMake<AssetT>(reinterpret_cast<uint64>(cacheHash), std::forward<Args>(constructorArguments)...);
+		}
+		
+		// For ease of use, this will forward the pointer as a single constructor argument
+		// and at the same time cache with this pointer as hash.
+		template<typename AssetT, typename PtrT>
+		AssetT* GetOrMakeFromPtr(PtrT* pointer)
+		{
+			assert(pointer != nullptr);
+			return GetOrMake<AssetT>(reinterpret_cast<uint64>(pointer), pointer);
+		}
+
+
+		// This will delete the element at that hash if found.
+		void Delete(uint64 cacheHash);
+
+			// This will delete the element at that hash if found.
+		template<typename PtrT>
+		void Delete(PtrT* cacheHash)
+		{
+			Delete(static_cast<uint64>(cacheHash));
 		}
 	};
 

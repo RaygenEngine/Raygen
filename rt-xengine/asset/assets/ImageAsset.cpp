@@ -3,10 +3,7 @@
 #include "asset/assets/ImageAsset.h"
 #include "system/Engine.h"
 #include "asset/AssetManager.h"
-
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image/stb_image.h"
-#include "tinygltf/tiny_gltf.h"
 
 ImageAsset* ImageAsset::GetDefaultWhite()
 {

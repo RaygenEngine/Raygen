@@ -34,7 +34,7 @@ namespace ParsingAux
 			return true;
 		}
 
-		LOG_INFO("Missing XML attribute: \"{0}\", defaulting", attribute);
+		LOG_TRACE("Missing XML attribute: \"{0}\", defaulting", attribute);
 		return false;
 	}
 
@@ -48,7 +48,7 @@ namespace ParsingAux
 			return true;
 		}
 
-		LOG_INFO("Missing string attribute \"{0}\", defaulting", attribute);
+		LOG_TRACE("Missing string attribute \"{0}\", defaulting", attribute);
 		return false;
 	}
 

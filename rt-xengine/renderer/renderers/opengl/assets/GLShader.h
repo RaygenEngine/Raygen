@@ -19,16 +19,16 @@ namespace OpenGL
 			: GLAsset(assocPath),
 			  m_glId(0) {}
 
-		~GLShader();
+		bool Load() override;
+		
+		friend class GLAssetManager;
+	public:
+		virtual ~GLShader();
 
 		[[nodiscard]] GLuint GetGLHandle() const { return m_glId; }
 
 		void SetUniformLocation(const std::string& name);
 		GLint GetUniformLocation(const std::string& name);
-
-	protected:
-		bool Load() override;
-		void Unload() override;
 	};
 
 }

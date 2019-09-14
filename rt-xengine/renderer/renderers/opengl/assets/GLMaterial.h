@@ -23,6 +23,9 @@ namespace OpenGL
 			  m_normalTexture(nullptr),
 			  m_emissiveTexture(nullptr) {}
 
+		bool Load() override;
+		friend class GLAssetManager;
+	public:
 		[[nodiscard]] GLTexture* GetBaseColorTexture() const { return m_baseColorTexture; }
 		[[nodiscard]] GLTexture* GetOcclusionMetallicRoughnessTexture() const { return m_occlusionMetallicRoughnessTexture; }
 		[[nodiscard]] GLTexture* GetNormalTexture() const { return m_normalTexture; }

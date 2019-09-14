@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "renderer/renderers/opengl/assets/GLModel.h"
+#include "renderer/renderers/opengl/test/GLTestRenderer.h"
 #include "renderer/renderers/opengl/GLUtil.h"
 #include "system/Engine.h"
 #include "asset/AssetManager.h"
@@ -9,10 +10,8 @@
 namespace OpenGL
 {
 
-	std::optional<GLModel::GLMesh> GLModel::LoadGLMesh(GeometryGroup& data, GLenum usage)
+	bool GLModel::LoadGLMesh(GLMesh& glMesh, GeometryGroupPod& data, GLenum usage)
 	{
-		GLMesh glMesh{};
-
 		glMesh.geometryMode = GetGLGeometryMode(data.mode);
 
 		glGenVertexArrays(1, &glMesh.vao);
@@ -65,7 +64,7 @@ namespace OpenGL
 
 		glBindVertexArray(0);
 
-		return glMesh;
+		return true;
 	}
 
 	GLModel::~GLModel()
@@ -81,6 +80,8 @@ namespace OpenGL
 			glDeleteBuffers(1, &mesh.ebo);
 
 			glDeleteVertexArrays(1, &mesh.vao);
+
+			delete mesh.material;
 		}
 	}
 
@@ -95,32 +96,17 @@ namespace OpenGL
 
 		for (auto& mesh : modelData->meshes)
 		{
-			for (auto& geometryGroup : mesh.geometryGroups)
+			for (auto& geometryGroup : mesh->geometryGroups)
 			{
-				auto glMesh = LoadGLMesh(geometryGroup, m_usage);
-				if (!glMesh)
+				GLMesh& glmesh = m_meshes.emplace_back(GLMesh());
+				if (!LoadGLMesh(glmesh, *geometryGroup, m_usage))
+				{
 					return false;
+				}
 				
-				m_meshes.emplace_back(glMesh.value());
 			}
 		}
 
 		return true;
-	}
-
-	void GLModel::Unload()
-	{
-		for (auto& mesh : m_meshes)
-		{
-			glDeleteBuffers(1, &mesh.positionsVBO);
-			glDeleteBuffers(1, &mesh.normalsVBO);
-			glDeleteBuffers(1, &mesh.tangentsVBO);
-			glDeleteBuffers(1, &mesh.bitangentsVBO);
-			glDeleteBuffers(1, &mesh.textCoords0VBO);
-			glDeleteBuffers(1, &mesh.textCoords1VBO);
-			glDeleteBuffers(1, &mesh.ebo);
-
-			glDeleteVertexArrays(1, &mesh.vao);
-		}
 	}
 }

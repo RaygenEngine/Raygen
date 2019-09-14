@@ -24,6 +24,8 @@ set(SOURCE_FILES
 	asset/assets/GltfFileAsset.cpp
 	asset/assets/DummyAssets.cpp
 	
+	asset/util/DependenciesImpl.cpp
+
 	core/logger/Logger.cpp
 	
 	editor/Editor.cpp
