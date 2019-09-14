@@ -2,10 +2,10 @@
 
 #include "renderer/renderers/opengl/GLAsset.h"
 #include "renderer/renderers/opengl/assets/GLMaterial.h"
-#include "asset/assets/ModelAsset.h"
 
 #include "GLAD/glad.h"
 #include <optional>
+#include "asset/pods/ModelPod.h"
 
 namespace OpenGL
 {
@@ -36,9 +36,7 @@ namespace OpenGL
 
 	private:
 
-		std::optional<GLMesh> LoadGLMesh(const ModelAsset::Mesh::GeometryGroup& data, GLenum usage);
-		
-		ModelAsset* m_model;
+		std::optional<GLMesh> LoadGLMesh(GeometryGroup& data, GLenum usage);
 
 	protected:
 		GLenum m_usage;
@@ -46,9 +44,8 @@ namespace OpenGL
 		std::vector<GLMesh> m_meshes;
 
 	public:
-		GLModel(ModelAsset* model)
-			: GLAsset(model),
-		      m_model(model),
+		GLModel(const fs::path& assocPath)
+			: GLAsset(assocPath),
 			  m_usage(GL_STATIC_DRAW) {}
 
 		virtual ~GLModel();

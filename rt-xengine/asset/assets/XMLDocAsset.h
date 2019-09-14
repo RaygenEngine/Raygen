@@ -1,20 +1,20 @@
 #pragma once
 
 #include "asset/Asset.h"
+#include "asset/pods/XMLDocPod.h"
+
 #include "tinyxml2/tinyxml2.h"
 
-class XMLDocAsset : public Asset
+class XMLDocAsset : public PodedAsset<XMLDocPod>
 {
-	tinyxml2::XMLDocument m_document;
 
 public:
 	XMLDocAsset(const fs::path& path)
-		: Asset(path) {}
+		: PodedAsset(path) {}
 	~XMLDocAsset() = default;
 
-	const tinyxml2::XMLElement* GetRootElement() const { return m_document.RootElement(); }
+	const tinyxml2::XMLElement* GetRootElement() const { return m_pod->document.RootElement(); }
 
 protected:
 	bool Load() override;
-	void Unload() override;
 };

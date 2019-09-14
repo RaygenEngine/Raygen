@@ -1,19 +1,25 @@
 #pragma once
 
 #include "renderer/renderers/opengl/GLRendererBase.h"
+#include "asset/AssetPod.h"
 
+#include <filesystem>
+namespace  fs = std::filesystem;
 
 namespace OpenGL
 {
-	
 	class GLAsset : public RendererObject<GLRendererBase>
-	{	
+	{
+	public:
+		fs::path GetAssetManagerPodPath() const { return m_assetManagerPodPath; }
+
 	protected:
-		GLAsset(Asset* asset)
-			: m_asset(asset) {}
+		GLAsset(const fs::path& assocPath)
+			: m_assetManagerPodPath(assocPath) {}
 		virtual ~GLAsset() = default;
 
-		Asset* m_asset;
+		fs::path m_assetManagerPodPath;
+		
 		bool m_isLoaded{ false };
 
 		virtual bool Load() = 0;

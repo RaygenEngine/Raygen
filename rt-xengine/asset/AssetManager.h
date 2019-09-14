@@ -6,52 +6,67 @@
 #include "asset/PathSystem.h"
 #include "asset/Asset.h"
 
-constexpr auto __default__textureWhite = "__default__texture-white.jpg";
-constexpr auto __default__textureMissing = "__default__texture-missing.jpg";
+constexpr auto __default__imageWhite = "__default__image-white.jpg";
+constexpr auto __default__imageMissing = "__default__image-missing.jpg";
 
-class ImageAsset;
+constexpr auto __default__texture = "#__default__texture";
+constexpr auto __default__material = "#__default__material";
 
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
 class AssetManager
 {
-	std::unordered_map<std::string, Asset*> m_assetMap;
+	std::unordered_map<std::string, Asset*> m_pathAssetMap;
+	std::unordered_map<AssetPod*, Asset*> m_podAssetMap;
 	friend class Editor;
 public:
 
-	static ImageAsset* GetDefaultWhite();
-	static ImageAsset* GetDefaultMissing();
-
-	template<typename AssetT>
-	bool Load(AssetT* asset)
+	bool Load(Asset* asset)
 	{
 		assert(asset);
-		assert(m_assetMap.find(asset->m_uri.string()) != m_assetMap.end());
+		assert(m_pathAssetMap.find(asset->m_uri.string()) != m_pathAssetMap.end());
 
 		if (asset->m_isLoaded)
 		{
 			return true;
 		}
-
-		if (asset->FriendLoad())
-		{
-			asset->m_isLoaded = true;
-		}
+		
+		asset->m_isLoaded = asset->FriendLoad();
+		
 		return asset->m_isLoaded;
 	}
 
-	//// If this returns null, an asset of a different type already exists at this uri
-	//template<typename AssetT>
-	//AssetT* RequestAsset(const fs::path& path)
-	//{
-	//	auto it = m_assetMap.find(path.string());
-	//	if (it != m_assetMap.end())
-	//	{
-	//		return dynamic_cast<AssetT*>(it->second);
-	//	}
-	//	AssetT* result = new AssetT(path);
-	//	m_assetMap.emplace(path.string(), result);
-	//	return result;
-	//}
+	// loads the parent asset of a pod (refreshes the pod's data)
+	template<typename PodType>
+	PodType* RequestFreshPod(const fs::path& podAssetPath)
+	{		
+		assert(m_pathAssetMap.find(podAssetPath.string()) != m_pathAssetMap.end());
+		
+		// get assoc asset
+		auto asset = dynamic_cast<PodedAsset<PodType>*>(m_pathAssetMap[podAssetPath.string()]);
+		assert(asset);
+		assert(Load(asset));
+
+		// (re)load it
+		return dynamic_cast<PodType*>(asset->m_pod);
+	}
+
+	void RefreshPod(AssetPod* pod)
+	{
+		assert(m_podAssetMap.find(pod) != m_podAssetMap.end());
+
+		// get assoc asset
+		const auto asset = m_podAssetMap[pod];
+		assert(Load(asset));
+	}
+
+	fs::path GetPodPath(AssetPod* pod)
+	{
+		assert(m_podAssetMap.find(pod) != m_podAssetMap.end());
+
+		// get assoc asset
+		const auto asset = m_podAssetMap[pod];
+		return asset->GetUri();
+	}
 
 	template<typename AssetT>
 	AssetT* RequestSearchAsset(const fs::path& path)
@@ -64,42 +79,45 @@ public:
 		}
 		else 
 		{
+			// PERF:
 			p = m_pathSystem.SearchAssetPath(path);
 			assert(!p.empty());
 		}
 
-		auto it = m_assetMap.find(p.string());
-		if (it != m_assetMap.end())
+		auto it = m_pathAssetMap.find(p.string());
+		if (it != m_pathAssetMap.end())
 		{
-			auto* p = dynamic_cast<AssetT*>(it->second);
-			assert(p);
-			return p;
+			auto* asset = dynamic_cast<AssetT*>(it->second);
+			assert(asset);
+			return asset;
 		}
-		AssetT* result = new AssetT(p);
-		m_assetMap.emplace(p.string(), result);
-		return result;
+		
+		AssetT* asset = new AssetT(p);
+		m_pathAssetMap.emplace(p.string(), asset);
+
+		asset->Allocate();
+		m_podAssetMap[asset->m_pod] = asset;
+		
+		return asset;
 	}
 
-	// todo:
-	template<typename AssetT>
-	void Unload(AssetT* asset)
+	void Unload(Asset* asset)
 	{
+		if(asset->m_isLoaded)
+		{
+			asset->Deallocate();
+		}
+		
 		asset->m_isLoaded = false;
-		//assert(false);
 	}
 
 	static bool IsCpuPath(const fs::path& path)
 	{
+		if (path.filename().string()[0] == '#') 
+			return true;
 		return false;
 	}
 
-	//template<typename AssetT>
-	//AssetT* GenerateAndLoad(const fs::path& path)
-	//{
-	//	auto r = GenerateAsset(path);
-	//	Load(r);
-	//	return r;
-	//}
 	PathSystem m_pathSystem;
 	bool Init(const std::string& applicationPath, const std::string& dataDirectoryName);
 };

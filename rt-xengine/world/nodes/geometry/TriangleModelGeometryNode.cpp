@@ -3,9 +3,9 @@
 #include "world/nodes/geometry/TriangleModelGeometryNode.h"
 #include "world/World.h"
 #include "asset/AssetManager.h"
-#include "asset/assets/ModelAsset.h"
-#include "asset/AssetManager.h"
 #include "system/Engine.h"
+#include "asset/assets/GltfModelAsset.h"
+#include "asset/assets/GltfFileAsset.h"
 
 TriangleModelGeometryNode::TriangleModelGeometryNode(Node* parent)
 	: Node(parent),
@@ -24,14 +24,21 @@ bool TriangleModelGeometryNode::LoadAttributesFromXML(const tinyxml2::XMLElement
 	Node::LoadAttributesFromXML(xmlData);
 
 
-	//if (ParsingAux::AttributeExists(xmlData, "model"))
-	//{
-	//	auto finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAsset(xmlData->Attribute("model"));
-	//	m_model = Engine::GetAssetManager()->RequestAsset<ModelAsset>(finalPath / fs::path("model"));
-	//	if (!Engine::GetAssetManager()->Load(m_model))
-	//		return false;
-	//}
-	//else return false;
+	if (ParsingAux::AttributeExists(xmlData, "model"))
+	{
+		fs::path file = xmlData->Attribute("model");
+
+		if (file.extension().compare(".gltf") == 0)
+		{
+			auto pParent = Engine::GetAssetManager()->RequestSearchAsset<GltfFileAsset>(file);
+
+			auto mPath = pParent->GetUri() / "#model";
+			// check if gltf
+			m_model = Engine::GetAssetManager()->RequestSearchAsset<GltfModelAsset>(mPath);
+		}
+		// load other types
+	}
+	else return false;
 
 	return true;
 }

@@ -7,27 +7,21 @@
 #include "world/nodes/geometry/TriangleModelGeometryNode.h"
 #include "asset/AssetManager.h"
 #include "system/Engine.h"
-
 #include "renderer/renderers/opengl/assets/GLCubeMap.h"
 #include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/assets/GLShader.h"
-#include "renderer/renderers/opengl/assets/GLTexture.h"
+#include "renderer/renderers/opengl/GLAssetManager.h"
 
 namespace OpenGL
 {
 	bool GLTestRenderer::InitScene(int32 width, int32 height)
 	{
-		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<TriangleModelGeometryNode>())
-			m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, GLTestGeometry>(this, geometryNode));
-		auto finalPath = Engine::GetAssetManager()->m_pathSystem.SearchAssetPath("test/test.frag");
-		const auto sources = Engine::GetAssetManager()->RequestAsset<MultiStringFileAsset>(finalPath);
-		if (!Engine::GetAssetManager()->Load(sources))
-			return false;
-
+		auto am = Engine::GetAssetManager();
 		
-		m_nonInstancedShader = GetGLAssetManager()->MaybeGenerateAsset<GLShader>(sources);
-		if (!GetGLAssetManager()->Load(m_nonInstancedShader))
-			return false;
+		const auto shaderAsset = am->RequestSearchAsset<ShaderAsset>("test/test.shader.json");
+		
+		m_nonInstancedShader = GetGLAssetManager()->RequestLoadAsset<GLShader>(shaderAsset->GetUri());
+		
 		m_nonInstancedShader->SetUniformLocation("mvp");
 		m_nonInstancedShader->SetUniformLocation("m");
 		m_nonInstancedShader->SetUniformLocation("normalMatrix");
@@ -58,7 +52,8 @@ namespace OpenGL
 		//for (auto* geometryNode : GetWorld()->GetNodeMap<World::TriangleModelInstancedGeometryNode>())
 		//	m_instancedGeometries.emplace_back(RequestGLInstancedModel(geometryNode));
 
-	
+		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<TriangleModelGeometryNode>())
+			m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, GLTestGeometry>(this, geometryNode));
 
 		//auto* sky = GetWorld()->GetAvailableNodeSpecificSubType<World::SkyHDRNode>();
 
@@ -113,25 +108,25 @@ namespace OpenGL
 
 				auto materialData = glMaterial->GetMaterialAsset();
 				
-				glUniform4fv(m_nonInstancedShader->GetUniformLocation("baseColorFactor"), 1, glm::value_ptr(materialData->GetBaseColorFactor()));
-				glUniform3fv(m_nonInstancedShader->GetUniformLocation("emissiveFactor"), 1, glm::value_ptr(materialData->GetEmissiveFactor()));
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("metallicFactor"), materialData->GetMetallicFactor());
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("roughnessFactor"), materialData->GetRoughnessFactor());
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("normalScale"), materialData->GetNormalScale());
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("occlusionStrength"), materialData->GetOcclusionStrength());
-				glUniform1i(m_nonInstancedShader->GetUniformLocation("alphaMode"), materialData->GetAlphaMode());
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("alphaCutoff"), materialData->GetAlphaCutoff());
-				glUniform1i(m_nonInstancedShader->GetUniformLocation("doubleSided"), materialData->IsDoubleSided());
+				glUniform4fv(m_nonInstancedShader->GetUniformLocation("baseColorFactor"), 1, glm::value_ptr(materialData->baseColorFactor));
+				glUniform3fv(m_nonInstancedShader->GetUniformLocation("emissiveFactor"), 1, glm::value_ptr(materialData->emissiveFactor));
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("metallicFactor"), materialData->metallicFactor);
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("roughnessFactor"), materialData->roughnessFactor);
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("normalScale"), materialData->normalScale);
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("occlusionStrength"), materialData->occlusionStrength);
+				glUniform1i(m_nonInstancedShader->GetUniformLocation("alphaMode"), materialData->alphaMode);
+				glUniform1f(m_nonInstancedShader->GetUniformLocation("alphaCutoff"), materialData->alphaCutoff);
+				glUniform1i(m_nonInstancedShader->GetUniformLocation("doubleSided"), materialData->doubleSided);
 				
-				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), glMaterial.baseColorTexture->GetGLBindlessHandle());
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), glMaterial->GetBaseColorTexture()->GetGLBindlessHandle());
 				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("occlusionMetallicRoughnessSampler"), glMaterial.occlusionMetallicRoughnessTexture->GetGLBindlessHandle());
 				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), glMaterial.emissiveTexture->GetGLBindlessHandle());
 
 				// may not exist
-				//const auto normalText = glMaterial.normalTexture;
-				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("normalSampler"), normalText ? normalText->GetGLBindlessHandle() : 0);
+				const auto normalText = glMaterial->GetNormalTexture();
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("normalSampler"), normalText ? normalText->GetGLBindlessHandle() : 0);
 
-				materialData->IsDoubleSided() ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
+				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 									
 				glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(glMesh.count), GL_UNSIGNED_INT, (GLvoid*)0);
 			

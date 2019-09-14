@@ -10,9 +10,7 @@ bool SkyCubeNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 
 	if (ParsingAux::AttributeExists(xmlData, "cube_map"))
 	{
-		m_cubeMap = Engine::GetAssetManager()->RequestSearchAsset<CubemapAsset>(xmlData->Attribute("cube_map"));
-		if (!Engine::GetAssetManager()->Load(m_cubeMap))
-			return false;
+		m_cubeMap = Engine::GetAssetManager()->RequestSearchAsset<CubemapAsset>(xmlData->Attribute("cube_map"))->GetPod();
 	}
 	else return false;
 

@@ -5,7 +5,7 @@
 
 class SkyHDRNode : public Node
 {
-	ImageAsset* m_hdrTexture;
+	ImagePod* m_hdrData;
 
 public:
 	SkyHDRNode(Node* parent);
@@ -13,7 +13,7 @@ public:
 		
 	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 
-	ImageAsset* GetSkyHDR() const { return m_hdrTexture; }
+	ImagePod* GetSkyHDR() const { return m_hdrData; }
 
 protected:
 	std::string ToString(bool verbose, uint depth) const override;

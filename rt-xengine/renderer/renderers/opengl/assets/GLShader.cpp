@@ -12,12 +12,12 @@ namespace OpenGL
 	
 	bool GLShader::Load()
 	{
-		if (!Engine::GetAssetManager()->Load(m_sources))
-			return false;
+		auto am = Engine::GetAssetManager();
 
-		const auto vertexSource = m_sources->GetFileData().at(".vert");
-		const auto fragmentSource = m_sources->GetFileData().at(".frag");
-		
+		const auto sources = am->RequestFreshPod<ShaderPod>(m_assetManagerPodPath);
+		am->RefreshPod(sources->vertex);
+		am->RefreshPod(sources->fragment);
+
 		GLint Result = GL_FALSE;
 		int32 infoLogLength;
 
@@ -25,7 +25,7 @@ namespace OpenGL
 
 		// Compile Vertex Shader
 		//LOG_TRACE("Compiling shader : {}", vertexSource->GetFileName());
-		char const* VertexSourcePointer = vertexSource->GetFileData().c_str();
+		char const* VertexSourcePointer = sources->vertex->data.c_str();
 		glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
 		glCompileShader(VertexShaderID); // Check Vertex Shader
 		glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
@@ -43,7 +43,7 @@ namespace OpenGL
 
 		// Compile Fragment Shader
 		//LOG_TRACE("Compiling shader : {}", fragmentSource->GetFileName());
-		char const* FragmentSourcePointer = fragmentSource->GetFileData().c_str();
+		char const* FragmentSourcePointer = sources->fragment->data.c_str();
 		glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
 		glCompileShader(FragmentShaderID); // Check Fragment Shader
 		glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);

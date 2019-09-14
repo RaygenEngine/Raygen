@@ -1,12 +1,19 @@
 #include "pch.h"
 
-#include "asset/assets/ModelAsset.h"
+#include "asset/assets/GltfModelAsset.h"
 #include "asset/AssetManager.h"
 #include "system/Engine.h"
 #include "asset/util/GltfAux.h"
+#include "asset/assets/GltfFileAsset.h"
+#include "asset/assets/GltfMaterialAsset.h"
+#include "asset/assets/DummyAssets.h"
 
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#define TINYGLTF_NO_EXTERNAL_IMAGE
 #include "tinygltf/tiny_gltf.h"
 #include <optional>
+
 
 namespace
 {
@@ -148,103 +155,7 @@ namespace
 		return;
 	}
 
-	bool LoadSampler(SamplerPod& outPod, const tg::Model& model, const tg::Texture& textureData, bool loadDefaultIfMissing = true)
-	{
-		bool didLoad = false;
-		const auto imageIndex = textureData.source;
-
-		// if image exists
-		if (imageIndex != -1)
-		{
-			// TODO check image settings
-			auto& gltfImage = model.images.at(imageIndex);
-
-			outPod.image = Engine::GetAssetManager()->RequestSearchAsset<ImageAsset>(gltfImage.uri);
-			didLoad = true;
-		}
-
-		const auto samplerIndex = textureData.sampler;
-		// if sampler exists
-		if (samplerIndex != -1)
-		{
-			auto& gltfSampler = model.samplers.at(samplerIndex);
-
-			outPod.minFilter = GltfAux::GetTextureFiltering(gltfSampler.minFilter);
-			outPod.magFilter = GltfAux::GetTextureFiltering(gltfSampler.magFilter);
-			outPod.wrapS = GltfAux::GetTextureWrapping(gltfSampler.wrapS);
-			outPod.wrapT = GltfAux::GetTextureWrapping(gltfSampler.wrapT);
-			outPod.wrapR = GltfAux::GetTextureWrapping(gltfSampler.wrapR);
-		}
-		//else keep default values
-		return didLoad;
-	}
-
-
-	bool LoadMaterial(MaterialPod& outMaterial, tg::Model& model, const tg::Material& materialData)
-	{
-		// factors
-		auto bFactor = materialData.pbrMetallicRoughness.baseColorFactor;
-		outMaterial.baseColorFactor = { bFactor[0], bFactor[1], bFactor[2], bFactor[3] };
-		outMaterial.metallicFactor = static_cast<float>(materialData.pbrMetallicRoughness.metallicFactor);
-		outMaterial.roughnessFactor = static_cast<float>(materialData.pbrMetallicRoughness.roughnessFactor);
-		auto eFactor = materialData.emissiveFactor;
-		outMaterial.emissiveFactor = { eFactor[0], eFactor[1], eFactor[2] };
-
-		// scales/strenghts
-		outMaterial.normalScale = static_cast<float>(materialData.normalTexture.scale);
-		outMaterial.occlusionStrength = static_cast<float>(materialData.occlusionTexture.strength);
-
-		// alpha
-		outMaterial.alphaMode = GltfAux::GetAlphaMode(materialData.alphaMode);
-
-		outMaterial.alphaCutoff = static_cast<float>(materialData.alphaCutoff);
-		// doublesided-ness
-		outMaterial.doubleSided = materialData.doubleSided;
-
-
-		auto LoadTexture = [&](auto textureInfo, SamplerPod& sampler, int32& textCoordIndex, bool useDefaultIfMissing = true)
-		{
-			bool didLoad = false;
-			if (textureInfo.index != -1)
-			{
-				tg::Texture& gltfTexture = model.textures.at(textureInfo.index);
-				
-				didLoad = LoadSampler(sampler, model, gltfTexture, useDefaultIfMissing);
-
-				textCoordIndex = textureInfo.texCoord;
-			}
-			
-			if (useDefaultIfMissing && !didLoad)
-			{
-				sampler.image = AssetManager::GetDefaultWhite();
-			}
-
-			return true;
-		};
-
-		// samplers
-		auto& baseColorTextureInfo = materialData.pbrMetallicRoughness.baseColorTexture;
-		LoadTexture(baseColorTextureInfo, outMaterial.baseColorTexture, outMaterial.baseColorTexCoordIndex);
-
-		auto& emissiveTextureInfo = materialData.emissiveTexture;
-		LoadTexture(emissiveTextureInfo, outMaterial.emissiveTexture, outMaterial.emissiveTexCoordIndex);
-
-		auto& normalTextureInfo = materialData.normalTexture;
-		LoadTexture(normalTextureInfo, outMaterial.normalTexture, outMaterial.normalTexCoordIndex, false);
-
-		// TODO: pack if different
-		auto& metallicRougnessTextureInfo = materialData.pbrMetallicRoughness.metallicRoughnessTexture;
-		auto& occlusionTextureInfo = materialData.occlusionTexture;
-
-		// same texture no need of packing
-		//if(metallicRougnessTextureInfo.index == occlusionTextureInfo.index)
-		{
-			LoadTexture(metallicRougnessTextureInfo, outMaterial.occlusionMetallicRoughnessTexture, outMaterial.occlusionMetallicRoughnessTexCoordIndex);
-		}
-		return true;
-	}
-
-	bool LoadGeometryGroup(GeometryGroupPod& geom, tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData,
+	bool LoadGeometryGroup(const fs::path& parentPath, GeometryGroup& geom, tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData,
 		const glm::mat4& transformMat)
 	{
 		// mode
@@ -306,13 +217,19 @@ namespace
 		// material
 		const auto materialIndex = primitiveData.material;
 
+		//geom.material = GltfMaterialAsset::GetDefaultMaterial->GetPod();
+
 		if (materialIndex != -1)
 		{
 			auto& mat = modelData.materials.at(materialIndex);
-			if (!LoadMaterial(geom.material, modelData, mat))
-			{
-				return false;
-			}
+
+			auto matPath = parentPath / ("#" + (!mat.name.empty() ? mat.name : "material") + "." + std::to_string(materialIndex));
+
+			geom.material = Engine::GetAssetManager()->RequestSearchAsset<GltfMaterialAsset>(matPath)->GetPod();
+		}
+		else
+		{
+			geom.material = DefaultMaterial::GetDefault()->GetPod();
 		}
 
 		// calculate missing normals (flat)
@@ -390,10 +307,8 @@ namespace
 		return true;
 	}
 
-
-	bool LoadMesh(MeshPod& mesh, tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
+	bool LoadMesh(const fs::path& parentPath, Mesh& mesh, tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
 	{
-		
 		mesh.geometryGroups.resize(meshData.primitives.size());
 
 		// primitives
@@ -404,7 +319,7 @@ namespace
 			auto& primitiveData = meshData.primitives.at(i);
 
 			// if one of the geometry groups fails to load
-			if (!LoadGeometryGroup(mesh.geometryGroups[i], modelData, primitiveData, transformMat))
+			if (!LoadGeometryGroup(parentPath, mesh.geometryGroups[i], modelData, primitiveData, transformMat))
 			{
 				LOG_ERROR("Failed to load geometry group, name: {}", geomName);
 				return false;
@@ -412,37 +327,18 @@ namespace
 		}
 		return true;
 	}
-
-
 }
 
-bool ModelAsset::LoadFromGltfImpl()
+bool GltfModelAsset::Load()
 {
-	namespace tg = tinygltf;
+	const auto pPath = m_uri.parent_path();
+	auto pParent = Engine::GetAssetManager()->RequestSearchAsset<GltfFileAsset>(pPath);
 
-	tg::TinyGLTF loader;
-	tg::Model model; 
-	
-	std::string err;
-	std::string warn;
-
-	auto ext = m_uri.extension();
-
-	bool ret = false;
-
-
-	if (ext.compare(".gltf") == 0)
-	{
-		ret = loader.LoadASCIIFromFile(&model, &err, &warn, m_uri.string());
-	}
-
-	CLOG_WARN(!warn.empty(), warn.c_str());
-	CLOG_ERROR(!err.empty(), err.c_str());
-
-	if (!ret)
-	{
+	// requires parent to be loaded
+	if (!Engine::GetAssetManager()->Load(pParent))
 		return false;
-	}
+
+	tinygltf::Model& model = pParent->GetPod()->data;
 
 	auto& defaultScene = model.scenes.at(model.defaultScene);
 
@@ -501,15 +397,15 @@ bool ModelAsset::LoadFromGltfImpl()
 			{
 				auto& gltfMesh = model.meshes.at(childNode.mesh);
 
-				MeshPod mesh;
+				Mesh mesh;
 
 				// if missing mesh
-				if (!LoadMesh(mesh, model, gltfMesh, localTransformMat))
+				if (!LoadMesh(pPath, mesh, model, gltfMesh, localTransformMat))
 				{
 					LOG_ERROR("Failed to load mesh, name: {}", gltfMesh.name);
 					return false;
 				}
-				m_meshes.emplace_back(mesh);
+				m_pod->meshes.emplace_back(mesh);
 			}
 
 			//load child's children
@@ -521,19 +417,4 @@ bool ModelAsset::LoadFromGltfImpl()
 	};
 
 	return RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
-}
-
-
-bool ModelAsset::Load()
-{
-	if (m_uri.extension().compare(".gltf") == 0)
-	{
-		TIMER_STATIC_SCOPE("gltf model load");
-		return LoadFromGltfImpl();
-	}
-	return true;
-}
-
-void ModelAsset::Unload()
-{
 }

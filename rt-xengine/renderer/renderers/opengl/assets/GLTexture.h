@@ -3,6 +3,7 @@
 #include "renderer/renderers/opengl/GLAsset.h"
 #include "asset/assets/ImageAsset.h"
 #include "asset/Asset.h"
+#include "asset/pods/TexturePod.h"
 
 #include "GLAD/glad.h"
 
@@ -10,16 +11,13 @@ namespace OpenGL
 {
 	class GLTexture : public GLAsset
 	{
-		ImageAsset* m_textureData;
-		
 		// bindless
 		GLuint64 m_bindlessHandle;
 		GLuint m_glId;
 
 	public:
-		GLTexture(ImageAsset* textureData)
-			: GLAsset(textureData),
-			  m_textureData(textureData),
+		GLTexture(const fs::path& assocPath)
+			: GLAsset(assocPath),
 			  m_bindlessHandle(0),
 			  m_glId(0)
 		{

@@ -1,18 +1,19 @@
 #pragma once
 
 #include "renderer/Renderer.h"
-#include "renderer/renderers/opengl/GLAssetManager.h"
 #include "system/Engine.h"
 
 namespace OpenGL
 {
+	class GLAssetManager;
+	
 	class GLRendererBase : public Renderer
 	{
 		HWND m_assochWnd;
 		HDC m_hdc;
 		HGLRC m_hglrc;
 
-		GLAssetManager m_glAssetManager;
+		std::unique_ptr<GLAssetManager> m_glAssetManager;
 
 	public:
 		GLRendererBase();
@@ -23,7 +24,7 @@ namespace OpenGL
 
 		GLAssetManager* GetGLAssetManager() 
 		{
-			return &m_glAssetManager;
+			return m_glAssetManager.get();
 		}
 	};
 

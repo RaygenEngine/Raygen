@@ -1,5 +1,7 @@
 #include "pch.h"
+
 #include "renderer/renderers/opengl/GLRendererBase.h"
+#include "renderer/renderers/opengl/GLAssetManager.h"
 
 #include "GLAD/glad.h"
 
@@ -11,6 +13,7 @@ namespace OpenGL
 		  m_hdc(nullptr),
 		  m_hglrc(nullptr)
 	{
+		m_glAssetManager = std::make_unique<GLAssetManager>();
 	}
 
 	GLRendererBase::~GLRendererBase()

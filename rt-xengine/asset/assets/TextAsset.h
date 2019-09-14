@@ -1,20 +1,16 @@
 #pragma once
 
 #include "asset/Asset.h"
+#include "asset/pods/TextPod.h"
 
-class TextAsset : public Asset
+class TextAsset : public PodedAsset<TextPod>
 {
-	std::string m_data;
-
 public:
 	TextAsset(const fs::path& path)
-		: Asset(path) {}
+		: PodedAsset(path) {}
 	~TextAsset() = default;
-
-	const std::string& GetFileData() const { return m_data; }
-
+	
 protected:
 	bool Load() override;
-	void Unload() override;
 };
 

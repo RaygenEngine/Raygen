@@ -4,11 +4,12 @@
 #include "renderer/renderers/opengl/GLUtil.h"
 #include "system/Engine.h"
 #include "asset/AssetManager.h"
+#include "renderer/renderers/opengl/GLAssetManager.h"
 
 namespace OpenGL
 {
 
-	std::optional<GLModel::GLMesh> GLModel::LoadGLMesh(const ModelAsset::Mesh::GeometryGroup& data, GLenum usage)
+	std::optional<GLModel::GLMesh> GLModel::LoadGLMesh(GeometryGroup& data, GLenum usage)
 	{
 		GLMesh glMesh{};
 
@@ -56,12 +57,10 @@ namespace OpenGL
 
 		glMesh.count = data.indices.size();
 
-		if (!Engine::GetAssetManager()->Load(data.material))
-			return {};
-		glMesh.material = GetGLAssetManager(this)->MaybeGenerateAsset<GLMaterial>(data.material);
-		if (!GetGLAssetManager(this)->Load(glMesh.material))
-			return {};
+		Engine::GetAssetManager()->RefreshPod(data.material);
 		
+		glMesh.material = GetGLAssetManager(this)->RequestLoadAsset<GLMaterial>(Engine::GetAssetManager()->GetPodPath(data.material));
+
 		DebugBoundVAO("name");
 
 		glBindVertexArray(0);
@@ -87,15 +86,14 @@ namespace OpenGL
 
 	bool GLModel::Load()
 	{
-		if (!Engine::GetAssetManager()->Load(m_model))
-			return false;
+		auto modelData = Engine::GetAssetManager()->RequestFreshPod<ModelPod>(m_assetManagerPodPath);
 		
 		TIMER_STATIC_SCOPE("uploading model time");
 
 		//m_usage = GetGLUsage(data->GetUsage());
 		m_usage = GL_STATIC_DRAW;
 
-		for (auto& mesh : m_model->GetMeshes())
+		for (auto& mesh : modelData->meshes)
 		{
 			for (auto& geometryGroup : mesh.geometryGroups)
 			{

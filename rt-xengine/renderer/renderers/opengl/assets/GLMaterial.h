@@ -8,8 +8,6 @@ namespace OpenGL
 {
 	class GLMaterial : public GLAsset
 	{
-		MaterialPod* m_materialData;
-		
 		// RGB: Albedo A: Opacity
 		GLTexture* m_baseColorTexture;
 		// R: occlusion, G: Roughness, B: Metal, A: empty
@@ -18,20 +16,20 @@ namespace OpenGL
 		GLTexture* m_emissiveTexture;
 		
 	public:
-		GLMaterial(MaterialPod* materialData)
-			: GLAsset(materialData),
-			m_materialData(materialData),
-			m_baseColorTexture(nullptr),
-			m_occlusionMetallicRoughnessTexture(nullptr),
-			m_normalTexture(nullptr),
-			m_emissiveTexture(nullptr) {}
+		GLMaterial(const fs::path& assocPath)
+			: GLAsset(assocPath),
+			  m_baseColorTexture(nullptr),
+			  m_occlusionMetallicRoughnessTexture(nullptr),
+			  m_normalTexture(nullptr),
+			  m_emissiveTexture(nullptr) {}
 
 		[[nodiscard]] GLTexture* GetBaseColorTexture() const { return m_baseColorTexture; }
 		[[nodiscard]] GLTexture* GetOcclusionMetallicRoughnessTexture() const { return m_occlusionMetallicRoughnessTexture; }
 		[[nodiscard]] GLTexture* GetNormalTexture() const { return m_normalTexture; }
 		[[nodiscard]] GLTexture* GetEmissiveTexture() const { return m_emissiveTexture; }
 
-		MaterialPod* GetMaterialAsset() const { return m_materialData; }
+		// PERF:
+		MaterialPod* GetMaterialAsset() const;
 		
 	protected:
 		bool Load() override;

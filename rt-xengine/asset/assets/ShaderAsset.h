@@ -1,18 +1,15 @@
 #pragma once
 
 #include "asset/assets/TextAsset.h"
+#include "asset/pods/ShaderPod.h"
 
-class ShaderAsset : public Asset
+class ShaderAsset : public PodedAsset<ShaderPod>
 {
 public:
-	TextAsset* m_vert;
-	TextAsset* m_frag;
-
 	ShaderAsset(const fs::path& path)
-		: Asset(path) {}
-
+		: PodedAsset(path) {}
+	
 protected:
 	bool Load() override;
-	void Unload() override { }
 };
 

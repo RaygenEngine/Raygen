@@ -1,22 +1,21 @@
 #pragma once
 
 #include "asset/Asset.h"
+#include "asset/AssetPod.h"
+#include "renderer/renderers/opengl/GLAsset.h"
 
 namespace OpenGL
 {
-	class GLAsset;
-	
 	class GLAssetManager
 	{		
-		std::unordered_map<Asset*, GLAsset*> m_assetMap;
+		std::unordered_map<std::string, GLAsset*> m_assetMap;
 
 	public:
 
-		template<typename AssetT>
-		bool Load(AssetT* asset)
+		bool Load(GLAsset* asset)
 		{
 			assert(asset);
-			assert(m_assetMap.find(asset->m_asset) != m_assetMap.end());
+			assert(m_assetMap.find(asset->m_assetManagerPodPath.string()) != m_assetMap.end());
 
 			if (asset->m_isLoaded)
 			{
@@ -27,30 +26,39 @@ namespace OpenGL
 			{
 				asset->m_isLoaded = true;
 			}
+			else
+			{
+				asset->m_isLoaded = false;
+			}
+			
 			return asset->m_isLoaded;
 		}
 
-		// If this returns null, an asset of a different type already exists at this key asset
-		template<typename AssetT, typename AssetK>
-		AssetT* MaybeGenerateAsset(AssetK* keyAsset)
+		template<typename AssetT>
+		AssetT* RequestLoadAsset(const fs::path& assetManagerPodPath)
 		{
-			auto it = m_assetMap.find(keyAsset);
+			auto it = m_assetMap.find(assetManagerPodPath.string());
 			if (it != m_assetMap.end())
 			{
-				return dynamic_cast<AssetT*>(it->second);
+				auto* p = dynamic_cast<AssetT*>(it->second);
+				assert(p);
+				return p;
 			}
-			AssetT* result = new AssetT(keyAsset);
-			m_assetMap.emplace(keyAsset, result);
+			AssetT* result = new AssetT(assetManagerPodPath);
+			m_assetMap.emplace(assetManagerPodPath.string(), result);
+
+			assert(Load(result));
+			
 			return result;
 		}
 
-
-		// todo:
-		template<typename AssetT>
-		void Unload(AssetT* asset)
+		void Unload(GLAsset* asset)
 		{
+			if (asset->m_isLoaded)
+			{
+				asset->Unload();
+			}
 			asset->m_isLoaded = false;
-			//assert(false);
 		}
 	};
 

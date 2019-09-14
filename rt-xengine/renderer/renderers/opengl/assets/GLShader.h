@@ -9,17 +9,14 @@ namespace OpenGL
 {
 	class GLShader : public GLAsset
 	{
-		ShaderAsset* m_sources;
-		
 		GLuint m_glId;
 
 		// temporary
 		std::unordered_map<std::string, GLint> m_uniformLocations;
 
 	public:
-		GLShader(ShaderAsset* sources)
-			: GLAsset(sources),
-			  m_sources(sources),
+		GLShader(const fs::path& assocPath)
+			: GLAsset(assocPath),
 			  m_glId(0) {}
 
 		~GLShader();

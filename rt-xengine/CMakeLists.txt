@@ -18,8 +18,11 @@ set(SOURCE_FILES
 	asset/assets/ImageAsset.cpp
 	asset/assets/CubemapAsset.cpp
 	asset/assets/ShaderAsset.cpp
-	asset/assets/ModelAsset.cpp	
-
+	asset/assets/GltfModelAsset.cpp
+	asset/assets/GltfMaterialAsset.cpp	
+	asset/assets/GltfTextureAsset.cpp
+	asset/assets/GltfFileAsset.cpp
+	asset/assets/DummyAssets.cpp
 	
 	core/logger/Logger.cpp
 	
@@ -34,11 +37,13 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/GLAsset.cpp
 	renderer/renderers/opengl/GLAssetManager.cpp
 	renderer/renderers/opengl/GLRendererBase.cpp
+	
 	renderer/renderers/opengl/assets/GLInstancedModel.cpp
 	renderer/renderers/opengl/assets/GLModel.cpp
 	renderer/renderers/opengl/assets/GLShader.cpp
 	renderer/renderers/opengl/assets/GLTexture.cpp
 	renderer/renderers/opengl/assets/GLCubeMap.cpp
+	renderer/renderers/opengl/assets/GLMaterial.cpp
 	
 	renderer/renderers/opengl/test/GLTestRenderer.cpp
 	renderer/renderers/opengl/test/GLTestGeometry.cpp
@@ -92,11 +97,22 @@ set(HEADER_FILES
 	asset/assets/ImageAsset.h
 	asset/assets/CubemapAsset.h
 	asset/assets/ShaderAsset.h
-	asset/assets/ModelAsset.h
+	asset/assets/GltfModelAsset.h
+	asset/assets/GltfMaterialAsset.h
+	asset/assets/GltfTextureAsset.h	
+	asset/assets/GltfFileAsset.h
+	asset/assets/DummyAssets.h
 
-	asset/pods/SamplerPod.h
+	asset/pods/TexturePod.h
 	asset/pods/MaterialPod.h
-
+	asset/pods/ModelPod.h
+	asset/pods/ImagePod.h
+	asset/pods/ShaderPod.h
+	asset/pods/TextPod.h
+	asset/pods/CubemapPod.h
+	asset/pods/XMLDocPod.h
+	asset/pods/GltfFilePod.h
+	
 	asset/util/GltfAux.h
 	asset/util/ParsingAux.h
 
@@ -137,11 +153,13 @@ set(HEADER_FILES
 	renderer/renderers/opengl/GLAssetManager.h
 	renderer/renderers/opengl/GLRendererBase.h
 	renderer/renderers/opengl/GLUtil.h
+	
 	renderer/renderers/opengl/assets/GLInstancedModel.h
 	renderer/renderers/opengl/assets/GLModel.h
 	renderer/renderers/opengl/assets/GLShader.h
 	renderer/renderers/opengl/assets/GLTexture.h
 	renderer/renderers/opengl/assets/GLCubeMap.h
+	renderer/renderers/opengl/assets/GLMaterial.h
 
 	renderer/renderers/opengl/test/GLTestRenderer.h
 	renderer/renderers/opengl/test/GLTestGeometry.h

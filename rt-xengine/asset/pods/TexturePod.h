@@ -1,9 +1,10 @@
 #pragma once
+
 #include "system/reflection/Reflector.h"
 #include "asset/AssetPod.h"
-#include "asset/assets/ImageAsset.h"
+#include "asset/pods/ImagePod.h"
 
-struct SamplerPod
+struct TexturePod : AssetPod
 {
 	TextureFiltering minFilter{TextureFiltering::LINEAR};
 	TextureFiltering magFilter{TextureFiltering::LINEAR};
@@ -12,6 +13,6 @@ struct SamplerPod
 	TextureWrapping wrapT{TextureWrapping::REPEAT};
 	TextureWrapping wrapR{TextureWrapping::REPEAT};
 
-	ImageAsset* image;
+	ImagePod* image{ nullptr };
 };
 

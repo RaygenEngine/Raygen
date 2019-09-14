@@ -1,30 +1,33 @@
 #include "pch.h"
 
 #include "renderer/renderers/opengl/assets/GLMaterial.h"
-#include "assets/AssetManager.h"
+#include "asset/AssetManager.h"
+#include "renderer/renderers/opengl/GLAssetManager.h"
 
 namespace OpenGL
 {
+	MaterialPod* GLMaterial::GetMaterialAsset() const
+	{
+		return Engine::GetAssetManager()->RequestFreshPod<MaterialPod>(m_assetManagerPodPath);
+	}
+
 	bool GLMaterial::Load()
 	{
-		if (!Engine::GetAssetManager()->Load(m_materialData))
-			return false;
+		auto am = Engine::GetAssetManager();
+		
+		const auto materialData = am->RequestFreshPod<MaterialPod>(m_assetManagerPodPath);
+		
+		am->RefreshPod(materialData->baseColorTexture);
+		//am->RefreshPod(materialData->occlusionMetallicRoughnessTexture);
+		//am->RefreshPod(materialData->normalTexture);
+		//am->RefreshPod(materialData->emissiveTexture);
 
-		m_baseColorTexture = GetGLAssetManager(this)->MaybeGenerateAsset<GLTexture>(m_materialData->GetBaseColorTexture());
-		if (!GetGLAssetManager(this)->Load(m_baseColorTexture))
-			return false;
-
-		m_occlusionMetallicRoughnessTexture = GetGLAssetManager(this)->MaybeGenerateAsset<GLTexture>(m_materialData->GetOcclusionMetallicRoughnessTexture());
-		if (!GetGLAssetManager(this)->Load(m_occlusionMetallicRoughnessTexture))
-			return false;
-
-		m_normalTexture = GetGLAssetManager(this)->MaybeGenerateAsset<GLTexture>(m_materialData->GetNormalTexture());
-		if (!GetGLAssetManager(this)->Load(m_normalTexture))
-			return false;
-
-		m_emissiveTexture = GetGLAssetManager(this)->MaybeGenerateAsset<GLTexture>(m_materialData->GetEmissiveTexture());
-		if (!GetGLAssetManager(this)->Load(m_emissiveTexture))
-			return false;
+		auto glAm = GetGLAssetManager(this);
+		
+		m_baseColorTexture = glAm->RequestLoadAsset<GLTexture>(am->GetPodPath(materialData->baseColorTexture));
+		//m_occlusionMetallicRoughnessTexture = glAm->RequestLoadAsset<GLTexture>(am->GetPodPath(materialData->occlusionMetallicRoughnessTexture));
+		//m_normalTexture = glAm->RequestLoadAsset<GLTexture>(am->GetPodPath(materialData->normalTexture));
+		//m_emissiveTexture = glAm->RequestLoadAsset<GLTexture>(am->GetPodPath(materialData->emissiveTexture));
 		
 		return true;
 	}

@@ -15,24 +15,31 @@ namespace OpenGL
 
 	bool GLCubeMap::Load()
 	{
-		if (!Engine::GetAssetManager()->Load(m_cubeMapData))
-			return false;
+		auto am = Engine::GetAssetManager();
+		
+		auto cubemapData = am->RequestFreshPod<CubemapPod>(m_assetManagerPodPath);
+		am->RefreshPod(cubemapData->sides[CMF_RIGHT]);
+		am->RefreshPod(cubemapData->sides[CMF_LEFT]);
+		am->RefreshPod(cubemapData->sides[CMF_UP]);
+		am->RefreshPod(cubemapData->sides[CMF_DOWN]);
+		am->RefreshPod(cubemapData->sides[CMF_FRONT]);
+		am->RefreshPod(cubemapData->sides[CMF_BACK]);
 		
 		glGenTextures(1, &m_glId);
 		glBindTexture(GL_TEXTURE_2D, m_glId);
 
 		// everything matches the first texture
-		const auto firstFaceText = m_cubeMapData->GetFace(CMF_RIGHT);
-		const auto minFiltering = firstFaceText.minFilter;
+		const auto firstFaceText = cubemapData->sides[CMF_RIGHT];
+		const auto minFiltering = firstFaceText->minFilter;
 
 		// If you don't use one of the filter values that include mipmaps (like GL_LINEAR_MIPMAP_LINEAR), your mipmaps will not be used in any way.
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GetGLFiltering(firstFaceText.magFilter));
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GetGLFiltering(firstFaceText->magFilter));
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GetGLFiltering(minFiltering));
 
 		GLenum type;
 		GLint internalFormat;
 
-		if (m_cubeMapData->IsHdr())
+		if (firstFaceText->image->hdr)
 		{
 			type = GL_FLOAT;
 			internalFormat = GL_RGBA32F;
@@ -43,14 +50,14 @@ namespace OpenGL
 			internalFormat = GL_RGBA;
 		}
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GetGLWrapping(firstFaceText.wrapS));
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GetGLWrapping(firstFaceText.wrapT));
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GetGLWrapping(firstFaceText.wrapR));
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GetGLWrapping(firstFaceText->wrapS));
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GetGLWrapping(firstFaceText->wrapT));
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GetGLWrapping(firstFaceText->wrapR));
 
 		for (auto i = 0; i < CMF_COUNT; ++i)
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat,
-				m_cubeMapData->GetWidth(), m_cubeMapData->GetHeight(), 0, GL_RGBA, type, m_cubeMapData->GetFace(CubeMapFace(i)).image->GetData());
+				firstFaceText->image->width, firstFaceText->image->height, 0, GL_RGBA, type, cubemapData->sides[i]->image->data);
 		}
 
 		if (GetGLFiltering(minFiltering) == GL_NEAREST_MIPMAP_NEAREST ||

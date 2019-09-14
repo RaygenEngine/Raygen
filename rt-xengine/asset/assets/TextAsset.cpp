@@ -13,15 +13,10 @@ bool TextAsset::Load()
 	}
 
 	t.seekg(0, std::ios::end);
-	m_data.reserve(t.tellg());
+	m_pod->data.reserve(t.tellg());
 	
 	t.seekg(0, std::ios::beg);
-	m_data.assign((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+	m_pod->data.assign((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 
 	return true;
-}
-
-void TextAsset::Unload()
-{
-	std::string().swap(m_data);
 }

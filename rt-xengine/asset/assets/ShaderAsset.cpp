@@ -1,4 +1,5 @@
 #include "pch.h"
+
 #include "asset/assets/ShaderAsset.h"
 #include "asset/AssetManager.h"
 
@@ -14,10 +15,12 @@ bool ShaderAsset::Load()
 
 	char buf[256];
 	t.getline(buf, 256);
-	m_frag = Engine::GetAssetManager()->RequestSearchAsset<TextAsset>(buf);
+	auto textAsset = Engine::GetAssetManager()->RequestSearchAsset<TextAsset>(buf);
+	m_pod->vertex = textAsset->GetPod();
 	
 	t.getline(buf, 256);
-	m_vert = Engine::GetAssetManager()->RequestSearchAsset<TextAsset>(buf);
+	textAsset = Engine::GetAssetManager()->RequestSearchAsset<TextAsset>(buf);
+	m_pod->fragment = textAsset->GetPod();
 
 	return true;
 }

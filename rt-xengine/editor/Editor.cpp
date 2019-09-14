@@ -139,7 +139,7 @@ void Editor::UpdateEditor()
 	{
 		ImGui::Indent();
 		std::string text;
-		for (auto& assetPair : Engine::GetAssetManager()->m_assetMap)
+		for (auto& assetPair : Engine::GetAssetManager()->m_pathAssetMap)
 		{
 			ImGui::Text(assetPair.first.c_str());
 
@@ -210,7 +210,7 @@ bool AddReflector(Reflector& reflector, int32 depth = 0)
 					s = fs::relative(ref->GetUri()).string();//.string();
 				}
 
-				if (ImGui::Button("Unload"))
+				if (ImGui::Button("Deallocate"))
 				{
 					Engine::GetAssetManager()->Unload(ref);
 				}
