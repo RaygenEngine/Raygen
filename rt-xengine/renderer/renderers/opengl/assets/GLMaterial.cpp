@@ -9,6 +9,7 @@ namespace OpenGL
 {
 	MaterialPod* GLMaterial::GetMaterialAsset() const
 	{
+		// TODO:
 		return m_pod;//  Engine::GetAssetManager()->RequestFreshPod<MaterialPod>(m_assetManagerPodPath);
 	}
 

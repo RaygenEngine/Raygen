@@ -76,7 +76,6 @@ public:
 		}
 		else
 		{
-			// PERF:
 			p = m_pathSystem.SearchAssetPath(path);
 			assert(!p.empty());
 		}
