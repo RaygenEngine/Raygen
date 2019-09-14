@@ -3,11 +3,8 @@
 #include "renderer/renderers/opengl/GLAsset.h"
 #include "asset/assets/ImageAsset.h"
 #include "asset/Asset.h"
-#include "asset/pods/TexturePod.h"
-
 #include "GLAD/glad.h"
-#include "asset/pods/SamplerPod.h"
-#
+
 
 namespace OpenGL
 {

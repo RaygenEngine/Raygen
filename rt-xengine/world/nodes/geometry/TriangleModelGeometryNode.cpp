@@ -11,6 +11,7 @@ TriangleModelGeometryNode::TriangleModelGeometryNode(Node* parent)
 	: Node(parent),
       m_model(nullptr)
 {
+
 	REFLECT_VAR(m_model);
 }
 

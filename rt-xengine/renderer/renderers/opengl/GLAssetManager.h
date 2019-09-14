@@ -46,6 +46,16 @@ namespace OpenGL
 			return GetOrMake<AssetT>(reinterpret_cast<uint64>(pointer), pointer);
 		}
 
+		template<typename AssetT>
+		AssetT* GetOrMakeFromUri(const fs::path& path)
+		{
+			std::hash<std::string> hasher;
+
+			uint64 hashValue = static_cast<uint64>(hasher(path.string()));
+
+			return GetOrMake<AssetT>(hashValue, path);
+		}
+
 
 		// This will delete the element at that hash if found.
 		void Delete(uint64 cacheHash);

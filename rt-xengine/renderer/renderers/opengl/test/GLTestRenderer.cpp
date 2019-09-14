@@ -18,9 +18,9 @@ namespace OpenGL
 	{
 		auto am = Engine::GetAssetManager();
 		
-		const auto shaderAsset = am->RequestSearchAsset<ShaderAsset>("test/test.shader.json");
+		const auto shaderAsset = am->RequestSearchAsset<ShaderAsset>("test.shader.json");
 		
-		m_nonInstancedShader = GetGLAssetManager()->RequestLoadAsset<GLShader>(shaderAsset->GetUri());
+		m_nonInstancedShader = GetGLAssetManager()->GetOrMakeFromUri<GLShader>(shaderAsset->GetUri());
 		
 		m_nonInstancedShader->SetUniformLocation("mvp");
 		m_nonInstancedShader->SetUniformLocation("m");
@@ -120,12 +120,12 @@ namespace OpenGL
 				glUniform1f(m_nonInstancedShader->GetUniformLocation("alphaCutoff"), materialData->alphaCutoff);
 				glUniform1i(m_nonInstancedShader->GetUniformLocation("doubleSided"), materialData->doubleSided);
 				
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), glMaterial->GetBaseColorTexture()->GetGLBindlessHandle());
-				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("occlusionMetallicRoughnessSampler"), glMaterial.occlusionMetallicRoughnessTexture->GetGLBindlessHandle());
-				//glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), glMaterial.emissiveTexture->GetGLBindlessHandle());
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), glMaterial.GetBaseColorTexture()->GetGLBindlessHandle());
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("occlusionMetallicRoughnessSampler"), glMaterial.GetOcclusionMetallicRoughnessTexture()->GetGLBindlessHandle());
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), glMaterial.GetEmissiveTexture()->GetGLBindlessHandle());
 
 				// may not exist
-				const auto normalText = glMaterial->GetNormalTexture();
+				const auto normalText = glMaterial.GetNormalTexture();
 				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("normalSampler"), normalText ? normalText->GetGLBindlessHandle() : 0);
 
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);

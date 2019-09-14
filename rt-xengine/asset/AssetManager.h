@@ -5,7 +5,6 @@
 #include "system/Engine.h"
 #include "asset/PathSystem.h"
 #include "asset/Asset.h"
-
 constexpr auto __default__imageWhite = "__default__image-white.jpg";
 constexpr auto __default__imageMissing = "__default__image-missing.jpg";
 
@@ -44,8 +43,7 @@ public:
 		// get assoc asset
 		auto asset = dynamic_cast<PodedAsset<PodType>*>(m_pathAssetMap[podAssetPath.string()]);
 		assert(asset);
-		assert(Load(asset));
-
+		Load(asset);
 		// (re)load it
 		return dynamic_cast<PodType*>(asset->m_pod);
 	}
@@ -56,7 +54,7 @@ public:
 
 		// get assoc asset
 		const auto asset = m_podAssetMap[pod];
-		assert(Load(asset));
+		Load(asset);
 	}
 
 	fs::path GetPodPath(AssetPod* pod)
@@ -100,15 +98,16 @@ public:
 		return asset;
 	}
 
-	void Unload(Asset* asset)
+	void Unload(Asset* asset);
+	
+	void UnloadAll()
 	{
-		if(asset->m_isLoaded)
+		for (auto& p : m_pathAssetMap) 
 		{
-			asset->Deallocate();
+			Unload(p.second);
 		}
-		
-		asset->m_isLoaded = false;
 	}
+
 
 	static bool IsCpuPath(const fs::path& path)
 	{

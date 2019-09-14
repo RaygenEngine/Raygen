@@ -9,7 +9,7 @@ namespace OpenGL
 {
 	MaterialPod* GLMaterial::GetMaterialAsset() const
 	{
-		return Engine::GetAssetManager()->RequestFreshPod<MaterialPod>(m_assetManagerPodPath);
+		return m_pod;//  Engine::GetAssetManager()->RequestFreshPod<MaterialPod>(m_assetManagerPodPath);
 	}
 
 	bool GLMaterial::Load()
@@ -17,18 +17,18 @@ namespace OpenGL
 		auto am = Engine::GetAssetManager();
 		
 		const auto materialData = am->RequestFreshPod<MaterialPod>(m_assetManagerPodPath);
-		
+		m_pod = materialData;
 		am->RefreshPod(materialData->baseColorTexture);
-		//am->RefreshPod(materialData->occlusionMetallicRoughnessTexture);
-		//am->RefreshPod(materialData->normalTexture);
-		//am->RefreshPod(materialData->emissiveTexture);
+		am->RefreshPod(materialData->occlusionMetallicRoughnessTexture);
+		am->RefreshPod(materialData->normalTexture);
+		am->RefreshPod(materialData->emissiveTexture);
 
 		auto glAm = GetGLAssetManager(this);
-		
-		m_baseColorTexture = glAm->RequestLoadAsset<GLTexture>(am->GetPodPath(materialData->baseColorTexture));
-		//m_occlusionMetallicRoughnessTexture = glAm->RequestLoadAsset<GLTexture>(am->GetPodPath(materialData->occlusionMetallicRoughnessTexture));
-		//m_normalTexture = glAm->RequestLoadAsset<GLTexture>(am->GetPodPath(materialData->normalTexture));
-		//m_emissiveTexture = glAm->RequestLoadAsset<GLTexture>(am->GetPodPath(materialData->emissiveTexture));
+			
+		m_baseColorTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(materialData->baseColorTexture));
+		m_occlusionMetallicRoughnessTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(materialData->occlusionMetallicRoughnessTexture));
+		m_normalTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(materialData->normalTexture));
+		m_emissiveTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(materialData->emissiveTexture));
 		
 		return true;
 	}

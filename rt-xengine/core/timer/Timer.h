@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+namespace ch = std::chrono;
 
 // TODO: make or use an actual timer
 #define TIMING
@@ -21,7 +22,6 @@
 
 namespace Timer
 {
-	namespace ch = std::chrono;
 	template<typename ChronoDuration = ch::microseconds>
 	class DebugTimer
 	{
@@ -63,6 +63,54 @@ namespace Timer
 				// Fix report of duration
 				RT_XENGINE_LOG_AT_LOWEST_LEVEL("{0}: {1} ?? \tTotal: {2} ??", str, last, m_total);
 			}
+		}
+
+		long long Get()
+		{
+			long long last = ch::duration_cast<ChronoDuration>(ch::system_clock::now() - m_startTime).count();
+			m_total += last;
+			return last;
+		}
+	};
+
+
+	template<typename ChronoDuration = ch::microseconds>
+	class ScopedTimer
+	{
+		// TODO: use metatemplates when merged with the other branch for specialization check.
+		//		static_assert(<ch::duration, ChronoDuration>, "Template parameter must be a std::chrono::duration");
+	public:
+		ch::time_point<ch::system_clock> m_startTime;
+		std::string m_name;
+		ScopedTimer(std::string&& name) : m_name(name) { Restart(); }
+
+		void Restart()
+		{
+			m_startTime = ch::system_clock::now();
+		}
+
+		void Report()
+		{
+			auto end = ch::system_clock::now();
+			long long last = ch::duration_cast<ChronoDuration>(end - m_startTime).count();
+			if constexpr (std::is_same_v<ChronoDuration, ch::microseconds>)
+			{
+				RT_XENGINE_LOG_AT_LOWEST_LEVEL("{0}: {1} micros", m_name, last);
+			}
+			else if constexpr (std::is_same_v<ChronoDuration, ch::milliseconds>)
+			{
+				RT_XENGINE_LOG_AT_LOWEST_LEVEL("{0}: {1} ms", m_name, last);
+			}
+			else
+			{
+				// Fix report of duration
+				RT_XENGINE_LOG_AT_LOWEST_LEVEL("{0}: {1} ??", m_name, last);
+			}
+		}
+
+		~ScopedTimer()
+		{
+			Report();
 		}
 
 		long long Get()

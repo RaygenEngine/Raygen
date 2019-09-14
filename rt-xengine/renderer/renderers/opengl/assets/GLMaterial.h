@@ -15,6 +15,7 @@ namespace OpenGL
 		GLTexture* m_normalTexture;
 		GLTexture* m_emissiveTexture;
 		
+		MaterialPod* m_pod;
 	public:
 		GLMaterial(const fs::path& assocPath)
 			: GLAsset(assocPath),
@@ -23,7 +24,6 @@ namespace OpenGL
 			  m_normalTexture(nullptr),
 			  m_emissiveTexture(nullptr) {}
 
-		bool Load() override;
 		friend class GLAssetManager;
 	public:
 		[[nodiscard]] GLTexture* GetBaseColorTexture() const { return m_baseColorTexture; }
@@ -36,7 +36,6 @@ namespace OpenGL
 		
 	protected:
 		bool Load() override;
-		void Unload() override;
 	};
 
 }

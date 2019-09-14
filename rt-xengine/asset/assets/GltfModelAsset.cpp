@@ -8,12 +8,7 @@
 #include "asset/assets/GltfMaterialAsset.h"
 #include "asset/assets/DummyAssets.h"
 
-#define TINYGLTF_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#define TINYGLTF_NO_EXTERNAL_IMAGE
 #include "tinygltf/tiny_gltf.h"
-#include <optional>
-
 
 namespace
 {

@@ -93,6 +93,7 @@ void Engine::SwitchRenderer(uint32 registrationIndex)
 		delete eng.m_renderer;
 	}
 
+
 	eng.m_renderer = eng.m_rendererRegistrations[registrationIndex].Construct();
 
 	eng.m_renderer->InitRendering(eng.m_window->GetHWND(), eng.m_window->GetHInstance());

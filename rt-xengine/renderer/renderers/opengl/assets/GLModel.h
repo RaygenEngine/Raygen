@@ -36,7 +36,7 @@ namespace OpenGL
 
 	private:
 
-		bool LoadGLMesh(GLMesh& mesh, GeometryGroupPod& data, GLenum usage);
+		bool LoadGLMesh(GLMesh& mesh, GeometryGroup& data, GLenum usage);
 		
 
 		GLenum m_usage;

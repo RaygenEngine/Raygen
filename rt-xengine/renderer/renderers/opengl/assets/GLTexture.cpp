@@ -4,6 +4,7 @@
 #include "renderer/renderers/opengl/GLUtil.h"
 #include "system/Engine.h"
 #include "asset/AssetManager.h"
+#include "asset/pods/TexturePod.h"
 
 namespace OpenGL
 {

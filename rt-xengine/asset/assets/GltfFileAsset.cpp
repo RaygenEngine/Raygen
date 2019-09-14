@@ -9,7 +9,8 @@
 
 bool GltfFileAsset::Load()
 {
-	TIMER_STATIC_SCOPE("gltf model load");
+	Timer::ScopedTimer<ch::milliseconds> timer("Gltf File Asset Load");
+
 
 	namespace tg = tinygltf;
 
@@ -24,9 +25,6 @@ bool GltfFileAsset::Load()
 
 	CLOG_WARN(!warn.empty(), warn.c_str());
 	CLOG_ERROR(!err.empty(), err.c_str());
-
-	if (!ret)
-		return false;
-
-	return true;
+	
+	return ret;
 }

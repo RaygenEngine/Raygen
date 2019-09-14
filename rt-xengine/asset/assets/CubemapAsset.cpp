@@ -7,23 +7,6 @@
 
 #include <iostream>
 
-bool CubemapAsset::LoadAll(CubemapAsset* self)
-{
-	if (!self)
-	{
-		return false;
-	}
-
-	return Engine::GetAssetManager()->Load(self) &&
-		Engine::GetAssetManager()->Load(self->m_sides[0].image) &&
-		Engine::GetAssetManager()->Load(self->m_sides[1].image) &&
-		Engine::GetAssetManager()->Load(self->m_sides[2].image) &&
-		Engine::GetAssetManager()->Load(self->m_sides[3].image) &&
-		Engine::GetAssetManager()->Load(self->m_sides[4].image) &&
-		Engine::GetAssetManager()->Load(self->m_sides[5].image);
-
-}
-
 bool CubemapAsset::Load()
 {
 	std::ifstream t(m_uri);

@@ -10,7 +10,7 @@
 namespace OpenGL
 {
 
-	bool GLModel::LoadGLMesh(GLMesh& glMesh, GeometryGroupPod& data, GLenum usage)
+	bool GLModel::LoadGLMesh(GLMesh& glMesh, GeometryGroup& data, GLenum usage)
 	{
 		glMesh.geometryMode = GetGLGeometryMode(data.mode);
 
@@ -58,7 +58,7 @@ namespace OpenGL
 
 		Engine::GetAssetManager()->RefreshPod(data.material);
 		
-		glMesh.material = GetGLAssetManager(this)->RequestLoadAsset<GLMaterial>(Engine::GetAssetManager()->GetPodPath(data.material));
+		glMesh.material = GetGLAssetManager(this)->GetOrMakeFromUri<GLMaterial>(Engine::GetAssetManager()->GetPodPath(data.material));
 
 		DebugBoundVAO("name");
 
@@ -96,10 +96,10 @@ namespace OpenGL
 
 		for (auto& mesh : modelData->meshes)
 		{
-			for (auto& geometryGroup : mesh->geometryGroups)
+			for (auto& geometryGroup : mesh.geometryGroups)
 			{
 				GLMesh& glmesh = m_meshes.emplace_back(GLMesh());
-				if (!LoadGLMesh(glmesh, *geometryGroup, m_usage))
+				if (!LoadGLMesh(glmesh, geometryGroup, m_usage))
 				{
 					return false;
 				}

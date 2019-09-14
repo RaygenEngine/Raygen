@@ -14,6 +14,10 @@ fs::path PathSystem::SearchPathUpRecursivelyFromCurrent(const fs::path& subPath)
 		LOG_TRACE("searching in: \'{}\', {}", currPath.string(), currPath.parent_path().string());
 		for (const auto& entry : fs::directory_iterator(currPath))
 		{
+			if (!entry.is_directory())
+			{
+				continue;
+			}
 			auto dataPath = entry.path() / subPath;
 
 			if (fs::exists(dataPath))
@@ -49,10 +53,12 @@ fs::path PathSystem::SearchPathDownRecursivelyFromPath(const fs::path& subPath, 
 	// if the search path is empty search in the current path
 	const auto currPath = searchPath.empty() ? fs::current_path() : searchPath;
 
+	auto fileToFind = utl::ToLower(subPath.string());
+
 	for (const auto& entry : fs::recursive_directory_iterator(currPath))
 	{
 		// Case sensitive compare.
-		if (entry.path().filename() == subPath)
+		if (utl::ToLower(entry.path().filename().string()) == fileToFind)
 		{
 			return entry;
 		}
@@ -71,10 +77,13 @@ void PathSystem::CacheAssetFilenames()
 		{
 			continue;
 		}
-		auto filename = entry.path().filename().string();
+		auto relative = fs::relative(entry);
+		auto filename = relative.filename().string();
+		auto relativeStr = relative.string();
 		if (!m_fileCache.count(filename))
 		{
-			m_fileCache.insert({ utl::force_move(filename), entry.path().string() });
+			m_fileCache.insert({ utl::force_move(filename), relativeStr });
+			m_fileCache.insert({ relativeStr, utl::force_move(relativeStr) });
 		}
 	}
 	LOG_INFO("Cached {} asset filenames in {} ms.", m_fileCache.size(), timer.Get());
@@ -123,10 +132,18 @@ fs::path PathSystem::SearchAssetPath(const fs::path& asset)
 	{
 		return fs::path(it->second);
 	}
+
+	if (fs::exists(asset))
+	{
+		return asset;
+	}
+
 	auto ret = SearchPathDownRecursivelyFromPath(asset);
 
-	if (ret.empty())
-		LOG_WARN("Could not locate asset, path: {}", asset.string());
+	// TODO: cache this result
+
+	//if (ret.empty())
+	//	LOG_WARN("Could not locate asset, path: {}", asset.string());
 	
 	return ret;
 }
