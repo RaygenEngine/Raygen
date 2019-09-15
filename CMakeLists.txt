@@ -9,7 +9,7 @@ set(LIB_DEPENDENCIES_DIRECTORY "${DEPENDENCIES_DIRECTORY}/lib")
 set(BIN_DEPENDENCIES_DIRECTORY "${DEPENDENCIES_DIRECTORY}/bin")
 set(INCLUDE_DEPENDENCIES_DIRECTORY "${DEPENDENCIES_DIRECTORY}/include")
 
-add_subdirectory (rt-xengine) 
+add_subdirectory (source) 
 add_subdirectory (extra-tools/glad-dll-gen)
 
 
