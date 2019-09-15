@@ -1,8 +1,7 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "nodes/geometry/TriangleModelGeometryNode.h"
-#include "nodes/geometry/TriangleModelInstancedGeometryNode.h"
+#include "nodes/geometry/GeometryNode.h"
 #include "nodes/TransformNode.h"
 #include "nodes/light/LightNode.h"
 #include "nodes/camera/CameraNode.h"
@@ -11,6 +10,7 @@
 #include "system/EngineComponent.h"
 #include "asset/AssetManager.h"
 #include "system/Input.h"
+#include "nodes/geometry/InstancedGeometryNode.h"
 
 class NodeFactory;
 
@@ -42,8 +42,8 @@ public:
 class World
 {
 	mutable std::unordered_set<Node*> m_nodes;
-	mutable std::unordered_set<TriangleModelGeometryNode*> m_triangleModelGeometries;
-	mutable std::unordered_set<TriangleModelInstancedGeometryNode*> m_triangleModelInstancedGeometries;
+	mutable std::unordered_set<GeometryNode*> m_triangleModelGeometries;
+	mutable std::unordered_set<InstancedGeometryNode*> m_triangleModelInstancedGeometries;
 	mutable std::unordered_set<TransformNode*> m_transforms;
 	mutable std::unordered_set<LightNode*> m_lights;
 	mutable std::unordered_set<CameraNode*> m_cameras;
@@ -111,8 +111,8 @@ public:
 	constexpr auto& GetNodeMap() const
 	{
 		if constexpr (std::is_base_of<LightNode, NodeType>::value) { return m_lights; }
-		else if constexpr (std::is_base_of<TriangleModelInstancedGeometryNode, NodeType>::value) { return m_triangleModelInstancedGeometries; }
-		else if constexpr (std::is_base_of<TriangleModelGeometryNode, NodeType>::value) { return m_triangleModelGeometries; }
+		else if constexpr (std::is_base_of<InstancedGeometryNode, NodeType>::value) { return m_triangleModelInstancedGeometries; }
+		else if constexpr (std::is_base_of<GeometryNode, NodeType>::value) { return m_triangleModelGeometries; }
 		else if constexpr (std::is_base_of<TransformNode, NodeType>::value) { return m_transforms; }
 		else if constexpr (std::is_base_of<CameraNode, NodeType>::value) { return m_cameras; }
 		else if constexpr (std::is_base_of<UserNode, NodeType>::value) { return m_users; }

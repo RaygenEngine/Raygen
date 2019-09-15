@@ -2,16 +2,16 @@
 
 #include "renderer/NodeObserver.h"
 #include "renderer/renderers/opengl/test/GLTestRenderer.h"
-#include "world/nodes/geometry/TriangleModelGeometryNode.h"
+#include "world/nodes/geometry/GeometryNode.h"
 #include "renderer/renderers/opengl/assets/GLModel.h"
 
 namespace OpenGL
 {
-	struct GLTestGeometry : public NodeObserver<GLTestRenderer, TriangleModelGeometryNode>
+	struct GLTestGeometry : public NodeObserver<GLTestRenderer, GeometryNode>
 	{
 		GLModel* glModel;
 
-		GLTestGeometry(GLTestRenderer* renderer, TriangleModelGeometryNode* node);
+		GLTestGeometry(GLTestRenderer* renderer, GeometryNode* node);
 		~GLTestGeometry() = default;
 	};
 }

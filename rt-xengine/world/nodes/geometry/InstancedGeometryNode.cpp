@@ -1,27 +1,21 @@
 #include "pch.h"
 
-#include "world/nodes/geometry/TriangleModelInstancedGeometryNode.h"
+#include "world/nodes/geometry/InstancedGeometryNode.h"
 
-
-TriangleModelInstancedGeometryNode::TriangleModelInstancedGeometryNode(Node* parent)
-	: TriangleModelGeometryNode(parent)
-{
-}
-
-void TriangleModelInstancedGeometryNode::CacheWorldTransform()
+void InstancedGeometryNode::CacheWorldTransform()
 {
 	Node::CacheWorldTransform();
 
 	m_instanceGroup.UpdateInstances(m_parent->GetWorldMatrix());
 }
 
-std::string TriangleModelInstancedGeometryNode::ToString(bool verbose, uint depth) const
+std::string InstancedGeometryNode::ToString(bool verbose, uint depth) const
 {
 	// TODO verbose print instances
 	return std::string("    ") * depth + "|--TMIgeometry instances: " + std::to_string(m_instanceGroup.GetCount()) + " " + Node::ToString(verbose, depth);
 }
 
-bool TriangleModelInstancedGeometryNode::LoadChildrenFromXML(const tinyxml2::XMLElement * xmlData)
+bool InstancedGeometryNode::LoadChildrenFromXML(const tinyxml2::XMLElement * xmlData)
 {
 	// children
 	for (auto* xmdChildElement = xmlData->FirstChildElement(); xmdChildElement != nullptr;

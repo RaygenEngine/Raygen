@@ -1,17 +1,18 @@
 #pragma once
 
-#include "world/nodes/geometry/TriangleModelGeometryNode.h"
+#include "world/nodes/geometry/GeometryNode.h"
 #include "world/nodes/geometry/Instancing.h"
 
 
-class TriangleModelInstancedGeometryNode : public TriangleModelGeometryNode
+class InstancedGeometryNode : public GeometryNode
 {
 	// world matrices are stored per instance basis
 	InstanceGroup m_instanceGroup;
 
 public:
-	TriangleModelInstancedGeometryNode(Node* parent);
-	~TriangleModelInstancedGeometryNode() = default;
+	InstancedGeometryNode(Node* parent)
+		: GeometryNode(parent) {}
+	~InstancedGeometryNode() = default;
 
 	const InstanceGroup& GetInstanceGroup() const { return m_instanceGroup; }
 

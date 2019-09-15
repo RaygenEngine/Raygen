@@ -5,8 +5,8 @@
 
 namespace OpenGL
 {
-	GLTestGeometry::GLTestGeometry(GLTestRenderer* renderer, TriangleModelGeometryNode* node)
-		: NodeObserver<GLTestRenderer, TriangleModelGeometryNode>(node)
+	GLTestGeometry::GLTestGeometry(GLTestRenderer* renderer, GeometryNode* node)
+		: NodeObserver<GLTestRenderer, GeometryNode>(node)
 	{
 		glModel = GetGLAssetManager(this)->GetOrMakeFromUri<GLModel>(node->GetModel()->GetUri());
 	}

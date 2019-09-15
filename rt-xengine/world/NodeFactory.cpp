@@ -49,13 +49,9 @@ Node* NodeFactory::LoadNodeFromType(const std::string& type, Node* parent, const
 	{
 		return world->LoadNode<LightNode>(parent, xmdChildElement);
 	}
-	if (type == "trimesh_geometry")
+	if (type == "geometry")
 	{
-		return world->LoadNode<TriangleModelGeometryNode>(parent, xmdChildElement);
-	}
-	if (type == "baked_trimesh_geometry")
-	{
-		//node = LoadNode<BakedTriangleMeshGeometryNode>(this, xmdChildElement);
+		return world->LoadNode<GeometryNode>(parent, xmdChildElement);
 	}
 	if (type == "transform")
 	{
@@ -65,13 +61,13 @@ Node* NodeFactory::LoadNodeFromType(const std::string& type, Node* parent, const
 	{
 		//return world->LoadNode<OculusUserNode>(parent, xmdChildElement);
 	}
-	if (type == "trimesh_geometry_instanced_matrix")
+	if (type == "geometry_instanced_matrix")
 	{
 		return LoadInstancingMatrixMetaNode(parent, xmdChildElement);
 	}
-	if (type == "trimesh_geometry_instanced")
+	if (type == "geometry_instanced")
 	{
-		return world->LoadNode<TriangleModelInstancedGeometryNode>(parent, xmdChildElement);
+		return world->LoadNode<InstancedGeometryNode>(parent, xmdChildElement);
 	}
 	if (type == "sky_cube")
 	{

@@ -3,13 +3,18 @@
 #include "world/nodes/Node.h"
 #include "asset/assets/GltfModelAsset.h"
 
-class TriangleModelGeometryNode : public Node
+class GeometryNode : public Node
 {
 	GltfModelAsset* m_model;
 
 public:
-	TriangleModelGeometryNode(Node* parent);
-	~TriangleModelGeometryNode() = default;
+	GeometryNode(Node* parent)
+		: Node(parent),
+		  m_model(nullptr)
+	{
+		REFLECT_VAR(m_model);
+	}
+	~GeometryNode() = default;
 
 	GltfModelAsset* GetModel() const { return m_model; }
 

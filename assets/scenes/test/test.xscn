@@ -22,12 +22,12 @@
 		   color="0.9450, 0.8549, 0.6431"/>
 	
 		
-	<trimesh_geometry name="box" 
+	<geometry name="box" 
 		translation="0.0, 0.0, -4.0"
 		scale="1, 1, 1" 
 		model="Sponza.gltf"/> 
 		
-	<trimesh_geometry name="box" 
+	<geometry name="box" 
 		translation="0.0, 0.0, -4.0"
 		scale="1, 1, 1" 
 		model="VC.gltf"/> 

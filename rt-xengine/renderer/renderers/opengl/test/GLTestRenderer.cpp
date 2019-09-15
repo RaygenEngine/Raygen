@@ -4,7 +4,7 @@
 #include "renderer/renderers/opengl/test/GLTestGeometry.h"
 #include "world/World.h"
 #include "world/nodes/user/freeform/FreeformUserNode.h"
-#include "world/nodes/geometry/TriangleModelGeometryNode.h"
+#include "world/nodes/geometry/GeometryNode.h"
 #include "asset/AssetManager.h"
 #include "system/Engine.h"
 #include "renderer/renderers/opengl/assets/GLCubeMap.h"
@@ -52,7 +52,7 @@ namespace OpenGL
 		//for (auto* geometryNode : GetWorld()->GetNodeMap<World::TriangleModelInstancedGeometryNode>())
 		//	m_instancedGeometries.emplace_back(RequestGLInstancedModel(geometryNode));
 
-		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<TriangleModelGeometryNode>())
+		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>())
 			m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, GLTestGeometry>(this, geometryNode));
 
 		//auto* sky = GetWorld()->GetAvailableNodeSpecificSubType<World::SkyHDRNode>();

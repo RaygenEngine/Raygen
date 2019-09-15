@@ -2,10 +2,10 @@
 
 #include "asset/util/ParsingAux.h"
 #include "world/World.h"
-#include "world/nodes/geometry/TriangleModelInstancedGeometryNode.h"
+#include "world/nodes/geometry/InstancedGeometryNode.h"
 #include "system/Engine.h"
 
-inline TriangleModelInstancedGeometryNode* LoadInstancingMatrixMetaNode(Node* parent, const tinyxml2::XMLElement* xmlElement)
+inline InstancedGeometryNode* LoadInstancingMatrixMetaNode(Node* parent, const tinyxml2::XMLElement* xmlElement)
 {
 	LOG_INFO("Loading instancing matrix meta node");
 
@@ -55,5 +55,5 @@ inline TriangleModelInstancedGeometryNode* LoadInstancingMatrixMetaNode(Node* pa
 		}
 	}
 
-	return Engine::GetWorld()->LoadNode<TriangleModelInstancedGeometryNode>(parent, triGeomInstancedNode);
+	return Engine::GetWorld()->LoadNode<InstancedGeometryNode>(parent, triGeomInstancedNode);
 }

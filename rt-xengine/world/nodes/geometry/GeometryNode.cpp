@@ -1,26 +1,19 @@
 #include "pch.h"
 
-#include "world/nodes/geometry/TriangleModelGeometryNode.h"
+#include "world/nodes/geometry/GeometryNode.h"
 #include "world/World.h"
 #include "asset/AssetManager.h"
 #include "system/Engine.h"
 #include "asset/assets/GltfModelAsset.h"
 #include "asset/assets/GltfFileAsset.h"
+#include "asset/util/ParsingAux.h"
 
-TriangleModelGeometryNode::TriangleModelGeometryNode(Node* parent)
-	: Node(parent),
-      m_model(nullptr)
-{
-
-	REFLECT_VAR(m_model);
-}
-
-std::string TriangleModelGeometryNode::ToString(bool verbose, uint depth) const
+std::string GeometryNode::ToString(bool verbose, uint depth) const
 {
 	return std::string("    ") * depth + "|--TMgeometry " + Node::ToString(verbose, depth);
 }
 
-bool TriangleModelGeometryNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
+bool GeometryNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 {
 	Node::LoadAttributesFromXML(xmlData);
 

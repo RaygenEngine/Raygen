@@ -70,8 +70,8 @@ set(SOURCE_FILES
 	world/nodes/sky/SkyCubeNode.cpp
 	world/nodes/sky/SkyHDRNode.cpp
 	
-	world/nodes/geometry/TriangleModelGeometryNode.cpp
-	world/nodes/geometry/TriangleModelInstancedGeometryNode.cpp
+	world/nodes/geometry/GeometryNode.cpp
+	world/nodes/geometry/InstancedGeometryNode.cpp
 	
 	world/nodes/light/LightNode.cpp
 	
@@ -191,8 +191,8 @@ set(HEADER_FILES
 	world/nodes/sky/SkyHDRNode.h
 	
 	world/nodes/geometry/Instancing.h
-	world/nodes/geometry/TriangleModelGeometryNode.h
-	world/nodes/geometry/TriangleModelInstancedGeometryNode.h
+	world/nodes/geometry/GeometryNode.h
+	world/nodes/geometry/InstancedGeometryNode.h
 	
 	world/nodes/light/LightNode.h
 	
