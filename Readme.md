@@ -8,7 +8,9 @@ RayxeИ is a graphics/game engine focused on renderer extensibility.
 ## Compiling
 
 The engine only supports Windows (for now).
+
 The development is done on MSVC 19.22. clang-cl may also be compatible (untested)
+
 C++17 and a very recent CMake is required.
 
 
@@ -27,5 +29,5 @@ C++17 and a very recent CMake is required.
 
 ## Authors
 
-* **John Moschos** - *Founder, Programmer* [@ Renoras](https://github.com/Renoras)
-* **Harry Katagis** - *Programmer* [@ katagis](https://github.com/katagis)
+* **John Moschos** - *Founder, Programmer* [Renoras](https://github.com/Renoras)
+* **Harry Katagis** - *Programmer* [katagis](https://github.com/katagis)
