@@ -25,8 +25,11 @@ struct Mesh
 	std::vector<GeometryGroup> geometryGroups;
 };
 
-struct ModelPod : AssetPod
+struct ModelPod : UnloadableAssetPod
 {
+	static bool Load(ModelPod* pod, const fs::path& path);
+
 	std::vector<Mesh> meshes;
+
 };
 

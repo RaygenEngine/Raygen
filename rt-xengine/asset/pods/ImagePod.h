@@ -3,8 +3,10 @@
 #include "system/reflection/Reflector.h"
 #include "asset/AssetPod.h"
 
-struct ImagePod : AssetPod
+struct ImagePod : UnloadableAssetPod
 {
+	static bool Load(ImagePod* pod, const fs::path& path);
+
 	int32 width{ 0 };
 	int32 height{ 0 };
 	// actual textures components -> final texture has RGBA, but this value gives insight to how the data is stored

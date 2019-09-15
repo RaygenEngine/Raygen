@@ -7,6 +7,8 @@
 // glTF-based material (not all extensions included) (comments in this file -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0)
 struct MaterialPod : AssetPod
 {
+	static bool Load(MaterialPod* pod, const fs::path& path);
+
 	// The value for each property(baseColor, metallic, roughness) can be defined using factors or textures.
 
 	// If a texture is not given, all respective texture components within this material model are assumed to have a value of 1.0.

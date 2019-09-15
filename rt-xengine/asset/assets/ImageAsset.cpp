@@ -7,7 +7,7 @@
 
 ImageAsset* ImageAsset::GetDefaultWhite()
 {
-	return Engine::GetAssetManager()->RequestSearchAsset<ImageAsset>(__default__imageWhite);
+	return AssetManager::GetOrCreate<ImageAsset>(__default__imageWhite);
 }
 
 ImageAsset* ImageAsset::GetDefaultMissing()

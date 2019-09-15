@@ -5,8 +5,10 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-struct XMLDocPod : AssetPod
+struct XMLDocPod : UnloadableAssetPod
 {
+	static bool Load(XMLDocPod* pod, const fs::path& path);
+
 	tinyxml2::XMLDocument document;
 };
 
