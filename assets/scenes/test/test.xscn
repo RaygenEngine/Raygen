@@ -30,7 +30,7 @@
 	<geometry name="box" 
 		translation="0.0, 0.0, -4.0"
 		scale="1, 1, 1" 
-		model="VC.gltf"/> 
+		model="VC.gltf/#model"/> 
 		
 	<!-- <geometry name="box2"  -->
 		<!-- translation="0.0, -100.0, -4.0" -->
