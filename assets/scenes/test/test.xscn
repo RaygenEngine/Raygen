@@ -22,15 +22,20 @@
 		   color="0.9450, 0.8549, 0.6431"/>
 	
 		
-	<geometry name="box" 
-		translation="0.0, 0.0, -4.0"
-		scale="1, 1, 1" 
-		model="Sponza.gltf"/> 
+	<!-- <geometry name="box"  -->
+		<!-- translation="0.0, 0.0, -4.0" -->
+		<!-- scale="1, 1, 1"  -->
+		<!-- model="Sponza.gltf"/>  -->
 		
 	<geometry name="box" 
 		translation="0.0, 0.0, -4.0"
 		scale="1, 1, 1" 
 		model="VC.gltf"/> 
+		
+	<!-- <geometry name="box2"  -->
+		<!-- translation="0.0, -100.0, -4.0" -->
+		<!-- scale="1, 1, 1"  -->
+		<!-- model="Sponza.gltf"/>  -->
 		
 
 </root>

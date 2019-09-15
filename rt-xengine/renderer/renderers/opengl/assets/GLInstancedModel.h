@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/renderers/opengl/assets/GLModel.h"
-#include "world/nodes/geometry/TriangleModelInstancedGeometryNode.h"
+#include "world/nodes/geometry/InstancedGeometryNode.h"
 
 #include "GLAD/glad.h"
 

@@ -22,7 +22,6 @@ bool GeometryNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 	{
 		fs::path file = xmlData->Attribute("model");
 		m_model = AssetManager::GetOrCreate<ModelPod>(file / "#model");
-
 		//if (file.extension().compare(".gltf") == 0)
 		//{
 		//	auto pParent = Engine::GetAssetManager()->RequestSearchAsset<GltfFileAsset>(file);

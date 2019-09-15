@@ -9,10 +9,9 @@ class GeometryNode : public Node
 
 public:
 	GeometryNode(Node* parent)
-		: Node(parent),
-		  m_model(nullptr)
+		: Node(parent)
 	{
-		REFLECT_VAR(m_model);
+		//REFLECT_VAR(m_model);
 	}
 	~GeometryNode() = default;
 
