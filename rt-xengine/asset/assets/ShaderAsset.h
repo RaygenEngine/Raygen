@@ -3,13 +3,8 @@
 #include "asset/assets/TextAsset.h"
 #include "asset/pods/ShaderPod.h"
 
-class ShaderAsset : public PodedAsset<ShaderPod>
+struct ShaderAsset
 {
-public:
-	ShaderAsset(const fs::path& path)
-		: PodedAsset(path) {}
-	
-protected:
-	bool Load() override;
+	static bool Load(ShaderPod* pod, const fs::path& path);
 };
 

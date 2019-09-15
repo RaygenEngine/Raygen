@@ -7,13 +7,13 @@
 
 #include <iostream>
 
-bool CubemapAsset::Load()
+bool CubemapAsset::Load(CubemapPod* pod, const fs::path& path)
 {
-	std::ifstream t(m_uri);
+	std::ifstream t(path);
 
 	if (!t.is_open())
 	{
-		LOG_WARN("Unable to open string file, path: {}", m_uri);
+		LOG_WARN("Unable to open string file, path: {}", path);
 		return false;
 	}
 
@@ -22,8 +22,7 @@ bool CubemapAsset::Load()
 		char name[256];
 		t.getline(name, 256);
 
-		auto imgAsset = Engine::GetAssetManager()->RequestSearchAsset<ImageAsset>(std::string(name));
-		m_pod->sides[i]->image = imgAsset->GetPod();
+		pod->sides[i]->image = AssetManager::GetOrCreate<ImagePod>(name);
 	}
 
 	return true;

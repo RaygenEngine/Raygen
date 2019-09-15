@@ -5,7 +5,7 @@
 
 class GeometryNode : public Node
 {
-	GltfModelAsset* m_model;
+	PodHandle<ModelPod> m_model;
 
 public:
 	GeometryNode(Node* parent)
@@ -16,7 +16,7 @@ public:
 	}
 	~GeometryNode() = default;
 
-	GltfModelAsset* GetModel() const { return m_model; }
+	PodHandle<ModelPod> GetModel() const { return m_model; }
 
 	std::string ToString(bool verbose, uint depth) const override;
 

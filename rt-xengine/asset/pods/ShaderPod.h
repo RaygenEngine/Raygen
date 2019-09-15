@@ -6,7 +6,9 @@
 
 struct ShaderPod : AssetPod
 {
-	TextPod* vertex{ nullptr };
-	TextPod* fragment{ nullptr };
+	static bool Load(ShaderPod* pod, const fs::path& path);
+
+	PodHandle<TextPod> vertex;
+	PodHandle<TextPod> fragment;
 };
 

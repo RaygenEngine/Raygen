@@ -218,13 +218,14 @@ namespace
 		{
 			auto& mat = modelData.materials.at(materialIndex);
 
-			auto matPath = parentPath / ("#" + (!mat.name.empty() ? mat.name : "material") + "." + std::to_string(materialIndex));
+			//auto matPath = parentPath / ("#" + (!mat.name.empty() ? mat.name : ("material." + std::to_string(materialIndex))));
+			auto matPath = parentPath / ("#material." + std::to_string(materialIndex));
 
-			geom.material = Engine::GetAssetManager()->RequestSearchAsset<GltfMaterialAsset>(matPath)->GetPod();
+			geom.material = AssetManager::GetOrCreate<MaterialPod>(matPath);
 		}
 		else
 		{
-			geom.material = DefaultMaterial::GetDefault()->GetPod();
+			geom.material = DefaultMaterial::GetDefault();
 		}
 
 		// calculate missing normals (flat)
@@ -324,16 +325,12 @@ namespace
 	}
 }
 
-bool GltfModelAsset::Load()
+bool GltfModelAsset::Load(ModelPod* pod, const fs::path& path)
 {
-	const auto pPath = m_uri.parent_path();
-	auto pParent = Engine::GetAssetManager()->RequestSearchAsset<GltfFileAsset>(pPath);
+	const auto pPath = path.parent_path();
+	auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath);
 
-	// requires parent to be loaded
-	if (!Engine::GetAssetManager()->Load(pParent))
-		return false;
-
-	tinygltf::Model& model = pParent->GetPod()->data;
+	tinygltf::Model& model = pParent->data;
 
 	auto& defaultScene = model.scenes.at(model.defaultScene);
 
@@ -400,7 +397,7 @@ bool GltfModelAsset::Load()
 					LOG_ERROR("Failed to load mesh, name: {}", gltfMesh.name);
 					return false;
 				}
-				m_pod->meshes.emplace_back(mesh);
+				pod->meshes.emplace_back(mesh);
 			}
 
 			//load child's children

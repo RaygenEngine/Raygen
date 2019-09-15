@@ -5,8 +5,10 @@
 
 #include "tinygltf/tiny_gltf.h"
 
-struct GltfFilePod : AssetPod
+struct GltfFilePod : DeletableAssetPod
 {
+	static bool Load(GltfFilePod* pod, const fs::path& path);
+
 	tinygltf::Model data;
 };
 

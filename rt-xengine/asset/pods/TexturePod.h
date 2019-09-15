@@ -6,6 +6,8 @@
 
 struct TexturePod : AssetPod
 {
+	static bool Load(TexturePod* pod, const fs::path& path);
+
 	TextureFiltering minFilter{TextureFiltering::LINEAR};
 	TextureFiltering magFilter{TextureFiltering::LINEAR};
 
@@ -13,6 +15,6 @@ struct TexturePod : AssetPod
 	TextureWrapping wrapT{TextureWrapping::REPEAT};
 	TextureWrapping wrapR{TextureWrapping::REPEAT};
 
-	ImagePod* image{ nullptr };
+	PodHandle<ImagePod> image;
 };
 

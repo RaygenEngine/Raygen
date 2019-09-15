@@ -12,6 +12,7 @@ set(SOURCE_FILES
 	asset/Asset.cpp
 	asset/AssetManager.cpp
 	asset/PathSystem.cpp
+	asset/PodLoaders.cpp
 	
 	asset/assets/TextAsset.cpp
 	asset/assets/XMLDocAsset.cpp
@@ -93,7 +94,7 @@ set(HEADER_FILES
 	asset/AssetPod.h
 	asset/AssetManager.h
 	asset/PathSystem.h
-
+		
 	asset/assets/TextAsset.h
 	asset/assets/XMLDocAsset.h
 	asset/assets/ImageAsset.h

@@ -30,7 +30,7 @@ namespace Timer
 	public:
 		ch::time_point<ch::system_clock> m_startTime;
 		long long m_total{ 0 };
-
+		bool m_stopped{ false };
 		DebugTimer() {}
 		DebugTimer(bool autoStart) 
 		{
@@ -70,6 +70,11 @@ namespace Timer
 			long long last = ch::duration_cast<ChronoDuration>(ch::system_clock::now() - m_startTime).count();
 			m_total += last;
 			return last;
+		}
+
+		void Stop()
+		{
+			m_stopped = true;
 		}
 	};
 

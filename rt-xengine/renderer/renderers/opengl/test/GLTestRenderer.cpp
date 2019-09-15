@@ -18,9 +18,9 @@ namespace OpenGL
 	{
 		auto am = Engine::GetAssetManager();
 		
-		const auto shaderAsset = am->RequestSearchAsset<ShaderAsset>("test.shader.json");
+		const auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("test.shader.json");
 		
-		m_nonInstancedShader = GetGLAssetManager()->GetOrMakeFromUri<GLShader>(shaderAsset->GetUri());
+		m_nonInstancedShader = GetGLAssetManager()->GetOrMakeFromUri<GLShader>(am->GetPodPath(shaderAsset));
 		
 		m_nonInstancedShader->SetUniformLocation("mvp");
 		m_nonInstancedShader->SetUniformLocation("m");
@@ -108,7 +108,7 @@ namespace OpenGL
 
 				GLMaterial& glMaterial = *glMesh.material;
 
-				MaterialPod* materialData = glMaterial.GetMaterialAsset();
+				PodHandle<MaterialPod> materialData = glMaterial.GetMaterialAsset();
 				
 				glUniform4fv(m_nonInstancedShader->GetUniformLocation("baseColorFactor"), 1, glm::value_ptr(materialData->baseColorFactor));
 				glUniform3fv(m_nonInstancedShader->GetUniformLocation("emissiveFactor"), 1, glm::value_ptr(materialData->emissiveFactor));

@@ -3,16 +3,7 @@
 #include "asset/Asset.h"
 #include "asset/pods/ImagePod.h"
 
-class ImageAsset : public PodedAsset<ImagePod>
+struct ImageAsset
 {
-public:
-	ImageAsset(const fs::path& path)
-		: PodedAsset(path) {}
-
-	static ImageAsset* GetDefaultWhite();
-	static ImageAsset* GetDefaultMissing();
-
-protected:
-	bool Load() override;
-	void Deallocate() override;
+	static bool Load(ImagePod* pod, const fs::path& path);
 };

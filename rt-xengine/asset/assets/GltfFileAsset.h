@@ -3,13 +3,7 @@
 #include "asset/Asset.h"
 #include "asset/pods/GltfFilePod.h"
 
-class GltfFileAsset : public PodedAsset<GltfFilePod>
+struct GltfFileAsset 
 {
-public:
-	
-	GltfFileAsset(const fs::path& path)
-		: PodedAsset(path) {}
-
-protected:
-	bool Load() override;
+	static bool Load(GltfFilePod* pod, const fs::path& path);
 };

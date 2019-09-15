@@ -56,7 +56,6 @@ namespace OpenGL
 
 		glMesh.count = data.indices.size();
 
-		Engine::GetAssetManager()->RefreshPod(data.material);
 		
 		glMesh.material = GetGLAssetManager(this)->GetOrMakeFromUri<GLMaterial>(Engine::GetAssetManager()->GetPodPath(data.material));
 
@@ -87,7 +86,7 @@ namespace OpenGL
 
 	bool GLModel::Load()
 	{
-		auto modelData = Engine::GetAssetManager()->RequestFreshPod<ModelPod>(m_assetManagerPodPath);
+		auto modelData = AssetManager::GetOrCreate<ModelPod>(m_assetManagerPodPath);
 		
 		TIMER_STATIC_SCOPE("uploading model time");
 

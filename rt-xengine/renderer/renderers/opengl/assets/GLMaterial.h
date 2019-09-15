@@ -15,7 +15,7 @@ namespace OpenGL
 		GLTexture* m_normalTexture;
 		GLTexture* m_emissiveTexture;
 		
-		MaterialPod* m_pod;
+		PodHandle<MaterialPod> m_pod;
 	public:
 		GLMaterial(const fs::path& assocPath)
 			: GLAsset(assocPath),
@@ -31,8 +31,7 @@ namespace OpenGL
 		[[nodiscard]] GLTexture* GetNormalTexture() const { return m_normalTexture; }
 		[[nodiscard]] GLTexture* GetEmissiveTexture() const { return m_emissiveTexture; }
 
-		// PERF:
-		MaterialPod* GetMaterialAsset() const;
+		PodHandle<MaterialPod> GetMaterialAsset() const;
 		
 	protected:
 		bool Load() override;

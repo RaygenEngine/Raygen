@@ -4,17 +4,17 @@
 #include "asset/assets/ImageAsset.h"
 #include "asset/assets/GltfMaterialAsset.h"
 
-void AssetManager::Unload(Asset* asset)
-{
-	if (asset->m_isLoaded && dynamic_cast<GltfMaterialAsset*>(asset) == nullptr)
-	{
-		asset->Deallocate();
-	}
+size_t AssetManager::NextHandle = 1;
 
-	asset->m_isLoaded = false;
+AssetPod* AssetManager::__DebugUid(size_t a)
+{
+	return Engine::GetAssetManager()->m_uidToPod.at(a);
 }
 
 bool AssetManager::Init(const std::string& applicationPath, const std::string& dataDirectoryName)
 {
 	return m_pathSystem.Init(applicationPath, dataDirectoryName);
 }
+
+
+

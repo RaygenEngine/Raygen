@@ -95,6 +95,8 @@ void AppBase::MainLoop()
 		// render
 		Engine::GetRenderer()->Render();
 		Engine::GetRenderer()->SwapBuffers();
+
+		Engine::Get().ReportFrameDrawn();
 	}
 }
 

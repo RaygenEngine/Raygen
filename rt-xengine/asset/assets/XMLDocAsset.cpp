@@ -2,7 +2,7 @@
 
 #include "asset/assets/XMLDocAsset.h"
 
-bool XMLDocAsset::Load()
+bool XMLDocAsset::Load(XMLDocPod* pod, const fs::path& path)
 {
-	return m_pod->document.LoadFile(m_uri.string().c_str()) == tinyxml2::XML_SUCCESS;
+	return pod->document.LoadFile(path.string().c_str()) == tinyxml2::XML_SUCCESS;
 }

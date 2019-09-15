@@ -7,6 +7,8 @@
 // glTF-based material (not all extensions included) (comments in this file -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0)
 struct MaterialPod : AssetPod
 {
+	static bool Load(MaterialPod* pod, const fs::path& path);
+
 	// The value for each property(baseColor, metallic, roughness) can be defined using factors or textures.
 
 	// If a texture is not given, all respective texture components within this material model are assumed to have a value of 1.0.
@@ -19,20 +21,20 @@ struct MaterialPod : AssetPod
 	// In this model it is not possible to specify a F0 value for non-metals, and a linear value of 4% (0.04) is used.
 	// The baseColorTexture uses the sRGB transfer function and must be converted to linear space before it is used for any computations.
 	// R-red, G-green, B-blue, A-alpha
-	TexturePod* baseColorTexture{ nullptr };
+	PodHandle<TexturePod> baseColorTexture;
 	int32 baseColorTexCoordIndex{ 0 };
 
 	// The metallic and roughness properties are packed together in a single texture called metallicRoughnessTexture.
 	// R-occlusion, G-roughness, B-metal, A-empty
-	TexturePod* occlusionMetallicRoughnessTexture{ nullptr };
+	PodHandle<TexturePod> occlusionMetallicRoughnessTexture;
 	int32 occlusionMetallicRoughnessTexCoordIndex{ 0 };
 	
 	// A tangent space normal map
-	TexturePod* normalTexture{ nullptr };
+	PodHandle<TexturePod> normalTexture;
 	int32 normalTexCoordIndex{ 0 };
 	
 	// The emissive map controls the color and intensity of the light being emitted by the material.
-	TexturePod* emissiveTexture{ nullptr };
+	PodHandle<TexturePod> emissiveTexture;
 	int32 emissiveTexCoordIndex{ 0 };
 
 	// Factor values act as linear multipliers for the corresponding texture values.

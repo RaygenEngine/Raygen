@@ -4,31 +4,29 @@
 #include "asset/assets/ImageAsset.h"
 #include "asset/AssetManager.h"
 
-DefaultTexture* DefaultTexture::GetDefault()
+PodHandle<TexturePod> DefaultTexture::GetDefault()
 {
-	return Engine::GetAssetManager()->RequestSearchAsset<DefaultTexture>(__default__texture);
+	return AssetManager::GetOrCreate<TexturePod>(__default__texture);
 }
 
-bool DefaultTexture::Load()
+bool DefaultTexture::Load(TexturePod* pod, const fs::path& path)
 {
-	auto image = ImageAsset::GetDefaultWhite();
-	m_pod->image = image->GetPod();
-	
+	pod->image = AssetManager::GetOrCreate<ImagePod>(__default__imageWhite);
 	return true;
 }
 
-DefaultMaterial* DefaultMaterial::GetDefault()
+PodHandle<MaterialPod> DefaultMaterial::GetDefault()
 {
-	return Engine::GetAssetManager()->RequestSearchAsset<DefaultMaterial>(__default__material);
+	return AssetManager::GetOrCreate<MaterialPod>(__default__material);
 }
 
-bool DefaultMaterial::Load()
+bool DefaultMaterial::Load(MaterialPod* pod, const fs::path& path)
 {
 	auto image = DefaultTexture::GetDefault();
-	m_pod->baseColorTexture = image->GetPod();
-	//m_pod->normalTexture = image->GetPod();
-	m_pod->emissiveTexture = image->GetPod();
-	m_pod->occlusionMetallicRoughnessTexture = image->GetPod();
+	pod->baseColorTexture = image;
+	pod->normalTexture = image;
+	pod->emissiveTexture = image;
+	pod->occlusionMetallicRoughnessTexture = image;
 
 	return true;
 }

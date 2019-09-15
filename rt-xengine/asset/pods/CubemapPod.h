@@ -6,6 +6,8 @@
 
 struct CubemapPod : AssetPod
 {
-	TexturePod* sides[CMF_COUNT]{ nullptr };
+	static bool Load(CubemapPod* pod, const fs::path& path);
+
+	PodHandle<TexturePod> sides[CMF_COUNT];
 };
 

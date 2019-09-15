@@ -186,7 +186,7 @@ public:
 	void Update();
 	//void WindowResize(int32 width, int32 height) override;
 
-	bool LoadAndPrepareWorldFromXML(XMLDocAsset* sceneXML);
+	bool LoadAndPrepareWorldFromXML(PodHandle<XMLDocPod> sceneXML);
 
 	NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
 };

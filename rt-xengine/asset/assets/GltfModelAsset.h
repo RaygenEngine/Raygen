@@ -5,13 +5,7 @@
 
 #include "tinygltf/tiny_gltf.h"
 
-class GltfModelAsset : public PodedAsset<ModelPod>
+struct GltfModelAsset
 {
-public:
-	
-	GltfModelAsset(const fs::path& path)
-		: PodedAsset(path) {}
-
-protected:
-	bool Load() override;
+	static bool Load(ModelPod* pod, const fs::path& path);
 };

@@ -139,9 +139,11 @@ void Editor::UpdateEditor()
 	{
 		ImGui::Indent();
 		std::string text;
-		for (auto& assetPair : Engine::GetAssetManager()->m_pathAssetMap)
+		for (auto& assetPair : Engine::GetAssetManager()->m_pathToUid)
 		{
 			ImGui::Text(assetPair.first.c_str());
+			ImGui::SameLine();
+			ImGui::Text(std::to_string(assetPair.second).c_str());
 
 			//text += assetPair.first + "\n";
 		}
@@ -212,13 +214,13 @@ bool AddReflector(Reflector& reflector, int32 depth = 0)
 
 				if (ImGui::Button("Deallocate"))
 				{
-					Engine::GetAssetManager()->Unload(ref);
+//					Engine::GetAssetManager()->Unload(ref);
 				}
 				ImGui::SameLine();
 
 				if (ImGui::Button("Reload"))
 				{
-					Engine::GetAssetManager()->Load(ref);
+	//				Engine::GetAssetManager()->Load(ref);
 				}
 				ImGui::SameLine();
 				ImGui::InputText("", &s);

@@ -5,41 +5,25 @@
 #include "asset/AssetManager.h"
 #include "stb_image/stb_image.h"
 
-ImageAsset* ImageAsset::GetDefaultWhite()
+bool ImageAsset::Load(ImagePod* pod, const fs::path& path)
 {
-	return Engine::GetAssetManager()->RequestSearchAsset<ImageAsset>(__default__imageWhite);
-}
+	auto finalPath = path;
 
-ImageAsset* ImageAsset::GetDefaultMissing()
-{
-	return Engine::GetAssetManager()->RequestSearchAsset<ImageAsset>(__default__imageMissing);
-}
+	pod->hdr = stbi_is_hdr(finalPath.string().c_str()) == 1;
 
-bool ImageAsset::Load()
-{
-	auto finalPath = m_uri;
-	
-	m_pod->hdr = stbi_is_hdr(finalPath.string().c_str()) == 1;
-
-	if (!m_pod->hdr)
-		m_pod->data = stbi_load(finalPath.string().c_str(), &m_pod->width, &m_pod->height, &m_pod->components, STBI_rgb_alpha);
+	if (!pod->hdr)
+		pod->data = stbi_load(finalPath.string().c_str(), &pod->width, &pod->height, &pod->components, STBI_rgb_alpha);
 	else
-		m_pod->data = stbi_loadf(finalPath.string().c_str(), &m_pod->width, &m_pod->height, &m_pod->components, STBI_rgb_alpha);
+		pod->data = stbi_loadf(finalPath.string().c_str(), &pod->width, &pod->height, &pod->components, STBI_rgb_alpha);
 
-	if (!m_pod->data || (m_pod->width == 0) || (m_pod->height == 0))
+	if (!pod->data || (pod->width == 0) || (pod->height == 0))
 	{
 		LOG_WARN("TextureAsset loading failed, filepath: {}, data_empty: {} width: {} height: {}", finalPath,
-			static_cast<bool>(m_pod->data), m_pod->width, m_pod->height);
+				 static_cast<bool>(pod->data), pod->width, pod->height);
 
 		return false;
 	}
 
 	return true;
-}
 
-void ImageAsset::Deallocate()
-{
-	// TODO: check
-	free(m_pod->data);
-	PodedAsset::Deallocate();
 }

@@ -34,6 +34,8 @@ Engine::~Engine()
 
 void Engine::InitEngine(AppBase* app)
 {
+	m_initToFrameTimer.Start();
+
 	m_app = app;
 
 	m_input = new Input();
@@ -64,11 +66,7 @@ bool Engine::CreateWorldFromFile(const std::string& filename)
 	}
 	m_world = new World(m_app->MakeNodeFactory());
 
-
-	XMLDocAsset* sceneXML = m_assetManager->RequestSearchAsset<XMLDocAsset>(filename);
-	if (!m_assetManager->Load(sceneXML))
-		return false;
-
+	auto sceneXML = AssetManager::GetOrCreate<XMLDocPod>(filename);
 	return m_world->LoadAndPrepareWorldFromXML(sceneXML);
 }
 

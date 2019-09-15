@@ -21,15 +21,16 @@ bool GeometryNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 	if (ParsingAux::AttributeExists(xmlData, "model"))
 	{
 		fs::path file = xmlData->Attribute("model");
+		m_model = AssetManager::GetOrCreate<ModelPod>(file / "#model");
 
-		if (file.extension().compare(".gltf") == 0)
-		{
-			auto pParent = Engine::GetAssetManager()->RequestSearchAsset<GltfFileAsset>(file);
+		//if (file.extension().compare(".gltf") == 0)
+		//{
+		//	auto pParent = Engine::GetAssetManager()->RequestSearchAsset<GltfFileAsset>(file);
 
-			auto mPath = pParent->GetUri() / "#model";
-			// check if gltf
-			m_model = Engine::GetAssetManager()->RequestSearchAsset<GltfModelAsset>(mPath);
-		}
+		//	auto mPath = pParent->GetUri() / "#model";
+		//	// check if gltf
+		//	m_model = Engine::GetAssetManager()->RequestSearchAsset<GltfModelAsset>(mPath);
+		//}
 		// load other types
 	}
 	else return false;
