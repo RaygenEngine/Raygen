@@ -3,7 +3,7 @@
 #include "system/reflection/Reflector.h"
 #include "asset/AssetPod.h"
 
-struct ImagePod : UnloadableAssetPod
+struct ImagePod : DeletableAssetPod
 {
 	static bool Load(ImagePod* pod, const fs::path& path);
 

@@ -5,7 +5,7 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-struct XMLDocPod : UnloadableAssetPod
+struct XMLDocPod : DeletableAssetPod
 {
 	static bool Load(XMLDocPod* pod, const fs::path& path);
 

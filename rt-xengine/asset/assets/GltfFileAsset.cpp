@@ -7,10 +7,9 @@
 #include <optional>
 
 
-bool GltfFileAsset::Load()
+bool GltfFileAsset::Load(GltfFilePod* pod, const fs::path& path)
 {
 	Timer::ScopedTimer<ch::milliseconds> timer("Gltf File Asset Load");
-
 
 	namespace tg = tinygltf;
 
@@ -19,12 +18,12 @@ bool GltfFileAsset::Load()
 	std::string err;
 	std::string warn;
 
-	auto ext = m_uri.extension();
+	auto ext = path.extension();
 
-	bool ret = loader.LoadASCIIFromFile(&m_pod->data, &err, &warn, m_uri.string());
+	bool ret = loader.LoadASCIIFromFile(&pod->data, &err, &warn, path.string());
 
 	CLOG_WARN(!warn.empty(), warn.c_str());
 	CLOG_ERROR(!err.empty(), err.c_str());
-	
+
 	return ret;
 }

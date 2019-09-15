@@ -3,13 +3,7 @@
 #include "asset/Asset.h"
 #include "asset/pods/TexturePod.h"
 
-class GltfTextureAsset : public PodedAsset<TexturePod>
+struct GltfTextureAsset
 {
-public:
-	
-	GltfTextureAsset(const fs::path& path)
-		: PodedAsset(path) {}
-
-protected:
-	bool Load() override;
+	static bool Load(TexturePod* pod, const fs::path& path);
 };

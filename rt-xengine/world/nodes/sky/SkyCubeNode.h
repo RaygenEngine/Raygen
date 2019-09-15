@@ -5,18 +5,17 @@
 
 class SkyCubeNode : public Node
 {
-	CubemapPod* m_cubeMap;
+	PodHandle<CubemapPod> m_cubeMap;
 
 public:
 	SkyCubeNode(Node* parent)
-		: Node(parent),
-	      m_cubeMap(nullptr) {}
+		: Node(parent) {}
 
 	~SkyCubeNode() = default;
 
 	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 
-	CubemapPod* GetSkyMap() const { return m_cubeMap; }
+	PodHandle<CubemapPod> GetSkyMap() const { return m_cubeMap; }
 
 protected:
 	std::string ToString(bool verbose, uint depth) const override;

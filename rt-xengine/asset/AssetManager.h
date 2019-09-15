@@ -14,6 +14,7 @@ constexpr auto __default__material = "#__default__material";
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
 class AssetManager
 {
+	friend class Editor;
 
 	std::unordered_map<size_t, AssetPod*> m_uidToPod;
 	std::unordered_map<size_t, std::string> m_uidToPath;
@@ -32,6 +33,8 @@ private:
 		// TODO: Copy old pod
 		m_pathToUid.erase(path.string());
 	}
+	
+
 
 
 	template<typename PodType>
@@ -39,9 +42,24 @@ private:
 	{
 		return dynamic_cast<PodType*>(m_uidToPod.at(podId));
 	}
-
+public:
+	// For internal use only, dont call this on your own
 	template<typename PodType>
-	PodType* RefreshPod(size_t podId)
+	PodType* __Internal_MaybeFindPod(size_t podId) const
+	{
+		auto it = m_uidToPod.find(podId);
+		if (it != m_uidToPod.end())
+		{
+			auto p = dynamic_cast<PodType*>(it->second);
+			assert(p && "Pod of incorrect type found");
+			return p;
+		}
+		return nullptr;
+	}
+
+	// For internal use only, dont call this on your own
+	template<typename PodType>
+	PodType* __Internal_RefreshPod(size_t podId)
 	{
 		auto it = m_uidToPod.find(podId);
 		if (it == m_uidToPod.end())
@@ -49,15 +67,19 @@ private:
 			return dynamic_cast<PodType*>(it->second);
 		}
 
-		auto& podPath = GetPodPath(podId);
+		auto& podPath = GetPodPath<PodType>(podId);
 
 		PodType* pod = new PodType();
 		PodType::Load(pod, podPath);
 		
-		m_uidToPod.insert({ podId, podPath });
+		m_uidToPod.insert({ podId, pod });
 		
 		return pod;
 	}
+
+	static AssetPod* __DebugUid(size_t a);
+
+private:
 
 	template<typename PodType>
 	PodType* ReplaceInto(size_t podId, const fs::path& path)
@@ -128,12 +150,14 @@ public:
 		}
 		else
 		{
-			p = m_pathSystem.SearchAssetPath(path);
+			p = am->m_pathSystem.SearchAssetPath(path);
 			assert(!p.empty());
 		}
 
-		auto it = m_pathToUid.find(p);
-		if (it != m_pathToUid.end())
+		std::string pathStr = p.string();
+
+		auto it = am->m_pathToUid.find(pathStr);
+		if (it != am->m_pathToUid.end())
 		{
 			PodHandle<PodType> result;
 			result.podId = it->second;
@@ -145,16 +169,22 @@ public:
 		PodHandle<PodType> result;
 		result.podId = newHandle;
 		
-		m_pathToUid.insert({ path.string(), newHandle });
+		am->m_pathToUid.insert({ pathStr, newHandle });
 
 		PodType* pod = new PodType();
 
-		PodType::Load(pod, path);
+		PodType::Load(pod, pathStr);
 
-		m_uidToPath.insert({ podId, path });
-		m_uidToPod.insert({ podId, pod });
+		am->m_uidToPath.insert({ newHandle, utl::force_move(pathStr) });
+		am->m_uidToPod.insert({ newHandle, pod });
 
-		return pod;
+		return result;
+	}
+
+	template<typename PodType>
+	fs::path GetPodPath(PodHandle<PodType> handle)
+	{
+		return m_uidToPath.at(handle.podId);
 	}
 
 	//template<typename PodHandle>

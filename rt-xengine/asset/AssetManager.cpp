@@ -6,19 +6,15 @@
 
 size_t AssetManager::NextHandle = 1;
 
-void AssetManager::Unload(Asset* asset)
+AssetPod* AssetManager::__DebugUid(size_t a)
 {
-	if (asset->m_isLoaded && dynamic_cast<GltfMaterialAsset*>(asset) == nullptr)
-	{
-		asset->Deallocate();
-	}
-
-	asset->m_isLoaded = false;
+	return Engine::GetAssetManager()->m_uidToPod.at(a);
 }
 
 bool AssetManager::Init(const std::string& applicationPath, const std::string& dataDirectoryName)
 {
 	return m_pathSystem.Init(applicationPath, dataDirectoryName);
 }
+
 
 

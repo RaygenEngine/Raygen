@@ -5,16 +5,7 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-class XMLDocAsset : public PodedAsset<XMLDocPod>
+struct XMLDocAsset
 {
-
-public:
-	XMLDocAsset(const fs::path& path)
-		: PodedAsset(path) {}
-	~XMLDocAsset() = default;
-
-	const tinyxml2::XMLElement* GetRootElement() const { return m_pod->document.RootElement(); }
-
-protected:
-	bool Load() override;
+	static bool Load(XMLDocPod* pod, const fs::path& path);
 };

@@ -15,6 +15,6 @@ struct TexturePod : AssetPod
 	TextureWrapping wrapT{TextureWrapping::REPEAT};
 	TextureWrapping wrapR{TextureWrapping::REPEAT};
 
-	ImagePod* image{ nullptr };
+	PodHandle<ImagePod> image;
 };
 

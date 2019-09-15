@@ -3,14 +3,8 @@
 #include "asset/Asset.h"
 #include "asset/pods/TextPod.h"
 
-class TextAsset : public PodedAsset<TextPod>
+struct TextAsset
 {
-public:
-	TextAsset(const fs::path& path)
-		: PodedAsset(path) {}
-	~TextAsset() = default;
-	
-protected:
-	bool Load() override;
+	static bool Load(TextPod* pod, const fs::path& path);
 };
 

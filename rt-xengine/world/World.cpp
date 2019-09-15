@@ -74,18 +74,11 @@ Node* World::GetNodeById(uint32 id) const
 	return nullptr;
 }
 
-bool World::LoadAndPrepareWorldFromXML(XMLDocAsset* sceneXML)
+bool World::LoadAndPrepareWorldFromXML(PodHandle<XMLDocPod> sceneXML)
 {
-	if (!sceneXML)
-	{
-		LOG_FATAL("Missing World scene XML data file!");
-		return false;
-	}
+	LOG_INFO("Loading World from XML: \'{}\'", Engine::GetAssetManager()->GetPodPath(sceneXML));
 
-
-	LOG_INFO("Loading World from XML: \'{}\'", sceneXML->GetUri());
-
-	auto* rootNode = sceneXML->GetRootElement();
+	auto* rootNode = sceneXML->document.RootElement();
 
 	m_root = std::make_unique<RootNode>();
 	

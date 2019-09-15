@@ -116,6 +116,8 @@ private:
 	AppBase* m_app;
 
 	Editor* m_editor;
+
+	Timer::DebugTimer<ch::milliseconds> m_initToFrameTimer;
 public:
 
 	// Init the internal engine systems.
@@ -143,4 +145,13 @@ public:
 
 	[[nodiscard]] bool ShouldUpdateWorld() const;
 	[[nodiscard]] bool IsUsingEditor() const;
+
+	void ReportFrameDrawn()
+	{
+		if (!m_initToFrameTimer.m_stopped)
+		{
+			LOG_WARN("Init to frame took: {} ms", m_initToFrameTimer.Get());
+			m_initToFrameTimer.Stop();
+		}
+	}
 };

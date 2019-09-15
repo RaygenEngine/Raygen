@@ -17,20 +17,15 @@ namespace OpenGL
 	{
 		auto am = Engine::GetAssetManager();
 		
-		auto cubemapData = am->RequestFreshPod<CubemapPod>(m_assetManagerPodPath);
-		am->RefreshPod(cubemapData->sides[CMF_RIGHT]);
-		am->RefreshPod(cubemapData->sides[CMF_LEFT]);
-		am->RefreshPod(cubemapData->sides[CMF_UP]);
-		am->RefreshPod(cubemapData->sides[CMF_DOWN]);
-		am->RefreshPod(cubemapData->sides[CMF_FRONT]);
-		am->RefreshPod(cubemapData->sides[CMF_BACK]);
+		auto cubemapData = AssetManager::GetOrCreate<CubemapPod>(m_assetManagerPodPath);
+
 		
 		glGenTextures(1, &m_glId);
 		glBindTexture(GL_TEXTURE_2D, m_glId);
 
 		// everything matches the first texture
-		const auto firstFaceText = cubemapData->sides[CMF_RIGHT];
-		const auto minFiltering = firstFaceText->minFilter;
+		auto firstFaceText = cubemapData->sides[CMF_RIGHT];
+		auto minFiltering = firstFaceText->minFilter;
 
 		// If you don't use one of the filter values that include mipmaps (like GL_LINEAR_MIPMAP_LINEAR), your mipmaps will not be used in any way.
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GetGLFiltering(firstFaceText->magFilter));

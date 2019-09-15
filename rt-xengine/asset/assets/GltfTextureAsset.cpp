@@ -7,26 +7,22 @@
 #include "asset/assets/ImageAsset.h"
 #include "asset/util/GltfAux.h"
 
-bool GltfTextureAsset::Load()
+bool GltfTextureAsset::Load(TexturePod* pod, const fs::path& path)
 {
-	const auto pPath = m_uri.parent_path();
-	auto pParent = Engine::GetAssetManager()->RequestSearchAsset<GltfFileAsset>(pPath);
+	const auto pPath = path.parent_path();
+	auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath);
 
-	// requires parent to be loaded
-	if (!Engine::GetAssetManager()->Load(pParent))
-		return false;
-
-	const auto info = m_uri.filename();
+	const auto info = path.filename();
 	const auto ext = std::stoi(&info.extension().string()[1]);
 
-	tinygltf::Model& model = pParent->GetPod()->data;
-	
+	tinygltf::Model& model = pParent->data;
+
 	auto& gltfTexture = model.textures.at(ext);
 
 	const auto imageIndex = gltfTexture.source;
 
-	auto imgAsset = ImageAsset::GetDefaultWhite();
-	
+	auto imgAsset = AssetManager::GetOrCreate<ImagePod>(__default__imageWhite);
+
 	// if image exists
 	if (imageIndex != -1)
 	{
@@ -34,11 +30,11 @@ bool GltfTextureAsset::Load()
 		auto& gltfImage = model.images.at(imageIndex);
 
 		auto textPath = pPath.parent_path() / gltfImage.uri;
-		
-		imgAsset = Engine::GetAssetManager()->RequestSearchAsset<ImageAsset>(textPath);
+
+		imgAsset = AssetManager::GetOrCreate<ImagePod>(textPath);
 	}
-	
-	m_pod->image = imgAsset->GetPod();
+
+	pod->image = imgAsset;
 
 	const auto samplerIndex = gltfTexture.sampler;
 	// if sampler exists
@@ -46,13 +42,13 @@ bool GltfTextureAsset::Load()
 	{
 		auto& gltfSampler = model.samplers.at(samplerIndex);
 
-		m_pod->minFilter = GltfAux::GetTextureFiltering(gltfSampler.minFilter);
-		m_pod->magFilter = GltfAux::GetTextureFiltering(gltfSampler.magFilter);
-		m_pod->wrapS = GltfAux::GetTextureWrapping(gltfSampler.wrapS);
-		m_pod->wrapT = GltfAux::GetTextureWrapping(gltfSampler.wrapT);
-		m_pod->wrapR = GltfAux::GetTextureWrapping(gltfSampler.wrapR);
+		pod->minFilter = GltfAux::GetTextureFiltering(gltfSampler.minFilter);
+		pod->magFilter = GltfAux::GetTextureFiltering(gltfSampler.magFilter);
+		pod->wrapS = GltfAux::GetTextureWrapping(gltfSampler.wrapS);
+		pod->wrapT = GltfAux::GetTextureWrapping(gltfSampler.wrapT);
+		pod->wrapR = GltfAux::GetTextureWrapping(gltfSampler.wrapR);
 	}
-	
+
 	//else keep default values
 	return true;
 }

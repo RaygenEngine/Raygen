@@ -4,28 +4,14 @@
 #include "asset/pods/TexturePod.h"
 #include "asset/pods/MaterialPod.h"
 
-class DefaultTexture : public PodedAsset<TexturePod>
+struct DefaultTexture
 {
-public:
-	DefaultTexture(const fs::path& path)
-		: PodedAsset(path) {}
-	~DefaultTexture() = default;
-
-	static DefaultTexture* GetDefault();
-	
-protected:
-	bool Load() override;
+	static PodHandle<TexturePod> GetDefault();
+	static bool Load(TexturePod* pod, const fs::path& path);
 };
 
-class DefaultMaterial : public PodedAsset<MaterialPod>
+struct DefaultMaterial
 {
-public:
-	DefaultMaterial(const fs::path& path)
-		: PodedAsset(path) {}
-	~DefaultMaterial() = default;
-
-	static DefaultMaterial* GetDefault();
-	
-protected:
-	bool Load() override;
+	static PodHandle<MaterialPod> GetDefault();
+	static bool Load(MaterialPod* pod, const fs::path& path);
 };

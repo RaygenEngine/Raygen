@@ -17,7 +17,7 @@ struct GeometryGroup
 
 	GeometryMode mode{ GeometryMode::TRIANGLES };
 
-	MaterialPod* material{ nullptr };
+	PodHandle<MaterialPod> material;
 };
 
 struct Mesh
@@ -25,7 +25,7 @@ struct Mesh
 	std::vector<GeometryGroup> geometryGroups;
 };
 
-struct ModelPod : UnloadableAssetPod
+struct ModelPod : DeletableAssetPod
 {
 	static bool Load(ModelPod* pod, const fs::path& path);
 

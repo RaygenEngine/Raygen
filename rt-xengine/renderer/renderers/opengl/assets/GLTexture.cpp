@@ -16,8 +16,7 @@ namespace OpenGL
 
 	bool GLTexture::Load()
 	{
-		const auto textureData = Engine::GetAssetManager()->RequestFreshPod<TexturePod>(m_assetManagerPodPath);
-		Engine::GetAssetManager()->RefreshPod(textureData->image);
+		const auto textureData = AssetManager::GetOrCreate<TexturePod>(m_assetManagerPodPath);
 		
 		glGenTextures(1, &m_glId);
 		glBindTexture(GL_TEXTURE_2D, m_glId);
