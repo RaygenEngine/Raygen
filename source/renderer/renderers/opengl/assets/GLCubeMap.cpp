@@ -25,11 +25,11 @@ namespace OpenGL
 
 		// everything matches the first texture
 		auto firstFaceText = cubemapData->sides[CMF_RIGHT];
-		auto minFiltering = firstFaceText->minFilter;
+		auto minFiltering = GetGLFiltering(firstFaceText->minFilter);
 
 		// If you don't use one of the filter values that include mipmaps (like GL_LINEAR_MIPMAP_LINEAR), your mipmaps will not be used in any way.
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GetGLFiltering(firstFaceText->magFilter));
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GetGLFiltering(minFiltering));
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFiltering);
 
 		GLenum type;
 		GLint internalFormat;
@@ -55,10 +55,10 @@ namespace OpenGL
 				firstFaceText->image->width, firstFaceText->image->height, 0, GL_RGBA, type, cubemapData->sides[i]->image->data);
 		}
 
-		if (GetGLFiltering(minFiltering) == GL_NEAREST_MIPMAP_NEAREST ||
-			GetGLFiltering(minFiltering) == GL_LINEAR_MIPMAP_NEAREST ||
-			GetGLFiltering(minFiltering) == GL_NEAREST_MIPMAP_LINEAR ||
-			GetGLFiltering(minFiltering) == GL_LINEAR_MIPMAP_LINEAR)
+		if (minFiltering == GL_NEAREST_MIPMAP_NEAREST ||
+			minFiltering == GL_LINEAR_MIPMAP_NEAREST ||
+			minFiltering == GL_NEAREST_MIPMAP_LINEAR ||
+			minFiltering == GL_LINEAR_MIPMAP_LINEAR)
 			glGenerateMipmap(GL_TEXTURE_2D);
 
 		// TODO if bindless?
