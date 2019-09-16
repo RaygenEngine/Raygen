@@ -30,7 +30,8 @@ uniform bool doubleSided;
 
 //mandatory
 layout(bindless_sampler) uniform sampler2D baseColorSampler;
-layout(bindless_sampler) uniform sampler2D occlusionMetallicRoughnessSampler;
+layout(bindless_sampler) uniform sampler2D metallicRoughnessSampler;
+layout(bindless_sampler) uniform sampler2D occlusionSampler;
 layout(bindless_sampler) uniform sampler2D emissiveSampler;
 //optional
 uniform uint64_t normalSampler;
@@ -52,7 +53,8 @@ uniform uint64_t normalSampler;
 void main()
 {
 	const vec4 baseColor = texture(baseColorSampler, dataIn.textCoord0);
-	const vec4 occlusionMetallicRoughness = texture(occlusionMetallicRoughnessSampler, dataIn.textCoord0);
+	const vec4 metallicRoughness = texture(metallicRoughnessSampler, dataIn.textCoord0);
+	const vec4 occlusion = texture(occlusionSampler, dataIn.textCoord0);
 	const vec4 emissive = texture(emissiveSampler, dataIn.textCoord0);
 	
 	
@@ -77,7 +79,7 @@ void main()
 			break;
 			
 		case 3: // metallic map
-			out_color = vec4(occlusionMetallicRoughness.bbb, 1.0);
+			out_color = vec4(metallicRoughness.bbb, 1.0);
 			break;
 			
 		case 4: // metallic factor
@@ -85,11 +87,11 @@ void main()
 			break;
 			
 		case 5: // metallic final
-			out_color = vec4(occlusionMetallicRoughness.bbb, 1.0) * metallicFactor;
+			out_color = vec4(metallicRoughness.bbb, 1.0) * metallicFactor;
 			break;
 			
 		case 6: // roughness map
-			out_color = vec4(occlusionMetallicRoughness.ggg, 1.0);
+			out_color = vec4(metallicRoughness.ggg, 1.0);
 			break;
 			
 		case 7: // roughness factor
@@ -97,7 +99,7 @@ void main()
 			break;
 			
 		case 8: // roughness final
-			out_color = vec4(occlusionMetallicRoughness.ggg, 1.0) * roughnessFactor;
+			out_color = vec4(metallicRoughness.ggg, 1.0) * roughnessFactor;
 			break;
 			
 		case 9: // normal
@@ -145,7 +147,7 @@ void main()
 			break;
 			
 		case 16: // occlusion map
-			out_color = vec4(occlusionMetallicRoughness.rrr, 1.0);
+			out_color = vec4(occlusion.rrr, 1.0);
 			break;
 			
 		case 17: // occlusion strength
@@ -153,7 +155,7 @@ void main()
 			break;
 			
 		case 18: // occlusion final
-			out_color = mix(baseColor, baseColor * occlusionMetallicRoughness.rrrr, occlusionStrength);
+			out_color = mix(baseColor, baseColor * occlusion.rrrr, occlusionStrength);
 			break;
 			
 		case 19: // emissive map

@@ -26,8 +26,15 @@ struct MaterialPod : AssetPod
 
 	// The metallic and roughness properties are packed together in a single texture called metallicRoughnessTexture.
 	// R-occlusion, G-roughness, B-metal, A-empty
-	PodHandle<TexturePod> occlusionMetallicRoughnessTexture;
-	int32 occlusionMetallicRoughnessTexCoordIndex{ 0 };
+	PodHandle<TexturePod> metallicRoughnessTexture;
+	int32 metallicRoughnessTexCoordIndex{ 0 };
+
+	// The metallic and roughness properties are packed together in a single texture called metallicRoughnessTexture.
+	// R-occlusion, G-occlusion, B-occlusion, A-empty
+	// Note: may point to an occlusionMetallicRoughness packed image where the R channel is equal to occlusion
+	// use the R channel ALWAYS
+	PodHandle<TexturePod> occlusionTexture;
+	int32 occlusionTexCoordIndex{ 0 };
 	
 	// A tangent space normal map
 	PodHandle<TexturePod> normalTexture;

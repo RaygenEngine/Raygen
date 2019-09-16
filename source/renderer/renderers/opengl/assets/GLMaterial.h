@@ -10,8 +10,10 @@ namespace OpenGL
 	{
 		// RGB: Albedo A: Opacity
 		GLTexture* m_baseColorTexture;
-		// R: occlusion, G: Roughness, B: Metal, A: empty
-		GLTexture* m_occlusionMetallicRoughnessTexture;
+		// R: *occlusion, G: Roughness, B: Metal, A: empty
+		GLTexture* m_metallicRoughnessTexture;
+		// R: occlusion, accessing other channels may give wrong info
+		GLTexture* m_occlusionTexture;
 		GLTexture* m_normalTexture;
 		GLTexture* m_emissiveTexture;
 		
@@ -20,14 +22,18 @@ namespace OpenGL
 		GLMaterial(const fs::path& assocPath)
 			: GLAsset(assocPath),
 			  m_baseColorTexture(nullptr),
-			  m_occlusionMetallicRoughnessTexture(nullptr),
+			  m_metallicRoughnessTexture(nullptr),
+		      m_occlusionTexture(nullptr),
 			  m_normalTexture(nullptr),
-			  m_emissiveTexture(nullptr) {}
+			  m_emissiveTexture(nullptr)
+		{
+		}
 
 		friend class GLAssetManager;
 	public:
 		[[nodiscard]] GLTexture* GetBaseColorTexture() const { return m_baseColorTexture; }
-		[[nodiscard]] GLTexture* GetOcclusionMetallicRoughnessTexture() const { return m_occlusionMetallicRoughnessTexture; }
+		[[nodiscard]] GLTexture* GetMetallicRoughnessTexture() const { return m_metallicRoughnessTexture; }
+		[[nodiscard]] GLTexture* GetOcclusionTexture() const { return m_occlusionTexture; }
 		[[nodiscard]] GLTexture* GetNormalTexture() const { return m_normalTexture; }
 		[[nodiscard]] GLTexture* GetEmissiveTexture() const { return m_emissiveTexture; }
 

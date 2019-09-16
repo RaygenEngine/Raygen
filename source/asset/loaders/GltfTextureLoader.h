@@ -21,17 +21,24 @@ namespace GltfTextureLoader
 
 		const auto imageIndex = gltfTexture.source;
 
-		auto imgAsset = AssetManager::GetOrCreate<ImagePod>(__default__imageWhite);
+		auto imgAsset = AssetManager::GetOrCreate<ImagePod>(__default__imageMissing);
 
 		// if image exists
+
+		// TODO check image settings
+		// this should exist (missing is handled from within material)
 		if (imageIndex != -1)
 		{
-			// TODO check image settings
 			auto& gltfImage = model.images.at(imageIndex);
 
 			auto textPath = pPath.parent_path() / gltfImage.uri;
 
 			imgAsset = AssetManager::GetOrCreate<ImagePod>(textPath);
+		}
+		else
+		{
+			// TODO: handle from material
+			LOG_ANY("");
 		}
 
 		pod->image = imgAsset;
@@ -47,6 +54,10 @@ namespace GltfTextureLoader
 			pod->wrapS = GltfAux::GetTextureWrapping(gltfSampler.wrapS);
 			pod->wrapT = GltfAux::GetTextureWrapping(gltfSampler.wrapT);
 			pod->wrapR = GltfAux::GetTextureWrapping(gltfSampler.wrapR);
+		}
+		else
+		{
+			LOG_ANY("");
 		}
 
 		//else keep default values

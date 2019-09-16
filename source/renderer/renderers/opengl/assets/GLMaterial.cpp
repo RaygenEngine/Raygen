@@ -21,7 +21,8 @@ namespace OpenGL
 		auto glAm = GetGLAssetManager(this);
 
 		m_baseColorTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(m_pod->baseColorTexture));
-		m_occlusionMetallicRoughnessTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(m_pod->occlusionMetallicRoughnessTexture));
+		m_metallicRoughnessTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(m_pod->metallicRoughnessTexture));
+		m_occlusionTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(m_pod->occlusionTexture));
 		m_normalTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(m_pod->normalTexture));
 		m_emissiveTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(m_pod->emissiveTexture));
 		

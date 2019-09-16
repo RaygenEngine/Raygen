@@ -122,7 +122,8 @@ namespace OpenGL
 				glUniform1i(m_nonInstancedShader->GetUniformLocation("doubleSided"), materialData->doubleSided);
 				
 				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), glMaterial.GetBaseColorTexture()->GetGLBindlessHandle());
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("occlusionMetallicRoughnessSampler"), glMaterial.GetOcclusionMetallicRoughnessTexture()->GetGLBindlessHandle());
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("metallicRoughnessSampler"), glMaterial.GetMetallicRoughnessTexture()->GetGLBindlessHandle());
+				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("occlusionSampler"), glMaterial.GetOcclusionTexture()->GetGLBindlessHandle());
 				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), glMaterial.GetEmissiveTexture()->GetGLBindlessHandle());
 
 				// may not exist
