@@ -228,3 +228,30 @@ static void _FillMembers(StaticReflector& reflector)\
 // Static reflect var
 #define S_REFLECT_VAR(Variable, ...)				\
 	reflector.AutoAddProperty<decltype(Variable)>(#Variable, offsetof(__ThisType, Variable)).InitFlags(PropertyFlags::Pack(__VA_ARGS__));
+//
+// Example expansion
+// 
+// struct Class
+// {
+// 	using __ThisType = Class; 
+// public:
+// 	[[nodiscard]]
+// 	static const StaticReflector& StaticReflect()
+// 	{
+// 		static StaticReflector reflector("Class");
+// 		if (!reflector.m_generated)
+// 		{
+// 			_FillMembers(reflector);
+// 			reflector.m_generated = true;
+// 		}
+// 		return reflector;
+// 	} 
+// public:
+// 	static void _FillMembers(StaticReflector& reflector)
+// 
+// 	{
+// 		reflector.AutoAddProperty<decltype(member[2])>("member", offsetof(__ThisType, member[2])).InitFlags(PropertyFlags::Pack(__VA_ARGS__));
+// 	}
+// 
+// 	int member[10];
+// };

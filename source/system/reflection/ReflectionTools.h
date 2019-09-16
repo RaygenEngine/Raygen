@@ -1,47 +1,51 @@
 #pragma once
 #include "system/reflection/Property.h"
-/*
 
-int32
-bool
-float
-glm::vec3
-std::string
-PodHandle<CubemapPod>
-PodHandle<GltfFilePod>
-PodHandle<ImagePod>
-PodHandle<MaterialPod>
-PodHandle<ModelPod>
-PodHandle<ShaderPod>
-PodHandle<TextPod>
-PodHandle<TexturePod>
-PodHandle<XMLDocPod>
-std::vector<PodHandle<CubemapPod>>
-std::vector<PodHandle<GltfFilePod>>
-std::vector<PodHandle<ImagePod>>
-std::vector<PodHandle<MaterialPod>>
-std::vector<PodHandle<ModelPod>>
-std::vector<PodHandle<ShaderPod>>
-std::vector<PodHandle<TextPod>>
-std::vector<PodHandle<TexturePod>>
-std::vector<PodHandle<XMLDocPod>>
-std::vector<PodHandle<CubemapPod>*>
-std::vector<PodHandle<GltfFilePod>*>
-std::vector<PodHandle<ImagePod>*>
-std::vector<PodHandle<MaterialPod>*>
-std::vector<PodHandle<ModelPod>*>
-std::vector<PodHandle<ShaderPod>*>
-std::vector<PodHandle<TextPod>*>
-std::vector<PodHandle<TexturePod>*>
-std::vector<PodHandle<XMLDocPod>*>
+#include <type_traits>
 
-*/
+
+#define DECLARE_HAS_FUNCTION_DETECTOR(FuncName)	\
+template<typename T, typename = void>			\
+struct Has##FuncName: std::false_type { };		\
+												\
+template<typename  T>							\
+struct Has##FuncName<T, std::enable_if_t<std::is_member_function_pointer<decltype(&T::##FuncName)>::value>> : std::true_type { };
+
+
+DECLARE_HAS_FUNCTION_DETECTOR(Begin);
+DECLARE_HAS_FUNCTION_DETECTOR(End);
+
+DECLARE_HAS_FUNCTION_DETECTOR(PreProperty);
+DECLARE_HAS_FUNCTION_DETECTOR(PostProperty);
+
+
+
+namespace ReflectionTools
+{
+struct Example
+{
+	void Begin(const Reflector&) {} // Pre Begin iteration on reflector's properties
+	void End(const Reflector&) {} // Post End iteration on reflector's properties
+
+	void PreProperty(ExactProperty& p) { }  // Pre Call visitor on proprety
+	void PostProperty(ExactProperty& p) { } // Post Call visitor on proprety
+
+	template<typename T>
+	void Visit(T& value, ExactProperty& p) {} // Overload this for T.
+};
+
+static_assert(HasPreProperty<Example>::value, "Reflection tools test failed.");
+}
 
 namespace impl {
 	template<typename T, typename V>
 	bool VisitIf(V& visitor, ExactProperty& p)
 	{
-		if (p.IsA<T>()) { visitor.visit(p.GetRef<T>(), p); return true; }
+		if (p.IsA<T>()) 
+		{ 
+			visitor.Visit(p.GetRef<T>(), p); 
+			return true; 
+		}
 		return false;
 	}
 }
@@ -93,9 +97,31 @@ void CallVisitorOnProperty(ExactProperty& prop, VisitorClass& v)
 template<typename ReflectedType, typename VisitorClass>
 void CallVisitorOnEveryProperty(ReflectedType* type, VisitorClass& v)
 {
-	auto reflector = GetReflector(type);
+	Reflector reflector = GetReflector(type);
+	
+	if constexpr (HasBegin<VisitorClass>::value)
+	{
+		v.Begin(reflector);
+	}
+
 	for (auto& p : reflector.GetProperties())
 	{
+		if constexpr (HasPreProperty<VisitorClass>::value)
+		{
+			v.PreProperty(p);
+		}
+		
 		CallVisitorOnProperty(p, v);
+
+		if constexpr (HasPostProperty<VisitorClass>::value)
+		{
+			v.PreProperty(p);
+		}
 	}
+
+	if constexpr (HasEnd<VisitorClass>::value)
+	{
+		v.End(reflector);
+	}
+
 }

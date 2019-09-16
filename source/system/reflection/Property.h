@@ -193,8 +193,9 @@ public:
 	{
 		static_assert(HasStaticReflector<Obj>,
 					  "Object type is not static reflected. This is probably a wrong object.");
-
-		return utl::force_move(ExactProperty::MakePropertyUnsafe(GetRealMemoryAddr(obj), m_type, m_name));
+		auto other = ExactProperty::MakePropertyUnsafe(GetRealMemoryAddr(obj), m_type, m_name);
+		other.m_flags = m_flags;
+		return utl::force_move(other);
 	}
 
 	// This will not detect the type automatically.
