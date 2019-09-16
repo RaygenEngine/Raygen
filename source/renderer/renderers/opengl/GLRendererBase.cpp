@@ -3,7 +3,7 @@
 #include "renderer/renderers/opengl/GLRendererBase.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
 
-#include "GLAD/glad.h"
+#include "glad/glad.h"
 
 namespace OpenGL
 {
@@ -58,16 +58,39 @@ namespace OpenGL
 
 		m_hdc = GetDC(m_assochWnd);
 
-		int32 pixelFormat = ChoosePixelFormat(m_hdc, &pfd);
+		const int32 pixelFormat = ChoosePixelFormat(m_hdc, &pfd);
 
-		RT_XENGINE_ASSERT_RETURN_FALSE(pixelFormat, "Can't find a suitable pixelFormat, error: {}", MB_OK | MB_ICONERROR);
-		RT_XENGINE_ASSERT_RETURN_FALSE(SetPixelFormat(m_hdc, pixelFormat, &pfd), "Can't set the pixelFormat, error: {}", MB_OK | MB_ICONERROR);
+		if(!pixelFormat)
+		{
+			LOG_FATAL("Can't find a suitable pixelFormat, error: {}", MB_OK | MB_ICONERROR);
+			return false;
+		}
+		
+		if(!SetPixelFormat(m_hdc, pixelFormat, &pfd))
+		{
+			LOG_FATAL("Can't set the pixelFormat, error: {}", MB_OK | MB_ICONERROR);
+			return false;
+		}
 
 		m_hglrc = wglCreateContext(m_hdc);
 
-		RT_XENGINE_ASSERT_RETURN_FALSE(m_hglrc, "Can't create a GL rendering context, error: {}", MB_OK | MB_ICONERROR);
-		RT_XENGINE_ASSERT_RETURN_FALSE(wglMakeCurrent(m_hdc, m_hglrc), "Can't activate GLRC, error: {}", MB_OK | MB_ICONERROR);
-		RT_XENGINE_ASSERT_RETURN_FALSE(gladLoadGL() == 1, "Couldn't load OpenGL function pointers, GL windows won't be loaded");
+		if(!m_hglrc)
+		{
+			LOG_FATAL("Can't create a GL rendering context, error: {}", MB_OK | MB_ICONERROR);
+			return false;
+		}
+		
+		if(!wglMakeCurrent(m_hdc, m_hglrc))
+		{
+			LOG_FATAL("Can't activate GLRC, error: {}", MB_OK | MB_ICONERROR);
+			return false;
+		}
+		
+		if(!(gladLoadGL() == 1))
+		{
+			LOG_FATAL("Couldn't load OpenGL function pointers, GL windows won't be loaded");
+			return false;
+		};
 
 		return true;
 	}

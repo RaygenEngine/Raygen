@@ -22,10 +22,10 @@
 		   color="0.9450, 0.8549, 0.6431"/>
 	
 		
-	<!-- <geometry name="box"  -->
-		<!-- translation="0.0, 0.0, -4.0" -->
-		<!-- scale="1, 1, 1"  -->
-		<!-- model="Sponza.gltf"/>  -->
+	<geometry name="box" 
+		translation="0.0, 0.0, -4.0"
+		scale="1, 1, 1" 
+		model="Sponza.gltf/#model"/> 
 		
 	<geometry name="box" 
 		translation="0.0, 0.0, -4.0"

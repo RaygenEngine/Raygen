@@ -13,7 +13,7 @@ AppBase::AppBase()
 	m_initialScene = "test.xscn";
 	m_assetPath = "assets";
 
-	m_windowTitle = "RT-XEngine";
+	m_windowTitle = "Rayxen";
 
 	m_windowWidth = 1920;
 	m_windowHeight = 1080;
