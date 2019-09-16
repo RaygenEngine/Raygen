@@ -1,4 +1,4 @@
-project (rt-xengine)
+project (Rayxen)
 
 #output at dependencies
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_BIN_DIRECTORY})
@@ -214,7 +214,7 @@ set(HEADER_FILES
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/CMakeLists.txt" AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/App.h")
 	set(APP_DIR "app")
-	message(STATUS "Detected app header at 'rt-xengine/app'. Using custom app files.") 
+	message(STATUS "Detected app header at '${CMAKE_CURRENT_SOURCE_DIR}/app'. Using custom app files.") 
 else()
 	set(APP_DIR "app-default")
 	message(STATUS "No specific app files detected. Using app-default.")
@@ -242,11 +242,11 @@ if(MSVC)
 	list(APPEND SOURCE_FILES pch/pch.cpp)
 endif(MSVC)
 
-add_executable(rt-xengine ${SOURCE_FILES} ${HEADER_FILES})
+add_executable(Rayxen ${SOURCE_FILES} ${HEADER_FILES})
 
 
 # 3rd party libraries
-target_link_libraries(rt-xengine
+target_link_libraries(Rayxen
 	glad.lib
 	tinyxml2.lib
 	opengl32.lib
@@ -257,7 +257,7 @@ target_link_libraries(rt-xengine
 add_compile_definitions(GLAD_GLAPI_EXPORT)
 
 # dependencies (build order)
-add_dependencies(rt-xengine 
+add_dependencies(Rayxen 
 	glad-dll-gen
 )
 
@@ -279,19 +279,19 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # enforce cpp17
-set_property(TARGET rt-xengine PROPERTY CXX_STANDARD 17)
-set_property(TARGET rt-xengine PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET Rayxen PROPERTY CXX_STANDARD 17)
+set_property(TARGET Rayxen PROPERTY CXX_STANDARD_REQUIRED ON)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX ${PROJECT_NAME} FILES ${HEADER_FILES} ${SOURCE_FILES})
 
 # multi-core compilation
 if(MSVC)
-	target_compile_options(rt-xengine PRIVATE "/MP")
+	target_compile_options(Rayxen PRIVATE "/MP")
 endif()
 
 # post build copy dlls
-add_custom_command(TARGET rt-xengine POST_BUILD
+add_custom_command(TARGET Rayxen POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
 		"${BIN_DEPENDENCIES_DIRECTORY}/$<CONFIGURATION>"
-        $<TARGET_FILE_DIR:rt-xengine>
+        $<TARGET_FILE_DIR:Rayxen>
 	COMMENT "Copying binary dependencies to target folder...")

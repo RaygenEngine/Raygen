@@ -210,7 +210,7 @@ __pycache__/
 /assets/imgui.ini
 
 # Ignore custom app folder
-rt-xengine/app/*
+source/app/*
 
 x64/
 x86/
