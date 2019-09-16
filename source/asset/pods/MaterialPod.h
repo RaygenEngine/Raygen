@@ -9,7 +9,17 @@ struct MaterialPod : AssetPod
 {
 	STATIC_REFLECTOR(MaterialPod)
 	{
+		S_REFLECT_VAR(baseColorTexture);
+		S_REFLECT_VAR(occlusionMetallicRoughnessTexture);
+		S_REFLECT_VAR(normalTexture);
+		S_REFLECT_VAR(emissiveTexture);
 
+		S_REFLECT_VAR(metallicFactor);
+		S_REFLECT_VAR(roughnessFactor);
+		S_REFLECT_VAR(normalScale);
+		S_REFLECT_VAR(occlusionStrength);
+		S_REFLECT_VAR(alphaCutoff);
+		S_REFLECT_VAR(doubleSided);
 	}
 	static bool Load(MaterialPod* pod, const fs::path& path);
 

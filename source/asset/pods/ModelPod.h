@@ -29,11 +29,12 @@ struct ModelPod : DeletableAssetPod
 {
 	STATIC_REFLECTOR(ModelPod)
 	{
-
+		S_REFLECT_VAR(lastMaterial);
 	}
 	static bool Load(ModelPod* pod, const fs::path& path);
 
 	std::vector<Mesh> meshes;
 
+	PodHandle<MaterialPod> lastMaterial;
 };
 

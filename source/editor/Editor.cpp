@@ -11,6 +11,54 @@
 #include "system/EngineEvents.h"
 
 #include <filesystem>
+#include "asset/pods/CubemapPod.h"
+#include "asset/pods/GltfFilePod.h"
+#include "asset/pods/ImagePod.h"
+#include "asset/pods/MaterialPod.h"
+#include "asset/pods/ModelPod.h"
+#include "asset/pods/ShaderPod.h"
+#include "asset/pods/TextPod.h"
+#include "asset/pods/TexturePod.h"
+#include "asset/pods/XMLDocPod.h"
+
+
+#include <iostream>
+#include "asset/AssetManager.h"
+#include "system/reflection/ReflectionTools.h"
+
+struct ReflVisitor
+{
+	int32 depth{ 0 };
+
+	template<typename T>
+	void visit(T& t, ExactProperty& p)
+	{
+		std::cout << std::string("\t", depth);
+		std::cout << "| " << p.GetName() << " -> " << t << std::endl;
+	}
+
+	void visit(glm::vec3& t, ExactProperty& p)
+	{
+		std::cout << std::string("\t", depth);
+		std::cout << "| " << p.GetName() << " -> " << t.x << ", " << t.y << ", " << t.z << std::endl;
+	}
+
+	template<typename T>
+	void visit(PodHandle<T>& t, ExactProperty& p)
+	{
+		std::cout << std::string("\t", depth);
+		std::cout << "Visited by pod: " << p.GetName() << "@" << Engine::GetAssetManager()->GetPodPath(t) << std::endl;
+		depth++;
+		CallVisitorOnEveryProperty(t.operator->(), *this);
+		depth--;
+	}
+
+	template<typename T>
+	void visit(std::vector<T>& t, ExactProperty& p)
+	{
+		std::cout << "Vector of anything" << std::endl;
+	}
+};
 
 namespace {
 template<typename Lambda>
@@ -294,6 +342,12 @@ void Editor::PropertyEditor(Node* node)
 	if (dirty || dirtyMatrix) 
 	{
 		node->MarkDirty();
+	}
+
+
+	if (ImGui::Button("Call visitor"))
+	{
+		CallVisitorOnEveryProperty(node, ReflVisitor());
 	}
 }
 

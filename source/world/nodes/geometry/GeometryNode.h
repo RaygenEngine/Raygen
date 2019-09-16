@@ -11,7 +11,7 @@ public:
 	GeometryNode(Node* parent)
 		: Node(parent)
 	{
-		//REFLECT_VAR(m_model);
+		REFLECT_VAR(m_model);
 	}
 	~GeometryNode() = default;
 
