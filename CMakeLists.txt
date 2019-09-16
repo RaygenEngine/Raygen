@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project (rt-xengine)
+project (Rayxen)
 
 set(PROJECT_MAIN_DIRECTORY "${CMAKE_SOURCE_DIR}")
 set(OUTPUT_BIN_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
