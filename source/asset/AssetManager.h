@@ -6,12 +6,6 @@
 #include "asset/PathSystem.h"
 #include "asset/AssetPod.h"
 
-constexpr auto __default__imageWhite = "__default__image-white.jpg";
-constexpr auto __default__imageMissing = "__default__image-missing.jpg";
-
-constexpr auto __default__texture = "#__default__texture";
-constexpr auto __default__material = "#__default__material";
-
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
 class AssetManager
 {
@@ -35,9 +29,6 @@ private:
 		m_pathToUid.erase(path.string());
 	}
 	
-
-
-
 	template<typename PodType>
 	PodType* FindPod(size_t podId)
 	{
@@ -47,10 +38,11 @@ public:
 	// For internal use only, dont call this on your own
 	template<typename PodType>
 	PodType* __Internal_MaybeFindPod(size_t podId) const
-	{
+	{	
 		auto it = m_uidToPod.find(podId);
 		if (it != m_uidToPod.end())
 		{
+			assert(it->second && "Found nullptr in uid To Pod map");
 			auto p = dynamic_cast<PodType*>(it->second);
 			assert(p && "Pod of incorrect type found");
 			return p;

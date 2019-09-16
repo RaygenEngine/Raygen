@@ -65,7 +65,7 @@ bool MaterialPod::Load(MaterialPod* pod, const fs::path& path)
 	// TODO: Json loader
 
 	
-	return DefaultMaterialLoader::Load(pod, path);
+	return CustomLoader::Load(pod, path);
 }
 
 bool ModelPod::Load(ModelPod* pod, const fs::path& path)
@@ -97,7 +97,7 @@ bool TexturePod::Load(TexturePod* pod, const fs::path& path)
 	}
 	// add Json sampler loader
 
-	return DefaultTextureLoader::Load(pod, path);
+	return CustomLoader::Load(pod, path);
 }
 
 bool XMLDocPod::Load(XMLDocPod* pod, const fs::path& path)

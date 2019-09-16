@@ -218,14 +218,13 @@ namespace GltfModelLoader
 			{
 				auto& mat = modelData.materials.at(materialIndex);
 
-				//auto matPath = parentPath / ("#" + (!mat.name.empty() ? mat.name : ("material." + std::to_string(materialIndex))));
 				auto matPath = parentPath / ("#material." + std::to_string(materialIndex));
 
 				geom.material = AssetManager::GetOrCreate<MaterialPod>(matPath);
 			}
 			else
 			{
-				geom.material = DefaultMaterialLoader::GetDefault();
+				geom.material = GET_CUSTOM_POD(MaterialPod, "");
 			}
 
 			// calculate missing normals (flat)

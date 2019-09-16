@@ -41,15 +41,15 @@ namespace GltfMaterialLoader
 		// doublesided-ness
 		pod->doubleSided = gltfMaterial.doubleSided;
 
-
-		auto LoadTexture = [&](auto textureInfo, PodHandle<TexturePod>& sampler, int32& textCoordIndex, bool useDefaultIfMissing = true)
+		enum class DefType { Missing, White, Normal };
+		
+		auto LoadTexture = [&](auto textureInfo, PodHandle<TexturePod>& sampler, int32& textCoordIndex, DefType defType)
 		{
 			if (textureInfo.index != -1)
 			{
 				tinygltf::Texture& gltfTexture = model.textures.at(textureInfo.index);
 
-				//auto textPath = pPath / ("#" + (!gltfTexture.name.empty() ? gltfTexture.name : "sampler") + "." + std::to_string(textureInfo.index));
-				auto textPath = pPath / ("#sampler." + std::to_string(textureInfo.index));
+				auto textPath = pPath / ("#texture." + std::to_string(textureInfo.index));
 
 				sampler = AssetManager::GetOrCreate<TexturePod>(textPath);
 
@@ -57,7 +57,18 @@ namespace GltfMaterialLoader
 			}
 			else
 			{
-				sampler = DefaultTextureLoader::GetDefault();
+				switch (defType)
+				{
+				case DefType::Missing:
+					sampler = GET_CUSTOM_POD(TexturePod, __default__imageMissing);
+					break;
+				case DefType::White:
+					sampler = GET_CUSTOM_POD(TexturePod, __default__imageWhite);
+					break;
+				case DefType::Normal:
+					sampler = GET_CUSTOM_POD(TexturePod, __default__imageNormal);
+					break;
+				}	
 			}
 
 			return true;
@@ -65,23 +76,21 @@ namespace GltfMaterialLoader
 
 		// samplers
 		auto& baseColorTextureInfo = gltfMaterial.pbrMetallicRoughness.baseColorTexture;
-		LoadTexture(baseColorTextureInfo, pod->baseColorTexture, pod->baseColorTexCoordIndex);
+		LoadTexture(baseColorTextureInfo, pod->baseColorTexture, pod->baseColorTexCoordIndex, DefType::White);
 
 		auto& emissiveTextureInfo = gltfMaterial.emissiveTexture;
-		LoadTexture(emissiveTextureInfo, pod->emissiveTexture, pod->emissiveTexCoordIndex);
+		LoadTexture(emissiveTextureInfo, pod->emissiveTexture, pod->emissiveTexCoordIndex, DefType::White);
 
 		auto& normalTextureInfo = gltfMaterial.normalTexture;
-		LoadTexture(normalTextureInfo, pod->normalTexture, pod->normalTexCoordIndex, false);
+		LoadTexture(normalTextureInfo, pod->normalTexture, pod->normalTexCoordIndex, DefType::Normal);
 
 		// TODO: pack if different
 		auto& metallicRougnessTextureInfo = gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture;
+		LoadTexture(metallicRougnessTextureInfo, pod->metallicRoughnessTexture, pod->metallicRoughnessTexCoordIndex, DefType::White);
+		
 		auto& occlusionTextureInfo = gltfMaterial.occlusionTexture;
+		LoadTexture(occlusionTextureInfo, pod->occlusionTexture, pod->occlusionTexCoordIndex, DefType::White);
 
-		// same texture no need of packing
-		//if(metallicRougnessTextureInfo.index == occlusionTextureInfo.index)
-		{
-			LoadTexture(metallicRougnessTextureInfo, pod->occlusionMetallicRoughnessTexture, pod->occlusionMetallicRoughnessTexCoordIndex);
-		}
 		return true;
 	}
 };
