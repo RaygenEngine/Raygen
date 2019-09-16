@@ -1,7 +1,7 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "asset/assets/CubemapAsset.h"
+#include "asset/loaders/CubemapLoader.h"
 
 class SkyCubeNode : public Node
 {

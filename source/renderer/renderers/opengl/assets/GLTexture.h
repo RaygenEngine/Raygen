@@ -1,8 +1,7 @@
 #pragma once
 
 #include "renderer/renderers/opengl/GLAsset.h"
-#include "asset/assets/ImageAsset.h"
-#include "asset/Asset.h"
+
 #include "GLAD/glad.h"
 
 

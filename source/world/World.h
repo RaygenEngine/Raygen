@@ -6,7 +6,7 @@
 #include "nodes/light/LightNode.h"
 #include "nodes/camera/CameraNode.h"
 #include "nodes/user/UserNode.h"
-#include "asset/assets/XMLDocAsset.h"
+#include "asset/loaders/XMLDocLoader.h"
 #include "system/EngineComponent.h"
 #include "asset/AssetManager.h"
 #include "system/Input.h"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "asset/assets/GltfModelAsset.h"
+#include "asset/loaders/GltfModelLoader.h"
 
 class GeometryNode : public Node
 {

@@ -4,7 +4,8 @@
 #include "system/reflection/Reflector.h"
 #include "system/Engine.h"
 #include "asset/PathSystem.h"
-#include "asset/Asset.h"
+#include "asset/AssetPod.h"
+
 constexpr auto __default__imageWhite = "__default__image-white.jpg";
 constexpr auto __default__imageMissing = "__default__image-missing.jpg";
 
@@ -62,7 +63,7 @@ public:
 	PodType* __Internal_RefreshPod(size_t podId)
 	{
 		auto it = m_uidToPod.find(podId);
-		if (it == m_uidToPod.end())
+		if (it != m_uidToPod.end())
 		{
 			return dynamic_cast<PodType*>(it->second);
 		}
@@ -170,14 +171,8 @@ public:
 		result.podId = newHandle;
 		
 		am->m_pathToUid.insert({ pathStr, newHandle });
-
-		PodType* pod = new PodType();
-
-		PodType::Load(pod, pathStr);
-
 		am->m_uidToPath.insert({ newHandle, utl::force_move(pathStr) });
-		am->m_uidToPod.insert({ newHandle, pod });
-
+		
 		return result;
 	}
 

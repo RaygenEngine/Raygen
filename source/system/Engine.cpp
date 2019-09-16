@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include "system/Engine.h"
-#include "asset/assets/XMLDocAsset.h"
+#include "asset/loaders/XMLDocLoader.h"
 #include "asset/AssetManager.h"
 #include "world/World.h"
 #include "renderer/Renderer.h"

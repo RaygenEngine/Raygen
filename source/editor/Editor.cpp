@@ -201,37 +201,6 @@ bool AddReflector(Reflector& reflector, int32 depth = 0)
 		},
 		[&str](std::string& ref) {
 			return ImGui::InputText(str, &ref);
-		},
-		[&str, depth](Asset*& ref) {
-			if (ImGui::CollapsingHeader((std::string(str) + "##" + std::to_string(depth)).c_str()))
-			{
-				ImGui::Indent();
-				std::string s = "No Asset";
-				if (ref)
-				{
-					s = fs::relative(ref->GetUri()).string();//.string();
-				}
-
-				if (ImGui::Button("Deallocate"))
-				{
-//					Engine::GetAssetManager()->Unload(ref);
-				}
-				ImGui::SameLine();
-
-				if (ImGui::Button("Reload"))
-				{
-	//				Engine::GetAssetManager()->Load(ref);
-				}
-				ImGui::SameLine();
-				ImGui::InputText("", &s);
-
-				if (ref)
-				{
-					ImGui::Indent();
-					AddReflector(GetReflector(ref), depth + 1);
-				}
-			}
-			return true;
 		});
 	}
 	return dirty;
@@ -321,14 +290,6 @@ namespace
 				},
 					[&](std::string& v) {
 					xmlElem->SetAttribute(p.GetName().c_str(), v.c_str());
-				},
-					[&](Asset*& v) {
-					if (v)
-					{
-						std::string assetFile;
-						assetFile = v->GetUri().string();
-						xmlElem->SetAttribute(p.GetName().c_str(), assetFile.c_str());
-					}
 				});
 			}
 		}

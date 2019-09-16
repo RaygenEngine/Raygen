@@ -8,16 +8,16 @@
 #include "asset/pods/TexturePod.h"
 #include "asset/pods/XMLDocPod.h"
 
-#include "asset/assets/CubemapAsset.h"
-#include "asset/assets/DummyAssets.h"
-#include "asset/assets/GltfFileAsset.h"
-#include "asset/assets/GltfMaterialAsset.h"
-#include "asset/assets/GltfModelAsset.h"
-#include "asset/assets/GltfTextureAsset.h"
-#include "asset/assets/ImageAsset.h"
-#include "asset/assets/ShaderAsset.h"
-#include "asset/assets/TextAsset.h"
-#include "asset/assets/XMLDocAsset.h"
+#include "asset/loaders/CubemapLoader.h"
+#include "asset/loaders/DummyLoader.h"
+#include "asset/loaders/GltfFileLoader.h"
+#include "asset/loaders/GltfMaterialLoader.h"
+#include "asset/loaders/GltfModelLoader.h"
+#include "asset/loaders/GltfTextureLoader.h"
+#include "asset/loaders/ImageLoader.h"
+#include "asset/loaders/ShaderLoader.h"
+#include "asset/loaders/TextLoader.h"
+#include "asset/loaders/XMLDocLoader.h"
 
 constexpr char SubpathIdentifier = '#';
 
@@ -43,36 +43,36 @@ bool IsOfType(const fs::path& path, const fs::path& ext)
 
 bool CubemapPod::Load(CubemapPod* pod, const fs::path& path)
 {
-	return CubemapAsset::Load(pod, path);
+	return CubemapLoader::Load(pod, path);
 }
 
 bool GltfFilePod::Load(GltfFilePod* pod, const fs::path& path)
 {
-	return GltfFileAsset::Load(pod, path);
+	return GltfFileLoader::Load(pod, path);
 }
 
 bool ImagePod::Load(ImagePod* pod, const fs::path& path)
 {
-	return ImageAsset::Load(pod, path);
+	return ImageLoader::Load(pod, path);
 }
 
 bool MaterialPod::Load(MaterialPod* pod, const fs::path& path)
 {
 	if (IsOfType(path, ".gltf")) 
 	{
-		return GltfMaterialAsset::Load(pod, path);
+		return GltfMaterialLoader::Load(pod, path);
 	}
 	// TODO: Json loader
 
 	
-	return DefaultMaterial::Load(pod, path);
+	return DefaultMaterialLoader::Load(pod, path);
 }
 
 bool ModelPod::Load(ModelPod* pod, const fs::path& path)
 {
 	if (IsOfType(path, ".gltf")) 
 	{
-		return GltfModelAsset::Load(pod, path);
+		return GltfModelLoader::Load(pod, path);
 	}
 	// Add obj loader or others
 	
@@ -81,26 +81,26 @@ bool ModelPod::Load(ModelPod* pod, const fs::path& path)
 
 bool ShaderPod::Load(ShaderPod* pod, const fs::path& path)
 {
-	return ShaderAsset::Load(pod, path);
+	return ShaderLoader::Load(pod, path);
 }
 
 bool TextPod::Load(TextPod* pod, const fs::path& path)
 {
-	return TextAsset::Load(pod, path);
+	return TextLoader::Load(pod, path);
 }
 
 bool TexturePod::Load(TexturePod* pod, const fs::path& path)
 {
 	if (IsOfType(path, ".gltf")) 
 	{
-		return GltfTextureAsset::Load(pod, path);
+		return GltfTextureLoader::Load(pod, path);
 	}
 	// add Json sampler loader
 
-	return DefaultTexture::Load(pod, path);
+	return DefaultTextureLoader::Load(pod, path);
 }
 
 bool XMLDocPod::Load(XMLDocPod* pod, const fs::path& path)
 {
-	return XMLDocAsset::Load(pod, path);
+	return XMLDocLoader::Load(pod, path);
 }
