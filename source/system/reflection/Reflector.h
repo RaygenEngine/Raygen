@@ -1,13 +1,11 @@
 #pragma once
 #include "system/reflection/Property.h"
 
-// Each reflected Object should have an instance of this and return it if quered for ::GetReflector()
 class Reflector
 {
 protected:
 	std::string m_objectName;
 	std::vector<ExactProperty> m_properties;
-	// PERF: this should probably be string_view
 	std::unordered_map<std::string, size_t> m_hashTable;
 
 	friend class StaticReflector;
@@ -15,9 +13,7 @@ public:
 	void SetName(const std::string& name) { m_objectName = name; }
 	std::string GetName() const { return m_objectName; }
 
-	
 	std::vector<ExactProperty>& GetProperties() { return m_properties; }
-
 	
 	bool HasProperty(const std::string& name) 
 	{
@@ -38,7 +34,6 @@ public:
 		return nullptr;
 	}
 
-	
 	template<typename Type>
 	ExactProperty& AddProperty(std::string&& name, Type& variable)
 	{
@@ -121,7 +116,7 @@ public:
 
 		Reflector r;
 		r.m_hashTable = m_hashTable;
-		r.SetName(m_className + "_Inst");
+		r.SetName(m_className);
 		r.m_properties.reserve(m_offsetProperties.size());
 		StaticReflector* self = const_cast<StaticReflector*>(this);
 		for (auto& originalProp : self->m_offsetProperties)

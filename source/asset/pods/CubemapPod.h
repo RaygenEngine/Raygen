@@ -8,7 +8,10 @@ struct CubemapPod : AssetPod
 {
 	STATIC_REFLECTOR(CubemapPod)
 	{
-
+		reflector.AutoAddProperty<PodHandle<TexturePod>>("sides[0]", offsetof(__ThisType, sides[0]));
+		reflector.AutoAddProperty<PodHandle<TexturePod>>("sides[1]", offsetof(__ThisType, sides[1]));
+		reflector.AutoAddProperty<PodHandle<TexturePod>>("sides[2]", offsetof(__ThisType, sides[2]));
+		
 	}
 	static bool Load(CubemapPod* pod, const fs::path& path);
 

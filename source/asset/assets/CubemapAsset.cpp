@@ -22,6 +22,7 @@ bool CubemapAsset::Load(CubemapPod* pod, const fs::path& path)
 		char name[256];
 		t.getline(name, 256);
 
+		pod->sides[i] = AssetManager::GetOrCreate<TexturePod>("#" + std::string(name) + "_" + std::to_string(i));
 		pod->sides[i]->image = AssetManager::GetOrCreate<ImagePod>(name);
 	}
 

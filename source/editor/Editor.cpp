@@ -26,25 +26,27 @@
 #include "asset/AssetManager.h"
 #include "system/reflection/ReflectionTools.h"
 
+#include <set>
+
 struct ReflVisitor
 {
 	int32 depth{ 0 };
 
 	template<typename T>
-	void visit(T& t, ExactProperty& p)
+	void Visit(T& t, ExactProperty& p)
 	{
 		std::cout << std::string("\t", depth);
 		std::cout << "| " << p.GetName() << " -> " << t << std::endl;
 	}
 
-	void visit(glm::vec3& t, ExactProperty& p)
+	void Visit(glm::vec3& t, ExactProperty& p)
 	{
 		std::cout << std::string("\t", depth);
 		std::cout << "| " << p.GetName() << " -> " << t.x << ", " << t.y << ", " << t.z << std::endl;
 	}
 
 	template<typename T>
-	void visit(PodHandle<T>& t, ExactProperty& p)
+	void Visit(PodHandle<T>& t, ExactProperty& p)
 	{
 		std::cout << std::string("\t", depth);
 		std::cout << "Visited by pod: " << p.GetName() << "@" << Engine::GetAssetManager()->GetPodPath(t) << std::endl;
@@ -53,8 +55,9 @@ struct ReflVisitor
 		depth--;
 	}
 
+	
 	template<typename T>
-	void visit(std::vector<T>& t, ExactProperty& p)
+	void Visit(std::vector<T>& t, ExactProperty& p)
 	{
 		std::cout << "Vector of anything" << std::endl;
 	}
@@ -95,69 +98,130 @@ void ImGuiNode(Node* node, int32 depth, Node*& selectedNode) {
 
 namespace
 {
-bool AddReflector(Reflector& reflector, int32 depth = 0)
+using namespace PropertyFlags;
+
+struct ReflectionToImguiVisitor : public ReflectionTools::Example
 {
-	bool dirty = false;
+	int32 depth{ 0 };
+	std::string path{};
+	
+	std::set<std::string> objNames;
 
-	for (auto& prop : reflector.GetProperties())
+	std::string nameBuf;
+	const char* name;  
+
+	void GenerateUniqueName(ExactProperty& p)
 	{
-		auto str = prop.GetName().c_str();
-
-		dirty |= prop.SwitchOnType(
-			[&str](int& ref) {
-			return ImGui::DragInt(str, &ref, 0.1f);
-		},
-			[&str](bool& ref) {
-			return ImGui::Checkbox(str, &ref);
-		},
-			[&str](float& ref) {
-			return ImGui::DragFloat(str, &ref, 0.01f);
-		},
-			[&str, &prop](glm::vec3& ref) {
-			if (prop.HasFlags(PropertyFlags::Color))
-			{
-				return ImGui::ColorEdit3(str, ImUtil::FromVec3(ref), ImGuiColorEditFlags_DisplayHSV);
-			}
-			return ImGui::DragFloat3(str, ImUtil::FromVec3(ref), 0.01f);
-		},
-			[&str](std::string& ref) {
-			return ImGui::InputText(str, &ref);
+		std::string buf = p.GetName() + "##" + path;
+		auto r = objNames.insert(buf);
+		int32 index = 0;
+		while (r.second == false)
+		{
+			r = objNames.insert(buf + std::to_string(index));
+			index++;
 		}
-			//		,[&str, depth](Asset*& ref) {
-			//			if (ImGui::CollapsingHeader((std::string(str) + "##" + std::to_string(depth)).c_str()))
-			//			{
-			//				ImGui::Indent();
-			//				std::string s = "No Asset";
-			//				if (ref)
-			//				{
-			//					s = fs::relative(ref->GetUri()).string();//.string();
-			//				}
-			//
-			//				if (ImGui::Button("Deallocate"))
-			//				{
-			////					Engine::GetAssetManager()->Unload(ref);
-			//				}
-			//				ImGui::SameLine();
-			//
-			//				if (ImGui::Button("Reload"))
-			//				{
-			//	//				Engine::GetAssetManager()->Load(ref);
-			//				}
-			//				ImGui::SameLine();
-			//				ImGui::InputText("", &s);
-			//
-			//				if (ref)
-			//				{
-			//					ImGui::Indent();
-			//					AddReflector(GetReflector(ref), depth + 1);
-			//				}
-			//			}
-			//			return true;
-			//		}
-		);
+		name = r.first->c_str();
 	}
-	return dirty;
-}
+
+	void Begin(Reflector& r)
+	{
+		path += "|" + r.GetName();
+	}
+
+	void End(Reflector& r)
+	{
+		path.erase(path.end() - (r.GetName().size() + 1), path.end());
+	}
+
+	void PreProperty(ExactProperty& p)
+	{
+		GenerateUniqueName(p);
+	}
+	
+	void Visit(int32& t, ExactProperty& p)
+	{
+		ImGui::DragInt(name, &t, 0.1f);
+	}
+
+	void Visit(bool& t, ExactProperty& p)
+	{
+		if (p.HasFlags(NoEdit))
+		{
+			bool t1 = t;
+			ImGui::Checkbox(name, &t1);
+		}
+		else
+		{
+			ImGui::Checkbox(name, &t);
+		}
+	}
+	
+	void Visit(float& t, ExactProperty& p)
+	{
+		ImGui::DragFloat(name, &t, 0.01f);
+	}
+
+	void Visit(glm::vec3& t, ExactProperty& p)
+	{
+		if (p.HasFlags(PropertyFlags::Color))
+		{
+			ImGui::ColorEdit3(name, ImUtil::FromVec3(t), ImGuiColorEditFlags_DisplayHSV);
+		}
+		else 
+		{
+			ImGui::DragFloat3(name, ImUtil::FromVec3(t), 0.01f);
+		}
+	}
+
+	void Visit(std::string& ref, ExactProperty& p) 
+	{
+		if (p.HasFlags(PropertyFlags::Multiline))
+		{
+			ImGui::InputTextMultiline(name, &ref, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16));
+		}
+		else
+		{
+			ImGui::InputText(name, &ref);
+		}
+	}
+
+	template<typename PodType>
+	void Visit(PodHandle<PodType>& pod, ExactProperty& p)
+	{
+		if (!pod.HasBeenAssigned())
+		{
+			std::string s = "Unitialised handle: " + p.GetName();
+			ImGui::Text(s.c_str());
+			return;
+		}
+
+		auto str = Engine::GetAssetManager()->GetPodPath(pod).string();
+		if (ImGui::CollapsingHeader(name))
+		{
+			GenerateUniqueName(p);
+			ImGui::InputText(name, &str, ImGuiInputTextFlags_ReadOnly);
+			depth++;
+			ImGui::Indent();
+			
+			CallVisitorOnEveryProperty(pod.operator->(), *this);
+
+			ImGui::Unindent();
+			depth--;
+		}
+	}
+
+
+	template<typename T>
+	void Visit(T& t, ExactProperty& p)
+	{
+		std::string s = "unhandled property: " + p.GetName();
+		ImGui::Text(s.c_str());
+	}
+
+
+};
+
+
 }
 
 
@@ -173,17 +237,6 @@ Editor::~Editor()
 	ImguiImpl::CleanupContext();
 }
 
-struct ReflStruct
-{
-	STATIC_REFLECTOR(ReflStruct)
-	{
-		S_REFLECT_VAR(number);
-		S_REFLECT_VAR(v, PropertyFlags::Color);
-	}
-
-	int32 number;
-	glm::vec3 v;
-};
 	
 void Editor::UpdateEditor()
 {
@@ -332,22 +385,15 @@ void Editor::PropertyEditor(Node* node)
 	}
 
 	ImGui::Separator();
-	bool dirty = AddReflector(node->m_reflector);
+	
+	CallVisitorOnEveryProperty(node, ReflectionToImguiVisitor());
+
 	ImGui::EndChild();
 
 	if (dirtyMatrix)
 	{
 		node->m_localMatrix = utl::GetTransformMat(node->m_localTranslation, node->m_localOrientation, node->m_localScale);
-	}
-	if (dirty || dirtyMatrix) 
-	{
 		node->MarkDirty();
-	}
-
-
-	if (ImGui::Button("Call visitor"))
-	{
-		CallVisitorOnEveryProperty(node, ReflVisitor());
 	}
 }
 
