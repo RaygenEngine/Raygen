@@ -3,9 +3,6 @@
 #include "world/nodes/geometry/GeometryNode.h"
 #include "world/World.h"
 #include "asset/AssetManager.h"
-#include "system/Engine.h"
-#include "asset/assets/GltfModelAsset.h"
-#include "asset/assets/GltfFileAsset.h"
 #include "asset/util/ParsingAux.h"
 
 std::string GeometryNode::ToString(bool verbose, uint depth) const
@@ -24,11 +21,11 @@ bool GeometryNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 		m_model = AssetManager::GetOrCreate<ModelPod>(file);
 		//if (file.extension().compare(".gltf") == 0)
 		//{
-		//	auto pParent = Engine::GetAssetManager()->RequestSearchAsset<GltfFileAsset>(file);
+		//	auto pParent = Engine::GetAssetManager()->RequestSearchAsset<GltfFileLoader>(file);
 
 		//	auto mPath = pParent->GetUri() / "#model";
 		//	// check if gltf
-		//	m_model = Engine::GetAssetManager()->RequestSearchAsset<GltfModelAsset>(mPath);
+		//	m_model = Engine::GetAssetManager()->RequestSearchAsset<GltfModelLoader>(mPath);
 		//}
 		// load other types
 	}

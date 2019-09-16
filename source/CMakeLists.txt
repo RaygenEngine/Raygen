@@ -9,22 +9,10 @@ link_directories(${LIB_DEPENDENCIES_DIRECTORY})
 
 set(SOURCE_FILES 
 
-	asset/Asset.cpp
 	asset/AssetManager.cpp
 	asset/PathSystem.cpp
 	asset/PodLoaders.cpp
-	
-	asset/assets/TextAsset.cpp
-	asset/assets/XMLDocAsset.cpp
-	asset/assets/ImageAsset.cpp
-	asset/assets/CubemapAsset.cpp
-	asset/assets/ShaderAsset.cpp
-	asset/assets/GltfModelAsset.cpp
-	asset/assets/GltfMaterialAsset.cpp	
-	asset/assets/GltfTextureAsset.cpp
-	asset/assets/GltfFileAsset.cpp
-	asset/assets/DummyAssets.cpp
-	
+		
 	asset/util/DependenciesImpl.cpp
 
 	core/logger/Logger.cpp
@@ -90,21 +78,20 @@ set(SOURCE_FILES
 
 set(HEADER_FILES 
 
-	asset/Asset.h
 	asset/AssetPod.h
 	asset/AssetManager.h
 	asset/PathSystem.h
 		
-	asset/assets/TextAsset.h
-	asset/assets/XMLDocAsset.h
-	asset/assets/ImageAsset.h
-	asset/assets/CubemapAsset.h
-	asset/assets/ShaderAsset.h
-	asset/assets/GltfModelAsset.h
-	asset/assets/GltfMaterialAsset.h
-	asset/assets/GltfTextureAsset.h	
-	asset/assets/GltfFileAsset.h
-	asset/assets/DummyAssets.h
+	asset/loaders/TextLoader.h
+	asset/loaders/XMLDocLoader.h
+	asset/loaders/ImageLoader.h
+	asset/loaders/CubemapLoader.h
+	asset/loaders/ShaderLoader.h
+	asset/loaders/GltfModelLoader.h
+	asset/loaders/GltfMaterialLoader.h
+	asset/loaders/GltfTextureLoader.h	
+	asset/loaders/GltfFileLoader.h
+	asset/loaders/DummyLoader.h
 
 	asset/pods/TexturePod.h
 	asset/pods/MaterialPod.h

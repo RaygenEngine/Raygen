@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/renderers/opengl/GLAsset.h"
-#include "asset/assets/CubemapAsset.h"
+#include "asset/loaders/CubemapLoader.h"
 
 #include "GLAD/glad.h"
 

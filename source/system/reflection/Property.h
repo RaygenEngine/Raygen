@@ -83,8 +83,8 @@ public:
 	}
 
 	// Calls one depending on the type of the property. Forwards a type& as a single lambda param. (eg: int& PropValue)
-	template<typename IntF, typename BoolF, typename FloatF, typename Vec3F, typename StringF, typename AssetPtrF>
-	auto SwitchOnType(IntF Int, BoolF Bool, FloatF Float, Vec3F Vec3, StringF String, AssetPtrF assetPtr) -> return_type_t<IntF>
+	template<typename IntF, typename BoolF, typename FloatF, typename Vec3F, typename StringF>
+	auto SwitchOnType(IntF Int, BoolF Bool, FloatF Float, Vec3F Vec3, StringF String) -> return_type_t<IntF>
 	{
 		switch (m_type)
 		{
@@ -102,9 +102,6 @@ public:
 			break;
 		case PropertyType::String:
 			return String(GetRef<std::string>());
-			break;
-		case PropertyType::AssetPtr:
-			return assetPtr(GetRef<Asset*>());
 			break;
 		}
 

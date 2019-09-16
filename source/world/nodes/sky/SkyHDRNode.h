@@ -1,7 +1,7 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "asset/assets/ImageAsset.h"
+#include "asset/loaders/ImageLoader.h"
 
 class SkyHDRNode : public Node
 {

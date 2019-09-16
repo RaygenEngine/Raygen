@@ -28,7 +28,7 @@ enum class PropertyType
 	Float,
 	Vec3,
 	String,
-	AssetPtr,
+	//AssetPtr,
 };
 
 static std::vector<std::string> PropertyTypeName = {
@@ -62,13 +62,13 @@ template<> constexpr bool IsReflected<Asset*> = true;
 
 
 template<typename Type>
-constexpr PropertyType ReflectionFromType = HasAssetReflector<std::remove_pointer_t<Type>> ? PropertyType::AssetPtr : PropertyType::NONE;
+constexpr PropertyType ReflectionFromType = /*HasAssetReflector<std::remove_pointer_t<Type>> ? PropertyType::AssetPtr :*/ PropertyType::NONE;
 template<> PropertyType ReflectionFromType<int32> = PropertyType::Int;
 template<> PropertyType ReflectionFromType<bool> = PropertyType::Bool;
 template<> PropertyType ReflectionFromType<float> = PropertyType::Float;
 template<> PropertyType ReflectionFromType<glm::vec3> = PropertyType::Vec3;
 template<> PropertyType ReflectionFromType<std::string> = PropertyType::String;
-template<> PropertyType ReflectionFromType<Asset*> = PropertyType::AssetPtr;
+//template<> PropertyType ReflectionFromType<Asset*> = PropertyType::AssetPtr;
 
 //template<PropertyType Type>
 //struct TypeFromReflection { static_assert("Expected a value of the enum PropertyType."); };

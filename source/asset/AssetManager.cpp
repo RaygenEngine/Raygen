@@ -1,8 +1,6 @@
 #include "pch.h"
 
 #include "asset/AssetManager.h"
-#include "asset/assets/ImageAsset.h"
-#include "asset/assets/GltfMaterialAsset.h"
 
 size_t AssetManager::NextHandle = 1;
 
