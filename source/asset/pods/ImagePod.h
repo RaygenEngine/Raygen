@@ -5,6 +5,10 @@
 
 struct ImagePod : DeletableAssetPod
 {
+	STATIC_REFLECTOR(ImagePod)
+	{
+
+	}
 	static bool Load(ImagePod* pod, const fs::path& path);
 
 	int32 width{ 0 };

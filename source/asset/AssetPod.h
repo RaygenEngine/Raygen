@@ -1,6 +1,5 @@
 #pragma once
 
-#include "system/reflection/Reflector.h"
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -15,11 +14,16 @@ struct DeletableAssetPod : AssetPod
 
 };
 
+struct BasePodHandle
+{
+
+};
+
 template<typename N>
 constexpr bool is_deletable_pod_v = std::is_base_of_v<DeletableAssetPod, N>;
 
 template<typename PodTypeT>
-struct PodHandle
+struct PodHandle : BasePodHandle
 {
 public:
 	using PodType = PodTypeT;
