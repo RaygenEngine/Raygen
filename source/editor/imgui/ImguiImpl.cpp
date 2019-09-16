@@ -21,6 +21,7 @@ void ImguiImpl::InitContext()
 	ImGui::StyleColorsLight();
 
 	ImGui_ImplWin32_Init(Engine::GetMainWindow()->GetHWND());
+	ImGui::GetIO().IniFilename = "scenes/imgui.ini";
 }
 
 void ImguiImpl::NewFrame()
