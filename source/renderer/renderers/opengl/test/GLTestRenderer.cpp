@@ -44,13 +44,14 @@ namespace OpenGL
 	
 		auto* user = Engine::GetWorld()->GetAvailableNodeSpecificSubType<FreeformUserNode>();
 
-		RT_XENGINE_ASSERT_RETURN_FALSE(user, "Missing freeform user node!");
+		// TODO: better way to check world requirements
+		if(!user)
+		{
+			LOG_FATAL("Missing freeform user node!" );
+			return false;
+		}
 
 		m_camera = user->GetCamera();
-
-		// TODO: fix instanced geometry
-		//for (auto* geometryNode : GetWorld()->GetNodeMap<World::TriangleModelInstancedGeometryNode>())
-		//	m_instancedGeometries.emplace_back(RequestGLInstancedModel(geometryNode));
 
 		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>())
 			m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, GLTestGeometry>(this, geometryNode));

@@ -51,7 +51,7 @@ public:
 		LONG cstyle = WS_OVERLAPPEDWINDOW,
 		WNDPROC windowHandleFunction = WndProc,
 		UINT style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC | CS_DBLCLKS,
-		LPCSTR name = TEXT("RTXENGINEWINDOWCLASS"),
+		LPCSTR name = TEXT("RAYXENWINDOWCLASS"),
 		HBRUSH backgroundBrushColor = (HBRUSH)(COLOR_WINDOW + 1),
 		LPCSTR cursorName = IDC_ARROW
 	);

@@ -41,7 +41,7 @@ namespace utl
 #define LOGGER_INIT(level) utl::Log::Init(level)
 
 // force log by matching the log level of the logger - except when level is LL_OFF
-#define RT_XENGINE_LOG_AT_LOWEST_LEVEL(...)     utl::Log::GetLogger()->log(utl::Log::GetLogger()->level(), __VA_ARGS__)
+#define LOG_ANY(...)     utl::Log::GetLogger()->log(utl::Log::GetLogger()->level(), __VA_ARGS__)
 
 #define LOG_TRACE(...)     utl::Log::GetLogger()->trace(__VA_ARGS__)
 #define LOG_DEBUG(...)     utl::Log::GetLogger()->debug(__VA_ARGS__)
@@ -56,7 +56,3 @@ namespace utl
 #define CLOG_WARN(condition, ...)      do { if ((condition)) { utl::Log::GetLogger()->warn(__VA_ARGS__) 	; } } while(0)
 #define CLOG_ERROR(condition, ...)     do { if ((condition)) { utl::Log::GetLogger()->error(__VA_ARGS__) 	; } } while(0)
 #define CLOG_FATAL(condition, ...)     do { if ((condition)) { utl::Log::GetLogger()->critical(__VA_ARGS__); } } while(0)
-
-// TODO: 
-#define RT_XENGINE_ASSERT(condition, ...) do { if(!(condition)) { LOG_FATAL("Assertation failed: (" #condition "): " __VA_ARGS__ ); abort(); } } while(0)
-#define RT_XENGINE_ASSERT_RETURN_FALSE(condition, ...) do { if(!(condition)) { LOG_FATAL("Assertation failed: (" #condition "): " __VA_ARGS__ ); return false; } } while(0)

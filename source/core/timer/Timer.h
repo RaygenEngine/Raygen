@@ -8,8 +8,8 @@ namespace ch = std::chrono;
 #ifdef TIMING
 #define INIT_TIMER auto start___ = std::chrono::high_resolution_clock::now()
 #define START_TIMER  start___ = std::chrono::high_resolution_clock::now()
-#define STOP_TIMER(name)  RT_XENGINE_LOG_AT_LOWEST_LEVEL("{0}: {1} ms", name,  std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-start___).count())
-#define STOP_TIMER_MICRO(name)  RT_XENGINE_LOG_AT_LOWEST_LEVEL("{0}: {1} micros", name,  std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()-start___).count())
+#define STOP_TIMER(name)  LOG_ANY("{0}: {1} ms", name,  std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-start___).count())
+#define STOP_TIMER_MICRO(name)  LOG_ANY("{0}: {1} micros", name,  std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()-start___).count())
 #else
 #define TIME_FUNCTION(func, ...)
 #define INIT_TIMER
@@ -52,16 +52,16 @@ namespace Timer
 			m_total += last;
 			if constexpr (std::is_same_v<ChronoDuration, ch::microseconds>)
 			{
-				RT_XENGINE_LOG_AT_LOWEST_LEVEL("{0}: {1} micros \tTotal: {2} micros", str, last, m_total);
+				LOG_ANY("{0}: {1} micros \tTotal: {2} micros", str, last, m_total);
 			}
 			else if constexpr (std::is_same_v<ChronoDuration, ch::milliseconds>)
 			{
-				RT_XENGINE_LOG_AT_LOWEST_LEVEL("{0}: {1} ms \tTotal: {2} ms", str, last, m_total);
+				LOG_ANY("{0}: {1} ms \tTotal: {2} ms", str, last, m_total);
 			}
 			else
 			{
 				// Fix report of duration
-				RT_XENGINE_LOG_AT_LOWEST_LEVEL("{0}: {1} ?? \tTotal: {2} ??", str, last, m_total);
+				LOG_ANY("{0}: {1} ?? \tTotal: {2} ??", str, last, m_total);
 			}
 		}
 
@@ -100,16 +100,16 @@ namespace Timer
 			long long last = ch::duration_cast<ChronoDuration>(end - m_startTime).count();
 			if constexpr (std::is_same_v<ChronoDuration, ch::microseconds>)
 			{
-				RT_XENGINE_LOG_AT_LOWEST_LEVEL("{0}: {1} micros", m_name, last);
+				LOG_ANY("{0}: {1} micros", m_name, last);
 			}
 			else if constexpr (std::is_same_v<ChronoDuration, ch::milliseconds>)
 			{
-				RT_XENGINE_LOG_AT_LOWEST_LEVEL("{0}: {1} ms", m_name, last);
+				LOG_ANY("{0}: {1} ms", m_name, last);
 			}
 			else
 			{
 				// Fix report of duration
-				RT_XENGINE_LOG_AT_LOWEST_LEVEL("{0}: {1} ??", m_name, last);
+				LOG_ANY("{0}: {1} ??", m_name, last);
 			}
 		}
 

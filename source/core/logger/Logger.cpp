@@ -13,7 +13,7 @@ namespace utl
 	{
 		spdlog::set_pattern("%^[%T] %n: %v%$"); 
 		// colored multi-threaded
-		s_logger = spdlog::stdout_color_mt("RT-XENGINE");
+		s_logger = spdlog::stdout_color_mt("Rayxen");
 
 		switch(level)
 		{
@@ -46,7 +46,7 @@ namespace utl
 				break;
 		}
 
-		RT_XENGINE_LOG_AT_LOWEST_LEVEL("Initialized RT_XEngine Logger, level: {}",
+		LOG_ANY("Initialized RT_XEngine Logger, level: {}",
 			spdlog::level::to_string_view(s_logger->level()));
 	}
 }
