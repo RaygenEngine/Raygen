@@ -149,23 +149,23 @@ void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 		},
 			[&](std::string& ref) {
 			ReadStringAttribute(xmlData, str, ref);
-		},
-			[&](Asset*& ref) {
-			std::string type;
-			ReadStringAttribute(xmlData, "type", type);
-
-			// default geom is static
-			auto modelGeomType = GeometryUsage::STATIC;
-			if (!type.empty() && utl::CaseInsensitiveCompare(type, "dynamic"))
-				modelGeomType = GeometryUsage::DYNAMIC;
-
-			std::string fileStr;
-			ReadStringAttribute(xmlData, str, fileStr);
-
-			//auto p = Engine::GetAssetManager()->m_pathSystem.SearchAssetPath(fileStr);
-			//ref = Engine::GetAssetManager()->RequestSearchAsset<ModelAsset>(p);
-			//Engine::GetAssetManager()->Load(ref);
 		}
+		//	, [&](Asset*& ref) {
+		//	std::string type;
+		//	ReadStringAttribute(xmlData, "type", type);
+
+		//	// default geom is static
+		//	auto modelGeomType = GeometryUsage::STATIC;
+		//	if (!type.empty() && utl::CaseInsensitiveCompare(type, "dynamic"))
+		//		modelGeomType = GeometryUsage::DYNAMIC;
+
+		//	std::string fileStr;
+		//	ReadStringAttribute(xmlData, str, fileStr);
+
+		//	//auto p = Engine::GetAssetManager()->m_pathSystem.SearchAssetPath(fileStr);
+		//	//ref = Engine::GetAssetManager()->RequestSearchAsset<ModelAsset>(p);
+		//	//Engine::GetAssetManager()->Load(ref);
+		//}
 		);
 	}
 	LoadAttributesFromXML(xmlData);

@@ -44,6 +44,75 @@ void ImGuiNode(Node* node, int32 depth, Node*& selectedNode) {
 }
 }
 
+
+namespace
+{
+bool AddReflector(Reflector& reflector, int32 depth = 0)
+{
+	bool dirty = false;
+
+	for (auto& prop : reflector.GetProperties())
+	{
+		auto str = prop.GetName().c_str();
+
+		dirty |= prop.SwitchOnType(
+			[&str](int& ref) {
+			return ImGui::DragInt(str, &ref, 0.1f);
+		},
+			[&str](bool& ref) {
+			return ImGui::Checkbox(str, &ref);
+		},
+			[&str](float& ref) {
+			return ImGui::DragFloat(str, &ref, 0.01f);
+		},
+			[&str, &prop](glm::vec3& ref) {
+			if (prop.HasFlags(PropertyFlags::Color))
+			{
+				return ImGui::ColorEdit3(str, ImUtil::FromVec3(ref), ImGuiColorEditFlags_DisplayHSV);
+			}
+			return ImGui::DragFloat3(str, ImUtil::FromVec3(ref), 0.01f);
+		},
+			[&str](std::string& ref) {
+			return ImGui::InputText(str, &ref);
+		}
+			//		,[&str, depth](Asset*& ref) {
+			//			if (ImGui::CollapsingHeader((std::string(str) + "##" + std::to_string(depth)).c_str()))
+			//			{
+			//				ImGui::Indent();
+			//				std::string s = "No Asset";
+			//				if (ref)
+			//				{
+			//					s = fs::relative(ref->GetUri()).string();//.string();
+			//				}
+			//
+			//				if (ImGui::Button("Deallocate"))
+			//				{
+			////					Engine::GetAssetManager()->Unload(ref);
+			//				}
+			//				ImGui::SameLine();
+			//
+			//				if (ImGui::Button("Reload"))
+			//				{
+			//	//				Engine::GetAssetManager()->Load(ref);
+			//				}
+			//				ImGui::SameLine();
+			//				ImGui::InputText("", &s);
+			//
+			//				if (ref)
+			//				{
+			//					ImGui::Indent();
+			//					AddReflector(GetReflector(ref), depth + 1);
+			//				}
+			//			}
+			//			return true;
+			//		}
+		);
+	}
+	return dirty;
+}
+}
+
+
 Editor::Editor()
 	: m_selectedNode(nullptr)
 	, m_updateWorld(true)
@@ -55,10 +124,26 @@ Editor::~Editor()
 {
 	ImguiImpl::CleanupContext();
 }
+
+struct ReflStruct
+{
+	STATIC_REFLECTOR(ReflStruct)
+	{
+		S_REFLECT_VAR(number);
+		S_REFLECT_VAR(v, PropertyFlags::Color);
+	}
+
+	int32 number;
+	glm::vec3 v;
+};
 	
 void Editor::UpdateEditor()
 {
+	static ReflStruct inst;
+
 	ImguiImpl::NewFrame();
+
+
 
 	// TODO: static fix this
 	static ImGui::FileBrowser sfb = ImGui::FileBrowser(
@@ -172,72 +257,6 @@ void Editor::Outliner()
 	ImGui::EndChild();
 }
 
-namespace
-{
-bool AddReflector(Reflector& reflector, int32 depth = 0)
-{
-	bool dirty = false;
-
-	for (auto& prop : reflector.GetProperties())
-	{
-		auto str = prop.GetName().c_str();
-
-		dirty |= prop.SwitchOnType(
-		[&str](int& ref) {
-			return ImGui::DragInt(str, &ref, 0.1f);
-		},
-		[&str](bool& ref) {
-			return ImGui::Checkbox(str, &ref);
-		},
-		[&str](float& ref) {
-			return ImGui::DragFloat(str, &ref, 0.01f);
-		},
-		[&str, &prop](glm::vec3& ref) {
-			if (prop.HasFlags(PropertyFlags::Color))
-			{
-				return ImGui::ColorEdit3(str, ImUtil::FromVec3(ref), ImGuiColorEditFlags_DisplayHSV);
-			}
-			return ImGui::DragFloat3(str, ImUtil::FromVec3(ref), 0.01f);
-		},
-		[&str](std::string& ref) {
-			return ImGui::InputText(str, &ref);
-		},
-		[&str, depth](Asset*& ref) {
-			if (ImGui::CollapsingHeader((std::string(str) + "##" + std::to_string(depth)).c_str()))
-			{
-				ImGui::Indent();
-				std::string s = "No Asset";
-				if (ref)
-				{
-					s = fs::relative(ref->GetUri()).string();//.string();
-				}
-
-				if (ImGui::Button("Deallocate"))
-				{
-//					Engine::GetAssetManager()->Unload(ref);
-				}
-				ImGui::SameLine();
-
-				if (ImGui::Button("Reload"))
-				{
-	//				Engine::GetAssetManager()->Load(ref);
-				}
-				ImGui::SameLine();
-				ImGui::InputText("", &s);
-
-				if (ref)
-				{
-					ImGui::Indent();
-					AddReflector(GetReflector(ref), depth + 1);
-				}
-			}
-			return true;
-		});
-	}
-	return dirty;
-}
-}
-
 void Editor::PropertyEditor(Node* node)
 {
 	ImGui::BeginChild("Properties", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
@@ -321,15 +340,16 @@ namespace
 				},
 					[&](std::string& v) {
 					xmlElem->SetAttribute(p.GetName().c_str(), v.c_str());
-				},
-					[&](Asset*& v) {
-					if (v)
-					{
-						std::string assetFile;
-						assetFile = v->GetUri().string();
-						xmlElem->SetAttribute(p.GetName().c_str(), assetFile.c_str());
-					}
-				});
+				}
+				//	,[&](Asset*& v) {
+				//	if (v)
+				//	{
+				//		std::string assetFile;
+				//		assetFile = v->GetUri().string();
+				//		xmlElem->SetAttribute(p.GetName().c_str(), assetFile.c_str());
+				//	}
+				//}
+				);
 			}
 		}
 		return xmlElem;
