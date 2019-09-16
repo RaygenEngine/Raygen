@@ -10,8 +10,6 @@ namespace fs = std::filesystem;
 class Asset
 {	
 public:
-	AssetReflector m_reflector;
-
 	fs::path GetUri() const { return m_uri; }
 	
 protected:
@@ -68,8 +66,3 @@ public:
 	
 	friend class AssetManager;
 };
-
-inline AssetReflector& GetReflector(Asset* object)
-{
-	return object->m_reflector;
-}
