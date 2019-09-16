@@ -228,9 +228,3 @@ static void _FillMembers(StaticReflector& reflector)\
 // Static reflect var
 #define S_REFLECT_VAR(Variable, ...)				\
 	reflector.AutoAddProperty<decltype(Variable)>(#Variable, offsetof(__ThisType, Variable)).InitFlags(PropertyFlags::Pack(__VA_ARGS__));
-
-
-namespace test
-{
-	void test();
-}

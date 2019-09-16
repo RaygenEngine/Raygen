@@ -408,5 +408,9 @@ bool GltfModelAsset::Load(ModelPod* pod, const fs::path& path)
 		return true;
 	};
 
-	return RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
+	bool r = RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
+
+	pod->lastMaterial = pod->meshes.back().geometryGroups.at(0).material;
+
+	return r;
 }

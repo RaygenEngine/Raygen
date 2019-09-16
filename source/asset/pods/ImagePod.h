@@ -7,7 +7,11 @@ struct ImagePod : DeletableAssetPod
 {
 	STATIC_REFLECTOR(ImagePod)
 	{
+		S_REFLECT_VAR(width);
+		S_REFLECT_VAR(height);
 
+		S_REFLECT_VAR(components);
+		S_REFLECT_VAR(hdr);
 	}
 	static bool Load(ImagePod* pod, const fs::path& path);
 
