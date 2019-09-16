@@ -6,6 +6,10 @@
 
 struct TexturePod : AssetPod
 {
+	STATIC_REFLECTOR(TexturePod)
+	{
+
+	}
 	static bool Load(TexturePod* pod, const fs::path& path);
 
 	TextureFiltering minFilter{TextureFiltering::LINEAR};

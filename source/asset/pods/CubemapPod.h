@@ -6,6 +6,10 @@
 
 struct CubemapPod : AssetPod
 {
+	STATIC_REFLECTOR(CubemapPod)
+	{
+
+	}
 	static bool Load(CubemapPod* pod, const fs::path& path);
 
 	PodHandle<TexturePod> sides[CMF_COUNT];

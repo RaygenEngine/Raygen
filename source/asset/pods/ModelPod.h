@@ -27,6 +27,10 @@ struct Mesh
 
 struct ModelPod : DeletableAssetPod
 {
+	STATIC_REFLECTOR(ModelPod)
+	{
+
+	}
 	static bool Load(ModelPod* pod, const fs::path& path);
 
 	std::vector<Mesh> meshes;

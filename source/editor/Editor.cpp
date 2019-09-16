@@ -139,8 +139,6 @@ struct ReflStruct
 	
 void Editor::UpdateEditor()
 {
-	static ReflStruct inst;
-
 	ImguiImpl::NewFrame();
 
 

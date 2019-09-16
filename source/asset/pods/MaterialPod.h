@@ -7,6 +7,10 @@
 // glTF-based material (not all extensions included) (comments in this file -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0)
 struct MaterialPod : AssetPod
 {
+	STATIC_REFLECTOR(MaterialPod)
+	{
+
+	}
 	static bool Load(MaterialPod* pod, const fs::path& path);
 
 	// The value for each property(baseColor, metallic, roughness) can be defined using factors or textures.

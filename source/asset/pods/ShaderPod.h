@@ -6,6 +6,10 @@
 
 struct ShaderPod : AssetPod
 {
+	STATIC_REFLECTOR(ShaderPod)
+	{
+
+	}
 	static bool Load(ShaderPod* pod, const fs::path& path);
 
 	PodHandle<TextPod> vertex;
