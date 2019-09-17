@@ -10,24 +10,21 @@ namespace OpenGL
 	class GLTexture : public GLAsset
 	{
 		// bindless
-		GLuint64 m_bindlessHandle;
-		GLuint m_glId;
+		GLuint64 m_bindlessId;
+		GLuint m_id;
 
 	public:
 		GLTexture(const fs::path& assocPath)
 			: GLAsset(assocPath),
-			  m_bindlessHandle(0),
-			  m_glId(0)
+			  m_bindlessId(0),
+			  m_id(0)
 		{
 		}
+		virtual ~GLTexture();
 
 		bool Load() override;
 
-		friend class GLAssetManager;
-	public:
-		virtual ~GLTexture();
-	
-		[[nodiscard]] GLuint GetGLId() const { return m_glId; }
-		[[nodiscard]] GLuint64 GetGLBindlessHandle() const { return m_bindlessHandle; }
+		[[nodiscard]] GLuint GetId() const { return m_id; }
+		[[nodiscard]] GLuint64 GetBindlessId() const { return m_bindlessId; }
 	};
 }

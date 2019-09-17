@@ -4,7 +4,7 @@
 #include "asset/pods/MaterialPod.h"
 #include "asset/pods/ModelPod.h"
 #include "asset/pods/ShaderPod.h"
-#include "asset/pods/TextPod.h"
+#include "asset/pods/StringPod.h"
 #include "asset/pods/TexturePod.h"
 #include "asset/pods/XMLDocPod.h"
 
@@ -38,12 +38,6 @@ fs::path GetRealExtension(const fs::path& path)
 bool IsOfType(const fs::path& path, const fs::path& ext)
 {
 	return GetRealExtension(path) == ext;
-}
-
-
-bool CubemapPod::Load(CubemapPod* pod, const fs::path& path)
-{
-	return CubemapLoader::Load(pod, path);
 }
 
 bool GltfFilePod::Load(GltfFilePod* pod, const fs::path& path)
@@ -84,7 +78,7 @@ bool ShaderPod::Load(ShaderPod* pod, const fs::path& path)
 	return ShaderLoader::Load(pod, path);
 }
 
-bool TextPod::Load(TextPod* pod, const fs::path& path)
+bool StringPod::Load(StringPod* pod, const fs::path& path)
 {
 	return TextLoader::Load(pod, path);
 }
@@ -94,6 +88,11 @@ bool TexturePod::Load(TexturePod* pod, const fs::path& path)
 	if (IsOfType(path, ".gltf")) 
 	{
 		return GltfTextureLoader::Load(pod, path);
+	}
+	// TODO: search sub extension, or make cubeman extension
+	else if (IsOfType(path, ".json"))
+	{
+		return CubemapLoader::Load(pod, path);
 	}
 	// add Json sampler loader
 

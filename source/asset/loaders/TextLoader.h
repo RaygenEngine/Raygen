@@ -1,10 +1,10 @@
 #pragma once
 
-#include "asset/pods/TextPod.h"
+#include "asset/pods/StringPod.h"
 
 namespace TextLoader
 {
-	inline bool Load(TextPod* pod, const fs::path& path)
+	inline bool Load(StringPod* pod, const fs::path& path)
 	{
 		std::ifstream t(path);
 

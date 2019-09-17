@@ -17,6 +17,16 @@ enum class TextureWrapping
 	REPEAT
 };
 
+enum class TextureType
+{
+	TEXTURE_1D,
+	TEXTURE_2D,
+	TEXTURE_3D,
+	TEXTURE_ARRAY,
+	TEXTURE_CUBEMAP,
+	TEXTURE_CUBEMAP_ARRAY
+};
+
 enum TextureChannel : int32
 {
 	TC_RED = BIT(0),

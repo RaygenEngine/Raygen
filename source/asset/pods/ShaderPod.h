@@ -2,13 +2,13 @@
 
 #include "system/reflection/Reflector.h"
 #include "asset/AssetPod.h"
-#include "asset/pods/TextPod.h"
+#include "asset/pods/StringPod.h"
 
 struct ShaderPod : AssetPod
 {
 	static bool Load(ShaderPod* pod, const fs::path& path);
 
-	PodHandle<TextPod> vertex;
-	PodHandle<TextPod> fragment;
+	PodHandle<StringPod> vertex;
+	PodHandle<StringPod> fragment;
 };
 

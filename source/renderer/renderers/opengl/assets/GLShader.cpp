@@ -7,7 +7,7 @@ namespace OpenGL
 {
 	GLShader::~GLShader()
 	{
-		glDeleteProgram(m_glId);
+		glDeleteProgram(m_id);
 	}
 	
 	bool GLShader::Load()
@@ -15,81 +15,74 @@ namespace OpenGL
 		
 		const auto sources = AssetManager::GetOrCreate<ShaderPod>(m_assetManagerPodPath);
 
-		GLint Result = GL_FALSE;
+		GLint result = GL_FALSE;
 		int32 infoLogLength;
 
-		const GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+		const GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 
 		// Compile Vertex Shader
-		//LOG_TRACE("Compiling shader : {}", vertexSource->GetFileName());
-		char const* VertexSourcePointer = sources->vertex->data.c_str();
-		glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
-		glCompileShader(VertexShaderID); // Check Vertex Shader
-		glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-		glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
+		char const* vertexSourcePointer = sources->vertex->data.c_str();
+		glShaderSource(vertexShaderID, 1, &vertexSourcePointer, NULL);
+		glCompileShader(vertexShaderID); // Check Vertex Shader
+		glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &result);
+		glGetShaderiv(vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
 
 		if (infoLogLength > 0)
 		{
-			std::vector<char> VertexShaderErrorMessage(infoLogLength + 1);
-			glGetShaderInfoLog(VertexShaderID, infoLogLength, NULL, &VertexShaderErrorMessage[0]);
-			//LOG_WARN("{}:\n{}", vertexSource->GetFileName(), &VertexShaderErrorMessage[0]);
-
+			std::vector<char> vertexShaderErrorMessage(infoLogLength + 1);
+			glGetShaderInfoLog(vertexShaderID, infoLogLength, NULL, &vertexShaderErrorMessage[0]);
+			LOG_WARN("Vertex shader error in {}:\n{}", m_assetManagerPodPath, &vertexShaderErrorMessage[0]);
 			return false;
 		}
-		const GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+		const GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
 		// Compile Fragment Shader
 		//LOG_TRACE("Compiling shader : {}", fragmentSource->GetFileName());
-		char const* FragmentSourcePointer = sources->fragment->data.c_str();
-		glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
-		glCompileShader(FragmentShaderID); // Check Fragment Shader
-		glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-		glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
+		char const* fragmentSourcePointer = sources->fragment->data.c_str();
+		glShaderSource(fragmentShaderID, 1, &fragmentSourcePointer, NULL);
+		glCompileShader(fragmentShaderID); // Check Fragment Shader
+		glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &result);
+		glGetShaderiv(fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
 
 		if (infoLogLength > 0)
 		{
-			std::vector<char> FragmentShaderErrorMessage(infoLogLength + 1);
-			glGetShaderInfoLog(FragmentShaderID, infoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-			//LOG_WARN("{}:\n{}", fragmentSource->GetFileName(), &FragmentShaderErrorMessage[0]);
-
+			std::vector<char> fragmentShaderErrorMessage(infoLogLength + 1);
+			glGetShaderInfoLog(fragmentShaderID, infoLogLength, NULL, &fragmentShaderErrorMessage[0]);
+			LOG_WARN("Fragment shader error in {}:\n{}", m_assetManagerPodPath, &fragmentShaderErrorMessage[0]);
 			return false;
 		}
 
-		// Link the program
-		LOG_DEBUG("Linking program");
-		m_glId = glCreateProgram();
-		glAttachShader(m_glId, VertexShaderID);
-		glAttachShader(m_glId, FragmentShaderID);
-		glLinkProgram(m_glId);
+		m_id = glCreateProgram();
+		glAttachShader(m_id, vertexShaderID);
+		glAttachShader(m_id, fragmentShaderID);
+		glLinkProgram(m_id);
 
-		// Check the program
-		glGetProgramiv(m_glId, GL_LINK_STATUS, &Result);
-		glGetProgramiv(m_glId, GL_INFO_LOG_LENGTH, &infoLogLength);
+		glGetProgramiv(m_id, GL_LINK_STATUS, &result);
+		glGetProgramiv(m_id, GL_INFO_LOG_LENGTH, &infoLogLength);
 
 		if (infoLogLength > 0)
 		{
-			std::vector<char> ProgramErrorMessage(infoLogLength + 1);
-			glGetProgramInfoLog(m_glId, infoLogLength, NULL, &ProgramErrorMessage[0]);
-			LOG_WARN("\n{}", &ProgramErrorMessage[0]);
-
+			std::vector<char> programErrorMessage(infoLogLength + 1);
+			glGetProgramInfoLog(m_id, infoLogLength, NULL, &programErrorMessage[0]);
+			LOG_WARN("Program shader error in {}:\n{}", m_assetManagerPodPath, &programErrorMessage[0]);
 			return false;
 		}
 
-		glDetachShader(m_glId, VertexShaderID);
-		glDetachShader(m_glId, FragmentShaderID);
-		glDeleteShader(VertexShaderID);
-		glDeleteShader(FragmentShaderID);
+		glDetachShader(m_id, vertexShaderID);
+		glDetachShader(m_id, fragmentShaderID);
+		glDeleteShader(vertexShaderID);
+		glDeleteShader(fragmentShaderID);
 
 		return true;
 	}
 
-	void GLShader::SetUniformLocation(const std::string& name)
+	void GLShader::operator+=(const std::string& uniformName)
 	{
-		m_uniformLocations[name] = glGetUniformLocation(m_glId, name.c_str());
+		m_uniformLocations.insert({ uniformName, glGetUniformLocation(m_id, uniformName.c_str()) });
 	}
-
-	GLint GLShader::GetUniformLocation(const std::string& name)
+	
+	GLint GLShader::operator[](const std::string& uniformName) const
 	{
-		return m_uniformLocations[name];
+		return m_uniformLocations.at(uniformName);
 	}
 }

@@ -31,7 +31,7 @@ namespace OpenGL
 
 			GLint geometryMode{ 0u };
 
-			uint64 count{ 0u };
+			GLsizei count{ 0u };
 		};
 
 	private:

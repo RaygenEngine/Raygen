@@ -178,8 +178,10 @@ void main()
 			out_color = vec4(baseColorFactor.a);
 			break;
 			
-		case 24: // opacity final TODO: alpha blending
-
+		case 24: // opacity final
+			out_color = baseColor;
+			if(baseColor.a < 0.5)
+				discard;
 			break;
 			
 		case 25: // texture coordinate 0

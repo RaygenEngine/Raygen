@@ -10,9 +10,9 @@ namespace ImageLoader
 	{
 		const auto finalPath = path;
 
-		pod->hdr = stbi_is_hdr(finalPath.string().c_str()) == 1;
+		pod->isHdr = stbi_is_hdr(finalPath.string().c_str()) == 1;
 
-		if (!pod->hdr)
+		if (!pod->isHdr)
 			pod->data = stbi_load(finalPath.string().c_str(), &pod->width, &pod->height, &pod->components, STBI_rgb_alpha);
 		else
 			pod->data = stbi_loadf(finalPath.string().c_str(), &pod->width, &pod->height, &pod->components, STBI_rgb_alpha);
