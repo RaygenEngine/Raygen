@@ -245,9 +245,9 @@ add_dependencies(Rayxen
 
 # 3rd party includes
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY})
-include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/GLAD)
-include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/GLM)
-include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/KHR)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/glad)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/glm)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/khr)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/nlohmann)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/spdlog)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/stb_image)

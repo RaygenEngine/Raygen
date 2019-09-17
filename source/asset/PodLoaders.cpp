@@ -1,4 +1,3 @@
-#include "asset/pods/CubemapPod.h"
 #include "asset/pods/GltfFilePod.h"
 #include "asset/pods/ImagePod.h"
 #include "asset/pods/MaterialPod.h"
