@@ -14,8 +14,10 @@
 	</freeform_user>
 	
 
-	<sky_hdr name="sky1"
-		hdr_texture="CedarCity.hdr"/>
+	<!-- <sky_hdr name="sky1" -->
+		<!-- hdr_texture="CedarCity.hdr"/> -->
+
+	<sky_cube name="abc" cube_map="alps.cubemap.json"/>
 
 	<sky_cube name="sky2"
 		cube_map="alps.cubemap.json"/>
@@ -33,7 +35,7 @@
 	<geometry name="box" 
 		translation="0.0, 0.0, -4.0"
 		scale="1, 1, 1" 
-		model="VC.gltf/#model"/> 
+		model="Sponza.gltf/#model"/> 
 		
 	<!-- <geometry name="box2"  -->
 		<!-- translation="0.0, -100.0, -4.0" -->

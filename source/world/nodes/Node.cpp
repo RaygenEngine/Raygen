@@ -264,3 +264,47 @@ std::string Node::ToString(bool verbose, uint depth) const
 		groupTree += child->ToString(verbose, depth + 1);
 	return "name:" + m_name + moreInfo + "\n" + groupTree;
 }
+
+void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
+{
+	using namespace ParsingAux;
+
+	for (auto& prop : m_reflector.GetProperties())
+	{
+		auto str = prop.GetName().c_str();
+		prop.SwitchOnType(
+			[&](int& ref) {
+			xmlData->QueryIntAttribute(str, &ref);
+		},
+			[&](bool& ref) {
+			xmlData->QueryBoolAttribute(str, &ref);
+		},
+			[&](float& ref) {
+			xmlData->QueryFloatAttribute(str, &ref);
+		},
+			[&](glm::vec3& ref) {
+			ReadFloatsAttribute(xmlData, str, ref);
+		},
+			[&](std::string& ref) {
+			ReadStringAttribute(xmlData, str, ref);
+		}
+			//	, [&](Asset*& ref) {
+			//	std::string type;
+			//	ReadStringAttribute(xmlData, "type", type);
+
+			//	// default geom is static
+			//	auto modelGeomType = GeometryUsage::STATIC;
+			//	if (!type.empty() && utl::CaseInsensitiveCompare(type, "dynamic"))
+			//		modelGeomType = GeometryUsage::DYNAMIC;
+
+			//	std::string fileStr;
+			//	ReadStringAttribute(xmlData, str, fileStr);
+
+			//	//auto p = Engine::GetAssetManager()->m_pathSystem.SearchAssetPath(fileStr);
+			//	//ref = Engine::GetAssetManager()->RequestSearchAsset<ModelAsset>(p);
+			//	//Engine::GetAssetManager()->Load(ref);
+			//}
+		);
+	}
+	LoadAttributesFromXML(xmlData);
+}

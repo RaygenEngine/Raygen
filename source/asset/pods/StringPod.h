@@ -1,11 +1,16 @@
 #pragma once
 
-#include "system/reflection/Reflector.h"
+#include "system/reflection/Reflection.h"
 #include "asset/AssetPod.h"
 
 struct StringPod : DeletableAssetPod
 {
-	static bool Load(StringPod* pod, const fs::path& path);
+	STATIC_REFLECTOR(StringPod)
+	{
+		S_REFLECT_VAR(data, PropertyFlags::Multiline);
+	}
+
+	static bool Load(TextPod* pod, const fs::path& path);
 
 	std::string data;
 };

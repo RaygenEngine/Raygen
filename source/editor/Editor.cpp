@@ -11,6 +11,56 @@
 #include "system/EngineEvents.h"
 
 #include <filesystem>
+#include "asset/pods/GltfFilePod.h"
+#include "asset/pods/ImagePod.h"
+#include "asset/pods/MaterialPod.h"
+#include "asset/pods/ModelPod.h"
+#include "asset/pods/ShaderPod.h"
+#include "asset/pods/TextPod.h"
+#include "asset/pods/TexturePod.h"
+#include "asset/pods/XMLDocPod.h"
+
+
+#include <iostream>
+#include "asset/AssetManager.h"
+#include "system/reflection/ReflectionTools.h"
+
+#include <set>
+
+struct ReflVisitor
+{
+	int32 depth{ 0 };
+
+	template<typename T>
+	void Visit(T& t, ExactProperty& p)
+	{
+		std::cout << std::string("\t", depth);
+		std::cout << "| " << p.GetName() << " -> " << t << std::endl;
+	}
+
+	void Visit(glm::vec3& t, ExactProperty& p)
+	{
+		std::cout << std::string("\t", depth);
+		std::cout << "| " << p.GetName() << " -> " << t.x << ", " << t.y << ", " << t.z << std::endl;
+	}
+
+	template<typename T>
+	void Visit(PodHandle<T>& t, ExactProperty& p)
+	{
+		std::cout << std::string("\t", depth);
+		std::cout << "Visited by pod: " << p.GetName() << "@" << Engine::GetAssetManager()->GetPodPath(t) << std::endl;
+		depth++;
+		CallVisitorOnEveryProperty(t.operator->(), *this);
+		depth--;
+	}
+
+	
+	template<typename T>
+	void Visit(std::vector<T>& t, ExactProperty& p)
+	{
+		std::cout << "Vector of anything" << std::endl;
+	}
+};
 
 namespace {
 template<typename Lambda>
@@ -44,6 +94,136 @@ void ImGuiNode(Node* node, int32 depth, Node*& selectedNode) {
 }
 }
 
+
+namespace
+{
+using namespace PropertyFlags;
+
+struct ReflectionToImguiVisitor : public ReflectionTools::Example
+{
+	int32 depth{ 0 };
+	std::string path{};
+	
+	std::set<std::string> objNames;
+
+	std::string nameBuf;
+	const char* name;  
+
+	void GenerateUniqueName(ExactProperty& p)
+	{
+		std::string buf = p.GetName() + "##" + path;
+		auto r = objNames.insert(buf);
+		int32 index = 0;
+		while (r.second == false)
+		{
+			r = objNames.insert(buf + std::to_string(index));
+			index++;
+		}
+		name = r.first->c_str();
+	}
+
+	void Begin(Reflector& r)
+	{
+		path += "|" + r.GetName();
+	}
+
+	void End(Reflector& r)
+	{
+		path.erase(path.end() - (r.GetName().size() + 1), path.end());
+	}
+
+	void PreProperty(ExactProperty& p)
+	{
+		GenerateUniqueName(p);
+	}
+	
+	void Visit(int32& t, ExactProperty& p)
+	{
+		ImGui::DragInt(name, &t, 0.1f);
+	}
+
+	void Visit(bool& t, ExactProperty& p)
+	{
+		if (p.HasFlags(NoEdit))
+		{
+			bool t1 = t;
+			ImGui::Checkbox(name, &t1);
+		}
+		else
+		{
+			ImGui::Checkbox(name, &t);
+		}
+	}
+	
+	void Visit(float& t, ExactProperty& p)
+	{
+		ImGui::DragFloat(name, &t, 0.01f);
+	}
+
+	void Visit(glm::vec3& t, ExactProperty& p)
+	{
+		if (p.HasFlags(PropertyFlags::Color))
+		{
+			ImGui::ColorEdit3(name, ImUtil::FromVec3(t), ImGuiColorEditFlags_DisplayHSV);
+		}
+		else 
+		{
+			ImGui::DragFloat3(name, ImUtil::FromVec3(t), 0.01f);
+		}
+	}
+
+	void Visit(std::string& ref, ExactProperty& p) 
+	{
+		if (p.HasFlags(PropertyFlags::Multiline))
+		{
+			ImGui::InputTextMultiline(name, &ref, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16));
+		}
+		else
+		{
+			ImGui::InputText(name, &ref);
+		}
+	}
+
+	template<typename PodType>
+	void Visit(PodHandle<PodType>& pod, ExactProperty& p)
+	{
+		if (!pod.HasBeenAssigned())
+		{
+			std::string s = "Unitialised handle: " + p.GetName();
+			ImGui::Text(s.c_str());
+			return;
+		}
+
+		auto str = Engine::GetAssetManager()->GetPodPath(pod).string();
+		if (ImGui::CollapsingHeader(name))
+		{
+			GenerateUniqueName(p);
+			ImGui::InputText(name, &str, ImGuiInputTextFlags_ReadOnly);
+			depth++;
+			ImGui::Indent();
+			
+			CallVisitorOnEveryProperty(pod.operator->(), *this);
+
+			ImGui::Unindent();
+			depth--;
+		}
+	}
+
+
+	template<typename T>
+	void Visit(T& t, ExactProperty& p)
+	{
+		std::string s = "unhandled property: " + p.GetName();
+		ImGui::Text(s.c_str());
+	}
+
+
+};
+
+
+}
+
+
 Editor::Editor()
 	: m_selectedNode(nullptr)
 	, m_updateWorld(true)
@@ -55,10 +235,13 @@ Editor::~Editor()
 {
 	ImguiImpl::CleanupContext();
 }
+
 	
 void Editor::UpdateEditor()
 {
 	ImguiImpl::NewFrame();
+
+
 
 	// TODO: static fix this
 	static ImGui::FileBrowser sfb = ImGui::FileBrowser(
@@ -172,41 +355,6 @@ void Editor::Outliner()
 	ImGui::EndChild();
 }
 
-namespace
-{
-bool AddReflector(Reflector& reflector, int32 depth = 0)
-{
-	bool dirty = false;
-
-	for (auto& prop : reflector.GetProperties())
-	{
-		auto str = prop.GetName().c_str();
-
-		dirty |= prop.SwitchOnType(
-		[&str](int& ref) {
-			return ImGui::DragInt(str, &ref, 0.1f);
-		},
-		[&str](bool& ref) {
-			return ImGui::Checkbox(str, &ref);
-		},
-		[&str](float& ref) {
-			return ImGui::DragFloat(str, &ref, 0.01f);
-		},
-		[&str, &prop](glm::vec3& ref) {
-			if (prop.HasFlags(PropertyFlags::Color))
-			{
-				return ImGui::ColorEdit3(str, ImUtil::FromVec3(ref), ImGuiColorEditFlags_DisplayHSV);
-			}
-			return ImGui::DragFloat3(str, ImUtil::FromVec3(ref), 0.01f);
-		},
-		[&str](std::string& ref) {
-			return ImGui::InputText(str, &ref);
-		});
-	}
-	return dirty;
-}
-}
-
 void Editor::PropertyEditor(Node* node)
 {
 	ImGui::BeginChild("Properties", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
@@ -236,15 +384,14 @@ void Editor::PropertyEditor(Node* node)
 	}
 
 	ImGui::Separator();
-	bool dirty = AddReflector(node->m_reflector);
+	
+	CallVisitorOnEveryProperty(node, ReflectionToImguiVisitor());
+
 	ImGui::EndChild();
 
 	if (dirtyMatrix)
 	{
 		node->m_localMatrix = utl::GetTransformMat(node->m_localTranslation, node->m_localOrientation, node->m_localScale);
-	}
-	if (dirty || dirtyMatrix) 
-	{
 		node->MarkDirty();
 	}
 }

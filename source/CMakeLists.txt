@@ -160,6 +160,7 @@ set(HEADER_FILES
 	system/reflection/Reflection.h
 	system/reflection/Reflector.h
 	system/reflection/Property.h
+	system/reflection/ReflectionTools.h
 	
 	event/Event.h
 
