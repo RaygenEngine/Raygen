@@ -5,8 +5,6 @@
 // Objects that are reflected are supposed to contain a Reflector class variable
 // 
 
-
-#include "GLM/glm.hpp"
 #include <unordered_map>
 #include <vector>
 #include <string>

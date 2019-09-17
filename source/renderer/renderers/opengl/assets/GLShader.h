@@ -3,7 +3,7 @@
 #include "renderer/renderers/opengl/GLAsset.h"
 #include "asset/loaders/ShaderLoader.h"
 
-#include "GLAD/glad.h"
+#include "glad/glad.h"
 
 namespace OpenGL
 {

@@ -2,7 +2,7 @@
 
 #include "renderer/renderers/opengl/GLAsset.h"
 
-#include "GLAD/glad.h"
+#include "glad/glad.h"
 
 
 namespace OpenGL
