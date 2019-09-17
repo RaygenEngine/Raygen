@@ -13,17 +13,17 @@ namespace OpenGL
 		MAKE_METADATA(GLTestRenderer)
 
 	protected:
-		//std::shared_ptr<GLShader> m_instancedShader;
-		GLShader* m_nonInstancedShader;
+
+		GLShader* m_testShader;
+		GLShader* m_screenQuadShader;
 
 		
 		std::vector<std::shared_ptr<GLTestGeometry>> m_geometryObservers;
-
-		//std::vector<std::shared_ptr<GLInstancedModel>> m_instancedGeometries;
-
-		//std::shared_ptr<GLTexture> m_skyTexture;
-
 		CameraNode* m_camera;
+
+		GLuint m_fbo;
+		GLuint m_outTexture;
+		GLuint m_depthStencilRbo;
 
 		int32 m_previewMode;
 
@@ -31,18 +31,21 @@ namespace OpenGL
 		DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
 
 		GLTestRenderer()
-			: m_camera(nullptr), m_previewMode(0) 
+			: m_camera(nullptr),
+			  m_fbo(0),
+			  m_outTexture(0),
+		      m_depthStencilRbo(0),
+		      m_previewMode(0)
 		{
 			m_resizeListener.BindMember(this, &GLTestRenderer::WindowResize);
 		}
 
-		~GLTestRenderer() = default;
+		~GLTestRenderer();
 
 		bool InitScene(int32 width, int32 height) override;
 		
 		void WindowResize(int32 width, int32 height);
 		void Render() override;
-
 
 		void Update() override;
 	};

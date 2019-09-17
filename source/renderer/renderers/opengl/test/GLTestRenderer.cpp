@@ -7,41 +7,54 @@
 #include "world/nodes/geometry/GeometryNode.h"
 #include "asset/AssetManager.h"
 #include "system/Engine.h"
-#include "renderer/renderers/opengl/assets/GLCubeMap.h"
 #include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/assets/GLShader.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
 
+#include "glad/glad.h"
+
 namespace OpenGL
 {
+	GLTestRenderer::~GLTestRenderer()
+	{
+		glDeleteFramebuffers(1, &m_fbo);
+		glDeleteTextures(1, &m_outTexture);
+		glDeleteRenderbuffers(1, &m_depthStencilRbo);
+	}
+
 	bool GLTestRenderer::InitScene(int32 width, int32 height)
 	{
 		auto am = Engine::GetAssetManager();
+
+		// shaders
+		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("screen_quad.shader.json");
+		m_screenQuadShader = GetGLAssetManager()->GetOrMakeFromUri<GLShader>(am->GetPodPath(shaderAsset));
 		
-		const auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("test.shader.json");
+		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("test.shader.json");
+		m_testShader = GetGLAssetManager()->GetOrMakeFromUri<GLShader>(am->GetPodPath(shaderAsset));
 		
-		m_nonInstancedShader = GetGLAssetManager()->GetOrMakeFromUri<GLShader>(am->GetPodPath(shaderAsset));
-		
-		m_nonInstancedShader->SetUniformLocation("mvp");
-		m_nonInstancedShader->SetUniformLocation("m");
-		m_nonInstancedShader->SetUniformLocation("normalMatrix");
-		m_nonInstancedShader->SetUniformLocation("mode");
-		m_nonInstancedShader->SetUniformLocation("viewPos");
-		m_nonInstancedShader->SetUniformLocation("baseColorFactor");
-		m_nonInstancedShader->SetUniformLocation("emissiveFactor");
-		m_nonInstancedShader->SetUniformLocation("metallicFactor");
-		m_nonInstancedShader->SetUniformLocation("roughnessFactor");
-		m_nonInstancedShader->SetUniformLocation("normalScale");
-		m_nonInstancedShader->SetUniformLocation("occlusionStrength");
-		m_nonInstancedShader->SetUniformLocation("alphaMode");
-		m_nonInstancedShader->SetUniformLocation("alphaCutoff");
-		m_nonInstancedShader->SetUniformLocation("doubleSided");
-		m_nonInstancedShader->SetUniformLocation("baseColorSampler");
-		m_nonInstancedShader->SetUniformLocation("occlusionMetallicRoughnessSampler");
-		m_nonInstancedShader->SetUniformLocation("emissiveSampler");
-		m_nonInstancedShader->SetUniformLocation("normalSampler");
-		m_nonInstancedShader->SetUniformLocation("occlusionSampler");
-	
+		auto& testShader = *m_testShader;
+		testShader += "mvp";
+		testShader += "m";
+		testShader += "normalMatrix";
+		testShader += "mode";
+		testShader += "viewPos";
+		testShader += "baseColorFactor";
+		testShader += "emissiveFactor";
+		testShader += "metallicFactor";
+		testShader += "roughnessFactor";
+		testShader += "normalScale";
+		testShader += "occlusionStrength";
+		testShader += "alphaMode";
+		testShader += "alphaCutoff";
+		testShader += "doubleSided";
+		testShader += "baseColorSampler";
+		testShader += "metallicRoughnessSampler";
+		testShader += "emissiveSampler";
+		testShader += "normalSampler";
+		testShader += "occlusionSampler";
+
+		// world data
 		auto* user = Engine::GetWorld()->GetAvailableNodeSpecificSubType<FreeformUserNode>();
 
 		// TODO: better way to check world requirements
@@ -56,83 +69,96 @@ namespace OpenGL
 		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>())
 			m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, GLTestGeometry>(this, geometryNode));
 
-		//auto* sky = GetWorld()->GetAvailableNodeSpecificSubType<World::SkyHDRNode>();
+		// fbo
+		glGenFramebuffers(1, &m_fbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+		
+		glGenTextures(1, &m_outTexture);
+		glBindTexture(GL_TEXTURE_2D, m_outTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outTexture, 0);
 
-		//RT_XENGINE_ASSERT_RETURN_FALSE(sky, "Missing freeform user node!");
-
-		//m_skyTexture = RequestGLTexture(sky->GetSkyHDR());
-
+		glGenRenderbuffers(1, &m_depthStencilRbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, m_depthStencilRbo);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_depthStencilRbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+		
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			LOG_FATAL("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+		
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		
 		return true;
 	}
 
 	void GLTestRenderer::WindowResize(int32 width, int32 height)
 	{
+
 		glViewport(0, 0, width, height);
 	}
 
 	void GLTestRenderer::Render()
 	{
-		auto bgcl = Engine::GetWorld()->GetRoot()->GetBackgroundColor();
+		// first pass
+		glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
-		glm::mat4 vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
-
-		glClearColor(bgcl.r, bgcl.g, bgcl.b, 1.0);
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		const auto backgroundColor = Engine::GetWorld()->GetRoot()->GetBackgroundColor();
+		glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT /*| GL_STENCIL_BUFFER_BIT*/);
 
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LEQUAL);
 
-		glUseProgram(m_nonInstancedShader->GetGLHandle());
+		auto& testShader = *m_testShader;
 
+		glUseProgram(testShader.GetId());
 
-		// TODO: glm::value_ptr
 		// global uniforms
-		glUniform3fv(m_nonInstancedShader->GetUniformLocation("viewPos"), 1, &m_camera->GetWorldTranslation()[0]);
-		glUniform1i(m_nonInstancedShader->GetUniformLocation("mode"), m_previewMode);
+		glUniform3fv(testShader["viewPos"], 1, glm::value_ptr(m_camera->GetWorldTranslation()));
+		glUniform1i(testShader["mode"], m_previewMode);
 
+		const auto vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
 		// render geometry (non-instanced)
 		for (auto& geometry : m_geometryObservers)
 		{
 			auto m = geometry->GetNode()->GetWorldMatrix();
 			auto mvp = vp * m;
 
-			GLModel* model = geometry->glModel;
-
-			glUniformMatrix4fv(m_nonInstancedShader->GetUniformLocation("mvp"), 1, GL_FALSE, &mvp[0][0]);
-			glUniformMatrix4fv(m_nonInstancedShader->GetUniformLocation("m"), 1, GL_FALSE, &m[0][0]);
-			glUniformMatrix3fv(m_nonInstancedShader->GetUniformLocation("normalMatrix"), 1, GL_FALSE, &glm::transpose(glm::inverse(glm::mat3(m)))[0][0]);
+			glUniformMatrix4fv(testShader["mvp"], 1, GL_FALSE, glm::value_ptr(mvp));
+			glUniformMatrix4fv(testShader["m"], 1, GL_FALSE, glm::value_ptr(m));
+			glUniformMatrix3fv(testShader["normalMatrix"], 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(glm::mat3(m)))));
 			
 			for (auto& glMesh : geometry->glModel->GetGLMeshes())
 			{
 				glBindVertexArray(glMesh.vao);
 
-				GLMaterial& glMaterial = *glMesh.material;
+				GLMaterial* glMaterial = glMesh.material;
+				PodHandle<MaterialPod> materialData = glMaterial->m_materialPod;
 
-				PodHandle<MaterialPod> materialData = glMaterial.GetMaterialAsset();
+				glUniform4fv(testShader["baseColorFactor"], 1, glm::value_ptr(materialData->baseColorFactor));
+				glUniform3fv(testShader["emissiveFactor"], 1, glm::value_ptr(materialData->emissiveFactor));
+				glUniform1f(testShader["metallicFactor"], materialData->metallicFactor);
+				glUniform1f(testShader["roughnessFactor"], materialData->roughnessFactor);
+				glUniform1f(testShader["normalScale"], materialData->normalScale);
+				glUniform1f(testShader["occlusionStrength"], materialData->occlusionStrength);
+				glUniform1i(testShader["alphaMode"], materialData->alphaMode);
+				glUniform1f(testShader["alphaCutoff"], materialData->alphaCutoff);
+				glUniform1i(testShader["doubleSided"], materialData->doubleSided);
 				
-				glUniform4fv(m_nonInstancedShader->GetUniformLocation("baseColorFactor"), 1, glm::value_ptr(materialData->baseColorFactor));
-				glUniform3fv(m_nonInstancedShader->GetUniformLocation("emissiveFactor"), 1, glm::value_ptr(materialData->emissiveFactor));
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("metallicFactor"), materialData->metallicFactor);
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("roughnessFactor"), materialData->roughnessFactor);
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("normalScale"), materialData->normalScale);
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("occlusionStrength"), materialData->occlusionStrength);
-				glUniform1i(m_nonInstancedShader->GetUniformLocation("alphaMode"), materialData->alphaMode);
-				glUniform1f(m_nonInstancedShader->GetUniformLocation("alphaCutoff"), materialData->alphaCutoff);
-				glUniform1i(m_nonInstancedShader->GetUniformLocation("doubleSided"), materialData->doubleSided);
-				
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("baseColorSampler"), glMaterial.GetBaseColorTexture()->GetGLBindlessHandle());
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("metallicRoughnessSampler"), glMaterial.GetMetallicRoughnessTexture()->GetGLBindlessHandle());
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("occlusionSampler"), glMaterial.GetOcclusionTexture()->GetGLBindlessHandle());
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("emissiveSampler"), glMaterial.GetEmissiveTexture()->GetGLBindlessHandle());
-
-				// may not exist
-				const auto normalText = glMaterial.GetNormalTexture();
-				glUniformHandleui64ARB(m_nonInstancedShader->GetUniformLocation("normalSampler"), normalText ? normalText->GetGLBindlessHandle() : 0);
+				glUniformHandleui64ARB(testShader["baseColorSampler"], glMaterial->baseColorTexture->GetBindlessId());
+				glUniformHandleui64ARB(testShader["metallicRoughnessSampler"], glMaterial->metallicRoughnessTexture->GetBindlessId());
+				glUniformHandleui64ARB(testShader["occlusionSampler"], glMaterial->occlusionTexture->GetBindlessId());
+				glUniformHandleui64ARB(testShader["emissiveSampler"], glMaterial->emissiveTexture->GetBindlessId());
+				glUniformHandleui64ARB(testShader["normalSampler"], glMaterial->normalTexture->GetBindlessId());
 
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 									
-				glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(glMesh.count), GL_UNSIGNED_INT, (GLvoid*)0);
+				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
 			
 				glBindVertexArray(0);
 			}
@@ -142,7 +168,23 @@ namespace OpenGL
 		glDisable(GL_CULL_FACE);
 
 		glUseProgram(0);
+
+		// second pass
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glUseProgram(m_screenQuadShader->GetId());
+
+		glBindTexture(GL_TEXTURE_2D, m_outTexture);
+
+		// big triangle trick, no vao
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+		
+		glUseProgram(0);
 	}
 
 	void GLTestRenderer::Update()

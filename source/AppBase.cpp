@@ -52,13 +52,12 @@ int32 AppBase::Main(int32 argc, char* argv[])
 		return -1;
 	}
 
-	// Start the renderer
-	engine.SwitchRenderer(0);
-
-
 	Window* window = Engine::GetMainWindow();
 	// Show the window
 	window->Show();
+
+	// Start the renderer
+	engine.SwitchRenderer(0);
 
 	if (m_lockMouse)
 	{
