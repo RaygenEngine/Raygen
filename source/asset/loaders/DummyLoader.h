@@ -30,7 +30,7 @@ namespace CustomLoader
 		auto str = path.string().find_last_of('#');
 		auto imgPath = path.string().substr(str+1);
 		
-		pod->image = AssetManager::GetOrCreate<ImagePod>(path);
+		pod->images.push_back(AssetManager::GetOrCreate<ImagePod>(imgPath));
 		return true;
 	}
 	

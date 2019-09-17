@@ -41,7 +41,7 @@ namespace GltfTextureLoader
 			LOG_ANY("");
 		}
 
-		pod->image = imgAsset;
+		pod->images.push_back(imgAsset);
 
 		const auto samplerIndex = gltfTexture.sampler;
 		// if sampler exists

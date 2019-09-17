@@ -17,7 +17,7 @@ struct ImagePod : DeletableAssetPod
 	// use malloc and free
 	void* data{ nullptr };
 
-	// if(hdr) data -> float* else data -> byte*
-	bool hdr{ false };
+	// if(isHdr) data -> float* else data -> byte*
+	bool isHdr{ false };
 };
 

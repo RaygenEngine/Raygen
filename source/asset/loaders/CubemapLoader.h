@@ -1,11 +1,11 @@
 #pragma once
 
 #include "asset/AssetManager.h"
-#include "asset/pods/CubemapPod.h"
+#include "asset/pods/TexturePod.h"
 
 namespace CubemapLoader
 {
-	inline bool Load(CubemapPod* pod, const fs::path& path)
+	inline bool Load(TexturePod* pod, const fs::path& path)
 	{
 		std::ifstream t(path);
 
@@ -20,7 +20,8 @@ namespace CubemapLoader
 			char name[256];
 			t.getline(name, 256);
 
-			pod->sides[i]->image = AssetManager::GetOrCreate<ImagePod>(name);
+			pod->type = TextureType::TEXTURE_CUBEMAP;
+			pod->images.push_back(AssetManager::GetOrCreate<ImagePod>(name));
 		}
 
 		return true;

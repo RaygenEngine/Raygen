@@ -29,11 +29,9 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/GLAssetManager.cpp
 	renderer/renderers/opengl/GLRendererBase.cpp
 	
-	renderer/renderers/opengl/assets/GLInstancedModel.cpp
 	renderer/renderers/opengl/assets/GLModel.cpp
 	renderer/renderers/opengl/assets/GLShader.cpp
 	renderer/renderers/opengl/assets/GLTexture.cpp
-	renderer/renderers/opengl/assets/GLCubeMap.cpp
 	renderer/renderers/opengl/assets/GLMaterial.cpp
 	
 	renderer/renderers/opengl/test/GLTestRenderer.cpp
@@ -98,8 +96,7 @@ set(HEADER_FILES
 	asset/pods/ModelPod.h
 	asset/pods/ImagePod.h
 	asset/pods/ShaderPod.h
-	asset/pods/TextPod.h
-	asset/pods/CubemapPod.h
+	asset/pods/StringPod.h
 	asset/pods/XMLDocPod.h
 	asset/pods/GltfFilePod.h
 	
@@ -144,11 +141,9 @@ set(HEADER_FILES
 	renderer/renderers/opengl/GLRendererBase.h
 	renderer/renderers/opengl/GLUtil.h
 	
-	renderer/renderers/opengl/assets/GLInstancedModel.h
 	renderer/renderers/opengl/assets/GLModel.h
 	renderer/renderers/opengl/assets/GLShader.h
 	renderer/renderers/opengl/assets/GLTexture.h
-	renderer/renderers/opengl/assets/GLCubeMap.h
 	renderer/renderers/opengl/assets/GLMaterial.h
 
 	renderer/renderers/opengl/test/GLTestRenderer.h

@@ -18,10 +18,10 @@ namespace ShaderLoader
 		char buf[256];
 
 		t.getline(buf, 256);
-		pod->vertex = AssetManager::GetOrCreate<TextPod>(buf);
+		pod->vertex = AssetManager::GetOrCreate<StringPod>(buf);
 
 		t.getline(buf, 256);
-		pod->fragment = AssetManager::GetOrCreate<TextPod>(buf);
+		pod->fragment = AssetManager::GetOrCreate<StringPod>(buf);
 
 		return true;
 	}

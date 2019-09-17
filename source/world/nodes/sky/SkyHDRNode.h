@@ -5,6 +5,7 @@
 
 class SkyHDRNode : public Node
 {
+	// TODO: this is a texture
 	PodHandle<ImagePod> m_hdrData;
 
 public:

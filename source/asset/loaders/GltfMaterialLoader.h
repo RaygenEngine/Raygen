@@ -84,7 +84,6 @@ namespace GltfMaterialLoader
 		auto& normalTextureInfo = gltfMaterial.normalTexture;
 		LoadTexture(normalTextureInfo, pod->normalTexture, pod->normalTexCoordIndex, DefType::Normal);
 
-		// TODO: pack if different
 		auto& metallicRougnessTextureInfo = gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture;
 		LoadTexture(metallicRougnessTextureInfo, pod->metallicRoughnessTexture, pod->metallicRoughnessTexCoordIndex, DefType::White);
 		

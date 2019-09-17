@@ -54,7 +54,7 @@ namespace OpenGL
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.indices.size() * sizeof(data.indices[0]),
 			&data.indices[0], usage);
 
-		glMesh.count = data.indices.size();
+		glMesh.count = static_cast<GLsizei>(data.indices.size());
 
 		
 		glMesh.material = GetGLAssetManager(this)->GetOrMakeFromUri<GLMaterial>(Engine::GetAssetManager()->GetPodPath(data.material));
