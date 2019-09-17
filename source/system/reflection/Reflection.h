@@ -83,6 +83,7 @@ enum class PropertyType
 	Bool,
 	Float,
 	Vec3,
+	Vec4,
 	String,
 	
 	Handle_Cubemap,
@@ -142,17 +143,17 @@ template<> constexpr bool IsReflected<int32> = true;
 template<> constexpr bool IsReflected<bool> = true;
 template<> constexpr bool IsReflected<float> = true;
 template<> constexpr bool IsReflected<glm::vec3> = true;
+template<> constexpr bool IsReflected<glm::vec4> = true;
 template<> constexpr bool IsReflected<std::string> = true;
 
 
 
-struct CubemapPod;
 struct GltfFilePod;
 struct ImagePod;
 struct MaterialPod;
 struct ModelPod;
 struct ShaderPod;
-struct TextPod;
+struct StringPod;
 struct TexturePod;
 struct XMLDocPod;
 
@@ -162,36 +163,34 @@ template<> PropertyType ReflectionFromType<int32> = PropertyType::Int;
 template<> PropertyType ReflectionFromType<bool> = PropertyType::Bool;
 template<> PropertyType ReflectionFromType<float> = PropertyType::Float;
 template<> PropertyType ReflectionFromType<glm::vec3> = PropertyType::Vec3;
+template<> PropertyType ReflectionFromType<glm::vec4> = PropertyType::Vec4;
 template<> PropertyType ReflectionFromType<std::string> = PropertyType::String;
 
 
-template<> PropertyType ReflectionFromType<PodHandle<CubemapPod>> = PropertyType::Handle_Cubemap;
 template<> PropertyType ReflectionFromType<PodHandle<GltfFilePod>> = PropertyType::Handle_GltfFile;
 template<> PropertyType ReflectionFromType<PodHandle<ImagePod>> = PropertyType::Handle_Image;
 template<> PropertyType ReflectionFromType<PodHandle<MaterialPod>> = PropertyType::Handle_Material;
 template<> PropertyType ReflectionFromType<PodHandle<ModelPod>> = PropertyType::Handle_Model;
 template<> PropertyType ReflectionFromType<PodHandle<ShaderPod>> = PropertyType::Handle_Shader;
-template<> PropertyType ReflectionFromType<PodHandle<TextPod>> = PropertyType::Handle_Text;
+template<> PropertyType ReflectionFromType<PodHandle<StringPod>> = PropertyType::Handle_Text;
 template<> PropertyType ReflectionFromType<PodHandle<TexturePod>> = PropertyType::Handle_Texture;
 template<> PropertyType ReflectionFromType<PodHandle<XMLDocPod>> = PropertyType::Handle_XMLDoc;
 
-template<> PropertyType ReflectionFromType<std::vector<PodHandle<CubemapPod>>> = PropertyType::Vector_Cubemap;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<GltfFilePod>>> = PropertyType::Vector_GltfFile;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<ImagePod>>> = PropertyType::Vector_Image;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<MaterialPod>>> = PropertyType::Vector_Material;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<ModelPod>>> = PropertyType::Vector_Model;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<ShaderPod>>> = PropertyType::Vector_Shader;
-template<> PropertyType ReflectionFromType<std::vector<PodHandle<TextPod>>> = PropertyType::Vector_Text;
+template<> PropertyType ReflectionFromType<std::vector<PodHandle<StringPod>>> = PropertyType::Vector_Text;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<TexturePod>>> = PropertyType::Vector_Texture;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<XMLDocPod>>> = PropertyType::Vector_XMLDoc;
 
-template<> PropertyType ReflectionFromType<std::vector<PodHandle<CubemapPod>*>> = PropertyType::VectorPtr_Cubemap;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<GltfFilePod>*>> = PropertyType::VectorPtr_GltfFile;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<ImagePod>*>> = PropertyType::VectorPtr_Image;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<MaterialPod>*>> = PropertyType::VectorPtr_Material;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<ModelPod>*>> = PropertyType::VectorPtr_Model;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<ShaderPod>*>> = PropertyType::VectorPtr_Shader;
-template<> PropertyType ReflectionFromType<std::vector<PodHandle<TextPod>*>> = PropertyType::VectorPtr_Text;
+template<> PropertyType ReflectionFromType<std::vector<PodHandle<StringPod>*>> = PropertyType::VectorPtr_Text;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<TexturePod>*>> = PropertyType::VectorPtr_Texture;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<XMLDocPod>*>> = PropertyType::VectorPtr_XMLDoc;
 

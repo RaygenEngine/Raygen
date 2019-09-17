@@ -159,7 +159,7 @@ void main()
 			
 		case 24: // opacity final
 			out_color = baseColor;
-			if(baseColor.a < 0.5)
+			if(baseColor.a < alphaCutoff)
 				discard;
 			break;
 			

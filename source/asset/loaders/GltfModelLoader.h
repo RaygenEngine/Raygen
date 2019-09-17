@@ -150,7 +150,7 @@ namespace GltfModelLoader
 			return;
 		}
 
-		bool LoadGeometryGroup(const fs::path& parentPath, GeometryGroup& geom, tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData,
+		bool LoadGeometryGroup(ModelPod* pod, const fs::path& parentPath, GeometryGroup& geom, tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData,
 			const glm::mat4& transformMat)
 		{
 			// mode
@@ -302,7 +302,7 @@ namespace GltfModelLoader
 			return true;
 		}
 
-		bool LoadMesh(const fs::path& parentPath, Mesh& mesh, tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
+		bool LoadMesh(ModelPod* pod, const fs::path& parentPath, Mesh& mesh, tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
 		{
 			mesh.geometryGroups.resize(meshData.primitives.size());
 
@@ -314,7 +314,7 @@ namespace GltfModelLoader
 				auto& primitiveData = meshData.primitives.at(i);
 
 				// if one of the geometry groups fails to load
-				if (!LoadGeometryGroup(parentPath, mesh.geometryGroups[i], modelData, primitiveData, transformMat))
+				if (!LoadGeometryGroup(pod, parentPath, mesh.geometryGroups[i], modelData, primitiveData, transformMat))
 				{
 					LOG_ERROR("Failed to load geometry group, name: {}", geomName);
 					return false;
@@ -391,7 +391,7 @@ namespace GltfModelLoader
 					Mesh mesh;
 
 					// if missing mesh
-					if (!LoadMesh(pPath, mesh, model, gltfMesh, localTransformMat))
+					if (!LoadMesh(pod, pPath, mesh, model, gltfMesh, localTransformMat))
 					{
 						LOG_ERROR("Failed to load mesh, name: {}", gltfMesh.name);
 						return false;
@@ -407,6 +407,16 @@ namespace GltfModelLoader
 			return true;
 		};
 
-		return RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
+		bool result = RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
+			
+		for (auto& mesh : pod->meshes)
+		{
+			for (auto& geomGroup : mesh.geometryGroups)
+			{
+				pod->materials.push_back(&geomGroup.material);
+			}
+		}
+
+		return result;
 	}
 };

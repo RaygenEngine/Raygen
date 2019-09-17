@@ -8,7 +8,7 @@ struct TexturePod : AssetPod
 {
 	STATIC_REFLECTOR(TexturePod)
 	{
-		S_REFLECT_VAR(image);
+		S_REFLECT_VAR(images);
 	}
 	static bool Load(TexturePod* pod, const fs::path& path);
 

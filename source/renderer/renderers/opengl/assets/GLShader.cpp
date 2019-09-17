@@ -2,6 +2,8 @@
 
 #include "renderer/renderers/opengl/assets/GLShader.h"
 #include "asset/AssetManager.h"
+#include "asset/pods/StringPod.h"
+#include "asset/AssetPod.h"
 
 namespace OpenGL
 {
