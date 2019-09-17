@@ -7,6 +7,10 @@
 
 struct GltfFilePod : DeletableAssetPod
 {
+	STATIC_REFLECTOR(GltfFilePod)
+	{
+
+	}
 	static bool Load(GltfFilePod* pod, const fs::path& path);
 
 	tinygltf::Model data;

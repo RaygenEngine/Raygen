@@ -7,6 +7,10 @@
 
 struct XMLDocPod : DeletableAssetPod
 {
+	STATIC_REFLECTOR(XMLDocPod)
+	{
+
+	}
 	static bool Load(XMLDocPod* pod, const fs::path& path);
 
 	tinyxml2::XMLDocument document;
