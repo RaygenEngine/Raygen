@@ -18,7 +18,7 @@ void ImguiImpl::InitContext()
 	}
 	ImGui::CreateContext();
 
-	ImGui::StyleColorsLight();
+	ImGui::StyleColorsDark();
 
 	ImGui_ImplWin32_Init(Engine::GetMainWindow()->GetHWND());
 	ImGui::GetIO().IniFilename = "scenes/imgui.ini";

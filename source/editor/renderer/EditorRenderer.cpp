@@ -1,12 +1,15 @@
 #include "pch.h"
 #include "editor/renderer/EditorRenderer.h"
 #include "editor/imgui/ImguiImpl.h"
+#include "editor/Editor.h"
 
 void EditorRenderer::Render()
 {
 	OpenGL::GLTestRenderer::Render();
-
-	ImguiImpl::RenderOpenGL();
+	if (Engine::GetEditor()->m_showImgui)
+	{
+		ImguiImpl::RenderOpenGL();
+	}
 }
 
 

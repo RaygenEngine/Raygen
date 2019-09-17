@@ -256,6 +256,33 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 		}
 	}
 
+	template<typename T>
+	void Visit(std::vector<PodHandle<T>>& t, ExactProperty& p)
+	{
+		if (ImGui::CollapsingHeader(name))
+		{
+			ImGui::Indent();
+			int32 index = 0;
+			for (auto& handle : t)
+			{
+				++index;
+				std::string sname = "|" + p.GetName() + std::to_string(index);
+				size_t len = sname.size();
+				path += sname;
+
+				GenerateUniqueName(p);
+				if (ImGui::CollapsingHeader(name))
+				{
+					ImGui::Indent();
+					CallVisitorOnEveryProperty(handle.operator->(), *this);
+					ImGui::Unindent();
+				}
+
+				path.erase(path.end() - (len), path.end());
+			}
+			ImGui::Unindent();
+		}
+	}
 
 };
 
@@ -274,12 +301,21 @@ Editor::~Editor()
 {
 	ImguiImpl::CleanupContext();
 }
-
+#include "editor/renderer/EditorRenderer.h"
+#include "system/Input.h"
 	
 void Editor::UpdateEditor()
 {
-	ImguiImpl::NewFrame();
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::~))
+	{
+		m_showImgui = !m_showImgui;
+	}
+	if (!m_showImgui)
+	{
+		return;
+	}
 
+	ImguiImpl::NewFrame();
 
 
 	// TODO: static fix this
@@ -310,6 +346,15 @@ void Editor::UpdateEditor()
 		lfb.SetTitle("Load World"); 
 		lfb.Open();
 	}
+
+	auto renderer = Engine::GetRenderer<EditorRenderer>();
+	if (renderer)
+	{
+		const char* str = renderer->m_previewModeString.c_str();
+		ImGui::Text(str);
+	}
+	
+
 
 	sfb.Display();
 	lfb.Display();

@@ -21,7 +21,7 @@ struct MaterialPod : AssetPod
 		S_REFLECT_VAR(normalTexCoordIndex);
 		S_REFLECT_VAR(emissiveTexCoordIndex);
 
-
+		S_REFLECT_VAR(baseColorFactor, PropertyFlags::Color);
 		S_REFLECT_VAR(emissiveFactor, PropertyFlags::Color);
 
 		S_REFLECT_VAR(metallicFactor);

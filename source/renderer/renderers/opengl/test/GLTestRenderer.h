@@ -10,10 +10,9 @@ namespace OpenGL
 
 	class GLTestRenderer :  public GLRendererBase
 	{
-		MAKE_METADATA(GLTestRenderer)
+		MAKE_METADATA(GLTestRenderer);
 
 	protected:
-
 		GLShader* m_testShader;
 		GLShader* m_screenQuadShader;
 
@@ -26,8 +25,9 @@ namespace OpenGL
 		GLuint m_depthStencilRbo;
 
 		int32 m_previewMode;
-
 	public:
+		std::string m_previewModeString{};
+
 		DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
 
 		GLTestRenderer()
