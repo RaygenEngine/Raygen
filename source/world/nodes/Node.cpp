@@ -127,33 +127,6 @@ bool Node::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
 	return true;
 }
 
-void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
-{
-	using namespace ParsingAux;
-
-	for (auto& prop : m_reflector.GetProperties())
-	{
-		auto str = prop.GetName().c_str();
-		prop.SwitchOnType(
-			[&](int& ref) {
-			xmlData->QueryIntAttribute(str, &ref);
-		},
-			[&](bool& ref) {
-			xmlData->QueryBoolAttribute(str, &ref);
-		},
-			[&](float& ref) {
-			xmlData->QueryFloatAttribute(str, &ref);
-		},
-			[&](glm::vec3& ref) {
-			ReadFloatsAttribute(xmlData, str, ref);
-		},
-			[&](std::string& ref) {
-			ReadStringAttribute(xmlData, str, ref);
-		});
-	}
-	LoadAttributesFromXML(xmlData);
-}
-
 void Node::Move(const glm::vec3& direction, float magnitude)
 {
 	m_localTranslation += direction * magnitude;

@@ -16,7 +16,7 @@
 #include "asset/pods/MaterialPod.h"
 #include "asset/pods/ModelPod.h"
 #include "asset/pods/ShaderPod.h"
-#include "asset/pods/TextPod.h"
+#include "asset/pods/StringPod.h"
 #include "asset/pods/TexturePod.h"
 #include "asset/pods/XMLDocPod.h"
 
@@ -172,6 +172,18 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 		}
 	}
 
+	void Visit(glm::vec4& t, ExactProperty& p)
+	{
+		if (p.HasFlags(PropertyFlags::Color))
+		{
+			ImGui::ColorEdit4(name, ImUtil::FromVec4(t), ImGuiColorEditFlags_DisplayHSV);
+		}
+		else
+		{
+			ImGui::DragFloat4(name, ImUtil::FromVec4(t), 0.01f);
+		}
+	}
+
 	void Visit(std::string& ref, ExactProperty& p) 
 	{
 		if (p.HasFlags(PropertyFlags::Multiline))
@@ -209,12 +221,39 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 		}
 	}
 
-
 	template<typename T>
 	void Visit(T& t, ExactProperty& p)
 	{
 		std::string s = "unhandled property: " + p.GetName();
 		ImGui::Text(s.c_str());
+	}
+
+	void Visit(std::vector<PodHandle<MaterialPod>*>& t, ExactProperty& p)
+	{
+		if (ImGui::CollapsingHeader(name))
+		{
+			ImGui::Indent();
+			int32 index = 0;
+			for (auto& handle : t)
+			{
+
+				++index;
+				std::string sname = "|" + p.GetName() + std::to_string(index);
+				int32 len = sname.size();
+				path += sname;
+				
+				GenerateUniqueName(p);
+				if (ImGui::CollapsingHeader(name))
+				{
+					ImGui::Indent();
+					CallVisitorOnEveryProperty(handle->operator->(), *this);
+					ImGui::Unindent();
+				}
+					
+				path.erase(path.end() - (len), path.end());
+			}
+			ImGui::Unindent();
+		}
 	}
 
 

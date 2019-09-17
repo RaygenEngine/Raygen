@@ -10,9 +10,19 @@ struct MaterialPod : AssetPod
 	STATIC_REFLECTOR(MaterialPod)
 	{
 		S_REFLECT_VAR(baseColorTexture);
-		S_REFLECT_VAR(occlusionMetallicRoughnessTexture);
+		S_REFLECT_VAR(metallicRoughnessTexture);
+		S_REFLECT_VAR(occlusionTexture);
 		S_REFLECT_VAR(normalTexture);
 		S_REFLECT_VAR(emissiveTexture);
+
+		S_REFLECT_VAR(baseColorTexCoordIndex)
+		S_REFLECT_VAR(metallicRoughnessTexCoordIndex);
+		S_REFLECT_VAR(occlusionTexCoordIndex);
+		S_REFLECT_VAR(normalTexCoordIndex);
+		S_REFLECT_VAR(emissiveTexCoordIndex);
+
+
+		S_REFLECT_VAR(emissiveFactor, PropertyFlags::Color);
 
 		S_REFLECT_VAR(metallicFactor);
 		S_REFLECT_VAR(roughnessFactor);

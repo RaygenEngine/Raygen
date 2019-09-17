@@ -12,7 +12,7 @@ struct ImagePod : DeletableAssetPod
 		S_REFLECT_VAR(height, NoEdit);
 
 		S_REFLECT_VAR(components, NoEdit);
-		S_REFLECT_VAR(hdr, NoEdit);
+		S_REFLECT_VAR(isHdr, NoEdit);
 	}
 	static bool Load(ImagePod* pod, const fs::path& path);
 

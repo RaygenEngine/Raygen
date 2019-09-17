@@ -10,7 +10,7 @@ struct StringPod : DeletableAssetPod
 		S_REFLECT_VAR(data, PropertyFlags::Multiline);
 	}
 
-	static bool Load(TextPod* pod, const fs::path& path);
+	static bool Load(StringPod* pod, const fs::path& path);
 
 	std::string data;
 };

@@ -10,7 +10,7 @@ class SkyCubeNode : public Node
 public:
 	SkyCubeNode(Node* parent)
 		: Node(parent) {
-		REFLECT_VAR(m_cubeMap);
+		REFLECT_VAR(m_cubemap);
 	}
 
 	~SkyCubeNode() = default;
