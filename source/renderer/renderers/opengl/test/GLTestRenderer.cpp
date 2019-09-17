@@ -10,16 +10,67 @@
 #include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/assets/GLShader.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
+#include "world/nodes/sky/SkyCubeNode.h"
 
 #include "glad/glad.h"
 
 namespace OpenGL
 {
+	// TODO: default skybox model (json) 
+	float skyboxVertices[] = {
+		// positions          
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		-1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f
+	};
+
+	
 	GLTestRenderer::~GLTestRenderer()
 	{
 		glDeleteFramebuffers(1, &m_fbo);
 		glDeleteTextures(1, &m_outTexture);
 		glDeleteRenderbuffers(1, &m_depthStencilRbo);
+	
+		glDeleteVertexArrays(1, &m_skyboxVAO);
+		glDeleteBuffers(1, &m_skyboxVBO);
 	}
 
 	bool GLTestRenderer::InitScene(int32 width, int32 height)
@@ -29,6 +80,12 @@ namespace OpenGL
 		// shaders
 		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("screen_quad.shader.json");
 		m_screenQuadShader = GetGLAssetManager()->GetOrMakeFromUri<GLShader>(am->GetPodPath(shaderAsset));
+
+		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("skybox.shader.json");
+		m_skyboxShader = GetGLAssetManager()->GetOrMakeFromUri<GLShader>(am->GetPodPath(shaderAsset));
+
+		auto& skyboxShader = *m_skyboxShader;
+		skyboxShader += "vp";
 		
 		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("test.shader.json");
 		m_testShader = GetGLAssetManager()->GetOrMakeFromUri<GLShader>(am->GetPodPath(shaderAsset));
@@ -36,34 +93,23 @@ namespace OpenGL
 		auto& testShader = *m_testShader;
 		testShader += "mvp";
 		testShader += "m";
-		testShader += "normalMatrix";
+		testShader += "normal_matrix";
 		testShader += "mode";
-		testShader += "viewPos";
-		testShader += "baseColorFactor";
-		testShader += "emissiveFactor";
-		testShader += "metallicFactor";
-		testShader += "roughnessFactor";
-		testShader += "normalScale";
-		testShader += "occlusionStrength";
-		testShader += "alphaMode";
-		testShader += "alphaCutoff";
-		testShader += "doubleSided";
-		testShader += "baseColorSampler";
-		testShader += "metallicRoughnessSampler";
-		testShader += "emissiveSampler";
-		testShader += "normalSampler";
-		testShader += "occlusionSampler";
-		
-		glUseProgram(testShader.id);
-		
-		glUniform1i(testShader["baseColorSampler"], 0);
-		glUniform1i(testShader["metallicRoughnessSampler"], 1);
-		glUniform1i(testShader["emissiveSampler"], 2);
-		glUniform1i(testShader["normalSampler"], 3);
-		glUniform1i(testShader["occlusionSampler"], 4);
-		
-		glUseProgram(0);
-		
+		testShader += "view_pos";
+		testShader += "light_pos";
+		testShader += "light_color";
+		testShader += "light_intensity";
+		testShader += "base_color_factor";
+		testShader += "emissive_factor";
+		testShader += "ambient";
+		testShader += "metallic_factor";
+		testShader += "roughness_factor";
+		testShader += "normal_scale";
+		testShader += "occlusion_strength";
+		testShader += "alpha_mode";
+		testShader += "alpha_cutoff";
+		testShader += "double_sided";
+	
 		// world data
 		auto* user = Engine::GetWorld()->GetAvailableNodeSpecificSubType<FreeformUserNode>();
 
@@ -76,10 +122,22 @@ namespace OpenGL
 
 		m_camera = user->GetCamera();
 
+		auto* sky = Engine::GetWorld()->GetAvailableNodeSpecificSubType<SkyCubeNode>();
+		m_skyboxCubemap = GetGLAssetManager()->GetOrMakeFromUri<GLTexture>(am->GetPodPath(sky->GetSkyMap()));
+
+		m_light = Engine::GetWorld()->GetAvailableNodeSpecificSubType<PunctualLightNode>();
+		
+		// TODO: better way to check world requirements
+		if (!m_light)
+		{
+			LOG_FATAL("Missing light node!");
+			return false;
+		}
+
 		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>())
 			m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, GLTestGeometry>(this, geometryNode));
 
-		// fbo
+		// buffers
 		glGenFramebuffers(1, &m_fbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 		
@@ -102,6 +160,15 @@ namespace OpenGL
 			LOG_FATAL("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
 		
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		// skybox
+		glGenVertexArrays(1, &m_skyboxVAO);
+		glGenBuffers(1, &m_skyboxVBO);
+		glBindVertexArray(m_skyboxVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, m_skyboxVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*)0);
 		
 		return true;
 	}
@@ -117,19 +184,25 @@ namespace OpenGL
 		// first pass
 		glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
-		const auto backgroundColor = Engine::GetWorld()->GetRoot()->GetBackgroundColor();
+		auto root = Engine::GetWorld()->GetRoot();
+		const auto backgroundColor = root->GetBackgroundColor();
 		glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT /*| GL_STENCIL_BUFFER_BIT*/);
 
 		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LEQUAL);
-
+		
 		auto& testShader = *m_testShader;
 
 		glUseProgram(testShader.id);
 
+		glDepthFunc(GL_LESS);
+
 		// global uniforms
-		glUniform3fv(testShader["viewPos"], 1, glm::value_ptr(m_camera->GetWorldTranslation()));
+		glUniform3fv(testShader["view_pos"], 1, glm::value_ptr(m_camera->GetWorldTranslation()));
+		glUniform3fv(testShader["light_pos"], 1, glm::value_ptr(m_light->GetWorldTranslation()));
+		glUniform3fv(testShader["light_color"], 1, glm::value_ptr(m_light->GetColor()));
+		glUniform1f(testShader["light_intensity"], m_light->GetIntensity());
+		glUniform3fv(testShader["ambient"], 1, glm::value_ptr(root->GetAmbientColor()));
 		glUniform1i(testShader["mode"], m_previewMode);
 
 		const auto vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
@@ -141,7 +214,7 @@ namespace OpenGL
 
 			glUniformMatrix4fv(testShader["mvp"], 1, GL_FALSE, glm::value_ptr(mvp));
 			glUniformMatrix4fv(testShader["m"], 1, GL_FALSE, glm::value_ptr(m));
-			glUniformMatrix3fv(testShader["normalMatrix"], 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(glm::mat3(m)))));
+			glUniformMatrix3fv(testShader["normal_matrix"], 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(glm::mat3(m)))));
 			
 			for (auto& glMesh : geometry->glModel->meshes)
 			{
@@ -150,15 +223,15 @@ namespace OpenGL
 				GLMaterial* glMaterial = glMesh.material;
 				PodHandle<MaterialPod> materialData = glMaterial->m_materialPod;
 
-				glUniform4fv(testShader["baseColorFactor"], 1, glm::value_ptr(materialData->baseColorFactor));
-				glUniform3fv(testShader["emissiveFactor"], 1, glm::value_ptr(materialData->emissiveFactor));
-				glUniform1f(testShader["metallicFactor"], materialData->metallicFactor);
-				glUniform1f(testShader["roughnessFactor"], materialData->roughnessFactor);
-				glUniform1f(testShader["normalScale"], materialData->normalScale);
-				glUniform1f(testShader["occlusionStrength"], materialData->occlusionStrength);
-				glUniform1i(testShader["alphaMode"], materialData->alphaMode);
-				glUniform1f(testShader["alphaCutoff"], materialData->alphaCutoff);
-				glUniform1i(testShader["doubleSided"], materialData->doubleSided);
+				glUniform4fv(testShader["base_color_factor"], 1, glm::value_ptr(materialData->baseColorFactor));
+				glUniform3fv(testShader["emissive_factor"], 1, glm::value_ptr(materialData->emissiveFactor));
+				glUniform1f(testShader["metallic_factor"], materialData->metallicFactor);
+				glUniform1f(testShader["roughness_factor"], materialData->roughnessFactor);
+				glUniform1f(testShader["normal_scale"], materialData->normalScale);
+				glUniform1f(testShader["occlusion_strength"], materialData->occlusionStrength);
+				glUniform1i(testShader["alpha_mode"], materialData->alphaMode);
+				glUniform1f(testShader["alpha_cutoff"], materialData->alphaCutoff);
+				glUniform1i(testShader["double_sided"], materialData->doubleSided);
 	
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
@@ -178,18 +251,28 @@ namespace OpenGL
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 									
 				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
-			
-				glBindVertexArray(0);
 			}
 		}
+
+		const auto vpNoTransformation = m_camera->GetProjectionMatrix() * glm::mat4(glm::mat3(m_camera->GetViewMatrix()));
 		
+		// draw skybox as last
+		glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+		// TODO: where to put this
+		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+		
+		glUseProgram(m_skyboxShader->id);
+		glUniformMatrix4fv((*m_skyboxShader)["vp"], 1, GL_FALSE, glm::value_ptr(vpNoTransformation));
+		glBindVertexArray(m_skyboxVAO);
 		glActiveTexture(GL_TEXTURE0);
-		
+		glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxCubemap->id);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
+
+		glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
-
-		glUseProgram(0);
-
+		
 		// second pass
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		

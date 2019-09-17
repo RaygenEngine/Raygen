@@ -306,8 +306,8 @@ Editor::~Editor()
 	
 void Editor::UpdateEditor()
 {
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::~))
-	{
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::TAB))
+	{	
 		m_showImgui = !m_showImgui;
 	}
 	if (!m_showImgui)

@@ -14,7 +14,8 @@ enum class LogLevelTarget
 enum PreviewTarget : int32
 {
 	// base color
-	PT_BASE_COLOR_MAP = 0,
+	PT_OUT,
+	PT_BASE_COLOR_MAP,
 	PT_BASE_COLOR_FACTOR,
 	PT_BASE_COLOR_FINAL,
 	// metallic
@@ -65,6 +66,7 @@ namespace utl
 	{
 		switch (pt)
 		{
+		case PT_OUT:				 return "out";
 		case PT_BASE_COLOR_MAP:		 return "base color map";
 		case PT_BASE_COLOR_FACTOR:	 return "base color factor";
 		case PT_BASE_COLOR_FINAL:	 return "base color final";

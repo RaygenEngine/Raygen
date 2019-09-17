@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--asset path gives priority to searching in this specific path (and subfolders) for asset loading requests from this world
 	if relative path is given the path system will search from inside the "scenes" root directory, otherwise (absolute path) this "hint" will be ignored-->
-<root name="roots" background="0.1, 0.2, 0.4" ambient="0, 0, 0.4">
+<root name="roots" background="0.1, 0.2, 0.4" ambient="0, 0, 0.1">
 	
 	<freeform_user name="user2"
 		translation="0, 15, 30"
@@ -17,14 +17,13 @@
 	<!-- <sky_hdr name="sky1" -->
 		<!-- hdr_texture="CedarCity.hdr"/> -->
 
-	<sky_cube name="abc" cube_map="alps.cubemap.json"/>
-
-	<sky_cube name="sky2"
-		cube_map="alps.cubemap.json"/>
+	<sky_cube name="abc" 
+			cube_map="alps.cubemap.json"/>
 
 	<light name="l1" 
 		   translation="0.0, 25.0, 0" 
-		   color="0.9450, 0.8549, 0.6431"/>
+		   color="0.9450, 0.8549, 0.6431"
+		   intensity="2"/>
 	
 		
 	<geometry name="box" 
