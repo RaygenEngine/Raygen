@@ -11,6 +11,8 @@ protected:
 	Node* m_selectedNode;
 	
 public:
+
+	bool m_showImgui{ true };
 	std::string m_sceneToLoad{};
 
 	Editor();
