@@ -7,12 +7,11 @@ namespace OpenGL
 {
 	GLShader::~GLShader()
 	{
-		glDeleteProgram(m_id);
+		glDeleteProgram(id);
 	}
 	
 	bool GLShader::Load()
 	{
-		
 		const auto sources = AssetManager::GetOrCreate<ShaderPod>(m_assetManagerPodPath);
 
 		GLint result = GL_FALSE;
@@ -52,24 +51,24 @@ namespace OpenGL
 			return false;
 		}
 
-		m_id = glCreateProgram();
-		glAttachShader(m_id, vertexShaderID);
-		glAttachShader(m_id, fragmentShaderID);
-		glLinkProgram(m_id);
+		id = glCreateProgram();
+		glAttachShader(id, vertexShaderID);
+		glAttachShader(id, fragmentShaderID);
+		glLinkProgram(id);
 
-		glGetProgramiv(m_id, GL_LINK_STATUS, &result);
-		glGetProgramiv(m_id, GL_INFO_LOG_LENGTH, &infoLogLength);
+		glGetProgramiv(id, GL_LINK_STATUS, &result);
+		glGetProgramiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
 
 		if (infoLogLength > 0)
 		{
 			std::vector<char> programErrorMessage(infoLogLength + 1);
-			glGetProgramInfoLog(m_id, infoLogLength, NULL, &programErrorMessage[0]);
+			glGetProgramInfoLog(id, infoLogLength, NULL, &programErrorMessage[0]);
 			LOG_WARN("Program shader error in {}:\n{}", m_assetManagerPodPath, &programErrorMessage[0]);
 			return false;
 		}
 
-		glDetachShader(m_id, vertexShaderID);
-		glDetachShader(m_id, fragmentShaderID);
+		glDetachShader(id, vertexShaderID);
+		glDetachShader(id, fragmentShaderID);
 		glDeleteShader(vertexShaderID);
 		glDeleteShader(fragmentShaderID);
 
@@ -78,11 +77,11 @@ namespace OpenGL
 
 	void GLShader::operator+=(const std::string& uniformName)
 	{
-		m_uniformLocations.insert({ uniformName, glGetUniformLocation(m_id, uniformName.c_str()) });
+		uniformLocations.insert({ uniformName, glGetUniformLocation(id, uniformName.c_str()) });
 	}
 	
 	GLint GLShader::operator[](const std::string& uniformName) const
 	{
-		return m_uniformLocations.at(uniformName);
+		return uniformLocations.at(uniformName);
 	}
 }

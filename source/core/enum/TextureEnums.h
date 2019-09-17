@@ -17,7 +17,7 @@ enum class TextureWrapping
 	REPEAT
 };
 
-enum class TextureType
+enum class TextureTarget
 {
 	TEXTURE_1D,
 	TEXTURE_2D,

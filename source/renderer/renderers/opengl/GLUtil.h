@@ -53,6 +53,16 @@ namespace OpenGL
 		default:						   return GL_INVALID_ENUM;
 		}
 	}
+
+	inline GLint GetGLTextureTarget(TextureTarget target)
+	{
+		switch (target)
+		{
+		case TextureTarget::TEXTURE_2D:      return GL_TEXTURE_2D;
+		case TextureTarget::TEXTURE_CUBEMAP: return GL_TEXTURE_CUBE_MAP;
+		default: assert(false && "Texture format yet supported");
+		}
+	}
 	
 	inline GLenum GLCheckError_(const char *file, int line)
 	{

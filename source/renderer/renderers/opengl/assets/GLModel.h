@@ -2,16 +2,14 @@
 
 #include "renderer/renderers/opengl/GLAsset.h"
 #include "renderer/renderers/opengl/assets/GLMaterial.h"
+#include "asset/pods/ModelPod.h"
 
 #include "GLAD/glad.h"
-#include <optional>
-#include "asset/pods/ModelPod.h"
 
 namespace OpenGL
 {
-	class GLModel : public GLAsset
-	{
-	public:
+	struct GLModel : GLAsset
+	{		
 		struct GLMesh
 		{
 			std::string name;
@@ -34,28 +32,16 @@ namespace OpenGL
 			GLsizei count{ 0u };
 		};
 
-	private:
+		GLenum usage{ GL_STATIC_DRAW };
+		std::vector<GLMesh> meshes;
 
-		bool LoadGLMesh(GLMesh& mesh, GeometryGroup& data, GLenum usage);
-		
-
-		GLenum m_usage;
-
-		std::vector<GLMesh> m_meshes;
-
-	public:
 		GLModel(const fs::path& assocPath)
-			: GLAsset(assocPath),
-			  m_usage(GL_STATIC_DRAW) {}
-		bool Load() override;
-
-		friend class GLAssetManager;
-	public:
+			: GLAsset(assocPath) {}
 		virtual ~GLModel();
 
-		std::vector<GLMesh>& GetGLMeshes() { return m_meshes; }
-
-		
+	protected:
+		bool LoadGLMesh(GLMesh& mesh, GeometryGroup& data, GLenum usage);
+		bool Load() override;
 	};
 
 }

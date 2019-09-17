@@ -9,23 +9,18 @@ namespace OpenGL
 	struct GLMaterial : GLAsset
 	{
 		// RGB: Albedo A: Opacity
-		GLTexture* baseColorTexture;
+		GLTexture* baseColorTexture{ nullptr };
 		// R: *occlusion, G: Roughness, B: Metal, A: empty
-		GLTexture* metallicRoughnessTexture;
+		GLTexture* metallicRoughnessTexture{ nullptr };
 		// R: occlusion, accessing other channels may give wrong info
-		GLTexture* occlusionTexture;
-		GLTexture* normalTexture;
-		GLTexture* emissiveTexture;
+		GLTexture* occlusionTexture{ nullptr };
+		GLTexture* normalTexture{ nullptr };
+		GLTexture* emissiveTexture{ nullptr };
 		
 		PodHandle<MaterialPod> m_materialPod;
 
 		GLMaterial(const fs::path& assocPath)
-			: GLAsset(assocPath),
-			  baseColorTexture(nullptr),
-			  metallicRoughnessTexture(nullptr),
-		      occlusionTexture(nullptr),
-			  normalTexture(nullptr),
-			  emissiveTexture(nullptr)
+			: GLAsset(assocPath)
 		{
 		}
 

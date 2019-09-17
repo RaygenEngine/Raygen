@@ -2,7 +2,6 @@
 
 #include "renderer/renderers/opengl/assets/GLTexture.h"
 #include "renderer/renderers/opengl/GLUtil.h"
-#include "system/Engine.h"
 #include "asset/AssetManager.h"
 #include "asset/pods/TexturePod.h"
 
@@ -10,39 +9,35 @@ namespace OpenGL
 {
 	GLTexture::~GLTexture()
 	{
-		// TODO: handle bind-less
-		glDeleteTextures(1, &m_id);
+		glDeleteTextures(1, &id);
 	}
 
 	bool GLTexture::Load()
 	{
 		const auto textureData = AssetManager::GetOrCreate<TexturePod>(m_assetManagerPodPath);
 		
-		glGenTextures(1, &m_id);
-		glBindTexture(GL_TEXTURE_2D, m_id);
+		glGenTextures(1, &id);
 
-		//if(textureData->type)
-		
+		const GLint textureTarget = GetGLTextureTarget(textureData->target);
+	
+		glBindTexture(textureTarget, id);
+
 		const auto minFiltering = GetGLFiltering(textureData->minFilter);
 
-		// If you don't use one of the filter values that include mipmaps (like GL_LINEAR_MIPMAP_LINEAR), your mipmaps will not be used in any way.
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GetGLFiltering(textureData->magFilter));
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFiltering);
+		glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GetGLFiltering(textureData->magFilter));
+		glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, minFiltering);
+		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GetGLWrapping(textureData->wrapS));
+		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GetGLWrapping(textureData->wrapT));
+		glTexParameteri(textureTarget, GL_TEXTURE_WRAP_R, GetGLWrapping(textureData->wrapR));
 
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GetGLWrapping(textureData->wrapS));
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GetGLWrapping(textureData->wrapT));
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GetGLWrapping(textureData->wrapR));
-
-
-		auto GetTypeAndInternalFormat = [](bool isHdr) -> std::pair<GLenum, GLint>
+		const auto GetTypeAndInternalFormat = [](bool isHdr) -> std::pair<GLenum, GLint>
 		{
 			return isHdr ? std::make_pair(GL_FLOAT, GL_RGBA32F) : std::make_pair(GL_UNSIGNED_BYTE, GL_RGBA);
 		};
 		
-		switch (textureData->type)
+		switch (textureData->target)
 		{
-		case TextureType::TEXTURE_2D:
+		case TextureTarget::TEXTURE_2D:
 		{
 			const auto img = textureData->images.at(0);
 			const auto typeAndInternalFormat = GetTypeAndInternalFormat(img->isHdr);
@@ -51,7 +46,7 @@ namespace OpenGL
 			break;
 		}
 			
-		case TextureType::TEXTURE_CUBEMAP:
+		case TextureTarget::TEXTURE_CUBEMAP:
 		{
 			for (auto i = 0; i < CMF_COUNT; ++i)
 			{
@@ -62,23 +57,19 @@ namespace OpenGL
 			}
 			break;
 		}
-		case TextureType::TEXTURE_1D:
-		case TextureType::TEXTURE_3D:
-		case TextureType::TEXTURE_ARRAY:
-		case TextureType::TEXTURE_CUBEMAP_ARRAY:
+		case TextureTarget::TEXTURE_1D:
+		case TextureTarget::TEXTURE_3D:
+		case TextureTarget::TEXTURE_ARRAY:
+		case TextureTarget::TEXTURE_CUBEMAP_ARRAY:
 		default:
-			assert(false && "Not yet supported");
+			assert(false && "Texture format yet supported");
 		}
 		
 		if (minFiltering == GL_NEAREST_MIPMAP_NEAREST ||
 			minFiltering == GL_LINEAR_MIPMAP_NEAREST ||
 			minFiltering == GL_NEAREST_MIPMAP_LINEAR ||
 			minFiltering == GL_LINEAR_MIPMAP_LINEAR)
-			glGenerateMipmap(GL_TEXTURE_2D);
-
-		// TODO if bindless, static flag?
-		m_bindlessId = glGetTextureHandleARB(m_id);
-		glMakeTextureHandleResidentARB(m_bindlessId);
+			glGenerateMipmap(textureTarget);
 
 		return true;
 	}

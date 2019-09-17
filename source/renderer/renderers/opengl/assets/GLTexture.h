@@ -4,27 +4,19 @@
 
 #include "glad/glad.h"
 
-
 namespace OpenGL
 {
-	class GLTexture : public GLAsset
+	struct GLTexture : GLAsset
 	{
-		// bindless
-		GLuint64 m_bindlessId;
-		GLuint m_id;
+		GLuint id;
 
-	public:
 		GLTexture(const fs::path& assocPath)
 			: GLAsset(assocPath),
-			  m_bindlessId(0),
-			  m_id(0)
+			  id(0)
 		{
 		}
 		virtual ~GLTexture();
 
 		bool Load() override;
-
-		[[nodiscard]] GLuint GetId() const { return m_id; }
-		[[nodiscard]] GLuint64 GetBindlessId() const { return m_bindlessId; }
 	};
 }

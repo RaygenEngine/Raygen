@@ -1,6 +1,5 @@
 #version 460 core
-#extension GL_ARB_gpu_shader_int64 : enable
-#extension GL_ARB_bindless_texture : enable
+
 out vec4 out_color;
   
 in Data
@@ -28,13 +27,11 @@ uniform int alphaMode;
 uniform float alphaCutoff;
 uniform bool doubleSided;
 
-//mandatory
-layout(bindless_sampler) uniform sampler2D baseColorSampler;
-layout(bindless_sampler) uniform sampler2D metallicRoughnessSampler;
-layout(bindless_sampler) uniform sampler2D occlusionSampler;
-layout(bindless_sampler) uniform sampler2D emissiveSampler;
-//optional
-uniform uint64_t normalSampler;
+uniform sampler2D baseColorSampler;
+uniform sampler2D metallicRoughnessSampler;
+uniform sampler2D emissiveSampler;
+uniform sampler2D normalSampler;
+uniform sampler2D occlusionSampler;
 
 #define M_1_PIf 0.318309886183790671538f
 #define M_PIf 3.14159265358979323846f
@@ -54,12 +51,9 @@ void main()
 {
 	const vec4 baseColor = texture(baseColorSampler, dataIn.textCoord0);
 	const vec4 metallicRoughness = texture(metallicRoughnessSampler, dataIn.textCoord0);
-	const vec4 occlusion = texture(occlusionSampler, dataIn.textCoord0);
 	const vec4 emissive = texture(emissiveSampler, dataIn.textCoord0);
-	
-	
-	//out_color = occlusionMetallicRoughness;
-	//return;
+	const vec4 sampleNormal = texture(normalSampler, dataIn.textCoord0);
+	const vec4 occlusion = texture(occlusionSampler, dataIn.textCoord0);
 	
 	// missing
 	out_color = vec4(1.f, 0.f, 1.f, 1.f);
@@ -111,27 +105,12 @@ void main()
 			break;
 			
 		case 11: // normal map
-			
-			// normal mapping
-			if(normalSampler>0)
-			{
-				out_color = texture(sampler2D(normalSampler), dataIn.textCoord0);
-			}
-		
+			out_color = sampleNormal;
 			break;
 			
-		case 12: // normal final
-		
-			if(normalSampler>0)
-			{
-				vec3 sampleNormal = texture(sampler2D(normalSampler), dataIn.textCoord0).rgb;
-				vec3 scaledNormal = normalize((sampleNormal * 2.0 - 1.0) * vec3(normalScale, normalScale, 1.0));
-				out_color = vec4(normalize(dataIn.TBN * scaledNormal), 1);
-			}
-			else
-			{
-				out_color = vec4(dataIn.normal, 1.0);
-			}
+		case 12: // normal final;
+			vec3 scaledNormal = normalize((sampleNormal.rgb * 2.0 - 1.0) * vec3(normalScale, normalScale, 1.0));
+			out_color = vec4(normalize(dataIn.TBN * scaledNormal), 1);
 			break;
 			
 		case 13: // tangent
