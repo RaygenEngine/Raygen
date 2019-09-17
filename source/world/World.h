@@ -3,7 +3,7 @@
 #include "world/nodes/Node.h"
 #include "nodes/geometry/GeometryNode.h"
 #include "nodes/TransformNode.h"
-#include "nodes/light/LightNode.h"
+#include "nodes/light/PunctualLightNode.h"
 #include "nodes/camera/CameraNode.h"
 #include "nodes/user/UserNode.h"
 #include "asset/loaders/XMLDocLoader.h"
@@ -45,7 +45,7 @@ class World
 	mutable std::unordered_set<GeometryNode*> m_triangleModelGeometries;
 	mutable std::unordered_set<InstancedGeometryNode*> m_triangleModelInstancedGeometries;
 	mutable std::unordered_set<TransformNode*> m_transforms;
-	mutable std::unordered_set<LightNode*> m_lights;
+	mutable std::unordered_set<PunctualLightNode*> m_lights;
 	mutable std::unordered_set<CameraNode*> m_cameras;
 	mutable std::unordered_set<UserNode*> m_users;
 		
@@ -110,7 +110,7 @@ public:
 	template <typename NodeType>
 	constexpr auto& GetNodeMap() const
 	{
-		if constexpr (std::is_base_of<LightNode, NodeType>::value) { return m_lights; }
+		if constexpr (std::is_base_of<PunctualLightNode, NodeType>::value) { return m_lights; }
 		else if constexpr (std::is_base_of<InstancedGeometryNode, NodeType>::value) { return m_triangleModelInstancedGeometries; }
 		else if constexpr (std::is_base_of<GeometryNode, NodeType>::value) { return m_triangleModelGeometries; }
 		else if constexpr (std::is_base_of<TransformNode, NodeType>::value) { return m_transforms; }

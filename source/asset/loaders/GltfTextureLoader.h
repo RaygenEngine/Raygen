@@ -37,8 +37,8 @@ namespace GltfTextureLoader
 		}
 		else
 		{
-			// TODO: handle from material
 			LOG_ANY("");
+			assert(false && "This model is unsafe to use, handle missing image from material");
 		}
 
 		pod->images.push_back(imgAsset);
@@ -54,10 +54,6 @@ namespace GltfTextureLoader
 			pod->wrapS = GltfAux::GetTextureWrapping(gltfSampler.wrapS);
 			pod->wrapT = GltfAux::GetTextureWrapping(gltfSampler.wrapT);
 			pod->wrapR = GltfAux::GetTextureWrapping(gltfSampler.wrapR);
-		}
-		else
-		{
-			LOG_ANY("");
 		}
 
 		//else keep default values

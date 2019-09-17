@@ -261,7 +261,7 @@ namespace GltfModelLoader
 				std::for_each(geom.normals.begin(), geom.normals.end(), [](glm::vec3& normal) { normal = glm::normalize(normal); });
 			}
 
-			// TODO test better calculations (using uv layer 0?) also text tangent handedness
+			// TODO test better calculations (using uv layer 0?) also text tangent handedness (urgently)
 			// calculate missing tangents (and bitangents)
 			if (geom.tangents.empty())
 			{
@@ -282,7 +282,8 @@ namespace GltfModelLoader
 				std::transform(geom.normals.begin(), geom.normals.end(), geom.tangents.begin(),
 					std::back_inserter(geom.bitangents), [](const glm::vec3& normal, const glm::vec4& tangent)
 					{
-						return glm::normalize(glm::cross(normal, glm::vec3(tangent)) * tangent.w);
+					// TODO: handness issues bitangent = cross(normal, tangent.xyz) * tangent.w
+						return glm::normalize(glm::cross(normal, glm::vec3(tangent)));
 					});
 			}
 

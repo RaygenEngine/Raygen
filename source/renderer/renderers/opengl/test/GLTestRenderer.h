@@ -3,6 +3,8 @@
 #include "renderer/renderers/opengl/GLRendererBase.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "renderer/renderers/opengl/assets/GLShader.h"
+#include "renderer/renderers/opengl/assets/GLTexture.h"
+#include "world/nodes/light/PunctualLightNode.h"
 
 namespace OpenGL
 {
@@ -14,15 +16,23 @@ namespace OpenGL
 
 	protected:
 		GLShader* m_testShader;
+		GLShader* m_skyboxShader;
 		GLShader* m_screenQuadShader;
 
+		GLTexture* m_skyboxCubemap;
 		
 		std::vector<std::shared_ptr<GLTestGeometry>> m_geometryObservers;
 		CameraNode* m_camera;
+		PunctualLightNode* m_light;
 
 		GLuint m_fbo;
 		GLuint m_outTexture;
 		GLuint m_depthStencilRbo;
+
+		GLuint m_skyboxVAO;
+		GLuint m_skyboxVBO;
+
+
 
 		int32 m_previewMode;
 	public:

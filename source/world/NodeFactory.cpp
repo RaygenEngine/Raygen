@@ -47,7 +47,7 @@ Node* NodeFactory::LoadNodeFromType(const std::string& type, Node* parent, const
 	}
 	if (type == "light")
 	{
-		return world->LoadNode<LightNode>(parent, xmdChildElement);
+		return world->LoadNode<PunctualLightNode>(parent, xmdChildElement);
 	}
 	if (type == "geometry")
 	{

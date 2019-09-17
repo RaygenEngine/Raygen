@@ -61,7 +61,7 @@ set(SOURCE_FILES
 	world/nodes/geometry/GeometryNode.cpp
 	world/nodes/geometry/InstancedGeometryNode.cpp
 	
-	world/nodes/light/LightNode.cpp
+	world/nodes/light/PunctualLightNode.cpp
 	
 	world/nodes/user/freeform/FreeformUserNode.cpp
 	world/nodes/user/oculus/OculusHeadNode.cpp
@@ -180,7 +180,7 @@ set(HEADER_FILES
 	world/nodes/geometry/GeometryNode.h
 	world/nodes/geometry/InstancedGeometryNode.h
 	
-	world/nodes/light/LightNode.h
+	world/nodes/light/PunctualLightNode.h
 	
 	world/nodes/user/freeform/FreeformUserNode.h
 	world/nodes/user/oculus/OculusHeadNode.h
