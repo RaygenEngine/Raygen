@@ -9,7 +9,24 @@
 
 namespace OpenGL
 {
+	GLModel::~GLModel()
+	{
+		for (auto& mesh : meshes)
+		{
+			glDeleteBuffers(1, &mesh.positionsVBO);
+			glDeleteBuffers(1, &mesh.normalsVBO);
+			glDeleteBuffers(1, &mesh.tangentsVBO);
+			glDeleteBuffers(1, &mesh.bitangentsVBO);
+			glDeleteBuffers(1, &mesh.textCoords0VBO);
+			glDeleteBuffers(1, &mesh.textCoords1VBO);
+			glDeleteBuffers(1, &mesh.ebo);
 
+			glDeleteVertexArrays(1, &mesh.vao);
+
+			delete mesh.material;
+		}
+	}
+	
 	bool GLModel::LoadGLMesh(GLMesh& glMesh, GeometryGroup& data, GLenum usage)
 	{
 		glMesh.geometryMode = GetGLGeometryMode(data.mode);
@@ -66,39 +83,22 @@ namespace OpenGL
 		return true;
 	}
 
-	GLModel::~GLModel()
-	{
-		for (auto& mesh : m_meshes)
-		{
-			glDeleteBuffers(1, &mesh.positionsVBO);
-			glDeleteBuffers(1, &mesh.normalsVBO);
-			glDeleteBuffers(1, &mesh.tangentsVBO);
-			glDeleteBuffers(1, &mesh.bitangentsVBO);
-			glDeleteBuffers(1, &mesh.textCoords0VBO);
-			glDeleteBuffers(1, &mesh.textCoords1VBO);
-			glDeleteBuffers(1, &mesh.ebo);
-
-			glDeleteVertexArrays(1, &mesh.vao);
-
-			delete mesh.material;
-		}
-	}
-
 	bool GLModel::Load()
 	{
 		auto modelData = AssetManager::GetOrCreate<ModelPod>(m_assetManagerPodPath);
 		
 		TIMER_STATIC_SCOPE("uploading model time");
 
+		// TODO
 		//m_usage = GetGLUsage(data->GetUsage());
-		m_usage = GL_STATIC_DRAW;
+		usage = GL_STATIC_DRAW;
 
 		for (auto& mesh : modelData->meshes)
 		{
 			for (auto& geometryGroup : mesh.geometryGroups)
 			{
-				GLMesh& glmesh = m_meshes.emplace_back(GLMesh());
-				if (!LoadGLMesh(glmesh, geometryGroup, m_usage))
+				GLMesh& glmesh = meshes.emplace_back(GLMesh());
+				if (!LoadGLMesh(glmesh, geometryGroup, usage))
 				{
 					return false;
 				}

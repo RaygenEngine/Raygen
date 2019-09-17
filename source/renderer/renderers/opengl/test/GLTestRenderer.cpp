@@ -53,7 +53,17 @@ namespace OpenGL
 		testShader += "emissiveSampler";
 		testShader += "normalSampler";
 		testShader += "occlusionSampler";
-
+		
+		glUseProgram(testShader.id);
+		
+		glUniform1i(testShader["baseColorSampler"], 0);
+		glUniform1i(testShader["metallicRoughnessSampler"], 1);
+		glUniform1i(testShader["emissiveSampler"], 2);
+		glUniform1i(testShader["normalSampler"], 3);
+		glUniform1i(testShader["occlusionSampler"], 4);
+		
+		glUseProgram(0);
+		
 		// world data
 		auto* user = Engine::GetWorld()->GetAvailableNodeSpecificSubType<FreeformUserNode>();
 
@@ -116,7 +126,7 @@ namespace OpenGL
 
 		auto& testShader = *m_testShader;
 
-		glUseProgram(testShader.GetId());
+		glUseProgram(testShader.id);
 
 		// global uniforms
 		glUniform3fv(testShader["viewPos"], 1, glm::value_ptr(m_camera->GetWorldTranslation()));
@@ -133,7 +143,7 @@ namespace OpenGL
 			glUniformMatrix4fv(testShader["m"], 1, GL_FALSE, glm::value_ptr(m));
 			glUniformMatrix3fv(testShader["normalMatrix"], 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(glm::mat3(m)))));
 			
-			for (auto& glMesh : geometry->glModel->GetGLMeshes())
+			for (auto& glMesh : geometry->glModel->meshes)
 			{
 				glBindVertexArray(glMesh.vao);
 
@@ -149,13 +159,22 @@ namespace OpenGL
 				glUniform1i(testShader["alphaMode"], materialData->alphaMode);
 				glUniform1f(testShader["alphaCutoff"], materialData->alphaCutoff);
 				glUniform1i(testShader["doubleSided"], materialData->doubleSided);
-				
-				glUniformHandleui64ARB(testShader["baseColorSampler"], glMaterial->baseColorTexture->GetBindlessId());
-				glUniformHandleui64ARB(testShader["metallicRoughnessSampler"], glMaterial->metallicRoughnessTexture->GetBindlessId());
-				glUniformHandleui64ARB(testShader["occlusionSampler"], glMaterial->occlusionTexture->GetBindlessId());
-				glUniformHandleui64ARB(testShader["emissiveSampler"], glMaterial->emissiveTexture->GetBindlessId());
-				glUniformHandleui64ARB(testShader["normalSampler"], glMaterial->normalTexture->GetBindlessId());
+	
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
 
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->metallicRoughnessTexture->id);
+
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->emissiveTexture->id);
+
+				glActiveTexture(GL_TEXTURE3);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->normalTexture->id);
+
+				glActiveTexture(GL_TEXTURE4);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->occlusionTexture->id);
+				
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 									
 				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
@@ -163,7 +182,9 @@ namespace OpenGL
 				glBindVertexArray(0);
 			}
 		}
-
+		
+		glActiveTexture(GL_TEXTURE0);
+		
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 
@@ -175,8 +196,9 @@ namespace OpenGL
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(m_screenQuadShader->GetId());
+		glUseProgram(m_screenQuadShader->id);
 
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_outTexture);
 
 		// big triangle trick, no vao

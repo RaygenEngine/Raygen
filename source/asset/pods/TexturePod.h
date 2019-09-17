@@ -15,7 +15,7 @@ struct TexturePod : AssetPod
 	TextureWrapping wrapT{ TextureWrapping::REPEAT };
 	TextureWrapping wrapR{ TextureWrapping::REPEAT };
 
-	TextureType type{ TextureType::TEXTURE_2D };
+	TextureTarget target{ TextureTarget::TEXTURE_2D };
 	
 	std::vector<PodHandle<ImagePod>> images;
 };

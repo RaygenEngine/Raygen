@@ -20,7 +20,7 @@ namespace CubemapLoader
 			char name[256];
 			t.getline(name, 256);
 
-			pod->type = TextureType::TEXTURE_CUBEMAP;
+			pod->target = TextureTarget::TEXTURE_CUBEMAP;
 			pod->images.push_back(AssetManager::GetOrCreate<ImagePod>(name));
 		}
 

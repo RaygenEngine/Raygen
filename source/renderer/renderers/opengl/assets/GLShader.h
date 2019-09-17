@@ -7,25 +7,21 @@
 
 namespace OpenGL
 {
-	class GLShader : public GLAsset
+	struct GLShader : GLAsset
 	{
-		GLuint m_id;
-
-		// temporary
-		std::unordered_map<std::string, GLint> m_uniformLocations;
-
-	public:
+		GLuint id;
+		
 		GLShader(const fs::path& assocPath)
-			: GLAsset(assocPath),
-			  m_id(0) {}
+			: GLAsset(assocPath) {}
 		virtual ~GLShader();
 		
-		bool Load() override;
-
-		[[nodiscard]] GLuint GetId() const { return m_id; }
-
 		GLint operator[](const std::string& uniformName) const;
 		void operator+=(const std::string& uniformName);
+
+	protected:
+		// temporary
+		std::unordered_map<std::string, GLint> uniformLocations;
+		bool Load() override;
 	};
 
 }
