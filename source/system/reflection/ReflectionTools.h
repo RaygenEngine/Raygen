@@ -113,7 +113,7 @@ void CallVisitorOnEveryProperty(ReflectedType* type, VisitorClass& v)
 
 		if constexpr (HasPostProperty<VisitorClass>::value)
 		{
-			v.PreProperty(p);
+			v.PostProperty(p);
 		}
 	}
 

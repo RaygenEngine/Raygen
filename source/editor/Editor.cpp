@@ -27,56 +27,7 @@
 
 #include <set>
 
-struct ReflVisitor
-{
-	int32 depth{ 0 };
-
-	template<typename T>
-	void Visit(T& t, ExactProperty& p)
-	{
-		std::cout << std::string("\t", depth);
-		std::cout << "| " << p.GetName() << " -> " << t << std::endl;
-	}
-
-	void Visit(glm::vec3& t, ExactProperty& p)
-	{
-		std::cout << std::string("\t", depth);
-		std::cout << "| " << p.GetName() << " -> " << t.x << ", " << t.y << ", " << t.z << std::endl;
-	}
-
-	template<typename T>
-	void Visit(PodHandle<T>& t, ExactProperty& p)
-	{
-		std::cout << std::string("\t", depth);
-		std::cout << "Visited by pod: " << p.GetName() << "@" << Engine::GetAssetManager()->GetPodPath(t) << std::endl;
-		depth++;
-		CallVisitorOnEveryProperty(t.operator->(), *this);
-		depth--;
-	}
-
-	
-	template<typename T>
-	void Visit(std::vector<T>& t, ExactProperty& p)
-	{
-		std::cout << "Vector of anything" << std::endl;
-	}
-};
-
 namespace {
-template<typename Lambda>
-void RecurseNodes(Node* root, Lambda f, int32 depth = 0)
-{
-	if (!root) 
-	{
-		return;
-	}
-
-	f(root, depth);
-	for (auto c : root->GetChildren())
-	{
-		RecurseNodes(c.get(), f, depth + 1);
-	}
-}
 
 // Recursively adds all children too
 void ImGuiNode(Node* node, int32 depth, Node*& selectedNode) {
@@ -107,7 +58,7 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 	std::set<std::string> objNames;
 
 	std::string nameBuf;
-	const char* name;  
+	const char* name; 
 
 	void GenerateUniqueName(ExactProperty& p)
 	{
@@ -232,18 +183,30 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 	{
 		if (ImGui::CollapsingHeader(name))
 		{
-			ImGui::Indent();
+			//ImGui::Indent();
+			//ImGui::Checkbox("Unique Only", &uniques);
+
+			std::unordered_set<PodHandle<MaterialPod>> includedHandles;
+
 			int32 index = 0;
 			for (auto& handle : t)
 			{
-
+				//if (uniques)
+				{
+					bool found = includedHandles.emplace(*handle).second;
+					if (found)
+					{
+						continue;
+					}
+				}
 				++index;
 				std::string sname = "|" + p.GetName() + std::to_string(index);
-				int32 len = sname.size();
+				size_t len = sname.size();
 				path += sname;
 				
 				GenerateUniqueName(p);
-				if (ImGui::CollapsingHeader(name))
+				std::string finalName = Engine::GetAssetManager()->GetPodPath(*handle).string() + "##" + name;
+				if (ImGui::CollapsingHeader(finalName.c_str()))
 				{
 					ImGui::Indent();
 					CallVisitorOnEveryProperty(handle->operator->(), *this);
@@ -317,13 +280,6 @@ void Editor::UpdateEditor()
 
 	ImguiImpl::NewFrame();
 
-
-	// TODO: static fix this
-	static ImGui::FileBrowser sfb = ImGui::FileBrowser(
-		ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_EnterNewFilename
-		| ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CreateNewDir
-		| ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CloseOnEsc);
-
 	static ImGui::FileBrowser lfb = ImGui::FileBrowser(
 		ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CloseOnEsc);
 
@@ -333,12 +289,13 @@ void Editor::UpdateEditor()
 
 	ImGui::Begin("Editor", &open);
 	ImGui::Checkbox("Update World", &m_updateWorld);
-	ImGui::SameLine();
+
 	if (ImGui::Button("Save"))
 	{
-		sfb.SetTitle("Save World"); 
-		sfb.Open();
+		m_sceneSave.OpenBrowser();
 	}
+
+	m_sceneSave.Draw();
 	ImGui::SameLine();
 	
 	if (ImGui::Button("Load"))
@@ -355,16 +312,7 @@ void Editor::UpdateEditor()
 	}
 	
 
-
-	sfb.Display();
 	lfb.Display();
-
-
-	if (sfb.HasSelected())
-	{
-		SaveScene(sfb.GetSelected().string());
-		sfb.ClearSelected();
-	}
 
 	if (lfb.HasSelected()) 
 	{
@@ -373,10 +321,10 @@ void Editor::UpdateEditor()
 	}
 
 
-	static std::string model;
+	/*static std::string model;
 	ImGui::InputText("ModelAsset to load:", &model);
 	ImGui::SameLine();
-	/*if (ImGui::Button("Create Asset"))
+	if (ImGui::Button("Create Asset"))
 	{
 		auto added =  Engine::GetWorld()->LoadNode<TriangleModelGeometryNode>(Engine::GetWorld()->GetRoot());
 		
@@ -400,8 +348,6 @@ void Editor::UpdateEditor()
 		}
 	}
 
-
-
 	if (ImGui::CollapsingHeader("Assets"))
 	{
 		ImGui::Indent();
@@ -411,12 +357,10 @@ void Editor::UpdateEditor()
 			ImGui::Text(assetPair.first.c_str());
 			ImGui::SameLine();
 			ImGui::Text(std::to_string(assetPair.second).c_str());
-
+			ImGui::SameLine();
 			//text += assetPair.first + "\n";
 		}
 	}
-
-
 
 	ImGui::End();
 
@@ -488,87 +432,8 @@ void Editor::LoadScene(const std::string& scenefile)
 	m_selectedNode = nullptr;
 	Event::OnWindowResize.Broadcast(Engine::GetMainWindow()->GetWidth(), Engine::GetMainWindow()->GetHeight());
 }
-	
-namespace
-{
-	tinyxml2::XMLElement* GenerateNodeXML(Node* node, tinyxml2::XMLDocument& document)
-	{
-		tinyxml2::XMLElement* xmlElem;
-
-		xmlElem = document.NewElement(node->GetType().c_str());
-		xmlElem->SetAttribute("name", node->GetName().c_str());
-
-		xmlElem->SetAttribute("translation", ParsingAux::FloatsToString(node->GetLocalTranslation()).c_str());
-		xmlElem->SetAttribute("euler_pyr", ParsingAux::FloatsToString(node->GetLocalPYR()).c_str());
-		xmlElem->SetAttribute("scale", ParsingAux::FloatsToString(node->GetLocalScale()).c_str());
-
-		for (auto& p : GetReflector(node).GetProperties())
-		{
-			if (!p.HasFlags(PropertyFlags::NoSave))
-			{
-				p.SwitchOnType(
-					[&](int32& v) {
-					xmlElem->SetAttribute(p.GetName().c_str(), v);
-				},
-					[&](bool& v) {
-					xmlElem->SetAttribute(p.GetName().c_str(), v);
-				},
-					[&](float& v) {
-					xmlElem->SetAttribute(p.GetName().c_str(), v);
-				},
-					[&](glm::vec3& v) {
-					xmlElem->SetAttribute(p.GetName().c_str(), ParsingAux::FloatsToString(v).c_str());
-				},
-					[&](std::string& v) {
-					xmlElem->SetAttribute(p.GetName().c_str(), v.c_str());
-				});
-			}
-		}
-		return xmlElem;
-	}
-}
-
-void Editor::SaveScene(const std::string& filename)
-{
-	using namespace tinyxml2;
-	XMLDocument xmlDoc;
-
-	std::unordered_map<Node*, XMLElement*> nodeXmlElements;
-
-	auto root = Engine::GetWorld()->GetRoot();
-	auto rootXml = GenerateNodeXML(root, xmlDoc);
-	xmlDoc.InsertFirstChild(rootXml);
-
-	nodeXmlElements.insert({ root, rootXml });
 
 
-	RecurseNodes(root, [&](Node* node, auto)
-	{
-		if (node == root)
-		{
-			return;
-		}
-
-		auto xmlElem = GenerateNodeXML(node, xmlDoc);
-		nodeXmlElements.insert({ node, xmlElem });
-
-		Node* parent = node->GetParent();
-		nodeXmlElements[parent]->InsertEndChild(xmlElem);
-	});
-
-		
-
-	FILE* fp;
-	if (fopen_s(&fp, filename.c_str(), "w") == 0)
-	{
-		xmlDoc.SaveFile(fp);
-		fclose(fp);
-	}
-	else
-	{
-		LOG_ERROR("Failed to open file for saving scene.");
-	}
-}
 
 void Editor::PreBeginFrame()
 {

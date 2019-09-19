@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform/Window.h"
+#include "editor/SceneSave.h"
 
 class Node;
 
@@ -9,7 +10,8 @@ class Editor
 protected:
 	bool m_updateWorld;
 	Node* m_selectedNode;
-	
+
+	SceneSave m_sceneSave;
 public:
 
 	bool m_showImgui{ true };
@@ -26,8 +28,6 @@ public:
 		return m_updateWorld;
 	}
 
-	void SaveScene(const std::string& filename);
-
 	void PreBeginFrame();
 
 private:
@@ -35,3 +35,18 @@ private:
 	void PropertyEditor(Node* activeNode);
 	void LoadScene(const std::string& scenefile);
 };
+
+template<typename Lambda>
+void RecurseNodes(Node* root, Lambda f, int32 depth = 0)
+{
+	if (!root)
+	{
+		return;
+	}
+
+	f(root, depth);
+	for (auto c : root->GetChildren())
+	{
+		RecurseNodes(c.get(), f, depth + 1);
+	}
+}

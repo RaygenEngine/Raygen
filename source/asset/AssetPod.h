@@ -58,5 +58,22 @@ public:
 		return podId != 0;
 	}
 
+	bool operator==(const PodHandle<PodType>& other) const
+	{
+		return other.podId == this->podId && podId != 0;
+	}
+
 	friend class AssetManager;
+	friend struct std::hash<PodHandle<PodTypeT>>;
 };
+
+namespace std {
+template<typename PodT> 
+struct hash<PodHandle<PodT>>
+{
+	size_t operator()(const PodHandle<PodT>& x) const
+	{
+		return x.podId;
+	}
+};
+}

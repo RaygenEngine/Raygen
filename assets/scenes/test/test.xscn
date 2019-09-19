@@ -18,7 +18,7 @@
 		<!-- hdr_texture="CedarCity.hdr"/> -->
 
 	<sky_cube name="abc" 
-			cube_map="alps.cubemap.json"/>
+			cubemap="alps.cubemap.json"/>
 
 	<light name="l1" 
 		   translation="0.0, 25.0, 0" 
