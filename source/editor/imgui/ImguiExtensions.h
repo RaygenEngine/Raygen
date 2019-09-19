@@ -4,6 +4,7 @@
 #include "imgui/imgui_stdlib.h"
 
 namespace ImUtil {
+// TODO: implement on ImGui side.
 static float* FromVec3(glm::vec3& vec3)
 {
 	return reinterpret_cast<float*>(&vec3);

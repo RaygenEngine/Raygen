@@ -217,8 +217,8 @@ namespace GltfModelLoader
 			if (materialIndex != -1)
 			{
 				auto& mat = modelData.materials.at(materialIndex);
-
-				auto matPath = parentPath / ("#material." + std::to_string(materialIndex));
+				
+				auto matPath = parentPath / ("#mat." + mat.name + "." + std::to_string(materialIndex));
 
 				geom.material = AssetManager::GetOrCreate<MaterialPod>(matPath);
 			}

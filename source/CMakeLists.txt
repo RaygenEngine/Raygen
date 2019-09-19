@@ -18,6 +18,10 @@ set(SOURCE_FILES
 	core/logger/Logger.cpp
 	
 	editor/Editor.cpp
+	editor/Outliner.cpp
+	editor/Details.cpp
+	editor/AssetWindow.cpp
+	editor/SceneSave.cpp
 	editor/imgui/ImguiImpl.cpp
 	editor/imgui/ImguiDemo.cpp
 	editor/renderer/EditorRenderer.cpp
@@ -80,6 +84,9 @@ set(HEADER_FILES
 	asset/AssetPod.h
 	asset/AssetManager.h
 	asset/PathSystem.h
+	
+	asset/UriLibrary.h
+	asset/PodIncludes.h
 		
 	asset/loaders/TextLoader.h
 	asset/loaders/XMLDocLoader.h
@@ -103,6 +110,7 @@ set(HEADER_FILES
 	
 	asset/util/GltfAux.h
 	asset/util/ParsingAux.h
+	
 
 	core/auxiliary/FlagAux.h
 	core/auxiliary/FileAux.h
@@ -130,6 +138,10 @@ set(HEADER_FILES
 	core/uuid/UUIDGenerator.h
 	
 	editor/Editor.h
+	editor/Outliner.h
+	editor/Details.h
+	editor/AssetWindow.h
+	editor/SceneSave.h
 	editor/imgui/ImguiImpl.h
 	editor/imgui/ImguiExtensions.h
 	editor/renderer/EditorRenderer.h

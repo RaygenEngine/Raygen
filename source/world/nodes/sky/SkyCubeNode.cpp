@@ -8,9 +8,9 @@ bool SkyCubeNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 {
 	Node::LoadAttributesFromXML(xmlData);
 
-	if (ParsingAux::AttributeExists(xmlData, "cube_map"))
+	if (ParsingAux::AttributeExists(xmlData, "cubemap"))
 	{
-		m_cubemap = AssetManager::GetOrCreate<TexturePod>(xmlData->Attribute("cube_map"));
+		m_cubemap = AssetManager::GetOrCreate<TexturePod>(xmlData->Attribute("cubemap"));
 	}
 	else return false;
 

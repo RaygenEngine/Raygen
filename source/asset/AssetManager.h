@@ -180,7 +180,17 @@ public:
 	//	return Engine::GetAssetManager()->ReplaceInto(handle.podId);
 	//}
 
-
+	template<typename PodType>
+	static void ClearCache(PodHandle<PodType> handle)
+	{
+		AssetManager* am = Engine::GetAssetManager();
+		auto it = am->m_uidToPod.find(handle.podId);
+		if (it != am->m_uidToPod.end())
+		{
+			delete it->second;
+			am->m_uidToPod.erase(handle.podId);
+		}
+	}
 
 
 	static bool IsCpuPath(const fs::path& path)

@@ -255,7 +255,7 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 {
 	LRESULT result = NULL;
 
-	Win32Window* window = Engine::GetMainWindow(); //reinterpret_cast<Win32Window*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+	Win32Window* window = Engine::GetMainWindow();
 
 	if(!window) return DefWindowProc(hWnd, message, wParam, lParam);
 

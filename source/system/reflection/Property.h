@@ -15,6 +15,14 @@ namespace PropertyFlags
 	constexpr Type Color	= (1 << 3);
 	constexpr Type Multiline = (1 << 4);
 
+	// Relevant on asset pods only.
+	// When set: it is not an error if this property is not found when loading.
+	constexpr Type OptionalPod = (1 << 5);
+	
+	// Relevant on vectors.
+	// When set: This vector is not resizable in editor.
+	constexpr Type VecNoResize = (1 << 6);
+
 	template<typename ...Flags>
 	constexpr PropertyFlags::Type Pack(Flags ...f)
 	{
