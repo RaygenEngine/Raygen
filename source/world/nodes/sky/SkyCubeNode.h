@@ -15,7 +15,6 @@ public:
 
 	~SkyCubeNode() = default;
 
-	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 
 	PodHandle<TexturePod> GetSkyMap() const { return m_cubemap; }
 
