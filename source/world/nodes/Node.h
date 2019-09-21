@@ -38,7 +38,7 @@ protected:
 public:
 	Reflector m_reflector;
 	friend class Editor;
-
+	friend class World;
 public:
 	Node();
 	// Nodes have pObject = parentNode->GetWorld() = World
@@ -87,7 +87,7 @@ public:
 
 	// Override loading of a specific child. 
 	// If you return a non null pointer here the default node creation will be skipped for this child
-	virtual Node* LoadSpecificChild(const tinyxml2::XMLElement* childXmlData) { return nullptr; }
+	virtual Node* LoadSpecificChild(const std::string& type) { return nullptr; }
 
 	// Called after all children have been loaded from the scene file.
 	// You can use this to track 'custom' children in 
@@ -211,12 +211,9 @@ public:
 		}
 		return dynamic_cast<NodeClass*>(child.get());
 	}
-
-
 protected:
 	virtual std::string ToString(bool verbose, uint depth) const;
 
 public:
-
 	virtual void ToString(std::ostream& os) const { os << "object-type: Node, id: " << GetUID(); }
 };

@@ -181,6 +181,7 @@ namespace OpenGL
 
 	void GLTestRenderer::Render()
 	{
+		m_camera = Engine::GetWorld()->GetActiveCamera();
 		// first pass
 		glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 

@@ -102,6 +102,42 @@ bool World::LoadAndPrepareWorldFromXML(PodHandle<XMLDocPod> sceneXML)
 	return true;
 }
 
+Node* World::DuplicateNode(Node* src, Node* newParent)
+{
+	if (!newParent)
+	{
+		newParent = src->GetParent();
+	}
+	Reflector& srcReflector = GetReflector(src);
+
+	Node* created = GetNodeFactory()->LoadNodeFromType(src->m_type, newParent);
+
+	created->m_type = src->m_type;
+	created->m_name = src->m_name + "_Copy";
+
+	created->m_localTranslation = src->m_localTranslation;
+	created->m_localOrientation = src->m_localOrientation;
+	created->m_localScale = src->m_localScale;
+	created->MarkDirty();
+
+	auto result = CopyReflectorInto(srcReflector, GetReflector(created));
+	CLOG_FATAL(!result.IsExactlyCorrect(), "Duplicate node did not exactly match properties! Node: {}", src);
+
+	GetReflector(created).SetName(created->m_type + "." + created->m_name + "." + std::to_string(created->GetUID()));
+
+	return created;
+}
+
+Node* World::DeepDuplicateNode(Node* src, Node* newParent)
+{
+	Node* result = DuplicateNode(src, newParent);
+	for (auto& child : src->GetChildren())
+	{
+		DeepDuplicateNode(child.get(), result);
+	}
+	result->PostChildrenLoaded();
+	return result;
+}
 
 void World::Update()
 {
