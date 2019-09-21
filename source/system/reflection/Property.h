@@ -82,10 +82,16 @@ public:
 		return *this;
 	}
 
-	// 
+	// True if ALL flags are found.
 	bool HasFlags(PropertyFlags::Type flags) const
 	{
 		return ((m_flags & flags) == flags);
+	}
+
+	// True only when the flags match exactly
+	bool HasSameFlags(Property& other) const
+	{
+		return other.m_flags == m_flags;
 	}
 };
 
@@ -108,36 +114,6 @@ class ExactProperty : public Property
 	}
 
 public:
-	// Calls one depending on the type of the property. Forwards a type& as a single lambda param. (eg: int& PropValue)
-	template<typename IntF, typename BoolF, typename FloatF, typename Vec3F, typename StringF>
-	auto SwitchOnType(IntF Int, BoolF Bool, FloatF Float, Vec3F Vec3, StringF String) -> return_type_t<IntF>
-	{
-		switch (m_type)
-		{
-		case PropertyType::Int:
-			return Int(GetRef<int32>());
-			break;
-		case PropertyType::Bool:
-			return Bool(GetRef<bool>());
-			break;
-		case PropertyType::Float:
-			return Float(GetRef<float>());
-			break;
-		case PropertyType::Vec3:
-			return Vec3(GetRef<glm::vec3>());
-			break;
-		case PropertyType::String:
-			return String(GetRef<std::string>());
-			break;
-		}
-
-		if constexpr (!std::is_void_v<return_type_t<IntF>>)
-		{
-			return {};
-		}
-	}
-
-
 	// ALWAYS only request types you are sure are the correct type with IsA() first.
 	// this WILL have undefined behavior if you try to convert to a different type.
 	template<typename As>

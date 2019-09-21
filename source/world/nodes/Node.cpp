@@ -105,10 +105,10 @@ bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 
 	LOG_INFO("Loading {0} named {1}", m_type, m_name);
 
-	NodeFactory* factory = Engine::GetWorld()->GetNodeFactory();
-
 	LoadReflectedProperties(xmlData);
 	LoadAttributesFromXML(xmlData);
+
+	NodeFactory* factory = Engine::GetWorld()->GetNodeFactory();
 	const auto status = factory->LoadChildren(xmlData, this);
 		
 	// calculate local matrix after loading

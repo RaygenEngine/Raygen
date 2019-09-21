@@ -2,7 +2,7 @@
 #include "system/reflection/Property.h"
 
 #include <type_traits>
-
+#include <any>
 
 #define DECLARE_HAS_FUNCTION_DETECTOR(FuncName)	\
 template<typename T, typename = void>			\
@@ -92,11 +92,9 @@ void CallVisitorOnProperty(ExactProperty& prop, VisitorClass& v)
 	 ;
 }
 
-template<typename ReflectedType, typename VisitorClass>
-void CallVisitorOnEveryProperty(ReflectedType* type, VisitorClass& v)
+template<typename VisitorClass>
+void CallVisitorOnEveryProperty(Reflector& reflector, VisitorClass& v)
 {
-	Reflector reflector = GetReflector(type);
-	
 	if constexpr (HasBegin<VisitorClass>::value)
 	{
 		v.Begin(reflector);
@@ -106,9 +104,19 @@ void CallVisitorOnEveryProperty(ReflectedType* type, VisitorClass& v)
 	{
 		if constexpr (HasPreProperty<VisitorClass>::value)
 		{
-			v.PreProperty(p);
+			if constexpr (std::is_same_v<return_type_t<decltype(&VisitorClass::PreProperty)>, bool>)
+			{
+				if (!v.PreProperty(p))
+				{
+					continue;
+				}
+			}
+			else
+			{
+				v.PreProperty(p);
+			}
 		}
-		
+
 		CallVisitorOnProperty(p, v);
 
 		if constexpr (HasPostProperty<VisitorClass>::value)
@@ -121,5 +129,47 @@ void CallVisitorOnEveryProperty(ReflectedType* type, VisitorClass& v)
 	{
 		v.End(reflector);
 	}
-
 }
+
+template<typename ReflectedType, typename VisitorClass>
+void CallVisitorOnEveryProperty(ReflectedType* type, VisitorClass& v)
+{
+	Reflector reflector = GetReflector(type);
+	CallVisitorOnEveryProperty(reflector, v);
+}
+
+struct ReflectorOperationResult
+{
+	// Properties with same name but different types are included here:
+	size_t PropertiesNotFoundInDestination{ 0 };
+
+	
+	size_t PropertiesNotFoundInSource{ 0 };
+
+	// Counts type miss matches where variable name is the same
+	// eg: this counts: 
+	// - SRC: bool myInt;
+	// - DST: int32 myInt;
+	size_t TypeMissmatches{ 0 };
+
+	// Counts flag missmatches on type matches
+	// eg: this counts: 
+	// - SRC: int32 myInt; [flag: NoSave]
+	// - DST: int32 myInt; [flag: NoLoad]
+	//
+	// eg: this doesnt: 
+	// - SRC: bool myInt; [flag: NoSave]
+	// - DST: int32 myInt; [flag: NoLoad]
+	size_t FlagMissmatches{ 0 };
+
+	bool IsExactlyCorrect()
+	{
+		return PropertiesNotFoundInDestination == 0
+			&& PropertiesNotFoundInSource == 0
+			&& TypeMissmatches == 0
+			&& FlagMissmatches == 0;
+	}
+};
+
+ReflectorOperationResult CopyReflectorInto(Reflector& Source, Reflector& Destination);
+ReflectorOperationResult ApplyMapToReflector(std::unordered_map<std::string, std::any>& Source, Reflector& Destination);

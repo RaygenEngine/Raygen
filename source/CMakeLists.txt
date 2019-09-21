@@ -48,7 +48,8 @@ set(SOURCE_FILES
 	system/Input.cpp
 	
 	system/reflection/Reflection.cpp
-	
+	system/reflection/ReflectionTools.cpp
+
 	event/Event.cpp
 	
 	world/World.cpp
