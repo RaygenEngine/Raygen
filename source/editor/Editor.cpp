@@ -60,6 +60,8 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 	std::string nameBuf;
 	const char* name; 
 
+	bool dirty{ false };
+
 	void GenerateUniqueName(ExactProperty& p)
 	{
 		std::string buf = p.GetName() + "##" + path;
@@ -88,73 +90,80 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 		GenerateUniqueName(p);
 	}
 	
-	void Visit(int32& t, ExactProperty& p)
+	template<typename T>
+	void Visit(T& t, ExactProperty& p)
 	{
-		ImGui::DragInt(name, &t, 0.1f);
+		if (Inner(t, p))
+		{
+			dirty = true;
+		}
 	}
 
-	void Visit(bool& t, ExactProperty& p)
+	bool Inner(int32& t, ExactProperty& p)
+	{
+		return ImGui::DragInt(name, &t, 0.1f);
+	}
+
+	bool Inner(bool& t, ExactProperty& p)
 	{
 		if (p.HasFlags(NoEdit))
 		{
 			bool t1 = t;
 			ImGui::Checkbox(name, &t1);
+			return false;
 		}
-		else
-		{
-			ImGui::Checkbox(name, &t);
-		}
+		return ImGui::Checkbox(name, &t);
 	}
 	
-	void Visit(float& t, ExactProperty& p)
+	bool Inner(float& t, ExactProperty& p)
 	{
-		ImGui::DragFloat(name, &t, 0.01f);
+		return ImGui::DragFloat(name, &t, 0.01f);
 	}
 
-	void Visit(glm::vec3& t, ExactProperty& p)
+	bool Inner(glm::vec3& t, ExactProperty& p)
 	{
 		if (p.HasFlags(PropertyFlags::Color))
 		{
-			ImGui::ColorEdit3(name, ImUtil::FromVec3(t), ImGuiColorEditFlags_DisplayHSV);
+			return ImGui::ColorEdit3(name, ImUtil::FromVec3(t), ImGuiColorEditFlags_DisplayHSV);
 		}
 		else 
 		{
-			ImGui::DragFloat3(name, ImUtil::FromVec3(t), 0.01f);
+			return ImGui::DragFloat3(name, ImUtil::FromVec3(t), 0.01f);
 		}
 	}
 
-	void Visit(glm::vec4& t, ExactProperty& p)
+	bool Inner(glm::vec4& t, ExactProperty& p)
 	{
 		if (p.HasFlags(PropertyFlags::Color))
 		{
-			ImGui::ColorEdit4(name, ImUtil::FromVec4(t), ImGuiColorEditFlags_DisplayHSV);
+			return ImGui::ColorEdit4(name, ImUtil::FromVec4(t), ImGuiColorEditFlags_DisplayHSV);
 		}
 		else
 		{
-			ImGui::DragFloat4(name, ImUtil::FromVec4(t), 0.01f);
+			return ImGui::DragFloat4(name, ImUtil::FromVec4(t), 0.01f);
 		}
 	}
 
-	void Visit(std::string& ref, ExactProperty& p) 
+	bool Inner(std::string& ref, ExactProperty& p) 
 	{
 		if (p.HasFlags(PropertyFlags::Multiline))
 		{
-			ImGui::InputTextMultiline(name, &ref, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16));
+			return ImGui::InputTextMultiline(name, &ref, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16));
 		}
 		else
 		{
-			ImGui::InputText(name, &ref);
+			return ImGui::InputText(name, &ref);
 		}
 	}
 
 	template<typename PodType>
-	void Visit(PodHandle<PodType>& pod, ExactProperty& p)
+	bool Inner(PodHandle<PodType>& pod, ExactProperty& p)
 	{
 		if (!pod.HasBeenAssigned())
 		{
 			std::string s = "Unitialised handle: " + p.GetName();
 			ImGui::Text(s.c_str());
-			return;
+			return false;
 		}
 
 		auto str = Engine::GetAssetManager()->GetPodPath(pod).string();
@@ -170,16 +179,18 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 			ImGui::Unindent();
 			depth--;
 		}
+		return false;
 	}
 
 	template<typename T>
-	void Visit(T& t, ExactProperty& p)
+	bool Inner(T& t, ExactProperty& p)
 	{
 		std::string s = "unhandled property: " + p.GetName();
 		ImGui::Text(s.c_str());
+		return false;
 	}
 
-	void Visit(std::vector<PodHandle<MaterialPod>*>& t, ExactProperty& p)
+	bool Inner(std::vector<PodHandle<MaterialPod>*>& t, ExactProperty& p)
 	{
 		if (ImGui::CollapsingHeader(name))
 		{
@@ -217,10 +228,11 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 			}
 			ImGui::Unindent();
 		}
+		return false;
 	}
 
 	template<typename T>
-	void Visit(std::vector<PodHandle<T>>& t, ExactProperty& p)
+	bool Inner(std::vector<PodHandle<T>>& t, ExactProperty& p)
 	{
 		if (ImGui::CollapsingHeader(name))
 		{
@@ -245,6 +257,7 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 			}
 			ImGui::Unindent();
 		}
+		return false;
 	}
 
 };
@@ -269,10 +282,9 @@ Editor::~Editor()
 	
 void Editor::UpdateEditor()
 {
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::TAB))
-	{	
-		m_showImgui = !m_showImgui;
-	}
+	HandleInput();
+
+
 	if (!m_showImgui)
 	{
 		return;
@@ -406,16 +418,31 @@ void Editor::PropertyEditor(Node* node)
 	}
 
 	
-	if (ImGui::DragFloat3("AbsScale", ImUtil::FromVec3(node->m_worldScale), 0.01f))
+	if (ImGui::Button("Duplicate"))
 	{
-		dirtyMatrix = true;
+		Engine::GetWorld()->DeepDuplicateNode(node);
+	}
+
+	auto camera = dynamic_cast<CameraNode*>(node);
+	if (camera)
+	{
+		ImGui::SameLine();
+		if (ImGui::Button("Make Active Camera"))
+		{
+			Engine::GetWorld()->m_activeCamera = camera;
+		}
 	}
 
 	ImGui::Separator();
-	
-	CallVisitorOnEveryProperty(node, ReflectionToImguiVisitor());
+	ReflectionToImguiVisitor visitor;
+	CallVisitorOnEveryProperty(node,visitor);
 
 	ImGui::EndChild();
+
+	if (visitor.dirty)
+	{
+		node->MarkDirty();
+	}
 
 	if (dirtyMatrix)
 	{
@@ -431,6 +458,22 @@ void Editor::LoadScene(const std::string& scenefile)
 
 	m_selectedNode = nullptr;
 	Event::OnWindowResize.Broadcast(Engine::GetMainWindow()->GetWidth(), Engine::GetMainWindow()->GetHeight());
+}
+
+void Editor::HandleInput()
+{
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::TAB))
+	{
+		m_showImgui = !m_showImgui;
+	}
+
+	if (Engine::GetInput()->IsKeyRepeat(XVirtualKey::CTRL) && Engine::GetInput()->IsKeyPressed(XVirtualKey::W))
+	{
+		if (m_selectedNode && m_selectedNode != Engine::GetWorld()->GetRoot())
+		{
+			Engine::GetWorld()->DeepDuplicateNode(m_selectedNode);
+		}
+	}
 }
 
 

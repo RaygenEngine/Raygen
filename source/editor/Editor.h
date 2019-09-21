@@ -34,6 +34,8 @@ private:
 	void Outliner();
 	void PropertyEditor(Node* activeNode);
 	void LoadScene(const std::string& scenefile);
+
+	void HandleInput();
 };
 
 template<typename Lambda>

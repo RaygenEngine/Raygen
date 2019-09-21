@@ -109,7 +109,7 @@ bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 	LoadAttributesFromXML(xmlData);
 
 	NodeFactory* factory = Engine::GetWorld()->GetNodeFactory();
-	const auto status = factory->LoadChildren(xmlData, this);
+	const auto status = factory->LoadChildrenXML(xmlData, this);
 		
 	// calculate local matrix after loading
 	m_localMatrix = utl::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);

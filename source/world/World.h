@@ -11,8 +11,10 @@
 #include "asset/AssetManager.h"
 #include "system/Input.h"
 #include "nodes/geometry/InstancedGeometryNode.h"
+#include "system/reflection/ReflectionTools.h"
 
-class NodeFactory;
+
+class CameraNode;
 
 // TODO:
 class RootNode : public Node
@@ -64,6 +66,9 @@ class World
 	NodeFactory* m_nodeFactory;
 
 	std::unique_ptr<RootNode> m_root;
+
+	CameraNode* m_activeCamera{ nullptr };
+	friend class Editor;
 public:
 	[[nodiscard]] RootNode* GetRoot() const { return m_root.get();  }
 
@@ -74,6 +79,13 @@ public:
 	template <typename NodeType>
 	void AddNode(NodeType* node)
 	{
+		if constexpr (std::is_same_v<NodeType, CameraNode>)
+		{
+			if (!m_activeCamera)
+			{
+				m_activeCamera = node;
+			}
+		}
 		GetNodeMap<NodeType>().insert(node);
 		m_nodes.insert(node);
 	}
@@ -138,8 +150,10 @@ public:
 	float GetDeltaTime() const { return m_deltaTime; }
 	float GetWorldTime() const { return m_worldTime; }
 
+	CameraNode* GetActiveCamera() const { return m_activeCamera; }
+
 	// SetIdentificationFromAssociatedDiskAssetIdentification node to world and as child, and return observer (maybe required for special inter-node handling)
-	template <typename ChildType>
+/*	template <typename ChildType>
 	ChildType* LoadNode(Node* parent, const tinyxml2::XMLElement* xmlData)
 	{
 		std::shared_ptr<ChildType> node = std::shared_ptr<ChildType>(new ChildType(parent), [&](ChildType* assetPtr)
@@ -164,9 +178,9 @@ public:
 		// return observer
 		return node.get();
 	}
-
+	*/
 	template <typename ChildType>
-	ChildType* LoadNode(Node* parent)
+	ChildType* CreateNode(Node* parent)
 	{
 		std::shared_ptr<ChildType> node = std::shared_ptr<ChildType>(new ChildType(parent), [&](ChildType* assetPtr)
 		{
@@ -189,4 +203,19 @@ public:
 	bool LoadAndPrepareWorldFromXML(PodHandle<XMLDocPod> sceneXML);
 
 	NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
+
+protected:
+	// Only reflected properties get copied.
+	// Transient properties do not get copied. 
+	// Children are ignored. Use DeepDuplicateNode to properly instanciate children.
+	Node* DuplicateNode(Node* src, Node* newParent = nullptr);
+
+
+public:
+	// Only reflected properties get copied.
+	// Transient properties do not get copied. 
+	// Children are iteratively duplicated and attached at their new respective parents.
+	// Uses the factory and m_type of each node to generate the new ones.
+	Node* DeepDuplicateNode(Node* src, Node* newParent = nullptr);
+
 };

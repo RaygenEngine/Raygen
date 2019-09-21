@@ -7,7 +7,7 @@
 #include "world/World.h"
 #include "world/nodes/user/freeform/FreeformUserNode.h"
 
-bool NodeFactory::LoadChildren(const tinyxml2::XMLElement* xmlData,
+bool NodeFactory::LoadChildrenXML(const tinyxml2::XMLElement* xmlData,
 										Node* parent)
 {
 	for (auto* xmdChildElement = xmlData->FirstChildElement(); xmdChildElement != nullptr;
@@ -15,67 +15,74 @@ bool NodeFactory::LoadChildren(const tinyxml2::XMLElement* xmlData,
 	{
 		const std::string type = xmdChildElement->Name();
 
-		Node* created = LoadChildSpecificNode(type, parent, xmdChildElement);
+		Node* created = LoadChildSpecificNode(type, parent);
 
 		if (!created)
 		{
-			created = LoadNodeFromType(type, parent, xmdChildElement);
+			created = LoadNodeFromType(type, parent);
 		}
 
-		CLOG_ERROR(!created, "Failed to load a child with type: {0}", type);
+		if (created)
+		{
+			bool loaded = created->LoadFromXML(xmdChildElement);
+			CLOG_ERROR(!loaded, "Failed to load a node with type: {0}", type);
+		}
+
+		CLOG_ERROR(!created, "Failed to create a child with type: {0}", type);
 	}
 
 	return parent->PostChildrenLoaded();
 }
 
-Node* NodeFactory::LoadChildSpecificNode(const std::string& type, Node* parentNode, const tinyxml2::XMLElement* xmdChildElement)
+Node* NodeFactory::LoadChildSpecificNode(const std::string& type, Node* parentNode)
 {
-	Node* custom = parentNode->LoadSpecificChild(xmdChildElement);
+	Node* custom = parentNode->LoadSpecificChild(type);
 	return custom;
 }
 
-Node* NodeFactory::LoadNodeFromType(const std::string& type, Node* parent, const tinyxml2::XMLElement* xmdChildElement)
+Node* NodeFactory::LoadNodeFromType(const std::string& type, Node* parent)
 {
 	World* world = Engine::GetWorld();
 	if (type == "freeform_user")
 	{
-		return world->LoadNode<FreeformUserNode>(parent, xmdChildElement);
+		return world->CreateNode<FreeformUserNode>(parent);
 	}
 	if (type == "camera")
 	{
-		return world->LoadNode<CameraNode>(parent, xmdChildElement);
+		return world->CreateNode<CameraNode>(parent);
 	}
 	if (type == "light")
 	{
-		return world->LoadNode<PunctualLightNode>(parent, xmdChildElement);
+		return world->CreateNode<PunctualLightNode>(parent);
 	}
 	if (type == "geometry")
 	{
-		return world->LoadNode<GeometryNode>(parent, xmdChildElement);
+		return world->CreateNode<GeometryNode>(parent);
 	}
 	if (type == "transform")
 	{
-		return world->LoadNode<TransformNode>(parent, xmdChildElement);
+		return world->CreateNode<TransformNode>(parent);
 	}
-	if (type == "oculus_user")
-	{
-		//return world->LoadNode<OculusUserNode>(parent, xmdChildElement);
-	}
-	if (type == "geometry_instanced_matrix")
-	{
-		return LoadInstancingMatrixMetaNode(parent, xmdChildElement);
-	}
+	// TODO: 
+	//if (type == "oculus_user")
+	//{
+	//	//return world->LoadNode<OculusUserNode>(parent);
+	//}
+	//if (type == "geometry_instanced_matrix")
+	//{
+	//	return LoadInstancingMatrixMetaNode(parent);
+	//}
 	if (type == "geometry_instanced")
 	{
-		return world->LoadNode<InstancedGeometryNode>(parent, xmdChildElement);
+		return world->CreateNode<InstancedGeometryNode>(parent);
 	}
 	if (type == "sky_cube")
 	{
-		return world->LoadNode<SkyCubeNode>(parent, xmdChildElement);
+		return world->CreateNode<SkyCubeNode>(parent);
 	}
 	if (type == "sky_hdr")
 	{
-		return world->LoadNode<SkyHDRNode>(parent, xmdChildElement);
+		return world->CreateNode<SkyHDRNode>(parent);
 	}
 
 	return nullptr;
