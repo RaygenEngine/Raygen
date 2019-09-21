@@ -8,6 +8,8 @@
 #include "sky/SkyHDRNode.h"
 #include "world/NodeFactory.h"
 #include "asset/AssetManager.h"
+#include "system/reflection/ReflectionTools.h"
+#include "asset/PodIncludes.h"
 
 Node::Node(Node* pNode)
 		: m_localTranslation(0.f, 0.f, 0.f),
@@ -106,6 +108,7 @@ bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 	NodeFactory* factory = Engine::GetWorld()->GetNodeFactory();
 
 	LoadReflectedProperties(xmlData);
+	LoadAttributesFromXML(xmlData);
 	const auto status = factory->LoadChildren(xmlData, this);
 		
 	// calculate local matrix after loading
@@ -238,46 +241,79 @@ std::string Node::ToString(bool verbose, uint depth) const
 	return "name:" + m_name + moreInfo + "\n" + groupTree;
 }
 
+namespace 
+{
+struct LoadPropertiesFromXMLVisitor
+{
+	const tinyxml2::XMLElement* xmlData;
+	const char* str;
+
+
+	// Basic types
+	void Visit(int32& v, ExactProperty& p) { xmlData->QueryIntAttribute(str, &v); }
+	void Visit(bool& v, ExactProperty& p) { xmlData->QueryBoolAttribute(str, &v); }
+	void Visit(float& v, ExactProperty& p) { xmlData->QueryFloatAttribute(str, &v); }
+
+	void Visit(glm::vec3& v, ExactProperty& p)
+	{
+		ParsingAux::ReadFloatsAttribute(xmlData, str, v);
+	}
+	void Visit(glm::vec4& v, ExactProperty& p)
+	{
+		ParsingAux::ReadFloatsAttribute(xmlData, str, v);
+	}
+
+	void Visit(std::string& v, ExactProperty& p)
+	{
+		ParsingAux::ReadStringAttribute(xmlData, str, v);
+	}
+
+	// Pod<T>
+	template<typename T>
+	void Visit(PodHandle<T>& handle, ExactProperty& p)
+	{
+		std::string tmp;
+		if (!ParsingAux::ReadStringAttribute(xmlData, str, tmp))
+		{
+			if (!p.HasFlags(PropertyFlags::OptionalPod))
+			{
+				LOG_FATAL("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
+			}
+			return;
+		}
+		handle = AssetManager::GetOrCreate<T>(tmp);
+	}
+	
+	template<typename T>
+	void Visit(std::vector<T>& v, ExactProperty& p)
+	{
+		LOG_WARN("Skipped loading unimplemented vector type from scenefile with name: {} ", p.GetName());
+	}
+
+	// Catch all else here
+	template<typename T>
+	void Visit(T& v, ExactProperty& p)
+	{
+		LOG_WARN("Skipped loading unimplemented type from scenefile with name: {} ", p.GetName());
+	}
+	
+};
+}
+
 void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 {
 	using namespace ParsingAux;
-
+	LoadPropertiesFromXMLVisitor visitor;
+	visitor.xmlData = xmlData;
 	for (auto& prop : m_reflector.GetProperties())
 	{
-		auto str = prop.GetName().c_str();
-		prop.SwitchOnType(
-			[&](int& ref) {
-			xmlData->QueryIntAttribute(str, &ref);
-		},
-			[&](bool& ref) {
-			xmlData->QueryBoolAttribute(str, &ref);
-		},
-			[&](float& ref) {
-			xmlData->QueryFloatAttribute(str, &ref);
-		},
-			[&](glm::vec3& ref) {
-			ReadFloatsAttribute(xmlData, str, ref);
-		},
-			[&](std::string& ref) {
-			ReadStringAttribute(xmlData, str, ref);
+		if (prop.HasFlags(PropertyFlags::NoLoad))
+		{
+			continue;
 		}
-			//	, [&](Asset*& ref) {
-			//	std::string type;
-			//	ReadStringAttribute(xmlData, "type", type);
 
-			//	// default geom is static
-			//	auto modelGeomType = GeometryUsage::STATIC;
-			//	if (!type.empty() && utl::CaseInsensitiveCompare(type, "dynamic"))
-			//		modelGeomType = GeometryUsage::DYNAMIC;
-
-			//	std::string fileStr;
-			//	ReadStringAttribute(xmlData, str, fileStr);
-
-			//	//auto p = Engine::GetAssetManager()->m_pathSystem.SearchAssetPath(fileStr);
-			//	//ref = Engine::GetAssetManager()->RequestSearchAsset<ModelAsset>(p);
-			//	//Engine::GetAssetManager()->Load(ref);
-			//}
-		);
+		auto str = prop.GetName().c_str();
+		visitor.str = str;
+		CallVisitorOnProperty(prop, visitor);
 	}
-	LoadAttributesFromXML(xmlData);
 }
