@@ -97,6 +97,15 @@ void Node::MarkDirty()
 		child->MarkDirty();
 }
 
+void Node::DeleteChild(Node* child)
+{
+	auto it = std::find_if(m_children.begin(), m_children.end(), [&](auto& ref) 
+	{
+		return ref.get() == child;
+	});
+	m_children.erase(it);
+}
+
 bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 {
 	ParsingAux::ReadFillEntityName(xmlData, m_name);

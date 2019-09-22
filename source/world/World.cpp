@@ -136,7 +136,17 @@ Node* World::DeepDuplicateNode(Node* src, Node* newParent)
 		DeepDuplicateNode(child.get(), result);
 	}
 	result->PostChildrenLoaded();
+	Event::OnWorldNodeAdded.Broadcast(result);
 	return result;
+}
+
+void World::DeleteNode(Node* src)
+{
+	if (!src->GetParent())
+	{
+		return;
+	}
+	src->GetParent()->DeleteChild(src);
 }
 
 void World::Update()

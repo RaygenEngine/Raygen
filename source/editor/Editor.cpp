@@ -202,14 +202,14 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 			int32 index = 0;
 			for (auto& handle : t)
 			{
-				//if (uniques)
-				{
-					bool found = includedHandles.emplace(*handle).second;
-					if (found)
-					{
-						continue;
-					}
-				}
+				////if (uniques)
+				//{
+				//	bool found = includedHandles.emplace(*handle).second;
+				//	if (found)
+				//	{
+				//		continue;
+				//	}
+				//}
 				++index;
 				std::string sname = "|" + p.GetName() + std::to_string(index);
 				size_t len = sname.size();
@@ -366,10 +366,15 @@ void Editor::UpdateEditor()
 		std::string text;
 		for (auto& assetPair : Engine::GetAssetManager()->m_pathToUid)
 		{
+			if (ImGui::Button("Unload"))
+			{
+				AssetManager::ClearFromId(assetPair.second);
+			}
+			ImGui::SameLine();
 			ImGui::Text(assetPair.first.c_str());
 			ImGui::SameLine();
 			ImGui::Text(std::to_string(assetPair.second).c_str());
-			ImGui::SameLine();
+			
 			//text += assetPair.first + "\n";
 		}
 	}
@@ -386,7 +391,7 @@ void Editor::Outliner()
 
 	RecurseNodes(Engine::GetWorld()->GetRoot(), [&](Node* node, int32 depth)
 	{
-		auto str = std::string(depth * 4, ' ') + node->m_reflector.GetName();
+		auto str = std::string(depth * 4, ' ') + node->m_type + "> " + node->m_name + "##" + node->m_reflector.GetName();
 		if (ImGui::Selectable(str.c_str(), node == m_selectedNode))
 		{
 			m_selectedNode = node;
@@ -398,7 +403,9 @@ void Editor::Outliner()
 void Editor::PropertyEditor(Node* node)
 {
 	ImGui::BeginChild("Properties", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
-	
+	ImGui::InputText("Name", &node->m_name);
+
+
 	glm::vec3 eulerPyr = glm::degrees(glm::eulerAngles(node->m_localOrientation));
 
 	bool dirtyMatrix = false;
@@ -420,7 +427,16 @@ void Editor::PropertyEditor(Node* node)
 	
 	if (ImGui::Button("Duplicate"))
 	{
-		Engine::GetWorld()->DeepDuplicateNode(node);
+		Node* newnode = Engine::GetWorld()->DeepDuplicateNode(node);
+		m_selectedNode = newnode;
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Delete"))
+	{
+		Engine::GetWorld()->DeleteNode(node);
+		m_selectedNode = nullptr;
+		ImGui::EndChild();
+		return;
 	}
 
 	auto camera = dynamic_cast<CameraNode*>(node);
@@ -475,8 +491,6 @@ void Editor::HandleInput()
 		}
 	}
 }
-
-
 
 void Editor::PreBeginFrame()
 {

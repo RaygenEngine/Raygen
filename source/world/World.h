@@ -50,12 +50,12 @@ class World
 	mutable std::unordered_set<PunctualLightNode*> m_lights;
 	mutable std::unordered_set<CameraNode*> m_cameras;
 	mutable std::unordered_set<UserNode*> m_users;
-		
+
 	// dirty nodes
-	std::unordered_set<Node*> m_dirtyNodes; 
+	std::unordered_set<Node*> m_dirtyNodes;
 	// used for optimizations
-	std::unordered_set<Node*> m_dirtyLeafNodes; 
-		
+	std::unordered_set<Node*> m_dirtyLeafNodes;
+
 	// world time
 	float m_deltaTime;
 
@@ -70,7 +70,7 @@ class World
 	CameraNode* m_activeCamera{ nullptr };
 	friend class Editor;
 public:
-	[[nodiscard]] RootNode* GetRoot() const { return m_root.get();  }
+	[[nodiscard]] RootNode* GetRoot() const { return m_root.get(); }
 
 	World(NodeFactory* factory);
 	~World();
@@ -93,6 +93,7 @@ public:
 	template <typename NodeType>
 	void RemoveNode(NodeType* node)
 	{
+		Event::OnWorldNodeRemoved.Broadcast(node);
 		GetNodeMap<NodeType>().erase(node);
 		m_nodes.erase(node);
 	}
@@ -108,7 +109,7 @@ public:
 	template <typename NodeSubType>
 	NodeSubType* GetAvailableNodeSpecificSubType() const
 	{
-		for(auto node : GetNodeMap<NodeSubType>())
+		for (auto node : GetNodeMap<NodeSubType>())
 		{
 			auto* snode = dynamic_cast<NodeSubType*>(node);
 
@@ -204,10 +205,11 @@ public:
 
 	NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
 
-protected:
+private:
 	// Only reflected properties get copied.
 	// Transient properties do not get copied. 
 	// Children are ignored. Use DeepDuplicateNode to properly instanciate children.
+	// Does not properly call the correct events / functions
 	Node* DuplicateNode(Node* src, Node* newParent = nullptr);
 
 
@@ -218,4 +220,7 @@ public:
 	// Uses the factory and m_type of each node to generate the new ones.
 	Node* DeepDuplicateNode(Node* src, Node* newParent = nullptr);
 
+
+	// This will also remove the children.
+	void DeleteNode(Node* src);
 };

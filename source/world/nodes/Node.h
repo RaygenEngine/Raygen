@@ -75,7 +75,7 @@ public:
 
 	void AddChild(std::shared_ptr<Node> child) { m_children.emplace_back(child); }
 
-
+	void DeleteChild(Node* child);
 	//
 	// LOADING
 	//

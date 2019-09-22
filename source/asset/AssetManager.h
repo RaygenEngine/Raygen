@@ -125,7 +125,17 @@ private:
 	{
 		return Engine::GetAssetManager()->FindPod(handle.podId);
 	}
-	
+
+	static void ClearFromId(size_t podId)
+	{
+		AssetManager* am = Engine::GetAssetManager();
+		auto it = am->m_uidToPod.find(podId);
+		if (it != am->m_uidToPod.end())
+		{
+			delete it->second;
+			am->m_uidToPod.erase(podId);
+		}
+	}
 
 	static size_t NextHandle;
 public:
@@ -191,6 +201,8 @@ public:
 			am->m_uidToPod.erase(handle.podId);
 		}
 	}
+
+
 
 
 	static bool IsCpuPath(const fs::path& path)
