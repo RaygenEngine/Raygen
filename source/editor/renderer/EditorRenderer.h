@@ -34,6 +34,9 @@ public:
 		});
 	}
 
+
+	void OnNodePodsDirty(Node* node);
+
 	
 
 	virtual void Render() override;

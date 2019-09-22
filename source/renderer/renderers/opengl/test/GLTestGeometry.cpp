@@ -9,7 +9,12 @@ namespace OpenGL
 	GLTestGeometry::GLTestGeometry(GLTestRenderer* renderer, GeometryNode* node)
 		: NodeObserver<GLTestRenderer, GeometryNode>(node)
 	{
-		glModel = GetGLAssetManager(this)->GetOrMakeFromUri<GLModel>(Engine::GetAssetManager()->GetPodPath(node->GetModel()));
+		ReloadModel();
+	}
+
+	void GLTestGeometry::ReloadModel()
+	{
+		glModel = GetGLAssetManager(this)->GetOrMakeFromUri<GLModel>(Engine::GetAssetManager()->GetPodPath(GetNode()->GetModel()));
 	}
 
 	GLTestGeometry::~GLTestGeometry()

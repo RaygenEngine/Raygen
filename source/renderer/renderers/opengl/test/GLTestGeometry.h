@@ -12,6 +12,8 @@ namespace OpenGL
 		GLModel* glModel;
 
 		GLTestGeometry(GLTestRenderer* renderer, GeometryNode* node);
+
+		void ReloadModel();
 		virtual ~GLTestGeometry() override;
 	};
 }
