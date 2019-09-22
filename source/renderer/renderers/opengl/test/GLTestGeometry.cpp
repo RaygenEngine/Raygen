@@ -11,4 +11,9 @@ namespace OpenGL
 	{
 		glModel = GetGLAssetManager(this)->GetOrMakeFromUri<GLModel>(Engine::GetAssetManager()->GetPodPath(node->GetModel()));
 	}
+
+	GLTestGeometry::~GLTestGeometry()
+	{
+
+	}
 }

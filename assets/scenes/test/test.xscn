@@ -26,12 +26,12 @@
 		   intensity="2"/>
 	
 		
-	<geometry name="box" 
+	<geometry name="helmet" 
 		translation="0.0, 0.0, -4.0"
 		scale="1, 1, 1" 
 		model="DamagedHelmet.gltf/#model"/> 
 		
-	<geometry name="box" 
+	<geometry name="sponza" 
 		translation="0.0, 0.0, -4.0"
 		scale="1, 1, 1" 
 		model="Sponza.gltf/#model"/> 
