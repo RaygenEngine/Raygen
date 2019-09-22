@@ -1,6 +1,6 @@
 #pragma once
 
-#include <unordered_set>
+#include <set>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -26,6 +26,9 @@ public:
 
 	// Unsafe, searches everywhere
 	fs::path SearchAssetPath(const fs::path& asset);
+
+	// Appends all filenames in the fileCache in outFiles. Costs O(m_fileCache.size())
+	void GenerateFileListOfType(const fs::path& extension, std::set<std::string>& outFiles) const;
 
 private:
 	void CacheAssetFilenames();

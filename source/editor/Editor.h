@@ -2,6 +2,7 @@
 
 #include "platform/Window.h"
 #include "editor/SceneSave.h"
+#include "editor/AssetWindow.h"
 
 class Node;
 
@@ -12,6 +13,9 @@ protected:
 	Node* m_selectedNode;
 
 	SceneSave m_sceneSave;
+
+	AssetWindow m_assetWindow;
+
 public:
 
 	bool m_showImgui{ true };

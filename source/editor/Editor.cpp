@@ -59,6 +59,8 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 
 	std::string nameBuf;
 	const char* name; 
+	
+	Node* node;
 
 	bool dirty{ false };
 
@@ -157,6 +159,25 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 	}
 
 	template<typename PodType>
+	void PodDropTarget(PodHandle<PodType>& pod)
+	{
+		if constexpr (std::is_same_v<PodType, ModelPod>)
+		{
+			if (ImGui::BeginDragDropTarget())
+			{
+				if (const ImGuiPayload * payload = ImGui::AcceptDragDropPayload("ASSET_PATH"))
+				{
+					IM_ASSERT(payload->DataSize == sizeof(std::string));
+					std::string* payloadStr = reinterpret_cast<std::string*>(payload->Data);
+					pod = AssetManager::GetOrCreate<PodType>(fs::path(*payloadStr) / "#model");
+					Engine::GetRenderer<EditorRenderer>()->OnNodePodsDirty(node);
+				}
+				ImGui::EndDragDropTarget();
+			}
+		}
+	}
+
+	template<typename PodType>
 	bool Inner(PodHandle<PodType>& pod, ExactProperty& p)
 	{
 		if (!pod.HasBeenAssigned())
@@ -171,6 +192,9 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 		{
 			GenerateUniqueName(p);
 			ImGui::InputText(name, &str, ImGuiInputTextFlags_ReadOnly);
+			PodDropTarget(pod);
+		
+
 			depth++;
 			ImGui::Indent();
 			
@@ -179,6 +203,7 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 			ImGui::Unindent();
 			depth--;
 		}
+		PodDropTarget(pod);
 		return false;
 	}
 
@@ -271,6 +296,7 @@ Editor::Editor()
 	, m_updateWorld(true)
 {
 	ImguiImpl::InitContext();
+	m_assetWindow.Init();
 }
 
 Editor::~Editor()
@@ -381,6 +407,10 @@ void Editor::UpdateEditor()
 
 	ImGui::End();
 
+
+	m_assetWindow.Draw();
+
+
 	ImguiImpl::EndFrame();
 }
 
@@ -451,6 +481,7 @@ void Editor::PropertyEditor(Node* node)
 
 	ImGui::Separator();
 	ReflectionToImguiVisitor visitor;
+	visitor.node = node;
 	CallVisitorOnEveryProperty(node,visitor);
 
 	ImGui::EndChild();

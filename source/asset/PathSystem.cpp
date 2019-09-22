@@ -147,3 +147,15 @@ fs::path PathSystem::SearchAssetPath(const fs::path& asset)
 	
 	return ret;
 }
+
+void PathSystem::GenerateFileListOfType(const fs::path& extension, std::set<std::string>& outFiles) const
+{
+	for (auto p : m_fileCache)
+	{
+		auto thisExtension = fs::path(p.first).extension();
+		if (thisExtension == extension)
+		{
+			outFiles.emplace(fs::path(p.first).filename().string());
+		}
+	}
+}
