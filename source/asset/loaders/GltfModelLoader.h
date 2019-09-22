@@ -75,7 +75,17 @@ namespace GltfModelLoader
 		// Uint32 empty specializations. runtime assert just in case
 		template<> void CopyToVector<float>(std::vector<uint32>&, byte*, size_t, size_t, size_t) { assert(false); }
 		template<> void CopyToVector<double>(std::vector<uint32>&, byte*, size_t, size_t, size_t) { assert(false); }
-		template<> void CopyToVector<byte>(std::vector<uint32>&, byte*, size_t, size_t, size_t) { assert(false); }
+		
+		template<> void CopyToVector<byte>(std::vector<uint32>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount, size_t componentCount)
+		{
+			assert(componentCount == 1);
+			for (uint32 i = 0; i < elementCount; ++i)
+			{
+				byte* elementPtr = &beginPtr[perElementOffset * i];
+				byte* data = reinterpret_cast<byte*>(elementPtr);
+				result[i] = *data;
+			}
+		}
 
 		// Extracts the type of the out vector and attempts to load any type of data at accessorIndex to this vector.
 		template<typename Output>
@@ -331,6 +341,11 @@ namespace GltfModelLoader
 		auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath);
 
 		tinygltf::Model& model = pParent->data;
+
+		if (model.defaultScene < 0)
+		{
+			model.defaultScene = 0;
+		}
 
 		auto& defaultScene = model.scenes.at(model.defaultScene);
 
