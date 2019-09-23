@@ -6,6 +6,7 @@
 namespace fs = std::filesystem;
 
 class World;
+class Node;
 
 class SceneSave
 {
@@ -18,4 +19,8 @@ public:
 	void Draw();
 
 	static bool SaveAsXML(World* world, const fs::path& path);
+
+
+	static void SerializeNodeData(Node* node);
+
 };

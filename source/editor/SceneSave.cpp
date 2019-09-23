@@ -161,3 +161,100 @@ bool SceneSave::SaveAsXML(World* world, const fs::path& path)
 
 	return false;
 }
+
+#include "nlohmann/json.hpp"
+using json = nlohmann::json;
+
+namespace glm {
+
+void to_json(json& j, const vec3& p) {
+	j = json{ p[0], p[1], p[2] };
+}
+
+void to_json(json& j, const vec4& p) {
+	j = json{ p[0], p[1], p[2], p[3] };
+}
+
+void from_json(const json& j, vec3& p) {
+	p[0] = j.at(0);
+	p[1] = j.at(1);
+	p[2] = j.at(2);
+}
+
+void from_json(const json& j, vec4& p) {
+	p[0] = j.at(0);
+	p[1] = j.at(1);
+	p[2] = j.at(2);
+	p[3] = j.at(3);
+}
+}
+
+template<typename T>
+void to_json(json& j, const PodHandle<T>& handle)
+{
+	j = Engine::GetAssetManager()->GetPodPath(handle).string();
+}
+
+template<typename T>
+void from_json(const json& j, PodHandle<T>& handle)
+{
+	handle = AssetManager::GetOrCreate(j.get<std::string>());
+}
+
+
+template<typename T>
+json to_json_deep(const PodHandle<T>& handle)
+{
+	//j = Engine::GetAssetManager()->GetPodPath(handle).string();
+	SerializeJsonVisitor visitor;
+	CallVisitorOnEveryProperty(handle.operator->(), visitor);
+
+	return utl::force_move(visitor.result);
+}
+
+
+template<typename T>
+json to_json_deep(std::vector<PodHandle<T>>& vec)
+{
+	json result;
+	for (auto& handle : vec)
+	{
+		SerializeJsonVisitor visitor;
+		CallVisitorOnEveryProperty(handle.operator->(), visitor);
+		result.emplace_back(utl::force_move(visitor.result));
+	}
+	return result;
+}
+
+
+struct SerializeJsonVisitor
+{
+	json result;
+
+	template<typename T>
+	void Visit(T& value, ExactProperty& prop)
+	{
+		result[prop.GetName()] = value;
+	}
+
+	//template<typename T>
+	//void Visit(PodHandle<T>& value, ExactProperty& prop)
+	//{
+	//	result[prop.GetName()] = to_json_deep(value);
+	//}
+
+	//template<typename T>
+	//void Visit(std::vector<PodHandle<T>>& value, ExactProperty& prop)
+	//{
+	//	result[prop.GetName()] = to_json_deep(value);
+	//}
+};
+
+#include <iostream>
+void SceneSave::SerializeNodeData(Node* node)
+{
+	SerializeJsonVisitor visitor;
+	CallVisitorOnEveryProperty(node, visitor);
+
+	std::cout << "Json Generated:\n" << std::setw(4) << visitor.result << std::endl;
+}

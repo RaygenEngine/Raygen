@@ -43,6 +43,7 @@ void FreeformUserNode::Update(float deltaTime)
 {
 	auto& input = *Engine::GetInput();
 
+	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetWheelDelta() * 0.00001f, 0.000001f, 0.1f);
 	auto speed = m_movementSpeed; // 0,01
 
 	speed *= deltaTime;

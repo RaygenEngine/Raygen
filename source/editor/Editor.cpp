@@ -11,15 +11,7 @@
 #include "system/EngineEvents.h"
 
 #include <filesystem>
-#include "asset/pods/GltfFilePod.h"
-#include "asset/pods/ImagePod.h"
-#include "asset/pods/MaterialPod.h"
-#include "asset/pods/ModelPod.h"
-#include "asset/pods/ShaderPod.h"
-#include "asset/pods/StringPod.h"
-#include "asset/pods/TexturePod.h"
-#include "asset/pods/XMLDocPod.h"
-
+#include "asset/PodIncludes.h"
 
 #include <iostream>
 #include "asset/AssetManager.h"
@@ -188,7 +180,10 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 		}
 
 		auto str = Engine::GetAssetManager()->GetPodPath(pod).string();
-		if (ImGui::CollapsingHeader(name))
+		bool open = ImGui::CollapsingHeader(name);
+		PodDropTarget(pod);
+
+		if (open)
 		{
 			GenerateUniqueName(p);
 			ImGui::InputText(name, &str, ImGuiInputTextFlags_ReadOnly);
@@ -203,7 +198,6 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 			ImGui::Unindent();
 			depth--;
 		}
-		PodDropTarget(pod);
 		return false;
 	}
 
@@ -212,47 +206,6 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 	{
 		std::string s = "unhandled property: " + p.GetName();
 		ImGui::Text(s.c_str());
-		return false;
-	}
-
-	bool Inner(std::vector<PodHandle<MaterialPod>*>& t, ExactProperty& p)
-	{
-		if (ImGui::CollapsingHeader(name))
-		{
-			//ImGui::Indent();
-			//ImGui::Checkbox("Unique Only", &uniques);
-
-			std::unordered_set<PodHandle<MaterialPod>> includedHandles;
-
-			int32 index = 0;
-			for (auto& handle : t)
-			{
-				////if (uniques)
-				//{
-				//	bool found = includedHandles.emplace(*handle).second;
-				//	if (found)
-				//	{
-				//		continue;
-				//	}
-				//}
-				++index;
-				std::string sname = "|" + p.GetName() + std::to_string(index);
-				size_t len = sname.size();
-				path += sname;
-				
-				GenerateUniqueName(p);
-				std::string finalName = Engine::GetAssetManager()->GetPodPath(*handle).string() + "##" + name;
-				if (ImGui::CollapsingHeader(finalName.c_str()))
-				{
-					ImGui::Indent();
-					CallVisitorOnEveryProperty(handle->operator->(), *this);
-					ImGui::Unindent();
-				}
-					
-				path.erase(path.end() - (len), path.end());
-			}
-			ImGui::Unindent();
-		}
 		return false;
 	}
 
@@ -271,7 +224,8 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 				path += sname;
 
 				GenerateUniqueName(p);
-				if (ImGui::CollapsingHeader(name))
+				std::string finalName = Engine::GetAssetManager()->GetPodPath(handle).string() + "##" + name;
+				if (ImGui::CollapsingHeader(finalName.c_str()))
 				{
 					ImGui::Indent();
 					CallVisitorOnEveryProperty(handle.operator->(), *this);
@@ -284,7 +238,6 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 		}
 		return false;
 	}
-
 };
 
 
@@ -435,6 +388,11 @@ void Editor::PropertyEditor(Node* node)
 	ImGui::BeginChild("Properties", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 	ImGui::InputText("Name", &node->m_name);
 
+	if (ImGui::Button("Serialize-Save"))
+	{
+		SceneSave::SerializeNodeData(node);
+	}
+
 
 	glm::vec3 eulerPyr = glm::degrees(glm::eulerAngles(node->m_localOrientation));
 
@@ -468,6 +426,7 @@ void Editor::PropertyEditor(Node* node)
 		ImGui::EndChild();
 		return;
 	}
+
 
 	auto camera = dynamic_cast<CameraNode*>(node);
 	if (camera)
