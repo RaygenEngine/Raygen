@@ -1,6 +1,8 @@
 #pragma once
 #include <set>
+#include <map>
 
+struct AssetPod;
 
 class AssetWindow
 {
@@ -9,6 +11,12 @@ class AssetWindow
 	std::set<std::string> m_xscn;
 
 	std::set<std::string> m_images;
+
+
+	std::unordered_map<size_t, std::string> m_knownPodTypes;
+
+	std::unordered_map<size_t, std::vector<AssetPod*>> m_podLists;
+
 public:
 	struct PathDrop
 	{
@@ -19,5 +27,14 @@ public:
 	void Init();
 	void Draw();
 
-	void DrawAsset(int32& n, const std::string& path);
+private:
+	void DrawAssetPod(AssetPod* pod);
+
+	void DrawFileLibrary();
+
+	void DrawAssetLibrary();
+
+	void DrawFileAsset(int32& n, const std::string& path);
+
+	void DetectPodCategory(AssetPod* pod);
 };
