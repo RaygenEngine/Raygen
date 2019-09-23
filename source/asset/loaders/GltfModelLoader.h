@@ -10,6 +10,7 @@
 
 namespace GltfModelLoader
 {
+	// TODO: Refactor: implementing this as a local struct with member functions can reduce the function arguments.
 	namespace
 	{
 		namespace tg = tinygltf;
@@ -161,7 +162,7 @@ namespace GltfModelLoader
 		}
 
 		bool LoadGeometryGroup(ModelPod* pod, const fs::path& parentPath, GeometryGroup& geom, tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData,
-			const glm::mat4& transformMat)
+			const glm::mat4& transformMat, bool& requiresDefaultMaterial)
 		{
 			// mode
 			geom.mode = GltfAux::GetGeometryMode(primitiveData.mode);
@@ -221,21 +222,19 @@ namespace GltfModelLoader
 
 			// material
 			const auto materialIndex = primitiveData.material;
-
-			//geom.material = GltfMaterialLoader::GetDefaultMaterial->GetPod();
-
-			if (materialIndex != -1)
+			
+			// If material is -1, we need default material.
+			if (materialIndex == -1)
 			{
-				auto& mat = modelData.materials.at(materialIndex);
-				
-				auto matPath = parentPath / ("#mat." + mat.name + "." + std::to_string(materialIndex));
-
-				geom.material = AssetManager::GetOrCreate<MaterialPod>(matPath);
+				requiresDefaultMaterial = true;
+				// Default material will be placed at last slot.
+				geom.materialIndex = static_cast<uint32>(pod->materials.size());
 			}
 			else
 			{
-				geom.material = GET_CUSTOM_POD(MaterialPod, "");
+				geom.materialIndex = materialIndex;
 			}
+			
 
 			// calculate missing normals (flat)
 			if (geom.normals.empty())
@@ -313,7 +312,8 @@ namespace GltfModelLoader
 			return true;
 		}
 
-		bool LoadMesh(ModelPod* pod, const fs::path& parentPath, Mesh& mesh, tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
+		bool LoadMesh(ModelPod* pod, const fs::path& parentPath, Mesh& mesh, tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat
+			, bool& requiresDefaultMaterial)
 		{
 			mesh.geometryGroups.resize(meshData.primitives.size());
 
@@ -325,7 +325,7 @@ namespace GltfModelLoader
 				auto& primitiveData = meshData.primitives.at(i);
 
 				// if one of the geometry groups fails to load
-				if (!LoadGeometryGroup(pod, parentPath, mesh.geometryGroups[i], modelData, primitiveData, transformMat))
+				if (!LoadGeometryGroup(pod, parentPath, mesh.geometryGroups[i], modelData, primitiveData, transformMat, requiresDefaultMaterial))
 				{
 					LOG_ERROR("Failed to load geometry group, name: {}", geomName);
 					return false;
@@ -348,7 +348,16 @@ namespace GltfModelLoader
 		}
 
 		auto& defaultScene = model.scenes.at(model.defaultScene);
+		
 
+		int32 matIndex = 0;
+		for (auto& gltfMaterial : model.materials)
+		{
+			auto matPath = pPath / ("#mat." + gltfMaterial.name + "." + std::to_string(matIndex++));
+			pod->materials.push_back(AssetManager::GetOrCreate<MaterialPod>(matPath));
+		}
+		bool requiresDefaultMaterial = false;
+		
 		std::function<bool(const std::vector<int>&, glm::mat4)> RecurseChildren;
 		RecurseChildren = [&](const std::vector<int>& childrenIndices, glm::mat4 parentTransformMat)
 		{
@@ -407,7 +416,7 @@ namespace GltfModelLoader
 					Mesh mesh;
 
 					// if missing mesh
-					if (!LoadMesh(pod, pPath, mesh, model, gltfMesh, localTransformMat))
+					if (!LoadMesh(pod, pPath, mesh, model, gltfMesh, localTransformMat, requiresDefaultMaterial))
 					{
 						LOG_ERROR("Failed to load mesh, name: {}", gltfMesh.name);
 						return false;
@@ -424,13 +433,10 @@ namespace GltfModelLoader
 		};
 
 		bool result = RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
-			
-		for (auto& mesh : pod->meshes)
+
+		if (requiresDefaultMaterial)
 		{
-			for (auto& geomGroup : mesh.geometryGroups)
-			{
-				pod->materials.push_back(&geomGroup.material);
-			}
+			pod->materials.push_back(GET_CUSTOM_POD(MaterialPod, ""));
 		}
 
 		return result;
