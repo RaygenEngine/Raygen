@@ -10,6 +10,7 @@
 class AssetManager
 {
 	friend class Editor;
+	friend class AssetWindow;
 
 	std::unordered_map<size_t, AssetPod*> m_uidToPod;
 	std::unordered_map<size_t, std::string> m_uidToPath;
