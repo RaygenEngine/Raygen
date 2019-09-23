@@ -17,7 +17,7 @@ struct GeometryGroup
 
 	GeometryMode mode{ GeometryMode::TRIANGLES };
 
-	PodHandle<MaterialPod> material;
+	uint32 materialIndex;
 };
 
 struct Mesh
@@ -35,6 +35,6 @@ struct ModelPod : DeletableAssetPod
 
 	std::vector<Mesh> meshes;
 
-	std::vector<PodHandle<MaterialPod>*> materials;
+	std::vector<PodHandle<MaterialPod>> materials;
 };
 

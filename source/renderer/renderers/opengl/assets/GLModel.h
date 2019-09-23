@@ -40,7 +40,7 @@ namespace OpenGL
 		virtual ~GLModel();
 
 	protected:
-		bool LoadGLMesh(GLMesh& mesh, GeometryGroup& data, GLenum usage);
+		bool LoadGLMesh(PodHandle<ModelPod> model, GLMesh& mesh, GeometryGroup& data, GLenum usage);
 		bool Load() override;
 	};
 
