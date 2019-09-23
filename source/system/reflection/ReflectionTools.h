@@ -80,15 +80,6 @@ void CallVisitorOnProperty(ExactProperty& prop, VisitorClass& v)
 	 || impl::VisitIf<std::vector<PodHandle<StringPod>>>(v, prop)
 	 || impl::VisitIf<std::vector<PodHandle<TexturePod>>>(v, prop)
 	 || impl::VisitIf<std::vector<PodHandle<XMLDocPod>>>(v, prop)
-
-	 || impl::VisitIf<std::vector<PodHandle<GltfFilePod>*>>(v, prop)
-	 || impl::VisitIf<std::vector<PodHandle<ImagePod>*>>(v, prop)
-	 || impl::VisitIf<std::vector<PodHandle<MaterialPod>*>>(v, prop)
-	 || impl::VisitIf<std::vector<PodHandle<ModelPod>*>>(v, prop)
-	 || impl::VisitIf<std::vector<PodHandle<ShaderPod>*>>(v, prop)
-	 || impl::VisitIf<std::vector<PodHandle<StringPod>*>>(v, prop)
-	 || impl::VisitIf<std::vector<PodHandle<TexturePod>*>>(v, prop)
-	 || impl::VisitIf<std::vector<PodHandle<XMLDocPod>*>>(v, prop)
 	 ;
 }
 

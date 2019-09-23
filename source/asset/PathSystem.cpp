@@ -142,8 +142,13 @@ fs::path PathSystem::SearchAssetPath(const fs::path& asset)
 
 	// TODO: cache this result
 
-	//if (ret.empty())
-	//	LOG_WARN("Could not locate asset, path: {}", asset.string());
+	if (ret.empty())
+	{
+		if (asset.has_parent_path())
+		{
+			ret = SearchAssetPath(asset.filename());
+		}
+	}
 	
 	return ret;
 }

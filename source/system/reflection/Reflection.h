@@ -105,16 +105,6 @@ enum class PropertyType
 	Vector_Text,
 	Vector_Texture,
 	Vector_XMLDoc,
-
-	VectorPtr_Cubemap,
-	VectorPtr_GltfFile,
-	VectorPtr_Image,
-	VectorPtr_Material,
-	VectorPtr_Model,
-	VectorPtr_Shader,
-	VectorPtr_Text,
-	VectorPtr_Texture,
-	VectorPtr_XMLDoc,
 };
 
 template<typename T>
@@ -184,20 +174,6 @@ template<> PropertyType ReflectionFromType<std::vector<PodHandle<ShaderPod>>> = 
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<StringPod>>> = PropertyType::Vector_Text;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<TexturePod>>> = PropertyType::Vector_Texture;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<XMLDocPod>>> = PropertyType::Vector_XMLDoc;
-
-template<> PropertyType ReflectionFromType<std::vector<PodHandle<GltfFilePod>*>> = PropertyType::VectorPtr_GltfFile;
-template<> PropertyType ReflectionFromType<std::vector<PodHandle<ImagePod>*>> = PropertyType::VectorPtr_Image;
-template<> PropertyType ReflectionFromType<std::vector<PodHandle<MaterialPod>*>> = PropertyType::VectorPtr_Material;
-template<> PropertyType ReflectionFromType<std::vector<PodHandle<ModelPod>*>> = PropertyType::VectorPtr_Model;
-template<> PropertyType ReflectionFromType<std::vector<PodHandle<ShaderPod>*>> = PropertyType::VectorPtr_Shader;
-template<> PropertyType ReflectionFromType<std::vector<PodHandle<StringPod>*>> = PropertyType::VectorPtr_Text;
-template<> PropertyType ReflectionFromType<std::vector<PodHandle<TexturePod>*>> = PropertyType::VectorPtr_Texture;
-template<> PropertyType ReflectionFromType<std::vector<PodHandle<XMLDocPod>*>> = PropertyType::VectorPtr_XMLDoc;
-
-
-
-
-
 
 
 

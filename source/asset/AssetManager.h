@@ -179,7 +179,7 @@ public:
 	}
 
 	template<typename PodType>
-	fs::path GetPodPath(PodHandle<PodType> handle)
+	fs::path GetPodPath(const PodHandle<PodType> handle)
 	{
 		return m_uidToPath.at(handle.podId);
 	}
