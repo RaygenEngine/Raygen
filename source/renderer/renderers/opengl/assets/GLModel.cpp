@@ -27,7 +27,7 @@ namespace OpenGL
 		}
 	}
 	
-	bool GLModel::LoadGLMesh(GLMesh& glMesh, GeometryGroup& data, GLenum usage)
+	bool GLModel::LoadGLMesh(PodHandle<ModelPod> model, GLMesh& glMesh, GeometryGroup& data, GLenum usage)
 	{
 		glMesh.geometryMode = GetGLGeometryMode(data.mode);
 
@@ -73,8 +73,8 @@ namespace OpenGL
 
 		glMesh.count = static_cast<GLsizei>(data.indices.size());
 
-		
-		glMesh.material = GetGLAssetManager(this)->GetOrMakeFromUri<GLMaterial>(Engine::GetAssetManager()->GetPodPath(data.material));
+		auto materialHandle = model->materials[data.materialIndex];
+		glMesh.material = GetGLAssetManager(this)->GetOrMakeFromUri<GLMaterial>(Engine::GetAssetManager()->GetPodPath(materialHandle));
 
 		DebugBoundVAO("name");
 
@@ -86,7 +86,6 @@ namespace OpenGL
 	bool GLModel::Load()
 	{
 		auto modelData = AssetManager::GetOrCreate<ModelPod>(m_assetManagerPodPath);
-		
 		TIMER_STATIC_SCOPE("uploading model time");
 
 		// TODO
@@ -98,7 +97,7 @@ namespace OpenGL
 			for (auto& geometryGroup : mesh.geometryGroups)
 			{
 				GLMesh& glmesh = meshes.emplace_back(GLMesh());
-				if (!LoadGLMesh(glmesh, geometryGroup, usage))
+				if (!LoadGLMesh(modelData, glmesh, geometryGroup, usage))
 				{
 					return false;
 				}
