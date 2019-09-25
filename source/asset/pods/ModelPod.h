@@ -25,7 +25,7 @@ struct Mesh
 	std::vector<GeometryGroup> geometryGroups;
 };
 
-struct ModelPod : DeletableAssetPod
+struct ModelPod : public AssetPod
 {
 	STATIC_REFLECTOR(ModelPod)
 	{

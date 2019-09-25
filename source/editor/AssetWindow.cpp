@@ -276,16 +276,16 @@ void Visit(T* pod, int32& id)
 
 void CallVisit(AssetPod* pod, int32& id)
 {
-#define MAYBE_VISIT(Type) if (typeid(*pod) == typeid(Type)) { Visit<Type>(dynamic_cast<Type*>(pod), id); }
-
-	MAYBE_VISIT(ImagePod);
-	MAYBE_VISIT(MaterialPod);
-	MAYBE_VISIT(ModelPod);
-	MAYBE_VISIT(ShaderPod);
-	MAYBE_VISIT(StringPod);
-	MAYBE_VISIT(TexturePod);
-
-#undef MAYBE_VISIT
+//#define MAYBE_VISIT(Type) if (typeid(*pod) == typeid(Type)) { Visit<Type>(dynamic_cast<Type*>(pod), id); }
+//
+//	MAYBE_VISIT(ImagePod);
+//	MAYBE_VISIT(MaterialPod);
+//	MAYBE_VISIT(ModelPod);
+//	MAYBE_VISIT(ShaderPod);
+//	MAYBE_VISIT(StringPod);
+//	MAYBE_VISIT(TexturePod);
+//
+//#undef MAYBE_VISIT
 }
 };
 

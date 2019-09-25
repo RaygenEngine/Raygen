@@ -118,10 +118,6 @@ constexpr bool IsReflectedF()
 	{
 		return true;
 	}
-	else if constexpr (is_vector_of_base_ptr_v<T, BasePodHandle>)
-	{
-		return true;
-	}
 	return false;
 }
 
@@ -185,6 +181,7 @@ template<> PropertyType ReflectionFromType<std::vector<PodHandle<XMLDocPod>>> = 
 // Static reflection, this macro leaves the scope on public:
 #define STATIC_REFLECTOR(Class)	private:			\
 using __ThisType = Class; public:					\
+Class() { type = ctti::type_id<Class>(); }			\
 [[nodiscard]]										\
 static const StaticReflector& StaticReflect()		\
 {													\
@@ -201,6 +198,7 @@ static void _FillMembers(StaticReflector& reflector)\
 // Static reflect var
 #define S_REFLECT_VAR(Variable, ...)				\
 	reflector.AutoAddProperty<decltype(Variable)>(#Variable, offsetof(__ThisType, Variable)).InitFlags(PropertyFlags::Pack(__VA_ARGS__));
+
 //
 // Example expansion
 // 
@@ -228,3 +226,25 @@ static void _FillMembers(StaticReflector& reflector)\
 // 
 // 	int member[10];
 // };
+
+/*
+#define REFLECTED_POD(Class) private:				\
+using __ThisType = Class; public:					\
+[[nodiscard]]										\
+static const StaticReflector& StaticReflect()		\
+{													\
+	static StaticReflector reflector(#Class);		\
+	if (!reflector.m_generated)						\
+	{												\
+		_FillMembers(reflector);					\
+		reflector.m_generated = true;				\
+	}												\
+	return reflector;								\
+}													\
+PodReflector GetPodReflector() override				\
+{													\
+	return std::move(__ThisType::StaticReflect())	\
+			.ToAbsoluteReflector(object);			\
+} public:											\
+static void _FillMembers(StaticReflector& reflector)\
+*/

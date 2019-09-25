@@ -5,6 +5,8 @@
 #include "system/Engine.h"
 #include "asset/PathSystem.h"
 #include "asset/AssetPod.h"
+#include "system/reflection/PodReflection.h"
+
 
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
 class AssetManager
@@ -38,13 +40,13 @@ private:
 public:
 	// For internal use only, dont call this on your own
 	template<typename PodType>
-	PodType* __Internal_MaybeFindPod(size_t podId) const
+	PodType* _Internal_MaybeFindPod(size_t podId) const
 	{	
 		auto it = m_uidToPod.find(podId);
 		if (it != m_uidToPod.end())
 		{
 			assert(it->second && "Found nullptr in uid To Pod map");
-			auto p = dynamic_cast<PodType*>(it->second);
+			auto p = PodCast<PodType>(it->second);
 			assert(p && "Pod of incorrect type found");
 			return p;
 		}
@@ -53,12 +55,12 @@ public:
 
 	// For internal use only, dont call this on your own
 	template<typename PodType>
-	PodType* __Internal_RefreshPod(size_t podId)
+	PodType* _Internal_RefreshPod(size_t podId)
 	{
 		auto it = m_uidToPod.find(podId);
 		if (it != m_uidToPod.end())
 		{
-			return dynamic_cast<PodType*>(it->second);
+			return PodCast<PodType>(it->second);
 		}
 
 		auto& podPath = GetPodPath<PodType>(podId);
