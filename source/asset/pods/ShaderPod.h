@@ -4,7 +4,7 @@
 #include "asset/AssetPod.h"
 #include "asset/pods/StringPod.h"
 
-struct ShaderPod : AssetPod
+struct ShaderPod : public AssetPod
 {
 	STATIC_REFLECTOR(ShaderPod)
 	{

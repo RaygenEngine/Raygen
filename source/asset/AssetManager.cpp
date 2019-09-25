@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "asset/AssetManager.h"
+#include "system/reflection/PodReflection.h"
 
 size_t AssetManager::NextHandle = 1;
 

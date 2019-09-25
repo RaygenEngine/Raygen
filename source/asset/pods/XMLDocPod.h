@@ -5,7 +5,7 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-struct XMLDocPod : DeletableAssetPod
+struct XMLDocPod : public AssetPod
 {
 	STATIC_REFLECTOR(XMLDocPod)
 	{

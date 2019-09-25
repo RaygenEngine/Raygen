@@ -49,6 +49,7 @@ set(SOURCE_FILES
 	
 	system/reflection/Reflection.cpp
 	system/reflection/ReflectionTools.cpp
+	system/reflection/PodReflection.cpp
 
 	event/Event.cpp
 	
@@ -174,7 +175,8 @@ set(HEADER_FILES
 	system/reflection/Reflector.h
 	system/reflection/Property.h
 	system/reflection/ReflectionTools.h
-	
+	system/reflection/PodReflection.h
+
 	event/Event.h
 
 	world/World.h

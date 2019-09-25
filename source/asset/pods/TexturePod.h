@@ -4,7 +4,7 @@
 #include "asset/AssetPod.h"
 #include "asset/pods/ImagePod.h"
 
-struct TexturePod : AssetPod
+struct TexturePod : public AssetPod
 {
 	STATIC_REFLECTOR(TexturePod)
 	{

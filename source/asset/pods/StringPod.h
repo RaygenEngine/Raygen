@@ -3,7 +3,7 @@
 #include "system/reflection/Reflection.h"
 #include "asset/AssetPod.h"
 
-struct StringPod : DeletableAssetPod
+struct StringPod : public AssetPod
 {
 	STATIC_REFLECTOR(StringPod)
 	{

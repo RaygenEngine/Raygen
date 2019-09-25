@@ -5,7 +5,7 @@
 
 #include "tinygltf/tiny_gltf.h"
 
-struct GltfFilePod : DeletableAssetPod
+struct GltfFilePod : public AssetPod
 {
 	STATIC_REFLECTOR(GltfFilePod)
 	{
