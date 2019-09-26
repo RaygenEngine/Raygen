@@ -35,7 +35,7 @@ private:
 	template<typename PodType>
 	PodType* FindPod(size_t podId)
 	{
-		return dynamic_cast<PodType*>(m_uidToPod.at(podId));
+		return PodCastVerfied<PodType>(m_uidToPod.at(podId));
 	}
 public:
 	// For internal use only, dont call this on your own
@@ -46,8 +46,7 @@ public:
 		if (it != m_uidToPod.end())
 		{
 			assert(it->second && "Found nullptr in uid To Pod map");
-			auto p = PodCast<PodType>(it->second);
-			assert(p && "Pod of incorrect type found");
+			auto p = PodCastVerfied<PodType>(it->second);
 			return p;
 		}
 		return nullptr;
@@ -60,7 +59,7 @@ public:
 		auto it = m_uidToPod.find(podId);
 		if (it != m_uidToPod.end())
 		{
-			return PodCast<PodType>(it->second);
+			return PodCastVerfied<PodType>(it->second);
 		}
 
 		auto& podPath = GetPodPath<PodType>(podId);
@@ -73,7 +72,7 @@ public:
 		return pod;
 	}
 
-	static AssetPod* __DebugUid(size_t a);
+	static AssetPod* _DebugUid(size_t a);
 
 private:
 
@@ -135,8 +134,28 @@ private:
 		auto it = am->m_uidToPod.find(podId);
 		if (it != am->m_uidToPod.end())
 		{
-			delete it->second;
+			::DeletePod(it->second);
 			am->m_uidToPod.erase(podId);
+		}
+	}
+	
+	// Will assert if PodId is not the same podtype.
+	// This can be removed from release builds for performance, but it is
+	// extremelly usefull for debugging
+	template<typename PodType>
+	void VerifyType(size_t podId)
+	{
+		auto it = m_uidToPod.find(podId);
+		if (it == m_uidToPod.end())
+		{
+			return;
+		}
+		auto mapType = it->second->type;
+		auto requestedType = ctti::type_id<PodType>();
+		if (mapType != requestedType)
+		{
+			LOG_FATAL("Attempted to verify pod as: {} . Pod already in asset manager was: {}", mapType.name(), requestedType.name());
+			assert(false);
 		}
 	}
 
@@ -165,6 +184,8 @@ public:
 		auto it = am->m_pathToUid.find(pathStr);
 		if (it != am->m_pathToUid.end())
 		{
+			am->VerifyType<PodType>(it->second);
+
 			PodHandle<PodType> result;
 			result.podId = it->second;
 			return result;
@@ -200,7 +221,7 @@ public:
 		auto it = am->m_uidToPod.find(handle.podId);
 		if (it != am->m_uidToPod.end())
 		{
-			delete it->second;
+			::DeletePod(it->second);
 			am->m_uidToPod.erase(handle.podId);
 		}
 	}
@@ -233,4 +254,13 @@ public:
 	////}
 	PathSystem m_pathSystem;
 	bool Init(const std::string& applicationPath, const std::string& dataDirectoryName);
+
+
+	~AssetManager()
+	{
+		for (auto& [uid, pod] : m_uidToPod)
+		{
+			::DeletePod(pod);
+		}
+	}
 };

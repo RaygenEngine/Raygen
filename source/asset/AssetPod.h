@@ -9,6 +9,11 @@ namespace fs = std::filesystem;
 struct AssetPod
 {
 	ctti::type_id_t type;
+
+protected:
+	// Do not ever delete generic asset pod pointer. There is no virtual destructor,
+	// always use DeletePod(AssetPod*) or cast to underlying pod type
+	~AssetPod() = default;
 };
 
 struct BasePodHandle

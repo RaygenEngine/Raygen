@@ -5,7 +5,7 @@
 
 size_t AssetManager::NextHandle = 1;
 
-AssetPod* AssetManager::__DebugUid(size_t a)
+AssetPod* AssetManager::_DebugUid(size_t a)
 {
 	return Engine::GetAssetManager()->m_uidToPod.at(a);
 }
@@ -14,6 +14,3 @@ bool AssetManager::Init(const std::string& applicationPath, const std::string& d
 {
 	return m_pathSystem.Init(applicationPath, dataDirectoryName);
 }
-
-
-
