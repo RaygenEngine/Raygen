@@ -20,8 +20,7 @@ class AssetManager
 	std::unordered_map<std::string, size_t> m_pathToUid;
 
 private:
-	template<typename PodType>
-	std::string GetPodPath(size_t podId)
+	std::string GetPodPathFromId(size_t podId)
 	{
 		return m_uidToPath.at(podId);
 	}
@@ -62,7 +61,7 @@ public:
 			return PodCastVerfied<PodType>(it->second);
 		}
 
-		auto& podPath = GetPodPath<PodType>(podId);
+		auto& podPath = GetPodPathFromId(podId);
 
 		PodType* pod = new PodType();
 		PodType::Load(pod, podPath);

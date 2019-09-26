@@ -53,3 +53,17 @@ void FindVariableInAllPods()
 		});
 	}
 }
+
+Reflector GetPodReflector(AssetPod* pod)
+{
+	static auto reflectorMap = CreateMapOnPodType<StaticReflector*>(
+	[](auto d)
+	{
+		using PodType = std::remove_pointer_t<decltype(d)>;
+		
+		return &const_cast<StaticReflector&>(PodType::StaticReflect());
+	}
+	);
+
+	return reflectorMap[pod->type]->ToAbsoluteReflector(pod);
+}

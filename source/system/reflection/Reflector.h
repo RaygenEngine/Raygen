@@ -128,41 +128,6 @@ public:
 	
 };
 
-// Abstracts over the multiple underlying reflector types for inspection purposes.
-class ReflectorViewer
-{
-private:
-	size_t ptr_offset;
-
-public:
-	std::string GetName() const 
-	{
-
-	}
-
-	const std::vector<ExactProperty>& GetProperties() 
-	{ 
-
-	}
-
-	bool HasProperty(const std::string& name)
-	{
-
-	}
-
-};
-
-
-//template<typename Class, typename = void>
-//void GetReflector(Class* object)
-//{
-//	static_assert(false,
-//				  "This is not a reflectable object."
-//				  "Neither m_reflector nor StaticReflect was found"
-//				  );
-//}
-
-
 template<typename T, typename = typename std::enable_if_t<!HasReflection<T>>>
 void GetReflector(T* object)
 {

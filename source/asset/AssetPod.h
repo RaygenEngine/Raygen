@@ -18,13 +18,13 @@ protected:
 
 struct BasePodHandle
 {
-protected:
 	size_t podId{ 0 };
 };
 
 template<typename PodTypeT>
 struct PodHandle : BasePodHandle
 {
+
 public:
 	using PodType = PodTypeT;
 	static_assert(std::is_base_of_v<AssetPod, PodType>, "Pod type should be a pod");
