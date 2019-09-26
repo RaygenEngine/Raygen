@@ -36,7 +36,6 @@ constexpr bool IsRegisteredPod = IsRegisteredPod_Impl<T, POD_TYPES>;
 // Checks if T is properly derived from assetpod. You should not have to use this unless you are modifying the PodReflection library.
 template<typename T>
 constexpr bool HasAssetPodBase = std::is_base_of_v<AssetPod, T>;
-
 }
 
 // Checks if T is a valid & registered pod type.
@@ -73,6 +72,24 @@ Type* PodCast(AssetPod* pod)
 	}
 	return nullptr;
 }
+
+// This pod cast will assert when fails.
+// This is extremelly usefull to catch early errors and avoid incorrect handles.
+template<typename Type>
+[[nodiscard]]
+Type* PodCastVerfied(AssetPod* pod)
+{
+	static_assert(IsValidPod<Type>, "This is not a valid and registered asset pod. The cast would always fail.");
+
+	if (pod::IsOfType<Type>(pod))
+	{
+		return static_cast<Type*>(pod);
+	}
+	LOG_FATAL("Verified Pod Cast failed. Tried to cast from: {} to {}", pod->type.name(), ctti::nameof<Type>());
+	assert(false && "See console.");
+	return nullptr;
+}
+
 
 namespace podd
 {
@@ -136,7 +153,6 @@ void VisitPodHash(ctti::type_index hash, Visitor& v)
 	podd::PodVisitHash_Impl<Visitor, POD_TYPES>(hash, v);
 }
 
-
 // Properly deletes a generic pod without rtti.
 inline void DeletePod(AssetPod* pod)
 {
@@ -183,7 +199,7 @@ std::unordered_map<ctti::type_id_t, Second> CreateMapOnPodType_Impl(Visitor& vis
 	(															// Begin expansion of variadic template 
 																// For each type 'T' in PodTs do this:
 		result.insert({											//	| Insert in result map:
-			ctti::type_id<PodTs>(),							//  |   At position of type T's hash
+			ctti::type_id<PodTs>(),								//  |   At position of type T's hash
 			visitor.operator()<PodTs*>(DummyType<PodTs>()) })	//  |   Whatever visitor<T>(T* dummy) returns (see use of DummyType<T>())
 	,															// End Expansion
 	...);
@@ -208,7 +224,6 @@ void ForEachPodType(Visitor& visitor)
 	podd::VisitPerType_Impl<Visitor, POD_TYPES>(visitor);
 }
 
-
 template<typename AnyType>
 [[nodiscard]]
 ctti::type_id_t GetTypeIdPtr(AnyType* t)
@@ -216,37 +231,47 @@ ctti::type_id_t GetTypeIdPtr(AnyType* t)
 	return ctti::type_id<std::remove_pointer_t<AnyType>>();
 }
 
-//inline void Example()
-//{
-//	std::unordered_map<ctti::type_id_t, std::string> pod_name = CreateMapOnPodType<std::string>(
-//		[](auto typeCarrier)
-//		{
-//			using PodType = std::remove_pointer_t<decltype(typeCarrier)>;
-//
-//			if constexpr (std::is_same_v<ImagePod, PodType>) {
-//				return "Image Pod";
-//			}
-//
-//			return "Not image pod";
-//		}
-//	);
-//}
+// Class that generates a type->call map for each pod when instanciated and visits the correct pod type in O(1) when called
+// from a generic AssetPod* .
+template<typename Visitor>
+class PodHashVisitor
+{
+	std::unordered_map<ctti::type_id_t, std::function<void(AssetPod*)>> m_callmap;
 
-void FindVariableInAllPods();
-std::vector<AssetPod*> GetOneOfEach();
+	Visitor* m_visitor;
 
+public:
+	PodHashVisitor()
+	{
+		ForEachPodType(
+		[&](auto dumRef)
+		{
+			using PodType = std::remove_pointer_t<decltype(dumRef)>;
 
+			m_callmap.insert(
+			{
+					ctti::type_id<PodType>(),
+					[&](AssetPod* pod) {
+						m_visitor->operator() < PodType > (PodCast<PodType>(pod));
+					}
+			});
+		});
+	}
 
-//#include <unordered_map>
-//#include <functional>
-//
-//// Create a PodType -> Function hash map once to use later.
-//template<typename ReturnType, typename Callable, typename... FunctionArgs>
-//[[nodiscard]] 
-//std::unordered_map<ctti::type_id_t, std::function<ReturnType(FunctionArgs...)>> 
-//CreateFunctionMap(Callable& c)
-//{
-//	std::unordered_map<ctti::type_id_t, std::function<ReturnType(FunctionArgs...)>> result;
-//
-//}
-// NOTE: the above is probably possible but probably not worth the time to implement
+	// Runs the visitor on a single pod.
+	// Complexity O(1)
+	void RunVisitor(Visitor& visitor, AssetPod* podThatVisits)
+	{
+		m_visitor = &visitor;
+		m_callmap[pod->type](podThatVisits);
+	}
+
+	// Runs the visitor on a single pod. Handle overload.
+	// Complexity O(1)
+	template<typename T>
+	void RunVisitor(Visitor& visitor, PodHandle<T> podThatVisits)
+	{
+		m_visitor = &visitor;
+		m_callmap[ctti::type_id<T>()](podThatVisits.operator->());
+	}
+};
