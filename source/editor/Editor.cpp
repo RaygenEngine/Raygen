@@ -153,19 +153,20 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 	template<typename PodType>
 	void PodDropTarget(PodHandle<PodType>& pod)
 	{
-		if constexpr (std::is_same_v<PodType, ModelPod>)
+//		std::string payloadTag = "POD_UID_" + std::to_string(pod->type.hash());
+
+		if (ImGui::BeginDragDropTarget())
 		{
-			if (ImGui::BeginDragDropTarget())
+			std::string payloadTag = "POD_UID_" + std::to_string(ctti::type_id<PodType>().hash());
+			if (const ImGuiPayload * payload = ImGui::AcceptDragDropPayload(payloadTag.c_str()))
 			{
-				if (const ImGuiPayload * payload = ImGui::AcceptDragDropPayload("ASSET_PATH"))
-				{
-					IM_ASSERT(payload->DataSize == sizeof(std::string));
-					std::string* payloadStr = reinterpret_cast<std::string*>(payload->Data);
-					pod = AssetManager::GetOrCreate<PodType>(fs::path(*payloadStr) / "#model");
-					Engine::GetRenderer<EditorRenderer>()->OnNodePodsDirty(node);
-				}
-				ImGui::EndDragDropTarget();
+				assert(payload->DataSize == sizeof(size_t));
+				size_t uid = *reinterpret_cast<size_t*>(payload->Data);
+				pod.podId = uid;
+				//pod = AssetManager::GetOrCreate<PodType>(fs::path(*payloadStr) / "#model");
+				Engine::GetRenderer<EditorRenderer>()->OnNodePodsDirty(node);
 			}
+			ImGui::EndDragDropTarget();
 		}
 	}
 
@@ -225,7 +226,9 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 
 				GenerateUniqueName(p);
 				std::string finalName = Engine::GetAssetManager()->GetPodPath(handle).string() + "##" + name;
-				if (ImGui::CollapsingHeader(finalName.c_str()))
+				bool r = ImGui::CollapsingHeader(finalName.c_str());
+				PodDropTarget(handle);
+				if (r)
 				{
 					ImGui::Indent();
 					CallVisitorOnEveryProperty(handle.operator->(), *this);

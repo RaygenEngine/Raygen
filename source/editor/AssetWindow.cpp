@@ -55,25 +55,23 @@ void AssetWindow::Draw()
 	ImGui::End();
 }
 
-
-
 void AssetWindow::DrawFileAsset(int32& n, const std::string& path)
 {
 	ImGui::PushID(n++);
-	ImGui::Button(path.c_str());
-
-	if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+	if (ImGui::Button(path.c_str()))
 	{
-		ImGui::SetDragDropPayload("ASSET_PATH", &path, sizeof(std::string));
-		ImGui::EndDragDropSource();
+		AssetManager::GetOrCreate<ModelPod>(path + "/#model").operator->();
 	}
+
+	//if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+	//{
+	//	ImGui::SetDragDropPayload("ASSET_PATH", &path, sizeof(std::string));
+	//	ImGui::EndDragDropSource();
+	//}
 	ImGui::PopID();
 }
 
-#include "asset/PodIncludes.h"
-
-namespace
-{
+#include "system/reflection/PodReflection.h"
 
 
 namespace
@@ -256,86 +254,71 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 	}
 };
 
-
 }
 
-
-template<typename T>
-void Visit(T* pod, int32& id)
+namespace {
+void PodDragSource(AssetPod* pod, size_t uid)
 {
-	ImGui::PushID(id++);
-	if (ImGui::CollapsingHeader(GetReflector(pod).GetName().c_str()))
+	if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
 	{
-		ImGui::Indent();
-		CallVisitorOnEveryProperty(pod, ReflectionToImguiVisitor());
-		ImGui::Unindent();
-		
+		std::string payloadTag = "POD_UID_" + std::to_string(pod->type.hash());
+		ImGui::SetDragDropPayload(payloadTag.c_str(), &uid, sizeof(size_t));
+		ImGui::EndDragDropSource();
 	}
-	ImGui::PopID();
 }
-
-void CallVisit(AssetPod* pod, int32& id)
-{
-//#define MAYBE_VISIT(Type) if (typeid(*pod) == typeid(Type)) { Visit<Type>(dynamic_cast<Type*>(pod), id); }
-//
-//	MAYBE_VISIT(ImagePod);
-//	MAYBE_VISIT(MaterialPod);
-//	MAYBE_VISIT(ModelPod);
-//	MAYBE_VISIT(ShaderPod);
-//	MAYBE_VISIT(StringPod);
-//	MAYBE_VISIT(TexturePod);
-//
-//#undef MAYBE_VISIT
-}
-};
-
-void DrawPodList(size_t hash, std::string& name, std::vector<AssetPod*>& pods)
-{
-	if (ImGui::CollapsingHeader(name.c_str()))
-	{
-		int32 id = 0;
-		for (auto pod : pods)
-		{
-			CallVisit(pod, id);
-		}
-	}
 }
 
 void AssetWindow::DrawAssetLibrary()
 {
 	if (ImGui::CollapsingHeader("Assets"))
 	{
-		m_podLists.clear();
+		std::unordered_map<ctti::type_id_t, std::vector<std::pair<size_t, AssetPod*>>> podVectors;
+		ForEachPodType([&](auto dummy) {
+			using PodType = std::remove_pointer_t<decltype(dummy)>;
+
+			podVectors.insert({ ctti::type_id<PodType>(), {} });
+		});
+
 		for (auto& [uid, pod] : Engine::GetAssetManager()->m_uidToPod)
 		{
-			DetectPodCategory(pod);
+			podVectors[pod->type].push_back({ uid, pod });
 		}
-		
-		for (auto& [hash, list] : m_podLists)
+		int32 outerId = 0;
+		for (auto& [type, vector] : podVectors)
 		{
-			DrawPodList(hash, m_knownPodTypes[hash], list);
+			outerId++;
+			std::string name = type.name().cppstring();
+
+			if (ImGui::CollapsingHeader(name.c_str()))
+			{
+				int32 n = 0 + outerId * 10000;
+				ImGui::Indent();
+				for (auto& p : vector)
+				{
+
+					auto& uid = p.first;
+					auto& pod = p.second;
+
+					
+					std::string podPath = Engine::GetAssetManager()->GetPodPathFromId(uid);
+					ImGui::PushID(n++);
+
+					bool open = ImGui::CollapsingHeader(podPath.c_str());
+					PodDragSource(pod, uid);
+					if (open)
+					{
+						ImGui::Indent();
+						CallVisitorOnEveryProperty(GetPodReflector(pod), ReflectionToImguiVisitor());
+						ImGui::Unindent();
+					}
+					ImGui::PopID();
+
+
+				}
+				ImGui::Unindent();
+			}
 		}
 	}
 
-}
-
-void AssetWindow::DrawAssetPod(AssetPod* pod)
-{
-
-}
-
-void AssetWindow::DetectPodCategory(AssetPod* pod)
-{
-	const std::type_info& ti = typeid(*pod);
-	size_t hash = ti.hash_code();
-
-	auto it = m_knownPodTypes.find(hash);
 	
-	if (it == m_knownPodTypes.end())
-	{
-		it = m_knownPodTypes.insert({ hash, ti.name() }).first;
-		m_podLists.insert({ hash, {} });
-	}
-
-	m_podLists[hash].push_back(pod);
 }

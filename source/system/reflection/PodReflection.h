@@ -236,7 +236,8 @@ ctti::type_id_t GetTypeIdPtr(AnyType* t)
 template<typename Visitor>
 class PodHashVisitor
 {
-	std::unordered_map<ctti::type_id_t, std::function<void(AssetPod*)>> m_callmap;
+	using ReturnT = return_type_t<decltype(Visitor::operator())>;
+	std::unordered_map<ctti::type_id_t, std::function<ReturnT(AssetPod*)>> m_callmap;
 
 	Visitor* m_visitor;
 
@@ -252,7 +253,7 @@ public:
 			{
 					ctti::type_id<PodType>(),
 					[&](AssetPod* pod) {
-						m_visitor->operator() < PodType > (PodCast<PodType>(pod));
+						return m_visitor->operator() < PodType > (PodCast<PodType>(pod));
 					}
 			});
 		});
@@ -260,18 +261,20 @@ public:
 
 	// Runs the visitor on a single pod.
 	// Complexity O(1)
-	void RunVisitor(Visitor& visitor, AssetPod* podThatVisits)
+	ReturnT RunVisitor(Visitor& visitor, AssetPod* podThatVisits)
 	{
 		m_visitor = &visitor;
-		m_callmap[pod->type](podThatVisits);
+		return m_callmap[pod->type](podThatVisits);
 	}
 
 	// Runs the visitor on a single pod. Handle overload.
 	// Complexity O(1)
 	template<typename T>
-	void RunVisitor(Visitor& visitor, PodHandle<T> podThatVisits)
+	ReturnT RunVisitor(Visitor& visitor, PodHandle<T> podThatVisits)
 	{
 		m_visitor = &visitor;
-		m_callmap[ctti::type_id<T>()](podThatVisits.operator->());
+		return m_callmap[ctti::type_id<T>()](podThatVisits.operator->());
 	}
 };
+
+Reflector GetPodReflector(AssetPod* pod);

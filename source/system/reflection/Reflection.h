@@ -56,6 +56,8 @@ constexpr bool HasMemberReflector = impl::has_reflector<T>::value;
 template<typename T>
 constexpr bool HasStaticReflector = impl::has_static_reflector<T, const StaticReflector&()>::value;
 
+template<> constexpr bool HasStaticReflector<AssetPod> = true;
+
 template<typename T>
 constexpr bool HasReflection = HasMemberReflector<T> || HasStaticReflector<T>;
 
