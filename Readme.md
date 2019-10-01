@@ -20,7 +20,7 @@ C++17 and a very recent CMake is required.
 * ImGui
 * spdlog
 * fmt
-* glew
+* glad
 * stb_image
 * glm
 * tinygltf
