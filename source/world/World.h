@@ -79,6 +79,7 @@ public:
 	template <typename NodeType>
 	void AddNode(NodeType* node)
 	{
+		// TODO: 
 		if constexpr (std::is_same_v<NodeType, CameraNode>)
 		{
 			if (!m_activeCamera)
@@ -133,8 +134,6 @@ public:
 
 		// general nodes
 		else if constexpr (std::is_base_of<Node, NodeType>::value) { return m_nodes; }
-
-		static_assert("Incorrect types!");
 	}
 
 	void AddDirtyNode(Node* node);

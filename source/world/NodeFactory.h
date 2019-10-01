@@ -12,4 +12,5 @@ public:
 
 	Node* LoadChildSpecificNode(const std::string& type, Node* parentNode);
 	virtual Node* LoadNodeFromType(const std::string& type, Node* parentNode);
+	virtual ~NodeFactory() = default;
 };
