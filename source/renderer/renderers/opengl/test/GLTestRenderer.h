@@ -25,10 +25,13 @@ namespace OpenGL
 		CameraNode* m_camera;
 		PunctualLightNode* m_light;
 
-		GLuint m_fbo;
-		GLuint m_outTexture;
-		GLuint m_depthStencilRbo;
-
+		GLuint m_msaaFbo;
+		GLuint m_msaaColorTexture;
+		GLuint m_msaaDepthStencilRbo;
+		
+		GLuint m_outFbo;
+		GLuint m_outColorTexture;
+		
 		GLuint m_skyboxVAO;
 		GLuint m_skyboxVBO;
 
@@ -42,9 +45,9 @@ namespace OpenGL
 
 		GLTestRenderer()
 			: m_camera(nullptr),
-			  m_fbo(0),
-			  m_outTexture(0),
-		      m_depthStencilRbo(0),
+			  m_msaaFbo(0),
+			  m_msaaColorTexture(0),
+		      m_msaaDepthStencilRbo(0),
 		      m_previewMode(0)
 		{
 			m_resizeListener.BindMember(this, &GLTestRenderer::WindowResize);

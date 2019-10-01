@@ -65,9 +65,9 @@ namespace OpenGL
 	
 	GLTestRenderer::~GLTestRenderer()
 	{
-		glDeleteFramebuffers(1, &m_fbo);
-		glDeleteTextures(1, &m_outTexture);
-		glDeleteRenderbuffers(1, &m_depthStencilRbo);
+		glDeleteFramebuffers(1, &m_msaaFbo);
+		glDeleteTextures(1, &m_msaaColorTexture);
+		glDeleteRenderbuffers(1, &m_msaaDepthStencilRbo);
 	
 		glDeleteVertexArrays(1, &m_skyboxVAO);
 		glDeleteBuffers(1, &m_skyboxVBO);
@@ -138,22 +138,32 @@ namespace OpenGL
 			m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, GLTestGeometry>(this, geometryNode));
 
 		// buffers
-		glGenFramebuffers(1, &m_fbo);
-		glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
-		
-		glGenTextures(1, &m_outTexture);
-		glBindTexture(GL_TEXTURE_2D, m_outTexture);
+		glGenFramebuffers(1, &m_outFbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+		glGenTextures(1, &m_outColorTexture);
+		glBindTexture(GL_TEXTURE_2D, m_outColorTexture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glBindTexture(GL_TEXTURE_2D, 0);
-		
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outTexture, 0);
 
-		glGenRenderbuffers(1, &m_depthStencilRbo);
-		glBindRenderbuffer(GL_RENDERBUFFER, m_depthStencilRbo);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_depthStencilRbo);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outColorTexture, 0);
+		
+		glGenFramebuffers(1, &m_msaaFbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
+
+		auto samples = 16;
+		glGenTextures(1, &m_msaaColorTexture);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture);
+		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB, width, height, GL_TRUE);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+		
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture, 0);
+
+		glGenRenderbuffers(1, &m_msaaDepthStencilRbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, m_msaaDepthStencilRbo);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, width, height);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_msaaDepthStencilRbo);
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 		
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -182,7 +192,7 @@ namespace OpenGL
 	void GLTestRenderer::Render()
 	{
 		// first pass
-		glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 
 		auto root = Engine::GetWorld()->GetRoot();
 		const auto backgroundColor = root->GetBackgroundColor();
@@ -273,7 +283,14 @@ namespace OpenGL
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 		
-		// second pass
+		// copy msaa to out
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFbo);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_outFbo);
+		// TODO this is wrong
+		auto wnd = Engine::GetMainWindow();
+		glBlitFramebuffer(0, 0, wnd->GetWidth(), wnd->GetHeight(), 0, 0, wnd->GetWidth(), wnd->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		// post process
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -282,7 +299,7 @@ namespace OpenGL
 		glUseProgram(m_screenQuadShader->id);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_outTexture);
+		glBindTexture(GL_TEXTURE_2D, m_outColorTexture);
 
 		// big triangle trick, no vao
 		glDrawArrays(GL_TRIANGLES, 0, 3);
