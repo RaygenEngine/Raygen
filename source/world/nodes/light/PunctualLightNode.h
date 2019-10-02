@@ -1,28 +1,17 @@
 #pragma once
 
 #include "world/nodes/Node.h"
+#include "world/nodes/light/LightNode.h"
 
-
-class PunctualLightNode : public Node
+class PunctualLightNode : public LightNode
 {
-	REFLECTED_NODE(PunctualLightNode, Node) 
-	{
-		REFLECT_VAR(m_color, PropertyFlags::Color);
-		REFLECT_VAR(m_intensity);
-	}
-
-	// TODO: should this be a flux vec3
-	glm::vec3 m_color;
-	float m_intensity;
+	REFLECTED_NODE(PunctualLightNode, LightNode) {}
 
 public:
 	PunctualLightNode(Node* parent);
 	~PunctualLightNode() = default;
 
-	[[nodiscard]] glm::vec3 GetColor() const { return m_color; }
-	[[nodiscard]] float GetIntensity() const { return m_intensity; }
-
 	std::string ToString(bool verbose, uint depth) const override;
 
-	void ToString(std::ostream& os) const override { os << "node-type: LightNode, name: " << m_name; }
+	void ToString(std::ostream& os) const override { os << "node-type: PunctualLightNode, name: " << m_name; }
 };

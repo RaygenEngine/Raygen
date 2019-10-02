@@ -33,7 +33,7 @@ namespace OpenGL
 		pfd.nVersion = 1;
 		pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
 		pfd.iPixelType = PFD_TYPE_RGBA;
-		pfd.cColorBits = 16;
+		pfd.cColorBits = 32;
 		pfd.cRedBits = 0;
 		pfd.cRedShift = 0;
 		pfd.cGreenBits = 0;
@@ -47,8 +47,8 @@ namespace OpenGL
 		pfd.cAccumGreenBits = 0;
 		pfd.cAccumBlueBits = 0;
 		pfd.cAccumAlphaBits = 0;
-		pfd.cDepthBits = 16;
-		pfd.cStencilBits = 0;
+		pfd.cDepthBits = 24;
+		pfd.cStencilBits = 8;
 		pfd.cAuxBuffers = 0;
 		pfd.iLayerType = PFD_MAIN_PLANE;
 		pfd.bReserved = 0;

@@ -4,14 +4,12 @@
 
 
 PunctualLightNode::PunctualLightNode(Node* parent)
-	: Node(parent),
-	  m_color(),
-      m_intensity(0.f)
+	: LightNode(parent)
 {
 }
 
 std::string PunctualLightNode::ToString(bool verbose, uint depth) const
 {
-	return std::string("    ") * depth + "|--light " + Node::ToString(verbose, depth);
+	return std::string("    ") * depth + "|--PunctualLight " + Node::ToString(verbose, depth);
 }
 

@@ -41,8 +41,11 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/assets/GLBindlessTexture.cpp
 	renderer/renderers/opengl/assets/GLMaterial.cpp
 	
+	renderer/renderers/opengl/basic/GLBasicDirectionalLight.cpp
+	renderer/renderers/opengl/basic/GLBasicGeometry.cpp
+	renderer/renderers/opengl/basic/GLBasicSkybox.cpp
+	
 	renderer/renderers/opengl/test/GLTestRenderer.cpp
-	renderer/renderers/opengl/test/GLTestGeometry.cpp
 
 	system/Engine.cpp
 	system/EngineComponent.cpp
@@ -67,7 +70,10 @@ set(SOURCE_FILES
 	world/nodes/geometry/InstancedGeometryNode.cpp
 	
 	world/nodes/light/PunctualLightNode.cpp
-	
+	world/nodes/light/DirectionalLightNode.cpp
+	world/nodes/light/SpotLightNode.cpp
+	world/nodes/light/LightNode.cpp
+		
 	world/nodes/user/freeform/FreeformUserNode.cpp
 	world/nodes/user/oculus/OculusHeadNode.cpp
 	world/nodes/user/oculus/OculusUserNode.cpp
@@ -173,9 +179,12 @@ set(HEADER_FILES
 	renderer/renderers/opengl/assets/GLBindlessTexture.h
 	renderer/renderers/opengl/assets/GLMaterial.h
 
-	renderer/renderers/opengl/test/GLTestRenderer.h
-	renderer/renderers/opengl/test/GLTestGeometry.h
+	renderer/renderers/opengl/basic/GLBasicDirectionalLight.h
+	renderer/renderers/opengl/basic/GLBasicGeometry.h
+	renderer/renderers/opengl/basic/GLBasicSkybox.h
 	
+	renderer/renderers/opengl/test/GLTestRenderer.h
+
 	system/Engine.h
 	system/EngineComponent.h
 	system/Object.h
@@ -201,6 +210,9 @@ set(HEADER_FILES
 	world/nodes/geometry/InstancedGeometryNode.h
 	
 	world/nodes/light/PunctualLightNode.h
+	world/nodes/light/DirectionalLightNode.h
+	world/nodes/light/SpotLightNode.h
+	world/nodes/light/LightNode.h
 	
 	world/nodes/user/freeform/FreeformUserNode.h
 	world/nodes/user/oculus/OculusHeadNode.h

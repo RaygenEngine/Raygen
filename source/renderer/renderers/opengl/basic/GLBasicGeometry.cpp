@@ -1,13 +1,13 @@
 #include "pch.h"
 
-#include "renderer/renderers/opengl/test/GLTestGeometry.h"
+#include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "asset/AssetManager.h"
 
 namespace OpenGL
 {
-	GLTestGeometry::GLTestGeometry(GLTestRenderer* renderer, GeometryNode* node)
-		: NodeObserver<GLTestRenderer, GeometryNode>(node)
+	GLBasicGeometry::GLBasicGeometry(GeometryNode* node)
+		: NodeObserver<GeometryNode, GLRendererBase>(node)
 	{
 		ReloadModel();
 	}

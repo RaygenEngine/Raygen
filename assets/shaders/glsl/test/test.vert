@@ -23,12 +23,15 @@ out Data
 	
 	// TODO: tangent space only calcs in fragment shader
 	mat3 TBN;
+	
+	vec4 light_fragpos;
 } dataOut;
 
 uniform mat4 mvp;
 uniform mat4 m;
 
 uniform mat3 normal_matrix; 
+uniform mat4 light_space_matrix;
 
 uniform vec3 view_pos;
 uniform vec3 light_pos;
@@ -59,4 +62,6 @@ void main()
 	dataOut.tangent_pos = dataOut.TBN * vec3(m * vec4(pos, 0.0));
 	dataOut.tangent_view_pos  = dataOut.TBN * view_pos;
 	dataOut.tangent_light_pos = dataOut.TBN * light_pos;
+	
+	dataOut.light_fragpos = light_space_matrix * vec4(dataOut.world_pos, 1.0);
 }
