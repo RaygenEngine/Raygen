@@ -72,13 +72,13 @@ void AssetWindow::DrawFileAsset(int32& n, const std::string& path)
 }
 
 #include "core/reflection/PodReflection.h"
-/*
+
 
 namespace
 {
 using namespace PropertyFlags;
 
-struct ReflectionToImguiVisitor : public ReflectionTools::Example
+struct ReflectionToImguiVisitor
 {
 	int32 depth{ 0 };
 	std::string path{};
@@ -91,9 +91,9 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 
 	bool dirty{ false };
 
-	void GenerateUniqueName(ExactProperty& p)
+	void GenerateUniqueName(const Property& p)
 	{
-		std::string buf = p.GetName() + "##" + path;
+		std::string buf = p.GetNameStr() + "##" + path;
 		auto r = objNames.insert(buf);
 		int32 index = 0;
 		while (r.second == false)
@@ -104,23 +104,23 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 		name = r.first->c_str();
 	}
 
-	void Begin(Reflector& r)
+	void Begin(const ReflClass& r)
 	{
-		path += "|" + r.GetName();
+		path += "|" + r.GetNameStr();
 	}
 
-	void End(Reflector& r)
+	void End(const ReflClass& r)
 	{
 		path.erase(path.end() - (r.GetName().size() + 1), path.end());
 	}
 
-	void PreProperty(ExactProperty& p)
+	void PreProperty(const Property& p)
 	{
 		GenerateUniqueName(p);
 	}
 
 	template<typename T>
-	void Visit(T& t, ExactProperty& p)
+	void operator()(T& t, const Property& p)
 	{
 		if (Inner(t, p))
 		{
@@ -128,12 +128,12 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 		}
 	}
 
-	bool Inner(int32& t, ExactProperty& p)
+	bool Inner(int32& t, const Property& p)
 	{
 		return ImGui::DragInt(name, &t, 0.1f);
 	}
 
-	bool Inner(bool& t, ExactProperty& p)
+	bool Inner(bool& t, const Property& p)
 	{
 		if (p.HasFlags(NoEdit))
 		{
@@ -144,12 +144,12 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 		return ImGui::Checkbox(name, &t);
 	}
 
-	bool Inner(float& t, ExactProperty& p)
+	bool Inner(float& t, const Property& p)
 	{
 		return ImGui::DragFloat(name, &t, 0.01f);
 	}
 
-	bool Inner(glm::vec3& t, ExactProperty& p)
+	bool Inner(glm::vec3& t, const Property& p)
 	{
 		if (p.HasFlags(PropertyFlags::Color))
 		{
@@ -161,7 +161,7 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 		}
 	}
 
-	bool Inner(glm::vec4& t, ExactProperty& p)
+	bool Inner(glm::vec4& t, const Property& p)
 	{
 		if (p.HasFlags(PropertyFlags::Color))
 		{
@@ -173,7 +173,7 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 		}
 	}
 
-	bool Inner(std::string& ref, ExactProperty& p)
+	bool Inner(std::string& ref, const Property& p)
 	{
 		if (p.HasFlags(PropertyFlags::Multiline))
 		{
@@ -186,11 +186,11 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 	}
 
 	template<typename PodType>
-	bool Inner(PodHandle<PodType>& pod, ExactProperty& p)
+	bool Inner(PodHandle<PodType>& pod, const Property& p)
 	{
 		if (!pod.HasBeenAssigned())
 		{
-			std::string s = "Unitialised handle: " + p.GetName();
+			std::string s = "Unitialised handle: " + p.GetNameStr();
 			ImGui::Text(s.c_str());
 			return false;
 		}
@@ -207,7 +207,7 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 			depth++;
 			ImGui::Indent();
 
-			CallVisitorOnEveryProperty(pod.operator->(), *this);
+			refltools::CallVisitorOnEveryProperty(pod.operator->(), *this);
 
 			ImGui::Unindent();
 			depth--;
@@ -216,7 +216,7 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 	}
 
 	template<typename T>
-	bool Inner(T& t, ExactProperty& p)
+	bool Inner(T& t, const Property& p)
 	{
 		std::string s = "unhandled property: " + p.GetName();
 		ImGui::Text(s.c_str());
@@ -224,7 +224,7 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 	}
 
 	template<typename T>
-	bool Inner(std::vector<PodHandle<T>>& t, ExactProperty& p)
+	bool Inner(std::vector<PodHandle<T>>& t, const Property& p)
 	{
 		if (ImGui::CollapsingHeader(name))
 		{
@@ -233,7 +233,7 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 			for (auto& handle : t)
 			{
 				++index;
-				std::string sname = "|" + p.GetName() + std::to_string(index);
+				std::string sname = "|" + p.GetNameStr() + std::to_string(index);
 				size_t len = sname.size();
 				path += sname;
 
@@ -242,7 +242,7 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 				if (ImGui::CollapsingHeader(finalName.c_str()))
 				{
 					ImGui::Indent();
-					CallVisitorOnEveryProperty(handle.operator->(), *this);
+					refltools::CallVisitorOnEveryProperty(handle.operator->(), *this);
 					ImGui::Unindent();
 				}
 
@@ -255,7 +255,7 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 };
 
 }
-*/
+
 namespace {
 void PodDragSource(AssetPod* pod, size_t uid)
 {
@@ -308,7 +308,7 @@ void AssetWindow::DrawAssetLibrary()
 					if (open)
 					{
 						ImGui::Indent();
-						//CallVisitorOnEveryProperty(GetPodReflector(pod), ReflectionToImguiVisitor());
+						refltools::CallVisitorOnEveryProperty(pod, ReflectionToImguiVisitor());
 						ImGui::Unindent();
 					}
 					ImGui::PopID();

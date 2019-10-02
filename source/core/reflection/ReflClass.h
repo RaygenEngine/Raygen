@@ -124,8 +124,7 @@ namespace refl
 		{
 			if constexpr (std::is_same_v<AssetPod, T>)
 			{
-				// TODO: implement this
-				static_assert("Implement");
+				static_assert(false, "Implement this by specialization");
 			}
 			else
 			{
@@ -134,7 +133,7 @@ namespace refl
 		}
 		else
 		{
-			static_assert("This object T is not reflected");
+			static_assert(false, "This object T is not reflected");
 		}
 	}
 }
