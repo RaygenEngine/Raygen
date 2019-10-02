@@ -7,7 +7,7 @@
 
 namespace detail
 {
-	const char* RemoveVariablePrefix(const char* name)
+	inline const char* RemoveVariablePrefix(const char* name)
 	{
 		if (name[0] != 0 && name[1] != 0 && name[2] != 0 && 
 			name[0] == 'm' && name[1] == '_')
@@ -29,6 +29,16 @@ class ReflClass
 	// PERF: possible to constexpr hash variable names and use them in this map prehashed.
 	std::unordered_map<std::string, size_t> m_hashTable;
 
+	void AppendProperties(const ReflClass& other)
+	{
+		size_t index = m_properties.size();
+		for (auto& prop : other.GetProperties())
+		{
+			m_properties.push_back(prop);
+			m_hashTable[std::string(prop.GetName())] = index++;
+		}
+	}
+
 public:
 	template<typename T>
 	static ReflClass Generate()
@@ -39,28 +49,52 @@ public:
 		return reflClass;
 	}
 
-	// Prefer reflection macros
-	// Never run ouside of T::GenerateReflection
-	template<typename T>
-	void AddProperty(size_t offset_of, const char* varname, PropertyFlags::Type) 
+	template<typename This, typename Parent>
+	static ReflClass Generate()
 	{
-		static_assert(refl::CanBeProperty<T>(), "This type is not reflectable and cannot be a property.");
+		// TODO: should avoid multiple generates here
+		ReflClass reflClass;
+		reflClass.m_type = refl::GetId<This>();
+		This::GenerateReflection(reflClass);
+		reflClass.AppendProperties(Parent::StaticClass());
+		return reflClass;
+	}
 
-		const char* name = detail::RemoveVariablePrefix(varname);
-		size_t index = m_properties.size();
-		m_properties(Property(refl::GetId<T>(), offset_of, name, flags))
-		m_hashTable[std::string(name)] = index;
+	template<typename T>
+	[[nodiscard]]
+	bool IsA() const
+	{
+		return refl::GetId<T>() == m_type;
 	}
 
 	// Grabs the compiletime type id of the reflected class
-	TypeId GetTypeId() const { return m_type; }
+	[[nodiscard]] TypeId GetTypeId() const { return m_type; }
 
+	// Grabs the compiletime type id of the reflected class
+	[[nodiscard]] std::string_view GetName() const { return m_type.name().begin(); }
+	[[nodiscard]] std::string GetNameStr() const { return m_type.name().str(); }
+
+	// Always Prefer reflection macros
+	// Never run ouside of T::GenerateReflection
+	template<typename T>
+	void AddProperty(size_t offset_of, const char* varname, PropertyFlags::Type flags) 
+	{
+		static_assert(refl::CanBeProperty<T>, "This type is not reflectable and cannot be a property.");
+
+		const char* name = detail::RemoveVariablePrefix(varname);
+		size_t index = m_properties.size();
+		m_properties.push_back(Property(refl::GetId<T>(), offset_of, name, flags));
+		m_hashTable[std::string(name)] = index;
+	}
+
+	[[nodiscard]]
 	bool HasProperty(const std::string& name) const
 	{
 		return m_hashTable.find(name) != m_hashTable.end();
 	}
 
 	// Returns nullptr if property was not found.
+	[[nodiscard]]
 	const Property* GetPropertyByName(const std::string& name) const
 	{
 		auto it = m_hashTable.find(name);
@@ -73,9 +107,6 @@ public:
 
 	const std::vector<Property>& GetProperties() const { return m_properties; }
 };
-
-class Node;
-class AssetPod;
 
 template<typename T>
 const ReflClass& GetClass(T* obj) 
@@ -93,7 +124,7 @@ const ReflClass& GetClass(T* obj)
 		}
 		else
 		{
-			return T::GetClass();
+			return T::StaticClass();
 		}
 	}
 	else
@@ -101,4 +132,4 @@ const ReflClass& GetClass(T* obj)
 		static_assert("This object T is not reflected");
 	}
 }
-
+	

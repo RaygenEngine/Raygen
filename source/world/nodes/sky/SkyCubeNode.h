@@ -5,13 +5,16 @@
 
 class SkyCubeNode : public Node
 {
+	REFLECTED_NODE(SkyCubeNode, Node)
+	{
+		REFLECT_VAR(m_cubemap);
+	}
+
 	PodHandle<TexturePod> m_cubemap;
 
 public:
 	SkyCubeNode(Node* parent)
-		: Node(parent) {
-		REFLECT_VAR(m_cubemap);
-	}
+		: Node(parent) {}
 
 	~SkyCubeNode() = default;
 

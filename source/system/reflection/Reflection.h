@@ -30,13 +30,13 @@ namespace refl
 		template<typename T, typename... ReflTypes>
 		constexpr bool CanBePropertyBaseType_ImplF()
 		{
-			return std::disjunction_v<std::is_same<T, ReflTypes>, ...>;
+			return std::disjunction_v<std::is_same<T, ReflTypes>...>;
 		}
 
 		template<typename T>
 		constexpr bool CanBePropertyBaseTypeF()
 		{
-			return IsReflectedBaseType_Impl<Z_REFL_TYPES>();
+			return CanBePropertyBaseType_ImplF<T, Z_REFL_TYPES>();
 		}
 
 
@@ -135,7 +135,7 @@ template<> PropertyType ReflectionFromType<std::vector<PodHandle<StringPod>>> = 
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<TexturePod>>> = PropertyType::Vector_Texture;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<XMLDocPod>>> = PropertyType::Vector_XMLDoc;
 */
-
+/*
 
 
 // ALWAYS expected to run in member function
@@ -162,7 +162,7 @@ static void _FillMembers(StaticReflector& reflector)\
 // Static reflect var
 #define S_REFLECT_VAR(Variable, ...)				\
 	reflector.AutoAddProperty<decltype(Variable)>(#Variable, offsetof(__ThisType, Variable)).InitFlags(PropertyFlags::Pack(__VA_ARGS__));
-
+	*/
 //
 // Example expansion
 // 

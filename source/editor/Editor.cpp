@@ -23,7 +23,7 @@ namespace {
 
 // Recursively adds all children too
 void ImGuiNode(Node* node, int32 depth, Node*& selectedNode) {
-	auto str = std::string(depth * 4, ' ') + node->m_reflector.GetName();
+	auto str = std::string(depth * 4, ' ') + node->GetClass().GetNameStr();
 	
 	if (ImGui::Selectable(str.c_str(), node == selectedNode))
 	{
@@ -37,7 +37,7 @@ void ImGuiNode(Node* node, int32 depth, Node*& selectedNode) {
 }
 }
 
-
+/*
 namespace
 {
 using namespace PropertyFlags;
@@ -245,7 +245,7 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 
 
 }
-
+*/
 
 Editor::Editor()
 	: m_selectedNode(nullptr)
@@ -336,7 +336,7 @@ void Editor::UpdateEditor()
 	}
 
 	if (m_selectedNode) {
-		if (ImGui::CollapsingHeader(GetReflector(m_selectedNode).GetName().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::CollapsingHeader(GetClass(m_selectedNode).GetNameStr().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			PropertyEditor(m_selectedNode);
 		}
@@ -377,7 +377,7 @@ void Editor::Outliner()
 
 	RecurseNodes(Engine::GetWorld()->GetRoot(), [&](Node* node, int32 depth)
 	{
-		auto str = std::string(depth * 4, ' ') + node->m_type + "> " + node->m_name + "##" + node->m_reflector.GetName();
+		auto str = std::string(depth * 4, ' ') + node->m_type + "> " + node->m_name + "##" + node->GetClass().GetNameStr();
 		if (ImGui::Selectable(str.c_str(), node == m_selectedNode))
 		{
 			m_selectedNode = node;
@@ -442,13 +442,13 @@ void Editor::PropertyEditor(Node* node)
 	}
 
 	ImGui::Separator();
-	ReflectionToImguiVisitor visitor;
-	visitor.node = node;
-	CallVisitorOnEveryProperty(node,visitor);
+	//ReflectionToImguiVisitor visitor;
+	//visitor.node = node;
+	//CallVisitorOnEveryProperty(node,visitor);
 
 	ImGui::EndChild();
 
-	if (visitor.dirty)
+	//if (visitor.dirty)
 	{
 		node->MarkDirty();
 	}

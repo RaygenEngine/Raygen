@@ -108,7 +108,8 @@ Node* World::DuplicateNode(Node* src, Node* newParent)
 	{
 		newParent = src->GetParent();
 	}
-	Reflector& srcReflector = GetReflector(src);
+	return nullptr;
+/*	const ReflClass& srcClass = GetReflector(src);
 
 	Node* created = GetNodeFactory()->LoadNodeFromType(src->m_type, newParent);
 
@@ -125,7 +126,7 @@ Node* World::DuplicateNode(Node* src, Node* newParent)
 
 	GetReflector(created).SetName(created->m_type + "." + created->m_name + "." + std::to_string(created->GetUID()));
 
-	return created;
+	return created;*/
 }
 
 Node* World::DeepDuplicateNode(Node* src, Node* newParent)

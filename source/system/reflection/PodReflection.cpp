@@ -46,14 +46,14 @@ void FindVariableInAllPods()
 
 		ForEachPodType(
 			[&](auto typedDummy) {
-			if (GetReflector(typedDummy).HasProperty(varname))
+			if (GetClass(typedDummy).HasProperty(varname))
 			{
 				std::cout << "Found '" << varname << "' in: " << GetTypeIdPtr(typedDummy).name() << "\n";
 			}
 		});
 	}
 }
-
+/*
 Reflector GetPodReflector(AssetPod* pod)
 {
 	static auto reflectorMap = CreateMapOnPodType<StaticReflector*>(
@@ -67,3 +67,4 @@ Reflector GetPodReflector(AssetPod* pod)
 
 	return reflectorMap[pod->type]->ToAbsoluteReflector(pod);
 }
+*/

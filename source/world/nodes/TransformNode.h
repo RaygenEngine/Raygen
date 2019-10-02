@@ -4,7 +4,8 @@
 
 class TransformNode : public Node
 {
-	// Loads from xml same as base class
+	REFLECTED_NODE(TransformNode, Node) {}
+
 public:
 	TransformNode(Node* parent);
 	~TransformNode() = default;

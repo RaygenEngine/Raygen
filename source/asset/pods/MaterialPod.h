@@ -1,35 +1,35 @@
 #pragma once
 
-#include "system/reflection/Reflector.h"
+#include "core/reflection/GenMacros.h"
 #include "asset/pods/TexturePod.h"
 
 // Note: assets of this class (Textures) are not cached directly as they are part of a cached ModelAsset anyway
 // glTF-based material (not all extensions included) (comments in this file -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0)
 struct MaterialPod : public AssetPod
 {
-	STATIC_REFLECTOR(MaterialPod)
+	REFLECTED_POD(MaterialPod)
 	{
-		S_REFLECT_VAR(baseColorTexture);
-		S_REFLECT_VAR(metallicRoughnessTexture);
-		S_REFLECT_VAR(occlusionTexture);
-		S_REFLECT_VAR(normalTexture);
-		S_REFLECT_VAR(emissiveTexture);
+		REFLECT_VAR(baseColorTexture);
+		REFLECT_VAR(metallicRoughnessTexture);
+		REFLECT_VAR(occlusionTexture);
+		REFLECT_VAR(normalTexture);
+		REFLECT_VAR(emissiveTexture);
 
-		S_REFLECT_VAR(baseColorTexCoordIndex)
-		S_REFLECT_VAR(metallicRoughnessTexCoordIndex);
-		S_REFLECT_VAR(occlusionTexCoordIndex);
-		S_REFLECT_VAR(normalTexCoordIndex);
-		S_REFLECT_VAR(emissiveTexCoordIndex);
+		REFLECT_VAR(baseColorTexCoordIndex);
+		REFLECT_VAR(metallicRoughnessTexCoordIndex);
+		REFLECT_VAR(occlusionTexCoordIndex);
+		REFLECT_VAR(normalTexCoordIndex);
+		REFLECT_VAR(emissiveTexCoordIndex);
 
-		S_REFLECT_VAR(baseColorFactor, PropertyFlags::Color);
-		S_REFLECT_VAR(emissiveFactor, PropertyFlags::Color);
+		REFLECT_VAR(baseColorFactor, PropertyFlags::Color);
+		REFLECT_VAR(emissiveFactor, PropertyFlags::Color);
 
-		S_REFLECT_VAR(metallicFactor);
-		S_REFLECT_VAR(roughnessFactor);
-		S_REFLECT_VAR(normalScale);
-		S_REFLECT_VAR(occlusionStrength);
-		S_REFLECT_VAR(alphaCutoff);
-		S_REFLECT_VAR(doubleSided);
+		REFLECT_VAR(metallicFactor);
+		REFLECT_VAR(roughnessFactor);
+		REFLECT_VAR(normalScale);
+		REFLECT_VAR(occlusionStrength);
+		REFLECT_VAR(alphaCutoff);
+		REFLECT_VAR(doubleSided);
 	}
 	static bool Load(MaterialPod* pod, const fs::path& path);
 

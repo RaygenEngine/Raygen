@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "system/reflection/Reflector.h"
+#include "core/reflection/GenMacros.h" // include gen macros here even if not needed to propagate to all node headers
 #include "tinyxml2/tinyxml2.h"
 #include "system/Object.h"
 
@@ -10,6 +10,40 @@ class World;
 
 class Node : public Object
 {
+	//
+	// REFLECTION BASE 
+	//
+	// Stuff required and used by reflection that are specific to base node class.
+	// This is similar to the macro code-gen but with a few changes for the base class.
+
+public:
+	using Parent = Node;
+	
+	[[nodiscard]]
+	virtual const ReflClass& GetClass() const
+	{
+		return Node::StaticClass();
+	}
+
+	[[nodiscard]]
+	virtual const ReflClass& GetParentClass() const
+	{
+		return Parent::StaticClass();
+	}
+
+	[[nodiscard]]
+	static const ReflClass& StaticClass()
+	{
+		static ReflClass cl = ReflClass::Generate<Node>();
+		return cl;
+	}
+private:
+	friend class ReflClass;								
+	static void GenerateReflection(ReflClass& refl)
+	{
+		// Add reflected variables here.
+	}
+
 protected:
 	// local
 	glm::vec3 m_localTranslation;
@@ -36,7 +70,7 @@ protected:
 
 		
 public:
-	Reflector m_reflector;
+	
 	friend class Editor;
 	friend class World;
 public:

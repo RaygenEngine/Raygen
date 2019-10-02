@@ -1,6 +1,6 @@
 #pragma once
-#include "system/reflection/Property.h"
-
+#include "core/reflection/ReflClass.h"
+/*
 #include <type_traits>
 #include <any>
 
@@ -24,14 +24,14 @@ namespace ReflectionTools
 {
 struct Example
 {
-	void Begin(const Reflector&) {} // Pre Begin iteration on reflector's properties
-	void End(const Reflector&) {} // Post End iteration on reflector's properties
+	void Begin(const ReflClass&) {} // Pre Begin iteration on reflector's properties
+	void End(const ReflClass&) {} // Post End iteration on reflector's properties
 
-	void PreProperty(ExactProperty& p) { }  // Pre Call visitor on proprety
-	void PostProperty(ExactProperty& p) { } // Post Call visitor on proprety
+	void PreProperty(Property& p) { }  // Pre Call visitor on proprety
+	void PostProperty(Property& p) { } // Post Call visitor on proprety
 
 	template<typename T>
-	void Visit(T& value, ExactProperty& p) {} // Overload this for T.
+	void operator()(T& value, Property& p) {} // Overload this for T.
 };
 
 static_assert(HasPreProperty<Example>::value, "Reflection tools test failed.");
@@ -39,11 +39,11 @@ static_assert(HasPreProperty<Example>::value, "Reflection tools test failed.");
 
 namespace impl {
 	template<typename T, typename V>
-	bool VisitIf(V& visitor, ExactProperty& p)
+	bool VisitIf(V& visitor, Property& p, void* obj)
 	{
 		if (p.IsA<T>()) 
 		{ 
-			visitor.Visit(p.GetRef<T>(), p); 
+			visitor.operator()(p.GetRef<T>(obj), p); 
 			return true; 
 		}
 		return false;
@@ -53,7 +53,7 @@ namespace impl {
 // Expects a visitor class with overloads for every type on .visit(ReflectedType, property)
 // Overloads can be templated.
 template<typename VisitorClass>
-void CallVisitorOnProperty(ExactProperty& prop, VisitorClass& v)
+void CallVisitorOnProperty(Property& prop, VisitorClass& v, void* obj)
 {
 	bool shortCircuit = 
 	    impl::VisitIf<int32>(v, prop)
@@ -164,3 +164,5 @@ struct ReflectorOperationResult
 
 ReflectorOperationResult CopyReflectorInto(Reflector& Source, Reflector& Destination);
 ReflectorOperationResult ApplyMapToReflector(std::unordered_map<std::string, std::any>& Source, Reflector& Destination);
+
+*/

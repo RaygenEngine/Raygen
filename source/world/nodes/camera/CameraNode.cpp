@@ -14,15 +14,6 @@ CameraNode::CameraNode(Node* parent)
 		m_far(1000.0f),
 		m_projectionMatrix()
 {
-	REFLECT_VAR(m_far);
-	REFLECT_VAR(m_focalLength);
-	REFLECT_VAR(m_vFov);
-	REFLECT_VAR(m_hFov);
-	REFLECT_VAR(m_near);
-
-	REFLECT_VAR(m_viewportWidth, PropertyFlags::Transient);
-	REFLECT_VAR(m_viewportHeight, PropertyFlags::Transient);
-
 	m_resizeListener.BindMember(this, &CameraNode::WindowResize);
 }
 

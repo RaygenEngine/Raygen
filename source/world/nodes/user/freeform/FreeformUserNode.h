@@ -6,6 +6,8 @@
 
 class FreeformUserNode : public UserNode
 {
+	REFLECTED_NODE(FreeformUserNode, UserNode) {}
+
 	CameraNode* m_camera;
 
 public:

@@ -2,7 +2,7 @@
 #include "system/reflection/ReflectionTools.h"
 #include "system/reflection/Reflector.h"
 #include "asset/PodIncludes.h"
-
+/*
 namespace 
 {
 using namespace PropertyFlags;
@@ -122,3 +122,4 @@ ReflectorOperationResult ApplyMapToReflector(std::unordered_map<std::string, std
 
 	return visitor.result;
 }
+*/

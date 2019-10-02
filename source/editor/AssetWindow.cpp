@@ -72,7 +72,7 @@ void AssetWindow::DrawFileAsset(int32& n, const std::string& path)
 }
 
 #include "system/reflection/PodReflection.h"
-
+/*
 
 namespace
 {
@@ -255,7 +255,7 @@ struct ReflectionToImguiVisitor : public ReflectionTools::Example
 };
 
 }
-
+*/
 namespace {
 void PodDragSource(AssetPod* pod, size_t uid)
 {
@@ -308,7 +308,7 @@ void AssetWindow::DrawAssetLibrary()
 					if (open)
 					{
 						ImGui::Indent();
-						CallVisitorOnEveryProperty(GetPodReflector(pod), ReflectionToImguiVisitor());
+						//CallVisitorOnEveryProperty(GetPodReflector(pod), ReflectionToImguiVisitor());
 						ImGui::Unindent();
 					}
 					ImGui::PopID();
