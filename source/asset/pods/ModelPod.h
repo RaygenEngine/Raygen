@@ -1,6 +1,6 @@
 #pragma once
 
-#include "system/reflection/Reflector.h"
+#include "core/reflection/GenMacros.h"
 #include "asset/AssetPod.h"
 #include "asset/pods/MaterialPod.h"
 
@@ -27,9 +27,9 @@ struct Mesh
 
 struct ModelPod : public AssetPod
 {
-	STATIC_REFLECTOR(ModelPod)
+	REFLECTED_POD(ModelPod)
 	{
-		S_REFLECT_VAR(materials);
+		REFLECT_VAR(materials);
 	}
 	static bool Load(ModelPod* pod, const fs::path& path);
 

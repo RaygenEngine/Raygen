@@ -1,15 +1,15 @@
 #pragma once
 
-#include "system/reflection/Reflector.h"
+#include "core/reflection/GenMacros.h"
 #include "asset/AssetPod.h"
 #include "asset/pods/StringPod.h"
 
 struct ShaderPod : public AssetPod
 {
-	STATIC_REFLECTOR(ShaderPod)
+	REFLECTED_POD(ShaderPod)
 	{
-		S_REFLECT_VAR(vertex);
-		S_REFLECT_VAR(fragment);
+		REFLECT_VAR(vertex);
+		REFLECT_VAR(fragment);
 	}
 	static bool Load(ShaderPod* pod, const fs::path& path);
 

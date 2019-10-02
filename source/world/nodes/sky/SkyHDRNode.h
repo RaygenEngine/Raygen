@@ -5,9 +5,10 @@
 
 class SkyHDRNode : public Node
 {
+	REFLECTED_NODE(SkyHDRNode, Node) { }
+
 	// TODO: this is a texture
 	PodHandle<ImagePod> m_hdrData;
-
 public:
 	SkyHDRNode(Node* parent);
 	~SkyHDRNode() = default;

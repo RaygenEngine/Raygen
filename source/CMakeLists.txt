@@ -132,6 +132,7 @@ set(HEADER_FILES
 	
 	core/logger/Logger.h
 	
+	core/reflection/GenMacros.h
 	core/reflection/Property.h
 	core/reflection/PropertyFlags.h
 	core/reflection/ReflClass.h

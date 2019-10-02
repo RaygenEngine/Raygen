@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "system/reflection/ReflectionTools.h"
-#include "system/reflection/Reflector.h"
+#include "core/reflection/GenMacros.h"
 
 #include "asset/pods/GltfFilePod.h"
 #include "asset/pods/ImagePod.h"

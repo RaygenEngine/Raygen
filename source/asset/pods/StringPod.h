@@ -5,9 +5,9 @@
 
 struct StringPod : public AssetPod
 {
-	STATIC_REFLECTOR(StringPod)
+	REFLECTED_POD(StringPod)
 	{
-		S_REFLECT_VAR(data, PropertyFlags::Multiline);
+		REFLECT_VAR(data, PropertyFlags::Multiline);
 	}
 
 	static bool Load(StringPod* pod, const fs::path& path);

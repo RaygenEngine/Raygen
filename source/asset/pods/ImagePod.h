@@ -1,18 +1,18 @@
 #pragma once
 
-#include "system/reflection/Reflector.h"
+#include "core/reflection/GenMacros.h"
 #include "asset/AssetPod.h"
 
 struct ImagePod : AssetPod
 {
-	STATIC_REFLECTOR(ImagePod)
+	REFLECTED_POD(ImagePod)
 	{
 		using namespace PropertyFlags;
-		S_REFLECT_VAR(width, NoEdit);
-		S_REFLECT_VAR(height, NoEdit);
+		REFLECT_VAR(width, NoEdit);
+		REFLECT_VAR(height, NoEdit);
 
-		S_REFLECT_VAR(components, NoEdit);
-		S_REFLECT_VAR(isHdr, NoEdit);
+		REFLECT_VAR(components, NoEdit);
+		REFLECT_VAR(isHdr, NoEdit);
 	}
 	static bool Load(ImagePod* pod, const fs::path& path);
 

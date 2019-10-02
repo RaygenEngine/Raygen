@@ -8,6 +8,17 @@
 // Window dependant // TODO: non-window dependant (e.g. oculus virtual eye)
 class CameraNode : public Node
 {
+	REFLECTED_NODE(CameraNode, Node)
+	{
+		REFLECT_VAR(m_far);
+		REFLECT_VAR(m_focalLength);
+		REFLECT_VAR(m_vFov);
+		REFLECT_VAR(m_hFov);
+		REFLECT_VAR(m_near);
+
+		REFLECT_VAR(m_viewportWidth, PropertyFlags::Transient);
+		REFLECT_VAR(m_viewportHeight, PropertyFlags::Transient);
+	}
 	// distance to film plane
 	float m_focalLength;
 

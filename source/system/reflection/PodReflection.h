@@ -277,4 +277,9 @@ public:
 	}
 };
 
-Reflector GetPodReflector(AssetPod* pod);
+inline const ReflClass& GetPodClass(AssetPod* pod)
+{
+	// TODO: implement
+	assert(false && "Implement me");
+	return ReflClass();
+}

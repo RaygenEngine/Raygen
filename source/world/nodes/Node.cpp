@@ -110,8 +110,7 @@ bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 {
 	ParsingAux::ReadFillEntityName(xmlData, m_name);
 	ParsingAux::ReadFillEntityType(xmlData, m_type);
-	m_reflector.SetName(m_type + "." + m_name + "." + std::to_string(GetUID()));
-
+	
 	LOG_INFO("Loading {0} named {1}", m_type, m_name);
 
 	LoadReflectedProperties(xmlData);
@@ -252,6 +251,7 @@ std::string Node::ToString(bool verbose, uint depth) const
 
 namespace 
 {
+/*
 struct LoadPropertiesFromXMLVisitor
 {
 	const tinyxml2::XMLElement* xmlData;
@@ -307,12 +307,13 @@ struct LoadPropertiesFromXMLVisitor
 	}
 	
 };
+*/
 }
 
 void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 {
 	using namespace ParsingAux;
-	LoadPropertiesFromXMLVisitor visitor;
+	/*LoadPropertiesFromXMLVisitor visitor;
 	visitor.xmlData = xmlData;
 	for (auto& prop : m_reflector.GetProperties())
 	{
@@ -325,4 +326,5 @@ void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 		visitor.str = str;
 		CallVisitorOnProperty(prop, visitor);
 	}
+	*/
 }

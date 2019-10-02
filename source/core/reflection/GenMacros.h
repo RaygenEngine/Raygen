@@ -2,22 +2,47 @@
 
 #include "core/reflection/ReflClass.h"
 
-#define REFLECTED_BASE(Class, Modifier) private:	\
-using Z_ThisType = Class;							\
-friend class ReflClass;								\
-public:												\
-[[nodiscard]]										\
-static const ReflClass& GetClass() {				\
-	static ReflClass cl								\
-		= ReflClass::Generate<Class>();				\
-	return cl;										\
-} Modifier:											\
-static void GenerateReflection(ReflClass& refl)
+class Node;
+struct AssetPod;
+
+// TODO: pod ctor should be private and befriend asset manager
+#define REFLECTED_POD(Class) public:					\
+	Class() { type = refl::GetId<Class>(); }			\
+	private:											\
+	using Z_ThisType = Class;							\
+	friend class ReflClass;								\
+	public:												\
+	[[nodiscard]]										\
+	static const ReflClass& StaticClass() {				\
+		static ReflClass cl								\
+			= ReflClass::Generate<Class>();				\
+		return cl;										\
+	} public:											\
+	static void GenerateReflection(ReflClass& refl)
 
 
-#define REFLECTED_POD(Class) private:				\
-	Class() { type = refl::GetId<Class>(); }		\
-	REFLECTED_BASE(Class, public)
+#define REFLECTED_NODE(Class, ParentClass) public:		\
+	using Parent = ParentClass;							\
+	[[nodiscard]]										\
+	const ReflClass& GetClass() const override			\
+	{													\
+		return Class::StaticClass();					\
+	}													\
+	[[nodiscard]]										\
+	const ReflClass& GetParentClass() const override	\
+	{													\
+		return Parent::StaticClass();					\
+	}													\
+	[[nodiscard]]										\
+	static const ReflClass& StaticClass()				\
+	{													\
+		static ReflClass cl								\
+			= ReflClass::Generate<Class, Parent>();		\
+		return cl;										\
+	} private:											\
+	using Z_ThisType = Class;							\
+	friend class ReflClass;								\
+	static void GenerateReflection(ReflClass& refl)		
 
 
 #define REFLECT_VAR(Variable, ...)					\

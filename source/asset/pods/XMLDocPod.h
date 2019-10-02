@@ -1,13 +1,13 @@
 #pragma once
 
-#include "system/reflection/Reflector.h"
+#include "core/reflection/GenMacros.h"
 #include "asset/AssetPod.h"
 
 #include "tinyxml2/tinyxml2.h"
 
 struct XMLDocPod : public AssetPod
 {
-	STATIC_REFLECTOR(XMLDocPod)
+	REFLECTED_POD(XMLDocPod)
 	{
 
 	}

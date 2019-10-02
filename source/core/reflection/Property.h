@@ -1,6 +1,7 @@
 #pragma once
 #include "core/reflection/TypeId.h"
 #include "core/reflection/PropertyFlags.h"
+#include "system/reflection/Reflection.h"
 #include <string_view>
 
 // a generic property that can be of any type.
@@ -35,10 +36,12 @@ protected:
 		, m_offset(offset) {}
 
 public:
-	std::string_view GetName() const { return m_name; }
+	[[nodiscard]] std::string_view GetName() const { return m_name; }
+	[[nodiscard]] std::string GetNameStr() const { return std::string(m_name); }
 
 	// Check if this property is of this type.
 	template<typename T>
+	[[nodiscard]]
 	bool IsA() const
 	{
 		static_assert(CanBeProperty<T>, "This check will always fail. T cannot be a reflected property.");
@@ -49,6 +52,7 @@ public:
 	// This will assert if the requested type is incorrect.
 	// TODO: SourceT MUST be the type this property was created from.
 	template<typename T, typename SourceT>
+	[[nodiscard]]
 	T& GetRef(SourceT* obj) const
 	{
 		static_assert(CanBeProperty<T>, "This will always fail. T is not a reflected property.");
@@ -60,12 +64,14 @@ public:
 	}
 
 	// True if ALL flags are found.
+	[[nodiscard]] 
 	bool HasFlags(PropertyFlags::Type flags) const
 	{
 		return ((m_flags & flags) == flags);
 	}
 
 	// True only when the flags match exactly
+	[[nodiscard]] 
 	bool HasSameFlags(const Property& other) const
 	{
 		return other.m_flags == m_flags;

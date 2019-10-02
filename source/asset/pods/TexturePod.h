@@ -1,14 +1,14 @@
 #pragma once
 
-#include "system/reflection/Reflector.h"
+#include "core/reflection/GenMacros.h"
 #include "asset/AssetPod.h"
 #include "asset/pods/ImagePod.h"
 
 struct TexturePod : public AssetPod
 {
-	STATIC_REFLECTOR(TexturePod)
+	REFLECTED_POD(TexturePod)
 	{
-		S_REFLECT_VAR(images);
+		REFLECT_VAR(images);
 	}
 	static bool Load(TexturePod* pod, const fs::path& path);
 

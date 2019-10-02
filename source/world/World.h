@@ -19,12 +19,15 @@ class CameraNode;
 // TODO:
 class RootNode : public Node
 {
+	REFLECTED_NODE(RootNode, Node)
+	{
+		REFLECT_VAR(m_background, PropertyFlags::Color);
+		REFLECT_VAR(m_ambient, PropertyFlags::Color);
+	}
 public:
 	RootNode()
 		: Node(nullptr)
 	{
-		REFLECT_VAR(m_background, PropertyFlags::Color);
-		REFLECT_VAR(m_ambient, PropertyFlags::Color);
 	}
 
 	glm::vec3 m_background;

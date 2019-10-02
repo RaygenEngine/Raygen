@@ -1,7 +1,7 @@
 #pragma once
 #include "core/reflection/Property.h"
 #include "core/reflection/TypeId.h"
-
+/*
 class Reflector
 {
 protected:
@@ -152,3 +152,4 @@ auto GetReflector(ReflectedClass* object) -> Reflector
 {
 	return utl::force_move(ReflectedClass::StaticReflect().ToAbsoluteReflector(object));
 }
+*/

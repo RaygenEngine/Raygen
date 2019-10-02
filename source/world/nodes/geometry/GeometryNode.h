@@ -5,14 +5,18 @@
 
 class GeometryNode : public Node
 {
+	REFLECTED_NODE(GeometryNode, Node)
+	{
+		REFLECT_VAR(m_model);
+	}
+
 	PodHandle<ModelPod> m_model;
 
 public:
 	GeometryNode(Node* parent)
 		: Node(parent)
-	{
-		REFLECT_VAR(m_model);
-	}
+	{}
+
 	~GeometryNode() = default;
 
 	PodHandle<ModelPod> GetModel() const { return m_model; }

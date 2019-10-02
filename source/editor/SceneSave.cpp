@@ -39,7 +39,7 @@ void SceneSave::Draw()
 	}
 }
 
-
+/*
 namespace
 {
 
@@ -48,50 +48,50 @@ struct GenerateXMLVisitor
 	tinyxml2::XMLElement* xmlElement;
 	const char* name;
 
-	void Visit(int32& v, ExactProperty& p)
+	void operator()(int32& v, Property& p)
+	{
+		xmlElement->SetAttribute(p.GetNameStr().c_str(), v);
+	}
+
+	void operator()(bool& v, Property& p)
+	{
+		xmlElement->SetAttribute(p.GetName()., v);
+	}
+
+	void operator()(float& v, Property& p)
 	{
 		xmlElement->SetAttribute(p.GetName().c_str(), v);
 	}
 
-	void Visit(bool& v, ExactProperty& p)
-	{
-		xmlElement->SetAttribute(p.GetName().c_str(), v);
-	}
-
-	void Visit(float& v, ExactProperty& p)
-	{
-		xmlElement->SetAttribute(p.GetName().c_str(), v);
-	}
-
-	void Visit(glm::vec3& v, ExactProperty& p)
+	void operator()(glm::vec3& v, Property& p)
 	{
 		xmlElement->SetAttribute(p.GetName().c_str(), ParsingAux::FloatsToString(v).c_str());
 	}
 
-	void Visit(glm::vec4& v, ExactProperty& p)
+	void operator()(glm::vec4& v, Property& p)
 	{
 		xmlElement->SetAttribute(p.GetName().c_str(), ParsingAux::FloatsToString(v).c_str());
 	}	
 	
-	void Visit(std::string& v, ExactProperty& p)
+	void operator()(std::string& v, Property& p)
 	{
 		xmlElement->SetAttribute(p.GetName().c_str(), v.c_str());
 	}
 
 	template<typename T>
-	void Visit(PodHandle<T>& handle, ExactProperty& p)
+	void operator()(PodHandle<T>& handle, Property& p)
 	{
 		auto podPath = Engine::GetAssetManager()->GetPodPath(handle);
 		xmlElement->SetAttribute(p.GetName().c_str(), uri::RemovePathDirectory(podPath).string().c_str());
 	}
 
 	template<typename T>
-	void Visit(T& v, ExactProperty& p)
+	void operator()(T& v, ExactProperty& p)
 	{
 		LOG_WARN("Attempting to save an unimplemented save type, skipping property: ", p.GetName());
 	}
 };
-
+*/
 
 tinyxml2::XMLElement* GenerateNodeXML(Node* node, tinyxml2::XMLDocument& document)
 {
@@ -103,7 +103,7 @@ tinyxml2::XMLElement* GenerateNodeXML(Node* node, tinyxml2::XMLDocument& documen
 	xmlElem->SetAttribute("translation", ParsingAux::FloatsToString(node->GetLocalTranslation()).c_str());
 	xmlElem->SetAttribute("euler_pyr", ParsingAux::FloatsToString(node->GetLocalPYR()).c_str());
 	xmlElem->SetAttribute("scale", ParsingAux::FloatsToString(node->GetLocalScale()).c_str());
-
+	/*
 	GenerateXMLVisitor visitor;
 	visitor.xmlElement = xmlElem;
 
@@ -114,10 +114,10 @@ tinyxml2::XMLElement* GenerateNodeXML(Node* node, tinyxml2::XMLDocument& documen
 			CallVisitorOnProperty(p, visitor);
 		}
 	}
-
+	*/
 	return xmlElem;
 }
-}
+//}
 
 bool SceneSave::SaveAsXML(World* world, const fs::path& path)
 {
@@ -227,34 +227,34 @@ json to_json_deep(std::vector<PodHandle<T>>& vec)
 }
 
 
-struct SerializeJsonVisitor
-{
-	json result;
-
-	template<typename T>
-	void Visit(T& value, ExactProperty& prop)
-	{
-		result[prop.GetName()] = value;
-	}
-
-	//template<typename T>
-	//void Visit(PodHandle<T>& value, ExactProperty& prop)
-	//{
-	//	result[prop.GetName()] = to_json_deep(value);
-	//}
-
-	//template<typename T>
-	//void Visit(std::vector<PodHandle<T>>& value, ExactProperty& prop)
-	//{
-	//	result[prop.GetName()] = to_json_deep(value);
-	//}
-};
+//struct SerializeJsonVisitor
+//{
+//	json result;
+//
+//	template<typename T>
+//	void Visit(T& value, ExactProperty& prop)
+//	{
+//		result[prop.GetName()] = value;
+//	}
+//
+//	//template<typename T>
+//	//void Visit(PodHandle<T>& value, ExactProperty& prop)
+//	//{
+//	//	result[prop.GetName()] = to_json_deep(value);
+//	//}
+//
+//	//template<typename T>
+//	//void Visit(std::vector<PodHandle<T>>& value, ExactProperty& prop)
+//	//{
+//	//	result[prop.GetName()] = to_json_deep(value);
+//	//}
+//};
 
 #include <iostream>
 void SceneSave::SerializeNodeData(Node* node)
 {
-	SerializeJsonVisitor visitor;
-	CallVisitorOnEveryProperty(node, visitor);
+	//SerializeJsonVisitor visitor;
+	////CallVisitorOnEveryProperty(node, visitor);
 
-	std::cout << "Json Generated:\n" << std::setw(4) << visitor.result << std::endl;
+	//std::cout << "Json Generated:\n" << std::setw(4) << visitor.result << std::endl;
 }
