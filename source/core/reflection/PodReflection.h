@@ -73,11 +73,42 @@ Type* PodCastVerfied(AssetPod* pod)
 	return nullptr;
 }
 
-
-inline const ReflClass& GetPodClass(AssetPod* pod)
+namespace refl
 {
-	// TODO: implement
-	assert(false && "Implement me");
-	return ReflClass();
-}
+	namespace detail 
+	{
+		template<typename Visitor, typename... PodTs>
+		void PodVisitP_Impl(AssetPod* pod, Visitor& v)
+		{
+			bool cc = (VisitIfP<PodTs>(pod, v) || ...);
+		}
 
+		template<typename T, typename Visitor>
+		bool VisitIfP(AssetPod* pod, Visitor& v)
+		{
+			if (pod->IsOfType<T>())
+			{
+				v(PodCast<T>(pod));
+				return true;
+			}
+			return false;
+		}
+
+		template<typename Visitor>
+		void VisitPodP(AssetPod* pod, Visitor& v)
+		{
+			detail::PodVisitP_Impl<Visitor, Z_POD_TYPES>(pod, v);
+		}
+	}
+
+	template<> 
+	inline const ReflClass& GetClass(AssetPod* pod)
+	{
+		const ReflClass* ptr;
+		detail::VisitPodP(pod, [&ptr](auto pod)
+		{
+			ptr = &std::remove_pointer_t<decltype(pod)>::StaticClass();
+		});
+		return *ptr;
+	}
+}
