@@ -45,7 +45,7 @@ public:
 	[[nodiscard]]
 	bool IsA() const
 	{
-		static_assert(CanBeProperty<T>, "This check will always fail. T cannot be a reflected property.");
+		static_assert(refl::CanBeProperty<T>, "This check will always fail. T cannot be a reflected property.");
 		return refl::GetId<T>() == m_type;
 	}
 
@@ -57,9 +57,9 @@ public:
 	[[nodiscard]]
 	T& GetRef(void* obj) const
 	{
-		static_assert(CanBeProperty<T>, "This will always fail. T is not a reflected property.");
+		static_assert(refl::CanBeProperty<T>, "This will always fail. T is not a reflected property.");
 		
-		CLOG_ASSERT(IsA<T>(), "Requested variable '{}' as '{}'. Actual type was: '{}' ", GetName(), m_type.name());
+		//CLOG_ASSERT(IsA<T>(), "Requested variable '{}' as '{}'. Actual type was: '{}' ", GetName(), refl::GetName<T>(), m_type.name());
 		
 		return *static_cast<T*>(GetRealMemoryAddr(obj));
 	}

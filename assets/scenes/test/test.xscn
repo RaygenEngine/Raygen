@@ -5,7 +5,9 @@
 	
 	<freeform_user name="user2"
 		translation="0, 15, 30"
-		lookat="0, 0, -5">
+		lookat="0, 0, -5"
+		int="3"
+		turningSpeed="0.420">
 	
 		<camera name="cam1"
 		    focal_length="1"

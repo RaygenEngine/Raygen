@@ -1,7 +1,8 @@
 #pragma once
 #include "core/reflection/ReflClass.h"
-
 #include "core/auxiliary/MetaTemplates.h"
+#include "core/reflection/PodReflection.h"
+
 #include <type_traits>
 
 namespace refltools
@@ -38,7 +39,7 @@ namespace refltools
 		{
 			if (p.IsA<T>())
 			{
-				v.operator() < T > (p.GetRef(obj), p);
+				v.operator()(p.GetRef<T>(obj), p);
 				return true;
 			}
 			return false;
@@ -47,15 +48,26 @@ namespace refltools
 		template<typename Visitor, typename... Types>
 		bool MaybeVisit(Visitor& v, const Property& p, void* obj)
 		{
-			return (VisitIf<Types>(v, p, obj) || ...); //Expand all ...Types and run visit.
+			return (VisitIf<Types, Visitor>(v, p, obj) || ...); //Expand all ...Types and run visit.
 		}
 
 		template<typename Visitor, typename... Types>
 		bool MaybeVisit_WrapVector(Visitor& v, const Property& p, void* obj)
 		{
-			return (VisitIf<std::vector<Types>>(v, p, obj) || ...);
+			return (VisitIf<std::vector<Types>, Visitor>(v, p, obj) || ...);
 		}
 
+		template<typename Visitor, typename... Types>
+		bool MaybeVisit_WrapPodHandle(Visitor& v, const Property& p, void* obj)
+		{
+			return (VisitIf<PodHandle<Types>, Visitor>(v, p, obj) || ...);
+		}
+
+		template<typename Visitor, typename... Types>
+		bool MaybeVisit_WrapVectorPodHandle(Visitor& v, const Property& p, void* obj)
+		{
+			return (VisitIf<std::vector<PodHandle<Types>>, Visitor>(v, p, obj) || ...);
+		}
 	}
 
 	// This is where all the instantiations of the sub types happen.
@@ -63,9 +75,9 @@ namespace refltools
 	template<typename Visitor>
 	void CallVisitorOnProperty(Visitor& v, const Property& p, void* obj)
 	{
-		bool cc = detail::MaybeVisitLinear<Z_REFL_TYPES>(v, p, obj)
-			|| detail::MaybeVisitLinear<Z_POD_TYPES>(v, p, obj)
-			|| detail::MaybeVisitLinear_WrapVector<Z_POD_TYPES>(v, p, obj);
+		bool cc = detail::MaybeVisit<Visitor, Z_REFL_TYPES>(v, p, obj)
+			|| detail::MaybeVisit_WrapPodHandle<Visitor, Z_POD_TYPES>(v, p, obj)
+			|| detail::MaybeVisit_WrapVectorPodHandle<Visitor, Z_POD_TYPES>(v, p, obj);
 	}
 
 	template<typename ReflectedObj, typename Visitor>

@@ -6,10 +6,13 @@
 
 class FreeformUserNode : public UserNode
 {
-	REFLECTED_NODE(FreeformUserNode, UserNode) {}
+	REFLECTED_NODE(FreeformUserNode, UserNode) 
+	{
+		REFLECT_VAR(m_int);
+	}
 
 	CameraNode* m_camera;
-
+	int32 m_int{ 1 };
 public:
 	FreeformUserNode(Node* parent);
 	~FreeformUserNode() = default;
