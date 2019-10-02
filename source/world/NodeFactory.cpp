@@ -45,9 +45,17 @@ Node* NodeFactory::LoadNodeFromType(const std::string& type, Node* parent, const
 	{
 		return world->LoadNode<CameraNode>(parent, xmdChildElement);
 	}
-	if (type == "light")
+	if (type == "punctual_light")
 	{
 		return world->LoadNode<PunctualLightNode>(parent, xmdChildElement);
+	}
+	if (type == "directional_light")
+	{
+		return world->LoadNode<DirectionalLightNode>(parent, xmdChildElement);
+	}
+	if (type == "spot_light")
+	{
+		return world->LoadNode<SpotLightNode>(parent, xmdChildElement);
 	}
 	if (type == "geometry")
 	{

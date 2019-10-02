@@ -1,16 +1,18 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "nodes/geometry/GeometryNode.h"
-#include "nodes/TransformNode.h"
-#include "nodes/light/PunctualLightNode.h"
-#include "nodes/camera/CameraNode.h"
-#include "nodes/user/UserNode.h"
+#include "world/nodes/geometry/GeometryNode.h"
+#include "world/nodes/TransformNode.h"
+#include "world/nodes/light/PunctualLightNode.h"
+#include "world/nodes/camera/CameraNode.h"
+#include "world/nodes/user/UserNode.h"
 #include "asset/loaders/XMLDocLoader.h"
 #include "system/EngineComponent.h"
 #include "asset/AssetManager.h"
 #include "system/Input.h"
-#include "nodes/geometry/InstancedGeometryNode.h"
+#include "world/nodes/geometry/InstancedGeometryNode.h"
+#include "world/nodes/light/DirectionalLightNode.h"
+#include "world/nodes/light/SpotLightNode.h"
 
 class NodeFactory;
 
@@ -45,7 +47,9 @@ class World
 	mutable std::unordered_set<GeometryNode*> m_triangleModelGeometries;
 	mutable std::unordered_set<InstancedGeometryNode*> m_triangleModelInstancedGeometries;
 	mutable std::unordered_set<TransformNode*> m_transforms;
-	mutable std::unordered_set<PunctualLightNode*> m_lights;
+	mutable std::unordered_set<PunctualLightNode*> m_punctualLights;
+	mutable std::unordered_set<DirectionalLightNode*> m_directionalLights;
+	mutable std::unordered_set<SpotLightNode*> m_spotLights;
 	mutable std::unordered_set<CameraNode*> m_cameras;
 	mutable std::unordered_set<UserNode*> m_users;
 		
@@ -110,13 +114,14 @@ public:
 	template <typename NodeType>
 	constexpr auto& GetNodeMap() const
 	{
-		if constexpr (std::is_base_of<PunctualLightNode, NodeType>::value) { return m_lights; }
+		if constexpr (std::is_base_of<PunctualLightNode, NodeType>::value) { return m_punctualLights; }
 		else if constexpr (std::is_base_of<InstancedGeometryNode, NodeType>::value) { return m_triangleModelInstancedGeometries; }
 		else if constexpr (std::is_base_of<GeometryNode, NodeType>::value) { return m_triangleModelGeometries; }
 		else if constexpr (std::is_base_of<TransformNode, NodeType>::value) { return m_transforms; }
 		else if constexpr (std::is_base_of<CameraNode, NodeType>::value) { return m_cameras; }
 		else if constexpr (std::is_base_of<UserNode, NodeType>::value) { return m_users; }
-
+		else if constexpr (std::is_base_of<DirectionalLightNode, NodeType>::value) { return m_directionalLights; }
+		else if constexpr (std::is_base_of<SpotLightNode, NodeType>::value) { return m_spotLights; }
 
 		// general nodes
 		else if constexpr (std::is_base_of<Node, NodeType>::value) { return m_nodes; }
