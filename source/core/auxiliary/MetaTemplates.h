@@ -191,13 +191,3 @@ struct Has##FuncName: std::false_type { };		\
 template<typename  T>							\
 struct Has##FuncName<T, std::enable_if_t<std::is_member_function_pointer<decltype(&T::##FuncName)>::value>> : std::true_type { };
 
-
-namespace
-{
-struct A {};
-struct B : A {};
-
-static_assert(is_vector_of_base_v<std::vector<B>, A>);
-static_assert(is_vector_of_base_ptr_v<std::vector<B*>, A>);
-static_assert(is_vector_of_base_ptr_v<std::vector<A*>, A>);
-}

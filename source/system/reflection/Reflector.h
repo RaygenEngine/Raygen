@@ -1,5 +1,6 @@
 #pragma once
-#include "system/reflection/Property.h"
+#include "core/reflection/Property.h"
+#include "core/reflection/TypeId.h"
 
 class Reflector
 {
