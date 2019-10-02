@@ -17,6 +17,8 @@ in Data
 	vec2 text_coord1;
 	
 	mat3 TBN;
+	
+	vec4 light_fragpos;
 } dataIn;
 
 uniform vec3 view_pos;
@@ -42,9 +44,28 @@ layout(binding=1) uniform sampler2D metallicRoughnessSampler;
 layout(binding=2) uniform sampler2D emissiveSampler;
 layout(binding=3) uniform sampler2D normalSampler;
 layout(binding=4) uniform sampler2D occlusionSampler;
+layout(binding=5) uniform sampler2D shadowMapSampler;
 
 #define _1_PI 0.318309886183790671538f
 #define PI 3.14159265358979323846f
+
+float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
+{
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = texture(shadowMapSampler, projCoords.xy).r; 
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+	// cure shadow acne
+	float bias = max(0.05 * (1.0 - dot(N, L)), 0.005); 
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+	// TODO: peter panning, pcf, oversampling
+    return shadow;
+}  
 
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
@@ -139,7 +160,8 @@ void main()
 	// light stuff
 	float distance = length(light_pos - dataIn.world_pos);
 	float attenuation = 1.0 / (distance * distance);
-	vec3 radiance = light_color * light_intensity * attenuation; 
+	float shadow = ShadowCalculation(dataIn.light_fragpos, N, L); 
+	vec3 radiance = (1.0 - shadow) * light_color * light_intensity * attenuation; 
 	
 	vec3 Lo = (kD * albedo / PI + specular) * radiance * max(dot(N, L), 0.0);
 

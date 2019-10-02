@@ -38,10 +38,13 @@ namespace OpenGL
 		
 		int32 m_previewMode;
 
+		void RenderDirectionalLights();
 		void RenderGeometries();
 		void RenderSkybox();
 		void RenderPostProcess();
 		void RenderWindow();
+
+		GLuint m_currentTexture;
 		
 	public:
 		

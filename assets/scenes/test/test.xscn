@@ -23,7 +23,8 @@
 	<directional_light name="l1" 
 		   translation="0.0, 25.0, 0" 
 		   color="0.9450, 0.8549, 0.6431"
-		   intensity="3000"/>
+		   intensity="3000"
+		   lookat="0, 0, 0"/>
 	
 		
 	<geometry name="box" 

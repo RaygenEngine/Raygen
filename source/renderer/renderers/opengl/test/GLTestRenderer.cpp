@@ -55,6 +55,7 @@ namespace OpenGL
 		testShader += "alpha_mode";
 		testShader += "alpha_cutoff";
 		testShader += "double_sided";
+		testShader += "light_space_matrix";
 	
 		// world data
 		auto* user = Engine::GetWorld()->GetAvailableNodeSpecificSubType<FreeformUserNode>();
@@ -116,6 +117,8 @@ namespace OpenGL
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outColorTexture, 0);
+
+		m_currentTexture = m_outColorTexture;
 		
 		return true;
 	}
@@ -125,12 +128,70 @@ namespace OpenGL
 		glViewport(0, 0, width, height);
 	}
 
+	void GLTestRenderer::RenderDirectionalLights()
+	{
+		// TODO optimize enabling disabling state switching  
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+		glEnable(GL_CULL_FACE);
+		
+		float near_plane = 1.0f, far_plane = 100.5f;
+		glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+
+		auto light = m_glDirectionalLights.at(0).get();
+
+		auto node = light->GetNode();
+
+		auto center = node->GetWorldTranslation() + node->GetFront();
+		// TODO check value of center
+		auto lightView = glm::lookAt(node->GetWorldTranslation(), center, node->GetUp());
+		
+		glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
+		glViewport(0, 0, light->width, light->height);
+		
+		glBindFramebuffer(GL_FRAMEBUFFER, light->fbo);
+	
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		glUseProgram(light->shader->id);
+
+		glUniformMatrix4fv((*light->shader)["light_space_matrix"], 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
+
+		for (auto& geometry : m_glGeometries)
+		{
+			auto m = geometry->GetNode()->GetWorldMatrix();
+			
+			glUniformMatrix4fv((*light->shader)["m"], 1, GL_FALSE, glm::value_ptr(m));
+
+			for (auto& glMesh : geometry->glModel->meshes)
+			{
+				glBindVertexArray(glMesh.vao);
+
+				GLMaterial* glMaterial = glMesh.material;
+				PodHandle<MaterialPod> materialData = glMaterial->m_materialPod;
+
+				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
+
+				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
+			}
+		}
+
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
+	}
+
 	void GLTestRenderer::RenderGeometries()
 	{
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
 
+		// TODO : renderer should store for output
+		auto wnd = Engine::GetMainWindow();
+		
+		glViewport(0, 0, wnd->GetWidth(), wnd->GetHeight());
+		
 		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 
 		glClearColor(0, 0, 0, 1.0);
@@ -164,6 +225,17 @@ namespace OpenGL
 			glUniformMatrix4fv(testShader["m"], 1, GL_FALSE, glm::value_ptr(m));
 			glUniformMatrix3fv(testShader["normal_matrix"], 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(glm::mat3(m)))));
 
+				//auto light = m_glDirectionalLights.at(0).get();
+				auto node = light->GetNode();
+				auto center = node->GetWorldTranslation() + node->GetFront();
+				// TODO check value of center
+				auto lightView = glm::lookAt(node->GetWorldTranslation(), center, node->GetUp());
+				float near_plane = 1.0f, far_plane = 100.5f;
+				glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+				glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
+			glUniformMatrix4fv(testShader["light_space_matrix"], 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
+
 			for (auto& glMesh : geometry->glModel->meshes)
 			{
 				glBindVertexArray(glMesh.vao);
@@ -195,6 +267,9 @@ namespace OpenGL
 
 				glActiveTexture(GL_TEXTURE4);
 				glBindTexture(GL_TEXTURE_2D, glMaterial->occlusionTexture->id);
+
+				glActiveTexture(GL_TEXTURE5);
+				glBindTexture(GL_TEXTURE_2D, light->shadowMap);
 
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
@@ -253,7 +328,7 @@ namespace OpenGL
 		glUseProgram(m_screenQuadShader->id);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_outColorTexture);
+		glBindTexture(GL_TEXTURE_2D, m_currentTexture);
 
 		// big triangle trick, no vao
 		glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -261,6 +336,8 @@ namespace OpenGL
 
 	void GLTestRenderer::Render()
 	{
+		// render directional lights shadow maps
+		RenderDirectionalLights();
 		// forward msaa-ed pass
 		RenderGeometries();
 		// render skybox, seamless enabled (render last)
@@ -284,6 +361,15 @@ namespace OpenGL
 			++m_previewMode %= PT_COUNT;
 			m_previewModeString = utl::SurfacePreviewTargetModeString(m_previewMode) + std::string(" -> ") + std::to_string(m_previewMode);
 			LOG_INFO("Preview Mode set to: {}({})", utl::SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
+		}
+		else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::L))
+		{
+			auto light = m_glDirectionalLights.at(0).get();
+			m_currentTexture = light->shadowMap;
+		}
+		else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::O))
+		{
+			m_currentTexture = m_outColorTexture;
 		}
 	}
 }
