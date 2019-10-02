@@ -14,7 +14,13 @@ namespace OpenGL
 	
 	bool GLShader::Load()
 	{
+		
 		const auto sources = AssetManager::GetOrCreate<ShaderPod>(m_assetManagerPodPath);
+		Engine::GetAssetManager()->ClearCache(sources);
+		Engine::GetAssetManager()->ClearCache(sources->fragment);
+		Engine::GetAssetManager()->ClearCache(sources->vertex);
+
+		
 
 		GLint result = GL_FALSE;
 		int32 infoLogLength;

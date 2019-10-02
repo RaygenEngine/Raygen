@@ -9,7 +9,9 @@ namespace OpenGL
 	struct GLBasicGeometry : NodeObserver<GeometryNode, GLRendererBase>
 	{
 		GLModel* glModel;
-	
+		
 		GLBasicGeometry(GeometryNode* node);
+
+		void ReloadModel();
 	};
 }

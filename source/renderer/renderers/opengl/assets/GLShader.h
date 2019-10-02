@@ -17,11 +17,11 @@ namespace OpenGL
 		
 		GLint operator[](const std::string& uniformName) const;
 		void operator+=(const std::string& uniformName);
+		bool Load() override;
 
 	protected:
 		// temporary
 		std::unordered_map<std::string, GLint> uniformLocations;
-		bool Load() override;
 	};
 
 }

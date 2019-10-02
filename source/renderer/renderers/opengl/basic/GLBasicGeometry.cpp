@@ -12,13 +12,8 @@ namespace OpenGL
 		ReloadModel();
 	}
 
-	void GLTestGeometry::ReloadModel()
+	void GLBasicGeometry::ReloadModel()
 	{
 		glModel = GetGLAssetManager(this)->GetOrMakeFromUri<GLModel>(Engine::GetAssetManager()->GetPodPath(GetNode()->GetModel()));
-	}
-
-	GLTestGeometry::~GLTestGeometry()
-	{
-
 	}
 }

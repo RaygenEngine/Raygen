@@ -5,6 +5,12 @@
 
 class LightNode : public Node
 {
+	REFLECTED_NODE(LightNode, Node)
+	{
+		REFLECT_VAR(m_color, PropertyFlags::Color);
+		REFLECT_VAR(m_intensity);
+	}
+
 	// TODO: should this be a flux vec3
 	glm::vec3 m_color;
 	float m_intensity;
