@@ -2,6 +2,8 @@
 
 #include "world/nodes/Node.h"
 #include "asset/loaders/ImageLoader.h"
+#include "asset/pods/ImagePod.h"
+#include "asset/PodHandle.h"
 
 class SkyHDRNode : public Node
 {

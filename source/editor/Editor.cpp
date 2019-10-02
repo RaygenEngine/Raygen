@@ -15,7 +15,7 @@
 
 #include <iostream>
 #include "asset/AssetManager.h"
-#include "system/reflection/ReflectionTools.h"
+#include "core/reflection/ReflectionTools.h"
 
 #include <set>
 
@@ -336,7 +336,7 @@ void Editor::UpdateEditor()
 	}
 
 	if (m_selectedNode) {
-		if (ImGui::CollapsingHeader(GetClass(m_selectedNode).GetNameStr().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::CollapsingHeader(refl::GetClass(m_selectedNode).GetNameStr().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			PropertyEditor(m_selectedNode);
 		}

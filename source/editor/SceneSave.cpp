@@ -5,7 +5,7 @@
 #include "tinyxml2/tinyxml2.h"
 #include "world/nodes/Node.h"
 #include "world/World.h"
-#include "system/reflection/ReflectionTools.h"
+#include "core/reflection/ReflectionTools.h"
 #include "asset/AssetManager.h"
 #include "editor/Editor.h"
 

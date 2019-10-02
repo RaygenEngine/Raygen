@@ -1,14 +1,17 @@
 #pragma once
 
 #include "system/EngineComponent.h"
-#include "system/reflection/Reflector.h"
 #include "system/Engine.h"
 #include "asset/PathSystem.h"
 #include "asset/AssetPod.h"
-#include "system/reflection/PodReflection.h"
+#include "core/reflection/PodReflection.h"
 
 
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
+// TODO: REFACTOR LIST
+// 1. Only cast delete with Internal pod delete implementation.
+// 2. Cleanup unused functions
+// 3. Make all functions static.
 class AssetManager
 {
 	friend class Editor;
@@ -18,6 +21,12 @@ class AssetManager
 	std::unordered_map<size_t, std::string> m_uidToPath;
 	
 	std::unordered_map<std::string, size_t> m_pathToUid;
+
+
+	static void DeletePod_Impl(AssetPod* pod);
+
+	// Creates a new instance of the underlying type of the given pod.
+	[[nodiscard]] static AssetPod* CreatePodByType(TypeId type);
 
 private:
 	std::string GetPodPathFromId(size_t podId)
@@ -133,7 +142,7 @@ private:
 		auto it = am->m_uidToPod.find(podId);
 		if (it != am->m_uidToPod.end())
 		{
-			::DeletePod(it->second);
+			DeletePod_Impl(it->second);
 			am->m_uidToPod.erase(podId);
 		}
 	}
@@ -220,7 +229,7 @@ public:
 		auto it = am->m_uidToPod.find(handle.podId);
 		if (it != am->m_uidToPod.end())
 		{
-			::DeletePod(it->second);
+			DeletePod_Impl(it->second);
 			am->m_uidToPod.erase(handle.podId);
 		}
 	}
@@ -259,7 +268,7 @@ public:
 	{
 		for (auto& [uid, pod] : m_uidToPod)
 		{
-			::DeletePod(pod);
+			DeletePod_Impl(pod);
 		}
 	}
 };

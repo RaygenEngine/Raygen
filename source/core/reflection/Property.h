@@ -1,7 +1,7 @@
 #pragma once
 #include "core/reflection/TypeId.h"
 #include "core/reflection/PropertyFlags.h"
-#include "system/reflection/Reflection.h"
+#include "core/reflection/PropertyTypes.h"
 #include <string_view>
 
 // a generic property that can be of any type.
@@ -38,6 +38,7 @@ protected:
 public:
 	[[nodiscard]] std::string_view GetName() const { return m_name; }
 	[[nodiscard]] std::string GetNameStr() const { return std::string(m_name); }
+	[[nodiscard]] TypeId GetType() const { return m_type; }
 
 	// Check if this property is of this type.
 	template<typename T>
@@ -48,17 +49,17 @@ public:
 		return refl::GetId<T>() == m_type;
 	}
 
+
 	// Returns a reference to the underlying variable of the passed object instance.
 	// This will assert if the requested type is incorrect.
-	// TODO: SourceT MUST be the type this property was created from.
-	template<typename T, typename SourceT>
+	// TODO: Maybe check SourceType and MUST be the type this property was created from.
+	template<typename T>
 	[[nodiscard]]
-	T& GetRef(SourceT* obj) const
+	T& GetRef(void* obj) const
 	{
 		static_assert(CanBeProperty<T>, "This will always fail. T is not a reflected property.");
-		static_assert(IsReflected<SourceT>(), "Source obj is  not a reflected object. This will always fail.");
 		
-		CLOG_ASSERT(IsA<T>(), "Requested variable '{}' from class '{}' as '{}'. Actual type was: '{}' ", GetName(), refl::GetName<SourceT>(), m_type.name());
+		CLOG_ASSERT(IsA<T>(), "Requested variable '{}' as '{}'. Actual type was: '{}' ", GetName(), m_type.name());
 		
 		return *static_cast<T*>(GetRealMemoryAddr(obj));
 	}

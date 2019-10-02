@@ -11,7 +11,6 @@
 #include "asset/AssetManager.h"
 #include "system/Input.h"
 #include "nodes/geometry/InstancedGeometryNode.h"
-#include "system/reflection/ReflectionTools.h"
 
 
 class CameraNode;
