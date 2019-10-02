@@ -6,8 +6,29 @@
 
 class DirectionalLightNode : public LightNode
 {
+	REFLECTED_NODE(DirectionalLightNode, LightNode)
+	{
+		REFLECT_VAR(m_near);
+		REFLECT_VAR(m_far);
+
+		REFLECT_VAR(m_left);
+		REFLECT_VAR(m_right);
+
+		REFLECT_VAR(m_bottom);
+		REFLECT_VAR(m_top);
+	}
 
 public:
+	float m_near{ 1.f };
+	float m_far{ 100.5f };
+
+	float m_left{ -10.f };
+	float m_right{ 10.f };
+
+	float m_bottom{ -10.f };
+	float m_top{ 10.f };
+
+
 	DirectionalLightNode(Node* parent);
 	~DirectionalLightNode() = default;
 

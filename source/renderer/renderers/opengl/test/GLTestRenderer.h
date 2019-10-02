@@ -72,5 +72,7 @@ namespace OpenGL
 		void Render() override;
 
 		void Update() override;
+
+		void RecompileShaders();
 	};
 }

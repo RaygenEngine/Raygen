@@ -168,8 +168,8 @@ void main()
 	vec3 color = Lo + emissive /*+ ambient*/;
 	color = mix(color, color * occlusion, occlusion_strength);
 	
-	// color = color / (color + vec3(1.0));
-    // color = pow(color, vec3(1.0/2.2));
+	color = color / (color + vec3(1.0));
+    color = pow(color, vec3(1.0/2.2));
 	
 	out_color = vec4(color, 1.f);
 

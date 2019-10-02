@@ -134,13 +134,15 @@ namespace OpenGL
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
-		
-		float near_plane = 1.0f, far_plane = 100.5f;
-		glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
 
 		auto light = m_glDirectionalLights.at(0).get();
-
 		auto node = light->GetNode();
+
+		float near_plane = 1.0f, far_plane = 100.5f;
+		glm::mat4 lightProjection = 
+			glm::ortho(node->m_left, node->m_right, node->m_bottom, node->m_top, node->m_near, node->m_far);
+
+
 
 		auto center = node->GetWorldTranslation() + node->GetFront();
 		// TODO check value of center
@@ -231,7 +233,8 @@ namespace OpenGL
 				// TODO check value of center
 				auto lightView = glm::lookAt(node->GetWorldTranslation(), center, node->GetUp());
 				float near_plane = 1.0f, far_plane = 100.5f;
-				glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+				glm::mat4 lightProjection =
+					glm::ortho(node->m_left, node->m_right, node->m_bottom, node->m_top, node->m_near, node->m_far);
 				glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
 			glUniformMatrix4fv(testShader["light_space_matrix"], 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
@@ -362,14 +365,37 @@ namespace OpenGL
 			m_previewModeString = utl::SurfacePreviewTargetModeString(m_previewMode) + std::string(" -> ") + std::to_string(m_previewMode);
 			LOG_INFO("Preview Mode set to: {}({})", utl::SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
 		}
-		else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::L))
+		
+		static bool Show = false;
+		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::L))
 		{
-			auto light = m_glDirectionalLights.at(0).get();
-			m_currentTexture = light->shadowMap;
+			if (Show)
+			{
+				m_currentTexture = m_outColorTexture;
+			}
+			else
+			{
+				auto light = m_glDirectionalLights.at(0).get();
+				m_currentTexture = light->shadowMap;
+			}
+			Show = !Show;
+			
 		}
-		else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::O))
+
+		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::R))
 		{
-			m_currentTexture = m_outColorTexture;
+			RecompileShaders();
+		}
+	}
+
+	void GLTestRenderer::RecompileShaders()
+	{
+		m_testShader->Load();
+		m_screenQuadShader->Load();
+
+		for (auto& l : m_glDirectionalLights)
+		{
+			l->shader->Load();
 		}
 	}
 }

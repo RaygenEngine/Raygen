@@ -16,7 +16,7 @@ public:
 		{
 			if (auto geometry = dynamic_cast<GeometryNode*>(node))
 			{
-			//	m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, OpenGL::GLTestGeometry>(this, geometry));
+				m_glGeometries.emplace_back(CreateObserver<OpenGL::GLBasicGeometry>(geometry));
 			}
 		});
 
@@ -24,12 +24,12 @@ public:
 		{
 			if (auto geometry = dynamic_cast<GeometryNode*>(node))
 			{
-				auto it = std::find_if(m_geometryObservers.begin(), m_geometryObservers.end(), [node](std::shared_ptr<OpenGL::GLTestGeometry>& ptr)
+				auto it = std::find_if(m_glGeometries.begin(), m_glGeometries.end(), [node](std::unique_ptr<OpenGL::GLBasicGeometry>& ptr)
 				{
 					return ptr.get()->GetNode() == node;
 				});
-				assert(it != m_geometryObservers.end() && "Attempting to remove untracked geometry node from observer list.");
-				m_geometryObservers.erase(it);
+				assert(it != m_glGeometries.end() && "Attempting to remove untracked geometry node from observer list.");
+				m_glGeometries.erase(it);
 			}
 		});
 	}
