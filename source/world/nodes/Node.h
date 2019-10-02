@@ -61,6 +61,7 @@ protected:
 	bool m_updateLocalMatrix;
 
 protected:
+	// TODO: remove
 	std::string m_type;
 	
 	Node* m_parent;

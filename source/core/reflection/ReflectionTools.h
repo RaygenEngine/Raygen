@@ -225,15 +225,13 @@ namespace refltools
 		};
 	}
 
-
 	// Copies values from 2 reflected objects all ReflClass properties from src dst
 	template<typename SrcT, typename DestT>
 	ReflClassOperationResult CopyClassTo(SrcT* src, DestT* dst)
 	{
-		detail::CopyIntoVisitor visitor(refl::GetClass(dst), dst);
+		detail::CopyIntoVisitor visitor(&refl::GetClass(dst), dst);
 		CallVisitorOnEveryProperty(src, visitor);
 		return visitor.operationResult;
 	}
-	
 
 }
