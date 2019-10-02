@@ -11,6 +11,8 @@
 
 #include "asset/PodIncludes.h"
 #include "asset/UriLibrary.h"
+#include "glm/glm.hpp"
+#include <string>
 
 SceneSave::SceneSave()
 {
@@ -39,7 +41,6 @@ void SceneSave::Draw()
 	}
 }
 
-/*
 namespace
 {
 
@@ -48,50 +49,59 @@ struct GenerateXMLVisitor
 	tinyxml2::XMLElement* xmlElement;
 	const char* name;
 
-	void operator()(int32& v, Property& p)
+	bool PreProperty(const Property& p)
+	{
+		if (p.HasFlags(PropertyFlags::NoSave))
+		{
+			return false;
+		}
+		return true;
+	}
+
+	void operator()(int32& v, const Property& p)
 	{
 		xmlElement->SetAttribute(p.GetNameStr().c_str(), v);
 	}
 
-	void operator()(bool& v, Property& p)
+	void operator()(bool& v, const Property& p)
 	{
-		xmlElement->SetAttribute(p.GetName()., v);
+		xmlElement->SetAttribute(p.GetNameStr().c_str(), v);
 	}
 
-	void operator()(float& v, Property& p)
+	void operator()(float& v, const Property& p)
 	{
-		xmlElement->SetAttribute(p.GetName().c_str(), v);
+		xmlElement->SetAttribute(p.GetNameStr().c_str(), v);
 	}
 
-	void operator()(glm::vec3& v, Property& p)
+	void operator()(glm::vec3& v, const Property& p)
 	{
-		xmlElement->SetAttribute(p.GetName().c_str(), ParsingAux::FloatsToString(v).c_str());
+		xmlElement->SetAttribute(p.GetNameStr().c_str(), ParsingAux::FloatsToString(v).c_str());
 	}
 
-	void operator()(glm::vec4& v, Property& p)
+	void operator()(glm::vec4& v, const Property& p)
 	{
-		xmlElement->SetAttribute(p.GetName().c_str(), ParsingAux::FloatsToString(v).c_str());
+		xmlElement->SetAttribute(p.GetNameStr().c_str(), ParsingAux::FloatsToString(v).c_str());
 	}	
 	
-	void operator()(std::string& v, Property& p)
+	void operator()(std::string& v, const Property& p)
 	{
-		xmlElement->SetAttribute(p.GetName().c_str(), v.c_str());
+		xmlElement->SetAttribute(p.GetNameStr().c_str(), v.c_str());
 	}
 
 	template<typename T>
-	void operator()(PodHandle<T>& handle, Property& p)
+	void operator()(PodHandle<T>& handle, const Property& p)
 	{
 		auto podPath = Engine::GetAssetManager()->GetPodPath(handle);
-		xmlElement->SetAttribute(p.GetName().c_str(), uri::RemovePathDirectory(podPath).string().c_str());
+		xmlElement->SetAttribute(p.GetNameStr().c_str(), uri::RemovePathDirectory(podPath).string().c_str());
 	}
 
 	template<typename T>
-	void operator()(T& v, ExactProperty& p)
+	void operator()(T& v, const Property& p)
 	{
 		LOG_WARN("Attempting to save an unimplemented save type, skipping property: ", p.GetName());
 	}
 };
-*/
+
 
 tinyxml2::XMLElement* GenerateNodeXML(Node* node, tinyxml2::XMLDocument& document)
 {
@@ -103,21 +113,15 @@ tinyxml2::XMLElement* GenerateNodeXML(Node* node, tinyxml2::XMLDocument& documen
 	xmlElem->SetAttribute("translation", ParsingAux::FloatsToString(node->GetLocalTranslation()).c_str());
 	xmlElem->SetAttribute("euler_pyr", ParsingAux::FloatsToString(node->GetLocalPYR()).c_str());
 	xmlElem->SetAttribute("scale", ParsingAux::FloatsToString(node->GetLocalScale()).c_str());
-	/*
+	
 	GenerateXMLVisitor visitor;
 	visitor.xmlElement = xmlElem;
 
-	for (auto& p : GetReflector(node).GetProperties())
-	{
-		if (!p.HasFlags(PropertyFlags::NoSave))
-		{
-			CallVisitorOnProperty(p, visitor);
-		}
-	}
-	*/
+	refltools::CallVisitorOnEveryProperty(node, visitor);
+
 	return xmlElem;
 }
-//}
+}
 
 bool SceneSave::SaveAsXML(World* world, const fs::path& path)
 {
@@ -254,7 +258,7 @@ json to_json_deep(std::vector<PodHandle<T>>& vec)
 void SceneSave::SerializeNodeData(Node* node)
 {
 	//SerializeJsonVisitor visitor;
-	////CallVisitorOnEveryProperty(node, visitor);
+	//CallVisitorOnEveryProperty(node, visitor);
 
 	//std::cout << "Json Generated:\n" << std::setw(4) << visitor.result << std::endl;
 }

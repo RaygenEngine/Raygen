@@ -24,25 +24,31 @@ void AssetWindow::DrawFileLibrary()
 	{
 		if (ImGui::CollapsingHeader("Model files"))
 		{
+			ImGui::Indent();
 			for (auto& s : m_gltf)
 			{
 				DrawFileAsset(n, s);
 			}
+			ImGui::Unindent();
 		}
 		if (ImGui::CollapsingHeader("Image files"))
 		{
+			ImGui::Indent();
 			for (auto& s : m_images)
 			{
 				DrawFileAsset(n, s);
 			}
+			ImGui::Unindent();
 		}
 
 		if (ImGui::CollapsingHeader("Scene files"))
 		{
+			ImGui::Indent();
 			for (auto& s : m_xscn)
 			{
 				DrawFileAsset(n, s);
 			}
+			ImGui::Unindent();
 		}
 	}
 }
@@ -54,20 +60,30 @@ void AssetWindow::Draw()
 	DrawAssetLibrary();
 	ImGui::End();
 }
-
+#include "asset/UriLibrary.h"
 void AssetWindow::DrawFileAsset(int32& n, const std::string& path)
 {
 	ImGui::PushID(n++);
-	if (ImGui::Button(path.c_str()))
+
+	if (uri::MatchesExtension(path, ".gltf"))
 	{
-		AssetManager::GetOrCreate<ModelPod>(path + "/#model").operator->();
+		ImGui::Button(path.c_str());
+			
+
+		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+		{
+			auto h = AssetManager::GetOrCreate<ModelPod>(path + "/#model");
+
+			std::string payloadTag = "POD_UID_" + std::to_string(h->type.hash());
+			ImGui::SetDragDropPayload(payloadTag.c_str(), &h.podId, sizeof(size_t));
+			ImGui::EndDragDropSource();
+		}
+	}
+	else
+	{
+		ImGui::Button(path.c_str());
 	}
 
-	//if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
-	//{
-	//	ImGui::SetDragDropPayload("ASSET_PATH", &path, sizeof(std::string));
-	//	ImGui::EndDragDropSource();
-	//}
 	ImGui::PopID();
 }
 
@@ -111,7 +127,7 @@ struct ReflectionToImguiVisitor
 
 	void End(const ReflClass& r)
 	{
-		path.erase(path.end() - (r.GetName().size() + 1), path.end());
+		path.erase(path.end() - (r.GetNameStr().size() + 1), path.end());
 	}
 
 	void PreProperty(const Property& p)

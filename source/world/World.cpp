@@ -4,7 +4,7 @@
 #include "system/Engine.h"
 #include "world/NodeFactory.h"
 #include "editor/Editor.h"
-
+#include "core/reflection/ReflectionTools.h"
 
 // TODO use integers (micro or milliseconds), also tidy
 using Clock = std::chrono::steady_clock;
@@ -108,8 +108,10 @@ Node* World::DuplicateNode(Node* src, Node* newParent)
 	{
 		newParent = src->GetParent();
 	}
-	return nullptr;
-/*	const ReflClass& srcClass = GetReflector(src);
+
+
+
+	const ReflClass& srcClass = refl::GetClass(src);
 
 	Node* created = GetNodeFactory()->LoadNodeFromType(src->m_type, newParent);
 
@@ -121,12 +123,9 @@ Node* World::DuplicateNode(Node* src, Node* newParent)
 	created->m_localScale = src->m_localScale;
 	created->MarkDirty();
 
-	auto result = CopyReflectorInto(srcReflector, GetReflector(created));
+	auto result = refltools::CopyClassTo(src, created);
 	CLOG_FATAL(!result.IsExactlyCorrect(), "Duplicate node did not exactly match properties! Node: {}", src);
-
-	GetReflector(created).SetName(created->m_type + "." + created->m_name + "." + std::to_string(created->GetUID()));
-
-	return created;*/
+	return created;
 }
 
 Node* World::DeepDuplicateNode(Node* src, Node* newParent)
