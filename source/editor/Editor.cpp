@@ -407,7 +407,10 @@ void Editor::PropertyEditor(Node* node)
 	}
 	if (ImGui::DragFloat3("Rotation", ImUtil::FromVec3(eulerPyr), 0.1f))
 	{
-		node->m_localOrientation = glm::quat(glm::radians(eulerPyr));
+		auto axes = node->GetLocalPYR();
+		axes = eulerPyr - axes;
+		
+		node->m_localOrientation = node->m_localOrientation * glm::quat(glm::radians(axes));
 		dirtyMatrix = true;
 	}
 	if (ImGui::DragFloat3("Scale", ImUtil::FromVec3(node->m_localScale), 0.01f))

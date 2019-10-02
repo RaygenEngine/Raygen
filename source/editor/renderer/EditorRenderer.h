@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/renderers/opengl/test/GLTestRenderer.h"
-#include "renderer/renderers/opengl/test/GLTestGeometry.h"
+#include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
 #include "world/nodes/geometry/GeometryNode.h"
 class EditorRenderer : public OpenGL::GLTestRenderer
 {
@@ -16,7 +16,7 @@ public:
 		{
 			if (auto geometry = dynamic_cast<GeometryNode*>(node))
 			{
-				m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, OpenGL::GLTestGeometry>(this, geometry));
+			//	m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, OpenGL::GLTestGeometry>(this, geometry));
 			}
 		});
 
