@@ -9,6 +9,7 @@
 #include "world/NodeFactory.h"
 #include "asset/AssetManager.h"
 #include "asset/PodIncludes.h"
+#include "core/reflection/ReflectionTools.h"
 
 Node::Node(Node* pNode)
 		: m_localTranslation(0.f, 0.f, 0.f),
@@ -250,80 +251,75 @@ std::string Node::ToString(bool verbose, uint depth) const
 
 namespace 
 {
-/*
+
 struct LoadPropertiesFromXMLVisitor
 {
 	const tinyxml2::XMLElement* xmlData;
 	const char* str;
+	std::string strBuf;
 
+	bool PreProperty(const Property& p)
+	{
+		if (p.HasFlags(PropertyFlags::NoLoad))
+		{
+			return false;
+		}
+		strBuf = p.GetNameStr();
+		str = strBuf.c_str();
+		return true;
+	}
 
 	// Basic types
-	void Visit(int32& v, ExactProperty& p) { xmlData->QueryIntAttribute(str, &v); }
-	void Visit(bool& v, ExactProperty& p) { xmlData->QueryBoolAttribute(str, &v); }
-	void Visit(float& v, ExactProperty& p) { xmlData->QueryFloatAttribute(str, &v); }
+	void operator()(int32& v, const Property& p) { xmlData->QueryIntAttribute(str, &v); }
+	void operator()(bool& v, const Property& p) { xmlData->QueryBoolAttribute(str, &v); }
+	void operator()(float& v, const Property& p) { xmlData->QueryFloatAttribute(str, &v); }
 
-	void Visit(glm::vec3& v, ExactProperty& p)
+	void operator()(glm::vec3& v, const Property& p)
 	{
 		ParsingAux::ReadFloatsAttribute(xmlData, str, v);
 	}
-	void Visit(glm::vec4& v, ExactProperty& p)
+	void operator()(glm::vec4& v, const Property& p)
 	{
 		ParsingAux::ReadFloatsAttribute(xmlData, str, v);
 	}
 
-	void Visit(std::string& v, ExactProperty& p)
+	void operator()(std::string& v, const Property& p)
 	{
 		ParsingAux::ReadStringAttribute(xmlData, str, v);
 	}
 
 	// Pod<T>
 	template<typename T>
-	void Visit(PodHandle<T>& handle, ExactProperty& p)
+	void operator()(PodHandle<T>& handle, const Property& p)
 	{
 		std::string tmp;
 		if (!ParsingAux::ReadStringAttribute(xmlData, str, tmp))
 		{
 			if (!p.HasFlags(PropertyFlags::OptionalPod))
 			{
-				LOG_FATAL("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
+				LOG_ASSERT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
 			}
-			return;
 		}
 		handle = AssetManager::GetOrCreate<T>(tmp);
 	}
 	
+	
 	template<typename T>
-	void Visit(std::vector<T>& v, ExactProperty& p)
+	void operator()(std::vector<T>& v, const Property& p)
 	{
-		LOG_WARN("Skipped loading unimplemented vector type from scenefile with name: {} ", p.GetName());
-	}
-
-	// Catch all else here
-	template<typename T>
-	void Visit(T& v, ExactProperty& p)
-	{
-		LOG_WARN("Skipped loading unimplemented type from scenefile with name: {} ", p.GetName());
+		LOG_WARN("Vectors are not implented yet on XML Scene Load. Skipped loading vector: ", p.GetNameStr());
 	}
 	
 };
-*/
+
 }
 
 void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 {
 	using namespace ParsingAux;
-	/*LoadPropertiesFromXMLVisitor visitor;
-	visitor.xmlData = xmlData;
-	for (auto& prop : m_reflector.GetProperties())
-	{
-		if (prop.HasFlags(PropertyFlags::NoLoad))
-		{
-			continue;
-		}
 
-		auto str = prop.GetName().c_str();
-		visitor.str = str;
-		CallVisitorOnProperty(prop, visitor);
-	}
-	*/
+	LoadPropertiesFromXMLVisitor visitor;
+	visitor.xmlData = xmlData;
+	
+	refltools::CallVisitorOnEveryProperty(this, visitor);
 }
