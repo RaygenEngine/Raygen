@@ -1,13 +1,19 @@
 #include "pch.h"
 
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
+#include "renderer/renderers/opengl/GLAssetManager.h"
 
 namespace OpenGL
 {
 	GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
-		: NodeObserver<DirectionalLightNode>(node)
+		: NodeObserver<DirectionalLightNode, GLRendererBase>(node)
 	{
-		// dir light depth TODO:
+		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("directional_light.shader.json");
+		shader = GetGLAssetManager(this)->GetOrMakeFromUri<GLShader>(Engine::GetAssetManager()->GetPodPath(shaderAsset));
+		auto& dlShader = *shader;
+		dlShader += "light_space_matrix";
+		dlShader += "m";
+
 		glGenFramebuffers(1, &fbo);
 
 		glGenTextures(1, &shadowMap);
