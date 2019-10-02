@@ -1,7 +1,8 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "system/Engine.h"
+
+class Renderer;
 
 template<typename RendererT>
 class RendererObject : public Object
@@ -12,7 +13,7 @@ class RendererObject : public Object
 };
 
 // saves the time of writing a base observer for each new and existing node type
-template <typename RendererType, typename NodeType>
+template <typename NodeType, typename RendererType = Renderer>
 class NodeObserver : public RendererObject<RendererType>
 {
 public:

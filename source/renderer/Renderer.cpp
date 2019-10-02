@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "renderer/Renderer.h"
-#include "system/Engine.h"
 
 bool Renderer::InitRendering(HWND assochWnd, HINSTANCE instance)
 {

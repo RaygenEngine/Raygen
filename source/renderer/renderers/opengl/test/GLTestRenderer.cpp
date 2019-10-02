@@ -1,7 +1,6 @@
 #include "pch.h"
 
 #include "renderer/renderers/opengl/test/GLTestRenderer.h"
-#include "renderer/renderers/opengl/test/GLTestGeometry.h"
 #include "world/World.h"
 #include "world/nodes/user/freeform/FreeformUserNode.h"
 #include "world/nodes/geometry/GeometryNode.h"
@@ -16,61 +15,14 @@
 
 namespace OpenGL
 {
-	// TODO: default skybox model (json) 
-	float skyboxVertices[] = {
-		// positions          
-		-1.0f,  1.0f, -1.0f,
-		-1.0f, -1.0f, -1.0f,
-		 1.0f, -1.0f, -1.0f,
-		 1.0f, -1.0f, -1.0f,
-		 1.0f,  1.0f, -1.0f,
-		-1.0f,  1.0f, -1.0f,
-
-		-1.0f, -1.0f,  1.0f,
-		-1.0f, -1.0f, -1.0f,
-		-1.0f,  1.0f, -1.0f,
-		-1.0f,  1.0f, -1.0f,
-		-1.0f,  1.0f,  1.0f,
-		-1.0f, -1.0f,  1.0f,
-
-		 1.0f, -1.0f, -1.0f,
-		 1.0f, -1.0f,  1.0f,
-		 1.0f,  1.0f,  1.0f,
-		 1.0f,  1.0f,  1.0f,
-		 1.0f,  1.0f, -1.0f,
-		 1.0f, -1.0f, -1.0f,
-
-		-1.0f, -1.0f,  1.0f,
-		-1.0f,  1.0f,  1.0f,
-		 1.0f,  1.0f,  1.0f,
-		 1.0f,  1.0f,  1.0f,
-		 1.0f, -1.0f,  1.0f,
-		-1.0f, -1.0f,  1.0f,
-
-		-1.0f,  1.0f, -1.0f,
-		 1.0f,  1.0f, -1.0f,
-		 1.0f,  1.0f,  1.0f,
-		 1.0f,  1.0f,  1.0f,
-		-1.0f,  1.0f,  1.0f,
-		-1.0f,  1.0f, -1.0f,
-
-		-1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f,  1.0f,
-		 1.0f, -1.0f, -1.0f,
-		 1.0f, -1.0f, -1.0f,
-		-1.0f, -1.0f,  1.0f,
-		 1.0f, -1.0f,  1.0f
-	};
-
-	
 	GLTestRenderer::~GLTestRenderer()
 	{
 		glDeleteFramebuffers(1, &m_msaaFbo);
 		glDeleteTextures(1, &m_msaaColorTexture);
 		glDeleteRenderbuffers(1, &m_msaaDepthStencilRbo);
-	
-		glDeleteVertexArrays(1, &m_skyboxVAO);
-		glDeleteBuffers(1, &m_skyboxVBO);
+
+		glDeleteFramebuffers(1, &m_outFbo);
+		glDeleteTextures(1, &m_outColorTexture);
 	}
 
 	bool GLTestRenderer::InitScene(int32 width, int32 height)
@@ -81,12 +33,6 @@ namespace OpenGL
 		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("screen_quad.shader.json");
 		m_screenQuadShader = GetGLAssetManager()->GetOrMakeFromUri<GLShader>(am->GetPodPath(shaderAsset));
 
-		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("skybox.shader.json");
-		m_skyboxShader = GetGLAssetManager()->GetOrMakeFromUri<GLShader>(am->GetPodPath(shaderAsset));
-
-		auto& skyboxShader = *m_skyboxShader;
-		skyboxShader += "vp";
-		
 		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("test.shader.json");
 		m_testShader = GetGLAssetManager()->GetOrMakeFromUri<GLShader>(am->GetPodPath(shaderAsset));
 		
@@ -123,40 +69,30 @@ namespace OpenGL
 		m_camera = user->GetCamera();
 
 		auto* sky = Engine::GetWorld()->GetAvailableNodeSpecificSubType<SkyCubeNode>();
-		m_skyboxCubemap = GetGLAssetManager()->GetOrMakeFromUri<GLTexture>(am->GetPodPath(sky->GetSkyMap()));
-
-		m_light = Engine::GetWorld()->GetAvailableNodeSpecificSubType<PunctualLightNode>();
 		
-		// TODO: better way to check world requirements
-		if (!m_light)
+		if(!sky)
 		{
-			LOG_FATAL("Missing light node!");
+			LOG_FATAL("Missing sky node!");
 			return false;
 		}
-
-		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>())
-			m_geometryObservers.emplace_back(CreateObserver<GLTestRenderer, GLTestGeometry>(this, geometryNode));
-
-		// buffers
-		glGenFramebuffers(1, &m_outFbo);
-		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
-		glGenTextures(1, &m_outColorTexture);
-		glBindTexture(GL_TEXTURE_2D, m_outColorTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outColorTexture, 0);
 		
+		m_skybox = CreateObserver<GLBasicSkybox>(sky);
+
+		for (auto* directionalLightNode : Engine::GetWorld()->GetNodeMap<DirectionalLightNode>())
+			m_glDirectionalLights.push_back(CreateObserver<GLBasicDirectionalLight>(directionalLightNode));
+		
+		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>())
+			m_glGeometries.push_back(CreateObserver<GLBasicGeometry>(geometryNode));
+
+		// msaa fbo
 		glGenFramebuffers(1, &m_msaaFbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 
-		auto samples = 16;
+		// TODO:
+		auto samples = 4;
 		glGenTextures(1, &m_msaaColorTexture);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture);
 		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB, width, height, GL_TRUE);
-		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 		
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture, 0);
 
@@ -164,60 +100,62 @@ namespace OpenGL
 		glBindRenderbuffer(GL_RENDERBUFFER, m_msaaDepthStencilRbo);
 		glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, width, height);
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_msaaDepthStencilRbo);
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
-		
+	
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			LOG_FATAL("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
 		
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		// skybox
-		glGenVertexArrays(1, &m_skyboxVAO);
-		glGenBuffers(1, &m_skyboxVBO);
-		glBindVertexArray(m_skyboxVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, m_skyboxVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*)0);
+		// out fbo
+		glGenFramebuffers(1, &m_outFbo);
+		
+		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+	
+		glGenTextures(1, &m_outColorTexture);
+		glBindTexture(GL_TEXTURE_2D, m_outColorTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outColorTexture, 0);
 		
 		return true;
 	}
 
 	void GLTestRenderer::WindowResize(int32 width, int32 height)
 	{
-
 		glViewport(0, 0, width, height);
 	}
 
-	void GLTestRenderer::Render()
+	void GLTestRenderer::RenderGeometries()
 	{
-		// first pass
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+		glEnable(GL_CULL_FACE);
+
 		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 
-		auto root = Engine::GetWorld()->GetRoot();
-		const auto backgroundColor = root->GetBackgroundColor();
-		glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1.0);
+		glClearColor(0, 0, 0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT /*| GL_STENCIL_BUFFER_BIT*/);
-
-		glEnable(GL_DEPTH_TEST);
 		
+		// TODO change syntax
 		auto& testShader = *m_testShader;
 
 		glUseProgram(testShader.id);
 
-		glDepthFunc(GL_LESS);
+		auto light = m_glDirectionalLights.at(0).get();
 
 		// global uniforms
 		glUniform3fv(testShader["view_pos"], 1, glm::value_ptr(m_camera->GetWorldTranslation()));
-		glUniform3fv(testShader["light_pos"], 1, glm::value_ptr(m_light->GetWorldTranslation()));
-		glUniform3fv(testShader["light_color"], 1, glm::value_ptr(m_light->GetColor()));
-		glUniform1f(testShader["light_intensity"], m_light->GetIntensity());
+		glUniform3fv(testShader["light_pos"], 1, glm::value_ptr(light->GetNode()->GetWorldTranslation()));
+		glUniform3fv(testShader["light_color"], 1, glm::value_ptr(light->GetNode()->GetColor()));
+		glUniform1f(testShader["light_intensity"], light->GetNode()->GetIntensity());
+
+		auto root = Engine::GetWorld()->GetRoot();
+		const auto backgroundColor = root->GetBackgroundColor();
 		glUniform3fv(testShader["ambient"], 1, glm::value_ptr(root->GetAmbientColor()));
-		glUniform1i(testShader["mode"], m_previewMode);
 
 		const auto vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
 		// render geometry (non-instanced)
-		for (auto& geometry : m_geometryObservers)
+		for (auto& geometry : m_glGeometries)
 		{
 			auto m = geometry->GetNode()->GetWorldMatrix();
 			auto mvp = vp * m;
@@ -225,7 +163,7 @@ namespace OpenGL
 			glUniformMatrix4fv(testShader["mvp"], 1, GL_FALSE, glm::value_ptr(mvp));
 			glUniformMatrix4fv(testShader["m"], 1, GL_FALSE, glm::value_ptr(m));
 			glUniformMatrix3fv(testShader["normal_matrix"], 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(glm::mat3(m)))));
-			
+
 			for (auto& glMesh : geometry->glModel->meshes)
 			{
 				glBindVertexArray(glMesh.vao);
@@ -242,7 +180,7 @@ namespace OpenGL
 				glUniform1i(testShader["alpha_mode"], materialData->alphaMode);
 				glUniform1f(testShader["alpha_cutoff"], materialData->alphaCutoff);
 				glUniform1i(testShader["double_sided"], materialData->doubleSided);
-	
+
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
 
@@ -257,32 +195,43 @@ namespace OpenGL
 
 				glActiveTexture(GL_TEXTURE4);
 				glBindTexture(GL_TEXTURE_2D, glMaterial->occlusionTexture->id);
-				
+
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
-									
+
 				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
 			}
 		}
 
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
+	}
+
+	void GLTestRenderer::RenderSkybox()
+	{
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+		glEnable(GL_CULL_FACE);
+		
 		const auto vpNoTransformation = m_camera->GetProjectionMatrix() * glm::mat4(glm::mat3(m_camera->GetViewMatrix()));
 		
-		// draw skybox as last
-		glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
-		// TODO: where to put this
-		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+		glUseProgram(m_skybox->shader->id);
 		
-		glUseProgram(m_skyboxShader->id);
-		glUniformMatrix4fv((*m_skyboxShader)["vp"], 1, GL_FALSE, glm::value_ptr(vpNoTransformation));
-		glBindVertexArray(m_skyboxVAO);
+		glUniformMatrix4fv((*m_skybox->shader)["vp"], 1, GL_FALSE, glm::value_ptr(vpNoTransformation));
+		glBindVertexArray(m_skybox->vao);
+		
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxCubemap->id);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glBindVertexArray(0);
-
-		glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_CULL_FACE);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, m_skybox->cubemap->id);
 		
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+		glDisable(GL_CULL_FACE);
+	}
+
+	void GLTestRenderer::RenderPostProcess()
+	{
 		// copy msaa to out
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFbo);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_outFbo);
@@ -290,9 +239,14 @@ namespace OpenGL
 		auto wnd = Engine::GetMainWindow();
 		glBlitFramebuffer(0, 0, wnd->GetWidth(), wnd->GetHeight(), 0, 0, wnd->GetWidth(), wnd->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-		// post process
+		// do post process here
+	}
+
+	void GLTestRenderer::RenderWindow()
+	{
+		// write to window
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		
+
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -303,10 +257,18 @@ namespace OpenGL
 
 		// big triangle trick, no vao
 		glDrawArrays(GL_TRIANGLES, 0, 3);
+	}
 
-		glBindTexture(GL_TEXTURE_2D, 0);
-		
-		glUseProgram(0);
+	void GLTestRenderer::Render()
+	{
+		// forward msaa-ed pass
+		RenderGeometries();
+		// render skybox, seamless enabled (render last)
+		RenderSkybox();
+		// copy msaa to out fbo and render any post process on it
+		RenderPostProcess();
+		// write out texture of out fbo to window (big triangle trick)
+		RenderWindow();
 	}
 
 	void GLTestRenderer::Update()

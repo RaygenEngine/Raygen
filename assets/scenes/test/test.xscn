@@ -20,10 +20,10 @@
 	<sky_cube name="abc" 
 			cube_map="alps.cubemap.json"/>
 
-	<light name="l1" 
+	<directional_light name="l1" 
 		   translation="0.0, 25.0, 0" 
 		   color="0.9450, 0.8549, 0.6431"
-		   intensity="2"/>
+		   intensity="3000"/>
 	
 		
 	<geometry name="box" 
