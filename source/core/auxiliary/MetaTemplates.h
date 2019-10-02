@@ -184,10 +184,15 @@ constexpr bool is_detected_v = is_detected<Op, Args...>::value;
 
 
 
-#define DECLARE_HAS_FUNCTION_DETECTOR(FuncName)	\
-template<typename T, typename = void>			\
-struct Has##FuncName: std::false_type { };		\
-												\
-template<typename  T>							\
-struct Has##FuncName<T, std::enable_if_t<std::is_member_function_pointer<decltype(&T::##FuncName)>::value>> : std::true_type { };
+#define DECLARE_HAS_FUNCTION_DETECTOR(FuncName)					\
+template<typename T, typename = void>							\
+struct Has##FuncName: std::false_type { };						\
+																\
+template<typename T>											\
+struct Has##FuncName<T, std::enable_if_t<						\
+	std::is_member_function_pointer<decltype(&T::##FuncName)>	\
+	::value>> : std::true_type { };								\
+																\
+template<typename T>											\
+constexpr bool HasV##FuncName = Has##FuncName<T>::value;		
 

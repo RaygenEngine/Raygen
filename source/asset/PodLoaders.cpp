@@ -18,26 +18,8 @@
 #include "asset/loaders/TextLoader.h"
 #include "asset/loaders/XMLDocLoader.h"
 
-constexpr char SubpathIdentifier = '#';
+#include "asset/UriLibrary.h"
 
-bool IsSubpath(const fs::path& path)
-{
-	return path.filename().string()[0] == SubpathIdentifier;
-}
-
-fs::path GetRealExtension(const fs::path& path) 
-{
-	if (IsSubpath(path)) 
-	{
-		return path.parent_path().extension();
-	}
-	return path.extension();
-}
-
-bool IsOfType(const fs::path& path, const fs::path& ext)
-{
-	return GetRealExtension(path) == ext;
-}
 
 bool GltfFilePod::Load(GltfFilePod* pod, const fs::path& path)
 {
@@ -51,7 +33,7 @@ bool ImagePod::Load(ImagePod* pod, const fs::path& path)
 
 bool MaterialPod::Load(MaterialPod* pod, const fs::path& path)
 {
-	if (IsOfType(path, ".gltf")) 
+	if (uri::MatchesExtension(path, ".gltf")) 
 	{
 		return GltfMaterialLoader::Load(pod, path);
 	}
@@ -63,7 +45,7 @@ bool MaterialPod::Load(MaterialPod* pod, const fs::path& path)
 
 bool ModelPod::Load(ModelPod* pod, const fs::path& path)
 {
-	if (IsOfType(path, ".gltf")) 
+	if (uri::MatchesExtension(path, ".gltf"))
 	{
 		return GltfModelLoader::Load(pod, path);
 	}
@@ -84,12 +66,12 @@ bool StringPod::Load(StringPod* pod, const fs::path& path)
 
 bool TexturePod::Load(TexturePod* pod, const fs::path& path)
 {
-	if (IsOfType(path, ".gltf")) 
+	if (uri::MatchesExtension(path, ".gltf"))
 	{
 		return GltfTextureLoader::Load(pod, path);
 	}
 	// TODO: search sub extension, or make cubeman extension
-	else if (IsOfType(path, ".json"))
+	else if (uri::MatchesExtension(path, ".json"))
 	{
 		return CubemapLoader::Load(pod, path);
 	}

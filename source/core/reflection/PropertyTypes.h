@@ -1,8 +1,6 @@
 #pragma once
 
 #include "core/auxiliary/MetaTemplates.h"
-#include "asset/AssetPod.h"
-
 
 #define Z_REFL_TYPES		\
 int32,						\
@@ -12,6 +10,7 @@ glm::vec3,					\
 glm::vec4,					\
 std::string
 
+struct BasePodHandle;
 
 namespace refl
 {
@@ -20,7 +19,7 @@ namespace refl
 		template<typename T>
 		constexpr bool IsHandleToPodF()
 		{
-			if constexpr (std::is_base_of_v<BasePodHandle, T>)
+			if constexpr (std::is_base_of_v<BasePodHandle, T> && !std::is_same_v<BasePodHandle, T>)
 			{
 				return true;
 			}
@@ -57,6 +56,18 @@ namespace refl
 			}
 			return false;
 		}
+	}
+
+	namespace proptypes
+	{
+		template<typename Type>
+		constexpr bool IsHandleToPod = detail::IsHandleToPodF<Type>();
+
+		template<typename Type>
+		constexpr bool IsVectorOfPodHandles = is_vector_of_base_v<Type, BasePodHandle>;
+
+		template<typename Type>
+		constexpr bool IsBaseType = detail::CanBePropertyBaseTypeF<Type>();
 	}
 
 	// IsReflected to compile time check if a type can be reflected.

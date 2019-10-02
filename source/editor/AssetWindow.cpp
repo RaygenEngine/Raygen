@@ -3,9 +3,9 @@
 #include "editor/AssetWindow.h"
 #include "system/Engine.h"
 #include "asset/AssetManager.h"
-#include "system/reflection/ReflectionTools.h"
+#include "core/reflection/ReflectionTools.h"
 #include "editor/imgui/ImguiExtensions.h"
-
+#include "core/reflection/PodTools.h"
 void AssetWindow::Init()
 {
 	Engine::GetAssetManager()->m_pathSystem.GenerateFileListOfType(".gltf", m_gltf);
@@ -71,7 +71,7 @@ void AssetWindow::DrawFileAsset(int32& n, const std::string& path)
 	ImGui::PopID();
 }
 
-#include "system/reflection/PodReflection.h"
+#include "core/reflection/PodReflection.h"
 /*
 
 namespace
@@ -273,7 +273,7 @@ void AssetWindow::DrawAssetLibrary()
 	if (ImGui::CollapsingHeader("Assets"))
 	{
 		std::unordered_map<ctti::type_id_t, std::vector<std::pair<size_t, AssetPod*>>> podVectors;
-		ForEachPodType([&](auto dummy) {
+		podtools::ForEachPodType([&](auto dummy) {
 			using PodType = std::remove_pointer_t<decltype(dummy)>;
 
 			podVectors.insert({ ctti::type_id<PodType>(), {} });

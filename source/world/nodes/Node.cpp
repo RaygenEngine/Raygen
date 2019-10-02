@@ -8,7 +8,6 @@
 #include "sky/SkyHDRNode.h"
 #include "world/NodeFactory.h"
 #include "asset/AssetManager.h"
-#include "system/reflection/ReflectionTools.h"
 #include "asset/PodIncludes.h"
 
 Node::Node(Node* pNode)

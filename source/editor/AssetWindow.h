@@ -1,8 +1,6 @@
 #pragma once
 #include <set>
 #include <map>
-//#include "system/reflection/PodReflection.h"
-
 
 class AssetWindow
 {

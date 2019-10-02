@@ -17,6 +17,8 @@ set(SOURCE_FILES
 
 	core/logger/Logger.cpp
 	
+	core/reflection/ReflectionTools.cpp
+
 	editor/Editor.cpp
 	editor/Outliner.cpp
 	editor/Details.cpp
@@ -47,9 +49,6 @@ set(SOURCE_FILES
 	system/Object.cpp
 	system/Input.cpp
 	
-	system/reflection/Reflection.cpp
-	system/reflection/ReflectionTools.cpp
-	system/reflection/PodReflection.cpp
 
 	event/Event.cpp
 	
@@ -89,7 +88,9 @@ set(HEADER_FILES
 	
 	asset/UriLibrary.h
 	asset/PodIncludes.h
-		
+	asset/PodHandle.h
+
+
 	asset/loaders/TextLoader.h
 	asset/loaders/XMLDocLoader.h
 	asset/loaders/ImageLoader.h
@@ -133,11 +134,15 @@ set(HEADER_FILES
 	core/logger/Logger.h
 	
 	core/reflection/GenMacros.h
+	core/reflection/PodReflection.h
+	core/reflection/PodTools.h
 	core/reflection/Property.h
 	core/reflection/PropertyFlags.h
+	core/reflection/PropertyTypes.h
 	core/reflection/ReflClass.h
+	core/reflection/ReflectionTools.h
 	core/reflection/TypeId.h
-	
+
 	core/timer/Timer.h
 	
 	core/type/IntegerTypes.h
@@ -176,11 +181,6 @@ set(HEADER_FILES
 	system/Object.h
 	system/Input.h
 	system/EngineEvents.h
-
-	system/reflection/Reflection.h
-	system/reflection/Reflector.h
-	system/reflection/ReflectionTools.h
-	system/reflection/PodReflection.h
 
 	event/Event.h
 

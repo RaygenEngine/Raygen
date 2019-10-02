@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/reflection/GenMacros.h"
-#include "asset/AssetPod.h"
+#include "asset/PodHandle.h"
 #include "asset/pods/ImagePod.h"
 
 struct TexturePod : public AssetPod

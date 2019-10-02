@@ -1,22 +1,8 @@
 #pragma once
 #include "core/reflection/Property.h"
-#include "system/reflection/Reflection.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
-
-namespace detail
-{
-	inline const char* RemoveVariablePrefix(const char* name)
-	{
-		if (name[0] != 0 && name[1] != 0 && name[2] != 0 && 
-			name[0] == 'm' && name[1] == '_')
-		{
-			return (name + 2);
-		}
-		return name;
-	};
-}
 
 // Object that describes a reflected class.
 class ReflClass
@@ -38,6 +24,16 @@ class ReflClass
 			m_hashTable[std::string(prop.GetName())] = index++;
 		}
 	}
+
+	static const char* RemoveVariablePrefix(const char* name)
+	{
+		if (name[0] != 0 && name[1] != 0 && name[2] != 0 &&
+			name[0] == 'm' && name[1] == '_')
+		{
+			return (name + 2);
+		}
+		return name;
+	};
 
 public:
 	template<typename T>
@@ -81,7 +77,7 @@ public:
 	{
 		static_assert(refl::CanBeProperty<T>, "This type is not reflectable and cannot be a property.");
 
-		const char* name = detail::RemoveVariablePrefix(varname);
+		const char* name = RemoveVariablePrefix(varname);
 		size_t index = m_properties.size();
 		m_properties.push_back(Property(refl::GetId<T>(), offset_of, name, flags));
 		m_hashTable[std::string(name)] = index;
@@ -108,28 +104,37 @@ public:
 	const std::vector<Property>& GetProperties() const { return m_properties; }
 };
 
-template<typename T>
-const ReflClass& GetClass(T* obj) 
-{ 
-	if constexpr (std::is_base_of_v<Node, T>)
+
+
+namespace refl
+{
+	// TODO: move this to the file containing both PodReflection + NodeReflection
+	// Gets the reflclass object of T and is specialized properly for every reflectable T.
+	// If you are unsure of how to get the ReflClass of an object ALWAYS USE THIS instead of static members/member functions.
+	template<typename T>
+	const ReflClass& GetClass(T* obj)
 	{
-		// Virtual call to get the lowest reflector even if T == Node
-		return obj->GetClass();
-	}
-	else if constexpr (std::is_base_of_v<AssetPod, T>)
-	{
-		if constexpr (std::is_same_v<AssetPod, T>)
+		// TODO: Static assert this for T
+		if constexpr (std::is_base_of_v<Node, T>)
 		{
-			static_assert("Implement");
+			// Virtual call to get the lowest reflector even if T == Node
+			return obj->GetClass();
+		}
+		else if constexpr (std::is_base_of_v<AssetPod, T>)
+		{
+			if constexpr (std::is_same_v<AssetPod, T>)
+			{
+				// TODO: implement this
+				static_assert("Implement");
+			}
+			else
+			{
+				return T::StaticClass();
+			}
 		}
 		else
 		{
-			return T::StaticClass();
+			static_assert("This object T is not reflected");
 		}
 	}
-	else
-	{
-		static_assert("This object T is not reflected");
-	}
 }
-	

@@ -35,4 +35,18 @@ namespace uri
 		}
 		return path.filename();
 	}
+
+	inline fs::path GetRealExtension(const fs::path& path)
+	{
+		if (IsCpuPath(path))
+		{
+			return path.parent_path().extension();
+		}
+		return path.extension();
+	}
+
+	inline bool MatchesExtension(const fs::path& path, const fs::path& ext)
+	{
+		return GetRealExtension(path) == ext;
+	}
 }

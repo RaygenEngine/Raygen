@@ -1,6 +1,5 @@
 #pragma once
 
-#include "system/reflection/Reflection.h"
 #include "asset/AssetPod.h"
 
 struct StringPod : public AssetPod
