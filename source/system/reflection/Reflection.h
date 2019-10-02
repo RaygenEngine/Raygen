@@ -1,80 +1,78 @@
 #pragma once
 
-// Basic reflection system based on "concepts" and template stuff
-// 
-// Objects that are reflected are supposed to contain a Reflector class variable
-// 
-
-#include <unordered_map>
-#include <vector>
-#include <string>
-#include <type_traits>
 #include "core/auxiliary/MetaTemplates.h"
 #include "asset/AssetPod.h"
 
 
-class StaticReflector;
-class Reflector;
+#define Z_REFL_TYPES		\
+int32,						\
+bool,						\
+float,						\
+glm::vec3,					\
+glm::vec4,					\
+std::string
 
-namespace impl
+
+namespace refl
 {
-template<class T, class Sig, class = void>struct has_static_reflector :std::false_type {};
-
-template<class T, class R, class...Args>
-struct has_static_reflector <T, R(Args...),
-	std::enable_if_t< // std:: in C++1y
-	std::is_convertible<
-	decltype(T::StaticReflect(std::declval<Args>()...)),
-	R
-	>::value
-	&& !std::is_same<R, void>::value
-	>
-> : std::true_type {};
-
-template<class T, class...Args>
-struct has_static_reflector <T, void(Args...),
-	decltype(void(T::foo(std::declval<Args>()...)))
-> : std::true_type {};
-
-template<typename T> struct has_reflector {
-	struct Fallback { Reflector m_reflector; }; // introduce member name "x"
-	struct Derived : T, Fallback { };
-
-	template<typename C, C> struct ChT;
-
-	template<typename C> static char(&f(ChT<Reflector Fallback::*, &C::m_reflector>*))[1];
-	template<typename C> static char(&f(...))[2];
-
-	static bool const value = sizeof(f<Derived>(0)) == 2;
-};
-}
-
-
-template<typename T>
-constexpr bool HasMemberReflector = impl::has_reflector<T>::value;
-
-template<typename T>
-constexpr bool HasStaticReflector = impl::has_static_reflector<T, const StaticReflector&()>::value;
-
-template<> constexpr bool HasStaticReflector<AssetPod> = true;
-
-template<typename T>
-constexpr bool HasReflection = HasMemberReflector<T> || HasStaticReflector<T>;
-
-
-
-template<typename T>
-constexpr bool IsHandleToReflectedPodF()
-{
-	if constexpr (std::is_base_of_v<BasePodHandle, T>)
+	namespace detail
 	{
-		return HasStaticReflector<typename T::PodType>;
+		template<typename T>
+		constexpr bool IsHandleToPodF()
+		{
+			if constexpr (std::is_base_of_v<BasePodHandle, T>)
+			{
+				return true;
+			}
+			return false;
+		}
+
+		template<typename T, typename... ReflTypes>
+		constexpr bool CanBePropertyBaseType_ImplF()
+		{
+			return std::disjunction_v<std::is_same<T, ReflTypes>, ...>;
+		}
+
+		template<typename T>
+		constexpr bool CanBePropertyBaseTypeF()
+		{
+			return IsReflectedBaseType_Impl<Z_REFL_TYPES>();
+		}
+
+
+		template<typename T>
+		constexpr bool CanBePropertyF()
+		{
+			if constexpr (IsHandleToPodF<T>())
+			{
+				return true;
+			}
+			else if constexpr (is_vector_of_base_v<T, BasePodHandle>)
+			{
+				return true;
+			}
+			else if constexpr (CanBePropertyBaseTypeF<T>())
+			{
+				return true;
+			}
+			return false;
+		}
 	}
-	return false;
+
+	// IsReflected to compile time check if a type can be reflected.
+	template<typename Type>
+	constexpr bool CanBeProperty = detail::CanBePropertyF<Type>();
 }
 
-template<typename T>
-constexpr bool IsHandleToReflectedPod = IsHandleToReflectedPodF<T>();
+/*
+struct GltfFilePod;
+struct ImagePod;
+struct MaterialPod;
+struct ModelPod;
+struct ShaderPod;
+struct StringPod;
+struct TexturePod;
+struct XMLDocPod;
 
 
 // All the currently supported reflected types.
@@ -87,7 +85,7 @@ enum class PropertyType
 	Vec3,
 	Vec4,
 	String,
-	
+
 	Handle_Cubemap,
 	Handle_GltfFile,
 	Handle_Image,
@@ -108,42 +106,6 @@ enum class PropertyType
 	Vector_Texture,
 	Vector_XMLDoc,
 };
-
-template<typename T>
-constexpr bool IsReflectedF()
-{
-	if constexpr (IsHandleToReflectedPod<T>)
-	{
-		return true;
-	}
-	else if constexpr (is_vector_of_base_v<T, BasePodHandle>)
-	{
-		return true;
-	}
-	return false;
-}
-
-
-// IsReflected to compile time check if a type can be reflected.
-template<typename Type> 
-constexpr bool IsReflected = IsReflectedF<Type>();
-template<> constexpr bool IsReflected<int32> = true;
-template<> constexpr bool IsReflected<bool> = true;
-template<> constexpr bool IsReflected<float> = true;
-template<> constexpr bool IsReflected<glm::vec3> = true;
-template<> constexpr bool IsReflected<glm::vec4> = true;
-template<> constexpr bool IsReflected<std::string> = true;
-
-
-
-struct GltfFilePod;
-struct ImagePod;
-struct MaterialPod;
-struct ModelPod;
-struct ShaderPod;
-struct StringPod;
-struct TexturePod;
-struct XMLDocPod;
 
 template<typename Type>
 constexpr PropertyType ReflectionFromType = PropertyType::NONE;
@@ -172,7 +134,7 @@ template<> PropertyType ReflectionFromType<std::vector<PodHandle<ShaderPod>>> = 
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<StringPod>>> = PropertyType::Vector_Text;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<TexturePod>>> = PropertyType::Vector_Texture;
 template<> PropertyType ReflectionFromType<std::vector<PodHandle<XMLDocPod>>> = PropertyType::Vector_XMLDoc;
-
+*/
 
 
 

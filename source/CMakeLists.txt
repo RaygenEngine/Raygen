@@ -132,6 +132,11 @@ set(HEADER_FILES
 	
 	core/logger/Logger.h
 	
+	core/reflection/Property.h
+	core/reflection/PropertyFlags.h
+	core/reflection/ReflClass.h
+	core/reflection/TypeId.h
+	
 	core/timer/Timer.h
 	
 	core/type/IntegerTypes.h
@@ -173,7 +178,6 @@ set(HEADER_FILES
 
 	system/reflection/Reflection.h
 	system/reflection/Reflector.h
-	system/reflection/Property.h
 	system/reflection/ReflectionTools.h
 	system/reflection/PodReflection.h
 

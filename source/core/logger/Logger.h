@@ -49,6 +49,8 @@ namespace utl
 #define LOG_WARN(...)      utl::Log::GetLogger()->warn(__VA_ARGS__)
 #define LOG_ERROR(...)     utl::Log::GetLogger()->error(__VA_ARGS__)
 #define LOG_FATAL(...)     utl::Log::GetLogger()->critical(__VA_ARGS__)
+#define LOG_ASSERT(...)    do { utl::Log::GetLogger()->critical(__VA_ARGS__); utl::Log::GetLogger()->flush(); std::abort(); } while(0)
+
 
 #define CLOG_TRACE(condition, ...)     do { if ((condition)) { utl::Log::GetLogger()->trace(__VA_ARGS__) 	; } } while(0)
 #define CLOG_DEBUG(condition, ...)     do { if ((condition)) { utl::Log::GetLogger()->debug(__VA_ARGS__) 	; } } while(0)
@@ -56,3 +58,5 @@ namespace utl
 #define CLOG_WARN(condition, ...)      do { if ((condition)) { utl::Log::GetLogger()->warn(__VA_ARGS__) 	; } } while(0)
 #define CLOG_ERROR(condition, ...)     do { if ((condition)) { utl::Log::GetLogger()->error(__VA_ARGS__) 	; } } while(0)
 #define CLOG_FATAL(condition, ...)     do { if ((condition)) { utl::Log::GetLogger()->critical(__VA_ARGS__); } } while(0)
+#define CLOG_ASSERT(condition, ...)    do { if ((condition)) { LOG_ASSERT(__VA_ARGS__); } } while(0)
+
