@@ -7,12 +7,13 @@
 #include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
 #include "renderer/renderers/opengl/basic/GLBasicSkybox.h"
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
+#include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
 
 namespace OpenGL
 {
-	class GLTestRenderer :  public GLRendererBase
+	class GLForwardRenderer :  public GLRendererBase
 	{
-		MAKE_METADATA(GLTestRenderer);
+		MAKE_METADATA(GLForwardRenderer);
 
 	protected:
 
@@ -22,7 +23,8 @@ namespace OpenGL
 
 		// entities
 		std::vector<std::unique_ptr<GLBasicGeometry>> m_glGeometries;
-		std::vector<std::unique_ptr<GLBasicDirectionalLight>> m_glDirectionalLights;
+		std::unique_ptr<GLBasicDirectionalLight> m_glDirectionalLight;
+		std::unique_ptr<GLBasicSpotLight> m_glSpotLight;
 		std::unique_ptr<GLBasicSkybox> m_skybox;
 		
 		// raw nodes
@@ -39,6 +41,7 @@ namespace OpenGL
 		int32 m_previewMode;
 
 		void RenderDirectionalLights();
+		void RenderSpotLights();
 		void RenderGeometries();
 		void RenderSkybox();
 		void RenderPostProcess();
@@ -52,7 +55,7 @@ namespace OpenGL
 
 		DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
 
-		GLTestRenderer()
+		GLForwardRenderer()
 			: m_camera(nullptr),
 			  m_msaaFbo(0),
 			  m_msaaColorTexture(0),
@@ -61,10 +64,10 @@ namespace OpenGL
 			  m_outColorTexture(0),
 		      m_previewMode(0)
 		{
-			m_resizeListener.BindMember(this, &GLTestRenderer::WindowResize);
+			m_resizeListener.BindMember(this, &GLForwardRenderer::WindowResize);
 		}
 
-		~GLTestRenderer();
+		~GLForwardRenderer();
 
 		bool InitScene(int32 width, int32 height) override;
 		

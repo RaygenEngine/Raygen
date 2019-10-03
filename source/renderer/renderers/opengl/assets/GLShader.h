@@ -15,8 +15,8 @@ namespace OpenGL
 			: GLAsset(assocPath) {}
 		virtual ~GLShader();
 		
-		GLint operator[](const std::string& uniformName) const;
-		void operator+=(const std::string& uniformName);
+		GLint GetUniform(const std::string& uniformName) const;
+		void AddUniform(const std::string& uniformName);
 		bool Load() override;
 
 	protected:

@@ -58,7 +58,7 @@ namespace OpenGL
 		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("skybox.shader.json");
 		shader = GetGLAssetManager(this)->GetOrMakeFromUri<GLShader>(Engine::GetAssetManager()->GetPodPath(shaderAsset));
 		auto& skyboxShader = *shader;
-		skyboxShader += "vp";
+		shader->AddUniform("vp");
 		
 		cubemap = GetGLAssetManager(this)->GetOrMakeFromUri<GLTexture>(Engine::GetAssetManager()->GetPodPath(node->GetSkyMap()));
 

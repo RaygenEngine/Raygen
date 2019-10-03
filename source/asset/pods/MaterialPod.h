@@ -5,7 +5,7 @@
 
 // Note: assets of this class (Textures) are not cached directly as they are part of a cached ModelAsset anyway
 // glTF-based material (not all extensions included) (comments in this file -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0)
-struct MaterialPod : public AssetPod
+struct MaterialPod : AssetPod
 {
 	REFLECTED_POD(MaterialPod)
 	{
