@@ -15,17 +15,10 @@ struct PodDeleter
 
 struct PodEntry
 {
-	enum class LoadingState
-	{
-		Loaded = 0,
-		CurrentlyLoading,
-		Unloaded
-	};
 	struct UnitializedPod {};
 
 	std::unique_ptr<AssetPod, PodDeleter> ptr;
 	TypeId type{ refl::GetId<UnitializedPod>() };
-	LoadingState loadingState{ LoadingState::Unloaded };
 	size_t uid{ 0 };
 	std::string path;
 
@@ -44,39 +37,18 @@ struct PodEntry
 		static_assert(std::is_base_of_v<AssetPod, T> && !std::is_same_v<AssetPod, T>, "PodEntry requires a pod type");
 		return Create(refl::GetId<T>(), uid, path);
 	}
-
-	void Unload()
-	{
-		ptr.reset();
-		loadingState = LoadingState::Unloaded;
-	}
-};
-
-struct MultithreadedLoader
-{
 	
 	template<typename T>
-	void BeginLoad(PodEntry* entry)
+	T* UnsafeGet()
 	{
-		// Implementation should be aware that this pointer may get invalidated after the function returns,
-		// but the underlying PodEntry data will not be edited, including the underlying memory position of the pod
-		T* podPointer = PodCastVerfied<T>(entry->ptr.get());
-		T::Load(podPointer, entry->path);
-		entry->loadingState = PodEntry::LoadingState::Loaded;
-	}
-
-	void WaitForLoad(PodEntry* entry)
-	{
-
+		static_assert(std::is_base_of_v<AssetPod, T> && !std::is_same_v<AssetPod, T>, "Unsafe get called without a pod type");
+		return static_cast<T*>(ptr.get());
 	}
 };
-
 
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
 class AssetManager
 {
-	MultithreadedLoader m_loader;
-	
 	friend class Editor;
 	friend class AssetWindow;
 
@@ -85,7 +57,6 @@ class AssetManager
 	// when having tens of thousands of objects maybe a map would be better.
 	std::vector<std::unique_ptr<PodEntry>> m_pods;
 	std::unordered_map<std::string, size_t> m_pathCache;
-	
 
 	PodEntry* GetEntryByPathFast(const std::string& path)
 	{
@@ -97,61 +68,14 @@ class AssetManager
 		return m_pods.at(it->second).get();
 	}
 
-	// This will wait for the pod data of the entry to finish loading.
 	template<typename T>
-	void LoadBlocking(PodEntry* entry)
+	void LoadEntry(PodEntry* entry)
 	{
-		T* pod = new T();
-		entry->ptr.reset(pod);
-		entry->loadingState = PodEntry::LoadingState::Loaded;
-		T::Load(pod, entry->path);
+		T* ptr = new T();
+		T::Load(ptr, entry->path); // WIP: handle error
+		entry->ptr.reset(ptr);
 	}
 
-	// Template is not required but saves runtime cost.
-	// Ignores call if currently loading.
-	// If reload == true will reload even already loaded pods
-	template<typename T, bool Reload = false>
-	void LoadNonBlocking(PodEntry* entry)
-	{
-		// WIP
-		//using ls = PodEntry::LoadingState;
-
-		//if (entry->loadingState == ls::CurrentlyLoading)
-		//{
-		//	return;
-		//}
-
-		//if constexpr (Reload == false)
-		//{
-		//	if (entry->loadingState == ls::Loaded)
-		//	{
-		//		return;
-		//	}
-		//}
-		//entry->Unload();
-		//entry->ptr = std::unique_ptr<AssetPod, PodDeleter>(new T());
-
-		//m_loader.BeginLoad<T>(entry);
-	}
-
-public:
-	// For Handle use only.
-	template<typename PodType>
-	PodType* _Handle_AccessPod(size_t podId)
-	{
-		PodEntry* entry = m_pods[podId].get();
-		
-		assert(entry->type == refl::GetId<PodType>()); // Technically this should never hit because we check during creation.
-
-		if (entry->loadingState != PodEntry::LoadingState::Loaded)
-		{
-			LoadBlocking<PodType>(entry);
-		}
-		
-		return PodCast<PodType>(entry->ptr.get());
-	}
-
-protected:
 	// Filters a path to the internal asset manager path format
 	static std::string FilterPath(const fs::path& path)
 	{
@@ -163,10 +87,6 @@ protected:
 
 		return Engine::GetAssetManager()->m_pathSystem.SearchAssetPath(path).string();
 	}
-
-	//
-	// Internal Pod Creation
-	//
 
 	template<typename T>
 	PodEntry* CreateAndRegister(const std::string& path)
@@ -206,7 +126,6 @@ public:
 		
 		assert(!path.empty());
 
-		
 		if (entry)
 		{
 			CLOG_ASSERT(entry->type != refl::GetId<PodType>(),
@@ -225,20 +144,36 @@ public:
 	template<typename PodType>
 	static void Reload(PodHandle<PodType> handle)
 	{
-		Engine::GetAssetManager()->m_pods[handle.podId]->Unload();
-		//WIP: Engine::GetAssetManager()->LoadNonBlocking<PodType, true>(&entry);
-		// PodEntry& entry = Engine::GetAssetManager()->m_pods[handle.podId];
+		auto inst = Engine::GetAssetManager();
+		inst->LoadEntry<PodType>(inst->m_pods[handle.podId].get());
 	}
 
 	// Frees the underlying cpu pod memory
 	static void Unload(BasePodHandle handle)
 	{
-		Engine::GetAssetManager()->m_pods[handle.podId]->Unload();
+		Engine::GetAssetManager()->m_pods[handle.podId]->ptr.reset();
 	}
 
 	static fs::path GetPodPath(BasePodHandle handle)
 	{
 		return Engine::GetAssetManager()->m_pods[handle.podId]->path;
 	}
+	
+	// For Internal Handle use only.
+	template<typename PodType>
+	PodType* _Handle_AccessPod(size_t podId)
+	{
+		PodEntry* entry = m_pods[podId].get();
+
+		assert(entry->type == refl::GetId<PodType>()); // Technically this should never hit because we check during creation.
+
+		if (!entry->ptr)
+		{
+			LoadEntry<PodType>(entry);
+		}
+
+		return entry->UnsafeGet<PodType>();
+	}
+
 	bool Init(const std::string& applicationPath, const std::string& dataDirectoryName);
 };
