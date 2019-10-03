@@ -110,7 +110,7 @@ void AppBase::RegisterRenderers()
 	}
 	else 
 	{
-		Engine::RegisterRenderer<OpenGL::GLTestRenderer>();
+		Engine::RegisterRenderer<OpenGL::GLDeferredRenderer>();
 	}
 }
 

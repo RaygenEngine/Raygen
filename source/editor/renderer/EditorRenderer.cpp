@@ -10,7 +10,7 @@ void EditorRenderer::OnNodePodsDirty(Node* node)
 	{
 		auto it = std::find_if(m_glGeometries.begin(), m_glGeometries.end(), [node](std::unique_ptr<OpenGL::GLBasicGeometry>& ptr)
 		{
-			return ptr.get()->GetNode() == node;
+			return ptr.get()->node == node;
 		});
 		assert(it != m_glGeometries.end() && "Attempting to update untracked geometry node from observer list.");
 		
@@ -20,7 +20,7 @@ void EditorRenderer::OnNodePodsDirty(Node* node)
 
 void EditorRenderer::Render()
 {
-	OpenGL::GLTestRenderer::Render();
+	OpenGL::GLDeferredRenderer::Render();
 	if (Engine::GetEditor()->m_showImgui)
 	{
 		ImguiImpl::RenderOpenGL();
@@ -30,7 +30,7 @@ void EditorRenderer::Render()
 
 bool EditorRenderer::InitRendering(HWND assochWnd, HINSTANCE instance)
 {
-	if (!OpenGL::GLTestRenderer::InitRendering(assochWnd, instance)) 
+	if (!OpenGL::GLDeferredRenderer::InitRendering(assochWnd, instance))
 	{
 		return false;
 	}

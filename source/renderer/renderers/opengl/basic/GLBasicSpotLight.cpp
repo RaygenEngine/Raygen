@@ -1,12 +1,12 @@
 #include "pch.h"
 
-#include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
+#include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
 
 namespace OpenGL
 {
-	GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
-		: NodeObserver<DirectionalLightNode, GLRendererBase>(node)
+	GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
+		: NodeObserver<SpotLightNode, GLRendererBase>(node)
 	{
 		const auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("depth_map.shader.json");
 		shader = GetGLAssetManager(this)->GetOrMakeFromUri<GLShader>(Engine::GetAssetManager()->GetPodPath(shaderAsset));
@@ -33,13 +33,13 @@ namespace OpenGL
 		glReadBuffer(GL_NONE);
 	}
 
-	GLBasicDirectionalLight::~GLBasicDirectionalLight()
+	GLBasicSpotLight::~GLBasicSpotLight()
 	{
 		glDeleteFramebuffers(1, &fbo);
 		glDeleteTextures(1, &shadowMap);
 	}
 
-	void GLBasicDirectionalLight::RenderShadowMap(const std::vector<std::unique_ptr<GLBasicGeometry>>& geometries)
+	void GLBasicSpotLight::RenderShadowMap(const std::vector<std::unique_ptr<GLBasicGeometry>>& geometries)
 	{
 		glViewport(0, 0, node->GetShadowMapWidth(), node->GetShadowMapHeight());
 
@@ -47,7 +47,8 @@ namespace OpenGL
 		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
 
-		const auto lightProjection = glm::ortho(node->m_left, node->m_right, node->m_bottom, node->m_top, node->m_near, node->m_far);
+		auto ar = static_cast<float>(node->GetShadowMapWidth()) / static_cast<float>(node->GetShadowMapHeight());
+		const auto lightProjection = glm::perspective(glm::radians(45.0f), ar, node->m_near, node->m_far);
 
 		// TODO check value of center
 		const auto center = node->GetWorldTranslation() + node->GetFront();
@@ -62,9 +63,9 @@ namespace OpenGL
 
 		glUseProgram(shader->id);
 
-		glUniform3fv(shader->GetUniform("source_pos"), 1, glm::value_ptr(node->GetWorldTranslation()));
+		glUniform3fv(shader->GetUniform("source_pos"), 1,glm::value_ptr(node->GetWorldTranslation()));
 		glUniform1f(shader->GetUniform("far"), node->m_far);
-
+		
 		for (auto& geometry : geometries)
 		{
 			auto m = geometry->node->GetWorldMatrix();

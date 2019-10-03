@@ -41,18 +41,19 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/assets/GLBindlessTexture.cpp
 	renderer/renderers/opengl/assets/GLMaterial.cpp
 	
+	renderer/renderers/opengl/basic/GLBasicSpotLight.cpp
 	renderer/renderers/opengl/basic/GLBasicDirectionalLight.cpp
 	renderer/renderers/opengl/basic/GLBasicGeometry.cpp
 	renderer/renderers/opengl/basic/GLBasicSkybox.cpp
 	
-	renderer/renderers/opengl/test/GLTestRenderer.cpp
+	renderer/renderers/opengl/forward/GLForwardRenderer.cpp
+	renderer/renderers/opengl/deferred/GLDeferredRenderer.cpp
 
 	system/Engine.cpp
 	system/EngineComponent.cpp
 	system/Object.cpp
 	system/Input.cpp
 	
-
 	event/Event.cpp
 	
 	world/World.cpp
@@ -179,11 +180,13 @@ set(HEADER_FILES
 	renderer/renderers/opengl/assets/GLBindlessTexture.h
 	renderer/renderers/opengl/assets/GLMaterial.h
 
+	renderer/renderers/opengl/basic/GLBasicSpotLight.h
 	renderer/renderers/opengl/basic/GLBasicDirectionalLight.h
 	renderer/renderers/opengl/basic/GLBasicGeometry.h
 	renderer/renderers/opengl/basic/GLBasicSkybox.h
 	
-	renderer/renderers/opengl/test/GLTestRenderer.h
+	renderer/renderers/opengl/forward/GLForwardRenderer.h
+	renderer/renderers/opengl/deferred/GLDeferredRenderer.h
 
 	system/Engine.h
 	system/EngineComponent.h

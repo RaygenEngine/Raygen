@@ -4,7 +4,6 @@
 // Game class provides overrides for the most important classes, functions and settings of the base engine.
 
 #include "world/NodeFactory.h"
-#include "renderer/renderers/opengl/test/GLTestRenderer.h"
 #include "system/Engine.h"
 #include "platform/Window.h"
 

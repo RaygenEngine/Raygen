@@ -1,9 +1,10 @@
 #pragma once
 
-#include "renderer/renderers/opengl/test/GLTestRenderer.h"
+#include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
 #include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
 #include "world/nodes/geometry/GeometryNode.h"
-class EditorRenderer : public OpenGL::GLTestRenderer
+
+class EditorRenderer : public OpenGL::GLDeferredRenderer
 {
 	MAKE_METADATA(EditorRenderer)
 public:
@@ -26,7 +27,7 @@ public:
 			{
 				auto it = std::find_if(m_glGeometries.begin(), m_glGeometries.end(), [node](std::unique_ptr<OpenGL::GLBasicGeometry>& ptr)
 				{
-					return ptr.get()->GetNode() == node;
+					return ptr.get()->node == node;
 				});
 				assert(it != m_glGeometries.end() && "Attempting to remove untracked geometry node from observer list.");
 				m_glGeometries.erase(it);

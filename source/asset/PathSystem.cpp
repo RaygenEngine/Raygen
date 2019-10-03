@@ -46,7 +46,7 @@ fs::path PathSystem::SearchPathUpRecursivelyFromCurrent(const fs::path& subPath)
 
 fs::path PathSystem::SearchPathDownRecursivelyFromPath(const fs::path& subPath, const fs::path& searchPath)
 {
-	TIMER_STATIC_SCOPE("Resolve recursive path search");
+	//TIMER_STATIC_SCOPE("Resolve recursive path search");
 	
 	LOG_DEBUG("Searching for path: \'{}\', recurse: downwards", subPath);
 
