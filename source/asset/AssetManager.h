@@ -7,6 +7,9 @@
 #include "core/reflection/PodReflection.h"
 #include "asset/UriLibrary.h"
 #include "asset/PodHandle.h"
+#include <future>
+#include <thread>
+
 
 struct PodDeleter
 {
@@ -21,6 +24,8 @@ struct PodEntry
 	TypeId type{ refl::GetId<UnitializedPod>() };
 	size_t uid{ 0 };
 	std::string path;
+
+	std::future<AssetPod*> futureLoaded;
 
 	static PodEntry Create(TypeId type, size_t uid, const std::string& path)
 	{
@@ -129,7 +134,7 @@ public:
 		if (entry)
 		{
 			CLOG_ASSERT(entry->type != refl::GetId<PodType>(),
-						"Incorrect pod type on GetOrCreate:\nPath: '{}'\nPrev Type: '{}' New type: '{}'", entry->type.name(), refl::GetName<PodType>());
+						"Incorrect pod type on GetOrCreate:\nPath: '{}'\nPrev Type: '{}' New type: '{}'", inPath, entry->type.name(), refl::GetName<PodType>());
 		}
 		else 
 		{
@@ -140,7 +145,7 @@ public:
 		return PodHandle<PodType>{entry->uid};
 	}
 
-	// Refreshes the underlying data of the pod. (Ignored if currently loading)
+	// Refreshes the underlying data of the pod.
 	template<typename PodType>
 	static void Reload(PodHandle<PodType> handle)
 	{
@@ -176,4 +181,38 @@ public:
 	}
 
 	bool Init(const std::string& applicationPath, const std::string& dataDirectoryName);
+
+
+	static void PreloadGltf(const std::string& modelPath);
+
+private:
+	// Future multithreaded loader specalizations
+
+	template<>
+	void LoadEntry<ImagePod>(PodEntry* entry)
+	{
+		entry->ptr.reset(entry->futureLoaded.get());
+	}
+
+	// Early load images.
+	template<>
+	PodEntry* CreateAndRegister<ImagePod>(const std::string& path)
+	{
+		assert(m_pathCache.find(path) == m_pathCache.end() && "Path already exists");
+		size_t uid = m_pods.size();
+
+		auto& ptr = m_pods.emplace_back(std::make_unique<PodEntry>(PodEntry::Create<ImagePod>(uid, path)));
+		
+		PodEntry* entry = ptr.get();
+		m_pathCache[path] = uid;
+
+		entry->futureLoaded = std::async(std::launch::async, [entry]() -> AssetPod* { 
+			ImagePod* ptr = new ImagePod();
+			ImagePod::Load(ptr, entry->path);
+			return ptr;
+		});
+
+		return entry;
+	}
+
 };
