@@ -1,5 +1,6 @@
 #pragma once
 #include "core/reflection/PodReflection.h"
+#include "asset/PodIncludes.h"
 
 namespace podtools
 {

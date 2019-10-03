@@ -5,270 +5,214 @@
 #include "asset/PathSystem.h"
 #include "asset/AssetPod.h"
 #include "core/reflection/PodReflection.h"
+#include "asset/UriLibrary.h"
+#include "asset/PodHandle.h"
+#include <future>
+#include <thread>
 
+
+struct PodDeleter
+{
+	void operator()(AssetPod* p);
+};
+
+struct PodEntry
+{
+	struct UnitializedPod {};
+
+	std::unique_ptr<AssetPod, PodDeleter> ptr;
+	TypeId type{ refl::GetId<UnitializedPod>() };
+	size_t uid{ 0 };
+	std::string path;
+
+	std::future<AssetPod*> futureLoaded;
+
+	static PodEntry Create(TypeId type, size_t uid, const std::string& path)
+	{
+		PodEntry entry;
+		entry.type = type;
+		entry.uid = uid;
+		entry.path = path;
+		return entry;
+	}
+
+	template<typename T>
+	static PodEntry Create(size_t uid, const std::string& path)
+	{
+		static_assert(std::is_base_of_v<AssetPod, T> && !std::is_same_v<AssetPod, T>, "PodEntry requires a pod type");
+		return Create(refl::GetId<T>(), uid, path);
+	}
+	
+	template<typename T>
+	T* UnsafeGet()
+	{
+		static_assert(std::is_base_of_v<AssetPod, T> && !std::is_same_v<AssetPod, T>, "Unsafe get called without a pod type");
+		return static_cast<T*>(ptr.get());
+	}
+};
 
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
-// TODO: REFACTOR LIST
-// 1. Only cast delete with Internal pod delete implementation.
-// 2. Cleanup unused functions
-// 3. Make all functions static.
 class AssetManager
 {
 	friend class Editor;
 	friend class AssetWindow;
 
-	std::unordered_map<size_t, AssetPod*> m_uidToPod;
-	std::unordered_map<size_t, std::string> m_uidToPath;
-	
-	std::unordered_map<std::string, size_t> m_pathToUid;
+	// Using vector here is a bit scary because we cannot control when the actual resize is going to happen
+	// Our data (PodEntry) is lightweight so this should not be too costly even for thousands of objects but
+	// when having tens of thousands of objects maybe a map would be better.
+	std::vector<std::unique_ptr<PodEntry>> m_pods;
+	std::unordered_map<std::string, size_t> m_pathCache;
 
-
-	static void DeletePod_Impl(AssetPod* pod);
-
-	// Creates a new instance of the underlying type of the given pod.
-	[[nodiscard]] static AssetPod* CreatePodByType(TypeId type);
-
-private:
-	std::string GetPodPathFromId(size_t podId)
+	PodEntry* GetEntryByPathFast(const std::string& path)
 	{
-		return m_uidToPath.at(podId);
-	}
-
-	void DetachOldPod(const fs::path& path)
-	{
-		// TODO: Copy old pod
-		m_pathToUid.erase(path.string());
-	}
-	
-	template<typename PodType>
-	PodType* FindPod(size_t podId)
-	{
-		return PodCastVerfied<PodType>(m_uidToPod.at(podId));
-	}
-public:
-	// For internal use only, dont call this on your own
-	template<typename PodType>
-	PodType* _Internal_MaybeFindPod(size_t podId) const
-	{	
-		auto it = m_uidToPod.find(podId);
-		if (it != m_uidToPod.end())
+		auto it = m_pathCache.find(path);
+		if (it == m_pathCache.end())
 		{
-			assert(it->second && "Found nullptr in uid To Pod map");
-			auto p = PodCastVerfied<PodType>(it->second);
-			return p;
+			return nullptr;
 		}
-		return nullptr;
+		return m_pods.at(it->second).get();
 	}
 
-	// For internal use only, dont call this on your own
-	template<typename PodType>
-	PodType* _Internal_RefreshPod(size_t podId)
+	template<typename T>
+	void LoadEntry(PodEntry* entry)
 	{
-		auto it = m_uidToPod.find(podId);
-		if (it != m_uidToPod.end())
+		T* ptr = new T();
+		T::Load(ptr, entry->path); // WIP: handle error
+		entry->ptr.reset(ptr);
+	}
+
+	// Filters a path to the internal asset manager path format
+	static std::string FilterPath(const fs::path& path)
+	{
+		// WIP:
+		if (uri::IsCpuPath(path))
 		{
-			return PodCastVerfied<PodType>(it->second);
+			return path.string();
 		}
 
-		auto& podPath = GetPodPathFromId(podId);
+		return Engine::GetAssetManager()->m_pathSystem.SearchAssetPath(path).string();
+	}
 
-		PodType* pod = new PodType();
-		PodType::Load(pod, podPath);
+	template<typename T>
+	PodEntry* CreateAndRegister(const std::string& path)
+	{
+		assert(m_pathCache.find(path) == m_pathCache.end() && "Path already exists");
+		size_t uid = m_pods.size();
+
+		auto& ptr = m_pods.emplace_back(std::make_unique<PodEntry>(PodEntry::Create<T>(uid, path)));
 		
-		m_uidToPod.insert({ podId, pod });
-		
-		return pod;
+		PodEntry* entry = ptr.get();
+		m_pathCache[path] = uid;
+
+		return entry;
 	}
 
-	static AssetPod* _DebugUid(size_t a);
-
-private:
-
-	template<typename PodType>
-	PodType* ReplaceInto(size_t podId, const fs::path& path)
-	{
-		assert(false && "Incorrect implementation, implement cache hits in replace");
-		auto it = m_uidToPod.find(podId);
-
-		if (it != m_uidToPod.end())
-		{
-			DetachOldPod(m_uidToPath[podId]);
-			PodType*& pod = it->second;
-			delete pod;
-			pod = new PodType();
-
-			PodType::Load(pod, path);
-
-			m_uidToPath[podId] = path;
-			return pod;
-		}
-
-		PodType* pod = new PodType();
-
-		PodType::Load(pod, path);
-
-		m_uidToPath.insert({ podId, path });
-		m_uidToPod.insert({ podId, pod });
-		return pod;
-	}
-
-protected:
-	template<typename PodType>
-	void DeletePod(size_t podId)
-	{
-		auto pod = FindPod<PodType>(podId);
-		delete pod;
-		m_uidToPod.erase(podId);
-	}
-
-
-
-private:
-	template<typename PodHandle>
-	static auto RefreshPod(const PodHandle& handle) -> typename PodHandle::PodType
-	{
-		return Engine::GetAssetManager()->RefreshPod(handle.podId);
-	}
-
-	template<typename PodHandle>
-	static auto FindPod(const PodHandle& handle) -> typename PodHandle::PodType
-	{
-		return Engine::GetAssetManager()->FindPod(handle.podId);
-	}
-
-	static void ClearFromId(size_t podId)
-	{
-		AssetManager* am = Engine::GetAssetManager();
-		auto it = am->m_uidToPod.find(podId);
-		if (it != am->m_uidToPod.end())
-		{
-			DeletePod_Impl(it->second);
-			am->m_uidToPod.erase(podId);
-		}
-	}
-	
-	// Will assert if PodId is not the same podtype.
-	// This can be removed from release builds for performance, but it is
-	// extremelly usefull for debugging
-	template<typename PodType>
-	void VerifyType(size_t podId)
-	{
-		auto it = m_uidToPod.find(podId);
-		if (it == m_uidToPod.end())
-		{
-			return;
-		}
-		auto mapType = it->second->type;
-		auto requestedType = ctti::type_id<PodType>();
-		if (mapType != requestedType)
-		{
-			LOG_FATAL("Attempted to verify pod as: {} . Pod already in asset manager was: {}", mapType.name(), requestedType.name());
-			assert(false);
-		}
-	}
-
-	static size_t NextHandle;
-public:
-	template<typename PodType>
-	static PodHandle<PodType> GetOrCreate(const fs::path& path)
-	{
-		auto am = Engine::GetAssetManager();
-		// Path Code
-
-
-		fs::path p;
-		if (IsCpuPath(path))
-		{
-			p = path;
-		}
-		else
-		{
-			p = am->m_pathSystem.SearchAssetPath(path);
-			assert(!p.empty());
-		}
-
-		std::string pathStr = p.string();
-
-		auto it = am->m_pathToUid.find(pathStr);
-		if (it != am->m_pathToUid.end())
-		{
-			am->VerifyType<PodType>(it->second);
-
-			PodHandle<PodType> result;
-			result.podId = it->second;
-			return result;
-		}
-
-		// Generate
-		size_t newHandle = NextHandle++;
-		PodHandle<PodType> result;
-		result.podId = newHandle;
-		
-		am->m_pathToUid.insert({ pathStr, newHandle });
-		am->m_uidToPath.insert({ newHandle, utl::force_move(pathStr) });
-		
-		return result;
-	}
-
-	template<typename PodType>
-	fs::path GetPodPath(const PodHandle<PodType> handle)
-	{
-		return m_uidToPath.at(handle.podId);
-	}
-
-	//template<typename PodHandle>
-	//static auto ReplaceInto(const PodHandle& handle, const fs::path& path) -> typename PodHandle::PodType
-	//{
-	//	return Engine::GetAssetManager()->ReplaceInto(handle.podId);
-	//}
-
-	template<typename PodType>
-	static void ClearCache(PodHandle<PodType> handle)
-	{
-		AssetManager* am = Engine::GetAssetManager();
-		auto it = am->m_uidToPod.find(handle.podId);
-		if (it != am->m_uidToPod.end())
-		{
-			DeletePod_Impl(it->second);
-			am->m_uidToPod.erase(handle.podId);
-		}
-	}
-
-
-
-
-	static bool IsCpuPath(const fs::path& path)
-	{
-		if (path.filename().string()[0] == '#') 
-			return true;
-		return false;
-	}
-
-	//template<typename ...Args>
-	//bool LoadAssetList(Args... args)
-	//{
-	//	using namespace std;
-	//	//static_assert(conjunction_v< (conjunction_v < is_pointer_v<Args>, is_base_of_v<std::remove_pointer_t<Args>, Asset>), ... >, "Not all argument types are pointers of assets.");
-
-	//	return ((Load(args) && ...));
-	//}
-
-	////template<typename AssetT>
-	////AssetT* GenerateAndLoad(const fs::path& path)
-	////{
-	////	auto r = GenerateAsset(path);
-	////	Load(r);
-	////	return r;
-	////}
+	// TODO: should be static global, independent of the asset manager.
 	PathSystem m_pathSystem;
+public:
+	// Returns a new handle from a given path.
+	// * if the asset of this path is already registered in the asset list it will return a handle to the existing one
+	//   requesting a different type of an existing path will (TODO: ) assert. (possibly should return invalid handle)
+	// * if the asset of this path is not registered, it will become registered and associated with this type.
+	//   it will also begin loading on another thread.
+	template<typename PodType>
+	static PodHandle<PodType> GetOrCreate(const fs::path& inPath)
+	{
+		auto inst = Engine::GetAssetManager();
+		
+		// WIP:
+		std::string path = inPath.string();
+		auto entry = inst->GetEntryByPathFast(path);
+		if (!entry)
+		{
+			path = FilterPath(inPath);
+			entry = inst->GetEntryByPathFast(path);
+		}
+		
+		assert(!path.empty());
+
+		if (entry)
+		{
+			CLOG_ASSERT(entry->type != refl::GetId<PodType>(),
+						"Incorrect pod type on GetOrCreate:\nPath: '{}'\nPrev Type: '{}' New type: '{}'", inPath, entry->type.name(), refl::GetName<PodType>());
+		}
+		else 
+		{
+			entry = inst->CreateAndRegister<PodType>(path);
+			inst->m_pathCache[inPath.string()] = entry->uid; // WIP:
+		}
+		
+		return PodHandle<PodType>{entry->uid};
+	}
+
+	// Refreshes the underlying data of the pod.
+	template<typename PodType>
+	static void Reload(PodHandle<PodType> handle)
+	{
+		auto inst = Engine::GetAssetManager();
+		inst->LoadEntry<PodType>(inst->m_pods[handle.podId].get());
+	}
+
+	// Frees the underlying cpu pod memory
+	static void Unload(BasePodHandle handle)
+	{
+		Engine::GetAssetManager()->m_pods[handle.podId]->ptr.reset();
+	}
+
+	static fs::path GetPodPath(BasePodHandle handle)
+	{
+		return Engine::GetAssetManager()->m_pods[handle.podId]->path;
+	}
+	
+	// For Internal Handle use only.
+	template<typename PodType>
+	PodType* _Handle_AccessPod(size_t podId)
+	{
+		PodEntry* entry = m_pods[podId].get();
+
+		assert(entry->type == refl::GetId<PodType>()); // Technically this should never hit because we check during creation.
+
+		if (!entry->ptr)
+		{
+			LoadEntry<PodType>(entry);
+		}
+
+		return entry->UnsafeGet<PodType>();
+	}
+
 	bool Init(const std::string& applicationPath, const std::string& dataDirectoryName);
 
 
-	~AssetManager()
+	static void PreloadGltf(const std::string& modelPath);
+
+private:
+	// Future multithreaded loader specalizations
+
+	template<>
+	void LoadEntry<ImagePod>(PodEntry* entry)
 	{
-		for (auto& [uid, pod] : m_uidToPod)
-		{
-			DeletePod_Impl(pod);
-		}
+		entry->ptr.reset(entry->futureLoaded.get());
 	}
+
+	// Early load images.
+	template<>
+	PodEntry* CreateAndRegister<ImagePod>(const std::string& path)
+	{
+		assert(m_pathCache.find(path) == m_pathCache.end() && "Path already exists");
+		size_t uid = m_pods.size();
+
+		auto& ptr = m_pods.emplace_back(std::make_unique<PodEntry>(PodEntry::Create<ImagePod>(uid, path)));
+		
+		PodEntry* entry = ptr.get();
+		m_pathCache[path] = uid;
+
+		entry->futureLoaded = std::async(std::launch::async, [entry]() -> AssetPod* { 
+			ImagePod* ptr = new ImagePod();
+			ImagePod::Load(ptr, entry->path);
+			return ptr;
+		});
+
+		return entry;
+	}
+
 };

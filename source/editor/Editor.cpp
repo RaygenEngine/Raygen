@@ -205,7 +205,7 @@ struct ReflectionToImguiVisitor
 	template<typename T>
 	bool Inner(T& t, const Property& p)
 	{
-		std::string s = "unhandled property: " + p.GetName();
+		std::string s = "unhandled property: " + p.GetNameStr();
 		ImGui::Text(s.c_str());
 		return false;
 	}
@@ -346,17 +346,16 @@ void Editor::UpdateEditor()
 	{
 		ImGui::Indent();
 		std::string text;
-		for (auto& assetPair : Engine::GetAssetManager()->m_pathToUid)
+		for (auto& assetEntry : Engine::GetAssetManager()->m_pods)
 		{
 			if (ImGui::Button("Unload"))
 			{
-				AssetManager::ClearFromId(assetPair.second);
+				AssetManager::Unload(BasePodHandle{ assetEntry->uid });
 			}
 			ImGui::SameLine();
-			ImGui::Text(assetPair.first.c_str());
+			ImGui::Text(assetEntry->path.c_str());
 			ImGui::SameLine();
-			ImGui::Text(std::to_string(assetPair.second).c_str());
-			
+		
 			//text += assetPair.first + "\n";
 		}
 	}
