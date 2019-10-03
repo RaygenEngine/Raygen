@@ -310,6 +310,12 @@ struct LoadPropertiesFromXMLVisitor
 		LOG_WARN("Vectors are not implented yet on XML Scene Load. Skipped loading vector: ", p.GetNameStr());
 	}
 	
+	template<typename T>
+	void operator()(T& v, const Property& p)
+	{
+		LOG_WARN("Unimplemented property: {}", refl::GetName<T>());
+	}
+
 };
 
 }

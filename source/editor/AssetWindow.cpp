@@ -6,6 +6,8 @@
 #include "core/reflection/ReflectionTools.h"
 #include "editor/imgui/ImguiExtensions.h"
 #include "core/reflection/PodTools.h"
+
+
 void AssetWindow::Init()
 {
 	Engine::GetAssetManager()->m_pathSystem.GenerateFileListOfType(".gltf", m_gltf);
@@ -234,7 +236,7 @@ struct ReflectionToImguiVisitor
 	template<typename T>
 	bool Inner(T& t, const Property& p)
 	{
-		std::string s = "unhandled property: " + p.GetName();
+		std::string s = "unhandled property: " + p.GetNameStr();
 		ImGui::Text(s.c_str());
 		return false;
 	}
@@ -294,46 +296,46 @@ void AssetWindow::DrawAssetLibrary()
 
 			podVectors.insert({ ctti::type_id<PodType>(), {} });
 		});
+		// TODO:
+		//for (auto& [uid, pod] : Engine::GetAssetManager()->m_pods)
+		//{
+		//	podVectors[pod->type].push_back({ uid, pod });
+		//}
+		//int32 outerId = 0;
+		//for (auto& [type, vector] : podVectors)
+		//{
+		//	outerId++;
+		//	std::string name = type.name().cppstring();
 
-		for (auto& [uid, pod] : Engine::GetAssetManager()->m_uidToPod)
-		{
-			podVectors[pod->type].push_back({ uid, pod });
-		}
-		int32 outerId = 0;
-		for (auto& [type, vector] : podVectors)
-		{
-			outerId++;
-			std::string name = type.name().cppstring();
+		//	if (ImGui::CollapsingHeader(name.c_str()))
+		//	{
+		//		int32 n = 0 + outerId * 10000;
+		//		ImGui::Indent();
+		//		for (auto& p : vector)
+		//		{
 
-			if (ImGui::CollapsingHeader(name.c_str()))
-			{
-				int32 n = 0 + outerId * 10000;
-				ImGui::Indent();
-				for (auto& p : vector)
-				{
+		//			auto& uid = p.first;
+		//			auto& pod = p.second;
 
-					auto& uid = p.first;
-					auto& pod = p.second;
+		//			
+		//			std::string podPath = Engine::GetAssetManager()->GetPodPathFromId(uid);
+		//			ImGui::PushID(n++);
 
-					
-					std::string podPath = Engine::GetAssetManager()->GetPodPathFromId(uid);
-					ImGui::PushID(n++);
-
-					bool open = ImGui::CollapsingHeader(podPath.c_str());
-					PodDragSource(pod, uid);
-					if (open)
-					{
-						ImGui::Indent();
-						refltools::CallVisitorOnEveryProperty(pod, ReflectionToImguiVisitor());
-						ImGui::Unindent();
-					}
-					ImGui::PopID();
+		//			bool open = ImGui::CollapsingHeader(podPath.c_str());
+		//			PodDragSource(pod, uid);
+		//			if (open)
+		//			{
+		//				ImGui::Indent();
+		//				refltools::CallVisitorOnEveryProperty(pod, ReflectionToImguiVisitor());
+		//				ImGui::Unindent();
+		//			}
+		//			ImGui::PopID();
 
 
-				}
-				ImGui::Unindent();
-			}
-		}
+		//		}
+		//		ImGui::Unindent();
+		//	}
+		//}
 	}
 
 	

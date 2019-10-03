@@ -150,7 +150,7 @@ namespace refltools
 		size_t FlagMissmatches{ 0 };
 
 		// If the underlying class types where not identical
-		bool ClassTypeMissmatch{ false };
+		bool ClassTypeMissmatch{ false }; // TODO: implement
 
 		bool IsExactlyCorrect()
 		{
