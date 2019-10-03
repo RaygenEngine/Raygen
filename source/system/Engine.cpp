@@ -67,7 +67,7 @@ bool Engine::CreateWorldFromFile(const std::string& filename)
 	m_world = new World(m_app->MakeNodeFactory());
 
 	auto sceneXML = AssetManager::GetOrCreate<XMLDocPod>(filename);
-	AssetManager::ClearCache(sceneXML);
+	AssetManager::Reload(sceneXML);
 	return m_world->LoadAndPrepareWorldFromXML(sceneXML);
 }
 

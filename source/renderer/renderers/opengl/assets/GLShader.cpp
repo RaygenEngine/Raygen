@@ -16,9 +16,9 @@ namespace OpenGL
 	{
 		
 		const auto sources = AssetManager::GetOrCreate<ShaderPod>(m_assetManagerPodPath);
-		Engine::GetAssetManager()->ClearCache(sources);
-		Engine::GetAssetManager()->ClearCache(sources->fragment);
-		Engine::GetAssetManager()->ClearCache(sources->vertex);
+		Engine::GetAssetManager()->Reload(sources);
+		Engine::GetAssetManager()->Reload(sources->fragment);
+		Engine::GetAssetManager()->Reload(sources->vertex);
 
 		
 
