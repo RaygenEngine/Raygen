@@ -303,6 +303,22 @@ struct LoadPropertiesFromXMLVisitor
 		handle = AssetManager::GetOrCreate<T>(tmp);
 	}
 	
+
+	void operator()(PodHandle<ModelPod>& handle, const Property& p)
+	{
+		std::string tmp;
+		if (!ParsingAux::ReadStringAttribute(xmlData, str, tmp))
+		{
+			if (!p.HasFlags(PropertyFlags::OptionalPod))
+			{
+				LOG_ASSERT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
+			}
+		}
+		handle = AssetManager::GetOrCreate<ModelPod>(tmp);
+		if (tmp.find(".gltf") != std::string::npos) {
+			AssetManager::PreloadGltf(tmp);
+		}
+	}
 	
 	template<typename T>
 	void operator()(std::vector<T>& v, const Property& p)
