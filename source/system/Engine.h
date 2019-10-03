@@ -154,4 +154,10 @@ public:
 			m_initToFrameTimer.Stop();
 		}
 	}
+
+	void NextRenderer()
+	{
+		static uint32 currentRenderer = 0;
+		SwitchRenderer(++currentRenderer % m_rendererRegistrations.size());
+	}
 };

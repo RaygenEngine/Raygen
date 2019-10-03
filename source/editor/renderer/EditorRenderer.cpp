@@ -4,7 +4,7 @@
 #include "editor/Editor.h"
 #include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
 
-void EditorRenderer::OnNodePodsDirty(Node* node)
+void ForwardEditorRenderer::OnNodePodsDirty(Node* node)
 {
 	if (auto geometry = dynamic_cast<GeometryNode*>(node))
 	{
@@ -18,7 +18,51 @@ void EditorRenderer::OnNodePodsDirty(Node* node)
 	}
 }
 
-void EditorRenderer::Render()
+void ForwardEditorRenderer::Render()
+{
+	OpenGL::GLForwardRenderer::Render();
+	if (Engine::GetEditor()->m_showImgui)
+	{
+		ImguiImpl::RenderOpenGL();
+	}
+}
+
+
+bool ForwardEditorRenderer::InitRendering(HWND assochWnd, HINSTANCE instance)
+{
+	if (!OpenGL::GLForwardRenderer::InitRendering(assochWnd, instance))
+	{
+		return false;
+	}
+	ImguiImpl::InitOpenGL();
+	return true;
+}
+
+ForwardEditorRenderer::~ForwardEditorRenderer()
+{
+	ImguiImpl::CleanupOpenGL();
+}
+
+
+//
+// WIP:
+//
+
+void DeferredEditorRenderer::OnNodePodsDirty(Node* node)
+{
+	if (auto geometry = dynamic_cast<GeometryNode*>(node))
+	{
+		auto it = std::find_if(m_glGeometries.begin(), m_glGeometries.end(), [node](std::unique_ptr<OpenGL::GLBasicGeometry>& ptr)
+		{
+			return ptr.get()->node == node;
+		});
+		assert(it != m_glGeometries.end() && "Attempting to update untracked geometry node from observer list.");
+
+		(*it)->ReloadModel();
+	}
+}
+
+void DeferredEditorRenderer::Render()
 {
 	OpenGL::GLDeferredRenderer::Render();
 	if (Engine::GetEditor()->m_showImgui)
@@ -28,7 +72,7 @@ void EditorRenderer::Render()
 }
 
 
-bool EditorRenderer::InitRendering(HWND assochWnd, HINSTANCE instance)
+bool DeferredEditorRenderer::InitRendering(HWND assochWnd, HINSTANCE instance)
 {
 	if (!OpenGL::GLDeferredRenderer::InitRendering(assochWnd, instance))
 	{
@@ -38,7 +82,7 @@ bool EditorRenderer::InitRendering(HWND assochWnd, HINSTANCE instance)
 	return true;
 }
 
-EditorRenderer::~EditorRenderer()
+DeferredEditorRenderer::~DeferredEditorRenderer()
 {
 	ImguiImpl::CleanupOpenGL();
 }
