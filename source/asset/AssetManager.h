@@ -7,9 +7,6 @@
 #include "core/reflection/PodReflection.h"
 #include "asset/UriLibrary.h"
 #include "asset/PodHandle.h"
-#include <future>
-#include <thread>
-#include <mutex>
 
 struct PodDeleter
 {
@@ -31,8 +28,6 @@ struct PodEntry
 	LoadingState loadingState{ LoadingState::Unloaded };
 	size_t uid{ 0 };
 	std::string path;
-	std::future<AssetPod*> loaded;
-
 
 	static PodEntry Create(TypeId type, size_t uid, const std::string& path)
 	{
@@ -60,22 +55,19 @@ struct PodEntry
 struct MultithreadedLoader
 {
 	
-	// Expected to return instantly
 	template<typename T>
 	void BeginLoad(PodEntry* entry)
 	{
-		entry->loaded = std::async(std::launch::async, [entry]() -> AssetPod* {
-			T* pod = new T();
-			T::Load(pod, entry->path); // TODO: handle errors
-
-			return pod; 
-		});
+		// Implementation should be aware that this pointer may get invalidated after the function returns,
+		// but the underlying PodEntry data will not be edited, including the underlying memory position of the pod
+		T* podPointer = PodCastVerfied<T>(entry->ptr.get());
+		T::Load(podPointer, entry->path);
+		entry->loadingState = PodEntry::LoadingState::Loaded;
 	}
 
 	void WaitForLoad(PodEntry* entry)
 	{
-	entry->ptr.reset(entry->loaded.get());
-	entry->loadingState = PodEntry::LoadingState::Loaded;
+
 	}
 };
 
@@ -84,7 +76,7 @@ struct MultithreadedLoader
 class AssetManager
 {
 	MultithreadedLoader m_loader;
-
+	
 	friend class Editor;
 	friend class AssetWindow;
 
@@ -93,43 +85,53 @@ class AssetManager
 	// when having tens of thousands of objects maybe a map would be better.
 	std::vector<std::unique_ptr<PodEntry>> m_pods;
 	std::unordered_map<std::string, size_t> m_pathCache;
-
+	
 
 	PodEntry* GetEntryByPathFast(const std::string& path)
 	{
-		std::lock_guard lock(registerMutex);
 		auto it = m_pathCache.find(path);
 		if (it == m_pathCache.end())
 		{
-
 			return nullptr;
 		}
 		return m_pods.at(it->second).get();
+	}
+
+	// This will wait for the pod data of the entry to finish loading.
+	template<typename T>
+	void LoadBlocking(PodEntry* entry)
+	{
+		T* pod = new T();
+		entry->ptr.reset(pod);
+		entry->loadingState = PodEntry::LoadingState::Loaded;
+		T::Load(pod, entry->path);
 	}
 
 	// Template is not required but saves runtime cost.
 	// Ignores call if currently loading.
 	// If reload == true will reload even already loaded pods
 	template<typename T, bool Reload = false>
-	void LoadNonBlocking(PodEntry * entry)
+	void LoadNonBlocking(PodEntry* entry)
 	{
-		using ls = PodEntry::LoadingState;
+		// WIP
+		//using ls = PodEntry::LoadingState;
 
-		if constexpr (Reload == false)
-		{
-			if (entry->loadingState == ls::Loaded)
-			{
-				return;
-			}
-		}
+		//if (entry->loadingState == ls::CurrentlyLoading)
+		//{
+		//	return;
+		//}
 
-		if (entry->loadingState == ls::CurrentlyLoading)
-		{
-			return;
-		}
-		entry->loadingState = ls::CurrentlyLoading;
-		entry->ptr.reset();
-		m_loader.BeginLoad<T>(entry);
+		//if constexpr (Reload == false)
+		//{
+		//	if (entry->loadingState == ls::Loaded)
+		//	{
+		//		return;
+		//	}
+		//}
+		//entry->Unload();
+		//entry->ptr = std::unique_ptr<AssetPod, PodDeleter>(new T());
+
+		//m_loader.BeginLoad<T>(entry);
 	}
 
 public:
@@ -137,17 +139,15 @@ public:
 	template<typename PodType>
 	PodType* _Handle_AccessPod(size_t podId)
 	{
-		registerMutex.lock();
 		PodEntry* entry = m_pods[podId].get();
-		registerMutex.unlock();
-
+		
 		assert(entry->type == refl::GetId<PodType>()); // Technically this should never hit because we check during creation.
 
 		if (entry->loadingState != PodEntry::LoadingState::Loaded)
 		{
-			m_loader.WaitForLoad(entry);
+			LoadBlocking<PodType>(entry);
 		}
-
+		
 		return PodCast<PodType>(entry->ptr.get());
 	}
 
@@ -168,32 +168,16 @@ protected:
 	// Internal Pod Creation
 	//
 
-	std::mutex registerMutex;
-
 	template<typename T>
 	PodEntry* CreateAndRegister(const std::string& path)
 	{
-
-		//assert(m_pathCache.find(path) == m_pathCache.end() && "Path already exists");
-		auto added = GetEntryByPathFast(path);
-		registerMutex.lock();
-
-		if (added)
-		{
-			return added;
-		}
+		assert(m_pathCache.find(path) == m_pathCache.end() && "Path already exists");
 		size_t uid = m_pods.size();
-
-
 
 		auto& ptr = m_pods.emplace_back(std::make_unique<PodEntry>(PodEntry::Create<T>(uid, path)));
 		
 		PodEntry* entry = ptr.get();
 		m_pathCache[path] = uid;
-		
-		registerMutex.unlock();
-
-		Engine::GetAssetManager()->LoadNonBlocking<T>(entry);
 
 		return entry;
 	}
@@ -241,9 +225,9 @@ public:
 	template<typename PodType>
 	static void Reload(PodHandle<PodType> handle)
 	{
-		auto entry = Engine::GetAssetManager()->m_pods[handle.podId].get();
-		entry->Unload();
-		Engine::GetAssetManager()->LoadNonBlocking<PodType, true>(entry);
+		Engine::GetAssetManager()->m_pods[handle.podId]->Unload();
+		//WIP: Engine::GetAssetManager()->LoadNonBlocking<PodType, true>(&entry);
+		// PodEntry& entry = Engine::GetAssetManager()->m_pods[handle.podId];
 	}
 
 	// Frees the underlying cpu pod memory
@@ -256,6 +240,5 @@ public:
 	{
 		return Engine::GetAssetManager()->m_pods[handle.podId]->path;
 	}
-
 	bool Init(const std::string& applicationPath, const std::string& dataDirectoryName);
 };
