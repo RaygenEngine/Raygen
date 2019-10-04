@@ -93,6 +93,9 @@ class AssetManager
 		return Engine::GetAssetManager()->m_pathSystem.SearchAssetPath(path).string();
 	}
 
+	// Specialized in a few cases where instant loading or multithreaded loading is faster
+	template<typename T> void PostRegisterEntry(PodEntry* p) {}
+
 	template<typename T>
 	PodEntry* CreateAndRegister(const std::string& path)
 	{
@@ -103,7 +106,7 @@ class AssetManager
 		
 		PodEntry* entry = ptr.get();
 		m_pathCache[path] = uid;
-
+		PostRegisterEntry<T>(entry);
 		return entry;
 	}
 
@@ -186,33 +189,57 @@ public:
 	static void PreloadGltf(const std::string& modelPath);
 
 private:
-	// Future multithreaded loader specalizations
+	// Specific pod specializations for loading:
+	// Images and string pods are loaded async
 
+	// Textures and shaders are instantly loaded.
+
+	// Async load images.
+	template<>
+	void PostRegisterEntry<ImagePod>(PodEntry* entry)
+	{
+		entry->futureLoaded = std::async(std::launch::async, [entry]() -> AssetPod * {
+			ImagePod* ptr = new ImagePod();
+			ImagePod::Load(ptr, entry->path);
+			return ptr;
+		});
+	}
 	template<>
 	void LoadEntry<ImagePod>(PodEntry* entry)
 	{
 		entry->ptr.reset(entry->futureLoaded.get());
 	}
-
-	// Early load images.
-	template<>
-	PodEntry* CreateAndRegister<ImagePod>(const std::string& path)
+	
+	template<> 
+	void PostRegisterEntry<TexturePod>(PodEntry* entry)
 	{
-		assert(m_pathCache.find(path) == m_pathCache.end() && "Path already exists");
-		size_t uid = m_pods.size();
+		TexturePod* pod = new TexturePod();
+		TexturePod::Load(pod, entry->path);
+		entry->ptr.reset(pod);
+	}
 
-		auto& ptr = m_pods.emplace_back(std::make_unique<PodEntry>(PodEntry::Create<ImagePod>(uid, path)));
-		
-		PodEntry* entry = ptr.get();
-		m_pathCache[path] = uid;
-
-		entry->futureLoaded = std::async(std::launch::async, [entry]() -> AssetPod* { 
-			ImagePod* ptr = new ImagePod();
-			ImagePod::Load(ptr, entry->path);
+	template<>
+	void PostRegisterEntry<ShaderPod>(PodEntry* entry)
+	{
+		ShaderPod* pod = new ShaderPod();
+		ShaderPod::Load(pod, entry->path);
+		entry->ptr.reset(pod);
+	}
+	template<>
+	void LoadEntry<StringPod>(PodEntry* entry)
+	{
+		entry->ptr.reset(entry->futureLoaded.get());
+	}
+	template<>
+	void PostRegisterEntry<StringPod>(PodEntry* entry)
+	{
+		entry->futureLoaded = std::async(std::launch::async, [entry]() -> AssetPod * {
+			StringPod* ptr = new StringPod();
+			StringPod::Load(ptr, entry->path);
 			return ptr;
 		});
-
-		return entry;
 	}
+
+
 
 };
