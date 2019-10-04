@@ -147,6 +147,7 @@ set(HEADER_FILES
 	core/reflection/PropertyTypes.h
 	core/reflection/ReflClass.h
 	core/reflection/ReflectionTools.h
+	core/reflection/ReflEnum.h
 	core/reflection/TypeId.h
 
 	core/timer/Timer.h
