@@ -54,6 +54,10 @@ namespace refl
 			{
 				return true;
 			}
+			else if constexpr (std::is_enum_v<T>)
+			{
+				return true;
+			}
 			return false;
 		}
 	}

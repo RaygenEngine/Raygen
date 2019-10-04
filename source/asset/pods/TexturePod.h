@@ -9,6 +9,7 @@ struct TexturePod : public AssetPod
 	REFLECTED_POD(TexturePod)
 	{
 		REFLECT_VAR(images);
+		REFLECT_VAR(minFilter);
 	}
 	static bool Load(TexturePod* pod, const fs::path& path);
 
