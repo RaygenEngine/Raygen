@@ -79,7 +79,7 @@ public:
 	}
 
 	[[nodiscard]]
-	MetaEnumInst GetRefEnum(void* obj) const
+	MetaEnumInst GetEnumRef(void* obj) const
 	{
 		CLOG_ASSERT(!IsEnum(), "Requested GetRefEnum on a property that was not an enum: {}, type: {} ", GetName(), m_type.name());
 		return MetaEnumInst::Make(GetRealMemoryAddr(obj), *GetEnum(), m_type);

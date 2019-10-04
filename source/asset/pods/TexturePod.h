@@ -10,6 +10,13 @@ struct TexturePod : public AssetPod
 	{
 		REFLECT_VAR(images);
 		REFLECT_VAR(minFilter);
+		REFLECT_VAR(magFilter);
+
+		REFLECT_VAR(wrapS);
+		REFLECT_VAR(wrapT);
+		REFLECT_VAR(wrapR);
+
+		REFLECT_VAR(target);
 	}
 	static bool Load(TexturePod* pod, const fs::path& path);
 

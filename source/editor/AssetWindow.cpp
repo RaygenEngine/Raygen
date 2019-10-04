@@ -61,7 +61,19 @@ void AssetWindow::Draw()
 	DrawFileLibrary();
 	DrawAssetLibrary();
 	ImGui::End();
+
+	for (auto& open : m_openFiles)
+	{
+		DrawEditor(open);
+	}
+
+	for (auto& toClose : m_openFilesRemove)
+	{
+		m_openFiles.erase(toClose);
+	}
+	m_openFilesRemove.clear();
 }
+
 #include "asset/UriLibrary.h"
 void AssetWindow::DrawFileAsset(int32& n, const std::string& path)
 {
@@ -108,6 +120,10 @@ struct ReflectionToImguiVisitor
 
 
 	bool dirty{ false };
+	bool recurse{ true };
+	ReflectionToImguiVisitor(bool recursive = true)
+		: recurse(recursive)
+	{}
 
 	void GenerateUniqueName(const Property& p)
 	{
@@ -214,8 +230,8 @@ struct ReflectionToImguiVisitor
 		}
 
 		auto str = Engine::GetAssetManager()->GetPodPath(pod).string();
-		bool open = ImGui::CollapsingHeader(name);
 
+		bool open = ImGui::CollapsingHeader(name);
 		if (open)
 		{
 			GenerateUniqueName(p);
@@ -224,9 +240,10 @@ struct ReflectionToImguiVisitor
 
 			depth++;
 			ImGui::Indent();
-
-			refltools::CallVisitorOnEveryProperty(pod.operator->(), *this);
-
+			if (recurse)
+			{
+				refltools::CallVisitorOnEveryProperty(pod.operator->(), *this);
+			}
 			ImGui::Unindent();
 			depth--;
 		}
@@ -260,7 +277,10 @@ struct ReflectionToImguiVisitor
 				if (ImGui::CollapsingHeader(finalName.c_str()))
 				{
 					ImGui::Indent();
-					refltools::CallVisitorOnEveryProperty(handle.operator->(), *this);
+					if (recurse)
+					{
+						refltools::CallVisitorOnEveryProperty(handle.operator->(), *this);
+					}
 					ImGui::Unindent();
 				}
 
@@ -270,17 +290,48 @@ struct ReflectionToImguiVisitor
 		}
 		return false;
 	}
+
+
+	// Enum
+	bool Inner(MetaEnumInst& t, const Property& p)
+	{
+		auto enumMeta = t.GetEnum();
+
+		//int32 currentItem = ;
+		std::string str;
+		str = t.GetValueStr();
+		int32 currentValue = t.GetValue();
+
+		if (ImGui::BeginCombo(name, str.c_str())) // The second parameter is the label previewed before opening the combo.
+		{
+			for (auto& [enumStr, value] : enumMeta.GetStringsToValues())
+			{
+				bool selected = (currentValue == value);
+				if (ImGui::Selectable(enumStr.c_str(), &selected))
+				{
+					t.SetValue(value);
+				}
+				if (selected)
+				{
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
+		}
+
+		return false;
+	}
 };
 
 }
 
 namespace {
-void PodDragSource(AssetPod* pod, size_t uid)
+void PodDragSource(PodEntry* entry)
 {
 	if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
 	{
-		std::string payloadTag = "POD_UID_" + std::to_string(pod->type.hash());
-		ImGui::SetDragDropPayload(payloadTag.c_str(), &uid, sizeof(size_t));
+		std::string payloadTag = "POD_UID_" + std::to_string(entry->type.hash());
+		ImGui::SetDragDropPayload(payloadTag.c_str(), &entry->uid, sizeof(size_t));
 		ImGui::EndDragDropSource();
 	}
 }
@@ -290,53 +341,231 @@ void AssetWindow::DrawAssetLibrary()
 {
 	if (ImGui::CollapsingHeader("Assets"))
 	{
-		std::unordered_map<ctti::type_id_t, std::vector<std::pair<size_t, AssetPod*>>> podVectors;
+
+		ImGui::Checkbox("Recursive Pods", &recurse);
+
+		ImGui::Indent();
+		std::unordered_map<ctti::type_id_t, std::vector<PodEntry*>> podVectors;
 		podtools::ForEachPodType([&](auto dummy) {
 			using PodType = std::remove_pointer_t<decltype(dummy)>;
 
 			podVectors.insert({ ctti::type_id<PodType>(), {} });
 		});
-		// TODO:
-		//for (auto& [uid, pod] : Engine::GetAssetManager()->m_pods)
-		//{
-		//	podVectors[pod->type].push_back({ uid, pod });
-		//}
-		//int32 outerId = 0;
-		//for (auto& [type, vector] : podVectors)
-		//{
-		//	outerId++;
-		//	std::string name = type.name().cppstring();
 
-		//	if (ImGui::CollapsingHeader(name.c_str()))
-		//	{
-		//		int32 n = 0 + outerId * 10000;
-		//		ImGui::Indent();
-		//		for (auto& p : vector)
-		//		{
+		for (auto& pod : Engine::GetAssetManager()->m_pods)
+		{
+			podVectors[pod->type].push_back({ pod.get() });
+		}
+		int32 outerId = 0;
+		for (auto& [type, vector] : podVectors)
+		{
+			outerId++;
+			std::string name = type.name().cppstring();
 
-		//			auto& uid = p.first;
-		//			auto& pod = p.second;
+			if (ImGui::CollapsingHeader(name.c_str()))
+			{
+				int32 n = 0 + outerId * 10000;
+				ImGui::Indent();
+				for (auto& entry : vector)
+				{
+					ImGui::PushID(n++);
 
-		//			
-		//			std::string podPath = Engine::GetAssetManager()->GetPodPathFromId(uid);
-		//			ImGui::PushID(n++);
+					bool open = ImGui::CollapsingHeader(entry->path.c_str());
+					PodDragSource(entry);
+					if (ImGui::IsItemHovered())
+					{
+						ImGui::BeginTooltip();
+						ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+						ImGui::TextUnformatted("Right click for context menu.\nDrag and drop in node properties to replace Node handle references.");
+						ImGui::PopTextWrapPos();
+						ImGui::EndTooltip();
+					}
+					if (ImGui::BeginPopupContextItem("Asset Context"))
+					{
+						if (ImGui::Selectable("Edit"))
+						{
+							m_openFiles.emplace(entry);
+						}
+						if (ImGui::Selectable("Clone"))
+						{
+							ImGui::OpenPopup("Clone Name");
+						}
 
-		//			bool open = ImGui::CollapsingHeader(podPath.c_str());
-		//			PodDragSource(pod, uid);
-		//			if (open)
-		//			{
-		//				ImGui::Indent();
-		//				refltools::CallVisitorOnEveryProperty(pod, ReflectionToImguiVisitor());
-		//				ImGui::Unindent();
-		//			}
-		//			ImGui::PopID();
+						if (ImGui::BeginPopupModal("Clone Name", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+						{
+							ImGui::Text("Give a name:");
+							ImGui::Separator();
+							std::string outString;
+							ImGui::InputText("Name", &outString);
 
+							if (ImGui::Button("OK", ImVec2(120, 0))) 
+							{ 
+								LOG_FATAL("{}", outString);
+								ImGui::CloseCurrentPopup(); 
+							}
+							
+							ImGui::SetItemDefaultFocus();
+							ImGui::SameLine();
+							if (ImGui::Button("Cancel", ImVec2(120, 0))) 
+							{ 
+								ImGui::CloseCurrentPopup(); 
+							}
+							ImGui::EndPopup();
+						}
 
-		//		}
-		//		ImGui::Unindent();
-		//	}
-		//}
+						ImGui::EndPopup();
+					}
+
+					if (open)
+					{
+						ImGui::Indent();
+						refltools::CallVisitorOnEveryProperty(entry->ptr.get(), ReflectionToImguiVisitor(recurse));
+						ImGui::Unindent();
+					}
+					ImGui::PopID();
+				}
+				ImGui::Unindent();
+			}
+		}
+		ImGui::Unindent();
 	}
 
 	
+}
+
+#include "nlohmann/json.hpp"
+using json = nlohmann::json;
+
+namespace glm {
+
+void to_json(json& j, const vec3& p) {
+	j = json{ p[0], p[1], p[2] };
+}
+
+void to_json(json& j, const vec4& p) {
+	j = json{ p[0], p[1], p[2], p[3] };
+}
+
+void from_json(const json& j, vec3& p) {
+	p[0] = j.at(0);
+	p[1] = j.at(1);
+	p[2] = j.at(2);
+}
+
+void from_json(const json& j, vec4& p) {
+	p[0] = j.at(0);
+	p[1] = j.at(1);
+	p[2] = j.at(2);
+	p[3] = j.at(3);
+}
+}
+
+template<typename T>
+void to_json(json& j, const PodHandle<T>& handle)
+{
+	j = AssetManager::GetPodPath(handle).string();
+}
+
+template<typename T>
+void from_json(const json& j, PodHandle<T>& handle)
+{
+	handle = AssetManager::GetOrCreate(j.get<std::string>());
+}
+
+struct SerializeJsonVisitor
+{
+	SerializeJsonVisitor(json& r)
+		: result(r) {}
+
+	json& result;
+
+	bool PreProperty(const Property& p)
+	{
+		// WIP
+		if (p.HasFlags(PropertyFlags::NoSave))
+		{
+			return false;
+		}
+		return true;
+	}
+
+	template<typename T>
+	void operator()(T& value, const Property& prop)
+	{
+		result[prop.GetNameStr()] = value;
+	}
+
+	template<typename T>
+	void operator()(PodHandle<T>& value, const Property& prop)
+	{
+		result[prop.GetNameStr()] = value;
+	}
+
+	template<typename T>
+	void operator()(std::vector<PodHandle<T>>& value, const Property& prop)
+	{
+		result[prop.GetNameStr()] = value;
+	}
+
+	void operator()(MetaEnumInst& inst, const Property& prop)
+	{
+		result[prop.GetNameStr()] = inst.GetValueStr();
+	}
+};
+#include <iostream>
+namespace
+{
+	void SaveAsJson(PodEntry* entry)
+	{
+		json result;
+		podtools::VisitPod(entry->ptr.get(),
+						   [&](auto p)
+		{
+			result["+type"] = entry->type.name().str();
+		});
+		result["+base"] = entry->path;
+
+		refltools::CallVisitorOnEveryProperty(entry->ptr.get(), SerializeJsonVisitor(result));
+
+		std::cout << "Json Generated:\n" << std::setw(4) << result << std::endl;
+	}
+
+	void LoadFromJson(PodEntry* entry)
+	{
+		LOG_ERROR("Load from json");
+	}
+}
+
+void AssetWindow::DrawEditor(PodEntry* entry)
+{
+	std::string n = "Generic Editor: " + entry->path;
+	
+	bool open = true;
+	ImGui::Begin(n.c_str(), &open);
+	if (!open)
+	{
+		m_openFilesRemove.emplace(entry);
+		ImGui::End();
+		return;
+	}
+	auto am = Engine::GetAssetManager();
+	if (entry->ptr)
+	{
+		if (ImGui::Button("Save Json"))
+		{
+			SaveAsJson(entry);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Load from Json"))
+		{
+			LoadFromJson(entry);
+		}
+
+		refltools::CallVisitorOnEveryProperty(entry->ptr.get(), ReflectionToImguiVisitor(false));
+	}
+	else
+	{
+		ImGui::Text("This asset is not loaded.");
+	}
+	ImGui::End();
 }
