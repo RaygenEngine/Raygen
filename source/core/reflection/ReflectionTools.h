@@ -28,6 +28,9 @@ namespace refltools
 
 		template<typename T>
 		void operator()(T& value, const Property& p) {} // Overload this for T.
+
+		// Overload that would catch all enum properties. Enum properties do not visit on the operator() with their type.
+		void operator()(MetaEnumInst& value, const Property& p) {}
 	};
 
 	static_assert(detail::HasPreProperty<ReflClassVisitor>::value, "Reflection tools test failed.");
@@ -75,6 +78,12 @@ namespace refltools
 	template<typename Visitor>
 	void CallVisitorOnProperty(Visitor& v, const Property& p, void* obj)
 	{
+		if (p.IsEnum())
+		{
+			auto EnumInst = p.GetEnumRef(obj);
+			v.operator()(EnumInst, p); // Keeping as a local allows overloaded operator()(T& ...) to pass enums through.
+			return;
+		}
 		bool cc = detail::MaybeVisit<Visitor, Z_REFL_TYPES>(v, p, obj)
 			|| detail::MaybeVisit_WrapPodHandle<Visitor, Z_POD_TYPES>(v, p, obj)
 			|| detail::MaybeVisit_WrapVectorPodHandle<Visitor, Z_POD_TYPES>(v, p, obj);
@@ -122,8 +131,6 @@ namespace refltools
 			v.End(cl);
 		}
 	}
-
-
 
 	struct ReflClassOperationResult
 	{
@@ -221,6 +228,16 @@ namespace refltools
 					return;
 				}
 				dstProp->GetRef<T>(dstObj) = ref;
+			}
+
+			void operator()(MetaEnumInst& ref, const Property& prop)
+			{
+				auto dstProp = GetMatch(prop); // guaranteed to return enum or nullptr
+				if (!dstProp)
+				{
+					return;
+				}
+				dstProp->GetEnumRef(dstObj).SetValue(ref.GetValue());
 			}
 		};
 	}

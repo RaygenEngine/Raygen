@@ -23,7 +23,7 @@ struct PodEntry
 	std::unique_ptr<AssetPod, PodDeleter> ptr;
 	TypeId type{ refl::GetId<UnitializedPod>() };
 	size_t uid{ 0 };
-	std::string path;
+	std::string path{ "#" };
 
 	std::future<AssetPod*> futureLoaded;
 

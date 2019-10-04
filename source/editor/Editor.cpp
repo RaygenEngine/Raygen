@@ -241,6 +241,36 @@ struct ReflectionToImguiVisitor
 		}
 		return false;
 	}
+
+	// Enum
+	bool Inner(MetaEnumInst& t, const Property& p)
+	{
+		auto enumMeta = t.GetEnum();
+
+		//int32 currentItem = ;
+		std::string str;
+		str = t.GetValueStr();
+		int32 currentValue = t.GetValue();
+
+		if (ImGui::BeginCombo(name, str.c_str())) // The second parameter is the label previewed before opening the combo.
+		{
+			for (auto& [enumStr, value] : enumMeta.GetStringsToValues())
+			{
+				bool selected = (currentValue == value);
+				if (ImGui::Selectable(enumStr.c_str(), &selected))
+				{
+					t.SetValue(value);
+				}
+				if (selected)
+				{
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
+		}
+
+		return false;
+	}
 };
 
 
@@ -354,7 +384,6 @@ void Editor::UpdateEditor()
 			}
 			ImGui::SameLine();
 			ImGui::Text(assetEntry->path.c_str());
-			ImGui::SameLine();
 		
 			//text += assetPair.first + "\n";
 		}

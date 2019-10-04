@@ -1,7 +1,7 @@
 #pragma once
 #include "core/reflection/TypeId.h"
 #define MAGIC_ENUM_RANGE_MIN -1
-#define MAGIC_ENUM_RANGE_MAX 32
+#define MAGIC_ENUM_RANGE_MAX 24
 #include "magic_enum/magic_enum.hpp"
 #include <unordered_map>
 #include <map>
@@ -49,7 +49,7 @@ struct enum_range<Enum> {\
 // Multiple limitations should be noted here:
 //
 // * No value aliasing is supported, if you have aliased values check the workaround in Neargye's magic_enum docs.
-// * Reflected values are only the values in the range [-1, 32], You can change this for your enums using the custom macro
+// * Reflected values are only the values in the range [-1, 24], You can change this for your enums using the custom macro
 //   REFL_ENUM_RANGE(MyEnum, Min, Max) right after your enum declaration. (big ranges -> bigger compile times)
 // * Reflected values can be set in the int32_t range.
 // 
@@ -86,6 +86,7 @@ struct ReflEnum
 			e.strToValue.insert(std::pair<std::string, under_t>(strView, value));
 			e.valueToStr.insert({ value, strView });
 		}
+
 		return e;
 	}
 
@@ -111,7 +112,7 @@ public:
 	}
 
 	[[nodiscard]]
-	const std::unordered_map<std::string, under_t> GetStringsToValues() const
+	const std::unordered_map<std::string, under_t>& GetStringsToValues() const
 	{
 		return strToValue;
 	}
@@ -136,19 +137,24 @@ private:
 	friend class Property;
 	void* obj;
 	const ReflEnum& meta;
-	MetaEnumInst(void* inObj, const ReflEnum& inMeta)
+	TypeId type;
+	MetaEnumInst(void* inObj, const ReflEnum& inMeta, TypeId inId)
 		: obj(inObj)
-		, meta(inMeta) {}
+		, meta(inMeta)
+		, type(inId){}
 
 	static MetaEnumInst Make(void* obj, const ReflEnum& inMeta, TypeId objType)
 	{
 		CLOG_ASSERT(inMeta.type != objType,
 					"GetRefEnum did not encounter correct object type. Types where: Enum: {} | Given: {}"
 					, inMeta.type.name(), objType.name());
-		return MetaEnumInst(obj, inMeta);
+		return MetaEnumInst(obj, inMeta, objType);
 	}
 
 public:
+	[[nodiscard]] TypeId GetType() const { return type; }
+	[[nodiscard]] const ReflEnum& GetEnum() const { return meta; }
+
 	// The value will only go through if it is a valid value for this enum.
 	void SetValue(under_t value)
 	{
@@ -158,12 +164,14 @@ public:
 		}
 	}
 
+	[[nodiscard]]
 	under_t GetValue() const
 	{
 		return meta.getter(obj);
 	}
 
-	// Gets the string of the enum value. Expects that 
+	// Gets the string of the enum value. Expects that
+	[[nodiscard]]
 	std::string_view GetValueStr() const
 	{
 		under_t value = meta.getter(obj);
@@ -179,5 +187,19 @@ public:
 			return;
 		}
 		meta.setter(obj, it->second);
+	}
+
+	// Safely gets a pointer to the enum object. (or nullptr if types don't match)
+	// In most actuall cases where you would know this type, there are probably better ways to do this.
+	template<typename T>
+	[[nodiscard]]
+	T* GetVerified()
+	{
+		static_assert(std::is_enum_v<T>, "T is not an enum. This call would always fail");
+		if (refl::GetId<T>() != type)
+		{
+			return nullptr;
+		}
+		return static_cast<T*>(obj);
 	}
 };

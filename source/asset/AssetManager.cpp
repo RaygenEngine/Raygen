@@ -6,7 +6,7 @@
 
 bool AssetManager::Init(const std::string& applicationPath, const std::string& dataDirectoryName)
 {
-	m_pods.push_back({});
+	m_pods.push_back(std::make_unique<PodEntry>());
 
 	return m_pathSystem.Init(applicationPath, dataDirectoryName);
 }

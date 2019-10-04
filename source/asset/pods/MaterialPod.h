@@ -28,6 +28,7 @@ struct MaterialPod : public AssetPod
 		REFLECT_VAR(roughnessFactor);
 		REFLECT_VAR(normalScale);
 		REFLECT_VAR(occlusionStrength);
+		REFLECT_VAR(alphaMode);
 		REFLECT_VAR(alphaCutoff);
 		REFLECT_VAR(doubleSided);
 	}
