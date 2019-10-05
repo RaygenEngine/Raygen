@@ -45,11 +45,21 @@ namespace OpenGL
 		}
 
 		template<typename AssetT>
-		AssetT* GetOrMakeFromUri(const fs::path& path)
+		AssetT* GetOrMakeFromUri(const uri::Uri& path)
 		{
 			std::hash<std::string> hasher;
 
-			uint64 hashValue = static_cast<uint64>(hasher(path.string()));
+			uint64 hashValue = static_cast<uint64>(hasher(path));
+
+			return GetOrMake<AssetT>(hashValue, path);
+		}
+
+		template<typename AssetT>
+		AssetT* GetOrMakeFromPodHandle(BasePodHandle handle)
+		{
+			std::hash<std::string> hasher;
+			auto path = AssetManager::GetPodUri(handle);
+			uint64 hashValue = static_cast<uint64>(hasher(path));
 
 			return GetOrMake<AssetT>(hashValue, path);
 		}

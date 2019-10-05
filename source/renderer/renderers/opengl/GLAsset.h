@@ -3,22 +3,19 @@
 #include "renderer/renderers/opengl/GLRendererBase.h"
 #include "asset/AssetPod.h"
 
-#include <filesystem>
-namespace  fs = std::filesystem;
-
 namespace OpenGL
 {
 	class GLAsset : public RendererObject<GLRendererBase>
 	{
 	public:
-		fs::path GetAssetManagerPodPath() const { return m_assetManagerPodPath; }
+		uri::Uri GetAssetManagerPodPath() const { return m_assetManagerPodPath; }
 
 	protected:
-		GLAsset(const fs::path& assocPath)
+		GLAsset(const uri::Uri& assocPath)
 			: m_assetManagerPodPath(assocPath) {}
 		virtual ~GLAsset() = default;
 
-		fs::path m_assetManagerPodPath;
+		uri::Uri m_assetManagerPodPath;
 		
 		bool m_isLoaded{ false };
 

@@ -23,11 +23,11 @@ struct PodEntry
 	std::unique_ptr<AssetPod, PodDeleter> ptr;
 	TypeId type{ refl::GetId<UnitializedPod>() };
 	size_t uid{ 0 };
-	std::string path{ "#" };
+	uri::Uri path{ "#" };
 
 	std::future<AssetPod*> futureLoaded;
 
-	static PodEntry Create(TypeId type, size_t uid, const std::string& path)
+	static PodEntry Create(TypeId type, size_t uid, const uri::Uri& path)
 	{
 		PodEntry entry;
 		entry.type = type;
@@ -37,7 +37,7 @@ struct PodEntry
 	}
 
 	template<typename T>
-	static PodEntry Create(size_t uid, const std::string& path)
+	static PodEntry Create(size_t uid, const uri::Uri& path)
 	{
 		static_assert(std::is_base_of_v<AssetPod, T> && !std::is_same_v<AssetPod, T>, "PodEntry requires a pod type");
 		return Create(refl::GetId<T>(), uid, path);
@@ -57,13 +57,10 @@ class AssetManager
 	friend class Editor;
 	friend class AssetWindow;
 
-	// Using vector here is a bit scary because we cannot control when the actual resize is going to happen
-	// Our data (PodEntry) is lightweight so this should not be too costly even for thousands of objects but
-	// when having tens of thousands of objects maybe a map would be better.
 	std::vector<std::unique_ptr<PodEntry>> m_pods;
-	std::unordered_map<std::string, size_t> m_pathCache;
+	std::unordered_map<uri::Uri, size_t> m_pathCache;
 
-	PodEntry* GetEntryByPathFast(const std::string& path)
+	PodEntry* GetEntryByPath(const uri::Uri& path)
 	{
 		auto it = m_pathCache.find(path);
 		if (it == m_pathCache.end())
@@ -77,21 +74,11 @@ class AssetManager
 	void LoadEntry(PodEntry* entry)
 	{
 		T* ptr = new T();
-		T::Load(ptr, entry->path); // WIP: handle error
+		bool loaded = T::Load(ptr, entry->path);
+		assert(loaded);
 		entry->ptr.reset(ptr);
 	}
 
-	// Filters a path to the internal asset manager path format
-	static std::string FilterPath(const fs::path& path)
-	{
-		// WIP:
-		if (uri::IsCpuPath(path))
-		{
-			return path.string();
-		}
-
-		return Engine::GetAssetManager()->m_pathSystem.SearchAssetPath(path).string();
-	}
 
 	// Specialized in a few cases where instant loading or multithreaded loading is faster
 	template<typename T> void PostRegisterEntry(PodEntry* p) {}
@@ -118,22 +105,15 @@ public:
 	//   requesting a different type of an existing path will (TODO: ) assert. (possibly should return invalid handle)
 	// * if the asset of this path is not registered, it will become registered and associated with this type.
 	//   it will also begin loading on another thread.
+
 	template<typename PodType>
-	static PodHandle<PodType> GetOrCreate(const fs::path& inPath)
+	static PodHandle<PodType> GetOrCreate(const uri::Uri& inPath)
 	{
 		auto inst = Engine::GetAssetManager();
-		
-		// WIP:
-		std::string path = inPath.string();
-		auto entry = inst->GetEntryByPathFast(path);
-		if (!entry)
-		{
-			path = FilterPath(inPath);
-			entry = inst->GetEntryByPathFast(path);
-		}
-		
-		assert(!path.empty());
+		CLOG_ASSERT(inPath.front() != '/', "Found non absolute uri {}", inPath);
 
+		auto entry = inst->GetEntryByPath(inPath);
+		
 		if (entry)
 		{
 			CLOG_ASSERT(entry->type != refl::GetId<PodType>(),
@@ -141,12 +121,43 @@ public:
 		}
 		else 
 		{
-			entry = inst->CreateAndRegister<PodType>(path);
-			inst->m_pathCache[inPath.string()] = entry->uid; // WIP:
+			entry = inst->CreateAndRegister<PodType>(inPath);
 		}
 		
 		return PodHandle<PodType>{entry->uid};
 	}
+
+	template<typename PodType>
+	static PodHandle<PodType> GetOrCreateFromParentUri(const fs::path& path, const uri::Uri parentUri)
+	{
+		uri::Uri resolvedUri;
+
+		if (path.c_str()[0] == '/')
+		{
+			resolvedUri = path.string();
+			return AssetManager::GetOrCreate<PodType>(resolvedUri);
+		}
+
+		auto diskPart = uri::GetDiskPathStrView(parentUri); // remove parents possible json
+
+		const auto cutIndex = diskPart.rfind('/') + 1; // Preserve the last '/'
+		diskPart.remove_suffix(diskPart.size() - cutIndex); // resolve parents directory
+
+		resolvedUri = (fs::path(diskPart) / path).string(); // add path (path may include json data at the end)
+
+		return AssetManager::GetOrCreate<PodType>(resolvedUri);
+	}
+
+	template<typename PodType> 
+	static PodHandle<PodType> GetOrCreateFromParent(const fs::path& path, BasePodHandle parentHandle)
+	{
+		// Parent: /abc/model.gltf{mat..}
+		// Given: bar/foo.jpg{abc}
+		// Resulted: /abc/bar/foo.jpg{abc}
+		CLOG_ASSERT(path.empty(), "Path was empty. Parent was: {}", AssetManager::GetPodUri(parentHandle));
+		return GetOrCreateFromParentUri<PodType>(path, AssetManager::GetPodUri(parentHandle));
+	}
+
 
 	// Refreshes the underlying data of the pod.
 	template<typename PodType>
@@ -162,7 +173,7 @@ public:
 		Engine::GetAssetManager()->m_pods[handle.podId]->ptr.reset();
 	}
 
-	static fs::path GetPodPath(BasePodHandle handle)
+	static uri::Uri GetPodUri(BasePodHandle handle)
 	{
 		return Engine::GetAssetManager()->m_pods[handle.podId]->path;
 	}

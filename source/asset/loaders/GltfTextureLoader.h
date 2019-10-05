@@ -7,13 +7,13 @@
 
 namespace GltfTextureLoader
 {
-	static bool Load(TexturePod* pod, const fs::path& path)
+	static bool Load(TexturePod* pod, const uri::Uri& path)
 	{
-		const auto pPath = path.parent_path();
+		const auto pPath = uri::GetDiskPath(path);
 		auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath);
 
-		const auto info = path.filename();
-		const auto ext = std::stoi(&info.extension().string()[1]);
+		nlohmann::json j = uri::GetJson(path);
+		int32 ext = j["texture"].get<int32>();
 
 		tinygltf::Model& model = pParent->data;
 
@@ -30,10 +30,7 @@ namespace GltfTextureLoader
 		if (imageIndex != -1)
 		{
 			auto& gltfImage = model.images.at(imageIndex);
-
-			auto textPath = pPath.parent_path() / gltfImage.uri;
-
-			imgAsset = AssetManager::GetOrCreate<ImagePod>(textPath);
+			imgAsset = AssetManager::GetOrCreateFromParentUri<ImagePod>(gltfImage.uri, path);
 		}
 		else
 		{

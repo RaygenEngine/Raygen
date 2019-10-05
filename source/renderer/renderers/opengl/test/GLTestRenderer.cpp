@@ -27,14 +27,12 @@ namespace OpenGL
 
 	bool GLTestRenderer::InitScene(int32 width, int32 height)
 	{
-		auto am = Engine::GetAssetManager();
-
 		// shaders
-		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("screen_quad.shader.json");
-		m_screenQuadShader = GetGLAssetManager()->GetOrMakeFromUri<GLShader>(am->GetPodPath(shaderAsset));
+		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/screen_quad.shader.json");
+		m_screenQuadShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
 
-		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("test.shader.json");
-		m_testShader = GetGLAssetManager()->GetOrMakeFromUri<GLShader>(am->GetPodPath(shaderAsset));
+		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/test/test.shader.json");
+		m_testShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
 		
 		auto& testShader = *m_testShader;
 		testShader += "mvp";

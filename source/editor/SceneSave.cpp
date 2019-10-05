@@ -37,7 +37,7 @@ void SceneSave::Draw()
 	{
 		fs::path file = m_saveBrowser.GetSelected();
 		m_saveBrowser.ClearSelected();
-		SaveAsXML(Engine::GetWorld(), file);
+		SaveAsXML(Engine::GetWorld(), file.string());
 	}
 }
 
@@ -55,44 +55,45 @@ struct GenerateXMLVisitor
 		{
 			return false;
 		}
+		name = p.GetNameStr().c_str();
 		return true;
 	}
 
 	void operator()(int32& v, const Property& p)
 	{
-		xmlElement->SetAttribute(p.GetNameStr().c_str(), v);
+		xmlElement->SetAttribute(name, v);
 	}
 
 	void operator()(bool& v, const Property& p)
 	{
-		xmlElement->SetAttribute(p.GetNameStr().c_str(), v);
+		xmlElement->SetAttribute(name, v);
 	}
 
 	void operator()(float& v, const Property& p)
 	{
-		xmlElement->SetAttribute(p.GetNameStr().c_str(), v);
+		xmlElement->SetAttribute(name, v);
 	}
 
 	void operator()(glm::vec3& v, const Property& p)
 	{
-		xmlElement->SetAttribute(p.GetNameStr().c_str(), ParsingAux::FloatsToString(v).c_str());
+		xmlElement->SetAttribute(name, ParsingAux::FloatsToString(v).c_str());
 	}
 
 	void operator()(glm::vec4& v, const Property& p)
 	{
-		xmlElement->SetAttribute(p.GetNameStr().c_str(), ParsingAux::FloatsToString(v).c_str());
+		xmlElement->SetAttribute(name, ParsingAux::FloatsToString(v).c_str());
 	}	
 	
 	void operator()(std::string& v, const Property& p)
 	{
-		xmlElement->SetAttribute(p.GetNameStr().c_str(), v.c_str());
+		xmlElement->SetAttribute(name, v.c_str());
 	}
 
 	template<typename T>
 	void operator()(PodHandle<T>& handle, const Property& p)
 	{
-		auto podPath = Engine::GetAssetManager()->GetPodPath(handle);
-		xmlElement->SetAttribute(p.GetNameStr().c_str(), uri::RemovePathDirectory(podPath).string().c_str());
+		auto podPath = AssetManager::GetPodUri(handle);
+		xmlElement->SetAttribute(name, podPath.c_str());
 	}
 
 	template<typename T>
@@ -123,7 +124,7 @@ tinyxml2::XMLElement* GenerateNodeXML(Node* node, tinyxml2::XMLDocument& documen
 }
 }
 
-bool SceneSave::SaveAsXML(World* world, const fs::path& path)
+bool SceneSave::SaveAsXML(World* world, const uri::Uri& path)
 {
 	using namespace tinyxml2;
 	XMLDocument xmlDoc;
@@ -152,7 +153,7 @@ bool SceneSave::SaveAsXML(World* world, const fs::path& path)
 	});
 
 	FILE* fp;
-	if (fopen_s(&fp, path.string().c_str(), "w") == 0)
+	if (fopen_s(&fp, path.c_str(), "w") == 0)
 	{
 		xmlDoc.SaveFile(fp);
 		fclose(fp);

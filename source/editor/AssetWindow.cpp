@@ -229,7 +229,7 @@ struct ReflectionToImguiVisitor
 			return false;
 		}
 
-		auto str = Engine::GetAssetManager()->GetPodPath(pod).string();
+		auto str = AssetManager::GetPodUri(pod);
 
 		bool open = ImGui::CollapsingHeader(name);
 		if (open)
@@ -273,7 +273,7 @@ struct ReflectionToImguiVisitor
 				path += sname;
 
 				GenerateUniqueName(p);
-				std::string finalName = Engine::GetAssetManager()->GetPodPath(handle).string() + "##" + name;
+				std::string finalName = AssetManager::GetPodUri(handle) + "##" + name;
 				if (ImGui::CollapsingHeader(finalName.c_str()))
 				{
 					ImGui::Indent();
@@ -463,7 +463,7 @@ void from_json(const json& j, vec4& p) {
 template<typename T>
 void to_json(json& j, const PodHandle<T>& handle)
 {
-	j = AssetManager::GetPodPath(handle).string();
+	j = AssetManager::GetPodUri(handle);
 }
 
 template<typename T>
@@ -481,7 +481,6 @@ struct SerializeJsonVisitor
 
 	bool PreProperty(const Property& p)
 	{
-		// WIP
 		if (p.HasFlags(PropertyFlags::NoSave))
 		{
 			return false;

@@ -1,9 +1,8 @@
 #pragma once
 #include "imgui/imgui.h"
 #include "imgui_ext/imfilebrowser.h"
-#include <filesystem>
 
-namespace fs = std::filesystem;
+#include "asset/AssetPod.h"
 
 class World;
 class Node;
@@ -18,7 +17,7 @@ public:
 
 	void Draw();
 
-	static bool SaveAsXML(World* world, const fs::path& path);
+	static bool SaveAsXML(World* world, const uri::Uri& paths);
 
 
 	static void SerializeNodeData(Node* node);

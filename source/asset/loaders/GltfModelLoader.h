@@ -161,7 +161,7 @@ namespace GltfModelLoader
 			return;
 		}
 
-		bool LoadGeometryGroup(ModelPod* pod, const fs::path& parentPath, GeometryGroup& geom, tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData,
+		bool LoadGeometryGroup(ModelPod* pod, const uri::Uri& parentPath, GeometryGroup& geom, tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData,
 			const glm::mat4& transformMat, bool& requiresDefaultMaterial)
 		{
 			// mode
@@ -312,7 +312,7 @@ namespace GltfModelLoader
 			return true;
 		}
 
-		bool LoadMesh(ModelPod* pod, const fs::path& parentPath, Mesh& mesh, tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat
+		bool LoadMesh(ModelPod* pod, const uri::Uri& parentPath, Mesh& mesh, tinygltf::Model& modelData, const tinygltf::Mesh& meshData, const glm::mat4& transformMat
 			, bool& requiresDefaultMaterial)
 		{
 			mesh.geometryGroups.resize(meshData.primitives.size());
@@ -335,9 +335,9 @@ namespace GltfModelLoader
 		}
 	}
 	
-	inline bool Load(ModelPod* pod, const fs::path& path)
+	inline bool Load(ModelPod* pod, const uri::Uri& path)
 	{
-		const auto pPath = path.parent_path();
+		const auto pPath = uri::GetDiskPath(path);
 		auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath);
 
 		tinygltf::Model& model = pParent->data;
@@ -353,7 +353,9 @@ namespace GltfModelLoader
 		int32 matIndex = 0;
 		for (auto& gltfMaterial : model.materials)
 		{
-			auto matPath = pPath / ("#mat." + gltfMaterial.name + "." + std::to_string(matIndex++));
+			nlohmann::json data;
+			data["material"] = matIndex++;
+			auto matPath = uri::MakeChildJson(path, data);
 			pod->materials.push_back(AssetManager::GetOrCreate<MaterialPod>(matPath));
 		}
 		bool requiresDefaultMaterial = false;

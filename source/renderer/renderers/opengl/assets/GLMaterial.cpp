@@ -15,11 +15,11 @@ namespace OpenGL
 		
 		auto glAm = GetGLAssetManager(this);
 
-		baseColorTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(m_materialPod->baseColorTexture));
-		metallicRoughnessTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(m_materialPod->metallicRoughnessTexture));
-		occlusionTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(m_materialPod->occlusionTexture));
-		normalTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(m_materialPod->normalTexture));
-		emissiveTexture = glAm->GetOrMakeFromUri<GLTexture>(am->GetPodPath(m_materialPod->emissiveTexture));
+		baseColorTexture = glAm->GetOrMakeFromPodHandle<GLTexture>(m_materialPod->baseColorTexture);
+		metallicRoughnessTexture = glAm->GetOrMakeFromPodHandle<GLTexture>(m_materialPod->metallicRoughnessTexture);
+		occlusionTexture = glAm->GetOrMakeFromPodHandle<GLTexture>(m_materialPod->occlusionTexture);
+		normalTexture = glAm->GetOrMakeFromPodHandle<GLTexture>(m_materialPod->normalTexture);
+		emissiveTexture = glAm->GetOrMakeFromPodHandle<GLTexture>(m_materialPod->emissiveTexture);
 		
 		return true;
 	}

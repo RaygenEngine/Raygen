@@ -5,13 +5,13 @@
 
 namespace CubemapLoader
 {
-	inline bool Load(TexturePod* pod, const fs::path& path)
+	inline bool Load(TexturePod* pod, const uri::Uri& path)
 	{
-		std::ifstream t(path);
+		std::ifstream t(uri::ToSystemPath(path));
 
 		if (!t.is_open())
 		{
-			LOG_WARN("Unable to open string file, path: {}", path);
+			LOG_WARN("Unable to open string file, path: {}", uri::ToSystemPath(path));
 			return false;
 		}
 
@@ -21,7 +21,7 @@ namespace CubemapLoader
 			t.getline(name, 256);
 			
 			pod->target = TextureTarget::TEXTURE_CUBEMAP;
-			pod->images.push_back(AssetManager::GetOrCreate<ImagePod>(name));
+			pod->images.push_back(AssetManager::GetOrCreateFromParentUri<ImagePod>(name, path));
 		}
 
 		return true;

@@ -76,9 +76,11 @@ Node* World::GetNodeById(uint32 id) const
 
 bool World::LoadAndPrepareWorldFromXML(PodHandle<XMLDocPod> sceneXML)
 {
-	LOG_INFO("Loading World from XML: \'{}\'", Engine::GetAssetManager()->GetPodPath(sceneXML));
+	LOG_INFO("Loading World from XML: \'{}\'", AssetManager::GetPodUri(sceneXML));
+	m_loadedFrom = sceneXML;
 
 	auto* rootNode = sceneXML->document.RootElement();
+	
 
 	m_root = std::make_unique<RootNode>();
 	
@@ -108,8 +110,6 @@ Node* World::DuplicateNode(Node* src, Node* newParent)
 	{
 		newParent = src->GetParent();
 	}
-
-
 
 	const ReflClass& srcClass = refl::GetClass(src);
 

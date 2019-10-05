@@ -31,7 +31,7 @@ struct ModelPod : public AssetPod
 	{
 		REFLECT_VAR(materials);
 	}
-	static bool Load(ModelPod* pod, const fs::path& path);
+	static bool Load(ModelPod* pod, const uri::Uri& path);
 
 	std::vector<Mesh> meshes;
 

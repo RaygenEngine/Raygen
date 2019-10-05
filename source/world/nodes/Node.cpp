@@ -257,6 +257,7 @@ struct LoadPropertiesFromXMLVisitor
 	const tinyxml2::XMLElement* xmlData;
 	const char* str;
 	std::string strBuf;
+	PodHandle<XMLDocPod> worldHandle;
 
 	bool PreProperty(const Property& p)
 	{
@@ -300,7 +301,7 @@ struct LoadPropertiesFromXMLVisitor
 				LOG_ASSERT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
 			}
 		}
-		handle = AssetManager::GetOrCreate<T>(tmp);
+		handle = AssetManager::GetOrCreateFromParent<T>(tmp, worldHandle);
 	}
 	
 
@@ -314,9 +315,11 @@ struct LoadPropertiesFromXMLVisitor
 				LOG_ASSERT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
 			}
 		}
-		handle = AssetManager::GetOrCreate<ModelPod>(tmp);
-		if (tmp.find(".gltf") != std::string::npos) {
-			AssetManager::PreloadGltf(tmp);
+		handle = AssetManager::GetOrCreateFromParent<ModelPod>(tmp, worldHandle);
+		
+		if (tmp.find(".gltf") != std::string::npos)
+		{
+			AssetManager::PreloadGltf(AssetManager::GetPodUri(handle));
 		}
 	}
 	
@@ -342,6 +345,6 @@ void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 
 	LoadPropertiesFromXMLVisitor visitor;
 	visitor.xmlData = xmlData;
-	
+	visitor.worldHandle = Engine::GetWorld()->GetLoadedFromHandle();
 	refltools::CallVisitorOnEveryProperty(this, visitor);
 }
