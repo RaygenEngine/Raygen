@@ -35,7 +35,7 @@ namespace OpenGL
 		GLenum usage{ GL_STATIC_DRAW };
 		std::vector<GLMesh> meshes;
 
-		GLModel(const fs::path& assocPath)
+		GLModel(const uri::Uri& assocPath)
 			: GLAsset(assocPath) {}
 		virtual ~GLModel();
 

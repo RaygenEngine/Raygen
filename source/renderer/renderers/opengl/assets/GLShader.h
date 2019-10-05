@@ -11,7 +11,7 @@ namespace OpenGL
 	{
 		GLuint id;
 		
-		GLShader(const fs::path& assocPath)
+		GLShader(const uri::Uri& assocPath)
 			: GLAsset(assocPath) {}
 		virtual ~GLShader();
 		

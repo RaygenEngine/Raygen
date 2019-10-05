@@ -74,7 +74,7 @@ namespace OpenGL
 		glMesh.count = static_cast<GLsizei>(data.indices.size());
 
 		auto materialHandle = model->materials[data.materialIndex];
-		glMesh.material = GetGLAssetManager(this)->GetOrMakeFromUri<GLMaterial>(Engine::GetAssetManager()->GetPodPath(materialHandle));
+		glMesh.material = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLMaterial>(materialHandle);
 
 		DebugBoundVAO("name");
 

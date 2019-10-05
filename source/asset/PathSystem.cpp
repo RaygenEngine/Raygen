@@ -6,7 +6,7 @@
 
 namespace fs = std::filesystem;
 
-fs::path PathSystem::SearchPathUpRecursivelyFromCurrent(const fs::path& subPath)
+fs::path PathSystem::SearchPathUpRecursivelyFromCurrent(const fs::path & subPath)
 {
 	LOG_DEBUG("Searching for path: \'{}\', recurse: upwards", subPath);
 	for (auto currPath = fs::current_path(); ; currPath = currPath.parent_path())
@@ -44,7 +44,7 @@ fs::path PathSystem::SearchPathUpRecursivelyFromCurrent(const fs::path& subPath)
 	return {};
 }
 
-fs::path PathSystem::SearchPathDownRecursivelyFromPath(const fs::path& subPath, const fs::path& searchPath)
+fs::path PathSystem::SearchPathDownRecursivelyFromPath(const fs::path & subPath, const fs::path & searchPath)
 {
 	TIMER_STATIC_SCOPE("Resolve recursive path search");
 	
@@ -125,7 +125,7 @@ bool PathSystem::Init(const std::string& applicationPath, const std::string& dat
 	return true;
 }
 
-fs::path PathSystem::SearchAssetPath(const fs::path& asset)
+fs::path PathSystem::SearchAssetPath(const fs::path & asset)
 {
 	auto it = m_fileCache.find(asset.string());
 	if (it != m_fileCache.end())
@@ -153,7 +153,7 @@ fs::path PathSystem::SearchAssetPath(const fs::path& asset)
 	return ret;
 }
 
-void PathSystem::GenerateFileListOfType(const fs::path& extension, std::set<std::string>& outFiles) const
+void PathSystem::GenerateFileListOfType(const fs::path & extension, std::set<std::string>& outFiles) const
 {
 	for (auto p : m_fileCache)
 	{

@@ -10,14 +10,18 @@
 
 namespace GltfMaterialLoader
 {
-	inline bool Load(MaterialPod* pod, const fs::path& path)
+	inline bool Load(MaterialPod* pod, const uri::Uri& path)
 	{
-		const auto pPath = path.parent_path();
+		using namespace nlohmann;
+
+		const auto pPath = uri::GetDiskPath(path);
 		auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath);
 
-		const auto info = path.filename();
-		const auto ext = std::stoi(&info.extension().string()[1]);
+		auto data = uri::GetJson(path);
 
+		int32 ext = 0;
+		data["material"].get_to(ext);
+		
 		tinygltf::Model& model = pParent->data;
 
 		auto& gltfMaterial = model.materials.at(ext);
@@ -49,8 +53,9 @@ namespace GltfMaterialLoader
 			{
 				tinygltf::Texture& gltfTexture = model.textures.at(textureInfo.index);
 
-				auto textPath = pPath / ("#texture." + std::to_string(textureInfo.index));
-
+				json data;
+				data["texture"] = textureInfo.index;
+				auto textPath = uri::MakeChildJson(path, data);
 				sampler = AssetManager::GetOrCreate<TexturePod>(textPath);
 
 				textCoordIndex = textureInfo.texCoord;

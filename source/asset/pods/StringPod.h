@@ -9,7 +9,7 @@ struct StringPod : public AssetPod
 		REFLECT_VAR(data, PropertyFlags::Multiline);
 	}
 
-	static bool Load(StringPod* pod, const fs::path& path);
+	static bool Load(StringPod* pod, const uri::Uri& path);
 
 	std::string data;
 };

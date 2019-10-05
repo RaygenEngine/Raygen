@@ -32,7 +32,7 @@ struct MaterialPod : public AssetPod
 		REFLECT_VAR(alphaCutoff);
 		REFLECT_VAR(doubleSided);
 	}
-	static bool Load(MaterialPod* pod, const fs::path& path);
+	static bool Load(MaterialPod* pod, const uri::Uri& path);
 
 	// The value for each property(baseColor, metallic, roughness) can be defined using factors or textures.
 

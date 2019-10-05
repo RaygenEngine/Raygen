@@ -11,16 +11,16 @@ bool AssetManager::Init(const std::string& applicationPath, const std::string& d
 	return m_pathSystem.Init(applicationPath, dataDirectoryName);
 }
 
-void AssetManager::PreloadGltf(const std::string& gltfPath)
+void AssetManager::PreloadGltf(const uri::Uri& gltfModelPath)
 {
-	fs::path p = gltfPath;
-	auto pParent = AssetManager::GetOrCreate<GltfFilePod>(p.parent_path().filename());
+	uri::Uri parentGltfFile = uri::GetDiskPath(gltfModelPath);
+	auto pParent = AssetManager::GetOrCreate<GltfFilePod>(parentGltfFile);
 
 	tinygltf::Model& file = pParent->data;
 
 	for (auto& gltfImage : file.images)
 	{
-		GetOrCreate<ImagePod>(gltfImage.uri);
+		GetOrCreateFromParent<ImagePod>(gltfImage.uri, pParent);
 	}
 }
 

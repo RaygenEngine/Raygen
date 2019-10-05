@@ -180,7 +180,7 @@ struct ReflectionToImguiVisitor
 			return false;
 		}
 
-		auto str = Engine::GetAssetManager()->GetPodPath(pod).string();
+		auto str = AssetManager::GetPodUri(pod);
 		bool open = ImGui::CollapsingHeader(name);
 		PodDropTarget(pod);
 
@@ -225,7 +225,7 @@ struct ReflectionToImguiVisitor
 				path += sname;
 
 				GenerateUniqueName(p);
-				std::string finalName = Engine::GetAssetManager()->GetPodPath(handle).string() + "##" + name;
+				std::string finalName = AssetManager::GetPodUri(handle) + "##" + name;
 				bool r = ImGui::CollapsingHeader(finalName.c_str());
 				PodDropTarget(handle);
 				if (r)

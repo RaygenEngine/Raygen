@@ -14,7 +14,7 @@ struct ImagePod : AssetPod
 		REFLECT_VAR(components, NoEdit);
 		REFLECT_VAR(isHdr, NoEdit);
 	}
-	static bool Load(ImagePod* pod, const fs::path& path);
+	static bool Load(ImagePod* pod, const uri::Uri& path);
 
 	int32 width{ 0 };
 	int32 height{ 0 };

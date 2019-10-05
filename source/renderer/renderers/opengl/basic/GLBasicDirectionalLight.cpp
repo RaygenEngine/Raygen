@@ -8,8 +8,8 @@ namespace OpenGL
 	GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
 		: NodeObserver<DirectionalLightNode, GLRendererBase>(node)
 	{
-		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("directional_light.shader.json");
-		shader = GetGLAssetManager(this)->GetOrMakeFromUri<GLShader>(Engine::GetAssetManager()->GetPodPath(shaderAsset));
+		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/directional_light.shader.json");
+		shader = GetGLAssetManager(this)->GetOrMakeFromUri<GLShader>(AssetManager::GetPodUri(shaderAsset));
 		auto& dlShader = *shader;
 		dlShader += "light_space_matrix";
 		dlShader += "m";

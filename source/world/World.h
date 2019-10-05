@@ -25,6 +25,7 @@ class RootNode : public Node
 		REFLECT_VAR(m_background, PropertyFlags::Color);
 		REFLECT_VAR(m_ambient, PropertyFlags::Color);
 	}
+	
 public:
 	RootNode()
 		: Node(nullptr)
@@ -72,6 +73,8 @@ class World
 	NodeFactory* m_nodeFactory;
 
 	std::unique_ptr<RootNode> m_root;
+
+	PodHandle<XMLDocPod> m_loadedFrom;
 
 	CameraNode* m_activeCamera{ nullptr };
 	friend class Editor;
@@ -159,33 +162,6 @@ public:
 
 	CameraNode* GetActiveCamera() const { return m_activeCamera; }
 
-	// SetIdentificationFromAssociatedDiskAssetIdentification node to world and as child, and return observer (maybe required for special inter-node handling)
-/*	template <typename ChildType>
-	ChildType* LoadNode(Node* parent, const tinyxml2::XMLElement* xmlData)
-	{
-		std::shared_ptr<ChildType> node = std::shared_ptr<ChildType>(new ChildType(parent), [&](ChildType* assetPtr)
-		{
-			// custom deleter to remove node from world when it is deleted
-			this->RemoveNode(assetPtr);
-			delete assetPtr;
-		}); //
-
-		// load it
-		if (!node->LoadFromXML(xmlData))
-		{
-			LOG_WARN("Failed to load new node: {0}", node->GetName());
-			return nullptr;
-		}
-
-		// add it to world maps
-		this->AddNode(node.get());
-
-		parent->AddChild(node);
-
-		// return observer
-		return node.get();
-	}
-	*/
 	template <typename ChildType>
 	ChildType* CreateNode(Node* parent)
 	{
@@ -203,13 +179,14 @@ public:
 		return node.get();
 	}
 
-
 	void Update();
 	//void WindowResize(int32 width, int32 height) override;
 
 	bool LoadAndPrepareWorldFromXML(PodHandle<XMLDocPod> sceneXML);
 
 	NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
+
+	PodHandle<XMLDocPod> GetLoadedFromHandle() { return m_loadedFrom; }
 
 private:
 	// Only reflected properties get copied.

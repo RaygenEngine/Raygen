@@ -10,7 +10,7 @@ namespace OpenGL
 	{
 		GLuint id;
 
-		GLTexture(const fs::path& assocPath)
+		GLTexture(const uri::Uri& assocPath)
 			: GLAsset(assocPath),
 			  id(0)
 		{

@@ -21,17 +21,17 @@
 #include "asset/UriLibrary.h"
 
 
-bool GltfFilePod::Load(GltfFilePod* pod, const fs::path& path)
+bool GltfFilePod::Load(GltfFilePod* pod, const uri::Uri& path)
 {
 	return GltfFileLoader::Load(pod, path);
 }
 
-bool ImagePod::Load(ImagePod* pod, const fs::path& path)
+bool ImagePod::Load(ImagePod* pod, const uri::Uri& path)
 {
 	return ImageLoader::Load(pod, path);
 }
 
-bool MaterialPod::Load(MaterialPod* pod, const fs::path& path)
+bool MaterialPod::Load(MaterialPod* pod, const uri::Uri& path)
 {
 	if (uri::MatchesExtension(path, ".gltf")) 
 	{
@@ -43,7 +43,7 @@ bool MaterialPod::Load(MaterialPod* pod, const fs::path& path)
 	return CustomLoader::Load(pod, path);
 }
 
-bool ModelPod::Load(ModelPod* pod, const fs::path& path)
+bool ModelPod::Load(ModelPod* pod, const uri::Uri& path)
 {
 	if (uri::MatchesExtension(path, ".gltf"))
 	{
@@ -54,17 +54,17 @@ bool ModelPod::Load(ModelPod* pod, const fs::path& path)
 	return false;
 }
 
-bool ShaderPod::Load(ShaderPod* pod, const fs::path& path)
+bool ShaderPod::Load(ShaderPod* pod, const uri::Uri& path)
 {
 	return ShaderLoader::Load(pod, path);
 }
 
-bool StringPod::Load(StringPod* pod, const fs::path& path)
+bool StringPod::Load(StringPod* pod, const uri::Uri& path)
 {
 	return TextLoader::Load(pod, path);
 }
 
-bool TexturePod::Load(TexturePod* pod, const fs::path& path)
+bool TexturePod::Load(TexturePod* pod, const uri::Uri& path)
 {
 	if (uri::MatchesExtension(path, ".gltf"))
 	{
@@ -80,7 +80,7 @@ bool TexturePod::Load(TexturePod* pod, const fs::path& path)
 	return CustomLoader::Load(pod, path);
 }
 
-bool XMLDocPod::Load(XMLDocPod* pod, const fs::path& path)
+bool XMLDocPod::Load(XMLDocPod* pod, const uri::Uri& path)
 {
 	return XMLDocLoader::Load(pod, path);
 }

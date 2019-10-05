@@ -2,9 +2,10 @@
 
 #include "core/reflection/TypeId.h"
 
-#include <filesystem>
-
-namespace fs = std::filesystem;
+namespace uri
+{ 
+	using Uri = std::string;
+}
 
 struct AssetPod
 {

@@ -55,12 +55,12 @@ namespace OpenGL
 	GLBasicSkybox::GLBasicSkybox(SkyCubeNode* node)
 		: NodeObserver<SkyCubeNode, GLRendererBase>(node)
 	{
-		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("skybox.shader.json");
-		shader = GetGLAssetManager(this)->GetOrMakeFromUri<GLShader>(Engine::GetAssetManager()->GetPodPath(shaderAsset));
+		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/skybox.shader.json");
+		shader = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
 		auto& skyboxShader = *shader;
 		skyboxShader += "vp";
 		
-		cubemap = GetGLAssetManager(this)->GetOrMakeFromUri<GLTexture>(Engine::GetAssetManager()->GetPodPath(node->GetSkyMap()));
+		cubemap = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLTexture>(node->GetSkyMap());
 
 		// skybox
 		glGenVertexArrays(1, &vao);

@@ -6,9 +6,9 @@
 
 // TODO: create custom asset generator
 
-constexpr auto __default__imageWhite = "__default__image-white.jpg";
-constexpr auto __default__imageMissing = "__default__image-missing.jpg";
-constexpr auto __default__imageNormal = "__default__image-normal.jpg";
+constexpr auto __default__imageWhite = "/default-data/__default__image-white.jpg";
+constexpr auto __default__imageMissing = "/default-data/__default__image-missing.jpg";
+constexpr auto __default__imageNormal = "/default-data/__default__image-normal.jpg";
 
 // For now: #custom-type#param0#param1...
 
@@ -16,25 +16,26 @@ constexpr auto __default__imageNormal = "__default__image-normal.jpg";
 namespace CustomLoader
 {	
 	template<typename PodType>
-	inline PodHandle<PodType> GetCustom(const fs::path& info)
+	inline PodHandle<PodType> GetCustom(const uri::Uri& info)
 	{
 		return AssetManager::GetOrCreate<PodType>(info);
 	}
 
 	// TODO: expand variadic correctly
-#define GET_CUSTOM_POD(type, ...) CustomLoader::GetCustom<type>("#"#type+("#"+std::string(__VA_ARGS__)))
+#define GET_CUSTOM_POD(type, ...) CustomLoader::GetCustom<type>(std::string(__VA_ARGS__) + #type)
 
 	// #TexturePod#image_path
-	inline bool Load(TexturePod* pod, const fs::path& path)
+	inline bool Load(TexturePod* pod, const uri::Uri& path)
 	{
-		auto str = path.string().find_last_of('#');
-		auto imgPath = path.string().substr(str+1);
-		
-		pod->images.push_back(AssetManager::GetOrCreate<ImagePod>(imgPath));
+		// WIP:
+		//auto str = "";//path.string().find_last_of('#');
+		//auto imgPath = "";//path.string().substr(str+1);
+		//
+		pod->images.push_back(AssetManager::GetOrCreate<ImagePod>(__default__imageWhite));
 		return true;
 	}
 	
-	inline bool Load(MaterialPod* pod, const fs::path& path)
+	inline bool Load(MaterialPod* pod, const uri::Uri& path)
 	{
 		pod->baseColorTexture = GET_CUSTOM_POD(TexturePod, __default__imageWhite);
 		pod->normalTexture = GET_CUSTOM_POD(TexturePod, __default__imageNormal);

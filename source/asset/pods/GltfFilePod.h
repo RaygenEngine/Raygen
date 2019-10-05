@@ -11,7 +11,7 @@ struct GltfFilePod : public AssetPod
 	{
 
 	}
-	static bool Load(GltfFilePod* pod, const fs::path& path);
+	static bool Load(GltfFilePod* pod, const uri::Uri& path);
 
 	tinygltf::Model data;
 };

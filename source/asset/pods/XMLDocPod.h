@@ -11,7 +11,7 @@ struct XMLDocPod : public AssetPod
 	{
 
 	}
-	static bool Load(XMLDocPod* pod, const fs::path& path);
+	static bool Load(XMLDocPod* pod, const uri::Uri& path);
 
 	tinyxml2::XMLDocument document;
 };

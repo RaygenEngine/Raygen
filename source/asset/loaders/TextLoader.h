@@ -1,16 +1,17 @@
 #pragma once
 
 #include "asset/pods/StringPod.h"
+#include "asset/UriLibrary.h"
 
 namespace TextLoader
 {
-	inline bool Load(StringPod* pod, const fs::path& path)
+	inline bool Load(StringPod* pod, const uri::Uri& path)
 	{
-		std::ifstream t(path);
+		std::ifstream t(uri::ToSystemPath(path));
 
 		if (!t.is_open())
 		{
-			LOG_WARN("Unable to open string file, path: {}", path);
+			LOG_WARN("Unable to open string file, path: {}", uri::ToSystemPath(path));
 			return false;
 		}
 

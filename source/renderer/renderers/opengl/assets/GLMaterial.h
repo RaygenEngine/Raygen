@@ -19,7 +19,7 @@ namespace OpenGL
 		
 		PodHandle<MaterialPod> m_materialPod;
 
-		GLMaterial(const fs::path& assocPath)
+		GLMaterial(const uri::Uri& assocPath)
 			: GLAsset(assocPath)
 		{
 		}

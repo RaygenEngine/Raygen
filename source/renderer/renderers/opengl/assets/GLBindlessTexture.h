@@ -11,7 +11,7 @@ namespace OpenGL
 	{
 		GLuint handle{ 0 };
 
-		GLBindlessTexture(const fs::path& assocPath)
+		GLBindlessTexture(const uri::Uri& assocPath)
 			: GLTexture(assocPath)
 		{
 		}
