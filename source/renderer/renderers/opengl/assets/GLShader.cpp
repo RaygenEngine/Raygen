@@ -11,7 +11,7 @@ namespace OpenGL
 	{
 		glDeleteProgram(id);
 	}
-	
+
 	bool GLShader::Load()
 	{
 		
@@ -83,13 +83,13 @@ namespace OpenGL
 		return true;
 	}
 
-	void GLShader::operator+=(const std::string& uniformName)
-	{
-		uniformLocations.insert({ uniformName, glGetUniformLocation(id, uniformName.c_str()) });
-	}
-	
-	GLint GLShader::operator[](const std::string& uniformName) const
+	GLint GLShader::GetUniform(const std::string& uniformName) const
 	{
 		return uniformLocations.at(uniformName);
+	}
+
+	void GLShader::AddUniform(const std::string& uniformName)
+	{
+		uniformLocations.insert({ uniformName, glGetUniformLocation(id, uniformName.c_str()) });
 	}
 }

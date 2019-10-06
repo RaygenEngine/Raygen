@@ -86,6 +86,11 @@ void AppBase::MainLoop()
 		// Let our window handle any events.
 		window->HandleEvents(m_handleControllers);
 		
+		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::CAPSLOCK))
+		{
+			Engine::Get().NextRenderer();
+		}
+
 		// update world 
 		Engine::GetWorld()->Update();
 		// update renderer (also checks world updates, eg. camera/ entity moved, light color changed)
@@ -106,12 +111,14 @@ void AppBase::RegisterRenderers()
 
 	if (m_enableEditor)
 	{
-		Engine::RegisterRenderer<EditorRenderer>();
+		Engine::RegisterRenderer<ForwardEditorRenderer>();
+		Engine::RegisterRenderer<DeferredEditorRenderer>();
 	}
-	else 
+	else
 	{
-		Engine::RegisterRenderer<OpenGL::GLTestRenderer>();
+		Engine::RegisterRenderer<OpenGL::GLDeferredRenderer>();
 	}
+	
 }
 
 Win32Window* AppBase::CreateAppWindow()

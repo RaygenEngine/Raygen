@@ -14,6 +14,6 @@ namespace OpenGL
 
 	void GLBasicGeometry::ReloadModel()
 	{
-		glModel = GetGLAssetManager(this)->GetOrMakeFromUri<GLModel>(AssetManager::GetPodUri(GetNode()->GetModel()));
+		glModel = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLModel>(node->GetModel());
 	}
 }

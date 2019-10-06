@@ -164,7 +164,17 @@ struct ReflectionToImguiVisitor
 				size_t uid = *reinterpret_cast<size_t*>(payload->Data);
 				pod.podId = uid;
 				//pod = AssetManager::GetOrCreate<PodType>(fs::path(*payloadStr) / "#model");
-				Engine::GetRenderer<EditorRenderer>()->OnNodePodsDirty(node);
+				auto r1 = Engine::GetRenderer<ForwardEditorRenderer>();
+				if (r1)
+				{
+					r1->OnNodePodsDirty(node);
+				}
+
+				auto r2 = Engine::GetRenderer<DeferredEditorRenderer>();
+				if (r2)
+				{
+					r2->OnNodePodsDirty(node);
+				}
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -328,7 +338,7 @@ void Editor::UpdateEditor()
 		lfb.Open();
 	}
 
-	auto renderer = Engine::GetRenderer<EditorRenderer>();
+	auto renderer = Engine::GetRenderer<DeferredEditorRenderer>();
 	if (renderer)
 	{
 		const char* str = renderer->m_previewModeString.c_str();

@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "renderer/renderers/opengl/test/GLTestRenderer.h"
+#include "renderer/renderers/opengl/forward/GLForwardRenderer.h"
 #include "world/World.h"
 #include "world/nodes/user/freeform/FreeformUserNode.h"
 #include "world/nodes/geometry/GeometryNode.h"
@@ -12,10 +12,11 @@
 #include "world/nodes/sky/SkyCubeNode.h"
 
 #include "glad/glad.h"
+#include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
 
 namespace OpenGL
 {
-	GLTestRenderer::~GLTestRenderer()
+	GLForwardRenderer::~GLForwardRenderer()
 	{
 		glDeleteFramebuffers(1, &m_msaaFbo);
 		glDeleteTextures(1, &m_msaaColorTexture);
@@ -25,38 +26,37 @@ namespace OpenGL
 		glDeleteTextures(1, &m_outColorTexture);
 	}
 
-	bool GLTestRenderer::InitScene(int32 width, int32 height)
+	bool GLForwardRenderer::InitScene(int32 width, int32 height)
 	{
 		// shaders
 		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/screen_quad.shader.json");
 		m_screenQuadShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
 
-		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/test/test.shader.json");
+		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/forward/forward.shader.json");
 		m_testShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
 		
-		auto& testShader = *m_testShader;
-		testShader += "mvp";
-		testShader += "m";
-		testShader += "normal_matrix";
-		testShader += "mode";
-		testShader += "view_pos";
-		testShader += "light_pos";
-		testShader += "light_color";
-		testShader += "light_intensity";
-		testShader += "base_color_factor";
-		testShader += "emissive_factor";
-		testShader += "ambient";
-		testShader += "metallic_factor";
-		testShader += "roughness_factor";
-		testShader += "normal_scale";
-		testShader += "occlusion_strength";
-		testShader += "alpha_mode";
-		testShader += "alpha_cutoff";
-		testShader += "double_sided";
-		testShader += "light_space_matrix";
+		m_testShader->AddUniform("mvp");
+		m_testShader->AddUniform("m");
+		m_testShader->AddUniform("normal_matrix");
+		m_testShader->AddUniform("mode");
+		m_testShader->AddUniform("view_pos");
+		m_testShader->AddUniform("light_pos");
+		m_testShader->AddUniform("light_color");
+		m_testShader->AddUniform("light_intensity");
+		m_testShader->AddUniform("base_color_factor");
+		m_testShader->AddUniform("emissive_factor");
+		m_testShader->AddUniform("ambient");
+		m_testShader->AddUniform("metallic_factor");
+		m_testShader->AddUniform("roughness_factor");
+		m_testShader->AddUniform("normal_scale");
+		m_testShader->AddUniform("occlusion_strength");
+		m_testShader->AddUniform("alpha_mode");
+		m_testShader->AddUniform("alpha_cutoff");
+		m_testShader->AddUniform("double_sided");
+		m_testShader->AddUniform("light_space_matrix");
 	
 		// world data
-		auto* user = Engine::GetWorld()->GetAvailableNodeSpecificSubType<FreeformUserNode>();
+		auto user = Engine::GetWorld()->GetAvailableNodeSpecificSubType<FreeformUserNode>();
 
 		// TODO: better way to check world requirements
 		if(!user)
@@ -77,8 +77,11 @@ namespace OpenGL
 		
 		m_skybox = CreateObserver<GLBasicSkybox>(sky);
 
-		for (auto* directionalLightNode : Engine::GetWorld()->GetNodeMap<DirectionalLightNode>())
-			m_glDirectionalLights.push_back(CreateObserver<GLBasicDirectionalLight>(directionalLightNode));
+		auto dLight = Engine::GetWorld()->GetAvailableNodeSpecificSubType<DirectionalLightNode>();
+		m_glDirectionalLight = CreateObserver<GLBasicDirectionalLight>(dLight);
+		
+		auto sLight = Engine::GetWorld()->GetAvailableNodeSpecificSubType<SpotLightNode>();
+		m_glSpotLight = CreateObserver<GLBasicSpotLight>(sLight);
 		
 		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>())
 			m_glGeometries.push_back(CreateObserver<GLBasicGeometry>(geometryNode));
@@ -117,125 +120,66 @@ namespace OpenGL
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outColorTexture, 0);
 
 		m_currentTexture = m_outColorTexture;
+
+		m_outWidth = width;
+		m_outHeight = height;
 		
 		return true;
 	}
 
-	void GLTestRenderer::WindowResize(int32 width, int32 height)
+	void GLForwardRenderer::WindowResize(int32 width, int32 height)
 	{
-		glViewport(0, 0, width, height);
+		m_outWidth = width;
+		m_outHeight = height;
 	}
 
-	void GLTestRenderer::RenderDirectionalLights()
+	void GLForwardRenderer::RenderDirectionalLights()
 	{
-		// TODO optimize enabling disabling state switching  
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
-		glEnable(GL_CULL_FACE);
-
-		auto light = m_glDirectionalLights.at(0).get();
-		auto node = light->GetNode();
-
-		float near_plane = 1.0f, far_plane = 100.5f;
-		glm::mat4 lightProjection = 
-			glm::ortho(node->m_left, node->m_right, node->m_bottom, node->m_top, node->m_near, node->m_far);
-
-
-
-		auto center = node->GetWorldTranslation() + node->GetFront();
-		// TODO check value of center
-		auto lightView = glm::lookAt(node->GetWorldTranslation(), center, node->GetUp());
-		
-		glm::mat4 lightSpaceMatrix = lightProjection * lightView;
-
-		glViewport(0, 0, light->width, light->height);
-		
-		glBindFramebuffer(GL_FRAMEBUFFER, light->fbo);
-	
-		glClear(GL_DEPTH_BUFFER_BIT);
-
-		glUseProgram(light->shader->id);
-
-		glUniformMatrix4fv((*light->shader)["light_space_matrix"], 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
-
-		for (auto& geometry : m_glGeometries)
-		{
-			auto m = geometry->GetNode()->GetWorldMatrix();
-			
-			glUniformMatrix4fv((*light->shader)["m"], 1, GL_FALSE, glm::value_ptr(m));
-
-			for (auto& glMesh : geometry->glModel->meshes)
-			{
-				glBindVertexArray(glMesh.vao);
-
-				GLMaterial* glMaterial = glMesh.material;
-				PodHandle<MaterialPod> materialData = glMaterial->m_materialPod;
-
-				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
-
-				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
-			}
-		}
-
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_DEPTH_TEST);
+		m_glDirectionalLight->RenderShadowMap(m_glGeometries);
 	}
 
-	void GLTestRenderer::RenderGeometries()
+	void GLForwardRenderer::RenderSpotLights()
+	{
+		m_glSpotLight->RenderShadowMap(m_glGeometries);
+	}
+
+	void GLForwardRenderer::RenderGeometries()
 	{
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
 
-		// TODO : renderer should store for output
-		auto wnd = Engine::GetMainWindow();
-		
-		glViewport(0, 0, wnd->GetWidth(), wnd->GetHeight());
+		glViewport(0, 0, m_outWidth, m_outHeight);
 		
 		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 
 		glClearColor(0, 0, 0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT /*| GL_STENCIL_BUFFER_BIT*/);
 		
-		// TODO change syntax
-		auto& testShader = *m_testShader;
-
-		glUseProgram(testShader.id);
-
-		auto light = m_glDirectionalLights.at(0).get();
+		glUseProgram(m_testShader->id);
 
 		// global uniforms
-		glUniform3fv(testShader["view_pos"], 1, glm::value_ptr(m_camera->GetWorldTranslation()));
-		glUniform3fv(testShader["light_pos"], 1, glm::value_ptr(light->GetNode()->GetWorldTranslation()));
-		glUniform3fv(testShader["light_color"], 1, glm::value_ptr(light->GetNode()->GetColor()));
-		glUniform1f(testShader["light_intensity"], light->GetNode()->GetIntensity());
+		glUniform3fv(m_testShader->GetUniform("view_pos"), 1, glm::value_ptr(m_camera->GetWorldTranslation()));
+		glUniform3fv(m_testShader->GetUniform("light_pos"), 1, glm::value_ptr(m_glSpotLight->node->GetWorldTranslation()));
+		glUniform3fv(m_testShader->GetUniform("light_color"), 1, glm::value_ptr(m_glSpotLight->node->GetColor()));
+		glUniform1f(m_testShader->GetUniform("light_intensity"), m_glSpotLight->node->GetIntensity());
 
 		auto root = Engine::GetWorld()->GetRoot();
 		const auto backgroundColor = root->GetBackgroundColor();
-		glUniform3fv(testShader["ambient"], 1, glm::value_ptr(root->GetAmbientColor()));
+		glUniform3fv(m_testShader->GetUniform("ambient"), 1, glm::value_ptr(root->GetAmbientColor()));
 
 		const auto vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
 		// render geometry (non-instanced)
 		for (auto& geometry : m_glGeometries)
 		{
-			auto m = geometry->GetNode()->GetWorldMatrix();
+			auto m = geometry->node->GetWorldMatrix();
 			auto mvp = vp * m;
 
-			glUniformMatrix4fv(testShader["mvp"], 1, GL_FALSE, glm::value_ptr(mvp));
-			glUniformMatrix4fv(testShader["m"], 1, GL_FALSE, glm::value_ptr(m));
-			glUniformMatrix3fv(testShader["normal_matrix"], 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(glm::mat3(m)))));
+			glUniformMatrix4fv(m_testShader->GetUniform("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+			glUniformMatrix4fv(m_testShader->GetUniform("m"), 1, GL_FALSE, glm::value_ptr(m));
+			glUniformMatrix3fv(m_testShader->GetUniform("normal_matrix"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(glm::mat3(m)))));
 
-				//auto light = m_glDirectionalLights.at(0).get();
-				auto node = light->GetNode();
-				auto center = node->GetWorldTranslation() + node->GetFront();
-				// TODO check value of center
-				auto lightView = glm::lookAt(node->GetWorldTranslation(), center, node->GetUp());
-				float near_plane = 1.0f, far_plane = 100.5f;
-				glm::mat4 lightProjection =
-					glm::ortho(node->m_left, node->m_right, node->m_bottom, node->m_top, node->m_near, node->m_far);
-				glm::mat4 lightSpaceMatrix = lightProjection * lightView;
-
-			glUniformMatrix4fv(testShader["light_space_matrix"], 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
+			glUniformMatrix4fv(m_testShader->GetUniform("light_space_matrix"), 1, GL_FALSE, glm::value_ptr(m_glSpotLight->lightSpaceMatrix));
 
 			for (auto& glMesh : geometry->glModel->meshes)
 			{
@@ -244,15 +188,15 @@ namespace OpenGL
 				GLMaterial* glMaterial = glMesh.material;
 				PodHandle<MaterialPod> materialData = glMaterial->m_materialPod;
 
-				glUniform4fv(testShader["base_color_factor"], 1, glm::value_ptr(materialData->baseColorFactor));
-				glUniform3fv(testShader["emissive_factor"], 1, glm::value_ptr(materialData->emissiveFactor));
-				glUniform1f(testShader["metallic_factor"], materialData->metallicFactor);
-				glUniform1f(testShader["roughness_factor"], materialData->roughnessFactor);
-				glUniform1f(testShader["normal_scale"], materialData->normalScale);
-				glUniform1f(testShader["occlusion_strength"], materialData->occlusionStrength);
-				glUniform1i(testShader["alpha_mode"], materialData->alphaMode);
-				glUniform1f(testShader["alpha_cutoff"], materialData->alphaCutoff);
-				glUniform1i(testShader["double_sided"], materialData->doubleSided);
+				glUniform4fv(m_testShader->GetUniform("base_color_factor"), 1, glm::value_ptr(materialData->baseColorFactor));
+				glUniform3fv(m_testShader->GetUniform("emissive_factor"), 1, glm::value_ptr(materialData->emissiveFactor));
+				glUniform1f(m_testShader->GetUniform("metallic_factor"), materialData->metallicFactor);
+				glUniform1f(m_testShader->GetUniform("roughness_factor"), materialData->roughnessFactor);
+				glUniform1f(m_testShader->GetUniform("normal_scale"), materialData->normalScale);
+				glUniform1f(m_testShader->GetUniform("occlusion_strength"), materialData->occlusionStrength);
+				glUniform1i(m_testShader->GetUniform("alpha_mode"), materialData->alphaMode);
+				glUniform1f(m_testShader->GetUniform("alpha_cutoff"), materialData->alphaCutoff);
+				glUniform1i(m_testShader->GetUniform("double_sided"), materialData->doubleSided);
 
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
@@ -270,7 +214,7 @@ namespace OpenGL
 				glBindTexture(GL_TEXTURE_2D, glMaterial->occlusionTexture->id);
 
 				glActiveTexture(GL_TEXTURE5);
-				glBindTexture(GL_TEXTURE_2D, light->shadowMap);
+				glBindTexture(GL_TEXTURE_2D, m_glSpotLight->shadowMap);
 
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
@@ -282,7 +226,7 @@ namespace OpenGL
 		glDisable(GL_DEPTH_TEST);
 	}
 
-	void GLTestRenderer::RenderSkybox()
+	void GLForwardRenderer::RenderSkybox()
 	{
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LEQUAL);
@@ -293,7 +237,7 @@ namespace OpenGL
 		
 		glUseProgram(m_skybox->shader->id);
 		
-		glUniformMatrix4fv((*m_skybox->shader)["vp"], 1, GL_FALSE, glm::value_ptr(vpNoTransformation));
+		glUniformMatrix4fv(m_skybox->shader->GetUniform("vp"), 1, GL_FALSE, glm::value_ptr(vpNoTransformation));
 		glBindVertexArray(m_skybox->vao);
 		
 		glActiveTexture(GL_TEXTURE0);
@@ -306,19 +250,17 @@ namespace OpenGL
 		glDisable(GL_CULL_FACE);
 	}
 
-	void GLTestRenderer::RenderPostProcess()
+	void GLForwardRenderer::RenderPostProcess()
 	{
 		// copy msaa to out
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFbo);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_outFbo);
-		// TODO this is wrong
-		auto wnd = Engine::GetMainWindow();
-		glBlitFramebuffer(0, 0, wnd->GetWidth(), wnd->GetHeight(), 0, 0, wnd->GetWidth(), wnd->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBlitFramebuffer(0, 0, m_outWidth, m_outHeight, 0, 0, m_outWidth, m_outHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		// do post process here
 	}
 
-	void GLTestRenderer::RenderWindow()
+	void GLForwardRenderer::RenderWindow()
 	{
 		// write to window
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -335,10 +277,11 @@ namespace OpenGL
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
 
-	void GLTestRenderer::Render()
+	void GLForwardRenderer::Render()
 	{
 		// render directional lights shadow maps
 		RenderDirectionalLights();
+		RenderSpotLights();
 		// forward msaa-ed pass
 		RenderGeometries();
 		// render skybox, seamless enabled (render last)
@@ -349,7 +292,7 @@ namespace OpenGL
 		RenderWindow();
 	}
 
-	void GLTestRenderer::Update()
+	void GLForwardRenderer::Update()
 	{
 		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K1))
 		{
@@ -363,21 +306,15 @@ namespace OpenGL
 			m_previewModeString = utl::SurfacePreviewTargetModeString(m_previewMode) + std::string(" -> ") + std::to_string(m_previewMode);
 			LOG_INFO("Preview Mode set to: {}({})", utl::SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
 		}
+
+		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::G))
+		{
+			m_currentTexture = m_outColorTexture;
+		}
 		
-		static bool Show = false;
 		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::L))
 		{
-			if (Show)
-			{
-				m_currentTexture = m_outColorTexture;
-			}
-			else
-			{
-				auto light = m_glDirectionalLights.at(0).get();
-				m_currentTexture = light->shadowMap;
-			}
-			Show = !Show;
-			
+			m_currentTexture = m_glSpotLight->shadowMap;
 		}
 
 		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::R))
@@ -386,14 +323,9 @@ namespace OpenGL
 		}
 	}
 
-	void GLTestRenderer::RecompileShaders()
+	void GLForwardRenderer::RecompileShaders()
 	{
 		m_testShader->Load();
 		m_screenQuadShader->Load();
-
-		for (auto& l : m_glDirectionalLights)
-		{
-			l->shader->Load();
-		}
 	}
 }

@@ -1,6 +1,5 @@
 #include "pch.h"
 
-#include "renderer/renderers/opengl/test/GLTestRenderer.h"
 #include "renderer/renderers/opengl/assets/GLMaterial.h"
 #include "asset/AssetManager.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"

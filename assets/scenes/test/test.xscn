@@ -20,19 +20,35 @@
 	<sky_cube name="abc" 
 			cubemap="/scenes/alps/alps.cubemap.json"/>
 
-	<transform name="light_p"
-		translation="0.0, 0, 0" >
+
 		
-		<directional_light name="l1" 
-			   translation="0.0, 25.0, 0" 
-			   color="0.9450, 0.8549, 0.6431"
-			   intensity="3000"
-			   lookat="0, 0, 0"/>
-	</transform>
+	<directional_light name="l1" 
+	   translation="0.0, 25.0, 0" 
+	   color="0.0, 0, 1"
+	   intensity="10"
+	   lookat="0, 0, 0"/>
+	   
+	<spot_light name="l3" 
+	   translation="0.0, 25.0, 0" 
+	   color="1, 0, 0"
+	   intensity="10"
+	   lookat="0, 0, 0"/>
 	
 		
-	<geometry name="helmet" 
-		translation="0.0, 0.0, -4.0"
+	<geometry name="sponza" 
+		translation="0.0, 0.0, 0.0"
+		scale="1, 1, 1" 
+		model="/scenes/gltf/Sponza/glTF/sponza.gltf{&quot;scene&quot;=-1}"/> 
+		
+		
+	<directional_light name="l2" 
+	   translation="0.0, 25.0, -25" 
+	   color="0.0, 0, 1"
+	   intensity="10"
+	   lookat="0, 0, -25"/>
+	
+	<geometry name="sponza" 
+		translation="0.0, 0.0, -25.0"
 		scale="1, 1, 1" 
 		model="/scenes/gltf/Sponza/glTF/sponza.gltf{&quot;scene&quot;=-1}"/> 
 		
