@@ -24,8 +24,10 @@ namespace OpenGL
 			node->GetShadowMapWidth(), node->GetShadowMapHeight(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		float borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 	
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
@@ -62,9 +64,6 @@ namespace OpenGL
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(shader->id);
-
-		glUniform3fv(shader->GetUniform("source_pos"), 1,glm::value_ptr(node->GetWorldTranslation()));
-		glUniform1f(shader->GetUniform("far"), node->m_far);
 		
 		for (auto& geometry : geometries)
 		{
@@ -72,7 +71,6 @@ namespace OpenGL
 			auto mvp = lightSpaceMatrix * m;
 
 			glUniformMatrix4fv(shader->GetUniform("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
-			glUniformMatrix4fv(shader->GetUniform("m"), 1, GL_FALSE, glm::value_ptr(m));
 
 			for (auto& glMesh : geometry->glModel->meshes)
 			{

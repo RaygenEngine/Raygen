@@ -122,13 +122,17 @@ namespace OpenGL
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outColorTexture, 0);
 
 		m_currentTexture = m_outColorTexture;
+
+		m_outWidth = width;
+		m_outHeight = height;
 		
 		return true;
 	}
 
 	void GLForwardRenderer::WindowResize(int32 width, int32 height)
 	{
-		glViewport(0, 0, width, height);
+		m_outWidth = width;
+		m_outHeight = height;
 	}
 
 	void GLForwardRenderer::RenderDirectionalLights()
@@ -147,10 +151,7 @@ namespace OpenGL
 		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
 
-		// TODO : renderer should store for output
-		auto wnd = Engine::GetMainWindow();
-		
-		glViewport(0, 0, wnd->GetWidth(), wnd->GetHeight());
+		glViewport(0, 0, m_outWidth, m_outHeight);
 		
 		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 
@@ -256,9 +257,7 @@ namespace OpenGL
 		// copy msaa to out
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFbo);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_outFbo);
-		// TODO this is wrong
-		auto wnd = Engine::GetMainWindow();
-		glBlitFramebuffer(0, 0, wnd->GetWidth(), wnd->GetHeight(), 0, 0, wnd->GetWidth(), wnd->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBlitFramebuffer(0, 0, m_outWidth, m_outHeight, 0, 0, m_outWidth, m_outHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		// do post process here
 	}
@@ -309,21 +308,15 @@ namespace OpenGL
 			m_previewModeString = utl::SurfacePreviewTargetModeString(m_previewMode) + std::string(" -> ") + std::to_string(m_previewMode);
 			LOG_INFO("Preview Mode set to: {}({})", utl::SurfacePreviewTargetModeString(m_previewMode), m_previewMode);
 		}
+
+		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::G))
+		{
+			m_currentTexture = m_outColorTexture;
+		}
 		
-		static bool Show = false;
 		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::L))
 		{
-			if (Show)
-			{
-				m_currentTexture = m_outColorTexture;
-				m_currentTexture = m_glDirectionalLight->shadowMap;
-			}
-			else
-			{
-				m_currentTexture = m_glSpotLight->shadowMap;
-			}
-			Show = !Show;
-			
+			m_currentTexture = m_glSpotLight->shadowMap;
 		}
 
 		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::R))
