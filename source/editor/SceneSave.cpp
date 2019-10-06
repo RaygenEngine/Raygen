@@ -169,11 +169,3 @@ bool SceneSave::SaveAsXML(World* world, const uri::Uri& path)
 	return false;
 }
 
-#include <iostream>
-void SceneSave::SerializeNodeData(Node* node)
-{
-	//SerializeJsonVisitor visitor;
-	//CallVisitorOnEveryProperty(node, visitor);
-
-	//std::cout << "Json Generated:\n" << std::setw(4) << visitor.result << std::endl;
-}

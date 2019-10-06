@@ -53,7 +53,7 @@ protected:
 								std::function<void(NodeObserverBase*)> onObserveeLost)
 	{
 		ObserverType* rawPtr = new ObserverType(typedNode);
-		m_observers.emplace(std::make_unique<NodeObserverBase>(typedNode));
+		m_observers.emplace(std::unique_ptr<NodeObserverBase>(rawPtr));
 		rawPtr->onObserveeLost = onObserveeLost;
 		return rawPtr;
 	}
@@ -62,7 +62,7 @@ protected:
 	ObserverType* CreateObserver_Weak(typename ObserverType::NodeType* typedNode)
 	{
 		auto lambda = [](NodeObserverBase* obs) -> void {
-			dynamic_cast<ObserverType::NodeType>(obs)->node = nullptr;
+			dynamic_cast<ObserverType::NodeType*>(obs)->node = nullptr;
 			baseNode = nullptr;
 		};
 
@@ -75,12 +75,18 @@ protected:
 	template <typename ObserverType, typename T>
 	ObserverType* CreateObserver_AutoContained(typename ObserverType::NodeType* typedNode, T& containerToAddAndRemoveFrom)
 	{
+		auto& cont = containerToAddAndRemoveFrom;
+
 		auto lambda = [&](NodeObserverBase* obs) -> void {
-			containerToAddAndRemoveFrom.erase(obs);
-			m_observers.erase(obs);
+			cont.erase(std::find(cont.begin(), cont.end(), obs));
+
+			m_observers.erase(std::find_if(begin(m_observers), end(m_observers),
+			[&](auto& elem) {
+				return elem.get() == obs;
+			}));
 		};
 		auto rawPtr = CreateObserver_Callback<ObserverType>(typedNode, lambda);
-		containerToAddAndRemoveFrom.emplace(rawPtr);
+		cont.insert(cont.end(), rawPtr);
 		return rawPtr;
 	}
 
@@ -98,12 +104,11 @@ protected:
 		[](NodeObserverBase* obs) -> void 
 		{
 			auto nodePtr = Engine::GetWorld()->GetAnyAvailableNode<typename ObserverType::NodeType>();
-			dynamic_cast<ObserverType>(obs)->node = nodePtr;
+			dynamic_cast<ObserverType*>(obs)->node = nodePtr;
 			obs->baseNode = nodePtr;
 		};
-		ObserverType* rawPtr = CreateObserver_Callback<ObserverType>(nodePtr, lambda);
-		containerToAddAndRemoveFrom.emplace(rawPtr);
-		return rawPtr;
+
+		return CreateObserver_Callback<ObserverType>(nodePtr, lambda);
 	}
 
 	// No use case for this currently

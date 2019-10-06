@@ -9,13 +9,12 @@ ObserverRenderer::ObserverRenderer()
 
 void ObserverRenderer::RemoveObserver(NodeObserverBase* ptr)
 {
-	// WIP
-	//m_observers.erase(std::find_if(begin(m_observers), end(m_observers),
-	//								[ptr](auto observerUnqPtr)
-	//{
-	//	return observerUnqPtr.get() == ptr;
-	//}
-	//));
+	m_observers.erase(std::find_if(begin(m_observers), end(m_observers),
+									[ptr](auto& observerUnqPtr)
+	{
+		return observerUnqPtr.get() == ptr;
+	}
+	));
 }
 
 void ObserverRenderer::OnNodeRemovedFromWorld(Node* node)
@@ -25,6 +24,7 @@ void ObserverRenderer::OnNodeRemovedFromWorld(Node* node)
 		if (observer->baseNode == node)
 		{
 			observer->onObserveeLost(observer.get());
+			return;
 		}
 	}
 }
