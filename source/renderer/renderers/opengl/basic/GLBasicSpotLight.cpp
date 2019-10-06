@@ -1,12 +1,12 @@
 #include "pch.h"
 
-#include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
+#include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
 
 namespace OpenGL
 {
-	GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
-		: NodeObserver<DirectionalLightNode, GLRendererBase>(node)
+	GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
+		: NodeObserver<SpotLightNode, GLRendererBase>(node)
 	{
 		const auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/depth_map.shader.json");
 		shader = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
@@ -35,13 +35,13 @@ namespace OpenGL
 		glReadBuffer(GL_NONE);
 	}
 
-	GLBasicDirectionalLight::~GLBasicDirectionalLight()
+	GLBasicSpotLight::~GLBasicSpotLight()
 	{
 		glDeleteFramebuffers(1, &fbo);
 		glDeleteTextures(1, &shadowMap);
 	}
 
-	void GLBasicDirectionalLight::RenderShadowMap(const std::vector<std::unique_ptr<GLBasicGeometry>>& geometries)
+	void GLBasicSpotLight::RenderShadowMap(const std::vector<std::unique_ptr<GLBasicGeometry>>& geometries)
 	{
 		glViewport(0, 0, node->GetShadowMapWidth(), node->GetShadowMapHeight());
 
@@ -49,7 +49,8 @@ namespace OpenGL
 		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
 
-		const auto lightProjection = glm::ortho(node->m_left, node->m_right, node->m_bottom, node->m_top, node->m_near, node->m_far);
+		auto ar = static_cast<float>(node->GetShadowMapWidth()) / static_cast<float>(node->GetShadowMapHeight());
+		const auto lightProjection = glm::perspective(glm::radians(45.0f), ar, node->m_near, node->m_far);
 
 		// TODO check value of center
 		const auto center = node->GetWorldTranslation() + node->GetFront();
@@ -63,7 +64,7 @@ namespace OpenGL
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(shader->id);
-
+		
 		for (auto& geometry : geometries)
 		{
 			auto m = geometry->node->GetWorldMatrix();

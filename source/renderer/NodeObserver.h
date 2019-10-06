@@ -14,17 +14,15 @@ class RendererObject : public Object
 
 // saves the time of writing a base observer for each new and existing node type
 template <typename NodeType, typename RendererType = Renderer>
-class NodeObserver : public RendererObject<RendererType>
+struct NodeObserver : RendererObject<RendererType>
 {
-public:
 	using NT = NodeType;
 
-protected:
-	NodeType* m_node;
+	NodeType* node;
 
 public:
 	NodeObserver(NodeType* node)
-		: m_node(node)
+		: node(node)
 	{
 		SetName(node->GetName());
 	}
@@ -32,7 +30,5 @@ public:
 	virtual void UpdateFromNode() {};
 
 	virtual ~NodeObserver() = default;
-
-	const NodeType* GetNode() const { return m_node; }
 };
 

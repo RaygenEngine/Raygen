@@ -44,6 +44,7 @@ layout(binding=1) uniform sampler2D metallicRoughnessSampler;
 layout(binding=2) uniform sampler2D emissiveSampler;
 layout(binding=3) uniform sampler2D normalSampler;
 layout(binding=4) uniform sampler2D occlusionSampler;
+// this renderer currently supports a single directional light map
 layout(binding=5) uniform sampler2D shadowMapSampler;
 
 #define _1_PI 0.318309886183790671538f
@@ -55,6 +56,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     // transform to [0,1] range
     projCoords = projCoords * 0.5 + 0.5;
+
     // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
     float closestDepth = texture(shadowMapSampler, projCoords.xy).r; 
     // get depth of current fragment from light's perspective
@@ -63,11 +65,15 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
 	float bias = max(0.05 * (1.0 - dot(N, L)), 0.005); 
     // check whether current frag pos is in shadow
     float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
-	// TODO: peter panning, pcf, oversampling
+	// TODO: peter panning, pcf
+	
+	if(projCoords.z > 1.0)
+		shadow = 0.0;
+	
     return shadow;
 }  
 
-vec3 fresnelSchlick(float cosTheta, vec3 F0)
+vec3 FresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }  
@@ -107,7 +113,6 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return ggx1 * ggx2;
 }
 
-// very basic unoptimized surface test shader
 void main()
 {
 	// sample material textures
@@ -143,7 +148,7 @@ void main()
 
 	vec3 F0 = vec3(0.04); 
 	F0 = mix(F0, albedo, metallic);
-	vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+	vec3 F = FresnelSchlick(max(dot(H, V), 0.0), F0);
 	
 	float NDF = DistributionGGX(N, H, roughness);       
 	float G = GeometrySmith(N, V, L, roughness); 
@@ -158,178 +163,15 @@ void main()
 	kD *= 1.0 - metallic;
 	
 	// light stuff
-	float distance = length(light_pos - dataIn.world_pos);
-	float attenuation = 1.0 / (distance * distance);
+	//float distance = length(light_pos - dataIn.world_pos);
+	//float attenuation = 1.0 / (distance * distance);
 	float shadow = ShadowCalculation(dataIn.light_fragpos, N, L); 
-	vec3 radiance = (1.0 - shadow) * light_color * light_intensity * attenuation; 
+	vec3 radiance = (1.0 - shadow) * light_color * light_intensity /** attenuation*/; 
 	
 	vec3 Lo = (kD * albedo / PI + specular) * radiance * max(dot(N, L), 0.0);
 
 	vec3 color = Lo + emissive /*+ ambient*/;
 	color = mix(color, color * occlusion, occlusion_strength);
 	
-	color = color / (color + vec3(1.0));
-    color = pow(color, vec3(1.0/2.2));
-	
 	out_color = vec4(color, 1.f);
-
-	// TODO: different rendering code path
-	/*switch (mode-1)
-	{
-		case 0: // base color map
-			out_color = base_color;
-			break;
-			
-		case 1: // base color factor
-			out_color = base_color_factor;
-			break;
-			
-		case 2: // base color final
-			out_color = base_color * base_color_factor;
-			break;
-			
-		case 3: // metallic map
-			out_color = vec4(metallic_roughness.bbb, 1.0);
-			break;
-			
-		case 4: // metallic factor
-			out_color = vec4(metallic_factor);
-			break;
-			
-		case 5: // metallic final
-			out_color = vec4(metallic_roughness.bbb, 1.0) * metallic_factor;
-			break;
-			
-		case 6: // roughness map
-			out_color = vec4(metallic_roughness.ggg, 1.0);
-			break;
-			
-		case 7: // roughness factor
-			out_color = vec4(roughness_factor);
-			break;
-			
-		case 8: // roughness final
-			out_color = vec4(metallic_roughness.ggg, 1.0) * roughness_factor;
-			break;
-			
-		case 9: // normal
-			out_color = vec4(dataIn.world_normal, 1.0);
-			break;
-			
-		case 10: // normal scale
-			out_color = vec4(normal_scale);
-			break;
-			
-		case 11: // normal map
-			out_color = sample_normal;
-			break;
-			
-		case 12: // normal final; TODO
-			vec3 scaledNormal = normalize((sample_normal.rgb * 2.0 - 1.0) * vec3(normal_scale, normal_scale, 1.0));
-			out_color = vec4(normalize(dataIn.TBN * scaledNormal), 1);
-			break;
-			
-		case 13: // tangent
-			out_color = dataIn.world_tangent;
-			break;
-			
-		case 14: // tangent handedness
-			out_color = vec4(dataIn.world_tangent.a);
-			break;
-			
-		case 15: // bitangent
-			out_color = vec4(dataIn.world_bitangent, 1.0);
-			break;
-			
-		case 16: // occlusion map
-			out_color = vec4(occlusion.rrr, 1.0);
-			break;
-			
-		case 17: // occlusion strength
-			out_color = vec4(occlusion_strength);
-			break;
-			
-		case 18: // occlusion final
-			out_color = mix(base_color, base_color * occlusion.rrrr, occlusion_strength);
-			break;
-			
-		case 19: // emissive map
-			out_color = vec4(emissive.rgb, 1.0);
-			break;
-			
-		case 20: // emissive factor
-			out_color = vec4(emissive_factor, 1.0);
-			break;
-			
-		case 21: // emissive final
-			out_color = vec4(emissive.rgb*emissive_factor, 1.0);
-			break;
-			
-		case 22: // opacity map
-			out_color = vec4(base_color.a);
-			break;
-			
-		case 23: // opacity factor
-			out_color = vec4(base_color_factor.a);
-			break;
-			
-		case 24: // opacity final
-			out_color = base_color;
-			if(base_color.a < alpha_cutoff)
-				discard;
-			break;
-			
-		case 25: // texture coordinate 0
-			out_color = vec4(dataIn.text_coord0, 0.0, 1.0);
-			break;
-			
-		case 26: // texture coordinate 1
-			out_color = vec4(dataIn.text_coord1, 0.0, 1.0);
-			break;
-			
-		case 27: // alpha mode
-			switch (alpha_mode)
-			{
-			// opaque
-			case 0:
-				out_color = vec4(1.f, 0.f, 0.f, 1.f);
-				break;
-			// mask
-			case 1:
-				out_color = vec4(0.f, 1.f, 0.f, 1.f);
-				break;
-			// blend
-			case 2:
-				out_color = vec4(0.f, 0.f, 1.f, 1.f);
-				break;
-			}
-			break;
-			
-		case 28: // alpha cutoff
-			out_color = vec4(alpha_cutoff);
-			break;
-	
-		case 29: // alpha mask
-			out_color = vec4(0.f, 0.f, 0.f, 1.f);
-			if(alpha_mode == 1)
-			{
-				// transparent
-				if(base_color.a < alpha_cutoff)
-				{
-					out_color = vec4(1.f, 1.f, 1.f, 1.f);
-				}
-			}
-			break;
-			
-		case 30: // double sidedness
-			if (double_sided)
-			{
-				out_color = vec4(1.f, 1.f, 1.f, 1.f);
-			}
-			else
-			{
-				out_color = vec4(0.f, 0.f, 0.f, 1.f);
-			}
-			break;
-	}*/
 }

@@ -81,7 +81,7 @@ class AssetManager
 		}
 		T* ptr = new T();
 		bool loaded = T::Load(ptr, entry->path);
-		assert(loaded);
+		CLOG_ASSERT(!loaded, "Failed to load: {} {}", entry->type.name(), entry->path);
 		entry->ptr.reset(ptr);
 	}
 

@@ -4,19 +4,20 @@
 #include "asset/loaders/ShaderLoader.h"
 
 #include "glad/glad.h"
+#include "core/timer/Timer.h"
 
 namespace OpenGL
 {
 	struct GLShader : GLAsset
 	{
 		GLuint id;
-		
+
 		GLShader(const uri::Uri& assocPath)
 			: GLAsset(assocPath) {}
 		virtual ~GLShader();
 		
-		GLint operator[](const std::string& uniformName) const;
-		void operator+=(const std::string& uniformName);
+		GLint GetUniform(const std::string& uniformName) const;
+		void AddUniform(const std::string& uniformName);
 		bool Load() override;
 
 	protected:
