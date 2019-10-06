@@ -16,23 +16,20 @@
 #include <iostream>
 #include "asset/AssetManager.h"
 #include "core/reflection/ReflectionTools.h"
-
+#include "imgui/imgui_internal.h"
 #include <set>
 
-namespace {
-
-// Recursively adds all children too
-void ImGuiNode(Node* node, int32 depth, Node*& selectedNode) {
-	auto str = std::string(depth * 4, ' ') + node->GetClass().GetNameStr();
-	
-	if (ImGui::Selectable(str.c_str(), node == selectedNode))
+namespace
+{
+void TextTooltip(const std::string& Tooltip)
+{
+	if (ImGui::IsItemHovered())
 	{
-		selectedNode = node;
-	}
-	
-	for (auto c : node->GetChildren())
-	{
-		ImGuiNode(c.get(), depth + 1, selectedNode);
+		ImGui::BeginTooltip();
+		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 45.0f);
+		ImGui::TextUnformatted(Tooltip.c_str());
+		ImGui::PopTextWrapPos();
+		ImGui::EndTooltip();
 	}
 }
 }
@@ -354,22 +351,6 @@ void Editor::UpdateEditor()
 		lfb.ClearSelected();
 	}
 
-
-	/*static std::string model;
-	ImGui::InputText("ModelAsset to load:", &model);
-	ImGui::SameLine();
-	if (ImGui::Button("Create Asset"))
-	{
-		auto added =  Engine::GetWorld()->LoadNode<TriangleModelGeometryNode>(Engine::GetWorld()->GetRoot());
-		
-		auto path = Engine::GetAssetManager()->m_pathSystem.SearchAssetPath(model);
-		auto asset = Engine::GetAssetManager()->RequestAsset<ModelAsset>(path / "model");
-		GetReflector(added).GetPropertyByName("model")->GetRef<ModelAsset*>() = asset;
-		Engine::GetAssetManager()->Load(asset);
-		
-		Event::OnWorldNodeAdded.Broadcast(added);
-	}*/
-
 	if (ImGui::CollapsingHeader("Outliner", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		Outliner();
@@ -388,14 +369,29 @@ void Editor::UpdateEditor()
 		std::string text;
 		for (auto& assetEntry : Engine::GetAssetManager()->m_pods)
 		{
+			ImGui::PushID(static_cast<int32>(assetEntry->uid));
+			bool disabled = !assetEntry;
+
+			if (disabled)
+			{
+				ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+			}
+			
 			if (ImGui::Button("Unload"))
 			{
 				AssetManager::Unload(BasePodHandle{ assetEntry->uid });
 			}
 			ImGui::SameLine();
 			ImGui::Text(assetEntry->path.c_str());
-		
-			//text += assetPair.first + "\n";
+			if (disabled)
+			{
+				ImGui::PopItemFlag();
+				ImGui::PopStyleVar();
+			}
+
+			TextTooltip(fmt::format("Path: {}\n Ptr: {}\nType: {}\n UID: {}", assetEntry->path, assetEntry->ptr, assetEntry->type.name(), assetEntry->uid));
+			ImGui::PopID();
 		}
 	}
 
@@ -415,11 +411,13 @@ void Editor::Outliner()
 
 	RecurseNodes(Engine::GetWorld()->GetRoot(), [&](Node* node, int32 depth)
 	{
-		auto str = std::string(depth * 4, ' ') + node->m_type + "> " + node->m_name + "##" + node->GetClass().GetNameStr();
+		auto str = std::string(depth * 4, ' ') + node->m_type + "> " + node->m_name;
+		ImGui::PushID(node->GetUID());
 		if (ImGui::Selectable(str.c_str(), node == m_selectedNode))
 		{
 			m_selectedNode = node;
 		}
+		ImGui::PopID();
 	});
 	ImGui::EndChild();
 }
@@ -428,12 +426,6 @@ void Editor::PropertyEditor(Node* node)
 {
 	ImGui::BeginChild("Properties", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 	ImGui::InputText("Name", &node->m_name);
-
-	if (ImGui::Button("Serialize-Save"))
-	{
-		SceneSave::SerializeNodeData(node);
-	}
-
 
 	glm::vec3 eulerPyr = glm::degrees(glm::eulerAngles(node->m_localOrientation));
 

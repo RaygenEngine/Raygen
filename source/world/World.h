@@ -118,7 +118,7 @@ public:
 	{
 		for (auto& node : m_nodes)
 		{
-			auto ptr = dynamic_cast<NodeType>(node)
+			auto ptr = dynamic_cast<NodeType*>(node);
 			if (ptr)
 			{
 				return ptr;

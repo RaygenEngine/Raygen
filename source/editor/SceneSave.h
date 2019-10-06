@@ -18,8 +18,4 @@ public:
 	void Draw();
 
 	static bool SaveAsXML(World* world, const uri::Uri& paths);
-
-
-	static void SerializeNodeData(Node* node);
-
 };
