@@ -47,3 +47,5 @@ struct AssetPod;
 
 #define REFLECT_VAR(Variable, ...)					\
 	refl.AddProperty<decltype(Variable)>(offsetof(Z_ThisType, Variable), #Variable, PropertyFlags::Pack(__VA_ARGS__))
+
+#define REFL_EQUALS_PROPERTY(PropertyRef, Variable)  (PropertyRef.GetName() == ReflClass::RemoveVariablePrefix(#Variable) && (&Variable))

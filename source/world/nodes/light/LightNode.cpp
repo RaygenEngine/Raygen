@@ -9,8 +9,8 @@ LightNode::LightNode(Node* parent)
       m_intensity(0.f)
 {}
 
-std::string LightNode::ToString(bool verbose, uint depth) const
+void LightNode::DirtyUpdate()
 {
-	return std::string("    ") * depth + "|--light " + Node::ToString(verbose, depth);
-}
+	Node::DirtyUpdate();
 
+}

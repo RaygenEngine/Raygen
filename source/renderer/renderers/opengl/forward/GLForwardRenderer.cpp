@@ -9,10 +9,10 @@
 #include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/assets/GLShader.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
-#include "world/nodes/sky/SkyCubeNode.h"
 
+#include "renderer/renderers/opengl/basic/GLBasicSkybox.h"
 #include "glad/glad.h"
-#include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
+
 
 namespace OpenGL
 {
@@ -26,8 +26,13 @@ namespace OpenGL
 		glDeleteTextures(1, &m_outColorTexture);
 	}
 
-	bool GLForwardRenderer::InitScene(int32 width, int32 height)
+	bool GLForwardRenderer::InitScene()
 	{
+		// world data
+		m_camera = Engine::GetWorld()->GetActiveCamera();
+		int32 width = m_camera->GetWidth();
+		int32 height = m_camera->GetHeight();
+
 		// shaders
 		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/screen_quad.shader.json");
 		m_screenQuadShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
@@ -55,36 +60,16 @@ namespace OpenGL
 		m_testShader->AddUniform("double_sided");
 		m_testShader->AddUniform("light_space_matrix");
 	
-		// world data
-		auto user = Engine::GetWorld()->GetAvailableNodeSpecificSubType<FreeformUserNode>();
-
-		// TODO: better way to check world requirements
-		if(!user)
-		{
-			LOG_FATAL("Missing freeform user node!" );
-			return false;
-		}
-
-		m_camera = user->GetCamera();
-
-		auto* sky = Engine::GetWorld()->GetAvailableNodeSpecificSubType<SkyCubeNode>();
 		
-		if(!sky)
-		{
-			LOG_FATAL("Missing sky node!");
-			return false;
-		}
 		
-		m_skybox = CreateObserver<GLBasicSkybox>(sky);
-
-		auto dLight = Engine::GetWorld()->GetAvailableNodeSpecificSubType<DirectionalLightNode>();
-		m_glDirectionalLight = CreateObserver<GLBasicDirectionalLight>(dLight);
-		
-		auto sLight = Engine::GetWorld()->GetAvailableNodeSpecificSubType<SpotLightNode>();
-		m_glSpotLight = CreateObserver<GLBasicSpotLight>(sLight);
+		m_skybox = CreateObserver_AnyAvailable<GLBasicSkybox>();
+		m_glDirectionalLight = CreateObserver_AnyAvailable<GLBasicDirectionalLight>();
+		m_glSpotLight = CreateObserver_AnyAvailable<GLBasicSpotLight>();
 		
 		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>())
-			m_glGeometries.push_back(CreateObserver<GLBasicGeometry>(geometryNode));
+		{
+			CreateObserver_AutoContained<GLBasicGeometry>(geometryNode, m_glGeometries);
+		}
 
 		// msaa fbo
 		glGenFramebuffers(1, &m_msaaFbo);

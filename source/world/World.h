@@ -20,12 +20,12 @@ class CameraNode;
 // TODO:
 class RootNode : public Node
 {
-	REFLECTED_NODE(RootNode, Node)
-	{
-		REFLECT_VAR(m_background, PropertyFlags::Color);
-		REFLECT_VAR(m_ambient, PropertyFlags::Color);
-	}
-	
+REFLECTED_NODE(RootNode, Node)
+{
+	REFLECT_VAR(m_background, PropertyFlags::Color);
+	REFLECT_VAR(m_ambient, PropertyFlags::Color);
+}
+
 public:
 	RootNode()
 		: Node(nullptr)
@@ -50,7 +50,6 @@ class World
 {
 	mutable std::unordered_set<Node*> m_nodes;
 	mutable std::unordered_set<GeometryNode*> m_triangleModelGeometries;
-	mutable std::unordered_set<InstancedGeometryNode*> m_triangleModelInstancedGeometries;
 	mutable std::unordered_set<TransformNode*> m_transforms;
 	mutable std::unordered_set<PunctualLightNode*> m_punctualLights;
 	mutable std::unordered_set<DirectionalLightNode*> m_directionalLights;
@@ -58,27 +57,31 @@ class World
 	mutable std::unordered_set<CameraNode*> m_cameras;
 	mutable std::unordered_set<UserNode*> m_users;
 
-	// dirty nodes
-	std::unordered_set<Node*> m_dirtyNodes;
-	// used for optimizations
-	std::unordered_set<Node*> m_dirtyLeafNodes;
-
-	// world time
-	float m_deltaTime;
-
-	// world time begins with applications starting time, use with timestamps
-	float m_worldTime;
-	float m_lastTime;
-
 	NodeFactory* m_nodeFactory;
-
 	std::unique_ptr<RootNode> m_root;
-
 	PodHandle<XMLDocPod> m_loadedFrom;
 
+	// TODO:
 	CameraNode* m_activeCamera{ nullptr };
+
+	using FrameClock = std::chrono::steady_clock;
+	ch::time_point<FrameClock> m_loadedTimepoint;
+	ch::time_point<FrameClock> m_lastFrameTimepoint;
+	long long m_deltaTimeMicros;
+
+	float m_deltaTime;
+
+	void UpdateFrameTimers();
+
 	friend class Editor;
 public:
+	// Returns float seconds
+	float GetDeltaTime() { return m_deltaTime; }
+
+	// Returns integer microseconds;
+	long long GetIntegerDeltaTime() { return m_deltaTimeMicros; }
+
+
 	[[nodiscard]] RootNode* GetRoot() const { return m_root.get(); }
 
 	World(NodeFactory* factory);
@@ -88,7 +91,7 @@ public:
 	template <typename NodeType>
 	void AddNode(NodeType* node)
 	{
-		// TODO: 
+		// WIP: 
 		if constexpr (std::is_same_v<NodeType, CameraNode>)
 		{
 			if (!m_activeCamera)
@@ -98,6 +101,7 @@ public:
 		}
 		GetNodeMap<NodeType>().insert(node);
 		m_nodes.insert(node);
+		node->m_dirty.set(Node::DF::Created);
 	}
 
 	template <typename NodeType>
@@ -112,8 +116,24 @@ public:
 	template <typename NodeType>
 	NodeType* GetAnyAvailableNode() const
 	{
-		return *GetNodeMap<NodeType>().begin();
+		for (auto& node : m_nodes)
+		{
+			auto ptr = dynamic_cast<NodeType>(node)
+			if (ptr)
+			{
+				return ptr;
+			}
+		}
+		return nullptr;
 	}
+
+	// available node may differ later in runtime
+	//template <typename NodeType>
+	//NodeType* GetFirstAvailableNode() const
+	//{
+	//	
+	//	return *GetNodeMap<NodeType>().begin();
+	//} TODO: Use in observer renderer
 
 	// available node may differ later in runtime
 	template <typename NodeSubType>
@@ -134,7 +154,6 @@ public:
 	constexpr auto& GetNodeMap() const
 	{
 		if constexpr (std::is_base_of<PunctualLightNode, NodeType>::value) { return m_punctualLights; }
-		else if constexpr (std::is_base_of<InstancedGeometryNode, NodeType>::value) { return m_triangleModelInstancedGeometries; }
 		else if constexpr (std::is_base_of<GeometryNode, NodeType>::value) { return m_triangleModelGeometries; }
 		else if constexpr (std::is_base_of<TransformNode, NodeType>::value) { return m_transforms; }
 		else if constexpr (std::is_base_of<CameraNode, NodeType>::value) { return m_cameras; }
@@ -146,19 +165,8 @@ public:
 		else if constexpr (std::is_base_of<Node, NodeType>::value) { return m_nodes; }
 	}
 
-	void AddDirtyNode(Node* node);
-
-	const std::unordered_set<Node*>& GetDirtyNodes() const { return m_dirtyNodes; }
-	const std::unordered_set<Node*>& GetDirtyLeafNodes() const { return m_dirtyLeafNodes; }
-
 	std::vector<Node*> GetNodesByName(const std::string& name) const;
 	Node* GetNodeByName(const std::string& name) const;
-
-	std::vector<Node*> GetNodesById(uint32 id) const;
-	Node* GetNodeById(uint32 id) const;
-
-	float GetDeltaTime() const { return m_deltaTime; }
-	float GetWorldTime() const { return m_worldTime; }
 
 	CameraNode* GetActiveCamera() const { return m_activeCamera; }
 
@@ -187,6 +195,9 @@ public:
 	NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
 
 	PodHandle<XMLDocPod> GetLoadedFromHandle() { return m_loadedFrom; }
+
+	void DirtyUpdateWorld();
+	void ClearDirtyFlags();
 
 private:
 	// Only reflected properties get copied.

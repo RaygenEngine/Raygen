@@ -18,7 +18,7 @@ AppBase::AppBase()
 	m_windowWidth = 1920;
 	m_windowHeight = 1080;
 
-	m_handleControllers = false;
+	m_handleControllers = true;
 	m_lockMouse = false;
 
 	m_argc = 1;
@@ -82,6 +82,7 @@ void AppBase::MainLoop()
 		}
 		// clear input soft state (pressed keys, etc.)
 		Engine::GetInput()->ClearSoftState();
+		Engine::GetWorld()->ClearDirtyFlags();
 
 		// Let our window handle any events.
 		window->HandleEvents(m_handleControllers);
@@ -99,6 +100,7 @@ void AppBase::MainLoop()
 		// render
 		Engine::GetRenderer()->Render();
 		Engine::GetRenderer()->SwapBuffers();
+
 
 		Engine::Get().ReportFrameDrawn();
 	}

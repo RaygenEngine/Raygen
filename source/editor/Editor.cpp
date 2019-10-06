@@ -489,15 +489,10 @@ void Editor::PropertyEditor(Node* node)
 
 	ImGui::EndChild();
 
-	//if (visitor.dirty)
-	{
-		node->MarkDirty();
-	}
 
 	if (dirtyMatrix)
 	{
-		node->m_localMatrix = utl::GetTransformMat(node->m_localTranslation, node->m_localOrientation, node->m_localScale);
-		node->MarkDirty();
+		node->SetLocalMatrix(utl::GetTransformMat(node->m_localTranslation, node->m_localOrientation, node->m_localScale));
 	}
 }
 

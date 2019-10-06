@@ -22,6 +22,8 @@ protected:
 	// Non owning pointer to the static ReflEnum structure generated for this enum class
 	const ReflEnum* m_enum;
 
+	size_t m_dirtyBitsetIndex;
+
 	// Returns real memory address from the offsetof for a specific instance.
 	void* GetRealMemoryAddr(void* objInstance) const
 	{
@@ -97,5 +99,11 @@ public:
 	bool HasSameFlags(const Property& other) const
 	{
 		return other.m_flags == m_flags;
+	}
+
+	Property& OnDirty(size_t bitIndex)
+	{
+		m_dirtyBitsetIndex = bitIndex;
+		return *this;
 	}
 };

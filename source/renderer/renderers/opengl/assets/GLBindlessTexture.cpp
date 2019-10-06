@@ -12,7 +12,7 @@ namespace OpenGL
 
 	bool GLBindlessTexture::Load()
 	{
-		handle = glGetTextureHandleARB(id);
+		handle = static_cast<GLuint>(glGetTextureHandleARB(id));
 		glMakeTextureHandleResidentARB(handle);
 		
 		return true;

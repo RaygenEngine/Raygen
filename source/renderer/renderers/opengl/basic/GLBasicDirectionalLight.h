@@ -21,7 +21,9 @@ namespace OpenGL
 		GLBasicDirectionalLight(DirectionalLightNode* node);
 		~GLBasicDirectionalLight();
 
+		virtual void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override {}
+
 		// render shadow map, then return the matrix needed to move from world to light space
-		void RenderShadowMap(const std::vector<std::unique_ptr<GLBasicGeometry>>& geometries);
+		void RenderShadowMap(const std::vector<GLBasicGeometry*>& geometries);
 	};
 }

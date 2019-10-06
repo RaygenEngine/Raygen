@@ -10,8 +10,4 @@ class PunctualLightNode : public LightNode
 public:
 	PunctualLightNode(Node* parent);
 	~PunctualLightNode() = default;
-
-	std::string ToString(bool verbose, uint depth) const override;
-
-	void ToString(std::ostream& os) const override { os << "node-type: PunctualLightNode, name: " << m_name; }
 };

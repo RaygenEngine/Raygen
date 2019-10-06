@@ -13,5 +13,16 @@ namespace OpenGL
 		GLBasicGeometry(GeometryNode* node);
 
 		void ReloadModel();
+
+		virtual void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override 
+		{
+			if (nodeDirtyFlagset[Node::DF::Properties])
+			{
+				// WIP:
+				ReloadModel();
+			}
+		}
+
+		virtual ~GLBasicGeometry() = default;
 	};
 }

@@ -57,7 +57,7 @@ namespace OpenGL
 		pfd.dwDamageMask = 0;
 
 		m_hdc = GetDC(m_assochWnd);
-
+		
 		const int32 pixelFormat = ChoosePixelFormat(m_hdc, &pfd);
 
 		if(!pixelFormat)

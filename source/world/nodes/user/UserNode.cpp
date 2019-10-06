@@ -4,7 +4,7 @@
 
 UserNode::UserNode(Node* parent)
 	: Node(parent),
-		m_movementSpeed(0.01f), 
-		m_turningSpeed(0.003f)
+		m_movementSpeed(10.0f), 
+		m_turningSpeed(0.7f)
 {
 }

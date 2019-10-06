@@ -7,7 +7,7 @@ namespace OpenGL
 {
 	class GLAssetManager;
 	
-	class GLRendererBase : public Renderer
+	class GLRendererBase : public ObserverRenderer
 	{
 		HWND m_assochWnd;
 		HDC m_hdc;

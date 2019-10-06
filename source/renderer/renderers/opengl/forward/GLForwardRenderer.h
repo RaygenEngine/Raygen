@@ -5,12 +5,13 @@
 #include "renderer/renderers/opengl/assets/GLShader.h"
 #include "renderer/renderers/opengl/assets/GLTexture.h"
 #include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
-#include "renderer/renderers/opengl/basic/GLBasicSkybox.h"
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
 
 namespace OpenGL
 {
+	struct GLBasicSkybox;
+
 	class GLForwardRenderer :  public GLRendererBase
 	{
 		MAKE_METADATA(GLForwardRenderer);
@@ -24,10 +25,10 @@ namespace OpenGL
 		GLShader* m_screenQuadShader;
 
 		// entities
-		std::vector<std::unique_ptr<GLBasicGeometry>> m_glGeometries;
-		std::unique_ptr<GLBasicDirectionalLight> m_glDirectionalLight;
-		std::unique_ptr<GLBasicSpotLight> m_glSpotLight;
-		std::unique_ptr<GLBasicSkybox> m_skybox;
+		std::vector<GLBasicGeometry*> m_glGeometries;
+		GLBasicDirectionalLight* m_glDirectionalLight;
+		GLBasicSpotLight* m_glSpotLight;
+		GLBasicSkybox* m_skybox;
 		
 		// raw nodes
 		CameraNode* m_camera;
@@ -71,7 +72,7 @@ namespace OpenGL
 
 		~GLForwardRenderer();
 
-		bool InitScene(int32 width, int32 height) override;
+		bool InitScene() override;
 		
 		void WindowResize(int32 width, int32 height);
 		void Render() override;

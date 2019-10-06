@@ -71,19 +71,6 @@ Node* NodeFactory::LoadNodeFromType(const std::string& type, Node* parent)
 	{
 		return world->CreateNode<TransformNode>(parent);
 	}
-	// TODO: 
-	//if (type == "oculus_user")
-	//{
-	//	//return world->LoadNode<OculusUserNode>(parent);
-	//}
-	//if (type == "geometry_instanced_matrix")
-	//{
-	//	return LoadInstancingMatrixMetaNode(parent);
-	//}
-	if (type == "geometry_instanced")
-	{
-		return world->CreateNode<InstancedGeometryNode>(parent);
-	}
 	if (type == "sky_cube")
 	{
 		return world->CreateNode<SkyCubeNode>(parent);

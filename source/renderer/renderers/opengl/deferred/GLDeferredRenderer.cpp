@@ -1,11 +1,12 @@
 #include "pch.h"
 
-#include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "world/nodes/user/freeform/FreeformUserNode.h"
-#include "world/World.h"
+#include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
 
 #include "glad/glad.h"
+#include "world/World.h"
+
 
 namespace OpenGL
 {
@@ -26,28 +27,27 @@ namespace OpenGL
 		glDeleteTextures(1, &m_outTexture);
 	}
 
-	bool GLDeferredRenderer::InitScene(int32 width, int32 height)
+	bool GLDeferredRenderer::InitScene()
 	{
-		// world data
-		auto* user = Engine::GetWorld()->GetAvailableNodeSpecificSubType<FreeformUserNode>();
+		m_camera = Engine::GetWorld()->GetActiveCamera();
+		int32 width = m_camera->GetWidth();
+		int32 height = m_camera->GetHeight();
 
-		// TODO: better way to check world requirements
-		if (!user)
-		{
-			LOG_FATAL("Missing freeform user node!");
-			return false;
-		}
-
-		m_camera = user->GetCamera();
 
 		for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>())
-			m_glGeometries.push_back(CreateObserver<GLBasicGeometry>(geometryNode));
-
+		{
+			CreateObserver_AutoContained<GLBasicGeometry>(geometryNode, m_glGeometries);
+		}
+	
 		for (auto* dirLightNode : Engine::GetWorld()->GetNodeMap<DirectionalLightNode>())
-			m_glDirectionalLights.push_back(CreateObserver<GLBasicDirectionalLight>(dirLightNode));
-
+		{
+			CreateObserver_AutoContained<GLBasicDirectionalLight>(dirLightNode, m_glDirectionalLights);
+		}
+			
 		for (auto* dirLightNode : Engine::GetWorld()->GetNodeMap<SpotLightNode>())
-			m_glSpotLights.push_back(CreateObserver<GLBasicSpotLight>(dirLightNode));
+		{
+			CreateObserver_AutoContained< GLBasicSpotLight>(dirLightNode, m_glSpotLights);
+		}
 
 		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/deferred/gBuffer/gBuffer.shader.json");
 		m_gBuffer.shader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);

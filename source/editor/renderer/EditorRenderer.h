@@ -19,7 +19,7 @@ public:
 		{
 			if (auto geometry = dynamic_cast<GeometryNode*>(node))
 			{
-				m_glGeometries.emplace_back(CreateObserver<OpenGL::GLBasicGeometry>(geometry));
+		//		m_glGeometries.emplace_back(CreateObserver<OpenGL::GLBasicGeometry>(geometry));
 			}
 		});
 
@@ -27,12 +27,12 @@ public:
 		{
 			if (auto geometry = dynamic_cast<GeometryNode*>(node))
 			{
-				auto it = std::find_if(m_glGeometries.begin(), m_glGeometries.end(), [node](std::unique_ptr<OpenGL::GLBasicGeometry>& ptr)
-				{
-					return ptr.get()->node == node;
-				});
-				assert(it != m_glGeometries.end() && "Attempting to remove untracked geometry node from observer list.");
-				m_glGeometries.erase(it);
+			//	auto it = std::find_if(m_glGeometries.begin(), m_glGeometries.end(), [node](std::unique_ptr<OpenGL::GLBasicGeometry>& ptr)
+				//{
+				//	return ptr.get()->node == node;
+				//});
+				//assert(it != m_glGeometries.end() && "Attempting to remove untracked geometry node from observer list.");
+			//	m_glGeometries.erase(it);
 			}
 		});
 	}
@@ -61,7 +61,7 @@ public:
 		{
 			if (auto geometry = dynamic_cast<GeometryNode*>(node))
 			{
-				m_glGeometries.emplace_back(CreateObserver<OpenGL::GLBasicGeometry>(geometry));
+				//m_glGeometries.emplace_back(CreateObserver<OpenGL::GLBasicGeometry>(geometry));
 			}
 		});
 
@@ -69,12 +69,12 @@ public:
 		{
 			if (auto geometry = dynamic_cast<GeometryNode*>(node))
 			{
-				auto it = std::find_if(m_glGeometries.begin(), m_glGeometries.end(), [node](std::unique_ptr<OpenGL::GLBasicGeometry>& ptr)
-				{
-					return ptr.get()->node == node;
-				});
-				assert(it != m_glGeometries.end() && "Attempting to remove untracked geometry node from observer list.");
-				m_glGeometries.erase(it);
+				//auto it = std::find_if(m_glGeometries.begin(), m_glGeometries.end(), [node](std::unique_ptr<OpenGL::GLBasicGeometry>& ptr)
+				//{
+				//	return ptr.get()->node == node;
+				//});
+				//assert(it != m_glGeometries.end() && "Attempting to remove untracked geometry node from observer list.");
+				//m_glGeometries.erase(it);
 			}
 		});
 	}
