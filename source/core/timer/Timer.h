@@ -147,7 +147,7 @@ namespace Timer
 }
 
 #define TIMER_STATIC_SCOPE(Name) \
-static Timer::DebugTimer scope_timer____LINE__; Timer::Scope scope_timer____LINE__scope(scope_timer____LINE__, Name)
+static Timer::DebugTimer scope_timer; Timer::Scope scope_timer_scope(scope_timer, Name)
 
 #define TIMER_STATIC_SCOPE_MS(Name) \
-static Timer::DebugTimer<std::chrono::milliseconds> scope_timer____LINE__; Timer::Scope<std::chrono::milliseconds> scope_timer____LINE__scope(scope_timer____LINE__, Name)
+static Timer::DebugTimer<std::chrono::milliseconds> scope_timer_ms; Timer::Scope<std::chrono::milliseconds> scope_timer_ms_scoe(scope_timer_ms, Name)

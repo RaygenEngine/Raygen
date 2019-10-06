@@ -43,6 +43,7 @@ namespace utl
 // force log by matching the log level of the logger - except when level is LL_OFF
 #define LOG_ANY(...)     utl::Log::GetLogger()->log(utl::Log::GetLogger()->level(), __VA_ARGS__)
 
+#define LOG_REPORT(...)    utl::Log::GetLogger()->warn(__VA_ARGS__)
 #define LOG_TRACE(...)     utl::Log::GetLogger()->trace(__VA_ARGS__)
 #define LOG_DEBUG(...)     utl::Log::GetLogger()->debug(__VA_ARGS__)
 #define LOG_INFO(...)      utl::Log::GetLogger()->info(__VA_ARGS__)
@@ -51,7 +52,7 @@ namespace utl
 #define LOG_FATAL(...)     utl::Log::GetLogger()->critical(__VA_ARGS__)
 #define LOG_ASSERT(...)    do { utl::Log::GetLogger()->critical(__VA_ARGS__); utl::Log::GetLogger()->flush(); std::abort(); } while(0)
 
-
+#define CLOG_REPORT(condition, ...)    do { if ((condition)) { LOG_REPORT(__VA_ARGS__); } } while(0)
 #define CLOG_TRACE(condition, ...)     do { if ((condition)) { utl::Log::GetLogger()->trace(__VA_ARGS__) 	; } } while(0)
 #define CLOG_DEBUG(condition, ...)     do { if ((condition)) { utl::Log::GetLogger()->debug(__VA_ARGS__) 	; } } while(0)
 #define CLOG_INFO(condition, ...)      do { if ((condition)) { utl::Log::GetLogger()->info(__VA_ARGS__)	; } } while(0)

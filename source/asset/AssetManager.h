@@ -73,6 +73,12 @@ class AssetManager
 	template<typename T>
 	void LoadEntry(PodEntry* entry)
 	{
+		// If we have future data, use them directly.
+		if (entry->futureLoaded.valid())
+		{
+			entry->ptr.reset(entry->futureLoaded.get());
+			return;
+		}
 		T* ptr = new T();
 		bool loaded = T::Load(ptr, entry->path);
 		assert(loaded);
@@ -215,11 +221,6 @@ private:
 			return ptr;
 		});
 	}
-	template<>
-	void LoadEntry<ImagePod>(PodEntry* entry)
-	{
-		entry->ptr.reset(entry->futureLoaded.get());
-	}
 	
 	template<> 
 	void PostRegisterEntry<TexturePod>(PodEntry* entry)
@@ -236,11 +237,7 @@ private:
 		ShaderPod::Load(pod, entry->path);
 		entry->ptr.reset(pod);
 	}
-	template<>
-	void LoadEntry<StringPod>(PodEntry* entry)
-	{
-		entry->ptr.reset(entry->futureLoaded.get());
-	}
+
 	template<>
 	void PostRegisterEntry<StringPod>(PodEntry* entry)
 	{

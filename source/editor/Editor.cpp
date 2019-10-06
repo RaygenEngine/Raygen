@@ -340,7 +340,7 @@ void Editor::UpdateEditor()
 
 	if (lfb.HasSelected()) 
 	{
-		m_sceneToLoad = lfb.GetSelected().string();
+		m_sceneToLoad = lfb.GetSelected();
 		lfb.ClearSelected();
 	}
 
@@ -491,9 +491,10 @@ void Editor::PropertyEditor(Node* node)
 	}
 }
 
-void Editor::LoadScene(const std::string& scenefile)
+void Editor::LoadScene(const fs::path& scenefile)
 {
-	Engine::Get().CreateWorldFromFile(scenefile);
+	
+	Engine::Get().CreateWorldFromFile("/" + fs::relative(scenefile).string());
 	Engine::Get().SwitchRenderer(0);
 
 	m_selectedNode = nullptr;
@@ -518,7 +519,7 @@ void Editor::HandleInput()
 
 void Editor::PreBeginFrame()
 {
-	if (m_sceneToLoad.size() > 0)
+	if (!m_sceneToLoad.empty())
 	{
 		LoadScene(m_sceneToLoad);
 		m_sceneToLoad = "";

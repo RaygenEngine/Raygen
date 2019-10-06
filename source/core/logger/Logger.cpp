@@ -46,7 +46,7 @@ namespace utl
 				break;
 		}
 
-		LOG_ANY("Initialized RT_XEngine Logger, level: {}",
+		LOG_ANY("Initialized Rayxen Logger, level: {}",
 			spdlog::level::to_string_view(s_logger->level()));
 	}
 }
