@@ -16,7 +16,9 @@ namespace OpenGL
 		MAKE_METADATA(GLForwardRenderer);
 
 	protected:
-
+		// TODO: should use the camera and window respectively
+		int32 m_outWidth{}, m_outHeight{};
+		
 		// shaders
 		GLShader* m_testShader;
 		GLShader* m_screenQuadShader;

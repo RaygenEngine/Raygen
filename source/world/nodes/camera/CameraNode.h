@@ -34,6 +34,7 @@ class CameraNode : public Node
 
 	int32 m_viewportWidth;
 	int32 m_viewportHeight;
+	
 public:
 	DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
 
