@@ -18,11 +18,14 @@ namespace OpenGL
 		GLShader* shader;
 
 		glm::mat4 lightSpaceMatrix;
-		
+
+		virtual void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override {}
+
+
 		GLBasicSpotLight(SpotLightNode* node);
 		~GLBasicSpotLight();
 
 		// render shadow map, then return the matrix needed to move from world to light space
-		void RenderShadowMap(const std::vector<std::unique_ptr<GLBasicGeometry>>& geometries);
+		void RenderShadowMap(const std::vector<GLBasicGeometry*>& geometries);
 	};
 }

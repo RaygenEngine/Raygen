@@ -26,3 +26,5 @@
 #include "core/auxiliary/GraphicsMathAux.h"
 #include "core/auxiliary/SmartPtrAux.h"
 #include "core/auxiliary/StringAux.h"
+
+#include <bitset>

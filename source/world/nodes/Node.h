@@ -4,9 +4,13 @@
 #include "core/reflection/GenMacros.h" // include gen macros here even if not needed to propagate to all node headers
 #include "tinyxml2/tinyxml2.h"
 #include "system/Object.h"
+#include <bitset>
 
 class AssetManager;
 class World;
+
+// Properly pads the dirty flags given to account for the parent class's dirty flags.
+#define DECLARE_DIRTY_FLAGSET(...) public: struct DF { enum { _PREV = Parent::DF::_COUNT - 1, __VA_ARGS__, _COUNT }; }; private:
 
 class Node : public Object
 {
@@ -44,6 +48,22 @@ private:
 		// Add reflected variables here.
 	}
 
+
+	// Base for dirty flagsets, use the macros. DOC
+public:
+	struct DF
+	{
+		enum {
+			Transform,
+			Hierarchy,
+			Children,
+			Properties,
+			Created,
+			_COUNT
+		};
+	};
+
+
 protected:
 	// local
 	glm::vec3 m_localTranslation;
@@ -57,8 +77,7 @@ protected:
 	glm::vec3 m_worldScale;
 	glm::mat4 m_worldMatrix;
 
-	bool m_dirty;
-	bool m_updateLocalMatrix;
+	std::bitset<64> m_dirty;
 
 protected:
 	// TODO: remove
@@ -68,9 +87,11 @@ protected:
 
 	// for now ownership is given to parent nodes (later on, world should be manager) 
 	std::vector<std::shared_ptr<Node>> m_children;
+	
 
-		
-public:
+private:
+	// mark dirty self and children
+	void MarkMatrixChanged();
 	
 	friend class Editor;
 	friend class World;
@@ -103,12 +124,14 @@ public:
 	bool IsLeaf() const { return m_children.empty(); }
 	const std::string& GetType() const { return m_type; }
 
-	const std::vector<std::shared_ptr<Node>>& GetChildren() { return m_children; };
+	const std::vector<std::shared_ptr<Node>>& GetChildren() { return m_children; }
 	
+	std::bitset<64> GetDirtyFlagset() const { return m_dirty; }
+
 	// Returns nullptr IF AND ONLY IF "this" node is the root node.
 	[[nodiscard]] Node* GetParent() const { return m_parent; }
 
-	void AddChild(std::shared_ptr<Node> child) { m_children.emplace_back(child); }
+	void AddChild(std::shared_ptr<Node> child) { m_dirty.set(DF::Children); m_children.emplace_back(child); }
 
 	void DeleteChild(Node* child);
 	//
@@ -119,6 +142,7 @@ public:
 	virtual bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData);
 	virtual void LoadReflectedProperties(const tinyxml2::XMLElement* xmlData);
 
+	virtual void PropertyUpdatedFromEditor(const Property& prop) { }; // the m_dirtyBitset Property is set directly through the editor before this call.
 
 	// Override loading of a specific child. 
 	// If you return a non null pointer here the default node creation will be skipped for this child
@@ -128,18 +152,10 @@ public:
 	// You can use this to track 'custom' children in 
 	virtual bool PostChildrenLoaded() { return true; }
 		
-	// mark dirty self and children
-	void MarkDirty();
 	// cache world transform bottom up (and where needed to be updated)
-	virtual void CacheWorldTransform();
+	void UpdateTransforms(const glm::mat4& parentMatrix);
 
-	void Move(const glm::vec3& direction, float magnitude);
-	void MoveUp(float magnitude);
-	void MoveDown(float magnitude);
-	void MoveRight(float magnitude);
-	void MoveLeft(float magnitude);
-	void MoveFront(float magnitude);
-	void MoveBack(float magnitude);
+	void AddLocalOffset(const glm::vec3& direction);
 
 	// not tested
 	void Orient(float yaw, float pitch, float roll);
@@ -148,7 +164,11 @@ public:
 
 	void OrientYaw(float yaw);
 
-	virtual void Update(float deltaTime);
+	virtual void Update(float deltaSeconds) {};
+
+	// Runs late in the frame, only on nodes that at least one m_dirty is set.
+	virtual void DirtyUpdate() {};
+
 
 	//
 	// Child Getter Utilities
@@ -246,9 +266,4 @@ public:
 		}
 		return dynamic_cast<NodeClass*>(child.get());
 	}
-protected:
-	virtual std::string ToString(bool verbose, uint depth) const;
-
-public:
-	virtual void ToString(std::ostream& os) const { os << "object-type: Node, id: " << GetUID(); }
 };

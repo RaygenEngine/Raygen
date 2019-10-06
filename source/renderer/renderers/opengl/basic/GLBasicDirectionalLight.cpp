@@ -41,7 +41,7 @@ namespace OpenGL
 		glDeleteTextures(1, &shadowMap);
 	}
 
-	void GLBasicDirectionalLight::RenderShadowMap(const std::vector<std::unique_ptr<GLBasicGeometry>>& geometries)
+	void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geometries)
 	{
 		glViewport(0, 0, node->GetShadowMapWidth(), node->GetShadowMapHeight());
 

@@ -8,34 +8,8 @@
 
 
 FreeformUserNode::FreeformUserNode(Node* parent)
-	: UserNode(parent),
-		m_camera(nullptr)
+	: UserNode(parent)
 {
-}
-
-std::string FreeformUserNode::ToString(bool verbose, uint depth) const
-{
-	return std::string("    ") * depth + "|--FreeformUser " + Node::ToString(verbose, depth);
-}
-
-bool FreeformUserNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
-{
-	UserNode::LoadAttributesFromXML(xmlData);
-
-	glm::vec3 localLookat{};
-	if (ParsingAux::ReadFloatsAttribute(xmlData, "lookat", localLookat))
-	{
-		// if lookat read overwrite following
-		SetLocalOrientation(utl::GetOrientationFromLookAtAndPosition(localLookat, GetLocalTranslation()));
-	}
-
-	return true;
-}
-
-bool FreeformUserNode::PostChildrenLoaded()
-{
-	m_camera = GetUniqueChildOfClass<CameraNode>();
-	return m_camera != nullptr;
 }
 
 // TODO: speed and turning speed adjustments
@@ -43,8 +17,8 @@ void FreeformUserNode::Update(float deltaTime)
 {
 	auto& input = *Engine::GetInput();
 
-	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetWheelDelta() * 0.00001f, 0.000001f, 0.1f);
-	auto speed = m_movementSpeed; // 0,01
+	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetWheelDelta() * 2.0f, 10.f, 100.0f);
+	auto speed = m_movementSpeed;
 
 	speed *= deltaTime;
 
@@ -61,17 +35,17 @@ void FreeformUserNode::Update(float deltaTime)
 	// user rotation
 	if (input.IsCursorDragged() && input.IsKeyRepeat(XVirtualKey::RBUTTON))
 	{
-		const float yaw = -input.GetCursorRelativePosition().x * m_turningSpeed;
-		const float pitch = -input.GetCursorRelativePosition().y * m_turningSpeed;
+		const float yaw = -input.GetCursorRelativePosition().x * m_turningSpeed * 0.005f;
+		const float pitch = -input.GetCursorRelativePosition().y * m_turningSpeed * 0.005f;
 
 		OrientWithoutRoll(yaw, pitch);
 	}
 
 	if (input.IsRightThumbMoving())
 	{
-		const auto yaw = -input.GetRightThumbDirection().x * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed;
+		const auto yaw = -input.GetRightThumbDirection().x * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;
 		// upside down with regards to the cursor dragging
-		const auto pitch = input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed;
+		const auto pitch = input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;
 
 		OrientWithoutRoll(yaw, pitch);
 	}
@@ -87,24 +61,24 @@ void FreeformUserNode::Update(float deltaTime)
 		const auto rotMat = glm::rotate(-(joystickAngle + glm::half_pi<float>()), GetUp());
 		const glm::vec3 moveDir = rotMat * glm::vec4(GetFront(), 1.f);
 
-		Move(moveDir, speed * input.GetLeftThumbMagnitude());
+		AddLocalOffset(moveDir * speed * input.GetLeftThumbMagnitude());
 	}
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::W, XVirtualKey::GAMEPAD_DPAD_UP))
-		MoveFront(speed);
+		AddLocalOffset(GetFront() * speed);
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::S, XVirtualKey::GAMEPAD_DPAD_DOWN))
-		MoveBack(speed);
+		AddLocalOffset((-GetFront()) * speed);
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::D, XVirtualKey::GAMEPAD_DPAD_RIGHT))
-		MoveRight(speed);
+		AddLocalOffset((GetRight()) * speed);
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::A, XVirtualKey::GAMEPAD_DPAD_LEFT))
-		MoveLeft(speed);
+		AddLocalOffset((-GetRight()) * speed);
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::E, XVirtualKey::GAMEPAD_LEFT_SHOULDER))
-		MoveUp(speed);
+		AddLocalOffset((GetUp()) * speed);
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::Q, XVirtualKey::GAMEPAD_RIGHT_SHOULDER))
-		MoveDown(speed);
+		AddLocalOffset((-GetUp()) * speed);
 }

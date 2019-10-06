@@ -9,22 +9,12 @@ SpotLightNode::SpotLightNode(Node* parent)
 {
 }
 
-std::string SpotLightNode::ToString(bool verbose, uint depth) const
-{
-	return std::string("    ") * depth + "|--SpotLight " + Node::ToString(verbose, depth);
-}
-
 
 bool SpotLightNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
 {
 	LightNode::LoadAttributesFromXML(xmlData);
+	// WIP:
 
-	glm::vec3 localLookat{};
-	if (ParsingAux::ReadFloatsAttribute(xmlData, "lookat", localLookat))
-	{
-		// if lookat read overwrite following
-		SetLocalOrientation(utl::GetOrientationFromLookAtAndPosition(localLookat, GetLocalTranslation()));
-	}
 
 	return true;
 }

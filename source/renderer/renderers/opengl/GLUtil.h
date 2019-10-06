@@ -62,6 +62,7 @@ namespace OpenGL
 		case TextureTarget::TEXTURE_CUBEMAP: return GL_TEXTURE_CUBE_MAP;
 		default: assert(false && "Texture format yet supported");
 		}
+		return GL_INVALID_ENUM;
 	}
 	
 	inline GLenum GLCheckError_(const char *file, int line)

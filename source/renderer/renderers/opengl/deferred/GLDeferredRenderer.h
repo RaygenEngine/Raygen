@@ -7,6 +7,9 @@
 #include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
+#include "renderer/renderers/opengl/basic/GLBasicSkybox.h"
+
+
 
 namespace OpenGL
 {
@@ -41,9 +44,9 @@ namespace OpenGL
 		} m_gBuffer;
 
 
-		std::vector<std::unique_ptr<GLBasicGeometry>> m_glGeometries;
-		std::vector<std::unique_ptr<GLBasicDirectionalLight>> m_glDirectionalLights;
-		std::vector<std::unique_ptr<GLBasicSpotLight>> m_glSpotLights;
+		std::vector<GLBasicGeometry*> m_glGeometries;
+		std::vector<GLBasicDirectionalLight*> m_glDirectionalLights;
+		std::vector<GLBasicSpotLight*> m_glSpotLights;
 		CameraNode* m_camera;
 
 		void RenderGBuffer();
@@ -69,7 +72,7 @@ namespace OpenGL
 
 		~GLDeferredRenderer();
 
-		bool InitScene(int32 width, int32 height) override;
+		bool InitScene() override;
 		
 		void WindowResize(int32 width, int32 height);
 		void Render() override;

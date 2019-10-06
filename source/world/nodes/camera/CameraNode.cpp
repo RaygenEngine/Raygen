@@ -23,37 +23,21 @@ void CameraNode::RecalculateProjectionFov()
 
 	m_projectionMatrix = glm::perspective(glm::radians(m_vFov), ar, m_near, m_far);
 	m_hFov = glm::degrees(2 * atan(ar * tan(glm::radians(m_vFov) * 0.5f)));
-}
-
-void CameraNode::CacheWorldTransform()
-{
-	Node::CacheWorldTransform();
-	RecalculateProjectionFov();
-}
-
-std::string CameraNode::ToString(bool verbose, uint depth) const
-{
-	return std::string("    ") * depth + "|--camera " + Node::ToString(verbose, depth);
-}
-
-void CameraNode::GetTracingVariables(glm::vec3& u, glm::vec3& v, glm::vec3& w)
-{
-	const auto tanVHalfFov = tan(glm::radians(m_vFov)*0.5f);
-	const auto tanHHalfFov = tan(glm::radians(m_hFov)*0.5f);
-
-	u = GetRight();
-	v = GetUp();
-	// TODO: check how is this affected by focal length, is it?
-	w = GetFront();
-
-	v *= tanVHalfFov * m_focalLength;
-	u *= tanHHalfFov * m_focalLength;
+	m_dirty.set(DF::Projection);
 }
 
 void CameraNode::WindowResize(int32 width, int32 height)
 {
 	m_viewportWidth = width;
 	m_viewportHeight = height;
-	RecalculateProjectionFov();
+	m_dirty.set(DF::ViewportSize);
 }
 
+void CameraNode::DirtyUpdate()
+{
+	Node::DirtyUpdate();
+	if (m_dirty[DF::Projection] || m_dirty[DF::ViewportSize])
+	{
+		RecalculateProjectionFov();
+	}
+}

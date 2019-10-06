@@ -19,13 +19,17 @@ bool DirectionalLightNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xml
 		// if lookat read overwrite following
 		SetLocalOrientation(utl::GetOrientationFromLookAtAndPosition(localLookat, GetLocalTranslation()));
 	}
-
+	glm::ortho(m_left, m_right, m_bottom, m_top, m_near, m_far);
 	return true;
 }
 
-
-std::string DirectionalLightNode::ToString(bool verbose, uint depth) const
+void DirectionalLightNode::DirtyUpdate()
 {
-	return std::string("    ") * depth + "|--DirectionalLight " + Node::ToString(verbose, depth);
+	LightNode::DirtyUpdate();
+	
+	if (m_dirty[DF::Projection])
+	{
+		UpdateOrthoProjectionMatrix();
+	}
 }
 

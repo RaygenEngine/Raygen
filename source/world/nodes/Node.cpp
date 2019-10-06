@@ -21,9 +21,7 @@ Node::Node(Node* pNode)
 		m_worldOrientation(1.f, 0.f, 0.f, 0.f),
 		m_worldScale(1.f, 1.f, 1.f),
 		m_worldMatrix(glm::mat4(1.f)),
-		m_dirty(false),
-		m_updateLocalMatrix(true),
-	    // update local on first iter
+		m_dirty(),
 	    m_parent(pNode)
 {
 }
@@ -31,70 +29,52 @@ Node::Node(Node* pNode)
 void Node::SetLocalTranslation(const glm::vec3& lt)
 {
 	m_localTranslation = lt;
-
-	m_updateLocalMatrix = true;
-	MarkDirty();
+	MarkMatrixChanged();
 }
 
 void Node::SetLocalOrientation(const glm::quat& lo)
 {
-	m_localOrientation = lo;
 
-	m_updateLocalMatrix = true;
-	MarkDirty();
+	m_localOrientation = lo;
+	MarkMatrixChanged();
 }
 
 void Node::SetLocalScale(const glm::vec3& ls)
 {
 	m_localScale = ls;
-
-	m_updateLocalMatrix = true;
-	MarkDirty();
+	MarkMatrixChanged();
 }
 
 void Node::SetLocalMatrix(const glm::mat4& lm)
 {
 	m_localMatrix = lm;
-
-	MarkDirty();
+	MarkMatrixChanged();
 }
 
-void Node::CacheWorldTransform()
+void Node::MarkMatrixChanged()
 {
-	// root
-	if (!m_parent)
-		return;
-		
-	if (!m_dirty)
-		return;
-
-	// cache from here until root
-	m_parent->CacheWorldTransform();
-
-	if(m_updateLocalMatrix)
-		m_localMatrix = utl::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
-
-	m_worldMatrix = m_parent->GetWorldMatrix() * m_localMatrix;
-
-	// TODO optimize
-	glm::vec3 skew; glm::vec4 persp;
-	glm::decompose(m_worldMatrix, m_worldScale, m_worldOrientation, m_worldTranslation, skew, persp);
-
-	m_dirty = false;
-	m_updateLocalMatrix = false;
-
-}
-
-void Node::MarkDirty()
-{
-	if(m_dirty)
-		return;
-
-	m_dirty = true;
-
-	Engine::GetWorld()->AddDirtyNode(this);
+	m_dirty.set(DF::Transform);
 	for (auto& child : m_children)
-		child->MarkDirty();
+	{
+		child->MarkMatrixChanged();
+	}
+}
+
+void Node::UpdateTransforms(const glm::mat4& parentMatrix)
+{
+	if (m_dirty[DF::Transform])
+	{
+		m_localMatrix = utl::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
+		m_worldMatrix = parentMatrix * m_localMatrix;
+		// PERF:
+		glm::vec3 skew; glm::vec4 persp;
+		glm::decompose(m_worldMatrix, m_worldScale, m_worldOrientation, m_worldTranslation, skew, persp);
+	}
+
+	for (auto& uPtr : m_children)
+	{
+		uPtr->UpdateTransforms(m_worldMatrix);
+	}
 }
 
 void Node::DeleteChild(Node* child)
@@ -104,6 +84,7 @@ void Node::DeleteChild(Node* child)
 		return ref.get() == child;
 	});
 	m_children.erase(it);
+	m_dirty.set(DF::Children);
 }
 
 bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
@@ -118,9 +99,9 @@ bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 
 	NodeFactory* factory = Engine::GetWorld()->GetNodeFactory();
 	const auto status = factory->LoadChildrenXML(xmlData, this);
-		
-	// calculate local matrix after loading
-	m_localMatrix = utl::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
+	
+	m_dirty.set();
+	
 	return status;
 }
 
@@ -132,66 +113,20 @@ bool Node::LoadAttributesFromXML(const tinyxml2::XMLElement * xmlData)
 	m_localOrientation = glm::quat(glm::radians(eulerPYR));
 	ParsingAux::ReadFloatsAttribute(xmlData, "scale", m_localScale);
 
-	m_updateLocalMatrix = true;
-	MarkDirty();
+	glm::vec3 localLookat{};
+	if (ParsingAux::ReadFloatsAttribute(xmlData, "lookat", localLookat))
+	{
+		// if lookat read overwrite following
+		m_localOrientation = utl::GetOrientationFromLookAtAndPosition(localLookat, GetLocalTranslation());
+	}
 
 	return true;
 }
 
-void Node::Move(const glm::vec3& direction, float magnitude)
+void Node::AddLocalOffset(const glm::vec3& direction)
 {
-	m_localTranslation += direction * magnitude;
-
-	m_updateLocalMatrix = true;
-	MarkDirty();
-}
-
-void Node::MoveUp(float magnitude)
-{
-	m_localTranslation += GetUp() * magnitude;
-
-	m_updateLocalMatrix = true;
-	MarkDirty();
-}
-
-void Node::MoveDown(float magnitude)
-{
-	m_localTranslation += -GetUp() * magnitude;
-
-	m_updateLocalMatrix = true;
-	MarkDirty();
-}
-
-void Node::MoveRight(float magnitude)
-{
-	m_localTranslation += GetRight() * magnitude;
-
-	m_updateLocalMatrix = true;
-	MarkDirty();
-}
-
-void Node::MoveLeft(float magnitude)
-{
-	m_localTranslation += -GetRight() * magnitude;
-
-	m_updateLocalMatrix = true;
-	MarkDirty();
-}
-
-void Node::MoveFront(float magnitude)
-{
-	m_localTranslation += GetFront() * magnitude;
-
-	m_updateLocalMatrix = true;
-	MarkDirty();
-}
-
-void Node::MoveBack(float magnitude)
-{
-	m_localTranslation += -GetFront() * magnitude;
-
-	m_updateLocalMatrix = true;
-	MarkDirty();
+	m_localTranslation += direction;
+	MarkMatrixChanged();
 }
 
 // TODO: orient speed adjust by world delta?
@@ -203,8 +138,7 @@ void Node::Orient(float yaw, float pitch, float roll)
 
 	m_localOrientation = rotY * rotP * rotR * m_localOrientation;
 
-	m_updateLocalMatrix = true;
-	MarkDirty();
+	MarkMatrixChanged();
 }
 
 void Node::OrientWithoutRoll(float yaw, float pitch)
@@ -214,126 +148,102 @@ void Node::OrientWithoutRoll(float yaw, float pitch)
 
 	m_localOrientation = rotY * m_localOrientation * rotP;
 
-	m_updateLocalMatrix = true;
-	MarkDirty();
+	MarkMatrixChanged();
 }
 
 void Node::OrientYaw(float yaw)
 {
 	const glm::quat rotY = glm::angleAxis(yaw, glm::vec3(0.f, 1.f, 0.f));
-
 	m_localOrientation = rotY * m_localOrientation;
 
-	m_updateLocalMatrix = true;
-	MarkDirty();
-}
-
-void Node::Update(float deltaTime)
-{
-
-}
-
-std::string Node::ToString(bool verbose, uint depth) const
-{
-	std::string moreInfo{};
-	if (verbose)
-	{
-		const void* address = static_cast<const void*>(this);
-		std::stringstream ss;
-		ss << address;
-		moreInfo = " uuid:" + std::to_string(GetUID()) + " address:" + ss.str();
-	}
-	std::string groupTree{};
-	for (const auto child : m_children)
-		groupTree += child->ToString(verbose, depth + 1);
-	return "name:" + m_name + moreInfo + "\n" + groupTree;
+	MarkMatrixChanged();
 }
 
 namespace 
 {
 
-struct LoadPropertiesFromXMLVisitor
-{
-	const tinyxml2::XMLElement* xmlData;
-	const char* str;
-	std::string strBuf;
-	PodHandle<XMLDocPod> worldHandle;
-
-	bool PreProperty(const Property& p)
+	struct LoadPropertiesFromXMLVisitor
 	{
-		if (p.HasFlags(PropertyFlags::NoLoad))
+		const tinyxml2::XMLElement* xmlData;
+		const char* str;
+		std::string strBuf;
+		PodHandle<XMLDocPod> worldHandle;
+
+		bool PreProperty(const Property& p)
 		{
-			return false;
-		}
-		strBuf = p.GetNameStr();
-		str = strBuf.c_str();
-		return true;
-	}
-
-	// Basic types
-	void operator()(int32& v, const Property& p) { xmlData->QueryIntAttribute(str, &v); }
-	void operator()(bool& v, const Property& p) { xmlData->QueryBoolAttribute(str, &v); }
-	void operator()(float& v, const Property& p) { xmlData->QueryFloatAttribute(str, &v); }
-
-	void operator()(glm::vec3& v, const Property& p)
-	{
-		ParsingAux::ReadFloatsAttribute(xmlData, str, v);
-	}
-	void operator()(glm::vec4& v, const Property& p)
-	{
-		ParsingAux::ReadFloatsAttribute(xmlData, str, v);
-	}
-
-	void operator()(std::string& v, const Property& p)
-	{
-		ParsingAux::ReadStringAttribute(xmlData, str, v);
-	}
-
-	// Pod<T>
-	template<typename T>
-	void operator()(PodHandle<T>& handle, const Property& p)
-	{
-		std::string tmp;
-		if (!ParsingAux::ReadStringAttribute(xmlData, str, tmp))
-		{
-			if (!p.HasFlags(PropertyFlags::OptionalPod))
+			if (p.HasFlags(PropertyFlags::NoLoad))
 			{
-				LOG_ASSERT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
+				return false;
 			}
+			strBuf = p.GetNameStr();
+			str = strBuf.c_str();
+			return true;
 		}
-		handle = AssetManager::GetOrCreateFromParent<T>(tmp, worldHandle);
-	}
+
+		// Basic types
+		void operator()(int32& v, const Property& p) { xmlData->QueryIntAttribute(str, &v); }
+		void operator()(bool& v, const Property& p) { xmlData->QueryBoolAttribute(str, &v); }
+		void operator()(float& v, const Property& p) { xmlData->QueryFloatAttribute(str, &v); }
+
+		void operator()(glm::vec3& v, const Property& p)
+		{
+			ParsingAux::ReadFloatsAttribute(xmlData, str, v);
+		}
+		void operator()(glm::vec4& v, const Property& p)
+		{
+			ParsingAux::ReadFloatsAttribute(xmlData, str, v);
+		}
+
+		void operator()(std::string& v, const Property& p)
+		{
+			ParsingAux::ReadStringAttribute(xmlData, str, v);
+		}
+
+		// Pod<T>
+		template<typename T>
+		void operator()(PodHandle<T>& handle, const Property& p)
+		{
+			std::string tmp;
+			if (!ParsingAux::ReadStringAttribute(xmlData, str, tmp))
+			{
+				if (!p.HasFlags(PropertyFlags::OptionalPod))
+				{
+					LOG_ASSERT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
+				}
+			}
+			handle = AssetManager::GetOrCreateFromParent<T>(tmp, worldHandle);
+		}
 	
 
-	void operator()(PodHandle<ModelPod>& handle, const Property& p)
-	{
-		std::string tmp;
-		if (!ParsingAux::ReadStringAttribute(xmlData, str, tmp))
+		void operator()(PodHandle<ModelPod>& handle, const Property& p)
 		{
-			if (!p.HasFlags(PropertyFlags::OptionalPod))
+			std::string tmp;
+			if (!ParsingAux::ReadStringAttribute(xmlData, str, tmp))
 			{
-				LOG_ASSERT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
+				if (!p.HasFlags(PropertyFlags::OptionalPod))
+				{
+					LOG_ASSERT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
+				}
 			}
-		}
-		handle = AssetManager::GetOrCreateFromParent<ModelPod>(tmp, worldHandle);
+			handle = AssetManager::GetOrCreateFromParent<ModelPod>(tmp, worldHandle);
 		
-		if (tmp.find(".gltf") != std::string::npos)
-		{
-			AssetManager::PreloadGltf(AssetManager::GetPodUri(handle));
+			if (tmp.find(".gltf") != std::string::npos)
+			{
+				AssetManager::PreloadGltf(AssetManager::GetPodUri(handle));
+			}
 		}
-	}
 	
-	template<typename T>
-	void operator()(std::vector<T>& v, const Property& p)
-	{
-		LOG_WARN("Vectors are not implented yet on XML Scene Load. Skipped loading vector: ", p.GetNameStr());
-	}
+		template<typename T>
+		void operator()(std::vector<T>& v, const Property& p)
+		{
+			LOG_WARN("Vectors are not implented yet on XML Scene Load. Skipped loading vector: ", p.GetNameStr());
+		}
 	
-	template<typename T>
-	void operator()(T& v, const Property& p)
-	{
-		LOG_WARN("Unimplemented property: {}", refl::GetName<T>());
-	}
+		template<typename T>
+		void operator()(T& v, const Property& p)
+		{
+			LOG_WARN("Unimplemented property: {}", refl::GetName<T>());
+		}
 
 };
 

@@ -20,8 +20,4 @@ public:
 	~GeometryNode() = default;
 
 	PodHandle<ModelPod> GetModel() const { return m_model; }
-
-	std::string ToString(bool verbose, uint depth) const override;
-
-	void ToString(std::ostream& os) const override { os << "node-type: TriangleModelGeometryNode, name: " << GetName(); }
 };

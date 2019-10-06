@@ -15,6 +15,11 @@ class ReflClass
 	// PERF: possible to constexpr hash variable names and use them in this map prehashed.
 	std::unordered_map<std::string, size_t> m_hashTable;
 
+	const ReflClass* m_parentClass;
+
+	ReflClass()
+		: m_parentClass(nullptr) {}
+
 	void AppendProperties(const ReflClass& other)
 	{
 		size_t index = m_properties.size();
@@ -23,9 +28,12 @@ class ReflClass
 			m_properties.push_back(prop);
 			m_hashTable[std::string(prop.GetName())] = index++;
 		}
+		m_parentClass = &other;
 	}
 
-	static const char* RemoveVariablePrefix(const char* name)
+public:
+	[[nodiscard]]
+	static constexpr const char* RemoveVariablePrefix(const char* name)
 	{
 		if (name[0] != 0 && name[1] != 0 && name[2] != 0 &&
 			name[0] == 'm' && name[1] == '_')
@@ -35,7 +43,6 @@ class ReflClass
 		return name;
 	};
 
-public:
 	template<typename T>
 	static ReflClass Generate()
 	{
@@ -73,7 +80,7 @@ public:
 	// Always Prefer reflection macros
 	// Never run ouside of T::GenerateReflection
 	template<typename T>
-	void AddProperty(size_t offset_of, const char* varname, PropertyFlags::Type flags) 
+	Property& AddProperty(size_t offset_of, const char* varname, PropertyFlags::Type flags) 
 	{
 		static_assert(refl::CanBeProperty<T>, "This type is not reflectable and cannot be a property.");
 
@@ -85,6 +92,7 @@ public:
 		{
 			m_properties[index].MakeEnum<T>();
 		}
+		return m_properties[index];
 	}
 
 	[[nodiscard]]
@@ -103,6 +111,12 @@ public:
 			return nullptr;
 		}
 		return &m_properties[it->second];
+	}
+
+	[[nodiscard]]
+	const ReflClass* GetParentClass() const
+	{
+		return m_parentClass;
 	}
 
 	const std::vector<Property>& GetProperties() const { return m_properties; }

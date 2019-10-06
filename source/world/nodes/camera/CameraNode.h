@@ -19,6 +19,9 @@ class CameraNode : public Node
 		REFLECT_VAR(m_viewportWidth, PropertyFlags::Transient);
 		REFLECT_VAR(m_viewportHeight, PropertyFlags::Transient);
 	}
+
+	DECLARE_DIRTY_FLAGSET(Projection, ViewportSize)
+	
 	// distance to film plane
 	float m_focalLength;
 
@@ -50,21 +53,18 @@ public:
 	float GetNear() const { return m_near; }
 	float GetFar() const { return m_far; }
 
-		void RecalculateProjectionFov();
+	int32 GetWidth() const { return m_viewportWidth; }
+	int32 GetHeight() const { return m_viewportHeight; }
 
-		virtual void CacheWorldTransform() override;
+	void RecalculateProjectionFov();
 
-		std::string ToString(bool verbose, uint depth) const override;
 
 	glm::mat4 GetViewMatrix() const { return glm::lookAt(GetWorldTranslation(), GetLookAt(), GetUp()); }
 	glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 		
-	void GetTracingVariables(glm::vec3& u, glm::vec3& v, glm::vec3& w);
-
+	virtual void DirtyUpdate() override;
 private:
 	void WindowResize(int32 width, int32 height);
-
-	void ToString(std::ostream& os) const override { os << "node-type: CameraNode, name: " << m_name; }
 };
 
 

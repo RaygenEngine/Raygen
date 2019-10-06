@@ -10,21 +10,3 @@ SkyHDRNode::SkyHDRNode(Node* parent)
 	: Node(parent)
 {
 }
-
-bool SkyHDRNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
-{
-	Node::LoadAttributesFromXML(xmlData);
-
-	if (ParsingAux::AttributeExists(xmlData, "hdr_texture"))
-	{
-		m_hdrData = AssetManager::GetOrCreate<ImagePod>(xmlData->Attribute("hdr_texture"));
-	}
-	else return false;
-
-	return true;
-}
-
-std::string SkyHDRNode::ToString(bool verbose, uint depth) const
-{
-	return std::string("    ") * depth + "|--SkyHDR " + Node::ToString(verbose, depth);
-}

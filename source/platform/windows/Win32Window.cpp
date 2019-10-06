@@ -144,7 +144,7 @@ void Win32Window::ReleaseMouseMovement()
 void Win32Window::Show()
 {
 	::ShowWindow(m_hWnd, SW_SHOWDEFAULT);
-	::UpdateWindow(m_hWnd);
+	//::UpdateWindow(m_hWnd);
 }
 
 void Win32Window::GenerateXInputControllerMessages()

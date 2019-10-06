@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderer/NodeObserver.h"
+#include "system/EngineEvents.h"
 
 #include <unordered_set>
 #include <type_traits>
@@ -20,39 +21,122 @@
 
 class Renderer
 {
-	// TODO: updates
-	//std::unordered_set<NodeObserver*> m_observers;
-	//std::unordered_set<NodeObserver*> m_dirtyObservers;
-
-protected:
-	template <typename ObserverType>
-	std::unique_ptr<ObserverType> CreateObserver(typename ObserverType::NT* typedNode)
-	{
-		//std::shared_ptr<ObserverType> observer = std::shared_ptr<ObserverType>(new ObserverType(renderer, typedNode), [&](ObserverType* assetPtr)
-		//{
-			//m_observers.erase(assetPtr);
-			//m_dirtyObservers.erase(assetPtr);
-		//	delete assetPtr;
-		//});
-
-		//m_observers.insert(observer.get());
-
-		return std::make_unique<ObserverType>(typedNode);
-	}
-
 public:
-	virtual ~Renderer() {}
+	virtual ~Renderer() = default;
 
 	// Windows based init rendering (implement in "context"-base renderers)
-	virtual bool InitRendering(HWND assochWnd, HINSTANCE instance);
+	virtual bool InitRendering(HWND assochWnd, HINSTANCE instance) = 0;
 
 	// Init Scene (shaders/ upload stuff etc.);
-	virtual bool InitScene(int32 width, int32 height) = 0;
+	virtual bool InitScene() = 0;
 
 	virtual void Update() = 0;
 
 	virtual void Render() = 0;
 
-	virtual void SwapBuffers() { };
+	virtual void SwapBuffers() = 0;
 };
 
+class ObserverRenderer : public Renderer
+{
+	std::unordered_set<std::unique_ptr<NodeObserverBase>> m_observers;
+
+protected:
+	ObserverRenderer();
+
+	DECLARE_EVENT_LISTENER(m_nodeAddedListener, Event::OnWorldNodeAdded);
+	DECLARE_EVENT_LISTENER(m_nodeRemovedListener, Event::OnWorldNodeRemoved);
+
+	template <typename ObserverType>
+	[[nodiscard]]
+	ObserverType* CreateObserver_Callback(typename ObserverType::NodeType* typedNode, 
+								std::function<void(NodeObserverBase*)> onObserveeLost)
+	{
+		ObserverType* rawPtr = new ObserverType(typedNode);
+		m_observers.emplace(std::make_unique<NodeObserverBase>(typedNode));
+		rawPtr->onObserveeLost = onObserveeLost;
+		return rawPtr;
+	}
+
+	template <typename ObserverType>
+	ObserverType* CreateObserver_Weak(typename ObserverType::NodeType* typedNode)
+	{
+		auto lambda = [](NodeObserverBase* obs) -> void {
+			dynamic_cast<ObserverType::NodeType>(obs)->node = nullptr;
+			baseNode = nullptr;
+		};
+
+		return CreateObserver_Callback<ObserverType>(typedNode, lambda);
+	}
+
+	//
+	//
+	// 
+	template <typename ObserverType, typename T>
+	ObserverType* CreateObserver_AutoContained(typename ObserverType::NodeType* typedNode, T& containerToAddAndRemoveFrom)
+	{
+		auto lambda = [&](NodeObserverBase* obs) -> void {
+			containerToAddAndRemoveFrom.erase(obs);
+			m_observers.erase(obs);
+		};
+		auto rawPtr = CreateObserver_Callback<ObserverType>(typedNode, lambda);
+		containerToAddAndRemoveFrom.emplace(rawPtr);
+		return rawPtr;
+	}
+
+	// Attempts to track any available node of this type.
+	// When this node gets deleted, it will automatically observe another available node of this type.
+	// If no such node is available or the last one from the world gets deleted, it will Nullptr the node member.
+
+	template <typename ObserverType>
+	[[nodiscard]]
+	ObserverType* CreateObserver_AnyAvailable()
+	{
+		auto nodePtr = Engine::GetWorld()->GetAnyAvailableNode<typename ObserverType::NodeType>();
+
+		auto lambda = 
+		[](NodeObserverBase* obs) -> void 
+		{
+			auto nodePtr = Engine::GetWorld()->GetAnyAvailableNode<typename ObserverType::NodeType>();
+			dynamic_cast<ObserverType>(obs)->node = nodePtr;
+			obs->baseNode = nodePtr;
+		};
+		ObserverType* rawPtr = CreateObserver_Callback<ObserverType>(nodePtr, lambda);
+		containerToAddAndRemoveFrom.emplace(rawPtr);
+		return rawPtr;
+	}
+
+	// No use case for this currently
+	//template <typename ObserverType>
+	//void CreateObserver_SelfDestruct(typename ObserverType::NodeType* typedNode)
+	//{
+	//	auto lambda = [m_observers](NodeObserverBase* obs) -> void {
+	//		&m_observers.erase(obs);
+	//	};
+	//	auto rawPtr = CreateObserver_Callback(nodePtr, lambda);
+	//	return rawPtr;
+	//}
+
+	void RemoveObserver(NodeObserverBase* ptr);
+
+private:
+	void OnNodeRemovedFromWorld(Node* node);
+
+protected:
+	virtual void OnNodeAddedToWorld(Node* node);
+
+public:
+	virtual ~ObserverRenderer() = default;
+
+	// Windows based init rendering (implement in "context"-base renderers)
+	virtual bool InitRendering(HWND assochWnd, HINSTANCE instance) = 0;
+
+	// Init Scene (shaders/ upload stuff etc.);
+	virtual bool InitScene() = 0;
+
+	virtual void Update();
+
+	virtual void Render() = 0;
+
+	virtual void SwapBuffers() { };
+};

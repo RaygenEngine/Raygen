@@ -17,6 +17,7 @@ namespace OpenGL
 		GLuint vao;
 		GLuint vbo;
 		
+		virtual void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override {}
 		GLBasicSkybox(SkyCubeNode* node);
 		~GLBasicSkybox();
 	};

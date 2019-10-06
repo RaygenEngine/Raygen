@@ -96,7 +96,7 @@ void Engine::SwitchRenderer(uint32 registrationIndex)
 	eng.m_renderer = eng.m_rendererRegistrations[registrationIndex].Construct();
 
 	eng.m_renderer->InitRendering(eng.m_window->GetHWND(), eng.m_window->GetHInstance());
-	eng.m_renderer->InitScene(eng.m_window->GetWidth(), eng.m_window->GetHeight());
+	eng.m_renderer->InitScene();
 }
 
 bool Engine::HasCmdArgument(const std::string& argument)

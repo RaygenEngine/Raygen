@@ -8,12 +8,23 @@ class DirectionalLightNode : public LightNode
 {
 	REFLECTED_NODE(DirectionalLightNode, LightNode)
 	{
-		REFLECT_VAR(m_left);
-		REFLECT_VAR(m_right);
+		REFLECT_VAR(m_left, PropertyFlags::Color)
+			.OnDirty(DF::Projection);
+		
+		REFLECT_VAR(m_right)
+			.OnDirty(DF::Projection);
 
-		REFLECT_VAR(m_bottom);
-		REFLECT_VAR(m_top);
+		REFLECT_VAR(m_bottom)
+			.OnDirty(DF::Projection);
+		
+		REFLECT_VAR(m_top)
+			.OnDirty(DF::Projection);
 	}
+
+	DECLARE_DIRTY_FLAGSET(Projection)
+
+	glm::mat4 m_orthoProjectionMatrix;
+	
 public:
 	// TODO:
 	float m_left{ -10.f };
@@ -22,12 +33,14 @@ public:
 	float m_bottom{ -10.f };
 	float m_top{ 10.f };
 
+
 	DirectionalLightNode(Node* parent);
 	~DirectionalLightNode() = default;
 
 	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 	
-	std::string ToString(bool verbose, uint depth) const override;
+	virtual void DirtyUpdate() override;
 
-	void ToString(std::ostream& os) const override { os << "node-type: DirectionalLightNode, name: " << m_name; }
+	void UpdateOrthoProjectionMatrix() { m_orthoProjectionMatrix = glm::ortho(m_left, m_right, m_bottom, m_top, m_near, m_far);  }
+	glm::mat4 GetOrthoProjectionMatrix() const { return m_orthoProjectionMatrix; }
 };

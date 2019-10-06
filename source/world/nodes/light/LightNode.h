@@ -7,16 +7,27 @@ class LightNode : public Node
 {
 	REFLECTED_NODE(LightNode, Node)
 	{
-		REFLECT_VAR(m_near);
-		REFLECT_VAR(m_far);
+		REFLECT_VAR(m_hasShadow);
 		REFLECT_VAR(m_color, PropertyFlags::Color);
 		REFLECT_VAR(m_intensity);
+
 		REFLECT_VAR(m_shadowMapWidth);
 		REFLECT_VAR(m_shadowMapHeight);
+		REFLECT_VAR(m_near);
+		REFLECT_VAR(m_far);
 	}
+
+	DECLARE_DIRTY_FLAGSET(
+		ShadowMapSize,
+		ColorAndIntensitiy,
+		NearAndFar,
+		HasShadowChanged
+	)
 
 	glm::vec3 m_color;
 	float m_intensity;
+
+	bool m_hasShadow;
 
 	int32 m_shadowMapWidth{ 2048 };
 	int32 m_shadowMapHeight{ 2048 };
@@ -34,9 +45,5 @@ public:
 	[[nodiscard]] int32 GetShadowMapWidth() const { return m_shadowMapWidth; }
 	[[nodiscard]] int32 GetShadowMapHeight() const { return m_shadowMapHeight; }
 
-	std::string ToString(bool verbose, uint depth) const override;
-
-	void ToString(std::ostream& os) const override { os << "node-type: LightNode, name: " << m_name; }
-
-	
+	virtual void DirtyUpdate();
 };

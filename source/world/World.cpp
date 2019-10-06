@@ -6,20 +6,10 @@
 #include "editor/Editor.h"
 #include "core/reflection/ReflectionTools.h"
 
-// TODO use integers (micro or milliseconds), also tidy
-using Clock = std::chrono::steady_clock;
-
-extern auto t_start = Clock::now();
-
-extern float GetTimeMs()
-{
-	return static_cast<float>((Clock::now() - t_start).count() / 1000000.f);
-}
-
 World::World(NodeFactory* factory)
 	: m_deltaTime(0),
-	m_worldTime(GetTimeMs()),
-	m_lastTime(GetTimeMs()),
+	m_loadedTimepoint(FrameClock::now()),
+	m_lastFrameTimepoint(FrameClock::now()),
 	m_nodeFactory(factory)
 {
 }
@@ -27,13 +17,6 @@ World::World(NodeFactory* factory)
 World::~World()
 {
 	delete m_nodeFactory;
-}
-
-void World::AddDirtyNode(Node* node)
-{
-	m_dirtyNodes.insert(node);
-	if (node->IsLeaf())
-		m_dirtyLeafNodes.insert(node);
 }
 
 std::vector<Node*> World::GetNodesByName(const std::string& name) const
@@ -55,25 +38,6 @@ Node* World::GetNodeByName(const std::string& name) const
 	return nullptr;
 }
 
-std::vector<Node*> World::GetNodesById(uint32 id) const
-{
-	std::vector<Node*> nodes;
-
-	for (auto* node : m_nodes)
-		if (node->GetUID() == id)
-			nodes.push_back(node);
-
-	return nodes;
-}
-
-Node* World::GetNodeById(uint32 id) const
-{
-	for (auto* node : m_nodes)
-		if (node->GetUID() == id)
-			return node;
-	return nullptr;
-}
-
 bool World::LoadAndPrepareWorldFromXML(PodHandle<XMLDocPod> sceneXML)
 {
 	LOG_INFO("Loading World from XML: \'{}\'", AssetManager::GetPodUri(sceneXML));
@@ -89,19 +53,31 @@ bool World::LoadAndPrepareWorldFromXML(PodHandle<XMLDocPod> sceneXML)
 		LOG_FATAL("Incorrect world format!");
 		return false;
 	}
-
-	// mark dirty (everything) to cache initial instance data 
-	// world will keep dirty leafs too for optimization
-	m_root->MarkDirty();
-
-	// Cache transform data bottom up from leaf nodes
-	for (auto* dirtyLeafNode : this->m_dirtyLeafNodes)
-	{
-		dirtyLeafNode->CacheWorldTransform();
-	}
-
+	DirtyUpdateWorld();
 	LOG_INFO("World loaded succesfully");
 	return true;
+}
+
+void World::DirtyUpdateWorld()
+{
+	m_root->UpdateTransforms(glm::identity<glm::mat4>());
+
+	// PERF:
+	for (auto* node : m_nodes)
+	{
+		if (node->m_dirty.any())
+		{
+			node->DirtyUpdate();
+		}
+	}
+}
+
+void World::ClearDirtyFlags()
+{
+	for (auto& node : m_nodes)
+	{
+		node->m_dirty.reset();
+	}
 }
 
 Node* World::DuplicateNode(Node* src, Node* newParent)
@@ -121,7 +97,7 @@ Node* World::DuplicateNode(Node* src, Node* newParent)
 	created->m_localTranslation = src->m_localTranslation;
 	created->m_localOrientation = src->m_localOrientation;
 	created->m_localScale = src->m_localScale;
-	created->MarkDirty();
+	created->MarkMatrixChanged();
 
 	auto result = refltools::CopyClassTo(src, created);
 	CLOG_FATAL(!result.IsExactlyCorrect(), "Duplicate node did not exactly match properties! Node: {}", src);
@@ -149,25 +125,25 @@ void World::DeleteNode(Node* src)
 	src->GetParent()->DeleteChild(src);
 }
 
+void World::UpdateFrameTimers()
+{
+	auto now = FrameClock::now();
+	m_deltaTimeMicros = ch::duration_cast<ch::microseconds>(now - m_lastFrameTimepoint).count();
+	m_deltaTime = static_cast<float>(m_deltaTimeMicros / (1e6));
+	m_lastFrameTimepoint = now;
+}
+
 void World::Update()
 {
-	// clear prev frames nodes
-	m_dirtyNodes.clear();
-	m_dirtyLeafNodes.clear();
-
-	const auto timestamp = GetTimeMs();
-
-	// calculate delta
-	const auto timeStep = timestamp - m_lastTime;
-	m_deltaTime = std::fminf(timeStep, 16.f);
-	m_worldTime += m_deltaTime;
-	m_lastTime = timestamp;
+	UpdateFrameTimers();
 
 	if (Engine::Get().ShouldUpdateWorld())
 	{
 		// Update after input and delta calculation
 		for (auto* node : m_nodes)
+		{
 			node->Update(m_deltaTime);
+		}
 	}
 		
 	if (Engine::Get().IsUsingEditor())
@@ -175,7 +151,5 @@ void World::Update()
 		Engine::GetEditor()->UpdateEditor();
 	}
 
-	// Update dirty leaf node instances
-	for (auto* dirtyLeafNode : m_dirtyLeafNodes)
-		dirtyLeafNode->CacheWorldTransform();
+	DirtyUpdateWorld();
 }
