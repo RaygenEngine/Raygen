@@ -48,6 +48,7 @@ struct GenerateXMLVisitor
 {
 	tinyxml2::XMLElement* xmlElement;
 	const char* name;
+	std::string name_str; // required for const char* validility
 
 	bool PreProperty(const Property& p)
 	{
@@ -55,7 +56,8 @@ struct GenerateXMLVisitor
 		{
 			return false;
 		}
-		name = p.GetNameStr().c_str();
+		name_str = p.GetNameStr();
+		name = name_str.c_str();
 		return true;
 	}
 

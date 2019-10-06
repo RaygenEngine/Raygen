@@ -1,9 +1,10 @@
 <root name="roots" translation="0, 0, 0" euler_pyr="0, -0, 0" scale="1, 1, 1" background="0.1, 0.2, 0.4" ambient="0, 0, 0.1">
-    <freeform_user name="user2" translation="-3.33851, 8.60876, -4.72384" euler_pyr="-15.6351, -62.9117, -0.000333719" scale="1, 1, 1" movementSpeed="0.017199999" turningSpeed="0.003">
+    <freeform_user name="user2" translation="0, 15, 30" euler_pyr="-23.1986, -0, 0" scale="1, 1, 1" movementSpeed="0.0099999998" turningSpeed="0.003">
         <camera name="cam1" translation="0, 0, 0" euler_pyr="0, -0, 0" scale="1, 1, 1" far="1000" focalLength="1" vFov="60" hFov="93.119301" near="0.2"/>
     </freeform_user>
-    <sky_cube name="abc" translation="0, 0, 0" euler_pyr="0, -0, 0" scale="1, 1, 1" cubemap="alps.cubemap.json"/>
-    <directional_light name="l1" translation="0, 27.15, 0" euler_pyr="0, -69.801, -90" scale="1, 1, 1" color="0.945, 0.8549, 0.6431" intensity="3000"/>
-    <geometry name="helmet" translation="0, 14.88, -5.65" euler_pyr="0, -0, 0" scale="1, 1, 1" model="DamagedHelmet.gltf\#model"/>
-    <geometry name="sponza" translation="0, 0, -4" euler_pyr="0, -0, 0" scale="1, 1, 1" model="Sponza.gltf\#model"/>
+    <sky_cube name="abc" translation="0, 0, 0" euler_pyr="0, -0, 0" scale="1, 1, 1" cubemap="/scenes/alps/alps.cubemap.json"/>
+    <transform name="light_p" translation="0, 0, 0" euler_pyr="0, -0, 0" scale="1, 1, 1">
+        <directional_light name="l1" translation="0, 25, 0" euler_pyr="-90, -90, 0" scale="1, 1, 1" near="1" far="100.5" left="-10" right="10" bottom="-10" top="10" color="0.945, 0.8549, 0.6431" intensity="3000"/>
+    </transform>
+    <geometry name="helmet" translation="0, 0, -4" euler_pyr="0, -0, 0" scale="1, 1, 1" model="/scenes/gltf/Sponza/glTF/sponza.gltf{&quot;scene&quot;=-1}"/>
 </root>

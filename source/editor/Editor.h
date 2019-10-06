@@ -4,6 +4,8 @@
 #include "editor/SceneSave.h"
 #include "editor/AssetWindow.h"
 
+#include <filesystem>
+namespace fs = std::filesystem;
 class Node;
 
 class Editor
@@ -19,7 +21,7 @@ protected:
 public:
 
 	bool m_showImgui{ true };
-	std::string m_sceneToLoad{};
+	fs::path m_sceneToLoad{};
 
 	Editor();
 
@@ -37,7 +39,7 @@ public:
 private:
 	void Outliner();
 	void PropertyEditor(Node* activeNode);
-	void LoadScene(const std::string& scenefile);
+	void LoadScene(const fs::path& scenefile);
 
 	void HandleInput();
 };
