@@ -55,7 +55,7 @@ namespace OpenGL
 	GLBasicSkybox::GLBasicSkybox(SkyCubeNode* node)
 		: NodeObserver<SkyCubeNode, GLRendererBase>(node)
 	{
-		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/skybox.shader.json");
+		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/Cubemap_InfDist.json");
 		shader = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
 		auto& skyboxShader = *shader;
 		shader->AddUniform("vp");

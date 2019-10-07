@@ -125,6 +125,11 @@ public:
 	glm::vec3 GetRight() const { return GetWorldOrientation() * glm::vec3(1.f, 0.f, 0.f); }
 	glm::vec3 GetFront() const { return GetWorldOrientation() * glm::vec3(0.f, 0.f, -1.f); }
 
+	// override if focalLength is defined
+	virtual glm::vec3 GetLookAt() const { return GetWorldTranslation() + GetFront(); }
+
+	glm::mat4 GetViewMatrix() const { return glm::lookAt(GetWorldTranslation(), GetLookAt(), GetUp()); }
+
 	bool IsLeaf() const { return m_children.empty(); }
 	const std::string& GetType() const { return m_type; }
 

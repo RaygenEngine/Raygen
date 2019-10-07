@@ -7,6 +7,6 @@ in vec2 uv;
 layout(binding=0) uniform sampler2D outTexture;
 
 void main()
-{
+{             
 	out_color = texture(outTexture, uv);
 }

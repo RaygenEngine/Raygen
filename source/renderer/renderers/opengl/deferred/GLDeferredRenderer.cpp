@@ -1,7 +1,6 @@
 #include "pch.h"
 
 #include "renderer/renderers/opengl/GLAssetManager.h"
-#include "world/nodes/user/freeform/FreeformUserNode.h"
 #include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
 
 #include "glad/glad.h"
@@ -49,7 +48,7 @@ namespace OpenGL
 			CreateObserver_AutoContained< GLBasicSpotLight>(dirLightNode, m_glSpotLights);
 		}
 
-		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/deferred/gBuffer/gBuffer.shader.json");
+		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/deferred/DR_GBuffer.json");
 		m_gBuffer.shader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
 
 		m_gBuffer.shader->AddUniform("mvp");
@@ -67,7 +66,7 @@ namespace OpenGL
 		m_gBuffer.shader->AddUniform("normal_texcoord_index");
 		m_gBuffer.shader->AddUniform("occlusion_texcoord_index");
 
-		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/deferred/gBuffer/gBufferAlphaMask.shader.json");
+		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/deferred/DR_GBuffer_AlphaMask.json");
 		m_gBuffer.shaderAlphaMask = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
 
 		m_gBuffer.shaderAlphaMask->AddUniform("mvp");
@@ -86,7 +85,7 @@ namespace OpenGL
 		m_gBuffer.shaderAlphaMask->AddUniform("normal_texcoord_index");
 		m_gBuffer.shaderAlphaMask->AddUniform("occlusion_texcoord_index");
 
-		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/deferred/lights/deferred_directional_light.shader.json");
+		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/deferred/DR_DirectionalLight.json");
 		m_deferredDirectionalLightShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
 		
 		m_deferredDirectionalLightShader->AddUniform("view_pos");
@@ -95,7 +94,7 @@ namespace OpenGL
 		m_deferredDirectionalLightShader->AddUniform("light_intensity");
 		m_deferredDirectionalLightShader->AddUniform("light_space_matrix");
 
-		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/deferred/lights/deferred_spot_light.shader.json");
+		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/deferred/DR_SpotLight.json");
 		m_deferredSpotLightShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
 
 		m_deferredSpotLightShader->AddUniform("view_pos");
