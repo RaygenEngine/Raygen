@@ -12,12 +12,7 @@ namespace OpenGL
 	{
 		for (auto& mesh : meshes)
 		{
-			glDeleteBuffers(1, &mesh.positionsVBO);
-			glDeleteBuffers(1, &mesh.normalsVBO);
-			glDeleteBuffers(1, &mesh.tangentsVBO);
-			glDeleteBuffers(1, &mesh.bitangentsVBO);
-			glDeleteBuffers(1, &mesh.textCoords0VBO);
-			glDeleteBuffers(1, &mesh.textCoords1VBO);
+			glDeleteBuffers(1, &mesh.verticesVBO);
 			glDeleteBuffers(1, &mesh.ebo);
 
 			glDeleteVertexArrays(1, &mesh.vao);
@@ -33,37 +28,26 @@ namespace OpenGL
 		glGenVertexArrays(1, &glMesh.vao);
 		glBindVertexArray(glMesh.vao);
 
-		const auto CreateUploadBuffer = [](GLuint& bufferId, auto& data, GLenum usage)
-		{
-			glGenBuffers(1, &bufferId);
-			glBindBuffer(GL_ARRAY_BUFFER, bufferId);
-			glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(data[0]),
-				&data[0], usage);
-		};
+		
 
-		CreateUploadBuffer(glMesh.positionsVBO, data.positions, usage);
+		glGenBuffers(1, &glMesh.verticesVBO);
+		glBindBuffer(GL_ARRAY_BUFFER, glMesh.verticesVBO);
+		glBufferData(GL_ARRAY_BUFFER, data.vertices.size() * sizeof(VertexData),
+					 &data.vertices[0], usage);
+
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-		CreateUploadBuffer(glMesh.normalsVBO, data.normals, usage);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (GLvoid*)offsetof(VertexData, position));
 		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-		CreateUploadBuffer(glMesh.tangentsVBO, data.tangents, usage);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (GLvoid*)offsetof(VertexData, normal));
 		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-		CreateUploadBuffer(glMesh.bitangentsVBO, data.bitangents, usage);
+		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexData), (GLvoid*)offsetof(VertexData, tangent));
 		glEnableVertexAttribArray(3);
-		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-		CreateUploadBuffer(glMesh.textCoords0VBO, data.textCoords0, usage);
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (GLvoid*)offsetof(VertexData, bitangent));
 		glEnableVertexAttribArray(4);
-		glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-		CreateUploadBuffer(glMesh.textCoords1VBO, data.textCoords1, usage);
+		glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (GLvoid*)offsetof(VertexData, textCoord0));
 		glEnableVertexAttribArray(5);
-		glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (GLvoid*)offsetof(VertexData, textCoord1));
+
 
 		glGenBuffers(1, &glMesh.ebo);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glMesh.ebo);
