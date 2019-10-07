@@ -14,13 +14,13 @@ namespace OpenGL
 
 	bool GLShader::Load()
 	{
-		
-		const auto sources = AssetManager::GetOrCreate<ShaderPod>(m_assetManagerPodPath);
-		Engine::GetAssetManager()->Reload(sources);
-		Engine::GetAssetManager()->Reload(sources->fragment);
-		Engine::GetAssetManager()->Reload(sources->vertex);
-
-		
+		if (!firstLoad)
+		{
+			AssetManager::Reload(sources);
+			AssetManager::Reload(sources->fragment);
+			AssetManager::Reload(sources->vertex);
+		}
+		firstLoad = false;
 
 		GLint result = GL_FALSE;
 		int32 infoLogLength;

@@ -12,8 +12,15 @@ namespace OpenGL
 	{
 		GLuint id;
 
+		bool firstLoad{ true };
+
+		PodHandle<ShaderPod> sources;
+
 		GLShader(const uri::Uri& assocPath)
-			: GLAsset(assocPath) {}
+			: GLAsset(assocPath) 
+		{
+			sources = AssetManager::GetOrCreate<ShaderPod>(m_assetManagerPodPath);
+		}
 		virtual ~GLShader();
 		
 		GLint GetUniform(const std::string& uniformName) const;

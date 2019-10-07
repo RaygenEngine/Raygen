@@ -38,8 +38,8 @@ class CameraNode : public Node
 
 	glm::mat4 m_projectionMatrix;
 
-	int32 m_viewportWidth;
-	int32 m_viewportHeight;
+	int32 m_viewportWidth{ 1280 };
+	int32 m_viewportHeight{ 720 };
 	
 public:
 	DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);

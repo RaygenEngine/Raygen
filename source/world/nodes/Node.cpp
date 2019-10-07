@@ -48,12 +48,22 @@ void Node::SetLocalScale(const glm::vec3& ls)
 void Node::SetLocalMatrix(const glm::mat4& lm)
 {
 	m_localMatrix = lm;
+	
+	glm::vec3 skew; glm::vec4 persp;
+	glm::decompose(lm, m_localScale, m_localOrientation, m_localTranslation, skew, persp);
 	MarkMatrixChanged();
+}
+
+void Node::SetWorldMatrix(const glm::mat4& newWorldMatrix)
+{
+	auto parentMatrix = GetParent()->GetWorldMatrix();
+	
+	SetLocalMatrix(glm::inverse(parentMatrix) * newWorldMatrix);
 }
 
 void Node::MarkMatrixChanged()
 {
-	m_dirty.set(DF::Transform);
+	m_dirty.set(DF::TRS);
 	for (auto& child : m_children)
 	{
 		child->MarkMatrixChanged();
@@ -62,7 +72,8 @@ void Node::MarkMatrixChanged()
 
 void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 {
-	if (m_dirty[DF::Transform])
+
+	if (m_dirty[DF::TRS])
 	{
 		m_localMatrix = utl::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
 		m_worldMatrix = parentMatrix * m_localMatrix;
@@ -70,6 +81,8 @@ void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 		glm::vec3 skew; glm::vec4 persp;
 		glm::decompose(m_worldMatrix, m_worldScale, m_worldOrientation, m_worldTranslation, skew, persp);
 	}
+
+
 
 	for (auto& uPtr : m_children)
 	{

@@ -4,19 +4,22 @@
 #include "asset/AssetPod.h"
 #include "asset/pods/MaterialPod.h"
 
+struct VertexData
+{
+	glm::vec3 position;
+	glm::vec3 normal;
+	glm::vec4 tangent;
+	glm::vec3 bitangent;
+	glm::vec2 textCoord0;
+	glm::vec2 textCoord1;
+};
+
 struct GeometryGroup
 {
 	std::vector<uint32> indices;
-
-	std::vector<glm::vec3> positions;
-	std::vector<glm::vec3> normals;
-	std::vector<glm::vec4> tangents;
-	std::vector<glm::vec3> bitangents;
-	std::vector<glm::vec2> textCoords0;
-	std::vector<glm::vec2> textCoords1;
+	std::vector<VertexData> vertices;
 
 	GeometryMode mode{ GeometryMode::TRIANGLES };
-
 	uint32 materialIndex;
 };
 
