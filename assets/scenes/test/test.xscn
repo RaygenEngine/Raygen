@@ -18,7 +18,7 @@
 		<!-- hdr_texture="CedarCity.hdr"/> -->
 
 	<sky_cube name="abc" 
-			cubemap="/scenes/alps/alps.cubemap.json"/>
+			cubemap="/import-data/skybox/alps.cubemap.json"/>
 
 
 		
@@ -30,15 +30,16 @@
 	   
 	<spot_light name="l3" 
 	   translation="0.0, 25.0, 0" 
-	   color="1, 0, 0"
+	   color="0.945, 0.85, 0.64"
 	   intensity="10"
-	   lookat="0, 0, 0"/>
+	   lookat="0, 0, 0"
+	   far="100"/>
 	
 		
 	<geometry name="sponza" 
 		translation="0.0, 0.0, 0.0"
 		scale="1, 1, 1" 
-		model="/scenes/gltf/Sponza/glTF/sponza.gltf{&quot;scene&quot;=-1}"/> 
+		model="/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf{&quot;scene&quot;=-1}"/> 
 		
 		
 	<directional_light name="l2" 
@@ -50,7 +51,7 @@
 	<geometry name="sponza" 
 		translation="0.0, 0.0, -25.0"
 		scale="1, 1, 1" 
-		model="/scenes/gltf/Sponza/glTF/sponza.gltf{&quot;scene&quot;=-1}"/> 
+		model="/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf{&quot;scene&quot;=-1}"/> 
 		
 
 

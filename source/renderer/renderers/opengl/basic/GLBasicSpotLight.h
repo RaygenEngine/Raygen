@@ -19,8 +19,7 @@ namespace OpenGL
 
 		glm::mat4 lightSpaceMatrix;
 
-		virtual void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override {}
-
+		void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override {}
 
 		GLBasicSpotLight(SpotLightNode* node);
 		~GLBasicSpotLight();

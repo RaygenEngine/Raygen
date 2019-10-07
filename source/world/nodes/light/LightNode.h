@@ -29,14 +29,16 @@ class LightNode : public Node
 
 	bool m_hasShadow;
 
+protected:
+	
 	int32 m_shadowMapWidth{ 2048 };
 	int32 m_shadowMapHeight{ 2048 };
 
-public:
-	// TODO:
 	float m_near{ 1.f };
 	float m_far{ 100.5f };
-	
+
+public:
+
 	LightNode(Node* parent);
 	~LightNode() = default;
 
@@ -44,6 +46,9 @@ public:
 	[[nodiscard]] float GetIntensity() const { return m_intensity; }
 	[[nodiscard]] int32 GetShadowMapWidth() const { return m_shadowMapWidth; }
 	[[nodiscard]] int32 GetShadowMapHeight() const { return m_shadowMapHeight; }
+	[[nodiscard]] float GetNear() const { return m_near; }
+	[[nodiscard]] float GetFar() const { return m_far; }
+	
 
 	virtual void DirtyUpdate();
 };

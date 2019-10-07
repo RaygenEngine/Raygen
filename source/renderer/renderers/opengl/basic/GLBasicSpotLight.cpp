@@ -11,9 +11,6 @@ namespace OpenGL
 		const auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/depth_map.shader.json");
 		shader = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
 		shader->AddUniform("mvp");
-		shader->AddUniform("m");
-		shader->AddUniform("source_pos");
-		shader->AddUniform("far");
 
 		glGenFramebuffers(1, &fbo);
 
@@ -26,7 +23,7 @@ namespace OpenGL
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-		float borderColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 	
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -48,19 +45,12 @@ namespace OpenGL
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
-
-		auto ar = static_cast<float>(node->GetShadowMapWidth()) / static_cast<float>(node->GetShadowMapHeight());
-		const auto lightProjection = glm::perspective(glm::radians(45.0f), ar, node->m_near, node->m_far);
-
-		// TODO check value of center
-		const auto center = node->GetWorldTranslation() + node->GetFront();
-		const auto lightView = glm::lookAt(node->GetWorldTranslation(), center, node->GetUp());
-
+		glCullFace(GL_FRONT);
+		
 		// TODO - PERF: calculate this only from update from node not every frame
-		lightSpaceMatrix = lightProjection * lightView;
+		lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 	
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(shader->id);
@@ -85,6 +75,7 @@ namespace OpenGL
 			}
 		}
 
+		glCullFace(GL_BACK);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 	}

@@ -5,7 +5,8 @@
 
 
 DirectionalLightNode::DirectionalLightNode(Node* parent)
-	: LightNode(parent)
+	: LightNode(parent),
+      m_orthoProjectionMatrix()
 {
 }
 

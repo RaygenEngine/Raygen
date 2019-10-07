@@ -17,18 +17,18 @@ namespace OpenGL
 		MAKE_METADATA(GLForwardRenderer);
 
 	protected:
-		// TODO: should use the camera and window respectively
-		int32 m_outWidth{}, m_outHeight{};
-		
+
 		// shaders
-		GLShader* m_testShader;
-		GLShader* m_screenQuadShader;
+		GLShader* m_testShader{};
+		GLShader* m_simpleOutShader{};
+		GLShader* m_linearizeOutShader{};
+		bool m_isOutNonLinear{ false };
 
 		// entities
 		std::vector<GLBasicGeometry*> m_glGeometries;
-		GLBasicDirectionalLight* m_glDirectionalLight;
-		GLBasicSpotLight* m_glSpotLight;
-		GLBasicSkybox* m_skybox;
+		GLBasicDirectionalLight* m_glDirectionalLight{};
+		GLBasicSpotLight* m_glSpotLight{};
+		GLBasicSkybox* m_skybox{};
 		
 		// raw nodes
 		CameraNode* m_camera;
@@ -48,15 +48,16 @@ namespace OpenGL
 		void RenderGeometries();
 		void RenderSkybox();
 		void RenderPostProcess();
-		void RenderWindow();
+		void RenderWindowSimple();
+		void RenderWindowLinearized();
 
-		GLuint m_currentTexture;
+		GLuint m_currentTexture{};
 		
 	public:
 		
 		std::string m_previewModeString{};
 
-		DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
+		//DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
 
 		GLForwardRenderer()
 			: m_camera(nullptr),
@@ -67,14 +68,14 @@ namespace OpenGL
 			  m_outColorTexture(0),
 		      m_previewMode(0)
 		{
-			m_resizeListener.BindMember(this, &GLForwardRenderer::WindowResize);
+			//m_resizeListener.BindMember(this, &GLForwardRenderer::WindowResize);
 		}
 
 		~GLForwardRenderer();
 
 		bool InitScene() override;
 		
-		void WindowResize(int32 width, int32 height);
+		//void WindowResize(int32 width, int32 height);
 		void Render() override;
 
 		void Update() override;
