@@ -11,11 +11,7 @@
 void AssetWindow::Init()
 {
 	Engine::GetAssetManager()->m_pathSystem.GenerateFileListOfType(".gltf", m_gltf);
-	Engine::GetAssetManager()->m_pathSystem.GenerateFileListOfType(".xscn", m_xscn);
 
-	Engine::GetAssetManager()->m_pathSystem.GenerateFileListOfType(".jpg", m_images);
-	Engine::GetAssetManager()->m_pathSystem.GenerateFileListOfType(".png", m_images);
-	Engine::GetAssetManager()->m_pathSystem.GenerateFileListOfType(".tga", m_images);
 }
 
 void AssetWindow::DrawFileLibrary()
@@ -28,25 +24,6 @@ void AssetWindow::DrawFileLibrary()
 		{
 			ImGui::Indent();
 			for (auto& s : m_gltf)
-			{
-				DrawFileAsset(n, s);
-			}
-			ImGui::Unindent();
-		}
-		if (ImGui::CollapsingHeader("Image files"))
-		{
-			ImGui::Indent();
-			for (auto& s : m_images)
-			{
-				DrawFileAsset(n, s);
-			}
-			ImGui::Unindent();
-		}
-
-		if (ImGui::CollapsingHeader("Scene files"))
-		{
-			ImGui::Indent();
-			for (auto& s : m_xscn)
 			{
 				DrawFileAsset(n, s);
 			}
@@ -75,18 +52,29 @@ void AssetWindow::Draw()
 }
 
 #include "asset/UriLibrary.h"
-void AssetWindow::DrawFileAsset(int32& n, const std::string& path)
+
+void AssetWindow::DrawFileAsset(int32& n, const std::string& zpath)
 {
 	ImGui::PushID(n++);
 
-	if (uri::MatchesExtension(path, ".gltf"))
+
+	auto path = zpath;
+	if (path.size() > 2 && uri::MatchesExtension(path, ".gltf"))
 	{
+		for (int32 i = 0; i < path.size(); ++i)
+		{
+			if (path[i] == '\\')
+			{
+				path[i] = '/';
+			}
+		}
+		
 		ImGui::Button(path.c_str());
 			
 
 		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
 		{
-			auto h = AssetManager::GetOrCreate<ModelPod>(path + "/#model");
+			auto h = AssetManager::GetOrCreate<ModelPod>(path + "{\"scene\"=-1}");
 
 			std::string payloadTag = "POD_UID_" + std::to_string(h->type.hash());
 			ImGui::SetDragDropPayload(payloadTag.c_str(), &h.podId, sizeof(size_t));

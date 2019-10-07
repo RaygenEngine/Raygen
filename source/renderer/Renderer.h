@@ -6,7 +6,7 @@
 #include <unordered_set>
 #include <type_traits>
 
-
+// TODO: 
 // For sub-renderer registration
 #define MAKE_METADATA(Class) \
 	public:\
@@ -35,6 +35,8 @@ public:
 	virtual void Render() = 0;
 
 	virtual void SwapBuffers() = 0;
+
+	//virtual bool SupportsEditor() = 0; // WIP
 };
 
 class ObserverRenderer : public Renderer

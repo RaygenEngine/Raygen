@@ -177,14 +177,14 @@ void main()
 	kD *= 1.0 - metallic;
 	
 	// light stuff
-	//float distance = length(light_pos - dataIn.world_pos);
-	//float attenuation = 1.0 / (distance * distance);
+	float distance = length(light_pos - dataIn.world_pos);
+	float attenuation = 1.0 / (distance);
 	float shadow = ShadowCalculation(dataIn.light_fragpos, N, L); 
-	vec3 radiance = (1.0 - shadow) * light_color * light_intensity /** attenuation*/; 
+	vec3 radiance = ((1.0 - shadow) * light_color * light_intensity * attenuation) + ambient; 
 	
 	vec3 Lo = (kD * albedo / PI + specular) * radiance * max(dot(N, L), 0.0);
 
-	vec3 color = Lo + emissive /*+ ambient*/;
+	vec3 color = Lo + emissive;
 	color = mix(color, color * occlusion, occlusion_strength);
 	
 	out_color = vec4(color, 1.f);
