@@ -1,2 +1,0 @@
-skybox.vert
-skybox.frag

@@ -27,6 +27,8 @@ uniform vec3 light_pos;
 uniform vec3 light_color;
 uniform float light_intensity;
 
+uniform float light_near;
+
 uniform vec3 ambient;
 
 uniform vec4 base_color_factor;
@@ -54,20 +56,33 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
 {
     // perform perspective divide
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+	
     // transform to [0,1] range
     projCoords = projCoords * 0.5 + 0.5;
-    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-    float closestDepth = texture(shadowMapSampler, projCoords.xy).r; 
+	
     // get depth of current fragment from light's perspective
     float currentDepth = projCoords.z;
-	// cure shadow acne
-	float bias = max(0.05 * (1.0 - dot(N, L)), 0.005); 
-    // check whether current frag pos is in shadow
-    float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
-	// TODO: peter panning, pcf
 	
-	if(projCoords.z > 1.0)
-		shadow = 0.0;
+	if(projCoords.z < light_near + 0.005)
+		return 1.0;
+	
+	// cure shadow acne
+	float bias = 0.005;//max(0.05 * (1.0 - max(dot(N, L), 0.0)), 0.005); 
+	
+	float shadow = 0.0;
+	vec2 texelSize = 1.0 / textureSize(shadowMapSampler, 0);
+	int n = 1;
+	for(int x = -n; x <= n; ++x)
+	{
+		for(int y = -n; y <= n; ++y)
+		{
+		    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+			float pcfDepth = texture(shadowMapSampler, projCoords.xy + vec2(x, y) * texelSize).r; 
+			shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+		}    
+	}
+	int count = 2*n + 1;
+	shadow /= count * count;
 		
     return shadow;
 }  
@@ -155,7 +170,7 @@ void main()
 	vec3 numerator = NDF * G * F;
 	float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
 	vec3 specular = numerator / max(denominator, 0.001); 
-	
+
 	vec3 kS = F;
 	vec3 kD = vec3(1.0) - kS;
 

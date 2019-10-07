@@ -137,13 +137,28 @@ void World::Update()
 {
 	UpdateFrameTimers();
 
+	static auto currentUser = (*m_users.begin());
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::G))
+	{
+		currentUser = (*m_users.begin());
+	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::L))
+	{
+		currentUser = (*--m_users.end());
+	}
+	
 	if (Engine::Get().ShouldUpdateWorld())
 	{
 		// Update after input and delta calculation
-		for (auto* node : m_nodes)
-		{
-			node->Update(m_deltaTime);
-		}
+		//for (auto* node : m_nodes)
+		//{
+			//node->Update(m_deltaTime);
+			// WIP
+
+		//}
+
+		currentUser->Update(m_deltaTime);
 	}
 		
 	if (Engine::Get().IsUsingEditor())
