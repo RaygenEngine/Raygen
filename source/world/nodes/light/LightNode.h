@@ -8,13 +8,17 @@ class LightNode : public Node
 	REFLECTED_NODE(LightNode, Node)
 	{
 		REFLECT_VAR(m_hasShadow);
-		REFLECT_VAR(m_color, PropertyFlags::Color);
-		REFLECT_VAR(m_intensity);
+		REFLECT_VAR(m_color, PropertyFlags::Color)
+			.OnDirty(DF::ColorAndIntensitiy);
 
-		REFLECT_VAR(m_shadowMapWidth);
-		REFLECT_VAR(m_shadowMapHeight);
-		REFLECT_VAR(m_near);
-		REFLECT_VAR(m_far);
+		REFLECT_VAR(m_intensity)
+			.OnDirty(DF::ColorAndIntensitiy);
+
+		REFLECT_VAR(m_shadowMapWidth)	.OnDirty(DF::ShadowMapSize);
+		REFLECT_VAR(m_shadowMapHeight)	.OnDirty(DF::ShadowMapSize);
+		
+		REFLECT_VAR(m_near) .OnDirty(DF::NearAndFar);
+		REFLECT_VAR(m_far)	.OnDirty(DF::NearAndFar);
 	}
 
 	DECLARE_DIRTY_FLAGSET(
