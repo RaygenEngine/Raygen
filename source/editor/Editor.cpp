@@ -18,6 +18,7 @@
 #include "core/reflection/ReflectionTools.h"
 #include "imgui/imgui_internal.h"
 #include <set>
+#include "core/reflection/PodTools.h"
 
 namespace
 {
@@ -51,7 +52,7 @@ struct ReflectionToImguiVisitor
 	
 	Node* node;
 
-	bool dirty{ false };
+	std::bitset<64> dirtyFlags;
 
 	void GenerateUniqueName(const Property& p)
 	{
@@ -86,7 +87,11 @@ struct ReflectionToImguiVisitor
 	{
 		if (Inner(t, p))
 		{
-			dirty = true;
+			if (p.GetDirtyFlagIndex() >= 0)
+			{
+				dirtyFlags.set(p.GetDirtyFlagIndex());
+			}
+			dirtyFlags.set(Node::DF::Properties);
 		}
 	}
 
@@ -365,23 +370,59 @@ void Editor::UpdateEditor()
 
 	if (ImGui::CollapsingHeader("Assets"))
 	{
+		auto reloadAssetLambda = [](std::unique_ptr<PodEntry>& assetEntry)
+		{
+			podtools::VisitPodType(assetEntry->type,
+								   [&assetEntry](auto tptr)
+			{
+				using PodType = std::remove_pointer_t<decltype(tptr)>;
+				AssetManager::Reload(PodHandle<PodType>{ assetEntry->uid });
+			});
+		};
+
+
 		ImGui::Indent();
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7, 7));
+		bool UnloadAll = ImGui::Button("Unload All");
+		ImGui::SameLine();
+		bool ReloadUnloaded = ImGui::Button("Reload Unloaded");
+		ImGui::SameLine();
+		bool ReloadAll = ImGui::Button("Reload All");
+		ImGui::PopStyleVar();
+
 		std::string text;
 		for (auto& assetEntry : Engine::GetAssetManager()->m_pods)
 		{
 			ImGui::PushID(static_cast<int32>(assetEntry->uid));
-			bool disabled = !assetEntry;
+			bool disabled = !(assetEntry.get()->ptr.get());
 
 			if (disabled)
 			{
+				ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0, 0.6f, 0.6f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0, 0.6f, 0.7f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0, 0.7f, 0.6f));
+				if (ImGui::Button("Reload") || ReloadUnloaded)
+				{
+					reloadAssetLambda(assetEntry);
+				}
+				ImGui::PopStyleColor(3);
 				ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.4f);
+			}
+			else
+			{
+				if (ImGui::Button("Unload") || UnloadAll)
+				{
+					AssetManager::Unload(BasePodHandle{ assetEntry->uid });
+				}
+			}
+
+			if (ReloadAll)
+			{
+				reloadAssetLambda(assetEntry);
 			}
 			
-			if (ImGui::Button("Unload"))
-			{
-				AssetManager::Unload(BasePodHandle{ assetEntry->uid });
-			}
+
 			ImGui::SameLine();
 			ImGui::Text(assetEntry->path.c_str());
 			if (disabled)
@@ -477,7 +518,10 @@ void Editor::PropertyEditor(Node* node)
 	ImGui::Separator();
 	ReflectionToImguiVisitor visitor;
 	visitor.node = node;
+	visitor.dirtyFlags = node->GetDirtyFlagset();
 	refltools::CallVisitorOnEveryProperty(node, visitor);
+
+	node->m_dirty = visitor.dirtyFlags;
 
 	ImGui::EndChild();
 
