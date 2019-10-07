@@ -43,6 +43,7 @@ void ObserverRenderer::Update()
 			auto flagset = observer->baseNode->GetDirtyFlagset();
 			if (flagset.any())
 			{
+				LOG_INFO("Dirty Flags on {}: {}", observer->baseNode->GetName(), flagset);
 				observer->DirtyNodeUpdate(flagset);
 			}
 		}

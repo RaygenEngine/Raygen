@@ -300,6 +300,7 @@ namespace OpenGL
 
 	void GLForwardRenderer::Update()
 	{
+		GLRendererBase::Update();
 		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K1))
 		{
 			m_previewMode = m_previewMode - 1 < 0 ? PT_COUNT - 1 : m_previewMode - 1;
