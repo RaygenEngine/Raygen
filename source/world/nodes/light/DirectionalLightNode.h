@@ -24,22 +24,21 @@ class DirectionalLightNode : public LightNode
 	DECLARE_DIRTY_FLAGSET(Projection)
 
 	glm::mat4 m_orthoProjectionMatrix;
-	
-public:
-	// TODO:
+
 	float m_left{ -10.f };
 	float m_right{ 10.f };
 
 	float m_bottom{ -10.f };
 	float m_top{ 10.f };
-
+	
+public:
 
 	DirectionalLightNode(Node* parent);
 	~DirectionalLightNode() = default;
 
 	bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData) override;
 	
-	virtual void DirtyUpdate() override;
+	void DirtyUpdate() override;
 
 	void UpdateOrthoProjectionMatrix() { m_orthoProjectionMatrix = glm::ortho(m_left, m_right, m_bottom, m_top, m_near, m_far);  }
 	glm::mat4 GetOrthoProjectionMatrix() const { return m_orthoProjectionMatrix; }

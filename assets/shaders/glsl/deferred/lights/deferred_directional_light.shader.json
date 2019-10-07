@@ -1,2 +1,2 @@
-/shaders/glsl/general/screen_quad.vert
+/shaders/glsl/general/big_triangle_trick.vert
 deferred_directional_light.frag

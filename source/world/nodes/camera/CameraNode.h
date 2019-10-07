@@ -1,8 +1,6 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "platform/windows/Win32Window.h"
-#include "system/Engine.h"
 #include "system/EngineEvents.h"
 
 // Window dependant // TODO: non-window dependant (e.g. oculus virtual eye)
@@ -44,7 +42,7 @@ public:
 	CameraNode(Node* parent);
 	~CameraNode() = default;
 
-	glm::vec3 GetLookAt() const { return GetWorldTranslation() + (GetWorldOrientation() * glm::vec3(0.f, 0.f, -1.f)) * m_focalLength; }
+	glm::vec3 GetLookAt() const override { return GetWorldTranslation() + GetFront() * m_focalLength; }
 
 	float GetVerticalFov() const { return m_vFov; }
 	float GetHorizontalFov() const { return m_hFov; }
@@ -58,11 +56,9 @@ public:
 
 	void RecalculateProjectionFov();
 
-
-	glm::mat4 GetViewMatrix() const { return glm::lookAt(GetWorldTranslation(), GetLookAt(), GetUp()); }
 	glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 		
-	virtual void DirtyUpdate() override;
+	void DirtyUpdate() override;
 private:
 	void WindowResize(int32 width, int32 height);
 };
