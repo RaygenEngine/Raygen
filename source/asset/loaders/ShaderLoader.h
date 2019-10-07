@@ -3,6 +3,7 @@
 #include "asset/AssetManager.h"
 #include "asset/pods/ShaderPod.h"
 #include "asset/UriLibrary.h"
+
 #include "nlohmann/json.hpp"
 
 namespace ShaderLoader
@@ -47,13 +48,13 @@ namespace ShaderLoader
 
 		std::string newFilePath;
 		
-		newFilePath = j.value<std::string>("vertex", "");
+		newFilePath = j.value<std::string>("vert", "");
 		if (!newFilePath.empty())
 		{
 			pod->vertex = AssetManager::GetOrCreateFromParentUri<StringPod>(newFilePath, path);
 		}
 		
-		newFilePath = j.value<std::string>("fragment", "");
+		newFilePath = j.value<std::string>("frag", "");
 		if (!newFilePath.empty())
 		{
 			pod->fragment = AssetManager::GetOrCreateFromParentUri<StringPod>(newFilePath, path);

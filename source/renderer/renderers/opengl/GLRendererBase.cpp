@@ -11,6 +11,7 @@ namespace OpenGL
 
 void GLRendererBase::Update()
 {
+	ObserverRenderer::Update();
 	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::BACKSPACE))
 	{
 		m_vsyncEnabled = !m_vsyncEnabled;
