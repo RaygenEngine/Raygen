@@ -13,44 +13,55 @@
 		
 	</freeform_user>
 	
+	<freeform_user name="userLight"
+		translation="0, 25, 0"
+		lookat="0, 0, 0">
+	
+	<directional_light name="l1" 
+	   color="0.0, 0, 1"
+	   intensity="10"/>
 
+			
+	</freeform_user>
+	
+		<spot_light name="l3" 
+		   color="0.945, 0.85, 0.64"
+		   intensity="10"/>
 	<!-- <sky_hdr name="sky1" -->
 		<!-- hdr_texture="CedarCity.hdr"/> -->
 
 	<sky_cube name="abc" 
-			cubemap="/scenes/alps/alps.cubemap.json"/>
+			cubemap="/import-data/skybox/alps.cubemap.json"/>
 
-
-		
-	<directional_light name="l1" 
-	   translation="0.0, 25.0, 0" 
-	   color="0.0, 0, 1"
-	   intensity="10"
-	   lookat="0, 0, 0"/>
+	<!-- <directional_light name="l1"  -->
+	   <!-- translation="0.0, 25.0, 0"  -->
+	   <!-- color="0.0, 0, 1" -->
+	   <!-- intensity="10" -->
+	   <!-- lookat="0, 0, 0"/> -->
 	   
-	<spot_light name="l3" 
-	   translation="0.0, 25.0, 0" 
-	   color="1, 0, 0"
-	   intensity="10"
-	   lookat="0, 0, 0"/>
+	<!-- <spot_light name="l3"  -->
+	   <!-- translation="0.0, 15.0, 0"  -->
+	   <!-- color="0.945, 0.85, 0.64" -->
+	   <!-- intensity="10" -->
+	   <!-- lookat="0, 0,  -25"/> -->
 	
 		
 	<geometry name="sponza" 
 		translation="0.0, 0.0, 0.0"
 		scale="1, 1, 1" 
-		model="/scenes/gltf/Sponza/glTF/sponza.gltf{&quot;scene&quot;=-1}"/> 
+		model="/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf{&quot;scene&quot;=-1}"/> 
 		
 		
-	<directional_light name="l2" 
-	   translation="0.0, 25.0, -25" 
-	   color="0.0, 0, 1"
-	   intensity="10"
-	   lookat="0, 0, -25"/>
+	<!-- <directional_light name="l2"  -->
+	   <!-- translation="0.0, 25.0, -25"  -->
+	   <!-- color="0.0, 0, 1" -->
+	   <!-- intensity="10" -->
+	   <!-- lookat="0, 0, -25"/> -->
 	
 	<geometry name="sponza" 
 		translation="0.0, 0.0, -25.0"
 		scale="1, 1, 1" 
-		model="/scenes/gltf/Sponza/glTF/sponza.gltf{&quot;scene&quot;=-1}"/> 
+		model="/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf{&quot;scene&quot;=-1}"/> 
 		
 
 

@@ -1,18 +1,14 @@
 #include "pch.h"
 
 #include "renderer/renderers/opengl/forward/GLForwardRenderer.h"
-#include "world/World.h"
-#include "world/nodes/user/freeform/FreeformUserNode.h"
-#include "world/nodes/geometry/GeometryNode.h"
-#include "asset/AssetManager.h"
-#include "system/Engine.h"
 #include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/assets/GLShader.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
-
 #include "renderer/renderers/opengl/basic/GLBasicSkybox.h"
-#include "glad/glad.h"
+#include "world/World.h"
+#include "platform/windows/Win32Window.h"
 
+#include "glad/glad.h"
 
 namespace OpenGL
 {
@@ -34,10 +30,15 @@ namespace OpenGL
 		int32 height = m_camera->GetHeight();
 
 		// shaders
-		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/screen_quad.shader.json");
-		m_screenQuadShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/QuadWriteTexture.json");
+		m_simpleOutShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
 
-		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/forward/forward.shader.json");
+		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/QuadWriteTexture_Linear.json");
+		m_linearizeOutShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		m_linearizeOutShader->AddUniform("near");
+		m_linearizeOutShader->AddUniform("far");
+
+		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/forward/FR_PBRtemp.json");
 		m_testShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
 		
 		m_testShader->AddUniform("mvp");
@@ -59,9 +60,8 @@ namespace OpenGL
 		m_testShader->AddUniform("alpha_cutoff");
 		m_testShader->AddUniform("double_sided");
 		m_testShader->AddUniform("light_space_matrix");
+		m_testShader->AddUniform("light_near");
 	
-		
-		
 		m_skybox = CreateObserver_AnyAvailable<GLBasicSkybox>();
 		m_glDirectionalLight = CreateObserver_AnyAvailable<GLBasicDirectionalLight>();
 		m_glSpotLight = CreateObserver_AnyAvailable<GLBasicSpotLight>();
@@ -106,16 +106,7 @@ namespace OpenGL
 
 		m_currentTexture = m_outColorTexture;
 
-		m_outWidth = width;
-		m_outHeight = height;
-		
 		return true;
-	}
-
-	void GLForwardRenderer::WindowResize(int32 width, int32 height)
-	{
-		m_outWidth = width;
-		m_outHeight = height;
 	}
 
 	void GLForwardRenderer::RenderDirectionalLights()
@@ -125,7 +116,7 @@ namespace OpenGL
 
 	void GLForwardRenderer::RenderSpotLights()
 	{
-		m_glSpotLight->RenderShadowMap(m_glGeometries);
+		m_glDirectionalLight->RenderShadowMap(m_glGeometries);
 	}
 
 	void GLForwardRenderer::RenderGeometries()
@@ -134,7 +125,7 @@ namespace OpenGL
 		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
 
-		glViewport(0, 0, m_outWidth, m_outHeight);
+		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
 		
 		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 
@@ -145,9 +136,9 @@ namespace OpenGL
 
 		// global uniforms
 		glUniform3fv(m_testShader->GetUniform("view_pos"), 1, glm::value_ptr(m_camera->GetWorldTranslation()));
-		glUniform3fv(m_testShader->GetUniform("light_pos"), 1, glm::value_ptr(m_glSpotLight->node->GetWorldTranslation()));
-		glUniform3fv(m_testShader->GetUniform("light_color"), 1, glm::value_ptr(m_glSpotLight->node->GetColor()));
-		glUniform1f(m_testShader->GetUniform("light_intensity"), m_glSpotLight->node->GetIntensity());
+		glUniform3fv(m_testShader->GetUniform("light_pos"), 1, glm::value_ptr(m_glDirectionalLight->node->GetWorldTranslation()));
+		glUniform3fv(m_testShader->GetUniform("light_color"), 1, glm::value_ptr(m_glDirectionalLight->node->GetColor()));
+		glUniform1f(m_testShader->GetUniform("light_intensity"), m_glDirectionalLight->node->GetIntensity());
 
 		auto root = Engine::GetWorld()->GetRoot();
 		const auto backgroundColor = root->GetBackgroundColor();
@@ -164,8 +155,10 @@ namespace OpenGL
 			glUniformMatrix4fv(m_testShader->GetUniform("m"), 1, GL_FALSE, glm::value_ptr(m));
 			glUniformMatrix3fv(m_testShader->GetUniform("normal_matrix"), 1, GL_FALSE, glm::value_ptr(glm::transpose(glm::inverse(glm::mat3(m)))));
 
-			glUniformMatrix4fv(m_testShader->GetUniform("light_space_matrix"), 1, GL_FALSE, glm::value_ptr(m_glSpotLight->lightSpaceMatrix));
+			glUniformMatrix4fv(m_testShader->GetUniform("light_space_matrix"), 1, GL_FALSE, glm::value_ptr(m_glDirectionalLight->lightSpaceMatrix));
 
+			glUniform1f(m_testShader->GetUniform("roughness_factor"), m_glDirectionalLight->node->GetNear());
+			
 			for (auto& glMesh : geometry->glModel->meshes)
 			{
 				glBindVertexArray(glMesh.vao);
@@ -199,7 +192,7 @@ namespace OpenGL
 				glBindTexture(GL_TEXTURE_2D, glMaterial->occlusionTexture->id);
 
 				glActiveTexture(GL_TEXTURE5);
-				glBindTexture(GL_TEXTURE_2D, m_glSpotLight->shadowMap);
+				glBindTexture(GL_TEXTURE_2D, m_glDirectionalLight->shadowMap);
 
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
@@ -240,20 +233,50 @@ namespace OpenGL
 		// copy msaa to out
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFbo);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_outFbo);
-		glBlitFramebuffer(0, 0, m_outWidth, m_outHeight, 0, 0, m_outWidth, m_outHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 
+			              0, 0, m_camera->GetWidth(), m_camera->GetHeight(),
+			              GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		// do post process here
 	}
 
-	void GLForwardRenderer::RenderWindow()
+	void GLForwardRenderer::RenderWindowSimple()
 	{
+		const auto window = Engine::GetMainWindow();
+		
+		glViewport(0, 0, window->GetWidth(), window->GetHeight());
+		
 		// write to window
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(m_screenQuadShader->id);
+		glUseProgram(m_simpleOutShader->id);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_currentTexture);
+
+		// big triangle trick, no vao
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+	}
+
+	void GLForwardRenderer::RenderWindowLinearized()
+	{
+		const auto window = Engine::GetMainWindow();
+		
+		glViewport(0, 0, window->GetWidth(), window->GetHeight());
+
+		// write to window
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glUseProgram(m_linearizeOutShader->id);
+		glUniform1f(m_linearizeOutShader->GetUniform("near"), m_glDirectionalLight->node->GetNear());
+		glUniform1f(m_linearizeOutShader->GetUniform("far"), m_glDirectionalLight->node->GetFar());
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_currentTexture);
@@ -274,7 +297,7 @@ namespace OpenGL
 		// copy msaa to out fbo and render any post process on it
 		RenderPostProcess();
 		// write out texture of out fbo to window (big triangle trick)
-		RenderWindow();
+		!m_isOutNonLinear ? RenderWindowSimple() : RenderWindowLinearized();
 	}
 
 	void GLForwardRenderer::Update()
@@ -296,11 +319,13 @@ namespace OpenGL
 		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::G))
 		{
 			m_currentTexture = m_outColorTexture;
+			m_isOutNonLinear = false;
 		}
 		
 		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::L))
 		{
-			m_currentTexture = m_glSpotLight->shadowMap;
+			m_currentTexture = m_glDirectionalLight->shadowMap;
+			m_isOutNonLinear = true;
 		}
 
 		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::R))
@@ -312,6 +337,7 @@ namespace OpenGL
 	void GLForwardRenderer::RecompileShaders()
 	{
 		m_testShader->Load();
-		m_screenQuadShader->Load();
+		m_simpleOutShader->Load();
+		m_linearizeOutShader->Load();
 	}
 }

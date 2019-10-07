@@ -1,22 +1,30 @@
 #include "pch.h"
 
 #include "world/nodes/light/SpotLightNode.h"
-#include "asset/util/ParsingAux.h"
 
 
 SpotLightNode::SpotLightNode(Node* parent)
-	: LightNode(parent)
+	: Node(parent),
+	  m_projectionMatrix(),
+      m_aperture(45.f)
 {
 }
 
-
-bool SpotLightNode::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
+void SpotLightNode::UpdateProjectionMatrix()
 {
-	LightNode::LoadAttributesFromXML(xmlData);
-	// WIP:
-
-
-	return true;
+	auto ar = static_cast<float>(m_shadowMapWidth) / static_cast<float>(m_shadowMapHeight);
+	m_projectionMatrix = glm::perspective(glm::radians(m_aperture), ar, m_near, m_far);
 }
+
+void SpotLightNode::DirtyUpdate()
+{
+	Node::DirtyUpdate();
+
+	if (m_dirty[DF::Projection])
+	{
+		UpdateProjectionMatrix();
+	}
+}
+
 
 
