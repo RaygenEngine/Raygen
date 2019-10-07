@@ -54,11 +54,12 @@ public:
 	struct DF
 	{
 		enum {
-			Transform,
+			TRS,
 			Hierarchy,
 			Children,
 			Properties,
 			Created,
+
 			_COUNT
 		};
 	};
@@ -111,6 +112,9 @@ public:
 	void SetLocalOrientation(const glm::quat& lo);
 	void SetLocalScale(const glm::vec3& ls);
 	void SetLocalMatrix(const glm::mat4& lm);
+
+	void SetWorldMatrix(const glm::mat4& newWorldMatrix);
+
 
 	glm::vec3 GetWorldTranslation() const { return m_worldTranslation; }
 	glm::quat GetWorldOrientation() const { return m_worldOrientation; }

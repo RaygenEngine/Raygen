@@ -4,9 +4,25 @@
 #include "renderer/renderers/opengl/GLAssetManager.h"
 
 #include "glad/glad.h"
+#include "system/Input.h"
 
 namespace OpenGL
 {
+
+void GLRendererBase::Update()
+{
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::BACKSPACE))
+	{
+		m_vsyncEnabled = !m_vsyncEnabled;
+		ChangeVSync(m_vsyncEnabled);
+	}
+}
+
+void GLRendererBase::ChangeVSync(bool enabled)
+	{
+		auto wglSwapIntervalEXT = ((BOOL(WINAPI*)(int))wglGetProcAddress("wglSwapIntervalEXT"));
+		wglSwapIntervalEXT(enabled);
+	}
 
 	GLRendererBase::GLRendererBase()
 		: m_assochWnd(nullptr),

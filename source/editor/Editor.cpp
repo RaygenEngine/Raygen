@@ -20,18 +20,17 @@
 #include <set>
 #include "core/reflection/PodTools.h"
 
+#define TEXT_TOOLTIP(...) if (ImGui::IsItemHovered()) { TextTooltipUtil(fmt::format(__VA_ARGS__)); }
+
 namespace
 {
-void TextTooltip(const std::string& Tooltip)
+void TextTooltipUtil(const std::string& Tooltip)
 {
-	if (ImGui::IsItemHovered())
-	{
 		ImGui::BeginTooltip();
 		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 45.0f);
 		ImGui::TextUnformatted(Tooltip.c_str());
 		ImGui::PopTextWrapPos();
 		ImGui::EndTooltip();
-	}
 }
 }
 
@@ -421,7 +420,6 @@ void Editor::UpdateEditor()
 			{
 				reloadAssetLambda(assetEntry);
 			}
-			
 
 			ImGui::SameLine();
 			ImGui::Text(assetEntry->path.c_str());
@@ -431,7 +429,7 @@ void Editor::UpdateEditor()
 				ImGui::PopStyleVar();
 			}
 
-			TextTooltip(fmt::format("Path: {}\n Ptr: {}\nType: {}\n UID: {}", assetEntry->path, assetEntry->ptr, assetEntry->type.name(), assetEntry->uid));
+			TEXT_TOOLTIP("Path: {}\n Ptr: {}\nType: {}\n UID: {}", assetEntry->path, assetEntry->ptr, assetEntry->type.name(), assetEntry->uid);
 			ImGui::PopID();
 		}
 	}
@@ -458,6 +456,23 @@ void Editor::Outliner()
 		{
 			m_selectedNode = node;
 		}
+		if (ImGui::BeginPopupContextItem("Outliner Context"))
+		{
+			if (ImGui::Selectable("Teleport To Camera"))
+			{
+				auto camera = Engine::GetWorld()->GetActiveCamera();
+				if (camera)
+				{
+					node->SetWorldMatrix(camera->GetWorldMatrix());
+				}
+			}
+			if (ImGui::Selectable("Pilot"))
+			{
+				ImGui::OpenPopup("Clone Name");
+			}
+
+			ImGui::EndPopup();
+		}		
 		ImGui::PopID();
 	});
 	ImGui::EndChild();

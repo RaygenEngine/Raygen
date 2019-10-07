@@ -15,6 +15,7 @@ namespace OpenGL
 
 		std::unique_ptr<GLAssetManager> m_glAssetManager;
 
+		bool m_vsyncEnabled{ true };
 	public:
 		GLRendererBase();
 		~GLRendererBase();
@@ -26,6 +27,10 @@ namespace OpenGL
 		{
 			return m_glAssetManager.get();
 		}
+		
+		virtual void Update() override;
+
+		void ChangeVSync(bool newIsEnabled);
 	};
 
 	template<typename GlRenderer>

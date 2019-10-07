@@ -161,68 +161,245 @@ namespace GltfModelLoader
 			return;
 		}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+		template<typename ComponentType>
+		void CopyToVertexData_Position(std::vector<VertexData>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+		{
+			for (int32 i = 0; i < elementCount; ++i)
+			{
+				byte* elementPtr = &beginPtr[perElementOffset * i];
+				ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
+
+				if constexpr (std::is_same_v<double, ComponentType>)
+				{
+					result[i].position[0] = static_cast<float>(data[0]);
+					result[i].position[1] = static_cast<float>(data[1]);
+					result[i].position[2] = static_cast<float>(data[2]);
+				}
+				else if constexpr (std::is_same_v<float, ComponentType>)
+				{
+					result[i].position[0] = data[0];
+					result[i].position[1] = data[1];
+					result[i].position[2] = data[2];
+				}
+				else
+				{
+					assert(false);
+				}
+			}
+		}
+
+		template<typename ComponentType>
+		void CopyToVertexData_Normal(std::vector<VertexData>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+		{
+			for (int32 i = 0; i < elementCount; ++i)
+			{
+				byte* elementPtr = &beginPtr[perElementOffset * i];
+				ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
+
+				if constexpr (std::is_same_v<double, ComponentType>)
+				{
+					result[i].normal[0] = static_cast<float>(data[0]);
+					result[i].normal[1] = static_cast<float>(data[1]);
+					result[i].normal[2] = static_cast<float>(data[2]);
+				}
+				else if constexpr (std::is_same_v<float, ComponentType>)
+				{
+					result[i].normal[0] = data[0];
+					result[i].normal[1] = data[1];
+					result[i].normal[2] = data[2];
+				}
+				else
+				{
+					assert(false);
+				}
+			}
+		}
+
+		template<typename ComponentType>
+		void CopyToVertexData_Tangent(std::vector<VertexData>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+		{
+			for (int32 i = 0; i < elementCount; ++i)
+			{
+				byte* elementPtr = &beginPtr[perElementOffset * i];
+				ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
+
+				if constexpr (std::is_same_v<double, ComponentType>)
+				{
+					result[i].tangent[0] = static_cast<float>(data[0]);
+					result[i].tangent[1] = static_cast<float>(data[1]);
+					result[i].tangent[2] = static_cast<float>(data[2]);
+				}
+				else if constexpr (std::is_same_v<float, ComponentType>)
+				{
+					result[i].tangent[0] = data[0];
+					result[i].tangent[1] = data[1];
+					result[i].tangent[2] = data[2];
+				}
+				else
+				{
+					assert(false);
+				}
+			}
+		}
+
+		template<typename ComponentType>
+		void CopyToVertexData_TexCoord0(std::vector<VertexData>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+		{
+			for (int32 i = 0; i < elementCount; ++i)
+			{
+				byte* elementPtr = &beginPtr[perElementOffset * i];
+				ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
+
+				if constexpr (std::is_same_v<double, ComponentType>)
+				{
+					result[i].textCoord0[0] = static_cast<float>(data[0]);
+					result[i].textCoord0[1] = static_cast<float>(data[1]);
+				}
+				else if constexpr (std::is_same_v<float, ComponentType>)
+				{
+					result[i].textCoord0[0] = data[0];
+					result[i].textCoord0[1] = data[1];
+				}
+				else
+				{
+					assert(false);
+				}
+			}
+		}
+
+		template<typename ComponentType>
+		void CopyToVertexData_TexCoord1(std::vector<VertexData>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+		{
+			for (int32 i = 0; i < elementCount; ++i)
+			{
+				byte* elementPtr = &beginPtr[perElementOffset * i];
+				ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
+
+				if constexpr (std::is_same_v<double, ComponentType>)
+				{
+					result[i].textCoord1[0] = static_cast<float>(data[0]);
+					result[i].textCoord1[1] = static_cast<float>(data[1]);
+				}
+				else if constexpr (std::is_same_v<float, ComponentType>)
+				{
+					result[i].textCoord1[0] = data[0];
+					result[i].textCoord1[1] = data[1];
+				}
+				else
+				{
+					assert(false);
+				}
+			}
+		}
+
+		template<size_t VertexElementIndex>
+		void LoadIntoVertextData(const tg::Model& modelData, int32 accessorIndex, std::vector<VertexData>& out)
+		{
+			//
+			// Actual example of a possible complex gltf buffer:
+			//                                              |     STRIDE  |
+			// [{vertexIndexes} * 1000] [{normals} * 1000] [{uv0, position} * 1000]
+			//													  ^ beginPtr for Position.
+			//
+
+			size_t elementCount;		// How many elements there are to read
+			size_t componentCount;		// How many components of type ComponentType there are to each element.
+
+			size_t strideByteOffset;	// The number of bytes to move in the buffer after each read to get the next element.
+										// This may be more bytes than the actual sizeof(ComponentType) * componentCount
+										// if the data is strided.
+
+			byte* beginPtr;				// Pointer to the first byte we care about.
+										// This may not be the actual start of the buffer of the binary file.
+
+			BufferComponentType componentType; // this particular model's underlying buffer type to read as.
+
+			{
+				size_t beginByteOffset;
+				const tinygltf::Accessor& accessor = modelData.accessors.at(accessorIndex);
+				const tinygltf::BufferView& bufferView = modelData.bufferViews.at(accessor.bufferView);
+				const tinygltf::Buffer& gltfBuffer = modelData.buffers.at(bufferView.buffer);
+
+
+				componentType = GltfAux::GetComponentType(accessor.componentType);
+				elementCount = accessor.count;
+				beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
+				strideByteOffset = accessor.ByteStride(bufferView);
+				componentCount = utl::GetElementComponentCount(GltfAux::GetElementType(accessor.type));
+				beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
+			}
+
+			switch (componentType)
+			{
+				// Conversions from signed to unsigned types are "implementation defined".
+				// This code assumes the implementation will not do any bit arethmitic from signed x to unsigned x.
+
+			case BufferComponentType::BYTE:			
+			case BufferComponentType::UNSIGNED_BYTE:
+			case BufferComponentType::SHORT:		
+			case BufferComponentType::UNSIGNED_SHORT:
+			case BufferComponentType::INT:			
+			case BufferComponentType::UNSIGNED_INT:	
+				assert(false);
+			case BufferComponentType::FLOAT:
+				LoadIntoVertextData_Selector<VertexElementIndex, float>(out, beginPtr, strideByteOffset, elementCount);
+				return;
+			case BufferComponentType::DOUBLE:
+				LoadIntoVertextData_Selector<VertexElementIndex, double>(out, beginPtr, strideByteOffset, elementCount);
+				return;
+			case BufferComponentType::INVALID:
+				return;
+			}
+		}
+
+		template<size_t VertexElementIndex, typename ComponentType>
+		void LoadIntoVertextData_Selector(std::vector<VertexData>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+		{
+			if constexpr (VertexElementIndex == 0)
+			{
+				CopyToVertexData_Position<ComponentType>(result, beginPtr, perElementOffset, elementCount);
+			}
+			else if constexpr (VertexElementIndex == 1)
+			{
+				CopyToVertexData_Normal<ComponentType>(result, beginPtr, perElementOffset, elementCount);
+			}
+			else if constexpr (VertexElementIndex == 2)
+			{
+				CopyToVertexData_Tangent<ComponentType>(result, beginPtr, perElementOffset, elementCount);
+			}
+			else if constexpr (VertexElementIndex == 3)
+			{
+				CopyToVertexData_TexCoord0<ComponentType>(result, beginPtr, perElementOffset, elementCount);
+			}
+			else if constexpr (VertexElementIndex == 4)
+			{
+				CopyToVertexData_TexCoord1<ComponentType>(result, beginPtr, perElementOffset, elementCount);
+			}
+		}
+
+
 		bool LoadGeometryGroup(ModelPod* pod, const uri::Uri& parentPath, GeometryGroup& geom, tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData,
 			const glm::mat4& transformMat, bool& requiresDefaultMaterial)
 		{
 			// mode
 			geom.mode = GltfAux::GetGeometryMode(primitiveData.mode);
 
-			// indexing
-			const auto indicesIndex = primitiveData.indices;
-
-			if (indicesIndex != -1)
-			{
-				ExtractBufferDataInto(modelData, indicesIndex, geom.indices);
-			}
-
-			// attributes
-			for (auto& attribute : primitiveData.attributes)
-			{
-				const auto& attrName = attribute.first;
-				int32 index = attribute.second;
-
-				if (utl::CaseInsensitiveCompare(attrName, "POSITION"))
-				{
-					ExtractBufferDataInto(modelData, index, geom.positions);
-				}
-				else if (utl::CaseInsensitiveCompare(attrName, "NORMAL"))
-				{
-					ExtractBufferDataInto(modelData, index, geom.normals);
-				}
-				else if (utl::CaseInsensitiveCompare(attrName, "TANGENT"))
-				{
-					ExtractBufferDataInto(modelData, index, geom.tangents);
-				}
-				else if (utl::CaseInsensitiveCompare(attrName, "TEXCOORD_0"))
-				{
-					ExtractBufferDataInto(modelData, index, geom.textCoords0);
-				}
-				else if (utl::CaseInsensitiveCompare(attrName, "TEXCOORD_1"))
-				{
-					ExtractBufferDataInto(modelData, index, geom.textCoords1);
-				}
-
-			}
-
-			// if missing positions
-			if (geom.positions.empty())
-				return false;
-
-			// PERF: speed up those calcs
-			for (auto& pos : geom.positions)
-			{
-				pos = transformMat * glm::vec4(pos, 1.f);
-			}
-			// PERF: speed up those calcs
-			const auto invTransMat = glm::transpose(glm::inverse(glm::mat3(transformMat)));
-			for (auto& normal : geom.normals)
-			{
-				normal = invTransMat * normal;
-			}
-
 			// material
 			const auto materialIndex = primitiveData.material;
-			
+
 			// If material is -1, we need default material.
 			if (materialIndex == -1)
 			{
@@ -234,78 +411,123 @@ namespace GltfModelLoader
 			{
 				geom.materialIndex = materialIndex;
 			}
-			
 
-			// calculate missing normals (flat)
-			if (geom.normals.empty())
+			auto it = std::find_if(begin(primitiveData.attributes), end(primitiveData.attributes), [](auto& pair) {
+				return utl::CaseInsensitiveCompare(pair.first, "POSITION");
+			});
+
+
+			size_t vertexCount = modelData.accessors.at(it->second).count;
+			geom.vertices.resize(vertexCount);
+
+			// indexing
+			const auto indicesIndex = primitiveData.indices;
+
+			if (indicesIndex != -1)
 			{
-				geom.normals.resize(geom.positions.size());
-
-				auto makeNormals = [&](std::function<uint32(int32)> getIndex)
+				ExtractBufferDataInto(modelData, indicesIndex, geom.indices);
+			}
+			else
+			{
+				geom.indices.resize(vertexCount);
+				for (int32 i = 0; i < vertexCount; ++i)
 				{
-					for (int32 i = 0; i < geom.indices.size(); i += 3)
-					{
-						// triangle
-						auto p0 = geom.positions[getIndex(i)];
-						auto p1 = geom.positions[getIndex(i + 1)];
-						auto p2 = geom.positions[getIndex(i + 2)];
-
-						glm::vec3 n = glm::cross(p1 - p0, p2 - p0);
-
-						geom.normals[getIndex(i)] += n;
-						geom.normals[getIndex(i + 1)] += n;
-						geom.normals[getIndex(i + 2)] += n;
-					}
-				};
-
-				if (!geom.indices.empty())
-				{
-					makeNormals([&](int32 i) { return geom.indices[i]; });
+					geom.indices[i] = i;
 				}
-				else
+			}
+		
+
+			bool missingNormals = true;
+			bool missingTangents = true;
+			bool missingTexcoord0 = true;
+			bool missingTexcoord1 = true;
+
+			// attributes
+			for (auto& attribute : primitiveData.attributes)
+			{
+				const auto& attrName = attribute.first;
+				int32 index = attribute.second;
+
+				if (utl::CaseInsensitiveCompare(attrName, "POSITION"))
 				{
-					makeNormals([](int32 i) { return i; });
+					LoadIntoVertextData<0>(modelData, index, geom.vertices);
+				}
+				else if (utl::CaseInsensitiveCompare(attrName, "NORMAL"))
+				{
+					LoadIntoVertextData<1>(modelData, index, geom.vertices);
+					missingNormals = false;
+				}
+				else if (utl::CaseInsensitiveCompare(attrName, "TANGENT"))
+				{
+					LoadIntoVertextData<2>(modelData, index, geom.vertices);
+					missingTangents = false;
+				}
+				else if (utl::CaseInsensitiveCompare(attrName, "TEXCOORD_0"))
+				{
+					LoadIntoVertextData<3>(modelData, index, geom.vertices);
+					missingTexcoord0 = false;
+				}
+				else if (utl::CaseInsensitiveCompare(attrName, "TEXCOORD_1"))
+				{
+					LoadIntoVertextData<4>(modelData, index, geom.vertices);
+					missingTexcoord1 = false;
 				}
 
-				std::for_each(geom.normals.begin(), geom.normals.end(), [](glm::vec3& normal) { normal = glm::normalize(normal); });
+			}
+
+
+			for (auto& v : geom.vertices)
+			{
+				v.position = transformMat * glm::vec4(v.position, 1.f);
+			}
+
+			if (!missingNormals)
+			{
+				const auto invTransMat = glm::transpose(glm::inverse(glm::mat3(transformMat)));
+				for (auto& v : geom.vertices)
+				{
+					v.normal = invTransMat * v.normal;
+				}
+			}
+			else
+			{
+				// calculate missing normals (flat)
+				for (int32 i = 0; i < geom.indices.size(); i += 3)
+				{
+					// triangle
+					auto p0 = geom.vertices[geom.indices[i]].position;
+					auto p1 = geom.vertices[geom.indices[i + 1]].position;
+					auto p2 = geom.vertices[geom.indices[i + 2]].position;
+
+					glm::vec3 n = glm::cross(p1 - p0, p2 - p0);
+
+					geom.vertices[geom.indices[i]].normal += n;
+					geom.vertices[geom.indices[i + 1]].normal += n;
+					geom.vertices[geom.indices[i + 2]].normal += n;
+				}
+				
+				for (auto& v : geom.vertices)
+				{
+					v.normal = glm::normalize(v.normal);
+				}
 			}
 
 			// TODO test better calculations (using uv layer 0?) also text tangent handedness (urgently)
 			// calculate missing tangents (and bitangents)
-			if (geom.tangents.empty())
+			if (missingTangents)
 			{
-				std::transform(geom.normals.begin(), geom.normals.end(), std::back_inserter(geom.tangents), [](const glm::vec3& normal)
-					{
-						const auto c1 = glm::cross(normal, glm::vec3(0.0, 0.0, 1.0));
-						const auto c2 = glm::cross(normal, glm::vec3(0.0, 1.0, 0.0));
-						if (glm::length(c1) > glm::length(c2))
-							return glm::vec4(glm::normalize(c1), 1.0f);
-						else
-							return glm::vec4(glm::normalize(c2), -1.f);
-					});
+				for (auto& v : geom.vertices)
+				{
+					const auto c1 = glm::cross(v.normal, glm::vec3(0.0, 0.0, 1.0));
+					const auto c2 = glm::cross(v.normal, glm::vec3(0.0, 1.0, 0.0));
+					
+					v.tangent = glm::length2(c1) > glm::length2(c2) ? glm::vec4(glm::normalize(c1), 1.0f) : glm::vec4(glm::normalize(c2), -1.f);
+				}
 			}
-
-			// calculate missing bitangents
-			if (geom.bitangents.empty())
+			for (auto& v : geom.vertices)
 			{
-				std::transform(geom.normals.begin(), geom.normals.end(), geom.tangents.begin(),
-					std::back_inserter(geom.bitangents), [](const glm::vec3& normal, const glm::vec4& tangent)
-					{
-					// TODO: handness issues bitangent = cross(normal, tangent.xyz) * tangent.w
-						return glm::normalize(glm::cross(normal, glm::vec3(tangent)));
-					});
-			}
-
-			// calculate missing textCoords0 - init zeros
-			if (geom.textCoords0.empty())
-			{
-				geom.textCoords0.resize(geom.positions.size());
-			}
-
-			// calculate missing textCoords1 - copy textCoords0
-			if (geom.textCoords1.empty())
-			{
-				geom.textCoords1 = geom.textCoords0;
+				// TODO: handness issues bitangent = cross(normal, tangent.xyz) * tangent.w
+				v.bitangent = glm::normalize(glm::cross(v.normal, glm::vec3(v.tangent)));
 			}
 
 			// calculate other baked data

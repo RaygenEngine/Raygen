@@ -18,13 +18,8 @@ namespace OpenGL
 			GLuint ebo{ 0u };
 
 			// TODO: may use single in the future
-			GLuint positionsVBO{ 0u };
-			GLuint normalsVBO{ 0u };
-			GLuint tangentsVBO{ 0u };
-			GLuint bitangentsVBO{ 0u };
-			GLuint textCoords0VBO{ 0u };
-			GLuint textCoords1VBO{ 0u };
-
+			GLuint verticesVBO{ 0u };
+			
 			GLMaterial* material{ nullptr };
 
 			GLint geometryMode{ 0u };
