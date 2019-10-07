@@ -37,6 +37,8 @@ namespace OpenGL
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
 		glDrawBuffer(GL_NONE);
 		glReadBuffer(GL_NONE);
+
+		lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 	}
 
 	GLBasicSpotLight::~GLBasicSpotLight()
@@ -113,7 +115,7 @@ namespace OpenGL
 				node->GetShadowMapWidth(), node->GetShadowMapHeight(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 		}
 
-		if (nodeDirtyFlagset[SpotLightNode::DF::Projection])
+		if (nodeDirtyFlagset[SpotLightNode::DF::Projection] || nodeDirtyFlagset[Node::DF::TRS])
 		{
 			lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 		}
