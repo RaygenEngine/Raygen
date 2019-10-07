@@ -22,7 +22,7 @@ protected:
 	// Non owning pointer to the static ReflEnum structure generated for this enum class
 	const ReflEnum* m_enum;
 
-	size_t m_dirtyBitsetIndex;
+	int32 m_dirtyFlagIndex;
 
 	// Returns real memory address from the offsetof for a specific instance.
 	void* GetRealMemoryAddr(void* objInstance) const
@@ -41,7 +41,8 @@ protected:
 		, m_flags(flags)
 		, m_name(name)
 		, m_offset(offset)
-		, m_enum(nullptr) {}
+		, m_enum(nullptr)
+		, m_dirtyFlagIndex(-1){}
 
 	template<typename Enum>
 	void MakeEnum()
@@ -56,6 +57,8 @@ public:
 	[[nodiscard]] TypeId GetType() const { return m_type; }
 	[[nodiscard]] const ReflEnum* GetEnum() const { return m_enum; }
 	[[nodiscard]] bool IsEnum() const { return m_enum != nullptr; }
+	[[nodiscard]] int32 GetDirtyFlagIndex() const { return m_dirtyFlagIndex; }
+
 
 	// Check if this property is of this type.
 	template<typename T>
@@ -101,9 +104,9 @@ public:
 		return other.m_flags == m_flags;
 	}
 
-	Property& OnDirty(size_t bitIndex)
+	Property& OnDirty(int32 setFlagIndex)
 	{
-		m_dirtyBitsetIndex = bitIndex;
+		m_dirtyFlagIndex = setFlagIndex;
 		return *this;
 	}
 };

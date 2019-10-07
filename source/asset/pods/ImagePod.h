@@ -28,5 +28,10 @@ struct ImagePod : AssetPod
 
 	// if(isHdr) data -> float* else data -> byte*
 	bool isHdr{ false };
+
+	~ImagePod()
+	{
+		free(data);
+	}
 };
 

@@ -401,6 +401,7 @@ namespace OpenGL
 
 	void GLDeferredRenderer::Update()
 	{
+		GLRendererBase::Update();
 		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K1))
 		{
 			m_currentTexture = m_gBuffer.positionsAttachment;
