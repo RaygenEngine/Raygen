@@ -8,9 +8,16 @@ namespace OpenGL
 	GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
 		: NodeObserver<DirectionalLightNode, GLRendererBase>(node)
 	{
-		const auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/depth_map.shader.json");
-		shader = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
-		shader->AddUniform("mvp");
+		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/DepthMap.json");
+		depthMap = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		depthMap->AddUniform("mvp");
+
+		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/DepthMap_AlphaMask.json");
+		depthMapAlphaMask = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		depthMapAlphaMask->AddUniform("mvp");
+		depthMapAlphaMask->AddUniform("base_color_factor");
+		depthMapAlphaMask->AddUniform("base_color_texcoord_index");
+		depthMapAlphaMask->AddUniform("alpha_cutoff");
 
 		glGenFramebuffers(1, &fbo);
 
@@ -47,27 +54,48 @@ namespace OpenGL
 		glEnable(GL_CULL_FACE);
 		
 		// TODO - PERF: calculate this only from update from node not every frame
-		lightSpaceMatrix = node->GetOrthoProjectionMatrix() * node->GetViewMatrix();
+		lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 	
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 		glClear(GL_DEPTH_BUFFER_BIT);
 
-		glUseProgram(shader->id);
+		auto gBufferShader = depthMap;
 
 		for (auto& geometry : geometries)
 		{
 			auto m = geometry->node->GetWorldMatrix();
 			auto mvp = lightSpaceMatrix * m;
 
-			glUniformMatrix4fv(shader->GetUniform("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
-
 			for (auto& glMesh : geometry->glModel->meshes)
 			{
-				glBindVertexArray(glMesh.vao);
-
 				GLMaterial* glMaterial = glMesh.material;
-				PodHandle<MaterialPod> materialData = glMaterial->m_materialPod;
+				MaterialPod* materialData = glMaterial->m_materialPod.operator->();
+
+				switch (materialData->alphaMode)
+				{
+					// blend not handled
+				case AM_BLEND:
+				case AM_OPAQUE:
+					gBufferShader = depthMap;
+					glUseProgram(gBufferShader->id);
+					break;
+				case AM_MASK:
+					gBufferShader = depthMapAlphaMask;
+					glUseProgram(gBufferShader->id);
+					glUniform1f(gBufferShader->GetUniform("alpha_cutoff"), materialData->alphaCutoff);
+					glUniform4fv(gBufferShader->GetUniform("base_color_factor"), 1, glm::value_ptr(materialData->baseColorFactor));
+					glUniform1i(gBufferShader->GetUniform("base_color_texcoord_index"), materialData->baseColorTexCoordIndex);
+					glActiveTexture(GL_TEXTURE0);
+					glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
+					break;
+
+				case AM_INVALID: abort();
+				}
+
+				glUniformMatrix4fv(gBufferShader->GetUniform("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+				
+				glBindVertexArray(glMesh.vao);
 
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
@@ -77,5 +105,20 @@ namespace OpenGL
 
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
+	}
+
+	void GLBasicDirectionalLight::DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset)
+	{
+		if (nodeDirtyFlagset[DirectionalLightNode::DF::ResizeShadows])
+		{
+			glBindTexture(GL_TEXTURE_2D, shadowMap);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+				node->GetShadowMapWidth(), node->GetShadowMapHeight(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		}
+
+		if (nodeDirtyFlagset[DirectionalLightNode::DF::Projection])
+		{
+			lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
+		}
 	}
 }

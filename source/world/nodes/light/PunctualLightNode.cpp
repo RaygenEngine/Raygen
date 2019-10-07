@@ -4,6 +4,6 @@
 
 
 PunctualLightNode::PunctualLightNode(Node* parent)
-	: LightNode(parent)
+	: Node(parent)
 {
 }

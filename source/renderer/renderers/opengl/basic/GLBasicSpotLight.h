@@ -15,16 +15,17 @@ namespace OpenGL
 		GLuint fbo;
 		GLuint shadowMap;
 
-		GLShader* shader;
+		GLShader* depthMap;
+		GLShader* depthMapAlphaMask;
 
 		glm::mat4 lightSpaceMatrix;
-
-		void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override {}
-
+		
 		GLBasicSpotLight(SpotLightNode* node);
 		~GLBasicSpotLight();
 
 		// render shadow map, then return the matrix needed to move from world to light space
 		void RenderShadowMap(const std::vector<GLBasicGeometry*>& geometries);
+
+		void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override;
 	};
 }

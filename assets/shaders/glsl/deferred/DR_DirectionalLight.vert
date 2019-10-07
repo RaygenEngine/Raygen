@@ -2,6 +2,7 @@
 
 out vec2 uv;
 
+// big triangle trick
 void main()
 {
 	float x = -1.0 + float((gl_VertexID & 1) << 2);
