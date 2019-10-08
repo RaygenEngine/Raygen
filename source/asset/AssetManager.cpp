@@ -4,18 +4,12 @@
 #include "core/reflection/PodTools.h"
 #include "asset/loaders/GltfFileLoader.h"
 
-bool AssetManager::Init(const std::string& applicationPath, const std::string& dataDirectoryName)
+bool AssetManager::Init()
 {
 	m_pods.push_back(std::make_unique<PodEntry>());
 
-	std::error_code error;
-	fs::current_path("../../assets/", error);
-	if (error)
-	{
-		LOG_FATAL("Couldn't set work directory!");
-		return false;
-	}
-
+	LOG_REPORT(fs::current_path());
+	
 	return true;
 }
 

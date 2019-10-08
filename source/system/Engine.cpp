@@ -41,7 +41,7 @@ void Engine::InitEngine(AppBase* app)
 	m_input = new Input();
 	m_assetManager = new AssetManager();
 	
-	m_assetManager->Init(app->m_argv[0], app->m_assetPath);
+	m_assetManager->Init();
 
 	app->RegisterRenderers();
 
