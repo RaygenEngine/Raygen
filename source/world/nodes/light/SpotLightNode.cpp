@@ -4,9 +4,9 @@
 
 
 SpotLightNode::SpotLightNode(Node* parent)
-	: Node(parent),
-	  m_projectionMatrix(),
-      m_aperture(45.f)
+	: Node(parent)
+	, m_projectionMatrix()
+	, m_aperture(45.f)
 {
 }
 
@@ -20,11 +20,7 @@ void SpotLightNode::DirtyUpdate()
 {
 	Node::DirtyUpdate();
 
-	if (m_dirty[DF::Projection])
-	{
+	if (m_dirty[DF::Projection]) {
 		UpdateProjectionMatrix();
 	}
 }
-
-
-

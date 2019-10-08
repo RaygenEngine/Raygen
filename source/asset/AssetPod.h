@@ -2,18 +2,16 @@
 
 #include "core/reflection/TypeId.h"
 
-namespace uri
-{ 
-	using Uri = std::string;
+namespace uri {
+using Uri = std::string;
 }
 
-struct AssetPod
-{
+struct AssetPod {
 	TypeId type;
 
 	template<typename T>
-	bool IsOfType() const 
-	{ 
+	bool IsOfType() const
+	{
 		static_assert(std::is_base_of_v<AssetPod, T>, "This check would always fail. T is not a child pod type");
 		return type == refl::GetId<T>();
 	};
@@ -24,28 +22,17 @@ protected:
 	~AssetPod() = default;
 };
 
-struct BasePodHandle
-{
+struct BasePodHandle {
 	size_t podId{ 0 };
 
-	bool HasBeenAssigned() const
-	{
-		return podId != 0;
-	}
+	bool HasBeenAssigned() const { return podId != 0; }
 
-	bool operator==(const BasePodHandle& other) const
-	{
-		return other.podId == this->podId && podId != 0;
-	}
+	bool operator==(const BasePodHandle& other) const { return other.podId == this->podId && podId != 0; }
 };
 
 namespace std {
 template<>
-struct hash<BasePodHandle>
-{
-	size_t operator()(const BasePodHandle& x) const
-	{
-		return x.podId;
-	}
+struct hash<BasePodHandle> {
+	size_t operator()(const BasePodHandle& x) const { return x.podId; }
 };
-}
+} // namespace std

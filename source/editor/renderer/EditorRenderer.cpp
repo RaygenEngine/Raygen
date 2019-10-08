@@ -6,14 +6,15 @@
 
 void ForwardEditorRenderer::OnNodePodsDirty(Node* node)
 {
-	//if (auto geometry = dynamic_cast<GeometryNode*>(node))
+	// if (auto geometry = dynamic_cast<GeometryNode*>(node))
 	//{
-	//	auto it = std::find_if(m_glGeometries.begin(), m_glGeometries.end(), [node](std::unique_ptr<OpenGL::GLBasicGeometry>& ptr)
+	//	auto it = std::find_if(m_glGeometries.begin(), m_glGeometries.end(),
+	//[node](std::unique_ptr<OpenGL::GLBasicGeometry>& ptr)
 	//	{
 	//		return ptr.get()->node == node;
 	//	});
 	//	assert(it != m_glGeometries.end() && "Attempting to update untracked geometry node from observer list.");
-	//	
+	//
 	//	(*it)->ReloadModel();
 	//}
 }
@@ -21,8 +22,7 @@ void ForwardEditorRenderer::OnNodePodsDirty(Node* node)
 void ForwardEditorRenderer::Render()
 {
 	OpenGL::GLForwardRenderer::Render();
-	if (Engine::GetEditor()->m_showImgui)
-	{
+	if (Engine::GetEditor()->m_showImgui) {
 		ImguiImpl::RenderOpenGL();
 	}
 }
@@ -30,8 +30,7 @@ void ForwardEditorRenderer::Render()
 
 bool ForwardEditorRenderer::InitRendering(HWND assochWnd, HINSTANCE instance)
 {
-	if (!OpenGL::GLForwardRenderer::InitRendering(assochWnd, instance))
-	{
+	if (!OpenGL::GLForwardRenderer::InitRendering(assochWnd, instance)) {
 		return false;
 	}
 	ImguiImpl::InitOpenGL();
@@ -50,9 +49,10 @@ ForwardEditorRenderer::~ForwardEditorRenderer()
 
 void DeferredEditorRenderer::OnNodePodsDirty(Node* node)
 {
-	//if (auto geometry = dynamic_cast<GeometryNode*>(node))
+	// if (auto geometry = dynamic_cast<GeometryNode*>(node))
 	//{
-	//	auto it = std::find_if(m_glGeometries.begin(), m_glGeometries.end(), [node](std::unique_ptr<OpenGL::GLBasicGeometry>& ptr)
+	//	auto it = std::find_if(m_glGeometries.begin(), m_glGeometries.end(),
+	//[node](std::unique_ptr<OpenGL::GLBasicGeometry>& ptr)
 	//	{
 	//		return ptr.get()->node == node;
 	//	});
@@ -65,8 +65,7 @@ void DeferredEditorRenderer::OnNodePodsDirty(Node* node)
 void DeferredEditorRenderer::Render()
 {
 	OpenGL::GLDeferredRenderer::Render();
-	if (Engine::GetEditor()->m_showImgui)
-	{
+	if (Engine::GetEditor()->m_showImgui) {
 		ImguiImpl::RenderOpenGL();
 	}
 }
@@ -74,8 +73,7 @@ void DeferredEditorRenderer::Render()
 
 bool DeferredEditorRenderer::InitRendering(HWND assochWnd, HINSTANCE instance)
 {
-	if (!OpenGL::GLDeferredRenderer::InitRendering(assochWnd, instance))
-	{
+	if (!OpenGL::GLDeferredRenderer::InitRendering(assochWnd, instance)) {
 		return false;
 	}
 	ImguiImpl::InitOpenGL();

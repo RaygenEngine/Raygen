@@ -6,8 +6,7 @@
 #include "asset/PodHandle.h"
 
 template<typename GpuAssetBaseType>
-class GenericGpuAssetManager
-{
+class GenericGpuAssetManager {
 	std::unordered_map<size_t, std::unique_ptr<GpuAssetBaseType>> m_assetMap;
 
 public:
@@ -16,8 +15,7 @@ public:
 	{
 		size_t uid = handle.podId;
 		auto it = m_assetMap.find(uid);
-		if (it != m_assetMap.end())
-		{
+		if (it != m_assetMap.end()) {
 			return dynamic_cast<AssetT*>(it->second.get());
 		}
 

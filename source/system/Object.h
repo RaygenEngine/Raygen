@@ -1,17 +1,18 @@
 #pragma once
 
-class Object
-{
+class Object {
 	utl::UID m_id;
-	
+
 protected:
 	std::string m_name;
-	
+
 public:
 	Object()
-		: m_id(utl::UUIDGenerator::GenerateUUID()) {}
+		: m_id(utl::UUIDGenerator::GenerateUUID())
+	{
+	}
 	virtual ~Object() = default;
-	
+
 	[[nodiscard]] utl::UID GetUID() const { return m_id; }
 	[[nodiscard]] std::string GetName() const { return m_name; }
 

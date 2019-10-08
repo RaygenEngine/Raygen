@@ -4,8 +4,7 @@
 #include "asset/AssetPod.h"
 #include "asset/pods/StringPod.h"
 
-struct ShaderPod : public AssetPod
-{
+struct ShaderPod : public AssetPod {
 	REFLECTED_POD(ShaderPod)
 	{
 		REFLECT_VAR(vertex);
@@ -16,4 +15,3 @@ struct ShaderPod : public AssetPod
 	PodHandle<StringPod> vertex;
 	PodHandle<StringPod> fragment;
 };
-

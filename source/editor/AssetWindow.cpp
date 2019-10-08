@@ -12,20 +12,16 @@ void AssetWindow::Init()
 {
 	Timer::DebugTimer<std::chrono::milliseconds> timer(true);
 
-	for (const auto& entry : fs::recursive_directory_iterator(fs::current_path()))
-	{
-		if (entry.is_directory())
-		{
+	for (const auto& entry : fs::recursive_directory_iterator(fs::current_path())) {
+		if (entry.is_directory()) {
 			continue;
 		}
-		
-		if (entry.path().extension() == ".gltf")
-		{
+
+		if (entry.path().extension() == ".gltf") {
 			auto key = entry.path().filename().string();
-			
+
 			auto& pathEntry = m_gltf[key];
-			if (pathEntry.empty())
-			{
+			if (pathEntry.empty()) {
 				pathEntry = std::filesystem::relative(entry);
 			}
 		}
@@ -39,28 +35,22 @@ void AssetWindow::DrawFileLibrary()
 	int32 n = 0;
 
 
-	if (ImGui::CollapsingHeader("Model files"))
-	{
+	if (ImGui::CollapsingHeader("Model files")) {
 		ImGui::Indent();
-		for (auto& s : m_gltf)
-		{
+		for (auto& s : m_gltf) {
 			ImGui::PushID(n++);
 
-			if (s.first.size() > 2)
-			{
+			if (s.first.size() > 2) {
 				auto strPath = "/" + s.second.string();
-				for (int32 i = 0; i < strPath.size(); ++i)
-				{
-					if (strPath[i] == '\\')
-					{
+				for (int32 i = 0; i < strPath.size(); ++i) {
+					if (strPath[i] == '\\') {
 						strPath[i] = '/';
 					}
 				}
 
 				ImGui::Button(s.first.c_str());
 
-				if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
-				{
+				if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
 					auto h = AssetManager::GetOrCreate<ModelPod>(strPath);
 
 					std::string payloadTag = "POD_UID_" + std::to_string(h->type.hash());
@@ -68,7 +58,7 @@ void AssetWindow::DrawFileLibrary()
 					ImGui::EndDragDropSource();
 				}
 			}
-			
+
 			ImGui::PopID();
 		}
 		ImGui::Unindent();
@@ -80,12 +70,10 @@ void AssetWindow::Draw()
 	ImGui::Begin("Asset Window");
 	DrawFileLibrary();
 	ImGui::End();
-
 }
 
 #include "asset/UriLibrary.h"
 
 void AssetWindow::DrawFileAsset(int32& n, const std::string& zpath)
 {
-
 }

@@ -2,42 +2,30 @@
 
 #include "world/nodes/Node.h"
 
-class DirectionalLightNode : public Node
-{
+class DirectionalLightNode : public Node {
 	REFLECTED_NODE(DirectionalLightNode, Node)
 	{
-		REFLECT_VAR(m_left)
-			.OnDirty(DF::Projection);
-		
-		REFLECT_VAR(m_right)
-			.OnDirty(DF::Projection);
+		REFLECT_VAR(m_left).OnDirty(DF::Projection);
 
-		REFLECT_VAR(m_bottom)
-			.OnDirty(DF::Projection);
-		
-		REFLECT_VAR(m_top)
-			.OnDirty(DF::Projection);
-		
-		REFLECT_VAR(m_near)
-			.OnDirty(DF::Projection);
+		REFLECT_VAR(m_right).OnDirty(DF::Projection);
 
-		REFLECT_VAR(m_far)
-			.OnDirty(DF::Projection);
+		REFLECT_VAR(m_bottom).OnDirty(DF::Projection);
 
-		REFLECT_VAR(m_color, PropertyFlags::Color)
-			.OnDirty(DF::Flux);
+		REFLECT_VAR(m_top).OnDirty(DF::Projection);
 
-		REFLECT_VAR(m_intensity)
-			.OnDirty(DF::Flux);
+		REFLECT_VAR(m_near).OnDirty(DF::Projection);
 
-		REFLECT_VAR(m_hasShadow)
-			.OnDirty(DF::ToggleShadows);
+		REFLECT_VAR(m_far).OnDirty(DF::Projection);
 
-		REFLECT_VAR(m_shadowMapWidth)
-			.OnDirty(DF::ResizeShadows);
-		
-		REFLECT_VAR(m_shadowMapHeight)
-			.OnDirty(DF::ResizeShadows);
+		REFLECT_VAR(m_color, PropertyFlags::Color).OnDirty(DF::Flux);
+
+		REFLECT_VAR(m_intensity).OnDirty(DF::Flux);
+
+		REFLECT_VAR(m_hasShadow).OnDirty(DF::ToggleShadows);
+
+		REFLECT_VAR(m_shadowMapWidth).OnDirty(DF::ResizeShadows);
+
+		REFLECT_VAR(m_shadowMapHeight).OnDirty(DF::ResizeShadows);
 	}
 
 	DECLARE_DIRTY_FLAGSET(Projection, Flux, ToggleShadows, ResizeShadows)
@@ -60,15 +48,14 @@ class DirectionalLightNode : public Node
 
 	float m_near{ 1.f };
 	float m_far{ 15.5f };
-	
-public:
 
+public:
 	DirectionalLightNode(Node* parent);
 	~DirectionalLightNode() = default;
 
 	void DirtyUpdate() override;
 
-	void UpdateProjectionMatrix() { m_projectionMatrix = glm::ortho(m_left, m_right, m_bottom, m_top, m_near, m_far);  }
+	void UpdateProjectionMatrix() { m_projectionMatrix = glm::ortho(m_left, m_right, m_bottom, m_top, m_near, m_far); }
 	glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 
 	[[nodiscard]] float GetOrthoFrustumLeft() const { return m_left; }

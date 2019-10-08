@@ -18,13 +18,12 @@
 class CameraNode;
 
 // TODO:
-class RootNode : public Node
-{
-REFLECTED_NODE(RootNode, Node)
-{
-	REFLECT_VAR(m_background, PropertyFlags::Color);
-	REFLECT_VAR(m_ambient, PropertyFlags::Color);
-}
+class RootNode : public Node {
+	REFLECTED_NODE(RootNode, Node)
+	{
+		REFLECT_VAR(m_background, PropertyFlags::Color);
+		REFLECT_VAR(m_ambient, PropertyFlags::Color);
+	}
 
 public:
 	RootNode()
@@ -41,13 +40,10 @@ public:
 	glm::vec3 GetAmbientColor() const { return m_ambient; }
 	void SetAmbientColor(const glm::vec3& color) { m_ambient = color; }
 
-	~RootNode() {
-		m_children.clear();
-	}
+	~RootNode() { m_children.clear(); }
 };
 
-class World
-{
+class World {
 	mutable std::unordered_set<Node*> m_nodes;
 	mutable std::unordered_set<GeometryNode*> m_triangleModelGeometries;
 	mutable std::unordered_set<TransformNode*> m_transforms;
@@ -74,6 +70,7 @@ class World
 	void UpdateFrameTimers();
 
 	friend class Editor;
+
 public:
 	// Returns float seconds
 	float GetDeltaTime() { return m_deltaTime; }
@@ -88,14 +85,12 @@ public:
 	~World();
 
 
-	template <typename NodeType>
+	template<typename NodeType>
 	void AddNode(NodeType* node)
 	{
-		// WIP: 
-		if constexpr (std::is_base_of_v<CameraNode, NodeType>)
-		{
-			if (!m_activeCamera)
-			{
+		// WIP:
+		if constexpr (std::is_base_of_v<CameraNode, NodeType>) {
+			if (!m_activeCamera) {
 				m_activeCamera = node;
 			}
 		}
@@ -104,7 +99,7 @@ public:
 		node->m_dirty.set(Node::DF::Created);
 	}
 
-	template <typename NodeType>
+	template<typename NodeType>
 	void RemoveNode(NodeType* node)
 	{
 		Event::OnWorldNodeRemoved.Broadcast(node);
@@ -113,14 +108,12 @@ public:
 	}
 
 	// available node may differ later in runtime
-	template <typename NodeType>
+	template<typename NodeType>
 	NodeType* GetAnyAvailableNode() const
 	{
-		for (auto& node : m_nodes)
-		{
+		for (auto& node : m_nodes) {
 			auto ptr = dynamic_cast<NodeType*>(node);
-			if (ptr)
-			{
+			if (ptr) {
 				return ptr;
 			}
 		}
@@ -128,19 +121,18 @@ public:
 	}
 
 	// available node may differ later in runtime
-	//template <typename NodeType>
-	//NodeType* GetFirstAvailableNode() const
+	// template <typename NodeType>
+	// NodeType* GetFirstAvailableNode() const
 	//{
-	//	
+	//
 	//	return *GetNodeMap<NodeType>().begin();
 	//} TODO: Use in observer renderer
 
 	// available node may differ later in runtime
-	template <typename NodeSubType>
+	template<typename NodeSubType>
 	NodeSubType* GetAvailableNodeSpecificSubType() const
 	{
-		for (auto node : GetNodeMap<NodeSubType>())
-		{
+		for (auto node : GetNodeMap<NodeSubType>()) {
 			auto* snode = dynamic_cast<NodeSubType*>(node);
 
 			if (snode)
@@ -150,19 +142,35 @@ public:
 		return nullptr;
 	}
 
-	template <typename NodeType>
+	template<typename NodeType>
 	constexpr auto& GetNodeMap() const
 	{
-		if constexpr (std::is_base_of<PunctualLightNode, NodeType>::value) { return m_punctualLights; }
-		else if constexpr (std::is_base_of<GeometryNode, NodeType>::value) { return m_triangleModelGeometries; }
-		else if constexpr (std::is_base_of<TransformNode, NodeType>::value) { return m_transforms; }
-		else if constexpr (std::is_base_of<CameraNode, NodeType>::value) { return m_cameras; }
-		else if constexpr (std::is_base_of<UserNode, NodeType>::value) { return m_users; }
-		else if constexpr (std::is_base_of<DirectionalLightNode, NodeType>::value) { return m_directionalLights; }
-		else if constexpr (std::is_base_of<SpotLightNode, NodeType>::value) { return m_spotLights; }
+		if constexpr (std::is_base_of<PunctualLightNode, NodeType>::value) {
+			return m_punctualLights;
+		}
+		else if constexpr (std::is_base_of<GeometryNode, NodeType>::value) {
+			return m_triangleModelGeometries;
+		}
+		else if constexpr (std::is_base_of<TransformNode, NodeType>::value) {
+			return m_transforms;
+		}
+		else if constexpr (std::is_base_of<CameraNode, NodeType>::value) {
+			return m_cameras;
+		}
+		else if constexpr (std::is_base_of<UserNode, NodeType>::value) {
+			return m_users;
+		}
+		else if constexpr (std::is_base_of<DirectionalLightNode, NodeType>::value) {
+			return m_directionalLights;
+		}
+		else if constexpr (std::is_base_of<SpotLightNode, NodeType>::value) {
+			return m_spotLights;
+		}
 
 		// general nodes
-		else if constexpr (std::is_base_of<Node, NodeType>::value) { return m_nodes; }
+		else if constexpr (std::is_base_of<Node, NodeType>::value) {
+			return m_nodes;
+		}
 	}
 
 	std::vector<Node*> GetNodesByName(const std::string& name) const;
@@ -170,11 +178,10 @@ public:
 
 	CameraNode* GetActiveCamera() const { return m_activeCamera; }
 
-	template <typename ChildType>
+	template<typename ChildType>
 	ChildType* CreateNode(Node* parent)
 	{
-		std::shared_ptr<ChildType> node = std::shared_ptr<ChildType>(new ChildType(parent), [&](ChildType* assetPtr)
-		{
+		std::shared_ptr<ChildType> node = std::shared_ptr<ChildType>(new ChildType(parent), [&](ChildType* assetPtr) {
 			// custom deleter to remove node from world when it is deleted
 			this->RemoveNode(assetPtr);
 			delete assetPtr;
@@ -188,7 +195,7 @@ public:
 	}
 
 	void Update();
-	//void WindowResize(int32 width, int32 height) override;
+	// void WindowResize(int32 width, int32 height) override;
 
 	bool LoadAndPrepareWorldFromXML(PodHandle<XMLDocPod> sceneXML);
 
@@ -201,7 +208,7 @@ public:
 
 private:
 	// Only reflected properties get copied.
-	// Transient properties do not get copied. 
+	// Transient properties do not get copied.
 	// Children are ignored. Use DeepDuplicateNode to properly instanciate children.
 	// Does not properly call the correct events / functions
 	Node* DuplicateNode(Node* src, Node* newParent = nullptr);
@@ -209,7 +216,7 @@ private:
 
 public:
 	// Only reflected properties get copied.
-	// Transient properties do not get copied. 
+	// Transient properties do not get copied.
 	// Children are iteratively duplicated and attached at their new respective parents.
 	// Uses the factory and m_type of each node to generate the new ones.
 	Node* DeepDuplicateNode(Node* src, Node* newParent = nullptr);

@@ -6,39 +6,37 @@
 
 #include "GLAD/glad.h"
 
-namespace OpenGL
-{
-	struct GLModel : GLAsset<ModelPod>
-	{		
-		struct GLMesh
-		{
-			std::string name;
-			
-			GLuint vao{ 0u };
-			GLuint ebo{ 0u };
+namespace OpenGL {
+struct GLModel : GLAsset<ModelPod> {
+	struct GLMesh {
+		std::string name;
 
-			// TODO: may use single in the future
-			GLuint verticesVBO{ 0u };
-			
-			GLMaterial* material{ nullptr };
+		GLuint vao{ 0u };
+		GLuint ebo{ 0u };
 
-			GLint geometryMode{ 0u };
+		// TODO: may use single in the future
+		GLuint verticesVBO{ 0u };
 
-			GLsizei count{ 0u };
-		};
+		GLMaterial* material{ nullptr };
 
-		GLenum usage{ GL_STATIC_DRAW };
-		std::vector<GLMesh> meshes;
+		GLint geometryMode{ 0u };
 
-		GLModel(PodHandle<ModelPod> handle)
-			: GLAsset(handle)
-		{}
-
-		virtual ~GLModel();
-
-	protected:
-		bool LoadGLMesh(const ModelPod& model, GLMesh& mesh, const GeometryGroup& data, GLenum usage);
-		bool Load() override;
+		GLsizei count{ 0u };
 	};
 
-}
+	GLenum usage{ GL_STATIC_DRAW };
+	std::vector<GLMesh> meshes;
+
+	GLModel(PodHandle<ModelPod> handle)
+		: GLAsset(handle)
+	{
+	}
+
+	virtual ~GLModel();
+
+protected:
+	bool LoadGLMesh(const ModelPod& model, GLMesh& mesh, const GeometryGroup& data, GLenum usage);
+	bool Load() override;
+};
+
+} // namespace OpenGL

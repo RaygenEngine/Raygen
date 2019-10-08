@@ -3,10 +3,8 @@
 #include <windows.h>
 
 // Provides an abstraction over the specific Win32 + OpenGL imgui implementation
-class ImguiImpl 
-{
+class ImguiImpl {
 public:
-
 	static void InitContext();
 	static void CleanupContext();
 

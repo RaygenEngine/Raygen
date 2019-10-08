@@ -5,23 +5,22 @@
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "renderer/renderers/opengl/assets/GLTexture.h"
 
-namespace OpenGL
+namespace OpenGL {
+bool GLMaterial::Load()
 {
-	bool GLMaterial::Load()
-	{
-		auto am = Engine::GetAssetManager();
-		
-		auto materialData = podHandle.Lock();
-		
-		auto glAm = GetGLAssetManager(this);
+	auto am = Engine::GetAssetManager();
 
-		baseColorTexture = glAm->GpuGetOrCreate<GLTexture>(materialData->baseColorTexture);
-		metallicRoughnessTexture = glAm->GpuGetOrCreate<GLTexture>(materialData->metallicRoughnessTexture);
-		occlusionTexture = glAm->GpuGetOrCreate<GLTexture>(materialData->occlusionTexture);
-		normalTexture = glAm->GpuGetOrCreate<GLTexture>(materialData->normalTexture);
-		emissiveTexture = glAm->GpuGetOrCreate<GLTexture>(materialData->emissiveTexture);
-		
-		return true;
-	}
+	auto materialData = podHandle.Lock();
 
+	auto glAm = GetGLAssetManager(this);
+
+	baseColorTexture = glAm->GpuGetOrCreate<GLTexture>(materialData->baseColorTexture);
+	metallicRoughnessTexture = glAm->GpuGetOrCreate<GLTexture>(materialData->metallicRoughnessTexture);
+	occlusionTexture = glAm->GpuGetOrCreate<GLTexture>(materialData->occlusionTexture);
+	normalTexture = glAm->GpuGetOrCreate<GLTexture>(materialData->normalTexture);
+	emissiveTexture = glAm->GpuGetOrCreate<GLTexture>(materialData->emissiveTexture);
+
+	return true;
 }
+
+} // namespace OpenGL

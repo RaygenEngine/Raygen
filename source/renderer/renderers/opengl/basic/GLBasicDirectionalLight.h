@@ -7,24 +7,22 @@
 
 #include "glad/glad.h"
 
-namespace OpenGL
-{
-	struct GLBasicDirectionalLight : NodeObserver<DirectionalLightNode, GLRendererBase>
-	{
-		GLuint fbo;
-		GLuint shadowMap;
+namespace OpenGL {
+struct GLBasicDirectionalLight : NodeObserver<DirectionalLightNode, GLRendererBase> {
+	GLuint fbo;
+	GLuint shadowMap;
 
-		GLShader* depthMap;
-		GLShader* depthMapAlphaMask;
+	GLShader* depthMap;
+	GLShader* depthMapAlphaMask;
 
-		glm::mat4 lightSpaceMatrix;
-		
-		GLBasicDirectionalLight(DirectionalLightNode* node);
-		~GLBasicDirectionalLight();
+	glm::mat4 lightSpaceMatrix;
 
-		// render shadow map, then return the matrix needed to move from world to light space
-		void RenderShadowMap(const std::vector<GLBasicGeometry*>& geometries);
+	GLBasicDirectionalLight(DirectionalLightNode* node);
+	~GLBasicDirectionalLight();
 
-		void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override;
-	};
-}
+	// render shadow map, then return the matrix needed to move from world to light space
+	void RenderShadowMap(const std::vector<GLBasicGeometry*>& geometries);
+
+	void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override;
+};
+} // namespace OpenGL

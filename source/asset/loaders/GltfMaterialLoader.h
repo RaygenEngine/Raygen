@@ -8,93 +8,83 @@
 
 #include "tinygltf/tiny_gltf.h"
 
-namespace GltfMaterialLoader
+namespace GltfMaterialLoader {
+inline bool Load(MaterialPod* pod, const uri::Uri& path)
 {
-	inline bool Load(MaterialPod* pod, const uri::Uri& path)
-	{
-		using namespace nlohmann;
+	using namespace nlohmann;
 
-		const auto pPath = uri::GetDiskPath(path);
-		auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath + "{}");
+	const auto pPath = uri::GetDiskPath(path);
+	auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath + "{}");
 
-		auto data = uri::GetJson(path);
+	auto data = uri::GetJson(path);
 
-		int32 ext = 0;
-		data["material"].get_to(ext);
-		
-		const tinygltf::Model& model = pParent->data;
+	int32 ext = 0;
+	data["material"].get_to(ext);
 
-		auto& gltfMaterial = model.materials.at(ext);
+	const tinygltf::Model& model = pParent->data;
 
-		// factors
-		auto bFactor = gltfMaterial.pbrMetallicRoughness.baseColorFactor;
-		pod->baseColorFactor = { bFactor[0], bFactor[1], bFactor[2], bFactor[3] };
-		pod->metallicFactor = static_cast<float>(gltfMaterial.pbrMetallicRoughness.metallicFactor);
-		pod->roughnessFactor = static_cast<float>(gltfMaterial.pbrMetallicRoughness.roughnessFactor);
-		auto eFactor = gltfMaterial.emissiveFactor;
-		pod->emissiveFactor = { eFactor[0], eFactor[1], eFactor[2] };
+	auto& gltfMaterial = model.materials.at(ext);
 
-		// scales/strenghts
-		pod->normalScale = static_cast<float>(gltfMaterial.normalTexture.scale);
-		pod->occlusionStrength = static_cast<float>(gltfMaterial.occlusionTexture.strength);
+	// factors
+	auto bFactor = gltfMaterial.pbrMetallicRoughness.baseColorFactor;
+	pod->baseColorFactor = { bFactor[0], bFactor[1], bFactor[2], bFactor[3] };
+	pod->metallicFactor = static_cast<float>(gltfMaterial.pbrMetallicRoughness.metallicFactor);
+	pod->roughnessFactor = static_cast<float>(gltfMaterial.pbrMetallicRoughness.roughnessFactor);
+	auto eFactor = gltfMaterial.emissiveFactor;
+	pod->emissiveFactor = { eFactor[0], eFactor[1], eFactor[2] };
 
-		// alpha
-		pod->alphaMode = GltfAux::GetAlphaMode(gltfMaterial.alphaMode);
+	// scales/strenghts
+	pod->normalScale = static_cast<float>(gltfMaterial.normalTexture.scale);
+	pod->occlusionStrength = static_cast<float>(gltfMaterial.occlusionTexture.strength);
 
-		pod->alphaCutoff = static_cast<float>(gltfMaterial.alphaCutoff);
-		// doublesided-ness
-		pod->doubleSided = gltfMaterial.doubleSided;
+	// alpha
+	pod->alphaMode = GltfAux::GetAlphaMode(gltfMaterial.alphaMode);
 
-		enum class DefType { Missing, White, Normal };
-		
-		auto LoadTexture = [&](auto textureInfo, PodHandle<TexturePod>& sampler, int32& textCoordIndex, DefType defType)
-		{
-			if (textureInfo.index != -1)
-			{
-				const tinygltf::Texture& gltfTexture = model.textures.at(textureInfo.index);
+	pod->alphaCutoff = static_cast<float>(gltfMaterial.alphaCutoff);
+	// doublesided-ness
+	pod->doubleSided = gltfMaterial.doubleSided;
 
-				json data;
-				data["texture"] = textureInfo.index;
-				auto textPath = uri::MakeChildJson(path, data);
-				sampler = AssetManager::GetOrCreate<TexturePod>(textPath);
+	enum class DefType { Missing, White, Normal };
 
-				textCoordIndex = textureInfo.texCoord;
+	auto LoadTexture = [&](auto textureInfo, PodHandle<TexturePod>& sampler, int32& textCoordIndex, DefType defType) {
+		if (textureInfo.index != -1) {
+			const tinygltf::Texture& gltfTexture = model.textures.at(textureInfo.index);
+
+			json data;
+			data["texture"] = textureInfo.index;
+			auto textPath = uri::MakeChildJson(path, data);
+			sampler = AssetManager::GetOrCreate<TexturePod>(textPath);
+
+			textCoordIndex = textureInfo.texCoord;
+		}
+		else {
+			switch (defType) {
+				case DefType::Missing: sampler = GET_CUSTOM_POD(TexturePod, __default__imageMissing); break;
+				case DefType::White: sampler = GET_CUSTOM_POD(TexturePod, __default__imageWhite); break;
+				case DefType::Normal: sampler = GET_CUSTOM_POD(TexturePod, __default__imageNormal); break;
 			}
-			else
-			{
-				switch (defType)
-				{
-				case DefType::Missing:
-					sampler = GET_CUSTOM_POD(TexturePod, __default__imageMissing);
-					break;
-				case DefType::White:
-					sampler = GET_CUSTOM_POD(TexturePod, __default__imageWhite);
-					break;
-				case DefType::Normal:
-					sampler = GET_CUSTOM_POD(TexturePod, __default__imageNormal);
-					break;
-				}	
-			}
-
-			return true;
-		};
-
-		// samplers
-		auto& baseColorTextureInfo = gltfMaterial.pbrMetallicRoughness.baseColorTexture;
-		LoadTexture(baseColorTextureInfo, pod->baseColorTexture, pod->baseColorTexCoordIndex, DefType::White);
-
-		auto& emissiveTextureInfo = gltfMaterial.emissiveTexture;
-		LoadTexture(emissiveTextureInfo, pod->emissiveTexture, pod->emissiveTexCoordIndex, DefType::White);
-
-		auto& normalTextureInfo = gltfMaterial.normalTexture;
-		LoadTexture(normalTextureInfo, pod->normalTexture, pod->normalTexCoordIndex, DefType::Normal);
-
-		auto& metallicRougnessTextureInfo = gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture;
-		LoadTexture(metallicRougnessTextureInfo, pod->metallicRoughnessTexture, pod->metallicRoughnessTexCoordIndex, DefType::White);
-		
-		auto& occlusionTextureInfo = gltfMaterial.occlusionTexture;
-		LoadTexture(occlusionTextureInfo, pod->occlusionTexture, pod->occlusionTexCoordIndex, DefType::White);
+		}
 
 		return true;
-	}
-};
+	};
+
+	// samplers
+	auto& baseColorTextureInfo = gltfMaterial.pbrMetallicRoughness.baseColorTexture;
+	LoadTexture(baseColorTextureInfo, pod->baseColorTexture, pod->baseColorTexCoordIndex, DefType::White);
+
+	auto& emissiveTextureInfo = gltfMaterial.emissiveTexture;
+	LoadTexture(emissiveTextureInfo, pod->emissiveTexture, pod->emissiveTexCoordIndex, DefType::White);
+
+	auto& normalTextureInfo = gltfMaterial.normalTexture;
+	LoadTexture(normalTextureInfo, pod->normalTexture, pod->normalTexCoordIndex, DefType::Normal);
+
+	auto& metallicRougnessTextureInfo = gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture;
+	LoadTexture(metallicRougnessTextureInfo, pod->metallicRoughnessTexture, pod->metallicRoughnessTexCoordIndex,
+		DefType::White);
+
+	auto& occlusionTextureInfo = gltfMaterial.occlusionTexture;
+	LoadTexture(occlusionTextureInfo, pod->occlusionTexture, pod->occlusionTexCoordIndex, DefType::White);
+
+	return true;
+}
+}; // namespace GltfMaterialLoader

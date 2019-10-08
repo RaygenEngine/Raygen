@@ -4,21 +4,18 @@
 #include "system/EngineEvents.h"
 
 // Note: to make a automatic camera that resizes to window size see WindowCameraNode
-class CameraNode : public Node
-{
+class CameraNode : public Node {
 	REFLECTED_NODE(CameraNode, Node)
 	{
-		REFLECT_VAR(m_far)			.OnDirty(DF::Projection);
-		REFLECT_VAR(m_focalLength)	.OnDirty(DF::Projection);
-		REFLECT_VAR(m_vFov)			.OnDirty(DF::Projection);
-		REFLECT_VAR(m_hFov)			.OnDirty(DF::Projection);
-		REFLECT_VAR(m_near)			.OnDirty(DF::Projection);
+		REFLECT_VAR(m_far).OnDirty(DF::Projection);
+		REFLECT_VAR(m_focalLength).OnDirty(DF::Projection);
+		REFLECT_VAR(m_vFov).OnDirty(DF::Projection);
+		REFLECT_VAR(m_hFov).OnDirty(DF::Projection);
+		REFLECT_VAR(m_near).OnDirty(DF::Projection);
 
-		REFLECT_VAR(m_viewportWidth, PropertyFlags::Transient)
-			.OnDirty(DF::ViewportSize);
+		REFLECT_VAR(m_viewportWidth, PropertyFlags::Transient).OnDirty(DF::ViewportSize);
 
-		REFLECT_VAR(m_viewportHeight, PropertyFlags::Transient)
-			.OnDirty(DF::ViewportSize);
+		REFLECT_VAR(m_viewportHeight, PropertyFlags::Transient).OnDirty(DF::ViewportSize);
 	}
 
 	DECLARE_DIRTY_FLAGSET(Projection, ViewportSize)
@@ -39,7 +36,7 @@ protected:
 
 	int32 m_viewportWidth{ 1280 };
 	int32 m_viewportHeight{ 720 };
-	
+
 public:
 	CameraNode(Node* parent);
 	~CameraNode() = default;
@@ -59,8 +56,6 @@ public:
 	void RecalculateProjectionFov();
 
 	glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
-		
+
 	void DirtyUpdate() override;
 };
-
-

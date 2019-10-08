@@ -6,5 +6,4 @@
 
 class App : public AppBase {
 public:
-	
 };

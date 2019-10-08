@@ -2,8 +2,7 @@
 
 #include "world/nodes/Node.h"
 
-class PunctualLightNode : public Node
-{
+class PunctualLightNode : public Node {
 	REFLECTED_NODE(PunctualLightNode, Node) {}
 
 	glm::vec3 m_color;

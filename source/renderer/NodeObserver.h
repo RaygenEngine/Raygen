@@ -5,16 +5,16 @@
 class Renderer;
 
 template<typename RendererT>
-struct RendererObject
-{
+struct RendererObject {
 	static_assert(!std::is_base_of_v<RendererT, Renderer>, "Renderer object should refer to a valid renderer type");
 	using Type = RendererT;
 };
 
-struct NodeObserverBase
-{
+struct NodeObserverBase {
 	NodeObserverBase(Node* node)
-		: baseNode(node) {}
+		: baseNode(node)
+	{
+	}
 
 	Node* baseNode;
 	std::function<void(NodeObserverBase*)> onObserveeLost;
@@ -24,9 +24,10 @@ struct NodeObserverBase
 
 
 // saves the time of writing a base observer for each new and existing node type
-template <typename NodeTypeT, typename RendererTypeT = Renderer>
-struct NodeObserver : NodeObserverBase, RendererObject<RendererTypeT>
-{
+template<typename NodeTypeT, typename RendererTypeT = Renderer>
+struct NodeObserver
+	: NodeObserverBase
+	, RendererObject<RendererTypeT> {
 	using NodeType = NodeTypeT;
 	using RendererType = RendererTypeT;
 	NodeType* node;
@@ -34,10 +35,11 @@ struct NodeObserver : NodeObserverBase, RendererObject<RendererTypeT>
 public:
 	NodeObserver(NodeType* node)
 		: NodeObserverBase(node)
-		, node(node) {}
+		, node(node)
+	{
+	}
 
 	virtual void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) = 0;
 
 	virtual ~NodeObserver() = default;
 };
-

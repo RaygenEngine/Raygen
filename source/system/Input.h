@@ -3,17 +3,14 @@
 #include <unordered_set>
 
 
-class Input
-{
+class Input {
 public:
-	struct Thumb
-	{
+	struct Thumb {
 		float magnitude;
 		glm::vec2 direction;
 	};
 
-	struct AnalogState
-	{
+	struct AnalogState {
 		Thumb thumbL;
 		Thumb thumbR;
 
@@ -40,7 +37,7 @@ private:
 	AnalogState m_analogState{};
 
 public:
-	//Input& operator=(const Input&) = delete;
+	// Input& operator=(const Input&) = delete;
 
 	Input();
 
@@ -61,7 +58,7 @@ public:
 
 	bool IsKeysCombination(XVirtualKey key) const { return IsKeyRepeat(key); }
 
-	template<typename ...Args>
+	template<typename... Args>
 	bool IsKeysCombination(XVirtualKey key0, Args... keys) const
 	{
 		return IsKeysCombination(key0) && IsKeysCombination(keys...);
@@ -69,7 +66,7 @@ public:
 
 	bool IsAnyOfKeysPressed(XVirtualKey key) const { return IsKeyPressed(key); }
 
-	template<typename ...Args>
+	template<typename... Args>
 	bool IsAnyOfKeysPressed(XVirtualKey key0, Args... keys) const
 	{
 		return IsAnyOfKeysPressed(key0) || IsAnyOfKeysPressed(keys...);
@@ -77,7 +74,7 @@ public:
 
 	bool IsAnyOfKeysRepeat(XVirtualKey key) const { return IsKeyRepeat(key); }
 
-	template<typename ...Args>
+	template<typename... Args>
 	bool IsAnyOfKeysRepeat(XVirtualKey key0, Args... keys) const
 	{
 		return IsAnyOfKeysRepeat(key0) || IsAnyOfKeysRepeat(keys...);
@@ -85,7 +82,7 @@ public:
 
 	bool IsAnyOfKeysReleased(XVirtualKey key) const { return IsKeyReleased(key); }
 
-	template<typename ...Args>
+	template<typename... Args>
 	bool IsAnyOfKeysReleased(XVirtualKey key0, Args... keys) const
 	{
 		return IsAnyOfKeysReleased(key0) || IsAnyOfKeysReleased(keys...);

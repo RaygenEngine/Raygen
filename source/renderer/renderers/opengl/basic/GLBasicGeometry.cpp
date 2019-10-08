@@ -4,16 +4,15 @@
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "asset/AssetManager.h"
 
-namespace OpenGL
+namespace OpenGL {
+GLBasicGeometry::GLBasicGeometry(GeometryNode* node)
+	: NodeObserver<GeometryNode, GLRendererBase>(node)
 {
-	GLBasicGeometry::GLBasicGeometry(GeometryNode* node)
-		: NodeObserver<GeometryNode, GLRendererBase>(node)
-	{
-		ReloadModel();
-	}
-
-	void GLBasicGeometry::ReloadModel()
-	{
-		glModel = GetGLAssetManager(this)->GpuGetOrCreate<GLModel>(node->GetModel());
-	}
+	ReloadModel();
 }
+
+void GLBasicGeometry::ReloadModel()
+{
+	glModel = GetGLAssetManager(this)->GpuGetOrCreate<GLModel>(node->GetModel());
+}
+} // namespace OpenGL

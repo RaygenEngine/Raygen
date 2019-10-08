@@ -16,11 +16,9 @@
 
 SceneSave::SceneSave()
 {
-	m_saveBrowser = ImGui::FileBrowser(
-		ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_EnterNewFilename
-		| ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CreateNewDir
-		| ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CloseOnEsc
-	);
+	m_saveBrowser = ImGui::FileBrowser(ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_EnterNewFilename
+									   | ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CreateNewDir
+									   | ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CloseOnEsc);
 	m_saveBrowser.SetPwd();
 	m_saveBrowser.SetTitle("Save Scene As");
 }
@@ -33,27 +31,23 @@ void SceneSave::OpenBrowser()
 void SceneSave::Draw()
 {
 	m_saveBrowser.Display();
-	if (m_saveBrowser.HasSelected())
-	{
+	if (m_saveBrowser.HasSelected()) {
 		fs::path file = m_saveBrowser.GetSelected();
 		m_saveBrowser.ClearSelected();
 		SaveAsXML(Engine::GetWorld(), file.string());
 	}
 }
 
-namespace
-{
+namespace {
 
-struct GenerateXMLVisitor
-{
+struct GenerateXMLVisitor {
 	tinyxml2::XMLElement* xmlElement;
 	const char* name;
 	std::string name_str; // required for const char* validility
 
 	bool PreProperty(const Property& p)
 	{
-		if (p.HasFlags(PropertyFlags::NoSave))
-		{
+		if (p.HasFlags(PropertyFlags::NoSave)) {
 			return false;
 		}
 		name_str = p.GetNameStr();
@@ -61,20 +55,11 @@ struct GenerateXMLVisitor
 		return true;
 	}
 
-	void operator()(int32& v, const Property& p)
-	{
-		xmlElement->SetAttribute(name, v);
-	}
+	void operator()(int32& v, const Property& p) { xmlElement->SetAttribute(name, v); }
 
-	void operator()(bool& v, const Property& p)
-	{
-		xmlElement->SetAttribute(name, v);
-	}
+	void operator()(bool& v, const Property& p) { xmlElement->SetAttribute(name, v); }
 
-	void operator()(float& v, const Property& p)
-	{
-		xmlElement->SetAttribute(name, v);
-	}
+	void operator()(float& v, const Property& p) { xmlElement->SetAttribute(name, v); }
 
 	void operator()(glm::vec3& v, const Property& p)
 	{
@@ -84,12 +69,9 @@ struct GenerateXMLVisitor
 	void operator()(glm::vec4& v, const Property& p)
 	{
 		xmlElement->SetAttribute(name, ParsingAux::FloatsToString(v).c_str());
-	}	
-	
-	void operator()(std::string& v, const Property& p)
-	{
-		xmlElement->SetAttribute(name, v.c_str());
 	}
+
+	void operator()(std::string& v, const Property& p) { xmlElement->SetAttribute(name, v.c_str()); }
 
 	template<typename T>
 	void operator()(PodHandle<T>& handle, const Property& p)
@@ -116,7 +98,7 @@ tinyxml2::XMLElement* GenerateNodeXML(Node* node, tinyxml2::XMLDocument& documen
 	xmlElem->SetAttribute("translation", ParsingAux::FloatsToString(node->GetLocalTranslation()).c_str());
 	xmlElem->SetAttribute("euler_pyr", ParsingAux::FloatsToString(node->GetLocalPYR()).c_str());
 	xmlElem->SetAttribute("scale", ParsingAux::FloatsToString(node->GetLocalScale()).c_str());
-	
+
 	GenerateXMLVisitor visitor;
 	visitor.xmlElement = xmlElem;
 
@@ -124,7 +106,7 @@ tinyxml2::XMLElement* GenerateNodeXML(Node* node, tinyxml2::XMLDocument& documen
 
 	return xmlElem;
 }
-}
+} // namespace
 
 bool SceneSave::SaveAsXML(World* world, const uri::Uri& path)
 {
@@ -140,10 +122,8 @@ bool SceneSave::SaveAsXML(World* world, const uri::Uri& path)
 	nodeXmlElements.insert({ root, rootXml });
 
 
-	RecurseNodes(root, [&](Node* node, auto)
-	{
-		if (node == root)
-		{
+	RecurseNodes(root, [&](Node* node, auto) {
+		if (node == root) {
 			return;
 		}
 
@@ -155,17 +135,14 @@ bool SceneSave::SaveAsXML(World* world, const uri::Uri& path)
 	});
 
 	FILE* fp;
-	if (fopen_s(&fp, path.c_str(), "w") == 0)
-	{
+	if (fopen_s(&fp, path.c_str(), "w") == 0) {
 		xmlDoc.SaveFile(fp);
 		fclose(fp);
 	}
-	else
-	{
+	else {
 		LOG_ERROR("Failed to open file for saving scene.");
 	}
 
 
 	return false;
 }
-

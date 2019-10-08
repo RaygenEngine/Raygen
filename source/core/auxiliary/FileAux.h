@@ -2,7 +2,6 @@
 
 #include <fstream>
 
-namespace utl
-{
+namespace utl {
 
 }

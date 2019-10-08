@@ -6,64 +6,53 @@
 
 
 // TODO: allow extension of this in "global typelist extensions app header" or something
-#define Z_POD_TYPES	\
-GltfFilePod,		\
-ImagePod,			\
-MaterialPod,		\
-ModelPod,			\
-ShaderPod,			\
-StringPod,			\
-TexturePod,			\
-XMLDocPod
+#define Z_POD_TYPES GltfFilePod, ImagePod, MaterialPod, ModelPod, ShaderPod, StringPod, TexturePod, XMLDocPod
 
 
 // The way the above macro works is that there are always 2 instances of each function. The first is the 'impl'
 // that takes a variadic argument list of all the registered pod types (PodTs) and the second, the actual interface
-// calls the 'impl' version using the POD_TYPES definition eg: IsRegisteredPod<T>() { IsRegisteredPod_Impl<T, POD_TYPES>() }
+// calls the 'impl' version using the POD_TYPES definition eg: IsRegisteredPod<T>() { IsRegisteredPod_Impl<T,
+// POD_TYPES>() }
 
 
-namespace refl
-{
-	namespace detail
-	{
-		template<typename T, typename... PodTs>
-		constexpr bool IsRegisteredPod_Impl = std::disjunction_v<std::is_same<T, PodTs>...>;
+namespace refl {
+namespace detail {
+	template<typename T, typename... PodTs>
+	constexpr bool IsRegisteredPod_Impl = std::disjunction_v<std::is_same<T, PodTs>...>;
 
-		// Tests whether the pod is contained in the POD_TYPES list. You should not have to use this unless you are modifying the PodReflection library
-		template<typename T>
-		constexpr bool IsRegisteredPod = IsRegisteredPod_Impl<T, Z_POD_TYPES>;
+	// Tests whether the pod is contained in the POD_TYPES list. You should not have to use this unless you are
+	// modifying the PodReflection library
+	template<typename T>
+	constexpr bool IsRegisteredPod = IsRegisteredPod_Impl<T, Z_POD_TYPES>;
 
-		// Checks if T is properly derived from assetpod. You should not have to use this unless you are modifying the PodReflection library.
-		template<typename T>
-		constexpr bool HasAssetPodBase = std::is_base_of_v<AssetPod, T>;
-	}
+	// Checks if T is properly derived from assetpod. You should not have to use this unless you are modifying the
+	// PodReflection library.
+	template<typename T>
+	constexpr bool HasAssetPodBase = std::is_base_of_v<AssetPod, T>;
+} // namespace detail
 
-	// Checks if T is a valid & registered pod type.
-	template<typename T> // Note: if you want to ever change pod requirements you should add the reqiurements here.
-	constexpr bool IsValidPod = detail::HasAssetPodBase<T> && detail::IsRegisteredPod<T>;
-}
+// Checks if T is a valid & registered pod type.
+template<typename T> // Note: if you want to ever change pod requirements you should add the reqiurements here.
+constexpr bool IsValidPod = detail::HasAssetPodBase<T>&& detail::IsRegisteredPod<T>;
+} // namespace refl
 
 template<typename Type>
-[[nodiscard]]
-Type* PodCast(AssetPod* pod)
+[[nodiscard]] Type* PodCast(AssetPod* pod)
 {
 	static_assert(refl::IsValidPod<Type>, "This is not a valid and registered asset pod. The cast would always fail.");
 
-	if (refl::GetId<Type>() == pod->type)
-	{
+	if (refl::GetId<Type>() == pod->type) {
 		return static_cast<Type*>(pod);
 	}
 	return nullptr;
 }
 
 template<typename Type>
-[[nodiscard]]
-const Type* PodCast(const AssetPod* pod)
+[[nodiscard]] const Type* PodCast(const AssetPod* pod)
 {
 	static_assert(refl::IsValidPod<Type>, "This is not a valid and registered asset pod. The cast would always fail.");
 
-	if (refl::GetId<Type>() == pod->type)
-	{
+	if (refl::GetId<Type>() == pod->type) {
 		return static_cast<const Type*>(pod);
 	}
 	return nullptr;
@@ -72,78 +61,69 @@ const Type* PodCast(const AssetPod* pod)
 // This pod cast will assert when fails.
 // This is extremelly usefull to catch early errors and avoid incorrect handles.
 template<typename Type>
-[[nodiscard]]
-Type* PodCastVerfied(AssetPod* pod)
+[[nodiscard]] Type* PodCastVerfied(AssetPod* pod)
 {
 	static_assert(refl::IsValidPod<Type>, "This is not a valid and registered asset pod. The cast would always fail.");
 
-	if (refl::GetId<Type>() == pod->type)
-	{
+	if (refl::GetId<Type>() == pod->type) {
 		return static_cast<Type*>(pod);
 	}
 	LOG_ASSERT("Verified Pod Cast failed. Tried to cast from: {} to {}", pod->type.name(), refl::GetName<Type>());
 	return nullptr;
 }
 
-namespace refl
+namespace refl {
+namespace detail {
+	template<typename Visitor, typename... PodTs>
+	void PodVisitP_Impl(AssetPod* pod, Visitor& v)
+	{
+		bool cc = (VisitIfP<PodTs>(pod, v) || ...);
+	}
+
+	template<typename T, typename Visitor>
+	bool VisitIfP(AssetPod* pod, Visitor& v)
+	{
+		if (pod->IsOfType<T>()) {
+			v(PodCast<T>(pod));
+			return true;
+		}
+		return false;
+	}
+
+	template<typename Visitor>
+	void VisitPodP(AssetPod* pod, Visitor& v)
+	{
+		detail::PodVisitP_Impl<Visitor, Z_POD_TYPES>(pod, v);
+	}
+
+	template<typename Visitor, typename... PodTs>
+	void PodVisitPConst_Impl(const AssetPod* pod, Visitor& v)
+	{
+		bool cc = (VisitIfPConst<PodTs>(pod, v) || ...);
+	}
+
+	template<typename T, typename Visitor>
+	bool VisitIfPConst(const AssetPod* pod, Visitor& v)
+	{
+		if (pod->IsOfType<T>()) {
+			v(PodCast<T>(pod));
+			return true;
+		}
+		return false;
+	}
+
+	template<typename Visitor>
+	void VisitPodConst(const AssetPod* pod, Visitor& v)
+	{
+		detail::PodVisitPConst_Impl<Visitor, Z_POD_TYPES>(pod, v);
+	}
+} // namespace detail
+
+template<>
+inline const ReflClass& GetClass(const AssetPod* pod)
 {
-	namespace detail 
-	{
-		template<typename Visitor, typename... PodTs>
-		void PodVisitP_Impl(AssetPod* pod, Visitor& v)
-		{
-			bool cc = (VisitIfP<PodTs>(pod, v) || ...);
-		}
-
-		template<typename T, typename Visitor>
-		bool VisitIfP(AssetPod* pod, Visitor& v)
-		{
-			if (pod->IsOfType<T>())
-			{
-				v(PodCast<T>(pod));
-				return true;
-			}
-			return false;
-		}
-
-		template<typename Visitor>
-		void VisitPodP(AssetPod* pod, Visitor& v)
-		{
-			detail::PodVisitP_Impl<Visitor, Z_POD_TYPES>(pod, v);
-		}
-
-		template<typename Visitor, typename... PodTs>
-		void PodVisitPConst_Impl(const AssetPod* pod, Visitor& v)
-		{
-			bool cc = (VisitIfPConst<PodTs>(pod, v) || ...);
-		}
-
-		template<typename T, typename Visitor>
-		bool VisitIfPConst(const AssetPod* pod, Visitor& v)
-		{
-			if (pod->IsOfType<T>())
-			{
-				v(PodCast<T>(pod));
-				return true;
-			}
-			return false;
-		}
-
-		template<typename Visitor>
-		void VisitPodConst(const AssetPod* pod, Visitor& v)
-		{
-			detail::PodVisitPConst_Impl<Visitor, Z_POD_TYPES>(pod, v);
-		}
-	}
-
-	template<> 
-	inline const ReflClass& GetClass(const AssetPod* pod)
-	{
-		const ReflClass* ptr;
-		detail::VisitPodConst(pod, [&ptr](auto pod)
-		{
-			ptr = &std::remove_pointer_t<decltype(pod)>::StaticClass();
-		});
-		return *ptr;
-	}
+	const ReflClass* ptr;
+	detail::VisitPodConst(pod, [&ptr](auto pod) { ptr = &std::remove_pointer_t<decltype(pod)>::StaticClass(); });
+	return *ptr;
 }
+} // namespace refl

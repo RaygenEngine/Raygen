@@ -6,21 +6,14 @@
 #include <unordered_set>
 #include <type_traits>
 
-// TODO: 
+// TODO:
 // For sub-renderer registration
-#define MAKE_METADATA(Class) \
-	public:\
-	    static Renderer* MetaConstruct() \
-		{ \
-	         return new Class(); \
-	    }\
-	    static std::string MetaName() \
-		{ \
-	        return std::string(#Class); \
-	    } \
+#define MAKE_METADATA(Class)                                                                                           \
+public:                                                                                                                \
+	static Renderer* MetaConstruct() { return new Class(); }                                                           \
+	static std::string MetaName() { return std::string(#Class); }
 
-class Renderer
-{
+class Renderer {
 public:
 	virtual ~Renderer() = default;
 
@@ -36,11 +29,10 @@ public:
 
 	virtual void SwapBuffers() = 0;
 
-	//virtual bool SupportsEditor() = 0; // WIP
+	// virtual bool SupportsEditor() = 0; // WIP
 };
 
-class ObserverRenderer : public Renderer
-{
+class ObserverRenderer : public Renderer {
 	std::unordered_set<std::unique_ptr<NodeObserverBase>> m_observers;
 
 protected:
@@ -49,10 +41,9 @@ protected:
 	DECLARE_EVENT_LISTENER(m_nodeAddedListener, Event::OnWorldNodeAdded);
 	DECLARE_EVENT_LISTENER(m_nodeRemovedListener, Event::OnWorldNodeRemoved);
 
-	template <typename ObserverType>
-	[[nodiscard]]
-	ObserverType* CreateObserver_Callback(typename ObserverType::NodeType* typedNode, 
-								std::function<void(NodeObserverBase*)> onObserveeLost)
+	template<typename ObserverType>
+	[[nodiscard]] ObserverType* CreateObserver_Callback(
+		typename ObserverType::NodeType* typedNode, std::function<void(NodeObserverBase*)> onObserveeLost)
 	{
 		ObserverType* rawPtr = new ObserverType(typedNode);
 		m_observers.emplace(std::unique_ptr<NodeObserverBase>(rawPtr));
@@ -60,7 +51,7 @@ protected:
 		return rawPtr;
 	}
 
-	template <typename ObserverType>
+	template<typename ObserverType>
 	ObserverType* CreateObserver_Weak(typename ObserverType::NodeType* typedNode)
 	{
 		auto lambda = [](NodeObserverBase* obs) -> void {
@@ -73,19 +64,18 @@ protected:
 
 	//
 	//
-	// 
-	template <typename ObserverType, typename T>
-	ObserverType* CreateObserver_AutoContained(typename ObserverType::NodeType* typedNode, T& containerToAddAndRemoveFrom)
+	//
+	template<typename ObserverType, typename T>
+	ObserverType* CreateObserver_AutoContained(
+		typename ObserverType::NodeType* typedNode, T& containerToAddAndRemoveFrom)
 	{
 		auto& cont = containerToAddAndRemoveFrom;
 
 		auto lambda = [&](NodeObserverBase* obs) -> void {
 			cont.erase(std::find(cont.begin(), cont.end(), obs));
 
-			m_observers.erase(std::find_if(begin(m_observers), end(m_observers),
-			[&](auto& elem) {
-				return elem.get() == obs;
-			}));
+			m_observers.erase(
+				std::find_if(begin(m_observers), end(m_observers), [&](auto& elem) { return elem.get() == obs; }));
 		};
 		auto rawPtr = CreateObserver_Callback<ObserverType>(typedNode, lambda);
 		cont.insert(cont.end(), rawPtr);
@@ -96,15 +86,12 @@ protected:
 	// When this node gets deleted, it will automatically observe another available node of this type.
 	// If no such node is available or the last one from the world gets deleted, it will Nullptr the node member.
 
-	template <typename ObserverType>
-	[[nodiscard]]
-	ObserverType* CreateObserver_AnyAvailable()
+	template<typename ObserverType>
+	[[nodiscard]] ObserverType* CreateObserver_AnyAvailable()
 	{
 		auto nodePtr = Engine::GetWorld()->GetAnyAvailableNode<typename ObserverType::NodeType>();
 
-		auto lambda = 
-		[](NodeObserverBase* obs) -> void 
-		{
+		auto lambda = [](NodeObserverBase* obs) -> void {
 			auto nodePtr = Engine::GetWorld()->GetAnyAvailableNode<typename ObserverType::NodeType>();
 			dynamic_cast<ObserverType*>(obs)->node = nodePtr;
 			obs->baseNode = nodePtr;
@@ -114,8 +101,8 @@ protected:
 	}
 
 	// No use case for this currently
-	//template <typename ObserverType>
-	//void CreateObserver_SelfDestruct(typename ObserverType::NodeType* typedNode)
+	// template <typename ObserverType>
+	// void CreateObserver_SelfDestruct(typename ObserverType::NodeType* typedNode)
 	//{
 	//	auto lambda = [m_observers](NodeObserverBase* obs) -> void {
 	//		&m_observers.erase(obs);
@@ -145,6 +132,5 @@ public:
 
 	virtual void Render() = 0;
 
-	virtual void SwapBuffers() { };
+	virtual void SwapBuffers(){};
 };
-

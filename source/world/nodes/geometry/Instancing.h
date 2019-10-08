@@ -2,8 +2,7 @@
 
 #include "asset/util/ParsingAux.h"
 
-struct Instance
-{
+struct Instance {
 	glm::vec3 localTranslation;
 	glm::quat localOrientation;
 	glm::vec3 localScale;
@@ -15,21 +14,21 @@ struct Instance
 	glm::mat4 worldMatrix;
 
 	Instance()
-		: localTranslation(0.f, 0.f, 0.f),
-			localOrientation(0.f, 0.f, 0.f, 1.f),
-			localScale(1.f, 1.f, 1.f),
-			localMatrix(glm::mat4(1)),
-			worldTranslation(0.f, 0.f, 0.f),
-			worldOrientation(0.f, 0.f, 0.f, 1.f),
-			worldScale(1.f, 1.f, 1.f),
-			worldMatrix(glm::mat4(1))
+		: localTranslation(0.f, 0.f, 0.f)
+		, localOrientation(0.f, 0.f, 0.f, 1.f)
+		, localScale(1.f, 1.f, 1.f)
+		, localMatrix(glm::mat4(1))
+		, worldTranslation(0.f, 0.f, 0.f)
+		, worldOrientation(0.f, 0.f, 0.f, 1.f)
+		, worldScale(1.f, 1.f, 1.f)
+		, worldMatrix(glm::mat4(1))
 	{
 	}
 
 	void LoadFromXML(const tinyxml2::XMLElement* xmlData)
 	{
 		ParsingAux::ReadFloatsAttribute(xmlData, "translation", localTranslation);
-		glm::vec3 eulerPYR{0.f, 0.f, 0.f};
+		glm::vec3 eulerPYR{ 0.f, 0.f, 0.f };
 		ParsingAux::ReadFloatsAttribute(xmlData, "euler_pyr", eulerPYR);
 		localOrientation = glm::quat(glm::radians(eulerPYR));
 		ParsingAux::ReadFloatsAttribute(xmlData, "scale", localScale);
@@ -43,14 +42,14 @@ struct Instance
 		worldMatrix = parentMat * localMatrix;
 
 		// TODO: optimize
-		glm::vec3 skew; glm::vec4 persp;
+		glm::vec3 skew;
+		glm::vec4 persp;
 		glm::decompose(worldMatrix, worldScale, worldOrientation, worldTranslation, skew, persp);
 	}
 };
 
 // TODO dirty instances on geom moves
-class InstanceGroup
-{
+class InstanceGroup {
 	std::unordered_map<std::string, Instance> m_instances;
 
 public:

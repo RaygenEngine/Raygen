@@ -10,39 +10,35 @@ class AssetManager;
 class World;
 
 // Properly pads the dirty flags given to account for the parent class's dirty flags.
-#define DECLARE_DIRTY_FLAGSET(...) public: struct DF { enum { _PREV = Parent::DF::_COUNT - 1, __VA_ARGS__, _COUNT }; }; private:
+#define DECLARE_DIRTY_FLAGSET(...)                                                                                     \
+public:                                                                                                                \
+	struct DF {                                                                                                        \
+		enum { _PREV = Parent::DF::_COUNT - 1, __VA_ARGS__, _COUNT };                                                  \
+	};                                                                                                                 \
+private:
 
-class Node : public Object
-{
+class Node : public Object {
 	//
-	// REFLECTION BASE 
+	// REFLECTION BASE
 	//
 	// Stuff required and used by reflection that are specific to base node class.
 	// This is similar to the macro code-gen but with a few changes for the base class.
 
 public:
 	using Parent = Node;
-	
-	[[nodiscard]]
-	virtual const ReflClass& GetClass() const
-	{
-		return Node::StaticClass();
-	}
 
-	[[nodiscard]]
-	virtual const ReflClass& GetParentClass() const
-	{
-		return Parent::StaticClass();
-	}
+	[[nodiscard]] virtual const ReflClass& GetClass() const { return Node::StaticClass(); }
 
-	[[nodiscard]]
-	static const ReflClass& StaticClass()
+	[[nodiscard]] virtual const ReflClass& GetParentClass() const { return Parent::StaticClass(); }
+
+	[[nodiscard]] static const ReflClass& StaticClass()
 	{
 		static ReflClass cl = ReflClass::Generate<Node>();
 		return cl;
 	}
+
 private:
-	friend class ReflClass;								
+	friend class ReflClass;
 	static void GenerateReflection(ReflClass& refl)
 	{
 		// Add reflected variables here.
@@ -51,8 +47,7 @@ private:
 
 	// Base for dirty flagsets, use the macros. DOC
 public:
-	struct DF
-	{
+	struct DF {
 		enum {
 			TRS,
 			Hierarchy,
@@ -83,19 +78,20 @@ protected:
 protected:
 	// TODO: remove
 	std::string m_type;
-	
+
 	Node* m_parent;
 
-	// for now ownership is given to parent nodes (later on, world should be manager) 
+	// for now ownership is given to parent nodes (later on, world should be manager)
 	std::vector<std::shared_ptr<Node>> m_children;
-	
+
 
 private:
 	// mark dirty self and children
 	void MarkMatrixChanged();
-	
+
 	friend class Editor;
 	friend class World;
+
 public:
 	Node();
 	// Nodes have pObject = parentNode->GetWorld() = World
@@ -105,7 +101,7 @@ public:
 	glm::vec3 GetLocalTranslation() const { return m_localTranslation; }
 	glm::quat GetLocalOrientation() const { return m_localOrientation; }
 	glm::vec3 GetLocalPYR() const { return glm::degrees(glm::eulerAngles(m_localOrientation)); }
-	glm::vec3 GetLocalScale() const { return m_localScale; }		
+	glm::vec3 GetLocalScale() const { return m_localScale; }
 	glm::mat4 GetLocalMatrix() const { return m_localMatrix; }
 
 	void SetLocalTranslation(const glm::vec3& lt);
@@ -134,13 +130,17 @@ public:
 	const std::string& GetType() const { return m_type; }
 
 	const std::vector<std::shared_ptr<Node>>& GetChildren() { return m_children; }
-	
+
 	std::bitset<64> GetDirtyFlagset() const { return m_dirty; }
 
 	// Returns nullptr IF AND ONLY IF "this" node is the root node.
 	[[nodiscard]] Node* GetParent() const { return m_parent; }
 
-	void AddChild(std::shared_ptr<Node> child) { m_dirty.set(DF::Children); m_children.emplace_back(child); }
+	void AddChild(std::shared_ptr<Node> child)
+	{
+		m_dirty.set(DF::Children);
+		m_children.emplace_back(child);
+	}
 
 	void DeleteChild(Node* child);
 	//
@@ -151,16 +151,17 @@ public:
 	virtual bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData);
 	virtual void LoadReflectedProperties(const tinyxml2::XMLElement* xmlData);
 
-	virtual void PropertyUpdatedFromEditor(const Property& prop) { }; // the m_dirtyBitset Property is set directly through the editor before this call.
+	virtual void PropertyUpdatedFromEditor(
+		const Property& prop){}; // the m_dirtyBitset Property is set directly through the editor before this call.
 
-	// Override loading of a specific child. 
+	// Override loading of a specific child.
 	// If you return a non null pointer here the default node creation will be skipped for this child
 	virtual Node* LoadSpecificChild(const std::string& type) { return nullptr; }
 
 	// Called after all children have been loaded from the scene file.
-	// You can use this to track 'custom' children in 
+	// You can use this to track 'custom' children in
 	virtual bool PostChildrenLoaded() { return true; }
-		
+
 	// cache world transform bottom up (and where needed to be updated)
 	void UpdateTransforms(const glm::mat4& parentMatrix);
 
@@ -173,10 +174,10 @@ public:
 
 	void OrientYaw(float yaw);
 
-	virtual void Update(float deltaSeconds) {};
+	virtual void Update(float deltaSeconds){};
 
 	// Runs late in the frame, only on nodes that at least one m_dirty is set.
-	virtual void DirtyUpdate() {};
+	virtual void DirtyUpdate(){};
 
 
 	//
@@ -186,21 +187,17 @@ public:
 	// Returns a valid child if it is the ONLY child of this class
 	// Only checks first level children
 	template<class NodeClass>
-	NodeClass* GetUniqueChildOfClass() const 
+	NodeClass* GetUniqueChildOfClass() const
 	{
 		NodeClass* first = nullptr;
-		for (auto child : m_children) 
-		{
+		for (auto child : m_children) {
 			auto ptr = dynamic_cast<NodeClass*>(child.get());
-			if (ptr) 
-			{
+			if (ptr) {
 				// check if we already found something
-				if (first)
-				{
+				if (first) {
 					return nullptr;
 				}
-				else 
-				{
+				else {
 					first = ptr;
 				}
 			}
@@ -210,13 +207,11 @@ public:
 
 	// Only checks first level children
 	template<class NodeClass>
-	NodeClass* GetFirstChildOfClass() const 
+	NodeClass* GetFirstChildOfClass() const
 	{
-		for (auto child : m_children) 
-		{
+		for (auto child : m_children) {
 			auto ptr = dynamic_cast<NodeClass*>(child.get());
-			if (ptr) 
-			{
+			if (ptr) {
 				return ptr;
 			}
 		}
@@ -224,14 +219,14 @@ public:
 	}
 
 	// Returns a valid child if it is the only child of this (class AND type)
-	// 
-	// eg: 
+	//
+	// eg:
 	// | - VRHead Head
 	// | 1 -- CameraNode* "RightEye"
 	// | 2 -- CameraNode* "LeftEye"
-	// 
+	//
 	// GetUniqueChildWithType<CameraNode>("rightEye") == *1
-	// 
+	//
 	// You can use the non templated version to not check for the actual cpp class type.
 	// Only checks first level children
 	//
@@ -239,18 +234,14 @@ public:
 	NodeClass* GetUniqueChildWithType(const std::string& type) const
 	{
 		NodeClass* first = nullptr;
-		for (auto child : m_children)
-		{
+		for (auto child : m_children) {
 			auto ptr = dynamic_cast<NodeClass*>(child.get());
-			if (ptr && ptr->GetType() == type)
-			{
+			if (ptr && ptr->GetType() == type) {
 				// check if we already found something
-				if (first)
-				{
+				if (first) {
 					return nullptr;
 				}
-				else
-				{
+				else {
 					first = ptr;
 				}
 			}
@@ -264,13 +255,10 @@ public:
 	template<class NodeClass = Node>
 	NodeClass* GetFirstChildOfType(const std::string& type) const
 	{
-		auto it = std::find_if(m_children.begin(), m_children.end(), [&](auto child) 
-		{
-			return child->GetType() == type && dynamic_cast<NodeClass*>(child.get());
-		});
+		auto it = std::find_if(m_children.begin(), m_children.end(),
+			[&](auto child) { return child->GetType() == type && dynamic_cast<NodeClass*>(child.get()); });
 
-		if (it == m_children.end()) 
-		{
+		if (it == m_children.end()) {
 			return nullptr;
 		}
 		return dynamic_cast<NodeClass*>(child.get());

@@ -11,14 +11,13 @@
 #include <thread>
 
 
-struct PodDeleter
-{
+struct PodDeleter {
 	void operator()(AssetPod* p);
 };
 
-struct PodEntry
-{
-	struct UnitializedPod {};
+struct PodEntry {
+	struct UnitializedPod {
+	};
 
 	std::unique_ptr<AssetPod, PodDeleter> ptr;
 	TypeId type{ refl::GetId<UnitializedPod>() };
@@ -43,18 +42,18 @@ struct PodEntry
 		static_assert(std::is_base_of_v<AssetPod, T> && !std::is_same_v<AssetPod, T>, "PodEntry requires a pod type");
 		return Create(refl::GetId<T>(), uid, path);
 	}
-	
+
 	template<typename T>
 	T* UnsafeGet()
 	{
-		static_assert(std::is_base_of_v<AssetPod, T> && !std::is_same_v<AssetPod, T>, "Unsafe get called without a pod type");
+		static_assert(
+			std::is_base_of_v<AssetPod, T> && !std::is_same_v<AssetPod, T>, "Unsafe get called without a pod type");
 		return static_cast<T*>(ptr.get());
 	}
 };
 
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
-class AssetManager
-{
+class AssetManager {
 	friend class Editor;
 	friend class AssetWindow;
 
@@ -64,8 +63,7 @@ class AssetManager
 	PodEntry* GetEntryByPath(const uri::Uri& path)
 	{
 		auto it = m_pathCache.find(path);
-		if (it == m_pathCache.end())
-		{
+		if (it == m_pathCache.end()) {
 			return nullptr;
 		}
 		return m_pods.at(it->second).get();
@@ -75,8 +73,7 @@ class AssetManager
 	void LoadEntry(PodEntry* entry)
 	{
 		// If we have future data, use them directly.
-		if (entry->futureLoaded.valid())
-		{
+		if (entry->futureLoaded.valid()) {
 			entry->ptr.reset(entry->futureLoaded.get());
 			return;
 		}
@@ -88,7 +85,10 @@ class AssetManager
 
 
 	// Specialized in a few cases where instant loading or multithreaded loading is faster
-	template<typename T> void PostRegisterEntry(PodEntry* p) {}
+	template<typename T>
+	void PostRegisterEntry(PodEntry* p)
+	{
+	}
 
 	template<typename T>
 	PodEntry* CreateAndRegister(const std::string& path)
@@ -97,7 +97,7 @@ class AssetManager
 		size_t uid = m_pods.size();
 
 		auto& ptr = m_pods.emplace_back(std::make_unique<PodEntry>(PodEntry::Create<T>(uid, path)));
-		
+
 		PodEntry* entry = ptr.get();
 		m_pathCache[path] = uid;
 		entry->name = uri::GetFilename(path);
@@ -119,18 +119,17 @@ public:
 		CLOG_ASSERT(inPath.front() != '/', "Found non absolute uri {}", inPath);
 
 		auto entry = inst->GetEntryByPath(inPath);
-		
-		if (entry)
-		{
+
+		if (entry) {
 			CLOG_ASSERT(entry->type != refl::GetId<PodType>(),
-						"Incorrect pod type on GetOrCreate:\nPath: '{}'\nPrev Type: '{}' New type: '{}'", inPath, entry->type.name(), refl::GetName<PodType>());
+				"Incorrect pod type on GetOrCreate:\nPath: '{}'\nPrev Type: '{}' New type: '{}'", inPath,
+				entry->type.name(), refl::GetName<PodType>());
 		}
-		else 
-		{
+		else {
 			entry = inst->CreateAndRegister<PodType>(inPath);
 		}
-		
-		return PodHandle<PodType>{entry->uid};
+
+		return PodHandle<PodType>{ entry->uid };
 	}
 
 	template<typename PodType>
@@ -138,15 +137,14 @@ public:
 	{
 		uri::Uri resolvedUri;
 
-		if (path.c_str()[0] == '/')
-		{
+		if (path.c_str()[0] == '/') {
 			resolvedUri = path.string();
 			return AssetManager::GetOrCreate<PodType>(resolvedUri);
 		}
 
 		auto diskPart = uri::GetDiskPathStrView(parentUri); // remove parents possible json
 
-		const auto cutIndex = diskPart.rfind('/') + 1; // Preserve the last '/'
+		const auto cutIndex = diskPart.rfind('/') + 1;      // Preserve the last '/'
 		diskPart.remove_suffix(diskPart.size() - cutIndex); // resolve parents directory
 
 		resolvedUri = (fs::path(diskPart) / path).string(); // add path (path may include json data at the end)
@@ -154,7 +152,7 @@ public:
 		return AssetManager::GetOrCreate<PodType>(resolvedUri);
 	}
 
-	template<typename PodType> 
+	template<typename PodType>
 	static PodHandle<PodType> GetOrCreateFromParent(const fs::path& path, BasePodHandle parentHandle)
 	{
 		// Parent: /abc/model.gltf{mat..}
@@ -167,20 +165,15 @@ public:
 	static void SetPodName(const uri::Uri& path, const std::string& newPodName)
 	{
 		auto& podEntries = Engine::GetAssetManager()->m_pods;
-		auto it = std::find_if(begin(podEntries), end(podEntries), [&](auto& podEntry) {
-			return podEntry->path == path;
-		});
+		auto it
+			= std::find_if(begin(podEntries), end(podEntries), [&](auto& podEntry) { return podEntry->path == path; });
 
-		if (it != podEntries.end())
-		{
+		if (it != podEntries.end()) {
 			(*it)->name = newPodName;
 		}
 	}
 
-	static PodEntry* GetEntry(BasePodHandle handle)
-	{
-		return Engine::GetAssetManager()->m_pods[handle.podId].get();
-	}
+	static PodEntry* GetEntry(BasePodHandle handle) { return Engine::GetAssetManager()->m_pods[handle.podId].get(); }
 
 
 	// Refreshes the underlying data of the pod.
@@ -192,26 +185,20 @@ public:
 	}
 
 	// Frees the underlying cpu pod memory
-	static void Unload(BasePodHandle handle)
-	{
-		Engine::GetAssetManager()->m_pods[handle.podId]->ptr.reset();
-	}
+	static void Unload(BasePodHandle handle) { Engine::GetAssetManager()->m_pods[handle.podId]->ptr.reset(); }
 
-	static uri::Uri GetPodUri(BasePodHandle handle)
-	{
-		return Engine::GetAssetManager()->m_pods[handle.podId]->path;
-	}
-	
+	static uri::Uri GetPodUri(BasePodHandle handle) { return Engine::GetAssetManager()->m_pods[handle.podId]->path; }
+
 	// For Internal Handle use only.
 	template<typename PodType>
 	PodType* _Handle_AccessPod(size_t podId)
 	{
 		PodEntry* entry = m_pods[podId].get();
 
-		assert(entry->type == refl::GetId<PodType>()); // Technically this should never hit because we check during creation.
+		assert(entry->type
+			   == refl::GetId<PodType>()); // Technically this should never hit because we check during creation.
 
-		if (!entry->ptr)
-		{
+		if (!entry->ptr) {
 			LoadEntry<PodType>(entry);
 		}
 
@@ -233,14 +220,14 @@ private:
 	template<>
 	void PostRegisterEntry<ImagePod>(PodEntry* entry)
 	{
-		entry->futureLoaded = std::async(std::launch::async, [entry]() -> AssetPod * {
+		entry->futureLoaded = std::async(std::launch::async, [entry]() -> AssetPod* {
 			ImagePod* ptr = new ImagePod();
 			ImagePod::Load(ptr, entry->path);
 			return ptr;
 		});
 	}
-	
-	template<> 
+
+	template<>
 	void PostRegisterEntry<TexturePod>(PodEntry* entry)
 	{
 		TexturePod* pod = new TexturePod();
@@ -259,13 +246,10 @@ private:
 	template<>
 	void PostRegisterEntry<StringPod>(PodEntry* entry)
 	{
-		entry->futureLoaded = std::async(std::launch::async, [entry]() -> AssetPod * {
+		entry->futureLoaded = std::async(std::launch::async, [entry]() -> AssetPod* {
 			StringPod* ptr = new StringPod();
 			StringPod::Load(ptr, entry->path);
 			return ptr;
 		});
 	}
-
-
-
 };

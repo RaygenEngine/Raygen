@@ -5,7 +5,7 @@
 #include "world/nodes/geometry/InstancedGeometryNode.h"
 #include "system/Engine.h"
 
-//inline InstancedGeometryNode* LoadInstancingMatrixMetaNode(Node* parent, const tinyxml2::XMLElement* xmlElement)
+// inline InstancedGeometryNode* LoadInstancingMatrixMetaNode(Node* parent, const tinyxml2::XMLElement* xmlElement)
 //{
 //	LOG_INFO("Loading instancing matrix meta node");
 //
@@ -32,25 +32,29 @@
 //	ParsingAux::ReadStringAttribute(xmlElement, "file", file);
 //
 //	// create trimesh_geometry_instanced node
-//	tinyxml2::XMLElement* triGeomInstancedNode = const_cast<tinyxml2::XMLElement*>(xmlElement)->GetDocument()->NewElement("trimesh_geometry_instanced");
+//	tinyxml2::XMLElement* triGeomInstancedNode =
+//const_cast<tinyxml2::XMLElement*>(xmlElement)->GetDocument()->NewElement("trimesh_geometry_instanced");
 //	triGeomInstancedNode->SetAttribute("name", name.c_str());
 //	triGeomInstancedNode->SetAttribute("file", file.c_str());
-//	
+//
 //	// create instances
 //	for (auto i = 0u; i < matHeight; ++i)
 //	{
 //		for (auto j = 0u; j < matWidth; ++j)
 //		{
-//			tinyxml2::XMLElement* instance = const_cast<tinyxml2::XMLElement*>(xmlElement)->GetDocument()->NewElement("instance");
+//			tinyxml2::XMLElement* instance =
+//const_cast<tinyxml2::XMLElement*>(xmlElement)->GetDocument()->NewElement("instance");
 //
 //			const auto instanceTranslation = translation + interval * glm::vec3(j, i, 0);
 //
 //			instance->SetAttribute("name", (name + "$instance$" + std::to_string(j + i * matHeight)).c_str());
-//			instance->SetAttribute("translation", (std::to_string(instanceTranslation.x) + ", " + std::to_string(instanceTranslation.y) + ", " + std::to_string(instanceTranslation.z)).c_str());
-//			instance->SetAttribute("euler_pyr", (std::to_string(eulerPYR.x) + ", " + std::to_string(eulerPYR.y) + ", " + std::to_string(eulerPYR.z)).c_str());
-//			instance->SetAttribute("scale", (std::to_string(scale.x) + ", " + std::to_string(scale.y) + ", " + std::to_string(scale.z)).c_str());
+//			instance->SetAttribute("translation", (std::to_string(instanceTranslation.x) + ", " +
+//std::to_string(instanceTranslation.y) + ", " + std::to_string(instanceTranslation.z)).c_str());
+//			instance->SetAttribute("euler_pyr", (std::to_string(eulerPYR.x) + ", " + std::to_string(eulerPYR.y) + ", " +
+//std::to_string(eulerPYR.z)).c_str()); 			instance->SetAttribute("scale", (std::to_string(scale.x) + ", " +
+//std::to_string(scale.y) + ", " + std::to_string(scale.z)).c_str());
 //
-//				
+//
 //			triGeomInstancedNode->InsertEndChild(instance);
 //		}
 //	}

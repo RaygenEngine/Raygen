@@ -33,24 +33,22 @@ bool ImagePod::Load(ImagePod* pod, const uri::Uri& path)
 
 bool MaterialPod::Load(MaterialPod* pod, const uri::Uri& path)
 {
-	if (uri::MatchesExtension(path, ".gltf")) 
-	{
+	if (uri::MatchesExtension(path, ".gltf")) {
 		return GltfMaterialLoader::Load(pod, path);
 	}
 	// TODO: Json loader
 
-	
+
 	return CustomLoader::Load(pod, path);
 }
 
 bool ModelPod::Load(ModelPod* pod, const uri::Uri& path)
 {
-	if (uri::MatchesExtension(path, ".gltf"))
-	{
+	if (uri::MatchesExtension(path, ".gltf")) {
 		return GltfModelLoader::Load(pod, path);
 	}
 	// Add obj loader or others
-	
+
 	return false;
 }
 
@@ -66,13 +64,11 @@ bool StringPod::Load(StringPod* pod, const uri::Uri& path)
 
 bool TexturePod::Load(TexturePod* pod, const uri::Uri& path)
 {
-	if (uri::MatchesExtension(path, ".gltf"))
-	{
+	if (uri::MatchesExtension(path, ".gltf")) {
 		return GltfTextureLoader::Load(pod, path);
 	}
 	// TODO: search sub extension, or make cubeman extension
-	else if (uri::MatchesExtension(path, ".json"))
-	{
+	else if (uri::MatchesExtension(path, ".json")) {
 		return CubemapLoader::Load(pod, path);
 	}
 	// add Json sampler loader

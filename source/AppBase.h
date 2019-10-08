@@ -7,8 +7,7 @@
 #include "system/Engine.h"
 #include "platform/Window.h"
 
-class AppBase
-{
+class AppBase {
 protected:
 	std::string m_name;
 	std::string m_initialScene;
@@ -27,6 +26,7 @@ protected:
 	char** m_argv;
 
 	bool m_enableEditor;
+
 public:
 	AppBase();
 
@@ -37,7 +37,7 @@ public:
 	virtual int32 Main(int32 argc, char* argv[]);
 
 	virtual void MainLoop();
-	
+
 	// Override here to register your custom renderer
 	virtual void RegisterRenderers();
 
