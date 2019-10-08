@@ -18,7 +18,7 @@ AppBase::AppBase()
 	m_windowWidth = 1920;
 	m_windowHeight = 1080;
 
-	m_handleControllers = true;
+	m_handleControllers = false;
 	m_lockMouse = false;
 
 	m_argc = 1;

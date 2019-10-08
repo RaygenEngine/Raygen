@@ -9,11 +9,11 @@ namespace OpenGL
 		: NodeObserver<DirectionalLightNode, GLRendererBase>(node)
 	{
 		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/DepthMap.json");
-		depthMap = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		depthMap = GetGLAssetManager(this)->GpuGetOrCreate<GLShader>(shaderAsset);
 		depthMap->AddUniform("mvp");
 
 		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/DepthMap_AlphaMask.json");
-		depthMapAlphaMask = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		depthMapAlphaMask = GetGLAssetManager(this)->GpuGetOrCreate<GLShader>(shaderAsset);
 		depthMapAlphaMask->AddUniform("mvp");
 		depthMapAlphaMask->AddUniform("base_color_factor");
 		depthMapAlphaMask->AddUniform("base_color_texcoord_index");
@@ -69,7 +69,7 @@ namespace OpenGL
 			for (auto& glMesh : geometry->glModel->meshes)
 			{
 				GLMaterial* glMaterial = glMesh.material;
-				MaterialPod* materialData = glMaterial->m_materialPod.operator->();
+				const MaterialPod* materialData = glMaterial->LockData();
 
 				switch (materialData->alphaMode)
 				{
@@ -89,7 +89,7 @@ namespace OpenGL
 					glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
 					break;
 
-				case AM_INVALID: abort();
+				case AM_INVALID: std::abort();
 				}
 
 				glUniformMatrix4fv(gBufferShader->GetUniform("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));

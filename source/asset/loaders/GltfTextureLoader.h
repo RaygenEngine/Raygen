@@ -15,7 +15,7 @@ namespace GltfTextureLoader
 		nlohmann::json j = uri::GetJson(path);
 		int32 ext = j["texture"].get<int32>();
 
-		tinygltf::Model& model = pParent->data;
+		const tinygltf::Model& model = pParent->data;
 
 		auto& gltfTexture = model.textures.at(ext);
 

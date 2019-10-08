@@ -33,15 +33,15 @@ namespace OpenGL
 
 		// shaders
 		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/QuadWriteTexture.json");
-		m_simpleOutShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		m_simpleOutShader = GetGLAssetManager()->GpuGetOrCreate<GLShader>(shaderAsset);
 
 		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/QuadWriteTexture_Linear.json");
-		m_linearizeOutShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		m_linearizeOutShader = GetGLAssetManager()->GpuGetOrCreate<GLShader>(shaderAsset);
 		m_linearizeOutShader->AddUniform("near");
 		m_linearizeOutShader->AddUniform("far");
 
 		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/forward/FR_PBRtemp.json");
-		m_testShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		m_testShader = GetGLAssetManager()->GpuGetOrCreate<GLShader>(shaderAsset);
 		
 		m_testShader->AddUniform("mvp");
 		m_testShader->AddUniform("m");
@@ -166,7 +166,7 @@ namespace OpenGL
 				glBindVertexArray(glMesh.vao);
 
 				GLMaterial* glMaterial = glMesh.material;
-				PodHandle<MaterialPod> materialData = glMaterial->m_materialPod;
+				const MaterialPod* materialData = glMaterial->LockData();
 
 				glUniform4fv(m_testShader->GetUniform("base_color_factor"), 1, glm::value_ptr(materialData->baseColorFactor));
 				glUniform3fv(m_testShader->GetUniform("emissive_factor"), 1, glm::value_ptr(materialData->emissiveFactor));

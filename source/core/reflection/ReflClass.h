@@ -130,7 +130,7 @@ namespace refl
 	// Gets the reflclass object of T and is specialized properly for every reflectable T.
 	// If you are unsure of how to get the ReflClass of an object ALWAYS USE THIS instead of static members/member functions.
 	template<typename T>
-	const ReflClass& GetClass(T* obj)
+	const ReflClass& GetClass(const T* obj)
 	{
 		// TODO: Static assert this for T
 		if constexpr (std::is_base_of_v<Node, T>)

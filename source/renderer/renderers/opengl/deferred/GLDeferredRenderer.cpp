@@ -48,8 +48,7 @@ namespace OpenGL
 			CreateObserver_AutoContained< GLBasicSpotLight>(dirLightNode, m_glSpotLights);
 		}
 
-		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/deferred/DR_GBuffer.json");
-		m_gBuffer.shader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		m_gBuffer.shader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_GBuffer.json");
 
 		m_gBuffer.shader->AddUniform("mvp");
 		m_gBuffer.shader->AddUniform("m");
@@ -66,8 +65,7 @@ namespace OpenGL
 		m_gBuffer.shader->AddUniform("normal_texcoord_index");
 		m_gBuffer.shader->AddUniform("occlusion_texcoord_index");
 
-		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/deferred/DR_GBuffer_AlphaMask.json");
-		m_gBuffer.shaderAlphaMask = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		m_gBuffer.shaderAlphaMask = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_GBuffer_AlphaMask.json");
 
 		m_gBuffer.shaderAlphaMask->AddUniform("mvp");
 		m_gBuffer.shaderAlphaMask->AddUniform("m");
@@ -85,8 +83,7 @@ namespace OpenGL
 		m_gBuffer.shaderAlphaMask->AddUniform("normal_texcoord_index");
 		m_gBuffer.shaderAlphaMask->AddUniform("occlusion_texcoord_index");
 
-		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/deferred/DR_DirectionalLight.json");
-		m_deferredDirectionalLightShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		m_deferredDirectionalLightShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_DirectionalLight.json");
 		
 		m_deferredDirectionalLightShader->AddUniform("view_pos");
 		m_deferredDirectionalLightShader->AddUniform("light_pos");
@@ -94,8 +91,7 @@ namespace OpenGL
 		m_deferredDirectionalLightShader->AddUniform("light_intensity");
 		m_deferredDirectionalLightShader->AddUniform("light_space_matrix");
 
-		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/deferred/DR_SpotLight.json");
-		m_deferredSpotLightShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		m_deferredSpotLightShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_SpotLight.json");
 
 		m_deferredSpotLightShader->AddUniform("view_pos");
 		m_deferredSpotLightShader->AddUniform("light_pos");
@@ -215,7 +211,7 @@ namespace OpenGL
 				glBindVertexArray(glMesh.vao);				
 
 				GLMaterial* glMaterial = glMesh.material;
-				MaterialPod* materialData = glMaterial->m_materialPod.operator->();
+				const MaterialPod* materialData = glMaterial->LockData();
 
 				switch (materialData->alphaMode)
 				{

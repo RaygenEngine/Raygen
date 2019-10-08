@@ -16,12 +16,10 @@ namespace OpenGL
 			glDeleteBuffers(1, &mesh.ebo);
 
 			glDeleteVertexArrays(1, &mesh.vao);
-
-			delete mesh.material;
 		}
 	}
 	
-	bool GLModel::LoadGLMesh(PodHandle<ModelPod> model, GLMesh& glMesh, GeometryGroup& data, GLenum usage)
+	bool GLModel::LoadGLMesh(const ModelPod& model, GLMesh& glMesh, const GeometryGroup& data, GLenum usage)
 	{
 		glMesh.geometryMode = GetGLGeometryMode(data.mode);
 
@@ -56,8 +54,8 @@ namespace OpenGL
 
 		glMesh.count = static_cast<GLsizei>(data.indices.size());
 
-		auto materialHandle = model->materials[data.materialIndex];
-		glMesh.material = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLMaterial>(materialHandle);
+		auto materialHandle = model.materials[data.materialIndex];
+		glMesh.material = GetGLAssetManager(this)->GpuGetOrCreate<GLMaterial>(materialHandle);
 
 		DebugBoundVAO("name");
 
@@ -68,7 +66,7 @@ namespace OpenGL
 
 	bool GLModel::Load()
 	{
-		auto modelData = AssetManager::GetOrCreate<ModelPod>(m_assetManagerPodPath);
+		auto modelData = podHandle.Lock();
 		TIMER_STATIC_SCOPE("uploading model time");
 
 		// TODO
@@ -80,7 +78,7 @@ namespace OpenGL
 			for (auto& geometryGroup : mesh.geometryGroups)
 			{
 				GLMesh& glmesh = meshes.emplace_back(GLMesh());
-				if (!LoadGLMesh(modelData, glmesh, geometryGroup, usage))
+				if (!LoadGLMesh(*modelData, glmesh, geometryGroup, usage))
 				{
 					return false;
 				}

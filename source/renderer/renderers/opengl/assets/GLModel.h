@@ -8,7 +8,7 @@
 
 namespace OpenGL
 {
-	struct GLModel : GLAsset
+	struct GLModel : GLAsset<ModelPod>
 	{		
 		struct GLMesh
 		{
@@ -30,12 +30,14 @@ namespace OpenGL
 		GLenum usage{ GL_STATIC_DRAW };
 		std::vector<GLMesh> meshes;
 
-		GLModel(const uri::Uri& assocPath)
-			: GLAsset(assocPath) {}
+		GLModel(PodHandle<ModelPod> handle)
+			: GLAsset(handle)
+		{}
+
 		virtual ~GLModel();
 
 	protected:
-		bool LoadGLMesh(PodHandle<ModelPod> model, GLMesh& mesh, GeometryGroup& data, GLenum usage);
+		bool LoadGLMesh(const ModelPod& model, GLMesh& mesh, const GeometryGroup& data, GLenum usage);
 		bool Load() override;
 	};
 

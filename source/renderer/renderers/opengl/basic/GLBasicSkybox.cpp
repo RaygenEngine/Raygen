@@ -56,11 +56,11 @@ namespace OpenGL
 		: NodeObserver<SkyCubeNode, GLRendererBase>(node)
 	{
 		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/Cubemap_InfDist.json");
-		shader = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		shader = GetGLAssetManager(this)->GpuGetOrCreate<GLShader>(shaderAsset);
 		auto& skyboxShader = *shader;
 		shader->AddUniform("vp");
 		
-		cubemap = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLTexture>(node->GetSkyMap());
+		cubemap = GetGLAssetManager(this)->GpuGetOrCreate<GLTexture>(node->GetSkyMap());
 
 		// skybox
 		glGenVertexArrays(1, &vao);

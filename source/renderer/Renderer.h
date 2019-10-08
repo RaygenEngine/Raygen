@@ -147,3 +147,4 @@ public:
 
 	virtual void SwapBuffers() { };
 };
+

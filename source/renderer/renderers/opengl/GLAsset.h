@@ -2,33 +2,45 @@
 #include "renderer/NodeObserver.h"
 #include "renderer/renderers/opengl/GLRendererBase.h"
 #include "asset/AssetPod.h"
+#include "asset/PodHandle.h"
 
 namespace OpenGL
 {
-	class GLAsset : public RendererObject<GLRendererBase>
+	struct GLAssetBase : public RendererObject<GLRendererBase>
+	{
+		GLAssetBase(BasePodHandle genericHandle)
+			: genericPodHandle(genericHandle) {}
+
+		BasePodHandle genericPodHandle;
+
+		virtual ~GLAssetBase() = default;
+	};
+
+	template<typename PodTypeT>
+	struct GLAsset : public GLAssetBase
 	{
 	public:
-		uri::Uri GetAssetManagerPodPath() const { return m_assetManagerPodPath; }
+		using PodType = PodTypeT;
 
 	protected:
-		GLAsset(const uri::Uri& assocPath)
-			: m_assetManagerPodPath(assocPath) {}
+		GLAsset(PodHandle<PodType> handle)
+			: GLAssetBase(handle)
+			, podHandle(handle) {}
+
+		PodHandle<PodType> podHandle;
+		
+		virtual bool Load() = 0;
 		virtual ~GLAsset() = default;
 
-		uri::Uri m_assetManagerPodPath;
-		
-		bool m_isLoaded{ false };
-
-		virtual bool Load() = 0;
-
+		friend GenericGpuAssetManager<GLAssetBase>;
 	private:
-		bool FriendLoad() 
-		{ 
-			m_isLoaded = Load(); 
-			return m_isLoaded;
+		void FriendLoad() {	Load(); }
+	public:
+		// DOC: 
+		const PodType* LockData()
+		{
+			return podHandle.Lock();
 		}
-
-		friend class GLAssetManager;
 	};
 
 }
