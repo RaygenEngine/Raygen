@@ -180,10 +180,10 @@ struct ReflectionToImguiVisitor
 			return false;
 		}
 
-		auto str = AssetManager::GetPodUri(pod);
+		auto str = AssetManager::GetEntry(pod)->name;
 		bool open = ImGui::CollapsingHeader(name);
 		PodDropTarget(pod);
-
+		TEXT_TOOLTIP("{}", AssetManager::GetPodUri(pod));
 		if (open)
 		{
 			GenerateUniqueName(p);
@@ -225,9 +225,11 @@ struct ReflectionToImguiVisitor
 				path += sname;
 
 				GenerateUniqueName(p);
-				std::string finalName = AssetManager::GetPodUri(handle) + "##" + name;
+				std::string finalName = AssetManager::GetEntry(handle)->name + "##" + name;
+				
 				bool r = ImGui::CollapsingHeader(finalName.c_str());
 				PodDropTarget(handle);
+				TEXT_TOOLTIP("{}", AssetManager::GetPodUri(handle));
 				if (r)
 				{
 					ImGui::Indent();
@@ -551,14 +553,6 @@ void Editor::HandleInput()
 	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::TAB))
 	{
 		m_showImgui = !m_showImgui;
-	}
-
-	if (Engine::GetInput()->IsKeyRepeat(XVirtualKey::CTRL) && Engine::GetInput()->IsKeyPressed(XVirtualKey::W))
-	{
-		if (m_selectedNode && m_selectedNode != Engine::GetWorld()->GetRoot())
-		{
-			Engine::GetWorld()->DeepDuplicateNode(m_selectedNode);
-		}
 	}
 }
 

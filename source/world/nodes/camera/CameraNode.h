@@ -3,7 +3,7 @@
 #include "world/nodes/Node.h"
 #include "system/EngineEvents.h"
 
-// Window dependant // TODO: non-window dependant (e.g. oculus virtual eye)
+// Note: to make a automatic camera that resizes to window size see WindowCameraNode
 class CameraNode : public Node
 {
 	REFLECTED_NODE(CameraNode, Node)
@@ -22,7 +22,8 @@ class CameraNode : public Node
 	}
 
 	DECLARE_DIRTY_FLAGSET(Projection, ViewportSize)
-	
+
+protected:
 	// distance to film plane
 	float m_focalLength;
 
@@ -40,8 +41,6 @@ class CameraNode : public Node
 	int32 m_viewportHeight{ 720 };
 	
 public:
-	DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
-
 	CameraNode(Node* parent);
 	~CameraNode() = default;
 
@@ -62,8 +61,6 @@ public:
 	glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 		
 	void DirtyUpdate() override;
-private:
-	void WindowResize(int32 width, int32 height);
 };
 
 

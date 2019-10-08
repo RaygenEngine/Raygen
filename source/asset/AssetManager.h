@@ -24,6 +24,7 @@ struct PodEntry
 	TypeId type{ refl::GetId<UnitializedPod>() };
 	size_t uid{ 0 };
 	uri::Uri path{ "#" };
+	std::string name{};
 
 	std::future<AssetPod*> futureLoaded;
 
@@ -99,6 +100,7 @@ class AssetManager
 		
 		PodEntry* entry = ptr.get();
 		m_pathCache[path] = uid;
+		entry->name = uri::GetFilename(path);
 		PostRegisterEntry<T>(entry);
 		return entry;
 	}
@@ -162,6 +164,24 @@ public:
 		// Resulted: /abc/bar/foo.jpg{abc}
 		CLOG_ASSERT(path.empty(), "Path was empty. Parent was: {}", AssetManager::GetPodUri(parentHandle));
 		return GetOrCreateFromParentUri<PodType>(path, AssetManager::GetPodUri(parentHandle));
+	}
+
+	static void SetPodName(const uri::Uri& path, const std::string& newPodName)
+	{
+		auto& podEntries = Engine::GetAssetManager()->m_pods;
+		auto it = std::find_if(begin(podEntries), end(podEntries), [&](auto& podEntry) {
+			return podEntry->path == path;
+		});
+
+		if (it != podEntries.end())
+		{
+			(*it)->name = newPodName;
+		}
+	}
+
+	static PodEntry* GetEntry(BasePodHandle handle)
+	{
+		return Engine::GetAssetManager()->m_pods[handle.podId].get();
 	}
 
 

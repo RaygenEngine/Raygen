@@ -63,12 +63,15 @@ public:
 	void ReleaseMouseMovement() override;
 
 	void Show() override;
+	void Hide() override;
 
 	void HandleEvents(bool shouldHandleControllers) override;
 
 	void SetTitle(const std::string& newTitle) override;
 
 	void GenerateXInputControllerMessages();
+
+	void FireFirstResizeEvent() override;
 
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 };

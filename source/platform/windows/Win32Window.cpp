@@ -48,7 +48,7 @@ bool Win32Window::Register(
 
 bool Win32Window::Create(
 	int32 xpos,
-	int32 ypox,
+	int32 ypos,
 	int32 width,
 	int32 height,
 	LPCSTR title,
@@ -59,13 +59,14 @@ bool Win32Window::Create(
 	ZeroMemory(&cs, sizeof(cs));
 
 	cs.x = xpos;	                       // Window X position
-	cs.y = ypox;	                       // Window Y position
+	cs.y = ypos;	                       // Window Y position
 	cs.cx = width;	                       // Window width
 	cs.cy = height;	                       // Window height
 	cs.hInstance = m_wcex.hInstance;       // Window instance.
 	cs.lpszClass = m_wcex.lpszClassName;   // Window class name
 	cs.lpszName = title;				   // Window title
 	cs.style = style;					   // Window style
+
 
 	// Create the window.
 	m_hWnd = ::CreateWindowEx(
@@ -144,7 +145,22 @@ void Win32Window::ReleaseMouseMovement()
 void Win32Window::Show()
 {
 	::ShowWindow(m_hWnd, SW_SHOWDEFAULT);
-	//::UpdateWindow(m_hWnd);
+	::UpdateWindow(m_hWnd);
+}
+
+void Win32Window::Hide()
+{
+	::ShowWindow(m_hWnd, SW_HIDE);
+	::UpdateWindow(m_hWnd);
+}
+
+void Win32Window::FireFirstResizeEvent()
+{
+	// Windows hack to ensure we get correct sizes without showing the window.
+	// Actual surface size will be smaller than the request made in CreateWindow to account for window borders
+	::ShowWindow(m_hWnd, SW_SHOWNOACTIVATE);
+	::ShowWindow(m_hWnd, SW_HIDE);
+	::UpdateWindow(m_hWnd);
 }
 
 void Win32Window::GenerateXInputControllerMessages()

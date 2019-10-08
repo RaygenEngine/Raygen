@@ -6,11 +6,15 @@
 	<freeform_user name="user2"
 		translation="0, 15, 30"
 		lookat="0, 0, -5">
-	
-		<camera name="cam1"
+
+		<window_camera name="cam_window"
 		    focal_length="1"
 			fov="60.0"/>
-		
+			
+		<!-- <camera name="cam1" -->
+		    <!-- focal_length="1" -->
+			<!-- fov="60.0"/> -->
+	
 	</freeform_user>
 	
 
@@ -43,8 +47,8 @@
 	<geometry name="sponza" 
 		translation="0.0, 0.0, 0.0"
 		scale="1, 1, 1" 
-		model="/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf{&quot;scene&quot;=-1}"/> 
 		
+		model="/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf"/> 
 		
 	<!-- <directional_light name="l2"  -->
 	   <!-- translation="0.0, 25.0, -25"  -->
@@ -55,7 +59,7 @@
 	<geometry name="sponza" 
 		translation="0.0, 0.0, -25.0"
 		scale="1, 1, 1" 
-		model="/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf{&quot;scene&quot;=-1}"/> 
+		model="/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf"/> 
 		
 
 

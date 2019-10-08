@@ -15,7 +15,7 @@ namespace GltfMaterialLoader
 		using namespace nlohmann;
 
 		const auto pPath = uri::GetDiskPath(path);
-		auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath);
+		auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath + "{}");
 
 		auto data = uri::GetJson(path);
 

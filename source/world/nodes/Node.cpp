@@ -242,7 +242,7 @@ namespace
 		
 			if (tmp.find(".gltf") != std::string::npos)
 			{
-				AssetManager::PreloadGltf(AssetManager::GetPodUri(handle));
+				AssetManager::PreloadGltf(AssetManager::GetPodUri(handle) + "{}");
 			}
 		}
 	

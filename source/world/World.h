@@ -92,7 +92,7 @@ public:
 	void AddNode(NodeType* node)
 	{
 		// WIP: 
-		if constexpr (std::is_same_v<NodeType, CameraNode>)
+		if constexpr (std::is_base_of_v<CameraNode, NodeType>)
 		{
 			if (!m_activeCamera)
 			{
