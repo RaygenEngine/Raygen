@@ -14,6 +14,7 @@ namespace refl
 	template<typename T>
 	constexpr std::string_view GetName()
 	{
-		return std::string_view(ctti::nameof<T>().begin());
+		auto cview = ctti::nameof<T>();
+		return std::string_view(cview.begin(), cview.size());
 	}
 }
