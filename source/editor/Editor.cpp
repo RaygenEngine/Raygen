@@ -19,6 +19,32 @@
 #include "imgui/imgui_internal.h"
 #include <set>
 #include "core/reflection/PodTools.h"
+namespace refl {
+
+namespace detail {
+	struct Visitor {
+		const ReflClass* ptr;
+
+		Visitor(const ReflClass* inPtr)
+			: ptr(inPtr)
+		{
+		}
+
+		template<typename T>
+		void operator()(T* pod)
+		{
+			ptr = &T::StaticClass();
+		}
+	};
+} // namespace detail
+inline const ReflClass& GetClass(const AssetPod* pod)
+{
+	const ReflClass* ptr;
+	detail::Visitor v(ptr);
+	podtools::VisitPod(const_cast<AssetPod*>(pod), v);
+	return *ptr;
+}
+} // namespace refl
 
 #define TEXT_TOOLTIP(...)                                                                                              \
 	if (ImGui::IsItemHovered()) {                                                                                      \
@@ -96,7 +122,7 @@ struct ReflectionToImguiVisitor {
 
 	bool Inner(float& t, const Property& p) { return ImGui::DragFloat(name, &t, 0.01f); }
 
-	bool Inner(glm::vec3& t, const Property& p) 
+	bool Inner(glm::vec3& t, const Property& p)
 	{
 		if (p.HasFlags(PropertyFlags::Color)) {
 			return ImGui::ColorEdit3(name, ImUtil::FromVec3(t), ImGuiColorEditFlags_DisplayHSV);
@@ -246,8 +272,6 @@ struct ReflectionToImguiVisitor {
 
 
 Editor::Editor()
-	: m_selectedNode(nullptr)
-	, m_updateWorld(true)
 {
 	ImguiImpl::InitContext();
 	m_assetWindow.Init();
@@ -259,8 +283,23 @@ Editor::~Editor()
 }
 #include "editor/renderer/EditorRenderer.h"
 #include "system/Input.h"
+namespace {
+struct VisitorReloader {
+	std::unique_ptr<PodEntry>& assetEntry;
+	VisitorReloader(std::unique_ptr<PodEntry>& entry)
+		: assetEntry(entry)
+	{
+	}
 
-void Editor::UpdateEditor() 
+	template<typename T>
+	void operator()(T ptr)
+	{
+		AssetManager::Reload(PodHandle<std::remove_pointer_t<T>>{ assetEntry->uid });
+	}
+};
+
+} // namespace
+void Editor::UpdateEditor()
 {
 	HandleInput();
 
@@ -320,10 +359,7 @@ void Editor::UpdateEditor()
 	if (ImGui::CollapsingHeader("Assets")) {
 
 		auto reloadAssetLambda = [](std::unique_ptr<PodEntry>& assetEntry) {
-			podtools::VisitPodType(assetEntry->type, [&assetEntry](auto tptr) {
-				using PodType = std::remove_pointer_t<decltype(tptr)>;
-				AssetManager::Reload(PodHandle<PodType>{ assetEntry->uid });
-			});
+			// podtools::VisitPodType(assetEntry->type, VisitorReloader(assetEntry));
 		};
 
 
