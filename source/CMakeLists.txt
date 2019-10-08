@@ -267,7 +267,7 @@ endif(MSVC)
 add_executable(Rayxen ${SOURCE_FILES} ${HEADER_FILES})
  
 if(MSVC)
-	set_property(TARGET Rayxen PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/assets")
+	set_property(TARGET Rayxen PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif(MSVC)
 
 # 3rd party libraries
