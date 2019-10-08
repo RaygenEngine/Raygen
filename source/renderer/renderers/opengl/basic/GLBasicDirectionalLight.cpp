@@ -37,6 +37,8 @@ namespace OpenGL
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
 		glDrawBuffer(GL_NONE);
 		glReadBuffer(GL_NONE);
+
+		lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 	}
 
 	GLBasicDirectionalLight::~GLBasicDirectionalLight()
@@ -53,9 +55,6 @@ namespace OpenGL
 		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
 		
-		// TODO - PERF: calculate this only from update from node not every frame
-		lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
-	
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -116,7 +115,7 @@ namespace OpenGL
 				node->GetShadowMapWidth(), node->GetShadowMapHeight(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 		}
 
-		if (nodeDirtyFlagset[DirectionalLightNode::DF::Projection])
+		if (nodeDirtyFlagset[DirectionalLightNode::DF::Projection] || nodeDirtyFlagset[Node::DF::TRS])
 		{
 			lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 		}

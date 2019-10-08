@@ -160,7 +160,7 @@ void PathSystem::GenerateFileListOfType(const fs::path & extension, std::set<std
 		auto thisExtension = fs::path(p.first).extension();
 		if (thisExtension == extension)
 		{
-			outFiles.emplace(fs::path(p.first).filename().string());
+			outFiles.emplace("/" + fs::relative(fs::path(p.first)).string());
 		}
 	}
 }

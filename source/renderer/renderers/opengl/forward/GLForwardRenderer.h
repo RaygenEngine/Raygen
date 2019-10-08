@@ -57,8 +57,6 @@ namespace OpenGL
 		
 		std::string m_previewModeString{};
 
-		//DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
-
 		GLForwardRenderer()
 			: m_camera(nullptr),
 			  m_msaaFbo(0),
@@ -68,14 +66,12 @@ namespace OpenGL
 			  m_outColorTexture(0),
 		      m_previewMode(0)
 		{
-			//m_resizeListener.BindMember(this, &GLForwardRenderer::WindowResize);
 		}
 
 		~GLForwardRenderer();
 
 		bool InitScene() override;
 		
-		//void WindowResize(int32 width, int32 height);
 		void Render() override;
 
 		void Update() override;
