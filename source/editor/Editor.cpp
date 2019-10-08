@@ -194,7 +194,7 @@ struct ReflectionToImguiVisitor
 			depth++;
 			ImGui::Indent();
 			
-			refltools::CallVisitorOnEveryProperty(pod.operator->(), *this);
+			refltools::CallVisitorOnEveryProperty(const_cast<PodType*>(pod.operator->()), *this);
 
 			ImGui::Unindent();
 			depth--;
@@ -233,7 +233,7 @@ struct ReflectionToImguiVisitor
 				if (r)
 				{
 					ImGui::Indent();
-					refltools::CallVisitorOnEveryProperty(handle.operator->(), *this);
+					refltools::CallVisitorOnEveryProperty(const_cast<T*>(handle.operator->()), *this);
 					ImGui::Unindent();
 				}
 

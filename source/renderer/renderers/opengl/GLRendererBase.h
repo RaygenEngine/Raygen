@@ -2,11 +2,20 @@
 
 #include "renderer/Renderer.h"
 #include "system/Engine.h"
+#include "renderer/GenericGpuAssetManager.h"
+
+namespace OpenGL 
+{
+	struct GLAssetBase;
+	
+	using GLAssetManager = GenericGpuAssetManager<OpenGL::GLAssetBase>;
+}
+
+
+
 
 namespace OpenGL
 {
-	class GLAssetManager;
-	
 	class GLRendererBase : public ObserverRenderer
 	{
 		HWND m_assochWnd;
@@ -18,7 +27,7 @@ namespace OpenGL
 		bool m_vsyncEnabled{ true };
 	public:
 		GLRendererBase();
-		~GLRendererBase();
+		virtual ~GLRendererBase();
 
 		bool InitRendering(HWND assochWnd, HINSTANCE instance) override;
 		void SwapBuffers() override;

@@ -9,11 +9,11 @@ namespace OpenGL
 		: NodeObserver<SpotLightNode, GLRendererBase>(node)
 	{
 		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/DepthMap.json");
-		depthMap = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		depthMap = GetGLAssetManager(this)->GpuGetOrCreate<GLShader>(shaderAsset);
 		depthMap->AddUniform("mvp");
 
 		shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/DepthMap_AlphaMask.json");
-		depthMapAlphaMask = GetGLAssetManager(this)->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
+		depthMapAlphaMask = GetGLAssetManager(this)->GpuGetOrCreate<GLShader>(shaderAsset);
 		depthMapAlphaMask->AddUniform("mvp");
 		depthMapAlphaMask->AddUniform("base_color_factor");
 		depthMapAlphaMask->AddUniform("base_color_texcoord_index");
@@ -69,7 +69,7 @@ namespace OpenGL
 			for (auto& glMesh : geometry->glModel->meshes)
 			{
 				GLMaterial* glMaterial = glMesh.material;
-				MaterialPod* materialData = glMaterial->m_materialPod.operator->();
+				const MaterialPod* materialData = glMaterial->LockData();
 
 				switch (materialData->alphaMode)
 				{

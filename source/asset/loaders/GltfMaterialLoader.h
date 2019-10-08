@@ -22,7 +22,7 @@ namespace GltfMaterialLoader
 		int32 ext = 0;
 		data["material"].get_to(ext);
 		
-		tinygltf::Model& model = pParent->data;
+		const tinygltf::Model& model = pParent->data;
 
 		auto& gltfMaterial = model.materials.at(ext);
 
@@ -51,7 +51,7 @@ namespace GltfMaterialLoader
 		{
 			if (textureInfo.index != -1)
 			{
-				tinygltf::Texture& gltfTexture = model.textures.at(textureInfo.index);
+				const tinygltf::Texture& gltfTexture = model.textures.at(textureInfo.index);
 
 				json data;
 				data["texture"] = textureInfo.index;

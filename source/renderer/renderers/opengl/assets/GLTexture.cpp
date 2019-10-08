@@ -14,7 +14,7 @@ namespace OpenGL
 
 	bool GLTexture::Load()
 	{
-		const auto textureData = AssetManager::GetOrCreate<TexturePod>(m_assetManagerPodPath);
+		const auto textureData = podHandle.Lock();
 		
 		glGenTextures(1, &id);
 

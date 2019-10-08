@@ -169,6 +169,7 @@ set(HEADER_FILES
 	
 	renderer/Renderer.h
 	renderer/NodeObserver.h
+	renderer/GenericGpuAssetManager.h
 	
 	renderer/renderers/opengl/GLAsset.h
 	renderer/renderers/opengl/GLAssetManager.h

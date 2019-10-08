@@ -16,11 +16,13 @@ namespace OpenGL
 	{
 		if (!firstLoad)
 		{
-			AssetManager::Reload(sources);
-			AssetManager::Reload(sources->fragment);
-			AssetManager::Reload(sources->vertex);
+			AssetManager::Reload(podHandle);
+			AssetManager::Reload(podHandle->fragment);
+			AssetManager::Reload(podHandle->vertex);
 		}
 		firstLoad = false;
+
+		auto sources = podHandle.Lock();
 
 		GLint result = GL_FALSE;
 		int32 infoLogLength;
@@ -38,7 +40,7 @@ namespace OpenGL
 		{
 			std::vector<char> vertexShaderErrorMessage(infoLogLength + 1);
 			glGetShaderInfoLog(vertexShaderID, infoLogLength, NULL, &vertexShaderErrorMessage[0]);
-			LOG_WARN("Vertex shader error in {}:\n{}", m_assetManagerPodPath, &vertexShaderErrorMessage[0]);
+			LOG_WARN("Vertex shader error in {}:\n{}", AssetManager::GetEntry(podHandle)->name, &vertexShaderErrorMessage[0]);
 			return false;
 		}
 		const GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
@@ -55,7 +57,7 @@ namespace OpenGL
 		{
 			std::vector<char> fragmentShaderErrorMessage(infoLogLength + 1);
 			glGetShaderInfoLog(fragmentShaderID, infoLogLength, NULL, &fragmentShaderErrorMessage[0]);
-			LOG_WARN("Fragment shader error in {}:\n{}", m_assetManagerPodPath, &fragmentShaderErrorMessage[0]);
+			LOG_WARN("Fragment shader error in {}:\n{}", AssetManager::GetEntry(podHandle)->name, &fragmentShaderErrorMessage[0]);
 			return false;
 		}
 
@@ -71,7 +73,7 @@ namespace OpenGL
 		{
 			std::vector<char> programErrorMessage(infoLogLength + 1);
 			glGetProgramInfoLog(id, infoLogLength, NULL, &programErrorMessage[0]);
-			LOG_WARN("Program shader error in {}:\n{}", m_assetManagerPodPath, &programErrorMessage[0]);
+			LOG_WARN("Program shader error in {}:\n{}", AssetManager::GetEntry(podHandle)->name, &programErrorMessage[0]);
 			return false;
 		}
 

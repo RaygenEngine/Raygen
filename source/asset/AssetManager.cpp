@@ -15,7 +15,7 @@ void AssetManager::PreloadGltf(const uri::Uri& gltfModelPath)
 {
 	auto pParent = AssetManager::GetOrCreate<GltfFilePod>(gltfModelPath);
 	
-	tinygltf::Model& file = pParent->data;
+	const tinygltf::Model& file = pParent->data;
 
 	for (auto& gltfImage : file.images)
 	{
@@ -31,4 +31,14 @@ void PodDeleter::operator()(AssetPod* p)
 		delete pod;
 	}
 	);
+}
+
+void Code()
+{
+	podtools::ForEachPodType([](auto p)
+	{
+		using PodType = std::remove_pointer_t<decltype(p)>;
+		PodHandle<PodType> a;
+		a._Debug();
+	});
 }

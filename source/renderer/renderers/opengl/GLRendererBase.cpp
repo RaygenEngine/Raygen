@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "renderer/renderers/opengl/GLRendererBase.h"
+
 #include "renderer/renderers/opengl/GLAssetManager.h"
 
 #include "glad/glad.h"
@@ -30,7 +31,8 @@ void GLRendererBase::ChangeVSync(bool enabled)
 		  m_hdc(nullptr),
 		  m_hglrc(nullptr)
 	{
-		m_glAssetManager = std::make_unique<GLAssetManager>();
+		m_glAssetManager.reset(new GLAssetManager());// = std::make_unique<GLAssetManager>();
+		//m_glAssetManager = std::make_unique<GLAssetManager>();
 	}
 
 	GLRendererBase::~GLRendererBase()

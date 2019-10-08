@@ -6,7 +6,7 @@
 
 namespace OpenGL
 {
-	struct GLMaterial : GLAsset
+	struct GLMaterial : GLAsset<MaterialPod>
 	{
 		// RGB: Albedo A: Opacity
 		GLTexture* baseColorTexture{ nullptr };
@@ -17,12 +17,11 @@ namespace OpenGL
 		GLTexture* normalTexture{ nullptr };
 		GLTexture* emissiveTexture{ nullptr };
 		
-		PodHandle<MaterialPod> m_materialPod;
+		//PodHandle<MaterialPod> m_materialPod;
 
-		GLMaterial(const uri::Uri& assocPath)
-			: GLAsset(assocPath)
-		{
-		}
+		GLMaterial(PodHandle<MaterialPod> handle)
+			: GLAsset(handle)
+		{}
 
 	protected:
 		bool Load() override;

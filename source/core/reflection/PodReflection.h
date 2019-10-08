@@ -43,7 +43,6 @@ namespace refl
 	constexpr bool IsValidPod = detail::HasAssetPodBase<T> && detail::IsRegisteredPod<T>;
 }
 
-
 template<typename Type>
 [[nodiscard]]
 Type* PodCast(AssetPod* pod)
@@ -53,6 +52,19 @@ Type* PodCast(AssetPod* pod)
 	if (refl::GetId<Type>() == pod->type)
 	{
 		return static_cast<Type*>(pod);
+	}
+	return nullptr;
+}
+
+template<typename Type>
+[[nodiscard]]
+const Type* PodCast(const AssetPod* pod)
+{
+	static_assert(refl::IsValidPod<Type>, "This is not a valid and registered asset pod. The cast would always fail.");
+
+	if (refl::GetId<Type>() == pod->type)
+	{
+		return static_cast<const Type*>(pod);
 	}
 	return nullptr;
 }
@@ -99,13 +111,36 @@ namespace refl
 		{
 			detail::PodVisitP_Impl<Visitor, Z_POD_TYPES>(pod, v);
 		}
+
+		template<typename Visitor, typename... PodTs>
+		void PodVisitPConst_Impl(const AssetPod* pod, Visitor& v)
+		{
+			bool cc = (VisitIfPConst<PodTs>(pod, v) || ...);
+		}
+
+		template<typename T, typename Visitor>
+		bool VisitIfPConst(const AssetPod* pod, Visitor& v)
+		{
+			if (pod->IsOfType<T>())
+			{
+				v(PodCast<T>(pod));
+				return true;
+			}
+			return false;
+		}
+
+		template<typename Visitor>
+		void VisitPodConst(const AssetPod* pod, Visitor& v)
+		{
+			detail::PodVisitPConst_Impl<Visitor, Z_POD_TYPES>(pod, v);
+		}
 	}
 
 	template<> 
-	inline const ReflClass& GetClass(AssetPod* pod)
+	inline const ReflClass& GetClass(const AssetPod* pod)
 	{
 		const ReflClass* ptr;
-		detail::VisitPodP(pod, [&ptr](auto pod)
+		detail::VisitPodConst(pod, [&ptr](auto pod)
 		{
 			ptr = &std::remove_pointer_t<decltype(pod)>::StaticClass();
 		});

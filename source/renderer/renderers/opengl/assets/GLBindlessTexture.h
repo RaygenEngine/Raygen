@@ -11,10 +11,10 @@ namespace OpenGL
 	{
 		GLuint handle{ 0 };
 
-		GLBindlessTexture(const uri::Uri& assocPath)
-			: GLTexture(assocPath)
-		{
-		}
+		GLBindlessTexture(PodHandle<TexturePod> handle)
+			: GLTexture(handle)
+		{}
+
 		virtual ~GLBindlessTexture();
 
 	protected:
