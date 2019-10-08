@@ -105,8 +105,6 @@ class AssetManager
 		return entry;
 	}
 
-	// TODO: should be static global, independent of the asset manager.
-	PathSystem m_pathSystem;
 public:
 	// Returns a new handle from a given path.
 	// * if the asset of this path is already registered in the asset list it will return a handle to the existing one

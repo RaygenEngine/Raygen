@@ -4,9 +4,11 @@
 #include <filesystem>
 
 namespace fs = std::filesystem;
-
+/*
 class PathSystem
 {
+	//static bool Init(const std::string& applicationPath, const std::string& dataDirectoryName);
+
 	// assets root path
 	fs::path m_assetsRootPath;
 
@@ -16,7 +18,6 @@ public:
 	PathSystem() = default;
 	~PathSystem() = default;
 
-	bool Init(const std::string& applicationPath, const std::string& dataDirectoryName);
 
 	// Search UP recursively for path from current
 	fs::path SearchPathUpRecursivelyFromCurrent(const fs::path & subPath);
@@ -33,3 +34,4 @@ public:
 private:
 	void CacheAssetFilenames();
 };
+*/

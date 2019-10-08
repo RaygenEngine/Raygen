@@ -8,7 +8,15 @@ bool AssetManager::Init(const std::string& applicationPath, const std::string& d
 {
 	m_pods.push_back(std::make_unique<PodEntry>());
 
-	return m_pathSystem.Init(applicationPath, dataDirectoryName);
+	std::error_code error;
+	fs::current_path("../../assets/", error);
+	if (error)
+	{
+		LOG_FATAL("Couldn't set work directory!");
+		return false;
+	}
+
+	return true;
 }
 
 void AssetManager::PreloadGltf(const uri::Uri& gltfModelPath)
