@@ -10,7 +10,7 @@ namespace GltfTextureLoader
 	static bool Load(TexturePod* pod, const uri::Uri& path)
 	{
 		const auto pPath = uri::GetDiskPath(path);
-		auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath);
+		auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath + "{}");
 
 		nlohmann::json j = uri::GetJson(path);
 		int32 ext = j["texture"].get<int32>();
@@ -45,6 +45,15 @@ namespace GltfTextureLoader
 		if (samplerIndex != -1)
 		{
 			auto& gltfSampler = model.samplers.at(samplerIndex);
+
+			if (gltfSampler.name.empty())
+			{
+				AssetManager::SetPodName(path, "Sampler." + std::to_string(samplerIndex));
+			}
+			else
+			{
+				AssetManager::SetPodName(path, gltfSampler.name);
+			}
 
 			pod->minFilter = GltfAux::GetTextureFiltering(gltfSampler.minFilter);
 			pod->magFilter = GltfAux::GetTextureFiltering(gltfSampler.magFilter);

@@ -56,6 +56,19 @@ namespace uri
 		return GetDiskExtension(path) == ext;
 	}
 
+	inline std::string_view GetFilename(const Uri& path)
+	{
+		auto diskView = GetDiskPathStrView(path);
+		auto loc = diskView.find_last_of('/');
+		
+		if (loc == std::string::npos)
+		{
+			return diskView;
+		}
+
+		return diskView.substr(loc + 1);
+	}
+
 	// Expects json object, values or arrays are not allowed.
 	inline Uri MakeChildJson(const Uri& parent, const nlohmann::json& json)
 	{

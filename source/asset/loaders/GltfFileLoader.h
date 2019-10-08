@@ -16,7 +16,7 @@ namespace GltfFileLoader
 		std::string err;
 		std::string warn;
 
-		const bool ret = loader.LoadASCIIFromFile(&pod->data, &err, &warn, uri::ToSystemPath(path));
+		const bool ret = loader.LoadASCIIFromFile(&pod->data, &err, &warn, uri::ToSystemPath(uri::GetDiskPath(path)));
 
 		CLOG_WARN(!warn.empty(), warn.c_str());
 		CLOG_ERROR(!err.empty(), err.c_str());

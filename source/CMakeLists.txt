@@ -63,7 +63,8 @@ set(SOURCE_FILES
 	world/nodes/TransformNode.cpp
 	
 	world/nodes/camera/CameraNode.cpp
-	
+	world/nodes/camera/WindowCameraNode.cpp
+
 	world/nodes/sky/SkyCubeNode.cpp
 	world/nodes/sky/SkyHDRNode.cpp
 	
@@ -204,6 +205,7 @@ set(HEADER_FILES
 	world/nodes/MetaNodeTranslation.h
 	
 	world/nodes/camera/CameraNode.h
+	world/nodes/camera/WindowCameraNode.h
 	
 	world/nodes/sky/SkyCubeNode.h
 	world/nodes/sky/SkyHDRNode.h

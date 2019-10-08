@@ -29,6 +29,8 @@ namespace OpenGL
 		int32 width = m_camera->GetWidth();
 		int32 height = m_camera->GetHeight();
 
+		LOG_REPORT("Camera Size: {}, {}", width, height);
+
 		// shaders
 		auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/QuadWriteTexture.json");
 		m_simpleOutShader = GetGLAssetManager()->GetOrMakeFromPodHandle<GLShader>(shaderAsset);
@@ -303,6 +305,7 @@ namespace OpenGL
 	void GLForwardRenderer::Update()
 	{
 		GLRendererBase::Update();
+
 		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K1))
 		{
 			m_previewMode = m_previewMode - 1 < 0 ? PT_COUNT - 1 : m_previewMode - 1;

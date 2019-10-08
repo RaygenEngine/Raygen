@@ -13,9 +13,8 @@ bool AssetManager::Init(const std::string& applicationPath, const std::string& d
 
 void AssetManager::PreloadGltf(const uri::Uri& gltfModelPath)
 {
-	uri::Uri parentGltfFile = uri::GetDiskPath(gltfModelPath);
-	auto pParent = AssetManager::GetOrCreate<GltfFilePod>(parentGltfFile);
-
+	auto pParent = AssetManager::GetOrCreate<GltfFilePod>(gltfModelPath);
+	
 	tinygltf::Model& file = pParent->data;
 
 	for (auto& gltfImage : file.images)

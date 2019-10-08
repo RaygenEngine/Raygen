@@ -53,11 +53,14 @@ int32 AppBase::Main(int32 argc, char* argv[])
 	}
 
 	Window* window = Engine::GetMainWindow();
-	// Show the window
-	window->Show();
+	// Allow world to update for the window before any renderer comes in play.
+	window->FireFirstResizeEvent();
 
 	// Start the renderer
 	engine.SwitchRenderer(0);
+	
+	// Show the actuall window after the renderer has initialized.
+	window->Show();
 
 	if (m_lockMouse)
 	{
@@ -120,13 +123,12 @@ void AppBase::RegisterRenderers()
 	{
 		Engine::RegisterRenderer<OpenGL::GLDeferredRenderer>();
 	}
-	
 }
 
 Win32Window* AppBase::CreateAppWindow()
 {
 	return Win32Window::CreateWin32Window(
-		m_windowTitle, 150, 150, m_windowWidth, m_windowHeight
+		m_windowTitle, CW_USEDEFAULT, CW_USEDEFAULT, m_windowWidth, m_windowHeight
 	);
 }
 
@@ -134,5 +136,3 @@ NodeFactory* AppBase::MakeNodeFactory()
 {
 	return new NodeFactory();
 }
-
-

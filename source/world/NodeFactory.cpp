@@ -3,6 +3,7 @@
 #include "world/NodeFactory.h"
 #include "world/nodes/sky/SkyCubeNode.h"
 #include "world/nodes/sky/SkyHDRNode.h"
+#include "world/nodes/camera/WindowCameraNode.h"
 #include "world/nodes/MetaNodeTranslation.h"
 #include "world/World.h"
 #include "world/nodes/user/freeform/FreeformUserNode.h"
@@ -50,6 +51,10 @@ Node* NodeFactory::LoadNodeFromType(const std::string& type, Node* parent)
 	if (type == "camera")
 	{
 		return world->CreateNode<CameraNode>(parent);
+	}
+	if (type == "window_camera")
+	{
+		return world->CreateNode<WindowCameraNode>(parent);
 	}
 	if (type == "punctual_light")
 	{

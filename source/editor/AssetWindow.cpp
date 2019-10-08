@@ -74,7 +74,7 @@ void AssetWindow::DrawFileAsset(int32& n, const std::string& zpath)
 
 		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
 		{
-			auto h = AssetManager::GetOrCreate<ModelPod>(path + "{\"scene\"=-1}");
+			auto h = AssetManager::GetOrCreate<ModelPod>(path);
 
 			std::string payloadTag = "POD_UID_" + std::to_string(h->type.hash());
 			ImGui::SetDragDropPayload(payloadTag.c_str(), &h.podId, sizeof(size_t));

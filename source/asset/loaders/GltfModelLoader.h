@@ -560,7 +560,7 @@ namespace GltfModelLoader
 	inline bool Load(ModelPod* pod, const uri::Uri& path)
 	{
 		const auto pPath = uri::GetDiskPath(path);
-		auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath);
+		auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath + "{}");
 
 		tinygltf::Model& model = pParent->data;
 
@@ -579,6 +579,15 @@ namespace GltfModelLoader
 			data["material"] = matIndex++;
 			auto matPath = uri::MakeChildJson(path, data);
 			pod->materials.push_back(AssetManager::GetOrCreate<MaterialPod>(matPath));
+			
+			if (gltfMaterial.name.empty())
+			{
+				AssetManager::SetPodName(matPath, "Mat." + std::to_string(matIndex));
+			}
+			else
+			{
+				AssetManager::SetPodName(matPath, gltfMaterial.name);
+			}
 		}
 		bool requiresDefaultMaterial = false;
 		

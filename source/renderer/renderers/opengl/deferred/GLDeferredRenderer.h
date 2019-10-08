@@ -62,6 +62,7 @@ namespace OpenGL
 		
 		std::string m_previewModeString{};
 
+		// TODO:
 		DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
 
 		GLDeferredRenderer()

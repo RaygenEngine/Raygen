@@ -34,7 +34,12 @@ public:
 	virtual void ReleaseMouseMovement() { }
 
 	virtual void Show() { }
-	
+	virtual void Hide() { }
+
+	// Expected to fire the engine's resize event before the first window->Show(), 
+	// allows the renderers to init with correct camera sizes before the window is visible.
+	virtual void FireFirstResizeEvent() { }
+
 	virtual void SetTitle(const std::string& newTitle) { };
 
 	// Called in the main loop
