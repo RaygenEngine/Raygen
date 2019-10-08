@@ -1,5 +1,5 @@
 #include "pch.h"
-
+/*
 #include "asset/PathSystem.h"
 
 #include <filesystem>
@@ -69,24 +69,7 @@ fs::path PathSystem::SearchPathDownRecursivelyFromPath(const fs::path & subPath,
 
 void PathSystem::CacheAssetFilenames()
 {
-	Timer::DebugTimer<std::chrono::milliseconds> timer(true);
 
-	for (const auto& entry : fs::recursive_directory_iterator(fs::current_path()))
-	{
-		if (entry.is_directory())
-		{
-			continue;
-		}
-		auto relative = fs::relative(entry);
-		auto filename = relative.filename().string();
-		auto relativeStr = relative.string();
-		if (!m_fileCache.count(filename))
-		{
-			m_fileCache.insert({ utl::force_move(filename), relativeStr });
-			m_fileCache.insert({ relativeStr, utl::force_move(relativeStr) });
-		}
-	}
-	LOG_INFO("Cached {} asset filenames in {} ms.", m_fileCache.size(), timer.Get());
 }
 
 bool PathSystem::Init(const std::string& applicationPath, const std::string& dataDirectoryName)
@@ -164,3 +147,4 @@ void PathSystem::GenerateFileListOfType(const fs::path & extension, std::set<std
 		}
 	}
 }
+*/
