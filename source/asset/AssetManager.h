@@ -218,7 +218,7 @@ public:
 		return entry->UnsafeGet<PodType>();
 	}
 
-	bool Init(const std::string& applicationPath, const std::string& dataDirectoryName);
+	bool Init();
 
 
 	static void PreloadGltf(const std::string& modelPath);
