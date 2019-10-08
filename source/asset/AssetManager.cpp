@@ -4,11 +4,13 @@
 #include "core/reflection/PodTools.h"
 #include "asset/loaders/GltfFileLoader.h"
 
-bool AssetManager::Init()
+bool AssetManager::Init(const fs::path& assetPath)
 {
 	m_pods.push_back(std::make_unique<PodEntry>());
 
-	LOG_REPORT(fs::current_path());
+	fs::current_path(fs::current_path() / assetPath);
+
+	LOG_REPORT("Current working dir: {}", fs::current_path());
 	
 	return true;
 }
