@@ -4,8 +4,7 @@
 #include "world/nodes/camera/CameraNode.h"
 #include "system/EngineEvents.h"
 
-class WindowCameraNode : public CameraNode
-{
+class WindowCameraNode : public CameraNode {
 public:
 	DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
 

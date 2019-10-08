@@ -33,29 +33,28 @@ void FreeformUserNode::Update(float deltaTime)
 		speed /= 10.f * glm::exp(input.GetLeftTriggerMagnitude());
 
 	// user rotation
-	if (input.IsCursorDragged() && input.IsKeyRepeat(XVirtualKey::RBUTTON))
-	{
+	if (input.IsCursorDragged() && input.IsKeyRepeat(XVirtualKey::RBUTTON)) {
 		const float yaw = -input.GetCursorRelativePosition().x * m_turningSpeed * 0.005f;
 		const float pitch = -input.GetCursorRelativePosition().y * m_turningSpeed * 0.005f;
 
 		OrientWithoutRoll(yaw, pitch);
 	}
 
-	if (input.IsRightThumbMoving())
-	{
-		const auto yaw = -input.GetRightThumbDirection().x * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;
+	if (input.IsRightThumbMoving()) {
+		const auto yaw
+			= -input.GetRightThumbDirection().x * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;
 		// upside down with regards to the cursor dragging
-		const auto pitch = input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;
+		const auto pitch
+			= input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;
 
 		OrientWithoutRoll(yaw, pitch);
 	}
 
 	// user movement
-	if (input.IsLeftThumbMoving())
-	{
-		//Calculate angle
+	if (input.IsLeftThumbMoving()) {
+		// Calculate angle
 		const float joystickAngle = atan2(-input.GetLeftThumbDirection().y * input.GetLeftThumbMagnitude(),
-				input.GetLeftThumbDirection().x * input.GetLeftThumbMagnitude());
+			input.GetLeftThumbDirection().x * input.GetLeftThumbMagnitude());
 
 		// adjust angle to match user rotation
 		const auto rotMat = glm::rotate(-(joystickAngle + glm::half_pi<float>()), GetUp());

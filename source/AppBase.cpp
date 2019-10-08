@@ -32,8 +32,7 @@ void AppBase::PreMainInit(int32 argc, char* argv[])
 	m_argc = argc;
 	m_argv = argv;
 
-	if (argc > 1) 
-	{
+	if (argc > 1) {
 		m_initialScene = argv[1];
 	}
 }
@@ -42,12 +41,11 @@ int32 AppBase::Main(int32 argc, char* argv[])
 {
 	LOG_FATAL("Running app: {}", m_name);
 
-	Engine& engine = Engine::Get(); 
+	Engine& engine = Engine::Get();
 
 	engine.InitEngine(this);
 
-	if (!engine.CreateWorldFromFile(m_initialScene))
-	{
+	if (!engine.CreateWorldFromFile(m_initialScene)) {
 		LOG_FATAL("Failed to create World!");
 		return -1;
 	}
@@ -58,12 +56,11 @@ int32 AppBase::Main(int32 argc, char* argv[])
 
 	// Start the renderer
 	engine.SwitchRenderer(0);
-	
+
 	// Show the actuall window after the renderer has initialized.
 	window->Show();
 
-	if (m_lockMouse)
-	{
+	if (m_lockMouse) {
 		window->RestrictMouseMovement();
 	}
 
@@ -77,10 +74,8 @@ int32 AppBase::Main(int32 argc, char* argv[])
 void AppBase::MainLoop()
 {
 	Window* window = Engine::GetMainWindow();
-	while (!window->IsClosed())
-	{
-		if (Engine::GetEditor()) 
-		{
+	while (!window->IsClosed()) {
+		if (Engine::GetEditor()) {
 			Engine::GetEditor()->PreBeginFrame();
 		}
 		// clear input soft state (pressed keys, etc.)
@@ -89,16 +84,15 @@ void AppBase::MainLoop()
 
 		// Let our window handle any events.
 		window->HandleEvents(m_handleControllers);
-		
-		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::CAPSLOCK))
-		{
+
+		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::CAPSLOCK)) {
 			Engine::Get().NextRenderer();
 		}
 
-		// update world 
+		// update world
 		Engine::GetWorld()->Update();
 		// update renderer (also checks world updates, eg. camera/ entity moved, light color changed)
-		
+
 		Engine::GetRenderer()->Update();
 		// render
 		Engine::GetRenderer()->Render();
@@ -109,27 +103,23 @@ void AppBase::MainLoop()
 	}
 }
 
-void AppBase::RegisterRenderers() 
+void AppBase::RegisterRenderers()
 {
 	// NOTE:
 	// Default behavior for an app is to start the FIRST renderer registered here.
 
-	if (m_enableEditor)
-	{
+	if (m_enableEditor) {
 		Engine::RegisterRenderer<ForwardEditorRenderer>();
 		Engine::RegisterRenderer<DeferredEditorRenderer>();
 	}
-	else
-	{
+	else {
 		Engine::RegisterRenderer<OpenGL::GLDeferredRenderer>();
 	}
 }
 
 Win32Window* AppBase::CreateAppWindow()
 {
-	return Win32Window::CreateWin32Window(
-		m_windowTitle, CW_USEDEFAULT, CW_USEDEFAULT, m_windowWidth, m_windowHeight
-	);
+	return Win32Window::CreateWin32Window(m_windowTitle, CW_USEDEFAULT, CW_USEDEFAULT, m_windowWidth, m_windowHeight);
 }
 
 NodeFactory* AppBase::MakeNodeFactory()

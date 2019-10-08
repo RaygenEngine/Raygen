@@ -8,24 +8,22 @@
 #include "glad/glad.h"
 
 
-namespace OpenGL
-{
-	struct GLBasicSpotLight : NodeObserver<SpotLightNode, GLRendererBase>
-	{
-		GLuint fbo;
-		GLuint shadowMap;
+namespace OpenGL {
+struct GLBasicSpotLight : NodeObserver<SpotLightNode, GLRendererBase> {
+	GLuint fbo;
+	GLuint shadowMap;
 
-		GLShader* depthMap;
-		GLShader* depthMapAlphaMask;
+	GLShader* depthMap;
+	GLShader* depthMapAlphaMask;
 
-		glm::mat4 lightSpaceMatrix;
-		
-		GLBasicSpotLight(SpotLightNode* node);
-		~GLBasicSpotLight();
+	glm::mat4 lightSpaceMatrix;
 
-		// render shadow map, then return the matrix needed to move from world to light space
-		void RenderShadowMap(const std::vector<GLBasicGeometry*>& geometries);
+	GLBasicSpotLight(SpotLightNode* node);
+	~GLBasicSpotLight();
 
-		void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override;
-	};
-}
+	// render shadow map, then return the matrix needed to move from world to light space
+	void RenderShadowMap(const std::vector<GLBasicGeometry*>& geometries);
+
+	void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override;
+};
+} // namespace OpenGL

@@ -6,10 +6,10 @@
 #include <string_view>
 
 // a generic property that can be of any type.
-class Property
-{
+class Property {
 	// Only class that is allowed to "construct" properties.
 	friend class ReflClass;
+
 protected:
 	TypeId m_type;
 	PropertyFlags::Type m_flags;
@@ -31,10 +31,7 @@ protected:
 		return ptr + m_offset;
 	}
 
-	bool IsA(TypeId inType) const
-	{
-		return m_type == inType;
-	}
+	bool IsA(TypeId inType) const { return m_type == inType; }
 
 	Property(TypeId type, size_t offset, std::string_view name, PropertyFlags::Type flags)
 		: m_type(type)
@@ -42,7 +39,9 @@ protected:
 		, m_name(name)
 		, m_offset(offset)
 		, m_enum(nullptr)
-		, m_dirtyFlagIndex(-1){}
+		, m_dirtyFlagIndex(-1)
+	{
+	}
 
 	template<typename Enum>
 	void MakeEnum()
@@ -62,8 +61,7 @@ public:
 
 	// Check if this property is of this type.
 	template<typename T>
-	[[nodiscard]]
-	bool IsA() const
+	[[nodiscard]] bool IsA() const
 	{
 		static_assert(refl::CanBeProperty<T>, "This check will always fail. T cannot be a reflected property.");
 		return refl::GetId<T>() == m_type;
@@ -73,36 +71,28 @@ public:
 	// This will assert if the requested type is incorrect.
 	// TODO: Maybe check SourceType and MUST be the type this property was created from.
 	template<typename T>
-	[[nodiscard]]
-	T& GetRef(void* obj) const
+	[[nodiscard]] T& GetRef(void* obj) const
 	{
 		static_assert(refl::CanBeProperty<T>, "This will always fail. T is not a reflected property.");
-		
-		//CLOG_ASSERT(IsA<T>(), "Requested variable '{}' as '{}'. Actual type was: '{}' ", GetName(), refl::GetName<T>(), m_type.name());
-		
+
+		// CLOG_ASSERT(IsA<T>(), "Requested variable '{}' as '{}'. Actual type was: '{}' ", GetName(),
+		// refl::GetName<T>(), m_type.name());
+
 		return *static_cast<T*>(GetRealMemoryAddr(obj));
 	}
 
-	[[nodiscard]]
-	MetaEnumInst GetEnumRef(void* obj) const
+	[[nodiscard]] MetaEnumInst GetEnumRef(void* obj) const
 	{
-		CLOG_ASSERT(!IsEnum(), "Requested GetRefEnum on a property that was not an enum: {}, type: {} ", GetName(), m_type.name());
+		CLOG_ASSERT(!IsEnum(), "Requested GetRefEnum on a property that was not an enum: {}, type: {} ", GetName(),
+			m_type.name());
 		return MetaEnumInst::Make(GetRealMemoryAddr(obj), *GetEnum(), m_type);
 	}
 
 	// True if ALL flags are found.
-	[[nodiscard]] 
-	bool HasFlags(PropertyFlags::Type flags) const
-	{
-		return ((m_flags & flags) == flags);
-	}
+	[[nodiscard]] bool HasFlags(PropertyFlags::Type flags) const { return ((m_flags & flags) == flags); }
 
 	// True only when the flags match exactly
-	[[nodiscard]] 
-	bool HasSameFlags(const Property& other) const
-	{
-		return other.m_flags == m_flags;
-	}
+	[[nodiscard]] bool HasSameFlags(const Property& other) const { return other.m_flags == m_flags; }
 
 	Property& OnDirty(int32 setFlagIndex)
 	{

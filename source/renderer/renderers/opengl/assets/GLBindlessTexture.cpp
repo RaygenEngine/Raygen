@@ -2,19 +2,18 @@
 
 #include "renderer/renderers/opengl/assets/GLBindlessTexture.h"
 
-namespace OpenGL
+namespace OpenGL {
+GLBindlessTexture::~GLBindlessTexture()
 {
-	GLBindlessTexture::~GLBindlessTexture()
-	{
-		if (glIsTextureHandleResidentARB(handle))
-			glMakeTextureHandleNonResidentARB(handle);
-	}
-
-	bool GLBindlessTexture::Load()
-	{
-		handle = static_cast<GLuint>(glGetTextureHandleARB(id));
-		glMakeTextureHandleResidentARB(handle);
-		
-		return true;
-	}
+	if (glIsTextureHandleResidentARB(handle))
+		glMakeTextureHandleNonResidentARB(handle);
 }
+
+bool GLBindlessTexture::Load()
+{
+	handle = static_cast<GLuint>(glGetTextureHandleARB(id));
+	glMakeTextureHandleResidentARB(handle);
+
+	return true;
+}
+} // namespace OpenGL

@@ -15,4 +15,4 @@ static float* FromVec4(glm::vec4& vec4)
 }
 
 
-}
+} // namespace ImUtil

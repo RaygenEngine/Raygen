@@ -5,14 +5,9 @@
 
 #include "tinyxml2/tinyxml2.h"
 
-struct XMLDocPod : public AssetPod
-{
-	REFLECTED_POD(XMLDocPod)
-	{
-
-	}
+struct XMLDocPod : public AssetPod {
+	REFLECTED_POD(XMLDocPod) {}
 	static bool Load(XMLDocPod* pod, const uri::Uri& path);
 
 	tinyxml2::XMLDocument document;
 };
-

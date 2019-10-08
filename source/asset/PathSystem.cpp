@@ -27,7 +27,7 @@ fs::path PathSystem::SearchPathUpRecursivelyFromCurrent(const fs::path & subPath
 			}
 		}
 
-		// reached end, check C 
+		// reached end, check C
 		if (currPath == currPath.parent_path())
 		{
 			auto dataPath = currPath / subPath;
@@ -47,7 +47,7 @@ fs::path PathSystem::SearchPathUpRecursivelyFromCurrent(const fs::path & subPath
 fs::path PathSystem::SearchPathDownRecursivelyFromPath(const fs::path & subPath, const fs::path & searchPath)
 {
 	//TIMER_STATIC_SCOPE("Resolve recursive path search");
-	
+
 	LOG_DEBUG("Searching for path: \'{}\', recurse: downwards", subPath);
 
 	// if the search path is empty search in the current path
@@ -81,7 +81,7 @@ bool PathSystem::Init(const std::string& applicationPath, const std::string& dat
 	if(!appParentPath.has_parent_path())
 	{
 		LOG_FATAL("Couldn't retrieve application's parent directory!");
-		return false; 
+		return false;
 	}
 
 	appParentPath = appParentPath.parent_path();
@@ -132,7 +132,7 @@ fs::path PathSystem::SearchAssetPath(const fs::path & asset)
 			ret = SearchAssetPath(asset.filename());
 		}
 	}
-	
+
 	return ret;
 }
 

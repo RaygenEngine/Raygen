@@ -3,12 +3,10 @@
 #include <map>
 struct PodEntry;
 
-class AssetWindow
-{
+class AssetWindow {
 	std::map<std::string, std::filesystem::path> m_gltf;
 
 public:
-
 	void Init();
 	void Draw();
 

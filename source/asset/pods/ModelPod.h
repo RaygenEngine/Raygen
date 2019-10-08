@@ -4,8 +4,7 @@
 #include "asset/AssetPod.h"
 #include "asset/pods/MaterialPod.h"
 
-struct VertexData
-{
+struct VertexData {
 	glm::vec3 position;
 	glm::vec3 normal;
 	glm::vec4 tangent;
@@ -14,8 +13,7 @@ struct VertexData
 	glm::vec2 textCoord1;
 };
 
-struct GeometryGroup
-{
+struct GeometryGroup {
 	std::vector<uint32> indices;
 	std::vector<VertexData> vertices;
 
@@ -23,21 +21,15 @@ struct GeometryGroup
 	uint32 materialIndex;
 };
 
-struct Mesh
-{
+struct Mesh {
 	std::vector<GeometryGroup> geometryGroups;
 };
 
-struct ModelPod : public AssetPod
-{
-	REFLECTED_POD(ModelPod)
-	{
-		REFLECT_VAR(materials);
-	}
+struct ModelPod : public AssetPod {
+	REFLECTED_POD(ModelPod) { REFLECT_VAR(materials); }
 	static bool Load(ModelPod* pod, const uri::Uri& path);
 
 	std::vector<Mesh> meshes;
 
 	std::vector<PodHandle<MaterialPod>> materials;
 };
-

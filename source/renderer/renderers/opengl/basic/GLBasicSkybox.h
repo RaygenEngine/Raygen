@@ -6,19 +6,17 @@
 #include "world/nodes/sky/SkyCubeNode.h"
 
 
-namespace OpenGL
-{
-	struct GLBasicSkybox : NodeObserver<SkyCubeNode, GLRendererBase>
-	{
-		GLTexture* cubemap;
+namespace OpenGL {
+struct GLBasicSkybox : NodeObserver<SkyCubeNode, GLRendererBase> {
+	GLTexture* cubemap;
 
-		GLShader* shader;
+	GLShader* shader;
 
-		GLuint vao;
-		GLuint vbo;
-		
-		virtual void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override {}
-		GLBasicSkybox(SkyCubeNode* node);
-		~GLBasicSkybox();
-	};
-}
+	GLuint vao;
+	GLuint vbo;
+
+	virtual void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override {}
+	GLBasicSkybox(SkyCubeNode* node);
+	~GLBasicSkybox();
+};
+} // namespace OpenGL

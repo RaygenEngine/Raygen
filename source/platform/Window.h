@@ -3,8 +3,7 @@
 #include "event/Event.h"
 
 // Base class for a platform independant window
-class Window
-{
+class Window {
 protected:
 	bool m_focused;
 	bool m_closed;
@@ -13,14 +12,14 @@ protected:
 	int m_height;
 
 public:
-
-	
 	// Attach input before creating window
 	Window()
-		: m_focused(false),
-		  m_closed(false), 
-		  m_width(0), 
-		  m_height(0) {}
+		: m_focused(false)
+		, m_closed(false)
+		, m_width(0)
+		, m_height(0)
+	{
+	}
 
 	virtual ~Window() = default;
 
@@ -30,18 +29,18 @@ public:
 	bool IsClosed() const { return m_closed; }
 	bool IsFocused() const { return m_focused; }
 
-	virtual void RestrictMouseMovement() { }
-	virtual void ReleaseMouseMovement() { }
+	virtual void RestrictMouseMovement() {}
+	virtual void ReleaseMouseMovement() {}
 
-	virtual void Show() { }
-	virtual void Hide() { }
+	virtual void Show() {}
+	virtual void Hide() {}
 
-	// Expected to fire the engine's resize event before the first window->Show(), 
+	// Expected to fire the engine's resize event before the first window->Show(),
 	// allows the renderers to init with correct camera sizes before the window is visible.
-	virtual void FireFirstResizeEvent() { }
+	virtual void FireFirstResizeEvent() {}
 
-	virtual void SetTitle(const std::string& newTitle) { };
+	virtual void SetTitle(const std::string& newTitle){};
 
 	// Called in the main loop
-	virtual void HandleEvents(bool shouldHandleControllers) { };
+	virtual void HandleEvents(bool shouldHandleControllers){};
 };

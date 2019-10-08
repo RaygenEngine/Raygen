@@ -7,9 +7,9 @@
 class World;
 class Node;
 
-class SceneSave
-{
+class SceneSave {
 	ImGui::FileBrowser m_saveBrowser;
+
 public:
 	SceneSave();
 

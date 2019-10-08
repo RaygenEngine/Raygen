@@ -3,8 +3,7 @@
 #include "nodes/Node.h"
 #include "tinyxml2/tinyxml2.h"
 
-class NodeFactory
-{
+class NodeFactory {
 
 public:
 	// Loads all nodes from the xml code as children to 'parentNode'.

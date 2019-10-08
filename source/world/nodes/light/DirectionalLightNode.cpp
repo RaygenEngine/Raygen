@@ -4,18 +4,16 @@
 
 
 DirectionalLightNode::DirectionalLightNode(Node* parent)
-	: Node(parent),
-      m_projectionMatrix()
+	: Node(parent)
+	, m_projectionMatrix()
 {
 }
 
 void DirectionalLightNode::DirtyUpdate()
 {
 	Node::DirtyUpdate();
-	
-	if (m_dirty[DF::Projection])
-	{
+
+	if (m_dirty[DF::Projection]) {
 		UpdateProjectionMatrix();
 	}
 }
-

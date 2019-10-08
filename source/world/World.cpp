@@ -7,10 +7,10 @@
 #include "core/reflection/ReflectionTools.h"
 
 World::World(NodeFactory* factory)
-	: m_deltaTime(0),
-	m_loadedTimepoint(FrameClock::now()),
-	m_lastFrameTimepoint(FrameClock::now()),
-	m_nodeFactory(factory)
+	: m_deltaTime(0)
+	, m_loadedTimepoint(FrameClock::now())
+	, m_lastFrameTimepoint(FrameClock::now())
+	, m_nodeFactory(factory)
 {
 }
 
@@ -44,12 +44,11 @@ bool World::LoadAndPrepareWorldFromXML(PodHandle<XMLDocPod> sceneXML)
 	m_loadedFrom = sceneXML;
 
 	auto* rootNode = sceneXML->document.RootElement();
-	
+
 
 	m_root = std::make_unique<RootNode>();
-	
-	if (!m_root->LoadFromXML(rootNode))
-	{
+
+	if (!m_root->LoadFromXML(rootNode)) {
 		LOG_FATAL("Incorrect world format!");
 		return false;
 	}
@@ -63,10 +62,8 @@ void World::DirtyUpdateWorld()
 	m_root->UpdateTransforms(glm::identity<glm::mat4>());
 
 	// PERF:
-	for (auto* node : m_nodes)
-	{
-		if (node->m_dirty.any())
-		{
+	for (auto* node : m_nodes) {
+		if (node->m_dirty.any()) {
 			node->DirtyUpdate();
 		}
 	}
@@ -74,16 +71,14 @@ void World::DirtyUpdateWorld()
 
 void World::ClearDirtyFlags()
 {
-	for (auto& node : m_nodes)
-	{
+	for (auto& node : m_nodes) {
 		node->m_dirty.reset();
 	}
 }
 
 Node* World::DuplicateNode(Node* src, Node* newParent)
 {
-	if (!newParent)
-	{
+	if (!newParent) {
 		newParent = src->GetParent();
 	}
 
@@ -107,8 +102,7 @@ Node* World::DuplicateNode(Node* src, Node* newParent)
 Node* World::DeepDuplicateNode(Node* src, Node* newParent)
 {
 	Node* result = DuplicateNode(src, newParent);
-	for (auto& child : src->GetChildren())
-	{
+	for (auto& child : src->GetChildren()) {
 		DeepDuplicateNode(child.get(), result);
 	}
 	result->PostChildrenLoaded();
@@ -118,8 +112,7 @@ Node* World::DeepDuplicateNode(Node* src, Node* newParent)
 
 void World::DeleteNode(Node* src)
 {
-	if (!src->GetParent())
-	{
+	if (!src->GetParent()) {
 		return;
 	}
 	src->GetParent()->DeleteChild(src);
@@ -136,18 +129,15 @@ void World::UpdateFrameTimers()
 void World::Update()
 {
 	UpdateFrameTimers();
-	
-	if (Engine::Get().ShouldUpdateWorld())
-	{
+
+	if (Engine::Get().ShouldUpdateWorld()) {
 		// Update after input and delta calculation
-		for (auto* node : m_nodes)
-		{
+		for (auto* node : m_nodes) {
 			node->Update(m_deltaTime);
 		}
 	}
-		
-	if (Engine::Get().IsUsingEditor())
-	{
+
+	if (Engine::Get().IsUsingEditor()) {
 		Engine::GetEditor()->UpdateEditor();
 	}
 

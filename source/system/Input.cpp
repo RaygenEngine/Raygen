@@ -2,8 +2,12 @@
 
 #include "system/Input.h"
 
-Input::Input(): m_doubleClicked(false), m_cursorDragged(false), m_cursorPosition(),
-	            m_cursorRelativePosition(), m_wheelDelta(0)
+Input::Input()
+	: m_doubleClicked(false)
+	, m_cursorDragged(false)
+	, m_cursorPosition()
+	, m_cursorRelativePosition()
+	, m_wheelDelta(0)
 {
 }
 
@@ -26,8 +30,8 @@ void Input::UpdateAnalogState(const AnalogState& state)
 
 void Input::UpdateAnalogState(AnalogState* state)
 {
-	//implicit copy constructor
-	m_analogState = *state; 
+	// implicit copy constructor
+	m_analogState = *state;
 }
 
 void Input::UpdateWheel(int32 wheelDelta)

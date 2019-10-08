@@ -2,34 +2,32 @@
 
 #include <mutex>
 
-#define INVALID_ID 0u
+#define INVALID_ID     0u
 #define FIRST_VALID_ID 1u
 
-namespace utl
-{
-	using UID = uint32;
+namespace utl {
+using UID = uint32;
 
-	// Context agnostic uuid generator
-	class UUIDGenerator
+// Context agnostic uuid generator
+class UUIDGenerator {
+	UID m_currentId = FIRST_VALID_ID;
+
+	UUIDGenerator() = default;
+
+public: // thread safe UUID generator
+	static UID GenerateUUID()
 	{
-		UID m_currentId = FIRST_VALID_ID;
+		static std::mutex mutex;
+		static UUIDGenerator instance;
+		mutex.lock();
+		const auto v = instance.m_currentId++;
 
-		UUIDGenerator() = default;
+		mutex.unlock();
 
-	public: // thread safe UUID generator
-		static UID GenerateUUID()
-		{
-			static std::mutex mutex;
-			static UUIDGenerator instance;
-			mutex.lock();
-			const auto v = instance.m_currentId++;
-			
-			mutex.unlock();
+		return v;
+	}
 
-			return v;
-		}
-
-		UUIDGenerator(UUIDGenerator const&) = delete;
-		void operator=(UUIDGenerator const&) = delete;
-	};
-}
+	UUIDGenerator(UUIDGenerator const&) = delete;
+	void operator=(UUIDGenerator const&) = delete;
+};
+} // namespace utl

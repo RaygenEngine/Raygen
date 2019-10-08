@@ -4,18 +4,17 @@
 #include "asset/pods/TexturePod.h"
 #include "glad/glad.h"
 
-namespace OpenGL
-{
-	struct GLTexture : GLAsset<TexturePod>
+namespace OpenGL {
+struct GLTexture : GLAsset<TexturePod> {
+	GLuint id{ 0 };
+
+	GLTexture(PodHandle<TexturePod> handle)
+		: GLAsset(handle)
 	{
-		GLuint id{ 0 };
+	}
 
-		GLTexture(PodHandle<TexturePod> handle)
-			: GLAsset(handle)
-		{}
+	virtual ~GLTexture();
 
-		virtual ~GLTexture();
-
-		bool Load() override;
-	};
-}
+	bool Load() override;
+};
+} // namespace OpenGL

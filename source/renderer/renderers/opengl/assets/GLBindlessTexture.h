@@ -5,19 +5,18 @@
 
 #include "glad/glad.h"
 
-namespace OpenGL
-{
-	struct GLBindlessTexture : GLTexture
+namespace OpenGL {
+struct GLBindlessTexture : GLTexture {
+	GLuint handle{ 0 };
+
+	GLBindlessTexture(PodHandle<TexturePod> handle)
+		: GLTexture(handle)
 	{
-		GLuint handle{ 0 };
+	}
 
-		GLBindlessTexture(PodHandle<TexturePod> handle)
-			: GLTexture(handle)
-		{}
+	virtual ~GLBindlessTexture();
 
-		virtual ~GLBindlessTexture();
-
-	protected:
-		bool Load() override;
-	};
-}
+protected:
+	bool Load() override;
+};
+} // namespace OpenGL

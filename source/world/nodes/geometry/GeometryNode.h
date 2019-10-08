@@ -3,19 +3,16 @@
 #include "world/nodes/Node.h"
 #include "asset/loaders/GltfModelLoader.h"
 
-class GeometryNode : public Node
-{
-	REFLECTED_NODE(GeometryNode, Node)
-	{
-		REFLECT_VAR(m_model);
-	}
+class GeometryNode : public Node {
+	REFLECTED_NODE(GeometryNode, Node) { REFLECT_VAR(m_model); }
 
 	PodHandle<ModelPod> m_model;
 
 public:
 	GeometryNode(Node* parent)
 		: Node(parent)
-	{}
+	{
+	}
 
 	~GeometryNode() = default;
 
