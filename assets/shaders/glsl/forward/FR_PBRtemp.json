@@ -1,2 +1,4 @@
-FR_PBRtemp.vert
-FR_PBRtemp.frag
+{
+	"vert": "FR_PBRtemp.vert",
+	"frag": "FR_PBRtemp.frag"
+}

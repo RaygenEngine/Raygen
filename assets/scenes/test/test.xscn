@@ -13,20 +13,14 @@
 		
 	</freeform_user>
 	
-	<freeform_user name="userLight"
-		translation="0, 25, 0"
-		lookat="0, 0, 0">
-	
+
 	<directional_light name="l1" 
 	   color="0.0, 0, 1"
 	   intensity="10"/>
-
-			
-	</freeform_user>
 	
-		<spot_light name="l3" 
-		   color="0.945, 0.85, 0.64"
-		   intensity="10"/>
+	<spot_light name="l3" 
+	    color="0.945, 0.85, 0.64"
+		intensity="10"/>
 	<!-- <sky_hdr name="sky1" -->
 		<!-- hdr_texture="CedarCity.hdr"/> -->
 

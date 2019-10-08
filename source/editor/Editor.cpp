@@ -164,18 +164,7 @@ struct ReflectionToImguiVisitor
 				assert(payload->DataSize == sizeof(size_t));
 				size_t uid = *reinterpret_cast<size_t*>(payload->Data);
 				pod.podId = uid;
-				//pod = AssetManager::GetOrCreate<PodType>(fs::path(*payloadStr) / "#model");
-				auto r1 = Engine::GetRenderer<ForwardEditorRenderer>();
-				if (r1)
-				{
-					r1->OnNodePodsDirty(node);
-				}
-
-				auto r2 = Engine::GetRenderer<DeferredEditorRenderer>();
-				if (r2)
-				{
-					r2->OnNodePodsDirty(node);
-				}
+				dirtyFlags.set(Node::DF::Properties);
 			}
 			ImGui::EndDragDropTarget();
 		}
