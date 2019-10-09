@@ -5,12 +5,13 @@
 #include "world/NodeFactory.h"
 #include "editor/Editor.h"
 #include "core/reflection/ReflectionTools.h"
+#include "core/reflection/GetClass.h"
 
 World::World(NodeFactory* factory)
-	: m_deltaTime(0)
+	: m_nodeFactory(factory)
 	, m_loadedTimepoint(FrameClock::now())
 	, m_lastFrameTimepoint(FrameClock::now())
-	, m_nodeFactory(factory)
+
 {
 }
 
@@ -81,8 +82,6 @@ Node* World::DuplicateNode(Node* src, Node* newParent)
 	if (!newParent) {
 		newParent = src->GetParent();
 	}
-
-	const ReflClass& srcClass = refl::GetClass(src);
 
 	Node* created = GetNodeFactory()->LoadNodeFromType(src->m_type, newParent);
 
