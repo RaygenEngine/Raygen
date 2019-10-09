@@ -5,20 +5,29 @@
 // Base class for a platform independant window
 class Window {
 protected:
-	bool m_focused{ false };
-	bool m_closed{ false };
+	bool m_focused;
+	bool m_closed;
 
-	int m_width{ 0 };
-	int m_height{ 0 };
+	int m_width;
+	int m_height;
 
 public:
+	// Attach input before creating window
+	Window()
+		: m_focused(false)
+		, m_closed(false)
+		, m_width(0)
+		, m_height(0)
+	{
+	}
+
 	virtual ~Window() = default;
 
-	[[nodiscard]] int GetWidth() const { return m_width; }
-	[[nodiscard]] int GetHeight() const { return m_height; }
+	int GetWidth() const { return m_width; }
+	int GetHeight() const { return m_height; }
 
-	[[nodiscard]] bool IsClosed() const { return m_closed; }
-	[[nodiscard]] bool IsFocused() const { return m_focused; }
+	bool IsClosed() const { return m_closed; }
+	bool IsFocused() const { return m_focused; }
 
 	virtual void RestrictMouseMovement() {}
 	virtual void ReleaseMouseMovement() {}

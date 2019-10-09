@@ -29,7 +29,7 @@ constexpr PropertyFlags::Type Pack(Flags... f)
 	return (f | ...);
 }
 
-[[maybe_unused]] static PropertyFlags::Type Pack()
+static PropertyFlags::Type Pack()
 {
 	return 0;
 }

@@ -68,7 +68,7 @@ void VisitPodType(TypeId type, Visitor& v)
 
 namespace detail {
 	template<typename Visitor, typename... PodTs>
-	void VisitPerType_Impl(Visitor& visitor)
+	[[nodiscard]] void VisitPerType_Impl(Visitor& visitor)
 	{
 		(visitor.operator()<PodTs*>(DummyType<PodTs>()), ...);
 	}
@@ -110,6 +110,4 @@ template<typename MappedType, typename Visitor>
 {
 	return detail::CreateMapOnPodType_Impl<MappedType, Visitor, Z_POD_TYPES>(v);
 }
-
-
 } // namespace podtools

@@ -1,7 +1,6 @@
 ﻿#pragma once
 
-enum class XVirtualKey
-{
+enum class XVirtualKey {
 	UNASSIGNED = 0,
 	RESERVED,
 	LBUTTON,
@@ -169,7 +168,7 @@ enum class XVirtualKey
 	OEM_MINUS,
 	OEM_PERIOD,
 	OEM_2,
-	TILDE,
+	OEM_3,
 	GAMEPAD_A,
 	GAMEPAD_B,
 	GAMEPAD_X,
@@ -235,5 +234,6 @@ enum class XVirtualKey
 	ZOOM,
 	NONAME,
 	PA1,
-	OEM_CLEAR
+	OEM_CLEAR,
+	TILDE
 };
