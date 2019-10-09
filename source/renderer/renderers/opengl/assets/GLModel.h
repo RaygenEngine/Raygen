@@ -4,7 +4,7 @@
 #include "renderer/renderers/opengl/assets/GLMaterial.h"
 #include "asset/pods/ModelPod.h"
 
-#include "glad/glad.h"
+#include "GLAD/glad.h"
 
 namespace OpenGL {
 struct GLModel : GLAsset<ModelPod> {

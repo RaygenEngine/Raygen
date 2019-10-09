@@ -10,8 +10,8 @@ class Node;
 
 class Editor {
 protected:
-	bool m_updateWorld{ true };
-	Node* m_selectedNode{ nullptr };
+	bool m_updateWorld;
+	Node* m_selectedNode;
 
 	SceneSave m_sceneSave;
 

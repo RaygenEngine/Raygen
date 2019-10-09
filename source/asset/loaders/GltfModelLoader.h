@@ -38,6 +38,22 @@ namespace {
 		}
 	}
 
+	// Empty specialization for conversions between types that should never happen.
+	template<>
+	void CopyToVector<uint32, glm::vec2>(std::vector<glm::vec2>&, byte*, size_t, size_t, size_t)
+	{
+		assert(false);
+	}
+	template<>
+	void CopyToVector<uint32, glm::vec3>(std::vector<glm::vec3>&, byte*, size_t, size_t, size_t)
+	{
+		assert(false);
+	}
+	template<>
+	void CopyToVector<uint32, glm::vec4>(std::vector<glm::vec4>&, byte*, size_t, size_t, size_t)
+	{
+		assert(false);
+	}
 
 	// Uint16 specialization. Expects componentCount == 1.
 	template<>
@@ -150,9 +166,12 @@ namespace {
 				CopyToVector<uint32>(out, beginPtr, strideByteOffset, elementCount, componentCount);
 				return;
 			case BufferComponentType::FLOAT:
+				CopyToVector<float>(out, beginPtr, strideByteOffset, elementCount, componentCount);
+				return;
 			case BufferComponentType::DOUBLE:
-			case BufferComponentType::INVALID: 
-				LOG_ASSERT("Found gltf with floats or doubles as vertex indicies.");
+				CopyToVector<double>(out, beginPtr, strideByteOffset, elementCount, componentCount);
+				return;
+			case BufferComponentType::INVALID: return;
 		}
 		return;
 	}

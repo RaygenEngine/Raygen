@@ -3,39 +3,6 @@
 #include "asset/AssetManager.h"
 #include "core/reflection/PodTools.h"
 #include "asset/loaders/GltfFileLoader.h"
-namespace refl {
-namespace detail {
-	struct Visitor {
-		const ReflClass* ptr;
-
-		Visitor(const ReflClass* inPtr)
-			: ptr(inPtr)
-		{
-		}
-
-		template<typename T>
-		void operator()(T* pod)
-		{
-			ptr = &T::StaticClass();
-		}
-	};
-
-	struct VisitorDeleter {
-		template<typename T>
-		void operator()(T* pod)
-		{
-			delete pod;
-		}
-	};
-} // namespace detail
-inline const ReflClass& GetClass(const AssetPod* pod)
-{
-	const ReflClass* ptr;
-	detail::Visitor v(ptr);
-	podtools::VisitPod(const_cast<AssetPod*>(pod), v);
-	return *ptr;
-}
-} // namespace refl
 
 bool AssetManager::Init(const fs::path& assetPath)
 {
@@ -61,19 +28,18 @@ void AssetManager::PreloadGltf(const uri::Uri& gltfModelPath)
 
 void PodDeleter::operator()(AssetPod* p)
 {
-	// podtools::VisitPod(p, refl::detail::VisitorDeleter());
-	// podtools::VisitPod(p, [](auto* pod) {
-	//	static_assert(!std::is_same_v<decltype(pod), AssetPod*>,
-	//		"This should not ever instantiate with AssetPod*. Pod tools has internal error.");
-	//	delete pod;
-	//});
+	podtools::VisitPod(p, [](auto* pod) {
+		static_assert(!std::is_same_v<decltype(pod), AssetPod*>,
+			"This should not ever instantiate with AssetPod*. Pod tools has internal error.");
+		delete pod;
+	});
 }
 
 void Code()
 {
-	// podtools::ForEachPodType([](auto p) {
-	//	using PodType = std::remove_pointer_t<decltype(p)>;
-	//	PodHandle<PodType> a;
-	//	a._Debug();
-	//});
+	podtools::ForEachPodType([](auto p) {
+		using PodType = std::remove_pointer_t<decltype(p)>;
+		PodHandle<PodType> a;
+		a._Debug();
+	});
 }

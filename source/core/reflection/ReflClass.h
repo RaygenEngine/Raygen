@@ -126,14 +126,14 @@ const ReflClass& GetClass(const T* obj)
 	}
 	else if constexpr (std::is_base_of_v<AssetPod, T>) {
 		if constexpr (std::is_same_v<AssetPod, T>) {
-			// static_assert(false, "Implement this by specialization");
+			static_assert(false, "Implement this by specialization");
 		}
 		else {
 			return T::StaticClass();
 		}
 	}
 	else {
-		// static_assert(false, "This object T is not reflected");
+		static_assert(false, "This object T is not reflected");
 	}
 }
 } // namespace refl

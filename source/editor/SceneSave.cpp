@@ -8,10 +8,10 @@
 #include "core/reflection/ReflectionTools.h"
 #include "asset/AssetManager.h"
 #include "editor/Editor.h"
+
 #include "asset/PodIncludes.h"
 #include "asset/UriLibrary.h"
-#include "GLM/glm.hpp"
-
+#include "glm/glm.hpp"
 #include <string>
 
 SceneSave::SceneSave()
@@ -103,7 +103,7 @@ tinyxml2::XMLElement* GenerateNodeXML(Node* node, tinyxml2::XMLDocument& documen
 	visitor.xmlElement = xmlElem;
 
 	refltools::CallVisitorOnEveryProperty(node, visitor);
-	
+
 	return xmlElem;
 }
 } // namespace

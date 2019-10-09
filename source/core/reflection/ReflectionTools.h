@@ -162,9 +162,8 @@ namespace detail {
 			operationResult.PropertiesNotFoundInSource = dstClass->GetProperties().size();
 		}
 
-		const ReflClass* dstClass;
 		void* dstObj;
-
+		const ReflClass* dstClass;
 		ReflClassOperationResult operationResult;
 
 		const Property* GetMatch(const Property& prop)

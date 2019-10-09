@@ -71,6 +71,7 @@ inline XVirtualKey TranslateXInputVirtualKeys(WORD vkey)
 inline XVirtualKey TranslateWin32VirtualKeys(WPARAM vkey)
 {
 	switch (vkey) {
+		case '~': return XVirtualKey::TILDE;
 		case 0x00: return XVirtualKey::UNASSIGNED;
 		case VK_LBUTTON: return XVirtualKey::LBUTTON;
 		case VK_RBUTTON: return XVirtualKey::RBUTTON;
@@ -263,7 +264,7 @@ inline XVirtualKey TranslateWin32VirtualKeys(WPARAM vkey)
 		case VK_OEM_MINUS: return XVirtualKey::OEM_MINUS;
 		case VK_OEM_PERIOD: return XVirtualKey::OEM_PERIOD;
 		case VK_OEM_2: return XVirtualKey::OEM_2;
-		case VK_OEM_3: return XVirtualKey::TILDE;
+		case VK_OEM_3: return XVirtualKey::OEM_3;
 		case 0xC1:
 		case 0xC2: return XVirtualKey::RESERVED;
 		case VK_GAMEPAD_A: return XVirtualKey::GAMEPAD_A;

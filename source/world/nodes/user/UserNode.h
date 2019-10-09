@@ -17,4 +17,6 @@ protected:
 public:
 	UserNode(Node* parent);
 	~UserNode() = default;
+
+	void ToString(std::ostream& os) const { os << "node-type: UserNode, name: " << m_name; }
 };
