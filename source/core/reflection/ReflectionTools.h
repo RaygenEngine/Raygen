@@ -92,7 +92,7 @@ void CallVisitorOnEveryProperty(ReflectedObj* obj, Visitor& v)
 
 	const ReflClass& cl = refl::GetClass(obj);
 
-	if constexpr (HasBegin<Visitor>::value) {
+	if constexpr (HasBegin<Visitor>::value) { // NOLINT
 		v.Begin(cl);
 	}
 

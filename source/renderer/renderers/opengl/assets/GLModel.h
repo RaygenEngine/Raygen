@@ -32,7 +32,7 @@ struct GLModel : GLAsset<ModelPod> {
 	{
 	}
 
-	virtual ~GLModel();
+	~GLModel() override;
 
 protected:
 	bool LoadGLMesh(const ModelPod& model, GLMesh& mesh, const GeometryGroup& data, GLenum usage);

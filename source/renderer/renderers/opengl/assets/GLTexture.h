@@ -13,7 +13,7 @@ struct GLTexture : GLAsset<TexturePod> {
 	{
 	}
 
-	virtual ~GLTexture();
+	~GLTexture() override;
 
 	bool Load() override;
 };

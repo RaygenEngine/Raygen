@@ -19,7 +19,7 @@ struct GLBasicSpotLight : NodeObserver<SpotLightNode, GLRendererBase> {
 	glm::mat4 lightSpaceMatrix;
 
 	GLBasicSpotLight(SpotLightNode* node);
-	~GLBasicSpotLight();
+	~GLBasicSpotLight() override;
 
 	// render shadow map, then return the matrix needed to move from world to light space
 	void RenderShadowMap(const std::vector<GLBasicGeometry*>& geometries);

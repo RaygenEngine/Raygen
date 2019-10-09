@@ -58,7 +58,7 @@ struct ReflectionToImguiVisitor {
 		std::string buf = p.GetNameStr() + "##" + path;
 		auto r = objNames.insert(buf);
 		int32 index = 0;
-		while (r.second == false) {
+		while (!r.second) {
 			r = objNames.insert(buf + std::to_string(index));
 			index++;
 		}
@@ -111,9 +111,8 @@ struct ReflectionToImguiVisitor {
 		if (p.HasFlags(PropertyFlags::Color)) {
 			return ImGui::ColorEdit4(name, ImUtil::FromVec4(t), ImGuiColorEditFlags_DisplayHSV);
 		}
-		else {
-			return ImGui::DragFloat4(name, ImUtil::FromVec4(t), 0.01f);
-		}
+
+		return ImGui::DragFloat4(name, ImUtil::FromVec4(t), 0.01f);
 	}
 
 	bool Inner(std::string& ref, const Property& p)
@@ -121,9 +120,8 @@ struct ReflectionToImguiVisitor {
 		if (p.HasFlags(PropertyFlags::Multiline)) {
 			return ImGui::InputTextMultiline(name, &ref, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16));
 		}
-		else {
-			return ImGui::InputText(name, &ref);
-		}
+
+		return ImGui::InputText(name, &ref);
 	}
 
 	template<typename PodType>
@@ -341,7 +339,7 @@ void Editor::UpdateEditor()
 		std::string text;
 		for (auto& assetEntry : Engine::GetAssetManager()->m_pods) {
 			ImGui::PushID(static_cast<int32>(assetEntry->uid));
-			bool disabled = !(assetEntry.get()->ptr.get());
+			bool disabled = !(assetEntry.get()->ptr);
 
 			if (disabled) {
 				ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0, 0.6f, 0.6f));

@@ -25,18 +25,6 @@ inline bool Load(ShaderPod* pod, const uri::Uri& path)
 		return false;
 	}
 
-	if (firstChar != '{') {
-		LOG_REPORT("DEPRECATED text shader file: {}", path);
-		char buf[256];
-
-		inStream.getline(buf, 256);
-		pod->vertex = AssetManager::GetOrCreateFromParentUri<StringPod>(buf, path);
-
-		inStream.getline(buf, 256);
-		pod->fragment = AssetManager::GetOrCreateFromParentUri<StringPod>(buf, path);
-		return true;
-	}
-
 	using nlohmann::json;
 	json j;
 

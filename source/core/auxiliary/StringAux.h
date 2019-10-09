@@ -20,11 +20,14 @@ inline bool SplitStringIntoTArray(T* arr, int arrSize, const std::string& str, c
 	auto i = 0;
 	while (ss >> value) {
 		success = i == (arrSize - 1);
-		if (i > arrSize - 1)
+		if (i > arrSize - 1) {
 			break;
+		}
+
 		arr[i++] = value;
-		if (ss.peek() == delimiter)
+		if (ss.peek() == delimiter) {
 			ss.ignore();
+		}
 	}
 	return success;
 }

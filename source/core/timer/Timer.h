@@ -94,10 +94,10 @@ public:
 	{
 		auto end = ch::system_clock::now();
 		long long last = ch::duration_cast<ChronoDuration>(end - m_startTime).count();
-		if constexpr (std::is_same_v<ChronoDuration, ch::microseconds>) {
+		if constexpr (std::is_same_v<ChronoDuration, ch::microseconds>) { // NOLINT
 			LOG_ANY("{0}: {1} micros", m_name, last);
 		}
-		else if constexpr (std::is_same_v<ChronoDuration, ch::milliseconds>) {
+		else if constexpr (std::is_same_v<ChronoDuration, ch::milliseconds>) { // NOLINT
 			LOG_ANY("{0}: {1} ms", m_name, last);
 		}
 		else {
