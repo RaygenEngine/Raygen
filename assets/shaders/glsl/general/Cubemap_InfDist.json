@@ -1,2 +1,4 @@
-Cubemap_InfDist.vert
-Cubemap_InfDist.frag
+{
+	"vert" : "Cubemap_InfDist.vert"
+	"frag" : "Cubemap_InfDist.frag"
+}

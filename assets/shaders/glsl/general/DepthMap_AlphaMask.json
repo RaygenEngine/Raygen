@@ -1,2 +1,4 @@
-DepthMap_AlphaMask.vert
-DepthMap_AlphaMask.frag
+{
+	"vert" : "DepthMap_AlphaMask.vert"
+	"frag" : "DepthMap_AlphaMask.frag"
+}

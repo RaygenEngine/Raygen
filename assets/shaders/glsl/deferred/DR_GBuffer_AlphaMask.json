@@ -1,2 +1,4 @@
-DR_GBuffer_AlphaMask.vert
-DR_GBuffer_AlphaMask.frag
+{
+	"vert" : "DR_GBuffer_AlphaMask.vert"
+	"frag" : "DR_GBuffer_AlphaMask.frag"
+}
