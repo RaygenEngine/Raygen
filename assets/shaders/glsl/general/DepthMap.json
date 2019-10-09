@@ -1,2 +1,4 @@
-DepthMap.vert
-DepthMap.frag
+{
+	"vert" : "DepthMap.vert"
+	"frag" : "DepthMap.frag"
+}

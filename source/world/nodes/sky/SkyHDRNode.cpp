@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "pch/pch.h"
 
 #include "world/nodes/sky/SkyHDRNode.h"
 #include "asset/util/ParsingAux.h"

@@ -31,7 +31,7 @@ protected:
 		return ptr + m_offset;
 	}
 
-	bool IsA(TypeId inType) const { return m_type == inType; }
+	[[nodiscard]] bool IsA(TypeId inType) const { return m_type == inType; }
 
 	Property(TypeId type, size_t offset, std::string_view name, PropertyFlags::Type flags)
 		: m_type(type)

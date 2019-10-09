@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "pch/pch.h"
 
 #include "asset/AssetManager.h"
 #include "core/reflection/PodTools.h"
@@ -41,7 +41,7 @@ void Code()
 	auto l = [](auto p) {
 		using PodType = std::remove_pointer_t<decltype(p)>;
 		PodHandle<PodType> a;
-		a._Debug();
+		[[maybe_unused]] auto debug = a._Debug();
 	};
 	podtools::ForEachPodType(l);
 }

@@ -1,4 +1,4 @@
-﻿#include "pch.h"
+﻿#include "pch/pch.h"
 
 #include "world/nodes/user/freeform/FreeformUserNode.h"
 #include "world/World.h"
@@ -23,14 +23,18 @@ void FreeformUserNode::Update(float deltaTime)
 	speed *= deltaTime;
 
 	// user buffs
-	if (input.IsKeyRepeat(XVirtualKey::LSHIFT))
+	if (input.IsKeyRepeat(XVirtualKey::LSHIFT)) {
 		speed *= 10.f;
-	if (input.IsKeyRepeat(XVirtualKey::CTRL))
+	}
+	if (input.IsKeyRepeat(XVirtualKey::CTRL)) {
 		speed /= 10.f;
-	if (input.IsRightTriggerMoving())
+	}
+	if (input.IsRightTriggerMoving()) {
 		speed *= 10.f * glm::exp(input.GetRightTriggerMagnitude());
-	if (input.IsLeftTriggerMoving())
+	}
+	if (input.IsLeftTriggerMoving()) {
 		speed /= 10.f * glm::exp(input.GetLeftTriggerMagnitude());
+	}
 
 	// user rotation
 	if (input.IsCursorDragged() && input.IsKeyRepeat(XVirtualKey::RBUTTON)) {
@@ -63,21 +67,26 @@ void FreeformUserNode::Update(float deltaTime)
 		AddLocalOffset(moveDir * speed * input.GetLeftThumbMagnitude());
 	}
 
-	if (input.IsAnyOfKeysRepeat(XVirtualKey::W, XVirtualKey::GAMEPAD_DPAD_UP))
+	if (input.IsAnyOfKeysRepeat(XVirtualKey::W, XVirtualKey::GAMEPAD_DPAD_UP)) {
 		AddLocalOffset(GetFront() * speed);
+	}
 
-	if (input.IsAnyOfKeysRepeat(XVirtualKey::S, XVirtualKey::GAMEPAD_DPAD_DOWN))
+	if (input.IsAnyOfKeysRepeat(XVirtualKey::S, XVirtualKey::GAMEPAD_DPAD_DOWN)) {
 		AddLocalOffset((-GetFront()) * speed);
+	}
 
-	if (input.IsAnyOfKeysRepeat(XVirtualKey::D, XVirtualKey::GAMEPAD_DPAD_RIGHT))
+	if (input.IsAnyOfKeysRepeat(XVirtualKey::D, XVirtualKey::GAMEPAD_DPAD_RIGHT)) {
 		AddLocalOffset((GetRight()) * speed);
+	}
 
-	if (input.IsAnyOfKeysRepeat(XVirtualKey::A, XVirtualKey::GAMEPAD_DPAD_LEFT))
+	if (input.IsAnyOfKeysRepeat(XVirtualKey::A, XVirtualKey::GAMEPAD_DPAD_LEFT)) {
 		AddLocalOffset((-GetRight()) * speed);
-
-	if (input.IsAnyOfKeysRepeat(XVirtualKey::E, XVirtualKey::GAMEPAD_LEFT_SHOULDER))
+	}
+	if (input.IsAnyOfKeysRepeat(XVirtualKey::E, XVirtualKey::GAMEPAD_LEFT_SHOULDER)) {
 		AddLocalOffset((GetUp()) * speed);
+	}
 
-	if (input.IsAnyOfKeysRepeat(XVirtualKey::Q, XVirtualKey::GAMEPAD_RIGHT_SHOULDER))
+	if (input.IsAnyOfKeysRepeat(XVirtualKey::Q, XVirtualKey::GAMEPAD_RIGHT_SHOULDER)) {
 		AddLocalOffset((-GetUp()) * speed);
+	}
 }

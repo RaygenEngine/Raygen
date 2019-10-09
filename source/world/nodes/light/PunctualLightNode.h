@@ -12,5 +12,4 @@ class PunctualLightNode : public Node {
 
 public:
 	PunctualLightNode(Node* parent);
-	~PunctualLightNode() = default;
 };

@@ -1,11 +1,5 @@
-#include "pch.h"
+#include "pch/pch.h"
 #include "renderer/Renderer.h"
-
-ObserverRenderer::ObserverRenderer()
-{
-	m_nodeAddedListener.BindMember(this, &ObserverRenderer::OnNodeAddedToWorld);
-	m_nodeRemovedListener.BindMember(this, &ObserverRenderer::OnNodeRemovedFromWorld);
-}
 
 void ObserverRenderer::RemoveObserver(NodeObserverBase* ptr)
 {

@@ -22,12 +22,16 @@ public:
 	fs::path m_sceneToLoad{};
 
 	Editor();
-
 	virtual ~Editor();
+	Editor(const Editor&) = default;
+	Editor(Editor&&) = default;
+	Editor& operator=(const Editor&) = default;
+	Editor& operator=(Editor&&) = default;
+
 
 	void UpdateEditor();
 
-	bool ShouldUpdateWorld() const { return m_updateWorld; }
+	[[nodiscard]] bool ShouldUpdateWorld() const { return m_updateWorld; }
 
 	void PreBeginFrame();
 
