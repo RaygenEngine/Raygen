@@ -96,7 +96,7 @@ struct ReflectionToImguiVisitor {
 
 	bool Inner(float& t, const Property& p) { return ImGui::DragFloat(name, &t, 0.01f); }
 
-	bool Inner(glm::vec3& t, const Property& p) 
+	bool Inner(glm::vec3& t, const Property& p)
 	{
 		if (p.HasFlags(PropertyFlags::Color)) {
 			return ImGui::ColorEdit3(name, ImUtil::FromVec3(t), ImGuiColorEditFlags_DisplayHSV);
@@ -246,8 +246,6 @@ struct ReflectionToImguiVisitor {
 
 
 Editor::Editor()
-	: m_selectedNode(nullptr)
-	, m_updateWorld(true)
 {
 	ImguiImpl::InitContext();
 	m_assetWindow.Init();
@@ -260,7 +258,7 @@ Editor::~Editor()
 #include "editor/renderer/EditorRenderer.h"
 #include "system/Input.h"
 
-void Editor::UpdateEditor() 
+void Editor::UpdateEditor()
 {
 	HandleInput();
 
@@ -294,8 +292,8 @@ void Editor::UpdateEditor()
 
 	auto renderer = Engine::GetRenderer<DeferredEditorRenderer>();
 	if (renderer) {
-		const char* str = renderer->m_previewModeString.c_str();
-		ImGui::Text(str);
+		auto str = renderer->m_previewModeString;
+		ImGui::Text(str.c_str());
 	}
 
 
@@ -320,10 +318,14 @@ void Editor::UpdateEditor()
 	if (ImGui::CollapsingHeader("Assets")) {
 
 		auto reloadAssetLambda = [](std::unique_ptr<PodEntry>& assetEntry) {
-			podtools::VisitPodType(assetEntry->type, [&assetEntry](auto tptr) {
+			auto l = [&assetEntry](auto tptr) {
 				using PodType = std::remove_pointer_t<decltype(tptr)>;
-				AssetManager::Reload(PodHandle<PodType>{ assetEntry->uid });
-			});
+				PodHandle<PodType> p;
+				p.podId = assetEntry->uid;
+				AssetManager::Reload(p);
+			};
+
+			podtools::VisitPodType(assetEntry->type, l);
 		};
 
 

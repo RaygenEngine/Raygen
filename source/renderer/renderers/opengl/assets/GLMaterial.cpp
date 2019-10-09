@@ -8,8 +8,6 @@
 namespace OpenGL {
 bool GLMaterial::Load()
 {
-	auto am = Engine::GetAssetManager();
-
 	auto materialData = podHandle.Lock();
 
 	auto glAm = GetGLAssetManager(this);

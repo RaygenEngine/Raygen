@@ -68,7 +68,7 @@ inline bool ReadFillEntityType(const tinyxml2::XMLElement* xmlElement, std::stri
 }
 
 template<typename T>
-std::string FloatsToString(T& floats)
+std::string FloatsToString(T floats)
 {
 	std::stringstream ss;
 

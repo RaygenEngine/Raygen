@@ -2,7 +2,7 @@
 #include "core/reflection/ReflClass.h"
 #include "core/auxiliary/MetaTemplates.h"
 #include "core/reflection/PodReflection.h"
-
+#include "core/reflection/GetClass.h"
 #include <type_traits>
 
 namespace refltools {
@@ -80,9 +80,9 @@ void CallVisitorOnProperty(Visitor& v, const Property& p, void* obj)
 		v.operator()(EnumInst, p); // Keeping as a local allows overloaded operator()(T& ...) to pass enums through.
 		return;
 	}
-	bool cc = detail::MaybeVisit<Visitor, Z_REFL_TYPES>(v, p, obj)
-			  || detail::MaybeVisit_WrapPodHandle<Visitor, Z_POD_TYPES>(v, p, obj)
-			  || detail::MaybeVisit_WrapVectorPodHandle<Visitor, Z_POD_TYPES>(v, p, obj);
+	[[maybe_unused]] bool cc = detail::MaybeVisit<Visitor, Z_REFL_TYPES>(v, p, obj)
+							   || detail::MaybeVisit_WrapPodHandle<Visitor, Z_POD_TYPES>(v, p, obj)
+							   || detail::MaybeVisit_WrapVectorPodHandle<Visitor, Z_POD_TYPES>(v, p, obj);
 }
 
 template<typename ReflectedObj, typename Visitor>
@@ -162,8 +162,9 @@ namespace detail {
 			operationResult.PropertiesNotFoundInSource = dstClass->GetProperties().size();
 		}
 
-		void* dstObj;
 		const ReflClass* dstClass;
+		void* dstObj;
+
 		ReflClassOperationResult operationResult;
 
 		const Property* GetMatch(const Property& prop)

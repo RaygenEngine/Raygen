@@ -245,7 +245,7 @@ constexpr bool is_detected_v = is_detected<Op, Args...>::value;
 	};                                                                                                                 \
                                                                                                                        \
 	template<typename T>                                                                                               \
-	struct Has##FuncName<T, std::enable_if_t<std::is_member_function_pointer<decltype(&T::##FuncName)>::value>>        \
+	struct Has##FuncName<T, std::enable_if_t<std::is_member_function_pointer<decltype(&T::FuncName)>::value>>          \
 		: std::true_type {                                                                                             \
 	};                                                                                                                 \
                                                                                                                        \

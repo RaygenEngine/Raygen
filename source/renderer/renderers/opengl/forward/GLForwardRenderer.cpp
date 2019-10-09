@@ -141,7 +141,6 @@ void GLForwardRenderer::RenderGeometries()
 	glUniform1f(m_testShader->GetUniform("light_intensity"), m_glSpotLight->node->GetIntensity());
 
 	auto root = Engine::GetWorld()->GetRoot();
-	const auto backgroundColor = root->GetBackgroundColor();
 	glUniform3fv(m_testShader->GetUniform("ambient"), 1, glm::value_ptr(root->GetAmbientColor()));
 
 	const auto vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();

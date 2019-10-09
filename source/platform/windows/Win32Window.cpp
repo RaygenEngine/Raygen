@@ -192,8 +192,6 @@ void Win32Window::GenerateXInputControllerMessages()
 	ZeroMemory(&keystroke, sizeof(XINPUT_KEYSTROKE));
 	XInputGetKeystroke(controllerIndex, {}, &keystroke);
 
-	UINT msg{};
-
 	switch (keystroke.Flags) {
 			// we only handle the keydown and keyup events, repeat is handled internally by the engine
 		case XINPUT_KEYSTROKE_KEYDOWN: input.UpdateKeyPressed(TranslateXInputVirtualKeys(keystroke.VirtualKey)); break;
