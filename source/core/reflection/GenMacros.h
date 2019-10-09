@@ -41,7 +41,6 @@ private:                                                                        
 	friend class ReflClass;                                                                                            \
 	static void GenerateReflection(ReflClass& refl)
 
-
 #define REFLECT_VAR(Variable, ...)                                                                                     \
 	refl.AddProperty<decltype(Variable)>(offsetof(Z_ThisType, Variable), #Variable, PropertyFlags::Pack(__VA_ARGS__))
 

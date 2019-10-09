@@ -14,7 +14,5 @@ public:
 	{
 	}
 
-	~SkyCubeNode() = default;
-
-	PodHandle<TexturePod> GetSkyMap() const { return m_cubemap; }
+	[[nodiscard]] PodHandle<TexturePod> GetSkyMap() const { return m_cubemap; }
 };

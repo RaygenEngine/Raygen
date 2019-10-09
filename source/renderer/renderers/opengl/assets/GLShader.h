@@ -8,7 +8,7 @@
 
 namespace OpenGL {
 struct GLShader : GLAsset<ShaderPod> {
-	GLuint id;
+	GLuint id{ 0 };
 	bool firstLoad{ true };
 
 	GLShader(PodHandle<ShaderPod> handle)
@@ -16,9 +16,9 @@ struct GLShader : GLAsset<ShaderPod> {
 	{
 	}
 
-	virtual ~GLShader();
+	~GLShader() override;
 
-	GLint GetUniform(const std::string& uniformName) const;
+	[[nodiscard]] GLint GetUniform(const std::string& uniformName) const;
 	void AddUniform(const std::string& uniformName);
 	bool Load() override;
 

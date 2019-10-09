@@ -79,7 +79,7 @@ public:
 		size_t index = m_properties.size();
 		m_properties.push_back(Property(refl::GetId<T>(), offset_of, name, flags));
 		m_hashTable[std::string(name)] = index;
-		if constexpr (std::is_enum_v<T>) {
+		if constexpr (std::is_enum_v<T>) { // NOLINT
 			m_properties[index].MakeEnum<T>();
 		}
 		return m_properties[index];

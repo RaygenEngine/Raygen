@@ -24,18 +24,22 @@ std::vector<Node*> World::GetNodesByName(const std::string& name) const
 {
 	std::vector<Node*> nodes;
 
-	for (auto* node : m_nodes)
-		if (node->GetName() == name)
+	for (auto* node : m_nodes) {
+		if (node->GetName() == name) {
 			nodes.push_back(node);
+		}
+	}
 
 	return nodes;
 }
 
 Node* World::GetNodeByName(const std::string& name) const
 {
-	for (auto* node : m_nodes)
-		if (node->GetName() == name)
+	for (auto* node : m_nodes) {
+		if (node->GetName() == name) {
 			return node;
+		}
+	}
 	return nullptr;
 }
 
@@ -94,7 +98,7 @@ Node* World::DuplicateNode(Node* src, Node* newParent)
 	created->MarkMatrixChanged();
 
 	auto result = refltools::CopyClassTo(src, created);
-	CLOG_FATAL(!result.IsExactlyCorrect(), "Duplicate node did not exactly match properties! Node: {}", src);
+	CLOG_FATAL(!result.IsExactlyCorrect(), "Duplicate node did not exactly match properties!");
 	return created;
 }
 
