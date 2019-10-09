@@ -1,2 +1,4 @@
-QuadWriteTexture.vert
-QuadWriteTexture.frag
+{
+	"vert" : "QuadWriteTexture.vert"
+	"frag" : "QuadWriteTexture.frag"
+}
