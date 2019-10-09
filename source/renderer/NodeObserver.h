@@ -20,6 +20,7 @@ struct NodeObserverBase {
 	std::function<void(NodeObserverBase*)> onObserveeLost;
 
 	virtual void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) = 0;
+	virtual ~NodeObserverBase() = default;
 };
 
 

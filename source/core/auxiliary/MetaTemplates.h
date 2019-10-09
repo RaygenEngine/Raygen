@@ -229,7 +229,7 @@ using detected_or = detail::detector<Default, void, Op, Args...>;
 	};                                                                                                                 \
                                                                                                                        \
 	template<typename T>                                                                                               \
-	struct Has##FuncName<T, std::enable_if_t<std::is_member_function_pointer<decltype(&T::##FuncName)>::value>>        \
+	struct Has##FuncName<T, std::enable_if_t<std::is_member_function_pointer<decltype(&T::FuncName)>::value>>          \
 		: std::true_type {                                                                                             \
 	};                                                                                                                 \
                                                                                                                        \
