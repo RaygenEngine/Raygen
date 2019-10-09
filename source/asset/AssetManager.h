@@ -85,7 +85,7 @@ class AssetManager {
 
 	// Specialized in a few cases where instant loading or multithreaded loading is faster
 	template<typename T>
-	void PostRegisterEntry(PodEntry* p)
+	void PostRegisterEntry(PodEntry* entry)
 	{
 	}
 
@@ -128,7 +128,9 @@ public:
 			entry = inst->CreateAndRegister<PodType>(inPath);
 		}
 
-		return PodHandle<PodType>{ entry->uid };
+		PodHandle<PodType> p;
+		p.podId = entry->uid;
+		return p;
 	}
 
 	template<typename PodType>

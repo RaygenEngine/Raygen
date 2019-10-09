@@ -1,6 +1,7 @@
 #pragma once
 #include "core/reflection/PodReflection.h"
 #include "asset/PodIncludes.h"
+#include "core/reflection/GetClass.h"
 
 namespace podtools {
 namespace detail {
@@ -9,20 +10,21 @@ namespace detail {
 	template<typename T>
 	T* DummyType()
 	{
-		return reinterpret_cast<T*>(nullptr);
+		T* dummy = nullptr;
+		return dummy;
 	}
 
 	// Visits pod on operator() of v
 	template<typename Visitor, typename... PodTs>
 	void PodVisit_Impl(AssetPod* pod, Visitor& v)
 	{
-		bool cc = (VisitIf<PodTs>(pod, v) || ...);
+		[[maybe_unused]] bool cc = (VisitIf<PodTs>(pod, v) || ...);
 	}
 
 	template<typename Visitor, typename... PodTs>
 	void PodVisitType_Impl(TypeId hash, Visitor& v)
 	{
-		bool cc = (VisitIfType<PodTs>(hash, v) || ...);
+		[[maybe_unused]] bool cc = (VisitIfType<PodTs>(hash, v) || ...);
 	}
 
 	// Runs v(PodCast<T>(pod)) and returns true, when pod is of type T
@@ -42,7 +44,7 @@ namespace detail {
 	bool VisitIfType(TypeId type, Visitor& v)
 	{
 		if (refl::GetId<T>() == type) {
-			v.operator()<T*>(DummyType<T>());
+			v.template operator()<T*>(DummyType<T>());
 			return true;
 		}
 		return false;
@@ -68,9 +70,9 @@ void VisitPodType(TypeId type, Visitor& v)
 
 namespace detail {
 	template<typename Visitor, typename... PodTs>
-	[[nodiscard]] void VisitPerType_Impl(Visitor& visitor)
+	void VisitPerType_Impl(Visitor& visitor)
 	{
-		(visitor.operator()<PodTs*>(DummyType<PodTs>()), ...);
+		(visitor.template operator()<PodTs*>(DummyType<PodTs>()), ...);
 	}
 } // namespace detail
 
@@ -89,11 +91,11 @@ namespace detail {
 		std::unordered_map<TypeId, MappedType> result;
 
 		// What this code does:
-		(                             // Begin expansion of variadic template
-									  // For each type 'T' in PodTs do this:
-			result.insert({           //	| Insert in result map:
-				refl::GetId<PodTs>(), //  |   At position of type T's hash
-				visitor.operator()<PodTs*>(
+		(                                            // Begin expansion of variadic template
+													 // For each type 'T' in PodTs do this:
+			result.insert({                          //	| Insert in result map:
+				refl::GetId<PodTs>(),                //  |   At position of type T's hash
+				visitor.template operator()<PodTs*>( //  |
 					DummyType<PodTs>()) }) //  |   Whatever visitor<T>(T* dummy) returns (see use of DummyType<T>())
 			,                              // End Expansion
 			...);

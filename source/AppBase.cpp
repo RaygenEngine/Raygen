@@ -22,11 +22,12 @@ AppBase::AppBase()
 	m_lockMouse = false;
 
 	m_argc = 1;
+	m_argv = nullptr;
 
 	m_enableEditor = true;
 }
 
-void AppBase::PreMainInit(int32 argc, char* argv[])
+void AppBase::PreMainInit(int32 argc, char* argv[]) // NOLINT
 {
 	// Copy the arguments for later use.
 	m_argc = argc;
@@ -37,7 +38,7 @@ void AppBase::PreMainInit(int32 argc, char* argv[])
 	}
 }
 
-int32 AppBase::Main(int32 argc, char* argv[])
+int32 AppBase::Main(int32 argc, char* argv[]) // NOLINT
 {
 	LOG_FATAL("Running app: {}", m_name);
 

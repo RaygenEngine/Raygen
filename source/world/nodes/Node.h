@@ -13,8 +13,14 @@ class World;
 #define DECLARE_DIRTY_FLAGSET(...)                                                                                     \
 public:                                                                                                                \
 	struct DF {                                                                                                        \
-		enum { _PREV = Parent::DF::_COUNT - 1, __VA_ARGS__, _COUNT };                                                  \
+		enum                                                                                                           \
+		{                                                                                                              \
+			_PREV = Parent::DF::_COUNT - 1,                                                                            \
+			__VA_ARGS__,                                                                                               \
+			_COUNT                                                                                                     \
+		};                                                                                                             \
 	};                                                                                                                 \
+                                                                                                                       \
 private:
 
 class Node : public Object {
@@ -48,7 +54,8 @@ private:
 	// Base for dirty flagsets, use the macros. DOC
 public:
 	struct DF {
-		enum {
+		enum
+		{
 			TRS,
 			Hierarchy,
 			Children,
@@ -62,18 +69,18 @@ public:
 
 protected:
 	// local
-	glm::vec3 m_localTranslation;
-	glm::quat m_localOrientation;
-	glm::vec3 m_localScale;
-	glm::mat4 m_localMatrix;
+	glm::vec3 m_localTranslation{ 0.f, 0.f, 0.f };
+	glm::quat m_localOrientation{ 1.f, 0.f, 0.f, 0.f };
+	glm::vec3 m_localScale{ 1.f, 1.f, 1.f };
+	glm::mat4 m_localMatrix{ glm::identity<glm::mat4>() };
 
 	// world
-	glm::vec3 m_worldTranslation;
-	glm::quat m_worldOrientation;
-	glm::vec3 m_worldScale;
-	glm::mat4 m_worldMatrix;
+	glm::vec3 m_worldTranslation{ 0.f, 0.f, 0.f };
+	glm::quat m_worldOrientation{ 1.f, 0.f, 0.f, 0.f };
+	glm::vec3 m_worldScale{ 1.f, 1.f, 1.f };
+	glm::mat4 m_worldMatrix{ glm::identity<glm::mat4>() };
 
-	std::bitset<64> m_dirty;
+	std::bitset<64> m_dirty{};
 
 protected:
 	// TODO: remove
@@ -84,6 +91,7 @@ protected:
 	// for now ownership is given to parent nodes (later on, world should be manager)
 	std::vector<std::shared_ptr<Node>> m_children;
 
+	std::string m_name;
 
 private:
 	// mark dirty self and children
@@ -93,16 +101,46 @@ private:
 	friend class World;
 
 public:
-	Node();
-	// Nodes have pObject = parentNode->GetWorld() = World
-	Node(Node* pNode);
+	Node(Node* pNode)
+		: m_parent(pNode)
+	{
+	}
+
+	Node(const Node&) = delete;
+	Node(Node&&) = delete;
+	Node& operator=(const Node&) = delete;
+	Node& operator=(Node&&) = delete;
 	virtual ~Node() = default;
 
-	glm::vec3 GetLocalTranslation() const { return m_localTranslation; }
-	glm::quat GetLocalOrientation() const { return m_localOrientation; }
-	glm::vec3 GetLocalPYR() const { return glm::degrees(glm::eulerAngles(m_localOrientation)); }
-	glm::vec3 GetLocalScale() const { return m_localScale; }
-	glm::mat4 GetLocalMatrix() const { return m_localMatrix; }
+	[[nodiscard]] glm::vec3 GetLocalTranslation() const { return m_localTranslation; }
+	[[nodiscard]] glm::quat GetLocalOrientation() const { return m_localOrientation; }
+	[[nodiscard]] glm::vec3 GetLocalPYR() const { return glm::degrees(glm::eulerAngles(m_localOrientation)); }
+	[[nodiscard]] glm::vec3 GetLocalScale() const { return m_localScale; }
+	[[nodiscard]] glm::mat4 GetLocalMatrix() const { return m_localMatrix; }
+
+	[[nodiscard]] glm::vec3 GetWorldTranslation() const { return m_worldTranslation; }
+	[[nodiscard]] glm::quat GetWorldOrientation() const { return m_worldOrientation; }
+	[[nodiscard]] glm::vec3 GetWorldScale() const { return m_worldScale; }
+	[[nodiscard]] glm::mat4 GetWorldMatrix() const { return m_worldMatrix; }
+
+	[[nodiscard]] glm::vec3 GetUp() const { return GetWorldOrientation() * glm::vec3(0.f, 1.f, 0.f); }
+	[[nodiscard]] glm::vec3 GetRight() const { return GetWorldOrientation() * glm::vec3(1.f, 0.f, 0.f); }
+	[[nodiscard]] glm::vec3 GetFront() const { return GetWorldOrientation() * glm::vec3(0.f, 0.f, -1.f); }
+
+	// override if focalLength is defined
+	[[nodiscard]] virtual glm::vec3 GetLookAt() const { return GetWorldTranslation() + GetFront(); }
+
+	[[nodiscard]] glm::mat4 GetViewMatrix() const { return glm::lookAt(GetWorldTranslation(), GetLookAt(), GetUp()); }
+
+	[[nodiscard]] bool IsLeaf() const { return m_children.empty(); }
+	[[nodiscard]] const std::string& GetType() const { return m_type; }
+	[[nodiscard]] const std::string& GetName() const { return m_name; };
+	[[nodiscard]] const std::vector<std::shared_ptr<Node>>& GetChildren() { return m_children; }
+
+	[[nodiscard]] std::bitset<64> GetDirtyFlagset() const { return m_dirty; }
+
+	// Returns nullptr IF AND ONLY IF "this" node is the root node.
+	[[nodiscard]] Node* GetParent() const { return m_parent; }
 
 	void SetLocalTranslation(const glm::vec3& lt);
 	void SetLocalOrientation(const glm::quat& lo);
@@ -111,37 +149,13 @@ public:
 
 	void SetWorldMatrix(const glm::mat4& newWorldMatrix);
 
-
-	glm::vec3 GetWorldTranslation() const { return m_worldTranslation; }
-	glm::quat GetWorldOrientation() const { return m_worldOrientation; }
-	glm::vec3 GetWorldScale() const { return m_worldScale; }
-	glm::mat4 GetWorldMatrix() const { return m_worldMatrix; }
-
-	glm::vec3 GetUp() const { return GetWorldOrientation() * glm::vec3(0.f, 1.f, 0.f); }
-	glm::vec3 GetRight() const { return GetWorldOrientation() * glm::vec3(1.f, 0.f, 0.f); }
-	glm::vec3 GetFront() const { return GetWorldOrientation() * glm::vec3(0.f, 0.f, -1.f); }
-
-	// override if focalLength is defined
-	virtual glm::vec3 GetLookAt() const { return GetWorldTranslation() + GetFront(); }
-
-	glm::mat4 GetViewMatrix() const { return glm::lookAt(GetWorldTranslation(), GetLookAt(), GetUp()); }
-
-	bool IsLeaf() const { return m_children.empty(); }
-	const std::string& GetType() const { return m_type; }
-
-	const std::vector<std::shared_ptr<Node>>& GetChildren() { return m_children; }
-
-	std::bitset<64> GetDirtyFlagset() const { return m_dirty; }
-
-	// Returns nullptr IF AND ONLY IF "this" node is the root node.
-	[[nodiscard]] Node* GetParent() const { return m_parent; }
-
 	void AddChild(std::shared_ptr<Node> child)
 	{
 		m_dirty.set(DF::Children);
 		m_children.emplace_back(child);
 	}
 
+	void SetName(const std::string& name) { m_name = name; }
 	void DeleteChild(Node* child);
 	//
 	// LOADING
@@ -156,11 +170,11 @@ public:
 
 	// Override loading of a specific child.
 	// If you return a non null pointer here the default node creation will be skipped for this child
-	virtual Node* LoadSpecificChild(const std::string& type) { return nullptr; }
+	[[nodiscard]] virtual Node* LoadSpecificChild(const std::string& type) { return nullptr; }
 
 	// Called after all children have been loaded from the scene file.
 	// You can use this to track 'custom' children in
-	virtual bool PostChildrenLoaded() { return true; }
+	[[nodiscard]] virtual bool PostChildrenLoaded() { return true; }
 
 	// cache world transform bottom up (and where needed to be updated)
 	void UpdateTransforms(const glm::mat4& parentMatrix);
@@ -187,7 +201,7 @@ public:
 	// Returns a valid child if it is the ONLY child of this class
 	// Only checks first level children
 	template<class NodeClass>
-	NodeClass* GetUniqueChildOfClass() const
+	[[nodiscard]] NodeClass* GetUniqueChildOfClass() const
 	{
 		NodeClass* first = nullptr;
 		for (auto child : m_children) {
@@ -207,7 +221,7 @@ public:
 
 	// Only checks first level children
 	template<class NodeClass>
-	NodeClass* GetFirstChildOfClass() const
+	[[nodiscard]] NodeClass* GetFirstChildOfClass() const
 	{
 		for (auto child : m_children) {
 			auto ptr = dynamic_cast<NodeClass*>(child.get());
@@ -231,7 +245,7 @@ public:
 	// Only checks first level children
 	//
 	template<class NodeClass = Node>
-	NodeClass* GetUniqueChildWithType(const std::string& type) const
+	[[nodiscard]] NodeClass* GetUniqueChildWithType(const std::string& type) const
 	{
 		NodeClass* first = nullptr;
 		for (auto child : m_children) {
@@ -253,7 +267,7 @@ public:
 	// You can use the non templated version to not check for the actual cpp class type.
 	// Only checks first level children
 	template<class NodeClass = Node>
-	NodeClass* GetFirstChildOfType(const std::string& type) const
+	[[nodiscard]] NodeClass* GetFirstChildOfType(const std::string& type) const
 	{
 		auto it = std::find_if(m_children.begin(), m_children.end(),
 			[&](auto child) { return child->GetType() == type && dynamic_cast<NodeClass*>(child.get()); });

@@ -17,97 +17,41 @@ namespace {
 	// the complexity here is mostly used to protect against 'incompatible' conversion types.
 	// The maintenance cost may not be worth the 'safe' conversions.
 
-	// Copy with strides from a C array-like to a vector while performing normal type conversion.
-	template<typename ComponentType, typename OutputType>
-	void CopyToVector(std::vector<OutputType>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount,
-		size_t componentCount)
-	{
-		for (int32 i = 0; i < elementCount; ++i) {
-			byte* elementPtr = &beginPtr[perElementOffset * i];
-			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
+	//// Copy with strides from a C array-like to a vector while performing normal type conversion.
+	// template<typename ComponentType, typename OutputType>
+	// void CopyToVector(std::vector<OutputType>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount,
+	//	size_t componentCount)
+	//{
+	//	for (int32 i = 0; i < elementCount; ++i) {
+	//		byte* elementPtr = &beginPtr[perElementOffset * i];
+	//		ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			for (uint32 c = 0; c < componentCount; ++c) {
-				if constexpr (std::is_same_v<double, ComponentType>) {
-					result[i][c] = static_cast<float>(data[c]); // explicitly convert any double input to float.
-				}
-				else {
-					result[i][c]
-						= data[c]; // normal type conversion, should be able to convert most of the required stuff
-				}
-			}
-		}
-	}
-
-	// Empty specialization for conversions between types that should never happen.
-	template<>
-	void CopyToVector<uint32, glm::vec2>(std::vector<glm::vec2>&, byte*, size_t, size_t, size_t)
-	{
-		assert(false);
-	}
-	template<>
-	void CopyToVector<uint32, glm::vec3>(std::vector<glm::vec3>&, byte*, size_t, size_t, size_t)
-	{
-		assert(false);
-	}
-	template<>
-	void CopyToVector<uint32, glm::vec4>(std::vector<glm::vec4>&, byte*, size_t, size_t, size_t)
-	{
-		assert(false);
-	}
+	//		for (uint32 c = 0; c < componentCount; ++c) {
+	//			if constexpr (std::is_same_v<double, ComponentType>) {
+	//				result[i][c] = static_cast<float>(data[c]); // explicitly convert any double input to float.
+	//			}
+	//			else {
+	//				result[i][c]
+	//					= data[c]; // normal type conversion, should be able to convert most of the required stuff
+	//			}
+	//		}
+	//	}
+	//}
 
 	// Uint16 specialization. Expects componentCount == 1.
-	template<>
-	void CopyToVector<unsigned short>(std::vector<uint32>& result, byte* beginPtr, size_t perElementOffset,
-		size_t elementCount, size_t componentCount)
+	template<typename T>
+	void CopyToVector(std::vector<uint32>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 	{
-		assert(componentCount == 1);
+		static_assert(std::is_integral_v<T>, "This is not an integer type");
+
 		for (uint32 i = 0; i < elementCount; ++i) {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
-			unsigned short* data = reinterpret_cast<unsigned short*>(elementPtr);
+			T* data = reinterpret_cast<T*>(elementPtr);
 			result[i] = *data;
 		}
 	}
 
-	// Uint32 specialization. Expects componentCount == 1.
-	template<>
-	void CopyToVector<unsigned int>(std::vector<uint32>& result, byte* beginPtr, size_t perElementOffset,
-		size_t elementCount, size_t componentCount)
-	{
-		assert(componentCount == 1);
-		for (uint32 i = 0; i < elementCount; ++i) {
-			byte* elementPtr = &beginPtr[perElementOffset * i];
-			unsigned int* data = reinterpret_cast<unsigned int*>(elementPtr);
-			result[i] = *data;
-		}
-	}
-
-	// Uint32 empty specializations. runtime assert just in case
-	template<>
-	void CopyToVector<float>(std::vector<uint32>&, byte*, size_t, size_t, size_t)
-	{
-		assert(false);
-	}
-	template<>
-	void CopyToVector<double>(std::vector<uint32>&, byte*, size_t, size_t, size_t)
-	{
-		assert(false);
-	}
-
-	template<>
-	void CopyToVector<byte>(std::vector<uint32>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount,
-		size_t componentCount)
-	{
-		assert(componentCount == 1);
-		for (uint32 i = 0; i < elementCount; ++i) {
-			byte* elementPtr = &beginPtr[perElementOffset * i];
-			byte* data = reinterpret_cast<byte*>(elementPtr);
-			result[i] = *data;
-		}
-	}
-
-	// Extracts the type of the out vector and attempts to load any type of data at accessorIndex to this vector.
-	template<typename Output>
-	void ExtractBufferDataInto(const tg::Model& modelData, int32 accessorIndex, std::vector<Output>& out)
+	void ExtractIndicesInto(const tg::Model& modelData, int32 accessorIndex, std::vector<uint32>& out)
 	{
 		//
 		// Actual example of a possible complex gltf buffer:
@@ -142,7 +86,7 @@ namespace {
 			componentCount = utl::GetElementComponentCount(GltfAux::GetElementType(accessor.type));
 			beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
 		}
-
+		CLOG_ASSERT(componentCount != 1, "Found indicies of 2 components in gltf file.");
 		out.resize(elementCount);
 
 		// This will generate EVERY possible mapping of Output -> ComponentType conversion
@@ -153,28 +97,32 @@ namespace {
 				// Conversions from signed to unsigned types are "implementation defined".
 				// This code assumes the implementation will not do any bit arethmitic from signed x to unsigned x.
 
-			case BufferComponentType::BYTE: // Fallthrough
-			case BufferComponentType::UNSIGNED_BYTE:
-				CopyToVector<unsigned char>(out, beginPtr, strideByteOffset, elementCount, componentCount);
+			case BufferComponentType::BYTE:
+			case BufferComponentType::UNSIGNED_BYTE: {
+				CopyToVector<unsigned char>(out, beginPtr, strideByteOffset, elementCount);
 				return;
-			case BufferComponentType::SHORT: // Fallthrough
-			case BufferComponentType::UNSIGNED_SHORT:
-				CopyToVector<unsigned short>(out, beginPtr, strideByteOffset, elementCount, componentCount);
+			}
+			case BufferComponentType::SHORT: {
+				CopyToVector<short>(out, beginPtr, strideByteOffset, elementCount);
 				return;
-			case BufferComponentType::INT:
-			case BufferComponentType::UNSIGNED_INT: // Fallthrough
-				CopyToVector<uint32>(out, beginPtr, strideByteOffset, elementCount, componentCount);
+			}
+			case BufferComponentType::UNSIGNED_SHORT: {
+				CopyToVector<unsigned short>(out, beginPtr, strideByteOffset, elementCount);
 				return;
+			}
+			case BufferComponentType::INT: {
+				CopyToVector<int>(out, beginPtr, strideByteOffset, elementCount);
+				return;
+			}
+			case BufferComponentType::UNSIGNED_INT: {
+				CopyToVector<uint32>(out, beginPtr, strideByteOffset, elementCount);
+				return;
+			}
 			case BufferComponentType::FLOAT:
-				CopyToVector<float>(out, beginPtr, strideByteOffset, elementCount, componentCount);
-				return;
 			case BufferComponentType::DOUBLE:
-				CopyToVector<double>(out, beginPtr, strideByteOffset, elementCount, componentCount);
-				return;
 			case BufferComponentType::INVALID: return;
 		}
 	}
-
 
 	template<typename ComponentType>
 	void CopyToVertexData_Position(
@@ -184,12 +132,12 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].position[0] = static_cast<float>(data[0]);
 				result[i].position[1] = static_cast<float>(data[1]);
 				result[i].position[2] = static_cast<float>(data[2]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].position[0] = data[0];
 				result[i].position[1] = data[1];
 				result[i].position[2] = data[2];
@@ -208,12 +156,12 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].normal[0] = static_cast<float>(data[0]);
 				result[i].normal[1] = static_cast<float>(data[1]);
 				result[i].normal[2] = static_cast<float>(data[2]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].normal[0] = data[0];
 				result[i].normal[1] = data[1];
 				result[i].normal[2] = data[2];
@@ -232,12 +180,12 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].tangent[0] = static_cast<float>(data[0]);
 				result[i].tangent[1] = static_cast<float>(data[1]);
 				result[i].tangent[2] = static_cast<float>(data[2]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].tangent[0] = data[0];
 				result[i].tangent[1] = data[1];
 				result[i].tangent[2] = data[2];
@@ -256,11 +204,11 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].textCoord0[0] = static_cast<float>(data[0]);
 				result[i].textCoord0[1] = static_cast<float>(data[1]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].textCoord0[0] = data[0];
 				result[i].textCoord0[1] = data[1];
 			}
@@ -278,11 +226,11 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].textCoord1[0] = static_cast<float>(data[0]);
 				result[i].textCoord1[1] = static_cast<float>(data[1]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].textCoord1[0] = data[0];
 				result[i].textCoord1[1] = data[1];
 			}
@@ -353,19 +301,19 @@ namespace {
 	void LoadIntoVertextData_Selector(
 		std::vector<VertexData>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 	{
-		if constexpr (VertexElementIndex == 0) {
+		if constexpr (VertexElementIndex == 0) { // NOLINT
 			CopyToVertexData_Position<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
-		else if constexpr (VertexElementIndex == 1) {
+		else if constexpr (VertexElementIndex == 1) { // NOLINT
 			CopyToVertexData_Normal<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
-		else if constexpr (VertexElementIndex == 2) {
+		else if constexpr (VertexElementIndex == 2) { // NOLINT
 			CopyToVertexData_Tangent<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
-		else if constexpr (VertexElementIndex == 3) {
+		else if constexpr (VertexElementIndex == 3) { // NOLINT
 			CopyToVertexData_TexCoord0<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
-		else if constexpr (VertexElementIndex == 4) {
+		else if constexpr (VertexElementIndex == 4) { // NOLINT
 			CopyToVertexData_TexCoord1<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
 	}
@@ -401,7 +349,7 @@ namespace {
 		const auto indicesIndex = primitiveData.indices;
 
 		if (indicesIndex != -1) {
-			ExtractBufferDataInto(modelData, indicesIndex, geom.indices);
+			ExtractIndicesInto(modelData, indicesIndex, geom.indices);
 		}
 		else {
 			geom.indices.resize(vertexCount);

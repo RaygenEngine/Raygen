@@ -2,7 +2,7 @@
 #include "core/reflection/ReflClass.h"
 #include "core/auxiliary/MetaTemplates.h"
 #include "core/reflection/PodReflection.h"
-
+#include "core/reflection/GetClass.h"
 #include <type_traits>
 
 namespace refltools {
@@ -20,16 +20,16 @@ struct ReflClassVisitor {
 	void End(const ReflClass&) {}   // Post End iteration on reflector's properties
 
 	// Pre Call visitor on proprety. If return type is boolean then returning false will skip visiting for this property
-	bool PreProperty(const Property& p) { return true; }
-	void PostProperty(const Property& p) {} // Post Call visitor on proprety
+	bool PreProperty(const Property&) { return true; }
+	void PostProperty(const Property&) {} // Post Call visitor on proprety
 
 	template<typename T>
-	void operator()(T& value, const Property& p)
+	void operator()(T&, const Property&)
 	{
 	} // Overload this for T.
 
 	// Overload that would catch all enum properties. Enum properties do not visit on the operator() with their type.
-	void operator()(MetaEnumInst& value, const Property& p) {}
+	void operator()(MetaEnumInst&, const Property&) {}
 };
 
 static_assert(detail::HasPreProperty<ReflClassVisitor>::value, "Reflection tools test failed.");
@@ -80,9 +80,9 @@ void CallVisitorOnProperty(Visitor& v, const Property& p, void* obj)
 		v.operator()(EnumInst, p); // Keeping as a local allows overloaded operator()(T& ...) to pass enums through.
 		return;
 	}
-	bool cc = detail::MaybeVisit<Visitor, Z_REFL_TYPES>(v, p, obj)
-			  || detail::MaybeVisit_WrapPodHandle<Visitor, Z_POD_TYPES>(v, p, obj)
-			  || detail::MaybeVisit_WrapVectorPodHandle<Visitor, Z_POD_TYPES>(v, p, obj);
+	[[maybe_unused]] bool cc = detail::MaybeVisit<Visitor, Z_REFL_TYPES>(v, p, obj)
+							   || detail::MaybeVisit_WrapPodHandle<Visitor, Z_POD_TYPES>(v, p, obj)
+							   || detail::MaybeVisit_WrapVectorPodHandle<Visitor, Z_POD_TYPES>(v, p, obj);
 }
 
 template<typename ReflectedObj, typename Visitor>
@@ -97,8 +97,8 @@ void CallVisitorOnEveryProperty(ReflectedObj* obj, Visitor& v)
 	}
 
 	for (auto& p : cl.GetProperties()) {
-		if constexpr (HasPreProperty<Visitor>::value) {
-			if constexpr (std::is_same_v<return_type_t<decltype(&Visitor::PreProperty)>, bool>) {
+		if constexpr (HasPreProperty<Visitor>::value) {                                           // NOLINT
+			if constexpr (std::is_same_v<return_type_t<decltype(&Visitor::PreProperty)>, bool>) { // NOLINT
 				if (!v.PreProperty(p)) {
 					continue;
 				}
@@ -110,12 +110,12 @@ void CallVisitorOnEveryProperty(ReflectedObj* obj, Visitor& v)
 
 		CallVisitorOnProperty(v, p, obj);
 
-		if constexpr (HasPostProperty<Visitor>::value) {
+		if constexpr (HasPostProperty<Visitor>::value) { // NOLINT
 			v.PostProperty(p);
 		}
 	}
 
-	if constexpr (HasEnd<Visitor>::value) {
+	if constexpr (HasEnd<Visitor>::value) { // NOLINT
 		v.End(cl);
 	}
 }
@@ -149,7 +149,7 @@ struct ReflClassOperationResult {
 	bool IsExactlyCorrect()
 	{
 		return PropertiesNotFoundInDestination == 0 && PropertiesNotFoundInSource == 0 && TypeMissmatches == 0
-			   && FlagMissmatches == 0 && ClassTypeMissmatch == false;
+			   && FlagMissmatches == 0 && !ClassTypeMissmatch;
 	}
 };
 
@@ -162,8 +162,9 @@ namespace detail {
 			operationResult.PropertiesNotFoundInSource = dstClass->GetProperties().size();
 		}
 
-		void* dstObj;
 		const ReflClass* dstClass;
+		void* dstObj;
+
 		ReflClassOperationResult operationResult;
 
 		const Property* GetMatch(const Property& prop)

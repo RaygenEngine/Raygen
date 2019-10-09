@@ -10,8 +10,8 @@ class Node;
 
 class Editor {
 protected:
-	bool m_updateWorld;
-	Node* m_selectedNode;
+	bool m_updateWorld{ true };
+	Node* m_selectedNode{ nullptr };
 
 	SceneSave m_sceneSave;
 
@@ -31,7 +31,7 @@ public:
 
 	void UpdateEditor();
 
-	bool ShouldUpdateWorld() const { return m_updateWorld; }
+	[[nodiscard]] bool ShouldUpdateWorld() const { return m_updateWorld; }
 
 	void PreBeginFrame();
 

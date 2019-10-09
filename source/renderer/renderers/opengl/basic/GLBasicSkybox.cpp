@@ -29,7 +29,6 @@ GLBasicSkybox::GLBasicSkybox(SkyCubeNode* node)
 {
 	auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/Cubemap_InfDist.json");
 	shader = GetGLAssetManager(this)->GpuGetOrCreate<GLShader>(shaderAsset);
-	auto& skyboxShader = *shader;
 	shader->AddUniform("vp");
 
 	cubemap = GetGLAssetManager(this)->GpuGetOrCreate<GLTexture>(node->GetSkyMap());

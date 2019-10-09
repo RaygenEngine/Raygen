@@ -13,7 +13,6 @@ class SkyHDRNode : public Node {
 
 public:
 	SkyHDRNode(Node* parent);
-	~SkyHDRNode() = default;
 
-	PodHandle<ImagePod> GetSkyHDR() const { return m_hdrData; }
+	[[nodiscard]] PodHandle<ImagePod> GetSkyHDR() const { return m_hdrData; }
 };

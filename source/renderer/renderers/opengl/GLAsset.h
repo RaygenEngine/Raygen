@@ -5,15 +5,16 @@
 #include "asset/PodHandle.h"
 
 namespace OpenGL {
-struct GLAssetBase : public RendererObject<GLRendererBase> {
+struct GLAssetBase
+	: Object
+	, RendererObject<GLRendererBase> {
+
 	GLAssetBase(BasePodHandle genericHandle)
 		: genericPodHandle(genericHandle)
 	{
 	}
 
 	BasePodHandle genericPodHandle;
-
-	virtual ~GLAssetBase() = default;
 };
 
 template<typename PodTypeT>
@@ -31,11 +32,9 @@ protected:
 	PodHandle<PodType> podHandle;
 
 	virtual bool Load() = 0;
-	virtual ~GLAsset() = default;
-
-	friend GenericGpuAssetManager<GLAssetBase>;
 
 private:
+	friend GenericGpuAssetManager<GLAssetBase>;
 	void FriendLoad() { Load(); }
 
 public:

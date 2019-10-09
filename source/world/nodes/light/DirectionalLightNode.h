@@ -51,12 +51,11 @@ class DirectionalLightNode : public Node {
 
 public:
 	DirectionalLightNode(Node* parent);
-	~DirectionalLightNode() = default;
 
 	void DirtyUpdate() override;
 
 	void UpdateProjectionMatrix() { m_projectionMatrix = glm::ortho(m_left, m_right, m_bottom, m_top, m_near, m_far); }
-	glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
+	[[nodiscard]] glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 
 	[[nodiscard]] float GetOrthoFrustumLeft() const { return m_left; }
 	[[nodiscard]] float GetOrthoFrustumRight() const { return m_right; }
