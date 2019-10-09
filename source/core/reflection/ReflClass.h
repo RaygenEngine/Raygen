@@ -14,12 +14,7 @@ class ReflClass {
 	// PERF: possible to constexpr hash variable names and use them in this map prehashed.
 	std::unordered_map<std::string, size_t> m_hashTable;
 
-	const ReflClass* m_parentClass;
-
-	ReflClass()
-		: m_parentClass(nullptr)
-	{
-	}
+	const ReflClass* m_parentClass{ nullptr };
 
 	void AppendProperties(const ReflClass& other)
 	{
@@ -107,7 +102,7 @@ public:
 
 	[[nodiscard]] const ReflClass* GetParentClass() const { return m_parentClass; }
 
-	const std::vector<Property>& GetProperties() const { return m_properties; }
+	[[nodiscard]] const std::vector<Property>& GetProperties() const { return m_properties; }
 };
 
 

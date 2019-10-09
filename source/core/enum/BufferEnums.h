@@ -1,6 +1,7 @@
 #pragma once
 
-enum class BufferComponentType {
+enum class BufferComponentType
+{
 	BYTE,
 	UNSIGNED_BYTE,
 	SHORT,
@@ -12,18 +13,28 @@ enum class BufferComponentType {
 	INVALID
 };
 
-enum class BufferElementType { SCALAR, VEC2, VEC3, VEC4, MAT2, MAT3, MAT4, INVALID };
+enum class BufferElementType
+{
+	SCALAR,
+	VEC2,
+	VEC3,
+	VEC4,
+	MAT2,
+	MAT3,
+	MAT4,
+	INVALID
+};
 
 namespace utl {
 inline int32 GetComponentTypeByteCount(BufferComponentType bct)
 {
 	switch (bct) {
-		case BufferComponentType::BYTE: return 1;
+		case BufferComponentType::BYTE:
 		case BufferComponentType::UNSIGNED_BYTE: return 1;
-		case BufferComponentType::SHORT: return 2;
+		case BufferComponentType::SHORT:
 		case BufferComponentType::UNSIGNED_SHORT: return 2;
-		case BufferComponentType::INT: return 4;
-		case BufferComponentType::UNSIGNED_INT: return 4;
+		case BufferComponentType::INT:
+		case BufferComponentType::UNSIGNED_INT:
 		case BufferComponentType::FLOAT: return 4;
 		case BufferComponentType::DOUBLE: return 8;
 		default: return -1;

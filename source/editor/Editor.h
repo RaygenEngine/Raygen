@@ -22,8 +22,12 @@ public:
 	fs::path m_sceneToLoad{};
 
 	Editor();
-
 	virtual ~Editor();
+	Editor(const Editor&) = default;
+	Editor(Editor&&) = default;
+	Editor& operator=(const Editor&) = default;
+	Editor& operator=(Editor&&) = default;
+
 
 	void UpdateEditor();
 

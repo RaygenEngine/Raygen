@@ -11,10 +11,7 @@ namespace detail {
 	template<typename T>
 	constexpr bool IsHandleToPodF()
 	{
-		if constexpr (std::is_base_of_v<BasePodHandle, T> && !std::is_same_v<BasePodHandle, T>) {
-			return true;
-		}
-		return false;
+		return std::is_base_of_v<BasePodHandle, T> && !std::is_same_v<BasePodHandle, T>;
 	}
 
 	template<typename T, typename... ReflTypes>

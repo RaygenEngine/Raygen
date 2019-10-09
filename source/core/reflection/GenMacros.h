@@ -20,6 +20,7 @@ public:                                                                         
 		static ReflClass cl = ReflClass::Generate<Class>();                                                            \
 		return cl;                                                                                                     \
 	}                                                                                                                  \
+                                                                                                                       \
 public:                                                                                                                \
 	static void GenerateReflection(ReflClass& refl)
 
@@ -34,6 +35,7 @@ public:                                                                         
 		static ReflClass cl = ReflClass::Generate<Class, Parent>();                                                    \
 		return cl;                                                                                                     \
 	}                                                                                                                  \
+                                                                                                                       \
 private:                                                                                                               \
 	using Z_ThisType = Class;                                                                                          \
 	friend class ReflClass;                                                                                            \
@@ -44,4 +46,4 @@ private:                                                                        
 	refl.AddProperty<decltype(Variable)>(offsetof(Z_ThisType, Variable), #Variable, PropertyFlags::Pack(__VA_ARGS__))
 
 #define REFL_EQUALS_PROPERTY(PropertyRef, Variable)                                                                    \
-	(PropertyRef.GetName() == ReflClass::RemoveVariablePrefix(#Variable) && (&Variable))
+	((PropertyRef).GetName() == ReflClass::RemoveVariablePrefix(#Variable) && (&(Variable)))

@@ -2,14 +2,13 @@
 
 #include "system/EngineComponent.h"
 #include "system/Engine.h"
-#include "asset/PathSystem.h"
 #include "asset/AssetPod.h"
 #include "core/reflection/PodReflection.h"
 #include "asset/UriLibrary.h"
 #include "asset/PodHandle.h"
+
 #include <future>
 #include <thread>
-
 
 struct PodDeleter {
 	void operator()(AssetPod* p);
@@ -19,7 +18,7 @@ struct PodEntry {
 	struct UnitializedPod {
 	};
 
-	std::unique_ptr<AssetPod, PodDeleter> ptr;
+	std::unique_ptr<AssetPod, PodDeleter> ptr{};
 	TypeId type{ refl::GetId<UnitializedPod>() };
 	size_t uid{ 0 };
 	uri::Uri path{ "#" };

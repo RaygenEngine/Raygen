@@ -28,17 +28,19 @@ inline glm::quat GetOrientationFromLookAtAndPosition(const glm::vec3& lookat, co
 {
 	const auto dlp = glm::distance(lookat, position);
 	// if can't get orientation return unit
-	if (EqualsZero(dlp))
+	if (EqualsZero(dlp)) {
 		return glm::quat{ 1.f, 0.f, 0.f, 0.f };
+	}
 
 	const auto direction = glm::normalize(lookat - position);
 
 	// if parallel use right as up
 	const auto ddu = abs(glm::dot(direction, glm::vec3(0.f, 1.f, 0.f)));
-	if (EqualsValue(ddu, 1.f))
+	if (EqualsValue(ddu, 1.f)) {
 		return glm::normalize(glm::quatLookAt(direction, glm::vec3(1.f, 0.f, 0.f)));
-	else
-		return glm::normalize(glm::quatLookAt(direction, glm::vec3(0.f, 1.f, 0.f)));
+	}
+
+	return glm::normalize(glm::quatLookAt(direction, glm::vec3(0.f, 1.f, 0.f)));
 }
 
 inline glm::mat4 GetProjectionMatrix(
@@ -51,15 +53,4 @@ inline glm::mat4 GetProjectionMatrix(
 
 	return glm::frustum(left, right, bottom, top, _near, _far);
 }
-
-// TODO
-/*inline glm::mat4 GetProjectionMatrix(const XFov& xfov, float _near, float _far)
-{
-	const auto top = _near * xfov.topTan;
-	const auto bottom = -_near * xfov.bottomTan;
-	const auto right = _near * xfov.rightTan;
-	const auto left = -_near * xfov.leftTan;
-
-	return glm::frustum(left, right, bottom, top, _near, _far);
-}*/
 } // namespace utl

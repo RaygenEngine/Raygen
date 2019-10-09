@@ -5,31 +5,31 @@
 #include "asset/pods/MaterialPod.h"
 
 struct VertexData {
-	glm::vec3 position;
-	glm::vec3 normal;
-	glm::vec4 tangent;
-	glm::vec3 bitangent;
-	glm::vec2 textCoord0;
-	glm::vec2 textCoord1;
+	glm::vec3 position{};
+	glm::vec3 normal{};
+	glm::vec4 tangent{};
+	glm::vec3 bitangent{};
+	glm::vec2 textCoord0{};
+	glm::vec2 textCoord1{};
 };
 
 struct GeometryGroup {
-	std::vector<uint32> indices;
-	std::vector<VertexData> vertices;
+	std::vector<uint32> indices{};
+	std::vector<VertexData> vertices{};
 
 	GeometryMode mode{ GeometryMode::TRIANGLES };
-	uint32 materialIndex;
+	uint32 materialIndex{ 0u };
 };
 
 struct Mesh {
-	std::vector<GeometryGroup> geometryGroups;
+	std::vector<GeometryGroup> geometryGroups{};
 };
 
 struct ModelPod : public AssetPod {
 	REFLECTED_POD(ModelPod) { REFLECT_VAR(materials); }
 	static bool Load(ModelPod* pod, const uri::Uri& path);
 
-	std::vector<Mesh> meshes;
+	std::vector<Mesh> meshes{};
 
-	std::vector<PodHandle<MaterialPod>> materials;
+	std::vector<PodHandle<MaterialPod>> materials{};
 };

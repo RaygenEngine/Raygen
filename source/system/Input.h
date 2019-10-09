@@ -37,8 +37,6 @@ private:
 	AnalogState m_analogState{};
 
 public:
-	// Input& operator=(const Input&) = delete;
-
 	Input();
 
 	void UpdateWheel(int32 wheelDelta);

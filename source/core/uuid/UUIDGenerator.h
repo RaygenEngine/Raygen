@@ -27,7 +27,12 @@ public: // thread safe UUID generator
 		return v;
 	}
 
+	~UUIDGenerator() = default;
+
 	UUIDGenerator(UUIDGenerator const&) = delete;
-	void operator=(UUIDGenerator const&) = delete;
+	UUIDGenerator(UUIDGenerator&&) = delete;
+
+	UUIDGenerator& operator=(UUIDGenerator const&) = delete;
+	UUIDGenerator& operator=(UUIDGenerator&&) = delete;
 };
 } // namespace utl

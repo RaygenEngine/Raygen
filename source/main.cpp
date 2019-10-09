@@ -21,7 +21,7 @@
 // Note: if your work does not require dynamic updates, is not resource intensive, etc. you can avoid some of the steps
 // shown above
 
-#include "pch.h"
+#include "pch/pch.h"
 #include "App.h"
 
 int32 main(int32 argc, char* argv[])

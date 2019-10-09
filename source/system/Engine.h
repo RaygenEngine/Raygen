@@ -56,10 +56,13 @@ public:
 	[[nodiscard]] static Editor* GetEditor() { return Get().m_editor; }
 
 public:
-	Engine(Engine const&) = delete;
-	void operator=(Engine const&) = delete;
-
 	~Engine();
+
+	Engine(Engine const&) = delete;
+	Engine(Engine&&) = delete;
+
+	Engine& operator=(Engine const&) = delete;
+	Engine& operator=(Engine&&) = delete;
 
 private:
 	struct RendererMetadata {
