@@ -16,12 +16,12 @@ class GLDeferredRenderer : public GLRendererBase {
 
 protected:
 	// TODO: should use the camera and window respectively
-	int32 m_outWidth{}, m_outHeight{};
-	GLuint m_outFbo{};
-	GLuint m_outTexture{};
+	int32 m_outWidth{0}, m_outHeight{0};
+	GLuint m_outFbo{0};
+	GLuint m_outTexture{0};
 
-	GLShader* m_deferredDirectionalLightShader{};
-	GLShader* m_deferredSpotLightShader{};
+	GLShader* m_deferredDirectionalLightShader{nullptr};
+	GLShader* m_deferredSpotLightShader{nullptr};
 
 	struct GBuffer {
 		GLuint fbo{ 0 };
@@ -42,7 +42,7 @@ protected:
 	std::vector<GLBasicGeometry*> m_glGeometries;
 	std::vector<GLBasicDirectionalLight*> m_glDirectionalLights;
 	std::vector<GLBasicSpotLight*> m_glSpotLights;
-	CameraNode* m_camera;
+	CameraNode* m_camera{ nullptr };
 
 	void RenderGBuffer();
 
@@ -51,7 +51,7 @@ protected:
 
 	void RenderWindow();
 
-	GLuint m_currentTexture{};
+	GLuint m_currentTexture{0};
 
 public:
 	std::string m_previewModeString{};
@@ -65,7 +65,7 @@ public:
 		m_resizeListener.BindMember(this, &GLDeferredRenderer::WindowResize);
 	}
 
-	~GLDeferredRenderer();
+	~GLDeferredRenderer() override;
 
 	bool InitScene() override;
 

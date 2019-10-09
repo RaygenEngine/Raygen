@@ -2,13 +2,6 @@
 
 #include "world/nodes/light/DirectionalLightNode.h"
 
-
-DirectionalLightNode::DirectionalLightNode(Node* parent)
-	: Node(parent)
-	, m_projectionMatrix()
-{
-}
-
 void DirectionalLightNode::DirtyUpdate()
 {
 	Node::DirtyUpdate();

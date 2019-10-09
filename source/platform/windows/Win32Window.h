@@ -23,7 +23,7 @@ protected:
 	bool Register(UINT style, LPCSTR name, HBRUSH backgroundBrushColor, HCURSOR cursor, WNDPROC windowHandleFunction,
 		HINSTANCE instance);
 
-	bool Create(int32 xpos, int32 ypox, int32 width, int32 height, LPCSTR title, LONG style);
+	bool Create(int32 xpos, int32 ypos, int32 width, int32 height, LPCSTR title, LONG style);
 
 public:
 	// Returns 'new' constructed window.

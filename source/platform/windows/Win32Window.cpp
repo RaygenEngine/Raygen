@@ -72,7 +72,7 @@ Win32Window* Win32Window::CreateWin32Window(const std::string& title, int32 xpos
 	auto window = new Win32Window();
 
 	if (!window->Register(
-			style, name, backgroundBrushColor, LoadCursor(NULL, cursorName), windowHandleFunction, hInstance)) {
+			style, name, backgroundBrushColor, LoadCursor(nullptr, cursorName), windowHandleFunction, hInstance)) {
 		LOG_FATAL("Failed to register application window!");
 		delete window;
 		return nullptr;
@@ -105,7 +105,7 @@ void Win32Window::RestrictMouseMovement()
 
 void Win32Window::ReleaseMouseMovement()
 {
-	ClipCursor(NULL);
+	ClipCursor(nullptr);
 }
 
 void Win32Window::Show()
@@ -164,7 +164,7 @@ void Win32Window::GenerateXInputControllerMessages()
 		thumb.direction = glm::normalize(point);
 
 		// clamp and normalize
-		magnitude > deadZone ? thumb.magnitude = (glm::min(magnitude, 32767.f) - deadZone) / (32767 - deadZone)
+		magnitude > deadZone ? thumb.magnitude = (glm::min(magnitude, 32767.f) - deadZone) / (32767.f - deadZone)
 							 : thumb.magnitude = 0.0f;
 
 		return thumb;
@@ -229,8 +229,10 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 
 	Win32Window* window = Engine::GetMainWindow();
 
-	if (!window)
+	if (!window) {
 		return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+
 
 	// TODO:
 	if (Engine::GetEditor()) {
@@ -259,14 +261,16 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 		case WM_SYSKEYDOWN:
 			// escape loses focus - use to resize, close, etc.
 			// also propagated in input
-			if (wParam == VK_ESCAPE)
+			if (wParam == VK_ESCAPE) {
 				window->ReleaseMouseMovement();
+			}
 
 			// translate generic key press
 			input.UpdateKeyPressed(TranslateWin32VirtualKeys(wParam));
 			// map extended key press
-			if (MapLeftRightKeys(wParam, lParam))
+			if (MapLeftRightKeys(wParam, lParam)) {
 				input.UpdateKeyPressed(TranslateWin32VirtualKeys(wParam));
+			}
 			break;
 
 		case WM_KEYUP:
@@ -274,8 +278,9 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 			// translate generic key up
 			input.UpdateKeyReleased(TranslateWin32VirtualKeys(wParam));
 			// map extended key up
-			if (MapLeftRightKeys(wParam, lParam))
+			if (MapLeftRightKeys(wParam, lParam)) {
 				input.UpdateKeyReleased(TranslateWin32VirtualKeys(wParam));
+			}
 			break;
 
 		case WM_LBUTTONDOWN: input.UpdateKeyPressed(XVirtualKey::LBUTTON); break;
@@ -311,16 +316,18 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 		case WM_MOUSEMOVE:
 			// drag is considered any of the mouse buttons as modifier
 			if (wParam & MK_LBUTTON || wParam & MK_MBUTTON || wParam & MK_RBUTTON || wParam & MK_XBUTTON1
-				|| wParam & MK_XBUTTON2)
+				|| wParam & MK_XBUTTON2) {
 				input.UpdateCursorDrag();
+			}
 
 			input.UpdateCursorPosition({ GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) });
 			break;
 
 		case WM_SIZE:
 			// don't report ever 0 width/height to avoid numerical errors
-			if (LOWORD(lParam) == 0 || HIWORD(lParam) == 0)
+			if (LOWORD(lParam) == 0 || HIWORD(lParam) == 0) {
 				break;
+			}
 
 			window->m_width = LOWORD(lParam);
 			window->m_height = HIWORD(lParam);

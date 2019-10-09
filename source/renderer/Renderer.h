@@ -11,7 +11,10 @@
 #define MAKE_METADATA(Class)                                                                                           \
 public:                                                                                                                \
 	static Renderer* MetaConstruct() { return new Class(); }                                                           \
-	static std::string MetaName() { return std::string(#Class); }
+	static std::string MetaName() { return std::string(#Class); }                                                      \
+                                                                                                                       \
+private:
+
 
 class Renderer {
 public:

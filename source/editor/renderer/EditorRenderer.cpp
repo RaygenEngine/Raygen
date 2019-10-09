@@ -4,21 +4,6 @@
 #include "editor/Editor.h"
 #include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
 
-void ForwardEditorRenderer::OnNodePodsDirty(Node* node)
-{
-	// if (auto geometry = dynamic_cast<GeometryNode*>(node))
-	//{
-	//	auto it = std::find_if(m_glGeometries.begin(), m_glGeometries.end(),
-	//[node](std::unique_ptr<OpenGL::GLBasicGeometry>& ptr)
-	//	{
-	//		return ptr.get()->node == node;
-	//	});
-	//	assert(it != m_glGeometries.end() && "Attempting to update untracked geometry node from observer list.");
-	//
-	//	(*it)->ReloadModel();
-	//}
-}
-
 void ForwardEditorRenderer::Render()
 {
 	OpenGL::GLForwardRenderer::Render();
@@ -42,26 +27,6 @@ ForwardEditorRenderer::~ForwardEditorRenderer()
 	ImguiImpl::CleanupOpenGL();
 }
 
-
-//
-// WIP:
-//
-
-void DeferredEditorRenderer::OnNodePodsDirty(Node* node)
-{
-	// if (auto geometry = dynamic_cast<GeometryNode*>(node))
-	//{
-	//	auto it = std::find_if(m_glGeometries.begin(), m_glGeometries.end(),
-	//[node](std::unique_ptr<OpenGL::GLBasicGeometry>& ptr)
-	//	{
-	//		return ptr.get()->node == node;
-	//	});
-	//	assert(it != m_glGeometries.end() && "Attempting to update untracked geometry node from observer list.");
-
-	//	(*it)->ReloadModel();
-	//}
-}
-
 void DeferredEditorRenderer::Render()
 {
 	OpenGL::GLDeferredRenderer::Render();
@@ -69,7 +34,6 @@ void DeferredEditorRenderer::Render()
 		ImguiImpl::RenderOpenGL();
 	}
 }
-
 
 bool DeferredEditorRenderer::InitRendering(HWND assochWnd, HINSTANCE instance)
 {

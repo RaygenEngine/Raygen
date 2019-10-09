@@ -41,8 +41,8 @@ void SceneSave::Draw()
 namespace {
 
 struct GenerateXMLVisitor {
-	tinyxml2::XMLElement* xmlElement;
-	const char* name;
+	tinyxml2::XMLElement* xmlElement{ nullptr };
+	const char* name{ nullptr };
 	std::string name_str; // required for const char* validility
 
 	bool PreProperty(const Property& p)

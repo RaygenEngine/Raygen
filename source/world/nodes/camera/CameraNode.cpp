@@ -3,17 +3,6 @@
 #include "world/nodes/camera/CameraNode.h"
 #include "platform/windows/Win32Window.h"
 
-CameraNode::CameraNode(Node* parent)
-	: Node(parent)
-	, m_focalLength(1.f)
-	, m_vFov(60.f)
-	, m_hFov(45.f)
-	, m_near(0.2f)
-	, m_far(1000.0f)
-	, m_projectionMatrix()
-{
-}
-
 void CameraNode::RecalculateProjectionFov()
 {
 	auto ar = static_cast<float>(m_viewportWidth) / static_cast<float>(m_viewportHeight);

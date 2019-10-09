@@ -88,9 +88,7 @@ void Engine::SwitchRenderer(uint32 registrationIndex)
 		return;
 	}
 
-	if (eng.m_renderer) {
-		delete eng.m_renderer;
-	}
+	delete eng.m_renderer;
 
 
 	eng.m_renderer = eng.m_rendererRegistrations[registrationIndex].Construct();
