@@ -10,7 +10,6 @@ link_directories(${LIB_DEPENDENCIES_DIRECTORY})
 set(SOURCE_FILES 
 
 	asset/AssetManager.cpp
-	asset/PathSystem.cpp
 	asset/PodLoaders.cpp
 		
 	asset/util/DependenciesImpl.cpp
@@ -91,12 +90,10 @@ set(HEADER_FILES
 
 	asset/AssetPod.h
 	asset/AssetManager.h
-	asset/PathSystem.h
 	
 	asset/UriLibrary.h
 	asset/PodIncludes.h
 	asset/PodHandle.h
-
 
 	asset/loaders/TextLoader.h
 	asset/loaders/XMLDocLoader.h
@@ -121,16 +118,10 @@ set(HEADER_FILES
 	asset/util/GltfAux.h
 	asset/util/ParsingAux.h
 	
-
-	core/auxiliary/FlagAux.h
-	core/auxiliary/FileAux.h
 	core/auxiliary/GraphicsMathAux.h
 	core/auxiliary/MetaTemplates.h
-	core/auxiliary/SmartPtrAux.h
+	core/auxiliary/MemoryAux.h
 	core/auxiliary/StringAux.h
-
-	core/data/BasicLight.h
-	core/data/Vertex.h
 	
 	core/enum/InputEnums.h
 	core/enum/TargetEnums.h
@@ -254,12 +245,12 @@ if(MSVC)
 
 	set_source_files_properties(pch/pch.cpp
 								PROPERTIES 
-								COMPILE_FLAGS "/Yc\"pch.h\" /Fp\"${PrecompiledBinary}\""
+								COMPILE_FLAGS "/Yc\"pch/pch.h\" /Fp\"${PrecompiledBinary}\""
 								OBJECT_OUTPUTS "${PrecompiledBinary}")
 	
 	set_source_files_properties(${SOURCE_FILES}
 								PROPERTIES 
-								COMPILE_FLAGS "/Yu\"pch.h\" /FI\"pch.h\" /Fp\"${PrecompiledBinary}\""
+								COMPILE_FLAGS "/Yu\"pch/pch.h\" /FI\"pch/pch.h\" /Fp\"${PrecompiledBinary}\""
 							    OBJECT_DEPENDS "${PrecompiledBinary}")  
 										   
 	list(APPEND SOURCE_FILES pch/pch.cpp)
@@ -298,7 +289,6 @@ include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/stb_image)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/tinygltf)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/tinyxml2)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/pch)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 # for generated exports file

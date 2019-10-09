@@ -19,7 +19,5 @@ struct GLBasicGeometry : NodeObserver<GeometryNode, GLRendererBase> {
 			ReloadModel();
 		}
 	}
-
-	virtual ~GLBasicGeometry() = default;
 };
 } // namespace OpenGL

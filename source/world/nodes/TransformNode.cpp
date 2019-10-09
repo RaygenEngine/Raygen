@@ -1,8 +1,3 @@
-#include "pch.h"
+#include "pch/pch.h"
 
 #include "world/nodes/TransformNode.h"
-
-TransformNode::TransformNode(Node* parent)
-	: Node(parent)
-{
-}

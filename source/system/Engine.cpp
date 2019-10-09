@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "pch/pch.h"
 
 #include "system/Engine.h"
 #include "asset/loaders/XMLDocLoader.h"
@@ -10,28 +10,13 @@
 #include "AppBase.h"
 #include "editor/Editor.h"
 
-// Leave this empty, use InitEngine.
-// Having a different function here enables us to 'construct' engine with parameters.
-Engine::Engine()
-	: m_assetManager(nullptr)
-	, m_world(nullptr)
-	, m_renderer(nullptr)
-	, m_window(nullptr)
-	, m_input(nullptr)
-{
-}
-
 Engine::~Engine()
 {
 	// NOTE: It is REALLY important to remember the reverse order here
-	if (m_renderer)
-		delete m_renderer;
-	if (m_editor)
-		delete m_editor;
-	if (m_world)
-		delete m_world;
-	if (m_window)
-		delete m_window;
+	delete m_renderer;
+	delete m_editor;
+	delete m_world;
+	delete m_window;
 
 	delete m_assetManager;
 	delete m_input;

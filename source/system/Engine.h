@@ -16,7 +16,7 @@ class NodeFactory;
 
 class Engine {
 private:
-	Engine();
+	Engine() = default;
 
 public:
 	[[nodiscard]] static Engine& Get()
@@ -56,10 +56,13 @@ public:
 	[[nodiscard]] static Editor* GetEditor() { return Get().m_editor; }
 
 public:
-	Engine(Engine const&) = delete;
-	void operator=(Engine const&) = delete;
-
 	~Engine();
+
+	Engine(Engine const&) = delete;
+	Engine(Engine&&) = delete;
+
+	Engine& operator=(Engine const&) = delete;
+	Engine& operator=(Engine&&) = delete;
 
 private:
 	struct RendererMetadata {
@@ -70,26 +73,26 @@ private:
 	std::vector<RendererMetadata> m_rendererRegistrations;
 
 	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
-	AssetManager* m_assetManager;
+	AssetManager* m_assetManager{ nullptr };
 
 	// Owning Pointer, Expected to be valid 'forever' after InitEngine at this time.
-	WindowType* m_window;
+	WindowType* m_window{ nullptr };
 
 	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
-	Input* m_input;
+	Input* m_input{ nullptr };
 
 	// Owning Pointer. No guarantees can be made for world pointer.
 	// It may be invalidated during runtime when loading other worlds etc.
-	World* m_world;
+	World* m_world{ nullptr };
 
 	// Owning Pointer. This pointer will NEVER be valid without a valid World existing.
 	// It will get invalidated when switching renderers / loading worlds.
-	Renderer* m_renderer;
+	Renderer* m_renderer{ nullptr };
 
 	// Non owning pointer, expected to be valid for the whole program execution
-	AppBase* m_app;
+	AppBase* m_app{ nullptr };
 
-	Editor* m_editor;
+	Editor* m_editor{ nullptr };
 
 	Timer::DebugTimer<ch::milliseconds> m_initToFrameTimer;
 

@@ -1,2 +1,4 @@
-DR_DirectionalLight.vert
-DR_DirectionalLight.frag
+{
+	"vert" : "DR_DirectionalLight.vert"
+	"frag" : "DR_DirectionalLight.frag"
+}

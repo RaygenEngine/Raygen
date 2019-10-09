@@ -14,7 +14,5 @@ public:
 	{
 	}
 
-	~GeometryNode() = default;
-
-	PodHandle<ModelPod> GetModel() const { return m_model; }
+	[[nodiscard]] PodHandle<ModelPod> GetModel() const { return m_model; }
 };

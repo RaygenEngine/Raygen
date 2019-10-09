@@ -24,7 +24,7 @@ inline PodHandle<PodType> GetCustom(const uri::Uri& info)
 #define GET_CUSTOM_POD(type, ...) CustomLoader::GetCustom<type>(std::string(__VA_ARGS__) + #type)
 
 // #TexturePod#image_path
-inline bool Load(TexturePod* pod, const uri::Uri& path)
+inline bool Load(TexturePod* pod, const uri::Uri&)
 {
 	// WIP:
 	// auto str = "";//path.string().find_last_of('#');
@@ -34,7 +34,7 @@ inline bool Load(TexturePod* pod, const uri::Uri& path)
 	return true;
 }
 
-inline bool Load(MaterialPod* pod, const uri::Uri& path)
+inline bool Load(MaterialPod* pod, const uri::Uri&)
 {
 	pod->baseColorTexture = GET_CUSTOM_POD(TexturePod, __default__imageWhite);
 	pod->normalTexture = GET_CUSTOM_POD(TexturePod, __default__imageNormal);

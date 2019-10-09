@@ -122,7 +122,6 @@ namespace {
 			case BufferComponentType::DOUBLE:
 			case BufferComponentType::INVALID: return;
 		}
-		return;
 	}
 
 	template<typename ComponentType>
@@ -133,12 +132,12 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].position[0] = static_cast<float>(data[0]);
 				result[i].position[1] = static_cast<float>(data[1]);
 				result[i].position[2] = static_cast<float>(data[2]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].position[0] = data[0];
 				result[i].position[1] = data[1];
 				result[i].position[2] = data[2];
@@ -157,12 +156,12 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].normal[0] = static_cast<float>(data[0]);
 				result[i].normal[1] = static_cast<float>(data[1]);
 				result[i].normal[2] = static_cast<float>(data[2]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].normal[0] = data[0];
 				result[i].normal[1] = data[1];
 				result[i].normal[2] = data[2];
@@ -181,12 +180,12 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].tangent[0] = static_cast<float>(data[0]);
 				result[i].tangent[1] = static_cast<float>(data[1]);
 				result[i].tangent[2] = static_cast<float>(data[2]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].tangent[0] = data[0];
 				result[i].tangent[1] = data[1];
 				result[i].tangent[2] = data[2];
@@ -205,11 +204,11 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].textCoord0[0] = static_cast<float>(data[0]);
 				result[i].textCoord0[1] = static_cast<float>(data[1]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].textCoord0[0] = data[0];
 				result[i].textCoord0[1] = data[1];
 			}
@@ -227,11 +226,11 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].textCoord1[0] = static_cast<float>(data[0]);
 				result[i].textCoord1[1] = static_cast<float>(data[1]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].textCoord1[0] = data[0];
 				result[i].textCoord1[1] = data[1];
 			}
@@ -302,27 +301,26 @@ namespace {
 	void LoadIntoVertextData_Selector(
 		std::vector<VertexData>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 	{
-		if constexpr (VertexElementIndex == 0) {
+		if constexpr (VertexElementIndex == 0) { // NOLINT
 			CopyToVertexData_Position<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
-		else if constexpr (VertexElementIndex == 1) {
+		else if constexpr (VertexElementIndex == 1) { // NOLINT
 			CopyToVertexData_Normal<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
-		else if constexpr (VertexElementIndex == 2) {
+		else if constexpr (VertexElementIndex == 2) { // NOLINT
 			CopyToVertexData_Tangent<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
-		else if constexpr (VertexElementIndex == 3) {
+		else if constexpr (VertexElementIndex == 3) { // NOLINT
 			CopyToVertexData_TexCoord0<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
-		else if constexpr (VertexElementIndex == 4) {
+		else if constexpr (VertexElementIndex == 4) { // NOLINT
 			CopyToVertexData_TexCoord1<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
 	}
 
 
-	bool LoadGeometryGroup(ModelPod* pod, const uri::Uri& parentPath, GeometryGroup& geom,
-		const tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat,
-		bool& requiresDefaultMaterial)
+	bool LoadGeometryGroup(ModelPod* pod, GeometryGroup& geom, const tinygltf::Model& modelData,
+		const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat, bool& requiresDefaultMaterial)
 	{
 		// mode
 		geom.mode = GltfAux::GetGeometryMode(primitiveData.mode);
@@ -443,8 +441,8 @@ namespace {
 		return true;
 	}
 
-	bool LoadMesh(ModelPod* pod, const uri::Uri& parentPath, Mesh& mesh, const tinygltf::Model& modelData,
-		const tinygltf::Mesh& meshData, const glm::mat4& transformMat, bool& requiresDefaultMaterial)
+	bool LoadMesh(ModelPod* pod, Mesh& mesh, const tinygltf::Model& modelData, const tinygltf::Mesh& meshData,
+		const glm::mat4& transformMat, bool& requiresDefaultMaterial)
 	{
 		mesh.geometryGroups.resize(meshData.primitives.size());
 
@@ -455,8 +453,8 @@ namespace {
 			auto& primitiveData = meshData.primitives.at(i);
 
 			// if one of the geometry groups fails to load
-			if (!LoadGeometryGroup(pod, parentPath, mesh.geometryGroups[i], modelData, primitiveData, transformMat,
-					requiresDefaultMaterial)) {
+			if (!LoadGeometryGroup(
+					pod, mesh.geometryGroups[i], modelData, primitiveData, transformMat, requiresDefaultMaterial)) {
 				LOG_ERROR("Failed to load geometry group, name: {}", geomName);
 				return false;
 			}
@@ -506,9 +504,11 @@ inline bool Load(ModelPod* pod, const uri::Uri& path)
 
 			// When matrix is defined, it must be decomposable to TRS.
 			if (!childNode.matrix.empty()) {
-				for (int32 row = 0; row < 4; ++row)
-					for (int32 column = 0; column < 4; ++column)
+				for (int32 row = 0; row < 4; ++row) {
+					for (int32 column = 0; column < 4; ++column) {
 						localTransformMat[row][column] = static_cast<float>(childNode.matrix[column + 4 * row]);
+					}
+				}
 			}
 			else {
 				glm::vec3 translation = glm::vec3(0.f);
@@ -547,7 +547,7 @@ inline bool Load(ModelPod* pod, const uri::Uri& path)
 				Mesh mesh;
 
 				// if missing mesh
-				if (!LoadMesh(pod, pPath, mesh, model, gltfMesh, localTransformMat, requiresDefaultMaterial)) {
+				if (!LoadMesh(pod, mesh, model, gltfMesh, localTransformMat, requiresDefaultMaterial)) {
 					LOG_ERROR("Failed to load mesh, name: {}", gltfMesh.name);
 					return false;
 				}
@@ -555,9 +555,11 @@ inline bool Load(ModelPod* pod, const uri::Uri& path)
 			}
 
 			// load child's children
-			if (!childNode.children.empty())
-				if (!RecurseChildren(childNode.children, localTransformMat))
+			if (!childNode.children.empty()) {
+				if (!RecurseChildren(childNode.children, localTransformMat)) {
 					return false;
+				}
+			}
 		}
 		return true;
 	};

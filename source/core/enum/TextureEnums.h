@@ -45,7 +45,3 @@ enum CubeMapFace : int32
 	CMF_BACK,
 	CMF_COUNT
 };
-
-class Foo {
-	int x;
-};

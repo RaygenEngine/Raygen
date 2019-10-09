@@ -1,10 +1,26 @@
 #pragma once
 
-enum class GeometryMode { POINTS, LINE, LINE_LOOP, LINE_STRIP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, INVALID };
+enum class GeometryMode
+{
+	POINTS,
+	LINE,
+	LINE_LOOP,
+	LINE_STRIP,
+	TRIANGLES,
+	TRIANGLE_STRIP,
+	TRIANGLE_FAN,
+	INVALID
+};
 
-enum class GeometryUsage { DYNAMIC, STATIC, INVALID };
+enum class GeometryUsage
+{
+	DYNAMIC,
+	STATIC,
+	INVALID
+};
 
-enum AlphaMode : int32 {
+enum AlphaMode : int32
+{
 	// The rendered output is fully opaque and any alpha value is ignored.
 	AM_OPAQUE,
 	// The rendered output is either fully opaque or fully transparent depending on the alpha value and the specified

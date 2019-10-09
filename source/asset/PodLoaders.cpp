@@ -1,3 +1,5 @@
+#include "pch/pch.h"
+
 #include "asset/pods/GltfFilePod.h"
 #include "asset/pods/ImagePod.h"
 #include "asset/pods/MaterialPod.h"
@@ -68,7 +70,7 @@ bool TexturePod::Load(TexturePod* pod, const uri::Uri& path)
 		return GltfTextureLoader::Load(pod, path);
 	}
 	// TODO: search sub extension, or make cubeman extension
-	else if (uri::MatchesExtension(path, ".json")) {
+	if (uri::MatchesExtension(path, ".json")) {
 		return CubemapLoader::Load(pod, path);
 	}
 	// add Json sampler loader

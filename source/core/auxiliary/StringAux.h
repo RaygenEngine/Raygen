@@ -51,8 +51,9 @@ inline void Trim(std::string& s)
 inline bool CaseInsensitiveCompare(const std::string& a, const std::string& b)
 {
 	// if different sizes, they are different
-	if (a.size() != b.size())
+	if (a.size() != b.size()) {
 		return false;
+	}
 
 	return std::equal(
 		a.begin(), a.end(), b.begin(), b.end(), [](char c1, char c2) { return tolower(c1) == tolower(c2); });

@@ -11,20 +11,19 @@
 #include "core/enum/GeometryEnums.h"
 #include "core/enum/BufferEnums.h"
 
-// c friendly data structs
-#include "core/data/BasicLight.h"
-#include "core/data/Vertex.h"
-
 // singletons
 #include "core/timer/Timer.h"
 #include "core/logger/Logger.h"
 #include "core/uuid/UUIDGenerator.h"
 
 // auxiliary
-#include "core/auxiliary/FlagAux.h"
-#include "core/auxiliary/FileAux.h"
 #include "core/auxiliary/GraphicsMathAux.h"
-#include "core/auxiliary/SmartPtrAux.h"
+#include "core/auxiliary/MemoryAux.h"
 #include "core/auxiliary/StringAux.h"
 
 #include <bitset>
+
+#include <fstream>
+
+#include <filesystem>
+namespace fs = std::filesystem;

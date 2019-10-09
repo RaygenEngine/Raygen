@@ -3,28 +3,6 @@
 #include <chrono>
 namespace ch = std::chrono;
 
-// TODO: make or use an actual timer
-#define TIMING
-#ifdef TIMING
-#	define INIT_TIMER  auto start___ = std::chrono::high_resolution_clock::now()
-#	define START_TIMER start___ = std::chrono::high_resolution_clock::now()
-#	define STOP_TIMER(name)                                                                                           \
-		LOG_ANY("{0}: {1} ms", name,                                                                                   \
-			std::chrono::duration_cast<std::chrono::milliseconds>(                                                     \
-				std::chrono::high_resolution_clock::now() - start___)                                                  \
-				.count())
-#	define STOP_TIMER_MICRO(name)                                                                                     \
-		LOG_ANY("{0}: {1} micros", name,                                                                               \
-			std::chrono::duration_cast<std::chrono::microseconds>(                                                     \
-				std::chrono::high_resolution_clock::now() - start___)                                                  \
-				.count())
-#else
-#	define TIME_FUNCTION(func, ...)
-#	define INIT_TIMER
-#	define START_TIMER
-#	define STOP_TIMER(name)
-#endif
-
 
 #include "core/logger/Logger.h"
 
@@ -37,7 +15,9 @@ public:
 	ch::time_point<ch::system_clock> m_startTime;
 	long long m_total{ 0 };
 	bool m_stopped{ false };
-	DebugTimer() {}
+
+	DebugTimer() = default;
+
 	DebugTimer(bool autoStart)
 	{
 		if (autoStart) {
@@ -107,6 +87,10 @@ public:
 	}
 
 	~ScopedTimer() { Report(); }
+	ScopedTimer(ScopedTimer const&) = default;
+	ScopedTimer(ScopedTimer&&) = default;
+	ScopedTimer& operator=(ScopedTimer const&) = default;
+	ScopedTimer& operator=(ScopedTimer&&) = default;
 
 	long long Get()
 	{
@@ -129,6 +113,10 @@ public:
 	}
 
 	~Scope() { m_timer.StopReport(m_str); }
+	Scope(Scope const&) = default;
+	Scope& operator=(Scope const&) = default;
+	Scope(Scope&&) = default;
+	Scope& operator=(Scope&&) = default;
 };
 } // namespace Timer
 
