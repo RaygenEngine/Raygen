@@ -101,9 +101,8 @@ struct ReflectionToImguiVisitor {
 		if (p.HasFlags(PropertyFlags::Color)) {
 			return ImGui::ColorEdit3(name, ImUtil::FromVec3(t), ImGuiColorEditFlags_DisplayHSV);
 		}
-		else {
-			return ImGui::DragFloat3(name, ImUtil::FromVec3(t), 0.01f);
-		}
+
+		return ImGui::DragFloat3(name, ImUtil::FromVec3(t), 0.01f);
 	}
 
 	bool Inner(glm::vec4& t, const Property& p)

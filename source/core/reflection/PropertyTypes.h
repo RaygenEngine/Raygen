@@ -30,19 +30,8 @@ namespace detail {
 	template<typename T>
 	constexpr bool CanBePropertyF()
 	{
-		if constexpr (IsHandleToPodF<T>()) {
-			return true;
-		}
-		else if constexpr (is_vector_of_base_v<T, BasePodHandle>) {
-			return true;
-		}
-		else if constexpr (CanBePropertyBaseTypeF<T>()) {
-			return true;
-		}
-		else if constexpr (std::is_enum_v<T>) {
-			return true;
-		}
-		return false;
+		return IsHandleToPodF<T>() || is_vector_of_base_v<T, BasePodHandle> || CanBePropertyBaseTypeF<T>()
+			   || std::is_enum_v<T>;
 	}
 } // namespace detail
 

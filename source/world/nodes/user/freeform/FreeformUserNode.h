@@ -9,7 +9,6 @@ class FreeformUserNode : public UserNode {
 
 public:
 	FreeformUserNode(Node* parent);
-	~FreeformUserNode() = default;
 
 	void Update(float deltaTime) override;
 };

@@ -132,12 +132,12 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].position[0] = static_cast<float>(data[0]);
 				result[i].position[1] = static_cast<float>(data[1]);
 				result[i].position[2] = static_cast<float>(data[2]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].position[0] = data[0];
 				result[i].position[1] = data[1];
 				result[i].position[2] = data[2];
@@ -156,12 +156,12 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].normal[0] = static_cast<float>(data[0]);
 				result[i].normal[1] = static_cast<float>(data[1]);
 				result[i].normal[2] = static_cast<float>(data[2]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].normal[0] = data[0];
 				result[i].normal[1] = data[1];
 				result[i].normal[2] = data[2];
@@ -180,12 +180,12 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].tangent[0] = static_cast<float>(data[0]);
 				result[i].tangent[1] = static_cast<float>(data[1]);
 				result[i].tangent[2] = static_cast<float>(data[2]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].tangent[0] = data[0];
 				result[i].tangent[1] = data[1];
 				result[i].tangent[2] = data[2];
@@ -204,11 +204,11 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].textCoord0[0] = static_cast<float>(data[0]);
 				result[i].textCoord0[1] = static_cast<float>(data[1]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].textCoord0[0] = data[0];
 				result[i].textCoord0[1] = data[1];
 			}
@@ -226,11 +226,11 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-			if constexpr (std::is_same_v<double, ComponentType>) {
+			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].textCoord1[0] = static_cast<float>(data[0]);
 				result[i].textCoord1[1] = static_cast<float>(data[1]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) {
+			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
 				result[i].textCoord1[0] = data[0];
 				result[i].textCoord1[1] = data[1];
 			}
@@ -301,19 +301,19 @@ namespace {
 	void LoadIntoVertextData_Selector(
 		std::vector<VertexData>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 	{
-		if constexpr (VertexElementIndex == 0) {
+		if constexpr (VertexElementIndex == 0) { // NOLINT
 			CopyToVertexData_Position<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
-		else if constexpr (VertexElementIndex == 1) {
+		else if constexpr (VertexElementIndex == 1) { // NOLINT
 			CopyToVertexData_Normal<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
-		else if constexpr (VertexElementIndex == 2) {
+		else if constexpr (VertexElementIndex == 2) { // NOLINT
 			CopyToVertexData_Tangent<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
-		else if constexpr (VertexElementIndex == 3) {
+		else if constexpr (VertexElementIndex == 3) { // NOLINT
 			CopyToVertexData_TexCoord0<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
-		else if constexpr (VertexElementIndex == 4) {
+		else if constexpr (VertexElementIndex == 4) { // NOLINT
 			CopyToVertexData_TexCoord1<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 		}
 	}

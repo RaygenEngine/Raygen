@@ -15,6 +15,11 @@ public:                                                                         
 
 class Renderer {
 public:
+	Renderer() = default;
+	Renderer(const Renderer&) = delete;
+	Renderer(Renderer&&) = delete;
+	Renderer& operator=(const Renderer&) = delete;
+	Renderer& operator=(Renderer&&) = delete;
 	virtual ~Renderer() = default;
 
 	// Windows based init rendering (implement in "context"-base renderers)
@@ -36,7 +41,11 @@ class ObserverRenderer : public Renderer {
 	std::unordered_set<std::unique_ptr<NodeObserverBase>> m_observers;
 
 protected:
-	ObserverRenderer();
+	ObserverRenderer()
+	{
+		m_nodeAddedListener.BindMember(this, &ObserverRenderer::OnNodeAddedToWorld);
+		m_nodeRemovedListener.BindMember(this, &ObserverRenderer::OnNodeRemovedFromWorld);
+	}
 
 	DECLARE_EVENT_LISTENER(m_nodeAddedListener, Event::OnWorldNodeAdded);
 	DECLARE_EVENT_LISTENER(m_nodeRemovedListener, Event::OnWorldNodeRemoved);
@@ -120,8 +129,6 @@ protected:
 	virtual void OnNodeAddedToWorld(Node* node);
 
 public:
-	virtual ~ObserverRenderer() = default;
-
 	// Windows based init rendering (implement in "context"-base renderers)
 	virtual bool InitRendering(HWND assochWnd, HINSTANCE instance) = 0;
 

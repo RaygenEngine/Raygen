@@ -31,7 +31,7 @@ public:
 
 	void UpdateEditor();
 
-	bool ShouldUpdateWorld() const { return m_updateWorld; }
+	[[nodiscard]] bool ShouldUpdateWorld() const { return m_updateWorld; }
 
 	void PreBeginFrame();
 

@@ -85,7 +85,7 @@ class AssetManager {
 
 	// Specialized in a few cases where instant loading or multithreaded loading is faster
 	template<typename T>
-	void PostRegisterEntry(PodEntry* p)
+	void PostRegisterEntry(PodEntry* entry)
 	{
 	}
 

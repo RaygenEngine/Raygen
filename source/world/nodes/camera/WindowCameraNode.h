@@ -9,7 +9,6 @@ public:
 	DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
 
 	WindowCameraNode(Node* parent);
-	~WindowCameraNode() = default;
 
 private:
 	void WindowResize(int32 width, int32 height);
