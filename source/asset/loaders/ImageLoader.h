@@ -19,11 +19,11 @@ inline bool Load(ImagePod* pod, const uri::Uri& path)
 		pod->data = stbi_loadf(finalPath, &pod->width, &pod->height, &pod->components, STBI_rgb_alpha);
 	}
 
-	bool result = !pod->data || (pod->width == 0) || (pod->height == 0);
+	bool hasNotResult = !pod->data || (pod->width == 0) || (pod->height == 0);
 
-	CLOG_WARN(!result, "TexturePod loading failed, filepath: {}, data_empty: {} width: {} height: {}", finalPath,
+	CLOG_WARN(hasNotResult, "TexturePod loading failed, filepath: {}, data_empty: {} width: {} height: {}", finalPath,
 		static_cast<bool>(pod->data), pod->width, pod->height);
 
-	return result;
+	return !hasNotResult;
 }
 }; // namespace ImageLoader
