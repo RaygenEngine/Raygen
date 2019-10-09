@@ -71,7 +71,6 @@ inline XVirtualKey TranslateXInputVirtualKeys(WORD vkey)
 inline XVirtualKey TranslateWin32VirtualKeys(WPARAM vkey)
 {
 	switch (vkey) {
-		case '~': return XVirtualKey::TILDE;
 		case 0x00: return XVirtualKey::UNASSIGNED;
 		case VK_LBUTTON: return XVirtualKey::LBUTTON;
 		case VK_RBUTTON: return XVirtualKey::RBUTTON;
