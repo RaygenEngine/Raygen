@@ -37,10 +37,10 @@ struct MetaEnumInst;
 	namespace magic_enum {                                                                                             \
 		template<>                                                                                                     \
 		struct enum_range<Enum> {                                                                                      \
-			static constexpr int min = Min;                                                                            \
-			static constexpr int max = Max;                                                                            \
+			static constexpr int min = (Min);                                                                          \
+			static constexpr int max = (Max);                                                                          \
 		};                                                                                                             \
-	}
+	} // NOLINT
 
 //
 // Enum Reflection for our reflection system.

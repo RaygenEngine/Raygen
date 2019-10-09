@@ -5,7 +5,7 @@
 #include <type_traits>
 
 
-// TODO: allow extension of this in "global typelist extensions app header" or something
+// TODO: BACK: allow extension of this in "global typelist extensions app header" or something
 #define Z_POD_TYPES GltfFilePod, ImagePod, MaterialPod, ModelPod, ShaderPod, StringPod, TexturePod, XMLDocPod
 
 
@@ -71,59 +71,3 @@ template<typename Type>
 	LOG_ASSERT("Verified Pod Cast failed. Tried to cast from: {} to {}", pod->type.name(), refl::GetName<Type>());
 	return nullptr;
 }
-
-namespace refl {
-namespace detail {
-	template<typename Visitor, typename... PodTs>
-	void PodVisitP_Impl(AssetPod* pod, Visitor& v)
-	{
-		bool cc = (VisitIfP<PodTs>(pod, v) || ...);
-	}
-
-	template<typename T, typename Visitor>
-	bool VisitIfP(AssetPod* pod, Visitor& v)
-	{
-		if (pod->IsOfType<T>()) {
-			v(PodCast<T>(pod));
-			return true;
-		}
-		return false;
-	}
-
-	template<typename Visitor>
-	void VisitPodP(AssetPod* pod, Visitor& v)
-	{
-		detail::PodVisitP_Impl<Visitor, Z_POD_TYPES>(pod, v);
-	}
-
-	template<typename Visitor, typename... PodTs>
-	void PodVisitPConst_Impl(const AssetPod* pod, Visitor& v)
-	{
-		bool cc = (VisitIfPConst<PodTs>(pod, v) || ...);
-	}
-
-	template<typename T, typename Visitor>
-	bool VisitIfPConst(const AssetPod* pod, Visitor& v)
-	{
-		if (pod->IsOfType<T>()) {
-			v(PodCast<T>(pod));
-			return true;
-		}
-		return false;
-	}
-
-	template<typename Visitor>
-	void VisitPodConst(const AssetPod* pod, Visitor& v)
-	{
-		detail::PodVisitPConst_Impl<Visitor, Z_POD_TYPES>(pod, v);
-	}
-} // namespace detail
-
-template<>
-inline const ReflClass& GetClass(const AssetPod* pod)
-{
-	const ReflClass* ptr;
-	detail::VisitPodConst(pod, [&ptr](auto pod) { ptr = &std::remove_pointer_t<decltype(pod)>::StaticClass(); });
-	return *ptr;
-}
-} // namespace refl

@@ -25,22 +25,26 @@ class RootNode : public Node {
 		REFLECT_VAR(m_ambient, PropertyFlags::Color);
 	}
 
+	glm::vec3 m_background{};
+	glm::vec3 m_ambient{};
+
 public:
 	RootNode()
 		: Node(nullptr)
 	{
 	}
 
-	glm::vec3 m_background;
-	glm::vec3 m_ambient;
+	[[nodiscard]] glm::vec3 GetBackgroundColor() const { return m_background; }
+	[[nodiscard]] glm::vec3 GetAmbientColor() const { return m_ambient; }
 
-	glm::vec3 GetBackgroundColor() const { return m_background; }
 	void SetBackgroundColor(const glm::vec3& color) { m_background = color; }
-
-	glm::vec3 GetAmbientColor() const { return m_ambient; }
 	void SetAmbientColor(const glm::vec3& color) { m_ambient = color; }
 
 	~RootNode() { m_children.clear(); }
+	RootNode(const RootNode&) = default;
+	RootNode(RootNode&&) = default;
+	RootNode& operator=(const RootNode&) = default;
+	RootNode& operator=(RootNode&&) = default;
 };
 
 class World {
@@ -65,7 +69,7 @@ class World {
 	ch::time_point<FrameClock> m_lastFrameTimepoint;
 	long long m_deltaTimeMicros;
 
-	float m_deltaTime;
+	float m_deltaTime{ 0.0f };
 
 	void UpdateFrameTimers();
 
@@ -89,7 +93,7 @@ public:
 	void AddNode(NodeType* node)
 	{
 		// WIP:
-		if constexpr (std::is_base_of_v<CameraNode, NodeType>) {
+		if constexpr (std::is_base_of_v<CameraNode, NodeType>) { // NOLINT
 			if (!m_activeCamera) {
 				m_activeCamera = node;
 			}
@@ -145,30 +149,30 @@ public:
 	template<typename NodeType>
 	constexpr auto& GetNodeMap() const
 	{
-		if constexpr (std::is_base_of<PunctualLightNode, NodeType>::value) {
+		if constexpr (std::is_base_of<PunctualLightNode, NodeType>::value) { // NOLINT
 			return m_punctualLights;
 		}
-		else if constexpr (std::is_base_of<GeometryNode, NodeType>::value) {
+		else if constexpr (std::is_base_of<GeometryNode, NodeType>::value) { // NOLINT
 			return m_triangleModelGeometries;
 		}
-		else if constexpr (std::is_base_of<TransformNode, NodeType>::value) {
+		else if constexpr (std::is_base_of<TransformNode, NodeType>::value) { // NOLINT
 			return m_transforms;
 		}
-		else if constexpr (std::is_base_of<CameraNode, NodeType>::value) {
+		else if constexpr (std::is_base_of<CameraNode, NodeType>::value) { // NOLINT
 			return m_cameras;
 		}
-		else if constexpr (std::is_base_of<UserNode, NodeType>::value) {
+		else if constexpr (std::is_base_of<UserNode, NodeType>::value) { // NOLINT
 			return m_users;
 		}
-		else if constexpr (std::is_base_of<DirectionalLightNode, NodeType>::value) {
+		else if constexpr (std::is_base_of<DirectionalLightNode, NodeType>::value) { // NOLINT
 			return m_directionalLights;
 		}
-		else if constexpr (std::is_base_of<SpotLightNode, NodeType>::value) {
+		else if constexpr (std::is_base_of<SpotLightNode, NodeType>::value) { // NOLINT
 			return m_spotLights;
 		}
 
 		// general nodes
-		else if constexpr (std::is_base_of<Node, NodeType>::value) {
+		else if constexpr (std::is_base_of<Node, NodeType>::value) { // NOLINT
 			return m_nodes;
 		}
 	}

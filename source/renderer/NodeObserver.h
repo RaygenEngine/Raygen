@@ -10,7 +10,7 @@ struct RendererObject {
 	using Type = RendererT;
 };
 
-struct NodeObserverBase {
+struct NodeObserverBase : Object {
 	NodeObserverBase(Node* node)
 		: baseNode(node)
 	{
@@ -40,6 +40,4 @@ public:
 	}
 
 	virtual void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) = 0;
-
-	virtual ~NodeObserver() = default;
 };

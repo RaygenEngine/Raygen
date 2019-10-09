@@ -11,22 +11,6 @@
 #include "asset/PodIncludes.h"
 #include "core/reflection/ReflectionTools.h"
 
-Node::Node(Node* pNode)
-	: m_localTranslation(0.f, 0.f, 0.f)
-	, m_localOrientation(1.f, 0.f, 0.f, 0.f)
-	,
-	// note w, x, y, z
-	m_localScale(1.f, 1.f, 1.f)
-	, m_localMatrix(glm::mat4(1.f))
-	, m_worldTranslation(0.f, 0.f, 0.f)
-	, m_worldOrientation(1.f, 0.f, 0.f, 0.f)
-	, m_worldScale(1.f, 1.f, 1.f)
-	, m_worldMatrix(glm::mat4(1.f))
-	, m_dirty()
-	, m_parent(pNode)
-{
-}
-
 void Node::SetLocalTranslation(const glm::vec3& lt)
 {
 	m_localTranslation = lt;

@@ -23,6 +23,7 @@ class GLRendererBase : public ObserverRenderer {
 
 public:
 	GLRendererBase();
+
 	virtual ~GLRendererBase();
 
 	bool InitRendering(HWND assochWnd, HINSTANCE instance) override;

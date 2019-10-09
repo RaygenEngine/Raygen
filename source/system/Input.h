@@ -50,70 +50,74 @@ public:
 	void UpdateAnalogState(const AnalogState& state);
 	void UpdateAnalogState(AnalogState* state);
 
-	bool IsKeyPressed(XVirtualKey key) const;
-	bool IsKeyRepeat(XVirtualKey key) const;
-	bool IsKeyReleased(XVirtualKey key) const;
+	[[nodiscard]] bool IsKeyPressed(XVirtualKey key) const;
+	[[nodiscard]] bool IsKeyRepeat(XVirtualKey key) const;
+	[[nodiscard]] bool IsKeyReleased(XVirtualKey key) const;
 
-	bool IsKeysCombination(XVirtualKey key) const { return IsKeyRepeat(key); }
+	[[nodiscard]] bool IsKeysCombination(XVirtualKey key) const { return IsKeyRepeat(key); }
 
 	template<typename... Args>
-	bool IsKeysCombination(XVirtualKey key0, Args... keys) const
+	[[nodiscard]] bool IsKeysCombination(XVirtualKey key0, Args... keys) const
 	{
 		return IsKeysCombination(key0) && IsKeysCombination(keys...);
 	}
 
-	bool IsAnyOfKeysPressed(XVirtualKey key) const { return IsKeyPressed(key); }
+	[[nodiscard]] bool IsAnyOfKeysPressed(XVirtualKey key) const { return IsKeyPressed(key); }
 
 	template<typename... Args>
-	bool IsAnyOfKeysPressed(XVirtualKey key0, Args... keys) const
+	[[nodiscard]] bool IsAnyOfKeysPressed(XVirtualKey key0, Args... keys) const
 	{
 		return IsAnyOfKeysPressed(key0) || IsAnyOfKeysPressed(keys...);
 	}
 
-	bool IsAnyOfKeysRepeat(XVirtualKey key) const { return IsKeyRepeat(key); }
+	[[nodiscard]] bool IsAnyOfKeysRepeat(XVirtualKey key) const { return IsKeyRepeat(key); }
 
 	template<typename... Args>
-	bool IsAnyOfKeysRepeat(XVirtualKey key0, Args... keys) const
+	[[nodiscard]] bool IsAnyOfKeysRepeat(XVirtualKey key0, Args... keys) const
 	{
 		return IsAnyOfKeysRepeat(key0) || IsAnyOfKeysRepeat(keys...);
 	}
 
-	bool IsAnyOfKeysReleased(XVirtualKey key) const { return IsKeyReleased(key); }
+	[[nodiscard]] bool IsAnyOfKeysReleased(XVirtualKey key) const { return IsKeyReleased(key); }
 
 	template<typename... Args>
-	bool IsAnyOfKeysReleased(XVirtualKey key0, Args... keys) const
+	[[nodiscard]] bool IsAnyOfKeysReleased(XVirtualKey key0, Args... keys) const
 	{
 		return IsAnyOfKeysReleased(key0) || IsAnyOfKeysReleased(keys...);
 	}
 
-	bool IsDoubleClicked() const { return m_cursorDragged; }
-	bool IsCursorDragged() const { return m_cursorDragged; }
-	// with regards to the previous recorded
-	glm::vec2 GetCursorRelativePosition() const { return m_cursorRelativePosition; }
-	glm::vec2 GetCursorPosition() const { return m_cursorPosition; }
-	int32 GetWheelDelta() const { return m_wheelDelta; }
+	[[nodiscard]] bool IsDoubleClicked() const { return m_cursorDragged; }
+	[[nodiscard]] bool IsCursorDragged() const { return m_cursorDragged; }
+	[[nodiscard]] // with regards to the previous recorded
+	[[nodiscard]] glm::vec2
+		GetCursorRelativePosition() const
+	{
+		return m_cursorRelativePosition;
+	}
+	[[nodiscard]] glm::vec2 GetCursorPosition() const { return m_cursorPosition; }
+	[[nodiscard]] int32 GetWheelDelta() const { return m_wheelDelta; }
 
-	const AnalogState& GetAnalogState() const { return m_analogState; }
-	float GetLeftTriggerMagnitude() const { return m_analogState.triggerL; }
-	float GetRightTriggerMagnitude() const { return m_analogState.triggerR; }
+	[[nodiscard]] const AnalogState& GetAnalogState() const { return m_analogState; }
+	[[nodiscard]] float GetLeftTriggerMagnitude() const { return m_analogState.triggerL; }
+	[[nodiscard]] float GetRightTriggerMagnitude() const { return m_analogState.triggerR; }
 
-	float GetLeftThumbMagnitude() const { return m_analogState.thumbL.magnitude; }
-	float GetRightThumbMagnitude() const { return m_analogState.thumbR.magnitude; }
+	[[nodiscard]] float GetLeftThumbMagnitude() const { return m_analogState.thumbL.magnitude; }
+	[[nodiscard]] float GetRightThumbMagnitude() const { return m_analogState.thumbR.magnitude; }
 
-	glm::vec2 GetLeftThumbDirection() const { return m_analogState.thumbL.direction; }
-	glm::vec2 GetRightThumbDirection() const { return m_analogState.thumbR.direction; }
+	[[nodiscard]] glm::vec2 GetLeftThumbDirection() const { return m_analogState.thumbL.direction; }
+	[[nodiscard]] glm::vec2 GetRightThumbDirection() const { return m_analogState.thumbR.direction; }
 
-	bool IsLeftTriggerResting() const { return utl::EqualsZero(m_analogState.triggerL); }
-	bool IsRightTriggerResting() const { return utl::EqualsZero(m_analogState.triggerR); }
+	[[nodiscard]] bool IsLeftTriggerResting() const { return utl::EqualsZero(m_analogState.triggerL); }
+	[[nodiscard]] bool IsRightTriggerResting() const { return utl::EqualsZero(m_analogState.triggerR); }
 
-	bool IsLeftThumbResting() const { return utl::EqualsZero(m_analogState.thumbL.magnitude); }
-	bool IsRightThumbResting() const { return utl::EqualsZero(m_analogState.thumbR.magnitude); }
+	[[nodiscard]] bool IsLeftThumbResting() const { return utl::EqualsZero(m_analogState.thumbL.magnitude); }
+	[[nodiscard]] bool IsRightThumbResting() const { return utl::EqualsZero(m_analogState.thumbR.magnitude); }
 
-	bool IsLeftTriggerMoving() const { return !utl::EqualsZero(m_analogState.triggerL); }
-	bool IsRightTriggerMoving() const { return !utl::EqualsZero(m_analogState.triggerR); }
+	[[nodiscard]] bool IsLeftTriggerMoving() const { return !utl::EqualsZero(m_analogState.triggerL); }
+	[[nodiscard]] bool IsRightTriggerMoving() const { return !utl::EqualsZero(m_analogState.triggerR); }
 
-	bool IsLeftThumbMoving() const { return !utl::EqualsZero(m_analogState.thumbL.magnitude); }
-	bool IsRightThumbMoving() const { return !utl::EqualsZero(m_analogState.thumbR.magnitude); }
+	[[nodiscard]] bool IsLeftThumbMoving() const { return !utl::EqualsZero(m_analogState.thumbL.magnitude); }
+	[[nodiscard]] bool IsRightThumbMoving() const { return !utl::EqualsZero(m_analogState.thumbR.magnitude); }
 
-	void ClearSoftState();
+	[[nodiscard]] void ClearSoftState();
 };

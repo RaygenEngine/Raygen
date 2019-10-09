@@ -16,29 +16,29 @@ class GLForwardRenderer : public GLRendererBase {
 
 protected:
 	// shaders
-	GLShader* m_testShader{};
-	GLShader* m_simpleOutShader{};
-	GLShader* m_linearizeOutShader{};
+	GLShader* m_testShader{nullptr};
+	GLShader* m_simpleOutShader{nullptr};
+	GLShader* m_linearizeOutShader{nullptr};
 	bool m_isOutNonLinear{ false };
 
 	// entities
 	std::vector<GLBasicGeometry*> m_glGeometries;
-	GLBasicDirectionalLight* m_glDirectionalLight{};
-	GLBasicSpotLight* m_glSpotLight{};
-	GLBasicSkybox* m_skybox{};
+	GLBasicDirectionalLight* m_glDirectionalLight{nullptr};
+	GLBasicSpotLight* m_glSpotLight{nullptr};
+	GLBasicSkybox* m_skybox{nullptr};
 
 	// raw nodes
-	CameraNode* m_camera;
+	CameraNode* m_camera{nullptr};
 
 	// rendering
-	GLuint m_msaaFbo;
-	GLuint m_msaaColorTexture;
-	GLuint m_msaaDepthStencilRbo;
+	GLuint m_msaaFbo{ 0 };
+	GLuint m_msaaColorTexture{ 0 };
+	GLuint m_msaaDepthStencilRbo{ 0 };
 
-	GLuint m_outFbo;
-	GLuint m_outColorTexture;
+	GLuint m_outFbo{ 0 };
+	GLuint m_outColorTexture{ 0 };
 
-	int32 m_previewMode;
+	int32 m_previewMode{ 0 };
 
 	void RenderDirectionalLights();
 	void RenderSpotLights();
@@ -52,17 +52,6 @@ protected:
 
 public:
 	std::string m_previewModeString{};
-
-	GLForwardRenderer()
-		: m_camera(nullptr)
-		, m_msaaFbo(0)
-		, m_msaaColorTexture(0)
-		, m_msaaDepthStencilRbo(0)
-		, m_outFbo(0)
-		, m_outColorTexture(0)
-		, m_previewMode(0)
-	{
-	}
 
 	~GLForwardRenderer();
 

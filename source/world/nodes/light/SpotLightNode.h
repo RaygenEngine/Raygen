@@ -41,13 +41,12 @@ class SpotLightNode : public Node {
 
 public:
 	SpotLightNode(Node* parent);
-	~SpotLightNode() = default;
 
 	void UpdateProjectionMatrix();
-	glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 
 	void DirtyUpdate() override;
 
+	[[nodiscard]] glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 	[[nodiscard]] float GetAperture() const { return m_aperture; }
 	[[nodiscard]] glm::vec3 GetColor() const { return m_color; }
 	[[nodiscard]] float GetIntensity() const { return m_intensity; }
