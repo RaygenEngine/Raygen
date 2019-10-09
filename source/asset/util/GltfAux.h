@@ -42,12 +42,15 @@ inline TextureWrapping GetTextureWrapping(int32 gltfWrapping)
 
 inline AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
 {
-	if (utl::CaseInsensitiveCompare(gltfAlphaMode, "OPAQUE"))
+	if (utl::CaseInsensitiveCompare(gltfAlphaMode, "OPAQUE")) {
 		return AM_OPAQUE;
-	if (utl::CaseInsensitiveCompare(gltfAlphaMode, "MASK"))
+	}
+	if (utl::CaseInsensitiveCompare(gltfAlphaMode, "MASK")) {
 		return AM_MASK;
-	if (utl::CaseInsensitiveCompare(gltfAlphaMode, "BLEND"))
+	}
+	if (utl::CaseInsensitiveCompare(gltfAlphaMode, "BLEND")) {
 		return AM_BLEND;
+	}
 	// not defined -> repeat
 	return AM_INVALID;
 }

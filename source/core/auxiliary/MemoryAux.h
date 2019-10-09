@@ -35,36 +35,22 @@
 //	void Add(SmartPtr foo) { smartPtrs.push_back(std::move(foo)); }
 //
 //	DereferenceIterator<typename std::vector<SmartPtr>::iterator> begin() { return
-//dereference_iterator(smartPtrs.begin()); } 	DereferenceIterator<typename std::vector<SmartPtr>::iterator> end() {
-//return dereference_iterator(smartPtrs.end()); }
+// dereference_iterator(smartPtrs.begin()); } 	DereferenceIterator<typename std::vector<SmartPtr>::iterator> end() {
+// return dereference_iterator(smartPtrs.end()); }
 //
 //	DereferenceIterator<typename std::vector<SmartPtr>::iterator> begin() const { return
-//dereference_iterator(smartPtrs.begin()); } 	DereferenceIterator<typename std::vector<SmartPtr>::iterator> end() const {
-//return dereference_iterator(smartPtrs.end()); }
+// dereference_iterator(smartPtrs.begin()); } 	DereferenceIterator<typename std::vector<SmartPtr>::iterator> end() const
+// { return dereference_iterator(smartPtrs.end()); }
 //
 //	DereferenceIterator<typename std::vector<SmartPtr>::iterator> cbegin() const { return
-//dereference_iterator(smartPtrs.begin()); } 	DereferenceIterator<typename std::vector<SmartPtr>::iterator> cend() const
-//{ return dereference_iterator(smartPtrs.end()); }
+// dereference_iterator(smartPtrs.begin()); } 	DereferenceIterator<typename std::vector<SmartPtr>::iterator> cend()
+// const { return dereference_iterator(smartPtrs.end()); }
 //
 // private:
 //	std::vector<SmartPtr> smartPtrs;
 //};
 
 namespace utl {
-template<typename SmartPtr>
-using SVectorType = typename SmartPtr::element_type;
-
-// This is temporary - give observer ptrs of vector of smart ptrs
-template<typename SmartPtr>
-std::vector<SVectorType<SmartPtr>*> GetRawPtrVector(const std::vector<SmartPtr>& sPtrVec)
-{
-	std::vector<SVectorType<SmartPtr>*> rPtrVec;
-
-	std::transform(
-		sPtrVec.begin(), sPtrVec.end(), std::back_inserter(rPtrVec), [](const SmartPtr& sptr) { return sptr.get(); });
-
-	return rPtrVec;
-}
 
 template<class T>
 [[nodiscard]] constexpr typename std::remove_reference<T>::type&& force_move(T const& t) noexcept = delete;

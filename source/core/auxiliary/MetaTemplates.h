@@ -205,12 +205,6 @@ constexpr bool is_vector_of_base_v = is_vector_of_base<Vector, ContaineeReq>();
 template<typename Vector, typename ContaineeReq>
 constexpr bool is_vector_of_base_ptr_v = is_vector_of_base_ptr<Vector, ContaineeReq>();
 
-struct nonesuch {
-	~nonesuch() = delete;
-	nonesuch(nonesuch const&) = delete;
-	void operator=(nonesuch const&) = delete;
-};
-
 namespace detail {
 template<class Default, class AlwaysVoid, template<class...> class Op, class... Args>
 struct detector {
@@ -226,18 +220,8 @@ struct detector<Default, std::void_t<Op<Args...>>, Op, Args...> {
 
 } // namespace detail
 
-template<template<class...> class Op, class... Args>
-using is_detected = typename detail::detector<nonesuch, void, Op, Args...>::value_t;
-
-template<template<class...> class Op, class... Args>
-using detected_t = typename detail::detector<nonesuch, void, Op, Args...>::type;
-
 template<class Default, template<class...> class Op, class... Args>
 using detected_or = detail::detector<Default, void, Op, Args...>;
-
-template<template<class...> class Op, class... Args>
-constexpr bool is_detected_v = is_detected<Op, Args...>::value;
-
 
 #define DECLARE_HAS_FUNCTION_DETECTOR(FuncName)                                                                        \
 	template<typename T, typename = void>                                                                              \

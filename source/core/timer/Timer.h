@@ -107,6 +107,10 @@ public:
 	}
 
 	~ScopedTimer() { Report(); }
+	ScopedTimer(ScopedTimer const&) = default;
+	ScopedTimer(ScopedTimer&&) = default;
+	ScopedTimer& operator=(ScopedTimer const&) = default;
+	ScopedTimer& operator=(ScopedTimer&&) = default;
 
 	long long Get()
 	{
@@ -129,6 +133,10 @@ public:
 	}
 
 	~Scope() { m_timer.StopReport(m_str); }
+	Scope(Scope const&) = default;
+	Scope& operator=(Scope const&) = default;
+	Scope(Scope&&) = default;
+	Scope& operator=(Scope&&) = default;
 };
 } // namespace Timer
 

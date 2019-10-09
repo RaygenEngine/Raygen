@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "pch/pch.h"
 #include "imgui/imgui.h"
 #include "editor/Editor.h"
 #include "world/World.h"
@@ -96,7 +96,7 @@ struct ReflectionToImguiVisitor {
 
 	bool Inner(float& t, const Property& p) { return ImGui::DragFloat(name, &t, 0.01f); }
 
-	bool Inner(glm::vec3& t, const Property& p) 
+	bool Inner(glm::vec3& t, const Property& p)
 	{
 		if (p.HasFlags(PropertyFlags::Color)) {
 			return ImGui::ColorEdit3(name, ImUtil::FromVec3(t), ImGuiColorEditFlags_DisplayHSV);
@@ -260,7 +260,7 @@ Editor::~Editor()
 #include "editor/renderer/EditorRenderer.h"
 #include "system/Input.h"
 
-void Editor::UpdateEditor() 
+void Editor::UpdateEditor()
 {
 	HandleInput();
 

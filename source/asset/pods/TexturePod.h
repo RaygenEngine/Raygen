@@ -28,5 +28,5 @@ struct TexturePod : public AssetPod {
 
 	TextureTarget target{ TextureTarget::TEXTURE_2D };
 
-	std::vector<PodHandle<ImagePod>> images;
+	std::vector<PodHandle<ImagePod>> images{};
 };

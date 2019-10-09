@@ -173,7 +173,6 @@ namespace {
 				return;
 			case BufferComponentType::INVALID: return;
 		}
-		return;
 	}
 
 
@@ -372,9 +371,8 @@ namespace {
 	}
 
 
-	bool LoadGeometryGroup(ModelPod* pod, const uri::Uri& parentPath, GeometryGroup& geom,
-		const tinygltf::Model& modelData, const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat,
-		bool& requiresDefaultMaterial)
+	bool LoadGeometryGroup(ModelPod* pod, GeometryGroup& geom, const tinygltf::Model& modelData,
+		const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat, bool& requiresDefaultMaterial)
 	{
 		// mode
 		geom.mode = GltfAux::GetGeometryMode(primitiveData.mode);
@@ -495,8 +493,8 @@ namespace {
 		return true;
 	}
 
-	bool LoadMesh(ModelPod* pod, const uri::Uri& parentPath, Mesh& mesh, const tinygltf::Model& modelData,
-		const tinygltf::Mesh& meshData, const glm::mat4& transformMat, bool& requiresDefaultMaterial)
+	bool LoadMesh(ModelPod* pod, Mesh& mesh, const tinygltf::Model& modelData, const tinygltf::Mesh& meshData,
+		const glm::mat4& transformMat, bool& requiresDefaultMaterial)
 	{
 		mesh.geometryGroups.resize(meshData.primitives.size());
 
@@ -507,8 +505,8 @@ namespace {
 			auto& primitiveData = meshData.primitives.at(i);
 
 			// if one of the geometry groups fails to load
-			if (!LoadGeometryGroup(pod, parentPath, mesh.geometryGroups[i], modelData, primitiveData, transformMat,
-					requiresDefaultMaterial)) {
+			if (!LoadGeometryGroup(
+					pod, mesh.geometryGroups[i], modelData, primitiveData, transformMat, requiresDefaultMaterial)) {
 				LOG_ERROR("Failed to load geometry group, name: {}", geomName);
 				return false;
 			}
@@ -558,9 +556,11 @@ inline bool Load(ModelPod* pod, const uri::Uri& path)
 
 			// When matrix is defined, it must be decomposable to TRS.
 			if (!childNode.matrix.empty()) {
-				for (int32 row = 0; row < 4; ++row)
-					for (int32 column = 0; column < 4; ++column)
+				for (int32 row = 0; row < 4; ++row) {
+					for (int32 column = 0; column < 4; ++column) {
 						localTransformMat[row][column] = static_cast<float>(childNode.matrix[column + 4 * row]);
+					}
+				}
 			}
 			else {
 				glm::vec3 translation = glm::vec3(0.f);
@@ -599,7 +599,7 @@ inline bool Load(ModelPod* pod, const uri::Uri& path)
 				Mesh mesh;
 
 				// if missing mesh
-				if (!LoadMesh(pod, pPath, mesh, model, gltfMesh, localTransformMat, requiresDefaultMaterial)) {
+				if (!LoadMesh(pod, mesh, model, gltfMesh, localTransformMat, requiresDefaultMaterial)) {
 					LOG_ERROR("Failed to load mesh, name: {}", gltfMesh.name);
 					return false;
 				}
@@ -607,9 +607,11 @@ inline bool Load(ModelPod* pod, const uri::Uri& path)
 			}
 
 			// load child's children
-			if (!childNode.children.empty())
-				if (!RecurseChildren(childNode.children, localTransformMat))
+			if (!childNode.children.empty()) {
+				if (!RecurseChildren(childNode.children, localTransformMat)) {
 					return false;
+				}
+			}
 		}
 		return true;
 	};

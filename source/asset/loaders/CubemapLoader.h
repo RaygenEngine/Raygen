@@ -20,7 +20,7 @@ inline bool Load(TexturePod* pod, const uri::Uri& path)
 	}
 
 	pod->target = TextureTarget::TEXTURE_CUBEMAP;
-	pod->images.resize(6);
+	pod->images.resize(CMF_COUNT);
 
 	nlohmann::json j;
 	inStream >> j;
