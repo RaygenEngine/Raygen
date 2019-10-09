@@ -129,7 +129,9 @@ public:
 			entry = inst->CreateAndRegister<PodType>(inPath);
 		}
 
-		return PodHandle<PodType>{ entry->uid };
+		PodHandle<PodType> p;
+		p.podId = entry->uid;
+		return p;
 	}
 
 	template<typename PodType>

@@ -44,12 +44,15 @@ inline bool Load(MaterialPod* pod, const uri::Uri& path)
 	// doublesided-ness
 	pod->doubleSided = gltfMaterial.doubleSided;
 
-	enum class DefType { Missing, White, Normal };
+	enum class DefType
+	{
+		Missing,
+		White,
+		Normal
+	};
 
 	auto LoadTexture = [&](auto textureInfo, PodHandle<TexturePod>& sampler, int32& textCoordIndex, DefType defType) {
 		if (textureInfo.index != -1) {
-			const tinygltf::Texture& gltfTexture = model.textures.at(textureInfo.index);
-
 			json data;
 			data["texture"] = textureInfo.index;
 			auto textPath = uri::MakeChildJson(path, data);

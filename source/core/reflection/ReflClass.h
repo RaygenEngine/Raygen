@@ -109,31 +109,3 @@ public:
 
 	const std::vector<Property>& GetProperties() const { return m_properties; }
 };
-
-
-namespace refl {
-// TODO: move this to the file containing both PodReflection + NodeReflection
-// Gets the reflclass object of T and is specialized properly for every reflectable T.
-// If you are unsure of how to get the ReflClass of an object ALWAYS USE THIS instead of static members/member
-// functions.
-template<typename T>
-const ReflClass& GetClass(const T* obj)
-{
-	// TODO: Static assert this for T
-	if constexpr (std::is_base_of_v<Node, T>) {
-		// Virtual call to get the lowest reflector even if T == Node
-		return obj->GetClass();
-	}
-	else if constexpr (std::is_base_of_v<AssetPod, T>) {
-		if constexpr (std::is_same_v<AssetPod, T>) {
-			static_assert(false, "Implement this by specialization");
-		}
-		else {
-			return T::StaticClass();
-		}
-	}
-	else {
-		static_assert(false, "This object T is not reflected");
-	}
-}
-} // namespace refl

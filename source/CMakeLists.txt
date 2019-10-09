@@ -141,6 +141,7 @@ set(HEADER_FILES
 	core/logger/Logger.h
 	
 	core/reflection/GenMacros.h
+	core/reflection/GetClass.h
 	core/reflection/PodReflection.h
 	core/reflection/PodTools.h
 	core/reflection/Property.h

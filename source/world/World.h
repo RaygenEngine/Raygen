@@ -65,7 +65,7 @@ class World {
 	ch::time_point<FrameClock> m_lastFrameTimepoint;
 	long long m_deltaTimeMicros;
 
-	float m_deltaTime;
+	float m_deltaTime{ 0.0f };
 
 	void UpdateFrameTimers();
 
