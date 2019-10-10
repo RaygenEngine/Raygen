@@ -3,35 +3,32 @@
 #include "world/nodes/Node.h"
 
 class SpotLightNode : public Node {
+
 	REFLECTED_NODE(SpotLightNode, Node)
 	{
-		REFLECT_VAR(m_aperture).OnDirty(DF::Projection);
-
-		REFLECT_VAR(m_near).OnDirty(DF::Projection);
-
-		REFLECT_VAR(m_far).OnDirty(DF::Projection);
-
 		REFLECT_VAR(m_color, PropertyFlags::Color).OnDirty(DF::Flux);
-
 		REFLECT_VAR(m_intensity).OnDirty(DF::Flux);
 
 		REFLECT_VAR(m_hasShadow).OnDirty(DF::ToggleShadows);
 
-		REFLECT_VAR(m_shadowMapWidth).OnDirty(DF::ResizeShadows);
+		REFLECT_VAR(m_aperture).OnDirty(DF::Projection);
+		REFLECT_VAR(m_near).OnDirty(DF::Projection);
+		REFLECT_VAR(m_far).OnDirty(DF::Projection);
 
+		REFLECT_VAR(m_shadowMapWidth).OnDirty(DF::ResizeShadows);
 		REFLECT_VAR(m_shadowMapHeight).OnDirty(DF::ResizeShadows);
 	}
 
 	DECLARE_DIRTY_FLAGSET(Projection, Flux, ToggleShadows, ResizeShadows)
 
-	glm::mat4 m_projectionMatrix;
+	glm::mat4 m_projectionMatrix{};
 
-	float m_aperture;
+	float m_aperture{ 45.f };
 
-	glm::vec3 m_color;
-	float m_intensity;
+	glm::vec3 m_color{ glm::vec3(1.f) };
+	float m_intensity{ 10.f };
 
-	bool m_hasShadow;
+	bool m_hasShadow{ true };
 
 	int32 m_shadowMapWidth{ 2048 };
 	int32 m_shadowMapHeight{ 2048 };
@@ -39,10 +36,13 @@ class SpotLightNode : public Node {
 	float m_near{ 1.f };
 	float m_far{ 15.5f };
 
-public:
-	SpotLightNode(Node* parent);
-
 	void UpdateProjectionMatrix();
+
+public:
+	SpotLightNode(Node* parent)
+		: Node(parent)
+	{
+	}
 
 	void DirtyUpdate() override;
 

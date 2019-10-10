@@ -17,10 +17,6 @@ void ObserverRenderer::OnNodeRemovedFromWorld(Node* node)
 	}
 }
 
-void ObserverRenderer::OnNodeAddedToWorld(Node* node)
-{
-}
-
 void ObserverRenderer::Update()
 {
 	for (auto& observer : m_observers) {

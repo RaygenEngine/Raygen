@@ -338,7 +338,7 @@ void Editor::UpdateEditor()
 		std::string text;
 		for (auto& assetEntry : Engine::GetAssetManager()->m_pods) {
 			ImGui::PushID(static_cast<int32>(assetEntry->uid));
-			bool disabled = !(assetEntry.get()->ptr);
+			bool disabled = !(assetEntry->ptr);
 
 			if (disabled) {
 				ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0, 0.6f, 0.6f));

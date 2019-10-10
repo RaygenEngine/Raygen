@@ -152,8 +152,9 @@ bool GLDeferredRenderer::InitScene()
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_gBuffer.depthAttachment);
 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		LOG_FATAL("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+	}
 
 	// out fbo
 	glGenFramebuffers(1, &m_outFbo);
@@ -167,8 +168,9 @@ bool GLDeferredRenderer::InitScene()
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outTexture, 0);
 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		LOG_FATAL("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+	}
 
 	m_currentTexture = m_outTexture;
 

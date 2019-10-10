@@ -20,9 +20,9 @@ protected:
 
 	// Relevant only if the property is an enum.
 	// Non owning pointer to the static ReflEnum structure generated for this enum class
-	const ReflEnum* m_enum;
+	const ReflEnum* m_enum{ nullptr };
 
-	int32 m_dirtyFlagIndex;
+	int32 m_dirtyFlagIndex{ -1 };
 
 	// Returns real memory address from the offsetof for a specific instance.
 	void* GetRealMemoryAddr(void* objInstance) const
@@ -38,8 +38,6 @@ protected:
 		, m_flags(flags)
 		, m_name(name)
 		, m_offset(offset)
-		, m_enum(nullptr)
-		, m_dirtyFlagIndex(-1)
 	{
 	}
 

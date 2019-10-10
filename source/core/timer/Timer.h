@@ -87,10 +87,10 @@ public:
 	}
 
 	~ScopedTimer() { Report(); }
-	ScopedTimer(ScopedTimer const&) = default;
-	ScopedTimer(ScopedTimer&&) = default;
-	ScopedTimer& operator=(ScopedTimer const&) = default;
-	ScopedTimer& operator=(ScopedTimer&&) = default;
+	ScopedTimer(ScopedTimer const&) = delete;
+	ScopedTimer(ScopedTimer&&) = delete;
+	ScopedTimer& operator=(ScopedTimer const&) = delete;
+	ScopedTimer& operator=(ScopedTimer&&) = delete;
 
 	long long Get()
 	{
@@ -113,10 +113,10 @@ public:
 	}
 
 	~Scope() { m_timer.StopReport(m_str); }
-	Scope(Scope const&) = default;
-	Scope& operator=(Scope const&) = default;
-	Scope(Scope&&) = default;
-	Scope& operator=(Scope&&) = default;
+	Scope(Scope const&) = delete;
+	Scope& operator=(Scope const&) = delete;
+	Scope(Scope&&) = delete;
+	Scope& operator=(Scope&&) = delete;
 };
 } // namespace Timer
 

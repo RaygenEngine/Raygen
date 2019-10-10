@@ -9,13 +9,14 @@
 
 namespace OpenGL {
 struct GLBasicDirectionalLight : NodeObserver<DirectionalLightNode, GLRendererBase> {
-	GLuint fbo;
-	GLuint shadowMap;
+	GLuint fbo{};
+	GLuint shadowMap{};
 
-	GLShader* depthMap;
-	GLShader* depthMapAlphaMask;
+	GLShader* depthMap{ nullptr };
+	GLShader* depthMapAlphaMask{ nullptr };
 
-	glm::mat4 lightSpaceMatrix;
+
+	glm::mat4 lightSpaceMatrix{};
 
 	GLBasicDirectionalLight(DirectionalLightNode* node);
 	~GLBasicDirectionalLight();

@@ -19,6 +19,7 @@ class CameraNode;
 
 // TODO:
 class RootNode : public Node {
+
 	REFLECTED_NODE(RootNode, Node)
 	{
 		REFLECT_VAR(m_background, PropertyFlags::Color);
@@ -40,14 +41,10 @@ public:
 	void SetBackgroundColor(const glm::vec3& color) { m_background = color; }
 	void SetAmbientColor(const glm::vec3& color) { m_ambient = color; }
 
-	~RootNode() { m_children.clear(); }
-	RootNode(const RootNode&) = default;
-	RootNode(RootNode&&) = default;
-	RootNode& operator=(const RootNode&) = default;
-	RootNode& operator=(RootNode&&) = default;
+	~RootNode() override { m_children.clear(); }
 };
 
-class World {
+class World : public Object {
 	mutable std::unordered_set<Node*> m_nodes;
 	mutable std::unordered_set<GeometryNode*> m_triangleModelGeometries;
 	mutable std::unordered_set<TransformNode*> m_transforms;
@@ -67,7 +64,7 @@ class World {
 	using FrameClock = std::chrono::steady_clock;
 	ch::time_point<FrameClock> m_loadedTimepoint;
 	ch::time_point<FrameClock> m_lastFrameTimepoint;
-	long long m_deltaTimeMicros;
+	long long m_deltaTimeMicros{ 0 };
 
 	float m_deltaTime{ 0.0f };
 
@@ -86,7 +83,7 @@ public:
 	[[nodiscard]] RootNode* GetRoot() const { return m_root.get(); }
 
 	World(NodeFactory* factory);
-	~World();
+	~World() override;
 
 
 	template<typename NodeType>

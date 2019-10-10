@@ -13,9 +13,9 @@ using GLAssetManager = GenericGpuAssetManager<OpenGL::GLAssetBase>;
 
 namespace OpenGL {
 class GLRendererBase : public ObserverRenderer {
-	HWND m_assochWnd;
-	HDC m_hdc;
-	HGLRC m_hglrc;
+	HWND m_assochWnd{};
+	HDC m_hdc{};
+	HGLRC m_hglrc{};
 
 	std::unique_ptr<GLAssetManager> m_glAssetManager;
 
