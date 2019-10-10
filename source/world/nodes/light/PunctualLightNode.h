@@ -11,7 +11,7 @@ class PunctualLightNode : public Node {
 	bool m_hasShadow{ true };
 
 public:
-	PunctualLightNode::PunctualLightNode(Node* parent)
+	PunctualLightNode(Node* parent)
 		: Node(parent)
 	{
 	}
