@@ -62,7 +62,6 @@ void Node::MarkMatrixChanged()
 
 void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 {
-
 	if (m_dirty[DF::TRS]) {
 		m_localMatrix = utl::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
 		m_worldMatrix = parentMatrix * m_localMatrix;
@@ -71,7 +70,6 @@ void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 		glm::vec4 persp;
 		glm::decompose(m_worldMatrix, m_worldScale, m_worldOrientation, m_worldTranslation, skew, persp);
 	}
-
 
 	for (auto& uPtr : m_children) {
 		uPtr->UpdateTransforms(m_worldMatrix);
@@ -83,41 +81,6 @@ void Node::DeleteChild(Node* child)
 	auto it = std::find_if(m_children.begin(), m_children.end(), [&](auto& ref) { return ref.get() == child; });
 	m_children.erase(it);
 	m_dirty.set(DF::Children);
-}
-
-bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
-{
-	ParsingAux::ReadFillEntityName(xmlData, m_name);
-	ParsingAux::ReadFillEntityType(xmlData, m_type);
-
-	LOG_INFO("Loading {0} named {1}", m_type, m_name);
-
-	LoadReflectedProperties(xmlData);
-	LoadAttributesFromXML(xmlData);
-
-	NodeFactory* factory = Engine::GetWorld()->GetNodeFactory();
-	const auto status = factory->LoadChildrenXML(xmlData, this);
-
-	m_dirty.set();
-
-	return status;
-}
-
-bool Node::LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData)
-{
-	ParsingAux::ReadFloatsAttribute(xmlData, "translation", m_localTranslation);
-	glm::vec3 eulerPYR{ 0.f, 0.f, 0.f };
-	ParsingAux::ReadFloatsAttribute(xmlData, "euler_pyr", eulerPYR);
-	m_localOrientation = glm::quat(glm::radians(eulerPYR));
-	ParsingAux::ReadFloatsAttribute(xmlData, "scale", m_localScale);
-
-	glm::vec3 localLookat{};
-	if (ParsingAux::ReadFloatsAttribute(xmlData, "lookat", localLookat)) {
-		// if lookat read overwrite following
-		m_localOrientation = utl::GetOrientationFromLookAtAndPosition(localLookat, GetLocalTranslation());
-	}
-
-	return true;
 }
 
 void Node::AddLocalOffset(const glm::vec3& direction)
@@ -153,6 +116,39 @@ void Node::OrientYaw(float yaw)
 	m_localOrientation = rotY * m_localOrientation;
 
 	MarkMatrixChanged();
+}
+
+bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
+{
+	ParsingAux::ReadFillEntityName(xmlData, m_name);
+	ParsingAux::ReadFillEntityType(xmlData, m_type);
+
+	LOG_INFO("Loading {0} named {1}", m_type, m_name);
+
+
+	// Load from reflection
+	LoadReflectedProperties(xmlData);
+
+	// Load Node generics
+	ParsingAux::ReadFloatsAttribute(xmlData, "translation", m_localTranslation);
+	glm::vec3 eulerPYR{ 0.f, 0.f, 0.f };
+	ParsingAux::ReadFloatsAttribute(xmlData, "euler_pyr", eulerPYR);
+	m_localOrientation = glm::quat(glm::radians(eulerPYR));
+	ParsingAux::ReadFloatsAttribute(xmlData, "scale", m_localScale);
+
+	glm::vec3 localLookat{};
+	if (ParsingAux::ReadFloatsAttribute(xmlData, "lookat", localLookat)) {
+		// if lookat read overwrite following
+		m_localOrientation = utl::GetOrientationFromLookAtAndPosition(localLookat, GetLocalTranslation());
+	}
+
+	// Load Children.
+	NodeFactory* factory = Engine::GetWorld()->GetNodeFactory();
+	const auto status = factory->LoadChildrenXML(xmlData, this);
+
+	m_dirty.set();
+
+	return status;
 }
 
 namespace {

@@ -24,7 +24,7 @@ public:                                                                         
 	static void GenerateReflection(ReflClass& refl)
 
 
-#define REFLECTED_NODE(Class, ParentClass)                                                                             \
+#define REFLECTED_NODE(Class, ParentClass, /*optional DF_FLAGS()*/...)                                                 \
 public:                                                                                                                \
 	using Parent = ParentClass;                                                                                        \
 	[[nodiscard]] const ReflClass& GetClass() const override { return Class::StaticClass(); }                          \
@@ -34,6 +34,7 @@ public:                                                                         
 		static ReflClass cl = ReflClass::Generate<Class, Parent>();                                                    \
 		return cl;                                                                                                     \
 	}                                                                                                                  \
+	__VA_ARGS__;                                                                                                       \
                                                                                                                        \
 private:                                                                                                               \
 	using Z_ThisType = Class;                                                                                          \
@@ -45,3 +46,15 @@ private:                                                                        
 
 #define REFL_EQUALS_PROPERTY(PropertyRef, Variable)                                                                    \
 	((PropertyRef).GetName() == ReflClass::RemoveVariablePrefix(#Variable) && (&(Variable)))
+
+
+#define DF_FLAGS(...)                                                                                                  \
+public:                                                                                                                \
+	struct DF : Parent::DF {                                                                                           \
+		enum                                                                                                           \
+		{                                                                                                              \
+			_PREV = Parent::DF::_COUNT - 1,                                                                            \
+			__VA_ARGS__,                                                                                               \
+			_COUNT                                                                                                     \
+		};                                                                                                             \
+	}

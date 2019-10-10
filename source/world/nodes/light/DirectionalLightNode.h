@@ -4,7 +4,7 @@
 
 class DirectionalLightNode : public Node {
 
-	REFLECTED_NODE(DirectionalLightNode, Node)
+	REFLECTED_NODE(DirectionalLightNode, Node, DF_FLAGS(Projection, Flux, ToggleShadows, ResizeShadows))
 	{
 		REFLECT_VAR(m_color, PropertyFlags::Color).OnDirty(DF::Flux);
 		REFLECT_VAR(m_intensity).OnDirty(DF::Flux);
@@ -21,8 +21,6 @@ class DirectionalLightNode : public Node {
 		REFLECT_VAR(m_shadowMapWidth).OnDirty(DF::ResizeShadows);
 		REFLECT_VAR(m_shadowMapHeight).OnDirty(DF::ResizeShadows);
 	}
-
-	DECLARE_DIRTY_FLAGSET(Projection, Flux, ToggleShadows, ResizeShadows)
 
 	glm::mat4 m_projectionMatrix{};
 

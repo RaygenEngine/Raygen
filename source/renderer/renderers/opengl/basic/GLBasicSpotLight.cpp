@@ -106,13 +106,15 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 
 void GLBasicSpotLight::DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset)
 {
-	if (nodeDirtyFlagset[SpotLightNode::DF::ResizeShadows]) {
+	using DF = SpotLightNode::DF;
+
+	if (nodeDirtyFlagset[DF::ResizeShadows]) {
 		glBindTexture(GL_TEXTURE_2D, shadowMap);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, node->GetShadowMapWidth(), node->GetShadowMapHeight(), 0,
 			GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	}
 
-	if (nodeDirtyFlagset[SpotLightNode::DF::Projection] || nodeDirtyFlagset[Node::DF::TRS]) {
+	if (nodeDirtyFlagset[DF::Projection] || nodeDirtyFlagset[DF::TRS]) {
 		lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 	}
 }
