@@ -136,8 +136,9 @@ public:
 		for (auto node : GetNodeMap<NodeSubType>()) {
 			auto* snode = dynamic_cast<NodeSubType*>(node);
 
-			if (snode)
+			if (snode) {
 				return snode;
+			}
 		}
 		// not found
 		return nullptr;
