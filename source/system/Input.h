@@ -117,5 +117,5 @@ public:
 	[[nodiscard]] bool IsLeftThumbMoving() const { return !utl::EqualsZero(m_analogState.thumbL.magnitude); }
 	[[nodiscard]] bool IsRightThumbMoving() const { return !utl::EqualsZero(m_analogState.thumbR.magnitude); }
 
-	[[nodiscard]] void ClearSoftState();
+	void ClearSoftState();
 };
