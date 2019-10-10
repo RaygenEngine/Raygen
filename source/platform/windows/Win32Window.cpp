@@ -235,7 +235,7 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 
 
 	// TODO:
-	if (Engine::GetEditor()) {
+	if (Engine::Get().IsUsingEditor()) {
 		if (ImguiImpl::WndProcHandler(hWnd, message, wParam, lParam)) {
 			return true;
 		}

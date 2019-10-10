@@ -6,11 +6,11 @@ namespace ch = std::chrono;
 
 #include "core/logger/Logger.h"
 
+// TODO: refactor duplicate timers.
 namespace Timer {
 template<typename ChronoDuration = ch::microseconds>
 class DebugTimer {
-	// TODO: use metatemplates when merged with the other branch for specialization check.
-	//		static_assert(<ch::duration, ChronoDuration>, "Template parameter must be a std::chrono::duration");
+
 public:
 	ch::time_point<ch::system_clock> m_startTime;
 	long long m_total{ 0 };
@@ -57,8 +57,6 @@ public:
 
 template<typename ChronoDuration = ch::microseconds>
 class ScopedTimer {
-	// TODO: use metatemplates when merged with the other branch for specialization check.
-	//		static_assert(<ch::duration, ChronoDuration>, "Template parameter must be a std::chrono::duration");
 public:
 	ch::time_point<ch::system_clock> m_startTime;
 	std::string m_name;

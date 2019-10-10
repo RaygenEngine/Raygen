@@ -180,7 +180,7 @@ bool GLDeferredRenderer::InitScene()
 	return true;
 }
 
-// TODO resize textures and stuff
+// TODO: resize textures and stuff
 void GLDeferredRenderer::WindowResize(int32 width, int32 height)
 {
 	m_outWidth = width;

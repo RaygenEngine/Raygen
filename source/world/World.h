@@ -13,36 +13,10 @@
 #include "world/nodes/geometry/InstancedGeometryNode.h"
 #include "world/nodes/light/DirectionalLightNode.h"
 #include "world/nodes/light/SpotLightNode.h"
-
+#include "world/nodes/RootNode.h"
 
 class CameraNode;
 
-// TODO:
-class RootNode : public Node {
-
-	REFLECTED_NODE(RootNode, Node)
-	{
-		REFLECT_VAR(m_background, PropertyFlags::Color);
-		REFLECT_VAR(m_ambient, PropertyFlags::Color);
-	}
-
-	glm::vec3 m_background{};
-	glm::vec3 m_ambient{};
-
-public:
-	RootNode()
-		: Node(nullptr)
-	{
-	}
-
-	[[nodiscard]] glm::vec3 GetBackgroundColor() const { return m_background; }
-	[[nodiscard]] glm::vec3 GetAmbientColor() const { return m_ambient; }
-
-	void SetBackgroundColor(const glm::vec3& color) { m_background = color; }
-	void SetAmbientColor(const glm::vec3& color) { m_ambient = color; }
-
-	~RootNode() override { m_children.clear(); }
-};
 
 class World : public Object {
 	mutable std::unordered_set<Node*> m_nodes;
@@ -58,7 +32,6 @@ class World : public Object {
 	std::unique_ptr<RootNode> m_root;
 	PodHandle<XMLDocPod> m_loadedFrom;
 
-	// TODO:
 	CameraNode* m_activeCamera{ nullptr };
 
 	using FrameClock = std::chrono::steady_clock;

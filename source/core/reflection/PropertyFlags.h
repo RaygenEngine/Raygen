@@ -10,17 +10,9 @@ constexpr Type NoCopy = (1 << 2);
 constexpr Type Transient = NoSave | NoLoad | NoCopy;
 
 constexpr Type NoEdit = (1 << 8);
+
 constexpr Type Color = (1 << 9);
 constexpr Type Multiline = (1 << 10);
-
-// Relevant on asset pods only.
-// When set: it is not an error if this property is not found when loading.
-constexpr Type OptionalPod = (1 << 20);
-
-// Relevant on vectors.
-// When set: This vector is not resizable in editor.
-constexpr Type VecNoResize = (1 << 25);
-
 
 template<typename... Flags>
 constexpr PropertyFlags::Type Pack(Flags... f)

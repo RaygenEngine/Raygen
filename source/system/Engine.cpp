@@ -78,6 +78,8 @@ void Engine::SwitchRenderer(uint32 registrationIndex)
 
 	eng.m_renderer = eng.m_rendererRegistrations[registrationIndex].Construct();
 
+	LOG_REPORT("Switched to renderer: {}", eng.m_rendererRegistrations[registrationIndex].name);
+
 	eng.m_renderer->InitRendering(eng.m_window->GetHWND(), eng.m_window->GetHInstance());
 	eng.m_renderer->InitScene();
 }

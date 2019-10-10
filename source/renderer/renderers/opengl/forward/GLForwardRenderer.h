@@ -12,23 +12,22 @@ namespace OpenGL {
 struct GLBasicSkybox;
 
 class GLForwardRenderer : public GLRendererBase {
-	MAKE_METADATA(GLForwardRenderer);
 
 protected:
 	// shaders
-	GLShader* m_testShader{nullptr};
-	GLShader* m_simpleOutShader{nullptr};
-	GLShader* m_linearizeOutShader{nullptr};
+	GLShader* m_testShader{ nullptr };
+	GLShader* m_simpleOutShader{ nullptr };
+	GLShader* m_linearizeOutShader{ nullptr };
 	bool m_isOutNonLinear{ false };
 
 	// entities
 	std::vector<GLBasicGeometry*> m_glGeometries;
-	GLBasicDirectionalLight* m_glDirectionalLight{nullptr};
-	GLBasicSpotLight* m_glSpotLight{nullptr};
-	GLBasicSkybox* m_skybox{nullptr};
+	GLBasicDirectionalLight* m_glDirectionalLight{ nullptr };
+	GLBasicSpotLight* m_glSpotLight{ nullptr };
+	GLBasicSkybox* m_skybox{ nullptr };
 
 	// raw nodes
-	CameraNode* m_camera{nullptr};
+	CameraNode* m_camera{ nullptr };
 
 	// rendering
 	GLuint m_msaaFbo{ 0 };

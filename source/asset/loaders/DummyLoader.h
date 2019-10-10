@@ -20,7 +20,6 @@ inline PodHandle<PodType> GetCustom(const uri::Uri& info)
 	return AssetManager::GetOrCreate<PodType>(info);
 }
 
-// TODO: expand variadic correctly
 #define GET_CUSTOM_POD(type, ...) CustomLoader::GetCustom<type>(std::string(__VA_ARGS__) + #type)
 
 // #TexturePod#image_path

@@ -10,7 +10,6 @@ class UserNode : public Node {
 	}
 
 protected:
-	// TODO: turning speed with delta is not working properly on different fps profiles
 	float m_movementSpeed{ 10.0f };
 	float m_turningSpeed{ 0.7f };
 

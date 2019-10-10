@@ -121,7 +121,6 @@ void Node::AddLocalOffset(const glm::vec3& direction)
 	MarkMatrixChanged();
 }
 
-// TODO: orient speed adjust by world delta?
 void Node::Orient(float yaw, float pitch, float roll)
 {
 	const glm::quat rotY = glm::angleAxis(yaw, glm::vec3(0.f, 1.f, 0.f));

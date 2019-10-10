@@ -74,8 +74,6 @@ LRESULT ImguiImpl::WndProcHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 	return false;
 }
 
-// TODO: when transfered to the engine side make this a static lib generated seperately
-
 #include "imgui/imgui.cpp"
 #include "imgui/imgui_draw.cpp"
 #include "imgui/imgui_widgets.cpp"

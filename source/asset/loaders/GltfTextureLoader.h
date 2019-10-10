@@ -24,7 +24,7 @@ static bool Load(TexturePod* pod, const uri::Uri& path)
 
 	// if image exists
 
-	// TODO check image settings
+	// TODO: check image settings
 	// this should exist (missing is handled from within material)
 	if (imageIndex != -1) {
 		auto& gltfImage = model.images.at(imageIndex);

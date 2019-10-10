@@ -12,7 +12,6 @@ FreeformUserNode::FreeformUserNode(Node* parent)
 {
 }
 
-// TODO: speed and turning speed adjustments
 void FreeformUserNode::Update(float deltaTime)
 {
 	auto& input = *Engine::GetInput();

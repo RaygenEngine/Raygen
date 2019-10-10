@@ -64,8 +64,6 @@ bool GLModel::Load()
 	auto modelData = podHandle.Lock();
 	TIMER_STATIC_SCOPE("uploading model time");
 
-	// TODO
-	// m_usage = GetGLUsage(data->GetUsage());
 	usage = GL_STATIC_DRAW;
 
 	for (auto& mesh : modelData->meshes) {

@@ -12,16 +12,15 @@
 
 namespace OpenGL {
 class GLDeferredRenderer : public GLRendererBase {
-	MAKE_METADATA(GLDeferredRenderer);
 
 protected:
 	// TODO: should use the camera and window respectively
-	int32 m_outWidth{0}, m_outHeight{0};
-	GLuint m_outFbo{0};
-	GLuint m_outTexture{0};
+	int32 m_outWidth{ 0 }, m_outHeight{ 0 };
+	GLuint m_outFbo{ 0 };
+	GLuint m_outTexture{ 0 };
 
-	GLShader* m_deferredDirectionalLightShader{nullptr};
-	GLShader* m_deferredSpotLightShader{nullptr};
+	GLShader* m_deferredDirectionalLightShader{ nullptr };
+	GLShader* m_deferredSpotLightShader{ nullptr };
 
 	struct GBuffer {
 		GLuint fbo{ 0 };
@@ -51,7 +50,7 @@ protected:
 
 	void RenderWindow();
 
-	GLuint m_currentTexture{0};
+	GLuint m_currentTexture{ 0 };
 
 public:
 	std::string m_previewModeString{};

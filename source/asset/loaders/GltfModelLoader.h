@@ -9,34 +9,9 @@
 #include "tinygltf/tiny_gltf.h"
 
 namespace GltfModelLoader {
-// TODO: Refactor: implementing this as a local struct with member functions can reduce the function arguments.
 namespace {
 	namespace tg = tinygltf;
 
-	// TODO: This code has high maintenance cost due to its complexity.
-	// the complexity here is mostly used to protect against 'incompatible' conversion types.
-	// The maintenance cost may not be worth the 'safe' conversions.
-
-	//// Copy with strides from a C array-like to a vector while performing normal type conversion.
-	// template<typename ComponentType, typename OutputType>
-	// void CopyToVector(std::vector<OutputType>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount,
-	//	size_t componentCount)
-	//{
-	//	for (int32 i = 0; i < elementCount; ++i) {
-	//		byte* elementPtr = &beginPtr[perElementOffset * i];
-	//		ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
-
-	//		for (uint32 c = 0; c < componentCount; ++c) {
-	//			if constexpr (std::is_same_v<double, ComponentType>) {
-	//				result[i][c] = static_cast<float>(data[c]); // explicitly convert any double input to float.
-	//			}
-	//			else {
-	//				result[i][c]
-	//					= data[c]; // normal type conversion, should be able to convert most of the required stuff
-	//			}
-	//		}
-	//	}
-	//}
 
 	// Uint16 specialization. Expects componentCount == 1.
 	template<typename T>
@@ -51,6 +26,7 @@ namespace {
 		}
 	}
 
+	// TODO: Refactor accessor reading code
 	void ExtractIndicesInto(const tg::Model& modelData, int32 accessorIndex, std::vector<uint32>& out)
 	{
 		//
@@ -88,10 +64,6 @@ namespace {
 		}
 		CLOG_ASSERT(componentCount != 1, "Found indicies of 2 components in gltf file.");
 		out.resize(elementCount);
-
-		// This will generate EVERY possible mapping of Output -> ComponentType conversion
-		// fix this later and provide empty specializations of "incompatible" types (eg: float -> int)
-		// TODO: This code will produce warnings for every type conversion that is considered 'unsafe'
 
 		switch (componentType) {
 				// Conversions from signed to unsigned types are "implementation defined".
@@ -278,9 +250,6 @@ namespace {
 		}
 
 		switch (componentType) {
-				// Conversions from signed to unsigned types are "implementation defined".
-				// This code assumes the implementation will not do any bit arethmitic from signed x to unsigned x.
-
 			case BufferComponentType::BYTE:
 			case BufferComponentType::UNSIGNED_BYTE:
 			case BufferComponentType::SHORT:
@@ -421,7 +390,8 @@ namespace {
 			}
 		}
 
-		// TODO test better calculations (using uv layer 0?) also text tangent handedness (urgently)
+		// TODO: Tangent and bitangent generation improvements:
+		// test better calculations (using uv layer 0?) also text tangent handedness (urgently)
 		// calculate missing tangents (and bitangents)
 		if (missingTangents) {
 			for (auto& v : geom.vertices) {
@@ -433,7 +403,7 @@ namespace {
 			}
 		}
 		for (auto& v : geom.vertices) {
-			// TODO: handness issues bitangent = cross(normal, tangent.xyz) * tangent.w
+			// handness issues bitangent = cross(normal, tangent.xyz) * tangent.w
 			v.bitangent = glm::normalize(glm::cross(v.normal, glm::vec3(v.tangent)));
 		}
 
@@ -539,7 +509,6 @@ inline bool Load(ModelPod* pod, const uri::Uri& path)
 
 			localTransformMat = parentTransformMat * localTransformMat;
 
-			// TODO: check instancing cases
 			// load mesh if exists
 			if (childNode.mesh != -1) {
 				auto& gltfMesh = model.meshes.at(childNode.mesh);

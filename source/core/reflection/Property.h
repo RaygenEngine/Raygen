@@ -67,14 +67,13 @@ public:
 
 	// Returns a reference to the underlying variable of the passed object instance.
 	// This will assert if the requested type is incorrect.
-	// TODO: Maybe check SourceType and MUST be the type this property was created from.
 	template<typename T>
 	[[nodiscard]] T& GetRef(void* obj) const
 	{
 		static_assert(refl::CanBeProperty<T>, "This will always fail. T is not a reflected property.");
 
-		// CLOG_ASSERT(IsA<T>(), "Requested variable '{}' as '{}'. Actual type was: '{}' ", GetName(),
-		// refl::GetName<T>(), m_type.name());
+		CLOG_ASSERT(!IsA<T>(), "Requested variable '{}' as '{}'. Actual type was: '{}' ", GetName(), refl::GetName<T>(),
+			m_type.name());
 
 		return *static_cast<T*>(GetRealMemoryAddr(obj));
 	}

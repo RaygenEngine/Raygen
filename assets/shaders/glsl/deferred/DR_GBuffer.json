@@ -1,4 +1,4 @@
 {
-	"vert" : "DR_GBuffer.vert"
+	"vert" : "DR_GBuffer.vert",
 	"frag" : "DR_GBuffer.frag"
 }
