@@ -2,15 +2,6 @@
 
 #include "system/Input.h"
 
-Input::Input()
-	: m_doubleClicked(false)
-	, m_cursorDragged(false)
-	, m_cursorPosition()
-	, m_cursorRelativePosition()
-	, m_wheelDelta(0)
-{
-}
-
 void Input::UpdateKeyPressed(XVirtualKey key)
 {
 	m_keysPressed.insert(key);

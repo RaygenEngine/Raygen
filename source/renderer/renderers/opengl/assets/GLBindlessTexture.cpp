@@ -5,8 +5,9 @@
 namespace OpenGL {
 GLBindlessTexture::~GLBindlessTexture()
 {
-	if (glIsTextureHandleResidentARB(handle))
+	if (glIsTextureHandleResidentARB(handle)) {
 		glMakeTextureHandleNonResidentARB(handle);
+	}
 }
 
 bool GLBindlessTexture::Load()

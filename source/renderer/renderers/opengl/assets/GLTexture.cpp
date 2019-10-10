@@ -59,8 +59,10 @@ bool GLTexture::Load()
 	}
 
 	if (minFiltering == GL_NEAREST_MIPMAP_NEAREST || minFiltering == GL_LINEAR_MIPMAP_NEAREST
-		|| minFiltering == GL_NEAREST_MIPMAP_LINEAR || minFiltering == GL_LINEAR_MIPMAP_LINEAR)
+		|| minFiltering == GL_NEAREST_MIPMAP_LINEAR || minFiltering == GL_LINEAR_MIPMAP_LINEAR) {
+
 		glGenerateMipmap(textureTarget);
+	}
 
 	return true;
 }

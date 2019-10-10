@@ -1,7 +1,7 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-
+// TODO:
 class PunctualLightNode : public Node {
 	REFLECTED_NODE(PunctualLightNode, Node) {}
 
@@ -11,5 +11,8 @@ class PunctualLightNode : public Node {
 	bool m_hasShadow;
 
 public:
-	PunctualLightNode(Node* parent);
+	PunctualLightNode::PunctualLightNode(Node* parent)
+		: Node(parent)
+	{
+	}
 };

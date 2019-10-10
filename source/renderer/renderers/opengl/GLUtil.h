@@ -82,7 +82,13 @@ inline GLenum GLCheckError_(const char* file, int line)
 inline void DebugBoundVAO(std::string baseMessage)
 {
 	baseMessage = "Querying VAO state, model: baseMessage";
-	int vab, eabb, eabbs, mva, isOn(1), vaabb;
+	int32 vab;
+	int32 eabb;
+	int32 eabbs;
+	int32 mva;
+	int32 isOn = 1;
+	int32 vaabb;
+
 	glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vab);
 	glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &eabb);
 	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &eabbs);

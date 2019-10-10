@@ -34,7 +34,6 @@ void AssetWindow::DrawFileLibrary()
 {
 	int32 n = 0;
 
-
 	if (ImGui::CollapsingHeader("Model files")) {
 		ImGui::Indent();
 		for (auto& s : m_gltf) {

@@ -22,25 +22,29 @@ class CameraNode : public Node {
 
 protected:
 	// distance to film plane
-	float m_focalLength;
+	float m_focalLength{ 1.f };
 
 	// vertical fov (full angle)
-	float m_vFov;
+	float m_vFov{ 60.f };
 	// horizontal fov depends on the vertical and the aspect ratio
-	float m_hFov;
+	float m_hFov{ 45.f };
 
-	float m_near;
-	float m_far;
+	float m_near{ 0.2f };
+	float m_far{ 1000.f };
 
-	glm::mat4 m_projectionMatrix;
+	glm::mat4 m_projectionMatrix{};
 
 	int32 m_viewportWidth{ 1280 };
 	int32 m_viewportHeight{ 720 };
 
 	void RecalculateProjectionFov();
 
+
 public:
-	CameraNode(Node* parent);
+	CameraNode(Node* parent)
+		: Node(parent)
+	{
+	}
 
 	[[nodiscard]] glm::vec3 GetLookAt() const override { return GetWorldTranslation() + GetFront() * m_focalLength; }
 

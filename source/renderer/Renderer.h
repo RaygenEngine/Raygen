@@ -129,7 +129,7 @@ private:
 	void OnNodeRemovedFromWorld(Node* node);
 
 protected:
-	virtual void OnNodeAddedToWorld(Node* node);
+	virtual void OnNodeAddedToWorld(Node* node){};
 
 public:
 	// Windows based init rendering (implement in "context"-base renderers)

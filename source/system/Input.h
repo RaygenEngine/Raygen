@@ -24,21 +24,19 @@ private:
 	std::unordered_set<XVirtualKey> m_keysRepeat;
 	std::unordered_set<XVirtualKey> m_keysReleased;
 
-	bool m_doubleClicked;
-	bool m_cursorDragged;
+	bool m_doubleClicked{ false };
+	bool m_cursorDragged{ false };
 
-	glm::vec2 m_cursorPosition;
+	glm::vec2 m_cursorPosition{};
 	// rel to previous recorded m_cursorPosition
-	glm::vec2 m_cursorRelativePosition;
+	glm::vec2 m_cursorRelativePosition{};
 
 	// multiples of 120
-	int32 m_wheelDelta;
+	int32 m_wheelDelta{ 0 };
 
 	AnalogState m_analogState{};
 
 public:
-	Input();
-
 	void UpdateWheel(int32 wheelDelta);
 	void UpdateCursorPosition(const glm::vec2& newCursorPosition);
 	void UpdateDoubleClick();

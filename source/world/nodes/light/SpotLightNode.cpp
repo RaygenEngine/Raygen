@@ -2,14 +2,6 @@
 
 #include "world/nodes/light/SpotLightNode.h"
 
-
-SpotLightNode::SpotLightNode(Node* parent)
-	: Node(parent)
-	, m_projectionMatrix()
-	, m_aperture(45.f)
-{
-}
-
 void SpotLightNode::UpdateProjectionMatrix()
 {
 	auto ar = static_cast<float>(m_shadowMapWidth) / static_cast<float>(m_shadowMapHeight);

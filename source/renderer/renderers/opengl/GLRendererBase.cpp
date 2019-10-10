@@ -29,8 +29,7 @@ GLRendererBase::GLRendererBase()
 	, m_hdc(nullptr)
 	, m_hglrc(nullptr)
 {
-	m_glAssetManager.reset(new GLAssetManager()); // = std::make_unique<GLAssetManager>();
-												  // m_glAssetManager = std::make_unique<GLAssetManager>();
+	m_glAssetManager = std::make_unique<GLAssetManager>();
 }
 
 GLRendererBase::~GLRendererBase()

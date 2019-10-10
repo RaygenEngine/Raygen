@@ -10,13 +10,13 @@
 
 namespace OpenGL {
 struct GLBasicSpotLight : NodeObserver<SpotLightNode, GLRendererBase> {
-	GLuint fbo;
-	GLuint shadowMap;
+	GLuint fbo{};
+	GLuint shadowMap{};
 
-	GLShader* depthMap;
-	GLShader* depthMapAlphaMask;
+	GLShader* depthMap{ nullptr };
+	GLShader* depthMapAlphaMask{ nullptr };
 
-	glm::mat4 lightSpaceMatrix;
+	glm::mat4 lightSpaceMatrix{};
 
 	GLBasicSpotLight(SpotLightNode* node);
 	~GLBasicSpotLight() override;

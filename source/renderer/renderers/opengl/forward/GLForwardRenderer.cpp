@@ -88,8 +88,9 @@ bool GLForwardRenderer::InitScene()
 	glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, width, height);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_msaaDepthStencilRbo);
 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		LOG_FATAL("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+	}
 
 	// out fbo
 	glGenFramebuffers(1, &m_outFbo);

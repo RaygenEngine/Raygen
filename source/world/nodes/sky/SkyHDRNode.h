@@ -12,7 +12,11 @@ class SkyHDRNode : public Node {
 	PodHandle<ImagePod> m_hdrData;
 
 public:
-	SkyHDRNode(Node* parent);
+	SkyHDRNode(Node* parent)
+		: Node(parent)
+	{
+	}
+
 
 	[[nodiscard]] PodHandle<ImagePod> GetSkyHDR() const { return m_hdrData; }
 };
