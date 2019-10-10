@@ -1,4 +1,4 @@
 {
-	"vert" : "DepthMap.vert"
+	"vert" : "DepthMap.vert",
 	"frag" : "DepthMap.frag"
 }

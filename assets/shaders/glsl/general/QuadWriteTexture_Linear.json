@@ -1,4 +1,4 @@
 {
-	"vert" : "QuadWriteTexture_Linear.vert"
+	"vert" : "QuadWriteTexture_Linear.vert",
 	"frag" : "QuadWriteTexture_Linear.frag"
 }
