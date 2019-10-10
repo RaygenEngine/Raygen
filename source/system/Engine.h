@@ -151,10 +151,5 @@ public:
 		SwitchRenderer(++currentRenderer % m_rendererRegistrations.size());
 	}
 
-	void ToggleEditor()
-	{
-		if (m_isEditorEnabled && m_renderer && m_renderer->SupportsEditor()) {
-			m_isEditorActive = !m_isEditorActive;
-		}
-	}
+	void ToggleEditor();
 };

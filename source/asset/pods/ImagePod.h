@@ -29,8 +29,4 @@ struct ImagePod : AssetPod {
 	bool isHdr{ false };
 
 	~ImagePod() { free(data); }
-	ImagePod(const ImagePod&) = default;
-	ImagePod(ImagePod&&) = default;
-	ImagePod& operator=(const ImagePod&) = default;
-	ImagePod& operator=(ImagePod&&) = default;
 };

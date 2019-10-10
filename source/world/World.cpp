@@ -66,10 +66,10 @@ void World::DirtyUpdateWorld()
 {
 	m_root->UpdateTransforms(glm::identity<glm::mat4>());
 
-	// PERF:
+	// PERF: Possible to use unordered_set for dirty nodes
 	for (auto* node : m_nodes) {
 		if (node->m_dirty.any()) {
-			node->DirtyUpdate();
+			node->CallDirtyUpdate();
 		}
 	}
 }

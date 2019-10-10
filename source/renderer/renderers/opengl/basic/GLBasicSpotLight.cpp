@@ -104,7 +104,7 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 	glDisable(GL_DEPTH_TEST);
 }
 
-void GLBasicSpotLight::DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset)
+void GLBasicSpotLight::DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset)
 {
 	if (nodeDirtyFlagset[SpotLightNode::DF::ResizeShadows]) {
 		glBindTexture(GL_TEXTURE_2D, shadowMap);

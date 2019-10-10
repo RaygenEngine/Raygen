@@ -14,11 +14,7 @@ bool NodeFactory::LoadChildrenXML(const tinyxml2::XMLElement* xmlData, Node* par
 		 xmdChildElement = xmdChildElement->NextSiblingElement()) {
 		const std::string type = xmdChildElement->Name();
 
-		Node* created = LoadChildSpecificNode(type, parent);
-
-		if (!created) {
-			created = LoadNodeFromType(type, parent);
-		}
+		Node* created = LoadNodeFromType(type, parent);
 
 		if (created) {
 			bool loaded = created->LoadFromXML(xmdChildElement);
@@ -29,12 +25,6 @@ bool NodeFactory::LoadChildrenXML(const tinyxml2::XMLElement* xmlData, Node* par
 	}
 
 	return parent->PostChildrenLoaded();
-}
-
-Node* NodeFactory::LoadChildSpecificNode(const std::string& type, Node* parentNode)
-{
-	Node* custom = parentNode->LoadSpecificChild(type);
-	return custom;
 }
 
 Node* NodeFactory::LoadNodeFromType(const std::string& type, Node* parent)

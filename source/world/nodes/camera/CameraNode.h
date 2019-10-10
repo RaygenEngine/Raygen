@@ -60,5 +60,5 @@ public:
 
 	[[nodiscard]] glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 
-	void DirtyUpdate() override;
+	void DirtyUpdate(DirtyFlagset flags) override;
 };

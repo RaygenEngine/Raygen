@@ -44,7 +44,10 @@ inline std::string_view GetDiskExtension(const Uri& path)
 	auto diskpath = GetDiskPathStrView(path);
 
 	const auto cutIndex = diskpath.rfind('.'); // Preserve the last '.'
-	diskpath.remove_prefix(cutIndex);          // resolve parents directory
+	if (cutIndex == std::string::npos) {
+		return {};
+	}
+	diskpath.remove_prefix(cutIndex); // resolve parents directory
 	return diskpath;
 }
 

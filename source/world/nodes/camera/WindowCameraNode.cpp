@@ -13,5 +13,5 @@ void WindowCameraNode::WindowResize(int32 width, int32 height)
 {
 	m_viewportWidth = width;
 	m_viewportHeight = height;
-	m_dirty.set(DF::ViewportSize);
+	SetDirty(DF::ViewportSize);
 }

@@ -120,3 +120,10 @@ bool Engine::IsEditorEnabled()
 {
 	return Get().m_isEditorEnabled;
 }
+
+void Engine::ToggleEditor()
+{
+	if (m_isEditorEnabled && m_renderer && m_renderer->SupportsEditor()) {
+		m_isEditorActive = !m_isEditorActive;
+	}
+}

@@ -2,11 +2,9 @@
 
 #include "world/nodes/light/DirectionalLightNode.h"
 
-void DirectionalLightNode::DirtyUpdate()
+void DirectionalLightNode::DirtyUpdate(DirtyFlagset flags)
 {
-	Node::DirtyUpdate();
-
-	if (m_dirty[DF::Projection]) {
+	if (flags[DF::Projection]) {
 		UpdateProjectionMatrix();
 	}
 }

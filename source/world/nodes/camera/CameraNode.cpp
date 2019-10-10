@@ -9,13 +9,14 @@ void CameraNode::RecalculateProjectionFov()
 
 	m_projectionMatrix = glm::perspective(glm::radians(m_vFov), ar, m_near, m_far);
 	m_hFov = glm::degrees(2 * atan(ar * tan(glm::radians(m_vFov) * 0.5f)));
-	m_dirty.set(DF::Projection);
+
+
+	SetDirty(DF::Projection);
 }
 
-void CameraNode::DirtyUpdate()
+void CameraNode::DirtyUpdate(DirtyFlagset flags)
 {
-	Node::DirtyUpdate();
-	if (m_dirty[DF::Projection] || m_dirty[DF::ViewportSize]) {
+	if (flags[DF::Projection] || flags[DF::ViewportSize]) {
 		RecalculateProjectionFov();
 	}
 }

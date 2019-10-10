@@ -62,7 +62,7 @@ public:
 	template<typename NodeType>
 	void AddNode(NodeType* node)
 	{
-		// WIP:
+		// TODO:
 		if constexpr (std::is_base_of_v<CameraNode, NodeType>) { // NOLINT
 			if (!m_activeCamera) {
 				m_activeCamera = node;

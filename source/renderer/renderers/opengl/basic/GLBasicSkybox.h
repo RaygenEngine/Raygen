@@ -15,7 +15,7 @@ struct GLBasicSkybox : NodeObserver<SkyCubeNode, GLRendererBase> {
 	GLuint vao{};
 	GLuint vbo{};
 
-	virtual void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override {}
+	virtual void DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset) override {}
 	GLBasicSkybox(SkyCubeNode* node);
 	~GLBasicSkybox() override;
 };

@@ -44,7 +44,7 @@ public:
 	{
 	}
 
-	void DirtyUpdate() override;
+	void DirtyUpdate(DirtyFlagset flags) override;
 
 	[[nodiscard]] glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 	[[nodiscard]] float GetAperture() const { return m_aperture; }
