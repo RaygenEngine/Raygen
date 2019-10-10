@@ -20,19 +20,18 @@ static bool Load(TexturePod* pod, const uri::Uri& path)
 
 	const auto imageIndex = gltfTexture.source;
 
-	auto imgAsset = AssetManager::GetOrCreate<ImagePod>(__default__imageMissing);
+	PodHandle<ImagePod> imgAsset;
 
 	// if image exists
 
 	// TODO: check image settings
 	// this should exist (missing is handled from within material)
+
+	CLOG_ASSERT(imageIndex == -1, "This model is unsafe to use, handle missing image from materialL: {}", path);
+
 	if (imageIndex != -1) {
 		auto& gltfImage = model.images.at(imageIndex);
 		imgAsset = AssetManager::GetOrCreateFromParentUri<ImagePod>(gltfImage.uri, path);
-	}
-	else {
-		LOG_ANY("");
-		assert(false && "This model is unsafe to use, handle missing image from material");
 	}
 
 	pod->images.push_back(imgAsset);

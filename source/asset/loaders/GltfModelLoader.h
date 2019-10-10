@@ -536,7 +536,7 @@ inline bool Load(ModelPod* pod, const uri::Uri& path)
 	bool result = RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
 
 	if (requiresDefaultMaterial) {
-		pod->materials.push_back(GET_CUSTOM_POD(MaterialPod, ""));
+		pod->materials.push_back(CustomLoader::GetDefaultMat());
 	}
 
 	return result;

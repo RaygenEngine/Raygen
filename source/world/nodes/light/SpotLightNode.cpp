@@ -8,11 +8,9 @@ void SpotLightNode::UpdateProjectionMatrix()
 	m_projectionMatrix = glm::perspective(glm::radians(m_aperture), ar, m_near, m_far);
 }
 
-void SpotLightNode::DirtyUpdate()
+void SpotLightNode::DirtyUpdate(DirtyFlagset flags)
 {
-	Node::DirtyUpdate();
-
-	if (m_dirty[DF::Projection]) {
+	if (flags[DF::Projection]) {
 		UpdateProjectionMatrix();
 	}
 }

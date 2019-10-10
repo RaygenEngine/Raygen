@@ -49,7 +49,7 @@ public:
 	{
 	}
 
-	void DirtyUpdate() override;
+	void DirtyUpdate(DirtyFlagset flags) override;
 
 	void UpdateProjectionMatrix() { m_projectionMatrix = glm::ortho(m_left, m_right, m_bottom, m_top, m_near, m_far); }
 	[[nodiscard]] glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }

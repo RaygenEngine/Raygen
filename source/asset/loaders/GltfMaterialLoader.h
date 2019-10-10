@@ -46,7 +46,6 @@ inline bool Load(MaterialPod* pod, const uri::Uri& path)
 
 	enum class DefType
 	{
-		Missing,
 		White,
 		Normal
 	};
@@ -62,9 +61,8 @@ inline bool Load(MaterialPod* pod, const uri::Uri& path)
 		}
 		else {
 			switch (defType) {
-				case DefType::Missing: sampler = GET_CUSTOM_POD(TexturePod, __default__imageMissing); break;
-				case DefType::White: sampler = GET_CUSTOM_POD(TexturePod, __default__imageWhite); break;
-				case DefType::Normal: sampler = GET_CUSTOM_POD(TexturePod, __default__imageNormal); break;
+				case DefType::White: sampler = CustomLoader::GetWhiteTexture(); break;
+				case DefType::Normal: sampler = CustomLoader::GetNormalTexture(); break;
 			}
 		}
 

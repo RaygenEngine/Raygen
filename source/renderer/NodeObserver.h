@@ -19,7 +19,7 @@ struct NodeObserverBase : Object {
 	Node* baseNode;
 	std::function<void(NodeObserverBase*)> onObserveeLost;
 
-	virtual void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) = 0;
+	virtual void DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset) = 0;
 };
 
 
@@ -39,5 +39,5 @@ public:
 	{
 	}
 
-	virtual void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) = 0;
+	virtual void DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset) = 0;
 };

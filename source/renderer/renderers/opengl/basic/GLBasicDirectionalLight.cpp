@@ -104,7 +104,7 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 	glDisable(GL_DEPTH_TEST);
 }
 
-void GLBasicDirectionalLight::DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset)
+void GLBasicDirectionalLight::DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset)
 {
 	if (nodeDirtyFlagset[DirectionalLightNode::DF::ResizeShadows]) {
 		glBindTexture(GL_TEXTURE_2D, shadowMap);

@@ -30,6 +30,9 @@ bool GltfFilePod::Load(GltfFilePod* pod, const uri::Uri& path)
 
 bool ImagePod::Load(ImagePod* pod, const uri::Uri& path)
 {
+	if (uri::IsCpu(path)) {
+		return CustomLoader::Load(pod, path);
+	}
 	return ImageLoader::Load(pod, path);
 }
 

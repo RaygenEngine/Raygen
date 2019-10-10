@@ -51,7 +51,7 @@ struct ReflectionToImguiVisitor {
 
 	Node* node;
 
-	std::bitset<64> dirtyFlags;
+	DirtyFlagset dirtyFlags;
 
 	void GenerateUniqueName(const Property& p)
 	{
