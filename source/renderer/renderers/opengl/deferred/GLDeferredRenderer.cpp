@@ -400,6 +400,7 @@ void GLDeferredRenderer::Render()
 
 	// render to window
 	RenderWindow();
+	GLEditorRenderer::Render();
 }
 
 void GLDeferredRenderer::Update()

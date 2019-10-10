@@ -34,6 +34,8 @@ public:
 	virtual void Update() override;
 
 	void ChangeVSync(bool newIsEnabled);
+
+	bool SupportsEditor() override { return false; }
 };
 
 template<typename GlRenderer>

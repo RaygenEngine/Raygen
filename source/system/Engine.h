@@ -93,6 +93,9 @@ private:
 	};
 	std::vector<RendererMetadata> m_rendererRegistrations;
 
+	bool m_isEditorActive{ true };
+	bool m_isEditorEnabled{ true };
+
 public:
 	// Init the internal engine systems.
 	// You MUST run this to properly init the engine
@@ -126,8 +129,13 @@ public:
 	// Avoid this if possible and always refactor cmd debug features to normal features.
 	static bool HasCmdArgument(const std::string& argument);
 
-	[[nodiscard]] bool ShouldUpdateWorld() const;
-	[[nodiscard]] bool IsUsingEditor() const;
+	[[nodiscard]] static bool ShouldUpdateWorld();
+
+	// Query if the editor is currently active. Can be changed any frame
+	[[nodiscard]] static bool IsEditorActive();
+
+	// Query if the editor could be activated during runtime. Cannot change after engine initialization
+	[[nodiscard]] static bool IsEditorEnabled();
 
 	void ReportFrameDrawn()
 	{
@@ -141,5 +149,12 @@ public:
 	{
 		static uint32 currentRenderer = 0;
 		SwitchRenderer(++currentRenderer % m_rendererRegistrations.size());
+	}
+
+	void ToggleEditor()
+	{
+		if (m_isEditorEnabled && m_renderer && m_renderer->SupportsEditor()) {
+			m_isEditorActive = !m_isEditorActive;
+		}
 	}
 };

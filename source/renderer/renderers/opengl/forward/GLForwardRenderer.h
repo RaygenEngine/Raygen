@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer/renderers/opengl/GLRendererBase.h"
+#include "renderer/renderers/opengl/GLEditorRenderer.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "renderer/renderers/opengl/assets/GLShader.h"
 #include "renderer/renderers/opengl/assets/GLTexture.h"
@@ -8,10 +8,11 @@
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
 
+
 namespace OpenGL {
 struct GLBasicSkybox;
 
-class GLForwardRenderer : public GLRendererBase {
+class GLForwardRenderer : public GLEditorRenderer {
 
 protected:
 	// shaders

@@ -32,6 +32,7 @@ set(SOURCE_FILES
 	
 	renderer/renderers/opengl/GLAsset.cpp
 	renderer/renderers/opengl/GLAssetManager.cpp
+	renderer/renderers/opengl/GLEditorRenderer.cpp
 	renderer/renderers/opengl/GLRendererBase.cpp
 	
 	renderer/renderers/opengl/assets/GLModel.cpp
@@ -166,6 +167,7 @@ set(HEADER_FILES
 	
 	renderer/renderers/opengl/GLAsset.h
 	renderer/renderers/opengl/GLAssetManager.h
+	renderer/renderers/opengl/GLEditorRenderer.h
 	renderer/renderers/opengl/GLRendererBase.h
 	renderer/renderers/opengl/GLUtil.h
 	

@@ -5,7 +5,8 @@
 #include "renderer/Renderer.h"
 #include "world/World.h"
 #include "editor/Editor.h"
-#include "editor/renderer/EditorRenderer.h"
+#include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
+#include "renderer/renderers/opengl/forward/GLForwardRenderer.h"
 
 AppBase::AppBase()
 {
@@ -76,9 +77,11 @@ void AppBase::MainLoop()
 {
 	Window* window = Engine::GetMainWindow();
 	while (!window->IsClosed()) {
-		if (Engine::GetEditor()) {
+
+		if (Engine::IsEditorActive()) {
 			Engine::GetEditor()->PreBeginFrame();
 		}
+
 		// clear input soft state (pressed keys, etc.)
 		Engine::GetInput()->ClearSoftState();
 		Engine::GetWorld()->ClearDirtyFlags();
@@ -86,7 +89,11 @@ void AppBase::MainLoop()
 		// Let our window handle any events.
 		window->HandleEvents(m_handleControllers);
 
-		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::CAPSLOCK)) {
+		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::OEM_3)) {
+			Engine::Get().ToggleEditor();
+		}
+
+		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::TAB)) {
 			Engine::Get().NextRenderer();
 		}
 
@@ -109,13 +116,8 @@ void AppBase::RegisterRenderers()
 	// NOTE:
 	// Default behavior for an app is to start the FIRST renderer registered here.
 
-	if (m_enableEditor) {
-		Engine::RegisterRenderer<ForwardEditorRenderer>();
-		Engine::RegisterRenderer<DeferredEditorRenderer>();
-	}
-	else {
-		Engine::RegisterRenderer<OpenGL::GLDeferredRenderer>();
-	}
+	Engine::RegisterRenderer<OpenGL::GLForwardRenderer>();
+	Engine::RegisterRenderer<OpenGL::GLDeferredRenderer>();
 }
 
 Win32Window* AppBase::CreateAppWindow()

@@ -27,7 +27,7 @@ public:
 
 	virtual void SwapBuffers() = 0;
 
-	// virtual bool SupportsEditor() = 0; // WIP
+	virtual bool SupportsEditor() = 0;
 };
 
 class ObserverRenderer : public Renderer {
@@ -122,15 +122,5 @@ protected:
 	virtual void OnNodeAddedToWorld(Node* node){};
 
 public:
-	// Windows based init rendering (implement in "context"-base renderers)
-	virtual bool InitRendering(HWND assochWnd, HINSTANCE instance) = 0;
-
-	// Init Scene (shaders/ upload stuff etc.);
-	virtual bool InitScene() = 0;
-
 	virtual void Update();
-
-	virtual void Render() = 0;
-
-	virtual void SwapBuffers(){};
 };

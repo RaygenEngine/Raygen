@@ -28,8 +28,6 @@ bool GLForwardRenderer::InitScene()
 	int32 width = m_camera->GetWidth();
 	int32 height = m_camera->GetHeight();
 
-	LOG_REPORT("Camera Size: {}, {}", width, height);
-
 	// shaders
 	auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/QuadWriteTexture.json");
 	m_simpleOutShader = GetGLAssetManager()->GpuGetOrCreate<GLShader>(shaderAsset);
@@ -298,6 +296,8 @@ void GLForwardRenderer::Render()
 	RenderPostProcess();
 	// write out texture of out fbo to window (big triangle trick)
 	!m_isOutNonLinear ? RenderWindowSimple() : RenderWindowLinearized();
+
+	GLEditorRenderer::Render();
 }
 
 void GLForwardRenderer::Update()

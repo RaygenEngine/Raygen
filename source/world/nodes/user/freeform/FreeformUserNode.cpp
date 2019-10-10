@@ -5,7 +5,7 @@
 #include "asset/util/ParsingAux.h"
 #include "system/Engine.h"
 #include "system/Input.h"
-
+#include "world/nodes/RootNode.h"
 
 FreeformUserNode::FreeformUserNode(Node* parent)
 	: UserNode(parent)
@@ -82,10 +82,10 @@ void FreeformUserNode::Update(float deltaTime)
 		AddLocalOffset((-GetRight()) * speed);
 	}
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::E, XVirtualKey::GAMEPAD_LEFT_SHOULDER)) {
-		AddLocalOffset((GetUp()) * speed);
+		AddLocalOffset((GetWorldRoot()->GetUp()) * speed);
 	}
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::Q, XVirtualKey::GAMEPAD_RIGHT_SHOULDER)) {
-		AddLocalOffset((-GetUp()) * speed);
+		AddLocalOffset((-GetWorldRoot()->GetUp()) * speed);
 	}
 }

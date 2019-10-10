@@ -4,10 +4,12 @@
 #include "core/reflection/GenMacros.h" // include gen macros here even if not needed to propagate to all node headers
 #include "tinyxml2/tinyxml2.h"
 #include "system/Object.h"
+#include "system/Engine.h"
 #include <bitset>
 
 class AssetManager;
 class World;
+class RootNode;
 
 // Properly pads the dirty flags given to account for the parent class's dirty flags.
 #define DECLARE_DIRTY_FLAGSET(...)                                                                                     \
@@ -22,6 +24,7 @@ public:                                                                         
 	};                                                                                                                 \
                                                                                                                        \
 private:
+
 
 class Node : public Object {
 	//
@@ -106,10 +109,6 @@ public:
 	{
 	}
 
-	Node(const Node&) = delete;
-	Node(Node&&) = delete;
-	Node& operator=(const Node&) = delete;
-	Node& operator=(Node&&) = delete;
 	virtual ~Node() = default;
 
 	[[nodiscard]] glm::vec3 GetLocalTranslation() const { return m_localTranslation; }
@@ -141,6 +140,9 @@ public:
 
 	// Returns nullptr IF AND ONLY IF "this" node is the root node.
 	[[nodiscard]] Node* GetParent() const { return m_parent; }
+
+	[[nodiscard]] World* GetWorld() const { return Engine::GetWorld(); }
+	[[nodiscard]] RootNode* GetWorldRoot() const;
 
 	void SetLocalTranslation(const glm::vec3& lt);
 	void SetLocalOrientation(const glm::quat& lo);

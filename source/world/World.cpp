@@ -133,14 +133,14 @@ void World::Update()
 {
 	UpdateFrameTimers();
 
-	if (Engine::Get().ShouldUpdateWorld()) {
+	if (Engine::ShouldUpdateWorld()) {
 		// Update after input and delta calculation
 		for (auto* node : m_nodes) {
 			node->Update(m_deltaTime);
 		}
 	}
 
-	if (Engine::Get().IsUsingEditor()) {
+	if (Engine::IsEditorActive()) {
 		Engine::GetEditor()->UpdateEditor();
 	}
 

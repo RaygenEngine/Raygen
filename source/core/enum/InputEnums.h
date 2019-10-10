@@ -1,6 +1,7 @@
 ﻿#pragma once
 
-enum class XVirtualKey {
+enum class XVirtualKey
+{
 	UNASSIGNED = 0,
 	RESERVED,
 	LBUTTON,
@@ -235,5 +236,4 @@ enum class XVirtualKey {
 	NONAME,
 	PA1,
 	OEM_CLEAR,
-	TILDE
 };

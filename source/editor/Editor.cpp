@@ -259,11 +259,6 @@ void Editor::UpdateEditor()
 {
 	HandleInput();
 
-
-	if (!m_showImgui) {
-		return;
-	}
-
 	ImguiImpl::NewFrame();
 
 	static ImGui::FileBrowser lfb = ImGui::FileBrowser(ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CloseOnEsc);
@@ -286,13 +281,6 @@ void Editor::UpdateEditor()
 		lfb.SetTitle("Load World");
 		lfb.Open();
 	}
-
-	auto renderer = Engine::GetRenderer<DeferredEditorRenderer>();
-	if (renderer) {
-		auto str = renderer->m_previewModeString;
-		ImGui::Text(str.c_str());
-	}
-
 
 	lfb.Display();
 
@@ -487,9 +475,6 @@ void Editor::LoadScene(const fs::path& scenefile)
 
 void Editor::HandleInput()
 {
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::TAB)) {
-		m_showImgui = !m_showImgui;
-	}
 }
 
 void Editor::PreBeginFrame()
