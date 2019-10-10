@@ -1,4 +1,4 @@
 {
-	"vert" : "Cubemap_InfDist.vert"
+	"vert" : "Cubemap_InfDist.vert",
 	"frag" : "Cubemap_InfDist.frag"
 }
