@@ -13,19 +13,6 @@ class RootNode;
 using DirtyFlagset = std::bitset<64>;
 
 // Properly pads the dirty flags given to account for the parent class's dirty flags.
-#define DECLARE_DIRTY_FLAGSET(...)                                                                                     \
-public:                                                                                                                \
-	struct DF {                                                                                                        \
-		enum                                                                                                           \
-		{                                                                                                              \
-			_PREV = Parent::DF::_COUNT - 1,                                                                            \
-			__VA_ARGS__,                                                                                               \
-			_COUNT                                                                                                     \
-		};                                                                                                             \
-	};                                                                                                                 \
-                                                                                                                       \
-private:
-
 
 class Node : public Object {
 	//
@@ -55,8 +42,8 @@ private:
 	}
 
 
-	// Base for dirty flagsets, use the macros. DOC
 public:
+	// Base for dirty flagsets, use the macros. DOC
 	struct DF {
 		enum
 		{
@@ -166,9 +153,7 @@ public:
 	//
 	bool LoadFromXML(const tinyxml2::XMLElement* xmlData);
 
-
-	virtual bool LoadAttributesFromXML(const tinyxml2::XMLElement* xmlData);
-	virtual void LoadReflectedProperties(const tinyxml2::XMLElement* xmlData);
+	void LoadReflectedProperties(const tinyxml2::XMLElement* xmlData);
 
 	virtual void PropertyUpdatedFromEditor(
 		const Property& prop){}; // the m_dirtyBitset Property is set directly through the editor before this call.

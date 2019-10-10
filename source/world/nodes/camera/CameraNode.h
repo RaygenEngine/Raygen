@@ -5,7 +5,7 @@
 
 // Note: to make a automatic camera that resizes to window size see WindowCameraNode
 class CameraNode : public Node {
-	REFLECTED_NODE(CameraNode, Node)
+	REFLECTED_NODE(CameraNode, Node, DF_FLAGS(Projection, ViewportSize))
 	{
 		REFLECT_VAR(m_far).OnDirty(DF::Projection);
 		REFLECT_VAR(m_focalLength).OnDirty(DF::Projection);
@@ -18,7 +18,6 @@ class CameraNode : public Node {
 		REFLECT_VAR(m_viewportHeight, PropertyFlags::Transient).OnDirty(DF::ViewportSize);
 	}
 
-	DECLARE_DIRTY_FLAGSET(Projection, ViewportSize)
 
 protected:
 	// distance to film plane
@@ -38,7 +37,6 @@ protected:
 	int32 m_viewportHeight{ 720 };
 
 	void RecalculateProjectionFov();
-
 
 public:
 	CameraNode(Node* parent)

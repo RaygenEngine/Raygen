@@ -6,10 +6,9 @@
 #include "asset/PodHandle.h"
 
 class SkyHDRNode : public Node {
-	REFLECTED_NODE(SkyHDRNode, Node) { REFLECT_VAR(m_hdrData); }
+	REFLECTED_NODE(SkyHDRNode, Node) { REFLECT_VAR(m_hdr); }
 
-
-	PodHandle<TexturePod> m_hdrData;
+	PodHandle<TexturePod> m_hdr;
 
 public:
 	SkyHDRNode(Node* parent)
@@ -17,6 +16,5 @@ public:
 	{
 	}
 
-
-	[[nodiscard]] PodHandle<TexturePod> GetSkyHDR() const { return m_hdrData; }
+	[[nodiscard]] PodHandle<TexturePod> GetSkyHDR() const { return m_hdr; }
 };
