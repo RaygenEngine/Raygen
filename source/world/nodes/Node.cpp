@@ -11,6 +11,11 @@
 #include "asset/PodIncludes.h"
 #include "core/reflection/ReflectionTools.h"
 
+RootNode* Node::GetWorldRoot() const
+{
+	return Engine::GetWorld()->GetRoot();
+}
+
 void Node::SetLocalTranslation(const glm::vec3& lt)
 {
 	m_localTranslation = lt;
@@ -184,9 +189,7 @@ struct LoadPropertiesFromXMLVisitor {
 	{
 		std::string tmp;
 		if (!ParsingAux::ReadStringAttribute(xmlData, str, tmp)) {
-			if (!p.HasFlags(PropertyFlags::OptionalPod)) {
-				LOG_ASSERT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
-			}
+			LOG_ASSERT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
 		}
 		handle = AssetManager::GetOrCreateFromParent<T>(tmp, worldHandle);
 	}
@@ -196,9 +199,7 @@ struct LoadPropertiesFromXMLVisitor {
 	{
 		std::string tmp;
 		if (!ParsingAux::ReadStringAttribute(xmlData, str, tmp)) {
-			if (!p.HasFlags(PropertyFlags::OptionalPod)) {
-				LOG_ASSERT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
-			}
+			LOG_ASSERT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
 		}
 		handle = AssetManager::GetOrCreateFromParent<ModelPod>(tmp, worldHandle);
 

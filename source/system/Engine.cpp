@@ -27,6 +27,7 @@ void Engine::InitEngine(AppBase* app)
 	m_initToFrameTimer.Start();
 
 	m_app = app;
+	m_isEditorEnabled = app->m_enableEditor;
 
 	m_input = new Input();
 	m_assetManager = new AssetManager();
@@ -37,7 +38,8 @@ void Engine::InitEngine(AppBase* app)
 
 	m_window = app->CreateAppWindow();
 
-	if (app->m_enableEditor) {
+
+	if (m_isEditorEnabled) {
 		m_editor = new Editor();
 	}
 }
@@ -80,6 +82,8 @@ void Engine::SwitchRenderer(uint32 registrationIndex)
 
 	LOG_REPORT("Switched to renderer: {}", eng.m_rendererRegistrations[registrationIndex].name);
 
+	eng.m_isEditorActive = eng.m_renderer->SupportsEditor();
+
 	eng.m_renderer->InitRendering(eng.m_window->GetHWND(), eng.m_window->GetHInstance());
 	eng.m_renderer->InitScene();
 }
@@ -98,16 +102,21 @@ bool Engine::HasCmdArgument(const std::string& argument)
 	return false;
 }
 
-bool Engine::ShouldUpdateWorld() const
+bool Engine::ShouldUpdateWorld()
 {
-	if (m_editor) {
-		return m_editor->ShouldUpdateWorld();
+	if (IsEditorActive()) {
+		return Get().m_editor->ShouldUpdateWorld();
 	}
 	return true;
 }
 
-bool Engine::IsUsingEditor() const
+bool Engine::IsEditorActive()
 {
 	// TODO: in the future disable editor with this flag.
-	return m_editor != nullptr;
+	return Get().m_editor && Get().m_isEditorActive;
+}
+
+bool Engine::IsEditorEnabled()
+{
+	return Get().m_isEditorEnabled;
 }

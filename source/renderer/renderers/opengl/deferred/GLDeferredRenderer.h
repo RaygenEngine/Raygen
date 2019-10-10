@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer/renderers/opengl/GLRendererBase.h"
+#include "renderer/renderers/opengl/GLEditorRenderer.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "renderer/renderers/opengl/assets/GLShader.h"
 #include "renderer/renderers/opengl/assets/GLTexture.h"
@@ -11,7 +11,7 @@
 
 
 namespace OpenGL {
-class GLDeferredRenderer : public GLRendererBase {
+class GLDeferredRenderer : public GLEditorRenderer {
 
 protected:
 	// TODO: should use the camera and window respectively

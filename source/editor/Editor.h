@@ -18,15 +18,14 @@ protected:
 	AssetWindow m_assetWindow;
 
 public:
-	bool m_showImgui{ true };
 	fs::path m_sceneToLoad{};
 
 	Editor();
 	virtual ~Editor();
-	Editor(const Editor&) = default;
-	Editor(Editor&&) = default;
-	Editor& operator=(const Editor&) = default;
-	Editor& operator=(Editor&&) = default;
+	Editor(const Editor&) = delete;
+	Editor(Editor&&) = delete;
+	Editor& operator=(const Editor&) = delete;
+	Editor& operator=(Editor&&) = delete;
 
 
 	void UpdateEditor();
