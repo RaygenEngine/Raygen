@@ -6,16 +6,6 @@
 #include <unordered_set>
 #include <type_traits>
 
-// TODO:
-// For sub-renderer registration
-#define MAKE_METADATA(Class)                                                                                           \
-public:                                                                                                                \
-	static Renderer* MetaConstruct() { return new Class(); }                                                           \
-	static std::string MetaName() { return std::string(#Class); }                                                      \
-                                                                                                                       \
-private:
-
-
 class Renderer {
 public:
 	Renderer() = default;

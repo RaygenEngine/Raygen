@@ -14,11 +14,9 @@ struct GLModel : GLAsset<ModelPod> {
 		GLuint vao{ 0u };
 		GLuint ebo{ 0u };
 
-		// TODO: may use single in the future
 		GLuint verticesVBO{ 0u };
 
 		GLMaterial* material{ nullptr };
-
 		GLint geometryMode{ 0u };
 
 		GLsizei count{ 0u };

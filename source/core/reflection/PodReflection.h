@@ -5,7 +5,6 @@
 #include <type_traits>
 
 
-// TODO: BACK: allow extension of this in "global typelist extensions app header" or something
 #define Z_POD_TYPES GltfFilePod, ImagePod, MaterialPod, ModelPod, ShaderPod, StringPod, TexturePod, XMLDocPod
 
 

@@ -5,14 +5,13 @@
 class Node;
 struct AssetPod;
 
-// TODO: pod ctor should be private and befriend asset manager
 #define REFLECTED_POD(Class)                                                                                           \
-public:                                                                                                                \
+private:                                                                                                               \
 	Class() { type = refl::GetId<Class>(); }                                                                           \
                                                                                                                        \
-private:                                                                                                               \
 	using Z_ThisType = Class;                                                                                          \
 	friend class ReflClass;                                                                                            \
+	friend class AssetManager;                                                                                         \
                                                                                                                        \
 public:                                                                                                                \
 	[[nodiscard]] static const ReflClass& StaticClass()                                                                \

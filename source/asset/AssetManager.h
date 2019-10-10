@@ -107,7 +107,7 @@ class AssetManager {
 public:
 	// Returns a new handle from a given path.
 	// * if the asset of this path is already registered in the asset list it will return a handle to the existing one
-	//   requesting a different type of an existing path will (TODO: ) assert. (possibly should return invalid handle)
+	//   requesting a different type of an existing path will assert.
 	// * if the asset of this path is not registered, it will become registered and associated with this type.
 	//   it will also begin loading on another thread.
 

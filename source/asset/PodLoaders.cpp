@@ -38,9 +38,6 @@ bool MaterialPod::Load(MaterialPod* pod, const uri::Uri& path)
 	if (uri::MatchesExtension(path, ".gltf")) {
 		return GltfMaterialLoader::Load(pod, path);
 	}
-	// TODO: Json loader
-
-
 	return CustomLoader::Load(pod, path);
 }
 
@@ -69,11 +66,9 @@ bool TexturePod::Load(TexturePod* pod, const uri::Uri& path)
 	if (uri::MatchesExtension(path, ".gltf")) {
 		return GltfTextureLoader::Load(pod, path);
 	}
-	// TODO: search sub extension, or make cubeman extension
 	if (uri::MatchesExtension(path, ".json")) {
 		return CubemapLoader::Load(pod, path);
 	}
-	// add Json sampler loader
 
 	return CustomLoader::Load(pod, path);
 }

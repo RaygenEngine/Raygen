@@ -7,16 +7,14 @@
 
 // WIP:
 class ForwardEditorRenderer : public OpenGL::GLForwardRenderer {
-	MAKE_METADATA(ForwardEditorRenderer)
 public:
 	void Render() override;
 	bool InitRendering(HWND assochWnd, HINSTANCE instance) override;
 	~ForwardEditorRenderer() override;
 };
 
-// WIP:
+// WIP: TODO:
 class DeferredEditorRenderer : public OpenGL::GLDeferredRenderer {
-	MAKE_METADATA(DeferredEditorRenderer)
 public:
 	void Render() override;
 	bool InitRendering(HWND assochWnd, HINSTANCE instance) override;

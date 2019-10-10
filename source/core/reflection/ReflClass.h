@@ -47,7 +47,6 @@ public:
 	template<typename This, typename Parent>
 	static ReflClass Generate()
 	{
-		// TODO: should avoid multiple generates here
 		ReflClass reflClass;
 		reflClass.m_type = refl::GetId<This>();
 		This::GenerateReflection(reflClass);

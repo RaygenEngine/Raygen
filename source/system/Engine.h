@@ -11,7 +11,6 @@ class Editor;
 
 class AppBase;
 
-// TODO:
 class NodeFactory;
 
 class Engine {
@@ -26,7 +25,6 @@ public:
 	}
 
 	// Not guaranteed to exist at all times.
-	// TODO: provide event guarantees for world validility.
 	[[nodiscard]] static World* GetWorld() { return Get().m_world; }
 
 	// It is HIGHLY recommended to validate this result in your code for future compatibility
@@ -39,7 +37,7 @@ public:
 	// Input will be valid forever after initialization.
 	[[nodiscard]] static Input* GetInput() { return Get().m_input; }
 
-	// TODO: possibly get rid of this to avoid getting renderers from random locations.
+	// DOC:
 	template<typename AsRenderer = Renderer>
 	[[nodiscard]] static AsRenderer* GetRenderer()
 	{
@@ -65,13 +63,6 @@ public:
 	Engine& operator=(Engine&&) = delete;
 
 private:
-	struct RendererMetadata {
-		std::string name;
-		std::function<Renderer*()> Construct;
-	};
-
-	std::vector<RendererMetadata> m_rendererRegistrations;
-
 	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
 	AssetManager* m_assetManager{ nullptr };
 
@@ -96,6 +87,12 @@ private:
 
 	Timer::DebugTimer<ch::milliseconds> m_initToFrameTimer;
 
+	struct RendererMetadata {
+		std::string name;
+		std::function<Renderer*()> Construct;
+	};
+	std::vector<RendererMetadata> m_rendererRegistrations;
+
 public:
 	// Init the internal engine systems.
 	// You MUST run this to properly init the engine
@@ -113,7 +110,16 @@ public:
 	template<typename RendererClass>
 	static uint32 RegisterRenderer()
 	{
-		Engine::Get().m_rendererRegistrations.push_back({ RendererClass::MetaName(), &RendererClass::MetaConstruct });
+		static_assert(std::is_base_of_v<Renderer, RendererClass>, "Attempting to register a non renderer class.");
+
+		RendererMetadata data;
+		data.Construct = []() -> Renderer* {
+			return new RendererClass();
+		};
+
+		data.name = refl::GetName<RendererClass>();
+
+		Engine::Get().m_rendererRegistrations.emplace_back(data);
 		return static_cast<uint32>(Engine::Get().m_rendererRegistrations.size() - 1);
 	}
 

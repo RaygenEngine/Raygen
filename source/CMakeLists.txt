@@ -59,6 +59,7 @@ set(SOURCE_FILES
 	world/NodeFactory.cpp
 	
 	world/nodes/Node.cpp
+	world/nodes/RootNode.cpp
 	world/nodes/TransformNode.cpp
 	
 	world/nodes/camera/CameraNode.cpp
@@ -194,6 +195,7 @@ set(HEADER_FILES
 	world/NodeFactory.h
 	
 	world/nodes/Node.h
+	world/nodes/RootNode.h
 	world/nodes/TransformNode.h
 	world/nodes/MetaNodeTranslation.h
 	

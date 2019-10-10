@@ -15,7 +15,6 @@ struct GLBasicGeometry : NodeObserver<GeometryNode, GLRendererBase> {
 	virtual void DirtyNodeUpdate(std::bitset<64> nodeDirtyFlagset) override
 	{
 		if (nodeDirtyFlagset[Node::DF::Properties]) {
-			// WIP:
 			ReloadModel();
 		}
 	}
