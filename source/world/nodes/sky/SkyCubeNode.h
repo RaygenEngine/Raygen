@@ -9,10 +9,5 @@ class SkyCubeNode : public Node {
 	PodHandle<TexturePod> m_cubemap;
 
 public:
-	SkyCubeNode(Node* parent)
-		: Node(parent)
-	{
-	}
-
 	[[nodiscard]] PodHandle<TexturePod> GetSkyMap() const { return m_cubemap; }
 };

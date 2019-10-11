@@ -11,6 +11,8 @@ class World;
 class RootNode;
 
 using DirtyFlagset = std::bitset<64>;
+using NodeDeleterFunc = void (*)(Node*);
+using NodeUniquePtr = std::unique_ptr<Node, NodeDeleterFunc>;
 
 // Properly pads the dirty flags given to account for the parent class's dirty flags.
 
@@ -76,10 +78,11 @@ private:
 	// TODO: remove
 	std::string m_type;
 
-	Node* m_parent;
+	Node* m_parent{ nullptr };
+
+	std::vector<NodeUniquePtr> m_children;
 
 protected:
-	std::vector<std::shared_ptr<Node>> m_children; // WIP unique_ptr
 	std::string m_name;
 
 private:
@@ -91,13 +94,9 @@ private:
 
 	friend class Editor;
 	friend class World;
+	friend class NodeFactory;
 
 public:
-	Node(Node* pNode)
-		: m_parent(pNode)
-	{
-	}
-
 	virtual ~Node() = default;
 
 	[[nodiscard]] glm::vec3 GetLocalTranslation() const { return m_localTranslation; }
@@ -123,7 +122,7 @@ public:
 	[[nodiscard]] bool IsLeaf() const { return m_children.empty(); }
 	[[nodiscard]] const std::string& GetType() const { return m_type; }
 	[[nodiscard]] const std::string& GetName() const { return m_name; };
-	[[nodiscard]] const std::vector<std::shared_ptr<Node>>& GetChildren() { return m_children; }
+	[[nodiscard]] const std::vector<NodeUniquePtr>& GetChildren() const { return m_children; }
 
 	[[nodiscard]] DirtyFlagset GetDirtyFlagset() const { return m_dirty; }
 
@@ -140,11 +139,7 @@ public:
 
 	void SetWorldMatrix(const glm::mat4& newWorldMatrix);
 
-	void AddChild(std::shared_ptr<Node> child)
-	{
-		m_dirty.set(DF::Children);
-		m_children.emplace_back(child);
-	}
+	void AddChild(std::shared_ptr<Node> child) {}
 
 	void SetName(const std::string& name) { m_name = name; }
 	void DeleteChild(Node* child);
@@ -157,10 +152,6 @@ public:
 
 	virtual void PropertyUpdatedFromEditor(
 		const Property& prop){}; // the m_dirtyBitset Property is set directly through the editor before this call.
-
-	// Called after all children have been loaded from the scene file.
-	// You can use this to track 'custom' children in
-	[[nodiscard]] virtual bool PostChildrenLoaded() { return true; }
 
 	// Runs late in the frame, only on nodes that at least one m_dirty is set.
 	virtual void DirtyUpdate(DirtyFlagset dirtyFlags){};
@@ -181,6 +172,25 @@ public:
 	void OrientYaw(float yaw);
 
 	void SetDirty(uint32 flagIndex) { m_dirty.set(flagIndex); }
+
+
+	//
+	template<typename T>
+	bool IsA()
+	{
+		if constexpr (std::is_same_v<T, Node>) {
+			return true;
+		}
+
+		auto nodeClass = &GetClass();
+		while (nodeClass != &Node::StaticClass()) {
+			if (nodeClass == &T::StaticClass()) {
+				return true;
+			}
+			nodeClass = nodeClass->GetParentClass();
+		}
+		return false;
+	}
 
 
 	//

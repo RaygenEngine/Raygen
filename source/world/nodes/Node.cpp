@@ -125,7 +125,6 @@ bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 
 	LOG_INFO("Loading {0} named {1}", m_type, m_name);
 
-
 	// Load from reflection
 	LoadReflectedProperties(xmlData);
 
@@ -144,11 +143,11 @@ bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 
 	// Load Children.
 	NodeFactory* factory = Engine::GetWorld()->GetNodeFactory();
-	const auto status = factory->LoadChildrenXML(xmlData, this);
+	factory->LoadChildrenXML(xmlData, this);
 
 	m_dirty.set();
 
-	return status;
+	return true;
 }
 
 namespace {

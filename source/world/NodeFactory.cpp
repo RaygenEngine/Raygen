@@ -8,13 +8,31 @@
 #include "world/World.h"
 #include "world/nodes/user/freeform/FreeformUserNode.h"
 
-bool NodeFactory::LoadChildrenXML(const tinyxml2::XMLElement* xmlData, Node* parent)
+void NodeFactory::RegisterNodes()
+{
+	RegisterNodeList<CameraNode, WindowCameraNode, GeometryNode, DirectionalLightNode, PunctualLightNode, SpotLightNode,
+		SkyCubeNode, SkyHDRNode, FreeformUserNode, TransformNode>();
+}
+
+Node* NodeFactory::NewNodeFromType(const std::string& type)
+{
+	auto it = m_nodeEntries.find(std::string(FilterNodeName(type)));
+	if (it != m_nodeEntries.end()) {
+		return it->second.newInstance();
+	}
+
+	LOG_ASSERT("Failed to find node registration for: {}", type);
+	return nullptr;
+}
+
+void NodeFactory::LoadChildrenXML(const tinyxml2::XMLElement* xmlData, Node* parent)
 {
 	for (auto* xmdChildElement = xmlData->FirstChildElement(); xmdChildElement != nullptr;
 		 xmdChildElement = xmdChildElement->NextSiblingElement()) {
 		const std::string type = xmdChildElement->Name();
 
-		Node* created = LoadNodeFromType(type, parent);
+		Node* created = NewNodeFromType(type);
+		Engine::GetWorld()->RegisterNode(created, parent);
 
 		if (created) {
 			bool loaded = created->LoadFromXML(xmdChildElement);
@@ -23,43 +41,4 @@ bool NodeFactory::LoadChildrenXML(const tinyxml2::XMLElement* xmlData, Node* par
 
 		CLOG_ERROR(!created, "Failed to create a child with type: {0}", type);
 	}
-
-	return parent->PostChildrenLoaded();
-}
-
-Node* NodeFactory::LoadNodeFromType(const std::string& type, Node* parent)
-{
-	World* world = Engine::GetWorld();
-	if (type == "freeform_user") {
-		return world->CreateNode<FreeformUserNode>(parent);
-	}
-	if (type == "camera") {
-		return world->CreateNode<CameraNode>(parent);
-	}
-	if (type == "window_camera") {
-		return world->CreateNode<WindowCameraNode>(parent);
-	}
-	if (type == "punctual_light") {
-		return world->CreateNode<PunctualLightNode>(parent);
-	}
-	if (type == "directional_light") {
-		return world->CreateNode<DirectionalLightNode>(parent);
-	}
-	if (type == "spot_light") {
-		return world->CreateNode<SpotLightNode>(parent);
-	}
-	if (type == "geometry") {
-		return world->CreateNode<GeometryNode>(parent);
-	}
-	if (type == "transform") {
-		return world->CreateNode<TransformNode>(parent);
-	}
-	if (type == "sky_cube") {
-		return world->CreateNode<SkyCubeNode>(parent);
-	}
-	if (type == "sky_hdr") {
-		return world->CreateNode<SkyHDRNode>(parent);
-	}
-
-	return nullptr;
 }

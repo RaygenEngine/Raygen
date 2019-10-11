@@ -19,14 +19,16 @@ class CameraNode;
 
 
 class World : public Object {
+
+	friend class Editor;
+	friend class NodeFactory;
+
 	mutable std::unordered_set<Node*> m_nodes;
-	mutable std::unordered_set<GeometryNode*> m_triangleModelGeometries;
-	mutable std::unordered_set<TransformNode*> m_transforms;
+	mutable std::unordered_set<GeometryNode*> m_geomteryNodes;
 	mutable std::unordered_set<PunctualLightNode*> m_punctualLights;
 	mutable std::unordered_set<DirectionalLightNode*> m_directionalLights;
 	mutable std::unordered_set<SpotLightNode*> m_spotLights;
-	mutable std::unordered_set<CameraNode*> m_cameras;
-	mutable std::unordered_set<UserNode*> m_users;
+	mutable std::unordered_set<CameraNode*> m_cameraNodes;
 
 	NodeFactory* m_nodeFactory;
 	std::unique_ptr<RootNode> m_root;
@@ -43,7 +45,9 @@ class World : public Object {
 
 	void UpdateFrameTimers();
 
-	friend class Editor;
+
+	void RegisterNode(Node* node, Node* parent);
+
 
 public:
 	// Returns float seconds
@@ -58,7 +62,6 @@ public:
 	World(NodeFactory* factory);
 	~World() override;
 
-
 	template<typename NodeType>
 	void AddNode(NodeType* node)
 	{
@@ -70,7 +73,6 @@ public:
 		}
 		GetNodeMap<NodeType>().insert(node);
 		m_nodes.insert(node);
-		node->m_dirty.set(Node::DF::Created);
 	}
 
 	template<typename NodeType>
@@ -120,30 +122,23 @@ public:
 	template<typename NodeType>
 	constexpr auto& GetNodeMap() const
 	{
-		if constexpr (std::is_base_of<PunctualLightNode, NodeType>::value) { // NOLINT
+		if constexpr (std::is_base_of_v<PunctualLightNode, NodeType>) { // NOLINT
 			return m_punctualLights;
 		}
-		else if constexpr (std::is_base_of<GeometryNode, NodeType>::value) { // NOLINT
-			return m_triangleModelGeometries;
+		else if constexpr (std::is_base_of_v<GeometryNode, NodeType>) { // NOLINT
+			return m_geomteryNodes;
 		}
-		else if constexpr (std::is_base_of<TransformNode, NodeType>::value) { // NOLINT
-			return m_transforms;
+		else if constexpr (std::is_base_of_v<CameraNode, NodeType>) { // NOLINT
+			return m_cameraNodes;
 		}
-		else if constexpr (std::is_base_of<CameraNode, NodeType>::value) { // NOLINT
-			return m_cameras;
-		}
-		else if constexpr (std::is_base_of<UserNode, NodeType>::value) { // NOLINT
-			return m_users;
-		}
-		else if constexpr (std::is_base_of<DirectionalLightNode, NodeType>::value) { // NOLINT
+		else if constexpr (std::is_base_of_v<DirectionalLightNode, NodeType>) { // NOLINT
 			return m_directionalLights;
 		}
-		else if constexpr (std::is_base_of<SpotLightNode, NodeType>::value) { // NOLINT
+		else if constexpr (std::is_base_of_v<SpotLightNode, NodeType>) { // NOLINT
 			return m_spotLights;
 		}
-
 		// general nodes
-		else if constexpr (std::is_base_of<Node, NodeType>::value) { // NOLINT
+		else if constexpr (std::is_base_of_v<Node, NodeType>) { // NOLINT
 			return m_nodes;
 		}
 	}
@@ -152,22 +147,6 @@ public:
 	Node* GetNodeByName(const std::string& name) const;
 
 	CameraNode* GetActiveCamera() const { return m_activeCamera; }
-
-	template<typename ChildType>
-	ChildType* CreateNode(Node* parent)
-	{
-		std::shared_ptr<ChildType> node = std::shared_ptr<ChildType>(new ChildType(parent), [&](ChildType* assetPtr) {
-			// custom deleter to remove node from world when it is deleted
-			this->RemoveNode(assetPtr);
-			delete assetPtr;
-		}); //
-
-		// add it to world maps
-		this->AddNode(node.get());
-		parent->AddChild(node);
-		// return observer
-		return node.get();
-	}
 
 	void Update();
 	// void WindowResize(int32 width, int32 height) override;
@@ -186,7 +165,7 @@ private:
 	// Transient properties do not get copied.
 	// Children are ignored. Use DeepDuplicateNode to properly instanciate children.
 	// Does not properly call the correct events / functions
-	Node* DuplicateNode(Node* src, Node* newParent = nullptr);
+	Node* DuplicateNode_Utl(Node* src, Node* newParent = nullptr);
 
 
 public:

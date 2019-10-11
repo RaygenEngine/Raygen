@@ -50,7 +50,7 @@ void RecurseNodes(Node* root, Lambda f, int32 depth = 0)
 	}
 
 	f(root, depth);
-	for (auto c : root->GetChildren()) {
+	for (auto& c : root->GetChildren()) {
 		RecurseNodes(c.get(), f, depth + 1);
 	}
 }

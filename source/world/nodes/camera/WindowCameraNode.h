@@ -5,10 +5,12 @@
 #include "system/EngineEvents.h"
 
 class WindowCameraNode : public CameraNode {
+	REFLECTED_NODE(WindowCameraNode, CameraNode) {}
+
 public:
 	DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
 
-	WindowCameraNode(Node* parent);
+	WindowCameraNode();
 
 private:
 	void WindowResize(int32 width, int32 height);

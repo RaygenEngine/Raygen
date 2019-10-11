@@ -38,11 +38,6 @@ class SpotLightNode : public Node {
 	void UpdateProjectionMatrix();
 
 public:
-	SpotLightNode(Node* parent)
-		: Node(parent)
-	{
-	}
-
 	void DirtyUpdate(DirtyFlagset flags) override;
 
 	[[nodiscard]] glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
