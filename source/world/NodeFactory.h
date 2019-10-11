@@ -27,7 +27,7 @@ protected:
 		if (v.substr(v.size() - 4) == detail::filter) {
 			v = v.substr(0, v.size() - 4);
 		}
-		return utl::ToLower(std::string{ v });
+		return smath::ToLower(std::string{ v });
 	}
 
 	template<typename T>
@@ -41,7 +41,7 @@ protected:
 		entry.classPtr = &T::StaticClass();
 		entry.newInstance = &T::NewInstance;
 
-		m_nodeEntries.insert({ utl::ToLower(name), entry });
+		m_nodeEntries.insert({ smath::ToLower(name), entry });
 	}
 
 	template<typename... Nodes>

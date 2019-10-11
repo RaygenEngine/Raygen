@@ -108,14 +108,11 @@ namespace {
 				result[i].position[1] = static_cast<float>(data[1]);
 				result[i].position[2] = static_cast<float>(data[2]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
+			else { // NOLINT
+				static_assert(std::is_same_v<float, ComponentType>);
 				result[i].position[0] = data[0];
 				result[i].position[1] = data[1];
 				result[i].position[2] = data[2];
-			}
-			// TODO: handle this
-			else {
-				assert(false);
 			}
 		}
 	}
@@ -133,13 +130,11 @@ namespace {
 				result[i].normal[1] = static_cast<float>(data[1]);
 				result[i].normal[2] = static_cast<float>(data[2]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
+			else { // NOLINT
+				static_assert(std::is_same_v<float, ComponentType>);
 				result[i].normal[0] = data[0];
 				result[i].normal[1] = data[1];
 				result[i].normal[2] = data[2];
-			}
-			else {
-				assert(false);
 			}
 		}
 	}
@@ -157,13 +152,11 @@ namespace {
 				result[i].tangent[1] = static_cast<float>(data[1]);
 				result[i].tangent[2] = static_cast<float>(data[2]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
+			else { // NOLINT
+				static_assert(std::is_same_v<float, ComponentType>);
 				result[i].tangent[0] = data[0];
 				result[i].tangent[1] = data[1];
 				result[i].tangent[2] = data[2];
-			}
-			else {
-				assert(false);
 			}
 		}
 	}
@@ -180,12 +173,10 @@ namespace {
 				result[i].textCoord0[0] = static_cast<float>(data[0]);
 				result[i].textCoord0[1] = static_cast<float>(data[1]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
+			else { // NOLINT
+				static_assert(std::is_same_v<float, ComponentType>);
 				result[i].textCoord0[0] = data[0];
 				result[i].textCoord0[1] = data[1];
-			}
-			else {
-				assert(false);
 			}
 		}
 	}
@@ -202,12 +193,10 @@ namespace {
 				result[i].textCoord1[0] = static_cast<float>(data[0]);
 				result[i].textCoord1[1] = static_cast<float>(data[1]);
 			}
-			else if constexpr (std::is_same_v<float, ComponentType>) { // NOLINT
+			else { // NOLINT
+				static_assert(std::is_same_v<float, ComponentType>);
 				result[i].textCoord1[0] = data[0];
 				result[i].textCoord1[1] = data[1];
-			}
-			else {
-				assert(false);
 			}
 		}
 	}

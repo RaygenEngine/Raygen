@@ -11,7 +11,7 @@
 #include "asset/loaders/ImageLoader.h"
 #include "asset/loaders/ShaderLoader.h"
 #include "asset/loaders/TextLoader.h"
-#include "asset/loaders/XMLDocLoader.h"
+#include "asset/loaders/JsonDocLoader.h"
 
 #include "asset/UriLibrary.h"
 

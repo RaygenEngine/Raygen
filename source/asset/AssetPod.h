@@ -34,10 +34,3 @@ struct BasePodHandle {
 
 	bool operator==(const BasePodHandle& other) const { return other.podId == this->podId && podId != 0; }
 };
-
-namespace std {
-template<>
-struct hash<BasePodHandle> {
-	size_t operator()(const BasePodHandle& x) const { return x.podId; }
-};
-} // namespace std

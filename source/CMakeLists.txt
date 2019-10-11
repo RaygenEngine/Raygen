@@ -83,7 +83,7 @@ set(HEADER_FILES
 	asset/loaders/CubemapLoader.h
 	asset/loaders/DummyLoader.h
 	asset/loaders/TextLoader.h
-	asset/loaders/XMLDocLoader.h
+	asset/loaders/JsonDocLoader.h
 	asset/loaders/ImageLoader.h
 	asset/loaders/ShaderLoader.h
 	asset/loaders/GltfModelLoader.h
@@ -97,7 +97,7 @@ set(HEADER_FILES
 	asset/pods/ImagePod.h
 	asset/pods/ShaderPod.h
 	asset/pods/StringPod.h
-	asset/pods/XMLDocPod.h
+	asset/pods/JsonDocPod.h
 	asset/pods/GltfFilePod.h
 
 	asset/util/GltfAux.h

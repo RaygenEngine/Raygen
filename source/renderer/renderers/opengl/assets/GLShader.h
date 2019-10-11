@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/renderers/opengl/GLAsset.h"
-#include "asset/loaders/ShaderLoader.h"
+#include "asset/pods/ShaderPod.h"
 
 #include <glad/glad.h>
 

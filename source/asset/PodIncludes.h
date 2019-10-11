@@ -10,4 +10,4 @@
 #include "asset/pods/ShaderPod.h"
 #include "asset/pods/StringPod.h"
 #include "asset/pods/TexturePod.h"
-#include "asset/pods/XMLDocPod.h"
+#include "asset/pods/JsonDocPod.h"

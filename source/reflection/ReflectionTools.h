@@ -7,6 +7,8 @@
 #include <type_traits>
 
 namespace refltools {
+using json = nlohmann::json;
+
 namespace detail {
 	DECLARE_HAS_FUNCTION_DETECTOR(Begin);
 	DECLARE_HAS_FUNCTION_DETECTOR(End);
@@ -144,13 +146,10 @@ struct ReflClassOperationResult {
 	// - DST: int32 myInt; [flag: NoLoad]
 	size_t FlagMissmatches{ 0 };
 
-	// If the underlying class types where not identical
-	bool ClassTypeMissmatch{ false }; // TODO: implement
-
 	bool IsExactlyCorrect()
 	{
 		return PropertiesNotFoundInDestination == 0 && PropertiesNotFoundInSource == 0 && TypeMissmatches == 0
-			   && FlagMissmatches == 0 && !ClassTypeMissmatch;
+			   && FlagMissmatches == 0;
 	}
 };
 
@@ -228,5 +227,95 @@ ReflClassOperationResult CopyClassTo(SrcT* src, DestT* dst)
 	CallVisitorOnEveryProperty(src, visitor);
 	return visitor.operationResult;
 }
+
+
+struct JsonToPropVisitor {
+
+	const json& j;
+	PropertyFlags::Type flagsToSkip;
+
+	JsonToPropVisitor(const json& inJson, PropertyFlags::Type inFlagsToSkip = PropertyFlags::NoLoad)
+		: j(inJson)
+		, flagsToSkip(inFlagsToSkip)
+	{
+	}
+
+	bool PreProperty(const Property& p)
+	{
+		if (p.HasFlags(flagsToSkip)) {
+			return false;
+		}
+		return true;
+	}
+
+	template<typename T>
+	void operator()(T& v, const Property& prop)
+	{
+		auto it = j.find(prop.GetName());
+		if (it != j.end()) {
+			it->get_to<T>(v);
+		}
+	}
+};
+
+// With Parent path override and conditionally gltfPreload
+struct JsonToPropVisitor_WithRelativePath {
+
+	JsonToPropVisitor parentVisitor;
+	BasePodHandle podParent;
+	bool gltfPreload;
+
+	JsonToPropVisitor_WithRelativePath(const json& inJson, BasePodHandle inParent, bool inGltfPreload = false,
+		PropertyFlags::Type inFlagsToSkip = PropertyFlags::NoLoad)
+		: parentVisitor(inJson, inFlagsToSkip)
+		, podParent(inParent)
+		, gltfPreload(inGltfPreload)
+	{
+	}
+
+	// forward any non ovreloaded call to parent
+	template<typename T>
+	void operator()(T& v, const Property& prop)
+	{
+		parentVisitor.operator()(v, prop);
+	}
+
+	template<typename T>
+	PodHandle<T> LoadHandle(const std::string& str)
+	{
+		return AssetManager::GetOrCreateFromParent<T>(str, podParent);
+	}
+
+	template<>
+	PodHandle<ModelPod> LoadHandle(const std::string& str)
+	{
+		auto handle = AssetManager::GetOrCreateFromParent<ModelPod>(str, podParent);
+		if (gltfPreload && str.find(".gltf") != std::string::npos) {
+			AssetManager::PreloadGltf(AssetManager::GetPodUri(handle) + "{}");
+		}
+		return handle;
+	}
+
+	template<typename T>
+	void operator()(PodHandle<T>& p, const Property& prop)
+	{
+		auto it = parentVisitor.j.find(prop.GetName());
+		if (it == parentVisitor.j.end()) {
+			LOG_ABORT("Failed to find pod property: {}", prop.GetName());
+		}
+		p = LoadHandle<T>(it->get<std::string>());
+	}
+
+	template<typename T>
+	void operator()(std::vector<PodHandle<T>>& v, const Property& prop)
+	{
+		auto it = parentVisitor.j.find(prop.GetName());
+		if (it != parentVisitor.j.end() && it->is_array()) {
+			for (auto& elem : *it) {
+				v.emplace_back(LoadHandle<T>(elem.get<std::string>()));
+			}
+		}
+	}
+};
 
 } // namespace refltools

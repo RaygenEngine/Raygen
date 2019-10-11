@@ -1,12 +1,13 @@
 #pragma once
 
-#include "asset/pods/XMLDocPod.h"
+#include "asset/pods/JsonDocPod.h"
 #include "asset/UriLibrary.h"
+#include <istream>
 
 namespace JsonDocLoader {
 inline bool Load(JsonDocPod* pod, const uri::Uri& path)
 {
-	using nlohmann::json;
+	using json = nlohmann::json;
 	std::ifstream file(uri::ToSystemPath(path));
 
 	if (!file.is_open()) {
