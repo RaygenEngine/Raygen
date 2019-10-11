@@ -3,7 +3,7 @@
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
 
-namespace OpenGL {
+namespace ogl {
 GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 	: NodeObserver<SpotLightNode, GLRendererBase>(node)
 {
@@ -116,4 +116,4 @@ void GLBasicSpotLight::DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset)
 		lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 	}
 }
-} // namespace OpenGL
+} // namespace ogl

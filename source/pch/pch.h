@@ -8,7 +8,7 @@
 #include "core/Event.h"
 
 // auxiliary
-#include "core/GraphicsMathAux.h"
+#include "core/MathAux.h"
 #include "core/StringAux.h"
 
 // meta

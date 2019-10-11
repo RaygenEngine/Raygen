@@ -5,7 +5,7 @@
 
 #include <glad/glad.h>
 
-namespace OpenGL {
+namespace ogl {
 // TODO: impl correctly (when needed)
 struct GLBindlessTexture : GLTexture {
 	GLuint handle{ 0 };
@@ -20,4 +20,4 @@ struct GLBindlessTexture : GLTexture {
 protected:
 	bool Load() override;
 };
-} // namespace OpenGL
+} // namespace ogl

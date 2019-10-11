@@ -10,7 +10,7 @@
 
 void AssetWindow::Init()
 {
-	Timer::DebugTimer<std::chrono::milliseconds> timer(true);
+	timer::DebugTimer<std::chrono::milliseconds> timer(true);
 
 	for (const auto& entry : fs::recursive_directory_iterator(fs::current_path())) {
 		if (entry.is_directory()) {

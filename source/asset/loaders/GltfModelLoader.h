@@ -55,11 +55,11 @@ namespace {
 			const tinygltf::Buffer& gltfBuffer = modelData.buffers.at(bufferView.buffer);
 
 
-			componentType = GltfAux::GetComponentType(accessor.componentType);
+			componentType = gltfaux::GetComponentType(accessor.componentType);
 			elementCount = accessor.count;
 			beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
 			strideByteOffset = accessor.ByteStride(bufferView);
-			componentCount = utl::ElementComponentCount(GltfAux::GetElementType(accessor.type));
+			componentCount = utl::ElementComponentCount(gltfaux::GetElementType(accessor.type));
 			beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
 		}
 		CLOG_ABORT(componentCount != 1, "Found indicies of 2 components in gltf file.");
@@ -240,11 +240,11 @@ namespace {
 			const tinygltf::Buffer& gltfBuffer = modelData.buffers.at(bufferView.buffer);
 
 
-			componentType = GltfAux::GetComponentType(accessor.componentType);
+			componentType = gltfaux::GetComponentType(accessor.componentType);
 			elementCount = accessor.count;
 			beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
 			strideByteOffset = accessor.ByteStride(bufferView);
-			componentCount = utl::ElementComponentCount(GltfAux::GetElementType(accessor.type));
+			componentCount = utl::ElementComponentCount(gltfaux::GetElementType(accessor.type));
 			beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
 		}
 
@@ -254,7 +254,7 @@ namespace {
 			case ComponentType::SHORT:
 			case ComponentType::USHORT:
 			case ComponentType::INT:
-			case ComponentType::UINT: assert(false);
+			case ComponentType::UINT: LOG_ABORT("Incorrect buffers, debug model...");
 			case ComponentType::FLOAT:
 				LoadIntoVertextData_Selector<VertexElementIndex, float>(out, beginPtr, strideByteOffset, elementCount);
 				return;
@@ -290,7 +290,10 @@ namespace {
 		const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat, bool& requiresDefaultMaterial)
 	{
 		// mode
-		geom.mode = GltfAux::GetGeometryMode(primitiveData.mode);
+		// TODO: handle non triangle case somewhere in code
+		geom.mode = gltfaux::GetGeometryMode(primitiveData.mode);
+		// TODO: find out from data (animations etc) the usage hint
+		// geom.usage = ...
 
 		// material
 		const auto materialIndex = primitiveData.material;
@@ -306,7 +309,7 @@ namespace {
 		}
 
 		auto it = std::find_if(begin(primitiveData.attributes), end(primitiveData.attributes),
-			[](auto& pair) { return utl::CaseInsensitiveCompare(pair.first, "POSITION"); });
+			[](auto& pair) { return smath::CaseInsensitiveCompare(pair.first, "POSITION"); });
 
 
 		size_t vertexCount = modelData.accessors.at(it->second).count;
@@ -336,22 +339,22 @@ namespace {
 			const auto& attrName = attribute.first;
 			int32 index = attribute.second;
 
-			if (utl::CaseInsensitiveCompare(attrName, "POSITION")) {
+			if (smath::CaseInsensitiveCompare(attrName, "POSITION")) {
 				LoadIntoVertextData<0>(modelData, index, geom.vertices);
 			}
-			else if (utl::CaseInsensitiveCompare(attrName, "NORMAL")) {
+			else if (smath::CaseInsensitiveCompare(attrName, "NORMAL")) {
 				LoadIntoVertextData<1>(modelData, index, geom.vertices);
 				missingNormals = false;
 			}
-			else if (utl::CaseInsensitiveCompare(attrName, "TANGENT")) {
+			else if (smath::CaseInsensitiveCompare(attrName, "TANGENT")) {
 				LoadIntoVertextData<2>(modelData, index, geom.vertices);
 				missingTangents = false;
 			}
-			else if (utl::CaseInsensitiveCompare(attrName, "TEXCOORD_0")) {
+			else if (smath::CaseInsensitiveCompare(attrName, "TEXCOORD_0")) {
 				LoadIntoVertextData<3>(modelData, index, geom.vertices);
 				missingTexcoord0 = false;
 			}
-			else if (utl::CaseInsensitiveCompare(attrName, "TEXCOORD_1")) {
+			else if (smath::CaseInsensitiveCompare(attrName, "TEXCOORD_1")) {
 				LoadIntoVertextData<4>(modelData, index, geom.vertices);
 				missingTexcoord1 = false;
 			}

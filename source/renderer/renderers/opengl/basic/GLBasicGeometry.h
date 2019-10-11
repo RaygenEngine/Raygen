@@ -4,7 +4,7 @@
 #include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/GLRendererBase.h"
 
-namespace OpenGL {
+namespace ogl {
 struct GLBasicGeometry : NodeObserver<GeometryNode, GLRendererBase> {
 	GLModel* glModel;
 
@@ -19,4 +19,4 @@ struct GLBasicGeometry : NodeObserver<GeometryNode, GLRendererBase> {
 		}
 	}
 };
-} // namespace OpenGL
+} // namespace ogl

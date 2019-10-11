@@ -10,7 +10,7 @@
 #include "renderer/renderers/opengl/basic/GLBasicSkybox.h"
 
 
-namespace OpenGL {
+namespace ogl {
 class GLDeferredRenderer : public GLEditorRenderer {
 
 protected:
@@ -75,4 +75,4 @@ public:
 
 	void RecompileShaders();
 };
-} // namespace OpenGL
+} // namespace ogl

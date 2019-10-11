@@ -4,7 +4,7 @@
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "asset/AssetManager.h"
 
-namespace OpenGL {
+namespace ogl {
 // TODO: default box model (json)
 float skyboxVertices[] = {
 	// positions
@@ -51,4 +51,4 @@ GLBasicSkybox::~GLBasicSkybox()
 	glDeleteVertexArrays(1, &vao);
 	glDeleteBuffers(1, &vbo);
 }
-} // namespace OpenGL
+} // namespace ogl

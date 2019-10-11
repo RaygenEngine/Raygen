@@ -2,7 +2,7 @@
 
 #include <tinygltf/tiny_gltf.h>
 
-namespace GltfAux {
+namespace gltfaux {
 inline GeometryMode GetGeometryMode(int32 gltfMode)
 {
 	switch (gltfMode) {
@@ -42,13 +42,13 @@ inline TextureWrapping GetTextureWrapping(int32 gltfWrapping)
 
 inline AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
 {
-	if (utl::CaseInsensitiveCompare(gltfAlphaMode, "OPAQUE")) {
+	if (smath::CaseInsensitiveCompare(gltfAlphaMode, "OPAQUE")) {
 		return AM_OPAQUE;
 	}
-	if (utl::CaseInsensitiveCompare(gltfAlphaMode, "MASK")) {
+	if (smath::CaseInsensitiveCompare(gltfAlphaMode, "MASK")) {
 		return AM_MASK;
 	}
-	if (utl::CaseInsensitiveCompare(gltfAlphaMode, "BLEND")) {
+	if (smath::CaseInsensitiveCompare(gltfAlphaMode, "BLEND")) {
 		return AM_BLEND;
 	}
 	// not defined -> opaque
@@ -83,4 +83,4 @@ inline ComponentType GetComponentType(int32 gltfComponentType)
 		default: return ComponentType::FLOAT;
 	}
 }
-} // namespace GltfAux
+} // namespace gltfaux

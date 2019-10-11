@@ -5,7 +5,7 @@
 #include "asset/AssetManager.h"
 #include "asset/pods/TexturePod.h"
 
-namespace OpenGL {
+namespace ogl {
 GLTexture::~GLTexture()
 {
 	glDeleteTextures(1, &id);
@@ -55,7 +55,7 @@ bool GLTexture::Load()
 		case TextureTarget::TEXTURE_3D:
 		case TextureTarget::TEXTURE_ARRAY:
 		case TextureTarget::TEXTURE_CUBEMAP_ARRAY:
-		default: assert(false && "Texture format yet supported");
+		default: LOG_ABORT("Texture format yet supported");
 	}
 
 	if (minFiltering == GL_NEAREST_MIPMAP_NEAREST || minFiltering == GL_LINEAR_MIPMAP_NEAREST
@@ -66,4 +66,4 @@ bool GLTexture::Load()
 
 	return true;
 }
-} // namespace OpenGL
+} // namespace ogl

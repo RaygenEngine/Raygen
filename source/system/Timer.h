@@ -6,7 +6,7 @@
 namespace ch = std::chrono;
 
 // TODO: refactor duplicate timers.
-namespace Timer {
+namespace timer {
 template<typename ChronoDuration = ch::microseconds>
 class DebugTimer {
 
@@ -115,12 +115,12 @@ public:
 	Scope(Scope&&) = delete;
 	Scope& operator=(Scope&&) = delete;
 };
-} // namespace Timer
+} // namespace timer
 
 #define TIMER_STATIC_SCOPE(Name)                                                                                       \
-	static Timer::DebugTimer scope_timer;                                                                              \
-	Timer::Scope scope_timer_scope(scope_timer, Name)
+	static timer::DebugTimer scope_timer;                                                                              \
+	timer::Scope scope_timer_scope(scope_timer, Name)
 
 #define TIMER_STATIC_SCOPE_MS(Name)                                                                                    \
-	static Timer::DebugTimer<std::chrono::milliseconds> scope_timer_ms;                                                \
-	Timer::Scope<std::chrono::milliseconds> scope_timer_ms_scoe(scope_timer_ms, Name)
+	static timer::DebugTimer<std::chrono::milliseconds> scope_timer_ms;                                                \
+	timer::Scope<std::chrono::milliseconds> scope_timer_ms_scoe(scope_timer_ms, Name)

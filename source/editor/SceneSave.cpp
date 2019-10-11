@@ -65,12 +65,12 @@ struct GenerateXMLVisitor {
 
 	void operator()(glm::vec3& v, const Property& p)
 	{
-		xmlElement->SetAttribute(name, ParsingAux::FloatsToString(v).c_str());
+		xmlElement->SetAttribute(name, parsingaux::FloatsToString(v).c_str());
 	}
 
 	void operator()(glm::vec4& v, const Property& p)
 	{
-		xmlElement->SetAttribute(name, ParsingAux::FloatsToString(v).c_str());
+		xmlElement->SetAttribute(name, parsingaux::FloatsToString(v).c_str());
 	}
 
 	void operator()(std::string& v, const Property& p) { xmlElement->SetAttribute(name, v.c_str()); }
@@ -97,9 +97,9 @@ tinyxml2::XMLElement* GenerateNodeXML(Node* node, tinyxml2::XMLDocument& documen
 	xmlElem = document.NewElement(node->GetType().c_str());
 	xmlElem->SetAttribute("name", node->GetName().c_str());
 
-	xmlElem->SetAttribute("translation", ParsingAux::FloatsToString(node->GetLocalTranslation()).c_str());
-	xmlElem->SetAttribute("euler_pyr", ParsingAux::FloatsToString(node->GetLocalPYR()).c_str());
-	xmlElem->SetAttribute("scale", ParsingAux::FloatsToString(node->GetLocalScale()).c_str());
+	xmlElem->SetAttribute("translation", parsingaux::FloatsToString(node->GetLocalTranslation()).c_str());
+	xmlElem->SetAttribute("euler_pyr", parsingaux::FloatsToString(node->GetLocalPYR()).c_str());
+	xmlElem->SetAttribute("scale", parsingaux::FloatsToString(node->GetLocalScale()).c_str());
 
 	GenerateXMLVisitor visitor;
 	visitor.xmlElement = xmlElem;

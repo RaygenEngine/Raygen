@@ -2,6 +2,6 @@
 #include "renderer/GenericGpuAssetManager.h"
 #include "renderer/renderers/opengl/GLAsset.h"
 
-namespace OpenGL {
+namespace ogl {
 using GLAssetManager = GenericGpuAssetManager<GLAssetBase>;
 }

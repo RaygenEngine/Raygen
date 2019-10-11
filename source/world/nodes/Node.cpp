@@ -117,8 +117,8 @@ void Node::OrientYaw(float yaw)
 
 bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 {
-	ParsingAux::ReadFillEntityName(xmlData, m_name);
-	ParsingAux::ReadFillEntityType(xmlData, m_type);
+	parsingaux::ReadFillEntityName(xmlData, m_name);
+	parsingaux::ReadFillEntityType(xmlData, m_type);
 
 	LOG_INFO("Loading {0} named {1}", m_type, m_name);
 
@@ -127,14 +127,14 @@ bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 	LoadReflectedProperties(xmlData);
 
 	// Load Node generics
-	ParsingAux::ReadFloatsAttribute(xmlData, "translation", m_localTranslation);
+	parsingaux::ReadFloatsAttribute(xmlData, "translation", m_localTranslation);
 	glm::vec3 eulerPYR{ 0.f, 0.f, 0.f };
-	ParsingAux::ReadFloatsAttribute(xmlData, "euler_pyr", eulerPYR);
+	parsingaux::ReadFloatsAttribute(xmlData, "euler_pyr", eulerPYR);
 	m_localOrientation = glm::quat(glm::radians(eulerPYR));
-	ParsingAux::ReadFloatsAttribute(xmlData, "scale", m_localScale);
+	parsingaux::ReadFloatsAttribute(xmlData, "scale", m_localScale);
 
 	glm::vec3 localLookat{};
-	if (ParsingAux::ReadFloatsAttribute(xmlData, "lookat", localLookat)) {
+	if (parsingaux::ReadFloatsAttribute(xmlData, "lookat", localLookat)) {
 		// if lookat read overwrite following
 		m_localOrientation = math::OrientationFromLookatAndPosition(localLookat, GetLocalTranslation());
 	}
@@ -171,17 +171,17 @@ struct LoadPropertiesFromXMLVisitor {
 	void operator()(bool& v, const Property& p) { xmlData->QueryBoolAttribute(str, &v); }
 	void operator()(float& v, const Property& p) { xmlData->QueryFloatAttribute(str, &v); }
 
-	void operator()(glm::vec3& v, const Property& p) { ParsingAux::ReadFloatsAttribute(xmlData, str, v); }
-	void operator()(glm::vec4& v, const Property& p) { ParsingAux::ReadFloatsAttribute(xmlData, str, v); }
+	void operator()(glm::vec3& v, const Property& p) { parsingaux::ReadFloatsAttribute(xmlData, str, v); }
+	void operator()(glm::vec4& v, const Property& p) { parsingaux::ReadFloatsAttribute(xmlData, str, v); }
 
-	void operator()(std::string& v, const Property& p) { ParsingAux::ReadStringAttribute(xmlData, str, v); }
+	void operator()(std::string& v, const Property& p) { parsingaux::ReadStringAttribute(xmlData, str, v); }
 
 	// Pod<T>
 	template<typename T>
 	void operator()(PodHandle<T>& handle, const Property& p)
 	{
 		std::string tmp;
-		if (!ParsingAux::ReadStringAttribute(xmlData, str, tmp)) {
+		if (!parsingaux::ReadStringAttribute(xmlData, str, tmp)) {
 			LOG_ABORT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
 		}
 		handle = AssetManager::GetOrCreateFromParent<T>(tmp, worldHandle);
@@ -191,7 +191,7 @@ struct LoadPropertiesFromXMLVisitor {
 	void operator()(PodHandle<ModelPod>& handle, const Property& p)
 	{
 		std::string tmp;
-		if (!ParsingAux::ReadStringAttribute(xmlData, str, tmp)) {
+		if (!parsingaux::ReadStringAttribute(xmlData, str, tmp)) {
 			LOG_ABORT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
 		}
 		handle = AssetManager::GetOrCreateFromParent<ModelPod>(tmp, worldHandle);
@@ -218,7 +218,7 @@ struct LoadPropertiesFromXMLVisitor {
 
 void Node::LoadReflectedProperties(const tinyxml2::XMLElement* xmlData)
 {
-	using namespace ParsingAux;
+	using namespace parsingaux;
 
 	LoadPropertiesFromXMLVisitor visitor;
 	visitor.xmlData = xmlData;

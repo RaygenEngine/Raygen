@@ -7,7 +7,7 @@
 
 #include <glad/glad.h>
 
-namespace OpenGL {
+namespace ogl {
 struct GLBasicDirectionalLight : NodeObserver<DirectionalLightNode, GLRendererBase> {
 	GLuint fbo{};
 	GLuint shadowMap{};
@@ -26,4 +26,4 @@ struct GLBasicDirectionalLight : NodeObserver<DirectionalLightNode, GLRendererBa
 
 	void DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset) override;
 };
-} // namespace OpenGL
+} // namespace ogl

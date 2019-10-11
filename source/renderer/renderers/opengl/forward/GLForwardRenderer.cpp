@@ -10,7 +10,7 @@
 
 #include <glad/glad.h>
 
-namespace OpenGL {
+namespace ogl {
 GLForwardRenderer::~GLForwardRenderer()
 {
 	glDeleteFramebuffers(1, &m_msaaFbo);
@@ -325,4 +325,4 @@ void GLForwardRenderer::RecompileShaders()
 	m_simpleOutShader->Load();
 	m_linearizeOutShader->Load();
 }
-} // namespace OpenGL
+} // namespace ogl
