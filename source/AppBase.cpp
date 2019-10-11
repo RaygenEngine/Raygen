@@ -1,4 +1,5 @@
 #include "pch/pch.h"
+
 #include "AppBase.h"
 #include "platform/windows/Win32Window.h"
 #include "system/Engine.h"
@@ -89,7 +90,7 @@ void AppBase::MainLoop()
 		// Let our window handle any events.
 		window->HandleEvents(m_handleControllers);
 
-		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::OEM_3)) {
+		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::TILDE)) {
 			Engine::Get().ToggleEditor();
 		}
 

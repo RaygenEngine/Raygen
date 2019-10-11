@@ -1,35 +1,32 @@
 #include "pch/pch.h"
 
 #include "world/nodes/Node.h"
-#include "world/nodes/MetaNodeTranslation.h"
 #include "asset/util/ParsingAux.h"
-#include "user/freeform/FreeformUserNode.h"
-#include "sky/SkyCubeNode.h"
-#include "sky/SkyHDRNode.h"
 #include "world/NodeFactory.h"
 #include "asset/AssetManager.h"
 #include "asset/PodIncludes.h"
-#include "core/reflection/ReflectionTools.h"
+#include "reflection/ReflectionTools.h"
+#include "world/World.h"
 
 RootNode* Node::GetWorldRoot() const
 {
 	return Engine::GetWorld()->GetRoot();
 }
 
-void Node::SetLocalTranslation(const glm::vec3& lt)
+void Node::SetLocalTranslation(glm::vec3 lt)
 {
 	m_localTranslation = lt;
 	MarkMatrixChanged();
 }
 
-void Node::SetLocalOrientation(const glm::quat& lo)
+void Node::SetLocalOrientation(glm::quat lo)
 {
 
 	m_localOrientation = lo;
 	MarkMatrixChanged();
 }
 
-void Node::SetLocalScale(const glm::vec3& ls)
+void Node::SetLocalScale(glm::vec3 ls)
 {
 	m_localScale = ls;
 	MarkMatrixChanged();
@@ -63,7 +60,7 @@ void Node::MarkMatrixChanged()
 void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 {
 	if (m_dirty[DF::TRS]) {
-		m_localMatrix = utl::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
+		m_localMatrix = math::TransformMatrixFromTOS(m_localScale, m_localOrientation, m_localTranslation);
 		m_worldMatrix = parentMatrix * m_localMatrix;
 		// PERF:
 		glm::vec3 skew;
@@ -83,7 +80,7 @@ void Node::DeleteChild(Node* child)
 	m_dirty.set(DF::Children);
 }
 
-void Node::AddLocalOffset(const glm::vec3& direction)
+void Node::AddLocalOffset(glm::vec3 direction)
 {
 	m_localTranslation += direction;
 	MarkMatrixChanged();
@@ -139,7 +136,7 @@ bool Node::LoadFromXML(const tinyxml2::XMLElement* xmlData)
 	glm::vec3 localLookat{};
 	if (ParsingAux::ReadFloatsAttribute(xmlData, "lookat", localLookat)) {
 		// if lookat read overwrite following
-		m_localOrientation = utl::GetOrientationFromLookAtAndPosition(localLookat, GetLocalTranslation());
+		m_localOrientation = math::OrientationFromLookatAndPosition(localLookat, GetLocalTranslation());
 	}
 
 	// Load Children.
@@ -185,7 +182,7 @@ struct LoadPropertiesFromXMLVisitor {
 	{
 		std::string tmp;
 		if (!ParsingAux::ReadStringAttribute(xmlData, str, tmp)) {
-			LOG_ASSERT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
+			LOG_ABORT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
 		}
 		handle = AssetManager::GetOrCreateFromParent<T>(tmp, worldHandle);
 	}
@@ -195,7 +192,7 @@ struct LoadPropertiesFromXMLVisitor {
 	{
 		std::string tmp;
 		if (!ParsingAux::ReadStringAttribute(xmlData, str, tmp)) {
-			LOG_ASSERT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
+			LOG_ABORT("Failed to load non optional pod: {} (Attribute missing in scene file).", p.GetName());
 		}
 		handle = AssetManager::GetOrCreateFromParent<ModelPod>(tmp, worldHandle);
 

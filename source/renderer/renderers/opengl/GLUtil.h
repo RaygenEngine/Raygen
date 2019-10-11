@@ -1,5 +1,8 @@
 #pragma once
 
+#include "asset/pods/ModelPod.h"
+#include "asset/pods/TexturePod.h"
+
 #define GLCheckError() GLCheckError_(__FILE__, __LINE__)
 
 namespace OpenGL {

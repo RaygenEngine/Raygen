@@ -1,10 +1,11 @@
 #pragma once
 
-
-#include "core/reflection/GenMacros.h" // include gen macros here even if not needed to propagate to all node headers
-#include "tinyxml2/tinyxml2.h"
+#include "reflection/GenMacros.h" // include gen macros here even if not needed to propagate to all node headers
 #include "system/Object.h"
 #include "system/Engine.h"
+
+#include <tinyxml2/tinyxml2.h>
+#include <bitset>
 
 class AssetManager;
 class World;
@@ -133,9 +134,9 @@ public:
 	[[nodiscard]] World* GetWorld() const { return Engine::GetWorld(); }
 	[[nodiscard]] RootNode* GetWorldRoot() const;
 
-	void SetLocalTranslation(const glm::vec3& lt);
-	void SetLocalOrientation(const glm::quat& lo);
-	void SetLocalScale(const glm::vec3& ls);
+	void SetLocalTranslation(glm::vec3 lt);
+	void SetLocalOrientation(glm::quat lo);
+	void SetLocalScale(glm::vec3 ls);
 	void SetLocalMatrix(const glm::mat4& lm);
 
 	void SetWorldMatrix(const glm::mat4& newWorldMatrix);
@@ -171,7 +172,7 @@ public:
 	// cache world transform bottom up (and where needed to be updated)
 	void UpdateTransforms(const glm::mat4& parentMatrix);
 
-	void AddLocalOffset(const glm::vec3& direction);
+	void AddLocalOffset(glm::vec3 direction);
 
 	// not tested
 	void Orient(float yaw, float pitch, float roll);

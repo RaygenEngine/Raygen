@@ -3,8 +3,7 @@
 #include "renderer/renderers/opengl/GLAsset.h"
 #include "asset/loaders/ShaderLoader.h"
 
-#include "glad/glad.h"
-#include "core/timer/Timer.h"
+#include <glad/glad.h>
 
 namespace OpenGL {
 struct GLShader : GLAsset<ShaderPod> {

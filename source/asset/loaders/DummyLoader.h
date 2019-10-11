@@ -4,7 +4,8 @@
 #include "asset/pods/TexturePod.h"
 #include "asset/pods/MaterialPod.h"
 #include "asset/pods/ImagePod.h"
-#include "nlohmann/json.hpp"
+
+#include <nlohmann/json.hpp>
 
 namespace CustomLoader {
 

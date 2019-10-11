@@ -1,17 +1,19 @@
 #include "pch/pch.h"
+
 #include "editor/SceneSave.h"
-#include "imgui/imgui.h"
 #include "system/Engine.h"
-#include "tinyxml2/tinyxml2.h"
 #include "world/nodes/Node.h"
 #include "world/World.h"
-#include "core/reflection/ReflectionTools.h"
+#include "reflection/ReflectionTools.h"
 #include "asset/AssetManager.h"
 #include "editor/Editor.h"
-
+#include "asset/util/ParsingAux.h"
 #include "asset/PodIncludes.h"
 #include "asset/UriLibrary.h"
-#include "glm/glm.hpp"
+
+#include <imgui/imgui.h>
+#include <tinyxml2/tinyxml2.h>
+#include <glm/glm.hpp>
 #include <string>
 
 SceneSave::SceneSave()

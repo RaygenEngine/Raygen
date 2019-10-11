@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/reflection/GenMacros.h"
+#include "reflection/GenMacros.h"
 #include "asset/AssetPod.h"
 
 struct ImagePod : AssetPod {

@@ -1,9 +1,8 @@
 #pragma once
 
-#include "system/EngineComponent.h"
 #include "system/Engine.h"
 #include "asset/AssetPod.h"
-#include "core/reflection/PodReflection.h"
+#include "reflection/PodReflection.h"
 #include "asset/UriLibrary.h"
 #include "asset/PodHandle.h"
 
@@ -78,7 +77,7 @@ class AssetManager {
 		}
 		T* ptr = new T();
 		bool loaded = T::Load(ptr, entry->path);
-		CLOG_ASSERT(!loaded, "Failed to load: {} {}", entry->type.name(), entry->path);
+		CLOG_ABORT(!loaded, "Failed to load: {} {}", entry->type.name(), entry->path);
 		entry->ptr.reset(ptr);
 	}
 
@@ -115,12 +114,12 @@ public:
 	static PodHandle<PodType> GetOrCreate(const uri::Uri& inPath)
 	{
 		auto inst = Engine::GetAssetManager();
-		CLOG_ASSERT(inPath.front() != '/', "Found non absolute uri {}", inPath);
+		CLOG_ABORT(inPath.front() != '/', "Found non absolute uri {}", inPath);
 
 		auto entry = inst->GetEntryByPath(inPath);
 
 		if (entry) {
-			CLOG_ASSERT(entry->type != refl::GetId<PodType>(),
+			CLOG_ABORT(entry->type != refl::GetId<PodType>(),
 				"Incorrect pod type on GetOrCreate:\nPath: '{}'\nPrev Type: '{}' New type: '{}'", inPath,
 				entry->type.name(), refl::GetName<PodType>());
 		}
@@ -159,7 +158,7 @@ public:
 		// Parent: /abc/model.gltf{mat..}
 		// Given: bar/foo.jpg{abc}
 		// Resulted: /abc/bar/foo.jpg{abc}
-		CLOG_ASSERT(path.empty(), "Path was empty. Parent was: {}", AssetManager::GetPodUri(parentHandle));
+		CLOG_ABORT(path.empty(), "Path was empty. Parent was: {}", AssetManager::GetPodUri(parentHandle));
 		return GetOrCreateFromParentUri<PodType>(path, AssetManager::GetPodUri(parentHandle));
 	}
 

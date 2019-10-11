@@ -1,5 +1,4 @@
 #pragma once
-#include "event/Event.h"
 
 #define DECLARE_EVENT_LISTENER(Name, EventName)                                                                        \
 	decltype(EventName)::Listener Name { EventName }

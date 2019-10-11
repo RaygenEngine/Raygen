@@ -38,8 +38,6 @@ protected:
 	GLuint m_outFbo{ 0 };
 	GLuint m_outColorTexture{ 0 };
 
-	int32 m_previewMode{ 0 };
-
 	void RenderDirectionalLights();
 	void RenderSpotLights();
 	void RenderGeometries();
@@ -51,8 +49,6 @@ protected:
 	GLuint m_currentTexture{};
 
 public:
-	std::string m_previewModeString{};
-
 	~GLForwardRenderer();
 
 	bool InitScene() override;

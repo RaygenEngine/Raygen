@@ -1,8 +1,26 @@
 #pragma once
 
-#include "core/reflection/GenMacros.h"
+#include "reflection/GenMacros.h"
 #include "asset/AssetPod.h"
 #include "asset/pods/MaterialPod.h"
+
+enum class GeometryMode
+{
+	POINTS,
+	LINE,
+	LINE_LOOP,
+	LINE_STRIP,
+	TRIANGLES,
+	TRIANGLE_STRIP,
+	TRIANGLE_FAN
+};
+
+enum class GeometryUsage
+{
+	DYNAMIC,
+	STATIC,
+	STREAM
+};
 
 struct VertexData {
 	glm::vec3 position{};

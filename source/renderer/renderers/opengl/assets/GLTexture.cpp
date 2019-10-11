@@ -43,7 +43,7 @@ bool GLTexture::Load()
 		}
 
 		case TextureTarget::TEXTURE_CUBEMAP: {
-			for (auto i = 0; i < CMF_COUNT; ++i) {
+			for (auto i = 0; i < CubemapFace::COUNT; ++i) {
 				const auto img = textureData->images.at(i);
 				const auto typeAndInternalFormat = GetTypeAndInternalFormat(img->isHdr);
 				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, typeAndInternalFormat.second, img->width,

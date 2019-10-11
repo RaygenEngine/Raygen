@@ -1,30 +1,19 @@
 #pragma once
 
-// types
-#include "core/type/IntegerTypes.h"
-#include "core/type/MathTypes.h"
+#include "core/Types.h"
 
-// enums
-#include "core/enum/InputEnums.h"
-#include "core/enum/TargetEnums.h"
-#include "core/enum/TextureEnums.h"
-#include "core/enum/GeometryEnums.h"
-#include "core/enum/BufferEnums.h"
+#include "core/CoreEnums.h"
 
-// singletons
-#include "core/timer/Timer.h"
-#include "core/logger/Logger.h"
-#include "core/uuid/UUIDGenerator.h"
+// event
+#include "core/Event.h"
 
 // auxiliary
-#include "core/auxiliary/GraphicsMathAux.h"
-#include "core/auxiliary/MemoryAux.h"
-#include "core/auxiliary/StringAux.h"
+#include "core/GraphicsMathAux.h"
+#include "core/StringAux.h"
 
-#include <bitset>
-#include <fstream>
+// meta
+#include "core/MetaTemplates.h"
+
+
 #include <filesystem>
-#include <chrono>
-
 namespace fs = std::filesystem;
-namespace ch = std::chrono;

@@ -5,7 +5,7 @@
 #include "renderer/renderers/opengl/assets/GLShader.h"
 #include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 
 namespace OpenGL {
 struct GLBasicDirectionalLight : NodeObserver<DirectionalLightNode, GLRendererBase> {

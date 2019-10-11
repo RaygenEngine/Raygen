@@ -1,7 +1,8 @@
 #pragma once
 
 #include "nodes/Node.h"
-#include "tinyxml2/tinyxml2.h"
+
+#include <tinyxml2/tinyxml2.h>
 
 class NodeFactory : public Object {
 

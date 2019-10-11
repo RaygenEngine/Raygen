@@ -27,7 +27,7 @@ static bool Load(TexturePod* pod, const uri::Uri& path)
 	// TODO: check image settings
 	// this should exist (missing is handled from within material)
 
-	CLOG_ASSERT(imageIndex == -1, "This model is unsafe to use, handle missing image from materialL: {}", path);
+	CLOG_ABORT(imageIndex == -1, "This model is unsafe to use, handle missing image from materialL: {}", path);
 
 	if (imageIndex != -1) {
 		auto& gltfImage = model.images.at(imageIndex);

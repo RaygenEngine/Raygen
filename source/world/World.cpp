@@ -4,8 +4,8 @@
 #include "system/Engine.h"
 #include "world/NodeFactory.h"
 #include "editor/Editor.h"
-#include "core/reflection/ReflectionTools.h"
-#include "core/reflection/GetClass.h"
+#include "reflection/ReflectionTools.h"
+#include "reflection/GetClass.h"
 
 World::World(NodeFactory* factory)
 	: m_nodeFactory(factory)
@@ -108,7 +108,7 @@ Node* World::DeepDuplicateNode(Node* src, Node* newParent)
 	for (auto& child : src->GetChildren()) {
 		DeepDuplicateNode(child.get(), result);
 	}
-	result->PostChildrenLoaded();
+	auto todo_removethisvar = result->PostChildrenLoaded();
 	Event::OnWorldNodeAdded.Broadcast(result);
 	return result;
 }

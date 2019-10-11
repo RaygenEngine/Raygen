@@ -1,12 +1,12 @@
 #include "pch/pch.h"
-#include "imgui/imgui.h"
+
 #include "editor/AssetWindow.h"
 #include "system/Engine.h"
 #include "asset/AssetManager.h"
-#include "core/reflection/ReflectionTools.h"
-#include "editor/imgui/ImguiExtensions.h"
-#include "core/reflection/PodTools.h"
+#include "reflection/ReflectionTools.h"
+#include "reflection/PodTools.h"
 
+#include <imgui/imgui.h>
 
 void AssetWindow::Init()
 {
