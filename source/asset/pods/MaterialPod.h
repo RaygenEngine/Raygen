@@ -1,11 +1,22 @@
 #pragma once
 
-#include "core/reflection/GenMacros.h"
+#include "reflection/GenMacros.h"
 #include "asset/pods/TexturePod.h"
 
-// Note: assets of this class (Textures) are not cached directly as they are part of a cached ModelAsset anyway
-// glTF-based material (not all extensions included) (comments in this file ->
-// https://github.com/KhronosGroup/glTF/tree/master/specification/2.0)
+enum AlphaMode : int32
+{
+	// The rendered output is fully opaque and any alpha value is ignored.
+	AM_OPAQUE,
+	// The rendered output is either fully opaque or fully transparent depending on the alpha value and the specified
+	// alpha cutoff value. This mode is used to simulate geometry such as tree leaves or wire fences.
+	AM_MASK,
+	// The rendered output is combined with the background using the normal painting operation (i.e. the Porter and Duff
+	// over operator). This mode is used to simulate geometry such as guaze cloth or animal fur.
+	AM_BLEND
+};
+
+// This material is based on the glTF standard for materials (not all extensions included)
+// see -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#materials)
 struct MaterialPod : AssetPod {
 	REFLECTED_POD(MaterialPod)
 	{

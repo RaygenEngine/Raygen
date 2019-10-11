@@ -3,6 +3,8 @@
 #include "asset/AssetManager.h"
 #include "asset/pods/TexturePod.h"
 
+#include <fstream>
+
 namespace CubemapLoader {
 inline bool Load(TexturePod* pod, const uri::Uri& path)
 {
@@ -20,7 +22,7 @@ inline bool Load(TexturePod* pod, const uri::Uri& path)
 	}
 
 	pod->target = TextureTarget::TEXTURE_CUBEMAP;
-	pod->images.resize(CMF_COUNT);
+	pod->images.resize(CubemapFace::COUNT);
 
 	nlohmann::json j;
 	inStream >> j;
@@ -28,12 +30,12 @@ inline bool Load(TexturePod* pod, const uri::Uri& path)
 	std::string newFilePath;
 
 	static std::unordered_map<std::string, int32> imageNames = {
-		{ "up", CMF_UP },
-		{ "down", CMF_DOWN },
-		{ "right", CMF_RIGHT },
-		{ "left", CMF_LEFT },
-		{ "front", CMF_FRONT },
-		{ "back", CMF_BACK },
+		{ "up", CubemapFace::UP },
+		{ "down", CubemapFace::DOWN },
+		{ "right", CubemapFace::RIGHT },
+		{ "left", CubemapFace::LEFT },
+		{ "front", CubemapFace::FRONT },
+		{ "back", CubemapFace::BACK },
 	};
 
 	for (auto& [key, value] : imageNames) {

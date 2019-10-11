@@ -2,7 +2,7 @@
 
 #include "renderer/renderers/opengl/GLRendererBase.h"
 
-namespace OpenGL {
+namespace ogl {
 class GLEditorRenderer : public GLRendererBase {
 
 public:
@@ -16,4 +16,4 @@ public:
 
 	bool SupportsEditor() override { return true; }
 };
-} // namespace OpenGL
+} // namespace ogl

@@ -1,35 +1,31 @@
 #include "pch/pch.h"
 
 #include "world/nodes/Node.h"
-#include "world/nodes/MetaNodeTranslation.h"
 #include "asset/util/ParsingAux.h"
-#include "user/freeform/FreeformUserNode.h"
-#include "sky/SkyCubeNode.h"
-#include "sky/SkyHDRNode.h"
 #include "world/NodeFactory.h"
 #include "asset/AssetManager.h"
 #include "asset/PodIncludes.h"
-#include "core/reflection/ReflectionTools.h"
+#include "reflection/ReflectionTools.h"
+#include "world/World.h"
 
 RootNode* Node::GetWorldRoot() const
 {
 	return Engine::GetWorld()->GetRoot();
 }
 
-void Node::SetLocalTranslation(const glm::vec3& lt)
+void Node::SetLocalTranslation(glm::vec3 lt)
 {
 	m_localTranslation = lt;
 	MarkMatrixChanged();
 }
 
-void Node::SetLocalOrientation(const glm::quat& lo)
+void Node::SetLocalOrientation(glm::quat lo)
 {
-
 	m_localOrientation = lo;
 	MarkMatrixChanged();
 }
 
-void Node::SetLocalScale(const glm::vec3& ls)
+void Node::SetLocalScale(glm::vec3 ls)
 {
 	m_localScale = ls;
 	MarkMatrixChanged();
@@ -63,12 +59,31 @@ void Node::MarkMatrixChanged()
 void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 {
 	if (m_dirty[DF::TRS]) {
-		m_localMatrix = utl::GetTransformMat(m_localTranslation, m_localOrientation, m_localScale);
+
+		LOG_REPORT("dirty {}", this->GetName());
+
+		m_localMatrix = math::TransformMatrixFromTOS(m_localScale, m_localOrientation, m_localTranslation);
 		m_worldMatrix = parentMatrix * m_localMatrix;
 		// PERF:
 		glm::vec3 skew;
 		glm::vec4 persp;
 		glm::decompose(m_worldMatrix, m_worldScale, m_worldOrientation, m_worldTranslation, skew, persp);
+
+		auto localBbox = GetBBox();
+
+		m_obb.max = m_worldMatrix * glm::vec4(localBbox.max, 1.f);
+		m_obb.min = m_worldMatrix * glm::vec4(localBbox.min, 1.f);
+
+		// calculate sphere
+
+		// TODO: rotated flag
+		// apply scaling
+		m_aabb.max = localBbox.max * m_worldScale;
+		m_aabb.min = localBbox.min * m_worldScale;
+
+		// apply translation
+		m_aabb.max = localBbox.max + m_worldTranslation;
+		m_aabb.min = localBbox.min + m_worldTranslation;
 	}
 
 	for (auto& uPtr : m_children) {
@@ -83,7 +98,7 @@ void Node::DeleteChild(Node* child)
 	m_dirty.set(DF::Children);
 }
 
-void Node::AddLocalOffset(const glm::vec3& direction)
+void Node::AddLocalOffset(glm::vec3 direction)
 {
 	m_localTranslation += direction;
 	MarkMatrixChanged();

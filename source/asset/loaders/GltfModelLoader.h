@@ -6,7 +6,7 @@
 #include "asset/loaders/DummyLoader.h"
 #include "asset/util/GltfAux.h"
 
-#include "tinygltf/tiny_gltf.h"
+#include <tinygltf/tiny_gltf.h>
 
 namespace GltfModelLoader {
 namespace {
@@ -46,7 +46,7 @@ namespace {
 		byte* beginPtr; // Pointer to the first byte we care about.
 						// This may not be the actual start of the buffer of the binary file.
 
-		BufferComponentType componentType; // this particular model's underlying buffer type to read as.
+		ComponentType componentType; // this particular model's underlying buffer type to read as.
 
 		{
 			size_t beginByteOffset;
@@ -55,44 +55,43 @@ namespace {
 			const tinygltf::Buffer& gltfBuffer = modelData.buffers.at(bufferView.buffer);
 
 
-			componentType = GltfAux::GetComponentType(accessor.componentType);
+			componentType = gltfaux::GetComponentType(accessor.componentType);
 			elementCount = accessor.count;
 			beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
 			strideByteOffset = accessor.ByteStride(bufferView);
-			componentCount = utl::GetElementComponentCount(GltfAux::GetElementType(accessor.type));
+			componentCount = utl::ElementComponentCount(gltfaux::GetElementType(accessor.type));
 			beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
 		}
-		CLOG_ASSERT(componentCount != 1, "Found indicies of 2 components in gltf file.");
+		CLOG_ABORT(componentCount != 1, "Found indicies of 2 components in gltf file.");
 		out.resize(elementCount);
 
 		switch (componentType) {
 				// Conversions from signed to unsigned types are "implementation defined".
 				// This code assumes the implementation will not do any bit arethmitic from signed x to unsigned x.
 
-			case BufferComponentType::BYTE:
-			case BufferComponentType::UNSIGNED_BYTE: {
+			case ComponentType::CHAR:
+			case ComponentType::BYTE: {
 				CopyToVector<unsigned char>(out, beginPtr, strideByteOffset, elementCount);
 				return;
 			}
-			case BufferComponentType::SHORT: {
+			case ComponentType::SHORT: {
 				CopyToVector<short>(out, beginPtr, strideByteOffset, elementCount);
 				return;
 			}
-			case BufferComponentType::UNSIGNED_SHORT: {
+			case ComponentType::USHORT: {
 				CopyToVector<unsigned short>(out, beginPtr, strideByteOffset, elementCount);
 				return;
 			}
-			case BufferComponentType::INT: {
+			case ComponentType::INT: {
 				CopyToVector<int>(out, beginPtr, strideByteOffset, elementCount);
 				return;
 			}
-			case BufferComponentType::UNSIGNED_INT: {
+			case ComponentType::UINT: {
 				CopyToVector<uint32>(out, beginPtr, strideByteOffset, elementCount);
 				return;
 			}
-			case BufferComponentType::FLOAT:
-			case BufferComponentType::DOUBLE:
-			case BufferComponentType::INVALID: return;
+			case ComponentType::FLOAT:
+			case ComponentType::DOUBLE: return;
 		}
 	}
 
@@ -114,6 +113,7 @@ namespace {
 				result[i].position[1] = data[1];
 				result[i].position[2] = data[2];
 			}
+			// TODO: handle this
 			else {
 				assert(false);
 			}
@@ -212,62 +212,8 @@ namespace {
 		}
 	}
 
-	template<size_t VertexElementIndex>
-	void LoadIntoVertextData(const tg::Model& modelData, int32 accessorIndex, std::vector<VertexData>& out)
-	{
-		//
-		// Actual example of a possible complex gltf buffer:
-		//                                              |     STRIDE  |
-		// [{vertexIndexes} * 1000] [{normals} * 1000] [{uv0, position} * 1000]
-		//													  ^ beginPtr for Position.
-		//
-
-		size_t elementCount;   // How many elements there are to read
-		size_t componentCount; // How many components of type ComponentType there are to each element.
-
-		size_t strideByteOffset; // The number of bytes to move in the buffer after each read to get the next element.
-								 // This may be more bytes than the actual sizeof(ComponentType) * componentCount
-								 // if the data is strided.
-
-		byte* beginPtr; // Pointer to the first byte we care about.
-						// This may not be the actual start of the buffer of the binary file.
-
-		BufferComponentType componentType; // this particular model's underlying buffer type to read as.
-
-		{
-			size_t beginByteOffset;
-			const tinygltf::Accessor& accessor = modelData.accessors.at(accessorIndex);
-			const tinygltf::BufferView& bufferView = modelData.bufferViews.at(accessor.bufferView);
-			const tinygltf::Buffer& gltfBuffer = modelData.buffers.at(bufferView.buffer);
-
-
-			componentType = GltfAux::GetComponentType(accessor.componentType);
-			elementCount = accessor.count;
-			beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
-			strideByteOffset = accessor.ByteStride(bufferView);
-			componentCount = utl::GetElementComponentCount(GltfAux::GetElementType(accessor.type));
-			beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
-		}
-
-		switch (componentType) {
-			case BufferComponentType::BYTE:
-			case BufferComponentType::UNSIGNED_BYTE:
-			case BufferComponentType::SHORT:
-			case BufferComponentType::UNSIGNED_SHORT:
-			case BufferComponentType::INT:
-			case BufferComponentType::UNSIGNED_INT: assert(false);
-			case BufferComponentType::FLOAT:
-				LoadIntoVertextData_Selector<VertexElementIndex, float>(out, beginPtr, strideByteOffset, elementCount);
-				return;
-			case BufferComponentType::DOUBLE:
-				LoadIntoVertextData_Selector<VertexElementIndex, double>(out, beginPtr, strideByteOffset, elementCount);
-				return;
-			case BufferComponentType::INVALID: return;
-		}
-	}
-
 	template<size_t VertexElementIndex, typename ComponentType>
-	void LoadIntoVertextData_Selector(
+	void LoadIntoVertexData_Selector(
 		std::vector<VertexData>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 	{
 		if constexpr (VertexElementIndex == 0) { // NOLINT
@@ -287,12 +233,67 @@ namespace {
 		}
 	}
 
+	template<size_t VertexElementIndex, typename... Box>
+	void LoadIntoVertexData(const tg::Model& modelData, int32 accessorIndex, std::vector<VertexData>& out)
+	{
+		//
+		// Actual example of a possible complex gltf buffer:
+		//                                              |     STRIDE  |
+		// [{vertexIndexes} * 1000] [{normals} * 1000] [{uv0, position} * 1000]
+		//													  ^ beginPtr for Position.
+		//
+
+		size_t elementCount;   // How many elements there are to read
+		size_t componentCount; // How many components of type ComponentType there are to each element.
+
+		size_t strideByteOffset; // The number of bytes to move in the buffer after each read to get the next element.
+								 // This may be more bytes than the actual sizeof(ComponentType) * componentCount
+								 // if the data is strided.
+
+		byte* beginPtr; // Pointer to the first byte we care about.
+						// This may not be the actual start of the buffer of the binary file.
+
+		ComponentType componentType; // this particular model's underlying buffer type to read as.
+
+		{
+			size_t beginByteOffset;
+			const tinygltf::Accessor& accessor = modelData.accessors.at(accessorIndex);
+			const tinygltf::BufferView& bufferView = modelData.bufferViews.at(accessor.bufferView);
+			const tinygltf::Buffer& gltfBuffer = modelData.buffers.at(bufferView.buffer);
+
+
+			componentType = gltfaux::GetComponentType(accessor.componentType);
+			elementCount = accessor.count;
+			beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
+			strideByteOffset = accessor.ByteStride(bufferView);
+			componentCount = utl::ElementComponentCount(gltfaux::GetElementType(accessor.type));
+			beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
+		}
+
+		switch (componentType) {
+			case ComponentType::CHAR:
+			case ComponentType::BYTE:
+			case ComponentType::SHORT:
+			case ComponentType::USHORT:
+			case ComponentType::INT:
+			case ComponentType::UINT: LOG_ABORT("Incorrect buffers, debug model...");
+			case ComponentType::FLOAT:
+				LoadIntoVertexData_Selector<VertexElementIndex, float>(out, beginPtr, strideByteOffset, elementCount);
+				return;
+			case ComponentType::DOUBLE:
+				LoadIntoVertexData_Selector<VertexElementIndex, double>(out, beginPtr, strideByteOffset, elementCount);
+				return;
+		}
+	}
 
 	bool LoadGeometryGroup(ModelPod* pod, GeometryGroup& geom, const tinygltf::Model& modelData,
 		const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat, bool& requiresDefaultMaterial)
 	{
 		// mode
-		geom.mode = GltfAux::GetGeometryMode(primitiveData.mode);
+		// TODO: handle non triangle case somewhere in code
+		geom.mode = gltfaux::GetGeometryMode(primitiveData.mode);
+		// TODO: find out from data (animations etc) the usage hint
+		// geom.usage = ...
 
 		// material
 		const auto materialIndex = primitiveData.material;
@@ -308,7 +309,7 @@ namespace {
 		}
 
 		auto it = std::find_if(begin(primitiveData.attributes), end(primitiveData.attributes),
-			[](auto& pair) { return utl::CaseInsensitiveCompare(pair.first, "POSITION"); });
+			[](auto& pair) { return smath::CaseInsensitiveCompare(pair.first, "POSITION"); });
 
 
 		size_t vertexCount = modelData.accessors.at(it->second).count;
@@ -338,30 +339,32 @@ namespace {
 			const auto& attrName = attribute.first;
 			int32 index = attribute.second;
 
-			if (utl::CaseInsensitiveCompare(attrName, "POSITION")) {
-				LoadIntoVertextData<0>(modelData, index, geom.vertices);
+			if (smath::CaseInsensitiveCompare(attrName, "POSITION")) {
+				LoadIntoVertexData<0>(modelData, index, geom.vertices);
 			}
-			else if (utl::CaseInsensitiveCompare(attrName, "NORMAL")) {
-				LoadIntoVertextData<1>(modelData, index, geom.vertices);
+			else if (smath::CaseInsensitiveCompare(attrName, "NORMAL")) {
+				LoadIntoVertexData<1>(modelData, index, geom.vertices);
 				missingNormals = false;
 			}
-			else if (utl::CaseInsensitiveCompare(attrName, "TANGENT")) {
-				LoadIntoVertextData<2>(modelData, index, geom.vertices);
+			else if (smath::CaseInsensitiveCompare(attrName, "TANGENT")) {
+				LoadIntoVertexData<2>(modelData, index, geom.vertices);
 				missingTangents = false;
 			}
-			else if (utl::CaseInsensitiveCompare(attrName, "TEXCOORD_0")) {
-				LoadIntoVertextData<3>(modelData, index, geom.vertices);
+			else if (smath::CaseInsensitiveCompare(attrName, "TEXCOORD_0")) {
+				LoadIntoVertexData<3>(modelData, index, geom.vertices);
 				missingTexcoord0 = false;
 			}
-			else if (utl::CaseInsensitiveCompare(attrName, "TEXCOORD_1")) {
-				LoadIntoVertextData<4>(modelData, index, geom.vertices);
+			else if (smath::CaseInsensitiveCompare(attrName, "TEXCOORD_1")) {
+				LoadIntoVertexData<4>(modelData, index, geom.vertices);
 				missingTexcoord1 = false;
 			}
 		}
 
-
 		for (auto& v : geom.vertices) {
 			v.position = transformMat * glm::vec4(v.position, 1.f);
+
+			pod->bbox.max = glm::max(pod->bbox.max, v.position);
+			pod->bbox.min = glm::min(pod->bbox.min, v.position);
 		}
 
 		if (!missingNormals) {
@@ -448,7 +451,6 @@ inline bool Load(ModelPod* pod, const uri::Uri& path)
 
 	auto& defaultScene = model.scenes.at(scene);
 
-
 	int32 matIndex = 0;
 	for (auto& gltfMaterial : model.materials) {
 		nlohmann::json data;
@@ -504,7 +506,7 @@ inline bool Load(ModelPod* pod, const uri::Uri& path)
 					scale[2] = static_cast<float>(childNode.scale[2]);
 				}
 
-				localTransformMat = utl::GetTransformMat(translation, orientation, scale);
+				localTransformMat = math::TransformMatrixFromTOS(scale, orientation, translation);
 			}
 
 			localTransformMat = parentTransformMat * localTransformMat;

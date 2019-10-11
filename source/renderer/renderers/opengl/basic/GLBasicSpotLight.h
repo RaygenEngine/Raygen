@@ -5,10 +5,10 @@
 #include "renderer/renderers/opengl/assets/GLShader.h"
 #include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 
 
-namespace OpenGL {
+namespace ogl {
 struct GLBasicSpotLight : NodeObserver<SpotLightNode, GLRendererBase> {
 	GLuint fbo{};
 	GLuint shadowMap{};
@@ -26,4 +26,4 @@ struct GLBasicSpotLight : NodeObserver<SpotLightNode, GLRendererBase> {
 
 	void DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset) override;
 };
-} // namespace OpenGL
+} // namespace ogl

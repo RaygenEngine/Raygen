@@ -1,16 +1,19 @@
 #include "pch/pch.h"
+
 #include "editor/SceneSave.h"
-#include "imgui/imgui.h"
 #include "system/Engine.h"
 #include "world/nodes/Node.h"
 #include "world/World.h"
-#include "core/reflection/ReflectionTools.h"
+#include "reflection/ReflectionTools.h"
 #include "asset/AssetManager.h"
 #include "editor/Editor.h"
-
+#include "asset/util/ParsingAux.h"
 #include "asset/PodIncludes.h"
 #include "asset/UriLibrary.h"
-#include "glm/glm.hpp"
+
+#include <imgui/imgui.h>
+#include <tinyxml2/tinyxml2.h>
+#include <glm/glm.hpp>
 #include <string>
 
 SceneSave::SceneSave()
@@ -62,12 +65,12 @@ struct GenerateXMLVisitor {
 
 	void operator()(glm::vec3& v, const Property& p)
 	{
-		xmlElement->SetAttribute(name, ParsingAux::FloatsToString(v).c_str());
+		xmlElement->SetAttribute(name, parsingaux::FloatsToString(v).c_str());
 	}
 
 	void operator()(glm::vec4& v, const Property& p)
 	{
-		xmlElement->SetAttribute(name, ParsingAux::FloatsToString(v).c_str());
+		xmlElement->SetAttribute(name, parsingaux::FloatsToString(v).c_str());
 	}
 
 	void operator()(std::string& v, const Property& p) { xmlElement->SetAttribute(name, v.c_str()); }
@@ -94,9 +97,9 @@ tinyxml2::XMLElement* GenerateNodeXML(Node* node, tinyxml2::XMLDocument& documen
 	xmlElem = document.NewElement(node->GetType().c_str());
 	xmlElem->SetAttribute("name", node->GetName().c_str());
 
-	xmlElem->SetAttribute("translation", ParsingAux::FloatsToString(node->GetLocalTranslation()).c_str());
-	xmlElem->SetAttribute("euler_pyr", ParsingAux::FloatsToString(node->GetLocalPYR()).c_str());
-	xmlElem->SetAttribute("scale", ParsingAux::FloatsToString(node->GetLocalScale()).c_str());
+	xmlElem->SetAttribute("translation", parsingaux::FloatsToString(node->GetLocalTranslation()).c_str());
+	xmlElem->SetAttribute("euler_pyr", parsingaux::FloatsToString(node->GetLocalPYR()).c_str());
+	xmlElem->SetAttribute("scale", parsingaux::FloatsToString(node->GetLocalScale()).c_str());
 
 	GenerateXMLVisitor visitor;
 	visitor.xmlElement = xmlElem;

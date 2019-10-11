@@ -4,7 +4,7 @@
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "asset/AssetManager.h"
 
-namespace OpenGL {
+namespace ogl {
 // TODO: default box model (json)
 float skyboxVertices[] = {
 	// positions
@@ -24,8 +24,8 @@ float skyboxVertices[] = {
 	1.0f
 };
 
-GLBasicSkybox::GLBasicSkybox(SkyCubeNode* node)
-	: NodeObserver<SkyCubeNode, GLRendererBase>(node)
+GLBasicSkybox::GLBasicSkybox(SkyboxNode* node)
+	: NodeObserver<SkyboxNode, GLRendererBase>(node)
 {
 	auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/Cubemap_InfDist.json");
 	shader = GetGLAssetManager(this)->GpuGetOrCreate<GLShader>(shaderAsset);
@@ -51,4 +51,4 @@ GLBasicSkybox::~GLBasicSkybox()
 	glDeleteVertexArrays(1, &vao);
 	glDeleteBuffers(1, &vbo);
 }
-} // namespace OpenGL
+} // namespace ogl

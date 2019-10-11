@@ -1,9 +1,7 @@
 #pragma once
 
 // The central library for the engines Uri convention.
-#include "nlohmann/json.hpp"
-namespace fs = std::filesystem;
-
+#include <nlohmann/json.hpp>
 
 namespace uri {
 using Uri = std::string;
@@ -71,7 +69,7 @@ inline std::string_view GetFilename(const Uri& path)
 // Expects json object, values or arrays are not allowed.
 inline Uri MakeChildJson(const Uri& parent, const nlohmann::json& json)
 {
-	CLOG_ASSERT(!json.is_object(), "Make child json expects a json object.");
+	CLOG_ABORT(!json.is_object(), "Make child json expects a json object.");
 	std::string v{ GetDiskPathStrView(parent) };
 	v += json.dump();
 	return v;
@@ -79,7 +77,7 @@ inline Uri MakeChildJson(const Uri& parent, const nlohmann::json& json)
 
 inline nlohmann::json GetJson(const Uri& path)
 {
-	CLOG_ASSERT(!IsCpu(path), "Attempted to get json from a disk path: {}", path);
+	CLOG_ABORT(!IsCpu(path), "Attempted to get json from a disk path: {}", path);
 
 	size_t startOffset = path.find_first_of(detail::JsonBegin);
 	size_t length = path.size() - startOffset;
@@ -91,7 +89,7 @@ inline nlohmann::json GetJson(const Uri& path)
 // Convert a uri to a path relative the current working directory.
 inline const char* ToSystemPath(const Uri& path)
 {
-	CLOG_ASSERT(IsCpu(path), "Attempted to get system path from a cpu path: {}", path);
+	CLOG_ABORT(IsCpu(path), "Attempted to get system path from a cpu path: {}", path);
 	return path.c_str() + 1;
 }
 } // namespace uri

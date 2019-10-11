@@ -3,6 +3,8 @@
 #include "asset/pods/StringPod.h"
 #include "asset/UriLibrary.h"
 
+#include <fstream>
+
 namespace TextLoader {
 inline bool Load(StringPod* pod, const uri::Uri& path)
 {

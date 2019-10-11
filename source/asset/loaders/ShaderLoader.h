@@ -4,7 +4,8 @@
 #include "asset/pods/ShaderPod.h"
 #include "asset/UriLibrary.h"
 
-#include "nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
+#include <fstream>
 
 namespace ShaderLoader {
 inline bool Load(ShaderPod* pod, const uri::Uri& path)

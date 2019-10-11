@@ -1,14 +1,12 @@
 #include "pch/pch.h"
 
 #include "world/NodeFactory.h"
-#include "world/nodes/sky/SkyCubeNode.h"
-#include "world/nodes/sky/SkyHDRNode.h"
+#include "world/nodes/sky/SkyboxNode.h"
 #include "world/nodes/camera/WindowCameraNode.h"
-#include "world/nodes/MetaNodeTranslation.h"
 #include "world/World.h"
 #include "world/nodes/user/freeform/FreeformUserNode.h"
 #include "core/reflection/ReflectionTools.h"
-#include "nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 void NodeFactory::RegisterNodes()

@@ -3,7 +3,7 @@
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
 
-namespace OpenGL {
+namespace ogl {
 GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
 	: NodeObserver<DirectionalLightNode, GLRendererBase>(node)
 {
@@ -86,8 +86,6 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 					glActiveTexture(GL_TEXTURE0);
 					glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
 					break;
-
-				case AM_INVALID: std::abort();
 			}
 
 			glUniformMatrix4fv(gBufferShader->GetUniform("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
@@ -116,4 +114,4 @@ void GLBasicDirectionalLight::DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset)
 		lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 	}
 }
-} // namespace OpenGL
+} // namespace ogl

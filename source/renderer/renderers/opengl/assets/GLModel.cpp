@@ -6,7 +6,7 @@
 #include "asset/AssetManager.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
 
-namespace OpenGL {
+namespace ogl {
 GLModel::~GLModel()
 {
 	for (auto& mesh : meshes) {
@@ -17,9 +17,10 @@ GLModel::~GLModel()
 	}
 }
 
-bool GLModel::LoadGLMesh(const ModelPod& model, GLMesh& glMesh, const GeometryGroup& data, GLenum usage)
+bool GLModel::LoadGLMesh(const ModelPod& model, GLMesh& glMesh, const GeometryGroup& data)
 {
 	glMesh.geometryMode = GetGLGeometryMode(data.mode);
+	glMesh.geometryUsage = GetGLGeometryUsage(data.usage);
 
 	glGenVertexArrays(1, &glMesh.vao);
 	glBindVertexArray(glMesh.vao);
@@ -27,7 +28,7 @@ bool GLModel::LoadGLMesh(const ModelPod& model, GLMesh& glMesh, const GeometryGr
 
 	glGenBuffers(1, &glMesh.verticesVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, glMesh.verticesVBO);
-	glBufferData(GL_ARRAY_BUFFER, data.vertices.size() * sizeof(VertexData), &data.vertices[0], usage);
+	glBufferData(GL_ARRAY_BUFFER, data.vertices.size() * sizeof(VertexData), &data.vertices[0], glMesh.geometryUsage);
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (GLvoid*)offsetof(VertexData, position));
@@ -45,7 +46,8 @@ bool GLModel::LoadGLMesh(const ModelPod& model, GLMesh& glMesh, const GeometryGr
 
 	glGenBuffers(1, &glMesh.ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glMesh.ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.indices.size() * sizeof(data.indices[0]), &data.indices[0], usage);
+	glBufferData(
+		GL_ELEMENT_ARRAY_BUFFER, data.indices.size() * sizeof(data.indices[0]), &data.indices[0], glMesh.geometryUsage);
 
 	glMesh.count = static_cast<GLsizei>(data.indices.size());
 
@@ -64,12 +66,10 @@ bool GLModel::Load()
 	auto modelData = podHandle.Lock();
 	TIMER_STATIC_SCOPE("uploading model time");
 
-	usage = GL_STATIC_DRAW;
-
 	for (auto& mesh : modelData->meshes) {
 		for (auto& geometryGroup : mesh.geometryGroups) {
 			GLMesh& glmesh = meshes.emplace_back(GLMesh());
-			if (!LoadGLMesh(*modelData, glmesh, geometryGroup, usage)) {
+			if (!LoadGLMesh(*modelData, glmesh, geometryGroup)) {
 				return false;
 			}
 		}
@@ -77,4 +77,4 @@ bool GLModel::Load()
 
 	return true;
 }
-} // namespace OpenGL
+} // namespace ogl

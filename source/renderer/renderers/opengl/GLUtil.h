@@ -1,13 +1,17 @@
 #pragma once
 
+#include "asset/pods/ModelPod.h"
+#include "world/nodes/geometry/GeometryNode.h"
+
 #define GLCheckError() GLCheckError_(__FILE__, __LINE__)
 
-namespace OpenGL {
-inline GLenum GetGLUsage(GeometryUsage geomUsage)
+namespace ogl {
+inline GLenum GetGLGeometryUsage(GeometryUsage geomUsage)
 {
 	switch (geomUsage) {
 		case GeometryUsage::DYNAMIC: return GL_DYNAMIC_DRAW;
 		case GeometryUsage::STATIC: return GL_STATIC_DRAW;
+		case GeometryUsage::STREAM: return GL_STREAM_DRAW;
 		default: return GL_INVALID_ENUM;
 	}
 }
@@ -54,7 +58,7 @@ inline GLint GetGLTextureTarget(TextureTarget target)
 	switch (target) {
 		case TextureTarget::TEXTURE_2D: return GL_TEXTURE_2D;
 		case TextureTarget::TEXTURE_CUBEMAP: return GL_TEXTURE_CUBE_MAP;
-		default: assert(false && "Texture format yet supported");
+		default: LOG_ABORT("Texture format not yet supported");
 	}
 	return GL_INVALID_ENUM;
 }
@@ -106,4 +110,4 @@ inline void DebugBoundVAO(std::string baseMessage)
 	}
 	LOG_DEBUG(baseMessage);
 }
-} // namespace OpenGL
+} // namespace ogl

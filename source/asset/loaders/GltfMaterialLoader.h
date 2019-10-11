@@ -6,7 +6,7 @@
 #include "asset/util/GltfAux.h"
 #include "asset/loaders/DummyLoader.h"
 
-#include "tinygltf/tiny_gltf.h"
+#include <tinygltf/tiny_gltf.h>
 
 namespace GltfMaterialLoader {
 inline bool Load(MaterialPod* pod, const uri::Uri& path)
@@ -38,7 +38,7 @@ inline bool Load(MaterialPod* pod, const uri::Uri& path)
 	pod->occlusionStrength = static_cast<float>(gltfMaterial.occlusionTexture.strength);
 
 	// alpha
-	pod->alphaMode = GltfAux::GetAlphaMode(gltfMaterial.alphaMode);
+	pod->alphaMode = gltfaux::GetAlphaMode(gltfMaterial.alphaMode);
 
 	pod->alphaCutoff = static_cast<float>(gltfMaterial.alphaCutoff);
 	// doublesided-ness

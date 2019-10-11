@@ -4,7 +4,7 @@
 #include "asset/AssetPod.h"
 #include "asset/PodHandle.h"
 
-namespace OpenGL {
+namespace ogl {
 struct GLAssetBase
 	: Object
 	, RendererObject<GLRendererBase> {
@@ -42,4 +42,4 @@ public:
 	const PodType* LockData() { return podHandle.Lock(); }
 };
 
-} // namespace OpenGL
+} // namespace ogl

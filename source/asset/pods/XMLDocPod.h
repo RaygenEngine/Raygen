@@ -1,9 +1,9 @@
 #pragma once
 
-#include "core/reflection/GenMacros.h"
+#include "reflection/GenMacros.h"
 #include "asset/AssetPod.h"
 
-#include "nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 struct JsonDocPod : public AssetPod {
 	REFLECTED_POD(JsonDocPod) {}

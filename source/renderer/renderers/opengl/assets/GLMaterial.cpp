@@ -5,7 +5,7 @@
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "renderer/renderers/opengl/assets/GLTexture.h"
 
-namespace OpenGL {
+namespace ogl {
 bool GLMaterial::Load()
 {
 	auto materialData = podHandle.Lock();
@@ -21,4 +21,4 @@ bool GLMaterial::Load()
 	return true;
 }
 
-} // namespace OpenGL
+} // namespace ogl

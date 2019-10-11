@@ -1,13 +1,13 @@
 #include "pch/pch.h"
 
 #include "renderer/renderers/opengl/GLRendererBase.h"
-
 #include "renderer/renderers/opengl/GLAssetManager.h"
-
-#include "glad/glad.h"
 #include "system/Input.h"
 
-namespace OpenGL {
+#include <glad/glad.h>
+
+
+namespace ogl {
 
 void GLRendererBase::Update()
 {
@@ -99,7 +99,7 @@ bool GLRendererBase::InitRendering(HWND assochWnd, HINSTANCE instance)
 	}
 
 	if (!(gladLoadGL() == 1)) {
-		LOG_FATAL("Couldn't load OpenGL function pointers, GL windows won't be loaded");
+		LOG_FATAL("Couldn't load ogl function pointers, GL windows won't be loaded");
 		return false;
 	};
 
@@ -112,4 +112,4 @@ void GLRendererBase::SwapBuffers()
 }
 
 
-} // namespace OpenGL
+} // namespace ogl

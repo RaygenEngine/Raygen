@@ -2,12 +2,12 @@
 
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
-
-#include "glad/glad.h"
 #include "world/World.h"
 
+#include <glad/glad.h>
 
-namespace OpenGL {
+
+namespace ogl {
 GLDeferredRenderer::GBuffer::~GBuffer()
 {
 	glDeleteFramebuffers(1, &fbo);
@@ -142,7 +142,7 @@ bool GLDeferredRenderer::InitScene()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, m_gBuffer.emissiveAttachment, 0);
 
-	// - tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
+	// - tell ogl which color attachments we'll use (of this framebuffer) for rendering
 	GLuint attachments[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3,
 		GL_COLOR_ATTACHMENT4 };
 	glDrawBuffers(5, attachments);
@@ -226,8 +226,6 @@ void GLDeferredRenderer::RenderGBuffer()
 					glUseProgram(gBufferShader->id);
 					glUniform1f(m_gBuffer.shaderAlphaMask->GetUniform("alpha_cutoff"), materialData->alphaCutoff);
 					break;
-
-				case AM_INVALID: abort();
 			}
 
 			glUniformMatrix4fv(gBufferShader->GetUniform("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
@@ -436,4 +434,4 @@ void GLDeferredRenderer::RecompileShaders()
 	m_deferredDirectionalLightShader->Load();
 	m_deferredSpotLightShader->Load();
 }
-} // namespace OpenGL
+} // namespace ogl

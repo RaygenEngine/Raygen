@@ -1,9 +1,10 @@
 #pragma once
 
-
-#include "core/reflection/GenMacros.h" // include gen macros here even if not needed to propagate to all node headers
+#include "reflection/GenMacros.h" // include gen macros here even if not needed to propagate to all node headers
 #include "system/Object.h"
 #include "system/Engine.h"
+
+#include <bitset>
 
 class AssetManager;
 class World;
@@ -72,6 +73,17 @@ private:
 	glm::vec3 m_worldScale{ 1.f, 1.f, 1.f };
 	glm::mat4 m_worldMatrix{ glm::identity<glm::mat4>() };
 
+
+public:
+	// TODO: aabb
+	Box m_localBbox{ glm::vec3{ 1.f }, glm::vec3{ -1.f } };
+
+	Box m_obb{ glm::vec3{ 1.f }, glm::vec3{ -1.f } };
+	Box m_aabb{ glm::vec3{ 1.f }, glm::vec3{ -1.f } };
+	bool m_hideBB = false;
+	[[nodiscard]] virtual Box GetBBox() const { return m_localBbox; }
+
+private:
 	DirtyFlagset m_dirty{};
 
 	// TODO: remove
@@ -131,9 +143,9 @@ public:
 	[[nodiscard]] World* GetWorld() const { return Engine::GetWorld(); }
 	[[nodiscard]] RootNode* GetWorldRoot() const;
 
-	void SetLocalTranslation(const glm::vec3& lt);
-	void SetLocalOrientation(const glm::quat& lo);
-	void SetLocalScale(const glm::vec3& ls);
+	void SetLocalTranslation(glm::vec3 lt);
+	void SetLocalOrientation(glm::quat lo);
+	void SetLocalScale(glm::vec3 ls);
 	void SetLocalMatrix(const glm::mat4& lm);
 
 	void SetWorldMatrix(const glm::mat4& newWorldMatrix);
@@ -158,7 +170,7 @@ public:
 	// cache world transform bottom up (and where needed to be updated)
 	void UpdateTransforms(const glm::mat4& parentMatrix);
 
-	void AddLocalOffset(const glm::vec3& direction);
+	void AddLocalOffset(glm::vec3 direction);
 
 	// not tested
 	void Orient(float yaw, float pitch, float roll);
