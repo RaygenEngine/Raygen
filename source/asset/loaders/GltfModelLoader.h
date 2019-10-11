@@ -113,6 +113,7 @@ namespace {
 				result[i].position[1] = data[1];
 				result[i].position[2] = data[2];
 			}
+			// TODO: handle this
 			else {
 				assert(false);
 			}
@@ -211,8 +212,29 @@ namespace {
 		}
 	}
 
-	template<size_t VertexElementIndex>
-	void LoadIntoVertextData(const tg::Model& modelData, int32 accessorIndex, std::vector<VertexData>& out)
+	template<size_t VertexElementIndex, typename ComponentType>
+	void LoadIntoVertexData_Selector(
+		std::vector<VertexData>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+	{
+		if constexpr (VertexElementIndex == 0) { // NOLINT
+			CopyToVertexData_Position<ComponentType>(result, beginPtr, perElementOffset, elementCount);
+		}
+		else if constexpr (VertexElementIndex == 1) { // NOLINT
+			CopyToVertexData_Normal<ComponentType>(result, beginPtr, perElementOffset, elementCount);
+		}
+		else if constexpr (VertexElementIndex == 2) { // NOLINT
+			CopyToVertexData_Tangent<ComponentType>(result, beginPtr, perElementOffset, elementCount);
+		}
+		else if constexpr (VertexElementIndex == 3) { // NOLINT
+			CopyToVertexData_TexCoord0<ComponentType>(result, beginPtr, perElementOffset, elementCount);
+		}
+		else if constexpr (VertexElementIndex == 4) { // NOLINT
+			CopyToVertexData_TexCoord1<ComponentType>(result, beginPtr, perElementOffset, elementCount);
+		}
+	}
+
+	template<size_t VertexElementIndex, typename... Box>
+	void LoadIntoVertexData(const tg::Model& modelData, int32 accessorIndex, std::vector<VertexData>& out)
 	{
 		//
 		// Actual example of a possible complex gltf buffer:
@@ -256,35 +278,13 @@ namespace {
 			case ComponentType::INT:
 			case ComponentType::UINT: LOG_ABORT("Incorrect buffers, debug model...");
 			case ComponentType::FLOAT:
-				LoadIntoVertextData_Selector<VertexElementIndex, float>(out, beginPtr, strideByteOffset, elementCount);
+				LoadIntoVertexData_Selector<VertexElementIndex, float>(out, beginPtr, strideByteOffset, elementCount);
 				return;
 			case ComponentType::DOUBLE:
-				LoadIntoVertextData_Selector<VertexElementIndex, double>(out, beginPtr, strideByteOffset, elementCount);
+				LoadIntoVertexData_Selector<VertexElementIndex, double>(out, beginPtr, strideByteOffset, elementCount);
 				return;
 		}
 	}
-
-	template<size_t VertexElementIndex, typename ComponentType>
-	void LoadIntoVertextData_Selector(
-		std::vector<VertexData>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
-	{
-		if constexpr (VertexElementIndex == 0) { // NOLINT
-			CopyToVertexData_Position<ComponentType>(result, beginPtr, perElementOffset, elementCount);
-		}
-		else if constexpr (VertexElementIndex == 1) { // NOLINT
-			CopyToVertexData_Normal<ComponentType>(result, beginPtr, perElementOffset, elementCount);
-		}
-		else if constexpr (VertexElementIndex == 2) { // NOLINT
-			CopyToVertexData_Tangent<ComponentType>(result, beginPtr, perElementOffset, elementCount);
-		}
-		else if constexpr (VertexElementIndex == 3) { // NOLINT
-			CopyToVertexData_TexCoord0<ComponentType>(result, beginPtr, perElementOffset, elementCount);
-		}
-		else if constexpr (VertexElementIndex == 4) { // NOLINT
-			CopyToVertexData_TexCoord1<ComponentType>(result, beginPtr, perElementOffset, elementCount);
-		}
-	}
-
 
 	bool LoadGeometryGroup(ModelPod* pod, GeometryGroup& geom, const tinygltf::Model& modelData,
 		const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat, bool& requiresDefaultMaterial)
@@ -340,29 +340,31 @@ namespace {
 			int32 index = attribute.second;
 
 			if (smath::CaseInsensitiveCompare(attrName, "POSITION")) {
-				LoadIntoVertextData<0>(modelData, index, geom.vertices);
+				LoadIntoVertexData<0>(modelData, index, geom.vertices);
 			}
 			else if (smath::CaseInsensitiveCompare(attrName, "NORMAL")) {
-				LoadIntoVertextData<1>(modelData, index, geom.vertices);
+				LoadIntoVertexData<1>(modelData, index, geom.vertices);
 				missingNormals = false;
 			}
 			else if (smath::CaseInsensitiveCompare(attrName, "TANGENT")) {
-				LoadIntoVertextData<2>(modelData, index, geom.vertices);
+				LoadIntoVertexData<2>(modelData, index, geom.vertices);
 				missingTangents = false;
 			}
 			else if (smath::CaseInsensitiveCompare(attrName, "TEXCOORD_0")) {
-				LoadIntoVertextData<3>(modelData, index, geom.vertices);
+				LoadIntoVertexData<3>(modelData, index, geom.vertices);
 				missingTexcoord0 = false;
 			}
 			else if (smath::CaseInsensitiveCompare(attrName, "TEXCOORD_1")) {
-				LoadIntoVertextData<4>(modelData, index, geom.vertices);
+				LoadIntoVertexData<4>(modelData, index, geom.vertices);
 				missingTexcoord1 = false;
 			}
 		}
 
-
 		for (auto& v : geom.vertices) {
 			v.position = transformMat * glm::vec4(v.position, 1.f);
+
+			pod->bbox.max = glm::max(pod->bbox.max, v.position);
+			pod->bbox.min = glm::min(pod->bbox.min, v.position);
 		}
 
 		if (!missingNormals) {
@@ -448,7 +450,6 @@ inline bool Load(ModelPod* pod, const uri::Uri& path)
 	}
 
 	auto& defaultScene = model.scenes.at(scene);
-
 
 	int32 matIndex = 0;
 	for (auto& gltfMaterial : model.materials) {
