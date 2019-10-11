@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--asset path gives priority to searching in this specific path (and subfolders) for asset loading requests from this world
 	if relative path is given the path system will search from inside the "scenes" root directory, otherwise (absolute path) this "hint" will be ignored-->
-<root name="roots" background="0.1, 0.2, 0.4" ambient="0, 0, 0.1">
+<root name="root" background="0.1, 0.2, 0.4" ambient="0, 0, 0.1">
 	
 	<freeform_user name="user2"
 		translation="0, 15, 30"

@@ -72,6 +72,17 @@ private:
 	glm::vec3 m_worldScale{ 1.f, 1.f, 1.f };
 	glm::mat4 m_worldMatrix{ glm::identity<glm::mat4>() };
 
+
+public:
+	// TODO: aabb
+	Box m_localBbox{ glm::vec3{ 1.f }, glm::vec3{ -1.f } };
+
+	Box m_obb{ glm::vec3{ 1.f }, glm::vec3{ -1.f } };
+	Box m_aabb{ glm::vec3{ 1.f }, glm::vec3{ -1.f } };
+	bool m_hideBB = false;
+	[[nodiscard]] virtual Box GetBBox() const { return m_localBbox; }
+
+private:
 	DirtyFlagset m_dirty{};
 
 	// TODO: remove

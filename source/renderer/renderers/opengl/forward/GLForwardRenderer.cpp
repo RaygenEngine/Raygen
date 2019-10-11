@@ -19,6 +19,9 @@ GLForwardRenderer::~GLForwardRenderer()
 
 	glDeleteFramebuffers(1, &m_outFbo);
 	glDeleteTextures(1, &m_outColorTexture);
+
+	glDeleteVertexArrays(1, &m_bbVao);
+	glDeleteBuffers(1, &m_bbVbo);
 }
 
 bool GLForwardRenderer::InitScene()
@@ -29,16 +32,15 @@ bool GLForwardRenderer::InitScene()
 	int32 height = m_camera->GetHeight();
 
 	// shaders
-	auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/QuadWriteTexture.json");
-	m_simpleOutShader = GetGLAssetManager()->GpuGetOrCreate<GLShader>(shaderAsset);
+	m_simpleOutShader
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/QuadWriteTexture.json");
 
-	shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/QuadWriteTexture_Linear.json");
-	m_linearizeOutShader = GetGLAssetManager()->GpuGetOrCreate<GLShader>(shaderAsset);
+	m_linearizeOutShader
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/QuadWriteTexture_Linear.json");
 	m_linearizeOutShader->AddUniform("near");
 	m_linearizeOutShader->AddUniform("far");
 
-	shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/forward/FR_PBRtemp.json");
-	m_testShader = GetGLAssetManager()->GpuGetOrCreate<GLShader>(shaderAsset);
+	m_testShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/forward/FR_PBRtemp.json");
 
 	m_testShader->AddUniform("mvp");
 	m_testShader->AddUniform("m");
@@ -60,6 +62,10 @@ bool GLForwardRenderer::InitScene()
 	m_testShader->AddUniform("double_sided");
 	m_testShader->AddUniform("light_space_matrix");
 	m_testShader->AddUniform("light_near");
+
+	m_bBoxShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/BBox.json");
+	m_bBoxShader->AddUniform("vp");
+	m_bBoxShader->AddUniform("color");
 
 	m_skybox = CreateObserver_AnyAvailable<GLBasicSkybox>();
 	m_glDirectionalLight = CreateObserver_AnyAvailable<GLBasicDirectionalLight>();
@@ -102,6 +108,19 @@ bool GLForwardRenderer::InitScene()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outColorTexture, 0);
+
+	// bounding boxes
+	glCreateVertexArrays(1, &m_bbVao);
+
+	glEnableVertexArrayAttrib(m_bbVao, 0);
+	glVertexArrayAttribFormat(m_bbVao, 0, 3, GL_FLOAT, GL_FALSE, 0);
+
+	glCreateBuffers(1, &m_bbVbo);
+	// TODO:
+	glNamedBufferData(m_bbVbo, 48 * sizeof(float), NULL, GL_DYNAMIC_DRAW);
+
+	glVertexArrayAttribBinding(m_bbVao, 0, 0);
+	glVertexArrayVertexBuffer(m_bbVao, 0, m_bbVbo, 0, sizeof(float) * 3);
 
 	m_currentTexture = m_outColorTexture;
 
@@ -203,6 +222,104 @@ void GLForwardRenderer::RenderGeometries()
 	glDisable(GL_DEPTH_TEST);
 }
 
+void GLForwardRenderer::RenderBoundingBoxes()
+{
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glEnable(GL_CULL_FACE);
+
+	auto worldNodes = Engine::GetWorld()->GetNodeMap<Node>();
+
+	glBindVertexArray(m_bbVao);
+
+	auto RenderBox = [&](Box box, glm::vec4 color, Node* node) {
+		const GLfloat data[] = {
+			box.min.x,
+			box.min.y,
+			box.min.z,
+
+			box.max.x,
+			box.min.y,
+			box.min.z,
+
+			box.max.x,
+			box.max.y,
+			box.min.z,
+
+			box.min.x,
+			box.max.y,
+			box.min.z,
+			//
+			box.min.x,
+			box.min.y,
+			box.max.z,
+
+			box.max.x,
+			box.min.y,
+			box.max.z,
+
+			box.max.x,
+			box.max.y,
+			box.max.z,
+
+			box.min.x,
+			box.max.y,
+			box.max.z,
+			//
+			box.min.x,
+			box.min.y,
+			box.min.z,
+
+			box.min.x,
+			box.min.y,
+			box.max.z,
+
+			box.max.x,
+			box.min.y,
+			box.min.z,
+
+			box.max.x,
+			box.min.y,
+			box.max.z,
+			//
+			box.max.x,
+			box.max.y,
+			box.min.z,
+
+			box.max.x,
+			box.max.y,
+			box.max.z,
+
+			box.min.x,
+			box.max.y,
+			box.min.z,
+
+			box.min.x,
+			box.max.y,
+			box.max.z,
+		};
+
+		glNamedBufferSubData(m_bbVbo, 0, 48 * sizeof(float), data);
+
+		glUseProgram(m_bBoxShader->id);
+		const auto vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix() * node->GetWorldMatrix();
+		glUniformMatrix4fv(m_bBoxShader->GetUniform("vp"), 1, GL_FALSE, glm::value_ptr(vp));
+		glUniform4fv(m_bBoxShader->GetUniform("color"), 1, glm::value_ptr(color));
+
+		// TODO: with fewer draw calls
+		glDrawArrays(GL_LINE_LOOP, 0, 4);
+		glDrawArrays(GL_LINE_LOOP, 4, 4);
+		glDrawArrays(GL_LINES, 8, 8);
+	};
+
+	for (auto node : worldNodes) {
+		// RenderBox(node->m_aabb, { 1, 1, 1, 1 }, node);
+		RenderBox(node->GetBBox(), { 1, 0, 0, 1 }, node);
+	}
+
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+} // namespace ogl
 void GLForwardRenderer::RenderSkybox()
 {
 	glEnable(GL_DEPTH_TEST);
@@ -290,6 +407,7 @@ void GLForwardRenderer::Render()
 	RenderSpotLights();
 	// forward msaa-ed pass
 	RenderGeometries();
+	RenderBoundingBoxes();
 	// render skybox, seamless enabled (render last)
 	RenderSkybox();
 	// copy msaa to out fbo and render any post process on it

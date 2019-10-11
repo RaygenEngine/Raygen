@@ -21,7 +21,6 @@ void Node::SetLocalTranslation(glm::vec3 lt)
 
 void Node::SetLocalOrientation(glm::quat lo)
 {
-
 	m_localOrientation = lo;
 	MarkMatrixChanged();
 }
@@ -60,12 +59,31 @@ void Node::MarkMatrixChanged()
 void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 {
 	if (m_dirty[DF::TRS]) {
+
+		LOG_REPORT("dirty {}", this->GetName());
+
 		m_localMatrix = math::TransformMatrixFromTOS(m_localScale, m_localOrientation, m_localTranslation);
 		m_worldMatrix = parentMatrix * m_localMatrix;
 		// PERF:
 		glm::vec3 skew;
 		glm::vec4 persp;
 		glm::decompose(m_worldMatrix, m_worldScale, m_worldOrientation, m_worldTranslation, skew, persp);
+
+		auto localBbox = GetBBox();
+
+		m_obb.max = m_worldMatrix * glm::vec4(localBbox.max, 1.f);
+		m_obb.min = m_worldMatrix * glm::vec4(localBbox.min, 1.f);
+
+		// calculate sphere
+
+		// TODO: rotated flag
+		// apply scaling
+		m_aabb.max = localBbox.max * m_worldScale;
+		m_aabb.min = localBbox.min * m_worldScale;
+
+		// apply translation
+		m_aabb.max = localBbox.max + m_worldTranslation;
+		m_aabb.min = localBbox.min + m_worldTranslation;
 	}
 
 	for (auto& uPtr : m_children) {
