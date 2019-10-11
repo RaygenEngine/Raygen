@@ -5,7 +5,7 @@
 
 #include <glad/glad.h>
 
-namespace OpenGL {
+namespace ogl {
 struct GLTexture : GLAsset<TexturePod> {
 	GLuint id{ 0 };
 
@@ -18,4 +18,4 @@ struct GLTexture : GLAsset<TexturePod> {
 
 	bool Load() override;
 };
-} // namespace OpenGL
+} // namespace ogl

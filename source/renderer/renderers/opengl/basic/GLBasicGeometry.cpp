@@ -4,7 +4,7 @@
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "asset/AssetManager.h"
 
-namespace OpenGL {
+namespace ogl {
 GLBasicGeometry::GLBasicGeometry(GeometryNode* node)
 	: NodeObserver<GeometryNode, GLRendererBase>(node)
 {
@@ -15,4 +15,4 @@ void GLBasicGeometry::ReloadModel()
 {
 	glModel = GetGLAssetManager(this)->GpuGetOrCreate<GLModel>(node->GetModel());
 }
-} // namespace OpenGL
+} // namespace ogl

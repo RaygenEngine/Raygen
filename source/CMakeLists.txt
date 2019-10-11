@@ -105,8 +105,9 @@ set(HEADER_FILES
 
 
 	core/CoreEnums.h
+	core/CoreStructs.h
 	core/Event.h
-	core/GraphicsMathAux.h
+	core/MathAux.h
 	core/MetaTemplates.h
 	core/StringAux.h
 	core/Types.h

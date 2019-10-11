@@ -3,7 +3,7 @@
 #include "renderer/renderers/opengl/GLEditorRenderer.h"
 #include "editor/imgui/ImguiImpl.h"
 
-namespace OpenGL {
+namespace ogl {
 bool GLEditorRenderer::InitRendering(HWND assochWnd, HINSTANCE instance)
 {
 	if (!GLRendererBase::InitRendering(assochWnd, instance)) {
@@ -29,4 +29,4 @@ GLEditorRenderer::~GLEditorRenderer()
 	}
 }
 
-} // namespace OpenGL
+} // namespace ogl

@@ -8,7 +8,7 @@
 #include <glad/glad.h>
 
 
-namespace OpenGL {
+namespace ogl {
 struct GLBasicSpotLight : NodeObserver<SpotLightNode, GLRendererBase> {
 	GLuint fbo{};
 	GLuint shadowMap{};
@@ -26,4 +26,4 @@ struct GLBasicSpotLight : NodeObserver<SpotLightNode, GLRendererBase> {
 
 	void DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset) override;
 };
-} // namespace OpenGL
+} // namespace ogl

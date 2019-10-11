@@ -2,7 +2,7 @@
 
 #include <tinyxml2/tinyxml2.h>
 
-namespace ParsingAux {
+namespace parsingaux {
 inline bool AttributeExists(const tinyxml2::XMLElement* xmlElement, const char* attribute)
 {
 	return xmlElement->FindAttribute(attribute);
@@ -13,7 +13,7 @@ bool ReadFloats(const char* data, T& floats)
 {
 	const auto count = sizeof(T) / sizeof(float);
 	float parts[count];
-	if (data && utl::SplitStringIntoTArray(parts, count, data, ',')) {
+	if (data && smath::SplitStringIntoTArray(parts, count, data, ',')) {
 		floats = reinterpret_cast<T&>(parts);
 		return true;
 	}
@@ -80,4 +80,4 @@ std::string FloatsToString(T floats)
 	}
 	return ss.str();
 }
-} // namespace ParsingAux
+} // namespace parsingaux

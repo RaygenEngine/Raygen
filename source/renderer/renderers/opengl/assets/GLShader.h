@@ -5,7 +5,7 @@
 
 #include <glad/glad.h>
 
-namespace OpenGL {
+namespace ogl {
 struct GLShader : GLAsset<ShaderPod> {
 	GLuint id{ 0 };
 	bool firstLoad{ true };
@@ -26,4 +26,4 @@ protected:
 	std::unordered_map<std::string, GLint> uniformLocations;
 };
 
-} // namespace OpenGL
+} // namespace ogl

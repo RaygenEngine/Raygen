@@ -9,7 +9,7 @@
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
 
 
-namespace OpenGL {
+namespace ogl {
 struct GLBasicSkybox;
 
 class GLForwardRenderer : public GLEditorRenderer {
@@ -59,4 +59,4 @@ public:
 
 	void RecompileShaders();
 };
-} // namespace OpenGL
+} // namespace ogl

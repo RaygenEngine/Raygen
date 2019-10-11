@@ -6,7 +6,7 @@
 
 #include <glad/glad.h>
 
-namespace OpenGL {
+namespace ogl {
 struct GLModel : GLAsset<ModelPod> {
 	struct GLMesh {
 		std::string name;
@@ -17,12 +17,12 @@ struct GLModel : GLAsset<ModelPod> {
 		GLuint verticesVBO{ 0u };
 
 		GLMaterial* material{ nullptr };
-		GLint geometryMode{ 0u };
 
 		GLsizei count{ 0u };
-	};
 
-	GLenum usage{ GL_STATIC_DRAW };
+		GLint geometryMode{ 0u };
+		GLenum geometryUsage{ 0u };
+	};
 	std::vector<GLMesh> meshes;
 
 	GLModel(PodHandle<ModelPod> handle)
@@ -33,8 +33,8 @@ struct GLModel : GLAsset<ModelPod> {
 	~GLModel() override;
 
 protected:
-	bool LoadGLMesh(const ModelPod& model, GLMesh& mesh, const GeometryGroup& data, GLenum usage);
+	bool LoadGLMesh(const ModelPod& model, GLMesh& mesh, const GeometryGroup& data);
 	bool Load() override;
 };
 
-} // namespace OpenGL
+} // namespace ogl

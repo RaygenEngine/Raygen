@@ -36,6 +36,7 @@ struct GeometryGroup {
 	std::vector<VertexData> vertices{};
 
 	GeometryMode mode{ GeometryMode::TRIANGLES };
+	GeometryUsage usage{ GeometryUsage::STATIC };
 	uint32 materialIndex{ 0u };
 };
 
@@ -45,6 +46,7 @@ struct Mesh {
 
 struct ModelPod : public AssetPod {
 	REFLECTED_POD(ModelPod) { REFLECT_VAR(materials); }
+
 	static bool Load(ModelPod* pod, const uri::Uri& path);
 
 	std::vector<Mesh> meshes{};

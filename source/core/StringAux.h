@@ -3,7 +3,7 @@
 #include <sstream>
 #include <iterator>
 
-namespace utl {
+namespace smath {
 template<typename T>
 // TODO: remove with xml removals
 inline bool SplitStringIntoTArray(T* arr, int arrSize, const std::string& str, char delimiter)
@@ -59,4 +59,4 @@ inline std::string ToLower(const std::string& str)
 	std::transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
 	return temp;
 }
-} // namespace utl
+} // namespace smath

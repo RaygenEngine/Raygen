@@ -4,7 +4,7 @@
 #include "renderer/renderers/opengl/assets/GLTexture.h"
 #include "asset/pods/MaterialPod.h"
 
-namespace OpenGL {
+namespace ogl {
 struct GLMaterial : GLAsset<MaterialPod> {
 	// RGB: Albedo A: Opacity
 	GLTexture* baseColorTexture{ nullptr };
@@ -26,4 +26,4 @@ protected:
 	bool Load() override;
 };
 
-} // namespace OpenGL
+} // namespace ogl

@@ -2,7 +2,7 @@
 
 #include "renderer/renderers/opengl/assets/GLBindlessTexture.h"
 
-namespace OpenGL {
+namespace ogl {
 GLBindlessTexture::~GLBindlessTexture()
 {
 	if (glIsTextureHandleResidentARB(handle)) {
@@ -17,4 +17,4 @@ bool GLBindlessTexture::Load()
 
 	return true;
 }
-} // namespace OpenGL
+} // namespace ogl

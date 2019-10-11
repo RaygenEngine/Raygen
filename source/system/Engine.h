@@ -13,7 +13,7 @@ class AppBase;
 
 class NodeFactory;
 
-#include "system/Timer.h"
+#include "system/timer.h"
 #include "system/Logger.h"
 
 class Engine {
@@ -88,7 +88,7 @@ private:
 
 	Editor* m_editor{ nullptr };
 
-	Timer::DebugTimer<ch::milliseconds> m_initToFrameTimer;
+	timer::DebugTimer<ch::milliseconds> m_initToFrameTimer;
 
 	struct RendererMetadata {
 		std::string name;

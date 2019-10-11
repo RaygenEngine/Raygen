@@ -6,7 +6,7 @@
 #include "world/nodes/sky/SkyboxNode.h"
 
 
-namespace OpenGL {
+namespace ogl {
 struct GLBasicSkybox : NodeObserver<SkyboxNode, GLRendererBase> {
 	GLTexture* cubemap;
 
@@ -19,4 +19,4 @@ struct GLBasicSkybox : NodeObserver<SkyboxNode, GLRendererBase> {
 	GLBasicSkybox(SkyboxNode* node);
 	~GLBasicSkybox() override;
 };
-} // namespace OpenGL
+} // namespace ogl
