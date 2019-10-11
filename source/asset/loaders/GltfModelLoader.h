@@ -6,7 +6,7 @@
 #include "asset/loaders/DummyLoader.h"
 #include "asset/util/GltfAux.h"
 
-#include "tinygltf/tiny_gltf.h"
+#include <tinygltf/tiny_gltf.h>
 
 namespace GltfModelLoader {
 namespace {
@@ -46,7 +46,7 @@ namespace {
 		byte* beginPtr; // Pointer to the first byte we care about.
 						// This may not be the actual start of the buffer of the binary file.
 
-		BufferComponentType componentType; // this particular model's underlying buffer type to read as.
+		ComponentType componentType; // this particular model's underlying buffer type to read as.
 
 		{
 			size_t beginByteOffset;
@@ -59,40 +59,39 @@ namespace {
 			elementCount = accessor.count;
 			beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
 			strideByteOffset = accessor.ByteStride(bufferView);
-			componentCount = utl::GetElementComponentCount(GltfAux::GetElementType(accessor.type));
+			componentCount = utl::ElementComponentCount(GltfAux::GetElementType(accessor.type));
 			beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
 		}
-		CLOG_ASSERT(componentCount != 1, "Found indicies of 2 components in gltf file.");
+		CLOG_ABORT(componentCount != 1, "Found indicies of 2 components in gltf file.");
 		out.resize(elementCount);
 
 		switch (componentType) {
 				// Conversions from signed to unsigned types are "implementation defined".
 				// This code assumes the implementation will not do any bit arethmitic from signed x to unsigned x.
 
-			case BufferComponentType::BYTE:
-			case BufferComponentType::UNSIGNED_BYTE: {
+			case ComponentType::CHAR:
+			case ComponentType::BYTE: {
 				CopyToVector<unsigned char>(out, beginPtr, strideByteOffset, elementCount);
 				return;
 			}
-			case BufferComponentType::SHORT: {
+			case ComponentType::SHORT: {
 				CopyToVector<short>(out, beginPtr, strideByteOffset, elementCount);
 				return;
 			}
-			case BufferComponentType::UNSIGNED_SHORT: {
+			case ComponentType::USHORT: {
 				CopyToVector<unsigned short>(out, beginPtr, strideByteOffset, elementCount);
 				return;
 			}
-			case BufferComponentType::INT: {
+			case ComponentType::INT: {
 				CopyToVector<int>(out, beginPtr, strideByteOffset, elementCount);
 				return;
 			}
-			case BufferComponentType::UNSIGNED_INT: {
+			case ComponentType::UINT: {
 				CopyToVector<uint32>(out, beginPtr, strideByteOffset, elementCount);
 				return;
 			}
-			case BufferComponentType::FLOAT:
-			case BufferComponentType::DOUBLE:
-			case BufferComponentType::INVALID: return;
+			case ComponentType::FLOAT:
+			case ComponentType::DOUBLE: return;
 		}
 	}
 
@@ -232,7 +231,7 @@ namespace {
 		byte* beginPtr; // Pointer to the first byte we care about.
 						// This may not be the actual start of the buffer of the binary file.
 
-		BufferComponentType componentType; // this particular model's underlying buffer type to read as.
+		ComponentType componentType; // this particular model's underlying buffer type to read as.
 
 		{
 			size_t beginByteOffset;
@@ -245,24 +244,23 @@ namespace {
 			elementCount = accessor.count;
 			beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
 			strideByteOffset = accessor.ByteStride(bufferView);
-			componentCount = utl::GetElementComponentCount(GltfAux::GetElementType(accessor.type));
+			componentCount = utl::ElementComponentCount(GltfAux::GetElementType(accessor.type));
 			beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
 		}
 
 		switch (componentType) {
-			case BufferComponentType::BYTE:
-			case BufferComponentType::UNSIGNED_BYTE:
-			case BufferComponentType::SHORT:
-			case BufferComponentType::UNSIGNED_SHORT:
-			case BufferComponentType::INT:
-			case BufferComponentType::UNSIGNED_INT: assert(false);
-			case BufferComponentType::FLOAT:
+			case ComponentType::CHAR:
+			case ComponentType::BYTE:
+			case ComponentType::SHORT:
+			case ComponentType::USHORT:
+			case ComponentType::INT:
+			case ComponentType::UINT: assert(false);
+			case ComponentType::FLOAT:
 				LoadIntoVertextData_Selector<VertexElementIndex, float>(out, beginPtr, strideByteOffset, elementCount);
 				return;
-			case BufferComponentType::DOUBLE:
+			case ComponentType::DOUBLE:
 				LoadIntoVertextData_Selector<VertexElementIndex, double>(out, beginPtr, strideByteOffset, elementCount);
 				return;
-			case BufferComponentType::INVALID: return;
 		}
 	}
 
@@ -504,7 +502,7 @@ inline bool Load(ModelPod* pod, const uri::Uri& path)
 					scale[2] = static_cast<float>(childNode.scale[2]);
 				}
 
-				localTransformMat = utl::GetTransformMat(translation, orientation, scale);
+				localTransformMat = math::TransformMatrixFromTOS(scale, orientation, translation);
 			}
 
 			localTransformMat = parentTransformMat * localTransformMat;

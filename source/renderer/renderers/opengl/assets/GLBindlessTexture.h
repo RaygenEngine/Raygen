@@ -3,9 +3,10 @@
 #include "renderer/renderers/opengl/GLAsset.h"
 #include "renderer/renderers/opengl/assets/GLTexture.h"
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 
 namespace OpenGL {
+// TODO: impl correctly (when needed)
 struct GLBindlessTexture : GLTexture {
 	GLuint handle{ 0 };
 

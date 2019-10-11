@@ -1,9 +1,9 @@
 #pragma once
 
-#include "core/reflection/GenMacros.h"
+#include "reflection/GenMacros.h"
 #include "asset/AssetPod.h"
 
-#include "tinyxml2/tinyxml2.h"
+#include <tinyxml2/tinyxml2.h>
 
 struct XMLDocPod : public AssetPod {
 	REFLECTED_POD(XMLDocPod) {}

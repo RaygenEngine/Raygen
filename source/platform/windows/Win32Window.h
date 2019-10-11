@@ -1,8 +1,10 @@
 #pragma once
 
-#include <windows.h>
 #include "system/Engine.h"
 #include "platform/Window.h"
+
+#include <windows.h>
+
 
 class Win32Window : public Window {
 	WNDCLASSEX m_wcex;

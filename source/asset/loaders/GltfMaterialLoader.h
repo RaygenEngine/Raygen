@@ -6,7 +6,7 @@
 #include "asset/util/GltfAux.h"
 #include "asset/loaders/DummyLoader.h"
 
-#include "tinygltf/tiny_gltf.h"
+#include <tinygltf/tiny_gltf.h>
 
 namespace GltfMaterialLoader {
 inline bool Load(MaterialPod* pod, const uri::Uri& path)

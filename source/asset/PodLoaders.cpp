@@ -1,13 +1,6 @@
 #include "pch/pch.h"
 
-#include "asset/pods/GltfFilePod.h"
-#include "asset/pods/ImagePod.h"
-#include "asset/pods/MaterialPod.h"
-#include "asset/pods/ModelPod.h"
-#include "asset/pods/ShaderPod.h"
-#include "asset/pods/StringPod.h"
-#include "asset/pods/TexturePod.h"
-#include "asset/pods/XMLDocPod.h"
+#include "asset/PodIncludes.h"
 
 #include "asset/loaders/CubemapLoader.h"
 #include "asset/loaders/DummyLoader.h"

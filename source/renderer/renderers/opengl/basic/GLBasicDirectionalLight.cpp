@@ -86,8 +86,6 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 					glActiveTexture(GL_TEXTURE0);
 					glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
 					break;
-
-				case AM_INVALID: std::abort();
 			}
 
 			glUniformMatrix4fv(gBufferShader->GetUniform("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));

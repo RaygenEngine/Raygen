@@ -8,105 +8,88 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LIB_DEPENDENCIES_DIRECTORY})
 link_directories(${LIB_DEPENDENCIES_DIRECTORY})
 
 set(SOURCE_FILES 
+	main.cpp
+	AppBase.cpp
+
 
 	asset/AssetManager.cpp
 	asset/PodLoaders.cpp
-		
+
+
 	asset/util/DependenciesImpl.cpp
 
-	core/logger/Logger.cpp
-	
-	core/reflection/ReflectionTools.cpp
 
 	editor/Editor.cpp
 	editor/Outliner.cpp
-	editor/Details.cpp
 	editor/AssetWindow.cpp
 	editor/SceneSave.cpp
+
 	editor/imgui/ImguiImpl.cpp
-	editor/imgui/ImguiDemo.cpp
-	editor/renderer/EditorRenderer.cpp
+    editor/imgui/ImguiDemo.cpp
+	
+	
+	platform/Window.cpp
+	
+	platform/windows/Win32Window.cpp
+	
 
 	renderer/Renderer.cpp
-	renderer/NodeObserver.cpp
 	
-	renderer/renderers/opengl/GLAsset.cpp
-	renderer/renderers/opengl/GLAssetManager.cpp
+
 	renderer/renderers/opengl/GLEditorRenderer.cpp
 	renderer/renderers/opengl/GLRendererBase.cpp
-	
 	renderer/renderers/opengl/assets/GLModel.cpp
 	renderer/renderers/opengl/assets/GLShader.cpp
 	renderer/renderers/opengl/assets/GLTexture.cpp
 	renderer/renderers/opengl/assets/GLBindlessTexture.cpp
 	renderer/renderers/opengl/assets/GLMaterial.cpp
-	
 	renderer/renderers/opengl/basic/GLBasicSpotLight.cpp
 	renderer/renderers/opengl/basic/GLBasicDirectionalLight.cpp
 	renderer/renderers/opengl/basic/GLBasicGeometry.cpp
 	renderer/renderers/opengl/basic/GLBasicSkybox.cpp
-	
 	renderer/renderers/opengl/forward/GLForwardRenderer.cpp
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.cpp
 
+
 	system/Engine.cpp
-	system/EngineComponent.cpp
-	system/Object.cpp
 	system/Input.cpp
-	
-	event/Event.cpp
-	
+	system/Logger.cpp
+
+
 	world/World.cpp
 	world/NodeFactory.cpp
 	
 	world/nodes/Node.cpp
 	world/nodes/RootNode.cpp
-	world/nodes/TransformNode.cpp
-	
 	world/nodes/camera/CameraNode.cpp
 	world/nodes/camera/WindowCameraNode.cpp
-
-	world/nodes/sky/SkyCubeNode.cpp
-	world/nodes/sky/SkyHDRNode.cpp
-	
-	world/nodes/geometry/GeometryNode.cpp
-	world/nodes/geometry/InstancedGeometryNode.cpp
-	
 	world/nodes/light/PunctualLightNode.cpp
 	world/nodes/light/DirectionalLightNode.cpp
 	world/nodes/light/SpotLightNode.cpp
-		
-	world/nodes/user/freeform/FreeformUserNode.cpp
-	world/nodes/user/oculus/OculusHeadNode.cpp
-	world/nodes/user/oculus/OculusUserNode.cpp
+	world/nodes/user/FreeformUserNode.cpp
 	world/nodes/user/UserNode.cpp
-	
-	main.cpp
-	AppBase.cpp
-
-	platform/Window.cpp
-	platform/windows/Win32Window.cpp
 )
 
-set(HEADER_FILES 
+set(HEADER_FILES
+	AppBase.h
 
+ 
 	asset/AssetPod.h
 	asset/AssetManager.h
-	
 	asset/UriLibrary.h
 	asset/PodIncludes.h
 	asset/PodHandle.h
 
+	asset/loaders/CubemapLoader.h
+	asset/loaders/DummyLoader.h
 	asset/loaders/TextLoader.h
 	asset/loaders/XMLDocLoader.h
 	asset/loaders/ImageLoader.h
-	asset/loaders/CubemapLoader.h
 	asset/loaders/ShaderLoader.h
 	asset/loaders/GltfModelLoader.h
 	asset/loaders/GltfMaterialLoader.h
 	asset/loaders/GltfTextureLoader.h	
 	asset/loaders/GltfFileLoader.h
-	asset/loaders/DummyLoader.h
 
 	asset/pods/TexturePod.h
 	asset/pods/MaterialPod.h
@@ -116,51 +99,49 @@ set(HEADER_FILES
 	asset/pods/StringPod.h
 	asset/pods/XMLDocPod.h
 	asset/pods/GltfFilePod.h
-	
+
 	asset/util/GltfAux.h
 	asset/util/ParsingAux.h
-	
-	core/auxiliary/GraphicsMathAux.h
-	core/auxiliary/MetaTemplates.h
-	core/auxiliary/MemoryAux.h
-	core/auxiliary/StringAux.h
-	
-	core/enum/InputEnums.h
-	core/enum/TargetEnums.h
-	core/enum/TextureEnums.h
-	core/enum/GeometryEnums.h
-	core/enum/BufferEnums.h
-	
-	core/logger/Logger.h
-	
-	core/reflection/GenMacros.h
-	core/reflection/GetClass.h
-	core/reflection/PodReflection.h
-	core/reflection/PodTools.h
-	core/reflection/Property.h
-	core/reflection/PropertyFlags.h
-	core/reflection/PropertyTypes.h
-	core/reflection/ReflClass.h
-	core/reflection/ReflectionTools.h
-	core/reflection/ReflEnum.h
-	core/reflection/TypeId.h
 
-	core/timer/Timer.h
-	
-	core/type/IntegerTypes.h
-	core/type/MathTypes.h
-	
-	core/uuid/UUIDGenerator.h
-	
+
+	core/CoreEnums.h
+	core/Event.h
+	core/GraphicsMathAux.h
+	core/MetaTemplates.h
+	core/StringAux.h
+	core/Types.h
+
+
 	editor/Editor.h
 	editor/Outliner.h
-	editor/Details.h
 	editor/AssetWindow.h
 	editor/SceneSave.h
+
 	editor/imgui/ImguiImpl.h
-	editor/imgui/ImguiExtensions.h
-	editor/renderer/EditorRenderer.h
 	
+	
+	pch/pch.h
+	
+	
+	platform/Window.h
+	
+	platform/windows/Win32Window.h
+	platform/windows/TranslateWin32VirtualKeys.h
+	
+
+	reflection/GenMacros.h
+	reflection/GetClass.h
+	reflection/PodReflection.h
+	reflection/PodTools.h
+	reflection/Property.h
+	reflection/PropertyFlags.h
+	reflection/PropertyTypes.h
+	reflection/ReflClass.h
+	reflection/ReflectionTools.h
+	reflection/ReflEnum.h
+	reflection/TypeId.h
+
+
 	renderer/Renderer.h
 	renderer/NodeObserver.h
 	renderer/GenericGpuAssetManager.h
@@ -170,28 +151,28 @@ set(HEADER_FILES
 	renderer/renderers/opengl/GLEditorRenderer.h
 	renderer/renderers/opengl/GLRendererBase.h
 	renderer/renderers/opengl/GLUtil.h
-	
 	renderer/renderers/opengl/assets/GLModel.h
 	renderer/renderers/opengl/assets/GLShader.h
 	renderer/renderers/opengl/assets/GLTexture.h
 	renderer/renderers/opengl/assets/GLBindlessTexture.h
 	renderer/renderers/opengl/assets/GLMaterial.h
-
 	renderer/renderers/opengl/basic/GLBasicSpotLight.h
 	renderer/renderers/opengl/basic/GLBasicDirectionalLight.h
 	renderer/renderers/opengl/basic/GLBasicGeometry.h
 	renderer/renderers/opengl/basic/GLBasicSkybox.h
-	
 	renderer/renderers/opengl/forward/GLForwardRenderer.h
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.h
 
+
 	system/Engine.h
-	system/EngineComponent.h
 	system/Object.h
 	system/Input.h
+	system/InputEnums.h
 	system/EngineEvents.h
+	system/Logger.h
+	system/Timer.h
+	system/UUIDGenerator.h
 
-	event/Event.h
 
 	world/World.h
 	world/NodeFactory.h
@@ -199,34 +180,15 @@ set(HEADER_FILES
 	world/nodes/Node.h
 	world/nodes/RootNode.h
 	world/nodes/TransformNode.h
-	world/nodes/MetaNodeTranslation.h
-	
 	world/nodes/camera/CameraNode.h
 	world/nodes/camera/WindowCameraNode.h
-	
-	world/nodes/sky/SkyCubeNode.h
-	world/nodes/sky/SkyHDRNode.h
-	
-	world/nodes/geometry/Instancing.h
+	world/nodes/sky/SkyboxNode.h
 	world/nodes/geometry/GeometryNode.h
-	world/nodes/geometry/InstancedGeometryNode.h
-	
 	world/nodes/light/PunctualLightNode.h
 	world/nodes/light/DirectionalLightNode.h
 	world/nodes/light/SpotLightNode.h
-	
-	world/nodes/user/freeform/FreeformUserNode.h
-	world/nodes/user/oculus/OculusHeadNode.h
-	world/nodes/user/oculus/OculusUserNode.h
+	world/nodes/user/FreeformUserNode.h
 	world/nodes/user/UserNode.h
-
-	pch/pch.h
-	
-	AppBase.h
-	
-	platform/Window.h
-	platform/windows/Win32Window.h
-	platform/windows/TranslateWin32VirtualKeys.h
 )
 
 

@@ -2,7 +2,8 @@
 
 #include "renderer/renderers/opengl/GLAsset.h"
 #include "asset/pods/TexturePod.h"
-#include "glad/glad.h"
+
+#include <glad/glad.h>
 
 namespace OpenGL {
 struct GLTexture : GLAsset<TexturePod> {

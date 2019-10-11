@@ -13,6 +13,9 @@ class AppBase;
 
 class NodeFactory;
 
+#include "system/Timer.h"
+#include "system/Logger.h"
+
 class Engine {
 private:
 	Engine() = default;

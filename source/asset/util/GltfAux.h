@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tinygltf/tiny_gltf.h"
+#include <tinygltf/tiny_gltf.h>
 
 namespace GltfAux {
 inline GeometryMode GetGeometryMode(int32 gltfMode)
@@ -13,7 +13,7 @@ inline GeometryMode GetGeometryMode(int32 gltfMode)
 		case TINYGLTF_MODE_TRIANGLES: return GeometryMode::TRIANGLES;
 		case TINYGLTF_MODE_TRIANGLE_STRIP: return GeometryMode::TRIANGLE_STRIP;
 		case TINYGLTF_MODE_TRIANGLE_FAN: return GeometryMode::TRIANGLE_FAN;
-		default: return GeometryMode::INVALID;
+		default: return GeometryMode::TRIANGLES;
 	}
 }
 
@@ -51,36 +51,36 @@ inline AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
 	if (utl::CaseInsensitiveCompare(gltfAlphaMode, "BLEND")) {
 		return AM_BLEND;
 	}
-	// not defined -> repeat
-	return AM_INVALID;
+	// not defined -> opaque
+	return AM_OPAQUE;
 }
 
-inline BufferElementType GetElementType(int32 gltfElementType)
+inline ElementType GetElementType(int32 gltfElementType)
 {
 	switch (gltfElementType) {
-		case TINYGLTF_TYPE_SCALAR: return BufferElementType::SCALAR;
-		case TINYGLTF_TYPE_VEC2: return BufferElementType::VEC2;
-		case TINYGLTF_TYPE_VEC3: return BufferElementType::VEC3;
-		case TINYGLTF_TYPE_VEC4: return BufferElementType::VEC4;
-		case TINYGLTF_TYPE_MAT2: return BufferElementType::MAT2;
-		case TINYGLTF_TYPE_MAT3: return BufferElementType::MAT3;
-		case TINYGLTF_TYPE_MAT4: return BufferElementType::MAT4;
-		default: return BufferElementType::INVALID;
+		case TINYGLTF_TYPE_SCALAR: return ElementType::SCALAR;
+		case TINYGLTF_TYPE_VEC2: return ElementType::VEC2;
+		case TINYGLTF_TYPE_VEC3: return ElementType::VEC3;
+		case TINYGLTF_TYPE_VEC4: return ElementType::VEC4;
+		case TINYGLTF_TYPE_MAT2: return ElementType::MAT2;
+		case TINYGLTF_TYPE_MAT3: return ElementType::MAT3;
+		case TINYGLTF_TYPE_MAT4: return ElementType::MAT4;
+		default: return ElementType::SCALAR;
 	}
 }
 
-inline BufferComponentType GetComponentType(int32 gltfComponentType)
+inline ComponentType GetComponentType(int32 gltfComponentType)
 {
 	switch (gltfComponentType) {
-		case TINYGLTF_COMPONENT_TYPE_BYTE: return BufferComponentType::BYTE;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: return BufferComponentType::UNSIGNED_BYTE;
-		case TINYGLTF_COMPONENT_TYPE_SHORT: return BufferComponentType::SHORT;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: return BufferComponentType::UNSIGNED_SHORT;
-		case TINYGLTF_COMPONENT_TYPE_INT: return BufferComponentType::INT;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: return BufferComponentType::UNSIGNED_INT;
-		case TINYGLTF_COMPONENT_TYPE_FLOAT: return BufferComponentType::FLOAT;
-		case TINYGLTF_COMPONENT_TYPE_DOUBLE: return BufferComponentType::DOUBLE;
-		default: return BufferComponentType::INVALID;
+		case TINYGLTF_COMPONENT_TYPE_BYTE: return ComponentType::CHAR;
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: return ComponentType::BYTE;
+		case TINYGLTF_COMPONENT_TYPE_SHORT: return ComponentType::SHORT;
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: return ComponentType::USHORT;
+		case TINYGLTF_COMPONENT_TYPE_INT: return ComponentType::INT;
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: return ComponentType::UINT;
+		case TINYGLTF_COMPONENT_TYPE_FLOAT: return ComponentType::FLOAT;
+		case TINYGLTF_COMPONENT_TYPE_DOUBLE: return ComponentType::DOUBLE;
+		default: return ComponentType::FLOAT;
 	}
 }
 } // namespace GltfAux

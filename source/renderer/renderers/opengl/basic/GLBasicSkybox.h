@@ -3,11 +3,11 @@
 #include "renderer/renderers/opengl/GLRendererBase.h"
 #include "renderer/renderers/opengl/assets/GLTexture.h"
 #include "renderer/renderers/opengl/assets/GLShader.h"
-#include "world/nodes/sky/SkyCubeNode.h"
+#include "world/nodes/sky/SkyboxNode.h"
 
 
 namespace OpenGL {
-struct GLBasicSkybox : NodeObserver<SkyCubeNode, GLRendererBase> {
+struct GLBasicSkybox : NodeObserver<SkyboxNode, GLRendererBase> {
 	GLTexture* cubemap;
 
 	GLShader* shader;
@@ -16,7 +16,7 @@ struct GLBasicSkybox : NodeObserver<SkyCubeNode, GLRendererBase> {
 	GLuint vbo{};
 
 	virtual void DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset) override {}
-	GLBasicSkybox(SkyCubeNode* node);
+	GLBasicSkybox(SkyboxNode* node);
 	~GLBasicSkybox() override;
 };
 } // namespace OpenGL

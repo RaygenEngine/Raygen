@@ -15,7 +15,7 @@ public:
 
 	[[nodiscard]] glm::vec3 GetAmbientColor() const { return m_ambient; }
 
-	void SetAmbientColor(const glm::vec3& color) { m_ambient = color; }
+	void SetAmbientColor(glm::vec3 color) { m_ambient = color; }
 
 	~RootNode() override { m_children.clear(); }
 };

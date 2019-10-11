@@ -1,5 +1,7 @@
 #pragma once
 
+#include "system/UUIDGenerator.h"
+
 class Object {
 	utl::UID m_id{};
 

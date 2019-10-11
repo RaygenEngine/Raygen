@@ -1,12 +1,10 @@
 #include "pch/pch.h"
 
 #include "world/NodeFactory.h"
-#include "world/nodes/sky/SkyCubeNode.h"
-#include "world/nodes/sky/SkyHDRNode.h"
+#include "world/nodes/sky/SkyboxNode.h"
 #include "world/nodes/camera/WindowCameraNode.h"
-#include "world/nodes/MetaNodeTranslation.h"
 #include "world/World.h"
-#include "world/nodes/user/freeform/FreeformUserNode.h"
+#include "world/nodes/user/FreeformUserNode.h"
 
 bool NodeFactory::LoadChildrenXML(const tinyxml2::XMLElement* xmlData, Node* parent)
 {
@@ -54,11 +52,8 @@ Node* NodeFactory::LoadNodeFromType(const std::string& type, Node* parent)
 	if (type == "transform") {
 		return world->CreateNode<TransformNode>(parent);
 	}
-	if (type == "sky_cube") {
-		return world->CreateNode<SkyCubeNode>(parent);
-	}
-	if (type == "sky_hdr") {
-		return world->CreateNode<SkyHDRNode>(parent);
+	if (type == "skybox") {
+		return world->CreateNode<SkyboxNode>(parent);
 	}
 
 	return nullptr;

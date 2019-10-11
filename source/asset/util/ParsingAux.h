@@ -1,7 +1,6 @@
 #pragma once
 
-#include "tinyxml2/tinyxml2.h"
-#include <string>
+#include <tinyxml2/tinyxml2.h>
 
 namespace ParsingAux {
 inline bool AttributeExists(const tinyxml2::XMLElement* xmlElement, const char* attribute)

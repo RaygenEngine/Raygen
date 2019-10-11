@@ -2,9 +2,9 @@
 
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
-
-#include "glad/glad.h"
 #include "world/World.h"
+
+#include <glad/glad.h>
 
 
 namespace OpenGL {
@@ -226,8 +226,6 @@ void GLDeferredRenderer::RenderGBuffer()
 					glUseProgram(gBufferShader->id);
 					glUniform1f(m_gBuffer.shaderAlphaMask->GetUniform("alpha_cutoff"), materialData->alphaCutoff);
 					break;
-
-				case AM_INVALID: abort();
 			}
 
 			glUniformMatrix4fv(gBufferShader->GetUniform("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));

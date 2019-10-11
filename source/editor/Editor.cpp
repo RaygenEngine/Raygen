@@ -1,24 +1,24 @@
 #include "pch/pch.h"
-#include "imgui/imgui.h"
+
 #include "editor/Editor.h"
 #include "world/World.h"
 #include "system/Engine.h"
-#include "editor/imgui/ImguiExtensions.h"
 #include "editor/imgui/ImguiImpl.h"
-#include "tinyxml2/tinyxml2.h"
-#include "imgui_ext/imfilebrowser.h"
 #include "platform/windows/Win32Window.h"
 #include "system/EngineEvents.h"
-
-#include <filesystem>
 #include "asset/PodIncludes.h"
-
-#include <iostream>
 #include "asset/AssetManager.h"
-#include "core/reflection/ReflectionTools.h"
-#include "imgui/imgui_internal.h"
+#include "reflection/ReflectionTools.h"
+#include "reflection/PodTools.h"
+
+#include <imgui/imgui.h>
+#include <imgui/imgui_stdlib.h>
+#include <imgui_ext/imfilebrowser.h>
+#include <imgui/imgui_internal.h>
+#include <tinyxml2/tinyxml2.h>
+#include <iostream>
 #include <set>
-#include "core/reflection/PodTools.h"
+
 
 #define TEXT_TOOLTIP(...)                                                                                              \
 	if (ImGui::IsItemHovered()) {                                                                                      \
@@ -38,6 +38,16 @@ void TextTooltipUtil(const std::string& Tooltip)
 
 
 namespace {
+inline float* FromVec3(glm::vec3& vec3)
+{
+	return reinterpret_cast<float*>(&vec3);
+}
+inline float* FromVec4(glm::vec4& vec4)
+{
+	return reinterpret_cast<float*>(&vec4);
+}
+
+
 using namespace PropertyFlags;
 
 struct ReflectionToImguiVisitor {
@@ -99,19 +109,19 @@ struct ReflectionToImguiVisitor {
 	bool Inner(glm::vec3& t, const Property& p)
 	{
 		if (p.HasFlags(PropertyFlags::Color)) {
-			return ImGui::ColorEdit3(name, ImUtil::FromVec3(t), ImGuiColorEditFlags_DisplayHSV);
+			return ImGui::ColorEdit3(name, FromVec3(t), ImGuiColorEditFlags_DisplayHSV);
 		}
 
-		return ImGui::DragFloat3(name, ImUtil::FromVec3(t), 0.01f);
+		return ImGui::DragFloat3(name, FromVec3(t), 0.01f);
 	}
 
 	bool Inner(glm::vec4& t, const Property& p)
 	{
 		if (p.HasFlags(PropertyFlags::Color)) {
-			return ImGui::ColorEdit4(name, ImUtil::FromVec4(t), ImGuiColorEditFlags_DisplayHSV);
+			return ImGui::ColorEdit4(name, FromVec4(t), ImGuiColorEditFlags_DisplayHSV);
 		}
 
-		return ImGui::DragFloat4(name, ImUtil::FromVec4(t), 0.01f);
+		return ImGui::DragFloat4(name, FromVec4(t), 0.01f);
 	}
 
 	bool Inner(std::string& ref, const Property& p)
@@ -252,7 +262,7 @@ Editor::~Editor()
 {
 	ImguiImpl::CleanupContext();
 }
-#include "editor/renderer/EditorRenderer.h"
+
 #include "system/Input.h"
 
 void Editor::UpdateEditor()
@@ -410,17 +420,17 @@ void Editor::PropertyEditor(Node* node)
 
 	bool dirtyMatrix = false;
 
-	if (ImGui::DragFloat3("Position", ImUtil::FromVec3(node->m_localTranslation), 0.01f)) {
+	if (ImGui::DragFloat3("Position", FromVec3(node->m_localTranslation), 0.01f)) {
 		dirtyMatrix = true;
 	}
-	if (ImGui::DragFloat3("Rotation", ImUtil::FromVec3(eulerPyr), 0.1f)) {
+	if (ImGui::DragFloat3("Rotation", FromVec3(eulerPyr), 0.1f)) {
 		auto axes = node->GetLocalPYR();
 		axes = eulerPyr - axes;
 
 		node->m_localOrientation = node->m_localOrientation * glm::quat(glm::radians(axes));
 		dirtyMatrix = true;
 	}
-	if (ImGui::DragFloat3("Scale", ImUtil::FromVec3(node->m_localScale), 0.01f)) {
+	if (ImGui::DragFloat3("Scale", FromVec3(node->m_localScale), 0.01f)) {
 		dirtyMatrix = true;
 	}
 
@@ -459,7 +469,7 @@ void Editor::PropertyEditor(Node* node)
 
 	if (dirtyMatrix) {
 		node->SetLocalMatrix(
-			utl::GetTransformMat(node->m_localTranslation, node->m_localOrientation, node->m_localScale));
+			math::TransformMatrixFromTOS(node->m_localScale, node->m_localOrientation, node->m_localTranslation));
 	}
 }
 
