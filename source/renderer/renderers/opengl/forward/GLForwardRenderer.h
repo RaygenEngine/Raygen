@@ -19,6 +19,7 @@ protected:
 	GLShader* m_testShader{ nullptr };
 	GLShader* m_simpleOutShader{ nullptr };
 	GLShader* m_linearizeOutShader{ nullptr };
+	GLShader* m_bBoxShader{ nullptr };
 	bool m_isOutNonLinear{ false };
 
 	// entities
@@ -38,9 +39,14 @@ protected:
 	GLuint m_outFbo{ 0 };
 	GLuint m_outColorTexture{ 0 };
 
+	// bounding boxes
+	GLuint m_bbVao;
+	GLuint m_bbVbo;
+
 	void RenderDirectionalLights();
 	void RenderSpotLights();
 	void RenderGeometries();
+	void RenderBoundingBoxes();
 	void RenderSkybox();
 	void RenderPostProcess();
 	void RenderWindowSimple();

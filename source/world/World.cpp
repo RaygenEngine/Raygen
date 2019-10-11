@@ -59,6 +59,7 @@ bool World::LoadAndPrepareWorldFromXML(PodHandle<XMLDocPod> sceneXML)
 	}
 	DirtyUpdateWorld();
 	LOG_INFO("World loaded succesfully");
+	m_root->m_dirty.reset();
 	return true;
 }
 

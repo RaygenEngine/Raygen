@@ -14,5 +14,7 @@ public:
 	{
 	}
 
+	Box GetBBox() const override { return m_model.Lock()->bbox; }
+
 	[[nodiscard]] PodHandle<ModelPod> GetModel() const { return m_model; }
 };
