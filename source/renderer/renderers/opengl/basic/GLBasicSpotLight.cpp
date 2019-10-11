@@ -7,12 +7,11 @@ namespace ogl {
 GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 	: NodeObserver<SpotLightNode, GLRendererBase>(node)
 {
-	auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/DepthMap.json");
-	depthMap = GetGLAssetManager(this)->GpuGetOrCreate<GLShader>(shaderAsset);
+	depthMap = GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap.json");
 	depthMap->AddUniform("mvp");
 
-	shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/DepthMap_AlphaMask.json");
-	depthMapAlphaMask = GetGLAssetManager(this)->GpuGetOrCreate<GLShader>(shaderAsset);
+	depthMapAlphaMask
+		= GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap_AlphaMask.json");
 	depthMapAlphaMask->AddUniform("mvp");
 	depthMapAlphaMask->AddUniform("base_color_factor");
 	depthMapAlphaMask->AddUniform("base_color_texcoord_index");

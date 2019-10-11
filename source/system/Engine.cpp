@@ -1,7 +1,6 @@
 #include "pch/pch.h"
 
 #include "system/Engine.h"
-#include "asset/loaders/XMLDocLoader.h"
 #include "asset/AssetManager.h"
 #include "world/World.h"
 #include "renderer/Renderer.h"
@@ -111,7 +110,6 @@ bool Engine::ShouldUpdateWorld()
 
 bool Engine::IsEditorActive()
 {
-	// TODO: in the future disable editor with this flag.
 	return Get().m_editor && Get().m_isEditorActive;
 }
 

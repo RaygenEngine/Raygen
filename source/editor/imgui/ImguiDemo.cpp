@@ -1,4 +1,4 @@
-// dear imgui, v1.73 WIP
+// dear imgui, v1.73
 // (demo code)
 
 // Message to the person tempted to delete this file when integrating Dear ImGui into their code base:
@@ -77,9 +77,9 @@ Index of this file:
 									// sscanf, fopen
 #endif
 #if defined(__clang__)
-#	pragma clang diagnostic                                                                                           \
-		ignored "-Wold-style-cast" // warning : use of old-style cast                              // yes, they are more
-								   // terse.
+#	pragma clang diagnostic ignored                                                                                   \
+		"-Wold-style-cast" // warning : use of old-style cast                              // yes, they are more
+						   // terse.
 #	pragma clang diagnostic ignored                                                                                   \
 		"-Wdeprecated-declarations" // warning : 'xx' is deprecated: The POSIX name for this item.. // for strdup used
 									// in demo code (so user can copy & paste the code)
@@ -655,7 +655,14 @@ static void ShowDemoWindowWidgets()
 			// Using the format string to display a name instead of an integer.
 			// Here we completely omit '%d' from the format string, so it'll only display a name.
 			// This technique can also be used with DragInt().
-			enum Element { Element_Fire, Element_Earth, Element_Air, Element_Water, Element_COUNT };
+			enum Element
+			{
+				Element_Fire,
+				Element_Earth,
+				Element_Air,
+				Element_Water,
+				Element_COUNT
+			};
 			const char* element_names[Element_COUNT] = { "Fire", "Earth", "Air", "Water" };
 			static int current_element = Element_Fire;
 			const char* current_element_name = (current_element >= 0 && current_element < Element_COUNT)
@@ -1748,7 +1755,12 @@ static void ShowDemoWindowWidgets()
 		{
 			ImGui::BulletText("Drag and drop to copy/swap items");
 			ImGui::Indent();
-			enum Mode { Mode_Copy, Mode_Move, Mode_Swap };
+			enum Mode
+			{
+				Mode_Copy,
+				Mode_Move,
+				Mode_Swap
+			};
 			static int mode = 0;
 			if (ImGui::RadioButton("Copy", mode == Mode_Copy)) {
 				mode = Mode_Copy;
@@ -4100,8 +4112,6 @@ struct ExampleAppConsole {
 			"This example implements a console with basic coloring, completion and history. A more elaborate "
 			"implementation may want to store entries along with extra data such as timestamp, emitter, etc.");
 		ImGui::TextWrapped("Enter 'HELP' for help, press TAB to use text completion.");
-
-		// TODO: display items starting from the bottom
 
 		if (ImGui::SmallButton("Add Dummy Text")) {
 			AddLog("%d some text", Items.Size);

@@ -144,7 +144,7 @@ bool SceneSave::SaveAsXML(World* world, const uri::Uri& path)
 	// else {
 	//	LOG_ERROR("Failed to open file for saving scene.");
 	//}
-	LOG_ASSERT("Implement me");
+	LOG_ABORT("Implement me");
 
 	return false;
 }

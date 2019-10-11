@@ -4,27 +4,6 @@
 #include <iterator>
 
 namespace smath {
-template<typename T>
-// TODO: remove with xml removals
-inline bool SplitStringIntoTArray(T* arr, int arrSize, const std::string& str, char delimiter)
-{
-	bool success = false;
-	std::stringstream ss(str);
-	T value;
-	auto i = 0;
-	while (ss >> value) {
-		success = i == (arrSize - 1);
-		if (i > arrSize - 1) {
-			break;
-		}
-
-		arr[i++] = value;
-		if (ss.peek() == delimiter) {
-			ss.ignore();
-		}
-	}
-	return success;
-}
 
 inline void LTrim(std::string& s)
 {

@@ -34,12 +34,12 @@
 				"+type": "WindowCamera",
 				"+name": "Resizeable Camera",
 				"focalLength": 1,
-				"fov": 61.69,
+				"fov": 61.69
 			}
 		]
 	},
 	{
-		"+type": "sKYcUBE",
+		"+type": "SkyBox",
 		"cubemap": "/import-data/skybox/alps.cubemap.json"
 	},
 	{

@@ -4,6 +4,7 @@
 // Generic Gpu Asset Manager
 //
 #include "asset/PodHandle.h"
+#include "asset/AssetManager.h"
 
 template<typename GpuAssetBaseType>
 class GenericGpuAssetManager {

@@ -68,6 +68,18 @@ class AssetManager {
 	}
 
 	template<typename T>
+	void TryLoad(T* into, const std::string& path)
+	{
+		bool loaded;
+		try {
+			loaded = T::Load(into, path);
+		} catch (std::exception& e) {
+			LOG_ABORT("Failed to load: {} {} Exception:\n{}", refl::GetName<T>(), path, e.what());
+		}
+		CLOG_ABORT(!loaded, "Failed to load: {} {}", refl::GetName<T>(), path);
+	}
+
+	template<typename T>
 	void LoadEntry(PodEntry* entry)
 	{
 		// If we have future data, use them directly.
@@ -75,12 +87,12 @@ class AssetManager {
 			entry->ptr.reset(entry->futureLoaded.get());
 			return;
 		}
+
 		T* ptr = new T();
-		bool loaded = T::Load(ptr, entry->path);
-		CLOG_ABORT(!loaded, "Failed to load: {} {}", entry->type.name(), entry->path);
+		TryLoad(ptr, entry->path);
+
 		entry->ptr.reset(ptr);
 	}
-
 
 	// Specialized in a few cases where instant loading or multithreaded loading is faster
 	template<typename T>
@@ -220,9 +232,9 @@ private:
 	template<>
 	void PostRegisterEntry<ImagePod>(PodEntry* entry)
 	{
-		entry->futureLoaded = std::async(std::launch::async, [entry]() -> AssetPod* {
+		entry->futureLoaded = std::async(std::launch::async, [&, entry]() -> AssetPod* {
 			ImagePod* ptr = new ImagePod();
-			ImagePod::Load(ptr, entry->path);
+			TryLoad(ptr, entry->path);
 			return ptr;
 		});
 	}
@@ -231,7 +243,7 @@ private:
 	void PostRegisterEntry<TexturePod>(PodEntry* entry)
 	{
 		TexturePod* pod = new TexturePod();
-		TexturePod::Load(pod, entry->path);
+		TryLoad(pod, entry->path);
 		entry->ptr.reset(pod);
 	}
 
@@ -239,16 +251,16 @@ private:
 	void PostRegisterEntry<ShaderPod>(PodEntry* entry)
 	{
 		ShaderPod* pod = new ShaderPod();
-		ShaderPod::Load(pod, entry->path);
+		TryLoad(pod, entry->path);
 		entry->ptr.reset(pod);
 	}
 
 	template<>
 	void PostRegisterEntry<StringPod>(PodEntry* entry)
 	{
-		entry->futureLoaded = std::async(std::launch::async, [entry]() -> AssetPod* {
+		entry->futureLoaded = std::async(std::launch::async, [&, entry]() -> AssetPod* {
 			StringPod* ptr = new StringPod();
-			StringPod::Load(ptr, entry->path);
+			TryLoad(ptr, entry->path);
 			return ptr;
 		});
 	}

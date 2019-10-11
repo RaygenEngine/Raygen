@@ -2,7 +2,6 @@
 
 #include "asset/AssetManager.h"
 #include "reflection/PodTools.h"
-#include "asset/loaders/GltfFileLoader.h"
 
 bool AssetManager::Init(const fs::path& assetPath)
 {

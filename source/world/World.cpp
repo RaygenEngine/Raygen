@@ -56,7 +56,7 @@ bool World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 	try {
 		m_nodeFactory->LoadChildren(scene->document, m_root.get());
 	} catch (std::exception* e) {
-		LOG_ASSERT("Exception: {}", e->what());
+		LOG_ABORT("Exception: {}", e->what());
 	}
 	m_root->m_dirty.set();
 
@@ -148,7 +148,7 @@ bool MaybeInsert(std::unordered_set<T*>& set, Node* node)
 
 void World::RegisterNode(Node* node, Node* parent)
 {
-	CLOG_ASSERT(node->m_parent, "Attempting to register a node that already has a parent.");
+	CLOG_ABORT(node->m_parent, "Attempting to register a node that already has a parent.");
 
 
 	node->m_parent = parent;

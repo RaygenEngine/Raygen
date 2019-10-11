@@ -6,7 +6,6 @@
 #include "world/nodes/light/PunctualLightNode.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "world/nodes/user/UserNode.h"
-#include "asset/loaders/XMLDocLoader.h"
 #include "asset/AssetManager.h"
 #include "system/Input.h"
 #include "world/nodes/light/DirectionalLightNode.h"
