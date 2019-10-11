@@ -27,7 +27,7 @@ static bool Load(TexturePod* pod, const uri::Uri& path)
 	// TODO: check image settings
 	// this should exist (missing is handled from within material)
 
-	CLOG_ASSERT(imageIndex == -1, "This model is unsafe to use, handle missing image from materialL: {}", path);
+	CLOG_ABORT(imageIndex == -1, "This model is unsafe to use, handle missing image from materialL: {}", path);
 
 	if (imageIndex != -1) {
 		auto& gltfImage = model.images.at(imageIndex);
@@ -48,11 +48,11 @@ static bool Load(TexturePod* pod, const uri::Uri& path)
 			AssetManager::SetPodName(path, gltfSampler.name);
 		}
 
-		pod->minFilter = GltfAux::GetTextureFiltering(gltfSampler.minFilter);
-		pod->magFilter = GltfAux::GetTextureFiltering(gltfSampler.magFilter);
-		pod->wrapS = GltfAux::GetTextureWrapping(gltfSampler.wrapS);
-		pod->wrapT = GltfAux::GetTextureWrapping(gltfSampler.wrapT);
-		pod->wrapR = GltfAux::GetTextureWrapping(gltfSampler.wrapR);
+		pod->minFilter = gltfaux::GetTextureFiltering(gltfSampler.minFilter);
+		pod->magFilter = gltfaux::GetTextureFiltering(gltfSampler.magFilter);
+		pod->wrapS = gltfaux::GetTextureWrapping(gltfSampler.wrapS);
+		pod->wrapT = gltfaux::GetTextureWrapping(gltfSampler.wrapT);
+		pod->wrapR = gltfaux::GetTextureWrapping(gltfSampler.wrapR);
 	}
 
 	// else keep default values

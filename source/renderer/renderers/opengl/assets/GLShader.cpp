@@ -5,7 +5,7 @@
 #include "asset/pods/StringPod.h"
 #include "asset/AssetPod.h"
 
-namespace OpenGL {
+namespace ogl {
 GLShader::~GLShader()
 {
 	glDeleteProgram(id);
@@ -91,4 +91,4 @@ void GLShader::AddUniform(const std::string& uniformName)
 {
 	uniformLocations.insert({ uniformName, glGetUniformLocation(id, uniformName.c_str()) });
 }
-} // namespace OpenGL
+} // namespace ogl

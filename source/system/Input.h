@@ -1,7 +1,8 @@
 #pragma once
 
-#include <unordered_set>
+#include "system/InputEnums.h"
 
+#include <unordered_set>
 
 class Input {
 public:
@@ -105,17 +106,11 @@ public:
 	[[nodiscard]] glm::vec2 GetLeftThumbDirection() const { return m_analogState.thumbL.direction; }
 	[[nodiscard]] glm::vec2 GetRightThumbDirection() const { return m_analogState.thumbR.direction; }
 
-	[[nodiscard]] bool IsLeftTriggerResting() const { return utl::EqualsZero(m_analogState.triggerL); }
-	[[nodiscard]] bool IsRightTriggerResting() const { return utl::EqualsZero(m_analogState.triggerR); }
+	[[nodiscard]] bool IsLeftTriggerResting() const { return math::EpsilonEqualsZero(m_analogState.triggerL); }
+	[[nodiscard]] bool IsRightTriggerResting() const { return math::EpsilonEqualsZero(m_analogState.triggerR); }
 
-	[[nodiscard]] bool IsLeftThumbResting() const { return utl::EqualsZero(m_analogState.thumbL.magnitude); }
-	[[nodiscard]] bool IsRightThumbResting() const { return utl::EqualsZero(m_analogState.thumbR.magnitude); }
-
-	[[nodiscard]] bool IsLeftTriggerMoving() const { return !utl::EqualsZero(m_analogState.triggerL); }
-	[[nodiscard]] bool IsRightTriggerMoving() const { return !utl::EqualsZero(m_analogState.triggerR); }
-
-	[[nodiscard]] bool IsLeftThumbMoving() const { return !utl::EqualsZero(m_analogState.thumbL.magnitude); }
-	[[nodiscard]] bool IsRightThumbMoving() const { return !utl::EqualsZero(m_analogState.thumbR.magnitude); }
+	[[nodiscard]] bool IsLeftThumbResting() const { return math::EpsilonEqualsZero(m_analogState.thumbL.magnitude); }
+	[[nodiscard]] bool IsRightThumbResting() const { return math::EpsilonEqualsZero(m_analogState.thumbR.magnitude); }
 
 	void ClearSoftState();
 };

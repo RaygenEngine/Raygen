@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/reflection/TypeId.h"
+#include "reflection/TypeId.h"
 
 namespace uri {
 using Uri = std::string;

@@ -4,14 +4,14 @@
 #include "system/Engine.h"
 #include "renderer/GenericGpuAssetManager.h"
 
-namespace OpenGL {
+namespace ogl {
 struct GLAssetBase;
 
-using GLAssetManager = GenericGpuAssetManager<OpenGL::GLAssetBase>;
-} // namespace OpenGL
+using GLAssetManager = GenericGpuAssetManager<ogl::GLAssetBase>;
+} // namespace ogl
 
 
-namespace OpenGL {
+namespace ogl {
 class GLRendererBase : public ObserverRenderer {
 	HWND m_assochWnd{};
 	HDC m_hdc{};
@@ -44,4 +44,4 @@ template<typename GlRenderer>
 	static_assert(std::is_base_of_v<GLRendererBase, GlRenderer>, "This call expects a Gl Renderer Object.");
 	return Engine::GetRenderer(glRendererObjectContext)->GetGLAssetManager();
 }
-} // namespace OpenGL
+} // namespace ogl

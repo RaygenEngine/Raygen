@@ -1,6 +1,4 @@
 #pragma once
-#include "system/EngineComponent.h"
-#include "event/Event.h"
 
 // Base class for a platform independant window
 class Window {

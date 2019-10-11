@@ -2,10 +2,10 @@
 
 #include "platform/windows/Win32Window.h"
 #include "platform/windows/TranslateWin32VirtualKeys.h"
-#include "world/World.h"
-#include "system/Engine.h"
+#include "system/Input.h"
+#include "system/EngineEvents.h"
 #include "editor/imgui/ImguiImpl.h"
-#include "renderer/Renderer.h"
+
 #include <windowsx.h>
 
 Win32Window::Win32Window()

@@ -9,7 +9,7 @@
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
 
 
-namespace OpenGL {
+namespace ogl {
 struct GLBasicSkybox;
 
 class GLForwardRenderer : public GLEditorRenderer {
@@ -19,6 +19,7 @@ protected:
 	GLShader* m_testShader{ nullptr };
 	GLShader* m_simpleOutShader{ nullptr };
 	GLShader* m_linearizeOutShader{ nullptr };
+	GLShader* m_bBoxShader{ nullptr };
 	bool m_isOutNonLinear{ false };
 
 	// entities
@@ -38,11 +39,14 @@ protected:
 	GLuint m_outFbo{ 0 };
 	GLuint m_outColorTexture{ 0 };
 
-	int32 m_previewMode{ 0 };
+	// bounding boxes
+	GLuint m_bbVao;
+	GLuint m_bbVbo;
 
 	void RenderDirectionalLights();
 	void RenderSpotLights();
 	void RenderGeometries();
+	void RenderBoundingBoxes();
 	void RenderSkybox();
 	void RenderPostProcess();
 	void RenderWindowSimple();
@@ -51,8 +55,6 @@ protected:
 	GLuint m_currentTexture{};
 
 public:
-	std::string m_previewModeString{};
-
 	~GLForwardRenderer();
 
 	bool InitScene() override;
@@ -70,4 +72,4 @@ public:
 		}
 	}
 };
-} // namespace OpenGL
+} // namespace ogl

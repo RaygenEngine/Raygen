@@ -1,16 +1,16 @@
 #include "pch/pch.h"
-#include "imgui/imgui.h"
+
 #include "editor/AssetWindow.h"
 #include "system/Engine.h"
 #include "asset/AssetManager.h"
-#include "core/reflection/ReflectionTools.h"
-#include "editor/imgui/ImguiExtensions.h"
-#include "core/reflection/PodTools.h"
+#include "reflection/ReflectionTools.h"
+#include "reflection/PodTools.h"
 
+#include <imgui/imgui.h>
 
 void AssetWindow::Init()
 {
-	Timer::DebugTimer<std::chrono::milliseconds> timer(true);
+	timer::DebugTimer<std::chrono::milliseconds> timer(true);
 
 	for (const auto& entry : fs::recursive_directory_iterator(fs::current_path())) {
 		if (entry.is_directory()) {

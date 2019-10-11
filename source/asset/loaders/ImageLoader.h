@@ -1,9 +1,9 @@
 #pragma once
 
 #include "asset/pods/ImagePod.h"
-
-#include "stb_image/stb_image.h"
 #include "asset/UriLibrary.h"
+
+#include <stb_image/stb_image.h>
 
 namespace ImageLoader {
 inline bool Load(ImagePod* pod, const uri::Uri& path)

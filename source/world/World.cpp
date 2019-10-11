@@ -4,9 +4,8 @@
 #include "system/Engine.h"
 #include "world/NodeFactory.h"
 #include "editor/Editor.h"
-#include "core/reflection/ReflectionTools.h"
-#include "core/reflection/GetClass.h"
-#include "world/nodes/Node.h"
+#include "reflection/ReflectionTools.h"
+#include "reflection/GetClass.h"
 
 World::World(NodeFactory* factory)
 	: m_nodeFactory(factory)
@@ -63,6 +62,7 @@ bool World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 
 	DirtyUpdateWorld();
 	LOG_INFO("World loaded succesfully");
+	m_root->m_dirty.reset();
 	return true;
 }
 

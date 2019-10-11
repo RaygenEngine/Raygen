@@ -3,7 +3,7 @@
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
 
-namespace OpenGL {
+namespace ogl {
 GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 	: NodeObserver<SpotLightNode, GLRendererBase>(node)
 {
@@ -86,8 +86,6 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 					glActiveTexture(GL_TEXTURE0);
 					glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
 					break;
-
-				case AM_INVALID: abort();
 			}
 
 			glUniformMatrix4fv(gBufferShader->GetUniform("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
@@ -118,4 +116,4 @@ void GLBasicSpotLight::DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset)
 		lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 	}
 }
-} // namespace OpenGL
+} // namespace ogl

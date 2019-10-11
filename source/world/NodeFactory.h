@@ -3,7 +3,7 @@
 #include "nodes/Node.h"
 #include <functional>
 #include <unordered_map>
-#include "nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 namespace detail {
 constexpr std::string_view filter = "Node";

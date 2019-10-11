@@ -1,7 +1,6 @@
 #pragma once
 
 #include "asset/pods/XMLDocPod.h"
-
 #include "asset/UriLibrary.h"
 
 namespace JsonDocLoader {

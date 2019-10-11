@@ -2,7 +2,7 @@
 
 #include <windows.h>
 
-// Provides an abstraction over the specific Win32 + OpenGL imgui implementation
+// Provides an abstraction over the specific Win32 + ogl imgui implementation
 class ImguiImpl {
 public:
 	static void InitContext();

@@ -1,6 +1,8 @@
 #pragma once
+
 #include <set>
 #include <map>
+
 struct PodEntry;
 
 class AssetWindow {
