@@ -7,11 +7,6 @@
 #include "system/Input.h"
 #include "world/nodes/RootNode.h"
 
-FreeformUserNode::FreeformUserNode(Node* parent)
-	: UserNode(parent)
-{
-}
-
 void FreeformUserNode::Update(float deltaTime)
 {
 	auto& input = *Engine::GetInput();

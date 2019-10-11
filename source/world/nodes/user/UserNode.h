@@ -12,10 +12,4 @@ class UserNode : public Node {
 protected:
 	float m_movementSpeed{ 10.0f };
 	float m_turningSpeed{ 0.7f };
-
-public:
-	UserNode(Node* parent)
-		: Node(parent)
-	{
-	}
 };

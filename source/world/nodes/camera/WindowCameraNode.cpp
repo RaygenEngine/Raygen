@@ -3,8 +3,8 @@
 #include "world/nodes/camera/WindowCameraNode.h"
 #include "platform/windows/Win32Window.h"
 
-WindowCameraNode::WindowCameraNode(Node* parent)
-	: CameraNode(parent)
+WindowCameraNode::WindowCameraNode()
+	: CameraNode()
 {
 	m_resizeListener.BindMember(this, &WindowCameraNode::WindowResize);
 }

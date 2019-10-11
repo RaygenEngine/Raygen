@@ -9,10 +9,5 @@ class GeometryNode : public Node {
 	PodHandle<ModelPod> m_model;
 
 public:
-	GeometryNode(Node* parent)
-		: Node(parent)
-	{
-	}
-
 	[[nodiscard]] PodHandle<ModelPod> GetModel() const { return m_model; }
 };

@@ -11,10 +11,5 @@ class SkyHDRNode : public Node {
 	PodHandle<TexturePod> m_hdr;
 
 public:
-	SkyHDRNode(Node* parent)
-		: Node(parent)
-	{
-	}
-
 	[[nodiscard]] PodHandle<TexturePod> GetSkyHDR() const { return m_hdr; }
 };

@@ -34,15 +34,20 @@ public:                                                                         
 		static ReflClass cl = ReflClass::Generate<Class, Parent>();                                                    \
 		return cl;                                                                                                     \
 	}                                                                                                                  \
+                                                                                                                       \
 	__VA_ARGS__;                                                                                                       \
                                                                                                                        \
 private:                                                                                                               \
 	using Z_ThisType = Class;                                                                                          \
 	friend class ReflClass;                                                                                            \
+	friend class NodeFactory;                                                                                          \
+	[[nodiscard]] static Node* NewInstance() { return new Class(); }                                                   \
 	static void GenerateReflection(ReflClass& refl)
+
 
 #define REFLECT_VAR(Variable, ...)                                                                                     \
 	refl.AddProperty<decltype(Variable)>(offsetof(Z_ThisType, Variable), #Variable, PropertyFlags::Pack(__VA_ARGS__))
+
 
 #define REFL_EQUALS_PROPERTY(PropertyRef, Variable)                                                                    \
 	((PropertyRef).GetName() == ReflClass::RemoveVariablePrefix(#Variable) && (&(Variable)))

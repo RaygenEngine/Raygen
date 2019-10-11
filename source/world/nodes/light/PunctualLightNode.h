@@ -9,10 +9,4 @@ class PunctualLightNode : public Node {
 	float m_intensity{ 10.f };
 
 	bool m_hasShadow{ true };
-
-public:
-	PunctualLightNode(Node* parent)
-		: Node(parent)
-	{
-	}
 };

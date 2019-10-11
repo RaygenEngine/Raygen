@@ -39,11 +39,6 @@ protected:
 	void RecalculateProjectionFov();
 
 public:
-	CameraNode(Node* parent)
-		: Node(parent)
-	{
-	}
-
 	[[nodiscard]] glm::vec3 GetLookAt() const override { return GetWorldTranslation() + GetFront() * m_focalLength; }
 
 	[[nodiscard]] float GetVerticalFov() const { return m_vFov; }

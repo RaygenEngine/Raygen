@@ -62,5 +62,12 @@ public:
 	void Update() override;
 
 	void RecompileShaders();
+
+	virtual void OnNodeAddedToWorld(Node* node)
+	{
+		if (dynamic_cast<GeometryNode*>(node)) {
+			CreateObserver_AutoContained<GLBasicGeometry>(dynamic_cast<GeometryNode*>(node), m_glGeometries);
+		}
+	}
 };
 } // namespace OpenGL
