@@ -56,10 +56,10 @@
 	   <!-- intensity="10" -->
 	   <!-- lookat="0, 0, -25"/> -->
 	
-	<geometry name="sponza" 
-		translation="0.0, 0.0, -25.0"
-		scale="1, 1, 1" 
-		model="/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf"/> 
+	<!-- <geometry name="sponza"  -->
+		<!-- translation="0.0, 0.0, -25.0" -->
+		<!-- scale="1, 1, 1"  -->
+		<!-- model="/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf"/>  -->
 		
 
 

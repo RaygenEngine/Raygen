@@ -3,6 +3,7 @@
 #include "core/Types.h"
 
 #include "core/CoreEnums.h"
+#include "core/CoreStructs.h"
 
 // event
 #include "core/Event.h"

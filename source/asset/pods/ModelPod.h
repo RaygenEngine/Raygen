@@ -22,15 +22,6 @@ enum class GeometryUsage
 	STREAM
 };
 
-struct VertexData {
-	glm::vec3 position{};
-	glm::vec3 normal{};
-	glm::vec4 tangent{};
-	glm::vec3 bitangent{};
-	glm::vec2 textCoord0{};
-	glm::vec2 textCoord1{};
-};
-
 struct GeometryGroup {
 	std::vector<uint32> indices{};
 	std::vector<VertexData> vertices{};
@@ -50,6 +41,8 @@ struct ModelPod : public AssetPod {
 	static bool Load(ModelPod* pod, const uri::Uri& path);
 
 	std::vector<Mesh> meshes{};
+
+	Box bbox;
 
 	std::vector<PodHandle<MaterialPod>> materials{};
 };
