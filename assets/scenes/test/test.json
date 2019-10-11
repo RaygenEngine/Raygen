@@ -1,0 +1,54 @@
+[
+	{
+		"+type": "Geometry",
+		"model": "/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf"
+	},
+	{
+		"+type": "FreeformUser",
+		"+trs": {
+			"pos": {
+				"x": 0,
+				"y": 15,
+				"z": 30
+			},
+			"lookat": {
+				"z": -5
+			}
+		},
+		"~children": [
+			{
+				"+type": "Spotlight",
+				"+name": "UserSpotlight",
+				"+trs": {
+					"pos": {
+						"y": 10
+					}
+				},
+				"color": {
+					"r": 0.94,
+					"g": 0.85,
+					"b": 0.64
+				}
+			},
+			{
+				"+type": "WindowCamera",
+				"+name": "Resizeable Camera",
+				"focalLength": 1,
+				"fov": 61.69,
+			}
+		]
+	},
+	{
+		"+type": "sKYcUBE",
+		"cubemap": "/import-data/skybox/alps.cubemap.json"
+	},
+	{
+		"+type": "Directionallight",
+		"+name": "DummyLight",
+		"+trs": {
+			"pos": {
+				"y": 10
+			}
+		}
+	}
+]

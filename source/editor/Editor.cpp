@@ -5,7 +5,6 @@
 #include "system/Engine.h"
 #include "editor/imgui/ImguiExtensions.h"
 #include "editor/imgui/ImguiImpl.h"
-#include "tinyxml2/tinyxml2.h"
 #include "imgui_ext/imfilebrowser.h"
 #include "platform/windows/Win32Window.h"
 #include "system/EngineEvents.h"

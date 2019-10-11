@@ -44,20 +44,23 @@ Node* World::GetNodeByName(const std::string& name) const
 	return nullptr;
 }
 
-bool World::LoadAndPrepareWorldFromXML(PodHandle<XMLDocPod> sceneXML)
+bool World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 {
-	LOG_INFO("Loading World from XML: \'{}\'", AssetManager::GetPodUri(sceneXML));
-	m_loadedFrom = sceneXML;
+	TIMER_STATIC_SCOPE("Json Load");
+	LOG_INFO("Loading World file: \'{}\'", AssetManager::GetPodUri(scene));
 
-	auto* rootNode = sceneXML->document.RootElement();
-
+	AssetManager::Reload(scene);
+	m_loadedFrom = scene;
 
 	m_root = std::make_unique<RootNode>();
 
-	if (!m_root->LoadFromXML(rootNode)) {
-		LOG_FATAL("Incorrect world format!");
-		return false;
+	try {
+		m_nodeFactory->LoadChildren(scene->document, m_root.get());
+	} catch (std::exception* e) {
+		LOG_ASSERT("Exception: {}", e->what());
 	}
+	m_root->m_dirty.set();
+
 	DirtyUpdateWorld();
 	LOG_INFO("World loaded succesfully");
 	return true;
@@ -145,7 +148,8 @@ bool MaybeInsert(std::unordered_set<T*>& set, Node* node)
 
 void World::RegisterNode(Node* node, Node* parent)
 {
-	CLOG_ASSERT(!parent, "Attempting to register a node that already has a parent.");
+	CLOG_ASSERT(node->m_parent, "Attempting to register a node that already has a parent.");
+
 
 	node->m_parent = parent;
 	m_nodes.insert(node);

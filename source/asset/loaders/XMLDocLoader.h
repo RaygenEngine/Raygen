@@ -2,12 +2,19 @@
 
 #include "asset/pods/XMLDocPod.h"
 
-#include "tinyxml2/tinyxml2.h"
 #include "asset/UriLibrary.h"
 
-namespace XMLDocLoader {
-inline bool Load(XMLDocPod* pod, const uri::Uri& path)
+namespace JsonDocLoader {
+inline bool Load(JsonDocPod* pod, const uri::Uri& path)
 {
-	return pod->document.LoadFile(uri::ToSystemPath(path)) == tinyxml2::XML_SUCCESS;
+	using nlohmann::json;
+	std::ifstream file(uri::ToSystemPath(path));
+
+	if (!file.is_open()) {
+		LOG_ERROR("Failed to open file at: {}", path);
+		return false;
+	}
+	file >> pod->document;
+	return true;
 }
-}; // namespace XMLDocLoader
+}; // namespace JsonDocLoader

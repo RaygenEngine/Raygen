@@ -11,7 +11,7 @@
 AppBase::AppBase()
 {
 	m_name = "Default Engine";
-	m_initialScene = "/scenes/test/test.xscn";
+	m_initialScene = "/scenes/test/test.json";
 	m_assetPath = "assets";
 
 	m_windowTitle = "Rayxen";

@@ -1,9 +1,8 @@
 #pragma once
 
-#include "tinyxml2/tinyxml2.h"
 #include <string>
 
-namespace ParsingAux {
+namespace ParsingAux { /*
 inline bool AttributeExists(const tinyxml2::XMLElement* xmlElement, const char* attribute)
 {
 	return xmlElement->FindAttribute(attribute);
@@ -80,5 +79,5 @@ std::string FloatsToString(T floats)
 		ss << floats[i];
 	}
 	return ss.str();
-}
+}*/
 } // namespace ParsingAux

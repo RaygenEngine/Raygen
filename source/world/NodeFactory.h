@@ -1,9 +1,9 @@
 #pragma once
 
 #include "nodes/Node.h"
-#include "tinyxml2/tinyxml2.h"
 #include <functional>
 #include <unordered_map>
+#include "nlohmann/json.hpp"
 
 namespace detail {
 constexpr std::string_view filter = "Node";
@@ -52,10 +52,18 @@ protected:
 
 	Node* NewNodeFromType(const std::string& type);
 
+
 public:
 	NodeFactory() { RegisterNodes(); }
 	// Loads all nodes from the xml code as children to 'parentNode'.
-	void LoadChildrenXML(const tinyxml2::XMLElement* xmlData, Node* parentNode);
+	void LoadNodeAndChildren(const nlohmann::json& jsonData, Node* parentNode);
+
+	void LoadChildren(const nlohmann::json& jsonArray, Node* parent);
 
 	virtual void RegisterNodes();
+
+private:
+	// Utility helpers for loading
+	void LoadNode_Trs(const nlohmann::json& jsonTrsObject, Node* nodeToLoadInto);
+	void LoadNode_Properties(const nlohmann::json& j, Node* node);
 };
