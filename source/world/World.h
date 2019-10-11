@@ -32,7 +32,7 @@ class World : public Object {
 
 	NodeFactory* m_nodeFactory;
 	std::unique_ptr<RootNode> m_root;
-	PodHandle<XMLDocPod> m_loadedFrom;
+	PodHandle<JsonDocPod> m_loadedFrom;
 
 	CameraNode* m_activeCamera{ nullptr };
 
@@ -146,16 +146,16 @@ public:
 	std::vector<Node*> GetNodesByName(const std::string& name) const;
 	Node* GetNodeByName(const std::string& name) const;
 
-	CameraNode* GetActiveCamera() const { return m_activeCamera; }
+	[[nodiscard]] CameraNode* GetActiveCamera() const { return m_activeCamera; }
 
 	void Update();
 	// void WindowResize(int32 width, int32 height) override;
 
-	bool LoadAndPrepareWorldFromXML(PodHandle<XMLDocPod> sceneXML);
+	bool LoadAndPrepareWorld(PodHandle<JsonDocPod> scenePod);
 
-	NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
+	[[nodiscard]] NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
 
-	PodHandle<XMLDocPod> GetLoadedFromHandle() { return m_loadedFrom; }
+	[[nodiscard]] PodHandle<JsonDocPod> GetLoadedFromHandle() const { return m_loadedFrom; }
 
 	void DirtyUpdateWorld();
 	void ClearDirtyFlags();

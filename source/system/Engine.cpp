@@ -55,9 +55,8 @@ bool Engine::CreateWorldFromFile(const std::string& filename)
 	}
 	m_world = new World(m_app->MakeNodeFactory());
 
-	auto sceneXML = AssetManager::GetOrCreate<XMLDocPod>(filename);
-	AssetManager::Reload(sceneXML);
-	return m_world->LoadAndPrepareWorldFromXML(sceneXML);
+	auto json = AssetManager::GetOrCreate<JsonDocPod>(filename);
+	return m_world->LoadAndPrepareWorld(json);
 }
 
 void Engine::SwitchRenderer(uint32 registrationIndex)

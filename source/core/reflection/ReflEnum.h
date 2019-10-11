@@ -159,7 +159,7 @@ public:
 	}
 
 	// Attempts to set the value by the string that matches the enum.
-	void SetValueByStr(std::string str) const
+	void SetValueByStr(const std::string& str) const
 	{
 		auto it = meta.strToValue.find(str);
 		if (it == meta.strToValue.end()) {

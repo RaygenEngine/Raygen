@@ -76,7 +76,7 @@ bool TexturePod::Load(TexturePod* pod, const uri::Uri& path)
 	return CustomLoader::Load(pod, path);
 }
 
-bool XMLDocPod::Load(XMLDocPod* pod, const uri::Uri& path)
+bool JsonDocPod::Load(JsonDocPod* pod, const uri::Uri& path)
 {
-	return XMLDocLoader::Load(pod, path);
+	return JsonDocLoader::Load(pod, path);
 }

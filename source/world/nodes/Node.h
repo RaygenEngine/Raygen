@@ -2,7 +2,6 @@
 
 
 #include "core/reflection/GenMacros.h" // include gen macros here even if not needed to propagate to all node headers
-#include "tinyxml2/tinyxml2.h"
 #include "system/Object.h"
 #include "system/Engine.h"
 
@@ -146,9 +145,6 @@ public:
 	//
 	// LOADING
 	//
-	bool LoadFromXML(const tinyxml2::XMLElement* xmlData);
-
-	void LoadReflectedProperties(const tinyxml2::XMLElement* xmlData);
 
 	virtual void PropertyUpdatedFromEditor(
 		const Property& prop){}; // the m_dirtyBitset Property is set directly through the editor before this call.

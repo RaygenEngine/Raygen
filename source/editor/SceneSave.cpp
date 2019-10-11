@@ -2,7 +2,6 @@
 #include "editor/SceneSave.h"
 #include "imgui/imgui.h"
 #include "system/Engine.h"
-#include "tinyxml2/tinyxml2.h"
 #include "world/nodes/Node.h"
 #include "world/World.h"
 #include "core/reflection/ReflectionTools.h"
@@ -37,7 +36,7 @@ void SceneSave::Draw()
 		SaveAsXML(Engine::GetWorld(), file.string());
 	}
 }
-
+/*
 namespace {
 
 struct GenerateXMLVisitor {
@@ -107,42 +106,42 @@ tinyxml2::XMLElement* GenerateNodeXML(Node* node, tinyxml2::XMLDocument& documen
 	return xmlElem;
 }
 } // namespace
-
+*/
 bool SceneSave::SaveAsXML(World* world, const uri::Uri& path)
 {
-	using namespace tinyxml2;
-	XMLDocument xmlDoc;
+	// using namespace tinyxml2;
+	// XMLDocument xmlDoc;
 
-	std::unordered_map<Node*, XMLElement*> nodeXmlElements;
+	// std::unordered_map<Node*, XMLElement*> nodeXmlElements;
 
-	auto root = Engine::GetWorld()->GetRoot();
-	auto rootXml = GenerateNodeXML(root, xmlDoc);
-	xmlDoc.InsertFirstChild(rootXml);
+	// auto root = Engine::GetWorld()->GetRoot();
+	// auto rootXml = GenerateNodeXML(root, xmlDoc);
+	// xmlDoc.InsertFirstChild(rootXml);
 
-	nodeXmlElements.insert({ root, rootXml });
+	// nodeXmlElements.insert({ root, rootXml });
 
 
-	RecurseNodes(root, [&](Node* node, auto) {
-		if (node == root) {
-			return;
-		}
+	// RecurseNodes(root, [&](Node* node, auto) {
+	//	if (node == root) {
+	//		return;
+	//	}
 
-		auto xmlElem = GenerateNodeXML(node, xmlDoc);
-		nodeXmlElements.insert({ node, xmlElem });
+	//	auto xmlElem = GenerateNodeXML(node, xmlDoc);
+	//	nodeXmlElements.insert({ node, xmlElem });
 
-		Node* parent = node->GetParent();
-		nodeXmlElements[parent]->InsertEndChild(xmlElem);
-	});
+	//	Node* parent = node->GetParent();
+	//	nodeXmlElements[parent]->InsertEndChild(xmlElem);
+	//});
 
-	FILE* fp;
-	if (fopen_s(&fp, path.c_str(), "w") == 0) {
-		xmlDoc.SaveFile(fp);
-		fclose(fp);
-	}
-	else {
-		LOG_ERROR("Failed to open file for saving scene.");
-	}
-
+	// FILE* fp;
+	// if (fopen_s(&fp, path.c_str(), "w") == 0) {
+	//	xmlDoc.SaveFile(fp);
+	//	fclose(fp);
+	//}
+	// else {
+	//	LOG_ERROR("Failed to open file for saving scene.");
+	//}
+	LOG_ASSERT("Implement me");
 
 	return false;
 }
