@@ -56,40 +56,8 @@ void Node::MarkMatrixChanged()
 	}
 }
 
-void Transform(Box& box, const glm::mat4& M)
-{
-	float a, b;
-
-	// Copy box A into min and max array.
-	auto AMin = box.min;
-	auto AMax = box.max;
-
-	// Begin at T.
-	box.max = glm::vec3(M[3]);
-	box.min = glm::vec3(M[3]);
-
-	// Find extreme points by considering product of
-	// min and max with each component of M.
-	for (auto j = 0; j < 3; ++j) {
-		for (auto i = 0; i < 3; ++i) {
-			auto a = M[i][j] * AMin[j];
-			auto b = M[i][j] * AMax[j];
-
-			if (a < b) {
-				box.min[j] += a;
-				box.max[j] += b;
-			}
-			else {
-				box.min[j] += b;
-				box.max[j] += a;
-			}
-		}
-	}
-}
-
 void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 {
-
 	if (m_dirty[DF::TRS]) {
 
 		LOG_REPORT("dirty {}", this->GetName());
@@ -101,55 +69,21 @@ void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 		glm::vec4 persp;
 		glm::decompose(m_worldMatrix, m_worldScale, m_worldOrientation, m_worldTranslation, skew, persp);
 
-		m_obb = GetBBox();
+		auto localBbox = GetBBox();
 
-		// m_obb.max = m_worldMatrix * glm::vec4(localBbox.max, 1.f);
-		// m_obb.min = m_worldMatrix * glm::vec4(localBbox.min, 1.f);
-
-
-		// TODO: rotated flag
-		// apply scaling
-		m_aabb.max = m_obb.max * m_worldScale;
-		m_aabb.min = m_obb.min * m_worldScale;
-		// m_aabb.max = localBbox.max * m_worldScale;
-		// m_aabb.min = localBbox.min * m_worldScale;
-
-		// apply translation
-		m_aabb.max += m_obb.max + m_worldTranslation;
-		m_aabb.min += m_obb.min + m_worldTranslation;
-		// m_aabb.max = localBbox.max + m_worldTranslation;
-		// m_aabb.min = localBbox.min + m_worldTranslation;
-		//
-
-		/*std::vector<glm::vec3> v;
-
-		v.push_back(m_worldMatrix * glm::vec4{ m_obb.min.x, m_obb.min.y, m_obb.min.z, 1.f });
-		v.push_back(m_worldMatrix * glm::vec4{ m_obb.max.x, m_obb.min.y, m_obb.min.z, 1.f });
-		v.push_back(m_worldMatrix * glm::vec4{ m_obb.max.x, m_obb.max.y, m_obb.min.z, 1.f });
-		v.push_back(m_worldMatrix * glm::vec4{ m_obb.min.x, m_obb.max.y, m_obb.min.z, 1.f });
-		v.push_back(m_worldMatrix * glm::vec4{ m_obb.min.x, m_obb.min.y, m_obb.max.z, 1.f });
-		v.push_back(m_worldMatrix * glm::vec4{ m_obb.max.x, m_obb.min.y, m_obb.max.z, 1.f });
-		v.push_back(m_worldMatrix * glm::vec4{ m_obb.max.x, m_obb.max.y, m_obb.max.z, 1.f });
-		v.push_back(m_worldMatrix * glm::vec4{ m_obb.min.x, m_obb.max.y, m_obb.max.z, 1.f });
-
-		m_aabb = { v[0], v[0] };
-
-		for (auto p : v) {
-			m_aabb.max = glm::max(m_aabb.max, p);
-			m_aabb.min = glm::min(m_aabb.min, p);
-		}*/
+		m_obb.max = m_worldMatrix * glm::vec4(localBbox.max, 1.f);
+		m_obb.min = m_worldMatrix * glm::vec4(localBbox.min, 1.f);
 
 		// calculate sphere
 
 		// TODO: rotated flag
 		// apply scaling
-		// m_aabb.max = localBbox.max * m_worldScale;
-		// m_aabb.min = localBbox.min * m_worldScale;
+		m_aabb.max = localBbox.max * m_worldScale;
+		m_aabb.min = localBbox.min * m_worldScale;
 
 		// apply translation
-		// m_aabb.max = localBbox.max + m_worldTranslation;
-		// m_aabb.min = localBbox.min + m_worldTranslation;
-		//
+		m_aabb.max = localBbox.max + m_worldTranslation;
+		m_aabb.min = localBbox.min + m_worldTranslation;
 	}
 
 	for (auto& uPtr : m_children) {

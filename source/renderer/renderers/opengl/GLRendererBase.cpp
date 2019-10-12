@@ -25,6 +25,9 @@ void GLRendererBase::ChangeVSync(bool enabled)
 }
 
 GLRendererBase::GLRendererBase()
+	: m_assochWnd(nullptr)
+	, m_hdc(nullptr)
+	, m_hglrc(nullptr)
 {
 	m_glAssetManager = std::make_unique<GLAssetManager>();
 }

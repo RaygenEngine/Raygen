@@ -1,7 +1,8 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "renderer/Renderer.h"
+#include <functional>
+class Renderer;
 
 template<typename RendererT>
 struct RendererObject {
@@ -31,9 +32,12 @@ struct NodeObserver
 	using RendererType = RendererTypeT;
 	NodeType* node;
 
+public:
 	NodeObserver(NodeType* node)
 		: NodeObserverBase(node)
 		, node(node)
 	{
 	}
+
+	virtual void DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset) = 0;
 };
