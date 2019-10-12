@@ -4,23 +4,16 @@ out vec4 out_color;
   
 in Data
 { 
-// WIP: currently world space
-	vec3 tangent_pos;
+	vec3 tangent_frag_pos;
 	vec3 tangent_view_pos;
 	vec3 tangent_light_pos;
 	
 	vec2 text_coord[2];
 	
-	// WIP: tangent space only calcs in fragment shader
-	mat3 TBN;
-	
-	// WIP: check what to do with this one
-	vec4 light_fragpos;
+	vec4 light_frag_pos;
 } dataIn;
 
-uniform vec3 view_pos;
 
-uniform vec3 light_pos;
 uniform vec3 light_color;
 uniform float light_intensity;
 uniform float light_near;
@@ -33,6 +26,8 @@ uniform float metallic_factor;
 uniform float roughness_factor;
 uniform float normal_scale;
 uniform float occlusion_strength;
+uniform float alpha_cutoff;
+uniform bool mask;
 
 uniform int base_color_texcoord_index;
 uniform int metallic_roughness_texcoord_index;
@@ -128,6 +123,12 @@ void main()
 {
 	// sample material textures
 	vec4 sampled_base_color = texture(baseColorSampler, dataIn.text_coord[base_color_texcoord_index]);
+	
+	float opacity = sampled_base_color.a * base_color_factor.a;
+	// mask mode and cutoff
+	if(mask && opacity < alpha_cutoff)
+		discard;
+	
 	vec4 sampled_metallic_roughness = texture(metallicRoughnessSampler, dataIn.text_coord[metallic_roughness_texcoord_index]);
 	vec4 sampled_emissive = texture(emissiveSampler, dataIn.text_coord[emissive_texcoord_index]);
 	vec4 sampled_sample_normal = texture(normalSampler, dataIn.text_coord[normal_texcoord_index]);
@@ -135,26 +136,20 @@ void main()
 	
 	// final material values
 	vec3 albedo = sampled_base_color.rgb * base_color_factor.rgb;
-	float opacity = sampled_base_color.a * base_color_factor.a;
 	float metallic = sampled_metallic_roughness.b * metallic_factor;
 	float roughness = sampled_metallic_roughness.g * roughness_factor;
 	vec3 emissive = sampled_emissive.rgb * emissive_factor;
 	float occlusion = sampled_occlusion.r;
 	vec3 normal = sampled_sample_normal.rgb;
 
-	// mask mode and cutoff, TODO: handle other modes as well
-	//if(alpha_mode == 1 && opacity < alpha_cutoff)
-	//	discard;
-		
-	// vectors
-
-	// TODO: all calculations in tangent space
-	vec3 N = normalize((normal.rgb * 2.0 - 1.0) * vec3(normal_scale, normal_scale, 1.0));
-	N = normalize(dataIn.TBN * N);
-	vec3 V = normalize(view_pos - dataIn.tangent_pos);
+	// note: don't forget this is a normal map, normals are in tangent space
+	// all calculations are in tangent space
+	vec3 N = normalize((normal * 2.0 - 1.0) * vec3(normal_scale, normal_scale, 1.0));
+	
+	vec3 V = normalize(dataIn.tangent_view_pos - dataIn.tangent_frag_pos);
 	
 	// loop lights
-	vec3 L = normalize(light_pos - dataIn.tangent_pos); 
+	vec3 L = normalize(dataIn.tangent_light_pos - dataIn.tangent_frag_pos); 
 	vec3 H = normalize(V + L);
 
 	vec3 F0 = vec3(0.04); 
@@ -174,9 +169,9 @@ void main()
 	kD *= 1.0 - metallic;
 	
 	// light stuff
-	float distance = length(light_pos - dataIn.tangent_pos);
+	float distance = length(dataIn.tangent_light_pos - dataIn.tangent_frag_pos);
 	float attenuation = 1.0 / (distance);
-	float shadow = ShadowCalculation(dataIn.light_fragpos, N, L); 
+	float shadow = ShadowCalculation(dataIn.light_frag_pos, N, L); 
 	vec3 radiance = ((1.0 - shadow) * light_color * light_intensity * attenuation) + ambient; 
 	
 	vec3 Lo = (kD * albedo / PI + specular) * radiance * max(dot(N, L), 0.0);

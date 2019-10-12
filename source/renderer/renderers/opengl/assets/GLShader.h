@@ -17,9 +17,17 @@ struct GLShader : GLAsset<ShaderPod> {
 
 	~GLShader() override;
 
-	[[nodiscard]] GLint GetUniform(const std::string& uniformName) const;
 	void AddUniform(const std::string& uniformName);
 	bool Load() override;
+
+	void UploadInt(const std::string& uniformName, int i);
+	void UploadFloat(const std::string& uniformName, float f);
+	void UploadVec2(const std::string& uniformName, glm::vec2 v);
+	void UploadVec3(const std::string& uniformName, glm::vec3 v);
+	void UploadVec4(const std::string& uniformName, glm::vec4 v);
+
+	void UploadMat4(const std::string& uniformName, const glm::mat4& m, GLboolean transpose = GL_FALSE);
+	void UploadMat3(const std::string& uniformName, const glm::mat3& m, GLboolean transpose = GL_FALSE);
 
 protected:
 	// temporary

@@ -92,9 +92,6 @@ void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 {
 
 	if (m_dirty[DF::TRS]) {
-
-		LOG_REPORT("dirty {}", this->GetName());
-
 		m_localMatrix = math::TransformMatrixFromTOS(m_localScale, m_localOrientation, m_localTranslation);
 		m_worldMatrix = parentMatrix * m_localMatrix;
 		// PERF:

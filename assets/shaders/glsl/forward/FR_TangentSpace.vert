@@ -9,18 +9,13 @@ layout (location = 5) in vec2 text_coord1;
 
 out Data
 { 
-// WIP: currently world space
-	vec3 tangent_pos;
+	vec3 tangent_frag_pos;
 	vec3 tangent_view_pos;
 	vec3 tangent_light_pos;
 	
 	vec2 text_coord[2];
 	
-	// WIP: tangent space only calcs in fragment shader
-	mat3 TBN;
-	
-	// WIP: check what to do with this one
-	vec4 light_fragpos;
+	vec4 light_frag_pos;
 } dataOut;
 
 uniform mat4 mvp;
@@ -43,12 +38,11 @@ void main()
     vec3 B = normalize(normal_matrix * bitangent);
     vec3 N = normalize(normal_matrix * normal);
 
-    dataOut.TBN = mat3(T, B, N);
+    mat3 TBN = transpose(mat3(T, B, N));
 	
-	// WIP actual tangent pos <- doesnt work currently
-	dataOut.tangent_pos = vec3(m * vec4(pos,1));//dataOut.TBN * vec3(m * vec4(pos, 0.0));
-	dataOut.tangent_view_pos  = view_pos;//dataOut.TBN * view_pos;
-	dataOut.tangent_light_pos = light_pos;//dataOut.TBN * light_pos;
+	dataOut.tangent_frag_pos = TBN * vec3(m * vec4(pos, 0.0));
+	dataOut.tangent_view_pos  = TBN * view_pos;
+	dataOut.tangent_light_pos = TBN * light_pos;
 	
-	dataOut.light_fragpos = light_space_matrix * vec4(dataOut.tangent_pos, 1.0);
+	dataOut.light_frag_pos = light_space_matrix * m * vec4(pos, 1.0);
 }
