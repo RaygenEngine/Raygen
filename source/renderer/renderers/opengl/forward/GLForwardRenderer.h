@@ -7,16 +7,17 @@
 #include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
+#include "renderer/renderers/opengl/basic/GLBasicSkybox.h"
 
 
 namespace ogl {
-struct GLBasicSkybox;
+
 
 class GLForwardRenderer : public GLEditorRenderer {
 
 protected:
 	// shaders
-	GLShader* m_testShader{ nullptr };
+	GLShader* m_forwardSpotLightShader{ nullptr };
 	GLShader* m_simpleOutShader{ nullptr };
 	GLShader* m_linearizeOutShader{ nullptr };
 	GLShader* m_bBoxShader{ nullptr };
@@ -24,35 +25,39 @@ protected:
 
 	// entities
 	std::vector<GLBasicGeometry*> m_glGeometries;
-	GLBasicDirectionalLight* m_glDirectionalLight{ nullptr };
-	GLBasicSpotLight* m_glSpotLight{ nullptr };
+	std::vector<GLBasicDirectionalLight*> m_glDirectionalLights;
+	std::vector<GLBasicSpotLight*> m_glSpotLights;
 	GLBasicSkybox* m_skybox{ nullptr };
 
 	// raw nodes
 	CameraNode* m_camera{ nullptr };
 
 	// rendering
-	GLuint m_msaaFbo{ 0 };
-	GLuint m_msaaColorTexture{ 0 };
-	GLuint m_msaaDepthStencilRbo{ 0 };
+	GLuint m_msaaFbo{ 0u };
+	GLuint m_msaaColorTexture{ 0u };
+	GLuint m_msaaDepthStencilRbo{ 0u };
 
-	GLuint m_outFbo{ 0 };
-	GLuint m_outColorTexture{ 0 };
+	GLuint m_outFbo{ 0u };
+	GLuint m_outColorTexture{ 0u };
+
+	GLuint m_interFbo{ 0u };
+	GLuint m_interColorTexture{ 0u };
 
 	// bounding boxes
-	GLuint m_bbVao;
-	GLuint m_bbVbo;
+	GLuint m_bbVao{ 0u };
+	GLuint m_bbVbo{ 0u };
+
+	void InitObservers();
+	void InitShaders();
+	void InitOther();
 
 	void RenderDirectionalLights();
 	void RenderSpotLights();
-	void RenderGeometries();
 	void RenderBoundingBoxes();
 	void RenderSkybox();
 	void RenderPostProcess();
 	void RenderWindowSimple();
 	void RenderWindowLinearized();
-
-	GLuint m_currentTexture{};
 
 public:
 	~GLForwardRenderer();

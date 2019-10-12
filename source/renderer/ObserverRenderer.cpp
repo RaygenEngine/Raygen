@@ -1,6 +1,6 @@
 #include "pch/pch.h"
 
-#include "renderer/Renderer.h"
+#include "renderer/ObserverRenderer.h"
 
 void ObserverRenderer::RemoveObserver(NodeObserverBase* ptr)
 {
