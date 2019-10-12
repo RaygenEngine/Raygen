@@ -32,8 +32,8 @@ set(SOURCE_FILES
 	
 	platform/windows/Win32Window.cpp
 	
-
-	renderer/Renderer.cpp
+	
+	renderer/ObserverRenderer.cpp
 	
 
 	renderer/renderers/opengl/GLEditorRenderer.cpp
@@ -144,6 +144,7 @@ set(HEADER_FILES
 
 
 	renderer/Renderer.h
+	renderer/ObserverRenderer.h
 	renderer/NodeObserver.h
 	renderer/GenericGpuAssetManager.h
 	
