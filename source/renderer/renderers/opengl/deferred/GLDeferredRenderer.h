@@ -7,6 +7,7 @@
 #include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
+#include "renderer/renderers/opengl/basic/GLBasicSkybox.h"
 
 
 namespace ogl {

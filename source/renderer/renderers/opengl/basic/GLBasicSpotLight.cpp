@@ -54,6 +54,7 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 	glEnable(GL_CULL_FACE);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	auto gBufferShader = depthMap;
