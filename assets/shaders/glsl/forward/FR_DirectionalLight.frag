@@ -13,18 +13,15 @@ in Data
 	vec4 light_frag_pos;
 } dataIn;
 
-
-struct SpotLight
+struct DirectionalLight
 {
 	vec3 color;
 	vec3 world_pos;
 	float intensity;
-	float near;
-	int atten_coef;
 	mat4 vp;
 };
 
-uniform SpotLight spot_light; 
+uniform DirectionalLight dr_light; 
 
 uniform vec3 ambient;
 
@@ -48,7 +45,7 @@ layout(binding=1) uniform sampler2D metallicRoughnessSampler;
 layout(binding=2) uniform sampler2D emissiveSampler;
 layout(binding=3) uniform sampler2D normalSampler;
 layout(binding=4) uniform sampler2D occlusionSampler;
-layout(binding=5) uniform sampler2D spotLightMapSampler;
+layout(binding=5) uniform sampler2D directionalLightMapSampler;
 
 #define PI 3.14159265358979323846f
 
@@ -63,21 +60,18 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
     // get depth of current fragment from light's perspective
     float currentDepth = projCoords.z;
 	
-	if(fragPosLightSpace.z < spot_light.near + 0.005)
-		return 1.0;
-	
 	// cure shadow acne
 	float bias = 0.005;//max(0.05 * (1.0 - max(dot(N, L), 0.0)), 0.005); 
 	
 	float shadow = 0.0;
-	vec2 texelSize = 1.0 / textureSize(spotLightMapSampler, 0);
+	vec2 texelSize = 1.0 / textureSize(directionalLightMapSampler, 0);
 	int n = 1;
 	for(int x = -n; x <= n; ++x)
 	{
 		for(int y = -n; y <= n; ++y)
 		{
 		    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-			float pcfDepth = texture(spotLightMapSampler, projCoords.xy + vec2(x, y) * texelSize).r; 
+			float pcfDepth = texture(directionalLightMapSampler, projCoords.xy + vec2(x, y) * texelSize).r; 
 			shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
 		}    
 	}
@@ -177,10 +171,8 @@ void main()
 	kD *= 1.0 - metallic;
 	
 	// light stuff
-	float distance = length(dataIn.tangent_light_pos - dataIn.tangent_frag_pos);
-	float attenuation = 1.0 / pow(distance, spot_light.atten_coef);
 	float shadow = ShadowCalculation(dataIn.light_frag_pos, N, L); 
-	vec3 radiance = ((1.0 - shadow) * spot_light.color * spot_light.intensity * attenuation) + ambient; 
+	vec3 radiance = ((1.0 - shadow) * dr_light.color * dr_light.intensity) + ambient; 
 	
 	vec3 Lo = (kD * albedo / PI + specular) * radiance * max(dot(N, L), 0.0);
 

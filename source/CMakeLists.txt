@@ -66,6 +66,7 @@ set(SOURCE_FILES
 	world/nodes/light/PunctualLightNode.cpp
 	world/nodes/light/DirectionalLightNode.cpp
 	world/nodes/light/SpotLightNode.cpp
+	world/nodes/light/LightNode.cpp
 	world/nodes/user/FreeformUserNode.cpp
 	world/nodes/user/UserNode.cpp
 )
@@ -189,6 +190,7 @@ set(HEADER_FILES
 	world/nodes/light/PunctualLightNode.h
 	world/nodes/light/DirectionalLightNode.h
 	world/nodes/light/SpotLightNode.h
+	world/nodes/light/LightNode.h
 	world/nodes/user/FreeformUserNode.h
 	world/nodes/user/UserNode.h
 )

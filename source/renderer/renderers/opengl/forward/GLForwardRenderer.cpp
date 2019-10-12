@@ -68,11 +68,12 @@ void GLForwardRenderer::InitShaders()
 	m_forwardSpotLightShader->AddUniform("normal_matrix");
 	m_forwardSpotLightShader->AddUniform("mode");
 	m_forwardSpotLightShader->AddUniform("view_pos");
-	m_forwardSpotLightShader->AddUniform("light_pos");
-	m_forwardSpotLightShader->AddUniform("light_color");
-	m_forwardSpotLightShader->AddUniform("light_intensity");
-	m_forwardSpotLightShader->AddUniform("light_space_matrix");
-	m_forwardSpotLightShader->AddUniform("light_near");
+	m_forwardSpotLightShader->AddUniform("spot_light.world_pos");
+	m_forwardSpotLightShader->AddUniform("spot_light.color");
+	m_forwardSpotLightShader->AddUniform("spot_light.intensity");
+	m_forwardSpotLightShader->AddUniform("spot_light.vp");
+	m_forwardSpotLightShader->AddUniform("spot_light.near");
+	m_forwardSpotLightShader->AddUniform("spot_light.atten_coef");
 	m_forwardSpotLightShader->AddUniform("base_color_factor");
 	m_forwardSpotLightShader->AddUniform("emissive_factor");
 	m_forwardSpotLightShader->AddUniform("ambient");
@@ -87,6 +88,33 @@ void GLForwardRenderer::InitShaders()
 	m_forwardSpotLightShader->AddUniform("occlusion_texcoord_index");
 	m_forwardSpotLightShader->AddUniform("mask");
 	m_forwardSpotLightShader->AddUniform("alpha_cutoff");
+
+	m_forwardDirectionalLightShader
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/forward/FR_DirectionalLight.json");
+
+	m_forwardDirectionalLightShader->AddUniform("mvp");
+	m_forwardDirectionalLightShader->AddUniform("m");
+	m_forwardDirectionalLightShader->AddUniform("normal_matrix");
+	m_forwardDirectionalLightShader->AddUniform("mode");
+	m_forwardDirectionalLightShader->AddUniform("view_pos");
+	m_forwardDirectionalLightShader->AddUniform("dr_light.world_pos");
+	m_forwardDirectionalLightShader->AddUniform("dr_light.color");
+	m_forwardDirectionalLightShader->AddUniform("dr_light.intensity");
+	m_forwardDirectionalLightShader->AddUniform("dr_light.vp");
+	m_forwardDirectionalLightShader->AddUniform("base_color_factor");
+	m_forwardDirectionalLightShader->AddUniform("emissive_factor");
+	m_forwardDirectionalLightShader->AddUniform("ambient");
+	m_forwardDirectionalLightShader->AddUniform("metallic_factor");
+	m_forwardDirectionalLightShader->AddUniform("roughness_factor");
+	m_forwardDirectionalLightShader->AddUniform("normal_scale");
+	m_forwardDirectionalLightShader->AddUniform("occlusion_strength");
+	m_forwardDirectionalLightShader->AddUniform("base_color_texcoord_index");
+	m_forwardDirectionalLightShader->AddUniform("metallic_roughness_texcoord_index");
+	m_forwardDirectionalLightShader->AddUniform("emissive_texcoord_index");
+	m_forwardDirectionalLightShader->AddUniform("normal_texcoord_index");
+	m_forwardDirectionalLightShader->AddUniform("occlusion_texcoord_index");
+	m_forwardDirectionalLightShader->AddUniform("mask");
+	m_forwardDirectionalLightShader->AddUniform("alpha_cutoff");
 
 	m_bBoxShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/BBox.json");
 	m_bBoxShader->AddUniform("vp");
@@ -201,7 +229,100 @@ void GLForwardRenderer::BlendMSAAToOut()
 
 void GLForwardRenderer::RenderDirectionalLights()
 {
-	// m_glSpotLight->RenderShadowMap(m_glGeometries);
+	for (auto light : m_glDirectionalLights) {
+		// render lights
+		light->RenderShadowMap(m_glGeometries);
+
+		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+		glEnable(GL_CULL_FACE);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
+		glClearColor(0, 0, 0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT /*| GL_STENCIL_BUFFER_BIT*/);
+
+		glUseProgram(m_forwardDirectionalLightShader->id);
+
+		const auto root = Engine::GetWorld()->GetRoot();
+		const auto vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
+
+		// global uniforms
+		m_forwardDirectionalLightShader->UploadVec3("ambient", root->GetAmbientColor());
+		m_forwardDirectionalLightShader->UploadVec3("view_pos", m_camera->GetWorldTranslation());
+
+		// light
+		m_forwardDirectionalLightShader->UploadMat4("dr_light.vp", light->lightSpaceMatrix);
+		m_forwardDirectionalLightShader->UploadVec3("dr_light.world_pos", light->node->GetWorldTranslation());
+		m_forwardDirectionalLightShader->UploadVec3("dr_light.color", light->node->GetColor());
+		m_forwardDirectionalLightShader->UploadFloat("dr_light.intensity", light->node->GetIntensity());
+
+		for (auto& geometry : m_glGeometries) {
+			auto m = geometry->node->GetWorldMatrix();
+			auto mvp = vp * m;
+
+			// model
+			m_forwardDirectionalLightShader->UploadMat4("m", m);
+			m_forwardDirectionalLightShader->UploadMat4("mvp", mvp);
+			m_forwardDirectionalLightShader->UploadMat3("normal_matrix", glm::transpose(glm::inverse(glm::mat3(m))));
+
+			for (auto& glMesh : geometry->glModel->meshes) {
+				glBindVertexArray(glMesh.vao);
+
+				GLMaterial* glMaterial = glMesh.material;
+				const MaterialPod* materialData = glMaterial->LockData();
+
+				// material
+				m_forwardDirectionalLightShader->UploadVec4("base_color_factor", materialData->baseColorFactor);
+				m_forwardDirectionalLightShader->UploadVec3("emissive_factor", materialData->emissiveFactor);
+				m_forwardDirectionalLightShader->UploadFloat("metallic_factor", materialData->metallicFactor);
+				m_forwardDirectionalLightShader->UploadFloat("roughness_factor", materialData->roughnessFactor);
+				m_forwardDirectionalLightShader->UploadFloat("normal_scale", materialData->normalScale);
+				m_forwardDirectionalLightShader->UploadFloat("occlusion_strength", materialData->occlusionStrength);
+				m_forwardDirectionalLightShader->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
+				m_forwardDirectionalLightShader->UploadInt(
+					"mask", materialData->alphaMode == AlphaMode::AM_MASK ? GL_TRUE : GL_FALSE);
+
+				// uv index
+				m_forwardDirectionalLightShader->UploadInt(
+					"base_color_texcoord_index", materialData->baseColorTexCoordIndex);
+				m_forwardDirectionalLightShader->UploadInt(
+					"metallic_roughness_texcoord_index", materialData->metallicRoughnessTexCoordIndex);
+				m_forwardDirectionalLightShader->UploadInt(
+					"emissive_texcoord_index", materialData->emissiveTexCoordIndex);
+				m_forwardDirectionalLightShader->UploadInt("normal_texcoord_index", materialData->normalTexCoordIndex);
+				m_forwardDirectionalLightShader->UploadInt(
+					"occlusion_texcoord_index", materialData->occlusionTexCoordIndex);
+
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
+
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->metallicRoughnessTexture->id);
+
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->emissiveTexture->id);
+
+				glActiveTexture(GL_TEXTURE3);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->normalTexture->id);
+
+				glActiveTexture(GL_TEXTURE4);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->occlusionTexture->id);
+
+				glActiveTexture(GL_TEXTURE5);
+				glBindTexture(GL_TEXTURE_2D, light->shadowMap);
+
+				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
+
+				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
+			}
+		}
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
+
+		BlendMSAAToOut();
+	}
 }
 
 void GLForwardRenderer::RenderSpotLights()
@@ -230,11 +351,12 @@ void GLForwardRenderer::RenderSpotLights()
 		m_forwardSpotLightShader->UploadVec3("view_pos", m_camera->GetWorldTranslation());
 
 		// light
-		m_forwardSpotLightShader->UploadMat4("light_space_matrix", light->lightSpaceMatrix);
-		m_forwardSpotLightShader->UploadVec3("light_pos", light->node->GetWorldTranslation());
-		m_forwardSpotLightShader->UploadVec3("light_color", light->node->GetColor());
-		m_forwardSpotLightShader->UploadFloat("light_intensity", light->node->GetIntensity());
-		m_forwardSpotLightShader->UploadFloat("light_near", light->node->GetNear());
+		m_forwardSpotLightShader->UploadMat4("spot_light.vp", light->lightSpaceMatrix);
+		m_forwardSpotLightShader->UploadVec3("spot_light.world_pos", light->node->GetWorldTranslation());
+		m_forwardSpotLightShader->UploadVec3("spot_light.color", light->node->GetColor());
+		m_forwardSpotLightShader->UploadFloat("spot_light.intensity", light->node->GetIntensity());
+		m_forwardSpotLightShader->UploadFloat("spot_light.near", light->node->GetNear());
+		m_forwardSpotLightShader->UploadInt("spot_light.atten_coef", light->node->GetAttenuationMode());
 
 		for (auto& geometry : m_glGeometries) {
 			auto m = geometry->node->GetWorldMatrix();
@@ -490,12 +612,12 @@ void GLForwardRenderer::Render()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// render directional lights shadow maps
-	// RenderDirectionalLights();
+	RenderDirectionalLights();
 	RenderSpotLights();
 	// forward msaa-ed pass
 	// RenderBoundingBoxes();
 	// render skybox, seamless enabled (render last)
-	// RenderSkybox();
+	RenderSkybox();
 	// copy msaa to out fbo and render any post process on it
 	// RenderPostProcess();
 	// write out texture of out fbo to window (big triangle trick)
@@ -517,6 +639,7 @@ void GLForwardRenderer::Update()
 void GLForwardRenderer::RecompileShaders()
 {
 	m_forwardSpotLightShader->Load();
+	m_forwardDirectionalLightShader->Load();
 	m_simpleOutShader->Load();
 	m_linearizeOutShader->Load();
 }

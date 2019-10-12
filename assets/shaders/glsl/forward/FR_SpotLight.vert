@@ -18,14 +18,24 @@ out Data
 	vec4 light_frag_pos;
 } dataOut;
 
+struct SpotLight
+{
+	vec3 color;
+	vec3 world_pos;
+	float intensity;
+	float near;
+	int atten_coef;
+	mat4 vp;
+};
+
+uniform SpotLight spot_light; 
+
 uniform mat4 mvp;
 uniform mat4 m;
 
 uniform mat3 normal_matrix; 
-uniform mat4 light_space_matrix;
 
 uniform vec3 view_pos;
-uniform vec3 light_pos;
 
 void main()
 {
@@ -42,7 +52,7 @@ void main()
 	
 	dataOut.tangent_frag_pos = TBN * vec3(m * vec4(pos, 0.0));
 	dataOut.tangent_view_pos  = TBN * view_pos;
-	dataOut.tangent_light_pos = TBN * light_pos;
+	dataOut.tangent_light_pos = TBN * spot_light.world_pos;
 	
-	dataOut.light_frag_pos = light_space_matrix * m * vec4(pos, 1.0);
+	dataOut.light_frag_pos = spot_light.vp * m * vec4(pos, 1.0);
 }
