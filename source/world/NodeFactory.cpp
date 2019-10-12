@@ -24,17 +24,9 @@ void NodeFactory::RegisterNodes()
 		SkyboxNode, FreeformUserNode, TransformNode>();
 }
 
-std::string NodeFactory::FilterNodeName(std::string_view v)
-{
-	if (v.substr(v.size() - 4) == detail::filter) {
-		v = v.substr(0, v.size() - 4);
-	}
-	return smath::ToLower(std::string{ v });
-}
-
 Node* NodeFactory::NewNodeFromType(const std::string& type)
 {
-	auto it = m_nodeEntries.find(std::string(FilterNodeName(type)));
+	auto it = m_nodeEntries.find(sceneconv::FilterNodeClassName(type));
 	if (it != m_nodeEntries.end()) {
 		return it->second.newInstance();
 	}
@@ -53,13 +45,9 @@ void NodeFactory::LoadChildren(const nlohmann::json& jsonArray, Node* parent)
 
 void NodeFactory::LoadNodeAndChildren(const json& jsonObject, Node* parent)
 {
-	static const std::string typeLabel = "+type";
-	static const std::string nameLabel = "+name";
-	static const std::string trsLabel = "+trs";
-	static const std::string childrenLabel = "~children";
+	using namespace sceneconv; // Use scene conventions form parsing aux
 
 	CLOG_ABORT(!jsonObject.is_object(), "Expected a json object here.");
-
 
 	std::string type = jsonObject.value<std::string>(typeLabel, "");
 
@@ -91,11 +79,7 @@ void NodeFactory::LoadNodeAndChildren(const json& jsonObject, Node* parent)
 
 void NodeFactory::LoadNode_Trs(const nlohmann::json& jsonTrsObject, Node* nodeToLoadInto)
 {
-	static const std::string posLabel = "pos";
-	static const std::string rotLabel = "rot";
-	static const std::string scaleLabel = "scale";
-	static const std::string lookatLabel = "lookat";
-
+	using namespace sceneconv;
 	auto& node = nodeToLoadInto;
 	auto& j = jsonTrsObject;
 

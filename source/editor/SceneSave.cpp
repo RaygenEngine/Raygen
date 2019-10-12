@@ -3,17 +3,19 @@
 #include "editor/SceneSave.h"
 #include "system/Engine.h"
 #include "world/nodes/Node.h"
-#include "world/World.h"
 #include "reflection/ReflectionTools.h"
+#include "world/World.h"
 #include "asset/AssetManager.h"
-#include "editor/Editor.h"
 #include "asset/util/ParsingAux.h"
 #include "asset/PodIncludes.h"
 #include "asset/UriLibrary.h"
+#include "world/nodes/RootNode.h"
 
 #include <imgui/imgui.h>
 #include <glm/glm.hpp>
+
 #include <string>
+#include <fstream>
 
 SceneSave::SceneSave()
 {
@@ -35,115 +37,51 @@ void SceneSave::Draw()
 	if (m_saveBrowser.HasSelected()) {
 		fs::path file = m_saveBrowser.GetSelected();
 		m_saveBrowser.ClearSelected();
-		SaveAsXML(Engine::GetWorld(), file.string());
+		SaveAs(Engine::GetWorld(), file.string());
 	}
 }
-/*
+
 namespace {
-
-struct GenerateXMLVisitor {
-	tinyxml2::XMLElement* xmlElement{ nullptr };
-	const char* name{ nullptr };
-	std::string name_str; // required for const char* validility
-
-	bool PreProperty(const Property& p)
-	{
-		if (p.HasFlags(PropertyFlags::NoSave)) {
-			return false;
-		}
-		name_str = p.GetNameStr();
-		name = name_str.c_str();
-		return true;
-	}
-
-	void operator()(int32& v, const Property& p) { xmlElement->SetAttribute(name, v); }
-
-	void operator()(bool& v, const Property& p) { xmlElement->SetAttribute(name, v); }
-
-	void operator()(float& v, const Property& p) { xmlElement->SetAttribute(name, v); }
-
-	void operator()(glm::vec3& v, const Property& p)
-	{
-		xmlElement->SetAttribute(name, parsingaux::FloatsToString(v).c_str());
-	}
-
-	void operator()(glm::vec4& v, const Property& p)
-	{
-		xmlElement->SetAttribute(name, parsingaux::FloatsToString(v).c_str());
-	}
-
-	void operator()(std::string& v, const Property& p) { xmlElement->SetAttribute(name, v.c_str()); }
-
-	template<typename T>
-	void operator()(PodHandle<T>& handle, const Property& p)
-	{
-		auto podPath = AssetManager::GetPodUri(handle);
-		xmlElement->SetAttribute(name, podPath.c_str());
-	}
-
-	template<typename T>
-	void operator()(T& v, const Property& p)
-	{
-		LOG_WARN("Attempting to save an unimplemented save type, skipping property: ", p.GetName());
-	}
-};
-
-
-tinyxml2::XMLElement* GenerateNodeXML(Node* node, tinyxml2::XMLDocument& document)
+using json = nlohmann::json;
+void GenerateJsonForNode(json& j, Node* node)
 {
-	tinyxml2::XMLElement* xmlElem;
+	using namespace sceneconv;
 
-	xmlElem = document.NewElement(node->GetType().c_str());
-	xmlElem->SetAttribute("name", node->GetName().c_str());
+	j[nameLabel] = node->GetName();
+	LOG_REPORT("StrView: {}", node->GetClass().GetName());
+	j[typeLabel] = FilterNodeClassName(node->GetClass().GetName());
+	j[trsLabel] = { { posLabel, node->GetLocalTranslation() }, { rotLabel, node->GetLocalPYR() },
+		{ scaleLabel, node->GetLocalScale() } };
 
-	xmlElem->SetAttribute("translation", parsingaux::FloatsToString(node->GetLocalTranslation()).c_str());
-	xmlElem->SetAttribute("euler_pyr", parsingaux::FloatsToString(node->GetLocalPYR()).c_str());
-	xmlElem->SetAttribute("scale", parsingaux::FloatsToString(node->GetLocalScale()).c_str());
+	refltools::PropertiesToJson(node, j);
 
-	GenerateXMLVisitor visitor;
-	visitor.xmlElement = xmlElem;
-
-	refltools::CallVisitorOnEveryProperty(node, visitor);
-
-	return xmlElem;
+	json childrenArray = json::array();
+	for (auto& childNode : node->GetChildren()) {
+		json jsonChild = json::object();
+		GenerateJsonForNode(jsonChild, childNode.get());
+		childrenArray.emplace_back(jsonChild);
+	}
+	j[childrenLabel] = std::move(childrenArray);
 }
 } // namespace
-*/
-bool SceneSave::SaveAsXML(World* world, const uri::Uri& path)
+
+void SceneSave::SaveAs(World* world, const uri::Uri& path)
 {
-	// using namespace tinyxml2;
-	// XMLDocument xmlDoc;
+	std::ofstream ofile(path);
 
-	// std::unordered_map<Node*, XMLElement*> nodeXmlElements;
+	if (!ofile.is_open()) {
+		LOG_ERROR("Failed to open file for world save: {}", path);
+		return;
+	}
 
-	// auto root = Engine::GetWorld()->GetRoot();
-	// auto rootXml = GenerateNodeXML(root, xmlDoc);
-	// xmlDoc.InsertFirstChild(rootXml);
+	json scene = json::array();
 
-	// nodeXmlElements.insert({ root, rootXml });
+	for (auto& child : world->GetRoot()->GetChildren()) {
+		json jsonChild = json::object();
+		GenerateJsonForNode(jsonChild, child.get());
+		scene.emplace_back(jsonChild);
+	}
 
-
-	// RecurseNodes(root, [&](Node* node, auto) {
-	//	if (node == root) {
-	//		return;
-	//	}
-
-	//	auto xmlElem = GenerateNodeXML(node, xmlDoc);
-	//	nodeXmlElements.insert({ node, xmlElem });
-
-	//	Node* parent = node->GetParent();
-	//	nodeXmlElements[parent]->InsertEndChild(xmlElem);
-	//});
-
-	// FILE* fp;
-	// if (fopen_s(&fp, path.c_str(), "w") == 0) {
-	//	xmlDoc.SaveFile(fp);
-	//	fclose(fp);
-	//}
-	// else {
-	//	LOG_ERROR("Failed to open file for saving scene.");
-	//}
-	LOG_ABORT("Implement me");
-
-	return false;
+	ofile << std::setw(4) << scene;
+	LOG_REPORT("Written scene at: {}", path);
 }
