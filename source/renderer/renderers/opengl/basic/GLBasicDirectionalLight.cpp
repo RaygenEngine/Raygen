@@ -60,7 +60,7 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-	auto gBufferShader = depthMap;
+	auto shadowMapShader = depthMap;
 
 	for (auto& geometry : geometries) {
 		auto m = geometry->node->GetWorldMatrix();
@@ -74,23 +74,23 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 					// blend not handled
 				case AM_BLEND:
 				case AM_OPAQUE:
-					gBufferShader = depthMap;
-					glUseProgram(gBufferShader->id);
+					shadowMapShader = depthMap;
+					glUseProgram(shadowMapShader->id);
 					break;
 				case AM_MASK:
-					gBufferShader = depthMapAlphaMask;
-					glUseProgram(gBufferShader->id);
-					glUniform1f(gBufferShader->GetUniform("alpha_cutoff"), materialData->alphaCutoff);
-					glUniform4fv(gBufferShader->GetUniform("base_color_factor"), 1,
-						glm::value_ptr(materialData->baseColorFactor));
-					glUniform1i(
-						gBufferShader->GetUniform("base_color_texcoord_index"), materialData->baseColorTexCoordIndex);
+					shadowMapShader = depthMapAlphaMask;
+					glUseProgram(shadowMapShader->id);
+
+					shadowMapShader->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
+					shadowMapShader->UploadVec4("base_color_factor", materialData->baseColorFactor);
+					shadowMapShader->UploadInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
+
 					glActiveTexture(GL_TEXTURE0);
 					glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
 					break;
 			}
 
-			glUniformMatrix4fv(gBufferShader->GetUniform("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+			shadowMapShader->UploadMat4("mvp", mvp);
 
 			glBindVertexArray(glMesh.vao);
 

@@ -52,6 +52,8 @@ protected:
 	void InitShaders();
 	void InitOther();
 
+	void BlendMSAAToOut();
+
 	void RenderDirectionalLights();
 	void RenderSpotLights();
 	void RenderBoundingBoxes();

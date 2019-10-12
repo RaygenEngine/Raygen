@@ -12,7 +12,6 @@
 #include "platform/windows/Win32Window.h"
 
 #include <glad/glad.h>
-#include <glm/gtc/type_ptr.hpp>
 
 namespace ogl {
 GLForwardRenderer::~GLForwardRenderer()
@@ -86,6 +85,8 @@ void GLForwardRenderer::InitShaders()
 	m_forwardSpotLightShader->AddUniform("emissive_texcoord_index");
 	m_forwardSpotLightShader->AddUniform("normal_texcoord_index");
 	m_forwardSpotLightShader->AddUniform("occlusion_texcoord_index");
+	m_forwardSpotLightShader->AddUniform("mask");
+	m_forwardSpotLightShader->AddUniform("alpha_cutoff");
 
 	m_bBoxShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/BBox.json");
 	m_bBoxShader->AddUniform("vp");
@@ -172,6 +173,32 @@ bool GLForwardRenderer::InitScene()
 	return true;
 }
 
+void GLForwardRenderer::BlendMSAAToOut()
+{
+	// copy to intermediate
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFbo);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_interFbo);
+
+	glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 0, 0, m_camera->GetWidth(),
+		m_camera->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
+
+	// write to window
+	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+
+	glUseProgram(m_simpleOutShader->id);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_interColorTexture);
+
+	// big triangle trick, no vao
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	glDisable(GL_BLEND);
+}
+
 void GLForwardRenderer::RenderDirectionalLights()
 {
 	// m_glSpotLight->RenderShadowMap(m_glGeometries);
@@ -195,32 +222,28 @@ void GLForwardRenderer::RenderSpotLights()
 
 		glUseProgram(m_forwardSpotLightShader->id);
 
-		// global uniforms
-		glUniform3fv(
-			m_forwardSpotLightShader->GetUniform("view_pos"), 1, glm::value_ptr(m_camera->GetWorldTranslation()));
-		glUniform3fv(
-			m_forwardSpotLightShader->GetUniform("light_pos"), 1, glm::value_ptr(light->node->GetWorldTranslation()));
-		glUniform3fv(m_forwardSpotLightShader->GetUniform("light_color"), 1, glm::value_ptr(light->node->GetColor()));
-		glUniform1f(m_forwardSpotLightShader->GetUniform("light_intensity"), light->node->GetIntensity());
-
 		const auto root = Engine::GetWorld()->GetRoot();
-		glUniform3fv(m_forwardSpotLightShader->GetUniform("ambient"), 1, glm::value_ptr(root->GetAmbientColor()));
-
 		const auto vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
+
+		// global uniforms
+		m_forwardSpotLightShader->UploadVec3("ambient", root->GetAmbientColor());
+		m_forwardSpotLightShader->UploadVec3("view_pos", m_camera->GetWorldTranslation());
+
+		// light
+		m_forwardSpotLightShader->UploadMat4("light_space_matrix", light->lightSpaceMatrix);
+		m_forwardSpotLightShader->UploadVec3("light_pos", light->node->GetWorldTranslation());
+		m_forwardSpotLightShader->UploadVec3("light_color", light->node->GetColor());
+		m_forwardSpotLightShader->UploadFloat("light_intensity", light->node->GetIntensity());
+		m_forwardSpotLightShader->UploadFloat("light_near", light->node->GetNear());
 
 		for (auto& geometry : m_glGeometries) {
 			auto m = geometry->node->GetWorldMatrix();
 			auto mvp = vp * m;
 
-			glUniformMatrix4fv(m_forwardSpotLightShader->GetUniform("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
-			glUniformMatrix4fv(m_forwardSpotLightShader->GetUniform("m"), 1, GL_FALSE, glm::value_ptr(m));
-			glUniformMatrix3fv(m_forwardSpotLightShader->GetUniform("normal_matrix"), 1, GL_FALSE,
-				glm::value_ptr(glm::transpose(glm::inverse(glm::mat3(m)))));
-
-			glUniformMatrix4fv(m_forwardSpotLightShader->GetUniform("light_space_matrix"), 1, GL_FALSE,
-				glm::value_ptr(light->lightSpaceMatrix));
-
-			glUniform1f(m_forwardSpotLightShader->GetUniform("roughness_factor"), light->node->GetNear());
+			// model
+			m_forwardSpotLightShader->UploadMat4("m", m);
+			m_forwardSpotLightShader->UploadMat4("mvp", mvp);
+			m_forwardSpotLightShader->UploadMat3("normal_matrix", glm::transpose(glm::inverse(glm::mat3(m))));
 
 			for (auto& glMesh : geometry->glModel->meshes) {
 				glBindVertexArray(glMesh.vao);
@@ -228,26 +251,24 @@ void GLForwardRenderer::RenderSpotLights()
 				GLMaterial* glMaterial = glMesh.material;
 				const MaterialPod* materialData = glMaterial->LockData();
 
-				glUniform4fv(m_forwardSpotLightShader->GetUniform("base_color_factor"), 1,
-					glm::value_ptr(materialData->baseColorFactor));
-				glUniform3fv(m_forwardSpotLightShader->GetUniform("emissive_factor"), 1,
-					glm::value_ptr(materialData->emissiveFactor));
-				glUniform1f(m_forwardSpotLightShader->GetUniform("metallic_factor"), materialData->metallicFactor);
-				glUniform1f(m_forwardSpotLightShader->GetUniform("roughness_factor"), materialData->roughnessFactor);
-				glUniform1f(m_forwardSpotLightShader->GetUniform("normal_scale"), materialData->normalScale);
-				glUniform1f(
-					m_forwardSpotLightShader->GetUniform("occlusion_strength"), materialData->occlusionStrength);
+				// material
+				m_forwardSpotLightShader->UploadVec4("base_color_factor", materialData->baseColorFactor);
+				m_forwardSpotLightShader->UploadVec3("emissive_factor", materialData->emissiveFactor);
+				m_forwardSpotLightShader->UploadFloat("metallic_factor", materialData->metallicFactor);
+				m_forwardSpotLightShader->UploadFloat("roughness_factor", materialData->roughnessFactor);
+				m_forwardSpotLightShader->UploadFloat("normal_scale", materialData->normalScale);
+				m_forwardSpotLightShader->UploadFloat("occlusion_strength", materialData->occlusionStrength);
+				m_forwardSpotLightShader->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
+				m_forwardSpotLightShader->UploadInt(
+					"mask", materialData->alphaMode == AlphaMode::AM_MASK ? GL_TRUE : GL_FALSE);
 
-				glUniform1i(m_forwardSpotLightShader->GetUniform("base_color_texcoord_index"),
-					materialData->baseColorTexCoordIndex);
-				glUniform1i(m_forwardSpotLightShader->GetUniform("metallic_roughness_texcoord_index"),
-					materialData->metallicRoughnessTexCoordIndex);
-				glUniform1i(m_forwardSpotLightShader->GetUniform("emissive_texcoord_index"),
-					materialData->emissiveTexCoordIndex);
-				glUniform1i(
-					m_forwardSpotLightShader->GetUniform("normal_texcoord_index"), materialData->normalTexCoordIndex);
-				glUniform1i(m_forwardSpotLightShader->GetUniform("occlusion_texcoord_index"),
-					materialData->occlusionTexCoordIndex);
+				// uv index
+				m_forwardSpotLightShader->UploadInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
+				m_forwardSpotLightShader->UploadInt(
+					"metallic_roughness_texcoord_index", materialData->metallicRoughnessTexCoordIndex);
+				m_forwardSpotLightShader->UploadInt("emissive_texcoord_index", materialData->emissiveTexCoordIndex);
+				m_forwardSpotLightShader->UploadInt("normal_texcoord_index", materialData->normalTexCoordIndex);
+				m_forwardSpotLightShader->UploadInt("occlusion_texcoord_index", materialData->occlusionTexCoordIndex);
 
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
@@ -275,30 +296,7 @@ void GLForwardRenderer::RenderSpotLights()
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 
-		// copy to intermediate
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFbo);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_interFbo);
-
-		glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 0, 0, m_camera->GetWidth(),
-			m_camera->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-
-		// additive blend all directional lights
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ONE);
-
-		// write to window
-		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
-
-		glUseProgram(m_simpleOutShader->id);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_interColorTexture);
-
-		// big triangle trick, no vao
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
-		glDisable(GL_BLEND);
+		BlendMSAAToOut();
 	}
 }
 
@@ -383,8 +381,8 @@ void GLForwardRenderer::RenderBoundingBoxes()
 
 		glUseProgram(m_bBoxShader->id);
 		const auto vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
-		glUniformMatrix4fv(m_bBoxShader->GetUniform("vp"), 1, GL_FALSE, glm::value_ptr(vp));
-		glUniform4fv(m_bBoxShader->GetUniform("color"), 1, glm::value_ptr(color));
+		m_bBoxShader->UploadMat4("vp", vp);
+		m_bBoxShader->UploadVec4("color", color);
 
 		// TODO: with fewer draw calls
 		glDrawArrays(GL_LINE_LOOP, 0, 4);
@@ -412,7 +410,8 @@ void GLForwardRenderer::RenderSkybox()
 
 	glUseProgram(m_skybox->shader->id);
 
-	glUniformMatrix4fv(m_skybox->shader->GetUniform("vp"), 1, GL_FALSE, glm::value_ptr(vpNoTransformation));
+	m_skybox->shader->UploadMat4("vp", vpNoTransformation);
+
 	glBindVertexArray(m_skybox->vao);
 
 	glActiveTexture(GL_TEXTURE0);
