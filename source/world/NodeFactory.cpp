@@ -18,6 +18,14 @@ void NodeFactory::RegisterNodes()
 		SkyboxNode, FreeformUserNode, TransformNode>();
 }
 
+std::string NodeFactory::FilterNodeName(std::string_view v)
+{
+	if (v.substr(v.size() - 4) == detail::filter) {
+		v = v.substr(0, v.size() - 4);
+	}
+	return smath::ToLower(std::string{ v });
+}
+
 Node* NodeFactory::NewNodeFromType(const std::string& type)
 {
 	auto it = m_nodeEntries.find(std::string(FilterNodeName(type)));

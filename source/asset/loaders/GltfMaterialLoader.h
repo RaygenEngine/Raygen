@@ -9,7 +9,7 @@
 #include <tinygltf/tiny_gltf.h>
 
 namespace GltfMaterialLoader {
-inline bool Load(MaterialPod* pod, const uri::Uri& path)
+inline void Load(MaterialPod* pod, const uri::Uri& path)
 {
 	using namespace nlohmann;
 
@@ -85,7 +85,5 @@ inline bool Load(MaterialPod* pod, const uri::Uri& path)
 
 	auto& occlusionTextureInfo = gltfMaterial.occlusionTexture;
 	LoadTexture(occlusionTextureInfo, pod->occlusionTexture, pod->occlusionTexCoordIndex, DefType::White);
-
-	return true;
 }
 }; // namespace GltfMaterialLoader

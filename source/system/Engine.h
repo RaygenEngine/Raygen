@@ -107,7 +107,7 @@ public:
 	//
 	void InitEngine(AppBase* app);
 
-	bool CreateWorldFromFile(const std::string& filename);
+	void CreateWorldFromFile(const std::string& filename);
 
 	// if another renderer is already active, then destroy old and
 	// then activate the next

@@ -275,7 +275,7 @@ namespace {
 		}
 	}
 
-	bool LoadGeometryGroup(ModelPod* pod, GeometryGroup& geom, const tinygltf::Model& modelData,
+	void LoadGeometryGroup(ModelPod* pod, GeometryGroup& geom, const tinygltf::Model& modelData,
 		const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat, bool& requiresDefaultMaterial)
 	{
 		// mode
@@ -398,12 +398,9 @@ namespace {
 			// handness issues bitangent = cross(normal, tangent.xyz) * tangent.w
 			v.bitangent = glm::normalize(glm::cross(v.normal, glm::vec3(v.tangent)));
 		}
-
-		// calculate other baked data
-		return true;
 	}
 
-	bool LoadMesh(ModelPod* pod, Mesh& mesh, const tinygltf::Model& modelData, const tinygltf::Mesh& meshData,
+	void LoadMesh(ModelPod* pod, Mesh& mesh, const tinygltf::Model& modelData, const tinygltf::Mesh& meshData,
 		const glm::mat4& transformMat, bool& requiresDefaultMaterial)
 	{
 		mesh.geometryGroups.resize(meshData.primitives.size());
@@ -415,17 +412,13 @@ namespace {
 			auto& primitiveData = meshData.primitives.at(i);
 
 			// if one of the geometry groups fails to load
-			if (!LoadGeometryGroup(
-					pod, mesh.geometryGroups[i], modelData, primitiveData, transformMat, requiresDefaultMaterial)) {
-				LOG_ERROR("Failed to load geometry group, name: {}", geomName);
-				return false;
-			}
+			LoadGeometryGroup(
+				pod, mesh.geometryGroups[i], modelData, primitiveData, transformMat, requiresDefaultMaterial);
 		}
-		return true;
 	}
 } // namespace
 
-inline bool Load(ModelPod* pod, const uri::Uri& path)
+inline void Load(ModelPod* pod, const uri::Uri& path)
 {
 	const auto pPath = uri::GetDiskPath(path);
 	auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath + "{}");
@@ -505,12 +498,7 @@ inline bool Load(ModelPod* pod, const uri::Uri& path)
 				auto& gltfMesh = model.meshes.at(childNode.mesh);
 
 				Mesh mesh;
-
-				// if missing mesh
-				if (!LoadMesh(pod, mesh, model, gltfMesh, localTransformMat, requiresDefaultMaterial)) {
-					LOG_ERROR("Failed to load mesh, name: {}", gltfMesh.name);
-					return false;
-				}
+				LoadMesh(pod, mesh, model, gltfMesh, localTransformMat, requiresDefaultMaterial);
 				pod->meshes.emplace_back(mesh);
 			}
 
@@ -524,12 +512,10 @@ inline bool Load(ModelPod* pod, const uri::Uri& path)
 		return true;
 	};
 
-	bool result = RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
+	RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
 
 	if (requiresDefaultMaterial) {
 		pod->materials.push_back(CustomLoader::GetDefaultMat());
 	}
-
-	return result;
 }
 }; // namespace GltfModelLoader
