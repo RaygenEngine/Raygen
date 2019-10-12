@@ -13,6 +13,7 @@
 #include "world/nodes/Node.h"
 #include "world/nodes/RootNode.h"
 #include "world/World.h"
+#include "system/Input.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_stdlib.h>
@@ -38,7 +39,6 @@ void TextTooltipUtil(const std::string& Tooltip)
 }
 } // namespace
 
-
 namespace {
 inline float* FromVec3(glm::vec3& vec3)
 {
@@ -48,7 +48,6 @@ inline float* FromVec4(glm::vec4& vec4)
 {
 	return reinterpret_cast<float*>(&vec4);
 }
-
 
 using namespace PropertyFlags;
 
@@ -264,8 +263,6 @@ Editor::~Editor()
 {
 	ImguiImpl::CleanupContext();
 }
-
-#include "system/Input.h"
 
 void Editor::UpdateEditor()
 {

@@ -3,7 +3,7 @@
 #include "reflection/ReflClass.h"
 #include "reflection/PodReflection.h"
 #include "reflection/GetClass.h"
-
+#include "asset/util/ParsingAux.h"
 #include <type_traits>
 
 namespace refltools {
@@ -317,5 +317,31 @@ struct JsonToPropVisitor_WithRelativePath {
 		}
 	}
 };
+
+struct ToJsonVisitor {
+	json& j;
+	ToJsonVisitor(json& inJson)
+		: j(inJson)
+	{
+	}
+
+	bool PreProperty(const Property& p) { return !p.HasFlags(PropertyFlags::NoSave); }
+
+	template<typename T>
+	void operator()(T& ref, const Property& p)
+	{
+		j[p.GetNameStr()] = ref;
+	}
+};
+
+
+// Assigns each property to the given json using default to_json functions,
+// Skips all NoSave properties
+template<typename ReflectedObj>
+void PropertiesToJson(ReflectedObj* obj, nlohmann::json& j)
+{
+	ToJsonVisitor visitor(j);
+	CallVisitorOnEveryProperty(obj, visitor);
+}
 
 } // namespace refltools
