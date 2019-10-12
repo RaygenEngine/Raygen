@@ -27,8 +27,7 @@ float skyboxVertices[] = {
 GLBasicSkybox::GLBasicSkybox(SkyboxNode* node)
 	: NodeObserver<SkyboxNode, GLRendererBase>(node)
 {
-	auto shaderAsset = AssetManager::GetOrCreate<ShaderPod>("/shaders/glsl/general/Cubemap_InfDist.json");
-	shader = GetGLAssetManager(this)->GpuGetOrCreate<GLShader>(shaderAsset);
+	shader = GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/Cubemap_InfDist.json");
 	shader->AddUniform("vp");
 
 	cubemap = GetGLAssetManager(this)->GpuGetOrCreate<GLTexture>(node->GetSkyMap());

@@ -2,8 +2,7 @@
 
 #include "reflection/ReflClass.h"
 
-class Node;
-struct AssetPod;
+// WIP: split for nodes and pods
 
 #define REFLECTED_POD(Class)                                                                                           \
 private:                                                                                                               \

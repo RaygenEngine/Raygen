@@ -1,6 +1,5 @@
 #pragma once
 
-#include "reflection/GenMacros.h"
 #include "asset/pods/TexturePod.h"
 
 enum AlphaMode : int32

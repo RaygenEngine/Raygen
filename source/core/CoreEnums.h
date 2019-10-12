@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/Types.h"
+
 enum class LogLevelTarget
 {
 	TRACE = 0,

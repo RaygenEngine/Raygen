@@ -12,7 +12,6 @@
 #include "asset/UriLibrary.h"
 
 #include <imgui/imgui.h>
-#include <tinyxml2/tinyxml2.h>
 #include <glm/glm.hpp>
 #include <string>
 

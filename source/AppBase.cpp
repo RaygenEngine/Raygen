@@ -1,13 +1,16 @@
 #include "pch/pch.h"
 
 #include "AppBase.h"
-#include "platform/windows/Win32Window.h"
-#include "system/Engine.h"
-#include "renderer/Renderer.h"
-#include "world/World.h"
 #include "editor/Editor.h"
+#include "platform/windows/Win32Window.h"
 #include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
 #include "renderer/renderers/opengl/forward/GLForwardRenderer.h"
+#include "system/Engine.h"
+#include "system/Input.h"
+#include "system/Logger.h"
+#include "world/NodeFactory.h"
+#include "world/World.h"
+
 
 AppBase::AppBase()
 {

@@ -1,10 +1,16 @@
 #include "pch/pch.h"
 
 #include "world/NodeFactory.h"
-#include "world/nodes/sky/SkyboxNode.h"
-#include "world/nodes/camera/WindowCameraNode.h"
 #include "world/World.h"
+#include "world/nodes/camera/CameraNode.h"
+#include "world/nodes/camera/WindowCameraNode.h"
+#include "world/nodes/geometry/GeometryNode.h"
+#include "world/nodes/light/DirectionalLightNode.h"
+#include "world/nodes/light/SpotLightNode.h"
+#include "world/nodes/light/PunctualLightNode.h"
+#include "world/nodes/sky/SkyboxNode.h"
 #include "world/nodes/user/FreeformUserNode.h"
+#include "world/nodes/TransformNode.h"
 #include "asset/util/ParsingAux.h"
 #include "reflection/ReflectionTools.h"
 
@@ -106,6 +112,7 @@ void NodeFactory::LoadNode_Trs(const nlohmann::json& jsonTrsObject, Node* nodeTo
 
 void NodeFactory::LoadNode_Properties(const nlohmann::json& j, Node* node)
 {
-	refltools::CallVisitorOnEveryProperty(
-		node, refltools::JsonToPropVisitor_WithRelativePath(j, Engine::GetWorld()->GetLoadedFromHandle(), true));
+	auto local = refltools::JsonToPropVisitor_WithRelativePath(j, Engine::GetWorld()->GetLoadedFromHandle(), true);
+
+	refltools::CallVisitorOnEveryProperty(node, local);
 }
