@@ -43,9 +43,8 @@ Node* World::GetNodeByName(const std::string& name) const
 	return nullptr;
 }
 
-bool World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
+void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 {
-	TIMER_STATIC_SCOPE("Json Load");
 	LOG_INFO("Loading World file: \'{}\'", AssetManager::GetPodUri(scene));
 
 	AssetManager::Reload(scene);
@@ -55,15 +54,14 @@ bool World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 
 	try {
 		m_nodeFactory->LoadChildren(scene->document, m_root.get());
-	} catch (std::exception* e) {
-		LOG_ABORT("Exception: {}", e->what());
+	} catch (std::exception& e) {
+		LOG_ABORT("Failed to load world: {}", e.what());
 	}
 	m_root->m_dirty.set();
 
 	DirtyUpdateWorld();
 	LOG_INFO("World loaded succesfully");
 	m_root->m_dirty.reset();
-	return true;
 }
 
 void World::DirtyUpdateWorld()

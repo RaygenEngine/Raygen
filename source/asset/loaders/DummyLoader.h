@@ -45,40 +45,33 @@ inline void AllocateImage(ImagePod* pod, glm::u8vec4 color)
 	d[3] = color.a;
 }
 
-inline bool Load(ImagePod* pod, const uri::Uri& path)
+inline void Load(ImagePod* pod, const uri::Uri& path)
 {
 	nlohmann::json j = uri::GetJson(path);
 
 	auto str = j.value<std::string>("color", "");
 
-	if (str.empty() || str == "white") {
-		AllocateImage(pod, glm::u8vec4(255));
-		return true;
-	}
-
 	if (str == "normal") {
 		AllocateImage(pod, glm::u8vec4(128, 127, 255, 255));
-		return true;
+		return;
 	}
 
-	return false;
+	AllocateImage(pod, glm::u8vec4(255));
 }
 
-inline bool Load(TexturePod* pod, const uri::Uri& path)
+inline void Load(TexturePod* pod, const uri::Uri& path)
 {
 	nlohmann::json j = uri::GetJson(path);
 	pod->images.push_back(AssetManager::GetOrCreate<ImagePod>(uri::MakeChildJson("/genImg", j)));
-	return true;
 }
 
-inline bool Load(MaterialPod* pod, const uri::Uri&)
+inline void Load(MaterialPod* pod, const uri::Uri&)
 {
 	pod->baseColorTexture = GetWhiteTexture();
 	pod->normalTexture = GetNormalTexture();
 	pod->emissiveTexture = GetWhiteTexture();
 	pod->metallicRoughnessTexture = GetWhiteTexture();
 	pod->occlusionTexture = GetWhiteTexture();
-	return true;
 }
 
 

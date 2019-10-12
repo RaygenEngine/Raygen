@@ -70,13 +70,12 @@ class AssetManager {
 	template<typename T>
 	void TryLoad(T* into, const std::string& path)
 	{
-		bool loaded;
+
 		try {
-			loaded = T::Load(into, path);
+			T::Load(into, path);
 		} catch (std::exception& e) {
 			LOG_ABORT("Failed to load: {} {} Exception:\n{}", refl::GetName<T>(), path, e.what());
 		}
-		CLOG_ABORT(!loaded, "Failed to load: {} {}", refl::GetName<T>(), path);
 	}
 
 	template<typename T>

@@ -22,13 +22,7 @@ class NodeFactory : public Object {
 	friend class World;
 
 protected:
-	std::string FilterNodeName(std::string_view v)
-	{
-		if (v.substr(v.size() - 4) == detail::filter) {
-			v = v.substr(0, v.size() - 4);
-		}
-		return smath::ToLower(std::string{ v });
-	}
+	std::string FilterNodeName(std::string_view v);
 
 	template<typename T>
 	void RegisterNode()

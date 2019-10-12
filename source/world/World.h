@@ -60,19 +60,6 @@ public:
 	~World() override;
 
 	template<typename NodeType>
-	void AddNode(NodeType* node)
-	{
-		// TODO:
-		if constexpr (std::is_base_of_v<CameraNode, NodeType>) { // NOLINT
-			if (!m_activeCamera) {
-				m_activeCamera = node;
-			}
-		}
-		GetNodeMap<NodeType>().insert(node);
-		m_nodes.insert(node);
-	}
-
-	template<typename NodeType>
 	void RemoveNode(NodeType* node)
 	{
 		Event::OnWorldNodeRemoved.Broadcast(node);
@@ -148,7 +135,7 @@ public:
 	void Update();
 	// void WindowResize(int32 width, int32 height) override;
 
-	bool LoadAndPrepareWorld(PodHandle<JsonDocPod> scenePod);
+	void LoadAndPrepareWorld(PodHandle<JsonDocPod> scenePod);
 
 	[[nodiscard]] NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
 

@@ -14,62 +14,65 @@
 #include "asset/loaders/JsonDocLoader.h"
 
 #include "asset/UriLibrary.h"
+#include "system/Logger.h"
 
-
-bool GltfFilePod::Load(GltfFilePod* pod, const uri::Uri& path)
+void GltfFilePod::Load(GltfFilePod* pod, const uri::Uri& path)
 {
-	return GltfFileLoader::Load(pod, path);
+	GltfFileLoader::Load(pod, path);
 }
 
-bool ImagePod::Load(ImagePod* pod, const uri::Uri& path)
+void ImagePod::Load(ImagePod* pod, const uri::Uri& path)
 {
 	if (uri::IsCpu(path)) {
-		return CustomLoader::Load(pod, path);
+		CustomLoader::Load(pod, path);
+		return;
 	}
-	return ImageLoader::Load(pod, path);
+	ImageLoader::Load(pod, path);
 }
 
-bool MaterialPod::Load(MaterialPod* pod, const uri::Uri& path)
+void MaterialPod::Load(MaterialPod* pod, const uri::Uri& path)
 {
 	if (uri::MatchesExtension(path, ".gltf")) {
-		return GltfMaterialLoader::Load(pod, path);
+		GltfMaterialLoader::Load(pod, path);
+		return;
 	}
-	return CustomLoader::Load(pod, path);
+	CustomLoader::Load(pod, path);
 }
 
-bool ModelPod::Load(ModelPod* pod, const uri::Uri& path)
+void ModelPod::Load(ModelPod* pod, const uri::Uri& path)
 {
 	if (uri::MatchesExtension(path, ".gltf")) {
 		return GltfModelLoader::Load(pod, path);
 	}
-	// Add obj loader or others
 
-	return false;
+	LOG_ABORT("Unknown model file found: {}", path);
 }
 
-bool ShaderPod::Load(ShaderPod* pod, const uri::Uri& path)
+void ShaderPod::Load(ShaderPod* pod, const uri::Uri& path)
 {
 	return ShaderLoader::Load(pod, path);
 }
 
-bool StringPod::Load(StringPod* pod, const uri::Uri& path)
+void StringPod::Load(StringPod* pod, const uri::Uri& path)
 {
 	return TextLoader::Load(pod, path);
 }
 
-bool TexturePod::Load(TexturePod* pod, const uri::Uri& path)
+void TexturePod::Load(TexturePod* pod, const uri::Uri& path)
 {
 	if (uri::MatchesExtension(path, ".gltf")) {
-		return GltfTextureLoader::Load(pod, path);
+		GltfTextureLoader::Load(pod, path);
+		return;
 	}
 	if (uri::MatchesExtension(path, ".json")) {
-		return CubemapLoader::Load(pod, path);
+		CubemapLoader::Load(pod, path);
+		return;
 	}
 
-	return CustomLoader::Load(pod, path);
+	CustomLoader::Load(pod, path);
 }
 
-bool JsonDocPod::Load(JsonDocPod* pod, const uri::Uri& path)
+void JsonDocPod::Load(JsonDocPod* pod, const uri::Uri& path)
 {
-	return JsonDocLoader::Load(pod, path);
+	JsonDocLoader::Load(pod, path);
 }

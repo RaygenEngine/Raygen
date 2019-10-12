@@ -7,7 +7,7 @@
 
 struct JsonDocPod : public AssetPod {
 	REFLECTED_POD(JsonDocPod) {}
-	static bool Load(JsonDocPod* pod, const uri::Uri& path);
+	static void Load(JsonDocPod* pod, const uri::Uri& path);
 
 	nlohmann::json document;
 };
