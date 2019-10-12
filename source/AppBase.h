@@ -3,9 +3,8 @@
 // Base class for the custom and default "Game" class.
 // Game class provides overrides for the most important classes, functions and settings of the base engine.
 
-#include "world/NodeFactory.h"
-#include "system/Engine.h"
-#include "platform/Window.h"
+class NodeFactory;
+class Win32Window;
 
 class AppBase {
 protected:

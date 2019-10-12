@@ -1,6 +1,5 @@
 #pragma once
 
-#include "reflection/GenMacros.h"
 #include "asset/PodHandle.h"
 #include "asset/pods/ImagePod.h"
 

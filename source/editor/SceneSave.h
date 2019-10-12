@@ -6,7 +6,6 @@
 #include <imgui_ext/imfilebrowser.h>
 
 class World;
-class Node;
 
 class SceneSave {
 	ImGui::FileBrowser m_saveBrowser;

@@ -1,11 +1,16 @@
 #include "pch/pch.h"
 
 #include "world/World.h"
-#include "system/Engine.h"
 #include "world/NodeFactory.h"
+#include "world/nodes/RootNode.h"
+#include "world/nodes/camera/CameraNode.h"
+#include "world/nodes/light/DirectionalLightNode.h"
+#include "world/nodes/light/PunctualLightNode.h"
+#include "world/nodes/light/SpotLightNode.h"
+#include "world/nodes/geometry/GeometryNode.h"
 #include "editor/Editor.h"
 #include "reflection/ReflectionTools.h"
-#include "reflection/GetClass.h"
+#include "system/EngineEvents.h"
 
 World::World(NodeFactory* factory)
 	: m_nodeFactory(factory)
@@ -17,6 +22,7 @@ World::World(NodeFactory* factory)
 
 World::~World()
 {
+	m_root.reset();
 	delete m_nodeFactory;
 }
 

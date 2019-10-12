@@ -1,5 +1,7 @@
 #pragma once
 
+#include "system/Logger.h"
+
 // The central library for the engines Uri convention.
 #include <nlohmann/json.hpp>
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "world/nodes/geometry/GeometryNode.h"
-#include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/GLRendererBase.h"
+#include "renderer/renderers/opengl/assets/GLModel.h"
 
 namespace ogl {
 struct GLBasicGeometry : NodeObserver<GeometryNode, GLRendererBase> {

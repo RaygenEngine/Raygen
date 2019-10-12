@@ -1,13 +1,13 @@
 #pragma once
 
-#include "system/Engine.h"
 #include "asset/AssetPod.h"
-#include "reflection/PodReflection.h"
 #include "asset/UriLibrary.h"
 #include "asset/PodHandle.h"
+#include "asset/PodIncludes.h"
+#include "system/Engine.h"
+#include "system/Logger.h"
 
 #include <future>
-#include <thread>
 
 struct PodDeleter {
 	void operator()(AssetPod* p);

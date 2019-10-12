@@ -233,7 +233,6 @@ endif(MSVC)
 # 3rd party libraries
 target_link_libraries(Rayxen
 	glad.lib
-	tinyxml2.lib
 	opengl32.lib
 	XInput.lib
 )
@@ -255,7 +254,6 @@ include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/nlohmann)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/spdlog)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/stb_image)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/tinygltf)
-include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/tinyxml2)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -267,6 +265,9 @@ set_property(TARGET Rayxen PROPERTY CXX_STANDARD 17)
 set_property(TARGET Rayxen PROPERTY CXX_STANDARD_REQUIRED ON)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX ${PROJECT_NAME} FILES ${HEADER_FILES} ${SOURCE_FILES})
+
+#definitions (WINDOWS)
+add_compile_definitions(NOMINMAX NODRAWTEXT NOOPENFILE)
 
 # multi-core compilation
 if(MSVC)

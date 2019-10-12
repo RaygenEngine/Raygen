@@ -1,11 +1,8 @@
 #pragma once
 
-#include "platform/Window.h"
 #include "editor/SceneSave.h"
 #include "editor/AssetWindow.h"
 
-#include <filesystem>
-namespace fs = std::filesystem;
 class Node;
 
 class Editor {

@@ -1,5 +1,7 @@
 #include "pch/pch.h"
+
 #include "App.h"
+#include "system/Logger.h"
 
 int32 main(int32 argc, char* argv[])
 {

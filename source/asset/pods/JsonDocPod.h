@@ -1,6 +1,5 @@
 #pragma once
 
-#include "reflection/GenMacros.h"
 #include "asset/AssetPod.h"
 
 #include <nlohmann/json.hpp>
