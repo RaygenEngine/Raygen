@@ -1,7 +1,7 @@
 #pragma once
 
-#include "asset/PodIncludes.h"
 #include "reflection/TypeId.h"
+#include "asset/PodIncludes.h"
 
 #include <type_traits>
 

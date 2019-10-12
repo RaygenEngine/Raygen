@@ -3,8 +3,11 @@
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
 #include "world/World.h"
+#include "world/nodes/camera/CameraNode.h"
+#include "system/Input.h"
 
 #include <glad/glad.h>
+#include <glm/ext.hpp>
 
 
 namespace ogl {

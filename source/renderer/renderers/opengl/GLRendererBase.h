@@ -3,11 +3,10 @@
 #include "renderer/Renderer.h"
 #include "system/Engine.h"
 #include "renderer/GenericGpuAssetManager.h"
+#include "system/Engine.h"
 
 namespace ogl {
-struct GLAssetBase;
-
-using GLAssetManager = GenericGpuAssetManager<ogl::GLAssetBase>;
+class GLAssetManager;
 } // namespace ogl
 
 

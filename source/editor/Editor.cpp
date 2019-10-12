@@ -1,15 +1,18 @@
 #include "pch/pch.h"
 
 #include "editor/Editor.h"
-#include "world/World.h"
-#include "system/Engine.h"
 #include "editor/imgui/ImguiImpl.h"
-#include "platform/windows/Win32Window.h"
-#include "system/EngineEvents.h"
-#include "asset/PodIncludes.h"
 #include "asset/AssetManager.h"
-#include "reflection/ReflectionTools.h"
+#include "asset/PodIncludes.h"
+#include "platform/windows/Win32Window.h"
 #include "reflection/PodTools.h"
+#include "reflection/ReflectionTools.h"
+#include "system/Engine.h"
+#include "system/EngineEvents.h"
+#include "world/nodes/camera/CameraNode.h"
+#include "world/nodes/Node.h"
+#include "world/nodes/RootNode.h"
+#include "world/World.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_stdlib.h>

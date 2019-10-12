@@ -2,11 +2,18 @@
 
 #include "world/nodes/Node.h"
 #include "asset/util/ParsingAux.h"
-#include "world/NodeFactory.h"
 #include "asset/AssetManager.h"
-#include "asset/PodIncludes.h"
 #include "reflection/ReflectionTools.h"
 #include "world/World.h"
+
+// WIP: glm includer
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/transform.hpp"
+#include "glm/gtx/quaternion.hpp"
+#include "glm/gtx/matrix_decompose.hpp"
+#include "glm/ext/matrix_clip_space.hpp"
 
 RootNode* Node::GetWorldRoot() const
 {

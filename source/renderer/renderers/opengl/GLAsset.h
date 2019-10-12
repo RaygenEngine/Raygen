@@ -1,8 +1,8 @@
 #pragma once
-#include "renderer/NodeObserver.h"
-#include "renderer/renderers/opengl/GLRendererBase.h"
+
 #include "asset/AssetPod.h"
 #include "asset/PodHandle.h"
+#include "renderer/renderers/opengl/GLRendererBase.h"
 
 namespace ogl {
 struct GLAssetBase
@@ -18,8 +18,8 @@ struct GLAssetBase
 };
 
 template<typename PodTypeT>
-struct GLAsset : public GLAssetBase {
-public:
+struct GLAsset : GLAssetBase {
+
 	using PodType = PodTypeT;
 
 protected:

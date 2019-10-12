@@ -1,14 +1,18 @@
 #pragma once
 
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtx/quaternion.hpp>
+
 namespace math {
 template<typename T>
-inline bool EpsilonEqualsValue(T input, T value)
+bool EpsilonEqualsValue(T input, T value)
 {
 	return glm::epsilonEqual(input, value, glm::epsilon<T>());
 }
 
 template<typename T>
-inline bool EpsilonEqualsZero(T input)
+bool EpsilonEqualsZero(T input)
 {
 	return EpsilonEqualsValue(input, T{ 0.f });
 }

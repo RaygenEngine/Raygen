@@ -1,11 +1,10 @@
 ﻿#include "pch/pch.h"
 
 #include "world/nodes/user/FreeformUserNode.h"
-#include "world/World.h"
+#include "world/nodes/RootNode.h"
 #include "asset/util/ParsingAux.h"
 #include "system/Engine.h"
 #include "system/Input.h"
-#include "world/nodes/RootNode.h"
 
 void FreeformUserNode::Update(float deltaTime)
 {

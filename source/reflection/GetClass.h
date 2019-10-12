@@ -1,6 +1,9 @@
 #pragma once
 
+#include "reflection/ReflClass.h"
 #include "reflection/PodReflection.h"
+
+class Node;
 
 namespace refl {
 namespace detail {

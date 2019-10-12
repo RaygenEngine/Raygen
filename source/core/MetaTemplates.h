@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 template<typename F>
 struct return_type_impl;
 
