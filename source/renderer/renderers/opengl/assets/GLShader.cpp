@@ -46,7 +46,6 @@ bool GLShader::Load()
 	const GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
 	// Compile Fragment Shader
-	// LOG_TRACE("Compiling shader : {}", fragmentSource->GetFileName());
 	char const* fragmentSourcePointer = sources->fragment->data.c_str();
 	glShaderSource(fragmentShaderID, 1, &fragmentSourcePointer, NULL);
 	glCompileShader(fragmentShaderID); // Check Fragment Shader

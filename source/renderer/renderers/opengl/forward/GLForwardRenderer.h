@@ -12,13 +12,12 @@
 class CameraNode;
 
 namespace ogl {
-
-
 class GLForwardRenderer : public GLEditorRenderer {
 
 protected:
 	// shaders
 	GLShader* m_forwardSpotLightShader{ nullptr };
+	GLShader* m_forwardDirectionalLightShader{ nullptr };
 	GLShader* m_simpleOutShader{ nullptr };
 	GLShader* m_linearizeOutShader{ nullptr };
 	GLShader* m_bBoxShader{ nullptr };

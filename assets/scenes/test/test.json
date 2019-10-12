@@ -49,33 +49,25 @@
 			"pos": {
 				"y": 10
 			}
+		},
+		"color": {
+			"r": 0.94,
+			"g": 0.85,
+			"b": 0.64
 		}
 	},
 	{
 		"+type": "Spotlight",
-		"+name": "sl1",
+		"+name": "dwad",
 		"+trs": {
 			"pos": {
 				"y": 10
 			}
-		}
-	},
-	{
-		"+type": "Spotlight",
-		"+name": "sl1",
-		"+trs": {
-			"pos": {
-				"y": 10
-			}
-		}
-	},
-	{
-		"+type": "Spotlight",
-		"+name": "sl1",
-		"+trs": {
-			"pos": {
-				"y": 10
-			}
+		},
+		"color": {
+			"r": 0.94,
+			"g": 0.85,
+			"b": 0.64
 		}
 	}
 ]

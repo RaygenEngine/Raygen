@@ -10,7 +10,7 @@ void SpotLightNode::UpdateProjectionMatrix()
 
 void SpotLightNode::DirtyUpdate(DirtyFlagset flags)
 {
-	if (flags[DF::Projection]) {
+	if (flags[DF::Projection] || flags[DF::NearFar]) {
 		UpdateProjectionMatrix();
 	}
 }

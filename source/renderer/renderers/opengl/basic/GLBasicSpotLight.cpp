@@ -10,15 +10,12 @@ namespace ogl {
 GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 	: NodeObserver<SpotLightNode, GLRendererBase>(node)
 {
-	depthMap = GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap.json");
-	depthMap->AddUniform("mvp");
-
-	depthMapAlphaMask
-		= GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap_AlphaMask.json");
-	depthMapAlphaMask->AddUniform("mvp");
-	depthMapAlphaMask->AddUniform("base_color_factor");
-	depthMapAlphaMask->AddUniform("base_color_texcoord_index");
-	depthMapAlphaMask->AddUniform("alpha_cutoff");
+	depthMapShader = GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap.json");
+	depthMapShader->AddUniform("mvp");
+	depthMapShader->AddUniform("base_color_factor");
+	depthMapShader->AddUniform("base_color_texcoord_index");
+	depthMapShader->AddUniform("alpha_cutoff");
+	depthMapShader->AddUniform("mask");
 
 	glGenFramebuffers(1, &fbo);
 
@@ -59,39 +56,28 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-	auto shadowMapShader = depthMap;
+	glUseProgram(depthMapShader->id);
 
 	for (auto& geometry : geometries) {
 		auto m = geometry->node->GetWorldMatrix();
 		auto mvp = lightSpaceMatrix * m;
 
+		depthMapShader->UploadMat4("mvp", mvp);
+
 		for (auto& glMesh : geometry->glModel->meshes) {
+			glBindVertexArray(glMesh.vao);
+
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
 
-			switch (materialData->alphaMode) {
-					// blend not handled
-				case AM_BLEND:
-				case AM_OPAQUE:
-					shadowMapShader = depthMap;
-					glUseProgram(shadowMapShader->id);
-					break;
-				case AM_MASK:
-					shadowMapShader = depthMapAlphaMask;
-					glUseProgram(shadowMapShader->id);
 
-					shadowMapShader->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
-					shadowMapShader->UploadVec4("base_color_factor", materialData->baseColorFactor);
-					shadowMapShader->UploadInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
 
-					glActiveTexture(GL_TEXTURE0);
-					glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
-					break;
-			}
-
-			shadowMapShader->UploadMat4("mvp", mvp);
-
-			glBindVertexArray(glMesh.vao);
+			depthMapShader->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
+			depthMapShader->UploadVec4("base_color_factor", materialData->baseColorFactor);
+			depthMapShader->UploadInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
+			depthMapShader->UploadInt("mask", materialData->alphaMode == AlphaMode::AM_MASK ? GL_TRUE : GL_FALSE);
 
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
@@ -113,7 +99,7 @@ void GLBasicSpotLight::DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset)
 			GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	}
 
-	if (nodeDirtyFlagset[DF::Projection] || nodeDirtyFlagset[DF::TRS]) {
+	if (nodeDirtyFlagset[DF::Projection] || nodeDirtyFlagset[DF::TRS] || nodeDirtyFlagset[DF::NearFar]) {
 		lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 	}
 }
