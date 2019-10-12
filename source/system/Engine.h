@@ -14,7 +14,6 @@ class AppBase;
 class NodeFactory;
 
 #include "system/Timer.h"
-#include "system/Logger.h"
 
 class Engine {
 private:
@@ -32,7 +31,7 @@ public:
 
 	// It is HIGHLY recommended to validate this result in your code for future compatibility
 	// Window will not be guaranteed to exist in the future (possible use: Headless Server)
-	[[nodiscard]] static Win32Window* GetMainWindow() { return Get().m_window; }
+	[[nodiscard]] static WindowType* GetMainWindow() { return Get().m_window; }
 
 	// FileAsset manager will be valid forever after initialization.
 	[[nodiscard]] static AssetManager* GetAssetManager() { return Get().m_assetManager; }
@@ -140,10 +139,11 @@ public:
 	// Query if the editor could be activated during runtime. Cannot change after engine initialization
 	[[nodiscard]] static bool IsEditorEnabled();
 
+	// WIP: cpp
 	void ReportFrameDrawn()
 	{
 		if (!m_initToFrameTimer.m_stopped) {
-			LOG_WARN("Init to frame took: {} ms", m_initToFrameTimer.Get());
+			// LOG_WARN("Init to frame took: {} ms", m_initToFrameTimer.Get());
 			m_initToFrameTimer.Stop();
 		}
 	}

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "reflection/TypeId.h"
+#include "reflection/GenMacros.h"
 
 namespace uri {
 using Uri = std::string;
@@ -17,14 +17,13 @@ struct AssetPod {
 	};
 
 protected:
-	// Do not ever delete generic asset pod pointer. There is no virtual destructor,
-	// always use DeletePod(AssetPod*) or cast to underlying pod type
+	// Do not ever delete generic asset pod pointer
 	AssetPod() = default;
 	~AssetPod() = default;
-	AssetPod(const AssetPod&) = default;
-	AssetPod(AssetPod&&) = default;
-	AssetPod& operator=(const AssetPod&) = default;
-	AssetPod& operator=(AssetPod&&) = default;
+	AssetPod(const AssetPod&) = delete;
+	AssetPod(AssetPod&&) = delete;
+	AssetPod& operator=(const AssetPod&) = delete;
+	AssetPod& operator=(AssetPod&&) = delete;
 };
 
 struct BasePodHandle {

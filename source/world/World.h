@@ -1,25 +1,25 @@
 #pragma once
 
-#include "world/nodes/Node.h"
-#include "world/nodes/geometry/GeometryNode.h"
-#include "world/nodes/TransformNode.h"
-#include "world/nodes/light/PunctualLightNode.h"
-#include "world/nodes/camera/CameraNode.h"
-#include "world/nodes/user/UserNode.h"
 #include "asset/AssetManager.h"
-#include "system/Input.h"
-#include "world/nodes/light/DirectionalLightNode.h"
-#include "world/nodes/light/SpotLightNode.h"
-#include "world/nodes/RootNode.h"
+#include "system/Object.h"
 
+#include <unordered_set>
+
+class Node;
+class RootNode;
 class CameraNode;
-
+class PunctualLightNode;
+class GeometryNode;
+class SpotLightNode;
+class DirectionalLightNode;
 
 class World : public Object {
 
 	friend class Editor;
 	friend class NodeFactory;
 
+
+	std::unique_ptr<RootNode> m_root;
 	mutable std::unordered_set<Node*> m_nodes;
 	mutable std::unordered_set<GeometryNode*> m_geomteryNodes;
 	mutable std::unordered_set<PunctualLightNode*> m_punctualLights;
@@ -27,8 +27,9 @@ class World : public Object {
 	mutable std::unordered_set<SpotLightNode*> m_spotLights;
 	mutable std::unordered_set<CameraNode*> m_cameraNodes;
 
+
 	NodeFactory* m_nodeFactory;
-	std::unique_ptr<RootNode> m_root;
+
 	PodHandle<JsonDocPod> m_loadedFrom;
 
 	CameraNode* m_activeCamera{ nullptr };

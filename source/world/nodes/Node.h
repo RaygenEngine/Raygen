@@ -2,13 +2,14 @@
 
 #include "reflection/GenMacros.h" // include gen macros here even if not needed to propagate to all node headers
 #include "system/Object.h"
-#include "system/Engine.h"
 
 #include <bitset>
 
 class AssetManager;
 class World;
 class RootNode;
+
+class Node;
 
 using DirtyFlagset = std::bitset<64>;
 using NodeDeleterFunc = void (*)(Node*);
@@ -140,7 +141,6 @@ public:
 	// Returns nullptr IF AND ONLY IF "this" node is the root node.
 	[[nodiscard]] Node* GetParent() const { return m_parent; }
 
-	[[nodiscard]] World* GetWorld() const { return Engine::GetWorld(); }
 	[[nodiscard]] RootNode* GetWorldRoot() const;
 
 	void SetLocalTranslation(glm::vec3 lt);

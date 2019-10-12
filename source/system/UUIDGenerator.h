@@ -1,7 +1,5 @@
 #pragma once
 
-#include <mutex>
-
 #define INVALID_ID 0u
 
 namespace utl {
@@ -16,13 +14,8 @@ class UUIDGenerator {
 public: // thread safe UUID generator
 	static UID GenerateUUID()
 	{
-		static std::mutex mutex;
 		static UUIDGenerator instance;
-		mutex.lock();
 		const auto v = instance.m_currentId++;
-
-		mutex.unlock();
-
 		return v;
 	}
 

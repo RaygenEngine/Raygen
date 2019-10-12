@@ -2,6 +2,9 @@
 
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
+#include "asset/AssetManager.h"
+
+#include <glm/gtc/type_ptr.hpp>
 
 namespace ogl {
 GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "renderer/renderers/opengl/GLEditorRenderer.h"
-#include "world/nodes/camera/CameraNode.h"
 #include "renderer/renderers/opengl/assets/GLShader.h"
 #include "renderer/renderers/opengl/assets/GLTexture.h"
 #include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
@@ -9,6 +8,7 @@
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
 #include "renderer/renderers/opengl/basic/GLBasicSkybox.h"
 
+class CameraNode;
 
 namespace ogl {
 class GLDeferredRenderer : public GLEditorRenderer {

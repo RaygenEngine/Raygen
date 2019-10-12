@@ -2,13 +2,17 @@
 
 #include "renderer/renderers/opengl/forward/GLForwardRenderer.h"
 #include "renderer/renderers/opengl/assets/GLModel.h"
-#include "renderer/renderers/opengl/assets/GLShader.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "renderer/renderers/opengl/basic/GLBasicSkybox.h"
 #include "world/World.h"
+#include "world/nodes/camera/CameraNode.h"
+#include "world/nodes/RootNode.h"
+#include "system/Input.h"
+// WIP:
 #include "platform/windows/Win32Window.h"
 
 #include <glad/glad.h>
+#include <glm/ext.hpp>
 
 namespace ogl {
 GLForwardRenderer::~GLForwardRenderer()
