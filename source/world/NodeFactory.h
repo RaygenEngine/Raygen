@@ -1,6 +1,8 @@
 #pragma once
 
 #include "nodes/Node.h"
+#include "core/StringAux.h"
+
 #include <functional>
 #include <unordered_map>
 #include <nlohmann/json.hpp>

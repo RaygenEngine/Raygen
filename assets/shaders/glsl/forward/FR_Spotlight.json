@@ -1,0 +1,4 @@
+{
+	"vert": "FR_TangentSpace.vert",
+	"frag": "FR_Spotlight.frag"
+}
