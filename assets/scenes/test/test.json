@@ -50,5 +50,32 @@
 				"y": 10
 			}
 		}
+	},
+	{
+		"+type": "Spotlight",
+		"+name": "sl1",
+		"+trs": {
+			"pos": {
+				"y": 10
+			}
+		}
+	},
+	{
+		"+type": "Spotlight",
+		"+name": "sl1",
+		"+trs": {
+			"pos": {
+				"y": 10
+			}
+		}
+	},
+	{
+		"+type": "Spotlight",
+		"+name": "sl1",
+		"+trs": {
+			"pos": {
+				"y": 10
+			}
+		}
 	}
 ]

@@ -3,27 +3,19 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-
 #include <cinttypes>
 #include <stddef.h>
 
-#include <glm/fwd.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
-
-#include <string>
-#include <iterator>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include <type_traits>
 
+// int types
 #include "core/Types.h"
-
+// enums/structs
 #include "core/CoreEnums.h"
 #include "core/CoreStructs.h"
-
-
-// auxiliary
-#include "core/MathAux.h"
-#include "core/StringAux.h"
-
 // meta
 #include "core/MetaTemplates.h"

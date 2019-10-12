@@ -7,7 +7,7 @@
 #include "system/Input.h"
 
 #include <glad/glad.h>
-#include <glm/ext.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
 namespace ogl {

@@ -4,20 +4,17 @@ out vec4 out_color;
   
 in Data
 { 
-	vec3 world_pos;  
-	vec3 world_normal;
-	vec4 world_tangent;
-	vec3 world_bitangent;
-
+// WIP: currently world space
 	vec3 tangent_pos;
 	vec3 tangent_view_pos;
 	vec3 tangent_light_pos;
 	
-	vec2 text_coord0;
-	vec2 text_coord1;
+	vec2 text_coord[2];
 	
+	// WIP: tangent space only calcs in fragment shader
 	mat3 TBN;
 	
+	// WIP: check what to do with this one
 	vec4 light_fragpos;
 } dataIn;
 
@@ -26,7 +23,6 @@ uniform vec3 view_pos;
 uniform vec3 light_pos;
 uniform vec3 light_color;
 uniform float light_intensity;
-
 uniform float light_near;
 
 uniform vec3 ambient;
@@ -37,19 +33,20 @@ uniform float metallic_factor;
 uniform float roughness_factor;
 uniform float normal_scale;
 uniform float occlusion_strength;
-uniform int alpha_mode;
-uniform float alpha_cutoff;
-uniform bool double_sided;
+
+uniform int base_color_texcoord_index;
+uniform int metallic_roughness_texcoord_index;
+uniform int emissive_texcoord_index;
+uniform int normal_texcoord_index;
+uniform int occlusion_texcoord_index;
 
 layout(binding=0) uniform sampler2D baseColorSampler;
 layout(binding=1) uniform sampler2D metallicRoughnessSampler;
 layout(binding=2) uniform sampler2D emissiveSampler;
 layout(binding=3) uniform sampler2D normalSampler;
 layout(binding=4) uniform sampler2D occlusionSampler;
-// this renderer currently supports a single directional light map
-layout(binding=5) uniform sampler2D shadowMapSampler;
+layout(binding=5) uniform sampler2D spotLightMapSampler;
 
-#define _1_PI 0.318309886183790671538f
 #define PI 3.14159265358979323846f
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
@@ -70,14 +67,14 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
 	float bias = 0.005;//max(0.05 * (1.0 - max(dot(N, L), 0.0)), 0.005); 
 	
 	float shadow = 0.0;
-	vec2 texelSize = 1.0 / textureSize(shadowMapSampler, 0);
+	vec2 texelSize = 1.0 / textureSize(spotLightMapSampler, 0);
 	int n = 1;
 	for(int x = -n; x <= n; ++x)
 	{
 		for(int y = -n; y <= n; ++y)
 		{
 		    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-			float pcfDepth = texture(shadowMapSampler, projCoords.xy + vec2(x, y) * texelSize).r; 
+			float pcfDepth = texture(spotLightMapSampler, projCoords.xy + vec2(x, y) * texelSize).r; 
 			shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
 		}    
 	}
@@ -130,11 +127,11 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 void main()
 {
 	// sample material textures
-	vec4 sampled_base_color = texture(baseColorSampler, dataIn.text_coord0);
-	vec4 sampled_metallic_roughness = texture(metallicRoughnessSampler, dataIn.text_coord0);
-	vec4 sampled_emissive = texture(emissiveSampler, dataIn.text_coord0);
-	vec4 sampled_sample_normal = texture(normalSampler, dataIn.text_coord0);
-	vec4 sampled_occlusion = texture(occlusionSampler, dataIn.text_coord0);
+	vec4 sampled_base_color = texture(baseColorSampler, dataIn.text_coord[base_color_texcoord_index]);
+	vec4 sampled_metallic_roughness = texture(metallicRoughnessSampler, dataIn.text_coord[metallic_roughness_texcoord_index]);
+	vec4 sampled_emissive = texture(emissiveSampler, dataIn.text_coord[emissive_texcoord_index]);
+	vec4 sampled_sample_normal = texture(normalSampler, dataIn.text_coord[normal_texcoord_index]);
+	vec4 sampled_occlusion = texture(occlusionSampler, dataIn.text_coord[occlusion_texcoord_index]);
 	
 	// final material values
 	vec3 albedo = sampled_base_color.rgb * base_color_factor.rgb;
@@ -146,18 +143,18 @@ void main()
 	vec3 normal = sampled_sample_normal.rgb;
 
 	// mask mode and cutoff, TODO: handle other modes as well
-	if(alpha_mode == 1 && opacity < alpha_cutoff)
-		discard;
+	//if(alpha_mode == 1 && opacity < alpha_cutoff)
+	//	discard;
 		
 	// vectors
 
 	// TODO: all calculations in tangent space
 	vec3 N = normalize((normal.rgb * 2.0 - 1.0) * vec3(normal_scale, normal_scale, 1.0));
 	N = normalize(dataIn.TBN * N);
-	vec3 V = normalize(view_pos - dataIn.world_pos);
+	vec3 V = normalize(view_pos - dataIn.tangent_pos);
 	
 	// loop lights
-	vec3 L = normalize(light_pos - dataIn.world_pos); 
+	vec3 L = normalize(light_pos - dataIn.tangent_pos); 
 	vec3 H = normalize(V + L);
 
 	vec3 F0 = vec3(0.04); 
@@ -177,7 +174,7 @@ void main()
 	kD *= 1.0 - metallic;
 	
 	// light stuff
-	float distance = length(light_pos - dataIn.world_pos);
+	float distance = length(light_pos - dataIn.tangent_pos);
 	float attenuation = 1.0 / (distance);
 	float shadow = ShadowCalculation(dataIn.light_fragpos, N, L); 
 	vec3 radiance = ((1.0 - shadow) * light_color * light_intensity * attenuation) + ambient; 

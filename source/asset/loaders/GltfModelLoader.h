@@ -5,8 +5,10 @@
 #include "asset/pods/GltfFilePod.h"
 #include "asset/loaders/DummyLoader.h"
 #include "asset/util/GltfAux.h"
+#include "core/MathAux.h"
 
 #include <tinygltf/tiny_gltf.h>
+
 
 namespace GltfModelLoader {
 namespace {

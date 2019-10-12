@@ -66,7 +66,7 @@ private:
 	glm::vec3 m_localTranslation{ 0.f, 0.f, 0.f };
 	glm::quat m_localOrientation{ 1.f, 0.f, 0.f, 0.f };
 	glm::vec3 m_localScale{ 1.f, 1.f, 1.f };
-	glm::mat4 m_localMatrix{ glm::identity<glm::mat4>() };
+	glm::mat4 m_localMatrix{};
 
 	// world
 	glm::vec3 m_worldTranslation{ 0.f, 0.f, 0.f };

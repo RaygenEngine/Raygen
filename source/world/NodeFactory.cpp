@@ -13,6 +13,7 @@
 #include "world/nodes/TransformNode.h"
 #include "asset/util/ParsingAux.h"
 #include "reflection/ReflectionTools.h"
+#include "core/MathAux.h"
 
 #include <nlohmann/json.hpp>
 

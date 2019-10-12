@@ -12,7 +12,7 @@
 #include "platform/windows/Win32Window.h"
 
 #include <glad/glad.h>
-#include <glm/ext.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace ogl {
 GLForwardRenderer::~GLForwardRenderer()
@@ -62,7 +62,7 @@ void GLForwardRenderer::InitShaders()
 	m_linearizeOutShader->AddUniform("far");
 
 	m_forwardSpotLightShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/forward/FR_PBRtemp.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/forward/FR_Spotlight.json");
 
 	m_forwardSpotLightShader->AddUniform("mvp");
 	m_forwardSpotLightShader->AddUniform("m");
@@ -72,6 +72,8 @@ void GLForwardRenderer::InitShaders()
 	m_forwardSpotLightShader->AddUniform("light_pos");
 	m_forwardSpotLightShader->AddUniform("light_color");
 	m_forwardSpotLightShader->AddUniform("light_intensity");
+	m_forwardSpotLightShader->AddUniform("light_space_matrix");
+	m_forwardSpotLightShader->AddUniform("light_near");
 	m_forwardSpotLightShader->AddUniform("base_color_factor");
 	m_forwardSpotLightShader->AddUniform("emissive_factor");
 	m_forwardSpotLightShader->AddUniform("ambient");
@@ -79,11 +81,11 @@ void GLForwardRenderer::InitShaders()
 	m_forwardSpotLightShader->AddUniform("roughness_factor");
 	m_forwardSpotLightShader->AddUniform("normal_scale");
 	m_forwardSpotLightShader->AddUniform("occlusion_strength");
-	m_forwardSpotLightShader->AddUniform("alpha_mode");
-	m_forwardSpotLightShader->AddUniform("alpha_cutoff");
-	m_forwardSpotLightShader->AddUniform("double_sided");
-	m_forwardSpotLightShader->AddUniform("light_space_matrix");
-	m_forwardSpotLightShader->AddUniform("light_near");
+	m_forwardSpotLightShader->AddUniform("base_color_texcoord_index");
+	m_forwardSpotLightShader->AddUniform("metallic_roughness_texcoord_index");
+	m_forwardSpotLightShader->AddUniform("emissive_texcoord_index");
+	m_forwardSpotLightShader->AddUniform("normal_texcoord_index");
+	m_forwardSpotLightShader->AddUniform("occlusion_texcoord_index");
 
 	m_bBoxShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/BBox.json");
 	m_bBoxShader->AddUniform("vp");
@@ -235,9 +237,17 @@ void GLForwardRenderer::RenderSpotLights()
 				glUniform1f(m_forwardSpotLightShader->GetUniform("normal_scale"), materialData->normalScale);
 				glUniform1f(
 					m_forwardSpotLightShader->GetUniform("occlusion_strength"), materialData->occlusionStrength);
-				glUniform1i(m_forwardSpotLightShader->GetUniform("alpha_mode"), materialData->alphaMode);
-				glUniform1f(m_forwardSpotLightShader->GetUniform("alpha_cutoff"), materialData->alphaCutoff);
-				glUniform1i(m_forwardSpotLightShader->GetUniform("double_sided"), materialData->doubleSided);
+
+				glUniform1i(m_forwardSpotLightShader->GetUniform("base_color_texcoord_index"),
+					materialData->baseColorTexCoordIndex);
+				glUniform1i(m_forwardSpotLightShader->GetUniform("metallic_roughness_texcoord_index"),
+					materialData->metallicRoughnessTexCoordIndex);
+				glUniform1i(m_forwardSpotLightShader->GetUniform("emissive_texcoord_index"),
+					materialData->emissiveTexCoordIndex);
+				glUniform1i(
+					m_forwardSpotLightShader->GetUniform("normal_texcoord_index"), materialData->normalTexCoordIndex);
+				glUniform1i(m_forwardSpotLightShader->GetUniform("occlusion_texcoord_index"),
+					materialData->occlusionTexCoordIndex);
 
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
