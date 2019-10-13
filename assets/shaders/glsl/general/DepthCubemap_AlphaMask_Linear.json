@@ -1,0 +1,5 @@
+{
+	"vert" : "DepthCubemap_AlphaMask_Linear.vert",
+	"geom" : "DepthCubemap_AlphaMask_Linear.geom",
+	"frag" : "DepthCubemap_AlphaMask_Linear.frag"
+}

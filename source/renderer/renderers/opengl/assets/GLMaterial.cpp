@@ -6,7 +6,7 @@
 #include "renderer/renderers/opengl/assets/GLTexture.h"
 
 namespace ogl {
-bool GLMaterial::Load()
+void GLMaterial::Load()
 {
 	auto materialData = podHandle.Lock();
 
@@ -17,8 +17,6 @@ bool GLMaterial::Load()
 	occlusionTexture = glAm->GpuGetOrCreate<GLTexture>(materialData->occlusionTexture);
 	normalTexture = glAm->GpuGetOrCreate<GLTexture>(materialData->normalTexture);
 	emissiveTexture = glAm->GpuGetOrCreate<GLTexture>(materialData->emissiveTexture);
-
-	return true;
 }
 
 } // namespace ogl

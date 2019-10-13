@@ -224,11 +224,11 @@ void GLDeferredRenderer::RenderGBuffer()
 				case MaterialPod::BLEND:
 				case MaterialPod::OPAQUE:
 					gBufferShader = m_gBuffer.shader;
-					glUseProgram(gBufferShader->id);
+					glUseProgram(gBufferShader->programId);
 					break;
 				case MaterialPod::MASK:
 					gBufferShader = m_gBuffer.shaderAlphaMask;
-					glUseProgram(gBufferShader->id);
+					glUseProgram(gBufferShader->programId);
 					m_gBuffer.shaderAlphaMask->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
 					break;
 			}
@@ -290,7 +290,7 @@ void GLDeferredRenderer::RenderDirectionalLights()
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
 
-		glUseProgram(m_deferredDirectionalLightShader->id);
+		glUseProgram(m_deferredDirectionalLightShader->programId);
 
 		// global uniforms
 		m_deferredDirectionalLightShader->UploadVec3("view_pos", m_camera->GetWorldTranslation());
@@ -336,7 +336,7 @@ void GLDeferredRenderer::RenderSpotLights()
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
 
-		glUseProgram(m_deferredSpotLightShader->id);
+		glUseProgram(m_deferredSpotLightShader->programId);
 
 		// global uniforms
 		m_deferredDirectionalLightShader->UploadVec3("view_pos", m_camera->GetWorldTranslation());

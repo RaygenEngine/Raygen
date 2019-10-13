@@ -11,7 +11,7 @@ GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 	: NodeObserver<SpotLightNode, GLRendererBase>(node)
 {
 	depthMapShader
-		= GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMapAlphaMask.json");
+		= GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap_AlphaMask.json");
 	depthMapShader->AddUniform("mvp");
 	depthMapShader->AddUniform("base_color_factor");
 	depthMapShader->AddUniform("base_color_texcoord_index");
@@ -19,10 +19,11 @@ GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 	depthMapShader->AddUniform("mask");
 
 	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 	glGenTextures(1, &shadowMap);
-
 	glBindTexture(GL_TEXTURE_2D, shadowMap);
+
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, node->GetShadowMapWidth(), node->GetShadowMapHeight(), 0,
 		GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -32,10 +33,12 @@ GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 	float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
+
+	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE,
+		"ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
 }
 
 GLBasicSpotLight::~GLBasicSpotLight()
@@ -58,7 +61,7 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 	if (!node->CastsShadows())
 		return;
 
-	glUseProgram(depthMapShader->id);
+	glUseProgram(depthMapShader->programId);
 
 	auto vp = node->GetViewProjectionMatrix();
 
@@ -101,7 +104,7 @@ void GLBasicSpotLight::DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset)
 {
 	using DF = SpotLightNode::DF;
 
-	if (nodeDirtyFlagset[DF::ResizeShadows]) {
+	if (nodeDirtyFlagset[DF::ShadowsTextSize]) {
 		glBindTexture(GL_TEXTURE_2D, shadowMap);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, node->GetShadowMapWidth(), node->GetShadowMapHeight(), 0,
 			GL_DEPTH_COMPONENT, GL_FLOAT, NULL);

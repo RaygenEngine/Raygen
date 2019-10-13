@@ -4,12 +4,12 @@
 
 class DirectionalLightNode : public LightNode {
 
-	REFLECTED_NODE(DirectionalLightNode, LightNode, DF_FLAGS(Projection))
+	REFLECTED_NODE(DirectionalLightNode, LightNode, DF_FLAGS(OrthoSides))
 	{
-		REFLECT_VAR(m_left).OnDirty(DF::Projection);
-		REFLECT_VAR(m_right).OnDirty(DF::Projection);
-		REFLECT_VAR(m_bottom).OnDirty(DF::Projection);
-		REFLECT_VAR(m_top).OnDirty(DF::Projection);
+		REFLECT_VAR(m_left).OnDirty(DF::OrthoSides);
+		REFLECT_VAR(m_right).OnDirty(DF::OrthoSides);
+		REFLECT_VAR(m_bottom).OnDirty(DF::OrthoSides);
+		REFLECT_VAR(m_top).OnDirty(DF::OrthoSides);
 	}
 
 	glm::mat4 m_projectionMatrix{};

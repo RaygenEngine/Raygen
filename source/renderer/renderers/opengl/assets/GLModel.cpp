@@ -17,7 +17,7 @@ GLModel::~GLModel()
 	}
 }
 
-bool GLModel::LoadGLMesh(const ModelPod& model, GLMesh& glMesh, const GeometryGroup& data)
+void GLModel::LoadGLMesh(const ModelPod& model, GLMesh& glMesh, const GeometryGroup& data)
 {
 	glMesh.geometryMode = GetGLGeometryMode(data.mode);
 	glMesh.geometryUsage = GetGLGeometryUsage(data.usage);
@@ -54,14 +54,10 @@ bool GLModel::LoadGLMesh(const ModelPod& model, GLMesh& glMesh, const GeometryGr
 	auto materialHandle = model.materials[data.materialIndex];
 	glMesh.material = GetGLAssetManager(this)->GpuGetOrCreate<GLMaterial>(materialHandle);
 
-	DebugBoundVAO("name");
-
 	glBindVertexArray(0);
-
-	return true;
 }
 
-bool GLModel::Load()
+void GLModel::Load()
 {
 	auto modelData = podHandle.Lock();
 	TIMER_STATIC_SCOPE("uploading model time");
@@ -69,12 +65,8 @@ bool GLModel::Load()
 	for (auto& mesh : modelData->meshes) {
 		for (auto& geometryGroup : mesh.geometryGroups) {
 			GLMesh& glmesh = meshes.emplace_back(GLMesh());
-			if (!LoadGLMesh(*modelData, glmesh, geometryGroup)) {
-				return false;
-			}
+			LoadGLMesh(*modelData, glmesh, geometryGroup);
 		}
 	}
-
-	return true;
 }
 } // namespace ogl

@@ -31,7 +31,7 @@ protected:
 
 	PodHandle<PodType> podHandle;
 
-	virtual bool Load() = 0;
+	virtual void Load() = 0;
 
 private:
 	friend GenericGpuAssetManager<GLAssetBase>;

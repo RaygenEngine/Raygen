@@ -22,7 +22,7 @@ void DirectionalLightNode::RecalculateViewProjectionMatrix()
 
 void DirectionalLightNode::DirtyUpdate(DirtyFlagset flags)
 {
-	if (flags[DF::Projection] || flags[DF::NearFar]) {
+	if (flags[DF::OrthoSides] || flags[DF::NearFar]) {
 		RecalculateProjectionMatrix();
 	}
 

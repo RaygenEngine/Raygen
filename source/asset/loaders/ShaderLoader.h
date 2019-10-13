@@ -33,6 +33,11 @@ inline void Load(ShaderPod* pod, const uri::Uri& path)
 		pod->vertex = AssetManager::GetOrCreateFromParentUri<StringPod>(newFilePath, path);
 	}
 
+	newFilePath = j.value<std::string>("geom", "");
+	if (!newFilePath.empty()) {
+		pod->geometry = AssetManager::GetOrCreateFromParentUri<StringPod>(newFilePath, path);
+	}
+
 	newFilePath = j.value<std::string>("frag", "");
 	if (!newFilePath.empty()) {
 		pod->fragment = AssetManager::GetOrCreateFromParentUri<StringPod>(newFilePath, path);

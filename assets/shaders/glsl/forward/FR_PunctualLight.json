@@ -1,0 +1,4 @@
+{
+	"vert": "FR_PunctualLight.vert",
+	"frag": "FR_PunctualLight.frag"
+}

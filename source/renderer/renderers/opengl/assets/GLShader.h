@@ -7,7 +7,7 @@
 
 namespace ogl {
 struct GLShader : GLAsset<ShaderPod> {
-	GLuint id{ 0 };
+	GLuint programId{ 0 };
 	bool firstLoad{ true };
 
 	GLShader(PodHandle<ShaderPod> handle)
@@ -17,9 +17,11 @@ struct GLShader : GLAsset<ShaderPod> {
 
 	~GLShader() override;
 
-	void AddUniform(const std::string& uniformName);
-	bool Load() override;
 
+	void Load() override;
+
+
+	void AddUniform(const std::string& uniformName);
 	void UploadInt(const std::string& uniformName, int i);
 	void UploadFloat(const std::string& uniformName, float f);
 	void UploadVec2(const std::string& uniformName, glm::vec2 v);
