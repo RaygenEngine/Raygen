@@ -5,7 +5,7 @@
 void SpotLightNode::RecalculateProjectionMatrix()
 {
 	auto ar = static_cast<float>(m_shadowMapWidth) / static_cast<float>(m_shadowMapHeight);
-	m_projectionMatrix = glm::perspective(glm::radians(m_aperture), ar, m_near, m_far);
+	m_projectionMatrix = glm::perspective(glm::radians(m_outerAperture), ar, m_near, m_far);
 	RecalculateViewProjectionMatrix();
 }
 
