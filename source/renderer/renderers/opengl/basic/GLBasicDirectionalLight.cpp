@@ -10,7 +10,8 @@ namespace ogl {
 GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
 	: NodeObserver<DirectionalLightNode, GLRendererBase>(node)
 {
-	depthMapShader = GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap.json");
+	depthMapShader
+		= GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMapAlphaMask.json");
 	depthMapShader->AddUniform("mvp");
 	depthMapShader->AddUniform("base_color_factor");
 	depthMapShader->AddUniform("base_color_texcoord_index");
@@ -49,7 +50,6 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	glEnable(GL_CULL_FACE);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glClear(GL_DEPTH_BUFFER_BIT);
