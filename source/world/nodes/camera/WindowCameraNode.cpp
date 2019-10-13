@@ -6,6 +6,10 @@
 WindowCameraNode::WindowCameraNode()
 	: CameraNode()
 {
+	auto wnd = Engine::GetMainWindow();
+	m_viewportWidth = wnd->GetWidth();
+	m_viewportHeight = wnd->GetHeight();
+
 	m_resizeListener.BindMember(this, &WindowCameraNode::WindowResize);
 }
 
