@@ -10,15 +10,13 @@ namespace ogl {
 GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 	: NodeObserver<SpotLightNode, GLRendererBase>(node)
 {
-	depthMap = GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap.json");
-	depthMap->AddUniform("mvp");
-
-	depthMapAlphaMask
-		= GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap_AlphaMask.json");
-	depthMapAlphaMask->AddUniform("mvp");
-	depthMapAlphaMask->AddUniform("base_color_factor");
-	depthMapAlphaMask->AddUniform("base_color_texcoord_index");
-	depthMapAlphaMask->AddUniform("alpha_cutoff");
+	depthMapShader
+		= GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMapAlphaMask.json");
+	depthMapShader->AddUniform("mvp");
+	depthMapShader->AddUniform("base_color_factor");
+	depthMapShader->AddUniform("base_color_texcoord_index");
+	depthMapShader->AddUniform("alpha_cutoff");
+	depthMapShader->AddUniform("mask");
 
 	glGenFramebuffers(1, &fbo);
 
@@ -38,8 +36,6 @@ GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
-
-	lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 }
 
 GLBasicSpotLight::~GLBasicSpotLight()
@@ -54,45 +50,42 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	glEnable(GL_CULL_FACE);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-	auto gBufferShader = depthMap;
+	if (!node->CastsShadows())
+		return;
+
+	glUseProgram(depthMapShader->id);
+
+	auto vp = node->GetViewProjectionMatrix();
 
 	for (auto& geometry : geometries) {
 		auto m = geometry->node->GetWorldMatrix();
-		auto mvp = lightSpaceMatrix * m;
+		auto mvp = vp * m;
+
+		depthMapShader->UploadMat4("mvp", mvp);
 
 		for (auto& glMesh : geometry->glModel->meshes) {
+
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
 
-			switch (materialData->alphaMode) {
-					// blend not handled
-				case AM_BLEND:
-				case AM_OPAQUE:
-					gBufferShader = depthMap;
-					glUseProgram(gBufferShader->id);
-					break;
-				case AM_MASK:
-					gBufferShader = depthMapAlphaMask;
-					glUseProgram(gBufferShader->id);
-					glUniform1f(gBufferShader->GetUniform("alpha_cutoff"), materialData->alphaCutoff);
-					glUniform4fv(gBufferShader->GetUniform("base_color_factor"), 1,
-						glm::value_ptr(materialData->baseColorFactor));
-					glUniform1i(
-						gBufferShader->GetUniform("base_color_texcoord_index"), materialData->baseColorTexCoordIndex);
-					glActiveTexture(GL_TEXTURE0);
-					glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
-					break;
-			}
-
-			glUniformMatrix4fv(gBufferShader->GetUniform("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
+			if (materialData->unlit)
+				continue;
 
 			glBindVertexArray(glMesh.vao);
+
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
+
+			depthMapShader->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
+			depthMapShader->UploadVec4("base_color_factor", materialData->baseColorFactor);
+			depthMapShader->UploadInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
+			depthMapShader->UploadInt("mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
 
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
@@ -112,10 +105,6 @@ void GLBasicSpotLight::DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset)
 		glBindTexture(GL_TEXTURE_2D, shadowMap);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, node->GetShadowMapWidth(), node->GetShadowMapHeight(), 0,
 			GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	}
-
-	if (nodeDirtyFlagset[DF::Projection] || nodeDirtyFlagset[DF::TRS]) {
-		lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 	}
 }
 } // namespace ogl

@@ -12,11 +12,7 @@ struct GLBasicDirectionalLight : NodeObserver<DirectionalLightNode, GLRendererBa
 	GLuint fbo{};
 	GLuint shadowMap{};
 
-	GLShader* depthMap{ nullptr };
-	GLShader* depthMapAlphaMask{ nullptr };
-
-
-	glm::mat4 lightSpaceMatrix{};
+	GLShader* depthMapShader{ nullptr };
 
 	GLBasicDirectionalLight(DirectionalLightNode* node);
 	~GLBasicDirectionalLight();

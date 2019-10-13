@@ -5,15 +5,9 @@
 #include "asset/AssetManager.h"
 #include "reflection/ReflectionTools.h"
 #include "world/World.h"
+#include "core/MathAux.h"
 
-// WIP: glm includer
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/transform.hpp"
-#include "glm/gtx/quaternion.hpp"
-#include "glm/gtx/matrix_decompose.hpp"
-#include "glm/ext/matrix_clip_space.hpp"
+#include <glm/gtx/matrix_decompose.hpp>
 
 RootNode* Node::GetWorldRoot() const
 {
@@ -91,9 +85,6 @@ void Node::MarkMatrixChanged()
 void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 {
 	if (m_dirty[DF::TRS]) {
-
-		LOG_REPORT("dirty {}", this->GetName());
-
 		m_localMatrix = math::TransformMatrixFromTOS(m_localScale, m_localOrientation, m_localTranslation);
 		m_worldMatrix = parentMatrix * m_localMatrix;
 		// PERF:

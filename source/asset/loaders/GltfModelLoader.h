@@ -5,8 +5,10 @@
 #include "asset/pods/GltfFilePod.h"
 #include "asset/loaders/DummyLoader.h"
 #include "asset/util/GltfAux.h"
+#include "core/MathAux.h"
 
 #include <tinygltf/tiny_gltf.h>
+
 
 namespace GltfModelLoader {
 namespace {
@@ -281,8 +283,6 @@ namespace {
 		// mode
 		// TODO: handle non triangle case somewhere in code
 		geom.mode = gltfaux::GetGeometryMode(primitiveData.mode);
-		// TODO: find out from data (animations etc) the usage hint
-		// geom.usage = ...
 
 		// material
 		const auto materialIndex = primitiveData.material;

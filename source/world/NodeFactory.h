@@ -2,6 +2,8 @@
 
 #include "nodes/Node.h"
 #include "asset/util/ParsingAux.h"
+#include "core/StringAux.h"
+
 #include <functional>
 #include <map>
 #include <nlohmann/json.hpp>

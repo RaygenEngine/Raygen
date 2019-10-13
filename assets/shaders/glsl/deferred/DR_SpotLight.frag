@@ -5,9 +5,11 @@ out vec4 out_color;
 in vec2 uv;
 
 uniform vec3 view_pos;
+
 uniform vec3 light_pos;
 uniform vec3 light_color;
 uniform float light_intensity;
+uniform float light_near;
 
 uniform mat4 light_space_matrix;
 
