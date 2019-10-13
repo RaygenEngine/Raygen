@@ -8,11 +8,12 @@ struct PodEntry;
 class AssetWindow {
 	std::map<std::string, std::filesystem::path> m_gltf;
 
+	bool m_needsRefresh{ true };
+
 public:
-	void Init();
+	void ReloadCache();
 	void Draw();
 
 private:
 	void DrawFileLibrary();
-	void DrawFileAsset(int32& n, const std::string& path);
 };

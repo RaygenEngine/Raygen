@@ -51,7 +51,9 @@ const ReflClass& GetClass(const T* obj)
 				obj, [&ptr](auto pod) { ptr = &std::remove_pointer_t<std::decay_t<decltype(pod)>>::StaticClass(); });
 			return *ptr;
 		}
-		return T::StaticClass();
+		else {
+			return T::StaticClass();
+		}
 	}
 }
 } // namespace refl

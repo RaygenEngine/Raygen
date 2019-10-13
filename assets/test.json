@@ -1,0 +1,171 @@
+[
+    {
+        "+name": "unnamed_Geometry",
+        "+trs": {
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "+type": "geometry",
+        "model": "/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf",
+        "~children": []
+    },
+    {
+        "+name": "unnamed_FreeformUser",
+        "+trs": {
+            "pos": {
+                "x": 0.0,
+                "y": 15.0,
+                "z": 30.0
+            },
+            "rot": {
+                "x": -26.565052032470703,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "+type": "freeformuser",
+        "movementSpeed": 10.0,
+        "turningSpeed": 0.699999988079071,
+        "~children": [
+            {
+                "+name": "UserSpotlight",
+                "+trs": {
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "rot": {
+                        "x": 0.0,
+                        "y": -0.0,
+                        "z": 0.0
+                    },
+                    "scale": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0
+                    }
+                },
+                "+type": "spotlight",
+                "aperture": 45.0,
+                "color": {
+                    "x": 0.9399999976158142,
+                    "y": 0.8500000238418579,
+                    "z": 0.6399999856948853
+                },
+                "far": 15.5,
+                "hasShadow": true,
+                "intensity": 10.0,
+                "near": 1.0,
+                "shadowMapHeight": 2048,
+                "shadowMapWidth": 2048,
+                "~children": []
+            },
+            {
+                "+name": "Resizeable Camera",
+                "+trs": {
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "rot": {
+                        "x": 0.0,
+                        "y": -0.0,
+                        "z": 0.0
+                    },
+                    "scale": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0
+                    }
+                },
+                "+type": "windowcamera",
+                "far": 1000.0,
+                "focalLength": 1.0,
+                "hFov": 91.49284362792969,
+                "near": 0.20000000298023224,
+                "vFov": 60.0,
+                "~children": []
+            }
+        ]
+    },
+    {
+        "+name": "unnamed_SkyBox",
+        "+trs": {
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "+type": "skybox",
+        "cubemap": "/import-data/skybox/alps.cubemap.json",
+        "~children": []
+    },
+    {
+        "+name": "DummyLight",
+        "+trs": {
+            "pos": {
+                "x": 0.0,
+                "y": 50.0,
+                "z": 0.0
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "+type": "directionallight",
+        "bottom": -10.0,
+        "color": {
+            "x": 1.0,
+            "y": 0.0,
+            "z": 0.0
+        },
+        "far": 15.5,
+        "hasShadow": true,
+        "intensity": 8.529999732971191,
+        "left": -10.0,
+        "near": 1.0,
+        "right": 10.0,
+        "shadowMapHeight": 2048,
+        "shadowMapWidth": 2048,
+        "top": 10.0,
+        "~children": []
+    }
+]
