@@ -16,7 +16,7 @@ struct TexturePod : public AssetPod {
 
 		REFLECT_VAR(target);
 	}
-	static bool Load(TexturePod* pod, const uri::Uri& path);
+	static void Load(TexturePod* pod, const uri::Uri& path);
 
 	TextureFiltering minFilter{ TextureFiltering::LINEAR };
 	TextureFiltering magFilter{ TextureFiltering::LINEAR };

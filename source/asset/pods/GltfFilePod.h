@@ -6,7 +6,7 @@
 
 struct GltfFilePod : AssetPod {
 	REFLECTED_POD(GltfFilePod) {}
-	static bool Load(GltfFilePod* pod, const uri::Uri& path);
+	static void Load(GltfFilePod* pod, const uri::Uri& path);
 
 	tinygltf::Model data;
 };

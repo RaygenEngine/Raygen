@@ -44,7 +44,7 @@ void Engine::InitEngine(AppBase* app)
 	}
 }
 
-bool Engine::CreateWorldFromFile(const std::string& filename)
+void Engine::CreateWorldFromFile(const std::string& filename)
 {
 	if (m_world) {
 		if (m_renderer) {
@@ -56,7 +56,7 @@ bool Engine::CreateWorldFromFile(const std::string& filename)
 	m_world = new World(m_app->MakeNodeFactory());
 
 	auto json = AssetManager::GetOrCreate<JsonDocPod>(filename);
-	return m_world->LoadAndPrepareWorld(json);
+	m_world->LoadAndPrepareWorld(json);
 }
 
 void Engine::SwitchRenderer(uint32 registrationIndex)

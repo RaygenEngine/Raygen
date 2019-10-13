@@ -49,9 +49,8 @@ Node* World::GetNodeByName(const std::string& name) const
 	return nullptr;
 }
 
-bool World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
+void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 {
-	TIMER_STATIC_SCOPE("Json Load");
 	LOG_INFO("Loading World file: \'{}\'", AssetManager::GetPodUri(scene));
 
 	AssetManager::Reload(scene);
@@ -61,21 +60,18 @@ bool World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 
 	try {
 		m_nodeFactory->LoadChildren(scene->document, m_root.get());
-	} catch (std::exception* e) {
-		LOG_ABORT("Exception: {}", e->what());
+	} catch (std::exception& e) {
+		LOG_ABORT("Failed to load world: {}", e.what());
 	}
 	m_root->m_dirty.set();
-
+	m_root->UpdateTransforms(glm::identity<glm::mat4>());
 	DirtyUpdateWorld();
 	LOG_INFO("World loaded succesfully");
 	m_root->m_dirty.reset();
-	return true;
 }
 
 void World::DirtyUpdateWorld()
 {
-	m_root->UpdateTransforms(glm::identity<glm::mat4>());
-
 	// PERF: Possible to use unordered_set for dirty nodes
 	for (auto* node : m_nodes) {
 		if (node->m_dirty.any()) {

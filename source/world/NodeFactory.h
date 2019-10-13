@@ -1,16 +1,12 @@
 #pragma once
 
 #include "nodes/Node.h"
+#include "asset/util/ParsingAux.h"
 #include "core/StringAux.h"
 
 #include <functional>
-#include <unordered_map>
+#include <map>
 #include <nlohmann/json.hpp>
-
-namespace detail {
-constexpr std::string_view filter = "Node";
-} // namespace detail
-
 
 class NodeFactory : public Object {
 
@@ -19,31 +15,25 @@ class NodeFactory : public Object {
 		std::function<Node*()> newInstance;
 	};
 
-	std::unordered_map<std::string, NodeClassEntry> m_nodeEntries;
+	// PERF: use unordered map here. Ordered map enables the the editor to show the list alphabetically.
+	std::map<std::string, NodeClassEntry> m_nodeEntries;
 
 	friend class World;
+	friend class Editor;
 
 protected:
-	std::string FilterNodeName(std::string_view v)
-	{
-		if (v.substr(v.size() - 4) == detail::filter) {
-			v = v.substr(0, v.size() - 4);
-		}
-		return smath::ToLower(std::string{ v });
-	}
-
 	template<typename T>
 	void RegisterNode()
 	{
 		static_assert(std::is_base_of_v<Node, T> && !std::is_same_v<Node, T>, "You can only register Node subclasses");
 
-		std::string name{ FilterNodeName(refl::GetName<T>()) };
+		std::string name{ sceneconv::FilterNodeClassName(refl::GetName<T>()) };
 
 		NodeClassEntry entry;
 		entry.classPtr = &T::StaticClass();
 		entry.newInstance = &T::NewInstance;
 
-		m_nodeEntries.insert({ smath::ToLower(name), entry });
+		m_nodeEntries.insert({ name, entry });
 	}
 
 	template<typename... Nodes>

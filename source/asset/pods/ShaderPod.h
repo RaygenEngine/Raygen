@@ -9,7 +9,7 @@ struct ShaderPod : public AssetPod {
 		REFLECT_VAR(vertex);
 		REFLECT_VAR(fragment);
 	}
-	static bool Load(ShaderPod* pod, const uri::Uri& path);
+	static void Load(ShaderPod* pod, const uri::Uri& path);
 
 	PodHandle<StringPod> vertex;
 	PodHandle<StringPod> fragment;
