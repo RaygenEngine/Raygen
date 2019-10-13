@@ -102,4 +102,6 @@ protected:
 
 public:
 	virtual void Update();
+
+	virtual void ActiveCameraResize(){};
 };

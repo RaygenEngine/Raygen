@@ -64,11 +64,11 @@ void FreeformUserNode::Update(float deltaTime)
 	}
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::W, XVirtualKey::GAMEPAD_DPAD_UP)) {
-		AddLocalOffset(GetFront() * speed);
+		AddWorldOffset(GetFront() * speed);
 	}
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::S, XVirtualKey::GAMEPAD_DPAD_DOWN)) {
-		AddLocalOffset((-GetFront()) * speed);
+		AddWorldOffset((-GetFront()) * speed);
 	}
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::D, XVirtualKey::GAMEPAD_DPAD_RIGHT)) {

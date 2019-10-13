@@ -20,9 +20,9 @@ set(SOURCE_FILES
 
 
 	editor/Editor.cpp
-	editor/Outliner.cpp
 	editor/AssetWindow.cpp
 	editor/NodeContextActions.cpp
+	editor/PropertyEditor.cpp
 	editor/SceneSave.cpp
 
 	editor/imgui/ImguiImpl.cpp

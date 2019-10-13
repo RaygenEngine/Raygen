@@ -491,7 +491,7 @@ void GLForwardRenderer::RenderBoundingBoxes()
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	auto worldNodes = Engine::GetWorld()->GetNodeMap<GeometryNode>();
+	auto worldNodes = Engine::GetWorld()->GetNodeMap<Node>();
 
 	glBindVertexArray(m_bbVao);
 
@@ -621,9 +621,9 @@ void GLForwardRenderer::RenderPostProcess()
 
 void GLForwardRenderer::RenderWindowSimple()
 {
-	const auto window = Engine::GetMainWindow();
+	// const auto window = Engine::GetMainWindow();
 
-	glViewport(0, 0, window->GetWidth(), window->GetHeight());
+	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
 
 	// write to window
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

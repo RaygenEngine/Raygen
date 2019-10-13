@@ -1,6 +1,9 @@
 #include "pch/pch.h"
 
 #include "renderer/ObserverRenderer.h"
+#include "system/Engine.h"
+#include "world/nodes/camera/CameraNode.h"
+#include "world/World.h"
 
 void ObserverRenderer::RemoveObserver(NodeObserverBase* ptr)
 {
@@ -20,6 +23,12 @@ void ObserverRenderer::OnNodeRemovedFromWorld(Node* node)
 
 void ObserverRenderer::Update()
 {
+	auto camera = Engine::GetWorld()->GetActiveCamera();
+	if (camera->GetDirtyFlagset()[CameraNode::DF::ViewportSize]) {
+		ActiveCameraResize();
+	}
+
+
 	for (auto& observer : m_observers) {
 		if (observer->baseNode) {
 			auto flagset = observer->baseNode->GetDirtyFlagset();

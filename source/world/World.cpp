@@ -156,6 +156,8 @@ void World::RegisterNode(Node* node, Node* parent)
 	node->m_parent = parent;
 	m_nodes.insert(node);
 
+
+	node->AutoUpdateTransforms();
 	node->SetDirty(Node::DF::Created);
 
 	parent->m_children.emplace_back(node, [](Node* node) {
