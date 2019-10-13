@@ -261,7 +261,9 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 	}
 
 	if (ImGui::DragFloat3("Rotation", ImUtil::FromVec3(eulerPyr), 0.1f)) {
-		m_localMode ? node->SetLocalPYR(eulerPyr) : node->SetWorldPYR(eulerPyr);
+		auto deltaAxis = eulerPyr - (m_localMode ? node->GetLocalPYR() : node->GetWorldPYR());
+		m_localMode ? node->SetLocalOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetLocalOrientation())
+					: node->SetWorldOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetWorldOrientation());
 	}
 
 	if (ImGui::DragFloat3("Scale", ImUtil::FromVec3(scale), 0.01f)) {

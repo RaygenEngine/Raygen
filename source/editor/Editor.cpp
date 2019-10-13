@@ -196,7 +196,6 @@ void Editor::Run_NewNodeMenu(Node* underNode)
 
 void Editor::Run_AssetView()
 {
-
 	auto reloadAssetLambda = [](std::unique_ptr<PodEntry>& assetEntry) {
 		auto l = [&assetEntry](auto tptr) {
 			using PodType = std::remove_pointer_t<decltype(tptr)>;
