@@ -221,12 +221,12 @@ void GLDeferredRenderer::RenderGBuffer()
 
 			switch (materialData->alphaMode) {
 					// blend not handled
-				case AM_BLEND:
-				case AM_OPAQUE:
+				case MaterialPod::BLEND:
+				case MaterialPod::OPAQUE:
 					gBufferShader = m_gBuffer.shader;
 					glUseProgram(gBufferShader->id);
 					break;
-				case AM_MASK:
+				case MaterialPod::MASK:
 					gBufferShader = m_gBuffer.shaderAlphaMask;
 					glUseProgram(gBufferShader->id);
 					m_gBuffer.shaderAlphaMask->UploadFloat("alpha_cutoff", materialData->alphaCutoff);

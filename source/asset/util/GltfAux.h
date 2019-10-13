@@ -42,19 +42,19 @@ inline TextureWrapping GetTextureWrapping(int32 gltfWrapping)
 	}
 };
 
-inline AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
+inline MaterialPod::AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
 {
 	if (smath::CaseInsensitiveCompare(gltfAlphaMode, "OPAQUE")) {
-		return AM_OPAQUE;
+		return MaterialPod::OPAQUE;
 	}
 	if (smath::CaseInsensitiveCompare(gltfAlphaMode, "MASK")) {
-		return AM_MASK;
+		return MaterialPod::MASK;
 	}
 	if (smath::CaseInsensitiveCompare(gltfAlphaMode, "BLEND")) {
-		return AM_BLEND;
+		return MaterialPod::BLEND;
 	}
 	// not defined -> opaque
-	return AM_OPAQUE;
+	return MaterialPod::OPAQUE;
 }
 
 inline ElementType GetElementType(int32 gltfElementType)

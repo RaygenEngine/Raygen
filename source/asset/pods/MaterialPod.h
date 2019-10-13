@@ -1,22 +1,27 @@
 #pragma once
 
-#include "asset/pods/TexturePod.h"
+// WIP:
+#undef OPAQUE
 
-enum AlphaMode : int32
-{
-	// The rendered output is fully opaque and any alpha value is ignored.
-	AM_OPAQUE,
-	// The rendered output is either fully opaque or fully transparent depending on the alpha value and the specified
-	// alpha cutoff value. This mode is used to simulate geometry such as tree leaves or wire fences.
-	AM_MASK,
-	// The rendered output is combined with the background using the normal painting operation (i.e. the Porter and Duff
-	// over operator). This mode is used to simulate geometry such as guaze cloth or animal fur.
-	AM_BLEND
-};
+#include "asset/pods/TexturePod.h"
 
 // This material is based on the glTF standard for materials (not all extensions included)
 // see -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#materials)
 struct MaterialPod : AssetPod {
+
+	enum AlphaMode : int32
+	{
+		// The rendered output is fully opaque and any alpha value is ignored.
+		OPAQUE,
+		// The rendered output is either fully opaque or fully transparent depending on the alpha value and the
+		// specified alpha cutoff value. This mode is used to simulate geometry such as tree leaves or wire fences.
+		MASK,
+		// The rendered output is combined with the background using the normal painting operation (i.e. the Porter and
+		// Duff over operator). This mode is used to simulate geometry such as guaze cloth or animal fur.
+		BLEND
+	};
+
+
 	REFLECTED_POD(MaterialPod)
 	{
 		REFLECT_VAR(baseColorTexture);
@@ -41,6 +46,7 @@ struct MaterialPod : AssetPod {
 		REFLECT_VAR(alphaMode);
 		REFLECT_VAR(alphaCutoff);
 		REFLECT_VAR(doubleSided);
+		REFLECT_VAR(unlit);
 	}
 	static bool Load(MaterialPod* pod, const uri::Uri& path);
 
@@ -97,11 +103,13 @@ struct MaterialPod : AssetPod {
 	// greater than or equal to the alphaCutoff value then it is rendered as fully opaque, otherwise, it is rendered as
 	// fully transparent. alphaCutoff value is ignored for other modes. The alpha value is defined in the
 	// baseColorTexture for metallic-roughness material model.
-	AlphaMode alphaMode{ AM_OPAQUE };
+	AlphaMode alphaMode{ OPAQUE };
 	float alphaCutoff{ 0.5f };
 
 	// The doubleSided property specifies whether the material is double sided. When this value is false, back-face
 	// culling is enabled. When this value is true, back-face culling is disabled and double sided lighting is enabled.
 	// The back-face must have its normals reversed before the lighting equation is evaluated.
 	bool doubleSided{ false };
+
+	bool unlit{ false };
 };
