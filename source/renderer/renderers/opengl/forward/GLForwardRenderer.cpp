@@ -686,7 +686,7 @@ void GLForwardRenderer::Render()
 void GLForwardRenderer::Update()
 {
 	GLRendererBase::Update();
-
+	m_camera = Engine::GetWorld()->GetActiveCamera();
 	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::R)) {
 		RecompileShaders();
 	}

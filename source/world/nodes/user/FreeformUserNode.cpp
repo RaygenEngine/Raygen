@@ -4,6 +4,7 @@
 #include "world/nodes/RootNode.h"
 #include "asset/util/ParsingAux.h"
 #include "system/Engine.h"
+#include "world/World.h"
 #include "system/Input.h"
 
 void FreeformUserNode::Update(float deltaTime)
@@ -31,10 +32,11 @@ void FreeformUserNode::Update(float deltaTime)
 
 	// user rotation
 	if (input.IsCursorDragged() && input.IsKeyRepeat(XVirtualKey::RBUTTON)) {
-		const float yaw = -input.GetCursorRelativePosition().x * m_turningSpeed * 0.005f;
-		const float pitch = -input.GetCursorRelativePosition().y * m_turningSpeed * 0.005f;
+		const float yaw = -input.GetCursorRelativePosition().x * m_turningSpeed * 0.5f;
+		const float pitch = -input.GetCursorRelativePosition().y * m_turningSpeed * 0.5f;
 
-		OrientWithoutRoll(yaw, pitch);
+		RotateAroundAxis(GetParent()->GetUp(), yaw);
+		RotateAroundAxis(GetRight(), pitch);
 	}
 
 	if (!input.IsRightThumbResting()) {
@@ -44,7 +46,8 @@ void FreeformUserNode::Update(float deltaTime)
 		const auto pitch
 			= input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;
 
-		OrientWithoutRoll(yaw, pitch);
+		RotateAroundAxis(GetParent()->GetUp(), glm::radians(yaw));
+		RotateAroundAxis(GetRight(), glm::radians(pitch));
 	}
 
 	// user movement
@@ -81,5 +84,9 @@ void FreeformUserNode::Update(float deltaTime)
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::Q, XVirtualKey::GAMEPAD_RIGHT_SHOULDER)) {
 		AddLocalOffset((-GetWorldRoot()->GetUp()) * speed);
+	}
+
+	if (input.IsKeyPressed(XVirtualKey::Z)) {
+		RotateAroundAxis(Engine::GetWorld()->GetRoot()->GetUp(), 45.f);
 	}
 }

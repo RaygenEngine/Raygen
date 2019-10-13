@@ -28,6 +28,7 @@ template<typename NodeTypeT, typename RendererTypeT = Renderer>
 struct NodeObserver
 	: NodeObserverBase
 	, RendererObject<RendererTypeT> {
+
 	using NodeType = NodeTypeT;
 	using RendererType = RendererTypeT;
 	NodeType* node;

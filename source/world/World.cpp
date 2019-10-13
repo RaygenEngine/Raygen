@@ -64,7 +64,7 @@ void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 		LOG_ABORT("Failed to load world: {}", e.what());
 	}
 	m_root->m_dirty.set();
-
+	m_root->UpdateTransforms(glm::identity<glm::mat4>());
 	DirtyUpdateWorld();
 	LOG_INFO("World loaded succesfully");
 	m_root->m_dirty.reset();
@@ -72,8 +72,6 @@ void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 
 void World::DirtyUpdateWorld()
 {
-	m_root->UpdateTransforms(glm::identity<glm::mat4>());
-
 	// PERF: Possible to use unordered_set for dirty nodes
 	for (auto* node : m_nodes) {
 		if (node->m_dirty.any()) {
