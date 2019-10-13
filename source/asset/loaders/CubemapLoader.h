@@ -6,20 +6,14 @@
 #include <fstream>
 
 namespace CubemapLoader {
-inline bool Load(TexturePod* pod, const uri::Uri& path)
+inline void Load(TexturePod* pod, const uri::Uri& path)
 {
 	std::ifstream inStream(uri::ToSystemPath(path));
 
-	if (!inStream.is_open()) {
-		LOG_WARN("Unable to open string file, path: {}", uri::ToSystemPath(path));
-		return false;
-	}
+	CLOG_ABORT(!inStream.is_open(), "Unable to open string file, path: {}", uri::ToSystemPath(path));
 	int32 firstChar = inStream.peek();
 
-	if (firstChar == EOF) {
-		LOG_WARN("Found empty cubemap file: {} No images loaded", uri::ToSystemPath(path));
-		return false;
-	}
+	CLOG_ABORT(firstChar == EOF, "Found empty cubemap file: {} No images loaded", uri::ToSystemPath(path));
 
 	pod->target = TextureTarget::TEXTURE_CUBEMAP;
 	pod->images.resize(CubemapFace::COUNT);
@@ -47,7 +41,5 @@ inline bool Load(TexturePod* pod, const uri::Uri& path)
 			LOG_ERROR("Missing cubemap face: \"{}\" when loading: {}", key, path);
 		}
 	}
-
-	return true;
 }
 }; // namespace CubemapLoader

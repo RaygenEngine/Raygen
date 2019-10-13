@@ -51,10 +51,7 @@ int32 AppBase::Main(int32 argc, char* argv[]) // NOLINT
 
 	engine.InitEngine(this);
 
-	if (!engine.CreateWorldFromFile(m_initialScene)) {
-		LOG_FATAL("Failed to create World!");
-		return -1;
-	}
+	engine.CreateWorldFromFile(m_initialScene);
 
 	Window* window = Engine::GetMainWindow();
 	// Allow world to update for the window before any renderer comes in play.

@@ -6,7 +6,7 @@
 #include <stb_image/stb_image.h>
 
 namespace ImageLoader {
-inline bool Load(ImagePod* pod, const uri::Uri& path)
+inline void Load(ImagePod* pod, const uri::Uri& path)
 {
 	const auto finalPath = uri::ToSystemPath(path);
 
@@ -21,9 +21,7 @@ inline bool Load(ImagePod* pod, const uri::Uri& path)
 
 	bool hasNotResult = !pod->data || (pod->width == 0) || (pod->height == 0);
 
-	CLOG_WARN(hasNotResult, "TexturePod loading failed, filepath: {}, data_empty: {} width: {} height: {}", finalPath,
+	CLOG_ABORT(hasNotResult, "TexturePod loading failed, filepath: {}, data_empty: {} width: {} height: {}", finalPath,
 		static_cast<bool>(pod->data), pod->width, pod->height);
-
-	return !hasNotResult;
 }
 }; // namespace ImageLoader

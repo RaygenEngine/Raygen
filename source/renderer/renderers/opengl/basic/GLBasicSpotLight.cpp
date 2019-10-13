@@ -52,6 +52,7 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 	glDepthFunc(GL_LESS);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	if (!node->CastsShadows())

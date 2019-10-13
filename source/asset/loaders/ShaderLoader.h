@@ -8,23 +8,18 @@
 #include <fstream>
 
 namespace ShaderLoader {
-inline bool Load(ShaderPod* pod, const uri::Uri& path)
+inline void Load(ShaderPod* pod, const uri::Uri& path)
 {
 	std::ifstream inStream(uri::ToSystemPath(path));
 
-	if (!inStream.is_open()) {
-		LOG_WARN("Unable to open shader file, path: {}", uri::ToSystemPath(path));
-		return false;
-	}
+
+	CLOG_ABORT(!inStream.is_open(), "Unable to open shader file, path: {}", uri::ToSystemPath(path));
 
 	inStream >> std::ws;
 
 	int32 firstChar = inStream.peek();
 
-	if (firstChar == EOF) {
-		LOG_WARN("Found empty shader file: {} No shaders loaded", uri::ToSystemPath(path));
-		return false;
-	}
+	CLOG_ABORT(firstChar == EOF, "Found empty shader file: {} No shaders loaded", uri::ToSystemPath(path));
 
 	using nlohmann::json;
 	json j;
@@ -42,8 +37,6 @@ inline bool Load(ShaderPod* pod, const uri::Uri& path)
 	if (!newFilePath.empty()) {
 		pod->fragment = AssetManager::GetOrCreateFromParentUri<StringPod>(newFilePath, path);
 	}
-
-	return true;
 }
 
 }; // namespace ShaderLoader

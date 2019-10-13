@@ -20,8 +20,9 @@ set(SOURCE_FILES
 
 
 	editor/Editor.cpp
-	editor/Outliner.cpp
+	editor/PropertyEditor.cpp
 	editor/AssetWindow.cpp
+	editor/NodeContextActions.cpp
 	editor/SceneSave.cpp
 
 	editor/imgui/ImguiImpl.cpp
@@ -32,8 +33,8 @@ set(SOURCE_FILES
 	
 	platform/windows/Win32Window.cpp
 	
-	
-	renderer/ObserverRenderer.cpp
+
+	renderer/Renderer.cpp
 	
 
 	renderer/renderers/opengl/GLEditorRenderer.cpp
@@ -113,13 +114,15 @@ set(HEADER_FILES
 	core/Types.h
 
 
-	editor/Editor.h
-	editor/Outliner.h
 	editor/AssetWindow.h
+	editor/Editor.h
+	editor/NodeContextActions.h
+	editor/PropertyEditor.h
 	editor/SceneSave.h
 
 	editor/imgui/ImguiImpl.h
-	
+	editor/imgui/ImguiUtil.h
+
 	
 	pch/pch.h
 	
@@ -144,7 +147,6 @@ set(HEADER_FILES
 
 
 	renderer/Renderer.h
-	renderer/ObserverRenderer.h
 	renderer/NodeObserver.h
 	renderer/GenericGpuAssetManager.h
 	

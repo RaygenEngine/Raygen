@@ -5,16 +5,13 @@
 #include <istream>
 
 namespace JsonDocLoader {
-inline bool Load(JsonDocPod* pod, const uri::Uri& path)
+inline void Load(JsonDocPod* pod, const uri::Uri& path)
 {
 	using json = nlohmann::json;
 	std::ifstream file(uri::ToSystemPath(path));
 
-	if (!file.is_open()) {
-		LOG_ERROR("Failed to open file at: {}", path);
-		return false;
-	}
+	CLOG_ABORT(!file.is_open(), "Failed to open file at: {}", path);
+
 	file >> pod->document;
-	return true;
 }
 }; // namespace JsonDocLoader

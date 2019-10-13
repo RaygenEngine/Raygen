@@ -6,7 +6,7 @@
 #include "asset/util/GltfAux.h"
 
 namespace GltfTextureLoader {
-static bool Load(TexturePod* pod, const uri::Uri& path)
+static void Load(TexturePod* pod, const uri::Uri& path)
 {
 	const auto pPath = uri::GetDiskPath(path);
 	auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath + "{}");
@@ -26,7 +26,6 @@ static bool Load(TexturePod* pod, const uri::Uri& path)
 
 	// TODO: check image settings
 	// this should exist (missing is handled from within material)
-
 	CLOG_ABORT(imageIndex == -1, "This model is unsafe to use, handle missing image from materialL: {}", path);
 
 	if (imageIndex != -1) {
@@ -54,8 +53,5 @@ static bool Load(TexturePod* pod, const uri::Uri& path)
 		pod->wrapT = gltfaux::GetTextureWrapping(gltfSampler.wrapT);
 		pod->wrapR = gltfaux::GetTextureWrapping(gltfSampler.wrapR);
 	}
-
-	// else keep default values
-	return true;
 }
 }; // namespace GltfTextureLoader
