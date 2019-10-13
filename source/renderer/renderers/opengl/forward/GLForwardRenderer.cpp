@@ -23,11 +23,11 @@ GLForwardRenderer::~GLForwardRenderer()
 	glDeleteFramebuffers(1, &m_outFbo);
 	glDeleteTextures(1, &m_outColorTexture);
 
-	glDeleteFramebuffers(1, &m_interFbo);
-	glDeleteTextures(1, &m_interColorTexture);
-
 	glDeleteVertexArrays(1, &m_bbVao);
 	glDeleteBuffers(1, &m_bbVbo);
+
+	glDeleteVertexArrays(1, &m_skyboxVao);
+	glDeleteBuffers(1, &m_skyboxVbo);
 }
 
 void GLForwardRenderer::InitObservers()
@@ -35,8 +35,10 @@ void GLForwardRenderer::InitObservers()
 	m_camera = Engine::GetWorld()->GetActiveCamera();
 	CLOG_ABORT(!m_camera, "This renderer expects a camera node to be present!");
 
-	m_skybox = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
-	CLOG_ABORT(!m_skybox, "This renderer expects a skybox node to be present!");
+	auto skyboxNode = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
+	CLOG_ABORT(!skyboxNode, "This renderer expects a skybox node to be present!");
+
+	m_skyboxCubemap = GetGLAssetManager()->GpuGetOrCreate<GLTexture>(skyboxNode->GetSkyMap());
 
 	for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>()) {
 		CreateObserver_AutoContained<GLBasicGeometry>(geometryNode, m_glGeometries);
@@ -123,8 +125,37 @@ void GLForwardRenderer::InitShaders()
 	m_bBoxShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/BBox.json");
 	m_bBoxShader->AddUniform("vp");
 	m_bBoxShader->AddUniform("color");
-}
 
+	m_cubemapInfDistShader
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/Cubemap_InfDist.json");
+	m_cubemapInfDistShader->AddUniform("vp");
+
+	m_depthPassShader
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMapAlphaMask.json");
+	m_depthPassShader->AddUniform("mvp");
+	m_depthPassShader->AddUniform("base_color_factor");
+	m_depthPassShader->AddUniform("base_color_texcoord_index");
+	m_depthPassShader->AddUniform("alpha_cutoff");
+	m_depthPassShader->AddUniform("mask");
+}
+// TODO: default box model (json)
+float skyboxVertices[] = {
+	// positions
+	-1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f,
+	-1.0f,
+
+	-1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f,
+	1.0f,
+
+	1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
+
+	-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f,
+
+	-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f,
+
+	-1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f,
+	1.0f
+};
 void GLForwardRenderer::InitOther()
 {
 	const int32 width = m_camera->GetWidth();
@@ -134,7 +165,7 @@ void GLForwardRenderer::InitOther()
 	glGenFramebuffers(1, &m_msaaFbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 
-	// TODO:
+	// TODO: samples
 	const auto samples = 4;
 	glGenTextures(1, &m_msaaColorTexture);
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture);
@@ -145,6 +176,7 @@ void GLForwardRenderer::InitOther()
 	glGenRenderbuffers(1, &m_msaaDepthStencilRbo);
 	glBindRenderbuffer(GL_RENDERBUFFER, m_msaaDepthStencilRbo);
 	glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, width, height);
+
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_msaaDepthStencilRbo);
 
 	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE,
@@ -165,21 +197,6 @@ void GLForwardRenderer::InitOther()
 	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE,
 		"ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
 
-	// inter fbo
-	glGenFramebuffers(1, &m_interFbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_interFbo);
-
-	glGenTextures(1, &m_interColorTexture);
-	glBindTexture(GL_TEXTURE_2D, m_interColorTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_interColorTexture, 0);
-
-	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE,
-		"ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
-
 	// bounding boxes
 	glCreateVertexArrays(1, &m_bbVao);
 
@@ -187,11 +204,23 @@ void GLForwardRenderer::InitOther()
 	glVertexArrayAttribFormat(m_bbVao, 0, 3, GL_FLOAT, GL_FALSE, 0);
 
 	glCreateBuffers(1, &m_bbVbo);
-	// TODO:
+	// TODO: (48)
 	glNamedBufferData(m_bbVbo, 48 * sizeof(float), NULL, GL_DYNAMIC_DRAW);
 
 	glVertexArrayAttribBinding(m_bbVao, 0, 0);
 	glVertexArrayVertexBuffer(m_bbVao, 0, m_bbVbo, 0, sizeof(float) * 3);
+
+	// skybox
+	glGenVertexArrays(1, &m_skyboxVao);
+	glGenBuffers(1, &m_skyboxVbo);
+
+	glBindVertexArray(m_skyboxVao);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_skyboxVbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*)0);
 }
 
 bool GLForwardRenderer::InitScene()
@@ -205,30 +234,51 @@ bool GLForwardRenderer::InitScene()
 	return true;
 }
 
-void GLForwardRenderer::BlendMSAAToOut()
+void GLForwardRenderer::RenderEarlyDepthPass()
 {
-	// copy to intermediate
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFbo);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_interFbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
+	glClearColor(0.f, 0.f, 0.f, 1.f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 0, 0, m_camera->GetWidth(),
-		m_camera->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE);
+	glUseProgram(m_depthPassShader->id);
 
-	// write to window
-	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+	auto vp = m_camera->GetViewProjectionMatrix();
 
-	glUseProgram(m_simpleOutShader->id);
+	for (auto& geometry : m_glGeometries) {
+		auto m = geometry->node->GetWorldMatrix();
+		auto mvp = vp * m;
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_interColorTexture);
+		m_depthPassShader->UploadMat4("mvp", mvp);
 
-	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+		for (auto& glMesh : geometry->glModel->meshes) {
+			GLMaterial* glMaterial = glMesh.material;
+			const MaterialPod* materialData = glMaterial->LockData();
 
-	glDisable(GL_BLEND);
+			if (materialData->unlit)
+				continue;
+
+			glBindVertexArray(glMesh.vao);
+
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
+
+			m_depthPassShader->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
+			m_depthPassShader->UploadVec4("base_color_factor", materialData->baseColorFactor);
+			m_depthPassShader->UploadInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
+			m_depthPassShader->UploadInt("mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
+
+			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
+
+			glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
+		}
+	}
+
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
 }
 
 void GLForwardRenderer::RenderDirectionalLights()
@@ -239,13 +289,14 @@ void GLForwardRenderer::RenderDirectionalLights()
 
 		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
 
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
-		glEnable(GL_CULL_FACE);
-
 		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
-		glClearColor(0, 0, 0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT /*| GL_STENCIL_BUFFER_BIT*/);
+
+		glDepthMask(GL_FALSE); // disable depth map writes
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_EQUAL);
 
 		glUseProgram(m_forwardDirectionalLightShader->id);
 
@@ -322,10 +373,11 @@ void GLForwardRenderer::RenderDirectionalLights()
 				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
 			}
 		}
+		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 
-		BlendMSAAToOut();
+		glDepthMask(GL_TRUE); // disable depth map writes
 	}
 }
 
@@ -337,13 +389,14 @@ void GLForwardRenderer::RenderSpotLights()
 
 		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
 
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
-		glEnable(GL_CULL_FACE);
-
 		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
-		glClearColor(0, 0, 0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT /*| GL_STENCIL_BUFFER_BIT*/);
+
+		glDepthMask(GL_FALSE); // disable depth map writes
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_EQUAL);
 
 		glUseProgram(m_forwardSpotLightShader->id);
 
@@ -425,10 +478,11 @@ void GLForwardRenderer::RenderSpotLights()
 				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
 			}
 		}
+		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 
-		BlendMSAAToOut();
+		glDepthMask(GL_TRUE); // disable depth map writes
 	}
 }
 
@@ -436,7 +490,6 @@ void GLForwardRenderer::RenderBoundingBoxes()
 {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	glEnable(GL_CULL_FACE);
 
 	auto worldNodes = Engine::GetWorld()->GetNodeMap<GeometryNode>();
 
@@ -527,44 +580,41 @@ void GLForwardRenderer::RenderBoundingBoxes()
 		// RenderBox(node->GetBBox(), { 1, 1, 1, 1 });
 	}
 
-	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
 }
 
+
 void GLForwardRenderer::RenderSkybox()
 {
-	// glEnable(GL_DEPTH_TEST);
-	// glDepthFunc(GL_LEQUAL);
-	// glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-	// glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-	// const auto vpNoTransformation = m_camera->GetProjectionMatrix() *
-	// glm::mat4(glm::mat3(m_camera->GetViewMatrix()));
+	const auto vpNoTransformation = m_camera->GetProjectionMatrix() * glm::mat4(glm::mat3(m_camera->GetViewMatrix()));
 
-	// glUseProgram(m_skybox->shader->id);
+	glUseProgram(m_cubemapInfDistShader->id);
 
-	// m_skybox->shader->UploadMat4("vp", vpNoTransformation);
+	m_cubemapInfDistShader->UploadMat4("vp", vpNoTransformation);
 
-	// glBindVertexArray(m_skybox->vao);
+	glBindVertexArray(m_skyboxVao);
 
-	// glActiveTexture(GL_TEXTURE0);
-	// glBindTexture(GL_TEXTURE_CUBE_MAP, m_skybox->cubemap->id);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxCubemap->id);
 
-	// glDrawArrays(GL_TRIANGLES, 0, 36);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 
-	// glDisable(GL_DEPTH_TEST);
-	// glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-	// glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
 void GLForwardRenderer::RenderPostProcess()
 {
 	// copy msaa to out
-	// glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFbo);
-	// glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_outFbo);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFbo);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_outFbo);
 
-	// glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 0, 0, m_camera->GetWidth(),
-	//	m_camera->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 0, 0, m_camera->GetWidth(),
+		m_camera->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 	// do post process here
 }
@@ -614,22 +664,18 @@ void GLForwardRenderer::RenderWindowLinearized()
 
 void GLForwardRenderer::Render()
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, m_interFbo);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-
+	// perform first pass as depth pass
+	RenderEarlyDepthPass();
 	// render directional lights shadow maps
 	RenderDirectionalLights();
 	RenderSpotLights();
-	// RenderBoundingBoxes();
+
+	// render node bounding boxes
+	RenderBoundingBoxes();
 	// render skybox, seamless enabled (render last)
-	// RenderSkybox();
+	RenderSkybox();
 	// copy msaa to out fbo and render any post process on it
-	// RenderPostProcess();
+	RenderPostProcess();
 	// write out texture of out fbo to window (big triangle trick)
 	RenderWindowSimple();
 	//! m_isOutNonLinear ? RenderWindowSimple() : RenderWindowLinearized();
