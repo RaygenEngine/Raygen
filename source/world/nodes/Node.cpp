@@ -149,6 +149,10 @@ void Node::DeleteChild(Node* child)
 
 void Node::AddLocalOffset(glm::vec3 direction)
 {
-	m_localTranslation += direction;
-	AutoUpdateTransforms();
+	SetLocalTranslation(m_localTranslation + direction);
+}
+
+void Node::AddWorldOffset(glm::vec3 direction)
+{
+	SetWorldTranslation(m_worldTranslation + direction);
 }

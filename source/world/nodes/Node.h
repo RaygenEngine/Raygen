@@ -150,6 +150,9 @@ public:
 	void SetWorldScale(glm::vec3 ws);
 	void SetWorldMatrix(const glm::mat4& newWorldMatrix);
 
+	void AddLocalOffset(glm::vec3 direction);
+	void AddWorldOffset(glm::vec3 direction);
+
 
 	void SetName(const std::string& name) { m_name = name; }
 	void DeleteChild(Node* child);
@@ -167,8 +170,6 @@ public:
 
 	// cache world transform top down (and where needed to be updated)
 	void UpdateTransforms(const glm::mat4& parentMatrix);
-
-	void AddLocalOffset(glm::vec3 direction);
 
 	void SetDirty(uint32 flagIndex) { m_dirty.set(flagIndex); }
 	void SetDirtyMultiple(DirtyFlagset other) { m_dirty |= other; };
