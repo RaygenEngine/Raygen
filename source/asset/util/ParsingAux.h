@@ -5,21 +5,24 @@
 
 #include <nlohmann/json.hpp>
 
+namespace parsingaux {
+// Default is taken by copy and deduces the template argument
+template<typename T>
+inline T SelectFromAlias(const nlohmann::json& j, const char* first, const char* second, T Default)
+{
+	auto it = j.find(first);
+	if (it != j.end()) {
+		return it->get<float>();
+	}
+	return j.value<float>(second, Default);
+}
+} // namespace parsingaux
 namespace glm {
-
 inline void from_json(const nlohmann::json& j, glm::vec3& vec)
 {
-	auto it = j.find("x");
-	if (it != j.end()) {
-		vec.x = j.value<float>("x", 0.f);
-		vec.y = j.value<float>("y", 0.f);
-		vec.z = j.value<float>("z", 0.f);
-		return;
-	}
-	// Search for rgb mode
-	vec.x = j.value<float>("r", 0.f);
-	vec.y = j.value<float>("g", 0.f);
-	vec.z = j.value<float>("b", 0.f);
+	vec.x = ::parsingaux::SelectFromAlias(j, "x", "r", 0.0f);
+	vec.y = ::parsingaux::SelectFromAlias(j, "y", "g", 0.0f);
+	vec.z = ::parsingaux::SelectFromAlias(j, "z", "b", 0.0f);
 }
 inline void to_json(nlohmann::json& j, const glm::vec3& p)
 {
@@ -28,19 +31,10 @@ inline void to_json(nlohmann::json& j, const glm::vec3& p)
 
 inline void from_json(const nlohmann::json& j, glm::vec4& vec)
 {
-	auto it = j.find("x");
-	if (it != j.end()) {
-		vec.x = j.value<float>("x", 0.f);
-		vec.y = j.value<float>("y", 0.f);
-		vec.z = j.value<float>("z", 0.f);
-		vec.w = j.value<float>("w", 0.f);
-		return;
-	}
-
-	vec.x = j.value<float>("r", 0.f);
-	vec.y = j.value<float>("g", 0.f);
-	vec.z = j.value<float>("b", 0.f);
-	vec.z = j.value<float>("a", 0.f);
+	vec.x = ::parsingaux::SelectFromAlias(j, "x", "r", 0.0f);
+	vec.y = ::parsingaux::SelectFromAlias(j, "y", "g", 0.0f);
+	vec.z = ::parsingaux::SelectFromAlias(j, "z", "b", 0.0f);
+	vec.w = ::parsingaux::SelectFromAlias(j, "w", "a", 1.0f);
 }
 
 inline void to_json(nlohmann::json& j, const glm::vec4& p)
@@ -87,7 +81,7 @@ inline std::string FilterNodeClassName(std::string_view v)
 	if (v.substr(v.size() - 4) == filter) {
 		v = v.substr(0, v.size() - 4);
 	}
-	return smath::ToLower(std::string{ v });
+	return std::string{ v };
 }
 
 inline const std::string typeLabel = "+type";

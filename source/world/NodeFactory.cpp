@@ -16,6 +16,7 @@
 
 #include <nlohmann/json.hpp>
 
+
 using json = nlohmann::json;
 
 void NodeFactory::RegisterNodes()
@@ -26,7 +27,10 @@ void NodeFactory::RegisterNodes()
 
 Node* NodeFactory::NewNodeFromType(const std::string& type)
 {
-	auto it = m_nodeEntries.find(sceneconv::FilterNodeClassName(type));
+	auto it = std::find_if(begin(m_nodeEntries), end(m_nodeEntries), [type](auto& other) {
+		return smath::CaseInsensitiveCompare(sceneconv::FilterNodeClassName(type), other.first);
+	});
+
 	if (it != m_nodeEntries.end()) {
 		return it->second.newInstance();
 	}

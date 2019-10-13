@@ -32,6 +32,11 @@ void Node::SetLocalOrientation(glm::quat lo)
 	MarkMatrixChanged();
 }
 
+void Node::SetLocalPYR(glm::vec3 lpyr)
+{
+	// WIP:
+}
+
 void Node::SetLocalScale(glm::vec3 ls)
 {
 	m_localScale = ls;
@@ -46,6 +51,26 @@ void Node::SetLocalMatrix(const glm::mat4& lm)
 	glm::vec4 persp;
 	glm::decompose(lm, m_localScale, m_localOrientation, m_localTranslation, skew, persp);
 	MarkMatrixChanged();
+}
+
+void Node::SetWorldTranslation(glm::vec3 wt)
+{
+	// WIP
+}
+
+void Node::SetWorldOrientation(glm::quat wo)
+{
+	// WIP
+}
+
+void Node::SetWorldPYR(glm::vec3 wpyr)
+{
+	// WIP
+}
+
+void Node::SetWorldScale(glm::vec3 ws)
+{
+	// WIP
 }
 
 void Node::SetWorldMatrix(const glm::mat4& newWorldMatrix)

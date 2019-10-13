@@ -119,6 +119,7 @@ public:
 
 	[[nodiscard]] glm::vec3 GetWorldTranslation() const { return m_worldTranslation; }
 	[[nodiscard]] glm::quat GetWorldOrientation() const { return m_worldOrientation; }
+	[[nodiscard]] glm::vec3 GetWorldPYR() const { return glm::degrees(glm::eulerAngles(m_worldOrientation)); }
 	[[nodiscard]] glm::vec3 GetWorldScale() const { return m_worldScale; }
 	[[nodiscard]] glm::mat4 GetWorldMatrix() const { return m_worldMatrix; }
 
@@ -140,17 +141,21 @@ public:
 
 	// Returns nullptr IF AND ONLY IF "this" node is the root node.
 	[[nodiscard]] Node* GetParent() const { return m_parent; }
-
+	[[nodiscard]] bool IsRoot() const { return m_parent == nullptr; }
 	[[nodiscard]] RootNode* GetWorldRoot() const;
 
 	void SetLocalTranslation(glm::vec3 lt);
 	void SetLocalOrientation(glm::quat lo);
+	void SetLocalPYR(glm::vec3 lpyr);
 	void SetLocalScale(glm::vec3 ls);
 	void SetLocalMatrix(const glm::mat4& lm);
 
+	void SetWorldTranslation(glm::vec3 wt);
+	void SetWorldOrientation(glm::quat wo);
+	void SetWorldPYR(glm::vec3 wpyr);
+	void SetWorldScale(glm::vec3 ws);
 	void SetWorldMatrix(const glm::mat4& newWorldMatrix);
 
-	void AddChild(std::shared_ptr<Node> child) {}
 
 	void SetName(const std::string& name) { m_name = name; }
 	void DeleteChild(Node* child);
@@ -180,7 +185,7 @@ public:
 	void OrientYaw(float yaw);
 
 	void SetDirty(uint32 flagIndex) { m_dirty.set(flagIndex); }
-
+	void SetDirtyMultiple(DirtyFlagset other) { m_dirty |= other; };
 
 	//
 	template<typename T>

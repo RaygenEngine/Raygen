@@ -3,7 +3,7 @@
 #include "nodes/Node.h"
 #include "asset/util/ParsingAux.h"
 #include <functional>
-#include <unordered_map>
+#include <map>
 #include <nlohmann/json.hpp>
 
 class NodeFactory : public Object {
@@ -13,9 +13,11 @@ class NodeFactory : public Object {
 		std::function<Node*()> newInstance;
 	};
 
-	std::unordered_map<std::string, NodeClassEntry> m_nodeEntries;
+	// PERF: use unordered map here. Ordered map enables the the editor to show the list alphabetically.
+	std::map<std::string, NodeClassEntry> m_nodeEntries;
 
 	friend class World;
+	friend class Editor;
 
 protected:
 	template<typename T>
@@ -29,7 +31,7 @@ protected:
 		entry.classPtr = &T::StaticClass();
 		entry.newInstance = &T::NewInstance;
 
-		m_nodeEntries.insert({ smath::ToLower(name), entry });
+		m_nodeEntries.insert({ name, entry });
 	}
 
 	template<typename... Nodes>

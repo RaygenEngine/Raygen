@@ -5,6 +5,7 @@
 #include "reflection/GetClass.h"
 #include "asset/util/ParsingAux.h"
 #include <type_traits>
+#include <sstream>
 
 namespace refltools {
 using json = nlohmann::json;
@@ -318,6 +319,7 @@ struct JsonToPropVisitor_WithRelativePath {
 	}
 };
 
+
 struct ToJsonVisitor {
 	json& j;
 	ToJsonVisitor(json& inJson)
@@ -342,6 +344,74 @@ void PropertiesToJson(ReflectedObj* obj, nlohmann::json& j)
 {
 	ToJsonVisitor visitor(j);
 	CallVisitorOnEveryProperty(obj, visitor);
+}
+
+
+struct ToStringVisitor {
+	std::string& str;
+	std::ostringstream os;
+	ToStringVisitor(std::string& instr)
+		: str(instr)
+	{
+	}
+
+	template<typename T>
+	void operator()(T& ref, const Property& p)
+	{
+		os << p.GetName() << ": " << ref << '\n';
+	}
+
+
+	void operator()(std::string& ref, const Property& p)
+	{
+		os << p.GetName() << ": ";
+		if (p.HasFlags(PropertyFlags::Multiline)) {
+			os << "\n=========\n" << ref << "\n==========\n";
+		}
+		else {
+			os << '"' << ref << '"' << '\n';
+		}
+	}
+
+	void operator()(MetaEnumInst& ref, const Property& p) { os << p.GetName() << ": " << ref.GetValueStr() << '\n'; }
+
+	template<typename T>
+	void operator()(PodHandle<T>& ref, const Property& p)
+	{
+		os << p.GetName() << ": " << AssetManager::GetPodUri(ref) << '\n';
+	}
+
+	template<typename T>
+	void operator()(std::vector<PodHandle<T>>& ref, const Property& p)
+	{
+		os << p.GetName() << ":\n";
+		for (auto& r : ref) {
+			os << "\t" << AssetManager::GetPodUri(r) << ",\n";
+		}
+	}
+
+	void operator()(glm::vec3& ref, const Property& p)
+	{
+		os << p.GetName() << ": " << ref.x << ", " << ref.y << ", " << ref.z << '\n';
+	}
+
+	void operator()(glm::vec4& ref, const Property& p)
+	{
+		os << p.GetName() << ": " << ref.x << ", " << ref.y << ", " << ref.z << ", " << ref.w << '\n';
+	}
+
+	void End(const ReflClass& r) { str += os.str(); }
+};
+
+// Assigns each property to the given json using default to_json functions,
+// Skips all NoSave properties
+template<typename ReflectedObj>
+std::string PropertiesToText(ReflectedObj* obj)
+{
+	std::string t;
+	ToStringVisitor visitor(t);
+	CallVisitorOnEveryProperty(obj, visitor);
+	return t;
 }
 
 } // namespace refltools
