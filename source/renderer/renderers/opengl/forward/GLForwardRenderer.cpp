@@ -286,7 +286,7 @@ void GLForwardRenderer::RenderDirectionalLights()
 				m_forwardDirectionalLightShader->UploadFloat("occlusion_strength", materialData->occlusionStrength);
 				m_forwardDirectionalLightShader->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
 				m_forwardDirectionalLightShader->UploadInt(
-					"mask", materialData->alphaMode == AlphaMode::AM_MASK ? GL_TRUE : GL_FALSE);
+					"mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
 
 				// uv index
 				m_forwardDirectionalLightShader->UploadInt(
@@ -392,7 +392,7 @@ void GLForwardRenderer::RenderSpotLights()
 				m_forwardSpotLightShader->UploadFloat("occlusion_strength", materialData->occlusionStrength);
 				m_forwardSpotLightShader->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
 				m_forwardSpotLightShader->UploadInt(
-					"mask", materialData->alphaMode == AlphaMode::AM_MASK ? GL_TRUE : GL_FALSE);
+					"mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
 
 				// uv index
 				m_forwardSpotLightShader->UploadInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);

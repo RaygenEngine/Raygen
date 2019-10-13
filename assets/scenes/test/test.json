@@ -1,35 +1,34 @@
 [
 	{
 		"+type": "Geometry",
-		"model": "/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf"
+		"model": "/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf",
+		"+name": "sponza"
+	},
+	{
+		"+type": "Geometry",
+		"model": "/import-data/glTF-Sample-Models/FlightHelmet/glTF/FlightHelmet.gltf",
+		"+name": "flight_helmet",
+		"+trs": {
+			"pos": {
+				"x": 0,
+				"y": 5
+			}
+		}
 	},
 	{
 		"+type": "FreeformUser",
 		"+trs": {
 			"pos": {
-				"x": 0,
-				"y": 15,
-				"z": 30
+				"x": 5,
+				"y": 5,
+				"z": 0
 			},
 			"lookat": {
-				"z": -5
+				"x": -5,
+				"y": 5
 			}
 		},
 		"~children": [
-			{
-				"+type": "Spotlight",
-				"+name": "UserSpotlight",
-				"+trs": {
-					"pos": {
-						"y": 10
-					}
-				},
-				"color": {
-					"r": 0.94,
-					"g": 0.85,
-					"b": 0.64
-				}
-			},
 			{
 				"+type": "WindowCamera",
 				"+name": "Resizeable Camera",
@@ -47,7 +46,13 @@
 		"+name": "DummyLight",
 		"+trs": {
 			"pos": {
-				"y": 10
+				"x": 0,
+				"y": 13
+			},
+			"lookat": {
+				"x": 0,
+				"y": -5,
+				"z": 0
 			}
 		},
 		"color": {
@@ -61,7 +66,13 @@
 		"+name": "dwad",
 		"+trs": {
 			"pos": {
-				"y": 10
+				"x": 5,
+				"y": 5,
+				"z": 0
+			},
+			"lookat": {
+				"x": -5,
+				"y": 5
 			}
 		},
 		"color": {

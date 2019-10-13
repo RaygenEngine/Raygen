@@ -54,6 +54,9 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
+	if (!node->CastsShadows())
+		return;
+
 	glUseProgram(depthMapShader->id);
 
 	auto vp = node->GetViewProjectionMatrix();
@@ -65,10 +68,14 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 		depthMapShader->UploadMat4("mvp", mvp);
 
 		for (auto& glMesh : geometry->glModel->meshes) {
-			glBindVertexArray(glMesh.vao);
 
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
+
+			if (materialData->unlit)
+				continue;
+
+			glBindVertexArray(glMesh.vao);
 
 
 			glActiveTexture(GL_TEXTURE0);
@@ -77,7 +84,7 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 			depthMapShader->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
 			depthMapShader->UploadVec4("base_color_factor", materialData->baseColorFactor);
 			depthMapShader->UploadInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
-			depthMapShader->UploadInt("mask", materialData->alphaMode == AlphaMode::AM_MASK ? GL_TRUE : GL_FALSE);
+			depthMapShader->UploadInt("mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
 
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 

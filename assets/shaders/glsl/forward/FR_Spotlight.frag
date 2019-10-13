@@ -187,7 +187,7 @@ void main()
 	float theta = dot(L, normalize(-dataIn.tangent_light_dir));
     float epsilon = (spot_light.cut_off - spot_light.inner_cut_off);
     float intensity = clamp((theta - spot_light.inner_cut_off) / epsilon, 0.0, 1.0);
-	  
+	 
 	float shadow = ShadowCalculation(dataIn.light_frag_pos, N, L); 
 	vec3 radiance = ((1.0 - shadow) * spot_light.color * spot_light.intensity * attenuation * intensity); 
 
