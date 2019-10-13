@@ -23,7 +23,7 @@ void SpotLightNode::RecalculateViewProjectionMatrix()
 
 void SpotLightNode::DirtyUpdate(DirtyFlagset flags)
 {
-	if (flags[DF::Projection] || flags[DF::NearFar]) {
+	if (flags[DF::Aperture] || flags[DF::NearFar] || flags[DF::ShadowsTextSize]) {
 		RecalculateProjectionMatrix();
 	}
 

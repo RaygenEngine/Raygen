@@ -6,6 +6,7 @@
 #include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
+#include "renderer/renderers/opengl/basic/GLBasicPunctualLight.h"
 
 class CameraNode;
 class SkyboxNode;
@@ -18,14 +19,16 @@ protected:
 	GLShader* m_depthPassShader{ nullptr };
 	GLShader* m_forwardSpotLightShader{ nullptr };
 	GLShader* m_forwardDirectionalLightShader{ nullptr };
+	GLShader* m_forwardPunctualLightShader{ nullptr };
 	GLShader* m_cubemapInfDistShader{ nullptr };
-	GLShader* m_simpleOutShader{ nullptr };
-	GLShader* m_linearizeOutShader{ nullptr };
+	// GLShader* m_simpleOutShader{ nullptr };
+	// GLShader* m_linearizeOutShader{ nullptr };
 	GLShader* m_bBoxShader{ nullptr };
 
 	// entities
 	std::vector<GLBasicGeometry*> m_glGeometries;
 	std::vector<GLBasicDirectionalLight*> m_glDirectionalLights;
+	std::vector<GLBasicPunctualLight*> m_glPunctualLights;
 	std::vector<GLBasicSpotLight*> m_glSpotLights;
 
 	// raw nodes
@@ -50,11 +53,12 @@ protected:
 
 	void InitObservers();
 	void InitShaders();
-	void InitOther();
+	void InitRenderBuffers();
 
 	void RenderEarlyDepthPass();
 	void RenderDirectionalLights();
 	void RenderSpotLights();
+	void RenderPunctualLights();
 	void RenderBoundingBoxes();
 	void RenderSkybox();
 	void RenderPostProcess();

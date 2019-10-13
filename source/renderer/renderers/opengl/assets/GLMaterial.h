@@ -23,7 +23,7 @@ struct GLMaterial : GLAsset<MaterialPod> {
 	}
 
 protected:
-	bool Load() override;
+	void Load() override;
 };
 
 } // namespace ogl

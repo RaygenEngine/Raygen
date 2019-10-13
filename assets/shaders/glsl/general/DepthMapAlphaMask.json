@@ -1,4 +1,0 @@
-{
-	"vert" : "DepthMapAlphaMask.vert",
-	"frag" : "DepthMapAlphaMask.frag"
-}

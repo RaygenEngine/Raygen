@@ -33,8 +33,8 @@ struct GLModel : GLAsset<ModelPod> {
 	~GLModel() override;
 
 protected:
-	bool LoadGLMesh(const ModelPod& model, GLMesh& mesh, const GeometryGroup& data);
-	bool Load() override;
+	void LoadGLMesh(const ModelPod& model, GLMesh& mesh, const GeometryGroup& data);
+	void Load() override;
 };
 
 } // namespace ogl

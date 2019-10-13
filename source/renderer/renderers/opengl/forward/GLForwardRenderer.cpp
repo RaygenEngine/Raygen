@@ -51,18 +51,14 @@ void GLForwardRenderer::InitObservers()
 	for (auto* dirLightNode : Engine::GetWorld()->GetNodeMap<SpotLightNode>()) {
 		CreateObserver_AutoContained<GLBasicSpotLight>(dirLightNode, m_glSpotLights);
 	}
+
+	for (auto* dirLightNode : Engine::GetWorld()->GetNodeMap<PunctualLightNode>()) {
+		CreateObserver_AutoContained<GLBasicPunctualLight>(dirLightNode, m_glPunctualLights);
+	}
 }
 
 void GLForwardRenderer::InitShaders()
 {
-	m_simpleOutShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/QuadWriteTexture.json");
-
-	m_linearizeOutShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/QuadWriteTexture_Linear.json");
-	m_linearizeOutShader->AddUniform("near");
-	m_linearizeOutShader->AddUniform("far");
-
 	m_forwardSpotLightShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/forward/FR_Spotlight.json");
 
@@ -72,12 +68,12 @@ void GLForwardRenderer::InitShaders()
 	m_forwardSpotLightShader->AddUniform("mode");
 	m_forwardSpotLightShader->AddUniform("view_pos");
 	m_forwardSpotLightShader->AddUniform("spot_light.world_pos");
+	m_forwardSpotLightShader->AddUniform("spot_light.world_dir");
 	m_forwardSpotLightShader->AddUniform("spot_light.color");
 	m_forwardSpotLightShader->AddUniform("spot_light.intensity");
 	m_forwardSpotLightShader->AddUniform("spot_light.vp");
 	m_forwardSpotLightShader->AddUniform("spot_light.near");
 	m_forwardSpotLightShader->AddUniform("spot_light.atten_coef");
-	m_forwardSpotLightShader->AddUniform("spot_light.world_dir");
 	m_forwardSpotLightShader->AddUniform("spot_light.outer_cut_off");
 	m_forwardSpotLightShader->AddUniform("spot_light.inner_cut_off");
 	m_forwardSpotLightShader->AddUniform("base_color_factor");
@@ -122,6 +118,34 @@ void GLForwardRenderer::InitShaders()
 	m_forwardDirectionalLightShader->AddUniform("mask");
 	m_forwardDirectionalLightShader->AddUniform("alpha_cutoff");
 
+	m_forwardPunctualLightShader
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/forward/FR_PunctualLight.json");
+
+	m_forwardPunctualLightShader->AddUniform("mvp");
+	m_forwardPunctualLightShader->AddUniform("m");
+	m_forwardPunctualLightShader->AddUniform("normal_matrix");
+	m_forwardPunctualLightShader->AddUniform("mode");
+	m_forwardPunctualLightShader->AddUniform("view_pos");
+	m_forwardPunctualLightShader->AddUniform("punctual_light.world_pos");
+	m_forwardPunctualLightShader->AddUniform("punctual_light.color");
+	m_forwardPunctualLightShader->AddUniform("punctual_light.intensity");
+	m_forwardPunctualLightShader->AddUniform("punctual_light.far");
+	m_forwardPunctualLightShader->AddUniform("punctual_light.atten_coef");
+	m_forwardPunctualLightShader->AddUniform("base_color_factor");
+	m_forwardPunctualLightShader->AddUniform("emissive_factor");
+	m_forwardPunctualLightShader->AddUniform("ambient");
+	m_forwardPunctualLightShader->AddUniform("metallic_factor");
+	m_forwardPunctualLightShader->AddUniform("roughness_factor");
+	m_forwardPunctualLightShader->AddUniform("normal_scale");
+	m_forwardPunctualLightShader->AddUniform("occlusion_strength");
+	m_forwardPunctualLightShader->AddUniform("base_color_texcoord_index");
+	m_forwardPunctualLightShader->AddUniform("metallic_roughness_texcoord_index");
+	m_forwardPunctualLightShader->AddUniform("emissive_texcoord_index");
+	m_forwardPunctualLightShader->AddUniform("normal_texcoord_index");
+	m_forwardPunctualLightShader->AddUniform("occlusion_texcoord_index");
+	m_forwardPunctualLightShader->AddUniform("mask");
+	m_forwardPunctualLightShader->AddUniform("alpha_cutoff");
+
 	m_bBoxShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/BBox.json");
 	m_bBoxShader->AddUniform("vp");
 	m_bBoxShader->AddUniform("color");
@@ -131,7 +155,7 @@ void GLForwardRenderer::InitShaders()
 	m_cubemapInfDistShader->AddUniform("vp");
 
 	m_depthPassShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMapAlphaMask.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap_AlphaMask.json");
 	m_depthPassShader->AddUniform("mvp");
 	m_depthPassShader->AddUniform("base_color_factor");
 	m_depthPassShader->AddUniform("base_color_texcoord_index");
@@ -156,26 +180,25 @@ float skyboxVertices[] = {
 	-1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f,
 	1.0f
 };
-void GLForwardRenderer::InitOther()
+void GLForwardRenderer::InitRenderBuffers()
 {
-	const int32 width = m_camera->GetWidth();
-	const int32 height = m_camera->GetHeight();
+	const auto maxWidth = 3840;
+	const auto maxHeight = 2160;
+	const auto maxSamples = 4;
 
 	// msaa fbo
 	glGenFramebuffers(1, &m_msaaFbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 
-	// TODO: samples
-	const auto samples = 4;
 	glGenTextures(1, &m_msaaColorTexture);
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture);
-	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB, width, height, GL_TRUE);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, maxSamples, GL_RGB, maxWidth, maxHeight, GL_TRUE);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture, 0);
 
 	glGenRenderbuffers(1, &m_msaaDepthStencilRbo);
 	glBindRenderbuffer(GL_RENDERBUFFER, m_msaaDepthStencilRbo);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, width, height);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, maxSamples, GL_DEPTH24_STENCIL8, maxWidth, maxHeight);
 
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_msaaDepthStencilRbo);
 
@@ -188,7 +211,7 @@ void GLForwardRenderer::InitOther()
 
 	glGenTextures(1, &m_outColorTexture);
 	glBindTexture(GL_TEXTURE_2D, m_outColorTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, maxWidth, maxHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -229,7 +252,7 @@ bool GLForwardRenderer::InitScene()
 
 	InitShaders();
 
-	InitOther();
+	InitRenderBuffers();
 
 	return true;
 }
@@ -243,7 +266,7 @@ void GLForwardRenderer::RenderEarlyDepthPass()
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	glUseProgram(m_depthPassShader->id);
+	glUseProgram(m_depthPassShader->programId);
 
 	auto vp = m_camera->GetViewProjectionMatrix();
 
@@ -298,7 +321,7 @@ void GLForwardRenderer::RenderDirectionalLights()
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_EQUAL);
 
-		glUseProgram(m_forwardDirectionalLightShader->id);
+		glUseProgram(m_forwardDirectionalLightShader->programId);
 
 		const auto root = Engine::GetWorld()->GetRoot();
 		const auto vp = m_camera->GetViewProjectionMatrix();
@@ -377,7 +400,7 @@ void GLForwardRenderer::RenderDirectionalLights()
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 
-		glDepthMask(GL_TRUE); // disable depth map writes
+		glDepthMask(GL_TRUE); // renable depth map writes
 	}
 }
 
@@ -398,7 +421,7 @@ void GLForwardRenderer::RenderSpotLights()
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_EQUAL);
 
-		glUseProgram(m_forwardSpotLightShader->id);
+		glUseProgram(m_forwardSpotLightShader->programId);
 
 		const auto root = Engine::GetWorld()->GetRoot();
 		const auto vp = m_camera->GetViewProjectionMatrix();
@@ -482,7 +505,107 @@ void GLForwardRenderer::RenderSpotLights()
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 
-		glDepthMask(GL_TRUE); // disable depth map writes
+		glDepthMask(GL_TRUE); // renable depth map writes
+	}
+}
+
+void GLForwardRenderer::RenderPunctualLights()
+{
+	for (auto light : m_glPunctualLights) {
+		// render lights
+		light->RenderShadowMap(m_glGeometries);
+
+		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+
+		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
+
+		glDepthMask(GL_FALSE); // disable depth map writes
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_EQUAL);
+
+		glUseProgram(m_forwardPunctualLightShader->programId);
+
+		const auto root = Engine::GetWorld()->GetRoot();
+		const auto vp = m_camera->GetViewProjectionMatrix();
+
+		// global uniforms
+		m_forwardPunctualLightShader->UploadVec3("ambient", root->GetAmbientColor());
+		m_forwardPunctualLightShader->UploadVec3("view_pos", m_camera->GetWorldTranslation());
+
+		// light
+		m_forwardPunctualLightShader->UploadVec3("punctual_light.world_pos", light->node->GetWorldTranslation());
+		m_forwardPunctualLightShader->UploadVec3("punctual_light.color", light->node->GetColor());
+		m_forwardPunctualLightShader->UploadFloat("punctual_light.intensity", light->node->GetIntensity());
+		m_forwardPunctualLightShader->UploadFloat("punctual_light.far", light->node->GetFar());
+		m_forwardPunctualLightShader->UploadInt("punctual_light.atten_coef", light->node->GetAttenuationMode());
+
+		for (auto& geometry : m_glGeometries) {
+			auto m = geometry->node->GetWorldMatrix();
+			auto mvp = vp * m;
+
+			// model
+			m_forwardPunctualLightShader->UploadMat4("m", m);
+			m_forwardPunctualLightShader->UploadMat4("mvp", mvp);
+			m_forwardPunctualLightShader->UploadMat3("normal_matrix", glm::transpose(glm::inverse(glm::mat3(m))));
+
+			for (auto& glMesh : geometry->glModel->meshes) {
+				glBindVertexArray(glMesh.vao);
+
+				GLMaterial* glMaterial = glMesh.material;
+				const MaterialPod* materialData = glMaterial->LockData();
+
+				// material
+				m_forwardPunctualLightShader->UploadVec4("base_color_factor", materialData->baseColorFactor);
+				m_forwardPunctualLightShader->UploadVec3("emissive_factor", materialData->emissiveFactor);
+				m_forwardPunctualLightShader->UploadFloat("metallic_factor", materialData->metallicFactor);
+				m_forwardPunctualLightShader->UploadFloat("roughness_factor", materialData->roughnessFactor);
+				m_forwardPunctualLightShader->UploadFloat("normal_scale", materialData->normalScale);
+				m_forwardPunctualLightShader->UploadFloat("occlusion_strength", materialData->occlusionStrength);
+				m_forwardPunctualLightShader->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
+				m_forwardPunctualLightShader->UploadInt(
+					"mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
+
+				// uv index
+				m_forwardPunctualLightShader->UploadInt(
+					"base_color_texcoord_index", materialData->baseColorTexCoordIndex);
+				m_forwardPunctualLightShader->UploadInt(
+					"metallic_roughness_texcoord_index", materialData->metallicRoughnessTexCoordIndex);
+				m_forwardPunctualLightShader->UploadInt("emissive_texcoord_index", materialData->emissiveTexCoordIndex);
+				m_forwardPunctualLightShader->UploadInt("normal_texcoord_index", materialData->normalTexCoordIndex);
+				m_forwardPunctualLightShader->UploadInt(
+					"occlusion_texcoord_index", materialData->occlusionTexCoordIndex);
+
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
+
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->metallicRoughnessTexture->id);
+
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->emissiveTexture->id);
+
+				glActiveTexture(GL_TEXTURE3);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->normalTexture->id);
+
+				glActiveTexture(GL_TEXTURE4);
+				glBindTexture(GL_TEXTURE_2D, glMaterial->occlusionTexture->id);
+
+				glActiveTexture(GL_TEXTURE5);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, light->cubeShadowMap);
+
+				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
+
+				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
+			}
+		}
+		glDisable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
+
+		glDepthMask(GL_TRUE); // renable depth map writes
 	}
 }
 
@@ -564,7 +687,7 @@ void GLForwardRenderer::RenderBoundingBoxes()
 
 		glNamedBufferSubData(m_bbVbo, 0, 48 * sizeof(float), data);
 
-		glUseProgram(m_bBoxShader->id);
+		glUseProgram(m_bBoxShader->programId);
 		const auto vp = m_camera->GetViewProjectionMatrix();
 		m_bBoxShader->UploadMat4("vp", vp);
 		m_bBoxShader->UploadVec4("color", color);
@@ -592,7 +715,7 @@ void GLForwardRenderer::RenderSkybox()
 
 	const auto vpNoTransformation = m_camera->GetProjectionMatrix() * glm::mat4(glm::mat3(m_camera->GetViewMatrix()));
 
-	glUseProgram(m_cubemapInfDistShader->id);
+	glUseProgram(m_cubemapInfDistShader->programId);
 
 	m_cubemapInfDistShader->UploadMat4("vp", vpNoTransformation);
 
@@ -609,7 +732,7 @@ void GLForwardRenderer::RenderSkybox()
 
 void GLForwardRenderer::RenderPostProcess()
 {
-	// copy msaa to out
+	// blit msaa to out
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFbo);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_outFbo);
 
@@ -621,22 +744,14 @@ void GLForwardRenderer::RenderPostProcess()
 
 void GLForwardRenderer::RenderWindowSimple()
 {
-	// const auto window = Engine::GetMainWindow();
+	auto wnd = Engine::GetMainWindow();
 
-	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+	// blit out to window buffer
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_outFbo);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-	// write to window
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	glUseProgram(m_simpleOutShader->id);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_outColorTexture);
-
-	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 0, 0, wnd->GetWidth(), wnd->GetHeight(),
+		GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
 void GLForwardRenderer::RenderWindowLinearized()
@@ -669,7 +784,7 @@ void GLForwardRenderer::Render()
 	// render directional lights shadow maps
 	RenderDirectionalLights();
 	RenderSpotLights();
-
+	RenderPunctualLights();
 	// render node bounding boxes
 	RenderBoundingBoxes();
 	// render skybox, seamless enabled (render last)
@@ -696,7 +811,8 @@ void GLForwardRenderer::RecompileShaders()
 {
 	m_forwardSpotLightShader->Load();
 	m_forwardDirectionalLightShader->Load();
-	m_simpleOutShader->Load();
-	m_linearizeOutShader->Load();
+	m_forwardPunctualLightShader->Load();
+	// m_simpleOutShader->Load();
+	// m_linearizeOutShader->Load();
 }
 } // namespace ogl

@@ -16,6 +16,6 @@ struct GLTexture : GLAsset<TexturePod> {
 
 	~GLTexture() override;
 
-	bool Load() override;
+	void Load() override;
 };
 } // namespace ogl

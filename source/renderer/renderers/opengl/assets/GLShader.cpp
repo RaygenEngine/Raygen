@@ -10,77 +10,88 @@
 namespace ogl {
 GLShader::~GLShader()
 {
-	glDeleteProgram(id);
+	glDeleteProgram(programId);
 }
 
-bool GLShader::Load()
+void GLShader::Load()
 {
+
 	if (!firstLoad) {
 		AssetManager::Reload(podHandle);
 		AssetManager::Reload(podHandle->fragment);
+		// WIP:
+		if (podHandle.Lock()->geometry.podId) {
+			AssetManager::Reload(podHandle->geometry);
+		}
+
 		AssetManager::Reload(podHandle->vertex);
 	}
 	firstLoad = false;
 
-	auto sources = podHandle.Lock();
+	auto CreateShader = [](GLenum type, PodHandle<StringPod> pod) -> GLuint {
+		GLint result = GL_FALSE;
+		int32 infoLogLength;
+
+		const GLuint shaderId = glCreateShader(type);
+
+		char const* sourcePointer = pod.Lock()->data.c_str();
+		// Compile Shader
+		glShaderSource(shaderId, 1, &sourcePointer, NULL);
+		glCompileShader(shaderId);
+		glGetShaderiv(shaderId, GL_COMPILE_STATUS, &result);
+		glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+		if (infoLogLength > 0) {
+			std::vector<char> shaderErrorMessage(infoLogLength + 1);
+			glGetShaderInfoLog(shaderId, infoLogLength, NULL, &shaderErrorMessage[0]);
+			LOG_WARN("Error in {}:\n{}", AssetManager::GetEntry(pod)->name, &shaderErrorMessage[0]);
+			return 0u;
+		}
+
+		return shaderId;
+	};
+
+	auto shaderPod = podHandle.Lock();
+
+	auto vertexShaderId = CreateShader(GL_VERTEX_SHADER, shaderPod->vertex);
+
+	// WIP:
+	auto geometryShaderId = 0u;
+	if (shaderPod->geometry.podId) {
+		geometryShaderId = CreateShader(GL_GEOMETRY_SHADER, shaderPod->geometry);
+	}
+
+	auto fragmentShaderId = CreateShader(GL_FRAGMENT_SHADER, shaderPod->fragment);
+
+	programId = glCreateProgram();
+	glAttachShader(programId, vertexShaderId);
+	if (geometryShaderId)
+		glAttachShader(programId, geometryShaderId);
+	glAttachShader(programId, fragmentShaderId);
+	glLinkProgram(programId);
 
 	GLint result = GL_FALSE;
 	int32 infoLogLength;
 
-	const GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-
-	// Compile Vertex Shader
-	char const* vertexSourcePointer = sources->vertex->data.c_str();
-	glShaderSource(vertexShaderID, 1, &vertexSourcePointer, NULL);
-	glCompileShader(vertexShaderID); // Check Vertex Shader
-	glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &result);
-	glGetShaderiv(vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
-
-	if (infoLogLength > 0) {
-		std::vector<char> vertexShaderErrorMessage(infoLogLength + 1);
-		glGetShaderInfoLog(vertexShaderID, infoLogLength, NULL, &vertexShaderErrorMessage[0]);
-		LOG_WARN(
-			"Vertex shader error in {}:\n{}", AssetManager::GetEntry(podHandle)->name, &vertexShaderErrorMessage[0]);
-		return false;
-	}
-	const GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-
-	// Compile Fragment Shader
-	char const* fragmentSourcePointer = sources->fragment->data.c_str();
-	glShaderSource(fragmentShaderID, 1, &fragmentSourcePointer, NULL);
-	glCompileShader(fragmentShaderID); // Check Fragment Shader
-	glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &result);
-	glGetShaderiv(fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
-
-	if (infoLogLength > 0) {
-		std::vector<char> fragmentShaderErrorMessage(infoLogLength + 1);
-		glGetShaderInfoLog(fragmentShaderID, infoLogLength, NULL, &fragmentShaderErrorMessage[0]);
-		LOG_WARN("Fragment shader error in {}:\n{}", AssetManager::GetEntry(podHandle)->name,
-			&fragmentShaderErrorMessage[0]);
-		return false;
-	}
-
-	id = glCreateProgram();
-	glAttachShader(id, vertexShaderID);
-	glAttachShader(id, fragmentShaderID);
-	glLinkProgram(id);
-
-	glGetProgramiv(id, GL_LINK_STATUS, &result);
-	glGetProgramiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
+	glGetProgramiv(programId, GL_LINK_STATUS, &result);
+	glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLogLength);
 
 	if (infoLogLength > 0) {
 		std::vector<char> programErrorMessage(infoLogLength + 1);
-		glGetProgramInfoLog(id, infoLogLength, NULL, &programErrorMessage[0]);
-		LOG_WARN("Program shader error in {}:\n{}", AssetManager::GetEntry(podHandle)->name, &programErrorMessage[0]);
-		return false;
+		glGetProgramInfoLog(programId, infoLogLength, NULL, &programErrorMessage[0]);
+		LOG_WARN("Error in {}:\n{}", AssetManager::GetEntry(podHandle)->name, &programErrorMessage[0]);
+		return;
 	}
 
-	glDetachShader(id, vertexShaderID);
-	glDetachShader(id, fragmentShaderID);
-	glDeleteShader(vertexShaderID);
-	glDeleteShader(fragmentShaderID);
+	glDetachShader(programId, vertexShaderId);
+	if (geometryShaderId)
+		glDetachShader(programId, geometryShaderId);
+	glDetachShader(programId, fragmentShaderId);
 
-	return true;
+	glDeleteShader(vertexShaderId);
+	if (geometryShaderId)
+		glDeleteShader(geometryShaderId);
+	glDeleteShader(fragmentShaderId);
 }
 
 
@@ -121,6 +132,6 @@ void GLShader::UploadMat4(const std::string& uniformName, const glm::mat4& m, GL
 
 void GLShader::AddUniform(const std::string& uniformName)
 {
-	uniformLocations.insert({ uniformName, glGetUniformLocation(id, uniformName.c_str()) });
+	uniformLocations.insert({ uniformName, glGetUniformLocation(programId, uniformName.c_str()) });
 }
 } // namespace ogl

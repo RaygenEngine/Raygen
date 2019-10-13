@@ -11,7 +11,7 @@ GLTexture::~GLTexture()
 	glDeleteTextures(1, &id);
 }
 
-bool GLTexture::Load()
+void GLTexture::Load()
 {
 	const auto textureData = podHandle.Lock();
 
@@ -63,7 +63,5 @@ bool GLTexture::Load()
 
 		glGenerateMipmap(textureTarget);
 	}
-
-	return true;
 }
 } // namespace ogl
