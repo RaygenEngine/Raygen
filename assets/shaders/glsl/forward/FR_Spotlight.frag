@@ -6,7 +6,9 @@ in Data
 { 
 	vec3 tangent_frag_pos;
 	vec3 tangent_view_pos;
-	vec3 tangent_light_pos;
+	
+	vec3 tangent_light_pos;	
+	vec3 tangent_light_dir;
 	
 	vec2 text_coord[2];
 	
@@ -14,17 +16,18 @@ in Data
 } dataIn;
 
 
-struct SpotLight
+uniform struct SpotLight
 {
-	vec3 color;
 	vec3 world_pos;
+	vec3 world_dir;
+	vec3 color;
 	float intensity;
 	float near;
 	int atten_coef;
+	float cut_off;
+	float inner_cut_off;
 	mat4 vp;
-};
-
-uniform SpotLight spot_light; 
+} spot_light;
 
 uniform vec3 ambient;
 
@@ -176,13 +179,19 @@ void main()
 
 	kD *= 1.0 - metallic;
 	
-	// light stuff
+	// attenuation
 	float distance = length(dataIn.tangent_light_pos - dataIn.tangent_frag_pos);
 	float attenuation = 1.0 / pow(distance, spot_light.atten_coef);
-	float shadow = ShadowCalculation(dataIn.light_frag_pos, N, L); 
-	vec3 radiance = ((1.0 - shadow) * spot_light.color * spot_light.intensity * attenuation) + ambient; 
 	
-	vec3 Lo = (kD * albedo / PI + specular) * radiance * max(dot(N, L), 0.0);
+	// WIP: spot light
+	float theta = dot(L, normalize(-dataIn.tangent_light_dir));
+    float epsilon = (spot_light.cut_off - spot_light.inner_cut_off);
+    float intensity = clamp((theta - spot_light.inner_cut_off) / epsilon, 0.0, 1.0);
+	  
+	float shadow = ShadowCalculation(dataIn.light_frag_pos, N, L); 
+	vec3 radiance = ((1.0 - shadow) * spot_light.color * spot_light.intensity * attenuation * intensity); 
+
+	vec3 Lo = (kD * albedo / PI + specular) * (radiance + ambient) * max(dot(N, L), 0.0);
 
 	vec3 color = Lo + emissive;
 	color = mix(color, color * occlusion, occlusion_strength);

@@ -24,8 +24,8 @@ class LightNode : public Node {
 	{
 		CONSTANT = 0,
 		LINEAR = 1,
-		INVERSE_SQUARED = 2
-	} m_attenuationMode{ AttenuationMode::INVERSE_SQUARED };
+		QUADRATIC = 2
+	} m_attenuationMode{ AttenuationMode::LINEAR };
 
 protected:
 	glm::vec3 m_color{ glm::vec3(1.f) };

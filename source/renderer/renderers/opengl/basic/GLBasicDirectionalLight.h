@@ -14,8 +14,6 @@ struct GLBasicDirectionalLight : NodeObserver<DirectionalLightNode, GLRendererBa
 
 	GLShader* depthMapShader{ nullptr };
 
-	glm::mat4 lightSpaceMatrix{};
-
 	GLBasicDirectionalLight(DirectionalLightNode* node);
 	~GLBasicDirectionalLight();
 

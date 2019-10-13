@@ -35,8 +35,6 @@ GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
-
-	lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 }
 
 GLBasicDirectionalLight::~GLBasicDirectionalLight()
@@ -58,9 +56,11 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 
 	glUseProgram(depthMapShader->id);
 
+	auto vp = node->GetViewProjectionMatrix();
+
 	for (auto& geometry : geometries) {
 		auto m = geometry->node->GetWorldMatrix();
-		auto mvp = lightSpaceMatrix * m;
+		auto mvp = vp * m;
 
 		depthMapShader->UploadMat4("mvp", mvp);
 
@@ -69,6 +69,7 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
+
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
@@ -96,10 +97,6 @@ void GLBasicDirectionalLight::DirtyNodeUpdate(DirtyFlagset nodeDirtyFlagset)
 		glBindTexture(GL_TEXTURE_2D, shadowMap);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, node->GetShadowMapWidth(), node->GetShadowMapHeight(), 0,
 			GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	}
-
-	if (nodeDirtyFlagset[DF::Projection] || nodeDirtyFlagset[DF::TRS] || nodeDirtyFlagset[DF::NearFar]) {
-		lightSpaceMatrix = node->GetProjectionMatrix() * node->GetViewMatrix();
 	}
 }
 } // namespace ogl

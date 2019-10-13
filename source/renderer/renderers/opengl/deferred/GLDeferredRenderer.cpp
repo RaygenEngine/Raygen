@@ -206,7 +206,7 @@ void GLDeferredRenderer::RenderGBuffer()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT /*| GL_STENCIL_BUFFER_BIT*/);
 
 	auto gBufferShader = m_gBuffer.shader;
-	const auto vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
+	const auto vp = m_camera->GetViewProjectionMatrix();
 
 	// render geometry (non-instanced)
 	for (auto& geometry : m_glGeometries) {
@@ -296,7 +296,7 @@ void GLDeferredRenderer::RenderDirectionalLights()
 		m_deferredDirectionalLightShader->UploadVec3("view_pos", m_camera->GetWorldTranslation());
 
 		// light
-		m_deferredDirectionalLightShader->UploadMat4("light_space_matrix", light->lightSpaceMatrix);
+		m_deferredDirectionalLightShader->UploadMat4("light_space_matrix", light->node->GetViewProjectionMatrix());
 		m_deferredDirectionalLightShader->UploadVec3("light_pos", light->node->GetWorldTranslation());
 		m_deferredDirectionalLightShader->UploadVec3("light_color", light->node->GetColor());
 		m_deferredDirectionalLightShader->UploadFloat("light_intensity", light->node->GetIntensity());
@@ -342,7 +342,7 @@ void GLDeferredRenderer::RenderSpotLights()
 		m_deferredDirectionalLightShader->UploadVec3("view_pos", m_camera->GetWorldTranslation());
 
 		// light
-		m_deferredDirectionalLightShader->UploadMat4("light_space_matrix", light->lightSpaceMatrix);
+		m_deferredDirectionalLightShader->UploadMat4("light_space_matrix", light->node->GetViewProjectionMatrix());
 		m_deferredDirectionalLightShader->UploadVec3("light_pos", light->node->GetWorldTranslation());
 		m_deferredDirectionalLightShader->UploadVec3("light_color", light->node->GetColor());
 		m_deferredDirectionalLightShader->UploadFloat("light_intensity", light->node->GetIntensity());

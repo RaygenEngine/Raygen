@@ -13,6 +13,8 @@ class DirectionalLightNode : public LightNode {
 	}
 
 	glm::mat4 m_projectionMatrix{};
+	glm::mat4 m_viewMatrix{};
+	glm::mat4 m_viewProjectionMatrix{};
 
 	float m_left{ -10.f };
 	float m_right{ 10.f };
@@ -20,15 +22,19 @@ class DirectionalLightNode : public LightNode {
 	float m_bottom{ -10.f };
 	float m_top{ 10.f };
 
-	void UpdateProjectionMatrix();
+	void RecalculateProjectionMatrix();
+	void RecalculateViewMatrix();
+	void RecalculateViewProjectionMatrix();
 
 public:
 	void DirtyUpdate(DirtyFlagset flags) override;
-
-	[[nodiscard]] glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 
 	[[nodiscard]] float GetOrthoFrustumLeft() const { return m_left; }
 	[[nodiscard]] float GetOrthoFrustumRight() const { return m_right; }
 	[[nodiscard]] float GetOrthoFrustumBottom() const { return m_bottom; }
 	[[nodiscard]] float GetOrthoFrustumTop() const { return m_top; }
+
+	[[nodiscard]] glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
+	[[nodiscard]] glm::mat4 GetViewMatrix() const { return m_viewMatrix; }
+	[[nodiscard]] glm::mat4 GetViewProjectionMatrix() const { return m_viewProjectionMatrix; }
 };

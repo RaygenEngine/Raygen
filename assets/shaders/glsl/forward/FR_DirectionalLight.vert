@@ -18,15 +18,13 @@ out Data
 	vec4 light_frag_pos;
 } dataOut;
 
-struct DirectionalLight
+uniform struct DirectionalLight
 {
 	vec3 color;
 	vec3 world_pos;
 	float intensity;
 	mat4 vp;
-};
-
-uniform DirectionalLight dr_light; 
+} dr_light;
 
 uniform mat4 mvp;
 uniform mat4 m;
