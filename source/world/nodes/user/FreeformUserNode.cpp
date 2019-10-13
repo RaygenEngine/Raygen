@@ -85,8 +85,4 @@ void FreeformUserNode::Update(float deltaTime)
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::Q, XVirtualKey::GAMEPAD_RIGHT_SHOULDER)) {
 		AddLocalOffset((-GetWorldRoot()->GetUp()) * speed);
 	}
-
-	if (input.IsKeyPressed(XVirtualKey::Z)) {
-		RotateAroundAxis(Engine::GetWorld()->GetRoot()->GetUp(), 45.f);
-	}
 }
