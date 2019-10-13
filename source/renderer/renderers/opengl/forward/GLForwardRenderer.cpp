@@ -76,7 +76,7 @@ void GLForwardRenderer::InitShaders()
 	m_forwardSpotLightShader->AddUniform("spot_light.near");
 	m_forwardSpotLightShader->AddUniform("spot_light.atten_coef");
 	m_forwardSpotLightShader->AddUniform("spot_light.world_dir");
-	m_forwardSpotLightShader->AddUniform("spot_light.cut_off");
+	m_forwardSpotLightShader->AddUniform("spot_light.outer_cut_off");
 	m_forwardSpotLightShader->AddUniform("spot_light.inner_cut_off");
 	m_forwardSpotLightShader->AddUniform("base_color_factor");
 	m_forwardSpotLightShader->AddUniform("emissive_factor");
@@ -363,7 +363,7 @@ void GLForwardRenderer::RenderSpotLights()
 		m_forwardSpotLightShader->UploadFloat("spot_light.near", light->node->GetNear());
 		m_forwardSpotLightShader->UploadInt("spot_light.atten_coef", light->node->GetAttenuationMode());
 		m_forwardSpotLightShader->UploadFloat(
-			"spot_light.cut_off", glm::cos(glm::radians(light->node->GetAperture() / 2.f)));
+			"spot_light.outer_cut_off", glm::cos(glm::radians(light->node->GetOuterAperture() / 2.f)));
 		m_forwardSpotLightShader->UploadFloat(
 			"spot_light.inner_cut_off", glm::cos(glm::radians(light->node->GetInnerAperture() / 2.f)));
 

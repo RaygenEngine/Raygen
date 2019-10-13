@@ -24,12 +24,17 @@ uniform struct SpotLight
 {
 	vec3 world_pos;
 	vec3 world_dir;
+	
+	float outer_cut_off;
+	float inner_cut_off;
+	
 	vec3 color;
 	float intensity;
+	
 	float near;
+	
 	int atten_coef;
-	float cut_off;
-	float inner_cut_off;
+
 	mat4 vp;
 } spot_light;
 

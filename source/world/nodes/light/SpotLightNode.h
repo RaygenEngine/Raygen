@@ -5,7 +5,7 @@
 class SpotLightNode : public LightNode {
 	REFLECTED_NODE(SpotLightNode, LightNode, DF_FLAGS(Projection))
 	{
-		REFLECT_VAR(m_aperture).OnDirty(DF::Projection);
+		REFLECT_VAR(m_outerAperture).OnDirty(DF::Projection);
 		REFLECT_VAR(m_innerAperture);
 	}
 
@@ -14,7 +14,7 @@ class SpotLightNode : public LightNode {
 	glm::mat4 m_viewProjectionMatrix{};
 
 	// angle
-	float m_aperture{ 45.f };
+	float m_outerAperture{ 25.f };
 	// inner
 	float m_innerAperture{ 12.5f };
 
@@ -26,7 +26,7 @@ public:
 	void DirtyUpdate(DirtyFlagset flags) override;
 
 	// WIP: return radians or keep radians in general
-	[[nodiscard]] float GetAperture() const { return m_aperture; }
+	[[nodiscard]] float GetOuterAperture() const { return m_outerAperture; }
 	[[nodiscard]] float GetInnerAperture() const { return m_innerAperture; }
 
 	[[nodiscard]] glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
