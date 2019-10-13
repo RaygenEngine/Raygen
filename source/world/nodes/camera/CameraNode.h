@@ -4,10 +4,10 @@
 
 // Note: to make a automatic camera that resizes to window size see WindowCameraNode
 class CameraNode : public Node {
-	REFLECTED_NODE(CameraNode, Node, DF_FLAGS(Projection, ViewportSize))
+	REFLECTED_NODE(CameraNode, Node, DF_FLAGS(Projection, ViewportSize, FocalLength))
 	{
 		REFLECT_VAR(m_far).OnDirty(DF::Projection);
-		REFLECT_VAR(m_focalLength).OnDirty(DF::Projection);
+		REFLECT_VAR(m_focalLength).OnDirty(DF::FocalLength);
 		REFLECT_VAR(m_vFov).OnDirty(DF::Projection);
 		REFLECT_VAR(m_hFov).OnDirty(DF::Projection);
 		REFLECT_VAR(m_near).OnDirty(DF::Projection);
@@ -22,7 +22,7 @@ protected:
 	// distance to film plane
 	float m_focalLength{ 1.f };
 
-	// vertical fov (full angle)
+	// vertical fov (angle)
 	float m_vFov{ 60.f };
 	// horizontal fov depends on the vertical and the aspect ratio
 	float m_hFov{ 45.f };
@@ -31,14 +31,18 @@ protected:
 	float m_far{ 1000.f };
 
 	glm::mat4 m_projectionMatrix{};
+	glm::mat4 m_viewMatrix{};
+	glm::mat4 m_viewProjectionMatrix{};
 
 	int32 m_viewportWidth{ 1280 };
 	int32 m_viewportHeight{ 720 };
 
 	void RecalculateProjectionFov();
+	void RecalculateViewMatrix();
+	void RecalculateViewProjectionMatrix();
 
 public:
-	[[nodiscard]] glm::vec3 GetLookAt() const override { return GetWorldTranslation() + GetFront() * m_focalLength; }
+	[[nodiscard]] glm::vec3 GetLookAt() const { return GetWorldTranslation() + GetFront() * m_focalLength; }
 
 	[[nodiscard]] float GetVerticalFov() const { return m_vFov; }
 	[[nodiscard]] float GetHorizontalFov() const { return m_hFov; }
@@ -51,6 +55,8 @@ public:
 	[[nodiscard]] int32 GetHeight() const { return m_viewportHeight; }
 
 	[[nodiscard]] glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
+	[[nodiscard]] glm::mat4 GetViewMatrix() const { return m_viewMatrix; }
+	[[nodiscard]] glm::mat4 GetViewProjectionMatrix() const { return m_viewProjectionMatrix; }
 
 	void DirtyUpdate(DirtyFlagset flags) override;
 };

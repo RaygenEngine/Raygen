@@ -5,6 +5,8 @@
 #include "asset/pods/StringPod.h"
 #include "asset/AssetPod.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 namespace ogl {
 GLShader::~GLShader()
 {
@@ -44,7 +46,6 @@ bool GLShader::Load()
 	const GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
 	// Compile Fragment Shader
-	// LOG_TRACE("Compiling shader : {}", fragmentSource->GetFileName());
 	char const* fragmentSourcePointer = sources->fragment->data.c_str();
 	glShaderSource(fragmentShaderID, 1, &fragmentSourcePointer, NULL);
 	glCompileShader(fragmentShaderID); // Check Fragment Shader
@@ -82,9 +83,40 @@ bool GLShader::Load()
 	return true;
 }
 
-GLint GLShader::GetUniform(const std::string& uniformName) const
+
+void GLShader::UploadInt(const std::string& uniformName, int i)
 {
-	return uniformLocations.at(uniformName);
+	glUniform1i(uniformLocations.at(uniformName), i);
+}
+
+void GLShader::UploadFloat(const std::string& uniformName, float f)
+{
+	glUniform1f(uniformLocations.at(uniformName), f);
+}
+
+void GLShader::UploadVec2(const std::string& uniformName, glm::vec2 v)
+{
+	glUniform2fv(uniformLocations.at(uniformName), 1, glm::value_ptr(v));
+}
+
+void GLShader::UploadVec3(const std::string& uniformName, glm::vec3 v)
+{
+	glUniform3fv(uniformLocations.at(uniformName), 1, glm::value_ptr(v));
+}
+
+void GLShader::UploadVec4(const std::string& uniformName, glm::vec4 v)
+{
+	glUniform4fv(uniformLocations.at(uniformName), 1, glm::value_ptr(v));
+}
+
+void GLShader::UploadMat3(const std::string& uniformName, const glm::mat3& m, GLboolean transpose)
+{
+	glUniformMatrix3fv(uniformLocations.at(uniformName), 1, transpose, glm::value_ptr(m));
+}
+
+void GLShader::UploadMat4(const std::string& uniformName, const glm::mat4& m, GLboolean transpose)
+{
+	glUniformMatrix4fv(uniformLocations.at(uniformName), 1, transpose, glm::value_ptr(m));
 }
 
 void GLShader::AddUniform(const std::string& uniformName)

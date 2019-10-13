@@ -139,11 +139,10 @@ public:
 	// Query if the editor could be activated during runtime. Cannot change after engine initialization
 	[[nodiscard]] static bool IsEditorEnabled();
 
-	// WIP: cpp
 	void ReportFrameDrawn()
 	{
 		if (!m_initToFrameTimer.m_stopped) {
-			// LOG_WARN("Init to frame took: {} ms", m_initToFrameTimer.Get());
+			LOG_WARN("Init to frame took: {} ms", m_initToFrameTimer.Get());
 			m_initToFrameTimer.Stop();
 		}
 	}

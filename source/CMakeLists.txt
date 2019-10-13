@@ -47,7 +47,6 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/basic/GLBasicSpotLight.cpp
 	renderer/renderers/opengl/basic/GLBasicDirectionalLight.cpp
 	renderer/renderers/opengl/basic/GLBasicGeometry.cpp
-	renderer/renderers/opengl/basic/GLBasicSkybox.cpp
 	renderer/renderers/opengl/forward/GLForwardRenderer.cpp
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.cpp
 
@@ -67,6 +66,7 @@ set(SOURCE_FILES
 	world/nodes/light/PunctualLightNode.cpp
 	world/nodes/light/DirectionalLightNode.cpp
 	world/nodes/light/SpotLightNode.cpp
+	world/nodes/light/LightNode.cpp
 	world/nodes/user/FreeformUserNode.cpp
 	world/nodes/user/UserNode.cpp
 )
@@ -163,7 +163,6 @@ set(HEADER_FILES
 	renderer/renderers/opengl/basic/GLBasicSpotLight.h
 	renderer/renderers/opengl/basic/GLBasicDirectionalLight.h
 	renderer/renderers/opengl/basic/GLBasicGeometry.h
-	renderer/renderers/opengl/basic/GLBasicSkybox.h
 	renderer/renderers/opengl/forward/GLForwardRenderer.h
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.h
 
@@ -191,6 +190,7 @@ set(HEADER_FILES
 	world/nodes/light/PunctualLightNode.h
 	world/nodes/light/DirectionalLightNode.h
 	world/nodes/light/SpotLightNode.h
+	world/nodes/light/LightNode.h
 	world/nodes/user/FreeformUserNode.h
 	world/nodes/user/UserNode.h
 )

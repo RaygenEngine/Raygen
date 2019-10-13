@@ -66,7 +66,7 @@ private:
 	glm::vec3 m_localTranslation{ 0.f, 0.f, 0.f };
 	glm::quat m_localOrientation{ 1.f, 0.f, 0.f, 0.f };
 	glm::vec3 m_localScale{ 1.f, 1.f, 1.f };
-	glm::mat4 m_localMatrix{ glm::identity<glm::mat4>() };
+	glm::mat4 m_localMatrix{};
 
 	// world
 	glm::vec3 m_worldTranslation{ 0.f, 0.f, 0.f };
@@ -126,11 +126,6 @@ public:
 	[[nodiscard]] glm::vec3 GetUp() const { return GetWorldOrientation() * glm::vec3(0.f, 1.f, 0.f); }
 	[[nodiscard]] glm::vec3 GetRight() const { return GetWorldOrientation() * glm::vec3(1.f, 0.f, 0.f); }
 	[[nodiscard]] glm::vec3 GetFront() const { return GetWorldOrientation() * glm::vec3(0.f, 0.f, -1.f); }
-
-	// override if focalLength is defined
-	[[nodiscard]] virtual glm::vec3 GetLookAt() const { return GetWorldTranslation() + GetFront(); }
-
-	[[nodiscard]] glm::mat4 GetViewMatrix() const { return glm::lookAt(GetWorldTranslation(), GetLookAt(), GetUp()); }
 
 	[[nodiscard]] bool IsLeaf() const { return m_children.empty(); }
 	[[nodiscard]] const std::string& GetType() const { return m_type; }

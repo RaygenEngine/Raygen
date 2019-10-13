@@ -7,7 +7,7 @@
 #include "system/Input.h"
 
 #include <glad/glad.h>
-#include <glm/ext.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
 namespace ogl {
@@ -89,6 +89,7 @@ bool GLDeferredRenderer::InitScene()
 	m_deferredDirectionalLightShader->AddUniform("view_pos");
 	m_deferredDirectionalLightShader->AddUniform("light_pos");
 	m_deferredDirectionalLightShader->AddUniform("light_color");
+	m_deferredDirectionalLightShader->AddUniform("light_near");
 	m_deferredDirectionalLightShader->AddUniform("light_intensity");
 	m_deferredDirectionalLightShader->AddUniform("light_space_matrix");
 
@@ -98,6 +99,7 @@ bool GLDeferredRenderer::InitScene()
 	m_deferredSpotLightShader->AddUniform("view_pos");
 	m_deferredSpotLightShader->AddUniform("light_pos");
 	m_deferredSpotLightShader->AddUniform("light_color");
+	m_deferredSpotLightShader->AddUniform("light_near");
 	m_deferredSpotLightShader->AddUniform("light_intensity");
 	m_deferredSpotLightShader->AddUniform("light_space_matrix");
 
@@ -204,7 +206,7 @@ void GLDeferredRenderer::RenderGBuffer()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT /*| GL_STENCIL_BUFFER_BIT*/);
 
 	auto gBufferShader = m_gBuffer.shader;
-	const auto vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
+	const auto vp = m_camera->GetViewProjectionMatrix();
 
 	// render geometry (non-instanced)
 	for (auto& geometry : m_glGeometries) {
@@ -219,37 +221,37 @@ void GLDeferredRenderer::RenderGBuffer()
 
 			switch (materialData->alphaMode) {
 					// blend not handled
-				case AM_BLEND:
-				case AM_OPAQUE:
+				case MaterialPod::BLEND:
+				case MaterialPod::OPAQUE:
 					gBufferShader = m_gBuffer.shader;
 					glUseProgram(gBufferShader->id);
 					break;
-				case AM_MASK:
+				case MaterialPod::MASK:
 					gBufferShader = m_gBuffer.shaderAlphaMask;
 					glUseProgram(gBufferShader->id);
-					glUniform1f(m_gBuffer.shaderAlphaMask->GetUniform("alpha_cutoff"), materialData->alphaCutoff);
+					m_gBuffer.shaderAlphaMask->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
 					break;
 			}
 
-			glUniformMatrix4fv(gBufferShader->GetUniform("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
-			glUniformMatrix4fv(gBufferShader->GetUniform("m"), 1, GL_FALSE, glm::value_ptr(m));
-			glUniformMatrix3fv(gBufferShader->GetUniform("normal_matrix"), 1, GL_FALSE,
-				glm::value_ptr(glm::transpose(glm::inverse(glm::mat3(m)))));
+			// model
+			gBufferShader->UploadMat4("m", m);
+			gBufferShader->UploadMat4("mvp", mvp);
+			gBufferShader->UploadMat3("normal_matrix", glm::transpose(glm::inverse(glm::mat3(m))));
 
-			glUniform4fv(
-				gBufferShader->GetUniform("base_color_factor"), 1, glm::value_ptr(materialData->baseColorFactor));
-			glUniform3fv(gBufferShader->GetUniform("emissive_factor"), 1, glm::value_ptr(materialData->emissiveFactor));
-			glUniform1f(gBufferShader->GetUniform("metallic_factor"), materialData->metallicFactor);
-			glUniform1f(gBufferShader->GetUniform("roughness_factor"), materialData->roughnessFactor);
-			glUniform1f(gBufferShader->GetUniform("normal_scale"), materialData->normalScale);
-			glUniform1f(gBufferShader->GetUniform("occlusion_strength"), materialData->occlusionStrength);
+			// material
+			gBufferShader->UploadVec4("base_color_factor", materialData->baseColorFactor);
+			gBufferShader->UploadVec3("emissive_factor", materialData->emissiveFactor);
+			gBufferShader->UploadFloat("metallic_factor", materialData->metallicFactor);
+			gBufferShader->UploadFloat("roughness_factor", materialData->roughnessFactor);
+			gBufferShader->UploadFloat("normal_scale", materialData->normalScale);
+			gBufferShader->UploadFloat("occlusion_strength", materialData->occlusionStrength);
 
-			glUniform1i(gBufferShader->GetUniform("base_color_texcoord_index"), materialData->baseColorTexCoordIndex);
-			glUniform1i(gBufferShader->GetUniform("metallic_roughness_texcoord_index"),
-				materialData->metallicRoughnessTexCoordIndex);
-			glUniform1i(gBufferShader->GetUniform("emissive_texcoord_index"), materialData->emissiveTexCoordIndex);
-			glUniform1i(gBufferShader->GetUniform("normal_texcoord_index"), materialData->normalTexCoordIndex);
-			glUniform1i(gBufferShader->GetUniform("occlusion_texcoord_index"), materialData->occlusionTexCoordIndex);
+			// uv index
+			gBufferShader->UploadInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
+			gBufferShader->UploadInt("metallic_roughness_texcoord_index", materialData->metallicRoughnessTexCoordIndex);
+			gBufferShader->UploadInt("emissive_texcoord_index", materialData->emissiveTexCoordIndex);
+			gBufferShader->UploadInt("normal_texcoord_index", materialData->normalTexCoordIndex);
+			gBufferShader->UploadInt("occlusion_texcoord_index", materialData->occlusionTexCoordIndex);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
@@ -290,16 +292,15 @@ void GLDeferredRenderer::RenderDirectionalLights()
 
 		glUseProgram(m_deferredDirectionalLightShader->id);
 
-		glUniform3fv(m_deferredDirectionalLightShader->GetUniform("view_pos"), 1,
-			glm::value_ptr(m_camera->GetWorldTranslation()));
-		glUniform3fv(m_deferredDirectionalLightShader->GetUniform("light_pos"), 1,
-			glm::value_ptr(light->node->GetWorldTranslation()));
-		glUniform3fv(
-			m_deferredDirectionalLightShader->GetUniform("light_color"), 1, glm::value_ptr(light->node->GetColor()));
-		glUniform1f(m_deferredDirectionalLightShader->GetUniform("light_intensity"), light->node->GetIntensity());
+		// global uniforms
+		m_deferredDirectionalLightShader->UploadVec3("view_pos", m_camera->GetWorldTranslation());
 
-		glUniformMatrix4fv(m_deferredDirectionalLightShader->GetUniform("light_space_matrix"), 1, GL_FALSE,
-			glm::value_ptr(light->lightSpaceMatrix));
+		// light
+		m_deferredDirectionalLightShader->UploadMat4("light_space_matrix", light->node->GetViewProjectionMatrix());
+		m_deferredDirectionalLightShader->UploadVec3("light_pos", light->node->GetWorldTranslation());
+		m_deferredDirectionalLightShader->UploadVec3("light_color", light->node->GetColor());
+		m_deferredDirectionalLightShader->UploadFloat("light_intensity", light->node->GetIntensity());
+		m_deferredDirectionalLightShader->UploadFloat("light_near", light->node->GetNear());
 
 		// gBuffer
 		glActiveTexture(GL_TEXTURE0);
@@ -337,15 +338,15 @@ void GLDeferredRenderer::RenderSpotLights()
 
 		glUseProgram(m_deferredSpotLightShader->id);
 
-		glUniform3fv(
-			m_deferredSpotLightShader->GetUniform("view_pos"), 1, glm::value_ptr(m_camera->GetWorldTranslation()));
-		glUniform3fv(
-			m_deferredSpotLightShader->GetUniform("light_pos"), 1, glm::value_ptr(light->node->GetWorldTranslation()));
-		glUniform3fv(m_deferredSpotLightShader->GetUniform("light_color"), 1, glm::value_ptr(light->node->GetColor()));
-		glUniform1f(m_deferredSpotLightShader->GetUniform("light_intensity"), light->node->GetIntensity());
+		// global uniforms
+		m_deferredDirectionalLightShader->UploadVec3("view_pos", m_camera->GetWorldTranslation());
 
-		glUniformMatrix4fv(m_deferredSpotLightShader->GetUniform("light_space_matrix"), 1, GL_FALSE,
-			glm::value_ptr(light->lightSpaceMatrix));
+		// light
+		m_deferredDirectionalLightShader->UploadMat4("light_space_matrix", light->node->GetViewProjectionMatrix());
+		m_deferredDirectionalLightShader->UploadVec3("light_pos", light->node->GetWorldTranslation());
+		m_deferredDirectionalLightShader->UploadVec3("light_color", light->node->GetColor());
+		m_deferredDirectionalLightShader->UploadFloat("light_intensity", light->node->GetIntensity());
+		m_deferredDirectionalLightShader->UploadFloat("light_near", light->node->GetNear());
 
 		// gBuffer
 		glActiveTexture(GL_TEXTURE0);

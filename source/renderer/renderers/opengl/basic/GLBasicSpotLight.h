@@ -13,10 +13,7 @@ struct GLBasicSpotLight : NodeObserver<SpotLightNode, GLRendererBase> {
 	GLuint fbo{};
 	GLuint shadowMap{};
 
-	GLShader* depthMap{ nullptr };
-	GLShader* depthMapAlphaMask{ nullptr };
-
-	glm::mat4 lightSpaceMatrix{};
+	GLShader* depthMapShader{ nullptr };
 
 	GLBasicSpotLight(SpotLightNode* node);
 	~GLBasicSpotLight() override;

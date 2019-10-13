@@ -1,6 +1,7 @@
 #pragma once
 
 #include "system/InputEnums.h"
+#include "core/MathAux.h"
 
 #include <unordered_set>
 

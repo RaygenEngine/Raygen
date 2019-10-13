@@ -5,6 +5,7 @@ in Data
 	vec2 text_coord[2];
 } dataIn;
 
+uniform bool mask;
 uniform float alpha_cutoff;
 
 uniform vec4 base_color_factor;
@@ -19,6 +20,6 @@ void main()
 	float opacity = sampled_base_color.a * base_color_factor.a;
 
 	// mask mode and cutoff
-	if(opacity < alpha_cutoff)
+	if(mask && opacity < alpha_cutoff)
 		discard;
 }  

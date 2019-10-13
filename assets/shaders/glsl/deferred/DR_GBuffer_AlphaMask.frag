@@ -21,14 +21,13 @@ uniform float metallic_factor;
 uniform float roughness_factor;
 uniform float normal_scale;
 uniform float occlusion_strength;
+uniform float alpha_cutoff;
 
 uniform int base_color_texcoord_index;
 uniform int metallic_roughness_texcoord_index;
 uniform int emissive_texcoord_index;
 uniform int normal_texcoord_index;
 uniform int occlusion_texcoord_index;
-
-uniform float alpha_cutoff;
 
 layout(binding=0) uniform sampler2D baseColorSampler;
 layout(binding=1) uniform sampler2D metallicRoughnessSampler;
@@ -40,16 +39,19 @@ void main()
 {
 	// sample material textures
 	vec4 sampled_base_color = texture(baseColorSampler, dataIn.text_coord[base_color_texcoord_index]);
-	vec4 sampled_metallic_roughness = texture(metallicRoughnessSampler, dataIn.text_coord[metallic_roughness_texcoord_index]);
-	vec4 sampled_emissive = texture(emissiveSampler, dataIn.text_coord[emissive_texcoord_index]);
-	vec4 sampled_sample_normal = texture(normalSampler, dataIn.text_coord[normal_texcoord_index]);
-	vec4 sampled_occlusion = texture(occlusionSampler, dataIn.text_coord[occlusion_texcoord_index]);
 	
 	float opacity = sampled_base_color.a * base_color_factor.a;
 
 	// mask mode and cutoff
 	if(opacity < alpha_cutoff)
 		discard;
+	
+	vec4 sampled_metallic_roughness = texture(metallicRoughnessSampler, dataIn.text_coord[metallic_roughness_texcoord_index]);
+	vec4 sampled_emissive = texture(emissiveSampler, dataIn.text_coord[emissive_texcoord_index]);
+	vec4 sampled_sample_normal = texture(normalSampler, dataIn.text_coord[normal_texcoord_index]);
+	vec4 sampled_occlusion = texture(occlusionSampler, dataIn.text_coord[occlusion_texcoord_index]);
+	
+
 	
 	// final material values
 	
