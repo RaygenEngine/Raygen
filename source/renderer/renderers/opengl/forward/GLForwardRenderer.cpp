@@ -3,9 +3,9 @@
 #include "renderer/renderers/opengl/forward/GLForwardRenderer.h"
 #include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
-#include "renderer/renderers/opengl/basic/GLBasicSkybox.h"
 #include "world/World.h"
 #include "world/nodes/camera/CameraNode.h"
+#include "world/nodes/sky/SkyboxNode.h"
 #include "world/nodes/RootNode.h"
 #include "system/Input.h"
 // WIP:
@@ -33,7 +33,10 @@ GLForwardRenderer::~GLForwardRenderer()
 void GLForwardRenderer::InitObservers()
 {
 	m_camera = Engine::GetWorld()->GetActiveCamera();
-	m_skybox = CreateObserver_AnyAvailable<GLBasicSkybox>();
+	CLOG_ABORT(!m_camera, "This renderer expects a camera node to be present!");
+
+	m_skybox = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
+	CLOG_ABORT(!m_skybox, "This renderer expects a skybox node to be present!");
 
 	for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>()) {
 		CreateObserver_AutoContained<GLBasicGeometry>(geometryNode, m_glGeometries);
@@ -46,8 +49,6 @@ void GLForwardRenderer::InitObservers()
 	for (auto* dirLightNode : Engine::GetWorld()->GetNodeMap<SpotLightNode>()) {
 		CreateObserver_AutoContained<GLBasicSpotLight>(dirLightNode, m_glSpotLights);
 	}
-
-	CLOG_ABORT(!m_skybox, "This renderer expects a skybox node to be present!");
 }
 
 void GLForwardRenderer::InitShaders()
@@ -74,6 +75,9 @@ void GLForwardRenderer::InitShaders()
 	m_forwardSpotLightShader->AddUniform("spot_light.vp");
 	m_forwardSpotLightShader->AddUniform("spot_light.near");
 	m_forwardSpotLightShader->AddUniform("spot_light.atten_coef");
+	m_forwardSpotLightShader->AddUniform("spot_light.world_dir");
+	m_forwardSpotLightShader->AddUniform("spot_light.cut_off");
+	m_forwardSpotLightShader->AddUniform("spot_light.inner_cut_off");
 	m_forwardSpotLightShader->AddUniform("base_color_factor");
 	m_forwardSpotLightShader->AddUniform("emissive_factor");
 	m_forwardSpotLightShader->AddUniform("ambient");
@@ -246,14 +250,14 @@ void GLForwardRenderer::RenderDirectionalLights()
 		glUseProgram(m_forwardDirectionalLightShader->id);
 
 		const auto root = Engine::GetWorld()->GetRoot();
-		const auto vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
+		const auto vp = m_camera->GetViewProjectionMatrix();
 
 		// global uniforms
 		m_forwardDirectionalLightShader->UploadVec3("ambient", root->GetAmbientColor());
 		m_forwardDirectionalLightShader->UploadVec3("view_pos", m_camera->GetWorldTranslation());
 
 		// light
-		m_forwardDirectionalLightShader->UploadMat4("dr_light.vp", light->lightSpaceMatrix);
+		m_forwardDirectionalLightShader->UploadMat4("dr_light.vp", light->node->GetViewProjectionMatrix());
 		m_forwardDirectionalLightShader->UploadVec3("dr_light.world_pos", light->node->GetWorldTranslation());
 		m_forwardDirectionalLightShader->UploadVec3("dr_light.color", light->node->GetColor());
 		m_forwardDirectionalLightShader->UploadFloat("dr_light.intensity", light->node->GetIntensity());
@@ -344,19 +348,25 @@ void GLForwardRenderer::RenderSpotLights()
 		glUseProgram(m_forwardSpotLightShader->id);
 
 		const auto root = Engine::GetWorld()->GetRoot();
-		const auto vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
+		const auto vp = m_camera->GetViewProjectionMatrix();
 
 		// global uniforms
 		m_forwardSpotLightShader->UploadVec3("ambient", root->GetAmbientColor());
 		m_forwardSpotLightShader->UploadVec3("view_pos", m_camera->GetWorldTranslation());
 
 		// light
-		m_forwardSpotLightShader->UploadMat4("spot_light.vp", light->lightSpaceMatrix);
+		m_forwardSpotLightShader->UploadMat4("spot_light.vp", light->node->GetViewProjectionMatrix());
 		m_forwardSpotLightShader->UploadVec3("spot_light.world_pos", light->node->GetWorldTranslation());
+		m_forwardSpotLightShader->UploadVec3("spot_light.world_dir", light->node->GetFront());
 		m_forwardSpotLightShader->UploadVec3("spot_light.color", light->node->GetColor());
 		m_forwardSpotLightShader->UploadFloat("spot_light.intensity", light->node->GetIntensity());
 		m_forwardSpotLightShader->UploadFloat("spot_light.near", light->node->GetNear());
 		m_forwardSpotLightShader->UploadInt("spot_light.atten_coef", light->node->GetAttenuationMode());
+		m_forwardSpotLightShader->UploadFloat(
+			"spot_light.cut_off", glm::cos(glm::radians(light->node->GetAperture() / 2.f)));
+		m_forwardSpotLightShader->UploadFloat(
+			"spot_light.inner_cut_off", glm::cos(glm::radians(light->node->GetInnerAperture() / 2.f)));
+
 
 		for (auto& geometry : m_glGeometries) {
 			auto m = geometry->node->GetWorldMatrix();
@@ -502,7 +512,7 @@ void GLForwardRenderer::RenderBoundingBoxes()
 		glNamedBufferSubData(m_bbVbo, 0, 48 * sizeof(float), data);
 
 		glUseProgram(m_bBoxShader->id);
-		const auto vp = m_camera->GetProjectionMatrix() * m_camera->GetViewMatrix();
+		const auto vp = m_camera->GetViewProjectionMatrix();
 		m_bBoxShader->UploadMat4("vp", vp);
 		m_bBoxShader->UploadVec4("color", color);
 
@@ -523,27 +533,28 @@ void GLForwardRenderer::RenderBoundingBoxes()
 
 void GLForwardRenderer::RenderSkybox()
 {
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-	glEnable(GL_CULL_FACE);
+	// glEnable(GL_DEPTH_TEST);
+	// glDepthFunc(GL_LEQUAL);
+	// glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	// glEnable(GL_CULL_FACE);
 
-	const auto vpNoTransformation = m_camera->GetProjectionMatrix() * glm::mat4(glm::mat3(m_camera->GetViewMatrix()));
+	// const auto vpNoTransformation = m_camera->GetProjectionMatrix() *
+	// glm::mat4(glm::mat3(m_camera->GetViewMatrix()));
 
-	glUseProgram(m_skybox->shader->id);
+	// glUseProgram(m_skybox->shader->id);
 
-	m_skybox->shader->UploadMat4("vp", vpNoTransformation);
+	// m_skybox->shader->UploadMat4("vp", vpNoTransformation);
 
-	glBindVertexArray(m_skybox->vao);
+	// glBindVertexArray(m_skybox->vao);
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, m_skybox->cubemap->id);
+	// glActiveTexture(GL_TEXTURE0);
+	// glBindTexture(GL_TEXTURE_CUBE_MAP, m_skybox->cubemap->id);
 
-	glDrawArrays(GL_TRIANGLES, 0, 36);
+	// glDrawArrays(GL_TRIANGLES, 0, 36);
 
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-	glDisable(GL_CULL_FACE);
+	// glDisable(GL_DEPTH_TEST);
+	// glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	// glDisable(GL_CULL_FACE);
 }
 
 void GLForwardRenderer::RenderPostProcess()
@@ -614,10 +625,9 @@ void GLForwardRenderer::Render()
 	// render directional lights shadow maps
 	RenderDirectionalLights();
 	RenderSpotLights();
-	// forward msaa-ed pass
 	// RenderBoundingBoxes();
 	// render skybox, seamless enabled (render last)
-	RenderSkybox();
+	// RenderSkybox();
 	// copy msaa to out fbo and render any post process on it
 	// RenderPostProcess();
 	// write out texture of out fbo to window (big triangle trick)

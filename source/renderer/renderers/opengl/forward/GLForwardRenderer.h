@@ -6,10 +6,9 @@
 #include "renderer/renderers/opengl/basic/GLBasicGeometry.h"
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
-#include "renderer/renderers/opengl/basic/GLBasicSkybox.h"
-
 
 class CameraNode;
+class SkyboxNode;
 
 namespace ogl {
 class GLForwardRenderer : public GLEditorRenderer {
@@ -21,16 +20,15 @@ protected:
 	GLShader* m_simpleOutShader{ nullptr };
 	GLShader* m_linearizeOutShader{ nullptr };
 	GLShader* m_bBoxShader{ nullptr };
-	bool m_isOutNonLinear{ false };
 
 	// entities
 	std::vector<GLBasicGeometry*> m_glGeometries;
 	std::vector<GLBasicDirectionalLight*> m_glDirectionalLights;
 	std::vector<GLBasicSpotLight*> m_glSpotLights;
-	GLBasicSkybox* m_skybox{ nullptr };
 
 	// raw nodes
 	CameraNode* m_camera{ nullptr };
+	SkyboxNode* m_skybox{ nullptr };
 
 	// rendering
 	GLuint m_msaaFbo{ 0u };
