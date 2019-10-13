@@ -1,7 +1,7 @@
 #pragma once
 
-#include "renderer/Renderer.h"
-#include "system/Engine.h"
+#include "renderer/ObserverRenderer.h"
+
 #include "renderer/GenericGpuAssetManager.h"
 #include "system/Engine.h"
 
@@ -12,9 +12,9 @@ class GLAssetManager;
 
 namespace ogl {
 class GLRendererBase : public ObserverRenderer {
-	HWND m_assochWnd{};
-	HDC m_hdc{};
-	HGLRC m_hglrc{};
+	HWND m_assochWnd{ nullptr };
+	HDC m_hdc{ nullptr };
+	HGLRC m_hglrc{ nullptr };
 
 	std::unique_ptr<GLAssetManager> m_glAssetManager;
 
@@ -30,7 +30,7 @@ public:
 
 	GLAssetManager* GetGLAssetManager() { return m_glAssetManager.get(); }
 
-	virtual void Update() override;
+	void Update() override;
 
 	void ChangeVSync(bool newIsEnabled);
 

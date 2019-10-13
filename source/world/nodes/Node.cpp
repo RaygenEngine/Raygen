@@ -77,6 +77,37 @@ void Node::AutoUpdateTransforms()
 	UpdateTransforms(GetParent()->GetWorldMatrix());
 }
 
+void Transform(Box& box, const glm::mat4& M)
+{
+	float a, b;
+
+	// Copy box A into min and max array.
+	auto AMin = box.min;
+	auto AMax = box.max;
+
+	// Begin at T.
+	box.max = glm::vec3(M[3]);
+	box.min = glm::vec3(M[3]);
+
+	// Find extreme points by considering product of
+	// min and max with each component of M.
+	for (auto j = 0; j < 3; ++j) {
+		for (auto i = 0; i < 3; ++i) {
+			auto a = M[i][j] * AMin[j];
+			auto b = M[i][j] * AMax[j];
+
+			if (a < b) {
+				box.min[j] += a;
+				box.max[j] += b;
+			}
+			else {
+				box.min[j] += b;
+				box.max[j] += a;
+			}
+		}
+	}
+}
+
 void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 {
 	m_dirty.set(DF::TRS);
