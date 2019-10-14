@@ -149,17 +149,26 @@ namespace {
 			byte* elementPtr = &beginPtr[perElementOffset * i];
 			ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
+			float handness = 1.f;
+
 			if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
 				result[i].tangent[0] = static_cast<float>(data[0]);
 				result[i].tangent[1] = static_cast<float>(data[1]);
 				result[i].tangent[2] = static_cast<float>(data[2]);
+				handness = static_cast<float>(data[3]);
 			}
 			else { // NOLINT
 				static_assert(std::is_same_v<float, ComponentType>);
 				result[i].tangent[0] = data[0];
 				result[i].tangent[1] = data[1];
 				result[i].tangent[2] = data[2];
+				handness = data[3];
 			}
+
+			// normal is ensured to be here
+			// if it was calculated, i.e. missing whilst tangents are defined
+			// this is an issue with this particular model
+			result[i].bitangent = glm::normalize(glm::cross(result[i].normal, result[i].tangent) * handness);
 		}
 	}
 
@@ -180,6 +189,9 @@ namespace {
 				result[i].textCoord0[0] = data[0];
 				result[i].textCoord0[1] = data[1];
 			}
+
+			// mirror to second uv map in case it is missing
+			result[i].textCoord1 = result[i].textCoord0;
 		}
 	}
 
@@ -317,11 +329,11 @@ namespace {
 			}
 		}
 
-
-		bool missingNormals = true;
-		bool missingTangents = true;
-		bool missingTexcoord0 = true;
-		bool missingTexcoord1 = true;
+		int32 positionsIndex = -1;
+		int32 normalsIndex = -1;
+		int32 tangentsIndex = -1;
+		int32 texcoords0Index = -1;
+		int32 texcoords1Index = -1;
 
 		// attributes
 		for (auto& attribute : primitiveData.attributes) {
@@ -329,40 +341,39 @@ namespace {
 			int32 index = attribute.second;
 
 			if (smath::CaseInsensitiveCompare(attrName, "POSITION")) {
-				LoadIntoVertexData<0>(modelData, index, geom.vertices);
+				positionsIndex = index;
 			}
 			else if (smath::CaseInsensitiveCompare(attrName, "NORMAL")) {
-				LoadIntoVertexData<1>(modelData, index, geom.vertices);
-				missingNormals = false;
+				normalsIndex = index;
 			}
 			else if (smath::CaseInsensitiveCompare(attrName, "TANGENT")) {
-				LoadIntoVertexData<2>(modelData, index, geom.vertices);
-				missingTangents = false;
+				tangentsIndex = index;
 			}
 			else if (smath::CaseInsensitiveCompare(attrName, "TEXCOORD_0")) {
-				LoadIntoVertexData<3>(modelData, index, geom.vertices);
-				missingTexcoord0 = false;
+				texcoords0Index = index;
 			}
 			else if (smath::CaseInsensitiveCompare(attrName, "TEXCOORD_1")) {
-				LoadIntoVertexData<4>(modelData, index, geom.vertices);
-				missingTexcoord1 = false;
+				texcoords1Index = index;
 			}
 		}
 
-		for (auto& v : geom.vertices) {
-			v.position = transformMat * glm::vec4(v.position, 1.f);
+		// load in this order
 
-			pod->bbox.max = glm::max(pod->bbox.max, v.position);
-			pod->bbox.min = glm::min(pod->bbox.min, v.position);
-		}
-
-		if (!missingNormals) {
-			const auto invTransMat = glm::transpose(glm::inverse(glm::mat3(transformMat)));
-			for (auto& v : geom.vertices) {
-				v.normal = invTransMat * v.normal;
-			}
+		// POSITIONS
+		if (positionsIndex != -1) {
+			LoadIntoVertexData<0>(modelData, positionsIndex, geom.vertices);
 		}
 		else {
+			LOG_ABORT("Model does not have any positions...");
+		}
+
+		// NORMALS
+		if (normalsIndex != -1) {
+			LoadIntoVertexData<1>(modelData, normalsIndex, geom.vertices);
+		}
+		else {
+			LOG_DEBUG("Model missing normals, calculating flat normals");
+
 			// calculate missing normals (flat)
 			for (int32 i = 0; i < geom.indices.size(); i += 3) {
 				// triangle
@@ -382,21 +393,105 @@ namespace {
 			}
 		}
 
-		// TODO: Tangent and bitangent generation improvements:
-		// test better calculations (using uv layer 0?) also text tangent handedness (urgently)
-		// calculate missing tangents (and bitangents)
-		if (missingTangents) {
-			for (auto& v : geom.vertices) {
-				const auto c1 = glm::cross(v.normal, glm::vec3(0.0, 0.0, 1.0));
-				const auto c2 = glm::cross(v.normal, glm::vec3(0.0, 1.0, 0.0));
+		// UV 0
+		if (texcoords0Index != -1) {
+			LoadIntoVertexData<3>(modelData, texcoords0Index, geom.vertices);
+		}
+		else {
+			LOG_DEBUG("Model missing first uv map, not handled");
+		}
 
-				v.tangent = glm::length2(c1) > glm::length2(c2) ? glm::vec4(glm::normalize(c1), 1.0f)
-																: glm::vec4(glm::normalize(c2), -1.f);
+		// UV 1
+		if (texcoords1Index != -1) {
+			LoadIntoVertexData<4>(modelData, texcoords1Index, geom.vertices);
+		}
+		else {
+			LOG_DEBUG("Model missing second uv map, mirroring first");
+		}
+
+		// TANGENTS, BITANGENTS
+		if (tangentsIndex != -1) {
+			LoadIntoVertexData<2>(modelData, tangentsIndex, geom.vertices);
+		}
+		else {
+			if (texcoords0Index != -1 || texcoords1Index != -1) {
+				LOG_DEBUG("Model missing tangents, calculating using available uv map");
+
+				for (int32 i = 0; i < geom.indices.size(); i += 3) {
+					// triangle
+					auto p0 = geom.vertices[geom.indices[i]].position;
+					auto p1 = geom.vertices[geom.indices[i + 1]].position;
+					auto p2 = geom.vertices[geom.indices[i + 2]].position;
+
+					auto uv0 = texcoords0Index != -1 ? geom.vertices[geom.indices[i]].textCoord0
+													 : geom.vertices[geom.indices[i]].textCoord1;
+					auto uv1 = texcoords0Index != -1 ? geom.vertices[geom.indices[i + 1]].textCoord0
+													 : geom.vertices[geom.indices[i + 1]].textCoord1;
+					auto uv2 = texcoords0Index != -1 ? geom.vertices[geom.indices[i + 2]].textCoord0
+													 : geom.vertices[geom.indices[i + 2]].textCoord1;
+
+					glm::vec3 edge1 = p1 - p0;
+					glm::vec3 edge2 = p2 - p0;
+					glm::vec2 deltaUV1 = uv1 - uv0;
+					glm::vec2 deltaUV2 = uv2 - uv0;
+
+					float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+					glm::vec3 tangent;
+
+					tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+					tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+					tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+					// tangent = glm::normalize(tangent);
+
+					geom.vertices[geom.indices[i]].tangent += tangent;
+					geom.vertices[geom.indices[i + 1]].tangent += tangent;
+					geom.vertices[geom.indices[i + 2]].tangent += tangent;
+
+					glm::vec3 bitangent;
+
+					bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+					bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+					bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
+					// bitangent = glm::normalize(bitangent);
+
+					geom.vertices[geom.indices[i]].bitangent += bitangent;
+					geom.vertices[geom.indices[i + 1]].bitangent += bitangent;
+					geom.vertices[geom.indices[i + 2]].bitangent += bitangent;
+				}
+
+				for (auto& v : geom.vertices) {
+					v.tangent = glm::normalize(v.tangent);
+					v.bitangent = glm::normalize(v.bitangent);
+				}
+			}
+			else {
+				LOG_DEBUG("Model missing tangents (and uv maps), calculating using hack");
+
+				for (auto& v : geom.vertices) {
+					const auto c1 = glm::cross(v.normal, glm::vec3(0.0, 0.0, 1.0));
+					const auto c2 = glm::cross(v.normal, glm::vec3(0.0, 1.0, 0.0));
+
+					v.tangent = glm::length2(c1) > glm::length2(c2) ? glm::normalize(c1) : glm::normalize(c2);
+					v.bitangent = glm::normalize(glm::cross(v.normal, glm::vec3(v.tangent)));
+				}
 			}
 		}
+
+		// Bake transform
+		const auto invTransMat = glm::transpose(glm::inverse(glm::mat3(transformMat)));
 		for (auto& v : geom.vertices) {
-			// handness issues bitangent = cross(normal, tangent.xyz) * tangent.w
-			v.bitangent = glm::normalize(glm::cross(v.normal, glm::vec3(v.tangent)));
+
+			v.position = transformMat * glm::vec4(v.position, 1.f);
+
+			v.normal = invTransMat * v.normal;
+			v.tangent = invTransMat * v.tangent;
+			v.bitangent = invTransMat * v.bitangent;
+
+			pod->bbox.max = glm::max(pod->bbox.max, v.position);
+			pod->bbox.min = glm::min(pod->bbox.min, v.position);
 		}
 	}
 
