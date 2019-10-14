@@ -6,7 +6,7 @@
 int32 main(int32 argc, char* argv[])
 {
 	// Init logger (global access, not engine, app or window bound)
-	LOGGER_INIT(LogLevelTarget::INFO);
+	LOGGER_INIT(LogLevelTarget::DEBUG);
 	App app;
 	app.PreMainInit(argc, argv);
 	return app.Main(argc, argv);
