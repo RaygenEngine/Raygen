@@ -28,8 +28,6 @@ uniform struct PunctualLight
 	int atten_coef;
 } punctual_light;
 
-uniform vec3 ambient;
-
 uniform vec4 base_color_factor;
 uniform vec3 emissive_factor;
 uniform float metallic_factor;
@@ -58,23 +56,30 @@ float ShadowCalculation()
 {	
 	// get vector between fragment position and light position
     vec3 fragToLight = dataIn.world_frag_pos - punctual_light.world_pos;
-	//vec3 fragToLight = dataIn.tangent_frag_pos - dataIn.tangent_light_pos;
-	
-   // use the light to fragment vector to sample from the depth map    
-    float closestDepth = texture(punctualLightCubemapSampler, fragToLight).r;
-	
-    // it is currently in linear range between [0,1]. Re-transform back to original value
-    closestDepth *= punctual_light.far;
 	
     // now get current linear depth as the length between the fragment and light position
     float currentDepth = length(fragToLight);
 	
-    // now test for shadows
-    float bias = 0.05; 
-    float shadow = currentDepth -  bias > closestDepth ? 1.0 : 0.0;
+    // PCF
+    float bias = 0.05;  
+	float samples = 4.0;
+	float offset  = 0.1;
+	float shadow = 0;
+	for(float x = -offset; x < offset; x += offset / (samples * 0.5))
+	{
+		for(float y = -offset; y < offset; y += offset / (samples * 0.5))
+		{
+			for(float z = -offset; z < offset; z += offset / (samples * 0.5))
+			{
+				float closestDepth = texture(punctualLightCubemapSampler, fragToLight + vec3(x, y, z)).r; 
+				closestDepth *= punctual_light.far;   // Undo mapping [0;1]
+				if(currentDepth - bias > closestDepth)
+					shadow += 1.0;
+			}
+		}
+	}
 	
-	//out_color = vec4(vec3(closestDepth / punctual_light.far), 1.0);
-    return shadow;
+    return shadow /= (samples * samples * samples);
 }  
 
 vec3 FresnelSchlick(float cosTheta, vec3 F0)
@@ -173,7 +178,7 @@ void main()
 	float shadow = ShadowCalculation(); 
 	vec3 radiance = ((1.0 - shadow) * punctual_light.color * punctual_light.intensity * attenuation); 
 
-	vec3 Lo = (kD * albedo / PI + specular) * (radiance + ambient) * max(dot(N, L), 0.0);
+	vec3 Lo = (kD * albedo / PI + specular) * radiance * max(dot(N, L), 0.0);
 
 	vec3 color = Lo + emissive;
 	color = mix(color, color * occlusion, occlusion_strength);

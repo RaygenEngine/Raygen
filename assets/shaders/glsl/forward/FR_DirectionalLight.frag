@@ -21,8 +21,6 @@ uniform struct DirectionalLight
 	mat4 vp;
 } dr_light;
 
-uniform vec3 ambient;
-
 uniform vec4 base_color_factor;
 uniform vec3 emissive_factor;
 uniform float metallic_factor;
@@ -61,6 +59,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
 	// cure shadow acne
 	float bias = 0.005;//max(0.05 * (1.0 - max(dot(N, L), 0.0)), 0.005); 
 	
+	// PCF
 	float shadow = 0.0;
 	vec2 texelSize = 1.0 / textureSize(directionalLightMapSampler, 0);
 	int n = 1;
@@ -170,7 +169,7 @@ void main()
 	
 	// light stuff
 	float shadow = ShadowCalculation(dataIn.light_frag_pos, N, L); 
-	vec3 radiance = ((1.0 - shadow) * dr_light.color * dr_light.intensity) + ambient; 
+	vec3 radiance = (1.0 - shadow) * dr_light.color * dr_light.intensity; 
 	
 	vec3 Lo = (kD * albedo / PI + specular) * radiance * max(dot(N, L), 0.0);
 

@@ -34,8 +34,6 @@ uniform struct SpotLight
 	mat4 vp;
 } spot_light;
 
-uniform vec3 ambient;
-
 uniform vec4 base_color_factor;
 uniform vec3 emissive_factor;
 uniform float metallic_factor;
@@ -77,6 +75,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
 	// cure shadow acne
 	float bias = 0.005;//max(0.05 * (1.0 - max(dot(N, L), 0.0)), 0.005); 
 	
+    // PCF
 	float shadow = 0.0;
 	vec2 texelSize = 1.0 / textureSize(spotLightMapSampler, 0);
 	int n = 1;
@@ -196,7 +195,7 @@ void main()
 	float shadow = ShadowCalculation(dataIn.light_frag_pos, N, L); 
 	vec3 radiance = ((1.0 - shadow) * spot_light.color * spot_light.intensity * attenuation * intensity); 
 
-	vec3 Lo = (kD * albedo / PI + specular) * (radiance + ambient) * max(dot(N, L), 0.0);
+	vec3 Lo = (kD * albedo / PI + specular) * radiance * max(dot(N, L), 0.0);
 
 	vec3 color = Lo + emissive;
 	color = mix(color, color * occlusion, occlusion_strength);

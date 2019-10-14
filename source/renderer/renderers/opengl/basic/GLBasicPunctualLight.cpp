@@ -23,7 +23,7 @@ GLBasicPunctualLight::GLBasicPunctualLight(PunctualLightNode* node)
 	depthMapShader->AddUniform("vps[5]");
 	depthMapShader->AddUniform("base_color_factor");
 	depthMapShader->AddUniform("center");
-	depthMapShader->AddUniform("far_plane");
+	depthMapShader->AddUniform("far");
 	depthMapShader->AddUniform("base_color_texcoord_index");
 	depthMapShader->AddUniform("alpha_cutoff");
 	depthMapShader->AddUniform("mask");
@@ -72,7 +72,7 @@ void GLBasicPunctualLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& 
 
 	glUseProgram(depthMapShader->programId);
 
-	depthMapShader->UploadFloat("far_plane", node->GetFar());
+	depthMapShader->UploadFloat("far", node->GetFar());
 	depthMapShader->UploadVec3("center", node->GetWorldTranslation());
 
 	auto vps = node->GetViewProjectionMatrices();
