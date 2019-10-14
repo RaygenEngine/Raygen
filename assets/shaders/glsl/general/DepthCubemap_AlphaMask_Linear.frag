@@ -7,7 +7,7 @@ in Data
 } dataIn;
 
 uniform vec3 center;
-uniform float far_plane;
+uniform float far;
 
 uniform bool mask;
 uniform float alpha_cutoff;
@@ -31,7 +31,7 @@ void main()
     float distance = length(dataIn.world_frag_pos.xyz - center);
     
     // map to [0;1] range by dividing by far_plane
-    distance = distance / far_plane;
+    distance = distance / far;
     
     // write this as modified depth
     gl_FragDepth = distance;

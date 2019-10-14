@@ -42,46 +42,6 @@
 		"cubemap": "/import-data/skybox/alps.cubemap.json"
 	},
 	{
-		"+type": "Directionallight",
-		"+name": "DummyLight",
-		"+trs": {
-			"pos": {
-				"x": 0,
-				"y": 13
-			},
-			"lookat": {
-				"x": 0,
-				"y": -5,
-				"z": 0
-			}
-		},
-		"color": {
-			"r": 0.94,
-			"g": 0.85,
-			"b": 0.64
-		}
-	},
-	{
-		"+type": "Spotlight",
-		"+name": "test_spot",
-		"+trs": {
-			"pos": {
-				"x": 5,
-				"y": 5,
-				"z": 0
-			},
-			"lookat": {
-				"x": -5,
-				"y": 5
-			}
-		},
-		"color": {
-			"r": 0.94,
-			"g": 0.85,
-			"b": 0.64
-		}
-	},
-	{
 		"+type": "PunctualLight",
 		"+name": "test_punc",
 		"+trs": {
