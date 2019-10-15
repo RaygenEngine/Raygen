@@ -21,8 +21,7 @@ add_compile_definitions(GLAD_GLAPI_EXPORT)
 add_compile_definitions(GLAD_GLAPI_EXPORT_BUILD)
 
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/glad)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/khr)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 # multi-core compilation
 if(MSVC)
