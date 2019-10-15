@@ -14,19 +14,19 @@ GLBasicPunctualLight::GLBasicPunctualLight(PunctualLightNode* node)
 	depthMapShader = GetGLAssetManager(this)->GenerateFromPodPath<GLShader>(
 		"/shaders/glsl/general/DepthCubemap_AlphaMask_Linear.json");
 
-	depthMapShader->AddUniform("m");
-	depthMapShader->AddUniform("vps[0]");
-	depthMapShader->AddUniform("vps[1]");
-	depthMapShader->AddUniform("vps[2]");
-	depthMapShader->AddUniform("vps[3]");
-	depthMapShader->AddUniform("vps[4]");
-	depthMapShader->AddUniform("vps[5]");
-	depthMapShader->AddUniform("base_color_factor");
-	depthMapShader->AddUniform("center");
-	depthMapShader->AddUniform("far");
-	depthMapShader->AddUniform("base_color_texcoord_index");
-	depthMapShader->AddUniform("alpha_cutoff");
-	depthMapShader->AddUniform("mask");
+	depthMapShader->StoreUniformLoc("m");
+	depthMapShader->StoreUniformLoc("vps[0]");
+	depthMapShader->StoreUniformLoc("vps[1]");
+	depthMapShader->StoreUniformLoc("vps[2]");
+	depthMapShader->StoreUniformLoc("vps[3]");
+	depthMapShader->StoreUniformLoc("vps[4]");
+	depthMapShader->StoreUniformLoc("vps[5]");
+	depthMapShader->StoreUniformLoc("base_color_factor");
+	depthMapShader->StoreUniformLoc("center");
+	depthMapShader->StoreUniformLoc("far");
+	depthMapShader->StoreUniformLoc("base_color_texcoord_index");
+	depthMapShader->StoreUniformLoc("alpha_cutoff");
+	depthMapShader->StoreUniformLoc("mask");
 
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -72,21 +72,21 @@ void GLBasicPunctualLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& 
 
 	glUseProgram(depthMapShader->programId);
 
-	depthMapShader->UploadFloat("far", node->GetFar());
-	depthMapShader->UploadVec3("center", node->GetWorldTranslation());
+	depthMapShader->SendFloat("far", node->GetFar());
+	depthMapShader->SendVec3("center", node->GetWorldTranslation());
 
 	auto vps = node->GetViewProjectionMatrices();
 
 	for (auto& geometry : geometries) {
 		auto m = geometry->node->GetWorldMatrix();
 
-		depthMapShader->UploadMat4("m", m);
-		depthMapShader->UploadMat4("vps[0]", vps[0]);
-		depthMapShader->UploadMat4("vps[1]", vps[1]);
-		depthMapShader->UploadMat4("vps[2]", vps[2]);
-		depthMapShader->UploadMat4("vps[3]", vps[3]);
-		depthMapShader->UploadMat4("vps[4]", vps[4]);
-		depthMapShader->UploadMat4("vps[5]", vps[5]);
+		depthMapShader->SendMat4("m", m);
+		depthMapShader->SendMat4("vps[0]", vps[0]);
+		depthMapShader->SendMat4("vps[1]", vps[1]);
+		depthMapShader->SendMat4("vps[2]", vps[2]);
+		depthMapShader->SendMat4("vps[3]", vps[3]);
+		depthMapShader->SendMat4("vps[4]", vps[4]);
+		depthMapShader->SendMat4("vps[5]", vps[5]);
 
 		for (auto& glMesh : geometry->glModel->meshes) {
 
@@ -102,10 +102,10 @@ void GLBasicPunctualLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
 
-			depthMapShader->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
-			depthMapShader->UploadVec4("base_color_factor", materialData->baseColorFactor);
-			depthMapShader->UploadInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
-			depthMapShader->UploadInt("mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
+			depthMapShader->SendFloat("alpha_cutoff", materialData->alphaCutoff);
+			depthMapShader->SendVec4("base_color_factor", materialData->baseColorFactor);
+			depthMapShader->SendInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
+			depthMapShader->SendInt("mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
 
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 

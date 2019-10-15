@@ -1,54 +1,61 @@
 #version 430 core
 
-layout (location = 0) in vec3 pos;
-layout (location = 1) in vec3 normal;
-layout (location = 2) in vec3 tangent;
-layout (location = 3) in vec3 bitangent;
-layout (location = 4) in vec2 text_coord0;
-layout (location = 5) in vec2 text_coord1;
+layout (location = 0) in vec3 ocs_pos;
+layout (location = 1) in vec3 ocs_normal;
+layout (location = 2) in vec3 ocs_tangent;
+layout (location = 3) in vec3 ocs_bitangent;
+layout (location = 4) in vec2 textCoord0;
+layout (location = 5) in vec2 textCoord1;
 
 out Data
 { 
-	vec3 tangent_frag_pos;
-	vec3 tangent_view_pos;
-	vec3 tangent_light_pos;
+	vec3 tcs_fragPos;
+	vec3 tcs_viewPos;
 	
-	vec2 text_coord[2];
+	vec3 tcs_lightDir;
 	
-	vec4 light_frag_pos;
+	vec4 shadowCoord;
+	
+	vec2 textCoord[2];
 } dataOut;
 
 uniform struct DirectionalLight
 {
+	vec3 wcs_dir;
+
 	vec3 color;
-	vec3 world_pos;
 	float intensity;
-	mat4 vp;
-} dr_light;
+	
+	mat4 mvpBiased; // transforms to [0,1] in light space
+	
+	int samples;
+	float maxShadowBias;
+	sampler2DShadow shadowMap;
+} directionalLight;
 
 uniform mat4 mvp;
 uniform mat4 m;
 
-uniform mat3 normal_matrix; 
+uniform mat3 normalMatrix; 
 
-uniform vec3 view_pos;
+uniform vec3 wcs_viewPos;
 
 void main()
 {
-    gl_Position = mvp * vec4(pos,1);
+    gl_Position = mvp * vec4(ocs_pos,1);
 	
-	dataOut.text_coord[0] = text_coord0; 
-	dataOut.text_coord[1] = text_coord1; 
+	dataOut.textCoord[0] = textCoord0; 
+	dataOut.textCoord[1] = textCoord1; 
 	
-	vec3 T = normalize(normal_matrix * tangent);
-    vec3 B = normalize(normal_matrix * bitangent);
-    vec3 N = normalize(normal_matrix * normal);
+	vec3 T = normalize(normalMatrix * ocs_tangent);
+    vec3 B = normalize(normalMatrix * ocs_bitangent);
+    vec3 N = normalize(normalMatrix * ocs_normal);
 
     mat3 TBN = transpose(mat3(T, B, N));
 	
-	dataOut.tangent_frag_pos = TBN * vec3(m * vec4(pos, 0.0));
-	dataOut.tangent_view_pos  = TBN * view_pos;
-	dataOut.tangent_light_pos = TBN * dr_light.world_pos;
+	dataOut.tcs_fragPos = TBN * vec3(m * vec4(ocs_pos, 0.0));
+	dataOut.tcs_viewPos  = TBN * wcs_viewPos;
+	dataOut.tcs_lightDir  = TBN * directionalLight.wcs_dir;
 	
-	dataOut.light_frag_pos = dr_light.vp * m * vec4(pos, 1.0);
+	dataOut.shadowCoord = directionalLight.mvpBiased * vec4(ocs_pos, 1.0);
 }

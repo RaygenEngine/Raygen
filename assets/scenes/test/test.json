@@ -42,17 +42,16 @@
 		"cubemap": "/import-data/skybox/alps.cubemap.json"
 	},
 	{
-		"+type": "PunctualLight",
-		"+name": "test_punc",
+		"+type": "DirectionalLight",
+		"+name": "test_dir",
 		"+trs": {
 			"pos": {
-				"x": 5,
-				"y": 5,
-				"z": 0
+				"y": 15
 			},
 			"lookat": {
-				"x": -5,
-				"y": 5
+				"x": 0,
+				"y": 0,
+				"z": 0
 			}
 		},
 		"color": {

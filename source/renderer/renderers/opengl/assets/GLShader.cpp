@@ -95,42 +95,49 @@ void GLShader::Load()
 }
 
 
-void GLShader::UploadInt(const std::string& uniformName, int i)
+void GLShader::SendTexture(const std::string& uniformName, GLuint textureId, int32 textureUnitOffset)
+{
+	SendInt(uniformName, textureUnitOffset);
+	glActiveTexture(GL_TEXTURE0 + textureUnitOffset);
+	glBindTexture(GL_TEXTURE_2D, textureId);
+}
+
+void GLShader::SendInt(const std::string& uniformName, int32 i)
 {
 	glUniform1i(uniformLocations.at(uniformName), i);
 }
 
-void GLShader::UploadFloat(const std::string& uniformName, float f)
+void GLShader::SendFloat(const std::string& uniformName, float f)
 {
 	glUniform1f(uniformLocations.at(uniformName), f);
 }
 
-void GLShader::UploadVec2(const std::string& uniformName, glm::vec2 v)
+void GLShader::SendVec2(const std::string& uniformName, glm::vec2 v)
 {
 	glUniform2fv(uniformLocations.at(uniformName), 1, glm::value_ptr(v));
 }
 
-void GLShader::UploadVec3(const std::string& uniformName, glm::vec3 v)
+void GLShader::SendVec3(const std::string& uniformName, glm::vec3 v)
 {
 	glUniform3fv(uniformLocations.at(uniformName), 1, glm::value_ptr(v));
 }
 
-void GLShader::UploadVec4(const std::string& uniformName, glm::vec4 v)
+void GLShader::SendVec4(const std::string& uniformName, glm::vec4 v)
 {
 	glUniform4fv(uniformLocations.at(uniformName), 1, glm::value_ptr(v));
 }
 
-void GLShader::UploadMat3(const std::string& uniformName, const glm::mat3& m, GLboolean transpose)
+void GLShader::SendMat3(const std::string& uniformName, const glm::mat3& m, GLboolean transpose)
 {
 	glUniformMatrix3fv(uniformLocations.at(uniformName), 1, transpose, glm::value_ptr(m));
 }
 
-void GLShader::UploadMat4(const std::string& uniformName, const glm::mat4& m, GLboolean transpose)
+void GLShader::SendMat4(const std::string& uniformName, const glm::mat4& m, GLboolean transpose)
 {
 	glUniformMatrix4fv(uniformLocations.at(uniformName), 1, transpose, glm::value_ptr(m));
 }
 
-void GLShader::AddUniform(const std::string& uniformName)
+void GLShader::StoreUniformLoc(const std::string& uniformName)
 {
 	uniformLocations.insert({ uniformName, glGetUniformLocation(programId, uniformName.c_str()) });
 }

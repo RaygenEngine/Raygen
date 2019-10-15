@@ -12,11 +12,11 @@ GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 {
 	depthMapShader
 		= GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap_AlphaMask.json");
-	depthMapShader->AddUniform("mvp");
-	depthMapShader->AddUniform("base_color_factor");
-	depthMapShader->AddUniform("base_color_texcoord_index");
-	depthMapShader->AddUniform("alpha_cutoff");
-	depthMapShader->AddUniform("mask");
+	depthMapShader->StoreUniformLoc("mvp");
+	depthMapShader->StoreUniformLoc("base_color_factor");
+	depthMapShader->StoreUniformLoc("base_color_texcoord_index");
+	depthMapShader->StoreUniformLoc("alpha_cutoff");
+	depthMapShader->StoreUniformLoc("mask");
 
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -69,7 +69,7 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 		auto m = geometry->node->GetWorldMatrix();
 		auto mvp = vp * m;
 
-		depthMapShader->UploadMat4("mvp", mvp);
+		depthMapShader->SendMat4("mvp", mvp);
 
 		for (auto& glMesh : geometry->glModel->meshes) {
 
@@ -85,10 +85,10 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
 
-			depthMapShader->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
-			depthMapShader->UploadVec4("base_color_factor", materialData->baseColorFactor);
-			depthMapShader->UploadInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
-			depthMapShader->UploadInt("mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
+			depthMapShader->SendFloat("alpha_cutoff", materialData->alphaCutoff);
+			depthMapShader->SendVec4("base_color_factor", materialData->baseColorFactor);
+			depthMapShader->SendInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
+			depthMapShader->SendInt("mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
 
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
