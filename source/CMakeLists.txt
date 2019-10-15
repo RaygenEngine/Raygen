@@ -42,7 +42,6 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/assets/GLModel.cpp
 	renderer/renderers/opengl/assets/GLShader.cpp
 	renderer/renderers/opengl/assets/GLTexture.cpp
-	renderer/renderers/opengl/assets/GLBindlessTexture.cpp
 	renderer/renderers/opengl/assets/GLMaterial.cpp
 	renderer/renderers/opengl/basic/GLBasicSpotLight.cpp
 	renderer/renderers/opengl/basic/GLBasicDirectionalLight.cpp
@@ -160,7 +159,6 @@ set(HEADER_FILES
 	renderer/renderers/opengl/assets/GLModel.h
 	renderer/renderers/opengl/assets/GLShader.h
 	renderer/renderers/opengl/assets/GLTexture.h
-	renderer/renderers/opengl/assets/GLBindlessTexture.h
 	renderer/renderers/opengl/assets/GLMaterial.h
 	renderer/renderers/opengl/basic/GLBasicSpotLight.h
 	renderer/renderers/opengl/basic/GLBasicDirectionalLight.h
