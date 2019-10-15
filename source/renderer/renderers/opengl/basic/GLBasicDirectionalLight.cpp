@@ -11,7 +11,7 @@ GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
 	: NodeObserver<DirectionalLightNode, GLRendererBase>(node)
 {
 	depthMapShader
-		= GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap_AlphaMask.json");
+		= GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/engine-data/glsl/general/DepthMap_AlphaMask.json");
 	depthMapShader->StoreUniformLoc("mvp");
 	depthMapShader->StoreUniformLoc("base_color_factor");
 	depthMapShader->StoreUniformLoc("base_color_texcoord_index");

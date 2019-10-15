@@ -60,7 +60,7 @@ void GLForwardRenderer::InitObservers()
 void GLForwardRenderer::InitShaders()
 {
 	m_forwardSpotLightShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/forward/FR_Spotlight.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/forward/FR_Spotlight.json");
 
 	m_forwardSpotLightShader->StoreUniformLoc("mvp");
 	m_forwardSpotLightShader->StoreUniformLoc("m");
@@ -92,7 +92,7 @@ void GLForwardRenderer::InitShaders()
 	m_forwardSpotLightShader->StoreUniformLoc("alpha_cutoff");
 
 	m_forwardDirectionalLightShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/forward/FR_DirectionalLight.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/forward/FR_DirectionalLight.json");
 
 	// general
 	m_forwardDirectionalLightShader->StoreUniformLoc("mvp");
@@ -128,7 +128,7 @@ void GLForwardRenderer::InitShaders()
 	m_forwardDirectionalLightShader->StoreUniformLoc("material.mask");
 
 	m_forwardPunctualLightShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/forward/FR_PunctualLight.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/forward/FR_PunctualLight.json");
 
 	m_forwardPunctualLightShader->StoreUniformLoc("mvp");
 	m_forwardPunctualLightShader->StoreUniformLoc("m");
@@ -155,16 +155,16 @@ void GLForwardRenderer::InitShaders()
 	m_forwardPunctualLightShader->StoreUniformLoc("mask");
 	m_forwardPunctualLightShader->StoreUniformLoc("alpha_cutoff");
 
-	m_bBoxShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/BBox.json");
+	m_bBoxShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/general/BBox.json");
 	m_bBoxShader->StoreUniformLoc("vp");
 	m_bBoxShader->StoreUniformLoc("color");
 
 	m_cubemapInfDistShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/Cubemap_InfDist.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/general/Cubemap_InfDist.json");
 	m_cubemapInfDistShader->StoreUniformLoc("vp");
 
 	m_depthPassShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap_AlphaMask.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/general/DepthMap_AlphaMask.json");
 	m_depthPassShader->StoreUniformLoc("mvp");
 	m_depthPassShader->StoreUniformLoc("base_color_factor");
 	m_depthPassShader->StoreUniformLoc("base_color_texcoord_index");
