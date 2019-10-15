@@ -138,30 +138,39 @@ void GLForwardRenderer::InitShaders()
 	m_forwardPunctualLightShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/forward/FR_PunctualLight.json");
 
+	// general
 	m_forwardPunctualLightShader->StoreUniformLoc("mvp");
 	m_forwardPunctualLightShader->StoreUniformLoc("m");
-	m_forwardPunctualLightShader->StoreUniformLoc("normal_matrix");
-	m_forwardPunctualLightShader->StoreUniformLoc("mode");
-	m_forwardPunctualLightShader->StoreUniformLoc("view_pos");
-	m_forwardPunctualLightShader->StoreUniformLoc("punctual_light.world_pos");
-	m_forwardPunctualLightShader->StoreUniformLoc("punctual_light.color");
-	m_forwardPunctualLightShader->StoreUniformLoc("punctual_light.intensity");
-	m_forwardPunctualLightShader->StoreUniformLoc("punctual_light.far");
-	m_forwardPunctualLightShader->StoreUniformLoc("punctual_light.atten_coef");
-	m_forwardPunctualLightShader->StoreUniformLoc("base_color_factor");
-	m_forwardPunctualLightShader->StoreUniformLoc("emissive_factor");
-	m_forwardPunctualLightShader->StoreUniformLoc("ambient");
-	m_forwardPunctualLightShader->StoreUniformLoc("metallic_factor");
-	m_forwardPunctualLightShader->StoreUniformLoc("roughness_factor");
-	m_forwardPunctualLightShader->StoreUniformLoc("normal_scale");
-	m_forwardPunctualLightShader->StoreUniformLoc("occlusion_strength");
-	m_forwardPunctualLightShader->StoreUniformLoc("base_color_texcoord_index");
-	m_forwardPunctualLightShader->StoreUniformLoc("metallic_roughness_texcoord_index");
-	m_forwardPunctualLightShader->StoreUniformLoc("emissive_texcoord_index");
-	m_forwardPunctualLightShader->StoreUniformLoc("normal_texcoord_index");
-	m_forwardPunctualLightShader->StoreUniformLoc("occlusion_texcoord_index");
-	m_forwardPunctualLightShader->StoreUniformLoc("mask");
-	m_forwardPunctualLightShader->StoreUniformLoc("alpha_cutoff");
+	m_forwardPunctualLightShader->StoreUniformLoc("normalMatrix");
+	m_forwardPunctualLightShader->StoreUniformLoc("wcs_viewPos");
+	// punctual light
+	m_forwardPunctualLightShader->StoreUniformLoc("punctualLight.wcs_pos");
+	m_forwardPunctualLightShader->StoreUniformLoc("punctualLight.color");
+	m_forwardPunctualLightShader->StoreUniformLoc("punctualLight.intensity");
+	m_forwardPunctualLightShader->StoreUniformLoc("punctualLight.far");
+	m_forwardPunctualLightShader->StoreUniformLoc("punctualLight.attenCoef");
+	m_forwardPunctualLightShader->StoreUniformLoc("punctualLight.samples");
+	m_forwardPunctualLightShader->StoreUniformLoc("punctualLight.maxShadowBias");
+	m_forwardPunctualLightShader->StoreUniformLoc("punctualLight.shadowCubemap");
+	// material
+	m_forwardPunctualLightShader->StoreUniformLoc("material.baseColorFactor");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.emissiveFactor");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.metallicFactor");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.roughnessFactor");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.normalScale");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.occlusionStrength");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.baseColorSampler.index");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.baseColorSampler.sampler");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.metallicRoughnessSampler.index");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.metallicRoughnessSampler.sampler");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.emissiveSampler.index");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.emissiveSampler.sampler");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.normalSampler.index");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.normalSampler.sampler");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.occlusionSampler.index");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.occlusionSampler.sampler");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.alphaCutoff");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.mask");
 
 	m_bBoxShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/general/BBox.json");
 	m_bBoxShader->StoreUniformLoc("vp");
@@ -513,6 +522,8 @@ void GLForwardRenderer::RenderSpotLights()
 
 void GLForwardRenderer::RenderPunctualLights()
 {
+	auto ls = m_forwardPunctualLightShader;
+
 	for (auto light : m_glPunctualLights) {
 		// render lights
 		light->RenderShadowMap(m_glGeometries);
@@ -528,30 +539,32 @@ void GLForwardRenderer::RenderPunctualLights()
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_EQUAL);
 
-		glUseProgram(m_forwardPunctualLightShader->programId);
+		glUseProgram(ls->programId);
 
 		const auto root = Engine::GetWorld()->GetRoot();
 		const auto vp = m_camera->GetViewProjectionMatrix();
 
 		// global uniforms
-		m_forwardPunctualLightShader->SendVec3("ambient", root->GetAmbientColor());
-		m_forwardPunctualLightShader->SendVec3("view_pos", m_camera->GetWorldTranslation());
+		ls->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
 
 		// light
-		m_forwardPunctualLightShader->SendVec3("punctual_light.world_pos", light->node->GetWorldTranslation());
-		m_forwardPunctualLightShader->SendVec3("punctual_light.color", light->node->GetColor());
-		m_forwardPunctualLightShader->SendFloat("punctual_light.intensity", light->node->GetIntensity());
-		m_forwardPunctualLightShader->SendFloat("punctual_light.far", light->node->GetFar());
-		m_forwardPunctualLightShader->SendInt("punctual_light.atten_coef", light->node->GetAttenuationMode());
+		ls->SendVec3("punctualLight.wcs_pos", light->node->GetWorldTranslation());
+		ls->SendVec3("punctualLight.color", light->node->GetColor());
+		ls->SendFloat("punctualLight.intensity", light->node->GetIntensity());
+		ls->SendFloat("punctualLight.far", light->node->GetFar());
+		ls->SendInt("punctualLight.attenCoef", light->node->GetAttenuationMode());
+		ls->SendInt("punctualLight.samples", light->node->GetSamples());
+		ls->SendFloat("punctualLight.maxShadowBias", light->node->GetMaxShadowBias());
+		ls->SendCubeTexture("punctualLight.shadowCubemap", light->cubeShadowMap, 0);
 
 		for (auto& geometry : m_glGeometries) {
 			auto m = geometry->node->GetWorldMatrix();
 			auto mvp = vp * m;
 
 			// model
-			m_forwardPunctualLightShader->SendMat4("m", m);
-			m_forwardPunctualLightShader->SendMat4("mvp", mvp);
-			m_forwardPunctualLightShader->SendMat3("normal_matrix", glm::transpose(glm::inverse(glm::mat3(m))));
+			ls->SendMat4("m", m);
+			ls->SendMat4("mvp", mvp);
+			ls->SendMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(m))));
 
 			for (auto& glMesh : geometry->glModel->meshes) {
 				glBindVertexArray(glMesh.vao);
@@ -560,42 +573,27 @@ void GLForwardRenderer::RenderPunctualLights()
 				const MaterialPod* materialData = glMaterial->LockData();
 
 				// material
-				m_forwardPunctualLightShader->SendVec4("base_color_factor", materialData->baseColorFactor);
-				m_forwardPunctualLightShader->SendVec3("emissive_factor", materialData->emissiveFactor);
-				m_forwardPunctualLightShader->SendFloat("metallic_factor", materialData->metallicFactor);
-				m_forwardPunctualLightShader->SendFloat("roughness_factor", materialData->roughnessFactor);
-				m_forwardPunctualLightShader->SendFloat("normal_scale", materialData->normalScale);
-				m_forwardPunctualLightShader->SendFloat("occlusion_strength", materialData->occlusionStrength);
-				m_forwardPunctualLightShader->SendFloat("alpha_cutoff", materialData->alphaCutoff);
-				m_forwardPunctualLightShader->SendInt(
-					"mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
+				ls->SendVec4("material.baseColorFactor", materialData->baseColorFactor);
+				ls->SendVec3("material.emissiveFactor", materialData->emissiveFactor);
+				ls->SendFloat("material.metallicFactor", materialData->metallicFactor);
+				ls->SendFloat("material.roughnessFactor", materialData->roughnessFactor);
+				ls->SendFloat("material.normalScale", materialData->normalScale);
+				ls->SendFloat("material.occlusionStrength", materialData->occlusionStrength);
+				ls->SendFloat("material.alphaCutoff", materialData->alphaCutoff);
+				ls->SendInt("material.mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
 
-				// uv index
-				m_forwardPunctualLightShader->SendInt(
-					"base_color_texcoord_index", materialData->baseColorTexCoordIndex);
-				m_forwardPunctualLightShader->SendInt(
-					"metallic_roughness_texcoord_index", materialData->metallicRoughnessTexCoordIndex);
-				m_forwardPunctualLightShader->SendInt("emissive_texcoord_index", materialData->emissiveTexCoordIndex);
-				m_forwardPunctualLightShader->SendInt("normal_texcoord_index", materialData->normalTexCoordIndex);
-				m_forwardPunctualLightShader->SendInt("occlusion_texcoord_index", materialData->occlusionTexCoordIndex);
+				ls->SendInt("material.baseColorSampler.index", materialData->baseColorTexCoordIndex);
+				ls->SendInt("material.metallicRoughnessSampler.index", materialData->metallicRoughnessTexCoordIndex);
+				ls->SendInt("material.emissiveSampler.index", materialData->emissiveTexCoordIndex);
+				ls->SendInt("material.normalSampler.index", materialData->normalTexCoordIndex);
+				ls->SendInt("material.occlusionSampler.index", materialData->occlusionTexCoordIndex);
 
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
-
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, glMaterial->metallicRoughnessTexture->id);
-
-				glActiveTexture(GL_TEXTURE2);
-				glBindTexture(GL_TEXTURE_2D, glMaterial->emissiveTexture->id);
-
-				glActiveTexture(GL_TEXTURE3);
-				glBindTexture(GL_TEXTURE_2D, glMaterial->normalTexture->id);
-
-				glActiveTexture(GL_TEXTURE4);
-				glBindTexture(GL_TEXTURE_2D, glMaterial->occlusionTexture->id);
-
-				glActiveTexture(GL_TEXTURE5);
-				glBindTexture(GL_TEXTURE_CUBE_MAP, light->cubeShadowMap);
+				ls->SendTexture("material.baseColorSampler.sampler", glMaterial->baseColorTexture->id, 1);
+				ls->SendTexture(
+					"material.metallicRoughnessSampler.sampler", glMaterial->metallicRoughnessTexture->id, 2);
+				ls->SendTexture("material.emissiveSampler.sampler", glMaterial->emissiveTexture->id, 3);
+				ls->SendTexture("material.normalSampler.sampler", glMaterial->normalTexture->id, 4);
+				ls->SendTexture("material.occlusionSampler.sampler", glMaterial->occlusionTexture->id, 5);
 
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
@@ -787,7 +785,7 @@ void GLForwardRenderer::Render()
 	RenderSpotLights();
 	RenderPunctualLights();
 	// render node bounding boxes
-	// RenderBoundingBoxes();
+	RenderBoundingBoxes();
 	// render skybox, seamless enabled (render last)
 	RenderSkybox();
 	// copy msaa to out fbo and render any post process on it

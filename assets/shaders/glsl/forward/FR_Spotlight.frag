@@ -259,5 +259,5 @@ void main()
 	// TODO:
 	//color = powVec3(color, 1.0f / 2.2f);
 	
-	out_color = vec4(vec3(color), opacity);
+	out_color = vec4(color, opacity);
 }
