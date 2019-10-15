@@ -7,13 +7,13 @@ uniform mat4 vps[6];
 
 in Data
 { 
-	vec2 text_coord[2];
+	vec2 textCoord[2];
 } dataIn[];
 
 out Data
 { 
-	vec2 text_coord[2];
-	vec4 world_frag_pos;
+	vec2 textCoord[2];
+	vec4 wcs_fragPos;
 } dataOut;
 
 void main()
@@ -23,10 +23,10 @@ void main()
         gl_Layer = face; // built-in variable that specifies to which face we render.
         for(int i = 0; i < 3; ++i) // for each triangle's vertices
         {
-			dataOut.world_frag_pos = gl_in[i].gl_Position;
-            gl_Position = vps[face] * dataOut.world_frag_pos;
-			dataOut.text_coord[0] = dataIn[i].text_coord[0];
-			dataOut.text_coord[1] = dataIn[i].text_coord[1];
+			dataOut.wcs_fragPos = gl_in[i].gl_Position;
+            gl_Position = vps[face] * dataOut.wcs_fragPos;
+			dataOut.textCoord[0] = dataIn[i].textCoord[0];
+			dataOut.textCoord[1] = dataIn[i].textCoord[1];
             EmitVertex();
         }    
         EndPrimitive();

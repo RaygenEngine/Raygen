@@ -13,9 +13,9 @@ GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 	depthMapShader
 		= GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap_AlphaMask.json");
 	depthMapShader->StoreUniformLoc("mvp");
-	depthMapShader->StoreUniformLoc("base_color_factor");
-	depthMapShader->StoreUniformLoc("base_color_texcoord_index");
-	depthMapShader->StoreUniformLoc("alpha_cutoff");
+	depthMapShader->StoreUniformLoc("baseColorFactor");
+	depthMapShader->StoreUniformLoc("baseColorTexcoordIndex");
+	depthMapShader->StoreUniformLoc("alphaCutoff");
 	depthMapShader->StoreUniformLoc("mask");
 
 	glGenFramebuffers(1, &fbo);
@@ -23,13 +23,13 @@ GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 
 	glGenTextures(1, &shadowMap);
 	glBindTexture(GL_TEXTURE_2D, shadowMap);
-
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, node->GetShadowMapWidth(), node->GetShadowMapHeight(), 0,
 		GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 	float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
@@ -85,9 +85,9 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
 
-			depthMapShader->SendFloat("alpha_cutoff", materialData->alphaCutoff);
-			depthMapShader->SendVec4("base_color_factor", materialData->baseColorFactor);
-			depthMapShader->SendInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
+			depthMapShader->SendFloat("alphaCutoff", materialData->alphaCutoff);
+			depthMapShader->SendVec4("baseColorFactor", materialData->baseColorFactor);
+			depthMapShader->SendInt("baseColorTexcoordIndex", materialData->baseColorTexCoordIndex);
 			depthMapShader->SendInt("mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
 
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
