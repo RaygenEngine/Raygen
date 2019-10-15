@@ -12,7 +12,7 @@ GLBasicPunctualLight::GLBasicPunctualLight(PunctualLightNode* node)
 	: NodeObserver<PunctualLightNode, GLRendererBase>(node)
 {
 	depthMapShader = GetGLAssetManager(this)->GenerateFromPodPath<GLShader>(
-		"/shaders/glsl/general/DepthCubemap_AlphaMask_Linear.json");
+		"/engine-data/glsl/general/DepthCubemap_AlphaMask_Linear.json");
 
 	depthMapShader->StoreUniformLoc("m");
 	depthMapShader->StoreUniformLoc("vps[0]");

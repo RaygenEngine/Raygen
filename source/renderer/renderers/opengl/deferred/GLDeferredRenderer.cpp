@@ -47,7 +47,7 @@ bool GLDeferredRenderer::InitScene()
 		CreateObserver_AutoContained<GLBasicSpotLight>(dirLightNode, m_glSpotLights);
 	}
 
-	m_gBuffer.shader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_GBuffer.json");
+	m_gBuffer.shader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_GBuffer.json");
 
 	m_gBuffer.shader->StoreUniformLoc("mvp");
 	m_gBuffer.shader->StoreUniformLoc("m");
@@ -65,7 +65,7 @@ bool GLDeferredRenderer::InitScene()
 	m_gBuffer.shader->StoreUniformLoc("occlusion_texcoord_index");
 
 	m_gBuffer.shaderAlphaMask
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_GBuffer_AlphaMask.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_GBuffer_AlphaMask.json");
 
 	m_gBuffer.shaderAlphaMask->StoreUniformLoc("mvp");
 	m_gBuffer.shaderAlphaMask->StoreUniformLoc("m");
@@ -84,7 +84,7 @@ bool GLDeferredRenderer::InitScene()
 	m_gBuffer.shaderAlphaMask->StoreUniformLoc("occlusion_texcoord_index");
 
 	m_deferredDirectionalLightShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_DirectionalLight.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_DirectionalLight.json");
 
 	m_deferredDirectionalLightShader->StoreUniformLoc("view_pos");
 	m_deferredDirectionalLightShader->StoreUniformLoc("light_pos");
@@ -94,7 +94,7 @@ bool GLDeferredRenderer::InitScene()
 	m_deferredDirectionalLightShader->StoreUniformLoc("light_space_matrix");
 
 	m_deferredSpotLightShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_SpotLight.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_SpotLight.json");
 
 	m_deferredSpotLightShader->StoreUniformLoc("view_pos");
 	m_deferredSpotLightShader->StoreUniformLoc("light_pos");
