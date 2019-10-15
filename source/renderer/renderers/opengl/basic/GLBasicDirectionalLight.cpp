@@ -12,11 +12,11 @@ GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
 {
 	depthMapShader
 		= GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap_AlphaMask.json");
-	depthMapShader->AddUniform("mvp");
-	depthMapShader->AddUniform("base_color_factor");
-	depthMapShader->AddUniform("base_color_texcoord_index");
-	depthMapShader->AddUniform("alpha_cutoff");
-	depthMapShader->AddUniform("mask");
+	depthMapShader->StoreUniformLoc("mvp");
+	depthMapShader->StoreUniformLoc("base_color_factor");
+	depthMapShader->StoreUniformLoc("base_color_texcoord_index");
+	depthMapShader->StoreUniformLoc("alpha_cutoff");
+	depthMapShader->StoreUniformLoc("mask");
 
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -25,10 +25,11 @@ GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
 	glBindTexture(GL_TEXTURE_2D, shadowMap);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, node->GetShadowMapWidth(), node->GetShadowMapHeight(), 0,
 		GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 	float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
@@ -67,7 +68,7 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 		auto m = geometry->node->GetWorldMatrix();
 		auto mvp = vp * m;
 
-		depthMapShader->UploadMat4("mvp", mvp);
+		depthMapShader->SendMat4("mvp", mvp);
 
 		for (auto& glMesh : geometry->glModel->meshes) {
 			GLMaterial* glMaterial = glMesh.material;
@@ -82,10 +83,10 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
 
-			depthMapShader->UploadFloat("alpha_cutoff", materialData->alphaCutoff);
-			depthMapShader->UploadVec4("base_color_factor", materialData->baseColorFactor);
-			depthMapShader->UploadInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
-			depthMapShader->UploadInt("mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
+			depthMapShader->SendFloat("alpha_cutoff", materialData->alphaCutoff);
+			depthMapShader->SendVec4("base_color_factor", materialData->baseColorFactor);
+			depthMapShader->SendInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
+			depthMapShader->SendInt("mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
 
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 

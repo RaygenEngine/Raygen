@@ -51,10 +51,12 @@ protected:
 	GLuint m_skyboxVao{ 0u };
 	GLuint m_skyboxVbo{ 0u };
 
+	// Init
 	void InitObservers();
 	void InitShaders();
 	void InitRenderBuffers();
 
+	// Render
 	void RenderEarlyDepthPass();
 	void RenderDirectionalLights();
 	void RenderSpotLights();
@@ -65,6 +67,9 @@ protected:
 	void RenderWindowSimple();
 	void RenderWindowLinearized();
 
+	// Update
+	void RecompileShaders();
+
 public:
 	~GLForwardRenderer();
 
@@ -73,7 +78,5 @@ public:
 	void Render() override;
 
 	void Update() override;
-
-	void RecompileShaders();
 };
 } // namespace ogl

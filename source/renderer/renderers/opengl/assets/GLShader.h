@@ -21,15 +21,17 @@ struct GLShader : GLAsset<ShaderPod> {
 	void Load() override;
 
 
-	void AddUniform(const std::string& uniformName);
-	void UploadInt(const std::string& uniformName, int i);
-	void UploadFloat(const std::string& uniformName, float f);
-	void UploadVec2(const std::string& uniformName, glm::vec2 v);
-	void UploadVec3(const std::string& uniformName, glm::vec3 v);
-	void UploadVec4(const std::string& uniformName, glm::vec4 v);
+	void StoreUniformLoc(const std::string& uniformName);
 
-	void UploadMat4(const std::string& uniformName, const glm::mat4& m, GLboolean transpose = GL_FALSE);
-	void UploadMat3(const std::string& uniformName, const glm::mat3& m, GLboolean transpose = GL_FALSE);
+	void SendTexture(const std::string& uniformName, GLuint textureId, int32 textureUnitOffset);
+	void SendInt(const std::string& uniformName, int32 i);
+	void SendFloat(const std::string& uniformName, float f);
+	void SendVec2(const std::string& uniformName, glm::vec2 v);
+	void SendVec3(const std::string& uniformName, glm::vec3 v);
+	void SendVec4(const std::string& uniformName, glm::vec4 v);
+
+	void SendMat4(const std::string& uniformName, const glm::mat4& m, GLboolean transpose = GL_FALSE);
+	void SendMat3(const std::string& uniformName, const glm::mat3& m, GLboolean transpose = GL_FALSE);
 
 protected:
 	// temporary

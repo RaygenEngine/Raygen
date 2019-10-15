@@ -16,6 +16,9 @@ class LightNode : public Node {
 
 		REFLECT_VAR(m_shadowMapWidth).OnDirty(DF::ShadowsTextSize);
 		REFLECT_VAR(m_shadowMapHeight).OnDirty(DF::ShadowsTextSize);
+
+		REFLECT_VAR(m_maxShadowBias);
+		REFLECT_VAR(m_samples);
 	}
 
 protected:
@@ -30,12 +33,20 @@ protected:
 	float m_near{ 1.f };
 	float m_far{ 15.5f };
 
+	// TODO: consider moving stuff used by shaders as renderer reflected properties
+	// e.g. maxShadowBias, samples etc
+	float m_maxShadowBias{ 0.005f };
+
+	int m_samples{ 4 };
+
 public:
 	[[nodiscard]] glm::vec3 GetColor() const { return m_color; }
 	[[nodiscard]] float GetIntensity() const { return m_intensity; }
+	[[nodiscard]] float GetMaxShadowBias() const { return m_maxShadowBias; }
 	[[nodiscard]] int32 GetShadowMapWidth() const { return m_shadowMapWidth; }
 	[[nodiscard]] int32 GetShadowMapHeight() const { return m_shadowMapHeight; }
 	[[nodiscard]] float GetNear() const { return m_near; }
 	[[nodiscard]] float GetFar() const { return m_far; }
 	[[nodiscard]] bool CastsShadows() const { return m_hasShadow; }
+	[[nodiscard]] int GetSamples() const { return m_samples; }
 };
