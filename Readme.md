@@ -1,4 +1,4 @@
-![Rayxen](/assets/default-data/__default__image-logo.png?style=centerme "Rayxen")
+![Rayxen](/assets/engine-data/logo.png?style=centerme "Rayxen")
 
 # RayxeИ, a graphics engine
 
@@ -9,7 +9,7 @@ RayxeИ is a graphics/game engine focused on renderer extensibility.
 
 The engine only supports Windows (for now).
 
-The development is done on MSVC 19.22. clang-cl may also be compatible (untested)
+The development is done mostly on MSVC 19.22. Clang-cl v9 is also regularly tested.
 
 C++17 and a very recent CMake is required.
 
@@ -24,8 +24,10 @@ C++17 and a very recent CMake is required.
 * stb_image
 * glm
 * tinygltf
-* timyxml2
 * nlohmann/json
+* magic_enum
+* ctti
+
 
 ## Authors
 

@@ -55,7 +55,7 @@ void Engine::CreateWorldFromFile(const std::string& filename)
 	}
 	m_world = new World(m_app->MakeNodeFactory());
 
-	auto json = AssetManager::GetOrCreate<JsonDocPod>(filename);
+	auto json = AssetManager::GetOrCreateFromParentUri<JsonDocPod>(filename, "/");
 	m_world->LoadAndPrepareWorld(json);
 }
 
