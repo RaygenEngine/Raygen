@@ -103,7 +103,7 @@ void ImguiImpl::InitContext()
 	imguisyle::SetStyleSizes();
 
 	ImGui_ImplWin32_Init(Engine::GetMainWindow()->GetHWND());
-	ImGui::GetIO().IniFilename = "scenes/imgui.ini";
+	ImGui::GetIO().IniFilename = "EditorImgui.ini";
 }
 
 void ImguiImpl::NewFrame()
