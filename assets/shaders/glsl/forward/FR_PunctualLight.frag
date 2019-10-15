@@ -4,82 +4,91 @@ out vec4 out_color;
   
 in Data
 { 
-	vec3 world_frag_pos;
+	vec3 wcs_fragPos;
 
-	vec3 tangent_frag_pos;
-	vec3 tangent_view_pos;
+	vec3 tcs_fragPos;
+	vec3 tcs_viewPos;
 	
-	vec3 tangent_light_pos;	
-	vec3 tangent_light_dir;
-	
-	vec2 text_coord[2];
+	vec3 tcs_lightPos;
+
+	vec2 textCoord[2];
 } dataIn;
 
 
 uniform struct PunctualLight
 {
-	vec3 world_pos;
+	vec3 wcs_pos;
 	
 	vec3 color;
 	float intensity;
 	
 	float far;
 
-	int atten_coef;
-} punctual_light;
+	int attenCoef;
 
-uniform vec4 base_color_factor;
-uniform vec3 emissive_factor;
-uniform float metallic_factor;
-uniform float roughness_factor;
-uniform float normal_scale;
-uniform float occlusion_strength;
-uniform float alpha_cutoff;
-uniform bool mask;
+	int samples;
+	float maxShadowBias;
+	samplerCube shadowCubemap;
+} punctualLight;
 
-uniform int base_color_texcoord_index;
-uniform int metallic_roughness_texcoord_index;
-uniform int emissive_texcoord_index;
-uniform int normal_texcoord_index;
-uniform int occlusion_texcoord_index;
+// dont instantiate this (non-uniformly)
+struct SamplerWithTexcoordIndex
+{
+	int index;
+	sampler2D sampler;
+};
 
-layout(binding=0) uniform sampler2D baseColorSampler;
-layout(binding=1) uniform sampler2D metallicRoughnessSampler;
-layout(binding=2) uniform sampler2D emissiveSampler;
-layout(binding=3) uniform sampler2D normalSampler;
-layout(binding=4) uniform sampler2D occlusionSampler;
-layout(binding=5) uniform samplerCube punctualLightCubemapSampler;
+uniform struct Material
+{
+	vec4 baseColorFactor;
+	vec3 emissiveFactor;
+	float metallicFactor;
+	float roughnessFactor;
+	float normalScale;
+	float occlusionStrength;
+	
+	SamplerWithTexcoordIndex baseColorSampler;
+	SamplerWithTexcoordIndex metallicRoughnessSampler;
+	SamplerWithTexcoordIndex emissiveSampler;
+	SamplerWithTexcoordIndex normalSampler;
+	SamplerWithTexcoordIndex occlusionSampler;
+	
+	float alphaCutoff;
+	bool mask;
+
+} material;
 
 #define PI 3.14159265358979323846f
 
-float ShadowCalculation()
+float ShadowCalculation(float cosTheta)
 {	
 	// get vector between fragment position and light position
-    vec3 fragToLight = dataIn.world_frag_pos - punctual_light.world_pos;
+    vec3 fragToLight = dataIn.wcs_fragPos - punctualLight.wcs_pos;
 	
-    // now get current linear depth as the length between the fragment and light position
-    float currentDepth = length(fragToLight);
+	float currentDepth = length(fragToLight);
 	
-    // PCF
-    float bias = 0.05;  
-	float samples = 4.0;
+	float shadow  = 0.0;
+	float bias = punctualLight.maxShadowBias * tan(acos(cosTheta));
+	bias = clamp(bias, 0.0, punctualLight.maxShadowBias);
+	float samples = punctualLight.samples;
 	float offset  = 0.1;
-	float shadow = 0;
 	for(float x = -offset; x < offset; x += offset / (samples * 0.5))
 	{
 		for(float y = -offset; y < offset; y += offset / (samples * 0.5))
 		{
 			for(float z = -offset; z < offset; z += offset / (samples * 0.5))
 			{
-				float closestDepth = texture(punctualLightCubemapSampler, fragToLight + vec3(x, y, z)).r; 
-				closestDepth *= punctual_light.far;   // Undo mapping [0;1]
+				float closestDepth = texture(punctualLight.shadowCubemap, fragToLight + vec3(x, y, z)).r; 
+				closestDepth *= punctualLight.far;   // Undo mapping [0;1]
 				if(currentDepth - bias > closestDepth)
 					shadow += 1.0;
 			}
 		}
 	}
 	
-    return shadow /= (samples * samples * samples);
+	shadow /= (samples * samples * samples);	
+
+    return shadow;
 }  
 
 vec3 FresnelSchlick(float cosTheta, vec3 F0)
@@ -122,37 +131,65 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return ggx1 * ggx2;
 }
 
-void main()
+vec4 SampleMaterialTexture(SamplerWithTexcoordIndex si)
+{
+	return texture(si.sampler, dataIn.textCoord[si.index]);
+}
+
+void ProcessUniformMaterial(out vec3 albedo, out float opacity, out float metallic, out float roughness,
+							out vec3 emissive, out float occlusion, out vec3 normal)
 {
 	// sample material textures
-	vec4 sampled_base_color = texture(baseColorSampler, dataIn.text_coord[base_color_texcoord_index]);
+	vec4 sampledBaseColor = SampleMaterialTexture(material.baseColorSampler);
 	
-	float opacity = sampled_base_color.a * base_color_factor.a;
+	opacity = sampledBaseColor.a * material.baseColorFactor.a;
 	// mask mode and cutoff
-	if(mask && opacity < alpha_cutoff)
+	if(material.mask && opacity < material.alphaCutoff)
 		discard;
 	
-	vec4 sampled_metallic_roughness = texture(metallicRoughnessSampler, dataIn.text_coord[metallic_roughness_texcoord_index]);
-	vec4 sampled_emissive = texture(emissiveSampler, dataIn.text_coord[emissive_texcoord_index]);
-	vec4 sampled_sample_normal = texture(normalSampler, dataIn.text_coord[normal_texcoord_index]);
-	vec4 sampled_occlusion = texture(occlusionSampler, dataIn.text_coord[occlusion_texcoord_index]);
+	vec4 sampledMetallicRoughness = SampleMaterialTexture(material.metallicRoughnessSampler);
+	vec4 sampledEmissive = SampleMaterialTexture(material.emissiveSampler);
+	vec4 sampledNormal = SampleMaterialTexture(material.normalSampler);
+	vec4 sampledOcclusion = SampleMaterialTexture(material.occlusionSampler);
 	
 	// final material values
-	vec3 albedo = sampled_base_color.rgb * base_color_factor.rgb;
-	float metallic = sampled_metallic_roughness.b * metallic_factor;
-	float roughness = sampled_metallic_roughness.g * roughness_factor;
-	vec3 emissive = sampled_emissive.rgb * emissive_factor;
-	float occlusion = sampled_occlusion.r;
-	vec3 normal = sampled_sample_normal.rgb;
+	albedo = sampledBaseColor.rgb * material.baseColorFactor.rgb;
+	metallic = sampledMetallicRoughness.b * material.metallicFactor;
+	roughness = sampledMetallicRoughness.g * material.roughnessFactor;
+	emissive = sampledEmissive.rgb * material.emissiveFactor;
+	occlusion = sampledOcclusion.r;
+	normal = normalize((sampledNormal.rgb * 2.0 - 1.0) * vec3(material.normalScale, material.normalScale, 1.0));
+	// opacity set from above
+}
 
-	// note: don't forget this is a normal map, normals are in tangent space
-	// all calculations are in tangent space
-	vec3 N = normalize((normal * 2.0 - 1.0) * vec3(normal_scale, normal_scale, 1.0));
+vec3 powVec3 (vec3 v, float f)
+{
+	vec3 res;
+	res.x = pow(v.x, f);
+	res.y = pow(v.y, f);
+	res.z = pow(v.z, f);
+	return res;
+}
+
+void main()
+{
+	vec3 albedo;
+	float opacity;
+	float metallic;
+	float roughness;
+	vec3 emissive;
+	float occlusion;
+	vec3 normal;
 	
-	vec3 V = normalize(dataIn.tangent_view_pos - dataIn.tangent_frag_pos);
+	ProcessUniformMaterial(albedo, opacity, metallic, roughness, emissive, occlusion, normal);
+
+	// NOTE: all calculations should be in tangent space
+	vec3 N = normal;
+	
+	vec3 V = normalize(dataIn.tcs_viewPos - dataIn.tcs_fragPos);
 	
 	// loop lights
-	vec3 L = normalize(dataIn.tangent_light_pos - dataIn.tangent_frag_pos); 
+	vec3 L = normalize(dataIn.tcs_lightPos - dataIn.tcs_fragPos);  
 	vec3 H = normalize(V + L);
 
 	vec3 F0 = vec3(0.04); 
@@ -172,16 +209,19 @@ void main()
 	kD *= 1.0 - metallic;
 	
 	// attenuation
-	float distance = length(dataIn.tangent_light_pos - dataIn.tangent_frag_pos);
-	float attenuation = 1.0 / pow(distance, punctual_light.atten_coef);
+	float distance = length(dataIn.tcs_lightPos - dataIn.tcs_fragPos);
+	float attenuation = 1.0 / pow(distance, punctualLight.attenCoef);
 	
-	float shadow = ShadowCalculation(); 
-	vec3 radiance = ((1.0 - shadow) * punctual_light.color * punctual_light.intensity * attenuation); 
+	float shadow = ShadowCalculation(max(dot(N, L), 0.0)); 
+	vec3 radiance = ((1.0 - shadow) * punctualLight.color * punctualLight.intensity * attenuation); 
 
 	vec3 Lo = (kD * albedo / PI + specular) * radiance * max(dot(N, L), 0.0);
 
 	vec3 color = Lo + emissive;
-	color = mix(color, color * occlusion, occlusion_strength);
+	color = mix(color, color * occlusion, material.occlusionStrength);
 	
-	out_color = vec4(color, 1.f);
+	// TODO:
+	//color = powVec3(color, 1.0f / 2.2f);
+	
+	out_color = vec4(color, opacity);
 }

@@ -61,8 +61,8 @@
 		}
 	},
 	{
-		"+type": "SpotLight",
-		"+name": "test_spot",
+		"+type": "PunctualLight",
+		"+name": "test_pun",
 		"+trs": {
 			"pos": {
 				"y": 5

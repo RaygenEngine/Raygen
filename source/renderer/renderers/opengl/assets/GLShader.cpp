@@ -102,6 +102,13 @@ void GLShader::SendTexture(const std::string& uniformName, GLuint textureId, int
 	glBindTexture(GL_TEXTURE_2D, textureId);
 }
 
+void GLShader::SendCubeTexture(const std::string& uniformName, GLuint textureId, int32 textureUnitOffset)
+{
+	SendInt(uniformName, textureUnitOffset);
+	glActiveTexture(GL_TEXTURE0 + textureUnitOffset);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+}
+
 void GLShader::SendInt(const std::string& uniformName, int32 i)
 {
 	glUniform1i(uniformLocations.at(uniformName), i);

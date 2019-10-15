@@ -24,6 +24,7 @@ struct GLShader : GLAsset<ShaderPod> {
 	void StoreUniformLoc(const std::string& uniformName);
 
 	void SendTexture(const std::string& uniformName, GLuint textureId, int32 textureUnitOffset);
+	void SendCubeTexture(const std::string& uniformName, GLuint textureId, int32 textureUnitOffset);
 	void SendInt(const std::string& uniformName, int32 i);
 	void SendFloat(const std::string& uniformName, float f);
 	void SendVec2(const std::string& uniformName, glm::vec2 v);
