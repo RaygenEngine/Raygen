@@ -4,94 +4,123 @@ out vec4 out_color;
   
 in Data
 { 
-	vec3 tangent_frag_pos;
-	vec3 tangent_view_pos;
+	vec3 tcs_fragPos;
+	vec3 tcs_viewPos;
 	
-	vec3 tangent_light_pos;	
-	vec3 tangent_light_dir;
+	vec3 tcs_lightPos;
+	vec3 tcs_lightDir;
 	
-	vec2 text_coord[2];
+	vec4 shadowCoord;
 	
-	vec4 light_frag_pos;
+	vec2 textCoord[2];
 } dataIn;
 
 
 uniform struct SpotLight
 {
-	vec3 world_pos;
-	vec3 world_dir;
+	vec3 wcs_pos;
+	vec3 wcs_dir;
 	
-	float outer_cut_off;
-	float inner_cut_off;
+	float outerCutOff;
+	float innerCutOff;
 	
 	vec3 color;
 	float intensity;
 	
-	float near;
+	int attenCoef;
+
+	mat4 mvpBiased; // transforms to [0,1] in light space
 	
-	int atten_coef;
+	int samples;
+	float maxShadowBias;
+	sampler2DShadow shadowMap;
+} spotLight;
 
-	mat4 vp;
-} spot_light;
+// dont instantiate this (non-uniformly)
+struct SamplerWithTexcoordIndex
+{
+	int index;
+	sampler2D sampler;
+};
 
-uniform vec4 base_color_factor;
-uniform vec3 emissive_factor;
-uniform float metallic_factor;
-uniform float roughness_factor;
-uniform float normal_scale;
-uniform float occlusion_strength;
-uniform float alpha_cutoff;
-uniform bool mask;
+uniform struct Material
+{
+	vec4 baseColorFactor;
+	vec3 emissiveFactor;
+	float metallicFactor;
+	float roughnessFactor;
+	float normalScale;
+	float occlusionStrength;
+	
+	SamplerWithTexcoordIndex baseColorSampler;
+	SamplerWithTexcoordIndex metallicRoughnessSampler;
+	SamplerWithTexcoordIndex emissiveSampler;
+	SamplerWithTexcoordIndex normalSampler;
+	SamplerWithTexcoordIndex occlusionSampler;
+	
+	float alphaCutoff;
+	bool mask;
 
-uniform int base_color_texcoord_index;
-uniform int metallic_roughness_texcoord_index;
-uniform int emissive_texcoord_index;
-uniform int normal_texcoord_index;
-uniform int occlusion_texcoord_index;
-
-layout(binding=0) uniform sampler2D baseColorSampler;
-layout(binding=1) uniform sampler2D metallicRoughnessSampler;
-layout(binding=2) uniform sampler2D emissiveSampler;
-layout(binding=3) uniform sampler2D normalSampler;
-layout(binding=4) uniform sampler2D occlusionSampler;
-layout(binding=5) uniform sampler2D spotLightMapSampler;
+} material;
 
 #define PI 3.14159265358979323846f
 
-float ShadowCalculation(vec4 fragPosLightSpace, vec3 N, vec3 L)
+vec2 poissonDisk[16] = vec2[](
+	vec2(-0.94201624, -0.39906216),
+	vec2(0.94558609, -0.76890725),
+	vec2(-0.094184101, -0.92938870),
+	vec2(0.34495938, 0.29387760),
+	vec2(-0.91588581, 0.45771432),
+	vec2(-0.81544232, -0.87912464),
+	vec2(-0.38277543, 0.27676845),
+	vec2(0.97484398, 0.75648379),
+	vec2(0.44323325, -0.97511554),
+	vec2(0.53742981, -0.47373420),
+	vec2(-0.26496911, -0.41893023),
+	vec2(0.79197514, 0.19090188),
+	vec2(-0.24188840, 0.99706507),
+	vec2(-0.81409955, 0.91437590),
+	vec2(0.19984126, 0.78641367),
+	vec2(0.14383161, -0.14100790)
+	);
+	
+float random(vec4 seed4)
+{
+	float dot = dot(seed4, vec4(12.9898,78.233,45.164,94.673));
+    return fract(sin(dot) * 43758.5453);
+}
+
+float ShadowCalculation(float cosTheta)
 {	
-    // perform perspective divide
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-	
-    // transform to [0,1] range
-    projCoords = projCoords * 0.5 + 0.5;
-	
-    // get depth of current fragment from light's perspective
-    float currentDepth = projCoords.z;
-	
-	if(fragPosLightSpace.z < spot_light.near + 0.005)
-		return 1.0;
+	// texture(shadowMap, shadowCoord.xy).z is the distance between the light and the nearest occluder
+	// shadowCoord.z is the distance between the light and the current fragment
 	
 	// cure shadow acne
-	float bias = 0.005;//max(0.05 * (1.0 - max(dot(N, L), 0.0)), 0.005); 
+	float bias = spotLight.maxShadowBias * tan(acos(cosTheta));
+	bias = clamp(bias, 0.0, spotLight.maxShadowBias);
+
+	float currentDepth = (dataIn.shadowCoord.z - bias);
+
+	// if behind shadow map just return shadow
+	if(currentDepth / dataIn.shadowCoord.w < 0.005)
+		return 1.0;
+
+
+	float shadow = 0;
 	
-    // PCF
-	float shadow = 0.0;
-	vec2 texelSize = 1.0 / textureSize(spotLightMapSampler, 0);
-	int n = 1;
-	for(int x = -n; x <= n; ++x)
+	// Stratified Poisson Sampling
+	for (int i = 0; i < spotLight.samples; ++i)
 	{
-		for(int y = -n; y <= n; ++y)
-		{
-		    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-			float pcfDepth = texture(spotLightMapSampler, projCoords.xy + vec2(x, y) * texelSize).r; 
-			shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
-		}    
-	}
-	int count = 2*n + 1;
-	shadow /= count * count;
+		int index = int(16.0*random(vec4(dataIn.tcs_fragPos,i)))%16;
 		
-    return shadow;
+		vec2 shadowCoord = dataIn.shadowCoord.xy + poissonDisk[index]/100.0;
+		vec4 P = vec4(shadowCoord.xy, currentDepth, dataIn.shadowCoord.w);
+		
+		// Hardware implemented PCF on sample
+		shadow += (1.0-textureProj(spotLight.shadowMap, P, 0.f));
+	}
+		
+    return shadow / spotLight.samples;
 }  
 
 vec3 FresnelSchlick(float cosTheta, vec3 F0)
@@ -134,37 +163,64 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return ggx1 * ggx2;
 }
 
-void main()
+vec4 SampleMaterialTexture(SamplerWithTexcoordIndex si)
+{
+	return texture(si.sampler, dataIn.textCoord[si.index]);
+}
+
+void ProcessUniformMaterial(out vec3 albedo, out float opacity, out float metallic, out float roughness,
+							out vec3 emissive, out float occlusion, out vec3 normal)
 {
 	// sample material textures
-	vec4 sampled_base_color = texture(baseColorSampler, dataIn.text_coord[base_color_texcoord_index]);
+	vec4 sampledBaseColor = SampleMaterialTexture(material.baseColorSampler);
 	
-	float opacity = sampled_base_color.a * base_color_factor.a;
+	opacity = sampledBaseColor.a * material.baseColorFactor.a;
 	// mask mode and cutoff
-	if(mask && opacity < alpha_cutoff)
+	if(material.mask && opacity < material.alphaCutoff)
 		discard;
 	
-	vec4 sampled_metallic_roughness = texture(metallicRoughnessSampler, dataIn.text_coord[metallic_roughness_texcoord_index]);
-	vec4 sampled_emissive = texture(emissiveSampler, dataIn.text_coord[emissive_texcoord_index]);
-	vec4 sampled_sample_normal = texture(normalSampler, dataIn.text_coord[normal_texcoord_index]);
-	vec4 sampled_occlusion = texture(occlusionSampler, dataIn.text_coord[occlusion_texcoord_index]);
+	vec4 sampledMetallicRoughness = SampleMaterialTexture(material.metallicRoughnessSampler);
+	vec4 sampledEmissive = SampleMaterialTexture(material.emissiveSampler);
+	vec4 sampledNormal = SampleMaterialTexture(material.normalSampler);
+	vec4 sampledOcclusion = SampleMaterialTexture(material.occlusionSampler);
 	
 	// final material values
-	vec3 albedo = sampled_base_color.rgb * base_color_factor.rgb;
-	float metallic = sampled_metallic_roughness.b * metallic_factor;
-	float roughness = sampled_metallic_roughness.g * roughness_factor;
-	vec3 emissive = sampled_emissive.rgb * emissive_factor;
-	float occlusion = sampled_occlusion.r;
-	vec3 normal = sampled_sample_normal.rgb;
+	albedo = sampledBaseColor.rgb * material.baseColorFactor.rgb;
+	metallic = sampledMetallicRoughness.b * material.metallicFactor;
+	roughness = sampledMetallicRoughness.g * material.roughnessFactor;
+	emissive = sampledEmissive.rgb * material.emissiveFactor;
+	occlusion = sampledOcclusion.r;
+	normal = normalize((sampledNormal.rgb * 2.0 - 1.0) * vec3(material.normalScale, material.normalScale, 1.0));
+	// opacity set from above
+}
 
-	// note: don't forget this is a normal map, normals are in tangent space
-	// all calculations are in tangent space
-	vec3 N = normalize((normal * 2.0 - 1.0) * vec3(normal_scale, normal_scale, 1.0));
+vec3 powVec3 (vec3 v, float f)
+{
+	vec3 res;
+	res.x = pow(v.x, f);
+	res.y = pow(v.y, f);
+	res.z = pow(v.z, f);
+	return res;
+}
+
+void main()
+{
+	vec3 albedo;
+	float opacity;
+	float metallic;
+	float roughness;
+	vec3 emissive;
+	float occlusion;
+	vec3 normal;
 	
-	vec3 V = normalize(dataIn.tangent_view_pos - dataIn.tangent_frag_pos);
+	ProcessUniformMaterial(albedo, opacity, metallic, roughness, emissive, occlusion, normal);
+
+	// NOTE: all calculations should be in tangent space
+	vec3 N = normal;
 	
-	// loop lights
-	vec3 L = normalize(dataIn.tangent_light_pos - dataIn.tangent_frag_pos); 
+	vec3 V = normalize(dataIn.tcs_viewPos - dataIn.tcs_fragPos);
+	
+	vec3 L = normalize(dataIn.tcs_lightPos - dataIn.tcs_fragPos); 
 	vec3 H = normalize(V + L);
 
 	vec3 F0 = vec3(0.04); 
@@ -184,21 +240,24 @@ void main()
 	kD *= 1.0 - metallic;
 	
 	// attenuation
-	float distance = length(dataIn.tangent_light_pos - dataIn.tangent_frag_pos);
-	float attenuation = 1.0 / pow(distance, spot_light.atten_coef);
+	float distance = length(dataIn.tcs_lightPos - dataIn.tcs_fragPos);
+	float attenuation = 1.0 / pow(distance, spotLight.attenCoef);
 	
-    // spotlight (soft edges)
-	float theta = dot(L, normalize(-dataIn.tangent_light_dir));
-    float epsilon = (spot_light.inner_cut_off - spot_light.outer_cut_off);
-    float intensity = clamp((theta - spot_light.outer_cut_off) / epsilon, 0.0, 1.0);
+    // spot effect (soft edges)
+	float theta = dot(L, normalize(-dataIn.tcs_lightDir));
+    float epsilon = (spotLight.innerCutOff - spotLight.outerCutOff);
+    float spotEffect = clamp((theta - spotLight.outerCutOff) / epsilon, 0.0, 1.0);
 	 
-	float shadow = ShadowCalculation(dataIn.light_frag_pos, N, L); 
-	vec3 radiance = ((1.0 - shadow) * spot_light.color * spot_light.intensity * attenuation * intensity); 
+	float shadow = ShadowCalculation(max(dot(N, L), 0.0)); 
+	vec3 radiance = ((1.0 - shadow) * spotLight.color * spotLight.intensity * attenuation * spotEffect); 
 
 	vec3 Lo = (kD * albedo / PI + specular) * radiance * max(dot(N, L), 0.0);
 
 	vec3 color = Lo + emissive;
-	color = mix(color, color * occlusion, occlusion_strength);
+	color = mix(color, color * occlusion, material.occlusionStrength);
 	
-	out_color = vec4(color, 1.f);
+	// TODO:
+	//color = powVec3(color, 1.0f / 2.2f);
+	
+	out_color = vec4(vec3(color), opacity);
 }

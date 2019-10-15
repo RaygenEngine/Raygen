@@ -2,24 +2,24 @@
 
 in Data
 { 
-	vec2 text_coord[2];
+	vec2 textCoord[2];
 } dataIn;
 
 uniform bool mask;
-uniform float alpha_cutoff;
+uniform float alphaCutoff;
 
-uniform vec4 base_color_factor;
-uniform int base_color_texcoord_index;
+uniform vec4 baseColorFactor;
+uniform int baseColorTexcoordIndex;
 
 layout(binding=0) uniform sampler2D baseColorSampler;
 
 void main()
 {             
-	vec4 sampled_base_color = texture(baseColorSampler, dataIn.text_coord[base_color_texcoord_index]);
+	vec4 sampledBaseColor = texture(baseColorSampler, dataIn.textCoord[baseColorTexcoordIndex]);
 
-	float opacity = sampled_base_color.a * base_color_factor.a;
+	float opacity = sampledBaseColor.a * baseColorFactor.a;
 
 	// mask mode and cutoff
-	if(mask && opacity < alpha_cutoff)
+	if(mask && opacity < alphaCutoff)
 		discard;
 }  

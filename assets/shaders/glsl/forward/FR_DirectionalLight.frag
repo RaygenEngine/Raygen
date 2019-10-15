@@ -84,7 +84,7 @@ float random(vec4 seed4)
 
 float ShadowCalculation(float cosTheta)
 {	
-	// texture( shadowMap, shadowCoord.xy ).z is the distance between the light and the nearest occluder
+	// texture(shadowMap, shadowCoord.xy).z is the distance between the light and the nearest occluder
 	// shadowCoord.z is the distance between the light and the current fragment
 	
 	// cure shadow acne
@@ -108,7 +108,7 @@ float ShadowCalculation(float cosTheta)
 		
 		// Hardware implemented PCF on sample
 		shadow += (1.0-texture(directionalLight.shadowMap, 
-		vec3(shadowCoord + poissonDisk[index]/700.0,  (currentDepth-bias))));
+		vec3(shadowCoord + poissonDisk[index]/1400.0,  (currentDepth-bias))));
 	}
 		
     return shadow / directionalLight.samples;

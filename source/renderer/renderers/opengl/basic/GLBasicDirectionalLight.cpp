@@ -13,9 +13,9 @@ GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
 	depthMapShader
 		= GetGLAssetManager(this)->GenerateFromPodPath<GLShader>("/shaders/glsl/general/DepthMap_AlphaMask.json");
 	depthMapShader->StoreUniformLoc("mvp");
-	depthMapShader->StoreUniformLoc("base_color_factor");
-	depthMapShader->StoreUniformLoc("base_color_texcoord_index");
-	depthMapShader->StoreUniformLoc("alpha_cutoff");
+	depthMapShader->StoreUniformLoc("baseColorFactor");
+	depthMapShader->StoreUniformLoc("baseColorTexcoordIndex");
+	depthMapShader->StoreUniformLoc("alphaCutoff");
 	depthMapShader->StoreUniformLoc("mask");
 
 	glGenFramebuffers(1, &fbo);
@@ -83,9 +83,9 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
 
-			depthMapShader->SendFloat("alpha_cutoff", materialData->alphaCutoff);
-			depthMapShader->SendVec4("base_color_factor", materialData->baseColorFactor);
-			depthMapShader->SendInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
+			depthMapShader->SendFloat("alphaCutoff", materialData->alphaCutoff);
+			depthMapShader->SendVec4("baseColorFactor", materialData->baseColorFactor);
+			depthMapShader->SendInt("baseColorTexcoordIndex", materialData->baseColorTexCoordIndex);
 			depthMapShader->SendInt("mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
 
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
