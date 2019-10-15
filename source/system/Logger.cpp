@@ -31,6 +31,6 @@ void Log::Init(LogLevelTarget level)
 		default: s_logger->set_level(spdlog::level::level_enum::off); break;
 	}
 
-	LOG_REPORT("Initialized Rayxen Logger, level: {}", spdlog::level::to_string_view(s_logger->level()));
+	LOG_INFO("Initialized Rayxen Logger, level: {}", spdlog::level::to_string_view(s_logger->level()));
 }
 } // namespace utl

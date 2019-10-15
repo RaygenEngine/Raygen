@@ -6,8 +6,6 @@
 namespace GltfFileLoader {
 inline void Load(GltfFilePod* pod, const uri::Uri& path)
 {
-	timer::ScopedTimer<ch::milliseconds> timer("Gltf File Asset Load");
-
 	namespace tg = tinygltf;
 
 	tg::TinyGLTF loader;
