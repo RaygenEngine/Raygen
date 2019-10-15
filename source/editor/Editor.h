@@ -19,6 +19,9 @@ protected:
 	bool m_updateWorld{ true };
 	Node* m_selectedNode{ nullptr };
 
+	bool m_showImguiDemo{ false };
+	bool m_showGltfWindow{ false };
+
 	SceneSave m_sceneSave;
 
 	std::unique_ptr<AssetWindow> m_assetWindow;

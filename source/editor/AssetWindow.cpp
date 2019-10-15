@@ -61,11 +61,14 @@ void AssetWindow::DrawFileLibrary()
 	}
 }
 
-void AssetWindow::Draw()
+bool AssetWindow::Draw()
 {
-	ImGui::Begin("Model Files");
-	if (ImGui::CollapsingHeader("Model Files")) {
-		ImGui::Indent();
+	bool result = true;
+	ImGui::SetNextWindowPos(ImVec2(500, 250), ImGuiCond_FirstUseEver);
+	// Attempt to predict the viewport size for the first run, might be a bit off.
+	ImGui::SetNextWindowSize(ImVec2(250, 600), ImGuiCond_FirstUseEver);
+
+	if (ImGui::Begin("Model Files", &result)) {
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7, 7));
 		if (ImGui::Button("Refresh Files") || m_needsRefresh) {
 			ReloadCache();
@@ -73,11 +76,11 @@ void AssetWindow::Draw()
 		}
 		ImGui::PopStyleVar();
 
-		ImGui::Unindent();
 		ImGui::Separator();
 
 		DrawFileLibrary();
 	}
 
 	ImGui::End();
+	return result;
 }
