@@ -153,6 +153,18 @@ struct ReflectionToImguiVisitor {
 		return false;
 	}
 
+	// TODO:
+	// bool Inner(glm::mat4& t, const Property& p)
+	//{
+	//	// display in row major
+
+	//	auto rowMajor = glm::transpose(t);
+	//	return ImGui::DragFloat4(name, ImUtil::FromVec4(rowMajor[0]), 0.01f)
+	//		   || ImGui::DragFloat4(name, ImUtil::FromVec4(rowMajor[1]), 0.01f)
+	//		   || ImGui::DragFloat4(name, ImUtil::FromVec4(rowMajor[2]), 0.01f)
+	//		   || ImGui::DragFloat4(name, ImUtil::FromVec4(rowMajor[3]), 0.01f);
+	//}
+
 	template<typename T>
 	bool Inner(std::vector<PodHandle<T>>& t, const Property& p)
 	{
@@ -268,6 +280,25 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 
 	if (ImGui::DragFloat3("Scale", ImUtil::FromVec3(scale), 0.01f)) {
 		m_localMode ? node->SetLocalScale(scale) : node->SetWorldScale(scale);
+	}
+
+	ImGui::Checkbox("Display Matrix", &m_displayMatrix);
+
+	if (m_displayMatrix) {
+
+		glm::mat4 matrix = m_localMode ? node->GetLocalMatrix() : node->GetWorldMatrix();
+
+		// to row major
+		auto rowMajor = glm::transpose(matrix);
+
+		if (ImGui::DragFloat4("mat.row[0]", ImUtil::FromVec4(rowMajor[0]), 0.01f)
+			|| ImGui::DragFloat4("mat.row[1]", ImUtil::FromVec4(rowMajor[1]), 0.01f)
+			|| ImGui::DragFloat4("mat.row[2]", ImUtil::FromVec4(rowMajor[2]), 0.01f)
+			|| ImGui::DragFloat4("mat.row[3]", ImUtil::FromVec4(rowMajor[3]), 0.01f)) {
+
+			m_localMode ? node->SetLocalMatrix(glm::transpose(rowMajor))
+						: node->SetWorldMatrix(glm::transpose(rowMajor));
+		}
 	}
 
 	ImGui::Checkbox("Local Mode", &m_localMode);

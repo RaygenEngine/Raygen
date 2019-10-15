@@ -1,5 +1,10 @@
 #pragma once
 
+// DOC:
+// column-major ordering for matrices (may require transpose for other than Opengl (research))
+// clip space: negative one to one (may require transpose for other than Opengl (research))
+// right-handed coordinate system (mary require conversion to left when used by DirectX, Vulkan, etc)
+
 #include "asset/AssetManager.h"
 #include "system/Object.h"
 

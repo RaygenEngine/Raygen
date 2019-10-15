@@ -6,6 +6,7 @@ class Node;
 class PropertyEditor {
 public:
 	bool m_localMode{ true };
+	bool m_displayMatrix{ false };
 
 	// Injects the imgui code of a property editor from a node.
 	void Inject(Node* node);
