@@ -4,7 +4,9 @@
 #include "asset/AssetManager.h"
 #include "asset/pods/StringPod.h"
 #include "asset/AssetPod.h"
+#include "renderer/util/GLSLutil.h"
 
+#include <sstream>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace ogl {
@@ -15,26 +17,30 @@ GLShader::~GLShader()
 
 void GLShader::Load()
 {
-
+	// TODO: handle compile and link status
 	if (!firstLoad) {
 		AssetManager::Reload(podHandle);
-		AssetManager::Reload(podHandle->fragment);
-		// WIP:
-		if (podHandle.Lock()->geometry.podId) {
-			AssetManager::Reload(podHandle->geometry);
-		}
-
-		AssetManager::Reload(podHandle->vertex);
+		for (auto f : podHandle.Lock()->files)
+			AssetManager::Reload(f);
 	}
 	firstLoad = false;
 
-	auto CreateShader = [](GLenum type, PodHandle<StringPod> pod) -> GLuint {
+	auto CreateShader = [&](GLenum type, PodHandle<StringPod> pod) -> GLuint {
 		GLint result = GL_FALSE;
 		int32 infoLogLength;
 
 		const GLuint shaderId = glCreateShader(type);
 
-		char const* sourcePointer = pod.Lock()->data.c_str();
+		// TODO:
+		auto source = pod.Lock();
+
+		auto originalPath = AssetManager::GetPodUri(pod);
+		auto ppath = originalPath;
+
+		size_t offset = 0;
+		auto data = glsl::ProcessIncludeCommands(source->data, ppath, offset);
+
+		char const* sourcePointer = data.c_str();
 		// Compile Shader
 		glShaderSource(shaderId, 1, &sourcePointer, NULL);
 		glCompileShader(shaderId);
@@ -42,32 +48,73 @@ void GLShader::Load()
 		glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
 
 		if (infoLogLength > 0) {
-			std::vector<char> shaderErrorMessage(infoLogLength + 1);
+			std::string shaderErrorMessage;
+			shaderErrorMessage.resize(infoLogLength);
 			glGetShaderInfoLog(shaderId, infoLogLength, NULL, &shaderErrorMessage[0]);
-			LOG_WARN("Error in {}:\n{}", AssetManager::GetEntry(pod)->name, &shaderErrorMessage[0]);
+
+			// PERF:
+
+			std::string result;
+
+			std::istringstream iss(shaderErrorMessage);
+
+			for (std::string line; std::getline(iss, line);) {
+				if (line.empty() || line == "" || line[0] == '\0') {
+					break;
+				}
+				auto lineStartPos = line.find_first_of('(');
+				auto lineEndPos = line.find_first_of(')');
+
+				auto cutUntil = line.find_first_of(':');
+
+				auto lineNumber = std::stoi(line.substr(lineStartPos + 1, lineEndPos - lineStartPos - 1));
+
+				lineNumber = lineNumber - offset;
+
+				if (lineNumber < 0) {
+					result += ">>preprocessor/include-error:";
+				}
+				else {
+					result += ">>" + std::to_string(lineNumber) + ":";
+				}
+
+				result += line.substr(cutUntil + 1) + "\n";
+			}
+
+
+			LOG_WARN("Error in {}:\n{}", AssetManager::GetEntry(pod)->name, &result[0]);
 			return 0u;
 		}
 
 		return shaderId;
 	};
 
+
 	auto shaderPod = podHandle.Lock();
 
-	auto vertexShaderId = CreateShader(GL_VERTEX_SHADER, shaderPod->vertex);
+	programId = glCreateProgram();
 
-	// WIP:
-	auto geometryShaderId = 0u;
-	if (shaderPod->geometry.podId) {
-		geometryShaderId = CreateShader(GL_GEOMETRY_SHADER, shaderPod->geometry);
+	std::array<GLuint, 3> programParts;
+
+	for (auto f : shaderPod->files) {
+
+		auto filePath = AssetManager::GetPodUri(f);
+
+		if (uri::MatchesExtension(filePath, ".vert")) {
+			programParts[0] = CreateShader(GL_VERTEX_SHADER, f);
+		}
+		else if (uri::MatchesExtension(filePath, ".geom")) {
+			programParts[1] = CreateShader(GL_GEOMETRY_SHADER, f);
+		}
+		else if (uri::MatchesExtension(filePath, ".frag")) {
+			programParts[2] = CreateShader(GL_FRAGMENT_SHADER, f);
+		}
 	}
 
-	auto fragmentShaderId = CreateShader(GL_FRAGMENT_SHADER, shaderPod->fragment);
+	for (auto pp : programParts) {
+		glAttachShader(programId, pp);
+	}
 
-	programId = glCreateProgram();
-	glAttachShader(programId, vertexShaderId);
-	if (geometryShaderId)
-		glAttachShader(programId, geometryShaderId);
-	glAttachShader(programId, fragmentShaderId);
 	glLinkProgram(programId);
 
 	GLint result = GL_FALSE;
@@ -77,21 +124,18 @@ void GLShader::Load()
 	glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLogLength);
 
 	if (infoLogLength > 0) {
-		std::vector<char> programErrorMessage(infoLogLength + 1);
+		std::string programErrorMessage;
+		programErrorMessage.resize(infoLogLength);
+		// TODO: check if this needs injection
 		glGetProgramInfoLog(programId, infoLogLength, NULL, &programErrorMessage[0]);
 		LOG_WARN("Error in {}:\n{}", AssetManager::GetEntry(podHandle)->name, &programErrorMessage[0]);
 		return;
 	}
 
-	glDetachShader(programId, vertexShaderId);
-	if (geometryShaderId)
-		glDetachShader(programId, geometryShaderId);
-	glDetachShader(programId, fragmentShaderId);
-
-	glDeleteShader(vertexShaderId);
-	if (geometryShaderId)
-		glDeleteShader(geometryShaderId);
-	glDeleteShader(fragmentShaderId);
+	for (auto pp : programParts) {
+		glDetachShader(programId, pp);
+		glDeleteShader(pp);
+	}
 }
 
 

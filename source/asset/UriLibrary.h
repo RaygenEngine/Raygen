@@ -1,6 +1,7 @@
 #pragma once
 
 #include "system/Logger.h"
+#include "core/StringAux.h"
 
 // The central library for the engines Uri convention.
 #include <nlohmann/json.hpp>
@@ -66,6 +67,23 @@ inline std::string_view GetFilename(const Uri& path)
 	}
 
 	return diskView.substr(loc + 1);
+}
+
+inline std::string_view GetDir(const Uri& path)
+{
+	auto diskView = GetDiskPathStrView(path);
+	auto loc = diskView.find_last_of('/');
+
+	if (loc == std::string::npos) {
+		return "";
+	}
+
+	return diskView.substr(0, loc + 1);
+}
+
+inline bool IsUriRelative(const Uri& path)
+{
+	return path[0] != '/';
 }
 
 // Expects json object, values or arrays are not allowed.

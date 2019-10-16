@@ -145,11 +145,12 @@ set(HEADER_FILES
 	reflection/ReflEnum.h
 	reflection/TypeId.h
 
-
 	renderer/Renderer.h
 	renderer/ObserverRenderer.h
 	renderer/NodeObserver.h
 	renderer/GenericGpuAssetManager.h
+	
+	renderer/util/GLSLutil.h
 	
 	renderer/renderers/opengl/GLAsset.h
 	renderer/renderers/opengl/GLAssetManager.h

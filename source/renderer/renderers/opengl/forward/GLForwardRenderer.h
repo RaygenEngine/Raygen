@@ -21,8 +21,6 @@ protected:
 	GLShader* m_forwardDirectionalLightShader{ nullptr };
 	GLShader* m_forwardPunctualLightShader{ nullptr };
 	GLShader* m_cubemapInfDistShader{ nullptr };
-	// GLShader* m_simpleOutShader{ nullptr };
-	// GLShader* m_linearizeOutShader{ nullptr };
 	GLShader* m_bBoxShader{ nullptr };
 
 	// entities

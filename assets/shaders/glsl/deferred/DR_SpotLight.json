@@ -1,4 +1,4 @@
-{
-	"vert" : "DR_DirectionalLight.vert",
-	"frag" : "DR_DirectionalLight.frag"
-}
+[
+	"DR_DirectionalLight.vert",
+	"DR_DirectionalLight.frag"
+]

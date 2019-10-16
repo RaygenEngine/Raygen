@@ -82,16 +82,16 @@ void GLForwardRenderer::InitShaders()
 	m_forwardDirectionalLightShader->StoreUniformLoc("material.roughnessFactor");
 	m_forwardDirectionalLightShader->StoreUniformLoc("material.normalScale");
 	m_forwardDirectionalLightShader->StoreUniformLoc("material.occlusionStrength");
-	m_forwardDirectionalLightShader->StoreUniformLoc("material.baseColorSampler.index");
-	m_forwardDirectionalLightShader->StoreUniformLoc("material.baseColorSampler.sampler");
-	m_forwardDirectionalLightShader->StoreUniformLoc("material.metallicRoughnessSampler.index");
-	m_forwardDirectionalLightShader->StoreUniformLoc("material.metallicRoughnessSampler.sampler");
-	m_forwardDirectionalLightShader->StoreUniformLoc("material.emissiveSampler.index");
-	m_forwardDirectionalLightShader->StoreUniformLoc("material.emissiveSampler.sampler");
-	m_forwardDirectionalLightShader->StoreUniformLoc("material.normalSampler.index");
-	m_forwardDirectionalLightShader->StoreUniformLoc("material.normalSampler.sampler");
-	m_forwardDirectionalLightShader->StoreUniformLoc("material.occlusionSampler.index");
-	m_forwardDirectionalLightShader->StoreUniformLoc("material.occlusionSampler.sampler");
+	m_forwardDirectionalLightShader->StoreUniformLoc("material.baseColorTexcoordIndex");
+	m_forwardDirectionalLightShader->StoreUniformLoc("material.baseColorSampler");
+	m_forwardDirectionalLightShader->StoreUniformLoc("material.metallicRoughnessTexcoordIndex");
+	m_forwardDirectionalLightShader->StoreUniformLoc("material.metallicRoughnessSampler");
+	m_forwardDirectionalLightShader->StoreUniformLoc("material.emissiveTexcoordIndex");
+	m_forwardDirectionalLightShader->StoreUniformLoc("material.emissiveSampler");
+	m_forwardDirectionalLightShader->StoreUniformLoc("material.normalTexcoordIndex");
+	m_forwardDirectionalLightShader->StoreUniformLoc("material.normalSampler");
+	m_forwardDirectionalLightShader->StoreUniformLoc("material.occlusionTexcoordIndex");
+	m_forwardDirectionalLightShader->StoreUniformLoc("material.occlusionSampler");
 	m_forwardDirectionalLightShader->StoreUniformLoc("material.alphaCutoff");
 	m_forwardDirectionalLightShader->StoreUniformLoc("material.mask");
 
@@ -122,16 +122,16 @@ void GLForwardRenderer::InitShaders()
 	m_forwardSpotLightShader->StoreUniformLoc("material.roughnessFactor");
 	m_forwardSpotLightShader->StoreUniformLoc("material.normalScale");
 	m_forwardSpotLightShader->StoreUniformLoc("material.occlusionStrength");
-	m_forwardSpotLightShader->StoreUniformLoc("material.baseColorSampler.index");
-	m_forwardSpotLightShader->StoreUniformLoc("material.baseColorSampler.sampler");
-	m_forwardSpotLightShader->StoreUniformLoc("material.metallicRoughnessSampler.index");
-	m_forwardSpotLightShader->StoreUniformLoc("material.metallicRoughnessSampler.sampler");
-	m_forwardSpotLightShader->StoreUniformLoc("material.emissiveSampler.index");
-	m_forwardSpotLightShader->StoreUniformLoc("material.emissiveSampler.sampler");
-	m_forwardSpotLightShader->StoreUniformLoc("material.normalSampler.index");
-	m_forwardSpotLightShader->StoreUniformLoc("material.normalSampler.sampler");
-	m_forwardSpotLightShader->StoreUniformLoc("material.occlusionSampler.index");
-	m_forwardSpotLightShader->StoreUniformLoc("material.occlusionSampler.sampler");
+	m_forwardSpotLightShader->StoreUniformLoc("material.baseColorTexcoordIndex");
+	m_forwardSpotLightShader->StoreUniformLoc("material.baseColorSampler");
+	m_forwardSpotLightShader->StoreUniformLoc("material.metallicRoughnessTexcoordIndex");
+	m_forwardSpotLightShader->StoreUniformLoc("material.metallicRoughnessSampler");
+	m_forwardSpotLightShader->StoreUniformLoc("material.emissiveTexcoordIndex");
+	m_forwardSpotLightShader->StoreUniformLoc("material.emissiveSampler");
+	m_forwardSpotLightShader->StoreUniformLoc("material.normalTexcoordIndex");
+	m_forwardSpotLightShader->StoreUniformLoc("material.normalSampler");
+	m_forwardSpotLightShader->StoreUniformLoc("material.occlusionTexcoordIndex");
+	m_forwardSpotLightShader->StoreUniformLoc("material.occlusionSampler");
 	m_forwardSpotLightShader->StoreUniformLoc("material.alphaCutoff");
 	m_forwardSpotLightShader->StoreUniformLoc("material.mask");
 
@@ -159,16 +159,16 @@ void GLForwardRenderer::InitShaders()
 	m_forwardPunctualLightShader->StoreUniformLoc("material.roughnessFactor");
 	m_forwardPunctualLightShader->StoreUniformLoc("material.normalScale");
 	m_forwardPunctualLightShader->StoreUniformLoc("material.occlusionStrength");
-	m_forwardPunctualLightShader->StoreUniformLoc("material.baseColorSampler.index");
-	m_forwardPunctualLightShader->StoreUniformLoc("material.baseColorSampler.sampler");
-	m_forwardPunctualLightShader->StoreUniformLoc("material.metallicRoughnessSampler.index");
-	m_forwardPunctualLightShader->StoreUniformLoc("material.metallicRoughnessSampler.sampler");
-	m_forwardPunctualLightShader->StoreUniformLoc("material.emissiveSampler.index");
-	m_forwardPunctualLightShader->StoreUniformLoc("material.emissiveSampler.sampler");
-	m_forwardPunctualLightShader->StoreUniformLoc("material.normalSampler.index");
-	m_forwardPunctualLightShader->StoreUniformLoc("material.normalSampler.sampler");
-	m_forwardPunctualLightShader->StoreUniformLoc("material.occlusionSampler.index");
-	m_forwardPunctualLightShader->StoreUniformLoc("material.occlusionSampler.sampler");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.baseColorTexcoordIndex");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.baseColorSampler");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.metallicRoughnessTexcoordIndex");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.metallicRoughnessSampler");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.emissiveTexcoordIndex");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.emissiveSampler");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.normalTexcoordIndex");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.normalSampler");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.occlusionTexcoordIndex");
+	m_forwardPunctualLightShader->StoreUniformLoc("material.occlusionSampler");
 	m_forwardPunctualLightShader->StoreUniformLoc("material.alphaCutoff");
 	m_forwardPunctualLightShader->StoreUniformLoc("material.mask");
 
@@ -206,6 +206,7 @@ float skyboxVertices[] = {
 	-1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f,
 	1.0f
 };
+
 void GLForwardRenderer::InitRenderBuffers()
 {
 	const auto maxWidth = 3840;
@@ -397,18 +398,17 @@ void GLForwardRenderer::RenderDirectionalLights()
 				ls->SendFloat("material.alphaCutoff", materialData->alphaCutoff);
 				ls->SendInt("material.mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
 
-				ls->SendInt("material.baseColorSampler.index", materialData->baseColorTexCoordIndex);
-				ls->SendInt("material.metallicRoughnessSampler.index", materialData->metallicRoughnessTexCoordIndex);
-				ls->SendInt("material.emissiveSampler.index", materialData->emissiveTexCoordIndex);
-				ls->SendInt("material.normalSampler.index", materialData->normalTexCoordIndex);
-				ls->SendInt("material.occlusionSampler.index", materialData->occlusionTexCoordIndex);
+				ls->SendInt("material.baseColorTexcoordIndex", materialData->baseColorTexCoordIndex);
+				ls->SendInt("material.metallicRoughnessTexcoordIndex", materialData->metallicRoughnessTexCoordIndex);
+				ls->SendInt("material.emissiveTexcoordIndex", materialData->emissiveTexCoordIndex);
+				ls->SendInt("material.normalTexcoordIndex", materialData->normalTexCoordIndex);
+				ls->SendInt("material.occlusionTexcoordIndex", materialData->occlusionTexCoordIndex);
 
-				ls->SendTexture("material.baseColorSampler.sampler", glMaterial->baseColorTexture->id, 1);
-				ls->SendTexture(
-					"material.metallicRoughnessSampler.sampler", glMaterial->metallicRoughnessTexture->id, 2);
-				ls->SendTexture("material.emissiveSampler.sampler", glMaterial->emissiveTexture->id, 3);
-				ls->SendTexture("material.normalSampler.sampler", glMaterial->normalTexture->id, 4);
-				ls->SendTexture("material.occlusionSampler.sampler", glMaterial->occlusionTexture->id, 5);
+				ls->SendTexture("material.baseColorSampler", glMaterial->baseColorTexture->id, 1);
+				ls->SendTexture("material.metallicRoughnessSampler", glMaterial->metallicRoughnessTexture->id, 2);
+				ls->SendTexture("material.emissiveSampler", glMaterial->emissiveTexture->id, 3);
+				ls->SendTexture("material.normalSampler", glMaterial->normalTexture->id, 4);
+				ls->SendTexture("material.occlusionSampler", glMaterial->occlusionTexture->id, 5);
 
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
@@ -494,18 +494,17 @@ void GLForwardRenderer::RenderSpotLights()
 				ls->SendFloat("material.alphaCutoff", materialData->alphaCutoff);
 				ls->SendInt("material.mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
 
-				ls->SendInt("material.baseColorSampler.index", materialData->baseColorTexCoordIndex);
-				ls->SendInt("material.metallicRoughnessSampler.index", materialData->metallicRoughnessTexCoordIndex);
-				ls->SendInt("material.emissiveSampler.index", materialData->emissiveTexCoordIndex);
-				ls->SendInt("material.normalSampler.index", materialData->normalTexCoordIndex);
-				ls->SendInt("material.occlusionSampler.index", materialData->occlusionTexCoordIndex);
+				ls->SendInt("material.baseColorTexcoordIndex", materialData->baseColorTexCoordIndex);
+				ls->SendInt("material.metallicRoughnessTexcoordIndex", materialData->metallicRoughnessTexCoordIndex);
+				ls->SendInt("material.emissiveTexcoordIndex", materialData->emissiveTexCoordIndex);
+				ls->SendInt("material.normalTexcoordIndex", materialData->normalTexCoordIndex);
+				ls->SendInt("material.occlusionTexcoordIndex", materialData->occlusionTexCoordIndex);
 
-				ls->SendTexture("material.baseColorSampler.sampler", glMaterial->baseColorTexture->id, 1);
-				ls->SendTexture(
-					"material.metallicRoughnessSampler.sampler", glMaterial->metallicRoughnessTexture->id, 2);
-				ls->SendTexture("material.emissiveSampler.sampler", glMaterial->emissiveTexture->id, 3);
-				ls->SendTexture("material.normalSampler.sampler", glMaterial->normalTexture->id, 4);
-				ls->SendTexture("material.occlusionSampler.sampler", glMaterial->occlusionTexture->id, 5);
+				ls->SendTexture("material.baseColorSampler", glMaterial->baseColorTexture->id, 1);
+				ls->SendTexture("material.metallicRoughnessSampler", glMaterial->metallicRoughnessTexture->id, 2);
+				ls->SendTexture("material.emissiveSampler", glMaterial->emissiveTexture->id, 3);
+				ls->SendTexture("material.normalSampler", glMaterial->normalTexture->id, 4);
+				ls->SendTexture("material.occlusionSampler", glMaterial->occlusionTexture->id, 5);
 
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
@@ -582,18 +581,17 @@ void GLForwardRenderer::RenderPunctualLights()
 				ls->SendFloat("material.alphaCutoff", materialData->alphaCutoff);
 				ls->SendInt("material.mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
 
-				ls->SendInt("material.baseColorSampler.index", materialData->baseColorTexCoordIndex);
-				ls->SendInt("material.metallicRoughnessSampler.index", materialData->metallicRoughnessTexCoordIndex);
-				ls->SendInt("material.emissiveSampler.index", materialData->emissiveTexCoordIndex);
-				ls->SendInt("material.normalSampler.index", materialData->normalTexCoordIndex);
-				ls->SendInt("material.occlusionSampler.index", materialData->occlusionTexCoordIndex);
+				ls->SendInt("material.baseColorTexcoordIndex", materialData->baseColorTexCoordIndex);
+				ls->SendInt("material.metallicRoughnessTexcoordIndex", materialData->metallicRoughnessTexCoordIndex);
+				ls->SendInt("material.emissiveTexcoordIndex", materialData->emissiveTexCoordIndex);
+				ls->SendInt("material.normalTexcoordIndex", materialData->normalTexCoordIndex);
+				ls->SendInt("material.occlusionTexcoordIndex", materialData->occlusionTexCoordIndex);
 
-				ls->SendTexture("material.baseColorSampler.sampler", glMaterial->baseColorTexture->id, 1);
-				ls->SendTexture(
-					"material.metallicRoughnessSampler.sampler", glMaterial->metallicRoughnessTexture->id, 2);
-				ls->SendTexture("material.emissiveSampler.sampler", glMaterial->emissiveTexture->id, 3);
-				ls->SendTexture("material.normalSampler.sampler", glMaterial->normalTexture->id, 4);
-				ls->SendTexture("material.occlusionSampler.sampler", glMaterial->occlusionTexture->id, 5);
+				ls->SendTexture("material.baseColorSampler", glMaterial->baseColorTexture->id, 1);
+				ls->SendTexture("material.metallicRoughnessSampler", glMaterial->metallicRoughnessTexture->id, 2);
+				ls->SendTexture("material.emissiveSampler", glMaterial->emissiveTexture->id, 3);
+				ls->SendTexture("material.normalSampler", glMaterial->normalTexture->id, 4);
+				ls->SendTexture("material.occlusionSampler", glMaterial->occlusionTexture->id, 5);
 
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
@@ -800,10 +798,8 @@ void GLForwardRenderer::Render()
 void GLForwardRenderer::RecompileShaders()
 {
 	m_forwardSpotLightShader->Load();
-	m_forwardDirectionalLightShader->Load();
-	m_forwardPunctualLightShader->Load();
-	// m_simpleOutShader->Load();
-	// m_linearizeOutShader->Load();
+	// m_forwardDirectionalLightShader->Load();
+	// m_forwardPunctualLightShader->Load();
 }
 
 void GLForwardRenderer::Update()

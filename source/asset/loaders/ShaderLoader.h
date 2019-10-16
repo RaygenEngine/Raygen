@@ -4,6 +4,8 @@
 #include "asset/pods/ShaderPod.h"
 #include "asset/UriLibrary.h"
 
+// if found same included file then abort
+#include <unordered_set>
 #include <nlohmann/json.hpp>
 #include <fstream>
 
@@ -11,7 +13,6 @@ namespace ShaderLoader {
 inline void Load(ShaderPod* pod, const uri::Uri& path)
 {
 	std::ifstream inStream(uri::ToSystemPath(path));
-
 
 	CLOG_ABORT(!inStream.is_open(), "Unable to open shader file, path: {}", uri::ToSystemPath(path));
 
@@ -26,22 +27,11 @@ inline void Load(ShaderPod* pod, const uri::Uri& path)
 
 	inStream >> j;
 
-	std::string newFilePath;
-
-	newFilePath = j.value<std::string>("vert", "");
-	if (!newFilePath.empty()) {
-		pod->vertex = AssetManager::GetOrCreateFromParentUri<StringPod>(newFilePath, path);
-	}
-
-	newFilePath = j.value<std::string>("geom", "");
-	if (!newFilePath.empty()) {
-		pod->geometry = AssetManager::GetOrCreateFromParentUri<StringPod>(newFilePath, path);
-	}
-
-	newFilePath = j.value<std::string>("frag", "");
-	if (!newFilePath.empty()) {
-		pod->fragment = AssetManager::GetOrCreateFromParentUri<StringPod>(newFilePath, path);
+	for (auto newFilePath : j) {
+		pod->files.emplace_back(
+			AssetManager::GetOrCreateFromParentUri<StringPod>(newFilePath.get<std::string>(), path));
 	}
 }
+
 
 }; // namespace ShaderLoader
