@@ -1,4 +1,4 @@
-{
-	"vert": "FR_SpotLight.vert",
-	"frag": "FR_SpotLight.frag"
-}
+[
+	"FR_SpotLight.vert",
+	"FR_SpotLight.frag"
+]

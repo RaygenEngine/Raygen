@@ -1,4 +1,4 @@
-{
-	"vert": "FR_PunctualLight.vert",
-	"frag": "FR_PunctualLight.frag"
-}
+[
+	"FR_PunctualLight.vert",
+	"FR_PunctualLight.frag"
+]

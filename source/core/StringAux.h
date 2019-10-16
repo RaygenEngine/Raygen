@@ -38,4 +38,5 @@ inline std::string ToLower(const std::string& str)
 	std::transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
 	return temp;
 }
+
 } // namespace smath

@@ -1,4 +1,4 @@
-{
-	"vert": "BBox.vert",
-	"frag": "BBox.frag"
-}
+[
+	"BBox.vert",
+	"BBox.frag"
+]
