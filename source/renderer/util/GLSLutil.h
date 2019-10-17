@@ -1,6 +1,6 @@
 #pragma once
 
-// PERF:
+// WIP:
 
 #include "asset/UriLibrary.h"
 #include "asset/AssetManager.h"
@@ -22,7 +22,7 @@ inline Token FindTokenLocations(const std::string& data, const std::string& toke
 	auto beginLos = data.find(token, offset);
 	auto endLoc = beginLos + token.size();
 
-	return { data.find(token, 0), endLoc };
+	return { beginLos, endLoc };
 }
 
 inline size_t GetBeginOfNextToken(const std::string& data, size_t offset)
@@ -32,19 +32,18 @@ inline size_t GetBeginOfNextToken(const std::string& data, size_t offset)
 	return data.find_first_not_of(delimiters, offset);
 }
 
-inline std::string IncludeRecursively(
-	const std::string& data, const uri::Uri& parentPath, std::unordered_set<uri::Uri>& alreadyIncluded)
+inline std::string IncludeRecursively(PodHandle<StringPod> shaderSource, std::vector<BasePodHandle>& includeStack)
 {
-	std::string res = data;
+	includeStack.push_back(shaderSource);
+	std::string res = shaderSource.Lock()->data;
 
-	std::unordered_set<uri::Uri> included = alreadyIncluded;
 	auto includeToken = FindTokenLocations(res, "#include", 0);
 	while (includeToken.beginLoc != std::string::npos) {
 		auto pathBeginPos = GetBeginOfNextToken(res, includeToken.endLoc);
 
 		if (pathBeginPos == std::string::npos || (res[pathBeginPos] != '\"')) {
 			LOG_WARN("glsl prepocessor include error in {}, expected tokens: \", include pos: {}",
-				uri::GetFilename(parentPath), includeToken.beginLoc);
+				AssetManager::GetPodUri(shaderSource), includeToken.beginLoc);
 			// if this fails the include command on
 			// the upper level will be replaced by nothing
 			// this way the glsl compiler will generate
@@ -52,58 +51,57 @@ inline std::string IncludeRecursively(
 			return {};
 		}
 
-		auto expectedClosing = res[pathBeginPos] == '\"' ? '\"' : '<';
+		auto expectedClosing = '\"';
 
 		auto pathEndPos = res.find_first_of(expectedClosing, pathBeginPos + 1);
 		if (pathEndPos == std::string::npos) {
 			LOG_WARN("glsl prepocessor include error in {}, expected token: {}, include pos: {}",
-				uri::GetFilename(parentPath), expectedClosing, includeToken.beginLoc);
+				AssetManager::GetPodUri(shaderSource), expectedClosing, includeToken.beginLoc);
 			return {};
 		}
 
 		auto pathNameSize = pathEndPos - pathBeginPos - 1;
 		auto path = res.substr(pathBeginPos + 1, pathNameSize);
 
-		uri::Uri parentDir;
-		parentDir = uri::GetDir(parentPath);
+		auto includeePodHandle = AssetManager::GetOrCreateFromParent<StringPod>(path, shaderSource);
 
-		std::string filename;
-		filename = uri::GetFilename(path);
-
-		// if already included in this recursive path then break;
-		if (alreadyIncluded.find(filename) != alreadyIncluded.end()) {
-			LOG_WARN("glsl prepocessor include error in {}, recursive inclusion, include pos: {}",
-				uri::GetFilename(parentPath), includeToken.beginLoc);
-			return {};
+		if (std::find(includeStack.begin(), includeStack.end(), includeePodHandle) != includeStack.end()) {
+			return fmt::format("#error circular inclusion at '{}', already included '{}'",
+				AssetManager::GetPodUri(shaderSource), AssetManager::GetPodUri(includeePodHandle));
 		}
 
-		included.insert(filename);
+		auto includeeData = includeePodHandle.Lock()->data;
 
-		auto includeePod = AssetManager::GetOrCreateFromParentUri<StringPod>(path, parentDir);
-		auto includeeData = includeePod.Lock()->data;
+		auto includeeUri = AssetManager::GetPodUri(includeePodHandle);
 
-		auto includeeParentPath = (uri::IsUriRelative(path) ? parentDir : "") + path;
-		auto injData = IncludeRecursively(includeeData, includeeParentPath, included);
-		// inject data onto #include command
+
+		auto injData = IncludeRecursively(includeePodHandle, includeStack);
+
 		res.erase(includeToken.beginLoc, pathEndPos - includeToken.beginLoc + 1);
 		res.insert(includeToken.beginLoc, injData);
+
 		// search next include
 		includeToken = FindTokenLocations(res, "#include", 0);
-		included = alreadyIncluded;
 	}
+
+	includeStack.pop_back();
 
 	return res;
 }
 
 // expects #include "...."
-inline std::string ProcessIncludeCommands(const std::string& data, const uri::Uri& parentPath, size_t& offset)
+inline std::string ProcessIncludeCommands(PodHandle<StringPod> source, size_t& offset)
 {
+	timer::ScopedTimer _("includes");
+
+	std::string data = source.Lock()->data;
+
 	// copy
 	std::string res = data;
 
 	// search for includes (recursively)
-	std::unordered_set<uri::Uri> inc{};
-	res = IncludeRecursively(data, parentPath, inc);
+	std::vector<BasePodHandle> includeStack{};
+	res = IncludeRecursively(source, includeStack);
 
 	size_t old = std::count(data.begin(), data.end(), '\n');
 	size_t newf = std::count(res.begin(), res.end(), '\n');

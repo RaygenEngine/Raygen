@@ -39,7 +39,7 @@ void GLShader::Load()
 		auto ppath = originalPath;
 
 		size_t offset = 0;
-		auto data = glsl::ProcessIncludeCommands(source->data, ppath, offset);
+		auto data = glsl::ProcessIncludeCommands(pod, offset);
 
 		char const* sourcePointer = data.c_str();
 		// Compile Shader
