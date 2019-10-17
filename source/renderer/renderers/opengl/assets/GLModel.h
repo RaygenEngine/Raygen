@@ -18,10 +18,9 @@ struct GLModel : GLAsset<ModelPod> {
 
 		GLMaterial* material{ nullptr };
 
-		GLsizei count{ 0u };
+		GLsizei indicesCount{ 0u };
 
 		GLint geometryMode{ 0u };
-		GLenum geometryUsage{ 0u };
 	};
 	std::vector<GLMesh> meshes;
 

@@ -25,7 +25,7 @@ public:
 
 	virtual ~GLRendererBase();
 
-	bool InitRendering(HWND assochWnd, HINSTANCE instance) override;
+	void InitRendering(HWND assochWnd, HINSTANCE instance) override;
 	void SwapBuffers() override;
 
 	GLAssetManager* GetGLAssetManager() { return m_glAssetManager.get(); }

@@ -71,7 +71,7 @@ protected:
 public:
 	~GLForwardRenderer();
 
-	bool InitScene() override;
+	void InitScene() override;
 
 	void Render() override;
 

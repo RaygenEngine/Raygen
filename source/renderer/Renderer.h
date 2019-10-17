@@ -1,5 +1,6 @@
 #pragma once
 
+// TODO: remove when you implement platforms
 #include <windows.h>
 
 class Renderer {
@@ -12,10 +13,10 @@ public:
 	virtual ~Renderer() = default;
 
 	// Windows based init rendering (implement in "context"-base renderers)
-	virtual bool InitRendering(HWND assochWnd, HINSTANCE instance) = 0;
+	virtual void InitRendering(HWND assochWnd, HINSTANCE instance) = 0;
 
 	// Init Scene (shaders/ upload stuff etc.);
-	virtual bool InitScene() = 0;
+	virtual void InitScene() = 0;
 
 	virtual void Update() = 0;
 

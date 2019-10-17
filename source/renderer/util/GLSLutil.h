@@ -92,7 +92,7 @@ inline std::string IncludeRecursively(PodHandle<StringPod> shaderSource, std::ve
 // expects #include "...."
 inline std::string ProcessIncludeCommands(PodHandle<StringPod> source, size_t& offset)
 {
-	timer::ScopedTimer _("includes");
+	// timer::ScopedTimer _("includes");
 
 	std::string data = source.Lock()->data;
 

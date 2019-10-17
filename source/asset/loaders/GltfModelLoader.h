@@ -409,7 +409,6 @@ namespace {
 			LOG_DEBUG("Model missing second uv map, mirroring first");
 		}
 
-		// TODO: check TBN results with deferred
 		// TANGENTS, BITANGENTS
 		if (tangentsIndex != -1) {
 			LoadIntoVertexData<2>(modelData, tangentsIndex, geom.vertices);

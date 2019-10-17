@@ -280,16 +280,13 @@ void GLForwardRenderer::InitRenderBuffers()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*)0);
 }
 
-bool GLForwardRenderer::InitScene()
+void GLForwardRenderer::InitScene()
 {
 	InitObservers();
 
 	InitShaders();
 
 	InitRenderBuffers();
-
-	// TODO: remove bool from initscene/rendering
-	return true;
 }
 
 void GLForwardRenderer::RenderEarlyDepthPass()
