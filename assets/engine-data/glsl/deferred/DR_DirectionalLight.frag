@@ -1,8 +1,8 @@
 #version 460 core
 
-#include "/shaders/glsl/include/random.h"
-#include "/shaders/glsl/include/microfacet_bsdf.h"
-#include "/shaders/glsl/include/poisson.h"
+#include "/engine-data/glsl/include/random.h"
+#include "/engine-data/glsl/include/microfacet_bsdf.h"
+#include "/engine-data/glsl/include/poisson.h"
 
 out vec4 out_color;
 
