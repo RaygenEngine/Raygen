@@ -7,6 +7,7 @@ namespace fs = std::filesystem;
 #include <stddef.h>
 
 #define GLM_ENABLE_EXPERIMENTAL
+#define GLM_FORCE_CXX17
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 

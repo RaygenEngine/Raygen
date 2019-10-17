@@ -24,6 +24,20 @@ namespace glm
 
 		// -- Data --
 
+#		if GLM_SILENT_WARNINGS == GLM_ENABLE
+#			if GLM_COMPILER & GLM_COMPILER_GCC
+#				pragma GCC diagnostic push
+#				pragma GCC diagnostic ignored "-Wpedantic"
+#			elif GLM_COMPILER & GLM_COMPILER_CLANG
+#				pragma clang diagnostic push
+#				pragma clang diagnostic ignored "-Wgnu-anonymous-struct"
+#				pragma clang diagnostic ignored "-Wnested-anon-types"
+#			elif GLM_COMPILER & GLM_COMPILER_VC
+#				pragma warning(push)
+#				pragma warning(disable: 4201)  // nonstandard extension used : nameless struct/union
+#			endif
+#		endif
+
 #		if GLM_CONFIG_XYZW_ONLY
 			T x, y, z, w;
 #		elif GLM_CONFIG_ANONYMOUS_STRUCT == GLM_ENABLE
@@ -58,10 +72,21 @@ namespace glm
 #			endif
 #		endif
 
+#		if GLM_SILENT_WARNINGS == GLM_ENABLE
+#			if GLM_COMPILER & GLM_COMPILER_CLANG
+#				pragma clang diagnostic pop
+#			elif GLM_COMPILER & GLM_COMPILER_GCC
+#				pragma GCC diagnostic pop
+#			elif GLM_COMPILER & GLM_COMPILER_VC
+#				pragma warning(pop)
+#			endif
+#		endif
+
 		// -- Component accesses --
 
-		/// Return the count of components of the vector
 		typedef length_t length_type;
+
+		/// Return the count of components of the vector
 		GLM_FUNC_DECL static GLM_CONSTEXPR length_type length(){return 4;}
 
 		GLM_FUNC_DECL GLM_CONSTEXPR T & operator[](length_type i);
