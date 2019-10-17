@@ -68,7 +68,7 @@ protected:
 public:
 	~GLDeferredRenderer() override;
 
-	bool InitScene() override;
+	void InitScene() override;
 
 	void Render() override;
 

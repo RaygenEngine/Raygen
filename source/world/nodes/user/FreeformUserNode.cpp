@@ -11,7 +11,7 @@ void FreeformUserNode::Update(float deltaTime)
 {
 	auto& input = *Engine::GetInput();
 
-	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetWheelDelta() * 2.0f, 10.f, 100.0f);
+	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetWheelDelta() / 240.f * 2.0f, 0.f, 100.0f);
 	auto speed = m_movementSpeed;
 
 	speed *= deltaTime;
@@ -19,6 +19,7 @@ void FreeformUserNode::Update(float deltaTime)
 	if (!input.IsRightTriggerResting()) {
 		speed *= 10.f * glm::exp(input.GetRightTriggerMagnitude());
 	}
+
 	if (!input.IsLeftTriggerResting()) {
 		speed /= 10.f * glm::exp(input.GetLeftTriggerMagnitude());
 	}

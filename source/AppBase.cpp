@@ -23,7 +23,7 @@ AppBase::AppBase()
 	m_windowWidth = 1920;
 	m_windowHeight = 1080;
 
-	m_handleControllers = false;
+	m_handleControllers = true;
 	m_lockMouse = false;
 
 	m_argc = 1;
@@ -117,8 +117,8 @@ void AppBase::RegisterRenderers()
 	// NOTE:
 	// Default behavior for an app is to start the FIRST renderer registered here.
 
-	Engine::RegisterRenderer<ogl::GLForwardRenderer>();
 	Engine::RegisterRenderer<ogl::GLDeferredRenderer>();
+	Engine::RegisterRenderer<ogl::GLForwardRenderer>();
 }
 
 Win32Window* AppBase::CreateAppWindow()

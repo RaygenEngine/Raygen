@@ -4,15 +4,13 @@
 #include "editor/imgui/ImguiImpl.h"
 
 namespace ogl {
-bool GLEditorRenderer::InitRendering(HWND assochWnd, HINSTANCE instance)
+void GLEditorRenderer::InitRendering(HWND assochWnd, HINSTANCE instance)
 {
-	if (!GLRendererBase::InitRendering(assochWnd, instance)) {
-		return false;
-	}
+	GLRendererBase::InitRendering(assochWnd, instance);
+
 	if (Engine::IsEditorEnabled()) {
 		ImguiImpl::InitOpenGL();
 	}
-	return true;
 }
 
 void GLEditorRenderer::Render()

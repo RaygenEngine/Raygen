@@ -40,7 +40,7 @@ GLRendererBase::~GLRendererBase()
 	ReleaseDC(m_assochWnd, m_hdc);
 }
 
-bool GLRendererBase::InitRendering(HWND assochWnd, HINSTANCE instance)
+void GLRendererBase::InitRendering(HWND assochWnd, HINSTANCE instance)
 {
 	m_assochWnd = assochWnd;
 
@@ -76,34 +76,14 @@ bool GLRendererBase::InitRendering(HWND assochWnd, HINSTANCE instance)
 
 	const int32 pixelFormat = ChoosePixelFormat(m_hdc, &pfd);
 
-	if (!pixelFormat) {
-		LOG_FATAL("Can't find a suitable pixelFormat, error: {}", MB_OK | MB_ICONERROR);
-		return false;
-	}
-
-	if (!SetPixelFormat(m_hdc, pixelFormat, &pfd)) {
-		LOG_FATAL("Can't set the pixelFormat, error: {}", MB_OK | MB_ICONERROR);
-		return false;
-	}
+	CLOG_ABORT(!pixelFormat, "Can't find a suitable pixelFormat, error: {}", MB_OK | MB_ICONERROR);
+	CLOG_ABORT(!SetPixelFormat(m_hdc, pixelFormat, &pfd), "Can't set the pixelFormat, error: {}", MB_OK | MB_ICONERROR);
 
 	m_hglrc = wglCreateContext(m_hdc);
 
-	if (!m_hglrc) {
-		LOG_FATAL("Can't create a GL rendering context, error: {}", MB_OK | MB_ICONERROR);
-		return false;
-	}
-
-	if (!wglMakeCurrent(m_hdc, m_hglrc)) {
-		LOG_FATAL("Can't activate GLRC, error: {}", MB_OK | MB_ICONERROR);
-		return false;
-	}
-
-	if (!(gladLoadGL() == 1)) {
-		LOG_FATAL("Couldn't load ogl function pointers, GL windows won't be loaded");
-		return false;
-	};
-
-	return true;
+	CLOG_ABORT(!m_hglrc, "Can't create a GL rendering context, error: {}", MB_OK | MB_ICONERROR);
+	CLOG_ABORT(!wglMakeCurrent(m_hdc, m_hglrc), "Can't activate GLRC, error: {}", MB_OK | MB_ICONERROR);
+	CLOG_ABORT(!(gladLoadGL() == 1), "Couldn't load ogl function pointers");
 }
 
 void GLRendererBase::SwapBuffers()

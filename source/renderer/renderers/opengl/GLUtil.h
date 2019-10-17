@@ -6,15 +6,6 @@
 #define GLCheckError() ogl::GLCheckError_(__FILE__, __LINE__)
 
 namespace ogl {
-inline GLenum GetGLGeometryUsage(GeometryUsage geomUsage)
-{
-	switch (geomUsage) {
-		case GeometryUsage::DYNAMIC: return GL_DYNAMIC_DRAW;
-		case GeometryUsage::STATIC: return GL_STATIC_DRAW;
-		case GeometryUsage::STREAM: return GL_STREAM_DRAW;
-		default: return GL_INVALID_ENUM;
-	}
-}
 
 inline GLint GetGLWrapping(TextureWrapping textWrapping)
 {

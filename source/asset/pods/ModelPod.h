@@ -14,19 +14,11 @@ enum class GeometryMode
 	TRIANGLE_FAN
 };
 
-enum class GeometryUsage
-{
-	DYNAMIC,
-	STATIC,
-	STREAM
-};
-
 struct GeometryGroup {
 	std::vector<uint32> indices{};
 	std::vector<VertexData> vertices{};
 
 	GeometryMode mode{ GeometryMode::TRIANGLES };
-	GeometryUsage usage{ GeometryUsage::STATIC };
 	uint32 materialIndex{ 0u };
 };
 

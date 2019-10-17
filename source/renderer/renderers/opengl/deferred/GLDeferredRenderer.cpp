@@ -237,15 +237,13 @@ void GLDeferredRenderer::InitRenderBuffers()
 	}
 }
 
-bool GLDeferredRenderer::InitScene()
+void GLDeferredRenderer::InitScene()
 {
 	InitObservers();
 
 	InitShaders();
 
 	InitRenderBuffers();
-
-	return true;
 }
 
 void GLDeferredRenderer::RenderGBuffer()

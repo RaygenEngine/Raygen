@@ -95,6 +95,7 @@ public:
 		return m_cursorRelativePosition;
 	}
 	[[nodiscard]] glm::vec2 GetCursorPosition() const { return m_cursorPosition; }
+	// multiples of 120
 	[[nodiscard]] int32 GetWheelDelta() const { return m_wheelDelta; }
 
 	[[nodiscard]] const AnalogState& GetAnalogState() const { return m_analogState; }
