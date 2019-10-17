@@ -61,7 +61,7 @@ void GLDeferredRenderer::InitObservers()
 void GLDeferredRenderer::InitShaders()
 {
 	m_gBuffer.shader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_GBuffer_AlphaMask.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_GBuffer_AlphaMask.json");
 
 	m_gBuffer.shader->StoreUniformLoc("mvp");
 	m_gBuffer.shader->StoreUniformLoc("m");
@@ -135,7 +135,7 @@ void GLDeferredRenderer::InitShaders()
 	m_deferredSpotLightShader->StoreUniformLoc("gBuffer.emissiveSampler");
 
 	m_deferredPunctualLightShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_PunctualLight.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_PunctualLight.json");
 
 	m_deferredPunctualLightShader->StoreUniformLoc("wcs_viewPos");
 	m_deferredPunctualLightShader->StoreUniformLoc("invTextureSize");
@@ -158,7 +158,7 @@ void GLDeferredRenderer::InitShaders()
 	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.emissiveSampler");
 
 	m_windowShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>(
-		"/shaders/glsl/general/QuadWriteTexture_InvTextureSize.json");
+		"/engine-data/glsl/general/QuadWriteTexture_InvTextureSize.json");
 	m_windowShader->StoreUniformLoc("invTextureSize");
 }
 

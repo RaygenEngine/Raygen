@@ -103,7 +103,7 @@ void GLForwardRenderer::InitShaders()
 	m_forwardDirectionalLightShader->StoreUniformLoc("material.mask");
 
 	m_forwardSpotLightShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/forward/FR_Spotlight.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/forward/FR_Spotlight.json");
 
 	// general
 	m_forwardSpotLightShader->StoreUniformLoc("mvp");
@@ -196,7 +196,7 @@ void GLForwardRenderer::InitShaders()
 	m_depthPassShader->StoreUniformLoc("mask");
 
 	m_windowShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>(
-		"/shaders/glsl/general/QuadWriteTexture_InvTextureSize.json");
+		"/engine-data/glsl/general/QuadWriteTexture_InvTextureSize.json");
 	m_windowShader->StoreUniformLoc("invTextureSize");
 }
 // TODO: default box model (json)
