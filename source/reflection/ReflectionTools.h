@@ -400,6 +400,17 @@ struct ToStringVisitor {
 		os << p.GetName() << ": " << ref.x << ", " << ref.y << ", " << ref.z << ", " << ref.w << '\n';
 	}
 
+	void operator()(glm::mat4& ref, const Property& p)
+	{
+		os << p.GetName() << ": ";
+		for (int32 i = 0; i < 4; ++i) {
+			os << '\n';
+			for (int32 j = 0; j < 4; ++j) {
+				os << std::setprecision(4) << ref[i][j] << ", ";
+			}
+		}
+		os << '\n';
+	}
 	void End(const ReflClass& r) { str += os.str(); }
 };
 

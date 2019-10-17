@@ -15,6 +15,10 @@ class CameraNode : public Node {
 		REFLECT_VAR(m_viewportWidth, PropertyFlags::Transient).OnDirty(DF::ViewportSize);
 
 		REFLECT_VAR(m_viewportHeight, PropertyFlags::Transient).OnDirty(DF::ViewportSize);
+
+		REFLECT_VAR(m_viewMatrix, PropertyFlags::Transient);
+		REFLECT_VAR(m_projectionMatrix, PropertyFlags::Transient);
+		REFLECT_VAR(m_viewProjectionMatrix, PropertyFlags::Transient);
 	}
 
 

@@ -12,7 +12,7 @@ class AssetWindow {
 
 public:
 	void ReloadCache();
-	void Draw();
+	bool Draw(); // returns false if the window was closed
 
 private:
 	void DrawFileLibrary();

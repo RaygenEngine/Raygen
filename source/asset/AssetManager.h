@@ -216,7 +216,7 @@ public:
 		return entry->UnsafeGet<PodType>();
 	}
 
-	bool Init(const fs::path& assetPath);
+	void Init(const fs::path& assetPath);
 
 
 	static void PreloadGltf(const std::string& modelPath);

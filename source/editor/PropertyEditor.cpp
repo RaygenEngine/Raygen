@@ -17,34 +17,24 @@ using namespace PropertyFlags;
 
 struct ReflectionToImguiVisitor {
 	int32 depth{ 0 };
-	std::string path{};
-
-	std::set<std::string> objNames;
 
 	std::string nameBuf;
 	const char* name;
-
+	bool fullDisplayMat4{ false };
 	Node* node;
 
 	DirtyFlagset dirtyFlags{};
 
-	void GenerateUniqueName(const Property& p)
+	int32 id{ 1 };
+
+	void PreProperty(const Property& p)
 	{
-		std::string buf = p.GetNameStr() + "##" + path;
-		auto r = objNames.insert(buf);
-		int32 index = 0;
-		while (!r.second) {
-			r = objNames.insert(buf + std::to_string(index));
-			index++;
-		}
-		name = r.first->c_str();
+		ImGui::PushID(id++);
+		nameBuf = p.GetName();
+		name = nameBuf.c_str();
 	}
 
-	void Begin(const ReflClass& r) { path += "|" + r.GetNameStr(); }
-
-	void End(const ReflClass& r) { path.erase(path.end() - (r.GetNameStr().size() + 1), path.end()); }
-
-	void PreProperty(const Property& p) { GenerateUniqueName(p); }
+	void PostProperty(const Property& p) { ImGui::PopID(); }
 
 	template<typename T>
 	void operator()(T& t, const Property& p)
@@ -124,23 +114,25 @@ struct ReflectionToImguiVisitor {
 			return false;
 		}
 
-		auto str = AssetManager::GetEntry(pod)->name;
+		auto entry = AssetManager::GetEntry(pod);
+
+		auto str = entry->name;
 		bool open = ImGui::CollapsingHeader(name);
 		PodDropTarget(pod);
 		TEXT_TOOLTIP("{}", AssetManager::GetPodUri(pod));
 		if (open) {
-			GenerateUniqueName(p);
-			ImGui::InputText(name, &str, ImGuiInputTextFlags_ReadOnly);
-			PodDropTarget(pod);
+			ImGui::PushID(static_cast<uint32>(entry->uid) * 1024);
+			// GenerateUniqueName(p);
 
 
 			depth++;
 			ImGui::Indent();
 
-			refltools::CallVisitorOnEveryProperty(const_cast<PodType*>(pod.operator->()), *this);
+			refltools::CallVisitorOnEveryProperty(const_cast<PodType*>(pod.Lock()), *this);
 
 			ImGui::Unindent();
 			depth--;
+			ImGui::PopID();
 		}
 		return false;
 	}
@@ -153,17 +145,38 @@ struct ReflectionToImguiVisitor {
 		return false;
 	}
 
-	// TODO:
-	// bool Inner(glm::mat4& t, const Property& p)
-	//{
-	//	// display in row major
+	bool Inner(glm::mat4& t, const Property& p)
+	{
+		if (!fullDisplayMat4) {
+			std::string s = "mat4: " + p.GetNameStr();
 
-	//	auto rowMajor = glm::transpose(t);
-	//	return ImGui::DragFloat4(name, ImUtil::FromVec4(rowMajor[0]), 0.01f)
-	//		   || ImGui::DragFloat4(name, ImUtil::FromVec4(rowMajor[1]), 0.01f)
-	//		   || ImGui::DragFloat4(name, ImUtil::FromVec4(rowMajor[2]), 0.01f)
-	//		   || ImGui::DragFloat4(name, ImUtil::FromVec4(rowMajor[3]), 0.01f);
-	//}
+			ImGui::Text(s.c_str());
+			TEXT_TOOLTIP("Enable matrix editing by clicking on display matrix under node transform.\n\n{}:{}",
+				p.GetNameStr(), parsingaux::mat4_to_string(t));
+			return false;
+		}
+
+		// display in row major
+		auto rowMajor = glm::transpose(t);
+		bool edited = false;
+
+		std::array<std::string, 4> buffers;
+		buffers[0] = p.GetNameStr() + "[0]";
+		buffers[1] = p.GetNameStr() + "[1]";
+		buffers[2] = p.GetNameStr() + "[2]";
+		buffers[3] = p.GetNameStr() + "[3]";
+
+
+		edited |= ImGui::DragFloat4(buffers[0].c_str(), ImUtil::FromVec4(rowMajor[0]), 0.01f);
+		edited |= ImGui::DragFloat4(buffers[1].c_str(), ImUtil::FromVec4(rowMajor[1]), 0.01f);
+		edited |= ImGui::DragFloat4(buffers[2].c_str(), ImUtil::FromVec4(rowMajor[2]), 0.01f);
+		edited |= ImGui::DragFloat4(buffers[3].c_str(), ImUtil::FromVec4(rowMajor[3]), 0.01f);
+		ImGui::Separator();
+		if (edited) {
+			t = glm::transpose(rowMajor);
+		}
+		return edited;
+	}
 
 	template<typename T>
 	bool Inner(std::vector<PodHandle<T>>& t, const Property& p)
@@ -172,24 +185,24 @@ struct ReflectionToImguiVisitor {
 			ImGui::Indent();
 			int32 index = 0;
 			for (auto& handle : t) {
+				ImGui::PushID(index);
 				++index;
-				std::string sname = "|" + p.GetNameStr() + std::to_string(index);
-				size_t len = sname.size();
-				path += sname;
 
-				GenerateUniqueName(p);
-				std::string finalName = AssetManager::GetEntry(handle)->name + "##" + name;
+				std::string finalName = AssetManager::GetEntry(handle)->name;
 
 				bool r = ImGui::CollapsingHeader(finalName.c_str());
 				PodDropTarget(handle);
 				TEXT_TOOLTIP("{}", AssetManager::GetPodUri(handle));
 				if (r) {
+					ImGui::PushID(index * 1024 * 1024);
 					ImGui::Indent();
-					refltools::CallVisitorOnEveryProperty(const_cast<T*>(handle.operator->()), *this);
+					refltools::CallVisitorOnEveryProperty(const_cast<T*>(handle.Lock()), *this);
 					ImGui::Unindent();
+					ImGui::PopID();
 				}
 
-				path.erase(path.end() - (len), path.end());
+
+				ImGui::PopID();
 			}
 			ImGui::Unindent();
 		}
@@ -282,6 +295,8 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 		m_localMode ? node->SetLocalScale(scale) : node->SetWorldScale(scale);
 	}
 
+	ImGui::Checkbox("Local Mode", &m_localMode);
+	ImGui::SameLine(0.f, 16.f);
 	ImGui::Checkbox("Display Matrix", &m_displayMatrix);
 
 	if (m_displayMatrix) {
@@ -291,51 +306,54 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 		// to row major
 		auto rowMajor = glm::transpose(matrix);
 
-		if (ImGui::DragFloat4("mat.row[0]", ImUtil::FromVec4(rowMajor[0]), 0.01f)
-			|| ImGui::DragFloat4("mat.row[1]", ImUtil::FromVec4(rowMajor[1]), 0.01f)
-			|| ImGui::DragFloat4("mat.row[2]", ImUtil::FromVec4(rowMajor[2]), 0.01f)
-			|| ImGui::DragFloat4("mat.row[3]", ImUtil::FromVec4(rowMajor[3]), 0.01f)) {
+		bool edited = false;
 
+		edited |= ImGui::DragFloat4("mat.row[0]", ImUtil::FromVec4(rowMajor[0]), 0.01f);
+		edited |= ImGui::DragFloat4("mat.row[1]", ImUtil::FromVec4(rowMajor[1]), 0.01f);
+		edited |= ImGui::DragFloat4("mat.row[2]", ImUtil::FromVec4(rowMajor[2]), 0.01f);
+		edited |= ImGui::DragFloat4("mat.row[3]", ImUtil::FromVec4(rowMajor[3]), 0.01f);
+		if (edited) {
 			m_localMode ? node->SetLocalMatrix(glm::transpose(rowMajor))
 						: node->SetWorldMatrix(glm::transpose(rowMajor));
 		}
 	}
-
-	ImGui::Checkbox("Local Mode", &m_localMode);
 }
 
 void PropertyEditor::Run_ContextActions(Node* node)
 {
-	bool wasLastSplitter = false;
 	auto v = Engine::GetEditor()->m_nodeContextActions->GetActions(node);
-
-	int32 splitters = 0;
 
 	ImGui::Indent();
 
+	ImGuiStyle& style = ImGui::GetStyle();
+	float maxWidth = ImGui::GetWindowContentRegionWidth();
+
+	float indentWidth = ImGui::GetCursorPosX();
+	float totalWidth = 0.f;
+	float lastWidth = 0.f;
+
 	for (auto& action : v) {
 		if (action.IsSplitter()) {
-			wasLastSplitter = true;
 			continue;
 		}
 
-		ImGui::SameLine();
-		if (wasLastSplitter) {
-			if (splitters == 2) {
-				ImGui::Text("");
-				splitters = 0;
-			}
-			else {
-				ImGui::Text("|");
-				ImGui::SameLine();
-				splitters++;
-			}
+		float predictedWidth = strlen(action.name) * 7.f + style.ItemInnerSpacing.x * 2 + style.ItemSpacing.x;
+
+		if (totalWidth + predictedWidth + indentWidth < maxWidth) {
+			ImGui::SameLine();
 		}
-		wasLastSplitter = false;
-		if (!action.IsSplitter() && ImGui::Button(action.name)) {
+		else {
+			totalWidth = 0.f;
+		}
+
+		if (ImGui::Button(action.name)) {
 			action.function(node);
 		}
+		lastWidth = ImGui::GetItemRectSize().x;
+		totalWidth += lastWidth;
+		indentWidth = ImGui::GetCursorPosX();
 	}
+
 	ImGui::Unindent();
 }
 
@@ -343,7 +361,7 @@ void PropertyEditor::Run_ReflectedProperties(Node* node)
 {
 	ReflectionToImguiVisitor visitor;
 	visitor.node = node;
-
+	visitor.fullDisplayMat4 = m_displayMatrix;
 	refltools::CallVisitorOnEveryProperty(node, visitor);
 
 	node->SetDirtyMultiple(visitor.dirtyFlags);

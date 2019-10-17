@@ -49,13 +49,17 @@ void Editor::UpdateEditor()
 
 	ImguiImpl::NewFrame();
 
+	if (m_showImguiDemo) {
+		ImGui::ShowDemoWindow();
+	}
+
+
 	static ImGui::FileBrowser lfb = ImGui::FileBrowser(ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CloseOnEsc);
 
-	ImGui::ShowDemoWindow();
-
-	static bool open = true;
-
-	ImGui::Begin("Editor", &open);
+	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
+	// Attempt to predict the viewport size for the first run, might be a bit off.
+	ImGui::SetNextWindowSize(ImVec2(450, 1041), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Editor");
 	ImGui::Checkbox("Update World", &m_updateWorld);
 
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7, 7));
@@ -99,8 +103,9 @@ void Editor::UpdateEditor()
 
 	ImGui::End();
 
-
-	m_assetWindow->Draw();
+	if (m_showGltfWindow) {
+		m_showGltfWindow = m_assetWindow->Draw();
+	}
 
 
 	ImguiImpl::EndFrame();
@@ -164,7 +169,6 @@ void Editor::Run_ContextPopup(Node* node)
 			ImGui::EndMenu();
 		}
 
-
 		ImGui::EndPopup();
 	}
 }
@@ -208,14 +212,17 @@ void Editor::Run_AssetView()
 	};
 
 
-	ImGui::Indent();
+	ImGui::Indent(10.f);
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7, 7));
 	bool UnloadAll = ImGui::Button("Unload All");
 	ImGui::SameLine();
 	bool ReloadUnloaded = ImGui::Button("Reload Unloaded");
 	ImGui::SameLine();
 	bool ReloadAll = ImGui::Button("Reload All");
-
+	ImGui::SameLine();
+	if (ImGui::Button("Search for GLTFs")) {
+		m_showGltfWindow = true;
+	}
 
 	// Static meh..
 	static ImGuiTextFilter filter;
@@ -308,6 +315,10 @@ void Editor::Run_OutlinerDropTarget(Node* node)
 
 void Editor::HandleInput()
 {
+	// Ctrl + 1 opens imgui demo window
+	if (Engine::GetInput()->IsKeyRepeat(XVirtualKey::CTRL) && Engine::GetInput()->IsKeyPressed(XVirtualKey::K1)) {
+		m_showImguiDemo = !m_showImguiDemo;
+	}
 }
 
 void Editor::PushCommand(std::function<void()>&& func)

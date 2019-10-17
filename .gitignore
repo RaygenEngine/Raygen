@@ -200,34 +200,28 @@ __pycache__/
 !*_[Bb]ackup/ 
 
 # Ignore folders
-/assets/import-data/*
-/bin/*
-/build/*
+/bin/
+/build/
 
-# Ignore all scenes except "test"
-/assets/scenes/*
-!/assets/scenes/test
-/assets/imgui.ini
+# Asset folder ignores
+/assets/*
+# 'Unignore' pattern for everything in engine-data
+!/assets/engine-data/
+!/assets/engine-data/*
+!/assets/engine-data/**/*
 
 # Ignore custom app folder
-source/app/*
+/source/app/
 
 x64/
 x86/
 
-# Ignore optix nn dll
-/dependencies/bin/Debug/cudnn64_7.dll
-/dependencies/bin/Release/cudnn64_7.dll
 
 # Ignore copied generated headers during build
 /dependencies/include/GLAD/glad.h
 /dependencies/include/KHR/khrplatform.h
 
 # Ignore generated GLAD files
-dependencies/bin/Debug/glad.dll
-dependencies/bin/Release/glad.dll
-dependencies/lib/Debug/glad.exp
-dependencies/lib/Debug/glad.lib
-dependencies/lib/Release/glad.exp
-dependencies/lib/Release/glad.lib
+/dependencies/bin/
+/dependencies/lib/
 

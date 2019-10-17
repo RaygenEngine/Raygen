@@ -32,14 +32,14 @@ public:
 		long long last = ch::duration_cast<ChronoDuration>(end - m_startTime).count();
 		m_total += last;
 		if constexpr (std::is_same_v<ChronoDuration, ch::microseconds>) {
-			LOG_REPORT("{0}: {1} micros \tTotal: {2} micros", str, last, m_total);
+			LOG_INFO("{0}: {1} micros \tTotal: {2} micros", str, last, m_total);
 		}
 		else if constexpr (std::is_same_v<ChronoDuration, ch::milliseconds>) {
-			LOG_REPORT("{0}: {1} ms \tTotal: {2} ms", str, last, m_total);
+			LOG_INFO("{0}: {1} ms \tTotal: {2} ms", str, last, m_total);
 		}
 		else {
 			// Fix report of duration
-			LOG_REPORT("{0}: {1} ?? \tTotal: {2} ??", str, last, m_total);
+			LOG_INFO("{0}: {1} ?? \tTotal: {2} ??", str, last, m_total);
 		}
 	}
 
@@ -72,14 +72,14 @@ public:
 		auto end = ch::system_clock::now();
 		long long last = ch::duration_cast<ChronoDuration>(end - m_startTime).count();
 		if constexpr (std::is_same_v<ChronoDuration, ch::microseconds>) { // NOLINT
-			LOG_REPORT("{0}: {1} micros", m_name, last);
+			LOG_INFO("{0}: {1} micros", m_name, last);
 		}
 		else if constexpr (std::is_same_v<ChronoDuration, ch::milliseconds>) { // NOLINT
-			LOG_REPORT("{0}: {1} ms", m_name, last);
+			LOG_INFO("{0}: {1} ms", m_name, last);
 		}
 		else {
 			// Fix report of duration
-			LOG_REPORT("{0}: {1} ??", m_name, last);
+			LOG_INFO("{0}: {1} ??", m_name, last);
 		}
 	}
 

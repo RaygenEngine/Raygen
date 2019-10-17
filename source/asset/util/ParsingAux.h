@@ -41,8 +41,44 @@ inline void to_json(nlohmann::json& j, const glm::vec4& p)
 {
 	j = nlohmann::json{ { "x", p.x }, { "y", p.y }, { "z", p.z }, { "w", p.w } };
 }
+
+inline void from_json(const nlohmann::json& js, glm::mat4& mat)
+{
+	for (int32 i = 0; i < 4; ++i) {
+		for (int32 j = 0; j < 4; ++j) {
+			mat[i][j] = js[i * 4 + j].get<float>();
+		}
+	}
+}
+
+inline void to_json(nlohmann::json& js, const glm::mat4& mat)
+{
+	js = nlohmann::json::array();
+
+	for (int32 i = 0; i < 4; ++i) {
+		for (int32 j = 0; j < 4; ++j) {
+			js.push_back(mat[i][j]);
+		}
+	}
+}
+
 } // namespace glm
 
+namespace parsingaux {
+inline std::string mat4_to_string(const glm::mat4& mat)
+{
+	std::string s;
+	glm::mat4 m = glm::transpose(mat);
+	for (int32 i = 0; i < 4; ++i) {
+		s += '\n';
+		for (int32 j = 0; j < 4; ++j) {
+			s += std::to_string(m[i][j]) + ", ";
+		}
+	}
+	s += '\n';
+	return s;
+}
+} // namespace parsingaux
 
 template<typename T>
 inline void from_json(const nlohmann::json& j, PodHandle<T>& handle)
