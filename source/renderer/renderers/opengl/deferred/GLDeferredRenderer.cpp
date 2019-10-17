@@ -87,7 +87,7 @@ void GLDeferredRenderer::InitShaders()
 	m_gBuffer.shader->StoreUniformLoc("material.mask");
 
 	m_deferredDirectionalLightShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_DirectionalLight.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_DirectionalLight.json");
 
 	m_deferredDirectionalLightShader->StoreUniformLoc("wcs_viewPos");
 	m_deferredDirectionalLightShader->StoreUniformLoc("invTextureSize");
@@ -109,7 +109,7 @@ void GLDeferredRenderer::InitShaders()
 	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.emissiveSampler");
 
 	m_deferredSpotLightShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_SpotLight.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_SpotLight.json");
 
 	m_deferredSpotLightShader->StoreUniformLoc("wcs_viewPos");
 	m_deferredSpotLightShader->StoreUniformLoc("invTextureSize");

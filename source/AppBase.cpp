@@ -14,8 +14,8 @@
 
 AppBase::AppBase()
 {
-	m_name = "Default Engine";
-	m_initialScene = "/scenes/test/test.json";
+	m_name = "Rayxen Engine";
+	m_initialScene = "engine-data/default.json";
 	m_assetPath = "assets";
 
 	m_windowTitle = "Rayxen";
@@ -45,7 +45,7 @@ void AppBase::PreMainInit(int32 argc, char* argv[]) // NOLINT
 
 int32 AppBase::Main(int32 argc, char* argv[]) // NOLINT
 {
-	LOG_FATAL("Running app: {}", m_name);
+	LOG_INFO("Running app: {}", m_name);
 
 	Engine& engine = Engine::Get();
 

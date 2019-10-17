@@ -3,15 +3,17 @@
 #include "asset/AssetManager.h"
 #include "reflection/PodTools.h"
 
-bool AssetManager::Init(const fs::path& assetPath)
+void AssetManager::Init(const fs::path& assetPath)
 {
 	m_pods.push_back(std::make_unique<PodEntry>());
 
 	fs::current_path(fs::current_path() / assetPath);
 
-	LOG_REPORT("Current working dir: {}", fs::current_path());
+	if (!fs::is_directory("gen-data")) {
+		fs::create_directory("gen-data");
+	}
 
-	return true;
+	LOG_INFO("Current working dir: {}", fs::current_path());
 }
 
 void AssetManager::PreloadGltf(const uri::Uri& gltfModelPath)
