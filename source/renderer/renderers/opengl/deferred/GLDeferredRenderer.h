@@ -11,6 +11,7 @@
 class CameraNode;
 
 namespace ogl {
+
 class GLDeferredRenderer : public GLEditorRenderer {
 
 protected:
@@ -18,8 +19,9 @@ protected:
 	GLShader* m_deferredDirectionalLightShader{ nullptr };
 	GLShader* m_deferredSpotLightShader{ nullptr };
 	GLShader* m_deferredPunctualLightShader{ nullptr };
+	GLShader* m_windowShader{ nullptr };
 
-	// entities
+	// observers
 	std::vector<GLBasicGeometry*> m_glGeometries;
 	std::vector<GLBasicDirectionalLight*> m_glDirectionalLights;
 	std::vector<GLBasicPunctualLight*> m_glPunctualLights;
@@ -29,11 +31,6 @@ protected:
 	CameraNode* m_camera{ nullptr };
 
 	// rendering
-
-	// need to pass invTextureSize when using gBuffer's textures in screen quad
-	const int32 m_maxWidth{ 3840 };
-	const int32 m_maxHeight{ 2160 };
-
 	GLuint m_outFbo{ 0 };
 	GLuint m_outTexture{ 0 };
 
@@ -58,9 +55,11 @@ protected:
 	void InitRenderBuffers();
 
 	// Render
+	void ClearOutFbo();
 	void RenderGBuffer();
 	void RenderDirectionalLights();
 	void RenderSpotLights();
+	void RenderPunctualLights();
 	void RenderWindow();
 
 	// Update

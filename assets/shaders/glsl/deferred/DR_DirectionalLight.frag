@@ -6,8 +6,6 @@
 
 out vec4 out_color;
 
-in vec2 uv;
-
 uniform vec3 wcs_viewPos;
 uniform vec2 invTextureSize;
 
@@ -71,18 +69,19 @@ void ProcessUniformGBuffer(out vec3 albedo, out float opacity, out float metalli
 out float roughness, out vec3 emissive, out float occlusion, out float occlusionStrength, 
 out vec3 pos, out vec3 normal)
 {
-	// material values
-	pos = texture(gBuffer.positionsSampler, gl_FragCoord.st * invTextureSize).rgb;
-	normal = texture(gBuffer.normalsSampler, gl_FragCoord.st * invTextureSize).rgb;
-	vec4 albedoOpacity = texture(gBuffer.albedoOpacitySampler, gl_FragCoord.st * invTextureSize);
+	vec2 uv = gl_FragCoord.st * invTextureSize;
+
+	pos = texture(gBuffer.positionsSampler, uv).rgb;
+	normal = texture(gBuffer.normalsSampler, uv).rgb;
+	vec4 albedoOpacity = texture(gBuffer.albedoOpacitySampler, uv);
 	albedo = albedoOpacity.rgb;
 	opacity = albedoOpacity.a;
-	vec4 metallicRoughnessOcclusionOcclusionStrength = texture(gBuffer.specularSampler, gl_FragCoord.st * invTextureSize);
+	vec4 metallicRoughnessOcclusionOcclusionStrength = texture(gBuffer.specularSampler, uv);
 	metallic = metallicRoughnessOcclusionOcclusionStrength.r;
 	roughness = metallicRoughnessOcclusionOcclusionStrength.g;
 	occlusion = metallicRoughnessOcclusionOcclusionStrength.b;
 	occlusionStrength = metallicRoughnessOcclusionOcclusionStrength.a;
-	emissive = texture(gBuffer.emissiveSampler, gl_FragCoord.st * invTextureSize).rgb;
+	emissive = texture(gBuffer.emissiveSampler, uv).rgb;
 }
 
 void main()
@@ -105,7 +104,6 @@ void main()
 	vec3 N = wcs_normal;
 	vec3 V = normalize(wcs_viewPos - wcs_fragPos);
 	vec3 L = normalize(-directionalLight.wcs_dir); 
-	vec3 H = normalize(V + L);
 	
 	float shadow = ShadowCalculation(wcs_fragPos, max(dot(N, L), 0.0)); 
 	vec3 Li = (1.0 - shadow) * directionalLight.color * directionalLight.intensity; 
