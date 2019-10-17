@@ -1,5 +1,5 @@
-#ifndef microfacet_bsdf_h
-#define microfacet_bsdf_h
+#ifndef microface_bsdf_h
+#define microface_bsdf_h
 
 #define PI 3.14159265358979323846f
 
@@ -77,5 +77,4 @@ vec3 CookTorranceMicrofacetBRDF_GGX
 	return (kD * LambertBRDF(albedo) + specular);
 }
 	
-
 #endif

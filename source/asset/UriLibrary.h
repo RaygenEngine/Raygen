@@ -75,14 +75,18 @@ inline std::string_view GetDir(const Uri& path)
 	auto loc = diskView.find_last_of('/');
 
 	if (loc == std::string::npos) {
-		return "";
+		return {};
 	}
 
 	return diskView.substr(0, loc + 1);
 }
 
-inline bool IsUriRelative(const Uri& path)
+inline bool IsUri(const std::string& path)
 {
+	if (path.empty()) {
+		return false;
+	}
+
 	return path[0] != '/';
 }
 
