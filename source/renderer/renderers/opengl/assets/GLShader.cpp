@@ -152,9 +152,21 @@ void GLShader::SendTexture(const std::string& uniformName, GLuint textureId, int
 	glBindTexture(GL_TEXTURE_2D, textureId);
 }
 
+void GLShader::SendTexture(GLuint textureId, int32 textureUnitOffset)
+{
+	glActiveTexture(GL_TEXTURE0 + textureUnitOffset);
+	glBindTexture(GL_TEXTURE_2D, textureId);
+}
+
 void GLShader::SendCubeTexture(const std::string& uniformName, GLuint textureId, int32 textureUnitOffset)
 {
 	SendInt(uniformName, textureUnitOffset);
+	glActiveTexture(GL_TEXTURE0 + textureUnitOffset);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+}
+
+void GLShader::SendCubeTexture(GLuint textureId, int32 textureUnitOffset)
+{
 	glActiveTexture(GL_TEXTURE0 + textureUnitOffset);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
 }

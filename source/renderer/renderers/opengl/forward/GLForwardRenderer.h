@@ -22,8 +22,9 @@ protected:
 	GLShader* m_forwardPunctualLightShader{ nullptr };
 	GLShader* m_cubemapInfDistShader{ nullptr };
 	GLShader* m_bBoxShader{ nullptr };
+	GLShader* m_windowShader{ nullptr };
 
-	// entities
+	// observers
 	std::vector<GLBasicGeometry*> m_glGeometries;
 	std::vector<GLBasicDirectionalLight*> m_glDirectionalLights;
 	std::vector<GLBasicPunctualLight*> m_glPunctualLights;

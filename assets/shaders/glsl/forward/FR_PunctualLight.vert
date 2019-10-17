@@ -56,7 +56,7 @@ void main()
 
     mat3 TBN = transpose(mat3(T, B, N));
 	
-	dataOut.tcs_fragPos = TBN * vec3(m * vec4(ocs_pos, 0.0));
+	dataOut.tcs_fragPos = TBN * dataOut.wcs_fragPos;
 	dataOut.tcs_viewPos  = TBN * wcs_viewPos;
 	dataOut.tcs_lightPos = TBN * punctualLight.wcs_pos;
 }

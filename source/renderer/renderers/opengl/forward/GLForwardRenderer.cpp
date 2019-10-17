@@ -15,6 +15,12 @@
 #include <glad/glad.h>
 
 namespace ogl {
+
+constexpr int32 textMaxWidth = 3840;
+constexpr int32 textMaxHeight = 2160;
+constexpr glm::vec2 invTextureSize = { 1.f / textMaxWidth, 1.f / textMaxHeight };
+constexpr int32 msaaSamples = 4;
+
 GLForwardRenderer::~GLForwardRenderer()
 {
 	glDeleteFramebuffers(1, &m_msaaFbo);
@@ -188,6 +194,10 @@ void GLForwardRenderer::InitShaders()
 	m_depthPassShader->StoreUniformLoc("baseColorTexcoordIndex");
 	m_depthPassShader->StoreUniformLoc("alphaCutoff");
 	m_depthPassShader->StoreUniformLoc("mask");
+
+	m_windowShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>(
+		"/shaders/glsl/general/QuadWriteTexture_InvTextureSize.json");
+	m_windowShader->StoreUniformLoc("invTextureSize");
 }
 // TODO: default box model (json)
 float skyboxVertices[] = {
@@ -210,23 +220,19 @@ float skyboxVertices[] = {
 
 void GLForwardRenderer::InitRenderBuffers()
 {
-	const auto maxWidth = 3840;
-	const auto maxHeight = 2160;
-	const auto maxSamples = 4;
-
 	// msaa fbo
 	glGenFramebuffers(1, &m_msaaFbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 
 	glGenTextures(1, &m_msaaColorTexture);
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture);
-	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, maxSamples, GL_RGB, maxWidth, maxHeight, GL_TRUE);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, msaaSamples, GL_RGB, textMaxWidth, textMaxHeight, GL_TRUE);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture, 0);
 
 	glGenRenderbuffers(1, &m_msaaDepthStencilRbo);
 	glBindRenderbuffer(GL_RENDERBUFFER, m_msaaDepthStencilRbo);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, maxSamples, GL_DEPTH24_STENCIL8, maxWidth, maxHeight);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, msaaSamples, GL_DEPTH24_STENCIL8, textMaxWidth, textMaxHeight);
 
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_msaaDepthStencilRbo);
 
@@ -239,7 +245,7 @@ void GLForwardRenderer::InitRenderBuffers()
 
 	glGenTextures(1, &m_outColorTexture);
 	glBindTexture(GL_TEXTURE_2D, m_outColorTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, maxWidth, maxHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textMaxWidth, textMaxHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -311,11 +317,7 @@ void GLForwardRenderer::RenderEarlyDepthPass()
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
 
-			glBindVertexArray(glMesh.vao);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
-
+			m_depthPassShader->SendTexture(glMaterial->baseColorTexture->id, 0);
 			m_depthPassShader->SendFloat("alphaCutoff", materialData->alphaCutoff);
 			m_depthPassShader->SendVec4("baseColorFactor", materialData->baseColorFactor);
 			m_depthPassShader->SendInt("baseColorTexcoordIndex", materialData->baseColorTexCoordIndex);
@@ -323,7 +325,8 @@ void GLForwardRenderer::RenderEarlyDepthPass()
 
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
-			glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
+			glBindVertexArray(glMesh.vao);
+			glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
 		}
 	}
 
@@ -336,11 +339,12 @@ void GLForwardRenderer::RenderDirectionalLights()
 	auto ls = m_forwardDirectionalLightShader;
 
 	for (auto light : m_glDirectionalLights) {
-		// render lights
+
 		light->RenderShadowMap(m_glGeometries);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+
+		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 
 		glDepthMask(GL_FALSE); // disable depth map writes
 
@@ -368,7 +372,8 @@ void GLForwardRenderer::RenderDirectionalLights()
 		for (auto& geometry : m_glGeometries) {
 			auto m = geometry->node->GetWorldMatrix();
 
-			static glm::mat4 biasMatrix(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
+			constexpr glm::mat4 biasMatrix(
+				0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
 
 			glm::mat4 mvpBiased = biasMatrix * light->node->GetViewProjectionMatrix() * m;
 			ls->SendMat4("directionalLight.mvpBiased", mvpBiased);
@@ -382,8 +387,6 @@ void GLForwardRenderer::RenderDirectionalLights()
 			ls->SendMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(m))));
 
 			for (auto& glMesh : geometry->glModel->meshes) {
-				glBindVertexArray(glMesh.vao);
-
 				GLMaterial* glMaterial = glMesh.material;
 				const MaterialPod* materialData = glMaterial->LockData();
 
@@ -411,14 +414,15 @@ void GLForwardRenderer::RenderDirectionalLights()
 
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
-				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
+				glBindVertexArray(glMesh.vao);
+				glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
 			}
 		}
+		glDepthMask(GL_TRUE); // renable depth map writes
+
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
-
-		glDepthMask(GL_TRUE); // renable depth map writes
 	}
 }
 
@@ -427,7 +431,6 @@ void GLForwardRenderer::RenderSpotLights()
 	auto ls = m_forwardSpotLightShader;
 
 	for (auto light : m_glSpotLights) {
-		// render lights
 		light->RenderShadowMap(m_glGeometries);
 
 		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
@@ -465,7 +468,8 @@ void GLForwardRenderer::RenderSpotLights()
 		for (auto& geometry : m_glGeometries) {
 			auto m = geometry->node->GetWorldMatrix();
 
-			static glm::mat4 biasMatrix(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
+			constexpr glm::mat4 biasMatrix(
+				0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
 
 			glm::mat4 mvpBiased = biasMatrix * light->node->GetViewProjectionMatrix() * m;
 			ls->SendMat4("spotLight.mvpBiased", mvpBiased);
@@ -478,8 +482,6 @@ void GLForwardRenderer::RenderSpotLights()
 			ls->SendMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(m))));
 
 			for (auto& glMesh : geometry->glModel->meshes) {
-				glBindVertexArray(glMesh.vao);
-
 				GLMaterial* glMaterial = glMesh.material;
 				const MaterialPod* materialData = glMaterial->LockData();
 
@@ -507,14 +509,15 @@ void GLForwardRenderer::RenderSpotLights()
 
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
-				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
+				glBindVertexArray(glMesh.vao);
+				glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
 			}
 		}
+		glDepthMask(GL_TRUE); // renable depth map writes
+
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
-
-		glDepthMask(GL_TRUE); // renable depth map writes
 	}
 }
 
@@ -523,7 +526,6 @@ void GLForwardRenderer::RenderPunctualLights()
 	auto ls = m_forwardPunctualLightShader;
 
 	for (auto light : m_glPunctualLights) {
-		// render lights
 		light->RenderShadowMap(m_glGeometries);
 
 		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
@@ -565,8 +567,6 @@ void GLForwardRenderer::RenderPunctualLights()
 			ls->SendMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(m))));
 
 			for (auto& glMesh : geometry->glModel->meshes) {
-				glBindVertexArray(glMesh.vao);
-
 				GLMaterial* glMaterial = glMesh.material;
 				const MaterialPod* materialData = glMaterial->LockData();
 
@@ -594,14 +594,15 @@ void GLForwardRenderer::RenderPunctualLights()
 
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
-				glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
+				glBindVertexArray(glMesh.vao);
+				glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
 			}
 		}
+		glDepthMask(GL_TRUE); // renable depth map writes
+
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
-
-		glDepthMask(GL_TRUE); // renable depth map writes
 	}
 }
 
@@ -711,17 +712,13 @@ void GLForwardRenderer::RenderSkybox()
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-	const auto vpNoTransformation = m_camera->GetProjectionMatrix() * glm::mat4(glm::mat3(m_camera->GetViewMatrix()));
-
 	glUseProgram(m_cubemapInfDistShader->programId);
 
+	const auto vpNoTransformation = m_camera->GetProjectionMatrix() * glm::mat4(glm::mat3(m_camera->GetViewMatrix()));
 	m_cubemapInfDistShader->SendMat4("vp", vpNoTransformation);
+	m_cubemapInfDistShader->SendCubeTexture(m_skyboxCubemap->id, 0);
 
 	glBindVertexArray(m_skyboxVao);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, m_skyboxCubemap->id);
-
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	glDisable(GL_DEPTH_TEST);
@@ -737,26 +734,30 @@ void GLForwardRenderer::RenderPostProcess()
 	glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 0, 0, m_camera->GetWidth(),
 		m_camera->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-	// do post process here
+	// do post process here (on out Fbo)
 }
 
 void GLForwardRenderer::RenderWindow()
 {
 	auto wnd = Engine::GetMainWindow();
+	glViewport(0, 0, wnd->GetWidth(), wnd->GetHeight());
 
-	// blit out to window buffer
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_outFbo);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 0, 0, wnd->GetWidth(), wnd->GetHeight(),
-		GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	glUseProgram(m_windowShader->programId);
+
+	m_windowShader->SendVec2("invTextureSize", invTextureSize);
+	m_windowShader->SendTexture(m_outColorTexture, 0);
+
+	// big triangle trick, no vao
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void GLForwardRenderer::Render()
 {
 	// perform first pass as depth pass
 	RenderEarlyDepthPass();
-	// render directional lights shadow maps
+	// render lights
 	RenderDirectionalLights();
 	RenderSpotLights();
 	RenderPunctualLights();
@@ -782,6 +783,7 @@ void GLForwardRenderer::RecompileShaders()
 	m_forwardPunctualLightShader->Load();
 	m_cubemapInfDistShader->Load();
 	m_bBoxShader->Load();
+	m_windowShader->Load();
 }
 
 void GLForwardRenderer::Update()

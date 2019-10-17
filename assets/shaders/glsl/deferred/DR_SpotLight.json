@@ -1,4 +1,4 @@
 [
-	"DR_DirectionalLight.vert",
-	"DR_DirectionalLight.frag"
+	"DR_SpotLight.vert",
+	"DR_SpotLight.frag"
 ]

@@ -49,7 +49,7 @@ uniform vec3 wcs_viewPos;
 
 void main()
 {
-    gl_Position = mvp * vec4(ocs_pos,1);
+    gl_Position = mvp * vec4(ocs_pos, 1.0);
 	
 	dataOut.textCoord[0] = textCoord0; 
 	dataOut.textCoord[1] = textCoord1; 
@@ -60,7 +60,7 @@ void main()
 
     mat3 TBN = transpose(mat3(T, B, N));
 	
-	dataOut.tcs_fragPos = TBN * vec3(m * vec4(ocs_pos, 0.0));
+	dataOut.tcs_fragPos = TBN * vec3(m * vec4(ocs_pos, 1.0));
 	dataOut.tcs_viewPos  = TBN * wcs_viewPos;
 	dataOut.tcs_lightPos = TBN * spotLight.wcs_pos;
 	dataOut.tcs_lightDir = TBN * spotLight.wcs_dir;
