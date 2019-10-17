@@ -3,7 +3,7 @@
 #include "asset/pods/ModelPod.h"
 #include "world/nodes/geometry/GeometryNode.h"
 
-#define GLCheckError() GLCheckError_(__FILE__, __LINE__)
+#define GLCheckError() ogl::GLCheckError_(__FILE__, __LINE__)
 
 namespace ogl {
 inline GLenum GetGLGeometryUsage(GeometryUsage geomUsage)

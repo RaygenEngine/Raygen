@@ -15,6 +15,7 @@ GLShader::~GLShader()
 	glDeleteProgram(programId);
 }
 
+// TODO: tidy
 void GLShader::Load()
 {
 	// TODO: handle compile and link status
@@ -86,6 +87,7 @@ void GLShader::Load()
 			return 0u;
 		}
 
+
 		return shaderId;
 	};
 
@@ -94,7 +96,7 @@ void GLShader::Load()
 
 	programId = glCreateProgram();
 
-	std::array<GLuint, 3> programParts;
+	std::array<GLuint, 3> programParts{ 0 };
 
 	for (auto f : shaderPod->files) {
 
@@ -111,12 +113,14 @@ void GLShader::Load()
 		}
 	}
 
+
 	for (auto pp : programParts) {
-		glAttachShader(programId, pp);
+		if (pp) {
+			glAttachShader(programId, pp);
+		}
 	}
 
 	glLinkProgram(programId);
-
 	GLint result = GL_FALSE;
 	int32 infoLogLength;
 
@@ -133,8 +137,10 @@ void GLShader::Load()
 	}
 
 	for (auto pp : programParts) {
-		glDetachShader(programId, pp);
-		glDeleteShader(pp);
+		if (pp) {
+			glDetachShader(programId, pp);
+			glDeleteShader(pp);
+		}
 	}
 }
 

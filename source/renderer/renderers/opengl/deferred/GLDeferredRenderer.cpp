@@ -5,6 +5,8 @@
 #include "world/World.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "system/Input.h"
+#include "platform/windows/Win32Window.h"
+#include "renderer/renderers/opengl/GLUtil.h"
 
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -17,7 +19,7 @@ GLDeferredRenderer::GBuffer::~GBuffer()
 	glDeleteTextures(1, &positionsAttachment);
 	glDeleteTextures(1, &normalsAttachment);
 	glDeleteTextures(1, &albedoOpacityAttachment);
-	glDeleteTextures(1, &metallicRoughnessOcclusionOcclusionStengthAttachment);
+	glDeleteTextures(1, &specularAttachment);
 	glDeleteTextures(1, &emissiveAttachment);
 	glDeleteRenderbuffers(1, &depthAttachment);
 }
@@ -28,88 +30,98 @@ GLDeferredRenderer::~GLDeferredRenderer()
 	glDeleteTextures(1, &m_outTexture);
 }
 
-bool GLDeferredRenderer::InitScene()
+void GLDeferredRenderer::InitObservers()
 {
 	m_camera = Engine::GetWorld()->GetActiveCamera();
-	int32 width = m_camera->GetWidth();
-	int32 height = m_camera->GetHeight();
+	CLOG_ABORT(!m_camera, "This renderer expects a camera node to be present!");
 
-
-	for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>()) {
+	for (auto geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>()) {
 		CreateObserver_AutoContained<GLBasicGeometry>(geometryNode, m_glGeometries);
 	}
 
-	for (auto* dirLightNode : Engine::GetWorld()->GetNodeMap<DirectionalLightNode>()) {
-		CreateObserver_AutoContained<GLBasicDirectionalLight>(dirLightNode, m_glDirectionalLights);
+	for (auto lightNode : Engine::GetWorld()->GetNodeMap<DirectionalLightNode>()) {
+		CreateObserver_AutoContained<GLBasicDirectionalLight>(lightNode, m_glDirectionalLights);
 	}
 
-	for (auto* dirLightNode : Engine::GetWorld()->GetNodeMap<SpotLightNode>()) {
-		CreateObserver_AutoContained<GLBasicSpotLight>(dirLightNode, m_glSpotLights);
+	for (auto lightNode : Engine::GetWorld()->GetNodeMap<SpotLightNode>()) {
+		CreateObserver_AutoContained<GLBasicSpotLight>(lightNode, m_glSpotLights);
 	}
 
-	m_gBuffer.shader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_GBuffer.json");
+	for (auto lightNode : Engine::GetWorld()->GetNodeMap<PunctualLightNode>()) {
+		CreateObserver_AutoContained<GLBasicPunctualLight>(lightNode, m_glPunctualLights);
+	}
+}
+
+void GLDeferredRenderer::InitShaders()
+{
+	m_gBuffer.shader
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_GBuffer_AlphaMask.json");
 
 	m_gBuffer.shader->StoreUniformLoc("mvp");
 	m_gBuffer.shader->StoreUniformLoc("m");
-	m_gBuffer.shader->StoreUniformLoc("normal_matrix");
-	m_gBuffer.shader->StoreUniformLoc("base_color_factor");
-	m_gBuffer.shader->StoreUniformLoc("emissive_factor");
-	m_gBuffer.shader->StoreUniformLoc("metallic_factor");
-	m_gBuffer.shader->StoreUniformLoc("roughness_factor");
-	m_gBuffer.shader->StoreUniformLoc("normal_scale");
-	m_gBuffer.shader->StoreUniformLoc("occlusion_strength");
-	m_gBuffer.shader->StoreUniformLoc("base_color_texcoord_index");
-	m_gBuffer.shader->StoreUniformLoc("metallic_roughness_texcoord_index");
-	m_gBuffer.shader->StoreUniformLoc("emissive_texcoord_index");
-	m_gBuffer.shader->StoreUniformLoc("normal_texcoord_index");
-	m_gBuffer.shader->StoreUniformLoc("occlusion_texcoord_index");
-
-	m_gBuffer.shaderAlphaMask
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_GBuffer_AlphaMask.json");
-
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("mvp");
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("m");
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("normal_matrix");
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("base_color_factor");
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("emissive_factor");
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("metallic_factor");
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("roughness_factor");
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("normal_scale");
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("occlusion_strength");
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("alpha_cutoff");
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("base_color_texcoord_index");
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("metallic_roughness_texcoord_index");
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("emissive_texcoord_index");
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("normal_texcoord_index");
-	m_gBuffer.shaderAlphaMask->StoreUniformLoc("occlusion_texcoord_index");
+	m_gBuffer.shader->StoreUniformLoc("normalMatrix");
+	// material
+	m_gBuffer.shader->StoreUniformLoc("material.baseColorFactor");
+	m_gBuffer.shader->StoreUniformLoc("material.emissiveFactor");
+	m_gBuffer.shader->StoreUniformLoc("material.metallicFactor");
+	m_gBuffer.shader->StoreUniformLoc("material.roughnessFactor");
+	m_gBuffer.shader->StoreUniformLoc("material.normalScale");
+	m_gBuffer.shader->StoreUniformLoc("material.occlusionStrength");
+	m_gBuffer.shader->StoreUniformLoc("material.baseColorTexcoordIndex");
+	m_gBuffer.shader->StoreUniformLoc("material.baseColorSampler");
+	m_gBuffer.shader->StoreUniformLoc("material.metallicRoughnessTexcoordIndex");
+	m_gBuffer.shader->StoreUniformLoc("material.metallicRoughnessSampler");
+	m_gBuffer.shader->StoreUniformLoc("material.emissiveTexcoordIndex");
+	m_gBuffer.shader->StoreUniformLoc("material.emissiveSampler");
+	m_gBuffer.shader->StoreUniformLoc("material.normalTexcoordIndex");
+	m_gBuffer.shader->StoreUniformLoc("material.normalSampler");
+	m_gBuffer.shader->StoreUniformLoc("material.occlusionTexcoordIndex");
+	m_gBuffer.shader->StoreUniformLoc("material.occlusionSampler");
+	m_gBuffer.shader->StoreUniformLoc("material.alphaCutoff");
+	m_gBuffer.shader->StoreUniformLoc("material.mask");
 
 	m_deferredDirectionalLightShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_DirectionalLight.json");
 
-	m_deferredDirectionalLightShader->StoreUniformLoc("view_pos");
-	m_deferredDirectionalLightShader->StoreUniformLoc("light_pos");
-	m_deferredDirectionalLightShader->StoreUniformLoc("light_color");
-	m_deferredDirectionalLightShader->StoreUniformLoc("light_near");
-	m_deferredDirectionalLightShader->StoreUniformLoc("light_intensity");
-	m_deferredDirectionalLightShader->StoreUniformLoc("light_space_matrix");
+	m_deferredDirectionalLightShader->StoreUniformLoc("wcs_viewPos");
+	m_deferredDirectionalLightShader->StoreUniformLoc("invTextureSize");
 
-	m_deferredSpotLightShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_SpotLight.json");
+	// directional light
+	m_deferredDirectionalLightShader->StoreUniformLoc("directionalLight.wcs_dir");
+	m_deferredDirectionalLightShader->StoreUniformLoc("directionalLight.color");
+	m_deferredDirectionalLightShader->StoreUniformLoc("directionalLight.intensity");
+	m_deferredDirectionalLightShader->StoreUniformLoc("directionalLight.mvpBiased");
+	m_deferredDirectionalLightShader->StoreUniformLoc("directionalLight.maxShadowBias");
+	m_deferredDirectionalLightShader->StoreUniformLoc("directionalLight.samples");
+	m_deferredDirectionalLightShader->StoreUniformLoc("directionalLight.shadowMap");
 
-	m_deferredSpotLightShader->StoreUniformLoc("view_pos");
-	m_deferredSpotLightShader->StoreUniformLoc("light_pos");
-	m_deferredSpotLightShader->StoreUniformLoc("light_color");
-	m_deferredSpotLightShader->StoreUniformLoc("light_near");
-	m_deferredSpotLightShader->StoreUniformLoc("light_intensity");
-	m_deferredSpotLightShader->StoreUniformLoc("light_space_matrix");
+	// gBuffer
+	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.positionsSampler");
+	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.normalsSampler");
+	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.albedoOpacitySampler");
+	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.specularSampler");
+	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.emissiveSampler");
 
+	// m_deferredSpotLightShader
+	//	= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/shaders/glsl/deferred/DR_SpotLight.json");
+
+	// m_deferredSpotLightShader->StoreUniformLoc("view_pos");
+	// m_deferredSpotLightShader->StoreUniformLoc("light_pos");
+	// m_deferredSpotLightShader->StoreUniformLoc("light_color");
+	// m_deferredSpotLightShader->StoreUniformLoc("light_near");
+	// m_deferredSpotLightShader->StoreUniformLoc("light_intensity");
+	// m_deferredSpotLightShader->StoreUniformLoc("light_space_matrix");
+}
+
+void GLDeferredRenderer::InitRenderBuffers()
+{
 	glGenFramebuffers(1, &m_gBuffer.fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.fbo);
 
 	// - rgb: position
 	glGenTextures(1, &m_gBuffer.positionsAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.positionsAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, m_maxWidth, m_maxHeight, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.positionsAttachment, 0);
@@ -117,7 +129,7 @@ bool GLDeferredRenderer::InitScene()
 	// - rgb: normal
 	glGenTextures(1, &m_gBuffer.normalsAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.normalsAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, m_maxWidth, m_maxHeight, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_gBuffer.normalsAttachment, 0);
@@ -125,36 +137,34 @@ bool GLDeferredRenderer::InitScene()
 	// - rgb: albedo, a: opacity
 	glGenTextures(1, &m_gBuffer.albedoOpacityAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.albedoOpacityAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_maxWidth, m_maxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gBuffer.albedoOpacityAttachment, 0);
 
 	// - r: metallic, g: roughness, b: occlusion, a: occlusion strength
-	glGenTextures(1, &m_gBuffer.metallicRoughnessOcclusionOcclusionStengthAttachment);
-	glBindTexture(GL_TEXTURE_2D, m_gBuffer.metallicRoughnessOcclusionOcclusionStengthAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glGenTextures(1, &m_gBuffer.specularAttachment);
+	glBindTexture(GL_TEXTURE_2D, m_gBuffer.specularAttachment);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_maxWidth, m_maxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D,
-		m_gBuffer.metallicRoughnessOcclusionOcclusionStengthAttachment, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_gBuffer.specularAttachment, 0);
 
 	// - rgb: emissive, a: <reserved>
 	glGenTextures(1, &m_gBuffer.emissiveAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.emissiveAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_maxWidth, m_maxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, m_gBuffer.emissiveAttachment, 0);
 
-	// - tell ogl which color attachments we'll use (of this framebuffer) for rendering
 	GLuint attachments[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3,
 		GL_COLOR_ATTACHMENT4 };
 	glDrawBuffers(5, attachments);
 
 	glGenRenderbuffers(1, &m_gBuffer.depthAttachment);
 	glBindRenderbuffer(GL_RENDERBUFFER, m_gBuffer.depthAttachment);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_maxWidth, m_maxHeight);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_gBuffer.depthAttachment);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -167,7 +177,7 @@ bool GLDeferredRenderer::InitScene()
 
 	glGenTextures(1, &m_outTexture);
 	glBindTexture(GL_TEXTURE_2D, m_outTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_maxWidth, m_maxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -176,25 +186,22 @@ bool GLDeferredRenderer::InitScene()
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		LOG_FATAL("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
 	}
+}
 
-	m_currentTexture = m_outTexture;
+bool GLDeferredRenderer::InitScene()
+{
+	InitObservers();
 
-	m_outWidth = width;
-	m_outHeight = height;
+	InitShaders();
+
+	InitRenderBuffers();
 
 	return true;
 }
 
-// TODO: resize textures and stuff
-void GLDeferredRenderer::WindowResize(int32 width, int32 height)
-{
-	m_outWidth = width;
-	m_outHeight = height;
-}
-
 void GLDeferredRenderer::RenderGBuffer()
 {
-	glViewport(0, 0, m_outWidth, m_outHeight);
+	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -203,9 +210,11 @@ void GLDeferredRenderer::RenderGBuffer()
 	glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.fbo);
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT /*| GL_STENCIL_BUFFER_BIT*/);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	auto gBufferShader = m_gBuffer.shader;
+	auto gs = m_gBuffer.shader;
+	glUseProgram(gs->programId);
+
 	const auto vp = m_camera->GetViewProjectionMatrix();
 
 	// render geometry (non-instanced)
@@ -213,60 +222,36 @@ void GLDeferredRenderer::RenderGBuffer()
 		auto m = geometry->node->GetWorldMatrix();
 		auto mvp = vp * m;
 
+		gs->SendMat4("m", m);
+		gs->SendMat4("mvp", mvp);
+		gs->SendMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(m))));
+
 		for (auto& glMesh : geometry->glModel->meshes) {
 			glBindVertexArray(glMesh.vao);
 
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
 
-			switch (materialData->alphaMode) {
-					// blend not handled
-				case MaterialPod::BLEND:
-				case MaterialPod::OPAQUE:
-					gBufferShader = m_gBuffer.shader;
-					glUseProgram(gBufferShader->programId);
-					break;
-				case MaterialPod::MASK:
-					gBufferShader = m_gBuffer.shaderAlphaMask;
-					glUseProgram(gBufferShader->programId);
-					m_gBuffer.shaderAlphaMask->SendFloat("alpha_cutoff", materialData->alphaCutoff);
-					break;
-			}
-
-			// model
-			gBufferShader->SendMat4("m", m);
-			gBufferShader->SendMat4("mvp", mvp);
-			gBufferShader->SendMat3("normal_matrix", glm::transpose(glm::inverse(glm::mat3(m))));
-
 			// material
-			gBufferShader->SendVec4("base_color_factor", materialData->baseColorFactor);
-			gBufferShader->SendVec3("emissive_factor", materialData->emissiveFactor);
-			gBufferShader->SendFloat("metallic_factor", materialData->metallicFactor);
-			gBufferShader->SendFloat("roughness_factor", materialData->roughnessFactor);
-			gBufferShader->SendFloat("normal_scale", materialData->normalScale);
-			gBufferShader->SendFloat("occlusion_strength", materialData->occlusionStrength);
+			gs->SendVec4("material.baseColorFactor", materialData->baseColorFactor);
+			gs->SendVec3("material.emissiveFactor", materialData->emissiveFactor);
+			gs->SendFloat("material.metallicFactor", materialData->metallicFactor);
+			gs->SendFloat("material.roughnessFactor", materialData->roughnessFactor);
+			gs->SendFloat("material.normalScale", materialData->normalScale);
+			gs->SendFloat("material.occlusionStrength", materialData->occlusionStrength);
+			gs->SendFloat("material.alphaCutoff", materialData->alphaCutoff);
+			gs->SendInt("material.mask", materialData->alphaMode == MaterialPod::MASK ? GL_TRUE : GL_FALSE);
+			gs->SendInt("material.baseColorTexcoordIndex", materialData->baseColorTexCoordIndex);
+			gs->SendInt("material.metallicRoughnessTexcoordIndex", materialData->metallicRoughnessTexCoordIndex);
+			gs->SendInt("material.emissiveTexcoordIndex", materialData->emissiveTexCoordIndex);
+			gs->SendInt("material.normalTexcoordIndex", materialData->normalTexCoordIndex);
+			gs->SendInt("material.occlusionTexcoordIndex", materialData->occlusionTexCoordIndex);
 
-			// uv index
-			gBufferShader->SendInt("base_color_texcoord_index", materialData->baseColorTexCoordIndex);
-			gBufferShader->SendInt("metallic_roughness_texcoord_index", materialData->metallicRoughnessTexCoordIndex);
-			gBufferShader->SendInt("emissive_texcoord_index", materialData->emissiveTexCoordIndex);
-			gBufferShader->SendInt("normal_texcoord_index", materialData->normalTexCoordIndex);
-			gBufferShader->SendInt("occlusion_texcoord_index", materialData->occlusionTexCoordIndex);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
-
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, glMaterial->metallicRoughnessTexture->id);
-
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, glMaterial->emissiveTexture->id);
-
-			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, glMaterial->normalTexture->id);
-
-			glActiveTexture(GL_TEXTURE4);
-			glBindTexture(GL_TEXTURE_2D, glMaterial->occlusionTexture->id);
+			gs->SendTexture("material.baseColorSampler", glMaterial->baseColorTexture->id, 0);
+			gs->SendTexture("material.metallicRoughnessSampler", glMaterial->metallicRoughnessTexture->id, 1);
+			gs->SendTexture("material.emissiveSampler", glMaterial->emissiveTexture->id, 2);
+			gs->SendTexture("material.normalSampler", glMaterial->normalTexture->id, 3);
+			gs->SendTexture("material.occlusionSampler", glMaterial->occlusionTexture->id, 4);
 
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 			glDrawElements(GL_TRIANGLES, glMesh.count, GL_UNSIGNED_INT, (GLvoid*)0);
@@ -278,43 +263,53 @@ void GLDeferredRenderer::RenderGBuffer()
 
 void GLDeferredRenderer::RenderDirectionalLights()
 {
-	for (auto& light : m_glDirectionalLights) {
+
+	auto ls = m_deferredDirectionalLightShader;
+
+	for (auto light : m_glDirectionalLights) {
 		// render shadow map and get the light space matrix
 		light->RenderShadowMap(m_glGeometries);
+
+		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+
+		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
 
 		// additive blend all directional lights
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
 
-		glViewport(0, 0, m_outWidth, m_outHeight);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
-
-		glUseProgram(m_deferredDirectionalLightShader->programId);
+		glUseProgram(ls->programId);
 
 		// global uniforms
-		m_deferredDirectionalLightShader->SendVec3("view_pos", m_camera->GetWorldTranslation());
+		ls->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
+
+		auto invTextureSize = glm::vec2(1.f / m_maxWidth, 1.f / m_maxHeight);
+		ls->SendVec2("invTextureSize", invTextureSize);
 
 		// light
-		m_deferredDirectionalLightShader->SendMat4("light_space_matrix", light->node->GetViewProjectionMatrix());
-		m_deferredDirectionalLightShader->SendVec3("light_pos", light->node->GetWorldTranslation());
-		m_deferredDirectionalLightShader->SendVec3("light_color", light->node->GetColor());
-		m_deferredDirectionalLightShader->SendFloat("light_intensity", light->node->GetIntensity());
-		m_deferredDirectionalLightShader->SendFloat("light_near", light->node->GetNear());
+		ls->SendVec3("directionalLight.wcs_dir", light->node->GetFront());
+		ls->SendVec3("directionalLight.color", light->node->GetColor());
+		ls->SendFloat("directionalLight.intensity", light->node->GetIntensity());
+		ls->SendInt("directionalLight.samples", light->node->GetSamples());
+		ls->SendFloat("directionalLight.maxShadowBias", light->node->GetMaxShadowBias());
+		ls->SendTexture("directionalLight.shadowMap", light->shadowMap, 0);
+		static glm::mat4 biasMatrix(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
+		glm::mat4 mvpBiased = biasMatrix * light->node->GetViewProjectionMatrix();
+		ls->SendMat4("directionalLight.mvpBiased", mvpBiased);
 
 		// gBuffer
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_gBuffer.positionsAttachment);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, m_gBuffer.normalsAttachment);
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, m_gBuffer.albedoOpacityAttachment);
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, m_gBuffer.metallicRoughnessOcclusionOcclusionStengthAttachment);
-		glActiveTexture(GL_TEXTURE4);
-		glBindTexture(GL_TEXTURE_2D, m_gBuffer.emissiveAttachment);
-		glActiveTexture(GL_TEXTURE5);
-		glBindTexture(GL_TEXTURE_2D, light->shadowMap);
+		ls->StoreUniformLoc("gBuffer.positionsSampler");
+		ls->StoreUniformLoc("gBuffer.normalsSampler");
+		ls->StoreUniformLoc("gBuffer.maxShadowBias");
+		ls->StoreUniformLoc("gBuffer.metallicRoughnessOcclusionOcclusionStrengthSampler");
+		ls->StoreUniformLoc("gBuffer.emissiveSampler");
+
+		ls->SendTexture("gBuffer.positionsSampler", m_gBuffer.positionsAttachment, 1);
+		ls->SendTexture("gBuffer.normalsSampler", m_gBuffer.normalsAttachment, 2);
+		ls->SendTexture("gBuffer.albedoOpacitySampler", m_gBuffer.albedoOpacityAttachment, 3);
+		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
+		ls->SendTexture("gBuffer.emissiveSampler", m_gBuffer.emissiveAttachment, 5);
 
 		// big triangle trick, no vao
 		glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -325,28 +320,30 @@ void GLDeferredRenderer::RenderDirectionalLights()
 
 void GLDeferredRenderer::RenderSpotLights()
 {
-	for (auto& light : m_glSpotLights) {
+	auto ls = m_deferredSpotLightShader;
+
+	for (auto light : m_glSpotLights) {
 		light->RenderShadowMap(m_glGeometries);
 
 		// additive blend all directional lights
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
 
-		glViewport(0, 0, m_outWidth, m_outHeight);
+		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
 
 		glUseProgram(m_deferredSpotLightShader->programId);
 
 		// global uniforms
-		m_deferredDirectionalLightShader->SendVec3("view_pos", m_camera->GetWorldTranslation());
+		ls->SendVec3("view_pos", m_camera->GetWorldTranslation());
 
 		// light
-		m_deferredDirectionalLightShader->SendMat4("light_space_matrix", light->node->GetViewProjectionMatrix());
-		m_deferredDirectionalLightShader->SendVec3("light_pos", light->node->GetWorldTranslation());
-		m_deferredDirectionalLightShader->SendVec3("light_color", light->node->GetColor());
-		m_deferredDirectionalLightShader->SendFloat("light_intensity", light->node->GetIntensity());
-		m_deferredDirectionalLightShader->SendFloat("light_near", light->node->GetNear());
+		ls->SendMat4("light_space_matrix", light->node->GetViewProjectionMatrix());
+		ls->SendVec3("light_pos", light->node->GetWorldTranslation());
+		ls->SendVec3("light_color", light->node->GetColor());
+		ls->SendFloat("light_intensity", light->node->GetIntensity());
+		ls->SendFloat("light_near", light->node->GetNear());
 
 		// gBuffer
 		glActiveTexture(GL_TEXTURE0);
@@ -356,7 +353,7 @@ void GLDeferredRenderer::RenderSpotLights()
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, m_gBuffer.albedoOpacityAttachment);
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, m_gBuffer.metallicRoughnessOcclusionOcclusionStengthAttachment);
+		glBindTexture(GL_TEXTURE_2D, m_gBuffer.specularAttachment);
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, m_gBuffer.emissiveAttachment);
 		glActiveTexture(GL_TEXTURE5);
@@ -371,71 +368,89 @@ void GLDeferredRenderer::RenderSpotLights()
 
 void GLDeferredRenderer::RenderWindow()
 {
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_outFbo);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
+	auto wnd = Engine::GetMainWindow();
 
-	// TODO: should be main window width and height
-	glBlitFramebuffer(0, 0, m_outWidth, m_outHeight, 0, 0, m_outWidth, m_outHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	// blit out to window buffer
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_outFbo);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+	glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 0, 0, wnd->GetWidth(), wnd->GetHeight(),
+		GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+	// clean outFbo for next frame
+	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void GLDeferredRenderer::Render()
 {
-	glViewport(0, 0, m_outWidth, m_outHeight);
-
-	// TODO: begining of rendering"?
-	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-
 	// geometry pass
 	RenderGBuffer();
-
 	// light pass - blend lights on outFbo
 	RenderDirectionalLights();
-	RenderSpotLights();
+	// RenderSpotLights();
 
 	// post process - apply any to outFbo
 
 	// render to window
 	RenderWindow();
+
 	GLEditorRenderer::Render();
-}
 
-void GLDeferredRenderer::Update()
-{
-	GLRendererBase::Update();
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K1)) {
-		m_currentTexture = m_gBuffer.positionsAttachment;
-	}
-	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K2)) {
-		m_currentTexture = m_gBuffer.normalsAttachment;
-	}
-	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K3)) {
-		m_currentTexture = m_gBuffer.albedoOpacityAttachment;
-	}
-	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K4)) {
-		m_currentTexture = m_gBuffer.metallicRoughnessOcclusionOcclusionStengthAttachment;
-	}
-	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K5)) {
-		m_currentTexture = m_gBuffer.emissiveAttachment;
-	}
-	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::L)) {
-		// m_currentTexture = m_glDirectionalLights[1]->shadowMap;
-	}
-
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::R)) {
-		RecompileShaders();
-	}
+	GLCheckError();
 }
 
 void GLDeferredRenderer::RecompileShaders()
 {
 	m_gBuffer.shader->Load();
 	m_deferredDirectionalLightShader->Load();
-	m_deferredSpotLightShader->Load();
+	// m_deferredSpotLightShader->Load();
+}
+
+void GLDeferredRenderer::Update()
+{
+	GLRendererBase::Update();
+
+	// WIP:
+	m_camera = Engine::GetWorld()->GetActiveCamera();
+
+
+	// TODO: preview system for attachments (don't attach)
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K1)) {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.positionsAttachment, 0);
+	}
+	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K2)) {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.normalsAttachment, 0);
+	}
+	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K3)) {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+		glFramebufferTexture2D(
+			GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.albedoOpacityAttachment, 0);
+	}
+	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K4)) {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.specularAttachment, 0);
+	}
+	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K5)) {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.emissiveAttachment, 0);
+	}
+	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::L)) {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.emissiveAttachment, 0);
+	}
+	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::G)) {
+		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outTexture, 0);
+	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::R)) {
+		RecompileShaders();
+	}
 }
 } // namespace ogl

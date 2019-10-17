@@ -136,7 +136,7 @@ void main()
 	// tangent space vectors
 	vec3 N = normal;
 	vec3 V = normalize(dataIn.tcs_viewPos - dataIn.tcs_fragPos);
-	vec3 L = -dataIn.tcs_lightDir;
+	vec3 L = normalize(-dataIn.tcs_lightDir);
 
 	float shadow = ShadowCalculation(max(dot(N, L), 0.0)); 
 	vec3 Li = (1.0 - shadow) * directionalLight.color * directionalLight.intensity; 

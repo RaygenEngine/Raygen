@@ -8,6 +8,7 @@
 #include "world/nodes/sky/SkyboxNode.h"
 #include "world/nodes/RootNode.h"
 #include "system/Input.h"
+#include "renderer/renderers/opengl/GLUtil.h"
 // WIP:
 #include "platform/windows/Win32Window.h"
 
@@ -40,20 +41,20 @@ void GLForwardRenderer::InitObservers()
 
 	m_skyboxCubemap = GetGLAssetManager()->GpuGetOrCreate<GLTexture>(skyboxNode->GetSkyMap());
 
-	for (auto* geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>()) {
+	for (auto geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>()) {
 		CreateObserver_AutoContained<GLBasicGeometry>(geometryNode, m_glGeometries);
 	}
 
-	for (auto* dirLightNode : Engine::GetWorld()->GetNodeMap<DirectionalLightNode>()) {
-		CreateObserver_AutoContained<GLBasicDirectionalLight>(dirLightNode, m_glDirectionalLights);
+	for (auto lightNode : Engine::GetWorld()->GetNodeMap<DirectionalLightNode>()) {
+		CreateObserver_AutoContained<GLBasicDirectionalLight>(lightNode, m_glDirectionalLights);
 	}
 
-	for (auto* dirLightNode : Engine::GetWorld()->GetNodeMap<SpotLightNode>()) {
-		CreateObserver_AutoContained<GLBasicSpotLight>(dirLightNode, m_glSpotLights);
+	for (auto lightNode : Engine::GetWorld()->GetNodeMap<SpotLightNode>()) {
+		CreateObserver_AutoContained<GLBasicSpotLight>(lightNode, m_glSpotLights);
 	}
 
-	for (auto* dirLightNode : Engine::GetWorld()->GetNodeMap<PunctualLightNode>()) {
-		CreateObserver_AutoContained<GLBasicPunctualLight>(dirLightNode, m_glPunctualLights);
+	for (auto lightNode : Engine::GetWorld()->GetNodeMap<PunctualLightNode>()) {
+		CreateObserver_AutoContained<GLBasicPunctualLight>(lightNode, m_glPunctualLights);
 	}
 }
 
@@ -281,11 +282,14 @@ bool GLForwardRenderer::InitScene()
 
 	InitRenderBuffers();
 
+	// TODO: remove bool from initscene/rendering
 	return true;
 }
 
 void GLForwardRenderer::RenderEarlyDepthPass()
 {
+	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+
 	glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -307,11 +311,7 @@ void GLForwardRenderer::RenderEarlyDepthPass()
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
 
-			if (materialData->unlit)
-				continue;
-
 			glBindVertexArray(glMesh.vao);
-
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, glMaterial->baseColorTexture->id);
@@ -339,9 +339,8 @@ void GLForwardRenderer::RenderDirectionalLights()
 		// render lights
 		light->RenderShadowMap(m_glGeometries);
 
-		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
-
 		glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
+		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
 
 		glDepthMask(GL_FALSE); // disable depth map writes
 
@@ -706,6 +705,8 @@ void GLForwardRenderer::RenderBoundingBoxes()
 
 void GLForwardRenderer::RenderSkybox()
 {
+	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
@@ -739,7 +740,7 @@ void GLForwardRenderer::RenderPostProcess()
 	// do post process here
 }
 
-void GLForwardRenderer::RenderWindowSimple()
+void GLForwardRenderer::RenderWindow()
 {
 	auto wnd = Engine::GetMainWindow();
 
@@ -749,29 +750,6 @@ void GLForwardRenderer::RenderWindowSimple()
 
 	glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 0, 0, wnd->GetWidth(), wnd->GetHeight(),
 		GL_COLOR_BUFFER_BIT, GL_NEAREST);
-}
-
-void GLForwardRenderer::RenderWindowLinearized()
-{
-	// const auto window = Engine::GetMainWindow();
-
-	// glViewport(0, 0, window->GetWidth(), window->GetHeight());
-
-	//// write to window
-	// glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	// glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	// glClear(GL_COLOR_BUFFER_BIT);
-
-	// glUseProgram(m_linearizeOutShader->id);
-	// glUniform1f(m_linearizeOutShader->GetUniform("near"), m_glSpotLight->node->GetNear());
-	// glUniform1f(m_linearizeOutShader->GetUniform("far"), m_glSpotLight->node->GetFar());
-
-	// glActiveTexture(GL_TEXTURE0);
-	// glBindTexture(GL_TEXTURE_2D, m_currentTexture);
-
-	//// big triangle trick, no vao
-	// glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void GLForwardRenderer::Render()
@@ -789,23 +767,30 @@ void GLForwardRenderer::Render()
 	// copy msaa to out fbo and render any post process on it
 	RenderPostProcess();
 	// write out texture of out fbo to window (big triangle trick)
-	RenderWindowSimple();
-	//! m_isOutNonLinear ? RenderWindowSimple() : RenderWindowLinearized();
+	RenderWindow();
 
 	GLEditorRenderer::Render();
+
+	GLCheckError();
 }
 
 void GLForwardRenderer::RecompileShaders()
 {
+	m_depthPassShader->Load();
 	m_forwardSpotLightShader->Load();
-	// m_forwardDirectionalLightShader->Load();
-	// m_forwardPunctualLightShader->Load();
+	m_forwardDirectionalLightShader->Load();
+	m_forwardPunctualLightShader->Load();
+	m_cubemapInfDistShader->Load();
+	m_bBoxShader->Load();
 }
 
 void GLForwardRenderer::Update()
 {
 	GLRendererBase::Update();
+
+	// WIP:
 	m_camera = Engine::GetWorld()->GetActiveCamera();
+
 	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::R)) {
 		RecompileShaders();
 	}

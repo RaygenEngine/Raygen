@@ -16,13 +16,6 @@ void FreeformUserNode::Update(float deltaTime)
 
 	speed *= deltaTime;
 
-	// user buffs
-	if (input.IsKeyRepeat(XVirtualKey::LSHIFT)) {
-		speed *= 10.f;
-	}
-	if (input.IsKeyRepeat(XVirtualKey::CTRL)) {
-		speed /= 10.f;
-	}
 	if (!input.IsRightTriggerResting()) {
 		speed *= 10.f * glm::exp(input.GetRightTriggerMagnitude());
 	}
