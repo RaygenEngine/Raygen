@@ -105,8 +105,8 @@ void AppBase::MainLoop()
 		Engine::GetRenderer()->Update();
 		// render
 		Engine::GetRenderer()->Render();
-		Engine::GetRenderer()->SwapBuffers();
 
+		Engine::GetRenderer()->SwapBuffers();
 
 		Engine::Get().ReportFrameDrawn();
 	}

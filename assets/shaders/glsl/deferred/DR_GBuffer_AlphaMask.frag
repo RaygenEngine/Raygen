@@ -3,79 +3,99 @@
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec4 gAlbedoOpacity;
-layout (location = 3) out vec4 gMetallicRoughnessOcclusionOcclusionStrength;
+// r: metallic, g: roughness, b: occlusion, a: occlusion strength
+layout (location = 3) out vec4 gSpecular;
 layout (location = 4) out vec4 gEmissive;
   
 in Data
 { 
-	vec3 world_pos;  
+	vec3 wcs_fragPos; 
 
-	vec2 text_coord[2];
+	vec2 textCoord[2];
 	
 	mat3 TBN;
 } dataIn;
 
-uniform vec4 base_color_factor;
-uniform vec3 emissive_factor;
-uniform float metallic_factor;
-uniform float roughness_factor;
-uniform float normal_scale;
-uniform float occlusion_strength;
-uniform float alpha_cutoff;
+uniform struct Material
+{
+	// factors
+	vec4 baseColorFactor;
+	vec3 emissiveFactor;
+	float metallicFactor;
+	float roughnessFactor;
+	float normalScale;
+	float occlusionStrength;
+	
+	// text coord indices
+	int baseColorTexcoordIndex;
+	int metallicRoughnessTexcoordIndex;
+	int emissiveTexcoordIndex;
+	int normalTexcoordIndex;
+	int occlusionTexcoordIndex;
+	
+	// samplers
+	sampler2D baseColorSampler;
+	sampler2D metallicRoughnessSampler;
+	sampler2D emissiveSampler;
+	sampler2D normalSampler;
+	sampler2D occlusionSampler;
+	
+	// alpha mask
+	float alphaCutoff;
+	bool mask;
 
-uniform int base_color_texcoord_index;
-uniform int metallic_roughness_texcoord_index;
-uniform int emissive_texcoord_index;
-uniform int normal_texcoord_index;
-uniform int occlusion_texcoord_index;
+} material;
 
-layout(binding=0) uniform sampler2D baseColorSampler;
-layout(binding=1) uniform sampler2D metallicRoughnessSampler;
-layout(binding=2) uniform sampler2D emissiveSampler;
-layout(binding=3) uniform sampler2D normalSampler;
-layout(binding=4) uniform sampler2D occlusionSampler;
+void ProcessUniformMaterial(out vec3 albedo, out float opacity, out float metallic, out float roughness,
+							out vec3 emissive, out float occlusion, out vec3 normal)
+{
+	// sample material textures
+	vec4 sampledBaseColor = texture(material.baseColorSampler, dataIn.textCoord[material.baseColorTexcoordIndex]);
+	
+	opacity = sampledBaseColor.a * material.baseColorFactor.a;
+	// mask mode and cutoff
+	if(material.mask && opacity < material.alphaCutoff)
+		discard;
+	
+	vec4 sampledMetallicRoughness = texture(material.metallicRoughnessSampler, dataIn.textCoord[material.metallicRoughnessTexcoordIndex]); 
+	vec4 sampledEmissive = texture(material.emissiveSampler, dataIn.textCoord[material.emissiveTexcoordIndex]);
+	vec4 sampledNormal = texture(material.normalSampler, dataIn.textCoord[material.normalTexcoordIndex]);
+	vec4 sampledOcclusion = texture(material.occlusionSampler, dataIn.textCoord[material.occlusionTexcoordIndex]);
+	
+	// final material values
+	albedo = sampledBaseColor.rgb * material.baseColorFactor.rgb;
+	metallic = sampledMetallicRoughness.b * material.metallicFactor;
+	roughness = sampledMetallicRoughness.g * material.roughnessFactor;
+	emissive = sampledEmissive.rgb * material.emissiveFactor;
+	occlusion = sampledOcclusion.r;
+	normal = normalize((sampledNormal.rgb * 2.0 - 1.0) * vec3(material.normalScale, material.normalScale, 1.0));
+	// opacity set from above
+}
 
 void main()
 {
-	// sample material textures
-	vec4 sampled_base_color = texture(baseColorSampler, dataIn.text_coord[base_color_texcoord_index]);
+	vec3 albedo;
+	float opacity;
+	float metallic;
+	float roughness;
+	vec3 emissive;
+	float occlusion;
+	vec3 normal;
 	
-	float opacity = sampled_base_color.a * base_color_factor.a;
-
-	// mask mode and cutoff
-	if(opacity < alpha_cutoff)
-		discard;
-	
-	vec4 sampled_metallic_roughness = texture(metallicRoughnessSampler, dataIn.text_coord[metallic_roughness_texcoord_index]);
-	vec4 sampled_emissive = texture(emissiveSampler, dataIn.text_coord[emissive_texcoord_index]);
-	vec4 sampled_sample_normal = texture(normalSampler, dataIn.text_coord[normal_texcoord_index]);
-	vec4 sampled_occlusion = texture(occlusionSampler, dataIn.text_coord[occlusion_texcoord_index]);
-	
-
-	
-	// final material values
-	
-	// rgb : albedo, a: opacity
-	vec4 albedo = sampled_base_color * base_color_factor;
-	float metallic = sampled_metallic_roughness.b * metallic_factor;
-	float roughness = sampled_metallic_roughness.g * roughness_factor;
-	float occlusion = sampled_occlusion.r;
-	vec3 emissive = sampled_emissive.rgb * emissive_factor;
-	vec3 normal = sampled_sample_normal.rgb;
+	// material
+	ProcessUniformMaterial(albedo, opacity, metallic, roughness, emissive, occlusion, normal);
 
     // position
-    gPosition = dataIn.world_pos;
+    gPosition = dataIn.wcs_fragPos;
 	
     // normal (with normal mapping)
-	vec3 N = normalize((normal * 2.0 - 1.0) * vec3(normal_scale, normal_scale, 1.0));
-	N = normalize(dataIn.TBN * N);
-    gNormal = normalize(N);
+    gNormal = normalize(dataIn.TBN * normal);
 	
     // albedo opacity
-    gAlbedoOpacity = albedo;
+    gAlbedoOpacity = vec4(albedo, opacity);
 	
 	// spec params
-	gMetallicRoughnessOcclusionOcclusionStrength = vec4(metallic, roughness, occlusion, occlusion_strength);
+	gSpecular = vec4(metallic, roughness, occlusion, material.occlusionStrength);
 	
 	// emissive
 	gEmissive = vec4(emissive, 1.f);

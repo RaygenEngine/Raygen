@@ -62,8 +62,7 @@ protected:
 	void RenderBoundingBoxes();
 	void RenderSkybox();
 	void RenderPostProcess();
-	void RenderWindowSimple();
-	void RenderWindowLinearized();
+	void RenderWindow();
 
 	// Update
 	void RecompileShaders();
