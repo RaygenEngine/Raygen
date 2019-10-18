@@ -545,9 +545,11 @@ void GLDeferredRenderer::Render()
 
 void GLDeferredRenderer::RecompileShaders()
 {
-	m_gBuffer.shader->Load();
 	m_deferredDirectionalLightShader->Load();
-	// m_deferredSpotLightShader->Load();
+	m_deferredSpotLightShader->Load();
+	m_deferredPunctualLightShader->Load();
+	m_ambientLightShader->Load();
+	m_windowShader->Load();
 }
 
 void GLDeferredRenderer::Update()
