@@ -19,6 +19,7 @@ protected:
 	GLShader* m_deferredDirectionalLightShader{ nullptr };
 	GLShader* m_deferredSpotLightShader{ nullptr };
 	GLShader* m_deferredPunctualLightShader{ nullptr };
+	GLShader* m_ambientLightShader{ nullptr };
 	GLShader* m_windowShader{ nullptr };
 
 	// observers
@@ -49,6 +50,9 @@ protected:
 
 	} m_gBuffer;
 
+	// skybox
+	GLTexture* m_skyboxCubemap;
+
 	// Init
 	void InitObservers();
 	void InitShaders();
@@ -60,6 +64,7 @@ protected:
 	void RenderDirectionalLights();
 	void RenderSpotLights();
 	void RenderPunctualLights();
+	void RenderAmbientLight();
 	void RenderWindow();
 
 	// Update

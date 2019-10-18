@@ -4,6 +4,7 @@
 #include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
 #include "world/World.h"
 #include "world/nodes/camera/CameraNode.h"
+#include "world/nodes/sky/SkyboxNode.h"
 #include "system/Input.h"
 #include "platform/windows/Win32Window.h"
 #include "renderer/renderers/opengl/GLUtil.h"
@@ -27,7 +28,7 @@ GLDeferredRenderer::GBuffer::~GBuffer()
 	glDeleteTextures(1, &albedoOpacityAttachment);
 	glDeleteTextures(1, &specularAttachment);
 	glDeleteTextures(1, &emissiveAttachment);
-	glDeleteRenderbuffers(1, &depthAttachment);
+	glDeleteTextures(1, &depthAttachment);
 }
 
 GLDeferredRenderer::~GLDeferredRenderer()
@@ -40,6 +41,11 @@ void GLDeferredRenderer::InitObservers()
 {
 	m_camera = Engine::GetWorld()->GetActiveCamera();
 	CLOG_ABORT(!m_camera, "This renderer expects a camera node to be present!");
+
+	auto skyboxNode = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
+	CLOG_ABORT(!skyboxNode, "This renderer expects a skybox node to be present!");
+
+	m_skyboxCubemap = GetGLAssetManager()->GpuGetOrCreate<GLTexture>(skyboxNode->GetSkyMap());
 
 	for (auto geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>()) {
 		CreateObserver_AutoContained<GLBasicGeometry>(geometryNode, m_glGeometries);
@@ -157,6 +163,14 @@ void GLDeferredRenderer::InitShaders()
 	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.specularSampler");
 	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.emissiveSampler");
 
+
+	m_ambientLightShader
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_AmbientLight.json");
+
+	m_ambientLightShader->StoreUniformLoc("wcs_viewPos");
+	m_ambientLightShader->StoreUniformLoc("invTextureSize");
+	m_ambientLightShader->StoreUniformLoc("vp_inv");
+
 	m_windowShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>(
 		"/engine-data/glsl/general/QuadWriteTexture_InvTextureSize.json");
 	m_windowShader->StoreUniformLoc("invTextureSize");
@@ -211,10 +225,13 @@ void GLDeferredRenderer::InitRenderBuffers()
 		GL_COLOR_ATTACHMENT4 };
 	glDrawBuffers(5, attachments);
 
-	glGenRenderbuffers(1, &m_gBuffer.depthAttachment);
-	glBindRenderbuffer(GL_RENDERBUFFER, m_gBuffer.depthAttachment);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, textMaxWidth, textMaxHeight);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_gBuffer.depthAttachment);
+	glGenTextures(1, &m_gBuffer.depthAttachment);
+	glBindTexture(GL_TEXTURE_2D, m_gBuffer.depthAttachment);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, textMaxWidth, textMaxHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_gBuffer.depthAttachment, 0);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		LOG_FATAL("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
@@ -460,6 +477,33 @@ void GLDeferredRenderer::RenderPunctualLights()
 	}
 }
 
+void GLDeferredRenderer::RenderAmbientLight()
+{
+	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
+
+	glUseProgram(m_ambientLightShader->programId);
+
+	auto vpInv = glm::inverse(m_camera->GetViewProjectionMatrix());
+
+	m_ambientLightShader->SendMat4("vp_inv", vpInv);
+	m_ambientLightShader->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
+	m_ambientLightShader->SendVec2("invTextureSize", invTextureSize);
+	m_ambientLightShader->SendTexture(m_gBuffer.depthAttachment, 0);
+	m_ambientLightShader->SendCubeTexture(m_skyboxCubemap->id, 1);
+
+	// big triangle trick, no vao
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	glDisable(GL_BLEND);
+}
+
 void GLDeferredRenderer::RenderWindow()
 {
 	auto wnd = Engine::GetMainWindow();
@@ -486,7 +530,8 @@ void GLDeferredRenderer::Render()
 	RenderDirectionalLights();
 	RenderSpotLights();
 	RenderPunctualLights();
-
+	// ambient pass
+	RenderAmbientLight();
 
 	// post process - apply any to outFbo
 
@@ -511,38 +556,6 @@ void GLDeferredRenderer::Update()
 
 	// WIP:
 	m_camera = Engine::GetWorld()->GetActiveCamera();
-
-
-	// TODO: preview system for attachments (don't attach)
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K1)) {
-		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.positionsAttachment, 0);
-	}
-	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K2)) {
-		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.normalsAttachment, 0);
-	}
-	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K3)) {
-		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
-		glFramebufferTexture2D(
-			GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.albedoOpacityAttachment, 0);
-	}
-	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K4)) {
-		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.specularAttachment, 0);
-	}
-	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::K5)) {
-		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.emissiveAttachment, 0);
-	}
-	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::L)) {
-		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.emissiveAttachment, 0);
-	}
-	else if (Engine::GetInput()->IsKeyPressed(XVirtualKey::G)) {
-		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outTexture, 0);
-	}
 
 	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::R)) {
 		RecompileShaders();
