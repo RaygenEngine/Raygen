@@ -1,6 +1,7 @@
 #pragma once
 
 #include "asset/AssetPod.h"
+#include "system/Engine.h"
 
 struct PodEntry;
 
@@ -12,6 +13,7 @@ public:
 
 	[[nodiscard]] const PodEntry* _Debug() const { return Engine::GetAssetManager()->GetEntry(*this); }
 
+	// TODO: is this going to be removed?
 	[[nodiscard]] const PodType* operator->() const
 	{
 		return Engine::GetAssetManager()->_Handle_AccessPod<PodType>(podId);

@@ -2,6 +2,7 @@
 
 #include "reflection/GenMacros.h" // include gen macros here even if not needed to propagate to all node headers
 #include "system/Object.h"
+#include "core/AABB.h"
 
 #include <bitset>
 
@@ -68,23 +69,17 @@ private:
 	glm::vec3 m_localScale{ 1.f, 1.f, 1.f };
 	glm::mat4 m_localMatrix{};
 
+	Box m_localBB{ glm::vec3{ 0.3f }, glm::vec3{ -0.3f } };
+
 	// world
 	glm::vec3 m_worldTranslation{ 0.f, 0.f, 0.f };
 	glm::quat m_worldOrientation{ 1.f, 0.f, 0.f, 0.f };
 	glm::vec3 m_worldScale{ 1.f, 1.f, 1.f };
 	glm::mat4 m_worldMatrix{ glm::identity<glm::mat4>() };
 
+	Box m_aabb{ glm::vec3{ 0.3f }, glm::vec3{ -0.3f } };
 
-public:
-	// TODO: aabb
-	Box m_localBbox{ glm::vec3{ 1.f }, glm::vec3{ -1.f } };
 
-	Box m_obb{ glm::vec3{ 1.f }, glm::vec3{ -1.f } };
-	Box m_aabb{ glm::vec3{ 1.f }, glm::vec3{ -1.f } };
-	bool m_hideBB = false;
-	[[nodiscard]] virtual Box GetBBox() const { return m_localBbox; }
-
-private:
 	DirtyFlagset m_dirty{};
 
 	// TODO: remove
@@ -96,6 +91,8 @@ private:
 
 protected:
 	std::string m_name;
+
+	void SetLocalBB(Box box) { m_localBB = box; }
 
 private:
 	// Dirty Functions
@@ -121,6 +118,7 @@ public:
 	[[nodiscard]] glm::vec3 GetWorldPYR() const { return glm::degrees(glm::eulerAngles(m_worldOrientation)); }
 	[[nodiscard]] glm::vec3 GetWorldScale() const { return m_worldScale; }
 	[[nodiscard]] glm::mat4 GetWorldMatrix() const { return m_worldMatrix; }
+	[[nodiscard]] Box GetAABB() const { return m_aabb; }
 
 	[[nodiscard]] glm::vec3 GetUp() const { return GetWorldOrientation() * glm::vec3(0.f, 1.f, 0.f); }
 	[[nodiscard]] glm::vec3 GetRight() const { return GetWorldOrientation() * glm::vec3(1.f, 0.f, 0.f); }

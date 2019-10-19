@@ -4,14 +4,13 @@
 #include "world/nodes/RootNode.h"
 #include "asset/util/ParsingAux.h"
 #include "system/Engine.h"
-#include "world/World.h"
 #include "system/Input.h"
 
 void FreeformUserNode::Update(float deltaTime)
 {
 	auto& input = *Engine::GetInput();
 
-	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetWheelDelta() / 240.f * 2.0f, 0.f, 100.0f);
+	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetWheelDelta() / 240.f * 2.0f, 1.0f, 100.0f);
 	auto speed = m_movementSpeed;
 
 	speed *= deltaTime;

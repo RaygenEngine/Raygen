@@ -1,7 +1,7 @@
 #pragma once
 
 #include "world/nodes/light/LightNode.h"
-// TODO:
+
 class PunctualLightNode : public LightNode {
 	REFLECTED_NODE(PunctualLightNode, LightNode) { REFLECT_VAR(m_attenuationMode); }
 

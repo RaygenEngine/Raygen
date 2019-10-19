@@ -64,6 +64,7 @@ set(SOURCE_FILES
 	world/nodes/RootNode.cpp
 	world/nodes/camera/CameraNode.cpp
 	world/nodes/camera/WindowCameraNode.cpp
+	world/nodes/geometry/GeometryNode.cpp
 	world/nodes/light/PunctualLightNode.cpp
 	world/nodes/light/DirectionalLightNode.cpp
 	world/nodes/light/SpotLightNode.cpp
@@ -113,6 +114,7 @@ set(HEADER_FILES
 	core/MetaTemplates.h
 	core/StringAux.h
 	core/Types.h
+	core/AABB.h
 
 
 	editor/AssetWindow.h
