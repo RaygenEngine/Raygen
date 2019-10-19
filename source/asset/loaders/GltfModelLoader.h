@@ -518,7 +518,7 @@ inline void Load(ModelPod* pod, const uri::Uri& path)
 	const auto pPath = uri::GetDiskPath(path);
 	auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath + "{}");
 
-	const tinygltf::Model& model = pParent->data;
+	const tinygltf::Model& model = pParent.Lock()->data;
 
 	int32 scene = model.defaultScene;
 

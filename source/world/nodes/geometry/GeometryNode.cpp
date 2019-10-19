@@ -4,6 +4,6 @@
 void ::GeometryNode::DirtyUpdate(DirtyFlagset dirtyFlags)
 {
 	if (dirtyFlags[DF::ModelChange]) {
-		SetLocalBB(m_model->bbox);
+		SetLocalBB(m_model.Lock()->bbox);
 	}
 }

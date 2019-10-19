@@ -21,8 +21,7 @@ inline void Load(MaterialPod* pod, const uri::Uri& path)
 	int32 ext = 0;
 	data["material"].get_to(ext);
 
-	const tinygltf::Model& model = pParent->data;
-
+	const tinygltf::Model& model = pParent.Lock()->data;
 	auto& gltfMaterial = model.materials.at(ext);
 
 	// factors

@@ -14,7 +14,7 @@ static void Load(TexturePod* pod, const uri::Uri& path)
 	nlohmann::json j = uri::GetJson(path);
 	int32 ext = j["texture"].get<int32>();
 
-	const tinygltf::Model& model = pParent->data;
+	const tinygltf::Model& model = pParent.Lock()->data;
 
 	auto& gltfTexture = model.textures.at(ext);
 
