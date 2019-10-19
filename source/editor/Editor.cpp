@@ -36,7 +36,35 @@ Editor::Editor()
 			m_selectedNode = nullptr;
 		}
 	});
+
+
+	m_loadFileBrowser.SetTitle("Load Scene");
+
+	MakeMainMenu();
 }
+
+
+void Editor::MakeMainMenu()
+{
+	ImMenu sceneMenu;
+	sceneMenu.name = "Scene";
+
+	sceneMenu.AddEntry("Save", [&]() { m_sceneSave.OpenBrowser(); });
+	sceneMenu.AddEntry("Load", [&]() { m_loadFileBrowser.Open(); });
+	sceneMenu.AddSeperator();
+	sceneMenu.AddEntry("Exit", []() { Engine::GetMainWindow()->Destroy(); });
+
+	m_menus.emplace_back(sceneMenu);
+
+	ImMenu aboutMenu;
+	aboutMenu.name = "About";
+
+	aboutMenu.AddEntry("Help", [&]() { m_showHelpWindow = true; });
+	aboutMenu.AddEntry("About", [&]() { m_showAboutWindow = true; });
+
+	m_menus.emplace_back(aboutMenu);
+}
+
 
 Editor::~Editor()
 {
@@ -53,53 +81,66 @@ void Editor::UpdateEditor()
 		ImGui::ShowDemoWindow();
 	}
 
+	if (m_showAboutWindow) {
+		Run_AboutWindow();
+	}
 
-	static ImGui::FileBrowser lfb = ImGui::FileBrowser(ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CloseOnEsc);
+	if (m_showHelpWindow) {
+		Run_HelpWindow();
+	}
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	// Attempt to predict the viewport size for the first run, might be a bit off.
-	ImGui::SetNextWindowSize(ImVec2(450, 1041), ImGuiCond_FirstUseEver);
-	ImGui::Begin("Editor");
+	ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar);
+
+	Run_MenuBar();
+
 	ImGui::Checkbox("Update World", &m_updateWorld);
 
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7, 7));
-
 	if (ImGui::Button("Save")) {
 		m_sceneSave.OpenBrowser();
 	}
-
-
 	ImGui::SameLine();
 
 	if (ImGui::Button("Load")) {
-		lfb.SetTitle("Load World");
-		lfb.Open();
+		m_loadFileBrowser.SetTitle("Load World");
+		m_loadFileBrowser.Open();
 	}
 	ImGui::PopStyleVar();
 
 
 	m_sceneSave.Draw();
-	lfb.Display();
+	m_loadFileBrowser.Display();
 
-	if (lfb.HasSelected()) {
-		m_sceneToLoad = lfb.GetSelected();
-		lfb.ClearSelected();
+	if (m_loadFileBrowser.HasSelected()) {
+		m_sceneToLoad = m_loadFileBrowser.GetSelected();
+		m_loadFileBrowser.ClearSelected();
 	}
 
-	if (ImGui::CollapsingHeader("Outliner", ImGuiTreeNodeFlags_DefaultOpen)) {
-		Outliner();
-	}
+	if (ImGui::BeginChild("EditorScrollable", ImVec2(0, -15.f))) {
+		if (ImGui::CollapsingHeader("Outliner", ImGuiTreeNodeFlags_DefaultOpen)) {
+			Outliner();
+		}
 
-	if (m_selectedNode) {
-		if (ImGui::CollapsingHeader(
-				refl::GetClass(m_selectedNode).GetNameStr().c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
-			m_propertyEditor->Inject(m_selectedNode);
+		if (m_selectedNode) {
+			if (ImGui::CollapsingHeader(
+					refl::GetClass(m_selectedNode).GetNameStr().c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+				m_propertyEditor->Inject(m_selectedNode);
+			}
+		}
+
+		if (ImGui::CollapsingHeader("Assets")) {
+			Run_AssetView();
 		}
 	}
 
-	if (ImGui::CollapsingHeader("Assets")) {
-		Run_AssetView();
-	}
+	ImGui::EndChild();
+
+	std::string s = fmt::format("{:.1f} FPS | {}", Engine::GetFPS(), Engine::GetStatusLine());
+	ImGui::Text(s.c_str());
+
 
 	ImGui::End();
 
@@ -142,7 +183,6 @@ void Editor::Outliner()
 
 void Editor::LoadScene(const fs::path& scenefile)
 {
-
 	Engine::Get().CreateWorldFromFile("/" + fs::relative(scenefile).string());
 	Engine::Get().SwitchRenderer(0);
 
@@ -312,6 +352,61 @@ void Editor::Run_OutlinerDropTarget(Node* node)
 	}
 }
 
+void Editor::Run_MenuBar()
+{
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.f, 3.f));
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.f, 6.f));
+
+	if (ImGui::BeginMenuBar()) {
+		for (auto& entry : m_menus) {
+			entry.Draw();
+		}
+		ImGui::EndMenuBar();
+	}
+	ImGui::PopStyleVar(2);
+}
+
+void Editor::Run_AboutWindow()
+{
+	constexpr float version = 1.f;
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
+	if (ImGui::Begin("About", &m_showAboutWindow)) {
+		auto str = fmt::format(R"(
+Rayxen Engine:
+
+Version: {}
+Rayxen is a graphics/game engine focused on renderer extensibility.
+
+Authors:
+John Moschos - Founder, Programmer
+Harry Katagis - Programmer
+)",
+			version);
+
+		ImGui::Text(str.c_str());
+		ImGui::Text("");
+	}
+	ImGui::End();
+	ImGui::PopStyleVar();
+}
+
+void Editor::Run_HelpWindow()
+{
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
+
+	if (ImGui::Begin("Help", &m_showHelpWindow)) {
+		auto str = fmt::format(R"(
+Help:
+
+INSERT HELP HERE:
+)");
+		ImGui::Text(str.c_str());
+		ImGui::Text("");
+	}
+	ImGui::End();
+	ImGui::PopStyleVar();
+}
 
 void Editor::HandleInput()
 {

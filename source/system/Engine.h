@@ -88,6 +88,7 @@ private:
 	Editor* m_editor{ nullptr };
 
 	timer::DebugTimer<ch::milliseconds> m_initToFrameTimer;
+	timer::Timer m_frameTimer{ true };
 
 	struct RendererMetadata {
 		std::string name;
@@ -97,6 +98,9 @@ private:
 
 	bool m_isEditorActive{ true };
 	bool m_isEditorEnabled{ true };
+
+	std::string m_statusLine{ "Use Engine::SetStatusLine() to overwrite this." };
+	float m_lastFrameTime{ 0.f };
 
 public:
 	// Init the internal engine systems.
@@ -139,13 +143,14 @@ public:
 	// Query if the editor could be activated during runtime. Cannot change after engine initialization
 	[[nodiscard]] static bool IsEditorEnabled();
 
-	void ReportFrameDrawn()
-	{
-		if (!m_initToFrameTimer.m_stopped) {
-			LOG_WARN("Init to frame took: {} ms", m_initToFrameTimer.Get());
-			m_initToFrameTimer.Stop();
-		}
-	}
+	static void SetStatusLine(const std::string& newLine) { Get().m_statusLine = newLine; }
+	[[nodiscard]] static std::string GetStatusLine() { return Get().m_statusLine; }
+
+	// Not completely accurate, for now its just 1 / lastFrameTime.
+	// Completely independant of world timers.
+	static float GetFPS();
+
+	void ReportFrameDrawn();
 
 	void NextRenderer()
 	{
