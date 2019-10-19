@@ -34,7 +34,6 @@ class SpotLightNode : public LightNode {
 public:
 	void DirtyUpdate(DirtyFlagset flags) override;
 
-	// WIP: return radians or keep radians in general
 	[[nodiscard]] float GetOuterAperture() const { return m_outerAperture; }
 	[[nodiscard]] float GetInnerAperture() const { return m_innerAperture; }
 

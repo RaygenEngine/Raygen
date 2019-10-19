@@ -2,8 +2,6 @@
 
 #include "reflection/ReflClass.h"
 
-// WIP: split for nodes and pods
-
 #define REFLECTED_POD(Class)                                                                                           \
 private:                                                                                                               \
 	Class() { type = refl::GetId<Class>(); }                                                                           \

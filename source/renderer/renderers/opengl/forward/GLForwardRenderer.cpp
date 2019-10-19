@@ -9,7 +9,6 @@
 #include "world/nodes/RootNode.h"
 #include "system/Input.h"
 #include "renderer/renderers/opengl/GLUtil.h"
-// WIP:
 #include "platform/windows/Win32Window.h"
 
 #include <glad/glad.h>
