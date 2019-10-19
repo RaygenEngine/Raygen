@@ -1,6 +1,6 @@
 #pragma once
 
-// WIP:
+// TODO: create a GLSLPod to handle includes
 
 #include "asset/UriLibrary.h"
 #include "asset/AssetManager.h"

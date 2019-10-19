@@ -1,6 +1,5 @@
 #pragma once
 
-// WIP:
 #undef OPAQUE
 
 #include "asset/pods/TexturePod.h"
