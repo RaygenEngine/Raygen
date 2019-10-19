@@ -1,7 +1,8 @@
 #pragma once
 
+// Renderer for previewing materials and nodes (WIP, buggy)
+
 // TODO: re-write when there is time to
-// WIP: may be buggy
 
 #include "renderer/renderers/opengl/GLEditorRenderer.h"
 #include "renderer/renderers/opengl/assets/GLShader.h"
