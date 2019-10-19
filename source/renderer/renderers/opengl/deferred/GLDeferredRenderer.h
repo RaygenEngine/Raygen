@@ -1,5 +1,7 @@
 #pragma once
 
+// Deferred renderer, pbr (direct), ambient pass
+
 #include "renderer/renderers/opengl/GLEditorRenderer.h"
 #include "renderer/renderers/opengl/assets/GLShader.h"
 #include "renderer/renderers/opengl/assets/GLTexture.h"
