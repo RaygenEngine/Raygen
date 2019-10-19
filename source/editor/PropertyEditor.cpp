@@ -7,6 +7,7 @@
 #include "editor/Editor.h"
 #include "system/Engine.h"
 #include "reflection/ReflectionTools.h"
+#include "core/MathAux.h"
 
 #include "editor/imgui/ImguiUtil.h"
 
@@ -262,6 +263,7 @@ void PropertyEditor::Inject(Node* node)
 void PropertyEditor::Run_BaseProperties(Node* node)
 {
 	std::string name = node->GetName();
+
 	if (ImGui::InputText("Name", &name)) {
 		node->SetName(name);
 	}
@@ -281,8 +283,15 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 		scale = node->GetWorldScale();
 	}
 
+
 	if (ImGui::DragFloat3("Position", ImUtil::FromVec3(location), 0.01f)) {
 		m_localMode ? node->SetLocalTranslation(location) : node->SetWorldTranslation(location);
+	}
+	if (ImGui::BeginPopupContextItem("PositionPopup")) {
+		if (ImGui::MenuItem("Reset##1")) {
+			m_localMode ? node->SetLocalTranslation({}) : node->SetWorldTranslation({});
+		}
+		ImGui::EndPopup();
 	}
 
 	if (ImGui::DragFloat3("Rotation", ImUtil::FromVec3(eulerPyr), 0.1f)) {
@@ -290,9 +299,48 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 		m_localMode ? node->SetLocalOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetLocalOrientation())
 					: node->SetWorldOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetWorldOrientation());
 	}
+	if (ImGui::BeginPopupContextItem("RotatePopup")) {
+		if (ImGui::MenuItem("Reset##2")) {
+			m_localMode ? node->SetLocalOrientation(glm::identity<glm::quat>())
+						: node->SetWorldOrientation(glm::identity<glm::quat>());
+		}
+		ImGui::EndPopup();
+	}
 
-	if (ImGui::DragFloat3("Scale", ImUtil::FromVec3(scale), 0.01f)) {
-		m_localMode ? node->SetLocalScale(scale) : node->SetWorldScale(scale);
+	static bool lockedScale = false;
+	if (!lockedScale) {
+		if (ImGui::DragFloat3("Scale", ImUtil::FromVec3(scale), 0.01f)) {
+			m_localMode ? node->SetLocalScale(scale) : node->SetWorldScale(scale);
+		}
+	}
+	else {
+		glm::vec3 newScale = m_localMode ? node->GetLocalScale() : node->GetWorldScale();
+		if (ImGui::DragFloat3("Locked Scale", ImUtil::FromVec3(newScale), 0.01f)) {
+			glm::vec3 initialScale = m_localMode ? node->GetLocalScale() : node->GetWorldScale();
+
+			float ratio = 1.f;
+			if (!math::EpsilonEqualsValue(newScale.x, initialScale.x) && !math::EpsilonEqualsZero(initialScale.x)) {
+				ratio = newScale.x / initialScale.x;
+			}
+			else if (!math::EpsilonEqualsValue(newScale.y, initialScale.y)
+					 && !math::EpsilonEqualsZero(initialScale.y)) {
+				ratio = newScale.y / initialScale.y;
+			}
+			else if (!math::EpsilonEqualsZero(initialScale.z)) {
+				ratio = newScale.z / initialScale.z;
+			}
+			m_localMode ? node->SetLocalScale(initialScale * ratio) : node->SetWorldScale(initialScale * ratio);
+		}
+	}
+
+	if (ImGui::BeginPopupContextItem("ScalePopup")) {
+		if (ImGui::MenuItem("Reset##3")) {
+			m_localMode ? node->SetLocalScale(glm::vec3(1.f)) : node->SetWorldScale(glm::vec3(1.f));
+		}
+		if (ImGui::MenuItem("Lock", nullptr, lockedScale)) {
+			lockedScale = !lockedScale;
+		}
+		ImGui::EndPopup();
 	}
 
 	ImGui::Checkbox("Local Mode", &m_localMode);

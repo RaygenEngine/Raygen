@@ -173,6 +173,8 @@ LRESULT ImguiImpl::WndProcHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 
 		return false;
 	}
+
+	return false;
 }
 
 #include "imgui/imgui.cpp"

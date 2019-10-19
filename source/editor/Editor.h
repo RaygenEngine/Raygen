@@ -16,16 +16,65 @@ class AssetWindow;
 
 class Editor {
 protected:
+	struct ImMenu {
+		const char* name;
+
+		using FnPointer = std::function<void()>;
+
+		struct MenuOption {
+			const char* name{ nullptr };
+			FnPointer func;
+		};
+
+		std::vector<MenuOption> options;
+
+		void AddSeperator() { options.emplace_back(); }
+
+		void AddEntry(const char* inName, FnPointer funcPtr)
+		{
+			ImMenu::MenuOption option;
+			option.name = inName;
+			option.func = funcPtr;
+			options.emplace_back(option);
+		}
+
+		void Draw()
+		{
+			if (ImGui::BeginMenu(name)) {
+				ImGui::Spacing();
+				for (auto& entry : options) {
+					if (entry.name == nullptr) {
+						ImGui::Separator();
+						continue;
+					}
+
+					if (ImGui::MenuItem(entry.name)) {
+						std::invoke(entry.func);
+					}
+				}
+				ImGui::Spacing();
+				ImGui::EndMenu();
+			}
+		}
+	};
+
 	bool m_updateWorld{ true };
 	Node* m_selectedNode{ nullptr };
 
 	bool m_showImguiDemo{ false };
 	bool m_showGltfWindow{ false };
 
+	bool m_showAboutWindow{ false };
+	bool m_showHelpWindow{ false };
+
 	SceneSave m_sceneSave;
 
 	std::unique_ptr<AssetWindow> m_assetWindow;
 	std::unique_ptr<PropertyEditor> m_propertyEditor;
+
+	ImGui::FileBrowser m_loadFileBrowser = ImGui::FileBrowser(ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CloseOnEsc);
+
+	void MakeMainMenu();
 
 public:
 	DECLARE_EVENT_LISTENER(m_onNodeRemoved, Event::OnWorldNodeRemoved);
@@ -33,6 +82,8 @@ public:
 	std::unique_ptr<NodeContextActions> m_nodeContextActions;
 
 	fs::path m_sceneToLoad{};
+
+	std::vector<ImMenu> m_menus;
 
 	Editor();
 	virtual ~Editor();
@@ -70,6 +121,11 @@ public:
 
 	void Run_MaybeAssetTooltip(PodEntry* entry);
 	void Run_OutlinerDropTarget(Node* node);
+
+	void Run_MenuBar();
+
+	void Run_AboutWindow();
+	void Run_HelpWindow();
 
 private:
 	void Outliner();
