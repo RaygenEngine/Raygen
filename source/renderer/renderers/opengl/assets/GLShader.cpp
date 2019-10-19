@@ -67,7 +67,7 @@ void GLShader::Load()
 
 				auto cutUntil = line.find_first_of(':');
 
-				auto lineNumber = std::stoi(line.substr(lineStartPos + 1, lineEndPos - lineStartPos - 1));
+				size_t lineNumber = std::stoi(line.substr(lineStartPos + 1, lineEndPos - lineStartPos - 1));
 
 				lineNumber = lineNumber - offset;
 
