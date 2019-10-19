@@ -36,18 +36,24 @@ void GLTexture::Load()
 	switch (textureData->target) {
 		case TextureTarget::TEXTURE_2D: {
 			const auto img = textureData->images.at(0);
-			const auto typeAndInternalFormat = GetTypeAndInternalFormat(img->isHdr);
-			glTexImage2D(GL_TEXTURE_2D, 0, typeAndInternalFormat.second, img->width, img->height, 0, GL_RGBA,
-				typeAndInternalFormat.first, img->data);
+
+			auto imgPod = img.Lock();
+
+			const auto typeAndInternalFormat = GetTypeAndInternalFormat(imgPod->isHdr);
+			glTexImage2D(GL_TEXTURE_2D, 0, typeAndInternalFormat.second, imgPod->width, imgPod->height, 0, GL_RGBA,
+				typeAndInternalFormat.first, imgPod->data);
 			break;
 		}
 
 		case TextureTarget::TEXTURE_CUBEMAP: {
 			for (auto i = 0; i < CubemapFace::COUNT; ++i) {
 				const auto img = textureData->images.at(i);
-				const auto typeAndInternalFormat = GetTypeAndInternalFormat(img->isHdr);
-				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, typeAndInternalFormat.second, img->width,
-					img->height, 0, GL_RGBA, typeAndInternalFormat.first, img->data);
+
+				auto imgPod = img.Lock();
+
+				const auto typeAndInternalFormat = GetTypeAndInternalFormat(imgPod->isHdr);
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, typeAndInternalFormat.second, imgPod->width,
+					imgPod->height, 0, GL_RGBA, typeAndInternalFormat.first, imgPod->data);
 			}
 			break;
 		}
