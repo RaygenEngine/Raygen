@@ -2,7 +2,7 @@
 
 out vec4 out_color;
 
-in vec2 uv;
+uniform vec2 invTextureSize;
 
 uniform float near;
 uniform float far;
@@ -16,7 +16,10 @@ float LinearizeDepth(float depth)
 }
 
 void main()
-{             
+{          
+	vec2 uv = gl_FragCoord.st * invTextureSize;
+
+   
     float depth = LinearizeDepth(texture(outTexture, uv).r) / far; // divide by far for demonstration
     out_color = vec4(vec3(depth), 1.0);
 }

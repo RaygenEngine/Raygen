@@ -5,6 +5,7 @@
 #include "platform/windows/Win32Window.h"
 #include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
 #include "renderer/renderers/opengl/forward/GLForwardRenderer.h"
+#include "renderer/renderers/opengl/previewer/GLPreviewerRenderer.h"
 #include "system/Engine.h"
 #include "system/Input.h"
 #include "system/Logger.h"
@@ -117,6 +118,7 @@ void AppBase::RegisterRenderers()
 	// NOTE:
 	// Default behavior for an app is to start the FIRST renderer registered here.
 
+	Engine::RegisterRenderer<ogl::GLPreviewerRenderer>();
 	Engine::RegisterRenderer<ogl::GLDeferredRenderer>();
 	Engine::RegisterRenderer<ogl::GLForwardRenderer>();
 }

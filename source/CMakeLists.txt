@@ -49,6 +49,7 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/basic/GLBasicGeometry.cpp
 	renderer/renderers/opengl/forward/GLForwardRenderer.cpp
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.cpp
+	renderer/renderers/opengl/previewer/GLPreviewerRenderer.cpp
 
 
 	system/Engine.cpp
@@ -167,6 +168,7 @@ set(HEADER_FILES
 	renderer/renderers/opengl/basic/GLBasicGeometry.h
 	renderer/renderers/opengl/forward/GLForwardRenderer.h
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.h
+	renderer/renderers/opengl/previewer/GLPreviewerRenderer.h
 
 
 	system/Engine.h

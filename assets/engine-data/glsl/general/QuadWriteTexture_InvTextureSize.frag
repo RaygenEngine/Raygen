@@ -8,7 +8,7 @@ layout(binding=0) uniform sampler2D outTexture;
 
 void main()
 {             
-	vec2 textUV = gl_FragCoord.st * invTextureSize;
+	vec2 uv = gl_FragCoord.st * invTextureSize;
 
-	out_color = texture(outTexture, textUV);
+	out_color = texture(outTexture, uv);
 }

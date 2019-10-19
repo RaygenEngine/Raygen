@@ -550,6 +550,7 @@ void GLDeferredRenderer::RecompileShaders()
 	m_deferredPunctualLightShader->Load();
 	m_ambientLightShader->Load();
 	m_windowShader->Load();
+	m_gBuffer.shader->Load();
 }
 
 void GLDeferredRenderer::Update()
