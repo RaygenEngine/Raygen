@@ -149,12 +149,30 @@ LRESULT ImguiImpl::WndProcHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 
 	// Imgui handles keys but also forwards them so we manually check if we should forward them to the main window
 	// handler.
-	if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureKeyboard
-		&& (message == WM_KEYDOWN || message == WM_SYSKEYDOWN || message == WM_KEYUP || message == WM_SYSKEYUP)) {
-		return true;
-	}
+	if (ImGui::GetCurrentContext() != nullptr) {
+		if (ImGui::GetIO().WantCaptureKeyboard) {
+			switch (message) {
+				case WM_KEYDOWN:
+				case WM_SYSKEYDOWN: return true;
+			}
+		}
+		if (ImGui::GetIO().WantCaptureMouse) {
+			switch (message) {
+				case WM_MOUSEWHEEL:
+				case WM_MOUSEHWHEEL:
+				case WM_LBUTTONDOWN:
+				case WM_RBUTTONDOWN:
+				case WM_MBUTTONDOWN:
+				case WM_XBUTTONDOWN:
+				case WM_LBUTTONDBLCLK:
+				case WM_RBUTTONDBLCLK:
+				case WM_MBUTTONDBLCLK:
+				case WM_XBUTTONDBLCLK: return true;
+			}
+		}
 
-	return false;
+		return false;
+	}
 }
 
 #include "imgui/imgui.cpp"
