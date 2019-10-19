@@ -692,8 +692,7 @@ void GLForwardRenderer::RenderBoundingBoxes()
 	};
 
 	for (auto node : worldNodes) {
-		RenderBox(node->m_aabb, { 1, 0, 0, 1 });
-		// RenderBox(node->GetBBox(), { 1, 1, 1, 1 });
+		RenderBox(node->GetAABB(), { 1, 1, 1, 1 });
 	}
 
 	glDisable(GL_DEPTH_TEST);

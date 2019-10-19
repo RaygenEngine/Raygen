@@ -77,37 +77,6 @@ void Node::AutoUpdateTransforms()
 	UpdateTransforms(GetParent()->GetWorldMatrix());
 }
 
-void Transform(Box& box, const glm::mat4& M)
-{
-	float a, b;
-
-	// Copy box A into min and max array.
-	auto AMin = box.min;
-	auto AMax = box.max;
-
-	// Begin at T.
-	box.max = glm::vec3(M[3]);
-	box.min = glm::vec3(M[3]);
-
-	// Find extreme points by considering product of
-	// min and max with each component of M.
-	for (auto j = 0; j < 3; ++j) {
-		for (auto i = 0; i < 3; ++i) {
-			auto a = M[i][j] * AMin[j];
-			auto b = M[i][j] * AMax[j];
-
-			if (a < b) {
-				box.min[j] += a;
-				box.max[j] += b;
-			}
-			else {
-				box.min[j] += b;
-				box.max[j] += a;
-			}
-		}
-	}
-}
-
 void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 {
 	m_dirty.set(DF::TRS);
@@ -119,21 +88,23 @@ void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 	glm::vec4 persp;
 	glm::decompose(m_worldMatrix, m_worldScale, m_worldOrientation, m_worldTranslation, skew, persp);
 
-	auto localBbox = GetBBox();
+	auto center = (m_localBB.min + m_localBB.max) / 2.f;
+	auto extend = (m_localBB.max - m_localBB.min) / 2.f;
 
-	m_obb.max = m_worldMatrix * glm::vec4(localBbox.max, 1.f);
-	m_obb.min = m_worldMatrix * glm::vec4(localBbox.min, 1.f);
+	auto newCenter = glm::vec3(m_worldMatrix * glm::vec4(center, 1.f));
 
-	// calculate sphere
+	glm::mat4 absMat{};
 
-	// TODO: rotated flag
-	// apply scaling
-	m_aabb.max = localBbox.max * m_worldScale;
-	m_aabb.min = localBbox.min * m_worldScale;
+	for (auto j = 0; j < 3; ++j) {
+		for (auto i = 0; i < 3; ++i) {
+			absMat[i][j] = glm::abs(m_worldMatrix[i][j]);
+		}
+	}
 
-	// apply translation
-	m_aabb.max = localBbox.max + m_worldTranslation;
-	m_aabb.min = localBbox.min + m_worldTranslation;
+	auto newExtend = glm::vec3(absMat * glm::vec4(extend, 0.f));
+
+	m_aabb = { newCenter - newExtend, newCenter + newExtend };
+
 
 	for (auto& uPtr : m_children) {
 		uPtr->UpdateTransforms(m_worldMatrix);

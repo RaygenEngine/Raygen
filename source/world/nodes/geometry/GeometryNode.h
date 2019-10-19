@@ -4,12 +4,12 @@
 #include "asset/pods/ModelPod.h"
 
 class GeometryNode : public Node {
-	REFLECTED_NODE(GeometryNode, Node) { REFLECT_VAR(m_model); }
+	REFLECTED_NODE(GeometryNode, Node, DF_FLAGS(ModelChange)) { REFLECT_VAR(m_model).OnDirty(DF::ModelChange); }
 
 	PodHandle<ModelPod> m_model;
 
 public:
-	Box GetBBox() const override { return m_model.Lock()->bbox; }
-
 	[[nodiscard]] PodHandle<ModelPod> GetModel() const { return m_model; }
+
+	void DirtyUpdate(DirtyFlagset dirtyFlags) override;
 };
