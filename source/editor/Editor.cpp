@@ -46,22 +46,20 @@ Editor::Editor()
 
 void Editor::MakeMainMenu()
 {
-	ImMenu sceneMenu;
-	sceneMenu.name = "Scene";
-
+	ImMenu sceneMenu{ "Scene" };
 	sceneMenu.AddEntry("Save", [&]() { m_sceneSave.OpenBrowser(); });
 	sceneMenu.AddEntry("Load", [&]() { m_loadFileBrowser.Open(); });
 	sceneMenu.AddSeperator();
 	sceneMenu.AddEntry("Exit", []() { Engine::GetMainWindow()->Destroy(); });
-
 	m_menus.emplace_back(sceneMenu);
 
-	ImMenu aboutMenu;
-	aboutMenu.name = "About";
+	ImMenu debugMenu{ "Debug" };
+	debugMenu.AddEntry("Open ImGui Demo", [&]() { m_showImguiDemo = true; });
+	m_menus.emplace_back(debugMenu);
 
+	ImMenu aboutMenu{ "About" };
 	aboutMenu.AddEntry("Help", [&]() { m_showHelpWindow = true; });
 	aboutMenu.AddEntry("About", [&]() { m_showAboutWindow = true; });
-
 	m_menus.emplace_back(aboutMenu);
 }
 
@@ -410,10 +408,6 @@ INSERT HELP HERE:
 
 void Editor::HandleInput()
 {
-	// Ctrl + 1 opens imgui demo window
-	if (Engine::GetInput()->IsKeyRepeat(XVirtualKey::CTRL) && Engine::GetInput()->IsKeyPressed(XVirtualKey::K1)) {
-		m_showImguiDemo = !m_showImguiDemo;
-	}
 }
 
 void Editor::PushCommand(std::function<void()>&& func)

@@ -11,7 +11,7 @@
 // forward declare this in our own file because its commented out in the imgui impl header.
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 namespace imguisyle {
-void SetStyleSizes()
+void SetStyle()
 {
 	ImGuiStyle& style = ImGui::GetStyle();
 
@@ -100,7 +100,7 @@ void ImguiImpl::InitContext()
 	ImGui::CreateContext();
 
 	ImGui::StyleColorsDark();
-	imguisyle::SetStyleSizes();
+	imguisyle::SetStyle();
 
 	ImGui_ImplWin32_Init(Engine::GetMainWindow()->GetHWND());
 	ImGui::GetIO().IniFilename = "EditorImgui.ini";
