@@ -356,7 +356,7 @@ void GLDeferredRenderer::RenderDirectionalLights()
 		ls->SendVec2("invTextureSize", invTextureSize);
 
 		// light
-		ls->SendVec3("directionalLight.wcs_dir", light->node->GetFront());
+		ls->SendVec3("directionalLight.wcs_dir", light->node->GetWorldForward());
 		ls->SendVec3("directionalLight.color", light->node->GetColor());
 		ls->SendFloat("directionalLight.intensity", light->node->GetIntensity());
 		ls->SendInt("directionalLight.samples", light->node->GetSamples());
@@ -404,7 +404,7 @@ void GLDeferredRenderer::RenderSpotLights()
 
 		// light
 		ls->SendVec3("spotLight.wcs_pos", light->node->GetWorldTranslation());
-		ls->SendVec3("spotLight.wcs_dir", light->node->GetFront());
+		ls->SendVec3("spotLight.wcs_dir", light->node->GetWorldForward());
 		ls->SendFloat("spotLight.outerCutOff", glm::cos(glm::radians(light->node->GetOuterAperture() / 2.f)));
 		ls->SendFloat("spotLight.innerCutOff", glm::cos(glm::radians(light->node->GetInnerAperture() / 2.f)));
 		ls->SendVec3("spotLight.color", light->node->GetColor());

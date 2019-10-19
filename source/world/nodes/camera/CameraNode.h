@@ -46,7 +46,7 @@ protected:
 	void RecalculateViewProjectionMatrix();
 
 public:
-	[[nodiscard]] glm::vec3 GetLookAt() const { return GetWorldTranslation() + GetFront() * m_focalLength; }
+	[[nodiscard]] glm::vec3 GetLookAt() const { return GetWorldTranslation() + GetWorldForward() * m_focalLength; }
 
 	[[nodiscard]] float GetVerticalFov() const { return m_vFov; }
 	[[nodiscard]] float GetHorizontalFov() const { return m_hFov; }

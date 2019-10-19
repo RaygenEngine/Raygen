@@ -10,8 +10,8 @@ void DirectionalLightNode::RecalculateProjectionMatrix()
 
 void DirectionalLightNode::RecalculateViewMatrix()
 {
-	auto lookat = GetWorldTranslation() + GetFront();
-	m_viewMatrix = glm::lookAt(GetWorldTranslation(), lookat, GetUp());
+	auto lookat = GetWorldTranslation() + GetWorldForward();
+	m_viewMatrix = glm::lookAt(GetWorldTranslation(), lookat, GetWorldUp());
 	RecalculateViewProjectionMatrix();
 }
 

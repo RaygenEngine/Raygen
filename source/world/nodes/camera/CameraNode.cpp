@@ -13,7 +13,7 @@ void CameraNode::RecalculateProjectionFov()
 
 void CameraNode::RecalculateViewMatrix()
 {
-	m_viewMatrix = glm::lookAt(GetWorldTranslation(), GetLookAt(), GetUp());
+	m_viewMatrix = glm::lookAt(GetWorldTranslation(), GetLookAt(), GetWorldUp());
 	RecalculateViewProjectionMatrix();
 }
 

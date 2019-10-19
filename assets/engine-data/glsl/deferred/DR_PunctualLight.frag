@@ -43,10 +43,9 @@ float ShadowCalculation(vec3 pos, float cosTheta)
 	
 	// 3d pcf
 	float shadow  = 0.0;
-	float bias = punctualLight.maxShadowBias * tan(acos(cosTheta));
-	bias = clamp(bias, 0.0, punctualLight.maxShadowBias);
+	float bias = punctualLight.maxShadowBias;
 	float samples = punctualLight.samples;
-	float offset  = 0.1;
+	float offset  = 0.05;
 	for(float x = -offset; x < offset; x += offset / (samples * 0.5))
 	{
 		for(float y = -offset; y < offset; y += offset / (samples * 0.5))
