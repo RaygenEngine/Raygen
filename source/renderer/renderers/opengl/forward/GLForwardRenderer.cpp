@@ -81,6 +81,7 @@ void GLForwardRenderer::InitShaders()
 	m_forwardDirectionalLightShader->StoreUniformLoc("directionalLight.maxShadowBias");
 	m_forwardDirectionalLightShader->StoreUniformLoc("directionalLight.samples");
 	m_forwardDirectionalLightShader->StoreUniformLoc("directionalLight.shadowMap");
+	m_forwardDirectionalLightShader->StoreUniformLoc("directionalLight.castsShadow");
 	// material
 	m_forwardDirectionalLightShader->StoreUniformLoc("material.baseColorFactor");
 	m_forwardDirectionalLightShader->StoreUniformLoc("material.emissiveFactor");
@@ -121,6 +122,7 @@ void GLForwardRenderer::InitShaders()
 	m_forwardSpotLightShader->StoreUniformLoc("spotLight.samples");
 	m_forwardSpotLightShader->StoreUniformLoc("spotLight.maxShadowBias");
 	m_forwardSpotLightShader->StoreUniformLoc("spotLight.shadowMap");
+	m_forwardSpotLightShader->StoreUniformLoc("spotLight.castsShadow");
 	// material
 	m_forwardSpotLightShader->StoreUniformLoc("material.baseColorFactor");
 	m_forwardSpotLightShader->StoreUniformLoc("material.emissiveFactor");
@@ -158,6 +160,7 @@ void GLForwardRenderer::InitShaders()
 	m_forwardPunctualLightShader->StoreUniformLoc("punctualLight.samples");
 	m_forwardPunctualLightShader->StoreUniformLoc("punctualLight.maxShadowBias");
 	m_forwardPunctualLightShader->StoreUniformLoc("punctualLight.shadowCubemap");
+	m_forwardPunctualLightShader->StoreUniformLoc("punctualLight.castsShadow");
 	// material
 	m_forwardPunctualLightShader->StoreUniformLoc("material.baseColorFactor");
 	m_forwardPunctualLightShader->StoreUniformLoc("material.emissiveFactor");
@@ -341,6 +344,11 @@ void GLForwardRenderer::RenderDirectionalLights()
 
 	for (auto light : m_glDirectionalLights) {
 
+		// light AABB camera frustum culling
+		if (!math::BoxFrustumCollision(light->node->GetFrustumAABB(), m_camera->GetFrustum())) {
+			continue;
+		}
+
 		light->RenderShadowMap(m_glGeometries);
 
 		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
@@ -366,6 +374,7 @@ void GLForwardRenderer::RenderDirectionalLights()
 		ls->SendVec3("directionalLight.color", light->node->GetColor());
 		ls->SendFloat("directionalLight.intensity", light->node->GetIntensity());
 		ls->SendInt("directionalLight.samples", light->node->GetSamples());
+		ls->SendInt("directionalLight.castsShadow", light->node->CastsShadows() ? GL_TRUE : GL_FALSE);
 		ls->SendFloat("directionalLight.maxShadowBias", light->node->GetMaxShadowBias());
 		ls->SendTexture("directionalLight.shadowMap", light->shadowMap, 0);
 
@@ -437,6 +446,12 @@ void GLForwardRenderer::RenderSpotLights()
 	auto ls = m_forwardSpotLightShader;
 
 	for (auto light : m_glSpotLights) {
+
+		// light AABB camera frustum culling
+		if (!math::BoxFrustumCollision(light->node->GetFrustumAABB(), m_camera->GetFrustum())) {
+			continue;
+		}
+
 		light->RenderShadowMap(m_glGeometries);
 
 		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
@@ -466,6 +481,7 @@ void GLForwardRenderer::RenderSpotLights()
 		ls->SendFloat("spotLight.intensity", light->node->GetIntensity());
 		ls->SendInt("spotLight.attenCoef", light->node->GetAttenuationMode());
 		ls->SendInt("spotLight.samples", light->node->GetSamples());
+		ls->SendInt("spotLight.castsShadow", light->node->CastsShadows() ? GL_TRUE : GL_FALSE);
 		ls->SendFloat("spotLight.maxShadowBias", light->node->GetMaxShadowBias());
 		ls->SendTexture("spotLight.shadowMap", light->shadowMap, 0);
 
@@ -563,6 +579,7 @@ void GLForwardRenderer::RenderPunctualLights()
 		ls->SendFloat("punctualLight.far", light->node->GetFar());
 		ls->SendInt("punctualLight.attenCoef", light->node->GetAttenuationMode());
 		ls->SendInt("punctualLight.samples", light->node->GetSamples());
+		ls->SendInt("punctualLight.castsShadow", light->node->CastsShadows() ? GL_TRUE : GL_FALSE);
 		ls->SendFloat("punctualLight.maxShadowBias", light->node->GetMaxShadowBias());
 		ls->SendCubeTexture("punctualLight.shadowCubemap", light->cubeShadowMap, 0);
 
@@ -624,8 +641,6 @@ void GLForwardRenderer::RenderBoundingBoxes()
 {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-
-	auto worldNodes = Engine::GetWorld()->GetNodeMap<Node>();
 
 	glBindVertexArray(m_bbVao);
 
@@ -709,8 +724,16 @@ void GLForwardRenderer::RenderBoundingBoxes()
 		glDrawArrays(GL_LINES, 8, 8);
 	};
 
-	for (auto node : worldNodes) {
-		RenderBox(node->GetAABB(), { 1, 1, 1, 1 });
+	for (auto gObs : m_glGeometries) {
+		RenderBox(gObs->node->GetAABB(), { 1, 1, 1, 1 });
+	}
+
+	for (auto slObs : m_glSpotLights) {
+		RenderBox(slObs->node->GetFrustumAABB(), { 1, 1, 0, 1 });
+	}
+
+	for (auto dlObs : m_glDirectionalLights) {
+		RenderBox(dlObs->node->GetFrustumAABB(), { 1, 1, 0, 1 });
 	}
 
 	glDisable(GL_DEPTH_TEST);

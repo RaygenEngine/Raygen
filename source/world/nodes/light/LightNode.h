@@ -9,8 +9,6 @@ class LightNode : public Node {
 		REFLECT_VAR(m_color, PropertyFlags::Color).OnDirty(DF::Flux);
 		REFLECT_VAR(m_intensity).OnDirty(DF::Flux);
 
-		REFLECT_VAR(m_hasShadow);
-
 		REFLECT_VAR(m_near).OnDirty(DF::NearFar);
 		REFLECT_VAR(m_far).OnDirty(DF::NearFar);
 
@@ -19,6 +17,8 @@ class LightNode : public Node {
 
 		REFLECT_VAR(m_maxShadowBias);
 		REFLECT_VAR(m_samples);
+
+		REFLECT_VAR(m_hasShadow);
 	}
 
 protected:

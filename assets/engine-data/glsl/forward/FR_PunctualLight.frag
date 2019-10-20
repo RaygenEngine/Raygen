@@ -26,6 +26,8 @@ uniform struct PunctualLight
 	float far;
 
 	int attenCoef;
+	
+	bool castsShadow;
 
 	int samples;
 	float maxShadowBias;
@@ -64,6 +66,10 @@ uniform struct Material
 
 float ShadowCalculation(float cosTheta)
 {	
+	if(!punctualLight.castsShadow)
+		return 0.0;
+
+
 	// get vector between fragment position and light position
     vec3 fragToLight = dataIn.wcs_fragPos - punctualLight.wcs_pos;
 	

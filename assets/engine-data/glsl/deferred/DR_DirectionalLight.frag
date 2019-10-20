@@ -18,6 +18,8 @@ uniform struct DirectionalLight
 	
 	mat4 mvpBiased; // transforms to [0,1] in light space
 	
+	bool castsShadow;
+	
 	int samples;
 	float maxShadowBias;
 	sampler2DShadow shadowMap;
@@ -34,6 +36,9 @@ uniform struct GBuffer
 
 float ShadowCalculation(vec3 pos, float cosTheta)
 {
+	if(!directionalLight.castsShadow)
+		return 0.0;
+
 	// texture(shadowMap, shadowCoord.xy).z is the distance between the light and the nearest occluder
 	// shadowCoord.z is the distance between the light and the current fragment
 
@@ -46,8 +51,9 @@ float ShadowCalculation(vec3 pos, float cosTheta)
 	float currentDepth = shadowCoord4.z;
 	vec2 shadowCoord = shadowCoord4.xy;
 
-	// if behind shadow map just return shadow
-	if(currentDepth < 0.005)
+	// if in front or behind light's frustum return shadow
+	if(currentDepth < 0.005
+	|| currentDepth > 1.0)
 		return 1.0;
 
 	float shadow = 0;

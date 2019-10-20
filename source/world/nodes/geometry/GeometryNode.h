@@ -8,10 +8,17 @@ class GeometryNode : public Node {
 
 	PodHandle<ModelPod> m_model;
 
+	// world space
+	Box m_aabb;
+	Box m_localBB;
+
+	void CalculateAABB();
+
 public:
 	GeometryNode();
 
 	[[nodiscard]] PodHandle<ModelPod> GetModel() const { return m_model; }
+	[[nodiscard]] Box GetAABB() const { return m_aabb; }
 
 	void SetModel(PodHandle<ModelPod> newModel);
 

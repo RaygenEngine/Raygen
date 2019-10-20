@@ -76,9 +76,6 @@ private:
 	glm::vec3 m_worldScale{ 1.f, 1.f, 1.f };
 	glm::mat4 m_worldMatrix{ glm::identity<glm::mat4>() };
 
-	Box m_aabb{ glm::vec3{ 0.3f }, glm::vec3{ -0.3f } };
-
-
 	DirtyFlagset m_dirty{};
 
 	Node* m_parent{ nullptr };
@@ -87,8 +84,6 @@ private:
 
 protected:
 	std::string m_name;
-
-	void SetLocalBB(Box box) { m_localBB = box; }
 
 private:
 	// Dirty Functions
@@ -118,7 +113,6 @@ public:
 	[[nodiscard]] glm::vec3 GetWorldPYR() const { return glm::degrees(glm::eulerAngles(m_worldOrientation)); }
 	[[nodiscard]] glm::vec3 GetWorldScale() const { return m_worldScale; }
 	[[nodiscard]] glm::mat4 GetWorldMatrix() const { return m_worldMatrix; }
-	[[nodiscard]] Box GetAABB() const { return m_aabb; }
 
 	[[nodiscard]] glm::vec3 GetWorldUp() const { return GetWorldOrientation() * glm::vec3(0.f, 1.f, 0.f); }
 	[[nodiscard]] glm::vec3 GetWorldRight() const { return GetWorldOrientation() * glm::vec3(1.f, 0.f, 0.f); }
