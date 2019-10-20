@@ -82,6 +82,9 @@ protected:
 	bool m_showHelpWindow{ false };
 	bool m_showLogWindow{ false };
 
+
+	bool m_autoRestoreWorld{ false };
+
 	SceneSave m_sceneSave;
 
 	std::unique_ptr<AssetWindow> m_assetWindow;
@@ -96,6 +99,7 @@ public:
 	DECLARE_EVENT_LISTENER(m_onWorldLoaded, Event::OnWorldLoaded);
 
 	EditorCameraNode* m_editorCamera;
+	bool m_hasEditorCameraCachedMatrix{ false };
 	glm::mat4 m_editorCameraCachedMatrix{ glm::identity<glm::mat4>() };
 
 	std::unique_ptr<NodeContextActions> m_nodeContextActions;
@@ -152,6 +156,9 @@ public:
 	void Run_LogWindow();
 	static void PushCommand(std::function<void()>&& func);
 	static void PushPostFrameCommand(std::function<void()>&& func);
+
+	void OnPlay();
+	void OnStopPlay();
 
 private:
 	void SpawnEditorCamera();

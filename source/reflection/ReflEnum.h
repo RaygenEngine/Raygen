@@ -141,6 +141,12 @@ private:
 	}
 
 public:
+	void operator=(const MetaEnumInst& other)
+	{
+		if (type == other.type) {
+			SetValue(other.GetValue());
+		}
+	}
 	[[nodiscard]] TypeId GetType() const { return type; }
 	[[nodiscard]] const ReflEnum& GetEnum() const { return meta; }
 

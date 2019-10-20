@@ -27,9 +27,11 @@
 Editor::Editor()
 {
 	ImguiImpl::InitContext();
+
 	m_assetWindow = std::make_unique<AssetWindow>();
 	m_nodeContextActions = std::make_unique<NodeContextActions>();
 	m_propertyEditor = std::make_unique<PropertyEditor>();
+
 	m_onNodeRemoved.Bind([&](Node* node) {
 		if (node == m_selectedNode) {
 			if (node->GetParent()) {
@@ -82,8 +84,9 @@ struct ImRendererMenu : public Editor::ImMenu {
 void Editor::MakeMainMenu()
 {
 	auto sceneMenu = std::make_unique<ImMenu>("Scene");
-	sceneMenu->AddEntry("Save", [&]() { m_sceneSave.OpenBrowser(); });
+	sceneMenu->AddEntry("Save As", [&]() { m_sceneSave.OpenBrowser(); });
 	sceneMenu->AddEntry("Load", [&]() { m_loadFileBrowser.Open(); });
+	sceneMenu->AddEntry("Revert", [&]() { ReloadScene(); });
 	sceneMenu->AddSeperator();
 	sceneMenu->AddEntry("Exit", []() { Engine::GetMainWindow()->Destroy(); });
 	m_menus.emplace_back(std::move(sceneMenu));
@@ -115,7 +118,6 @@ void Editor::UpdateEditor()
 		m_editorCamera->UpdateFromEditor(Engine::GetWorld()->GetDeltaTime());
 	}
 
-
 	ImguiImpl::NewFrame();
 
 	if (m_showImguiDemo) {
@@ -141,19 +143,17 @@ void Editor::UpdateEditor()
 
 	Run_MenuBar();
 
-	if (ImGui::Checkbox("Update World", &m_updateWorld)) {
+	if (ImGui::Checkbox("Update World  ", &m_updateWorld)) {
 		if (m_updateWorld) {
-			if (m_editorCamera) {
-				m_editorCameraCachedMatrix = m_editorCamera->GetWorldMatrix();
-				Engine::GetWorld()->DeleteNode(m_editorCamera);
-			}
+			OnPlay();
 		}
 		else {
-			if (!m_editorCamera) {
-				SpawnEditorCamera();
-				m_editorCamera->SetWorldMatrix(m_editorCameraCachedMatrix);
-			}
+			OnStopPlay();
 		}
+	}
+	if (!m_updateWorld) {
+		ImGui::SameLine();
+		ImGui::Checkbox("Restore update state", &m_autoRestoreWorld);
 	}
 
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7, 7));
@@ -196,7 +196,10 @@ void Editor::UpdateEditor()
 
 	ImGui::EndChild();
 
-	std::string s = fmt::format("{:.1f} FPS | {}", Engine::GetFPS(), Engine::GetStatusLine());
+	auto& eng = Engine::Get();
+	auto rendererName = eng.GetRendererList()[eng.GetActiveRendererIndex()];
+
+	std::string s = fmt::format("{} | {:.1f} FPS | {}", rendererName, Engine::GetFPS(), Engine::GetStatusLine());
 	ImGui::Text(s.c_str());
 
 
@@ -223,7 +226,10 @@ void Editor::SpawnEditorCamera()
 	world->RegisterNode(m_editorCamera, world->GetRoot());
 
 	auto prevActive = world->GetActiveCamera();
-	if (prevActive) {
+	if (m_hasEditorCameraCachedMatrix) {
+		m_editorCamera->SetWorldMatrix(m_editorCameraCachedMatrix);
+	}
+	else if (prevActive) {
 		m_editorCamera->SetWorldMatrix(prevActive->GetWorldMatrix());
 	}
 	world->SetActiveCamera(m_editorCamera);
@@ -313,17 +319,34 @@ void Editor::ReloadScene()
 
 void Editor::OnDisableEditor()
 {
-	if (m_editorCamera) {
-		m_editorCameraCachedMatrix = m_editorCamera->GetWorldMatrix();
-		Engine::GetWorld()->DeleteNode(m_editorCamera);
-	}
+	OnPlay();
 }
 
 void Editor::OnEnableEditor()
 {
+	OnStopPlay();
+}
+
+void Editor::OnPlay()
+{
+	if (m_editorCamera) {
+		m_editorCameraCachedMatrix = m_editorCamera->GetWorldMatrix();
+		m_hasEditorCameraCachedMatrix = true;
+		Engine::GetWorld()->DeleteNode(m_editorCamera);
+	}
+	if (m_autoRestoreWorld) {
+		SceneSave::SaveAs(Engine::GetWorld(), "__sceneplay.tmp");
+	}
+}
+
+void Editor::OnStopPlay()
+{
 	if (!m_updateWorld) {
 		SpawnEditorCamera();
 		m_editorCamera->SetWorldMatrix(m_editorCameraCachedMatrix);
+	}
+	if (m_autoRestoreWorld) {
+		m_sceneToLoad = "__sceneplay.tmp";
 	}
 }
 
@@ -511,6 +534,7 @@ void Editor::Run_AboutWindow()
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
 	ImGui::SetNextWindowSize(ImVec2(550.f, 300.f), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
+
 	if (ImGui::Begin("About", &m_showAboutWindow)) {
 		auto str = fmt::format(R"(
 Rayxen Engine:
@@ -541,11 +565,13 @@ void Editor::Run_HelpWindow()
 		auto str = fmt::format(R"(
 Help:
 
-TODO: INSERT HELP HERE!
+See the documentation at the rayxen/docs folder for programming documentation.
+
 )");
 		ImGui::Text(str.c_str());
 		ImGui::Text("");
 	}
+
 	ImGui::End();
 	ImGui::PopStyleVar();
 }
@@ -564,6 +590,7 @@ void Editor::PushPostFrameCommand(std::function<void()>&& func)
 {
 	Engine::GetEditor()->m_postFrameCommands.emplace_back(func);
 }
+
 
 void Editor::PreBeginFrame()
 {
@@ -815,6 +842,7 @@ struct ExampleAppLog {
 			}
 		}
 		else {
+
 			// The simplest and easy way to display the entire buffer:
 			//   ImGui::TextUnformatted(buf_begin, buf_end);
 			// And it'll just work. TextUnformatted() has specialization for large blob of text and will fast-forward to
