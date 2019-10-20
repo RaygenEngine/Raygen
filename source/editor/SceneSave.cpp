@@ -10,6 +10,7 @@
 #include "asset/PodIncludes.h"
 #include "asset/UriLibrary.h"
 #include "world/nodes/RootNode.h"
+#include "world/nodes/camera/EditorCameraNode.h"
 
 #include <imgui/imgui.h>
 #include <glm/glm.hpp>
@@ -28,7 +29,7 @@ SceneSave::SceneSave()
 
 void SceneSave::OpenBrowser()
 {
-	m_saveBrowser.Open();
+	m_saveBrowser.Open(m_lastFile);
 }
 
 void SceneSave::Draw()
@@ -36,6 +37,8 @@ void SceneSave::Draw()
 	m_saveBrowser.Display();
 	if (m_saveBrowser.HasSelected()) {
 		fs::path file = m_saveBrowser.GetSelected();
+		file.replace_extension(".json");
+		m_lastFile = file.filename().string();
 		m_saveBrowser.ClearSelected();
 		SaveAs(Engine::GetWorld(), file.string());
 	}
@@ -48,7 +51,6 @@ void GenerateJsonForNode(json& j, Node* node)
 	using namespace sceneconv;
 
 	j[nameLabel] = node->GetName();
-	LOG_REPORT("StrView: {}", node->GetClass().GetName());
 	j[typeLabel] = FilterNodeClassName(node->GetClass().GetName());
 	j[trsLabel] = { { posLabel, node->GetLocalTranslation() }, { rotLabel, node->GetLocalPYR() },
 		{ scaleLabel, node->GetLocalScale() } };
@@ -57,6 +59,9 @@ void GenerateJsonForNode(json& j, Node* node)
 
 	json childrenArray = json::array();
 	for (auto& childNode : node->GetChildren()) {
+		if (childNode->IsA<EditorCameraNode>()) {
+			continue;
+		}
 		json jsonChild = json::object();
 		GenerateJsonForNode(jsonChild, childNode.get());
 		childrenArray.emplace_back(jsonChild);
@@ -65,23 +70,27 @@ void GenerateJsonForNode(json& j, Node* node)
 }
 } // namespace
 
-void SceneSave::SaveAs(World* world, const uri::Uri& path)
+void SceneSave::SaveAs(World* world, const uri::Uri& p)
 {
-	std::ofstream ofile(path);
+	std::ofstream ofile(p);
 
 	if (!ofile.is_open()) {
-		LOG_ERROR("Failed to open file for world save: {}", path);
+		Engine::SetStatusLine("Failed to save scene.");
+		LOG_ERROR("Failed to open file for world save: {}", p);
 		return;
 	}
 
 	json scene = json::array();
 
 	for (auto& child : world->GetRoot()->GetChildren()) {
+		if (child->IsA<EditorCameraNode>()) {
+			continue;
+		}
 		json jsonChild = json::object();
 		GenerateJsonForNode(jsonChild, child.get());
 		scene.emplace_back(jsonChild);
 	}
 
 	ofile << std::setw(4) << scene;
-	LOG_REPORT("Written scene at: {}", path);
+	LOG_REPORT("Written scene at: {}", p);
 }

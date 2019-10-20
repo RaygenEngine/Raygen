@@ -9,6 +9,7 @@ class World;
 
 class SceneSave {
 	ImGui::FileBrowser m_saveBrowser;
+	std::string m_lastFile;
 
 public:
 	SceneSave();
@@ -17,5 +18,5 @@ public:
 
 	void Draw();
 
-	static void SaveAs(World* world, const uri::Uri& paths);
+	static void SaveAs(World* world, const uri::Uri& p);
 };
