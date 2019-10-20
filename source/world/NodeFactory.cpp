@@ -72,8 +72,7 @@ void NodeFactory::LoadNodeAndChildren(const json& jsonObject, Node* parent)
 
 	LoadNode_Properties(jsonObject, node);
 	Engine::GetWorld()->RegisterNode(node, parent);
-	node->m_dirty.set();
-	node->SetDirty(0);
+
 
 	auto itChildren = jsonObject.find(childrenLabel);
 	if (itChildren != jsonObject.end()) {

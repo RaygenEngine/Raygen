@@ -64,6 +64,7 @@ set(SOURCE_FILES
 	world/nodes/RootNode.cpp
 	world/nodes/camera/CameraNode.cpp
 	world/nodes/camera/WindowCameraNode.cpp
+	world/nodes/camera/EditorCameraNode.cpp
 	world/nodes/geometry/GeometryNode.cpp
 	world/nodes/light/PunctualLightNode.cpp
 	world/nodes/light/DirectionalLightNode.cpp
@@ -190,6 +191,7 @@ set(HEADER_FILES
 	world/nodes/TransformNode.h
 	world/nodes/camera/CameraNode.h
 	world/nodes/camera/WindowCameraNode.h
+	world/nodes/camera/EditorCameraNode.h
 	world/nodes/sky/SkyboxNode.h
 	world/nodes/geometry/GeometryNode.h
 	world/nodes/light/PunctualLightNode.h
