@@ -94,6 +94,8 @@ protected:
 
 	void MakeMainMenu();
 
+	inline static bool s_showHelpTooltips{ true };
+
 public:
 	DECLARE_EVENT_LISTENER(m_onNodeRemoved, Event::OnWorldNodeRemoved);
 	DECLARE_EVENT_LISTENER(m_onWorldLoaded, Event::OnWorldLoaded);
@@ -156,6 +158,8 @@ public:
 	void Run_LogWindow();
 	static void PushCommand(std::function<void()>&& func);
 	static void PushPostFrameCommand(std::function<void()>&& func);
+
+	static void HelpTooltip(const char* tooltip);
 
 	void OnPlay();
 	void OnStopPlay();

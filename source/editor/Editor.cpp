@@ -143,7 +143,7 @@ void Editor::UpdateEditor()
 
 	Run_MenuBar();
 
-	if (ImGui::Checkbox("Update World  ", &m_updateWorld)) {
+	if (ImGui::Checkbox("Update World ", &m_updateWorld)) {
 		if (m_updateWorld) {
 			OnPlay();
 		}
@@ -151,6 +151,12 @@ void Editor::UpdateEditor()
 			OnStopPlay();
 		}
 	}
+
+	HelpTooltip(R"(Enables the update functions of the world nodes, and disables the editor camera.
+Some editor functionality like piloting may not work because they require the editor camera.
+
+To discard the state after running updates, use restore update state.)");
+
 	if (!m_updateWorld) {
 		ImGui::SameLine();
 		ImGui::Checkbox("Restore update state", &m_autoRestoreWorld);
@@ -589,6 +595,24 @@ void Editor::PushCommand(std::function<void()>&& func)
 void Editor::PushPostFrameCommand(std::function<void()>&& func)
 {
 	Engine::GetEditor()->m_postFrameCommands.emplace_back(func);
+}
+
+void Editor::HelpTooltip(const char* tooltip)
+{
+	if (!Editor::s_showHelpTooltips) {
+		return;
+	}
+	ImGui::SameLine();
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 0.95f));
+	ImGui::TextUnformatted("?");
+	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered()) {
+		ImGui::BeginTooltip();
+		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 30.0f);
+		ImGui::TextUnformatted(tooltip);
+		ImGui::PopTextWrapPos();
+		ImGui::EndTooltip();
+	}
 }
 
 
