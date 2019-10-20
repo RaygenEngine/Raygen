@@ -84,7 +84,7 @@ void Editor::MakeMainMenu()
 	m_menus.emplace_back(std::move(renderersMenu));
 
 	auto debugMenu = std::make_unique<ImMenu>("Debug");
-	debugMenu->AddEntry("Open ImGui Demo", [&]() { m_showImguiDemo = true; });
+	debugMenu->AddEntry("Open ImGui Demo", [&]() { m_showImguiDemo = !m_showImguiDemo; });
 	debugMenu->AddEntry("Open Log", [&]() { m_showLogWindow = true; });
 	m_menus.emplace_back(std::move(debugMenu));
 
