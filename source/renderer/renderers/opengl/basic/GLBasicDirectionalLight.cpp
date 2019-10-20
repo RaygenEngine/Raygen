@@ -50,6 +50,10 @@ GLBasicDirectionalLight::~GLBasicDirectionalLight()
 
 void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geometries)
 {
+	if (!node->CastsShadows()) {
+		return;
+	}
+
 	glViewport(0, 0, node->GetShadowMapWidth(), node->GetShadowMapHeight());
 
 	glEnable(GL_DEPTH_TEST);
@@ -57,9 +61,6 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glClear(GL_DEPTH_BUFFER_BIT);
-
-	if (!node->CastsShadows())
-		return;
 
 	glUseProgram(depthMapShader->programId);
 

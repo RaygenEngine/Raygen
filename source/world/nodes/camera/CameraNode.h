@@ -6,11 +6,11 @@
 class CameraNode : public Node {
 	REFLECTED_NODE(CameraNode, Node, DF_FLAGS(Projection, ViewportSize, FocalLength))
 	{
+		REFLECT_VAR(m_near).OnDirty(DF::Projection);
 		REFLECT_VAR(m_far).OnDirty(DF::Projection);
 		REFLECT_VAR(m_focalLength).OnDirty(DF::FocalLength);
 		REFLECT_VAR(m_vFov).OnDirty(DF::Projection);
 		REFLECT_VAR(m_hFov).OnDirty(DF::Projection);
-		REFLECT_VAR(m_near).OnDirty(DF::Projection);
 
 		REFLECT_VAR(m_viewportWidth, PropertyFlags::Transient).OnDirty(DF::ViewportSize);
 

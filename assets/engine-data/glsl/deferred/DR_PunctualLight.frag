@@ -19,6 +19,8 @@ uniform struct PunctualLight
 	float far;
 
 	int attenCoef;
+	
+	bool castsShadow;
 
 	int samples;
 	float maxShadowBias;
@@ -36,6 +38,9 @@ uniform struct GBuffer
 
 float ShadowCalculation(vec3 pos, float cosTheta)
 {
+	if(!punctualLight.castsShadow)
+		return 0.0;
+
 	// get vector between fragment position and light position
     vec3 fragToLight = pos - punctualLight.wcs_pos;
 	
