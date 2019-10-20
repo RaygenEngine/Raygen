@@ -20,7 +20,7 @@
 #include "world/NodeFactory.h"
 
 #include "editor/imgui/ImguiUtil.h"
-
+#include "world/nodes/geometry/GeometryNode.h"
 #include <iostream>
 #include <set>
 
@@ -212,7 +212,34 @@ void Editor::Outliner()
 
 	ImGui::PopStyleVar(2);
 	ImGui::EndChild();
+
+	if (ImGui::BeginDragDropTarget()) {
+		std::string payloadTag = "POD_UID_" + std::to_string(ctti::type_id<ModelPod>().hash());
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(payloadTag.c_str())) {
+			assert(payload->DataSize == sizeof(size_t));
+			size_t uid = *reinterpret_cast<size_t*>(payload->Data);
+
+			auto* podEntry = AssetManager::GetEntry(BasePodHandle{ uid });
+
+			auto cmd = [uid, podEntry]() {
+				auto newNode = NodeFactory::NewNode<GeometryNode>();
+
+				newNode->SetName(podEntry->name);
+				newNode->SetModel(PodHandle<ModelPod>{ uid });
+				Engine::GetWorld()->RegisterNode(newNode, Engine::GetWorld()->GetRoot());
+
+				DirtyFlagset temp;
+				temp.set();
+
+				newNode->SetDirtyMultiple(temp);
+			};
+
+			PushCommand(cmd);
+		}
+		ImGui::EndDragDropTarget();
+	}
 }
+
 
 void Editor::LoadScene(const fs::path& scenefile)
 {
