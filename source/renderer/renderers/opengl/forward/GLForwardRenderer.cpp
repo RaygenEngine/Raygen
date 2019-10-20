@@ -341,6 +341,11 @@ void GLForwardRenderer::RenderDirectionalLights()
 
 	for (auto light : m_glDirectionalLights) {
 
+		// light AABB camera frustum culling
+		if (!math::BoxFrustumCollision(light->node->GetFrustumAABB(), m_camera->GetFrustum())) {
+			continue;
+		}
+
 		light->RenderShadowMap(m_glGeometries);
 
 		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
@@ -437,6 +442,12 @@ void GLForwardRenderer::RenderSpotLights()
 	auto ls = m_forwardSpotLightShader;
 
 	for (auto light : m_glSpotLights) {
+
+		// light AABB camera frustum culling
+		if (!math::BoxFrustumCollision(light->node->GetFrustumAABB(), m_camera->GetFrustum())) {
+			continue;
+		}
+
 		light->RenderShadowMap(m_glGeometries);
 
 		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
@@ -625,8 +636,6 @@ void GLForwardRenderer::RenderBoundingBoxes()
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	auto worldNodes = Engine::GetWorld()->GetNodeMap<Node>();
-
 	glBindVertexArray(m_bbVao);
 
 	auto RenderBox = [&](Box box, glm::vec4 color) {
@@ -709,8 +718,16 @@ void GLForwardRenderer::RenderBoundingBoxes()
 		glDrawArrays(GL_LINES, 8, 8);
 	};
 
-	for (auto node : worldNodes) {
-		RenderBox(node->GetAABB(), { 1, 1, 1, 1 });
+	for (auto gObs : m_glGeometries) {
+		RenderBox(gObs->node->GetAABB(), { 1, 1, 1, 1 });
+	}
+
+	for (auto slObs : m_glSpotLights) {
+		RenderBox(slObs->node->GetFrustumAABB(), { 1, 1, 0, 1 });
+	}
+
+	for (auto dlObs : m_glDirectionalLights) {
+		RenderBox(dlObs->node->GetFrustumAABB(), { 1, 1, 0, 1 });
 	}
 
 	glDisable(GL_DEPTH_TEST);

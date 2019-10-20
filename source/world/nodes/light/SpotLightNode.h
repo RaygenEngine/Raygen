@@ -15,6 +15,8 @@ class SpotLightNode : public LightNode {
 	glm::mat4 m_viewMatrix{};
 	glm::mat4 m_viewProjectionMatrix{};
 	Frustum m_frustum{};
+	// (pyramid's) frustum world space aabb
+	Box m_frustumAABB{};
 
 	// angle
 	float m_outerAperture{ 25.f };
@@ -44,4 +46,5 @@ public:
 	[[nodiscard]] glm::mat4 GetViewProjectionMatrix() const { return m_viewProjectionMatrix; }
 	[[nodiscard]] AttenuationMode GetAttenuationMode() const { return m_attenuationMode; }
 	[[nodiscard]] Frustum GetFrustum() const { return m_frustum; }
+	[[nodiscard]] Box GetFrustumAABB() const { return m_frustumAABB; }
 };

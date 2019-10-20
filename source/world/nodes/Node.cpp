@@ -88,24 +88,6 @@ void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 	glm::vec4 persp;
 	glm::decompose(m_worldMatrix, m_worldScale, m_worldOrientation, m_worldTranslation, skew, persp);
 
-	const auto center = (m_localBB.min + m_localBB.max) / 2.f;
-	const auto extend = (m_localBB.max - m_localBB.min) / 2.f;
-
-	const auto newCenter = glm::vec3(m_worldMatrix * glm::vec4(center, 1.f));
-
-	glm::mat4 absMat{};
-
-	for (auto j = 0; j < 3; ++j) {
-		for (auto i = 0; i < 3; ++i) {
-			absMat[i][j] = glm::abs(m_worldMatrix[i][j]);
-		}
-	}
-
-	auto newExtend = glm::vec3(absMat * glm::vec4(extend, 0.f));
-
-	m_aabb = { newCenter - newExtend, newCenter + newExtend };
-
-
 	for (auto& uPtr : m_children) {
 		uPtr->UpdateTransforms(m_worldMatrix);
 	}

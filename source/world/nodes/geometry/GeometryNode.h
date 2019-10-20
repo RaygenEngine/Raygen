@@ -10,8 +10,13 @@ class GeometryNode : public Node {
 
 	PodHandle<ModelPod> m_model;
 
+	// world space
+	Box m_aabb;
+	Box m_localBB;
+
 public:
 	[[nodiscard]] PodHandle<ModelPod> GetModel() const { return m_model; }
+	[[nodiscard]] Box GetAABB() const { return m_aabb; }
 
 	void DirtyUpdate(DirtyFlagset dirtyFlags) override;
 };
