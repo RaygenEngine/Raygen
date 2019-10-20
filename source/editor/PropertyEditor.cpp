@@ -250,8 +250,13 @@ struct ReflectionToImguiVisitor {
 			ImGui::Indent();
 			int32 index = 0;
 			bool isThisMassEditing = false;
+			bool shouldReloadMaterials = false;
 			if (massEditMaterialVector == nullptr) {
 				ImGui::Checkbox("Mass Edit Materials", &massEditMaterials);
+				ImGui::SameLine();
+
+				shouldReloadMaterials = ImGui::Button("Reload Materials");
+
 				if (massEditMaterials) {
 					massEditMaterialVector = &t;
 					isThisMassEditing = true;
@@ -275,7 +280,9 @@ struct ReflectionToImguiVisitor {
 					ImGui::Unindent();
 					ImGui::PopID();
 				}
-
+				if (shouldReloadMaterials) {
+					AssetManager::Reload(handle);
+				}
 
 				ImGui::PopID();
 			}
@@ -299,6 +306,8 @@ struct ReflectionToImguiVisitor {
 		str = t.GetValueStr();
 		int32 currentValue = t.GetValue();
 
+		bool edited = false;
+
 		if (ImGui::BeginCombo(
 				name, str.c_str())) // The second parameter is the label previewed before opening the combo.
 		{
@@ -306,6 +315,7 @@ struct ReflectionToImguiVisitor {
 				bool selected = (currentValue == value);
 				if (ImGui::Selectable(enumStr.c_str(), &selected)) {
 					t.SetValue(value);
+					edited = true;
 				}
 				if (selected) {
 					ImGui::SetItemDefaultFocus();
@@ -314,7 +324,7 @@ struct ReflectionToImguiVisitor {
 			ImGui::EndCombo();
 		}
 
-		return false;
+		return edited;
 	}
 };
 
