@@ -54,6 +54,14 @@ public:
 
 	virtual void RegisterNodes();
 
+
+	// Avoid using this, this does NOT register absolutely anything. It just returns a new instance.
+	template<typename T>
+	static T* NewNode()
+	{
+		return static_cast<T*>(T::NewInstance());
+	}
+
 private:
 	// Utility helpers for loading
 	void LoadNode_Trs(const nlohmann::json& jsonTrsObject, Node* nodeToLoadInto);

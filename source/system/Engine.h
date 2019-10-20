@@ -98,6 +98,8 @@ private:
 
 	bool m_isEditorActive{ true };
 	bool m_isEditorEnabled{ true };
+	int32 m_currentRenderer{ 0 };
+
 
 	std::string m_statusLine{ "Use Engine::SetStatusLine() to overwrite this." };
 	float m_lastFrameTime{ 0.f };
@@ -148,15 +150,15 @@ public:
 
 	// Not completely accurate, for now its just 1 / lastFrameTime.
 	// Completely independant of world timers.
-	static float GetFPS();
+	[[nodiscard]] static float GetFPS();
 
 	void ReportFrameDrawn();
 
-	void NextRenderer()
-	{
-		static uint32 currentRenderer = 0;
-		SwitchRenderer(++currentRenderer % m_rendererRegistrations.size());
-	}
+	void NextRenderer() { SwitchRenderer(++m_currentRenderer % m_rendererRegistrations.size()); }
+
+	[[nodiscard]] int32 GetActiveRendererIndex() const { return m_currentRenderer; }
+
+	[[nodiscard]] std::vector<std::string> GetRendererList() const;
 
 	void ToggleEditor();
 };

@@ -77,6 +77,8 @@ void Engine::SwitchRenderer(uint32 registrationIndex)
 	delete eng.m_renderer;
 
 
+	m_currentRenderer = registrationIndex;
+
 	eng.m_renderer = eng.m_rendererRegistrations[registrationIndex].Construct();
 
 	LOG_REPORT("Switched to renderer: {}", eng.m_rendererRegistrations[registrationIndex].name);
@@ -133,6 +135,16 @@ void Engine::ReportFrameDrawn()
 		LOG_WARN("Init to frame took: {} ms", m_initToFrameTimer.Get());
 		m_initToFrameTimer.Stop();
 	}
+}
+
+std::vector<std::string> Engine::GetRendererList() const
+{
+	std::vector<std::string> result;
+
+	for (auto& r : m_rendererRegistrations) {
+		result.push_back(r.name);
+	}
+	return result;
 }
 
 void Engine::ToggleEditor()
