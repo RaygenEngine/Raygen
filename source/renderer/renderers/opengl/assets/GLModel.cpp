@@ -59,7 +59,7 @@ void GLModel::LoadGLMesh(const ModelPod& model, GLMesh& glMesh, const GeometryGr
 void GLModel::Load()
 {
 	auto modelData = podHandle.Lock();
-	TIMER_STATIC_SCOPE("uploading model time");
+	timer::ScopedTimer<ch::milliseconds> _("Uploading model time");
 
 	for (auto& mesh : modelData->meshes) {
 		for (auto& geometryGroup : mesh.geometryGroups) {

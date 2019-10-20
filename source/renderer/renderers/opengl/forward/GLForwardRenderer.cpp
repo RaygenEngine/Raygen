@@ -39,7 +39,7 @@ GLForwardRenderer::~GLForwardRenderer()
 void GLForwardRenderer::InitObservers()
 {
 	m_camera = Engine::GetWorld()->GetActiveCamera();
-	CLOG_ABORT(!m_camera, "This renderer expects a camera node to be present!");
+	CLOG_WARN(!m_camera, "Renderer found no camera.");
 
 	auto skyboxNode = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
 	CLOG_ABORT(!skyboxNode, "This renderer expects a skybox node to be present!");
@@ -768,20 +768,23 @@ void GLForwardRenderer::RenderWindow()
 
 void GLForwardRenderer::Render()
 {
-	// perform first pass as depth pass
-	RenderEarlyDepthPass();
-	// render lights
-	RenderDirectionalLights();
-	RenderSpotLights();
-	RenderPunctualLights();
-	// render node bounding boxes
-	RenderBoundingBoxes();
-	// render skybox, seamless enabled (render last)
-	RenderSkybox();
-	// copy msaa to out fbo and render any post process on it
-	RenderPostProcess();
-	// write out texture of out fbo to window (big triangle trick)
-	RenderWindow();
+	if (m_camera) {
+		// perform first pass as depth pass
+		RenderEarlyDepthPass();
+		// render lights
+		RenderDirectionalLights();
+		RenderSpotLights();
+		RenderPunctualLights();
+		// render node bounding boxes
+		RenderBoundingBoxes();
+		// render skybox, seamless enabled (render last)
+		RenderSkybox();
+		// copy msaa to out fbo and render any post process on it
+		RenderPostProcess();
+		// write out texture of out fbo to window (big triangle trick)
+		RenderWindow();
+	}
+	// else TODO: clear buffer
 
 	GLEditorRenderer::Render();
 
