@@ -63,7 +63,6 @@ void NodeFactory::LoadNodeAndChildren(const json& jsonObject, Node* parent)
 
 	Node* node = NewNodeFromType(type);
 
-	node->m_type = type;
 	node->m_name = jsonObject.value<std::string>(nameLabel, "unnamed_" + type);
 
 	auto it = jsonObject.find(trsLabel);

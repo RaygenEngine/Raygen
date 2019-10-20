@@ -119,6 +119,22 @@ bool Engine::IsEditorEnabled()
 	return Get().m_isEditorEnabled;
 }
 
+float Engine::GetFPS()
+{
+	return 1.f / std::max(Get().m_lastFrameTime, 0.0001f);
+}
+
+void Engine::ReportFrameDrawn()
+{
+	m_lastFrameTime = m_frameTimer.Get<ch::microseconds>() / 1e6f;
+	m_frameTimer.Start();
+
+	if (!m_initToFrameTimer.m_stopped) {
+		LOG_WARN("Init to frame took: {} ms", m_initToFrameTimer.Get());
+		m_initToFrameTimer.Stop();
+	}
+}
+
 void Engine::ToggleEditor()
 {
 	if (m_isEditorEnabled && m_renderer && m_renderer->SupportsEditor()) {

@@ -7,6 +7,32 @@ namespace ch = std::chrono;
 
 // TODO: refactor duplicate timers.
 namespace timer {
+
+// The simplest timer, just start and get
+struct Timer {
+	ch::time_point<ch::system_clock> startTime;
+
+	Timer(bool autoStart = false)
+	{
+		if (autoStart) {
+			Start();
+		}
+	}
+
+	void Start() { Restart(); }
+	void Restart() { startTime = ch::system_clock::now(); }
+
+	// If no duration type is passed, takes the parameter of the declaration
+	template<typename DurationType = ch::microseconds>
+	long long Get() const
+	{
+		return ch::duration_cast<DurationType>(ch::system_clock::now() - startTime).count();
+	}
+
+
+	auto GetTimeDiff() const { return ch::system_clock::now() - startTime; }
+};
+
 template<typename ChronoDuration = ch::microseconds>
 class DebugTimer {
 

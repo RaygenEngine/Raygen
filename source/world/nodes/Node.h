@@ -81,9 +81,6 @@ private:
 
 	DirtyFlagset m_dirty{};
 
-	// TODO: remove
-	std::string m_type;
-
 	Node* m_parent{ nullptr };
 
 	std::vector<NodeUniquePtr> m_children;
@@ -128,7 +125,6 @@ public:
 	[[nodiscard]] glm::vec3 GetWorldForward() const { return GetWorldOrientation() * glm::vec3(0.f, 0.f, -1.f); }
 
 	[[nodiscard]] bool IsLeaf() const { return m_children.empty(); }
-	[[nodiscard]] const std::string& GetType() const { return m_type; }
 	[[nodiscard]] const std::string& GetName() const { return m_name; };
 	[[nodiscard]] const std::vector<NodeUniquePtr>& GetChildren() const { return m_children; }
 

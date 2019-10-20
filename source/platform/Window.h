@@ -27,18 +27,20 @@ public:
 	bool IsClosed() const { return m_closed; }
 	bool IsFocused() const { return m_focused; }
 
+	virtual void Destroy() = 0;
+
 	virtual void RestrictMouseMovement() {}
 	virtual void ReleaseMouseMovement() {}
 
-	virtual void Show() {}
-	virtual void Hide() {}
+	virtual void Show() = 0;
+	virtual void Hide() = 0;
 
 	// Expected to fire the engine's resize event before the first window->Show(),
 	// allows the renderers to init with correct camera sizes before the window is visible.
-	virtual void FireFirstResizeEvent() {}
+	virtual void FireFirstResizeEvent() = 0;
 
 	virtual void SetTitle(const std::string& newTitle){};
 
 	// Called in the main loop
-	virtual void HandleEvents(bool shouldHandleControllers){};
+	virtual void HandleEvents(bool shouldHandleControllers) = 0;
 };
