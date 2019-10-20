@@ -11,17 +11,21 @@ void PunctualLightNode::RecalculateProjectionMatrix()
 
 void PunctualLightNode::RecalculateViewMatrices()
 {
-	// WIP: what to use here and in other lights
 	auto lookat = GetWorldTranslation() + glm::vec3(1.0, 0.0, 0.0);
 	m_viewMatrices[0] = glm::lookAt(GetWorldTranslation(), lookat, glm::vec3(0.0, -1.0, 0.0));
+
 	lookat = GetWorldTranslation() + glm::vec3(-1.0, 0.0, 0.0);
 	m_viewMatrices[1] = glm::lookAt(GetWorldTranslation(), lookat, glm::vec3(0.0, -1.0, 0.0));
+
 	lookat = GetWorldTranslation() + glm::vec3(0.0, 1.0, 0.0);
 	m_viewMatrices[2] = glm::lookAt(GetWorldTranslation(), lookat, glm::vec3(0.0, 0.0, 1.0));
+
 	lookat = GetWorldTranslation() + glm::vec3(0.0, -1.0, 0.0);
 	m_viewMatrices[3] = glm::lookAt(GetWorldTranslation(), lookat, glm::vec3(0.0, 0.0, -1.0));
+
 	lookat = GetWorldTranslation() + glm::vec3(0.0, 0.0, 1.0);
 	m_viewMatrices[4] = glm::lookAt(GetWorldTranslation(), lookat, glm::vec3(0.0, -1.0, 0.0));
+
 	lookat = GetWorldTranslation() + glm::vec3(0.0, 0.0, -1.0);
 	m_viewMatrices[5] = glm::lookAt(GetWorldTranslation(), lookat, glm::vec3(0.0, -1.0, 0.0));
 	RecalculateViewProjectionMatrices();

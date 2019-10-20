@@ -9,7 +9,6 @@
 #include "world/nodes/RootNode.h"
 #include "system/Input.h"
 #include "renderer/renderers/opengl/GLUtil.h"
-// WIP:
 #include "platform/windows/Win32Window.h"
 
 #include <glad/glad.h>
@@ -305,6 +304,11 @@ void GLForwardRenderer::RenderEarlyDepthPass()
 	auto vp = m_camera->GetViewProjectionMatrix();
 
 	for (auto& geometry : m_glGeometries) {
+		// view frustum culling
+		if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+			continue;
+		}
+
 		auto m = geometry->node->GetWorldMatrix();
 		auto mvp = vp * m;
 
@@ -352,14 +356,13 @@ void GLForwardRenderer::RenderDirectionalLights()
 
 		glUseProgram(ls->programId);
 
-		const auto root = Engine::GetWorld()->GetRoot();
 		const auto vp = m_camera->GetViewProjectionMatrix();
 
 		// global uniforms
 		ls->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
 
 		// light
-		ls->SendVec3("directionalLight.wcs_dir", light->node->GetFront());
+		ls->SendVec3("directionalLight.wcs_dir", light->node->GetWorldForward());
 		ls->SendVec3("directionalLight.color", light->node->GetColor());
 		ls->SendFloat("directionalLight.intensity", light->node->GetIntensity());
 		ls->SendInt("directionalLight.samples", light->node->GetSamples());
@@ -367,6 +370,12 @@ void GLForwardRenderer::RenderDirectionalLights()
 		ls->SendTexture("directionalLight.shadowMap", light->shadowMap, 0);
 
 		for (auto& geometry : m_glGeometries) {
+			// view frustum culling
+			if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+				continue;
+			}
+
+
 			auto m = geometry->node->GetWorldMatrix();
 
 			constexpr glm::mat4 biasMatrix(
@@ -443,7 +452,6 @@ void GLForwardRenderer::RenderSpotLights()
 
 		glUseProgram(ls->programId);
 
-		const auto root = Engine::GetWorld()->GetRoot();
 		const auto vp = m_camera->GetViewProjectionMatrix();
 
 		// global uniforms
@@ -451,7 +459,7 @@ void GLForwardRenderer::RenderSpotLights()
 
 		// light
 		ls->SendVec3("spotLight.wcs_pos", light->node->GetWorldTranslation());
-		ls->SendVec3("spotLight.wcs_dir", light->node->GetFront());
+		ls->SendVec3("spotLight.wcs_dir", light->node->GetWorldForward());
 		ls->SendFloat("spotLight.outerCutOff", glm::cos(glm::radians(light->node->GetOuterAperture() / 2.f)));
 		ls->SendFloat("spotLight.innerCutOff", glm::cos(glm::radians(light->node->GetInnerAperture() / 2.f)));
 		ls->SendVec3("spotLight.color", light->node->GetColor());
@@ -463,6 +471,11 @@ void GLForwardRenderer::RenderSpotLights()
 
 
 		for (auto& geometry : m_glGeometries) {
+			// view frustum culling
+			if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+				continue;
+			}
+
 			auto m = geometry->node->GetWorldMatrix();
 
 			constexpr glm::mat4 biasMatrix(
@@ -538,7 +551,6 @@ void GLForwardRenderer::RenderPunctualLights()
 
 		glUseProgram(ls->programId);
 
-		const auto root = Engine::GetWorld()->GetRoot();
 		const auto vp = m_camera->GetViewProjectionMatrix();
 
 		// global uniforms
@@ -555,6 +567,11 @@ void GLForwardRenderer::RenderPunctualLights()
 		ls->SendCubeTexture("punctualLight.shadowCubemap", light->cubeShadowMap, 0);
 
 		for (auto& geometry : m_glGeometries) {
+			// view frustum culling
+			if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+				continue;
+			}
+
 			auto m = geometry->node->GetWorldMatrix();
 			auto mvp = vp * m;
 
@@ -693,8 +710,7 @@ void GLForwardRenderer::RenderBoundingBoxes()
 	};
 
 	for (auto node : worldNodes) {
-		RenderBox(node->m_aabb, { 1, 0, 0, 1 });
-		// RenderBox(node->GetBBox(), { 1, 1, 1, 1 });
+		RenderBox(node->GetAABB(), { 1, 1, 1, 1 });
 	}
 
 	glDisable(GL_DEPTH_TEST);

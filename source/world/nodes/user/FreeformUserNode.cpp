@@ -4,14 +4,13 @@
 #include "world/nodes/RootNode.h"
 #include "asset/util/ParsingAux.h"
 #include "system/Engine.h"
-#include "world/World.h"
 #include "system/Input.h"
 
 void FreeformUserNode::Update(float deltaTime)
 {
 	auto& input = *Engine::GetInput();
 
-	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetWheelDelta() / 240.f * 2.0f, 0.f, 100.0f);
+	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetWheelDelta() / 240.f * 2.0f, 1.0f, 100.0f);
 	auto speed = m_movementSpeed;
 
 	speed *= deltaTime;
@@ -29,8 +28,8 @@ void FreeformUserNode::Update(float deltaTime)
 		const float yaw = -input.GetCursorRelativePosition().x * m_turningSpeed * 0.5f;
 		const float pitch = -input.GetCursorRelativePosition().y * m_turningSpeed * 0.5f;
 
-		RotateAroundAxis(GetParent()->GetUp(), yaw);
-		RotateAroundAxis(GetRight(), pitch);
+		RotateAroundAxis(GetParent()->GetWorldUp(), yaw);
+		RotateAroundAxis(GetWorldRight(), pitch);
 	}
 
 	if (!input.IsRightThumbResting()) {
@@ -40,8 +39,8 @@ void FreeformUserNode::Update(float deltaTime)
 		const auto pitch
 			= input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;
 
-		RotateAroundAxis(GetParent()->GetUp(), glm::radians(yaw));
-		RotateAroundAxis(GetRight(), glm::radians(pitch));
+		RotateAroundAxis(GetParent()->GetWorldUp(), glm::radians(yaw));
+		RotateAroundAxis(GetWorldRight(), glm::radians(pitch));
 	}
 
 	// user movement
@@ -51,32 +50,32 @@ void FreeformUserNode::Update(float deltaTime)
 			input.GetLeftThumbDirection().x * input.GetLeftThumbMagnitude());
 
 		// adjust angle to match user rotation
-		const auto rotMat = glm::rotate(-(joystickAngle + glm::half_pi<float>()), GetUp());
-		const glm::vec3 moveDir = rotMat * glm::vec4(GetFront(), 1.f);
+		const auto rotMat = glm::rotate(-(joystickAngle + glm::half_pi<float>()), GetWorldUp());
+		const glm::vec3 moveDir = rotMat * glm::vec4(GetWorldForward(), 1.f);
 
 		AddLocalOffset(moveDir * speed * input.GetLeftThumbMagnitude());
 	}
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::W, XVirtualKey::GAMEPAD_DPAD_UP)) {
-		AddWorldOffset(GetFront() * speed);
+		AddWorldOffset(GetWorldForward() * speed);
 	}
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::S, XVirtualKey::GAMEPAD_DPAD_DOWN)) {
-		AddWorldOffset((-GetFront()) * speed);
+		AddWorldOffset((-GetWorldForward()) * speed);
 	}
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::D, XVirtualKey::GAMEPAD_DPAD_RIGHT)) {
-		AddLocalOffset((GetRight()) * speed);
+		AddLocalOffset((GetWorldRight()) * speed);
 	}
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::A, XVirtualKey::GAMEPAD_DPAD_LEFT)) {
-		AddLocalOffset((-GetRight()) * speed);
+		AddLocalOffset((-GetWorldRight()) * speed);
 	}
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::E, XVirtualKey::GAMEPAD_LEFT_SHOULDER)) {
-		AddLocalOffset((GetWorldRoot()->GetUp()) * speed);
+		AddLocalOffset((GetWorldRoot()->GetWorldUp()) * speed);
 	}
 
 	if (input.IsAnyOfKeysRepeat(XVirtualKey::Q, XVirtualKey::GAMEPAD_RIGHT_SHOULDER)) {
-		AddLocalOffset((-GetWorldRoot()->GetUp()) * speed);
+		AddLocalOffset((-GetWorldRoot()->GetWorldUp()) * speed);
 	}
 }

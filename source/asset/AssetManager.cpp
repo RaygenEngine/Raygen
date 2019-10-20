@@ -20,7 +20,7 @@ void AssetManager::PreloadGltf(const uri::Uri& gltfModelPath)
 {
 	auto pParent = AssetManager::GetOrCreate<GltfFilePod>(gltfModelPath);
 
-	const tinygltf::Model& file = pParent->data;
+	const tinygltf::Model& file = pParent.Lock()->data;
 
 	for (auto& gltfImage : file.images) {
 		GetOrCreateFromParent<ImagePod>(gltfImage.uri, pParent);
