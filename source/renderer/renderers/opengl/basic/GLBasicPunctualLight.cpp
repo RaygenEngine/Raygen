@@ -57,7 +57,7 @@ GLBasicPunctualLight::~GLBasicPunctualLight()
 
 void GLBasicPunctualLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geometries)
 {
-	if (node->CastsShadows()) {
+	if (!node->CastsShadows()) {
 		return;
 	}
 
