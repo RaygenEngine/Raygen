@@ -28,6 +28,36 @@ struct ReflectionToImguiVisitor {
 
 	int32 id{ 1 };
 
+	// TODO: a little hack for mass material editing in vectors, should be replaced when and if we do actual asset
+	// editors.
+	bool massEditMaterials{ false };
+	std::vector<PodHandle<MaterialPod>>* massEditMaterialVector{ nullptr };
+	template<typename T>
+	void MassMaterialEdit(T& t, const Property& p)
+	{
+		for (auto& materialHandle : *massEditMaterialVector) {
+			p.GetRef<T>(const_cast<MaterialPod*>(materialHandle.Lock())) = t;
+		}
+	}
+
+	template<typename T>
+	void MassMaterialEdit(PodHandle<T>& t, const Property& p)
+	{
+	}
+	template<typename T>
+	void MassMaterialEdit(std::vector<PodHandle<T>>& t, const Property& p)
+	{
+	}
+	template<>
+	void MassMaterialEdit(MetaEnumInst& t, const Property& p)
+	{
+		for (auto& materialHandle : *massEditMaterialVector) {
+			p.GetEnumRef(const_cast<MaterialPod*>(materialHandle.Lock())).SetValue(t.GetValue());
+		}
+	}
+	// End of mass edit material
+
+
 	void PreProperty(const Property& p)
 	{
 		ImGui::PushID(id++);
@@ -45,6 +75,9 @@ struct ReflectionToImguiVisitor {
 				dirtyFlags.set(p.GetDirtyFlagIndex());
 			}
 			dirtyFlags.set(Node::DF::Properties);
+			if (massEditMaterials) {
+				MassMaterialEdit<T>(t, p);
+			}
 		}
 	}
 
@@ -205,6 +238,52 @@ struct ReflectionToImguiVisitor {
 
 				ImGui::PopID();
 			}
+			ImGui::Unindent();
+		}
+		return false;
+	}
+
+	template<>
+	bool Inner(std::vector<PodHandle<MaterialPod>>& t, const Property& p)
+	{
+		if (ImGui::CollapsingHeader(name)) {
+			ImGui::Indent();
+			int32 index = 0;
+			bool isThisMassEditing = false;
+			if (massEditMaterialVector == nullptr) {
+				ImGui::Checkbox("Mass Edit Materials", &massEditMaterials);
+				if (massEditMaterials) {
+					massEditMaterialVector = &t;
+					isThisMassEditing = true;
+				}
+			}
+
+
+			for (auto& handle : t) {
+				ImGui::PushID(index);
+				++index;
+
+				std::string finalName = AssetManager::GetEntry(handle)->name;
+
+				bool r = ImGui::CollapsingHeader(finalName.c_str());
+				PodDropTarget(handle);
+				TEXT_TOOLTIP("{}", AssetManager::GetPodUri(handle));
+				if (r) {
+					ImGui::PushID(index * 1024 * 1024);
+					ImGui::Indent();
+					refltools::CallVisitorOnEveryProperty(const_cast<MaterialPod*>(handle.Lock()), *this);
+					ImGui::Unindent();
+					ImGui::PopID();
+				}
+
+
+				ImGui::PopID();
+			}
+
+			if (isThisMassEditing) {
+				massEditMaterialVector = nullptr;
+			}
+
 			ImGui::Unindent();
 		}
 		return false;
@@ -410,7 +489,9 @@ void PropertyEditor::Run_ReflectedProperties(Node* node)
 	ReflectionToImguiVisitor visitor;
 	visitor.node = node;
 	visitor.fullDisplayMat4 = m_displayMatrix;
+	visitor.massEditMaterials = m_massEditMaterials;
 	refltools::CallVisitorOnEveryProperty(node, visitor);
 
+	m_massEditMaterials = visitor.massEditMaterials;
 	node->SetDirtyMultiple(visitor.dirtyFlags);
 }
