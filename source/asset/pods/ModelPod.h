@@ -27,13 +27,14 @@ struct Mesh {
 };
 
 struct ModelPod : public AssetPod {
+
 	REFLECTED_POD(ModelPod) { REFLECT_VAR(materials); }
 
 	static void Load(ModelPod* pod, const uri::Uri& path);
 
 	std::vector<Mesh> meshes{};
 
-	Box bbox;
+	Box bbox{ glm::vec3(.5f), glm::vec3(-.5f) };
 
 	std::vector<PodHandle<MaterialPod>> materials{};
 };

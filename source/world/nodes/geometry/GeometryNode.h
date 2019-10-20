@@ -2,6 +2,8 @@
 
 #include "world/nodes/Node.h"
 #include "asset/pods/ModelPod.h"
+// WIP: move to cpp
+#include "asset/AssetManager.h"
 
 class GeometryNode : public Node {
 	REFLECTED_NODE(GeometryNode, Node, DF_FLAGS(ModelChange)) { REFLECT_VAR(m_model).OnDirty(DF::ModelChange); }
