@@ -1,6 +1,7 @@
 #include "pch/pch.h"
 
 #include "world/nodes/camera/CameraNode.h"
+#include "core/MathAux.h"
 
 void CameraNode::RecalculateProjectionFov()
 {
@@ -20,6 +21,13 @@ void CameraNode::RecalculateViewMatrix()
 void CameraNode::RecalculateViewProjectionMatrix()
 {
 	m_viewProjectionMatrix = m_projectionMatrix * m_viewMatrix;
+	RecalculateFrustum();
+}
+
+void CameraNode::RecalculateFrustum()
+{
+	// viewProj to get frustum plane equations in world space
+	math::ExtractFrustumPlanes(m_frustum, m_viewProjectionMatrix);
 }
 
 void CameraNode::DirtyUpdate(DirtyFlagset flags)

@@ -304,6 +304,12 @@ void GLForwardRenderer::RenderEarlyDepthPass()
 	auto vp = m_camera->GetViewProjectionMatrix();
 
 	for (auto& geometry : m_glGeometries) {
+		// view frustum culling
+		if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+			LOG_REPORT("node {} will not be rendered", geometry->node->GetName());
+			continue;
+		}
+
 		auto m = geometry->node->GetWorldMatrix();
 		auto mvp = vp * m;
 
@@ -351,7 +357,6 @@ void GLForwardRenderer::RenderDirectionalLights()
 
 		glUseProgram(ls->programId);
 
-		const auto root = Engine::GetWorld()->GetRoot();
 		const auto vp = m_camera->GetViewProjectionMatrix();
 
 		// global uniforms
@@ -366,6 +371,13 @@ void GLForwardRenderer::RenderDirectionalLights()
 		ls->SendTexture("directionalLight.shadowMap", light->shadowMap, 0);
 
 		for (auto& geometry : m_glGeometries) {
+			// view frustum culling
+			if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+				LOG_REPORT("node {} will not be rendered", geometry->node->GetName());
+				continue;
+			}
+
+
 			auto m = geometry->node->GetWorldMatrix();
 
 			constexpr glm::mat4 biasMatrix(
@@ -442,7 +454,6 @@ void GLForwardRenderer::RenderSpotLights()
 
 		glUseProgram(ls->programId);
 
-		const auto root = Engine::GetWorld()->GetRoot();
 		const auto vp = m_camera->GetViewProjectionMatrix();
 
 		// global uniforms
@@ -462,6 +473,12 @@ void GLForwardRenderer::RenderSpotLights()
 
 
 		for (auto& geometry : m_glGeometries) {
+			// view frustum culling
+			if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+				LOG_REPORT("node {} will not be rendered", geometry->node->GetName());
+				continue;
+			}
+
 			auto m = geometry->node->GetWorldMatrix();
 
 			constexpr glm::mat4 biasMatrix(
@@ -537,7 +554,6 @@ void GLForwardRenderer::RenderPunctualLights()
 
 		glUseProgram(ls->programId);
 
-		const auto root = Engine::GetWorld()->GetRoot();
 		const auto vp = m_camera->GetViewProjectionMatrix();
 
 		// global uniforms
@@ -554,6 +570,12 @@ void GLForwardRenderer::RenderPunctualLights()
 		ls->SendCubeTexture("punctualLight.shadowCubemap", light->cubeShadowMap, 0);
 
 		for (auto& geometry : m_glGeometries) {
+			// view frustum culling
+			if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+				LOG_REPORT("node {} will not be rendered", geometry->node->GetName());
+				continue;
+			}
+
 			auto m = geometry->node->GetWorldMatrix();
 			auto mvp = vp * m;
 

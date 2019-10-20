@@ -281,6 +281,12 @@ void GLDeferredRenderer::RenderGBuffer()
 
 	// render geometry (non-instanced)
 	for (auto& geometry : m_glGeometries) {
+		// view frustum culling
+		if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+			LOG_REPORT("node {} will not be rendered", geometry->node->GetName());
+			continue;
+		}
+
 		auto m = geometry->node->GetWorldMatrix();
 		auto mvp = vp * m;
 
