@@ -12,6 +12,8 @@ class GeometryNode : public Node {
 	Box m_aabb;
 	Box m_localBB;
 
+	void CalculateAABB();
+
 public:
 	GeometryNode();
 

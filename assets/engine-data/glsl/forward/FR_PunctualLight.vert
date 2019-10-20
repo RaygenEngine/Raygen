@@ -29,6 +29,8 @@ uniform struct PunctualLight
 	float far;
 
 	int attenCoef;
+	
+	bool castsShadow;
 
 	int samples;
 	float maxShadowBias;

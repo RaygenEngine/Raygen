@@ -35,6 +35,8 @@ uniform struct SpotLight
 
 	mat4 mvpBiased; // transforms to [0,1] in light space
 	
+	bool castsShadow;
+	
 	int samples;
 	float maxShadowBias;
 	sampler2DShadow shadowMap;

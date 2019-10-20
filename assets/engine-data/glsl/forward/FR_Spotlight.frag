@@ -35,6 +35,8 @@ uniform struct SpotLight
 
 	mat4 mvpBiased; // transforms to [0,1] in light space
 	
+	bool castsShadow;
+	
 	int samples;
 	float maxShadowBias;
 	sampler2DShadow shadowMap;
@@ -73,6 +75,9 @@ uniform struct Material
 
 float ShadowCalculation(float cosTheta)
 {	
+	if(!spotLight.castsShadow)
+		return 0.0;
+
 	// texture(shadowMap, shadowCoord.xy).z is the distance between the light and the nearest occluder
 	// shadowCoord.z is the distance between the light and the current fragment
 	
@@ -82,8 +87,9 @@ float ShadowCalculation(float cosTheta)
 
 	float currentDepth = (dataIn.shadowCoord.z - bias);
 
-	// if behind shadow map just return shadow
-	if(currentDepth / dataIn.shadowCoord.w < 0.005)
+	// if in front or behind light's frustum return shadow
+	if(currentDepth / dataIn.shadowCoord.w < 0.005 
+	|| currentDepth / dataIn.shadowCoord.w > 1.0)
 		return 1.0;
 		
 	float shadow = 0;
