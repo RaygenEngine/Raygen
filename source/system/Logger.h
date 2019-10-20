@@ -3,13 +3,17 @@
 #include "spdlog/logger.h"
 // include for custom formats
 #include "spdlog/fmt/ostr.h"
+#include <sstream>
 
 namespace utl {
+// TODO: should not be in utl namespace
 class Log {
 public:
 	static void Init(LogLevelTarget level);
 
 	inline static std::shared_ptr<spdlog::logger>& GetLogger() { return s_logger; }
+
+	static std::stringstream s_editorLogStream;
 
 private:
 	static std::shared_ptr<spdlog::logger> s_logger;

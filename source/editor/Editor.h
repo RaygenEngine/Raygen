@@ -15,8 +15,13 @@ class PropertyEditor;
 class AssetWindow;
 
 class Editor {
-protected:
+public:
 	struct ImMenu {
+		ImMenu(const char* inName)
+			: name(inName)
+		{
+		}
+
 		const char* name;
 
 		using FnPointer = std::function<void()>;
@@ -38,26 +43,34 @@ protected:
 			options.emplace_back(option);
 		}
 
-		void Draw()
+		virtual void DrawOptions(Editor* editor)
+		{
+			for (auto& entry : options) {
+				if (entry.name == nullptr) {
+					ImGui::Separator();
+					continue;
+				}
+
+				if (ImGui::MenuItem(entry.name)) {
+					std::invoke(entry.func);
+				}
+			}
+		}
+
+		void Draw(Editor* editor)
 		{
 			if (ImGui::BeginMenu(name)) {
 				ImGui::Spacing();
-				for (auto& entry : options) {
-					if (entry.name == nullptr) {
-						ImGui::Separator();
-						continue;
-					}
-
-					if (ImGui::MenuItem(entry.name)) {
-						std::invoke(entry.func);
-					}
-				}
+				DrawOptions(editor);
 				ImGui::Spacing();
 				ImGui::EndMenu();
 			}
 		}
+
+		virtual ~ImMenu() = default;
 	};
 
+protected:
 	bool m_updateWorld{ true };
 	Node* m_selectedNode{ nullptr };
 
@@ -66,6 +79,7 @@ protected:
 
 	bool m_showAboutWindow{ false };
 	bool m_showHelpWindow{ false };
+	bool m_showLogWindow{ false };
 
 	SceneSave m_sceneSave;
 
@@ -83,7 +97,7 @@ public:
 
 	fs::path m_sceneToLoad{};
 
-	std::vector<ImMenu> m_menus;
+	std::vector<std::unique_ptr<ImMenu>> m_menus;
 
 	Editor();
 	virtual ~Editor();
@@ -127,16 +141,19 @@ public:
 	void Run_AboutWindow();
 	void Run_HelpWindow();
 
+	void Run_LogWindow();
+	static void PushCommand(std::function<void()>&& func);
+	static void PushPostFrameCommand(std::function<void()>&& func);
+
 private:
 	void Outliner();
 	void LoadScene(const fs::path& scenefile);
 
 	void HandleInput();
 
-	static void PushCommand(std::function<void()>&& func);
-
 
 	std::vector<std::function<void()>> m_postDrawCommands;
+	std::vector<std::function<void()>> m_postFrameCommands;
 };
 
 template<typename Lambda>
