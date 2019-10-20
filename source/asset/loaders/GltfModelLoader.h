@@ -236,7 +236,7 @@ namespace {
 		}
 	}
 
-	template<size_t VertexElementIndex, typename... Box>
+	template<size_t VertexElementIndex>
 	void LoadIntoVertexData(const tg::Model& modelData, int32 accessorIndex, std::vector<VertexData>& out)
 	{
 		//
@@ -479,7 +479,6 @@ namespace {
 				}
 			}
 		}
-		pod->bbox = {};
 
 		// Bake transform
 		const auto invTransMat = glm::transpose(glm::inverse(glm::mat3(transformMat)));
@@ -491,8 +490,8 @@ namespace {
 			v.tangent = invTransMat * v.tangent;
 			v.bitangent = invTransMat * v.bitangent;
 
-			pod->bbox.max = glm::max(pod->bbox.max, v.position);
 			pod->bbox.min = glm::min(pod->bbox.min, v.position);
+			pod->bbox.max = glm::max(pod->bbox.max, v.position);
 		}
 	}
 
@@ -516,6 +515,8 @@ namespace {
 
 inline void Load(ModelPod* pod, const uri::Uri& path)
 {
+	pod->bbox = { glm::vec3(std::numeric_limits<float>::max()), glm::vec3(-std::numeric_limits<float>::max()) };
+
 	const auto pPath = uri::GetDiskPath(path);
 	auto pParent = AssetManager::GetOrCreate<GltfFilePod>(pPath + "{}");
 

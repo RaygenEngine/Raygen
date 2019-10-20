@@ -54,6 +54,26 @@ inline glm::quat OrientationFromLookatAndPosition(glm::vec3 lookat, glm::vec3 po
 	return glm::normalize(glm::quatLookAt(direction, glm::vec3(0.f, 1.f, 0.f)));
 }
 
+inline Box TransformedAABB(Box aabb, const glm::mat4& mat)
+{
+	const auto center = (aabb.min + aabb.max) / 2.f;
+	const auto extend = (aabb.max - aabb.min) / 2.f;
+
+	const auto newCenter = glm::vec3(mat * glm::vec4(center, 1.f));
+
+	glm::mat4 absMat{};
+
+	for (auto j = 0; j < 3; ++j) {
+		for (auto i = 0; i < 3; ++i) {
+			absMat[i][j] = glm::abs(mat[i][j]);
+		}
+	}
+
+	const auto newExtend = glm::vec3(absMat * glm::vec4(extend, 0.f));
+
+	return { newCenter - newExtend, newCenter + newExtend };
+}
+
 // TODO: add Intersection.h to core
 inline void NormalizePlane(Plane& plane)
 {
@@ -175,6 +195,69 @@ inline bool BoxFrustumCollision(Box b, const Frustum& f)
 		case Intersection::OUTSIDE:;
 	}
 	return false;
+}
+
+inline glm::vec3 IntersectionOfThreePlanes(Plane p0, Plane p1, Plane p2)
+{
+	const auto a0 = p0.a;
+	const auto b0 = p0.b;
+	const auto c0 = p0.c;
+	const auto d0 = p0.d;
+
+	const auto a1 = p1.a;
+	const auto b1 = p1.b;
+	const auto c1 = p1.c;
+	const auto d1 = p1.d;
+
+	const auto a2 = p2.a;
+	const auto b2 = p2.b;
+	const auto c2 = p2.c;
+	const auto d2 = p2.d;
+
+	glm::vec3 intr;
+	intr.x = -(-b0 * c1 * d2 + b0 * c2 * d1 + b1 * c0 * d2 - b1 * c2 * d0 - b2 * c0 * d1 + b2 * c1 * d0)
+			 / (-a0 * b1 * c2 + a0 * b2 * c1 + a1 * b0 * c2 - a1 * b2 * c0 - a2 * b0 * c1 + a2 * b1 * c0);
+	intr.y = -(a0 * c1 * d2 - a0 * c2 * d1 - a1 * c0 * d2 + a1 * c2 * d0 + a2 * c0 * d1 - a2 * c1 * d0)
+			 / (-a0 * b1 * c2 + a0 * b2 * c1 + a1 * b0 * c2 - a1 * b2 * c0 - a2 * b0 * c1 + a2 * b1 * c0);
+	intr.z = -(-a0 * b1 * d2 + a0 * b2 * d1 + a1 * b0 * d2 - a1 * b2 * d0 - a2 * b0 * d1 + a2 * b1 * d0)
+			 / (-a0 * b1 * c2 + a0 * b2 * c1 + a1 * b0 * c2 - a1 * b2 * c0 - a2 * b0 * c1 + a2 * b1 * c0);
+
+	return intr;
+}
+
+// Atten: PYRAMID
+inline Box CreateBoxFromFrustumPyramid(glm::vec3 center, const Frustum& f)
+{
+	Box box{};
+
+	auto ftr
+		= math::IntersectionOfThreePlanes(f.planes[Frustum::TOP], f.planes[Frustum::RIGHT], f.planes[Frustum::FAR_]);
+
+	box.min = ftr;
+	box.max = ftr;
+
+	auto ftl
+		= math::IntersectionOfThreePlanes(f.planes[Frustum::TOP], f.planes[Frustum::LEFT], f.planes[Frustum::FAR_]);
+
+	box.min = glm::min(box.min, ftl);
+	box.max = glm::max(box.max, ftl);
+
+	auto fbr
+		= math::IntersectionOfThreePlanes(f.planes[Frustum::BOTTOM], f.planes[Frustum::RIGHT], f.planes[Frustum::FAR_]);
+
+	box.min = glm::min(box.min, fbr);
+	box.max = glm::max(box.max, fbr);
+
+	auto fbl
+		= math::IntersectionOfThreePlanes(f.planes[Frustum::BOTTOM], f.planes[Frustum::LEFT], f.planes[Frustum::FAR_]);
+
+	box.min = glm::min(box.min, fbl);
+	box.max = glm::max(box.max, fbl);
+
+	box.min = glm::min(box.min, center);
+	box.max = glm::max(box.max, center);
+
+	return box;
 }
 
 } // namespace math

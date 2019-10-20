@@ -344,6 +344,11 @@ void GLDeferredRenderer::RenderDirectionalLights()
 
 	for (auto light : m_glDirectionalLights) {
 
+		// light AABB camera frustum culling
+		if (!math::BoxFrustumCollision(light->node->GetFrustumAABB(), m_camera->GetFrustum())) {
+			continue;
+		}
+
 		light->RenderShadowMap(m_glGeometries);
 
 		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
@@ -390,6 +395,11 @@ void GLDeferredRenderer::RenderSpotLights()
 	auto ls = m_deferredSpotLightShader;
 
 	for (auto light : m_glSpotLights) {
+
+		// light AABB camera frustum culling
+		if (!math::BoxFrustumCollision(light->node->GetFrustumAABB(), m_camera->GetFrustum())) {
+			continue;
+		}
 
 		light->RenderShadowMap(m_glGeometries);
 
