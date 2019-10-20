@@ -150,6 +150,12 @@ std::vector<std::string> Engine::GetRendererList() const
 void Engine::ToggleEditor()
 {
 	if (m_isEditorEnabled && m_renderer && m_renderer->SupportsEditor()) {
+		if (m_isEditorActive) {
+			m_editor->OnDisableEditor();
+		}
+		else {
+			m_editor->OnEnableEditor();
+		}
 		m_isEditorActive = !m_isEditorActive;
 	}
 }

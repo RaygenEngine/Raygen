@@ -24,7 +24,6 @@
 #include <iostream>
 #include <set>
 
-
 Editor::Editor()
 {
 	ImguiImpl::InitContext();
@@ -33,10 +32,19 @@ Editor::Editor()
 	m_propertyEditor = std::make_unique<PropertyEditor>();
 	m_onNodeRemoved.Bind([&](Node* node) {
 		if (node == m_selectedNode) {
-			m_selectedNode = nullptr;
+			if (node->GetParent()) {
+				m_selectedNode = node->GetParent();
+			}
+			else {
+				m_selectedNode = nullptr;
+			}
+		}
+		if (node == m_editorCamera) {
+			m_editorCamera = nullptr;
 		}
 	});
 
+	m_onWorldLoaded.Bind([&]() { SpawnEditorCamera(); });
 
 	m_loadFileBrowser.SetTitle("Load Scene");
 
@@ -94,7 +102,6 @@ void Editor::MakeMainMenu()
 	m_menus.emplace_back(std::move(aboutMenu));
 }
 
-
 Editor::~Editor()
 {
 	ImguiImpl::CleanupContext();
@@ -103,6 +110,11 @@ Editor::~Editor()
 void Editor::UpdateEditor()
 {
 	HandleInput();
+
+	if (m_editorCamera) {
+		m_editorCamera->UpdateFromEditor(Engine::GetWorld()->GetDeltaTime());
+	}
+
 
 	ImguiImpl::NewFrame();
 
@@ -129,7 +141,20 @@ void Editor::UpdateEditor()
 
 	Run_MenuBar();
 
-	ImGui::Checkbox("Update World", &m_updateWorld);
+	if (ImGui::Checkbox("Update World", &m_updateWorld)) {
+		if (m_updateWorld) {
+			if (m_editorCamera) {
+				m_editorCameraCachedMatrix = m_editorCamera->GetWorldMatrix();
+				Engine::GetWorld()->DeleteNode(m_editorCamera);
+			}
+		}
+		else {
+			if (!m_editorCamera) {
+				SpawnEditorCamera();
+				m_editorCamera->SetWorldMatrix(m_editorCameraCachedMatrix);
+			}
+		}
+	}
 
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7, 7));
 	if (ImGui::Button("Save")) {
@@ -190,6 +215,20 @@ void Editor::UpdateEditor()
 	m_postDrawCommands.clear();
 }
 
+void Editor::SpawnEditorCamera()
+{
+	auto world = Engine::GetWorld();
+	m_editorCamera = NodeFactory::NewNode<EditorCameraNode>();
+	m_editorCamera->SetName("Editor Camera");
+	world->RegisterNode(m_editorCamera, world->GetRoot());
+
+	auto prevActive = world->GetActiveCamera();
+	if (prevActive) {
+		m_editorCamera->SetWorldMatrix(prevActive->GetWorldMatrix());
+	}
+	world->SetActiveCamera(m_editorCamera);
+}
+
 void Editor::Outliner()
 {
 	ImGui::BeginChild(
@@ -202,11 +241,33 @@ void Editor::Outliner()
 		auto str = std::string(depth * 6, ' ') + sceneconv::FilterNodeClassName(node->GetClass().GetName()) + "> "
 				   + node->m_name;
 		ImGui::PushID(node->GetUID());
+
+		if (node == m_editorCamera) {
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.58f, 0.58f, 0.95f));
+			// ImGui::PushStyleColor(ImGuiCol_TextSelectedBg, ImVec4(0.5f, 0.0f, 0.0f, 0.95f));
+			ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.28f, 0.01f, 0.10f, 0.95f));
+			ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.3f, 0.02f, 0.09f, 0.95f));
+			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.36f, 0.04f, 0.11f, 0.95f));
+		}
+
 		if (ImGui::Selectable(str.c_str(), node == m_selectedNode)) {
 			m_selectedNode = node;
 		}
-		Run_ContextPopup(node);
-		Run_OutlinerDropTarget(node);
+
+		if (node != m_editorCamera) {
+			Run_ContextPopup(node);
+			Run_OutlinerDropTarget(node);
+		}
+		else {
+			if (!m_editorCamera->GetParent()->IsRoot() && ImGui::BeginPopupContextItem("Outliner Camera Context")) {
+				if (ImGui::MenuItem("Stop piloting")) {
+					Editor::MakeChildOf(Engine::GetWorld()->GetRoot(), m_editorCamera);
+					m_editorCamera->ResetRotation();
+				}
+				ImGui::EndPopup();
+			}
+			ImGui::PopStyleColor(4);
+		}
 		ImGui::PopID();
 	});
 
@@ -227,11 +288,6 @@ void Editor::Outliner()
 				newNode->SetName(podEntry->name);
 				newNode->SetModel(PodHandle<ModelPod>{ uid });
 				Engine::GetWorld()->RegisterNode(newNode, Engine::GetWorld()->GetRoot());
-
-				DirtyFlagset temp;
-				temp.set();
-
-				newNode->SetDirtyMultiple(temp);
 			};
 
 			PushCommand(cmd);
@@ -240,7 +296,6 @@ void Editor::Outliner()
 	}
 }
 
-
 void Editor::LoadScene(const fs::path& scenefile)
 {
 	Engine::Get().CreateWorldFromFile("/" + fs::relative(scenefile).string());
@@ -248,6 +303,28 @@ void Editor::LoadScene(const fs::path& scenefile)
 
 	m_selectedNode = nullptr;
 	Event::OnWindowResize.Broadcast(Engine::GetMainWindow()->GetWidth(), Engine::GetMainWindow()->GetHeight());
+}
+
+void Editor::ReloadScene()
+{
+	auto path = AssetManager::GetPodUri(Engine::GetWorld()->GetLoadedFromHandle());
+	m_sceneToLoad = uri::ToSystemPath(path);
+}
+
+void Editor::OnDisableEditor()
+{
+	if (m_editorCamera) {
+		m_editorCameraCachedMatrix = m_editorCamera->GetWorldMatrix();
+		Engine::GetWorld()->DeleteNode(m_editorCamera);
+	}
+}
+
+void Editor::OnEnableEditor()
+{
+	if (!m_updateWorld) {
+		SpawnEditorCamera();
+		m_editorCamera->SetWorldMatrix(m_editorCameraCachedMatrix);
+	}
 }
 
 void Editor::Run_ContextPopup(Node* node)
@@ -263,8 +340,9 @@ void Editor::Run_ContextPopup(Node* node)
 				ImGui::Separator();
 			}
 		}
+		ImGui::Separator();
 
-		if (ImGui::BeginMenu("New Node")) {
+		if (ImGui::BeginMenu("Add Child")) {
 			Run_NewNodeMenu(node);
 			ImGui::EndMenu();
 		}
@@ -475,13 +553,6 @@ TODO: INSERT HELP HERE!
 
 void Editor::HandleInput()
 {
-	if (Engine::GetInput()->IsKeyRepeat(XVirtualKey::O)) {
-		LOG_ERROR(
-			"Some error happened OMG! Some error happened OMG!Some error happened OMG!Some error happened OMG!Some "
-			"error happened OMG!Some error happened OMG!Some error happened OMG!Some error happened OMG!");
-		LOG_ERROR("Some error happened OMG!");
-		LOG_WARN("LMAO");
-	}
 }
 
 void Editor::PushCommand(std::function<void()>&& func)
@@ -582,7 +653,9 @@ void Editor::MoveChildOut(Node* node)
 
 void Editor::MoveSelectedUnder(Node* node)
 {
-	MakeChildOf(node, Engine::GetEditor()->m_selectedNode);
+	if (Engine::GetEditor()->m_selectedNode != Engine::GetEditor()->m_editorCamera) {
+		MakeChildOf(node, Engine::GetEditor()->m_selectedNode);
+	}
 }
 
 
@@ -628,12 +701,22 @@ void Editor::MakeChildOf(Node* newParent, Node* node)
 }
 
 
-void Editor::LookThroughThis(Node* node)
+void Editor::PilotThis(Node* node)
 {
-	auto camera = Engine::GetWorld()->GetActiveCamera();
-	if (camera) {
-		camera->SetWorldMatrix(node->GetWorldMatrix());
+	auto camera = Engine::GetEditor()->m_editorCamera;
+	if (!camera) {
+		LOG_WARN("Only possible to pilot nodes if there is an editor camera");
+		return;
 	}
+
+	if (camera->GetParent() == node) {
+		Editor::MakeChildOf(Engine::GetWorld()->GetRoot(), camera);
+		camera->ResetRotation();
+		return;
+	}
+
+	Editor::MakeChildOf(node, camera);
+	camera->SetLocalMatrix(glm::identity<glm::mat4>());
 }
 
 void Editor::TeleportToCamera(Node* node)

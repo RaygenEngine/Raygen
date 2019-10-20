@@ -6,6 +6,7 @@
 #include "editor/PropertyEditor.h"
 #include "editor/NodeContextActions.h"
 #include "system/EngineEvents.h"
+#include "world/nodes/camera/EditorCameraNode.h"
 
 #include <memory>
 #include <functional>
@@ -71,7 +72,7 @@ public:
 	};
 
 protected:
-	bool m_updateWorld{ true };
+	bool m_updateWorld{ false };
 	Node* m_selectedNode{ nullptr };
 
 	bool m_showImguiDemo{ false };
@@ -92,6 +93,10 @@ protected:
 
 public:
 	DECLARE_EVENT_LISTENER(m_onNodeRemoved, Event::OnWorldNodeRemoved);
+	DECLARE_EVENT_LISTENER(m_onWorldLoaded, Event::OnWorldLoaded);
+
+	EditorCameraNode* m_editorCamera;
+	glm::mat4 m_editorCameraCachedMatrix{ glm::identity<glm::mat4>() };
 
 	std::unique_ptr<NodeContextActions> m_nodeContextActions;
 
@@ -109,6 +114,10 @@ public:
 
 	void UpdateEditor();
 
+	// On Toggle
+	void OnDisableEditor();
+	void OnEnableEditor();
+
 	[[nodiscard]] bool ShouldUpdateWorld() const { return m_updateWorld; }
 
 	void PreBeginFrame();
@@ -123,11 +132,10 @@ public:
 	static void MoveSelectedUnder(Node* node);
 	static void MakeChildOf(Node* newParent, Node* node);
 
-	static void LookThroughThis(Node* node);
+	static void PilotThis(Node* node);
 	static void TeleportToCamera(Node* node);
 
 	static void MakeActiveCamera(Node* node);
-
 
 	void Run_ContextPopup(Node* node);
 	void Run_NewNodeMenu(Node* underNode);
@@ -146,8 +154,11 @@ public:
 	static void PushPostFrameCommand(std::function<void()>&& func);
 
 private:
+	void SpawnEditorCamera();
 	void Outliner();
+
 	void LoadScene(const fs::path& scenefile);
+	void ReloadScene();
 
 	void HandleInput();
 

@@ -65,6 +65,9 @@ void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 	}
 	m_root->m_dirty.set();
 	m_root->UpdateTransforms(glm::identity<glm::mat4>());
+
+	Event::OnWorldLoaded.Broadcast();
+
 	DirtyUpdateWorld();
 	LOG_INFO("World loaded succesfully");
 	m_root->m_dirty.reset();
@@ -158,11 +161,14 @@ void World::RegisterNode(Node* node, Node* parent)
 
 
 	node->AutoUpdateTransforms();
-	node->SetDirty(Node::DF::Created);
+
+	DirtyFlagset temp;
+	temp.set();
+	node->SetDirtyMultiple(temp);
 
 	parent->m_children.emplace_back(node, [](Node* node) {
 		// custom deleter to remove node from world when it is deleted
-		Engine::GetWorld()->RemoveNode(node);
+		Engine::GetWorld()->CleanupNodeReferences(node);
 		delete node;
 	});
 
@@ -177,6 +183,41 @@ void World::RegisterNode(Node* node, Node* parent)
 	[[maybe_unused]] bool cc = MaybeInsert(m_geomteryNodes, node) || MaybeInsert(m_punctualLights, node)
 							   || MaybeInsert(m_directionalLights, node) || MaybeInsert(m_spotLights, node);
 }
+
+namespace {
+template<typename T>
+bool MaybeRemove(std::unordered_set<T*>& set, Node* node)
+{
+	if (node->IsA<T>()) {
+		set.erase(static_cast<T*>(node));
+		return true;
+	}
+	return false;
+}
+} // namespace
+
+void World::CleanupNodeReferences(Node* node)
+{
+	Event::OnWorldNodeRemoved.Broadcast(node);
+
+	m_nodes.erase(node);
+	bool isCamera = MaybeRemove(m_cameraNodes, node);
+	if (isCamera) {
+		if (m_activeCamera == node) {
+			if (!m_cameraNodes.empty()) {
+				m_activeCamera = *m_cameraNodes.begin();
+			}
+			else {
+				m_activeCamera = nullptr;
+			}
+		}
+		return;
+	}
+
+	[[maybe_unused]] bool cc = MaybeRemove(m_geomteryNodes, node) || MaybeRemove(m_punctualLights, node)
+							   || MaybeRemove(m_directionalLights, node) || MaybeRemove(m_spotLights, node);
+}
+
 
 void World::Update()
 {
