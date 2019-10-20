@@ -40,8 +40,11 @@ public:
 	HWND GetHWND() const { return m_hWnd; }
 	HINSTANCE GetHInstance() const { return m_wcex.hInstance; }
 
+
 	void RestrictMouseMovement() override;
 	void ReleaseMouseMovement() override;
+
+	void Destroy() override;
 
 	void Show() override;
 	void Hide() override;

@@ -108,6 +108,11 @@ void Win32Window::ReleaseMouseMovement()
 	ClipCursor(nullptr);
 }
 
+void Win32Window::Destroy()
+{
+	DestroyWindow(m_hWnd);
+}
+
 void Win32Window::Show()
 {
 	::ShowWindow(m_hWnd, SW_SHOWDEFAULT);
