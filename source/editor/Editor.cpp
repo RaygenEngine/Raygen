@@ -164,7 +164,7 @@ void Editor::Outliner()
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.f, 6.f));
 
 	RecurseNodes(Engine::GetWorld()->GetRoot(), [&](Node* node, int32 depth) {
-		auto str = std::string(depth * 3, ' ') + sceneconv::FilterNodeClassName(node->GetClass().GetName()) + "> "
+		auto str = std::string(depth * 6, ' ') + sceneconv::FilterNodeClassName(node->GetClass().GetName()) + "> "
 				   + node->m_name;
 		ImGui::PushID(node->GetUID());
 		if (ImGui::Selectable(str.c_str(), node == m_selectedNode)) {
@@ -315,8 +315,8 @@ void Editor::Run_AssetView()
 void Editor::Run_MaybeAssetTooltip(PodEntry* entry)
 {
 	if (ImGui::IsItemHovered()) {
-		std::string text = fmt::format("Path: {}\nName: {}\nType: {}\n Ptr: {}\n UID: {}", entry->path, entry->name,
-			entry->type.name(), entry->ptr, entry->uid);
+		std::string text = fmt::format("Path:\t{}\nName:\t{}\nType:\t{}\n Ptr:\t{}\n UID:\t{}", entry->path,
+			entry->name, entry->type.name(), entry->ptr, entry->uid);
 
 		if (!entry->ptr) {
 			ImUtil::TextTooltipUtil(text);
