@@ -32,7 +32,6 @@ void GLShader::Load()
 
 		const GLuint shaderId = glCreateShader(type);
 
-		// TODO:
 		auto source = pod.Lock();
 
 		auto originalPath = AssetManager::GetPodUri(pod);
@@ -68,7 +67,7 @@ void GLShader::Load()
 
 				auto cutUntil = line.find_first_of(':');
 
-				auto lineNumber = std::stoi(line.substr(lineStartPos + 1, lineEndPos - lineStartPos - 1));
+				size_t lineNumber = std::stoi(line.substr(lineStartPos + 1, lineEndPos - lineStartPos - 1));
 
 				lineNumber = lineNumber - offset;
 
@@ -130,7 +129,6 @@ void GLShader::Load()
 	if (infoLogLength > 0) {
 		std::string programErrorMessage;
 		programErrorMessage.resize(infoLogLength);
-		// TODO: check if this needs injection
 		glGetProgramInfoLog(programId, infoLogLength, NULL, &programErrorMessage[0]);
 		LOG_WARN("Error in {}:\n{}", AssetManager::GetEntry(podHandle)->name, &programErrorMessage[0]);
 		return;

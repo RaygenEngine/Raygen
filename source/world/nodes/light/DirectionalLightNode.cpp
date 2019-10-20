@@ -1,6 +1,7 @@
 #include "pch/pch.h"
 
 #include "world/nodes/light/DirectionalLightNode.h"
+#include "core/MathAux.h"
 
 void DirectionalLightNode::RecalculateProjectionMatrix()
 {
@@ -10,14 +11,21 @@ void DirectionalLightNode::RecalculateProjectionMatrix()
 
 void DirectionalLightNode::RecalculateViewMatrix()
 {
-	auto lookat = GetWorldTranslation() + GetFront();
-	m_viewMatrix = glm::lookAt(GetWorldTranslation(), lookat, GetUp());
+	auto lookat = GetWorldTranslation() + GetWorldForward();
+	m_viewMatrix = glm::lookAt(GetWorldTranslation(), lookat, GetWorldUp());
 	RecalculateViewProjectionMatrix();
 }
 
 void DirectionalLightNode::RecalculateViewProjectionMatrix()
 {
 	m_viewProjectionMatrix = m_projectionMatrix * m_viewMatrix;
+	RecalculateFrustum();
+}
+
+void DirectionalLightNode::RecalculateFrustum()
+{
+	// viewProj to get frustum plane equations in world space
+	math::ExtractFrustumPlanes(m_frustum, m_viewProjectionMatrix);
 }
 
 void DirectionalLightNode::DirtyUpdate(DirtyFlagset flags)

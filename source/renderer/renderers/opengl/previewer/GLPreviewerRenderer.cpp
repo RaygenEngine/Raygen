@@ -255,6 +255,11 @@ void GLPreviewerRenderer::RenderPreviewBuffer()
 
 	// render geometry (non-instanced)
 	for (auto& geometry : m_glGeometries) {
+		// view frustum culling
+		if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+			continue;
+		}
+
 		auto m = geometry->node->GetWorldMatrix();
 		auto mvp = vp * m;
 
@@ -286,7 +291,7 @@ void GLPreviewerRenderer::RenderPreviewBuffer()
 
 			glm::vec3 alphaMode{};
 			switch (materialData->alphaMode) {
-				case MaterialPod::OPAQUE: alphaMode = { 1.f, 1.f, 1.f }; break;
+				case MaterialPod::OPAQUE_: alphaMode = { 1.f, 1.f, 1.f }; break;
 				case MaterialPod::MASK: alphaMode = { 0.f, 0.f, 0.f }; break;
 				case MaterialPod::BLEND: alphaMode = { 0.4f, 0.4f, 0.4f }; break;
 			}

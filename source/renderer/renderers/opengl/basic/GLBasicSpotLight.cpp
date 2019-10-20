@@ -3,6 +3,7 @@
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "asset/AssetManager.h"
+#include "core/MathAux.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -72,6 +73,10 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 		depthMapShader->SendMat4("mvp", mvp);
 
 		for (auto& glMesh : geometry->glModel->meshes) {
+			// light frustum culling
+			if (!math::BoxFrustumCollision(geometry->node->GetAABB(), node->GetFrustum())) {
+				continue;
+			}
 
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();

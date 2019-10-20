@@ -1,6 +1,7 @@
 #include "pch/pch.h"
 
 #include "world/nodes/light/SpotLightNode.h"
+#include "core/MathAux.h"
 
 void SpotLightNode::RecalculateProjectionMatrix()
 {
@@ -11,14 +12,21 @@ void SpotLightNode::RecalculateProjectionMatrix()
 
 void SpotLightNode::RecalculateViewMatrix()
 {
-	auto lookat = GetWorldTranslation() + GetFront();
-	m_viewMatrix = glm::lookAt(GetWorldTranslation(), lookat, GetUp());
+	auto lookat = GetWorldTranslation() + GetWorldForward();
+	m_viewMatrix = glm::lookAt(GetWorldTranslation(), lookat, GetWorldUp());
 	RecalculateViewProjectionMatrix();
 }
 
 void SpotLightNode::RecalculateViewProjectionMatrix()
 {
 	m_viewProjectionMatrix = m_projectionMatrix * m_viewMatrix;
+	RecalculateFrustum();
+}
+
+void SpotLightNode::RecalculateFrustum()
+{
+	// viewProj to get frustum plane equations in world space
+	math::ExtractFrustumPlanes(m_frustum, m_viewProjectionMatrix);
 }
 
 void SpotLightNode::DirtyUpdate(DirtyFlagset flags)

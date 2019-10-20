@@ -1,9 +1,10 @@
 #pragma once
 
 // DOC:
-// column-major ordering for matrices (may require transpose for other than Opengl (research))
-// clip space: negative one to one (may require transpose for other than Opengl (research))
-// right-handed coordinate system (mary require conversion to left when used by DirectX, Vulkan, etc)
+// column-major ordering for matrices (may require glm::transpose in some renderers)
+// clip space: negative one to one (convert when you need zero to one)
+// right-handed coordinate system (mary require conversion to left when used by DirectX, Vulkan and other renderers)
+// values are stored in degrees (use glm::radians to convert)
 
 #include "asset/AssetManager.h"
 #include "system/Object.h"

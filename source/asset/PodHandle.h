@@ -1,6 +1,7 @@
 #pragma once
 
 #include "asset/AssetPod.h"
+#include "system/Engine.h"
 
 struct PodEntry;
 
@@ -12,16 +13,11 @@ public:
 
 	[[nodiscard]] const PodEntry* _Debug() const { return Engine::GetAssetManager()->GetEntry(*this); }
 
-	[[nodiscard]] const PodType* operator->() const
+
+	[[nodiscard]] const PodType* Lock() const
 	{
 		return Engine::GetAssetManager()->_Handle_AccessPod<PodType>(podId);
 	}
-
-	//
-	//
-	//
-	//
-	[[nodiscard]] const PodType* Lock() const { return operator->(); }
 
 	friend class AssetManager;
 };
