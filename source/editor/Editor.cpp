@@ -43,24 +43,55 @@ Editor::Editor()
 	MakeMainMenu();
 }
 
+struct ImRendererMenu : public Editor::ImMenu {
+	ImRendererMenu()
+		: Editor::ImMenu("Renderer")
+	{
+	}
+
+	void DrawOptions(Editor* editor) override
+	{
+		if (ImGui::MenuItem("Restart")) {
+			Editor::PushPostFrameCommand(
+				[=]() { Engine::Get().SwitchRenderer(Engine::Get().GetActiveRendererIndex()); });
+		}
+
+		if (ImGui::BeginMenu("Switch")) {
+			int32 index = 0;
+			int32 current = Engine::Get().GetActiveRendererIndex();
+
+			for (auto& r : Engine::Get().GetRendererList()) {
+				if (ImGui::MenuItem(r.c_str(), nullptr, index == current)) {
+					Editor::PushPostFrameCommand([=]() { Engine::Get().SwitchRenderer(index); });
+				}
+				++index;
+			}
+			ImGui::EndMenu();
+		}
+	}
+};
 
 void Editor::MakeMainMenu()
 {
-	ImMenu sceneMenu{ "Scene" };
-	sceneMenu.AddEntry("Save", [&]() { m_sceneSave.OpenBrowser(); });
-	sceneMenu.AddEntry("Load", [&]() { m_loadFileBrowser.Open(); });
-	sceneMenu.AddSeperator();
-	sceneMenu.AddEntry("Exit", []() { Engine::GetMainWindow()->Destroy(); });
-	m_menus.emplace_back(sceneMenu);
+	auto sceneMenu = std::make_unique<ImMenu>("Scene");
+	sceneMenu->AddEntry("Save", [&]() { m_sceneSave.OpenBrowser(); });
+	sceneMenu->AddEntry("Load", [&]() { m_loadFileBrowser.Open(); });
+	sceneMenu->AddSeperator();
+	sceneMenu->AddEntry("Exit", []() { Engine::GetMainWindow()->Destroy(); });
+	m_menus.emplace_back(std::move(sceneMenu));
 
-	ImMenu debugMenu{ "Debug" };
-	debugMenu.AddEntry("Open ImGui Demo", [&]() { m_showImguiDemo = true; });
-	m_menus.emplace_back(debugMenu);
+	auto renderersMenu = std::make_unique<ImRendererMenu>();
+	m_menus.emplace_back(std::move(renderersMenu));
 
-	ImMenu aboutMenu{ "About" };
-	aboutMenu.AddEntry("Help", [&]() { m_showHelpWindow = true; });
-	aboutMenu.AddEntry("About", [&]() { m_showAboutWindow = true; });
-	m_menus.emplace_back(aboutMenu);
+	auto debugMenu = std::make_unique<ImMenu>("Debug");
+	debugMenu->AddEntry("Open ImGui Demo", [&]() { m_showImguiDemo = true; });
+	debugMenu->AddEntry("Open Log", [&]() { m_showLogWindow = true; });
+	m_menus.emplace_back(std::move(debugMenu));
+
+	auto aboutMenu = std::make_unique<ImMenu>("About");
+	aboutMenu->AddEntry("Help", [&]() { m_showHelpWindow = true; });
+	aboutMenu->AddEntry("About", [&]() { m_showAboutWindow = true; });
+	m_menus.emplace_back(std::move(aboutMenu));
 }
 
 
@@ -85,6 +116,10 @@ void Editor::UpdateEditor()
 
 	if (m_showHelpWindow) {
 		Run_HelpWindow();
+	}
+
+	if (m_showLogWindow) {
+		Run_LogWindow();
 	}
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
@@ -182,7 +217,7 @@ void Editor::Outliner()
 void Editor::LoadScene(const fs::path& scenefile)
 {
 	Engine::Get().CreateWorldFromFile("/" + fs::relative(scenefile).string());
-	Engine::Get().SwitchRenderer(0);
+	Engine::Get().SwitchRenderer(Engine::Get().GetActiveRendererIndex());
 
 	m_selectedNode = nullptr;
 	Event::OnWindowResize.Broadcast(Engine::GetMainWindow()->GetWidth(), Engine::GetMainWindow()->GetHeight());
@@ -357,7 +392,7 @@ void Editor::Run_MenuBar()
 
 	if (ImGui::BeginMenuBar()) {
 		for (auto& entry : m_menus) {
-			entry.Draw();
+			entry->Draw(this);
 		}
 		ImGui::EndMenuBar();
 	}
@@ -369,6 +404,8 @@ void Editor::Run_AboutWindow()
 	constexpr float version = 1.f;
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
+	ImGui::SetNextWindowSize(ImVec2(550.f, 300.f), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
 	if (ImGui::Begin("About", &m_showAboutWindow)) {
 		auto str = fmt::format(R"(
 Rayxen Engine:
@@ -392,12 +429,14 @@ Harry Katagis - Programmer
 void Editor::Run_HelpWindow()
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
+	ImGui::SetNextWindowSize(ImVec2(550.f, 300.f), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
 
 	if (ImGui::Begin("Help", &m_showHelpWindow)) {
 		auto str = fmt::format(R"(
 Help:
 
-INSERT HELP HERE:
+TODO: INSERT HELP HERE!
 )");
 		ImGui::Text(str.c_str());
 		ImGui::Text("");
@@ -406,13 +445,26 @@ INSERT HELP HERE:
 	ImGui::PopStyleVar();
 }
 
+
 void Editor::HandleInput()
 {
+	if (Engine::GetInput()->IsKeyRepeat(XVirtualKey::O)) {
+		LOG_ERROR(
+			"Some error happened OMG! Some error happened OMG!Some error happened OMG!Some error happened OMG!Some "
+			"error happened OMG!Some error happened OMG!Some error happened OMG!Some error happened OMG!");
+		LOG_ERROR("Some error happened OMG!");
+		LOG_WARN("LMAO");
+	}
 }
 
 void Editor::PushCommand(std::function<void()>&& func)
 {
 	Engine::GetEditor()->m_postDrawCommands.emplace_back(func);
+}
+
+void Editor::PushPostFrameCommand(std::function<void()>&& func)
+{
+	Engine::GetEditor()->m_postFrameCommands.emplace_back(func);
 }
 
 void Editor::PreBeginFrame()
@@ -421,6 +473,11 @@ void Editor::PreBeginFrame()
 		LoadScene(m_sceneToLoad);
 		m_sceneToLoad = "";
 	}
+
+	for (auto& cmd : m_postFrameCommands) {
+		cmd();
+	}
+	m_postFrameCommands.clear();
 }
 
 void Editor::Duplicate(Node* node)
@@ -565,4 +622,141 @@ void Editor::MakeActiveCamera(Node* node)
 	if (node->IsA<CameraNode>()) {
 		Engine::GetWorld()->m_activeCamera = static_cast<CameraNode*>(node);
 	}
+}
+
+namespace logwindow {
+struct ExampleAppLog {
+	ImGuiTextBuffer Buf;
+	ImGuiTextFilter Filter;
+	ImVector<int> LineOffsets; // Index to lines offset. We maintain this with AddLog() calls, allowing us to have a
+							   // random access on lines
+	bool AutoScroll;           // Keep scrolling if already at the bottom
+
+	ExampleAppLog()
+	{
+		AutoScroll = true;
+		Clear();
+	}
+
+	void Clear()
+	{
+		Buf.clear();
+		LineOffsets.clear();
+		LineOffsets.push_back(0);
+	}
+
+	void AddLog(const char* fmt, ...) IM_FMTARGS(2)
+	{
+		int old_size = Buf.size();
+		va_list args;
+		va_start(args, fmt);
+		Buf.appendfv(fmt, args);
+		va_end(args);
+		for (int new_size = Buf.size(); old_size < new_size; old_size++)
+			if (Buf[old_size] == '\n')
+				LineOffsets.push_back(old_size + 1);
+	}
+
+	void Draw(const char* title, bool* p_open = NULL)
+	{
+		if (!ImGui::Begin(title, p_open)) {
+			ImGui::End();
+			return;
+		}
+
+		// Options menu
+		if (ImGui::BeginPopup("Options")) {
+			ImGui::Checkbox("Auto-scroll", &AutoScroll);
+			ImGui::EndPopup();
+		}
+
+		// Main window
+		if (ImGui::Button("Options"))
+			ImGui::OpenPopup("Options");
+		ImGui::SameLine();
+		bool clear = ImGui::Button("Clear");
+		ImGui::SameLine();
+		bool copy = ImGui::Button("Copy");
+		ImGui::SameLine();
+		Filter.Draw("Filter", -100.0f);
+
+		ImGui::Separator();
+		ImGui::BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
+
+		if (clear)
+			Clear();
+		if (copy)
+			ImGui::LogToClipboard();
+
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+		const char* buf = Buf.begin();
+		const char* buf_end = Buf.end();
+		if (Filter.IsActive()) {
+			// In this example we don't use the clipper when Filter is enabled.
+			// This is because we don't have a random access on the result on our filter.
+			// A real application processing logs with ten of thousands of entries may want to store the result of
+			// search/filter. especially if the filtering function is not trivial (e.g. reg-exp).
+			for (int line_no = 0; line_no < LineOffsets.Size; line_no++) {
+				const char* line_start = buf + LineOffsets[line_no];
+				const char* line_end
+					= (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
+				if (Filter.PassFilter(line_start, line_end))
+					ImGui::TextUnformatted(line_start, line_end);
+			}
+		}
+		else {
+			// The simplest and easy way to display the entire buffer:
+			//   ImGui::TextUnformatted(buf_begin, buf_end);
+			// And it'll just work. TextUnformatted() has specialization for large blob of text and will fast-forward to
+			// skip non-visible lines. Here we instead demonstrate using the clipper to only process lines that are
+			// within the visible area. If you have tens of thousands of items and their processing cost is
+			// non-negligible, coarse clipping them on your side is recommended. Using ImGuiListClipper requires A)
+			// random access into your data, and B) items all being the  same height, both of which we can handle since
+			// we an array pointing to the beginning of each line of text. When using the filter (in the block of code
+			// above) we don't have random access into the data to display anymore, which is why we don't use the
+			// clipper. Storing or skimming through the search result would make it possible (and would be recommended
+			// if you want to search through tens of thousands of entries)
+			ImGuiListClipper clipper;
+			clipper.Begin(LineOffsets.Size);
+			while (clipper.Step()) {
+				for (int line_no = clipper.DisplayStart; line_no < clipper.DisplayEnd; line_no++) {
+					const char* line_start = buf + LineOffsets[line_no];
+					const char* line_end
+						= (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
+					ImGui::TextUnformatted(line_start, line_end);
+				}
+			}
+			clipper.End();
+		}
+		ImGui::PopStyleVar();
+
+		if (AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+			ImGui::SetScrollHereY(1.0f);
+
+		ImGui::EndChild();
+		ImGui::End();
+	}
+};
+
+} // namespace logwindow
+
+void Editor::Run_LogWindow()
+{
+	static logwindow::ExampleAppLog log;
+	auto& ss = utl::Log::s_editorLogStream;
+
+
+	std::string line;
+	while (std::getline(ss, line)) {
+		log.AddLog(line.c_str());
+		log.AddLog("\n");
+	}
+	ss.clear();
+
+	ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Rayxen Log", &m_showLogWindow);
+	ImGui::End();
+
+	log.Draw("Rayxen Log", &m_showLogWindow);
 }
