@@ -3,6 +3,7 @@
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "asset/AssetManager.h"
+#include "core/MathAux.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -65,6 +66,11 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 	auto vp = node->GetViewProjectionMatrix();
 
 	for (auto& geometry : geometries) {
+		// light frustum culling
+		if (!math::BoxFrustumCollision(geometry->node->GetAABB(), node->GetFrustum())) {
+			continue;
+		}
+
 		auto m = geometry->node->GetWorldMatrix();
 		auto mvp = vp * m;
 

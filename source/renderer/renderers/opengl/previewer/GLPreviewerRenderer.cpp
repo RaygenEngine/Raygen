@@ -257,7 +257,6 @@ void GLPreviewerRenderer::RenderPreviewBuffer()
 	for (auto& geometry : m_glGeometries) {
 		// view frustum culling
 		if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
-			LOG_REPORT("node {} will not be rendered", geometry->node->GetName());
 			continue;
 		}
 
