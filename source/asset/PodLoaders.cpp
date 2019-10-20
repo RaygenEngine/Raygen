@@ -45,7 +45,10 @@ void ModelPod::Load(ModelPod* pod, const uri::Uri& path)
 		return GltfModelLoader::Load(pod, path);
 	}
 
-	LOG_ABORT("Unknown model file found: {}", path);
+	// Let "/genEmptyModel" pass as an empty model
+	if (path != "/genEmptyModel") {
+		LOG_ABORT("Unknown model file found: {}", path);
+	}
 }
 
 void ShaderPod::Load(ShaderPod* pod, const uri::Uri& path)

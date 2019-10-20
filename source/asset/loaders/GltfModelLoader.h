@@ -479,6 +479,7 @@ namespace {
 				}
 			}
 		}
+		pod->bbox = {};
 
 		// Bake transform
 		const auto invTransMat = glm::transpose(glm::inverse(glm::mat3(transformMat)));
