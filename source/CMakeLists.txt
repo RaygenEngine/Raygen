@@ -114,7 +114,6 @@ set(HEADER_FILES
 	core/MetaTemplates.h
 	core/StringAux.h
 	core/Types.h
-	core/AABB.h
 
 
 	editor/AssetWindow.h

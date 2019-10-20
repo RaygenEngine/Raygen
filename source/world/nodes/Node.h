@@ -2,7 +2,6 @@
 
 #include "reflection/GenMacros.h" // include gen macros here even if not needed to propagate to all node headers
 #include "system/Object.h"
-#include "core/AABB.h"
 
 #include <bitset>
 

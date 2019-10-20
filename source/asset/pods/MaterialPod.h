@@ -1,7 +1,5 @@
 #pragma once
 
-#undef OPAQUE
-
 #include "asset/pods/TexturePod.h"
 
 // This material is based on the glTF standard for materials (not all extensions included)
@@ -11,7 +9,7 @@ struct MaterialPod : AssetPod {
 	enum AlphaMode : int32
 	{
 		// The rendered output is fully opaque and any alpha value is ignored.
-		OPAQUE,
+		OPAQUE_,
 		// The rendered output is either fully opaque or fully transparent depending on the alpha value and the
 		// specified alpha cutoff value. This mode is used to simulate geometry such as tree leaves or wire fences.
 		MASK,
@@ -102,7 +100,7 @@ struct MaterialPod : AssetPod {
 	// greater than or equal to the alphaCutoff value then it is rendered as fully opaque, otherwise, it is rendered as
 	// fully transparent. alphaCutoff value is ignored for other modes. The alpha value is defined in the
 	// baseColorTexture for metallic-roughness material model.
-	AlphaMode alphaMode{ OPAQUE };
+	AlphaMode alphaMode{ OPAQUE_ };
 	float alphaCutoff{ 0.5f };
 
 	// The doubleSided property specifies whether the material is double sided. When this value is false, back-face

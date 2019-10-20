@@ -4,7 +4,8 @@
 namespace fs = std::filesystem;
 
 #include <cinttypes>
-#include <stddef.h>
+#include <cstddef>
+
 
 #define GLM_ENABLE_EXPERIMENTAL
 #define GLM_FORCE_CXX17
