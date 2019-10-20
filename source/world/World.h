@@ -33,7 +33,6 @@ class World : public Object {
 	mutable std::unordered_set<SpotLightNode*> m_spotLights;
 	mutable std::unordered_set<CameraNode*> m_cameraNodes;
 
-
 	NodeFactory* m_nodeFactory;
 
 	PodHandle<JsonDocPod> m_loadedFrom;
@@ -52,6 +51,8 @@ class World : public Object {
 
 	void RegisterNode(Node* node, Node* parent);
 
+	// Removes node from any tracking sets / active cameras etc.
+	void CleanupNodeReferences(Node* node);
 
 public:
 	// Returns float seconds
@@ -65,14 +66,6 @@ public:
 
 	World(NodeFactory* factory);
 	~World() override;
-
-	template<typename NodeType>
-	void RemoveNode(NodeType* node)
-	{
-		Event::OnWorldNodeRemoved.Broadcast(node);
-		GetNodeMap<NodeType>().erase(node);
-		m_nodes.erase(node);
-	}
 
 	// available node may differ later in runtime
 	template<typename NodeType>
@@ -138,6 +131,12 @@ public:
 	Node* GetNodeByName(const std::string& name) const;
 
 	[[nodiscard]] CameraNode* GetActiveCamera() const { return m_activeCamera; }
+	void SetActiveCamera(CameraNode* cam)
+	{
+		if (m_cameraNodes.count(cam)) {
+			m_activeCamera = cam;
+		}
+	}
 
 	void Update();
 	// void WindowResize(int32 width, int32 height) override;

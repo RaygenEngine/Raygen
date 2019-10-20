@@ -11,6 +11,7 @@ namespace Event {
 // int32 width, int32 height
 inline MulticastEvent<int32, int32> OnWindowResize;
 
+inline MulticastEvent<> OnWorldLoaded;
 inline MulticastEvent<Node*> OnWorldNodeAdded;
 inline MulticastEvent<Node*> OnWorldNodeRemoved;
 } // namespace Event

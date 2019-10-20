@@ -24,7 +24,7 @@ void ObserverRenderer::OnNodeRemovedFromWorld(Node* node)
 void ObserverRenderer::Update()
 {
 	auto camera = Engine::GetWorld()->GetActiveCamera();
-	if (camera->GetDirtyFlagset()[CameraNode::DF::ViewportSize]) {
+	if (camera && camera->GetDirtyFlagset()[CameraNode::DF::ViewportSize]) {
 		ActiveCameraResize();
 	}
 

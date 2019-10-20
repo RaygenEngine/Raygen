@@ -40,7 +40,7 @@ GLDeferredRenderer::~GLDeferredRenderer()
 void GLDeferredRenderer::InitObservers()
 {
 	m_camera = Engine::GetWorld()->GetActiveCamera();
-	CLOG_ABORT(!m_camera, "This renderer expects a camera node to be present!");
+	CLOG_WARN(!m_camera, "Renderer failed to find camera.");
 
 	auto skyboxNode = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
 	CLOG_ABORT(!skyboxNode, "This renderer expects a skybox node to be present!");
@@ -537,21 +537,24 @@ void GLDeferredRenderer::RenderWindow()
 
 void GLDeferredRenderer::Render()
 {
-	// geometry pass
-	RenderGBuffer();
-	// clear out fbo
-	ClearOutFbo();
-	// light pass - blend lights on outFbo
-	RenderDirectionalLights();
-	RenderSpotLights();
-	RenderPunctualLights();
-	// ambient pass
-	RenderAmbientLight();
+	if (m_camera) {
+		// geometry pass
+		RenderGBuffer();
+		// clear out fbo
+		ClearOutFbo();
+		// light pass - blend lights on outFbo
+		RenderDirectionalLights();
+		RenderSpotLights();
+		RenderPunctualLights();
+		// ambient pass
+		RenderAmbientLight();
 
-	// post process - apply any to outFbo
+		// post process - apply any to outFbo
 
-	// render to window
-	RenderWindow();
+		// render to window
+		RenderWindow();
+	}
+	// else TODO: clear buffer
 
 	GLEditorRenderer::Render();
 

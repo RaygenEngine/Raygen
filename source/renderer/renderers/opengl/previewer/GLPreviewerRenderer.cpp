@@ -117,7 +117,7 @@ void GLPreviewerRenderer::GetNextLight()
 void GLPreviewerRenderer::InitObservers()
 {
 	m_camera = Engine::GetWorld()->GetActiveCamera();
-	CLOG_ABORT(!m_camera, "This renderer expects a camera node to be present!");
+	CLOG_WARN(!m_camera, "Failed to find a camera.");
 
 	for (auto geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>()) {
 		CreateObserver_AutoContained<GLBasicGeometry>(geometryNode, m_glGeometries);
@@ -380,13 +380,15 @@ void GLPreviewerRenderer::RenderWindow()
 
 void GLPreviewerRenderer::Render()
 {
-	RenderPreviewBuffer();
+	if (m_camera) {
+		RenderPreviewBuffer();
 
-	RenderDirectionalLights();
-	RenderSpotLights();
-	RenderPunctualLights();
+		RenderDirectionalLights();
+		RenderSpotLights();
+		RenderPunctualLights();
 
-	RenderWindow();
+		RenderWindow();
+	}
 
 	GLEditorRenderer::Render();
 } // namespace ogl
