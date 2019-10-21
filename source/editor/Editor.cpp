@@ -836,11 +836,20 @@ void Editor::FocusNode(Node* node)
 	if (!cam) {
 		return;
 	}
-	// TODO: should take account bboxes here for a nice user experience
-
 	auto trans = node->GetWorldTranslation();
 	cam->SetWorldTranslation(trans);
-	cam->AddWorldOffset(-cam->GetWorldForward() * 1.f);
+
+	float dist = 1.f;
+	if (node->IsA<GeometryNode>()) {
+		auto geom = static_cast<GeometryNode*>(node);
+		auto min = geom->GetAABB().min;
+		auto max = geom->GetAABB().max;
+		dist = glm::abs(min.x - max.x) + glm::abs(min.y - max.y);
+
+		cam->SetWorldTranslation(geom->GetAABB().GetCenter());
+	}
+	cam->AddWorldOffset(glm::vec3(-1.f, 0.25f, 0.f) * dist);
+	cam->SetLookAt(node->GetWorldTranslation());
 }
 
 void Editor::TeleportToCamera(Node* node)

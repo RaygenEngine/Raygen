@@ -72,6 +72,11 @@ void Node::SetWorldMatrix(const glm::mat4& newWorldMatrix)
 	SetLocalMatrix(glm::inverse(parentMatrix) * newWorldMatrix);
 }
 
+void Node::SetLookAt(glm::vec3 lookat)
+{
+	SetWorldOrientation(math::OrientationFromLookatAndPosition(lookat, m_worldTranslation));
+}
+
 void Node::AutoUpdateTransforms()
 {
 	UpdateTransforms(GetParent()->GetWorldMatrix());

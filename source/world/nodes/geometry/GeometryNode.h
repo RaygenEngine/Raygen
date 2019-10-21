@@ -19,6 +19,7 @@ public:
 
 	[[nodiscard]] PodHandle<ModelPod> GetModel() const { return m_model; }
 	[[nodiscard]] Box GetAABB() const { return m_aabb; }
+	[[nodiscard]] Box GetLocalAABB() const { return m_localBB; }
 
 	void SetModel(PodHandle<ModelPod> newModel);
 
