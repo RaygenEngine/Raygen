@@ -64,7 +64,7 @@ protected:
 	void RenderPunctualLights();
 	void RenderBoundingBoxes();
 	void RenderSkybox();
-	void RenderPostProcess();
+	void BlitMSAAtoOut();
 	void RenderWindow();
 
 	// Update

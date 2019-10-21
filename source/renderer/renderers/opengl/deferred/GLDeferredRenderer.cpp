@@ -33,6 +33,7 @@ GLDeferredRenderer::GBuffer::~GBuffer()
 
 GLDeferredRenderer::~GLDeferredRenderer()
 {
+	glDeleteFramebuffers(1, &m_lightFbo);
 	glDeleteFramebuffers(1, &m_outFbo);
 	glDeleteTextures(1, &m_outTexture);
 }
@@ -174,6 +175,10 @@ void GLDeferredRenderer::InitShaders()
 	m_ambientLightShader->StoreUniformLoc("invTextureSize");
 	m_ambientLightShader->StoreUniformLoc("vp_inv");
 
+	m_dummyPostProcShader
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DummyPostProc.json");
+	m_dummyPostProcShader->StoreUniformLoc("invTextureSize");
+
 	m_windowShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>(
 		"/engine-data/glsl/general/QuadWriteTexture_InvTextureSize.json");
 	m_windowShader->StoreUniformLoc("invTextureSize");
@@ -235,6 +240,22 @@ void GLDeferredRenderer::InitRenderBuffers()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_gBuffer.depthAttachment, 0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		LOG_FATAL("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+	}
+
+	// light fbo
+	glGenFramebuffers(1, &m_lightFbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
+
+	glGenTextures(1, &m_lightTexture);
+	glBindTexture(GL_TEXTURE_2D, m_lightTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textMaxWidth, textMaxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_lightTexture, 0);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		LOG_FATAL("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
@@ -331,10 +352,14 @@ void GLDeferredRenderer::RenderGBuffer()
 	glDisable(GL_DEPTH_TEST);
 }
 
-void GLDeferredRenderer::ClearOutFbo()
+void GLDeferredRenderer::ClearFbos()
 {
 	// clean outFbo for next frame
 	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -356,7 +381,7 @@ void GLDeferredRenderer::RenderDirectionalLights()
 
 		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
 
-		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
@@ -409,7 +434,7 @@ void GLDeferredRenderer::RenderSpotLights()
 
 		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
 
-		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
@@ -461,7 +486,7 @@ void GLDeferredRenderer::RenderPunctualLights()
 
 		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
 
-		glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
@@ -502,7 +527,7 @@ void GLDeferredRenderer::RenderAmbientLight()
 {
 	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
 
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glEnable(GL_BLEND);
@@ -523,6 +548,26 @@ void GLDeferredRenderer::RenderAmbientLight()
 
 	glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glDisable(GL_BLEND);
+}
+
+void GLDeferredRenderer::RenderPostProcess()
+{
+	// after the first post process, blend the rest on top of it
+	// or copy the lightsFbo to the outFbo at the beginning of post processing
+
+	// Dummy post process
+	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+
+	// on m_outFbo
+	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+
+	glUseProgram(m_dummyPostProcShader->programId);
+
+	m_dummyPostProcShader->SendVec2("invTextureSize", invTextureSize);
+	m_dummyPostProcShader->SendTexture(m_lightTexture, 0);
+
+	// big triangle trick, no vao
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void GLDeferredRenderer::RenderWindow()
@@ -547,16 +592,15 @@ void GLDeferredRenderer::Render()
 		// geometry pass
 		RenderGBuffer();
 		// clear out fbo
-		ClearOutFbo();
+		ClearFbos();
 		// light pass - blend lights on outFbo
 		RenderDirectionalLights();
 		RenderSpotLights();
 		RenderPunctualLights();
 		// ambient pass
 		RenderAmbientLight();
-
-		// post process - apply any to outFbo
-
+		// post process
+		RenderPostProcess();
 		// render to window
 		RenderWindow();
 	}
@@ -575,6 +619,7 @@ void GLDeferredRenderer::RecompileShaders()
 	m_ambientLightShader->Load();
 	m_windowShader->Load();
 	m_gBuffer.shader->Load();
+	m_dummyPostProcShader->Load();
 }
 
 void GLDeferredRenderer::Update()

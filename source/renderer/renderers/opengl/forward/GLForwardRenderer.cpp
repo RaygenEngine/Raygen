@@ -761,7 +761,7 @@ void GLForwardRenderer::RenderSkybox()
 	glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
-void GLForwardRenderer::RenderPostProcess()
+void GLForwardRenderer::BlitMSAAtoOut()
 {
 	// blit msaa to out
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFbo);
@@ -769,8 +769,6 @@ void GLForwardRenderer::RenderPostProcess()
 
 	glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 0, 0, m_camera->GetWidth(),
 		m_camera->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-	// do post process here (on out Fbo)
 }
 
 void GLForwardRenderer::RenderWindow()
@@ -802,8 +800,8 @@ void GLForwardRenderer::Render()
 		RenderBoundingBoxes();
 		// render skybox, seamless enabled (render last)
 		RenderSkybox();
-		// copy msaa to out fbo and render any post process on it
-		RenderPostProcess();
+		// blit
+		BlitMSAAtoOut();
 		// write out texture of out fbo to window (big triangle trick)
 		RenderWindow();
 	}
