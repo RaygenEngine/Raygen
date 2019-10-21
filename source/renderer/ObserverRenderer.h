@@ -98,7 +98,14 @@ private:
 	void OnNodeRemovedFromWorld(Node* node);
 
 protected:
-	virtual void OnNodeAddedToWorld(Node* node){};
+	virtual void OnNodeAddedToWorld(Node* node){
+		// auto interestedInType = &Node::StaticClass();
+		// auto cl = &node->GetClass();
+
+		// if (cl == interestedInType || cl->GetChildClasses().count(interestedInType)) {
+
+		//}
+	};
 
 public:
 	virtual void Update();

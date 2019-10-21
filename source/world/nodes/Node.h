@@ -140,6 +140,8 @@ public:
 	void SetWorldScale(glm::vec3 ws);
 	void SetWorldMatrix(const glm::mat4& newWorldMatrix);
 
+	void SetLookAt(glm::vec3 lookat);
+
 	void RotateAroundAxis(glm::vec3 worldAxis, float degrees);
 
 	void AddLocalOffset(glm::vec3 direction);

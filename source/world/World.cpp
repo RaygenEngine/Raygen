@@ -55,6 +55,7 @@ void World::SetActiveCamera(CameraNode* cam)
 		m_activeCamera = cam;
 	}
 }
+
 void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 {
 	LOG_INFO("Loading World file: \'{}\'", AssetManager::GetPodUri(scene));
