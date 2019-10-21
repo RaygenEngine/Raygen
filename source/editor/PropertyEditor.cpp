@@ -480,6 +480,8 @@ void PropertyEditor::Run_ContextActions(Node* node)
 
 	for (auto& action : v) {
 		if (action.IsSplitter()) {
+			ImGui::SameLine();
+			ImGui::Text(" ");
 			continue;
 		}
 

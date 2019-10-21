@@ -15,7 +15,30 @@ class Node;
 class PropertyEditor;
 class AssetWindow;
 
+// This is a reflected enum, putting more options will appear directly in the editor. (Make sure None still exists)
+enum class EditorBBoxDrawing
+{
+	None,
+	SelectedNode,
+	AllNodes,
+	AllNodesPlusParents
+};
+
 class Editor {
+public:
+	// Status queries for Renderers / Other engine modules The only functions that are intended for cross module use.
+
+	// All are static calls with 'reasonable' default behavior for when there is no editor instance, you can call them
+	// without checking the editor existance first.
+
+	// Will be null when no node is selected or there is no editor.
+	// Can change any frame
+	static Node* GetSelectedNode();
+
+	// Always None if there is no editor, can change any frame
+	static EditorBBoxDrawing GetBBoxDrawing();
+
+	// End of cross module functions
 public:
 	struct ImMenu {
 		ImMenu(const char* inName)
@@ -85,6 +108,7 @@ protected:
 
 	bool m_autoRestoreWorld{ false };
 
+
 	SceneSave m_sceneSave;
 
 	std::unique_ptr<AssetWindow> m_assetWindow;
@@ -139,11 +163,12 @@ public:
 	static void MakeChildOf(Node* newParent, Node* node);
 
 	static void PilotThis(Node* node);
+	static void FocusNode(Node* node);
 	static void TeleportToCamera(Node* node);
 
 	static void MakeActiveCamera(Node* node);
 
-	void Run_ContextPopup(Node* node);
+	bool Run_ContextPopup(Node* node);
 	void Run_NewNodeMenu(Node* underNode);
 	void Run_AssetView();
 
@@ -163,6 +188,16 @@ public:
 
 	void OnPlay();
 	void OnStopPlay();
+
+	[[nodiscard]] bool IsCameraPiloting() const
+	{
+		if (m_editorCamera) {
+			return m_editorCamera->GetParent()->IsRoot();
+		}
+		return false;
+	}
+	EditorBBoxDrawing m_bboxDrawing{ EditorBBoxDrawing::None };
+
 
 private:
 	void SpawnEditorCamera();

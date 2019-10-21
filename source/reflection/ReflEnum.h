@@ -108,7 +108,7 @@ public:
 	template<typename T>
 	[[nodiscard]] MetaEnumInst TieEnum(T& obj) const
 	{
-		return Make(&obj, *this, refl::GetId<T>())
+		return MetaEnumInst::Make(&obj, *this, refl::GetId<T>());
 	}
 
 	friend struct MetaEnumInst;
