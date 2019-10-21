@@ -187,6 +187,8 @@ set(HEADER_FILES
 	world/NodeFactory.h
 	
 	world/nodes/Node.h
+	world/nodes/NodeIterator.h
+
 	world/nodes/RootNode.h
 	world/nodes/TransformNode.h
 	world/nodes/camera/CameraNode.h

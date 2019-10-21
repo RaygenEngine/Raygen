@@ -8,6 +8,7 @@
 
 #include "asset/AssetManager.h"
 #include "system/Object.h"
+#include "world/nodes/NodeIterator.h"
 
 #include <unordered_set>
 
@@ -24,6 +25,8 @@ class World : public Object {
 	friend class Editor;
 	friend class NodeFactory;
 
+	template<typename T>
+	friend struct NodeIterator;
 
 	std::unique_ptr<RootNode> m_root;
 	mutable std::unordered_set<Node*> m_nodes;
@@ -70,6 +73,7 @@ public:
 	~World() override;
 
 	// available node may differ later in runtime
+	// TODO: implement with node sets
 	template<typename NodeType>
 	NodeType* GetAnyAvailableNode() const
 	{
@@ -129,39 +133,12 @@ public:
 		}
 	}
 
-private:
-	// Should be const
-	const std::unordered_set<Node*>& GetNodesOfExactTypeFromClass(const ReflClass& cl)
-	{
-		return m_typeHashToNodes[cl.GetTypeId().hash()];
-	}
-
-	std::unordered_set<Node*> GetNodesOfTypeFromClass(const ReflClass& cl)
-	{
-		auto copy = GetNodesOfExactTypeFromClass(cl);
-		for (auto& childClass : cl.GetChildClasses()) {
-			auto& childSet = m_typeHashToNodes[childClass->GetTypeId().hash()];
-			copy.insert(childSet.begin(), childSet.end());
-		}
-		return std::move(copy);
-	}
-
 public:
-	// Safe to static cast, TODO: should be private and provide iterators that static cast automatically, also below
 	template<typename T>
-	const std::unordered_set<Node*>& GetNodesOfExactType()
+	NodeIterable<T> GetNodeIterator()
 	{
-		return GetNodesOfExactTypeFromClass(T::StaticClass());
+		return NodeIterable<T>(m_typeHashToNodes);
 	}
-
-	// Safe to static cast.
-	// Required to make a copy unless we provide iterators
-	template<typename T>
-	std::unordered_set<Node*> GetNodesOfType()
-	{
-		return GetNodesOfTypeFromClass(T::StaticClass());
-	}
-
 
 	std::vector<Node*> GetNodesByName(const std::string& name) const;
 	Node* GetNodeByName(const std::string& name) const;
