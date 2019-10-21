@@ -42,10 +42,11 @@ std::vector<NodeContextActions::Entry> NodeContextActions::GetActions(Node* node
 
 		auto editorCam = Engine::GetEditor()->m_editorCamera;
 		if (editorCam && editorCam->GetParent() == node) {
-			actions.emplace_back("Stop Piloting This", &Editor::PilotThis);
+			actions.emplace_back("Stop Piloting", &Editor::PilotThis);
 		}
 		else {
-			actions.emplace_back("Pilot This", &Editor::PilotThis);
+			actions.emplace_back("Focus", &Editor::FocusNode);
+			actions.emplace_back("Pilot", &Editor::PilotThis);
 		}
 
 		if (node->IsA<CameraNode>()) {
