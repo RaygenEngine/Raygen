@@ -22,6 +22,7 @@ protected:
 	GLShader* m_deferredSpotLightShader{ nullptr };
 	GLShader* m_deferredPunctualLightShader{ nullptr };
 	GLShader* m_ambientLightShader{ nullptr };
+	GLShader* m_dummyPostProcShader{ nullptr };
 	GLShader* m_windowShader{ nullptr };
 
 	// observers
@@ -34,6 +35,9 @@ protected:
 	CameraNode* m_camera{ nullptr };
 
 	// rendering
+	GLuint m_lightFbo{ 0 };
+	GLuint m_lightTexture{ 0 };
+
 	GLuint m_outFbo{ 0 };
 	GLuint m_outTexture{ 0 };
 
@@ -61,12 +65,13 @@ protected:
 	void InitRenderBuffers();
 
 	// Render
-	void ClearOutFbo();
+	void ClearFbos();
 	void RenderGBuffer();
 	void RenderDirectionalLights();
 	void RenderSpotLights();
 	void RenderPunctualLights();
 	void RenderAmbientLight();
+	void RenderPostProcess();
 	void RenderWindow();
 
 	// Update
