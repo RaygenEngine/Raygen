@@ -49,6 +49,12 @@ Node* World::GetNodeByName(const std::string& name) const
 	return nullptr;
 }
 
+void World::SetActiveCamera(CameraNode* cam)
+{
+	if (m_cameraNodes.count(cam)) {
+		m_activeCamera = cam;
+	}
+}
 void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 {
 	LOG_INFO("Loading World file: \'{}\'", AssetManager::GetPodUri(scene));
@@ -160,6 +166,8 @@ void World::RegisterNode(Node* node, Node* parent)
 	m_nodes.insert(node);
 
 
+	m_typeHashToNodes[node->GetClass().GetTypeId().hash()].insert(node);
+
 	node->AutoUpdateTransforms();
 
 	DirtyFlagset temp;
@@ -199,6 +207,8 @@ bool MaybeRemove(std::unordered_set<T*>& set, Node* node)
 void World::CleanupNodeReferences(Node* node)
 {
 	Event::OnWorldNodeRemoved.Broadcast(node);
+
+	m_typeHashToNodes[node->GetClass().GetTypeId().hash()].erase(node);
 
 	m_nodes.erase(node);
 	bool isCamera = MaybeRemove(m_cameraNodes, node);

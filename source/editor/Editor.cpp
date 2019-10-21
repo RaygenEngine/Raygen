@@ -271,14 +271,20 @@ void Editor::Outliner()
 			Run_OutlinerDropTarget(node);
 		}
 		else {
-			if (!m_editorCamera->GetParent()->IsRoot() && ImGui::BeginPopupContextItem("Outliner Camera Context")) {
-				if (ImGui::MenuItem("Stop piloting")) {
-					Editor::MakeChildOf(Engine::GetWorld()->GetRoot(), m_editorCamera);
-					m_editorCamera->ResetRotation();
+			ImGui::PopStyleColor(4);
+
+			if (ImGui::BeginPopupContextItem("Outliner Camera Context")) {
+				if (!m_editorCamera->GetParent()->IsRoot()) {
+					if (ImGui::MenuItem("Stop piloting")) {
+						Editor::MakeChildOf(Engine::GetWorld()->GetRoot(), m_editorCamera);
+						m_editorCamera->ResetRotation();
+					}
+				}
+				if (ImGui::MenuItem("Set As Active")) {
+					Engine::GetWorld()->SetActiveCamera(m_editorCamera);
 				}
 				ImGui::EndPopup();
 			}
-			ImGui::PopStyleColor(4);
 		}
 		ImGui::PopID();
 	});
@@ -359,7 +365,7 @@ void Editor::OnStopPlay()
 void Editor::Run_ContextPopup(Node* node)
 {
 	if (ImGui::BeginPopupContextItem("Outliner Context")) {
-		for (auto& action : m_nodeContextActions->GetActions(node)) {
+		for (auto& action : m_nodeContextActions->GetActions(node, true)) {
 			if (!action.IsSplitter()) {
 				if (ImGui::MenuItem(action.name)) {
 					action.function(node);

@@ -33,6 +33,8 @@ class World : public Object {
 	mutable std::unordered_set<SpotLightNode*> m_spotLights;
 	mutable std::unordered_set<CameraNode*> m_cameraNodes;
 
+	std::unordered_map<size_t, std::unordered_set<Node*>> m_typeHashToNodes;
+
 	NodeFactory* m_nodeFactory;
 
 	PodHandle<JsonDocPod> m_loadedFrom;
@@ -127,19 +129,48 @@ public:
 		}
 	}
 
+private:
+	// Should be const
+	const std::unordered_set<Node*>& GetNodesOfExactTypeFromClass(const ReflClass& cl)
+	{
+		return m_typeHashToNodes[cl.GetTypeId().hash()];
+	}
+
+	std::unordered_set<Node*> GetNodesOfTypeFromClass(const ReflClass& cl)
+	{
+		auto copy = GetNodesOfExactTypeFromClass(cl);
+		for (auto& childClass : cl.GetChildClasses()) {
+			auto& childSet = m_typeHashToNodes[childClass->GetTypeId().hash()];
+			copy.insert(childSet.begin(), childSet.end());
+		}
+		return std::move(copy);
+	}
+
+public:
+	// Safe to static cast, TODO: should be private and provide iterators that static cast automatically, also below
+	template<typename T>
+	const std::unordered_set<Node*>& GetNodesOfExactType()
+	{
+		return GetNodesOfExactTypeFromClass(T::StaticClass());
+	}
+
+	// Safe to static cast.
+	// Required to make a copy unless we provide iterators
+	template<typename T>
+	std::unordered_set<Node*> GetNodesOfType()
+	{
+		return GetNodesOfTypeFromClass(T::StaticClass());
+	}
+
+
 	std::vector<Node*> GetNodesByName(const std::string& name) const;
 	Node* GetNodeByName(const std::string& name) const;
 
 	[[nodiscard]] CameraNode* GetActiveCamera() const { return m_activeCamera; }
-	void SetActiveCamera(CameraNode* cam)
-	{
-		if (m_cameraNodes.count(cam)) {
-			m_activeCamera = cam;
-		}
-	}
+	void SetActiveCamera(CameraNode* cam);
+
 
 	void Update();
-	// void WindowResize(int32 width, int32 height) override;
 
 	void LoadAndPrepareWorld(PodHandle<JsonDocPod> scenePod);
 

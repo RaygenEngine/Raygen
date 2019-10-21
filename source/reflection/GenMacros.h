@@ -23,22 +23,39 @@ public:                                                                         
 
 #define REFLECTED_NODE(Class, ParentClass, /*optional DF_FLAGS()*/...)                                                 \
 public:                                                                                                                \
+	/* Public interface */                                                                                             \
 	using Parent = ParentClass;                                                                                        \
 	[[nodiscard]] const ReflClass& GetClass() const override { return Class::StaticClass(); }                          \
 	[[nodiscard]] const ReflClass& GetParentClass() const override { return Parent::StaticClass(); }                   \
-	[[nodiscard]] static const ReflClass& StaticClass()                                                                \
-	{                                                                                                                  \
-		static ReflClass cl = ReflClass::Generate<Class, Parent>();                                                    \
-		return cl;                                                                                                     \
-	}                                                                                                                  \
+	[[nodiscard]] static const ReflClass& StaticClass() { return Class::Z_MutableClass(); }                            \
                                                                                                                        \
+	/* Expand DF FLAGS declaration here as public */                                                                   \
 	__VA_ARGS__;                                                                                                       \
                                                                                                                        \
 private:                                                                                                               \
+	/* Init of static class, also updates parents' child set. With this we ensure all ReflClasses are unique for each  \
+	 * class and therefore we can check if the class is the same by comparing pointers */                              \
+	static ReflClass& Z_MutableClass()                                                                                 \
+	{                                                                                                                  \
+		static ReflClass cl = ReflClass::Generate<Class, Parent>(&cl);                                                 \
+		return cl;                                                                                                     \
+	}                                                                                                                  \
+                                                                                                                       \
+	/* Some 'using' trickery to allow enable macros */                                                                 \
 	using Z_ThisType = Class;                                                                                          \
 	friend class ReflClass;                                                                                            \
 	friend class NodeFactory;                                                                                          \
-	[[nodiscard]] static Node* NewInstance() { return new Class(); }                                                   \
+                                                                                                                       \
+	/* Instanciates a class of this type. Should really be in ReflClass but not required because its only used by      \
+	 * NodeFactory. */                                                                                                 \
+	[[nodiscard]] static Node* NewInstance()                                                                           \
+	{                                                                                                                  \
+		Z_MutableClass(); /* Ensure reflclass for this has been instanciated, therefore the parent class knows this    \
+							 class.*/                                                                                  \
+		return new Class();                                                                                            \
+	}                                                                                                                  \
+	/* Called from inside the ReflClass::Generate to generate members, only supposed to be used with the macros        \
+	 * below. The user must provide the body. */                                                                       \
 	static void GenerateReflection(ReflClass& refl)
 
 
