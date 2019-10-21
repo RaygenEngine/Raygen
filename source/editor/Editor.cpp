@@ -341,7 +341,7 @@ void Editor::OnPlay()
 		Engine::GetWorld()->DeleteNode(m_editorCamera);
 	}
 	if (m_autoRestoreWorld) {
-		SceneSave::SaveAs(Engine::GetWorld(), "__sceneplay.tmp");
+		SceneSave::SaveAs(Engine::GetWorld(), "__scene.tmp");
 	}
 }
 
@@ -352,7 +352,7 @@ void Editor::OnStopPlay()
 		m_editorCamera->SetWorldMatrix(m_editorCameraCachedMatrix);
 	}
 	if (m_autoRestoreWorld) {
-		m_sceneToLoad = "__sceneplay.tmp";
+		m_sceneToLoad = "__scene.tmp";
 	}
 }
 

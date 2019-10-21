@@ -44,14 +44,14 @@ void Node::SetLocalMatrix(const glm::mat4& lm)
 
 void Node::SetWorldTranslation(glm::vec3 wt)
 {
-	auto parentTranslation = GetParent()->GetWorldTranslation();
-	SetLocalTranslation(wt - parentTranslation);
+	auto parentMatrix = GetParent()->GetWorldMatrix();
+	SetLocalTranslation(glm::inverse(parentMatrix) * glm::vec4(wt, 1.f));
 }
 
 void Node::SetWorldOrientation(glm::quat wo)
 {
-	auto parentOrient = GetParent()->GetWorldOrientation();
-	SetLocalOrientation(glm::inverse(parentOrient) * wo);
+	auto worldMatrix = math::TransformMatrixFromTOS(m_worldScale, wo, m_worldTranslation);
+	SetWorldMatrix(worldMatrix);
 }
 
 void Node::RotateAroundAxis(glm::vec3 worldAxis, float degrees)
@@ -62,8 +62,8 @@ void Node::RotateAroundAxis(glm::vec3 worldAxis, float degrees)
 
 void Node::SetWorldScale(glm::vec3 ws)
 {
-	auto parentScale = GetParent()->GetWorldScale();
-	SetLocalScale(ws / parentScale);
+	auto worldMatrix = math::TransformMatrixFromTOS(ws, m_worldOrientation, m_worldTranslation);
+	SetWorldMatrix(worldMatrix);
 }
 
 void Node::SetWorldMatrix(const glm::mat4& newWorldMatrix)

@@ -35,6 +35,10 @@ struct ReflectionToImguiVisitor {
 	template<typename T>
 	void MassMaterialEdit(T& t, const Property& p)
 	{
+		if (!massEditMaterialVector) {
+			massEditMaterials = false;
+			return;
+		}
 		for (auto& materialHandle : *massEditMaterialVector) {
 			p.GetRef<T>(const_cast<MaterialPod*>(materialHandle.Lock())) = t;
 		}
@@ -51,6 +55,10 @@ struct ReflectionToImguiVisitor {
 	template<>
 	void MassMaterialEdit(MetaEnumInst& t, const Property& p)
 	{
+		if (!massEditMaterialVector) {
+			massEditMaterials = false;
+			return;
+		}
 		for (auto& materialHandle : *massEditMaterialVector) {
 			p.GetEnumRef(const_cast<MaterialPod*>(materialHandle.Lock())).SetValue(t.GetValue());
 		}
