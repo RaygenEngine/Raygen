@@ -47,6 +47,7 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/basic/GLBasicDirectionalLight.cpp
 	renderer/renderers/opengl/basic/GLBasicPunctualLight.cpp
 	renderer/renderers/opengl/basic/GLBasicGeometry.cpp
+	renderer/renderers/opengl/dovr/GLDOVRRenderer.cpp
 	renderer/renderers/opengl/forward/GLForwardRenderer.cpp
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.cpp
 	renderer/renderers/opengl/previewer/GLPreviewerRenderer.cpp
@@ -62,6 +63,7 @@ set(SOURCE_FILES
 	
 	world/nodes/Node.cpp
 	world/nodes/RootNode.cpp
+	world/nodes/vr/OVRNode.cpp
 	world/nodes/camera/CameraNode.cpp
 	world/nodes/camera/WindowCameraNode.cpp
 	world/nodes/camera/EditorCameraNode.cpp
@@ -168,6 +170,7 @@ set(HEADER_FILES
 	renderer/renderers/opengl/basic/GLBasicDirectionalLight.h
 	renderer/renderers/opengl/basic/GLBasicPunctualLight.h
 	renderer/renderers/opengl/basic/GLBasicGeometry.h
+	renderer/renderers/opengl/dovr/GLDOVRRenderer.h
 	renderer/renderers/opengl/forward/GLForwardRenderer.h
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.h
 	renderer/renderers/opengl/previewer/GLPreviewerRenderer.h
@@ -189,6 +192,7 @@ set(HEADER_FILES
 	world/nodes/Node.h
 	world/nodes/RootNode.h
 	world/nodes/TransformNode.h
+	world/nodes/vr/OVRNode.h
 	world/nodes/camera/CameraNode.h
 	world/nodes/camera/WindowCameraNode.h
 	world/nodes/camera/EditorCameraNode.h
@@ -242,6 +246,7 @@ endif(MSVC)
 # 3rd party libraries
 target_link_libraries(Rayxen
 	glad.lib
+	LibOVR.lib
 	opengl32.lib
 	XInput.lib
 )

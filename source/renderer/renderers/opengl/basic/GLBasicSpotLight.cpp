@@ -38,8 +38,7 @@ GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 
-	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE,
-		"ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 }
 
 GLBasicSpotLight::~GLBasicSpotLight()

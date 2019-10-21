@@ -238,8 +238,7 @@ void GLForwardRenderer::InitRenderBuffers()
 
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_msaaDepthStencilRbo);
 
-	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE,
-		"ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 
 	// out fbo
 	glGenFramebuffers(1, &m_outFbo);
@@ -253,8 +252,7 @@ void GLForwardRenderer::InitRenderBuffers()
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outColorTexture, 0);
 
-	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE,
-		"ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 
 	// bounding boxes
 	glCreateVertexArrays(1, &m_bbVao);

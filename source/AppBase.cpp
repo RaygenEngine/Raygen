@@ -6,6 +6,7 @@
 #include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
 #include "renderer/renderers/opengl/forward/GLForwardRenderer.h"
 #include "renderer/renderers/opengl/previewer/GLPreviewerRenderer.h"
+#include "renderer/renderers/opengl/dovr/GLDOVRRenderer.h"
 #include "system/Engine.h"
 #include "system/Input.h"
 #include "system/Logger.h"
@@ -16,7 +17,7 @@
 AppBase::AppBase()
 {
 	m_name = "Rayxen Engine";
-	m_initialScene = "engine-data/default.json";
+	m_initialScene = "engine-data/test-vr.json";
 	m_assetPath = "assets";
 
 	m_windowTitle = "Rayxen";
@@ -118,6 +119,7 @@ void AppBase::RegisterRenderers()
 	// NOTE:
 	// Default behavior for an app is to start the FIRST renderer registered here.
 
+	Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
 	Engine::RegisterRenderer<ogl::GLForwardRenderer>();
 	Engine::RegisterRenderer<ogl::GLDeferredRenderer>();
 	Engine::RegisterRenderer<ogl::GLPreviewerRenderer>();

@@ -241,9 +241,7 @@ void GLDeferredRenderer::InitRenderBuffers()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_gBuffer.depthAttachment, 0);
 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		LOG_FATAL("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
-	}
+	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 
 	// light fbo
 	glGenFramebuffers(1, &m_lightFbo);
@@ -257,9 +255,7 @@ void GLDeferredRenderer::InitRenderBuffers()
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_lightTexture, 0);
 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		LOG_FATAL("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
-	}
+	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 
 	// out fbo
 	glGenFramebuffers(1, &m_outFbo);
@@ -273,9 +269,7 @@ void GLDeferredRenderer::InitRenderBuffers()
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outTexture, 0);
 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		LOG_FATAL("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
-	}
+	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 }
 
 void GLDeferredRenderer::InitScene()

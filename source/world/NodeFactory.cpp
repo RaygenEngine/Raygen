@@ -11,6 +11,7 @@
 #include "world/nodes/sky/SkyboxNode.h"
 #include "world/nodes/user/FreeformUserNode.h"
 #include "world/nodes/TransformNode.h"
+#include "world/nodes/vr/OVRNode.h"
 #include "asset/util/ParsingAux.h"
 #include "reflection/ReflectionTools.h"
 #include "core/MathAux.h"
@@ -23,7 +24,7 @@ using json = nlohmann::json;
 void NodeFactory::RegisterNodes()
 {
 	RegisterNodeList<CameraNode, WindowCameraNode, GeometryNode, DirectionalLightNode, PunctualLightNode, SpotLightNode,
-		SkyboxNode, FreeformUserNode, TransformNode>();
+		SkyboxNode, FreeformUserNode, TransformNode, OVRNode>();
 }
 
 Node* NodeFactory::NewNodeFromType(const std::string& type)

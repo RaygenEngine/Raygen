@@ -19,6 +19,7 @@ class GeometryNode;
 class SpotLightNode;
 class DirectionalLightNode;
 
+
 class World : public Object {
 
 	friend class Editor;
@@ -48,13 +49,14 @@ class World : public Object {
 
 	void UpdateFrameTimers();
 
-
-	void RegisterNode(Node* node, Node* parent);
-
 	// Removes node from any tracking sets / active cameras etc.
 	void CleanupNodeReferences(Node* node);
 
 public:
+	// WIP:
+	void RegisterNode(Node* node, Node* parent);
+
+
 	// Returns float seconds
 	float GetDeltaTime() { return m_deltaTime; }
 
