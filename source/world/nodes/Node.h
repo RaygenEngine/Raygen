@@ -23,6 +23,11 @@ class Node : public Object {
 	//
 	// Stuff required and used by reflection that are specific to base node class.
 	// This is similar to the macro code-gen but with a few changes for the base class.
+	[[nodiscard]] static ReflClass& Z_MutableClass()
+	{
+		static ReflClass cl = ReflClass::Generate<Node>();
+		return cl;
+	}
 
 public:
 	using Parent = Node;
@@ -31,17 +36,13 @@ public:
 
 	[[nodiscard]] virtual const ReflClass& GetParentClass() const { return Parent::StaticClass(); }
 
-	[[nodiscard]] static const ReflClass& StaticClass()
-	{
-		static ReflClass cl = ReflClass::Generate<Node>();
-		return cl;
-	}
+	[[nodiscard]] static const ReflClass& StaticClass() { return Z_MutableClass(); }
 
 private:
 	friend class ReflClass;
 	static void GenerateReflection(ReflClass& refl)
 	{
-		// Add reflected variables here.
+		// Node class has no base variables
 	}
 
 

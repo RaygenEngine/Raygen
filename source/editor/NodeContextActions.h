@@ -17,7 +17,7 @@ struct NodeContextActions {
 		{
 		}
 
-		Entry(const char* inName, FuncType inFunc)
+		Entry(const char* inName, FuncType inFunc, bool button = true)
 			: name(inName)
 			, function(inFunc)
 		{
@@ -26,7 +26,7 @@ struct NodeContextActions {
 
 		bool IsSplitter() const { return name == nullptr; }
 	};
-	std::vector<Entry> GetActions(Node* node);
+	std::vector<Entry> GetActions(Node* node, bool extendedList = false);
 
 private:
 	std::vector<Entry> baseActions;
