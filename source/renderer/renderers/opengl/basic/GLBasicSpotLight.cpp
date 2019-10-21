@@ -82,7 +82,7 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
 
-			if (materialData->unlit)
+			if (materialData->castsShadows)
 				continue;
 
 			glBindVertexArray(glMesh.vao);

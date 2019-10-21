@@ -93,7 +93,7 @@ void GLBasicPunctualLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& 
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
 
-			if (materialData->unlit)
+			if (materialData->castsShadows)
 				continue;
 
 			glBindVertexArray(glMesh.vao);
