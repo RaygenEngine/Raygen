@@ -32,6 +32,7 @@ void CameraNode::RecalculateFrustum()
 
 void CameraNode::DirtyUpdate(DirtyFlagset flags)
 {
+	Node::DirtyUpdate(flags);
 	if (flags[DF::Projection] || flags[DF::ViewportSize]) {
 		RecalculateProjectionFov();
 	}
