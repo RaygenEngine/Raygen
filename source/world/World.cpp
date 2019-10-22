@@ -56,9 +56,7 @@ Node* World::GetNodeByName(const std::string& name) const
 
 void World::SetActiveCamera(CameraNode* cam)
 {
-	if (m_cameraNodes.count(cam)) {
-		m_activeCamera = cam;
-	}
+	m_activeCamera = cam;
 }
 
 void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
@@ -129,8 +127,6 @@ Node* World::DuplicateNode_Utl(Node* src, Node* newParent)
 	auto result = refltools::CopyClassTo(src, created);
 
 	CLOG_FATAL(!result.IsExactlyCorrect(), "Duplicate node did not exactly match properties!");
-
-	Event::OnWorldNodeAdded.Broadcast(created);
 	return created;
 }
 
@@ -153,17 +149,6 @@ void World::DeleteNode(Node* src)
 	src->GetParent()->DeleteChild(src);
 }
 
-namespace {
-template<typename T>
-bool MaybeInsert(std::unordered_set<T*>& set, Node* node)
-{
-	if (node->IsA<T>()) {
-		set.insert(static_cast<T*>(node));
-		return true;
-	}
-	return false;
-}
-} // namespace
 
 void World::RegisterNode(Node* node, Node* parent)
 {
@@ -196,52 +181,24 @@ void World::RegisterNode(Node* node, Node* parent)
 		delete node;
 	});
 
-	bool isCamera = MaybeInsert(m_cameraNodes, node);
-	if (isCamera) {
-		if (!m_activeCamera) {
-			m_activeCamera = static_cast<CameraNode*>(node);
-		}
-		return;
-	}
+	Event::OnWorldNodeAdded.Broadcast(node);
 
-	[[maybe_unused]] bool cc = MaybeInsert(m_geomteryNodes, node) || MaybeInsert(m_punctualLights, node)
-							   || MaybeInsert(m_directionalLights, node) || MaybeInsert(m_spotLights, node);
-}
 
-namespace {
-template<typename T>
-bool MaybeRemove(std::unordered_set<T*>& set, Node* node)
-{
-	if (node->IsA<T>()) {
-		set.erase(static_cast<T*>(node));
-		return true;
+	if (!m_activeCamera && node->IsA<CameraNode>()) {
+		SetActiveCamera(NodeCast<CameraNode>(node));
 	}
-	return false;
 }
-} // namespace
 
 void World::CleanupNodeReferences(Node* node)
 {
 	Event::OnWorldNodeRemoved.Broadcast(node);
 
 	m_typeHashToNodes[node->GetClass().GetTypeId().hash()].erase(node);
-
 	m_nodes.erase(node);
-	bool isCamera = MaybeRemove(m_cameraNodes, node);
-	if (isCamera) {
-		if (m_activeCamera == node) {
-			if (!m_cameraNodes.empty()) {
-				m_activeCamera = *m_cameraNodes.begin();
-			}
-			else {
-				m_activeCamera = nullptr;
-			}
-		}
-		return;
-	}
 
-	[[maybe_unused]] bool cc = MaybeRemove(m_geomteryNodes, node) || MaybeRemove(m_punctualLights, node)
-							   || MaybeRemove(m_directionalLights, node) || MaybeRemove(m_spotLights, node);
+	if (node == m_activeCamera) {
+		SetActiveCamera(GetAnyAvailableNode<CameraNode>());
+	}
 }
 
 

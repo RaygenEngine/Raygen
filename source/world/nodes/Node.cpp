@@ -26,6 +26,11 @@ void Node::SetLocalOrientation(glm::quat lo)
 	AutoUpdateTransforms();
 }
 
+void Node::SetLocalPYR(glm::vec3 pyr)
+{
+	SetLocalOrientation(glm::quat(glm::radians(pyr)));
+}
+
 void Node::SetLocalScale(glm::vec3 ls)
 {
 	m_localScale = ls;
@@ -52,6 +57,11 @@ void Node::SetWorldOrientation(glm::quat wo)
 {
 	auto worldMatrix = math::TransformMatrixFromTOS(m_worldScale, wo, m_worldTranslation);
 	SetWorldMatrix(worldMatrix);
+}
+
+void Node::SetWorldPYR(glm::vec3 pyr)
+{
+	SetWorldOrientation(glm::quat(glm::radians(pyr)));
 }
 
 void Node::RotateAroundAxis(glm::vec3 worldAxis, float degrees)

@@ -154,7 +154,7 @@ void Editor::UpdateEditor()
 	ImguiImpl::NewFrame();
 
 	if (m_showImguiDemo) {
-		ImGui::ShowDemoWindow();
+		ImGui::ShowDemoWindow(&m_showImguiDemo);
 	}
 
 	if (m_showAboutWindow) {
@@ -350,21 +350,25 @@ void Editor::Outliner()
 		ImGui::EndDragDropTarget();
 	}
 	if (!foundOpen) {
-		if (ImGui::BeginPopupContextItem("Rightclick Context")) {
+		ImGui::PushID(989);
+		if (ImGui::BeginPopupContextItem("RightclickOutliner Context")) {
 			if (ImGui::BeginMenu("New Node")) {
 				Run_NewNodeMenu(Engine::GetWorld()->GetRoot());
 				ImGui::EndMenu();
 			}
-			if (IsCameraPiloting() && ImGui::BeginMenu("Stop piloting")) {
+			if (IsCameraPiloting() && ImGui::MenuItem("Stop piloting")) {
 				Editor::PilotThis(nullptr);
 			}
 			ImGui::EndPopup();
 		}
+		ImGui::PopID();
 	}
 }
 
 void Editor::LoadScene(const fs::path& scenefile)
 {
+	m_updateWorld = false;
+
 	Engine::Get().CreateWorldFromFile("/" + fs::relative(scenefile).string());
 	Engine::Get().SwitchRenderer(Engine::Get().GetActiveRendererIndex());
 
@@ -403,8 +407,10 @@ void Editor::OnPlay()
 void Editor::OnStopPlay()
 {
 	if (!m_updateWorld) {
-		SpawnEditorCamera();
-		m_editorCamera->SetWorldMatrix(m_editorCameraCachedMatrix);
+		if (!m_editorCamera) {
+			SpawnEditorCamera();
+			m_editorCamera->SetWorldMatrix(m_editorCameraCachedMatrix);
+		}
 	}
 	if (m_autoRestoreWorld) {
 		m_sceneToLoad = "__scene.tmp";
@@ -708,6 +714,7 @@ void Editor::MoveChildUp(Node* node)
 	if (thisIt != begin(children)) {
 		std::iter_swap(thisIt, thisIt - 1);
 	}
+	node->SetDirty(Node::DF::Children);
 }
 
 void Editor::MoveChildDown(Node* node)
@@ -721,7 +728,7 @@ void Editor::MoveChildDown(Node* node)
 	if (thisIt + 1 != end(children)) {
 		std::iter_swap(thisIt, thisIt + 1);
 	}
-	// WIP: decide what flag this sets
+	node->SetDirty(Node::DF::Children);
 }
 
 void Editor::MoveChildOut(Node* node)
@@ -807,7 +814,6 @@ void Editor::MakeChildOf(Node* newParent, Node* node)
 
 	PushCommand(lateCmd);
 }
-
 
 void Editor::PilotThis(Node* node)
 {

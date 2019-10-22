@@ -12,14 +12,7 @@
 
 Engine::~Engine()
 {
-	// NOTE: It is REALLY important to remember the reverse order here
-	delete m_renderer;
-	delete m_editor;
-	delete m_world;
-	delete m_window;
-
-	delete m_assetManager;
-	delete m_input;
+	// Destruction of objects is done at Deinit
 }
 
 void Engine::InitEngine(AppBase* app)
@@ -158,4 +151,16 @@ void Engine::ToggleEditor()
 		}
 		m_isEditorActive = !m_isEditorActive;
 	}
+}
+
+void Engine::DeinitEngine()
+{
+	// NOTE: It is REALLY important to remember the reverse order here
+	delete m_renderer;
+	delete m_editor;
+	delete m_world;
+	delete m_window;
+
+	delete m_assetManager;
+	delete m_input;
 }

@@ -24,71 +24,19 @@ protected:
 
 
 	// WIP: Cleanup unused stuff, decide on "Singleton" Observer (maybe even auto-add them?)
-	// WIP: Maybe remove custom deleter for each observer instance?
 	// TODO: custom dirtyFlagset structure?
 	// DOC: document the final version
-
-	template<typename ObserverType>
-	[[nodiscard]] ObserverType* CreateObserver_Callback(
-		typename ObserverType::NodeType* typedNode, std::function<void(NodeObserverBase*)> onObserveeLost)
-	{
-		ObserverType* rawPtr = new ObserverType(typedNode);
-		m_observers.emplace(std::unique_ptr<NodeObserverBase>(rawPtr));
-		rawPtr->onObserveeLost = onObserveeLost;
-		return rawPtr;
-	}
-
-	template<typename ObserverType>
-	ObserverType* CreateObserver_Weak(typename ObserverType::NodeType* typedNode)
-	{
-		auto lambda = [](NodeObserverBase* obs) -> void {
-			dynamic_cast<ObserverType::NodeType*>(obs)->node = nullptr;
-			baseNode = nullptr;
-		};
-
-		return CreateObserver_Callback<ObserverType>(typedNode, lambda);
-	}
-
-	//
-	//
-	//
-	template<typename ObserverType, typename T>
-	ObserverType* CreateObserver_AutoContained(
-		typename ObserverType::NodeType* typedNode, T& containerToAddAndRemoveFrom)
-	{
-		auto& cont = containerToAddAndRemoveFrom;
-
-		auto lambda = [&](NodeObserverBase* obs) -> void {
-			cont.erase(std::find(cont.begin(), cont.end(), obs));
-
-			m_observers.erase(
-				std::find_if(begin(m_observers), end(m_observers), [&](auto& elem) { return elem.get() == obs; }));
-		};
-		auto rawPtr = CreateObserver_Callback<ObserverType>(typedNode, lambda);
-		cont.insert(cont.end(), rawPtr);
-		return rawPtr;
-	}
 
 	// Attempts to track any available node of this type.
 	// When this node gets deleted, it will automatically observe another available node of this type.
 	// If no such node is available or the last one from the world gets deleted, it will Nullptr the node member.
-
+	// TODO: maybe usefull for optimizations to avoid GetAnyAvailableNode() every frame. left for reference
 	template<typename ObserverType>
 	[[nodiscard]] ObserverType* CreateObserver_AnyAvailable()
 	{
-		auto nodePtr = Engine::GetWorld()->GetAnyAvailableNode<typename ObserverType::NodeType>();
-
-		if (!nodePtr)
-			return nullptr;
-
-		auto lambda = [](NodeObserverBase* obs) -> void {
-			auto nodePtr = Engine::GetWorld()->GetAnyAvailableNode<typename ObserverType::NodeType>();
-			dynamic_cast<ObserverType*>(obs)->node = nodePtr;
-			obs->baseNode = nodePtr;
-		};
-
-		return CreateObserver_Callback<ObserverType>(nodePtr, lambda);
+		return nullptr;
 	}
+
 
 	// Tracks ALL nodes of this type AND subtypes by automatically adding and removing them from the observer container.
 	// You can handle additional creation/update/deletion stuff through the Observer's:
@@ -100,18 +48,18 @@ protected:
 		using ObserverType = std::remove_pointer_t<typename T::value_type>;
 		using NodeType = typename ObserverType::NodeType;
 
-		// First fill the container
+		// Fill the container with the current nodes of this type
 		auto world = Engine::GetWorld();
 		for (auto node : world->GetNodeIterator<NodeType>()) {
-			CreateObserver_AutoContained<ObserverType>(node, containerToAddAndRemoveFrom);
+			CreateAddObserverToContainer<ObserverType>(node, containerToAddAndRemoveFrom);
 		}
 
-		// Our on add lambda
+		// On add lambda
 		auto adderLambda = [&](Node* nodeToAdd) {
 			CLOG_ABORT(nodeToAdd->GetClass() != NodeType::StaticClass(),
 				"Incorrect type, Static cast will fail. Observer Renderer Internal error");
 
-			CreateObserver_AutoContained<ObserverType>(static_cast<NodeType*>(nodeToAdd), containerToAddAndRemoveFrom);
+			CreateAddObserverToContainer<ObserverType>(static_cast<NodeType*>(nodeToAdd), containerToAddAndRemoveFrom);
 		};
 
 		// Register our add function
@@ -120,14 +68,37 @@ protected:
 
 	void RemoveObserver(NodeObserverBase* ptr);
 
-private:
-	void OnNodeRemovedFromWorld(Node* node);
-
 protected:
+	// Probably worthless to overload this under normal circumstances, you should prefer to use the automatic lifetimes
+	// of the observer renderer
+	virtual void OnNodeRemovedFromWorld(Node* node);
 	virtual void OnNodeAddedToWorld(Node* node);
+	virtual void ActiveCameraResize(){};
 
 public:
 	virtual void Update();
 
-	virtual void ActiveCameraResize(){};
+
+private:
+	// Internal utility function
+	template<typename ObserverType, typename T>
+	ObserverType* CreateAddObserverToContainer(
+		typename ObserverType::NodeType* typedNode, T& containerToAddAndRemoveFrom)
+	{
+		auto& cont = containerToAddAndRemoveFrom;
+
+		auto lambda = [&](NodeObserverBase* obs) -> void {
+			cont.erase(std::find(cont.begin(), cont.end(), obs));
+
+			m_observers.erase(
+				std::find_if(begin(m_observers), end(m_observers), [&](auto& elem) { return elem.get() == obs; }));
+		};
+
+		ObserverType* rawPtr = new ObserverType(typedNode);
+		m_observers.emplace(std::unique_ptr<NodeObserverBase>(rawPtr));
+		rawPtr->onObserveeLost = lambda;
+
+		containerToAddAndRemoveFrom.insert(cont.end(), rawPtr);
+		return rawPtr;
+	}
 };

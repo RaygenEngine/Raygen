@@ -30,12 +30,7 @@ class World : public Object {
 	friend struct NodeIterator;
 
 	std::unique_ptr<RootNode> m_root;
-	mutable std::unordered_set<Node*> m_nodes;
-	mutable std::unordered_set<GeometryNode*> m_geomteryNodes;
-	mutable std::unordered_set<PunctualLightNode*> m_punctualLights;
-	mutable std::unordered_set<DirectionalLightNode*> m_directionalLights;
-	mutable std::unordered_set<SpotLightNode*> m_spotLights;
-	mutable std::unordered_set<CameraNode*> m_cameraNodes;
+	std::unordered_set<Node*> m_nodes;
 
 	std::unordered_map<size_t, std::unordered_set<Node*>> m_typeHashToNodes;
 
@@ -77,72 +72,30 @@ public:
 	World(NodeFactory* factory);
 	~World() override;
 
-	// available node may differ later in runtime
-	// TODO: implement with node sets
+	// available node may differ later in runtime.
+	// returns nodes of subclasses ONLY IF no exact type was found.
+	// returns nullptr if no node of this class or subclasses where found
 	template<typename NodeType>
 	NodeType* GetAnyAvailableNode() const
 	{
-		for (auto& node : m_nodes) {
-			auto ptr = dynamic_cast<NodeType*>(node);
-			if (ptr) {
-				return ptr;
-			}
+		Node* node = GetAnyAvailableNodeFromClass(&NodeType::StaticClass());
+		if (!node) {
+			return nullptr;
 		}
-		return nullptr;
+		return NodeCast<NodeType>(node);
 	}
 
-	// available node may differ later in runtime
-	// template <typename NodeType>
-	// NodeType* GetFirstAvailableNode() const
-	//{
-	//
-	//	return *GetNodeMap<NodeType>().begin();
-	//} TODO: Use in observer renderer
-
-	// available node may differ later in runtime
-	template<typename NodeSubType>
-	NodeSubType* GetAvailableNodeSpecificSubType() const
-	{
-		for (auto node : GetNodeMap<NodeSubType>()) {
-			auto* snode = dynamic_cast<NodeSubType*>(node);
-
-			if (snode) {
-				return snode;
-			}
-		}
-		// not found
-		return nullptr;
-	}
-
-	template<typename NodeType>
-	constexpr auto& GetNodeMap() const
-	{
-		if constexpr (std::is_base_of_v<PunctualLightNode, NodeType>) { // NOLINT
-			return m_punctualLights;
-		}
-		else if constexpr (std::is_base_of_v<GeometryNode, NodeType>) { // NOLINT
-			return m_geomteryNodes;
-		}
-		else if constexpr (std::is_base_of_v<CameraNode, NodeType>) { // NOLINT
-			return m_cameraNodes;
-		}
-		else if constexpr (std::is_base_of_v<DirectionalLightNode, NodeType>) { // NOLINT
-			return m_directionalLights;
-		}
-		else if constexpr (std::is_base_of_v<SpotLightNode, NodeType>) { // NOLINT
-			return m_spotLights;
-		}
-		// general nodes
-		else if constexpr (std::is_base_of_v<Node, NodeType>) { // NOLINT
-			return m_nodes;
-		}
-	}
-
-public:
 	// Push a command to be executed before dirty update.
 	// Helps with adding/deleting nodes that would otherwise invalidate the iterating set.
 	void PushDelayedCommand(std::function<void()>&& func);
 
+	// Returns an iterable that can be used to access every node of this type or subtypes.
+	// Best used in a for each loop:
+	//
+	// for(CameraNode* camera : world->GetNodeIterator<CameraNode>()) {
+	//   ... // Runs for every CameraNode in the world
+	// }
+	//
 	template<typename T>
 	NodeIterable<T> GetNodeIterator()
 	{
@@ -194,6 +147,28 @@ public:
 	Node* DeepDuplicateNode(Node* src, Node* newParent = nullptr);
 
 
+	// TODO: make async safe to be called from updates / dirtyupdates
 	// This will also remove the children.
 	void DeleteNode(Node* src);
+
+private:
+	// Will give priority to exact class first, then if not found may return any subclass in no particular order.
+	Node* GetAnyAvailableNodeFromClass(const ReflClass* cl) const
+	{
+		// Check for exact
+		if (auto it = m_typeHashToNodes.find(cl->GetTypeId().hash());
+			it != end(m_typeHashToNodes) && it->second.size() > 0) {
+			return *it->second.begin();
+		}
+
+		// Exact not found, check for subclasses
+
+		for (auto& childClass : cl->GetChildClasses()) {
+			Node* node = GetAnyAvailableNodeFromClass(childClass);
+			if (node) {
+				return node;
+			}
+		}
+		return nullptr;
+	}
 };

@@ -101,7 +101,19 @@ struct ReflectionToImguiVisitor {
 
 	bool Inner(bool& t, const Property& p) { return ImGui::Checkbox(name, &t); }
 
-	bool Inner(float& t, const Property& p) { return ImGui::DragFloat(name, &t, 0.01f); }
+	bool Inner(float& t, const Property& p)
+	{
+		if (p.HasFlags(Degrees)) {
+			auto degrees = glm::degrees(t);
+			if (ImGui::DragFloat(name, &degrees, 0.01f)) {
+				t = glm::radians(degrees);
+				return true;
+			}
+			TEXT_TOOLTIP("Converted to degrees for the editor, actual value is: {}", t);
+			return false;
+		}
+		return ImGui::DragFloat(name, &t, 0.01f);
+	}
 
 	bool Inner(glm::vec3& t, const Property& p)
 	{
@@ -391,11 +403,17 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 		}
 		ImGui::EndPopup();
 	}
-
 	if (ImGui::DragFloat3("Rotation", ImUtil::FromVec3(eulerPyr), 0.1f)) {
 		auto deltaAxis = eulerPyr - (m_localMode ? node->GetLocalPYR() : node->GetWorldPYR());
-		m_localMode ? node->SetLocalOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetLocalOrientation())
-					: node->SetWorldOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetWorldOrientation());
+		if (ImGui::IsAnyMouseDown()) {
+			// On user drag use quat diff, prevents gimbal locks while dragging
+			m_localMode ? node->SetLocalOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetLocalOrientation())
+						: node->SetWorldOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetWorldOrientation());
+		}
+		else {
+			// On user type set pyr directly, prevents the axis from flickering
+			m_localMode ? node->SetLocalPYR(eulerPyr) : node->SetWorldPYR(eulerPyr);
+		}
 	}
 	if (ImGui::BeginPopupContextItem("RotatePopup")) {
 		if (ImGui::MenuItem("Reset##2")) {

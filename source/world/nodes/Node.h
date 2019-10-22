@@ -15,7 +15,18 @@ using DirtyFlagset = std::bitset<64>;
 using NodeDeleterFunc = void (*)(Node*);
 using NodeUniquePtr = std::unique_ptr<Node, NodeDeleterFunc>;
 
-// Properly pads the dirty flags given to account for the parent class's dirty flags.
+// Casts a generic node to T without dynamic_cast, using the underlying reflection for checks
+// Aborts if node was not of this type.
+// Results in undefined behavior on configurations where CLOG_ABORT is disabled.
+template<typename T>
+T* NodeCast(Node* node)
+{
+	static_assert(std::is_base_of_v<Node, T>, "Template argument was not a node. Cast would always fail.");
+	CLOG_ABORT(!node->IsA<T>(), "NodeCast failed. Given node: {}> {} was not a {}", node->GetClass().GetName(),
+		node->GetName(), refl::GetName<T>());
+	return static_cast<T*>(node);
+}
+
 
 class Node : public Object {
 	//
@@ -132,11 +143,13 @@ public:
 
 	void SetLocalTranslation(glm::vec3 lt);
 	void SetLocalOrientation(glm::quat lo);
+	void SetLocalPYR(glm::vec3 pyr); // in degrees
 	void SetLocalScale(glm::vec3 ls);
 	void SetLocalMatrix(const glm::mat4& lm);
 
 	void SetWorldTranslation(glm::vec3 wt);
 	void SetWorldOrientation(glm::quat wo);
+	void SetWorldPYR(glm::vec3 pyr); // in degrees
 	void SetWorldScale(glm::vec3 ws);
 	void SetWorldMatrix(const glm::mat4& newWorldMatrix);
 

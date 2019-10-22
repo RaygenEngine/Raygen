@@ -7,18 +7,21 @@
 
 class Input {
 public:
-	struct Thumb {
+	struct Stick {
 		float magnitude;
 		glm::vec2 direction;
+
+		float GetXAxisValue(float multiplyBy = 1.f) const { return direction.x * magnitude * multiplyBy; }
+		float GetYAxisValue(float multiplyBy = 1.f) const { return direction.y * magnitude * multiplyBy; }
 	};
 
 	struct AnalogState {
-		Thumb thumbL;
-		Thumb thumbR;
+		Stick ls; // left stick
+		Stick rs; // right stick
 
 		// normalized analog value
-		float triggerL;
-		float triggerR;
+		float lt; // left trigger
+		float rt; // right trigger
 	};
 
 private:
@@ -99,20 +102,20 @@ public:
 	[[nodiscard]] int32 GetWheelDelta() const { return m_wheelDelta; }
 
 	[[nodiscard]] const AnalogState& GetAnalogState() const { return m_analogState; }
-	[[nodiscard]] float GetLeftTriggerMagnitude() const { return m_analogState.triggerL; }
-	[[nodiscard]] float GetRightTriggerMagnitude() const { return m_analogState.triggerR; }
+	[[nodiscard]] float GetLeftTriggerMagnitude() const { return m_analogState.lt; }
+	[[nodiscard]] float GetRightTriggerMagnitude() const { return m_analogState.rt; }
 
-	[[nodiscard]] float GetLeftThumbMagnitude() const { return m_analogState.thumbL.magnitude; }
-	[[nodiscard]] float GetRightThumbMagnitude() const { return m_analogState.thumbR.magnitude; }
+	[[nodiscard]] float GetLeftThumbMagnitude() const { return m_analogState.ls.magnitude; }
+	[[nodiscard]] float GetRightThumbMagnitude() const { return m_analogState.rs.magnitude; }
 
-	[[nodiscard]] glm::vec2 GetLeftThumbDirection() const { return m_analogState.thumbL.direction; }
-	[[nodiscard]] glm::vec2 GetRightThumbDirection() const { return m_analogState.thumbR.direction; }
+	[[nodiscard]] glm::vec2 GetLeftThumbDirection() const { return m_analogState.ls.direction; }
+	[[nodiscard]] glm::vec2 GetRightThumbDirection() const { return m_analogState.rs.direction; }
 
-	[[nodiscard]] bool IsLeftTriggerResting() const { return math::EpsilonEqualsZero(m_analogState.triggerL); }
-	[[nodiscard]] bool IsRightTriggerResting() const { return math::EpsilonEqualsZero(m_analogState.triggerR); }
+	[[nodiscard]] bool IsLeftTriggerResting() const { return math::EpsilonEqualsZero(m_analogState.lt); }
+	[[nodiscard]] bool IsRightTriggerResting() const { return math::EpsilonEqualsZero(m_analogState.rt); }
 
-	[[nodiscard]] bool IsLeftThumbResting() const { return math::EpsilonEqualsZero(m_analogState.thumbL.magnitude); }
-	[[nodiscard]] bool IsRightThumbResting() const { return math::EpsilonEqualsZero(m_analogState.thumbR.magnitude); }
+	[[nodiscard]] bool IsLeftThumbResting() const { return math::EpsilonEqualsZero(m_analogState.ls.magnitude); }
+	[[nodiscard]] bool IsRightThumbResting() const { return math::EpsilonEqualsZero(m_analogState.rs.magnitude); }
 
 	void ClearSoftState();
 };

@@ -161,4 +161,6 @@ public:
 	[[nodiscard]] std::vector<std::string> GetRendererList() const;
 
 	void ToggleEditor();
+
+	void DeinitEngine();
 };
