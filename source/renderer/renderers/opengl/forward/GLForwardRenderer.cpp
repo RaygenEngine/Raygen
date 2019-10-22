@@ -46,21 +46,11 @@ void GLForwardRenderer::InitObservers()
 
 	m_skyboxCubemap = GetGLAssetManager()->GpuGetOrCreate<GLTexture>(skyboxNode->GetSkyMap());
 
-	for (auto geometryNode : Engine::GetWorld()->GetNodeMap<GeometryNode>()) {
-		CreateObserver_AutoContained<GLBasicGeometry>(geometryNode, m_glGeometries);
-	}
-
-	for (auto lightNode : Engine::GetWorld()->GetNodeMap<DirectionalLightNode>()) {
-		CreateObserver_AutoContained<GLBasicDirectionalLight>(lightNode, m_glDirectionalLights);
-	}
-
-	for (auto lightNode : Engine::GetWorld()->GetNodeMap<SpotLightNode>()) {
-		CreateObserver_AutoContained<GLBasicSpotLight>(lightNode, m_glSpotLights);
-	}
-
-	for (auto lightNode : Engine::GetWorld()->GetNodeMap<PunctualLightNode>()) {
-		CreateObserver_AutoContained<GLBasicPunctualLight>(lightNode, m_glPunctualLights);
-	}
+	// Auto deduces observer type and node type
+	RegisterObserverContainer_AutoLifetimes(m_glGeometries);
+	RegisterObserverContainer_AutoLifetimes(m_glDirectionalLights);
+	RegisterObserverContainer_AutoLifetimes(m_glSpotLights);
+	RegisterObserverContainer_AutoLifetimes(m_glPunctualLights);
 }
 
 void GLForwardRenderer::InitShaders()

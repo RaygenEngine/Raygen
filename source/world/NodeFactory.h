@@ -23,7 +23,7 @@ class NodeFactory : public Object {
 
 protected:
 	template<typename T>
-	void RegisterNode()
+	void RegisterTypeToFactory()
 	{
 		static_assert(std::is_base_of_v<Node, T> && !std::is_same_v<Node, T>, "You can only register Node subclasses");
 
@@ -37,12 +37,10 @@ protected:
 	}
 
 	template<typename... Nodes>
-	void RegisterNodeList()
+	void RegisterListToFactory()
 	{
-		(RegisterNode<Nodes>(), ...);
+		(RegisterTypeToFactory<Nodes>(), ...);
 	}
-
-	Node* NewNodeFromType(const std::string& type);
 
 
 public:
@@ -56,6 +54,9 @@ public:
 
 
 	// Avoid using this, this does NOT register absolutely anything. It just returns a new instance.
+	Node* NewNodeFromType(const std::string& type);
+
+	// Avoid using this too, this does NOT register absolutely anything. It just returns a new instance.
 	template<typename T>
 	static T* NewNode()
 	{

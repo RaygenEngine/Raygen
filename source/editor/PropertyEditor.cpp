@@ -131,10 +131,9 @@ struct ReflectionToImguiVisitor {
 	}
 
 	template<typename PodType>
-	void PodDropTarget(PodHandle<PodType>& pod)
+	bool PodDropTarget(PodHandle<PodType>& pod)
 	{
-		//		std::string payloadTag = "POD_UID_" + std::to_string(pod->type.hash());
-
+		bool result = false;
 		if (ImGui::BeginDragDropTarget()) {
 			std::string payloadTag = "POD_UID_" + std::to_string(ctti::type_id<PodType>().hash());
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(payloadTag.c_str())) {
@@ -142,9 +141,11 @@ struct ReflectionToImguiVisitor {
 				size_t uid = *reinterpret_cast<size_t*>(payload->Data);
 				pod.podId = uid;
 				dirtyFlags.set(Node::DF::Properties);
+				result = true;
 			}
 			ImGui::EndDragDropTarget();
 		}
+		return result;
 	}
 
 	template<typename PodType>
@@ -160,7 +161,7 @@ struct ReflectionToImguiVisitor {
 
 		auto str = entry->name;
 		bool open = ImGui::CollapsingHeader(name);
-		PodDropTarget(pod);
+		bool result = PodDropTarget(pod);
 		TEXT_TOOLTIP("{}", AssetManager::GetPodUri(pod));
 		if (open) {
 			ImGui::PushID(static_cast<uint32>(entry->uid) * 1024);
@@ -176,7 +177,7 @@ struct ReflectionToImguiVisitor {
 			depth--;
 			ImGui::PopID();
 		}
-		return false;
+		return result;
 	}
 
 	template<typename T>
@@ -466,7 +467,7 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 
 void PropertyEditor::Run_ContextActions(Node* node)
 {
-	auto v = Engine::GetEditor()->m_nodeContextActions->GetActions(node);
+	auto v = Engine::GetEditor()->m_nodeContextActions->GetActions(node, false);
 
 	ImGui::Indent();
 
@@ -479,6 +480,8 @@ void PropertyEditor::Run_ContextActions(Node* node)
 
 	for (auto& action : v) {
 		if (action.IsSplitter()) {
+			ImGui::SameLine();
+			ImGui::Text(" ");
 			continue;
 		}
 

@@ -4,6 +4,9 @@
 
 // Note: to make a automatic camera that resizes to window size see WindowCameraNode
 class CameraNode : public Node {
+
+	friend class OVRNode;
+
 	REFLECTED_NODE(CameraNode, Node, DF_FLAGS(Projection, ViewportSize, FocalLength))
 	{
 		REFLECT_VAR(m_near).OnDirty(DF::Projection);
@@ -11,6 +14,8 @@ class CameraNode : public Node {
 		REFLECT_VAR(m_focalLength).OnDirty(DF::FocalLength);
 		REFLECT_VAR(m_vFov).OnDirty(DF::Projection);
 		REFLECT_VAR(m_hFov).OnDirty(DF::Projection);
+		REFLECT_VAR(m_vFovOffset).OnDirty(DF::Projection);
+		REFLECT_VAR(m_hFovOffset).OnDirty(DF::Projection);
 
 		REFLECT_VAR(m_viewportWidth, PropertyFlags::Transient).OnDirty(DF::ViewportSize);
 
@@ -19,6 +24,8 @@ class CameraNode : public Node {
 		REFLECT_VAR(m_viewMatrix, PropertyFlags::Transient);
 		REFLECT_VAR(m_projectionMatrix, PropertyFlags::Transient);
 		REFLECT_VAR(m_viewProjectionMatrix, PropertyFlags::Transient);
+
+
 	}
 
 
@@ -33,6 +40,9 @@ protected:
 
 	float m_near{ 0.2f };
 	float m_far{ 1000.f };
+
+	float m_vFovOffset{ 0.f };
+	float m_hFovOffset{ 0.f };
 
 	glm::mat4 m_projectionMatrix{};
 	glm::mat4 m_viewMatrix{};

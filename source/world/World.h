@@ -8,6 +8,8 @@
 
 #include "asset/AssetManager.h"
 #include "system/Object.h"
+#include "world/nodes/NodeIterator.h"
+#include "world/NodeFactory.h" // Not required directly, used in templates
 
 #include <unordered_set>
 
@@ -25,6 +27,8 @@ class World : public Object {
 	friend class Editor;
 	friend class NodeFactory;
 
+	template<typename T>
+	friend struct NodeIterator;
 
 	std::unique_ptr<RootNode> m_root;
 	mutable std::unordered_set<Node*> m_nodes;
@@ -33,6 +37,8 @@ class World : public Object {
 	mutable std::unordered_set<DirectionalLightNode*> m_directionalLights;
 	mutable std::unordered_set<SpotLightNode*> m_spotLights;
 	mutable std::unordered_set<CameraNode*> m_cameraNodes;
+
+	std::unordered_map<size_t, std::unordered_set<Node*>> m_typeHashToNodes;
 
 	NodeFactory* m_nodeFactory;
 
@@ -45,11 +51,16 @@ class World : public Object {
 	ch::time_point<FrameClock> m_lastFrameTimepoint;
 	long long m_deltaTimeMicros{ 0 };
 
+	bool m_isIteratingNodeSet{ false };
+
+	std::vector<std::function<void()>> m_postIterateCommandList;
+
 	float m_deltaTime{ 0.0f };
 
-	void RegisterNode(Node* node, Node* parent);
-
 	void UpdateFrameTimers();
+
+	// Parent == nullptr means root
+	void RegisterNode(Node* node, Node* parent = nullptr);
 
 	// Removes node from any tracking sets / active cameras etc.
 	void CleanupNodeReferences(Node* node);
@@ -68,6 +79,7 @@ public:
 	~World() override;
 
 	// available node may differ later in runtime
+	// TODO: implement with node sets
 	template<typename NodeType>
 	NodeType* GetAnyAvailableNode() const
 	{
@@ -127,19 +139,25 @@ public:
 		}
 	}
 
+public:
+	// Push a command to be executed before dirty update.
+	// Helps with adding/deleting nodes that would otherwise invalidate the iterating set.
+	void PushDelayedCommand(std::function<void()>&& func);
+
+	template<typename T>
+	NodeIterable<T> GetNodeIterator()
+	{
+		return NodeIterable<T>(m_typeHashToNodes);
+	}
+
 	std::vector<Node*> GetNodesByName(const std::string& name) const;
 	Node* GetNodeByName(const std::string& name) const;
 
 	[[nodiscard]] CameraNode* GetActiveCamera() const { return m_activeCamera; }
-	void SetActiveCamera(CameraNode* cam)
-	{
-		if (m_cameraNodes.count(cam)) {
-			m_activeCamera = cam;
-		}
-	}
+	void SetActiveCamera(CameraNode* cam);
+
 
 	void Update();
-	// void WindowResize(int32 width, int32 height) override;
 
 	void LoadAndPrepareWorld(PodHandle<JsonDocPod> scenePod);
 
@@ -149,6 +167,17 @@ public:
 
 	void DirtyUpdateWorld();
 	void ClearDirtyFlags();
+
+	// Default nullptr parent means this will be registered to root.
+	// DOC: No documentation as to when it is safe to call this. Usually it is not.
+	template<typename T>
+	T* CreateNode(const std::string& name, Node* parent = nullptr)
+	{
+		auto node = m_nodeFactory->NewNode<T>();
+		node->SetName(name);
+		RegisterNode(node, parent);
+		return node;
+	}
 
 private:
 	// Only reflected properties get copied.

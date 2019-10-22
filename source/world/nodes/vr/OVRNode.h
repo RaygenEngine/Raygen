@@ -4,49 +4,41 @@
 #include "world/nodes/camera/CameraNode.h"
 
 #include <ovr/OVR_CAPI.h>
-
-// WIP
-struct EyeCamera {
-	int32 width, height;
-
-	glm::mat4 projectionMatrix{};
-	glm::mat4 viewMatrix{};
-	glm::mat4 viewProjection{};
-
-	glm::vec3 worldPos{};
-
-	ovrFovPort fov{};
-	ovrPosef pose{};
-};
+#include <Extras/OVR_Math.h>
 
 class OVRNode : public Node {
-	REFLECTED_NODE(OVRNode, Node) { REFLECT_VAR(m_frameIndex, PropertyFlags::NoEdit); }
+	REFLECTED_NODE(OVRNode, Node) {}
 
-	ovrSession m_session;
-	int64 m_frameIndex{ 0 };
+	ovrSession m_session{};
 
-	EyeCamera m_eyes[2];
+	std::array<CameraNode*, 2> m_eyes{};
 
-	void RecalculateEyesMatrices();
+	struct RendererInfo {
+		bool visible{ false };
+		int64 frameIndex{ 0 };
+
+		ovrPosef eyePoses[2]{};
+		ovrFovPort eyeFovs[2]{};
+		ovrRecti eyeViewports[2]{};
+
+		OVR::Matrix4f proj{};
+		double sensorSampleTime{};
+	} m_info{};
+
+	void PrepareEyes();
 
 public:
 	OVRNode();
 	~OVRNode();
 
-	// WIP
-	bool enabled{ false };
-	bool visible{ false };
-
 	void Update(float deltaTime) override;
 
 	[[nodiscard]] ovrSession GetOVRSession() const { return m_session; }
-	[[nodiscard]] size_t GetFrameIndex() const { return m_frameIndex; }
-	[[nodiscard]] EyeCamera* GetEyeCamera(int32 index) { return &m_eyes[index]; }
+	[[nodiscard]] CameraNode* GetEyeCamera(int32 index) { return m_eyes.at(index); }
+	[[nodiscard]] RendererInfo& GetRendererInfo() { return m_info; }
 
-	void IncrementFrameIndex() { ++m_frameIndex; }
 
-	void EditLayerDetails(ovrLayerEyeFovDepth& ld) const;
-	void EditLayerDetails(ovrLayerEyeFov& ld) const;
+	void IncrementFrameIndex() { ++m_info.frameIndex; }
 
 	void DirtyUpdate(DirtyFlagset flags) override;
 };
