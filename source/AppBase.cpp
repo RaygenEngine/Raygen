@@ -17,7 +17,7 @@
 AppBase::AppBase()
 {
 	m_name = "Rayxen Engine";
-	m_initialScene = "engine-data/test-vr.json";
+	m_initialScene = "engine-data/default.json";
 	m_assetPath = "assets";
 
 	m_windowTitle = "Rayxen";
@@ -119,8 +119,8 @@ void AppBase::RegisterRenderers()
 	// NOTE:
 	// Default behavior for an app is to start the FIRST renderer registered here.
 
-	Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
 	Engine::RegisterRenderer<ogl::GLForwardRenderer>();
+	Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
 	Engine::RegisterRenderer<ogl::GLDeferredRenderer>();
 	Engine::RegisterRenderer<ogl::GLPreviewerRenderer>();
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#define Z_REFL_TYPES int32, bool, float, glm::vec3, glm::vec4, std::string, glm::mat4
+#define Z_REFL_TYPES int32, int64, bool, float, glm::vec3, glm::vec4, std::string, glm::mat4
 
 struct BasePodHandle;
 
