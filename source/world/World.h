@@ -47,16 +47,14 @@ class World : public Object {
 
 	float m_deltaTime{ 0.0f };
 
+	void RegisterNode(Node* node, Node* parent);
+
 	void UpdateFrameTimers();
 
 	// Removes node from any tracking sets / active cameras etc.
 	void CleanupNodeReferences(Node* node);
 
 public:
-	// WIP:
-	void RegisterNode(Node* node, Node* parent);
-
-
 	// Returns float seconds
 	float GetDeltaTime() { return m_deltaTime; }
 

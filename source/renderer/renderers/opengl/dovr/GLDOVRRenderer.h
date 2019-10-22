@@ -13,7 +13,7 @@
 #include <ovr/OVR_CAPI.h>
 
 class OVRNode;
-class CameraNode;
+class EyeCamera;
 
 namespace ogl {
 
@@ -21,28 +21,13 @@ class GLDOVRRenderer : public GLEditorRenderer {
 
 	struct Eye {
 		ovrSession session;
-		CameraNode* camera;
+		EyeCamera* camera;
 
 		GLuint outFbo{ 0 };
 		ovrTextureSwapChain colorTextureChain{ nullptr };
 		ovrTextureSwapChain depthTextureChain{ nullptr };
 
-		struct GBuffer {
-			GLuint fbo{ 0 };
-			GLuint positionsAttachment{ 0 };
-			GLuint normalsAttachment{ 0 };
-			GLuint albedoOpacityAttachment{ 0 };
-			// r: metallic, g: roughness, b: occlusion, a: occlusion strength
-			GLuint specularAttachment{ 0 };
-			GLuint emissiveAttachment{ 0 };
-			GLuint depthAttachment{ 0 };
-			GLShader* shader{ nullptr };
-
-			~GBuffer();
-
-		} gBuffer;
-
-		Eye(ovrSession session, CameraNode* camera);
+		Eye(ovrSession session, EyeCamera* camera);
 		~Eye();
 
 		void SwapTexture();
@@ -73,6 +58,21 @@ class GLDOVRRenderer : public GLEditorRenderer {
 	ovrMirrorTexture m_mirrorTexture{ nullptr };
 	GLuint m_mirrorFBO{ 0 };
 
+	struct GBuffer {
+		GLuint fbo{ 0 };
+		GLuint positionsAttachment{ 0 };
+		GLuint normalsAttachment{ 0 };
+		GLuint albedoOpacityAttachment{ 0 };
+		// r: metallic, g: roughness, b: occlusion, a: occlusion strength
+		GLuint specularAttachment{ 0 };
+		GLuint emissiveAttachment{ 0 };
+		GLuint depthAttachment{ 0 };
+		GLShader* shader{ nullptr };
+
+		~GBuffer();
+
+	} m_gBuffer;
+
 	// skybox
 	GLTexture* m_skyboxCubemap{ nullptr };
 
@@ -81,7 +81,7 @@ class GLDOVRRenderer : public GLEditorRenderer {
 	void InitShaders();
 	void InitRenderBuffers();
 
-	// Render
+	// Render WIP
 	void RenderGBuffer(Eye* eye);
 	void RenderDirectionalLights(Eye* eye);
 	void RenderSpotLights(Eye* eye);
