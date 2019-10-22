@@ -72,6 +72,8 @@ set(SOURCE_FILES
 	world/nodes/light/LightNode.cpp
 	world/nodes/user/FreeformUserNode.cpp
 	world/nodes/user/UserNode.cpp
+	world/nodes/user/FlyingUserNode.cpp
+
 )
 
 set(HEADER_FILES
@@ -202,6 +204,7 @@ set(HEADER_FILES
 	world/nodes/light/LightNode.h
 	world/nodes/user/FreeformUserNode.h
 	world/nodes/user/UserNode.h
+	world/nodes/user/FlyingUserNode.h
 )
 
 

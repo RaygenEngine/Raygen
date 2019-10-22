@@ -72,6 +72,8 @@ int32 AppBase::Main(int32 argc, char* argv[]) // NOLINT
 
 	window->ReleaseMouseMovement();
 
+	engine.DeinitEngine();
+
 	return 0;
 }
 

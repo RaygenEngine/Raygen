@@ -21,7 +21,7 @@ void SetStyle()
 	style.FramePadding = ImVec2(3.f, 3.f);
 	style.ItemSpacing = ImVec2(2.f, 2.f);
 	style.ItemInnerSpacing = ImVec2(3.f, 3.f);
-	style.TouchExtraPadding = ImVec2(3.f, 3.f);
+	style.TouchExtraPadding = ImVec2(3.f, 1.f);
 	style.IndentSpacing = 14.f;
 	style.ScrollbarSize = 15.f;
 	// style.GrabMinSize default

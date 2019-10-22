@@ -162,33 +162,33 @@ void Win32Window::GenerateXInputControllerMessages()
 	ZeroMemory(&state, sizeof(XINPUT_STATE));
 	XInputGetState(controllerIndex, &state);
 
-	const auto CalculateThumb = [](const glm::vec2& point, int32 deadZone) {
-		Input::Thumb thumb{};
+	const auto CalculateStick = [](const glm::vec2& point, int32 deadZone) {
+		Input::Stick stick{};
 
 		const float magnitude = glm::length(point);
-		thumb.direction = glm::normalize(point);
+		stick.direction = glm::normalize(point);
 
 		// clamp and normalize
-		magnitude > deadZone ? thumb.magnitude = (glm::min(magnitude, 32767.f) - deadZone) / (32767.f - deadZone)
-							 : thumb.magnitude = 0.0f;
+		magnitude > deadZone ? stick.magnitude = (glm::min(magnitude, 32767.f) - deadZone) / (32767.f - deadZone)
+							 : stick.magnitude = 0.0f;
 
-		return thumb;
+		return stick;
 	};
 
 	Input::AnalogState analogState{};
 
-	analogState.thumbL
-		= CalculateThumb({ state.Gamepad.sThumbLX, state.Gamepad.sThumbLY }, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
-	analogState.thumbR
-		= CalculateThumb({ state.Gamepad.sThumbRX, state.Gamepad.sThumbRY }, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+	analogState.ls
+		= CalculateStick({ state.Gamepad.sThumbLX, state.Gamepad.sThumbLY }, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+	analogState.rs
+		= CalculateStick({ state.Gamepad.sThumbRX, state.Gamepad.sThumbRY }, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
 
 	const auto CalculateTrigger = [](BYTE magnitude, int32 deadZone) {
 		return magnitude > deadZone ? (glm::min(static_cast<float>(magnitude), 255.f) - deadZone) / (255.f - deadZone)
 									: 0.f;
 	};
 
-	analogState.triggerL = CalculateTrigger(state.Gamepad.bLeftTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
-	analogState.triggerR = CalculateTrigger(state.Gamepad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
+	analogState.lt = CalculateTrigger(state.Gamepad.bLeftTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
+	analogState.rt = CalculateTrigger(state.Gamepad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD);
 
 	input.UpdateAnalogState(analogState);
 

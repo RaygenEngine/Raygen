@@ -7,6 +7,7 @@
 #include "reflection/PodTools.h"
 
 #include <imgui/imgui.h>
+#include "editor/imgui/ImguiUtil.h"
 
 void AssetWindow::ReloadCache()
 {
@@ -37,24 +38,29 @@ void AssetWindow::DrawFileLibrary()
 
 	for (auto& s : m_gltf) {
 		ImGui::PushID(n++);
-
 		if (s.first.size() > 2) {
-			auto strPath = "/" + s.second.string();
-			for (int32 i = 0; i < strPath.size(); ++i) {
-				if (strPath[i] == '\\') {
-					strPath[i] = '/';
-				}
+			if (!m_filter.PassFilter(s.first.c_str())) {
+				ImGui::PopID();
+				continue;
 			}
 
 			ImGui::Button(s.first.c_str());
 
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+				auto strPath = "/" + s.second.string();
+				for (int32 i = 0; i < strPath.size(); ++i) {
+					if (strPath[i] == '\\') {
+						strPath[i] = '/';
+					}
+				}
+
 				auto h = AssetManager::GetOrCreate<ModelPod>(strPath);
 
 				std::string payloadTag = "POD_UID_" + std::to_string(h.Lock()->type.hash());
 				ImGui::SetDragDropPayload(payloadTag.c_str(), &h.podId, sizeof(size_t));
 				ImGui::EndDragDropSource();
 			}
+			TEXT_TOOLTIP("Drag into outliner to create a node with this model.");
 		}
 
 		ImGui::PopID();
@@ -70,10 +76,13 @@ bool AssetWindow::Draw()
 
 	if (ImGui::Begin("Model Files", &result)) {
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7, 7));
-		if (ImGui::Button("Refresh Files") || m_needsRefresh) {
+		if (ImGui::Button("Refresh") || m_needsRefresh) {
 			ReloadCache();
 			m_needsRefresh = false;
 		}
+		ImGui::SameLine();
+		m_filter.Draw("Search", ImGui::GetFontSize() * 8);
+
 		ImGui::PopStyleVar();
 
 		ImGui::Separator();
