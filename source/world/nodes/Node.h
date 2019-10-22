@@ -153,9 +153,6 @@ public:
 	// LOADING
 	//
 
-	virtual void PropertyUpdatedFromEditor(
-		const Property& prop){}; // the m_dirtyBitset Property is set directly through the editor before this call.
-
 	// Runs late in the frame, only on nodes that at least one m_dirty is set.
 	virtual void DirtyUpdate(DirtyFlagset dirtyFlags){};
 
@@ -199,7 +196,7 @@ protected:
 	{
 		for (auto& childUnq : m_children) {
 			Node* child = childUnq.get();
-			if (&child->GetClass() == &T::StaticClass() && child->GetName() == name) {
+			if (child->GetClass() == T::StaticClass() && child->GetName() == name) {
 				return static_cast<T*>(child);
 			}
 		}
