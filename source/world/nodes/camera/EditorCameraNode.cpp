@@ -9,6 +9,8 @@
 
 void EditorCameraNode::UpdateFromEditor(float deltaTime)
 {
+	CameraNode::Update(deltaTime);
+
 	auto& input = *Engine::GetInput();
 
 	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetWheelDelta() / 240.f * 2.0f, 2.0f, 100.0f);

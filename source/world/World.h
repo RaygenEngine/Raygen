@@ -9,6 +9,7 @@
 #include "asset/AssetManager.h"
 #include "system/Object.h"
 #include "world/nodes/NodeIterator.h"
+#include "world/NodeFactory.h" // Not required directly, used in templates
 
 #include <unordered_set>
 
@@ -49,12 +50,16 @@ class World : public Object {
 	ch::time_point<FrameClock> m_lastFrameTimepoint;
 	long long m_deltaTimeMicros{ 0 };
 
+	bool m_isIteratingNodeSet{ false };
+
+	std::vector<std::function<void()>> m_postIterateCommandList;
+
 	float m_deltaTime{ 0.0f };
 
 	void UpdateFrameTimers();
 
-
-	void RegisterNode(Node* node, Node* parent);
+	// Parent == nullptr means root
+	void RegisterNode(Node* node, Node* parent = nullptr);
 
 	// Removes node from any tracking sets / active cameras etc.
 	void CleanupNodeReferences(Node* node);
@@ -134,6 +139,10 @@ public:
 	}
 
 public:
+	// Push a command to be executed before dirty update.
+	// Helps with adding/deleting nodes that would otherwise invalidate the iterating set.
+	void PushDelayedCommand(std::function<void()>&& func);
+
 	template<typename T>
 	NodeIterable<T> GetNodeIterator()
 	{
@@ -157,6 +166,17 @@ public:
 
 	void DirtyUpdateWorld();
 	void ClearDirtyFlags();
+
+	// Default nullptr parent means this will be registered to root.
+	// DOC: No documentation as to when it is safe to call this. Usually it is not.
+	template<typename T>
+	T* CreateNode(const std::string& name, Node* parent = nullptr)
+	{
+		auto node = m_nodeFactory->NewNode<T>();
+		node->SetName(name);
+		RegisterNode(node, parent);
+		return node;
+	}
 
 private:
 	// Only reflected properties get copied.
