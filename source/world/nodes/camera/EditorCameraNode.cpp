@@ -9,6 +9,8 @@
 
 void EditorCameraNode::UpdateFromEditor(float deltaTime)
 {
+	CameraNode::Update(deltaTime);
+
 	auto& input = *Engine::GetInput();
 
 	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetWheelDelta() / 240.f * 2.0f, 2.0f, 100.0f);
@@ -33,7 +35,6 @@ void EditorCameraNode::UpdateFromEditor(float deltaTime)
 		// if any change came here its from dragging in the editor.
 		applyTo->SetWorldMatrix(GetWorldMatrix());
 		SetLocalMatrix(glm::identity<glm::mat4>());
-		// SetWorldScale(glm::vec3(1.f));
 	}
 	auto root = Engine::GetWorld()->GetRoot();
 

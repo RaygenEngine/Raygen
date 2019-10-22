@@ -18,12 +18,12 @@
 
 namespace ogl {
 
-GLDOVRRenderer::Eye::Eye(ovrSession session, EyeCamera* camera)
+GLDOVRRenderer::Eye::Eye(ovrSession session, CameraNode* camera)
 	: session(session)
 	, camera(camera)
 {
-	const auto width = camera->width;
-	const auto height = camera->height;
+	const auto width = camera->GetWidth();
+	const auto height = camera->GetHeight();
 
 	ovrTextureSwapChainDesc desc = {};
 	desc.Type = ovrTexture_2D;
@@ -103,7 +103,7 @@ void GLDOVRRenderer::Eye::SwapTexture()
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, curDepthTexId, 0);
 
 	// clean outFbo for next frame
-	glViewport(0, 0, camera->width, camera->height);
+	glViewport(0, 0, camera->GetWidth(), camera->GetHeight());
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -292,8 +292,8 @@ void GLDOVRRenderer::InitRenderBuffers()
 
 	// WIP
 	const auto cam = m_eyes[0]->camera;
-	auto width = cam->width;
-	auto height = cam->height;
+	auto width = cam->GetWidth();
+	auto height = cam->GetHeight();
 
 	glGenFramebuffers(1, &m_gBuffer.fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.fbo);
@@ -384,15 +384,13 @@ void GLDOVRRenderer::InitScene()
 	InitShaders();
 
 	InitRenderBuffers();
-
-	m_ovr->enabled = true;
 }
 
 void GLDOVRRenderer::RenderGBuffer(Eye* eye)
 {
 	const auto cam = eye->camera;
 
-	glViewport(0, 0, cam->width, cam->height);
+	glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.fbo);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -404,7 +402,7 @@ void GLDOVRRenderer::RenderGBuffer(Eye* eye)
 	auto gs = m_gBuffer.shader;
 	glUseProgram(gs->programId);
 
-	const auto vp = eye->camera->viewProjection;
+	const auto vp = eye->camera->GetViewProjectionMatrix();
 
 	// render geometry (non-instanced)
 	for (auto& geometry : m_glGeometries) {
@@ -471,7 +469,7 @@ void GLDOVRRenderer::RenderDirectionalLights(Eye* eye)
 		const auto cam = eye->camera;
 		const auto fbo = eye->outFbo;
 
-		glViewport(0, 0, cam->width, cam->height);
+		glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
 
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
@@ -481,8 +479,8 @@ void GLDOVRRenderer::RenderDirectionalLights(Eye* eye)
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", eye->camera->worldPos);
-		const glm::vec2 invTextureSize = { 1.f / cam->width, 1.f / cam->height };
+		ls->SendVec3("wcs_viewPos", eye->camera->GetWorldTranslation());
+		const glm::vec2 invTextureSize = { 1.f / cam->GetWidth(), 1.f / cam->GetHeight() };
 		ls->SendVec2("invTextureSize", invTextureSize);
 
 		// light
@@ -527,7 +525,7 @@ void GLDOVRRenderer::RenderSpotLights(Eye* eye)
 		const auto cam = eye->camera;
 		const auto fbo = eye->outFbo;
 
-		glViewport(0, 0, cam->width, cam->height);
+		glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
 
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
@@ -537,8 +535,8 @@ void GLDOVRRenderer::RenderSpotLights(Eye* eye)
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", eye->camera->worldPos);
-		const glm::vec2 invTextureSize = { 1.f / cam->width, 1.f / cam->height };
+		ls->SendVec3("wcs_viewPos", eye->camera->GetWorldTranslation());
+		const glm::vec2 invTextureSize = { 1.f / cam->GetWidth(), 1.f / cam->GetHeight() };
 		ls->SendVec2("invTextureSize", invTextureSize);
 
 		// light
@@ -582,7 +580,7 @@ void GLDOVRRenderer::RenderPunctualLights(Eye* eye)
 		const auto cam = eye->camera;
 		const auto fbo = eye->outFbo;
 
-		glViewport(0, 0, cam->width, cam->height);
+		glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
 
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
@@ -592,8 +590,8 @@ void GLDOVRRenderer::RenderPunctualLights(Eye* eye)
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", eye->camera->worldPos);
-		const glm::vec2 invTextureSize = { 1.f / cam->width, 1.f / cam->height };
+		ls->SendVec3("wcs_viewPos", eye->camera->GetWorldTranslation());
+		const glm::vec2 invTextureSize = { 1.f / cam->GetWidth(), 1.f / cam->GetHeight() };
 		ls->SendVec2("invTextureSize", invTextureSize);
 
 		// light
@@ -626,7 +624,7 @@ void GLDOVRRenderer::RenderAmbientLight(Eye* eye)
 	const auto cam = eye->camera;
 	const auto fbo = eye->outFbo;
 
-	glViewport(0, 0, cam->width, cam->height);
+	glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
@@ -636,11 +634,11 @@ void GLDOVRRenderer::RenderAmbientLight(Eye* eye)
 
 	glUseProgram(m_ambientLightShader->programId);
 
-	auto vpInv = glm::inverse(eye->camera->viewProjection);
+	auto vpInv = glm::inverse(eye->camera->GetViewProjectionMatrix());
 
 	m_ambientLightShader->SendMat4("vp_inv", vpInv);
-	m_ambientLightShader->SendVec3("wcs_viewPos", eye->camera->worldPos);
-	const glm::vec2 invTextureSize = { 1.f / cam->width, 1.f / cam->height };
+	m_ambientLightShader->SendVec3("wcs_viewPos", eye->camera->GetWorldTranslation());
+	const glm::vec2 invTextureSize = { 1.f / cam->GetWidth(), 1.f / cam->GetHeight() };
 	m_ambientLightShader->SendVec2("invTextureSize", invTextureSize);
 	m_ambientLightShader->SendTexture(m_gBuffer.depthAttachment, 0);
 	m_ambientLightShader->SendCubeTexture(m_skyboxCubemap->id, 1);
@@ -655,10 +653,11 @@ void GLDOVRRenderer::RenderAmbientLight(Eye* eye)
 void GLDOVRRenderer::Render()
 {
 	const auto session = m_ovr->GetOVRSession();
-	const auto frameIndex = m_ovr->GetFrameIndex();
+	const auto info = m_ovr->GetRendererInfo();
 
-	if (m_ovr->visible) {
-		CLOG_ABORT(!OVR_SUCCESS(ovr_BeginFrame(session, frameIndex)), "Oculus Begin frame failure");
+	if (info.visible) {
+		CLOG_ABORT(!OVR_SUCCESS(ovr_WaitToBeginFrame(session, info.frameIndex)), "Oculus Wait to begin frame failure");
+		CLOG_ABORT(!OVR_SUCCESS(ovr_BeginFrame(session, info.frameIndex)), "Oculus Begin frame failure");
 
 
 		for (auto& eye : m_eyes) {
@@ -674,6 +673,7 @@ void GLDOVRRenderer::Render()
 			// ambient pass
 			RenderAmbientLight(eye.get());
 
+
 			eye->Commit();
 		}
 
@@ -686,23 +686,33 @@ void GLDOVRRenderer::Render()
 		ld.DepthTexture[0] = m_eyes[0]->depthTextureChain;
 		ld.ColorTexture[1] = m_eyes[1]->colorTextureChain;
 		ld.DepthTexture[1] = m_eyes[1]->depthTextureChain;
-		m_ovr->EditLayerDetails(ld);
+
+
+		ld.ProjectionDesc = ovrTimewarpProjectionDesc_FromProjection(info.proj, ovrProjection_ClipRangeOpenGL);
+		ld.SensorSampleTime = info.sensorSampleTime;
+
+		ld.Viewport[0] = info.eyeViewports[0];
+		ld.Fov[0] = info.eyeFovs[0];
+		ld.RenderPose[0] = info.eyePoses[0];
+		ld.Viewport[1] = info.eyeViewports[1];
+		ld.Fov[1] = info.eyeFovs[1];
+		ld.RenderPose[1] = info.eyePoses[1];
+
 
 		ovrLayerHeader* layers = &ld.Header;
-		CLOG_ABORT(!OVR_SUCCESS(ovr_EndFrame(session, frameIndex, nullptr, &layers, 1)), "Oculus End frame failure");
+		CLOG_ABORT(
+			!OVR_SUCCESS(ovr_EndFrame(session, info.frameIndex, nullptr, &layers, 1)), "Oculus End frame failure");
 
-		// WIP
 		m_ovr->IncrementFrameIndex();
 	}
 	auto wnd = Engine::GetMainWindow();
-	// Blit mirror texture to back buffer TODO: check
-	// glBindFramebuffer(GL_READ_FRAMEBUFFER, m_mirrorFBO);
-	// glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	// glBlitFramebuffer(0, wnd->GetHeight(), wnd->GetWidth(), 0, 0, 0, wnd->GetWidth(), wnd->GetHeight(),
-	//	GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	// Blit mirror texture to back buffer
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_mirrorFBO);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBlitFramebuffer(0, wnd->GetHeight(), wnd->GetWidth(), 0, 0, 0, wnd->GetWidth(), wnd->GetHeight(),
+		GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-
 
 	GLEditorRenderer::Render();
 

@@ -21,6 +21,7 @@
 
 #include "editor/imgui/ImguiUtil.h"
 #include "world/nodes/geometry/GeometryNode.h"
+#include "reflection/ReflEnum.h"
 #include <iostream>
 #include <set>
 
@@ -78,8 +79,40 @@ struct ImRendererMenu : public Editor::ImMenu {
 			}
 			ImGui::EndMenu();
 		}
+
+		if (ImGui::BeginMenu("BBox Debugging")) {
+			auto& bboxEnum = ReflEnum::GetMeta<EditorBBoxDrawing>();
+			auto bboxEnumTie = bboxEnum.TieEnum(editor->m_bboxDrawing);
+
+			for (auto& [value, str] : bboxEnum.GetValues()) {
+				std::string s;
+				s = str;
+				if (ImGui::MenuItem(s.c_str(), nullptr, bboxEnumTie.GetValue() == value)) {
+					bboxEnumTie.SetValue(value);
+				}
+			}
+			ImGui::EndMenu();
+		}
 	}
 };
+
+Node* Editor::GetSelectedNode()
+{
+	auto editor = Engine::GetEditor();
+	if (editor) {
+		return editor->m_selectedNode;
+	}
+	return nullptr;
+}
+
+EditorBBoxDrawing Editor::GetBBoxDrawing()
+{
+	auto editor = Engine::GetEditor();
+	if (editor) {
+		return editor->m_bboxDrawing;
+	}
+	return EditorBBoxDrawing::None;
+}
 
 void Editor::MakeMainMenu()
 {
@@ -249,6 +282,7 @@ void Editor::Outliner()
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3.f, 6.f));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.f, 6.f));
 
+	bool foundOpen = false;
 	RecurseNodes(Engine::GetWorld()->GetRoot(), [&](Node* node, int32 depth) {
 		auto str = std::string(depth * 6, ' ') + sceneconv::FilterNodeClassName(node->GetClass().GetName()) + "> "
 				   + node->m_name;
@@ -271,14 +305,23 @@ void Editor::Outliner()
 			Run_OutlinerDropTarget(node);
 		}
 		else {
-			if (!m_editorCamera->GetParent()->IsRoot() && ImGui::BeginPopupContextItem("Outliner Camera Context")) {
-				if (ImGui::MenuItem("Stop piloting")) {
-					Editor::MakeChildOf(Engine::GetWorld()->GetRoot(), m_editorCamera);
-					m_editorCamera->ResetRotation();
+			ImGui::PopStyleColor(4);
+
+			if (ImGui::BeginPopupContextItem("OutlinerElemContext")) {
+				if (!m_editorCamera->GetParent()->IsRoot()) {
+					if (ImGui::MenuItem("Stop piloting")) {
+						Editor::MakeChildOf(Engine::GetWorld()->GetRoot(), m_editorCamera);
+						m_editorCamera->ResetRotation();
+					}
+				}
+				if (ImGui::MenuItem("Set As Active")) {
+					Engine::GetWorld()->SetActiveCamera(m_editorCamera);
 				}
 				ImGui::EndPopup();
 			}
-			ImGui::PopStyleColor(4);
+		}
+		if (ImGui::IsPopupOpen("OutlinerElemContext")) {
+			foundOpen = true;
 		}
 		ImGui::PopID();
 	});
@@ -305,6 +348,18 @@ void Editor::Outliner()
 			PushCommand(cmd);
 		}
 		ImGui::EndDragDropTarget();
+	}
+	if (!foundOpen) {
+		if (ImGui::BeginPopupContextItem("Rightclick Context")) {
+			if (ImGui::BeginMenu("New Node")) {
+				Run_NewNodeMenu(Engine::GetWorld()->GetRoot());
+				ImGui::EndMenu();
+			}
+			if (IsCameraPiloting() && ImGui::BeginMenu("Stop piloting")) {
+				Editor::PilotThis(nullptr);
+			}
+			ImGui::EndPopup();
+		}
 	}
 }
 
@@ -356,10 +411,10 @@ void Editor::OnStopPlay()
 	}
 }
 
-void Editor::Run_ContextPopup(Node* node)
+bool Editor::Run_ContextPopup(Node* node)
 {
-	if (ImGui::BeginPopupContextItem("Outliner Context")) {
-		for (auto& action : m_nodeContextActions->GetActions(node)) {
+	if (ImGui::BeginPopupContextItem("OutlinerElemContext")) {
+		for (auto& action : m_nodeContextActions->GetActions(node, true)) {
 			if (!action.IsSplitter()) {
 				if (ImGui::MenuItem(action.name)) {
 					action.function(node);
@@ -377,7 +432,9 @@ void Editor::Run_ContextPopup(Node* node)
 		}
 
 		ImGui::EndPopup();
+		return true;
 	}
+	return false;
 }
 
 void Editor::Run_NewNodeMenu(Node* underNode)
@@ -760,14 +817,39 @@ void Editor::PilotThis(Node* node)
 		return;
 	}
 
-	if (camera->GetParent() == node) {
+	if (camera->GetParent() == node || node == nullptr) {
 		Editor::MakeChildOf(Engine::GetWorld()->GetRoot(), camera);
 		camera->ResetRotation();
 		return;
 	}
 
 	Editor::MakeChildOf(node, camera);
-	camera->SetLocalMatrix(glm::identity<glm::mat4>());
+	camera->SetWorldMatrix(node->GetWorldMatrix());
+}
+
+void Editor::FocusNode(Node* node)
+{
+	if (!node) {
+		return;
+	}
+	auto cam = Engine::GetEditor()->m_editorCamera;
+	if (!cam) {
+		return;
+	}
+	auto trans = node->GetWorldTranslation();
+	cam->SetWorldTranslation(trans);
+
+	float dist = 1.f;
+	if (node->IsA<GeometryNode>()) {
+		auto geom = static_cast<GeometryNode*>(node);
+		auto min = geom->GetAABB().min;
+		auto max = geom->GetAABB().max;
+		dist = glm::abs(min.x - max.x) + glm::abs(min.y - max.y);
+
+		cam->SetWorldTranslation(geom->GetAABB().GetCenter());
+	}
+	cam->AddWorldOffset(glm::vec3(-1.f, 0.25f, 0.f) * dist);
+	cam->SetLookAt(node->GetWorldTranslation());
 }
 
 void Editor::TeleportToCamera(Node* node)

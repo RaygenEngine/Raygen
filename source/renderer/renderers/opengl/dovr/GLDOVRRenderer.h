@@ -13,7 +13,7 @@
 #include <ovr/OVR_CAPI.h>
 
 class OVRNode;
-class EyeCamera;
+class CameraNode;
 
 namespace ogl {
 
@@ -21,13 +21,13 @@ class GLDOVRRenderer : public GLEditorRenderer {
 
 	struct Eye {
 		ovrSession session;
-		EyeCamera* camera;
+		CameraNode* camera;
 
 		GLuint outFbo{ 0 };
 		ovrTextureSwapChain colorTextureChain{ nullptr };
 		ovrTextureSwapChain depthTextureChain{ nullptr };
 
-		Eye(ovrSession session, EyeCamera* camera);
+		Eye(ovrSession session, CameraNode* camera);
 		~Eye();
 
 		void SwapTexture();

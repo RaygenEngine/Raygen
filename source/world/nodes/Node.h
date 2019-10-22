@@ -23,6 +23,11 @@ class Node : public Object {
 	//
 	// Stuff required and used by reflection that are specific to base node class.
 	// This is similar to the macro code-gen but with a few changes for the base class.
+	[[nodiscard]] static ReflClass& Z_MutableClass()
+	{
+		static ReflClass cl = ReflClass::Generate<Node>();
+		return cl;
+	}
 
 public:
 	using Parent = Node;
@@ -31,17 +36,13 @@ public:
 
 	[[nodiscard]] virtual const ReflClass& GetParentClass() const { return Parent::StaticClass(); }
 
-	[[nodiscard]] static const ReflClass& StaticClass()
-	{
-		static ReflClass cl = ReflClass::Generate<Node>();
-		return cl;
-	}
+	[[nodiscard]] static const ReflClass& StaticClass() { return Z_MutableClass(); }
 
 private:
 	friend class ReflClass;
 	static void GenerateReflection(ReflClass& refl)
 	{
-		// Add reflected variables here.
+		// Node class has no base variables
 	}
 
 
@@ -139,6 +140,8 @@ public:
 	void SetWorldScale(glm::vec3 ws);
 	void SetWorldMatrix(const glm::mat4& newWorldMatrix);
 
+	void SetLookAt(glm::vec3 lookat);
+
 	void RotateAroundAxis(glm::vec3 worldAxis, float degrees);
 
 	void AddLocalOffset(glm::vec3 direction);
@@ -149,9 +152,6 @@ public:
 	//
 	// LOADING
 	//
-
-	virtual void PropertyUpdatedFromEditor(
-		const Property& prop){}; // the m_dirtyBitset Property is set directly through the editor before this call.
 
 	// Runs late in the frame, only on nodes that at least one m_dirty is set.
 	virtual void DirtyUpdate(DirtyFlagset dirtyFlags){};
@@ -182,88 +182,25 @@ public:
 		return false;
 	}
 
-
+protected:
+	// Can accept node types that are not registered to the factory
+	// This will not fetch subclasses but will only match exact classes, name is case sensitive
+	// The expected use of this function is to be used on Dirty DF::Children to grab actual node pointers that you can
+	// safely store as members. You can be sure that the pointers will always be valid during Update()
 	//
-	// Child Getter Utilities
+	// Any other use may cause iterator invalidation or other undefined behavior.
 	//
-
-	// Returns a valid child if it is the ONLY child of this class
-	// Only checks first level children
-	template<class NodeClass>
-	[[nodiscard]] NodeClass* GetUniqueChildOfClass() const
+	// NOTE: requires includes: World.h
+	template<typename T>
+	T* GetOrCreateChild(const std::string& name)
 	{
-		NodeClass* first = nullptr;
-		for (auto child : m_children) {
-			auto ptr = dynamic_cast<NodeClass*>(child.get());
-			if (ptr) {
-				// check if we already found something
-				if (first) {
-					return nullptr;
-				}
-				else {
-					first = ptr;
-				}
+		for (auto& childUnq : m_children) {
+			Node* child = childUnq.get();
+			if (child->GetClass() == T::StaticClass() && child->GetName() == name) {
+				return static_cast<T*>(child);
 			}
 		}
-		return first;
-	}
 
-	// Only checks first level children
-	template<class NodeClass>
-	[[nodiscard]] NodeClass* GetFirstChildOfClass() const
-	{
-		for (auto child : m_children) {
-			auto ptr = dynamic_cast<NodeClass*>(child.get());
-			if (ptr) {
-				return ptr;
-			}
-		}
-		return nullptr;
-	}
-
-	// Returns a valid child if it is the only child of this (class AND type)
-	//
-	// eg:
-	// | - VRHead Head
-	// | 1 -- CameraNode* "RightEye"
-	// | 2 -- CameraNode* "LeftEye"
-	//
-	// GetUniqueChildWithType<CameraNode>("rightEye") == *1
-	//
-	// You can use the non templated version to not check for the actual cpp class type.
-	// Only checks first level children
-	//
-	template<class NodeClass = Node>
-	[[nodiscard]] NodeClass* GetUniqueChildWithType(const std::string& type) const
-	{
-		NodeClass* first = nullptr;
-		for (auto child : m_children) {
-			auto ptr = dynamic_cast<NodeClass*>(child.get());
-			if (ptr && ptr->GetType() == type) {
-				// check if we already found something
-				if (first) {
-					return nullptr;
-				}
-				else {
-					first = ptr;
-				}
-			}
-		}
-		return first;
-	}
-
-	// Child must match both NodeClass AND type
-	// You can use the non templated version to not check for the actual cpp class type.
-	// Only checks first level children
-	template<class NodeClass = Node>
-	[[nodiscard]] NodeClass* GetFirstChildOfType(const std::string& type) const
-	{
-		auto it = std::find_if(m_children.begin(), m_children.end(),
-			[&](auto child) { return child->GetType() == type && dynamic_cast<NodeClass*>(child.get()); });
-
-		if (it == m_children.end()) {
-			return nullptr;
-		}
-		return dynamic_cast<NodeClass*>(child.get());
+		return Engine::GetWorld()->CreateNode<T>(name, this);
 	}
 };

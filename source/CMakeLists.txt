@@ -190,6 +190,8 @@ set(HEADER_FILES
 	world/NodeFactory.h
 	
 	world/nodes/Node.h
+	world/nodes/NodeIterator.h
+
 	world/nodes/RootNode.h
 	world/nodes/TransformNode.h
 	world/nodes/vr/OVRNode.h
@@ -268,6 +270,7 @@ include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/nlohmann)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/spdlog)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/stb_image)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/tinygltf)
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/ovr)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 

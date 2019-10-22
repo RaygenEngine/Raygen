@@ -21,6 +21,17 @@ void ObserverRenderer::OnNodeRemovedFromWorld(Node* node)
 	}
 }
 
+void ObserverRenderer::OnNodeAddedToWorld(Node* node)
+{
+	for (auto& [nodeClass, adderFunc] : m_onTypeAdded) {
+		auto thisNodeClass = &node->GetClass();
+
+		if (thisNodeClass == nodeClass || nodeClass->GetChildClasses().count(thisNodeClass)) {
+			adderFunc(node);
+		}
+	}
+};
+
 void ObserverRenderer::Update()
 {
 	auto camera = Engine::GetWorld()->GetActiveCamera();

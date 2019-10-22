@@ -26,6 +26,11 @@ World::~World()
 	delete m_nodeFactory;
 }
 
+void World::PushDelayedCommand(std::function<void()>&& func)
+{
+	m_postIterateCommandList.emplace_back(func);
+}
+
 std::vector<Node*> World::GetNodesByName(const std::string& name) const
 {
 	std::vector<Node*> nodes;
@@ -49,6 +54,13 @@ Node* World::GetNodeByName(const std::string& name) const
 	return nullptr;
 }
 
+void World::SetActiveCamera(CameraNode* cam)
+{
+	if (m_cameraNodes.count(cam)) {
+		m_activeCamera = cam;
+	}
+}
+
 void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 {
 	LOG_INFO("Loading World file: \'{}\'", AssetManager::GetPodUri(scene));
@@ -58,11 +70,11 @@ void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 
 	m_root = std::make_unique<RootNode>();
 
-	try {
-		m_nodeFactory->LoadChildren(scene.Lock()->document, m_root.get());
-	} catch (std::exception& e) {
-		LOG_ABORT("Failed to load world: {}", e.what());
-	}
+	// try {
+	m_nodeFactory->LoadChildren(scene.Lock()->document, m_root.get());
+	//} //catch (std::exception& e) {
+	// LOG_ABORT("Failed to load world: Exception encountered: {}", e.what());
+	//}
 	m_root->m_dirty.set();
 	m_root->UpdateTransforms(glm::identity<glm::mat4>());
 
@@ -75,12 +87,14 @@ void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 
 void World::DirtyUpdateWorld()
 {
+	m_isIteratingNodeSet = true;
 	// PERF: Possible to use unordered_set for dirty nodes
 	for (auto* node : m_nodes) {
 		if (node->m_dirty.any()) {
 			node->CallDirtyUpdate();
 		}
 	}
+	m_isIteratingNodeSet = false;
 }
 
 void World::ClearDirtyFlags()
@@ -154,11 +168,21 @@ bool MaybeInsert(std::unordered_set<T*>& set, Node* node)
 void World::RegisterNode(Node* node, Node* parent)
 {
 	CLOG_ABORT(node->m_parent, "Attempting to register a node that already has a parent.");
-
+	if (parent == nullptr) {
+		parent = GetRoot();
+	}
 
 	node->m_parent = parent;
-	m_nodes.insert(node);
 
+	if (!m_isIteratingNodeSet) {
+		m_nodes.insert(node);
+	}
+	else {
+		PushDelayedCommand([&, node]() { m_nodes.insert(node); });
+	}
+
+
+	m_typeHashToNodes[node->GetClass().GetTypeId().hash()].insert(node);
 
 	node->AutoUpdateTransforms();
 
@@ -200,6 +224,8 @@ void World::CleanupNodeReferences(Node* node)
 {
 	Event::OnWorldNodeRemoved.Broadcast(node);
 
+	m_typeHashToNodes[node->GetClass().GetTypeId().hash()].erase(node);
+
 	m_nodes.erase(node);
 	bool isCamera = MaybeRemove(m_cameraNodes, node);
 	if (isCamera) {
@@ -224,15 +250,25 @@ void World::Update()
 	UpdateFrameTimers();
 
 	if (Engine::ShouldUpdateWorld()) {
+		m_isIteratingNodeSet = true;
 		// Update after input and delta calculation
 		for (auto* node : m_nodes) {
 			node->Update(m_deltaTime);
 		}
+		m_isIteratingNodeSet = false;
 	}
 
 	if (Engine::IsEditorActive()) {
 		Engine::GetEditor()->UpdateEditor();
 	}
 
-	DirtyUpdateWorld();
+
+	do {
+		for (auto& cmd : m_postIterateCommandList) {
+			cmd();
+		}
+		m_postIterateCommandList.clear();
+
+		DirtyUpdateWorld();
+	} while (!m_postIterateCommandList.empty());
 }

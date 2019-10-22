@@ -23,8 +23,8 @@ using json = nlohmann::json;
 
 void NodeFactory::RegisterNodes()
 {
-	RegisterNodeList<CameraNode, WindowCameraNode, GeometryNode, DirectionalLightNode, PunctualLightNode, SpotLightNode,
-		SkyboxNode, FreeformUserNode, TransformNode, OVRNode>();
+	RegisterListToFactory<CameraNode, WindowCameraNode, GeometryNode, DirectionalLightNode, PunctualLightNode,
+		SpotLightNode, SkyboxNode, FreeformUserNode, TransformNode, OVRNode>();
 }
 
 Node* NodeFactory::NewNodeFromType(const std::string& type)
@@ -44,7 +44,8 @@ Node* NodeFactory::NewNodeFromType(const std::string& type)
 void NodeFactory::LoadChildren(const nlohmann::json& jsonArray, Node* parent)
 {
 	for (auto& childObj : jsonArray) {
-		CLOG_ABORT(!childObj.is_object(), "Expected an object.");
+		CLOG_ABORT(!childObj.is_object(), "Element in children array is not a json object. Parent was: {} | {}",
+			parent->GetClass().GetNameStr(), parent->GetName());
 		LoadNodeAndChildren(childObj, parent);
 	}
 }
