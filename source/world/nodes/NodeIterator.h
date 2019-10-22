@@ -22,8 +22,8 @@ public:
 	NodeType* operator*()
 	{
 		Node* node = *underlyingIterator;
-		CLOG_ABORT(&typename node->GetClass() == &typename NodeType::StaticClass(),
-			"Incorrect class type on iterator. static cast would fail.");
+		CLOG_ABORT(
+			node->GetClass() != NodeType::StaticClass(), "Incorrect class type on iterator. static cast would fail.");
 		return static_cast<NodeType*>(node);
 	}
 

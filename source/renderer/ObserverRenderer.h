@@ -9,6 +9,9 @@
 class ObserverRenderer : public Renderer {
 	std::unordered_set<std::unique_ptr<NodeObserverBase>> m_observers;
 
+	// Could be easily modified to allow for user adding functions but currently out of scope
+	std::unordered_map<const ReflClass*, std::function<void(Node*)>> m_onTypeAdded;
+
 protected:
 	ObserverRenderer()
 	{
@@ -18,6 +21,12 @@ protected:
 
 	DECLARE_EVENT_LISTENER(m_nodeAddedListener, Event::OnWorldNodeAdded);
 	DECLARE_EVENT_LISTENER(m_nodeRemovedListener, Event::OnWorldNodeRemoved);
+
+
+	// WIP: Cleanup unused stuff, decide on "Singleton" Observer (maybe even auto-add them?)
+	// WIP: Maybe remove custom deleter for each observer instance?
+	// TODO: custom dirtyFlagset structure?
+	// DOC: document the final version
 
 	template<typename ObserverType>
 	[[nodiscard]] ObserverType* CreateObserver_Callback(
@@ -81,16 +90,33 @@ protected:
 		return CreateObserver_Callback<ObserverType>(nodePtr, lambda);
 	}
 
-	// No use case for this currently
-	// template <typename ObserverType>
-	// void CreateObserver_SelfDestruct(typename ObserverType::NodeType* typedNode)
-	//{
-	//	auto lambda = [m_observers](NodeObserverBase* obs) -> void {
-	//		&m_observers.erase(obs);
-	//	};
-	//	auto rawPtr = CreateObserver_Callback(nodePtr, lambda);
-	//	return rawPtr;
-	//}
+	// Tracks ALL nodes of this type AND subtypes by automatically adding and removing them from the observer container.
+	// You can handle additional creation/update/deletion stuff through the Observer's:
+	// Constructor/DirtyNodeUpdate/Destructor respectively
+	// NOTE: observer type is deduced from container::value_type
+	template<typename T>
+	void RegisterObserverContainer_AutoLifetimes(T& containerToAddAndRemoveFrom)
+	{
+		using ObserverType = std::remove_pointer_t<typename T::value_type>;
+		using NodeType = typename ObserverType::NodeType;
+
+		// First fill the container
+		auto world = Engine::GetWorld();
+		for (auto node : world->GetNodeIterator<NodeType>()) {
+			CreateObserver_AutoContained<ObserverType>(node, containerToAddAndRemoveFrom);
+		}
+
+		// Our on add lambda
+		auto adderLambda = [&](Node* nodeToAdd) {
+			CLOG_ABORT(nodeToAdd->GetClass() != NodeType::StaticClass(),
+				"Incorrect type, Static cast will fail. Observer Renderer Internal error");
+
+			CreateObserver_AutoContained<ObserverType>(static_cast<NodeType*>(nodeToAdd), containerToAddAndRemoveFrom);
+		};
+
+		// Register our add function
+		m_onTypeAdded.insert({ &NodeType::StaticClass(), std::move(adderLambda) });
+	}
 
 	void RemoveObserver(NodeObserverBase* ptr);
 
@@ -98,14 +124,7 @@ private:
 	void OnNodeRemovedFromWorld(Node* node);
 
 protected:
-	virtual void OnNodeAddedToWorld(Node* node){
-		// auto interestedInType = &Node::StaticClass();
-		// auto cl = &node->GetClass();
-
-		// if (cl == interestedInType || cl->GetChildClasses().count(interestedInType)) {
-
-		//}
-	};
+	virtual void OnNodeAddedToWorld(Node* node);
 
 public:
 	virtual void Update();
