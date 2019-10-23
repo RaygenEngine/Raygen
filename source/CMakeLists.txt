@@ -111,7 +111,6 @@ set(HEADER_FILES
 
 
 	core/CoreEnums.h
-	core/CoreStructs.h
 	core/Event.h
 	core/MathAux.h
 	core/MetaTemplates.h

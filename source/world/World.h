@@ -30,6 +30,7 @@ class World : public Object {
 	template<typename T>
 	friend struct NodeIterator;
 
+	// TODO: remove sets
 	std::unique_ptr<RootNode> m_root;
 	mutable std::unordered_set<Node*> m_nodes;
 	mutable std::unordered_set<GeometryNode*> m_geomteryNodes;

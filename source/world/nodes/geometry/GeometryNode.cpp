@@ -15,7 +15,8 @@ void GeometryNode::SetModel(PodHandle<ModelPod> newModel)
 
 void GeometryNode::CalculateAABB()
 {
-	m_aabb = math::TransformedAABB(m_localBB, GetWorldMatrix());
+	m_aabb = m_localBB;
+	m_aabb.Transform(GetWorldMatrix());
 }
 
 void ::GeometryNode::DirtyUpdate(DirtyFlagset dirtyFlags)

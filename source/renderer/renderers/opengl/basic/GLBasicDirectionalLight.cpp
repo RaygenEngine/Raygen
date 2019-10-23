@@ -67,7 +67,7 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 
 	for (auto& geometry : geometries) {
 		// light frustum culling
-		if (!math::BoxFrustumCollision(geometry->node->GetAABB(), node->GetFrustum())) {
+		if (!node->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
 			continue;
 		}
 

@@ -37,7 +37,7 @@ void CameraNode::RecalculateViewProjectionMatrix()
 void CameraNode::RecalculateFrustum()
 {
 	// viewProj to get frustum plane equations in world space
-	math::ExtractFrustumPlanes(m_frustum, m_viewProjectionMatrix);
+	m_frustum.ExtractFromMatrix(m_viewProjectionMatrix);
 }
 
 void CameraNode::DirtyUpdate(DirtyFlagset flags)
