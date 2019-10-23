@@ -8,6 +8,8 @@
 
 #include <imgui/imgui.h>
 #include "editor/imgui/ImguiUtil.h"
+#include "editor/DataStrings.h"
+#include "editor/Editor.h"
 
 void AssetWindow::ReloadCache()
 {
@@ -80,6 +82,8 @@ bool AssetWindow::Draw()
 			ReloadCache();
 			m_needsRefresh = false;
 		}
+		Editor::HelpTooltipInline(help_GltfWindowRefresh);
+
 		ImGui::SameLine();
 		m_filter.Draw("Search", ImGui::GetFontSize() * 8);
 

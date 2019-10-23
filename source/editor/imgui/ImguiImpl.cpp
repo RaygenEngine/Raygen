@@ -46,11 +46,14 @@ void SetStyle()
 	colors[ImGuiCol_Text] = ImVec4(0.85f, 0.85f, 0.89f, 0.98f);
 	colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 0.8f);
 
-	ImGui::GetIO().Fonts->AddFontFromFileTTF("engine-data/fonts/UbuntuMedium.ttf", 15);
-	ImGui::GetIO().Fonts->AddFontFromFileTTF("engine-data/fonts/UbuntuMonoRegular.ttf", 14);
+	// Static this, needs to be valid for as long as imgui is used.
+	static const ImWchar ranges[] = { 0x0007, 0x00FF, 0 };
+
+	ImGui::GetIO().Fonts->AddFontFromFileTTF("engine-data/fonts/UbuntuMedium.ttf", 15, nullptr, ranges);
+	ImGui::GetIO().Fonts->AddFontFromFileTTF("engine-data/fonts/UbuntuMonoRegular.ttf", 14, nullptr, ranges);
 
 	ImGui::GetIO().Fonts->Build();
-}
+} // namespace imguisyle
 } // namespace imguisyle
 void ImguiImpl::InitContext()
 {

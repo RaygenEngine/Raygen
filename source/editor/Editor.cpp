@@ -22,8 +22,11 @@
 #include "editor/imgui/ImguiUtil.h"
 #include "world/nodes/geometry/GeometryNode.h"
 #include "reflection/ReflEnum.h"
+#include "editor/DataStrings.h"
+
 #include <iostream>
 #include <set>
+
 
 Editor::Editor()
 {
@@ -176,7 +179,7 @@ void Editor::UpdateEditor()
 
 	Run_MenuBar();
 
-	if (ImGui::Checkbox("Update World ", &m_updateWorld)) {
+	if (ImGui::Checkbox("Update World", &m_updateWorld)) {
 		if (m_updateWorld) {
 			OnPlay();
 		}
@@ -184,19 +187,17 @@ void Editor::UpdateEditor()
 			OnStopPlay();
 		}
 	}
+	HelpTooltip(help_UpdateWorld);
 
-	HelpTooltip(R"(Enables the update functions of the world nodes, and disables the editor camera.
-Some editor functionality like piloting may not work because they require the editor camera.
-
-To discard the state after running updates, use restore update state.)");
-
-	if (!m_updateWorld) {
+	if (!(m_updateWorld && !m_hasRestoreSave)) {
+		ImExt::HSpace(4.f);
 		ImGui::SameLine();
 		ImGui::Checkbox("Restore update state", &m_autoRestoreWorld);
+		HelpTooltip(help_RestoreWorld);
 	}
 
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7, 7));
-	if (ImGui::Button("Save")) {
+	if (ImGui::Button("Save As")) {
 		m_sceneSave.OpenBrowser();
 	}
 	ImGui::SameLine();
@@ -217,18 +218,25 @@ To discard the state after running updates, use restore update state.)");
 	}
 
 	if (ImGui::BeginChild("EditorScrollable", ImVec2(0, -15.f))) {
-		if (ImGui::CollapsingHeader("Outliner", ImGuiTreeNodeFlags_DefaultOpen)) {
+		auto open = ImGui::CollapsingHeader("Outliner", ImGuiTreeNodeFlags_DefaultOpen);
+		CollapsingHeaderTooltip(help_Outliner);
+		if (open) {
 			Outliner();
 		}
 
+
 		if (m_selectedNode) {
-			if (ImGui::CollapsingHeader(
-					refl::GetClass(m_selectedNode).GetNameStr().c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+			open = ImGui::CollapsingHeader(
+				refl::GetClass(m_selectedNode).GetNameStr().c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+			CollapsingHeaderTooltip(help_PropertyEditor);
+			if (open) {
 				m_propertyEditor->Inject(m_selectedNode);
 			}
 		}
 
-		if (ImGui::CollapsingHeader("Assets")) {
+		open = ImGui::CollapsingHeader("Assets");
+		CollapsingHeaderTooltip(help_AssetView);
+		if (open) {
 			Run_AssetView();
 		}
 	}
@@ -319,6 +327,9 @@ void Editor::Outliner()
 				}
 				ImGui::EndPopup();
 			}
+			else {
+				Editor::CollapsingHeaderTooltip(help_EditorCamera);
+			}
 		}
 		if (ImGui::IsPopupOpen("OutlinerElemContext")) {
 			foundOpen = true;
@@ -337,12 +348,15 @@ void Editor::Outliner()
 
 			auto* podEntry = AssetManager::GetEntry(BasePodHandle{ uid });
 
-			auto cmd = [uid, podEntry]() {
+			auto cmd = [&, uid, podEntry]() {
 				auto newNode = NodeFactory::NewNode<GeometryNode>();
 
 				newNode->SetName(podEntry->name);
 				newNode->SetModel(PodHandle<ModelPod>{ uid });
 				Engine::GetWorld()->RegisterNode(newNode, Engine::GetWorld()->GetRoot());
+				if (!IsCameraPiloting()) {
+					PushPostFrameCommand([newNode]() { FocusNode(newNode); });
+				}
 			};
 
 			PushCommand(cmd);
@@ -368,11 +382,11 @@ void Editor::Outliner()
 void Editor::LoadScene(const fs::path& scenefile)
 {
 	m_updateWorld = false;
+	m_selectedNode = nullptr;
 
-	Engine::Get().CreateWorldFromFile("/" + fs::relative(scenefile).string());
+	Engine::Get().CreateWorldFromFile(fs::relative(scenefile).string());
 	Engine::Get().SwitchRenderer(Engine::Get().GetActiveRendererIndex());
 
-	m_selectedNode = nullptr;
 	Event::OnWindowResize.Broadcast(Engine::GetMainWindow()->GetWidth(), Engine::GetMainWindow()->GetHeight());
 }
 
@@ -399,8 +413,10 @@ void Editor::OnPlay()
 		m_hasEditorCameraCachedMatrix = true;
 		Engine::GetWorld()->DeleteNode(m_editorCamera);
 	}
+	m_hasRestoreSave = false;
 	if (m_autoRestoreWorld) {
 		SceneSave::SaveAs(Engine::GetWorld(), "__scene.tmp");
+		m_hasRestoreSave = true;
 	}
 }
 
@@ -412,7 +428,7 @@ void Editor::OnStopPlay()
 			m_editorCamera->SetWorldMatrix(m_editorCameraCachedMatrix);
 		}
 	}
-	if (m_autoRestoreWorld) {
+	if (m_autoRestoreWorld && m_hasRestoreSave) {
 		m_sceneToLoad = "__scene.tmp";
 	}
 }
@@ -485,19 +501,23 @@ void Editor::Run_AssetView()
 	ImGui::Indent(10.f);
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7, 7));
 	bool UnloadAll = ImGui::Button("Unload All");
+	HelpTooltipInline(help_AssetUnloadAll);
 	ImGui::SameLine();
 	bool ReloadUnloaded = ImGui::Button("Reload Unloaded");
+	HelpTooltipInline(help_AssetReloadUnloaded);
 	ImGui::SameLine();
 	bool ReloadAll = ImGui::Button("Reload All");
+	HelpTooltipInline(help_AssetReloadAll);
 	ImGui::SameLine();
 	if (ImGui::Button("Search for GLTFs")) {
 		m_showGltfWindow = true;
 	}
+	Editor::HelpTooltipInline(help_AssetSearchGltf);
 
 	// Static meh..
 	static ImGuiTextFilter filter;
 	filter.Draw("Filter Assets", ImGui::GetFontSize() * 16);
-
+	HelpTooltip(help_AssetFilter);
 	ImGui::PopStyleVar();
 
 
@@ -601,23 +621,14 @@ void Editor::Run_AboutWindow()
 	constexpr float version = 1.f;
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
-	ImGui::SetNextWindowSize(ImVec2(550.f, 300.f), ImGuiCond_FirstUseEver);
+	// ImGui::SetNextWindowSize(ImVec2(550.f, 220.f), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
 
-	if (ImGui::Begin("About", &m_showAboutWindow)) {
-		auto str = fmt::format(R"(
-Rayxen Engine:
-
-Version: {}
-Rayxen is a graphics/game engine focused on renderer extensibility.
-
-Authors:
-John Moschos - Founder, Programmer
-Harry Katagis - Programmer
-)",
-			version);
-
-		ImGui::Text(str.c_str());
+	if (ImGui::Begin("About", &m_showAboutWindow, ImGuiWindowFlags_AlwaysAutoResize)) {
+		ImGui::Text("Rayxen: v1.0");
+		ImExt::HSpace(220.f);
+		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 33.0f);
+		ImGui::Text(txt_about);
 		ImGui::Text("");
 	}
 	ImGui::End();
@@ -627,17 +638,13 @@ Harry Katagis - Programmer
 void Editor::Run_HelpWindow()
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
-	ImGui::SetNextWindowSize(ImVec2(550.f, 300.f), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(550.f, 820.f), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(0, 720.f), ImGuiCond_Always);
 
 	if (ImGui::Begin("Help", &m_showHelpWindow)) {
-		auto str = fmt::format(R"(
-Help:
-
-See the documentation at the rayxen/docs folder for programming documentation.
-
-)");
-		ImGui::Text(str.c_str());
+		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 33.0f);
+		ImGui::Text(txt_help);
 		ImGui::Text("");
 	}
 
@@ -665,13 +672,55 @@ void Editor::HelpTooltip(const char* tooltip)
 	if (!Editor::s_showHelpTooltips) {
 		return;
 	}
+	ImExt::HSpace(1.f);
 	ImGui::SameLine();
 	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 0.95f));
+	ImGui::TextUnformatted("\xc2\xb0"); // help symbol: aka U+00b0
+	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered()) {
+		ImGui::BeginTooltip();
+		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 30.0f);
+		if (tooltip[0] == '\n') {
+			tooltip++;
+		}
+		ImGui::TextUnformatted(tooltip);
+		ImGui::PopTextWrapPos();
+		ImGui::EndTooltip();
+	}
+}
+void Editor::HelpTooltipInline(const char* tooltip)
+{
+	if (!Editor::s_showHelpTooltips) {
+		return;
+	}
+	if (ImGui::IsItemHovered()) {
+		ImGui::BeginTooltip();
+		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 30.0f);
+		if (tooltip[0] == '\n') {
+			tooltip++;
+		}
+		ImGui::TextUnformatted(tooltip);
+		ImGui::PopTextWrapPos();
+		ImGui::EndTooltip();
+	}
+}
+
+void Editor::CollapsingHeaderTooltip(const char* tooltip)
+{
+	if (!Editor::s_showHelpTooltips) {
+		return;
+	}
+	ImGui::SameLine();
+	ImGui::SetCursorPosX(ImGui::GetContentRegionMax().x - 12.f);
+	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 0.6f, 0.95f));
 	ImGui::TextUnformatted("?");
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered()) {
 		ImGui::BeginTooltip();
 		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 30.0f);
+		if (tooltip[0] == '\n') {
+			tooltip++;
+		}
 		ImGui::TextUnformatted(tooltip);
 		ImGui::PopTextWrapPos();
 		ImGui::EndTooltip();

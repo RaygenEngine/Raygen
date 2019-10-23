@@ -26,26 +26,30 @@ protected:
 
 	// WIP: Cleanup unused stuff, decide on "Singleton" Observer (maybe even auto-add them?)
 	// TODO: custom dirtyFlagset structure?
+	// PERF: remove_swap for vectors and fast iterations
 	// DOC: document the final version
 
 	template<typename NodeType>
-	[[nodiscard]] void RegisterObserver_PointerForTracking(NodeType*& ptrToAutoUpdate)
+	void RegisterObserver_PointerForTracking(NodeType*& ptrToAutoUpdate)
 	{
-		auto world = Engine::GetWorld();
 
-		auto findNext = [&, ptrToAutoUpdate]() {
-			auto world = Engine::GetWorld();
-			ptrToAutoUpdate = world->GetAnyAvailableNode<NodeType>();
-
+		auto onAdd = [&, ptrToAutoUpdate](Node* node) {
 			if (!ptrToAutoUpdate) {
-				m_onTypeAdded.insert({ &NodeType::StaticClass(), findNext });
-				return;
+				ptrToAutoUpdate = NodeCast<NodeType>(node);
 			}
-			m_onTypeAdded.erase(&NodeType::StaticClass());
 		};
 
+		auto onRemove = [&, ptrToAutoUpdate](Node* node) {
+			auto world = Engine::GetWorld();
+			if (ptrToAutoUpdate == node) {
+				ptrToAutoUpdate = world->GetAnyAvailableNode<NodeType>();
+			}
+		};
 
-		return nullptr;
+		auto world = Engine::GetWorld();
+		ptrToAutoUpdate = world->GetAnyAvailableNode<NodeType>();
+
+		RegisterAdderRemoverForType<NodeType>(onAdd, onRemove);
 	}
 
 	// Attempts to track any available node of this type.
@@ -63,25 +67,39 @@ protected:
 	// You can handle additional creation/update/deletion stuff through the Observer's:
 	// Constructor/DirtyNodeUpdate/Destructor respectively
 	// NOTE: observer type is deduced from container::value_type
+	// DOC: Limitation, cannot track the same node with 2 observers, each observer must have a one to one relation to a
+	// node
 	template<typename T>
 	void RegisterObserverContainer_AutoLifetimes(T& containerToAddAndRemoveFrom)
 	{
 		using ObserverType = std::remove_pointer_t<typename T::value_type>;
 		using NodeType = typename ObserverType::NodeType;
 
+		// On add lambda
+		auto adderLambda = [&](Node* nodeToAdd) {
+			ObserverType* rawPtr = new ObserverType(NodeCast<NodeType>(nodeToAdd));
+			m_observers.emplace(std::unique_ptr<NodeObserverBase>(rawPtr));
+			containerToAddAndRemoveFrom.insert(containerToAddAndRemoveFrom.end(), rawPtr);
+		};
+
 		// Fill the container with the current nodes of this type
 		auto world = Engine::GetWorld();
 		for (auto node : world->GetNodeIterator<NodeType>()) {
-			CreateAddObserverToContainer<ObserverType>(node, containerToAddAndRemoveFrom);
+			adderLambda(node);
 		}
 
-		// On add lambda
-		auto adderLambda = [&](Node* nodeToAdd) {
-			CreateAddObserverToContainer<ObserverType>(NodeCast<NodeType>(nodeToAdd), containerToAddAndRemoveFrom);
+		auto removerLambda = [&](Node* nodeToRemove) {
+			auto& cont = containerToAddAndRemoveFrom;
+			cont.erase(std::remove_if(cont.begin(), cont.end(),
+				[nodeToRemove](ObserverType* obsPtr) { return obsPtr->baseNode == nodeToRemove; }));
+
+			m_observers.erase(std::find_if(
+				m_observers.begin(), m_observers.end(), [nodeToRemove](const std::unique_ptr<NodeObserverBase>& ptr) {
+					return ptr->baseNode == nodeToRemove;
+				}));
 		};
 
-		// Register our add function
-		m_onTypeAdded.insert({ &NodeType::StaticClass(), std::move(adderLambda) });
+		RegisterAdderRemoverForType<NodeType>(adderLambda, removerLambda);
 	}
 
 	void RemoveObserver(NodeObserverBase* ptr);
@@ -97,26 +115,10 @@ public:
 	virtual void Update();
 
 
-private:
-	// Internal utility function
-	template<typename ObserverType, typename T>
-	ObserverType* CreateAddObserverToContainer(
-		typename ObserverType::NodeType* typedNode, T& containerToAddAndRemoveFrom)
+	template<typename NodeType>
+	void RegisterAdderRemoverForType(std::function<void(Node*)>&& adderFunc, std::function<void(Node*)>&& removerFunc)
 	{
-		auto& cont = containerToAddAndRemoveFrom;
-
-		auto lambda = [&](NodeObserverBase* obs) -> void {
-			cont.erase(std::find(cont.begin(), cont.end(), obs));
-
-			m_observers.erase(
-				std::find_if(begin(m_observers), end(m_observers), [&](auto& elem) { return elem.get() == obs; }));
-		};
-
-		ObserverType* rawPtr = new ObserverType(typedNode);
-		m_observers.emplace(std::unique_ptr<NodeObserverBase>(rawPtr));
-		rawPtr->onObserveeLost = lambda;
-
-		containerToAddAndRemoveFrom.insert(cont.end(), rawPtr);
-		return rawPtr;
+		m_onTypeAdded.insert({ &NodeType::StaticClass(), adderFunc });
+		m_onTypeRemoved.insert({ &NodeType::StaticClass(), removerFunc });
 	}
 };

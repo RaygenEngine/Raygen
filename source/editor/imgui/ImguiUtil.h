@@ -32,3 +32,13 @@ inline float* FromVec4(glm::vec4& vec4)
 }
 
 } // namespace ImUtil
+
+namespace ImExt {
+
+inline void HSpace(float space = 6.f)
+{
+	ImGui::SameLine();
+	ImGui::Dummy(ImVec2(space, 0.f));
+}
+
+} // namespace ImExt

@@ -105,9 +105,8 @@ protected:
 	bool m_showHelpWindow{ false };
 	bool m_showLogWindow{ false };
 
-
 	bool m_autoRestoreWorld{ false };
-
+	bool m_hasRestoreSave{ false };
 
 	SceneSave m_sceneSave;
 
@@ -185,6 +184,8 @@ public:
 	static void PushPostFrameCommand(std::function<void()>&& func);
 
 	static void HelpTooltip(const char* tooltip);
+	static void HelpTooltipInline(const char* tooltip);
+	static void CollapsingHeaderTooltip(const char* tooltip);
 
 	void OnPlay();
 	void OnStopPlay();
@@ -192,7 +193,7 @@ public:
 	[[nodiscard]] bool IsCameraPiloting() const
 	{
 		if (m_editorCamera) {
-			return m_editorCamera->GetParent()->IsRoot();
+			return !m_editorCamera->GetParent()->IsRoot();
 		}
 		return false;
 	}

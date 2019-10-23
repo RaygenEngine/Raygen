@@ -125,6 +125,7 @@ set(HEADER_FILES
 	editor/NodeContextActions.h
 	editor/PropertyEditor.h
 	editor/SceneSave.h
+	editor/DataStrings.h
 
 	editor/imgui/ImguiImpl.h
 	editor/imgui/ImguiUtil.h

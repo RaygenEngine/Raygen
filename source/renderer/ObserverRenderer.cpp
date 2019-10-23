@@ -13,19 +13,13 @@ void ObserverRenderer::RemoveObserver(NodeObserverBase* ptr)
 
 void ObserverRenderer::OnNodeRemovedFromWorld(Node* node)
 {
-	for (auto& observer : m_observers) {
-		if (observer->baseNode == node) {
-			observer->onObserveeLost(observer.get());
-			return;
+	for (auto& [nodeClass, removerFunc] : m_onTypeRemoved) {
+		auto thisNodeClass = &node->GetClass();
+
+		if (thisNodeClass == nodeClass || nodeClass->GetChildClasses().count(thisNodeClass)) {
+			removerFunc(node);
 		}
 	}
-	// for (auto& [nodeClass, removerFunc] : m_onTypeRemoved) {
-	//	auto thisNodeClass = &node->GetClass();
-
-	//	if (thisNodeClass == nodeClass || nodeClass->GetChildClasses().count(thisNodeClass)) {
-	//		removerFunc(node);
-	//	}
-	//}
 }
 
 void ObserverRenderer::OnNodeAddedToWorld(Node* node)
