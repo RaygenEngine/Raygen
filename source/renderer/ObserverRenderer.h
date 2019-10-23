@@ -11,6 +11,7 @@ class ObserverRenderer : public Renderer {
 
 	// Could be easily modified to allow for user adding functions but currently out of scope
 	std::unordered_map<const ReflClass*, std::function<void(Node*)>> m_onTypeAdded;
+	std::unordered_map<const ReflClass*, std::function<void(Node*)>> m_onTypeRemoved;
 
 protected:
 	ObserverRenderer()
@@ -27,13 +28,33 @@ protected:
 	// TODO: custom dirtyFlagset structure?
 	// DOC: document the final version
 
+	template<typename NodeType>
+	[[nodiscard]] void RegisterObserver_PointerForTracking(NodeType*& ptrToAutoUpdate)
+	{
+		auto world = Engine::GetWorld();
+
+		auto findNext = [&, ptrToAutoUpdate]() {
+			auto world = Engine::GetWorld();
+			ptrToAutoUpdate = world->GetAnyAvailableNode<NodeType>();
+
+			if (!ptrToAutoUpdate) {
+				m_onTypeAdded.insert({ &NodeType::StaticClass(), findNext });
+				return;
+			}
+			m_onTypeAdded.erase(&NodeType::StaticClass());
+		};
+
+
+		return nullptr;
+	}
+
 	// Attempts to track any available node of this type.
 	// When this node gets deleted, it will automatically observe another available node of this type.
 	// If no such node is available or the last one from the world gets deleted, it will Nullptr the node member.
-	// TODO: maybe usefull for optimizations to avoid GetAnyAvailableNode() every frame. left for reference
 	template<typename ObserverType>
 	[[nodiscard]] ObserverType* CreateObserver_AnyAvailable()
 	{
+
 		return nullptr;
 	}
 
@@ -56,10 +77,7 @@ protected:
 
 		// On add lambda
 		auto adderLambda = [&](Node* nodeToAdd) {
-			CLOG_ABORT(nodeToAdd->GetClass() != NodeType::StaticClass(),
-				"Incorrect type, Static cast will fail. Observer Renderer Internal error");
-
-			CreateAddObserverToContainer<ObserverType>(static_cast<NodeType*>(nodeToAdd), containerToAddAndRemoveFrom);
+			CreateAddObserverToContainer<ObserverType>(NodeCast<NodeType>(nodeToAdd), containerToAddAndRemoveFrom);
 		};
 
 		// Register our add function

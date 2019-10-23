@@ -223,5 +223,7 @@ x86/
 
 # Ignore generated GLAD files
 /dependencies/bin/
-/dependencies/lib/
-
+/dependencies/lib/*
+!/dependencies/lib/*/
+/dependencies/lib/*/*
+!/dependencies/lib/*/LibOVR.lib

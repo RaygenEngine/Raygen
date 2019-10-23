@@ -19,6 +19,13 @@ void ObserverRenderer::OnNodeRemovedFromWorld(Node* node)
 			return;
 		}
 	}
+	// for (auto& [nodeClass, removerFunc] : m_onTypeRemoved) {
+	//	auto thisNodeClass = &node->GetClass();
+
+	//	if (thisNodeClass == nodeClass || nodeClass->GetChildClasses().count(thisNodeClass)) {
+	//		removerFunc(node);
+	//	}
+	//}
 }
 
 void ObserverRenderer::OnNodeAddedToWorld(Node* node)

@@ -228,8 +228,7 @@ void GLForwardRenderer::InitRenderBuffers()
 
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_msaaDepthStencilRbo);
 
-	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE,
-		"ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 
 	// out fbo
 	glGenFramebuffers(1, &m_outFbo);
@@ -243,8 +242,7 @@ void GLForwardRenderer::InitRenderBuffers()
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outColorTexture, 0);
 
-	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE,
-		"ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 
 	// bounding boxes
 	glCreateVertexArrays(1, &m_bbVao);
@@ -298,7 +296,8 @@ void GLForwardRenderer::RenderEarlyDepthPass()
 
 	for (auto& geometry : m_glGeometries) {
 		// view frustum culling
-		if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+		// TODO: camera->IsInsideFrustum(SceneNodeT)
+		if (!m_camera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
 			continue;
 		}
 
@@ -335,7 +334,7 @@ void GLForwardRenderer::RenderDirectionalLights()
 	for (auto light : m_glDirectionalLights) {
 
 		// light AABB camera frustum culling
-		if (!math::BoxFrustumCollision(light->node->GetFrustumAABB(), m_camera->GetFrustum())) {
+		if (!m_camera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
 			continue;
 		}
 
@@ -370,7 +369,7 @@ void GLForwardRenderer::RenderDirectionalLights()
 
 		for (auto& geometry : m_glGeometries) {
 			// view frustum culling
-			if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+			if (!m_camera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
 				continue;
 			}
 
@@ -438,7 +437,7 @@ void GLForwardRenderer::RenderSpotLights()
 	for (auto light : m_glSpotLights) {
 
 		// light AABB camera frustum culling
-		if (!math::BoxFrustumCollision(light->node->GetFrustumAABB(), m_camera->GetFrustum())) {
+		if (!m_camera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
 			continue;
 		}
 
@@ -478,7 +477,7 @@ void GLForwardRenderer::RenderSpotLights()
 
 		for (auto& geometry : m_glGeometries) {
 			// view frustum culling
-			if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+			if (!m_camera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
 				continue;
 			}
 
@@ -575,7 +574,7 @@ void GLForwardRenderer::RenderPunctualLights()
 
 		for (auto& geometry : m_glGeometries) {
 			// view frustum culling
-			if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+			if (!m_camera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
 				continue;
 			}
 
@@ -634,7 +633,7 @@ void GLForwardRenderer::RenderBoundingBoxes()
 
 	glBindVertexArray(m_bbVao);
 
-	auto RenderBox = [&](Box box, glm::vec4 color) {
+	auto RenderBox = [&](math::AABB box, glm::vec4 color) {
 		const GLfloat data[] = {
 			box.min.x,
 			box.min.y,
@@ -751,7 +750,7 @@ void GLForwardRenderer::RenderSkybox()
 	glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
-void GLForwardRenderer::RenderPostProcess()
+void GLForwardRenderer::BlitMSAAtoOut()
 {
 	// blit msaa to out
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFbo);
@@ -759,8 +758,6 @@ void GLForwardRenderer::RenderPostProcess()
 
 	glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 0, 0, m_camera->GetWidth(),
 		m_camera->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-	// do post process here (on out Fbo)
 }
 
 void GLForwardRenderer::RenderWindow()
@@ -792,8 +789,8 @@ void GLForwardRenderer::Render()
 		RenderBoundingBoxes();
 		// render skybox, seamless enabled (render last)
 		RenderSkybox();
-		// copy msaa to out fbo and render any post process on it
-		RenderPostProcess();
+		// blit
+		BlitMSAAtoOut();
 		// write out texture of out fbo to window (big triangle trick)
 		RenderWindow();
 	}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "world/nodes/light/LightNode.h"
+#include "core/MathAux.h"
 
 class DirectionalLightNode : public LightNode {
 
@@ -16,9 +17,9 @@ class DirectionalLightNode : public LightNode {
 	glm::mat4 m_viewMatrix{};
 	glm::mat4 m_viewProjectionMatrix{};
 	// may not actually needed in directional
-	Frustum m_frustum{};
+	math::Frustum m_frustum{};
 	// (pyramid's) frustum world space aabb
-	Box m_frustumAABB{};
+	math::AABB m_frustumAABB{};
 
 	float m_left{ -10.f };
 	float m_right{ 10.f };
@@ -42,6 +43,6 @@ public:
 	[[nodiscard]] glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 	[[nodiscard]] glm::mat4 GetViewMatrix() const { return m_viewMatrix; }
 	[[nodiscard]] glm::mat4 GetViewProjectionMatrix() const { return m_viewProjectionMatrix; }
-	[[nodiscard]] Frustum GetFrustum() const { return m_frustum; }
-	[[nodiscard]] Box GetFrustumAABB() const { return m_frustumAABB; }
+	[[nodiscard]] math::Frustum GetFrustum() const { return m_frustum; }
+	[[nodiscard]] math::AABB GetFrustumAABB() const { return m_frustumAABB; }
 };

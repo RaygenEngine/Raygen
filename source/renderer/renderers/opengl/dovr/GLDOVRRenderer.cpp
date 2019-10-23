@@ -1,9 +1,10 @@
 #include "pch/pch.h"
 
 #include "renderer/renderers/opengl/GLAssetManager.h"
-#include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
+#include "renderer/renderers/opengl/dovr/GLDOVRRenderer.h"
 #include "world/World.h"
 #include "world/nodes/camera/CameraNode.h"
+#include "world/nodes/vr/OVRNode.h"
 #include "world/nodes/sky/SkyboxNode.h"
 #include "system/Input.h"
 #include "platform/windows/Win32Window.h"
@@ -11,6 +12,8 @@
 
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <ovr/Extras/OVR_Math.h>
+#include <ovr/OVR_CAPI_GL.h>
 
 
 namespace ogl {
@@ -19,8 +22,104 @@ constexpr int32 textMaxWidth = 3840;
 constexpr int32 textMaxHeight = 2160;
 constexpr glm::vec2 invTextureSize = { 1.f / textMaxWidth, 1.f / textMaxHeight };
 
+GLDOVRRenderer::Eye::Eye(ovrSession session, CameraNode* camera)
+	: session(session)
+	, camera(camera)
+{
+	const auto width = camera->GetWidth();
+	const auto height = camera->GetHeight();
 
-GLDeferredRenderer::GBuffer::~GBuffer()
+	ovrTextureSwapChainDesc desc = {};
+	desc.Type = ovrTexture_2D;
+	desc.ArraySize = 1;
+	desc.Width = width;
+	desc.Height = height;
+	desc.MipLevels = 1;
+	desc.Format = OVR_FORMAT_R8G8B8A8_UNORM_SRGB;
+	// no MSAA textures.
+	desc.SampleCount = 1;
+	desc.StaticImage = ovrFalse;
+	{
+		const ovrResult result = ovr_CreateTextureSwapChainGL(session, &desc, &colorTextureChain);
+		int32 length = 0;
+		ovr_GetTextureSwapChainLength(session, colorTextureChain, &length);
+		if (OVR_SUCCESS(result)) {
+			for (int32 i = 0; i < length; ++i) {
+				GLuint chainTexId;
+				ovr_GetTextureSwapChainBufferGL(session, colorTextureChain, i, &chainTexId);
+				glBindTexture(GL_TEXTURE_2D, chainTexId);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			}
+		}
+	}
+	desc.Format = OVR_FORMAT_D32_FLOAT;
+	{
+		const ovrResult result = ovr_CreateTextureSwapChainGL(session, &desc, &depthTextureChain);
+
+		int32 length = 0;
+		ovr_GetTextureSwapChainLength(session, depthTextureChain, &length);
+
+		if (OVR_SUCCESS(result)) {
+			for (int i = 0; i < length; ++i) {
+				GLuint chainTexId;
+				ovr_GetTextureSwapChainBufferGL(session, depthTextureChain, i, &chainTexId);
+				glBindTexture(GL_TEXTURE_2D, chainTexId);
+
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			}
+		}
+	}
+
+	glGenFramebuffers(1, &outFbo);
+}
+
+GLDOVRRenderer::Eye::~Eye()
+{
+	ovr_DestroyTextureSwapChain(session, colorTextureChain);
+	ovr_DestroyTextureSwapChain(session, depthTextureChain);
+	glDeleteFramebuffers(1, &outFbo);
+}
+
+void GLDOVRRenderer::Eye::SwapTexture()
+{
+	GLuint curColorTexId;
+	{
+		int32 curIndex;
+		ovr_GetTextureSwapChainCurrentIndex(session, colorTextureChain, &curIndex);
+		ovr_GetTextureSwapChainBufferGL(session, colorTextureChain, curIndex, &curColorTexId);
+	}
+
+	GLuint curDepthTexId;
+	{
+		int32 curIndex;
+		ovr_GetTextureSwapChainCurrentIndex(session, depthTextureChain, &curIndex);
+		ovr_GetTextureSwapChainBufferGL(session, depthTextureChain, curIndex, &curDepthTexId);
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, outFbo);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, curColorTexId, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, curDepthTexId, 0);
+
+	// clean outFbo for next frame
+	glViewport(0, 0, camera->GetWidth(), camera->GetHeight());
+
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void GLDOVRRenderer::Eye::Commit()
+{
+	ovr_CommitTextureSwapChain(session, colorTextureChain);
+	ovr_CommitTextureSwapChain(session, depthTextureChain);
+}
+
+GLDOVRRenderer::GBuffer::~GBuffer()
 {
 	glDeleteFramebuffers(1, &fbo);
 	glDeleteTextures(1, &positionsAttachment);
@@ -31,24 +130,24 @@ GLDeferredRenderer::GBuffer::~GBuffer()
 	glDeleteTextures(1, &depthAttachment);
 }
 
-GLDeferredRenderer::~GLDeferredRenderer()
+GLDOVRRenderer::~GLDOVRRenderer()
 {
-	glDeleteFramebuffers(1, &m_lightFbo);
-	glDeleteFramebuffers(1, &m_outFbo);
-	glDeleteTextures(1, &m_outTexture);
+	const auto session = m_ovr->GetOVRSession();
+
+	ovr_DestroyMirrorTexture(session, m_mirrorTexture);
+	glDeleteFramebuffers(1, &m_mirrorFBO);
 }
 
-void GLDeferredRenderer::InitObservers()
+void GLDOVRRenderer::InitObservers()
 {
-	m_camera = Engine::GetWorld()->GetActiveCamera();
-	CLOG_WARN(!m_camera, "Renderer failed to find camera.");
+	// TODO: will remove
+	m_ovr = Engine::GetWorld()->GetAnyAvailableNode<OVRNode>();
+	CLOG_ABORT(!m_ovr, "This renderer expects an ovr node to be present!");
 
 	auto skyboxNode = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
 	CLOG_ABORT(!skyboxNode, "This renderer expects a skybox node to be present!");
 
-	// TODO: should be possible to update skybox, decide on singleton observers to do this automatically
 	m_skyboxCubemap = GetGLAssetManager()->GpuGetOrCreate<GLTexture>(skyboxNode->GetSkyMap());
-
 
 	RegisterObserverContainer_AutoLifetimes(m_glGeometries);
 	RegisterObserverContainer_AutoLifetimes(m_glDirectionalLights);
@@ -56,7 +155,7 @@ void GLDeferredRenderer::InitObservers()
 	RegisterObserverContainer_AutoLifetimes(m_glPunctualLights);
 }
 
-void GLDeferredRenderer::InitShaders()
+void GLDOVRRenderer::InitShaders()
 {
 	m_gBuffer.shader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_GBuffer_AlphaMask.json");
@@ -166,17 +265,19 @@ void GLDeferredRenderer::InitShaders()
 	m_ambientLightShader->StoreUniformLoc("invTextureSize");
 	m_ambientLightShader->StoreUniformLoc("vp_inv");
 
-	m_dummyPostProcShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DummyPostProc.json");
-	m_dummyPostProcShader->StoreUniformLoc("invTextureSize");
-
 	m_windowShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>(
 		"/engine-data/glsl/general/QuadWriteTexture_InvTextureSize.json");
 	m_windowShader->StoreUniformLoc("invTextureSize");
 }
 
-void GLDeferredRenderer::InitRenderBuffers()
+void GLDOVRRenderer::InitRenderBuffers()
 {
+	// eye buffers
+	const auto session = m_ovr->GetOVRSession();
+
+	m_eyes[0] = std::make_unique<Eye>(session, m_ovr->GetEyeCamera(0));
+	m_eyes[1] = std::make_unique<Eye>(session, m_ovr->GetEyeCamera(1));
+
 	glGenFramebuffers(1, &m_gBuffer.fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.fbo);
 
@@ -234,36 +335,33 @@ void GLDeferredRenderer::InitRenderBuffers()
 
 	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 
-	// light fbo
-	glGenFramebuffers(1, &m_lightFbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
+	auto wnd = Engine::GetMainWindow();
 
-	glGenTextures(1, &m_lightTexture);
-	glBindTexture(GL_TEXTURE_2D, m_lightTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textMaxWidth, textMaxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// Mirror (for debug, def)
+	ovrMirrorTextureDesc desc;
+	memset(&desc, 0, sizeof(desc));
+	desc.Width = wnd->GetWidth();
+	desc.Height = wnd->GetHeight();
+	desc.Format = OVR_FORMAT_R8G8B8A8_UNORM_SRGB;
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_lightTexture, 0);
+	// desc.MirrorOptions = ovrMirrorOption_PostDistortion;
+	// Create mirror texture and an FBO used to copy mirror texture to back buffer
+	const ovrResult result = ovr_CreateMirrorTextureWithOptionsGL(session, &desc, &m_mirrorTexture);
 
-	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
+	CLOG_ABORT(!OVR_SUCCESS(result), "Failed to construct mirror texture");
 
-	// out fbo
-	glGenFramebuffers(1, &m_outFbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+	// Configure the mirror read buffer
+	GLuint texId;
+	ovr_GetMirrorTextureBufferGL(session, m_mirrorTexture, &texId);
 
-	glGenTextures(1, &m_outTexture);
-	glBindTexture(GL_TEXTURE_2D, m_outTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textMaxWidth, textMaxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outTexture, 0);
-
-	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
+	glGenFramebuffers(1, &m_mirrorFBO);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_mirrorFBO);
+	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texId, 0);
+	glFramebufferRenderbuffer(GL_READ_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 }
 
-void GLDeferredRenderer::InitScene()
+void GLDOVRRenderer::InitScene()
 {
 	InitObservers();
 
@@ -272,9 +370,11 @@ void GLDeferredRenderer::InitScene()
 	InitRenderBuffers();
 }
 
-void GLDeferredRenderer::RenderGBuffer()
+void GLDOVRRenderer::RenderGBuffer(int32 eyeIndex)
 {
-	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+	const auto cam = m_eyes[eyeIndex]->camera;
+
+	glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.fbo);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -286,12 +386,12 @@ void GLDeferredRenderer::RenderGBuffer()
 	auto gs = m_gBuffer.shader;
 	glUseProgram(gs->programId);
 
-	const auto vp = m_camera->GetViewProjectionMatrix();
+	const auto vp = cam->GetViewProjectionMatrix();
 
 	// render geometry (non-instanced)
 	for (auto& geometry : m_glGeometries) {
 		// view frustum culling
-		if (!m_camera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
+		if (!cam->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
 			continue;
 		}
 
@@ -337,36 +437,26 @@ void GLDeferredRenderer::RenderGBuffer()
 	glDisable(GL_DEPTH_TEST);
 }
 
-void GLDeferredRenderer::ClearFbos()
+void GLDOVRRenderer::RenderDirectionalLights(int32 eyeIndex)
 {
-	// clean outFbo for next frame
-	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+	const auto cam = m_eyes[eyeIndex]->camera;
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-}
-
-void GLDeferredRenderer::RenderDirectionalLights()
-{
 	auto ls = m_deferredDirectionalLightShader;
 
 	for (auto light : m_glDirectionalLights) {
 
 		// light AABB camera frustum culling
-		if (!m_camera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
+		if (!cam->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
 			continue;
 		}
 
 		light->RenderShadowMap(m_glGeometries);
 
-		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+		const auto fbo = m_eyes[eyeIndex]->outFbo;
 
-		glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
+		glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
+
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
@@ -374,8 +464,7 @@ void GLDeferredRenderer::RenderDirectionalLights()
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
-
+		ls->SendVec3("wcs_viewPos", cam->GetWorldTranslation());
 		ls->SendVec2("invTextureSize", invTextureSize);
 
 		// light
@@ -404,22 +493,27 @@ void GLDeferredRenderer::RenderDirectionalLights()
 	}
 }
 
-void GLDeferredRenderer::RenderSpotLights()
+void GLDOVRRenderer::RenderSpotLights(int32 eyeIndex)
 {
+	const auto cam = m_eyes[eyeIndex]->camera;
+
 	auto ls = m_deferredSpotLightShader;
 
 	for (auto light : m_glSpotLights) {
 
 		// light AABB camera frustum culling
-		if (!m_camera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
+		if (!cam->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
 			continue;
 		}
 
 		light->RenderShadowMap(m_glGeometries);
 
-		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
 
-		glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
+		const auto fbo = m_eyes[eyeIndex]->outFbo;
+
+		glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
+
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
@@ -427,8 +521,7 @@ void GLDeferredRenderer::RenderSpotLights()
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
-
+		ls->SendVec3("wcs_viewPos", cam->GetWorldTranslation());
 		ls->SendVec2("invTextureSize", invTextureSize);
 
 		// light
@@ -461,7 +554,7 @@ void GLDeferredRenderer::RenderSpotLights()
 	}
 }
 
-void GLDeferredRenderer::RenderPunctualLights()
+void GLDOVRRenderer::RenderPunctualLights(int32 eyeIndex)
 {
 	auto ls = m_deferredPunctualLightShader;
 
@@ -469,9 +562,12 @@ void GLDeferredRenderer::RenderPunctualLights()
 
 		light->RenderShadowMap(m_glGeometries);
 
-		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+		const auto cam = m_eyes[eyeIndex]->camera;
+		const auto fbo = m_eyes[eyeIndex]->outFbo;
 
-		glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
+		glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
+
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
@@ -479,8 +575,7 @@ void GLDeferredRenderer::RenderPunctualLights()
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
-
+		ls->SendVec3("wcs_viewPos", cam->GetWorldTranslation());
 		ls->SendVec2("invTextureSize", invTextureSize);
 
 		// light
@@ -508,11 +603,14 @@ void GLDeferredRenderer::RenderPunctualLights()
 	}
 }
 
-void GLDeferredRenderer::RenderAmbientLight()
+void GLDOVRRenderer::RenderAmbientLight(int32 eyeIndex)
 {
-	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+	const auto cam = m_eyes[eyeIndex]->camera;
+	const auto fbo = m_eyes[eyeIndex]->outFbo;
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
+	glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
+
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glEnable(GL_BLEND);
@@ -520,10 +618,10 @@ void GLDeferredRenderer::RenderAmbientLight()
 
 	glUseProgram(m_ambientLightShader->programId);
 
-	auto vpInv = glm::inverse(m_camera->GetViewProjectionMatrix());
+	auto vpInv = glm::inverse(cam->GetViewProjectionMatrix());
 
 	m_ambientLightShader->SendMat4("vp_inv", vpInv);
-	m_ambientLightShader->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
+	m_ambientLightShader->SendVec3("wcs_viewPos", cam->GetWorldTranslation());
 	m_ambientLightShader->SendVec2("invTextureSize", invTextureSize);
 	m_ambientLightShader->SendTexture(m_gBuffer.depthAttachment, 0);
 	m_ambientLightShader->SendCubeTexture(m_skyboxCubemap->id, 1);
@@ -535,68 +633,67 @@ void GLDeferredRenderer::RenderAmbientLight()
 	glDisable(GL_BLEND);
 }
 
-void GLDeferredRenderer::RenderPostProcess()
+void GLDOVRRenderer::Render()
 {
-	// after the first post process, blend the rest on top of it
-	// or copy the lightsFbo to the outFbo at the beginning of post processing
+	const auto session = m_ovr->GetOVRSession();
+	const auto info = m_ovr->GetRendererInfo();
 
-	// Dummy post process
-	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+	if (info.visible) {
+		CLOG_ABORT(!OVR_SUCCESS(ovr_WaitToBeginFrame(session, info.frameIndex)), "Oculus Wait to begin frame failure");
+		CLOG_ABORT(!OVR_SUCCESS(ovr_BeginFrame(session, info.frameIndex)), "Oculus Begin frame failure");
 
-	// on m_outFbo
-	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+		// Do distortion rendering, Present and flush/sync
+		ovrLayerEyeFovDepth ld = {};
+		ld.Header.Type = ovrLayerType_EyeFovDepth;
+		ld.Header.Flags = ovrLayerFlag_TextureOriginAtBottomLeft; // Because OpenGL.
+		ld.ProjectionDesc = ovrTimewarpProjectionDesc_FromProjection(info.proj, ovrProjection_ClipRangeOpenGL);
+		ld.SensorSampleTime = info.sensorSampleTime;
 
-	glUseProgram(m_dummyPostProcShader->programId);
 
-	m_dummyPostProcShader->SendVec2("invTextureSize", invTextureSize);
-	m_dummyPostProcShader->SendTexture(m_lightTexture, 0);
+		for (auto i = 0; i < 2; i++) {
 
-	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-}
+			m_eyes[i]->SwapTexture();
 
-void GLDeferredRenderer::RenderWindow()
-{
-	auto wnd = Engine::GetMainWindow();
-	glViewport(0, 0, wnd->GetWidth(), wnd->GetHeight());
+			// geometry pass
+			RenderGBuffer(i);
+			// TODO: copy gBuffer's depth attachment to eye's fbo (i.e fill the depthTextureChain, needed for lag
+			// correction techniques) light pass - blend lights on outFbo
+			RenderDirectionalLights(i);
+			RenderSpotLights(i);
+			RenderPunctualLights(i);
+			// ambient pass
+			RenderAmbientLight(i);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			m_eyes[i]->Commit();
 
-	glUseProgram(m_windowShader->programId);
+			ld.ColorTexture[i] = m_eyes[i]->colorTextureChain;
+			ld.DepthTexture[i] = m_eyes[i]->depthTextureChain;
+			ld.Viewport[i] = info.eyeViewports[i];
+			ld.Fov[i] = info.eyeFovs[i];
+			ld.RenderPose[i] = info.eyePoses[i];
+		}
 
-	m_windowShader->SendVec2("invTextureSize", invTextureSize);
-	m_windowShader->SendTexture(m_outTexture, 0);
+		ovrLayerHeader* layers = &ld.Header;
+		CLOG_ABORT(
+			!OVR_SUCCESS(ovr_EndFrame(session, info.frameIndex, nullptr, &layers, 1)), "Oculus End frame failure");
 
-	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-}
-
-void GLDeferredRenderer::Render()
-{
-	if (m_camera) {
-		// geometry pass
-		RenderGBuffer();
-		// clear out fbo
-		ClearFbos();
-		// light pass - blend lights on outFbo
-		RenderDirectionalLights();
-		RenderSpotLights();
-		RenderPunctualLights();
-		// ambient pass
-		RenderAmbientLight();
-		// post process
-		RenderPostProcess();
-		// render to window
-		RenderWindow();
+		m_ovr->IncrementFrameIndex();
 	}
-	// else TODO: clear buffer
+	auto wnd = Engine::GetMainWindow();
+	// Blit mirror texture to back buffer
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_mirrorFBO);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBlitFramebuffer(0, wnd->GetHeight(), wnd->GetWidth(), 0, 0, 0, wnd->GetWidth(), wnd->GetHeight(),
+		GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
 	GLEditorRenderer::Render();
 
 	GLCheckError();
 }
 
-void GLDeferredRenderer::RecompileShaders()
+void GLDOVRRenderer::RecompileShaders()
 {
 	m_deferredDirectionalLightShader->Load();
 	m_deferredSpotLightShader->Load();
@@ -604,15 +701,11 @@ void GLDeferredRenderer::RecompileShaders()
 	m_ambientLightShader->Load();
 	m_windowShader->Load();
 	m_gBuffer.shader->Load();
-	m_dummyPostProcShader->Load();
 }
 
-void GLDeferredRenderer::Update()
+void GLDOVRRenderer::Update()
 {
 	GLRendererBase::Update();
-
-	// WIP:
-	m_camera = Engine::GetWorld()->GetActiveCamera();
 
 	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::R)) {
 		RecompileShaders();

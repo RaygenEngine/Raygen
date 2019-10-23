@@ -48,7 +48,7 @@ protected:
 	GLuint m_bbVbo{ 0u };
 
 	// skybox
-	GLTexture* m_skyboxCubemap;
+	GLTexture* m_skyboxCubemap{ nullptr };
 	GLuint m_skyboxVao{ 0u };
 	GLuint m_skyboxVbo{ 0u };
 
@@ -64,7 +64,7 @@ protected:
 	void RenderPunctualLights();
 	void RenderBoundingBoxes();
 	void RenderSkybox();
-	void RenderPostProcess();
+	void BlitMSAAtoOut();
 	void RenderWindow();
 
 	// Update
