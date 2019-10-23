@@ -6,8 +6,9 @@
 
 out vec4 out_color;
 
+in vec2 uv;
+
 uniform vec3 wcs_viewPos;
-uniform vec2 invTextureSize;
 
 uniform struct SpotLight
 {
@@ -83,8 +84,6 @@ void ProcessUniformGBuffer(out vec3 albedo, out float opacity, out float metalli
 out float roughness, out vec3 emissive, out float occlusion, out float occlusionStrength, 
 out vec3 pos, out vec3 normal)
 {
-	vec2 uv = gl_FragCoord.st * invTextureSize;
-
 	pos = texture(gBuffer.positionsSampler, uv).rgb;
 	normal = texture(gBuffer.normalsSampler, uv).rgb;
 	vec4 albedoOpacity = texture(gBuffer.albedoOpacitySampler, uv);

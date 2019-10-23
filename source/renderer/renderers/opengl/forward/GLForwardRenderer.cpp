@@ -3,6 +3,7 @@
 #include "renderer/renderers/opengl/forward/GLForwardRenderer.h"
 #include "renderer/renderers/opengl/assets/GLModel.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
+#include "renderer/renderers/opengl/GLPreviewer.h"
 #include "world/World.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "world/nodes/sky/SkyboxNode.h"
@@ -15,9 +16,7 @@
 
 namespace ogl {
 
-constexpr int32 textMaxWidth = 3840;
-constexpr int32 textMaxHeight = 2160;
-constexpr glm::vec2 invTextureSize = { 1.f / textMaxWidth, 1.f / textMaxHeight };
+
 constexpr int32 msaaSamples = 4;
 
 GLForwardRenderer::~GLForwardRenderer()
@@ -28,6 +27,7 @@ GLForwardRenderer::~GLForwardRenderer()
 
 	glDeleteFramebuffers(1, &m_outFbo);
 	glDeleteTextures(1, &m_outColorTexture);
+	glDeleteTextures(1, &m_outDepthTexture);
 
 	glDeleteVertexArrays(1, &m_bbVao);
 	glDeleteBuffers(1, &m_bbVbo);
@@ -187,12 +187,11 @@ void GLForwardRenderer::InitShaders()
 	m_depthPassShader->StoreUniformLoc("alphaCutoff");
 	m_depthPassShader->StoreUniformLoc("mask");
 
-	m_windowShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>(
-		"/engine-data/glsl/general/QuadWriteTexture_InvTextureSize.json");
-	m_windowShader->StoreUniformLoc("invTextureSize");
+	m_windowShader
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/general/QuadWriteTexture.json");
 }
 // TODO: default box model (json)
-float skyboxVertices[] = {
+constexpr float skyboxVertices[] = {
 	// positions
 	-1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f,
 	-1.0f,
@@ -212,19 +211,22 @@ float skyboxVertices[] = {
 
 void GLForwardRenderer::InitRenderBuffers()
 {
+	const auto width = m_camera->GetWidth();
+	const auto height = m_camera->GetHeight();
+
 	// msaa fbo
 	glGenFramebuffers(1, &m_msaaFbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 
 	glGenTextures(1, &m_msaaColorTexture);
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture);
-	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, msaaSamples, GL_RGB, textMaxWidth, textMaxHeight, GL_TRUE);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, msaaSamples, GL_RGB, width, height, GL_TRUE);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture, 0);
 
 	glGenRenderbuffers(1, &m_msaaDepthStencilRbo);
 	glBindRenderbuffer(GL_RENDERBUFFER, m_msaaDepthStencilRbo);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, msaaSamples, GL_DEPTH24_STENCIL8, textMaxWidth, textMaxHeight);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, msaaSamples, GL_DEPTH24_STENCIL8, width, height);
 
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_msaaDepthStencilRbo);
 
@@ -236,11 +238,19 @@ void GLForwardRenderer::InitRenderBuffers()
 
 	glGenTextures(1, &m_outColorTexture);
 	glBindTexture(GL_TEXTURE_2D, m_outColorTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textMaxWidth, textMaxHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outColorTexture, 0);
+
+	glGenTextures(1, &m_outDepthTexture);
+	glBindTexture(GL_TEXTURE_2D, m_outDepthTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_outDepthTexture, 0);
 
 	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 
@@ -268,6 +278,10 @@ void GLForwardRenderer::InitRenderBuffers()
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*)0);
+
+
+	GetGLPreviewer()->AddPreview(m_outColorTexture, "color");
+	GetGLPreviewer()->AddPreview(m_outDepthTexture, "depth");
 }
 
 void GLForwardRenderer::InitScene()
@@ -758,6 +772,9 @@ void GLForwardRenderer::BlitMSAAtoOut()
 
 	glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 0, 0, m_camera->GetWidth(),
 		m_camera->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+	glBlitFramebuffer(0, 0, m_camera->GetWidth(), m_camera->GetHeight(), 0, 0, m_camera->GetWidth(),
+		m_camera->GetHeight(), GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 }
 
 void GLForwardRenderer::RenderWindow()
@@ -769,7 +786,6 @@ void GLForwardRenderer::RenderWindow()
 
 	glUseProgram(m_windowShader->programId);
 
-	m_windowShader->SendVec2("invTextureSize", invTextureSize);
 	m_windowShader->SendTexture(m_outColorTexture, 0);
 
 	// big triangle trick, no vao
@@ -796,6 +812,10 @@ void GLForwardRenderer::Render()
 	}
 	// else TODO: clear buffer
 
+	if (IsPreviewerEnabled()) {
+		GetGLPreviewer()->RenderPreview();
+	}
+
 	GLEditorRenderer::Render();
 
 	GLCheckError();
@@ -810,6 +830,24 @@ void GLForwardRenderer::RecompileShaders()
 	m_cubemapInfDistShader->Load();
 	m_bBoxShader->Load();
 	m_windowShader->Load();
+}
+
+void GLForwardRenderer::ActiveCameraResize()
+{
+	const auto width = m_camera->GetWidth();
+	const auto height = m_camera->GetHeight();
+
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, msaaSamples, GL_RGB, width, height, GL_TRUE);
+
+	glBindRenderbuffer(GL_RENDERBUFFER, m_msaaDepthStencilRbo);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, msaaSamples, GL_DEPTH24_STENCIL8, width, height);
+
+	glBindTexture(GL_TEXTURE_2D, m_outColorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+	glBindTexture(GL_TEXTURE_2D, m_outDepthTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 }
 
 void GLForwardRenderer::Update()

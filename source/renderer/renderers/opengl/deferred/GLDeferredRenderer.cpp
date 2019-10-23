@@ -1,6 +1,7 @@
 #include "pch/pch.h"
 
 #include "renderer/renderers/opengl/GLAssetManager.h"
+#include "renderer/renderers/opengl/GLPreviewer.h"
 #include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
 #include "world/World.h"
 #include "world/nodes/camera/CameraNode.h"
@@ -14,11 +15,6 @@
 
 
 namespace ogl {
-
-constexpr int32 textMaxWidth = 3840;
-constexpr int32 textMaxHeight = 2160;
-constexpr glm::vec2 invTextureSize = { 1.f / textMaxWidth, 1.f / textMaxHeight };
-
 
 GLDeferredRenderer::GBuffer::~GBuffer()
 {
@@ -88,7 +84,6 @@ void GLDeferredRenderer::InitShaders()
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_DirectionalLight.json");
 
 	m_deferredDirectionalLightShader->StoreUniformLoc("wcs_viewPos");
-	m_deferredDirectionalLightShader->StoreUniformLoc("invTextureSize");
 
 	// directional light
 	m_deferredDirectionalLightShader->StoreUniformLoc("directionalLight.wcs_dir");
@@ -111,7 +106,6 @@ void GLDeferredRenderer::InitShaders()
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_SpotLight.json");
 
 	m_deferredSpotLightShader->StoreUniformLoc("wcs_viewPos");
-	m_deferredSpotLightShader->StoreUniformLoc("invTextureSize");
 
 	// spot light
 	m_deferredSpotLightShader->StoreUniformLoc("spotLight.wcs_pos");
@@ -138,7 +132,6 @@ void GLDeferredRenderer::InitShaders()
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_PunctualLight.json");
 
 	m_deferredPunctualLightShader->StoreUniformLoc("wcs_viewPos");
-	m_deferredPunctualLightShader->StoreUniformLoc("invTextureSize");
 
 	// punctual light
 	m_deferredPunctualLightShader->StoreUniformLoc("punctualLight.wcs_pos");
@@ -163,27 +156,27 @@ void GLDeferredRenderer::InitShaders()
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_AmbientLight.json");
 
 	m_ambientLightShader->StoreUniformLoc("wcs_viewPos");
-	m_ambientLightShader->StoreUniformLoc("invTextureSize");
 	m_ambientLightShader->StoreUniformLoc("vp_inv");
 
 	m_dummyPostProcShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DummyPostProc.json");
-	m_dummyPostProcShader->StoreUniformLoc("invTextureSize");
 
-	m_windowShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>(
-		"/engine-data/glsl/general/QuadWriteTexture_InvTextureSize.json");
-	m_windowShader->StoreUniformLoc("invTextureSize");
+	m_windowShader
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/general/QuadWriteTexture.json");
 }
 
 void GLDeferredRenderer::InitRenderBuffers()
 {
+	const auto width = m_camera->GetWidth();
+	const auto height = m_camera->GetHeight();
+
 	glGenFramebuffers(1, &m_gBuffer.fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.fbo);
 
 	// - rgb: position
 	glGenTextures(1, &m_gBuffer.positionsAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.positionsAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, textMaxWidth, textMaxHeight, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.positionsAttachment, 0);
@@ -191,7 +184,7 @@ void GLDeferredRenderer::InitRenderBuffers()
 	// - rgb: normal
 	glGenTextures(1, &m_gBuffer.normalsAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.normalsAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, textMaxWidth, textMaxHeight, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_gBuffer.normalsAttachment, 0);
@@ -199,7 +192,7 @@ void GLDeferredRenderer::InitRenderBuffers()
 	// - rgb: albedo, a: opacity
 	glGenTextures(1, &m_gBuffer.albedoOpacityAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.albedoOpacityAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textMaxWidth, textMaxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gBuffer.albedoOpacityAttachment, 0);
@@ -207,7 +200,7 @@ void GLDeferredRenderer::InitRenderBuffers()
 	// - r: metallic, g: roughness, b: occlusion, a: occlusion strength
 	glGenTextures(1, &m_gBuffer.specularAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.specularAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textMaxWidth, textMaxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_gBuffer.specularAttachment, 0);
@@ -215,7 +208,7 @@ void GLDeferredRenderer::InitRenderBuffers()
 	// - rgb: emissive, a: <reserved>
 	glGenTextures(1, &m_gBuffer.emissiveAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.emissiveAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textMaxWidth, textMaxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, m_gBuffer.emissiveAttachment, 0);
@@ -226,8 +219,7 @@ void GLDeferredRenderer::InitRenderBuffers()
 
 	glGenTextures(1, &m_gBuffer.depthAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.depthAttachment);
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, textMaxWidth, textMaxHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_gBuffer.depthAttachment, 0);
@@ -240,7 +232,7 @@ void GLDeferredRenderer::InitRenderBuffers()
 
 	glGenTextures(1, &m_lightTexture);
 	glBindTexture(GL_TEXTURE_2D, m_lightTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textMaxWidth, textMaxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -254,13 +246,22 @@ void GLDeferredRenderer::InitRenderBuffers()
 
 	glGenTextures(1, &m_outTexture);
 	glBindTexture(GL_TEXTURE_2D, m_outTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textMaxWidth, textMaxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outTexture, 0);
 
 	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
+
+
+	GetGLPreviewer()->AddPreview(m_gBuffer.positionsAttachment, "positions");
+	GetGLPreviewer()->AddPreview(m_gBuffer.normalsAttachment, "normals");
+	GetGLPreviewer()->AddPreview(m_gBuffer.albedoOpacityAttachment, "albedoOpacity");
+	GetGLPreviewer()->AddPreview(m_gBuffer.specularAttachment, "specular");
+	GetGLPreviewer()->AddPreview(m_gBuffer.emissiveAttachment, "emissive");
+	GetGLPreviewer()->AddPreview(m_gBuffer.depthAttachment, "depth");
+	GetGLPreviewer()->AddPreview(m_lightTexture, "light texture");
 }
 
 void GLDeferredRenderer::InitScene()
@@ -376,8 +377,6 @@ void GLDeferredRenderer::RenderDirectionalLights()
 		// global uniforms
 		ls->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
 
-		ls->SendVec2("invTextureSize", invTextureSize);
-
 		// light
 		ls->SendVec3("directionalLight.wcs_dir", light->node->GetWorldForward());
 		ls->SendVec3("directionalLight.color", light->node->GetColor());
@@ -429,8 +428,6 @@ void GLDeferredRenderer::RenderSpotLights()
 		// global uniforms
 		ls->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
 
-		ls->SendVec2("invTextureSize", invTextureSize);
-
 		// light
 		ls->SendVec3("spotLight.wcs_pos", light->node->GetWorldTranslation());
 		ls->SendVec3("spotLight.wcs_dir", light->node->GetWorldForward());
@@ -481,8 +478,6 @@ void GLDeferredRenderer::RenderPunctualLights()
 		// global uniforms
 		ls->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
 
-		ls->SendVec2("invTextureSize", invTextureSize);
-
 		// light
 		ls->SendVec3("punctualLight.wcs_pos", light->node->GetWorldTranslation());
 		ls->SendVec3("punctualLight.color", light->node->GetColor());
@@ -524,7 +519,6 @@ void GLDeferredRenderer::RenderAmbientLight()
 
 	m_ambientLightShader->SendMat4("vp_inv", vpInv);
 	m_ambientLightShader->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
-	m_ambientLightShader->SendVec2("invTextureSize", invTextureSize);
 	m_ambientLightShader->SendTexture(m_gBuffer.depthAttachment, 0);
 	m_ambientLightShader->SendCubeTexture(m_skyboxCubemap->id, 1);
 
@@ -548,7 +542,6 @@ void GLDeferredRenderer::RenderPostProcess()
 
 	glUseProgram(m_dummyPostProcShader->programId);
 
-	m_dummyPostProcShader->SendVec2("invTextureSize", invTextureSize);
 	m_dummyPostProcShader->SendTexture(m_lightTexture, 0);
 
 	// big triangle trick, no vao
@@ -564,7 +557,6 @@ void GLDeferredRenderer::RenderWindow()
 
 	glUseProgram(m_windowShader->programId);
 
-	m_windowShader->SendVec2("invTextureSize", invTextureSize);
 	m_windowShader->SendTexture(m_outTexture, 0);
 
 	// big triangle trick, no vao
@@ -591,6 +583,10 @@ void GLDeferredRenderer::Render()
 	}
 	// else TODO: clear buffer
 
+	if (IsPreviewerEnabled()) {
+		GetGLPreviewer()->RenderPreview();
+	}
+
 	GLEditorRenderer::Render();
 
 	GLCheckError();
@@ -605,6 +601,36 @@ void GLDeferredRenderer::RecompileShaders()
 	m_windowShader->Load();
 	m_gBuffer.shader->Load();
 	m_dummyPostProcShader->Load();
+}
+
+void GLDeferredRenderer::ActiveCameraResize()
+{
+	const auto width = m_camera->GetWidth();
+	const auto height = m_camera->GetHeight();
+
+	glBindTexture(GL_TEXTURE_2D, m_gBuffer.positionsAttachment);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+
+	glBindTexture(GL_TEXTURE_2D, m_gBuffer.normalsAttachment);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+
+	glBindTexture(GL_TEXTURE_2D, m_gBuffer.albedoOpacityAttachment);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glBindTexture(GL_TEXTURE_2D, m_gBuffer.specularAttachment);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glBindTexture(GL_TEXTURE_2D, m_gBuffer.emissiveAttachment);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glBindTexture(GL_TEXTURE_2D, m_gBuffer.depthAttachment);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+
+	glBindTexture(GL_TEXTURE_2D, m_lightTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	glBindTexture(GL_TEXTURE_2D, m_outTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 }
 
 void GLDeferredRenderer::Update()
