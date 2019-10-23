@@ -37,7 +37,7 @@ public:
 
 	bool SupportsEditor() override { return false; }
 
-	bool IsPreviewerEnabled() const { return m_previewerEnabled; }
+	void Render() override;
 };
 
 template<typename GlRenderer>

@@ -15,6 +15,8 @@ void GLEditorRenderer::InitRendering(HWND assochWnd, HINSTANCE instance)
 
 void GLEditorRenderer::Render()
 {
+	GLRendererBase::Render();
+
 	if (Engine::IsEditorActive()) {
 		ImguiImpl::RenderOpenGL();
 	}

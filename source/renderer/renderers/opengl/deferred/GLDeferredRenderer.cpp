@@ -583,10 +583,6 @@ void GLDeferredRenderer::Render()
 	}
 	// else TODO: clear buffer
 
-	if (IsPreviewerEnabled()) {
-		GetGLPreviewer()->RenderPreview();
-	}
-
 	GLEditorRenderer::Render();
 
 	GLCheckError();
