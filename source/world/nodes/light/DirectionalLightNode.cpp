@@ -28,9 +28,8 @@ void DirectionalLightNode::RecalculateViewProjectionMatrix()
 void DirectionalLightNode::RecalculateFrustum()
 {
 	// viewProj to get frustum plane equations in world space
-	math::ExtractFrustumPlanes(m_frustum, m_viewProjectionMatrix);
-
-	m_frustumAABB = math::CreateBoxFromFrustumPyramid(GetWorldTranslation(), m_frustum);
+	m_frustum.ExtractFromMatrix(m_viewProjectionMatrix);
+	m_frustumAABB = m_frustum.FrustumPyramidAABB(GetWorldTranslation());
 }
 
 void DirectionalLightNode::DirtyUpdate(DirtyFlagset flags)

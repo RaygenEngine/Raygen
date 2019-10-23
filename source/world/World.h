@@ -21,6 +21,7 @@ class GeometryNode;
 class SpotLightNode;
 class DirectionalLightNode;
 
+
 class World : public Object {
 
 	friend class Editor;
@@ -29,6 +30,7 @@ class World : public Object {
 	template<typename T>
 	friend struct NodeIterator;
 
+	// TODO: remove sets
 	std::unique_ptr<RootNode> m_root;
 	std::unordered_set<Node*> m_nodes;
 

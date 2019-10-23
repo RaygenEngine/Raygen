@@ -1,6 +1,6 @@
 #pragma once
 
-// Deferred renderer, pbr (direct), ambient pass
+// OVR Deferred renderer, pbr (direct), ambient pass
 
 #include "renderer/renderers/opengl/GLEditorRenderer.h"
 #include "renderer/renderers/opengl/assets/GLShader.h"
@@ -10,19 +10,36 @@
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
 #include "renderer/renderers/opengl/basic/GLBasicPunctualLight.h"
 
+#include <ovr/OVR_CAPI.h>
+
+class OVRNode;
 class CameraNode;
 
 namespace ogl {
 
-class GLDeferredRenderer : public GLEditorRenderer {
+class GLDOVRRenderer : public GLEditorRenderer {
 
-protected:
+	struct Eye {
+		ovrSession session;
+		CameraNode* camera;
+
+		GLuint outFbo{ 0 };
+		ovrTextureSwapChain colorTextureChain{ nullptr };
+		ovrTextureSwapChain depthTextureChain{ nullptr };
+
+		Eye(ovrSession session, CameraNode* camera);
+		~Eye();
+
+		void SwapTexture();
+		void Commit();
+	};
+
+
 	// shaders
 	GLShader* m_deferredDirectionalLightShader{ nullptr };
 	GLShader* m_deferredSpotLightShader{ nullptr };
 	GLShader* m_deferredPunctualLightShader{ nullptr };
 	GLShader* m_ambientLightShader{ nullptr };
-	GLShader* m_dummyPostProcShader{ nullptr };
 	GLShader* m_windowShader{ nullptr };
 
 	// observers
@@ -32,14 +49,14 @@ protected:
 	std::vector<GLBasicSpotLight*> m_glSpotLights;
 
 	// raw nodes
-	CameraNode* m_camera{ nullptr };
+	OVRNode* m_ovr{ nullptr };
 
 	// rendering
-	GLuint m_lightFbo{ 0 };
-	GLuint m_lightTexture{ 0 };
+	std::array<std::unique_ptr<Eye>, 2> m_eyes;
 
-	GLuint m_outFbo{ 0 };
-	GLuint m_outTexture{ 0 };
+	// used to copy oculus output to window back buffer
+	ovrMirrorTexture m_mirrorTexture{ nullptr };
+	GLuint m_mirrorFBO{ 0 };
 
 	struct GBuffer {
 		GLuint fbo{ 0 };
@@ -65,20 +82,17 @@ protected:
 	void InitRenderBuffers();
 
 	// Render
-	void ClearFbos();
-	void RenderGBuffer();
-	void RenderDirectionalLights();
-	void RenderSpotLights();
-	void RenderPunctualLights();
-	void RenderAmbientLight();
-	void RenderPostProcess();
-	void RenderWindow();
+	void RenderGBuffer(int32 eyeIndex);
+	void RenderDirectionalLights(int32 eyeIndex);
+	void RenderSpotLights(int32 eyeIndex);
+	void RenderPunctualLights(int32 eyeIndex);
+	void RenderAmbientLight(int32 eyeIndex);
 
 	// Update
 	void RecompileShaders();
 
 public:
-	~GLDeferredRenderer() override;
+	~GLDOVRRenderer();
 
 	void InitScene() override;
 

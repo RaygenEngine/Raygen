@@ -68,11 +68,11 @@ void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 
 	m_root = std::make_unique<RootNode>();
 
-	try {
-		m_nodeFactory->LoadChildren(scene.Lock()->document, m_root.get());
-	} catch (std::exception& e) {
-		LOG_ABORT("Failed to load world: Exception encountered: {}", e.what());
-	}
+	// try {
+	m_nodeFactory->LoadChildren(scene.Lock()->document, m_root.get());
+	//} //catch (std::exception& e) {
+	// LOG_ABORT("Failed to load world: Exception encountered: {}", e.what());
+	//}
 	m_root->m_dirty.set();
 	m_root->UpdateTransforms(glm::identity<glm::mat4>());
 

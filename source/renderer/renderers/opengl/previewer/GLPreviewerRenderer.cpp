@@ -188,9 +188,7 @@ void GLPreviewerRenderer::InitRenderBuffers()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_previewDepthTexture, 0);
 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		LOG_FATAL("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
-	}
+	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 }
 
 void GLPreviewerRenderer::InitScene()
@@ -245,7 +243,7 @@ void GLPreviewerRenderer::RenderPreviewBuffer()
 	// render geometry (non-instanced)
 	for (auto& geometry : m_glGeometries) {
 		// view frustum culling
-		if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+		if (!m_camera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
 			continue;
 		}
 

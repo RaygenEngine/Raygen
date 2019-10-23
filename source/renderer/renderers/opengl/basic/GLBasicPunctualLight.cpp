@@ -45,8 +45,7 @@ GLBasicPunctualLight::GLBasicPunctualLight(PunctualLightNode* node)
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 
-	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE,
-		"ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 }
 
 GLBasicPunctualLight::~GLBasicPunctualLight()
@@ -93,7 +92,7 @@ void GLBasicPunctualLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& 
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
 
-			if (materialData->unlit)
+			if (materialData->castsShadows)
 				continue;
 
 			glBindVertexArray(glMesh.vao);

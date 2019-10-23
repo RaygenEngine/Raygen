@@ -38,8 +38,7 @@ GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 
-	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE,
-		"ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 }
 
 GLBasicSpotLight::~GLBasicSpotLight()
@@ -75,14 +74,14 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 
 		for (auto& glMesh : geometry->glModel->meshes) {
 			// light frustum culling
-			if (!math::BoxFrustumCollision(geometry->node->GetAABB(), node->GetFrustum())) {
+			if (!node->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
 				continue;
 			}
 
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
 
-			if (materialData->unlit)
+			if (materialData->castsShadows)
 				continue;
 
 			glBindVertexArray(glMesh.vao);

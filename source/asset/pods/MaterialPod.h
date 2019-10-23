@@ -43,7 +43,7 @@ struct MaterialPod : AssetPod {
 		REFLECT_VAR(alphaMode);
 		REFLECT_VAR(alphaCutoff);
 		REFLECT_VAR(doubleSided);
-		REFLECT_VAR(unlit);
+		REFLECT_VAR(castsShadows);
 	}
 	static void Load(MaterialPod* pod, const uri::Uri& path);
 
@@ -108,5 +108,5 @@ struct MaterialPod : AssetPod {
 	// The back-face must have its normals reversed before the lighting equation is evaluated.
 	bool doubleSided{ false };
 
-	bool unlit{ false };
+	bool castsShadows{ false };
 };

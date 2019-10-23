@@ -2,6 +2,7 @@
 
 #include "asset/AssetPod.h"
 #include "asset/pods/MaterialPod.h"
+#include "core/MathAux.h"
 
 enum class GeometryMode
 {
@@ -12,6 +13,15 @@ enum class GeometryMode
 	TRIANGLES,
 	TRIANGLE_STRIP,
 	TRIANGLE_FAN
+};
+
+struct VertexData {
+	glm::vec3 position{};
+	glm::vec3 normal{};
+	glm::vec3 tangent{};
+	glm::vec3 bitangent{};
+	glm::vec2 textCoord0{};
+	glm::vec2 textCoord1{};
 };
 
 struct GeometryGroup {
@@ -34,7 +44,7 @@ struct ModelPod : public AssetPod {
 
 	std::vector<Mesh> meshes{};
 
-	Box bbox{ glm::vec3(.5f), glm::vec3(-.5f) };
+	math::AABB bbox{ glm::vec3(.5f), glm::vec3(-.5f) };
 
 	std::vector<PodHandle<MaterialPod>> materials{};
 };

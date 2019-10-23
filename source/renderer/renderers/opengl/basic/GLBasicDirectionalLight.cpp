@@ -38,8 +38,7 @@ GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 
-	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE,
-		"ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 }
 
 GLBasicDirectionalLight::~GLBasicDirectionalLight()
@@ -68,7 +67,7 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 
 	for (auto& geometry : geometries) {
 		// light frustum culling
-		if (!math::BoxFrustumCollision(geometry->node->GetAABB(), node->GetFrustum())) {
+		if (!node->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
 			continue;
 		}
 
@@ -81,7 +80,7 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
 
-			if (materialData->unlit)
+			if (materialData->castsShadows)
 				continue;
 
 			glBindVertexArray(glMesh.vao);

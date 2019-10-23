@@ -1,6 +1,8 @@
 #pragma once
 
 #include "world/nodes/light/LightNode.h"
+#include "core/MathAux.h"
+
 
 class SpotLightNode : public LightNode {
 	REFLECTED_NODE(SpotLightNode, LightNode, DF_FLAGS(Aperture))
@@ -14,9 +16,9 @@ class SpotLightNode : public LightNode {
 	glm::mat4 m_projectionMatrix{};
 	glm::mat4 m_viewMatrix{};
 	glm::mat4 m_viewProjectionMatrix{};
-	Frustum m_frustum{};
+	math::Frustum m_frustum{};
 	// (pyramid's) frustum world space aabb
-	Box m_frustumAABB{};
+	math::AABB m_frustumAABB{};
 
 	// angle
 	float m_outerAperture{ 25.f };
@@ -28,7 +30,7 @@ class SpotLightNode : public LightNode {
 		CONSTANT = 0,
 		LINEAR = 1,
 		QUADRATIC = 2
-	} m_attenuationMode{ AttenuationMode::LINEAR };
+	} m_attenuationMode{ LINEAR };
 
 	void RecalculateProjectionMatrix();
 	void RecalculateViewMatrix();
@@ -45,6 +47,6 @@ public:
 	[[nodiscard]] glm::mat4 GetViewMatrix() const { return m_viewMatrix; }
 	[[nodiscard]] glm::mat4 GetViewProjectionMatrix() const { return m_viewProjectionMatrix; }
 	[[nodiscard]] AttenuationMode GetAttenuationMode() const { return m_attenuationMode; }
-	[[nodiscard]] Frustum GetFrustum() const { return m_frustum; }
-	[[nodiscard]] Box GetFrustumAABB() const { return m_frustumAABB; }
+	[[nodiscard]] math::Frustum GetFrustum() const { return m_frustum; }
+	[[nodiscard]] math::AABB GetFrustumAABB() const { return m_frustumAABB; }
 };

@@ -114,8 +114,9 @@ namespace sceneconv {
 inline std::string FilterNodeClassName(std::string_view v)
 {
 	constexpr std::string_view filter = "Node";
-	if (v.substr(v.size() - 4) == filter) {
-		v = v.substr(0, v.size() - 4);
+
+	if (v.size() > filter.size() && v.substr(v.size() - filter.size()) == filter) {
+		v = v.substr(0, v.size() - filter.size());
 	}
 	return std::string{ v };
 }
