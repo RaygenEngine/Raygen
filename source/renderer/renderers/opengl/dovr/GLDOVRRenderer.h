@@ -81,12 +81,12 @@ class GLDOVRRenderer : public GLEditorRenderer {
 	void InitShaders();
 	void InitRenderBuffers();
 
-	// Render WIP
-	void RenderGBuffer(Eye* eye);
-	void RenderDirectionalLights(Eye* eye);
-	void RenderSpotLights(Eye* eye);
-	void RenderPunctualLights(Eye* eye);
-	void RenderAmbientLight(Eye* eye);
+	// Render
+	void RenderGBuffer(int32 eyeIndex);
+	void RenderDirectionalLights(int32 eyeIndex);
+	void RenderSpotLights(int32 eyeIndex);
+	void RenderPunctualLights(int32 eyeIndex);
+	void RenderAmbientLight(int32 eyeIndex);
 
 	// Update
 	void RecompileShaders();
