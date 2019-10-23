@@ -69,8 +69,6 @@ private:
 	glm::vec3 m_localScale{ 1.f, 1.f, 1.f };
 	glm::mat4 m_localMatrix{};
 
-	Box m_localBB{ glm::vec3{ 0.3f }, glm::vec3{ -0.3f } };
-
 	// world
 	glm::vec3 m_worldTranslation{ 0.f, 0.f, 0.f };
 	glm::quat m_worldOrientation{ 1.f, 0.f, 0.f, 0.f };

@@ -296,7 +296,8 @@ void GLForwardRenderer::RenderEarlyDepthPass()
 
 	for (auto& geometry : m_glGeometries) {
 		// view frustum culling
-		if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+		// TODO: camera->IsInsideFrustum(SceneNodeT)
+		if (!m_camera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
 			continue;
 		}
 
@@ -333,7 +334,7 @@ void GLForwardRenderer::RenderDirectionalLights()
 	for (auto light : m_glDirectionalLights) {
 
 		// light AABB camera frustum culling
-		if (!math::BoxFrustumCollision(light->node->GetFrustumAABB(), m_camera->GetFrustum())) {
+		if (!m_camera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
 			continue;
 		}
 
@@ -368,7 +369,7 @@ void GLForwardRenderer::RenderDirectionalLights()
 
 		for (auto& geometry : m_glGeometries) {
 			// view frustum culling
-			if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+			if (!m_camera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
 				continue;
 			}
 
@@ -436,7 +437,7 @@ void GLForwardRenderer::RenderSpotLights()
 	for (auto light : m_glSpotLights) {
 
 		// light AABB camera frustum culling
-		if (!math::BoxFrustumCollision(light->node->GetFrustumAABB(), m_camera->GetFrustum())) {
+		if (!m_camera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
 			continue;
 		}
 
@@ -476,7 +477,7 @@ void GLForwardRenderer::RenderSpotLights()
 
 		for (auto& geometry : m_glGeometries) {
 			// view frustum culling
-			if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+			if (!m_camera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
 				continue;
 			}
 
@@ -573,7 +574,7 @@ void GLForwardRenderer::RenderPunctualLights()
 
 		for (auto& geometry : m_glGeometries) {
 			// view frustum culling
-			if (!math::BoxFrustumCollision(geometry->node->GetAABB(), m_camera->GetFrustum())) {
+			if (!m_camera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
 				continue;
 			}
 
@@ -632,7 +633,7 @@ void GLForwardRenderer::RenderBoundingBoxes()
 
 	glBindVertexArray(m_bbVao);
 
-	auto RenderBox = [&](Box box, glm::vec4 color) {
+	auto RenderBox = [&](math::AABB box, glm::vec4 color) {
 		const GLfloat data[] = {
 			box.min.x,
 			box.min.y,

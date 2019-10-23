@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -19,20 +20,20 @@ bool EpsilonEqualsZero(T input)
 
 inline glm::mat4 TransformMatrixFromTOS(glm::vec3 scale, glm::quat orientation, glm::vec3 translation)
 {
-	glm::mat4 S = glm::scale(scale);
-	glm::mat4 R = glm::toMat4(orientation);
-	glm::mat4 T = glm::translate(translation);
+	const auto s = glm::scale(scale);
+	const auto r = glm::toMat4(orientation);
+	const auto t = glm::translate(translation);
 
-	return T * R * S;
+	return t * r * s;
 }
 
 inline glm::mat4 TransformMatrixFromTRS(glm::vec3 scale, glm::vec3 raxis, float rads, glm::vec3 translation)
 {
-	glm::mat4 S = glm::scale(scale);
-	glm::mat4 R = glm::rotate(rads, raxis);
-	glm::mat4 T = glm::translate(translation);
+	const auto s = glm::scale(scale);
+	const auto r = glm::rotate(rads, raxis);
+	const auto t = glm::translate(translation);
 
-	return T * R * S;
+	return t * r * s;
 }
 
 inline glm::quat OrientationFromLookatAndPosition(glm::vec3 lookat, glm::vec3 position)
@@ -54,94 +55,6 @@ inline glm::quat OrientationFromLookatAndPosition(glm::vec3 lookat, glm::vec3 po
 	return glm::normalize(glm::quatLookAt(direction, glm::vec3(0.f, 1.f, 0.f)));
 }
 
-inline Box TransformedAABB(Box aabb, const glm::mat4& mat)
-{
-	const auto center = (aabb.min + aabb.max) / 2.f;
-	const auto extend = (aabb.max - aabb.min) / 2.f;
-
-	const auto newCenter = glm::vec3(mat * glm::vec4(center, 1.f));
-
-	glm::mat4 absMat{};
-
-	for (auto j = 0; j < 3; ++j) {
-		for (auto i = 0; i < 3; ++i) {
-			absMat[i][j] = glm::abs(mat[i][j]);
-		}
-	}
-
-	const auto newExtend = glm::vec3(absMat * glm::vec4(extend, 0.f));
-
-	return { newCenter - newExtend, newCenter + newExtend };
-}
-
-// TODO: add Intersection.h to core
-inline void NormalizePlane(Plane& plane)
-{
-	const auto mag = glm::length(glm::vec3(plane.a, plane.b, plane.c));
-	plane.a = plane.a / mag;
-	plane.b = plane.b / mag;
-	plane.c = plane.c / mag;
-	plane.d = plane.d / mag;
-}
-
-// signed distance in units of magnitude of the plane's vector n = (a,b,c)
-// to obtain true distance, normalize the plane
-inline float PlaneToPointDistance(const Plane& plane, glm::vec3 pt)
-{
-	return plane.a * pt.x + plane.b * pt.y + plane.c * pt.z + plane.d;
-}
-
-// Hartmann/Gribbs method: see paper for usage
-template<bool normalize = true>
-void ExtractFrustumPlanes(Frustum& f, const glm::mat4& comboMatrix)
-{
-	// Left clipping plane
-	f.planes[Frustum::LEFT].a = comboMatrix[0][3] + comboMatrix[0][0];
-	f.planes[Frustum::LEFT].b = comboMatrix[1][3] + comboMatrix[1][0];
-	f.planes[Frustum::LEFT].c = comboMatrix[2][3] + comboMatrix[2][0];
-	f.planes[Frustum::LEFT].d = comboMatrix[3][3] + comboMatrix[3][0];
-
-	// Right clipping plane
-	f.planes[Frustum::RIGHT].a = comboMatrix[0][3] - comboMatrix[0][0];
-	f.planes[Frustum::RIGHT].b = comboMatrix[1][3] - comboMatrix[1][0];
-	f.planes[Frustum::RIGHT].c = comboMatrix[2][3] - comboMatrix[2][0];
-	f.planes[Frustum::RIGHT].d = comboMatrix[3][3] - comboMatrix[3][0];
-
-	// Top clipping plane
-	f.planes[Frustum::TOP].a = comboMatrix[0][3] - comboMatrix[0][1];
-	f.planes[Frustum::TOP].b = comboMatrix[1][3] - comboMatrix[1][1];
-	f.planes[Frustum::TOP].c = comboMatrix[2][3] - comboMatrix[2][1];
-	f.planes[Frustum::TOP].d = comboMatrix[3][3] - comboMatrix[3][1];
-
-	// Bottom clipping plane
-	f.planes[Frustum::BOTTOM].a = comboMatrix[0][3] + comboMatrix[0][1];
-	f.planes[Frustum::BOTTOM].b = comboMatrix[1][3] + comboMatrix[1][1];
-	f.planes[Frustum::BOTTOM].c = comboMatrix[2][3] + comboMatrix[2][1];
-	f.planes[Frustum::BOTTOM].d = comboMatrix[3][3] + comboMatrix[3][1];
-
-	// Near clipping plane
-	f.planes[Frustum::NEAR_].a = comboMatrix[0][3] + comboMatrix[0][2];
-	f.planes[Frustum::NEAR_].b = comboMatrix[1][3] + comboMatrix[1][2];
-	f.planes[Frustum::NEAR_].c = comboMatrix[2][3] + comboMatrix[2][2];
-	f.planes[Frustum::NEAR_].d = comboMatrix[3][3] + comboMatrix[3][2];
-
-	// Far clipping plane
-	f.planes[Frustum::FAR_].a = comboMatrix[0][3] - comboMatrix[0][2];
-	f.planes[Frustum::FAR_].b = comboMatrix[1][3] - comboMatrix[1][2];
-	f.planes[Frustum::FAR_].c = comboMatrix[2][3] - comboMatrix[2][2];
-	f.planes[Frustum::FAR_].d = comboMatrix[3][3] - comboMatrix[3][2];
-
-	// Normalize the plane equations, if requested
-	if constexpr (normalize) {
-		NormalizePlane(f.planes[0]);
-		NormalizePlane(f.planes[1]);
-		NormalizePlane(f.planes[2]);
-		NormalizePlane(f.planes[3]);
-		NormalizePlane(f.planes[4]);
-		NormalizePlane(f.planes[5]);
-	}
-}
-
 enum class Intersection
 {
 	OUTSIDE,
@@ -149,53 +62,49 @@ enum class Intersection
 	INTERSECT
 };
 
-// considers b and f are in same space
-inline Intersection BoxFrustumIntersectionTest(Box b, const Frustum& f)
-{
-	auto res = Intersection::INSIDE;
+struct AABB {
+	glm::vec3 min{};
+	glm::vec3 max{};
 
-	// for each plane do ...
-	for (auto& pl : f.planes) {
+	[[nodiscard]] glm::vec3 GetCenter() const { return (min + max) / 2.f; }
+	[[nodiscard]] glm::vec3 GetExtend() const { return (max - min) / 2.f; }
 
-		const auto planeNormal = glm::vec3(pl.a, pl.b, pl.c);
+	void Transform(const glm::mat4& mat)
+	{
+		const auto newCenter = glm::vec3(mat * glm::vec4(GetCenter(), 1.f));
 
-		auto vertexP = b.min;
-		if (planeNormal.x >= 0)
-			vertexP.x = b.max.x;
-		if (planeNormal.y >= 0)
-			vertexP.y = b.max.y;
-		if (planeNormal.z >= 0)
-			vertexP.z = b.max.z;
+		glm::mat4 absMat{};
 
-		auto vertexN = b.max;
-		if (planeNormal.x >= 0)
-			vertexN.x = b.min.x;
-		if (planeNormal.y >= 0)
-			vertexN.y = b.min.y;
-		if (planeNormal.z >= 0)
-			vertexN.z = b.min.z;
-
-		if (PlaneToPointDistance(pl, vertexP) < 0) {
-			return Intersection::OUTSIDE;
+		for (auto j = 0; j < 3; ++j) {
+			for (auto i = 0; i < 3; ++i) {
+				absMat[i][j] = glm::abs(mat[i][j]);
+			}
 		}
 
-		if (PlaneToPointDistance(pl, vertexN) < 0) {
-			res = Intersection::INTERSECT;
-		}
-	}
-	return res;
-}
+		const auto newExtend = glm::vec3(absMat * glm::vec4(GetExtend(), 0.f));
 
-// WIP: name?
-inline bool BoxFrustumCollision(Box b, const Frustum& f)
-{
-	switch (BoxFrustumIntersectionTest(b, f)) {
-		case Intersection::INSIDE:
-		case Intersection::INTERSECT: return true;
-		case Intersection::OUTSIDE:;
+		min = newCenter - newExtend;
+		max = newCenter + newExtend;
 	}
-	return false;
-}
+};
+
+struct Plane {
+	// ax + by + cz + d = 0
+	float a, b, c, d;
+
+	void Normalize()
+	{
+		const auto mag = glm::length(glm::vec3(a, b, c));
+		a = a / mag;
+		b = b / mag;
+		c = c / mag;
+		d = d / mag;
+	}
+
+	// signed distance in units of magnitude of the plane's vector n = (a,b,c)
+	// to obtain true distance, normalize the plane
+	[[nodiscard]] float DistanceFromPoint(glm::vec3 pt) const { return a * pt.x + b * pt.y + c * pt.z + d; }
+};
 
 inline glm::vec3 IntersectionOfThreePlanes(Plane p0, Plane p1, Plane p2)
 {
@@ -225,39 +134,144 @@ inline glm::vec3 IntersectionOfThreePlanes(Plane p0, Plane p1, Plane p2)
 	return intr;
 }
 
-// Atten: PYRAMID
-inline Box CreateBoxFromFrustumPyramid(glm::vec3 center, const Frustum& f)
-{
-	Box box{};
+struct Frustum {
+	enum
+	{
+		TOP = 0,
+		BOTTOM,
+		LEFT,
+		RIGHT,
+		NEAR_,
+		FAR_
+	};
 
-	auto ftr
-		= math::IntersectionOfThreePlanes(f.planes[Frustum::TOP], f.planes[Frustum::RIGHT], f.planes[Frustum::FAR_]);
+	std::array<Plane, 6> planes;
 
-	box.min = ftr;
-	box.max = ftr;
+	// Hartmann/Gribbs method: see paper for usage
+	template<bool normalize = true>
+	void ExtractFromMatrix(const glm::mat4& comboMatrix)
+	{
+		// Left clipping plane
+		planes[LEFT].a = comboMatrix[0][3] + comboMatrix[0][0];
+		planes[LEFT].b = comboMatrix[1][3] + comboMatrix[1][0];
+		planes[LEFT].c = comboMatrix[2][3] + comboMatrix[2][0];
+		planes[LEFT].d = comboMatrix[3][3] + comboMatrix[3][0];
 
-	auto ftl
-		= math::IntersectionOfThreePlanes(f.planes[Frustum::TOP], f.planes[Frustum::LEFT], f.planes[Frustum::FAR_]);
+		// Right clipping plane
+		planes[RIGHT].a = comboMatrix[0][3] - comboMatrix[0][0];
+		planes[RIGHT].b = comboMatrix[1][3] - comboMatrix[1][0];
+		planes[RIGHT].c = comboMatrix[2][3] - comboMatrix[2][0];
+		planes[RIGHT].d = comboMatrix[3][3] - comboMatrix[3][0];
 
-	box.min = glm::min(box.min, ftl);
-	box.max = glm::max(box.max, ftl);
+		// Top clipping plane
+		planes[TOP].a = comboMatrix[0][3] - comboMatrix[0][1];
+		planes[TOP].b = comboMatrix[1][3] - comboMatrix[1][1];
+		planes[TOP].c = comboMatrix[2][3] - comboMatrix[2][1];
+		planes[TOP].d = comboMatrix[3][3] - comboMatrix[3][1];
 
-	auto fbr
-		= math::IntersectionOfThreePlanes(f.planes[Frustum::BOTTOM], f.planes[Frustum::RIGHT], f.planes[Frustum::FAR_]);
+		// Bottom clipping plane
+		planes[BOTTOM].a = comboMatrix[0][3] + comboMatrix[0][1];
+		planes[BOTTOM].b = comboMatrix[1][3] + comboMatrix[1][1];
+		planes[BOTTOM].c = comboMatrix[2][3] + comboMatrix[2][1];
+		planes[BOTTOM].d = comboMatrix[3][3] + comboMatrix[3][1];
 
-	box.min = glm::min(box.min, fbr);
-	box.max = glm::max(box.max, fbr);
+		// Near clipping plane
+		planes[NEAR_].a = comboMatrix[0][3] + comboMatrix[0][2];
+		planes[NEAR_].b = comboMatrix[1][3] + comboMatrix[1][2];
+		planes[NEAR_].c = comboMatrix[2][3] + comboMatrix[2][2];
+		planes[NEAR_].d = comboMatrix[3][3] + comboMatrix[3][2];
 
-	auto fbl
-		= math::IntersectionOfThreePlanes(f.planes[Frustum::BOTTOM], f.planes[Frustum::LEFT], f.planes[Frustum::FAR_]);
+		// Far clipping plane
+		planes[FAR_].a = comboMatrix[0][3] - comboMatrix[0][2];
+		planes[FAR_].b = comboMatrix[1][3] - comboMatrix[1][2];
+		planes[FAR_].c = comboMatrix[2][3] - comboMatrix[2][2];
+		planes[FAR_].d = comboMatrix[3][3] - comboMatrix[3][2];
 
-	box.min = glm::min(box.min, fbl);
-	box.max = glm::max(box.max, fbl);
+		// Normalize the plane equations, if requested
+		if constexpr (normalize) {
+			for (auto& p : planes) {
+				p.Normalize();
+			}
+		}
+	}
 
-	box.min = glm::min(box.min, center);
-	box.max = glm::max(box.max, center);
+	// considers aabb and f are in same space
+	[[nodiscard]] Intersection IntersectionTestWithAABB(AABB aabb)
+	{
+		auto res = Intersection::INSIDE;
 
-	return box;
-}
+		// for each plane do ...
+		for (auto& pl : planes) {
+
+			const auto planeNormal = glm::vec3(pl.a, pl.b, pl.c);
+
+			auto vertexP = aabb.min;
+			if (planeNormal.x >= 0)
+				vertexP.x = aabb.max.x;
+			if (planeNormal.y >= 0)
+				vertexP.y = aabb.max.y;
+			if (planeNormal.z >= 0)
+				vertexP.z = aabb.max.z;
+
+			auto vertexN = aabb.max;
+			if (planeNormal.x >= 0)
+				vertexN.x = aabb.min.x;
+			if (planeNormal.y >= 0)
+				vertexN.y = aabb.min.y;
+			if (planeNormal.z >= 0)
+				vertexN.z = aabb.min.z;
+
+			if (pl.DistanceFromPoint(vertexP) < 0) {
+				return Intersection::OUTSIDE;
+			}
+
+			if (pl.DistanceFromPoint(vertexN) < 0) {
+				res = Intersection::INTERSECT;
+			}
+		}
+		return res;
+	}
+
+	[[nodiscard]] bool IntersectsAABB(AABB aabb)
+	{
+		switch (IntersectionTestWithAABB(aabb)) {
+			case Intersection::INSIDE:
+			case Intersection::INTERSECT: return true;
+			case Intersection::OUTSIDE:;
+		}
+		return false;
+	}
+
+	// TODO: for better precision create using all points of the frustum
+	[[nodiscard]] AABB FrustumPyramidAABB(glm::vec3 apex)
+	{
+		AABB box{};
+
+		auto ftr = IntersectionOfThreePlanes(planes[TOP], planes[RIGHT], planes[FAR_]);
+
+		box.min = ftr;
+		box.max = ftr;
+
+		auto ftl = IntersectionOfThreePlanes(planes[TOP], planes[LEFT], planes[FAR_]);
+
+		box.min = glm::min(box.min, ftl);
+		box.max = glm::max(box.max, ftl);
+
+		auto fbr = IntersectionOfThreePlanes(planes[BOTTOM], planes[RIGHT], planes[FAR_]);
+
+		box.min = glm::min(box.min, fbr);
+		box.max = glm::max(box.max, fbr);
+
+		auto fbl = IntersectionOfThreePlanes(planes[BOTTOM], planes[LEFT], planes[FAR_]);
+
+		box.min = glm::min(box.min, fbl);
+		box.max = glm::max(box.max, fbl);
+
+		box.min = glm::min(box.min, apex);
+		box.max = glm::max(box.max, apex);
+
+		return box;
+	}
+};
 
 } // namespace math
