@@ -22,7 +22,9 @@ constexpr Type Color = (1 << 9);
 constexpr Type Multiline = (1 << 10);
 
 // Only relevant for float types. (could be used for vec3 in the future)
-constexpr Type Degrees = (1 << 11);
+// Automatically converts the variable to degrees in the editor.
+// Note: currently does not apply to scene json files.
+constexpr Type Rads = (1 << 11);
 
 
 template<typename... Flags>

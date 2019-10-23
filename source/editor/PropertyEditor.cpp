@@ -10,6 +10,7 @@
 #include "core/MathAux.h"
 
 #include "editor/imgui/ImguiUtil.h"
+#include "editor/DataStrings.h"
 
 
 namespace {
@@ -103,7 +104,7 @@ struct ReflectionToImguiVisitor {
 
 	bool Inner(float& t, const Property& p)
 	{
-		if (p.HasFlags(Degrees)) {
+		if (p.HasFlags(Rads)) {
 			auto degrees = glm::degrees(t);
 			if (ImGui::DragFloat(name, &degrees, 0.01f)) {
 				t = glm::radians(degrees);
@@ -174,7 +175,11 @@ struct ReflectionToImguiVisitor {
 		auto str = entry->name;
 		bool open = ImGui::CollapsingHeader(name);
 		bool result = PodDropTarget(pod);
-		TEXT_TOOLTIP("{}", AssetManager::GetPodUri(pod));
+		TEXT_TOOLTIP("Pod Internal Path:\n{}\n", AssetManager::GetPodUri(pod));
+		if (depth == 0) {
+			Editor::CollapsingHeaderTooltip(help_PropPodEditing);
+		}
+
 		if (open) {
 			ImGui::PushID(static_cast<uint32>(entry->uid) * 1024);
 			// GenerateUniqueName(p);
@@ -274,10 +279,11 @@ struct ReflectionToImguiVisitor {
 			bool shouldReloadMaterials = false;
 			if (massEditMaterialVector == nullptr) {
 				ImGui::Checkbox("Mass Edit Materials", &massEditMaterials);
+				Editor::HelpTooltipInline(help_PropMassEditMats);
 				ImGui::SameLine();
 
 				shouldReloadMaterials = ImGui::Button("Reload Materials");
-
+				Editor::HelpTooltipInline(help_PropMassRestoreMats);
 				if (massEditMaterials) {
 					massEditMaterialVector = &t;
 					isThisMassEditing = true;
@@ -460,8 +466,10 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 	}
 
 	ImGui::Checkbox("Local Mode", &m_localMode);
+	Editor::HelpTooltipInline("Toggles local/global space for TRS and transform matrix editing.");
 	ImGui::SameLine(0.f, 16.f);
 	ImGui::Checkbox("Display Matrix", &m_displayMatrix);
+	Editor::HelpTooltipInline("Toggles visiblity and editing of matricies as a row major table.");
 
 	if (m_displayMatrix) {
 
