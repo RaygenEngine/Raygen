@@ -37,6 +37,13 @@ void GLRendererBase::ChangeVSync(bool enabled)
 	wglSwapIntervalEXT(enabled);
 }
 
+void GLRendererBase::Render()
+{
+	if (m_previewerEnabled) {
+		m_glPreviewer->RenderPreview();
+	}
+}
+
 GLRendererBase::GLRendererBase()
 {
 	m_glAssetManager = std::make_unique<GLAssetManager>();
