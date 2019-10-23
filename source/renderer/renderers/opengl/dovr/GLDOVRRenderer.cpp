@@ -18,6 +18,10 @@
 
 namespace ogl {
 
+constexpr int32 textMaxWidth = 3840;
+constexpr int32 textMaxHeight = 2160;
+constexpr glm::vec2 invTextureSize = { 1.f / textMaxWidth, 1.f / textMaxHeight };
+
 GLDOVRRenderer::Eye::Eye(ovrSession session, CameraNode* camera)
 	: session(session)
 	, camera(camera)
@@ -107,10 +111,6 @@ void GLDOVRRenderer::Eye::SwapTexture()
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// glViewport(0, 0, texSize.w, texSize.h);
-	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	// glEnable(GL_FRAMEBUFFER_SRGB);
 }
 
 void GLDOVRRenderer::Eye::Commit()
@@ -130,10 +130,9 @@ GLDOVRRenderer::GBuffer::~GBuffer()
 	glDeleteTextures(1, &depthAttachment);
 }
 
-// WIP
 GLDOVRRenderer::~GLDOVRRenderer()
 {
-	auto session = m_ovr->GetOVRSession();
+	const auto session = m_ovr->GetOVRSession();
 
 	ovr_DestroyMirrorTexture(session, m_mirrorTexture);
 	glDeleteFramebuffers(1, &m_mirrorFBO);
@@ -290,18 +289,13 @@ void GLDOVRRenderer::InitRenderBuffers()
 	m_eyes[0] = std::make_unique<Eye>(session, m_ovr->GetEyeCamera(0));
 	m_eyes[1] = std::make_unique<Eye>(session, m_ovr->GetEyeCamera(1));
 
-	// WIP
-	const auto cam = m_eyes[0]->camera;
-	auto width = cam->GetWidth();
-	auto height = cam->GetHeight();
-
 	glGenFramebuffers(1, &m_gBuffer.fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.fbo);
 
 	// - rgb: position
 	glGenTextures(1, &m_gBuffer.positionsAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.positionsAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, textMaxWidth, textMaxHeight, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.positionsAttachment, 0);
@@ -309,7 +303,7 @@ void GLDOVRRenderer::InitRenderBuffers()
 	// - rgb: normal
 	glGenTextures(1, &m_gBuffer.normalsAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.normalsAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, textMaxWidth, textMaxHeight, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_gBuffer.normalsAttachment, 0);
@@ -317,7 +311,7 @@ void GLDOVRRenderer::InitRenderBuffers()
 	// - rgb: albedo, a: opacity
 	glGenTextures(1, &m_gBuffer.albedoOpacityAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.albedoOpacityAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textMaxWidth, textMaxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_gBuffer.albedoOpacityAttachment, 0);
@@ -325,7 +319,7 @@ void GLDOVRRenderer::InitRenderBuffers()
 	// - r: metallic, g: roughness, b: occlusion, a: occlusion strength
 	glGenTextures(1, &m_gBuffer.specularAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.specularAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textMaxWidth, textMaxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_gBuffer.specularAttachment, 0);
@@ -333,7 +327,7 @@ void GLDOVRRenderer::InitRenderBuffers()
 	// - rgb: emissive, a: <reserved>
 	glGenTextures(1, &m_gBuffer.emissiveAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.emissiveAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textMaxWidth, textMaxHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, m_gBuffer.emissiveAttachment, 0);
@@ -344,7 +338,8 @@ void GLDOVRRenderer::InitRenderBuffers()
 
 	glGenTextures(1, &m_gBuffer.depthAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.depthAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, textMaxWidth, textMaxHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_gBuffer.depthAttachment, 0);
@@ -386,9 +381,9 @@ void GLDOVRRenderer::InitScene()
 	InitRenderBuffers();
 }
 
-void GLDOVRRenderer::RenderGBuffer(Eye* eye)
+void GLDOVRRenderer::RenderGBuffer(int32 eyeIndex)
 {
-	const auto cam = eye->camera;
+	const auto cam = m_eyes[eyeIndex]->camera;
 
 	glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
 
@@ -402,14 +397,14 @@ void GLDOVRRenderer::RenderGBuffer(Eye* eye)
 	auto gs = m_gBuffer.shader;
 	glUseProgram(gs->programId);
 
-	const auto vp = eye->camera->GetViewProjectionMatrix();
+	const auto vp = cam->GetViewProjectionMatrix();
 
 	// render geometry (non-instanced)
 	for (auto& geometry : m_glGeometries) {
-		// view frustum culling WIP
-		// if (!math::BoxFrustumCollision(geometry->node->GetAABB(), eye->camera->GetFrustum())) {
-		//	continue;
-		//}
+		// view frustum culling
+		if (!math::BoxFrustumCollision(geometry->node->GetAABB(), cam->GetFrustum())) {
+			continue;
+		}
 
 		auto m = geometry->node->GetWorldMatrix();
 		auto mvp = vp * m;
@@ -453,21 +448,22 @@ void GLDOVRRenderer::RenderGBuffer(Eye* eye)
 	glDisable(GL_DEPTH_TEST);
 }
 
-void GLDOVRRenderer::RenderDirectionalLights(Eye* eye)
+void GLDOVRRenderer::RenderDirectionalLights(int32 eyeIndex)
 {
+	const auto cam = m_eyes[eyeIndex]->camera;
+
 	auto ls = m_deferredDirectionalLightShader;
 
 	for (auto light : m_glDirectionalLights) {
 
-		// light AABB camera frustum culling WIP
-		// if (!math::BoxFrustumCollision(light->node->GetFrustumAABB(), eye->camera->GetFrustum())) {
-		//	continue;
-		//}
+		// light AABB camera frustum culling
+		if (!math::BoxFrustumCollision(light->node->GetFrustumAABB(), cam->GetFrustum())) {
+			continue;
+		}
 
 		light->RenderShadowMap(m_glGeometries);
 
-		const auto cam = eye->camera;
-		const auto fbo = eye->outFbo;
+		const auto fbo = m_eyes[eyeIndex]->outFbo;
 
 		glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
 
@@ -479,8 +475,7 @@ void GLDOVRRenderer::RenderDirectionalLights(Eye* eye)
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", eye->camera->GetWorldTranslation());
-		const glm::vec2 invTextureSize = { 1.f / cam->GetWidth(), 1.f / cam->GetHeight() };
+		ls->SendVec3("wcs_viewPos", cam->GetWorldTranslation());
 		ls->SendVec2("invTextureSize", invTextureSize);
 
 		// light
@@ -509,21 +504,23 @@ void GLDOVRRenderer::RenderDirectionalLights(Eye* eye)
 	}
 }
 
-void GLDOVRRenderer::RenderSpotLights(Eye* eye)
+void GLDOVRRenderer::RenderSpotLights(int32 eyeIndex)
 {
+	const auto cam = m_eyes[eyeIndex]->camera;
+
 	auto ls = m_deferredSpotLightShader;
 
 	for (auto light : m_glSpotLights) {
 
-		// light AABB camera frustum culling WIP
-		// if (!math::BoxFrustumCollision(light->node->GetFrustumAABB(), eye->camera->GetFrustum())) {
-		//	continue;
-		//}
+		// light AABB camera frustum culling
+		if (!math::BoxFrustumCollision(light->node->GetFrustumAABB(), cam->GetFrustum())) {
+			continue;
+		}
 
 		light->RenderShadowMap(m_glGeometries);
 
-		const auto cam = eye->camera;
-		const auto fbo = eye->outFbo;
+
+		const auto fbo = m_eyes[eyeIndex]->outFbo;
 
 		glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
 
@@ -535,8 +532,7 @@ void GLDOVRRenderer::RenderSpotLights(Eye* eye)
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", eye->camera->GetWorldTranslation());
-		const glm::vec2 invTextureSize = { 1.f / cam->GetWidth(), 1.f / cam->GetHeight() };
+		ls->SendVec3("wcs_viewPos", cam->GetWorldTranslation());
 		ls->SendVec2("invTextureSize", invTextureSize);
 
 		// light
@@ -569,7 +565,7 @@ void GLDOVRRenderer::RenderSpotLights(Eye* eye)
 	}
 }
 
-void GLDOVRRenderer::RenderPunctualLights(Eye* eye)
+void GLDOVRRenderer::RenderPunctualLights(int32 eyeIndex)
 {
 	auto ls = m_deferredPunctualLightShader;
 
@@ -577,8 +573,8 @@ void GLDOVRRenderer::RenderPunctualLights(Eye* eye)
 
 		light->RenderShadowMap(m_glGeometries);
 
-		const auto cam = eye->camera;
-		const auto fbo = eye->outFbo;
+		const auto cam = m_eyes[eyeIndex]->camera;
+		const auto fbo = m_eyes[eyeIndex]->outFbo;
 
 		glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
 
@@ -590,8 +586,7 @@ void GLDOVRRenderer::RenderPunctualLights(Eye* eye)
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", eye->camera->GetWorldTranslation());
-		const glm::vec2 invTextureSize = { 1.f / cam->GetWidth(), 1.f / cam->GetHeight() };
+		ls->SendVec3("wcs_viewPos", cam->GetWorldTranslation());
 		ls->SendVec2("invTextureSize", invTextureSize);
 
 		// light
@@ -619,10 +614,10 @@ void GLDOVRRenderer::RenderPunctualLights(Eye* eye)
 	}
 }
 
-void GLDOVRRenderer::RenderAmbientLight(Eye* eye)
+void GLDOVRRenderer::RenderAmbientLight(int32 eyeIndex)
 {
-	const auto cam = eye->camera;
-	const auto fbo = eye->outFbo;
+	const auto cam = m_eyes[eyeIndex]->camera;
+	const auto fbo = m_eyes[eyeIndex]->outFbo;
 
 	glViewport(0, 0, cam->GetWidth(), cam->GetHeight());
 
@@ -634,11 +629,10 @@ void GLDOVRRenderer::RenderAmbientLight(Eye* eye)
 
 	glUseProgram(m_ambientLightShader->programId);
 
-	auto vpInv = glm::inverse(eye->camera->GetViewProjectionMatrix());
+	auto vpInv = glm::inverse(cam->GetViewProjectionMatrix());
 
 	m_ambientLightShader->SendMat4("vp_inv", vpInv);
-	m_ambientLightShader->SendVec3("wcs_viewPos", eye->camera->GetWorldTranslation());
-	const glm::vec2 invTextureSize = { 1.f / cam->GetWidth(), 1.f / cam->GetHeight() };
+	m_ambientLightShader->SendVec3("wcs_viewPos", cam->GetWorldTranslation());
 	m_ambientLightShader->SendVec2("invTextureSize", invTextureSize);
 	m_ambientLightShader->SendTexture(m_gBuffer.depthAttachment, 0);
 	m_ambientLightShader->SendCubeTexture(m_skyboxCubemap->id, 1);
@@ -659,45 +653,36 @@ void GLDOVRRenderer::Render()
 		CLOG_ABORT(!OVR_SUCCESS(ovr_WaitToBeginFrame(session, info.frameIndex)), "Oculus Wait to begin frame failure");
 		CLOG_ABORT(!OVR_SUCCESS(ovr_BeginFrame(session, info.frameIndex)), "Oculus Begin frame failure");
 
-
-		for (auto& eye : m_eyes) {
-
-			eye->SwapTexture();
-
-			// geometry pass
-			RenderGBuffer(eye.get());
-			// light pass - blend lights on outFbo
-			RenderDirectionalLights(eye.get());
-			RenderSpotLights(eye.get());
-			RenderPunctualLights(eye.get());
-			// ambient pass
-			RenderAmbientLight(eye.get());
-
-
-			eye->Commit();
-		}
-
 		// Do distortion rendering, Present and flush/sync
 		ovrLayerEyeFovDepth ld = {};
 		ld.Header.Type = ovrLayerType_EyeFovDepth;
 		ld.Header.Flags = ovrLayerFlag_TextureOriginAtBottomLeft; // Because OpenGL.
-
-		ld.ColorTexture[0] = m_eyes[0]->colorTextureChain;
-		ld.DepthTexture[0] = m_eyes[0]->depthTextureChain;
-		ld.ColorTexture[1] = m_eyes[1]->colorTextureChain;
-		ld.DepthTexture[1] = m_eyes[1]->depthTextureChain;
-
-
 		ld.ProjectionDesc = ovrTimewarpProjectionDesc_FromProjection(info.proj, ovrProjection_ClipRangeOpenGL);
 		ld.SensorSampleTime = info.sensorSampleTime;
 
-		ld.Viewport[0] = info.eyeViewports[0];
-		ld.Fov[0] = info.eyeFovs[0];
-		ld.RenderPose[0] = info.eyePoses[0];
-		ld.Viewport[1] = info.eyeViewports[1];
-		ld.Fov[1] = info.eyeFovs[1];
-		ld.RenderPose[1] = info.eyePoses[1];
 
+		for (auto i = 0; i < 2; i++) {
+
+			m_eyes[i]->SwapTexture();
+
+			// geometry pass
+			RenderGBuffer(i);
+			// TODO: copy gBuffer's depth attachment to eye's fbo (i.e fill the depthTextureChain, needed for lag
+			// correction techniques) light pass - blend lights on outFbo
+			RenderDirectionalLights(i);
+			RenderSpotLights(i);
+			RenderPunctualLights(i);
+			// ambient pass
+			RenderAmbientLight(i);
+
+			m_eyes[i]->Commit();
+
+			ld.ColorTexture[i] = m_eyes[i]->colorTextureChain;
+			ld.DepthTexture[i] = m_eyes[i]->depthTextureChain;
+			ld.Viewport[i] = info.eyeViewports[i];
+			ld.Fov[i] = info.eyeFovs[i];
+			ld.RenderPose[i] = info.eyePoses[i];
+		}
 
 		ovrLayerHeader* layers = &ld.Header;
 		CLOG_ABORT(
