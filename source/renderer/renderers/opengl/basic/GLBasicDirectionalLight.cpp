@@ -2,12 +2,14 @@
 
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
+#include "renderer/renderers/opengl/GLPreviewer.h"
 #include "asset/AssetManager.h"
 #include "core/MathAux.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
 namespace ogl {
+
 GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
 	: NodeObserver<DirectionalLightNode, GLRendererBase>(node)
 {
@@ -33,6 +35,8 @@ GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 	float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+	GetGLPreviewer(this)->AddPreview(shadowMap, node->GetName());
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
 	glDrawBuffer(GL_NONE);

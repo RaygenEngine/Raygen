@@ -2,6 +2,7 @@
 
 #include "renderer/renderers/opengl/assets/GLTexture.h"
 #include "renderer/renderers/opengl/GLUtil.h"
+#include "renderer/renderers/opengl/GLPreviewer.h"
 #include "asset/AssetManager.h"
 #include "asset/pods/TexturePod.h"
 
@@ -42,6 +43,9 @@ void GLTexture::Load()
 			const auto typeAndInternalFormat = GetTypeAndInternalFormat(imgPod->isHdr);
 			glTexImage2D(GL_TEXTURE_2D, 0, typeAndInternalFormat.second, imgPod->width, imgPod->height, 0, GL_RGBA,
 				typeAndInternalFormat.first, imgPod->data);
+
+			GetGLPreviewer(this)->AddPreview(id, AssetManager::GetEntry(img)->name);
+
 			break;
 		}
 

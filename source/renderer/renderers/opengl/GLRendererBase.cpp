@@ -2,6 +2,7 @@
 
 #include "renderer/renderers/opengl/GLRendererBase.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
+#include "renderer/renderers/opengl/GLPreviewer.h"
 #include "system/Input.h"
 
 #include <glad/glad.h>
@@ -16,6 +17,18 @@ void GLRendererBase::Update()
 		m_vsyncEnabled = !m_vsyncEnabled;
 		ChangeVSync(m_vsyncEnabled);
 	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::P)) {
+		m_previewerEnabled = !m_previewerEnabled;
+	}
+
+	if (m_previewerEnabled && Engine::GetInput()->IsKeyPressed(XVirtualKey::K1)) {
+		m_glPreviewer->PreviousPreview();
+	}
+
+	if (m_previewerEnabled && Engine::GetInput()->IsKeyPressed(XVirtualKey::K2)) {
+		m_glPreviewer->NextPreview();
+	}
 }
 
 void GLRendererBase::ChangeVSync(bool enabled)
@@ -25,11 +38,9 @@ void GLRendererBase::ChangeVSync(bool enabled)
 }
 
 GLRendererBase::GLRendererBase()
-	: m_assochWnd(nullptr)
-	, m_hdc(nullptr)
-	, m_hglrc(nullptr)
 {
 	m_glAssetManager = std::make_unique<GLAssetManager>();
+	m_glPreviewer = std::make_unique<GLPreviewer>();
 }
 
 GLRendererBase::~GLRendererBase()
@@ -84,6 +95,8 @@ void GLRendererBase::InitRendering(HWND assochWnd, HINSTANCE instance)
 	CLOG_ABORT(!m_hglrc, "Can't create a GL rendering context, error: {}", MB_OK | MB_ICONERROR);
 	CLOG_ABORT(!wglMakeCurrent(m_hdc, m_hglrc), "Can't activate GLRC, error: {}", MB_OK | MB_ICONERROR);
 	CLOG_ABORT(!(gladLoadGL() == 1), "Couldn't load ogl function pointers");
+
+	m_glPreviewer->InitPreviewShaders(m_glAssetManager.get());
 }
 
 void GLRendererBase::SwapBuffers()

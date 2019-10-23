@@ -42,6 +42,7 @@ protected:
 
 	GLuint m_outFbo{ 0u };
 	GLuint m_outColorTexture{ 0u };
+	GLuint m_outDepthTexture{ 0u };
 
 	// bounding boxes
 	GLuint m_bbVao{ 0u };
@@ -69,6 +70,8 @@ protected:
 
 	// Update
 	void RecompileShaders();
+
+	void ActiveCameraResize() override;
 
 public:
 	~GLForwardRenderer();

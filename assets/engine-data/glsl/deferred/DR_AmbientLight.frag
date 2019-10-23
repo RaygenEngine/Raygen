@@ -2,10 +2,9 @@
 
 out vec4 out_color;
 
-in vec2 texCoord;
+in vec2 uv;
 
 uniform vec3 wcs_viewPos;
-uniform vec2 invTextureSize;
 
 uniform mat4 vp_inv;
 
@@ -15,8 +14,8 @@ layout(binding=1) uniform samplerCube skyboxSampler;
 vec3 ReconstructWCS(vec2 uv)
 {
 	vec4 clipPos; // clip space reconstruction
-	clipPos.x = 2.0 * texCoord.x - 1.0;
-	clipPos.y = 2.0 * texCoord.y - 1.0;
+	clipPos.x = 2.0 * uv.x - 1.0;
+	clipPos.y = 2.0 * uv.y - 1.0;
 	clipPos.z = 2.0 * texture(depthSampler, uv.xy).r -1.0;
 	clipPos.w = 1.0;
 	
@@ -27,8 +26,6 @@ vec3 ReconstructWCS(vec2 uv)
 
 void main()
 {
-	vec2 uv = gl_FragCoord.st * invTextureSize;
-	
 	float currentDepth = texture(depthSampler, uv.xy).r;
 
 	out_color = vec4(vec3(0.0), 1.0);

@@ -36,7 +36,7 @@ set(SOURCE_FILES
 
 	renderer/ObserverRenderer.cpp
 	
-
+	renderer/renderers/opengl/GLPreviewer.cpp
 	renderer/renderers/opengl/GLEditorRenderer.cpp
 	renderer/renderers/opengl/GLRendererBase.cpp
 	renderer/renderers/opengl/assets/GLModel.cpp
@@ -50,7 +50,6 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/dovr/GLDOVRRenderer.cpp
 	renderer/renderers/opengl/forward/GLForwardRenderer.cpp
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.cpp
-	renderer/renderers/opengl/previewer/GLPreviewerRenderer.cpp
 
 
 	system/Engine.cpp
@@ -160,6 +159,7 @@ set(HEADER_FILES
 	renderer/util/GLSLutil.h
 	
 	renderer/renderers/opengl/GLAsset.h
+	renderer/renderers/opengl/GLPreviewer.h
 	renderer/renderers/opengl/GLAssetManager.h
 	renderer/renderers/opengl/GLEditorRenderer.h
 	renderer/renderers/opengl/GLRendererBase.h
@@ -175,7 +175,6 @@ set(HEADER_FILES
 	renderer/renderers/opengl/dovr/GLDOVRRenderer.h
 	renderer/renderers/opengl/forward/GLForwardRenderer.h
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.h
-	renderer/renderers/opengl/previewer/GLPreviewerRenderer.h
 
 
 	system/Engine.h

@@ -7,18 +7,18 @@
 
 namespace ogl {
 class GLAssetManager;
-} // namespace ogl
+class GLPreviewer;
 
-
-namespace ogl {
 class GLRendererBase : public ObserverRenderer {
 	HWND m_assochWnd{ nullptr };
 	HDC m_hdc{ nullptr };
 	HGLRC m_hglrc{ nullptr };
 
 	std::unique_ptr<GLAssetManager> m_glAssetManager;
+	std::unique_ptr<GLPreviewer> m_glPreviewer;
 
 	bool m_vsyncEnabled{ true };
+	bool m_previewerEnabled{ false };
 
 public:
 	GLRendererBase();
@@ -28,13 +28,16 @@ public:
 	void InitRendering(HWND assochWnd, HINSTANCE instance) override;
 	void SwapBuffers() override;
 
-	GLAssetManager* GetGLAssetManager() { return m_glAssetManager.get(); }
+	[[nodiscard]] GLAssetManager* GetGLAssetManager() const { return m_glAssetManager.get(); }
+	[[nodiscard]] GLPreviewer* GetGLPreviewer() const { return m_glPreviewer.get(); }
 
 	void Update() override;
 
 	void ChangeVSync(bool newIsEnabled);
 
 	bool SupportsEditor() override { return false; }
+
+	bool IsPreviewerEnabled() const { return m_previewerEnabled; }
 };
 
 template<typename GlRenderer>
@@ -43,4 +46,12 @@ template<typename GlRenderer>
 	static_assert(std::is_base_of_v<GLRendererBase, GlRenderer>, "This call expects a Gl Renderer Object.");
 	return Engine::GetRenderer(glRendererObjectContext)->GetGLAssetManager();
 }
+
+template<typename GlRenderer>
+[[nodiscard]] GLPreviewer* GetGLPreviewer(RendererObject<GlRenderer>* glRendererObjectContext)
+{
+	static_assert(std::is_base_of_v<GLRendererBase, GlRenderer>, "This call expects a Gl Renderer Object.");
+	return Engine::GetRenderer(glRendererObjectContext)->GetGLPreviewer();
+}
+
 } // namespace ogl

@@ -77,6 +77,8 @@ protected:
 	// Update
 	void RecompileShaders();
 
+	void ActiveCameraResize() override;
+
 public:
 	~GLDeferredRenderer() override;
 
