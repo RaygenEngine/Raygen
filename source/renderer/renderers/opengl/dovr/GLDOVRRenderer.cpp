@@ -690,8 +690,10 @@ void GLDOVRRenderer::Render()
 	const auto info = m_ovr->GetRendererInfo();
 
 	if (info.visible) {
-		CLOG_ABORT(!OVR_SUCCESS(ovr_WaitToBeginFrame(session, info.frameIndex)), "Oculus Wait to begin frame failure");
-		CLOG_ABORT(!OVR_SUCCESS(ovr_BeginFrame(session, info.frameIndex)), "Oculus Begin frame failure");
+		auto res = ovr_WaitToBeginFrame(session, info.frameIndex);
+		CLOG_ABORT(!OVR_SUCCESS(res), "Oculus Wait to begin frame failure");
+		res = ovr_BeginFrame(session, info.frameIndex);
+		CLOG_ABORT(!OVR_SUCCESS(res), "Oculus Begin frame failure");
 
 		// Do distortion rendering, Present and flush/sync
 		ovrLayerEyeFovDepth ld = {};
@@ -726,8 +728,9 @@ void GLDOVRRenderer::Render()
 		}
 
 		ovrLayerHeader* layers = &ld.Header;
-		CLOG_ABORT(
-			!OVR_SUCCESS(ovr_EndFrame(session, info.frameIndex, nullptr, &layers, 1)), "Oculus End frame failure");
+
+		res = ovr_EndFrame(session, info.frameIndex, nullptr, &layers, 1);
+		CLOG_ABORT(!OVR_SUCCESS(res), "Oculus End frame failure");
 
 		m_ovr->IncrementFrameIndex();
 	}

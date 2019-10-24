@@ -47,14 +47,14 @@ void OVRNode::PrepareEyes()
 OVRNode::OVRNode()
 {
 	ovrInitParams initParams = { ovrInit_RequestVersion | ovrInit_FocusAware, OVR_MINOR_VERSION, NULL, 0, 0 };
-	ovrResult result = ovr_Initialize(&initParams);
+	auto res = ovr_Initialize(&initParams);
 
-	CLOG_ABORT(OVR_FAILURE(result), "Failed to initialize oculus");
+	CLOG_ABORT(OVR_FAILURE(res), "Failed to initialize oculus");
 
 	ovrGraphicsLuid luid;
-	result = ovr_Create(&m_session, &luid);
+	res = ovr_Create(&m_session, &luid);
 
-	CLOG_ABORT(OVR_FAILURE(result), "Failed to initialize oculus session");
+	CLOG_ABORT(OVR_FAILURE(res), "Failed to initialize oculus session");
 }
 
 OVRNode::~OVRNode()
