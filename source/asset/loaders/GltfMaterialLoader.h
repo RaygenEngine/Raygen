@@ -49,10 +49,12 @@ inline void Load(MaterialPod* pod, const uri::Uri& path)
 		Normal
 	};
 
-	auto LoadTexture = [&](auto textureInfo, PodHandle<TexturePod>& sampler, int32& textCoordIndex, DefType defType) {
+	auto LoadTexture = [&](auto textureInfo, PodHandle<TexturePod>& sampler, int32& textCoordIndex, DefType defType,
+						   bool isSRGBA = false) {
 		if (textureInfo.index != -1) {
 			json data;
 			data["texture"] = textureInfo.index;
+			data["isSRGBA"] = isSRGBA;
 			auto textPath = uri::MakeChildJson(path, data);
 			sampler = AssetManager::GetOrCreate<TexturePod>(textPath);
 
@@ -70,10 +72,10 @@ inline void Load(MaterialPod* pod, const uri::Uri& path)
 
 	// samplers
 	auto& baseColorTextureInfo = gltfMaterial.pbrMetallicRoughness.baseColorTexture;
-	LoadTexture(baseColorTextureInfo, pod->baseColorTexture, pod->baseColorTexCoordIndex, DefType::White);
+	LoadTexture(baseColorTextureInfo, pod->baseColorTexture, pod->baseColorTexCoordIndex, DefType::White, true);
 
 	auto& emissiveTextureInfo = gltfMaterial.emissiveTexture;
-	LoadTexture(emissiveTextureInfo, pod->emissiveTexture, pod->emissiveTexCoordIndex, DefType::White);
+	LoadTexture(emissiveTextureInfo, pod->emissiveTexture, pod->emissiveTexCoordIndex, DefType::White, true);
 
 	auto& normalTextureInfo = gltfMaterial.normalTexture;
 	LoadTexture(normalTextureInfo, pod->normalTexture, pod->normalTexCoordIndex, DefType::Normal);

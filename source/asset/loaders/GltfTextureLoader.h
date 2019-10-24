@@ -13,6 +13,7 @@ static void Load(TexturePod* pod, const uri::Uri& path)
 
 	nlohmann::json j = uri::GetJson(path);
 	int32 ext = j["texture"].get<int32>();
+	pod->isSRGBA = j["isSRGBA"].get<bool>();
 
 	const tinygltf::Model& model = pParent.Lock()->data;
 

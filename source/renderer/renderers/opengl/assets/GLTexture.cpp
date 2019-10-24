@@ -30,8 +30,9 @@ void GLTexture::Load()
 	glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GetGLWrapping(textureData->wrapT));
 	glTexParameteri(textureTarget, GL_TEXTURE_WRAP_R, GetGLWrapping(textureData->wrapR));
 
-	const auto GetTypeAndInternalFormat = [](bool isHdr) -> std::pair<GLenum, GLint> {
-		return isHdr ? std::make_pair(GL_FLOAT, GL_RGBA32F) : std::make_pair(GL_UNSIGNED_BYTE, GL_RGBA);
+	const auto GetTypeAndInternalFormat = [&](bool isHdr) -> std::pair<GLenum, GLint> {
+		return isHdr ? std::make_pair(GL_FLOAT, GL_RGBA32F)
+					 : std::make_pair(GL_UNSIGNED_BYTE, textureData->isSRGBA ? GL_SRGB_ALPHA : GL_RGBA);
 	};
 
 	switch (textureData->target) {

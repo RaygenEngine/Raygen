@@ -25,6 +25,7 @@ protected:
 	GLShader* m_forwardPunctualLightShader{ nullptr };
 	GLShader* m_cubemapInfDistShader{ nullptr };
 	GLShader* m_bBoxShader{ nullptr };
+	GLShader* m_dummyPostProcShader{ nullptr };
 	GLShader* m_windowShader{ nullptr };
 
 	// observers
@@ -38,9 +39,12 @@ protected:
 	GLuint m_msaaColorTexture{ 0u };
 	GLuint m_msaaDepthStencilRbo{ 0u };
 
+	GLuint m_intrFbo{ 0u };
+	GLuint m_intrColorTexture{ 0u };
+	GLuint m_intrDepthTexture{ 0u };
+
 	GLuint m_outFbo{ 0u };
 	GLuint m_outColorTexture{ 0u };
-	GLuint m_outDepthTexture{ 0u };
 
 	// bounding boxes
 	GLuint m_bbVao{ 0u };
@@ -65,7 +69,8 @@ protected:
 	void RenderPunctualLights();
 	void RenderBoundingBoxes();
 	void RenderSkybox();
-	void BlitMSAAtoOut();
+	void BlitMSAAtoIntr();
+	void RenderPostProcess();
 	void RenderWindow();
 
 	// Update

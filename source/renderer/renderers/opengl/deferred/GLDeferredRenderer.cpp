@@ -156,7 +156,8 @@ void GLDeferredRenderer::InitShaders()
 	m_ambientLightShader->StoreUniformLoc("ambient");
 
 	m_dummyPostProcShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DummyPostProc.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/post-process/DummyPostProc.json");
+	m_dummyPostProcShader->StoreUniformLoc("gamma");
 
 	m_windowShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/general/QuadWriteTexture.json");
@@ -541,6 +542,7 @@ void GLDeferredRenderer::RenderPostProcess()
 
 	glUseProgram(m_dummyPostProcShader->programId);
 
+	m_dummyPostProcShader->SendFloat("gamma", m_gamma);
 	m_dummyPostProcShader->SendTexture(m_lightTexture, 0);
 
 	// big triangle trick, no vao
