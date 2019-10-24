@@ -39,12 +39,9 @@ void GLDeferredRenderer::InitObservers()
 	m_camera = Engine::GetWorld()->GetActiveCamera();
 	CLOG_WARN(!m_camera, "Renderer failed to find camera.");
 
-	auto skyboxNode = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
-	CLOG_ABORT(!skyboxNode, "This renderer expects a skybox node to be present!");
-
 	// TODO: should be possible to update skybox, decide on singleton observers to do this automatically
+	auto skyboxNode = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
 	m_skyboxCubemap = GetGLAssetManager()->GpuGetOrCreate<GLTexture>(skyboxNode->GetSkyMap());
-
 
 	RegisterObserverContainer_AutoLifetimes(m_glGeometries);
 	RegisterObserverContainer_AutoLifetimes(m_glDirectionalLights);
@@ -273,13 +270,26 @@ void GLDeferredRenderer::InitScene()
 	InitRenderBuffers();
 }
 
+void GLDeferredRenderer::ClearBuffers()
+{
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.fbo);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+}
+
 void GLDeferredRenderer::RenderGBuffer()
 {
 	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
-
-	glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.fbo);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -336,20 +346,6 @@ void GLDeferredRenderer::RenderGBuffer()
 	}
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
-}
-
-void GLDeferredRenderer::ClearFbos()
-{
-	// clean outFbo for next frame
-	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
-
-	glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void GLDeferredRenderer::RenderDirectionalLights()
@@ -565,12 +561,12 @@ void GLDeferredRenderer::RenderWindow()
 
 void GLDeferredRenderer::Render()
 {
+	ClearBuffers();
+
 	if (m_camera) {
 		// geometry pass
 		RenderGBuffer();
-		// clear out fbo
-		ClearFbos();
-		// light pass - blend lights on outFbo
+		// light pass - blend lights on lightFbo
 		RenderDirectionalLights();
 		RenderSpotLights();
 		RenderPunctualLights();
@@ -581,8 +577,9 @@ void GLDeferredRenderer::Render()
 		// render to window
 		RenderWindow();
 	}
-	// else TODO: clear buffer
 
+	// ensure writing of editor on the back buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	GLEditorRenderer::Render();
 
 	GLCheckError();

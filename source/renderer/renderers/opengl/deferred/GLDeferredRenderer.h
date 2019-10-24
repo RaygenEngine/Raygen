@@ -65,7 +65,7 @@ protected:
 	void InitRenderBuffers();
 
 	// Render
-	void ClearFbos();
+	void ClearBuffers();
 	void RenderGBuffer();
 	void RenderDirectionalLights();
 	void RenderSpotLights();

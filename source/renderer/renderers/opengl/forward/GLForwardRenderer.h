@@ -59,6 +59,7 @@ protected:
 	void InitRenderBuffers();
 
 	// Render
+	void ClearBuffers();
 	void RenderEarlyDepthPass();
 	void RenderDirectionalLights();
 	void RenderSpotLights();
