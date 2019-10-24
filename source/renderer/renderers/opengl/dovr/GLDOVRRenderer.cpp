@@ -685,12 +685,12 @@ void GLDOVRRenderer::Render()
 
 void GLDOVRRenderer::RecompileShaders()
 {
-	m_deferredDirectionalLightShader->Load();
-	m_deferredSpotLightShader->Load();
-	m_deferredPunctualLightShader->Load();
-	m_ambientLightShader->Load();
-	m_windowShader->Load();
-	m_gBuffer.shader->Load();
+	m_deferredDirectionalLightShader->Reload();
+	m_deferredSpotLightShader->Reload();
+	m_deferredPunctualLightShader->Reload();
+	m_ambientLightShader->Reload();
+	m_windowShader->Reload();
+	m_gBuffer.shader->Reload();
 }
 
 void GLDOVRRenderer::Update()

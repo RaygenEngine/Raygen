@@ -819,13 +819,13 @@ void GLForwardRenderer::Render()
 
 void GLForwardRenderer::RecompileShaders()
 {
-	m_depthPassShader->Load();
-	m_forwardSpotLightShader->Load();
-	m_forwardDirectionalLightShader->Load();
-	m_forwardPunctualLightShader->Load();
-	m_cubemapInfDistShader->Load();
-	m_bBoxShader->Load();
-	m_windowShader->Load();
+	m_depthPassShader->Reload();
+	m_forwardSpotLightShader->Reload();
+	m_forwardDirectionalLightShader->Reload();
+	m_forwardPunctualLightShader->Reload();
+	m_cubemapInfDistShader->Reload();
+	m_bBoxShader->Reload();
+	m_windowShader->Reload();
 }
 
 void GLForwardRenderer::ActiveCameraResize()

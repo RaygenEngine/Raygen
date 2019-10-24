@@ -121,8 +121,8 @@ void AppBase::RegisterRenderers()
 	// Default behavior for an app is to start the FIRST renderer registered here.
 
 	Engine::RegisterRenderer<ogl::GLForwardRenderer>();
-	Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
 	Engine::RegisterRenderer<ogl::GLDeferredRenderer>();
+	Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
 }
 
 Win32Window* AppBase::CreateAppWindow()
