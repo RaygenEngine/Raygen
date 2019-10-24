@@ -43,12 +43,12 @@ void GLDeferredRenderer::InitObservers()
 	m_camera = Engine::GetWorld()->GetActiveCamera();
 	CLOG_WARN(!m_camera, "Renderer failed to find camera.");
 
-	auto skyboxNode = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
-	CLOG_ABORT(!skyboxNode, "This renderer expects a skybox node to be present!");
 
-	// TODO: should be possible to update skybox, decide on singleton observers to do this automatically
-	m_skyboxCubemap = GetGLAssetManager()->GpuGetOrCreate<GLTexture>(skyboxNode->GetSkyMap());
+	auto reload = [](GLBasicSkybox* skyboxObs) {
+		skyboxObs->ReloadSkybox();
+	};
 
+	m_skybox = CreateTrackerObserver_AnyAvailableWithCallback<GLBasicSkybox>(reload);
 
 	RegisterObserverContainer_AutoLifetimes(m_glGeometries);
 	RegisterObserverContainer_AutoLifetimes(m_glDirectionalLights);
@@ -526,7 +526,7 @@ void GLDeferredRenderer::RenderAmbientLight()
 	m_ambientLightShader->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
 	m_ambientLightShader->SendVec2("invTextureSize", invTextureSize);
 	m_ambientLightShader->SendTexture(m_gBuffer.depthAttachment, 0);
-	m_ambientLightShader->SendCubeTexture(m_skyboxCubemap->id, 1);
+	m_ambientLightShader->SendCubeTexture(m_skybox->texture->id, 1);
 
 	// big triangle trick, no vao
 	glDrawArrays(GL_TRIANGLES, 0, 3);

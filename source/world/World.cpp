@@ -191,10 +191,10 @@ void World::RegisterNode(Node* node, Node* parent)
 
 void World::CleanupNodeReferences(Node* node)
 {
-	Event::OnWorldNodeRemoved.Broadcast(node);
-
 	m_typeHashToNodes[node->GetClass().GetTypeId().hash()].erase(node);
 	m_nodes.erase(node);
+
+	Event::OnWorldNodeRemoved.Broadcast(node);
 
 	if (node == m_activeCamera) {
 		SetActiveCamera(GetAnyAvailableNode<CameraNode>());
