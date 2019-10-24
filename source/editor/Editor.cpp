@@ -918,7 +918,7 @@ void Editor::TeleportToCamera(Node* node)
 void Editor::MakeActiveCamera(Node* node)
 {
 	if (node->IsA<CameraNode>()) {
-		Engine::GetWorld()->m_activeCamera = static_cast<CameraNode*>(node);
+		Engine::GetWorld()->SetActiveCamera(NodeCast<CameraNode>(node));
 	}
 }
 
@@ -1042,7 +1042,7 @@ struct ExampleAppLog {
 void Editor::Run_LogWindow()
 {
 	static logwindow::ExampleAppLog log;
-	auto& ss = utl::Log::s_editorLogStream;
+	auto& ss = Log::s_editorLogStream;
 
 
 	std::string line;

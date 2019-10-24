@@ -18,5 +18,5 @@ void main()
 {
 	vec3 color = texture(lightsColorSampler, quad_uv).rgb;
 	
-	out_color = vec4(vec3(1,1,1) - color, 1);
+	out_color = vec4(color, 1);
 }

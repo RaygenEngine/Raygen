@@ -31,15 +31,21 @@ void ObserverRenderer::OnNodeAddedToWorld(Node* node)
 			adderFunc(node);
 		}
 	}
-};
+}
+
+void ObserverRenderer::OnActiveCameraChanged(CameraNode* node)
+{
+	m_activeCamera = Engine::GetWorld()->GetActiveCamera();
+	if (m_activeCamera) {
+		ActiveCameraResize();
+	}
+}
 
 void ObserverRenderer::Update()
 {
-	auto camera = Engine::GetWorld()->GetActiveCamera();
-	if (camera && camera->GetDirtyFlagset()[CameraNode::DF::ViewportSize]) {
+	if (m_activeCamera && m_activeCamera->GetDirtyFlagset()[CameraNode::DF::ViewportSize]) {
 		ActiveCameraResize();
 	}
-
 
 	for (auto& observer : m_observers) {
 		if (observer->baseNode) {

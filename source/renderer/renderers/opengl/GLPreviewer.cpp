@@ -1,9 +1,9 @@
 #include "pch/pch.h"
 
+#include "platform/windows/Win32Window.h"
 #include "renderer/renderers/opengl/GLPreviewer.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
 #include "renderer/renderers/opengl/assets/GLShader.h"
-#include "platform/windows/Win32Window.h"
 #include "asset/AssetManager.h"
 #include "system/Logger.h"
 

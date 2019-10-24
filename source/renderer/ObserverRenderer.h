@@ -13,15 +13,18 @@ class ObserverRenderer : public Renderer {
 	std::unordered_map<const ReflClass*, std::function<void(Node*)>> m_onTypeAdded;
 	std::unordered_map<const ReflClass*, std::function<void(Node*)>> m_onTypeRemoved;
 
+
 protected:
 	ObserverRenderer()
 	{
 		m_nodeAddedListener.BindMember(this, &ObserverRenderer::OnNodeAddedToWorld);
 		m_nodeRemovedListener.BindMember(this, &ObserverRenderer::OnNodeRemovedFromWorld);
+		m_activeCameraChangedListener.BindMember(this, &ObserverRenderer::OnActiveCameraChanged);
 	}
 
 	DECLARE_EVENT_LISTENER(m_nodeAddedListener, Event::OnWorldNodeAdded);
 	DECLARE_EVENT_LISTENER(m_nodeRemovedListener, Event::OnWorldNodeRemoved);
+	DECLARE_EVENT_LISTENER(m_activeCameraChangedListener, Event::OnWorldActiveCameraChanged);
 
 
 	// WIP: Cleanup unused stuff, decide on "Singleton" Observer (maybe even auto-add them?)
@@ -104,15 +107,18 @@ protected:
 
 	void RemoveObserver(NodeObserverBase* ptr);
 
+	CameraNode* m_activeCamera;
+
 protected:
 	// Probably worthless to overload this under normal circumstances, you should prefer to use the automatic lifetimes
 	// of the observer renderer
 	virtual void OnNodeRemovedFromWorld(Node* node);
 	virtual void OnNodeAddedToWorld(Node* node);
+	virtual void OnActiveCameraChanged(CameraNode* node);
 	virtual void ActiveCameraResize(){};
 
 public:
-	virtual void Update();
+	void Update() override;
 
 
 	template<typename NodeType>

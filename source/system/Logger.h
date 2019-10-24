@@ -5,8 +5,7 @@
 #include "spdlog/fmt/ostr.h"
 #include <sstream>
 
-namespace utl {
-// TODO: should not be in utl namespace
+
 class Log {
 public:
 	static void Init(LogLevelTarget level);
@@ -18,21 +17,20 @@ public:
 private:
 	static std::shared_ptr<spdlog::logger> s_logger;
 };
-} // namespace utl
 
-#define LOGGER_INIT(level) utl::Log::Init(level)
+#define LOGGER_INIT(level) Log::Init(level)
 
-#define LOG_REPORT(...) utl::Log::GetLogger()->warn(__VA_ARGS__)
-#define LOG_TRACE(...)  utl::Log::GetLogger()->trace(__VA_ARGS__)
-#define LOG_DEBUG(...)  utl::Log::GetLogger()->debug(__VA_ARGS__)
-#define LOG_INFO(...)   utl::Log::GetLogger()->info(__VA_ARGS__)
-#define LOG_WARN(...)   utl::Log::GetLogger()->warn(__VA_ARGS__)
-#define LOG_ERROR(...)  utl::Log::GetLogger()->error(__VA_ARGS__)
-#define LOG_FATAL(...)  utl::Log::GetLogger()->critical(__VA_ARGS__)
+#define LOG_REPORT(...) Log::GetLogger()->warn(__VA_ARGS__)
+#define LOG_TRACE(...)  Log::GetLogger()->trace(__VA_ARGS__)
+#define LOG_DEBUG(...)  Log::GetLogger()->debug(__VA_ARGS__)
+#define LOG_INFO(...)   Log::GetLogger()->info(__VA_ARGS__)
+#define LOG_WARN(...)   Log::GetLogger()->warn(__VA_ARGS__)
+#define LOG_ERROR(...)  Log::GetLogger()->error(__VA_ARGS__)
+#define LOG_FATAL(...)  Log::GetLogger()->critical(__VA_ARGS__)
 #define LOG_ABORT(...)                                                                                                 \
 	do {                                                                                                               \
-		utl::Log::GetLogger()->critical(__VA_ARGS__);                                                                  \
-		utl::Log::GetLogger()->flush();                                                                                \
+		LOG_FATAL(__VA_ARGS__);                                                                                        \
+		Log::GetLogger()->flush();                                                                                     \
 		std::abort();                                                                                                  \
 	} while (0)
 
@@ -45,37 +43,37 @@ private:
 #define CLOG_TRACE(condition, ...)                                                                                     \
 	do {                                                                                                               \
 		if ((condition)) {                                                                                             \
-			utl::Log::GetLogger()->trace(__VA_ARGS__);                                                                 \
+			LOG_TRACE(__VA_ARGS__);                                                                                    \
 		}                                                                                                              \
 	} while (0)
 #define CLOG_DEBUG(condition, ...)                                                                                     \
 	do {                                                                                                               \
 		if ((condition)) {                                                                                             \
-			utl::Log::GetLogger()->debug(__VA_ARGS__);                                                                 \
+			LOG_DEBUG(__VA_ARGS__);                                                                                    \
 		}                                                                                                              \
 	} while (0)
 #define CLOG_INFO(condition, ...)                                                                                      \
 	do {                                                                                                               \
 		if ((condition)) {                                                                                             \
-			utl::Log::GetLogger()->info(__VA_ARGS__);                                                                  \
+			LOG_INFO(__VA_ARGS__);                                                                                     \
 		}                                                                                                              \
 	} while (0)
 #define CLOG_WARN(condition, ...)                                                                                      \
 	do {                                                                                                               \
 		if ((condition)) {                                                                                             \
-			utl::Log::GetLogger()->warn(__VA_ARGS__);                                                                  \
+			LOG_WARN(__VA_ARGS__);                                                                                     \
 		}                                                                                                              \
 	} while (0)
 #define CLOG_ERROR(condition, ...)                                                                                     \
 	do {                                                                                                               \
 		if ((condition)) {                                                                                             \
-			utl::Log::GetLogger()->error(__VA_ARGS__);                                                                 \
+			LOG_ERROR(__VA_ARGS__);                                                                                    \
 		}                                                                                                              \
 	} while (0)
 #define CLOG_FATAL(condition, ...)                                                                                     \
 	do {                                                                                                               \
 		if ((condition)) {                                                                                             \
-			utl::Log::GetLogger()->critical(__VA_ARGS__);                                                              \
+			LOG_FATAL(__VA_ARGS__);                                                                                    \
 		}                                                                                                              \
 	} while (0)
 #define CLOG_ABORT(condition, ...)                                                                                     \
