@@ -41,9 +41,8 @@ void GLForwardRenderer::InitObservers()
 	m_camera = Engine::GetWorld()->GetActiveCamera();
 	CLOG_WARN(!m_camera, "Renderer found no camera.");
 
+	// TODO: should be possible to update skybox, decide on singleton observers to do this automatically
 	auto skyboxNode = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
-	CLOG_ABORT(!skyboxNode, "This renderer expects a skybox node to be present!");
-
 	m_skyboxCubemap = GetGLAssetManager()->GpuGetOrCreate<GLTexture>(skyboxNode->GetSkyMap());
 
 	// Auto deduces observer type and node type
@@ -293,13 +292,22 @@ void GLForwardRenderer::InitScene()
 	InitRenderBuffers();
 }
 
+void GLForwardRenderer::ClearBuffers()
+{
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+}
+
 void GLForwardRenderer::RenderEarlyDepthPass()
 {
 	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
-	glClearColor(0.f, 0.f, 0.f, 1.f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -794,6 +802,8 @@ void GLForwardRenderer::RenderWindow()
 
 void GLForwardRenderer::Render()
 {
+	ClearBuffers();
+
 	if (m_camera) {
 		// perform first pass as depth pass
 		RenderEarlyDepthPass();
@@ -810,8 +820,9 @@ void GLForwardRenderer::Render()
 		// write out texture of out fbo to window (big triangle trick)
 		RenderWindow();
 	}
-	// else TODO: clear buffer
 
+	// ensure writing of editor on the back buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	GLEditorRenderer::Render();
 
 	GLCheckError();

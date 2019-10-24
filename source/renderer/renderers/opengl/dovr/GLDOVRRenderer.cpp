@@ -136,13 +136,12 @@ GLDOVRRenderer::~GLDOVRRenderer()
 
 void GLDOVRRenderer::InitObservers()
 {
-	// TODO: will remove
+	// TODO: Find out how to handle a renderer strongly dependent to world data
 	m_ovr = Engine::GetWorld()->GetAnyAvailableNode<OVRNode>();
 	CLOG_ABORT(!m_ovr, "This renderer expects an ovr node to be present!");
 
+	// TODO: should be possible to update skybox, decide on singleton observers to do this automatically
 	auto skyboxNode = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
-	CLOG_ABORT(!skyboxNode, "This renderer expects a skybox node to be present!");
-
 	m_skyboxCubemap = GetGLAssetManager()->GpuGetOrCreate<GLTexture>(skyboxNode->GetSkyMap());
 
 	RegisterObserverContainer_AutoLifetimes(m_glGeometries);
@@ -625,6 +624,7 @@ void GLDOVRRenderer::RenderAmbientLight(int32 eyeIndex)
 
 void GLDOVRRenderer::Render()
 {
+
 	const auto session = m_ovr->GetOVRSession();
 	const auto info = m_ovr->GetRendererInfo();
 
@@ -676,8 +676,8 @@ void GLDOVRRenderer::Render()
 	glBlitFramebuffer(0, wnd->GetHeight(), wnd->GetWidth(), 0, 0, 0, wnd->GetWidth(), wnd->GetHeight(),
 		GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-
+	// ensure writing of editor on the back buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	GLEditorRenderer::Render();
 
 	GLCheckError();
