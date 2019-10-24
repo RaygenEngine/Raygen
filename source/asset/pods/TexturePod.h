@@ -27,7 +27,8 @@ struct TexturePod : AssetPod {
 
 	TextureTarget target{ TextureTarget::TEXTURE_2D };
 
-	bool isSRGBA{ false };
+	// !isSRGB...
+	bool isLinear{ true };
 
 	std::vector<PodHandle<ImagePod>> images{};
 };
