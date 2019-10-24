@@ -3,6 +3,11 @@
 #include "world/nodes/light/DirectionalLightNode.h"
 #include "core/MathAux.h"
 
+void DirectionalLightNode::CalculateWorldAABB()
+{
+	m_aabb = m_frustum.FrustumPyramidAABB(GetWorldTranslation());
+}
+
 void DirectionalLightNode::RecalculateProjectionMatrix()
 {
 	m_projectionMatrix = glm::ortho(m_left, m_right, m_bottom, m_top, m_near, m_far);
@@ -29,7 +34,7 @@ void DirectionalLightNode::RecalculateFrustum()
 {
 	// viewProj to get frustum plane equations in world space
 	m_frustum.ExtractFromMatrix(m_viewProjectionMatrix);
-	m_frustumAABB = m_frustum.FrustumPyramidAABB(GetWorldTranslation());
+	CalculateWorldAABB();
 }
 
 void DirectionalLightNode::DirtyUpdate(DirtyFlagset flags)

@@ -424,7 +424,7 @@ void GLDOVRRenderer::RenderGBuffer(int32 eyeIndex)
 	// render geometry (non-instanced)
 	for (auto& geometry : m_glGeometries) {
 		// view frustum culling
-		if (!camera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
+		if (!camera->IsNodeInsideFrustum(geometry->node)) {
 			continue;
 		}
 
@@ -480,7 +480,7 @@ void GLDOVRRenderer::RenderDirectionalLights(int32 eyeIndex)
 	for (auto light : m_glDirectionalLights) {
 
 		// light AABB camera frustum culling
-		if (!camera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
+		if (!camera->IsNodeInsideFrustum(light->node)) {
 			continue;
 		}
 
@@ -533,7 +533,7 @@ void GLDOVRRenderer::RenderSpotLights(int32 eyeIndex)
 	for (auto light : m_glSpotLights) {
 
 		// light AABB camera frustum culling
-		if (!camera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
+		if (!camera->IsNodeInsideFrustum(light->node)) {
 			continue;
 		}
 

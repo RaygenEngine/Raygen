@@ -77,7 +77,7 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 
 		for (auto& glMesh : geometry->glModel->meshes) {
 			// light frustum culling
-			if (!node->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
+			if (!node->IsNodeInsideFrustum(geometry->node)) {
 				continue;
 			}
 

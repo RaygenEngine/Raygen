@@ -33,9 +33,6 @@ GLForwardRenderer::~GLForwardRenderer()
 	glDeleteFramebuffers(1, &m_outFbo);
 	glDeleteTextures(1, &m_outColorTexture);
 
-	glDeleteVertexArrays(1, &m_bbVao);
-	glDeleteBuffers(1, &m_bbVbo);
-
 	glDeleteVertexArrays(1, &m_skyboxVao);
 	glDeleteBuffers(1, &m_skyboxVbo);
 }
@@ -183,10 +180,6 @@ void GLForwardRenderer::InitShaders()
 	m_forwardPunctualLightShader->StoreUniformLoc("material.alphaCutoff");
 	m_forwardPunctualLightShader->StoreUniformLoc("material.mask");
 
-	m_bBoxShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/general/BBox.json");
-	m_bBoxShader->StoreUniformLoc("vp");
-	m_bBoxShader->StoreUniformLoc("color");
-
 	m_cubemapInfDistShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/general/Cubemap_InfDist.json");
 	m_cubemapInfDistShader->StoreUniformLoc("vp");
@@ -274,19 +267,6 @@ void GLForwardRenderer::InitRenderBuffers()
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outColorTexture, 0);
 
-	// bounding boxes
-	glCreateVertexArrays(1, &m_bbVao);
-
-	glEnableVertexArrayAttrib(m_bbVao, 0);
-	glVertexArrayAttribFormat(m_bbVao, 0, 3, GL_FLOAT, GL_FALSE, 0);
-
-	glCreateBuffers(1, &m_bbVbo);
-	// TODO: (48)
-	glNamedBufferData(m_bbVbo, 48 * sizeof(float), NULL, GL_DYNAMIC_DRAW);
-
-	glVertexArrayAttribBinding(m_bbVao, 0, 0);
-	glVertexArrayVertexBuffer(m_bbVao, 0, m_bbVbo, 0, sizeof(float) * 3);
-
 	// skybox
 	glGenVertexArrays(1, &m_skyboxVao);
 	glGenBuffers(1, &m_skyboxVbo);
@@ -307,6 +287,8 @@ void GLForwardRenderer::InitRenderBuffers()
 
 void GLForwardRenderer::InitScene()
 {
+	GLEditorRenderer::InitScene();
+
 	InitObservers();
 
 	InitShaders();
@@ -346,8 +328,7 @@ void GLForwardRenderer::RenderEarlyDepthPass()
 
 	for (auto& geometry : m_glGeometries) {
 		// view frustum culling
-		// TODO: camera->IsInsideFrustum(SceneNodeT)
-		if (!m_activeCamera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
+		if (!m_activeCamera->IsNodeInsideFrustum(geometry->node)) {
 			continue;
 		}
 
@@ -398,7 +379,7 @@ void GLForwardRenderer::RenderAmbientLight()
 
 	for (auto& geometry : m_glGeometries) {
 		// view frustum culling
-		if (!m_activeCamera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
+		if (!m_activeCamera->IsNodeInsideFrustum(geometry->node)) {
 			continue;
 		}
 
@@ -448,7 +429,7 @@ void GLForwardRenderer::RenderDirectionalLights()
 	for (auto light : m_glDirectionalLights) {
 
 		// light AABB camera frustum culling
-		if (!m_activeCamera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
+		if (!m_activeCamera->IsNodeInsideFrustum(light->node)) {
 			continue;
 		}
 
@@ -483,7 +464,7 @@ void GLForwardRenderer::RenderDirectionalLights()
 
 		for (auto& geometry : m_glGeometries) {
 			// view frustum culling
-			if (!m_activeCamera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
+			if (!m_activeCamera->IsNodeInsideFrustum(geometry->node)) {
 				continue;
 			}
 
@@ -544,7 +525,7 @@ void GLForwardRenderer::RenderSpotLights()
 	for (auto light : m_glSpotLights) {
 
 		// light AABB camera frustum culling
-		if (!m_activeCamera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
+		if (!m_activeCamera->IsNodeInsideFrustum(light->node)) {
 			continue;
 		}
 
@@ -584,7 +565,7 @@ void GLForwardRenderer::RenderSpotLights()
 
 		for (auto& geometry : m_glGeometries) {
 			// view frustum culling
-			if (!m_activeCamera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
+			if (!m_activeCamera->IsNodeInsideFrustum(geometry->node)) {
 				continue;
 			}
 
@@ -675,7 +656,7 @@ void GLForwardRenderer::RenderPunctualLights()
 
 		for (auto& geometry : m_glGeometries) {
 			// view frustum culling
-			if (!m_activeCamera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
+			if (!m_activeCamera->IsNodeInsideFrustum(geometry->node)) {
 				continue;
 			}
 
@@ -723,110 +704,17 @@ void GLForwardRenderer::RenderPunctualLights()
 
 void GLForwardRenderer::RenderBoundingBoxes()
 {
+	// TODO: this way post process effect will be on top of the bounding boxes...
+	glViewport(0, 0, m_activeCamera->GetWidth(), m_activeCamera->GetHeight());
+	glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	glBindVertexArray(m_bbVao);
-
-	// Editor::GetBBoxDrawing()
-	// Editor::GetSelectedNode()
-
-
-	auto RenderBox = [&](math::AABB box, glm::vec4 color) {
-		const GLfloat data[] = {
-			box.min.x,
-			box.min.y,
-			box.min.z,
-
-			box.max.x,
-			box.min.y,
-			box.min.z,
-
-			box.max.x,
-			box.max.y,
-			box.min.z,
-
-			box.min.x,
-			box.max.y,
-			box.min.z,
-			//
-			box.min.x,
-			box.min.y,
-			box.max.z,
-
-			box.max.x,
-			box.min.y,
-			box.max.z,
-
-			box.max.x,
-			box.max.y,
-			box.max.z,
-
-			box.min.x,
-			box.max.y,
-			box.max.z,
-			//
-			box.min.x,
-			box.min.y,
-			box.min.z,
-
-			box.min.x,
-			box.min.y,
-			box.max.z,
-
-			box.max.x,
-			box.min.y,
-			box.min.z,
-
-			box.max.x,
-			box.min.y,
-			box.max.z,
-			//
-			box.max.x,
-			box.max.y,
-			box.min.z,
-
-			box.max.x,
-			box.max.y,
-			box.max.z,
-
-			box.min.x,
-			box.max.y,
-			box.min.z,
-
-			box.min.x,
-			box.max.y,
-			box.max.z,
-		};
-
-		glNamedBufferSubData(m_bbVbo, 0, 48 * sizeof(float), data);
-
-		glUseProgram(m_bBoxShader->programId);
-		const auto vp = m_activeCamera->GetViewProjectionMatrix();
-		m_bBoxShader->SendMat4("vp", vp);
-		m_bBoxShader->SendVec4("color", color);
-
-		// TODO: with fewer draw calls
-		glDrawArrays(GL_LINE_LOOP, 0, 4);
-		glDrawArrays(GL_LINE_LOOP, 4, 4);
-		glDrawArrays(GL_LINES, 8, 8);
-	};
-
-	for (auto gObs : m_glGeometries) {
-		RenderBox(gObs->node->GetAABB(), { 1, 1, 1, 1 });
-	}
-
-	for (auto slObs : m_glSpotLights) {
-		RenderBox(slObs->node->GetFrustumAABB(), { 1, 1, 0, 1 });
-	}
-
-	for (auto dlObs : m_glDirectionalLights) {
-		RenderBox(dlObs->node->GetFrustumAABB(), { 1, 1, 0, 1 });
-	}
+	GLEditorRenderer::RenderBoundingBoxes();
 
 	glDisable(GL_DEPTH_TEST);
 }
-
 
 void GLForwardRenderer::RenderSkybox()
 {
@@ -898,6 +786,7 @@ void GLForwardRenderer::RenderWindow()
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
+
 void GLForwardRenderer::Render()
 {
 	ClearBuffers();
@@ -937,7 +826,6 @@ void GLForwardRenderer::RecompileShaders()
 	m_forwardDirectionalLightShader->Reload();
 	m_forwardPunctualLightShader->Reload();
 	m_cubemapInfDistShader->Reload();
-	m_bBoxShader->Reload();
 	m_dummyPostProcShader->Reload();
 	m_windowShader->Reload();
 }

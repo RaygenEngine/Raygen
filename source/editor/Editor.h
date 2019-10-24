@@ -21,7 +21,6 @@ enum class EditorBBoxDrawing
 	None,
 	SelectedNode,
 	AllNodes,
-	AllNodesPlusParents
 };
 
 class Editor {

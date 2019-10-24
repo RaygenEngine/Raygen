@@ -27,6 +27,8 @@ protected:
 	DECLARE_EVENT_LISTENER(m_activeCameraChangedListener, Event::OnWorldActiveCameraChanged);
 
 
+	const auto& GetObservers() const { return m_observers; }
+
 	// WIP: Cleanup unused stuff, decide on "Singleton" Observer (maybe even auto-add them?)
 	// TODO: custom dirtyFlagset structure?
 	// PERF: remove_swap for vectors and fast iterations
@@ -107,7 +109,7 @@ protected:
 
 	void RemoveObserver(NodeObserverBase* ptr);
 
-	// note: those may be temporarily here
+	// WIP: note: those may be temporarily here
 	CameraNode* m_activeCamera{ nullptr };
 	float m_gamma{ 2.2f };
 

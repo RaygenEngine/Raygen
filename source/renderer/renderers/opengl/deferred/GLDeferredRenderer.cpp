@@ -264,6 +264,8 @@ void GLDeferredRenderer::InitRenderBuffers()
 
 void GLDeferredRenderer::InitScene()
 {
+	GLEditorRenderer::InitScene();
+
 	InitObservers();
 
 	InitShaders();
@@ -305,7 +307,7 @@ void GLDeferredRenderer::RenderGBuffer()
 	// render geometry (non-instanced)
 	for (auto& geometry : m_glGeometries) {
 		// view frustum culling
-		if (!m_activeCamera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
+		if (!m_activeCamera->IsNodeInsideFrustum(geometry->node)) {
 			continue;
 		}
 
@@ -358,7 +360,7 @@ void GLDeferredRenderer::RenderDirectionalLights()
 	for (auto light : m_glDirectionalLights) {
 
 		// light AABB camera frustum culling
-		if (!m_activeCamera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
+		if (!m_activeCamera->IsNodeInsideFrustum(light->node)) {
 			continue;
 		}
 
@@ -408,7 +410,7 @@ void GLDeferredRenderer::RenderSpotLights()
 	for (auto light : m_glSpotLights) {
 
 		// light AABB camera frustum culling
-		if (!m_activeCamera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
+		if (!m_activeCamera->IsNodeInsideFrustum(light->node)) {
 			continue;
 		}
 
@@ -577,6 +579,7 @@ void GLDeferredRenderer::Render()
 		RenderPunctualLights();
 		// ambient pass
 		RenderAmbientLight();
+		RenderBoundingBoxes();
 		// post process
 		RenderPostProcess();
 		// render to window

@@ -3,6 +3,11 @@
 #include "world/nodes/light/SpotLightNode.h"
 #include "core/MathAux.h"
 
+void SpotLightNode::CalculateWorldAABB()
+{
+	m_aabb = m_frustum.FrustumPyramidAABB(GetWorldTranslation());
+}
+
 void SpotLightNode::RecalculateProjectionMatrix()
 {
 	auto ar = static_cast<float>(m_shadowMapWidth) / static_cast<float>(m_shadowMapHeight);
@@ -30,7 +35,7 @@ void SpotLightNode::RecalculateFrustum()
 {
 	// viewProj to get frustum plane equations in world space
 	m_frustum.ExtractFromMatrix(m_viewProjectionMatrix);
-	m_frustumAABB = m_frustum.FrustumPyramidAABB(GetWorldTranslation());
+	CalculateWorldAABB();
 }
 
 void SpotLightNode::DirtyUpdate(DirtyFlagset flags)
