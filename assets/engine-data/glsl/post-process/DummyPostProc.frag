@@ -2,6 +2,8 @@
 
 out vec4 out_color;
 
+uniform float gamma;
+
 // those are the uvs on the quad
 in vec2 quad_uv;
 
@@ -17,6 +19,8 @@ layout(binding=0) uniform sampler2D lightsColorSampler;
 void main()
 {
 	vec3 color = texture(lightsColorSampler, quad_uv).rgb;
+	
+    color = pow(color, vec3(1.0/gamma));
 	
 	out_color = vec4(color, 1);
 }

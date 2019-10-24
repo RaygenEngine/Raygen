@@ -3,7 +3,7 @@
 #include "asset/PodHandle.h"
 #include "asset/pods/ImagePod.h"
 
-struct TexturePod : public AssetPod {
+struct TexturePod : AssetPod {
 	REFLECTED_POD(TexturePod)
 	{
 		REFLECT_VAR(images);
@@ -26,6 +26,8 @@ struct TexturePod : public AssetPod {
 	TextureWrapping wrapR{ TextureWrapping::REPEAT };
 
 	TextureTarget target{ TextureTarget::TEXTURE_2D };
+
+	bool isSRGBA{ false };
 
 	std::vector<PodHandle<ImagePod>> images{};
 };

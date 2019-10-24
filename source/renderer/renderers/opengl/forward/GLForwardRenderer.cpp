@@ -26,9 +26,12 @@ GLForwardRenderer::~GLForwardRenderer()
 	glDeleteTextures(1, &m_msaaColorTexture);
 	glDeleteRenderbuffers(1, &m_msaaDepthStencilRbo);
 
+	glDeleteFramebuffers(1, &m_intrFbo);
+	glDeleteTextures(1, &m_intrColorTexture);
+	glDeleteTextures(1, &m_intrDepthTexture);
+
 	glDeleteFramebuffers(1, &m_outFbo);
 	glDeleteTextures(1, &m_outColorTexture);
-	glDeleteTextures(1, &m_outDepthTexture);
 
 	glDeleteVertexArrays(1, &m_bbVao);
 	glDeleteBuffers(1, &m_bbVbo);
@@ -188,6 +191,10 @@ void GLForwardRenderer::InitShaders()
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/general/Cubemap_InfDist.json");
 	m_cubemapInfDistShader->StoreUniformLoc("vp");
 
+	m_dummyPostProcShader
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/post-process/DummyPostProc.json");
+	m_dummyPostProcShader->StoreUniformLoc("gamma");
+
 	m_windowShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/general/QuadWriteTexture.json");
 }
@@ -233,6 +240,28 @@ void GLForwardRenderer::InitRenderBuffers()
 
 	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 
+	// intr fbo
+	glGenFramebuffers(1, &m_intrFbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_intrFbo);
+
+	glGenTextures(1, &m_intrColorTexture);
+	glBindTexture(GL_TEXTURE_2D, m_intrColorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_intrColorTexture, 0);
+
+	glGenTextures(1, &m_intrDepthTexture);
+	glBindTexture(GL_TEXTURE_2D, m_intrDepthTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_intrDepthTexture, 0);
+
+	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
+
 	// out fbo
 	glGenFramebuffers(1, &m_outFbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
@@ -244,16 +273,6 @@ void GLForwardRenderer::InitRenderBuffers()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_outColorTexture, 0);
-
-	glGenTextures(1, &m_outDepthTexture);
-	glBindTexture(GL_TEXTURE_2D, m_outDepthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_outDepthTexture, 0);
-
-	CLOG_ABORT(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE, "Framebuffer is not complete!");
 
 	// bounding boxes
 	glCreateVertexArrays(1, &m_bbVao);
@@ -281,8 +300,9 @@ void GLForwardRenderer::InitRenderBuffers()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*)0);
 
 
-	GetGLPreviewer()->AddPreview(m_outColorTexture, "color");
-	GetGLPreviewer()->AddPreview(m_outDepthTexture, "depth");
+	GetGLPreviewer()->AddPreview(m_intrColorTexture, "color");
+	GetGLPreviewer()->AddPreview(m_intrDepthTexture, "depth");
+	GetGLPreviewer()->AddPreview(m_outColorTexture, "out");
 }
 
 void GLForwardRenderer::InitScene()
@@ -303,6 +323,12 @@ void GLForwardRenderer::ClearBuffers()
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_intrFbo);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+	glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void GLForwardRenderer::RenderEarlyDepthPass()
@@ -824,17 +850,37 @@ void GLForwardRenderer::RenderSkybox()
 	glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
-void GLForwardRenderer::BlitMSAAtoOut()
+void GLForwardRenderer::BlitMSAAtoIntr()
 {
 	// blit msaa to out
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFbo);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_outFbo);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_intrFbo);
 
 	glBlitFramebuffer(0, 0, m_activeCamera->GetWidth(), m_activeCamera->GetHeight(), 0, 0, m_activeCamera->GetWidth(),
 		m_activeCamera->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 	glBlitFramebuffer(0, 0, m_activeCamera->GetWidth(), m_activeCamera->GetHeight(), 0, 0, m_activeCamera->GetWidth(),
 		m_activeCamera->GetHeight(), GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+}
+
+void GLForwardRenderer::RenderPostProcess()
+{
+	// after the first post process, blend the rest on top of it
+	// or copy the lightsFbo to the outFbo at the beginning of post processing
+
+	// Dummy post process
+	glViewport(0, 0, m_activeCamera->GetWidth(), m_activeCamera->GetHeight());
+
+	// on m_outFbo
+	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
+
+	glUseProgram(m_dummyPostProcShader->programId);
+
+	m_dummyPostProcShader->SendFloat("gamma", m_gamma);
+	m_dummyPostProcShader->SendTexture(m_intrColorTexture, 0);
+
+	// big triangle trick, no vao
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void GLForwardRenderer::RenderWindow()
@@ -870,7 +916,9 @@ void GLForwardRenderer::Render()
 		// render skybox, seamless enabled (render last)
 		RenderSkybox();
 		// blit
-		BlitMSAAtoOut();
+		BlitMSAAtoIntr();
+		// render post process
+		RenderPostProcess();
 		// write out texture of out fbo to window (big triangle trick)
 		RenderWindow();
 	}
@@ -890,6 +938,7 @@ void GLForwardRenderer::RecompileShaders()
 	m_forwardPunctualLightShader->Reload();
 	m_cubemapInfDistShader->Reload();
 	m_bBoxShader->Reload();
+	m_dummyPostProcShader->Reload();
 	m_windowShader->Reload();
 }
 
@@ -904,11 +953,14 @@ void GLForwardRenderer::ActiveCameraResize()
 	glBindRenderbuffer(GL_RENDERBUFFER, m_msaaDepthStencilRbo);
 	glRenderbufferStorageMultisample(GL_RENDERBUFFER, msaaSamples, GL_DEPTH24_STENCIL8, width, height);
 
-	glBindTexture(GL_TEXTURE_2D, m_outColorTexture);
+	glBindTexture(GL_TEXTURE_2D, m_intrColorTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
-	glBindTexture(GL_TEXTURE_2D, m_outDepthTexture);
+	glBindTexture(GL_TEXTURE_2D, m_intrDepthTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+
+	glBindTexture(GL_TEXTURE_2D, m_outColorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 }
 
 void GLForwardRenderer::Update()

@@ -2,6 +2,7 @@
 
 #include "renderer/ObserverRenderer.h"
 #include "system/Engine.h"
+#include "system/Input.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "world/World.h"
 
@@ -55,5 +56,13 @@ void ObserverRenderer::Update()
 				observer->DirtyNodeUpdate(flagset);
 			}
 		}
+	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::OEM_PLUS)) {
+		m_gamma += 0.03f;
+	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::OEM_MINUS)) {
+		m_gamma -= 0.03f;
 	}
 }

@@ -267,7 +267,8 @@ void GLDOVRRenderer::InitShaders()
 	m_ambientLightShader->StoreUniformLoc("ambient");
 
 	m_dummyPostProcShader
-		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DummyPostProc.json");
+		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/post-process/DummyPostProc.json");
+	m_dummyPostProcShader->StoreUniformLoc("gamma");
 }
 
 void GLDOVRRenderer::InitRenderBuffers()
@@ -676,6 +677,7 @@ void GLDOVRRenderer::RenderPostProcess(int32 eyeIndex)
 
 	glUseProgram(m_dummyPostProcShader->programId);
 
+	m_dummyPostProcShader->SendFloat("gamma", m_gamma);
 	m_dummyPostProcShader->SendTexture(lightText, 0);
 
 	// big triangle trick, no vao
@@ -745,6 +747,7 @@ void GLDOVRRenderer::Render()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	GLEditorRenderer::Render();
 
+	// TODO: find the cause of errors when we decide to make this renderer stable
 	GLCheckError();
 }
 
