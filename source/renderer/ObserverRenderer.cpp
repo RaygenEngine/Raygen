@@ -40,7 +40,6 @@ void ObserverRenderer::Update()
 		ActiveCameraResize();
 	}
 
-
 	for (auto& observer : m_observers) {
 		if (observer->baseNode) {
 			auto flagset = observer->baseNode->GetDirtyFlagset();
