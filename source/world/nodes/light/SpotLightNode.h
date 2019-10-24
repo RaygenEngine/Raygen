@@ -16,9 +16,8 @@ class SpotLightNode : public LightNode {
 	glm::mat4 m_projectionMatrix{};
 	glm::mat4 m_viewMatrix{};
 	glm::mat4 m_viewProjectionMatrix{};
+	// world space frustum TODO
 	math::Frustum m_frustum{};
-	// (pyramid's) frustum world space aabb
-	math::AABB m_frustumAABB{};
 
 	// angle
 	float m_outerAperture{ 25.f };
@@ -31,6 +30,8 @@ class SpotLightNode : public LightNode {
 		LINEAR = 1,
 		QUADRATIC = 2
 	} m_attenuationMode{ LINEAR };
+
+	void CalculateWorldAABB() override;
 
 	void RecalculateProjectionMatrix();
 	void RecalculateViewMatrix();
@@ -47,6 +48,7 @@ public:
 	[[nodiscard]] glm::mat4 GetViewMatrix() const { return m_viewMatrix; }
 	[[nodiscard]] glm::mat4 GetViewProjectionMatrix() const { return m_viewProjectionMatrix; }
 	[[nodiscard]] AttenuationMode GetAttenuationMode() const { return m_attenuationMode; }
-	[[nodiscard]] math::Frustum GetFrustum() const { return m_frustum; }
-	[[nodiscard]] math::AABB GetFrustumAABB() const { return m_frustumAABB; }
+	//[[nodiscard]] math::Frustum GetFrustum() const { return m_frustum; }
+
+	bool IsNodeInsideFrustum(Node* node) { return m_frustum.IntersectsAABB(node->GetAABB()); }
 };

@@ -9,18 +9,10 @@ class GeometryNode : public Node {
 
 	PodHandle<ModelPod> m_model;
 
-	// world space
-	math::AABB m_aabb;
-	math::AABB m_localBB;
-
-	void CalculateAABB();
-
 public:
 	GeometryNode();
 
 	[[nodiscard]] PodHandle<ModelPod> GetModel() const { return m_model; }
-	[[nodiscard]] math::AABB GetAABB() const { return m_aabb; }
-	[[nodiscard]] math::AABB GetLocalAABB() const { return m_localBB; }
 
 	void SetModel(PodHandle<ModelPod> newModel);
 

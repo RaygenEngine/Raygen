@@ -71,7 +71,7 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 
 	for (auto& geometry : geometries) {
 		// light frustum culling
-		if (!node->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
+		if (!node->IsNodeInsideFrustum(geometry->node)) {
 			continue;
 		}
 

@@ -46,10 +46,13 @@ protected:
 	glm::mat4 m_projectionMatrix{};
 	glm::mat4 m_viewMatrix{};
 	glm::mat4 m_viewProjectionMatrix{};
+	// world space frustum TODO
 	math::Frustum m_frustum{};
 
 	int32 m_viewportWidth{ 1280 };
 	int32 m_viewportHeight{ 720 };
+
+	void CalculateWorldAABB() override;
 
 	void RecalculateProjectionFov();
 	void RecalculateViewMatrix();
@@ -73,7 +76,9 @@ public:
 	[[nodiscard]] glm::mat4 GetViewMatrix() const { return m_viewMatrix; }
 	[[nodiscard]] glm::mat4 GetViewProjectionMatrix() const { return m_viewProjectionMatrix; }
 
-	[[nodiscard]] math::Frustum GetFrustum() const { return m_frustum; }
+	//[[nodiscard]] math::Frustum GetFrustum() const { return m_frustum; }
+
+	bool IsNodeInsideFrustum(Node* node) { return m_frustum.IntersectsAABB(node->GetAABB()); }
 
 	void DirtyUpdate(DirtyFlagset flags) override;
 };

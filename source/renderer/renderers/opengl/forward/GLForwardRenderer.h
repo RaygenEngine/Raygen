@@ -24,7 +24,6 @@ protected:
 	GLShader* m_forwardDirectionalLightShader{ nullptr };
 	GLShader* m_forwardPunctualLightShader{ nullptr };
 	GLShader* m_cubemapInfDistShader{ nullptr };
-	GLShader* m_bBoxShader{ nullptr };
 	GLShader* m_dummyPostProcShader{ nullptr };
 	GLShader* m_windowShader{ nullptr };
 
@@ -46,9 +45,6 @@ protected:
 	GLuint m_outFbo{ 0u };
 	GLuint m_outColorTexture{ 0u };
 
-	// bounding boxes
-	GLuint m_bbVao{ 0u };
-	GLuint m_bbVbo{ 0u };
 
 	// skybox
 	GLTexture* m_skyboxCubemap{ nullptr };
@@ -67,7 +63,7 @@ protected:
 	void RenderDirectionalLights();
 	void RenderSpotLights();
 	void RenderPunctualLights();
-	void RenderBoundingBoxes();
+	void RenderBoundingBoxes() override;
 	void RenderSkybox();
 	void BlitMSAAtoIntr();
 	void RenderPostProcess();

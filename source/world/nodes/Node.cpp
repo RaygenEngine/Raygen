@@ -87,6 +87,12 @@ void Node::SetLookAt(glm::vec3 lookat)
 	SetWorldOrientation(math::OrientationFromLookatAndPosition(lookat, m_worldTranslation));
 }
 
+void Node::CalculateWorldAABB()
+{
+	m_aabb = m_localBB;
+	m_aabb.Transform(GetWorldMatrix());
+}
+
 void Node::AutoUpdateTransforms()
 {
 	UpdateTransforms(GetParent()->GetWorldMatrix());
@@ -98,6 +104,9 @@ void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 
 	m_localMatrix = math::TransformMatrixFromTOS(m_localScale, m_localOrientation, m_localTranslation);
 	m_worldMatrix = parentMatrix * m_localMatrix;
+
+	CalculateWorldAABB();
+
 	// PERF:
 	glm::vec3 skew;
 	glm::vec4 persp;
