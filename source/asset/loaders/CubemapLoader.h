@@ -18,7 +18,7 @@ inline void Load(TexturePod* pod, const uri::Uri& path)
 	pod->target = TextureTarget::TEXTURE_CUBEMAP;
 	pod->images.resize(CubemapFace::COUNT);
 	// (for now) consider cubemaps as srgba
-	pod->isSRGBA = true;
+	pod->isLinear = false;
 
 	nlohmann::json j;
 	inStream >> j;
