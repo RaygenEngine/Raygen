@@ -95,13 +95,16 @@ void GLRendererBase::InitRendering(HWND assochWnd, HINSTANCE instance)
 	const int32 pixelFormat = ChoosePixelFormat(m_hdc, &pfd);
 
 	CLOG_ABORT(!pixelFormat, "Can't find a suitable pixelFormat, error: {}", MB_OK | MB_ICONERROR);
-	CLOG_ABORT(!SetPixelFormat(m_hdc, pixelFormat, &pfd), "Can't set the pixelFormat, error: {}", MB_OK | MB_ICONERROR);
+	auto res = SetPixelFormat(m_hdc, pixelFormat, &pfd);
+	CLOG_ABORT(!res, "Can't set the pixelFormat, error: {}", MB_OK | MB_ICONERROR);
 
 	m_hglrc = wglCreateContext(m_hdc);
 
 	CLOG_ABORT(!m_hglrc, "Can't create a GL rendering context, error: {}", MB_OK | MB_ICONERROR);
-	CLOG_ABORT(!wglMakeCurrent(m_hdc, m_hglrc), "Can't activate GLRC, error: {}", MB_OK | MB_ICONERROR);
-	CLOG_ABORT(!(gladLoadGL() == 1), "Couldn't load ogl function pointers");
+	res = wglMakeCurrent(m_hdc, m_hglrc);
+	CLOG_ABORT(!res, "Can't activate GLRC, error: {}", MB_OK | MB_ICONERROR);
+	res = gladLoadGL();
+	CLOG_ABORT(!(res == 1), "Couldn't load ogl function pointers");
 
 	m_glPreviewer->InitPreviewShaders(m_glAssetManager.get());
 }
