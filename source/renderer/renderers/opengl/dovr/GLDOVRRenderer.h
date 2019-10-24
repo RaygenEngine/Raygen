@@ -16,12 +16,15 @@ class OVRNode;
 class CameraNode;
 
 namespace ogl {
-
+// TODO: session should be part of Engine state and requested from both nodes and renderers
 class GLDOVRRenderer : public GLEditorRenderer {
 
 	struct Eye {
 		ovrSession session;
 		CameraNode* camera;
+
+		GLuint lightFbo{ 0 };
+		GLuint lightTexture{ 0 };
 
 		GLuint outFbo{ 0 };
 		ovrTextureSwapChain colorTextureChain{ nullptr };
@@ -40,7 +43,7 @@ class GLDOVRRenderer : public GLEditorRenderer {
 	GLShader* m_deferredSpotLightShader{ nullptr };
 	GLShader* m_deferredPunctualLightShader{ nullptr };
 	GLShader* m_ambientLightShader{ nullptr };
-	GLShader* m_windowShader{ nullptr };
+	GLShader* m_dummyPostProcShader{ nullptr };
 
 	// observers
 	std::vector<GLBasicGeometry*> m_glGeometries;
@@ -82,11 +85,13 @@ class GLDOVRRenderer : public GLEditorRenderer {
 	void InitRenderBuffers();
 
 	// Render
+	void ClearBuffers();
 	void RenderGBuffer(int32 eyeIndex);
 	void RenderDirectionalLights(int32 eyeIndex);
 	void RenderSpotLights(int32 eyeIndex);
 	void RenderPunctualLights(int32 eyeIndex);
 	void RenderAmbientLight(int32 eyeIndex);
+	void RenderPostProcess(int32 eyeIndex);
 
 	// Update
 	void RecompileShaders();

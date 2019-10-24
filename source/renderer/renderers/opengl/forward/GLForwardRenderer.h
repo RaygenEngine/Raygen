@@ -19,6 +19,7 @@ class GLForwardRenderer : public GLEditorRenderer {
 protected:
 	// shaders
 	GLShader* m_depthPassShader{ nullptr };
+	GLShader* m_ambientLightShader{ nullptr };
 	GLShader* m_forwardSpotLightShader{ nullptr };
 	GLShader* m_forwardDirectionalLightShader{ nullptr };
 	GLShader* m_forwardPunctualLightShader{ nullptr };
@@ -31,9 +32,6 @@ protected:
 	std::vector<GLBasicDirectionalLight*> m_glDirectionalLights;
 	std::vector<GLBasicPunctualLight*> m_glPunctualLights;
 	std::vector<GLBasicSpotLight*> m_glSpotLights;
-
-	// raw nodes
-	CameraNode* m_camera{ nullptr };
 
 	// rendering
 	GLuint m_msaaFbo{ 0u };
@@ -61,6 +59,7 @@ protected:
 	// Render
 	void ClearBuffers();
 	void RenderEarlyDepthPass();
+	void RenderAmbientLight();
 	void RenderDirectionalLights();
 	void RenderSpotLights();
 	void RenderPunctualLights();

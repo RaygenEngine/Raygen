@@ -238,8 +238,6 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
 
-
-	// TODO:
 	if (Engine::IsEditorActive()) {
 		if (ImguiImpl::WndProcHandler(hWnd, message, wParam, lParam)) {
 			return true;

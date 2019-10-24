@@ -8,8 +8,13 @@ uniform vec3 wcs_viewPos;
 
 uniform mat4 vp_inv;
 
+uniform vec3 ambient;
+
 layout(binding=0) uniform sampler2D depthSampler;
 layout(binding=1) uniform samplerCube skyboxSampler;
+layout(binding=2) uniform sampler2D albedoSampler;
+layout(binding=3) uniform sampler2D emissiveSampler;
+layout(binding=4) uniform sampler2D specularSampler;
 
 vec3 ReconstructWCS(vec2 uv)
 {
@@ -36,4 +41,13 @@ void main()
 		
 		out_color = texture(skyboxSampler, dir);
 	}
+	
+	vec3 albedo = texture(albedoSampler, uv.xy).rgb;
+	vec3 emissive = texture(emissiveSampler, uv.xy).rgb;
+	vec4 specular = texture(specularSampler, uv.xy);
+	
+	vec3 color = (albedo *  ambient) + emissive;
+	color = mix(color, color * specular.b, specular.a);
+	
+	out_color += vec4(color, 1);
 }

@@ -17,8 +17,8 @@ Rayxen has been primarily designed with the goal of being a sandbox for renderer
 
 The tools provided by the engine for Renderer Designers are:
 1. Extensible automatic asset handling with caching.
-2. Integrated reflection system with a powerfull editor.
-3. Hotswappable sample renderers for comparing and debugging.
+2. Integrated reflection system with a powerful editor.
+3. Hot-swappable sample renderers for comparing and debugging.
 __
 
 
@@ -28,7 +28,7 @@ Also note that the editor has not been thoroughly profiled and may induce slight
 
 
 Scene saving and loading is available and the scene format is in json.
-All the reflected properties of nodes are automatically serialized and restored upon loading. Any asset refrenced in the scene file is stored relative to the Rayxen/assets/ folder and the scene will fail to load if it is not found.
+All the reflected properties of nodes are automatically serialized and restored upon loading. Any asset referenced in the scene file is stored relative to the Rayxen/assets/ folder and the scene will fail to load if it is not found.
 Editing the json files by hand possible but not recommended.
 
 

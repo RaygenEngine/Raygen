@@ -15,10 +15,10 @@ GLShader::~GLShader()
 	glDeleteProgram(programId);
 }
 
-// TODO: tidy
+// WIP: tidy
 void GLShader::Load()
 {
-	// TODO: handle compile and link status
+	// WIP: handle compile and link status
 	auto CreateShader = [&](GLenum type, PodHandle<StringPod> pod) -> GLuint {
 		GLint result = GL_FALSE;
 		int32 infoLogLength;
@@ -138,10 +138,11 @@ void GLShader::Load()
 void GLShader::Reload()
 {
 	glDeleteProgram(programId);
-	programId = 0;
+
+	LOG_REPORT("Reloading shader {}", AssetManager::GetEntry(podHandle)->name);
 
 	AssetManager::Reload(podHandle);
-	for (auto f : podHandle.Lock()->files) {
+	for (const auto f : podHandle.Lock()->files) {
 		AssetManager::Reload(f);
 	}
 

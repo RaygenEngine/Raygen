@@ -31,9 +31,6 @@ protected:
 	std::vector<GLBasicPunctualLight*> m_glPunctualLights;
 	std::vector<GLBasicSpotLight*> m_glSpotLights;
 
-	// raw nodes
-	CameraNode* m_camera{ nullptr };
-
 	// rendering
 	GLuint m_lightFbo{ 0 };
 	GLuint m_lightTexture{ 0 };

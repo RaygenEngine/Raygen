@@ -4,6 +4,7 @@
 #include "renderer/renderers/opengl/GLPreviewer.h"
 #include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
 #include "world/World.h"
+#include "world/nodes/RootNode.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "world/nodes/sky/SkyboxNode.h"
 #include "system/Input.h"
@@ -30,14 +31,15 @@ GLDeferredRenderer::GBuffer::~GBuffer()
 GLDeferredRenderer::~GLDeferredRenderer()
 {
 	glDeleteFramebuffers(1, &m_lightFbo);
+	glDeleteTextures(1, &m_lightTexture);
 	glDeleteFramebuffers(1, &m_outFbo);
 	glDeleteTextures(1, &m_outTexture);
 }
 
 void GLDeferredRenderer::InitObservers()
 {
-	m_camera = Engine::GetWorld()->GetActiveCamera();
-	CLOG_WARN(!m_camera, "Renderer failed to find camera.");
+	m_activeCamera = Engine::GetWorld()->GetActiveCamera();
+	CLOG_WARN(!m_activeCamera, "Renderer failed to find camera.");
 
 	// TODO: should be possible to update skybox, decide on singleton observers to do this automatically
 	auto skyboxNode = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
@@ -97,7 +99,6 @@ void GLDeferredRenderer::InitShaders()
 	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.normalsSampler");
 	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.albedoOpacitySampler");
 	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.specularSampler");
-	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.emissiveSampler");
 
 	m_deferredSpotLightShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_SpotLight.json");
@@ -123,7 +124,6 @@ void GLDeferredRenderer::InitShaders()
 	m_deferredSpotLightShader->StoreUniformLoc("gBuffer.normalsSampler");
 	m_deferredSpotLightShader->StoreUniformLoc("gBuffer.albedoOpacitySampler");
 	m_deferredSpotLightShader->StoreUniformLoc("gBuffer.specularSampler");
-	m_deferredSpotLightShader->StoreUniformLoc("gBuffer.emissiveSampler");
 
 	m_deferredPunctualLightShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_PunctualLight.json");
@@ -146,7 +146,6 @@ void GLDeferredRenderer::InitShaders()
 	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.normalsSampler");
 	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.albedoOpacitySampler");
 	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.specularSampler");
-	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.emissiveSampler");
 
 
 	m_ambientLightShader
@@ -154,6 +153,7 @@ void GLDeferredRenderer::InitShaders()
 
 	m_ambientLightShader->StoreUniformLoc("wcs_viewPos");
 	m_ambientLightShader->StoreUniformLoc("vp_inv");
+	m_ambientLightShader->StoreUniformLoc("ambient");
 
 	m_dummyPostProcShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DummyPostProc.json");
@@ -164,8 +164,8 @@ void GLDeferredRenderer::InitShaders()
 
 void GLDeferredRenderer::InitRenderBuffers()
 {
-	const auto width = m_camera->GetWidth();
-	const auto height = m_camera->GetHeight();
+	const auto width = m_activeCamera->GetWidth();
+	const auto height = m_activeCamera->GetHeight();
 
 	glGenFramebuffers(1, &m_gBuffer.fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.fbo);
@@ -289,7 +289,9 @@ void GLDeferredRenderer::ClearBuffers()
 
 void GLDeferredRenderer::RenderGBuffer()
 {
-	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+	glViewport(0, 0, m_activeCamera->GetWidth(), m_activeCamera->GetHeight());
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_gBuffer.fbo);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -297,12 +299,12 @@ void GLDeferredRenderer::RenderGBuffer()
 	auto gs = m_gBuffer.shader;
 	glUseProgram(gs->programId);
 
-	const auto vp = m_camera->GetViewProjectionMatrix();
+	const auto vp = m_activeCamera->GetViewProjectionMatrix();
 
 	// render geometry (non-instanced)
 	for (auto& geometry : m_glGeometries) {
 		// view frustum culling
-		if (!m_camera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
+		if (!m_activeCamera->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
 			continue;
 		}
 
@@ -355,13 +357,13 @@ void GLDeferredRenderer::RenderDirectionalLights()
 	for (auto light : m_glDirectionalLights) {
 
 		// light AABB camera frustum culling
-		if (!m_camera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
+		if (!m_activeCamera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
 			continue;
 		}
 
 		light->RenderShadowMap(m_glGeometries);
 
-		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+		glViewport(0, 0, m_activeCamera->GetWidth(), m_activeCamera->GetHeight());
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
 
@@ -371,7 +373,7 @@ void GLDeferredRenderer::RenderDirectionalLights()
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
+		ls->SendVec3("wcs_viewPos", m_activeCamera->GetWorldTranslation());
 
 		// light
 		ls->SendVec3("directionalLight.wcs_dir", light->node->GetWorldForward());
@@ -390,7 +392,6 @@ void GLDeferredRenderer::RenderDirectionalLights()
 		ls->SendTexture("gBuffer.normalsSampler", m_gBuffer.normalsAttachment, 2);
 		ls->SendTexture("gBuffer.albedoOpacitySampler", m_gBuffer.albedoOpacityAttachment, 3);
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
-		ls->SendTexture("gBuffer.emissiveSampler", m_gBuffer.emissiveAttachment, 5);
 
 		// big triangle trick, no vao
 		glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -406,13 +407,13 @@ void GLDeferredRenderer::RenderSpotLights()
 	for (auto light : m_glSpotLights) {
 
 		// light AABB camera frustum culling
-		if (!m_camera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
+		if (!m_activeCamera->GetFrustum().IntersectsAABB(light->node->GetFrustumAABB())) {
 			continue;
 		}
 
 		light->RenderShadowMap(m_glGeometries);
 
-		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+		glViewport(0, 0, m_activeCamera->GetWidth(), m_activeCamera->GetHeight());
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
 
@@ -422,7 +423,7 @@ void GLDeferredRenderer::RenderSpotLights()
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
+		ls->SendVec3("wcs_viewPos", m_activeCamera->GetWorldTranslation());
 
 		// light
 		ls->SendVec3("spotLight.wcs_pos", light->node->GetWorldTranslation());
@@ -445,7 +446,6 @@ void GLDeferredRenderer::RenderSpotLights()
 		ls->SendTexture("gBuffer.normalsSampler", m_gBuffer.normalsAttachment, 2);
 		ls->SendTexture("gBuffer.albedoOpacitySampler", m_gBuffer.albedoOpacityAttachment, 3);
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
-		ls->SendTexture("gBuffer.emissiveSampler", m_gBuffer.emissiveAttachment, 5);
 
 		// big triangle trick, no vao
 		glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -462,7 +462,7 @@ void GLDeferredRenderer::RenderPunctualLights()
 
 		light->RenderShadowMap(m_glGeometries);
 
-		glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+		glViewport(0, 0, m_activeCamera->GetWidth(), m_activeCamera->GetHeight());
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
 
@@ -472,7 +472,7 @@ void GLDeferredRenderer::RenderPunctualLights()
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
+		ls->SendVec3("wcs_viewPos", m_activeCamera->GetWorldTranslation());
 
 		// light
 		ls->SendVec3("punctualLight.wcs_pos", light->node->GetWorldTranslation());
@@ -490,7 +490,6 @@ void GLDeferredRenderer::RenderPunctualLights()
 		ls->SendTexture("gBuffer.normalsSampler", m_gBuffer.normalsAttachment, 2);
 		ls->SendTexture("gBuffer.albedoOpacitySampler", m_gBuffer.albedoOpacityAttachment, 3);
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
-		ls->SendTexture("gBuffer.emissiveSampler", m_gBuffer.emissiveAttachment, 5);
 
 		// big triangle trick, no vao
 		glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -501,7 +500,7 @@ void GLDeferredRenderer::RenderPunctualLights()
 
 void GLDeferredRenderer::RenderAmbientLight()
 {
-	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+	glViewport(0, 0, m_activeCamera->GetWidth(), m_activeCamera->GetHeight());
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_lightFbo);
 
@@ -511,12 +510,16 @@ void GLDeferredRenderer::RenderAmbientLight()
 
 	glUseProgram(m_ambientLightShader->programId);
 
-	auto vpInv = glm::inverse(m_camera->GetViewProjectionMatrix());
+	const auto vpInv = glm::inverse(m_activeCamera->GetViewProjectionMatrix());
 
 	m_ambientLightShader->SendMat4("vp_inv", vpInv);
-	m_ambientLightShader->SendVec3("wcs_viewPos", m_camera->GetWorldTranslation());
+	m_ambientLightShader->SendVec3("wcs_viewPos", m_activeCamera->GetWorldTranslation());
+	m_ambientLightShader->SendVec3("ambient", Engine::GetWorld()->GetRoot()->GetAmbientColor());
 	m_ambientLightShader->SendTexture(m_gBuffer.depthAttachment, 0);
 	m_ambientLightShader->SendCubeTexture(m_skyboxCubemap->id, 1);
+	m_ambientLightShader->SendTexture(m_gBuffer.albedoOpacityAttachment, 2);
+	m_ambientLightShader->SendTexture(m_gBuffer.emissiveAttachment, 3);
+	m_ambientLightShader->SendTexture(m_gBuffer.specularAttachment, 4);
 
 	// big triangle trick, no vao
 	glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -531,7 +534,7 @@ void GLDeferredRenderer::RenderPostProcess()
 	// or copy the lightsFbo to the outFbo at the beginning of post processing
 
 	// Dummy post process
-	glViewport(0, 0, m_camera->GetWidth(), m_camera->GetHeight());
+	glViewport(0, 0, m_activeCamera->GetWidth(), m_activeCamera->GetHeight());
 
 	// on m_outFbo
 	glBindFramebuffer(GL_FRAMEBUFFER, m_outFbo);
@@ -563,7 +566,7 @@ void GLDeferredRenderer::Render()
 {
 	ClearBuffers();
 
-	if (m_camera) {
+	if (m_activeCamera) {
 		// geometry pass
 		RenderGBuffer();
 		// light pass - blend lights on lightFbo
@@ -598,8 +601,8 @@ void GLDeferredRenderer::RecompileShaders()
 
 void GLDeferredRenderer::ActiveCameraResize()
 {
-	const auto width = m_camera->GetWidth();
-	const auto height = m_camera->GetHeight();
+	const auto width = m_activeCamera->GetWidth();
+	const auto height = m_activeCamera->GetHeight();
 
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.positionsAttachment);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
@@ -629,9 +632,6 @@ void GLDeferredRenderer::ActiveCameraResize()
 void GLDeferredRenderer::Update()
 {
 	GLRendererBase::Update();
-
-	// WIP:
-	m_camera = Engine::GetWorld()->GetActiveCamera();
 
 	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::R)) {
 		RecompileShaders();
