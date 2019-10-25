@@ -15,9 +15,18 @@ class NodeFactory;
 
 #include "system/Timer.h"
 
+
 class Engine {
 private:
 	Engine() = default;
+
+	struct DrawReporter {
+
+		uint64 tris{ 0ull };
+		uint64 draws{ 0ull };
+
+		void Reset();
+	};
 
 public:
 	[[nodiscard]] static Engine& Get()
@@ -55,7 +64,8 @@ public:
 	// ALWAYS, ALWAYS check this return value. Editor may not be initialized at all in some cases.
 	[[nodiscard]] static Editor* GetEditor() { return Get().m_editor; }
 
-public:
+	[[nodiscard]] static DrawReporter* GetDrawReporter() { return &Get().m_drawReporter; }
+
 	~Engine();
 
 	Engine(Engine const&) = delete;
@@ -65,6 +75,8 @@ public:
 	Engine& operator=(Engine&&) = delete;
 
 private:
+	DrawReporter m_drawReporter;
+
 	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
 	AssetManager* m_assetManager{ nullptr };
 

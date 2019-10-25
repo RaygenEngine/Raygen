@@ -353,7 +353,7 @@ void GLForwardRenderer::RenderEarlyDepthPass()
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
 			glBindVertexArray(glMesh.vao);
-			glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
+			report_glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
 		}
 	}
 
@@ -419,7 +419,7 @@ void GLForwardRenderer::RenderAmbientLight()
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
 			glBindVertexArray(glMesh.vao);
-			glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
+			report_glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
 		}
 	}
 	glDepthMask(GL_TRUE); // renable depth map writes
@@ -514,7 +514,7 @@ void GLForwardRenderer::RenderDirectionalLights()
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
 				glBindVertexArray(glMesh.vao);
-				glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
+				report_glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
 			}
 		}
 		glDepthMask(GL_TRUE); // renable depth map writes
@@ -614,7 +614,7 @@ void GLForwardRenderer::RenderSpotLights()
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
 				glBindVertexArray(glMesh.vao);
-				glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
+				report_glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
 			}
 		}
 		glDepthMask(GL_TRUE); // renable depth map writes
@@ -698,7 +698,7 @@ void GLForwardRenderer::RenderPunctualLights()
 				materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
 				glBindVertexArray(glMesh.vao);
-				glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
+				report_glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
 			}
 		}
 		glDepthMask(GL_TRUE); // renable depth map writes
@@ -743,7 +743,7 @@ void GLForwardRenderer::RenderSkybox()
 	m_cubemapInfDistShader->SendCubeTexture(m_ambient->texture->id, 0);
 
 	glBindVertexArray(m_skyboxVao);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
+	report_glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
@@ -780,7 +780,7 @@ void GLForwardRenderer::RenderPostProcess()
 	m_dummyPostProcShader->SendTexture(m_intrColorTexture, 0);
 
 	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	report_glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void GLForwardRenderer::RenderWindow()
@@ -795,7 +795,7 @@ void GLForwardRenderer::RenderWindow()
 	m_windowShader->SendTexture(m_outColorTexture, 0);
 
 	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	report_glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 

@@ -351,7 +351,7 @@ void GLDeferredRenderer::RenderGBuffer()
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
 			glBindVertexArray(glMesh.vao);
-			glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
+			report_glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
 		}
 	}
 	glDisable(GL_CULL_FACE);
@@ -402,7 +402,7 @@ void GLDeferredRenderer::RenderDirectionalLights()
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
 
 		// big triangle trick, no vao
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		report_glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glDisable(GL_BLEND);
 	}
@@ -456,7 +456,7 @@ void GLDeferredRenderer::RenderSpotLights()
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
 
 		// big triangle trick, no vao
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		report_glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glDisable(GL_BLEND);
 	}
@@ -500,7 +500,7 @@ void GLDeferredRenderer::RenderPunctualLights()
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
 
 		// big triangle trick, no vao
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		report_glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glDisable(GL_BLEND);
 	}
@@ -530,7 +530,7 @@ void GLDeferredRenderer::RenderAmbientLight()
 	m_ambientLightShader->SendTexture(m_gBuffer.specularAttachment, 4);
 
 	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	report_glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glDisable(GL_BLEND);
@@ -554,7 +554,7 @@ void GLDeferredRenderer::RenderPostProcess()
 	m_dummyPostProcShader->SendTexture(m_lightTexture, 0);
 
 	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	report_glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void GLDeferredRenderer::RenderWindow()
@@ -569,7 +569,7 @@ void GLDeferredRenderer::RenderWindow()
 	m_windowShader->SendTexture(m_outTexture, 0);
 
 	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	report_glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void GLDeferredRenderer::Render()
