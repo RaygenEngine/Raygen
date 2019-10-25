@@ -6,7 +6,7 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/sinks/ostream_sink.h"
 
-namespace utl {
+
 std::shared_ptr<spdlog::logger> Log::s_logger;
 std::stringstream Log::s_editorLogStream;
 
@@ -40,4 +40,3 @@ void Log::Init(LogLevelTarget level)
 
 	LOG_INFO("Initialized Rayxen Logger, level: {}", spdlog::level::to_string_view(s_logger->level()));
 }
-} // namespace utl

@@ -13,19 +13,10 @@ void GeometryNode::SetModel(PodHandle<ModelPod> newModel)
 	SetDirty(DF::ModelChange);
 }
 
-void GeometryNode::CalculateAABB()
-{
-	m_aabb = m_localBB;
-	m_aabb.Transform(GetWorldMatrix());
-}
-
 void ::GeometryNode::DirtyUpdate(DirtyFlagset dirtyFlags)
 {
 	if (dirtyFlags[DF::ModelChange]) {
 		m_localBB = m_model.Lock()->bbox;
-		CalculateAABB();
-	}
-	else if (dirtyFlags[DF::TRS]) {
-		CalculateAABB();
+		CalculateWorldAABB();
 	}
 }

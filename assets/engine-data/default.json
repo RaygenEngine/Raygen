@@ -22,80 +22,6 @@
         "model": "/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf",
         "~children": [
             {
-                "+name": "test_pun",
-                "+trs": {
-                    "pos": {
-                        "x": -10.295938491821289,
-                        "y": 1.5171912908554077,
-                        "z": -4.279172897338867
-                    },
-                    "rot": {
-                        "x": 38.598106384277344,
-                        "y": 77.83318328857422,
-                        "z": -5.73983097076416
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0000001192092896
-                    }
-                },
-                "+type": "PunctualLight",
-                "attenuationMode": "CONSTANT",
-                "color": {
-                    "x": 0.9399999976158142,
-                    "y": 0.8500000238418579,
-                    "z": 0.6399999856948853
-                },
-                "far": 21.91200065612793,
-                "hasShadow": true,
-                "intensity": 10.0,
-                "maxShadowBias": 0.6940000057220459,
-                "near": 0.12999999523162842,
-                "samples": 8,
-                "shadowMapHeight": 2048,
-                "shadowMapWidth": 2048,
-                "~children": []
-            },
-            {
-                "+name": "test_spot",
-                "+trs": {
-                    "pos": {
-                        "x": 5.453902721405029,
-                        "y": 4.79185676574707,
-                        "z": 4.4443678855896
-                    },
-                    "rot": {
-                        "x": 0.3443179130554199,
-                        "y": 74.2629165649414,
-                        "z": -0.0016739254351705313
-                    },
-                    "scale": {
-                        "x": 0.9999998807907104,
-                        "y": 1.0,
-                        "z": 1.000000238418579
-                    }
-                },
-                "+type": "SpotLight",
-                "attenuationMode": "CONSTANT",
-                "color": {
-                    "x": 0.9399999976158142,
-                    "y": 0.8500000238418579,
-                    "z": 0.6399999856948853
-                },
-                "far": 15.5,
-                "hasShadow": true,
-                "innerAperture": 12.5,
-                "intensity": 10.0,
-                "maxShadowBias": 0.004999999888241291,
-                "near": 1.0,
-                "outerAperture": 25.0,
-                "samples": 43,
-                "shadowMapHeight": 2048,
-                "shadowMapWidth": 2048,
-                "~children": []
-            },
-            {
                 "+name": "flight_helmet",
                 "+trs": {
                     "pos": {
@@ -104,9 +30,9 @@
                         "z": 2.686573028564453
                     },
                     "rot": {
-                        "x": -1.0383466482162476,
-                        "y": -16.922868728637695,
-                        "z": 2.9205610752105713
+                        "x": -1.6816248393780597e-09,
+                        "y": -2.7406954927755578e-08,
+                        "z": 4.7299124616984045e-09
                     },
                     "scale": {
                         "x": 0.9999998211860657,
@@ -122,14 +48,14 @@
                 "+name": "test_dir",
                 "+trs": {
                     "pos": {
-                        "x": 0.0,
-                        "y": 15.0,
-                        "z": 0.0
+                        "x": 0.9173188209533691,
+                        "y": 14.624977111816406,
+                        "z": -0.6508057117462158
                     },
                     "rot": {
-                        "x": -90.0,
-                        "y": -89.96573638916016,
-                        "z": 0.0
+                        "x": 93.61835479736328,
+                        "y": 88.64347076416016,
+                        "z": -179.9766387939453
                     },
                     "scale": {
                         "x": 1.0,
@@ -146,53 +72,15 @@
                 },
                 "far": 15.5,
                 "hasShadow": true,
-                "intensity": 6.559999942779541,
+                "intensity": 13.359999656677246,
                 "left": -10.0,
                 "maxShadowBias": 0.004999999888241291,
                 "near": 1.0,
                 "right": 10.0,
-                "samples": 71,
+                "samples": 15,
                 "shadowMapHeight": 2048,
                 "shadowMapWidth": 2048,
                 "top": 10.0,
-                "~children": []
-            },
-            {
-                "+name": "SpotLight_new",
-                "+trs": {
-                    "pos": {
-                        "x": -3.4040255546569824,
-                        "y": 5.80335807800293,
-                        "z": -4.612786769866943
-                    },
-                    "rot": {
-                        "x": 173.16275024414063,
-                        "y": -73.28057098388672,
-                        "z": 178.18418884277344
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                "+type": "SpotLight",
-                "attenuationMode": "CONSTANT",
-                "color": {
-                    "x": 1.0,
-                    "y": 0.0,
-                    "z": 0.0
-                },
-                "far": 15.5,
-                "hasShadow": true,
-                "innerAperture": 12.5,
-                "intensity": 10.0,
-                "maxShadowBias": 0.014000000432133675,
-                "near": 1.0,
-                "outerAperture": 59.099998474121094,
-                "samples": 75,
-                "shadowMapHeight": 2048,
-                "shadowMapWidth": 2048,
                 "~children": []
             }
         ]
@@ -200,10 +88,20 @@
     {
         "+name": "unnamed_FreeformUser",
         "+trs": {
-            "lookat": {
-                "x": 0,
-                "y": 0,
-                "z": 5
+            "pos": {
+                "x": -0.03111627697944641,
+                "y": 3.488917827606201,
+                "z": -0.237051323056221
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.000010371208191,
+                "y": 0.9999890327453613,
+                "z": 1.0000079870224
             }
         },
         "+type": "FreeformUser",
@@ -211,7 +109,7 @@
         "turningSpeed": 0.699999988079071,
         "~children": [
             {
-                "+name": "Resizeable Camera",
+                "+name": "WindowCamera_new",
                 "+trs": {
                     "pos": {
                         "x": 0.0,
@@ -232,19 +130,21 @@
                 "+type": "WindowCamera",
                 "far": 1000.0,
                 "focalLength": 1.0,
-                "hFov": 91.49284362792969,
+                "hFov": 1.5968513488769531,
+                "hFovOffset": 0.0,
                 "near": 0.20000000298023224,
-                "vFov": 60.0,
+                "vFov": 1.0471975803375244,
+                "vFovOffset": 0.0,
                 "~children": []
             }
         ]
     },
     {
-        "+name": "unnamed_SkyBox",
+        "+name": "Scene Ambient",
         "+trs": {
             "pos": {
                 "x": 0.0,
-                "y": -0.7400000095367432,
+                "y": 0.0,
                 "z": 0.0
             },
             "rot": {
@@ -258,8 +158,125 @@
                 "z": 1.0
             }
         },
-        "+type": "Skybox",
-        "cubemap": "/import-data/skybox/alps.cubemap.json",
+        "+type": "Ambient",
+        "ambientTerm": {
+            "x": 0.1076287105679512,
+            "y": 0.14117544889450073,
+            "z": 0.2599118947982788
+        },
+        "skybox": "/import-data/skybox/alps.cubemap.json",
+        "~children": []
+    },
+    {
+        "+name": "helmet light",
+        "+trs": {
+            "pos": {
+                "x": -3.428236722946167,
+                "y": 5.249015808105469,
+                "z": 3.5398335456848145
+            },
+            "rot": {
+                "x": -9.912321090698242,
+                "y": 76.0601806640625,
+                "z": -0.004511584062129259
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "+type": "SpotLight",
+        "attenuationMode": "CONSTANT",
+        "color": {
+            "x": 0.5763835906982422,
+            "y": 0.8325991034507751,
+            "z": 0.4621475338935852
+        },
+        "far": 15.5,
+        "hasShadow": true,
+        "innerAperture": 0.21275562047958374,
+        "intensity": 10.0,
+        "maxShadowBias": 0.004999999888241291,
+        "near": 1.0,
+        "outerAperture": 0.46844637393951416,
+        "samples": 4,
+        "shadowMapHeight": 2048,
+        "shadowMapWidth": 2048,
+        "~children": []
+    },
+    {
+        "+name": "PunctualLight_new",
+        "+trs": {
+            "pos": {
+                "x": 9.232999801635742,
+                "y": 2.2009999752044678,
+                "z": -3.671999931335449
+            },
+            "rot": {
+                "x": 167.09210205078125,
+                "y": 48.4400634765625,
+                "z": -179.99867248535156
+            },
+            "scale": {
+                "x": 1.0000001192092896,
+                "y": 1.0,
+                "z": 1.0000001192092896
+            }
+        },
+        "+type": "PunctualLight",
+        "attenuationMode": "CONSTANT",
+        "color": {
+            "x": 1.0,
+            "y": 0.0,
+            "z": 0.0
+        },
+        "far": 13.300000190734863,
+        "hasShadow": true,
+        "intensity": 10.0,
+        "maxShadowBias": 0.0010000000474974513,
+        "near": 0.0020000000949949026,
+        "samples": 4,
+        "shadowMapHeight": 2048,
+        "shadowMapWidth": 2048,
+        "~children": []
+    },
+    {
+        "+name": "SpotLight_new",
+        "+trs": {
+            "pos": {
+                "x": -4.581157207489014,
+                "y": 5.20310115814209,
+                "z": -3.7703564167022705
+            },
+            "rot": {
+                "x": 139.7086181640625,
+                "y": -60.29716491699219,
+                "z": -138.78512573242188
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "+type": "SpotLight",
+        "attenuationMode": "QUADRATIC",
+        "color": {
+            "x": 0.7973568439483643,
+            "y": 0.745369553565979,
+            "z": 0.5374255776405334
+        },
+        "far": 15.5,
+        "hasShadow": true,
+        "innerAperture": 0.21816615760326385,
+        "intensity": 169.6999969482422,
+        "maxShadowBias": 0.004999999888241291,
+        "near": 1.0,
+        "outerAperture": 0.4363323152065277,
+        "samples": 4,
+        "shadowMapHeight": 2048,
+        "shadowMapWidth": 2048,
         "~children": []
     }
 ]

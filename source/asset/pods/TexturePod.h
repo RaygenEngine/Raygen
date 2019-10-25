@@ -3,10 +3,9 @@
 #include "asset/PodHandle.h"
 #include "asset/pods/ImagePod.h"
 
-struct TexturePod : public AssetPod {
+struct TexturePod : AssetPod {
 	REFLECTED_POD(TexturePod)
 	{
-		REFLECT_VAR(images);
 		REFLECT_VAR(minFilter);
 		REFLECT_VAR(magFilter);
 
@@ -15,6 +14,8 @@ struct TexturePod : public AssetPod {
 		REFLECT_VAR(wrapR);
 
 		REFLECT_VAR(target);
+
+		REFLECT_VAR(images);
 	}
 	static void Load(TexturePod* pod, const uri::Uri& path);
 
@@ -26,6 +27,9 @@ struct TexturePod : public AssetPod {
 	TextureWrapping wrapR{ TextureWrapping::REPEAT };
 
 	TextureTarget target{ TextureTarget::TEXTURE_2D };
+
+	// !isSRGB...
+	bool isLinear{ true };
 
 	std::vector<PodHandle<ImagePod>> images{};
 };

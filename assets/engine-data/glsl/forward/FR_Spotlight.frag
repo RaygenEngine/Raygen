@@ -47,25 +47,19 @@ uniform struct Material
 {
 	// factors
 	vec4 baseColorFactor;
-	vec3 emissiveFactor;
 	float metallicFactor;
 	float roughnessFactor;
 	float normalScale;
-	float occlusionStrength;
 	
 	// text coord indices
 	int baseColorTexcoordIndex;
 	int metallicRoughnessTexcoordIndex;
-	int emissiveTexcoordIndex;
 	int normalTexcoordIndex;
-	int occlusionTexcoordIndex;
 	
 	// samplers
 	sampler2D baseColorSampler;
 	sampler2D metallicRoughnessSampler;
-	sampler2D emissiveSampler;
 	sampler2D normalSampler;
-	sampler2D occlusionSampler;
 	
 	// alpha mask
 	float alphaCutoff;
@@ -109,8 +103,7 @@ float ShadowCalculation(float cosTheta)
     return shadow / spotLight.samples;
 }  
 
-void ProcessUniformMaterial(out vec3 albedo, out float opacity, out float metallic, out float roughness,
-							out vec3 emissive, out float occlusion, out vec3 normal)
+void ProcessUniformMaterial(out vec3 albedo, out float opacity, out float metallic, out float roughness, out vec3 normal)
 {
 	// sample material textures
 	vec4 sampledBaseColor = texture(material.baseColorSampler, dataIn.textCoord[material.baseColorTexcoordIndex]);
@@ -120,17 +113,13 @@ void ProcessUniformMaterial(out vec3 albedo, out float opacity, out float metall
 	if(material.mask && opacity < material.alphaCutoff)
 		discard;
 	
-	vec4 sampledMetallicRoughness = texture(material.metallicRoughnessSampler, dataIn.textCoord[material.metallicRoughnessTexcoordIndex]); 
-	vec4 sampledEmissive = texture(material.emissiveSampler, dataIn.textCoord[material.emissiveTexcoordIndex]);
+	vec4 sampledMetallicRoughness = texture(material.metallicRoughnessSampler, dataIn.textCoord[material.metallicRoughnessTexcoordIndex]);
 	vec4 sampledNormal = texture(material.normalSampler, dataIn.textCoord[material.normalTexcoordIndex]);
-	vec4 sampledOcclusion = texture(material.occlusionSampler, dataIn.textCoord[material.occlusionTexcoordIndex]);
 	
 	// final material values
 	albedo = sampledBaseColor.rgb * material.baseColorFactor.rgb;
 	metallic = sampledMetallicRoughness.b * material.metallicFactor;
 	roughness = sampledMetallicRoughness.g * material.roughnessFactor;
-	emissive = sampledEmissive.rgb * material.emissiveFactor;
-	occlusion = sampledOcclusion.r;
 	normal = normalize((sampledNormal.rgb * 2.0 - 1.0) * vec3(material.normalScale, material.normalScale, 1.0));
 	// opacity set from above
 }
@@ -141,12 +130,10 @@ void main()
 	float opacity;
 	float metallic;
 	float roughness;
-	vec3 emissive;
-	float occlusion;
 	vec3 normal;
 	
 	// material
-	ProcessUniformMaterial(albedo, opacity, metallic, roughness, emissive, occlusion, normal);
+	ProcessUniformMaterial(albedo, opacity, metallic, roughness, normal);
 
 	// tangent space vectors
 	vec3 N = normal;
@@ -166,9 +153,6 @@ void main()
 	vec3 Li = ((1.0 - shadow) * spotLight.color * spotLight.intensity * attenuation * spotEffect); 
 
 	vec3 Lo = CookTorranceMicrofacetBRDF_GGX(L, V, N, albedo, metallic, roughness) * Li * max(dot(N, L), 0.0);
-
-	vec3 color = Lo + emissive;
-	color = mix(color, color * occlusion, material.occlusionStrength);
 	
-	out_color = vec4(color, opacity);
+	out_color = vec4(Lo, opacity);
 }

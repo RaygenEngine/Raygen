@@ -57,6 +57,8 @@ Node* World::GetNodeByName(const std::string& name) const
 void World::SetActiveCamera(CameraNode* cam)
 {
 	m_activeCamera = cam;
+
+	Event::OnWorldActiveCameraChanged.Broadcast(cam);
 }
 
 void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)

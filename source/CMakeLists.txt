@@ -36,14 +36,14 @@ set(SOURCE_FILES
 
 	renderer/ObserverRenderer.cpp
 	
-
+	renderer/renderers/opengl/GLPreviewer.cpp
 	renderer/renderers/opengl/GLEditorRenderer.cpp
 	renderer/renderers/opengl/GLRendererBase.cpp
 	renderer/renderers/opengl/assets/GLModel.cpp
 	renderer/renderers/opengl/assets/GLShader.cpp
 	renderer/renderers/opengl/assets/GLTexture.cpp
 	renderer/renderers/opengl/assets/GLMaterial.cpp
-	renderer/renderers/opengl/basic/GLBasicSkybox.cpp
+	renderer/renderers/opengl/basic/GLBasicAmbient.cpp
 	renderer/renderers/opengl/basic/GLBasicSpotLight.cpp
 	renderer/renderers/opengl/basic/GLBasicDirectionalLight.cpp
 	renderer/renderers/opengl/basic/GLBasicPunctualLight.cpp
@@ -51,7 +51,6 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/dovr/GLDOVRRenderer.cpp
 	renderer/renderers/opengl/forward/GLForwardRenderer.cpp
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.cpp
-	renderer/renderers/opengl/previewer/GLPreviewerRenderer.cpp
 
 
 	system/Engine.cpp
@@ -73,6 +72,7 @@ set(SOURCE_FILES
 	world/nodes/light/DirectionalLightNode.cpp
 	world/nodes/light/SpotLightNode.cpp
 	world/nodes/light/LightNode.cpp
+	world/nodes/light/AmbientNode.cpp
 	world/nodes/user/FreeformUserNode.cpp
 	world/nodes/user/UserNode.cpp
 	world/nodes/user/FlyingUserNode.cpp
@@ -162,6 +162,7 @@ set(HEADER_FILES
 	renderer/util/GLSLutil.h
 	
 	renderer/renderers/opengl/GLAsset.h
+	renderer/renderers/opengl/GLPreviewer.h
 	renderer/renderers/opengl/GLAssetManager.h
 	renderer/renderers/opengl/GLEditorRenderer.h
 	renderer/renderers/opengl/GLRendererBase.h
@@ -170,7 +171,7 @@ set(HEADER_FILES
 	renderer/renderers/opengl/assets/GLShader.h
 	renderer/renderers/opengl/assets/GLTexture.h
 	renderer/renderers/opengl/assets/GLMaterial.h
-	renderer/renderers/opengl/basic/GLBasicSkybox.h
+	renderer/renderers/opengl/basic/GLBasicAmbient.h
 	renderer/renderers/opengl/basic/GLBasicSpotLight.h
 	renderer/renderers/opengl/basic/GLBasicDirectionalLight.h
 	renderer/renderers/opengl/basic/GLBasicPunctualLight.h
@@ -178,7 +179,6 @@ set(HEADER_FILES
 	renderer/renderers/opengl/dovr/GLDOVRRenderer.h
 	renderer/renderers/opengl/forward/GLForwardRenderer.h
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.h
-	renderer/renderers/opengl/previewer/GLPreviewerRenderer.h
 
 
 	system/Engine.h
@@ -203,12 +203,12 @@ set(HEADER_FILES
 	world/nodes/camera/CameraNode.h
 	world/nodes/camera/WindowCameraNode.h
 	world/nodes/camera/EditorCameraNode.h
-	world/nodes/sky/SkyboxNode.h
 	world/nodes/geometry/GeometryNode.h
 	world/nodes/light/PunctualLightNode.h
 	world/nodes/light/DirectionalLightNode.h
 	world/nodes/light/SpotLightNode.h
 	world/nodes/light/LightNode.h
+	world/nodes/light/AmbientNode.h
 	world/nodes/user/FreeformUserNode.h
 	world/nodes/user/UserNode.h
 	world/nodes/user/FlyingUserNode.h
