@@ -148,11 +148,11 @@ Editor::~Editor()
 
 void Editor::UpdateEditor()
 {
-	HandleInput();
 
 	if (m_editorCamera) {
 		m_editorCamera->UpdateFromEditor(Engine::GetWorld()->GetDeltaTime());
 	}
+	HandleInput();
 
 	ImguiImpl::NewFrame();
 
@@ -655,6 +655,15 @@ void Editor::Run_HelpWindow()
 
 void Editor::HandleInput()
 {
+	auto input = Engine::GetInput();
+	if (input->IsKeyRepeat(XVirtualKey::SHIFT) && input->IsKeyPressed(XVirtualKey::F)) {
+		PilotThis(m_selectedNode);
+	}
+	else if (input->IsKeyPressed(XVirtualKey::F)) {
+		if (m_selectedNode) {
+			FocusNode(m_selectedNode);
+		}
+	}
 }
 
 void Editor::PushCommand(std::function<void()>&& func)
@@ -872,12 +881,20 @@ void Editor::PilotThis(Node* node)
 		return;
 	}
 
+	bool wasPiloting = Engine::GetEditor()->IsCameraPiloting();
+
 	if (camera->GetParent() == node || node == nullptr) {
+		if (!wasPiloting) {
+			return;
+		}
 		Editor::MakeChildOf(Engine::GetWorld()->GetRoot(), camera);
-		camera->ResetRotation();
+		camera->SetWorldMatrix(Engine::GetEditor()->m_editorCameraPrePilotPos);
 		return;
 	}
 
+	if (!wasPiloting) {
+		Engine::GetEditor()->m_editorCameraPrePilotPos = camera->GetWorldMatrix();
+	}
 	Editor::MakeChildOf(node, camera);
 	camera->SetWorldMatrix(node->GetWorldMatrix());
 }
@@ -927,8 +944,8 @@ namespace logwindow {
 struct ExampleAppLog {
 	ImGuiTextBuffer Buf;
 	ImGuiTextFilter Filter;
-	ImVector<int> LineOffsets; // Index to lines offset. We maintain this with AddLog() calls, allowing us to have a
-							   // random access on lines
+	ImVector<int> LineOffsets; // Index to lines offset. We maintain this with AddLog() calls, allowing us to
+							   // have a random access on lines
 	bool AutoScroll;           // Keep scrolling if already at the bottom
 
 	ExampleAppLog()
@@ -993,8 +1010,8 @@ struct ExampleAppLog {
 		if (Filter.IsActive()) {
 			// In this example we don't use the clipper when Filter is enabled.
 			// This is because we don't have a random access on the result on our filter.
-			// A real application processing logs with ten of thousands of entries may want to store the result of
-			// search/filter. especially if the filtering function is not trivial (e.g. reg-exp).
+			// A real application processing logs with ten of thousands of entries may want to store the result
+			// of search/filter. especially if the filtering function is not trivial (e.g. reg-exp).
 			for (int line_no = 0; line_no < LineOffsets.Size; line_no++) {
 				const char* line_start = buf + LineOffsets[line_no];
 				const char* line_end
@@ -1007,15 +1024,16 @@ struct ExampleAppLog {
 
 			// The simplest and easy way to display the entire buffer:
 			//   ImGui::TextUnformatted(buf_begin, buf_end);
-			// And it'll just work. TextUnformatted() has specialization for large blob of text and will fast-forward to
-			// skip non-visible lines. Here we instead demonstrate using the clipper to only process lines that are
-			// within the visible area. If you have tens of thousands of items and their processing cost is
-			// non-negligible, coarse clipping them on your side is recommended. Using ImGuiListClipper requires A)
-			// random access into your data, and B) items all being the  same height, both of which we can handle since
-			// we an array pointing to the beginning of each line of text. When using the filter (in the block of code
-			// above) we don't have random access into the data to display anymore, which is why we don't use the
-			// clipper. Storing or skimming through the search result would make it possible (and would be recommended
-			// if you want to search through tens of thousands of entries)
+			// And it'll just work. TextUnformatted() has specialization for large blob of text and will
+			// fast-forward to skip non-visible lines. Here we instead demonstrate using the clipper to only
+			// process lines that are within the visible area. If you have tens of thousands of items and their
+			// processing cost is non-negligible, coarse clipping them on your side is recommended. Using
+			// ImGuiListClipper requires A) random access into your data, and B) items all being the  same
+			// height, both of which we can handle since we an array pointing to the beginning of each line of
+			// text. When using the filter (in the block of code above) we don't have random access into the
+			// data to display anymore, which is why we don't use the clipper. Storing or skimming through the
+			// search result would make it possible (and would be recommended if you want to search through tens
+			// of thousands of entries)
 			ImGuiListClipper clipper;
 			clipper.Begin(LineOffsets.Size);
 			while (clipper.Step()) {
