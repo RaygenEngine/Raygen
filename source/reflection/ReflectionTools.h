@@ -20,8 +20,8 @@ namespace detail {
 
 // These are all the possible functions and their documentation for the visitor
 struct ReflClassVisitor {
-	void Begin(const ReflClass&) {} // Pre Begin iteration on reflector's properties
-	void End(const ReflClass&) {}   // Post End iteration on reflector's properties
+	void Begin(void* objectPtr, const ReflClass&) {} // Pre Begin iteration on reflector's properties
+	void End(const ReflClass&) {}                    // Post End iteration on reflector's properties
 
 	// Pre Call visitor on proprety. If return type is boolean then returning false will skip visiting for this property
 	bool PreProperty(const Property&) { return true; }
@@ -97,7 +97,7 @@ void CallVisitorOnEveryProperty(ReflectedObj* obj, Visitor& v)
 	const ReflClass& cl = refl::GetClass(obj);
 
 	if constexpr (HasBegin<Visitor>::value) { // NOLINT
-		v.Begin(cl);
+		v.Begin(obj, cl);
 	}
 
 	for (auto& p : cl.GetProperties()) {
@@ -263,16 +263,25 @@ struct JsonToPropVisitor {
 struct JsonToPropVisitor_WithRelativePath {
 
 	JsonToPropVisitor parentVisitor;
-	BasePodHandle podParent;
 	bool gltfPreload;
+	uri::Uri parentUri;
 
 	JsonToPropVisitor_WithRelativePath(const json& inJson, BasePodHandle inParent, bool inGltfPreload = false,
 		PropertyFlags::Type inFlagsToSkip = PropertyFlags::NoLoad)
 		: parentVisitor(inJson, inFlagsToSkip)
-		, podParent(inParent)
+		, gltfPreload(inGltfPreload)
+	{
+		parentUri = AssetManager::GetPodUri(inParent);
+	}
+
+	JsonToPropVisitor_WithRelativePath(const json& inJson, const uri::Uri inParentUri, bool inGltfPreload = false,
+		PropertyFlags::Type inFlagsToSkip = PropertyFlags::NoLoad)
+		: parentVisitor(inJson, inFlagsToSkip)
+		, parentUri(inParentUri)
 		, gltfPreload(inGltfPreload)
 	{
 	}
+
 
 	// forward any non ovreloaded call to parent
 	template<typename T>
@@ -284,13 +293,13 @@ struct JsonToPropVisitor_WithRelativePath {
 	template<typename T>
 	PodHandle<T> LoadHandle(const std::string& str)
 	{
-		return AssetManager::GetOrCreateFromParent<T>(str, podParent);
+		return AssetManager::GetOrCreateFromParentUri<T>(str, parentUri);
 	}
 
 	template<>
 	PodHandle<ModelPod> LoadHandle(const std::string& str)
 	{
-		auto handle = AssetManager::GetOrCreateFromParent<ModelPod>(str, podParent);
+		auto handle = AssetManager::GetOrCreateFromParentUri<ModelPod>(str, parentUri);
 		if (gltfPreload && str.find(".gltf") != std::string::npos) {
 			AssetManager::PreloadGltf(AssetManager::GetPodUri(handle) + "{}");
 		}

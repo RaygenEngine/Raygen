@@ -37,6 +37,7 @@ void PodDeleter::operator()(AssetPod* p)
 	podtools::VisitPod(p, l);
 }
 
+// Dummy to avoid _Debug getting optimzed out
 void Code()
 {
 	auto l = [](auto p) {
