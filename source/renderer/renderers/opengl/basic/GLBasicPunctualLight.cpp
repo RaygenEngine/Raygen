@@ -89,6 +89,11 @@ void GLBasicPunctualLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& 
 
 		for (auto& glMesh : geometry->glModel->meshes) {
 
+			// light aabb culling
+			if (!node->IsNodeInsideAABB(geometry->node)) {
+				continue;
+			}
+
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
 

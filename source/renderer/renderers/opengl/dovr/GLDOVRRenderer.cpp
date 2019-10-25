@@ -592,6 +592,11 @@ void GLDOVRRenderer::RenderPunctualLights(int32 eyeIndex)
 
 	for (auto light : m_glPunctualLights) {
 
+		// light AABB camera frustum culling
+		if (!camera->IsNodeInsideFrustum(light->node)) {
+			continue;
+		}
+
 		light->RenderShadowMap(m_glGeometries);
 
 		glViewport(0, 0, camera->GetWidth(), camera->GetHeight());

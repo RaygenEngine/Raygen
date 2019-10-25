@@ -630,6 +630,12 @@ void GLForwardRenderer::RenderPunctualLights()
 	auto ls = m_forwardPunctualLightShader;
 
 	for (auto light : m_glPunctualLights) {
+
+		// light AABB camera frustum culling
+		if (!m_activeCamera->IsNodeInsideFrustum(light->node)) {
+			continue;
+		}
+
 		light->RenderShadowMap(m_glGeometries);
 
 		glViewport(0, 0, m_activeCamera->GetWidth(), m_activeCamera->GetHeight());

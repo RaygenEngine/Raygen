@@ -101,7 +101,7 @@ struct ReflectionToImguiVisitor {
 			if (Inner(t, p)) {
 				if (p.GetDirtyFlagIndex() >= 0) {
 					dirtyFlags.set(p.GetDirtyFlagIndex());
-					LOG_REPORT("Set Dirty: {}", p.GetName());
+					// LOG_REPORT("Set Dirty: {}", p.GetName());
 				}
 				dirtyFlags.set(Node::DF::Properties);
 				if (massEditMaterials) {
