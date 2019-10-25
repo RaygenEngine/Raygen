@@ -34,39 +34,51 @@ protected:
 	// PERF: remove_swap for vectors and fast iterations
 	// DOC: document the final version
 
-	template<typename NodeType>
-	void RegisterObserver_PointerForTracking(NodeType*& ptrToAutoUpdate)
-	{
-
-		auto onAdd = [&, ptrToAutoUpdate](Node* node) {
-			if (!ptrToAutoUpdate) {
-				ptrToAutoUpdate = NodeCast<NodeType>(node);
-			}
-		};
-
-		auto onRemove = [&, ptrToAutoUpdate](Node* node) {
-			auto world = Engine::GetWorld();
-			if (ptrToAutoUpdate == node) {
-				ptrToAutoUpdate = world->GetAnyAvailableNode<NodeType>();
-			}
-		};
-
-		auto world = Engine::GetWorld();
-		ptrToAutoUpdate = world->GetAnyAvailableNode<NodeType>();
-
-		RegisterAdderRemoverForType<NodeType>(onAdd, onRemove);
-	}
 
 	// Attempts to track any available node of this type.
 	// When this node gets deleted, it will automatically observe another available node of this type.
 	// If no such node is available or the last one from the world gets deleted, it will Nullptr the node member.
+	// Note: observer constructor is called with nullptr node if no such node type is found.
 	template<typename ObserverType>
-	[[nodiscard]] ObserverType* CreateObserver_AnyAvailable()
+	[[nodiscard]] ObserverType* CreateTrackerObserver_AnyAvailable()
 	{
+		auto doNothing = [](auto ptr) {
+		};
 
-		return nullptr;
+		return CreateTrackerObserver_AnyAvailableWithCallback(doNothing);
 	}
 
+	template<typename ObserverType>
+	[[nodiscard]] ObserverType* CreateTrackerObserver_AnyAvailableWithCallback(
+		std::function<void(ObserverType*)>&& callbackWhenNodeChanged)
+	{
+		using NodeType = typename ObserverType::NodeType;
+
+		NodeType* node = Engine::GetWorld()->GetAnyAvailableNode<NodeType>();
+		ObserverType* observer = new ObserverType(node);
+		m_observers.emplace(std::unique_ptr<NodeObserverBase>(observer));
+
+		auto onAdd = [callback = callbackWhenNodeChanged, observer](Node* node) {
+			if (!observer->baseNode) {
+				observer->baseNode = node;
+				observer->node = NodeCast<NodeType>(node);
+				callback(observer);
+			}
+		};
+
+		auto onRemove = [&, callback{ std::move(callbackWhenNodeChanged) }, observer](Node* node) {
+			if (node == observer->node) {
+				NodeType* newNode = Engine::GetWorld()->GetAnyAvailableNode<NodeType>();
+				observer->baseNode = newNode;
+				observer->node = newNode ? NodeCast<NodeType>(newNode) : nullptr;
+				callback(observer);
+			}
+		};
+
+		RegisterAdderRemoverForType<NodeType>(onAdd, onRemove);
+
+		return observer;
+	}
 
 	// Tracks ALL nodes of this type AND subtypes by automatically adding and removing them from the observer container.
 	// You can handle additional creation/update/deletion stuff through the Observer's:
@@ -125,10 +137,15 @@ public:
 	void Update() override;
 
 
+	// Do not use this with NodeTypes that are already handled for automatic lifetimes. This deregisters the other
+	// functions for this type
 	template<typename NodeType>
 	void RegisterAdderRemoverForType(std::function<void(Node*)>&& adderFunc, std::function<void(Node*)>&& removerFunc)
 	{
 		m_onTypeAdded.insert({ &NodeType::StaticClass(), adderFunc });
 		m_onTypeRemoved.insert({ &NodeType::StaticClass(), removerFunc });
 	}
+
+public:
+	virtual void Update();
 };

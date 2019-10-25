@@ -9,6 +9,7 @@
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
 #include "renderer/renderers/opengl/basic/GLBasicPunctualLight.h"
+#include "renderer/renderers/opengl/basic/GLBasicSkybox.h"
 
 class CameraNode;
 
@@ -30,6 +31,7 @@ protected:
 	std::vector<GLBasicDirectionalLight*> m_glDirectionalLights;
 	std::vector<GLBasicPunctualLight*> m_glPunctualLights;
 	std::vector<GLBasicSpotLight*> m_glSpotLights;
+	GLBasicSkybox* m_skybox;
 
 	// rendering
 	GLuint m_lightFbo{ 0 };
@@ -52,9 +54,6 @@ protected:
 		~GBuffer();
 
 	} m_gBuffer;
-
-	// skybox
-	GLTexture* m_skyboxCubemap{ nullptr };
 
 	// Init
 	void InitObservers();
