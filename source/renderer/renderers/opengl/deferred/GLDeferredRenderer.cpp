@@ -41,9 +41,12 @@ void GLDeferredRenderer::InitObservers()
 	m_activeCamera = Engine::GetWorld()->GetActiveCamera();
 	CLOG_WARN(!m_activeCamera, "Renderer failed to find camera.");
 
-	// TODO: should be possible to update skybox, decide on singleton observers to do this automatically
-	auto skyboxNode = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
-	m_skyboxCubemap = GetGLAssetManager()->GpuGetOrCreate<GLTexture>(skyboxNode->GetSkyMap());
+
+	auto reload = [](GLBasicSkybox* skyboxObs) {
+		skyboxObs->ReloadSkybox();
+	};
+
+	m_skybox = CreateTrackerObserver_AnyAvailableWithCallback<GLBasicSkybox>(reload);
 
 	RegisterObserverContainer_AutoLifetimes(m_glGeometries);
 	RegisterObserverContainer_AutoLifetimes(m_glDirectionalLights);
