@@ -145,7 +145,4 @@ public:
 		m_onTypeAdded.insert({ &NodeType::StaticClass(), adderFunc });
 		m_onTypeRemoved.insert({ &NodeType::StaticClass(), removerFunc });
 	}
-
-public:
-	virtual void Update();
 };

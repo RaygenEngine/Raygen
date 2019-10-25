@@ -53,7 +53,7 @@ GLBasicDirectionalLight::~GLBasicDirectionalLight()
 
 void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geometries)
 {
-	if (!node->CastsShadows()) {
+	if (!node->HasShadow()) {
 		return;
 	}
 
@@ -84,7 +84,7 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
 
-			if (materialData->castsShadows)
+			if (!materialData->castsShadows)
 				continue;
 
 			glBindVertexArray(glMesh.vao);

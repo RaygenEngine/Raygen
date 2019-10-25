@@ -7,6 +7,8 @@ constexpr Type NoSave = (1 << 0);
 constexpr Type NoLoad = (1 << 1);
 constexpr Type NoCopy = (1 << 2);
 
+constexpr Type Hidden = (1 << 3);
+
 constexpr Type NoEdit = (1 << 8);
 
 // == NoSave | NoLoad | NoCopy, should probably be used everywhere instead of NoSave/NoLoad
