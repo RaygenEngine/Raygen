@@ -17,8 +17,8 @@ Rayxen has been primarily designed with the goal of being a sandbox for renderer
 
 The tools provided by the engine for Renderer Designers are:
 1. Extensible automatic asset handling with caching.
-2. Integrated reflection system with a powerfull editor.
-3. Hotswappable sample renderers for comparing and debugging.
+2. Integrated reflection system with a powerful editor.
+3. Hot-swappable sample renderers for comparing and debugging.
 __
 
 
@@ -28,7 +28,7 @@ Also note that the editor has not been thoroughly profiled and may induce slight
 
 
 Scene saving and loading is available and the scene format is in json.
-All the reflected properties of nodes are automatically serialized and restored upon loading. Any asset refrenced in the scene file is stored relative to the Rayxen/assets/ folder and the scene will fail to load if it is not found.
+All the reflected properties of nodes are automatically serialized and restored upon loading. Any asset referenced in the scene file is stored relative to the Rayxen/assets/ folder and the scene will fail to load if it is not found.
 Editing the json files by hand possible but not recommended.
 
 
@@ -37,19 +37,52 @@ Some help tooltips are available in the editor covering specific functions. Thes
 )";
 
 inline const char* help_Outliner = R"(
-outliner:
+Outliner provides an outline of the current world hierarchy.
+
+Select nodes by clicking to open their property editor.
+Right click nodes to open their context menu.
+Drag-n-drop a node onto another to change the hierarchy.
 )";
 
 inline const char* help_PropertyEditor = R"(
-propeditor:
+Instance editor allows viewing and editing the name and transform of the node.
+Transform can be edited in local or world space and the full matrix can also be edited.
+
+Right-clicking on scale provides an additional locked scale mode.
+
+
+Property editor (below) enables editing any reflected variable of the selected node.
+
+No filtering is done to the input and illegal values can be set to some properties that may cause system instability (eg: negative texture sizes).
+Asset references can also be edited inline.
+
+Note:
+All values are updated bidirectionaly in realtime
 )";
 
 inline const char* help_AssetView = R"(
-assetview:
+Assets panel provides an overview of all the currently registered assets.
+
+Hovering any line will show info of this asset entry. The data residing in memory can be unloaded and reloaded at will.
 )";
 
 inline const char* help_EditorCamera = R"(
-editor camera:
+Editor camera is a special node managed by the editor to allow for editor specific extra functionality.
+
+Keybinds for editor camera are:
+W,A,S,D,Q,E movement
+X: toggle between axis aligned, view based movement
+C: reset orientation (resets roll too)
+F: Focus currently selected node
+
+The editor camera differs from other nodes in the following ways:
+
+* It is not saved or loaded in scene files
+* It updates even when the world is not updating
+* It is automatically removed or added when toggling world updates
+* It cannot have children
+* It automatically moves its parent
+* Context actions are disabled
 )";
 
 inline const char* help_UpdateWorld = R"(
