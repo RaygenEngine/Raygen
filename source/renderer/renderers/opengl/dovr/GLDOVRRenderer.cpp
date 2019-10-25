@@ -6,8 +6,8 @@
 #include "world/World.h"
 #include "world/nodes/RootNode.h"
 #include "world/nodes/camera/CameraNode.h"
+#include "world/nodes/light/AmbientNode.h"
 #include "world/nodes/vr/OVRNode.h"
-#include "world/nodes/sky/SkyboxNode.h"
 #include "system/Input.h"
 #include "platform/windows/Win32Window.h"
 #include "renderer/renderers/opengl/GLUtil.h"
@@ -33,6 +33,7 @@ GLDOVRRenderer::Eye::Eye(ovrSession session, CameraNode* camera)
 	desc.Width = width;
 	desc.Height = height;
 	desc.MipLevels = 1;
+	// TODO: check what to use for proper gamma correction
 	desc.Format = OVR_FORMAT_R8G8B8A8_UNORM_SRGB;
 	// no MSAA textures.
 	desc.SampleCount = 1;
@@ -152,9 +153,11 @@ void GLDOVRRenderer::InitObservers()
 	m_ovr = Engine::GetWorld()->GetAnyAvailableNode<OVRNode>();
 	CLOG_ABORT(!m_ovr, "This renderer expects an ovr node to be present!");
 
-	// TODO: should be possible to update skybox, decide on singleton observers to do this automatically
-	auto skyboxNode = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
-	m_skyboxCubemap = GetGLAssetManager()->GpuGetOrCreate<GLTexture>(skyboxNode->GetSkyMap());
+	const auto reload = [](GLBasicAmbient* ambObs) {
+		ambObs->ReloadSkybox();
+	};
+
+	m_ambient = CreateTrackerObserver_AnyAvailableWithCallback<GLBasicAmbient>(reload);
 
 	RegisterObserverContainer_AutoLifetimes(m_glGeometries);
 	RegisterObserverContainer_AutoLifetimes(m_glDirectionalLights);
@@ -554,8 +557,8 @@ void GLDOVRRenderer::RenderSpotLights(int32 eyeIndex)
 		// light
 		ls->SendVec3("spotLight.wcs_pos", light->node->GetWorldTranslation());
 		ls->SendVec3("spotLight.wcs_dir", light->node->GetWorldForward());
-		ls->SendFloat("spotLight.outerCutOff", glm::cos(glm::radians(light->node->GetOuterAperture() / 2.f)));
-		ls->SendFloat("spotLight.innerCutOff", glm::cos(glm::radians(light->node->GetInnerAperture() / 2.f)));
+		ls->SendFloat("spotLight.outerCutOff", glm::cos(light->node->GetOuterAperture() / 2.f));
+		ls->SendFloat("spotLight.innerCutOff", glm::cos(light->node->GetInnerAperture() / 2.f));
 		ls->SendVec3("spotLight.color", light->node->GetColor());
 		ls->SendFloat("spotLight.intensity", light->node->GetIntensity());
 		ls->SendInt("spotLight.attenCoef", light->node->GetAttenuationMode());
@@ -646,9 +649,9 @@ void GLDOVRRenderer::RenderAmbientLight(int32 eyeIndex)
 
 	m_ambientLightShader->SendMat4("vp_inv", vpInv);
 	m_ambientLightShader->SendVec3("wcs_viewPos", camera->GetWorldTranslation());
-	m_ambientLightShader->SendVec3("ambient", Engine::GetWorld()->GetRoot()->GetAmbientColor());
+	m_ambientLightShader->SendVec3("ambient", m_ambient->node->GetAmbientTerm());
 	m_ambientLightShader->SendTexture(m_gBuffer.depthAttachment, 0);
-	m_ambientLightShader->SendCubeTexture(m_skyboxCubemap->id, 1);
+	m_ambientLightShader->SendCubeTexture(m_ambient->texture->id, 1);
 	m_ambientLightShader->SendTexture(m_gBuffer.albedoOpacityAttachment, 2);
 	m_ambientLightShader->SendTexture(m_gBuffer.emissiveAttachment, 3);
 	m_ambientLightShader->SendTexture(m_gBuffer.specularAttachment, 4);

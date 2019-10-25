@@ -8,7 +8,7 @@
 #include "world/nodes/light/DirectionalLightNode.h"
 #include "world/nodes/light/SpotLightNode.h"
 #include "world/nodes/light/PunctualLightNode.h"
-#include "world/nodes/sky/SkyboxNode.h"
+#include "world/nodes/light/AmbientNode.h"
 #include "world/nodes/user/FreeformUserNode.h"
 #include "world/nodes/user/FlyingUserNode.h"
 #include "world/nodes/TransformNode.h"
@@ -25,7 +25,7 @@ using json = nlohmann::json;
 void NodeFactory::RegisterNodes()
 {
 	RegisterListToFactory<CameraNode, WindowCameraNode, GeometryNode, DirectionalLightNode, PunctualLightNode,
-		SpotLightNode, SkyboxNode, FreeformUserNode, TransformNode, FlyingUserNode, OVRNode>();
+		SpotLightNode, AmbientNode, FreeformUserNode, TransformNode, FlyingUserNode, OVRNode>();
 }
 
 Node* NodeFactory::NewNodeFromType(const std::string& type)

@@ -10,16 +10,16 @@ void SpotLightNode::CalculateWorldAABB()
 
 void SpotLightNode::RecalculateProjectionMatrix()
 {
-	auto ar = static_cast<float>(m_shadowMapWidth) / static_cast<float>(m_shadowMapHeight);
-	m_projectionMatrix = glm::perspective(glm::radians(m_outerAperture), ar, m_near, m_far);
+	const auto ar = static_cast<float>(m_shadowMapWidth) / static_cast<float>(m_shadowMapHeight);
+	m_projectionMatrix = glm::perspective(m_outerAperture, ar, m_near, m_far);
 
 	RecalculateViewProjectionMatrix();
 }
 
 void SpotLightNode::RecalculateViewMatrix()
 {
-	auto lookat = GetWorldTranslation() + GetWorldForward();
-	m_viewMatrix = glm::lookAt(GetWorldTranslation(), lookat, GetWorldUp());
+	const auto lookAt = GetWorldTranslation() + GetWorldForward();
+	m_viewMatrix = glm::lookAt(GetWorldTranslation(), lookAt, GetWorldUp());
 
 	RecalculateViewProjectionMatrix();
 }

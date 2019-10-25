@@ -43,7 +43,7 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/assets/GLShader.cpp
 	renderer/renderers/opengl/assets/GLTexture.cpp
 	renderer/renderers/opengl/assets/GLMaterial.cpp
-	renderer/renderers/opengl/basic/GLBasicSkybox.cpp
+	renderer/renderers/opengl/basic/GLBasicAmbient.cpp
 	renderer/renderers/opengl/basic/GLBasicSpotLight.cpp
 	renderer/renderers/opengl/basic/GLBasicDirectionalLight.cpp
 	renderer/renderers/opengl/basic/GLBasicPunctualLight.cpp
@@ -72,6 +72,7 @@ set(SOURCE_FILES
 	world/nodes/light/DirectionalLightNode.cpp
 	world/nodes/light/SpotLightNode.cpp
 	world/nodes/light/LightNode.cpp
+	world/nodes/light/AmbientNode.cpp
 	world/nodes/user/FreeformUserNode.cpp
 	world/nodes/user/UserNode.cpp
 	world/nodes/user/FlyingUserNode.cpp
@@ -169,7 +170,7 @@ set(HEADER_FILES
 	renderer/renderers/opengl/assets/GLShader.h
 	renderer/renderers/opengl/assets/GLTexture.h
 	renderer/renderers/opengl/assets/GLMaterial.h
-	renderer/renderers/opengl/basic/GLBasicSkybox.h
+	renderer/renderers/opengl/basic/GLBasicAmbient.h
 	renderer/renderers/opengl/basic/GLBasicSpotLight.h
 	renderer/renderers/opengl/basic/GLBasicDirectionalLight.h
 	renderer/renderers/opengl/basic/GLBasicPunctualLight.h
@@ -201,12 +202,12 @@ set(HEADER_FILES
 	world/nodes/camera/CameraNode.h
 	world/nodes/camera/WindowCameraNode.h
 	world/nodes/camera/EditorCameraNode.h
-	world/nodes/sky/SkyboxNode.h
 	world/nodes/geometry/GeometryNode.h
 	world/nodes/light/PunctualLightNode.h
 	world/nodes/light/DirectionalLightNode.h
 	world/nodes/light/SpotLightNode.h
 	world/nodes/light/LightNode.h
+	world/nodes/light/AmbientNode.h
 	world/nodes/user/FreeformUserNode.h
 	world/nodes/user/UserNode.h
 	world/nodes/user/FlyingUserNode.h

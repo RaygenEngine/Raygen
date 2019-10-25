@@ -13,10 +13,10 @@ class CameraNode : public Node {
 		REFLECT_VAR(m_near).OnDirty(DF::Projection);
 		REFLECT_VAR(m_far).OnDirty(DF::Projection);
 		REFLECT_VAR(m_focalLength).OnDirty(DF::FocalLength);
-		REFLECT_VAR(m_vFov).OnDirty(DF::Projection);
-		REFLECT_VAR(m_hFov).OnDirty(DF::Projection);
-		REFLECT_VAR(m_vFovOffset).OnDirty(DF::Projection);
-		REFLECT_VAR(m_hFovOffset).OnDirty(DF::Projection);
+		REFLECT_VAR(m_vFov, PropertyFlags::Rads).OnDirty(DF::Projection);
+		REFLECT_VAR(m_hFov, PropertyFlags::Rads).OnDirty(DF::Projection);
+		REFLECT_VAR(m_vFovOffset, PropertyFlags::Rads).OnDirty(DF::Projection);
+		REFLECT_VAR(m_hFovOffset, PropertyFlags::Rads).OnDirty(DF::Projection);
 
 		REFLECT_VAR(m_viewportWidth, PropertyFlags::Transient).OnDirty(DF::ViewportSize);
 
@@ -33,9 +33,9 @@ protected:
 	float m_focalLength{ 1.f };
 
 	// vertical fov (angle)
-	float m_vFov{ 60.f };
+	float m_vFov{ glm::radians(60.f) };
 	// horizontal fov depends on the vertical and the aspect ratio
-	float m_hFov{ 45.f };
+	float m_hFov{ glm::radians(45.f) };
 
 	float m_near{ 0.2f };
 	float m_far{ 1000.f };

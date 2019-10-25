@@ -65,4 +65,12 @@ void ObserverRenderer::Update()
 	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::OEM_MINUS)) {
 		m_gamma -= 0.03f;
 	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::MULTIPLY)) {
+		m_exposure += 0.03f;
+	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::DIVIDE)) {
+		m_exposure -= 0.03f;
+	}
 }
