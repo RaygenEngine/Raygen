@@ -6,7 +6,8 @@
 #include <fstream>
 
 namespace CubemapLoader {
-inline void Load(TexturePod* pod, const uri::Uri& path)
+// Returns false if failed to detect its custom json format, allows the generic loader to run if this fails
+inline bool Load(TexturePod* pod, const uri::Uri& path)
 {
 	std::ifstream inStream(uri::ToSystemPath(path));
 
@@ -15,13 +16,12 @@ inline void Load(TexturePod* pod, const uri::Uri& path)
 
 	CLOG_ABORT(firstChar == EOF, "Found empty cubemap file: {} No images loaded", uri::ToSystemPath(path));
 
-	pod->target = TextureTarget::TEXTURE_CUBEMAP;
-	pod->images.resize(CubemapFace::COUNT);
-
 	nlohmann::json j;
 	inStream >> j;
 
 	std::string newFilePath;
+
+	bool hasFoundAnyFace = false;
 
 	static std::unordered_map<std::string, int32> imageNames = {
 		{ "up", CubemapFace::UP },
@@ -35,11 +35,19 @@ inline void Load(TexturePod* pod, const uri::Uri& path)
 	for (auto& [key, value] : imageNames) {
 		std::string imagePath = j.value(key, "");
 		if (!imagePath.empty()) {
+			if (!hasFoundAnyFace) {
+				pod->target = TextureTarget::TEXTURE_CUBEMAP;
+				pod->images.resize(CubemapFace::COUNT);
+			}
+
 			pod->images[value] = AssetManager::GetOrCreateFromParentUri<ImagePod>(imagePath, path);
+			hasFoundAnyFace = true;
 		}
-		else {
+		else if (hasFoundAnyFace) {
 			LOG_ERROR("Missing cubemap face: \"{}\" when loading: {}", key, path);
 		}
 	}
+
+	return hasFoundAnyFace;
 }
 }; // namespace CubemapLoader

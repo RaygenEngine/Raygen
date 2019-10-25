@@ -12,6 +12,7 @@
 #include "asset/loaders/ShaderLoader.h"
 #include "asset/loaders/TextLoader.h"
 #include "asset/loaders/JsonDocLoader.h"
+#include "asset/loaders/JsonGenericLoader.h"
 
 #include "asset/UriLibrary.h"
 #include "system/Logger.h"
@@ -34,6 +35,10 @@ void MaterialPod::Load(MaterialPod* pod, const uri::Uri& path)
 {
 	if (uri::MatchesExtension(path, ".gltf")) {
 		GltfMaterialLoader::Load(pod, path);
+		return;
+	}
+	if (uri::MatchesExtension(path, ".json")) {
+		GenericJsonLoader::Load(pod, path);
 		return;
 	}
 	CustomLoader::Load(pod, path);
@@ -68,7 +73,9 @@ void TexturePod::Load(TexturePod* pod, const uri::Uri& path)
 		return;
 	}
 	if (uri::MatchesExtension(path, ".json")) {
-		CubemapLoader::Load(pod, path);
+		if (!CubemapLoader::Load(pod, path)) {
+			GenericJsonLoader::Load(pod, path);
+		}
 		return;
 	}
 

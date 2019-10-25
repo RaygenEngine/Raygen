@@ -15,7 +15,7 @@ namespace ImUtil {
 inline void TextTooltipUtil(const std::string& Tooltip)
 {
 	ImGui::BeginTooltip();
-	ImGui::PushTextWrapPos(ImGui::GetFontSize() * 45.0f);
+	ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
 	ImGui::TextUnformatted(Tooltip.c_str());
 	ImGui::PopTextWrapPos();
 	ImGui::EndTooltip();

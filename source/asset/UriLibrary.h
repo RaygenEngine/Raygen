@@ -116,4 +116,16 @@ inline const char* ToSystemPath(const Uri& path)
 	CLOG_ABORT(IsCpu(path), "Attempted to get system path from a cpu path: {}", path);
 	return path.c_str() + 1;
 }
+
+inline std::string SystemToUri(fs::path& path)
+{
+	auto strPath = "/" + fs::relative(path).string();
+	for (int32 i = 0; i < strPath.size(); ++i) {
+		if (strPath[i] == '\\') {
+			strPath[i] = '/';
+		}
+	}
+	return strPath;
+}
+
 } // namespace uri

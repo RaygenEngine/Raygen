@@ -90,6 +90,7 @@ set(HEADER_FILES
 	asset/PodHandle.h
 
 	asset/loaders/CubemapLoader.h
+	asset/loaders/JsonGenericLoader.h
 	asset/loaders/DummyLoader.h
 	asset/loaders/TextLoader.h
 	asset/loaders/JsonDocLoader.h

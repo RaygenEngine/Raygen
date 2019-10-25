@@ -8,14 +8,23 @@
 #include "system/Engine.h"
 #include "reflection/ReflectionTools.h"
 #include "core/MathAux.h"
-
+#include "reflection/PodTools.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "editor/DataStrings.h"
-
+#include "asset/AssetManager.h"
+#include <fstream>
 
 namespace {
 
 using namespace PropertyFlags;
+
+template<typename T>
+constexpr bool CanOpenFromFile = refl::IsValidPod<T>;
+
+
+template<typename T>
+constexpr bool IsJsonLoadable
+	= std::is_same_v<MaterialPod, T> || std::is_same_v<ShaderPod, T> || std::is_same_v<TexturePod, T>;
 
 struct ReflectionToImguiVisitor {
 	int32 depth{ 0 };
@@ -28,6 +37,12 @@ struct ReflectionToImguiVisitor {
 	DirtyFlagset dirtyFlags{};
 
 	int32 id{ 1 };
+
+	void* currentObject{ nullptr };
+	const Property* currentProperty{ nullptr };
+	PropertyEditor* propedit;
+
+	void Begin(void* objPtr, const ReflClass& cl) { currentObject = objPtr; }
 
 	// TODO: a little hack for mass material editing in vectors, should be replaced when and if we do actual asset
 	// editors.
@@ -66,12 +81,12 @@ struct ReflectionToImguiVisitor {
 	}
 	// End of mass edit material
 
-
 	void PreProperty(const Property& p)
 	{
 		ImGui::PushID(id++);
 		nameBuf = p.GetName();
 		name = nameBuf.c_str();
+		currentProperty = &p;
 	}
 
 	void PostProperty(const Property& p) { ImGui::PopID(); }
@@ -87,6 +102,7 @@ struct ReflectionToImguiVisitor {
 			if (Inner(t, p)) {
 				if (p.GetDirtyFlagIndex() >= 0) {
 					dirtyFlags.set(p.GetDirtyFlagIndex());
+					LOG_REPORT("Set Dirty: {}", p.GetName());
 				}
 				dirtyFlags.set(Node::DF::Properties);
 				if (massEditMaterials) {
@@ -147,60 +163,6 @@ struct ReflectionToImguiVisitor {
 		return ImGui::InputText(name, &ref);
 	}
 
-	template<typename PodType>
-	bool PodDropTarget(PodHandle<PodType>& pod)
-	{
-		bool result = false;
-		if (ImGui::BeginDragDropTarget()) {
-			std::string payloadTag = "POD_UID_" + std::to_string(ctti::type_id<PodType>().hash());
-			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(payloadTag.c_str())) {
-				assert(payload->DataSize == sizeof(size_t));
-				size_t uid = *reinterpret_cast<size_t*>(payload->Data);
-				pod.podId = uid;
-				dirtyFlags.set(Node::DF::Properties);
-				result = true;
-			}
-			ImGui::EndDragDropTarget();
-		}
-		return result;
-	}
-
-	template<typename PodType>
-	bool Inner(PodHandle<PodType>& pod, const Property& p)
-	{
-		if (!pod.HasBeenAssigned()) {
-			std::string s = "Unitialised handle: " + p.GetNameStr();
-			ImGui::Text(s.c_str());
-			return false;
-		}
-
-		auto entry = AssetManager::GetEntry(pod);
-
-		auto str = entry->name;
-		bool open = ImGui::CollapsingHeader(name);
-		bool result = PodDropTarget(pod);
-		TEXT_TOOLTIP("Pod Internal Path:\n{}\n", AssetManager::GetPodUri(pod));
-		if (depth == 0) {
-			Editor::CollapsingHeaderTooltip(help_PropPodEditing);
-		}
-
-		if (open) {
-			ImGui::PushID(static_cast<uint32>(entry->uid) * 1024);
-			// GenerateUniqueName(p);
-
-
-			depth++;
-			ImGui::Indent();
-
-			refltools::CallVisitorOnEveryProperty(const_cast<PodType*>(pod.Lock()), *this);
-
-			ImGui::Unindent();
-			depth--;
-			ImGui::PopID();
-		}
-		return result;
-	}
-
 	template<typename T>
 	bool Inner(T& t, const Property& p)
 	{
@@ -242,9 +204,81 @@ struct ReflectionToImguiVisitor {
 		return edited;
 	}
 
+	template<typename PodType>
+	bool PodDropTarget(PodHandle<PodType>& pod)
+	{
+		bool result = false;
+		if (ImGui::BeginDragDropTarget()) {
+			std::string payloadTag = "POD_UID_" + std::to_string(ctti::type_id<PodType>().hash());
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(payloadTag.c_str())) {
+				assert(payload->DataSize == sizeof(size_t));
+				size_t uid = *reinterpret_cast<size_t*>(payload->Data);
+				pod.podId = uid;
+				dirtyFlags.set(Node::DF::Properties);
+				result = true;
+			}
+			ImGui::EndDragDropTarget();
+		}
+		return result;
+	}
+
+	template<typename PodType>
+	bool InjectPodCode(PodHandle<PodType>& pod, const Property& p, bool isInVector = false, uint64 extraId = 1)
+	{
+		if (!pod.HasBeenAssigned()) {
+			std::string s = "Unitialised handle: " + p.GetNameStr();
+			ImGui::Text(s.c_str());
+			return false;
+		}
+
+		auto entry = AssetManager::GetEntry(pod);
+
+		bool open = false;
+		if (!isInVector) {
+			open = ImGui::CollapsingHeader(name);
+		}
+		else {
+
+			open = ImGui::CollapsingHeader(entry->name.c_str());
+		}
+
+		size_t id = ImGui::GetItemID();
+
+		bool result = PodDropTarget(pod);
+		result |= Run_PodContext(pod, id);
+		if (depth == 0) {
+			TEXT_TOOLTIP("Pod Internal Path:\n{}\n", AssetManager::GetPodUri(pod));
+			Editor::CollapsingHeaderTooltip(help_PropPodEditing);
+		}
+		else {
+			TEXT_TOOLTIP("{}", AssetManager::GetPodUri(pod));
+		}
+
+		if (open) {
+			ImGui::PushID(static_cast<int>(static_cast<uint64>(entry->uid) * 1024 * extraId));
+
+			depth++;
+			ImGui::Indent();
+
+			refltools::CallVisitorOnEveryProperty(const_cast<PodType*>(pod.Lock()), *this);
+
+			ImGui::Unindent();
+			depth--;
+			ImGui::PopID();
+		}
+		return result;
+	}
+
+	template<typename PodType>
+	bool Inner(PodHandle<PodType>& pod, const Property& p)
+	{
+		return InjectPodCode(pod, p);
+	}
+
 	template<typename T>
 	bool Inner(std::vector<PodHandle<T>>& t, const Property& p)
 	{
+		bool result = false;
 		if (ImGui::CollapsingHeader(name)) {
 			ImGui::Indent();
 			int32 index = 0;
@@ -252,30 +286,19 @@ struct ReflectionToImguiVisitor {
 				ImGui::PushID(index);
 				++index;
 
-				std::string finalName = AssetManager::GetEntry(handle)->name;
-
-				bool r = ImGui::CollapsingHeader(finalName.c_str());
-				PodDropTarget(handle);
-				TEXT_TOOLTIP("{}", AssetManager::GetPodUri(handle));
-				if (r) {
-					ImGui::PushID(index * 1024 * 1024);
-					ImGui::Indent();
-					refltools::CallVisitorOnEveryProperty(const_cast<T*>(handle.Lock()), *this);
-					ImGui::Unindent();
-					ImGui::PopID();
-				}
-
+				InjectPodCode(handle, p, true, index * 1024);
 
 				ImGui::PopID();
 			}
 			ImGui::Unindent();
 		}
-		return false;
+		return result;
 	}
 
 	template<>
 	bool Inner(std::vector<PodHandle<MaterialPod>>& t, const Property& p)
 	{
+		bool result = false;
 		if (ImGui::CollapsingHeader(name)) {
 			ImGui::Indent();
 			int32 index = 0;
@@ -294,23 +317,12 @@ struct ReflectionToImguiVisitor {
 				}
 			}
 
-
 			for (auto& handle : t) {
 				ImGui::PushID(index);
 				++index;
 
-				std::string finalName = AssetManager::GetEntry(handle)->name;
+				InjectPodCode(handle, p, true, index * 1024);
 
-				bool r = ImGui::CollapsingHeader(finalName.c_str());
-				PodDropTarget(handle);
-				TEXT_TOOLTIP("{}", AssetManager::GetPodUri(handle));
-				if (r) {
-					ImGui::PushID(index * 1024 * 1024);
-					ImGui::Indent();
-					refltools::CallVisitorOnEveryProperty(const_cast<MaterialPod*>(handle.Lock()), *this);
-					ImGui::Unindent();
-					ImGui::PopID();
-				}
 				if (shouldReloadMaterials) {
 					AssetManager::Reload(handle);
 				}
@@ -324,7 +336,7 @@ struct ReflectionToImguiVisitor {
 
 			ImGui::Unindent();
 		}
-		return false;
+		return result;
 	}
 
 	// Enum
@@ -357,7 +369,90 @@ struct ReflectionToImguiVisitor {
 
 		return edited;
 	}
+
+	template<typename T>
+	bool Run_PodContext(PodHandle<T>& handle, size_t id)
+	{
+		bool result = false;
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3.f, 6.f));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.f, 6.f));
+		if (ImGui::BeginPopupContextItem("PodContext")) {
+			auto entry = AssetManager::GetEntry(handle);
+
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.4f, 0.4f, 0.8f));
+			ImGui::Text("Warning: Alpha");
+			ImGui::PopStyleColor();
+			TEXT_TOOLTIP(
+				"The features under this list are not properly tested and may be highly unstable. Failing to load a "
+				"file will almost certainly result in corrupt engine state. Editing sub-assets will fail to reflect "
+				"the changes even in the default provided renderers.\nAlso note:\n1. You are actually editing the "
+				"actual pod here and any edits will propagate to pod handles in the whole engine.\n2. Performing a "
+				"save "
+				"as will replace the previous pod handle with one that links the new file.")
+
+			// ImGui::MenuItem("Manual Dirty", nullptr, nullptr, false));
+
+			if (ImGui::MenuItem("Manual Dirty")) {
+				result = true;
+			}
+			if (ImGui::MenuItem("Reload asset")) {
+				AssetManager::Reload(handle);
+				result = true;
+			}
+			if (ImGui::MenuItem("Open from disk")) {
+				propedit->m_openAsset.BeginDialogFor(currentObject, *currentProperty, id);
+			}
+
+			if constexpr (IsJsonLoadable<T>) {
+				if (!uri::IsCpu(entry->path) && ImGui::BeginMenu("Save")) {
+					if (ImGui::MenuItem("Overwrite")) {
+						fs::path saveOver = uri::ToSystemPath(entry->path);
+						LOG_REPORT("Save Overwrte at: {}", saveOver);
+						SaveAs(handle, saveOver);
+						result = true;
+					}
+					ImGui::EndMenu();
+				}
+				if (ImGui::MenuItem("Save As")) {
+					propedit->m_saveAsset.BeginDialogFor(currentObject, *currentProperty, id);
+				}
+			}
+
+			// if (ImGui::BeginMenu("Add Child")) {
+			//	Run_NewNodeMenu(node);
+			//	ImGui::EndMenu();
+			//}
+
+			ImGui::EndPopup();
+		}
+		ImGui::PopStyleVar(2);
+
+		if (propedit->m_openAsset.HasFileFor(currentObject, *currentProperty, id)) {
+			handle = AssetManager::GetOrCreate<T>(uri::SystemToUri(propedit->m_openAsset.filepath));
+			result = true;
+		}
+		else if (propedit->m_saveAsset.HasFileFor(currentObject, *currentProperty, id)) {
+			auto& path = propedit->m_openAsset.filepath;
+			SaveAs(handle, path);
+			handle = AssetManager::GetOrCreate<T>(uri::SystemToUri(path));
+			AssetManager::Reload(handle);
+			result = true;
+		}
+		return result;
+	}
 };
+
+template<typename T>
+void SaveAs(PodHandle<T>& handle, fs::path& path)
+{
+	using json = nlohmann::json;
+	path.replace_extension(".json");
+
+	json j;
+	refltools::PropertiesToJson(const_cast<T*>(handle.Lock()), j);
+	std::ofstream file(path);
+	file << std::setw(4) << j;
+}
 
 
 } // namespace
@@ -378,6 +473,9 @@ void PropertyEditor::Inject(Node* node)
 	Run_ReflectedProperties(node);
 	ImGui::Unindent();
 	ImGui::Spacing();
+
+	m_openAsset.Display();
+	m_saveAsset.Display();
 }
 
 void PropertyEditor::Run_BaseProperties(Node* node)
@@ -541,6 +639,7 @@ void PropertyEditor::Run_ReflectedProperties(Node* node)
 	visitor.node = node;
 	visitor.fullDisplayMat4 = m_displayMatrix;
 	visitor.massEditMaterials = m_massEditMaterials;
+	visitor.propedit = this;
 	refltools::CallVisitorOnEveryProperty(node, visitor);
 
 	m_massEditMaterials = visitor.massEditMaterials;
