@@ -125,6 +125,7 @@ public:
 	EditorCameraNode* m_editorCamera;
 	bool m_hasEditorCameraCachedMatrix{ false };
 	glm::mat4 m_editorCameraCachedMatrix{ glm::identity<glm::mat4>() };
+	glm::mat4 m_editorCameraPrePilotPos{ glm::identity<glm::mat4>() };
 
 	std::unique_ptr<NodeContextActions> m_nodeContextActions;
 
