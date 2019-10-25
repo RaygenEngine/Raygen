@@ -58,11 +58,11 @@ void ObserverRenderer::Update()
 		}
 	}
 
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::OEM_PLUS)) {
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::ADD)) {
 		m_gamma += 0.03f;
 	}
 
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::OEM_MINUS)) {
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::SUBTRACT)) {
 		m_gamma -= 0.03f;
 	}
 
