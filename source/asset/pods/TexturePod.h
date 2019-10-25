@@ -6,7 +6,6 @@
 struct TexturePod : AssetPod {
 	REFLECTED_POD(TexturePod)
 	{
-		REFLECT_VAR(images);
 		REFLECT_VAR(minFilter);
 		REFLECT_VAR(magFilter);
 
@@ -15,6 +14,8 @@ struct TexturePod : AssetPod {
 		REFLECT_VAR(wrapR);
 
 		REFLECT_VAR(target);
+
+		REFLECT_VAR(images);
 	}
 	static void Load(TexturePod* pod, const uri::Uri& path);
 

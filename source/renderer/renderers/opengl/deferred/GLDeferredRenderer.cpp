@@ -42,7 +42,7 @@ void GLDeferredRenderer::InitObservers()
 	CLOG_WARN(!m_activeCamera, "Renderer failed to find camera.");
 
 
-	auto reload = [](GLBasicSkybox* skyboxObs) {
+	const auto reload = [](GLBasicSkybox* skyboxObs) {
 		skyboxObs->ReloadSkybox();
 	};
 
@@ -386,7 +386,7 @@ void GLDeferredRenderer::RenderDirectionalLights()
 		ls->SendVec3("directionalLight.color", light->node->GetColor());
 		ls->SendFloat("directionalLight.intensity", light->node->GetIntensity());
 		ls->SendInt("directionalLight.samples", light->node->GetSamples());
-		ls->SendInt("directionalLight.castsShadow", light->node->CastsShadows() ? GL_TRUE : GL_FALSE);
+		ls->SendInt("directionalLight.castsShadow", light->node->HasShadow() ? GL_TRUE : GL_FALSE);
 		ls->SendFloat("directionalLight.maxShadowBias", light->node->GetMaxShadowBias());
 		ls->SendTexture("directionalLight.shadowMap", light->shadowMap, 0);
 		constexpr glm::mat4 biasMatrix(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
@@ -440,7 +440,7 @@ void GLDeferredRenderer::RenderSpotLights()
 		ls->SendFloat("spotLight.intensity", light->node->GetIntensity());
 		ls->SendInt("spotLight.attenCoef", light->node->GetAttenuationMode());
 		ls->SendInt("spotLight.samples", light->node->GetSamples());
-		ls->SendInt("spotLight.castsShadow", light->node->CastsShadows() ? GL_TRUE : GL_FALSE);
+		ls->SendInt("spotLight.castsShadow", light->node->HasShadow() ? GL_TRUE : GL_FALSE);
 		ls->SendFloat("spotLight.maxShadowBias", light->node->GetMaxShadowBias());
 		ls->SendTexture("spotLight.shadowMap", light->shadowMap, 0);
 		constexpr glm::mat4 biasMatrix(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
@@ -487,7 +487,7 @@ void GLDeferredRenderer::RenderPunctualLights()
 		ls->SendFloat("punctualLight.far", light->node->GetFar());
 		ls->SendInt("punctualLight.attenCoef", light->node->GetAttenuationMode());
 		ls->SendInt("punctualLight.samples", light->node->GetSamples());
-		ls->SendInt("punctualLight.castsShadow", light->node->CastsShadows() ? GL_TRUE : GL_FALSE);
+		ls->SendInt("punctualLight.castsShadow", light->node->HasShadow() ? GL_TRUE : GL_FALSE);
 		ls->SendFloat("punctualLight.maxShadowBias", light->node->GetMaxShadowBias());
 		ls->SendCubeTexture("punctualLight.shadowCubemap", light->cubeShadowMap, 0);
 
@@ -522,7 +522,7 @@ void GLDeferredRenderer::RenderAmbientLight()
 	m_ambientLightShader->SendVec3("wcs_viewPos", m_activeCamera->GetWorldTranslation());
 	m_ambientLightShader->SendVec3("ambient", Engine::GetWorld()->GetRoot()->GetAmbientColor());
 	m_ambientLightShader->SendTexture(m_gBuffer.depthAttachment, 0);
-	m_ambientLightShader->SendCubeTexture(m_skyboxCubemap->id, 1);
+	m_ambientLightShader->SendCubeTexture(m_skybox->texture->id, 1);
 	m_ambientLightShader->SendTexture(m_gBuffer.albedoOpacityAttachment, 2);
 	m_ambientLightShader->SendTexture(m_gBuffer.emissiveAttachment, 3);
 	m_ambientLightShader->SendTexture(m_gBuffer.specularAttachment, 4);

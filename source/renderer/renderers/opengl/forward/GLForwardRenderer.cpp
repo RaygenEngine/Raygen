@@ -458,7 +458,7 @@ void GLForwardRenderer::RenderDirectionalLights()
 		ls->SendVec3("directionalLight.color", light->node->GetColor());
 		ls->SendFloat("directionalLight.intensity", light->node->GetIntensity());
 		ls->SendInt("directionalLight.samples", light->node->GetSamples());
-		ls->SendInt("directionalLight.castsShadow", light->node->CastsShadows() ? GL_TRUE : GL_FALSE);
+		ls->SendInt("directionalLight.castsShadow", light->node->HasShadow() ? GL_TRUE : GL_FALSE);
 		ls->SendFloat("directionalLight.maxShadowBias", light->node->GetMaxShadowBias());
 		ls->SendTexture("directionalLight.shadowMap", light->shadowMap, 0);
 
@@ -558,7 +558,7 @@ void GLForwardRenderer::RenderSpotLights()
 		ls->SendFloat("spotLight.intensity", light->node->GetIntensity());
 		ls->SendInt("spotLight.attenCoef", light->node->GetAttenuationMode());
 		ls->SendInt("spotLight.samples", light->node->GetSamples());
-		ls->SendInt("spotLight.castsShadow", light->node->CastsShadows() ? GL_TRUE : GL_FALSE);
+		ls->SendInt("spotLight.castsShadow", light->node->HasShadow() ? GL_TRUE : GL_FALSE);
 		ls->SendFloat("spotLight.maxShadowBias", light->node->GetMaxShadowBias());
 		ls->SendTexture("spotLight.shadowMap", light->shadowMap, 0);
 
@@ -650,7 +650,7 @@ void GLForwardRenderer::RenderPunctualLights()
 		ls->SendFloat("punctualLight.far", light->node->GetFar());
 		ls->SendInt("punctualLight.attenCoef", light->node->GetAttenuationMode());
 		ls->SendInt("punctualLight.samples", light->node->GetSamples());
-		ls->SendInt("punctualLight.castsShadow", light->node->CastsShadows() ? GL_TRUE : GL_FALSE);
+		ls->SendInt("punctualLight.castsShadow", light->node->HasShadow() ? GL_TRUE : GL_FALSE);
 		ls->SendFloat("punctualLight.maxShadowBias", light->node->GetMaxShadowBias());
 		ls->SendCubeTexture("punctualLight.shadowCubemap", light->cubeShadowMap, 0);
 

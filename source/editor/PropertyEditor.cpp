@@ -79,10 +79,9 @@ struct ReflectionToImguiVisitor {
 	template<typename T>
 	void operator()(T& t, const Property& p)
 	{
-		// WIP:
-		// if (p.HasFlags(PropertyFlags::Hidden)) {
-		//	return;
-		//}
+		if (p.HasFlags(PropertyFlags::Hidden)) {
+			return;
+		}
 		if (!p.HasFlags(NoEdit)) {
 			if (Inner(t, p)) {
 				if (p.GetDirtyFlagIndex() >= 0) {
