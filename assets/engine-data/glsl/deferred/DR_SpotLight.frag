@@ -104,6 +104,7 @@ void main()
 	
 	ProcessUniformGBuffer(albedo, opacity, metallic, roughness, wcs_fragPos, wcs_normal);
 	
+
 	// vectors are in wcs
 	vec3 N = wcs_normal;
 	vec3 V = normalize(wcs_viewPos - wcs_fragPos);

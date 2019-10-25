@@ -8,14 +8,13 @@ out vec4 out_color;
   
 in Data
 { 
-	vec3 tcs_fragPos;
-	vec3 tcs_viewPos;
-	
-	vec3 tcs_lightDir;
-	
+	vec3 wcs_fragPos;
+
 	vec4 shadowCoord;
 	
 	vec2 textCoord[2];
+	
+	mat3 TBN;
 } dataIn;
 
 uniform struct DirectionalLight
@@ -64,6 +63,8 @@ uniform struct Material
 
 } material;
 
+uniform vec3 wcs_viewPos;
+
 float ShadowCalculation(float cosTheta)
 {	
 	if(!directionalLight.castsShadow)
@@ -90,7 +91,7 @@ float ShadowCalculation(float cosTheta)
 	// Stratified Poisson Sampling
 	for (int i = 0; i < directionalLight.samples; ++i)
 	{
-		int index = int(16.0*random(vec4(dataIn.tcs_fragPos,i)))%16;
+		int index = int(16.0*random(vec4(dataIn.wcs_fragPos,i)))%16;
 		
 		// Hardware implemented PCF on sample
 		shadow += (1.0-texture(directionalLight.shadowMap, 
@@ -132,10 +133,11 @@ void main()
 	// material
 	ProcessUniformMaterial(albedo, opacity, metallic, roughness, normal);
 
-	// tangent space vectors
-	vec3 N = normal;
-	vec3 V = normalize(dataIn.tcs_viewPos - dataIn.tcs_fragPos);
-	vec3 L = normalize(-dataIn.tcs_lightDir);
+	// TODO: implement tangent space lighting correctly
+	// world space vectors
+	vec3 N =  normalize(dataIn.TBN * normal);
+	vec3 V = normalize(wcs_viewPos - dataIn.wcs_fragPos);
+	vec3 L = normalize(-directionalLight.wcs_dir); 
 
 	float shadow = ShadowCalculation(max(dot(N, L), 0.0)); 
 	vec3 Li = (1.0 - shadow) * directionalLight.color * directionalLight.intensity; 

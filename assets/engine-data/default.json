@@ -53,9 +53,9 @@
                         "z": -0.6508057117462158
                     },
                     "rot": {
-                        "x": 93.6182861328125,
-                        "y": 88.64347076416016,
-                        "z": -179.9766387939453
+                        "x": 93.61824798583984,
+                        "y": 88.64361572265625,
+                        "z": -179.97669982910156
                     },
                     "scale": {
                         "x": 1.0,
@@ -77,7 +77,7 @@
                 "maxShadowBias": 0.004999999888241291,
                 "near": 1.0,
                 "right": 10.0,
-                "samples": 15,
+                "samples": 21,
                 "shadowMapHeight": 2048,
                 "shadowMapWidth": 2048,
                 "top": 10.0,
@@ -130,7 +130,7 @@
                 "+type": "WindowCamera",
                 "far": 1000.0,
                 "focalLength": 1.0,
-                "hFov": 1.5968513488769531,
+                "hFov": 1.6415311098098755,
                 "hFovOffset": 0.0,
                 "near": 0.20000000298023224,
                 "vFov": 1.0471975803375244,
@@ -177,8 +177,8 @@
             },
             "rot": {
                 "x": -9.912323951721191,
-                "y": 76.06019592285156,
-                "z": -0.004513363353908062
+                "y": 76.06021881103516,
+                "z": -0.0045133670791983604
             },
             "scale": {
                 "x": 1.0,
@@ -200,13 +200,13 @@
         "maxShadowBias": 0.004999999888241291,
         "near": 1.0,
         "outerAperture": 0.46844637393951416,
-        "samples": 4,
+        "samples": 10,
         "shadowMapHeight": 2048,
         "shadowMapWidth": 2048,
         "~children": []
     },
     {
-        "+name": "PunctualLight_new",
+        "+name": "Above",
         "+trs": {
             "pos": {
                 "x": 9.232999801635742,
@@ -236,7 +236,7 @@
         "intensity": 10.0,
         "maxShadowBias": 0.0010000000474974513,
         "near": 0.0020000000949949026,
-        "samples": 4,
+        "samples": 3,
         "shadowMapHeight": 2048,
         "shadowMapWidth": 2048,
         "~children": []
@@ -274,7 +274,7 @@
         "maxShadowBias": 0.004999999888241291,
         "near": 1.0,
         "outerAperture": 0.4363323152065277,
-        "samples": 4,
+        "samples": 6,
         "shadowMapHeight": 2048,
         "shadowMapWidth": 2048,
         "~children": []
