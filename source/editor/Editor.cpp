@@ -904,7 +904,7 @@ void Editor::FocusNode(Node* node)
 		cam->SetWorldTranslation(geom->GetAABB().GetCenter());
 	}
 	cam->AddWorldOffset(glm::vec3(-1.f, 0.25f, 0.f) * dist);
-	cam->SetLookAt(node->GetWorldTranslation());
+	cam->SetWorldLookAt(node->GetWorldTranslation());
 }
 
 void Editor::TeleportToCamera(Node* node)
@@ -921,6 +921,7 @@ void Editor::MakeActiveCamera(Node* node)
 		Engine::GetWorld()->SetActiveCamera(NodeCast<CameraNode>(node));
 	}
 }
+
 
 namespace logwindow {
 struct ExampleAppLog {

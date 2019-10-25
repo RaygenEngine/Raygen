@@ -153,14 +153,14 @@ public:
 	void SetLocalPYR(glm::vec3 pyr); // in degrees
 	void SetLocalScale(glm::vec3 ls);
 	void SetLocalMatrix(const glm::mat4& lm);
+	void SetLocalLookAt(glm::vec3 lookAt);
 
 	void SetWorldTranslation(glm::vec3 wt);
 	void SetWorldOrientation(glm::quat wo);
 	void SetWorldPYR(glm::vec3 pyr); // in degrees
 	void SetWorldScale(glm::vec3 ws);
 	void SetWorldMatrix(const glm::mat4& newWorldMatrix);
-
-	void SetLookAt(glm::vec3 lookat);
+	void SetWorldLookAt(glm::vec3 lookAt);
 
 	void RotateAroundAxis(glm::vec3 worldAxis, float degrees);
 

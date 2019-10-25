@@ -7,8 +7,8 @@
 class SpotLightNode : public LightNode {
 	REFLECTED_NODE(SpotLightNode, LightNode, DF_FLAGS(Aperture))
 	{
-		REFLECT_VAR(m_outerAperture).OnDirty(DF::Aperture);
-		REFLECT_VAR(m_innerAperture);
+		REFLECT_VAR(m_outerAperture, PropertyFlags::Rads).OnDirty(DF::Aperture);
+		REFLECT_VAR(m_innerAperture, PropertyFlags::Rads);
 
 		REFLECT_VAR(m_attenuationMode);
 	}
@@ -20,9 +20,9 @@ class SpotLightNode : public LightNode {
 	math::Frustum m_frustum{};
 
 	// angle
-	float m_outerAperture{ 25.f };
+	float m_outerAperture{ glm::radians(25.f) };
 	// inner
-	float m_innerAperture{ 12.5f };
+	float m_innerAperture{ glm::radians(12.5f) };
 
 	enum AttenuationMode : int32
 	{

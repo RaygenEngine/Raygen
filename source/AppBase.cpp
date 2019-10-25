@@ -122,7 +122,7 @@ void AppBase::RegisterRenderers()
 
 	Engine::RegisterRenderer<ogl::GLForwardRenderer>();
 	Engine::RegisterRenderer<ogl::GLDeferredRenderer>();
-	Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
+	// Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
 }
 
 Win32Window* AppBase::CreateAppWindow()

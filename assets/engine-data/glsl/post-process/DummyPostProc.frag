@@ -3,6 +3,7 @@
 out vec4 out_color;
 
 uniform float gamma;
+uniform float exposure;
 
 // those are the uvs on the quad
 in vec2 quad_uv;
@@ -18,9 +19,12 @@ layout(binding=0) uniform sampler2D lightsColorSampler;
 
 void main()
 {
-	vec3 color = texture(lightsColorSampler, quad_uv).rgb;
-	
-    color = pow(color, vec3(1.0/gamma));
-	
-	out_color = vec4(color, 1);
+    vec3 hdrColor = texture(lightsColorSampler, quad_uv).rgb;
+  
+    // Exposure tone mapping
+    vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);
+    // Gamma correction 
+	mapped = pow(mapped, vec3(1.0 / gamma));
+  
+    out_color = vec4(mapped, 1.0);
 }

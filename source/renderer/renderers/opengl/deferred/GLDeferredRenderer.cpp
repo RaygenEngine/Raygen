@@ -6,7 +6,7 @@
 #include "world/World.h"
 #include "world/nodes/RootNode.h"
 #include "world/nodes/camera/CameraNode.h"
-#include "world/nodes/sky/SkyboxNode.h"
+#include "world/nodes/light/AmbientNode.h"
 #include "system/Input.h"
 #include "platform/windows/Win32Window.h"
 #include "renderer/renderers/opengl/GLUtil.h"
@@ -42,11 +42,11 @@ void GLDeferredRenderer::InitObservers()
 	CLOG_WARN(!m_activeCamera, "Renderer failed to find camera.");
 
 
-	const auto reload = [](GLBasicSkybox* skyboxObs) {
-		skyboxObs->ReloadSkybox();
+	const auto reload = [](GLBasicAmbient* ambObs) {
+		ambObs->ReloadSkybox();
 	};
 
-	m_skybox = CreateTrackerObserver_AnyAvailableWithCallback<GLBasicSkybox>(reload);
+	m_ambient = CreateTrackerObserver_AnyAvailableWithCallback<GLBasicAmbient>(reload);
 
 	RegisterObserverContainer_AutoLifetimes(m_glGeometries);
 	RegisterObserverContainer_AutoLifetimes(m_glDirectionalLights);
@@ -161,6 +161,7 @@ void GLDeferredRenderer::InitShaders()
 	m_dummyPostProcShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/post-process/DummyPostProc.json");
 	m_dummyPostProcShader->StoreUniformLoc("gamma");
+	m_dummyPostProcShader->StoreUniformLoc("exposure");
 
 	m_windowShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/general/QuadWriteTexture.json");
@@ -233,7 +234,8 @@ void GLDeferredRenderer::InitRenderBuffers()
 
 	glGenTextures(1, &m_lightTexture);
 	glBindTexture(GL_TEXTURE_2D, m_lightTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	// HDR
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -434,8 +436,8 @@ void GLDeferredRenderer::RenderSpotLights()
 		// light
 		ls->SendVec3("spotLight.wcs_pos", light->node->GetWorldTranslation());
 		ls->SendVec3("spotLight.wcs_dir", light->node->GetWorldForward());
-		ls->SendFloat("spotLight.outerCutOff", glm::cos(glm::radians(light->node->GetOuterAperture() / 2.f)));
-		ls->SendFloat("spotLight.innerCutOff", glm::cos(glm::radians(light->node->GetInnerAperture() / 2.f)));
+		ls->SendFloat("spotLight.outerCutOff", glm::cos(light->node->GetOuterAperture() / 2.f));
+		ls->SendFloat("spotLight.innerCutOff", glm::cos(light->node->GetInnerAperture() / 2.f));
 		ls->SendVec3("spotLight.color", light->node->GetColor());
 		ls->SendFloat("spotLight.intensity", light->node->GetIntensity());
 		ls->SendInt("spotLight.attenCoef", light->node->GetAttenuationMode());
@@ -520,9 +522,9 @@ void GLDeferredRenderer::RenderAmbientLight()
 
 	m_ambientLightShader->SendMat4("vp_inv", vpInv);
 	m_ambientLightShader->SendVec3("wcs_viewPos", m_activeCamera->GetWorldTranslation());
-	m_ambientLightShader->SendVec3("ambient", Engine::GetWorld()->GetRoot()->GetAmbientColor());
+	m_ambientLightShader->SendVec3("ambient", m_ambient->node->GetAmbientTerm());
 	m_ambientLightShader->SendTexture(m_gBuffer.depthAttachment, 0);
-	m_ambientLightShader->SendCubeTexture(m_skybox->texture->id, 1);
+	m_ambientLightShader->SendCubeTexture(m_ambient->texture->id, 1);
 	m_ambientLightShader->SendTexture(m_gBuffer.albedoOpacityAttachment, 2);
 	m_ambientLightShader->SendTexture(m_gBuffer.emissiveAttachment, 3);
 	m_ambientLightShader->SendTexture(m_gBuffer.specularAttachment, 4);
@@ -548,6 +550,7 @@ void GLDeferredRenderer::RenderPostProcess()
 	glUseProgram(m_dummyPostProcShader->programId);
 
 	m_dummyPostProcShader->SendFloat("gamma", m_gamma);
+	m_dummyPostProcShader->SendFloat("exposure", m_exposure);
 	m_dummyPostProcShader->SendTexture(m_lightTexture, 0);
 
 	// big triangle trick, no vao
@@ -631,10 +634,10 @@ void GLDeferredRenderer::ActiveCameraResize()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 
 	glBindTexture(GL_TEXTURE_2D, m_lightTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 
 	glBindTexture(GL_TEXTURE_2D, m_outTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 }
 
 void GLDeferredRenderer::Update()

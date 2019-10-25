@@ -21,11 +21,11 @@ void OVRNode::PrepareEyes()
 		// TODO: this should be updated from the cameras
 		m_info.eyeFovs[i] = f;
 
-		m_eyes[i]->m_hFov = glm::degrees(atan(f.RightTan) + atan(f.LeftTan));
-		m_eyes[i]->m_hFovOffset = glm::degrees(atan(f.RightTan) - atan(f.LeftTan));
+		m_eyes[i]->m_hFov = atan(f.RightTan) + atan(f.LeftTan);
+		m_eyes[i]->m_hFovOffset = atan(f.RightTan) - atan(f.LeftTan);
 
-		m_eyes[i]->m_vFov = glm::degrees(atan(f.UpTan) + atan(f.DownTan));
-		m_eyes[i]->m_vFovOffset = glm::degrees(atan(f.UpTan) - atan(f.DownTan));
+		m_eyes[i]->m_vFov = atan(f.UpTan) + atan(f.DownTan);
+		m_eyes[i]->m_vFovOffset = atan(f.UpTan) - atan(f.DownTan);
 	}
 
 	const auto eyeSizeLeft = ovr_GetFovTextureSize(m_session, ovrEye_Left, hmd.DefaultEyeFov[ovrEye_Left], 1.0f);

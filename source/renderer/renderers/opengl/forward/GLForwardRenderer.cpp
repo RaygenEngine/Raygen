@@ -6,7 +6,7 @@
 #include "renderer/renderers/opengl/GLPreviewer.h"
 #include "world/World.h"
 #include "world/nodes/camera/CameraNode.h"
-#include "world/nodes/sky/SkyboxNode.h"
+#include "world/nodes/light/AmbientNode.h"
 #include "world/nodes/RootNode.h"
 #include "system/Input.h"
 #include "renderer/renderers/opengl/GLUtil.h"
@@ -42,9 +42,11 @@ void GLForwardRenderer::InitObservers()
 	m_activeCamera = Engine::GetWorld()->GetActiveCamera();
 	CLOG_WARN(!m_activeCamera, "Renderer found no camera.");
 
-	// TODO: should be possible to update skybox, decide on singleton observers to do this automatically
-	auto skyboxNode = Engine::GetWorld()->GetAnyAvailableNode<SkyboxNode>();
-	m_skyboxCubemap = GetGLAssetManager()->GpuGetOrCreate<GLTexture>(skyboxNode->GetSkyMap());
+	const auto reload = [](GLBasicAmbient* ambObs) {
+		ambObs->ReloadSkybox();
+	};
+
+	m_ambient = CreateTrackerObserver_AnyAvailableWithCallback<GLBasicAmbient>(reload);
 
 	// Auto deduces observer type and node type
 	RegisterObserverContainer_AutoLifetimes(m_glGeometries);
@@ -187,6 +189,7 @@ void GLForwardRenderer::InitShaders()
 	m_dummyPostProcShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/post-process/DummyPostProc.json");
 	m_dummyPostProcShader->StoreUniformLoc("gamma");
+	m_dummyPostProcShader->StoreUniformLoc("exposure");
 
 	m_windowShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/general/QuadWriteTexture.json");
@@ -221,7 +224,7 @@ void GLForwardRenderer::InitRenderBuffers()
 
 	glGenTextures(1, &m_msaaColorTexture);
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture);
-	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, msaaSamples, GL_RGB, width, height, GL_TRUE);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, msaaSamples, GL_RGBA16F, width, height, GL_TRUE);
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture, 0);
 
@@ -239,7 +242,7 @@ void GLForwardRenderer::InitRenderBuffers()
 
 	glGenTextures(1, &m_intrColorTexture);
 	glBindTexture(GL_TEXTURE_2D, m_intrColorTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -360,6 +363,10 @@ void GLForwardRenderer::RenderEarlyDepthPass()
 
 void GLForwardRenderer::RenderAmbientLight()
 {
+	if (!m_ambient->node) {
+		return;
+	}
+
 	glViewport(0, 0, m_activeCamera->GetWidth(), m_activeCamera->GetHeight());
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFbo);
@@ -373,7 +380,7 @@ void GLForwardRenderer::RenderAmbientLight()
 
 	glUseProgram(m_ambientLightShader->programId);
 
-	m_ambientLightShader->SendVec3("ambient", Engine::GetWorld()->GetRoot()->GetAmbientColor());
+	m_ambientLightShader->SendVec3("ambient", m_ambient->node->GetAmbientTerm());
 
 	const auto vp = m_activeCamera->GetViewProjectionMatrix();
 
@@ -552,8 +559,8 @@ void GLForwardRenderer::RenderSpotLights()
 		// light
 		ls->SendVec3("spotLight.wcs_pos", light->node->GetWorldTranslation());
 		ls->SendVec3("spotLight.wcs_dir", light->node->GetWorldForward());
-		ls->SendFloat("spotLight.outerCutOff", glm::cos(glm::radians(light->node->GetOuterAperture() / 2.f)));
-		ls->SendFloat("spotLight.innerCutOff", glm::cos(glm::radians(light->node->GetInnerAperture() / 2.f)));
+		ls->SendFloat("spotLight.outerCutOff", glm::cos(light->node->GetOuterAperture() / 2.f));
+		ls->SendFloat("spotLight.innerCutOff", glm::cos(light->node->GetInnerAperture() / 2.f));
 		ls->SendVec3("spotLight.color", light->node->GetColor());
 		ls->SendFloat("spotLight.intensity", light->node->GetIntensity());
 		ls->SendInt("spotLight.attenCoef", light->node->GetAttenuationMode());
@@ -718,6 +725,10 @@ void GLForwardRenderer::RenderBoundingBoxes()
 
 void GLForwardRenderer::RenderSkybox()
 {
+	if (!m_ambient->node || !m_ambient->texture) {
+		return;
+	}
+
 	glViewport(0, 0, m_activeCamera->GetWidth(), m_activeCamera->GetHeight());
 
 	glEnable(GL_DEPTH_TEST);
@@ -729,7 +740,7 @@ void GLForwardRenderer::RenderSkybox()
 	const auto vpNoTransformation
 		= m_activeCamera->GetProjectionMatrix() * glm::mat4(glm::mat3(m_activeCamera->GetViewMatrix()));
 	m_cubemapInfDistShader->SendMat4("vp", vpNoTransformation);
-	m_cubemapInfDistShader->SendCubeTexture(m_skyboxCubemap->id, 0);
+	m_cubemapInfDistShader->SendCubeTexture(m_ambient->texture->id, 0);
 
 	glBindVertexArray(m_skyboxVao);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -765,6 +776,7 @@ void GLForwardRenderer::RenderPostProcess()
 	glUseProgram(m_dummyPostProcShader->programId);
 
 	m_dummyPostProcShader->SendFloat("gamma", m_gamma);
+	m_dummyPostProcShader->SendFloat("exposure", m_exposure);
 	m_dummyPostProcShader->SendTexture(m_intrColorTexture, 0);
 
 	// big triangle trick, no vao
@@ -836,13 +848,13 @@ void GLForwardRenderer::ActiveCameraResize()
 	const auto height = m_activeCamera->GetHeight();
 
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msaaColorTexture);
-	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, msaaSamples, GL_RGB, width, height, GL_TRUE);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, msaaSamples, GL_RGBA16F, width, height, GL_TRUE);
 
 	glBindRenderbuffer(GL_RENDERBUFFER, m_msaaDepthStencilRbo);
 	glRenderbufferStorageMultisample(GL_RENDERBUFFER, msaaSamples, GL_DEPTH24_STENCIL8, width, height);
 
 	glBindTexture(GL_TEXTURE_2D, m_intrColorTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 
 	glBindTexture(GL_TEXTURE_2D, m_intrDepthTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
