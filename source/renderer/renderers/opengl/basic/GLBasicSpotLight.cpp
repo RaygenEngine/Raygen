@@ -67,7 +67,7 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 
 	glUseProgram(depthMapShader->programId);
 
-	auto vp = node->GetViewProjectionMatrix();
+	const auto vp = node->GetViewProjectionMatrix();
 
 	for (auto& geometry : geometries) {
 		auto m = geometry->node->GetWorldMatrix();
