@@ -2,6 +2,7 @@
 
 #include "renderer/renderers/opengl/GLRendererBase.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
+#include "renderer/renderers/opengl/GLPreviewer.h"
 #include "system/Input.h"
 
 #include <glad/glad.h>
@@ -16,6 +17,18 @@ void GLRendererBase::Update()
 		m_vsyncEnabled = !m_vsyncEnabled;
 		ChangeVSync(m_vsyncEnabled);
 	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::P)) {
+		m_previewerEnabled = !m_previewerEnabled;
+	}
+
+	if (m_previewerEnabled && Engine::GetInput()->IsKeyPressed(XVirtualKey::K1)) {
+		m_glPreviewer->PreviousPreview();
+	}
+
+	if (m_previewerEnabled && Engine::GetInput()->IsKeyPressed(XVirtualKey::K2)) {
+		m_glPreviewer->NextPreview();
+	}
 }
 
 void GLRendererBase::ChangeVSync(bool enabled)
@@ -24,12 +37,17 @@ void GLRendererBase::ChangeVSync(bool enabled)
 	wglSwapIntervalEXT(enabled);
 }
 
+void GLRendererBase::Render()
+{
+	if (m_previewerEnabled) {
+		m_glPreviewer->RenderPreview();
+	}
+}
+
 GLRendererBase::GLRendererBase()
-	: m_assochWnd(nullptr)
-	, m_hdc(nullptr)
-	, m_hglrc(nullptr)
 {
 	m_glAssetManager = std::make_unique<GLAssetManager>();
+	m_glPreviewer = std::make_unique<GLPreviewer>();
 }
 
 GLRendererBase::~GLRendererBase()
@@ -77,13 +95,18 @@ void GLRendererBase::InitRendering(HWND assochWnd, HINSTANCE instance)
 	const int32 pixelFormat = ChoosePixelFormat(m_hdc, &pfd);
 
 	CLOG_ABORT(!pixelFormat, "Can't find a suitable pixelFormat, error: {}", MB_OK | MB_ICONERROR);
-	CLOG_ABORT(!SetPixelFormat(m_hdc, pixelFormat, &pfd), "Can't set the pixelFormat, error: {}", MB_OK | MB_ICONERROR);
+	auto res = SetPixelFormat(m_hdc, pixelFormat, &pfd);
+	CLOG_ABORT(!res, "Can't set the pixelFormat, error: {}", MB_OK | MB_ICONERROR);
 
 	m_hglrc = wglCreateContext(m_hdc);
 
 	CLOG_ABORT(!m_hglrc, "Can't create a GL rendering context, error: {}", MB_OK | MB_ICONERROR);
-	CLOG_ABORT(!wglMakeCurrent(m_hdc, m_hglrc), "Can't activate GLRC, error: {}", MB_OK | MB_ICONERROR);
-	CLOG_ABORT(!(gladLoadGL() == 1), "Couldn't load ogl function pointers");
+	res = wglMakeCurrent(m_hdc, m_hglrc);
+	CLOG_ABORT(!res, "Can't activate GLRC, error: {}", MB_OK | MB_ICONERROR);
+	res = gladLoadGL();
+	CLOG_ABORT(!(res == 1), "Couldn't load ogl function pointers");
+
+	m_glPreviewer->InitPreviewShaders(m_glAssetManager.get());
 }
 
 void GLRendererBase::SwapBuffers()

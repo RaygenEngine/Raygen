@@ -38,6 +38,8 @@ inline bool Load(TexturePod* pod, const uri::Uri& path)
 			if (!hasFoundAnyFace) {
 				pod->target = TextureTarget::TEXTURE_CUBEMAP;
 				pod->images.resize(CubemapFace::COUNT);
+				// (for now) consider cubemaps as srgba
+				pod->isLinear = false;
 			}
 
 			pod->images[value] = AssetManager::GetOrCreateFromParentUri<ImagePod>(imagePath, path);

@@ -2,6 +2,7 @@
 
 #include "renderer/ObserverRenderer.h"
 #include "system/Engine.h"
+#include "system/Input.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "world/World.h"
 
@@ -31,12 +32,19 @@ void ObserverRenderer::OnNodeAddedToWorld(Node* node)
 			adderFunc(node);
 		}
 	}
-};
+}
+
+void ObserverRenderer::OnActiveCameraChanged(CameraNode* node)
+{
+	m_activeCamera = Engine::GetWorld()->GetActiveCamera();
+	if (m_activeCamera) {
+		ActiveCameraResize();
+	}
+}
 
 void ObserverRenderer::Update()
 {
-	auto camera = Engine::GetWorld()->GetActiveCamera();
-	if (camera && camera->GetDirtyFlagset()[CameraNode::DF::ViewportSize]) {
+	if (m_activeCamera && m_activeCamera->GetDirtyFlagset()[CameraNode::DF::ViewportSize]) {
 		ActiveCameraResize();
 	}
 
@@ -48,5 +56,21 @@ void ObserverRenderer::Update()
 				observer->DirtyNodeUpdate(flagset);
 			}
 		}
+	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::OEM_PLUS)) {
+		m_gamma += 0.03f;
+	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::OEM_MINUS)) {
+		m_gamma -= 0.03f;
+	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::MULTIPLY)) {
+		m_exposure += 0.03f;
+	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::DIVIDE)) {
+		m_exposure -= 0.03f;
 	}
 }

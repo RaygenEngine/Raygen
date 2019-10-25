@@ -2,21 +2,25 @@
 
 out vec4 out_color;
 
-in vec2 texCoord;
+in vec2 uv;
 
 uniform vec3 wcs_viewPos;
-uniform vec2 invTextureSize;
 
 uniform mat4 vp_inv;
 
+uniform vec3 ambient;
+
 layout(binding=0) uniform sampler2D depthSampler;
 layout(binding=1) uniform samplerCube skyboxSampler;
+layout(binding=2) uniform sampler2D albedoSampler;
+layout(binding=3) uniform sampler2D emissiveSampler;
+layout(binding=4) uniform sampler2D specularSampler;
 
 vec3 ReconstructWCS(vec2 uv)
 {
 	vec4 clipPos; // clip space reconstruction
-	clipPos.x = 2.0 * texCoord.x - 1.0;
-	clipPos.y = 2.0 * texCoord.y - 1.0;
+	clipPos.x = 2.0 * uv.x - 1.0;
+	clipPos.y = 2.0 * uv.y - 1.0;
 	clipPos.z = 2.0 * texture(depthSampler, uv.xy).r -1.0;
 	clipPos.w = 1.0;
 	
@@ -27,8 +31,6 @@ vec3 ReconstructWCS(vec2 uv)
 
 void main()
 {
-	vec2 uv = gl_FragCoord.st * invTextureSize;
-	
 	float currentDepth = texture(depthSampler, uv.xy).r;
 
 	out_color = vec4(vec3(0.0), 1.0);
@@ -39,4 +41,13 @@ void main()
 		
 		out_color = texture(skyboxSampler, dir);
 	}
+	
+	vec3 albedo = texture(albedoSampler, uv.xy).rgb;
+	vec3 emissive = texture(emissiveSampler, uv.xy).rgb;
+	vec4 specular = texture(specularSampler, uv.xy);
+	
+	vec3 color = (albedo *  ambient) + emissive;
+	color = mix(color, color * specular.b, specular.a);
+	
+	out_color += vec4(color, 1);
 }

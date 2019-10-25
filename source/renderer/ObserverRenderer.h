@@ -13,18 +13,24 @@ class ObserverRenderer : public Renderer {
 	std::unordered_map<const ReflClass*, std::function<void(Node*)>> m_onTypeAdded;
 	std::unordered_map<const ReflClass*, std::function<void(Node*)>> m_onTypeRemoved;
 
+
 protected:
 	ObserverRenderer()
 	{
 		m_nodeAddedListener.BindMember(this, &ObserverRenderer::OnNodeAddedToWorld);
 		m_nodeRemovedListener.BindMember(this, &ObserverRenderer::OnNodeRemovedFromWorld);
+		m_activeCameraChangedListener.BindMember(this, &ObserverRenderer::OnActiveCameraChanged);
 	}
 
 	DECLARE_EVENT_LISTENER(m_nodeAddedListener, Event::OnWorldNodeAdded);
 	DECLARE_EVENT_LISTENER(m_nodeRemovedListener, Event::OnWorldNodeRemoved);
+	DECLARE_EVENT_LISTENER(m_activeCameraChangedListener, Event::OnWorldActiveCameraChanged);
 
 
-	// WIP: Observer function names.
+	const auto& GetObservers() const { return m_observers; }
+
+	// WIP: Cleanup unused stuff, decide on "Singleton" Observer (maybe even auto-add them?)
+	// TODO: custom dirtyFlagset structure?
 	// PERF: remove_swap for vectors and fast iterations
 	// DOC: document the final version
 
@@ -115,12 +121,22 @@ protected:
 
 	void RemoveObserver(NodeObserverBase* ptr);
 
+	// WIP: note: those may be temporarily here
+	CameraNode* m_activeCamera{ nullptr };
+	float m_gamma{ 2.2f };
+	float m_exposure{ 1.f };
+
 protected:
 	// Probably worthless to overload this under normal circumstances, you should prefer to use the automatic lifetimes
 	// of the observer renderer
 	virtual void OnNodeRemovedFromWorld(Node* node);
 	virtual void OnNodeAddedToWorld(Node* node);
+	virtual void OnActiveCameraChanged(CameraNode* node);
 	virtual void ActiveCameraResize(){};
+
+public:
+	void Update() override;
+
 
 	// Do not use this with NodeTypes that are already handled for automatic lifetimes. This deregisters the other
 	// functions for this type
@@ -130,7 +146,4 @@ protected:
 		m_onTypeAdded.insert({ &NodeType::StaticClass(), adderFunc });
 		m_onTypeRemoved.insert({ &NodeType::StaticClass(), removerFunc });
 	}
-
-public:
-	virtual void Update();
 };

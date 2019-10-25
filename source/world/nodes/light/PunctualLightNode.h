@@ -16,6 +16,9 @@ class PunctualLightNode : public LightNode {
 		QUADRATIC = 2
 	} m_attenuationMode{ AttenuationMode::LINEAR };
 
+	// TODO calculate using a sphere
+	// void CalculateWorldAABB() override;
+
 	void RecalculateProjectionMatrix();
 	void RecalculateViewMatrices();
 	void RecalculateViewProjectionMatrices();

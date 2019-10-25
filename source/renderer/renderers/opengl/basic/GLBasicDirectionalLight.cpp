@@ -2,12 +2,14 @@
 
 #include "renderer/renderers/opengl/basic/GLBasicDirectionalLight.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
+#include "renderer/renderers/opengl/GLPreviewer.h"
 #include "asset/AssetManager.h"
 #include "core/MathAux.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
 namespace ogl {
+
 GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
 	: NodeObserver<DirectionalLightNode, GLRendererBase>(node)
 {
@@ -34,6 +36,8 @@ GLBasicDirectionalLight::GLBasicDirectionalLight(DirectionalLightNode* node)
 	float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
+	GetGLPreviewer(this)->AddPreview(shadowMap, node->GetName());
+
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
@@ -49,7 +53,7 @@ GLBasicDirectionalLight::~GLBasicDirectionalLight()
 
 void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geometries)
 {
-	if (!node->CastsShadows()) {
+	if (!node->HasShadow()) {
 		return;
 	}
 
@@ -67,7 +71,7 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 
 	for (auto& geometry : geometries) {
 		// light frustum culling
-		if (!node->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
+		if (!node->IsNodeInsideFrustum(geometry->node)) {
 			continue;
 		}
 
@@ -80,7 +84,7 @@ void GLBasicDirectionalLight::RenderShadowMap(const std::vector<GLBasicGeometry*
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
 
-			if (materialData->castsShadows)
+			if (!materialData->castsShadows)
 				continue;
 
 			glBindVertexArray(glMesh.vao);

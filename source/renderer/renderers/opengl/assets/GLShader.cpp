@@ -15,17 +15,10 @@ GLShader::~GLShader()
 	glDeleteProgram(programId);
 }
 
-// TODO: tidy
+// WIP: tidy
 void GLShader::Load()
 {
-	// TODO: handle compile and link status
-	if (!firstLoad) {
-		AssetManager::Reload(podHandle);
-		for (auto f : podHandle.Lock()->files)
-			AssetManager::Reload(f);
-	}
-	firstLoad = false;
-
+	// WIP: handle compile and link status
 	auto CreateShader = [&](GLenum type, PodHandle<StringPod> pod) -> GLuint {
 		GLint result = GL_FALSE;
 		int32 infoLogLength;
@@ -142,6 +135,25 @@ void GLShader::Load()
 	}
 }
 
+void GLShader::Reload()
+{
+	glDeleteProgram(programId);
+
+	LOG_REPORT("Reloading shader {}", AssetManager::GetEntry(podHandle)->name);
+
+	AssetManager::Reload(podHandle);
+	for (const auto f : podHandle.Lock()->files) {
+		AssetManager::Reload(f);
+	}
+
+	Load();
+
+	// search again for the locations
+	for (auto [k, v] : uniformLocations) {
+		StoreUniformLoc(k);
+	}
+}
+
 
 void GLShader::SendTexture(const std::string& uniformName, GLuint textureId, int32 textureUnitOffset)
 {
@@ -206,6 +218,6 @@ void GLShader::SendMat4(const std::string& uniformName, const glm::mat4& m, GLbo
 
 void GLShader::StoreUniformLoc(const std::string& uniformName)
 {
-	uniformLocations.insert({ uniformName, glGetUniformLocation(programId, uniformName.c_str()) });
+	uniformLocations[uniformName] = glGetUniformLocation(programId, uniformName.c_str());
 }
 } // namespace ogl

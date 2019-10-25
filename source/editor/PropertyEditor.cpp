@@ -94,10 +94,9 @@ struct ReflectionToImguiVisitor {
 	template<typename T>
 	void operator()(T& t, const Property& p)
 	{
-		// WIP:
-		// if (p.HasFlags(PropertyFlags::Hidden)) {
-		//	return;
-		//}
+		if (p.HasFlags(PropertyFlags::Hidden)) {
+			return;
+		}
 		if (!p.HasFlags(NoEdit)) {
 			if (Inner(t, p)) {
 				if (p.GetDirtyFlagIndex() >= 0) {
@@ -480,6 +479,9 @@ void PropertyEditor::Inject(Node* node)
 
 void PropertyEditor::Run_BaseProperties(Node* node)
 {
+	static Node* prevNode = nullptr;
+	static glm::vec3 lookAtRef{ 0.f, 0.f, 0.f };
+
 	std::string name = node->GetName();
 
 	if (ImGui::InputText("Name", &name)) {
@@ -501,6 +503,15 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 		scale = node->GetWorldScale();
 	}
 
+	const auto UpdateLookAtReference = [&]() {
+		auto fwd = m_localMode ? node->GetLocalForward() : node->GetWorldForward();
+		auto lookAt = location + fwd;
+		lookAtRef = lookAt;
+	};
+
+	if (prevNode != node) {
+		UpdateLookAtReference();
+	}
 
 	if (ImGui::DragFloat3("Position", ImUtil::FromVec3(location), 0.01f)) {
 		m_localMode ? node->SetLocalTranslation(location) : node->SetWorldTranslation(location);
@@ -511,22 +522,35 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 		}
 		ImGui::EndPopup();
 	}
-	if (ImGui::DragFloat3("Rotation", ImUtil::FromVec3(eulerPyr), 0.1f)) {
-		auto deltaAxis = eulerPyr - (m_localMode ? node->GetLocalPYR() : node->GetWorldPYR());
-		if (ImGui::IsAnyMouseDown()) {
-			// On user drag use quat diff, prevents gimbal locks while dragging
-			m_localMode ? node->SetLocalOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetLocalOrientation())
-						: node->SetWorldOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetWorldOrientation());
-		}
-		else {
-			// On user type set pyr directly, prevents the axis from flickering
-			m_localMode ? node->SetLocalPYR(eulerPyr) : node->SetWorldPYR(eulerPyr);
+	static bool lookAtMode = false;
+	if (!lookAtMode) {
+		if (ImGui::DragFloat3("Rotation", ImUtil::FromVec3(eulerPyr), 0.1f)) {
+			auto deltaAxis = eulerPyr - (m_localMode ? node->GetLocalPYR() : node->GetWorldPYR());
+			if (ImGui::IsAnyMouseDown()) {
+				// On user drag use quat diff, prevents gimbal locks while dragging
+				m_localMode
+					? node->SetLocalOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetLocalOrientation())
+					: node->SetWorldOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetWorldOrientation());
+			}
+			else {
+				// On user type set pyr directly, prevents the axis from flickering
+				m_localMode ? node->SetLocalPYR(glm::radians(eulerPyr)) : node->SetWorldPYR(glm::radians(eulerPyr));
+			}
 		}
 	}
+	else {
+		ImGui::DragFloat3("LookAt", ImUtil::FromVec3(lookAtRef), 0.1f);
+		m_localMode ? node->SetLocalLookAt(lookAtRef) : node->SetWorldLookAt(lookAtRef);
+	}
+
 	if (ImGui::BeginPopupContextItem("RotatePopup")) {
 		if (ImGui::MenuItem("Reset##2")) {
 			m_localMode ? node->SetLocalOrientation(glm::identity<glm::quat>())
 						: node->SetWorldOrientation(glm::identity<glm::quat>());
+		}
+		if (ImGui::MenuItem("LookAt", nullptr, lookAtMode)) {
+			lookAtMode = !lookAtMode;
+			UpdateLookAtReference();
 		}
 		ImGui::EndPopup();
 	}
@@ -567,7 +591,9 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 		ImGui::EndPopup();
 	}
 
-	ImGui::Checkbox("Local Mode", &m_localMode);
+	if (ImGui::Checkbox("Local Mode", &m_localMode)) {
+		UpdateLookAtReference();
+	}
 	Editor::HelpTooltipInline("Toggles local/global space for TRS and transform matrix editing.");
 	ImGui::SameLine(0.f, 16.f);
 	ImGui::Checkbox("Display Matrix", &m_displayMatrix);
@@ -591,6 +617,8 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 						: node->SetWorldMatrix(glm::transpose(rowMajor));
 		}
 	}
+
+	prevNode = node;
 }
 
 void PropertyEditor::Run_ContextActions(Node* node)

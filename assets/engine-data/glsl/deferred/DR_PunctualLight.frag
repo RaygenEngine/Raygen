@@ -6,8 +6,9 @@
 
 out vec4 out_color;
 
+in vec2 uv;
+
 uniform vec3 wcs_viewPos;
-uniform vec2 invTextureSize;
 
 uniform struct PunctualLight
 {
@@ -33,7 +34,6 @@ uniform struct GBuffer
 	sampler2D normalsSampler;
 	sampler2D albedoOpacitySampler;
 	sampler2D specularSampler;
-	sampler2D emissiveSampler;
 } gBuffer;
 
 float ShadowCalculation(vec3 pos, float cosTheta)
@@ -71,11 +71,8 @@ float ShadowCalculation(vec3 pos, float cosTheta)
 }  
 
 void ProcessUniformGBuffer(out vec3 albedo, out float opacity, out float metallic, 
-out float roughness, out vec3 emissive, out float occlusion, out float occlusionStrength, 
-out vec3 pos, out vec3 normal)
+out float roughness, out vec3 pos, out vec3 normal)
 {
-	vec2 uv = gl_FragCoord.st * invTextureSize;
-
 	pos = texture(gBuffer.positionsSampler, uv).rgb;
 	normal = texture(gBuffer.normalsSampler, uv).rgb;
 	vec4 albedoOpacity = texture(gBuffer.albedoOpacitySampler, uv);
@@ -84,26 +81,19 @@ out vec3 pos, out vec3 normal)
 	vec4 metallicRoughnessOcclusionOcclusionStrength = texture(gBuffer.specularSampler, uv);
 	metallic = metallicRoughnessOcclusionOcclusionStrength.r;
 	roughness = metallicRoughnessOcclusionOcclusionStrength.g;
-	occlusion = metallicRoughnessOcclusionOcclusionStrength.b;
-	occlusionStrength = metallicRoughnessOcclusionOcclusionStrength.a;
-	emissive = texture(gBuffer.emissiveSampler, uv).rgb;
 }
 
 void main()
 {
-		// gBuffer values
+	// gBuffer values
 	vec3 albedo;
 	float opacity;
 	float metallic;
 	float roughness;
-	float occlusion;
-	float occlusionStrength;
-	vec3 emissive;
 	vec3 wcs_fragPos;
 	vec3 wcs_normal;
 	
-	ProcessUniformGBuffer(albedo, opacity, metallic, roughness, emissive,
-		occlusion, occlusionStrength, wcs_fragPos, wcs_normal);
+	ProcessUniformGBuffer(albedo, opacity, metallic, roughness, wcs_fragPos, wcs_normal);
 	
 	vec3 N = wcs_normal;
 	vec3 V = normalize(wcs_viewPos - wcs_fragPos);
@@ -118,8 +108,8 @@ void main()
 
 	vec3 Lo = CookTorranceMicrofacetBRDF_GGX(L, V, N, albedo, metallic, roughness) * Li * max(dot(N, L), 0.0);
 
-	vec3 color = Lo + emissive;
-	color = mix(color, color * occlusion, occlusionStrength);
-		
-	out_color = vec4(color, opacity);
+	out_color = vec4(Lo, opacity);
 }
+
+
+

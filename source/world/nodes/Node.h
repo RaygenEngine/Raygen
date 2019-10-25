@@ -2,6 +2,7 @@
 
 #include "reflection/GenMacros.h" // include gen macros here even if not needed to propagate to all node headers
 #include "system/Object.h"
+#include "core/MathAux.h"
 
 #include <bitset>
 
@@ -95,6 +96,12 @@ private:
 protected:
 	std::string m_name;
 
+	// TODO: keep only the local space one
+	// currently world space
+	math::AABB m_aabb{};
+	math::AABB m_localBB{ { -0.3, -0.3, -0.3 }, { 0.3, 0.3, 0.3 } };
+	virtual void CalculateWorldAABB();
+
 private:
 	// Dirty Functions
 	void CallDirtyUpdate() { DirtyUpdate(m_dirty); };
@@ -139,19 +146,21 @@ public:
 	[[nodiscard]] bool IsRoot() const { return m_parent == nullptr; }
 	[[nodiscard]] RootNode* GetWorldRoot() const;
 
+	[[nodiscard]] math::AABB GetAABB() const { return m_aabb; }
+
 	void SetLocalTranslation(glm::vec3 lt);
 	void SetLocalOrientation(glm::quat lo);
 	void SetLocalPYR(glm::vec3 pyr); // in degrees
 	void SetLocalScale(glm::vec3 ls);
 	void SetLocalMatrix(const glm::mat4& lm);
+	void SetLocalLookAt(glm::vec3 lookAt);
 
 	void SetWorldTranslation(glm::vec3 wt);
 	void SetWorldOrientation(glm::quat wo);
 	void SetWorldPYR(glm::vec3 pyr); // in degrees
 	void SetWorldScale(glm::vec3 ws);
 	void SetWorldMatrix(const glm::mat4& newWorldMatrix);
-
-	void SetLookAt(glm::vec3 lookat);
+	void SetWorldLookAt(glm::vec3 lookAt);
 
 	void RotateAroundAxis(glm::vec3 worldAxis, float degrees);
 
@@ -175,7 +184,6 @@ public:
 	void SetDirty(uint32 flagIndex) { m_dirty.set(flagIndex); }
 	void SetDirtyMultiple(DirtyFlagset other) { m_dirty |= other; };
 
-	//
 	template<typename T>
 	bool IsA()
 	{

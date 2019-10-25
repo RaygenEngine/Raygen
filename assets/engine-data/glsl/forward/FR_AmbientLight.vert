@@ -9,31 +9,15 @@ layout (location = 5) in vec2 textCoord1;
 
 out Data
 { 
-	vec3 wcs_fragPos;
-	vec3 wcs_normal;
-	vec3 wcs_tangent;
-	vec3 wcs_bitangent;
 	vec2 textCoord[2];
-	
-	mat3 TBN;
 } dataOut;
 
 uniform mat4 mvp;
-uniform mat4 m;
-
-uniform mat3 normalMatrix; 
 
 void main()
 {
     gl_Position = mvp * vec4(ocs_pos,1);
-	dataOut.wcs_fragPos = vec3(m * vec4(ocs_pos,1));
-
+	
 	dataOut.textCoord[0] = textCoord0; 
 	dataOut.textCoord[1] = textCoord1; 
-	
-	dataOut.wcs_normal = normalize(normalMatrix * ocs_normal);
-	dataOut.wcs_tangent = normalize(normalMatrix * ocs_tangent);
-	dataOut.wcs_bitangent = normalize(normalMatrix * ocs_bitangent);
-
-    dataOut.TBN = mat3(dataOut.wcs_tangent, dataOut.wcs_bitangent, dataOut.wcs_normal);
 }

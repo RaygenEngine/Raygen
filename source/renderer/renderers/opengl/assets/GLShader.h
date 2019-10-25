@@ -8,7 +8,6 @@
 namespace ogl {
 struct GLShader : GLAsset<ShaderPod> {
 	GLuint programId{ 0 };
-	bool firstLoad{ true };
 
 	GLShader(PodHandle<ShaderPod> handle)
 		: GLAsset(handle)
@@ -19,6 +18,8 @@ struct GLShader : GLAsset<ShaderPod> {
 
 
 	void Load() override;
+
+	void Reload();
 
 
 	void StoreUniformLoc(const std::string& uniformName);

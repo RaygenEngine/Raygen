@@ -2,6 +2,7 @@
 
 #include "renderer/renderers/opengl/assets/GLTexture.h"
 #include "renderer/renderers/opengl/GLUtil.h"
+#include "renderer/renderers/opengl/GLPreviewer.h"
 #include "asset/AssetManager.h"
 #include "asset/pods/TexturePod.h"
 
@@ -29,8 +30,39 @@ void GLTexture::Load()
 	glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GetGLWrapping(textureData->wrapT));
 	glTexParameteri(textureTarget, GL_TEXTURE_WRAP_R, GetGLWrapping(textureData->wrapR));
 
-	const auto GetTypeAndInternalFormat = [](bool isHdr) -> std::pair<GLenum, GLint> {
-		return isHdr ? std::make_pair(GL_FLOAT, GL_RGBA32F) : std::make_pair(GL_UNSIGNED_BYTE, GL_RGBA);
+	struct TextureSetup {
+		GLint internalformat{ GL_INVALID_VALUE };
+		GLenum format{ GL_INVALID_ENUM };
+		GLenum type{ GL_INVALID_ENUM };
+	};
+
+	const auto GetTextureSetup = [&](bool isLinear, bool isHdr, int32 components) -> TextureSetup {
+		TextureSetup ts{};
+
+		switch (components) {
+			case 1:
+				ts.internalformat = (!isHdr ? GL_RED : GL_R32F);
+				ts.format = GL_RED;
+				break;
+			case 2:
+				ts.internalformat = (!isHdr ? GL_RG : GL_RG32F);
+				ts.format = GL_RG;
+				break;
+			case 3:
+				ts.internalformat = (!isHdr ? (isLinear ? GL_RGB : GL_SRGB8) : (isLinear ? GL_RGB32F : GL_SRGB));
+				ts.format = GL_RGB;
+				break;
+			case 4:
+				ts.internalformat
+					= (!isHdr ? (isLinear ? GL_RGBA : GL_SRGB8_ALPHA8) : (isLinear ? GL_RGBA32F : GL_SRGB_ALPHA));
+				ts.format = GL_RGBA;
+				break;
+			default: LOG_ABORT("Components cannot be more than 4");
+		}
+
+		ts.type = (!isHdr ? GL_UNSIGNED_BYTE : GL_FLOAT);
+
+		return ts;
 	};
 
 	switch (textureData->target) {
@@ -39,9 +71,12 @@ void GLTexture::Load()
 
 			auto imgPod = img.Lock();
 
-			const auto typeAndInternalFormat = GetTypeAndInternalFormat(imgPod->isHdr);
-			glTexImage2D(GL_TEXTURE_2D, 0, typeAndInternalFormat.second, imgPod->width, imgPod->height, 0, GL_RGBA,
-				typeAndInternalFormat.first, imgPod->data);
+			const auto textureSetup = GetTextureSetup(textureData->isLinear, imgPod->isHdr, imgPod->components);
+			glTexImage2D(GL_TEXTURE_2D, 0, textureSetup.internalformat, imgPod->width, imgPod->height, 0,
+				textureSetup.format, textureSetup.type, imgPod->data);
+
+			GetGLPreviewer(this)->AddPreview(id, AssetManager::GetEntry(img)->name);
+
 			break;
 		}
 
@@ -51,9 +86,9 @@ void GLTexture::Load()
 
 				auto imgPod = img.Lock();
 
-				const auto typeAndInternalFormat = GetTypeAndInternalFormat(imgPod->isHdr);
-				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, typeAndInternalFormat.second, imgPod->width,
-					imgPod->height, 0, GL_RGBA, typeAndInternalFormat.first, imgPod->data);
+				const auto textureSetup = GetTextureSetup(textureData->isLinear, imgPod->isHdr, imgPod->components);
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, textureSetup.internalformat, imgPod->width,
+					imgPod->height, 0, textureSetup.format, textureSetup.type, imgPod->data);
 			}
 			break;
 		}

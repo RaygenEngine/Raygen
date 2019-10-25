@@ -2,6 +2,7 @@
 
 #include "renderer/renderers/opengl/basic/GLBasicSpotLight.h"
 #include "renderer/renderers/opengl/GLAssetManager.h"
+#include "renderer/renderers/opengl/GLPreviewer.h"
 #include "asset/AssetManager.h"
 #include "core/MathAux.h"
 
@@ -34,6 +35,8 @@ GLBasicSpotLight::GLBasicSpotLight(SpotLightNode* node)
 	float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
+	GetGLPreviewer(this)->AddPreview(shadowMap, node->GetName());
+
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
@@ -49,7 +52,7 @@ GLBasicSpotLight::~GLBasicSpotLight()
 
 void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geometries)
 {
-	if (!node->CastsShadows()) {
+	if (!node->HasShadow()) {
 		return;
 	}
 
@@ -74,14 +77,14 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 
 		for (auto& glMesh : geometry->glModel->meshes) {
 			// light frustum culling
-			if (!node->GetFrustum().IntersectsAABB(geometry->node->GetAABB())) {
+			if (!node->IsNodeInsideFrustum(geometry->node)) {
 				continue;
 			}
 
 			GLMaterial* glMaterial = glMesh.material;
 			const MaterialPod* materialData = glMaterial->LockData();
 
-			if (materialData->castsShadows)
+			if (!materialData->castsShadows)
 				continue;
 
 			glBindVertexArray(glMesh.vao);

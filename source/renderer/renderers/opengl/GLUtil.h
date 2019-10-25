@@ -73,7 +73,6 @@ inline GLenum GLCheckError_(const char* file, int line)
 	return errorCode;
 }
 
-
 inline void DebugBoundVAO(std::string baseMessage)
 {
 	baseMessage = "Querying VAO state, model: baseMessage";

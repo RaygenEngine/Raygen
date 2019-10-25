@@ -6,6 +6,7 @@
 #include <ovr/OVR_CAPI.h>
 #include <Extras/OVR_Math.h>
 
+// TODO: session should be part of Engine state and requested from both nodes and renderers
 class OVRNode : public Node {
 	REFLECTED_NODE(OVRNode, Node) {}
 

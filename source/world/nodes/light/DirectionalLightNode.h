@@ -16,16 +16,16 @@ class DirectionalLightNode : public LightNode {
 	glm::mat4 m_projectionMatrix{};
 	glm::mat4 m_viewMatrix{};
 	glm::mat4 m_viewProjectionMatrix{};
-	// may not actually needed in directional
+	// world space frustum TODO
 	math::Frustum m_frustum{};
-	// (pyramid's) frustum world space aabb
-	math::AABB m_frustumAABB{};
 
 	float m_left{ -10.f };
 	float m_right{ 10.f };
 
 	float m_bottom{ -10.f };
 	float m_top{ 10.f };
+
+	void CalculateWorldAABB() override;
 
 	void RecalculateProjectionMatrix();
 	void RecalculateViewMatrix();
@@ -43,6 +43,7 @@ public:
 	[[nodiscard]] glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 	[[nodiscard]] glm::mat4 GetViewMatrix() const { return m_viewMatrix; }
 	[[nodiscard]] glm::mat4 GetViewProjectionMatrix() const { return m_viewProjectionMatrix; }
-	[[nodiscard]] math::Frustum GetFrustum() const { return m_frustum; }
-	[[nodiscard]] math::AABB GetFrustumAABB() const { return m_frustumAABB; }
+	//[[nodiscard]] math::Frustum GetFrustum() const { return m_frustum; }
+
+	bool IsNodeInsideFrustum(Node* node) { return m_frustum.IntersectsAABB(node->GetAABB()); }
 };

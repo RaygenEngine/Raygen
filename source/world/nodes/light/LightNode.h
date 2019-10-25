@@ -46,6 +46,6 @@ public:
 	[[nodiscard]] int32 GetShadowMapHeight() const { return m_shadowMapHeight; }
 	[[nodiscard]] float GetNear() const { return m_near; }
 	[[nodiscard]] float GetFar() const { return m_far; }
-	[[nodiscard]] bool CastsShadows() const { return m_hasShadow; }
+	[[nodiscard]] bool HasShadow() const { return m_hasShadow; }
 	[[nodiscard]] int GetSamples() const { return m_samples; }
 };

@@ -2,11 +2,11 @@
 
 out vec4 out_color;
 
+uniform float gamma;
+uniform float exposure;
+
 // those are the uvs on the quad
 in vec2 quad_uv;
-
-// see how we pass invTextureSize and pass any uniform likewise
-uniform vec2 invTextureSize;
 
 // to pass those use 
 // shader->SendTexture(<host code varname>, <bindingLoc>);
@@ -19,12 +19,12 @@ layout(binding=0) uniform sampler2D lightsColorSampler;
 
 void main()
 {
-	// with these you can sample the input textures
-	// so that they match the quad (i.e. if the sampler is different resolution
-	// than the quad use those uvs to match them)
-	vec2 text_uv = gl_FragCoord.st * invTextureSize;
-	
-	vec3 color = texture(lightsColorSampler, text_uv).rgb;
-	
-	out_color = vec4(vec3(1,1,1) - color, 1);
+    vec3 hdrColor = texture(lightsColorSampler, quad_uv).rgb;
+  
+    // Exposure tone mapping
+    vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);
+    // Gamma correction 
+	mapped = pow(mapped, vec3(1.0 / gamma));
+  
+    out_color = vec4(mapped, 1.0);
 }

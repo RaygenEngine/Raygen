@@ -21,17 +21,11 @@ struct MaterialPod : AssetPod {
 
 	REFLECTED_POD(MaterialPod)
 	{
-		REFLECT_VAR(baseColorTexture);
-		REFLECT_VAR(metallicRoughnessTexture);
-		REFLECT_VAR(occlusionTexture);
-		REFLECT_VAR(normalTexture);
-		REFLECT_VAR(emissiveTexture);
-
-		REFLECT_VAR(baseColorTexCoordIndex);
-		REFLECT_VAR(metallicRoughnessTexCoordIndex);
-		REFLECT_VAR(occlusionTexCoordIndex);
-		REFLECT_VAR(normalTexCoordIndex);
-		REFLECT_VAR(emissiveTexCoordIndex);
+		REFLECT_VAR(baseColorTexCoordIndex, PropertyFlags::Hidden);
+		REFLECT_VAR(metallicRoughnessTexCoordIndex, PropertyFlags::Hidden);
+		REFLECT_VAR(occlusionTexCoordIndex, PropertyFlags::Hidden);
+		REFLECT_VAR(normalTexCoordIndex, PropertyFlags::Hidden);
+		REFLECT_VAR(emissiveTexCoordIndex, PropertyFlags::Hidden);
 
 		REFLECT_VAR(baseColorFactor, PropertyFlags::Color);
 		REFLECT_VAR(emissiveFactor, PropertyFlags::Color);
@@ -44,7 +38,14 @@ struct MaterialPod : AssetPod {
 		REFLECT_VAR(alphaCutoff);
 		REFLECT_VAR(doubleSided);
 		REFLECT_VAR(castsShadows);
+
+		REFLECT_VAR(baseColorTexture);
+		REFLECT_VAR(metallicRoughnessTexture);
+		REFLECT_VAR(occlusionTexture);
+		REFLECT_VAR(normalTexture);
+		REFLECT_VAR(emissiveTexture);
 	}
+
 	static void Load(MaterialPod* pod, const uri::Uri& path);
 
 	// The value for each property(baseColor, metallic, roughness) can be defined using factors or textures.
@@ -108,5 +109,5 @@ struct MaterialPod : AssetPod {
 	// The back-face must have its normals reversed before the lighting equation is evaluated.
 	bool doubleSided{ false };
 
-	bool castsShadows{ false };
+	bool castsShadows{ true };
 };
