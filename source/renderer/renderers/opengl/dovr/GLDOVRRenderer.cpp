@@ -466,7 +466,7 @@ void GLDOVRRenderer::RenderGBuffer(int32 eyeIndex)
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
 			glBindVertexArray(glMesh.vao);
-			glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
+			report_glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
 		}
 	}
 	glDisable(GL_CULL_FACE);
@@ -520,7 +520,7 @@ void GLDOVRRenderer::RenderDirectionalLights(int32 eyeIndex)
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
 
 		// big triangle trick, no vao
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		report_glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glDisable(GL_BLEND);
 	}
@@ -577,7 +577,7 @@ void GLDOVRRenderer::RenderSpotLights(int32 eyeIndex)
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
 
 		// big triangle trick, no vao
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		report_glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glDisable(GL_BLEND);
 	}
@@ -624,7 +624,7 @@ void GLDOVRRenderer::RenderPunctualLights(int32 eyeIndex)
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
 
 		// big triangle trick, no vao
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		report_glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glDisable(GL_BLEND);
 	}
@@ -657,7 +657,7 @@ void GLDOVRRenderer::RenderAmbientLight(int32 eyeIndex)
 	m_ambientLightShader->SendTexture(m_gBuffer.specularAttachment, 4);
 
 	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	report_glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glDisable(GL_BLEND);
@@ -684,7 +684,7 @@ void GLDOVRRenderer::RenderPostProcess(int32 eyeIndex)
 	m_dummyPostProcShader->SendTexture(lightText, 0);
 
 	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	report_glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void GLDOVRRenderer::Render()
