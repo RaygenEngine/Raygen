@@ -113,7 +113,7 @@ private:
 	int32 m_currentRenderer{ 0 };
 
 
-	std::string m_statusLine{ "Use Engine::SetStatusLine() to overwrite this." };
+	std::string m_statusLine{};
 	float m_lastFrameTime{ 0.f };
 
 public:

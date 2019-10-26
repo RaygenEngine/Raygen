@@ -217,7 +217,9 @@ void Editor::UpdateEditor()
 		m_loadFileBrowser.ClearSelected();
 	}
 
-	if (ImGui::BeginChild("EditorScrollable", ImVec2(0, -15.f))) {
+	auto linesAtBottom = Engine::GetStatusLine().empty() ? 1 : 2;
+
+	if (ImGui::BeginChild("EditorScrollable", ImVec2(0, -ImGui::GetTextLineHeightWithSpacing() * linesAtBottom))) {
 		auto open = ImGui::CollapsingHeader("Outliner", ImGuiTreeNodeFlags_DefaultOpen);
 		CollapsingHeaderTooltip(help_Outliner);
 		if (open) {
@@ -246,8 +248,20 @@ void Editor::UpdateEditor()
 	auto& eng = Engine::Get();
 	auto rendererName = eng.GetRendererList()[eng.GetActiveRendererIndex()];
 
-	std::string s = fmt::format("{} | {:.1f} FPS | {}", rendererName, Engine::GetFPS(), Engine::GetStatusLine());
+	// auto str = "tris: " + std::to_string(m_drawReporter.tris) + " | drawcalls: " +
+	// std::to_string(m_drawReporter.draws);
+	// SetStatusLine(str);
+
+
+	auto drawReporter = Engine::GetDrawReporter();
+	std::string s = fmt::format("{} | Draws: {:n} | Tris: {:n} | {:.1f} FPS", rendererName, drawReporter->draws,
+		drawReporter->tris, Engine::GetFPS());
+
 	ImGui::Text(s.c_str());
+
+	if (!Engine::GetStatusLine().empty()) {
+		ImGui::Text(Engine::GetStatusLine().c_str());
+	}
 
 
 	ImGui::End();
@@ -652,7 +666,6 @@ void Editor::Run_HelpWindow()
 	ImGui::PopStyleVar();
 }
 
-
 void Editor::HandleInput()
 {
 	auto input = Engine::GetInput();
@@ -664,8 +677,16 @@ void Editor::HandleInput()
 			FocusNode(m_selectedNode);
 		}
 	}
-}
 
+	if (input->IsKeyPressed(XVirtualKey::Z)) {
+		if (std::rand() % 2) {
+			Engine::SetStatusLine("Engine status line");
+		}
+		else {
+			Engine::SetStatusLine("");
+		}
+	}
+}
 void Editor::PushCommand(std::function<void()>&& func)
 {
 	Engine::GetEditor()->m_postDrawCommands.emplace_back(func);
