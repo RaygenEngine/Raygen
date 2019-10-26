@@ -134,10 +134,6 @@ void Engine::ReportFrameDrawn()
 		LOG_WARN("Init to frame took: {} ms", m_initToFrameTimer.Get());
 		m_initToFrameTimer.Stop();
 	}
-
-	auto str = "tris: " + std::to_string(m_drawReporter.tris) + " | drawcalls: " + std::to_string(m_drawReporter.draws);
-	SetStatusLine(str);
-	m_drawReporter.Reset();
 }
 
 std::vector<std::string> Engine::GetRendererList() const

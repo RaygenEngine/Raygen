@@ -7,12 +7,13 @@
 
 #include <glad/glad.h>
 
-
 namespace ogl {
 
 void GLRendererBase::Update()
 {
 	ObserverRenderer::Update();
+	Engine::GetDrawReporter()->Reset();
+
 	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::BACKSPACE)) {
 		m_vsyncEnabled = !m_vsyncEnabled;
 		ChangeVSync(m_vsyncEnabled);
