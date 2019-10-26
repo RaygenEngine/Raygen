@@ -19,11 +19,11 @@ class DirectionalLightNode : public LightNode {
 	// world space frustum TODO
 	math::Frustum m_frustum{};
 
-	float m_left{ -10.f };
-	float m_right{ 10.f };
+	float m_left{ -20.f };
+	float m_right{ 20.f };
 
-	float m_bottom{ -10.f };
-	float m_top{ 10.f };
+	float m_bottom{ -20.f };
+	float m_top{ 20.f };
 
 	void CalculateWorldAABB() override;
 

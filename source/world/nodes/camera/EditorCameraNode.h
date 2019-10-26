@@ -11,8 +11,13 @@ class EditorCameraNode : public WindowCameraNode {
 	float m_turningSpeed{ 0.3f };
 	bool m_worldAlign{ false };
 
+protected:
+	void WindowResize(int32 x, int32 y) override;
+
 public:
 	void UpdateFromEditor(float deltaTime);
 
 	void ResetRotation();
+
+	EditorCameraNode();
 };

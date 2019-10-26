@@ -23,20 +23,20 @@ class LightNode : public Node {
 
 protected:
 	glm::vec3 m_color{ glm::vec3(1.f) };
-	float m_intensity{ 10.f };
+	float m_intensity{ 30.f };
 
 	bool m_hasShadow{ true };
 
 	int32 m_shadowMapWidth{ 2048 };
 	int32 m_shadowMapHeight{ 2048 };
 
-	float m_near{ 1.f };
-	float m_far{ 15.5f };
+	float m_near{ 0.05f };
+	float m_far{ 20.0f };
 
 	// TODO: consider moving stuff used by shaders as renderer reflected properties
 	// e.g. maxShadowBias, samples etc
 	float m_maxShadowBias{ 0.005f };
-	int m_samples{ 4 };
+	int32 m_samples{ 4 };
 
 public:
 	[[nodiscard]] glm::vec3 GetColor() const { return m_color; }
@@ -47,5 +47,5 @@ public:
 	[[nodiscard]] float GetNear() const { return m_near; }
 	[[nodiscard]] float GetFar() const { return m_far; }
 	[[nodiscard]] bool HasShadow() const { return m_hasShadow; }
-	[[nodiscard]] int GetSamples() const { return m_samples; }
+	[[nodiscard]] int32 GetSamples() const { return m_samples; }
 };

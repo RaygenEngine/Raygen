@@ -677,15 +677,6 @@ void Editor::HandleInput()
 			FocusNode(m_selectedNode);
 		}
 	}
-
-	if (input->IsKeyPressed(XVirtualKey::Z)) {
-		if (std::rand() % 2) {
-			Engine::SetStatusLine("Engine status line");
-		}
-		else {
-			Engine::SetStatusLine("");
-		}
-	}
 }
 void Editor::PushCommand(std::function<void()>&& func)
 {
