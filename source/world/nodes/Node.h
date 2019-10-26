@@ -163,6 +163,8 @@ public:
 	void SetWorldLookAt(glm::vec3 lookAt);
 
 	void RotateAroundAxis(glm::vec3 worldAxis, float degrees);
+	void RotateAroundLocalAxis(glm::vec3 localAxis, float degrees);
+
 
 	void AddLocalOffset(glm::vec3 direction);
 	void AddWorldOffset(glm::vec3 direction);

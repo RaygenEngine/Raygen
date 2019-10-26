@@ -22,9 +22,7 @@ public:
 	NodeType* operator*()
 	{
 		Node* node = *underlyingIterator;
-		CLOG_ABORT(
-			node->GetClass() != NodeType::StaticClass(), "Incorrect class type on iterator. static cast would fail.");
-		return static_cast<NodeType*>(node);
+		return NodeCast<NodeType>(node);
 	}
 
 	void operator++() { ++underlyingIterator; }
