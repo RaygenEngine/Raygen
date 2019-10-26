@@ -33,11 +33,11 @@ protected:
 	float m_focalLength{ 1.f };
 
 	// vertical fov (angle)
-	float m_vFov{ glm::radians(60.f) };
+	float m_vFov{ glm::radians(72.f) };
 	// horizontal fov depends on the vertical and the aspect ratio
-	float m_hFov{ glm::radians(45.f) };
+	float m_hFov{ glm::radians(106.f) };
 
-	float m_near{ 0.2f };
+	float m_near{ 0.001f };
 	float m_far{ 1000.f };
 
 	float m_vFovOffset{ 0.f };
@@ -57,7 +57,6 @@ protected:
 	void RecalculateProjectionFov();
 	void RecalculateViewMatrix();
 	void RecalculateViewProjectionMatrix();
-	void RecalculateFrustum();
 
 public:
 	[[nodiscard]] glm::vec3 GetLookAt() const { return GetWorldTranslation() + GetWorldForward() * m_focalLength; }

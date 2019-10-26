@@ -7,6 +7,13 @@
 #include "system/Engine.h"
 #include "world/World.h"
 
+
+EditorCameraNode::EditorCameraNode()
+	: WindowCameraNode()
+{
+	RecalculateProjectionFov();
+}
+
 void EditorCameraNode::UpdateFromEditor(float deltaTime)
 {
 	CameraNode::Update(deltaTime);
@@ -126,4 +133,10 @@ void EditorCameraNode::ResetRotation()
 	auto pyr = GetWorldPYR();
 	SetWorldOrientation(glm::identity<glm::quat>());
 	RotateAroundAxis(Engine::GetWorld()->GetRoot()->GetWorldUp(), pyr.y);
+}
+
+void EditorCameraNode::WindowResize(int32 x, int32 y)
+{
+	WindowCameraNode::WindowResize(x, y);
+	RecalculateProjectionFov();
 }

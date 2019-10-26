@@ -34,11 +34,7 @@ void CameraNode::RecalculateViewMatrix()
 void CameraNode::RecalculateViewProjectionMatrix()
 {
 	m_viewProjectionMatrix = m_projectionMatrix * m_viewMatrix;
-	RecalculateFrustum();
-}
 
-void CameraNode::RecalculateFrustum()
-{
 	// viewProj to get frustum plane equations in world space
 	m_frustum.ExtractFromMatrix(m_viewProjectionMatrix);
 	CalculateWorldAABB();
