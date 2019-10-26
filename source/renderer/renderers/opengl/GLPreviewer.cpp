@@ -51,7 +51,7 @@ void GLPreviewer::RenderPreview()
 	m_simpleShader->SendTexture(preview.handle, 0);
 
 	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	report_glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void GLPreviewer::PreviousPreview()

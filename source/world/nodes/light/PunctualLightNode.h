@@ -16,8 +16,7 @@ class PunctualLightNode : public LightNode {
 		QUADRATIC = 2
 	} m_attenuationMode{ AttenuationMode::LINEAR };
 
-	// TODO calculate using a sphere
-	// void CalculateWorldAABB() override;
+	void CalculateWorldAABB() override;
 
 	void RecalculateProjectionMatrix();
 	void RecalculateViewMatrices();
@@ -30,4 +29,6 @@ public:
 	[[nodiscard]] const std::array<glm::mat4, 6>& GetViewMatrices() const { return m_viewMatrices; }
 	[[nodiscard]] const std::array<glm::mat4, 6>& GetViewProjectionMatrices() const { return m_viewProjectionMatrices; }
 	[[nodiscard]] AttenuationMode GetAttenuationMode() const { return m_attenuationMode; }
+
+	bool IsNodeInsideAABB(Node* node) const { return m_aabb.IntersectsAABB(node->GetAABB()); }
 };

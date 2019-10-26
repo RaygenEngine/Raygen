@@ -9,15 +9,13 @@ layout (location = 5) in vec2 textCoord1;
 
 out Data
 { 
-	vec3 tcs_fragPos;
-	vec3 tcs_viewPos;
-	
-	vec3 tcs_lightPos;
-	vec3 tcs_lightDir;
-	
+	vec3 wcs_fragPos;
+
 	vec4 shadowCoord;
 	
 	vec2 textCoord[2];
+	
+	mat3 TBN;
 } dataOut;
 
 uniform struct SpotLight
@@ -47,8 +45,6 @@ uniform mat4 m;
 
 uniform mat3 normalMatrix; 
 
-uniform vec3 wcs_viewPos;
-
 void main()
 {
     gl_Position = mvp * vec4(ocs_pos, 1.0);
@@ -60,12 +56,9 @@ void main()
     vec3 B = normalize(normalMatrix * ocs_bitangent);
     vec3 N = normalize(normalMatrix * ocs_normal);
 
-    mat3 TBN = transpose(mat3(T, B, N));
+    dataOut.TBN = mat3(T, B, N);
 	
-	dataOut.tcs_fragPos = TBN * vec3(m * vec4(ocs_pos, 1.0));
-	dataOut.tcs_viewPos  = TBN * wcs_viewPos;
-	dataOut.tcs_lightPos = TBN * spotLight.wcs_pos;
-	dataOut.tcs_lightDir = TBN * spotLight.wcs_dir;
+	dataOut.wcs_fragPos = vec3(m * vec4(ocs_pos, 1.0));
 	
 	dataOut.shadowCoord = spotLight.mvpBiased * vec4(ocs_pos, 1.0);
 }

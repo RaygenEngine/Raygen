@@ -178,7 +178,7 @@ void GLDeferredRenderer::InitRenderBuffers()
 	// - rgb: position
 	glGenTextures(1, &m_gBuffer.positionsAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.positionsAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.positionsAttachment, 0);
@@ -186,7 +186,7 @@ void GLDeferredRenderer::InitRenderBuffers()
 	// - rgb: normal
 	glGenTextures(1, &m_gBuffer.normalsAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.normalsAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_gBuffer.normalsAttachment, 0);
@@ -351,7 +351,7 @@ void GLDeferredRenderer::RenderGBuffer()
 			materialData->doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE);
 
 			glBindVertexArray(glMesh.vao);
-			glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
+			report_glDrawElements(GL_TRIANGLES, glMesh.indicesCount, GL_UNSIGNED_INT, (GLvoid*)0);
 		}
 	}
 	glDisable(GL_CULL_FACE);
@@ -402,7 +402,7 @@ void GLDeferredRenderer::RenderDirectionalLights()
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
 
 		// big triangle trick, no vao
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		report_glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glDisable(GL_BLEND);
 	}
@@ -456,7 +456,7 @@ void GLDeferredRenderer::RenderSpotLights()
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
 
 		// big triangle trick, no vao
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		report_glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glDisable(GL_BLEND);
 	}
@@ -467,6 +467,11 @@ void GLDeferredRenderer::RenderPunctualLights()
 	auto ls = m_deferredPunctualLightShader;
 
 	for (auto light : m_glPunctualLights) {
+
+		// light AABB camera frustum culling
+		if (!m_activeCamera->IsNodeInsideFrustum(light->node)) {
+			continue;
+		}
 
 		light->RenderShadowMap(m_glGeometries);
 
@@ -500,7 +505,7 @@ void GLDeferredRenderer::RenderPunctualLights()
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
 
 		// big triangle trick, no vao
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		report_glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glDisable(GL_BLEND);
 	}
@@ -530,7 +535,7 @@ void GLDeferredRenderer::RenderAmbientLight()
 	m_ambientLightShader->SendTexture(m_gBuffer.specularAttachment, 4);
 
 	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	report_glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glDisable(GL_BLEND);
@@ -554,7 +559,7 @@ void GLDeferredRenderer::RenderPostProcess()
 	m_dummyPostProcShader->SendTexture(m_lightTexture, 0);
 
 	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	report_glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void GLDeferredRenderer::RenderWindow()
@@ -569,7 +574,7 @@ void GLDeferredRenderer::RenderWindow()
 	m_windowShader->SendTexture(m_outTexture, 0);
 
 	// big triangle trick, no vao
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	report_glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void GLDeferredRenderer::Render()
@@ -616,10 +621,10 @@ void GLDeferredRenderer::ActiveCameraResize()
 	const auto height = m_activeCamera->GetHeight();
 
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.positionsAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
 
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.normalsAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
 
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.albedoOpacityAttachment);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -634,10 +639,10 @@ void GLDeferredRenderer::ActiveCameraResize()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 
 	glBindTexture(GL_TEXTURE_2D, m_lightTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 
 	glBindTexture(GL_TEXTURE_2D, m_outTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 }
 
 void GLDeferredRenderer::Update()

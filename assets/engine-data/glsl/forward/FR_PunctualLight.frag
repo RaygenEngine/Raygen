@@ -8,12 +8,11 @@ in Data
 { 
 	vec3 wcs_fragPos;
 
-	vec3 tcs_fragPos;
-	vec3 tcs_viewPos;
+	vec4 shadowCoord;
 	
-	vec3 tcs_lightPos;
-
 	vec2 textCoord[2];
+	
+	mat3 TBN;
 } dataIn;
 
 uniform struct PunctualLight
@@ -63,6 +62,8 @@ uniform struct Material
 	bool mask;
 
 } material;
+
+uniform vec3 wcs_viewPos;
 
 float ShadowCalculation(float cosTheta)
 {	
@@ -131,13 +132,14 @@ void main()
 	// material
 	ProcessUniformMaterial(albedo, opacity, metallic, roughness, normal);
 
-	// tangent space vectors
-	vec3 N = normal;
-	vec3 V = normalize(dataIn.tcs_viewPos - dataIn.tcs_fragPos);
-	vec3 L = normalize(dataIn.tcs_lightPos - dataIn.tcs_fragPos);  
+	// TODO: implement tangent space lighting correctly
+	// world space vectors
+	vec3 N =  normalize(dataIn.TBN * normal);
+	vec3 V = normalize(wcs_viewPos - dataIn.wcs_fragPos);
+	vec3 L = normalize(punctualLight.wcs_pos - dataIn.wcs_fragPos); 
 	
 	// attenuation
-	float distance = length(dataIn.tcs_lightPos - dataIn.tcs_fragPos);
+	float distance = length(punctualLight.wcs_pos - dataIn.wcs_fragPos);
 	float attenuation = 1.0 / pow(distance, punctualLight.attenCoef);
 	
 	float shadow = ShadowCalculation(max(dot(N, L), 0.0)); 

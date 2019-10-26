@@ -2,6 +2,16 @@
 
 #include "world/nodes/light/PunctualLightNode.h"
 
+void PunctualLightNode::CalculateWorldAABB()
+{
+	// calculate from bounding sphere
+	const auto center = GetWorldTranslation();
+	const auto radiusOffset = glm::vec3(m_far);
+
+	m_aabb.min = center - radiusOffset;
+	m_aabb.max = center + radiusOffset;
+}
+
 void PunctualLightNode::RecalculateProjectionMatrix()
 {
 	auto ar = static_cast<float>(m_shadowMapWidth) / static_cast<float>(m_shadowMapHeight);
@@ -45,6 +55,10 @@ void PunctualLightNode::DirtyUpdate(DirtyFlagset flags)
 {
 	if (flags[DF::NearFar] || flags[DF::ShadowsTextSize]) {
 		RecalculateProjectionMatrix();
+	}
+
+	if (flags[DF::NearFar]) {
+		CalculateWorldAABB();
 	}
 
 	if (flags[DF::TRS]) {
