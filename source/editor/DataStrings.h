@@ -63,7 +63,7 @@ All values are updated bidirectionaly in realtime
 inline const char* help_AssetView = R"(
 Assets panel provides an overview of all the currently registered assets.
 
-Hovering any line will show info of this asset entry. The data residing in memory can be unloaded and reloaded at will.
+The data residing in memory can be unloaded and reloaded at will.
 )";
 
 inline const char* help_EditorCamera = R"(
@@ -71,9 +71,12 @@ Editor camera is a special node managed by the editor to allow for editor specif
 
 Keybinds for editor camera are:
 W,A,S,D,Q,E movement
+Right-click drag: facing
+Shift, Ctrl: Speed up, speed down
 X: toggle between axis aligned, view based movement
 C: reset orientation (resets roll too)
 F: Focus currently selected node
+Shift+F: Toggle Piloting selected node.
 
 The editor camera differs from other nodes in the following ways:
 
@@ -97,27 +100,32 @@ Toggles automatic reloading of the world state after 'stoping' updating.
 )";
 
 inline const char* help_AssetUnloadAll = R"(
-DOC:
+Unloads all currently filtered assets. 
+Some assets may reload instantly because they are accessed.
 )";
 
 inline const char* help_AssetReloadUnloaded = R"(
-DOC:
+Reloads any filtered assets currently unloaded.
 )";
 
 inline const char* help_AssetReloadAll = R"(
-DOC:
+Reloads all currently filtered assets.
 )";
 
 inline const char* help_AssetFilter = R"(
-DOC:
+Filter assets, can accept multiple terms by ',' and negative matches by '-'
+eg: '-mat, .gltf'
 )";
 
 inline const char* help_AssetSearchGltf = R"(
-Gltf Search:
+Opens the gltf file list window.
 )";
 
 inline const char* help_GltfWindowRefresh = R"(
-Gltf Refresh:
+This window contains all .gtlf files found in assets/ folders.
+Duplicate names are shown once.
+
+Contents of this window are cached, refresh to detect new files / changes in the filesystem.
 )";
 
 inline const char* help_PropPodEditing = R"(
@@ -127,6 +135,8 @@ Editing asset pod properties is currently only partially supported.
 
 The cpu side data are edited in real time, but even the provided renderers will not reflect the changes on most cases.
 Also any changes to the pods do not get saved in scene files and will be lost when the asset reloads from disk.
+
+Right-clicking here brings up the extra pod handle context actions.
 )";
 
 

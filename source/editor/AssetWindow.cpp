@@ -62,7 +62,7 @@ void AssetWindow::DrawFileLibrary()
 				ImGui::SetDragDropPayload(payloadTag.c_str(), &h.podId, sizeof(size_t));
 				ImGui::EndDragDropSource();
 			}
-			TEXT_TOOLTIP("Drag into outliner to create a node with this model.");
+			TEXT_TOOLTIP("Drag this onto the outliner to create a new geometry node with this gltf model.");
 		}
 
 		ImGui::PopID();
