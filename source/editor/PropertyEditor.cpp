@@ -526,7 +526,7 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 			}
 			else {
 				// On user type set pyr directly, prevents the axis from flickering
-				m_localMode ? node->SetLocalPYR(glm::radians(eulerPyr)) : node->SetWorldPYR(glm::radians(eulerPyr));
+				m_localMode ? node->SetLocalPYR(eulerPyr) : node->SetWorldPYR(eulerPyr);
 			}
 		}
 	}
