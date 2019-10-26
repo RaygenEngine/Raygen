@@ -37,7 +37,7 @@ protected:
 	// horizontal fov depends on the vertical and the aspect ratio
 	float m_hFov{ glm::radians(106.f) };
 
-	float m_near{ 0.001f };
+	float m_near{ 0.05f };
 	float m_far{ 1000.f };
 
 	float m_vFovOffset{ 0.f };

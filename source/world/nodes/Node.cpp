@@ -75,6 +75,12 @@ void Node::RotateAroundAxis(glm::vec3 worldAxis, float degrees)
 	SetWorldOrientation(rot * m_worldOrientation);
 }
 
+void Node::RotateAroundLocalAxis(glm::vec3 localAxis, float degrees)
+{
+	const glm::quat rot = glm::angleAxis(glm::radians(degrees), glm::vec3(localAxis));
+	SetLocalOrientation(rot * m_localOrientation);
+}
+
 void Node::SetWorldScale(glm::vec3 ws)
 {
 	auto worldMatrix = math::TransformMatrixFromTOS(ws, m_worldOrientation, m_worldTranslation);
