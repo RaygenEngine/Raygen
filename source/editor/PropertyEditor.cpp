@@ -94,14 +94,13 @@ struct ReflectionToImguiVisitor {
 	template<typename T>
 	void operator()(T& t, const Property& p)
 	{
-		if (p.HasFlags(PropertyFlags::Hidden)) {
+		if (p.HasFlags(Hidden)) {
 			return;
 		}
 		if (!p.HasFlags(NoEdit)) {
 			if (Inner(t, p)) {
 				if (p.GetDirtyFlagIndex() >= 0) {
 					dirtyFlags.set(p.GetDirtyFlagIndex());
-					LOG_REPORT("Set Dirty: {}", p.GetName());
 				}
 				dirtyFlags.set(Node::DF::Properties);
 				if (massEditMaterials) {
@@ -386,8 +385,7 @@ struct ReflectionToImguiVisitor {
 				"file will almost certainly result in corrupt engine state. Editing sub-assets will fail to reflect "
 				"the changes even in the default provided renderers.\nAlso note:\n1. You are actually editing the "
 				"actual pod here and any edits will propagate to pod handles in the whole engine.\n2. Performing a "
-				"save "
-				"as will replace the previous pod handle with one that links the new file.")
+				"save as will replace the previous pod handle with one that links the new file.")
 
 			// ImGui::MenuItem("Manual Dirty", nullptr, nullptr, false));
 
@@ -416,12 +414,6 @@ struct ReflectionToImguiVisitor {
 					propedit->m_saveAsset.BeginDialogFor(currentObject, *currentProperty, id);
 				}
 			}
-
-			// if (ImGui::BeginMenu("Add Child")) {
-			//	Run_NewNodeMenu(node);
-			//	ImGui::EndMenu();
-			//}
-
 			ImGui::EndPopup();
 		}
 		ImGui::PopStyleVar(2);
