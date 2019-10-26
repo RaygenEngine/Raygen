@@ -81,7 +81,6 @@ void AppBase::MainLoop()
 {
 	Window* window = Engine::GetMainWindow();
 	while (!window->IsClosed()) {
-
 		if (Engine::IsEditorActive()) {
 			Engine::GetEditor()->PreBeginFrame();
 		}

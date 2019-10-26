@@ -3,6 +3,8 @@
 #include "asset/pods/ModelPod.h"
 #include "world/nodes/geometry/GeometryNode.h"
 
+#include <glad/glad.h>
+
 #define GLCheckError() ogl::GLCheckError_(__FILE__, __LINE__)
 
 namespace ogl {

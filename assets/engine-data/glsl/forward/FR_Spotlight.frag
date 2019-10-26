@@ -8,15 +8,13 @@ out vec4 out_color;
   
 in Data
 { 
-	vec3 tcs_fragPos;
-	vec3 tcs_viewPos;
-	
-	vec3 tcs_lightPos;
-	vec3 tcs_lightDir;
-	
+	vec3 wcs_fragPos;
+
 	vec4 shadowCoord;
 	
 	vec2 textCoord[2];
+	
+	mat3 TBN;
 } dataIn;
 
 
@@ -67,6 +65,8 @@ uniform struct Material
 
 } material;
 
+uniform vec3 wcs_viewPos;
+
 float ShadowCalculation(float cosTheta)
 {	
 	if(!spotLight.castsShadow)
@@ -91,7 +91,7 @@ float ShadowCalculation(float cosTheta)
 	// Stratified Poisson Sampling
 	for (int i = 0; i < spotLight.samples; ++i)
 	{
-		int index = int(16.0*random(vec4(dataIn.tcs_fragPos,i)))%16;
+		int index = int(16.0*random(vec4(dataIn.wcs_fragPos,i)))%16;
 		
 		vec2 shadowCoord = dataIn.shadowCoord.xy + poissonDisk[index]/100.0;
 		vec4 P = vec4(shadowCoord.xy, currentDepth, dataIn.shadowCoord.w);
@@ -135,17 +135,18 @@ void main()
 	// material
 	ProcessUniformMaterial(albedo, opacity, metallic, roughness, normal);
 
-	// tangent space vectors
-	vec3 N = normal;
-	vec3 V = normalize(dataIn.tcs_viewPos - dataIn.tcs_fragPos);
-	vec3 L = normalize(dataIn.tcs_lightPos - dataIn.tcs_fragPos); 
+	// TODO: implement tangent space lighting correctly
+	// world space vectors
+	vec3 N =  normalize(dataIn.TBN * normal);
+	vec3 V = normalize(wcs_viewPos - dataIn.wcs_fragPos);
+	vec3 L = normalize(spotLight.wcs_pos - dataIn.wcs_fragPos); 
 	
 	// attenuation
-	float distance = length(dataIn.tcs_lightPos - dataIn.tcs_fragPos);
+	float distance = length(spotLight.wcs_pos - dataIn.wcs_fragPos);
 	float attenuation = 1.0 / pow(distance, spotLight.attenCoef);
 	
     // spot effect (soft edges)
-	float theta = dot(L, normalize(-dataIn.tcs_lightDir));
+	float theta = dot(L, normalize(-spotLight.wcs_dir));
     float epsilon = (spotLight.innerCutOff - spotLight.outerCutOff);
     float spotEffect = clamp((theta - spotLight.outerCutOff) / epsilon, 0.0, 1.0);
 	 

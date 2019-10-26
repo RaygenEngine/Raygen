@@ -86,6 +86,21 @@ struct AABB {
 		min = newCenter - newExtend;
 		max = newCenter + newExtend;
 	}
+
+	bool IntersectsAABB(const AABB& aabb) const
+	{
+		if (aabb.min.x > max.x || aabb.max.x < min.x) {
+			return false;
+		}
+		if (aabb.min.y > max.y || aabb.max.y < min.y) {
+			return false;
+		}
+		if (aabb.min.z > max.z || aabb.max.z < min.z) {
+			return false;
+		}
+
+		return true;
+	}
 };
 
 struct Plane {

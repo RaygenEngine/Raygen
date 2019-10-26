@@ -1,9 +1,23 @@
 #pragma once
 
 #include "renderer/ObserverRenderer.h"
-
 #include "renderer/GenericGpuAssetManager.h"
 #include "system/Engine.h"
+#include "renderer/renderers/opengl/GLUtil.h"
+
+#define report_glDrawElements(mode, count, type, indices)                                                              \
+	GLCheckError();                                                                                                    \
+	auto dr = Engine::GetDrawReporter();                                                                               \
+	++dr->draws;                                                                                                       \
+	dr->tris += count / 3;                                                                                             \
+	glDrawElements(mode, count, type, indices)
+
+#define report_glDrawArrays(mode, first, count)                                                                        \
+	GLCheckError();                                                                                                    \
+	auto dr = Engine::GetDrawReporter();                                                                               \
+	++dr->draws;                                                                                                       \
+	dr->tris += count / 3;                                                                                             \
+	glDrawArrays(mode, first, count)
 
 namespace ogl {
 class GLAssetManager;
