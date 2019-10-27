@@ -14,6 +14,9 @@ namespace fs = std::filesystem;
 
 #include <type_traits>
 
+// ALWAYS, ALWAYS keep this before ANY of Rayxen's header includes
+#include "FeatureMacros.h"
+
 // int types
 #include "core/Types.h"
 // enums/structs

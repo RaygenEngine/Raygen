@@ -24,7 +24,13 @@ AppBase::AppBase()
 	m_windowWidth = 1920;
 	m_windowHeight = 1080;
 
+	// Xinput controller queries are expensive. By default FAST_RELEASE auto disables thems.
+	// You can change this to enable XInput controller support.
+#if RXN_WITH_FEATURE(FAST_RELEASE)
+	m_handleControllers = false;
+#else
 	m_handleControllers = true;
+#endif
 	m_lockMouse = false;
 
 	m_argc = 1;
