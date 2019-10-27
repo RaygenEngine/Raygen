@@ -15,8 +15,6 @@ public:
 	// Windows based init rendering (implement in "context"-base renderers)
 	virtual void Init(HWND assochWnd, HINSTANCE instance) = 0;
 
-	virtual void Update() = 0;
-
 	virtual void DoWork() = 0;
 
 	virtual bool SupportsEditor() = 0;
