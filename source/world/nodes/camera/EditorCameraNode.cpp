@@ -7,6 +7,7 @@
 #include "system/Engine.h"
 #include "world/World.h"
 
+
 void EditorCameraNode::UpdateFromEditor(float deltaTime)
 {
 	CameraNode::Update(deltaTime);

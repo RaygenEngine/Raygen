@@ -71,15 +71,33 @@ struct ImRendererMenu : public Editor::ImMenu {
 		}
 
 		if (ImGui::BeginMenu("Switch")) {
-			int32 index = 0;
-			int32 current = Engine::Get().GetActiveRendererIndex();
 
-			for (auto& r : Engine::Get().GetRendererList()) {
-				if (ImGui::MenuItem(r.c_str(), nullptr, index == current)) {
-					Editor::PushPostFrameCommand([=]() { Engine::Get().SwitchRenderer(index); });
+			size_t current = Engine::Get().GetActiveRendererIndex();
+
+			auto rendererList = Engine::Get().GetRendererList();
+
+
+			for (auto& r : rendererList) {
+				if (!r.primary) {
+					continue;
 				}
-				++index;
+
+				if (ImGui::MenuItem(r.name.c_str(), nullptr, r.index == current)) {
+					Editor::PushPostFrameCommand([=]() { Engine::Get().SwitchRenderer(r.index); });
+				}
 			}
+			ImGui::Separator();
+
+			for (auto& r : rendererList) {
+				if (r.primary) {
+					continue;
+				}
+
+				if (ImGui::MenuItem(r.name.c_str(), nullptr, r.index == current)) {
+					Editor::PushPostFrameCommand([=]() { Engine::Get().SwitchRenderer(r.index); });
+				}
+			}
+
 			ImGui::EndMenu();
 		}
 
@@ -102,7 +120,7 @@ struct ImRendererMenu : public Editor::ImMenu {
 Node* Editor::GetSelectedNode()
 {
 	auto editor = Engine::GetEditor();
-	if (editor) {
+	if (editor && Engine::IsEditorActive()) {
 		return editor->m_selectedNode;
 	}
 	return nullptr;
@@ -111,7 +129,7 @@ Node* Editor::GetSelectedNode()
 EditorBBoxDrawing Editor::GetBBoxDrawing()
 {
 	auto editor = Engine::GetEditor();
-	if (editor) {
+	if (editor && Engine::IsEditorActive()) {
 		return editor->m_bboxDrawing;
 	}
 	return EditorBBoxDrawing::None;
@@ -217,7 +235,9 @@ void Editor::UpdateEditor()
 		m_loadFileBrowser.ClearSelected();
 	}
 
-	if (ImGui::BeginChild("EditorScrollable", ImVec2(0, -15.f))) {
+	auto linesAtBottom = Engine::GetStatusLine().empty() ? 1 : 2;
+
+	if (ImGui::BeginChild("EditorScrollable", ImVec2(0, -ImGui::GetTextLineHeightWithSpacing() * linesAtBottom))) {
 		auto open = ImGui::CollapsingHeader("Outliner", ImGuiTreeNodeFlags_DefaultOpen);
 		CollapsingHeaderTooltip(help_Outliner);
 		if (open) {
@@ -244,10 +264,22 @@ void Editor::UpdateEditor()
 	ImGui::EndChild();
 
 	auto& eng = Engine::Get();
-	auto rendererName = eng.GetRendererList()[eng.GetActiveRendererIndex()];
+	auto rendererName = eng.GetRendererList()[eng.GetActiveRendererIndex()].name;
 
-	std::string s = fmt::format("{} | {:.1f} FPS | {}", rendererName, Engine::GetFPS(), Engine::GetStatusLine());
+	// auto str = "tris: " + std::to_string(m_drawReporter.tris) + " | drawcalls: " +
+	// std::to_string(m_drawReporter.draws);
+	// SetStatusLine(str);
+
+
+	auto drawReporter = Engine::GetDrawReporter();
+	std::string s = fmt::format("{} | Draws: {:n} | Tris: {:n} | {:.1f} FPS", rendererName, drawReporter->draws,
+		drawReporter->tris, Engine::GetFPS());
+
 	ImGui::Text(s.c_str());
+
+	if (!Engine::GetStatusLine().empty()) {
+		ImGui::Text(Engine::GetStatusLine().c_str());
+	}
 
 
 	ImGui::End();
@@ -652,7 +684,6 @@ void Editor::Run_HelpWindow()
 	ImGui::PopStyleVar();
 }
 
-
 void Editor::HandleInput()
 {
 	auto input = Engine::GetInput();
@@ -665,7 +696,6 @@ void Editor::HandleInput()
 		}
 	}
 }
-
 void Editor::PushCommand(std::function<void()>&& func)
 {
 	Engine::GetEditor()->m_postDrawCommands.emplace_back(func);

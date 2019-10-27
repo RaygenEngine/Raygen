@@ -40,10 +40,10 @@ template<typename Type>
 {
 	static_assert(refl::IsValidPod<Type>, "This is not a valid and registered asset pod. The cast would always fail.");
 
-	if (refl::GetId<Type>() == pod->type) {
-		return static_cast<Type*>(pod);
-	}
-	return nullptr;
+	CLOG_ABORT(refl::GetId<Type>() != pod->type, "Pod Cast failed. Tried to cast from: {} to {}", pod->type.name(),
+		refl::GetName<Type>());
+
+	return static_cast<Type*>(pod);
 }
 
 template<typename Type>
@@ -51,22 +51,8 @@ template<typename Type>
 {
 	static_assert(refl::IsValidPod<Type>, "This is not a valid and registered asset pod. The cast would always fail.");
 
-	if (refl::GetId<Type>() == pod->type) {
-		return static_cast<const Type*>(pod);
-	}
-	return nullptr;
-}
+	CLOG_ABORT(refl::GetId<Type>() != pod->type, "Pod Cast failed. Tried to cast from: {} to {}", pod->type.name(),
+		refl::GetName<Type>());
 
-// This pod cast will assert when fails.
-// This is extremelly usefull to catch early errors and avoid incorrect handles.
-template<typename Type>
-[[nodiscard]] Type* PodCastVerfied(AssetPod* pod)
-{
-	static_assert(refl::IsValidPod<Type>, "This is not a valid and registered asset pod. The cast would always fail.");
-
-	if (refl::GetId<Type>() == pod->type) {
-		return static_cast<Type*>(pod);
-	}
-	LOG_ABORT("Verified Pod Cast failed. Tried to cast from: {} to {}", pod->type.name(), refl::GetName<Type>());
-	return nullptr;
+	return static_cast<const Type*>(pod);
 }

@@ -24,7 +24,13 @@ AppBase::AppBase()
 	m_windowWidth = 1920;
 	m_windowHeight = 1080;
 
+	// Xinput controller queries are expensive. By default FAST_RELEASE auto disables thems.
+	// You can change this to enable XInput controller support.
+#if RXN_WITH_FEATURE(FAST_RELEASE)
+	m_handleControllers = false;
+#else
 	m_handleControllers = true;
+#endif
 	m_lockMouse = false;
 
 	m_argc = 1;
@@ -67,6 +73,10 @@ int32 AppBase::Main(int32 argc, char* argv[]) // NOLINT
 	if (m_lockMouse) {
 		window->RestrictMouseMovement();
 	}
+
+	// Allow for world to update any flags that became dirty since InitWorld to here. (eg: resize events, nodes added
+	// later etc)
+	Engine::GetWorld()->DirtyUpdateWorld();
 
 	MainLoop();
 
@@ -117,11 +127,12 @@ void AppBase::MainLoop()
 void AppBase::RegisterRenderers()
 {
 	// NOTE:
-	// Default behavior for an app is to start the FIRST renderer registered here.
+	// Default behavior for an app is to start the first primary registered here.
+	Engine::RegisterPrimaryRenderer<ogl::GLDeferredRenderer>();
+	Engine::RegisterPrimaryRenderer<ogl::GLForwardRenderer>();
 
-	Engine::RegisterRenderer<ogl::GLForwardRenderer>();
-	Engine::RegisterRenderer<ogl::GLDeferredRenderer>();
-	// Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
+	// Non primary renderers are skipped when cycling through renderers but can be enabled from the editor menu
+	Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
 }
 
 Win32Window* AppBase::CreateAppWindow()

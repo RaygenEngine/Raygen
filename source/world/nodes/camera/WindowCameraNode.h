@@ -12,6 +12,6 @@ public:
 
 	WindowCameraNode();
 
-private:
-	void WindowResize(int32 width, int32 height);
+protected:
+	virtual void WindowResize(int32 width, int32 height);
 };

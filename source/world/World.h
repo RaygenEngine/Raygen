@@ -144,12 +144,13 @@ public:
 	// Only reflected properties get copied.
 	// Transient properties do not get copied.
 	// Children are iteratively duplicated and attached at their new respective parents.
-	// Uses the factory and m_type of each node to generate the new ones.
+	// Uses the factory for each node to generate the new ones.
 	Node* DeepDuplicateNode(Node* src, Node* newParent = nullptr);
 
 
 	// TODO: make async safe to be called from updates / dirtyupdates
 	// This will also remove the children.
+	// Do not delete nodes in any Node::Update() or Node::DirtyUpdate() this will invalidate the loop iterators
 	void DeleteNode(Node* src);
 
 private:

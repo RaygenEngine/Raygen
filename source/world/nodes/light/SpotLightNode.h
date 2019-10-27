@@ -20,9 +20,9 @@ class SpotLightNode : public LightNode {
 	math::Frustum m_frustum{};
 
 	// angle
-	float m_outerAperture{ glm::radians(25.f) };
+	float m_outerAperture{ glm::radians(45.f) };
 	// inner
-	float m_innerAperture{ glm::radians(12.5f) };
+	float m_innerAperture{ glm::radians(22.5f) };
 
 	enum AttenuationMode : int32
 	{

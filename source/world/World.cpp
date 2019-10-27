@@ -81,8 +81,10 @@ void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 	Event::OnWorldLoaded.Broadcast();
 
 	DirtyUpdateWorld();
-	LOG_INFO("World loaded succesfully");
+
 	m_root->m_dirty.reset();
+	ClearDirtyFlags();
+	LOG_INFO("World loaded succesfully");
 }
 
 void World::DirtyUpdateWorld()
@@ -128,7 +130,7 @@ Node* World::DuplicateNode_Utl(Node* src, Node* newParent)
 
 	auto result = refltools::CopyClassTo(src, created);
 
-	CLOG_FATAL(!result.IsExactlyCorrect(), "Duplicate node did not exactly match properties!");
+	CLOG_ERROR(!result.IsExactlyCorrect(), "Duplicate node did not exactly match properties!");
 	return created;
 }
 
