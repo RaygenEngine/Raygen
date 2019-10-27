@@ -135,7 +135,9 @@ protected:
 	virtual void ActiveCameraResize(){};
 
 public:
-	void Update() override;
+	virtual void Update();
+	virtual void Render() = 0;
+	void DoWork() final override;
 
 
 	// Do not use this with NodeTypes that are already handled for automatic lifetimes. This deregisters the other

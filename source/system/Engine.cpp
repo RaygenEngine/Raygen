@@ -89,8 +89,7 @@ void Engine::SwitchRenderer(size_t registrationIndex)
 
 	eng.m_renderer->SupportsEditor() ? ActivateEditor() : DeactivateEditor();
 
-	eng.m_renderer->InitRendering(eng.m_window->GetHWND(), eng.m_window->GetHInstance());
-	eng.m_renderer->InitScene();
+	eng.m_renderer->Init(eng.m_window->GetHWND(), eng.m_window->GetHInstance());
 }
 
 bool Engine::HasCmdArgument(const std::string& argument)

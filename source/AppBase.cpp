@@ -114,11 +114,7 @@ void AppBase::MainLoop()
 		Engine::GetWorld()->Update();
 		// update renderer (also checks world updates, eg. camera/ entity moved, light color changed)
 
-		Engine::GetRenderer()->Update();
-		// render
-		Engine::GetRenderer()->Render();
-
-		Engine::GetRenderer()->SwapBuffers();
+		Engine::GetRenderer()->DoWork();
 
 		Engine::Get().ReportFrameDrawn();
 	}
