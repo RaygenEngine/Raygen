@@ -20,6 +20,9 @@ namespace ogl {
 // TODO: session should be part of Engine state and requested from both nodes and renderers
 class GLDOVRRenderer : public GLEditorRenderer {
 
+	float m_gamma{ 2.2f };
+	float m_exposure{ 1.f };
+
 	struct Eye {
 		ovrSession session;
 		CameraNode* camera;

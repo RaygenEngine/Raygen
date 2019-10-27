@@ -17,6 +17,9 @@ class SkyboxNode;
 namespace ogl {
 class GLForwardRenderer : public GLEditorRenderer {
 
+	float m_gamma{ 2.2f };
+	float m_exposure{ 1.f };
+
 protected:
 	// shaders
 	GLShader* m_depthPassShader{ nullptr };

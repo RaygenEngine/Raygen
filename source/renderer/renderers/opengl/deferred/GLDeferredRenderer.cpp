@@ -652,5 +652,21 @@ void GLDeferredRenderer::Update()
 	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::R)) {
 		RecompileShaders();
 	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::ADD)) {
+		m_gamma += 0.03f;
+	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::SUBTRACT)) {
+		m_gamma -= 0.03f;
+	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::MULTIPLY)) {
+		m_exposure += 0.03f;
+	}
+
+	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::DIVIDE)) {
+		m_exposure -= 0.03f;
+	}
 }
 } // namespace ogl

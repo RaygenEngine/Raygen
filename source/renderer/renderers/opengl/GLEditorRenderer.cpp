@@ -62,7 +62,7 @@ void GLEditorRenderer::RenderBoundingBoxes()
 
 	glBindVertexArray(m_bbVao);
 
-	// TODO: simplify and apply to other default renderers (during transition to local AABBs)
+	// TODO: simplify (during transition to local AABBs)
 
 	const auto RenderBox = [&](math::AABB box, glm::vec4 color) {
 		const GLfloat data[] = {
