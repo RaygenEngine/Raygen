@@ -83,7 +83,8 @@ GLDOVRRenderer::Eye::Eye(ovrSession session, CameraNode* camera)
 
 	glGenTextures(1, &lightTexture);
 	glBindTexture(GL_TEXTURE_2D, lightTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	// HDR
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -272,6 +273,7 @@ void GLDOVRRenderer::InitShaders()
 	m_dummyPostProcShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/post-process/DummyPostProc.json");
 	m_dummyPostProcShader->StoreUniformLoc("gamma");
+	m_dummyPostProcShader->StoreUniformLoc("exposure");
 }
 
 void GLDOVRRenderer::InitRenderBuffers()
@@ -292,7 +294,7 @@ void GLDOVRRenderer::InitRenderBuffers()
 	// - rgb: position
 	glGenTextures(1, &m_gBuffer.positionsAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.positionsAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gBuffer.positionsAttachment, 0);
@@ -300,7 +302,7 @@ void GLDOVRRenderer::InitRenderBuffers()
 	// - rgb: normal
 	glGenTextures(1, &m_gBuffer.normalsAttachment);
 	glBindTexture(GL_TEXTURE_2D, m_gBuffer.normalsAttachment);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_gBuffer.normalsAttachment, 0);
@@ -686,6 +688,7 @@ void GLDOVRRenderer::RenderPostProcess(int32 eyeIndex)
 	glUseProgram(m_dummyPostProcShader->programId);
 
 	m_dummyPostProcShader->SendFloat("gamma", m_gamma);
+	m_dummyPostProcShader->SendFloat("exposure", m_exposure);
 	m_dummyPostProcShader->SendTexture(lightText, 0);
 
 	// big triangle trick, no vao
@@ -754,9 +757,6 @@ void GLDOVRRenderer::Render()
 	// ensure writing of editor on the back buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	GLEditorRenderer::Render();
-
-	// TODO: find the cause of errors when we decide to make this renderer stable
-	GLCheckError();
 }
 
 void GLDOVRRenderer::RecompileShaders()

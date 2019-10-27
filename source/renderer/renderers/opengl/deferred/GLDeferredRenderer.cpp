@@ -600,8 +600,6 @@ void GLDeferredRenderer::Render()
 	// ensure writing of editor on the back buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	GLEditorRenderer::Render();
-
-	GLCheckError();
 }
 
 void GLDeferredRenderer::RecompileShaders()
