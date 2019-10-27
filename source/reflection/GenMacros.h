@@ -23,6 +23,7 @@ public:                                                                         
 
 #define REFLECTED_NODE(Class, ParentClass, /*optional DF_FLAGS()*/...)                                                 \
 public:                                                                                                                \
+	static_assert(std::is_convertible_v<Class*, ParentClass*>, "Reflection parent does not match real parent");        \
 	/* Public interface */                                                                                             \
 	using Parent = ParentClass;                                                                                        \
 	[[nodiscard]] const ReflClass& GetClass() const override { return Class::StaticClass(); }                          \

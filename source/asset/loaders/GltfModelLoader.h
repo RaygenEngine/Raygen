@@ -14,23 +14,7 @@ namespace GltfModelLoader {
 namespace {
 	namespace tg = tinygltf;
 
-
-	// Uint16 specialization. Expects componentCount == 1.
-	template<typename T>
-	void CopyToVector(std::vector<uint32>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
-	{
-		static_assert(std::is_integral_v<T>, "This is not an integer type");
-
-		for (uint32 i = 0; i < elementCount; ++i) {
-			byte* elementPtr = &beginPtr[perElementOffset * i];
-			T* data = reinterpret_cast<T*>(elementPtr);
-			result[i] = *data;
-		}
-	}
-
-	// TODO: Refactor accessor reading code
-	void ExtractIndicesInto(const tg::Model& modelData, int32 accessorIndex, std::vector<uint32>& out)
-	{
+	struct AccessorDescription {
 		//
 		// Actual example of a possible complex gltf buffer:
 		//                                              |     STRIDE  |
@@ -50,6 +34,7 @@ namespace {
 
 		ComponentType componentType; // this particular model's underlying buffer type to read as.
 
+		AccessorDescription(const tg::Model& modelData, int32 accessorIndex)
 		{
 			size_t beginByteOffset;
 			const tinygltf::Accessor& accessor = modelData.accessors.at(accessorIndex);
@@ -64,32 +49,52 @@ namespace {
 			componentCount = utl::ElementComponentCount(gltfaux::GetElementType(accessor.type));
 			beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
 		}
-		CLOG_ABORT(componentCount != 1, "Found indicies of 2 components in gltf file.");
-		out.resize(elementCount);
+	};
 
-		switch (componentType) {
+
+	// Uint16 specialization. Expects componentCount == 1.
+	template<typename T>
+	void CopyToVector(std::vector<uint32>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+	{
+		static_assert(std::is_integral_v<T>, "This is not an integer type");
+
+		for (uint32 i = 0; i < elementCount; ++i) {
+			byte* elementPtr = &beginPtr[perElementOffset * i];
+			T* data = reinterpret_cast<T*>(elementPtr);
+			result[i] = *data;
+		}
+	}
+
+	void ExtractIndicesInto(const tg::Model& modelData, int32 accessorIndex, std::vector<uint32>& out)
+	{
+		AccessorDescription desc(modelData, accessorIndex);
+
+		CLOG_ABORT(desc.componentCount != 1, "Found indicies of 2 components in gltf file.");
+		out.resize(desc.elementCount);
+
+		switch (desc.componentType) {
 				// Conversions from signed to unsigned types are "implementation defined".
 				// This code assumes the implementation will not do any bit arethmitic from signed x to unsigned x.
 
 			case ComponentType::CHAR:
 			case ComponentType::BYTE: {
-				CopyToVector<unsigned char>(out, beginPtr, strideByteOffset, elementCount);
+				CopyToVector<unsigned char>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 				return;
 			}
 			case ComponentType::SHORT: {
-				CopyToVector<short>(out, beginPtr, strideByteOffset, elementCount);
+				CopyToVector<short>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 				return;
 			}
 			case ComponentType::USHORT: {
-				CopyToVector<unsigned short>(out, beginPtr, strideByteOffset, elementCount);
+				CopyToVector<unsigned short>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 				return;
 			}
 			case ComponentType::INT: {
-				CopyToVector<int>(out, beginPtr, strideByteOffset, elementCount);
+				CopyToVector<int>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 				return;
 			}
 			case ComponentType::UINT: {
-				CopyToVector<uint32>(out, beginPtr, strideByteOffset, elementCount);
+				CopyToVector<uint32>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 				return;
 			}
 			case ComponentType::FLOAT:
@@ -239,41 +244,9 @@ namespace {
 	template<size_t VertexElementIndex>
 	void LoadIntoVertexData(const tg::Model& modelData, int32 accessorIndex, std::vector<VertexData>& out)
 	{
-		//
-		// Actual example of a possible complex gltf buffer:
-		//                                              |     STRIDE  |
-		// [{vertexIndexes} * 1000] [{normals} * 1000] [{uv0, position} * 1000]
-		//													  ^ beginPtr for Position.
-		//
+		AccessorDescription desc(modelData, accessorIndex);
 
-		size_t elementCount;   // How many elements there are to read
-		size_t componentCount; // How many components of type ComponentType there are to each element.
-
-		size_t strideByteOffset; // The number of bytes to move in the buffer after each read to get the next element.
-								 // This may be more bytes than the actual sizeof(ComponentType) * componentCount
-								 // if the data is strided.
-
-		byte* beginPtr; // Pointer to the first byte we care about.
-						// This may not be the actual start of the buffer of the binary file.
-
-		ComponentType componentType; // this particular model's underlying buffer type to read as.
-
-		{
-			size_t beginByteOffset;
-			const tinygltf::Accessor& accessor = modelData.accessors.at(accessorIndex);
-			const tinygltf::BufferView& bufferView = modelData.bufferViews.at(accessor.bufferView);
-			const tinygltf::Buffer& gltfBuffer = modelData.buffers.at(bufferView.buffer);
-
-
-			componentType = gltfaux::GetComponentType(accessor.componentType);
-			elementCount = accessor.count;
-			beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
-			strideByteOffset = accessor.ByteStride(bufferView);
-			componentCount = utl::ElementComponentCount(gltfaux::GetElementType(accessor.type));
-			beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
-		}
-
-		switch (componentType) {
+		switch (desc.componentType) {
 			case ComponentType::CHAR:
 			case ComponentType::BYTE:
 			case ComponentType::SHORT:
@@ -281,10 +254,12 @@ namespace {
 			case ComponentType::INT:
 			case ComponentType::UINT: LOG_ABORT("Incorrect buffers, debug model...");
 			case ComponentType::FLOAT:
-				LoadIntoVertexData_Selector<VertexElementIndex, float>(out, beginPtr, strideByteOffset, elementCount);
+				LoadIntoVertexData_Selector<VertexElementIndex, float>(
+					out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 				return;
 			case ComponentType::DOUBLE:
-				LoadIntoVertexData_Selector<VertexElementIndex, double>(out, beginPtr, strideByteOffset, elementCount);
+				LoadIntoVertexData_Selector<VertexElementIndex, double>(
+					out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 				return;
 		}
 	}

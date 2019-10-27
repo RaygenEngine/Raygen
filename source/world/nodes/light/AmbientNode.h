@@ -12,7 +12,7 @@ class AmbientNode : public Node {
 
 	PodHandle<TexturePod> m_skybox;
 
-	glm::vec3 m_ambientTerm{ 0.7f, 0.7f, 0.7f };
+	glm::vec3 m_ambientTerm{ 0.02f, 0.02f, 0.02f };
 
 public:
 	[[nodiscard]] PodHandle<TexturePod> GetSkybox() const { return m_skybox; }

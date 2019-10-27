@@ -81,7 +81,7 @@ set(SOURCE_FILES
 
 set(HEADER_FILES
 	AppBase.h
-
+	FeatureMacros.h
  
 	asset/AssetPod.h
 	asset/AssetManager.h

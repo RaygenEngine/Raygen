@@ -47,8 +47,10 @@ const ReflClass& GetClass(const T* obj)
 	else if constexpr (std::is_base_of_v<AssetPod, T>) { // NOLINT
 		if constexpr (std::is_same_v<AssetPod, T>) {     // NOLINT
 			const ReflClass* ptr;
-			detail::VisitPodConst(
-				obj, [&ptr](auto pod) { ptr = &std::remove_pointer_t<std::decay_t<decltype(pod)>>::StaticClass(); });
+			auto l = [&ptr](auto pod) {
+				ptr = &std::remove_pointer_t<std::decay_t<decltype(pod)>>::StaticClass();
+			};
+			detail::VisitPodConst(obj, l);
 			return *ptr;
 		}
 		else {

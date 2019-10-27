@@ -14,7 +14,7 @@
 void AssetWindow::ReloadCache()
 {
 	m_gltf.clear();
-	timer::DebugTimer<std::chrono::milliseconds> timer(true);
+	timer::Timer timer(true);
 
 	for (const auto& entry : fs::recursive_directory_iterator(fs::current_path())) {
 		if (entry.is_directory()) {
@@ -31,7 +31,7 @@ void AssetWindow::ReloadCache()
 		}
 	}
 
-	LOG_INFO("Cached {} gltf files in {} ms.", m_gltf.size(), timer.Get());
+	LOG_INFO("Cached {} gltf files in {} ms.", m_gltf.size(), timer.Get<std::chrono::milliseconds>());
 }
 
 void AssetWindow::DrawFileLibrary()
@@ -62,7 +62,7 @@ void AssetWindow::DrawFileLibrary()
 				ImGui::SetDragDropPayload(payloadTag.c_str(), &h.podId, sizeof(size_t));
 				ImGui::EndDragDropSource();
 			}
-			TEXT_TOOLTIP("Drag into outliner to create a node with this model.");
+			TEXT_TOOLTIP("Drag this onto the outliner to create a new geometry node with this gltf model.");
 		}
 
 		ImGui::PopID();
