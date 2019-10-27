@@ -39,19 +39,20 @@ public:
 
 	virtual ~GLRendererBase();
 
-	void InitRendering(HWND assochWnd, HINSTANCE instance) override;
-	void SwapBuffers() override;
+	virtual void InitScene() = 0;
+	void Init(HWND assochWnd, HINSTANCE instance) final override;
+
+	void SwapBuffers();
 
 	[[nodiscard]] GLAssetManager* GetGLAssetManager() const { return m_glAssetManager.get(); }
 	[[nodiscard]] GLPreviewer* GetGLPreviewer() const { return m_glPreviewer.get(); }
 
 	void Update() override;
+	void Render() override;
 
 	void ChangeVSync(bool newIsEnabled);
 
 	bool SupportsEditor() override { return false; }
-
-	void Render() override;
 };
 
 template<typename GlRenderer>

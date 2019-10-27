@@ -74,3 +74,9 @@ void ObserverRenderer::Update()
 		m_exposure -= 0.03f;
 	}
 }
+
+void ObserverRenderer::DoWork()
+{
+	Update();
+	Render();
+}

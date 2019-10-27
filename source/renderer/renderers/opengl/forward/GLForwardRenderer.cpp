@@ -833,6 +833,8 @@ void GLForwardRenderer::Render()
 	// ensure writing of editor on the back buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	GLEditorRenderer::Render();
+
+	SwapBuffers();
 }
 
 void GLForwardRenderer::RecompileShaders()

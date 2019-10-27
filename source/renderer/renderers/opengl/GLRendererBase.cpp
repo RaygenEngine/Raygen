@@ -12,6 +12,7 @@ namespace ogl {
 void GLRendererBase::Update()
 {
 	ObserverRenderer::Update();
+
 	Engine::GetDrawReporter()->Reset();
 
 	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::BACKSPACE)) {
@@ -32,17 +33,17 @@ void GLRendererBase::Update()
 	}
 }
 
-void GLRendererBase::ChangeVSync(bool enabled)
-{
-	auto wglSwapIntervalEXT = ((BOOL(WINAPI*)(int))wglGetProcAddress("wglSwapIntervalEXT"));
-	wglSwapIntervalEXT(enabled);
-}
-
 void GLRendererBase::Render()
 {
 	if (m_previewerEnabled) {
 		m_glPreviewer->RenderPreview();
 	}
+}
+
+void GLRendererBase::ChangeVSync(bool enabled)
+{
+	auto wglSwapIntervalEXT = ((BOOL(WINAPI*)(int))wglGetProcAddress("wglSwapIntervalEXT"));
+	wglSwapIntervalEXT(enabled);
 }
 
 GLRendererBase::GLRendererBase()
@@ -59,7 +60,7 @@ GLRendererBase::~GLRendererBase()
 	ReleaseDC(m_assochWnd, m_hdc);
 }
 
-void GLRendererBase::InitRendering(HWND assochWnd, HINSTANCE instance)
+void GLRendererBase::Init(HWND assochWnd, HINSTANCE instance)
 {
 	m_assochWnd = assochWnd;
 
@@ -108,6 +109,8 @@ void GLRendererBase::InitRendering(HWND assochWnd, HINSTANCE instance)
 	CLOG_ABORT(!(res == 1), "Couldn't load ogl function pointers");
 
 	m_glPreviewer->InitPreviewShaders(m_glAssetManager.get());
+
+	InitScene();
 }
 
 void GLRendererBase::SwapBuffers()

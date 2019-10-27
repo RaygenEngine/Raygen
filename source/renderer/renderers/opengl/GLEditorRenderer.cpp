@@ -10,17 +10,13 @@
 #include <glad/glad.h>
 
 namespace ogl {
-void GLEditorRenderer::InitRendering(HWND assochWnd, HINSTANCE instance)
-{
-	GLRendererBase::InitRendering(assochWnd, instance);
-
-	if (Engine::IsEditorEnabled()) {
-		ImguiImpl::InitOpenGL();
-	}
-}
 
 void GLEditorRenderer::InitScene()
 {
+	if (Engine::IsEditorEnabled()) {
+		ImguiImpl::InitOpenGL();
+	}
+
 	m_bBoxShader = GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/general/BBox.json");
 	m_bBoxShader->StoreUniformLoc("vp");
 	m_bBoxShader->StoreUniformLoc("color");
