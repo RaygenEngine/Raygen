@@ -1,0 +1,2 @@
+#include "platform/windows/resources/WinResource.h"
+IDI_ICON1 ICON "platform/windows/resources/icon.ico"
