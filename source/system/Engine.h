@@ -99,7 +99,7 @@ private:
 
 	Editor* m_editor{ nullptr };
 
-	timer::DebugTimer<ch::milliseconds> m_initToFrameTimer;
+	timer::Timer m_initToFrameTimer{};
 	timer::Timer m_frameTimer{ true };
 
 	struct RendererMetadata {
@@ -173,6 +173,9 @@ public:
 	[[nodiscard]] std::vector<std::string> GetRendererList() const;
 
 	void ToggleEditor();
+	void ActivateEditor();
+	void DeactivateEditor();
+
 
 	void DeinitEngine();
 };

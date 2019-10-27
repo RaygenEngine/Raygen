@@ -130,11 +130,7 @@
                 "+type": "WindowCamera",
                 "far": 1000.0,
                 "focalLength": 1.0,
-                "hFov": 1.6415311098098755,
-                "hFovOffset": 0.0,
                 "near": 0.20000000298023224,
-                "vFov": 1.0471975803375244,
-                "vFovOffset": 0.0,
                 "~children": []
             }
         ]
