@@ -121,10 +121,8 @@ protected:
 
 	void RemoveObserver(NodeObserverBase* ptr);
 
-	// WIP: note: those may be temporarily here
+	// For simplification purposes
 	CameraNode* m_activeCamera{ nullptr };
-	float m_gamma{ 2.2f };
-	float m_exposure{ 1.f };
 
 protected:
 	// Probably worthless to overload this under normal circumstances, you should prefer to use the automatic lifetimes

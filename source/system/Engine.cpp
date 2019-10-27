@@ -9,7 +9,9 @@
 #include "renderer/Renderer.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"
+
 #include <algorithm>
+
 Engine::~Engine()
 {
 	// Destruction of objects is done at Deinit
