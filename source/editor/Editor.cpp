@@ -71,15 +71,33 @@ struct ImRendererMenu : public Editor::ImMenu {
 		}
 
 		if (ImGui::BeginMenu("Switch")) {
-			int32 index = 0;
-			int32 current = Engine::Get().GetActiveRendererIndex();
 
-			for (auto& r : Engine::Get().GetRendererList()) {
-				if (ImGui::MenuItem(r.c_str(), nullptr, index == current)) {
-					Editor::PushPostFrameCommand([=]() { Engine::Get().SwitchRenderer(index); });
+			size_t current = Engine::Get().GetActiveRendererIndex();
+
+			auto rendererList = Engine::Get().GetRendererList();
+
+
+			for (auto& r : rendererList) {
+				if (!r.primary) {
+					continue;
 				}
-				++index;
+
+				if (ImGui::MenuItem(r.name.c_str(), nullptr, r.index == current)) {
+					Editor::PushPostFrameCommand([=]() { Engine::Get().SwitchRenderer(r.index); });
+				}
 			}
+			ImGui::Separator();
+
+			for (auto& r : rendererList) {
+				if (r.primary) {
+					continue;
+				}
+
+				if (ImGui::MenuItem(r.name.c_str(), nullptr, r.index == current)) {
+					Editor::PushPostFrameCommand([=]() { Engine::Get().SwitchRenderer(r.index); });
+				}
+			}
+
 			ImGui::EndMenu();
 		}
 
@@ -246,7 +264,7 @@ void Editor::UpdateEditor()
 	ImGui::EndChild();
 
 	auto& eng = Engine::Get();
-	auto rendererName = eng.GetRendererList()[eng.GetActiveRendererIndex()];
+	auto rendererName = eng.GetRendererList()[eng.GetActiveRendererIndex()].name;
 
 	// auto str = "tris: " + std::to_string(m_drawReporter.tris) + " | drawcalls: " +
 	// std::to_string(m_drawReporter.draws);

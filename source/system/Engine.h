@@ -20,12 +20,23 @@ class Engine {
 private:
 	Engine() = default;
 
+public:
 	struct DrawReporter {
 
 		uint64 tris{ 0ull };
 		uint64 draws{ 0ull };
 
 		void Reset();
+	};
+
+	struct RendererMetadata {
+		size_t index;
+		std::string name;
+		bool primary;
+
+	private:
+		friend class Engine;
+		std::function<Renderer*()> Construct;
 	};
 
 public:
@@ -102,19 +113,34 @@ private:
 	timer::Timer m_initToFrameTimer{};
 	timer::Timer m_frameTimer{ true };
 
-	struct RendererMetadata {
-		std::string name;
-		std::function<Renderer*()> Construct;
-	};
 	std::vector<RendererMetadata> m_rendererRegistrations;
 
 	bool m_isEditorActive{ true };
 	bool m_isEditorEnabled{ true };
-	int32 m_currentRenderer{ 0 };
+	size_t m_currentRenderer{ 0 };
 
 
 	std::string m_statusLine{};
 	float m_lastFrameTime{ 0.f };
+
+	template<typename RendererClass>
+	static size_t RegisterRendererInternal(bool primary = false)
+	{
+		static_assert(std::is_base_of_v<Renderer, RendererClass>, "Attempting to register a non renderer class.");
+
+		RendererMetadata data;
+		data.Construct = []() -> Renderer* {
+			return new RendererClass();
+		};
+
+		size_t index = Engine::Get().m_rendererRegistrations.size();
+
+		data.name = refl::GetName<RendererClass>();
+		data.primary = primary;
+		data.index = index;
+		Engine::Get().m_rendererRegistrations.emplace_back(data);
+		return index;
+	}
 
 public:
 	// Init the internal engine systems.
@@ -128,22 +154,18 @@ public:
 
 	// if another renderer is already active, then destroy old and
 	// then activate the next
-	void SwitchRenderer(uint32 registrationIndex);
+	void SwitchRenderer(size_t registrationIndex);
 
 	template<typename RendererClass>
-	static uint32 RegisterRenderer()
+	static size_t RegisterRenderer()
 	{
-		static_assert(std::is_base_of_v<Renderer, RendererClass>, "Attempting to register a non renderer class.");
+		return RegisterRendererInternal<RendererClass>(false);
+	}
 
-		RendererMetadata data;
-		data.Construct = []() -> Renderer* {
-			return new RendererClass();
-		};
-
-		data.name = refl::GetName<RendererClass>();
-
-		Engine::Get().m_rendererRegistrations.emplace_back(data);
-		return static_cast<uint32>(Engine::Get().m_rendererRegistrations.size() - 1);
+	template<typename RendererClass>
+	static size_t RegisterPrimaryRenderer()
+	{
+		return RegisterRendererInternal<RendererClass>(true);
 	}
 
 	// Avoid this if possible and always refactor cmd debug features to normal features.
@@ -166,11 +188,11 @@ public:
 
 	void ReportFrameDrawn();
 
-	void NextRenderer() { SwitchRenderer(++m_currentRenderer % m_rendererRegistrations.size()); }
+	void NextRenderer();
 
-	[[nodiscard]] int32 GetActiveRendererIndex() const { return m_currentRenderer; }
+	[[nodiscard]] size_t GetActiveRendererIndex() const { return m_currentRenderer; }
 
-	[[nodiscard]] std::vector<std::string> GetRendererList() const;
+	[[nodiscard]] const std::vector<RendererMetadata>& GetRendererList() const { return m_rendererRegistrations; };
 
 	void ToggleEditor();
 	void ActivateEditor();

@@ -9,7 +9,7 @@
 #include "renderer/Renderer.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"
-
+#include <algorithm>
 Engine::~Engine()
 {
 	// Destruction of objects is done at Deinit
@@ -35,6 +35,10 @@ void Engine::InitEngine(AppBase* app)
 
 	app->RegisterRenderers();
 
+	CLOG_ABORT(!std::count_if(begin(m_rendererRegistrations), end(m_rendererRegistrations),
+				   [](auto& registration) { return registration.primary; }),
+		"No primary renderers registered.");
+
 	m_window = app->CreateAppWindow();
 
 
@@ -58,8 +62,9 @@ void Engine::CreateWorldFromFile(const std::string& filename)
 	m_world->LoadAndPrepareWorld(json);
 }
 
-void Engine::SwitchRenderer(uint32 registrationIndex)
+void Engine::SwitchRenderer(size_t registrationIndex)
 {
+	// WIP
 	Engine& eng = Engine::Get();
 
 	if (!Engine::GetWorld()) {
@@ -139,14 +144,13 @@ void Engine::ReportFrameDrawn()
 	}
 }
 
-std::vector<std::string> Engine::GetRendererList() const
+void Engine::NextRenderer()
 {
-	std::vector<std::string> result;
-
-	for (auto& r : m_rendererRegistrations) {
-		result.push_back(r.name);
+	auto index = (m_currentRenderer + 1) % m_rendererRegistrations.size();
+	while (!m_rendererRegistrations[index].primary) {
+		index = (index + 1) % m_rendererRegistrations.size();
 	}
-	return result;
+	SwitchRenderer(index);
 }
 
 void Engine::ToggleEditor()

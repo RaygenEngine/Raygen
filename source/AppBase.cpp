@@ -121,11 +121,12 @@ void AppBase::MainLoop()
 void AppBase::RegisterRenderers()
 {
 	// NOTE:
-	// Default behavior for an app is to start the FIRST renderer registered here.
+	// Default behavior for an app is to start the first primary registered here.
+	Engine::RegisterPrimaryRenderer<ogl::GLDeferredRenderer>();
+	Engine::RegisterPrimaryRenderer<ogl::GLForwardRenderer>();
 
-	Engine::RegisterRenderer<ogl::GLForwardRenderer>();
-	Engine::RegisterRenderer<ogl::GLDeferredRenderer>();
-	// Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
+	// Non primary renderers are skipped when cycling through renderers but can be enabled from the editor menu
+	Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
 }
 
 Win32Window* AppBase::CreateAppWindow()
