@@ -243,6 +243,7 @@ if(MSVC)
 							    OBJECT_DEPENDS "${PrecompiledBinary}")  
 										   
 	list(APPEND SOURCE_FILES pch/pch.cpp)
+	list(APPEND SOURCE_FILES platform/windows/resources/WinResource.rc)
 endif(MSVC)
 
 add_executable(Rayxen ${SOURCE_FILES} ${HEADER_FILES})

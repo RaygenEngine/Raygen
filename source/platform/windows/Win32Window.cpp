@@ -1,5 +1,5 @@
 #include "pch/pch.h"
-
+#include "platform/windows/resources/WinResource.h"
 #include "platform/windows/Win32Window.h"
 #include "platform/windows/TranslateWin32VirtualKeys.h"
 #include "system/Input.h"
@@ -35,6 +35,7 @@ bool Win32Window::Register(UINT style, LPCSTR name, HBRUSH backgroundBrushColor,
 	m_wcex.hCursor = cursor;
 	m_wcex.lpfnWndProc = windowHandleFunction;
 	m_wcex.hInstance = instance;
+	m_wcex.hIcon = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON1));
 
 	// Register window and ensure registration success.
 	return static_cast<bool>(RegisterClassEx(&m_wcex));
@@ -70,6 +71,7 @@ Win32Window* Win32Window::CreateWin32Window(const std::string& title, int32 xpos
 	HINSTANCE hInstance = GetModuleHandle(nullptr);
 
 	auto window = new Win32Window();
+
 
 	if (!window->Register(
 			style, name, backgroundBrushColor, LoadCursor(nullptr, cursorName), windowHandleFunction, hInstance)) {
