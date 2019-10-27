@@ -1,0 +1,499 @@
+[
+    {
+        "+name": "unnamed_FreeformUser",
+        "+trs": {
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rot": {
+                "x": -0.054831136018037796,
+                "y": -1.1561952784067131e-10,
+                "z": 0.054831136018037796
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "+type": "FreeformUser",
+        "movementSpeed": 10.0,
+        "turningSpeed": 0.699999988079071,
+        "~children": [
+            {
+                "+name": "Resizeable Camera",
+                "+trs": {
+                    "pos": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    },
+                    "rot": {
+                        "x": 0.0,
+                        "y": -0.0,
+                        "z": 0.0
+                    },
+                    "scale": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0
+                    }
+                },
+                "+type": "WindowCamera",
+                "far": 1000.0,
+                "focalLength": 1.0,
+                "hFov": -2.971290349960327,
+                "hFovOffset": 0.0,
+                "near": 0.20000000298023224,
+                "vFov": 60.0,
+                "vFovOffset": 0.0,
+                "~children": []
+            }
+        ]
+    },
+    {
+        "+name": "Scene Ambient",
+        "+trs": {
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "+type": "Ambient",
+        "ambientTerm": {
+            "x": 0.7268722057342529,
+            "y": 0.7268649339675903,
+            "z": 0.7268649339675903
+        },
+        "skybox": "/import-data/skybox/alps.cubemap.json",
+        "~children": []
+    },
+    {
+        "+name": "AlphaBlendModeTest.gltf",
+        "+trs": {
+            "pos": {
+                "x": 2.4700000286102295,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.41999998688697815,
+                "y": 0.41999998688697815,
+                "z": 0.41999998688697815
+            }
+        },
+        "+type": "Geometry",
+        "model": "/import-data/glTF-Sample-Models/AlphaBlendModeTest/glTF/AlphaBlendModeTest.gltf",
+        "~children": []
+    },
+    {
+        "+name": "BoomBoxWithAxes.gltf",
+        "+trs": {
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 16.799999237060547,
+                "y": 16.799999237060547,
+                "z": 16.799999237060547
+            }
+        },
+        "+type": "Geometry",
+        "model": "/import-data/glTF-Sample-Models/BoomBoxWithAxes/glTF/BoomBoxWithAxes.gltf",
+        "~children": []
+    },
+    {
+        "+name": "MorphPrimitivesTest.gltf",
+        "+trs": {
+            "pos": {
+                "x": 5.179999828338623,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rot": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "+type": "Geometry",
+        "model": "/import-data/glTF-Sample-Models/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf",
+        "~children": []
+    },
+    {
+        "+name": "MetalRoughSpheres.gltf",
+        "+trs": {
+            "pos": {
+                "x": 0.6600000262260437,
+                "y": 0.20000000298023224,
+                "z": 4.489999771118164
+            },
+            "rot": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.28999999165534973,
+                "y": 0.28999999165534973,
+                "z": 0.28999999165534973
+            }
+        },
+        "+type": "Geometry",
+        "model": "/import-data/glTF-Sample-Models/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf",
+        "~children": [
+            {
+                "+name": "DirectionalLight_new",
+                "+trs": {
+                    "pos": {
+                        "x": -3.575000047683716,
+                        "y": -0.35199999809265137,
+                        "z": 19.363000869750977
+                    },
+                    "rot": {
+                        "x": -0.9127400517463684,
+                        "y": -0.7794619798660278,
+                        "z": -179.19342041015625
+                    },
+                    "scale": {
+                        "x": 1.0000091791152954,
+                        "y": 1.000051498413086,
+                        "z": 1.000035285949707
+                    }
+                },
+                "+type": "DirectionalLight",
+                "bottom": -6.869999885559082,
+                "color": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "far": 15.5,
+                "hasShadow": true,
+                "intensity": 10.0,
+                "left": -6.869999885559082,
+                "maxShadowBias": 0.004999999888241291,
+                "near": 1.0,
+                "right": 6.869999885559082,
+                "samples": 67,
+                "shadowMapHeight": 2048,
+                "shadowMapWidth": 2048,
+                "top": 6.869999885559082,
+                "~children": []
+            }
+        ]
+    },
+    {
+        "+name": "MultiUVTest.gltf",
+        "+trs": {
+            "pos": {
+                "x": 3.6700000762939453,
+                "y": 0.20000000298023224,
+                "z": 4.260000228881836
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.6000000834465027,
+                "y": 0.6000000834465027,
+                "z": 0.6000000834465027
+            }
+        },
+        "+type": "Geometry",
+        "model": "/import-data/glTF-Sample-Models/MultiUVTest/glTF/MultiUVTest.gltf",
+        "~children": []
+    },
+    {
+        "+name": "Transform_new",
+        "+trs": {
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rot": {
+                "x": -0.054831136018037796,
+                "y": -1.1399108046372675e-10,
+                "z": 0.05483114346861839
+            },
+            "scale": {
+                "x": 0.9999998807907104,
+                "y": 1.0,
+                "z": 0.9999998807907104
+            }
+        },
+        "+type": "Transform",
+        "~children": [
+            {
+                "+name": "NormalTangentTest.gltf",
+                "+trs": {
+                    "pos": {
+                        "x": 7.7999982833862305,
+                        "y": -0.007464470807462931,
+                        "z": -7.143396487663267e-06
+                    },
+                    "rot": {
+                        "x": 0.054831117391586304,
+                        "y": 5.247261651675217e-05,
+                        "z": -0.05483110994100571
+                    },
+                    "scale": {
+                        "x": 1.000000238418579,
+                        "y": 1.0,
+                        "z": 1.000000238418579
+                    }
+                },
+                "+type": "Geometry",
+                "model": "/import-data/glTF-Sample-Models/NormalTangentTest/glTF/NormalTangentTest.gltf",
+                "~children": []
+            },
+            {
+                "+name": "NormalTangentMirrorTest.gltf",
+                "+trs": {
+                    "pos": {
+                        "x": 10.83996868133545,
+                        "y": -0.040373675525188446,
+                        "z": -3.8636993849650025e-05
+                    },
+                    "rot": {
+                        "x": 0.054831117391586304,
+                        "y": 5.247261651675217e-05,
+                        "z": -0.05483110994100571
+                    },
+                    "scale": {
+                        "x": 1.000000238418579,
+                        "y": 1.0,
+                        "z": 1.000000238418579
+                    }
+                },
+                "+type": "Geometry",
+                "model": "/import-data/glTF-Sample-Models/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest.gltf",
+                "~children": []
+            },
+            {
+                "+name": "SpotLight_new",
+                "+trs": {
+                    "pos": {
+                        "x": 9.446643829345703,
+                        "y": 0.6571900844573975,
+                        "z": 8.119635581970215
+                    },
+                    "rot": {
+                        "x": -9.57906723022461,
+                        "y": -2.0879533290863037,
+                        "z": -0.10052379965782166
+                    },
+                    "scale": {
+                        "x": 1.000000238418579,
+                        "y": 1.0,
+                        "z": 1.0000003576278687
+                    }
+                },
+                "+type": "SpotLight",
+                "attenuationMode": "LINEAR",
+                "color": {
+                    "x": 1.0,
+                    "y": 0.9999899864196777,
+                    "z": 0.9999899864196777
+                },
+                "far": 14.369999885559082,
+                "hasShadow": true,
+                "innerAperture": 0.3804817497730255,
+                "intensity": 17.459999084472656,
+                "maxShadowBias": 0.004999999888241291,
+                "near": 0.09099999815225601,
+                "outerAperture": 0.9386380314826965,
+                "samples": 17,
+                "shadowMapHeight": 2048,
+                "shadowMapWidth": 2048,
+                "~children": []
+            },
+            {
+                "+name": "SpotLight_new_Copy",
+                "+trs": {
+                    "pos": {
+                        "x": 8.6311616897583,
+                        "y": 0.05256536602973938,
+                        "z": -7.440626621246338
+                    },
+                    "rot": {
+                        "x": 171.8373260498047,
+                        "y": 1.5533047914505005,
+                        "z": 179.94366455078125
+                    },
+                    "scale": {
+                        "x": 1.0000007152557373,
+                        "y": 1.0,
+                        "z": 1.0000007152557373
+                    }
+                },
+                "+type": "SpotLight",
+                "attenuationMode": "LINEAR",
+                "color": {
+                    "x": 1.0,
+                    "y": 0.9999899864196777,
+                    "z": 0.9999899864196777
+                },
+                "far": 14.369999885559082,
+                "hasShadow": true,
+                "innerAperture": 0.3804817497730255,
+                "intensity": 17.459999084472656,
+                "maxShadowBias": 0.004999999888241291,
+                "near": 0.09099999815225601,
+                "outerAperture": 0.9386380314826965,
+                "samples": 17,
+                "shadowMapHeight": 2048,
+                "shadowMapWidth": 2048,
+                "~children": []
+            }
+        ]
+    },
+    {
+        "+name": "OrientationTest.gltf",
+        "+trs": {
+            "pos": {
+                "x": 0.5,
+                "y": -0.1899999976158142,
+                "z": 7.800000190734863
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.10000000149011612,
+                "y": 0.10000000149011612,
+                "z": 0.10000000149011612
+            }
+        },
+        "+type": "Geometry",
+        "model": "/import-data/glTF-Sample-Models/OrientationTest/glTF/OrientationTest.gltf",
+        "~children": []
+    },
+    {
+        "+name": "TextureCoordinateTest.gltf",
+        "+trs": {
+            "pos": {
+                "x": 3.4600000381469727,
+                "y": -0.029999999329447746,
+                "z": 7.849999904632568
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.7599999904632568,
+                "y": 0.7599999904632568,
+                "z": 0.7599999904632568
+            }
+        },
+        "+type": "Geometry",
+        "model": "/import-data/glTF-Sample-Models/TextureCoordinateTest/glTF/TextureCoordinateTest.gltf",
+        "~children": []
+    },
+    {
+        "+name": "TextureSettingsTest.gltf",
+        "+trs": {
+            "pos": {
+                "x": -1.7000000476837158,
+                "y": 0.1599999964237213,
+                "z": 0.0
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.16599999368190765,
+                "y": 0.16599999368190765,
+                "z": 0.16599999368190765
+            }
+        },
+        "+type": "Geometry",
+        "model": "/import-data/glTF-Sample-Models/TextureSettingsTest/glTF/TextureSettingsTest.gltf",
+        "~children": []
+    },
+    {
+        "+name": "VertexColorTest.gltf",
+        "+trs": {
+            "pos": {
+                "x": -3.8399999141693115,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.5699999928474426,
+                "y": 0.5699999928474426,
+                "z": 0.5699999928474426
+            }
+        },
+        "+type": "Geometry",
+        "model": "/import-data/glTF-Sample-Models/VertexColorTest/glTF/VertexColorTest.gltf",
+        "~children": []
+    },
+    {
+        "+name": "TriangleWithoutIndices.gltf",
+        "+trs": {
+            "pos": {
+                "x": -4.139999866485596,
+                "y": -0.6600000262260437,
+                "z": 1.4800000190734863
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "+type": "Geometry",
+        "model": "/import-data/glTF-Sample-Models/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf",
+        "~children": []
+    }
+]
