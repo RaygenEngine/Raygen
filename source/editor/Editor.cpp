@@ -102,7 +102,7 @@ struct ImRendererMenu : public Editor::ImMenu {
 Node* Editor::GetSelectedNode()
 {
 	auto editor = Engine::GetEditor();
-	if (editor) {
+	if (editor && Engine::IsEditorActive()) {
 		return editor->m_selectedNode;
 	}
 	return nullptr;
@@ -111,7 +111,7 @@ Node* Editor::GetSelectedNode()
 EditorBBoxDrawing Editor::GetBBoxDrawing()
 {
 	auto editor = Engine::GetEditor();
-	if (editor) {
+	if (editor && Engine::IsEditorActive()) {
 		return editor->m_bboxDrawing;
 	}
 	return EditorBBoxDrawing::None;

@@ -82,7 +82,7 @@ void Engine::SwitchRenderer(uint32 registrationIndex)
 
 	LOG_REPORT("Switched to renderer: {}", eng.m_rendererRegistrations[registrationIndex].name);
 
-	eng.m_isEditorActive = eng.m_renderer->SupportsEditor();
+	eng.m_renderer->SupportsEditor() ? ActivateEditor() : DeactivateEditor();
 
 	eng.m_renderer->InitRendering(eng.m_window->GetHWND(), eng.m_window->GetHInstance());
 	eng.m_renderer->InitScene();
@@ -130,9 +130,12 @@ void Engine::ReportFrameDrawn()
 	m_lastFrameTime = m_frameTimer.Get<ch::microseconds>() / 1e6f;
 	m_frameTimer.Start();
 
-	if (!m_initToFrameTimer.m_stopped) {
-		LOG_WARN("Init to frame took: {} ms", m_initToFrameTimer.Get());
-		m_initToFrameTimer.Stop();
+
+	static bool hasFrameReport = false;
+
+	if (!hasFrameReport) {
+		LOG_WARN("Init to frame took: {} ms", m_initToFrameTimer.Get<ch::milliseconds>());
+		hasFrameReport = true;
 	}
 }
 
@@ -149,13 +152,23 @@ std::vector<std::string> Engine::GetRendererList() const
 void Engine::ToggleEditor()
 {
 	if (m_isEditorEnabled && m_renderer && m_renderer->SupportsEditor()) {
-		if (m_isEditorActive) {
-			m_editor->OnDisableEditor();
-		}
-		else {
-			m_editor->OnEnableEditor();
-		}
-		m_isEditorActive = !m_isEditorActive;
+		m_isEditorActive ? DeactivateEditor() : ActivateEditor();
+	}
+}
+
+void Engine::ActivateEditor()
+{
+	if (!m_isEditorActive) {
+		m_editor->OnEnableEditor();
+		m_isEditorActive = true;
+	}
+}
+
+void Engine::DeactivateEditor()
+{
+	if (m_isEditorActive) {
+		m_editor->OnDisableEditor();
+		m_isEditorActive = false;
 	}
 }
 

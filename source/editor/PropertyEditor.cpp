@@ -467,13 +467,12 @@ void PropertyEditor::Inject(Node* node)
 
 	m_openAsset.Display();
 	m_saveAsset.Display();
+
+	m_prevNode = node;
 }
 
 void PropertyEditor::Run_BaseProperties(Node* node)
 {
-	static Node* prevNode = nullptr;
-	static glm::vec3 lookAtRef{ 0.f, 0.f, 0.f };
-
 	std::string name = node->GetName();
 
 	if (ImGui::InputText("Name", &name)) {
@@ -498,10 +497,10 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 	const auto UpdateLookAtReference = [&]() {
 		auto fwd = m_localMode ? node->GetLocalForward() : node->GetWorldForward();
 		auto lookAt = location + fwd;
-		lookAtRef = lookAt;
+		m_lookAtPos = lookAt;
 	};
 
-	if (prevNode != node) {
+	if (m_prevNode != node) {
 		UpdateLookAtReference();
 	}
 
@@ -514,8 +513,7 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 		}
 		ImGui::EndPopup();
 	}
-	static bool lookAtMode = false;
-	if (!lookAtMode) {
+	if (!m_lookAtMode) {
 		if (ImGui::DragFloat3("Rotation", ImUtil::FromVec3(eulerPyr), 0.1f)) {
 			auto deltaAxis = eulerPyr - (m_localMode ? node->GetLocalPYR() : node->GetWorldPYR());
 			if (ImGui::IsAnyMouseDown()) {
@@ -531,8 +529,11 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 		}
 	}
 	else {
-		ImGui::DragFloat3("LookAt", ImUtil::FromVec3(lookAtRef), 0.1f);
-		m_localMode ? node->SetLocalLookAt(lookAtRef) : node->SetWorldLookAt(lookAtRef);
+		ImGui::DragFloat3("Look At", ImUtil::FromVec3(m_lookAtPos), 0.1f);
+		Editor::HelpTooltipInline(
+			"Look at will lock lookat position of the selected node for as long as it is active. This way you can "
+			"adjust the position of your node while keeping the lookat position fixed.");
+		m_localMode ? node->SetLocalLookAt(m_lookAtPos) : node->SetWorldLookAt(m_lookAtPos);
 	}
 
 	if (ImGui::BeginPopupContextItem("RotatePopup")) {
@@ -540,15 +541,16 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 			m_localMode ? node->SetLocalOrientation(glm::identity<glm::quat>())
 						: node->SetWorldOrientation(glm::identity<glm::quat>());
 		}
-		if (ImGui::MenuItem("LookAt", nullptr, lookAtMode)) {
-			lookAtMode = !lookAtMode;
-			UpdateLookAtReference();
+		if (ImGui::MenuItem("Look At", nullptr, m_lookAtMode)) {
+			m_lookAtMode = !m_lookAtMode;
+			if (m_lookAtMode) {
+				UpdateLookAtReference();
+			}
 		}
 		ImGui::EndPopup();
 	}
 
-	static bool lockedScale = false;
-	if (!lockedScale) {
+	if (!m_lockedScale) {
 		if (ImGui::DragFloat3("Scale", ImUtil::FromVec3(scale), 0.01f)) {
 			m_localMode ? node->SetLocalScale(scale) : node->SetWorldScale(scale);
 		}
@@ -569,6 +571,10 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 			else if (!math::EpsilonEqualsZero(initialScale.z)) {
 				ratio = newScale.z / initialScale.z;
 			}
+			else {
+				initialScale = newScale;
+				ratio = 1.f;
+			}
 			m_localMode ? node->SetLocalScale(initialScale * ratio) : node->SetWorldScale(initialScale * ratio);
 		}
 	}
@@ -577,8 +583,8 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 		if (ImGui::MenuItem("Reset##3")) {
 			m_localMode ? node->SetLocalScale(glm::vec3(1.f)) : node->SetWorldScale(glm::vec3(1.f));
 		}
-		if (ImGui::MenuItem("Lock", nullptr, lockedScale)) {
-			lockedScale = !lockedScale;
+		if (ImGui::MenuItem("Lock", nullptr, m_lockedScale)) {
+			m_lockedScale = !m_lockedScale;
 		}
 		ImGui::EndPopup();
 	}
@@ -609,8 +615,6 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 						: node->SetWorldMatrix(glm::transpose(rowMajor));
 		}
 	}
-
-	prevNode = node;
 }
 
 void PropertyEditor::Run_ContextActions(Node* node)

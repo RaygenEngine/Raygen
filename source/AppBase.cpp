@@ -68,6 +68,10 @@ int32 AppBase::Main(int32 argc, char* argv[]) // NOLINT
 		window->RestrictMouseMovement();
 	}
 
+	// Allow for world to update any flags that became dirty since InitWorld to here. (eg: resize events, nodes added
+	// later etc)
+	Engine::GetWorld()->DirtyUpdateWorld();
+
 	MainLoop();
 
 	window->ReleaseMouseMovement();

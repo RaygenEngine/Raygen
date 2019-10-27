@@ -81,8 +81,10 @@ void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 	Event::OnWorldLoaded.Broadcast();
 
 	DirtyUpdateWorld();
-	LOG_INFO("World loaded succesfully");
+
 	m_root->m_dirty.reset();
+	ClearDirtyFlags();
+	LOG_INFO("World loaded succesfully");
 }
 
 void World::DirtyUpdateWorld()

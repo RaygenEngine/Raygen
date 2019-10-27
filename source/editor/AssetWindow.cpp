@@ -14,7 +14,7 @@
 void AssetWindow::ReloadCache()
 {
 	m_gltf.clear();
-	timer::DebugTimer<std::chrono::milliseconds> timer(true);
+	timer::Timer timer(true);
 
 	for (const auto& entry : fs::recursive_directory_iterator(fs::current_path())) {
 		if (entry.is_directory()) {
@@ -31,7 +31,7 @@ void AssetWindow::ReloadCache()
 		}
 	}
 
-	LOG_INFO("Cached {} gltf files in {} ms.", m_gltf.size(), timer.Get());
+	LOG_INFO("Cached {} gltf files in {} ms.", m_gltf.size(), timer.Get<std::chrono::milliseconds>());
 }
 
 void AssetWindow::DrawFileLibrary()
