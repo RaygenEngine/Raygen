@@ -130,7 +130,7 @@ Node* World::DuplicateNode_Utl(Node* src, Node* newParent)
 
 	auto result = refltools::CopyClassTo(src, created);
 
-	CLOG_FATAL(!result.IsExactlyCorrect(), "Duplicate node did not exactly match properties!");
+	CLOG_ERROR(!result.IsExactlyCorrect(), "Duplicate node did not exactly match properties!");
 	return created;
 }
 

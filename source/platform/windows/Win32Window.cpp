@@ -73,14 +73,12 @@ Win32Window* Win32Window::CreateWin32Window(const std::string& title, int32 xpos
 
 	if (!window->Register(
 			style, name, backgroundBrushColor, LoadCursor(nullptr, cursorName), windowHandleFunction, hInstance)) {
-		LOG_FATAL("Failed to register application window!");
-		delete window;
+		LOG_ABORT("Failed to register application window!");
 		return nullptr;
 	}
 
 	if (!window->Create(xpos, ypox, width, height, title.c_str(), cstyle)) {
-		LOG_FATAL("Failed to create application window!");
-		delete window;
+		LOG_ABORT("Failed to register application window!");
 		return nullptr;
 	}
 
