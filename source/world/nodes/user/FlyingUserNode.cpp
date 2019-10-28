@@ -20,7 +20,7 @@ void FlyingUserNode::Update(float deltaTime)
 	float roll = 0.f;
 	float forward = m_baseSpeed * deltaTime;
 
-	if (input.IsCursorDragged() && input.IsKeyRepeat(XVirtualKey::RBUTTON)) {
+	if (input.IsCursorDragged() && input.IsKeyRepeat(Key::RBUTTON)) {
 		yaw += -input.GetCursorRelativePosition().x * m_inputYawMultiplier * 0.1f;
 		pitch += -input.GetCursorRelativePosition().y * m_inputPitchMultiplier * 0.1f;
 	}
@@ -39,20 +39,20 @@ void FlyingUserNode::Update(float deltaTime)
 	}
 
 
-	if (input.IsKeyPressed(XVirtualKey::GAMEPAD_Y)) {
+	if (input.IsKeyPressed(Key::GAMEPAD_Y)) {
 		m_baseSpeed += 5.f;
 	}
 
-	if (input.IsKeyPressed(XVirtualKey::GAMEPAD_X)) {
+	if (input.IsKeyPressed(Key::GAMEPAD_X)) {
 		m_baseSpeed -= 5.f;
 	}
 
 
-	RotateAroundAxis(GetWorldUp(), yaw);
-	RotateAroundAxis(GetWorldRight(), pitch);
-	RotateAroundAxis(GetWorldForward(), roll);
+	RotateAroundAxis(GetUp(), yaw);
+	RotateAroundAxis(GetRight(), pitch);
+	RotateAroundAxis(GetForward(), roll);
 
-	AddWorldOffset(GetWorldForward() * forward);
+	AddOffset(GetForward() * forward);
 
 
 	if (!input.IsRightThumbResting()) {

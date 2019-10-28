@@ -1,6 +1,6 @@
 #pragma once
 
-enum class XVirtualKey
+enum class Key
 {
 	UNASSIGNED = 0,
 	RESERVED,

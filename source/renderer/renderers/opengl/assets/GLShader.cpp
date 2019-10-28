@@ -15,10 +15,9 @@ GLShader::~GLShader()
 	glDeleteProgram(programId);
 }
 
-// WIP: tidy
+// TODO: tidy and handle compile and link status
 void GLShader::Load()
 {
-	// WIP: handle compile and link status
 	auto CreateShader = [&](GLenum type, PodHandle<StringPod> pod) -> GLuint {
 		GLint result = GL_FALSE;
 		int32 infoLogLength;

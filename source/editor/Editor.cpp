@@ -306,10 +306,10 @@ void Editor::SpawnEditorCamera()
 
 	auto prevActive = world->GetActiveCamera();
 	if (m_hasEditorCameraCachedMatrix) {
-		m_editorCamera->SetWorldMatrix(m_editorCameraCachedMatrix);
+		m_editorCamera->SetMatrix(m_editorCameraCachedMatrix);
 	}
 	else if (prevActive) {
-		m_editorCamera->SetWorldMatrix(prevActive->GetWorldMatrix());
+		m_editorCamera->SetMatrix(prevActive->GetMatrix());
 	}
 	world->SetActiveCamera(m_editorCamera);
 }
@@ -441,7 +441,7 @@ void Editor::OnEnableEditor()
 void Editor::OnPlay()
 {
 	if (m_editorCamera) {
-		m_editorCameraCachedMatrix = m_editorCamera->GetWorldMatrix();
+		m_editorCameraCachedMatrix = m_editorCamera->GetMatrix();
 		m_hasEditorCameraCachedMatrix = true;
 		Engine::GetWorld()->DeleteNode(m_editorCamera);
 	}
@@ -457,7 +457,7 @@ void Editor::OnStopPlay()
 	if (!m_updateWorld) {
 		if (!m_editorCamera) {
 			SpawnEditorCamera();
-			m_editorCamera->SetWorldMatrix(m_editorCameraCachedMatrix);
+			m_editorCamera->SetMatrix(m_editorCameraCachedMatrix);
 		}
 	}
 	if (m_autoRestoreWorld && m_hasRestoreSave) {
@@ -687,10 +687,10 @@ void Editor::Run_HelpWindow()
 void Editor::HandleInput()
 {
 	auto input = Engine::GetInput();
-	if (input->IsKeyRepeat(XVirtualKey::SHIFT) && input->IsKeyPressed(XVirtualKey::F)) {
+	if (input->IsKeyRepeat(Key::SHIFT) && input->IsKeyPressed(Key::F)) {
 		PilotThis(m_selectedNode);
 	}
-	else if (input->IsKeyPressed(XVirtualKey::F)) {
+	else if (input->IsKeyPressed(Key::F)) {
 		if (m_selectedNode) {
 			FocusNode(m_selectedNode);
 		}
@@ -825,7 +825,7 @@ void Editor::MoveChildOut(Node* node)
 		return;
 	}
 	auto lateCmd = [node]() {
-		auto worldMatrix = node->GetWorldMatrix();
+		auto worldMatrix = node->GetMatrix();
 		node->GetParent()->SetDirty(Node::DF::Children);
 
 		auto& children = node->GetParent()->m_children;
@@ -845,7 +845,7 @@ void Editor::MoveChildOut(Node* node)
 		newChildren.emplace(insertAt, std::move(src));
 
 		node->m_parent = insertBefore->GetParent();
-		node->SetWorldMatrix(worldMatrix);
+		node->SetMatrix(worldMatrix);
 		node->SetDirty(Node::DF::Hierarchy);
 		node->GetParent()->SetDirty(Node::DF::Children);
 	};
@@ -881,7 +881,7 @@ void Editor::MakeChildOf(Node* newParent, Node* node)
 	}
 
 	auto lateCmd = [newParent, node]() {
-		auto worldMatrix = node->GetWorldMatrix();
+		auto worldMatrix = node->GetMatrix();
 		node->GetParent()->SetDirty(Node::DF::Children); // That parent is losing a child.
 
 		auto& children = node->GetParent()->m_children;
@@ -895,7 +895,7 @@ void Editor::MakeChildOf(Node* newParent, Node* node)
 		newParent->m_children.emplace_back(std::move(src));
 
 		node->m_parent = newParent;
-		node->SetWorldMatrix(worldMatrix);
+		node->SetMatrix(worldMatrix);
 		node->SetDirty(Node::DF::Hierarchy);
 		node->GetParent()->SetDirty(Node::DF::Children);
 	};
@@ -918,15 +918,15 @@ void Editor::PilotThis(Node* node)
 			return;
 		}
 		Editor::MakeChildOf(Engine::GetWorld()->GetRoot(), camera);
-		camera->SetWorldMatrix(Engine::GetEditor()->m_editorCameraPrePilotPos);
+		camera->SetMatrix(Engine::GetEditor()->m_editorCameraPrePilotPos);
 		return;
 	}
 
 	if (!wasPiloting) {
-		Engine::GetEditor()->m_editorCameraPrePilotPos = camera->GetWorldMatrix();
+		Engine::GetEditor()->m_editorCameraPrePilotPos = camera->GetMatrix();
 	}
 	Editor::MakeChildOf(node, camera);
-	camera->SetWorldMatrix(node->GetWorldMatrix());
+	camera->SetMatrix(node->GetMatrix());
 }
 
 void Editor::FocusNode(Node* node)
@@ -938,8 +938,8 @@ void Editor::FocusNode(Node* node)
 	if (!cam) {
 		return;
 	}
-	auto trans = node->GetWorldTranslation();
-	cam->SetWorldTranslation(trans);
+	auto trans = node->GetTranslation();
+	cam->SetTranslation(trans);
 
 	float dist = 1.f;
 	if (node->IsA<GeometryNode>()) {
@@ -948,17 +948,17 @@ void Editor::FocusNode(Node* node)
 		auto max = geom->GetAABB().max;
 		dist = glm::abs(min.x - max.x) + glm::abs(min.y - max.y);
 
-		cam->SetWorldTranslation(geom->GetAABB().GetCenter());
+		cam->SetTranslation(geom->GetAABB().GetCenter());
 	}
-	cam->AddWorldOffset(glm::vec3(-1.f, 0.25f, 0.f) * dist);
-	cam->SetWorldLookAt(node->GetWorldTranslation());
+	cam->AddOffset(glm::vec3(-1.f, 0.25f, 0.f) * dist);
+	cam->SetLookAt(node->GetTranslation());
 }
 
 void Editor::TeleportToCamera(Node* node)
 {
 	auto camera = Engine::GetWorld()->GetActiveCamera();
 	if (camera) {
-		node->SetWorldMatrix(camera->GetWorldMatrix());
+		node->SetMatrix(camera->GetMatrix());
 	}
 }
 

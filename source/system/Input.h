@@ -25,9 +25,9 @@ public:
 	};
 
 private:
-	std::unordered_set<XVirtualKey> m_keysPressed;
-	std::unordered_set<XVirtualKey> m_keysRepeat;
-	std::unordered_set<XVirtualKey> m_keysReleased;
+	std::unordered_set<Key> m_keysPressed;
+	std::unordered_set<Key> m_keysRepeat;
+	std::unordered_set<Key> m_keysReleased;
 
 	bool m_doubleClicked{ false };
 	bool m_cursorDragged{ false };
@@ -47,44 +47,44 @@ public:
 	void UpdateDoubleClick();
 	void UpdateCursorDrag();
 
-	void UpdateKeyPressed(XVirtualKey key);
-	void UpdateKeyReleased(XVirtualKey key);
+	void UpdateKeyPressed(Key key);
+	void UpdateKeyReleased(Key key);
 
 	void UpdateAnalogState(const AnalogState& state);
 	void UpdateAnalogState(AnalogState* state);
 
-	[[nodiscard]] bool IsKeyPressed(XVirtualKey key) const;
-	[[nodiscard]] bool IsKeyRepeat(XVirtualKey key) const;
-	[[nodiscard]] bool IsKeyReleased(XVirtualKey key) const;
+	[[nodiscard]] bool IsKeyPressed(Key key) const;
+	[[nodiscard]] bool IsKeyRepeat(Key key) const;
+	[[nodiscard]] bool IsKeyReleased(Key key) const;
 
-	[[nodiscard]] bool IsKeysCombination(XVirtualKey key) const { return IsKeyRepeat(key); }
+	[[nodiscard]] bool IsKeysCombination(Key key) const { return IsKeyRepeat(key); }
 
 	template<typename... Args>
-	[[nodiscard]] bool IsKeysCombination(XVirtualKey key0, Args... keys) const
+	[[nodiscard]] bool IsKeysCombination(Key key0, Args... keys) const
 	{
 		return IsKeysCombination(key0) && IsKeysCombination(keys...);
 	}
 
-	[[nodiscard]] bool IsAnyOfKeysPressed(XVirtualKey key) const { return IsKeyPressed(key); }
+	[[nodiscard]] bool IsAnyOfKeysPressed(Key key) const { return IsKeyPressed(key); }
 
 	template<typename... Args>
-	[[nodiscard]] bool IsAnyOfKeysPressed(XVirtualKey key0, Args... keys) const
+	[[nodiscard]] bool IsAnyOfKeysPressed(Key key0, Args... keys) const
 	{
 		return IsAnyOfKeysPressed(key0) || IsAnyOfKeysPressed(keys...);
 	}
 
-	[[nodiscard]] bool IsAnyOfKeysRepeat(XVirtualKey key) const { return IsKeyRepeat(key); }
+	[[nodiscard]] bool IsAnyOfKeysRepeat(Key key) const { return IsKeyRepeat(key); }
 
 	template<typename... Args>
-	[[nodiscard]] bool IsAnyOfKeysRepeat(XVirtualKey key0, Args... keys) const
+	[[nodiscard]] bool IsAnyOfKeysRepeat(Key key0, Args... keys) const
 	{
 		return IsAnyOfKeysRepeat(key0) || IsAnyOfKeysRepeat(keys...);
 	}
 
-	[[nodiscard]] bool IsAnyOfKeysReleased(XVirtualKey key) const { return IsKeyReleased(key); }
+	[[nodiscard]] bool IsAnyOfKeysReleased(Key key) const { return IsKeyReleased(key); }
 
 	template<typename... Args>
-	[[nodiscard]] bool IsAnyOfKeysReleased(XVirtualKey key0, Args... keys) const
+	[[nodiscard]] bool IsAnyOfKeysReleased(Key key0, Args... keys) const
 	{
 		return IsAnyOfKeysReleased(key0) || IsAnyOfKeysReleased(keys...);
 	}

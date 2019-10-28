@@ -31,9 +31,12 @@ public:
 
 	virtual void RestrictMouseMovement() {}
 	virtual void ReleaseMouseMovement() {}
+	virtual void DrawSplash(){};
+	virtual void DrawLoading(){};
 
 	virtual void Show() = 0;
 	virtual void Hide() = 0;
+
 
 	// Expected to fire the engine's resize event before the first window->Show(),
 	// allows the renderers to init with correct camera sizes before the window is visible.

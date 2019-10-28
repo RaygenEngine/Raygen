@@ -6,18 +6,32 @@
 #include "system/EngineEvents.h"
 #include "editor/imgui/ImguiImpl.h"
 
+namespace Gdiplus {
+using std::min;
+using std::max;
+} // namespace Gdiplus
 #include <windowsx.h>
+#include <objidl.h>
+#include <gdiplus.h>
+using namespace Gdiplus;
+#pragma comment(lib, "Gdiplus.lib")
+
+static ULONG_PTR gdiplusToken;
 
 Win32Window::Win32Window()
 	: m_wcex()
 	, m_hWnd(nullptr)
 {
+	GdiplusStartupInput gdiplusStartupInput;
+	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 }
 
 Win32Window::~Win32Window()
 {
 	// Unregister window class, freeing the memory that was
 	// previously allocated for this window.
+
+	GdiplusShutdown(gdiplusToken);
 
 	::UnregisterClass(m_wcex.lpszClassName, m_wcex.hInstance);
 }
@@ -123,6 +137,31 @@ void Win32Window::Hide()
 {
 	::ShowWindow(m_hWnd, SW_HIDE);
 	::UpdateWindow(m_hWnd);
+}
+
+#include "renderer/Renderer.h"
+
+void Win32Window::DrawSplash()
+{
+	HDC hdc = GetDC(m_hWnd);
+	if (hdc) {
+		Graphics graphics(hdc);
+		Image image(L"engine-data\\splash.png");
+		graphics.DrawImage(
+			&image, INT(m_width / 2 - image.GetWidth() / 2), INT(m_height / 2.4 - image.GetHeight() / 2));
+		ReleaseDC(m_hWnd, hdc);
+	}
+}
+
+void Win32Window::DrawLoading()
+{
+	HDC hdc = GetDC(m_hWnd);
+	if (hdc) {
+		Graphics graphics(hdc);
+		Image image(L"engine-data\\loading.png");
+		graphics.DrawImage(&image, INT(m_width / 2 - image.GetWidth() / 2), INT(m_height / 2 - image.GetHeight() / 2));
+		ReleaseDC(m_hWnd, hdc);
+	}
 }
 
 void Win32Window::FireFirstResizeEvent()
@@ -286,21 +325,21 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 			}
 			break;
 
-		case WM_LBUTTONDOWN: input.UpdateKeyPressed(XVirtualKey::LBUTTON); break;
+		case WM_LBUTTONDOWN: input.UpdateKeyPressed(Key::LBUTTON); break;
 
-		case WM_RBUTTONDOWN: input.UpdateKeyPressed(XVirtualKey::RBUTTON); break;
+		case WM_RBUTTONDOWN: input.UpdateKeyPressed(Key::RBUTTON); break;
 
-		case WM_MBUTTONDOWN: input.UpdateKeyPressed(XVirtualKey::MBUTTON); break;
+		case WM_MBUTTONDOWN: input.UpdateKeyPressed(Key::MBUTTON); break;
 
 		case WM_XBUTTONDOWN:
 			input.UpdateKeyPressed(TranslateWin32VirtualKeys(MapExtraMouseButtons(GET_XBUTTON_WPARAM(wParam))));
 			break;
 
-		case WM_LBUTTONUP: input.UpdateKeyReleased(XVirtualKey::LBUTTON); break;
+		case WM_LBUTTONUP: input.UpdateKeyReleased(Key::LBUTTON); break;
 
-		case WM_RBUTTONUP: input.UpdateKeyReleased(XVirtualKey::RBUTTON); break;
+		case WM_RBUTTONUP: input.UpdateKeyReleased(Key::RBUTTON); break;
 
-		case WM_MBUTTONUP: input.UpdateKeyReleased(XVirtualKey::MBUTTON); break;
+		case WM_MBUTTONUP: input.UpdateKeyReleased(Key::MBUTTON); break;
 
 		case WM_XBUTTONUP:
 			input.UpdateKeyReleased(TranslateWin32VirtualKeys(MapExtraMouseButtons(GET_XBUTTON_WPARAM(wParam))));

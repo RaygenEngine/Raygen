@@ -19,44 +19,44 @@ void EditorCameraNode::UpdateFromEditor(float deltaTime)
 
 	speed *= deltaTime;
 
-	if (!input.IsRightTriggerResting() || input.IsKeyRepeat(XVirtualKey::SHIFT)) {
+	if (!input.IsRightTriggerResting() || input.IsKeyRepeat(Key::SHIFT)) {
 		speed *= 5.f * glm::exp(input.GetRightTriggerMagnitude());
 	}
 
-	if (!input.IsLeftTriggerResting() || input.IsKeyRepeat(XVirtualKey::CTRL)) {
+	if (!input.IsLeftTriggerResting() || input.IsKeyRepeat(Key::CTRL)) {
 		speed /= 5.f * glm::exp(input.GetLeftTriggerMagnitude());
 	}
 
 	Node* applyTo = GetParent();
 	if (applyTo->IsRoot()) {
 		applyTo = this;
-		SetWorldScale(glm::vec3(1.f));
+		SetScale(glm::vec3(1.f));
 	}
 	else {
 		// if any change came here its from dragging in the editor.
-		applyTo->SetWorldMatrix(GetWorldMatrix());
+		applyTo->SetMatrix(GetMatrix());
 		SetLocalMatrix(glm::identity<glm::mat4>());
 	}
 	auto root = Engine::GetWorld()->GetRoot();
 
 
-	if (input.IsKeyPressed(XVirtualKey::X)) {
+	if (input.IsKeyPressed(Key::X)) {
 		m_worldAlign = !m_worldAlign;
 	}
 
-	if (input.IsKeyPressed(XVirtualKey::C)) {
-		auto pyr = applyTo->GetWorldPYR();
-		applyTo->SetWorldOrientation(glm::identity<glm::quat>());
-		applyTo->RotateAroundAxis(root->GetWorldUp(), pyr.y);
+	if (input.IsKeyPressed(Key::C)) {
+		auto pyr = applyTo->GetEulerAngles();
+		applyTo->SetOrientation(glm::identity<glm::quat>());
+		applyTo->RotateAroundAxis(root->GetUp(), pyr.y);
 	}
 
 	// user rotation
-	if (input.IsCursorDragged() && input.IsKeyRepeat(XVirtualKey::RBUTTON)) {
+	if (input.IsCursorDragged() && input.IsKeyRepeat(Key::RBUTTON)) {
 		const float yaw = -input.GetCursorRelativePosition().x * m_turningSpeed * 0.5f;
 		const float pitch = -input.GetCursorRelativePosition().y * m_turningSpeed * 0.5f;
 
-		applyTo->RotateAroundAxis(root->GetWorldUp(), yaw);
-		applyTo->RotateAroundAxis(GetWorldRight(), pitch);
+		applyTo->RotateAroundAxis(root->GetUp(), yaw);
+		applyTo->RotateAroundAxis(GetRight(), pitch);
 	}
 
 	if (!input.IsRightThumbResting()) {
@@ -66,8 +66,8 @@ void EditorCameraNode::UpdateFromEditor(float deltaTime)
 		const auto pitch
 			= input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;
 
-		applyTo->RotateAroundAxis(root->GetWorldUp(), glm::radians(yaw));
-		applyTo->RotateAroundAxis(GetWorldRight(), glm::radians(pitch));
+		applyTo->RotateAroundAxis(root->GetUp(), glm::radians(yaw));
+		applyTo->RotateAroundAxis(GetRight(), glm::radians(pitch));
 	}
 
 	// user movement
@@ -77,16 +77,16 @@ void EditorCameraNode::UpdateFromEditor(float deltaTime)
 			input.GetLeftThumbDirection().x * input.GetLeftThumbMagnitude());
 
 		// adjust angle to match user rotation
-		const auto rotMat = glm::rotate(-(joystickAngle + glm::half_pi<float>()), GetWorldUp());
-		const glm::vec3 moveDir = rotMat * glm::vec4(GetWorldForward(), 1.f);
+		const auto rotMat = glm::rotate(-(joystickAngle + glm::half_pi<float>()), GetUp());
+		const glm::vec3 moveDir = rotMat * glm::vec4(GetForward(), 1.f);
 
 		applyTo->AddLocalOffset(moveDir * speed * input.GetLeftThumbMagnitude());
 	}
 
 
-	auto forward = GetWorldForward();
-	auto right = GetWorldRight();
-	auto up = GetWorldUp();
+	auto forward = GetForward();
+	auto right = GetRight();
+	auto up = GetUp();
 
 	if (m_worldAlign) {
 		forward.y = 0.f;
@@ -95,36 +95,36 @@ void EditorCameraNode::UpdateFromEditor(float deltaTime)
 		right.y = 0.f;
 		right = glm::normalize(right);
 
-		up = root->GetWorldUp();
+		up = root->GetUp();
 	}
 
-	if (input.IsAnyOfKeysRepeat(XVirtualKey::W, XVirtualKey::GAMEPAD_DPAD_UP)) {
+	if (input.IsAnyOfKeysRepeat(Key::W, Key::GAMEPAD_DPAD_UP)) {
 		applyTo->AddLocalOffset(forward * speed);
 	}
 
-	if (input.IsAnyOfKeysRepeat(XVirtualKey::S, XVirtualKey::GAMEPAD_DPAD_DOWN)) {
+	if (input.IsAnyOfKeysRepeat(Key::S, Key::GAMEPAD_DPAD_DOWN)) {
 		applyTo->AddLocalOffset((-forward) * speed);
 	}
 
-	if (input.IsAnyOfKeysRepeat(XVirtualKey::D, XVirtualKey::GAMEPAD_DPAD_RIGHT)) {
+	if (input.IsAnyOfKeysRepeat(Key::D, Key::GAMEPAD_DPAD_RIGHT)) {
 		applyTo->AddLocalOffset(right * speed);
 	}
 
-	if (input.IsAnyOfKeysRepeat(XVirtualKey::A, XVirtualKey::GAMEPAD_DPAD_LEFT)) {
+	if (input.IsAnyOfKeysRepeat(Key::A, Key::GAMEPAD_DPAD_LEFT)) {
 		applyTo->AddLocalOffset((-right) * speed);
 	}
-	if (input.IsAnyOfKeysRepeat(XVirtualKey::E, XVirtualKey::GAMEPAD_RIGHT_SHOULDER)) {
+	if (input.IsAnyOfKeysRepeat(Key::E, Key::GAMEPAD_RIGHT_SHOULDER)) {
 		applyTo->AddLocalOffset(up * speed);
 	}
 
-	if (input.IsAnyOfKeysRepeat(XVirtualKey::Q, XVirtualKey::GAMEPAD_LEFT_SHOULDER)) {
+	if (input.IsAnyOfKeysRepeat(Key::Q, Key::GAMEPAD_LEFT_SHOULDER)) {
 		applyTo->AddLocalOffset((-up) * speed);
 	}
 }
 
 void EditorCameraNode::ResetRotation()
 {
-	auto pyr = GetWorldPYR();
-	SetWorldOrientation(glm::identity<glm::quat>());
-	RotateAroundAxis(Engine::GetWorld()->GetRoot()->GetWorldUp(), pyr.y);
+	auto pyr = GetEulerAngles();
+	SetOrientation(glm::identity<glm::quat>());
+	RotateAroundAxis(Engine::GetWorld()->GetRoot()->GetUp(), pyr.y);
 }

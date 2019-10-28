@@ -5,7 +5,7 @@
 
 void DirectionalLightNode::CalculateWorldAABB()
 {
-	m_aabb = m_frustum.FrustumPyramidAABB(GetWorldTranslation());
+	m_aabb = m_frustum.FrustumPyramidAABB(GetTranslation());
 }
 
 void DirectionalLightNode::RecalculateProjectionMatrix()
@@ -17,8 +17,8 @@ void DirectionalLightNode::RecalculateProjectionMatrix()
 
 void DirectionalLightNode::RecalculateViewMatrix()
 {
-	const auto lookAt = GetWorldTranslation() + GetWorldForward();
-	m_viewMatrix = glm::lookAt(GetWorldTranslation(), lookAt, GetWorldUp());
+	const auto lookAt = GetTranslation() + GetForward();
+	m_viewMatrix = glm::lookAt(GetTranslation(), lookAt, GetUp());
 
 	RecalculateViewProjectionMatrix();
 }
