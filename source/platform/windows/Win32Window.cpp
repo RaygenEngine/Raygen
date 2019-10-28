@@ -139,8 +139,6 @@ void Win32Window::Hide()
 	::UpdateWindow(m_hWnd);
 }
 
-#include "renderer/Renderer.h"
-
 void Win32Window::DrawSplash()
 {
 	HDC hdc = GetDC(m_hWnd);
@@ -162,15 +160,6 @@ void Win32Window::DrawLoading()
 		graphics.DrawImage(&image, INT(m_width / 2 - image.GetWidth() / 2), INT(m_height / 2 - image.GetHeight() / 2));
 		ReleaseDC(m_hWnd, hdc);
 	}
-}
-
-void Win32Window::FireFirstResizeEvent()
-{
-	// Windows hack to ensure we get correct sizes without showing the window.
-	// Actual surface size will be smaller than the request made in CreateWindow to account for window borders
-	::ShowWindow(m_hWnd, SW_SHOWNOACTIVATE);
-	::ShowWindow(m_hWnd, SW_HIDE);
-	::UpdateWindow(m_hWnd);
 }
 
 void Win32Window::GenerateXInputControllerMessages()
