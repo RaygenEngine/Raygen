@@ -98,22 +98,22 @@ void OVRNode::Update(float deltaTime)
 		ovr_CalcEyePoses2(trackingState.HeadPose.ThePose, hmdToEyePose, m_info.eyePoses);
 
 		auto ori = trackingState.HeadPose.ThePose.Orientation;
-		SetLocalOrientation(glm::quat(ori.w, ori.x, ori.y, ori.z));
+		SetNodeOrientationLCS(glm::quat(ori.w, ori.x, ori.y, ori.z));
 
 		auto pos = trackingState.HeadPose.ThePose.Position;
-		SetLocalTranslation({ pos.x, pos.y, pos.z });
+		SetNodePositionLCS({ pos.x, pos.y, pos.z });
 
 		ori = hmdToEyePose[0].Orientation;
-		m_eyes[0]->SetLocalOrientation(glm::quat(ori.w, ori.x, ori.y, ori.z));
+		m_eyes[0]->SetNodeOrientationLCS(glm::quat(ori.w, ori.x, ori.y, ori.z));
 
 		pos = hmdToEyePose[0].Position;
-		m_eyes[0]->SetLocalTranslation({ pos.x, pos.y, pos.z });
+		m_eyes[0]->SetNodePositionLCS({ pos.x, pos.y, pos.z });
 
 		ori = hmdToEyePose[1].Orientation;
-		m_eyes[1]->SetLocalOrientation(glm::quat(ori.w, ori.x, ori.y, ori.z));
+		m_eyes[1]->SetNodeOrientationLCS(glm::quat(ori.w, ori.x, ori.y, ori.z));
 
 		pos = hmdToEyePose[1].Position;
-		m_eyes[1]->SetLocalTranslation({ pos.x, pos.y, pos.z });
+		m_eyes[1]->SetNodePositionLCS({ pos.x, pos.y, pos.z });
 
 		auto proj = glm::transpose(m_eyes[0]->GetProjectionMatrix());
 		m_info.proj = reinterpret_cast<OVR::Matrix4f&>(proj);

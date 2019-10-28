@@ -77,16 +77,16 @@ public:
 
 private:
 	// local
-	glm::vec3 m_localTranslation{ 0.f };
+	glm::vec3 m_localPosition{ 0.f };
 	glm::quat m_localOrientation{ glm::identity<glm::quat>() };
 	glm::vec3 m_localScale{ 1.f };
-	glm::mat4 m_localMatrix{ glm::identity<glm::mat4>() };
+	glm::mat4 m_localTransform{ glm::identity<glm::mat4>() };
 
 	// world
-	glm::vec3 m_translation{ 0.f };
+	glm::vec3 m_position{ 0.f };
 	glm::quat m_orientation{ glm::identity<glm::quat>() };
 	glm::vec3 m_scale{ 1.f };
-	glm::mat4 m_matrix{ glm::identity<glm::mat4>() };
+	glm::mat4 m_transform{ glm::identity<glm::mat4>() };
 
 	DirtyFlagset m_dirty{};
 
@@ -116,27 +116,27 @@ private:
 public:
 	virtual ~Node() = default;
 
-	[[nodiscard]] glm::vec3 GetLocalTranslation() const { return m_localTranslation; }
-	[[nodiscard]] glm::quat GetLocalOrientation() const { return m_localOrientation; }
+	[[nodiscard]] glm::vec3 GetNodePositionLCS() const { return m_localPosition; }
+	[[nodiscard]] glm::quat GetNodeOrientationLCS() const { return m_localOrientation; }
 	// pitch, yaw, roll
-	[[nodiscard]] glm::vec3 GetLocalEulerAngles() const { return glm::degrees(glm::eulerAngles(m_localOrientation)); }
-	[[nodiscard]] glm::vec3 GetLocalScale() const { return m_localScale; }
-	[[nodiscard]] glm::mat4 GetLocalMatrix() const { return m_localMatrix; }
+	[[nodiscard]] glm::vec3 GetNodeEulerAnglesLCS() const { return glm::degrees(glm::eulerAngles(m_localOrientation)); }
+	[[nodiscard]] glm::vec3 GetNodeScaleLCS() const { return m_localScale; }
+	[[nodiscard]] glm::mat4 GetNodeTransformLCS() const { return m_localTransform; }
 
-	[[nodiscard]] glm::vec3 GetLocalUp() const { return GetLocalOrientation() * glm::vec3(0.f, 1.f, 0.f); }
-	[[nodiscard]] glm::vec3 GetLocalRight() const { return GetLocalOrientation() * glm::vec3(1.f, 0.f, 0.f); }
-	[[nodiscard]] glm::vec3 GetLocalForward() const { return GetLocalOrientation() * glm::vec3(0.f, 0.f, -1.f); }
+	[[nodiscard]] glm::vec3 GetNodeUpLCS() const { return GetNodeOrientationLCS() * glm::vec3(0.f, 1.f, 0.f); }
+	[[nodiscard]] glm::vec3 GetNodeRightLCS() const { return GetNodeOrientationLCS() * glm::vec3(1.f, 0.f, 0.f); }
+	[[nodiscard]] glm::vec3 GetNodeForwardLCS() const { return GetNodeOrientationLCS() * glm::vec3(0.f, 0.f, -1.f); }
 
-	[[nodiscard]] glm::vec3 GetTranslation() const { return m_translation; }
-	[[nodiscard]] glm::quat GetOrientation() const { return m_orientation; }
+	[[nodiscard]] glm::vec3 GetNodePositionWCS() const { return m_position; }
+	[[nodiscard]] glm::quat GetNodeOrientationWCS() const { return m_orientation; }
 	// pitch, yaw, roll
-	[[nodiscard]] glm::vec3 GetEulerAngles() const { return glm::degrees(glm::eulerAngles(m_orientation)); }
-	[[nodiscard]] glm::vec3 GetScale() const { return m_scale; }
-	[[nodiscard]] glm::mat4 GetMatrix() const { return m_matrix; }
+	[[nodiscard]] glm::vec3 GetNodeEulerAnglesWCS() const { return glm::degrees(glm::eulerAngles(m_orientation)); }
+	[[nodiscard]] glm::vec3 GetNodeScaleWCS() const { return m_scale; }
+	[[nodiscard]] glm::mat4 GetNodeTransformWCS() const { return m_transform; }
 
-	[[nodiscard]] glm::vec3 GetUp() const { return GetOrientation() * glm::vec3(0.f, 1.f, 0.f); }
-	[[nodiscard]] glm::vec3 GetRight() const { return GetOrientation() * glm::vec3(1.f, 0.f, 0.f); }
-	[[nodiscard]] glm::vec3 GetForward() const { return GetOrientation() * glm::vec3(0.f, 0.f, -1.f); }
+	[[nodiscard]] glm::vec3 GetNodeUpWCS() const { return GetNodeOrientationWCS() * glm::vec3(0.f, 1.f, 0.f); }
+	[[nodiscard]] glm::vec3 GetNodeRightWCS() const { return GetNodeOrientationWCS() * glm::vec3(1.f, 0.f, 0.f); }
+	[[nodiscard]] glm::vec3 GetNodeForwardWCS() const { return GetNodeOrientationWCS() * glm::vec3(0.f, 0.f, -1.f); }
 
 	[[nodiscard]] bool IsLeaf() const { return m_children.empty(); }
 	[[nodiscard]] const std::string& GetName() const { return m_name; };
@@ -151,27 +151,27 @@ public:
 
 	[[nodiscard]] math::AABB GetAABB() const { return m_aabb; }
 
-	void SetLocalTranslation(glm::vec3 lt);
-	void SetLocalOrientation(glm::quat lo);
+	void SetNodePositionLCS(glm::vec3 lt);
+	void SetNodeOrientationLCS(glm::quat lo);
 	// in degrees / pitch, yaw, roll
-	void SetLocalPYR(glm::vec3 pyr);
-	void SetLocalScale(glm::vec3 ls);
-	void SetLocalMatrix(const glm::mat4& lm);
-	void SetLocalLookAt(glm::vec3 lookAt);
+	void SetNodeEulerAnglesLCS(glm::vec3 pyr);
+	void SetNodeScaleLCS(glm::vec3 ls);
+	void SetNodeTransformLCS(const glm::mat4& lm);
+	void SetNodeLookAtLCS(glm::vec3 lookAt);
 
-	void RotateAroundLocalAxis(glm::vec3 localAxis, float degrees);
-	void AddLocalOffset(glm::vec3 direction);
+	void RotateNodeAroundAxisLCS(glm::vec3 localAxis, float degrees);
+	void AddNodePositionOffsetLCS(glm::vec3 offset);
 
-	void SetTranslation(glm::vec3 wt);
-	void SetOrientation(glm::quat wo);
+	void SetNodePositionWCS(glm::vec3 wt);
+	void SetNodeOrientationWCS(glm::quat wo);
 	// in degrees / pitch, yaw, roll
-	void SetEulerAngles(glm::vec3 pyr);
-	void SetScale(glm::vec3 ws);
-	void SetMatrix(const glm::mat4& newWorldMatrix);
-	void SetLookAt(glm::vec3 lookAt);
+	void SetNodeEulerAnglesWCS(glm::vec3 pyr);
+	void SetNodeScaleWCS(glm::vec3 ws);
+	void SetNodeTransformWCS(const glm::mat4& newWorldMatrix);
+	void SetNodeLookAtWCS(glm::vec3 lookAt);
 
-	void RotateAroundAxis(glm::vec3 worldAxis, float degrees);
-	void AddOffset(glm::vec3 direction);
+	void RotateNodeAroundAxisWCS(glm::vec3 worldAxis, float degrees);
+	void AddNodePositionOffsetWCS(glm::vec3 offset);
 
 	void SetName(const std::string& name) { m_name = name; }
 	void DeleteChild(Node* child);

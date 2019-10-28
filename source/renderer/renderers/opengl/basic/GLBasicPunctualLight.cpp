@@ -72,12 +72,12 @@ void GLBasicPunctualLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& 
 	glUseProgram(depthMapShader->programId);
 
 	depthMapShader->SendFloat("far", node->GetFar());
-	depthMapShader->SendVec3("center", node->GetTranslation());
+	depthMapShader->SendVec3("center", node->GetNodePositionWCS());
 
 	auto vps = node->GetViewProjectionMatrices();
 
 	for (auto& geometry : geometries) {
-		auto m = geometry->node->GetMatrix();
+		auto m = geometry->node->GetNodeTransformWCS();
 
 		depthMapShader->SendMat4("m", m);
 		depthMapShader->SendMat4("vps[0]", vps[0]);

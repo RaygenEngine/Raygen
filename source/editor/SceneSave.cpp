@@ -52,8 +52,8 @@ void GenerateJsonForNode(json& j, Node* node)
 
 	j[nameLabel] = node->GetName();
 	j[typeLabel] = FilterNodeClassName(node->GetClass().GetName());
-	j[trsLabel] = { { posLabel, node->GetLocalTranslation() }, { rotLabel, node->GetLocalEulerAngles() },
-		{ scaleLabel, node->GetLocalScale() } };
+	j[trsLabel] = { { posLabel, node->GetNodePositionLCS() }, { rotLabel, node->GetNodeEulerAnglesLCS() },
+		{ scaleLabel, node->GetNodeScaleLCS() } };
 
 	refltools::PropertiesToJson(node, j);
 

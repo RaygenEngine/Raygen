@@ -5,7 +5,7 @@
 void PunctualLightNode::CalculateWorldAABB()
 {
 	// calculate from bounding sphere
-	const auto center = GetTranslation();
+	const auto center = GetNodePositionWCS();
 	const auto radiusOffset = glm::vec3(m_far);
 
 	m_aabb.min = center - radiusOffset;
@@ -22,23 +22,23 @@ void PunctualLightNode::RecalculateProjectionMatrix()
 
 void PunctualLightNode::RecalculateViewMatrices()
 {
-	auto lookat = GetTranslation() + glm::vec3(1.0, 0.0, 0.0);
-	m_viewMatrices[0] = glm::lookAt(GetTranslation(), lookat, glm::vec3(0.0, -1.0, 0.0));
+	auto lookat = GetNodePositionWCS() + glm::vec3(1.0, 0.0, 0.0);
+	m_viewMatrices[0] = glm::lookAt(GetNodePositionWCS(), lookat, glm::vec3(0.0, -1.0, 0.0));
 
-	lookat = GetTranslation() + glm::vec3(-1.0, 0.0, 0.0);
-	m_viewMatrices[1] = glm::lookAt(GetTranslation(), lookat, glm::vec3(0.0, -1.0, 0.0));
+	lookat = GetNodePositionWCS() + glm::vec3(-1.0, 0.0, 0.0);
+	m_viewMatrices[1] = glm::lookAt(GetNodePositionWCS(), lookat, glm::vec3(0.0, -1.0, 0.0));
 
-	lookat = GetTranslation() + glm::vec3(0.0, 1.0, 0.0);
-	m_viewMatrices[2] = glm::lookAt(GetTranslation(), lookat, glm::vec3(0.0, 0.0, 1.0));
+	lookat = GetNodePositionWCS() + glm::vec3(0.0, 1.0, 0.0);
+	m_viewMatrices[2] = glm::lookAt(GetNodePositionWCS(), lookat, glm::vec3(0.0, 0.0, 1.0));
 
-	lookat = GetTranslation() + glm::vec3(0.0, -1.0, 0.0);
-	m_viewMatrices[3] = glm::lookAt(GetTranslation(), lookat, glm::vec3(0.0, 0.0, -1.0));
+	lookat = GetNodePositionWCS() + glm::vec3(0.0, -1.0, 0.0);
+	m_viewMatrices[3] = glm::lookAt(GetNodePositionWCS(), lookat, glm::vec3(0.0, 0.0, -1.0));
 
-	lookat = GetTranslation() + glm::vec3(0.0, 0.0, 1.0);
-	m_viewMatrices[4] = glm::lookAt(GetTranslation(), lookat, glm::vec3(0.0, -1.0, 0.0));
+	lookat = GetNodePositionWCS() + glm::vec3(0.0, 0.0, 1.0);
+	m_viewMatrices[4] = glm::lookAt(GetNodePositionWCS(), lookat, glm::vec3(0.0, -1.0, 0.0));
 
-	lookat = GetTranslation() + glm::vec3(0.0, 0.0, -1.0);
-	m_viewMatrices[5] = glm::lookAt(GetTranslation(), lookat, glm::vec3(0.0, -1.0, 0.0));
+	lookat = GetNodePositionWCS() + glm::vec3(0.0, 0.0, -1.0);
+	m_viewMatrices[5] = glm::lookAt(GetNodePositionWCS(), lookat, glm::vec3(0.0, -1.0, 0.0));
 
 	RecalculateViewProjectionMatrices();
 }

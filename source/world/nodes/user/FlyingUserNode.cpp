@@ -48,11 +48,11 @@ void FlyingUserNode::Update(float deltaTime)
 	}
 
 
-	RotateAroundAxis(GetUp(), yaw);
-	RotateAroundAxis(GetRight(), pitch);
-	RotateAroundAxis(GetForward(), roll);
+	RotateNodeAroundAxisWCS(GetNodeUpWCS(), yaw);
+	RotateNodeAroundAxisWCS(GetNodeRightWCS(), pitch);
+	RotateNodeAroundAxisWCS(GetNodeForwardWCS(), roll);
 
-	AddOffset(GetForward() * forward);
+	AddNodePositionOffsetWCS(GetNodeForwardWCS() * forward);
 
 
 	if (!input.IsRightThumbResting()) {
@@ -65,7 +65,7 @@ void FlyingUserNode::Update(float deltaTime)
 		auto headYaw = -analog.rs.GetXAxisValue() * 90.f;
 		auto headPitch = analog.rs.GetYAxisValue() * 90.f;
 
-		m_pilotHead->SetLocalPYR(glm::vec3(headPitch, headYaw, 0.f));
+		m_pilotHead->SetNodeEulerAnglesLCS(glm::vec3(headPitch, headYaw, 0.f));
 	}
 }
 
