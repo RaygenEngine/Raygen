@@ -561,20 +561,17 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 			glm::vec3 initialScale = m_localMode ? node->GetLocalScale() : node->GetScale();
 
 			float ratio = 1.f;
-			if (!math::EpsilonEqualsValue(newScale.x, initialScale.x) && !math::EpsilonEqualsZero(initialScale.x)) {
+			if (!math::EpsilonEqualsValue(newScale.x, initialScale.x)) {
 				ratio = newScale.x / initialScale.x;
 			}
-			else if (!math::EpsilonEqualsValue(newScale.y, initialScale.y)
-					 && !math::EpsilonEqualsZero(initialScale.y)) {
+			else if (!math::EpsilonEqualsValue(newScale.y, initialScale.y)) {
 				ratio = newScale.y / initialScale.y;
 			}
-			else if (!math::EpsilonEqualsZero(initialScale.z)) {
+			else if (!math::EpsilonEqualsValue(newScale.z, initialScale.z)) {
 				ratio = newScale.z / initialScale.z;
 			}
-			else {
-				initialScale = newScale;
-				ratio = 1.f;
-			}
+
+			ratio += 0.00001f;
 			m_localMode ? node->SetLocalScale(initialScale * ratio) : node->SetScale(initialScale * ratio);
 		}
 	}

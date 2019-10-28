@@ -32,6 +32,7 @@ uniform struct GBuffer
 	sampler2D normalsSampler;
 	sampler2D albedoOpacitySampler;
 	sampler2D specularSampler;
+	sampler2D depthSampler;
 } gBuffer;
 
 float ShadowCalculation(vec3 pos, float cosTheta)
@@ -86,6 +87,14 @@ out float roughness, out vec3 pos, out vec3 normal)
 
 void main()
 {
+	float currentDepth = texture(gBuffer.depthSampler, uv.xy).r;
+
+	if(currentDepth == 1.0)
+	{
+		out_color = vec4(0,0,0,1);
+		return;
+	}
+
 	// gBuffer values
 	vec3 albedo;
 	float opacity;

@@ -102,6 +102,7 @@ void GLDeferredRenderer::InitShaders()
 	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.normalsSampler");
 	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.albedoOpacitySampler");
 	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.specularSampler");
+	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.depthSampler");
 
 	m_deferredSpotLightShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_SpotLight.json");
@@ -127,6 +128,7 @@ void GLDeferredRenderer::InitShaders()
 	m_deferredSpotLightShader->StoreUniformLoc("gBuffer.normalsSampler");
 	m_deferredSpotLightShader->StoreUniformLoc("gBuffer.albedoOpacitySampler");
 	m_deferredSpotLightShader->StoreUniformLoc("gBuffer.specularSampler");
+	m_deferredSpotLightShader->StoreUniformLoc("gBuffer.depthSampler");
 
 	m_deferredPunctualLightShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_PunctualLight.json");
@@ -149,6 +151,7 @@ void GLDeferredRenderer::InitShaders()
 	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.normalsSampler");
 	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.albedoOpacitySampler");
 	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.specularSampler");
+	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.depthSampler");
 
 
 	m_ambientLightShader
@@ -400,6 +403,7 @@ void GLDeferredRenderer::RenderDirectionalLights()
 		ls->SendTexture("gBuffer.normalsSampler", m_gBuffer.normalsAttachment, 2);
 		ls->SendTexture("gBuffer.albedoOpacitySampler", m_gBuffer.albedoOpacityAttachment, 3);
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
+		ls->SendTexture("gBuffer.depthSampler", m_gBuffer.depthAttachment, 5);
 
 		// big triangle trick, no vao
 		report_glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -454,6 +458,7 @@ void GLDeferredRenderer::RenderSpotLights()
 		ls->SendTexture("gBuffer.normalsSampler", m_gBuffer.normalsAttachment, 2);
 		ls->SendTexture("gBuffer.albedoOpacitySampler", m_gBuffer.albedoOpacityAttachment, 3);
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
+		ls->SendTexture("gBuffer.depthSampler", m_gBuffer.depthAttachment, 5);
 
 		// big triangle trick, no vao
 		report_glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -503,6 +508,7 @@ void GLDeferredRenderer::RenderPunctualLights()
 		ls->SendTexture("gBuffer.normalsSampler", m_gBuffer.normalsAttachment, 2);
 		ls->SendTexture("gBuffer.albedoOpacitySampler", m_gBuffer.albedoOpacityAttachment, 3);
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
+		ls->SendTexture("gBuffer.depthSampler", m_gBuffer.depthAttachment, 5);
 
 		// big triangle trick, no vao
 		report_glDrawArrays(GL_TRIANGLES, 0, 3);

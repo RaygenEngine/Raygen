@@ -18,7 +18,7 @@ bool EpsilonEqualsZero(T input)
 	return EpsilonEqualsValue(input, T{ 0.f });
 }
 
-inline glm::mat4 TransformMatrixFromTOS(glm::vec3 scale, glm::quat orientation, glm::vec3 translation)
+inline glm::mat4 TransformMatrixFromSOT(glm::vec3 scale, glm::quat orientation, glm::vec3 translation)
 {
 	const auto s = glm::scale(scale);
 	const auto r = glm::toMat4(orientation);
@@ -27,7 +27,7 @@ inline glm::mat4 TransformMatrixFromTOS(glm::vec3 scale, glm::quat orientation, 
 	return t * r * s;
 }
 
-inline glm::mat4 TransformMatrixFromTRS(glm::vec3 scale, glm::vec3 raxis, float rads, glm::vec3 translation)
+inline glm::mat4 TransformMatrixFromSRT(glm::vec3 scale, glm::vec3 raxis, float rads, glm::vec3 translation)
 {
 	const auto s = glm::scale(scale);
 	const auto r = glm::rotate(rads, raxis);

@@ -63,7 +63,8 @@ public:
 	struct DF {
 		enum
 		{
-			TRS,
+			// scaled, rotated or translated
+			SRT,
 			Hierarchy,
 			Children,
 			Properties,
@@ -76,15 +77,15 @@ public:
 
 private:
 	// local
-	glm::vec3 m_localTranslation{ 0.f, 0.f, 0.f };
-	glm::quat m_localOrientation{ 1.f, 0.f, 0.f, 0.f };
-	glm::vec3 m_localScale{ 1.f, 1.f, 1.f };
+	glm::vec3 m_localTranslation{ 0.f };
+	glm::quat m_localOrientation{ glm::identity<glm::quat>() };
+	glm::vec3 m_localScale{ 1.f };
 	glm::mat4 m_localMatrix{ glm::identity<glm::mat4>() };
 
 	// world
-	glm::vec3 m_translation{ 0.f, 0.f, 0.f };
-	glm::quat m_orientation{ 1.f, 0.f, 0.f, 0.f };
-	glm::vec3 m_scale{ 1.f, 1.f, 1.f };
+	glm::vec3 m_translation{ 0.f };
+	glm::quat m_orientation{ glm::identity<glm::quat>() };
+	glm::vec3 m_scale{ 1.f };
 	glm::mat4 m_matrix{ glm::identity<glm::mat4>() };
 
 	DirtyFlagset m_dirty{};

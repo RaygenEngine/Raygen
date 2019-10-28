@@ -77,7 +77,12 @@ void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 	// LOG_ABORT("Failed to load world: Exception encountered: {}", e.what());
 	//}
 	m_root->m_dirty.set();
-	m_root->UpdateTransforms(glm::identity<glm::mat4>());
+
+	auto mat = glm::identity<glm::mat4>();
+	// mat[3][0] = 0.000001f;
+	// mat[3][1] = 0.000001f;
+	// mat[3][2] = 0.000001f;
+	m_root->UpdateTransforms(mat);
 
 	Event::OnWorldLoaded.Broadcast();
 
