@@ -76,11 +76,13 @@ float ShadowCalculation(float cosTheta)
 	
 	float currentDepth = length(fragToLight);
 	
+
 	// 3d pcf
 	float shadow  = 0.0;
-	float bias = punctualLight.maxShadowBias;
-	float samples = punctualLight.samples;
+	float bias = max(0.0005, punctualLight.maxShadowBias);
+	float samples = max(0, punctualLight.samples);
 	float offset  = 0.05;
+	float div = 0.0001;
 	for(float x = -offset; x < offset; x += offset / (samples * 0.5))
 	{
 		for(float y = -offset; y < offset; y += offset / (samples * 0.5))
@@ -91,11 +93,12 @@ float ShadowCalculation(float cosTheta)
 				closestDepth *= punctualLight.far;   // Undo mapping [0;1]
 				if(currentDepth - bias > closestDepth)
 					shadow += 1.0;
+				div += 1.0;
 			}
 		}
 	}
 	
-	shadow /= (samples * samples * samples);	
+	shadow /= div;	
 
     return shadow;
 }  
