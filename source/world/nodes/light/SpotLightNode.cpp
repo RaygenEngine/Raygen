@@ -5,7 +5,7 @@
 
 void SpotLightNode::CalculateWorldAABB()
 {
-	m_aabb = m_frustum.FrustumPyramidAABB(GetWorldTranslation());
+	m_aabb = m_frustum.FrustumPyramidAABB(GetTranslation());
 }
 
 void SpotLightNode::RecalculateProjectionMatrix()
@@ -18,8 +18,8 @@ void SpotLightNode::RecalculateProjectionMatrix()
 
 void SpotLightNode::RecalculateViewMatrix()
 {
-	const auto lookAt = GetWorldTranslation() + GetWorldForward();
-	m_viewMatrix = glm::lookAt(GetWorldTranslation(), lookAt, GetWorldUp());
+	const auto lookAt = GetTranslation() + GetForward();
+	m_viewMatrix = glm::lookAt(GetTranslation(), lookAt, GetUp());
 
 	RecalculateViewProjectionMatrix();
 }

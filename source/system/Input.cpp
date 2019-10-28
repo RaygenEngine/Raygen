@@ -2,13 +2,13 @@
 
 #include "system/Input.h"
 
-void Input::UpdateKeyPressed(XVirtualKey key)
+void Input::UpdateKeyPressed(Key key)
 {
 	m_keysPressed.insert(key);
 	m_keysRepeat.insert(key);
 }
 
-void Input::UpdateKeyReleased(XVirtualKey key)
+void Input::UpdateKeyReleased(Key key)
 {
 	m_keysReleased.insert(key);
 	m_keysRepeat.erase(key);
@@ -46,17 +46,17 @@ void Input::UpdateCursorDrag()
 	m_cursorDragged = true;
 }
 
-bool Input::IsKeyPressed(XVirtualKey key) const
+bool Input::IsKeyPressed(Key key) const
 {
 	return m_keysPressed.find(key) != m_keysPressed.end();
 }
 
-bool Input::IsKeyRepeat(XVirtualKey key) const
+bool Input::IsKeyRepeat(Key key) const
 {
 	return m_keysRepeat.find(key) != m_keysRepeat.end();
 }
 
-bool Input::IsKeyReleased(XVirtualKey key) const
+bool Input::IsKeyReleased(Key key) const
 {
 	return m_keysReleased.find(key) != m_keysReleased.end();
 }

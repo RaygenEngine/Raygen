@@ -15,20 +15,20 @@ void GLRendererBase::Update()
 
 	Engine::GetDrawReporter()->Reset();
 
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::BACKSPACE)) {
+	if (Engine::GetInput()->IsKeyPressed(Key::BACKSPACE)) {
 		m_vsyncEnabled = !m_vsyncEnabled;
 		ChangeVSync(m_vsyncEnabled);
 	}
 
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::P)) {
+	if (Engine::GetInput()->IsKeyPressed(Key::P)) {
 		m_previewerEnabled = !m_previewerEnabled;
 	}
 
-	if (m_previewerEnabled && Engine::GetInput()->IsKeyPressed(XVirtualKey::K1)) {
+	if (m_previewerEnabled && Engine::GetInput()->IsKeyPressed(Key::K1)) {
 		m_glPreviewer->PreviousPreview();
 	}
 
-	if (m_previewerEnabled && Engine::GetInput()->IsKeyPressed(XVirtualKey::K2)) {
+	if (m_previewerEnabled && Engine::GetInput()->IsKeyPressed(Key::K2)) {
 		m_glPreviewer->NextPreview();
 	}
 }

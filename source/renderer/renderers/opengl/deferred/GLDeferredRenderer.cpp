@@ -316,7 +316,7 @@ void GLDeferredRenderer::RenderGBuffer()
 			continue;
 		}
 
-		auto m = geometry->node->GetWorldMatrix();
+		auto m = geometry->node->GetMatrix();
 		auto mvp = vp * m;
 
 		gs->SendMat4("m", m);
@@ -381,10 +381,10 @@ void GLDeferredRenderer::RenderDirectionalLights()
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_activeCamera->GetWorldTranslation());
+		ls->SendVec3("wcs_viewPos", m_activeCamera->GetTranslation());
 
 		// light
-		ls->SendVec3("directionalLight.wcs_dir", light->node->GetWorldForward());
+		ls->SendVec3("directionalLight.wcs_dir", light->node->GetForward());
 		ls->SendVec3("directionalLight.color", light->node->GetColor());
 		ls->SendFloat("directionalLight.intensity", light->node->GetIntensity());
 		ls->SendInt("directionalLight.samples", light->node->GetSamples());
@@ -431,11 +431,11 @@ void GLDeferredRenderer::RenderSpotLights()
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_activeCamera->GetWorldTranslation());
+		ls->SendVec3("wcs_viewPos", m_activeCamera->GetTranslation());
 
 		// light
-		ls->SendVec3("spotLight.wcs_pos", light->node->GetWorldTranslation());
-		ls->SendVec3("spotLight.wcs_dir", light->node->GetWorldForward());
+		ls->SendVec3("spotLight.wcs_pos", light->node->GetTranslation());
+		ls->SendVec3("spotLight.wcs_dir", light->node->GetForward());
 		ls->SendFloat("spotLight.outerCutOff", glm::cos(light->node->GetOuterAperture() / 2.f));
 		ls->SendFloat("spotLight.innerCutOff", glm::cos(light->node->GetInnerAperture() / 2.f));
 		ls->SendVec3("spotLight.color", light->node->GetColor());
@@ -485,10 +485,10 @@ void GLDeferredRenderer::RenderPunctualLights()
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_activeCamera->GetWorldTranslation());
+		ls->SendVec3("wcs_viewPos", m_activeCamera->GetTranslation());
 
 		// light
-		ls->SendVec3("punctualLight.wcs_pos", light->node->GetWorldTranslation());
+		ls->SendVec3("punctualLight.wcs_pos", light->node->GetTranslation());
 		ls->SendVec3("punctualLight.color", light->node->GetColor());
 		ls->SendFloat("punctualLight.intensity", light->node->GetIntensity());
 		ls->SendFloat("punctualLight.far", light->node->GetFar());
@@ -526,7 +526,7 @@ void GLDeferredRenderer::RenderAmbientLight()
 	const auto vpInv = glm::inverse(m_activeCamera->GetViewProjectionMatrix());
 
 	m_ambientLightShader->SendMat4("vp_inv", vpInv);
-	m_ambientLightShader->SendVec3("wcs_viewPos", m_activeCamera->GetWorldTranslation());
+	m_ambientLightShader->SendVec3("wcs_viewPos", m_activeCamera->GetTranslation());
 	m_ambientLightShader->SendVec3("ambient", m_ambient->node->GetAmbientTerm());
 	m_ambientLightShader->SendTexture(m_gBuffer.depthAttachment, 0);
 	m_ambientLightShader->SendCubeTexture(m_ambient->texture->id, 1);
@@ -639,7 +639,7 @@ void GLDeferredRenderer::ActiveCameraResize()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 
 	glBindTexture(GL_TEXTURE_2D, m_lightTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 
 	glBindTexture(GL_TEXTURE_2D, m_outTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -649,23 +649,23 @@ void GLDeferredRenderer::Update()
 {
 	GLRendererBase::Update();
 
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::R)) {
+	if (Engine::GetInput()->IsKeyPressed(Key::R)) {
 		RecompileShaders();
 	}
 
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::ADD)) {
+	if (Engine::GetInput()->IsKeyPressed(Key::ADD)) {
 		m_gamma += 0.03f;
 	}
 
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::SUBTRACT)) {
+	if (Engine::GetInput()->IsKeyPressed(Key::SUBTRACT)) {
 		m_gamma -= 0.03f;
 	}
 
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::MULTIPLY)) {
+	if (Engine::GetInput()->IsKeyPressed(Key::MULTIPLY)) {
 		m_exposure += 0.03f;
 	}
 
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::DIVIDE)) {
+	if (Engine::GetInput()->IsKeyPressed(Key::DIVIDE)) {
 		m_exposure -= 0.03f;
 	}
 }

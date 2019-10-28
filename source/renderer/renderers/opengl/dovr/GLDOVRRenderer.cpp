@@ -433,7 +433,7 @@ void GLDOVRRenderer::RenderGBuffer(int32 eyeIndex)
 			continue;
 		}
 
-		auto m = geometry->node->GetWorldMatrix();
+		auto m = geometry->node->GetMatrix();
 		auto mvp = vp * m;
 
 		gs->SendMat4("m", m);
@@ -501,10 +501,10 @@ void GLDOVRRenderer::RenderDirectionalLights(int32 eyeIndex)
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", camera->GetWorldTranslation());
+		ls->SendVec3("wcs_viewPos", camera->GetTranslation());
 
 		// light
-		ls->SendVec3("directionalLight.wcs_dir", light->node->GetWorldForward());
+		ls->SendVec3("directionalLight.wcs_dir", light->node->GetForward());
 		ls->SendVec3("directionalLight.color", light->node->GetColor());
 		ls->SendFloat("directionalLight.intensity", light->node->GetIntensity());
 		ls->SendInt("directionalLight.samples", light->node->GetSamples());
@@ -554,11 +554,11 @@ void GLDOVRRenderer::RenderSpotLights(int32 eyeIndex)
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", camera->GetWorldTranslation());
+		ls->SendVec3("wcs_viewPos", camera->GetTranslation());
 
 		// light
-		ls->SendVec3("spotLight.wcs_pos", light->node->GetWorldTranslation());
-		ls->SendVec3("spotLight.wcs_dir", light->node->GetWorldForward());
+		ls->SendVec3("spotLight.wcs_pos", light->node->GetTranslation());
+		ls->SendVec3("spotLight.wcs_dir", light->node->GetForward());
 		ls->SendFloat("spotLight.outerCutOff", glm::cos(light->node->GetOuterAperture() / 2.f));
 		ls->SendFloat("spotLight.innerCutOff", glm::cos(light->node->GetInnerAperture() / 2.f));
 		ls->SendVec3("spotLight.color", light->node->GetColor());
@@ -611,10 +611,10 @@ void GLDOVRRenderer::RenderPunctualLights(int32 eyeIndex)
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", camera->GetWorldTranslation());
+		ls->SendVec3("wcs_viewPos", camera->GetTranslation());
 
 		// light
-		ls->SendVec3("punctualLight.wcs_pos", light->node->GetWorldTranslation());
+		ls->SendVec3("punctualLight.wcs_pos", light->node->GetTranslation());
 		ls->SendVec3("punctualLight.color", light->node->GetColor());
 		ls->SendFloat("punctualLight.intensity", light->node->GetIntensity());
 		ls->SendFloat("punctualLight.far", light->node->GetFar());
@@ -655,7 +655,7 @@ void GLDOVRRenderer::RenderAmbientLight(int32 eyeIndex)
 	const auto vpInv = glm::inverse(camera->GetViewProjectionMatrix());
 
 	m_ambientLightShader->SendMat4("vp_inv", vpInv);
-	m_ambientLightShader->SendVec3("wcs_viewPos", camera->GetWorldTranslation());
+	m_ambientLightShader->SendVec3("wcs_viewPos", camera->GetTranslation());
 	m_ambientLightShader->SendVec3("ambient", m_ambient->node->GetAmbientTerm());
 	m_ambientLightShader->SendTexture(m_gBuffer.depthAttachment, 0);
 	m_ambientLightShader->SendCubeTexture(m_ambient->texture->id, 1);
@@ -775,23 +775,23 @@ void GLDOVRRenderer::Update()
 {
 	GLRendererBase::Update();
 
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::R)) {
+	if (Engine::GetInput()->IsKeyPressed(Key::R)) {
 		RecompileShaders();
 	}
 
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::ADD)) {
+	if (Engine::GetInput()->IsKeyPressed(Key::ADD)) {
 		m_gamma += 0.03f;
 	}
 
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::SUBTRACT)) {
+	if (Engine::GetInput()->IsKeyPressed(Key::SUBTRACT)) {
 		m_gamma -= 0.03f;
 	}
 
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::MULTIPLY)) {
+	if (Engine::GetInput()->IsKeyPressed(Key::MULTIPLY)) {
 		m_exposure += 0.03f;
 	}
 
-	if (Engine::GetInput()->IsKeyPressed(XVirtualKey::DIVIDE)) {
+	if (Engine::GetInput()->IsKeyPressed(Key::DIVIDE)) {
 		m_exposure -= 0.03f;
 	}
 }

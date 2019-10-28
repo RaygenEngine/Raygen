@@ -70,6 +70,7 @@ void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 
 	m_root = std::make_unique<RootNode>();
 
+	// TODO:
 	// try {
 	m_nodeFactory->LoadChildren(scene.Lock()->document, m_root.get());
 	//} //catch (std::exception& e) {

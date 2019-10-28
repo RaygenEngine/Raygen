@@ -69,6 +69,9 @@ void Engine::SwitchRenderer(size_t registrationIndex)
 	// WIP
 	Engine& eng = Engine::Get();
 
+	Engine::GetMainWindow()->DrawLoading();
+
+
 	if (!Engine::GetWorld()) {
 		LOG_ERROR("Attempted to start a renderer without world.");
 		return;

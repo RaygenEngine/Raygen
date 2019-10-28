@@ -58,17 +58,15 @@ int32 AppBase::Main(int32 argc, char* argv[]) // NOLINT
 
 	engine.InitEngine(this);
 
-	engine.CreateWorldFromFile(m_initialScene);
-
 	Window* window = Engine::GetMainWindow();
-	// Allow world to update for the window before any renderer comes in play.
-	window->FireFirstResizeEvent();
+	window->Show();
+	window->DrawSplash();
+
+	engine.CreateWorldFromFile(m_initialScene);
 
 	// Start the renderer
 	engine.SwitchRenderer(0);
 
-	// Show the actuall window after the renderer has initialized.
-	window->Show();
 
 	if (m_lockMouse) {
 		window->RestrictMouseMovement();
@@ -102,17 +100,14 @@ void AppBase::MainLoop()
 		// Let our window handle any events.
 		window->HandleEvents(m_handleControllers);
 
-		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::TILDE)) {
+		if (Engine::GetInput()->IsKeyPressed(Key::TILDE)) {
 			Engine::Get().ToggleEditor();
 		}
 
-		if (Engine::GetInput()->IsKeyPressed(XVirtualKey::TAB)) {
+		if (Engine::GetInput()->IsKeyPressed(Key::TAB)) {
 			Engine::Get().NextRenderer();
 		}
-
-		// update world
 		Engine::GetWorld()->Update();
-		// update renderer (also checks world updates, eg. camera/ entity moved, light color changed)
 
 		Engine::GetRenderer()->DoWork();
 

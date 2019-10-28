@@ -52,27 +52,27 @@ void Node::SetLocalLookAt(glm::vec3 lookAt)
 	SetLocalOrientation(math::OrientationFromLookatAndPosition(lookAt, m_localTranslation));
 }
 
-void Node::SetWorldTranslation(glm::vec3 wt)
+void Node::SetTranslation(glm::vec3 wt)
 {
-	auto parentMatrix = GetParent()->GetWorldMatrix();
+	auto parentMatrix = GetParent()->GetMatrix();
 	SetLocalTranslation(glm::inverse(parentMatrix) * glm::vec4(wt, 1.f));
 }
 
-void Node::SetWorldOrientation(glm::quat wo)
+void Node::SetOrientation(glm::quat wo)
 {
-	auto worldMatrix = math::TransformMatrixFromTOS(m_worldScale, wo, m_worldTranslation);
-	SetWorldMatrix(worldMatrix);
+	auto worldMatrix = math::TransformMatrixFromTOS(m_scale, wo, m_translation);
+	SetMatrix(worldMatrix);
 }
 
-void Node::SetWorldPYR(glm::vec3 pyr)
+void Node::SetEulerAngles(glm::vec3 pyr)
 {
-	SetWorldOrientation(glm::quat(glm::radians(pyr)));
+	SetOrientation(glm::quat(glm::radians(pyr)));
 }
 
 void Node::RotateAroundAxis(glm::vec3 worldAxis, float degrees)
 {
 	const glm::quat rot = glm::angleAxis(glm::radians(degrees), glm::vec3(worldAxis));
-	SetWorldOrientation(rot * m_worldOrientation);
+	SetOrientation(rot * m_orientation);
 }
 
 void Node::RotateAroundLocalAxis(glm::vec3 localAxis, float degrees)
@@ -81,32 +81,32 @@ void Node::RotateAroundLocalAxis(glm::vec3 localAxis, float degrees)
 	SetLocalOrientation(rot * m_localOrientation);
 }
 
-void Node::SetWorldScale(glm::vec3 ws)
+void Node::SetScale(glm::vec3 ws)
 {
-	auto worldMatrix = math::TransformMatrixFromTOS(ws, m_worldOrientation, m_worldTranslation);
-	SetWorldMatrix(worldMatrix);
+	auto worldMatrix = math::TransformMatrixFromTOS(ws, m_orientation, m_translation);
+	SetMatrix(worldMatrix);
 }
 
-void Node::SetWorldMatrix(const glm::mat4& newWorldMatrix)
+void Node::SetMatrix(const glm::mat4& newWorldMatrix)
 {
-	auto parentMatrix = GetParent()->GetWorldMatrix();
+	auto parentMatrix = GetParent()->GetMatrix();
 	SetLocalMatrix(glm::inverse(parentMatrix) * newWorldMatrix);
 }
 
-void Node::SetWorldLookAt(glm::vec3 lookAt)
+void Node::SetLookAt(glm::vec3 lookAt)
 {
-	SetWorldOrientation(math::OrientationFromLookatAndPosition(lookAt, m_worldTranslation));
+	SetOrientation(math::OrientationFromLookatAndPosition(lookAt, m_translation));
 }
 
 void Node::CalculateWorldAABB()
 {
 	m_aabb = m_localBB;
-	m_aabb.Transform(GetWorldMatrix());
+	m_aabb.Transform(GetMatrix());
 }
 
 void Node::AutoUpdateTransforms()
 {
-	UpdateTransforms(GetParent()->GetWorldMatrix());
+	UpdateTransforms(GetParent()->GetMatrix());
 }
 
 void Node::UpdateTransforms(const glm::mat4& parentMatrix)
@@ -114,17 +114,17 @@ void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 	m_dirty.set(DF::TRS);
 
 	m_localMatrix = math::TransformMatrixFromTOS(m_localScale, m_localOrientation, m_localTranslation);
-	m_worldMatrix = parentMatrix * m_localMatrix;
+	m_matrix = parentMatrix * m_localMatrix;
 
 	CalculateWorldAABB();
 
 	// PERF:
 	glm::vec3 skew;
 	glm::vec4 persp;
-	glm::decompose(m_worldMatrix, m_worldScale, m_worldOrientation, m_worldTranslation, skew, persp);
+	glm::decompose(m_matrix, m_scale, m_orientation, m_translation, skew, persp);
 
 	for (auto& uPtr : m_children) {
-		uPtr->UpdateTransforms(m_worldMatrix);
+		uPtr->UpdateTransforms(m_matrix);
 	}
 }
 
@@ -140,7 +140,7 @@ void Node::AddLocalOffset(glm::vec3 direction)
 	SetLocalTranslation(m_localTranslation + direction);
 }
 
-void Node::AddWorldOffset(glm::vec3 direction)
+void Node::AddOffset(glm::vec3 direction)
 {
-	SetWorldTranslation(m_worldTranslation + direction);
+	SetTranslation(m_translation + direction);
 }

@@ -485,17 +485,17 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 
 	if (m_localMode) {
 		location = node->GetLocalTranslation();
-		eulerPyr = node->GetLocalPYR();
+		eulerPyr = node->GetLocalEulerAngles();
 		scale = node->GetLocalScale();
 	}
 	else {
-		location = node->GetWorldTranslation();
-		eulerPyr = node->GetWorldPYR();
-		scale = node->GetWorldScale();
+		location = node->GetTranslation();
+		eulerPyr = node->GetEulerAngles();
+		scale = node->GetScale();
 	}
 
 	const auto UpdateLookAtReference = [&]() {
-		auto fwd = m_localMode ? node->GetLocalForward() : node->GetWorldForward();
+		auto fwd = m_localMode ? node->GetLocalForward() : node->GetForward();
 		auto lookAt = location + fwd;
 		m_lookAtPos = lookAt;
 	};
@@ -505,26 +505,26 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 	}
 
 	if (ImGui::DragFloat3("Position", ImUtil::FromVec3(location), 0.01f)) {
-		m_localMode ? node->SetLocalTranslation(location) : node->SetWorldTranslation(location);
+		m_localMode ? node->SetLocalTranslation(location) : node->SetTranslation(location);
 	}
 	if (ImGui::BeginPopupContextItem("PositionPopup")) {
 		if (ImGui::MenuItem("Reset##1")) {
-			m_localMode ? node->SetLocalTranslation({}) : node->SetWorldTranslation({});
+			m_localMode ? node->SetLocalTranslation({}) : node->SetTranslation({});
 		}
 		ImGui::EndPopup();
 	}
 	if (!m_lookAtMode) {
 		if (ImGui::DragFloat3("Rotation", ImUtil::FromVec3(eulerPyr), 0.1f)) {
-			auto deltaAxis = eulerPyr - (m_localMode ? node->GetLocalPYR() : node->GetWorldPYR());
+			auto deltaAxis = eulerPyr - (m_localMode ? node->GetLocalEulerAngles() : node->GetEulerAngles());
 			if (ImGui::IsAnyMouseDown()) {
 				// On user drag use quat diff, prevents gimbal locks while dragging
 				m_localMode
 					? node->SetLocalOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetLocalOrientation())
-					: node->SetWorldOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetWorldOrientation());
+					: node->SetOrientation(glm::quat(glm::radians(deltaAxis)) * node->GetOrientation());
 			}
 			else {
 				// On user type set pyr directly, prevents the axis from flickering
-				m_localMode ? node->SetLocalPYR(eulerPyr) : node->SetWorldPYR(eulerPyr);
+				m_localMode ? node->SetLocalPYR(eulerPyr) : node->SetEulerAngles(eulerPyr);
 			}
 		}
 	}
@@ -533,13 +533,13 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 		Editor::HelpTooltipInline(
 			"Look at will lock lookat position of the selected node for as long as it is active. This way you can "
 			"adjust the position of your node while keeping the lookat position fixed.");
-		m_localMode ? node->SetLocalLookAt(m_lookAtPos) : node->SetWorldLookAt(m_lookAtPos);
+		m_localMode ? node->SetLocalLookAt(m_lookAtPos) : node->SetLookAt(m_lookAtPos);
 	}
 
 	if (ImGui::BeginPopupContextItem("RotatePopup")) {
 		if (ImGui::MenuItem("Reset##2")) {
 			m_localMode ? node->SetLocalOrientation(glm::identity<glm::quat>())
-						: node->SetWorldOrientation(glm::identity<glm::quat>());
+						: node->SetOrientation(glm::identity<glm::quat>());
 		}
 		if (ImGui::MenuItem("Look At", nullptr, m_lookAtMode)) {
 			m_lookAtMode = !m_lookAtMode;
@@ -552,13 +552,13 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 
 	if (!m_lockedScale) {
 		if (ImGui::DragFloat3("Scale", ImUtil::FromVec3(scale), 0.01f)) {
-			m_localMode ? node->SetLocalScale(scale) : node->SetWorldScale(scale);
+			m_localMode ? node->SetLocalScale(scale) : node->SetScale(scale);
 		}
 	}
 	else {
-		glm::vec3 newScale = m_localMode ? node->GetLocalScale() : node->GetWorldScale();
+		glm::vec3 newScale = m_localMode ? node->GetLocalScale() : node->GetScale();
 		if (ImGui::DragFloat3("Locked Scale", ImUtil::FromVec3(newScale), 0.01f)) {
-			glm::vec3 initialScale = m_localMode ? node->GetLocalScale() : node->GetWorldScale();
+			glm::vec3 initialScale = m_localMode ? node->GetLocalScale() : node->GetScale();
 
 			float ratio = 1.f;
 			if (!math::EpsilonEqualsValue(newScale.x, initialScale.x) && !math::EpsilonEqualsZero(initialScale.x)) {
@@ -575,13 +575,13 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 				initialScale = newScale;
 				ratio = 1.f;
 			}
-			m_localMode ? node->SetLocalScale(initialScale * ratio) : node->SetWorldScale(initialScale * ratio);
+			m_localMode ? node->SetLocalScale(initialScale * ratio) : node->SetScale(initialScale * ratio);
 		}
 	}
 
 	if (ImGui::BeginPopupContextItem("ScalePopup")) {
 		if (ImGui::MenuItem("Reset##3")) {
-			m_localMode ? node->SetLocalScale(glm::vec3(1.f)) : node->SetWorldScale(glm::vec3(1.f));
+			m_localMode ? node->SetLocalScale(glm::vec3(1.f)) : node->SetScale(glm::vec3(1.f));
 		}
 		if (ImGui::MenuItem("Lock", nullptr, m_lockedScale)) {
 			m_lockedScale = !m_lockedScale;
@@ -599,7 +599,7 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 
 	if (m_displayMatrix) {
 
-		glm::mat4 matrix = m_localMode ? node->GetLocalMatrix() : node->GetWorldMatrix();
+		glm::mat4 matrix = m_localMode ? node->GetLocalMatrix() : node->GetMatrix();
 
 		// to row major
 		auto rowMajor = glm::transpose(matrix);
@@ -611,8 +611,7 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 		edited |= ImGui::DragFloat4("mat.row[2]", ImUtil::FromVec4(rowMajor[2]), 0.01f);
 		edited |= ImGui::DragFloat4("mat.row[3]", ImUtil::FromVec4(rowMajor[3]), 0.01f);
 		if (edited) {
-			m_localMode ? node->SetLocalMatrix(glm::transpose(rowMajor))
-						: node->SetWorldMatrix(glm::transpose(rowMajor));
+			m_localMode ? node->SetLocalMatrix(glm::transpose(rowMajor)) : node->SetMatrix(glm::transpose(rowMajor));
 		}
 	}
 }
