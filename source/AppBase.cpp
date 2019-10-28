@@ -109,7 +109,7 @@ void AppBase::MainLoop()
 		}
 		Engine::GetWorld()->Update();
 
-		Engine::GetRenderer()->DoWork();
+		Engine::GetRenderer()->DrawFrame();
 
 		Engine::Get().ReportFrameDrawn();
 	}
