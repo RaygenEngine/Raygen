@@ -56,8 +56,6 @@ protected:
 	template<typename T>
 	void RegisterObserverContainer_AutoLifetimes(T& containerToAddAndRemoveFrom);
 
-	void RemoveObserver(NodeObserverBase* ptr);
-
 	// For simplification purposes
 	CameraNode* m_activeCamera{ nullptr };
 
