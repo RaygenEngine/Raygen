@@ -34,9 +34,7 @@ C++17 and a very recent CMake is required.
 
 ## Authors
 
-| Name | fdfdfd | Focus |
+| Info | Position | Focus |
 | ------|-----|-----|
-|John Moschos [Renoras](https://github.com/Renoras)| Founder, Programmer |Graphics & rendering |
-
-* **John Moschos** - *Founder, Programmer | General engine development | Graphics & rendering* [Renoras](https://github.com/Renoras)
-* **Harry Katagis** - *Lead Designer, Programmer | General engine development | Engine Subsystem & Module design* [katagis](https://github.com/katagis)
+|**John Moschos**, [Renoras](https://github.com/Renoras)| Founder, Programmer |Graphics & rendering |
+|**Harry Katagis**, [katagis](https://github.com/katagis)| Lead Designer, Programmer | Engine Subsystems & Modules |
