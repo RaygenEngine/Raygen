@@ -59,7 +59,7 @@ void ObserverRenderer::Update()
 	}
 }
 
-void ObserverRenderer::DoWork()
+void ObserverRenderer::DrawFrame()
 {
 	Update();
 	Render();
