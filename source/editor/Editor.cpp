@@ -657,7 +657,7 @@ void Editor::Run_AboutWindow()
 	ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
 
 	if (ImGui::Begin("About", &m_showAboutWindow, ImGuiWindowFlags_AlwaysAutoResize)) {
-		ImGui::Text("Rayxen: v1.0");
+		ImGui::Text("Rayxen: v1.0.0");
 		ImExt::HSpace(220.f);
 		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 33.0f);
 		ImGui::Text(txt_about);

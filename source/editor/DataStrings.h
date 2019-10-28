@@ -2,24 +2,25 @@
 // For editor use only, contains the actual text pieces for the editor help and other stuff.
 
 inline const char* txt_about = R"(
-About text can be edited at editor/DataStrings.h
-
-Licensed under: ...
+(outdated and/or imprecise, wait for version v1.0.1)
+License: TBD (v1.0.1)
 )";
 
 // this text autowraps around 70 chars for optimal reading
 inline const char* txt_help = R"(
+(outdated and/or imprecise, wait for version v1.0.1)
+
 Programming documentation can be found at docs/ in Markdown format or viewed directly on __github. In this window you can get an overview of Rayxen's features, design logic and editor basics.
 
-Rayxen has been primarily designed with the goal of being a sandbox for renderer development. Therefore all the design logic is based on __ basic principles:
+Rayxen has been primarily designed with the goal of being a sandbox for renderer development. Therefore all the design logic is based on the following basic principles:
 1. All rendering features are opt-in.
-2. __
+2. ...
 
 The tools provided by the engine for Renderer Designers are:
 1. Extensible automatic asset handling with caching.
 2. Integrated reflection system with a powerful editor.
 3. Hot-swappable sample renderers for comparing and debugging.
-__
+4. ...
 
 
 Editor Help:
@@ -29,10 +30,10 @@ Also note that the editor has not been thoroughly profiled and may induce slight
 
 Scene saving and loading is available and the scene format is in json.
 All the reflected properties of nodes are automatically serialized and restored upon loading. Any asset referenced in the scene file is stored relative to the Rayxen/assets/ folder and the scene will fail to load if it is not found.
-Editing the json files by hand possible but not recommended.
+Editing the json files by hand is possible but not recommended.
 
 
-Some help tooltips are available in the editor covering specific functions. These are not included here __(why).
+Some help tooltips are available in the editor.
 
 )";
 

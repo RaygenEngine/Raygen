@@ -1,8 +1,10 @@
 ![Rayxen](/assets/engine-data/logo.png?style=centerme "Rayxen")
 
-# RayxeИ, a graphics engine
+(outdated and/or imprecise, wait for version v1.0.1)
 
-RayxeИ is a graphics/game engine focused on renderer extensibility.
+# Rayxen, a graphics engine
+
+Rayxen is a graphics engine focused on renderer extensibility.
 
 
 ## Compiling
@@ -27,9 +29,14 @@ C++17 and a very recent CMake is required.
 * nlohmann/json
 * magic_enum
 * ctti
+* LibOVR
 
 
 ## Authors
 
-* **John Moschos** - *Founder, Programmer* [Renoras](https://github.com/Renoras)
-* **Harry Katagis** - *Programmer* [katagis](https://github.com/katagis)
+| Name | fdfdfd | Focus |
+| ------|-----|-----|
+|John Moschos [Renoras](https://github.com/Renoras)| Founder, Programmer |Graphics & rendering |
+
+* **John Moschos** - *Founder, Programmer | General engine development | Graphics & rendering* [Renoras](https://github.com/Renoras)
+* **Harry Katagis** - *Lead Designer, Programmer | General engine development | Engine Subsystem & Module design* [katagis](https://github.com/katagis)
