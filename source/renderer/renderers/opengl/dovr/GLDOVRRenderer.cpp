@@ -33,7 +33,6 @@ GLDOVRRenderer::Eye::Eye(ovrSession session, CameraNode* camera)
 	desc.Width = width;
 	desc.Height = height;
 	desc.MipLevels = 1;
-	// TODO: check what to use for proper gamma correction
 	desc.Format = OVR_FORMAT_R8G8B8A8_UNORM_SRGB;
 	// no MSAA textures.
 	desc.SampleCount = 1;
@@ -54,7 +53,7 @@ GLDOVRRenderer::Eye::Eye(ovrSession session, CameraNode* camera)
 			}
 		}
 	}
-	desc.Format = OVR_FORMAT_D32_FLOAT;
+	desc.Format = OVR_FORMAT_D24_UNORM_S8_UINT;
 	{
 		const ovrResult result = ovr_CreateTextureSwapChainGL(session, &desc, &depthTextureChain);
 
@@ -214,6 +213,7 @@ void GLDOVRRenderer::InitShaders()
 	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.normalsSampler");
 	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.albedoOpacitySampler");
 	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.specularSampler");
+	m_deferredDirectionalLightShader->StoreUniformLoc("gBuffer.depthSampler");
 
 	m_deferredSpotLightShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_SpotLight.json");
@@ -234,11 +234,13 @@ void GLDOVRRenderer::InitShaders()
 	m_deferredSpotLightShader->StoreUniformLoc("spotLight.shadowMap");
 	m_deferredSpotLightShader->StoreUniformLoc("spotLight.castsShadow");
 
+
 	// gBuffer
 	m_deferredSpotLightShader->StoreUniformLoc("gBuffer.positionsSampler");
 	m_deferredSpotLightShader->StoreUniformLoc("gBuffer.normalsSampler");
 	m_deferredSpotLightShader->StoreUniformLoc("gBuffer.albedoOpacitySampler");
 	m_deferredSpotLightShader->StoreUniformLoc("gBuffer.specularSampler");
+	m_deferredSpotLightShader->StoreUniformLoc("gBuffer.depthSampler");
 
 	m_deferredPunctualLightShader
 		= GetGLAssetManager()->GenerateFromPodPath<GLShader>("/engine-data/glsl/deferred/DR_PunctualLight.json");
@@ -261,6 +263,7 @@ void GLDOVRRenderer::InitShaders()
 	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.normalsSampler");
 	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.albedoOpacitySampler");
 	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.specularSampler");
+	m_deferredPunctualLightShader->StoreUniformLoc("gBuffer.depthSampler");
 
 
 	m_ambientLightShader
@@ -353,7 +356,7 @@ void GLDOVRRenderer::InitRenderBuffers()
 	desc.Height = wnd->GetHeight();
 	desc.Format = OVR_FORMAT_R8G8B8A8_UNORM_SRGB;
 
-	// desc.MirrorOptions = ovrMirrorOption_PostDistortion;
+	desc.MirrorOptions = ovrMirrorOption_PostDistortion;
 	// Create mirror texture and an FBO used to copy mirror texture to back buffer
 	const ovrResult result = ovr_CreateMirrorTextureWithOptionsGL(session, &desc, &m_mirrorTexture);
 
@@ -400,12 +403,6 @@ void GLDOVRRenderer::ClearBuffers()
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_eyes[1]->lightFbo);
 	glClear(GL_COLOR_BUFFER_BIT);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, m_eyes[0]->outFbo);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, m_eyes[1]->outFbo);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void GLDOVRRenderer::RenderGBuffer(int32 eyeIndex)
@@ -473,6 +470,13 @@ void GLDOVRRenderer::RenderGBuffer(int32 eyeIndex)
 	}
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
+
+	// blit depth to eye out fbo (i.e fill depthTextureChain, important for lag correction)
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_gBuffer.fbo);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_eyes[eyeIndex]->outFbo);
+
+	glBlitFramebuffer(0, 0, camera->GetWidth(), camera->GetHeight(), 0, 0, camera->GetWidth(), camera->GetHeight(),
+		GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 }
 
 void GLDOVRRenderer::RenderDirectionalLights(int32 eyeIndex)
@@ -520,6 +524,7 @@ void GLDOVRRenderer::RenderDirectionalLights(int32 eyeIndex)
 		ls->SendTexture("gBuffer.normalsSampler", m_gBuffer.normalsAttachment, 2);
 		ls->SendTexture("gBuffer.albedoOpacitySampler", m_gBuffer.albedoOpacityAttachment, 3);
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
+		ls->SendTexture("gBuffer.depthSampler", m_gBuffer.depthAttachment, 5);
 
 		// big triangle trick, no vao
 		report_glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -577,6 +582,7 @@ void GLDOVRRenderer::RenderSpotLights(int32 eyeIndex)
 		ls->SendTexture("gBuffer.normalsSampler", m_gBuffer.normalsAttachment, 2);
 		ls->SendTexture("gBuffer.albedoOpacitySampler", m_gBuffer.albedoOpacityAttachment, 3);
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
+		ls->SendTexture("gBuffer.depthSampler", m_gBuffer.depthAttachment, 5);
 
 		// big triangle trick, no vao
 		report_glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -629,6 +635,7 @@ void GLDOVRRenderer::RenderPunctualLights(int32 eyeIndex)
 		ls->SendTexture("gBuffer.normalsSampler", m_gBuffer.normalsAttachment, 2);
 		ls->SendTexture("gBuffer.albedoOpacitySampler", m_gBuffer.albedoOpacityAttachment, 3);
 		ls->SendTexture("gBuffer.specularSampler", m_gBuffer.specularAttachment, 4);
+		ls->SendTexture("gBuffer.depthSampler", m_gBuffer.depthAttachment, 5);
 
 		// big triangle trick, no vao
 		report_glDrawArrays(GL_TRIANGLES, 0, 3);
