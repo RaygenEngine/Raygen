@@ -70,7 +70,7 @@ void GLBasicSpotLight::RenderShadowMap(const std::vector<GLBasicGeometry*>& geom
 	const auto vp = node->GetViewProjectionMatrix();
 
 	for (auto& geometry : geometries) {
-		auto m = geometry->node->GetMatrix();
+		auto m = geometry->node->GetNodeTransformWCS();
 		auto mvp = vp * m;
 
 		depthMapShader->SendMat4("mvp", mvp);

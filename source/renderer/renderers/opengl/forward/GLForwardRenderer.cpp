@@ -335,7 +335,7 @@ void GLForwardRenderer::RenderEarlyDepthPass()
 			continue;
 		}
 
-		auto m = geometry->node->GetMatrix();
+		auto m = geometry->node->GetNodeTransformWCS();
 		auto mvp = vp * m;
 
 		m_depthPassShader->SendMat4("mvp", mvp);
@@ -391,7 +391,7 @@ void GLForwardRenderer::RenderAmbientLight()
 		}
 
 
-		auto m = geometry->node->GetMatrix();
+		auto m = geometry->node->GetNodeTransformWCS();
 		auto mvp = vp * m;
 
 		m_ambientLightShader->SendMat4("mvp", mvp);
@@ -458,10 +458,10 @@ void GLForwardRenderer::RenderDirectionalLights()
 		const auto vp = m_activeCamera->GetViewProjectionMatrix();
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_activeCamera->GetTranslation());
+		ls->SendVec3("wcs_viewPos", m_activeCamera->GetNodePositionWCS());
 
 		// light
-		ls->SendVec3("directionalLight.wcs_dir", light->node->GetForward());
+		ls->SendVec3("directionalLight.wcs_dir", light->node->GetNodeForwardWCS());
 		ls->SendVec3("directionalLight.color", light->node->GetColor());
 		ls->SendFloat("directionalLight.intensity", light->node->GetIntensity());
 		ls->SendInt("directionalLight.samples", light->node->GetSamples());
@@ -475,7 +475,7 @@ void GLForwardRenderer::RenderDirectionalLights()
 				continue;
 			}
 
-			auto m = geometry->node->GetMatrix();
+			auto m = geometry->node->GetNodeTransformWCS();
 
 			constexpr glm::mat4 biasMatrix(
 				0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
@@ -554,11 +554,11 @@ void GLForwardRenderer::RenderSpotLights()
 		const auto vp = m_activeCamera->GetViewProjectionMatrix();
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_activeCamera->GetTranslation());
+		ls->SendVec3("wcs_viewPos", m_activeCamera->GetNodePositionWCS());
 
 		// light
-		ls->SendVec3("spotLight.wcs_pos", light->node->GetTranslation());
-		ls->SendVec3("spotLight.wcs_dir", light->node->GetForward());
+		ls->SendVec3("spotLight.wcs_pos", light->node->GetNodePositionWCS());
+		ls->SendVec3("spotLight.wcs_dir", light->node->GetNodeForwardWCS());
 		ls->SendFloat("spotLight.outerCutOff", glm::cos(light->node->GetOuterAperture() / 2.f));
 		ls->SendFloat("spotLight.innerCutOff", glm::cos(light->node->GetInnerAperture() / 2.f));
 		ls->SendVec3("spotLight.color", light->node->GetColor());
@@ -576,7 +576,7 @@ void GLForwardRenderer::RenderSpotLights()
 				continue;
 			}
 
-			auto m = geometry->node->GetMatrix();
+			auto m = geometry->node->GetNodeTransformWCS();
 
 			constexpr glm::mat4 biasMatrix(
 				0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
@@ -654,10 +654,10 @@ void GLForwardRenderer::RenderPunctualLights()
 		const auto vp = m_activeCamera->GetViewProjectionMatrix();
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_activeCamera->GetTranslation());
+		ls->SendVec3("wcs_viewPos", m_activeCamera->GetNodePositionWCS());
 
 		// light
-		ls->SendVec3("punctualLight.wcs_pos", light->node->GetTranslation());
+		ls->SendVec3("punctualLight.wcs_pos", light->node->GetNodePositionWCS());
 		ls->SendVec3("punctualLight.color", light->node->GetColor());
 		ls->SendFloat("punctualLight.intensity", light->node->GetIntensity());
 		ls->SendFloat("punctualLight.far", light->node->GetFar());
@@ -673,7 +673,7 @@ void GLForwardRenderer::RenderPunctualLights()
 				continue;
 			}
 
-			auto m = geometry->node->GetMatrix();
+			auto m = geometry->node->GetNodeTransformWCS();
 			auto mvp = vp * m;
 
 			// model

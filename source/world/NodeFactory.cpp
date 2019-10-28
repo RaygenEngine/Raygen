@@ -93,13 +93,13 @@ void NodeFactory::LoadNode_Trs(const nlohmann::json& jsonTrsObject, Node* nodeTo
 		return;
 	}
 
-	node->m_localTranslation = j.value<glm::vec3>(posLabel, {});
+	node->m_localPosition = j.value<glm::vec3>(posLabel, {});
 	node->m_localScale = j.value<glm::vec3>(scaleLabel, { 1.f, 1.f, 1.f });
 
 	auto it = j.find(lookatLabel);
 	if (it != j.end()) {
 		auto lookat = j.value<glm::vec3>(lookatLabel, {});
-		node->m_localOrientation = math::OrientationFromLookatAndPosition(lookat, node->GetLocalTranslation());
+		node->m_localOrientation = math::OrientationFromLookatAndPosition(lookat, node->GetNodePositionLCS());
 		return;
 	}
 

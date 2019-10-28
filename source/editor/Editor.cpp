@@ -306,10 +306,10 @@ void Editor::SpawnEditorCamera()
 
 	auto prevActive = world->GetActiveCamera();
 	if (m_hasEditorCameraCachedMatrix) {
-		m_editorCamera->SetMatrix(m_editorCameraCachedMatrix);
+		m_editorCamera->SetNodeTransformWCS(m_editorCameraCachedMatrix);
 	}
 	else if (prevActive) {
-		m_editorCamera->SetMatrix(prevActive->GetMatrix());
+		m_editorCamera->SetNodeTransformWCS(prevActive->GetNodeTransformWCS());
 	}
 	world->SetActiveCamera(m_editorCamera);
 }
@@ -441,7 +441,7 @@ void Editor::OnEnableEditor()
 void Editor::OnPlay()
 {
 	if (m_editorCamera) {
-		m_editorCameraCachedMatrix = m_editorCamera->GetMatrix();
+		m_editorCameraCachedMatrix = m_editorCamera->GetNodeTransformWCS();
 		m_hasEditorCameraCachedMatrix = true;
 		Engine::GetWorld()->DeleteNode(m_editorCamera);
 	}
@@ -457,7 +457,7 @@ void Editor::OnStopPlay()
 	if (!m_updateWorld) {
 		if (!m_editorCamera) {
 			SpawnEditorCamera();
-			m_editorCamera->SetMatrix(m_editorCameraCachedMatrix);
+			m_editorCamera->SetNodeTransformWCS(m_editorCameraCachedMatrix);
 		}
 	}
 	if (m_autoRestoreWorld && m_hasRestoreSave) {
@@ -825,7 +825,7 @@ void Editor::MoveChildOut(Node* node)
 		return;
 	}
 	auto lateCmd = [node]() {
-		auto worldMatrix = node->GetMatrix();
+		auto worldMatrix = node->GetNodeTransformWCS();
 		node->GetParent()->SetDirty(Node::DF::Children);
 
 		auto& children = node->GetParent()->m_children;
@@ -845,7 +845,7 @@ void Editor::MoveChildOut(Node* node)
 		newChildren.emplace(insertAt, std::move(src));
 
 		node->m_parent = insertBefore->GetParent();
-		node->SetMatrix(worldMatrix);
+		node->SetNodeTransformWCS(worldMatrix);
 		node->SetDirty(Node::DF::Hierarchy);
 		node->GetParent()->SetDirty(Node::DF::Children);
 	};
@@ -881,7 +881,7 @@ void Editor::MakeChildOf(Node* newParent, Node* node)
 	}
 
 	auto lateCmd = [newParent, node]() {
-		auto worldMatrix = node->GetMatrix();
+		auto worldMatrix = node->GetNodeTransformWCS();
 		node->GetParent()->SetDirty(Node::DF::Children); // That parent is losing a child.
 
 		auto& children = node->GetParent()->m_children;
@@ -895,7 +895,7 @@ void Editor::MakeChildOf(Node* newParent, Node* node)
 		newParent->m_children.emplace_back(std::move(src));
 
 		node->m_parent = newParent;
-		node->SetMatrix(worldMatrix);
+		node->SetNodeTransformWCS(worldMatrix);
 		node->SetDirty(Node::DF::Hierarchy);
 		node->GetParent()->SetDirty(Node::DF::Children);
 	};
@@ -918,15 +918,15 @@ void Editor::PilotThis(Node* node)
 			return;
 		}
 		Editor::MakeChildOf(Engine::GetWorld()->GetRoot(), camera);
-		camera->SetMatrix(Engine::GetEditor()->m_editorCameraPrePilotPos);
+		camera->SetNodeTransformWCS(Engine::GetEditor()->m_editorCameraPrePilotPos);
 		return;
 	}
 
 	if (!wasPiloting) {
-		Engine::GetEditor()->m_editorCameraPrePilotPos = camera->GetMatrix();
+		Engine::GetEditor()->m_editorCameraPrePilotPos = camera->GetNodeTransformWCS();
 	}
 	Editor::MakeChildOf(node, camera);
-	camera->SetMatrix(node->GetMatrix());
+	camera->SetNodeTransformWCS(node->GetNodeTransformWCS());
 }
 
 void Editor::FocusNode(Node* node)
@@ -938,8 +938,8 @@ void Editor::FocusNode(Node* node)
 	if (!cam) {
 		return;
 	}
-	auto trans = node->GetTranslation();
-	cam->SetTranslation(trans);
+	auto trans = node->GetNodePositionWCS();
+	cam->SetNodePositionWCS(trans);
 
 	float dist = 1.f;
 	if (node->IsA<GeometryNode>()) {
@@ -948,10 +948,10 @@ void Editor::FocusNode(Node* node)
 		auto max = geom->GetAABB().max;
 		dist = glm::abs(min.x - max.x) + glm::abs(min.y - max.y);
 
-		cam->SetTranslation(geom->GetAABB().GetCenter());
+		cam->SetNodePositionWCS(geom->GetAABB().GetCenter());
 	}
-	cam->AddOffset(glm::vec3(-1.f, 0.25f, 0.f) * dist);
-	cam->SetLookAt(node->GetTranslation());
+	cam->AddNodePositionOffsetWCS(glm::vec3(-1.f, 0.25f, 0.f) * dist);
+	cam->SetNodeLookAtWCS(node->GetNodePositionWCS());
 }
 //		auto newMat
 //= math::TransformMatrixFromTOS(camera->GetTranslation(), camera->GetOrientation(), node->GetScale());
@@ -960,9 +960,9 @@ void Editor::TeleportToCamera(Node* node)
 {
 	auto camera = Engine::GetWorld()->GetActiveCamera();
 	if (camera) {
-		auto newMat
-			= math::TransformMatrixFromSOT(node->GetScale(), camera->GetOrientation(), camera->GetTranslation());
-		node->SetMatrix(newMat);
+		auto newMat = math::TransformMatrixFromSOT(
+			node->GetNodeScaleWCS(), camera->GetNodeOrientationWCS(), camera->GetNodePositionWCS());
+		node->SetNodeTransformWCS(newMat);
 	}
 }
 

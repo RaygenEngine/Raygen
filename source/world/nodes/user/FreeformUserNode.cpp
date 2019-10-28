@@ -28,8 +28,8 @@ void FreeformUserNode::Update(float deltaTime)
 		const float yaw = -input.GetCursorRelativePosition().x * m_turningSpeed * 0.5f;
 		const float pitch = -input.GetCursorRelativePosition().y * m_turningSpeed * 0.5f;
 
-		RotateAroundAxis(GetParent()->GetUp(), yaw);
-		RotateAroundAxis(GetRight(), pitch);
+		RotateNodeAroundAxisWCS(GetParent()->GetNodeUpWCS(), yaw);
+		RotateNodeAroundAxisWCS(GetNodeRightWCS(), pitch);
 	}
 
 	if (!input.IsRightThumbResting()) {
@@ -39,8 +39,8 @@ void FreeformUserNode::Update(float deltaTime)
 		const auto pitch
 			= input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;
 
-		RotateAroundAxis(GetParent()->GetUp(), glm::radians(yaw));
-		RotateAroundAxis(GetRight(), glm::radians(pitch));
+		RotateNodeAroundAxisWCS(GetParent()->GetNodeUpWCS(), glm::radians(yaw));
+		RotateNodeAroundAxisWCS(GetNodeRightWCS(), glm::radians(pitch));
 	}
 
 	// user movement
@@ -50,32 +50,32 @@ void FreeformUserNode::Update(float deltaTime)
 			input.GetLeftThumbDirection().x * input.GetLeftThumbMagnitude());
 
 		// adjust angle to match user rotation
-		const auto rotMat = glm::rotate(-(joystickAngle + glm::half_pi<float>()), GetUp());
-		const glm::vec3 moveDir = rotMat * glm::vec4(GetForward(), 1.f);
+		const auto rotMat = glm::rotate(-(joystickAngle + glm::half_pi<float>()), GetNodeUpWCS());
+		const glm::vec3 moveDir = rotMat * glm::vec4(GetNodeForwardWCS(), 1.f);
 
-		AddLocalOffset(moveDir * speed * input.GetLeftThumbMagnitude());
+		AddNodePositionOffsetLCS(moveDir * speed * input.GetLeftThumbMagnitude());
 	}
 
 	if (input.IsAnyOfKeysRepeat(Key::W, Key::GAMEPAD_DPAD_UP)) {
-		AddLocalOffset(GetLocalForward() * speed);
+		AddNodePositionOffsetLCS(GetNodeForwardLCS() * speed);
 	}
 
 	if (input.IsAnyOfKeysRepeat(Key::S, Key::GAMEPAD_DPAD_DOWN)) {
-		AddLocalOffset((-GetLocalForward()) * speed);
+		AddNodePositionOffsetLCS((-GetNodeForwardLCS()) * speed);
 	}
 
 	if (input.IsAnyOfKeysRepeat(Key::D, Key::GAMEPAD_DPAD_RIGHT)) {
-		AddLocalOffset((GetLocalRight()) * speed);
+		AddNodePositionOffsetLCS((GetNodeRightLCS()) * speed);
 	}
 
 	if (input.IsAnyOfKeysRepeat(Key::A, Key::GAMEPAD_DPAD_LEFT)) {
-		AddLocalOffset((-GetLocalRight()) * speed);
+		AddNodePositionOffsetLCS((-GetNodeRightLCS()) * speed);
 	}
 	if (input.IsAnyOfKeysRepeat(Key::E, Key::GAMEPAD_LEFT_SHOULDER)) {
-		AddLocalOffset((GetWorldRoot()->GetUp()) * speed);
+		AddNodePositionOffsetLCS((GetWorldRoot()->GetNodeUpWCS()) * speed);
 	}
 
 	if (input.IsAnyOfKeysRepeat(Key::Q, Key::GAMEPAD_RIGHT_SHOULDER)) {
-		AddLocalOffset((-GetWorldRoot()->GetUp()) * speed);
+		AddNodePositionOffsetLCS((-GetWorldRoot()->GetNodeUpWCS()) * speed);
 	}
 }

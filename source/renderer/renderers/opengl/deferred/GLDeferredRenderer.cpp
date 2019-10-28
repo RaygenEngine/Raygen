@@ -319,7 +319,7 @@ void GLDeferredRenderer::RenderGBuffer()
 			continue;
 		}
 
-		auto m = geometry->node->GetMatrix();
+		auto m = geometry->node->GetNodeTransformWCS();
 		auto mvp = vp * m;
 
 		gs->SendMat4("m", m);
@@ -384,10 +384,10 @@ void GLDeferredRenderer::RenderDirectionalLights()
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_activeCamera->GetTranslation());
+		ls->SendVec3("wcs_viewPos", m_activeCamera->GetNodePositionWCS());
 
 		// light
-		ls->SendVec3("directionalLight.wcs_dir", light->node->GetForward());
+		ls->SendVec3("directionalLight.wcs_dir", light->node->GetNodeForwardWCS());
 		ls->SendVec3("directionalLight.color", light->node->GetColor());
 		ls->SendFloat("directionalLight.intensity", light->node->GetIntensity());
 		ls->SendInt("directionalLight.samples", light->node->GetSamples());
@@ -435,11 +435,11 @@ void GLDeferredRenderer::RenderSpotLights()
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_activeCamera->GetTranslation());
+		ls->SendVec3("wcs_viewPos", m_activeCamera->GetNodePositionWCS());
 
 		// light
-		ls->SendVec3("spotLight.wcs_pos", light->node->GetTranslation());
-		ls->SendVec3("spotLight.wcs_dir", light->node->GetForward());
+		ls->SendVec3("spotLight.wcs_pos", light->node->GetNodePositionWCS());
+		ls->SendVec3("spotLight.wcs_dir", light->node->GetNodeForwardWCS());
 		ls->SendFloat("spotLight.outerCutOff", glm::cos(light->node->GetOuterAperture() / 2.f));
 		ls->SendFloat("spotLight.innerCutOff", glm::cos(light->node->GetInnerAperture() / 2.f));
 		ls->SendVec3("spotLight.color", light->node->GetColor());
@@ -490,10 +490,10 @@ void GLDeferredRenderer::RenderPunctualLights()
 		glUseProgram(ls->programId);
 
 		// global uniforms
-		ls->SendVec3("wcs_viewPos", m_activeCamera->GetTranslation());
+		ls->SendVec3("wcs_viewPos", m_activeCamera->GetNodePositionWCS());
 
 		// light
-		ls->SendVec3("punctualLight.wcs_pos", light->node->GetTranslation());
+		ls->SendVec3("punctualLight.wcs_pos", light->node->GetNodePositionWCS());
 		ls->SendVec3("punctualLight.color", light->node->GetColor());
 		ls->SendFloat("punctualLight.intensity", light->node->GetIntensity());
 		ls->SendFloat("punctualLight.far", light->node->GetFar());
@@ -532,7 +532,7 @@ void GLDeferredRenderer::RenderAmbientLight()
 	const auto vpInv = glm::inverse(m_activeCamera->GetViewProjectionMatrix());
 
 	m_ambientLightShader->SendMat4("vp_inv", vpInv);
-	m_ambientLightShader->SendVec3("wcs_viewPos", m_activeCamera->GetTranslation());
+	m_ambientLightShader->SendVec3("wcs_viewPos", m_activeCamera->GetNodePositionWCS());
 	m_ambientLightShader->SendVec3("ambient", m_ambient->node->GetAmbientTerm());
 	m_ambientLightShader->SendTexture(m_gBuffer.depthAttachment, 0);
 	m_ambientLightShader->SendCubeTexture(m_ambient->texture->id, 1);

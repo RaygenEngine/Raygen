@@ -132,7 +132,7 @@ Node* World::DuplicateNode_Utl(Node* src, Node* newParent)
 
 	RegisterNode(created, newParent);
 
-	created->SetLocalMatrix(src->GetLocalMatrix());
+	created->SetNodeTransformLCS(src->GetNodeTransformLCS());
 
 	auto result = refltools::CopyClassTo(src, created);
 

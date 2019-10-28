@@ -5,7 +5,7 @@
 
 void CameraNode::CalculateWorldAABB()
 {
-	m_aabb = m_frustum.FrustumPyramidAABB(GetTranslation());
+	m_aabb = m_frustum.FrustumPyramidAABB(GetNodePositionWCS());
 }
 
 void CameraNode::RecalculateProjectionFov()
@@ -27,7 +27,7 @@ void CameraNode::RecalculateProjectionFov()
 
 void CameraNode::RecalculateViewMatrix()
 {
-	m_viewMatrix = glm::lookAt(GetTranslation(), GetLookAt(), GetUp());
+	m_viewMatrix = glm::lookAt(GetNodePositionWCS(), GetLookAt(), GetNodeUpWCS());
 	RecalculateViewProjectionMatrix();
 }
 

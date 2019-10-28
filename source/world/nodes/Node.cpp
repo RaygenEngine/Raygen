@@ -14,117 +14,117 @@ RootNode* Node::GetWorldRoot() const
 	return Engine::GetWorld()->GetRoot();
 }
 
-void Node::SetLocalTranslation(glm::vec3 lt)
+void Node::SetNodePositionLCS(glm::vec3 lt)
 {
-	m_localTranslation = lt;
+	m_localPosition = lt;
 	AutoUpdateTransforms();
 }
 
-void Node::SetLocalOrientation(glm::quat lo)
+void Node::SetNodeOrientationLCS(glm::quat lo)
 {
 	m_localOrientation = lo;
 	AutoUpdateTransforms();
 }
 
-void Node::SetLocalPYR(glm::vec3 pyr)
+void Node::SetNodeEulerAnglesLCS(glm::vec3 pyr)
 {
-	SetLocalOrientation(glm::quat(glm::radians(pyr)));
+	SetNodeOrientationLCS(glm::quat(glm::radians(pyr)));
 }
 
-void Node::SetLocalScale(glm::vec3 ls)
+void Node::SetNodeScaleLCS(glm::vec3 ls)
 {
 	m_localScale = ls;
 	AutoUpdateTransforms();
 }
 
-void Node::SetLocalMatrix(const glm::mat4& lm)
+void Node::SetNodeTransformLCS(const glm::mat4& lm)
 {
-	m_localMatrix = lm;
+	m_localTransform = lm;
 
 	glm::vec3 skew;
 	glm::vec4 persp;
-	glm::decompose(lm, m_localScale, m_localOrientation, m_localTranslation, skew, persp);
+	glm::decompose(lm, m_localScale, m_localOrientation, m_localPosition, skew, persp);
 	AutoUpdateTransforms();
 }
 
-void Node::SetLocalLookAt(glm::vec3 lookAt)
+void Node::SetNodeLookAtLCS(glm::vec3 lookAt)
 {
-	SetLocalOrientation(math::OrientationFromLookatAndPosition(lookAt, m_localTranslation));
+	SetNodeOrientationLCS(math::OrientationFromLookatAndPosition(lookAt, m_localPosition));
 }
 
-void Node::SetTranslation(glm::vec3 wt)
+void Node::SetNodePositionWCS(glm::vec3 wt)
 {
-	auto parentMatrix = GetParent()->GetMatrix();
-	SetLocalTranslation(glm::inverse(parentMatrix) * glm::vec4(wt, 1.f));
+	auto parentMatrix = GetParent()->GetNodeTransformWCS();
+	SetNodePositionLCS(glm::inverse(parentMatrix) * glm::vec4(wt, 1.f));
 }
 
-void Node::SetOrientation(glm::quat wo)
+void Node::SetNodeOrientationWCS(glm::quat wo)
 {
-	auto worldMatrix = math::TransformMatrixFromSOT(m_scale, wo, m_translation);
-	SetMatrix(worldMatrix);
+	auto worldMatrix = math::TransformMatrixFromSOT(m_scale, wo, m_position);
+	SetNodeTransformWCS(worldMatrix);
 }
 
-void Node::SetEulerAngles(glm::vec3 pyr)
+void Node::SetNodeEulerAnglesWCS(glm::vec3 pyr)
 {
-	SetOrientation(glm::quat(glm::radians(pyr)));
+	SetNodeOrientationWCS(glm::quat(glm::radians(pyr)));
 }
 
-void Node::RotateAroundAxis(glm::vec3 worldAxis, float degrees)
+void Node::RotateNodeAroundAxisWCS(glm::vec3 worldAxis, float degrees)
 {
 	const glm::quat rot = glm::angleAxis(glm::radians(degrees), glm::vec3(worldAxis));
-	SetOrientation(rot * m_orientation);
+	SetNodeOrientationWCS(rot * m_orientation);
 }
 
-void Node::RotateAroundLocalAxis(glm::vec3 localAxis, float degrees)
+void Node::RotateNodeAroundAxisLCS(glm::vec3 localAxis, float degrees)
 {
 	const glm::quat rot = glm::angleAxis(glm::radians(degrees), glm::vec3(localAxis));
-	SetLocalOrientation(rot * m_localOrientation);
+	SetNodeOrientationLCS(rot * m_localOrientation);
 }
 
-void Node::SetScale(glm::vec3 ws)
+void Node::SetNodeScaleWCS(glm::vec3 ws)
 {
-	auto worldMatrix = math::TransformMatrixFromSOT(ws, m_orientation, m_translation);
-	SetMatrix(worldMatrix);
+	auto worldMatrix = math::TransformMatrixFromSOT(ws, m_orientation, m_position);
+	SetNodeTransformWCS(worldMatrix);
 }
 
-void Node::SetMatrix(const glm::mat4& newWorldMatrix)
+void Node::SetNodeTransformWCS(const glm::mat4& newWorldMatrix)
 {
-	auto parentMatrix = GetParent()->GetMatrix();
-	SetLocalMatrix(glm::inverse(parentMatrix) * newWorldMatrix);
+	auto parentMatrix = GetParent()->GetNodeTransformWCS();
+	SetNodeTransformLCS(glm::inverse(parentMatrix) * newWorldMatrix);
 }
 
-void Node::SetLookAt(glm::vec3 lookAt)
+void Node::SetNodeLookAtWCS(glm::vec3 lookAt)
 {
-	SetOrientation(math::OrientationFromLookatAndPosition(lookAt, m_translation));
+	SetNodeOrientationWCS(math::OrientationFromLookatAndPosition(lookAt, m_position));
 }
 
 void Node::CalculateWorldAABB()
 {
 	m_aabb = m_localBB;
-	m_aabb.Transform(GetMatrix());
+	m_aabb.Transform(GetNodeTransformWCS());
 }
 
 void Node::AutoUpdateTransforms()
 {
-	UpdateTransforms(GetParent()->GetMatrix());
+	UpdateTransforms(GetParent()->GetNodeTransformWCS());
 }
 
 void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 {
 	m_dirty.set(DF::SRT);
 
-	m_localMatrix = math::TransformMatrixFromSOT(m_localScale, m_localOrientation, m_localTranslation);
-	m_matrix = parentMatrix * m_localMatrix;
+	m_localTransform = math::TransformMatrixFromSOT(m_localScale, m_localOrientation, m_localPosition);
+	m_transform = parentMatrix * m_localTransform;
 
 	CalculateWorldAABB();
 
 	// PERF:
 	glm::vec3 skew;
 	glm::vec4 persp;
-	glm::decompose(m_matrix, m_scale, m_orientation, m_translation, skew, persp);
+	glm::decompose(m_transform, m_scale, m_orientation, m_position, skew, persp);
 
 	for (auto& uPtr : m_children) {
-		uPtr->UpdateTransforms(m_matrix);
+		uPtr->UpdateTransforms(m_transform);
 	}
 }
 
@@ -135,12 +135,12 @@ void Node::DeleteChild(Node* child)
 	m_dirty.set(DF::Children);
 }
 
-void Node::AddLocalOffset(glm::vec3 direction)
+void Node::AddNodePositionOffsetLCS(glm::vec3 offset)
 {
-	SetLocalTranslation(m_localTranslation + direction);
+	SetNodePositionLCS(m_localPosition + offset);
 }
 
-void Node::AddOffset(glm::vec3 direction)
+void Node::AddNodePositionOffsetWCS(glm::vec3 offset)
 {
-	SetTranslation(m_translation + direction);
+	SetNodePositionWCS(m_position + offset);
 }
