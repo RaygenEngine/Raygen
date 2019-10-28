@@ -6,12 +6,6 @@
 #include "world/nodes/camera/CameraNode.h"
 #include "world/World.h"
 
-void ObserverRenderer::RemoveObserver(NodeObserverBase* ptr)
-{
-	m_observers.erase(std::find_if(
-		begin(m_observers), end(m_observers), [ptr](auto& observerUnqPtr) { return observerUnqPtr.get() == ptr; }));
-}
-
 void ObserverRenderer::OnNodeRemovedFromWorld(Node* node)
 {
 	for (auto& [nodeClass, removerFunc] : m_onTypeRemoved) {
