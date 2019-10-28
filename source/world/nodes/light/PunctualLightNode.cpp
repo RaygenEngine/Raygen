@@ -16,6 +16,7 @@ void PunctualLightNode::RecalculateProjectionMatrix()
 {
 	auto ar = static_cast<float>(m_shadowMapWidth) / static_cast<float>(m_shadowMapHeight);
 	m_projectionMatrix = glm::perspective(glm::radians(90.0f), ar, m_near, m_far);
+
 	RecalculateViewProjectionMatrices();
 }
 
@@ -38,6 +39,7 @@ void PunctualLightNode::RecalculateViewMatrices()
 
 	lookat = GetTranslation() + glm::vec3(0.0, 0.0, -1.0);
 	m_viewMatrices[5] = glm::lookAt(GetTranslation(), lookat, glm::vec3(0.0, -1.0, 0.0));
+
 	RecalculateViewProjectionMatrices();
 }
 
@@ -49,6 +51,8 @@ void PunctualLightNode::RecalculateViewProjectionMatrices()
 	m_viewProjectionMatrices[3] = m_projectionMatrix * m_viewMatrices[3];
 	m_viewProjectionMatrices[4] = m_projectionMatrix * m_viewMatrices[4];
 	m_viewProjectionMatrices[5] = m_projectionMatrix * m_viewMatrices[5];
+
+	CalculateWorldAABB();
 }
 
 void PunctualLightNode::DirtyUpdate(DirtyFlagset flags)
@@ -57,11 +61,7 @@ void PunctualLightNode::DirtyUpdate(DirtyFlagset flags)
 		RecalculateProjectionMatrix();
 	}
 
-	if (flags[DF::NearFar]) {
-		CalculateWorldAABB();
-	}
-
-	if (flags[DF::TRS]) {
+	if (flags[DF::SRT]) {
 		RecalculateViewMatrices();
 	}
 }

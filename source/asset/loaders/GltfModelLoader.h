@@ -560,7 +560,7 @@ inline void Load(ModelPod* pod, const uri::Uri& path)
 					scale[2] = static_cast<float>(childNode.scale[2]);
 				}
 
-				localTransformMat = math::TransformMatrixFromTOS(scale, orientation, translation);
+				localTransformMat = math::TransformMatrixFromSOT(scale, orientation, translation);
 			}
 
 			localTransformMat = parentTransformMat * localTransformMat;

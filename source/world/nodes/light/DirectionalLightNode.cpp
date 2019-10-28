@@ -43,7 +43,7 @@ void DirectionalLightNode::DirtyUpdate(DirtyFlagset flags)
 		RecalculateProjectionMatrix();
 	}
 
-	if (flags[DF::TRS]) {
+	if (flags[DF::SRT]) {
 		RecalculateViewMatrix();
 	}
 }

@@ -953,12 +953,16 @@ void Editor::FocusNode(Node* node)
 	cam->AddOffset(glm::vec3(-1.f, 0.25f, 0.f) * dist);
 	cam->SetLookAt(node->GetTranslation());
 }
-
+//		auto newMat
+//= math::TransformMatrixFromTOS(camera->GetTranslation(), camera->GetOrientation(), node->GetScale());
+// node->SetMatrix(newMat);
 void Editor::TeleportToCamera(Node* node)
 {
 	auto camera = Engine::GetWorld()->GetActiveCamera();
 	if (camera) {
-		node->SetMatrix(camera->GetMatrix());
+		auto newMat
+			= math::TransformMatrixFromSOT(node->GetScale(), camera->GetOrientation(), camera->GetTranslation());
+		node->SetMatrix(newMat);
 	}
 }
 

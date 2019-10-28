@@ -47,7 +47,7 @@ void CameraNode::DirtyUpdate(DirtyFlagset flags)
 		RecalculateProjectionFov();
 	}
 
-	if (flags[DF::TRS] || flags[DF::FocalLength]) {
+	if (flags[DF::SRT] || flags[DF::FocalLength]) {
 		RecalculateViewMatrix();
 	}
 }

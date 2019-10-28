@@ -60,7 +60,7 @@ void Node::SetTranslation(glm::vec3 wt)
 
 void Node::SetOrientation(glm::quat wo)
 {
-	auto worldMatrix = math::TransformMatrixFromTOS(m_scale, wo, m_translation);
+	auto worldMatrix = math::TransformMatrixFromSOT(m_scale, wo, m_translation);
 	SetMatrix(worldMatrix);
 }
 
@@ -83,7 +83,7 @@ void Node::RotateAroundLocalAxis(glm::vec3 localAxis, float degrees)
 
 void Node::SetScale(glm::vec3 ws)
 {
-	auto worldMatrix = math::TransformMatrixFromTOS(ws, m_orientation, m_translation);
+	auto worldMatrix = math::TransformMatrixFromSOT(ws, m_orientation, m_translation);
 	SetMatrix(worldMatrix);
 }
 
@@ -111,9 +111,9 @@ void Node::AutoUpdateTransforms()
 
 void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 {
-	m_dirty.set(DF::TRS);
+	m_dirty.set(DF::SRT);
 
-	m_localMatrix = math::TransformMatrixFromTOS(m_localScale, m_localOrientation, m_localTranslation);
+	m_localMatrix = math::TransformMatrixFromSOT(m_localScale, m_localOrientation, m_localTranslation);
 	m_matrix = parentMatrix * m_localMatrix;
 
 	CalculateWorldAABB();
