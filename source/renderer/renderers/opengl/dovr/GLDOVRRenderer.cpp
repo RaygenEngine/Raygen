@@ -370,7 +370,6 @@ void GLDOVRRenderer::InitRenderBuffers()
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_mirrorFBO);
 	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texId, 0);
 	glFramebufferRenderbuffer(GL_READ_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0);
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
 	GetGLPreviewer()->AddPreview(m_gBuffer.positionsAttachment, "positions");
 	GetGLPreviewer()->AddPreview(m_gBuffer.normalsAttachment, "normals");
