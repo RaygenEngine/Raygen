@@ -98,7 +98,7 @@ float ShadowCalculation(float cosTheta)
 		}
 	}
 	
-	shadow /= div;	
+	shadow /= div; 	
 
     return shadow;
 }  

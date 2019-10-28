@@ -15,6 +15,7 @@
 
 AppBase::AppBase()
 {
+
 	m_name = "Rayxen Engine";
 	m_initialScene = "engine-data/default.json";
 	m_assetPath = "assets";
