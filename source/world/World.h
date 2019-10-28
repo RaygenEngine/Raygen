@@ -145,6 +145,7 @@ public:
 	// Transient properties do not get copied.
 	// Children are iteratively duplicated and attached at their new respective parents.
 	// Uses the factory for each node to generate the new ones.
+	// Unsafe to call during update / dirtyupdates, invalidates iterators
 	Node* DeepDuplicateNode(Node* src, Node* newParent = nullptr);
 
 
