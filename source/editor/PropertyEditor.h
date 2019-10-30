@@ -1,7 +1,7 @@
 #pragma once
 
 #include "editor/Editor.h"
-#include "imgui_ext/imfilebrowser.h"
+#include <imfilebrowser.h>
 class Node;
 
 class PropertyEditor {

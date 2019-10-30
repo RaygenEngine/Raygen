@@ -244,13 +244,13 @@ if(MSVC)
 										   
 	list(APPEND SOURCE_FILES pch/pch.cpp)
 	list(APPEND SOURCE_FILES platform/windows/resources/WinResource.rc)
-endif(MSVC)
+endif()
 
 add_executable(Rayxen ${SOURCE_FILES} ${HEADER_FILES})
  
 if(MSVC)
 	set_property(TARGET Rayxen PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
-endif(MSVC)
+endif()
 
 # 3rd party libraries
 target_link_libraries(Rayxen
@@ -268,15 +268,27 @@ add_dependencies(Rayxen
 	glad-dll-gen
 )
 
+# TODO:
+# foreach(dep ${header_only_dependencies})
+# 	message(${dep})
+# 	add_dependencies(Rayxen 
+# 		${dep}
+# 	)
+# endforeach()
+
+
 # 3rd party includes
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY})
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/glad)
-include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/glm)
+
+foreach(dir ${includes_list})
+	message(${dir})
+	include_directories(${dir})
+endforeach()
+
+include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/ctti)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/khr)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/nlohmann)
-include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/spdlog)
-include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/stb_image)
-include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/tinygltf)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/ovr)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})

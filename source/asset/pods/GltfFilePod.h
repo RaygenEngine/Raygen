@@ -2,7 +2,7 @@
 
 #include "asset/AssetPod.h"
 
-#include <tinygltf/tiny_gltf.h>
+#include <tiny_gltf.h>
 
 struct GltfFilePod : AssetPod {
 	REFLECTED_POD(GltfFilePod) {}

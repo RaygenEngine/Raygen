@@ -6,7 +6,7 @@
 #include "reflection/ReflectionTools.h"
 #include "reflection/PodTools.h"
 
-#include <imgui/imgui.h>
+#include <imgui.h>
 #include "editor/imgui/ImguiUtil.h"
 #include "editor/DataStrings.h"
 #include "editor/Editor.h"

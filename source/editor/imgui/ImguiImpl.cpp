@@ -4,9 +4,9 @@
 #include "platform/windows/Win32Window.h"
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD
 
-#include <imgui/imgui.h>
-#include <imgui/imgui_impl_opengl3.h>
-#include <imgui/imgui_impl_win32.h>
+#include <imgui.h>
+#include <examples/imgui_impl_opengl3.h>
+#include <examples/imgui_impl_win32.h>
 
 // forward declare this in our own file because its commented out in the imgui impl header.
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -141,9 +141,9 @@ LRESULT ImguiImpl::WndProcHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 	return false;
 }
 
-#include "imgui/imgui.cpp"
-#include "imgui/imgui_draw.cpp"
-#include "imgui/imgui_widgets.cpp"
-#include "imgui/imgui_impl_opengl3.cpp"
-#include "imgui/imgui_impl_win32.cpp"
-#include "imgui/imgui_stdlib.cpp"
+#include <imgui.cpp>
+#include <imgui_draw.cpp>
+#include <imgui_widgets.cpp>
+#include <examples/imgui_impl_opengl3.cpp>
+#include <examples/imgui_impl_win32.cpp>
+#include <misc/cpp/imgui_stdlib.cpp>

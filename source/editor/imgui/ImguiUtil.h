@@ -1,9 +1,9 @@
 #pragma once
 
-#include <imgui/imgui.h>
-#include <imgui/imgui_stdlib.h>
-#include <imgui_ext/imfilebrowser.h>
-#include <imgui/imgui_internal.h>
+#include <imgui.h>
+#include <misc/cpp/imgui_stdlib.h>
+#include <imfilebrowser.h>
+#include <imgui_internal.h>
 
 #define TEXT_TOOLTIP(...)                                                                                              \
 	if (ImGui::IsItemHovered()) {                                                                                      \

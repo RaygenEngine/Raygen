@@ -2,7 +2,7 @@
 
 #include "core/StringAux.h"
 
-#include <tinygltf/tiny_gltf.h>
+#include <tiny_gltf.h>
 
 namespace gltfaux {
 inline GeometryMode GetGeometryMode(int32 gltfMode)
