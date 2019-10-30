@@ -1,8 +1,8 @@
 #pragma once
 
-#include "spdlog/logger.h"
+#include <spdlog/logger.h>
 // include for custom formats
-#include "spdlog/fmt/ostr.h"
+#include <spdlog/fmt/ostr.h>
 #include <sstream>
 
 

@@ -5,7 +5,7 @@
 #include "editor/Editor.h"
 #include "world/nodes/Node.h"
 #include "world/nodes/camera/CameraNode.h"
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 
 NodeContextActions::NodeContextActions()

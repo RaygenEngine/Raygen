@@ -12,7 +12,7 @@
 #include "world/nodes/RootNode.h"
 #include "world/nodes/camera/EditorCameraNode.h"
 
-#include <imgui/imgui.h>
+#include <imgui.h>
 #include <glm/glm.hpp>
 
 #include <string>
@@ -29,7 +29,7 @@ SceneSave::SceneSave()
 
 void SceneSave::OpenBrowser()
 {
-	m_saveBrowser.Open(m_lastFile);
+	m_saveBrowser.Open(/*m_lastFile*/);
 }
 
 void SceneSave::Draw()
@@ -38,7 +38,7 @@ void SceneSave::Draw()
 	if (m_saveBrowser.HasSelected()) {
 		fs::path file = m_saveBrowser.GetSelected();
 		file.replace_extension(".json");
-		m_lastFile = file.filename().string();
+		//m_lastFile = file.filename().string();
 		m_saveBrowser.ClearSelected();
 		SaveAs(Engine::GetWorld(), file.string());
 	}

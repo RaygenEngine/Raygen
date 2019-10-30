@@ -5,7 +5,7 @@
 
 #define MAGIC_ENUM_RANGE_MIN -1
 #define MAGIC_ENUM_RANGE_MAX 24
-#include <magic_enum/magic_enum.hpp>
+#include <magic_enum.hpp>
 #include <unordered_map>
 #include <map>
 #include <functional>

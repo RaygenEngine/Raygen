@@ -9,7 +9,7 @@
 #include <ovr/OVR_CAPI.h>
 #include <ovr/Extras/OVR_Math.h>
 #include <ovr/Extras/OVR_StereoProjection.h>
-#include <gtx/matrix_decompose.inl>
+#include <glm/gtx/matrix_decompose.inl>
 
 void OVRNode::PrepareEyes()
 {
