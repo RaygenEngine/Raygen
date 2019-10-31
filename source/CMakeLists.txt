@@ -1,6 +1,5 @@
 project (Rayxen)
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LIB_DEPENDENCIES_DIRECTORY})
 # 3rd party libs
 link_directories(${DEPENDENCIES_DIRECTORY}/glad/lib)
 
