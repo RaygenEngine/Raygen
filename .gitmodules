@@ -1,0 +1,36 @@
+[submodule "dependencies/glm"]
+	path = dependencies/glm
+	url = https://github.com/g-truc/glm
+	branch = master
+[submodule "dependencies/spdlog"]
+	path = dependencies/spdlog
+	url = https://github.com/gabime/spdlog
+	branch = v1.x
+[submodule "dependencies/imgui"]
+	path = dependencies/imgui
+	url = https://github.com/ocornut/imgui
+	branch = master
+[submodule "dependencies/magic_enum"]
+	path = dependencies/magic_enum
+	url = https://github.com/Neargye/magic_enum
+	branch = master
+[submodule "dependencies/nlohmann"]
+	path = dependencies/nlohmann
+	url = https://github.com/nlohmann/json
+	branch = develop
+[submodule "dependencies/stb"]
+	path = dependencies/stb
+	url = https://github.com/nothings/stb
+	branch = master
+[submodule "dependencies/imfilebrowser"]
+	path = dependencies/imfilebrowser
+	url = https://github.com/AirGuanZ/imgui-filebrowser
+	branch = master
+[submodule "dependencies/tinygltf"]
+	path = dependencies/tinygltf
+	url = https://github.com/syoyo/tinygltf
+	branch = master
+[submodule "dependencies/ctti"]
+	path = dependencies/ctti
+	url = https://github.com/katagis/ctti
+	branch = master

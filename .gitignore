@@ -216,14 +216,6 @@ __pycache__/
 x64/
 x86/
 
+# Ignore dependency lib files
+/dependencies/*/lib/
 
-# Ignore copied generated headers during build
-/dependencies/include/GLAD/glad.h
-/dependencies/include/KHR/khrplatform.h
-
-# Ignore generated GLAD files
-/dependencies/bin/
-/dependencies/lib/*
-!/dependencies/lib/*/
-/dependencies/lib/*/*
-!/dependencies/lib/*/LibOVR.lib

@@ -25,7 +25,7 @@ using json = nlohmann::json;
 void NodeFactory::RegisterNodes()
 {
 	RegisterListToFactory<CameraNode, WindowCameraNode, GeometryNode, DirectionalLightNode, PunctualLightNode,
-		SpotLightNode, AmbientNode, FreeformUserNode, TransformNode, FlyingUserNode, OVRNode>();
+		SpotLightNode, AmbientNode, FreeformUserNode, TransformNode, FlyingUserNode /*, OVRNode*/>();
 }
 
 Node* NodeFactory::NewNodeFromType(const std::string& type)

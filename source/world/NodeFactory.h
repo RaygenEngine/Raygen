@@ -6,7 +6,7 @@
 
 #include <functional>
 #include <map>
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 class NodeFactory : public Object {
 

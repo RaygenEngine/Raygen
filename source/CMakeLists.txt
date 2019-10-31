@@ -1,11 +1,8 @@
 project (Rayxen)
 
-#output at dependencies
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_BIN_DIRECTORY})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LIB_DEPENDENCIES_DIRECTORY})
-
-# additional lib dir
-link_directories(${LIB_DEPENDENCIES_DIRECTORY})
+# 3rd party libs
+link_directories(${DEPENDENCIES_DIRECTORY}/glad/lib)
 
 set(SOURCE_FILES 
 	main.cpp
@@ -255,7 +252,6 @@ endif()
 # 3rd party libraries
 target_link_libraries(Rayxen
 	glad.lib
-	LibOVR.lib
 	opengl32.lib
 	XInput.lib
 )
@@ -263,33 +259,30 @@ target_link_libraries(Rayxen
 # glad dll
 add_compile_definitions(GLAD_GLAPI_EXPORT)
 
+
 # dependencies (build order)
 add_dependencies(Rayxen 
-	glad-dll-gen
+	glad
 )
-
-# TODO:
-# foreach(dep ${header_only_dependencies})
-# 	message(${dep})
-# 	add_dependencies(Rayxen 
-# 		${dep}
-# 	)
-# endforeach()
-
 
 # 3rd party includes
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY})
-include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/glad)
-
-foreach(dir ${includes_list})
-	message(${dir})
-	include_directories(${dir})
-endforeach()
-
-include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/ctti)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/khr)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/nlohmann)
 include_directories(${INCLUDE_DEPENDENCIES_DIRECTORY}/ovr)
+
+include_directories(${DEPENDENCIES_DIRECTORY})
+include_directories(${DEPENDENCIES_DIRECTORY}/glm)
+include_directories(${DEPENDENCIES_DIRECTORY}/spdlog/include)
+include_directories(${DEPENDENCIES_DIRECTORY}/imgui)
+include_directories(${DEPENDENCIES_DIRECTORY}/magic_enum/include)
+include_directories(${DEPENDENCIES_DIRECTORY}/nlohmann/include)
+include_directories(${DEPENDENCIES_DIRECTORY}/tinygltf)
+include_directories(${DEPENDENCIES_DIRECTORY}/imfilebrowser)
+include_directories(${DEPENDENCIES_DIRECTORY}/glad/include/glad)
+include_directories(${DEPENDENCIES_DIRECTORY}/glad/include/KHR)
+include_directories(${DEPENDENCIES_DIRECTORY}/glad/include/)
+include_directories(${DEPENDENCIES_DIRECTORY}/ctti/include)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -309,10 +302,3 @@ add_compile_definitions(NOMINMAX NODRAWTEXT NOOPENFILE)
 if(MSVC)
 	target_compile_options(Rayxen PRIVATE "/MP")
 endif()
-
-# post build copy dlls
-add_custom_command(TARGET Rayxen POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-		"${BIN_DEPENDENCIES_DIRECTORY}/$<CONFIGURATION>"
-        $<TARGET_FILE_DIR:Rayxen>
-	COMMENT "Copying binary dependencies to target folder...")
