@@ -71,8 +71,8 @@ public:
 	[[nodiscard]] TypeId GetTypeId() const { return m_type; }
 
 	// Grabs the compiletime type id of the reflected class
-	[[nodiscard]] std::string_view GetName() const { return { m_type.name().begin(), m_type.name().length() }; }
-	[[nodiscard]] std::string GetNameStr() const { return m_type.name().str(); }
+	[[nodiscard]] std::string_view GetName() const { return m_type.name(); }
+	[[nodiscard]] std::string GetNameStr() const { return m_type.name_str(); }
 
 	// Always Prefer reflection macros
 	// Never run ouside of T::GenerateReflection
