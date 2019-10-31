@@ -124,7 +124,7 @@ void AppBase::RegisterRenderers()
 	Engine::RegisterPrimaryRenderer<ogl::GLForwardRenderer>();
 
 	// Non primary renderers are skipped when cycling through renderers but can be enabled from the editor menu
-	Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
+	// Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
 }
 
 Win32Window* AppBase::CreateAppWindow()

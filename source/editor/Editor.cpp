@@ -654,7 +654,7 @@ void Editor::Run_AboutWindow()
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
 	// ImGui::SetNextWindowSize(ImVec2(550.f, 220.f), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
 
 	if (ImGui::Begin("About", &m_showAboutWindow, ImGuiWindowFlags_AlwaysAutoResize)) {
 		ImGui::Text("Rayxen: v1.0.0");
@@ -671,7 +671,7 @@ void Editor::Run_HelpWindow()
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
 	ImGui::SetNextWindowSize(ImVec2(550.f, 820.f), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
 	ImGui::SetNextWindowSize(ImVec2(0, 720.f), ImGuiCond_Always);
 
 	if (ImGui::Begin("Help", &m_showHelpWindow)) {
@@ -1105,7 +1105,7 @@ void Editor::Run_LogWindow()
 	}
 	ss.clear();
 
-	ImGui::SetNextWindowPosCenter(ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
 	ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Rayxen Log", &m_showLogWindow);
 	ImGui::End();
