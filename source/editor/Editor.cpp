@@ -373,7 +373,7 @@ void Editor::Outliner()
 	ImGui::EndChild();
 
 	if (ImGui::BeginDragDropTarget()) {
-		std::string payloadTag = "POD_UID_" + std::to_string(ctti::type_id<ModelPod>().hash());
+		std::string payloadTag = "POD_UID_" + std::to_string(refl::GetId<ModelPod>().hash());
 		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(payloadTag.c_str())) {
 			assert(payload->DataSize == sizeof(size_t));
 			size_t uid = *reinterpret_cast<size_t*>(payload->Data);

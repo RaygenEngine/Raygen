@@ -30,7 +30,3 @@
 	path = dependencies/tinygltf
 	url = https://github.com/syoyo/tinygltf
 	branch = master
-[submodule "dependencies/ctti"]
-	path = dependencies/ctti
-	url = https://github.com/katagis/ctti
-	branch = master

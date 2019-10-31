@@ -281,7 +281,6 @@ include_directories(${DEPENDENCIES_DIRECTORY}/imfilebrowser)
 include_directories(${DEPENDENCIES_DIRECTORY}/glad/include/glad)
 include_directories(${DEPENDENCIES_DIRECTORY}/glad/include/KHR)
 include_directories(${DEPENDENCIES_DIRECTORY}/glad/include/)
-include_directories(${DEPENDENCIES_DIRECTORY}/ctti/include)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
