@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 
-project (Rayxen)
+project (Kaleido)
 
 set(OUTPUT_BIN_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(DEPENDENCIES_DIRECTORY "${CMAKE_SOURCE_DIR}/dependencies")

@@ -10,9 +10,9 @@ License: TBD (v1.0.1)
 inline const char* txt_help = R"(
 (outdated and/or imprecise, wait for version v1.0.1)
 
-Programming documentation can be found at docs/ in Markdown format or viewed directly on __github. In this window you can get an overview of Rayxen's features, design logic and editor basics.
+Programming documentation can be found at docs/ in Markdown format or viewed directly on __github. In this window you can get an overview of Kaleido's features, design logic and editor basics.
 
-Rayxen has been primarily designed with the goal of being a sandbox for renderer development. Therefore all the design logic is based on the following basic principles:
+Kaleido has been primarily designed with the goal of being a sandbox for renderer development. Therefore all the design logic is based on the following basic principles:
 1. All rendering features are opt-in.
 2. ...
 
@@ -29,7 +29,7 @@ Also note that the editor has not been thoroughly profiled and may induce slight
 
 
 Scene saving and loading is available and the scene format is in json.
-All the reflected properties of nodes are automatically serialized and restored upon loading. Any asset referenced in the scene file is stored relative to the Rayxen/assets/ folder and the scene will fail to load if it is not found.
+All the reflected properties of nodes are automatically serialized and restored upon loading. Any asset referenced in the scene file is stored relative to the Kaleido/assets/ folder and the scene will fail to load if it is not found.
 Editing the json files by hand is possible but not recommended.
 
 

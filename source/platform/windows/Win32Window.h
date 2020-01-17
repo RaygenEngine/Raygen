@@ -34,7 +34,7 @@ public:
 	static Win32Window* CreateWin32Window(const std::string& title = std::string("Win32 Window"), int32 xpos = 150,
 		int32 ypox = 150, int32 width = 1920, int32 height = 1080, LONG cstyle = WS_OVERLAPPEDWINDOW,
 		WNDPROC windowHandleFunction = WndProc, UINT style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC | CS_DBLCLKS,
-		LPCSTR name = TEXT("RAYXENWINDOWCLASS"), HBRUSH backgroundBrushColor = CreateSolidBrush(RGB(76, 76, 144)),
+		LPCSTR name = TEXT("KALEIDOWINDOWCLASS"), HBRUSH backgroundBrushColor = CreateSolidBrush(RGB(76, 76, 144)),
 		LPCSTR cursorName = IDC_ARROW);
 
 	HWND GetHWND() const { return m_hWnd; }

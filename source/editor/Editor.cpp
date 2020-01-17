@@ -657,7 +657,7 @@ void Editor::Run_AboutWindow()
 	ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
 
 	if (ImGui::Begin("About", &m_showAboutWindow, ImGuiWindowFlags_AlwaysAutoResize)) {
-		ImGui::Text("Rayxen: v1.0.0");
+		ImGui::Text("Kaleido: v1.0.0");
 		ImExt::HSpace(220.f);
 		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 33.0f);
 		ImGui::Text(txt_about);
@@ -1107,8 +1107,8 @@ void Editor::Run_LogWindow()
 
 	ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
 	ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-	ImGui::Begin("Rayxen Log", &m_showLogWindow);
+	ImGui::Begin("Kaleido Log", &m_showLogWindow);
 	ImGui::End();
 
-	log.Draw("Rayxen Log", &m_showLogWindow);
+	log.Draw("Kaleido Log", &m_showLogWindow);
 }
