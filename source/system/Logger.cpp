@@ -14,7 +14,7 @@ void Log::Init(LogLevelTarget level)
 {
 	spdlog::set_pattern("%^[%T] %n: %v%$");
 	// colored multi-threaded
-	s_logger = spdlog::stdout_color_mt("Rayxen");
+	s_logger = spdlog::stdout_color_mt("Kaleido");
 
 	auto editorOssSink = std::make_shared<spdlog::sinks::ostream_sink_mt>(s_editorLogStream);
 	editorOssSink->set_pattern("[%T.%e] %L:\t%v");
@@ -38,5 +38,5 @@ void Log::Init(LogLevelTarget level)
 		default: s_logger->set_level(spdlog::level::level_enum::off); break;
 	}
 
-	LOG_INFO("Initialized Rayxen Logger, level: {}", spdlog::level::to_string_view(s_logger->level()));
+	LOG_INFO("Initialized Kaleido Logger, level: {}", spdlog::level::to_string_view(s_logger->level()));
 }

@@ -14,7 +14,7 @@ namespace fs = std::filesystem;
 
 #include <type_traits>
 
-// ALWAYS, ALWAYS keep this before ANY of Rayxen's header includes
+// ALWAYS, ALWAYS keep this before ANY of Kaleido's header includes
 #include "FeatureMacros.h"
 
 // int types

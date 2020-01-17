@@ -1,4 +1,4 @@
-project (Rayxen)
+project (Kaleido)
 
 # 3rd party libs
 link_directories(${DEPENDENCIES_DIRECTORY}/glad/lib)
@@ -242,14 +242,14 @@ if(MSVC)
 	list(APPEND SOURCE_FILES platform/windows/resources/WinResource.rc)
 endif()
 
-add_executable(Rayxen ${SOURCE_FILES} ${HEADER_FILES})
+add_executable(Kaleido ${SOURCE_FILES} ${HEADER_FILES})
  
 if(MSVC)
-	set_property(TARGET Rayxen PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+	set_property(TARGET Kaleido PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
 # 3rd party libraries
-target_link_libraries(Rayxen
+target_link_libraries(Kaleido
 	glad.lib
 	opengl32.lib
 	XInput.lib
@@ -260,7 +260,7 @@ add_compile_definitions(GLAD_GLAPI_EXPORT)
 
 
 # dependencies (build order)
-add_dependencies(Rayxen 
+add_dependencies(Kaleido 
 	glad
 )
 
@@ -288,8 +288,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # enforce cpp17
-set_property(TARGET Rayxen PROPERTY CXX_STANDARD 17)
-set_property(TARGET Rayxen PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET Kaleido PROPERTY CXX_STANDARD 17)
+set_property(TARGET Kaleido PROPERTY CXX_STANDARD_REQUIRED ON)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX ${PROJECT_NAME} FILES ${HEADER_FILES} ${SOURCE_FILES})
 
@@ -298,7 +298,7 @@ add_compile_definitions(NOMINMAX NODRAWTEXT NOOPENFILE)
 
 # multi-core compilation
 if(MSVC)
-	target_compile_options(Rayxen PRIVATE "/MP")
+	target_compile_options(Kaleido PRIVATE "/MP")
 	# unsafe strcpy used by some dependencies
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
