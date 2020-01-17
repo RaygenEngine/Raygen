@@ -299,4 +299,6 @@ add_compile_definitions(NOMINMAX NODRAWTEXT NOOPENFILE)
 # multi-core compilation
 if(MSVC)
 	target_compile_options(Rayxen PRIVATE "/MP")
+	# unsafe strcpy used by some dependencies
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()

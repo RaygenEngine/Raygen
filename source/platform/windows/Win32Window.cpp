@@ -5,33 +5,18 @@
 #include "system/Input.h"
 #include "system/EngineEvents.h"
 #include "editor/imgui/ImguiImpl.h"
-
-namespace Gdiplus {
-using std::min;
-using std::max;
-} // namespace Gdiplus
 #include <windowsx.h>
-#include <objidl.h>
-#include <gdiplus.h>
-using namespace Gdiplus;
-#pragma comment(lib, "Gdiplus.lib")
-
-static ULONG_PTR gdiplusToken;
 
 Win32Window::Win32Window()
 	: m_wcex()
 	, m_hWnd(nullptr)
 {
-	GdiplusStartupInput gdiplusStartupInput;
-	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 }
 
 Win32Window::~Win32Window()
 {
 	// Unregister window class, freeing the memory that was
 	// previously allocated for this window.
-
-	GdiplusShutdown(gdiplusToken);
 
 	::UnregisterClass(m_wcex.lpszClassName, m_wcex.hInstance);
 }
@@ -141,25 +126,10 @@ void Win32Window::Hide()
 
 void Win32Window::DrawSplash()
 {
-	HDC hdc = GetDC(m_hWnd);
-	if (hdc) {
-		Graphics graphics(hdc);
-		Image image(L"engine-data\\splash.png");
-		graphics.DrawImage(
-			&image, INT(m_width / 2 - image.GetWidth() / 2), INT(m_height / 2.4 - image.GetHeight() / 2));
-		ReleaseDC(m_hWnd, hdc);
-	}
 }
 
 void Win32Window::DrawLoading()
 {
-	HDC hdc = GetDC(m_hWnd);
-	if (hdc) {
-		Graphics graphics(hdc);
-		Image image(L"engine-data\\loading.png");
-		graphics.DrawImage(&image, INT(m_width / 2 - image.GetWidth() / 2), INT(m_height / 2 - image.GetHeight() / 2));
-		ReleaseDC(m_hWnd, hdc);
-	}
 }
 
 void Win32Window::GenerateXInputControllerMessages()
