@@ -30,3 +30,7 @@
 	path = dependencies/tinygltf
 	url = https://github.com/syoyo/tinygltf
 	branch = master
+[submodule "assets/gltf-samples"]
+	path = assets/gltf-samples
+	url = https://github.com/katagis/gltf-sample-models
+	branch = master
