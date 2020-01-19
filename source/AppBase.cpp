@@ -11,6 +11,7 @@
 #include "system/Logger.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"
+#include <renderer\renderers\vulkan\VkRendererBase.h>
 
 
 AppBase::AppBase()
@@ -120,9 +121,13 @@ void AppBase::RegisterRenderers()
 {
 	// NOTE:
 	// Default behavior for an app is to start the first primary registered here.
+
+	// WIP: use base renderer for context tests
+	// TODO: fix issue when first renderer is vulkan, opengl fails
+	Engine::RegisterPrimaryRenderer<vk::VkRendererBase>();
+
 	Engine::RegisterPrimaryRenderer<ogl::GLDeferredRenderer>();
 	Engine::RegisterPrimaryRenderer<ogl::GLForwardRenderer>();
-
 	// Non primary renderers are skipped when cycling through renderers but can be enabled from the editor menu
 	// Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
 }

@@ -2688,7 +2688,7 @@ static void ShowDemoWindowLayout()
 		ImVec2 pos = ImGui::GetCursorScreenPos();
 		ImVec4 clip_rect(pos.x, pos.y, pos.x + size.x, pos.y + size.y);
 		ImGui::InvisibleButton("##dummy", size);
-		if (ImGui::IsItemActive() && ImGui::IsMouseDragging()) {
+		if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_::ImGuiMouseButton_Left)) {
 			offset.x += ImGui::GetIO().MouseDelta.x;
 			offset.y += ImGui::GetIO().MouseDelta.y;
 		}
