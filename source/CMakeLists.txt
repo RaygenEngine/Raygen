@@ -48,6 +48,8 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/forward/GLForwardRenderer.cpp
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.cpp
 
+	renderer/renderers/vulkan/VkRendererBase.cpp
+
 
 	system/Engine.cpp
 	system/Input.cpp
@@ -176,6 +178,8 @@ set(HEADER_FILES
 	renderer/renderers/opengl/forward/GLForwardRenderer.h
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.h
 
+	renderer/renderers/vulkan/VkRendererBase.h
+
 
 	system/Engine.h
 	system/Object.h
@@ -248,11 +252,15 @@ if(MSVC)
 	set_property(TARGET Kaleido PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
+# Vulkan
+find_package(Vulkan REQUIRED)
+
 # 3rd party libraries
 target_link_libraries(Kaleido
 	glad.lib
 	opengl32.lib
 	XInput.lib
+	Vulkan::Vulkan
 )
 
 # glad dll
