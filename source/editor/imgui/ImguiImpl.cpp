@@ -6,6 +6,7 @@
 
 #include <imgui.h>
 #include <examples/imgui_impl_opengl3.h>
+#include <examples/imgui_impl_vulkan.h>
 #include <examples/imgui_impl_win32.h>
 
 // forward declare this in our own file because its commented out in the imgui impl header.
@@ -53,7 +54,7 @@ void SetStyle()
 	ImGui::GetIO().Fonts->AddFontFromFileTTF("engine-data/fonts/UbuntuMonoRegular.ttf", 14, nullptr, ranges);
 
 	ImGui::GetIO().Fonts->Build();
-} // namespace imguisyle
+}
 } // namespace imguisyle
 void ImguiImpl::InitContext()
 {
@@ -70,9 +71,13 @@ void ImguiImpl::InitContext()
 	ImGui::GetIO().IniFilename = "EditorImgui.ini";
 }
 
+#include "renderer/renderers/opengl/GLEditorRenderer.h"
+
 void ImguiImpl::NewFrame()
 {
-	ImGui_ImplOpenGL3_NewFrame();
+	if (dynamic_cast<ogl::GLEditorRenderer*>(Engine::GetRenderer())) {
+		ImGui_ImplOpenGL3_NewFrame();
+	}
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 }
@@ -145,5 +150,6 @@ LRESULT ImguiImpl::WndProcHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 #include <imgui_draw.cpp>
 #include <imgui_widgets.cpp>
 #include <examples/imgui_impl_opengl3.cpp>
+#include <examples/imgui_impl_vulkan.cpp>
 #include <examples/imgui_impl_win32.cpp>
 #include <misc/cpp/imgui_stdlib.cpp>
