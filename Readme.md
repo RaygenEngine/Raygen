@@ -1,40 +1,36 @@
-![Rayxen](/assets/engine-data/logo.png?style=centerme "Rayxen")
+![Ragyen](/assets/engine-data/logo.png?style=centerme "Raygen")
 
-(outdated and/or imprecise, wait for version v1.0.1)
+# Raygen
 
-# Rayxen, a graphics engine
-
-Rayxen is a graphics engine focused on renderer extensibility.
-
-
-## Compiling
-
-The engine only supports Windows (for now).
-
-The development is done mostly on MSVC 19.22. Clang-cl v9 is also regularly tested.
-
-C++17 and a very recent CMake is required.
+Raygen is a graphics engine focused on exploring real-time use cases of ray tracing.
+The engine is written in modern C++ and uses the Vulkan API. 
 
 
-## Dependencies (included)
-*Todo: provide links for these awesome projects*
+## Getting started
 
-* ImGui
-* spdlog
-* fmt
-* glad
-* stb_image
-* glm
-* tinygltf
-* nlohmann/json
-* magic_enum
-* ctti
-* LibOVR
+```
+ git clone --recursive --shallow-submodules https://github.com/Renoras/Raygen
+ cd Raygen
+ mkdir build
+ cd build
+ cmake ..
+ ```
 
+If you are using the .sln to build remember to change the startup project to Raygen.
+
+## Dependencies (included as submodules)
+
+* [glm](https://github.com/g-truc/glm)
+* [ImGui](https://github.com/ocornut/imgui)
+* [spdlog](https://github.com/gabime/spdlog)
+* [stb](https://github.com/nothings/stb)
+* [tinygltf](https://github.com/syoyo/tinygltf)
+* [nlohmann/json](https://github.com/nlohmann/json)
+* [magic_enum](https://github.com/Neargye/magic_enum)
 
 ## Authors
 
-| Info | Position | Focus |
-| ------|-----|-----|
-|**John Moschos**, [Renoras](https://github.com/Renoras)| Founder, Programmer |Graphics & rendering |
-|**Harry Katagis**, [katagis](https://github.com/katagis)| Lead Designer, Programmer | Engine Subsystems & Modules |
+| Info | Role |
+| ------|-----|
+|**John Moschos**, [Renoras](https://github.com/Renoras)| Co-Founder, Programmer |
+|**Harry Katagis**, [katagis](https://github.com/katagis)| Co-Founder, Programmer |

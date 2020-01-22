@@ -154,8 +154,8 @@ void Editor::MakeMainMenu()
 	m_menus.emplace_back(std::move(debugMenu));
 
 	auto aboutMenu = std::make_unique<ImMenu>("About");
-	aboutMenu->AddEntry("Help", [&]() { m_showHelpWindow = true; });
 	aboutMenu->AddEntry("About", [&]() { m_showAboutWindow = true; });
+	aboutMenu->AddEntry("Help", [&]() { m_showHelpWindow = true; });
 	m_menus.emplace_back(std::move(aboutMenu));
 }
 
@@ -653,11 +653,10 @@ void Editor::Run_AboutWindow()
 	constexpr float version = 1.f;
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
-	// ImGui::SetNextWindowSize(ImVec2(550.f, 220.f), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowPos(ImVec2(650.f, 100.f), ImGuiCond_FirstUseEver);
 
 	if (ImGui::Begin("About", &m_showAboutWindow, ImGuiWindowFlags_AlwaysAutoResize)) {
-		ImGui::Text("Rayxen: v1.0.0");
+		ImGui::Text("Raygen: v0.1");
 		ImExt::HSpace(220.f);
 		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 33.0f);
 		ImGui::Text(txt_about);
@@ -670,8 +669,7 @@ void Editor::Run_AboutWindow()
 void Editor::Run_HelpWindow()
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
-	ImGui::SetNextWindowSize(ImVec2(550.f, 820.f), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowPos(ImVec2(650.f, 100.f), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(0, 720.f), ImGuiCond_Always);
 
 	if (ImGui::Begin("Help", &m_showHelpWindow)) {
@@ -1105,10 +1103,10 @@ void Editor::Run_LogWindow()
 	}
 	ss.clear();
 
-	ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowPos(ImVec2(700.f, 300.f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
 	ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-	ImGui::Begin("Rayxen Log", &m_showLogWindow);
+	ImGui::Begin("Raygen Log", &m_showLogWindow);
 	ImGui::End();
 
-	log.Draw("Rayxen Log", &m_showLogWindow);
+	log.Draw("Raygen Log", &m_showLogWindow);
 }

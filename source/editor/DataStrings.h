@@ -2,39 +2,19 @@
 // For editor use only, contains the actual text pieces for the editor help and other stuff.
 
 inline const char* txt_about = R"(
-(outdated and/or imprecise, wait for version v1.0.1)
-License: TBD (v1.0.1)
+License: TBD
+Copyright (c) 2019-2020 John Moschos, Harry Katagis
+
 )";
 
 // this text autowraps around 70 chars for optimal reading
 inline const char* txt_help = R"(
-(outdated and/or imprecise, wait for version v1.0.1)
-
-Programming documentation can be found at docs/ in Markdown format or viewed directly on __github. In this window you can get an overview of Rayxen's features, design logic and editor basics.
-
-Rayxen has been primarily designed with the goal of being a sandbox for renderer development. Therefore all the design logic is based on the following basic principles:
-1. All rendering features are opt-in.
-2. ...
-
-The tools provided by the engine for Renderer Designers are:
-1. Extensible automatic asset handling with caching.
-2. Integrated reflection system with a powerful editor.
-3. Hot-swappable sample renderers for comparing and debugging.
-4. ...
-
-
-Editor Help:
 The editor is designed primarily for debugging and advanced users. Multiple properties can be set to "incorrect" values and rarely some may crash your system. You can for example set a negative texture size, or a 128k by 128k one so use responsibly.
-Also note that the editor has not been thoroughly profiled and may induce slight performance penalties while the windows are open and visible. The editor can be toggled at any time using the ` key.
-
+Also note that the editor has not been thoroughly profiled and may introduce slight performance penalties while the windows are open and visible. The editor can be toggled at any time using the ` key.
 
 Scene saving and loading is available and the scene format is in json.
-All the reflected properties of nodes are automatically serialized and restored upon loading. Any asset referenced in the scene file is stored relative to the Rayxen/assets/ folder and the scene will fail to load if it is not found.
+All the reflected properties of nodes are automatically serialized and restored upon loading. Any asset referenced in the scene file is stored relative to the Raygen/assets/ folder and the scene will fail to load if it is not found.
 Editing the json files by hand is possible but not recommended.
-
-
-Some help tooltips are available in the editor.
-
 )";
 
 inline const char* help_Outliner = R"(
