@@ -11,3 +11,4 @@
 #include "asset/pods/StringPod.h"
 #include "asset/pods/TexturePod.h"
 #include "asset/pods/JsonDocPod.h"
+#include "asset/pods/BinaryPod.h"
