@@ -48,6 +48,8 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/forward/GLForwardRenderer.cpp
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.cpp
 
+	renderer/renderers/vulkan/VkRendererBase.cpp
+
 
 	system/Engine.cpp
 	system/Input.cpp
@@ -96,6 +98,7 @@ set(HEADER_FILES
 	asset/loaders/GltfMaterialLoader.h
 	asset/loaders/GltfTextureLoader.h	
 	asset/loaders/GltfFileLoader.h
+	asset/loaders/BinaryLoader.h
 
 	asset/pods/TexturePod.h
 	asset/pods/MaterialPod.h
@@ -105,6 +108,7 @@ set(HEADER_FILES
 	asset/pods/StringPod.h
 	asset/pods/JsonDocPod.h
 	asset/pods/GltfFilePod.h
+	asset/pods/BinaryPod.h
 
 	asset/util/GltfAux.h
 	asset/util/ParsingAux.h
@@ -175,6 +179,8 @@ set(HEADER_FILES
 	renderer/renderers/opengl/dovr/GLDOVRRenderer.h
 	renderer/renderers/opengl/forward/GLForwardRenderer.h
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.h
+
+	renderer/renderers/vulkan/VkRendererBase.h
 
 
 	system/Engine.h
@@ -263,6 +269,9 @@ target_link_libraries(Raygen
 
 # glad dll
 add_compile_definitions(GLAD_GLAPI_EXPORT)
+
+# instruct glfw to globaly include vulkan headers
+add_compile_definitions(GLFW_INCLUDE_VULKAN)
 
 
 # dependencies (build order)
