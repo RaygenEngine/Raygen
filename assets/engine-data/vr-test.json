@@ -19,7 +19,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf",
+        "model": "/gltf-samples/2.0/Sponza/glTF/sponza.gltf",
         "~children": [
             {
                 "+name": "flight_helmet",
@@ -41,7 +41,7 @@
                     }
                 },
                 "+type": "Geometry",
-                "model": "/import-data/glTF-Sample-Models/FlightHelmet/glTF/FlightHelmet.gltf",
+                "model": "/gltf-samples/2.0/FlightHelmet/glTF/FlightHelmet.gltf",
                 "~children": []
             },
             {

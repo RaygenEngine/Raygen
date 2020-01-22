@@ -16,11 +16,11 @@
 AppBase::AppBase()
 {
 
-	m_name = "Rayxen Engine";
+	m_name = "Raygen Engine";
 	m_initialScene = "engine-data/default.json";
 	m_assetPath = "assets";
 
-	m_windowTitle = "Rayxen";
+	m_windowTitle = "Raygen";
 
 	m_windowWidth = 1920;
 	m_windowHeight = 1080;
