@@ -1,5 +1,3 @@
-![Ragyen](/assets/engine-data/logo.png?style=centerme "Raygen")
-
 # Raygen
 
 Raygen is a graphics engine focused on exploring real-time use cases of ray tracing.
@@ -9,7 +7,7 @@ The engine is written in modern C++ and uses the Vulkan API.
 ## Getting started
 
 ```
- git clone --recursive --shallow-submodules https://github.com/Renoras/Raygen
+ git clone --recursive https://github.com/Renoras/Raygen
  cd Raygen
  mkdir build
  cd build
