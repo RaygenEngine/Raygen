@@ -34,3 +34,7 @@
 	path = assets/gltf-samples
 	url = https://github.com/katagis/gltf-sample-models
 	branch = master
+[submodule "dependencies/glfw"]
+	path = dependencies/glfw
+	url = https://github.com/glfw/glfw
+	branch = v3.3-stable

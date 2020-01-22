@@ -248,11 +248,17 @@ if(MSVC)
 	set_property(TARGET Raygen PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
+# Vulkan
+find_package(Vulkan REQUIRED)
+
 # 3rd party libraries
 target_link_libraries(Raygen
 	glad.lib
 	opengl32.lib
 	XInput.lib
+	Vulkan::Vulkan
+	glfw
+	${GLFW_LIBRARIES}
 )
 
 # glad dll
@@ -262,6 +268,7 @@ add_compile_definitions(GLAD_GLAPI_EXPORT)
 # dependencies (build order)
 add_dependencies(Raygen 
 	glad
+	glfw
 )
 
 # 3rd party includes
@@ -281,6 +288,7 @@ include_directories(${DEPENDENCIES_DIRECTORY}/imfilebrowser)
 include_directories(${DEPENDENCIES_DIRECTORY}/glad/include/glad)
 include_directories(${DEPENDENCIES_DIRECTORY}/glad/include/KHR)
 include_directories(${DEPENDENCIES_DIRECTORY}/glad/include/)
+include_directories(${DEPENDENCIES_DIRECTORY}/GLFW/include)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
