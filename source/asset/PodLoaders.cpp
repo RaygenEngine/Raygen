@@ -13,6 +13,7 @@
 #include "asset/loaders/TextLoader.h"
 #include "asset/loaders/JsonDocLoader.h"
 #include "asset/loaders/JsonGenericLoader.h"
+#include "asset/loaders/BinaryLoader.h"
 
 #include "asset/UriLibrary.h"
 #include "system/Logger.h"
@@ -64,6 +65,11 @@ void ShaderPod::Load(ShaderPod* pod, const uri::Uri& path)
 void StringPod::Load(StringPod* pod, const uri::Uri& path)
 {
 	return TextLoader::Load(pod, path);
+}
+
+void BinaryPod::Load(BinaryPod* pod, const uri::Uri& path)
+{
+	return BinaryLoader::Load(pod, path);
 }
 
 void TexturePod::Load(TexturePod* pod, const uri::Uri& path)

@@ -98,6 +98,7 @@ set(HEADER_FILES
 	asset/loaders/GltfMaterialLoader.h
 	asset/loaders/GltfTextureLoader.h	
 	asset/loaders/GltfFileLoader.h
+	asset/loaders/BinaryLoader.h
 
 	asset/pods/TexturePod.h
 	asset/pods/MaterialPod.h
@@ -107,6 +108,7 @@ set(HEADER_FILES
 	asset/pods/StringPod.h
 	asset/pods/JsonDocPod.h
 	asset/pods/GltfFilePod.h
+	asset/pods/BinaryPod.h
 
 	asset/util/GltfAux.h
 	asset/util/ParsingAux.h
