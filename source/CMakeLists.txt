@@ -31,23 +31,6 @@ set(SOURCE_FILES
 	
 
 	renderer/ObserverRenderer.cpp
-	
-	renderer/renderers/opengl/GLPreviewer.cpp
-	renderer/renderers/opengl/GLEditorRenderer.cpp
-	renderer/renderers/opengl/GLRendererBase.cpp
-	renderer/renderers/opengl/assets/GLModel.cpp
-	renderer/renderers/opengl/assets/GLShader.cpp
-	renderer/renderers/opengl/assets/GLTexture.cpp
-	renderer/renderers/opengl/assets/GLMaterial.cpp
-	renderer/renderers/opengl/basic/GLBasicAmbient.cpp
-	renderer/renderers/opengl/basic/GLBasicSpotLight.cpp
-	renderer/renderers/opengl/basic/GLBasicDirectionalLight.cpp
-	renderer/renderers/opengl/basic/GLBasicPunctualLight.cpp
-	renderer/renderers/opengl/basic/GLBasicGeometry.cpp
-	renderer/renderers/opengl/dovr/GLDOVRRenderer.cpp
-	renderer/renderers/opengl/forward/GLForwardRenderer.cpp
-	renderer/renderers/opengl/deferred/GLDeferredRenderer.cpp
-
 	renderer/renderers/vulkan/VkRendererBase.cpp
 
 
@@ -160,26 +143,6 @@ set(HEADER_FILES
 	renderer/GenericGpuAssetManager.h
 	
 	renderer/util/GLSLutil.h
-	
-	renderer/renderers/opengl/GLAsset.h
-	renderer/renderers/opengl/GLPreviewer.h
-	renderer/renderers/opengl/GLAssetManager.h
-	renderer/renderers/opengl/GLEditorRenderer.h
-	renderer/renderers/opengl/GLRendererBase.h
-	renderer/renderers/opengl/GLUtil.h
-	renderer/renderers/opengl/assets/GLModel.h
-	renderer/renderers/opengl/assets/GLShader.h
-	renderer/renderers/opengl/assets/GLTexture.h
-	renderer/renderers/opengl/assets/GLMaterial.h
-	renderer/renderers/opengl/basic/GLBasicAmbient.h
-	renderer/renderers/opengl/basic/GLBasicSpotLight.h
-	renderer/renderers/opengl/basic/GLBasicDirectionalLight.h
-	renderer/renderers/opengl/basic/GLBasicPunctualLight.h
-	renderer/renderers/opengl/basic/GLBasicGeometry.h
-	renderer/renderers/opengl/dovr/GLDOVRRenderer.h
-	renderer/renderers/opengl/forward/GLForwardRenderer.h
-	renderer/renderers/opengl/deferred/GLDeferredRenderer.h
-
 	renderer/renderers/vulkan/VkRendererBase.h
 
 
@@ -259,16 +222,11 @@ find_package(Vulkan REQUIRED)
 
 # 3rd party libraries
 target_link_libraries(Raygen
-	glad.lib
-	opengl32.lib
 	XInput.lib
 	Vulkan::Vulkan
 	glfw
 	${GLFW_LIBRARIES}
 )
-
-# glad dll
-add_compile_definitions(GLAD_GLAPI_EXPORT)
 
 # instruct glfw to globaly include vulkan headers
 add_compile_definitions(GLFW_INCLUDE_VULKAN)
@@ -276,7 +234,6 @@ add_compile_definitions(GLFW_INCLUDE_VULKAN)
 
 # dependencies (build order)
 add_dependencies(Raygen 
-	glad
 	glfw
 )
 
@@ -294,9 +251,6 @@ include_directories(${DEPENDENCIES_DIRECTORY}/magic_enum/include)
 include_directories(${DEPENDENCIES_DIRECTORY}/nlohmann/include)
 include_directories(${DEPENDENCIES_DIRECTORY}/tinygltf)
 include_directories(${DEPENDENCIES_DIRECTORY}/imfilebrowser)
-include_directories(${DEPENDENCIES_DIRECTORY}/glad/include/glad)
-include_directories(${DEPENDENCIES_DIRECTORY}/glad/include/KHR)
-include_directories(${DEPENDENCIES_DIRECTORY}/glad/include/)
 include_directories(${DEPENDENCIES_DIRECTORY}/GLFW/include)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})

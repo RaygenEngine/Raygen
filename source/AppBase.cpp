@@ -3,9 +3,6 @@
 #include "AppBase.h"
 #include "editor/Editor.h"
 #include "platform/windows/Win32Window.h"
-#include "renderer/renderers/opengl/deferred/GLDeferredRenderer.h"
-#include "renderer/renderers/opengl/forward/GLForwardRenderer.h"
-#include "renderer/renderers/opengl/dovr/GLDOVRRenderer.h"
 #include "renderer/renderers/vulkan/VkRendererBase.h"
 #include "system/Engine.h"
 #include "system/Input.h"
@@ -122,8 +119,6 @@ void AppBase::RegisterRenderers()
 	// NOTE:
 	// Default behavior for an app is to start the first primary registered here.
 	Engine::RegisterPrimaryRenderer<vk::VkRendererBase>();
-	Engine::RegisterPrimaryRenderer<ogl::GLDeferredRenderer>();
-
 	//	Engine::RegisterPrimaryRenderer<ogl::GLForwardRenderer>();
 
 	// Non primary renderers are skipped when cycling through renderers but can be enabled from the editor menu
