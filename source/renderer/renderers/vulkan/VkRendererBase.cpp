@@ -950,7 +950,8 @@ initialization (e.g. if swap chain is recreated)
 
 void VkRendererBase::ImGui_VulkanInit()
 {
-
+	// ImGui implementation of command buffers needs a ton of fixes. enable validation layers to find errors
+	// This is a temporary hacky implementation to allow for basic debugging while working on other parts of the project
 	QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(m_physicalDevice, m_surface);
 
 	ImGui_ImplVulkan_InitInfo init = {};

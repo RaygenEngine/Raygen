@@ -71,13 +71,9 @@ void ImguiImpl::InitContext()
 	ImGui::GetIO().IniFilename = "EditorImgui.ini";
 }
 
-#include "renderer/renderers/opengl/GLEditorRenderer.h"
-
 void ImguiImpl::NewFrame()
 {
-	if (dynamic_cast<ogl::GLEditorRenderer*>(Engine::GetRenderer())) {
-		ImGui_ImplOpenGL3_NewFrame();
-	}
+
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 }
@@ -92,21 +88,6 @@ void ImguiImpl::CleanupContext()
 {
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
-}
-
-void ImguiImpl::InitOpenGL()
-{
-	ImGui_ImplOpenGL3_Init();
-}
-
-void ImguiImpl::RenderOpenGL()
-{
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void ImguiImpl::CleanupOpenGL()
-{
-	ImGui_ImplOpenGL3_Shutdown();
 }
 
 LRESULT ImguiImpl::WndProcHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -149,7 +130,6 @@ LRESULT ImguiImpl::WndProcHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 #include <imgui.cpp>
 #include <imgui_draw.cpp>
 #include <imgui_widgets.cpp>
-#include <examples/imgui_impl_opengl3.cpp>
 #include <examples/imgui_impl_vulkan.cpp>
 #include <examples/imgui_impl_win32.cpp>
 #include <misc/cpp/imgui_stdlib.cpp>
