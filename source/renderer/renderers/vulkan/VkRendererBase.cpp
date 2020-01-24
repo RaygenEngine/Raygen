@@ -247,8 +247,10 @@ VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
 		return capabilities.currentExtent;
 	}
 	else {
-		int32 height = Engine::GetMainWindow()->GetHeight();
-		int32 width = Engine::GetMainWindow()->GetWidth();
+
+		int32 height;
+		int32 width;
+		glfwGetWindowSize(Engine::GetMainWindow(), &width, &height);
 
 		VkExtent2D actualExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
 
@@ -333,7 +335,7 @@ VkRendererBase::~VkRendererBase()
 	vkDestroyInstance(m_instance, nullptr);
 }
 
-void VkRendererBase::CreateInstance()
+void VkRendererBase::CreateInstance(const std::vector<const char*>& additionalExtensions)
 {
 	VkApplicationInfo appInfo = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
 	appInfo.pApplicationName = "KaleidoApp";
@@ -362,6 +364,10 @@ void VkRendererBase::CreateInstance()
 		createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
 	}
 
+	for (auto& extension : additionalExtensions) {
+		requiredExtensions.push_back(extension);
+	}
+
 	CheckIfExtensionsAreAvailable();
 
 	createInfo.enabledExtensionCount = static_cast<uint32>(requiredExtensions.size());
@@ -375,13 +381,9 @@ void VkRendererBase::CreateInstance()
 	}
 }
 
-void VkRendererBase::CreateSurface(HWND assochWnd, HINSTANCE instance)
+void VkRendererBase::CreateSurface(GLFWwindow* window)
 {
-	VkWin32SurfaceCreateInfoKHR win32SurfaceInfo = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
-	win32SurfaceInfo.hwnd = assochWnd;
-	win32SurfaceInfo.hinstance = instance;
-
-	vkCall(vkCreateWin32SurfaceKHR(m_instance, &win32SurfaceInfo, nullptr, &m_surface));
+	vkCall(glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface));
 }
 
 void VkRendererBase::ChoosePhysicalDevice()
@@ -990,14 +992,8 @@ void VkRendererBase::ImGui_VulkanInit()
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
 
-void VkRendererBase::Init(HWND assochWnd, HINSTANCE instance)
+void VkRendererBase::Init()
 {
-	// Vk instance and debug messenger
-	CreateInstance();
-
-	// Vk surface
-	CreateSurface(assochWnd, instance);
-
 	// TODO: Rate device suitability and chose the count of gpus with the best scores based on properties etc
 	ChoosePhysicalDevice();
 

@@ -1,6 +1,6 @@
 #pragma once
-class Win32Window;
-using WindowType = Win32Window;
+struct GLFWwindow;
+using WindowType = GLFWwindow;
 
 class AssetManager;
 class Renderer;

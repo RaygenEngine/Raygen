@@ -2,6 +2,7 @@
 #include "editor/imgui/ImguiImpl.h"
 #include "system/Engine.h"
 #include "platform/windows/Win32Window.h"
+#include <glfw/glfw3.h>
 
 #include <imgui.h>
 #include <examples/imgui_impl_vulkan.h>
@@ -66,16 +67,19 @@ void ImguiImpl::InitContext()
 	ImGui::StyleColorsDark();
 	imguisyle::SetStyle();
 
-	ImGui_ImplWin32_Init(Engine::GetMainWindow()->GetHWND());
-	ImGui::GetIO().IniFilename = "EditorImgui.ini";
-
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	ImGui::GetIO().ConfigViewportsNoDecoration = false; //	|= ImGuiViewportFlags_NoDecoration;
+
+	ImGui_ImplGlfw_InitForVulkan(Engine::GetMainWindow(), true);
+	ImGui::GetIO().IniFilename = "EditorImgui.ini";
 }
 
 void ImguiImpl::NewFrame()
 {
 
-	ImGui_ImplWin32_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui_ImplVulkan_NewFrame();
 	ImGui::NewFrame();
 }
 
@@ -83,54 +87,20 @@ void ImguiImpl::EndFrame()
 {
 	ImGui::EndFrame();
 	ImGui::Render();
+	ImGui::UpdatePlatformWindows();
+	ImGui::RenderPlatformWindowsDefault();
 }
 
 void ImguiImpl::CleanupContext()
 {
-	ImGui_ImplWin32_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
-}
-
-LRESULT ImguiImpl::WndProcHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	// TODO: Its possible to actually implement this over the engine's input system
-	if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam)) {
-		return true;
-	}
-
-	// Imgui handles keys but also forwards them so we manually check if we should forward them to the main window
-	// handler.
-	if (ImGui::GetCurrentContext() != nullptr) {
-		if (ImGui::GetIO().WantCaptureKeyboard) {
-			switch (message) {
-				case WM_KEYDOWN:
-				case WM_SYSKEYDOWN: return true;
-			}
-		}
-		if (ImGui::GetIO().WantCaptureMouse) {
-			switch (message) {
-				case WM_MOUSEWHEEL:
-				case WM_MOUSEHWHEEL:
-				case WM_LBUTTONDOWN:
-				case WM_RBUTTONDOWN:
-				case WM_MBUTTONDOWN:
-				case WM_XBUTTONDOWN:
-				case WM_LBUTTONDBLCLK:
-				case WM_RBUTTONDBLCLK:
-				case WM_MBUTTONDBLCLK:
-				case WM_XBUTTONDBLCLK: return true;
-			}
-		}
-
-		return false;
-	}
-
-	return false;
 }
 
 #include <imgui.cpp>
 #include <imgui_draw.cpp>
 #include <imgui_widgets.cpp>
 #include <examples/imgui_impl_vulkan.cpp>
-#include <examples/imgui_impl_win32.cpp>
+//#include <examples/imgui_impl_win32.cpp>
+#include <examples/imgui_impl_glfw.cpp>
 #include <misc/cpp/imgui_stdlib.cpp>

@@ -23,6 +23,7 @@
 #include "world/nodes/geometry/GeometryNode.h"
 #include "reflection/ReflEnum.h"
 #include "editor/DataStrings.h"
+#include <glfw/glfw3.h>
 
 #include <iostream>
 #include <set>
@@ -106,7 +107,7 @@ void Editor::MakeMainMenu()
 	sceneMenu->AddEntry("Load", [&]() { m_loadFileBrowser.Open(); });
 	sceneMenu->AddEntry("Revert", [&]() { ReloadScene(); });
 	sceneMenu->AddSeperator();
-	sceneMenu->AddEntry("Exit", []() { Engine::GetMainWindow()->Destroy(); });
+	sceneMenu->AddEntry("Exit", []() { glfwSetWindowShouldClose(Engine::GetMainWindow(), 1); });
 	m_menus.emplace_back(std::move(sceneMenu));
 
 	auto renderersMenu = std::make_unique<ImRendererMenu>();
@@ -377,7 +378,11 @@ void Editor::LoadScene(const fs::path& scenefile)
 	Engine::Get().CreateWorldFromFile(fs::relative(scenefile).string());
 	Engine::Get().SwitchRenderer();
 
-	Event::OnWindowResize.Broadcast(Engine::GetMainWindow()->GetWidth(), Engine::GetMainWindow()->GetHeight());
+	int32 width;
+	int32 height;
+
+	glfwGetWindowSize(Engine::GetMainWindow(), &width, &height);
+	Event::OnWindowResize.Broadcast(width, height);
 }
 
 void Editor::ReloadScene()

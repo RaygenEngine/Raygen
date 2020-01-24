@@ -1,7 +1,8 @@
 #include "pch/pch.h"
 
 #include "world/nodes/camera/WindowCameraNode.h"
-#include "platform/windows/Win32Window.h"
+#include "system/Engine.h"
+#include <glfw/glfw3.h>
 
 WindowCameraNode::WindowCameraNode()
 	: CameraNode()
@@ -9,9 +10,13 @@ WindowCameraNode::WindowCameraNode()
 	m_resizeListener.BindMember(this, &WindowCameraNode::WindowResize);
 	auto mainWindow = Engine::GetMainWindow();
 
-	if (mainWindow && mainWindow->GetWidth() > 0 && mainWindow->GetHeight() > 0) {
-		m_viewportWidth = mainWindow->GetWidth();
-		m_viewportHeight = mainWindow->GetHeight();
+	int32 width;
+	int32 height;
+	glfwGetWindowSize(mainWindow, &width, &height);
+
+	if (mainWindow && width > 0 && height > 0) {
+		m_viewportWidth = width;
+		m_viewportHeight = height;
 	}
 }
 
