@@ -37,9 +37,6 @@ public:
 
 	virtual void MainLoop();
 
-	// Override here to register your custom renderer
-	virtual void RegisterRenderers();
-
 	// Return a 'new Win32Window()' with your parameters
 	virtual Win32Window* CreateAppWindow();
 

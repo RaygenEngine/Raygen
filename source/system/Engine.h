@@ -13,6 +13,10 @@ class AppBase;
 
 class NodeFactory;
 
+namespace vk {
+class VkRendererBase;
+}
+
 #include "system/Timer.h"
 
 
@@ -27,16 +31,6 @@ public:
 		uint64 draws{ 0ull };
 
 		void Reset();
-	};
-
-	struct RendererMetadata {
-		size_t index;
-		std::string name;
-		bool primary;
-
-	private:
-		friend class Engine;
-		std::function<Renderer*()> Construct;
 	};
 
 public:
@@ -59,18 +53,8 @@ public:
 	// Input will be valid forever after initialization.
 	[[nodiscard]] static Input* GetInput() { return Get().m_input; }
 
-	// DOC:
-	template<typename AsRenderer = Renderer>
-	[[nodiscard]] static AsRenderer* GetRenderer()
-	{
-		return dynamic_cast<AsRenderer*>(Get().m_renderer);
-	}
+	[[nodiscard]] static vk::VkRendererBase* GetRenderer() { return Get().m_renderer; }
 
-	template<template<class> typename RendererObject, typename RenderT>
-	[[nodiscard]] static RenderT* GetRenderer(RendererObject<RenderT>* contextRendererObject)
-	{
-		return GetRenderer<RenderT>();
-	}
 
 	// ALWAYS, ALWAYS check this return value. Editor may not be initialized at all in some cases.
 	[[nodiscard]] static Editor* GetEditor() { return Get().m_editor; }
@@ -101,9 +85,8 @@ private:
 	// It may be invalidated during runtime when loading other worlds etc.
 	World* m_world{ nullptr };
 
-	// Owning Pointer. This pointer will NEVER be valid without a valid World existing.
-	// It will get invalidated when switching renderers / loading worlds.
-	Renderer* m_renderer{ nullptr };
+	// Owning Pointer.
+	vk::VkRendererBase* m_renderer{ nullptr };
 
 	// Non owning pointer, expected to be valid for the whole program execution
 	AppBase* m_app{ nullptr };
@@ -113,34 +96,12 @@ private:
 	timer::Timer m_initToFrameTimer{};
 	timer::Timer m_frameTimer{ true };
 
-	std::vector<RendererMetadata> m_rendererRegistrations;
-
 	bool m_isEditorActive{ true };
 	bool m_isEditorEnabled{ true };
-	size_t m_currentRenderer{ 0 };
-
 
 	std::string m_statusLine{};
 	float m_lastFrameTime{ 0.f };
 
-	template<typename RendererClass>
-	static size_t RegisterRendererInternal(bool primary = false)
-	{
-		static_assert(std::is_base_of_v<Renderer, RendererClass>, "Attempting to register a non renderer class.");
-
-		RendererMetadata data;
-		data.Construct = []() -> Renderer* {
-			return new RendererClass();
-		};
-
-		size_t index = Engine::Get().m_rendererRegistrations.size();
-
-		data.name = refl::GetName<RendererClass>();
-		data.primary = primary;
-		data.index = index;
-		Engine::Get().m_rendererRegistrations.emplace_back(data);
-		return index;
-	}
 
 public:
 	// Init the internal engine systems.
@@ -151,22 +112,6 @@ public:
 	void InitEngine(AppBase* app);
 
 	void CreateWorldFromFile(const std::string& filename);
-
-	// if another renderer is already active, then destroy old and
-	// then activate the next
-	void SwitchRenderer(size_t registrationIndex);
-
-	template<typename RendererClass>
-	static size_t RegisterRenderer()
-	{
-		return RegisterRendererInternal<RendererClass>(false);
-	}
-
-	template<typename RendererClass>
-	static size_t RegisterPrimaryRenderer()
-	{
-		return RegisterRendererInternal<RendererClass>(true);
-	}
 
 	// Avoid this if possible and always refactor cmd debug features to normal features.
 	static bool HasCmdArgument(const std::string& argument);
@@ -188,16 +133,11 @@ public:
 
 	void ReportFrameDrawn();
 
-	void NextRenderer();
-
-	[[nodiscard]] size_t GetActiveRendererIndex() const { return m_currentRenderer; }
-
-	[[nodiscard]] const std::vector<RendererMetadata>& GetRendererList() const { return m_rendererRegistrations; };
-
 	void ToggleEditor();
 	void ActivateEditor();
 	void DeactivateEditor();
 
+	void SwitchRenderer();
 
 	void DeinitEngine();
 };

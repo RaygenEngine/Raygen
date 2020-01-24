@@ -3,13 +3,12 @@
 #include "AppBase.h"
 #include "editor/Editor.h"
 #include "platform/windows/Win32Window.h"
-#include "renderer/renderers/vulkan/VkRendererBase.h"
 #include "system/Engine.h"
 #include "system/Input.h"
 #include "system/Logger.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"
-
+#include "renderer/renderers/vulkan/VkRendererBase.h"
 
 AppBase::AppBase()
 {
@@ -64,7 +63,7 @@ int32 AppBase::Main(int32 argc, char* argv[]) // NOLINT
 	engine.CreateWorldFromFile(m_initialScene);
 
 	// Start the renderer
-	engine.SwitchRenderer(0);
+	engine.SwitchRenderer();
 
 
 	if (m_lockMouse) {
@@ -103,26 +102,12 @@ void AppBase::MainLoop()
 			Engine::Get().ToggleEditor();
 		}
 
-		if (Engine::GetInput()->IsKeyPressed(Key::TAB)) {
-			Engine::Get().NextRenderer();
-		}
 		Engine::GetWorld()->Update();
 
 		Engine::GetRenderer()->DrawFrame();
 
 		Engine::Get().ReportFrameDrawn();
 	}
-}
-
-void AppBase::RegisterRenderers()
-{
-	// NOTE:
-	// Default behavior for an app is to start the first primary registered here.
-	Engine::RegisterPrimaryRenderer<vk::VkRendererBase>();
-	//	Engine::RegisterPrimaryRenderer<ogl::GLForwardRenderer>();
-
-	// Non primary renderers are skipped when cycling through renderers but can be enabled from the editor menu
-	// Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
 }
 
 Win32Window* AppBase::CreateAppWindow()

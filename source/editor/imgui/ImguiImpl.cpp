@@ -2,12 +2,11 @@
 #include "editor/imgui/ImguiImpl.h"
 #include "system/Engine.h"
 #include "platform/windows/Win32Window.h"
-#define IMGUI_IMPL_OPENGL_LOADER_GLAD
 
 #include <imgui.h>
-#include <examples/imgui_impl_opengl3.h>
 #include <examples/imgui_impl_vulkan.h>
 #include <examples/imgui_impl_win32.h>
+#include <examples/imgui_impl_glfw.h>
 
 // forward declare this in our own file because its commented out in the imgui impl header.
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -69,6 +68,8 @@ void ImguiImpl::InitContext()
 
 	ImGui_ImplWin32_Init(Engine::GetMainWindow()->GetHWND());
 	ImGui::GetIO().IniFilename = "EditorImgui.ini";
+
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 }
 
 void ImguiImpl::NewFrame()

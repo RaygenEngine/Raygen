@@ -65,42 +65,6 @@ struct ImRendererMenu : public Editor::ImMenu {
 
 	void DrawOptions(Editor* editor) override
 	{
-		if (ImGui::MenuItem("Restart")) {
-			Editor::PushPostFrameCommand(
-				[=]() { Engine::Get().SwitchRenderer(Engine::Get().GetActiveRendererIndex()); });
-		}
-
-		if (ImGui::BeginMenu("Switch")) {
-
-			size_t current = Engine::Get().GetActiveRendererIndex();
-
-			auto rendererList = Engine::Get().GetRendererList();
-
-
-			for (auto& r : rendererList) {
-				if (!r.primary) {
-					continue;
-				}
-
-				if (ImGui::MenuItem(r.name.c_str(), nullptr, r.index == current)) {
-					Editor::PushPostFrameCommand([=]() { Engine::Get().SwitchRenderer(r.index); });
-				}
-			}
-			ImGui::Separator();
-
-			for (auto& r : rendererList) {
-				if (r.primary) {
-					continue;
-				}
-
-				if (ImGui::MenuItem(r.name.c_str(), nullptr, r.index == current)) {
-					Editor::PushPostFrameCommand([=]() { Engine::Get().SwitchRenderer(r.index); });
-				}
-			}
-
-			ImGui::EndMenu();
-		}
-
 		if (ImGui::BeginMenu("BBox Debugging")) {
 			auto& bboxEnum = ReflEnum::GetMeta<EditorBBoxDrawing>();
 			auto bboxEnumTie = bboxEnum.TieEnum(editor->m_bboxDrawing);
@@ -264,16 +228,11 @@ void Editor::UpdateEditor()
 	ImGui::EndChild();
 
 	auto& eng = Engine::Get();
-	auto rendererName = eng.GetRendererList()[eng.GetActiveRendererIndex()].name;
-
-	// auto str = "tris: " + std::to_string(m_drawReporter.tris) + " | drawcalls: " +
-	// std::to_string(m_drawReporter.draws);
-	// SetStatusLine(str);
 
 
 	auto drawReporter = Engine::GetDrawReporter();
-	std::string s = fmt::format("{} | Draws: {:n} | Tris: {:n} | {:.1f} FPS", rendererName, drawReporter->draws,
-		drawReporter->tris, Engine::GetFPS());
+	std::string s = fmt::format(
+		"Draws: {:n} | Tris: {:n} | {:.1f} FPS", drawReporter->draws, drawReporter->tris, Engine::GetFPS());
 
 	ImGui::Text(s.c_str());
 
@@ -287,7 +246,6 @@ void Editor::UpdateEditor()
 	if (m_showGltfWindow) {
 		m_showGltfWindow = m_assetWindow->Draw();
 	}
-
 
 	ImguiImpl::EndFrame();
 
@@ -417,7 +375,7 @@ void Editor::LoadScene(const fs::path& scenefile)
 	m_selectedNode = nullptr;
 
 	Engine::Get().CreateWorldFromFile(fs::relative(scenefile).string());
-	Engine::Get().SwitchRenderer(Engine::Get().GetActiveRendererIndex());
+	Engine::Get().SwitchRenderer();
 
 	Event::OnWindowResize.Broadcast(Engine::GetMainWindow()->GetWidth(), Engine::GetMainWindow()->GetHeight());
 }
