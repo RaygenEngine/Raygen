@@ -9,7 +9,7 @@
 [submodule "dependencies/imgui"]
 	path = dependencies/imgui
 	url = https://github.com/ocornut/imgui
-	branch = master
+	branch = docking
 [submodule "dependencies/magic_enum"]
 	path = dependencies/magic_enum
 	url = https://github.com/Neargye/magic_enum

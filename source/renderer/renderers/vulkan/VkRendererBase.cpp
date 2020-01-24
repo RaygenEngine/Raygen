@@ -963,7 +963,7 @@ void VkRendererBase::ImGui_VulkanInit()
 	init.PipelineCache = VK_NULL_HANDLE;
 	init.DescriptorPool = m_descriptorPool;
 	init.ImageCount = m_swapChainImages.size();
-	init.MinImageCount = m_swapChainImages.size();
+	init.MinImageCount = static_cast<uint32_t>(m_swapChainImages.size());
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
 	ImGui_ImplVulkan_Init(&init, m_renderPass);

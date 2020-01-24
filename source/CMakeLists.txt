@@ -1,19 +1,13 @@
 project (Raygen)
 
-# 3rd party libs
-link_directories(${DEPENDENCIES_DIRECTORY}/glad/lib)
-
 set(SOURCE_FILES 
 	main.cpp
 	AppBase.cpp
 
-
 	asset/AssetManager.cpp
 	asset/PodLoaders.cpp
 
-
 	asset/util/DependenciesImpl.cpp
-
 
 	editor/Editor.cpp
 	editor/AssetWindow.cpp
@@ -24,15 +18,11 @@ set(SOURCE_FILES
 	editor/imgui/ImguiImpl.cpp
     editor/imgui/ImguiDemo.cpp
 	
-	
 	platform/Window.cpp
-	
 	platform/windows/Win32Window.cpp
 	
-
 	renderer/ObserverRenderer.cpp
 	renderer/renderers/vulkan/VkRendererBase.cpp
-
 
 	system/Engine.cpp
 	system/Input.cpp
@@ -57,128 +47,9 @@ set(SOURCE_FILES
 	world/nodes/user/FreeformUserNode.cpp
 	world/nodes/user/UserNode.cpp
 	world/nodes/user/FlyingUserNode.cpp
-
 )
 
-set(HEADER_FILES
-	AppBase.h
-	FeatureMacros.h
- 
-	asset/AssetPod.h
-	asset/AssetManager.h
-	asset/UriLibrary.h
-	asset/PodIncludes.h
-	asset/PodHandle.h
-
-	asset/loaders/CubemapLoader.h
-	asset/loaders/JsonGenericLoader.h
-	asset/loaders/DummyLoader.h
-	asset/loaders/TextLoader.h
-	asset/loaders/JsonDocLoader.h
-	asset/loaders/ImageLoader.h
-	asset/loaders/ShaderLoader.h
-	asset/loaders/GltfModelLoader.h
-	asset/loaders/GltfMaterialLoader.h
-	asset/loaders/GltfTextureLoader.h	
-	asset/loaders/GltfFileLoader.h
-	asset/loaders/BinaryLoader.h
-
-	asset/pods/TexturePod.h
-	asset/pods/MaterialPod.h
-	asset/pods/ModelPod.h
-	asset/pods/ImagePod.h
-	asset/pods/ShaderPod.h
-	asset/pods/StringPod.h
-	asset/pods/JsonDocPod.h
-	asset/pods/GltfFilePod.h
-	asset/pods/BinaryPod.h
-
-	asset/util/GltfAux.h
-	asset/util/ParsingAux.h
-
-
-	core/CoreEnums.h
-	core/Event.h
-	core/MathAux.h
-	core/MetaTemplates.h
-	core/StringAux.h
-	core/Types.h
-
-
-	editor/AssetWindow.h
-	editor/Editor.h
-	editor/NodeContextActions.h
-	editor/PropertyEditor.h
-	editor/SceneSave.h
-	editor/DataStrings.h
-
-	editor/imgui/ImguiImpl.h
-	editor/imgui/ImguiUtil.h
-
-	
-	pch/pch.h
-	
-	
-	platform/Window.h
-	
-	platform/windows/Win32Window.h
-	platform/windows/TranslateWin32VirtualKeys.h
-	
-
-	reflection/GenMacros.h
-	reflection/GetClass.h
-	reflection/PodReflection.h
-	reflection/PodTools.h
-	reflection/Property.h
-	reflection/PropertyFlags.h
-	reflection/PropertyTypes.h
-	reflection/ReflClass.h
-	reflection/ReflectionTools.h
-	reflection/ReflEnum.h
-	reflection/TypeId.h
-
-	renderer/Renderer.h
-	renderer/ObserverRenderer.h
-	renderer/NodeObserver.h
-	renderer/GenericGpuAssetManager.h
-	
-	renderer/util/GLSLutil.h
-	renderer/renderers/vulkan/VkRendererBase.h
-
-
-	system/Engine.h
-	system/Object.h
-	system/Input.h
-	system/InputEnums.h
-	system/EngineEvents.h
-	system/Logger.h
-	system/Timer.h
-	system/UUIDGenerator.h
-
-
-	world/World.h
-	world/NodeFactory.h
-	
-	world/nodes/Node.h
-	world/nodes/NodeIterator.h
-
-	world/nodes/RootNode.h
-	world/nodes/TransformNode.h
-	world/nodes/vr/OVRNode.h
-	world/nodes/camera/CameraNode.h
-	world/nodes/camera/WindowCameraNode.h
-	world/nodes/camera/EditorCameraNode.h
-	world/nodes/geometry/GeometryNode.h
-	world/nodes/light/PunctualLightNode.h
-	world/nodes/light/DirectionalLightNode.h
-	world/nodes/light/SpotLightNode.h
-	world/nodes/light/LightNode.h
-	world/nodes/light/AmbientNode.h
-	world/nodes/user/FreeformUserNode.h
-	world/nodes/user/UserNode.h
-	world/nodes/user/FlyingUserNode.h
-)
-
+file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS "*.h")
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/CMakeLists.txt" AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/App.h")
 	set(APP_DIR "app")

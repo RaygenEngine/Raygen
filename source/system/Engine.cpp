@@ -9,7 +9,7 @@
 #include "renderer/Renderer.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"
-
+#include "renderer/renderers/vulkan/VkRendererBase.h"
 #include <algorithm>
 
 Engine::~Engine()
@@ -25,6 +25,26 @@ void Engine::DrawReporter::Reset()
 
 void Engine::InitEngine(AppBase* app)
 {
+	/*
+		V2:
+
+		Renderer State Stages:
+
+		> STAGE 1:
+		Headless "global" vulkan instance.
+		Sets up VkInstance and Device.
+		Allows for GPU asset loading.
+
+		> STAGE 2:
+		Sets up surface to the main window
+		Can present but has no world
+
+		> STAGE 3:
+		Full rendering capabilities with world.
+
+	*/
+
+
 	m_initToFrameTimer.Start();
 
 	m_app = app;
@@ -32,14 +52,7 @@ void Engine::InitEngine(AppBase* app)
 
 	m_input = new Input();
 	m_assetManager = new AssetManager();
-
 	m_assetManager->Init(m_app->m_assetPath);
-
-	app->RegisterRenderers();
-
-	CLOG_ABORT(!std::count_if(begin(m_rendererRegistrations), end(m_rendererRegistrations),
-				   [](auto& registration) { return registration.primary; }),
-		"No primary renderers registered.");
 
 	m_window = app->CreateAppWindow();
 
@@ -64,7 +77,7 @@ void Engine::CreateWorldFromFile(const std::string& filename)
 	m_world->LoadAndPrepareWorld(json);
 }
 
-void Engine::SwitchRenderer(size_t registrationIndex)
+void Engine::SwitchRenderer()
 {
 	// WIP
 	Engine& eng = Engine::Get();
@@ -76,24 +89,10 @@ void Engine::SwitchRenderer(size_t registrationIndex)
 		LOG_ERROR("Attempted to start a renderer without world.");
 		return;
 	}
-
-	if (registrationIndex < 0 || registrationIndex >= eng.m_rendererRegistrations.size()) {
-		LOG_WARN("Attempted to switch to incorrect renderer index: {} of total registered: {}", registrationIndex,
-			eng.m_rendererRegistrations.size());
-		return;
-	}
-
 	delete eng.m_renderer;
 
-
-	m_currentRenderer = registrationIndex;
-
-	eng.m_renderer = eng.m_rendererRegistrations[registrationIndex].Construct();
-
-	LOG_REPORT("Switched to renderer: {}", eng.m_rendererRegistrations[registrationIndex].name);
-
+	eng.m_renderer = new vk::VkRendererBase();
 	eng.m_renderer->SupportsEditor() ? ActivateEditor() : DeactivateEditor();
-
 	eng.m_renderer->Init(eng.m_window->GetHWND(), eng.m_window->GetHInstance());
 }
 
@@ -146,15 +145,6 @@ void Engine::ReportFrameDrawn()
 		LOG_WARN("Init to frame took: {} ms", m_initToFrameTimer.Get<ch::milliseconds>());
 		hasFrameReport = true;
 	}
-}
-
-void Engine::NextRenderer()
-{
-	auto index = (m_currentRenderer + 1) % m_rendererRegistrations.size();
-	while (!m_rendererRegistrations[index].primary) {
-		index = (index + 1) % m_rendererRegistrations.size();
-	}
-	SwitchRenderer(index);
 }
 
 void Engine::ToggleEditor()
