@@ -56,27 +56,15 @@ int32 AppBase::Main(int32 argc, char* argv[]) // NOLINT
 
 	engine.InitEngine(this);
 
-	Window* window = Engine::GetMainWindow();
-	window->Show();
-	window->DrawSplash();
+	WindowType* window = Engine::GetMainWindow();
 
 	engine.CreateWorldFromFile(m_initialScene);
-
-	// Start the renderer
-	engine.SwitchRenderer();
-
-
-	if (m_lockMouse) {
-		window->RestrictMouseMovement();
-	}
 
 	// Allow for world to update any flags that became dirty since InitWorld to here. (eg: resize events, nodes added
 	// later etc)
 	Engine::GetWorld()->DirtyUpdateWorld();
 
 	MainLoop();
-
-	window->ReleaseMouseMovement();
 
 	engine.DeinitEngine();
 
@@ -85,8 +73,8 @@ int32 AppBase::Main(int32 argc, char* argv[]) // NOLINT
 
 void AppBase::MainLoop()
 {
-	Window* window = Engine::GetMainWindow();
-	while (!window->IsClosed()) {
+	GLFWwindow* window = Engine::GetMainWindow();
+	while (!glfwWindowShouldClose(Engine::GetMainWindow())) {
 		if (Engine::IsEditorActive()) {
 			Engine::GetEditor()->PreBeginFrame();
 		}
@@ -96,7 +84,7 @@ void AppBase::MainLoop()
 		Engine::GetWorld()->ClearDirtyFlags();
 
 		// Let our window handle any events.
-		window->HandleEvents(m_handleControllers);
+		glfwPollEvents();
 
 		if (Engine::GetInput()->IsKeyPressed(Key::TILDE)) {
 			Engine::Get().ToggleEditor();

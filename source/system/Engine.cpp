@@ -10,6 +10,8 @@
 #include "world/NodeFactory.h"
 #include "world/World.h"
 #include "renderer/renderers/vulkan/VkRendererBase.h"
+#include "platform/GlfwUtil.h"
+#include <glfw/glfw3.h>
 #include <algorithm>
 
 Engine::~Engine()
@@ -25,25 +27,6 @@ void Engine::DrawReporter::Reset()
 
 void Engine::InitEngine(AppBase* app)
 {
-	/*
-		V2:
-
-		Renderer State Stages:
-
-		> STAGE 1:
-		Headless "global" vulkan instance.
-		Sets up VkInstance and Device.
-		Allows for GPU asset loading.
-
-		> STAGE 2:
-		Sets up surface to the main window
-		Can present but has no world
-
-		> STAGE 3:
-		Full rendering capabilities with world.
-
-	*/
-
 
 	m_initToFrameTimer.Start();
 
@@ -54,12 +37,7 @@ void Engine::InitEngine(AppBase* app)
 	m_assetManager = new AssetManager();
 	m_assetManager->Init(m_app->m_assetPath);
 
-	m_window = app->CreateAppWindow();
-
-
-	if (m_isEditorEnabled) {
-		m_editor = new Editor();
-	}
+	SwitchRenderer();
 }
 
 void Engine::CreateWorldFromFile(const std::string& filename)
@@ -79,21 +57,28 @@ void Engine::CreateWorldFromFile(const std::string& filename)
 
 void Engine::SwitchRenderer()
 {
+	glfwInit();
 	// WIP
 	Engine& eng = Engine::Get();
-
-	Engine::GetMainWindow()->DrawLoading();
-
-
-	if (!Engine::GetWorld()) {
-		LOG_ERROR("Attempted to start a renderer without world.");
-		return;
-	}
 	delete eng.m_renderer;
 
 	eng.m_renderer = new vk::VkRendererBase();
 	eng.m_renderer->SupportsEditor() ? ActivateEditor() : DeactivateEditor();
-	eng.m_renderer->Init(eng.m_window->GetHWND(), eng.m_window->GetHInstance());
+
+	// Vk instance and debug messenger
+	eng.m_renderer->CreateInstance(glfwutl::GetVulkanExtensions());
+
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	eng.m_window
+		= glfwCreateWindow(m_app->m_windowWidth, m_app->m_windowHeight, m_app->m_windowTitle.c_str(), nullptr, nullptr);
+
+	eng.m_renderer->CreateSurface(eng.m_window);
+
+	if (m_isEditorEnabled) {
+		m_editor = new Editor();
+	}
+
+	eng.m_renderer->Init();
 }
 
 bool Engine::HasCmdArgument(const std::string& argument)
@@ -176,8 +161,8 @@ void Engine::DeinitEngine()
 	delete m_renderer;
 	delete m_editor;
 	delete m_world;
-	delete m_window;
-
+	glfwDestroyWindow(m_window);
+	glfwTerminate();
 	delete m_assetManager;
 	delete m_input;
 }

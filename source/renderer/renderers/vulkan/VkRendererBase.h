@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer/ObserverRenderer.h"
-
+#include <glfw/glfw3.h>
 #include <vulkan/vulkan.h>
 
 namespace vk {
@@ -98,8 +98,7 @@ class VkRendererBase : public ObserverRenderer {
 	// that do not report swap chain incompatibilities correctly
 	// Also test window minimization
 
-	void CreateInstance();
-	void CreateSurface(HWND assochWnd, HINSTANCE instance);
+
 	void ChoosePhysicalDevice();
 	void CreateDevice();
 	void CreateSwapChain();
@@ -121,10 +120,13 @@ class VkRendererBase : public ObserverRenderer {
 	void ImGui_VulkanInit();
 
 public:
+	void CreateInstance(const std::vector<const char*>& additionalExtensions);
+	void CreateSurface(GLFWwindow* window);
+
 	virtual ~VkRendererBase();
 
 
-	virtual void Init(HWND assochWnd, HINSTANCE instance) override;
+	void Init();
 	virtual bool SupportsEditor() override;
 	virtual void Render() override;
 };

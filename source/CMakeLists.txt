@@ -19,6 +19,8 @@ set(SOURCE_FILES
     editor/imgui/ImguiDemo.cpp
 	
 	platform/Window.cpp
+	platform/GlfwUtil.cpp
+
 	platform/windows/Win32Window.cpp
 	
 	renderer/ObserverRenderer.cpp
@@ -101,7 +103,7 @@ target_link_libraries(Raygen
 
 # instruct glfw to globaly include vulkan headers
 add_compile_definitions(GLFW_INCLUDE_VULKAN)
-
+add_compile_definitions(GLFW_INCLUDE_NONE)
 
 # dependencies (build order)
 add_dependencies(Raygen 

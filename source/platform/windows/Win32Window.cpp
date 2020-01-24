@@ -230,16 +230,17 @@ LRESULT CALLBACK Win32Window::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
 {
 	LRESULT result = NULL;
 
-	Win32Window* window = Engine::GetMainWindow();
+	Win32Window* window = nullptr;
+	// Engine::GetMainWindow();
 
 	if (!window) {
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
 
 	if (Engine::IsEditorActive()) {
-		if (ImguiImpl::WndProcHandler(hWnd, message, wParam, lParam)) {
-			return true;
-		}
+		// if (ImguiImpl::WndProcHandler(hWnd, message, wParam, lParam)) {
+		// return true;
+		//}
 	}
 
 	auto& input = *Engine::GetInput();
