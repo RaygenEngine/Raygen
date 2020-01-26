@@ -4,7 +4,6 @@
 #include "system/Logger.h"
 
 #include "asset/AssetManager.h"
-#include "platform/windows/Win32Window.h"
 
 #include <set>
 
