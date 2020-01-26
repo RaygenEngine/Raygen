@@ -68,7 +68,7 @@ void ImguiImpl::InitContext()
 
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-	ImGui::GetIO().ConfigViewportsNoDecoration = false; //	|= ImGuiViewportFlags_NoDecoration;
+	ImGui::GetIO().ConfigViewportsNoDecoration = false;
 
 	ImGui_ImplGlfw_InitForVulkan(Engine::GetMainWindow(), true);
 	ImGui::GetIO().IniFilename = "EditorImgui.ini";
