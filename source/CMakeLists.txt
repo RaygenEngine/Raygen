@@ -18,11 +18,8 @@ set(SOURCE_FILES
 	editor/imgui/ImguiImpl.cpp
     editor/imgui/ImguiDemo.cpp
 	
-	platform/Window.cpp
 	platform/GlfwUtil.cpp
 
-	platform/windows/Win32Window.cpp
-	
 	renderer/ObserverRenderer.cpp
 	renderer/renderers/vulkan/VkRendererBase.cpp
 

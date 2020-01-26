@@ -1,73 +1,63 @@
 #include "pch/pch.h"
-
 #include "system/Input.h"
 
-void Input::UpdateKeyPressed(Key key)
+void Input::ReleaseSpecialKey(Key released, Key special)
 {
-	m_keysPressed.insert(key);
-	m_keysRepeat.insert(key);
+	Key otherKey; // The other same special key, eg if special is LShift the otherKey should become RShift
+
+	switch (special) {
+		case Key::Shift: otherKey = (released == Key::LeftShift) ? Key::RightShift : Key::LeftShift; break;
+		case Key::Alt: otherKey = (released == Key::LeftAlt) ? Key::RightAlt : Key::LeftAlt; break;
+		case Key::Ctrl: otherKey = (released == Key::LeftCtrl) ? Key::RightCtrl : Key::LeftCtrl; break;
+		case Key::Platform: otherKey = (released == Key::LeftPlatform) ? Key::RightPlatform : Key::LeftPlatform; break;
+		case Key::Enter: otherKey = (released == Key::Enter_Text) ? Key::Num_Enter : Key::Enter_Text; break;
+	}
+
+	if (!IsDown(otherKey)) {
+		Z_UpdateKeyReleased(special, Key::None);
+	}
 }
 
-void Input::UpdateKeyReleased(Key key)
+
+void Input::Z_UpdateKeyPressed(Key key, Key special)
 {
-	m_keysReleased.insert(key);
-	m_keysRepeat.erase(key);
+	keysJustPressed.insert(key);
+	keyStates[static_cast<int32>(key)] = true;
+
+	if (special != Key::None && !IsDown(special)) {
+		Z_UpdateKeyPressed(special, Key::None);
+	}
 }
 
-void Input::UpdateAnalogState(const AnalogState& state)
+void Input::Z_UpdateKeyReleased(Key key, Key special)
 {
-	m_analogState = state;
+	keysJustReleased.insert(key);
+	keyStates[static_cast<int32>(key)] = false;
+
+	if (special != Key::None) {
+		ReleaseSpecialKey(key, special);
+	}
 }
 
-void Input::UpdateAnalogState(AnalogState* state)
+void Input::Z_UpdateMouseMove(glm::vec2 newCoords)
 {
-	// implicit copy constructor
-	m_analogState = *state;
+	if (IsDown(Key::Mouse_LeftClick) || IsDown(Key::Mouse_RightClick) || IsDown(Key::Mouse_MiddleClick)) {
+		isMouseDragging = true;
+	}
+	relativeCursorPosition = newCoords - cursorPosition;
+	cursorPosition = newCoords;
 }
 
-void Input::UpdateWheel(int32 wheelDelta)
+void Input::Z_UpdateScrollWheel(int32 newDelta)
 {
-	m_wheelDelta = wheelDelta;
+	scrollWheelDelta = newDelta;
 }
 
-void Input::UpdateCursorPosition(const glm::vec2& newCursorPosition)
+void Input::Z_ClearFrameState()
 {
-	m_cursorRelativePosition = newCursorPosition - m_cursorPosition;
-	m_cursorPosition = newCursorPosition;
-}
-
-void Input::UpdateDoubleClick()
-{
-	m_doubleClicked = true;
-}
-
-void Input::UpdateCursorDrag()
-{
-	m_cursorDragged = true;
-}
-
-bool Input::IsKeyPressed(Key key) const
-{
-	return m_keysPressed.find(key) != m_keysPressed.end();
-}
-
-bool Input::IsKeyRepeat(Key key) const
-{
-	return m_keysRepeat.find(key) != m_keysRepeat.end();
-}
-
-bool Input::IsKeyReleased(Key key) const
-{
-	return m_keysReleased.find(key) != m_keysReleased.end();
-}
-
-void Input::ClearSoftState()
-{
-	m_wheelDelta = 0;
-	m_cursorRelativePosition = { 0, 0 };
-	m_doubleClicked = false;
-	m_cursorDragged = false;
-
-	m_keysReleased.clear();
-	m_keysPressed.clear();
+	scrollWheelDelta = 0;
+	keysJustPressed.clear();
+	keysJustReleased.clear();
+	isMouseDragging = false;
+	relativeCursorPosition = {};
 }

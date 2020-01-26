@@ -12,40 +12,40 @@ void FlyingUserNode::Update(float deltaTime)
 {
 	UserNode::Update(deltaTime);
 
-	auto& input = *Engine::GetInput();
-	auto& analog = input.GetAnalogState();
+	auto& input = Engine::GetInput();
+	auto& gamepad = input.GetGamepadState();
 
 	float pitch = 0.f;
 	float yaw = 0.f;
 	float roll = 0.f;
 	float forward = m_baseSpeed * deltaTime;
 
-	if (input.IsCursorDragged() && input.IsKeyRepeat(Key::RBUTTON)) {
-		yaw += -input.GetCursorRelativePosition().x * m_inputYawMultiplier * 0.1f;
-		pitch += -input.GetCursorRelativePosition().y * m_inputPitchMultiplier * 0.1f;
+	if (input.IsMouseDragging()) {
+		yaw += -input.GetMouseDelta().x * m_inputYawMultiplier * 0.1f;
+		pitch += -input.GetMouseDelta().y * m_inputPitchMultiplier * 0.1f;
 	}
 
-	if (!input.IsLeftThumbResting()) {
-		yaw += -analog.ls.GetXAxisValue(m_inputYawMultiplier) * deltaTime * m_inputSensitivity;
-		pitch += -analog.ls.GetYAxisValue(m_inputPitchMultiplier) * deltaTime * m_inputSensitivity;
+	if (!gamepad.ls.IsResting()) {
+		yaw += -gamepad.ls.GetXAxisValue(m_inputYawMultiplier) * deltaTime * m_inputSensitivity;
+		pitch += -gamepad.ls.GetYAxisValue(m_inputPitchMultiplier) * deltaTime * m_inputSensitivity;
 	}
 
-	if (!input.IsLeftTriggerResting()) {
-		roll += -analog.lt * m_inputSpeedMultiplier * deltaTime * m_inputSensitivity;
+	if (!gamepad.IsLTResting()) {
+		roll += -gamepad.lt * m_inputSpeedMultiplier * deltaTime * m_inputSensitivity;
 	}
 
-	if (!input.IsRightTriggerResting()) {
-		roll += analog.rt * m_inputSpeedMultiplier * deltaTime * m_inputSensitivity;
+	if (!gamepad.IsRTResting()) {
+		roll += gamepad.rt * m_inputSpeedMultiplier * deltaTime * m_inputSensitivity;
 	}
 
 
-	if (input.IsKeyPressed(Key::GAMEPAD_Y)) {
-		m_baseSpeed += 5.f;
-	}
+	// if (input.IsJustPressed(Key::GAMEPAD_Y)) {
+	//	m_baseSpeed += 5.f;
+	//}
 
-	if (input.IsKeyPressed(Key::GAMEPAD_X)) {
-		m_baseSpeed -= 5.f;
-	}
+	// if (input.IsJustPressed(Key::GAMEPAD_X)) {
+	//	m_baseSpeed -= 5.f;
+	//}
 
 
 	RotateNodeAroundAxisWCS(GetNodeUpWCS(), yaw);
@@ -55,15 +55,15 @@ void FlyingUserNode::Update(float deltaTime)
 	AddNodePositionOffsetWCS(GetNodeForwardWCS() * forward);
 
 
-	if (!input.IsRightThumbResting()) {
-		yaw += -analog.ls.GetXAxisValue(90.f);
-		pitch += -analog.ls.GetYAxisValue(90.f);
+	if (!gamepad.ls.IsResting()) {
+		yaw += -gamepad.ls.GetXAxisValue(90.f);
+		pitch += -gamepad.ls.GetYAxisValue(90.f);
 	}
 
 	if (m_handleHead) {
 
-		auto headYaw = -analog.rs.GetXAxisValue() * 90.f;
-		auto headPitch = analog.rs.GetYAxisValue() * 90.f;
+		auto headYaw = -gamepad.rs.GetXAxisValue() * 90.f;
+		auto headPitch = gamepad.rs.GetYAxisValue() * 90.f;
 
 		m_pilotHead->SetNodeEulerAnglesLCS(glm::vec3(headPitch, headYaw, 0.f));
 	}

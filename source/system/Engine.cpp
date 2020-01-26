@@ -72,6 +72,8 @@ void Engine::SwitchRenderer()
 	eng.m_window
 		= glfwCreateWindow(m_app->m_windowWidth, m_app->m_windowHeight, m_app->m_windowTitle.c_str(), nullptr, nullptr);
 
+	glfwutl::SetupEventCallbacks(eng.m_window);
+
 	eng.m_renderer->CreateSurface(eng.m_window);
 
 	if (m_isEditorEnabled) {
