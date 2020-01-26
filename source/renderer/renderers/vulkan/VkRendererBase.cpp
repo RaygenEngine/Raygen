@@ -7,8 +7,6 @@
 
 #include <set>
 
-#include <vulkan/vulkan_win32.h>
-
 #include "imgui/imgui.h"
 #include "imgui/examples/imgui_impl_vulkan.h" //wip
 
@@ -82,7 +80,8 @@ void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create
 	createInfo.pfnUserCallback = DebugCallback;
 }
 
-std::vector<const char*> requiredExtensions = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+// NOTE: Win32 surface extension is not required here anymore. Avoids requiring windows.h
+std::vector<const char*> requiredExtensions = { VK_KHR_SURFACE_EXTENSION_NAME };
 std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
