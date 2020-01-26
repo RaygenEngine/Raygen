@@ -94,6 +94,7 @@ find_package(Vulkan REQUIRED)
 target_link_libraries(Raygen
 	XInput.lib
 	Vulkan::Vulkan
+	spdlog
 	glfw
 	${GLFW_LIBRARIES}
 )
@@ -105,6 +106,7 @@ add_compile_definitions(GLFW_INCLUDE_NONE)
 # dependencies (build order)
 add_dependencies(Raygen 
 	glfw
+	spdlog
 )
 
 # 3rd party includes
