@@ -5,7 +5,6 @@
 #include "AppBase.h"
 #include "asset/AssetManager.h"
 #include "editor/Editor.h"
-#include "platform/windows/Win32Window.h"
 #include "renderer/Renderer.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"

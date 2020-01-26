@@ -1,8 +1,5 @@
 #pragma once
 
-// TODO: remove when you implement platforms
-#include <windows.h>
-
 class Renderer {
 public:
 	Renderer() = default;
