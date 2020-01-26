@@ -4,7 +4,6 @@
 // Game class provides overrides for the most important classes, functions and settings of the base engine.
 
 class NodeFactory;
-class Win32Window;
 
 class AppBase {
 protected:
@@ -36,9 +35,6 @@ public:
 	virtual int32 Main(int32 argc, char* argv[]);
 
 	virtual void MainLoop();
-
-	// Return a 'new Win32Window()' with your parameters
-	virtual Win32Window* CreateAppWindow();
 
 	// Return a 'new NodeFactory()' subtype of node factory with your own factory
 	virtual NodeFactory* MakeNodeFactory();

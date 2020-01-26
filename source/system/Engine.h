@@ -6,7 +6,7 @@ class AssetManager;
 class Renderer;
 class Window;
 class World;
-class Input;
+struct Input;
 class Editor;
 
 class AppBase;
@@ -51,7 +51,7 @@ public:
 	[[nodiscard]] static AssetManager* GetAssetManager() { return Get().m_assetManager; }
 
 	// Input will be valid forever after initialization.
-	[[nodiscard]] static Input* GetInput() { return Get().m_input; }
+	[[nodiscard]] static Input& GetInput() { return *Get().m_input; }
 
 	[[nodiscard]] static vk::VkRendererBase* GetRenderer() { return Get().m_renderer; }
 

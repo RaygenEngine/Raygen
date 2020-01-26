@@ -7,7 +7,6 @@
 
 #include "asset/AssetManager.h"
 #include "asset/PodIncludes.h"
-#include "platform/windows/Win32Window.h"
 #include "reflection/PodTools.h"
 #include "reflection/ReflectionTools.h"
 #include "system/Engine.h"
@@ -647,11 +646,11 @@ void Editor::Run_HelpWindow()
 
 void Editor::HandleInput()
 {
-	auto input = Engine::GetInput();
-	if (input->IsKeyRepeat(Key::SHIFT) && input->IsKeyPressed(Key::F)) {
+	auto& input = Engine::GetInput();
+	if (input.IsDown(Key::LeftShift) && input.IsJustPressed(Key::F)) {
 		PilotThis(m_selectedNode);
 	}
-	else if (input->IsKeyPressed(Key::F)) {
+	else if (input.IsDown(Key::F)) {
 		if (m_selectedNode) {
 			FocusNode(m_selectedNode);
 		}

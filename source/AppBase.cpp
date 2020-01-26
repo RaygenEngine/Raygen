@@ -80,13 +80,13 @@ void AppBase::MainLoop()
 		}
 
 		// clear input soft state (pressed keys, etc.)
-		Engine::GetInput()->ClearSoftState();
+		Engine::GetInput().Z_ClearFrameState();
 		Engine::GetWorld()->ClearDirtyFlags();
 
 		// Let our window handle any events.
 		glfwPollEvents();
 
-		if (Engine::GetInput()->IsKeyPressed(Key::TILDE)) {
+		if (Engine::GetInput().IsJustPressed(Key::Tilde)) {
 			Engine::Get().ToggleEditor();
 		}
 
@@ -96,11 +96,6 @@ void AppBase::MainLoop()
 
 		Engine::Get().ReportFrameDrawn();
 	}
-}
-
-Win32Window* AppBase::CreateAppWindow()
-{
-	return Win32Window::CreateWin32Window(m_windowTitle, CW_USEDEFAULT, CW_USEDEFAULT, m_windowWidth, m_windowHeight);
 }
 
 NodeFactory* AppBase::MakeNodeFactory()

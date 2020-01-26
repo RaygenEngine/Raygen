@@ -4,118 +4,90 @@
 #include "core/MathAux.h"
 
 #include <unordered_set>
+#include <bitset>
 
-class Input {
-public:
+using KeyStates = std::bitset<static_cast<int32>(Key::_NUM)>;
+
+// TODO:
+// * Gamepad Support
+// * Actual input system with focus
+// FIXME: Workaround mouse reporting outside of window
+// * Implement reflection for Input Enum keys to support editor and Key Properties
+// * Modifier support for key presses, useful for the editor - circumvented by event calls
+
+struct Input {
 	struct Stick {
-		float magnitude;
+		float magnitude{ 0.0f };
 		glm::vec2 direction;
 
 		float GetXAxisValue(float multiplyBy = 1.f) const { return direction.x * magnitude * multiplyBy; }
 		float GetYAxisValue(float multiplyBy = 1.f) const { return direction.y * magnitude * multiplyBy; }
+		bool IsResting() const { return math::EpsilonEqualsZero(magnitude); }
 	};
 
-	struct AnalogState {
+	struct GamepadState {
 		Stick ls; // left stick
 		Stick rs; // right stick
 
 		// normalized analog value
-		float lt; // left trigger
-		float rt; // right trigger
+		float lt{ 0.0f }; // left trigger
+		float rt{ 0.0f }; // right trigger
+
+		[[nodiscard]] bool IsLTResting() const { return math::EpsilonEqualsZero(lt); }
+		[[nodiscard]] bool IsRTResting() const { return math::EpsilonEqualsZero(rt); }
 	};
 
+
 private:
-	std::unordered_set<Key> m_keysPressed;
-	std::unordered_set<Key> m_keysRepeat;
-	std::unordered_set<Key> m_keysReleased;
+	// TODO:
+	GamepadState gamepadState;
+	KeyStates keyStates{};
 
-	bool m_doubleClicked{ false };
-	bool m_cursorDragged{ false };
+	// Use getter utilities for these
+	std::unordered_set<Key> keysJustPressed;
+	std::unordered_set<Key> keysJustReleased;
 
-	glm::vec2 m_cursorPosition{};
-	// rel to previous recorded m_cursorPosition
-	glm::vec2 m_cursorRelativePosition{};
+	bool isMouseDragging{ false };
 
-	// multiples of 120
-	int32 m_wheelDelta{ 0 };
+	glm::vec2 cursorPosition;
+	glm::vec2 relativeCursorPosition;
 
-	AnalogState m_analogState{};
+	int32 scrollWheelDelta{ 0 };
+
+	// Handles "double" keys propagation. (eg: Releasing LShift while holding down RShift)
+	void ReleaseSpecialKey(Key released, Key special);
 
 public:
-	void UpdateWheel(int32 wheelDelta);
-	void UpdateCursorPosition(const glm::vec2& newCursorPosition);
-	void UpdateDoubleClick();
-	void UpdateCursorDrag();
+	// Use only through platform code to update the state.
+	void Z_UpdateKeyPressed(Key key, Key special);
+	void Z_UpdateKeyReleased(Key key, Key special);
+	void Z_UpdateMouseMove(glm::vec2 newCoords);
+	void Z_UpdateScrollWheel(int32 newDelta);
+	void Z_ClearFrameState();
 
-	void UpdateKeyPressed(Key key);
-	void UpdateKeyReleased(Key key);
+	[[nodiscard]] bool IsMouseDragging() const noexcept { return isMouseDragging; }
 
-	void UpdateAnalogState(const AnalogState& state);
-	void UpdateAnalogState(AnalogState* state);
+	[[nodiscard]] glm::vec2 GetMouseDelta() const noexcept { return relativeCursorPosition; }
 
-	[[nodiscard]] bool IsKeyPressed(Key key) const;
-	[[nodiscard]] bool IsKeyRepeat(Key key) const;
-	[[nodiscard]] bool IsKeyReleased(Key key) const;
+	// Pixels in window buffer coordinates.
+	// LIMITATION: Actual mouse position will be incorrect if mouse is outside of the window
+	[[nodiscard]] glm::vec2 GetMousePosition() const noexcept { return cursorPosition; }
 
-	[[nodiscard]] bool IsKeysCombination(Key key) const { return IsKeyRepeat(key); }
+	// Returns a possibly negative integer number of scroll steps.
+	[[nodiscard]] int32 GetScrollDelta() const noexcept { return scrollWheelDelta; }
 
-	template<typename... Args>
-	[[nodiscard]] bool IsKeysCombination(Key key0, Args... keys) const
+	[[nodiscard]] bool IsDown(Key key) const noexcept { return keyStates[static_cast<int32>(key)]; }
+	[[nodiscard]] bool IsJustPressed(Key key) const noexcept { return keysJustPressed.count(key) > 0; }
+	[[nodiscard]] bool IsJustReleased(Key key) const noexcept { return keysJustReleased.count(key) > 0; }
+
+	[[nodiscard]] const KeyStates& GetKeyStates() const noexcept { return keyStates; }
+	[[nodiscard]] const GamepadState& GetGamepadState() const noexcept { return gamepadState; }
+
+	[[nodiscard]] bool AreKeysDown(Key key) const noexcept { return IsDown(key); }
+
+	template<typename... Keys>
+	[[nodiscard]] bool AreKeysDown(Key key, Keys... keys) const noexcept
 	{
-		return IsKeysCombination(key0) && IsKeysCombination(keys...);
+		return IsDown(key) && AreKeysDown(keys...);
 	}
-
-	[[nodiscard]] bool IsAnyOfKeysPressed(Key key) const { return IsKeyPressed(key); }
-
-	template<typename... Args>
-	[[nodiscard]] bool IsAnyOfKeysPressed(Key key0, Args... keys) const
-	{
-		return IsAnyOfKeysPressed(key0) || IsAnyOfKeysPressed(keys...);
-	}
-
-	[[nodiscard]] bool IsAnyOfKeysRepeat(Key key) const { return IsKeyRepeat(key); }
-
-	template<typename... Args>
-	[[nodiscard]] bool IsAnyOfKeysRepeat(Key key0, Args... keys) const
-	{
-		return IsAnyOfKeysRepeat(key0) || IsAnyOfKeysRepeat(keys...);
-	}
-
-	[[nodiscard]] bool IsAnyOfKeysReleased(Key key) const { return IsKeyReleased(key); }
-
-	template<typename... Args>
-	[[nodiscard]] bool IsAnyOfKeysReleased(Key key0, Args... keys) const
-	{
-		return IsAnyOfKeysReleased(key0) || IsAnyOfKeysReleased(keys...);
-	}
-
-	[[nodiscard]] bool IsDoubleClicked() const { return m_cursorDragged; }
-	[[nodiscard]] bool IsCursorDragged() const { return m_cursorDragged; }
-	[[nodiscard]] // with regards to the previous recorded
-	[[nodiscard]] glm::vec2
-		GetCursorRelativePosition() const
-	{
-		return m_cursorRelativePosition;
-	}
-	[[nodiscard]] glm::vec2 GetCursorPosition() const { return m_cursorPosition; }
-	// multiples of 120
-	[[nodiscard]] int32 GetWheelDelta() const { return m_wheelDelta; }
-
-	[[nodiscard]] const AnalogState& GetAnalogState() const { return m_analogState; }
-	[[nodiscard]] float GetLeftTriggerMagnitude() const { return m_analogState.lt; }
-	[[nodiscard]] float GetRightTriggerMagnitude() const { return m_analogState.rt; }
-
-	[[nodiscard]] float GetLeftThumbMagnitude() const { return m_analogState.ls.magnitude; }
-	[[nodiscard]] float GetRightThumbMagnitude() const { return m_analogState.rs.magnitude; }
-
-	[[nodiscard]] glm::vec2 GetLeftThumbDirection() const { return m_analogState.ls.direction; }
-	[[nodiscard]] glm::vec2 GetRightThumbDirection() const { return m_analogState.rs.direction; }
-
-	[[nodiscard]] bool IsLeftTriggerResting() const { return math::EpsilonEqualsZero(m_analogState.lt); }
-	[[nodiscard]] bool IsRightTriggerResting() const { return math::EpsilonEqualsZero(m_analogState.rt); }
-
-	[[nodiscard]] bool IsLeftThumbResting() const { return math::EpsilonEqualsZero(m_analogState.ls.magnitude); }
-	[[nodiscard]] bool IsRightThumbResting() const { return math::EpsilonEqualsZero(m_analogState.rs.magnitude); }
-
-	void ClearSoftState();
 };

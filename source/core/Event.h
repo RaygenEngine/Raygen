@@ -74,4 +74,6 @@ public:
 			listener->m_callback(std::forward<Args>(args)...);
 		}
 	}
+
+	[[nodiscard]] constexpr bool IsBound() const noexcept { return listeners.size() > 0; }
 };

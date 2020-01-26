@@ -200,6 +200,11 @@ public:
 	EditorBBoxDrawing m_bboxDrawing{ EditorBBoxDrawing::None };
 
 
+	static bool EditorHandleKeyEvent(int32 glfwKey, int32 glfwScancode, int32 glfwAction, int32 glfwModifiers)
+	{
+		return false;
+	}
+
 private:
 	void SpawnEditorCamera();
 	void Outliner();

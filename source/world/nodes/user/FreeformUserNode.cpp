@@ -8,74 +8,73 @@
 
 void FreeformUserNode::Update(float deltaTime)
 {
-	auto& input = *Engine::GetInput();
+	auto& input = Engine::GetInput();
+	auto& gamepad = input.GetGamepadState();
 
-	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetWheelDelta() / 240.f * 2.0f, 1.0f, 100.0f);
+	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetScrollDelta() / 240.f * 2.0f, 1.0f, 100.0f);
 	auto speed = m_movementSpeed;
 
 	speed *= deltaTime;
 
-	if (!input.IsRightTriggerResting()) {
-		speed *= 10.f * glm::exp(input.GetRightTriggerMagnitude());
+	if (!gamepad.IsRTResting()) {
+		speed *= 10.f * glm::exp(gamepad.rt);
 	}
 
-	if (!input.IsLeftTriggerResting()) {
-		speed /= 10.f * glm::exp(input.GetLeftTriggerMagnitude());
+	if (!gamepad.IsLTResting()) {
+		speed /= 10.f * glm::exp(gamepad.lt);
 	}
 
 	// user rotation
-	if (input.IsCursorDragged() && input.IsKeyRepeat(Key::RBUTTON)) {
-		const float yaw = -input.GetCursorRelativePosition().x * m_turningSpeed * 0.5f;
-		const float pitch = -input.GetCursorRelativePosition().y * m_turningSpeed * 0.5f;
+	if (input.IsMouseDragging()) {
+		const float yaw = -input.GetMouseDelta().x * m_turningSpeed * 0.5f;
+		const float pitch = -input.GetMouseDelta().y * m_turningSpeed * 0.5f;
 
 		RotateNodeAroundAxisWCS(GetParent()->GetNodeUpWCS(), yaw);
 		RotateNodeAroundAxisWCS(GetNodeRightWCS(), pitch);
 	}
 
-	if (!input.IsRightThumbResting()) {
-		const auto yaw
-			= -input.GetRightThumbDirection().x * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;
+	if (!gamepad.IsRTResting()) {
+		const auto yaw = -gamepad.rs.GetXAxisValue() * 2.5f * m_turningSpeed * deltaTime;
 		// upside down with regards to the cursor dragging
-		const auto pitch
-			= input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;
+		const auto pitch = gamepad.rs.GetYAxisValue() * 2.5f * m_turningSpeed * deltaTime;
 
 		RotateNodeAroundAxisWCS(GetParent()->GetNodeUpWCS(), glm::radians(yaw));
 		RotateNodeAroundAxisWCS(GetNodeRightWCS(), glm::radians(pitch));
 	}
 
 	// user movement
-	if (!input.IsLeftThumbResting()) {
+	if (!gamepad.IsLTResting()) {
 		// Calculate angle
-		const float joystickAngle = atan2(-input.GetLeftThumbDirection().y * input.GetLeftThumbMagnitude(),
-			input.GetLeftThumbDirection().x * input.GetLeftThumbMagnitude());
+		const float joystickAngle = atan2(-gamepad.ls.GetYAxisValue(), gamepad.ls.GetXAxisValue());
 
 		// adjust angle to match user rotation
 		const auto rotMat = glm::rotate(-(joystickAngle + glm::half_pi<float>()), GetNodeUpWCS());
 		const glm::vec3 moveDir = rotMat * glm::vec4(GetNodeForwardWCS(), 1.f);
 
-		AddNodePositionOffsetLCS(moveDir * speed * input.GetLeftThumbMagnitude());
+		AddNodePositionOffsetLCS(moveDir * speed * gamepad.lt);
 	}
 
-	if (input.IsAnyOfKeysRepeat(Key::W, Key::GAMEPAD_DPAD_UP)) {
+	if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
 		AddNodePositionOffsetLCS(GetNodeForwardLCS() * speed);
 	}
 
-	if (input.IsAnyOfKeysRepeat(Key::S, Key::GAMEPAD_DPAD_DOWN)) {
+	if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
 		AddNodePositionOffsetLCS((-GetNodeForwardLCS()) * speed);
 	}
 
-	if (input.IsAnyOfKeysRepeat(Key::D, Key::GAMEPAD_DPAD_RIGHT)) {
+	if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
 		AddNodePositionOffsetLCS((GetNodeRightLCS()) * speed);
 	}
 
-	if (input.IsAnyOfKeysRepeat(Key::A, Key::GAMEPAD_DPAD_LEFT)) {
+	if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
 		AddNodePositionOffsetLCS((-GetNodeRightLCS()) * speed);
 	}
-	if (input.IsAnyOfKeysRepeat(Key::E, Key::GAMEPAD_LEFT_SHOULDER)) {
+
+	if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
 		AddNodePositionOffsetLCS((GetWorldRoot()->GetNodeUpWCS()) * speed);
 	}
 
-	if (input.IsAnyOfKeysRepeat(Key::Q, Key::GAMEPAD_RIGHT_SHOULDER)) {
+	if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
 		AddNodePositionOffsetLCS((-GetWorldRoot()->GetNodeUpWCS()) * speed);
 	}
 }
