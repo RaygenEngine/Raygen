@@ -41,3 +41,6 @@ public:
 
 	friend class Engine;
 };
+
+class App : public AppBase {
+};
