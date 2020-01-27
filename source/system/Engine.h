@@ -102,6 +102,7 @@ private:
 	std::string m_statusLine{};
 	float m_lastFrameTime{ 0.f };
 
+	void InitRenderer();
 
 public:
 	// Init the internal engine systems.
@@ -137,7 +138,6 @@ public:
 	void ActivateEditor();
 	void DeactivateEditor();
 
-	void SwitchRenderer();
 
 	void DeinitEngine();
 };

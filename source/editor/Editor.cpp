@@ -371,11 +371,15 @@ void Editor::Outliner()
 
 void Editor::LoadScene(const fs::path& scenefile)
 {
+	// WIP:
+	LOG_ERROR("Reimplement Scene Loading.");
+	return;
+
 	m_updateWorld = false;
 	m_selectedNode = nullptr;
 
 	Engine::Get().CreateWorldFromFile(fs::relative(scenefile).string());
-	Engine::Get().SwitchRenderer();
+	// Engine::Get().SwitchRenderer();
 
 	int32 width;
 	int32 height;
