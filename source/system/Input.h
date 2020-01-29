@@ -14,6 +14,7 @@ using KeyStates = std::bitset<static_cast<int32>(Key::_NUM)>;
 // FIXME: Workaround mouse reporting outside of window
 // * Implement reflection for Input Enum keys to support editor and Key Properties
 // * Modifier support for key presses, useful for the editor - circumvented by event calls
+// * Drop mouse move event for glfwGetMousePosition()
 
 struct Input {
 	struct Stick {

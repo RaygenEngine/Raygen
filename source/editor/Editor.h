@@ -2,6 +2,7 @@
 
 #include "editor/SceneSave.h"
 #include "editor/AssetWindow.h"
+#include "editor/windows/EdWindow.h"
 
 #include "editor/PropertyEditor.h"
 #include "editor/NodeContextActions.h"
@@ -118,6 +119,15 @@ protected:
 
 	inline static bool s_showHelpTooltips{ true };
 
+	template<typename T>
+	void OpenWindow()
+	{
+		static_assert(std::is_base_of_v<ed::Window, T>, "Not an editor window class");
+		auto win = new T();
+		m_windows.push_back(win);
+		win->OnOpen();
+	}
+
 public:
 	DECLARE_EVENT_LISTENER(m_onNodeRemoved, Event::OnWorldNodeRemoved);
 	DECLARE_EVENT_LISTENER(m_onWorldLoaded, Event::OnWorldLoaded);
@@ -132,6 +142,8 @@ public:
 	fs::path m_sceneToLoad{};
 
 	std::vector<std::unique_ptr<ImMenu>> m_menus;
+
+	std::vector<ed::Window*> m_windows;
 
 	Editor();
 	virtual ~Editor();

@@ -24,3 +24,14 @@
 #	undef RXN_WITH_FEATURE_PRIVATE_DEF_FAST_RELEASE
 #	define RXN_WITH_FEATURE_PRIVATE_DEF_FAST_RELEASE() 1
 #endif
+
+// CONCEPTS INTELLISENSE WORKAROUND
+// TODO: when intellisense supports concepts replace ALL uses of the macro and deprecate
+// parentheses omited on purpose
+#ifdef __INTELLISENSE__
+#	define REQUIRES(...)
+#	define CONC(...) typename // Use when inlining concept types. Ugly :(
+#else
+#	define REQUIRES(...) requires __VA_ARGS__
+#	define CONC(...)     __VA_ARGS__
+#endif
