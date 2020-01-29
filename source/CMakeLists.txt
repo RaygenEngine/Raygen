@@ -15,6 +15,8 @@ set(SOURCE_FILES
 	editor/NodeContextActions.cpp
 	editor/PropertyEditor.cpp
 	editor/SceneSave.cpp
+	editor/EdComponentWindows.cpp
+	editor/windows/EdWindow.cpp
 
 	editor/imgui/ImguiImpl.cpp
     editor/imgui/ImguiDemo.cpp
@@ -127,8 +129,8 @@ target_include_directories(Raygen PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 #include_directories(RAYGEN_INCLUDE_DIRS_LOCAL)
 
-# enforce cpp17
-set_property(TARGET Raygen Raygen-App PROPERTY CXX_STANDARD 17)
+# enforce cpp20
+set_property(TARGET Raygen Raygen-App PROPERTY CXX_STANDARD 20)
 set_property(TARGET Raygen Raygen-App PROPERTY CXX_STANDARD_REQUIRED ON)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX ${PROJECT_NAME} FILES ${HEADER_FILES} ${SOURCE_FILES})

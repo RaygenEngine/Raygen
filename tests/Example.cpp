@@ -1,15 +1,11 @@
-// Include engine pch
-#include "pch/pch.h"
+#include "test.h"
 
 // Include the engine headers required for testing
 #include "system/EngineEvents.h"
 // Include any Raygen-Test specific header files (if any)
 
-// Include catch last
-#include <catch2/catch.hpp>
 
-
-TEST_CASE("Multicast Event & Listener", "core")
+TEST_CASE("Multicast Event & Listener")
 {
 	MulticastEvent<int32> SimpleEvent;
 
@@ -33,7 +29,7 @@ struct EventListenerTest {
 	EventListenerTest() { focusListener.BindMember(this, &EventListenerTest::OnWindowFocus); }
 };
 
-TEST_CASE("Engine Event & Scoped Listener", "system")
+TEST_CASE("Engine Event & Scoped Listener")
 {
 	Event::OnWindowFocus.Broadcast(false);
 	{

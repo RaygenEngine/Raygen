@@ -102,10 +102,11 @@ constexpr auto GetTypeId() noexcept
 {
 	return TypeId(GetName<T>());
 }
-
+using Hash = std::size_t;
 } // namespace mti
 
 using TypeId = mti::TypeId;
+
 
 namespace refl {
 template<typename T>

@@ -27,6 +27,25 @@
 #include <iostream>
 #include <set>
 
+class AboutWindow : public ed::Window {
+public:
+	AboutWindow()
+		: ed::Window("About")
+	{
+		m_flags = ImGuiWindowFlags_AlwaysAutoResize;
+	}
+
+	virtual void OnDraw()
+	{
+		ImGui::Text("Raygen: v0.1");
+		ImExt::HSpace(220.f);
+		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 33.0f);
+		ImGui::Text(txt_about);
+		ImGui::Text("");
+	}
+
+	virtual ~AboutWindow() = default;
+};
 
 Editor::Editor()
 {
@@ -118,7 +137,7 @@ void Editor::MakeMainMenu()
 	m_menus.emplace_back(std::move(debugMenu));
 
 	auto aboutMenu = std::make_unique<ImMenu>("About");
-	aboutMenu->AddEntry("About", [&]() { m_showAboutWindow = true; });
+	aboutMenu->AddEntry("About", [&]() { OpenWindow<AboutWindow>(); });
 	aboutMenu->AddEntry("Help", [&]() { m_showHelpWindow = true; });
 	m_menus.emplace_back(std::move(aboutMenu));
 }
@@ -138,13 +157,17 @@ void Editor::UpdateEditor()
 
 	ImguiImpl::NewFrame();
 
+	for (auto& win : m_windows) {
+		win->Z_Draw();
+	}
+
 	if (m_showImguiDemo) {
 		ImGui::ShowDemoWindow(&m_showImguiDemo);
 	}
 
-	if (m_showAboutWindow) {
-		Run_AboutWindow();
-	}
+	//	if (m_showAboutWindow) {
+	//		Run_AboutWindow();
+	//	}
 
 	if (m_showHelpWindow) {
 		Run_HelpWindow();

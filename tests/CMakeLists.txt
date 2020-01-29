@@ -23,8 +23,8 @@ include_directories(${DEPENDENCIES_DIRECTORY}/catch2/single_include)
 
 message(WARN "${DEPENDENCIES_DIRECTORY}")
 
-# enforce cpp17
-set_property(TARGET Raygen-Test PROPERTY CXX_STANDARD 17)
+# enforce cpp20
+set_property(TARGET Raygen-Test PROPERTY CXX_STANDARD 20)
 set_property(TARGET Raygen-Test PROPERTY CXX_STANDARD_REQUIRED ON)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX ${PROJECT_NAME} FILES ${HEADER_FILES} ${SOURCE_FILES})
