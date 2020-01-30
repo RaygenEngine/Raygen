@@ -2,6 +2,8 @@
 
 #include "reflection/TypeId.h"
 #include "editor/windows/EdWindow.h"
+#include "core/iterable/IterableSafeVector.h"
+#include "core/iterable/IterableSafeHashMap.h"
 #include <functional>
 #include <unordered_set>
 #include <vector>
@@ -26,13 +28,16 @@ public:
 	std::vector<UniqueWindowEntry> m_entries;
 	std::unordered_map<mti::Hash, size_t> m_entiresHash;
 
-	std::unordered_map<mti::Hash, std::unique_ptr<Window>> m_uniqueWindows;
-	std::unordered_set<std::unique_ptr<Window>> m_multiWindows;
+
+	IterableSafeHashMap<mti::Hash, std::unique_ptr<Window>> m_uniqueWindows;
+	IterableSafeVector<std::unique_ptr<Window>> m_multiWindows;
+	// std::unordered_map<mti::Hash, std::unique_ptr<Window>> m_uniqueWindows;
+	// std::vector<std::unique_ptr<Window>> m_multiWindows;
 
 
 	// Assumes you won't double add
 	template<CONC(WindowClass) T>
-	void AddWindowEntry(std::string&& name)
+	void AddWindowEntry(const std::string& name)
 	{
 		auto hash = mti::GetHash<T>();
 		m_entiresHash.insert({ hash, m_entries.size() });
@@ -41,7 +46,7 @@ public:
 	};
 
 
-	[[nodiscard]] bool IsUniqueOpen(mti::Hash hash) const noexcept { return m_uniqueWindows.count(hash); };
+	[[nodiscard]] bool IsUniqueOpen(mti::Hash hash) const noexcept { return m_uniqueWindows.map.count(hash); };
 
 	template<CONC(WindowClass) T>
 	[[nodiscard]] bool IsUniqueOpen() const noexcept

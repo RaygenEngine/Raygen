@@ -70,6 +70,7 @@ public:
 	~UniqueWinOpen() override = default;
 };
 
+// TODO: bad test. too complicated
 TEST("Adding / Removing windows while iterating")
 {
 	ComponentWindows comp;
@@ -85,22 +86,21 @@ TEST("Adding / Removing windows while iterating")
 	{
 		g_OpenClose = 3;
 		comp.ZTest_Draw(); // If crashing here the removal of oneself is wrong
-		REQ(comp.m_uniqueWindows.size() == 0);
+		REQ(comp.m_uniqueWindows.map.size() == 0);
 	}
 
 	SECT("can add while iterating")
 	{
 		g_OpenClose = 1;
 		comp.ZTest_Draw();
-		REQ(g_uniqueDraws == 1); // Verify we iterated the "added" window
+		REQ(g_uniqueDraws == 0); // Verify we did not iterate the "added" window
 
 		SECT("and then remove")
 		{
 			g_OpenClose = 2;
 			comp.ZTest_Draw();
-			// Removing another window while iterating produces "undefined" on whether the other draw will run this
-			// frame, but remains a valid removal and should not skip other entries.
-			REQ(comp.m_uniqueWindows.size() == 1);
+			REQ(g_uniqueDraws == 1); // Verify we did iterate the "removed" window
+			REQ(comp.m_uniqueWindows.map.size() == 1);
 		}
 	}
 }

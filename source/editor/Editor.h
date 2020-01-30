@@ -8,6 +8,7 @@
 #include "editor/NodeContextActions.h"
 #include "system/EngineEvents.h"
 #include "world/nodes/camera/EditorCameraNode.h"
+#include "editor/EdComponentWindows.h"
 
 #include <memory>
 #include <functional>
@@ -119,15 +120,6 @@ protected:
 
 	inline static bool s_showHelpTooltips{ true };
 
-	template<typename T>
-	void OpenWindow()
-	{
-		static_assert(std::is_base_of_v<ed::Window, T>, "Not an editor window class");
-		auto win = new T();
-		m_windows.push_back(win);
-		win->OnOpen();
-	}
-
 public:
 	DECLARE_EVENT_LISTENER(m_onNodeRemoved, Event::OnWorldNodeRemoved);
 	DECLARE_EVENT_LISTENER(m_onWorldLoaded, Event::OnWorldLoaded);
@@ -143,7 +135,7 @@ public:
 
 	std::vector<std::unique_ptr<ImMenu>> m_menus;
 
-	std::vector<ed::Window*> m_windows;
+	ed::ComponentWindows m_windowsComponent;
 
 	Editor();
 	virtual ~Editor();
