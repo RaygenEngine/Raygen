@@ -12,6 +12,7 @@
 #include "system/Engine.h"
 #include "system/EngineEvents.h"
 #include "world/nodes/camera/CameraNode.h"
+
 #include "world/nodes/Node.h"
 #include "world/nodes/RootNode.h"
 #include "world/World.h"
@@ -29,8 +30,8 @@
 
 class AboutWindow : public ed::Window {
 public:
-	AboutWindow()
-		: ed::Window("About")
+	AboutWindow(std::string_view name)
+		: ed::Window(name)
 	{
 		m_flags = ImGuiWindowFlags_AlwaysAutoResize;
 	}
@@ -120,6 +121,9 @@ EditorBBoxDrawing Editor::GetBBoxDrawing()
 
 void Editor::MakeMainMenu()
 {
+	m_windowsComponent.AddWindowEntry<AboutWindow>("About");
+
+	m_menus.clear();
 	auto sceneMenu = std::make_unique<ImMenu>("Scene");
 	sceneMenu->AddEntry("Save As", [&]() { m_sceneSave.OpenBrowser(); });
 	sceneMenu->AddEntry("Load", [&]() { m_loadFileBrowser.Open(); });
@@ -137,9 +141,17 @@ void Editor::MakeMainMenu()
 	m_menus.emplace_back(std::move(debugMenu));
 
 	auto aboutMenu = std::make_unique<ImMenu>("About");
-	aboutMenu->AddEntry("About", [&]() { OpenWindow<AboutWindow>(); });
+	// aboutMenu->AddEntry("About", [&]() { OpenWindow<AboutWindow>(); });
 	aboutMenu->AddEntry("Help", [&]() { m_showHelpWindow = true; });
 	m_menus.emplace_back(std::move(aboutMenu));
+
+
+	auto windowsMenu = std::make_unique<ImMenu>("Windows");
+	for (auto& winEntry : m_windowsComponent.m_entries) {
+		windowsMenu->AddEntry(winEntry.name.c_str(), [&]() { m_windowsComponent.ToggleUnique(winEntry.hash); });
+	}
+
+	m_menus.emplace_back(std::move(windowsMenu));
 }
 
 Editor::~Editor()
@@ -157,9 +169,7 @@ void Editor::UpdateEditor()
 
 	ImguiImpl::NewFrame();
 
-	for (auto& win : m_windows) {
-		win->Z_Draw();
-	}
+	m_windowsComponent.Draw();
 
 	if (m_showImguiDemo) {
 		ImGui::ShowDemoWindow(&m_showImguiDemo);

@@ -14,7 +14,7 @@ bool ComponentWindows::OpenUnique(mti::Hash hash)
 
 		auto& elem = m_entries[it->second];
 
-		m_uniqueWindows.insert({ hash, elem.constructor(elem.name) });
+		m_uniqueWindows.Emplace({ hash, elem.constructor(elem.name) });
 
 		return true;
 	}
@@ -23,14 +23,13 @@ bool ComponentWindows::OpenUnique(mti::Hash hash)
 
 bool ComponentWindows::CloseUnique(mti::Hash hash)
 {
-	return m_uniqueWindows.erase(hash) == 1; // WIP: handle delete
+	return m_uniqueWindows.Remove(hash) == 1; // WIP: handle delete
 }
 
 bool ComponentWindows::ToggleUnique(mti::Hash hash)
 {
 	if (IsUniqueOpen(hash)) {
-		CloseUnique(hash);
-		return false;
+		return !CloseUnique(hash);
 	}
 	return OpenUnique(hash);
 }
@@ -38,16 +37,17 @@ bool ComponentWindows::ToggleUnique(mti::Hash hash)
 template<typename DrawFunc>
 void ComponentWindows::InternalDraw(DrawFunc&& func)
 {
-	auto it = begin(m_uniqueWindows);
-	auto endIt = end(m_uniqueWindows);
-
-	for (auto& [hash, window] : m_uniqueWindows) {
+	m_uniqueWindows.BeginSafeRegion();
+	for (auto& [hash, window] : m_uniqueWindows.map) {
 		func(window.get());
 	}
+	m_uniqueWindows.EndSafeRegion();
 
-	for (auto& window : m_multiWindows) {
+	m_multiWindows.BeginSafeRegion();
+	for (auto& window : m_multiWindows.vec) {
 		func(window.get());
 	}
+	m_multiWindows.EndSafeRegion();
 }
 
 void ComponentWindows::Draw()

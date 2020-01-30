@@ -47,18 +47,23 @@ struct IterableSafeHashMap {
 		return map.emplace(std::forward<std::pair<KeyT, ValueT>&&>(elem)).first;
 	}
 
-	// Finds and removes if found
-	void Remove(const KeyT& key) { Remove(map.find(key)); }
+	// Finds and removes if found.
+	// Returns if the element was removed.
+	// This function may queue a remove operation and return false. (Happens when a key was found but we are iterating.)
+	bool Remove(const KeyT& key) { return Remove(map.find(key)); }
 
-	void Remove(Iterator iterator)
+	// Returns if the element was removed.
+	// This function may queue a remove operation and return false. (Happens when a key was found but we are iterating.)
+	bool Remove(Iterator iterator)
 	{
 		if (iterator == end(map)) {
-			return;
+			return false;
 		}
 		if (!isIterating) {
 			map.erase(iterator);
-			return;
+			return true;
 		}
 		erasingCache.push_back(iterator);
+		return false;
 	}
 };
