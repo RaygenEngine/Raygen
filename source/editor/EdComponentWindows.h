@@ -81,5 +81,13 @@ public:
 	{
 		return ToggleUnique(mti::GetHash<T>());
 	};
+
+	void Draw();
+
+	void ZTest_Draw();
+
+private:
+	template<typename DrawFunc>
+	void InternalDraw(DrawFunc&& func);
 };
 } // namespace ed

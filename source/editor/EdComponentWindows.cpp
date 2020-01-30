@@ -34,4 +34,31 @@ bool ComponentWindows::ToggleUnique(mti::Hash hash)
 	}
 	return OpenUnique(hash);
 }
+
+template<typename DrawFunc>
+void ComponentWindows::InternalDraw(DrawFunc&& func)
+{
+	auto it = begin(m_uniqueWindows);
+	auto endIt = end(m_uniqueWindows);
+
+	for (auto& [hash, window] : m_uniqueWindows) {
+		func(window.get());
+	}
+
+	for (auto& window : m_multiWindows) {
+		func(window.get());
+	}
+}
+
+void ComponentWindows::Draw()
+{
+	InternalDraw([](Window* w) { w->Z_Draw(); });
+}
+
+void ComponentWindows::ZTest_Draw()
+{
+	InternalDraw([](Window* w) { w->OnDraw(); });
+}
+
+
 } // namespace ed
