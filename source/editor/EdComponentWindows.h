@@ -19,7 +19,7 @@ private:
 
 public:
 	struct UniqueWindowEntry {
-		std::function<std::unique_ptr<Window>(const std::string&)> constructor;
+		std::function<Window*(const std::string&)> constructor;
 		size_t hash;
 		std::string name;
 	};
@@ -28,68 +28,61 @@ public:
 	std::vector<UniqueWindowEntry> m_entries;
 	std::unordered_map<mti::Hash, size_t> m_entiresHash;
 
+	IterableSafeHashMap<mti::Hash, Window*> m_openUniqueWindows;
+	std::unordered_map<mti::Hash, Window*> m_closedUniqueWindows;
 
-	IterableSafeHashMap<mti::Hash, std::unique_ptr<Window>> m_uniqueWindows;
 	IterableSafeVector<std::unique_ptr<Window>> m_multiWindows;
-	// std::unordered_map<mti::Hash, std::unique_ptr<Window>> m_uniqueWindows;
-	// std::vector<std::unique_ptr<Window>> m_multiWindows;
 
 
-	// Assumes you won't double add
-	template<CONC(WindowClass) T>
+	template<CONC(UniqueWindowClass) T>
 	void AddWindowEntry(const std::string& name)
 	{
 		auto hash = mti::GetHash<T>();
-		m_entiresHash.insert({ hash, m_entries.size() });
-		m_entries.emplace_back(
-			UniqueWindowEntry{ [](const std::string& name) { return std::make_unique<T>(name); }, hash, name });
+		if (m_entiresHash.insert({ hash, m_entries.size() }).second) {
+			m_entries.emplace_back(
+				UniqueWindowEntry{ [](const std::string& name) { return new T(name); }, hash, name });
+		}
 	};
 
 
-	[[nodiscard]] bool IsUniqueOpen(mti::Hash hash) const noexcept { return m_uniqueWindows.map.count(hash); };
+	[[nodiscard]] bool IsUniqueOpen(mti::Hash hash) const noexcept { return m_openUniqueWindows.map.count(hash); };
 
-	template<CONC(WindowClass) T>
+	template<CONC(UniqueWindowClass) T>
 	[[nodiscard]] bool IsUniqueOpen() const noexcept
 	{
 		return IsUniqueOpen(mti::GetHash<T>());
 	};
 
 
-	// Returns false if hash not registered, true if a window of this type is open (even if not opened right now)
-	bool OpenUnique(mti::Hash hash);
+	void OpenUnique(mti::Hash hash);
 
-	// Returns false if class not registered
-	template<CONC(WindowClass) T>
-	bool OpenUnique()
+	template<CONC(UniqueWindowClass) T>
+	void OpenUnique()
 	{
-		return OpenUnique(mti::GetHash<T>());
+		OpenUnique(mti::GetHash<T>());
 	};
 
 
-	// Returns true if a unique window was closed. false otherwise (not open/not registered)
-	bool CloseUnique(mti::Hash hash);
+	void CloseUnique(mti::Hash hash);
 
-	// Returns true if a unique window was closed. false otherwise (not open/not registered)
-	template<CONC(WindowClass) T>
-	bool CloseUnique()
+	template<CONC(UniqueWindowClass) T>
+	void CloseUnique()
 	{
-		return CloseUnique(mti::GetHash<T>());
+		CloseUnique(mti::GetHash<T>());
 	};
 
 
-	// Returns the new state of the window. (Window may fail to open)
-	bool ToggleUnique(mti::Hash hash);
+	void ToggleUnique(mti::Hash hash);
 
-	// Returns the new state of the window. (Window may fail to open)
-	template<CONC(WindowClass) T>
-	bool ToggleUnique()
+	template<CONC(UniqueWindowClass) T>
+	void ToggleUnique()
 	{
-		return ToggleUnique(mti::GetHash<T>());
+		ToggleUnique(mti::GetHash<T>());
 	};
 
 	void Draw();
 
-	void ZTest_Draw();
+	~ComponentWindows();
 
 private:
 	template<typename DrawFunc>

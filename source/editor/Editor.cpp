@@ -28,15 +28,14 @@
 #include <iostream>
 #include <set>
 
-class AboutWindow : public ed::Window {
+class AboutWindow : public ed::UniqueWindow {
 public:
 	AboutWindow(std::string_view name)
-		: ed::Window(name)
+		: ed::UniqueWindow(name)
 	{
-		m_flags = ImGuiWindowFlags_AlwaysAutoResize;
 	}
 
-	virtual void OnDraw()
+	virtual void ImguiDraw()
 	{
 		ImGui::Text("Raygen: v0.1");
 		ImExt::HSpace(220.f);
@@ -47,6 +46,33 @@ public:
 
 	virtual ~AboutWindow() = default;
 };
+
+class HelpWindow : public ed::UniqueWindow {
+public:
+	HelpWindow(std::string_view name)
+		: ed::UniqueWindow(name)
+	{
+	}
+
+	virtual void OnDraw(const char* title, bool* open)
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
+		ImGui::SetNextWindowPos(ImVec2(650.f, 100.f), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(0, 720.f), ImGuiCond_Always);
+
+		if (ImGui::Begin(title, open)) {
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 33.0f);
+			ImGui::Text(txt_help);
+			ImGui::Text("");
+		}
+
+		ImGui::End();
+		ImGui::PopStyleVar();
+	}
+
+	virtual ~HelpWindow() = default;
+};
+
 
 Editor::Editor()
 {
@@ -122,6 +148,7 @@ EditorBBoxDrawing Editor::GetBBoxDrawing()
 void Editor::MakeMainMenu()
 {
 	m_windowsComponent.AddWindowEntry<AboutWindow>("About");
+	m_windowsComponent.AddWindowEntry<HelpWindow>("Help");
 
 	m_menus.clear();
 	auto sceneMenu = std::make_unique<ImMenu>("Scene");
@@ -148,7 +175,9 @@ void Editor::MakeMainMenu()
 
 	auto windowsMenu = std::make_unique<ImMenu>("Windows");
 	for (auto& winEntry : m_windowsComponent.m_entries) {
-		windowsMenu->AddEntry(winEntry.name.c_str(), [&]() { m_windowsComponent.ToggleUnique(winEntry.hash); });
+		windowsMenu->AddEntry(
+			winEntry.name.c_str(), [&]() { m_windowsComponent.ToggleUnique(winEntry.hash); },
+			[&]() { return m_windowsComponent.IsUniqueOpen(winEntry.hash); });
 	}
 
 	m_menus.emplace_back(std::move(windowsMenu));
@@ -667,18 +696,6 @@ void Editor::Run_AboutWindow()
 
 void Editor::Run_HelpWindow()
 {
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
-	ImGui::SetNextWindowPos(ImVec2(650.f, 100.f), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSize(ImVec2(0, 720.f), ImGuiCond_Always);
-
-	if (ImGui::Begin("Help", &m_showHelpWindow)) {
-		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 33.0f);
-		ImGui::Text(txt_help);
-		ImGui::Text("");
-	}
-
-	ImGui::End();
-	ImGui::PopStyleVar();
 }
 
 void Editor::HandleInput()

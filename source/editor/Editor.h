@@ -54,17 +54,29 @@ public:
 		struct MenuOption {
 			const char* name{ nullptr };
 			FnPointer func;
+			std::function<bool()> isSelectedFunc;
+
+			MenuOption()
+			{
+				isSelectedFunc = []() {
+					return false;
+				};
+			}
 		};
 
 		std::vector<MenuOption> options;
 
 		void AddSeperator() { options.emplace_back(); }
 
-		void AddEntry(const char* inName, FnPointer funcPtr)
+		void AddEntry(const char* inName, FnPointer funcPtr, std::function<bool()> isSelectedBind = {})
 		{
 			ImMenu::MenuOption option;
 			option.name = inName;
 			option.func = funcPtr;
+			if (isSelectedBind) {
+				option.isSelectedFunc = isSelectedBind;
+			}
+
 			options.emplace_back(option);
 		}
 
@@ -76,7 +88,7 @@ public:
 					continue;
 				}
 
-				if (ImGui::MenuItem(entry.name)) {
+				if (ImGui::MenuItem(entry.name, nullptr, entry.isSelectedFunc())) {
 					std::invoke(entry.func);
 				}
 			}
