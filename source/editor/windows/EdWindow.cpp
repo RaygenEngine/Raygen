@@ -1,33 +1,56 @@
 #include "pch/pch.h"
 #include "editor/windows/EdWindow.h"
 #include "system/Logger.h"
+#include "imgui/imgui.h"
+
 namespace ed {
 
-uint64 Window::s_windowId = 1;
-
-Window::Window(std::string_view title)
+Window::Window(std::string_view title, std::string_view identifier)
 {
-	{
-		m_id = s_windowId++;
-		m_title = fmt::format("{}###{}", title, m_id);
-	}
+	m_title = title;
+	m_identifier = identifier;
+	ReformatTitle();
 }
 
-void Window::Z_Draw()
+bool Window::Z_Draw()
 {
-	bool prevOpen = m_isOpen;
+	OnDraw(m_fullTitle.c_str(), &m_keepOpen);
 
-	bool shouldDraw = ImGui::Begin(m_title.c_str(), &m_isOpen, m_flags);
-
-	if (prevOpen != m_isOpen) {
-		// TODO: Check unsaved windows drawing behavior
-		m_isOpen ? OnOpen() : OnClose();
+	if (!m_keepOpen) {
+		m_keepOpen = true;
+		return false;
 	}
+	return true;
+}
 
-	if (shouldDraw) {
-		OnDraw();
+void Window::OnDraw(const char* title, bool* keepOpen)
+{
+	if (ImGui::Begin(title, keepOpen)) {
+		ImguiDraw();
 	}
-
 	ImGui::End();
+}
+
+void Window::ReformatTitle()
+{
+	if (m_identifier.size() > 0) {
+		m_fullTitle = fmt::format("{}##{}", m_title, m_identifier);
+	}
+	else {
+		m_fullTitle = m_title;
+	}
+	m_title = m_fullTitle.c_str();
+}
+
+UniqueWindow::UniqueWindow(std::string_view initialTitle)
+	: Window(initialTitle)
+{
+	m_identifier = fmt::format("#{}_Unq", initialTitle);
+	ReformatTitle();
+}
+
+MultiWindow::MultiWindow(std::string_view title, std::string_view identifier)
+	: Window(title, identifier)
+{
 }
 } // namespace ed

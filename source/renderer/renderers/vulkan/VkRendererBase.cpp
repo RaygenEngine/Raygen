@@ -12,7 +12,7 @@
 
 #define vkCall(x)                                                                                                      \
 	do {                                                                                                               \
-		CLOG_ABORT(x != VK_SUCCESS, "Failed vkCall: {}");                                                              \
+		CLOG_ABORT(x != VK_SUCCESS, "Failed vkCall: {}", ##x);                                                         \
 	} while (0)
 
 

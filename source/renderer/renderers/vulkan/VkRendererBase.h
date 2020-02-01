@@ -2,7 +2,7 @@
 
 #include "renderer/ObserverRenderer.h"
 #include <glfw/glfw3.h>
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 
 namespace vk {
 

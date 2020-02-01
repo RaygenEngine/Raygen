@@ -11,7 +11,7 @@ public:
 	{
 	}
 
-	void OnDraw() override { g_uniqueDraws++; }
+	void OnDraw(const char*, bool*) override { g_uniqueDraws++; }
 
 	~UniqueWin() override = default;
 };
@@ -54,7 +54,7 @@ public:
 	{
 	}
 
-	void OnDraw() override
+	void OnDraw(const char*, bool*) override
 	{
 		if (g_OpenClose == 1) {
 			g_ComponoentWindow->OpenUnique<UniqueWin>();
@@ -85,22 +85,22 @@ TEST("Adding / Removing windows while iterating")
 	SECT("can self remove last")
 	{
 		g_OpenClose = 3;
-		comp.ZTest_Draw(); // If crashing here the removal of oneself is wrong
-		REQ(comp.m_uniqueWindows.map.size() == 0);
+		comp.Draw(); // If crashing here the removal of oneself is wrong
+		REQ(comp.m_openUniqueWindows.map.size() == 0);
 	}
 
 	SECT("can add while iterating")
 	{
 		g_OpenClose = 1;
-		comp.ZTest_Draw();
+		comp.Draw();
 		REQ(g_uniqueDraws == 0); // Verify we did not iterate the "added" window
 
 		SECT("and then remove")
 		{
 			g_OpenClose = 2;
-			comp.ZTest_Draw();
+			comp.Draw();
 			REQ(g_uniqueDraws == 1); // Verify we did iterate the "removed" window
-			REQ(comp.m_uniqueWindows.map.size() == 1);
+			REQ(comp.m_openUniqueWindows.map.size() == 1);
 		}
 	}
 }
