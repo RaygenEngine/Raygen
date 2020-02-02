@@ -22,29 +22,6 @@
         "model": "/import-data/glTF-Sample-Models/Sponza/glTF/sponza.gltf",
         "~children": [
             {
-                "+name": "flight_helmet",
-                "+trs": {
-                    "pos": {
-                        "x": -8.326693534851074,
-                        "y": 4.668534278869629,
-                        "z": 2.686573028564453
-                    },
-                    "rot": {
-                        "x": -1.6816248393780597e-09,
-                        "y": -2.7406954927755578e-08,
-                        "z": 4.7299124616984045e-09
-                    },
-                    "scale": {
-                        "x": 0.9999998211860657,
-                        "y": 1.0,
-                        "z": 1.0000001192092896
-                    }
-                },
-                "+type": "Geometry",
-                "model": "/import-data/glTF-Sample-Models/FlightHelmet/glTF/FlightHelmet.gltf",
-                "~children": []
-            },
-            {
                 "+name": "test_dir",
                 "+trs": {
                     "pos": {

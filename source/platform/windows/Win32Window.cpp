@@ -15,6 +15,8 @@ Win32Window::Win32Window()
 
 Win32Window::~Win32Window()
 {
+	Hide();
+	CloseWindow(m_hWnd);
 	// Unregister window class, freeing the memory that was
 	// previously allocated for this window.
 
@@ -63,6 +65,7 @@ bool Win32Window::Create(int32 xpos, int32 ypos, int32 width, int32 height, LPCS
 
 	return m_hWnd;
 }
+char g_windowClass[100] = "";
 
 Win32Window* Win32Window::CreateWin32Window(const std::string& title, int32 xpos, int32 ypox, int32 width, int32 height,
 	LONG cstyle, WNDPROC windowHandleFunction, UINT style, LPCSTR name, HBRUSH backgroundBrushColor, LPCSTR cursorName)
@@ -70,16 +73,15 @@ Win32Window* Win32Window::CreateWin32Window(const std::string& title, int32 xpos
 	HINSTANCE hInstance = GetModuleHandle(nullptr);
 
 	auto window = new Win32Window();
-
-
-	if (!window->Register(
-			style, name, backgroundBrushColor, LoadCursor(nullptr, cursorName), windowHandleFunction, hInstance)) {
-		LOG_ABORT("Failed to register application window!");
+	strcpy_s(g_windowClass, (std::string(name) + std::to_string(rand())).c_str());
+	if (!window->Register(style, g_windowClass, backgroundBrushColor, LoadCursor(nullptr, cursorName),
+			windowHandleFunction, hInstance)) {
+		LOG_ABORT("Failed to register application window! {}", GetLastError());
 		return nullptr;
 	}
 
 	if (!window->Create(xpos, ypox, width, height, title.c_str(), cstyle)) {
-		LOG_ABORT("Failed to register application window!");
+		LOG_ABORT("Failed to create application window! {}", GetLastError());
 		return nullptr;
 	}
 

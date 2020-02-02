@@ -46,6 +46,8 @@ public:
 		return instance;
 	}
 
+	bool m_remakeWindow{ true };
+
 	// Not guaranteed to exist at all times.
 	[[nodiscard]] static World* GetWorld() { return Get().m_world; }
 

@@ -27,6 +27,6 @@ public:
 
 	virtual void RenderBoundingBoxes();
 
-	bool SupportsEditor() override { return true; }
+	bool SupportsEditor() override { return false; }
 };
 } // namespace ogl

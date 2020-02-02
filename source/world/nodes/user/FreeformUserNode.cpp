@@ -34,7 +34,7 @@ void FreeformUserNode::Update(float deltaTime)
 
 	if (!input.IsRightThumbResting()) {
 		const auto yaw
-			= -input.GetRightThumbDirection().x * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;
+			= input.GetRightThumbDirection().x * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;
 		// upside down with regards to the cursor dragging
 		const auto pitch
 			= input.GetRightThumbDirection().y * input.GetRightThumbMagnitude() * 2.5f * m_turningSpeed * deltaTime;

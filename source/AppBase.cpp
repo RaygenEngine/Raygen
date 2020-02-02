@@ -114,6 +114,8 @@ void AppBase::MainLoop()
 		Engine::GetRenderer()->DrawFrame();
 
 		Engine::Get().ReportFrameDrawn();
+
+		window = Engine::GetMainWindow();
 	}
 }
 
@@ -128,6 +130,8 @@ void AppBase::RegisterRenderers()
 
 	Engine::RegisterPrimaryRenderer<ogl::GLDeferredRenderer>();
 	Engine::RegisterPrimaryRenderer<ogl::GLForwardRenderer>();
+
+
 	// Non primary renderers are skipped when cycling through renderers but can be enabled from the editor menu
 	// Engine::RegisterRenderer<ogl::GLDOVRRenderer>();
 }

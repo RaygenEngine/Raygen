@@ -85,6 +85,13 @@ void Engine::SwitchRenderer(size_t registrationIndex)
 
 	delete eng.m_renderer;
 
+	if (m_remakeWindow) {
+		delete m_window;
+		m_window = m_app->CreateAppWindow();
+		m_window->Show();
+		m_remakeWindow = false;
+	}
+
 
 	m_currentRenderer = registrationIndex;
 
