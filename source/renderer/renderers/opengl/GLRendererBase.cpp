@@ -55,9 +55,11 @@ GLRendererBase::GLRendererBase()
 GLRendererBase::~GLRendererBase()
 {
 	ChangeDisplaySettings(NULL, 0);
-	wglMakeCurrent(m_hdc, NULL);
-	wglDeleteContext(m_hglrc);
-	ReleaseDC(m_assochWnd, m_hdc);
+	CLOG_ERROR(!wglMakeCurrent(m_hdc, NULL), "Failed to make current");
+	CLOG_ERROR(!wglDeleteContext(m_hglrc), "Failed to delete");
+	CLOG_ERROR(ReleaseDC(m_assochWnd, m_hdc) != 1, "Failed to release");
+	// gladUnloadGL();
+	Engine::Get().m_remakeWindow = true;
 }
 
 void GLRendererBase::Init(HWND assochWnd, HINSTANCE instance)
@@ -66,7 +68,7 @@ void GLRendererBase::Init(HWND assochWnd, HINSTANCE instance)
 
 	PIXELFORMATDESCRIPTOR pfd;
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-	pfd.nVersion = 1;
+	pfd.nVersion = 2;
 	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
 	pfd.iPixelType = PFD_TYPE_RGBA;
 	pfd.cColorBits = 32;
@@ -93,12 +95,16 @@ void GLRendererBase::Init(HWND assochWnd, HINSTANCE instance)
 	pfd.dwDamageMask = 0;
 
 	m_hdc = GetDC(m_assochWnd);
-
+	auto dcc = wglGetCurrentContext();
 	const int32 pixelFormat = ChoosePixelFormat(m_hdc, &pfd);
 
 	CLOG_ABORT(!pixelFormat, "Can't find a suitable pixelFormat, error: {}", MB_OK | MB_ICONERROR);
 	auto res = SetPixelFormat(m_hdc, pixelFormat, &pfd);
-	CLOG_ABORT(!res, "Can't set the pixelFormat, error: {}", MB_OK | MB_ICONERROR);
+	if (!res) {
+		// CLOG_ABORT(!res, "Can't set the pixelFormat, error: {}", GetLastError());
+		LOG_ERROR("Using existing pixel format");
+	}
+
 
 	m_hglrc = wglCreateContext(m_hdc);
 
@@ -107,15 +113,17 @@ void GLRendererBase::Init(HWND assochWnd, HINSTANCE instance)
 	CLOG_ABORT(!res, "Can't activate GLRC, error: {}", MB_OK | MB_ICONERROR);
 	res = gladLoadGL();
 	CLOG_ABORT(!(res == 1), "Couldn't load ogl function pointers");
-
 	m_glPreviewer->InitPreviewShaders(m_glAssetManager.get());
 
+	glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
 	InitScene();
 }
 
 void GLRendererBase::SwapBuffers()
 {
+	wglMakeCurrent(m_hdc, NULL);
 	::SwapBuffers(m_hdc);
+	wglMakeCurrent(m_hdc, m_hglrc);
 }
 
 

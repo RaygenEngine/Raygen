@@ -49,6 +49,13 @@ set(SOURCE_FILES
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.cpp
 
 	renderer/renderers/vulkan/VkRendererBase.cpp
+	renderer/renderers/vulkan/InstanceLayer.cpp
+	renderer/renderers/vulkan/PhysicalDevice.cpp
+	renderer/renderers/vulkan/Device.cpp
+	renderer/renderers/vulkan/Swapchain.cpp
+	renderer/renderers/vulkan/GraphicsPipeline.cpp
+	renderer/renderers/vulkan/Model.cpp
+	renderer/renderers/vulkan/Descriptors.cpp
 
 
 	system/Engine.cpp
@@ -181,7 +188,13 @@ set(HEADER_FILES
 	renderer/renderers/opengl/deferred/GLDeferredRenderer.h
 
 	renderer/renderers/vulkan/VkRendererBase.h
-
+	renderer/renderers/vulkan/InstanceLayer.h
+	renderer/renderers/vulkan/PhysicalDevice.h
+	renderer/renderers/vulkan/Device.h
+	renderer/renderers/vulkan/Swapchain.h
+	renderer/renderers/vulkan/GraphicsPipeline.h
+	renderer/renderers/vulkan/Model.h
+	renderer/renderers/vulkan/Descriptors.h
 
 	system/Engine.h
 	system/Object.h
