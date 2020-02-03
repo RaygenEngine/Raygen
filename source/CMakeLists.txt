@@ -30,6 +30,7 @@ set(SOURCE_FILES
 	system/Input.cpp
 	system/Logger.cpp
 	system/console/Console.cpp
+	system/profiler/Profiler.cpp
 
 
 	world/World.cpp

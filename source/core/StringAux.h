@@ -61,4 +61,15 @@ std::vector<std::string_view> Split(T str, std::string_view delims = " ")
 	return output;
 }
 
+constexpr size_t StrHash(const std::string_view str) noexcept
+{
+	static_assert(sizeof(size_t) == 8);
+	// FNV-1a 64 bit algorithm
+	size_t result = 0xcbf29ce484222325; // FNV offset basis
+	for (char c : str) {
+		result ^= c;
+		result *= 1099511628211; // FNV prime
+	}
+	return result;
+}
 } // namespace str

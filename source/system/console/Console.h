@@ -13,6 +13,10 @@ private:
 
 protected:
 	Console(const Console&) = delete;
+	Console(Console&&) = delete;
+	Console operator=(const Console&) = delete;
+	Console operator=(Console&&) = delete;
+
 
 	[[nodiscard]] static Console& Get()
 	{
