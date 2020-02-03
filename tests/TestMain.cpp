@@ -1,3 +1,5 @@
+#include "pch/pch.h"
+#include "system/Logger.h"
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>
 
@@ -6,6 +8,9 @@ int main(int argc, char* argv[])
 	Catch::Session session; // There must be exactly one instance
 
 	int height = 0; // Some user variable you want to be able to set
+
+	LOGGER_INIT(LogLevelTarget::ERR);
+
 
 	// Build a new parser on top of Catch's
 	using namespace Catch::clara;

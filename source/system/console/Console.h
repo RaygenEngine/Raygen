@@ -1,0 +1,49 @@
+#pragma once
+#include "core/StringAux.h"
+#include "system/Logger.h"
+#include <unordered_map>
+#include <string>
+
+struct ConsoleEntry;
+
+class Console {
+private:
+	Console() = default;
+
+
+protected:
+	Console(const Console&) = delete;
+
+	[[nodiscard]] static Console& Get()
+	{
+		static Console* instance = new Console(); // Avoid de initialisation errors.
+		return *instance;
+	}
+
+	std::unordered_map<std::string, ConsoleEntry*> m_entries;
+
+public:
+	// TODO: allow only ConsoleVariable
+	static void AutoRegister(const char* name, ConsoleEntry* entry)
+	{
+		auto& c = Get();
+		if (!c.m_entries.emplace(name, entry).second) {
+			Log::EarlyInit(); // Required since this may be called before main
+			LOG_ERROR("Failed to register a duplicate console variable: {}", name);
+		}
+	}
+
+	static void Execute(const std::string& command);
+	static void Execute(std::string_view command);
+
+	// BOTH must match for safety reasons. (avoid removing collision)
+	static void Unregister(const std::string& command, ConsoleEntry* entry)
+	{
+		auto& entries = Get().m_entries;
+		auto it = entries.find(command);
+
+		if (it != entries.end() && it->second == entry) {
+			entries.erase(command);
+		}
+	}
+};

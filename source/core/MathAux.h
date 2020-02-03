@@ -13,6 +13,12 @@ bool EpsilonEqualsValue(T input, T value)
 }
 
 template<typename T>
+bool EpsilonEquals(T input, T value)
+{
+	return glm::epsilonEqual(input, value, glm::epsilon<T>());
+}
+
+template<typename T>
 bool EpsilonEqualsZero(T input)
 {
 	return EpsilonEqualsValue(input, T{ 0.f });

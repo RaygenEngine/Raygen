@@ -2,6 +2,7 @@
 
 #include <string>
 
+// TODO: rename
 namespace smath {
 
 inline void LTrim(std::string& s)
@@ -39,3 +40,25 @@ inline std::string ToLower(const std::string& str)
 }
 
 } // namespace smath
+
+namespace str {
+// TODO: string concept
+template<typename T>
+std::vector<std::string_view> Split(T str, std::string_view delims = " ")
+{
+	std::vector<std::string_view> output;
+	for (auto first = str.data(), second = str.data(), last = first + str.size(); second != last && first != last;
+		 first = second + 1) {
+		second = std::find_first_of(first, last, std::cbegin(delims), std::cend(delims));
+
+		if (first != second) {
+			output.emplace_back(first, second - first);
+		}
+	}
+	if (output.size() == 0) {
+		output.emplace_back(str);
+	}
+	return output;
+}
+
+} // namespace str

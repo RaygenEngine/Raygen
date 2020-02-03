@@ -471,6 +471,7 @@ void PropertyEditor::Inject(Node* node)
 	m_prevNode = node;
 }
 
+
 void PropertyEditor::Run_BaseProperties(Node* node)
 {
 	std::string name = node->GetName();

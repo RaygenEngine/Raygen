@@ -4,10 +4,10 @@
 
 namespace ed {
 int32 g_uniqueDraws = 0;
-class UniqueWin : public Window {
+class UniqueWin : public UniqueWindow {
 public:
 	UniqueWin(const std::string& name)
-		: Window(name)
+		: UniqueWindow(name)
 	{
 	}
 
@@ -47,10 +47,10 @@ TEST("Unique Windows")
 int32 g_OpenClose = 0;
 ComponentWindows* g_ComponoentWindow = nullptr;
 
-class UniqueWinOpen : public Window {
+class UniqueWinOpen : public UniqueWindow {
 public:
 	UniqueWinOpen(const std::string& name)
-		: Window(name)
+		: UniqueWindow(name)
 	{
 	}
 
