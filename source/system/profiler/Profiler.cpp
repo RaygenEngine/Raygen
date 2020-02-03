@@ -1,4 +1,6 @@
-#include "Profiler.h"
+#include "pch/pch.h"
+#include "system/profiler/Profiler.h"
+#include "system/profiler/ProfileScope.h"
 
 void Profiler::Register(ProfileScopeBase* profObj)
 {

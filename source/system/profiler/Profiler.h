@@ -54,6 +54,14 @@ public:
 
 	[[nodiscard]] constexpr static bool IsModuleEnabled(ProfilerSetup::Module m) { return IsEnabled(m); }
 
+	static void BeginProfiling()
+	{
+		s_isProfiling = true;
+		EndFrame();
+	}
+
+	static void EndProfiling() { s_isProfiling = false; }
+
 
 	// WARNING: All currently registered entries will be lost until application restart with no way of restoring them
 	static void Z_ClearRegistrations() { Get().m_entries.clear(); };
