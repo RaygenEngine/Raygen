@@ -6,8 +6,7 @@ TEST("Profiler")
 {
 	using namespace std::literals;
 
-	Profiler::s_isProfiling = true;
-	Profiler::EndFrame();
+	Profiler::BeginProfiling();
 	Profiler::Z_ClearRegistrations();
 
 	for (int32 i = 0; i < 5; ++i) {
