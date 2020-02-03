@@ -12,14 +12,9 @@ std::stringstream Log::s_editorLogStream;
 
 void Log::Init(LogLevelTarget level)
 {
-	spdlog::set_pattern("%^[%T] %n: %v%$");
-	// colored multi-threaded
-	s_logger = spdlog::stdout_color_mt("Raygen");
-
-	auto editorOssSink = std::make_shared<spdlog::sinks::ostream_sink_mt>(s_editorLogStream);
-	editorOssSink->set_pattern("[%T.%e] %L:\t%v");
-	s_logger->sinks().push_back(editorOssSink);
-
+	if (!s_logger) {
+		BasicSetup();
+	}
 
 	switch (level) {
 		case LogLevelTarget::TRACE: s_logger->set_level(spdlog::level::level_enum::trace); break;
@@ -38,5 +33,24 @@ void Log::Init(LogLevelTarget level)
 		default: s_logger->set_level(spdlog::level::level_enum::off); break;
 	}
 
-	LOG_INFO("Initialized Raygen Logger, level: {}", spdlog::level::to_string_view(s_logger->level()));
+	LOG_INFO("Raygen Logger level: {}", spdlog::level::to_string_view(s_logger->level()));
+}
+
+void Log::EarlyInit()
+{
+	if (!s_logger) {
+		BasicSetup();
+		s_logger->set_level(spdlog::level::level_enum::warn);
+	}
+}
+
+void Log::BasicSetup()
+{
+	spdlog::set_pattern("%^[%T] %n: %v%$");
+	// colored multi-threaded
+	s_logger = spdlog::stdout_color_mt("Raygen");
+
+	auto editorOssSink = std::make_shared<spdlog::sinks::ostream_sink_mt>(s_editorLogStream);
+	editorOssSink->set_pattern("[%T.%e] %L:\t%v");
+	s_logger->sinks().push_back(editorOssSink);
 }

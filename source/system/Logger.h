@@ -14,8 +14,10 @@ public:
 	inline static std::shared_ptr<spdlog::logger>& GetLogger() { return s_logger; }
 
 	static std::stringstream s_editorLogStream;
+	static void EarlyInit();
 
 private:
+	static void BasicSetup();
 	static std::shared_ptr<spdlog::logger> s_logger;
 };
 

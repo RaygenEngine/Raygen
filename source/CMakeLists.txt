@@ -29,6 +29,7 @@ set(SOURCE_FILES
 	system/Engine.cpp
 	system/Input.cpp
 	system/Logger.cpp
+	system/console/Console.cpp
 
 
 	world/World.cpp

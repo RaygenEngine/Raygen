@@ -23,7 +23,9 @@
 #include "world/nodes/geometry/GeometryNode.h"
 #include "reflection/ReflEnum.h"
 #include "editor/DataStrings.h"
+#include "system/console/Console.h"
 #include <glfw/glfw3.h>
+
 
 #include <iostream>
 #include <set>
@@ -71,6 +73,37 @@ public:
 	}
 
 	virtual ~HelpWindow() = default;
+};
+
+
+#include "system/console/ConsoleVariable.h"
+ConsoleVariable<int32> g_myVar("var", 2);
+ConsoleVariable<std::string> g_strVar("str", "string_variable");
+
+ConsoleFunction g_consoleFunction("hello_world", [](auto) { LOG_ERROR("Hello World! {}", g_strVar.Get()); });
+
+class ConsoleWindow : public ed::UniqueWindow {
+	std::string m_input;
+
+public:
+	ConsoleWindow(std::string_view name)
+		: ed::UniqueWindow(name)
+	{
+	}
+
+	virtual void ImguiDraw()
+	{
+		if (ImGui::InputText("###ConsoleInp", &m_input, ImGuiInputTextFlags_EnterReturnsTrue)) {
+			Console::Execute(m_input);
+			m_input = "";
+		}
+		ImGui::Separator();
+		ImGui::Text("Example:");
+		ImGui::InputInt("g_myVar", &g_myVar.Get());
+		ImGui::InputText("g_strVar", &g_strVar.Get());
+	}
+
+	virtual ~ConsoleWindow() = default;
 };
 
 
@@ -149,6 +182,7 @@ void Editor::MakeMainMenu()
 {
 	m_windowsComponent.AddWindowEntry<AboutWindow>("About");
 	m_windowsComponent.AddWindowEntry<HelpWindow>("Help");
+	m_windowsComponent.AddWindowEntry<ConsoleWindow>("Console");
 
 	m_menus.clear();
 	auto sceneMenu = std::make_unique<ImMenu>("Scene");
@@ -1028,6 +1062,7 @@ struct ExampleAppLog {
 			return;
 		}
 
+
 		// Options menu
 		if (ImGui::BeginPopup("Options")) {
 			ImGui::Checkbox("Auto-scroll", &AutoScroll);
@@ -1043,6 +1078,20 @@ struct ExampleAppLog {
 		bool copy = ImGui::Button("Copy");
 		ImGui::SameLine();
 		Filter.Draw("Filter", -100.0f);
+
+		ImGui::Separator();
+
+		ImGui::Text("Console: ");
+		ImGui::SameLine();
+		static std::string str{};
+
+		if (ImGui::InputText("##ConsoleInput", &str)) {
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Enter##Console")) {
+			Console::Execute(str);
+			str = "";
+		}
 
 		ImGui::Separator();
 		ImGui::BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
@@ -1098,6 +1147,7 @@ struct ExampleAppLog {
 
 		if (AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
 			ImGui::SetScrollHereY(1.0f);
+
 
 		ImGui::EndChild();
 		ImGui::End();
