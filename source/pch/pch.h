@@ -23,3 +23,5 @@ namespace fs = std::filesystem;
 #include "core/CoreEnums.h"
 // meta
 #include "core/MetaTemplates.h"
+
+#include "core/MacroUtils.h"
