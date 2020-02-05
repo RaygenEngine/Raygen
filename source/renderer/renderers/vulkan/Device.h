@@ -2,10 +2,9 @@
 
 #include "renderer/renderers/vulkan/PhysicalDevice.h"
 #include "renderer/renderers/vulkan/Descriptors.h"
-
 #include <vulkan/vulkan.hpp>
 
-namespace vulkan {
+namespace vlkn {
 
 class Swapchain;
 class GraphicsPipeline;
@@ -18,8 +17,8 @@ class Device : public vk::Device {
 
 	PhysicalDevice* m_assocPhysicalDevice;
 
-	vk::CommandPool m_graphicsCommandPool;
-	vk::CommandPool m_transferCommandPool;
+	vk::UniqueCommandPool m_graphicsCommandPool;
+	vk::UniqueCommandPool m_transferCommandPool;
 
 public:
 	Device(vk::Device handle, PhysicalDevice* physicalDevice);
@@ -31,24 +30,19 @@ public:
 
 	PhysicalDevice* GetPhysicalDevice() const { return m_assocPhysicalDevice; }
 
-	vk::CommandPool GetGraphicsCommandPool() const { return m_graphicsCommandPool; }
-	vk::CommandPool GetTransferCommandPool() const { return m_transferCommandPool; }
+	vk::CommandPool GetGraphicsCommandPool() const { return m_graphicsCommandPool.get(); }
+	vk::CommandPool GetTransferCommandPool() const { return m_transferCommandPool.get(); }
 
-	vk::ShaderModule CreateShaderModule(const std::string& binPath);
+	vk::UniqueShaderModule CreateShaderModule(const std::string& binPath);
 
 	std::unique_ptr<Swapchain> RequestDeviceSwapchainOnSurface(vk::SurfaceKHR surface);
 	std::unique_ptr<GraphicsPipeline> RequestDeviceGraphicsPipeline(Swapchain* swapchain);
 	std::unique_ptr<Descriptors> RequestDeviceDescriptors(Swapchain* swapchain, GraphicsPipeline* pipeline);
 
-	// TODO
-	// void FreeSwapchain();
-	// void FreeGraphicsPipeline();
-	// void FreeDescriptors();
-	// void FreeModel();
-
-
 	void CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
-		vk::Buffer& buffer, vk::DeviceMemory& bufferMemory);
+		vk::UniqueBuffer& buffer, vk::UniqueDeviceMemory& memory);
 	void CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
+
+	// void CreateImage(const std::string& textPath);
 };
-} // namespace vulkan
+} // namespace vlkn

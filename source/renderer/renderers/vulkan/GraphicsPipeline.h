@@ -6,21 +6,21 @@
 
 #include <vulkan/vulkan.hpp>
 
-namespace vulkan {
+namespace vlkn {
 class GraphicsPipeline {
 
-	vk::DescriptorSetLayout m_descriptorSetLayout;
+	vk::UniqueDescriptorSetLayout m_descriptorSetLayout;
 
-	vk::Pipeline m_pipeline;
-	vk::PipelineLayout m_pipelineLayout;
+	vk::UniquePipeline m_pipeline;
+	vk::UniquePipelineLayout m_pipelineLayout;
 
 
 public:
 	GraphicsPipeline(Device* device, Swapchain* swapchain);
 
-	vk::DescriptorSetLayout GetDescriptorSetLayout() const { return m_descriptorSetLayout; }
+	vk::DescriptorSetLayout GetDescriptorSetLayout() const { return m_descriptorSetLayout.get(); }
 
-	vk::Pipeline GetPipeline() const { return m_pipeline; }
-	vk::PipelineLayout GetPipelineLayout() const { return m_pipelineLayout; }
+	vk::Pipeline GetPipeline() const { return m_pipeline.get(); }
+	vk::PipelineLayout GetPipelineLayout() const { return m_pipelineLayout.get(); }
 };
-} // namespace vulkan
+} // namespace vlkn

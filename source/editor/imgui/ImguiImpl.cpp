@@ -1,6 +1,7 @@
 
 #include "editor/imgui/ImguiImpl.h"
 #include "system/Engine.h"
+#include "renderer/renderers/opengl/GLEditorRenderer.h"
 #include "platform/windows/Win32Window.h"
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD
 
@@ -72,7 +73,9 @@ void ImguiImpl::InitContext()
 
 void ImguiImpl::NewFrame()
 {
-	ImGui_ImplOpenGL3_NewFrame();
+	if (dynamic_cast<ogl::GLEditorRenderer*>(Engine::GetRenderer())) {
+		ImGui_ImplOpenGL3_NewFrame();
+	}
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 }

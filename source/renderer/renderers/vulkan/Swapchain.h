@@ -4,20 +4,20 @@
 
 #include <vulkan/vulkan.hpp>
 
-namespace vulkan {
+namespace vlkn {
 class Swapchain {
 
-	vk::SwapchainKHR m_handle;
+	vk::UniqueSwapchainKHR m_handle;
 
 	vk::Format m_imageFormat;
 	vk::Extent2D m_extent;
 
 	std::vector<vk::Image> m_images;
-	std::vector<vk::ImageView> m_imageViews;
+	std::vector<vk::UniqueImageView> m_imageViews;
 
-	vk::RenderPass m_renderPass;
+	vk::UniqueRenderPass m_renderPass;
 
-	std::vector<vk::Framebuffer> m_framebuffers;
+	std::vector<vk::UniqueFramebuffer> m_framebuffers;
 
 	Device* m_assocDevice;
 	vk::SurfaceKHR m_assocSurface;
@@ -31,14 +31,14 @@ class Swapchain {
 public:
 	Swapchain(Device* device, vk::SurfaceKHR surface);
 
-	vk::SwapchainKHR Get() const { return m_handle; }
+	vk::SwapchainKHR Get() const { return m_handle.get(); }
 	vk::Format GetImageFormat() const { return m_imageFormat; }
 	vk::Extent2D GetExtent() const { return m_extent; }
-	vk::RenderPass GetRenderPass() const { return m_renderPass; }
+	vk::RenderPass GetRenderPass() const { return m_renderPass.get(); }
 	std::vector<vk::Image> GetImages() const { return m_images; }
-	std::vector<vk::ImageView> GetImageViews() const { return m_imageViews; }
-	std::vector<vk::Framebuffer> GetFramebuffers() const { return m_framebuffers; }
+	std::vector<vk::ImageView> GetImageViews() const { return vk::uniqueToRaw(m_imageViews); }
+	std::vector<vk::Framebuffer> GetFramebuffers() const { return vk::uniqueToRaw(m_framebuffers); }
 
 	uint32 GetImageCount() const { return static_cast<uint32>(m_images.size()); }
 };
-} // namespace vulkan
+} // namespace vlkn

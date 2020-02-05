@@ -16,7 +16,7 @@ struct SwapChainSupportDetails {
 	std::vector<vk::PresentModeKHR> presentModes;
 };
 
-VkImageView createImageView(vulkan::Device* dev, vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags)
+VkImageView createImageView(vlkn::Device* dev, vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags)
 {
 	vk::ImageViewCreateInfo viewInfo{};
 	viewInfo.setImage(image).setViewType(vk::ImageViewType::e2D).setFormat(format);
@@ -29,7 +29,7 @@ VkImageView createImageView(vulkan::Device* dev, vk::Image image, vk::Format for
 	return dev->createImageView(viewInfo);
 }
 
-void createImage(vulkan::Device* device, uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling,
+void createImage(vlkn::Device* device, uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling,
 	vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Image& image, vk::DeviceMemory& imageMemory)
 {
 	auto pd = device->GetPhysicalDevice();
@@ -106,7 +106,7 @@ vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
 }
 } // namespace
 
-namespace vulkan {
+namespace vlkn {
 Swapchain::Swapchain(Device* device, vk::SurfaceKHR surface)
 	: m_assocDevice(device)
 	, m_assocSurface(surface)
@@ -156,8 +156,8 @@ Swapchain::Swapchain(Device* device, vk::SurfaceKHR surface)
 		.setOldSwapchain(nullptr);
 
 
-	m_handle = device->createSwapchainKHR(createInfo);
-	m_images = device->getSwapchainImagesKHR(m_handle);
+	m_handle = device->createSwapchainKHRUnique(createInfo);
+	m_images = device->getSwapchainImagesKHR(m_handle.get());
 
 	// Store swap chain image format and extent
 	m_imageFormat = surfaceFormat.format;
@@ -176,7 +176,7 @@ Swapchain::Swapchain(Device* device, vk::SurfaceKHR surface)
 		createInfo.subresourceRange.setLevelCount(1);
 		createInfo.subresourceRange.setBaseArrayLayer(0);
 		createInfo.subresourceRange.setLayerCount(1);
-		m_imageViews.emplace_back(device->createImageView(createInfo));
+		m_imageViews.emplace_back(device->createImageViewUnique(createInfo));
 	}
 
 	// render pass
@@ -234,7 +234,7 @@ Swapchain::Swapchain(Device* device, vk::SurfaceKHR surface)
 		.setDependencyCount(1)
 		.setPDependencies(&dependency);
 
-	m_renderPass = device->createRenderPass(renderPassInfo);
+	m_renderPass = device->createRenderPassUnique(renderPassInfo);
 
 	// framebuffers
 	vk::Format depthFormat = physicalDevice->FindDepthFormat();
@@ -244,17 +244,17 @@ Swapchain::Swapchain(Device* device, vk::SurfaceKHR surface)
 	depthImageView = createImageView(m_assocDevice, depthImage, depthFormat, vk::ImageAspectFlagBits::eDepth);
 
 	for (auto& imgv : m_imageViews) {
-		std::array<vk::ImageView, 2> attachments = { imgv, depthImageView };
+		std::array<vk::ImageView, 2> attachments = { imgv.get(), depthImageView };
 		vk::FramebufferCreateInfo createInfo{};
-		createInfo.setRenderPass(m_renderPass)
+		createInfo.setRenderPass(m_renderPass.get())
 			.setAttachmentCount(static_cast<uint32>(attachments.size()))
 			.setPAttachments(attachments.data())
 			.setWidth(extent.width)
 			.setHeight(extent.height)
 			.setLayers(1);
 
-		m_framebuffers.push_back(device->createFramebuffer(createInfo));
+		m_framebuffers.emplace_back(device->createFramebufferUnique(createInfo));
 	}
 }
 
-} // namespace vulkan
+} // namespace vlkn

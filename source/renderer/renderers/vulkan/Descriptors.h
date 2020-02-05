@@ -3,7 +3,7 @@
 #include "vulkan/vulkan.hpp"
 
 
-namespace vulkan {
+namespace vlkn {
 
 class Device;
 class Swapchain;
@@ -19,18 +19,18 @@ struct UniformBufferObject {
 class Descriptors {
 
 	// uniforms
-	std::vector<vk::Buffer> m_uniformBuffers;
-	std::vector<vk::DeviceMemory> m_uniformBuffersMemory;
+	std::vector<vk::UniqueBuffer> m_uniformBuffers;
+	std::vector<vk::UniqueDeviceMemory> m_uniformBuffersMemory;
 
-	vk::DescriptorPool m_descriptorPool;
-	std::vector<vk::DescriptorSet> m_descriptorSets;
+	vk::UniqueDescriptorPool m_descriptorPool;
+	std::vector<vk::UniqueDescriptorSet> m_descriptorSets;
 
 public:
 	Descriptors(Device* device, Swapchain* swapchain, GraphicsPipeline* graphicsPipeline);
 
-	std::vector<vk::Buffer> GetUniformBuffers() const { return m_uniformBuffers; }
-	std::vector<vk::DeviceMemory> GetUniformBuffersMemory() const { return m_uniformBuffersMemory; }
-	vk::DescriptorPool GetDescriptorPool() const { return m_descriptorPool; }
-	std::vector<vk::DescriptorSet> GetDescriptorSets() const { return m_descriptorSets; }
+	std::vector<vk::Buffer> GetUniformBuffers() const { return vk::uniqueToRaw(m_uniformBuffers); }
+	std::vector<vk::DeviceMemory> GetUniformBuffersMemory() const { return vk::uniqueToRaw(m_uniformBuffersMemory); }
+	vk::DescriptorPool GetDescriptorPool() const { return m_descriptorPool.get(); }
+	std::vector<vk::DescriptorSet> GetDescriptorSets() const { return vk::uniqueToRaw(m_descriptorSets); }
 };
-} // namespace vulkan
+} // namespace vlkn

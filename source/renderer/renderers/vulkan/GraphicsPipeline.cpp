@@ -3,7 +3,7 @@
 #include "renderer/renderers/vulkan/GraphicsPipeline.h"
 #include "asset/pods/ModelPod.h"
 
-namespace vulkan {
+namespace vlkn {
 GraphicsPipeline::GraphicsPipeline(Device* device, Swapchain* swapchain)
 {
 	// descriptor layout
@@ -18,17 +18,17 @@ GraphicsPipeline::GraphicsPipeline(Device* device, Swapchain* swapchain)
 	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
 	layoutInfo.setBindingCount(1u).setPBindings(&uboLayoutBinding);
 
-	m_descriptorSetLayout = device->createDescriptorSetLayout(layoutInfo);
+	m_descriptorSetLayout = device->createDescriptorSetLayoutUnique(layoutInfo);
 
 	// shaders
 	auto vertShaderModule = device->CreateShaderModule("/engine-data/spv/vert.spv");
 	auto fragShaderModule = device->CreateShaderModule("/engine-data/spv/frag.spv");
 
 	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
-	vertShaderStageInfo.setStage(vk::ShaderStageFlagBits::eVertex).setModule(vertShaderModule).setPName("main");
+	vertShaderStageInfo.setStage(vk::ShaderStageFlagBits::eVertex).setModule(vertShaderModule.get()).setPName("main");
 
 	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
-	fragShaderStageInfo.setStage(vk::ShaderStageFlagBits::eFragment).setModule(fragShaderModule).setPName("main");
+	fragShaderStageInfo.setStage(vk::ShaderStageFlagBits::eFragment).setModule(fragShaderModule.get()).setPName("main");
 
 	vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
@@ -143,11 +143,11 @@ GraphicsPipeline::GraphicsPipeline(Device* device, Swapchain* swapchain)
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.setSetLayoutCount(1u);
-	pipelineLayoutInfo.setPSetLayouts(&(m_descriptorSetLayout));
+	pipelineLayoutInfo.setPSetLayouts(&(m_descriptorSetLayout.get()));
 	pipelineLayoutInfo.setPushConstantRangeCount(0u);
 	pipelineLayoutInfo.setPPushConstantRanges(nullptr);
 
-	m_pipelineLayout = device->createPipelineLayout(pipelineLayoutInfo);
+	m_pipelineLayout = device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
@@ -172,12 +172,12 @@ GraphicsPipeline::GraphicsPipeline(Device* device, Swapchain* swapchain)
 		.setPDepthStencilState(&depthStencil)
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(nullptr)
-		.setLayout(m_pipelineLayout)
+		.setLayout(m_pipelineLayout.get())
 		.setRenderPass(swapchain->GetRenderPass())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 
-	m_pipeline = device->createGraphicsPipeline(nullptr, pipelineInfo);
+	m_pipeline = device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
-} // namespace vulkan
+} // namespace vlkn

@@ -1,6 +1,6 @@
 #include "pch/pch.h"
 
-#include "renderer/renderers/vulkan/VkRendererBase.h"
+#include "renderer/renderers/vulkan/VkSampleRenderer.h"
 #include "system/Logger.h"
 #include "system/Engine.h"
 
@@ -83,9 +83,9 @@ std::vector<const char*> requiredExtensions = { VK_KHR_SURFACE_EXTENSION_NAME, V
 std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 } // namespace
-namespace vk {
+namespace vlkn {
 
-VkRendererBase::~VkRendererBase()
+VkSampleRenderer::~VkSampleRenderer()
 {
 	// TODO: cleanup
 	// vkDeviceWaitIdle(m_device);
@@ -111,20 +111,20 @@ VkRendererBase::~VkRendererBase()
 	// vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
 	// vkDestroyInstance(m_instance, nullptr);
 
-	m_instanceLayer.reset();
-	m_swapchain.reset();
-	m_descriptors.reset();
-	m_graphicsPipeline.reset();
+	// m_instanceLayer.reset();
+	// m_swapchain.reset();
+	// m_descriptors.reset();
+	// m_graphicsPipeline.reset();
 
 	Engine::Get().m_remakeWindow = true;
 }
 
-void VkRendererBase::CreateRenderCommandBuffers()
+void VkSampleRenderer::CreateRenderCommandBuffers()
 {
 	auto world = Engine::GetWorld();
 	auto geomNode = world->GetAnyAvailableNode<GeometryNode>();
 	auto model = geomNode->GetModel();
-	m_model = std::make_unique<vulkan::Model>(m_device.get(), model);
+	m_model = std::make_unique<vlkn::Model>(m_device.get(), model);
 
 
 	m_renderCommandBuffers.resize(m_swapchain->GetImageCount());
@@ -161,13 +161,13 @@ void VkRendererBase::CreateRenderCommandBuffers()
 					vk::PipelineBindPoint::eGraphics, m_graphicsPipeline->GetPipeline());
 
 				for (auto& gg : m_model->GetGeometryGroups()) {
-					vk::Buffer vertexBuffers[] = { gg.vertexBuffer };
+					vk::Buffer vertexBuffers[] = { gg.vertexBuffer.get() };
 					vk::DeviceSize offsets[] = { 0 };
 					// geom
 					m_renderCommandBuffers[i].bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
 
 					// indices
-					m_renderCommandBuffers[i].bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);
+					m_renderCommandBuffers[i].bindIndexBuffer(gg.indexBuffer.get(), 0, vk::IndexType::eUint32);
 
 					// descriptor sets
 					m_renderCommandBuffers[i].bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
@@ -186,7 +186,7 @@ void VkRendererBase::CreateRenderCommandBuffers()
 	}
 }
 
-void VkRendererBase::RecreateSwapChain()
+void VkSampleRenderer::RecreateSwapChain()
 {
 	// WIP: use old swap chain during recreation
 	// vkDeviceWaitIdle(m_device);
@@ -202,7 +202,7 @@ void VkRendererBase::RecreateSwapChain()
 	// CreateRenderCommandBuffers();
 }
 
-void VkRendererBase::CleanupSwapChain()
+void VkSampleRenderer::CleanupSwapChain()
 {
 	// for (auto framebuffer : m_swapChainFramebuffers) {
 	//	vkDestroyFramebuffer(m_device, framebuffer, nullptr);
@@ -230,9 +230,9 @@ void VkRendererBase::CleanupSwapChain()
 	// vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
 }
 
-void VkRendererBase::Init(HWND assochWnd, HINSTANCE instance)
+void VkSampleRenderer::Init(HWND assochWnd, HINSTANCE instance)
 {
-	m_instanceLayer = std::make_unique<vulkan::InstanceLayer>(assochWnd, instance);
+	m_instanceLayer = std::make_unique<vlkn::InstanceLayer>(assochWnd, instance);
 
 	auto physicalDevice = m_instanceLayer->GetBestCapablePhysicalDevice();
 
@@ -252,12 +252,12 @@ void VkRendererBase::Init(HWND assochWnd, HINSTANCE instance)
 	m_renderFinishedSemaphore = m_device->createSemaphoreUnique({});
 } // namespace vk
 
-bool VkRendererBase::SupportsEditor()
+bool VkSampleRenderer::SupportsEditor()
 {
 	return false;
 }
 
-void VkRendererBase::Render()
+void VkSampleRenderer::DrawFrame()
 {
 	uint32 imageIndex;
 
@@ -278,7 +278,7 @@ void VkRendererBase::Render()
 		auto modelm = geomNode->GetNodeTransformWCS();
 		auto camera = world->GetActiveCamera();
 
-		vulkan::UniformBufferObject ubo = {};
+		vlkn::UniformBufferObject ubo = {};
 		ubo.model = modelm;
 		ubo.view = camera->GetViewMatrix();
 		ubo.proj = camera->GetProjectionMatrix();
@@ -322,4 +322,4 @@ void VkRendererBase::Render()
 	}
 }
 
-} // namespace vk
+} // namespace vlkn
