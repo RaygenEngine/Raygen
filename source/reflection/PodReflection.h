@@ -5,7 +5,8 @@
 
 #include <type_traits>
 
-#define Z_POD_TYPES GltfFilePod, ImagePod, MaterialPod, ModelPod, ShaderPod, StringPod, TexturePod, JsonDocPod
+#define Z_POD_TYPES                                                                                                    \
+	GltfFilePod, ImagePod, MaterialPod, ModelPod, ShaderPod, StringPod, TexturePod, JsonDocPod, BinaryPod
 
 
 // The way the above macro works is that there are always 2 instances of each function. The first is the 'impl'

@@ -7,7 +7,7 @@
 
 #include <set>
 
-namespace vulkan {
+namespace vlkn {
 
 // WIP:
 std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_MAINTENANCE1_EXTENSION_NAME };
@@ -190,4 +190,4 @@ vk::Format PhysicalDevice::FindDepthFormat()
 		vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 }
 
-} // namespace vulkan
+} // namespace vlkn

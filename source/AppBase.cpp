@@ -11,7 +11,7 @@
 #include "system/Logger.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"
-#include <renderer\renderers\vulkan\VkRendererBase.h>
+#include "renderer\renderers\vulkan\VkSampleRenderer.h"
 
 
 AppBase::AppBase()
@@ -80,7 +80,7 @@ int32 AppBase::Main(int32 argc, char* argv[]) // NOLINT
 
 	MainLoop();
 
-	window->ReleaseMouseMovement();
+	// window->ReleaseMouseMovement();
 
 	engine.DeinitEngine();
 
@@ -126,7 +126,7 @@ void AppBase::RegisterRenderers()
 
 	// WIP: use base renderer for context tests
 	// TODO: fix issue when first renderer is vulkan, opengl fails
-	Engine::RegisterPrimaryRenderer<vk::VkRendererBase>();
+	Engine::RegisterPrimaryRenderer<vlkn::VkSampleRenderer>();
 
 	Engine::RegisterPrimaryRenderer<ogl::GLDeferredRenderer>();
 	Engine::RegisterPrimaryRenderer<ogl::GLForwardRenderer>();

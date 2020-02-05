@@ -12,7 +12,7 @@
 		CLOG_ABORT(x != VK_SUCCESS, "Failed vkCall");                                                                  \
 	} while (0)
 
-namespace vulkan {
+namespace vlkn {
 std::vector<const char*> requiredExtensions = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
 
 InstanceLayer::InstanceLayer(HWND assochWnd, HINSTANCE instance)
@@ -30,7 +30,7 @@ InstanceLayer::InstanceLayer(HWND assochWnd, HINSTANCE instance)
 		.setEnabledExtensionCount(static_cast<uint32>(requiredExtensions.size()))
 		.setPpEnabledExtensionNames(requiredExtensions.data());
 
-	m_instance = vk::createInstance(createInfo);
+	m_instance = vk::createInstanceUnique(createInfo);
 
 	// create surface (WIP: currently C form)
 	VkWin32SurfaceCreateInfoKHR win32SurfaceInfo = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
@@ -38,11 +38,11 @@ InstanceLayer::InstanceLayer(HWND assochWnd, HINSTANCE instance)
 	win32SurfaceInfo.hinstance = instance;
 
 	VkSurfaceKHR tmp;
-	vkCall(vkCreateWin32SurfaceKHR(m_instance, &win32SurfaceInfo, nullptr, &tmp));
+	vkCall(vkCreateWin32SurfaceKHR(m_instance.get(), &win32SurfaceInfo, nullptr, &tmp));
 	m_surface = tmp;
 
 	// get capable physical devices
-	auto deviceHandles = m_instance.enumeratePhysicalDevices();
+	auto deviceHandles = m_instance->enumeratePhysicalDevices();
 
 	for (const auto dH : deviceHandles) {
 		auto pD = std::make_unique<PhysicalDevice>(dH, m_surface);
@@ -55,8 +55,8 @@ InstanceLayer::InstanceLayer(HWND assochWnd, HINSTANCE instance)
 
 InstanceLayer::~InstanceLayer()
 {
-	m_instance.destroySurfaceKHR(m_surface);
-	m_instance.destroy();
+	m_instance->destroySurfaceKHR(m_surface);
+	// m_instance->destroy();
 }
 
 PhysicalDevice* InstanceLayer::GetBestCapablePhysicalDevice()
@@ -74,4 +74,4 @@ PhysicalDevice* InstanceLayer::GetBestCapablePhysicalDevice()
 	return m_capablePhysicalDevices[0].get();
 }
 
-} // namespace vulkan
+} // namespace vlkn

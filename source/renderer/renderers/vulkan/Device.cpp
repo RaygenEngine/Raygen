@@ -9,7 +9,7 @@
 
 #include <set>
 
-namespace vulkan {
+namespace vlkn {
 
 Device::Device(vk::Device handle, PhysicalDevice* physicalDevice)
 	: vk::Device(handle)
@@ -27,30 +27,28 @@ Device::Device(vk::Device handle, PhysicalDevice* physicalDevice)
 	graphicsPoolInfo.setQueueFamilyIndex(graphicsQueueFamily.familyIndex);
 	graphicsPoolInfo.setFlags(vk::CommandPoolCreateFlags(0));
 
-	m_graphicsCommandPool = createCommandPool(graphicsPoolInfo);
+	m_graphicsCommandPool = createCommandPoolUnique(graphicsPoolInfo);
 
 	vk::CommandPoolCreateInfo transferPoolInfo{};
 	transferPoolInfo.setQueueFamilyIndex(transferQueueFamily.familyIndex);
 	transferPoolInfo.setFlags(vk::CommandPoolCreateFlags(0));
 
-	m_transferCommandPool = createCommandPool(transferPoolInfo);
+	m_transferCommandPool = createCommandPoolUnique(transferPoolInfo);
 }
 
 Device::~Device()
 {
-	destroyCommandPool(m_graphicsCommandPool);
-	destroyCommandPool(m_transferCommandPool);
 	destroy();
 }
 
-vk::ShaderModule Device::CreateShaderModule(const std::string& binPath)
+vk::UniqueShaderModule Device::CreateShaderModule(const std::string& binPath)
 {
 	auto& data = AssetManager::GetOrCreateFromParentUri<BinaryPod>(binPath, "/").Lock()->data;
 
 	vk::ShaderModuleCreateInfo createInfo{};
 	createInfo.setCodeSize(data.size()).setPCode(reinterpret_cast<const uint32*>(data.data()));
 
-	return createShaderModule(createInfo);
+	return createShaderModuleUnique(createInfo);
 }
 
 std::unique_ptr<Swapchain> Device::RequestDeviceSwapchainOnSurface(vk::SurfaceKHR surface)
@@ -69,14 +67,13 @@ std::unique_ptr<Descriptors> Device::RequestDeviceDescriptors(Swapchain* swapcha
 }
 
 void Device::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
-	vk::Buffer& buffer, vk::DeviceMemory& bufferMemory)
-
+	vk::UniqueBuffer& buffer, vk::UniqueDeviceMemory& memory)
 {
 	vk::BufferCreateInfo bufferInfo{};
 	bufferInfo.setSize(size).setUsage(usage).setSharingMode(vk::SharingMode::eExclusive);
 
-	buffer = createBuffer(bufferInfo);
-	vk::MemoryRequirements memRequirements = getBufferMemoryRequirements(buffer);
+	buffer = createBufferUnique(bufferInfo);
+	vk::MemoryRequirements memRequirements = getBufferMemoryRequirements(buffer.get());
 
 	vk::MemoryAllocateInfo allocInfo{};
 	allocInfo.setAllocationSize(memRequirements.size);
@@ -89,16 +86,16 @@ void Device::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::M
 	// NVIDIA GTX 1080. The right way to allocate memory for a large number of objects at the same time is to create
 	// a custom allocator that splits up a single allocation among many different objects by using the offset
 	// parameters that we've seen in many functions.
-	bufferMemory = allocateMemory(allocInfo);
+	memory = allocateMemoryUnique(allocInfo);
 
-	bindBufferMemory(buffer, bufferMemory, 0);
+	bindBufferMemory(buffer.get(), memory.get(), 0);
 }
 
 void Device::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size)
 {
 	vk::CommandBufferAllocateInfo allocInfo{};
 	allocInfo.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandPool(m_transferCommandPool)
+		.setCommandPool(m_transferCommandPool.get())
 		.setCommandBufferCount(1u);
 
 	// TODO: check if unique gets freed automatically (due to buffer-pool relationship)
@@ -127,7 +124,17 @@ void Device::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSi
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.
 	m_transferQueue.waitIdle();
 
-	freeCommandBuffers(m_transferCommandPool, 1, &commandBuffer);
+	freeCommandBuffers(m_transferCommandPool.get(), 1, &commandBuffer);
 }
 
-} // namespace vulkan
+// void Device::CreateImage(const std::string& textPath)
+//{
+//	auto& data = AssetManager::GetOrCreateFromParentUri<TexturePod>(textPath, "/");
+//
+//	vk::ShaderModuleCreateInfo createInfo{};
+//	createInfo.setCodeSize(data.size()).setPCode(reinterpret_cast<const uint32*>(data.data()));
+//
+//	return createShaderModuleUnique(createInfo);
+//}
+
+} // namespace vlkn

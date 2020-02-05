@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.hpp>
 
-namespace vulkan {
+namespace vlkn {
 
 class Device;
 
@@ -51,4 +51,4 @@ public:
 
 	vk::Format FindDepthFormat();
 };
-} // namespace vulkan
+} // namespace vlkn

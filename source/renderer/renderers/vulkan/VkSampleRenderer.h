@@ -5,24 +5,24 @@
 #include "renderer/renderers/vulkan/GraphicsPipeline.h"
 #include "renderer/renderers/vulkan/Descriptors.h"
 #include "renderer/renderers/vulkan/Model.h"
-#include "renderer/ObserverRenderer.h"
+#include "renderer/Renderer.h"
 
 #include <vulkan/vulkan.hpp>
 
 
-namespace vk {
+namespace vlkn {
 
-class VkRendererBase : public ObserverRenderer {
+class VkSampleRenderer : public Renderer {
 
 	// high level parts
-	std::unique_ptr<vulkan::InstanceLayer> m_instanceLayer;
-	std::unique_ptr<vulkan::Device> m_device;
-	std::unique_ptr<vulkan::Swapchain> m_swapchain;
-	std::unique_ptr<vulkan::GraphicsPipeline> m_graphicsPipeline;
-	std::unique_ptr<vulkan::Descriptors> m_descriptors;
+	std::unique_ptr<InstanceLayer> m_instanceLayer;
+	std::unique_ptr<Device> m_device;
+	std::unique_ptr<Swapchain> m_swapchain;
+	std::unique_ptr<GraphicsPipeline> m_graphicsPipeline;
+	std::unique_ptr<Descriptors> m_descriptors;
 
 	// data
-	std::unique_ptr<vulkan::Model> m_model;
+	std::unique_ptr<Model> m_model;
 
 	// render commands
 	std::vector<vk::CommandBuffer> m_renderCommandBuffers;
@@ -40,12 +40,12 @@ class VkRendererBase : public ObserverRenderer {
 	void CleanupSwapChain();
 
 public:
-	virtual ~VkRendererBase();
+	virtual ~VkSampleRenderer();
 
 
 	virtual void Init(HWND assochWnd, HINSTANCE instance) override;
 	virtual bool SupportsEditor() override;
-	virtual void Render() override;
+	virtual void DrawFrame() override;
 };
 
-} // namespace vk
+} // namespace vlkn
