@@ -92,10 +92,11 @@ void ImguiImpl::EndFrame()
 
 void ImguiImpl::CleanupContext()
 {
-	ImGui_ImplVulkan_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
+	// WIP
+	// ImGui_ImplVulkan_Shutdown();
+	// ImGui_ImplGlfw_Shutdown();
 
-	ImGui::DestroyContext();
+	// ImGui::DestroyContext();
 }
 
 #include <imgui.cpp>

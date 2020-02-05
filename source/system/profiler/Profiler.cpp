@@ -9,7 +9,7 @@ void Profiler::Register(ProfileScopeBase* profObj)
 	p.m_entries.insert({ profObj->engModule, {} }).first->second.push_back(profObj);
 }
 
-void Profiler::EndFrame()
+void Profiler::BeginFrame()
 {
 	if (!s_isProfiling) {
 		return;
@@ -22,4 +22,9 @@ void Profiler::EndFrame()
 			entry->Reset();
 		}
 	}
+
+	auto now = ch::system_clock::now();
+
+	p.m_lastFrameTime = ch::duration_cast<Precision>(now - p.m_frameBeginTime);
+	p.m_frameBeginTime = now;
 };

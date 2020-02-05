@@ -3,11 +3,13 @@
 #include "world/nodes/user/FreeformUserNode.h"
 #include "world/nodes/RootNode.h"
 #include "asset/util/ParsingAux.h"
+#include "system/profiler/ProfileScope.h"
 #include "system/Engine.h"
 #include "system/Input.h"
 
 void FreeformUserNode::Update(float deltaTime)
 {
+	PROFILE_SCOPE(World);
 	auto& input = Engine::GetInput();
 	auto& gamepad = input.GetGamepadState();
 

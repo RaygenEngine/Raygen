@@ -8,6 +8,7 @@
 #include "world/NodeFactory.h"
 #include "world/World.h"
 #include "renderer/renderers/vulkan/VkRendererBase.h"
+#include "system/profiler/ProfileScope.h"
 
 AppBase::AppBase()
 {
@@ -67,6 +68,7 @@ void AppBase::MainLoop()
 {
 	GLFWwindow* window = Engine::GetMainWindow();
 	while (!glfwWindowShouldClose(Engine::GetMainWindow())) {
+		PROFILE_SCOPE(System)
 		if (Engine::IsEditorActive()) {
 			Engine::GetEditor()->PreBeginFrame();
 		}

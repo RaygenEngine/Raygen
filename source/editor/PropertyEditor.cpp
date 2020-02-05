@@ -11,6 +11,7 @@
 #include "reflection/PodTools.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "editor/DataStrings.h"
+#include "system//profiler/ProfileScope.h"
 #include "asset/AssetManager.h"
 #include <fstream>
 
@@ -450,6 +451,8 @@ void SaveAs(PodHandle<T>& handle, fs::path& path)
 
 void PropertyEditor::Inject(Node* node)
 {
+	PROFILE_SCOPE(Editor);
+
 	ImGui::Indent();
 	if (!node->IsRoot()) {
 		Run_BaseProperties(node);

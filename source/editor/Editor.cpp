@@ -24,88 +24,13 @@
 #include "reflection/ReflEnum.h"
 #include "editor/DataStrings.h"
 #include "system/console/Console.h"
-#include <glfw/glfw3.h>
+#include "editor/windows/WindowsRegistry.h"
+#include "system/profiler/ProfileScope.h"
 
+#include <glfw/glfw3.h>
 
 #include <iostream>
 #include <set>
-
-class AboutWindow : public ed::UniqueWindow {
-public:
-	AboutWindow(std::string_view name)
-		: ed::UniqueWindow(name)
-	{
-	}
-
-	virtual void ImguiDraw()
-	{
-		ImGui::Text("Raygen: v0.1");
-		ImExt::HSpace(220.f);
-		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 33.0f);
-		ImGui::Text(txt_about);
-		ImGui::Text("");
-	}
-
-	virtual ~AboutWindow() = default;
-};
-
-class HelpWindow : public ed::UniqueWindow {
-public:
-	HelpWindow(std::string_view name)
-		: ed::UniqueWindow(name)
-	{
-	}
-
-	virtual void OnDraw(const char* title, bool* open)
-	{
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
-		ImGui::SetNextWindowPos(ImVec2(650.f, 100.f), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowSize(ImVec2(0, 720.f), ImGuiCond_Always);
-
-		if (ImGui::Begin(title, open)) {
-			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 33.0f);
-			ImGui::Text(txt_help);
-			ImGui::Text("");
-		}
-
-		ImGui::End();
-		ImGui::PopStyleVar();
-	}
-
-	virtual ~HelpWindow() = default;
-};
-
-
-#include "system/console/ConsoleVariable.h"
-ConsoleVariable<int32> g_myVar("var", 2);
-ConsoleVariable<std::string> g_strVar("str", "string_variable");
-
-ConsoleFunction g_consoleFunction("hello_world", [](auto) { LOG_ERROR("Hello World! {}", g_strVar.Get()); });
-
-class ConsoleWindow : public ed::UniqueWindow {
-	std::string m_input;
-
-public:
-	ConsoleWindow(std::string_view name)
-		: ed::UniqueWindow(name)
-	{
-	}
-
-	virtual void ImguiDraw()
-	{
-		if (ImGui::InputText("###ConsoleInp", &m_input, ImGuiInputTextFlags_EnterReturnsTrue)) {
-			Console::Execute(m_input);
-			m_input = "";
-		}
-		ImGui::Separator();
-		ImGui::Text("Example:");
-		ImGui::InputInt("g_myVar", &g_myVar.Get());
-		ImGui::InputText("g_strVar", &g_strVar.Get());
-	}
-
-	virtual ~ConsoleWindow() = default;
-};
-
 
 Editor::Editor()
 {
@@ -180,9 +105,8 @@ EditorBBoxDrawing Editor::GetBBoxDrawing()
 
 void Editor::MakeMainMenu()
 {
-	m_windowsComponent.AddWindowEntry<AboutWindow>("About");
-	m_windowsComponent.AddWindowEntry<HelpWindow>("Help");
-	m_windowsComponent.AddWindowEntry<ConsoleWindow>("Console");
+	RegisterWindows(m_windowsComponent);
+
 
 	m_menus.clear();
 	auto sceneMenu = std::make_unique<ImMenu>("Scene");
@@ -224,7 +148,7 @@ Editor::~Editor()
 
 void Editor::UpdateEditor()
 {
-
+	PROFILE_SCOPE(Editor);
 	if (m_editorCamera) {
 		m_editorCamera->UpdateFromEditor(Engine::GetWorld()->GetDeltaTime());
 	}
@@ -279,6 +203,7 @@ void Editor::UpdateEditor()
 		m_sceneSave.OpenBrowser();
 	}
 	ImGui::SameLine();
+
 
 	if (ImGui::Button("Load")) {
 		m_loadFileBrowser.SetTitle("Load World");
@@ -370,6 +295,8 @@ void Editor::SpawnEditorCamera()
 
 void Editor::Outliner()
 {
+	PROFILE_SCOPE(Editor);
+
 	ImGui::BeginChild(
 		"Outliner", ImVec2(ImGui::GetWindowContentRegionWidth(), 300), false, ImGuiWindowFlags_HorizontalScrollbar);
 	ImGui::Spacing();
