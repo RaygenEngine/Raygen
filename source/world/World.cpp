@@ -11,6 +11,7 @@
 #include "editor/Editor.h"
 #include "reflection/ReflectionTools.h"
 #include "system/EngineEvents.h"
+#include "system/profiler/ProfileScope.h"
 
 World::World(NodeFactory* factory)
 	: m_nodeFactory(factory)
@@ -211,18 +212,24 @@ void World::CleanupNodeReferences(Node* node)
 	}
 }
 
-
+#include <chrono>
+#include <thread>
 void World::Update()
 {
-	UpdateFrameTimers();
+	{
+		PROFILE_SCOPE(World);
+		using namespace std::literals;
+		// std::this_thread::sleep_for(2ms);
+		UpdateFrameTimers();
 
-	if (Engine::ShouldUpdateWorld()) {
-		m_isIteratingNodeSet = true;
-		// Update after input and delta calculation
-		for (auto* node : m_nodes) {
-			node->Update(m_deltaTime);
+		if (Engine::ShouldUpdateWorld()) {
+			m_isIteratingNodeSet = true;
+			// Update after input and delta calculation
+			for (auto* node : m_nodes) {
+				node->Update(m_deltaTime);
+			}
+			m_isIteratingNodeSet = false;
 		}
-		m_isIteratingNodeSet = false;
 	}
 
 	if (Engine::IsEditorActive()) {

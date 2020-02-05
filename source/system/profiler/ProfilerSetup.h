@@ -13,23 +13,19 @@ enum Module : size_t
 	Renderer,
 	World,
 	Game,
-	Test,
 };
 
 //
 // Profiler Setup, updating this will trigger recompile of all translation units that profile something
 //
-constexpr bool c_startsEnabled = false;
+constexpr bool c_startsEnabled = true;
 constexpr std::array Enabled = {
-	Core,
-	System,
-	Editor,
-	Asset,
-	Platform,
-	Renderer,
-	World,
-	Game,
-	Test,
+	//	Core,
+	System, Editor,
+	//	Asset,
+	//	Platform,
+	Renderer, World,
+	//	Game,
 };
 
 //

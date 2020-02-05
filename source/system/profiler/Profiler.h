@@ -11,7 +11,7 @@ struct ProfileScopeBase;
 
 class Profiler {
 public:
-	using Precision = ch::microseconds;
+	using Precision = ch::nanoseconds;
 
 private:
 	Profiler() = default;
@@ -31,12 +31,16 @@ protected:
 
 	std::map<ProfilerSetup::Module, std::vector<ProfileScopeBase*>> m_entries;
 
+
+	ch::time_point<ch::system_clock> m_frameBeginTime{};
+	Precision m_lastFrameTime;
+
 public:
 	static inline bool s_isProfiling = ProfilerSetup::c_startsEnabled;
 
 	static void Register(ProfileScopeBase* profObj);
 
-	static void EndFrame();
+	static void BeginFrame();
 
 	// Don't modify even if its not const
 	[[nodiscard]] static decltype(m_entries)& GetAll() { return Get().m_entries; };
@@ -54,14 +58,11 @@ public:
 
 	[[nodiscard]] constexpr static bool IsModuleEnabled(ProfilerSetup::Module m) { return IsEnabled(m); }
 
-	static void BeginProfiling()
-	{
-		s_isProfiling = true;
-		EndFrame();
-	}
+	static void BeginProfiling() { s_isProfiling = true; }
 
 	static void EndProfiling() { s_isProfiling = false; }
 
+	[[nodiscard]] static Precision GetLastFrameTime() { return Get().m_lastFrameTime; }
 
 	// WARNING: All currently registered entries will be lost until application restart with no way of restoring them
 	static void Z_ClearRegistrations() { Get().m_entries.clear(); };

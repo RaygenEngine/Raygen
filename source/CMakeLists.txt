@@ -16,7 +16,14 @@ set(SOURCE_FILES
 	editor/PropertyEditor.cpp
 	editor/SceneSave.cpp
 	editor/EdComponentWindows.cpp
+	
 	editor/windows/EdWindow.cpp
+	editor/windows/WindowsRegistry.cpp
+	
+	editor/windows/general/EdConsoleWindow.cpp
+	editor/windows/general/EdMiscWindow.cpp
+	editor/windows/general/EdProfilerWindow.cpp
+
 
 	editor/imgui/ImguiImpl.cpp
     editor/imgui/ImguiDemo.cpp

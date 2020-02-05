@@ -10,15 +10,15 @@ TEST("Profiler")
 	Profiler::Z_ClearRegistrations();
 
 	for (int32 i = 0; i < 5; ++i) {
-		PROFILE_SCOPE(Test);
+		PROFILE_SCOPE(World);
 		std::this_thread::sleep_for(1ms);
 	}
 
 	// This does is not the best but the only way to properly pass all cases
-	if constexpr (IsEnabled(ProfilerSetup::Test)) {
+	if constexpr (IsEnabled(ProfilerSetup::World)) {
 		REQ(Profiler::GetAll().size() > 0);
 
-		auto vec = Profiler::GetModule(ProfilerSetup::Test);
+		auto vec = Profiler::GetModule(ProfilerSetup::World);
 		REQ(vec != nullptr);
 
 		REQ(vec->size() == 1);
@@ -27,7 +27,7 @@ TEST("Profiler")
 		REQ(vec->at(0)->hits == 5);
 		REQ(vec->at(0)->sumDuration >= 4ms);
 
-		Profiler::EndFrame();
+		Profiler::BeginFrame();
 
 		REQ(vec->at(0)->hits == 0);
 		REQ(vec->at(0)->sumDuration == 0s);
@@ -35,7 +35,7 @@ TEST("Profiler")
 	else {
 		REQ(Profiler::GetAll().size() == 0);
 
-		auto vec = Profiler::GetModule(ProfilerSetup::Test);
+		auto vec = Profiler::GetModule(ProfilerSetup::World);
 		REQ(vec == nullptr);
 	}
 }

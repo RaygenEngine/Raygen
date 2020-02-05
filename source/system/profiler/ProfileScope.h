@@ -16,6 +16,7 @@ struct ProfileScopeBase {
 
 	size_t hits;
 	Profiler::Precision sumDuration;
+	int32 inScope{ false };
 
 	ProfileScopeBase(const char* file, int32 line, const char* function, ProfilerSetup::Module engModule)
 		: file(file)
@@ -50,12 +51,14 @@ struct ProfileScopeBase {
 		{
 			if (Profiler::s_isProfiling) {
 				time = ch::system_clock::now();
+				owner.inScope++;
 			}
 		}
 
 		~Scope()
 		{
 			if (Profiler::s_isProfiling) {
+				owner.inScope--;
 				owner.AddExecution(ch::duration_cast<Profiler::Precision>(ch::system_clock::now() - time));
 			}
 		}
