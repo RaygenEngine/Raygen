@@ -20,6 +20,8 @@ class Device : public vk::Device {
 	vk::UniqueCommandPool m_graphicsCommandPool;
 	vk::UniqueCommandPool m_transferCommandPool;
 
+	vk::UniqueCommandBuffer m_transferCommandBuffer;
+
 public:
 	Device(vk::Device handle, PhysicalDevice* physicalDevice);
 	~Device();
@@ -41,6 +43,12 @@ public:
 
 	vk::Result Present(const vk::PresentInfoKHR& info);
 	vk::Result SubmitGraphics(uint32 submitCount, vk::SubmitInfo* pSubmits, vk::Fence fence);
+
+	vk::Queue GetGraphicsQueue() const { return m_graphicsQueue; }
+	vk::Queue GetTransferQueue() const { return m_transferQueue; }
+
+	vk::CommandBuffer GetTransferCommandBuffer() const { return m_transferCommandBuffer.get(); }
+
 
 	// void CreateImage(const std::string& textPath);
 };
