@@ -141,11 +141,14 @@ GraphicsPipeline::GraphicsPipeline(Device* device, Swapchain* swapchain)
 	dynamicState.setDynamicStateCount(2u).setPDynamicStates(dynamicStates);
 
 	// pipeline layout
+	vk::PushConstantRange pushConstantRange{};
+	pushConstantRange.setStageFlags(vk::ShaderStageFlagBits::eVertex).setSize(sizeof(glm::mat4)).setOffset(0u);
+
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.setSetLayoutCount(1u);
-	pipelineLayoutInfo.setPSetLayouts(&(m_descriptorSetLayout.get()));
-	pipelineLayoutInfo.setPushConstantRangeCount(0u);
-	pipelineLayoutInfo.setPPushConstantRanges(nullptr);
+	pipelineLayoutInfo.setSetLayoutCount(1u)
+		.setPSetLayouts(&(m_descriptorSetLayout.get()))
+		.setPushConstantRangeCount(1u)
+		.setPPushConstantRanges(&pushConstantRange);
 
 	m_pipelineLayout = device->createPipelineLayoutUnique(pipelineLayoutInfo);
 

@@ -7,6 +7,8 @@
 #include "renderer/renderers/vulkan/Model.h"
 #include "renderer/Renderer.h"
 
+#include "system/EngineEvents.h"
+
 #include <vulkan/vulkan.hpp>
 
 
@@ -22,7 +24,7 @@ class VkSampleRenderer : public Renderer {
 	std::unique_ptr<Descriptors> m_descriptors;
 
 	// data
-	std::unique_ptr<Model> m_model;
+	std::vector<std::unique_ptr<Model>> m_models;
 
 	// render commands
 	std::vector<vk::CommandBuffer> m_renderCommandBuffers;
@@ -36,8 +38,10 @@ class VkSampleRenderer : public Renderer {
 	// Also test window minimization
 	void CreateRenderCommandBuffers();
 
-	void RecreateSwapChain();
-	void CleanupSwapChain();
+	void RecreateSwapChain(int32, int32);
+
+	DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
+
 
 public:
 	virtual ~VkSampleRenderer();

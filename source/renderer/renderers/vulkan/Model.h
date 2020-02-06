@@ -32,5 +32,7 @@ public:
 	Model(Device* device, PodHandle<ModelPod> handle);
 
 	const std::vector<GeometryGroup>& GetGeometryGroups() const { return m_geometryGroups; }
+
+	glm::mat4 m_transform;
 };
 } // namespace vlkn

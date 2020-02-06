@@ -18,7 +18,7 @@ AppBase::AppBase()
 {
 
 	m_name = "Kaleido Engine";
-	m_initialScene = "engine-data/default.json";
+	m_initialScene = "engine-data/engine-tests.json";
 	m_assetPath = "assets";
 
 	m_windowTitle = "Kaleido";

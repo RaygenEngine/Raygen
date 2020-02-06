@@ -16,7 +16,8 @@ struct SwapChainSupportDetails {
 	std::vector<vk::PresentModeKHR> presentModes;
 };
 
-VkImageView createImageView(vlkn::Device* dev, vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags)
+vk::UniqueImageView createImageView(
+	vlkn::Device* dev, vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags)
 {
 	vk::ImageViewCreateInfo viewInfo{};
 	viewInfo.setImage(image).setViewType(vk::ImageViewType::e2D).setFormat(format);
@@ -26,11 +27,12 @@ VkImageView createImageView(vlkn::Device* dev, vk::Image image, vk::Format forma
 		.setBaseArrayLayer(0)
 		.setLayerCount(1);
 
-	return dev->createImageView(viewInfo);
+	return dev->createImageViewUnique(viewInfo);
 }
 
 void createImage(vlkn::Device* device, uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling,
-	vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::Image& image, vk::DeviceMemory& imageMemory)
+	vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueImage& image,
+	vk::UniqueDeviceMemory& imageMemory)
 {
 	auto pd = device->GetPhysicalDevice();
 
@@ -46,17 +48,17 @@ void createImage(vlkn::Device* device, uint32 width, uint32 height, vk::Format f
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setSharingMode(vk::SharingMode::eExclusive);
 
-	image = device->createImage(imageInfo);
+	image = device->createImageUnique(imageInfo);
 
-	vk::MemoryRequirements memRequirements = device->getImageMemoryRequirements(image);
+	vk::MemoryRequirements memRequirements = device->getImageMemoryRequirements(image.get());
 
 	vk::MemoryAllocateInfo allocInfo{};
 	allocInfo.setAllocationSize(memRequirements.size);
 	allocInfo.setMemoryTypeIndex(pd->FindMemoryType(memRequirements.memoryTypeBits, properties));
 
-	imageMemory = device->allocateMemory(allocInfo);
+	imageMemory = device->allocateMemoryUnique(allocInfo);
 
-	device->bindImageMemory(image, imageMemory, 0);
+	device->bindImageMemory(image.get(), imageMemory.get(), 0);
 }
 
 vk::SurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats)
@@ -241,10 +243,10 @@ Swapchain::Swapchain(Device* device, vk::SurfaceKHR surface)
 	createImage(m_assocDevice, extent.width, extent.height, depthFormat, vk::ImageTiling::eOptimal,
 		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, depthImage,
 		depthImageMemory);
-	depthImageView = createImageView(m_assocDevice, depthImage, depthFormat, vk::ImageAspectFlagBits::eDepth);
+	depthImageView = createImageView(m_assocDevice, depthImage.get(), depthFormat, vk::ImageAspectFlagBits::eDepth);
 
 	for (auto& imgv : m_imageViews) {
-		std::array<vk::ImageView, 2> attachments = { imgv.get(), depthImageView };
+		std::array<vk::ImageView, 2> attachments = { imgv.get(), depthImageView.get() };
 		vk::FramebufferCreateInfo createInfo{};
 		createInfo.setRenderPass(m_renderPass.get())
 			.setAttachmentCount(static_cast<uint32>(attachments.size()))
