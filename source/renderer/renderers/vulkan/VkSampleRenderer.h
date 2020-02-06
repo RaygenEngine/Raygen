@@ -15,6 +15,7 @@
 namespace vlkn {
 
 class VkSampleRenderer : public Renderer {
+	friend class ImguiImpl;
 
 	// high level parts
 	std::unique_ptr<InstanceLayer> m_instanceLayer;
@@ -41,10 +42,9 @@ class VkSampleRenderer : public Renderer {
 	void RecreateSwapChain(int32, int32);
 
 	DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
+	bool m_shouldRecreateSwapchain{ false };
 
-	friend class ImguiImpl;
-
-	void AddImgui(int32 imageIndex);
+	void RecordCommandBuffer(int32 imageIndex);
 
 public:
 	virtual ~VkSampleRenderer();

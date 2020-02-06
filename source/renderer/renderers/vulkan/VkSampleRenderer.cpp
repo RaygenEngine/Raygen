@@ -154,26 +154,9 @@ void VkSampleRenderer::CreateRenderCommandBuffers()
 	}
 } // namespace vlkn
 
-void VkSampleRenderer::RecreateSwapChain(int32, int32)
-{
-	m_device->waitIdle();
-
-	m_descriptors.reset();
-	m_graphicsPipeline.reset();
-	m_swapchain.reset();
-
-	m_device->freeCommandBuffers(m_device->GetGraphicsCommandPool(), m_renderCommandBuffers);
-
-	m_swapchain = m_device->RequestDeviceSwapchainOnSurface(m_instanceLayer->GetSurface());
-	m_graphicsPipeline = m_device->RequestDeviceGraphicsPipeline(m_swapchain.get());
-	m_descriptors = m_device->RequestDeviceDescriptors(m_swapchain.get(), m_graphicsPipeline.get());
-
-	CreateRenderCommandBuffers();
-}
-
 void VkSampleRenderer::Init(HWND assochWnd, HINSTANCE instance)
 {
-	m_resizeListener.BindMember(this, &VkSampleRenderer::RecreateSwapChain);
+	m_resizeListener.Bind([&](auto, auto) { m_shouldRecreateSwapchain = true; });
 
 	m_instanceLayer = std::make_unique<vlkn::InstanceLayer>(assochWnd, instance);
 
@@ -212,7 +195,7 @@ bool VkSampleRenderer::SupportsEditor()
 	return true;
 }
 
-void VkSampleRenderer::AddImgui(int32 imageIndex)
+void VkSampleRenderer::RecordCommandBuffer(int32 imageIndex)
 {
 	auto& cmdBuffer = m_renderCommandBuffers[imageIndex];
 	// WIP
@@ -276,6 +259,21 @@ void VkSampleRenderer::AddImgui(int32 imageIndex)
 
 void VkSampleRenderer::DrawFrame()
 {
+	if (m_shouldRecreateSwapchain) {
+		m_device->waitIdle();
+
+		m_descriptors.reset();
+		m_graphicsPipeline.reset();
+		m_swapchain.reset();
+
+		m_device->freeCommandBuffers(m_device->GetGraphicsCommandPool(), m_renderCommandBuffers);
+
+		m_swapchain = m_device->RequestDeviceSwapchainOnSurface(m_instanceLayer->GetSurface());
+		m_graphicsPipeline = m_device->RequestDeviceGraphicsPipeline(m_swapchain.get());
+		m_descriptors = m_device->RequestDeviceDescriptors(m_swapchain.get(), m_graphicsPipeline.get());
+
+		// CreateRenderCommandBuffers();
+	}
 	uint32 imageIndex;
 
 	vk::Result result0 = m_device->acquireNextImageKHR(
@@ -309,7 +307,7 @@ void VkSampleRenderer::DrawFrame()
 	vk::Semaphore waitSemaphores[] = { m_imageAvailableSemaphore.get() };
 
 
-	AddImgui(imageIndex);
+	RecordCommandBuffer(imageIndex);
 
 	// wait with writing colors to the image until it's available
 	// the implementation can already start executing our vertex shader and such while the image is not yet
