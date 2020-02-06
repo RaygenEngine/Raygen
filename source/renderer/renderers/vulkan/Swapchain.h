@@ -23,9 +23,9 @@ class Swapchain {
 	vk::SurfaceKHR m_assocSurface;
 
 	// WIP: depth image
-	vk::Image depthImage;
-	vk::DeviceMemory depthImageMemory;
-	vk::ImageView depthImageView;
+	vk::UniqueImage depthImage;
+	vk::UniqueDeviceMemory depthImageMemory;
+	vk::UniqueImageView depthImageView;
 
 
 public:

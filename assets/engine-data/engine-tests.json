@@ -101,7 +101,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "/gltf-samples/2.0/AlphaBlendModeTest/glTF/AlphaBlendModeTest.gltf",
+        "model": "/import-data/glTF-Sample-Models/AlphaBlendModeTest/glTF/AlphaBlendModeTest.gltf",
         "~children": []
     },
     {
@@ -124,7 +124,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "/gltf-samples/2.0/BoomBoxWithAxes/glTF/BoomBoxWithAxes.gltf",
+        "model": "/import-data/glTF-Sample-Models/BoomBoxWithAxes/glTF/BoomBoxWithAxes.gltf",
         "~children": []
     },
     {
@@ -147,7 +147,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "/gltf-samples/2.0/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf",
+        "model": "/import-data/glTF-Sample-Models/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf",
         "~children": []
     },
     {
@@ -170,7 +170,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "/gltf-samples/2.0/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf",
+        "model": "/import-data/glTF-Sample-Models/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf",
         "~children": [
             {
                 "+name": "DirectionalLight_new",
@@ -233,7 +233,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "/gltf-samples/2.0/MultiUVTest/glTF/MultiUVTest.gltf",
+        "model": "/import-data/glTF-Sample-Models/MultiUVTest/glTF/MultiUVTest.gltf",
         "~children": []
     },
     {
@@ -277,7 +277,7 @@
                     }
                 },
                 "+type": "Geometry",
-                "model": "/gltf-samples/2.0/NormalTangentTest/glTF/NormalTangentTest.gltf",
+                "model": "/import-data/glTF-Sample-Models/NormalTangentTest/glTF/NormalTangentTest.gltf",
                 "~children": []
             },
             {
@@ -300,7 +300,7 @@
                     }
                 },
                 "+type": "Geometry",
-                "model": "/gltf-samples/2.0/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest.gltf",
+                "model": "/import-data/glTF-Sample-Models/NormalTangentMirrorTest/glTF/NormalTangentMirrorTest.gltf",
                 "~children": []
             },
             {
@@ -401,7 +401,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "/gltf-samples/2.0/OrientationTest/glTF/OrientationTest.gltf",
+        "model": "/import-data/glTF-Sample-Models/OrientationTest/glTF/OrientationTest.gltf",
         "~children": []
     },
     {
@@ -424,7 +424,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "/gltf-samples/2.0/TextureCoordinateTest/glTF/TextureCoordinateTest.gltf",
+        "model": "/import-data/glTF-Sample-Models/TextureCoordinateTest/glTF/TextureCoordinateTest.gltf",
         "~children": []
     },
     {
@@ -447,7 +447,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "/gltf-samples/2.0/TextureSettingsTest/glTF/TextureSettingsTest.gltf",
+        "model": "/import-data/glTF-Sample-Models/TextureSettingsTest/glTF/TextureSettingsTest.gltf",
         "~children": []
     },
     {
@@ -470,7 +470,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "/gltf-samples/2.0/VertexColorTest/glTF/VertexColorTest.gltf",
+        "model": "/import-data/glTF-Sample-Models/VertexColorTest/glTF/VertexColorTest.gltf",
         "~children": []
     },
     {
@@ -493,7 +493,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "/gltf-samples/2.0/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf",
+        "model": "/import-data/glTF-Sample-Models/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf",
         "~children": []
     }
 ]
