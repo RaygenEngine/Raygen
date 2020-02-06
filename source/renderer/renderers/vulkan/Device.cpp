@@ -31,9 +31,18 @@ Device::Device(vk::Device handle, PhysicalDevice* physicalDevice)
 
 	vk::CommandPoolCreateInfo transferPoolInfo{};
 	transferPoolInfo.setQueueFamilyIndex(transferQueueFamily.familyIndex);
-	transferPoolInfo.setFlags(vk::CommandPoolCreateFlags(0));
+	transferPoolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
+
 
 	m_transferCommandPool = createCommandPoolUnique(transferPoolInfo);
+
+
+	vk::CommandBufferAllocateInfo allocInfo{};
+	allocInfo.setLevel(vk::CommandBufferLevel::ePrimary)
+		.setCommandPool(m_transferCommandPool.get())
+		.setCommandBufferCount(1u);
+
+	m_transferCommandBuffer = std::move(allocateCommandBuffersUnique(allocInfo)[0]);
 }
 
 Device::~Device()
@@ -93,38 +102,29 @@ void Device::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::M
 
 void Device::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size)
 {
-	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandPool(m_transferCommandPool.get())
-		.setCommandBufferCount(1u);
 
-	// TODO: check if unique gets freed automatically (due to buffer-pool relationship)
-	// also check index
-	vk::CommandBuffer commandBuffer = allocateCommandBuffers(allocInfo)[0];
 
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-	commandBuffer.begin(beginInfo);
+	m_transferCommandBuffer->begin(beginInfo);
 
 	vk::BufferCopy copyRegion{};
 	copyRegion.setSize(size);
 
-	commandBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
+	m_transferCommandBuffer->copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
 
-	commandBuffer.end();
+	m_transferCommandBuffer->end();
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo.setCommandBufferCount(1u);
-	submitInfo.setPCommandBuffers(&commandBuffer);
+	submitInfo.setPCommandBuffers(&m_transferCommandBuffer.get());
 
 	m_transferQueue.submit(1u, &submitInfo, {});
 	// PERF:
 	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.
 	m_transferQueue.waitIdle();
-
-	freeCommandBuffers(m_transferCommandPool.get(), 1, &commandBuffer);
 }
 
 vk::Result Device::Present(const vk::PresentInfoKHR& info)

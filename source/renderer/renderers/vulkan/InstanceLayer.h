@@ -25,5 +25,7 @@ public:
 	vk::SurfaceKHR GetSurface() { return m_surface; }
 
 	PhysicalDevice* GetBestCapablePhysicalDevice();
+
+	[[nodiscard]] vk::Instance GetInstance() const { return m_instance.get(); }
 };
 } // namespace vlkn

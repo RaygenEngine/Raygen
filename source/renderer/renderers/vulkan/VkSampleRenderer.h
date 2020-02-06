@@ -42,6 +42,7 @@ class VkSampleRenderer : public Renderer {
 
 	DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
 
+	friend class ImguiImpl;
 
 public:
 	virtual ~VkSampleRenderer();

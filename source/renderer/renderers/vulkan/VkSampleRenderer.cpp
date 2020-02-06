@@ -9,6 +9,7 @@
 #include "world/nodes/geometry/GeometryNode.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "platform/windows/Win32Window.h"
+#include "editor/imgui/ImguiImpl.h"
 
 #include <set>
 
@@ -79,6 +80,8 @@ namespace vlkn {
 
 VkSampleRenderer::~VkSampleRenderer()
 {
+	m_device->waitIdle();
+
 	Engine::Get().m_remakeWindow = true;
 }
 
@@ -193,17 +196,20 @@ void VkSampleRenderer::Init(HWND assochWnd, HINSTANCE instance)
 		m_models.back()->m_transform = geomNode->GetNodeTransformWCS();
 	}
 
+
 	CreateRenderCommandBuffers();
 
 	// semaphores
 
 	m_imageAvailableSemaphore = m_device->createSemaphoreUnique({});
 	m_renderFinishedSemaphore = m_device->createSemaphoreUnique({});
+
+	::ImguiImpl::InitVulkan();
 } // namespace vk
 
 bool VkSampleRenderer::SupportsEditor()
 {
-	return false;
+	return true;
 }
 
 void VkSampleRenderer::DrawFrame()
@@ -240,9 +246,22 @@ void VkSampleRenderer::DrawFrame()
 	vk::SubmitInfo submitInfo{};
 	vk::Semaphore waitSemaphores[] = { m_imageAvailableSemaphore.get() };
 
+
+	// WIP
+
+	/*vk::CommandBufferBeginInfo cmdBeginInfo{};
+	cmdBeginInfo.flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue;
+	m_renderCommandBuffers[imageIndex].begin(cmdBeginInfo);
+	vk::CommandBuffer c = m_renderCommandBuffers[imageIndex];
+	::ImguiImpl::RenderVulkan(&c);
+	m_renderCommandBuffers[imageIndex].end();
+	*/
+
 	// wait with writing colors to the image until it's available
-	// the implementation can already start executing our vertex shader and such while the image is not yet available
+	// the implementation can already start executing our vertex shader and such while the image is not yet
+	// available
 	vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+
 	submitInfo.setWaitSemaphoreCount(1u)
 		.setPWaitSemaphores(waitSemaphores)
 		.setPWaitDstStageMask(waitStages)
