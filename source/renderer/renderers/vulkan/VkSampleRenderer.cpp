@@ -212,6 +212,68 @@ bool VkSampleRenderer::SupportsEditor()
 	return true;
 }
 
+void VkSampleRenderer::AddImgui(int32 imageIndex)
+{
+	auto& cmdBuffer = m_renderCommandBuffers[imageIndex];
+	// WIP
+
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
+
+	// begin command buffer recording
+	cmdBuffer.begin(beginInfo);
+	{
+		vk::RenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.setRenderPass(m_swapchain->GetRenderPass())
+			.setFramebuffer(m_swapchain->GetFramebuffers()[imageIndex]);
+		renderPassInfo.renderArea.setOffset({ 0, 0 }).setExtent(m_swapchain->GetExtent());
+		std::array<vk::ClearValue, 2> clearValues = {};
+		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+		clearValues[1].setDepthStencil({ 1.0f, 0 });
+		renderPassInfo.setClearValueCount(static_cast<uint32>(clearValues.size()));
+		renderPassInfo.setPClearValues(clearValues.data());
+
+		// begin render pass
+		cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+		{
+			// bind the graphics pipeline
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_graphicsPipeline->GetPipeline());
+
+
+			for (auto& model : m_models) {
+				for (auto& gg : model->GetGeometryGroups()) {
+
+					// Submit via push constant (rather than a UBO)
+					cmdBuffer.pushConstants(m_graphicsPipeline->GetPipelineLayout(), vk::ShaderStageFlagBits::eVertex,
+						0u, sizeof(glm::mat4), &model->m_transform);
+
+					vk::Buffer vertexBuffers[] = { gg.vertexBuffer.get() };
+					vk::DeviceSize offsets[] = { 0 };
+					// geom
+					cmdBuffer.bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
+
+					// indices
+					cmdBuffer.bindIndexBuffer(gg.indexBuffer.get(), 0, vk::IndexType::eUint32);
+
+					// descriptor sets
+					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+						m_graphicsPipeline->GetPipelineLayout(), 0u, 1u,
+						&(m_descriptors->GetDescriptorSets()[imageIndex]), 0u, nullptr);
+
+					// draw call (triangle)
+					cmdBuffer.drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+				}
+			}
+
+			::ImguiImpl::RenderVulkan(&cmdBuffer);
+		}
+		// end render pass
+		cmdBuffer.endRenderPass();
+	}
+	// end command buffer recording
+	cmdBuffer.end();
+}
+
 void VkSampleRenderer::DrawFrame()
 {
 	uint32 imageIndex;
@@ -247,15 +309,7 @@ void VkSampleRenderer::DrawFrame()
 	vk::Semaphore waitSemaphores[] = { m_imageAvailableSemaphore.get() };
 
 
-	// WIP
-
-	/*vk::CommandBufferBeginInfo cmdBeginInfo{};
-	cmdBeginInfo.flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue;
-	m_renderCommandBuffers[imageIndex].begin(cmdBeginInfo);
-	vk::CommandBuffer c = m_renderCommandBuffers[imageIndex];
-	::ImguiImpl::RenderVulkan(&c);
-	m_renderCommandBuffers[imageIndex].end();
-	*/
+	AddImgui(imageIndex);
 
 	// wait with writing colors to the image until it's available
 	// the implementation can already start executing our vertex shader and such while the image is not yet

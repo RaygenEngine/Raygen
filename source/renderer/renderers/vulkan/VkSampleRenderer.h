@@ -44,6 +44,8 @@ class VkSampleRenderer : public Renderer {
 
 	friend class ImguiImpl;
 
+	void AddImgui(int32 imageIndex);
+
 public:
 	virtual ~VkSampleRenderer();
 

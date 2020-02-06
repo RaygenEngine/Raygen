@@ -210,7 +210,8 @@ void VkRendererBase::ImGui_VulkanInit()
 
 void ImguiImpl::RenderVulkan(vk::CommandBuffer* drawCommandBuffer)
 {
-	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), *drawCommandBuffer);
+	auto data = ImGui::GetDrawData();
+	ImGui_ImplVulkan_RenderDrawData(data, *drawCommandBuffer);
 }
 
 void ImguiImpl::CleanupVulkan()
