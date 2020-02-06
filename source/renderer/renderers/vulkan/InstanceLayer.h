@@ -21,8 +21,7 @@ class InstanceLayer {
 public:
 	InstanceLayer(HWND assochWnd, HINSTANCE instance);
 	~InstanceLayer();
-	// WIP: temp
-	vk::Instance GetInstance() { return m_instance.get(); }
+
 	vk::SurfaceKHR GetSurface() { return m_surface; }
 
 	PhysicalDevice* GetBestCapablePhysicalDevice();

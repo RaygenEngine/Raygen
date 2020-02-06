@@ -24,10 +24,6 @@ public:
 	Device(vk::Device handle, PhysicalDevice* physicalDevice);
 	~Device();
 
-	vk::Queue GetGraphicsQueue() const { return m_graphicsQueue; }
-	vk::Queue GetTransferQueue() const { return m_transferQueue; }
-	vk::Queue GetPresentQueue() const { return m_presentQueue; }
-
 	PhysicalDevice* GetPhysicalDevice() const { return m_assocPhysicalDevice; }
 
 	vk::CommandPool GetGraphicsCommandPool() const { return m_graphicsCommandPool.get(); }
@@ -42,6 +38,9 @@ public:
 	void CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
 		vk::UniqueBuffer& buffer, vk::UniqueDeviceMemory& memory);
 	void CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
+
+	vk::Result Present(const vk::PresentInfoKHR& info);
+	vk::Result SubmitGraphics(uint32 submitCount, vk::SubmitInfo* pSubmits, vk::Fence fence);
 
 	// void CreateImage(const std::string& textPath);
 };

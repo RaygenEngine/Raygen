@@ -127,6 +127,16 @@ void Device::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSi
 	freeCommandBuffers(m_transferCommandPool.get(), 1, &commandBuffer);
 }
 
+vk::Result Device::Present(const vk::PresentInfoKHR& info)
+{
+	return m_presentQueue.presentKHR(info);
+}
+
+vk::Result Device::SubmitGraphics(uint32 submitCount, vk::SubmitInfo* pSubmits, vk::Fence fence)
+{
+	return m_graphicsQueue.submit(submitCount, pSubmits, fence);
+}
+
 // void Device::CreateImage(const std::string& textPath)
 //{
 //	auto& data = AssetManager::GetOrCreateFromParentUri<TexturePod>(textPath, "/");
