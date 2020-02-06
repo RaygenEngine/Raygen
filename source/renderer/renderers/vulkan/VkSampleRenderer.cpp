@@ -14,11 +14,6 @@
 
 #include <vulkan/vulkan_win32.h>
 
-#define vkCall(x)                                                                                                      \
-	do {                                                                                                               \
-		CLOG_ABORT(x != VK_SUCCESS, "Failed vkCall");                                                                  \
-	} while (0)
-
 
 constexpr bool useSeperateTransferQueue = false;
 
@@ -87,35 +82,6 @@ namespace vlkn {
 
 VkSampleRenderer::~VkSampleRenderer()
 {
-	// TODO: cleanup
-	// vkDeviceWaitIdle(m_device);
-	// m_device->De
-
-	// CleanupSwapChain();
-
-	// vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
-
-	// vkDestroyBuffer(m_device, m_vertexBuffer, nullptr);
-	// vkFreeMemory(m_device, m_vertexBufferMemory, nullptr);
-
-	// vkDestroyBuffer(m_device, m_indexBuffer, nullptr);
-	// vkFreeMemory(m_device, m_indexBufferMemory, nullptr);
-
-	// vkDestroySemaphore(m_device, m_renderFinishedSemaphore, nullptr);
-	// vkDestroySemaphore(m_device, m_imageAvailableSemaphore, nullptr);
-
-	// vkDestroyCommandPool(m_device, m_graphicsCommandPool, nullptr);
-
-	// vkDestroyDevice(m_device, nullptr);
-
-	// vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
-	// vkDestroyInstance(m_instance, nullptr);
-
-	// m_instanceLayer.reset();
-	// m_swapchain.reset();
-	// m_descriptors.reset();
-	// m_graphicsPipeline.reset();
-
 	Engine::Get().m_remakeWindow = true;
 }
 
@@ -304,7 +270,7 @@ void VkSampleRenderer::DrawFrame()
 	vk::Semaphore signalSemaphores[] = { m_renderFinishedSemaphore.get() };
 	submitInfo.setSignalSemaphoreCount(1u).setPSignalSemaphores(signalSemaphores);
 
-	m_device->GetGraphicsQueue().submit(1u, &submitInfo, {});
+	m_device->SubmitGraphics(1u, &submitInfo, {});
 
 	vk::PresentInfoKHR presentInfo;
 	presentInfo.setWaitSemaphoreCount(1u).setPWaitSemaphores(signalSemaphores);
@@ -312,7 +278,7 @@ void VkSampleRenderer::DrawFrame()
 	vk::SwapchainKHR swapChains[] = { m_swapchain->Get() };
 	presentInfo.setSwapchainCount(1u).setPSwapchains(swapChains).setPImageIndices(&imageIndex).setPResults(nullptr);
 
-	result = m_device->GetPresentQueue().presentKHR(&presentInfo);
+	result = m_device->Present(presentInfo);
 
 	switch (result) {
 		case vk::Result::eErrorOutOfDateKHR:

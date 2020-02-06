@@ -30,7 +30,6 @@ public:
 
 	std::vector<vk::Buffer> GetUniformBuffers() const { return vk::uniqueToRaw(m_uniformBuffers); }
 	std::vector<vk::DeviceMemory> GetUniformBuffersMemory() const { return vk::uniqueToRaw(m_uniformBuffersMemory); }
-	vk::DescriptorPool GetDescriptorPool() const { return m_descriptorPool.get(); }
 	std::vector<vk::DescriptorSet> GetDescriptorSets() const { return vk::uniqueToRaw(m_descriptorSets); }
 };
 } // namespace vlkn
