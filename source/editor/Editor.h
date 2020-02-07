@@ -96,7 +96,8 @@ public:
 
 		void Draw(Editor* editor)
 		{
-			if (ImGui::BeginMenu(name)) {
+			bool open = ImGui::BeginMenu(name);
+			if (open) {
 				ImGui::Spacing();
 				DrawOptions(editor);
 				ImGui::Spacing();
@@ -229,7 +230,7 @@ private:
 	void ReloadScene();
 
 	void HandleInput();
-
+	void Dockspace();
 
 	std::vector<std::function<void()>> m_postDrawCommands;
 	std::vector<std::function<void()>> m_postFrameCommands;
