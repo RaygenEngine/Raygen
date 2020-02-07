@@ -31,7 +31,16 @@ set(SOURCE_FILES
 	platform/GlfwUtil.cpp
 
 	renderer/ObserverRenderer.cpp
-	renderer/renderers/vulkan/VkRendererBase.cpp
+	renderer/renderers/vulkan/VkSampleRenderer.cpp
+	renderer/renderers/vulkan/InstanceLayer.cpp
+	renderer/renderers/vulkan/PhysicalDevice.cpp
+	renderer/renderers/vulkan/Device.cpp
+	renderer/renderers/vulkan/Swapchain.cpp
+	renderer/renderers/vulkan/GraphicsPipeline.cpp
+	renderer/renderers/vulkan/Model.cpp
+	renderer/renderers/vulkan/Image.cpp
+	renderer/renderers/vulkan/Descriptors.cpp
+
 
 	system/Engine.cpp
 	system/Input.cpp
