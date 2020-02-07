@@ -90,6 +90,8 @@ void AppBase::MainLoop()
 		Engine::GetRenderer()->DrawFrame();
 
 		Engine::Get().ReportFrameDrawn();
+
+		window = Engine::GetMainWindow();
 	}
 }
 

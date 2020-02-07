@@ -21,7 +21,6 @@ void CameraNode::RecalculateProjectionFov()
 
 	m_projectionMatrix = glm::frustum(left, right, bottom, top, m_near, m_far);
 
-
 	RecalculateViewProjectionMatrix();
 }
 

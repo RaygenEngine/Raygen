@@ -21,7 +21,7 @@ vec3 ReconstructWCS(vec2 uv)
 	vec4 clipPos; // clip space reconstruction
 	clipPos.x = 2.0 * uv.x - 1.0;
 	clipPos.y = 2.0 * uv.y - 1.0;
-	clipPos.z = 2.0 * texture(depthSampler, uv.xy).r -1.0;
+	clipPos.z = texture(depthSampler, uv.xy).r;
 	clipPos.w = 1.0;
 	
 	vec4 pwcs = vp_inv * clipPos; // clip space -> world space
@@ -40,6 +40,7 @@ void main()
 		vec3 dir = normalize(ReconstructWCS(uv) - wcs_viewPos);
 		
 		out_color = texture(skyboxSampler, dir);
+		return;
 	}
 	
 	vec3 albedo = texture(albedoSampler, uv.xy).rgb;
