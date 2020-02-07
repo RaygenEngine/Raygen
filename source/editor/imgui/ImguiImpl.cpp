@@ -150,10 +150,3 @@ void ImguiImpl::RenderVulkan(vk::CommandBuffer* drawCommandBuffer)
 {
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), *drawCommandBuffer);
 }
-
-#include <imgui.cpp>
-#include <imgui_draw.cpp>
-#include <imgui_widgets.cpp>
-#include <examples/imgui_impl_vulkan.cpp>
-#include <examples/imgui_impl_glfw.cpp>
-#include <misc/cpp/imgui_stdlib.cpp>

@@ -24,9 +24,7 @@ set(SOURCE_FILES
 	editor/windows/general/EdMiscWindow.cpp
 	editor/windows/general/EdProfilerWindow.cpp
 
-
 	editor/imgui/ImguiImpl.cpp
-    editor/imgui/ImguiDemo.cpp
 	
 	platform/GlfwUtil.cpp
 
@@ -123,7 +121,7 @@ add_compile_definitions(GLFW_INCLUDE_NONE)
 
 # dependencies (build order)
 add_dependencies(Raygen 
-	imgui
+	ImGui
 	glfw
 	spdlog
 )
