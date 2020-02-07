@@ -4,26 +4,31 @@
 
 #include "system/Logger.h"
 
-#include <vulkan/vulkan_win32.h>
+#include <glfw/glfw3.h>
 
 
 #define vkCall(x)                                                                                                      \
 	do {                                                                                                               \
-		CLOG_ABORT(x != VK_SUCCESS, "Failed vkCall");                                                                  \
+		auto r = x;                                                                                                    \
+		CLOG_ABORT(r != VK_SUCCESS, "Failed vkCall: {} error: {}", ##x, r);                                            \
 	} while (0)
 
 namespace vlkn {
-std::vector<const char*> requiredExtensions = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+std::vector<const char*> requiredExtensions = { VK_KHR_SURFACE_EXTENSION_NAME };
 
-InstanceLayer::InstanceLayer(HWND assochWnd, HINSTANCE instance)
+InstanceLayer::InstanceLayer(std::vector<const char*> additionalExtensions, WindowType* window)
 {
 	// create instance
 	vk::ApplicationInfo appInfo{};
-	appInfo.setPApplicationName("KaleidoApp")
+	appInfo.setPApplicationName("RaygenApp")
 		.setApplicationVersion(VK_MAKE_VERSION(1, 0, 0))
-		.setPEngineName("KaleidoEngine")
+		.setPEngineName("RaygenEngine")
 		.setEngineVersion(VK_MAKE_VERSION(1, 0, 0))
 		.setApiVersion(VK_API_VERSION_1_1);
+
+	for (auto& extension : additionalExtensions) {
+		requiredExtensions.push_back(extension);
+	}
 
 	vk::InstanceCreateInfo createInfo{};
 	createInfo.setPApplicationInfo(&appInfo)
@@ -32,13 +37,9 @@ InstanceLayer::InstanceLayer(HWND assochWnd, HINSTANCE instance)
 
 	m_instance = vk::createInstanceUnique(createInfo);
 
-	// create surface (WIP: currently C form)
-	VkWin32SurfaceCreateInfoKHR win32SurfaceInfo = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
-	win32SurfaceInfo.hwnd = assochWnd;
-	win32SurfaceInfo.hinstance = instance;
 
 	VkSurfaceKHR tmp;
-	vkCall(vkCreateWin32SurfaceKHR(m_instance.get(), &win32SurfaceInfo, nullptr, &tmp));
+	vkCall(glfwCreateWindowSurface(m_instance.get(), window, nullptr, &tmp));
 	m_surface = tmp;
 
 	// get capable physical devices

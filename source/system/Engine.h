@@ -13,9 +13,10 @@ class AppBase;
 
 class NodeFactory;
 
-namespace vk {
-class VkRendererBase;
+namespace vlkn {
+class VkSampleRenderer;
 }
+using RendererT = vlkn::VkSampleRenderer;
 
 #include "system/Timer.h"
 
@@ -55,7 +56,7 @@ public:
 	// Input will be valid forever after initialization.
 	[[nodiscard]] static Input& GetInput() { return *Get().m_input; }
 
-	[[nodiscard]] static vk::VkRendererBase* GetRenderer() { return Get().m_renderer; }
+	[[nodiscard]] static RendererT* GetRenderer() { return Get().m_renderer; }
 
 
 	// ALWAYS, ALWAYS check this return value. Editor may not be initialized at all in some cases.
@@ -88,7 +89,7 @@ private:
 	World* m_world{ nullptr };
 
 	// Owning Pointer.
-	vk::VkRendererBase* m_renderer{ nullptr };
+	RendererT* m_renderer{ nullptr };
 
 	// Non owning pointer, expected to be valid for the whole program execution
 	AppBase* m_app{ nullptr };

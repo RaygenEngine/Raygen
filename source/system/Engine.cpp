@@ -8,7 +8,7 @@
 #include "renderer/Renderer.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"
-#include "renderer/renderers/vulkan/VkRendererBase.h"
+#include "renderer/renderers/vulkan/VkSampleRenderer.h"
 #include "platform/GlfwUtil.h"
 #include <glfw/glfw3.h>
 #include <algorithm>
@@ -59,11 +59,9 @@ void Engine::InitRenderer()
 	glfwInit();
 	// WIP:
 
-	m_renderer = new vk::VkRendererBase();
+	m_renderer = new RendererT();
 	m_renderer->SupportsEditor() ? ActivateEditor() : DeactivateEditor();
 
-	// Vk instance and debug messenger
-	m_renderer->CreateInstance(glfwutl::GetVulkanExtensions());
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	m_window
@@ -71,7 +69,9 @@ void Engine::InitRenderer()
 
 	glfwutl::SetupEventCallbacks(m_window);
 
-	m_renderer->CreateSurface(m_window);
+	// Vk instance and debug messenger
+	m_renderer->InitInstanceAndSurface(glfwutl::GetVulkanExtensions(), m_window);
+
 
 	if (m_isEditorEnabled) {
 		m_editor = new Editor();

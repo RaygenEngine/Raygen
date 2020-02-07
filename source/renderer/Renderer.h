@@ -9,6 +9,7 @@ public:
 	Renderer& operator=(Renderer&&) = delete;
 	virtual ~Renderer() = default;
 
+
 	virtual void DrawFrame() = 0;
 
 	virtual bool SupportsEditor() = 0;

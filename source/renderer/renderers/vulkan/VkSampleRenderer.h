@@ -37,11 +37,10 @@ class VkSampleRenderer : public Renderer {
 	// WIP : handle resizing explicitly in case there are drivers
 	// that do not report swap chain incompatibilities correctly
 	// Also test window minimization
-	void CreateRenderCommandBuffers();
-
-	void RecreateSwapChain(int32, int32);
+	void AllocateRenderCommandBuffers();
 
 	DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
+	DECLARE_EVENT_LISTENER(m_worldLoaded, Event::OnWorldLoaded);
 	bool m_shouldRecreateSwapchain{ false };
 
 	void RecordCommandBuffer(int32 imageIndex);
@@ -49,8 +48,11 @@ class VkSampleRenderer : public Renderer {
 public:
 	virtual ~VkSampleRenderer();
 
+	void InitInstanceAndSurface(std::vector<const char*> additionalExtensions, WindowType* window);
 
-	virtual void Init(HWND assochWnd, HINSTANCE instance) override;
+	void InitWorld();
+
+	void Init();
 	virtual bool SupportsEditor() override;
 	virtual void DrawFrame() override;
 };

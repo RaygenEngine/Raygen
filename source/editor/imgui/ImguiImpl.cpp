@@ -2,14 +2,13 @@
 #include "editor/imgui/ImguiImpl.h"
 #include "system/Engine.h"
 #include <glfw/glfw3.h>
+#include "renderer/renderers/vulkan/VkSampleRenderer.h"
 
 #include <imgui.h>
 #include <examples/imgui_impl_vulkan.h>
 #include <examples/imgui_impl_win32.h>
 #include <examples/imgui_impl_glfw.h>
 
-// forward declare this in our own file because its commented out in the imgui impl header.
-IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 namespace imguisyle {
 void SetStyle()
 {
@@ -99,10 +98,62 @@ void ImguiImpl::CleanupContext()
 	// ImGui::DestroyContext();
 }
 
+
+void ImguiImpl::InitVulkan()
+{
+	auto& r = *Engine::GetRenderer();
+
+	auto physDev = r.m_device->GetPhysicalDevice();
+
+	ImGui_ImplVulkan_InitInfo init = {};
+	init.Instance = r.m_instanceLayer->GetInstance();
+	init.PhysicalDevice = *physDev;
+	init.Device = *r.m_device.get();
+	init.QueueFamily = physDev->GetBestGraphicsFamily().familyIndex;
+	init.Queue = r.m_device->GetGraphicsQueue();
+	init.PipelineCache = VK_NULL_HANDLE;
+	init.DescriptorPool = r.m_descriptors->GetDescriptorPool();
+
+	init.ImageCount = r.m_swapchain->GetImageCount();
+	init.MinImageCount = r.m_swapchain->GetImageCount();
+	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+	init.CheckVkResultFn = nullptr;
+	ImGui_ImplVulkan_Init(&init, r.m_swapchain->GetRenderPass());
+
+
+	auto cmdBuffer = r.m_device->GetTransferCommandBuffer();
+
+	//	vkCall(vkResetCommandPool(m_device, m_commandPool, 0));
+
+	VkCommandBufferBeginInfo begin_info = {};
+	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	cmdBuffer.begin(begin_info);
+
+	ImGui_ImplVulkan_CreateFontsTexture(cmdBuffer);
+
+	vk::SubmitInfo end_info = {};
+	end_info.commandBufferCount = 1;
+	end_info.pCommandBuffers = &cmdBuffer;
+
+	cmdBuffer.end();
+
+	r.m_device->GetTransferQueue().submit(1, &end_info, {});
+	r.m_device->waitIdle();
+
+	ImGui_ImplVulkan_DestroyFontUploadObjects();
+}
+
+
+void ImguiImpl::RenderVulkan(vk::CommandBuffer* drawCommandBuffer)
+{
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), *drawCommandBuffer);
+}
+
 #include <imgui.cpp>
 #include <imgui_draw.cpp>
 #include <imgui_widgets.cpp>
 #include <examples/imgui_impl_vulkan.cpp>
-//#include <examples/imgui_impl_win32.cpp>
 #include <examples/imgui_impl_glfw.cpp>
 #include <misc/cpp/imgui_stdlib.cpp>
