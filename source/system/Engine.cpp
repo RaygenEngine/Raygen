@@ -36,6 +36,8 @@ void Engine::InitEngine(AppBase* app)
 	m_assetManager = new AssetManager();
 	m_assetManager->Init(m_app->m_assetPath);
 
+	m_lastRecordTime = ch::system_clock::now();
+
 	InitRenderer();
 }
 
@@ -114,7 +116,7 @@ bool Engine::IsEditorEnabled()
 
 float Engine::GetFPS()
 {
-	return 1.f / std::max(Get().m_lastFrameTime, 0.0001f);
+	return Get().m_steadyFps;
 }
 
 void Engine::ReportFrameDrawn()
@@ -122,6 +124,26 @@ void Engine::ReportFrameDrawn()
 	m_lastFrameTime = m_frameTimer.Get<ch::microseconds>() / 1e6f;
 	m_frameTimer.Start();
 
+	using namespace std::literals;
+	++m_framesSinceLastRecord;
+
+	auto now = ch::system_clock::now();
+	auto diff = now - m_lastRecordTime;
+	constexpr auto c_reportPeriod = 100ms;
+	if (diff >= c_reportPeriod) {
+		m_steadyFps
+			= static_cast<float>(m_framesSinceLastRecord) / ((ch::duration_cast<ch::nanoseconds>(diff).count() / 1e9f));
+		m_lastRecordTime = now;
+		m_framesSinceLastRecord = 0;
+
+		static int32 titleCounter = 0;
+		if (titleCounter == 0) {
+			static std::string s_title;
+			s_title = fmt::format("Raygen - {:4.2f} FPS", m_steadyFps);
+			glfwSetWindowTitle(m_window, s_title.c_str());
+		}
+		titleCounter = (titleCounter + 1) % 5;
+	}
 
 	static bool hasFrameReport = false;
 
