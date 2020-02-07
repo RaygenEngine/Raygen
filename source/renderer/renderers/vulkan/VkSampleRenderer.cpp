@@ -8,7 +8,6 @@
 #include "world/World.h"
 #include "world/nodes/geometry/GeometryNode.h"
 #include "world/nodes/camera/CameraNode.h"
-#include "platform/windows/Win32Window.h"
 #include "editor/imgui/ImguiImpl.h"
 
 #include <set>
@@ -85,7 +84,7 @@ VkSampleRenderer::~VkSampleRenderer()
 	Engine::Get().m_remakeWindow = true;
 }
 
-void VkSampleRenderer::CreateRenderCommandBuffers()
+void VkSampleRenderer::AllocateRenderCommandBuffers()
 {
 	m_renderCommandBuffers.resize(m_swapchain->GetImageCount());
 
@@ -95,70 +94,29 @@ void VkSampleRenderer::CreateRenderCommandBuffers()
 		.setCommandBufferCount(static_cast<uint32>(m_renderCommandBuffers.size()));
 
 	m_renderCommandBuffers = m_device->allocateCommandBuffers(allocInfo);
-
-	for (int32 i = 0; i < m_renderCommandBuffers.size(); ++i) {
-		vk::CommandBufferBeginInfo beginInfo{};
-		beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
-
-		// begin command buffer recording
-		m_renderCommandBuffers[i].begin(beginInfo);
-		{
-			vk::RenderPassBeginInfo renderPassInfo{};
-			renderPassInfo.setRenderPass(m_swapchain->GetRenderPass())
-				.setFramebuffer(m_swapchain->GetFramebuffers()[i]);
-			renderPassInfo.renderArea.setOffset({ 0, 0 }).setExtent(m_swapchain->GetExtent());
-			std::array<vk::ClearValue, 2> clearValues = {};
-			clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-			clearValues[1].setDepthStencil({ 1.0f, 0 });
-			renderPassInfo.setClearValueCount(static_cast<uint32>(clearValues.size()));
-			renderPassInfo.setPClearValues(clearValues.data());
-
-			// begin render pass
-			m_renderCommandBuffers[i].beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-			{
-				// bind the graphics pipeline
-				m_renderCommandBuffers[i].bindPipeline(
-					vk::PipelineBindPoint::eGraphics, m_graphicsPipeline->GetPipeline());
-
-
-				for (auto& model : m_models) {
-					for (auto& gg : model->GetGeometryGroups()) {
-
-						// Submit via push constant (rather than a UBO)
-						m_renderCommandBuffers[i].pushConstants(m_graphicsPipeline->GetPipelineLayout(),
-							vk::ShaderStageFlagBits::eVertex, 0u, sizeof(glm::mat4), &model->m_transform);
-
-						vk::Buffer vertexBuffers[] = { gg.vertexBuffer.get() };
-						vk::DeviceSize offsets[] = { 0 };
-						// geom
-						m_renderCommandBuffers[i].bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
-
-						// indices
-						m_renderCommandBuffers[i].bindIndexBuffer(gg.indexBuffer.get(), 0, vk::IndexType::eUint32);
-
-						// descriptor sets
-						m_renderCommandBuffers[i].bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-							m_graphicsPipeline->GetPipelineLayout(), 0u, 1u, &(m_descriptors->GetDescriptorSets()[i]),
-							0u, nullptr);
-
-						// draw call (triangle)
-						m_renderCommandBuffers[i].drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
-					}
-				}
-			}
-			// end render pass
-			m_renderCommandBuffers[i].endRenderPass();
-		}
-		// end command buffer recording
-		m_renderCommandBuffers[i].end();
-	}
 } // namespace vlkn
 
-void VkSampleRenderer::Init(HWND assochWnd, HINSTANCE instance)
+
+void VkSampleRenderer::InitInstanceAndSurface(std::vector<const char*> additionalExtensions, WindowType* window)
+{
+	m_instanceLayer = std::make_unique<vlkn::InstanceLayer>(additionalExtensions, window);
+}
+
+void VkSampleRenderer::InitWorld()
+{
+	auto world = Engine::GetWorld();
+
+	m_models.clear();
+	for (auto geomNode : world->GetNodeIterator<GeometryNode>()) {
+		auto model = geomNode->GetModel();
+		m_models.emplace_back(std::make_unique<Model>(m_device.get(), model));
+		m_models.back()->m_transform = geomNode->GetNodeTransformWCS();
+	}
+}
+void VkSampleRenderer::Init()
 {
 	m_resizeListener.Bind([&](auto, auto) { m_shouldRecreateSwapchain = true; });
-
-	m_instanceLayer = std::make_unique<vlkn::InstanceLayer>(assochWnd, instance);
+	m_worldLoaded.Bind([&]() { InitWorld(); });
 
 	auto physicalDevice = m_instanceLayer->GetBestCapablePhysicalDevice();
 
@@ -170,17 +128,8 @@ void VkSampleRenderer::Init(HWND assochWnd, HINSTANCE instance)
 
 	m_descriptors = m_device->RequestDeviceDescriptors(m_swapchain.get(), m_graphicsPipeline.get());
 
-	auto world = Engine::GetWorld();
 
-	for (auto geomNode : world->GetNodeIterator<GeometryNode>()) {
-
-		auto model = geomNode->GetModel();
-		m_models.emplace_back(std::make_unique<Model>(m_device.get(), model));
-		m_models.back()->m_transform = geomNode->GetNodeTransformWCS();
-	}
-
-
-	CreateRenderCommandBuffers();
+	AllocateRenderCommandBuffers();
 
 	// semaphores
 

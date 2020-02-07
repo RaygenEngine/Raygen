@@ -3,11 +3,11 @@
 #include "renderer/renderers/vulkan/SwapChain.h"
 
 #include "system/Engine.h"
-#include "platform/windows/Win32Window.h"
 
 #include "system/Logger.h"
 
 #include <vulkan/vulkan_win32.h>
+#include <glfw/glfw3.h>
 
 namespace {
 struct SwapChainSupportDetails {
@@ -93,8 +93,9 @@ vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
 		return capabilities.currentExtent;
 	}
 	else {
-		int32 height = Engine::GetMainWindow()->GetHeight();
-		int32 width = Engine::GetMainWindow()->GetWidth();
+		int32 height;
+		int32 width;
+		glfwGetWindowSize(Engine::GetMainWindow(), &width, &height);
 
 		VkExtent2D actualExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
 

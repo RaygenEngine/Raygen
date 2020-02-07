@@ -212,14 +212,10 @@ void World::CleanupNodeReferences(Node* node)
 	}
 }
 
-#include <chrono>
-#include <thread>
 void World::Update()
 {
 	{
 		PROFILE_SCOPE(World);
-		using namespace std::literals;
-		// std::this_thread::sleep_for(2ms);
 		UpdateFrameTimers();
 
 		if (Engine::ShouldUpdateWorld()) {

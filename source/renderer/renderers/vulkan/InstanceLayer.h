@@ -4,7 +4,7 @@
 
 #include "renderer/renderers/vulkan/PhysicalDevice.h"
 
-#include <windows.h>
+#include "system/Engine.h"
 
 
 namespace vlkn {
@@ -19,7 +19,7 @@ class InstanceLayer {
 	std::vector<std::unique_ptr<PhysicalDevice>> m_capablePhysicalDevices;
 
 public:
-	InstanceLayer(HWND assochWnd, HINSTANCE instance);
+	InstanceLayer(std::vector<const char*> additionalExtensions, WindowType* window);
 	~InstanceLayer();
 
 	vk::SurfaceKHR GetSurface() { return m_surface; }
