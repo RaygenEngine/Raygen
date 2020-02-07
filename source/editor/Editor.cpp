@@ -146,6 +146,74 @@ Editor::~Editor()
 	ImguiImpl::CleanupContext();
 }
 
+void Editor::Dockspace()
+{
+	static bool opt_fullscreen_persistant = true;
+	bool opt_fullscreen = opt_fullscreen_persistant;
+	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+
+	// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
+	// because it would be confusing to have two docking targets within each others.
+	ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+	if (opt_fullscreen) {
+		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGui::SetNextWindowPos(viewport->Pos);
+		ImGui::SetNextWindowSize(viewport->Size);
+		ImGui::SetNextWindowViewport(viewport->ID);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
+						| ImGuiWindowFlags_NoMove;
+		window_flags
+			|= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBackground;
+	}
+
+	// Important: note that we proceed even if Begin() returns false (aka window is collapsed).
+	// This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
+	// all active windows docked into it will lose their parent and become undocked.
+	// We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
+	// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+	bool dummy{};
+	ImGui::Begin("DockSpace Demo", &dummy, window_flags);
+	ImGui::PopStyleVar();
+
+	if (opt_fullscreen)
+		ImGui::PopStyleVar(2);
+
+	// DockSpace
+	ImGuiIO& io = ImGui::GetIO();
+	ImGuiID dockspace_id = ImGui::GetID("MainDockspace");
+	ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+
+	Run_MenuBar();
+
+
+	/*	if (ImGui::BeginMenuBar()) {
+			if (ImGui::BeginMenu("Docking")) {
+				// Disabling fullscreen would allow the window to be moved to the front of other windows,
+				// which we can't undo at the moment without finer window depth/z control.
+				// ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
+
+				if (ImGui::MenuItem("Flag: NoSplit", "", (dockspace_flags & ImGuiDockNodeFlags_NoSplit) != 0))
+					dockspace_flags ^= ImGuiDockNodeFlags_NoSplit;
+				if (ImGui::MenuItem("Flag: NoResize", "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))
+					dockspace_flags ^= ImGuiDockNodeFlags_NoResize;
+				if (ImGui::MenuItem("Flag: NoDockingInCentralNode", "",
+						(dockspace_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0))
+					dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
+				if (ImGui::MenuItem(
+						"Flag: PassthruCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) !=
+	   0)) dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode; if (ImGui::MenuItem("Flag: AutoHideTabBar", "",
+	   (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0)) dockspace_flags ^=
+	   ImGuiDockNodeFlags_AutoHideTabBar; ImGui::EndMenu();
+			}
+			ImGui::EndMenuBar();
+		}
+		*/
+	ImGui::End();
+}
+
 void Editor::UpdateEditor()
 {
 	PROFILE_SCOPE(Editor);
@@ -155,7 +223,7 @@ void Editor::UpdateEditor()
 	HandleInput();
 
 	ImguiImpl::NewFrame();
-
+	Dockspace();
 	m_windowsComponent.Draw();
 
 	if (m_showImguiDemo) {
@@ -174,12 +242,14 @@ void Editor::UpdateEditor()
 		Run_LogWindow();
 	}
 
+	if (Engine::GetInput().IsJustPressed(Key::A)) {
+	}
+
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	// Attempt to predict the viewport size for the first run, might be a bit off.
 	ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
-	ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar);
+	ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_NoScrollbar);
 
-	Run_MenuBar();
 
 	if (ImGui::Checkbox("Update World", &m_updateWorld)) {
 		if (m_updateWorld) {
@@ -625,7 +695,7 @@ void Editor::Run_OutlinerDropTarget(Node* node)
 
 void Editor::Run_MenuBar()
 {
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.f, 3.f));
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.f, 7.f));
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.f, 6.f));
 
 	if (ImGui::BeginMenuBar()) {

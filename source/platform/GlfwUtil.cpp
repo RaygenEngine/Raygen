@@ -74,6 +74,9 @@ void WindowFramebufferSizeCb(GLFWwindow* window, int32 newWidth, int32 newHeight
 void WindowContentScaleCb(GLFWwindow* window, float newXScale, float newYScale)
 {
 }
+#include <windows.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <glfw/glfw3native.h>
 
 void WindowMouseButtonCb(GLFWwindow* window, int32 button, int32 action, int32 modifiers)
 {
