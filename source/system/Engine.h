@@ -105,6 +105,10 @@ private:
 	std::string m_statusLine{};
 	float m_lastFrameTime{ 0.f };
 
+	float m_steadyFps{ 0.f };
+	ch::system_clock::time_point m_lastRecordTime;
+	size_t m_framesSinceLastRecord{ 0 }; // WARNING: use 64 bits to avoid overflow.
+
 	void InitRenderer();
 
 public:

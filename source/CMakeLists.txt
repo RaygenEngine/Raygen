@@ -107,6 +107,7 @@ find_package(Vulkan REQUIRED)
 target_link_libraries(Raygen
 	XInput.lib
 	Vulkan::Vulkan
+	ImGui
 	spdlog
 	glfw
 	${GLFW_LIBRARIES}
@@ -122,14 +123,13 @@ add_compile_definitions(GLFW_INCLUDE_NONE)
 
 # dependencies (build order)
 add_dependencies(Raygen 
+	imgui
 	glfw
 	spdlog
 )
 
 target_include_directories(Raygen PUBLIC ${INCLUDE_DEPENDENCIES_DIRECTORY})
-target_include_directories(Raygen PUBLIC ${INCLUDE_DEPENDENCIES_DIRECTORY}/khr)
 target_include_directories(Raygen PUBLIC ${INCLUDE_DEPENDENCIES_DIRECTORY}/nlohmann)
-target_include_directories(Raygen PUBLIC ${INCLUDE_DEPENDENCIES_DIRECTORY}/ovr)
 							  
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY})
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/glm)

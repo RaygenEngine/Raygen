@@ -8,8 +8,8 @@
 	branch = v1.x
 [submodule "dependencies/imgui"]
 	path = dependencies/imgui
-	url = https://github.com/ocornut/imgui
-	branch = docking
+	url = https://github.com/raygengroup/imgui
+	branch = master
 [submodule "dependencies/magic_enum"]
 	path = dependencies/magic_enum
 	url = https://github.com/Neargye/magic_enum
@@ -36,8 +36,8 @@
 	branch = master
 [submodule "dependencies/glfw"]
 	path = dependencies/glfw
-	url = https://github.com/glfw/glfw
-	branch = v3.3-stable
+	url = https://github.com/raygengroup/glfw
+	branch = master
 [submodule "dependencies/catch2"]
 	path = dependencies/catch2
 	url = https://github.com/catchorg/Catch2/
