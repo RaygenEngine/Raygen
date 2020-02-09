@@ -4,6 +4,9 @@ namespace vk {
 class CommandBuffer;
 } // namespace vk
 
+struct ImFont;
+
+
 class ImguiImpl {
 public:
 	static void InitContext();
@@ -14,4 +17,7 @@ public:
 
 	static void InitVulkan();
 	static void RenderVulkan(vk::CommandBuffer* drawCommandBuffer);
+
+	inline static ImFont* s_EditorFont{ nullptr };
+	inline static ImFont* s_CodeFont{ nullptr };
 };
