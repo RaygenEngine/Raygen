@@ -10,6 +10,7 @@
 #include <examples/imgui_impl_glfw.h>
 
 namespace imguisyle {
+
 void SetStyle()
 {
 	ImGuiStyle& style = ImGui::GetStyle();
@@ -48,8 +49,14 @@ void SetStyle()
 	// Static this, needs to be valid for as long as imgui is used.
 	static const ImWchar ranges[] = { 0x0007, 0x00FF, 0 };
 
-	ImGui::GetIO().Fonts->AddFontFromFileTTF("engine-data/fonts/UbuntuMedium.ttf", 15, nullptr, ranges);
+	ImguiImpl::s_EditorFont
+		= ImGui::GetIO().Fonts->AddFontFromFileTTF("engine-data/fonts/UbuntuMedium.ttf", 15, nullptr, ranges);
 	ImGui::GetIO().Fonts->AddFontFromFileTTF("engine-data/fonts/UbuntuMonoRegular.ttf", 14, nullptr, ranges);
+
+
+	ImguiImpl::s_CodeFont
+		= ImGui::GetIO().Fonts->AddFontFromFileTTF("engine-data/fonts/SourceCodePro-Semibold.ttf", 18, nullptr, ranges);
+
 
 	ImGui::GetIO().Fonts->Build();
 }
@@ -67,7 +74,7 @@ void ImguiImpl::InitContext()
 
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-	ImGui::GetIO().ConfigViewportsNoDecoration = false;
+	// ImGui::GetIO().ConfigViewportsNoDecoration = false;
 
 	ImGui_ImplGlfw_InitForVulkan(Engine::GetMainWindow(), true);
 	ImGui::GetIO().IniFilename = "EditorImgui.ini";

@@ -9,6 +9,7 @@
 #include "system/EngineEvents.h"
 #include "world/nodes/camera/EditorCameraNode.h"
 #include "editor/EdComponentWindows.h"
+#include "editor/imgui/ImEd.h"
 
 #include <memory>
 #include <functional>
@@ -96,12 +97,10 @@ public:
 
 		void Draw(Editor* editor)
 		{
-			bool open = ImGui::BeginMenu(name);
+			bool open = ImEd::BeginMenu(name);
 			if (open) {
-				ImGui::Spacing();
 				DrawOptions(editor);
-				ImGui::Spacing();
-				ImGui::EndMenu();
+				ImEd::EndMenu();
 			}
 		}
 

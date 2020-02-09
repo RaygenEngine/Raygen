@@ -24,6 +24,8 @@
 #include "world/nodes/geometry/GeometryNode.h"
 #include "reflection/ReflEnum.h"
 #include "editor/DataStrings.h"
+#include "editor/imgui/ImEd.h"
+
 #include "system/console/Console.h"
 #include "editor/windows/WindowsRegistry.h"
 #include "system/profiler/ProfileScope.h"
@@ -696,16 +698,12 @@ void Editor::Run_OutlinerDropTarget(Node* node)
 
 void Editor::Run_MenuBar()
 {
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.f, 7.f));
-	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.f, 6.f));
-
-	if (ImGui::BeginMenuBar()) {
+	if (ImEd::BeginMenuBar()) {
 		for (auto& entry : m_menus) {
 			entry->Draw(this);
 		}
-		ImGui::EndMenuBar();
+		ImEd::EndMenuBar();
 	}
-	ImGui::PopStyleVar(2);
 }
 
 void Editor::Run_AboutWindow()
@@ -1100,6 +1098,7 @@ struct ExampleAppLog {
 			ImGui::LogToClipboard();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+		ImGui::PushFont(ImguiImpl::s_CodeFont);
 		const char* buf = Buf.begin();
 		const char* buf_end = Buf.end();
 		if (Filter.IsActive()) {
@@ -1141,11 +1140,11 @@ struct ExampleAppLog {
 			}
 			clipper.End();
 		}
+		ImGui::PopFont();
 		ImGui::PopStyleVar();
 
 		if (AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
 			ImGui::SetScrollHereY(1.0f);
-
 
 		ImGui::EndChild();
 		ImGui::End();
