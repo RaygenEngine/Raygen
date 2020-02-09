@@ -21,8 +21,12 @@ GraphicsPipeline::GraphicsPipeline(Device* device, Swapchain* swapchain)
 	m_descriptorSetLayout = device->createDescriptorSetLayoutUnique(layoutInfo);
 
 	// shaders
-	auto vertShaderModule = device->CreateShaderModule("/engine-data/spv/vert.spv");
-	auto fragShaderModule = device->CreateShaderModule("/engine-data/spv/frag.spv");
+	// auto vertShaderModule = device->CreateShaderModule("/engine-data/spv/vert.spv");
+	// auto fragShaderModule = device->CreateShaderModule("/engine-data/spv/frag.spv");
+
+	auto vertShaderModule = device->CompileCreateShaderModule("engine-data/spv/test.vert");
+	auto fragShaderModule = device->CompileCreateShaderModule("engine-data/spv/test.frag");
+
 
 	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo.setStage(vk::ShaderStageFlagBits::eVertex).setModule(vertShaderModule.get()).setPName("main");
