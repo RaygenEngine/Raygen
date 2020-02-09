@@ -32,6 +32,7 @@ public:
 	vk::CommandPool GetTransferCommandPool() const { return m_transferCommandPool.get(); }
 
 	vk::UniqueShaderModule CreateShaderModule(const std::string& binPath);
+	vk::UniqueShaderModule CompileCreateShaderModule(const std::string& path);
 
 	std::unique_ptr<Swapchain> RequestDeviceSwapchainOnSurface(vk::SurfaceKHR surface);
 	std::unique_ptr<GraphicsPipeline> RequestDeviceGraphicsPipeline(Swapchain* swapchain);

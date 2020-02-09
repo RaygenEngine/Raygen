@@ -6,6 +6,7 @@
 #include "renderer/renderers/vulkan/GraphicsPipeline.h"
 #include "asset/AssetManager.h"
 #include "system/Logger.h"
+#include "asset/util/SpirvCompiler.h"
 
 #include <set>
 
@@ -56,6 +57,16 @@ vk::UniqueShaderModule Device::CreateShaderModule(const std::string& binPath)
 
 	vk::ShaderModuleCreateInfo createInfo{};
 	createInfo.setCodeSize(data.size()).setPCode(reinterpret_cast<const uint32*>(data.data()));
+
+	return createShaderModuleUnique(createInfo);
+}
+
+vk::UniqueShaderModule Device::CompileCreateShaderModule(const std::string& path)
+{
+	auto binary = ShaderCompiler::Compile(path);
+
+	vk::ShaderModuleCreateInfo createInfo{};
+	createInfo.setCodeSize(binary.size() * 4).setPCode(binary.data());
 
 	return createShaderModuleUnique(createInfo);
 }

@@ -9,6 +9,7 @@ set(SOURCE_FILES
 	asset/PodLoaders.cpp
 
 	asset/util/DependenciesImpl.cpp
+	asset/util/SpirvCompiler.cpp
 
 	editor/Editor.cpp
 	editor/AssetWindow.cpp
@@ -107,6 +108,10 @@ target_link_libraries(Raygen
 	Vulkan::Vulkan
 	ImGui
 	spdlog
+	# shader compiler
+	SPIRV
+	glslang-default-resource-limits
+	#end of shader compiler
 	glfw
 	${GLFW_LIBRARIES}
 )
@@ -138,6 +143,9 @@ target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/nlohmann/incl
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/tinygltf)
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/imfilebrowser)
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/GLFW/include)
+
+target_include_directories(Raygen PUBLIC ${Vulkan_INCLUDE_DIR}/../glslang)
+
 
 target_include_directories(Raygen PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
