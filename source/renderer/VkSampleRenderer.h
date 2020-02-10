@@ -1,11 +1,10 @@
 #pragma once
-#include "renderer/renderers/vulkan/InstanceLayer.h"
-#include "renderer/renderers/vulkan/Device.h"
-#include "renderer/renderers/vulkan/Swapchain.h"
-#include "renderer/renderers/vulkan/GraphicsPipeline.h"
-#include "renderer/renderers/vulkan/Descriptors.h"
-#include "renderer/renderers/vulkan/Model.h"
-#include "renderer/Renderer.h"
+#include "renderer/InstanceLayer.h"
+#include "renderer/Device.h"
+#include "renderer/Swapchain.h"
+#include "renderer/GraphicsPipeline.h"
+#include "renderer/Descriptors.h"
+#include "renderer/Model.h"
 
 #include "system/EngineEvents.h"
 
@@ -14,7 +13,7 @@
 
 namespace vlkn {
 
-class VkSampleRenderer : public Renderer {
+class VkSampleRenderer {
 	friend class ImguiImpl;
 
 	// high level parts
@@ -53,8 +52,7 @@ public:
 	void InitWorld();
 
 	void Init();
-	virtual bool SupportsEditor() override;
-	virtual void DrawFrame() override;
+	void DrawFrame();
 };
 
 } // namespace vlkn

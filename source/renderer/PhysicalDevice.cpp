@@ -1,7 +1,7 @@
 #include "pch/pch.h"
 
-#include "renderer/renderers/vulkan/PhysicalDevice.h"
-#include "renderer/renderers/vulkan/Device.h"
+#include "renderer/PhysicalDevice.h"
+#include "renderer/Device.h"
 
 #include "system/Logger.h"
 

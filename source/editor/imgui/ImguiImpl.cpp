@@ -2,7 +2,7 @@
 #include "editor/imgui/ImguiImpl.h"
 #include "system/Engine.h"
 #include <glfw/glfw3.h>
-#include "renderer/renderers/vulkan/VkSampleRenderer.h"
+#include "renderer/VkSampleRenderer.h"
 
 #include <imgui.h>
 #include <examples/imgui_impl_vulkan.h>

@@ -2,7 +2,7 @@
 
 #include "vulkan/vulkan.hpp"
 
-#include "renderer/renderers/vulkan/PhysicalDevice.h"
+#include "renderer/PhysicalDevice.h"
 
 #include "system/Engine.h"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer/renderers/vulkan/Device.h"
+#include "renderer/Device.h"
 #include "asset/pods/ModelPod.h"
 
 #include "vulkan/vulkan.hpp"

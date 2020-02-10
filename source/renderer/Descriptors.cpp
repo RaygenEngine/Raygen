@@ -2,9 +2,9 @@
 #include "Descriptors.h"
 
 
-#include "renderer/renderers/vulkan/Device.h"
-#include "renderer/renderers/vulkan/Swapchain.h"
-#include "renderer/renderers/vulkan/GraphicsPipeline.h"
+#include "renderer/Device.h"
+#include "renderer/Swapchain.h"
+#include "renderer/GraphicsPipeline.h"
 
 
 namespace vlkn {

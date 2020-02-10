@@ -1,7 +1,7 @@
 #pragma once
 
-#include "renderer/renderers/vulkan/PhysicalDevice.h"
-#include "renderer/renderers/vulkan/Descriptors.h"
+#include "renderer/PhysicalDevice.h"
+#include "renderer/Descriptors.h"
 #include <vulkan/vulkan.hpp>
 
 namespace vlkn {

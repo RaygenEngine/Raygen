@@ -7,7 +7,7 @@
 #include "system/Logger.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"
-#include "renderer/renderers/vulkan/VkSampleRenderer.h"
+#include "renderer/VkSampleRenderer.h"
 #include "system/profiler/ProfileScope.h"
 #include <glfw/glfw3.h>
 

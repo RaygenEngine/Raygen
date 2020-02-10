@@ -5,10 +5,9 @@
 #include "AppBase.h"
 #include "asset/AssetManager.h"
 #include "editor/Editor.h"
-#include "renderer/Renderer.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"
-#include "renderer/renderers/vulkan/VkSampleRenderer.h"
+#include "renderer/VkSampleRenderer.h"
 #include "platform/GlfwUtil.h"
 #include <glfw/glfw3.h>
 #include <algorithm>
@@ -62,7 +61,6 @@ void Engine::InitRenderer()
 	// WIP:
 
 	m_renderer = new RendererT();
-	m_renderer->SupportsEditor() ? ActivateEditor() : DeactivateEditor();
 
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -155,7 +153,7 @@ void Engine::ReportFrameDrawn()
 
 void Engine::ToggleEditor()
 {
-	if (m_isEditorEnabled && m_renderer && m_renderer->SupportsEditor()) {
+	if (m_isEditorEnabled && m_renderer) {
 		m_isEditorActive ? DeactivateEditor() : ActivateEditor();
 	}
 }

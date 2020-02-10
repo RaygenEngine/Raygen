@@ -1,6 +1,6 @@
 #include "pch/pch.h"
 
-#include "renderer/renderers/vulkan/SwapChain.h"
+#include "renderer/SwapChain.h"
 
 #include "system/Engine.h"
 
