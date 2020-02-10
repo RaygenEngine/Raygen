@@ -43,4 +43,5 @@ set_target_properties(
 	spv-tools-spv-amd-sb
 	spv-tools-spv-amd-sevp
 	spv-tools-spv-amd-stm
+	glslang-default-resource-limits
 PROPERTIES FOLDER ext_dependencies)

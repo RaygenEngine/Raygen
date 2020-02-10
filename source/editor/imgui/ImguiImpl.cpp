@@ -6,7 +6,6 @@
 
 #include <imgui.h>
 #include <examples/imgui_impl_vulkan.h>
-#include <examples/imgui_impl_win32.h>
 #include <examples/imgui_impl_glfw.h>
 
 namespace imguisyle {

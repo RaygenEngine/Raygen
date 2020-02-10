@@ -1,6 +1,5 @@
 #pragma once
 
-#include <spdlog/logger.h>
 // include for custom formats
 #include <spdlog/fmt/ostr.h>
 #include <sstream>
@@ -11,20 +10,27 @@ public:
 	// NOTE: logging and levels my be discarded by build configuration
 	static void Init(LogLevelTarget level);
 
-	inline static std::shared_ptr<spdlog::logger>& GetLogger() { return s_logger; }
 
 	static std::stringstream s_editorLogStream;
 	static void EarlyInit();
 
+
+	static void Debug(const std::string& str);
+	static void Info(const std::string& str);
+	static void Warn(const std::string& str);
+	static void Error(const std::string& str);
+	static void Critical(const std::string& str);
+
+	static void Flush();
+
 private:
 	static void BasicSetup();
-	static std::shared_ptr<spdlog::logger> s_logger;
 };
 
 #define LOGGER_INIT(level) Log::Init(level)
 
 
-#define _RXN_DO_NOTHING_REQUIRE_SEMICOL()                                                                              \
+#define _RGN_DO_NOTHING_REQUIRE_SEMICOL()                                                                              \
 	do {                                                                                                               \
 	} while (0)
 
@@ -32,36 +38,36 @@ private:
 //
 // BASIC LOGGING
 //
-#if RXN_WITH_LOG(LOG_BELOW_WARN)
-#	define LOG_DEBUG(...) Log::GetLogger()->debug(__VA_ARGS__)
-#	define LOG_INFO(...)  Log::GetLogger()->info(__VA_ARGS__)
+#if RGN_WITH_LOG(LOG_BELOW_WARN)
+#	define LOG_DEBUG(...) Log::Debug(fmt::format(__VA_ARGS__))
+#	define LOG_INFO(...)  Log::Info(fmt::format(__VA_ARGS__))
 #else
-#	define LOG_DEBUG(...) _RXN_DO_NOTHING_REQUIRE_SEMICOL()
-#	define LOG_INFO(...)  _RXN_DO_NOTHING_REQUIRE_SEMICOL()
+#	define LOG_DEBUG(...) _RGN_DO_NOTHING_REQUIRE_SEMICOL()
+#	define LOG_INFO(...)  _RGN_DO_NOTHING_REQUIRE_SEMICOL()
 #endif
 
-#if RXN_WITH_LOG(LOG_ANY)
-#	define LOG_WARN(...)   Log::GetLogger()->warn(__VA_ARGS__)
-#	define LOG_REPORT(...) Log::GetLogger()->warn(__VA_ARGS__)
-#	define LOG_ERROR(...)  Log::GetLogger()->error(__VA_ARGS__)
+#if RGN_WITH_LOG(LOG_ANY)
+#	define LOG_WARN(...)   Log::Warn(fmt::format(__VA_ARGS__))
+#	define LOG_REPORT(...) Log::Warn(fmt::format(__VA_ARGS__))
+#	define LOG_ERROR(...)  Log::Error(fmt::format(__VA_ARGS__))
 #else
-#	define LOG_WARN(...)   _RXN_DO_NOTHING_REQUIRE_SEMICOL()
-#	define LOG_REPORT(...) _RXN_DO_NOTHING_REQUIRE_SEMICOL()
-#	define LOG_ERROR(...)  _RXN_DO_NOTHING_REQUIRE_SEMICOL()
+#	define LOG_WARN(...)   _RGN_DO_NOTHING_REQUIRE_SEMICOL()
+#	define LOG_REPORT(...) _RGN_DO_NOTHING_REQUIRE_SEMICOL()
+#	define LOG_ERROR(...)  _RGN_DO_NOTHING_REQUIRE_SEMICOL()
 #endif
 
 //
 // SPECIAL ABORT
 //
-#if RXN_WITH_LOG(LOG_ANY)
+#if RGN_WITH_LOG(LOG_ANY)
 #	define LOG_ABORT(...)                                                                                             \
 		do {                                                                                                           \
-			Log::GetLogger()->critical(__VA_ARGS__);                                                                   \
-			Log::GetLogger()->flush();                                                                                 \
+			Log::Critical(fmt::format(__VA_ARGS__));                                                                   \
+			Log::Flush();                                                                                              \
 			std::abort();                                                                                              \
 		} while (0)
 #else
-#	define LOG_ABORT(...) _RXN_DO_NOTHING_REQUIRE_SEMICOL()
+#	define LOG_ABORT(...) _RGN_DO_NOTHING_REQUIRE_SEMICOL()
 #endif
 
 //
@@ -74,26 +80,26 @@ private:
 		}                                                                                                              \
 	} while (0)
 
-#if RXN_WITH_LOG(LOG_BELOW_WARN)
+#if RGN_WITH_LOG(LOG_BELOW_WARN)
 #	define CLOG_DEBUG(condition, ...) CLOG_AT_LEVEL(_DEBUG, condition, __VA_ARGS__)
 #	define CLOG_INFO(condition, ...)  CLOG_AT_LEVEL(_INFO, condition, __VA_ARGS__)
 #else
-#	define CLOG_DEBUG(condition, ...) _RXN_DO_NOTHING_REQUIRE_SEMICOL()
-#	define CLOG_INFO(condition, ...)  _RXN_DO_NOTHING_REQUIRE_SEMICOL()
+#	define CLOG_DEBUG(condition, ...) _RGN_DO_NOTHING_REQUIRE_SEMICOL()
+#	define CLOG_INFO(condition, ...)  _RGN_DO_NOTHING_REQUIRE_SEMICOL()
 #endif
 
-#if RXN_WITH_LOG(LOG_ANY)
+#if RGN_WITH_LOG(LOG_ANY)
 #	define CLOG_WARN(condition, ...)   CLOG_AT_LEVEL(_WARN, condition, __VA_ARGS__)
 #	define CLOG_REPORT(condition, ...) CLOG_AT_LEVEL(_REPORT, condition, __VA_ARGS__)
 #	define CLOG_ERROR(condition, ...)  CLOG_AT_LEVEL(_ERROR, condition, __VA_ARGS__)
 #else
-#	define CLOG_WARN(condition, ...)   _RXN_DO_NOTHING_REQUIRE_SEMICOL()
-#	define CLOG_REPORT(condition, ...) _RXN_DO_NOTHING_REQUIRE_SEMICOL()
-#	define CLOG_ERROR(condition, ...)  _RXN_DO_NOTHING_REQUIRE_SEMICOL()
+#	define CLOG_WARN(condition, ...)   _RGN_DO_NOTHING_REQUIRE_SEMICOL()
+#	define CLOG_REPORT(condition, ...) _RGN_DO_NOTHING_REQUIRE_SEMICOL()
+#	define CLOG_ERROR(condition, ...)  _RGN_DO_NOTHING_REQUIRE_SEMICOL()
 #endif
 
-#if RXN_WITH_LOG(CLOG_ABORT)
+#if RGN_WITH_LOG(CLOG_ABORT)
 #	define CLOG_ABORT(condition, ...) CLOG_AT_LEVEL(_ABORT, condition, __VA_ARGS__)
 #else
-#	define CLOG_ABORT(condition, ...) _RXN_DO_NOTHING_REQUIRE_SEMICOL()
+#	define CLOG_ABORT(condition, ...) _RGN_DO_NOTHING_REQUIRE_SEMICOL()
 #endif

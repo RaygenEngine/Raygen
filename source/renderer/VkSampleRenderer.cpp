@@ -12,7 +12,6 @@
 
 #include <set>
 
-#include <vulkan/vulkan_win32.h>
 
 namespace {
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
@@ -71,7 +70,7 @@ void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create
 	createInfo.pfnUserCallback = DebugCallback;
 }
 
-std::vector<const char*> requiredExtensions = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+std::vector<const char*> requiredExtensions = { VK_KHR_SURFACE_EXTENSION_NAME };
 std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 } // namespace
