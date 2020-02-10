@@ -45,7 +45,7 @@ set(SOURCE_FILES
 	system/Logger.cpp
 	system/console/Console.cpp
 	system/profiler/Profiler.cpp
-
+	system/reflection/ReflectionDb.cpp
 
 	world/World.cpp
 	world/NodeFactory.cpp

@@ -2,6 +2,7 @@
 
 #include "world/nodes/Node.h"
 #include "world/nodes/camera/CameraNode.h"
+#include "system/reflection/ReflectionDb.h"
 #include "system/EngineEvents.h"
 
 class WindowCameraNode : public CameraNode {
@@ -11,6 +12,7 @@ public:
 	DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
 
 	WindowCameraNode();
+
 
 protected:
 	virtual void WindowResize(int32 width, int32 height);
