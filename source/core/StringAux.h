@@ -44,7 +44,7 @@ inline std::string ToLower(const std::string& str)
 namespace str {
 // TODO: string concept
 template<typename T>
-std::vector<std::string_view> Split(T str, std::string_view delims = " ")
+std::vector<std::string_view> Split(const T& str, std::string_view delims = " ")
 {
 	std::vector<std::string_view> output;
 	for (auto first = str.data(), second = str.data(), last = first + str.size(); second != last && first != last;

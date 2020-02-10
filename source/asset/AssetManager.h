@@ -55,10 +55,14 @@ struct PodEntry {
 	}
 };
 
+namespace ed {
+class AssetsWindow;
+}
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
 class AssetManager {
 	friend class Editor;
 	friend class AssetWindow;
+	friend class ed::AssetsWindow;
 
 	std::vector<std::unique_ptr<PodEntry>> m_pods;
 	std::unordered_map<uri::Uri, size_t> m_pathCache;
