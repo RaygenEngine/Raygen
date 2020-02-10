@@ -1,7 +1,7 @@
 #pragma once
 
 #include "asset/AssetPod.h"
-
+#include "reflection/GenMacros.h"
 #include <tiny_gltf.h>
 
 struct GltfFilePod : AssetPod {

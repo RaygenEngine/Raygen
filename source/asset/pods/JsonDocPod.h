@@ -1,7 +1,7 @@
 #pragma once
 
 #include "asset/AssetPod.h"
-
+#include "reflection/GenMacros.h"
 #include <nlohmann/json.hpp>
 
 struct JsonDocPod : public AssetPod {

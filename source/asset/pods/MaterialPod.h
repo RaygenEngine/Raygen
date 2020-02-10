@@ -1,7 +1,7 @@
 #pragma once
 
 #include "asset/pods/TexturePod.h"
-
+#include "reflection/GenMacros.h"
 // This material is based on the glTF standard for materials (not all extensions included)
 // see -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#materials)
 struct MaterialPod : AssetPod {

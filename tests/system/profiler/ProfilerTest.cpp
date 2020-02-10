@@ -1,6 +1,7 @@
 #include "Test.h"
 #include "system/Logger.h"
 #include "system/profiler/ProfileScope.h"
+#include <thread>
 
 TEST("Profiler")
 {

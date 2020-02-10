@@ -1,7 +1,6 @@
 #pragma once
 
 #include "reflection/PodReflection.h"
-#include "asset/PodIncludes.h"
 #include "reflection/GetClass.h"
 
 namespace podtools {
@@ -57,7 +56,7 @@ namespace detail {
 template<typename Visitor>
 void VisitPod(AssetPod* pod, Visitor& v)
 {
-	detail::PodVisit_Impl<Visitor, Z_POD_TYPES>(pod, v);
+	detail::PodVisit_Impl<Visitor, ENGINE_POD_TYPES>(pod, v);
 }
 
 
@@ -65,7 +64,7 @@ void VisitPod(AssetPod* pod, Visitor& v)
 template<typename Visitor>
 void VisitPodType(TypeId type, Visitor& v)
 {
-	detail::PodVisitType_Impl<Visitor, Z_POD_TYPES>(type, v);
+	detail::PodVisitType_Impl<Visitor, ENGINE_POD_TYPES>(type, v);
 }
 
 
@@ -81,7 +80,7 @@ namespace detail {
 template<typename Visitor>
 void ForEachPodType(Visitor& visitor)
 {
-	detail::VisitPerType_Impl<Visitor, Z_POD_TYPES>(visitor);
+	detail::VisitPerType_Impl<Visitor, ENGINE_POD_TYPES>(visitor);
 }
 
 
@@ -111,6 +110,6 @@ namespace detail {
 template<typename MappedType, typename Visitor>
 [[nodiscard]] std::unordered_map<TypeId, MappedType> CreateMapOnPodType(Visitor& v)
 {
-	return detail::CreateMapOnPodType_Impl<MappedType, Visitor, Z_POD_TYPES>(v);
+	return detail::CreateMapOnPodType_Impl<MappedType, Visitor, ENGINE_POD_TYPES>(v);
 }
 } // namespace podtools
