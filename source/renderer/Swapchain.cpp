@@ -6,7 +6,6 @@
 
 #include "system/Logger.h"
 
-#include <vulkan/vulkan_win32.h>
 #include <glfw/glfw3.h>
 
 namespace {

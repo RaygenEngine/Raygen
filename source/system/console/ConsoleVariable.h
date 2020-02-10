@@ -4,6 +4,7 @@
 #include "system/console/Console.h"
 #include "system/Logger.h"
 #include <string_view>
+#include <functional>
 
 struct ConsoleEntry {
 	const char* name;
