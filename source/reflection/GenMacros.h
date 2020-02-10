@@ -1,6 +1,7 @@
 #pragma once
 
 #include "reflection/ReflClass.h"
+#include "system/reflection/ReflectionDb.h"
 
 #define REFLECTED_POD(Class)                                                                                           \
 private:                                                                                                               \
@@ -46,7 +47,8 @@ private:                                                                        
 	using Z_ThisType = Class;                                                                                          \
 	friend class ReflClass;                                                                                            \
 	friend class NodeFactory;                                                                                          \
-                                                                                                                       \
+	friend class ReflectionDb;                                                                                         \
+	static inline ReflectionRegistar<Class> Z_InternalRegistar = ReflectionRegistar<Class>();                          \
 	/* Instanciates a class of this type. Should really be in ReflClass but not required because its only used by      \
 	 * NodeFactory. */                                                                                                 \
 	[[nodiscard]] static Node* NewInstance()                                                                           \
