@@ -5,6 +5,7 @@
 #include "renderer/Swapchain.h"
 #include "renderer/GraphicsPipeline.h"
 #include "asset/AssetManager.h"
+#include "asset/pods/BinaryPod.h"
 #include "system/Logger.h"
 #include "asset/util/SpirvCompiler.h"
 

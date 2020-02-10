@@ -2,6 +2,7 @@
 
 #include "asset/AssetManager.h"
 #include "reflection/PodTools.h"
+#include "asset/PodIncludes.h"
 
 void AssetManager::Init(const fs::path& assetPath)
 {
@@ -46,4 +47,50 @@ void Code()
 		[[maybe_unused]] auto debug = a._Debug();
 	};
 	podtools::ForEachPodType(l);
+}
+
+template<>
+void AssetManager::PostRegisterEntry<ImagePod>(PodEntry* entry)
+{
+	entry->futureLoaded = std::async(std::launch::async, [&, entry]() -> AssetPod* {
+		ImagePod* ptr = new ImagePod();
+		TryLoad(ptr, entry->path);
+		return ptr;
+	});
+}
+
+template<>
+void AssetManager::PostRegisterEntry<TexturePod>(PodEntry* entry)
+{
+	TexturePod* pod = new TexturePod();
+	TryLoad(pod, entry->path);
+	entry->ptr.reset(pod);
+}
+
+template<>
+void AssetManager::PostRegisterEntry<ShaderPod>(PodEntry* entry)
+{
+	ShaderPod* pod = new ShaderPod();
+	TryLoad(pod, entry->path);
+	entry->ptr.reset(pod);
+}
+
+template<>
+void AssetManager::PostRegisterEntry<StringPod>(PodEntry* entry)
+{
+	entry->futureLoaded = std::async(std::launch::async, [&, entry]() -> AssetPod* {
+		StringPod* ptr = new StringPod();
+		TryLoad(ptr, entry->path);
+		return ptr;
+	});
+}
+
+// Dummy to instatiate exports above as to export them to the .lib
+void AssetManager::Z_SpecializationExporter()
+{
+	PodEntry* a{};
+	PostRegisterEntry<ShaderPod>(a);
+	PostRegisterEntry<StringPod>(a);
+	PostRegisterEntry<TexturePod>(a);
+	PostRegisterEntry<ImagePod>(a);
 }
