@@ -10,6 +10,7 @@
 #include "system/Object.h"
 #include "world/nodes/NodeIterator.h"
 #include "world/NodeFactory.h" // Not required directly, used in templates
+#include "asset/pods/JsonDocPod.h"
 
 #include <unordered_set>
 

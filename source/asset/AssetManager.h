@@ -3,7 +3,6 @@
 #include "asset/AssetPod.h"
 #include "asset/UriLibrary.h"
 #include "asset/PodHandle.h"
-#include "asset/PodIncludes.h"
 #include "system/Engine.h"
 #include "system/Logger.h"
 
@@ -12,6 +11,11 @@
 struct PodDeleter {
 	void operator()(AssetPod* p);
 };
+
+struct ImagePod;
+struct TexturePod;
+struct ShaderPod;
+struct StringPod;
 
 struct PodEntry {
 	struct UnitializedPod {
@@ -229,38 +233,17 @@ private:
 
 	// Async load images.
 	template<>
-	void PostRegisterEntry<ImagePod>(PodEntry* entry)
-	{
-		entry->futureLoaded = std::async(std::launch::async, [&, entry]() -> AssetPod* {
-			ImagePod* ptr = new ImagePod();
-			TryLoad(ptr, entry->path);
-			return ptr;
-		});
-	}
+	void PostRegisterEntry<ImagePod>(PodEntry* entry);
 
 	template<>
-	void PostRegisterEntry<TexturePod>(PodEntry* entry)
-	{
-		TexturePod* pod = new TexturePod();
-		TryLoad(pod, entry->path);
-		entry->ptr.reset(pod);
-	}
+	void PostRegisterEntry<TexturePod>(PodEntry* entry);
 
 	template<>
-	void PostRegisterEntry<ShaderPod>(PodEntry* entry)
-	{
-		ShaderPod* pod = new ShaderPod();
-		TryLoad(pod, entry->path);
-		entry->ptr.reset(pod);
-	}
+	void PostRegisterEntry<ShaderPod>(PodEntry* entry);
 
 	template<>
-	void PostRegisterEntry<StringPod>(PodEntry* entry)
-	{
-		entry->futureLoaded = std::async(std::launch::async, [&, entry]() -> AssetPod* {
-			StringPod* ptr = new StringPod();
-			TryLoad(ptr, entry->path);
-			return ptr;
-		});
-	}
+	void PostRegisterEntry<StringPod>(PodEntry* entry);
+
+	// Dummy Exporter for pod specialization
+	void Z_SpecializationExporter();
 };
