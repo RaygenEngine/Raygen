@@ -1,9 +1,9 @@
 #include "pch/pch.h"
 
-#include "renderer/renderers/vulkan/Device.h"
-#include "renderer/renderers/vulkan/PhysicalDevice.h"
-#include "renderer/renderers/vulkan/Swapchain.h"
-#include "renderer/renderers/vulkan/GraphicsPipeline.h"
+#include "renderer/Device.h"
+#include "renderer/PhysicalDevice.h"
+#include "renderer/Swapchain.h"
+#include "renderer/GraphicsPipeline.h"
 #include "asset/AssetManager.h"
 #include "system/Logger.h"
 #include "asset/util/SpirvCompiler.h"

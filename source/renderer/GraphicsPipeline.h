@@ -1,8 +1,8 @@
 #pragma once
 
-#include "renderer/renderers/vulkan/Device.h"
-#include "renderer/renderers/vulkan/Swapchain.h"
-#include "renderer/renderers/vulkan/Descriptors.h"
+#include "renderer/Device.h"
+#include "renderer/Swapchain.h"
+#include "renderer/Descriptors.h"
 
 #include <vulkan/vulkan.hpp>
 

@@ -1,6 +1,6 @@
 #include "pch/pch.h"
 
-#include "renderer/renderers/vulkan/GraphicsPipeline.h"
+#include "renderer/GraphicsPipeline.h"
 #include "asset/pods/ModelPod.h"
 
 namespace vlkn {

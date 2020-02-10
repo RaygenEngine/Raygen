@@ -1,6 +1,6 @@
 #include "pch/pch.h"
 
-#include "renderer/renderers/vulkan/VkSampleRenderer.h"
+#include "renderer/VkSampleRenderer.h"
 #include "system/Logger.h"
 #include "system/Engine.h"
 
@@ -138,11 +138,6 @@ void VkSampleRenderer::Init()
 
 	::ImguiImpl::InitVulkan();
 } // namespace vk
-
-bool VkSampleRenderer::SupportsEditor()
-{
-	return true;
-}
 
 void VkSampleRenderer::RecordCommandBuffer(int32 imageIndex)
 {

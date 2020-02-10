@@ -29,16 +29,15 @@ set(SOURCE_FILES
 	
 	platform/GlfwUtil.cpp
 
-	renderer/ObserverRenderer.cpp
-	renderer/renderers/vulkan/VkSampleRenderer.cpp
-	renderer/renderers/vulkan/InstanceLayer.cpp
-	renderer/renderers/vulkan/PhysicalDevice.cpp
-	renderer/renderers/vulkan/Device.cpp
-	renderer/renderers/vulkan/Swapchain.cpp
-	renderer/renderers/vulkan/GraphicsPipeline.cpp
-	renderer/renderers/vulkan/Model.cpp
-	renderer/renderers/vulkan/Image.cpp
-	renderer/renderers/vulkan/Descriptors.cpp
+	renderer/VkSampleRenderer.cpp
+	renderer/InstanceLayer.cpp
+	renderer/PhysicalDevice.cpp
+	renderer/Device.cpp
+	renderer/Swapchain.cpp
+	renderer/GraphicsPipeline.cpp
+	renderer/Model.cpp
+	renderer/Image.cpp
+	renderer/Descriptors.cpp
 
 
 	system/Engine.cpp

@@ -1,6 +1,6 @@
 #include "pch/pch.h"
 
-#include "renderer/renderers/vulkan/Model.h"
+#include "renderer/Model.h"
 #include "asset/AssetManager.h"
 
 
