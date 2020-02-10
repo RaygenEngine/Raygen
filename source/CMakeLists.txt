@@ -21,6 +21,7 @@ set(SOURCE_FILES
 	editor/windows/EdWindow.cpp
 	editor/windows/WindowsRegistry.cpp
 	
+	editor/windows/general/EdAssetsWindow.cpp
 	editor/windows/general/EdConsoleWindow.cpp
 	editor/windows/general/EdMiscWindow.cpp
 	editor/windows/general/EdProfilerWindow.cpp
