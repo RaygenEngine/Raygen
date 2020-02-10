@@ -1,7 +1,7 @@
 #pragma once
 
 #include "asset/AssetPod.h"
-
+#include "reflection/GenMacros.h"
 struct ImagePod : AssetPod {
 	REFLECTED_POD(ImagePod)
 	{

@@ -26,7 +26,7 @@ namespace detail {
 	template<typename Visitor>
 	void VisitPodConst(const AssetPod* pod, Visitor& v)
 	{
-		detail::PodVisitPConst_Impl<Visitor, Z_POD_TYPES>(pod, v);
+		detail::PodVisitPConst_Impl<Visitor, ENGINE_POD_TYPES>(pod, v);
 	}
 
 	template<typename T>

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "editor/Editor.h"
+#include "reflection/Property.h"
 #include <imfilebrowser.h>
 class Node;
 

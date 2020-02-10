@@ -2,6 +2,7 @@
 
 #include "reflection/ReflClass.h"
 #include "reflection/PodReflection.h"
+#include "asset/PodIncludes.h"
 #include "reflection/GetClass.h"
 #include "asset/util/ParsingAux.h"
 #include <type_traits>
@@ -85,8 +86,8 @@ void CallVisitorOnProperty(Visitor& v, const Property& p, void* obj)
 		return;
 	}
 	[[maybe_unused]] bool cc = detail::MaybeVisit<Visitor, Z_REFL_TYPES>(v, p, obj)
-							   || detail::MaybeVisit_WrapPodHandle<Visitor, Z_POD_TYPES>(v, p, obj)
-							   || detail::MaybeVisit_WrapVectorPodHandle<Visitor, Z_POD_TYPES>(v, p, obj);
+							   || detail::MaybeVisit_WrapPodHandle<Visitor, ENGINE_POD_TYPES>(v, p, obj)
+							   || detail::MaybeVisit_WrapVectorPodHandle<Visitor, ENGINE_POD_TYPES>(v, p, obj);
 }
 
 template<typename ReflectedObj, typename Visitor>

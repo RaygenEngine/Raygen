@@ -1,6 +1,7 @@
 #pragma once
 
 #include "asset/AssetPod.h"
+#include "reflection/GenMacros.h"
 
 struct BinaryPod : public AssetPod {
 	REFLECTED_POD(BinaryPod) {}

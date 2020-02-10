@@ -1,5 +1,5 @@
 #pragma once
-
+#include <unordered_set>
 // A basic (non stl compliant) iterator that will iterate over all nodes of type T or subtypes in the world.
 // the order of the nodes is undefined
 // Hacky implementation, iterator contains all the info required, and end iterator is just a nullptr

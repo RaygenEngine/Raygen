@@ -3,6 +3,7 @@
 #include "asset/AssetPod.h"
 #include "asset/UriLibrary.h"
 #include "asset/PodHandle.h"
+#include "reflection/PodReflection.h"
 #include "system/Engine.h"
 #include "system/Logger.h"
 
@@ -128,6 +129,13 @@ public:
 	template<typename PodType>
 	static PodHandle<PodType> GetOrCreate(const uri::Uri& inPath)
 	{
+		// If you hit this assert, it means the pod you are trying to create is not registered in engine pods.
+		// To properly add a pod to the engine see AssetPod.h comments
+		// TODO: Use concepts for pods
+		static_assert(refl::IsValidPod<PodType>,
+			"Attempting to create an invalid pod type. Did you forget to register a new pod type?");
+
+
 		auto inst = Engine::GetAssetManager();
 		CLOG_ABORT(inPath.front() != '/', "Found non absolute uri {}", inPath);
 
