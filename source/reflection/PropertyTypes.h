@@ -24,13 +24,26 @@ namespace detail {
 		return CanBePropertyBaseType_ImplF<T, Z_REFL_TYPES>();
 	}
 
+	template<typename T, typename... ReflTypes>
+	constexpr bool IsVectorOfReflType_ImplF()
+	{
+		return std::disjunction_v<std::is_same<T, std::vector<ReflTypes>>...>;
+	}
+
+	template<typename T>
+	constexpr bool IsVectorOfReflTypeF()
+	{
+		return IsVectorOfReflType_ImplF<T, Z_REFL_TYPES>();
+	}
 
 	template<typename T>
 	constexpr bool CanBePropertyF()
 	{
 		return IsHandleToPodF<T>() || is_vector_of_base_v<T, BasePodHandle> || CanBePropertyBaseTypeF<T>()
-			   || std::is_enum_v<T>;
+			   || std::is_enum_v<T> || IsVectorOfReflTypeF<T>();
 	}
+
+
 } // namespace detail
 
 namespace proptypes {
@@ -39,6 +52,9 @@ namespace proptypes {
 
 	template<typename Type>
 	constexpr bool IsVectorOfPodHandles = is_vector_of_base_v<Type, BasePodHandle>;
+
+	template<typename Type>
+	constexpr bool IsVectorOfReflTypes = IsVectorOfReflTypeF<Type>();
 
 	template<typename Type>
 	constexpr bool IsBaseType = detail::CanBePropertyBaseTypeF<Type>();

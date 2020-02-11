@@ -1,6 +1,7 @@
 #include "pch/pch.h"
 #include "system/Logger.h"
 #include "editor/EdComponentWindows.h"
+#include "editor/EdUserSettings.h"
 
 namespace ed {
 
@@ -15,11 +16,13 @@ void ComponentWindows::OpenUnique(mti::Hash hash)
 		return;
 	}
 
+	UpdateSettingsForWindow(m_entries[it->second].name, true);
+
 	// Find out if we need creation, or we have already made this window
 	auto itClosed = m_closedUniqueWindows.find(hash);
 
 	if (itClosed != m_closedUniqueWindows.end()) {
-		Window* winPtr = itClosed->second;
+		UniqueWindow* winPtr = itClosed->second;
 		m_closedUniqueWindows.erase(itClosed);
 		m_openUniqueWindows.Emplace({ hash, winPtr });
 		return;
@@ -37,7 +40,9 @@ void ComponentWindows::CloseUnique(mti::Hash hash)
 		return;
 	}
 
-	Window* winPtr = it->second;
+	UpdateSettingsForWindow(m_entries[m_entiresHash.at(hash)].name, false);
+
+	UniqueWindow* winPtr = it->second;
 	m_openUniqueWindows.Remove(it);
 	m_closedUniqueWindows.emplace(hash, winPtr);
 }
@@ -98,5 +103,31 @@ ComponentWindows::~ComponentWindows()
 	}
 }
 
+void ComponentWindows::LoadWindowFromSettings(const std::string& name, mti::Hash hash)
+{
+	auto& s = ed::GetSettings();
+
+	if (std::find(s.openWindows.begin(), s.openWindows.end(), name) != s.openWindows.end()) {
+		OpenUnique(hash);
+	}
+}
+
+void ComponentWindows::UpdateSettingsForWindow(const std::string& name, bool isOpen)
+{
+	auto& s = ed::GetSettings();
+	if (isOpen) {
+		if (std::find(s.openWindows.begin(), s.openWindows.end(), name) == s.openWindows.end()) {
+			s.openWindows.push_back(name);
+			s.MarkDirty();
+		}
+	}
+	else {
+		auto it = std::remove(s.openWindows.begin(), s.openWindows.end(), name);
+		if (it != s.openWindows.end()) {
+			s.openWindows.erase(it);
+			s.MarkDirty();
+		}
+	}
+}
 
 } // namespace ed

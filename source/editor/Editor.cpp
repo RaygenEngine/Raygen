@@ -30,6 +30,8 @@
 #include "editor/windows/WindowsRegistry.h"
 #include "system/profiler/ProfileScope.h"
 
+#include "editor/EdUserSettings.h"
+
 #include <glfw/glfw3.h>
 
 #include <iostream>
@@ -347,6 +349,8 @@ void Editor::UpdateEditor()
 		cmd();
 	}
 	m_postDrawCommands.clear();
+
+	ed::GetSettings().SaveIfDirty();
 }
 
 void Editor::SpawnEditorCamera()

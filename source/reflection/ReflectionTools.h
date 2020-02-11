@@ -7,6 +7,7 @@
 #include "asset/util/ParsingAux.h"
 #include <type_traits>
 #include <sstream>
+#include <fstream>
 
 namespace refltools {
 using json = nlohmann::json;
@@ -86,6 +87,7 @@ void CallVisitorOnProperty(Visitor& v, const Property& p, void* obj)
 		return;
 	}
 	[[maybe_unused]] bool cc = detail::MaybeVisit<Visitor, Z_REFL_TYPES>(v, p, obj)
+							   || detail::MaybeVisit_WrapVector<Visitor, Z_REFL_TYPES>(v, p, obj)
 							   || detail::MaybeVisit_WrapPodHandle<Visitor, ENGINE_POD_TYPES>(v, p, obj)
 							   || detail::MaybeVisit_WrapVectorPodHandle<Visitor, ENGINE_POD_TYPES>(v, p, obj);
 }
@@ -356,6 +358,42 @@ void PropertiesToJson(ReflectedObj* obj, nlohmann::json& j)
 	CallVisitorOnEveryProperty(obj, visitor);
 }
 
+template<typename ReflectedObj>
+bool ToJsonFile(ReflectedObj* obj, const fs::path& file)
+{
+	static_assert(
+		!std::is_const_v<ReflectedObj>, "This cannot be const. Please only const_cast if you absolutely HAVE to.");
+	std::ofstream fstr(file);
+	if (!fstr) {
+		return false;
+	}
+	json j;
+	ToJsonVisitor visitor(j);
+	CallVisitorOnEveryProperty(obj, visitor);
+	fstr << j;
+	return true;
+}
+//
+template<typename ReflectedObj>
+void JsonToProperties(ReflectedObj* obj, nlohmann::json& j)
+{
+	JsonToPropVisitor visitor(j);
+	CallVisitorOnEveryProperty(obj, visitor);
+}
+
+
+template<typename ReflectedObj>
+void FromJsonFile(ReflectedObj* obj, const fs::path& file)
+{
+	std::ifstream fstr(file);
+	if (!fstr) {
+		return; // could probably create it
+	}
+	auto j = json::parse(fstr, nullptr, false);
+	JsonToPropVisitor visitor(j);
+	CallVisitorOnEveryProperty(obj, visitor);
+}
+
 
 struct ToStringVisitor {
 	std::string& str;
@@ -371,6 +409,14 @@ struct ToStringVisitor {
 		os << p.GetName() << ": " << ref << '\n';
 	}
 
+	template<typename T>
+	void operator()(std::vector<T>& ref, const Property& p)
+	{
+		os << p.GetName() << ": ";
+		for (auto& r : ref) {
+			os << "\t" << r << ",\n";
+		}
+	}
 
 	void operator()(std::string& ref, const Property& p)
 	{
@@ -436,3 +482,28 @@ std::string PropertiesToText(ReflectedObj* obj)
 }
 
 } // namespace refltools
+
+
+inline std::ostream& operator<<(std::ostream& os, const glm::vec3& ref)
+{
+	os << "[" << ref.x << ", " << ref.y << ", " << ref.z << "]";
+	return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const glm::vec4& ref)
+{
+	os << "[" << ref.x << ", " << ref.y << ", " << ref.z << ", " << ref.w << "]";
+	return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const glm::mat4& ref)
+{
+	for (int32 i = 0; i < 4; ++i) {
+		os << '\n';
+		for (int32 j = 0; j < 4; ++j) {
+			os << std::setprecision(4) << ref[i][j] << ", ";
+		}
+	}
+	os << '\n';
+	return os;
+}

@@ -1,5 +1,5 @@
 #pragma once
-
+// TODO: move this
 #include "reflection/ReflEnum.h"
 #include "asset/AssetManager.h"
 
@@ -84,7 +84,7 @@ template<typename T>
 inline void from_json(const nlohmann::json& j, PodHandle<T>& handle)
 {
 	if (j.is_string()) {
-		handle = AssetManager::GetOrCreate<T>(j.get<std::string>())
+		handle = AssetManager::GetOrCreate<T>(j.get<std::string>());
 	}
 }
 

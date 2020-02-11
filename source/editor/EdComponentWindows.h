@@ -15,11 +15,11 @@ namespace ed {
 // asset editors)
 class ComponentWindows {
 private:
-	void OpenWindow() {}
+	void OpenWindow(){};
 
 public:
 	struct UniqueWindowEntry {
-		std::function<Window*(const std::string&)> constructor;
+		std::function<UniqueWindow*(const std::string&)> constructor;
 		size_t hash;
 		std::string name;
 	};
@@ -28,8 +28,8 @@ public:
 	std::vector<UniqueWindowEntry> m_entries;
 	std::unordered_map<mti::Hash, size_t> m_entiresHash;
 
-	IterableSafeHashMap<mti::Hash, Window*> m_openUniqueWindows;
-	std::unordered_map<mti::Hash, Window*> m_closedUniqueWindows;
+	IterableSafeHashMap<mti::Hash, UniqueWindow*> m_openUniqueWindows;
+	std::unordered_map<mti::Hash, UniqueWindow*> m_closedUniqueWindows;
 
 	IterableSafeVector<std::unique_ptr<Window>> m_multiWindows;
 
@@ -42,6 +42,8 @@ public:
 			m_entries.emplace_back(
 				UniqueWindowEntry{ [](const std::string& name) { return new T(name); }, hash, name });
 		}
+
+		LoadWindowFromSettings(name, hash);
 	};
 
 
@@ -87,5 +89,8 @@ public:
 private:
 	template<typename DrawFunc>
 	void InternalDraw(DrawFunc&& func);
+
+	void LoadWindowFromSettings(const std::string& name, mti::Hash hash);
+	void UpdateSettingsForWindow(const std::string& name, bool currentIsOpen);
 };
 } // namespace ed
