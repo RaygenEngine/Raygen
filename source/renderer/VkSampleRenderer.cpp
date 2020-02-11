@@ -9,6 +9,7 @@
 #include "world/nodes/geometry/GeometryNode.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "editor/imgui/ImguiImpl.h"
+#include "system/profiler/ProfileScope.h"
 
 #include <set>
 
@@ -140,6 +141,8 @@ void VkSampleRenderer::Init()
 
 void VkSampleRenderer::RecordCommandBuffer(int32 imageIndex)
 {
+	PROFILE_SCOPE(Renderer);
+
 	auto& cmdBuffer = m_renderCommandBuffers[imageIndex];
 	// WIP
 
@@ -168,6 +171,7 @@ void VkSampleRenderer::RecordCommandBuffer(int32 imageIndex)
 
 			for (auto& model : m_models) {
 				for (auto& gg : model->GetGeometryGroups()) {
+					PROFILE_SCOPE(Renderer);
 
 					// Submit via push constant (rather than a UBO)
 					cmdBuffer.pushConstants(m_graphicsPipeline->GetPipelineLayout(), vk::ShaderStageFlagBits::eVertex,
@@ -202,6 +206,8 @@ void VkSampleRenderer::RecordCommandBuffer(int32 imageIndex)
 
 void VkSampleRenderer::DrawFrame()
 {
+	PROFILE_SCOPE(Renderer);
+
 	if (m_shouldRecreateSwapchain) {
 		m_device->waitIdle();
 

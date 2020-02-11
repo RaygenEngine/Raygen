@@ -35,3 +35,14 @@
 #	define REQUIRES(...) requires __VA_ARGS__
 #	define CONC(...)     __VA_ARGS__
 #endif
+
+// HAS to be used to always link some not automatically exported functions. (usually template specializations)
+#ifdef _MSC_VER
+#	define NOINLINE __declspec(noinline)
+#else
+#	define NOINLINE __attribute__((noinline))
+#endif
+
+// Hack to force symbols to be produced for this function (exports to compiler dependant noinline)
+// TODO: Test with clang
+#define FORCE_LINK NOINLINE
