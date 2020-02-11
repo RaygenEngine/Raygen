@@ -86,11 +86,16 @@ void ImguiImpl::NewFrame()
 	ImGui_ImplVulkan_NewFrame();
 	ImGui::NewFrame();
 }
-
+#include "system/profiler/ProfileScope.h"
 void ImguiImpl::EndFrame()
 {
-	ImGui::EndFrame();
-	ImGui::Render();
+	{
+		PROFILE_SCOPE(Editor);
+		ImGui::EndFrame();
+
+
+		ImGui::Render();
+	}
 	ImGui::UpdatePlatformWindows();
 	ImGui::RenderPlatformWindowsDefault();
 }
@@ -154,5 +159,6 @@ void ImguiImpl::InitVulkan()
 
 void ImguiImpl::RenderVulkan(vk::CommandBuffer* drawCommandBuffer)
 {
+	PROFILE_SCOPE(Editor);
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), *drawCommandBuffer);
 }

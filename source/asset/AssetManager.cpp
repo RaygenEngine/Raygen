@@ -50,7 +50,7 @@ void Code()
 }
 
 template<>
-void AssetManager::PostRegisterEntry<ImagePod>(PodEntry* entry)
+FORCE_LINK void AssetManager::PostRegisterEntry<ImagePod>(PodEntry* entry)
 {
 	entry->futureLoaded = std::async(std::launch::async, [&, entry]() -> AssetPod* {
 		ImagePod* ptr = new ImagePod();
@@ -60,7 +60,7 @@ void AssetManager::PostRegisterEntry<ImagePod>(PodEntry* entry)
 }
 
 template<>
-void AssetManager::PostRegisterEntry<TexturePod>(PodEntry* entry)
+FORCE_LINK void AssetManager::PostRegisterEntry<TexturePod>(PodEntry* entry)
 {
 	TexturePod* pod = new TexturePod();
 	TryLoad(pod, entry->path);
@@ -68,7 +68,7 @@ void AssetManager::PostRegisterEntry<TexturePod>(PodEntry* entry)
 }
 
 template<>
-void AssetManager::PostRegisterEntry<ShaderPod>(PodEntry* entry)
+FORCE_LINK void AssetManager::PostRegisterEntry<ShaderPod>(PodEntry* entry)
 {
 	ShaderPod* pod = new ShaderPod();
 	TryLoad(pod, entry->path);
@@ -76,7 +76,7 @@ void AssetManager::PostRegisterEntry<ShaderPod>(PodEntry* entry)
 }
 
 template<>
-void AssetManager::PostRegisterEntry<StringPod>(PodEntry* entry)
+FORCE_LINK void AssetManager::PostRegisterEntry<StringPod>(PodEntry* entry)
 {
 	entry->futureLoaded = std::async(std::launch::async, [&, entry]() -> AssetPod* {
 		StringPod* ptr = new StringPod();

@@ -265,7 +265,7 @@ void Editor::UpdateEditor()
 	HelpTooltip(help_UpdateWorld);
 
 	if (!(m_updateWorld && !m_hasRestoreSave)) {
-		ImExt::HSpace(4.f);
+		ImEd::HSpace(4.f);
 		ImGui::SameLine();
 		ImGui::Checkbox("Restore update state", &m_autoRestoreWorld);
 		HelpTooltip(help_RestoreWorld);
@@ -715,7 +715,7 @@ void Editor::Run_AboutWindow()
 
 	if (ImGui::Begin("About", &m_showAboutWindow, ImGuiWindowFlags_AlwaysAutoResize)) {
 		ImGui::Text("Raygen: v0.1");
-		ImExt::HSpace(220.f);
+		ImEd::HSpace(220.f);
 		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 33.0f);
 		ImGui::Text(txt_about);
 		ImGui::Text("");
@@ -755,7 +755,7 @@ void Editor::HelpTooltip(const char* tooltip)
 	if (!Editor::s_showHelpTooltips) {
 		return;
 	}
-	ImExt::HSpace(1.f);
+	ImEd::HSpace(1.f);
 	ImGui::SameLine();
 	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 0.95f));
 	ImGui::TextUnformatted("\xc2\xb0"); // help symbol: aka U+00b0

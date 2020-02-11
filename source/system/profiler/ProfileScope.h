@@ -87,6 +87,7 @@ struct ProfileScope<M, true> : ProfileScopeBase {
 	}
 };
 
-#define PROFILE_SCOPE(Mod)                                                                                             \
-	static ProfileScope<ProfilerSetup::Mod> MACRO_PASTE(z_prof_, __LINE__)(__FILE__, __LINE__, __FUNCSIG__);           \
-	ProfileScope<ProfilerSetup::Mod>::Scope MACRO_PASTE(z_prof_sc, __LINE__)(MACRO_PASTE(z_prof_, __LINE__));
+// For parameter use one of ProfilerSetup.h (System, Core, Editor, Renderer, World etc)
+#define PROFILE_SCOPE(EngineModule)                                                                                    \
+	static ProfileScope<ProfilerSetup::EngineModule> MACRO_PASTE(z_prof_, __LINE__)(__FILE__, __LINE__, __FUNCSIG__);  \
+	ProfileScope<ProfilerSetup::EngineModule>::Scope MACRO_PASTE(z_prof_sc, __LINE__)(MACRO_PASTE(z_prof_, __LINE__));

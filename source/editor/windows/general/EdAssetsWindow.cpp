@@ -5,6 +5,7 @@
 #include "editor/imgui/ImEd.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "reflection/ReflectionTools.h"
+#include "editor/imgui/ImguiImpl.h"
 
 #include <magic_enum.hpp>
 #include <spdlog/fmt/fmt.h>
@@ -100,8 +101,9 @@ void AssetsWindow::AppendEntry(AssetFileEntry* entry, const std::string& pathToH
 		}
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0.f, 3.f });
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 15.f, 0.f });
 		bool open = ImGui::TreeNodeEx(entry->subpath.c_str(), nodeFlags);
-		ImGui::PopStyleVar(1);
+		ImGui::PopStyleVar(2);
 		if (ImGui::IsItemClicked()) {
 			m_currentPath = thisPath;
 		}
@@ -118,11 +120,13 @@ namespace {
 	void MaybeItemHover(PodEntry* entry)
 	{
 		if (ImGui::IsItemHovered()) {
+			ImGui::PushFont(ImguiImpl::s_CodeFont);
 			std::string text = fmt::format("Path:\t{}\nName:\t{}\nType:\t{}\n Ptr:\t{}\n UID:\t{}", entry->path,
 				entry->name, entry->type.name(), entry->ptr, entry->uid);
 
 			if (!entry->ptr) {
 				ImUtil::TextTooltipUtil(text);
+				ImGui::PopFont();
 				return;
 			}
 
@@ -133,6 +137,7 @@ namespace {
 			text += refltools::PropertiesToText(entry->ptr.get());
 
 			ImUtil::TextTooltipUtil(text);
+			ImGui::PopFont();
 		}
 	}
 } // namespace
@@ -182,28 +187,34 @@ void AssetsWindow::ImguiDraw()
 	if (ImEd::Button("Back") && CanBack) {
 		m_currentPath.erase(prevDirPos);
 	}
+	ImEd::HSpace();
+	ImGui::SameLine();
 	ImGui::Text(m_currentPath.c_str());
 	ImGui::Separator();
 
 	ImGui::Columns(2, NULL, true);
 
-	for (auto& child : m_root.children) {
-		AppendEntry(child.second.get(), "");
+	if (ImGui::BeginChild("AssetsFolderView", ImVec2(0, -ImGui::GetTextLineHeightWithSpacing() * 1))) {
+		for (auto& child : m_root.children) {
+			AppendEntry(child.second.get(), "");
+		}
 	}
+	ImGui::EndChild();
+
 
 	ImGui::NextColumn();
-	ImGui::Indent();
-
-	AssetFileEntry* entry = GetPathEntry(m_currentPath);
-
-	for (auto& e : entry->children) {
-		if (e.second->entry == nullptr) {
-			continue;
+	ImGui::Indent(8.f);
+	if (ImGui::BeginChild("AssetsFileView", ImVec2(0, -ImGui::GetTextLineHeightWithSpacing() * 1))) {
+		AssetFileEntry* entry = GetPathEntry(m_currentPath);
+		for (auto& e : entry->children) {
+			if (e.second->entry == nullptr) {
+				continue;
+			}
+			DrawAsset(e.second->entry);
 		}
-		DrawAsset(e.second->entry);
 	}
-
-	ImGui::Unindent();
+	ImGui::Unindent(8.f);
+	ImGui::EndChild();
 	ImGui::Columns(1);
 }
 } // namespace ed

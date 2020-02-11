@@ -60,4 +60,11 @@ inline void EndMenu()
 	ImGui::EndMenu();
 }
 
+inline void HSpace(float space = 6.f)
+{
+	ImGui::SameLine();
+	ImGui::Dummy(ImVec2(space, 0.f));
+}
+
+
 } // namespace ImEd

@@ -69,7 +69,7 @@ void StringPod::Load(StringPod* pod, const uri::Uri& path)
 
 void BinaryPod::Load(BinaryPod* pod, const uri::Uri& path)
 {
-	return BinaryLoader::Load(pod, path); 
+	return BinaryLoader::Load(pod, path);
 }
 
 void TexturePod::Load(TexturePod* pod, const uri::Uri& path)

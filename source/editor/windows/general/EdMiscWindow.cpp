@@ -3,6 +3,7 @@
 #include "editor/DataStrings.h"
 
 #include "editor/imgui/ImguiUtil.h"
+#include "editor/imgui/ImEd.h"
 
 #include <imgui/imgui.h>
 namespace ed {
@@ -25,7 +26,7 @@ void HelpWindow::OnDraw(const char* title, bool* open)
 void AboutWindow::ImguiDraw()
 {
 	ImGui::Text("Raygen: v0.1");
-	ImExt::HSpace(220.f);
+	ImEd::HSpace(220.f);
 	ImGui::PushTextWrapPos(ImGui::GetFontSize() * 33.0f);
 	ImGui::Text(txt_about);
 	ImGui::Text("");

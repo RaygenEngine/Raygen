@@ -30,8 +30,6 @@ ProfilerWindow::ProfilerWindow(std::string_view name)
 
 void ProfilerWindow::ShowCategoryCheckbox(ProfilerSetup::Module category)
 {
-	auto str = std::string(c_categories[category]);
-	ImGui::Checkbox(str.c_str(), &visibleCategories[category]);
 }
 
 void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
@@ -120,10 +118,33 @@ void ProfilerWindow::ImguiDraw()
 		}
 	}
 
-	for (int32 i = 0; i < c_catNum; i++) {
-		if (c_categories[i].size() > 0) {
-			ShowCategoryCheckbox(static_cast<ProfilerSetup::Module>(i));
+	ImGuiStyle& style = ImGui::GetStyle();
+	float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+	constexpr float c_colWidth = 120.f;
+	bool lastHasSameLine = false;
+
+	for (int i = 0; i < c_catNum; ++i) {
+		if (c_categories[i].size() == 0) {
+			continue;
 		}
+		ImGui::PushID(i);
+
+		auto str = std::string(c_categories[i]);
+		auto beginCursorPos = ImGui::GetCursorPosX();
+		ImGui::Checkbox(str.c_str(), &visibleCategories[i]);
+		lastHasSameLine = false;
+		float last_button_x2 = ImGui::GetItemRectMin().x + c_colWidth;
+		float next_button_x2 = last_button_x2 + c_colWidth; // Expected position if next button was on same line
+
+		if (next_button_x2 < window_visible_x2) {
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(beginCursorPos + c_colWidth);
+			lastHasSameLine = true;
+		}
+		ImGui::PopID();
+	}
+	if (lastHasSameLine) {
+		ImGui::NewLine();
 	}
 	ImGui::Separator();
 
