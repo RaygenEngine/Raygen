@@ -62,6 +62,27 @@ private:                                                                        
 	static void GenerateReflection(ReflClass& refl)
 
 
+// Generic reflected struct / class. Unregistered (for now). Can be used to allow access to member data & reflection
+// tools for any struct that is not Node / Pod. (eg: An auto-saving generic struct like EditorUserSettings)
+// This struct should remain a simple POD without inheritance to avoid UB.
+#define REFLECTED_GENERIC(Class)                                                                                       \
+public:                                                                                                                \
+	mti::TypeId type{ refl::GetId<Class>() };                                                                          \
+                                                                                                                       \
+private:                                                                                                               \
+	using Z_ThisType = Class;                                                                                          \
+	friend class ReflClass;                                                                                            \
+                                                                                                                       \
+public:                                                                                                                \
+	[[nodiscard]] static const ReflClass& StaticClass()                                                                \
+	{                                                                                                                  \
+		static ReflClass cl = ReflClass::Generate<Class>();                                                            \
+		return cl;                                                                                                     \
+	}                                                                                                                  \
+                                                                                                                       \
+public:                                                                                                                \
+	static void GenerateReflection(ReflClass& refl)
+
 #define REFLECT_VAR(Variable, ...)                                                                                     \
 	refl.AddProperty<decltype(Variable)>(offsetof(Z_ThisType, Variable), #Variable, PropertyFlags::Pack(__VA_ARGS__))
 

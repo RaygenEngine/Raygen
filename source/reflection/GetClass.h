@@ -29,10 +29,22 @@ namespace detail {
 		detail::PodVisitPConst_Impl<Visitor, ENGINE_POD_TYPES>(pod, v);
 	}
 
+
+	// WIP: Reflected concept should be declared somewhere concretely
+	template<typename T>
+	concept Reflected = requires(T t)
+	{
+		{
+			T::StaticClass()
+		}
+		->std::convertible_to<ReflClass>;
+	};
+
+
 	template<typename T>
 	constexpr bool SupportsGetClassF()
 	{
-		return std::is_base_of_v<Node, T> || std::is_base_of_v<AssetPod, T>;
+		return std::is_base_of_v<Node, T> || std::is_base_of_v<AssetPod, T> || Reflected<T>;
 	}
 } // namespace detail
 
@@ -56,6 +68,9 @@ const ReflClass& GetClass(const T* obj)
 		else {
 			return T::StaticClass();
 		}
+	}
+	else {
+		return T::StaticClass();
 	}
 }
 } // namespace refl

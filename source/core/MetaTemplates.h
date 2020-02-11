@@ -188,6 +188,15 @@ constexpr bool is_vector_of_base()
 }
 
 template<typename V, typename C>
+constexpr bool is_vector_of_same()
+{
+	if constexpr (is_vector_v<V>) { // NOLINT
+		return std::is_same_v<C, typename V::value_type>;
+	}
+	return false;
+}
+
+template<typename V, typename C>
 constexpr bool is_vector_of_base_ptr()
 {
 	if constexpr (is_vector_v<V>) {
@@ -205,6 +214,9 @@ constexpr bool is_vector_of_base_v = is_vector_of_base<Vector, ContaineeReq>();
 
 template<typename Vector, typename ContaineeReq>
 constexpr bool is_vector_of_base_ptr_v = is_vector_of_base_ptr<Vector, ContaineeReq>();
+
+template<typename Vector, typename ContaineeReq>
+constexpr bool is_vector_of_same_v = is_vector_of_same<Vector, ContaineeReq>();
 
 #define DECLARE_HAS_FUNCTION_DETECTOR(FuncName)                                                                        \
 	template<typename T, typename = void>                                                                              \

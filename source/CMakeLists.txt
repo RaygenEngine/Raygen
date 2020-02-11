@@ -17,7 +17,8 @@ set(SOURCE_FILES
 	editor/PropertyEditor.cpp
 	editor/SceneSave.cpp
 	editor/EdComponentWindows.cpp
-	
+	editor/EdUserSettings.cpp
+
 	editor/windows/EdWindow.cpp
 	editor/windows/WindowsRegistry.cpp
 	
