@@ -12,7 +12,7 @@
 #include "system/reflection/ReflectionDb.h"
 #include <glfw/glfw3.h>
 #include <algorithm>
-#
+
 Engine::~Engine()
 {
 	// Destruction of objects is done at Deinit

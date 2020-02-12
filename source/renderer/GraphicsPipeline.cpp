@@ -21,9 +21,6 @@ GraphicsPipeline::GraphicsPipeline(Device* device, Swapchain* swapchain)
 	m_descriptorSetLayout = device->createDescriptorSetLayoutUnique(layoutInfo);
 
 	// shaders
-	// auto vertShaderModule = device->CreateShaderModule("/engine-data/spv/vert.spv");
-	// auto fragShaderModule = device->CreateShaderModule("/engine-data/spv/frag.spv");
-
 	auto vertShaderModule = device->CompileCreateShaderModule("engine-data/spv/test.vert");
 	auto fragShaderModule = device->CompileCreateShaderModule("engine-data/spv/test.frag");
 
@@ -84,10 +81,10 @@ GraphicsPipeline::GraphicsPipeline(Device* device, Swapchain* swapchain)
 
 	auto ext = swapchain->GetExtent();
 	vk::Viewport viewport{};
-	viewport.setX(0.f)
-		.setY(static_cast<float>(ext.height))
-		.setWidth(static_cast<float>(ext.width))
-		.setHeight(-static_cast<float>(ext.height))
+	viewport.setX(static_cast<float>(g_ViewportCoordinates.position.x))
+		.setY(static_cast<float>(g_ViewportCoordinates.position.y + g_ViewportCoordinates.size.y))
+		.setWidth(static_cast<float>(g_ViewportCoordinates.size.x))
+		.setHeight(-static_cast<float>(g_ViewportCoordinates.size.y))
 		.setMinDepth(0.f)
 		.setMaxDepth(1.f);
 

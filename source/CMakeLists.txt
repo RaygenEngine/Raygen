@@ -144,6 +144,7 @@ target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/nlohmann/incl
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/tinygltf)
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/imfilebrowser)
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/GLFW/include)
+target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/cereal/include)
 
 target_include_directories(Raygen PUBLIC ${Vulkan_INCLUDE_DIR}/../glslang)
 
