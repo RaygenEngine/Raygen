@@ -20,6 +20,12 @@ using RendererT = vlkn::VkSampleRenderer;
 
 #include "system/Timer.h"
 
+inline struct ViewportCoordinates {
+	glm::vec2 position;
+	glm::vec2 size;
+	bool operator==(const ViewportCoordinates&) const = default;
+} g_ViewportCoordinates;
+
 
 class Engine {
 private:

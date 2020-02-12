@@ -40,7 +40,10 @@ class VkSampleRenderer {
 
 	DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
 	DECLARE_EVENT_LISTENER(m_worldLoaded, Event::OnWorldLoaded);
+	DECLARE_EVENT_LISTENER(m_viewportUpdated, Event::OnViewportUpdated);
 	bool m_shouldRecreateSwapchain{ false };
+	bool m_shouldRecreatePipeline{ false };
+
 
 	void RecordCommandBuffer(int32 imageIndex);
 
@@ -50,6 +53,8 @@ public:
 	void InitInstanceAndSurface(std::vector<const char*> additionalExtensions, WindowType* window);
 
 	void InitWorld();
+
+	void RecreateGraphicsPipeline();
 
 	void Init();
 	void DrawFrame();

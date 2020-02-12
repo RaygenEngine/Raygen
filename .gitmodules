@@ -42,3 +42,6 @@
 	path = dependencies/catch2
 	url = https://github.com/catchorg/Catch2/
 	branch = master
+[submodule "dependencies/cereal"]
+	path = dependencies/cereal
+	url = https://github.com/uscilab/cereal

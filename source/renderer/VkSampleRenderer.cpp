@@ -113,10 +113,17 @@ void VkSampleRenderer::InitWorld()
 		m_models.back()->m_transform = geomNode->GetNodeTransformWCS();
 	}
 }
+
+void VkSampleRenderer::RecreateGraphicsPipeline()
+{
+}
+
 void VkSampleRenderer::Init()
 {
 	m_resizeListener.Bind([&](auto, auto) { m_shouldRecreateSwapchain = true; });
 	m_worldLoaded.Bind([&]() { InitWorld(); });
+	m_viewportUpdated.Bind([&]() { m_shouldRecreatePipeline = true; });
+
 
 	auto physicalDevice = m_instanceLayer->GetBestCapablePhysicalDevice();
 
@@ -215,14 +222,29 @@ void VkSampleRenderer::DrawFrame()
 		m_graphicsPipeline.reset();
 		m_swapchain.reset();
 
-		m_device->freeCommandBuffers(m_device->GetGraphicsCommandPool(), m_renderCommandBuffers);
+		// m_device->freeCommandBuffers(m_device->GetGraphicsCommandPool(), m_renderCommandBuffers);
 
 		m_swapchain = m_device->RequestDeviceSwapchainOnSurface(m_instanceLayer->GetSurface());
 		m_graphicsPipeline = m_device->RequestDeviceGraphicsPipeline(m_swapchain.get());
 		m_descriptors = m_device->RequestDeviceDescriptors(m_swapchain.get(), m_graphicsPipeline.get());
 
-		// CreateRenderCommandBuffers();
+		// AllocateRenderCommandBuffers();
+		m_shouldRecreateSwapchain = false;
+		m_shouldRecreatePipeline = false;
+		::ImguiImpl::InitVulkan();
 	}
+	else if (m_shouldRecreatePipeline) {
+		m_shouldRecreatePipeline = false;
+
+		m_descriptors.reset();
+		m_graphicsPipeline.reset();
+
+
+		m_graphicsPipeline = m_device->RequestDeviceGraphicsPipeline(m_swapchain.get());
+		m_descriptors = m_device->RequestDeviceDescriptors(m_swapchain.get(), m_graphicsPipeline.get());
+		::ImguiImpl::InitVulkan();
+	}
+
 	uint32 imageIndex;
 
 	vk::Result result0 = m_device->acquireNextImageKHR(
