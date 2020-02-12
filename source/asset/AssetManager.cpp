@@ -94,3 +94,68 @@ void AssetManager::Z_SpecializationExporter()
 	PostRegisterEntry<TexturePod>(a);
 	PostRegisterEntry<ImagePod>(a);
 }
+
+/*
+#include <cereal/types/memory.hpp>
+#include <cereal/archives/binary.hpp>
+#include "reflection/ReflectionTools.h"
+
+namespace {
+
+struct PropertyToCerealVisitor {
+	cereal::BinaryOutputArchive& archive;
+
+	template<typename T>
+	void operator()(T& value, const Property& p)
+	{
+		archive(value);
+	}
+};
+
+struct PodSaverVisitor {
+	fs::path file;
+
+
+	PodSaverVisitor(fs::path&& where)
+		: file(where)
+	{
+	}
+
+	template<typename PodType>
+	fs::path GetExtension()
+	{
+		return mti::GetName<PodType>();
+	}
+
+	// Specialize this for types that contain non reflected data
+	template<typename PodType>
+	void AddNonReflectedData(cereal::BinaryOutputArchive& archive)
+	{
+	}
+
+	template<typename PodType>
+	void operator()(PodType* pod)
+	{
+		file.replace_extension(GetExtension<PodType>());
+
+		std::ofstream os(file, std::ios::binary);
+		cereal::BinaryOutputArchive archive(os);
+
+		PropertyToCerealVisitor visitor{ archive };
+		refltools::CallVisitorOnEveryProperty(pod, visitor);
+
+		AddNonReflectedData<PodType>(archive);
+	}
+};
+} // namespace
+
+void AssetManager::SaveToDisk(BasePodHandle handle)
+{
+	AssetPod* pod = Engine::GetAssetManager()->m_pods[handle.podId]->ptr.get();
+
+	auto uri = fs::path(GetPodUri(handle));
+
+	PodSaverVisitor inst(std::move(uri));
+	podtools::VisitPod(pod, inst);
+}
+*/
