@@ -92,6 +92,7 @@ void CallVisitorOnProperty(Visitor& v, const Property& p, void* obj)
 							   || detail::MaybeVisit_WrapVectorPodHandle<Visitor, ENGINE_POD_TYPES>(v, p, obj);
 }
 
+// Visitor must implement "template<VarType> void operator()(VarType& value, const Property& property)"
 template<typename ReflectedObj, typename Visitor>
 void CallVisitorOnEveryProperty(ReflectedObj* obj, Visitor& v)
 {

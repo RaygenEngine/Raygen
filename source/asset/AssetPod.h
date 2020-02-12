@@ -45,5 +45,5 @@ struct BasePodHandle {
 
 	[[nodiscard]] bool HasBeenAssigned() const { return podId != 0; }
 
-	bool operator==(const BasePodHandle& other) const { return other.podId == this->podId && podId != 0; }
+	[[nodiscard]] bool operator==(const BasePodHandle& other) const { return other.podId == this->podId && podId != 0; }
 };
