@@ -19,11 +19,8 @@ struct ImagePod : AssetPod {
 
 	int32 components{ 0 };
 
-	// use malloc and free
-	void* data{ nullptr };
+	std::vector<byte> data{};
 
 	// if(isHdr) data -> float* else data -> byte*
 	bool isHdr{ false };
-
-	~ImagePod() { free(data); }
 };
