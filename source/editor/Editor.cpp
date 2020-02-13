@@ -31,6 +31,7 @@
 #include "system/profiler/ProfileScope.h"
 
 #include "editor/EdUserSettings.h"
+#include "system/console/ConsoleVariable.h"
 
 #include <glfw/glfw3.h>
 
@@ -151,11 +152,13 @@ Editor::~Editor()
 	ImguiImpl::CleanupContext();
 }
 
+
 void Editor::Dockspace()
 {
 	static bool opt_fullscreen_persistant = true;
 	bool opt_fullscreen = opt_fullscreen_persistant;
-	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+	static ImGuiDockNodeFlags dockspace_flags
+		= ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_NoDockingInCentralNode;
 
 	// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
 	// because it would be confusing to have two docking targets within each others.
@@ -180,7 +183,7 @@ void Editor::Dockspace()
 	// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 	bool dummy{};
-	ImGui::Begin("DockSpace Demo", &dummy, window_flags);
+	ImGui::Begin("DockSpace", &dummy, window_flags);
 	ImGui::PopStyleVar();
 
 	if (opt_fullscreen)
@@ -194,28 +197,27 @@ void Editor::Dockspace()
 	Run_MenuBar();
 
 
-	/*	if (ImGui::BeginMenuBar()) {
-			if (ImGui::BeginMenu("Docking")) {
-				// Disabling fullscreen would allow the window to be moved to the front of other windows,
-				// which we can't undo at the moment without finer window depth/z control.
-				// ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
+	auto centralNode = ImGui::DockBuilderGetCentralNode(dockspace_id);
+	if (centralNode) {
+		auto copy = g_ViewportCoordinates;
 
-				if (ImGui::MenuItem("Flag: NoSplit", "", (dockspace_flags & ImGuiDockNodeFlags_NoSplit) != 0))
-					dockspace_flags ^= ImGuiDockNodeFlags_NoSplit;
-				if (ImGui::MenuItem("Flag: NoResize", "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))
-					dockspace_flags ^= ImGuiDockNodeFlags_NoResize;
-				if (ImGui::MenuItem("Flag: NoDockingInCentralNode", "",
-						(dockspace_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0))
-					dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
-				if (ImGui::MenuItem(
-						"Flag: PassthruCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) !=
-	   0)) dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode; if (ImGui::MenuItem("Flag: AutoHideTabBar", "",
-	   (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0)) dockspace_flags ^=
-	   ImGuiDockNodeFlags_AutoHideTabBar; ImGui::EndMenu();
-			}
-			ImGui::EndMenuBar();
+		auto rect = centralNode->Rect();
+
+
+		g_ViewportCoordinates.position
+			= { rect.Min.x - ImGui::GetWindowViewport()->Pos.x, rect.Min.y - ImGui::GetWindowViewport()->Pos.y };
+		g_ViewportCoordinates.size = { rect.GetWidth(), rect.GetHeight() };
+		if (copy != g_ViewportCoordinates) {
+			Event::OnViewportUpdated.Broadcast();
 		}
-		*/
+
+
+		auto str = fmt::format("Pos: {}, {} Size: {} {}", g_ViewportCoordinates.position.x,
+			g_ViewportCoordinates.position.x, g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y);
+		LOG_REPORT(str);
+	}
+
+
 	ImGui::End();
 }
 
