@@ -6,6 +6,7 @@
 #include "reflection/PodReflection.h"
 #include "system/Engine.h"
 #include "system/Logger.h"
+#include "system/console/ConsoleVariable.h"
 
 #include <future>
 
@@ -63,6 +64,10 @@ class AssetManager {
 	friend class Editor;
 	friend class AssetWindow;
 	friend class ed::AssetsWindow;
+
+	ConsoleFunction<int32> serializeUid{ "save_pod" };
+	ConsoleFunction<int32> deserilizeUid{ "load_pod" };
+
 
 	std::vector<std::unique_ptr<PodEntry>> m_pods;
 	std::unordered_map<uri::Uri, size_t> m_pathCache;
