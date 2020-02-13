@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <concepts>
 
 namespace math {
 template<typename T>
@@ -59,6 +60,12 @@ inline glm::quat OrientationFromLookatAndPosition(glm::vec3 lookat, glm::vec3 po
 	}
 
 	return glm::normalize(glm::quatLookAt(direction, glm::vec3(0.f, 1.f, 0.f)));
+}
+
+template<typename T>
+inline int32 RoundToInt(T number)
+{
+	return static_cast<int32>(glm::round(number));
 }
 
 enum class Intersection

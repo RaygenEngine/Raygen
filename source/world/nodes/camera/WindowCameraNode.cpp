@@ -7,7 +7,8 @@
 WindowCameraNode::WindowCameraNode()
 	: CameraNode()
 {
-	m_resizeListener.BindMember(this, &WindowCameraNode::WindowResize);
+	m_resizeListener.BindMember(this, &WindowCameraNode::OnWindowResizeEvent);
+	m_viewportListener.BindMember(this, &WindowCameraNode::OnViewportUpdatedEvent);
 	auto mainWindow = Engine::GetMainWindow();
 
 	int32 width;
@@ -25,4 +26,16 @@ void WindowCameraNode::WindowResize(int32 width, int32 height)
 	m_viewportWidth = width;
 	m_viewportHeight = height;
 	SetDirty(DF::ViewportSize);
+}
+
+void WindowCameraNode::OnWindowResizeEvent(int32 width, int32 height)
+{
+	if (!Engine::IsEditorActive()) {
+		WindowResize(width, height);
+	}
+}
+
+void WindowCameraNode::OnViewportUpdatedEvent()
+{
+	WindowResize(math::RoundToInt(g_ViewportCoordinates.size.x), math::RoundToInt(g_ViewportCoordinates.size.y));
 }

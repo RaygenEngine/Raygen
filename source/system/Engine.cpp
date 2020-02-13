@@ -24,20 +24,9 @@ void Engine::DrawReporter::Reset()
 	draws = 0ull;
 }
 
-namespace {
-void PrintClasses()
-{
-	auto& cls = ReflectionDb::GetEntries();
-	for (auto& [name, cl] : cls) {
-		LOG_REPORT("Found Class: {} of {}", name, cl->GetParentClass()->GetNameStr());
-	}
-}
-} // namespace
 void Engine::InitEngine(AppBase* app)
 {
 	m_initToFrameTimer.Start();
-
-	PrintClasses();
 
 	m_app = app;
 	m_isEditorEnabled = app->m_enableEditor;
