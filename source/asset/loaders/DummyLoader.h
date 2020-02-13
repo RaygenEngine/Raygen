@@ -36,9 +36,9 @@ inline void AllocateImage(ImagePod* pod, glm::u8vec4 color)
 	pod->isHdr = false;
 	pod->components = 4;
 
-	pod->data = malloc(sizeof(glm::u8vec4));
+	pod->data.resize(sizeof(glm::u8vec4));
 
-	byte* d = reinterpret_cast<byte*>(pod->data);
+	byte* d = pod->data.data();
 	d[0] = color.r;
 	d[1] = color.g;
 	d[2] = color.b;

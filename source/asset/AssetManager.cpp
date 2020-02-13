@@ -19,13 +19,13 @@ void AssetManager::Init(const fs::path& assetPath)
 	LOG_INFO("Current working dir: {}", fs::current_path());
 
 	serializeUid.function = [&](int32 uid) {
-		fs::path p = uri::GetDiskPathNoAbsoluteStrView(m_pods[uid]->path);
+		fs::path p = uri::ToSystemPath(m_pods[uid]->path);
 		p.replace_extension("pod");
 		SerializePod(m_pods[uid]->ptr.get(), p);
 	};
 
 	deserilizeUid.function = [&](int32 uid) {
-		fs::path p = uri::GetDiskPathNoAbsoluteStrView(m_pods[uid]->path);
+		fs::path p = uri::ToSystemPath(m_pods[uid]->path);
 		p.replace_extension("pod");
 		DeserializePod(m_pods[uid]->ptr.get(), p);
 	};

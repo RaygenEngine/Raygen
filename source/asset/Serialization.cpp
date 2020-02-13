@@ -68,14 +68,25 @@ struct CerealArchiveVisitor {
 	// void operator()(MetaEnumInst& ref, const Property& p) { ar(ref); }
 };
 
+template<typename Archive, typename PodType>
+void PostReflectionSerialize(Archive& ar, PodType* pod)
+{
+}
+
+template<typename Archive>
+void PostReflectionSerialize(Archive& ar, ImagePod* pod)
+{
+	ar(pod->data);
+	LOG_REPORT("Ser/Deser {} img data", pod->data.size());
+}
+
 
 template<typename Archive>
 void serialize(Archive& ar, AssetPod* pod)
 {
-	/*	podtools::VisitPod(
-			pod, [](auto f) { LOG_REPORT("Serialize pod: {}", mti::GetName<std::remove_pointer_t<decltype(f)>>()); });*/
 	CerealArchiveVisitor v(ar);
 	refltools::CallVisitorOnEveryProperty(pod, v);
+	podtools::VisitPod(pod, [&](auto f) { PostReflectionSerialize(ar, f); });
 }
 
 void SerializePod(AssetPod* pod, const fs::path& file)
