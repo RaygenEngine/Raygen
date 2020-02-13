@@ -7,6 +7,7 @@ set(SOURCE_FILES
 
 	asset/AssetManager.cpp
 	asset/PodLoaders.cpp
+	asset/Serialization.cpp
 
 	asset/util/DependenciesImpl.cpp
 	asset/util/SpirvCompiler.cpp

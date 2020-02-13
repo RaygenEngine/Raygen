@@ -51,7 +51,7 @@ struct ConsoleVariable : public ConsoleEntry {
 };
 
 // Auto registers a console function with a lambda.
-struct ConsoleFunction : public ConsoleEntry {
+struct ConsoleFunctionGeneric : public ConsoleEntry {
 
 
 	std::function<void(std::string_view)> function;
@@ -60,7 +60,8 @@ struct ConsoleFunction : public ConsoleEntry {
 	// Lambda params of func is a std::string_view of the console command (including the command itself)
 	// Recommended to use with str::Split (StringAux) and conv::FromStrView. Automated templated variants to be provided
 	// at a future update.
-	ConsoleFunction(const char* name, std::function<void(std::string_view)> func = {}, const char* inTooltip = "")
+	ConsoleFunctionGeneric(
+		const char* name, std::function<void(std::string_view)> func = {}, const char* inTooltip = "")
 		: ConsoleEntry(name, inTooltip)
 		, function(func)
 	{
@@ -72,8 +73,52 @@ struct ConsoleFunction : public ConsoleEntry {
 			function(command);
 			return;
 		}
-		LOG_REPORT("Console function: {} is registered but no function has been set.");
+		LOG_REPORT("Console function: {} is registered but no function has been set.", name);
 	}
+
+	virtual ~ConsoleFunctionGeneric() = default;
+};
+
+// WIP: no test, should be easy to test
+template<typename... Args>
+struct ConsoleFunction : public ConsoleEntry {
+
+	std::function<void(Args...)> function;
+
+	static constexpr auto argCount = sizeof...(Args);
+
+	ConsoleFunction(const char* name, std::function<void(Args...)> func = {}, const char* inTooltip = "")
+		: ConsoleEntry(name, inTooltip)
+		, function(func)
+	{
+	}
+
+	void Execute(std::string_view command) override
+	{
+		if (!function) {
+			LOG_REPORT("Console function: {} is registered but no function has been set.", name);
+			return;
+		}
+
+		auto vec = str::Split(command);
+		if (vec.size() - 1 != argCount) {
+			LOG_REPORT("Incorrect number of arguments for console command: {}. Expected: {}", name, argCount);
+			return;
+		}
+
+		std::tuple<Args...> args;
+
+
+		std::apply(
+			[&](auto&&... elem) {
+				int currentArg = 1;
+				((void)(elem = conv::FromStrView<std::remove_reference_t<decltype(elem)>>(vec[currentArg++])), ...);
+			},
+			args);
+
+		std::apply(function, args);
+	}
+
 
 	virtual ~ConsoleFunction() = default;
 };

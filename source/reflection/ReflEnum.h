@@ -188,4 +188,19 @@ public:
 		}
 		return static_cast<T*>(obj);
 	}
+
+	template<typename Archive>
+	void save(Archive& ar) const
+	{
+		std::string t = std::string(GetValueStr());
+		ar(t);
+	}
+
+	template<typename Archive>
+	void load(Archive& ar)
+	{
+		std::string t{};
+		ar(t);
+		SetValueByStr(t);
+	}
 };

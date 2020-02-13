@@ -38,6 +38,17 @@ inline uri::Uri GetDiskPath(const Uri& path)
 	return s;
 }
 
+
+// Trims first '/'
+inline std::string_view GetDiskPathNoAbsoluteStrView(const Uri& path)
+{
+	auto v = GetDiskPathStrView(path);
+	if (v.starts_with("/")) {
+		return v.substr(1);
+	}
+	return v;
+}
+
 // Preserves the '.' from the extension
 // String view gets invalidated if the given path is moved or deallocated.
 inline std::string_view GetDiskExtension(const Uri& path)
