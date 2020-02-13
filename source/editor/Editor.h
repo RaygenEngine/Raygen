@@ -114,10 +114,6 @@ protected:
 	bool m_showImguiDemo{ false };
 	bool m_showGltfWindow{ false };
 
-	bool m_showAboutWindow{ false };
-	bool m_showHelpWindow{ false };
-	bool m_showLogWindow{ false };
-
 	bool m_autoRestoreWorld{ false };
 	bool m_hasRestoreSave{ false };
 
@@ -192,10 +188,6 @@ public:
 
 	void Run_MenuBar();
 
-	void Run_AboutWindow();
-	void Run_HelpWindow();
-
-	void Run_LogWindow();
 	static void PushCommand(std::function<void()>&& func);
 	static void PushPostFrameCommand(std::function<void()>&& func);
 

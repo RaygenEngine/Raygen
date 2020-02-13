@@ -34,8 +34,8 @@ TEST("Console Runtime registration")
 
 	int32 var = -1;
 	{
-		ConsoleFunction g_func(
-			"_t_callable", [&](auto) { var = 8; }); // This will get unregistered at the end of this scope
+		ConsoleFunction<> g_func(
+			"_t_callable", [&]() { var = 8; }); // This will get unregistered at the end of this scope
 
 		REQ(var == -1);
 		Console::Execute("_t_callable"sv);
@@ -44,4 +44,18 @@ TEST("Console Runtime registration")
 	var = 1;
 	Console::Execute("_t_callable"sv); // Should fail to find a function
 	REQ(var == 1);
+}
+
+TEST("Console Automatic params")
+{
+	using namespace std::literals;
+
+	int32 var = -1;
+	ConsoleFunction<int32, float> g_func("_add", [&](auto x, auto y) {
+		var = x + static_cast<int32>(y);
+	}); // This will get unregistered at the end of this scope
+
+	REQ(var == -1);
+	Console::Execute("_add 1 2"sv);
+	REQ(var == 3);
 }

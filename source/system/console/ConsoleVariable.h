@@ -6,6 +6,8 @@
 #include <string_view>
 #include <functional>
 
+// TODO: Genericly support strings in quotes as parameters
+
 struct ConsoleEntry {
 	const char* name;
 	const char* tooltip;

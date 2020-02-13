@@ -17,19 +17,13 @@ void Log::Init(LogLevelTarget level)
 	}
 
 	switch (level) {
-		case LogLevelTarget::TRACE: g_logger->set_level(spdlog::level::level_enum::trace); break;
-
-		case LogLevelTarget::DEBUG: g_logger->set_level(spdlog::level::level_enum::debug); break;
-
-		case LogLevelTarget::INFO: g_logger->set_level(spdlog::level::level_enum::info); break;
-
-		case LogLevelTarget::WARN: g_logger->set_level(spdlog::level::level_enum::warn); break;
-
-		case LogLevelTarget::ERR: g_logger->set_level(spdlog::level::level_enum::err); break;
-
-		case LogLevelTarget::CRITICAL: g_logger->set_level(spdlog::level::level_enum::critical); break;
-
-		case LogLevelTarget::OFF:
+		case LogLevelTarget::Trace: g_logger->set_level(spdlog::level::level_enum::trace); break;
+		case LogLevelTarget::Debug: g_logger->set_level(spdlog::level::level_enum::debug); break;
+		case LogLevelTarget::Info: g_logger->set_level(spdlog::level::level_enum::info); break;
+		case LogLevelTarget::Warn: g_logger->set_level(spdlog::level::level_enum::warn); break;
+		case LogLevelTarget::Error: g_logger->set_level(spdlog::level::level_enum::err); break;
+		case LogLevelTarget::Critical: g_logger->set_level(spdlog::level::level_enum::critical); break;
+		case LogLevelTarget::Off:
 		default: g_logger->set_level(spdlog::level::level_enum::off); break;
 	}
 

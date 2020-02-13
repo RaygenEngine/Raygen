@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 
 	int height = 0; // Some user variable you want to be able to set
 
-	LOGGER_INIT(LogLevelTarget::ERR);
+	LOGGER_INIT(LogLevelTarget::Error);
 
 
 	// Build a new parser on top of Catch's
