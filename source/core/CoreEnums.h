@@ -2,13 +2,13 @@
 
 enum class LogLevelTarget
 {
-	TRACE = 0,
-	DEBUG,
-	INFO,
-	WARN,
-	ERR,
-	CRITICAL,
-	OFF
+	Trace = 0,
+	Debug,
+	Info,
+	Warn,
+	Error,
+	Critical,
+	Off
 };
 
 enum class ComponentType

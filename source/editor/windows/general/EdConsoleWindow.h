@@ -11,7 +11,7 @@ public:
 	{
 	}
 
-	virtual void ImguiDraw();
+	virtual void OnDraw(const char* title, bool* keepOpen);
 
 	virtual ~ConsoleWindow() = default;
 };
