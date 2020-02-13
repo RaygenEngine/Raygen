@@ -200,9 +200,7 @@ void Editor::Dockspace()
 	auto centralNode = ImGui::DockBuilderGetCentralNode(dockspace_id);
 	if (centralNode) {
 		auto copy = g_ViewportCoordinates;
-
 		auto rect = centralNode->Rect();
-
 
 		g_ViewportCoordinates.position
 			= { rect.Min.x - ImGui::GetWindowViewport()->Pos.x, rect.Min.y - ImGui::GetWindowViewport()->Pos.y };
@@ -210,11 +208,6 @@ void Editor::Dockspace()
 		if (copy != g_ViewportCoordinates) {
 			Event::OnViewportUpdated.Broadcast();
 		}
-
-
-		auto str = fmt::format("Pos: {}, {} Size: {} {}", g_ViewportCoordinates.position.x,
-			g_ViewportCoordinates.position.x, g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y);
-		LOG_REPORT(str);
 	}
 
 
