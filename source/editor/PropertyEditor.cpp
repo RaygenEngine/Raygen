@@ -230,7 +230,7 @@ struct ReflectionToImguiVisitor {
 			return false;
 		}
 
-		auto entry = AssetManager::GetEntry(pod);
+		auto entry = AssetImporterManager::GetEntry(pod);
 
 		bool open = false;
 		if (!isInVector) {
@@ -246,11 +246,11 @@ struct ReflectionToImguiVisitor {
 		bool result = PodDropTarget(pod);
 		result |= Run_PodContext(pod, id);
 		if (depth == 0) {
-			TEXT_TOOLTIP("Pod Internal Path:\n{}\n", AssetManager::GetPodUri(pod));
+			TEXT_TOOLTIP("Pod Internal Path:\n{}\n", AssetImporterManager::GetPodUri(pod));
 			Editor::CollapsingHeaderTooltip(help_PropPodEditing);
 		}
 		else {
-			TEXT_TOOLTIP("{}", AssetManager::GetPodUri(pod));
+			TEXT_TOOLTIP("{}", AssetImporterManager::GetPodUri(pod));
 		}
 
 		if (open) {
@@ -323,7 +323,7 @@ struct ReflectionToImguiVisitor {
 				InjectPodCode(handle, p, true, index * 1024);
 
 				if (shouldReloadMaterials) {
-					AssetManager::Reload(handle);
+					AssetImporterManager::Reload(handle);
 				}
 
 				ImGui::PopID();
@@ -376,7 +376,7 @@ struct ReflectionToImguiVisitor {
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3.f, 6.f));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.f, 6.f));
 		if (ImGui::BeginPopupContextItem("PodContext")) {
-			auto entry = AssetManager::GetEntry(handle);
+			auto entry = AssetImporterManager::GetEntry(handle);
 
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.4f, 0.4f, 0.8f));
 			ImGui::Text("Warning: Alpha");
@@ -394,7 +394,7 @@ struct ReflectionToImguiVisitor {
 				result = true;
 			}
 			if (ImGui::MenuItem("Reload asset")) {
-				AssetManager::Reload(handle);
+				AssetImporterManager::Reload(handle);
 				result = true;
 			}
 			if (ImGui::MenuItem("Open from disk")) {
@@ -420,14 +420,14 @@ struct ReflectionToImguiVisitor {
 		ImGui::PopStyleVar(2);
 
 		if (propedit->m_openAsset.HasFileFor(currentObject, *currentProperty, id)) {
-			handle = AssetManager::GetOrCreate<T>(uri::SystemToUri(propedit->m_openAsset.filepath));
+			handle = AssetImporterManager::GetOrCreate<T>(uri::SystemToUri(propedit->m_openAsset.filepath));
 			result = true;
 		}
 		else if (propedit->m_saveAsset.HasFileFor(currentObject, *currentProperty, id)) {
 			auto& path = propedit->m_openAsset.filepath;
 			SaveAs(handle, path);
-			handle = AssetManager::GetOrCreate<T>(uri::SystemToUri(path));
-			AssetManager::Reload(handle);
+			handle = AssetImporterManager::GetOrCreate<T>(uri::SystemToUri(path));
+			AssetImporterManager::Reload(handle);
 			result = true;
 		}
 		return result;

@@ -2,7 +2,8 @@
 struct GLFWwindow;
 using WindowType = GLFWwindow;
 
-class AssetManager;
+class AssetImporterManager;
+class AssetFrontEndManager;
 class Renderer;
 class Window;
 class World;
@@ -52,20 +53,17 @@ public:
 	// Not guaranteed to exist at all times.
 	[[nodiscard]] static World* GetWorld() { return Get().m_world; }
 
-	// It is HIGHLY recommended to validate this result in your code for future compatibility
-	// Window will not be guaranteed to exist in the future (possible use: Headless Server)
 	[[nodiscard]] static WindowType* GetMainWindow() { return Get().m_window; }
 
-	// FileAsset manager will be valid forever after initialization.
-	[[nodiscard]] static AssetManager* GetAssetManager() { return Get().m_assetManager; }
+	[[nodiscard]] static AssetImporterManager* GetAssetImporterManager() { return Get().m_assetImporterManager; }
+
+	[[nodiscard]] static AssetFrontEndManager* GetAssetFrontEndManager() { return Get().m_assetFrontEndManager; }
 
 	// Input will be valid forever after initialization.
 	[[nodiscard]] static Input& GetInput() { return *Get().m_input; }
 
 	[[nodiscard]] static RendererT* GetRenderer() { return Get().m_renderer; }
 
-
-	// ALWAYS, ALWAYS check this return value. Editor may not be initialized at all in some cases.
 	[[nodiscard]] static Editor* GetEditor() { return Get().m_editor; }
 
 	[[nodiscard]] static DrawReporter* GetDrawReporter() { return &Get().m_drawReporter; }
@@ -82,7 +80,11 @@ private:
 	DrawReporter m_drawReporter;
 
 	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
-	AssetManager* m_assetManager{ nullptr };
+	AssetImporterManager* m_assetImporterManager{ nullptr };
+
+	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
+	AssetFrontEndManager* m_assetFrontEndManager{ nullptr };
+
 
 	// Owning Pointer, Expected to be valid 'forever' after InitEngine at this time.
 	WindowType* m_window{ nullptr };

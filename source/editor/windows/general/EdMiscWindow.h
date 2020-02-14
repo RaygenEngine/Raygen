@@ -24,4 +24,16 @@ public:
 
 	virtual ~HelpWindow() = default;
 };
+class ImGuiDemoWindow : public ed::UniqueWindow {
+public:
+	ImGuiDemoWindow(std::string_view name)
+		: ed::UniqueWindow(name)
+	{
+	}
+
+	virtual void OnDraw(const char* title, bool* open);
+
+
+	virtual ~ImGuiDemoWindow() = default;
+};
 } // namespace ed

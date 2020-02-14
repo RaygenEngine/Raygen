@@ -39,7 +39,7 @@ void serialize(Archive& ar, glm::mat4x4& v)
 template<typename Archive, typename T>
 void save(Archive& ar, const PodHandle<T>& v)
 {
-	ar(AssetManager::GetPodUri(v));
+	ar(AssetImporterManager::GetPodUri(v));
 }
 
 template<typename Archive, typename T>
@@ -47,7 +47,7 @@ void load(Archive& ar, PodHandle<T>& v)
 {
 	std::string path;
 	ar(path);
-	v = AssetManager::GetOrCreate<T>(path);
+	v = AssetImporterManager::GetOrCreate<T>(path);
 }
 
 template<typename Archive>
@@ -81,9 +81,42 @@ void PostReflectionSerialize(Archive& ar, ImagePod* pod)
 }
 
 
+struct PodMeta {
+	int32 myData;
+
+	template<typename Arc>
+	void serialize(Arc& ar)
+	{
+		ar(myData);
+	}
+};
+
+
 template<typename Archive>
-void serialize(Archive& ar, AssetPod* pod)
+void load(Archive& ar, AssetPod& podRef)
 {
+	AssetPod* pod = &podRef;
+
+	PodMeta m;
+	ar(m);
+	LOG_REPORT("Pod Is: {}", m.myData);
+
+	CerealArchiveVisitor v(ar);
+	refltools::CallVisitorOnEveryProperty(pod, v);
+	podtools::VisitPod(pod, [&](auto f) { PostReflectionSerialize(ar, f); });
+}
+
+template<typename Archive>
+void save(Archive& ar, const AssetPod& podRef)
+{
+	AssetPod* pod = &const_cast<AssetPod&>(podRef);
+
+	PodMeta m;
+
+	m.myData = std::rand();
+
+	ar(m);
+
 	CerealArchiveVisitor v(ar);
 	refltools::CallVisitorOnEveryProperty(pod, v);
 	podtools::VisitPod(pod, [&](auto f) { PostReflectionSerialize(ar, f); });
@@ -97,7 +130,7 @@ void SerializePod(AssetPod* pod, const fs::path& file)
 		return;
 	}
 	cereal::BinaryOutputArchive archive(os);
-	archive(pod);
+	archive(*pod);
 }
 
 void DeserializePod(AssetPod* pod, const fs::path& file)
@@ -108,5 +141,5 @@ void DeserializePod(AssetPod* pod, const fs::path& file)
 		return;
 	}
 	cereal::BinaryInputArchive archive(is);
-	archive(pod);
+	archive(*pod);
 }

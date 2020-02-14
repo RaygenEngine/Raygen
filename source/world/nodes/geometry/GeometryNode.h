@@ -10,8 +10,6 @@ class GeometryNode : public Node {
 	PodHandle<ModelPod> m_model;
 
 public:
-	GeometryNode();
-
 	[[nodiscard]] PodHandle<ModelPod> GetModel() const { return m_model; }
 
 	void SetModel(PodHandle<ModelPod> newModel);

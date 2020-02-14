@@ -2,11 +2,6 @@
 #include "asset/AssetManager.h"
 #include "core/MathAux.h"
 
-GeometryNode::GeometryNode()
-{
-	m_model = AssetManager::GetOrCreate<ModelPod>("/genEmptyModel");
-}
-
 void GeometryNode::SetModel(PodHandle<ModelPod> newModel)
 {
 	m_model = newModel;

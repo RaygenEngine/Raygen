@@ -64,9 +64,9 @@ void World::SetActiveCamera(CameraNode* cam)
 
 void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 {
-	LOG_INFO("Loading World file: \'{}\'", AssetManager::GetPodUri(scene));
+	LOG_INFO("Loading World file: \'{}\'", AssetImporterManager::GetPodUri(scene));
 
-	AssetManager::Reload(scene);
+	AssetImporterManager::Reload(scene);
 	m_loadedFrom = scene;
 
 	m_root = std::make_unique<RootNode>();

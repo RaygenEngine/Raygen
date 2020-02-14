@@ -19,10 +19,12 @@ void RegisterWindows(ed::ComponentWindows& windowsComponent)
 {
 	windowsComponent.AddWindowEntry<AssetsWindow>("Assets");
 
-	windowsComponent.AddWindowEntry<AboutWindow>("About");
-	windowsComponent.AddWindowEntry<HelpWindow>("Help");
 	windowsComponent.AddWindowEntry<ConsoleWindow>("Console");
 
 	windowsComponent.AddWindowEntry<ProfilerWindow>("Profiler");
+
+	windowsComponent.AddWindowEntry<AboutWindow>("About");
+	windowsComponent.AddWindowEntry<HelpWindow>("Help");
+	windowsComponent.AddWindowEntry<ImGuiDemoWindow>("ImGui Demo");
 }
 } // namespace ed

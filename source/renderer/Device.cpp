@@ -54,7 +54,7 @@ Device::~Device()
 
 vk::UniqueShaderModule Device::CreateShaderModule(const std::string& binPath)
 {
-	auto& data = AssetManager::GetOrCreateFromParentUri<BinaryPod>(binPath, "/").Lock()->data;
+	auto& data = AssetImporterManager::GetOrCreateFromParentUri<BinaryPod>(binPath, "/").Lock()->data;
 
 	vk::ShaderModuleCreateInfo createInfo{};
 	createInfo.setCodeSize(data.size()).setPCode(reinterpret_cast<const uint32*>(data.data()));
