@@ -111,7 +111,6 @@ protected:
 	bool m_updateWorld{ false };
 	Node* m_selectedNode{ nullptr };
 
-	bool m_showImguiDemo{ false };
 	bool m_showGltfWindow{ false };
 
 	bool m_autoRestoreWorld{ false };

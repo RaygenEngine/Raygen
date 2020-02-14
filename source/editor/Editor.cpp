@@ -126,10 +126,6 @@ void Editor::MakeMainMenu()
 	auto renderersMenu = std::make_unique<ImRendererMenu>();
 	m_menus.emplace_back(std::move(renderersMenu));
 
-	auto debugMenu = std::make_unique<ImMenu>("Debug");
-	debugMenu->AddEntry("Open ImGui Demo", [&]() { m_showImguiDemo = !m_showImguiDemo; });
-	m_menus.emplace_back(std::move(debugMenu));
-
 	auto windowsMenu = std::make_unique<ImMenu>("Windows");
 	for (auto& winEntry : m_windowsComponent.m_entries) {
 		windowsMenu->AddEntry(
@@ -218,13 +214,6 @@ void Editor::UpdateEditor()
 	ImguiImpl::NewFrame();
 	Dockspace();
 	m_windowsComponent.Draw();
-
-	if (m_showImguiDemo) {
-		ImGui::ShowDemoWindow(&m_showImguiDemo);
-	}
-
-	if (Engine::GetInput().IsJustPressed(Key::A)) {
-	}
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	// Attempt to predict the viewport size for the first run, might be a bit off.
@@ -412,7 +401,7 @@ void Editor::Outliner()
 			assert(payload->DataSize == sizeof(size_t));
 			size_t uid = *reinterpret_cast<size_t*>(payload->Data);
 
-			auto* podEntry = AssetManager::GetEntry(BasePodHandle{ uid });
+			auto* podEntry = AssetImporterManager::GetEntry(BasePodHandle{ uid });
 
 			auto cmd = [&, uid, podEntry]() {
 				auto newNode = NodeFactory::NewNode<GeometryNode>();
@@ -466,7 +455,7 @@ void Editor::LoadScene(const fs::path& scenefile)
 
 void Editor::ReloadScene()
 {
-	auto path = AssetManager::GetPodUri(Engine::GetWorld()->GetLoadedFromHandle());
+	auto path = AssetImporterManager::GetPodUri(Engine::GetWorld()->GetLoadedFromHandle());
 	m_sceneToLoad = uri::ToSystemPath(path);
 }
 
@@ -565,7 +554,7 @@ void Editor::Run_AssetView()
 			using PodType = std::remove_pointer_t<decltype(tptr)>;
 			PodHandle<PodType> p;
 			p.podId = assetEntry->uid;
-			AssetManager::Reload(p);
+			AssetImporterManager::Reload(p);
 		};
 
 		podtools::VisitPodType(assetEntry->type, l);
@@ -596,7 +585,7 @@ void Editor::Run_AssetView()
 
 
 	std::string text;
-	for (auto& assetEntry : Engine::GetAssetManager()->m_pods) {
+	for (auto& assetEntry : Engine::GetAssetImporterManager()->m_pods) {
 		if (!filter.PassFilter(assetEntry->path.c_str()) && !filter.PassFilter(assetEntry->name.c_str())) {
 			continue;
 		}
@@ -617,7 +606,7 @@ void Editor::Run_AssetView()
 		}
 		else {
 			if (ImGui::Button("Unload") || UnloadAll) {
-				AssetManager::Unload(BasePodHandle{ assetEntry->uid });
+				AssetImporterManager::Unload(BasePodHandle{ assetEntry->uid });
 			}
 		}
 

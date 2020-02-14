@@ -32,5 +32,9 @@ void AboutWindow::ImguiDraw()
 	ImGui::Text("");
 }
 
+void ImGuiDemoWindow::OnDraw(const char* title, bool* open)
+{
+	ImGui::ShowDemoWindow(open);
+}
 
 } // namespace ed

@@ -1,5 +1,6 @@
 #pragma once
 #include "reflection/TypeId.h"
+#include <concepts>
 
 namespace uri {
 using Uri = std::string;
@@ -47,3 +48,6 @@ struct BasePodHandle {
 
 	[[nodiscard]] bool operator==(const BasePodHandle& other) const { return other.podId == this->podId && podId != 0; }
 };
+
+template<typename T>
+concept CAssetPod = std::derived_from<T, AssetPod>;

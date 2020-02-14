@@ -9,7 +9,8 @@ private:                                                                        
                                                                                                                        \
 	using Z_ThisType = Class;                                                                                          \
 	friend class ReflClass;                                                                                            \
-	friend class AssetManager;                                                                                         \
+	friend class AssetImporterManager;                                                                                 \
+	friend class AssetHandlerManager;                                                                                  \
                                                                                                                        \
 public:                                                                                                                \
 	[[nodiscard]] static const ReflClass& StaticClass()                                                                \

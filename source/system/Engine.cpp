@@ -32,8 +32,10 @@ void Engine::InitEngine(AppBase* app)
 	m_isEditorEnabled = app->m_enableEditor;
 
 	m_input = new Input();
-	m_assetManager = new AssetManager();
-	m_assetManager->Init(m_app->m_assetPath);
+	m_assetImporterManager = new AssetImporterManager();
+	m_assetFrontEndManager = new AssetFrontEndManager();
+	m_assetImporterManager->Init(m_app->m_assetPath);
+
 
 	m_lastRecordTime = ch::system_clock::now();
 
@@ -51,7 +53,7 @@ void Engine::CreateWorldFromFile(const std::string& filename)
 	}
 	m_world = new World(m_app->MakeNodeFactory());
 
-	auto json = AssetManager::GetOrCreateFromParentUri<JsonDocPod>(filename, "/");
+	auto json = AssetImporterManager::GetOrCreateFromParentUri<JsonDocPod>(filename, "/");
 	m_world->LoadAndPrepareWorld(json);
 }
 
@@ -182,6 +184,7 @@ void Engine::DeinitEngine()
 	delete m_world;
 	glfwDestroyWindow(m_window);
 	glfwTerminate();
-	delete m_assetManager;
+	delete m_assetImporterManager;
+	delete m_assetFrontEndManager;
 	delete m_input;
 }

@@ -56,7 +56,7 @@ void AssetWindow::DrawFileLibrary()
 					}
 				}
 
-				auto h = AssetManager::GetOrCreate<ModelPod>(strPath);
+				auto h = AssetImporterManager::GetOrCreate<ModelPod>(strPath);
 
 				std::string payloadTag = "POD_UID_" + std::to_string(h.Lock()->type.hash());
 				ImGui::SetDragDropPayload(payloadTag.c_str(), &h.podId, sizeof(size_t));

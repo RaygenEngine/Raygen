@@ -230,3 +230,22 @@ constexpr bool is_vector_of_same_v = is_vector_of_same<Vector, ContaineeReq>();
                                                                                                                        \
 	template<typename T>                                                                                               \
 	constexpr bool HasV##FuncName = Has##FuncName<T>::value;
+
+
+namespace detail {
+template<typename...>
+struct index_of_type;
+
+// found it
+template<typename T, typename... R>
+struct index_of_type<T, T, R...> : std::integral_constant<size_t, 0> {
+};
+
+// still looking
+template<typename T, typename F, typename... R>
+struct index_of_type<T, F, R...> : std::integral_constant<size_t, 1 + index_of_type<T, R...>::value> {
+};
+} // namespace detail
+
+template<typename Search, typename... Variadics>
+constexpr size_t index_of_type_v = detail::index_of_type<Search, Variadics...>::value;
