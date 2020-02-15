@@ -49,6 +49,24 @@ namespace detail {
 		}
 		return false;
 	}
+
+
+	template<typename Visitor, typename... PodTs>
+	void PodVisitHash_Impl(mti::Hash hash, Visitor& v)
+	{
+		[[maybe_unused]] bool cc = (VisitIfHash<PodTs>(hash, v) || ...);
+	}
+
+
+	template<typename T, typename Visitor>
+	bool VisitIfHash(mti::Hash hash, Visitor& v)
+	{
+		if (mti::GetHash<T>() == hash) {
+			v.template operator()<T*>(DummyType<T>());
+			return true;
+		}
+		return false;
+	}
 } // namespace detail
 
 
@@ -65,6 +83,13 @@ template<typename Visitor>
 void VisitPodType(TypeId type, Visitor& v)
 {
 	detail::PodVisitType_Impl<Visitor, ENGINE_POD_TYPES>(type, v);
+}
+
+// Visits operator() of Visitor v with the proper type providing a dummytype nullptr
+template<typename Visitor>
+void VisitPodHash(mti::Hash hash, Visitor& v)
+{
+	detail::PodVisitHash_Impl<Visitor, ENGINE_POD_TYPES>(hash, v);
 }
 
 
