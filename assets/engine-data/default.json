@@ -19,71 +19,8 @@
             }
         },
         "+type": "Geometry",
-        "model": "/gltf-samples/2.0/Sponza/glTF/sponza.gltf",
-        "~children": [
-            {
-                "+name": "flight_helmet",
-                "+trs": {
-                    "pos": {
-                        "x": -8.326693534851074,
-                        "y": 4.668534278869629,
-                        "z": 2.686573028564453
-                    },
-                    "rot": {
-                        "x": -1.6816248393780597e-09,
-                        "y": -2.7406954927755578e-08,
-                        "z": 4.7299124616984045e-09
-                    },
-                    "scale": {
-                        "x": 0.9999998211860657,
-                        "y": 1.0,
-                        "z": 1.0000001192092896
-                    }
-                },
-                "+type": "Geometry",
-                "model": "/gltf-samples/2.0/FlightHelmet/glTF/FlightHelmet.gltf",
-                "~children": []
-            },
-            {
-                "+name": "test_dir",
-                "+trs": {
-                    "pos": {
-                        "x": -0.28299999237060547,
-                        "y": 14.624977111816406,
-                        "z": -0.6209999918937683
-                    },
-                    "rot": {
-                        "x": 93.61827087402344,
-                        "y": 88.6441879272461,
-                        "z": -179.97662353515625
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                "+type": "DirectionalLight",
-                "bottom": -15.0,
-                "color": {
-                    "x": 0.9365853667259216,
-                    "y": 0.8577359914779663,
-                    "z": 0.6716002821922302
-                },
-                "far": 15.5,
-                "hasShadow": true,
-                "intensity": 13.359999656677246,
-                "left": -10.0,
-                "maxShadowBias": 0.004999999888241291,
-                "near": 1.0,
-                "right": 10.0,
-                "samples": 21,
-                "shadowMapHeight": 2048,
-                "shadowMapWidth": 2048,
-                "top": 15.0,
-                "~children": []
-            }
-        ]
+        "model": "gen-data/gltf-samples/2.0/FlightHelmet/glTF/RubberWoodMat___ModelPod.bin",
+        "~children": []
     },
     {
         "+name": "unnamed_FreeformUser",
@@ -94,9 +31,9 @@
                 "z": -3.083888292312622
             },
             "rot": {
-                "x": 28.03939437866211,
+                "x": 28.039392471313477,
                 "y": -0.12191768735647202,
-                "z": -0.002039786661043763
+                "z": -0.0020397899206727743
             },
             "scale": {
                 "x": 1.0000336170196533,
@@ -130,7 +67,7 @@
                 "+type": "WindowCamera",
                 "far": 1000.0,
                 "focalLength": 1.0,
-                "hFov": 1.8239539861679077,
+                "hFov": 2.1909356117248535,
                 "hFovOffset": 0.0,
                 "near": 0.20000000298023224,
                 "vFov": 1.2566370964050293,
@@ -164,7 +101,7 @@
             "y": 0.14117544889450073,
             "z": 0.2599118947982788
         },
-        "skybox": "/engine-data/skybox/stormy-days.cubemap.json",
+        "skybox": "gen-data/engine-data/skybox/stormy-days_cubemap___TexturePod.bin",
         "~children": []
     },
     {
@@ -176,9 +113,9 @@
                 "z": 3.5398335456848145
             },
             "rot": {
-                "x": -9.912323951721191,
-                "y": 76.06028747558594,
-                "z": -0.004515161272138357
+                "x": -9.912321090698242,
+                "y": 76.060302734375,
+                "z": -0.004515170119702816
             },
             "scale": {
                 "x": 1.0,

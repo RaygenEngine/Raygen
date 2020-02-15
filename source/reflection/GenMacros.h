@@ -11,6 +11,7 @@ private:                                                                        
 	friend class ReflClass;                                                                                            \
 	friend class AssetImporterManager;                                                                                 \
 	friend class AssetHandlerManager;                                                                                  \
+	friend void DeserializePodFromBinary(PodEntry*);                                                                   \
                                                                                                                        \
 public:                                                                                                                \
 	[[nodiscard]] static const ReflClass& StaticClass()                                                                \

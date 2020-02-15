@@ -47,7 +47,7 @@ void load(Archive& ar, PodHandle<T>& v)
 {
 	std::string path;
 	ar(path);
-	v = AssetImporterManager::ResolveOrImport<T>(path);
+	v = AssetHandlerManager::GetAsyncHandle<T>(path);
 }
 
 template<typename Archive>
@@ -80,26 +80,10 @@ void PostReflectionSerialize(Archive& ar, ImagePod* pod)
 	LOG_REPORT("Ser/Deser {} img data", pod->data.size());
 }
 
-
-struct PodMeta {
-	int32 myData;
-
-	template<typename Arc>
-	void serialize(Arc& ar)
-	{
-		ar(myData);
-	}
-};
-
-
 template<typename Archive>
 void load(Archive& ar, AssetPod& podRef)
 {
 	AssetPod* pod = &podRef;
-
-	PodMeta m;
-	ar(m);
-	LOG_REPORT("Pod Is: {}", m.myData);
 
 	CerealArchiveVisitor v(ar);
 	refltools::CallVisitorOnEveryProperty(pod, v);
@@ -111,35 +95,73 @@ void save(Archive& ar, const AssetPod& podRef)
 {
 	AssetPod* pod = &const_cast<AssetPod&>(podRef);
 
-	PodMeta m;
-
-	m.myData = std::rand();
-
-	ar(m);
-
 	CerealArchiveVisitor v(ar);
 	refltools::CallVisitorOnEveryProperty(pod, v);
 	podtools::VisitPod(pod, [&](auto f) { PostReflectionSerialize(ar, f); });
 }
 
-void SerializePod(AssetPod* pod, const fs::path& file)
+//
+// POD META DATA
+//
+template<typename Archive>
+void save(Archive& ar, const PodMetaData& metadata)
 {
+	ar(metadata.podTypeHash, metadata.originalImportLocation, metadata.preferedDiskType, metadata.exportOnSave,
+		metadata.reimportOnLoad);
+}
+
+template<typename Archive>
+void load(Archive& ar, PodMetaData& metadata)
+{
+	ar(metadata.podTypeHash, metadata.originalImportLocation, metadata.preferedDiskType, metadata.exportOnSave,
+		metadata.reimportOnLoad);
+}
+
+
+void SerializePodToBinary(PodMetaData& metadata, AssetPod* pod, const fs::path& file)
+{
+	CLOG_ABORT(file.extension() == "bin", "Incorrect extension");
+	fs::create_directories(file.parent_path());
 	std::ofstream os(file, std::ios::binary);
 	if (!os) {
 		LOG_ERROR("Failed to open file for pod writing: {}", file);
 		return;
 	}
 	cereal::BinaryOutputArchive archive(os);
+
+	metadata.preferedDiskType = PodDiskType::Binary;
+	archive(metadata);
 	archive(*pod);
 }
 
-void DeserializePod(AssetPod* pod, const fs::path& file)
+void DeserializePodFromBinary(PodEntry* entry)
 {
+	fs::path file = entry->path;
+	CLOG_ABORT(file.extension() == "bin", "Incorrect extension");
+
+	auto& meta = entry->metadata;
+
 	std::ifstream is(file, std::ios::binary);
 	if (!is) {
 		LOG_ERROR("Failed to open file for pod reading: {}", file);
 		return;
 	}
+
 	cereal::BinaryInputArchive archive(is);
-	archive(*pod);
+	archive(meta);
+
+
+	CLOG_ERROR(meta.preferedDiskType != PodDiskType::Binary, "Found a binary pod with prefered type as json: {}", file);
+
+
+	// determine pod type and allocate it
+	podtools::VisitPodHash(meta.podTypeHash, [&](auto type) {
+		using PodType = std::remove_pointer_t<decltype(type)>;
+		static_assert(!std::is_pointer_v<PodType>);
+		entry->ptr.reset(new PodType());
+		LOG_REPORT("Importing: {} from {}", mti::GetName<PodType>(), entry->path);
+	});
+
+	LOG_INFO("Loading Pod: {}", entry->path);
+	archive(*entry->ptr.get());
 }

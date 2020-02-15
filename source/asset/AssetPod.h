@@ -52,3 +52,35 @@ struct BasePodHandle {
 
 template<typename T>
 concept CAssetPod = std::derived_from<T, AssetPod>;
+
+
+enum class PodDiskType
+{
+	Binary,
+	Json
+};
+
+// This metadata is saved on disk as a header for the disk asset
+struct PodMetaData {
+	// This hash is the result from mti::GetHash<> and has the same limitations
+	mti::Hash podTypeHash{};
+
+	// The original file that this asset got imported from. Allows us to "reimport" an asset.
+	// This string a hybrid of the kaleido uri convention and can contain "meta" json data in it.
+	// It is required if we want reimport for example a single material from a .gltf asset
+	// This field can be empty
+	std::string originalImportLocation;
+
+	// Determines how should this asset wants be saved on disk. (binary/json)
+	PodDiskType preferedDiskType{ PodDiskType::Binary };
+
+	// This will overwrite the file under originalImportLocation with the result of the asset exporter (if an exporter
+	// is available for this asset type)
+	// This functionality allows us to "save" shader editing back to the original source file.
+	bool exportOnSave{ false };
+
+	// Reimport on load will reimport the original import file when the asset loads.
+	// This can be usefull for debugging, external asset editing (eg: reimporting textures while editing) or even as a
+	// general switch for updating asset versions or fixing corrupt assets.
+	bool reimportOnLoad{ false };
+};

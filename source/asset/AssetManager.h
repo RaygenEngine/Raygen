@@ -38,37 +38,6 @@ struct TexturePod;
 struct ShaderPod;
 struct StringPod;
 
-enum class PodDiskType
-{
-	Binary,
-	Json
-};
-
-// This metadata is saved on disk as a header for the disk asset
-struct PodMetaData {
-	// This hash is the result from mti::GetHash<> and has the same limitations
-	mti::Hash podTypeHash;
-
-	// The original file that this asset got imported from. Allows us to "reimport" an asset.
-	// This string a hybrid of the kaleido uri convention and can contain "meta" json data in it.
-	// It is required if we want reimport for example a single material from a .gltf asset
-	// This field can be empty
-	std::string originalImportLocation;
-
-	// Determines how should this asset wants be saved on disk. (binary/json)
-	PodDiskType preferedDiskType{ PodDiskType::Binary };
-
-	// This will overwrite the file under originalImportLocation with the result of the asset exporter (if an exporter
-	// is available for this asset type)
-	// This functionality allows us to "save" shader editing back to the original source file.
-	bool exportOnSave{ false };
-
-	// Reimport on load will reimport the original import file when the asset loads.
-	// This can be usefull for debugging, external asset editing (eg: reimporting textures while editing) or even as a
-	// general switch for updating asset versions or fixing corrupt assets.
-	bool reimportOnLoad{ false };
-};
-
 
 struct PodEntry {
 	struct UnitializedPod {
@@ -133,6 +102,7 @@ concept CUidConvertible = requires(T a)
 
 class AssetHandlerManager {
 
+	ConsoleFunction<> m_SaveAll{ "SaveAll" };
 
 public:
 	friend class AssetImporterManager;
@@ -144,14 +114,26 @@ public:
 		return inst;
 	}
 
-	AssetHandlerManager() {}
+	AssetHandlerManager()
+	{
+		m_SaveAll.function = [&]() {
+			for (auto& entry : m_pods) {
+				SaveToDisk(entry.get());
+			}
+		};
+	}
 
 	std::vector<std::unique_ptr<PodEntry>> m_pods;
 	std::unordered_map<uri::Uri, size_t> m_pathCache;
 
 
-	uri::Uri SuggestFilenameImpl(std::string_view directory, const uri::Uri& desiredFilename)
+	uri::Uri SuggestFilenameImpl(std::string_view directory, const uri::Uri& desired)
 	{
+		uri::Uri desiredFilename = desired;
+
+
+		std::replace(desiredFilename.begin(), desiredFilename.begin() + desiredFilename.rfind('.') - 1, '.', '_');
+
 		auto desiredFullPath = (fs::path(directory) / uri::StripExt(desiredFilename)).string();
 
 		// WIP: implement with hashmaps and/or internal directory format
@@ -169,8 +151,27 @@ public:
 
 
 	void SaveToDiskInternal(PodEntry* entry);
+	void LoadAllPodsInDirectory(const fs::path& path);
+	void LoadFromDiskTypelesskInternal(PodEntry* entry);
+
+	template<CONC(CAssetPod) T>
+	PodHandle<T> GetAsyncHandleInternal(const uri::Uri& str)
+	{
+		auto it = m_pathCache.find(str);
+		if (it != m_pathCache.end()) {
+			return PodHandle<T>();
+		}
+
+		return PodHandle<T>(it->second);
+	}
 
 public:
+	template<CONC(CAssetPod) T>
+	static PodHandle<T> GetAsyncHandle(const uri::Uri& str)
+	{
+		return Get().GetAsyncHandleInternal<T>(str);
+	}
+
 	static uri::Uri GetPodImportPath(BasePodHandle handle)
 	{
 		return Get().m_pods[handle.podId]->metadata.originalImportLocation;
@@ -220,7 +221,15 @@ public:
 	static void SaveToDisk(T asset)
 	{
 		size_t uid = ToAssetUid(asset);
-		Get().SaveToDiskInternal(Get().m_pods[uid]);
+		Get().SaveToDiskInternal(Get().m_pods[uid].get());
+	}
+
+
+	template<CONC(CUidConvertible) T>
+	static void LoadFromDiskTypeless(T asset)
+	{
+		size_t uid = ToAssetUid(asset);
+		Get().LoadFromDiskTypelesskInternal(Get().m_pods[uid].get());
 	}
 
 
@@ -380,7 +389,7 @@ private:
 
 		auto ext = entry->metadata.preferedDiskType == PodDiskType::Binary ? "bin" : "json";
 
-		auto name = fmt::format("{} = {}.{}", fs::path(entry->name).filename().string(), entry->type.name(), ext);
+		auto name = fmt::format("{}___{}.{}", fs::path(entry->name).filename().string(), entry->type.name(), ext);
 		entry->name = AssetHandlerManager::SuggestFilename(uri::GetDir(entry->path), name);
 
 		entry->path = fs::path(uri::GetDiskPath(entry->path)).replace_filename(entry->name).string();
