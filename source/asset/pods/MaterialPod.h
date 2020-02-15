@@ -46,7 +46,7 @@ struct MaterialPod : AssetPod {
 		REFLECT_VAR(emissiveTexture);
 	}
 
-	static void Load(MaterialPod* pod, const uri::Uri& path);
+	static void Load(PodEntry* entry, MaterialPod* pod, const uri::Uri& path);
 
 	// The value for each property(baseColor, metallic, roughness) can be defined using factors or textures.
 

@@ -14,7 +14,7 @@ inline void Load(MaterialPod* pod, const uri::Uri& path)
 	using namespace nlohmann;
 
 	const auto pPath = uri::GetDiskPath(path);
-	auto pParent = AssetImporterManager::GetOrCreate<GltfFilePod>(pPath + "{}");
+	auto pParent = AssetImporterManager::ResolveOrImport<GltfFilePod>(pPath + "{}");
 
 	auto data = uri::GetJson(path);
 
@@ -56,7 +56,7 @@ inline void Load(MaterialPod* pod, const uri::Uri& path)
 			data["texture"] = textureInfo.index;
 			data["isLinear"] = isLinear;
 			auto textPath = uri::MakeChildJson(path, data);
-			sampler = AssetImporterManager::GetOrCreate<TexturePod>(textPath);
+			sampler = AssetImporterManager::ResolveOrImport<TexturePod>(textPath);
 
 			textCoordIndex = textureInfo.texCoord;
 		}

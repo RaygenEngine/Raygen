@@ -5,7 +5,7 @@
 
 struct ShaderPod : public AssetPod {
 	REFLECTED_POD(ShaderPod) { REFLECT_VAR(files); }
-	static void Load(ShaderPod* pod, const uri::Uri& path);
+	static void Load(PodEntry* entry, ShaderPod* pod, const uri::Uri& path);
 
 	std::vector<PodHandle<StringPod>> files;
 };

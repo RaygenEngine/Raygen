@@ -6,9 +6,18 @@
 
 #include "asset/Serialization.h"
 
+
 void AssetImporterManager::Init(const fs::path& assetPath)
 {
-	m_pods.push_back(std::make_unique<PodEntry>());
+	AssetHandlerManager::Get().m_pods.push_back(std::make_unique<PodEntry>());
+
+	podtools::ForEachPodType([](auto dummy) {
+		using PodType = std::remove_pointer_t<decltype(dummy)>;
+		auto entry = AssetHandlerManager::CreateNew<PodType>();
+		entry->path = fmt::format("~{}", GetDefaultPodUid<PodType>());
+		entry->ptr.reset(new PodType());
+	});
+
 
 	fs::current_path(fs::current_path() / assetPath);
 
@@ -17,30 +26,8 @@ void AssetImporterManager::Init(const fs::path& assetPath)
 	}
 
 	LOG_INFO("Current working dir: {}", fs::current_path());
-
-	serializeUid.function = [&](int32 uid) {
-		fs::path p = uri::ToSystemPath(m_pods[uid]->path);
-		p.replace_extension("pod");
-		SerializePod(m_pods[uid]->ptr.get(), p);
-	};
-
-	deserilizeUid.function = [&](int32 uid) {
-		fs::path p = uri::ToSystemPath(m_pods[uid]->path);
-		p.replace_extension("pod");
-		DeserializePod(m_pods[uid]->ptr.get(), p);
-	};
 }
 
-void AssetImporterManager::PreloadGltf(const uri::Uri& gltfModelPath)
-{
-	auto pParent = AssetImporterManager::GetOrCreate<GltfFilePod>(gltfModelPath);
-
-	const tinygltf::Model& file = pParent.Lock()->data;
-
-	for (auto& gltfImage : file.images) {
-		GetOrCreateFromParent<ImagePod>(gltfImage.uri, pParent);
-	}
-}
 
 void PodDeleter::operator()(AssetPod* p)
 {
@@ -63,48 +50,11 @@ void Code()
 	podtools::ForEachPodType(l);
 }
 
-template<>
-FORCE_LINK void AssetImporterManager::PostRegisterEntry<ImagePod>(PodEntry* entry)
+void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 {
-	entry->futureLoaded = std::async(std::launch::async, [&, entry]() -> AssetPod* {
-		ImagePod* ptr = new ImagePod();
-		TryLoad(ptr, entry->path);
-		return ptr;
-	});
-}
+	CLOG_ABORT(entry, "Attempting to save null entry");
+	CLOG_ABORT(entry->ptr, "Attempting to save unloaded asset");
 
-template<>
-FORCE_LINK void AssetImporterManager::PostRegisterEntry<TexturePod>(PodEntry* entry)
-{
-	TexturePod* pod = new TexturePod();
-	TryLoad(pod, entry->path);
-	entry->ptr.reset(pod);
-}
 
-template<>
-FORCE_LINK void AssetImporterManager::PostRegisterEntry<ShaderPod>(PodEntry* entry)
-{
-	ShaderPod* pod = new ShaderPod();
-	TryLoad(pod, entry->path);
-	entry->ptr.reset(pod);
-}
-
-template<>
-FORCE_LINK void AssetImporterManager::PostRegisterEntry<StringPod>(PodEntry* entry)
-{
-	entry->futureLoaded = std::async(std::launch::async, [&, entry]() -> AssetPod* {
-		StringPod* ptr = new StringPod();
-		TryLoad(ptr, entry->path);
-		return ptr;
-	});
-}
-
-// Dummy to instatiate exports above as to export them to the .lib
-void AssetImporterManager::Z_SpecializationExporter()
-{
-	PodEntry* a{};
-	PostRegisterEntry<ShaderPod>(a);
-	PostRegisterEntry<StringPod>(a);
-	PostRegisterEntry<TexturePod>(a);
-	PostRegisterEntry<ImagePod>(a);
+	entry->requiresSave = false;
 }

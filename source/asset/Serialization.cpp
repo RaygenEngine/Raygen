@@ -39,7 +39,7 @@ void serialize(Archive& ar, glm::mat4x4& v)
 template<typename Archive, typename T>
 void save(Archive& ar, const PodHandle<T>& v)
 {
-	ar(AssetImporterManager::GetPodUri(v));
+	ar(AssetHandlerManager::GetPodUri(v));
 }
 
 template<typename Archive, typename T>
@@ -47,7 +47,7 @@ void load(Archive& ar, PodHandle<T>& v)
 {
 	std::string path;
 	ar(path);
-	v = AssetImporterManager::GetOrCreate<T>(path);
+	v = AssetImporterManager::ResolveOrImport<T>(path);
 }
 
 template<typename Archive>

@@ -20,7 +20,7 @@ AssetsWindow::AssetsWindow(std::string_view name)
 
 void AssetsWindow::ReloadEntries()
 {
-	auto& pods = Engine::GetAssetImporterManager()->m_pods;
+	auto& pods = AssetHandlerManager::Z_GetPods();
 
 	for (auto& pod : pods) {
 		auto parts = str::Split(uri::GetDir(pod->path), "/");
@@ -158,9 +158,6 @@ void AssetsWindow::DrawAsset(PodEntry* assetEntry)
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.4f);
 	}
 	else {
-		if (ImGui::Button("Unload")) {
-			AssetImporterManager::Unload(BasePodHandle{ assetEntry->uid });
-		}
 	}
 
 	ImGui::SameLine();

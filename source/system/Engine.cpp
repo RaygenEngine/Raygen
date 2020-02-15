@@ -53,7 +53,7 @@ void Engine::CreateWorldFromFile(const std::string& filename)
 	}
 	m_world = new World(m_app->MakeNodeFactory());
 
-	auto json = AssetImporterManager::GetOrCreateFromParentUri<JsonDocPod>(filename, "/");
+	auto json = AssetImporterManager::ResolveOrImportFromParentUri<JsonDocPod>(filename, "/");
 	m_world->LoadAndPrepareWorld(json);
 }
 

@@ -401,7 +401,7 @@ void Editor::Outliner()
 			assert(payload->DataSize == sizeof(size_t));
 			size_t uid = *reinterpret_cast<size_t*>(payload->Data);
 
-			auto* podEntry = AssetImporterManager::GetEntry(BasePodHandle{ uid });
+			auto* podEntry = AssetHandlerManager::GetEntry(BasePodHandle{ uid });
 
 			auto cmd = [&, uid, podEntry]() {
 				auto newNode = NodeFactory::NewNode<GeometryNode>();
@@ -455,7 +455,7 @@ void Editor::LoadScene(const fs::path& scenefile)
 
 void Editor::ReloadScene()
 {
-	auto path = AssetImporterManager::GetPodUri(Engine::GetWorld()->GetLoadedFromHandle());
+	auto path = AssetHandlerManager::GetPodUri(Engine::GetWorld()->GetLoadedFromHandle());
 	m_sceneToLoad = uri::ToSystemPath(path);
 }
 
@@ -554,7 +554,8 @@ void Editor::Run_AssetView()
 			using PodType = std::remove_pointer_t<decltype(tptr)>;
 			PodHandle<PodType> p;
 			p.podId = assetEntry->uid;
-			AssetImporterManager::Reload(p);
+			// WIP:
+			// AssetImporterManager::Reload(p);
 		};
 
 		podtools::VisitPodType(assetEntry->type, l);
@@ -585,7 +586,7 @@ void Editor::Run_AssetView()
 
 
 	std::string text;
-	for (auto& assetEntry : Engine::GetAssetImporterManager()->m_pods) {
+	for (auto& assetEntry : AssetHandlerManager::Z_GetPods()) {
 		if (!filter.PassFilter(assetEntry->path.c_str()) && !filter.PassFilter(assetEntry->name.c_str())) {
 			continue;
 		}
@@ -606,7 +607,8 @@ void Editor::Run_AssetView()
 		}
 		else {
 			if (ImGui::Button("Unload") || UnloadAll) {
-				AssetImporterManager::Unload(BasePodHandle{ assetEntry->uid });
+				// WIP:
+				// AssetImporterManager::Unload(BasePodHandle{ assetEntry->uid });
 			}
 		}
 

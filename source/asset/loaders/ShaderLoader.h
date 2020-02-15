@@ -29,7 +29,7 @@ inline void Load(ShaderPod* pod, const uri::Uri& path)
 
 	for (auto newFilePath : j) {
 		pod->files.emplace_back(
-			AssetImporterManager::GetOrCreateFromParentUri<StringPod>(newFilePath.get<std::string>(), path));
+			AssetImporterManager::ResolveOrImportFromParentUri<StringPod>(newFilePath.get<std::string>(), path));
 	}
 }
 

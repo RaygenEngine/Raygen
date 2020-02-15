@@ -77,29 +77,14 @@ struct PodEntry {
 	std::unique_ptr<AssetPod, PodDeleter> ptr{};
 	TypeId type{ refl::GetId<UnitializedPod>() };
 	size_t uid{ 0 };
-	uri::Uri path{ "#" };
+	uri::Uri path{};
+	// WIP: remove name, just get it from path with new assets
 	std::string name{};
-
-	std::future<AssetPod*> futureLoaded;
 
 	// WIP: optional, only our custom disk assets
 	PodMetaData metadata;
 
-	// static PodEntry Create(TypeId type, size_t uid, const uri::Uri& path)
-	//{
-	//	PodEntry entry;
-	//	entry.type = type;
-	//	entry.uid = uid;
-	//	entry.path = path;
-	//	return entry;
-	//}
-
-	// template<typename T>
-	// static PodEntry Create(size_t uid, const uri::Uri& path)
-	//{
-	//	static_assert(std::is_base_of_v<AssetPod, T> && !std::is_same_v<AssetPod, T>, "PodEntry requires a pod type");
-	//	return Create(refl::GetId<T>(), uid, path);
-	//}
+	bool requiresSave{ false };
 
 	template<typename T>
 	T* UnsafeGet()
@@ -108,10 +93,48 @@ struct PodEntry {
 			std::is_base_of_v<AssetPod, T> && !std::is_same_v<AssetPod, T>, "Unsafe get called without a pod type");
 		return static_cast<T*>(ptr.get());
 	}
+
+	void MarkSave() { requiresSave = true; }
+};
+
+template<typename T>
+size_t ToAssetUid(T t)
+{
+	return t;
+};
+
+template<>
+inline size_t ToAssetUid<size_t>(size_t t)
+{
+	return t;
+}
+
+template<>
+inline size_t ToAssetUid<BasePodHandle>(BasePodHandle handle)
+{
+	return handle.podId;
+}
+
+template<>
+inline size_t ToAssetUid<PodEntry*>(PodEntry* entry)
+{
+	return entry->uid;
+}
+
+template<typename T>
+concept CUidConvertible = requires(T a)
+{
+	{
+		ToAssetUid(a)
+	}
+	->std::convertible_to<size_t>;
 };
 
 
 class AssetHandlerManager {
+
+
+public:
 	friend class AssetImporterManager;
 	friend class AssetFrontEndManager;
 
@@ -125,6 +148,27 @@ class AssetHandlerManager {
 
 	std::vector<std::unique_ptr<PodEntry>> m_pods;
 	std::unordered_map<uri::Uri, size_t> m_pathCache;
+
+
+	uri::Uri SuggestFilenameImpl(std::string_view directory, const uri::Uri& desiredFilename)
+	{
+		auto desiredFullPath = (fs::path(directory) / uri::StripExt(desiredFilename)).string();
+
+		// WIP: implement with hashmaps and/or internal directory format
+		// THIS IS ULTRA SLOW N^2
+		for (auto& pod : m_pods) {
+			if (uri::StripExt(pod->path) == desiredFullPath) {
+				std::string resultFilename = fmt::format(
+					"{}_{}{}", uri::StripExt(desiredFilename), std::rand(), uri::GetDiskExtension(desiredFilename));
+				return fs::path(desiredFilename).replace_filename(resultFilename).string();
+			}
+		}
+
+		return desiredFilename;
+	}
+
+
+	void SaveToDiskInternal(PodEntry* entry);
 
 public:
 	static uri::Uri GetPodImportPath(BasePodHandle handle)
@@ -147,7 +191,7 @@ public:
 		auto entry = CreateNewTypeless();
 		entry->type = podType;
 		entry->metadata.podTypeHash = podType.hash();
-		return nullptr;
+		return entry;
 	}
 
 	// Initialized fields:
@@ -162,6 +206,41 @@ public:
 
 		return entry;
 	}
+
+	static void RemoveEntry(size_t uid) { Get().m_pods[uid].reset(); }
+
+	static void RemoveEntry(BasePodHandle handle) { RemoveEntry(handle.podId); }
+
+	static uri::Uri GetPodUri(BasePodHandle handle) { return Get().m_pods[handle.podId]->path; }
+
+	static PodEntry* GetEntry(BasePodHandle handle) { return Get().m_pods[handle.podId].get(); }
+
+
+	template<CONC(CUidConvertible) T>
+	static void SaveToDisk(T asset)
+	{
+		size_t uid = ToAssetUid(asset);
+		Get().SaveToDiskInternal(Get().m_pods[uid]);
+	}
+
+
+	// Returns an alternative "valid" path for this asset. ie one that will not collide with a current asset.
+	// If the passed in path is corret it will be returned instead
+	static uri::Uri SuggestFilename(std::string_view directory, const uri::Uri& desiredFilename)
+	{
+		return Get().SuggestFilenameImpl(directory, desiredFilename);
+	}
+
+	template<CONC(CAssetPod) PodType>
+	static PodType* Z_Handle_AccessPod(size_t podId)
+	{
+		return static_cast<PodType*>(Get().m_pods[podId]->ptr.get());
+	}
+
+
+	// AVOID THIS. This is for internal use.
+	// TODO: private and friend this
+	[[nodiscard]] static std::vector<std::unique_ptr<PodEntry>>& Z_GetPods() { return Get().m_pods; }
 };
 
 
@@ -171,13 +250,13 @@ class AssetsWindow;
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
 class AssetImporterManager {
 public:
-private:
-	std::unordered_map<uri::Uri, std::unique_ptr<AssetPod>> m_pathCache;
-	std::unordered_map<size_t, std::unique_ptr<AssetPod>> m_pathCache;
+	void Init(const fs::path& assetPath);
 
+private:
 	// Stores this session's known imported paths. Any ResolveOrImport that hits this just returns the handle
 	std::unordered_map<uri::Uri, BasePodHandle> m_importedPathsCache;
 
+	fs::path m_currentImportingPath{ "gen-data/" };
 
 public:
 	//
@@ -191,284 +270,125 @@ public:
 	// code)
 	// NOTE: We only cache since the execution of the program
 	template<CONC(CAssetPod) PodType>
-	static PodHandle<PodType> ResolveOrImport(const fs::path& inFullPath)
+	static PodHandle<PodType> ResolveOrImport(const fs::path& inFullPath, fs::path& importingPath = fs::path())
 	{
 		auto inst = Engine::GetAssetImporterManager();
-		auto [it, didInsert] = inst->m_importedPathsCache.try_emplace(inFullPath, PodHandle<PodType>{});
+		if (importingPath.empty()) {
+			importingPath = inst->m_currentImportingPath;
+		}
+
+
+		auto [it, didInsert] = inst->m_importedPathsCache.try_emplace(inFullPath.string(), PodHandle<PodType>{});
 
 		if (!didInsert) {
 			// TODO: type check this handle
-			return PodHandle<PodType>{ it->second };
+			return PodHandle<PodType>(it->second);
 		}
 
-		PodHandle<PodType> handle = inst->ImportFromDisk<PodType>(inFullPath);
+		PodHandle<PodType> handle = inst->ImportFromDisk<PodType>(inFullPath, importingPath);
 		it->second = handle;
 		return handle;
 	}
 
 	template<CONC(CAssetPod) PodType>
-	static PodHandle<PodType> ResolveOrImportFromParentUri(const fs::path& path, const uri::Uri& parentUri)
+	static PodHandle<PodType> ResolveOrImportFromParentUri(
+		const fs::path& path, const uri::Uri& parentUri, fs::path& importingPath = fs::path())
 	{
-		auto parentDir = uri::GetDir(uri::GetDiskPathStrView(parentUri)); // Get parent directory. (Also removoes json)
-		uri::Uri resolvedUri
-			= (fs::path(parentDir) / path).string(); // add path (path may include json data at the end)
+		if (parentUri.size() <= 1) {
+			return AssetImporterManager::ResolveOrImport<PodType>(path, importingPath);
+		}
 
-		return AssetImporterManager::ResolveOrImport<PodType>(resolvedUri);
+		auto dskPath = uri::GetDiskPath(parentUri);
+		auto parentDir = uri::GetDir(dskPath);             // Get parent directory. (Also removes json)
+		fs::path resolvedUri = fs::path(parentDir) / path; // add path (path may include json data at the end)
+
+		return AssetImporterManager::ResolveOrImport<PodType>(resolvedUri, importingPath);
 	}
 
 	template<CONC(CAssetPod) PodType>
-	static PodHandle<PodType> ResolveOrImportFromParent(const fs::path& path, BasePodHandle parentHandle)
+	static PodHandle<PodType> ResolveOrImportFromParent(
+		const fs::path& path, BasePodHandle parentHandle, fs::path& importingPath = fs::path())
 	{
 		CLOG_ABORT(path.empty(), "Path was empty. Parent was: {}", AssetHandlerManager::GetPodImportPath(parentHandle));
-		return ResolveOrImportFromParentUri<PodType>(path, AssetHandlerManager::GetPodImportPath(parentHandle));
+		return ResolveOrImportFromParentUri<PodType>(
+			path, AssetHandlerManager::GetPodImportPath(parentHandle), importingPath);
 	}
-
 
 private:
 	template<CONC(CAssetPod) PodType>
-	PodHandle<PodType> ImportFromDisk(const fs::path& path)
+	PodHandle<PodType> ImportFromDisk(const fs::path& path, const fs::path& importingPath)
 	{
 		PodEntry* entry = AssetHandlerManager::CreateNew<PodType>();
-		entry->metadata.originalImportLocation = path;
-	}
+		entry->metadata.originalImportLocation = path.string();
 
+		if (!TryImport<PodType>(entry, importingPath)) {
+			AssetHandlerManager::RemoveEntry(entry->uid);
+			return PodHandle<PodType>(); // Will return the proper "default" pod of this type
+		}
+		return PodHandle<PodType>{ entry->uid };
+	}
 
 	template<CONC(CAssetPod) T>
-	void TryImport(PodEntry* entry)
+	bool TryImport(PodEntry* entry, const fs::path& importingPath)
 	{
 		if (entry->metadata.originalImportLocation.empty()) {
-			LOG_ERROR("Failed to import. No asset location"); // DOC: msg
-			return;
+			LOG_ERROR("Failed to import. No asset location");
+			return false;
 		}
 
-		if (entry->type.hash() != mti::GetHash<T>()) {
-			LOG_ERROR("Failed to import. Type missmatch"); // DOC: msg
-			return;
+		if (entry->type != mti::GetTypeId<T>() || entry->metadata.podTypeHash != mti::GetHash<T>()) {
+			LOG_ERROR("Failed to import. Type missmatch");
+			return false;
 		}
 
-		try {
-			T::Load(entry); // LEFT HERE.
-		} catch (std::exception& e) {
-			LOG_ABORT("Failed to load: {} {} Exception:\n{}", refl::GetName<T>(), path, e.what());
-		}
-	}
+		//
+		// Calling the actual import function
+		//
 
-
-	// template<typename T>
-	// PodEntry* CreateAndRegister(const std::string& path)
-	//{
-	//	assert(m_pathCache.find(path) == m_pathCache.end() && "Path already exists");
-	//	size_t uid = m_pods.size();
-
-	//	auto& ptr = m_pods.emplace_back(std::make_unique<PodEntry>(PodEntry::Create<T>(uid, path)));
-
-	//	PodEntry* entry = ptr.get();
-	//	m_pathCache[path] = uid;
-	//	entry->name = uri::GetFilename(path);
-	//	PostRegisterEntry<T>(entry);
-	//	return entry;
-	//}
-
-
-	// template<CONC(CAssetPod) PodT>
-	// static PodT* GetFromPath(const uri::Uri& path)
-	//{
-	//	return PodCast<PodT>(m_pathCache.at(path).get());
-	//}
-
-
-	friend class Editor;
-	friend class AssetWindow;
-	friend class ed::AssetsWindow;
-
-	ConsoleFunction<int32> serializeUid{ "save_pod" };
-	ConsoleFunction<int32> deserilizeUid{ "load_pod" };
-
-
-	PodEntry* GetEntryByPath(const uri::Uri& path)
-	{
-		auto it = m_pathCache.find(path);
-		if (it == m_pathCache.end()) {
-			return nullptr;
-		}
-		return m_pods.at(it->second).get();
-	}
-
-	template<typename T>
-	void TryLoad(T* into, const std::string& path)
-	{
-
-		try {
-			T::Load(into, path);
-		} catch (std::exception& e) {
-			LOG_ABORT("Failed to load: {} {} Exception:\n{}", refl::GetName<T>(), path, e.what());
-		}
-	}
-
-	template<typename T>
-	void LoadEntry(PodEntry* entry)
-	{
-		// If we have future data, use them directly.
-		if (entry->futureLoaded.valid()) {
-			entry->ptr.reset(entry->futureLoaded.get());
-			return;
-		}
-
-		T* ptr = new T();
-		TryLoad(ptr, entry->path);
-
+		auto ptr = new T();
 		entry->ptr.reset(ptr);
-	}
-
-	// Specialized in a few cases where instant loading or multithreaded loading is faster
-	template<typename T>
-	void PostRegisterEntry(PodEntry* entry)
-	{
-	}
-
-
-public:
-	// Returns a new handle from a given path.
-	// * if the asset of this path is already registered in the asset list it will return a handle to the existing
-	// one
-	//   requesting a different type of an existing path will assert.
-	// * if the asset of this path is not registered, it will become registered and associated with this type.
-	//   it will also begin loading on another thread.
-
-	template<typename PodType>
-	static PodHandle<PodType> GetOrCreate(const uri::Uri& inPath)
-	{
-		// If you hit this assert, it means the pod you are trying to create is not registered in engine pods.
-		// To properly add a pod to the engine see AssetPod.h comments
-		// TODO: Use concepts for pods
-		static_assert(refl::IsValidPod<PodType>,
-			"Attempting to create an invalid pod type. Did you forget to register a new pod type?");
-
-
-		auto inst = Engine::GetAssetImporterManager();
-		CLOG_ABORT(inPath.front() != '/', "Found non absolute uri {}", inPath);
-
-		auto entry = inst->GetEntryByPath(inPath);
-
-		if (entry) {
-			CLOG_ABORT(entry->type != refl::GetId<PodType>(),
-				"Incorrect pod type on GetOrCreate:\nPath: '{}'\nPrev Type: '{}' New type: '{}'", inPath,
-				entry->type.name(), refl::GetName<PodType>());
-		}
-		else {
-			entry = inst->CreateAndRegister<PodType>(inPath);
+		try {
+			T::Load(entry, ptr, entry->metadata.originalImportLocation);
+		} catch (std::exception& e) {
+			LOG_ERROR("Failed to import: {} {} Exception:\n{}\nAll dependent import assets may be incorrect.",
+				refl::GetName<T>(), entry->metadata.originalImportLocation, e.what());
+			return false;
 		}
 
-		PodHandle<PodType> p;
-		p.podId = entry->uid;
-		return p;
-	}
 
-	template<typename PodType>
-	static PodHandle<PodType> GetOrCreateFromParentUri(const fs::path& path, const uri::Uri parentUri)
-	{
-		uri::Uri resolvedUri;
+		//
+		// Post import guarantees (all fields must be initialized)
+		//
+		// WIP: some stuff should be moved in import functions because it depends on specific loaders + asset types
 
-		if (path.c_str()[0] == '/') {
-			resolvedUri = path.string();
-			return AssetImporterManager::GetOrCreate<PodType>(resolvedUri);
+		// WIP: currently only works for paths relative to assets/
+		// needs to be able to import from anywhere, into the root of importingPathing
+		auto dskImportPath = fs::path(uri::ToSystemPath(uri::GetDiskPath(entry->metadata.originalImportLocation)));
+		auto interm = (importingPath / dskImportPath);
+		entry->path = interm.relative_path().string();
+
+		bool generatedName{ false };
+		if (entry->name.empty()) {
+			if (uri::HasJson(entry->path)) {
+				entry->name = fmt::format("Imported_{}_{}", mti::GetName<T>(), std::rand());
+			}
+			else {
+				entry->name = uri::GetFilenameNoExt(entry->path);
+			}
 		}
 
-		auto diskPart = uri::GetDiskPathStrView(parentUri); // remove parents possible json
 
-		const auto cutIndex = diskPart.rfind('/') + 1;      // Preserve the last '/'
-		diskPart.remove_suffix(diskPart.size() - cutIndex); // resolve parents directory
+		auto ext = entry->metadata.preferedDiskType == PodDiskType::Binary ? "bin" : "json";
 
-		resolvedUri = (fs::path(diskPart) / path).string(); // add path (path may include json data at the end)
+		auto name = fmt::format("{} = {}.{}", fs::path(entry->name).filename().string(), entry->type.name(), ext);
+		entry->name = AssetHandlerManager::SuggestFilename(uri::GetDir(entry->path), name);
 
-		return AssetImporterManager::GetOrCreate<PodType>(resolvedUri);
+		entry->path = fs::path(uri::GetDiskPath(entry->path)).replace_filename(entry->name).string();
+
+		LOG_INFO("Imported {:<12}: {}", entry->type.name(), entry->path);
+		entry->MarkSave();
+		return true;
 	}
-
-	template<typename PodType>
-	static PodHandle<PodType> GetOrCreateFromParent(const fs::path& path, BasePodHandle parentHandle)
-	{
-		// Parent: /abc/model.gltf{mat..}
-		// Given: bar/foo.jpg{abc}
-		// Resulted: /abc/bar/foo.jpg{abc}
-		CLOG_ABORT(path.empty(), "Path was empty. Parent was: {}", AssetImporterManager::GetPodUri(parentHandle));
-		return GetOrCreateFromParentUri<PodType>(path, AssetImporterManager::GetPodUri(parentHandle));
-	}
-
-	static void SetPodName(const uri::Uri& path, const std::string& newPodName)
-	{
-		auto& podEntries = Engine::GetAssetImporterManager()->m_pods;
-		auto it
-			= std::find_if(begin(podEntries), end(podEntries), [&](auto& podEntry) { return podEntry->path == path; });
-
-		if (it != podEntries.end()) {
-			(*it)->name = newPodName;
-		}
-	}
-
-	static PodEntry* GetEntry(BasePodHandle handle)
-	{
-		return Engine::GetAssetImporterManager()->m_pods[handle.podId].get();
-	}
-
-
-	// Refreshes the underlying data of the pod.
-	template<typename PodType>
-	static void Reload(PodHandle<PodType> handle)
-	{
-		auto inst = Engine::GetAssetImporterManager();
-		inst->LoadEntry<PodType>(inst->m_pods[handle.podId].get());
-	}
-
-	// Frees the underlying cpu pod memory
-	static void Unload(BasePodHandle handle) { Engine::GetAssetImporterManager()->m_pods[handle.podId]->ptr.reset(); }
-
-	static uri::Uri GetPodUri(BasePodHandle handle)
-	{
-		return Engine::GetAssetImporterManager()->m_pods[handle.podId]->path;
-	}
-
-	// For Internal Handle use only.
-	template<typename PodType>
-	PodType* _Handle_AccessPod(size_t podId)
-	{
-		PodEntry* entry = m_pods[podId].get();
-
-		assert(entry->type
-			   == refl::GetId<PodType>()); // Technically this should never hit because we check during creation.
-
-		if (!entry->ptr) {
-			LoadEntry<PodType>(entry);
-		}
-
-		return entry->UnsafeGet<PodType>();
-	}
-
-	void Init(const fs::path& assetPath);
-
-
-	static void PreloadGltf(const std::string& modelPath);
-
-private:
-	// Specific pod specializations for loading:
-	// Images and string pods are loaded async
-
-	// Textures and shaders are instantly loaded.
-
-	// Async load images.
-	template<>
-	void PostRegisterEntry<ImagePod>(PodEntry* entry);
-
-	template<>
-	void PostRegisterEntry<TexturePod>(PodEntry* entry);
-
-	template<>
-	void PostRegisterEntry<ShaderPod>(PodEntry* entry);
-
-	template<>
-	void PostRegisterEntry<StringPod>(PodEntry* entry);
-
-	// Dummy Exporter for pod specialization
-	void Z_SpecializationExporter();
 };
 
 

@@ -30,7 +30,7 @@ namespace detail {
 	}
 
 
-	// WIP: Reflected concept should be declared somewhere concretely
+	// TODO: Reflected concept should be declared somewhere concretely
 	template<typename T>
 	concept Reflected = requires(T t)
 	{
