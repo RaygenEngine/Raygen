@@ -488,12 +488,12 @@ namespace {
 	}
 } // namespace
 
-inline void Load(ModelPod* pod, const uri::Uri& path)
+inline void Load(PodEntry* entry, ModelPod* pod, const uri::Uri& path)
 {
 	pod->bbox = { glm::vec3(std::numeric_limits<float>::max()), glm::vec3(-std::numeric_limits<float>::max()) };
 
 	const auto pPath = uri::GetDiskPath(path);
-	auto pParent = AssetImporterManager::GetOrCreate<GltfFilePod>(pPath + "{}");
+	auto pParent = AssetImporterManager::ResolveOrImport<GltfFilePod>(pPath + "{}");
 
 	const tinygltf::Model& model = pParent.Lock()->data;
 
@@ -510,13 +510,13 @@ inline void Load(ModelPod* pod, const uri::Uri& path)
 		nlohmann::json data;
 		data["material"] = matIndex++;
 		auto matPath = uri::MakeChildJson(path, data);
-		pod->materials.push_back(AssetImporterManager::GetOrCreate<MaterialPod>(matPath));
+		pod->materials.push_back(AssetImporterManager::ResolveOrImport<MaterialPod>(matPath));
 
 		if (gltfMaterial.name.empty()) {
-			AssetImporterManager::SetPodName(matPath, "Mat." + std::to_string(matIndex));
+			entry->name = "Mat." + std::to_string(matIndex);
 		}
 		else {
-			AssetImporterManager::SetPodName(matPath, gltfMaterial.name);
+			entry->name = gltfMaterial.name;
 		}
 	}
 	bool requiresDefaultMaterial = false;

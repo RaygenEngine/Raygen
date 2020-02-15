@@ -6,10 +6,10 @@
 #include "asset/util/GltfAux.h"
 
 namespace GltfTextureLoader {
-static void Load(TexturePod* pod, const uri::Uri& path)
+static void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 {
 	const auto pPath = uri::GetDiskPath(path);
-	auto pParent = AssetImporterManager::GetOrCreate<GltfFilePod>(pPath + "{}");
+	auto pParent = AssetImporterManager::ResolveOrImport<GltfFilePod>(pPath + "{}");
 
 	nlohmann::json j = uri::GetJson(path);
 	int32 ext = j["texture"].get<int32>();
@@ -31,7 +31,7 @@ static void Load(TexturePod* pod, const uri::Uri& path)
 
 	if (imageIndex != -1) {
 		auto& gltfImage = model.images.at(imageIndex);
-		imgAsset = AssetImporterManager::GetOrCreateFromParentUri<ImagePod>(gltfImage.uri, path);
+		imgAsset = AssetImporterManager::ResolveOrImportFromParentUri<ImagePod>(gltfImage.uri, path);
 	}
 
 	pod->images.push_back(imgAsset);
@@ -42,10 +42,10 @@ static void Load(TexturePod* pod, const uri::Uri& path)
 		auto& gltfSampler = model.samplers.at(samplerIndex);
 
 		if (gltfSampler.name.empty()) {
-			AssetImporterManager::SetPodName(path, "Sampler." + std::to_string(samplerIndex));
+			entry->name = "Texture_" + std::to_string(samplerIndex);
 		}
 		else {
-			AssetImporterManager::SetPodName(path, gltfSampler.name);
+			entry->name = gltfSampler.name;
 		}
 
 		pod->minFilter = gltfaux::GetTextureFiltering(gltfSampler.minFilter);

@@ -275,7 +275,7 @@ struct JsonToPropVisitor_WithRelativePath {
 		: parentVisitor(inJson, inFlagsToSkip)
 		, gltfPreload(inGltfPreload)
 	{
-		parentUri = AssetImporterManager::GetPodUri(inParent);
+		parentUri = AssetHandlerManager::GetPodUri(inParent);
 	}
 
 	JsonToPropVisitor_WithRelativePath(const json& inJson, const uri::Uri inParentUri, bool inGltfPreload = false,
@@ -297,17 +297,7 @@ struct JsonToPropVisitor_WithRelativePath {
 	template<typename T>
 	PodHandle<T> LoadHandle(const std::string& str)
 	{
-		return AssetImporterManager::GetOrCreateFromParentUri<T>(str, parentUri);
-	}
-
-	template<>
-	PodHandle<ModelPod> LoadHandle(const std::string& str)
-	{
-		auto handle = AssetImporterManager::GetOrCreateFromParentUri<ModelPod>(str, parentUri);
-		if (gltfPreload && str.find(".gltf") != std::string::npos) {
-			AssetImporterManager::PreloadGltf(AssetImporterManager::GetPodUri(handle) + "{}");
-		}
-		return handle;
+		return AssetImporterManager::ResolveOrImportFromParentUri<T>(str, parentUri);
 	}
 
 	template<typename T>
@@ -435,7 +425,7 @@ struct ToStringVisitor {
 	template<typename T>
 	void operator()(PodHandle<T>& ref, const Property& p)
 	{
-		os << p.GetName() << ": " << AssetImporterManager::GetPodUri(ref) << '\n';
+		os << p.GetName() << ": " << AssetHandlerManager::GetPodUri(ref) << '\n';
 	}
 
 	template<typename T>
@@ -443,7 +433,7 @@ struct ToStringVisitor {
 	{
 		os << p.GetName() << ":\n";
 		for (auto& r : ref) {
-			os << "\t" << AssetImporterManager::GetPodUri(r) << ",\n";
+			os << "\t" << AssetHandlerManager::GetPodUri(r) << ",\n";
 		}
 	}
 

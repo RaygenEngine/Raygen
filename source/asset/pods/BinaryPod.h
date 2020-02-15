@@ -6,7 +6,7 @@
 struct BinaryPod : public AssetPod {
 	REFLECTED_POD(BinaryPod) {}
 
-	static void Load(BinaryPod* pod, const uri::Uri& path);
+	static void Load(PodEntry* entry, BinaryPod* pod, const uri::Uri& path);
 
 	std::vector<char> data;
 };

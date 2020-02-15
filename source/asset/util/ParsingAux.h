@@ -84,14 +84,14 @@ template<typename T>
 inline void from_json(const nlohmann::json& j, PodHandle<T>& handle)
 {
 	if (j.is_string()) {
-		handle = AssetImporterManager::GetOrCreate<T>(j.get<std::string>());
+		handle = AssetImporterManager::ResolveOrImport<T>(j.get<std::string>());
 	}
 }
 
 template<typename T>
 inline void to_json(nlohmann::json& j, const PodHandle<T>& handle)
 {
-	j = AssetImporterManager::GetPodUri(handle);
+	j = AssetHandlerManager::GetPodUri(handle);
 }
 
 inline void from_json(const nlohmann::json& j, MetaEnumInst& enumInst)

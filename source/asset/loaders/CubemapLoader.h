@@ -42,7 +42,7 @@ inline bool Load(TexturePod* pod, const uri::Uri& path)
 				pod->isLinear = false;
 			}
 
-			pod->images[value] = AssetImporterManager::GetOrCreateFromParentUri<ImagePod>(imagePath, path);
+			pod->images[value] = AssetImporterManager::ResolveOrImportFromParentUri<ImagePod>(imagePath, path);
 			hasFoundAnyFace = true;
 		}
 		else if (hasFoundAnyFace) {

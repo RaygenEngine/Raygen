@@ -5,6 +5,7 @@
 namespace uri {
 using Uri = std::string;
 }
+struct PodEntry;
 
 // ADDING PODS:
 //

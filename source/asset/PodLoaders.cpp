@@ -18,12 +18,12 @@
 #include "asset/UriLibrary.h"
 #include "system/Logger.h"
 
-void GltfFilePod::Load(GltfFilePod* pod, const uri::Uri& path)
+void GltfFilePod::Load(PodEntry* entry, GltfFilePod* pod, const uri::Uri& path)
 {
 	GltfFileLoader::Load(pod, path);
 }
 
-void ImagePod::Load(ImagePod* pod, const uri::Uri& path)
+void ImagePod::Load(PodEntry* entry, ImagePod* pod, const uri::Uri& path)
 {
 	if (uri::IsCpu(path)) {
 		CustomLoader::Load(pod, path);
@@ -32,7 +32,7 @@ void ImagePod::Load(ImagePod* pod, const uri::Uri& path)
 	ImageLoader::Load(pod, path);
 }
 
-void MaterialPod::Load(MaterialPod* pod, const uri::Uri& path)
+void MaterialPod::Load(PodEntry* entry, MaterialPod* pod, const uri::Uri& path)
 {
 	if (uri::MatchesExtension(path, ".gltf")) {
 		GltfMaterialLoader::Load(pod, path);
@@ -45,32 +45,32 @@ void MaterialPod::Load(MaterialPod* pod, const uri::Uri& path)
 	CustomLoader::Load(pod, path);
 }
 
-void ModelPod::Load(ModelPod* pod, const uri::Uri& path)
+void ModelPod::Load(PodEntry* entry, ModelPod* pod, const uri::Uri& path)
 {
 	if (uri::MatchesExtension(path, ".gltf")) {
-		return GltfModelLoader::Load(pod, path);
+		return GltfModelLoader::Load(entry, pod, path);
 	}
 }
 
-void ShaderPod::Load(ShaderPod* pod, const uri::Uri& path)
+void ShaderPod::Load(PodEntry* entry, ShaderPod* pod, const uri::Uri& path)
 {
 	return ShaderLoader::Load(pod, path);
 }
 
-void StringPod::Load(StringPod* pod, const uri::Uri& path)
+void StringPod::Load(PodEntry* entry, StringPod* pod, const uri::Uri& path)
 {
 	return TextLoader::Load(pod, path);
 }
 
-void BinaryPod::Load(BinaryPod* pod, const uri::Uri& path)
+void BinaryPod::Load(PodEntry* entry, BinaryPod* pod, const uri::Uri& path)
 {
 	return BinaryLoader::Load(pod, path);
 }
 
-void TexturePod::Load(TexturePod* pod, const uri::Uri& path)
+void TexturePod::Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 {
 	if (uri::MatchesExtension(path, ".gltf")) {
-		GltfTextureLoader::Load(pod, path);
+		GltfTextureLoader::Load(entry, pod, path);
 		return;
 	}
 	if (uri::MatchesExtension(path, ".json")) {
@@ -83,7 +83,7 @@ void TexturePod::Load(TexturePod* pod, const uri::Uri& path)
 	CustomLoader::Load(pod, path);
 }
 
-void JsonDocPod::Load(JsonDocPod* pod, const uri::Uri& path)
+void JsonDocPod::Load(PodEntry* entry, JsonDocPod* pod, const uri::Uri& path)
 {
 	JsonDocLoader::Load(pod, path);
 }
