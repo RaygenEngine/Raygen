@@ -8,5 +8,5 @@ struct BinaryPod : public AssetPod {
 
 	static void Load(PodEntry* entry, BinaryPod* pod, const uri::Uri& path);
 
-	std::vector<char> data;
+	std::vector<byte> data;
 };

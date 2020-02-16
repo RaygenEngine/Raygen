@@ -76,6 +76,7 @@ inline std::string_view GetFilename(const Uri& path)
 	return diskView.substr(loc + 1);
 }
 
+// Also strips json
 inline std::string_view GetFilenameNoExt(const Uri& path)
 {
 	auto diskView = GetDiskPathStrView(path);

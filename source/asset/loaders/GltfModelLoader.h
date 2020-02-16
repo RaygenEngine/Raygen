@@ -510,14 +510,12 @@ inline void Load(PodEntry* entry, ModelPod* pod, const uri::Uri& path)
 		nlohmann::json data;
 		data["material"] = matIndex++;
 		auto matPath = uri::MakeChildJson(path, data);
-		pod->materials.push_back(AssetImporterManager::ResolveOrImport<MaterialPod>(matPath));
 
-		if (gltfMaterial.name.empty()) {
-			entry->name = "Mat." + std::to_string(matIndex);
-		}
-		else {
-			entry->name = gltfMaterial.name;
-		}
+		std::string name = gltfMaterial.name.empty() ? "Mat." + std::to_string(matIndex) : gltfMaterial.name;
+
+		auto matHandle = AssetImporterManager::ResolveOrImport<MaterialPod>(matPath, name);
+
+		pod->materials.push_back(matHandle);
 	}
 	bool requiresDefaultMaterial = false;
 

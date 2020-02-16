@@ -90,6 +90,7 @@ void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 
 void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 {
+	TIMER_STATIC_SCOPE("LOAD ALL PODS");
 	size_t beginUid = m_pods.size();
 	{
 		TIMER_STATIC_SCOPE("Searching for pods.");
@@ -119,8 +120,32 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 	{
 		TIMER_STATIC_SCOPE("Loading pods.");
 
-		for (size_t i = beginUid; i < m_pods.size(); ++i) {
-			LoadFromDiskTypelesskInternal(m_pods[i].get());
+		size_t podsToLoad = m_pods.size() - beginUid;
+		size_t jobCount = std::max(std::thread::hardware_concurrency(), static_cast<uint>(2));
+		size_t podsPerJob
+			= static_cast<size_t>(std::ceil(static_cast<float>(podsToLoad) / static_cast<float>(jobCount)));
+
+		LOG_REPORT("Loading in {} jobs: {} pods per job.", jobCount, podsPerJob);
+
+		auto loadRange = [&](size_t start, size_t stop) {
+			stop = std::min(stop, m_pods.size());
+			for (size_t i = start; i < stop; ++i) {
+				LoadFromDiskTypelesskInternal(m_pods[i].get());
+			}
+			return true;
+		};
+
+
+		std::vector<std::future<bool>> results;
+
+		for (size_t i = 0; i < podsToLoad; i += podsPerJob) {
+			size_t from = i + beginUid;
+			size_t to = i + beginUid + podsPerJob;
+			results.push_back(std::async(std::launch::async, loadRange, from, to));
+		}
+
+		for (auto& r : results) {
+			r.wait();
 		}
 	}
 }

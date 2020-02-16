@@ -99,7 +99,6 @@ concept CUidConvertible = requires(T a)
 	->std::convertible_to<size_t>;
 };
 
-
 class AssetHandlerManager {
 
 	ConsoleFunction<> m_SaveAll{ "SaveAll" };
@@ -131,8 +130,11 @@ public:
 	{
 		uri::Uri desiredFilename = desired;
 
+		auto dotLoc = desiredFilename.rfind('.');
 
-		std::replace(desiredFilename.begin(), desiredFilename.begin() + desiredFilename.rfind('.') - 1, '.', '_');
+		if (dotLoc != std::string::npos) {
+			std::replace(desiredFilename.begin(), desiredFilename.begin() + dotLoc - 1, '.', '_');
+		}
 
 		auto desiredFullPath = (fs::path(directory) / uri::StripExt(desiredFilename)).string();
 
@@ -157,8 +159,11 @@ public:
 	template<CONC(CAssetPod) T>
 	PodHandle<T> GetAsyncHandleInternal(const uri::Uri& str)
 	{
+		if (str.starts_with('/')) {
+			return AssetImporterManager::ResolveOrImport<T>(str);
+		}
 		auto it = m_pathCache.find(str);
-		if (it != m_pathCache.end()) {
+		if (it == m_pathCache.end()) {
 			return PodHandle<T>();
 		}
 
@@ -279,7 +284,8 @@ public:
 	// code)
 	// NOTE: We only cache since the execution of the program
 	template<CONC(CAssetPod) PodType>
-	static PodHandle<PodType> ResolveOrImport(const fs::path& inFullPath, fs::path& importingPath = fs::path())
+	static PodHandle<PodType> ResolveOrImport(
+		const fs::path& inFullPath, const uri::Uri& suggestedName = "", fs::path& importingPath = fs::path())
 	{
 		auto inst = Engine::GetAssetImporterManager();
 		if (importingPath.empty()) {
@@ -294,42 +300,43 @@ public:
 			return PodHandle<PodType>(it->second);
 		}
 
-		PodHandle<PodType> handle = inst->ImportFromDisk<PodType>(inFullPath, importingPath);
+		PodHandle<PodType> handle = inst->ImportFromDisk<PodType>(inFullPath, suggestedName, importingPath);
 		it->second = handle;
 		return handle;
 	}
 
 	template<CONC(CAssetPod) PodType>
-	static PodHandle<PodType> ResolveOrImportFromParentUri(
-		const fs::path& path, const uri::Uri& parentUri, fs::path& importingPath = fs::path())
+	static PodHandle<PodType> ResolveOrImportFromParentUri(const fs::path& path, const uri::Uri& parentUri,
+		const uri::Uri& suggestedName = "", fs::path& importingPath = fs::path())
 	{
 		if (parentUri.size() <= 1) {
-			return AssetImporterManager::ResolveOrImport<PodType>(path, importingPath);
+			return AssetImporterManager::ResolveOrImport<PodType>(path, suggestedName, importingPath);
 		}
 
 		auto dskPath = uri::GetDiskPath(parentUri);
 		auto parentDir = uri::GetDir(dskPath);             // Get parent directory. (Also removes json)
 		fs::path resolvedUri = fs::path(parentDir) / path; // add path (path may include json data at the end)
 
-		return AssetImporterManager::ResolveOrImport<PodType>(resolvedUri, importingPath);
+		return AssetImporterManager::ResolveOrImport<PodType>(resolvedUri, suggestedName, importingPath);
 	}
 
 	template<CONC(CAssetPod) PodType>
-	static PodHandle<PodType> ResolveOrImportFromParent(
-		const fs::path& path, BasePodHandle parentHandle, fs::path& importingPath = fs::path())
+	static PodHandle<PodType> ResolveOrImportFromParent(const fs::path& path, BasePodHandle parentHandle,
+		const uri::Uri& suggestedName = "", fs::path& importingPath = fs::path())
 	{
 		CLOG_ABORT(path.empty(), "Path was empty. Parent was: {}", AssetHandlerManager::GetPodImportPath(parentHandle));
 		return ResolveOrImportFromParentUri<PodType>(
-			path, AssetHandlerManager::GetPodImportPath(parentHandle), importingPath);
+			path, AssetHandlerManager::GetPodImportPath(parentHandle), suggestedName, importingPath);
 	}
 
 private:
 	template<CONC(CAssetPod) PodType>
-	PodHandle<PodType> ImportFromDisk(const fs::path& path, const fs::path& importingPath)
+	PodHandle<PodType> ImportFromDisk(
+		const fs::path& path, const uri::Uri& suggestedName, const fs::path& importingPath)
 	{
 		PodEntry* entry = AssetHandlerManager::CreateNew<PodType>();
 		entry->metadata.originalImportLocation = path.string();
-
+		entry->name = suggestedName;
 		if (!TryImport<PodType>(entry, importingPath)) {
 			AssetHandlerManager::RemoveEntry(entry->uid);
 			return PodHandle<PodType>(); // Will return the proper "default" pod of this type
@@ -374,25 +381,26 @@ private:
 		// needs to be able to import from anywhere, into the root of importingPathing
 		auto dskImportPath = fs::path(uri::ToSystemPath(uri::GetDiskPath(entry->metadata.originalImportLocation)));
 		auto interm = (importingPath / dskImportPath);
-		entry->path = interm.relative_path().string();
+		auto fullRelativePath = interm.relative_path().string();
 
 		bool generatedName{ false };
 		if (entry->name.empty()) {
-			if (uri::HasJson(entry->path)) {
-				entry->name = fmt::format("Imported_{}_{}", mti::GetName<T>(), std::rand());
+			if (uri::HasJson(entry->metadata.originalImportLocation)) {
+				entry->name = fmt::format("{}_{}", uri::GetFilenameNoExt(entry->metadata.originalImportLocation),
+					mti::GetName<T>(), std::rand());
 			}
 			else {
-				entry->name = uri::GetFilenameNoExt(entry->path);
+				entry->name = uri::GetFilenameNoExt(fullRelativePath);
 			}
 		}
 
 
 		auto ext = entry->metadata.preferedDiskType == PodDiskType::Binary ? "bin" : "json";
 
-		auto name = fmt::format("{}___{}.{}", fs::path(entry->name).filename().string(), entry->type.name(), ext);
-		entry->name = AssetHandlerManager::SuggestFilename(uri::GetDir(entry->path), name);
+		auto name = fmt::format("{}.{}", fs::path(entry->name).filename().string(), ext);
+		entry->name = AssetHandlerManager::SuggestFilename(uri::GetDir(fullRelativePath), name);
 
-		entry->path = fs::path(uri::GetDiskPath(entry->path)).replace_filename(entry->name).string();
+		entry->path = fs::path(uri::GetDiskPath(fullRelativePath)).replace_filename(entry->name).string();
 
 		LOG_INFO("Imported {:<12}: {}", entry->type.name(), entry->path);
 		entry->MarkSave();

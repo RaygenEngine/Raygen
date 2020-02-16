@@ -19,7 +19,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/gltf-samples/2.0/FlightHelmet/glTF/RubberWoodMat___ModelPod.bin",
+        "model": "gen-data/gltf-samples/2.0/FlightHelmet/glTF/FlightHelmet.bin",
         "~children": []
     },
     {
@@ -33,7 +33,7 @@
             "rot": {
                 "x": 28.039392471313477,
                 "y": -0.12191768735647202,
-                "z": -0.0020397899206727743
+                "z": -0.002039794810116291
             },
             "scale": {
                 "x": 1.0000336170196533,
@@ -67,7 +67,7 @@
                 "+type": "WindowCamera",
                 "far": 1000.0,
                 "focalLength": 1.0,
-                "hFov": 2.1909356117248535,
+                "hFov": 1.5966464281082153,
                 "hFovOffset": 0.0,
                 "near": 0.20000000298023224,
                 "vFov": 1.2566370964050293,
@@ -75,34 +75,6 @@
                 "~children": []
             }
         ]
-    },
-    {
-        "+name": "Scene Ambient",
-        "+trs": {
-            "pos": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "rot": {
-                "x": 0.0,
-                "y": -0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            }
-        },
-        "+type": "Ambient",
-        "ambientTerm": {
-            "x": 0.1076287105679512,
-            "y": 0.14117544889450073,
-            "z": 0.2599118947982788
-        },
-        "skybox": "gen-data/engine-data/skybox/stormy-days_cubemap___TexturePod.bin",
-        "~children": []
     },
     {
         "+name": "helmet light",
@@ -113,9 +85,9 @@
                 "z": 3.5398335456848145
             },
             "rot": {
-                "x": -9.912321090698242,
+                "x": -9.912320137023926,
                 "y": 76.060302734375,
-                "z": -0.004515170119702816
+                "z": -0.004513401538133621
             },
             "scale": {
                 "x": 1.0,
@@ -214,6 +186,29 @@
         "samples": 6,
         "shadowMapHeight": 2048,
         "shadowMapWidth": 2048,
+        "~children": []
+    },
+    {
+        "+name": "Sponza.bin",
+        "+trs": {
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "+type": "Geometry",
+        "model": "gen-data/gltf-samples/2.0/Sponza/glTF/Sponza.bin",
         "~children": []
     }
 ]

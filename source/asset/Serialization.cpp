@@ -5,6 +5,7 @@
 #include "reflection/PodTools.h"
 #include "reflection/ReflectionTools.h"
 #include "asset/PodIncludes.h"
+#include "asset/PodSerializers.h"
 #include <cereal/cereal.hpp>
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/vector.hpp>
@@ -17,6 +18,12 @@
 
 
 namespace glm {
+template<typename Archive>
+void serialize(Archive& ar, glm::vec2& v)
+{
+	ar(v.x, v.y);
+}
+
 template<typename Archive>
 void serialize(Archive& ar, glm::vec3& v)
 {
@@ -68,18 +75,6 @@ struct CerealArchiveVisitor {
 	// void operator()(MetaEnumInst& ref, const Property& p) { ar(ref); }
 };
 
-template<typename Archive, typename PodType>
-void PostReflectionSerialize(Archive& ar, PodType* pod)
-{
-}
-
-template<typename Archive>
-void PostReflectionSerialize(Archive& ar, ImagePod* pod)
-{
-	ar(pod->data);
-	LOG_REPORT("Ser/Deser {} img data", pod->data.size());
-}
-
 template<typename Archive>
 void load(Archive& ar, AssetPod& podRef)
 {
@@ -87,7 +82,7 @@ void load(Archive& ar, AssetPod& podRef)
 
 	CerealArchiveVisitor v(ar);
 	refltools::CallVisitorOnEveryProperty(pod, v);
-	podtools::VisitPod(pod, [&](auto f) { PostReflectionSerialize(ar, f); });
+	podtools::VisitPod(pod, [&](auto f) { AdditionalSerializeLoad(ar, f); });
 }
 
 template<typename Archive>
@@ -97,7 +92,7 @@ void save(Archive& ar, const AssetPod& podRef)
 
 	CerealArchiveVisitor v(ar);
 	refltools::CallVisitorOnEveryProperty(pod, v);
-	podtools::VisitPod(pod, [&](auto f) { PostReflectionSerialize(ar, f); });
+	podtools::VisitPod(pod, [&](auto f) { AdditionalSerializeSave(ar, f); });
 }
 
 //
@@ -159,9 +154,7 @@ void DeserializePodFromBinary(PodEntry* entry)
 		using PodType = std::remove_pointer_t<decltype(type)>;
 		static_assert(!std::is_pointer_v<PodType>);
 		entry->ptr.reset(new PodType());
-		LOG_REPORT("Importing: {} from {}", mti::GetName<PodType>(), entry->path);
 	});
 
-	LOG_INFO("Loading Pod: {}", entry->path);
 	archive(*entry->ptr.get());
 }
