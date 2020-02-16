@@ -15,6 +15,8 @@ struct TexturePod : AssetPod {
 
 		REFLECT_VAR(target);
 
+		REFLECT_VAR(isLinear, PropertyFlags::Generated);
+
 		REFLECT_VAR(images);
 	}
 	static void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path);

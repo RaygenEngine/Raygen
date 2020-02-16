@@ -83,4 +83,8 @@ struct PodMetaData {
 	// This can be usefull for debugging, external asset editing (eg: reimporting textures while editing) or even as a
 	// general switch for updating asset versions or fixing corrupt assets.
 	bool reimportOnLoad{ false };
+
+	// Mark pods as transient ones when they are just used for importing and should not be saved on disk
+	// eg: GltfFilePod
+	bool transientPod{ false };
 };

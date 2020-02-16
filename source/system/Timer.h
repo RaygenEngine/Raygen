@@ -1,7 +1,7 @@
 #pragma once
 
 #include "system/Logger.h"
-
+#include "core/MacroUtils.h"
 #include <chrono>
 namespace ch = std::chrono;
 
@@ -116,9 +116,9 @@ public:
 } // namespace timer
 
 #define TIMER_STATIC_SCOPE(Name)                                                                                       \
-	static timer::MultiTimer scope_timer;                                                                              \
-	auto scope_timer_scope = scope_timer.StartScope(Name);
+	static timer::MultiTimer MACRO_PASTE(z_scope_t, __LINE__);                                                         \
+	auto MACRO_PASTE(z_scope_t_s, __LINE__) = MACRO_PASTE(z_scope_t, __LINE__).StartScope(Name);
 
 #define TIMER_STATIC_SCOPE_MS(Name)                                                                                    \
-	static timer::MultiTimer<std::chrono::milliseconds> scope_timer_ms;                                                \
-	auto scope_timer_scope_ms = scope_timer_ms.StartScope(Name);
+	static timer::MultiTimer<std::chrono::milliseconds> MACRO_PASTE(z_scope_t, __LINE__);                              \
+	auto MACRO_PASTE(z_scope_t_s, __LINE__) = MACRO_PASTE(z_scope_t, __LINE__).StartScope(Name);

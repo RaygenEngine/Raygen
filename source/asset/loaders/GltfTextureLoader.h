@@ -27,11 +27,12 @@ static void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 
 	// TODO: check image settings
 	// this should exist (missing is handled from within material)
-	CLOG_ABORT(imageIndex == -1, "This model is unsafe to use, handle missing image from materialL: {}", path);
+	CLOG_ABORT(imageIndex == -1, "This model is unsafe to use, handle missing image from material: {}", path);
 
 	if (imageIndex != -1) {
 		auto& gltfImage = model.images.at(imageIndex);
 		imgAsset = AssetImporterManager::ResolveOrImportFromParentUri<ImagePod>(gltfImage.uri, path);
+		entry->name = fmt::format("{}_texture", uri::GetFilenameNoExt(gltfImage.uri));
 	}
 
 	pod->images.push_back(imgAsset);
@@ -42,7 +43,7 @@ static void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 		auto& gltfSampler = model.samplers.at(samplerIndex);
 
 		if (gltfSampler.name.empty()) {
-			entry->name = "Texture_" + std::to_string(samplerIndex);
+			entry->name = fmt::format("{}_sampler_{}", uri::GetFilenameNoExt(path), samplerIndex);
 		}
 		else {
 			entry->name = gltfSampler.name;
