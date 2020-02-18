@@ -297,8 +297,7 @@ struct JsonToPropVisitor_WithRelativePath {
 	template<typename T>
 	PodHandle<T> LoadHandle(const std::string& str)
 	{
-		return AssetHandlerManager::GetAsyncHandle<T>(str);
-		// return AssetImporterManager::ResolveOrImportFromParentUri<T>(str, parentUri);
+		return AssetFrontEndManager::TransitionalLoadAsset<T>(str);
 	}
 
 	template<typename T>

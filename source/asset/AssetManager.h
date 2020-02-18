@@ -159,9 +159,6 @@ public:
 	template<CONC(CAssetPod) T>
 	PodHandle<T> GetAsyncHandleInternal(const uri::Uri& str)
 	{
-		if (str.starts_with('/')) {
-			return AssetImporterManager::ResolveOrImport<T>(str);
-		}
 		auto it = m_pathCache.find(str);
 		if (it == m_pathCache.end()) {
 			return PodHandle<T>();
@@ -410,4 +407,15 @@ private:
 
 
 class AssetFrontEndManager {
+
+public:
+	// Used to determine whether to use importer vs async handles until the assets get a proper front-end for importing
+	template<CONC(CAssetPod) PodType>
+	static PodHandle<PodType> TransitionalLoadAsset(const uri::Uri& str)
+	{
+		if (str.starts_with('/')) {
+			return AssetImporterManager::ResolveOrImport<PodType>(str);
+		}
+		return AssetHandlerManager::GetAsyncHandle<PodType>(str);
+	}
 };
