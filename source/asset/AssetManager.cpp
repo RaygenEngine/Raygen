@@ -29,12 +29,7 @@ void AssetImporterManager::Init(const fs::path& assetPath)
 
 	LOG_INFO("Current working dir: {}", fs::current_path());
 
-	int32 i;
-	std::cout << "If you want to load pods type 1:\n";
-	std::cin >> i;
-	if (i == 1) {
-		AssetHandlerManager::Get().LoadAllPodsInDirectory("gen-data/");
-	}
+	AssetHandlerManager::Get().LoadAllPodsInDirectory("gen-data/");
 }
 
 
@@ -136,16 +131,16 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 		};
 
 
-		std::vector<std::future<bool>> results;
+		std::vector<std::thread> results;
 
 		for (size_t i = 0; i < podsToLoad; i += podsPerJob) {
 			size_t from = i + beginUid;
 			size_t to = i + beginUid + podsPerJob;
-			results.push_back(std::async(std::launch::async, loadRange, from, to));
+			results.push_back(std::thread(loadRange, from, to));
 		}
 
 		for (auto& r : results) {
-			r.wait();
+			r.join();
 		}
 	}
 }
