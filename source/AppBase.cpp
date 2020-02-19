@@ -78,12 +78,13 @@ void AppBase::MainLoop()
 		Engine::GetInput().Z_ClearFrameState();
 		Engine::GetWorld()->ClearDirtyFlags();
 
-		// WIP:
+		// TODO: full update on window resize
 		// Let our window handle any events.
 		glfwPollEvents();
 
+		// TODO: Correctly implement toggling editor
 		if (Engine::GetInput().IsJustPressed(Key::Tilde)) {
-			Engine::Get().ToggleEditor();
+			// Engine::Get().ToggleEditor();
 		}
 
 		Engine::GetWorld()->Update();

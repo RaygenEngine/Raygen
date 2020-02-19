@@ -11,7 +11,7 @@
 #include <future>
 
 // ASSET URI:
-// Documentation of Asset URI convention: (WIP: After refactor is finished)
+// Documentation of Asset URI convention: (WIP: ASSETS After refactor is finished)
 //
 // 4 types of assets: (first letter of the URI categorizes the type)
 //
@@ -47,10 +47,10 @@ struct PodEntry {
 	TypeId type{ refl::GetId<UnitializedPod>() };
 	size_t uid{ 0 };
 	uri::Uri path{};
-	// WIP: remove name, just get it from path with new assets
+	// WIP: ASSETS remove name, just get it from path with new assets
 	std::string name{};
 
-	// WIP: optional, only our custom disk assets
+	// WIP: ASSETS optional, only our custom disk assets
 	PodMetaData metadata;
 
 	bool requiresSave{ false };
@@ -138,7 +138,7 @@ public:
 
 		auto desiredFullPath = (fs::path(directory) / uri::StripExt(desiredFilename)).string();
 
-		// WIP: implement with hashmaps and/or internal directory format
+		// WIP: ASSETS implement with hashmaps and/or internal directory format
 		// THIS IS ULTRA SLOW N^2
 		for (auto& pod : m_pods) {
 			if (uri::StripExt(pod->path) == desiredFullPath) {
@@ -182,7 +182,6 @@ public:
 	template<CONC(CAssetPod) PodT>
 	static PodEntry* CreateNew()
 	{
-		// WIP
 		// Add entry here. Return entry to allow edits / w.e else.
 		// Whoever "Creates" the asset should be responsible for filling in the metadat
 		// (feels like a less decoupled instead of having multple CreateNewFromDisk etc)
@@ -372,9 +371,10 @@ private:
 		//
 		// Post import guarantees (all fields must be initialized)
 		//
-		// WIP: some stuff should be moved in import functions because it depends on specific loaders + asset types
+		// WIP: ASSETS: some stuff should be moved in import functions because it depends on specific loaders + asset
+		// types
 
-		// WIP: currently only works for paths relative to assets/
+		// WIP: ASSETS: currently only works for paths relative to assets/
 		// needs to be able to import from anywhere, into the root of importingPathing
 		auto dskImportPath = fs::path(uri::ToSystemPath(uri::GetDiskPath(entry->metadata.originalImportLocation)));
 		auto interm = (importingPath / dskImportPath);

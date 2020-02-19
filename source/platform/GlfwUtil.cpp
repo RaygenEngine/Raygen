@@ -1,11 +1,10 @@
-#include "GlfwUtil.h"
+#include "pch/pch.h"
+#include "editor/Editor.h"
+#include "platform/GlfwUtil.h"
 #include "system/Logger.h"
 #include "system/Input.h"
 #include "system/Engine.h"
 #include "system/EngineEvents.h"
-#include "editor/Editor.h"
-#include <imgui/imgui.h>
-#include <glfw/glfw3.h>
 
 Key ToEngineKey(int32 glfwKey, Key& outSpecialKey);
 Key MouseToEngineKey(int32 glfwMouse);
@@ -74,9 +73,6 @@ void WindowFramebufferSizeCb(GLFWwindow* window, int32 newWidth, int32 newHeight
 void WindowContentScaleCb(GLFWwindow* window, float newXScale, float newYScale)
 {
 }
-#include <windows.h>
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <glfw/glfw3native.h>
 
 void WindowMouseButtonCb(GLFWwindow* window, int32 button, int32 action, int32 modifiers)
 {
