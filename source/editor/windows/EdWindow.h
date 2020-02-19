@@ -39,9 +39,8 @@ public:
 	// behavior)
 	bool Z_Draw();
 
-	// WIP: Not called
+	// TODO: Not called (unused) Implement these to finish the interface
 	virtual void OnOpen() {}
-	// WIP: Not called
 	virtual void OnClose() {}
 
 	// Overwrite this and write your imgui drawing here. Given parameters are defaults to be passed to ImGui::Begin.
@@ -53,7 +52,7 @@ public:
 	virtual void ImguiDraw(){};
 
 
-	// WIP
+	// TODO: Editor shortcuts
 	virtual bool HandleShortcut(KeyShortcut) { return false; };
 
 	// Mark this window is to be closed

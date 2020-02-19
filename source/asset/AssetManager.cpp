@@ -94,7 +94,7 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 				continue;
 			}
 
-			// WIP: Handle json
+			// WIP: ASSETS Handle json
 			if (entry.path().extension() == ".bin") {
 				auto key = fs::relative(entry.path()).string();
 				std::replace(key.begin(), key.end(), '\\', '/');

@@ -31,7 +31,8 @@ Descriptors::Descriptors(Device* device, Swapchain* swapchain, GraphicsPipeline*
 	poolSize.setType(vk::DescriptorType::eUniformBuffer).setDescriptorCount(static_cast<uint32>(setCount));
 
 	vk::DescriptorPoolCreateInfo poolInfo{};
-	poolInfo.setPoolSizeCount(1u).setPPoolSizes(&poolSize).setMaxSets(static_cast<uint32>(setCount) + 2); // WIP:
+	poolInfo.setPoolSizeCount(1u).setPPoolSizes(&poolSize).setMaxSets(
+		static_cast<uint32>(setCount) + 2); // TODO: Properly allocate for imgui instead of flat +2
 
 	m_descriptorPool = device->createDescriptorPoolUnique(poolInfo);
 

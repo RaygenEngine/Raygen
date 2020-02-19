@@ -81,7 +81,9 @@ struct ConsoleFunctionGeneric : public ConsoleEntry {
 	virtual ~ConsoleFunctionGeneric() = default;
 };
 
-// WIP: no test, should be easy to test
+// Templated console function.
+// Declared as: ConsoleFunction<int32, int32> myConsoleFunction{"callme"};
+// Automatically parses console using conv::FromStrView (or operator<<)
 template<typename... Args>
 struct ConsoleFunction : public ConsoleEntry {
 
