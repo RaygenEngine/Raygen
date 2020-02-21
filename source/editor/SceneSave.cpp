@@ -12,6 +12,8 @@
 #include "world/nodes/RootNode.h"
 #include "world/nodes/camera/EditorCameraNode.h"
 
+#include "editor/misc/NativeFileBrowser.h"
+
 #include <imgui.h>
 #include <glm/glm.hpp>
 
@@ -20,27 +22,13 @@
 
 SceneSave::SceneSave()
 {
-	m_saveBrowser = ImGui::FileBrowser(ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_EnterNewFilename
-									   | ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CreateNewDir
-									   | ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CloseOnEsc);
-	m_saveBrowser.SetPwd();
-	m_saveBrowser.SetTitle("Save Scene As");
 }
 
 void SceneSave::OpenBrowser()
 {
-	m_saveBrowser.Open(/*m_lastFile*/);
-}
-
-void SceneSave::Draw()
-{
-	m_saveBrowser.Display();
-	if (m_saveBrowser.HasSelected()) {
-		fs::path file = m_saveBrowser.GetSelected();
-		file.replace_extension(".json");
-		//m_lastFile = file.filename().string();
-		m_saveBrowser.ClearSelected();
-		SaveAs(Engine::GetWorld(), file.string());
+	if (auto file = ed::NativeFileBrowser::SaveFile({ "json" })) {
+		file->replace_extension(".json");
+		SaveAs(Engine::GetWorld(), file->string());
 	}
 }
 

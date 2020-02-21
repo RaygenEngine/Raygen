@@ -65,8 +65,6 @@ Editor::Editor()
 
 	m_onWorldLoaded.Bind([&]() { SpawnEditorCamera(); });
 
-	m_loadFileBrowser.SetTitle("Load Scene");
-
 	MakeMainMenu();
 }
 
@@ -120,7 +118,7 @@ void Editor::MakeMainMenu()
 	m_menus.clear();
 	auto sceneMenu = std::make_unique<ImMenu>("Scene");
 	sceneMenu->AddEntry("Save As", [&]() { m_sceneSave.OpenBrowser(); });
-	sceneMenu->AddEntry("Load", [&]() { m_loadFileBrowser.Open(); });
+	sceneMenu->AddEntry("Load", [&]() { OpenLoadDialog(); });
 	sceneMenu->AddEntry("Revert", [&]() { ReloadScene(); });
 	sceneMenu->AddSeperator();
 	sceneMenu->AddEntry("Exit", []() { glfwSetWindowShouldClose(Engine::GetMainWindow(), 1); });
@@ -267,19 +265,10 @@ void Editor::UpdateEditor()
 
 
 	if (ImGui::Button("Load")) {
-		m_loadFileBrowser.SetTitle("Load World");
-		m_loadFileBrowser.Open();
+		OpenLoadDialog();
 	}
 	ImGui::PopStyleVar();
 
-
-	m_sceneSave.Draw();
-	m_loadFileBrowser.Display();
-
-	if (m_loadFileBrowser.HasSelected()) {
-		m_sceneToLoad = m_loadFileBrowser.GetSelected();
-		m_loadFileBrowser.ClearSelected();
-	}
 
 	auto linesAtBottom = Engine::GetStatusLine().empty() ? 1 : 2;
 
@@ -452,6 +441,14 @@ void Editor::Outliner()
 			ImGui::EndPopup();
 		}
 		ImGui::PopID();
+	}
+}
+
+void Editor::OpenLoadDialog()
+{
+	if (auto file = ed::NativeFileBrowser::OpenFile({ "json" })) {
+		LOG_REPORT("LOADING: {}", *file);
+		m_sceneToLoad = *file;
 	}
 }
 

@@ -16,15 +16,28 @@ public:
 		}
 	};
 
+
+	//
+	// This interface can be used like this:
+	// if (auto file = SaveFile({ "jpg" })) {
+	//    fs::path x = *file; // * operator on optional OR
+	//    file->replace_extension(".jpg"); // -> operator
+	// }
+	//
+
+	// See example usage in NativeFileBrowser.h
 	[[nodiscard]] static auto OpenFile(const ExtensionFilter& extensions = {},
 		const fs::path& initialPath = fs::current_path()) -> std::optional<fs::path>;
 
+	// See example usage in NativeFileBrowser.h
 	[[nodiscard]] static auto OpenFileMultiple(const ExtensionFilter& extensions = {},
-		const fs::path& initialPath = fs::current_path()) -> std::vector<fs::path>;
+		const fs::path& initialPath = fs::current_path()) -> std::optional<std::vector<fs::path>>;
 
+	// See example usage in NativeFileBrowser.h
 	[[nodiscard]] static auto SelectFolder(const fs::path& initialPath = fs::current_path()) //
 		-> std::optional<fs::path>;
 
+	// See example usage in NativeFileBrowser.h
 	[[nodiscard]] static auto SaveFile(const ExtensionFilter& extensions = {},
 		const fs::path& initialPath = fs::current_path()) -> std::optional<fs::path>;
 };
