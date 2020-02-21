@@ -29,7 +29,8 @@ set(SOURCE_FILES
 	editor/windows/general/EdProfilerWindow.cpp
 
 	editor/imgui/ImguiImpl.cpp
-	
+	editor/imgui/FileBrowser.cpp
+
 	platform/GlfwUtil.cpp
 
 	renderer/VkSampleRenderer.cpp

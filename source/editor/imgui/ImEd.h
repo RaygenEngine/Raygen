@@ -1,5 +1,6 @@
 #pragma once
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
 // ImGui wrapper for calls that use different styles. (bigger buttons etc)
@@ -64,6 +65,49 @@ inline void HSpace(float space = 6.f)
 {
 	ImGui::SameLine();
 	ImGui::Dummy(ImVec2(space, 0.f));
+}
+
+
+// TODO: Add cpp to this header
+struct InputTextCallback_UserData {
+	std::string* Str;
+	ImGuiInputTextCallback ChainCallback;
+	void* ChainCallbackUserData;
+};
+
+inline int InputTextCallback(ImGuiInputTextCallbackData* data)
+{
+	InputTextCallback_UserData* user_data = (InputTextCallback_UserData*)data->UserData;
+	if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+		// Resize string callback
+		// If for some reason we refuse the new length (BufTextLen) and/or capacity (BufSize) we need to set them back
+		// to what we want.
+		std::string* str = user_data->Str;
+		IM_ASSERT(data->Buf == str->c_str());
+		str->resize(data->BufTextLen);
+		data->Buf = (char*)str->c_str();
+	}
+	else if (user_data->ChainCallback) {
+		// Forward to user callback, if any
+		data->UserData = user_data->ChainCallbackUserData;
+		return user_data->ChainCallback(data);
+	}
+	return 0;
+}
+
+inline bool InputTextSized(const char* label, std::string* str, ImVec2 size, ImGuiInputTextFlags flags = 0,
+	ImGuiInputTextCallback callback = NULL, void* user_data = NULL)
+{
+	IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
+	flags |= ImGuiInputTextFlags_CallbackResize;
+
+	InputTextCallback_UserData cb_user_data;
+	cb_user_data.Str = str;
+	cb_user_data.ChainCallback = callback;
+	cb_user_data.ChainCallbackUserData = user_data;
+
+	return ImGui::InputTextEx(label, NULL, const_cast<char*>(str->c_str()), static_cast<int>(str->capacity()) + 1, size,
+		flags, InputTextCallback, &cb_user_data);
 }
 
 

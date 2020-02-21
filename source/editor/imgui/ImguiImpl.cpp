@@ -48,16 +48,24 @@ void SetStyle()
 	// Static this, needs to be valid for as long as imgui is used.
 	static const ImWchar ranges[] = { 0x0007, 0x00FF, 0 };
 
-	ImguiImpl::s_EditorFont
-		= ImGui::GetIO().Fonts->AddFontFromFileTTF("engine-data/fonts/UbuntuMedium.ttf", 15, nullptr, ranges);
-	ImGui::GetIO().Fonts->AddFontFromFileTTF("engine-data/fonts/UbuntuMonoRegular.ttf", 14, nullptr, ranges);
+
+	auto& io = ImGui::GetIO();
+
+	ImguiImpl::s_EditorFont = io.Fonts->AddFontFromFileTTF("engine-data/fonts/UbuntuMedium.ttf", 15, nullptr, ranges);
+
+
+	static const ImWchar faRange[] = { 0xf000, 0xF941, 0 };
+	ImFontConfig faConfig;
+	faConfig.MergeMode = true;
+	faConfig.PixelSnapH = true;
+	io.Fonts->AddFontFromFileTTF("engine-data/fonts/Font-Awesome-5-Free-Solid-900.ttf", 15.0f, &faConfig, faRange);
 
 
 	ImguiImpl::s_CodeFont
-		= ImGui::GetIO().Fonts->AddFontFromFileTTF("engine-data/fonts/SourceCodePro-Semibold.ttf", 18, nullptr, ranges);
+		= io.Fonts->AddFontFromFileTTF("engine-data/fonts/SourceCodePro-Semibold.ttf", 18, nullptr, ranges);
 
-
-	ImGui::GetIO().Fonts->Build();
+	io.FontAllowUserScaling = true;
+	io.Fonts->Build();
 
 	/* WIP light theme
 ImVec4* colors = ImGui::GetStyle().Colors;

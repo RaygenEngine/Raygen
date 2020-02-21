@@ -10,6 +10,7 @@
 #include "world/nodes/camera/EditorCameraNode.h"
 #include "editor/EdComponentWindows.h"
 #include "editor/imgui/ImEd.h"
+#include "editor/imgui/FileBrowser.h"
 
 #include <memory>
 #include <functional>
@@ -128,6 +129,8 @@ protected:
 	inline static bool s_showHelpTooltips{ true };
 
 public:
+	ImEd::FileBrowser m_myBrowser; // WIP
+
 	DECLARE_EVENT_LISTENER(m_onNodeRemoved, Event::OnWorldNodeRemoved);
 	DECLARE_EVENT_LISTENER(m_onWorldLoaded, Event::OnWorldLoaded);
 
