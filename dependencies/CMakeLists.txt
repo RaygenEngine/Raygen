@@ -11,6 +11,7 @@ set(GLFW_VULKAN_STATIC ON CACHE BOOL "Glfw Install")
 add_subdirectory(glfw)
 add_subdirectory(spdlog)
 add_subdirectory(imgui)
+add_subdirectory(nativefiledialog)
 
 # Vulkan
 find_package(Vulkan REQUIRED)
@@ -26,6 +27,7 @@ PROPERTIES FOLDER forks)
 
 
 set_target_properties(
+	NativeFileDialog
 	spdlog
 	glslang
 	HLSL

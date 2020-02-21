@@ -31,6 +31,9 @@ set(SOURCE_FILES
 	editor/imgui/ImguiImpl.cpp
 	editor/imgui/FileBrowser.cpp
 
+	editor/misc/NativeFileBrowser.cpp
+
+
 	platform/GlfwUtil.cpp
 
 	renderer/VkSampleRenderer.cpp
@@ -107,6 +110,7 @@ find_package(Vulkan REQUIRED)
 
 # 3rd party libraries
 target_link_libraries(Raygen
+	NativeFileDialog
 	XInput.lib
 	Vulkan::Vulkan
 	ImGui
@@ -147,6 +151,8 @@ target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/tinygltf)
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/imfilebrowser)
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/GLFW/include)
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/cereal/include)
+target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/nativefiledialog/src/include)
+
 
 target_include_directories(Raygen PUBLIC ${Vulkan_INCLUDE_DIR}/../glslang)
 
