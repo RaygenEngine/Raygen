@@ -10,7 +10,7 @@ namespace ImEd {
 // A non header only imgui file browser
 // Minimal interface for now, expected to be used as a "single instance" that can be used everywhere.
 
-
+// NOTE: Currently unused. Decided to implement NativeFileDialog (at least for now)
 class FileBrowser {
 public:
 	enum class Mode

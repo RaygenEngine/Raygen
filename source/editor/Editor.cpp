@@ -32,6 +32,8 @@
 
 #include "editor/EdUserSettings.h"
 #include "system/console/ConsoleVariable.h"
+
+#include "editor/misc/NativeFileBrowser.h"
 #include "editor/TextIcons.h"
 
 #include <glfw/glfw3.h>
@@ -228,6 +230,16 @@ void Editor::UpdateEditor()
 
 	if (ImEd::Button(U8(u8"Test Browser"))) {
 		m_myBrowser.OpenDialog([](auto& p) { LOG_REPORT("Selected file: {}", p.string()); });
+	}
+
+	ImGui::SameLine();
+	if (ImEd::Button("Native Browser")) {
+		if (auto path = ed::NativeFileBrowser::SaveFile({ "jpg" }); path) {
+			LOG_REPORT("Found: {}", path.value().string());
+		}
+		else {
+			LOG_REPORT("Canceled");
+		}
 	}
 
 	if (ImGui::Checkbox("Update World", &m_updateWorld)) {

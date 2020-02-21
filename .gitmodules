@@ -45,3 +45,6 @@
 [submodule "dependencies/cereal"]
 	path = dependencies/cereal
 	url = https://github.com/uscilab/cereal
+[submodule "dependencies/nativefiledialog"]
+	path = dependencies/nativefiledialog
+	url = https://github.com/raygengroup/nativefiledialog
