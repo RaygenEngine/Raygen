@@ -22,10 +22,6 @@
 	path = dependencies/stb
 	url = https://github.com/nothings/stb
 	branch = master
-[submodule "dependencies/imfilebrowser"]
-	path = dependencies/imfilebrowser
-	url = https://github.com/AirGuanZ/imgui-filebrowser
-	branch = master
 [submodule "dependencies/tinygltf"]
 	path = dependencies/tinygltf
 	url = https://github.com/syoyo/tinygltf
