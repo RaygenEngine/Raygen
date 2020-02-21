@@ -32,6 +32,7 @@
 
 #include "editor/EdUserSettings.h"
 #include "system/console/ConsoleVariable.h"
+#include "editor/TextIcons.h"
 
 #include <glfw/glfw3.h>
 
@@ -175,8 +176,10 @@ void Editor::Dockspace()
 	ImGui::Begin("DockSpace", &dummy, window_flags);
 	ImGui::PopStyleVar();
 
-	if (opt_fullscreen)
+	if (opt_fullscreen) {
 		ImGui::PopStyleVar(2);
+	}
+
 
 	// DockSpace
 	ImGuiIO& io = ImGui::GetIO();
@@ -213,13 +216,19 @@ void Editor::UpdateEditor()
 
 	ImguiImpl::NewFrame();
 	Dockspace();
+
 	m_windowsComponent.Draw();
+	m_myBrowser.Draw();
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	// Attempt to predict the viewport size for the first run, might be a bit off.
 	ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_NoScrollbar);
 
+
+	if (ImEd::Button(U8(u8"Test Browser"))) {
+		m_myBrowser.OpenDialog([](auto& p) { LOG_REPORT("Selected file: {}", p.string()); });
+	}
 
 	if (ImGui::Checkbox("Update World", &m_updateWorld)) {
 		if (m_updateWorld) {
@@ -676,28 +685,6 @@ void Editor::Run_MenuBar()
 		ImEd::EndMenuBar();
 	}
 }
-
-// void Editor::Run_AboutWindow()
-//{
-//	constexpr float version = 1.f;
-//
-//	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
-//	ImGui::SetNextWindowPos(ImVec2(650.f, 100.f), ImGuiCond_FirstUseEver);
-//
-//	if (ImGui::Begin("About", &m_showAboutWindow, ImGuiWindowFlags_AlwaysAutoResize)) {
-//		ImGui::Text("Raygen: v0.1");
-//		ImEd::HSpace(220.f);
-//		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 33.0f);
-//		ImGui::Text(txt_about);
-//		ImGui::Text("");
-//	}
-//	ImGui::End();
-//	ImGui::PopStyleVar();
-//}
-
-// void Editor::Run_HelpWindow()
-//{
-//}
 
 void Editor::HandleInput()
 {
