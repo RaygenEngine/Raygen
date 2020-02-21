@@ -406,9 +406,6 @@ void PropertyEditor::Inject(Node* node)
 	ImGui::Unindent();
 	ImGui::Spacing();
 
-	m_openAsset.Display();
-	m_saveAsset.Display();
-
 	m_prevNode = node;
 }
 

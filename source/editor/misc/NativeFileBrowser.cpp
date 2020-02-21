@@ -21,7 +21,7 @@ std::optional<fs::path> NativeFileBrowser::OpenFile(const ExtensionFilter& exten
 	return path;
 }
 
-std::vector<fs::path> NativeFileBrowser::OpenFileMultiple(
+std::optional<std::vector<fs::path>> NativeFileBrowser::OpenFileMultiple(
 	const ExtensionFilter& extensions, const fs::path& initialPath)
 {
 	nfdpathset_t pathSet;

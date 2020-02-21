@@ -2,7 +2,6 @@
 
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
-#include <imfilebrowser.h>
 #include <imgui_internal.h>
 
 #define TEXT_TOOLTIP(...)                                                                                              \

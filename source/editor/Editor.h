@@ -122,8 +122,6 @@ protected:
 	std::unique_ptr<AssetWindow> m_assetWindow;
 	std::unique_ptr<PropertyEditor> m_propertyEditor;
 
-	ImGui::FileBrowser m_loadFileBrowser = ImGui::FileBrowser(ImGuiFileBrowserFlags_::ImGuiFileBrowserFlags_CloseOnEsc);
-
 	void MakeMainMenu();
 
 	inline static bool s_showHelpTooltips{ true };
@@ -219,6 +217,7 @@ private:
 	void SpawnEditorCamera();
 	void Outliner();
 
+	void OpenLoadDialog();
 	void LoadScene(const fs::path& scenefile);
 	void ReloadScene();
 
