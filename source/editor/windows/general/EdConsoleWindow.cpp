@@ -85,6 +85,7 @@ struct ImguiLogState {
 
 	void Draw(const char* title, bool* p_open = NULL)
 	{
+		ImGui::AlignTextToFramePadding();
 		ImGui::Text("Cmd: ");
 		ImGui::SameLine();
 
