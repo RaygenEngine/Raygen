@@ -381,7 +381,7 @@ private:
 		const fs::path& path, const uri::Uri& suggestedName, const fs::path& importingPath)
 	{
 		PodEntry* entry = AssetHandlerManager::CreateNew<PodType>();
-		entry->metadata.originalImportLocation = path.string();
+		entry->metadata.originalImportLocation = path.generic_string();
 		entry->name = suggestedName;
 		if (!TryImport<PodType>(entry, importingPath)) {
 			AssetHandlerManager::RemoveEntry(entry->uid);

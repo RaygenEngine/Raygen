@@ -206,6 +206,7 @@ void AssetsWindow::ImguiDraw()
 					AssetImporterManager::ResolveOrImport<ImagePod>(path, "", fs::path(m_currentPath));
 				}
 			}
+			ReloadEntries();
 		}
 	}
 	ImEd::HSpace();
@@ -238,4 +239,17 @@ void AssetsWindow::ImguiDraw()
 	ImGui::EndChild();
 	ImGui::Columns(1);
 }
+
+void AssetsWindow::ImportFiles(std::vector<std::string>&& files)
+{
+
+	for (auto& file : files) {
+		auto path = fs::path(file);
+		if (path.extension() == ".gltf") {
+			AssetImporterManager::ResolveOrImport<ModelPod>(path, "", fs::path(m_currentPath));
+		}
+	}
+	ReloadEntries();
+}
+
 } // namespace ed

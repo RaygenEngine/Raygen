@@ -5,6 +5,7 @@
 #include "system/Input.h"
 #include "system/Engine.h"
 #include "system/EngineEvents.h"
+#include <vector>
 
 Key ToEngineKey(int32 glfwKey, Key& outSpecialKey);
 Key MouseToEngineKey(int32 glfwMouse);
@@ -142,6 +143,14 @@ void WindowCharacterCb(GLFWwindow* window, uint32 unicodeCharacter)
 // Drag 'n' drop on top of window
 void WindowPathDropCb(GLFWwindow* window, int32 elementCount, const char* paths[])
 {
+	std::vector<std::string> strPaths;
+	for (int32 i = 0; i < elementCount; i++) {
+		strPaths.push_back(paths[i]);
+	}
+
+	if (auto editor = Engine::GetEditor(); editor) {
+		editor->OnFileDrop(std::move(strPaths));
+	}
 }
 
 void MonitorConfigCb(GLFWmonitor* monitor, int32 glfwEvent)
@@ -173,7 +182,7 @@ void glfwutl::SetupEventCallbacks(GLFWwindow* window)
 	glfwSetScrollCallback(window, WindowScrollCb);
 	glfwSetKeyCallback(window, WindowKeyCb);
 	// glfwSetCharCallback(window, WindowCharacterCb);
-	// glfwSetDropCallback(window, WindowPathDropCb); TODO: Use drop for editor
+	glfwSetDropCallback(window, WindowPathDropCb);
 	// glfwSetMonitorCallback(MonitorConfigCb);
 	// glfwSetJoystickCallback(JoystickConnectionCb);
 }

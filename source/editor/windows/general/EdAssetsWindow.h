@@ -41,6 +41,9 @@ public:
 	virtual void ImguiDraw();
 	virtual ~AssetsWindow() = default;
 
+
+	void ImportFiles(std::vector<std::string>&& files); // WIP: ASSETS interface, decide std::string vs fs::path
+
 private:
 	AssetFileEntry m_root;
 	std::string m_currentPath{};
