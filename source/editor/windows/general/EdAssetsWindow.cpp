@@ -1,4 +1,6 @@
 #include "pch/pch.h"
+#define IMGUI_DEFINE_MATH_OPERATORS
+
 #include "editor/windows/general/EdAssetsWindow.h"
 #include "asset/AssetManager.h"
 #include "core/StringAux.h"
@@ -103,14 +105,79 @@ void AssetsWindow::AppendEntry(AssetFileEntry* entry, const std::string& pathToH
 void AssetsWindow::DrawAsset(PodEntry* assetEntry)
 {
 	ImGui::PushID(static_cast<int32>(assetEntry->uid));
-	// auto str = fmt::format("{}  {}", U8(assetEntry->GetClass()->GetIcon()), uri::GetFilenameNoExt(assetEntry->path));
 
-	ImGui::PushFont(ImguiImpl::s_AssetIconFont);
-	ImGui::TextUnformatted(U8(assetEntry->GetClass()->GetIcon()));
-	ImGui::PopFont();
-	ImGui::TextUnformatted(assetEntry->name.c_str());
+	constexpr float padding = 6.f;
+	constexpr float c_itemWidth = 110.f;
+	constexpr float c_itemHeight = 100.f;
+	constexpr float c_maxLabelWidth = 100.f;
 
+
+	const float scaledLabelWidth = c_maxLabelWidth * ImGui::GetCurrentWindow()->FontWindowScale;
+	const ImVec2 scaledSize = ImVec2(c_itemWidth, c_itemHeight) * ImGui::GetCurrentWindow()->FontWindowScale;
+
+	ImVec2 cursBegin = ImGui::GetCursorPos();
+
+	static bool selected = false; // TODO: Hack
+	ImGui::Selectable("##AssetEntrySelectableGroup", &selected, 0, scaledSize);
+	ImGui::SetCursorPos(cursBegin);
+	ImGui::BeginGroup();
+
+	auto iconTxt = U8(assetEntry->GetClass()->GetIcon());
+	// Icon
+	{
+		ImGui::BeginGroup();
+		ImGui::PushFont(ImguiImpl::s_AssetIconFont);
+		float width = ImGui::CalcTextSize(iconTxt).x;
+		float cursPos = ((scaledSize.x - width) / 2.f) + cursBegin.x;
+		ImGui::SetCursorPosX(cursPos);
+		ImGui::TextUnformatted(iconTxt);
+		ImGui::PopFont();
+		ImGui::EndGroup();
+	}
+
+
+	// Label
+	{
+		auto nameTxt = assetEntry->name.c_str();
+		const float txtWidth = std::min(ImGui::CalcTextSize(nameTxt).x, scaledLabelWidth);
+
+		const float centerOffset = ((scaledSize.x - txtWidth) / 2.f);
+
+		const ImVec2 labelSize = ImVec2(scaledSize.x, ImGui::GetFontSize() * 2.f);
+		ImVec2 pos = ImGui::GetCursorScreenPos();
+
+		// Hitbox
+		{
+			ImRect bb(pos, pos + labelSize);
+			ImGui::ItemSize(labelSize, 0.0f);
+			ImGui::ItemAdd(bb, 0);
+		}
+		// Drawing
+		{
+			ImVec4 clip_rect(pos.x, pos.y, pos.x + labelSize.x, pos.y + labelSize.y);
+
+			ImGui::GetWindowDrawList()->AddText(ImGui::GetFont(), ImGui::GetFontSize(),
+				ImVec2(pos.x + centerOffset, pos.y), ImGui::GetColorU32(ImGuiCol_Text), nameTxt, nullptr,
+				scaledLabelWidth, &clip_rect);
+		}
+	}
+	ImGui::EndGroup();
 	ed::asset::MaybeHoverTooltip(assetEntry);
+
+
+	const float nextItemStartX = cursBegin.x + scaledSize.x + padding;
+	const float nextItemEndX = nextItemStartX + scaledSize.x;
+	bool needsWrapping = (ImGui::GetWindowSize().x - nextItemEndX) < 0.f;
+
+	if (!needsWrapping) {
+		ImGui::SameLine();
+		ImGui::SetCursorPosX(nextItemStartX);
+	}
+	else {
+		ImGui::SetCursorPosY(cursBegin.y + scaledSize.y + padding);
+	}
+
+
 	ImGui::PopID();
 }
 
@@ -128,7 +195,7 @@ void AssetsWindow::ImguiDraw()
 		m_currentPath.erase(prevDirPos);
 	}
 	ImGui::SameLine();
-	if (ImEd::Button(U8(FA_FILE_IMPORT "  Import Files"))) {
+	if (ImEd::Button(U8(FA_FILE_IMPORT u8"  Import Files"))) {
 		if (auto files = ed::NativeFileBrowser::OpenFileMultiple({ "gltf,png,jpg,tiff" })) {
 			for (auto& path : *files) {
 				// WIP: ASSETS
