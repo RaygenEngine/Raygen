@@ -6,6 +6,8 @@
 #include "editor/imgui/ImguiUtil.h"
 #include "reflection/ReflectionTools.h"
 #include "editor/imgui/ImguiImpl.h"
+#include "editor/utl/EdAssetUtils.h"
+#include "editor/misc/NativeFileBrowser.h"
 
 #include <magic_enum.hpp>
 #include <spdlog/fmt/fmt.h>
@@ -23,12 +25,14 @@ void AssetsWindow::ReloadEntries()
 	auto& pods = AssetHandlerManager::Z_GetPods();
 
 	for (auto& pod : pods) {
+		[[unlikely]] if (pod->transient) { continue; }
+
 		auto parts = str::Split(uri::GetDir(pod->path), "/");
 		auto* currentNode = &m_root;
 		if (parts.size() > 1) {
 			for (auto& subpath : parts) {
 				currentNode->containsDirectories = true;
-				// TODO: What a mess, simplify
+				// TODO: ASSETS What a mess, simplify
 				currentNode
 					= currentNode->children.emplace(std::string(subpath), std::make_unique<AssetFileEntry>(subpath))
 						  .first->second.get();
@@ -64,26 +68,6 @@ AssetFileEntry* AssetsWindow::GetPathEntry(const std::string& path)
 	return currentNode;
 }
 
-/*
-if (ImGui::TreeNode("Basic trees")) {
-	for (int i = 0; i < 5; i++) {
-		// Use SetNextItemOpen() so set the default state of a node to be open.
-		// We could also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same
-		thing !if (i == 0) ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-
-		if (ImGui::TreeNode((void*)(intptr_t)i, "Child %d", i)) {
-			ImGui::Text("blah blah");
-			ImGui::SameLine();
-			if (ImGui::SmallButton("button")) {
-			};
-			ImGui::TreePop();
-		}
-	}
-	ImGui::TreePop();
-}
-*/
-
-
 void AssetsWindow::AppendEntry(AssetFileEntry* entry, const std::string& pathToHere)
 {
 	ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick
@@ -116,57 +100,17 @@ void AssetsWindow::AppendEntry(AssetFileEntry* entry, const std::string& pathToH
 	}
 }
 
-namespace {
-	void MaybeItemHover(PodEntry* entry)
-	{
-		if (ImGui::IsItemHovered()) {
-			ImGui::PushFont(ImguiImpl::s_CodeFont);
-			std::string text = fmt::format("Path:\t{}\nName:\t{}\nType:\t{}\n Ptr:\t{}\n UID:\t{}", entry->path,
-				entry->name, entry->type.name(), entry->ptr, entry->uid);
-
-			if (!entry->ptr) {
-				ImUtil::TextTooltipUtil(text);
-				ImGui::PopFont();
-				return;
-			}
-
-			text += "\n";
-			text += "\n";
-			text += "\n";
-
-			text += refltools::PropertiesToText(entry->ptr.get());
-
-			ImUtil::TextTooltipUtil(text);
-			ImGui::PopFont();
-		}
-	}
-} // namespace
-
 void AssetsWindow::DrawAsset(PodEntry* assetEntry)
 {
 	ImGui::PushID(static_cast<int32>(assetEntry->uid));
-	bool disabled = !(assetEntry->ptr);
+	// auto str = fmt::format("{}  {}", U8(assetEntry->GetClass()->GetIcon()), uri::GetFilenameNoExt(assetEntry->path));
 
-	if (disabled) {
-		ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0, 0.6f, 0.6f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0, 0.6f, 0.7f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0, 0.7f, 0.6f));
-		if (ImGui::Button("Reload")) {
-		}
-		ImGui::PopStyleColor(3);
-		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.4f);
-	}
-	else {
-	}
+	ImGui::PushFont(ImguiImpl::s_AssetIconFont);
+	ImGui::TextUnformatted(U8(assetEntry->GetClass()->GetIcon()));
+	ImGui::PopFont();
+	ImGui::TextUnformatted(assetEntry->name.c_str());
 
-	ImGui::SameLine();
-	ImGui::Text(assetEntry->path.c_str());
-	if (disabled) {
-		ImGui::PopItemFlag();
-		ImGui::PopStyleVar();
-	}
-	MaybeItemHover(assetEntry);
+	ed::asset::MaybeHoverTooltip(assetEntry);
 	ImGui::PopID();
 }
 
@@ -180,9 +124,22 @@ void AssetsWindow::ImguiDraw()
 	size_t prevDirPos = m_currentPath.rfind('/');
 	const bool CanBack = prevDirPos > 1;
 	ImGui::SameLine();
-	// TODO: Disable this button
 	if (ImEd::Button("Back") && CanBack) {
 		m_currentPath.erase(prevDirPos);
+	}
+	ImGui::SameLine();
+	if (ImEd::Button(U8(FA_FILE_IMPORT "  Import Files"))) {
+		if (auto files = ed::NativeFileBrowser::OpenFileMultiple({ "gltf,png,jpg,tiff" })) {
+			for (auto& path : *files) {
+				// WIP: ASSETS
+				if (path.extension() == ".gltf") {
+					AssetImporterManager::ResolveOrImport<ModelPod>(path, "", fs::path(m_currentPath));
+				}
+				else {
+					AssetImporterManager::ResolveOrImport<ImagePod>(path, "", fs::path(m_currentPath));
+				}
+			}
+		}
 	}
 	ImEd::HSpace();
 	ImGui::SameLine();

@@ -6,6 +6,8 @@ class LightNode : public Node {
 
 	REFLECTED_NODE(LightNode, Node, DF_FLAGS(Flux, NearFar, ShadowsTextSize))
 	{
+		REFLECT_ICON(FA_LIGHTBULB);
+
 		REFLECT_VAR(m_color, PropertyFlags::Color).OnDirty(DF::Flux);
 		REFLECT_VAR(m_intensity).OnDirty(DF::Flux);
 

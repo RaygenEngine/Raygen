@@ -5,7 +5,11 @@
 #include "core/MathAux.h"
 
 class GeometryNode : public Node {
-	REFLECTED_NODE(GeometryNode, Node, DF_FLAGS(ModelChange)) { REFLECT_VAR(m_model).OnDirty(DF::ModelChange); }
+	REFLECTED_NODE(GeometryNode, Node, DF_FLAGS(ModelChange))
+	{
+		REFLECT_ICON(FA_CUBE);
+		REFLECT_VAR(m_model).OnDirty(DF::ModelChange);
+	}
 
 	PodHandle<ModelPod> m_model;
 

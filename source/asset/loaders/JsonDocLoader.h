@@ -5,7 +5,7 @@
 #include <istream>
 
 namespace JsonDocLoader {
-inline void Load(JsonDocPod* pod, const uri::Uri& path)
+inline void Load(PodEntry* entry, JsonDocPod* pod, const uri::Uri& path)
 {
 	std::ifstream file(uri::ToSystemPath(path));
 

@@ -37,7 +37,7 @@ struct ImagePod;
 struct TexturePod;
 struct ShaderPod;
 struct StringPod;
-
+class ReflClass;
 
 struct PodEntry {
 	struct UnitializedPod {
@@ -47,13 +47,19 @@ struct PodEntry {
 	TypeId type{ refl::GetId<UnitializedPod>() };
 	size_t uid{ 0 };
 	uri::Uri path{};
-	// WIP: ASSETS remove name, just get it from path with new assets
-	std::string name{};
 
-	// WIP: ASSETS optional, only our custom disk assets
+	std::string name{}; // TODO: fix data duplication
+
+	// Mark pods as transient ones when they are just used for importing (or are generated) and "file-like" operations
+	// like save and reimport are not allowed on them. eg: GltfFilePod, default constructed empty pods
+	bool transient{ true };
+
+	// Only usefull if transient is false
+	bool requiresSave{ false };
+
+	// Only usefull if transient is false
 	PodMetaData metadata;
 
-	bool requiresSave{ false };
 
 	template<typename T>
 	T* UnsafeGet()
@@ -64,6 +70,18 @@ struct PodEntry {
 	}
 
 	void MarkSave() { requiresSave = true; }
+
+
+	//
+	// Refl Class Section (optimisation to avoid GetClass for each pod)
+	//
+	[[nodiscard]] const ReflClass* GetClass() const { return podClass; };
+
+	// Used by importers and serializers
+	[[nodiscard]] void Z_AssignClass(const ReflClass* cl) { podClass = cl; }
+
+private:
+	const ReflClass* podClass{ nullptr };
 };
 
 template<typename T>
@@ -144,11 +162,11 @@ public:
 			if (uri::StripExt(pod->path) == desiredFullPath) {
 				std::string resultFilename = fmt::format(
 					"{}_{}{}", uri::StripExt(desiredFilename), std::rand(), uri::GetDiskExtension(desiredFilename));
-				return fs::path(desiredFilename).replace_filename(resultFilename).string();
+				return fs::path(desiredFilename).replace_filename(resultFilename).replace_extension().generic_string();
 			}
 		}
 
-		return desiredFilename;
+		return uri::Uri(uri::StripExt(desiredFilename));
 	}
 
 
@@ -185,14 +203,11 @@ public:
 		// Add entry here. Return entry to allow edits / w.e else.
 		// Whoever "Creates" the asset should be responsible for filling in the metadat
 		// (feels like a less decoupled instead of having multple CreateNewFromDisk etc)
-		return CreateNew(mti::GetTypeId<PodT>());
-	}
 
-	static PodEntry* CreateNew(TypeId podType)
-	{
 		auto entry = CreateNewTypeless();
-		entry->type = podType;
-		entry->metadata.podTypeHash = podType.hash();
+		entry->type = mti::GetTypeId<PodT>();
+		entry->metadata.podTypeHash = entry->type.hash();
+		entry->Z_AssignClass(&PodT::StaticClass());
 		return entry;
 	}
 
@@ -266,7 +281,40 @@ private:
 	// Stores this session's known imported paths. Any ResolveOrImport that hits this just returns the handle
 	std::unordered_map<uri::Uri, BasePodHandle> m_importedPathsCache;
 
-	fs::path m_currentImportingPath{ "gen-data/" };
+	fs::path m_defaultImportingPath{ "gen-data/" };
+
+	struct ImportOperation {
+		int32 stackSize{ 0 };
+		fs::path currentOpImportingPath{};
+
+		void PushOperation(AssetImporterManager& importer, fs::path& inOutImportingPath)
+		{
+			if (stackSize == 0) {
+				if (inOutImportingPath.empty()) {
+					// This warning happens when an arbitiary (as in: Not from importers) ResolveOrImport attempts to
+					// import an asset but is not given an importingPath argument. This means that the imported assets
+					// will go to a "random" folder in the assets and not the user selected one. Technically importing
+					// should only ever be done from the asset window or other editor UI that allows the user to select
+					// where to import.
+					LOG_WARN("Importing assets with default import path! (Manual import from code?)");
+
+					currentOpImportingPath = importer.m_defaultImportingPath;
+				}
+				else {
+					currentOpImportingPath = inOutImportingPath;
+				}
+			}
+
+			stackSize++;
+			if (inOutImportingPath.empty()) {
+				inOutImportingPath = currentOpImportingPath;
+			}
+		}
+
+		void PopOperation() { stackSize--; }
+	};
+
+	ImportOperation m_currentOperation;
 
 public:
 	//
@@ -284,9 +332,6 @@ public:
 		const fs::path& inFullPath, const uri::Uri& suggestedName = "", fs::path& importingPath = fs::path())
 	{
 		auto inst = Engine::GetAssetImporterManager();
-		if (importingPath.empty()) {
-			importingPath = inst->m_currentImportingPath;
-		}
 
 
 		auto [it, didInsert] = inst->m_importedPathsCache.try_emplace(inFullPath.string(), PodHandle<PodType>{});
@@ -296,7 +341,9 @@ public:
 			return PodHandle<PodType>(it->second);
 		}
 
+		inst->m_currentOperation.PushOperation(*inst, importingPath);
 		PodHandle<PodType> handle = inst->ImportFromDisk<PodType>(inFullPath, suggestedName, importingPath);
+		inst->m_currentOperation.PopOperation();
 		it->second = handle;
 		return handle;
 	}
@@ -325,7 +372,10 @@ public:
 			path, AssetHandlerManager::GetPodImportPath(parentHandle), suggestedName, importingPath);
 	}
 
+
 private:
+	ConsoleVariable<bool> m_longImportPaths{ "a.longImportPaths", false };
+
 	template<CONC(CAssetPod) PodType>
 	PodHandle<PodType> ImportFromDisk(
 		const fs::path& path, const uri::Uri& suggestedName, const fs::path& importingPath)
@@ -359,6 +409,8 @@ private:
 
 		auto ptr = new T();
 		entry->ptr.reset(ptr);
+		entry->transient = false; // All entries that are "imported" default as non-transient. Importers can change this
+								  // value during importing
 		try {
 			T::Load(entry, ptr, entry->metadata.originalImportLocation);
 		} catch (std::exception& e) {
@@ -373,12 +425,8 @@ private:
 		//
 		// WIP: ASSETS: some stuff should be moved in import functions because it depends on specific loaders + asset
 		// types
-
-		// WIP: ASSETS: currently only works for paths relative to assets/
-		// needs to be able to import from anywhere, into the root of importingPathing
-		auto dskImportPath = fs::path(uri::ToSystemPath(uri::GetDiskPath(entry->metadata.originalImportLocation)));
-		auto interm = (importingPath / dskImportPath);
-		auto fullRelativePath = interm.relative_path().string();
+		auto interm = (importingPath / uri::GetFilename(entry->metadata.originalImportLocation));
+		auto fullRelativePath = interm.relative_path().generic_string();
 
 		bool generatedName{ false };
 		if (entry->name.empty()) {

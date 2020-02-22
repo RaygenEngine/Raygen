@@ -109,18 +109,6 @@ Duplicate names are shown once.
 Contents of this window are cached, refresh to detect new files / changes in the filesystem.
 )";
 
-inline const char* help_PropPodEditing = R"(
-
-WARNING:
-Editing asset pod properties is currently only partially supported.
-
-The cpu side data are edited in real time, but even the provided renderers will not reflect the changes on most cases.
-Also any changes to the pods do not get saved in scene files and will be lost when the asset reloads from disk.
-
-Right-clicking here brings up the extra pod handle context actions.
-)";
-
-
 inline const char* help_PropMassEditMats = R"(
 Toggles parallel editing of materials in this list by editing any one of them.
 Only the edited properties will propagate to the rest of the materials.

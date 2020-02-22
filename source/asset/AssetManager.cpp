@@ -75,12 +75,12 @@ void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 
 
 	if (meta.exportOnSave) {
-		// TODO: implement
+		// WIP: ASSETS implement
 	}
 
 
 	entry->requiresSave = false;
-	LOG_REPORT("Saved: {} at: {}", entry->name, entry->path);
+	LOG_REPORT("Saved pod at: {}", entry->path);
 }
 
 void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)

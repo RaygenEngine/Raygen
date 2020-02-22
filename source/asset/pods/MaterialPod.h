@@ -21,6 +21,8 @@ struct MaterialPod : AssetPod {
 
 	REFLECTED_POD(MaterialPod)
 	{
+		REFLECT_ICON(FA_SWATCHBOOK);
+
 		REFLECT_VAR(baseColorTexCoordIndex, PropertyFlags::Hidden);
 		REFLECT_VAR(metallicRoughnessTexCoordIndex, PropertyFlags::Hidden);
 		REFLECT_VAR(occlusionTexCoordIndex, PropertyFlags::Hidden);

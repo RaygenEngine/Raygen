@@ -5,6 +5,7 @@
 class UserNode : public Node {
 	REFLECTED_NODE(UserNode, Node)
 	{
+		REFLECT_ICON(FA_MALE);
 		REFLECT_VAR(m_movementSpeed);
 		REFLECT_VAR(m_turningSpeed);
 	}

@@ -9,6 +9,8 @@
 #include "editor/windows/general/EdConsoleWindow.h"
 #include "editor/windows/general/EdProfilerWindow.h"
 #include "editor/windows/general/EdAssetsWindow.h"
+#include "editor/windows/general/EdAssetListWindow.h"
+
 
 #include "glfw/glfw3.h"
 #include "imgui/imgui.h"
@@ -17,7 +19,8 @@
 namespace ed {
 void RegisterWindows(ed::ComponentWindows& windowsComponent)
 {
-	windowsComponent.AddWindowEntry<AssetsWindow>("Assets");
+	windowsComponent.AddWindowEntry<AssetsWindow>("Asset Browser");
+	windowsComponent.AddWindowEntry<AssetListWindow>("Asset List");
 
 	windowsComponent.AddWindowEntry<ConsoleWindow>("Console");
 

@@ -20,4 +20,5 @@ public:
 
 	inline static ImFont* s_EditorFont{ nullptr };
 	inline static ImFont* s_CodeFont{ nullptr };
+	inline static ImFont* s_AssetIconFont{ nullptr };
 };
