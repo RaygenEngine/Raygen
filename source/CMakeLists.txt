@@ -20,13 +20,19 @@ set(SOURCE_FILES
 	editor/EdComponentWindows.cpp
 	editor/EdUserSettings.cpp
 
+	editor/utl/EdAssetUtils.cpp
+
 	editor/windows/EdWindow.cpp
 	editor/windows/WindowsRegistry.cpp
 	
+	editor/windows/general/EdAssetListWindow.cpp
 	editor/windows/general/EdAssetsWindow.cpp
 	editor/windows/general/EdConsoleWindow.cpp
 	editor/windows/general/EdMiscWindow.cpp
 	editor/windows/general/EdProfilerWindow.cpp
+
+	
+
 
 	editor/imgui/ImguiImpl.cpp
 	editor/imgui/FileBrowser.cpp

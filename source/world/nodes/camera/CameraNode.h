@@ -10,6 +10,8 @@ class CameraNode : public Node {
 
 	REFLECTED_NODE(CameraNode, Node, DF_FLAGS(Projection, ViewportSize, FocalLength))
 	{
+		REFLECT_ICON(FA_CAMERA_RETRO);
+
 		REFLECT_VAR(m_near).OnDirty(DF::Projection);
 		REFLECT_VAR(m_far).OnDirty(DF::Projection);
 		REFLECT_VAR(m_focalLength).OnDirty(DF::FocalLength);

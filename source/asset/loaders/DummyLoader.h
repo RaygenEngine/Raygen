@@ -45,7 +45,7 @@ inline void AllocateImage(ImagePod* pod, glm::u8vec4 color)
 	d[3] = color.a;
 }
 
-inline void Load(ImagePod* pod, const uri::Uri& path)
+inline void Load(PodEntry* entry, ImagePod* pod, const uri::Uri& path)
 {
 	nlohmann::json j = uri::GetJson(path);
 
@@ -59,13 +59,13 @@ inline void Load(ImagePod* pod, const uri::Uri& path)
 	AllocateImage(pod, glm::u8vec4(255));
 }
 
-inline void Load(TexturePod* pod, const uri::Uri& path)
+inline void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 {
 	nlohmann::json j = uri::GetJson(path);
 	pod->images.push_back(AssetImporterManager::ResolveOrImport<ImagePod>(uri::MakeChildJson("/genImg", j)));
 }
 
-inline void Load(MaterialPod* pod, const uri::Uri&)
+inline void Load(PodEntry* entry, MaterialPod* pod, const uri::Uri&)
 {
 	pod->baseColorTexture = GetWhiteTexture();
 	pod->normalTexture = GetNormalTexture();

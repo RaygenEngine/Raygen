@@ -244,11 +244,8 @@ struct ReflectionToImguiVisitor {
 		size_t id = ImGui::GetItemID();
 
 		bool result = PodDropTarget(pod);
-		// WIP:
-		// result |= Run_PodContext(pod, id);
 		if (depth == 0) {
 			TEXT_TOOLTIP("Pod Internal Path:\n{}\n", AssetHandlerManager::GetPodUri(pod));
-			Editor::CollapsingHeaderTooltip(help_PropPodEditing);
 		}
 		else {
 			TEXT_TOOLTIP("{}", AssetHandlerManager::GetPodUri(pod));

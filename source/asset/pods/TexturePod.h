@@ -6,6 +6,8 @@
 struct TexturePod : AssetPod {
 	REFLECTED_POD(TexturePod)
 	{
+		REFLECT_ICON(FA_IMAGES);
+
 		REFLECT_VAR(minFilter);
 		REFLECT_VAR(magFilter);
 

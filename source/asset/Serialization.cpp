@@ -154,7 +154,10 @@ void DeserializePodFromBinary(PodEntry* entry)
 		using PodType = std::remove_pointer_t<decltype(type)>;
 		static_assert(!std::is_pointer_v<PodType>);
 		entry->ptr.reset(new PodType());
+		entry->type = mti::GetTypeId<PodType>();
+		entry->Z_AssignClass(&PodType::StaticClass());
 	});
-
+	entry->transient = false;
+	entry->name = uri::GetFilenameNoExt(entry->path);
 	archive(*entry->ptr.get());
 }

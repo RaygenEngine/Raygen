@@ -1,14 +1,35 @@
 
 #include "editor/imgui/ImguiImpl.h"
 #include "system/Engine.h"
-#include <glfw/glfw3.h>
 #include "renderer/VkSampleRenderer.h"
+#include "reflection/PodTools.h"
+#include "asset/PodIncludes.h"
 
+#include <glfw/glfw3.h>
 #include <imgui.h>
 #include <examples/imgui_impl_vulkan.h>
 #include <examples/imgui_impl_glfw.h>
 
 namespace imguisyle {
+void AddLargeAssetIconsFont(ImFontAtlas* atlas)
+{
+	static ImVector<ImWchar> ranges;
+	ImFontAtlas::GlyphRangesBuilder builder;
+
+
+	podtools::ForEachPodType([&](auto dummy) {
+		using PodT = std::remove_pointer_t<decltype(dummy)>;
+		const ReflClass& cl = PodT::StaticClass();
+		builder.AddText(U8(cl.GetIcon()));
+	});
+	builder.AddText(U8(FA_FOLDER));
+	builder.BuildRanges(&ranges); // Build the final result (ordered ranges with all the unique characters submitted)
+
+
+	ImguiImpl::s_AssetIconFont
+		= atlas->AddFontFromFileTTF("engine-data/fonts/Font-Awesome-5-Free-Solid-900.ttf", 60.f, nullptr, ranges.Data);
+}
+
 
 void SetStyle()
 {
@@ -50,19 +71,23 @@ void SetStyle()
 
 
 	auto& io = ImGui::GetIO();
+	ImFontConfig fontConfig{};
 
-	ImguiImpl::s_EditorFont = io.Fonts->AddFontFromFileTTF("engine-data/fonts/UbuntuMedium.ttf", 15, nullptr, ranges);
+	ImguiImpl::s_EditorFont
+		= io.Fonts->AddFontFromFileTTF("engine-data/fonts/UbuntuMedium.ttf", 15.f, &fontConfig, ranges);
 
 
 	static const ImWchar faRange[] = { 0xf000, 0xF941, 0 };
-	ImFontConfig faConfig;
+	ImFontConfig faConfig{};
 	faConfig.MergeMode = true;
 	faConfig.PixelSnapH = true;
 	io.Fonts->AddFontFromFileTTF("engine-data/fonts/Font-Awesome-5-Free-Solid-900.ttf", 15.0f, &faConfig, faRange);
 
 
 	ImguiImpl::s_CodeFont
-		= io.Fonts->AddFontFromFileTTF("engine-data/fonts/SourceCodePro-Semibold.ttf", 18, nullptr, ranges);
+		= io.Fonts->AddFontFromFileTTF("engine-data/fonts/SourceCodePro-Semibold.ttf", 18.f, nullptr, ranges);
+
+	AddLargeAssetIconsFont(io.Fonts);
 
 	io.FontAllowUserScaling = true;
 	io.Fonts->Build();

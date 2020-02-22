@@ -16,7 +16,7 @@ private:                                                                        
 public:                                                                                                                \
 	[[nodiscard]] static const ReflClass& StaticClass()                                                                \
 	{                                                                                                                  \
-		static ReflClass cl = ReflClass::Generate<Class>();                                                            \
+		static ReflClass cl = ReflClass::Generate<Class>(FA_MAIL_BULK);                                                \
 		return cl;                                                                                                     \
 	}                                                                                                                  \
                                                                                                                        \
@@ -103,3 +103,6 @@ public:                                                                         
 			_COUNT                                                                                                     \
 		};                                                                                                             \
 	}
+
+
+#define REFLECT_ICON(u8_icon) refl.SetIcon(u8_icon)

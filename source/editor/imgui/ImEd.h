@@ -1,4 +1,6 @@
 #pragma once
+#include "editor/imgui/ImguiUtil.h"
+#include "editor/imgui/ImguiImpl.h"
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
@@ -110,5 +112,28 @@ inline bool InputTextSized(const char* label, std::string* str, ImVec2 size, ImG
 		flags, InputTextCallback, &cb_user_data);
 }
 
+template<typename T>
+inline void DisabledSection(bool disabled, const T& codeSection)
+{
+	if (disabled) {
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.4f);
+		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+	}
+	codeSection();
 
+	if (disabled) {
+		ImGui::PopItemFlag();
+		ImGui::PopStyleVar();
+	}
+}
+
+inline void BeginCodeFont()
+{
+	ImGui::PushFont(ImguiImpl::s_CodeFont);
+}
+
+inline void EndCodeFont()
+{
+	ImGui::PopFont();
+}
 } // namespace ImEd

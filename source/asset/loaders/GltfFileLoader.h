@@ -4,7 +4,7 @@
 #include "asset/UriLibrary.h"
 
 namespace GltfFileLoader {
-inline void Load(GltfFilePod* pod, const uri::Uri& path)
+inline void Load(PodEntry* entry, GltfFilePod* pod, const uri::Uri& path)
 {
 	namespace tg = tinygltf;
 

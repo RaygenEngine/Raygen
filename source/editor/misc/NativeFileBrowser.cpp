@@ -3,6 +3,21 @@
 #include "system/Logger.h"
 #include <nativefiledialog/src/include/nfd.h>
 
+namespace {
+
+fs::path ToForwardSlashPath(nfdchar_t* txt)
+{
+	nfdchar_t* ptr = txt;
+	while (*ptr != '\0') {
+		if (*ptr == '\\') {
+			*ptr = '/';
+		}
+		ptr++;
+	}
+	return { txt };
+}
+
+} // namespace
 namespace ed {
 std::optional<fs::path> NativeFileBrowser::OpenFile(const ExtensionFilter& extensions, const fs::path& initialPath)
 {
@@ -16,7 +31,8 @@ std::optional<fs::path> NativeFileBrowser::OpenFile(const ExtensionFilter& exten
 		LOG_ERROR("NativeFileBrowserError: {}", NFD_GetError());
 		return {};
 	}
-	std::optional<fs::path> path{ outPath };
+
+	std::optional<fs::path> path{ ToForwardSlashPath(outPath) };
 	free(outPath);
 	return path;
 }
@@ -40,7 +56,7 @@ std::optional<std::vector<fs::path>> NativeFileBrowser::OpenFileMultiple(
 	size_t i;
 	for (i = 0; i < NFD_PathSet_GetCount(&pathSet); ++i) {
 		nfdchar_t* path = NFD_PathSet_GetPath(&pathSet, i);
-		files.emplace_back(path);
+		files.emplace_back(ToForwardSlashPath(path));
 	}
 	NFD_PathSet_Free(&pathSet);
 
@@ -59,7 +75,7 @@ std::optional<fs::path> NativeFileBrowser::SelectFolder(const fs::path& initialP
 		LOG_ERROR("NativeFileBrowserError: {}", NFD_GetError());
 		return {};
 	}
-	std::optional<fs::path> path{ outPath };
+	std::optional<fs::path> path{ ToForwardSlashPath(outPath) };
 	free(outPath);
 	return path;
 }
@@ -76,7 +92,7 @@ std::optional<fs::path> NativeFileBrowser::SaveFile(const ExtensionFilter& exten
 		LOG_ERROR("NativeFileBrowserError: {}", NFD_GetError());
 		return {};
 	}
-	std::optional<fs::path> path{ outPath };
+	std::optional<fs::path> path{ ToForwardSlashPath(outPath) };
 	free(outPath);
 	return path;
 }

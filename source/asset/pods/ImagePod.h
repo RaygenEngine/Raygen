@@ -6,6 +6,8 @@ struct ImagePod : AssetPod {
 	REFLECTED_POD(ImagePod)
 	{
 		using namespace PropertyFlags;
+		REFLECT_ICON(FA_IMAGE);
+
 		REFLECT_VAR(width, NoEdit);
 		REFLECT_VAR(height, NoEdit);
 

@@ -13,8 +13,6 @@
 
 void AssetWindow::ReloadCache()
 {
-
-
 	m_gltf.clear();
 	timer::Timer timer(true);
 
@@ -36,7 +34,7 @@ void AssetWindow::ReloadCache()
 	LOG_INFO("Cached {} gltf files in {} ms.", m_gltf.size(), timer.Get<std::chrono::milliseconds>());
 }
 
-ConsoleVariable<int32> g_importEverything = ConsoleVariable("ImportEverything", 0);
+ConsoleVariable<int32> g_importEverything = ConsoleVariable("a.ImportEverything", 0);
 
 void AssetWindow::DrawFileLibrary()
 {
@@ -77,9 +75,7 @@ void AssetWindow::DrawFileLibrary()
 		g_importEverything.value = 0;
 
 		for (auto& s : m_gltf) {
-			auto strPath = "/" + s.second.string();
-			std::replace(strPath.begin(), strPath.end(), '\\', '/');
-
+			auto strPath = "/" + s.second.generic_string();
 			AssetImporterManager::ResolveOrImport<ModelPod>(strPath);
 		}
 	}

@@ -38,7 +38,11 @@ struct Mesh {
 
 struct ModelPod : public AssetPod {
 
-	REFLECTED_POD(ModelPod) { REFLECT_VAR(materials); }
+	REFLECTED_POD(ModelPod)
+	{
+		REFLECT_ICON(FA_CUBE);
+		REFLECT_VAR(materials);
+	}
 
 	static void Load(PodEntry* entry, ModelPod* pod, const uri::Uri& path);
 

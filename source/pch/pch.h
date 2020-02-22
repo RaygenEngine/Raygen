@@ -27,3 +27,5 @@ namespace fs = std::filesystem;
 #include "core/MetaTemplates.h"
 
 #include "core/MacroUtils.h"
+
+#include "core/Icons.h"

@@ -20,13 +20,13 @@
 
 void GltfFilePod::Load(PodEntry* entry, GltfFilePod* pod, const uri::Uri& path)
 {
-	GltfFileLoader::Load(pod, path);
+	GltfFileLoader::Load(entry, pod, path);
 }
 
 void ImagePod::Load(PodEntry* entry, ImagePod* pod, const uri::Uri& path)
 {
 	if (uri::IsCpu(path)) {
-		CustomLoader::Load(pod, path);
+		CustomLoader::Load(entry, pod, path);
 		return;
 	}
 	ImageLoader::Load(pod, path);
@@ -42,7 +42,7 @@ void MaterialPod::Load(PodEntry* entry, MaterialPod* pod, const uri::Uri& path)
 		GenericJsonLoader::Load(pod, path);
 		return;
 	}
-	CustomLoader::Load(pod, path);
+	CustomLoader::Load(entry, pod, path);
 }
 
 void ModelPod::Load(PodEntry* entry, ModelPod* pod, const uri::Uri& path)
@@ -80,10 +80,10 @@ void TexturePod::Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 		return;
 	}
 
-	CustomLoader::Load(pod, path);
+	CustomLoader::Load(entry, pod, path);
 }
 
 void JsonDocPod::Load(PodEntry* entry, JsonDocPod* pod, const uri::Uri& path)
 {
-	JsonDocLoader::Load(pod, path);
+	JsonDocLoader::Load(entry, pod, path);
 }

@@ -34,7 +34,8 @@
 #include "system/console/ConsoleVariable.h"
 
 #include "editor/misc/NativeFileBrowser.h"
-#include "editor/TextIcons.h"
+#include "editor/utl/EdAssetUtils.h"
+
 
 #include <glfw/glfw3.h>
 
@@ -117,11 +118,11 @@ void Editor::MakeMainMenu()
 
 	m_menus.clear();
 	auto sceneMenu = std::make_unique<ImMenu>("Scene");
-	sceneMenu->AddEntry("Save As", [&]() { m_sceneSave.OpenBrowser(); });
-	sceneMenu->AddEntry("Load", [&]() { OpenLoadDialog(); });
-	sceneMenu->AddEntry("Revert", [&]() { ReloadScene(); });
+	sceneMenu->AddEntry(U8(FA_SAVE u8"  Save As"), [&]() { m_sceneSave.OpenBrowser(); });
+	sceneMenu->AddEntry(U8(FA_FOLDER_OPEN u8"  Load"), [&]() { OpenLoadDialog(); });
+	sceneMenu->AddEntry(U8(FA_REDO_ALT u8"  Revert"), [&]() { ReloadScene(); });
 	sceneMenu->AddSeperator();
-	sceneMenu->AddEntry("Exit", []() { glfwSetWindowShouldClose(Engine::GetMainWindow(), 1); });
+	sceneMenu->AddEntry(U8(FA_DOOR_OPEN u8"  Exit"), []() { glfwSetWindowShouldClose(Engine::GetMainWindow(), 1); });
 	m_menus.emplace_back(std::move(sceneMenu));
 
 	auto renderersMenu = std::make_unique<ImRendererMenu>();
@@ -220,25 +221,10 @@ void Editor::UpdateEditor()
 	m_windowsComponent.Draw();
 	m_myBrowser.Draw();
 
-	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	// Attempt to predict the viewport size for the first run, might be a bit off.
 	ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_NoScrollbar);
 
-
-	if (ImEd::Button(U8(u8"Test Browser"))) {
-		m_myBrowser.OpenDialog([](auto& p) { LOG_REPORT("Selected file: {}", p.string()); });
-	}
-
-	ImGui::SameLine();
-	if (ImEd::Button("Native Browser")) {
-		if (auto path = ed::NativeFileBrowser::SaveFile({ "jpg" }); path) {
-			LOG_REPORT("Found: {}", path.value().string());
-		}
-		else {
-			LOG_REPORT("Canceled");
-		}
-	}
 
 	if (ImGui::Checkbox("Update World", &m_updateWorld)) {
 		if (m_updateWorld) {
@@ -257,17 +243,18 @@ void Editor::UpdateEditor()
 		HelpTooltip(help_RestoreWorld);
 	}
 
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7, 7));
-	if (ImGui::Button("Save As")) {
+
+	if (ImEd::Button(U8(FA_SAVE u8"  Save As"))) {
 		m_sceneSave.OpenBrowser();
 	}
 	ImGui::SameLine();
-
-
-	if (ImGui::Button("Load")) {
+	if (ImEd::Button(U8(FA_FOLDER_OPEN u8"  Load"))) {
 		OpenLoadDialog();
 	}
-	ImGui::PopStyleVar();
+	ImGui::SameLine();
+	if (ImEd::Button(U8(u8"Imgui File"))) {
+		m_myBrowser.OpenDialog([](auto& p) { LOG_REPORT("Selected file: {}", p.string()); });
+	}
 
 
 	auto linesAtBottom = Engine::GetStatusLine().empty() ? 1 : 2;
@@ -278,7 +265,6 @@ void Editor::UpdateEditor()
 		if (open) {
 			Outliner();
 		}
-
 
 		if (m_selectedNode) {
 			open = ImGui::CollapsingHeader(
@@ -357,8 +343,8 @@ void Editor::Outliner()
 
 	bool foundOpen = false;
 	RecurseNodes(Engine::GetWorld()->GetRoot(), [&](Node* node, int32 depth) {
-		auto str = std::string(depth * 6, ' ') + sceneconv::FilterNodeClassName(node->GetClass().GetName()) + "> "
-				   + node->m_name;
+		auto str = std::string(depth * 6, ' ') + U8(node->GetClass().GetIcon()) + "  "
+				   + sceneconv::FilterNodeClassName(node->GetClass().GetName()) + "> " + node->m_name;
 		ImGui::PushID(node->GetUID());
 
 		if (node == m_editorCamera) {
@@ -640,31 +626,10 @@ void Editor::Run_AssetView()
 			ImGui::PopItemFlag();
 			ImGui::PopStyleVar();
 		}
-		Run_MaybeAssetTooltip(assetEntry.get());
+		ed::asset::MaybeHoverTooltip(assetEntry.get());
 
 
 		ImGui::PopID();
-	}
-}
-
-void Editor::Run_MaybeAssetTooltip(PodEntry* entry)
-{
-	if (ImGui::IsItemHovered()) {
-		std::string text = fmt::format("Path:\t{}\nName:\t{}\nType:\t{}\n Ptr:\t{}\n UID:\t{}", entry->path,
-			entry->name, entry->type.name(), entry->ptr, entry->uid);
-
-		if (!entry->ptr) {
-			ImUtil::TextTooltipUtil(text);
-			return;
-		}
-
-		text += "\n";
-		text += "\n";
-		text += "\n";
-
-		text += refltools::PropertiesToText(entry->ptr.get());
-
-		ImUtil::TextTooltipUtil(text);
 	}
 }
 

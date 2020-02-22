@@ -20,6 +20,13 @@ class ReflClass {
 
 	std::unordered_set<const ReflClass*> m_childClasses;
 
+
+	static constexpr char8 c_defaultIcon[] = FA_DOT_CIRCLE;
+	// An "optional" icon for this class, as font character. Not the best place to be as it is "editor metadata" but not
+	// as big of a deal to seperate this (yet)
+	// The icon is supposed to be supported by the editor font.
+	const char8* m_icon = c_defaultIcon;
+
 	void AppendProperties(const ReflClass& other)
 	{
 		size_t index = m_properties.size();
@@ -28,9 +35,15 @@ class ReflClass {
 			m_hashTable[std::string(prop.GetName())] = index++;
 		}
 		m_parentClass = &other;
+		ReplaceIfDefaultIcon(other.m_icon);
 	}
 
 	void AddChildClass(const ReflClass* newChild) { m_childClasses.emplace(newChild); }
+
+	[[nodiscard]] bool IsIconDefault() const
+	{
+		return std::u8string_view{ m_icon } == std::u8string_view{ c_defaultIcon };
+	}
 
 public:
 	[[nodiscard]] static constexpr const char* RemoveVariablePrefix(const char* name)
@@ -42,11 +55,12 @@ public:
 	};
 
 	template<typename T>
-	static ReflClass Generate()
+	static ReflClass Generate(const char8* replaceIcon = c_defaultIcon)
 	{
 		ReflClass reflClass;
 		reflClass.m_type = refl::GetId<T>();
 		T::GenerateReflection(reflClass);
+		reflClass.ReplaceIfDefaultIcon(replaceIcon);
 		return reflClass;
 	}
 
@@ -74,6 +88,10 @@ public:
 	[[nodiscard]] std::string_view GetName() const { return m_type.name(); }
 	[[nodiscard]] std::string GetNameStr() const { return m_type.name_str(); }
 
+	// Grabs the text icon for editor facing text of this type
+	[[nodiscard]] const char8* GetIcon() const { return m_icon; }
+
+
 	// Always Prefer reflection macros
 	// Never run ouside of T::GenerateReflection
 	template<typename T>
@@ -83,8 +101,10 @@ public:
 
 		const char* name = RemoveVariablePrefix(varname);
 		size_t index = m_properties.size();
+
 		m_properties.push_back(Property(refl::GetId<T>(), offset_of, name, flags));
 		m_hashTable[std::string(name)] = index;
+
 		if constexpr (std::is_enum_v<T>) { // NOLINT
 			m_properties[index].MakeEnum<T>();
 		}
@@ -105,6 +125,16 @@ public:
 		}
 		return &m_properties[it->second];
 	}
+
+	void SetIcon(const char8* icon) { m_icon = icon; }
+
+	void ReplaceIfDefaultIcon(const char8* icon)
+	{
+		if (IsIconDefault()) {
+			SetIcon(icon);
+		}
+	}
+
 
 	[[nodiscard]] const ReflClass* GetParentClass() const { return m_parentClass; }
 
