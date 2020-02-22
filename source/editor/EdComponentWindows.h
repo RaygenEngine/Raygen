@@ -86,6 +86,15 @@ public:
 
 	~ComponentWindows();
 
+	template<CONC(UniqueWindowClass) T>
+	// template<typename T>
+	T* GetUniqueWindow()
+	{
+		// TODO: should not open the window
+		OpenUnique<T>();
+		return static_cast<T*>(m_openUniqueWindows.map.at(mti::GetHash<T>()));
+	}
+
 private:
 	template<typename DrawFunc>
 	void InternalDraw(DrawFunc&& func);

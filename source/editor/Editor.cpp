@@ -35,7 +35,7 @@
 
 #include "editor/misc/NativeFileBrowser.h"
 #include "editor/utl/EdAssetUtils.h"
-
+#include "editor/windows/general/EdAssetsWindow.h"
 
 #include <glfw/glfw3.h>
 
@@ -313,6 +313,12 @@ void Editor::UpdateEditor()
 
 	ed::GetSettings().SaveIfDirty();
 }
+
+void Editor::OnFileDrop(std::vector<std::string>&& files)
+{
+	m_windowsComponent.GetUniqueWindow<ed::AssetsWindow>()->ImportFiles(std::move(files));
+}
+
 
 void Editor::SpawnEditorCamera()
 {
