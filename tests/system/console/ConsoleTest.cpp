@@ -59,3 +59,24 @@ TEST("Console Automatic params")
 	Console::Execute("_add 1 2"sv);
 	REQ(var == 3);
 }
+
+TEST("Console Var Func")
+{
+	using namespace std::literals;
+
+	bool didUpdate = false;
+
+	ConsoleVarFunc<int32> var(
+		"_test", [&]() { didUpdate = true; }, -1);
+
+	REQ(var.Get() == -1);
+
+	Console::Execute("_test"sv);
+
+	REQ(didUpdate == false); // Wont update on access
+
+	Console::Execute("_test 2"sv);
+
+	REQ(var.Get() == 2);    // Value properly set
+	REQ(didUpdate == true); // function did run
+}
