@@ -1,6 +1,7 @@
 #pragma once
 #include "core/StringAux.h"
 #include "system/Logger.h"
+#include "core/StringHashing.h"
 #include <unordered_map>
 #include <string>
 
@@ -8,8 +9,7 @@ struct ConsoleEntry;
 
 class Console {
 private:
-	Console() = default;
-
+	Console() = default; // Cannot register commands in this constructor
 
 protected:
 	Console(const Console&) = delete;
@@ -24,7 +24,7 @@ protected:
 		return *instance;
 	}
 
-	std::unordered_map<std::string, ConsoleEntry*> m_entries;
+	std::unordered_map<std::string, ConsoleEntry*, str::HashInsensitive, str::EqualInsensitive> m_entries;
 
 public:
 	// TODO: allow only ConsoleVariable
@@ -50,4 +50,8 @@ public:
 			entries.erase(command);
 		}
 	}
+
+	static std::vector<ConsoleEntry*> AutoCompleteSuggest(std::string_view currentPart);
+
+	static decltype(m_entries)& Z_GetEntries();
 };

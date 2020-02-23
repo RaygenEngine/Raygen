@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "core/StringHashing.h"
 
 // TODO: rename
 namespace smath {
@@ -42,8 +43,11 @@ inline std::string ToLower(const std::string& str)
 } // namespace smath
 
 namespace str {
-// TODO: string concept
 template<typename T>
+concept CharSeq = true; // TODO: string concept
+
+
+template<CONC(CharSeq) T>
 std::vector<std::string_view> Split(const T& str, std::string_view delims = " ")
 {
 	std::vector<std::string_view> output;
@@ -61,7 +65,7 @@ std::vector<std::string_view> Split(const T& str, std::string_view delims = " ")
 	return output;
 }
 
-constexpr size_t StrHash(const std::string_view str) noexcept
+[[deprecated("Use str::Hash from core/StringHashing.h")]] constexpr size_t StrHash(const std::string_view str) noexcept
 {
 	static_assert(sizeof(size_t) == 8);
 	// FNV-1a 64 bit algorithm
@@ -72,4 +76,15 @@ constexpr size_t StrHash(const std::string_view str) noexcept
 	}
 	return result;
 }
+
+//
+// Starts With Insensitive. (for sensitive use std)
+//
+constexpr inline bool startsWithInsensitive(std::string_view who, std::string_view startsWithTxt)
+{
+	return who.size() >= startsWithTxt.size()
+		   && str::EqualInsensitive{}(who.substr(0, startsWithTxt.size()), startsWithTxt);
+}
+
+
 } // namespace str
