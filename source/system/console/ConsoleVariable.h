@@ -35,21 +35,44 @@ struct ConsoleVariable : public ConsoleEntry {
 	{
 	}
 
-	void Execute(std::string_view command) override
-	{
-		auto vec = str::Split(command);
-		if (vec.size() <= 1) {
-			LOG_REPORT("{}: {}", name, value);
-			return;
-		}
-		value = conv::FromStrView<T>(vec[1]);
-		LOG_REPORT("Console set {}: {}", name, value);
-	}
+	void Execute(std::string_view command) override { TryUpdateValue(command); }
 
 	T& Get() { return value; }
 
 	explicit operator T&() { return value; }
 	virtual ~ConsoleVariable() = default;
+
+protected:
+	bool TryUpdateValue(std::string_view command)
+	{
+		auto vec = str::Split(command);
+		if (vec.size() <= 1) {
+			LOG_REPORT("{}: {}", name, value);
+			return false;
+		}
+		value = conv::FromStrView<T>(vec[1]);
+		LOG_REPORT("Console set {}: {}", name, value);
+		return true;
+	}
+};
+
+
+template<typename T>
+struct ConsoleVarFunc : public ConsoleVariable<T> {
+	std::function<void()> updateFunc;
+
+	ConsoleVarFunc(const char* name, std::function<void()>&& function, T defValue = {}, const char* inTooltip = "")
+		: ConsoleVariable(name, defValue, inTooltip)
+		, updateFunc(function)
+	{
+	}
+
+	void Execute(std::string_view command) override
+	{
+		if (TryUpdateValue(command)) {
+			updateFunc();
+		}
+	}
 };
 
 // Auto registers a console function with a lambda.
