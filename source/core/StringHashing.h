@@ -22,10 +22,10 @@ struct EqualImpl {
 	using is_transparent = void;
 	static constexpr bool isInsensitive = Sens == CaseSensitivity::Insensitive;
 
-	bool operator()(std::string_view lhs, std::string_view rhs) const { return copmare(lhs, rhs); }
+	constexpr bool operator()(std::string_view lhs, std::string_view rhs) const { return compare(lhs, rhs); }
 
 private:
-	static bool compareChar(char c1, char c2) noexcept
+	static constexpr bool compareChar(char c1, char c2) noexcept
 	{
 		if constexpr (isInsensitive) {
 			return c1 == c2 || std::tolower(c1) == std::tolower(c2);
@@ -33,7 +33,7 @@ private:
 		return c1 == c2;
 	}
 
-	bool copmare(std::string_view str1, std::string_view str2) const noexcept
+	constexpr bool compare(std::string_view str1, std::string_view str2) const noexcept
 	{
 		return ((str1.size() == str2.size()) && std::equal(str1.begin(), str1.end(), str2.begin(), &compareChar));
 	}
@@ -44,9 +44,9 @@ struct HashImpl {
 	using transparent_key_equal = EqualImpl<Sens>;
 	static constexpr bool isInsensitive = Sens == CaseSensitivity::Insensitive;
 
-	size_t operator()(std::string_view txt) const noexcept { return hash(txt); }
-	size_t operator()(const std::string& txt) const noexcept { return hash(txt); }
-	size_t operator()(const char* txt) const noexcept { return hash(txt); }
+	constexpr size_t operator()(std::string_view txt) const noexcept { return hash(txt); }
+	constexpr size_t operator()(const std::string& txt) const noexcept { return hash(txt); }
+	constexpr size_t operator()(const char* txt) const noexcept { return hash(txt); }
 
 private:
 	constexpr size_t hash(std::string_view view) const noexcept
@@ -75,5 +75,10 @@ using Equal = EqualImpl<CaseSensitivity::Sensitive>;
 using HashInsensitive = HashImpl<CaseSensitivity::Insensitive>;
 using EqualInsensitive = EqualImpl<CaseSensitivity::Insensitive>;
 
+// These "instances" are to be used as a function eg: str::hash("txt");
+inline Hash hash;
+inline Equal equal;
+inline HashInsensitive hashInsensitive;
+inline EqualInsensitive equalInsensitive;
 
 } // namespace str

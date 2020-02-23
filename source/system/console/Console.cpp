@@ -1,5 +1,28 @@
 #include "system/console/Console.h"
 #include "system/console/ConsoleVariable.h"
+#include "core/StringAux.h"
+
+ConsoleFunctionGeneric commandAll(
+	"all",
+	[](std::string_view view) {
+		auto parts = str::Split(view);
+
+		if (parts.size() <= 1) {
+			for (auto& [key, entry] : Console::Z_GetEntries()) {
+				LOG_REPORT("{:<30} - {}", key, entry->tooltip);
+			}
+			return;
+		}
+
+		auto filter = parts[1];
+
+		for (auto& [key, entry] : Console::Z_GetEntries()) {
+			if (str::startsWithInsensitive(key, filter)) {
+				LOG_REPORT("{:<30} - {}", key, entry->tooltip);
+			}
+		}
+	},
+	"Lists all available commands [starting with the text passed as param]");
 
 void Console::Execute(const std::string& command)
 {
@@ -8,19 +31,30 @@ void Console::Execute(const std::string& command)
 
 void Console::Execute(std::string_view command)
 {
-	if (command.starts_with("all")) {
-		for (auto& [key, z] : Get().m_entries) {
-			LOG_REPORT("{}", key);
-		}
-		return;
-	}
 	auto parts = str::Split(command);
 	auto& entries = Get().m_entries;
 
-	auto it = entries.find(std::string(parts[0]));
+	auto it = entries.find(parts[0]);
 	if (it != entries.end()) {
 		it->second->Execute(command);
 		return;
 	}
 	LOG_REPORT("Command {} not found.", parts[0]);
+}
+
+std::vector<ConsoleEntry*> Console::AutoCompleteSuggest(std::string_view currentPart)
+{
+	std::vector<ConsoleEntry*> found;
+
+	for (auto& [key, entry] : Get().m_entries) {
+		if (str::startsWithInsensitive(key, currentPart)) {
+			found.push_back(entry);
+		}
+	}
+	return found;
+}
+
+auto Console::Z_GetEntries() -> decltype(m_entries)&
+{
+	return Get().m_entries;
 }

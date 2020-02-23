@@ -21,6 +21,7 @@ struct ImguiLogState {
 	bool AutoScroll;           // Keep scrolling if already at the bottom
 
 	std::string consoleStr{};
+	bool shouldRecaptureKeyboard{ false };
 
 	ImguiLogState()
 	{
@@ -89,9 +90,15 @@ struct ImguiLogState {
 		ImGui::Text("Cmd: ");
 		ImGui::SameLine();
 
+		if (shouldRecaptureKeyboard) {
+			shouldRecaptureKeyboard = false;
+			ImGui::SetKeyboardFocusHere();
+		}
+
 		if (ImGui::InputText("##ConsoleInput", &consoleStr, ImGuiInputTextFlags_EnterReturnsTrue)) {
 			Console::Execute(consoleStr);
 			consoleStr = "";
+			shouldRecaptureKeyboard = true;
 		}
 
 		ImEd::HSpace();

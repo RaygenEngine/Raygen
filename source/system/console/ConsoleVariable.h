@@ -51,7 +51,7 @@ protected:
 			return false;
 		}
 		value = conv::FromStrView<T>(vec[1]);
-		LOG_REPORT("Console set {}: {}", name, value);
+		LOG_REPORT("Console set {}: {} - {}", name, value, tooltip);
 		return true;
 	}
 };
