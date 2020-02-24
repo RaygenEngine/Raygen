@@ -3,9 +3,9 @@
 #include "renderer/GraphicsPipeline.h"
 #include "asset/pods/ModelPod.h"
 
-namespace vlkn {
-GraphicsPipeline::GraphicsPipeline(Device* device, Swapchain* swapchain)
+GraphicsPipeline::GraphicsPipeline(DeviceWrapper& device, Swapchain* swapchain)
 {
+
 	// descriptor layout
 
 	vk::DescriptorSetLayoutBinding uboLayoutBinding{};
@@ -15,14 +15,22 @@ GraphicsPipeline::GraphicsPipeline(Device* device, Swapchain* swapchain)
 		.setStageFlags(vk::ShaderStageFlagBits::eVertex)
 		.setPImmutableSamplers(nullptr);
 
+	vk::DescriptorSetLayoutBinding samplerLayoutBinding{};
+	samplerLayoutBinding.setBinding(1u)
+		.setDescriptorCount(1u)
+		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+		.setPImmutableSamplers(nullptr)
+		.setStageFlags(vk::ShaderStageFlagBits::eFragment);
+
+	std::array<vk::DescriptorSetLayoutBinding, 2> bindings{ uboLayoutBinding, samplerLayoutBinding };
 	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.setBindingCount(1u).setPBindings(&uboLayoutBinding);
+	layoutInfo.setBindingCount(static_cast<uint32>(bindings.size())).setPBindings(bindings.data());
 
 	m_descriptorSetLayout = device->createDescriptorSetLayoutUnique(layoutInfo);
 
 	// shaders
-	auto vertShaderModule = device->CompileCreateShaderModule("engine-data/spv/test.vert");
-	auto fragShaderModule = device->CompileCreateShaderModule("engine-data/spv/test.frag");
+	auto vertShaderModule = device.CompileCreateShaderModule("engine-data/spv/test.vert");
+	auto fragShaderModule = device.CompileCreateShaderModule("engine-data/spv/test.frag");
 
 
 	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
@@ -184,4 +192,3 @@ GraphicsPipeline::GraphicsPipeline(Device* device, Swapchain* swapchain)
 
 	m_pipeline = device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
-} // namespace vlkn

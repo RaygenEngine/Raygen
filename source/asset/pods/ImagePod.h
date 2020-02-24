@@ -19,6 +19,7 @@ struct ImagePod : AssetPod {
 	int32 width{ 0 };
 	int32 height{ 0 };
 
+	// WIP: actual components
 	int32 components{ 0 };
 
 	std::vector<byte> data{};
