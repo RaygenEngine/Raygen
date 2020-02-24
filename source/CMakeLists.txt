@@ -37,20 +37,18 @@ set(SOURCE_FILES
 	editor/imgui/ImguiImpl.cpp
 	editor/imgui/FileBrowser.cpp
 
-	editor/misc/NativeFileBrowser.cpp
-
-
 	platform/GlfwUtil.cpp
 
 	renderer/VkSampleRenderer.cpp
-	renderer/InstanceLayer.cpp
-	renderer/PhysicalDevice.cpp
-	renderer/Device.cpp
+	renderer/InstanceWrapper.cpp
+	renderer/PhysicalDeviceWrapper.cpp
+	renderer/DeviceWrapper.cpp
 	renderer/Swapchain.cpp
 	renderer/GraphicsPipeline.cpp
 	renderer/Model.cpp
-	renderer/Image.cpp
+	renderer/Texture.cpp
 	renderer/Descriptors.cpp
+	editor/misc/NativeFileBrowser.cpp
 
 
 	system/Engine.cpp

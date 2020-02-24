@@ -1,14 +1,15 @@
 #pragma once
 
+#include "renderer/VkObjectWrapper.h"
+
 #include <vulkan/vulkan.hpp>
 
-namespace vlkn {
 
-class Device;
+class DeviceWrapper;
 
 struct QueueFamily {
 	vk::QueueFamilyProperties props;
-	uint32 familyIndex;
+	uint32 index;
 
 	float rating{ 0.0f };
 };
@@ -21,7 +22,7 @@ struct SwapchainSupportDetails {
 
 
 // physical device with surface support
-class PhysicalDevice : public vk::PhysicalDevice {
+class PhysicalDeviceWrapper : public VkObjectWrapper<vk::PhysicalDevice> {
 
 	float m_rating{ 0.0f };
 
@@ -31,18 +32,16 @@ class PhysicalDevice : public vk::PhysicalDevice {
 	std::vector<QueueFamily> m_presentFamilies;
 
 public:
-	PhysicalDevice(vk::PhysicalDevice handle, vk::SurfaceKHR surface);
+	void Init(vk::PhysicalDevice handle, vk::SurfaceKHR surface);
 
 	float GetDeviceRating() const { return m_rating; }
 
-	QueueFamily GetBestGraphicsFamily() const;
-	QueueFamily GetBestTransferFamily() const;
-	QueueFamily GetBestComputeFamily() const;
-	QueueFamily GetBestPresentFamily() const;
+	std::vector<QueueFamily> GetGraphicsFamilies() const { return m_graphicsFamilies; }
+	std::vector<QueueFamily> GetTransferFamilies() const { return m_transferFamilies; }
+	std::vector<QueueFamily> GetComputeFamilies() const { return m_computeFamilies; }
+	std::vector<QueueFamily> GetPresentFamilies() const { return m_presentFamilies; }
 
 	SwapchainSupportDetails GetSwapchainSupportDetails(vk::SurfaceKHR surface);
-
-	std::unique_ptr<Device> RequestLogicalDevice();
 
 	uint32 FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties);
 
@@ -51,4 +50,3 @@ public:
 
 	vk::Format FindDepthFormat();
 };
-} // namespace vlkn

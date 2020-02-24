@@ -14,10 +14,9 @@ class AppBase;
 
 class NodeFactory;
 
-namespace vlkn {
 class VkSampleRenderer;
-}
-using RendererT = vlkn::VkSampleRenderer;
+
+using RendererT = VkSampleRenderer;
 
 #include "system/Timer.h"
 

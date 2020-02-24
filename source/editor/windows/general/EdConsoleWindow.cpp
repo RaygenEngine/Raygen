@@ -48,8 +48,8 @@ struct ImguiLogState {
 		}
 	}
 
-	static constexpr ImVec4 c_warnColor{ 0.9f, 0.66f, 0.38f, 1.f };
-	static constexpr ImVec4 c_errColor{ 1.f, 0.f, 0.f, 1.f };
+	ImVec4 c_warnColor = { 0.9f, 0.66f, 0.38f, 1.f };
+	ImVec4 c_errColor = { 1.f, 0.f, 0.f, 1.f };
 
 	LogLevelTarget GetLineLogLevel(const char* begin) const
 	{
