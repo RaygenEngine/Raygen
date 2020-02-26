@@ -397,6 +397,22 @@ void Editor::Outliner()
 	ImGui::PopStyleVar(2);
 	ImGui::EndChild();
 
+	if (auto entry = ImEd::AcceptTypedPodDrop<ModelPod>()) {
+		auto cmd = [&, entry]() {
+			auto newNode = NodeFactory::NewNode<GeometryNode>();
+
+			newNode->SetName(entry->GetNameStr());
+			newNode->SetModel(entry->GetHandleAs<ModelPod>());
+			Engine::GetWorld()->RegisterNode(newNode, Engine::GetWorld()->GetRoot());
+			if (!IsCameraPiloting()) {
+				PushPostFrameCommand([newNode]() { FocusNode(newNode); });
+			}
+		};
+
+		PushCommand(cmd);
+	}
+
+	/*
 	if (ImGui::BeginDragDropTarget()) {
 		std::string payloadTag = "POD_UID_" + std::to_string(refl::GetId<ModelPod>().hash());
 		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(payloadTag.c_str())) {
@@ -420,6 +436,7 @@ void Editor::Outliner()
 		}
 		ImGui::EndDragDropTarget();
 	}
+	*/
 	if (!foundOpen) {
 		ImGui::PushID(989);
 		if (ImGui::BeginPopupContextItem("RightclickOutliner Context")) {

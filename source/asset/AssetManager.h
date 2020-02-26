@@ -69,8 +69,19 @@ struct PodEntry {
 		return static_cast<T*>(ptr.get());
 	}
 
+	template<CONC(CAssetPod) T>
+	PodHandle<T> GetHandleAs()
+	{
+		CLOG_ABORT(type != mti::GetTypeId<T>(), "Entry->GetAs() Cast failure");
+		return PodHandle<T>{ uid };
+	}
+
 	void MarkSave() { requiresSave = true; }
 
+	// Prefer this from .name; .name will get deprecated in the future
+	[[nodiscard]] std::string_view GetName() const { return uri::GetFilenameNoExt(path); }
+
+	[[nodiscard]] std::string GetNameStr() const { return std::string(uri::GetFilenameNoExt(path)); }
 
 	//
 	// Refl Class Section (optimisation to avoid GetClass for each pod)
@@ -119,9 +130,7 @@ concept CUidConvertible = requires(T a)
 
 class AssetHandlerManager {
 
-	ConsoleFunction<> m_SaveAll{ "SaveAll" };
-
-public:
+private:
 	friend class AssetImporterManager;
 	friend class AssetFrontEndManager;
 
@@ -131,14 +140,7 @@ public:
 		return inst;
 	}
 
-	AssetHandlerManager()
-	{
-		m_SaveAll.function = [&]() {
-			for (auto& entry : m_pods) {
-				SaveToDisk(entry.get());
-			}
-		};
-	}
+	AssetHandlerManager() {}
 
 	std::vector<std::unique_ptr<PodEntry>> m_pods;
 	std::unordered_map<uri::Uri, size_t> m_pathCache;
@@ -162,11 +164,11 @@ public:
 			if (uri::StripExt(pod->path) == desiredFullPath) {
 				std::string resultFilename = fmt::format(
 					"{}_{}{}", uri::StripExt(desiredFilename), std::rand(), uri::GetDiskExtension(desiredFilename));
-				return fs::path(desiredFilename).replace_filename(resultFilename).replace_extension().generic_string();
+				return fs::path(desiredFilename).replace_filename(resultFilename).generic_string();
 			}
 		}
 
-		return uri::Uri(uri::StripExt(desiredFilename));
+		return desiredFilename;
 	}
 
 
@@ -186,6 +188,13 @@ public:
 	}
 
 public:
+	static void SaveAll()
+	{
+		for (auto& entry : Get().m_pods) {
+			SaveToDisk(entry.get());
+		}
+	}
+
 	template<CONC(CAssetPod) T>
 	static PodHandle<T> GetAsyncHandle(const uri::Uri& str)
 	{
