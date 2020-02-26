@@ -19,7 +19,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/gltf-samples/2.0/FlightHelmet/glTF/FlightHelmet.bin",
+        "model": "gen-data/FlightHelmet.bin",
         "~children": []
     },
     {
@@ -208,7 +208,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/gltf-samples/2.0/Sponza/glTF/Sponza.bin",
+        "model": "gen-data/Sponza.bin",
         "~children": []
     }
 ]

@@ -100,7 +100,10 @@ void InstanceWrapper::Init(std::vector<const char*> additionalExtensions, Window
 	std::vector<char const*> instanceLayerNames = { "VK_LAYER_KHRONOS_validation" };
 
 	if (!CheckLayers(instanceLayerNames, instanceLayerProperties)) {
-		LOG_ABORT("Set the environment variable VK_LAYER_PATH to point to the location of your layers");
+		instanceLayerNames[0] = { "VK_LAYER_LUNARG_standard_validation" };
+		LOG_ERROR(
+			"Validation layers not found. Set the environment variable VK_LAYER_PATH to point to the location of your "
+			"layers");
 	}
 
 	for (auto& extension : additionalExtensions) {
@@ -109,9 +112,9 @@ void InstanceWrapper::Init(std::vector<const char*> additionalExtensions, Window
 
 	// create instance
 	vk::ApplicationInfo appInfo{};
-	appInfo.setPApplicationName("KaleidoApp")
+	appInfo.setPApplicationName("RaygenApp")
 		.setApplicationVersion(VK_MAKE_VERSION(1, 0, 0))
-		.setPEngineName("KaleidoEngine")
+		.setPEngineName("RaygenEngine")
 		.setEngineVersion(VK_MAKE_VERSION(1, 0, 0))
 		.setApiVersion(VK_API_VERSION_1_2);
 

@@ -39,6 +39,19 @@ private:
 	}
 };
 
+// Case insensitive only
+struct LessImpl {
+	using is_transparent = void;
+
+	struct LessComp {
+		bool operator()(const unsigned char& c1, const unsigned char& c2) const { return tolower(c1) < tolower(c2); }
+	};
+	bool operator()(std::string_view s1, std::string_view s2) const noexcept
+	{
+		return std::lexicographical_compare(s1.begin(), s1.end(), s2.begin(), s2.end(), LessComp());
+	}
+};
+
 template<CaseSensitivity Sens = CaseSensitivity::Sensitive>
 struct HashImpl {
 	using transparent_key_equal = EqualImpl<Sens>;
@@ -74,11 +87,13 @@ using Equal = EqualImpl<CaseSensitivity::Sensitive>;
 
 using HashInsensitive = HashImpl<CaseSensitivity::Insensitive>;
 using EqualInsensitive = EqualImpl<CaseSensitivity::Insensitive>;
+using LessInsensitive = LessImpl;
 
 // These "instances" are to be used as a function eg: str::hash("txt");
 inline Hash hash;
 inline Equal equal;
 inline HashInsensitive hashInsensitive;
 inline EqualInsensitive equalInsensitive;
+
 
 } // namespace str

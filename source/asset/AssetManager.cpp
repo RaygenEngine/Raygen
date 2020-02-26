@@ -8,6 +8,10 @@
 
 #include <iostream>
 
+ConsoleFunction<> console_SaveAll{ "a.saveAll", []() {
+									  AssetHandlerManager::SaveAll();
+								  } };
+
 
 void AssetImporterManager::Init(const fs::path& assetPath)
 {
