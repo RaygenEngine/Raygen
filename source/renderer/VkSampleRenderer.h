@@ -45,6 +45,9 @@ class VkSampleRenderer {
 	DECLARE_EVENT_LISTENER(m_resizeListener, Event::OnWindowResize);
 	DECLARE_EVENT_LISTENER(m_worldLoaded, Event::OnWorldLoaded);
 	DECLARE_EVENT_LISTENER(m_viewportUpdated, Event::OnViewportUpdated);
+	DECLARE_EVENT_LISTENER(m_nodeAdded, Event::OnWorldNodeAdded);
+	DECLARE_EVENT_LISTENER(m_nodeRemoved, Event::OnWorldNodeRemoved);
+
 	bool m_shouldRecreateSwapchain{ false };
 	bool m_shouldRecreatePipeline{ false };
 

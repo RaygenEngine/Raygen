@@ -22,7 +22,6 @@ using namespace PropertyFlags;
 template<typename T>
 constexpr bool CanOpenFromFile = refl::IsValidPod<T>;
 
-
 template<typename T>
 constexpr bool IsJsonLoadable
 	= std::is_same_v<MaterialPod, T> || std::is_same_v<ShaderPod, T> || std::is_same_v<TexturePod, T>;
