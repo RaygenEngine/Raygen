@@ -24,12 +24,12 @@ VkSampleRenderer::~VkSampleRenderer()
 void VkSampleRenderer::CreateGeometry()
 {
 	auto world = Engine::GetWorld();
-
+	m_models.clear();
 	for (auto geomNode : world->GetNodeIterator<GeometryNode>()) {
 
 		auto model = geomNode->GetModel();
 		m_models.emplace_back(std::make_unique<Model>(m_device, m_descriptors.get(), model));
-		m_models.back()->m_transform = geomNode->GetNodeTransformWCS();
+		m_models.back()->m_node = geomNode;
 	}
 }
 
@@ -70,6 +70,8 @@ void VkSampleRenderer::Init()
 	m_resizeListener.Bind([&](auto, auto) { m_shouldRecreateSwapchain = true; });
 	m_worldLoaded.Bind([&]() { InitWorld(); });
 	m_viewportUpdated.Bind([&]() { m_shouldRecreatePipeline = true; });
+	m_nodeAdded.Bind([&](auto) { CreateGeometry(); });
+	m_nodeRemoved.Bind([&](auto) { CreateGeometry(); });
 
 	m_swapchain = m_device.RequestDeviceSwapchainOnSurface(m_instance.GetSurface());
 	m_graphicsPipeline = m_device.RequestDeviceGraphicsPipeline(m_swapchain.get());
@@ -115,12 +117,12 @@ void VkSampleRenderer::RecordCommandBuffer(int32 imageIndex)
 
 
 			for (auto& model : m_models) {
+				// Submit via push constant (rather than a UBO)
+				cmdBuffer.pushConstants(m_graphicsPipeline->GetPipelineLayout(), vk::ShaderStageFlagBits::eVertex, 0u,
+					sizeof(glm::mat4), &model->m_node->GetNodeTransformWCS());
+
 				for (auto& gg : model->GetGeometryGroups()) {
 					PROFILE_SCOPE(Renderer);
-
-					// Submit via push constant (rather than a UBO)
-					cmdBuffer.pushConstants(m_graphicsPipeline->GetPipelineLayout(), vk::ShaderStageFlagBits::eVertex,
-						0u, sizeof(glm::mat4), &model->m_transform);
 
 					vk::Buffer vertexBuffers[] = { gg.vertexBuffer.get() };
 					vk::DeviceSize offsets[] = { 0 };
@@ -165,7 +167,6 @@ void VkSampleRenderer::DrawFrame()
 		m_graphicsPipeline = m_device.RequestDeviceGraphicsPipeline(m_swapchain.get());
 		m_descriptors = m_device.RequestDeviceDescriptors(m_swapchain.get(), m_graphicsPipeline.get());
 
-		m_models.clear();
 		CreateGeometry();
 
 		m_renderCommandBuffers.clear();
@@ -185,7 +186,6 @@ void VkSampleRenderer::DrawFrame()
 		m_graphicsPipeline = m_device.RequestDeviceGraphicsPipeline(m_swapchain.get());
 		m_descriptors = m_device.RequestDeviceDescriptors(m_swapchain.get(), m_graphicsPipeline.get());
 
-		m_models.clear();
 		CreateGeometry();
 
 		::ImguiImpl::InitVulkan();

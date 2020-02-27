@@ -2,6 +2,7 @@
 
 #include "renderer/DeviceWrapper.h"
 #include "asset/pods/ModelPod.h"
+#include "world/nodes/geometry/GeometryNode.h"
 
 #include "vulkan/vulkan.hpp"
 
@@ -35,11 +36,12 @@ struct GPUGeometryGroup {
 class Model {
 	std::vector<GPUGeometryGroup> m_geometryGroups;
 
-
 public:
 	Model(DeviceWrapper& device, Descriptors* descriptors, PodHandle<ModelPod> handle);
 
 	const std::vector<GPUGeometryGroup>& GetGeometryGroups() const { return m_geometryGroups; }
 
 	glm::mat4 m_transform;
+
+	GeometryNode* m_node; // WIP:
 };
