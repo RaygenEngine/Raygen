@@ -11,8 +11,11 @@
 #include "reflection/PodTools.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "editor/DataStrings.h"
-#include "system//profiler/ProfileScope.h"
+#include "system/profiler/ProfileScope.h"
+#include "editor/imgui/ImGuizmo.h"
 #include "asset/AssetManager.h"
+#include "world/World.h"
+#include "world/nodes/camera/CameraNode.h"
 #include <fstream>
 
 namespace {
@@ -396,6 +399,8 @@ void PropertyEditor::Inject(Node* node)
 		Run_ContextActions(node);
 
 		ImGui::Separator();
+
+		Run_ImGuizmo(node);
 	}
 
 	Run_ReflectedProperties(node);
@@ -600,4 +605,26 @@ void PropertyEditor::Run_ReflectedProperties(Node* node)
 
 	m_massEditMaterials = visitor.massEditMaterials;
 	node->SetDirtyMultiple(visitor.dirtyFlags);
+}
+
+void PropertyEditor::Run_ImGuizmo(Node* node)
+{
+	auto world = Engine::GetWorld();
+	auto camera = world->GetActiveCamera();
+
+	if (!camera) {
+		return;
+	}
+
+	auto cameraView = camera->GetViewMatrix();
+	auto cameraProj = camera->GetProjectionMatrix();
+
+	auto nodeMatrix = node->GetNodeTransformWCS();
+
+
+	ImGuizmo::Manipulate(reinterpret_cast<float*>(&cameraView), reinterpret_cast<float*>(&cameraProj),
+		static_cast<ImGuizmo::OPERATION>(m_manipMode.op), static_cast<ImGuizmo::MODE>(m_manipMode.mode),
+		reinterpret_cast<float*>(&nodeMatrix));
+
+	node->SetNodeTransformWCS(nodeMatrix);
 }

@@ -23,7 +23,7 @@ struct ProfileScopeBase {
 		, line(line)
 		, function(function)
 		, engModule(engModule)
-		, hash(str::StrHash(function))
+		, hash(str::hash(function))
 		, hits(0)
 		, sumDuration()
 	{

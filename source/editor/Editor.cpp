@@ -36,6 +36,7 @@
 #include "editor/misc/NativeFileBrowser.h"
 #include "editor/utl/EdAssetUtils.h"
 #include "editor/windows/general/EdAssetsWindow.h"
+#include "editor/imgui/ImGuizmo.h"
 
 #include <glfw/glfw3.h>
 
@@ -186,7 +187,7 @@ void Editor::Dockspace()
 	ImGuiIO& io = ImGui::GetIO();
 	ImGuiID dockspace_id = ImGui::GetID("MainDockspace");
 	ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
-
+	ImGuizmo::SetDrawlist();
 	Run_MenuBar();
 
 
@@ -205,6 +206,10 @@ void Editor::Dockspace()
 
 
 	ImGui::End();
+	auto& coord = g_ViewportCoordinates;
+
+	ImGuizmo::SetRect(ImGui::GetWindowViewport()->Pos.x + coord.position.x,
+		ImGui::GetWindowViewport()->Pos.y + coord.position.y, coord.size.x, coord.size.y);
 }
 
 void Editor::UpdateEditor()
@@ -692,6 +697,27 @@ void Editor::HandleInput()
 	else if (input.IsDown(Key::F)) {
 		if (m_selectedNode) {
 			FocusNode(m_selectedNode);
+		}
+	}
+
+	if (!input.IsDown(Key::Mouse_RightClick)) {
+		using op = ed::ManipOperationMode::Operation;
+
+		if (input.IsJustPressed(Key::W)) {
+			m_propertyEditor->m_manipMode.op = op::Translate;
+		}
+		else if (input.IsJustPressed(Key::E)) {
+			m_propertyEditor->m_manipMode.op = op::Rotate;
+		}
+		else if (input.IsJustPressed(Key::R)) {
+			m_propertyEditor->m_manipMode.op = op::Scale;
+		}
+
+		if (input.IsJustPressed(Key::Q)) {
+			m_propertyEditor->m_manipMode.mode
+				= m_propertyEditor->m_manipMode.mode == ed::ManipOperationMode::Space::Local
+					  ? ed::ManipOperationMode::Space::World
+					  : ed::ManipOperationMode::Space::Local;
 		}
 	}
 }
