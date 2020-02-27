@@ -30,12 +30,10 @@ set(SOURCE_FILES
 	editor/windows/general/EdConsoleWindow.cpp
 	editor/windows/general/EdMiscWindow.cpp
 	editor/windows/general/EdProfilerWindow.cpp
-
 	
-
-
 	editor/imgui/ImguiImpl.cpp
 	editor/imgui/FileBrowser.cpp
+	editor/imgui/ImGuizmo.cpp
 
 	platform/GlfwUtil.cpp
 

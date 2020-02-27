@@ -5,6 +5,9 @@
 #include "reflection/PodTools.h"
 #include "asset/PodIncludes.h"
 #include "system/console/ConsoleVariable.h"
+#include "system/profiler/ProfileScope.h"
+#include "editor/imgui/ImGuizmo.h"
+
 
 #include <glfw/glfw3.h>
 #include <imgui.h>
@@ -186,7 +189,7 @@ void ImguiImpl::NewFrame()
 	ImGui_ImplVulkan_NewFrame();
 	ImGui::NewFrame();
 }
-#include "system/profiler/ProfileScope.h"
+
 void ImguiImpl::EndFrame()
 {
 	{

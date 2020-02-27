@@ -95,28 +95,30 @@ void EditorCameraNode::UpdateFromEditor(float deltaTime)
 		up = root->GetNodeUpWCS();
 	}
 
-	if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
-		applyTo->AddNodePositionOffsetLCS(forward * speed);
-	}
+	if (input.IsDown(Key::Mouse_RightClick)) {
+		if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
+			applyTo->AddNodePositionOffsetLCS(forward * speed);
+		}
 
-	if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
-		applyTo->AddNodePositionOffsetLCS((-forward) * speed);
-	}
+		if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
+			applyTo->AddNodePositionOffsetLCS((-forward) * speed);
+		}
 
-	if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
-		applyTo->AddNodePositionOffsetLCS(right * speed);
-	}
+		if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
+			applyTo->AddNodePositionOffsetLCS(right * speed);
+		}
 
-	if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
-		applyTo->AddNodePositionOffsetLCS((-right) * speed);
-	}
+		if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
+			applyTo->AddNodePositionOffsetLCS((-right) * speed);
+		}
 
-	if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
-		applyTo->AddNodePositionOffsetLCS(up * speed);
-	}
+		if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
+			applyTo->AddNodePositionOffsetLCS(up * speed);
+		}
 
-	if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
-		applyTo->AddNodePositionOffsetLCS((-up) * speed);
+		if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
+			applyTo->AddNodePositionOffsetLCS((-up) * speed);
+		}
 	}
 }
 
