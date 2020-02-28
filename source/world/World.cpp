@@ -12,6 +12,7 @@
 #include "reflection/ReflectionTools.h"
 #include "system/EngineEvents.h"
 #include "system/profiler/ProfileScope.h"
+#include "renderer/VulkanLayer.h"
 
 World::World(NodeFactory* factory)
 	: m_nodeFactory(factory)
@@ -84,6 +85,9 @@ void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 	m_root->m_dirty.reset();
 	ClearDirtyFlags();
 	LOG_INFO("World loaded succesfully");
+
+	// WIP: fix
+	VulkanLayer::ReinitModels();
 }
 
 void World::DirtyUpdateWorld()

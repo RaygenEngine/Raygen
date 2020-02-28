@@ -5,6 +5,8 @@
 #include "reflection/PodTools.h"
 #include "asset/PodIncludes.h"
 #include "system/console/ConsoleVariable.h"
+#include "renderer/VulkanLayer.h"
+
 
 #include <glfw/glfw3.h>
 #include <imgui.h>
@@ -212,27 +214,26 @@ void ImguiImpl::CleanupContext()
 
 void ImguiImpl::InitVulkan()
 {
-	auto& r = *Engine::GetRenderer();
-
-	auto physDev = r.m_device.GetPhysicalDevice();
+	auto physDev = VulkanLayer::device->pd;
+	auto& device = VulkanLayer::device;
 
 	ImGui_ImplVulkan_InitInfo init = {};
-	init.Instance = r.m_instance.get();
-	init.PhysicalDevice = physDev.get();
-	init.Device = r.m_device.get();
-	init.QueueFamily = r.m_device.GetGraphicsQueue().familyIndex;
-	init.Queue = r.m_device.GetGraphicsQueue().get();
+	init.Instance = VulkanLayer::instance->handle.get();
+	init.PhysicalDevice = physDev->handle;
+	init.Device = device->handle.get();
+	init.QueueFamily = device->graphicsQueue.familyIndex;
+	init.Queue = device->graphicsQueue.handle;
 	init.PipelineCache = VK_NULL_HANDLE;
-	init.DescriptorPool = r.m_descriptors->GetDescriptorPool();
+	init.DescriptorPool = VulkanLayer::quadDescriptorPool.get();
 
-	init.ImageCount = r.m_swapchain->GetImageCount();
-	init.MinImageCount = r.m_swapchain->GetImageCount();
+	init.ImageCount = VulkanLayer::swapchain->images.size();
+	init.MinImageCount = VulkanLayer::swapchain->images.size();
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init, r.m_swapchain->GetRenderPass());
+	ImGui_ImplVulkan_Init(&init, VulkanLayer::defPass.m_renderPass.get());
 
 
-	auto cmdBuffer = r.m_device.GetTransferCommandBuffer();
+	auto cmdBuffer = device->transferCmdBuffer.get();
 
 	//	vkCall(vkResetCommandPool(m_device, m_commandPool, 0));
 
@@ -250,8 +251,8 @@ void ImguiImpl::InitVulkan()
 
 	cmdBuffer.end();
 
-	r.m_device.GetTransferQueue()->submit(1, &end_info, {});
-	r.m_device->waitIdle();
+	device->transferQueue.handle.submit(1, &end_info, {});
+	device->transferQueue.handle.waitIdle();
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }

@@ -1,16 +1,11 @@
 #include "pch/pch.h"
 
-#include "renderer/InstanceWrapper.h"
+#include "renderer/Instance.h"
 
 #include "system/Logger.h"
 
 #include <glfw/glfw3.h>
 
-
-#define vkCall(x)                                                                                                      \
-	do {                                                                                                               \
-		CLOG_ABORT(x != VK_SUCCESS, "Failed vkCall");                                                                  \
-	} while (0)
 
 PFN_vkCreateDebugUtilsMessengerEXT pfnVkCreateDebugUtilsMessengerEXT;
 PFN_vkDestroyDebugUtilsMessengerEXT pfnVkDestroyDebugUtilsMessengerEXT;
@@ -27,7 +22,6 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(
 {
 	return pfnVkDestroyDebugUtilsMessengerEXT(instance, messenger, pAllocator);
 }
-
 namespace {
 VkBool32 DebugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 	VkDebugUtilsMessageTypeFlagsEXT messageTypes, VkDebugUtilsMessengerCallbackDataEXT const* pCallbackData,
@@ -84,14 +78,14 @@ bool CheckLayers(std::vector<char const*> const& layers, std::vector<vk::LayerPr
 		}) != properties.end();
 	});
 }
-
-
-std::vector<const char*> requiredExtensions = { VK_KHR_SURFACE_EXTENSION_NAME, VK_EXT_DEBUG_UTILS_EXTENSION_NAME };
 } // namespace
 
-
-void InstanceWrapper::Init(std::vector<const char*> additionalExtensions, WindowType* window)
+Instance::Instance(std::vector<const char*> requiredExtensions, WindowType* window)
 {
+	auto allExtensions = requiredExtensions;
+	allExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+	allExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
 	std::vector<vk::LayerProperties> instanceLayerProperties = vk::enumerateInstanceLayerProperties();
 
 	/* VULKAN_KEY_START */
@@ -103,38 +97,35 @@ void InstanceWrapper::Init(std::vector<const char*> additionalExtensions, Window
 		LOG_ABORT("Set the environment variable VK_LAYER_PATH to point to the location of your layers");
 	}
 
-	for (auto& extension : additionalExtensions) {
-		requiredExtensions.push_back(extension);
-	}
-
 	// create instance
 	vk::ApplicationInfo appInfo{};
-	appInfo.setPApplicationName("KaleidoApp")
+	appInfo.setPApplicationName("RaygenApp")
 		.setApplicationVersion(VK_MAKE_VERSION(1, 0, 0))
-		.setPEngineName("KaleidoEngine")
+		.setPEngineName("RaygenEngine")
 		.setEngineVersion(VK_MAKE_VERSION(1, 0, 0))
 		.setApiVersion(VK_API_VERSION_1_2);
 
 	vk::InstanceCreateInfo createInfo{};
 	createInfo.setPApplicationInfo(&appInfo)
-		.setEnabledExtensionCount(static_cast<uint32>(requiredExtensions.size()))
-		.setPpEnabledExtensionNames(requiredExtensions.data());
+		.setEnabledExtensionCount(static_cast<uint32>(allExtensions.size()))
+		.setPpEnabledExtensionNames(allExtensions.data());
 
+#ifndef NDEBUG
 	createInfo.setEnabledLayerCount(static_cast<uint32>(instanceLayerNames.size()))
 		.setPpEnabledLayerNames(instanceLayerNames.data());
+#endif
 
+	handle = vk::createInstanceUnique(createInfo);
 
-	m_vkHandle = vk::createInstanceUnique(createInfo);
-
-
-	pfnVkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
-		m_vkHandle->getProcAddr("vkCreateDebugUtilsMessengerEXT"));
+#ifndef NDEBUG
+	pfnVkCreateDebugUtilsMessengerEXT
+		= reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(handle->getProcAddr("vkCreateDebugUtilsMessengerEXT"));
 	if (!pfnVkCreateDebugUtilsMessengerEXT) {
 		LOG_ABORT("GetInstanceProcAddr: Unable to find pfnVkCreateDebugUtilsMessengerEXT function.");
 	}
 
-	pfnVkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-		m_vkHandle->getProcAddr("vkDestroyDebugUtilsMessengerEXT"));
+	pfnVkDestroyDebugUtilsMessengerEXT
+		= reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(handle->getProcAddr("vkDestroyDebugUtilsMessengerEXT"));
 	if (!pfnVkDestroyDebugUtilsMessengerEXT) {
 		LOG_ABORT("GetInstanceProcAddr: Unable to find pfnVkDestroyDebugUtilsMessengerEXT function.");
 	}
@@ -144,44 +135,30 @@ void InstanceWrapper::Init(std::vector<const char*> additionalExtensions, Window
 	vk::DebugUtilsMessageTypeFlagsEXT messageTypeFlags(vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral
 													   | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance
 													   | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation);
-	m_debugUtilsMessenger = m_vkHandle->createDebugUtilsMessengerEXTUnique(
+	debugUtilsMessenger = handle->createDebugUtilsMessengerEXTUnique(
 		vk::DebugUtilsMessengerCreateInfoEXT({}, severityFlags, messageTypeFlags, &DebugMessageFunc));
-
+#endif
 	// create surface (WIP: currently C form)
 
 	VkSurfaceKHR tmp;
-	vkCall(glfwCreateWindowSurface(m_vkHandle.get(), window, nullptr, &tmp));
-	m_surface = tmp;
+	if (glfwCreateWindowSurface(handle.get(), window, nullptr, &tmp) != VK_SUCCESS) {
+		LOG_ABORT("Failed to create glfw window surface");
+	}
+	surface = tmp;
 
 	// get capable physical devices
-	auto deviceHandles = m_vkHandle->enumeratePhysicalDevices();
+	auto deviceHandles = handle->enumeratePhysicalDevices();
 
 	for (const auto dH : deviceHandles) {
-		PhysicalDeviceWrapper pd{};
-		pd.Init(dH, m_surface);
+		auto pd = std::make_unique<PhysicalDevice>(dH, surface);
 		// if capable
-		if (pd.GetDeviceRating() > 0) {
-			m_capablePhysicalDevices.push_back(pd);
+		if (pd->rating > 0) {
+			capablePhysicalDevices.push_back(std::move(pd));
 		}
 	}
 }
 
-InstanceWrapper::~InstanceWrapper()
+Instance::~Instance()
 {
-	m_vkHandle->destroySurfaceKHR(m_surface);
-}
-
-PhysicalDeviceWrapper& InstanceWrapper::GetBestCapablePhysicalDevice()
-{
-	CLOG_ABORT(m_capablePhysicalDevices.empty(), "No capable physical device found for required vulkan rendering");
-
-	// WIP:
-	// auto it = std::max_element(m_capablePhysicalDevices.begin(), m_capablePhysicalDevices.end(),
-	//	[](std::unique_ptr<PhysicalDevice> a, std::unique_ptr<PhysicalDevice> b) {
-	//		return a->GetDeviceRating() < b->GetDeviceRating();
-	//	});
-
-	// return { it->get() };
-
-	return m_capablePhysicalDevices[0];
+	handle->destroySurfaceKHR(surface);
 }

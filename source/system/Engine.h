@@ -21,8 +21,8 @@ using RendererT = VkSampleRenderer;
 #include "system/Timer.h"
 
 inline struct ViewportCoordinates {
-	glm::vec2 position{};
-	glm::vec2 size{ 640, 480 };
+	glm::uvec2 position{};
+	glm::uvec2 size{ 1920, 1056 };
 	bool operator==(const ViewportCoordinates&) const = default;
 } g_ViewportCoordinates;
 
@@ -61,8 +61,6 @@ public:
 	// Input will be valid forever after initialization.
 	[[nodiscard]] static Input& GetInput() { return *Get().m_input; }
 
-	[[nodiscard]] static RendererT* GetRenderer() { return Get().m_renderer; }
-
 	[[nodiscard]] static Editor* GetEditor() { return Get().m_editor; }
 
 	[[nodiscard]] static DrawReporter* GetDrawReporter() { return &Get().m_drawReporter; }
@@ -94,9 +92,6 @@ private:
 	// Owning Pointer. No guarantees can be made for world pointer.
 	// It may be invalidated during runtime when loading other worlds etc.
 	World* m_world{ nullptr };
-
-	// Owning Pointer.
-	RendererT* m_renderer{ nullptr };
 
 	// Non owning pointer, expected to be valid for the whole program execution
 	AppBase* m_app{ nullptr };

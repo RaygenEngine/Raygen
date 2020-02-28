@@ -39,15 +39,15 @@ set(SOURCE_FILES
 
 	platform/GlfwUtil.cpp
 
-	renderer/VkSampleRenderer.cpp
-	renderer/InstanceWrapper.cpp
-	renderer/PhysicalDeviceWrapper.cpp
-	renderer/DeviceWrapper.cpp
+	renderer/GeometryPass.cpp
+	renderer/DeferredPass.cpp
+	renderer/VulkanLayer.cpp
+	renderer/Instance.cpp
+	renderer/PhysicalDevice.cpp
+	renderer/LogicalDevice.cpp
 	renderer/Swapchain.cpp
-	renderer/GraphicsPipeline.cpp
 	renderer/Model.cpp
 	renderer/Texture.cpp
-	renderer/Descriptors.cpp
 	editor/misc/NativeFileBrowser.cpp
 
 

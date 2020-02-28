@@ -7,7 +7,7 @@
 #include "system/Logger.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"
-#include "renderer/VkSampleRenderer.h"
+#include "renderer/VulkanLayer.h"
 #include "system/profiler/ProfileScope.h"
 #include <glfw/glfw3.h>
 
@@ -89,7 +89,8 @@ void AppBase::MainLoop()
 
 		Engine::GetWorld()->Update();
 
-		Engine::GetRenderer()->DrawFrame();
+		// Engine::GetRenderer()->DrawFrame();
+		VulkanLayer::DrawFrame();
 
 		Engine::Get().ReportFrameDrawn();
 
