@@ -1,81 +1,29 @@
 #include "pch/pch.h"
 
-#include "renderer/VkSampleRenderer.h"
-#include "system/Logger.h"
+#include "renderer/GeometryPass.h"
+#include "renderer/VulkanLayer.h"
 #include "system/Engine.h"
 
-
-#include "renderer/VulkanLayer.h"
-#include "asset/AssetManager.h"
-#include "world/World.h"
-#include "world/nodes/geometry/GeometryNode.h"
-#include "world/nodes/camera/CameraNode.h"
-#include "editor/imgui/ImguiImpl.h"
-#include "system/profiler/ProfileScope.h"
-
-#include <set>
-
-
-VkSampleRenderer::~VkSampleRenderer()
+void GeometryPass::CreateFramebufferImageViews()
 {
-	/*m_device->waitIdle();
-
-	m_graphicsPipeline.reset();
-	m_swapchain.reset();
-	m_descriptors.reset();*/
-
-	m_models.clear();
-
-
-	Engine::Get().m_remakeWindow = true;
 }
 
-void VkSampleRenderer::InitWorld()
+void GeometryPass::InitRenderPassAndFramebuffers()
 {
-	auto world = Engine::GetWorld();
+	auto& swapchain = VulkanLayer::swapchain;
+	auto& device = VulkanLayer::device;
 
-	for (auto geomNode : world->GetNodeIterator<GeometryNode>()) {
-
-		auto model = geomNode->GetModel();
-		m_models.emplace_back(model);
-		m_models.back()->m_transform = geomNode->GetNodeTransformWCS();
-	}
-}
-
-void VkSampleRenderer::Init()
-{
-	m_resizeListener.Bind([&](auto, auto) { m_shouldRecreateSwapchain = true; });
-	m_worldLoaded.Bind([&]() { InitWorld(); });
-	m_viewportUpdated.Bind([&]() { m_shouldRecreatePipeline = true; });
-
-	InitRenderPassAndFramebuffersOfCurrentSwapchain();
-	InitGraphicsPipeline();
-	InitRenderCmdBuffers();
-	InitUniformBuffers();
-
-	// semaphores
-	auto device = VulkanLayer::GetDevice();
-	m_imageAvailableSemaphore = device->handle->createSemaphoreUnique({});
-	m_renderFinishedSemaphore = device->handle->createSemaphoreUnique({});
-
-	::ImguiImpl::InitVulkan();
-} // namespace vk
-
-void VkSampleRenderer::InitRenderPassAndFramebuffersOfCurrentSwapchain()
-{
-	auto swapchain = VulkanLayer::GetSwapchain();
-	auto device = VulkanLayer::GetDevice();
 
 	vk::AttachmentDescription colorAttachment{};
-	colorAttachment.setFormat(swapchain->imageFormat)
+	colorAttachment
+		.setFormat(vk::Format::eR8G8B8A8Srgb) // WIP
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
 		.setInitialLayout(vk::ImageLayout::eUndefined)
-		.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
-
+		.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal); // WIP
 
 	vk::AttachmentReference colorAttachmentRef{};
 	colorAttachmentRef.setAttachment(0);
@@ -98,7 +46,6 @@ void VkSampleRenderer::InitRenderPassAndFramebuffersOfCurrentSwapchain()
 	vk::SubpassDescription subpass{};
 	subpass.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
 	subpass.setColorAttachmentCount(1)
-		.setColorAttachmentCount(1)
 		.setPColorAttachments(&colorAttachmentRef)
 		.setPDepthStencilAttachment(&depthAttachmentRef);
 
@@ -121,54 +68,69 @@ void VkSampleRenderer::InitRenderPassAndFramebuffersOfCurrentSwapchain()
 
 	m_renderPass = device->handle->createRenderPassUnique(renderPassInfo);
 
-	m_framebuffers.clear();
-	m_framebuffers.resize(swapchain->images.size());
+	// albedo buffer
+	vk::Format format = vk::Format::eR8G8B8A8Srgb;
+
+	device->CreateImage(g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y, format, vk::ImageTiling::eOptimal,
+		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, albedoImage, albedoImageMemory);
+
+	// WIP:
+	// device->TransitionImageLayout(
+	//	albedoImage.get(), format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+
+	vk::ImageViewCreateInfo viewInfo{};
+	viewInfo.setImage(albedoImage.get()).setViewType(vk::ImageViewType::e2D).setFormat(format);
+	viewInfo.subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eColor)
+		.setBaseMipLevel(0)
+		.setLevelCount(1)
+		.setBaseArrayLayer(0)
+		.setLayerCount(1);
+
+	albedoImageView = device->handle->createImageViewUnique(viewInfo);
+
+	// depth buffer
+	vk::Format depthFormat = device->pd->FindDepthFormat();
+	device->CreateImage(g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y, depthFormat,
+		vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, depthImage, depthImageMemory);
+
+	device->TransitionImageLayout(
+		depthImage.get(), depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+
+	viewInfo.setImage(depthImage.get()).setViewType(vk::ImageViewType::e2D).setFormat(depthFormat);
+	viewInfo.subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eDepth)
+		.setBaseMipLevel(0)
+		.setLevelCount(1)
+		.setBaseArrayLayer(0)
+		.setLayerCount(1);
+
+	depthImageView = device->handle->createImageViewUnique(viewInfo);
+
 
 	// framebuffers
-	for (auto i = 0; i < swapchain->images.size(); ++i) {
-		std::array<vk::ImageView, 2> attachments = { swapchain->imageViews[i].get(), swapchain->depthImageView.get() };
-		vk::FramebufferCreateInfo createInfo{};
-		createInfo.setRenderPass(m_renderPass.get())
-			.setAttachmentCount(static_cast<uint32>(attachments.size()))
-			.setPAttachments(attachments.data())
-			.setWidth(swapchain->extent.width)
-			.setHeight(swapchain->extent.height)
-			.setLayers(1);
 
-		m_framebuffers[i] = device->handle->createFramebufferUnique(createInfo);
-	}
+	std::array<vk::ImageView, 2> imAttachments = { albedoImageView.get(), depthImageView.get() };
+	vk::FramebufferCreateInfo createInfo{};
+	createInfo.setRenderPass(m_renderPass.get())
+		.setAttachmentCount(static_cast<uint32>(imAttachments.size()))
+		.setPAttachments(imAttachments.data())
+		.setWidth(g_ViewportCoordinates.size.x)
+		.setHeight(g_ViewportCoordinates.size.y)
+		.setLayers(1);
+
+	m_framebuffer = device->handle->createFramebufferUnique(createInfo);
 }
 
-void VkSampleRenderer::InitGraphicsPipeline()
+void GeometryPass::InitPipelineAndStuff()
 {
-	auto device = VulkanLayer::GetDevice();
-	auto swapchain = VulkanLayer::GetSwapchain();
-
-	// descriptor layout
-
-	vk::DescriptorSetLayoutBinding uboLayoutBinding{};
-	uboLayoutBinding.setBinding(0u)
-		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-		.setDescriptorCount(1u)
-		.setStageFlags(vk::ShaderStageFlagBits::eVertex)
-		.setPImmutableSamplers(nullptr);
-
-	vk::DescriptorSetLayoutBinding samplerLayoutBinding{};
-	samplerLayoutBinding.setBinding(1u)
-		.setDescriptorCount(1u)
-		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setPImmutableSamplers(nullptr)
-		.setStageFlags(vk::ShaderStageFlagBits::eFragment);
-
-	std::array<vk::DescriptorSetLayoutBinding, 2> bindings{ uboLayoutBinding, samplerLayoutBinding };
-	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.setBindingCount(static_cast<uint32>(bindings.size())).setPBindings(bindings.data());
-
-	m_descriptorSetLayout = device->handle->createDescriptorSetLayoutUnique(layoutInfo);
+	auto& device = VulkanLayer::device;
+	auto& swapchain = VulkanLayer::swapchain;
+	auto& descriptorSetLayout = VulkanLayer::modelDescriptorSetLayout;
 
 	// shaders
-	auto vertShaderModule = device->CompileCreateShaderModule("engine-data/spv/test.vert");
-	auto fragShaderModule = device->CompileCreateShaderModule("engine-data/spv/test.frag");
+	auto vertShaderModule = device->CompileCreateShaderModule("engine-data/spv/gbuffer.vert");
+	auto fragShaderModule = device->CompileCreateShaderModule("engine-data/spv/gbuffer.frag");
 
 
 	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
@@ -297,9 +259,11 @@ void VkSampleRenderer::InitGraphicsPipeline()
 	vk::PushConstantRange pushConstantRange{};
 	pushConstantRange.setStageFlags(vk::ShaderStageFlagBits::eVertex).setSize(sizeof(glm::mat4)).setOffset(0u);
 
+	std::array layouts = { descriptorSetLayout.get() };
+
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.setSetLayoutCount(1u)
-		.setPSetLayouts(&(m_descriptorSetLayout.get()))
+		.setPSetLayouts(layouts.data())
 		.setPushConstantRangeCount(1u)
 		.setPPushConstantRanges(&pushConstantRange);
 
@@ -337,48 +301,10 @@ void VkSampleRenderer::InitGraphicsPipeline()
 	m_pipeline = device->handle->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void VkSampleRenderer::InitRenderCmdBuffers()
+
+void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 {
-	auto device = VulkanLayer::GetDevice();
-	auto swapchain = VulkanLayer::GetSwapchain();
-
-	m_renderCmdBuffers.clear();
-
-	m_renderCmdBuffers.resize(swapchain->images.size());
-
-	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(device->graphicsCmdPool.get())
-		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(static_cast<uint32>(m_renderCmdBuffers.size()));
-
-	m_renderCmdBuffers = device->handle->allocateCommandBuffersUnique(allocInfo);
-}
-
-void VkSampleRenderer::InitUniformBuffers()
-{
-	auto device = VulkanLayer::GetDevice();
-	auto swapchain = VulkanLayer::GetSwapchain();
-
-	m_uniformBuffers.clear();
-	m_uniformBuffersMemory.clear();
-
-	m_uniformBuffers.resize(swapchain->images.size());
-	m_uniformBuffersMemory.resize(swapchain->images.size());
-
-	vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
-
-	for (size_t i = 0; i < swapchain->images.size(); i++) {
-		device->CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eUniformBuffer,
-			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, m_uniformBuffers[i],
-			m_uniformBuffersMemory[i]);
-	}
-}
-
-void VkSampleRenderer::RecordCommandBuffer(int32 imageIndex)
-{
-	PROFILE_SCOPE(Renderer);
-
-	auto& cmdBuffer = m_renderCmdBuffers[imageIndex];
+	// PROFILE_SCOPE(GE);
 	// WIP
 
 	vk::CommandBufferBeginInfo beginInfo{};
@@ -388,15 +314,17 @@ void VkSampleRenderer::RecordCommandBuffer(int32 imageIndex)
 	cmdBuffer->begin(beginInfo);
 	{
 		vk::RenderPassBeginInfo renderPassInfo{};
-		renderPassInfo.setRenderPass(m_renderPass.get()).setFramebuffer(m_framebuffers[imageIndex].get());
+		renderPassInfo.setRenderPass(m_renderPass.get()).setFramebuffer(m_framebuffer.get());
 		// WIP: extent
-		renderPassInfo.renderArea.setOffset({ 0, 0 }).setExtent(VulkanLayer::GetSwapchain()->extent);
+		renderPassInfo.renderArea.setOffset({ 0, 0 }).setExtent(
+			vk::Extent2D{ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y });
 		std::array<vk::ClearValue, 2> clearValues = {};
 		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
 		clearValues[1].setDepthStencil({ 1.0f, 0 });
 		renderPassInfo.setClearValueCount(static_cast<uint32>(clearValues.size()));
 		renderPassInfo.setPClearValues(clearValues.data());
 
+		// WIP: render pass doesn't start from here
 		// begin render pass
 		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{
@@ -404,13 +332,13 @@ void VkSampleRenderer::RecordCommandBuffer(int32 imageIndex)
 			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 
-			for (auto& model : m_models) {
+			for (auto& model : VulkanLayer::models) {
 				for (auto& gg : model->geometryGroups) {
-					PROFILE_SCOPE(Renderer);
+					// PROFILE_SCOPE(Renderer);
 
 					// Submit via push constant (rather than a UBO)
 					cmdBuffer->pushConstants(m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u,
-						sizeof(glm::mat4), &model->m_transform);
+						sizeof(glm::mat4), &model->m_node->GetNodeTransformWCS());
 
 					vk::Buffer vertexBuffers[] = { gg.vertexBuffer.get() };
 					vk::DeviceSize offsets[] = { 0 };
@@ -422,14 +350,12 @@ void VkSampleRenderer::RecordCommandBuffer(int32 imageIndex)
 
 					// descriptor sets
 					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-						&(gg.descriptorSets[imageIndex]), 0u, nullptr);
+						&(gg.descriptorSet), 0u, nullptr);
 
 					// draw call (triangle)
 					cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 				}
 			}
-
-			::ImguiImpl::RenderVulkan(&cmdBuffer.get());
 		}
 		// end render pass
 		cmdBuffer->endRenderPass();
@@ -438,111 +364,16 @@ void VkSampleRenderer::RecordCommandBuffer(int32 imageIndex)
 	cmdBuffer->end();
 }
 
-void VkSampleRenderer::DrawFrame()
+void GeometryPass::TransitionGBufferForShaderRead()
 {
-	PROFILE_SCOPE(Renderer);
+	auto& device = VulkanLayer::device;
+	device->TransitionImageLayout(albedoImage.get(), vk::Format::eR8G8B8A8Srgb,
+		vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+}
 
-	if (m_shouldRecreateSwapchain) {
-		// m_device->waitIdle();
-
-		// m_descriptors.reset();
-		// m_graphicsPipeline.reset();
-		// m_swapchain.reset();
-
-		// m_device->freeCommandBuffers(m_device.GetGraphicsCommandPool(), m_renderCommandBuffers);
-
-		// m_swapchain = m_device.RequestDeviceSwapchainOnSurface(m_instance.GetSurface());
-		// m_graphicsPipeline = m_device.RequestDeviceGraphicsPipeline(m_swapchain.get());
-		// m_descriptors = m_device.RequestDeviceDescriptors(m_swapchain.get(), m_graphicsPipeline.get());
-
-		// m_models.clear();
-		// CreateGeometry();
-
-		// m_renderCommandBuffers.clear();
-		// AllocateRenderCommandBuffers();
-
-		m_shouldRecreateSwapchain = false;
-		m_shouldRecreatePipeline = false;
-		::ImguiImpl::InitVulkan();
-	}
-	else if (m_shouldRecreatePipeline) {
-		m_shouldRecreatePipeline = false;
-
-		// m_descriptors.reset();
-		// m_graphicsPipeline.reset();
-
-
-		// m_graphicsPipeline = m_device.RequestDeviceGraphicsPipeline(m_swapchain.get());
-		// m_descriptors = m_device.RequestDeviceDescriptors(m_swapchain.get(), m_graphicsPipeline.get());
-
-		// m_models.clear();
-		// CreateGeometry();
-
-		::ImguiImpl::InitVulkan();
-	}
-
-	uint32 imageIndex;
-
-	vk::Result result0 = m_device->acquireNextImageKHR(
-		m_swapchain->Get(), UINT64_MAX, m_imageAvailableSemaphore.get(), {}, &imageIndex);
-
-	switch (result0) {
-		case vk::Result::eErrorOutOfDateKHR: return;
-		case vk::Result::eSuccess:
-		case vk::Result::eSuboptimalKHR: break;
-		default: LOG_ABORT("failed to acquire swap chain image!");
-	}
-
-	// WIP: UNIFORM BUFFER UPDATES
-	{
-		auto world = Engine::GetWorld();
-		auto camera = world->GetActiveCamera();
-
-		UniformBufferObject ubo{};
-		ubo.view = camera->GetViewMatrix();
-		ubo.proj = camera->GetProjectionMatrix();
-
-		void* data = m_device->mapMemory(m_descriptors->GetUniformBuffersMemory()[imageIndex], 0, sizeof(ubo));
-		memcpy(data, &ubo, sizeof(ubo));
-		m_device->unmapMemory(m_descriptors->GetUniformBuffersMemory()[imageIndex]);
-	}
-
-	vk::SubmitInfo submitInfo{};
-	vk::Semaphore waitSemaphores[] = { m_imageAvailableSemaphore.get() };
-
-
-	RecordCommandBuffer(imageIndex);
-
-	// wait with writing colors to the image until it's available
-	// the implementation can already start executing our vertex shader and such while the image is not yet
-	// available
-	vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
-
-	submitInfo.setWaitSemaphoreCount(1u)
-		.setPWaitSemaphores(waitSemaphores)
-		.setPWaitDstStageMask(waitStages)
-		.setCommandBufferCount(1u)
-		.setPCommandBuffers(&m_renderCmdBuffers[imageIndex].get());
-
-	// which semaphores to signal once the command buffer(s) have finished execution
-	vk::Semaphore signalSemaphores[] = { m_renderFinishedSemaphore.get() };
-	submitInfo.setSignalSemaphoreCount(1u).setPSignalSemaphores(signalSemaphores);
-
-	m_device.GetGraphicsQueue()->submit(1u, &submitInfo, {});
-	vk::PresentInfoKHR presentInfo;
-	presentInfo.setWaitSemaphoreCount(1u).setPWaitSemaphores(signalSemaphores);
-
-	vk::SwapchainKHR swapChains[] = { m_swapchain->Get() };
-	presentInfo.setSwapchainCount(1u).setPSwapchains(swapChains).setPImageIndices(&imageIndex).setPResults(nullptr);
-
-	vk::Result result1 = m_device.GetPresentQueue()->presentKHR(presentInfo);
-
-	m_device.GetPresentQueue()->waitIdle();
-
-	switch (result1) {
-		case vk::Result::eErrorOutOfDateKHR:
-		case vk::Result::eSuboptimalKHR: return;
-		case vk::Result::eSuccess: break;
-		default: LOG_ABORT("failed to acquire swap chain image!");
-	}
+void GeometryPass::TransitionGBufferForAttachmentWrite()
+{
+	auto& device = VulkanLayer::device;
+	device->TransitionImageLayout(albedoImage.get(), vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eShaderReadOnlyOptimal,
+		vk::ImageLayout::eColorAttachmentOptimal);
 }

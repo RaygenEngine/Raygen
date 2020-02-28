@@ -162,11 +162,11 @@ public:
 			if (uri::StripExt(pod->path) == desiredFullPath) {
 				std::string resultFilename = fmt::format(
 					"{}_{}{}", uri::StripExt(desiredFilename), std::rand(), uri::GetDiskExtension(desiredFilename));
-				return fs::path(desiredFilename).replace_filename(resultFilename).replace_extension().generic_string();
+				return fs::path(desiredFilename).replace_filename(resultFilename).generic_string();
 			}
 		}
 
-		return uri::Uri(uri::StripExt(desiredFilename));
+		return uri::Uri(desiredFilename);
 	}
 
 
