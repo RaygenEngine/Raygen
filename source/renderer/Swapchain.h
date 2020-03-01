@@ -24,4 +24,8 @@ struct Swapchain {
 	vk::UniqueRenderPass renderPass;
 
 	Swapchain(LogicalDevice* ld, vk::SurfaceKHR surface);
+
+private:
+	void InitRenderPass();
+	void InitFrameBuffers();
 };

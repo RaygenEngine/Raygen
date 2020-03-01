@@ -8,13 +8,10 @@
 class DeferredPass {
 public:
 	// pipeline stuffs
-	// GENERIC MODEL GEOMETRY PASS PIPELINE
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;
 
+	void InitPipeline(vk::RenderPass& renderPass);
 
-	void InitRenderPassAndFramebuffers();
-	void InitPipelineAndStuff();
-
-	void RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Framebuffer& framebuffer);
+	void RecordCmd(vk::CommandBuffer* cmdBuffer);
 };
