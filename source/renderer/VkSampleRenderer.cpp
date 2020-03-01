@@ -122,7 +122,7 @@ void VkSampleRenderer::RecordCommandBuffer(int32 imageIndex)
 					sizeof(glm::mat4), &model->m_node->GetNodeTransformWCS());
 
 				for (auto& gg : model->GetGeometryGroups()) {
-					PROFILE_SCOPE(Renderer);
+					PROFILE_SCOPE_CHEAP(Renderer);
 
 					vk::Buffer vertexBuffers[] = { gg.vertexBuffer.get() };
 					vk::DeviceSize offsets[] = { 0 };

@@ -1,8 +1,9 @@
 #include "pch/pch.h"
 #include "editor/windows/general/EdProfilerWindow.h"
 #include "system/profiler/ProfileScope.h"
+#include "editor/misc/NativeFileBrowser.h"
 
-#include <magic_enum.hpp>
+#include "reflection/ReflEnum.h"
 #include <spdlog/fmt/fmt.h>
 #include "editor/imgui/ImEd.h"
 
@@ -60,7 +61,7 @@ void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 		ImGui::ProgressBar(perc, ImVec2(totWidth / 4.f, 0));
 		ImGui::SameLine();
 
-		std::string loc = fmt::format("{} {}", entry->function, entry->line);
+		std::string loc = fmt::format("{} {}", entry->frontFacingName, entry->line);
 
 		ImEd::SetNextItemPerc(0.3f);
 		ImGui::Text(loc.c_str());
@@ -117,6 +118,18 @@ void ProfilerWindow::ImguiDraw()
 			Profiler::BeginProfiling();
 		}
 	}
+	ImGui::SameLine();
+	if (ImEd::Button("Export Session")) {
+		if (auto file = ed::NativeFileBrowser::SaveFile({ "json" })) {
+			Profiler::ExportSessionToJson(*file);
+		}
+	}
+
+	ImGui::SameLine();
+	if (ImEd::Button("Reset Session")) {
+		Profiler::ResetSession();
+	}
+
 
 	ImGuiStyle& style = ImGui::GetStyle();
 	float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
@@ -154,6 +167,5 @@ void ProfilerWindow::ImguiDraw()
 			ImGui::Separator();
 		}
 	}
-	Profiler::BeginFrame();
 }
 } // namespace ed

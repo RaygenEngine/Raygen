@@ -13,10 +13,11 @@ struct ProfileScopeBase {
 	const char* function;
 	size_t hash;
 	ProfilerSetup::Module engModule;
+	std::string_view frontFacingName;
 
 	size_t hits;
 	Profiler::Precision sumDuration;
-	int32 inScope{ false };
+
 
 	ProfileScopeBase(const char* file, int32 line, const char* function, ProfilerSetup::Module engModule)
 		: file(file)
@@ -27,13 +28,21 @@ struct ProfileScopeBase {
 		, hits(0)
 		, sumDuration()
 	{
+		std::string_view trim = " __cdecl ";
+
+		// TODO: make this search portable
+		frontFacingName = std::string_view(function);
+		auto trimLoc = frontFacingName.find(trim);
+		if (trimLoc != std::string::npos) {
+			frontFacingName = frontFacingName.substr(trimLoc + trim.size());
+		}
 		Profiler::Register(this);
 	}
 
-	void AddExecution(Profiler::Precision d)
+	void AddExecution(Profiler::Precision duration)
 	{
 		hits++;
-		sumDuration += d;
+		sumDuration += duration;
 	}
 
 	void Reset()
@@ -42,7 +51,16 @@ struct ProfileScopeBase {
 		sumDuration = {};
 	}
 
+	template<bool ExtendedScope = ProfilerSetup::c_isDefaultScopeExtended>
 	struct Scope {
+		static constexpr bool isExtendedScope()
+		{
+			if constexpr (ProfilerSetup::c_shouldOverrideAllWithDefault) {
+				return ProfilerSetup::c_isDefaultScopeExtended;
+			}
+			return ExtendedScope;
+		}
+
 		ProfileScopeBase& owner;
 		ch::time_point<ch::system_clock> time;
 
@@ -51,15 +69,18 @@ struct ProfileScopeBase {
 		{
 			if (Profiler::s_isProfiling) {
 				time = ch::system_clock::now();
-				owner.inScope++;
 			}
 		}
 
 		~Scope()
 		{
 			if (Profiler::s_isProfiling) {
-				owner.inScope--;
-				owner.AddExecution(ch::duration_cast<Profiler::Precision>(ch::system_clock::now() - time));
+				auto now = ch::system_clock::now();
+				owner.AddExecution(now - time);
+
+				if constexpr (isExtendedScope()) {
+					Profiler::ReportExtendedScope(&owner, time, now);
+				}
 			}
 		}
 	};
@@ -87,7 +108,14 @@ struct ProfileScope<M, true> : ProfileScopeBase {
 	}
 };
 
+// TODO: non portable __FUNCSIG__
+// TODO: use a single macro and forward arguments
 // For parameter use one of ProfilerSetup.h (System, Core, Editor, Renderer, World etc)
 #define PROFILE_SCOPE(EngineModule)                                                                                    \
 	static ProfileScope<ProfilerSetup::EngineModule> MACRO_PASTE(z_prof_, __LINE__)(__FILE__, __LINE__, __FUNCSIG__);  \
 	ProfileScope<ProfilerSetup::EngineModule>::Scope MACRO_PASTE(z_prof_sc, __LINE__)(MACRO_PASTE(z_prof_, __LINE__));
+
+#define PROFILE_SCOPE_CHEAP(EngineModule)                                                                              \
+	static ProfileScope<ProfilerSetup::EngineModule> MACRO_PASTE(z_prof_, __LINE__)(__FILE__, __LINE__, __FUNCSIG__);  \
+	ProfileScope<ProfilerSetup::EngineModule>::Scope<false> MACRO_PASTE(z_prof_sc, __LINE__)(                          \
+		MACRO_PASTE(z_prof_, __LINE__));
