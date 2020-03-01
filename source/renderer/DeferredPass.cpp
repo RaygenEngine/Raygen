@@ -63,30 +63,29 @@ void DeferredPass::InitRenderPassAndFramebuffers()
 		.setDependencyCount(1)
 		.setPDependencies(&dependency);
 
-	m_renderPass = device->handle->createRenderPassUnique(renderPassInfo);
+	VulkanLayer::swapchain->renderPass = device->handle->createRenderPassUnique(renderPassInfo);
 
-	m_framebuffers.clear();
-	m_framebuffers.resize(swapchain->images.size());
+	VulkanLayer::swapchain->framebuffers.clear();
+	VulkanLayer::swapchain->framebuffers.resize(swapchain->images.size());
 
 	// framebuffers
 	for (auto i = 0; i < swapchain->images.size(); ++i) {
 		std::array<vk::ImageView, 2> attachments = { swapchain->imageViews[i].get(), swapchain->depthImageView.get() };
 		vk::FramebufferCreateInfo createInfo{};
-		createInfo.setRenderPass(m_renderPass.get())
+		createInfo.setRenderPass(VulkanLayer::swapchain->renderPass.get())
 			.setAttachmentCount(static_cast<uint32>(attachments.size()))
 			.setPAttachments(attachments.data())
 			.setWidth(swapchain->extent.width)
 			.setHeight(swapchain->extent.height)
 			.setLayers(1);
 
-		m_framebuffers[i] = device->handle->createFramebufferUnique(createInfo);
+		VulkanLayer::swapchain->framebuffers[i] = device->handle->createFramebufferUnique(createInfo);
 	}
 }
 
 void DeferredPass::InitPipelineAndStuff()
 {
 	auto& device = VulkanLayer::device;
-	auto& swapchain = VulkanLayer::swapchain;
 	auto& descriptorSetLayout = VulkanLayer::quadDescriptorSetLayout;
 
 	// shaders
@@ -114,18 +113,20 @@ void DeferredPass::InitPipelineAndStuff()
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.setTopology(vk::PrimitiveTopology::eTriangleList).setPrimitiveRestartEnable(VK_FALSE);
 
+
+	const float x = static_cast<float>(g_ViewportCoordinates.position.x);
+	const float y = static_cast<float>(g_ViewportCoordinates.position.y);
+	const float width = static_cast<float>(g_ViewportCoordinates.size.x);
+	const float height = static_cast<float>(g_ViewportCoordinates.size.y);
+
 	vk::Viewport viewport{};
-	viewport.setX(static_cast<float>(g_ViewportCoordinates.position.x))
-		.setY(static_cast<float>(g_ViewportCoordinates.position.y + g_ViewportCoordinates.size.y))
-		.setWidth(static_cast<float>(g_ViewportCoordinates.size.x))
-		.setHeight(-static_cast<float>(g_ViewportCoordinates.size.y))
-		.setMinDepth(0.f)
-		.setMaxDepth(1.f);
+	viewport.setX(x).setY(y).setWidth(width).setHeight(height).setMinDepth(0.f).setMaxDepth(1.f);
+
+	vk::Extent2D ext;
+	ext.setWidth(g_ViewportCoordinates.size.x).setHeight(g_ViewportCoordinates.size.y);
 
 	vk::Rect2D scissor{};
-	scissor.setOffset({ 0, 0 });
-	// WIP: is this correct?
-	scissor.setExtent(swapchain->extent);
+	scissor.setOffset(vk::Offset2D(g_ViewportCoordinates.position.x, g_ViewportCoordinates.position.y)).setExtent(ext);
 
 	vk::PipelineViewportStateCreateInfo viewportState{};
 	viewportState.setViewportCount(1u).setPViewports(&viewport).setScissorCount(1u).setPScissors(&scissor);
@@ -135,7 +136,7 @@ void DeferredPass::InitPipelineAndStuff()
 		.setRasterizerDiscardEnable(VK_FALSE)
 		.setPolygonMode(vk::PolygonMode::eFill)
 		.setLineWidth(1.f)
-		.setCullMode(vk::CullModeFlagBits::eBack)
+		.setCullMode(vk::CullModeFlagBits::eFront) // TODO: Fix in shader
 		.setFrontFace(vk::FrontFace::eCounterClockwise)
 		.setDepthBiasEnable(VK_FALSE)
 		.setDepthBiasConstantFactor(0.f)
@@ -213,7 +214,7 @@ void DeferredPass::InitPipelineAndStuff()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(nullptr) // TODO: check
 		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(m_renderPass.get())
+		.setRenderPass(VulkanLayer::swapchain->renderPass.get())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
@@ -230,18 +231,20 @@ void DeferredPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Framebuffer& fram
 	// begin command buffer recording
 	cmdBuffer->begin(beginInfo);
 	{
+		// TODO: Fix render pass
 		vk::RenderPassBeginInfo renderPassInfo{};
-		renderPassInfo.setRenderPass(m_renderPass.get()).setFramebuffer(framebuffer);
-		// WIP: extent
-		renderPassInfo.renderArea.setOffset({ 0, 0 }).setExtent(
-			vk::Extent2D{ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y });
+		renderPassInfo.setRenderPass(VulkanLayer::swapchain->renderPass.get()).setFramebuffer(framebuffer);
+
+		// WIP: test proper area
+		renderPassInfo.renderArea
+			.setOffset(vk::Offset2D(g_ViewportCoordinates.position.x, g_ViewportCoordinates.position.y))
+			.setExtent(vk::Extent2D{ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y });
 		std::array<vk::ClearValue, 2> clearValues = {};
-		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+		clearValues[0].setColor(std::array{ 0.2f, 0.1f, 0.0f, 1.0f });
 		clearValues[1].setDepthStencil({ 1.0f, 0 });
 		renderPassInfo.setClearValueCount(static_cast<uint32>(clearValues.size()));
 		renderPassInfo.setPClearValues(clearValues.data());
 
-		// WIP: render pass doesn't start from here
 		// begin render pass
 		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{
@@ -255,7 +258,6 @@ void DeferredPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Framebuffer& fram
 			// draw call (triangle)
 			cmdBuffer->draw(3u, 1u, 0u, 0u);
 		}
-		ImguiImpl::RenderVulkan(cmdBuffer);
 
 		// end render pass
 		cmdBuffer->endRenderPass();

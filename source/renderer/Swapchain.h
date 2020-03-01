@@ -19,5 +19,9 @@ struct Swapchain {
 	vk::UniqueDeviceMemory depthImageMemory;
 	vk::UniqueImageView depthImageView;
 
+
+	std::vector<vk::UniqueFramebuffer> framebuffers;
+	vk::UniqueRenderPass renderPass;
+
 	Swapchain(LogicalDevice* ld, vk::SurfaceKHR surface);
 };

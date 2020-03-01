@@ -62,6 +62,7 @@ struct MulticastEvent {
 
 private:
 	std::vector<Listener*> listeners;
+	std::vector<FunctionType> freeFunctions;
 
 	void Bind(Listener* listener) { listeners.push_back(listener); }
 
@@ -71,9 +72,16 @@ public:
 	void Broadcast(Args... args)
 	{
 		for (auto listener : listeners) {
-			listener->m_callback(std::forward<Args>(args)...);
+			listener->m_callback(args...);
+		}
+
+		for (auto& func : freeFunctions) {
+			func(args...);
 		}
 	}
+
+	void BindFreeFunction(std::function<void(Args...)>&& func) { freeFunctions.emplace_back(func); }
+	void UnbindAllFreeFunctions() { freeFunctions.clear(); }
 
 	[[nodiscard]] constexpr bool IsBound() const noexcept { return listeners.size() > 0; }
 };

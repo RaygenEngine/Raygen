@@ -1,7 +1,6 @@
 
 #include "editor/imgui/ImguiImpl.h"
 #include "system/Engine.h"
-#include "renderer/VkSampleRenderer.h"
 #include "reflection/PodTools.h"
 #include "asset/PodIncludes.h"
 #include "system/console/ConsoleVariable.h"
@@ -232,7 +231,7 @@ void ImguiImpl::InitVulkan()
 	init.MinImageCount = VulkanLayer::swapchain->images.size();
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init, VulkanLayer::defPass.m_renderPass.get());
+	ImGui_ImplVulkan_Init(&init, VulkanLayer::swapchain->renderPass.get());
 
 
 	auto cmdBuffer = device->transferCmdBuffer.get();
