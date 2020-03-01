@@ -1,18 +1,17 @@
 #include "pch/pch.h"
 
-#include "renderer/PhysicalDeviceWrapper.h"
-#include "renderer/DeviceWrapper.h"
+#include "renderer/PhysicalDevice.h"
+#include "renderer/LogicalDevice.h"
 
 #include "system/Logger.h"
 
 #include <set>
 
 
-void PhysicalDeviceWrapper::Init(vk::PhysicalDevice handle, vk::SurfaceKHR surface)
+PhysicalDevice::PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surface)
+	: handle(vkHandle)
 {
-	m_vkHandle = handle;
-
-	std::vector<vk::QueueFamilyProperties> queueFamilyProperties = m_vkHandle.getQueueFamilyProperties();
+	std::vector<vk::QueueFamilyProperties> queueFamilyProperties = handle.getQueueFamilyProperties();
 
 	uint32 i = 0;
 	for (const auto& qFP : queueFamilyProperties) {
@@ -23,7 +22,7 @@ void PhysicalDeviceWrapper::Init(vk::PhysicalDevice handle, vk::SurfaceKHR surfa
 		queueFamily.rating += qFP.queueCount / 4.f;
 
 		// if queue supports presentation
-		auto supportsPresent = m_vkHandle.getSurfaceSupportKHR(i, surface);
+		auto supportsPresent = handle.getSurfaceSupportKHR(i, surface);
 
 
 		// WIP: the more functionality a queue supports the lesser the score
@@ -32,19 +31,19 @@ void PhysicalDeviceWrapper::Init(vk::PhysicalDevice handle, vk::SurfaceKHR surfa
 									 + bool(qFP.queueFlags & vk::QueueFlagBits::eTransfer) + supportsPresent));
 
 		if (qFP.queueFlags & vk::QueueFlagBits::eGraphics) {
-			m_graphicsFamilies.push_back(queueFamily);
+			graphicsFamilies.push_back(queueFamily);
 		}
 
 		if (qFP.queueFlags & vk::QueueFlagBits::eCompute) {
-			m_computeFamilies.push_back(queueFamily);
+			computeFamilies.push_back(queueFamily);
 		}
 
 		if (qFP.queueFlags & vk::QueueFlagBits::eTransfer) {
-			m_transferFamilies.push_back(queueFamily);
+			transferFamilies.push_back(queueFamily);
 		}
 
 		if (supportsPresent) {
-			m_presentFamilies.push_back(queueFamily);
+			presentFamilies.push_back(queueFamily);
 		}
 
 		i++;
@@ -70,27 +69,22 @@ void PhysicalDeviceWrapper::Init(vk::PhysicalDevice handle, vk::SurfaceKHR surfa
 	// WIP:
 
 	// TODO: this device must support presentation
-	if (m_presentFamilies.empty()) {
-		m_rating = 0;
+	if (presentFamilies.empty()) {
+		rating = 0.f;
 	}
 
-	m_rating = 1u;
+	rating = 1.f;
+
+	// specific surface support details
+
+	ssDetails.capabilities = handle.getSurfaceCapabilitiesKHR(surface);
+	ssDetails.formats = handle.getSurfaceFormatsKHR(surface);
+	ssDetails.presentModes = handle.getSurfacePresentModesKHR(surface);
 }
 
-SwapchainSupportDetails PhysicalDeviceWrapper::GetSwapchainSupportDetails(vk::SurfaceKHR surface)
+uint32 PhysicalDevice::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties)
 {
-	SwapchainSupportDetails details;
-
-	details.capabilities = m_vkHandle.getSurfaceCapabilitiesKHR(surface);
-	details.formats = m_vkHandle.getSurfaceFormatsKHR(surface);
-	details.presentModes = m_vkHandle.getSurfacePresentModesKHR(surface);
-
-	return details;
-}
-
-uint32 PhysicalDeviceWrapper::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties)
-{
-	vk::PhysicalDeviceMemoryProperties memProperties = m_vkHandle.getMemoryProperties();
+	vk::PhysicalDeviceMemoryProperties memProperties = handle.getMemoryProperties();
 
 	for (uint32 i = 0; i < memProperties.memoryTypeCount; ++i) {
 		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
@@ -101,11 +95,11 @@ uint32 PhysicalDeviceWrapper::FindMemoryType(uint32 typeFilter, vk::MemoryProper
 	LOG_ABORT("Failed to find suitable memory type!");
 }
 
-vk::Format PhysicalDeviceWrapper::FindSupportedFormat(
+vk::Format PhysicalDevice::FindSupportedFormat(
 	const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features)
 {
 	for (auto format : candidates) {
-		vk::FormatProperties props = m_vkHandle.getFormatProperties(format);
+		vk::FormatProperties props = handle.getFormatProperties(format);
 
 		if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
 			return format;
@@ -118,7 +112,7 @@ vk::Format PhysicalDeviceWrapper::FindSupportedFormat(
 	LOG_ABORT("Failed to find supported format!");
 }
 
-vk::Format PhysicalDeviceWrapper::FindDepthFormat()
+vk::Format PhysicalDevice::FindDepthFormat()
 {
 	return FindSupportedFormat({ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint },
 		vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);

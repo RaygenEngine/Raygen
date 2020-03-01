@@ -10,19 +10,15 @@
 
 class DeviceWrapper;
 
-class Texture {
+struct Texture {
 
-	vk::UniqueImage m_handle;
-	vk::UniqueDeviceMemory m_memory;
+	vk::UniqueImage handle;
+	vk::UniqueDeviceMemory memory;
 
-	vk::UniqueImageView m_view;
+	vk::UniqueImageView view;
 
 	// PERF: one to many views
-	vk::UniqueSampler m_sampler;
+	vk::UniqueSampler sampler;
 
-public:
-	Texture(DeviceWrapper& device, PodHandle<TexturePod> handle);
-
-	vk::ImageView GetView() const { return m_view.get(); }
-	vk::Sampler GetSampler() const { return m_sampler.get(); }
+	Texture(PodHandle<TexturePod> podHandle);
 };
