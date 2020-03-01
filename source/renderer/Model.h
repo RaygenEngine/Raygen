@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer/DeviceWrapper.h"
+#include "renderer/LogicalDevice.h"
 #include "asset/pods/ModelPod.h"
 #include "world/nodes/geometry/GeometryNode.h"
 
@@ -28,20 +28,15 @@ struct GPUGeometryGroup {
 	// one for each swapchain image
 	// TODO: check
 	// https://stackoverflow.com/questions/36772607/vulkan-texture-rendering-on-multiple-meshes this
-	std::vector<vk::DescriptorSet> descriptorSets;
+	vk::DescriptorSet descriptorSet;
 
 	uint32 indexCount{ 0u };
 };
 
-class Model {
-	std::vector<GPUGeometryGroup> m_geometryGroups;
+struct Model {
+	std::vector<GPUGeometryGroup> geometryGroups;
 
-public:
-	Model(DeviceWrapper& device, Descriptors* descriptors, PodHandle<ModelPod> handle);
+	Model(PodHandle<ModelPod> podHandle);
 
-	const std::vector<GPUGeometryGroup>& GetGeometryGroups() const { return m_geometryGroups; }
-
-	glm::mat4 m_transform;
-
-	GeometryNode* m_node; // WIP:
+	GeometryNode* m_node;
 };

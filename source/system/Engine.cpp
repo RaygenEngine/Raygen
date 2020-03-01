@@ -10,6 +10,7 @@
 #include "renderer/VkSampleRenderer.h"
 #include "platform/GlfwUtil.h"
 #include "system/reflection/ReflectionDb.h"
+#include "renderer/VulkanLayer.h"
 #include <glfw/glfw3.h>
 #include <algorithm>
 
@@ -36,7 +37,6 @@ void Engine::InitEngine(AppBase* app)
 	m_assetFrontEndManager = new AssetFrontEndManager();
 	m_assetImporterManager->Init(m_app->m_assetPath);
 
-
 	m_lastRecordTime = ch::system_clock::now();
 
 	InitRenderer();
@@ -45,10 +45,7 @@ void Engine::InitEngine(AppBase* app)
 void Engine::CreateWorldFromFile(const std::string& filename)
 {
 	if (m_world) {
-		if (m_renderer) {
-			delete m_renderer;
-			m_renderer = nullptr;
-		}
+
 		delete m_world;
 	}
 	m_world = new World(m_app->MakeNodeFactory());
@@ -60,10 +57,6 @@ void Engine::CreateWorldFromFile(const std::string& filename)
 void Engine::InitRenderer()
 {
 	glfwInit();
-	// WIP:
-
-	m_renderer = new RendererT();
-
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	m_window
@@ -72,14 +65,15 @@ void Engine::InitRenderer()
 	glfwutl::SetupEventCallbacks(m_window);
 
 	// Vk instance and debug messenger
-	m_renderer->InitInstanceAndSurface(glfwutl::GetVulkanExtensions(), m_window);
+	VulkanLayer::InitVulkanLayer(glfwutl::GetVulkanExtensions(), m_window);
+	// m_renderer->InitInstanceAndSurface(glfwutl::GetVulkanExtensions(), m_window);
 
 
 	if (m_isEditorEnabled) {
 		m_editor = new Editor();
 	}
 
-	m_renderer->Init();
+	ImguiImpl::InitVulkan();
 }
 
 bool Engine::HasCmdArgument(const std::string& argument)
@@ -155,9 +149,10 @@ void Engine::ReportFrameDrawn()
 
 void Engine::ToggleEditor()
 {
-	if (m_isEditorEnabled && m_renderer) {
-		m_isEditorActive ? DeactivateEditor() : ActivateEditor();
-	}
+	// WIP
+	// if (m_isEditorEnabled && m_renderer) {
+	//	m_isEditorActive ? DeactivateEditor() : ActivateEditor();
+	//}
 }
 
 void Engine::ActivateEditor()
@@ -179,7 +174,6 @@ void Engine::DeactivateEditor()
 void Engine::DeinitEngine()
 {
 	// NOTE: It is REALLY important to remember the reverse order here
-	delete m_renderer;
 	delete m_editor;
 	delete m_world;
 	glfwDestroyWindow(m_window);

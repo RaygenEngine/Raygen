@@ -115,7 +115,7 @@ void load(Archive& ar, PodMetaData& metadata)
 
 void SerializePodToBinary(PodMetaData& metadata, AssetPod* pod, const fs::path& file)
 {
-	CLOG_ABORT(file.extension() == "bin", "Incorrect extension");
+	CLOG_ABORT(file.extension() != ".bin", "Incorrect extension");
 	fs::create_directories(file.parent_path());
 	std::ofstream os(file, std::ios::binary);
 	if (!os) {
