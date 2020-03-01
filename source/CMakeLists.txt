@@ -34,11 +34,14 @@ set(SOURCE_FILES
 	editor/imgui/ImguiImpl.cpp
 	editor/imgui/FileBrowser.cpp
 	editor/imgui/ImGuizmo.cpp
+	
+	editor/misc/NativeFileBrowser.cpp
 
 	platform/GlfwUtil.cpp
 
 	renderer/GeometryPass.cpp
 	renderer/DeferredPass.cpp
+	renderer/EditorPass.cpp
 	renderer/VulkanLayer.cpp
 	renderer/Instance.cpp
 	renderer/PhysicalDevice.cpp
@@ -46,8 +49,7 @@ set(SOURCE_FILES
 	renderer/Swapchain.cpp
 	renderer/Model.cpp
 	renderer/Texture.cpp
-	editor/misc/NativeFileBrowser.cpp
-
+	
 
 	system/Engine.cpp
 	system/Input.cpp

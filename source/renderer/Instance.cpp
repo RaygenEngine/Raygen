@@ -90,15 +90,12 @@ Instance::Instance(std::vector<const char*> requiredExtensions, WindowType* wind
 
 	/* VULKAN_KEY_START */
 
-	// Use standard_validation meta layer that enables all recommended validation layers
+
 	std::vector<char const*> instanceLayerNames = { "VK_LAYER_KHRONOS_validation" };
 
-	if (!CheckLayers(instanceLayerNames, instanceLayerProperties)) {
-		instanceLayerNames[0] = { "VK_LAYER_LUNARG_standard_validation" };
-		LOG_ERROR(
-			"Validation layers not found. Set the environment variable VK_LAYER_PATH to point to the location of your "
-			"layers");
-	}
+	const bool foundLayers = CheckLayers(instanceLayerNames, instanceLayerProperties);
+	CLOG_WARN(!foundLayers, "Vulkan Validation layers not found.");
+
 
 	// create instance
 	vk::ApplicationInfo appInfo{};
@@ -113,35 +110,35 @@ Instance::Instance(std::vector<const char*> requiredExtensions, WindowType* wind
 		.setEnabledExtensionCount(static_cast<uint32>(allExtensions.size()))
 		.setPpEnabledExtensionNames(allExtensions.data());
 
-#ifndef NDEBUG
-	createInfo.setEnabledLayerCount(static_cast<uint32>(instanceLayerNames.size()))
-		.setPpEnabledLayerNames(instanceLayerNames.data());
-#endif
+	if (foundLayers) {
+		createInfo.setEnabledLayerCount(static_cast<uint32>(instanceLayerNames.size()))
+			.setPpEnabledLayerNames(instanceLayerNames.data());
+	}
 
 	handle = vk::createInstanceUnique(createInfo);
 
-#ifndef NDEBUG
-	pfnVkCreateDebugUtilsMessengerEXT
-		= reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(handle->getProcAddr("vkCreateDebugUtilsMessengerEXT"));
-	if (!pfnVkCreateDebugUtilsMessengerEXT) {
-		LOG_ABORT("GetInstanceProcAddr: Unable to find pfnVkCreateDebugUtilsMessengerEXT function.");
+	if (foundLayers) {
+		pfnVkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+			handle->getProcAddr("vkCreateDebugUtilsMessengerEXT"));
+		if (!pfnVkCreateDebugUtilsMessengerEXT) {
+			LOG_ABORT("GetInstanceProcAddr: Unable to find pfnVkCreateDebugUtilsMessengerEXT function.");
+		}
+
+		pfnVkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+			handle->getProcAddr("vkDestroyDebugUtilsMessengerEXT"));
+		if (!pfnVkDestroyDebugUtilsMessengerEXT) {
+			LOG_ABORT("GetInstanceProcAddr: Unable to find pfnVkDestroyDebugUtilsMessengerEXT function.");
+		}
+
+		vk::DebugUtilsMessageSeverityFlagsEXT severityFlags(
+			vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError);
+		vk::DebugUtilsMessageTypeFlagsEXT messageTypeFlags(vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral
+														   | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance
+														   | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation);
+		debugUtilsMessenger = handle->createDebugUtilsMessengerEXTUnique(
+			vk::DebugUtilsMessengerCreateInfoEXT({}, severityFlags, messageTypeFlags, &DebugMessageFunc));
 	}
 
-	pfnVkDestroyDebugUtilsMessengerEXT
-		= reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(handle->getProcAddr("vkDestroyDebugUtilsMessengerEXT"));
-	if (!pfnVkDestroyDebugUtilsMessengerEXT) {
-		LOG_ABORT("GetInstanceProcAddr: Unable to find pfnVkDestroyDebugUtilsMessengerEXT function.");
-	}
-
-	vk::DebugUtilsMessageSeverityFlagsEXT severityFlags(
-		vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError);
-	vk::DebugUtilsMessageTypeFlagsEXT messageTypeFlags(vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral
-													   | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance
-													   | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation);
-	debugUtilsMessenger = handle->createDebugUtilsMessengerEXTUnique(
-		vk::DebugUtilsMessengerCreateInfoEXT({}, severityFlags, messageTypeFlags, &DebugMessageFunc));
-#endif
-	// create surface (WIP: currently C form)
 
 	VkSurfaceKHR tmp;
 	if (glfwCreateWindowSurface(handle.get(), window, nullptr, &tmp) != VK_SUCCESS) {

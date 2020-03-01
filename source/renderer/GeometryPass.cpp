@@ -10,7 +10,6 @@ void GeometryPass::CreateFramebufferImageViews()
 
 void GeometryPass::InitRenderPassAndFramebuffers()
 {
-	auto& swapchain = VulkanLayer::swapchain;
 	auto& device = VulkanLayer::device;
 
 
@@ -125,7 +124,6 @@ void GeometryPass::InitRenderPassAndFramebuffers()
 void GeometryPass::InitPipelineAndStuff()
 {
 	auto& device = VulkanLayer::device;
-	auto& swapchain = VulkanLayer::swapchain;
 	auto& descriptorSetLayout = VulkanLayer::modelDescriptorSetLayout;
 
 	// shaders
@@ -194,17 +192,16 @@ void GeometryPass::InitPipelineAndStuff()
 	inputAssembly.setTopology(vk::PrimitiveTopology::eTriangleList).setPrimitiveRestartEnable(VK_FALSE);
 
 	vk::Viewport viewport{};
-	viewport.setX(static_cast<float>(g_ViewportCoordinates.position.x))
-		.setY(static_cast<float>(g_ViewportCoordinates.position.y + g_ViewportCoordinates.size.y))
-		.setWidth(static_cast<float>(g_ViewportCoordinates.size.x))
-		.setHeight(-static_cast<float>(g_ViewportCoordinates.size.y))
+	viewport.setX(0)
+		.setY((float)g_ViewportCoordinates.size.y)
+		.setWidth((float)g_ViewportCoordinates.size.x)
+		.setHeight(-(float)(g_ViewportCoordinates.size.y))
 		.setMinDepth(0.f)
 		.setMaxDepth(1.f);
 
 	vk::Rect2D scissor{};
 	scissor.setOffset({ 0, 0 });
-	// WIP: is this correct?
-	scissor.setExtent(swapchain->extent);
+	scissor.setExtent({ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y });
 
 	vk::PipelineViewportStateCreateInfo viewportState{};
 	viewportState.setViewportCount(1u).setPViewports(&viewport).setScissorCount(1u).setPScissors(&scissor);
@@ -319,7 +316,7 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 		renderPassInfo.renderArea.setOffset({ 0, 0 }).setExtent(
 			vk::Extent2D{ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y });
 		std::array<vk::ClearValue, 2> clearValues = {};
-		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+		clearValues[0].setColor(std::array{ 0.0f, 0.1f, 0.15f, 1.0f });
 		clearValues[1].setDepthStencil({ 1.0f, 0 });
 		renderPassInfo.setClearValueCount(static_cast<uint32>(clearValues.size()));
 		renderPassInfo.setPClearValues(clearValues.data());

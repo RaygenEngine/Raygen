@@ -7,12 +7,17 @@
 #include "editor/Editor.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"
-#include "renderer/VkSampleRenderer.h"
 #include "platform/GlfwUtil.h"
 #include "system/reflection/ReflectionDb.h"
 #include "renderer/VulkanLayer.h"
 #include <glfw/glfw3.h>
 #include <algorithm>
+
+ConsoleFunction<> debugCoords{ "d.viewport", []() {
+								  auto& c = g_ViewportCoordinates;
+								  LOG_REPORT("\n viewport.Size: {}, {}\n viewport.Pos: {} {}", c.size.x, c.size.y,
+									  c.position.x, c.position.y);
+							  } };
 
 Engine::~Engine()
 {
@@ -64,10 +69,7 @@ void Engine::InitRenderer()
 
 	glfwutl::SetupEventCallbacks(m_window);
 
-	// Vk instance and debug messenger
 	VulkanLayer::InitVulkanLayer(glfwutl::GetVulkanExtensions(), m_window);
-	// m_renderer->InitInstanceAndSurface(glfwutl::GetVulkanExtensions(), m_window);
-
 
 	if (m_isEditorEnabled) {
 		m_editor = new Editor();

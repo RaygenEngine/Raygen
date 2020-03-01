@@ -8,6 +8,7 @@
 #include "renderer/Model.h"
 #include "renderer/GeometryPass.h"
 #include "renderer/DeferredPass.h"
+#include "renderer/EditorPass.h"
 
 #include <vulkan/vulkan.hpp>
 struct UniformBufferObject {
@@ -52,6 +53,7 @@ public:
 
 	inline static GeometryPass geomPass;
 	inline static DeferredPass defPass;
+	inline static EditorPass editorPass;
 
 	static void ReinitModels();
 

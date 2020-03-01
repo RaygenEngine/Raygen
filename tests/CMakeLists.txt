@@ -21,8 +21,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 # Additional dependencies needed only by Raygen-Test
 include_directories(${DEPENDENCIES_DIRECTORY}/catch2/single_include)
 
-message(WARN "${DEPENDENCIES_DIRECTORY}")
-
 # enforce cpp20
 set_property(TARGET Raygen-Test PROPERTY CXX_STANDARD 20)
 set_property(TARGET Raygen-Test PROPERTY CXX_STANDARD_REQUIRED ON)

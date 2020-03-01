@@ -4,6 +4,7 @@
 
 #include "system/Engine.h"
 #include "system/EngineEvents.h"
+#include "system/Input.h"
 #include "renderer/Model.h"
 #include "world/World.h"
 #include "world/nodes/camera/CameraNode.h"
@@ -32,12 +33,6 @@ void VulkanLayer::InitVulkanLayer(std::vector<const char*>& extensions, WindowTy
 
 	InitModelDescriptors();
 
-
-	// Event::OnWorldLoaded.Bind([]() { ReinitModels(); });
-	// Event::OnWorldNodeAdded.Bind([]() { ReinitModels(); });
-	// Event::OnWorldNodeRemoved.Bind([]() { ReinitModels(); });
-
-
 	geomPass.InitRenderPassAndFramebuffers();
 	geomPass.InitPipelineAndStuff();
 
@@ -47,6 +42,8 @@ void VulkanLayer::InitVulkanLayer(std::vector<const char*>& extensions, WindowTy
 	defPass.InitRenderPassAndFramebuffers();
 	defPass.InitPipelineAndStuff();
 
+
+	editorPass.InitRenderPassAndFramebuffers();
 
 	// WIP
 	vk::CommandBufferAllocateInfo allocInfo{};
@@ -61,7 +58,7 @@ void VulkanLayer::InitVulkanLayer(std::vector<const char*>& extensions, WindowTy
 	vk::CommandBufferAllocateInfo allocInfo2{};
 	allocInfo2.setCommandPool(device->graphicsCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(swapchain->images.size());
+		.setCommandBufferCount(static_cast<uint32>(swapchain->images.size()));
 
 	outCmdBuffer = device->handle->allocateCommandBuffersUnique(allocInfo2);
 
@@ -82,7 +79,7 @@ void VulkanLayer::ReinitModels()
 	models.clear();
 	for (auto geomNode : world->GetNodeIterator<GeometryNode>()) {
 		auto model = geomNode->GetModel();
-		models.emplace_back(std::make_unique<Model>(model)); // WIP
+		models.emplace_back(std::make_unique<Model>(model)); // TODO: RENDERER
 		models.back()->m_node = geomNode;
 	}
 }
@@ -119,7 +116,7 @@ void VulkanLayer::InitModelDescriptors()
 
 	modelDescriptorSetLayout = device->handle->createDescriptorSetLayoutUnique(layoutInfo);
 
-	// WIP: Global uniforms
+	// TODO: RENDERER Global uniforms
 	std::array<vk::DescriptorPoolSize, 2> poolSizes{};
 	// for global uniforms
 	poolSizes[0].setType(vk::DescriptorType::eUniformBuffer).setDescriptorCount(1);
@@ -287,14 +284,22 @@ void VulkanLayer::DrawFrame()
 	}
 
 
+	// WIP:
+	static bool def{ false };
+	if (Engine::GetInput().IsJustPressed(Key::B)) {
+		def = !def;
+	}
+
+	if (def) {
+		defPass.RecordCmd(&outCmdBuffer[imageIndex].get(), swapchain->framebuffers[imageIndex].get());
+	}
+	else {
+		editorPass.RecordCmd(&outCmdBuffer[imageIndex].get(), swapchain->framebuffers[imageIndex].get());
+	}
+
+
 	vk::SubmitInfo submitInfo2{};
 	vk::Semaphore waitSemaphores[] = { imageAvailableSemaphore.get() };
-
-	defPass.RecordCmd(&outCmdBuffer[imageIndex].get(), defPass.m_framebuffers[imageIndex].get());
-
-	// wait with writing colors to the image until it's available
-	// the implementation can already start executing our vertex shader and such while the image is not yet
-	// available
 	vk::PipelineStageFlags waitStages2[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
 
 	submitInfo2.setWaitSemaphoreCount(0u)
@@ -303,13 +308,9 @@ void VulkanLayer::DrawFrame()
 		.setCommandBufferCount(1u)
 		.setPCommandBuffers(&outCmdBuffer[imageIndex].get());
 
-	// which semaphores to signal once the command buffer(s) have finished execution
-	// vk::Semaphore signalSemaphores[] = { m_renderFinishedSemaphore.get() };
-	// submitInfo.setSignalSemaphoreCount(1u).setPSignalSemaphores(signalSemaphores);
-
 	device->graphicsQueue.handle.submit(1u, &submitInfo2, {});
-
 	device->graphicsQueue.handle.waitIdle();
+
 
 	vk::PresentInfoKHR presentInfo;
 	presentInfo.setWaitSemaphoreCount(1u).setPWaitSemaphores(waitSemaphores);

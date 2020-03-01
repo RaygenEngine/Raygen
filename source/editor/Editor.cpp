@@ -37,6 +37,7 @@
 #include "editor/utl/EdAssetUtils.h"
 #include "editor/windows/general/EdAssetsWindow.h"
 #include "editor/imgui/ImGuizmo.h"
+#include "renderer/VulkanLayer.h"
 
 #include <glfw/glfw3.h>
 
@@ -192,24 +193,32 @@ void Editor::Dockspace()
 
 
 	auto centralNode = ImGui::DockBuilderGetCentralNode(dockspace_id);
+
 	if (centralNode) {
 		auto copy = g_ViewportCoordinates;
 		auto rect = centralNode->Rect();
 
-		g_ViewportCoordinates.position
-			= { rect.Min.x - ImGui::GetWindowViewport()->Pos.x, rect.Min.y - ImGui::GetWindowViewport()->Pos.y };
-		g_ViewportCoordinates.size = { rect.GetWidth(), rect.GetHeight() };
-		if (copy != g_ViewportCoordinates) {
-			Event::OnViewportUpdated.Broadcast();
+		static bool hasValidSize = false;
+
+		if (hasValidSize) {
+			g_ViewportCoordinates.position
+				= { rect.Min.x - ImGui::GetWindowViewport()->Pos.x, rect.Min.y - ImGui::GetWindowViewport()->Pos.y };
+			g_ViewportCoordinates.size = { rect.GetWidth(), rect.GetHeight() };
+			if (copy != g_ViewportCoordinates) {
+				Event::OnViewportUpdated.Broadcast();
+			}
 		}
+		hasValidSize = true;
 	}
 
 
 	ImGui::End();
+
 	auto& coord = g_ViewportCoordinates;
 
 	ImGuizmo::SetRect(ImGui::GetWindowViewport()->Pos.x + coord.position.x,
-		ImGui::GetWindowViewport()->Pos.y + coord.position.y, coord.size.x, coord.size.y);
+		ImGui::GetWindowViewport()->Pos.y + coord.position.y, static_cast<float>(coord.size.x),
+		static_cast<float>(coord.size.y));
 }
 
 void Editor::UpdateEditor()
