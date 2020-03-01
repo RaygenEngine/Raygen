@@ -12,9 +12,11 @@ struct ProfileScopeBase;
 class Profiler {
 public:
 	using Precision = ch::nanoseconds;
+	using Timepoint = ch::time_point<ch::system_clock>;
 
 private:
-	Profiler() = default;
+	Profiler();
+
 
 protected:
 	Profiler(const Profiler&) = delete;
@@ -34,9 +36,26 @@ protected:
 
 	ch::time_point<ch::system_clock> m_frameBeginTime{};
 	Precision m_lastFrameTime;
+	Timepoint m_initTime;
+
+	struct ExtendedEntry {
+		ProfileScopeBase* scope;
+		Timepoint enterTime;
+		Timepoint exitTime;
+	};
+
+
+	// Outer vector breaks up entries to batches, prevents super huge copies when inserting.
+	// for better results we need to roll our own vector that preallocates
+	std::vector<std::vector<ExtendedEntry>> m_sessionRecords;
+	std::vector<ExtendedEntry>* m_sessionCurrentVector;
+
+	void BeginFrameSession();
 
 public:
 	static inline bool s_isProfiling = ProfilerSetup::c_startsEnabled;
+	static inline bool s_shouldStartProfiling = false;
+	static inline bool s_shouldEndProfiling = false;
 
 	static void Register(ProfileScopeBase* profObj);
 
@@ -58,9 +77,17 @@ public:
 
 	[[nodiscard]] constexpr static bool IsModuleEnabled(ProfilerSetup::Module m) { return IsEnabled(m); }
 
-	static void BeginProfiling() { s_isProfiling = true; }
+	static void BeginProfiling() { s_shouldStartProfiling = true; }
+	static void EndProfiling() { s_shouldEndProfiling = true; }
 
-	static void EndProfiling() { s_isProfiling = false; }
+	static void ExportSessionToJson(const fs::path& file);
+
+	static void ResetSession();
+
+	static void ReportExtendedScope(ProfileScopeBase* scope, Timepoint start, Timepoint now)
+	{
+		Get().m_sessionCurrentVector->push_back({ scope, start, now });
+	};
 
 	[[nodiscard]] static Precision GetLastFrameTime() { return Get().m_lastFrameTime; }
 

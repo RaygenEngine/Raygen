@@ -9,7 +9,6 @@
 #include "editor/Editor.h"
 #include "editor/utl/EdAssetUtils.h"
 
-#include <magic_enum.hpp>
 #include <spdlog/fmt/fmt.h>
 #include <imgui_internal.h>
 

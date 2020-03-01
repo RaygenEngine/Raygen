@@ -69,6 +69,8 @@ void AppBase::MainLoop()
 {
 	GLFWwindow* window = Engine::GetMainWindow();
 	while (!glfwWindowShouldClose(Engine::GetMainWindow())) {
+		Profiler::BeginFrame();
+
 		PROFILE_SCOPE(System)
 		if (Engine::IsEditorActive()) {
 			Engine::GetEditor()->PreBeginFrame();
