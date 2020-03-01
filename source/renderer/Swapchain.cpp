@@ -5,6 +5,7 @@
 #include "system/Engine.h"
 
 #include "system/Logger.h"
+#include "renderer/VulkanLayer.h"
 
 #include <glfw/glfw3.h>
 
@@ -144,4 +145,87 @@ Swapchain::Swapchain(LogicalDevice* ld, vk::SurfaceKHR surface)
 		.setLayerCount(1);
 
 	depthImageView = ld->handle->createImageViewUnique(viewInfo);
+
+
+	InitRenderPass();
+	InitFrameBuffers();
+}
+
+void Swapchain::InitRenderPass()
+{
+	auto& device = VulkanLayer::device;
+
+	vk::AttachmentDescription colorAttachment{};
+	colorAttachment.setFormat(imageFormat)
+		.setSamples(vk::SampleCountFlagBits::e1)
+		.setLoadOp(vk::AttachmentLoadOp::eClear)
+		.setStoreOp(vk::AttachmentStoreOp::eStore)
+		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+		.setInitialLayout(vk::ImageLayout::eUndefined)
+		.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
+
+
+	vk::AttachmentReference colorAttachmentRef{};
+	colorAttachmentRef.setAttachment(0);
+	colorAttachmentRef.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+	vk::AttachmentDescription depthAttachment{};
+	depthAttachment.setFormat(device->pd->FindDepthFormat())
+		.setSamples(vk::SampleCountFlagBits::e1)
+		.setLoadOp(vk::AttachmentLoadOp::eClear)
+		.setStoreOp(vk::AttachmentStoreOp::eDontCare)
+		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+		.setInitialLayout(vk::ImageLayout::eUndefined)
+		.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+
+	vk::AttachmentReference depthAttachmentRef{};
+	depthAttachmentRef.setAttachment(1);
+	depthAttachmentRef.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+
+	vk::SubpassDescription subpass{};
+	subpass.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
+	subpass.setColorAttachmentCount(1)
+		.setColorAttachmentCount(1)
+		.setPColorAttachments(&colorAttachmentRef)
+		.setPDepthStencilAttachment(&depthAttachmentRef);
+
+	vk::SubpassDependency dependency{};
+	dependency.setSrcSubpass(VK_SUBPASS_EXTERNAL)
+		.setDstSubpass(0)
+		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+		.setSrcAccessMask(vk::AccessFlags(0)) // 0
+		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
+
+	std::array<vk::AttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
+	vk::RenderPassCreateInfo renderPassInfo{};
+	renderPassInfo.setAttachmentCount(static_cast<uint32>(attachments.size()))
+		.setPAttachments(attachments.data())
+		.setSubpassCount(1)
+		.setPSubpasses(&subpass)
+		.setDependencyCount(1)
+		.setPDependencies(&dependency);
+
+	renderPass = device->handle->createRenderPassUnique(renderPassInfo);
+}
+
+void Swapchain::InitFrameBuffers()
+{
+	framebuffers.clear();
+	framebuffers.resize(images.size());
+	// framebuffers
+	for (auto i = 0; i < images.size(); ++i) {
+		std::array<vk::ImageView, 2> attachments = { imageViews[i].get(), depthImageView.get() };
+		vk::FramebufferCreateInfo createInfo{};
+		createInfo.setRenderPass(renderPass.get())
+			.setAttachmentCount(static_cast<uint32>(attachments.size()))
+			.setPAttachments(attachments.data())
+			.setWidth(extent.width)
+			.setHeight(extent.height)
+			.setLayers(1);
+
+		framebuffers[i] = VulkanLayer::device->handle->createFramebufferUnique(createInfo);
+	}
 }

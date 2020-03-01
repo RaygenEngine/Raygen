@@ -39,11 +39,7 @@ void VulkanLayer::InitVulkanLayer(std::vector<const char*>& extensions, WindowTy
 
 	InitQuadDescriptor();
 
-	defPass.InitRenderPassAndFramebuffers();
-	defPass.InitPipelineAndStuff();
-
-
-	editorPass.InitRenderPassAndFramebuffers();
+	defPass.InitPipeline(swapchain->renderPass.get());
 
 	// WIP
 	vk::CommandBufferAllocateInfo allocInfo{};
@@ -265,7 +261,6 @@ void VulkanLayer::DrawFrame()
 	// submitInfo.setSignalSemaphoreCount(1u).setPSignalSemaphores(signalSemaphores);
 
 	device->graphicsQueue.handle.submit(1u, &submitInfo, {});
-
 	device->graphicsQueue.handle.waitIdle();
 
 	// DEFERRED
@@ -283,18 +278,35 @@ void VulkanLayer::DrawFrame()
 		default: LOG_ABORT("failed to acquire swap chain image!");
 	}
 
+	auto cmdBuffer = &outCmdBuffer[imageIndex].get();
+	auto& framebuffer = swapchain->framebuffers[imageIndex].get();
+	{
+		vk::CommandBufferBeginInfo beginInfo{};
+		beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
 
-	// WIP:
-	static bool def{ false };
-	if (Engine::GetInput().IsJustPressed(Key::B)) {
-		def = !def;
-	}
+		// begin command buffer recording
+		cmdBuffer->begin(beginInfo);
 
-	if (def) {
-		defPass.RecordCmd(&outCmdBuffer[imageIndex].get(), swapchain->framebuffers[imageIndex].get());
-	}
-	else {
-		editorPass.RecordCmd(&outCmdBuffer[imageIndex].get(), swapchain->framebuffers[imageIndex].get());
+
+		vk::RenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.setRenderPass(VulkanLayer::swapchain->renderPass.get()).setFramebuffer(framebuffer);
+		renderPassInfo.renderArea
+			.setOffset({ 0, 0 }) //
+			.setExtent(VulkanLayer::swapchain->extent);
+
+		std::array<vk::ClearValue, 2> clearValues = {};
+		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+		clearValues[1].setDepthStencil({ 1.0f, 0 });
+		renderPassInfo.setClearValueCount(static_cast<uint32>(clearValues.size()));
+		renderPassInfo.setPClearValues(clearValues.data());
+
+		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+
+		defPass.RecordCmd(cmdBuffer);
+		editorPass.RecordCmd(cmdBuffer);
+
+		cmdBuffer->endRenderPass();
+		cmdBuffer->end();
 	}
 
 
