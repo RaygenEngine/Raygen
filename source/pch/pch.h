@@ -21,8 +21,6 @@ namespace fs = std::filesystem;
 
 // int types
 #include "core/Types.h"
-// enums/structs
-#include "core/CoreEnums.h"
 // meta
 #include "core/MetaTemplates.h"
 

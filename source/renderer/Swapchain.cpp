@@ -106,8 +106,8 @@ Swapchain::Swapchain(LogicalDevice* ld, vk::SurfaceKHR surface)
 		.setOldSwapchain(nullptr);
 
 
-	handle = ld->handle->createSwapchainKHRUnique(createInfo);
-	images = ld->handle->getSwapchainImagesKHR(handle.get());
+	handle = ld->createSwapchainKHRUnique(createInfo);
+	images = ld->getSwapchainImagesKHR(handle.get());
 
 	// Store swap chain image format and extent
 	imageFormat = surfaceFormat.format;
@@ -124,7 +124,7 @@ Swapchain::Swapchain(LogicalDevice* ld, vk::SurfaceKHR surface)
 			.setBaseArrayLayer(0u)
 			.setLayerCount(1u);
 
-		imageViews.emplace_back(ld->handle->createImageViewUnique(viewInfo));
+		imageViews.emplace_back(ld->createImageViewUnique(viewInfo));
 	}
 
 	// depth buffer
@@ -144,7 +144,7 @@ Swapchain::Swapchain(LogicalDevice* ld, vk::SurfaceKHR surface)
 		.setBaseArrayLayer(0)
 		.setLayerCount(1);
 
-	depthImageView = ld->handle->createImageViewUnique(viewInfo);
+	depthImageView = ld->createImageViewUnique(viewInfo);
 
 
 	InitRenderPass();
@@ -208,7 +208,7 @@ void Swapchain::InitRenderPass()
 		.setDependencyCount(1)
 		.setPDependencies(&dependency);
 
-	renderPass = device->handle->createRenderPassUnique(renderPassInfo);
+	renderPass = device->createRenderPassUnique(renderPassInfo);
 }
 
 void Swapchain::InitFrameBuffers()
@@ -226,6 +226,6 @@ void Swapchain::InitFrameBuffers()
 			.setHeight(extent.height)
 			.setLayers(1);
 
-		framebuffers[i] = VulkanLayer::device->handle->createFramebufferUnique(createInfo);
+		framebuffers[i] = VulkanLayer::device->createFramebufferUnique(createInfo);
 	}
 }

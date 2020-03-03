@@ -233,7 +233,6 @@ void Editor::UpdateEditor()
 	Dockspace();
 
 	m_windowsComponent.Draw();
-	m_myBrowser.Draw();
 
 	// Attempt to predict the viewport size for the first run, might be a bit off.
 	ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
@@ -264,10 +263,6 @@ void Editor::UpdateEditor()
 	ImGui::SameLine();
 	if (ImEd::Button(U8(FA_FOLDER_OPEN u8"  Load"))) {
 		OpenLoadDialog();
-	}
-	ImGui::SameLine();
-	if (ImEd::Button(U8(u8"Imgui File"))) {
-		m_myBrowser.OpenDialog([](auto& p) { LOG_REPORT("Selected file: {}", p.string()); });
 	}
 
 
@@ -477,7 +472,7 @@ void Editor::OpenLoadDialog()
 
 void Editor::LoadScene(const fs::path& scenefile)
 {
-	// WIP:
+	// TODO:
 	LOG_ERROR("Reimplement Scene Loading.");
 	return;
 
@@ -595,7 +590,7 @@ void Editor::Run_AssetView()
 			using PodType = std::remove_pointer_t<decltype(tptr)>;
 			PodHandle<PodType> p;
 			p.podId = assetEntry->uid;
-			// WIP:
+			// TODO: Remove this asset view
 			// AssetImporterManager::Reload(p);
 		};
 
@@ -648,7 +643,6 @@ void Editor::Run_AssetView()
 		}
 		else {
 			if (ImGui::Button("Unload") || UnloadAll) {
-				// WIP:
 				// AssetImporterManager::Unload(BasePodHandle{ assetEntry->uid });
 			}
 		}

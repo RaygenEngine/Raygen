@@ -1,7 +1,6 @@
 #pragma once
 #include "core/StringAux.h"
 #include "system/Logger.h"
-#include "core/StringHashing.h"
 #include <unordered_map>
 #include <string>
 

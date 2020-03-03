@@ -45,7 +45,7 @@ struct ConsoleVariable : public ConsoleEntry {
 protected:
 	bool TryUpdateValue(std::string_view command)
 	{
-		auto vec = str::Split(command);
+		auto vec = str::split(command);
 		if (vec.size() <= 1) {
 			LOG_REPORT("{}: {}", name, value);
 			return false;
@@ -83,7 +83,7 @@ struct ConsoleFunctionGeneric : public ConsoleEntry {
 
 	// Func param can be left empty to be set later
 	// Lambda params of func is a std::string_view of the console command (including the command itself)
-	// Recommended to use with str::Split (StringAux) and conv::FromStrView. Automated templated variants to be provided
+	// Recommended to use with str::split (StringAux) and conv::FromStrView. Automated templated variants to be provided
 	// at a future update.
 	ConsoleFunctionGeneric(
 		const char* name, std::function<void(std::string_view)> func = {}, const char* inTooltip = "")
@@ -127,7 +127,7 @@ struct ConsoleFunction : public ConsoleEntry {
 			return;
 		}
 
-		auto vec = str::Split(command);
+		auto vec = str::split(command);
 		if (vec.size() - 1 != argCount) {
 			LOG_REPORT("Incorrect number of arguments for console command: {}. Expected: {}", name, argCount);
 			return;

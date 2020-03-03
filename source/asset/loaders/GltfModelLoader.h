@@ -285,7 +285,7 @@ namespace {
 		}
 
 		auto it = std::find_if(begin(primitiveData.attributes), end(primitiveData.attributes),
-			[](auto& pair) { return smath::CaseInsensitiveCompare(pair.first, "POSITION"); });
+			[](auto& pair) { return str::equalInsensitive(pair.first, "POSITION"); });
 
 
 		size_t vertexCount = modelData.accessors.at(it->second).count;
@@ -315,19 +315,19 @@ namespace {
 			const auto& attrName = attribute.first;
 			int32 index = attribute.second;
 
-			if (smath::CaseInsensitiveCompare(attrName, "POSITION")) {
+			if (str::equalInsensitive(attrName, "POSITION")) {
 				positionsIndex = index;
 			}
-			else if (smath::CaseInsensitiveCompare(attrName, "NORMAL")) {
+			else if (str::equalInsensitive(attrName, "NORMAL")) {
 				normalsIndex = index;
 			}
-			else if (smath::CaseInsensitiveCompare(attrName, "TANGENT")) {
+			else if (str::equalInsensitive(attrName, "TANGENT")) {
 				tangentsIndex = index;
 			}
-			else if (smath::CaseInsensitiveCompare(attrName, "TEXCOORD_0")) {
+			else if (str::equalInsensitive(attrName, "TEXCOORD_0")) {
 				texcoords0Index = index;
 			}
-			else if (smath::CaseInsensitiveCompare(attrName, "TEXCOORD_1")) {
+			else if (str::equalInsensitive(attrName, "TEXCOORD_1")) {
 				texcoords1Index = index;
 			}
 		}

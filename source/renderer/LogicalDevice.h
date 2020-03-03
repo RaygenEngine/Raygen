@@ -3,18 +3,18 @@
 #include "renderer/PhysicalDevice.h"
 #include "renderer/Texture.h"
 #include "asset/pods/TexturePod.h"
-
 #include <vulkan/vulkan.hpp>
 
-struct DeviceQueue {
-	vk::Queue handle;
+struct DeviceQueue : public vk::Queue {
 	uint32 familyIndex;
+
+private:
+	friend struct LogicalDevice;
+	void SetHandle(vk::Queue queue) { vk::Queue::operator=(queue); }
 };
 
 // Info about a logical device
-struct LogicalDevice {
-
-	vk::UniqueDevice handle;
+struct LogicalDevice : public vk::Device {
 
 	DeviceQueue graphicsQueue;
 	DeviceQueue transferQueue;
@@ -29,6 +29,7 @@ struct LogicalDevice {
 	vk::UniqueCommandBuffer graphicsCmdBuffer;
 
 	LogicalDevice(PhysicalDevice* pd, std::vector<const char*> deviceExtensions);
+	~LogicalDevice();
 
 	vk::UniqueShaderModule CreateShaderModule(const std::string& binPath);
 	vk::UniqueShaderModule CompileCreateShaderModule(const std::string& path);

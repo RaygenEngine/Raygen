@@ -43,7 +43,7 @@ LogicalDevice::LogicalDevice(PhysicalDevice* pd, std::vector<const char*> device
 
 	// TODO: (get from assoc)
 	vk::PhysicalDeviceFeatures deviceFeatures{};
-	// WIP: check if supported by the pd..
+	// TODO: check if supported by the pd..
 	deviceFeatures.setSamplerAnisotropy(VK_TRUE);
 
 	vk::DeviceCreateInfo deviceCreateInfo{};
@@ -54,41 +54,47 @@ LogicalDevice::LogicalDevice(PhysicalDevice* pd, std::vector<const char*> device
 		.setEnabledExtensionCount(static_cast<uint32>(deviceExtensions.size()))
 		.setEnabledLayerCount(0);
 
-	handle = pd->handle.createDeviceUnique(deviceCreateInfo);
+	vk::Device::operator=(pd->createDevice(deviceCreateInfo));
 
 	// Device queues
 	graphicsQueue.familyIndex = graphicsQueueFamily.index;
-	graphicsQueue.handle = handle->getQueue(graphicsQueueFamily.index, 0);
+	graphicsQueue.SetHandle(getQueue(graphicsQueueFamily.index, 0));
 
 	transferQueue.familyIndex = transferQueueFamily.index;
-	transferQueue.handle = handle->getQueue(transferQueueFamily.index, 0);
+	transferQueue.SetHandle(getQueue(transferQueueFamily.index, 0));
 
 	presentQueue.familyIndex = presentQueueFamily.index;
-	presentQueue.handle = handle->getQueue(presentQueueFamily.index, 0);
+	presentQueue.SetHandle(getQueue(presentQueueFamily.index, 0));
 
 
 	vk::CommandPoolCreateInfo graphicsPoolInfo{};
 	graphicsPoolInfo.setQueueFamilyIndex(graphicsQueue.familyIndex);
 	graphicsPoolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
 
-	graphicsCmdPool = handle->createCommandPoolUnique(graphicsPoolInfo);
+	graphicsCmdPool = createCommandPoolUnique(graphicsPoolInfo);
 
 	vk::CommandPoolCreateInfo transferPoolInfo{};
 	transferPoolInfo.setQueueFamilyIndex(transferQueue.familyIndex);
 	transferPoolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
 
-	transferCmdPool = handle->createCommandPoolUnique(transferPoolInfo);
+	transferCmdPool = createCommandPoolUnique(transferPoolInfo);
 
 	vk::CommandBufferAllocateInfo allocInfo{};
 	allocInfo.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandPool(transferCmdPool.get())
 		.setCommandBufferCount(1u);
 
-	transferCmdBuffer = std::move(handle->allocateCommandBuffersUnique(allocInfo)[0]);
+	transferCmdBuffer = std::move(allocateCommandBuffersUnique(allocInfo)[0]);
 
 	allocInfo.setCommandPool(graphicsCmdPool.get());
 
-	graphicsCmdBuffer = std::move(handle->allocateCommandBuffersUnique(allocInfo)[0]);
+	graphicsCmdBuffer = std::move(allocateCommandBuffersUnique(allocInfo)[0]);
+}
+
+LogicalDevice::~LogicalDevice()
+{
+	// NEXT:
+	// destroy();
 }
 
 vk::UniqueShaderModule LogicalDevice::CreateShaderModule(const std::string& binPath)
@@ -98,7 +104,7 @@ vk::UniqueShaderModule LogicalDevice::CreateShaderModule(const std::string& binP
 	vk::ShaderModuleCreateInfo createInfo{};
 	createInfo.setCodeSize(data.size()).setPCode(reinterpret_cast<const uint32*>(data.data()));
 
-	return handle->createShaderModuleUnique(createInfo);
+	return createShaderModuleUnique(createInfo);
 }
 
 vk::UniqueShaderModule LogicalDevice::CompileCreateShaderModule(const std::string& path)
@@ -108,7 +114,7 @@ vk::UniqueShaderModule LogicalDevice::CompileCreateShaderModule(const std::strin
 	vk::ShaderModuleCreateInfo createInfo{};
 	createInfo.setCodeSize(binary.size() * 4).setPCode(binary.data());
 
-	return handle->createShaderModuleUnique(createInfo);
+	return createShaderModuleUnique(createInfo);
 }
 
 void LogicalDevice::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
@@ -117,8 +123,8 @@ void LogicalDevice::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage
 	vk::BufferCreateInfo bufferInfo{};
 	bufferInfo.setSize(size).setUsage(usage).setSharingMode(vk::SharingMode::eExclusive);
 
-	buffer = handle->createBufferUnique(bufferInfo);
-	vk::MemoryRequirements memRequirements = handle->getBufferMemoryRequirements(buffer.get());
+	buffer = createBufferUnique(bufferInfo);
+	vk::MemoryRequirements memRequirements = getBufferMemoryRequirements(buffer.get());
 
 	vk::MemoryAllocateInfo allocInfo{};
 	allocInfo.setAllocationSize(memRequirements.size);
@@ -131,9 +137,9 @@ void LogicalDevice::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage
 	// NVIDIA GTX 1080. The right way to allocate memory for a large number of objects at the same time is to create
 	// a custom allocator that splits up a single allocation among many different objects by using the offset
 	// parameters that we've seen in many functions.
-	memory = handle->allocateMemoryUnique(allocInfo);
+	memory = allocateMemoryUnique(allocInfo);
 
-	handle->bindBufferMemory(buffer.get(), memory.get(), 0);
+	bindBufferMemory(buffer.get(), memory.get(), 0);
 }
 
 void LogicalDevice::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size)
@@ -154,11 +160,11 @@ void LogicalDevice::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::D
 	submitInfo.setCommandBufferCount(1u);
 	submitInfo.setPCommandBuffers(&transferCmdBuffer.get());
 
-	transferQueue.handle.submit(1u, &submitInfo, {});
+	transferQueue.submit(1u, &submitInfo, {});
 	// PERF:
 	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.
-	transferQueue.handle.waitIdle();
+	transferQueue.waitIdle();
 }
 
 void LogicalDevice::CreateImage(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling,
@@ -175,20 +181,20 @@ void LogicalDevice::CreateImage(uint32 width, uint32 height, vk::Format format, 
 		.setInitialLayout(vk::ImageLayout::eUndefined)
 		.setUsage(usage)
 		.setSamples(vk::SampleCountFlagBits::e1)
-		// WIP: test
+		// TODO: GPU ASSETS
 		.setSharingMode(vk::SharingMode::eExclusive);
 
-	image = handle->createImageUnique(imageInfo);
+	image = createImageUnique(imageInfo);
 
-	vk::MemoryRequirements memRequirements = handle->getImageMemoryRequirements(image.get());
+	vk::MemoryRequirements memRequirements = getImageMemoryRequirements(image.get());
 
 	vk::MemoryAllocateInfo allocInfo{};
 	allocInfo.setAllocationSize(memRequirements.size);
 	allocInfo.setMemoryTypeIndex(pd->FindMemoryType(memRequirements.memoryTypeBits, properties));
 
-	memory = handle->allocateMemoryUnique(allocInfo);
+	memory = allocateMemoryUnique(allocInfo);
 
-	handle->bindImageMemory(image.get(), memory.get(), 0);
+	bindImageMemory(image.get(), memory.get(), 0);
 }
 
 void LogicalDevice::CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32 width, uint32 height)
@@ -204,6 +210,7 @@ void LogicalDevice::CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32
 		.setBufferImageHeight(0u)
 		.setImageOffset({ 0, 0, 0 })
 		.setImageExtent({ width, height, 1u });
+
 	region.imageSubresource.setAspectMask(vk::ImageAspectFlagBits::eColor)
 		.setMipLevel(0u)
 		.setBaseArrayLayer(0u)
@@ -217,16 +224,17 @@ void LogicalDevice::CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32
 	submitInfo.setCommandBufferCount(1u);
 	submitInfo.setPCommandBuffers(&transferCmdBuffer.get());
 
-	transferQueue.handle.submit(1u, &submitInfo, {});
+	transferQueue.submit(1u, &submitInfo, {});
 	// PERF:
 	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.
-	transferQueue.handle.waitIdle();
+	transferQueue.waitIdle();
 }
 
 void LogicalDevice::TransitionImageLayout(
 	vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
+	// TODO: GPU ASSETS
 	vk::ImageMemoryBarrier barrier{};
 	barrier.setOldLayout(oldLayout).setNewLayout(newLayout).setImage(image);
 
@@ -259,8 +267,7 @@ void LogicalDevice::TransitionImageLayout(
 		sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
 		destinationStage = vk::PipelineStageFlagBits::eTransfer;
 
-		// WIP: is this an implicit onwership of the transfer queue?
-		// it should be explicit
+
 		barrier.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
 		barrier.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
 	}
@@ -273,7 +280,6 @@ void LogicalDevice::TransitionImageLayout(
 		sourceStage = vk::PipelineStageFlagBits::eTransfer;
 		destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
 
-		// WIP: this should be a transition?
 		barrier.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
 		barrier.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
 	}
@@ -285,7 +291,7 @@ void LogicalDevice::TransitionImageLayout(
 		sourceStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 		destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
 
-		// WIP: this should be a transition?
+
 		barrier.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
 		barrier.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
 	}
@@ -297,7 +303,6 @@ void LogicalDevice::TransitionImageLayout(
 		sourceStage = vk::PipelineStageFlagBits::eFragmentShader;
 		destinationStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 
-		// WIP: this should be a transition?
 		barrier.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
 		barrier.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
 	}
@@ -327,6 +332,6 @@ void LogicalDevice::TransitionImageLayout(
 	submitInfo.setCommandBufferCount(1u);
 	submitInfo.setPCommandBuffers(&graphicsCmdBuffer.get());
 
-	graphicsQueue.handle.submit(1u, &submitInfo, {});
-	graphicsQueue.handle.waitIdle();
+	graphicsQueue.submit(1u, &submitInfo, {});
+	graphicsQueue.waitIdle();
 }

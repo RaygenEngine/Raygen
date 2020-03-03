@@ -74,9 +74,7 @@ void TexturePod::Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 		return;
 	}
 	if (uri::MatchesExtension(path, ".json")) {
-		if (!CubemapLoader::Load(pod, path)) {
-			GenericJsonLoader::Load(pod, path);
-		}
+		GenericJsonLoader::Load(pod, path);
 		return;
 	}
 

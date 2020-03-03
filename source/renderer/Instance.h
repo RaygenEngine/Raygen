@@ -7,8 +7,8 @@
 
 
 // Instance layer wrapper
-struct Instance {
-	vk::UniqueInstance handle;
+struct Instance : public vk::Instance {
+
 	vk::SurfaceKHR surface;
 
 	vk::UniqueDebugUtilsMessengerEXT debugUtilsMessenger;

@@ -2,6 +2,7 @@
 
 #include "renderer/GeometryPass.h"
 #include "renderer/VulkanLayer.h"
+#include "system/profiler/ProfileScope.h"
 #include "system/Engine.h"
 
 void GeometryPass::CreateFramebufferImageViews()
@@ -15,14 +16,14 @@ void GeometryPass::InitRenderPassAndFramebuffers()
 
 	vk::AttachmentDescription colorAttachment{};
 	colorAttachment
-		.setFormat(vk::Format::eR8G8B8A8Srgb) // WIP
+		.setFormat(vk::Format::eR8G8B8A8Srgb) // CHECK:
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
 		.setInitialLayout(vk::ImageLayout::eUndefined)
-		.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal); // WIP
+		.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal); // CHECK:
 
 	vk::AttachmentReference colorAttachmentRef{};
 	colorAttachmentRef.setAttachment(0);
@@ -65,7 +66,7 @@ void GeometryPass::InitRenderPassAndFramebuffers()
 		.setDependencyCount(1)
 		.setPDependencies(&dependency);
 
-	m_renderPass = device->handle->createRenderPassUnique(renderPassInfo);
+	m_renderPass = device->createRenderPassUnique(renderPassInfo);
 
 	// albedo buffer
 	vk::Format format = vk::Format::eR8G8B8A8Srgb;
@@ -74,7 +75,7 @@ void GeometryPass::InitRenderPassAndFramebuffers()
 		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, albedoImage, albedoImageMemory);
 
-	// WIP:
+	// TODO:
 	// device->TransitionImageLayout(
 	//	albedoImage.get(), format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
@@ -86,7 +87,7 @@ void GeometryPass::InitRenderPassAndFramebuffers()
 		.setBaseArrayLayer(0)
 		.setLayerCount(1);
 
-	albedoImageView = device->handle->createImageViewUnique(viewInfo);
+	albedoImageView = device->createImageViewUnique(viewInfo);
 
 	// depth buffer
 	vk::Format depthFormat = device->pd->FindDepthFormat();
@@ -104,7 +105,7 @@ void GeometryPass::InitRenderPassAndFramebuffers()
 		.setBaseArrayLayer(0)
 		.setLayerCount(1);
 
-	depthImageView = device->handle->createImageViewUnique(viewInfo);
+	depthImageView = device->createImageViewUnique(viewInfo);
 
 
 	// framebuffers
@@ -118,7 +119,7 @@ void GeometryPass::InitRenderPassAndFramebuffers()
 		.setHeight(g_ViewportCoordinates.size.y)
 		.setLayers(1);
 
-	m_framebuffer = device->handle->createFramebufferUnique(createInfo);
+	m_framebuffer = device->createFramebufferUnique(createInfo);
 }
 
 void GeometryPass::InitPipelineAndStuff()
@@ -246,12 +247,6 @@ void GeometryPass::InitPipelineAndStuff()
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 
-	// dynamic states
-	vk::DynamicState dynamicStates[] = { vk::DynamicState::eViewport, vk::DynamicState::eLineWidth };
-
-	vk::PipelineDynamicStateCreateInfo dynamicState{};
-	dynamicState.setDynamicStateCount(2u).setPDynamicStates(dynamicStates);
-
 	// pipeline layout
 	vk::PushConstantRange pushConstantRange{};
 	pushConstantRange.setStageFlags(vk::ShaderStageFlagBits::eVertex).setSize(sizeof(glm::mat4)).setOffset(0u);
@@ -264,7 +259,7 @@ void GeometryPass::InitPipelineAndStuff()
 		.setPushConstantRangeCount(1u)
 		.setPPushConstantRanges(&pushConstantRange);
 
-	m_pipelineLayout = device->handle->createPipelineLayoutUnique(pipelineLayoutInfo);
+	m_pipelineLayout = device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
@@ -288,21 +283,20 @@ void GeometryPass::InitPipelineAndStuff()
 		.setPMultisampleState(&multisampling)
 		.setPDepthStencilState(&depthStencil)
 		.setPColorBlendState(&colorBlending)
-		.setPDynamicState(nullptr) // TODO: check
+		.setPDynamicState(nullptr)
 		.setLayout(m_pipelineLayout.get())
 		.setRenderPass(m_renderPass.get())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 
-	m_pipeline = device->handle->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+	m_pipeline = device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
 
 void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 {
-	// PROFILE_SCOPE(GE);
-	// WIP
+	PROFILE_SCOPE(Renderer);
 
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
@@ -312,7 +306,6 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 	{
 		vk::RenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.setRenderPass(m_renderPass.get()).setFramebuffer(m_framebuffer.get());
-		// WIP: extent
 		renderPassInfo.renderArea.setOffset({ 0, 0 }).setExtent(
 			vk::Extent2D{ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y });
 		std::array<vk::ClearValue, 2> clearValues = {};
@@ -321,7 +314,7 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 		renderPassInfo.setClearValueCount(static_cast<uint32>(clearValues.size()));
 		renderPassInfo.setPClearValues(clearValues.data());
 
-		// WIP: render pass doesn't start from here
+		// PERF: needs render pass?
 		// begin render pass
 		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{
@@ -331,8 +324,6 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 
 			for (auto& model : VulkanLayer::models) {
 				for (auto& gg : model->geometryGroups) {
-					// PROFILE_SCOPE(Renderer);
-
 					// Submit via push constant (rather than a UBO)
 					cmdBuffer->pushConstants(m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u,
 						sizeof(glm::mat4), &model->m_node->GetNodeTransformWCS());

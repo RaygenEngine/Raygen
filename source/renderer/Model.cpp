@@ -34,15 +34,15 @@ Model::Model(PodHandle<ModelPod> podHandle)
 				indexStagingBuffer, indexStagingBufferMemory);
 
 			byte* vertexDstData
-				= static_cast<byte*>(device->handle->mapMemory(vertexStagingBufferMemory.get(), 0, vertexBufferSize));
+				= static_cast<byte*>(device->mapMemory(vertexStagingBufferMemory.get(), 0, vertexBufferSize));
 			byte* indexDstData
-				= static_cast<byte*>(device->handle->mapMemory(indexStagingBufferMemory.get(), 0, indexBufferSize));
+				= static_cast<byte*>(device->mapMemory(indexStagingBufferMemory.get(), 0, indexBufferSize));
 
 			memcpy(vertexDstData, gg.vertices.data(), vertexBufferSize);
 			memcpy(indexDstData, gg.indices.data(), indexBufferSize);
 
-			device->handle->unmapMemory(vertexStagingBufferMemory.get());
-			device->handle->unmapMemory(indexStagingBufferMemory.get());
+			device->unmapMemory(vertexStagingBufferMemory.get());
+			device->unmapMemory(indexStagingBufferMemory.get());
 
 			// device local
 			device->CreateBuffer(vertexBufferSize,
@@ -62,7 +62,7 @@ Model::Model(PodHandle<ModelPod> podHandle)
 
 			// albedo texture
 
-			// WIP: asset caching
+			// TODO: GPU ASSETS caching
 			vgg.albedoText = std::make_unique<Texture>(data->materials[gg.materialIndex].Lock()->baseColorTexture);
 
 			// descriptors
@@ -82,7 +82,7 @@ Model::Model(PodHandle<ModelPod> podHandle)
 				.setPImageInfo(nullptr)
 				.setPTexelBufferView(nullptr);
 
-			device->handle->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+			device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 
 
 			// images (material)
@@ -101,7 +101,7 @@ Model::Model(PodHandle<ModelPod> podHandle)
 				.setPImageInfo(&imageInfo)
 				.setPTexelBufferView(nullptr);
 
-			device->handle->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+			device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 
 
 			// TODO: check moves

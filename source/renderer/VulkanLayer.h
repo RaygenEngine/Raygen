@@ -15,7 +15,7 @@ struct UniformBufferObject {
 	glm::mat4 view;
 	glm::mat4 proj;
 };
-// WIP:
+
 class VulkanLayer {
 
 
@@ -42,7 +42,6 @@ public:
 	inline static vk::UniqueDescriptorSet quadDescriptorSet;
 	//
 
-	// WIP: one of many
 	inline static vk::UniqueCommandBuffer geometryCmdBuffer;
 
 	inline static std::vector<vk::UniqueCommandBuffer> outCmdBuffer;

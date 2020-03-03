@@ -29,7 +29,6 @@ class PropertyEditor {
 public:
 	bool m_localMode{ true };
 	bool m_displayMatrix{ false };
-	bool m_massEditMaterials{ false };
 	bool m_lockedScale{ false };
 
 	Node* m_prevNode{ nullptr };

@@ -4,7 +4,6 @@
 #include "renderer/Model.h"
 #include <vulkan/vulkan.hpp>
 
-// WIP:
 class GeometryPass {
 public:
 	vk::UniqueRenderPass m_renderPass;
