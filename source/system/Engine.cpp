@@ -9,8 +9,8 @@
 #include "world/World.h"
 #include "platform/GlfwUtil.h"
 #include "system/reflection/ReflectionDb.h"
-#include "renderer/VulkanLayer.h"
 #include <glfw/glfw3.h>
+#include "renderer/VulkanLayer.h"
 #include <algorithm>
 
 ConsoleFunction<> debugCoords{ "d.viewport", []() {
@@ -151,7 +151,7 @@ void Engine::ReportFrameDrawn()
 
 void Engine::ToggleEditor()
 {
-	// WIP
+	// TODO:
 	// if (m_isEditorEnabled && m_renderer) {
 	//	m_isEditorActive ? DeactivateEditor() : ActivateEditor();
 	//}

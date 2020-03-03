@@ -1,6 +1,7 @@
 #pragma once
 
 #include "world/nodes/Node.h"
+#include "system/console/ConsoleVariable.h"
 
 class LightNode : public Node {
 

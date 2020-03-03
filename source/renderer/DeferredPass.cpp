@@ -1,11 +1,12 @@
 #include "pch/pch.h"
 
+#include "system/profiler/ProfileScope.h"
 #include "renderer/DeferredPass.h"
 #include "renderer/VulkanLayer.h"
 #include "editor/imgui/ImguiImpl.h"
 #include "system/Engine.h"
 
-void DeferredPass::InitPipeline(vk::RenderPass& renderPass)
+void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 {
 	auto& device = VulkanLayer::device;
 	auto& descriptorSetLayout = VulkanLayer::quadDescriptorSetLayout;
@@ -110,10 +111,11 @@ void DeferredPass::InitPipeline(vk::RenderPass& renderPass)
 		.setPushConstantRangeCount(0u)
 		.setPPushConstantRanges(&pushConstantRange);
 
-	m_pipelineLayout = device->handle->createPipelineLayoutUnique(pipelineLayoutInfo);
+	m_pipelineLayout = device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
+	// TODO: remove depth from deferred pass
 	// depth and stencil state
-	vk::PipelineDepthStencilStateCreateInfo depthStencil{}; // WIP
+	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
 	depthStencil.setDepthTestEnable(VK_TRUE);
 	depthStencil.setDepthWriteEnable(VK_TRUE);
 	depthStencil.setDepthCompareOp(vk::CompareOp::eLess);
@@ -141,12 +143,14 @@ void DeferredPass::InitPipeline(vk::RenderPass& renderPass)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 
-	m_pipeline = device->handle->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+	m_pipeline = device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
 
 void DeferredPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
 {
+	PROFILE_SCOPE(Renderer);
+
 	// bind the graphics pipeline
 	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 

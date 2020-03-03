@@ -15,6 +15,8 @@ TEST("Profiler")
 		std::this_thread::sleep_for(1ms);
 	}
 
+
+	// TODO:
 	// This does is not the best but the only way to properly pass all cases
 	if constexpr (IsEnabled(ProfilerSetup::World)) {
 		REQ(Profiler::GetAll().size() > 0);

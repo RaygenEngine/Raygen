@@ -13,14 +13,10 @@ Texture::Texture(PodHandle<TexturePod> podHandle)
 	auto& device = VulkanLayer::device;
 
 
-	auto data = podHandle.Lock();
+	auto textureData = podHandle.Lock();
+	auto imgData = textureData->image.Lock();
 
-	// WIP: get first image for now
-	auto imgData = data->images[0].Lock();
-
-	// if(isHdr) data -> float* else data -> byte*
-	vk::DeviceSize imageSize = imgData->height * imgData->width * 4 * (imgData->isHdr ? 4 : 1);
-
+	vk::DeviceSize imageSize = imgData->data.size();
 
 	vk::UniqueBuffer stagingBuffer;
 	vk::UniqueDeviceMemory stagingBufferMemory;
@@ -29,14 +25,13 @@ Texture::Texture(PodHandle<TexturePod> podHandle)
 		stagingBufferMemory);
 
 	// copy data to buffer
-	void* bufferData = device->handle->mapMemory(stagingBufferMemory.get(), 0, imageSize);
+	void* bufferData = device->mapMemory(stagingBufferMemory.get(), 0, imageSize);
 	memcpy(bufferData, imgData->data.data(), static_cast<size_t>(imageSize));
-	device->handle->unmapMemory(stagingBufferMemory.get());
+	device->unmapMemory(stagingBufferMemory.get());
 
 
 	vk::Format format = imgData->isHdr ? vk::Format::eR32G32B32A32Sfloat : vk::Format::eR8G8B8A8Srgb;
 
-	// WIP: based on texture
 	device->CreateImage(imgData->width, imgData->height, format, vk::ImageTiling::eOptimal,
 		vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, handle, memory);
@@ -62,10 +57,10 @@ Texture::Texture(PodHandle<TexturePod> podHandle)
 		.setBaseArrayLayer(0u)
 		.setLayerCount(1u);
 
-	view = device->handle->createImageViewUnique(viewInfo);
+	view = device->createImageViewUnique(viewInfo);
 
 	// sampler
-	// WIP: values should be chosen based on Texture pod
+	// NEXT: values should be chosen based on Texture pod
 	vk::SamplerCreateInfo samplerInfo{};
 	samplerInfo.setMagFilter(vk::Filter::eLinear)
 		.setMinFilter(vk::Filter::eLinear)
@@ -73,7 +68,7 @@ Texture::Texture(PodHandle<TexturePod> podHandle)
 		.setAddressModeV(vk::SamplerAddressMode::eRepeat)
 		.setAddressModeW(vk::SamplerAddressMode::eRepeat)
 		// PERF:
-		.setAnisotropyEnable(VK_FALSE)
+		.setAnisotropyEnable(VK_TRUE)
 		.setMaxAnisotropy(1u)
 		.setBorderColor(vk::BorderColor::eIntOpaqueBlack)
 		.setUnnormalizedCoordinates(VK_FALSE)
@@ -84,5 +79,5 @@ Texture::Texture(PodHandle<TexturePod> podHandle)
 		.setMinLod(0.f)
 		.setMaxLod(0.f);
 
-	sampler = device->handle->createSamplerUnique(samplerInfo);
+	sampler = device->createSamplerUnique(samplerInfo);
 }

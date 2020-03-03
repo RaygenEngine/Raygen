@@ -5,12 +5,12 @@
 #include "asset/PodIncludes.h"
 
 #include "asset/Serialization.h"
+#include <vulkan/vulkan.hpp>
 
 #include <iostream>
 
-ConsoleFunction<> console_SaveAll{ "a.saveAll", []() {
-									  AssetHandlerManager::SaveAll();
-								  } };
+ConsoleFunction<> console_SaveAll{ "a.saveAll", []() { AssetHandlerManager::SaveAll(); },
+	"Saves all currently unsaved assets" };
 
 
 void AssetImporterManager::Init(const fs::path& assetPath)
@@ -74,12 +74,13 @@ void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 	else if (meta.preferedDiskType == PodDiskType::Json) {
 	}
 	else {
+		// TODO:
 		LOG_ABORT("Implement");
 	}
 
 
 	if (meta.exportOnSave) {
-		// WIP: ASSETS implement
+		// TODO: ASSETS implement
 	}
 
 
@@ -98,10 +99,9 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 				continue;
 			}
 
-			// WIP: ASSETS Handle json
+			// TODO: ASSETS Handle json
 			if (entry.path().extension() == ".bin") {
-				auto key = fs::relative(entry.path()).string();
-				std::replace(key.begin(), key.end(), '\\', '/');
+				auto key = fs::relative(entry.path()).generic_string();
 				size_t uid = m_pods.size();
 				m_pathCache.emplace(key, uid);
 
@@ -129,7 +129,7 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 		auto loadRange = [&](size_t start, size_t stop) {
 			stop = std::min(stop, m_pods.size());
 			for (size_t i = start; i < stop; ++i) {
-				LoadFromDiskTypelesskInternal(m_pods[i].get());
+				LoadFromDiskTypelessInternal(m_pods[i].get());
 			}
 			return true;
 		};
@@ -149,7 +149,7 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 	}
 }
 
-void AssetHandlerManager::LoadFromDiskTypelesskInternal(PodEntry* entry)
+void AssetHandlerManager::LoadFromDiskTypelessInternal(PodEntry* entry)
 {
 	DeserializePodFromBinary(entry);
 }

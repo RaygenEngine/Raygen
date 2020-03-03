@@ -1,54 +1,109 @@
 #pragma once
 
 #include <string>
-#include "core/StringHashing.h"
-
-// TODO: rename
-namespace smath {
-
-inline void LTrim(std::string& s)
-{
-	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int c) { return !std::isspace(c); }));
-}
-
-inline void RTrim(std::string& s)
-{
-	s.erase(std::find_if(s.rbegin(), s.rend(), [](int c) { return !std::isspace(c); }).base(), s.end());
-}
-
-inline void Trim(std::string& s)
-{
-	LTrim(s);
-	RTrim(s);
-}
-
-inline bool CaseInsensitiveCompare(const std::string& a, const std::string& b)
-{
-	// if different sizes, they are different
-	if (a.size() != b.size()) {
-		return false;
-	}
-
-	return std::equal(
-		a.begin(), a.end(), b.begin(), b.end(), [](char c1, char c2) { return tolower(c1) == tolower(c2); });
-}
-
-inline std::string ToLower(const std::string& str)
-{
-	std::string temp = str;
-	std::transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
-	return temp;
-}
-
-} // namespace smath
 
 namespace str {
+
+// Using this will also add support for C++20 heterogenous lookup: https://wg21.link/P0919R3
+// (only MSVC > 19.23 at: 23/2/2020)
+
+namespace detail {
+	enum class CaseSensitivity
+	{
+		Insensitive,
+		Sensitive
+	};
+
+	template<CaseSensitivity Sens = CaseSensitivity::Sensitive>
+	struct EqualImpl {
+		using is_transparent = void;
+		static constexpr bool isInsensitive = Sens == CaseSensitivity::Insensitive;
+
+		constexpr bool operator()(std::string_view lhs, std::string_view rhs) const { return compare(lhs, rhs); }
+
+	private:
+		static constexpr bool compareChar(char c1, char c2) noexcept
+		{
+			if constexpr (isInsensitive) {
+				return c1 == c2 || std::tolower(c1) == std::tolower(c2);
+			}
+			return c1 == c2;
+		}
+
+		constexpr bool compare(std::string_view str1, std::string_view str2) const noexcept
+		{
+			return ((str1.size() == str2.size()) && std::equal(str1.begin(), str1.end(), str2.begin(), &compareChar));
+		}
+	};
+
+	// Case insensitive only
+	struct LessImpl {
+		using is_transparent = void;
+
+		struct LessComp {
+			bool operator()(const unsigned char& c1, const unsigned char& c2) const
+			{
+				return tolower(c1) < tolower(c2);
+			}
+		};
+		bool operator()(std::string_view s1, std::string_view s2) const noexcept
+		{
+			return std::lexicographical_compare(s1.begin(), s1.end(), s2.begin(), s2.end(), LessComp());
+		}
+	};
+
+	template<CaseSensitivity Sens = CaseSensitivity::Sensitive>
+	struct HashImpl {
+		using transparent_key_equal = EqualImpl<Sens>;
+		static constexpr bool isInsensitive = Sens == CaseSensitivity::Insensitive;
+
+		constexpr size_t operator()(std::string_view txt) const noexcept { return hash(txt); }
+		constexpr size_t operator()(const std::string& txt) const noexcept { return hash(txt); }
+		constexpr size_t operator()(const char* txt) const noexcept { return hash(txt); }
+
+	private:
+		constexpr size_t hash(std::string_view view) const noexcept
+		{
+			static_assert(sizeof(size_t) == 8);
+			// FNV-1a 64 bit algorithm
+			size_t result = 0xcbf29ce484222325; // FNV offset basis
+			for (char c : view) {
+				if constexpr (isInsensitive) {
+					result ^= static_cast<char>(std::tolower(c));
+				}
+				else {
+					result ^= c;
+				}
+				result *= 1099511628211; // FNV prime
+			}
+			return result;
+		};
+	};
+} // namespace detail
+
+
+// Case Sensitive
+using Hash = detail::HashImpl<detail::CaseSensitivity::Sensitive>;
+// Case Sensitive
+using Equal = detail::EqualImpl<detail::CaseSensitivity::Sensitive>;
+
+using HashInsensitive = detail::HashImpl<detail::CaseSensitivity::Insensitive>;
+using EqualInsensitive = detail::EqualImpl<detail::CaseSensitivity::Insensitive>;
+using LessInsensitive = detail::LessImpl;
+
+// These "instances" are to be used as a function eg: str::hash("txt");
+constexpr inline Hash hash;
+constexpr inline Equal equal;
+constexpr inline HashInsensitive hashInsensitive;
+constexpr inline EqualInsensitive equalInsensitive;
+
+
 template<typename T>
-concept CharSeq = true; // TODO: string concept
+concept CharSeq = true; // CHECK: string concept
 
-
+// TEST:
 template<CONC(CharSeq) T>
-std::vector<std::string_view> Split(const T& str, std::string_view delims = " ")
+std::vector<std::string_view> split(const T& str, std::string_view delims = " ")
 {
 	std::vector<std::string_view> output;
 	for (auto first = str.data(), second = str.data(), last = first + str.size(); second != last && first != last;
@@ -63,18 +118,6 @@ std::vector<std::string_view> Split(const T& str, std::string_view delims = " ")
 		output.emplace_back(str);
 	}
 	return output;
-}
-
-[[deprecated("Use str::Hash from core/StringHashing.h")]] constexpr size_t StrHash(const std::string_view str) noexcept
-{
-	static_assert(sizeof(size_t) == 8);
-	// FNV-1a 64 bit algorithm
-	size_t result = 0xcbf29ce484222325; // FNV offset basis
-	for (char c : str) {
-		result ^= c;
-		result *= 1099511628211; // FNV prime
-	}
-	return result;
 }
 
 //

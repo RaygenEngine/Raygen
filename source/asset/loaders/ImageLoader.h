@@ -12,12 +12,13 @@ inline void Load(ImagePod* pod, const uri::Uri& path)
 
 	pod->isHdr = stbi_is_hdr(finalPath) == 1;
 
+
 	void* data = nullptr;
 	if (!pod->isHdr) {
-		data = stbi_load(finalPath, &pod->width, &pod->height, &pod->components, STBI_rgb_alpha);
+		data = stbi_load(finalPath, &pod->width, &pod->height, nullptr, STBI_rgb_alpha);
 	}
 	else {
-		data = stbi_loadf(finalPath, &pod->width, &pod->height, &pod->components, STBI_rgb_alpha);
+		data = stbi_loadf(finalPath, &pod->width, &pod->height, nullptr, STBI_rgb_alpha);
 	}
 
 	const bool hasNotResult = !data || (pod->width == 0) || (pod->height == 0);

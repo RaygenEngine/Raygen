@@ -18,7 +18,7 @@ class DirectionalLightNode : public LightNode {
 	glm::mat4 m_projectionMatrix{};
 	glm::mat4 m_viewMatrix{};
 	glm::mat4 m_viewProjectionMatrix{};
-	// world space frustum TODO
+	// world space frustum TODO:
 	math::Frustum m_frustum{};
 
 	float m_left{ -20.f };

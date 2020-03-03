@@ -17,7 +17,7 @@ using uint = uint32;
 using char8 = char8_t;
 using char16 = char16_t;
 
-// TODO: properly convert with codecs / locales or wait for full C++20 support
+// CHECK: properly convert with codecs / locales or wait for full C++20 support
 [[nodiscard]] inline const char* U8(const char8_t* txt) noexcept
 {
 	return reinterpret_cast<const char*>(txt);

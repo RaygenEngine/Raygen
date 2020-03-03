@@ -39,7 +39,7 @@ void AssetsWindow::ReloadEntries()
 			continue;
 		}
 
-		auto parts = str::Split(uri, "/");
+		auto parts = str::split(uri, "/");
 		auto* currentNode = &m_root;
 		for (auto& subpath : parts) {
 			currentNode = currentNode->FindOrAddFolder(subpath);
@@ -259,7 +259,7 @@ void AssetsWindow::ImguiDraw()
 	if (ImEd::Button(ETXT(FA_FILE_IMPORT, "Import Files"))) {
 		if (auto files = ed::NativeFileBrowser::OpenFileMultiple({ "gltf" })) {
 			for (auto& path : *files) {
-				// WIP: ASSETS
+				// TODO: IMPORTERS
 				if (path.extension() == ".gltf") {
 					AssetImporterManager::ResolveOrImport<ModelPod>(path, "", fs::path(m_currentPath));
 				}

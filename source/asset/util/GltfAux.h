@@ -3,6 +3,58 @@
 #include "core/StringAux.h"
 
 #include <tiny_gltf.h>
+enum class ComponentType
+{
+	CHAR,
+	BYTE,
+	SHORT,
+	USHORT,
+	INT,
+	UINT,
+	FLOAT,
+	DOUBLE
+};
+
+enum class ElementType
+{
+	SCALAR,
+	VEC2,
+	VEC3,
+	VEC4,
+	MAT2,
+	MAT3,
+	MAT4
+};
+namespace utl {
+
+inline int32 ComponentTypeByteCount(ComponentType bct)
+{
+	switch (bct) {
+		case ComponentType::CHAR:
+		case ComponentType::BYTE: return 1;
+		case ComponentType::SHORT:
+		case ComponentType::USHORT: return 2;
+		case ComponentType::INT:
+		case ComponentType::UINT:
+		case ComponentType::FLOAT: return 4;
+		case ComponentType::DOUBLE: return 8;
+		default: return -1;
+	}
+}
+inline int32 ElementComponentCount(ElementType bet)
+{
+	switch (bet) {
+		case ElementType::SCALAR: return 1;
+		case ElementType::VEC2: return 2;
+		case ElementType::VEC3: return 3;
+		case ElementType::VEC4:
+		case ElementType::MAT2: return 4;
+		case ElementType::MAT3: return 9;
+		case ElementType::MAT4: return 16;
+		default: return -1;
+	}
+}
+} // namespace utl
 
 namespace gltfaux {
 inline GeometryMode GetGeometryMode(int32 gltfMode)
@@ -44,13 +96,13 @@ inline TextureWrapping GetTextureWrapping(int32 gltfWrapping)
 
 inline MaterialPod::AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
 {
-	if (smath::CaseInsensitiveCompare(gltfAlphaMode, "OPAQUE")) {
+	if (str::equalInsensitive(gltfAlphaMode, "OPAQUE")) {
 		return MaterialPod::OPAQUE_;
 	}
-	if (smath::CaseInsensitiveCompare(gltfAlphaMode, "MASK")) {
+	if (str::equalInsensitive(gltfAlphaMode, "MASK")) {
 		return MaterialPod::MASK;
 	}
-	if (smath::CaseInsensitiveCompare(gltfAlphaMode, "BLEND")) {
+	if (str::equalInsensitive(gltfAlphaMode, "BLEND")) {
 		return MaterialPod::BLEND;
 	}
 	// not defined -> opaque

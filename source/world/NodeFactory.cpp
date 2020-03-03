@@ -30,9 +30,8 @@ void NodeFactory::RegisterNodes()
 
 Node* NodeFactory::NewNodeFromType(const std::string& type)
 {
-	auto it = std::find_if(begin(m_nodeEntries), end(m_nodeEntries), [type](auto& other) {
-		return smath::CaseInsensitiveCompare(sceneconv::FilterNodeClassName(type), other.first);
-	});
+	auto it = std::find_if(begin(m_nodeEntries), end(m_nodeEntries),
+		[type](auto& other) { return str::equalInsensitive(sceneconv::FilterNodeClassName(type), other.first); });
 
 	if (it != m_nodeEntries.end()) {
 		return it->second.newInstance();

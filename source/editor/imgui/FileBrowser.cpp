@@ -70,7 +70,6 @@ void FileBrowser::ImguiHeader()
 		create |= ImGui::Button("Create");
 
 		if (create) {
-			// WIP
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();

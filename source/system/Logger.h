@@ -4,6 +4,16 @@
 #include <spdlog/fmt/ostr.h>
 #include <sstream>
 
+enum class LogLevelTarget
+{
+	Trace = 0,
+	Debug,
+	Info,
+	Warn,
+	Error,
+	Critical,
+	Off
+};
 
 class Log {
 public:

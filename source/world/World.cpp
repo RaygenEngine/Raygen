@@ -86,7 +86,7 @@ void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 	ClearDirtyFlags();
 	LOG_INFO("World loaded succesfully");
 
-	// WIP: fix
+	// NEXT: fix
 	VulkanLayer::ReinitModels();
 }
 

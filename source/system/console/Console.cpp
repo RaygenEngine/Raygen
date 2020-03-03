@@ -5,7 +5,7 @@
 ConsoleFunctionGeneric commandAll(
 	"all",
 	[](std::string_view view) {
-		auto parts = str::Split(view);
+		auto parts = str::split(view);
 
 		if (parts.size() <= 1) {
 			for (auto& [key, entry] : Console::Z_GetEntries()) {
@@ -31,7 +31,7 @@ void Console::Execute(const std::string& command)
 
 void Console::Execute(std::string_view command)
 {
-	auto parts = str::Split(command);
+	auto parts = str::split(command);
 	auto& entries = Get().m_entries;
 
 	auto it = entries.find(parts[0]);

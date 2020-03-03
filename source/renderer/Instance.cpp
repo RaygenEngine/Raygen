@@ -115,17 +115,17 @@ Instance::Instance(std::vector<const char*> requiredExtensions, WindowType* wind
 			.setPpEnabledLayerNames(instanceLayerNames.data());
 	}
 
-	handle = vk::createInstanceUnique(createInfo);
+	vk::Instance::operator=(vk::createInstance(createInfo));
 
 	if (foundLayers) {
-		pfnVkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
-			handle->getProcAddr("vkCreateDebugUtilsMessengerEXT"));
+		pfnVkCreateDebugUtilsMessengerEXT
+			= reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(getProcAddr("vkCreateDebugUtilsMessengerEXT"));
 		if (!pfnVkCreateDebugUtilsMessengerEXT) {
 			LOG_ABORT("GetInstanceProcAddr: Unable to find pfnVkCreateDebugUtilsMessengerEXT function.");
 		}
 
-		pfnVkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-			handle->getProcAddr("vkDestroyDebugUtilsMessengerEXT"));
+		pfnVkDestroyDebugUtilsMessengerEXT
+			= reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(getProcAddr("vkDestroyDebugUtilsMessengerEXT"));
 		if (!pfnVkDestroyDebugUtilsMessengerEXT) {
 			LOG_ABORT("GetInstanceProcAddr: Unable to find pfnVkDestroyDebugUtilsMessengerEXT function.");
 		}
@@ -135,19 +135,19 @@ Instance::Instance(std::vector<const char*> requiredExtensions, WindowType* wind
 		vk::DebugUtilsMessageTypeFlagsEXT messageTypeFlags(vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral
 														   | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance
 														   | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation);
-		debugUtilsMessenger = handle->createDebugUtilsMessengerEXTUnique(
+		debugUtilsMessenger = createDebugUtilsMessengerEXTUnique(
 			vk::DebugUtilsMessengerCreateInfoEXT({}, severityFlags, messageTypeFlags, &DebugMessageFunc));
 	}
 
 
 	VkSurfaceKHR tmp;
-	if (glfwCreateWindowSurface(handle.get(), window, nullptr, &tmp) != VK_SUCCESS) {
+	if (glfwCreateWindowSurface(*this, window, nullptr, &tmp) != VK_SUCCESS) {
 		LOG_ABORT("Failed to create glfw window surface");
 	}
 	surface = tmp;
 
 	// get capable physical devices
-	auto deviceHandles = handle->enumeratePhysicalDevices();
+	auto deviceHandles = enumeratePhysicalDevices();
 
 	for (const auto dH : deviceHandles) {
 		auto pd = std::make_unique<PhysicalDevice>(dH, surface);
@@ -160,5 +160,6 @@ Instance::Instance(std::vector<const char*> requiredExtensions, WindowType* wind
 
 Instance::~Instance()
 {
-	handle->destroySurfaceKHR(surface);
+	destroySurfaceKHR(surface);
+	destroy();
 }

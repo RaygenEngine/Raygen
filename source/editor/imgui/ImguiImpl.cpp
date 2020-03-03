@@ -205,11 +205,10 @@ void ImguiImpl::EndFrame()
 
 void ImguiImpl::CleanupContext()
 {
-	// WIP
-	// ImGui_ImplVulkan_Shutdown();
-	// ImGui_ImplGlfw_Shutdown();
+	ImGui_ImplVulkan_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
 
-	// ImGui::DestroyContext();
+	ImGui::DestroyContext();
 }
 
 
@@ -219,16 +218,15 @@ void ImguiImpl::InitVulkan()
 	auto& device = VulkanLayer::device;
 
 	ImGui_ImplVulkan_InitInfo init = {};
-	init.Instance = VulkanLayer::instance->handle.get();
-	init.PhysicalDevice = physDev->handle;
-	init.Device = device->handle.get();
+	init.Instance = *VulkanLayer::instance;
+	init.PhysicalDevice = *physDev;
+	init.Device = *device;
 	init.QueueFamily = device->graphicsQueue.familyIndex;
-	init.Queue = device->graphicsQueue.handle;
+	init.Queue = device->graphicsQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
 	init.DescriptorPool = VulkanLayer::quadDescriptorPool.get();
-
-	init.ImageCount = VulkanLayer::swapchain->images.size();
-	init.MinImageCount = VulkanLayer::swapchain->images.size();
+	init.ImageCount = static_cast<uint32>(VulkanLayer::swapchain->images.size());
+	init.MinImageCount = static_cast<uint32>(VulkanLayer::swapchain->images.size());
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
 	ImGui_ImplVulkan_Init(&init, VulkanLayer::swapchain->renderPass.get());
@@ -252,8 +250,8 @@ void ImguiImpl::InitVulkan()
 
 	cmdBuffer.end();
 
-	device->transferQueue.handle.submit(1, &end_info, {});
-	device->transferQueue.handle.waitIdle();
+	device->transferQueue.submit(1, &end_info, {});
+	device->transferQueue.waitIdle();
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }

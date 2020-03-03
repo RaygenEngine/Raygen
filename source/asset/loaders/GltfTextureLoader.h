@@ -13,7 +13,6 @@ static void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 
 	nlohmann::json j = uri::GetJson(path);
 	int32 ext = j["texture"].get<int32>();
-	pod->isLinear = j["isLinear"].get<bool>();
 
 	const tinygltf::Model& model = pParent.Lock()->data;
 
@@ -35,7 +34,7 @@ static void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 		entry->name = fmt::format("{}_texture", uri::GetFilenameNoExt(gltfImage.uri));
 	}
 
-	pod->images.push_back(imgAsset);
+	pod->image = imgAsset;
 
 	const auto samplerIndex = gltfTexture.sampler;
 	// if sampler exists
@@ -49,11 +48,12 @@ static void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 			entry->name = gltfSampler.name;
 		}
 
+		// NEXT:
 		pod->minFilter = gltfaux::GetTextureFiltering(gltfSampler.minFilter);
 		pod->magFilter = gltfaux::GetTextureFiltering(gltfSampler.magFilter);
-		pod->wrapS = gltfaux::GetTextureWrapping(gltfSampler.wrapS);
-		pod->wrapT = gltfaux::GetTextureWrapping(gltfSampler.wrapT);
-		pod->wrapR = gltfaux::GetTextureWrapping(gltfSampler.wrapR);
+		pod->wrapU = gltfaux::GetTextureWrapping(gltfSampler.wrapS);
+		pod->wrapV = gltfaux::GetTextureWrapping(gltfSampler.wrapT);
+		pod->wrapW = gltfaux::GetTextureWrapping(gltfSampler.wrapR);
 	}
 }
 }; // namespace GltfTextureLoader
