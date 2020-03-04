@@ -186,33 +186,31 @@ void Editor::Dockspace()
 
 	// DockSpace
 	ImGuiIO& io = ImGui::GetIO();
-	ImGuiID dockspace_id = ImGui::GetID("MainDockspace");
-	ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+	m_dockspaceId = ImGui::GetID("MainDockspace");
+	ImGui::DockSpace(m_dockspaceId, ImVec2(0.0f, 0.0f), dockspace_flags);
 	ImGuizmo::SetDrawlist();
 	Run_MenuBar();
 
 
-	auto centralNode = ImGui::DockBuilderGetCentralNode(dockspace_id);
+	ImGui::End();
+}
+
+void Editor::UpdateViewportCoordsFromDockspace()
+{
+	auto centralNode = ImGui::DockBuilderGetCentralNode(m_dockspaceId);
 
 	if (centralNode) {
 		auto copy = g_ViewportCoordinates;
 		auto rect = centralNode->Rect();
 
-		static bool hasValidSize = false;
 
-		if (hasValidSize) {
-			g_ViewportCoordinates.position
-				= { rect.Min.x - ImGui::GetWindowViewport()->Pos.x, rect.Min.y - ImGui::GetWindowViewport()->Pos.y };
-			g_ViewportCoordinates.size = { rect.GetWidth(), rect.GetHeight() };
-			if (copy != g_ViewportCoordinates) {
-				Event::OnViewportUpdated.Broadcast();
-			}
+		g_ViewportCoordinates.position
+			= { rect.Min.x - ImGui::GetWindowViewport()->Pos.x, rect.Min.y - ImGui::GetWindowViewport()->Pos.y };
+		g_ViewportCoordinates.size = { rect.GetWidth(), rect.GetHeight() };
+		if (copy != g_ViewportCoordinates) {
+			Event::OnViewportUpdated.Broadcast();
 		}
-		hasValidSize = true;
 	}
-
-
-	ImGui::End();
 
 	auto& coord = g_ViewportCoordinates;
 
@@ -220,6 +218,23 @@ void Editor::Dockspace()
 		ImGui::GetWindowViewport()->Pos.y + coord.position.y, static_cast<float>(coord.size.x),
 		static_cast<float>(coord.size.y));
 }
+
+namespace {
+void DrawTextureDebugger()
+{
+	ImGui::Begin("Image Debugger.");
+
+	auto descrSet = *VulkanLayer::quadDescriptorSet;
+	if (!descrSet) {
+		ImGui::Text("Null handle");
+		ImGui::End();
+		return;
+	}
+
+	ImGui::Image(descrSet, ImVec2(512, 512));
+	ImGui::End();
+}
+} // namespace
 
 void Editor::UpdateEditor()
 {
@@ -233,6 +248,9 @@ void Editor::UpdateEditor()
 	Dockspace();
 
 	m_windowsComponent.Draw();
+
+
+	// DrawTextureDebugger();
 
 	// Attempt to predict the viewport size for the first run, might be a bit off.
 	ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
@@ -313,6 +331,7 @@ void Editor::UpdateEditor()
 		m_showGltfWindow = m_assetWindow->Draw();
 	}
 
+	UpdateViewportCoordsFromDockspace();
 	ImguiImpl::EndFrame();
 
 	for (auto& cmd : m_postDrawCommands) {
