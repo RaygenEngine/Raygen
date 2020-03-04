@@ -126,6 +126,10 @@ protected:
 
 	inline static bool s_showHelpTooltips{ true };
 
+	ImGuiID m_dockspaceId;
+
+	void UpdateViewportCoordsFromDockspace();
+
 public:
 	DECLARE_EVENT_LISTENER(m_onNodeRemoved, Event::OnWorldNodeRemoved);
 	DECLARE_EVENT_LISTENER(m_onWorldLoaded, Event::OnWorldLoaded);
