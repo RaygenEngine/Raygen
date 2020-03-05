@@ -26,7 +26,7 @@
 #endif
 
 // CONCEPTS INTELLISENSE WORKAROUND
-// TODO: when intellisense supports concepts replace ALL uses of the macro and deprecate
+// CHECK: when intellisense supports concepts replace ALL uses of the macro and deprecate
 // parentheses omited on purpose
 #ifdef __INTELLISENSE__
 #	define REQUIRES(...)
@@ -42,7 +42,3 @@
 #else
 #	define NOINLINE __attribute__((noinline))
 #endif
-
-// Hack to force symbols to be produced for this function (exports to compiler dependant noinline)
-// TODO: Test with clang
-#define FORCE_LINK NOINLINE

@@ -215,7 +215,7 @@ public:
 		return false;
 	}
 
-	void OnFileDrop(std::vector<std::string>&& files);
+	void OnFileDrop(std::vector<fs::path>&& files);
 
 
 private:

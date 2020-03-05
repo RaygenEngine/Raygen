@@ -58,7 +58,7 @@ public:
 	// Mark this window is to be closed
 	void MarkClose() { m_keepOpen = false; }
 
-	// TODO: currently this will make the window "jump" if the identifier is not a ### one. (Unique windows unaffected)
+	// CHECK: currently this will make the window "jump" if the identifier is not a ### one. (Unique windows unaffected)
 	void SetTitle(std::string_view newTitle)
 	{
 		m_title = newTitle;

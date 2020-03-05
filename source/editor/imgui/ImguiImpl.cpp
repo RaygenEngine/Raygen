@@ -21,8 +21,7 @@ void AddLargeAssetIconsFont(ImFontAtlas* atlas)
 	ImFontAtlas::GlyphRangesBuilder builder;
 
 
-	podtools::ForEachPodType([&](auto dummy) {
-		using PodT = std::remove_pointer_t<decltype(dummy)>;
+	podtools::ForEachPodType([&]<typename PodT>() {
 		const ReflClass& cl = PodT::StaticClass();
 		builder.AddText(U8(cl.GetIcon()));
 	});

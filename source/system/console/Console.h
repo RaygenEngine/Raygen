@@ -26,7 +26,6 @@ protected:
 	std::unordered_map<std::string, ConsoleEntry*, str::HashInsensitive, str::EqualInsensitive> m_entries;
 
 public:
-	// TODO: allow only ConsoleVariable
 	static void AutoRegister(const char* name, ConsoleEntry* entry)
 	{
 		auto& c = Get();

@@ -4,7 +4,7 @@
 #include <spdlog/fmt/ostr.h>
 #include <sstream>
 
-enum class LogLevelTarget
+enum class LogLevel
 {
 	Trace = 0,
 	Debug,
@@ -18,7 +18,7 @@ enum class LogLevelTarget
 class Log {
 public:
 	// NOTE: logging and levels my be discarded by build configuration
-	static void Init(LogLevelTarget level);
+	static void Init(LogLevel level);
 
 
 	static std::stringstream s_editorLogStream;

@@ -17,8 +17,7 @@ void AssetImporterManager::Init(const fs::path& assetPath)
 {
 	AssetHandlerManager::Get().m_pods.push_back(std::make_unique<PodEntry>());
 
-	podtools::ForEachPodType([](auto dummy) {
-		using PodType = std::remove_pointer_t<decltype(dummy)>;
+	podtools::ForEachPodType([]<typename PodType>() {
 		auto entry = AssetHandlerManager::CreateNew<PodType>();
 		entry->path = fmt::format("~{}", GetDefaultPodUid<PodType>());
 		entry->ptr.reset(new PodType());
@@ -50,8 +49,7 @@ void PodDeleter::operator()(AssetPod* p)
 // Dummy to avoid _Debug getting optimzed out
 void Code()
 {
-	auto l = [](auto p) {
-		using PodType = std::remove_pointer_t<decltype(p)>;
+	auto l = []<typename PodType>() {
 		PodHandle<PodType> a;
 		[[maybe_unused]] auto debug = a._Debug();
 	};
@@ -68,15 +66,7 @@ void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 
 	auto& meta = entry->metadata;
 
-	if (meta.preferedDiskType == PodDiskType::Binary) {
-		SerializePodToBinary(entry->metadata, entry->ptr.get(), entry->path);
-	}
-	else if (meta.preferedDiskType == PodDiskType::Json) {
-	}
-	else {
-		// TODO:
-		LOG_ABORT("Implement");
-	}
+	SerializePodToBinary(entry->metadata, entry->ptr.get(), entry->path);
 
 
 	if (meta.exportOnSave) {
@@ -99,7 +89,6 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 				continue;
 			}
 
-			// TODO: ASSETS Handle json
 			if (entry.path().extension() == ".bin") {
 				auto key = fs::relative(entry.path()).generic_string();
 				size_t uid = m_pods.size();

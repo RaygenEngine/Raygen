@@ -150,5 +150,5 @@ enum class Key
 	// Gamepad
 	//
 
-	_NUM
+	_NUM // Count
 };

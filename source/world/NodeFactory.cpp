@@ -12,7 +12,6 @@
 #include "world/nodes/user/FreeformUserNode.h"
 #include "world/nodes/user/FlyingUserNode.h"
 #include "world/nodes/TransformNode.h"
-#include "world/nodes/vr/OVRNode.h"
 #include "asset/util/ParsingAux.h"
 #include "reflection/ReflectionTools.h"
 #include "core/MathAux.h"

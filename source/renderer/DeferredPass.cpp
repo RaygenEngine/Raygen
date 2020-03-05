@@ -47,7 +47,7 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 		.setRasterizerDiscardEnable(VK_FALSE)
 		.setPolygonMode(vk::PolygonMode::eFill)
 		.setLineWidth(1.f)
-		.setCullMode(vk::CullModeFlagBits::eFront) // TODO: RENDERER Fix in shader
+		.setCullMode(vk::CullModeFlagBits::eBack)
 		.setFrontFace(vk::FrontFace::eCounterClockwise)
 		.setDepthBiasEnable(VK_FALSE)
 		.setDepthBiasConstantFactor(0.f)
@@ -103,11 +103,11 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 
 	m_pipelineLayout = device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
-	// TODO: remove depth from deferred pass
+	// NEXT: remove depth from deferred pass
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
-	depthStencil.setDepthTestEnable(VK_TRUE);
-	depthStencil.setDepthWriteEnable(VK_TRUE);
+	depthStencil.setDepthTestEnable(VK_FALSE);
+	depthStencil.setDepthWriteEnable(VK_FALSE);
 	depthStencil.setDepthCompareOp(vk::CompareOp::eLess);
 	depthStencil.setDepthBoundsTestEnable(VK_FALSE);
 	depthStencil.setMinDepthBounds(0.0f); // Optional

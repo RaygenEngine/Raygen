@@ -10,7 +10,7 @@
 
 
 namespace {
-// TODO: fix log levels here when/if logger gets redone
+// CHECK: fix log levels here when/if logger gets redone
 
 
 struct ImguiLogState {
@@ -51,21 +51,21 @@ struct ImguiLogState {
 	ImVec4 c_warnColor = { 0.9f, 0.66f, 0.38f, 1.f };
 	ImVec4 c_errColor = { 1.f, 0.f, 0.f, 1.f };
 
-	LogLevelTarget GetLineLogLevel(const char* begin) const
+	LogLevel GetLineLogLevel(const char* begin) const
 	{
 		// HACK: access 15 directly (hard coded) which is the letter of the log "type" (
 		// corresponds to formatting in logger.cpp for the editor log sink
 		constexpr int32 typeLetterIndex = 15;
 		const char type = begin[typeLetterIndex];
 		switch (type) {
-			case 'T': return LogLevelTarget::Trace;
-			case 'D': return LogLevelTarget::Debug;
-			case 'I': return LogLevelTarget::Info;
-			case 'W': return LogLevelTarget::Warn;
-			case 'E': return LogLevelTarget::Error;
-			case 'C': return LogLevelTarget::Critical;
+			case 'T': return LogLevel::Trace;
+			case 'D': return LogLevel::Debug;
+			case 'I': return LogLevel::Info;
+			case 'W': return LogLevel::Warn;
+			case 'E': return LogLevel::Error;
+			case 'C': return LogLevel::Critical;
 		}
-		return LogLevelTarget::Off;
+		return LogLevel::Off;
 	}
 
 	void DrawTxtLine(const char* line_start, const char* line_end)
@@ -73,8 +73,8 @@ struct ImguiLogState {
 		bool colored{ false };
 		auto level = GetLineLogLevel(line_start);
 		switch (level) {
-			case LogLevelTarget::Warn: ImGui::PushStyleColor(ImGuiCol_Text, c_warnColor); break;
-			case LogLevelTarget::Error: ImGui::PushStyleColor(ImGuiCol_Text, c_errColor); break;
+			case LogLevel::Warn: ImGui::PushStyleColor(ImGuiCol_Text, c_warnColor); break;
+			case LogLevel::Error: ImGui::PushStyleColor(ImGuiCol_Text, c_errColor); break;
 			default: {
 				ImGui::TextUnformatted(line_start, line_end);
 				return;

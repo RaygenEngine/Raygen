@@ -7,14 +7,14 @@ TEST("Profiler")
 {
 	using namespace std::literals;
 
-	Profiler::BeginProfiling();
 	Profiler::Z_ClearRegistrations();
+	Profiler::BeginProfiling();
+	Profiler::BeginFrame();
 
 	for (int32 i = 0; i < 5; ++i) {
 		PROFILE_SCOPE(World);
 		std::this_thread::sleep_for(1ms);
 	}
-
 
 	// TODO:
 	// This does is not the best but the only way to properly pass all cases

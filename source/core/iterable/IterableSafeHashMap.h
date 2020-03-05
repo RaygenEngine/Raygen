@@ -1,7 +1,6 @@
 #pragma once
 
 #include <unordered_map>
-#include <unordered_set>
 #include <algorithm>
 #include <vector>
 
@@ -38,7 +37,7 @@ struct IterableSafeHashMap {
 		erasingCache.clear();
 	}
 
-	// TODO: forward does not work in this context, provide emplace by copy
+	// CHECK: forward does not work in this context, provide emplace by copy
 	auto Emplace(std::pair<KeyT, ValueT>&& elem)
 	{
 		if (isIterating) {

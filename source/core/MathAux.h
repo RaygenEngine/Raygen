@@ -270,7 +270,7 @@ struct Frustum {
 		return false;
 	}
 
-	// TODO: for better precision create using all points of the frustum
+	// CHECK: for better precision create using all points of the frustum
 	[[nodiscard]] AABB FrustumPyramidAABB(glm::vec3 apex)
 	{
 		AABB box{};

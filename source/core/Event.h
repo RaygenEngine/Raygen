@@ -55,7 +55,7 @@ struct MulticastEvent {
 			}
 		}
 
-		[[nodiscard]] bool IsBound() const { return m_registered; }
+		[[nodiscard]] bool IsBound() const noexcept { return m_registered; }
 
 		~Listener() { Unbind(); }
 	};
@@ -81,7 +81,7 @@ public:
 	}
 
 	void BindFreeFunction(std::function<void(Args...)>&& func) { freeFunctions.emplace_back(func); }
-	void UnbindAllFreeFunctions() { freeFunctions.clear(); }
+	void UnbindAllFreeFunctions() noexcept { freeFunctions.clear(); }
 
 	[[nodiscard]] constexpr bool IsBound() const noexcept { return listeners.size() > 0; }
 };

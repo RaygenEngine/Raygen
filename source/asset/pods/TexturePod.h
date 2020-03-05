@@ -3,22 +3,21 @@
 #include "asset/PodHandle.h"
 #include "asset/pods/ImagePod.h"
 
-// TODO: Pascal Case
 enum class TextureFiltering
 {
-	NEAREST,
-	LINEAR,
-	NEAREST_MIPMAP_NEAREST,
-	NEAREST_MIPMAP_LINEAR,
-	LINEAR_MIPMAP_NEAREST,
-	LINEAR_MIPMAP_LINEAR
+	Nearest,
+	Linear,
+	NearestMipmapNearest,
+	NearestMipmapLinear,
+	LinearMipmapNearest,
+	LinearMipmapLinear
 };
 
 enum class TextureWrapping
 {
-	CLAMP_TO_EDGE,
-	MIRRORED_REPEAT,
-	REPEAT
+	ClampToEdge,
+	MirroredRepeat,
+	Repeat
 };
 
 struct TexturePod : AssetPod {
@@ -39,10 +38,10 @@ struct TexturePod : AssetPod {
 
 	PodHandle<ImagePod> image{};
 
-	TextureFiltering minFilter{ TextureFiltering::LINEAR };
-	TextureFiltering magFilter{ TextureFiltering::LINEAR };
+	TextureFiltering minFilter{ TextureFiltering::Linear };
+	TextureFiltering magFilter{ TextureFiltering::Linear };
 
-	TextureWrapping wrapU{ TextureWrapping::REPEAT };
-	TextureWrapping wrapV{ TextureWrapping::REPEAT };
-	TextureWrapping wrapW{ TextureWrapping::REPEAT };
+	TextureWrapping wrapU{ TextureWrapping::Repeat };
+	TextureWrapping wrapV{ TextureWrapping::Repeat };
+	TextureWrapping wrapW{ TextureWrapping::Repeat };
 };

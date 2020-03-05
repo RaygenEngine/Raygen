@@ -78,7 +78,7 @@ void GeometryPass::InitFramebuffers()
 		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, albedoImage, albedoImageMemory);
 
-	// TODO:
+	// NEXT:
 	// device->TransitionImageLayout(
 	//	albedoImage.get(), format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 

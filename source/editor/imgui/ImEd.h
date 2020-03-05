@@ -86,7 +86,7 @@ inline void HSpace(float space = 6.f)
 }
 
 
-// TODO: Add cpp to this header
+// NEXT: Add cpp to this header
 struct InputTextCallback_UserData {
 	std::string* Str;
 	ImGuiInputTextCallback ChainCallback;

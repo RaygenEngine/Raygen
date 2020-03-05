@@ -151,10 +151,7 @@ void Engine::ReportFrameDrawn()
 
 void Engine::ToggleEditor()
 {
-	// TODO:
-	// if (m_isEditorEnabled && m_renderer) {
-	//	m_isEditorActive ? DeactivateEditor() : ActivateEditor();
-	//}
+	// CHECK:
 }
 
 void Engine::ActivateEditor()

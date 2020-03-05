@@ -80,7 +80,7 @@ public:
 	virtual ~AssetsWindow() = default;
 
 
-	void ImportFiles(std::vector<std::string>&& files); // TODO: ASSETS implement with vectror<fs::path>
+	void ImportFiles(std::vector<fs::path>&& files);
 
 private:
 	assetentry::FolderEntry m_root{ "Assets", nullptr };

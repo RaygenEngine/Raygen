@@ -268,7 +268,7 @@ namespace {
 		const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat, bool& requiresDefaultMaterial)
 	{
 		// mode
-		// TODO: handle non triangle case somewhere in code
+		// CHECK: handle non triangle case somewhere in code
 		geom.mode = gltfaux::GetGeometryMode(primitiveData.mode);
 
 		// material

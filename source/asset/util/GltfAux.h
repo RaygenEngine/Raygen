@@ -74,23 +74,23 @@ inline GeometryMode GetGeometryMode(int32 gltfMode)
 inline TextureFiltering GetTextureFiltering(int32 gltfFiltering)
 {
 	switch (gltfFiltering) {
-		case TINYGLTF_TEXTURE_FILTER_NEAREST: return TextureFiltering::NEAREST;
-		case TINYGLTF_TEXTURE_FILTER_LINEAR: return TextureFiltering::LINEAR;
-		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST: return TextureFiltering::NEAREST_MIPMAP_NEAREST;
-		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST: return TextureFiltering::LINEAR_MIPMAP_NEAREST;
-		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR: return TextureFiltering::NEAREST_MIPMAP_LINEAR;
-		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR: return TextureFiltering::LINEAR_MIPMAP_LINEAR;
-		default: return TextureFiltering::LINEAR;
+		case TINYGLTF_TEXTURE_FILTER_NEAREST: return TextureFiltering::Nearest;
+		case TINYGLTF_TEXTURE_FILTER_LINEAR: return TextureFiltering::Linear;
+		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST: return TextureFiltering::NearestMipmapNearest;
+		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST: return TextureFiltering::LinearMipmapNearest;
+		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR: return TextureFiltering::NearestMipmapLinear;
+		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR: return TextureFiltering::LinearMipmapLinear;
+		default: return TextureFiltering::Linear;
 	}
 };
 
 inline TextureWrapping GetTextureWrapping(int32 gltfWrapping)
 {
 	switch (gltfWrapping) {
-		case TINYGLTF_TEXTURE_WRAP_REPEAT: return TextureWrapping::REPEAT;
-		case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE: return TextureWrapping::CLAMP_TO_EDGE;
-		case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT: return TextureWrapping::MIRRORED_REPEAT;
-		default: return TextureWrapping::REPEAT;
+		case TINYGLTF_TEXTURE_WRAP_REPEAT: return TextureWrapping::Repeat;
+		case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE: return TextureWrapping::ClampToEdge;
+		case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT: return TextureWrapping::MirroredRepeat;
+		default: return TextureWrapping::Repeat;
 	}
 };
 

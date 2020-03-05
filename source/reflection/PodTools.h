@@ -5,15 +5,6 @@
 
 namespace podtools {
 namespace detail {
-	// Util get nothing but with a type, useful when attempting to do lambda overload with auto param.
-	// TODO: Fix when c++20 with templated lambda support.
-	template<typename T>
-	T* DummyType()
-	{
-		T* dummy = nullptr;
-		return dummy;
-	}
-
 	// Visits pod on operator() of v
 	template<typename Visitor, typename... PodTs>
 	void PodVisit_Impl(AssetPod* pod, Visitor& v)
@@ -44,7 +35,7 @@ namespace detail {
 	bool VisitIfType(TypeId type, Visitor& v)
 	{
 		if (refl::GetId<T>() == type) {
-			v.template operator()<T*>(DummyType<T>());
+			v.template operator()<T>();
 			return true;
 		}
 		return false;
@@ -62,7 +53,7 @@ namespace detail {
 	bool VisitIfHash(mti::Hash hash, Visitor& v)
 	{
 		if (mti::GetHash<T>() == hash) {
-			v.template operator()<T*>(DummyType<T>());
+			v.template operator()<T>();
 			return true;
 		}
 		return false;
@@ -78,14 +69,14 @@ void VisitPod(AssetPod* pod, Visitor& v)
 }
 
 
-// Visits operator() of Visitor v with the proper type providing a dummytype nullptr
+// Visits operator() of Visitor v with the proper type
 template<typename Visitor>
 void VisitPodType(TypeId type, Visitor& v)
 {
 	detail::PodVisitType_Impl<Visitor, ENGINE_POD_TYPES>(type, v);
 }
 
-// Visits operator() of Visitor v with the proper type providing a dummytype nullptr
+// Visits operator() of Visitor v with the proper type
 template<typename Visitor>
 void VisitPodHash(mti::Hash hash, Visitor& v)
 {
@@ -97,11 +88,11 @@ namespace detail {
 	template<typename Visitor, typename... PodTs>
 	void VisitPerType_Impl(Visitor& visitor)
 	{
-		(visitor.template operator()<PodTs*>(DummyType<PodTs>()), ...);
+		(visitor.template operator()<PodTs>(), ...);
 	}
 } // namespace detail
 
-// Visits operator() of visitor once with each pod type providing a dummytype nullptr
+// Visits operator() of visitor once with each pod type
 template<typename Visitor>
 void ForEachPodType(Visitor& visitor)
 {
@@ -115,14 +106,15 @@ namespace detail {
 	{
 		std::unordered_map<TypeId, MappedType> result;
 
-		// What this code does:
-		(                                            // Begin expansion of variadic template
-													 // For each type 'T' in PodTs do this:
-			result.insert({                          //	| Insert in result map:
-				refl::GetId<PodTs>(),                //  |   At position of type T's hash
-				visitor.template operator()<PodTs*>( //  |
-					DummyType<PodTs>()) }) //  |   Whatever visitor<T>(T* dummy) returns (see use of DummyType<T>())
-			,                              // End Expansion
+
+		// What this code does: DOC:
+		(                                           // Begin expansion of variadic template
+													// For each type 'T' in PodTs do this:
+			result.insert({                         //	| Insert in result map:
+				refl::GetId<PodTs>(),               //  |   At position of type T's hash
+				visitor.template operator()<PodTs>( //  |
+					) }) //  |   Whatever visitor<T>(T* dummy) returns (see use of DummyType<T>())
+			,            // End Expansion
 			...);
 
 		return result;

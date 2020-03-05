@@ -250,7 +250,7 @@ void Editor::UpdateEditor()
 	m_windowsComponent.Draw();
 
 
-	// DrawTextureDebugger();
+	DrawTextureDebugger();
 
 	// Attempt to predict the viewport size for the first run, might be a bit off.
 	ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
@@ -342,7 +342,7 @@ void Editor::UpdateEditor()
 	ed::GetSettings().SaveIfDirty();
 }
 
-void Editor::OnFileDrop(std::vector<std::string>&& files)
+void Editor::OnFileDrop(std::vector<fs::path>&& files)
 {
 	m_windowsComponent.GetUniqueWindow<ed::AssetsWindow>()->ImportFiles(std::move(files));
 }
@@ -604,31 +604,8 @@ void Editor::Run_NewNodeMenu(Node* underNode)
 
 void Editor::Run_AssetView()
 {
-	auto reloadAssetLambda = [](std::unique_ptr<PodEntry>& assetEntry) {
-		auto l = [&assetEntry](auto tptr) {
-			using PodType = std::remove_pointer_t<decltype(tptr)>;
-			PodHandle<PodType> p;
-			p.podId = assetEntry->uid;
-			// TODO: Remove this asset view
-			// AssetImporterManager::Reload(p);
-		};
-
-		podtools::VisitPodType(assetEntry->type, l);
-	};
-
-
 	ImGui::Indent(10.f);
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7, 7));
-	bool UnloadAll = ImGui::Button("Unload All");
-	HelpTooltipInline(help_AssetUnloadAll);
-	ImGui::SameLine();
-	bool ReloadUnloaded = ImGui::Button("Reload Unloaded");
-	HelpTooltipInline(help_AssetReloadUnloaded);
-	ImGui::SameLine();
-	bool ReloadAll = ImGui::Button("Reload All");
-	HelpTooltipInline(help_AssetReloadAll);
-	ImGui::SameLine();
-	if (ImGui::Button("Search for GLTFs")) {
+	if (ImEd::Button("Search for GLTFs")) {
 		m_showGltfWindow = true;
 	}
 	Editor::HelpTooltipInline(help_AssetSearchGltf);
@@ -637,8 +614,6 @@ void Editor::Run_AssetView()
 	static ImGuiTextFilter filter;
 	filter.Draw("Filter Assets", ImGui::GetFontSize() * 16);
 	HelpTooltip(help_AssetFilter);
-	ImGui::PopStyleVar();
-
 
 	std::string text;
 	for (auto& assetEntry : AssetHandlerManager::Z_GetPods()) {
@@ -647,37 +622,9 @@ void Editor::Run_AssetView()
 		}
 
 		ImGui::PushID(static_cast<int32>(assetEntry->uid));
-		bool disabled = !(assetEntry->ptr);
 
-		if (disabled) {
-			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0, 0.6f, 0.6f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0, 0.6f, 0.7f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0, 0.7f, 0.6f));
-			if (ImGui::Button("Reload") || ReloadUnloaded) {
-				reloadAssetLambda(assetEntry);
-			}
-			ImGui::PopStyleColor(3);
-			ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.4f);
-		}
-		else {
-			if (ImGui::Button("Unload") || UnloadAll) {
-				// AssetImporterManager::Unload(BasePodHandle{ assetEntry->uid });
-			}
-		}
-
-		if (ReloadAll) {
-			reloadAssetLambda(assetEntry);
-		}
-
-		ImGui::SameLine();
 		ImGui::Text(assetEntry->path.c_str());
-		if (disabled) {
-			ImGui::PopItemFlag();
-			ImGui::PopStyleVar();
-		}
 		ed::asset::MaybeHoverTooltip(assetEntry.get());
-
 
 		ImGui::PopID();
 	}

@@ -53,13 +53,6 @@ struct BasePodHandle {
 template<typename T>
 concept CAssetPod = std::derived_from<T, AssetPod>;
 
-
-enum class PodDiskType
-{
-	Binary,
-	Json
-};
-
 // This metadata is saved on disk as a header for the disk asset
 struct PodMetaData {
 	// This hash is the result from mti::GetHash<> and has the same limitations
@@ -70,9 +63,6 @@ struct PodMetaData {
 	// It is required if we want reimport for example a single material from a .gltf asset
 	// This field can be empty
 	std::string originalImportLocation;
-
-	// Determines how should this asset wants be saved on disk. (binary/json)
-	PodDiskType preferedDiskType{ PodDiskType::Binary };
 
 	// This will overwrite the file under originalImportLocation with the result of the asset exporter (if an exporter
 	// is available for this asset type)
