@@ -1,4 +1,4 @@
-#include "pch/pch.h"
+#include "pch.h"
 
 #include "editor/PropertyEditor.h"
 
@@ -7,7 +7,7 @@
 #include "editor/Editor.h"
 #include "system/Engine.h"
 #include "reflection/ReflectionTools.h"
-#include "core/MathAux.h"
+#include "core/MathUtl.h"
 #include "reflection/PodTools.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "editor/DataStrings.h"
@@ -438,13 +438,13 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 			glm::vec3 initialScale = m_localMode ? node->GetNodeScaleLCS() : node->GetNodeScaleWCS();
 
 			float ratio = 1.f;
-			if (!math::EpsilonEqualsValue(newScale.x, initialScale.x)) {
+			if (!math::equals(newScale.x, initialScale.x)) {
 				ratio = newScale.x / initialScale.x;
 			}
-			else if (!math::EpsilonEqualsValue(newScale.y, initialScale.y)) {
+			else if (!math::equals(newScale.y, initialScale.y)) {
 				ratio = newScale.y / initialScale.y;
 			}
-			else if (!math::EpsilonEqualsValue(newScale.z, initialScale.z)) {
+			else if (!math::equals(newScale.z, initialScale.z)) {
 				ratio = newScale.z / initialScale.z;
 			}
 

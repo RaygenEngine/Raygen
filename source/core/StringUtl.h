@@ -99,10 +99,10 @@ constexpr inline EqualInsensitive equalInsensitive;
 
 
 template<typename T>
-concept CharSeq = true; // CHECK: string concept
+concept CCharSeq = true; // CHECK: string concept
 
 // TEST:
-template<CONC(CharSeq) T>
+template<CONC(CCharSeq) T>
 std::vector<std::string_view> split(const T& str, std::string_view delims = " ")
 {
 	std::vector<std::string_view> output;

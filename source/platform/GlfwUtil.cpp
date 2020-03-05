@@ -1,4 +1,4 @@
-#include "pch/pch.h"
+#include "pch.h"
 #include "editor/Editor.h"
 #include "platform/GlfwUtil.h"
 #include "system/Logger.h"
@@ -33,22 +33,14 @@ void Error(int32 errorCode, const char* description)
 // All known glfw callbacks are registered here even if not required.
 // ImGui may "overwrite" some user callbacks and forwards them to us.
 
-void WindowPositionCb(GLFWwindow* window, int32 xpos, int32 ypos)
-{
-}
+void WindowPositionCb(GLFWwindow* window, int32 xpos, int32 ypos) {}
 
-void WindowSizeCb(GLFWwindow* window, int32 newWidth, int32 newHeight)
-{
-}
+void WindowSizeCb(GLFWwindow* window, int32 newWidth, int32 newHeight) {}
 
-void WindowCloseCb(GLFWwindow* window)
-{
-}
+void WindowCloseCb(GLFWwindow* window) {}
 
 // Is called during resize & moving and can be used to keep rendering
-void WindowRefreshCb(GLFWwindow* window)
-{
-}
+void WindowRefreshCb(GLFWwindow* window) {}
 
 void WindowFocusCb(GLFWwindow* window, int32 isFocused) // Unfortunately we can't implicit convert to bool here
 {
@@ -61,9 +53,7 @@ void WindowIconifyCb(GLFWwindow* window, int32 isIconified)
 	Event::OnWindowMinimize.Broadcast(isIconified == GLFW_TRUE);
 }
 
-void WindowMaximizeCb(GLFWwindow* window, int32 isMaximised)
-{
-}
+void WindowMaximizeCb(GLFWwindow* window, int32 isMaximised) {}
 
 // This should probably preferred for "resize" over window size, check glfw docs.
 void WindowFramebufferSizeCb(GLFWwindow* window, int32 newWidth, int32 newHeight)
@@ -71,9 +61,7 @@ void WindowFramebufferSizeCb(GLFWwindow* window, int32 newWidth, int32 newHeight
 	Event::OnWindowResize.Broadcast(newWidth, newHeight);
 }
 
-void WindowContentScaleCb(GLFWwindow* window, float newXScale, float newYScale)
-{
-}
+void WindowContentScaleCb(GLFWwindow* window, float newXScale, float newYScale) {}
 
 void WindowMouseButtonCb(GLFWwindow* window, int32 button, int32 action, int32 modifiers)
 {
@@ -99,9 +87,7 @@ void WindowCursorPositionCb(GLFWwindow* window, double xcoord, double ycoord)
 	Engine::GetInput().Z_UpdateMouseMove({ xcoord, ycoord });
 }
 
-void WindowCursorEnterCb(GLFWwindow* window, int32 hasJustEntered)
-{
-}
+void WindowCursorEnterCb(GLFWwindow* window, int32 hasJustEntered) {}
 
 void WindowScrollCb(GLFWwindow* window, double xoffset, double yoffset)
 {
@@ -136,9 +122,7 @@ void WindowKeyCb(GLFWwindow* window, int32 key, int32 scancode, int32 action, in
 	}
 }
 
-void WindowCharacterCb(GLFWwindow* window, uint32 unicodeCharacter)
-{
-}
+void WindowCharacterCb(GLFWwindow* window, uint32 unicodeCharacter) {}
 
 // Drag 'n' drop on top of window
 void WindowPathDropCb(GLFWwindow* window, int32 elementCount, const char* paths[])

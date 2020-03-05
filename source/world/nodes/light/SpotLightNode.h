@@ -1,7 +1,7 @@
 #pragma once
 
 #include "world/nodes/light/LightNode.h"
-#include "core/MathAux.h"
+#include "core/MathUtl.h"
 
 
 class SpotLightNode : public LightNode {

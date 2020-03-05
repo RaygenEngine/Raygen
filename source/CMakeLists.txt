@@ -87,17 +87,17 @@ set(APP_SOURCES
 if(MSVC)
 	set(PrecompiledBinary "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIGURATION>_pch/pch.pch")
 
-	set_source_files_properties(pch/pch.cpp
+	set_source_files_properties(pch.cpp
 								PROPERTIES 
-								COMPILE_FLAGS "/Yc\"pch/pch.h\" /Fp\"${PrecompiledBinary}\""
+								COMPILE_FLAGS "/Yc\"pch.h\" /Fp\"${PrecompiledBinary}\""
 								OBJECT_OUTPUTS "${PrecompiledBinary}")
 	
 	set_source_files_properties(${SOURCE_FILES}
 								PROPERTIES 
-								COMPILE_FLAGS "/Yu\"pch/pch.h\" /FI\"pch/pch.h\" /Fp\"${PrecompiledBinary}\""
+								COMPILE_FLAGS "/Yu\"pch.h\" /FI\"pch.h\" /Fp\"${PrecompiledBinary}\""
 							    OBJECT_DEPENDS "${PrecompiledBinary}")  
 										   
-	list(APPEND SOURCE_FILES pch/pch.cpp)
+	list(APPEND SOURCE_FILES pch.cpp)
 	list(APPEND APP_SOURCES platform/windows/resources/WinResource.rc)
 endif()
 

@@ -7,7 +7,7 @@
 #include "system/Engine.h"
 #include "system/Logger.h"
 #include "system/console/ConsoleVariable.h"
-#include "core/StringAux.h"
+#include "core/StringUtl.h"
 #include <future>
 
 // ASSET URI:

@@ -1,9 +1,9 @@
-#include "pch/pch.h"
+#include "pch.h"
 #define IMGUI_DEFINE_MATH_OPERATORS
 
 #include "editor/windows/general/EdAssetsWindow.h"
 #include "asset/AssetManager.h"
-#include "core/StringAux.h"
+#include "core/StringUtl.h"
 #include "editor/imgui/ImEd.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "reflection/ReflectionTools.h"

@@ -4,7 +4,7 @@
 #	define HAS_INCLUDED_TEST_HEADER
 #endif
 
-#include "pch/pch.h"
+#include "pch.h"
 #include <catch2/catch.hpp>
 
 // renames

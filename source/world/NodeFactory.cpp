@@ -1,4 +1,4 @@
-#include "pch/pch.h"
+#include "pch.h"
 
 #include "world/NodeFactory.h"
 #include "world/World.h"
@@ -14,7 +14,7 @@
 #include "world/nodes/TransformNode.h"
 #include "asset/util/ParsingAux.h"
 #include "reflection/ReflectionTools.h"
-#include "core/MathAux.h"
+#include "core/MathUtl.h"
 
 #include <nlohmann/json.hpp>
 
@@ -97,7 +97,7 @@ void NodeFactory::LoadNode_Trs(const nlohmann::json& jsonTrsObject, Node* nodeTo
 	auto it = j.find(lookatLabel);
 	if (it != j.end()) {
 		auto lookat = j.value<glm::vec3>(lookatLabel, {});
-		node->m_localOrientation = math::OrientationFromLookatAndPosition(lookat, node->GetNodePositionLCS());
+		node->m_localOrientation = math::findOrientation(lookat, node->GetNodePositionLCS());
 		return;
 	}
 
