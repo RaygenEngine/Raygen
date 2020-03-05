@@ -60,6 +60,8 @@ int32 AppBase::Main(int32 argc, char* argv[]) // NOLINT
 
 	MainLoop();
 
+
+	VulkanLayer::quadDescriptorSet.reset(); // NEXT: This is here to log the proper error
 	engine.DeinitEngine();
 
 	return 0;
@@ -83,11 +85,6 @@ void AppBase::MainLoop()
 		// TODO: full update on window resize
 		// Let our window handle any events.
 		glfwPollEvents();
-
-		// TODO: Correctly implement toggling editor
-		if (Engine::GetInput().IsJustPressed(Key::Tilde)) {
-			// Engine::Get().ToggleEditor();
-		}
 
 		Engine::GetWorld()->Update();
 

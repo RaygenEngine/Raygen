@@ -22,15 +22,16 @@ public:
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;
 
-
-	void CreateFramebufferImageViews();
-
-
-	void InitRenderPassAndFramebuffers();
+	void InitRenderPass();
+	void InitFramebuffers();
 	void InitPipelineAndStuff();
 
 	void RecordGeometryDraw(vk::CommandBuffer* cmdBuffer);
 
 	void TransitionGBufferForShaderRead();
 	void TransitionGBufferForAttachmentWrite();
+
+protected:
+	vk::Viewport GetViewport() const;
+	vk::Rect2D GetScissor() const;
 };

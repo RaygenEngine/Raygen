@@ -21,8 +21,8 @@ using RendererT = VkSampleRenderer;
 #include "system/Timer.h"
 
 inline struct ViewportCoordinates {
-	glm::uvec2 position{ 413, 32 }; // NEXT:
-	glm::uvec2 size{ 972, 551 };
+	glm::uvec2 position{};
+	glm::uvec2 size{};
 	bool operator==(const ViewportCoordinates&) const = default;
 } g_ViewportCoordinates;
 

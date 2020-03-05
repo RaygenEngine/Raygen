@@ -13,4 +13,9 @@ public:
 	void InitPipeline(vk::RenderPass renderPass);
 
 	void RecordCmd(vk::CommandBuffer* cmdBuffer);
+
+
+protected:
+	vk::Viewport GetViewport() const;
+	vk::Rect2D GetScissor() const;
 };
