@@ -5,15 +5,10 @@
 #include "system/profiler/ProfileScope.h"
 #include "system/Engine.h"
 
-void GeometryPass::CreateFramebufferImageViews()
-{
-}
 
-void GeometryPass::InitRenderPassAndFramebuffers()
+void GeometryPass::InitRenderPass()
 {
 	auto& device = VulkanLayer::device;
-
-
 	vk::AttachmentDescription colorAttachment{};
 	colorAttachment
 		.setFormat(vk::Format::eR8G8B8A8Srgb) // CHECK:
@@ -67,11 +62,19 @@ void GeometryPass::InitRenderPassAndFramebuffers()
 		.setPDependencies(&dependency);
 
 	m_renderPass = device->createRenderPassUnique(renderPassInfo);
+}
+
+void GeometryPass::InitFramebuffers()
+{
+
+	auto& device = VulkanLayer::device;
+	vk::Extent2D fbSize = VulkanLayer::viewportFramebufferSize;
+
 
 	// albedo buffer
 	vk::Format format = vk::Format::eR8G8B8A8Srgb;
 
-	device->CreateImage(g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y, format, vk::ImageTiling::eOptimal,
+	device->CreateImage(fbSize.width, fbSize.height, format, vk::ImageTiling::eOptimal,
 		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, albedoImage, albedoImageMemory);
 
@@ -89,11 +92,12 @@ void GeometryPass::InitRenderPassAndFramebuffers()
 
 	albedoImageView = device->createImageViewUnique(viewInfo);
 
+
 	// depth buffer
 	vk::Format depthFormat = device->pd->FindDepthFormat();
-	device->CreateImage(g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y, depthFormat,
-		vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, depthImage, depthImageMemory);
+	device->CreateImage(fbSize.width, fbSize.height, depthFormat, vk::ImageTiling::eOptimal,
+		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, depthImage,
+		depthImageMemory);
 
 	device->TransitionImageLayout(
 		depthImage.get(), depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
@@ -115,8 +119,8 @@ void GeometryPass::InitRenderPassAndFramebuffers()
 	createInfo.setRenderPass(m_renderPass.get())
 		.setAttachmentCount(static_cast<uint32>(imAttachments.size()))
 		.setPAttachments(imAttachments.data())
-		.setWidth(g_ViewportCoordinates.size.x)
-		.setHeight(g_ViewportCoordinates.size.y)
+		.setWidth(fbSize.width)
+		.setHeight(fbSize.height)
 		.setLayers(1);
 
 	m_framebuffer = device->createFramebufferUnique(createInfo);
@@ -192,17 +196,8 @@ void GeometryPass::InitPipelineAndStuff()
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.setTopology(vk::PrimitiveTopology::eTriangleList).setPrimitiveRestartEnable(VK_FALSE);
 
-	vk::Viewport viewport{};
-	viewport.setX(0)
-		.setY((float)g_ViewportCoordinates.size.y)
-		.setWidth((float)g_ViewportCoordinates.size.x)
-		.setHeight(-(float)(g_ViewportCoordinates.size.y))
-		.setMinDepth(0.f)
-		.setMaxDepth(1.f);
-
-	vk::Rect2D scissor{};
-	scissor.setOffset({ 0, 0 });
-	scissor.setExtent({ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y });
+	vk::Viewport viewport = GetViewport();
+	vk::Rect2D scissor = GetScissor();
 
 	vk::PipelineViewportStateCreateInfo viewportState{};
 	viewportState.setViewportCount(1u).setPViewports(&viewport).setScissorCount(1u).setPScissors(&scissor);
@@ -246,6 +241,13 @@ void GeometryPass::InitPipelineAndStuff()
 		.setPAttachments(&colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
+	// Dynamic vieport
+	vk::DynamicState dynamicStates[2] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
+	dynamicStateInfo //
+		.setDynamicStateCount(2u)
+		.setPDynamicStates(&dynamicStates[0]);
+
 
 	// pipeline layout
 	vk::PushConstantRange pushConstantRange{};
@@ -283,7 +285,7 @@ void GeometryPass::InitPipelineAndStuff()
 		.setPMultisampleState(&multisampling)
 		.setPDepthStencilState(&depthStencil)
 		.setPColorBlendState(&colorBlending)
-		.setPDynamicState(nullptr)
+		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
 		.setRenderPass(m_renderPass.get())
 		.setSubpass(0u)
@@ -298,6 +300,7 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 {
 	PROFILE_SCOPE(Renderer);
 
+
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
 
@@ -306,8 +309,8 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 	{
 		vk::RenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.setRenderPass(m_renderPass.get()).setFramebuffer(m_framebuffer.get());
-		renderPassInfo.renderArea.setOffset({ 0, 0 }).setExtent(
-			vk::Extent2D{ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y });
+		renderPassInfo.renderArea.setOffset({ 0, 0 }).setExtent(VulkanLayer::viewportRect.extent);
+
 		std::array<vk::ClearValue, 2> clearValues = {};
 		clearValues[0].setColor(std::array{ 0.0f, 0.1f, 0.15f, 1.0f });
 		clearValues[1].setDepthStencil({ 1.0f, 0 });
@@ -321,6 +324,9 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 			// bind the graphics pipeline
 			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
+			// Dynamic viewport & scissor
+			cmdBuffer->setViewport(0, { GetViewport() });
+			cmdBuffer->setScissor(0, { GetScissor() });
 
 			for (auto& model : VulkanLayer::models) {
 				for (auto& gg : model->geometryGroups) {
@@ -364,4 +370,28 @@ void GeometryPass::TransitionGBufferForAttachmentWrite()
 	auto& device = VulkanLayer::device;
 	device->TransitionImageLayout(albedoImage.get(), vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eShaderReadOnlyOptimal,
 		vk::ImageLayout::eColorAttachmentOptimal);
+}
+
+vk::Viewport GeometryPass::GetViewport() const
+{
+	auto vpSize = VulkanLayer::viewportRect.extent;
+
+	vk::Viewport viewport{};
+	viewport.setX(0)
+		.setY(static_cast<float>(vpSize.height))
+		.setWidth(static_cast<float>(vpSize.width))
+		.setHeight(-static_cast<float>(vpSize.height))
+		.setMinDepth(0.f)
+		.setMaxDepth(1.f);
+	return viewport;
+}
+
+vk::Rect2D GeometryPass::GetScissor() const
+{
+	vk::Rect2D scissor{};
+
+	scissor.setOffset({ 0, 0 });
+	scissor.setExtent(VulkanLayer::viewportRect.extent);
+
+	return scissor;
 }

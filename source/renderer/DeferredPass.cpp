@@ -36,20 +36,8 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.setTopology(vk::PrimitiveTopology::eTriangleList).setPrimitiveRestartEnable(VK_FALSE);
 
-
-	const float x = static_cast<float>(g_ViewportCoordinates.position.x);
-	const float y = static_cast<float>(g_ViewportCoordinates.position.y);
-	const float width = static_cast<float>(g_ViewportCoordinates.size.x);
-	const float height = static_cast<float>(g_ViewportCoordinates.size.y);
-
-	vk::Viewport viewport{};
-	viewport.setX(x).setY(y).setWidth(width).setHeight(height).setMinDepth(0.f).setMaxDepth(1.f);
-
-	vk::Extent2D ext;
-	ext.setWidth(g_ViewportCoordinates.size.x).setHeight(g_ViewportCoordinates.size.y);
-
-	vk::Rect2D scissor{};
-	scissor.setOffset(vk::Offset2D(g_ViewportCoordinates.position.x, g_ViewportCoordinates.position.y)).setExtent(ext);
+	vk::Viewport viewport = GetViewport();
+	vk::Rect2D scissor = GetScissor();
 
 	vk::PipelineViewportStateCreateInfo viewportState{};
 	viewportState.setViewportCount(1u).setPViewports(&viewport).setScissorCount(1u).setPScissors(&scissor);
@@ -95,10 +83,12 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 
 
 	// dynamic states
-	vk::DynamicState dynamicStates[] = { vk::DynamicState::eViewport, vk::DynamicState::eLineWidth };
+	vk::DynamicState dynamicStates[] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
 
-	vk::PipelineDynamicStateCreateInfo dynamicState{};
-	dynamicState.setDynamicStateCount(2u).setPDynamicStates(dynamicStates);
+	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
+	dynamicStateInfo //
+		.setDynamicStateCount(2u)
+		.setPDynamicStates(dynamicStates);
 
 	// pipeline layout
 	vk::PushConstantRange pushConstantRange{};
@@ -136,7 +126,7 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 		.setPMultisampleState(&multisampling)
 		.setPDepthStencilState(&depthStencil)
 		.setPColorBlendState(&colorBlending)
-		.setPDynamicState(nullptr) // TODO: check
+		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
 		.setRenderPass(renderPass)
 		.setSubpass(0u)
@@ -154,10 +144,39 @@ void DeferredPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
 	// bind the graphics pipeline
 	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
+	// Dynamic viewport & scissor
+	cmdBuffer->setViewport(0, { GetViewport() });
+	cmdBuffer->setScissor(0, { GetScissor() });
+
 	// descriptor sets
 	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-		&(VulkanLayer::quadDescriptorSet.get()), 0u, nullptr);
+		&(*VulkanLayer::quadDescriptorSet), 0u, nullptr);
 
 	// draw call (triangle)
 	cmdBuffer->draw(3u, 1u, 0u, 0u);
+}
+
+vk::Viewport DeferredPass::GetViewport() const
+{
+	auto& rect = VulkanLayer::viewportRect;
+	const float x = static_cast<float>(rect.offset.x);
+	const float y = static_cast<float>(rect.offset.y);
+	const float width = static_cast<float>(rect.extent.width);
+	const float height = static_cast<float>(rect.extent.height);
+
+	vk::Viewport viewport{};
+	viewport //
+		.setX(x)
+		.setY(y)
+		.setWidth(width)
+		.setHeight(height)
+		.setMinDepth(0.f)
+		.setMaxDepth(1.f);
+
+	return viewport;
+}
+
+vk::Rect2D DeferredPass::GetScissor() const
+{
+	return VulkanLayer::viewportRect;
 }

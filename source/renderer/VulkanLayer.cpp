@@ -7,10 +7,42 @@
 #include "system/EngineEvents.h"
 #include "system/Input.h"
 #include "renderer/Model.h"
+
 #include "world/World.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "world/nodes/geometry/GeometryNode.h"
 #include "editor/imgui/ImguiImpl.h"
+#include <array>
+
+namespace {
+vk::Extent2D SuggestFrameubfferSize(vk::Extent2D viewportSize)
+{
+	vk::Extent2D sizes[] = {
+		{ 1280, 800 },
+		{ 1920, 1080 },
+		{ 2560, 1440 },
+		{ 4096, 2160 },
+	};
+	constexpr size_t sizesLen = sizeof(sizes) / sizeof(vk::Extent2D);
+
+	vk::Extent2D result = viewportSize;
+	for (size_t i = 0; i < sizesLen; i++) {
+		if (sizes[i].width >= viewportSize.width) {
+			result.width = sizes[i].width;
+			break;
+		}
+	}
+
+	for (size_t i = 0; i < sizesLen; i++) {
+		if (sizes[i].height >= viewportSize.height) {
+			result.height = sizes[i].height;
+			break;
+		}
+	}
+
+	return result;
+}
+} // namespace
 
 
 void VulkanLayer::InitVulkanLayer(std::vector<const char*>& extensions, WindowType* window)
@@ -29,16 +61,18 @@ void VulkanLayer::InitVulkanLayer(std::vector<const char*>& extensions, WindowTy
 	auto deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_MAINTENANCE1_EXTENSION_NAME };
 	device = std::make_unique<LogicalDevice>(pd, deviceExtensions);
 
+
 	// create swapchain
 	ReconstructSwapchain();
 
 	InitModelDescriptors();
 
-	geomPass.InitRenderPassAndFramebuffers();
+	// CHECK: Code smell, needs internal first init function
+	geomPass.InitRenderPass();
 	geomPass.InitPipelineAndStuff();
 
-
 	InitQuadDescriptor();
+	OnViewportResize();
 
 	defPass.InitPipeline(swapchain->renderPass.get());
 
@@ -63,13 +97,15 @@ void VulkanLayer::InitVulkanLayer(std::vector<const char*>& extensions, WindowTy
 
 	imageAvailableSemaphore = device->createSemaphoreUnique({});
 	renderFinishedSemaphore = device->createSemaphoreUnique({});
+
+	viewportUpdateListener.Bind([] { didViewportResize.Set(); });
+	windowResizeListener.Bind([](auto, auto) { didWindowResize.Set(); });
 }
 
 void VulkanLayer::ReconstructSwapchain()
 {
 	swapchain = std::make_unique<Swapchain>(device.get(), instance->surface);
 }
-
 
 void VulkanLayer::ReinitModels()
 {
@@ -200,12 +236,16 @@ void VulkanLayer::InitQuadDescriptor()
 		.setMinLod(0.f)
 		.setMaxLod(0.f);
 
-	static auto sampler = device->createSamplerUnique(samplerInfo);
+	quadSampler = std::move(device->createSamplerUnique(samplerInfo));
+}
+
+void VulkanLayer::UpdateQuadDescriptorSet()
+{
 
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
 		.setImageView(geomPass.albedoImageView.get())
-		.setSampler(sampler.get());
+		.setSampler(*quadSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};
 	descriptorWrite.setDstSet(quadDescriptorSet.get())
@@ -221,9 +261,41 @@ void VulkanLayer::InitQuadDescriptor()
 }
 
 
+void VulkanLayer::OnViewportResize()
+{
+	vk::Extent2D viewportSize{ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y };
+
+	viewportRect.extent = viewportSize;
+	viewportRect.offset = vk::Offset2D(g_ViewportCoordinates.position.x, g_ViewportCoordinates.position.y);
+
+	// NEXT: fix while keeping 1 to 1 ratio
+	// vk::Extent2D fbSize = SuggestFrameubfferSize(viewportSize);
+	vk::Extent2D fbSize = viewportSize;
+
+	if (fbSize != viewportFramebufferSize) {
+		viewportFramebufferSize = fbSize;
+		geomPass.InitFramebuffers();
+		UpdateQuadDescriptorSet();
+	}
+}
+
+void VulkanLayer::OnWindowResize()
+{
+	// NEXT:
+}
+
+
 void VulkanLayer::DrawFrame()
 {
 	PROFILE_SCOPE(Renderer);
+
+	if (*didWindowResize) {
+		OnWindowResize();
+	}
+
+	if (*didViewportResize) {
+		OnViewportResize();
+	}
 
 	// NEXT: UNIFORM BUFFER UPDATES
 	{
