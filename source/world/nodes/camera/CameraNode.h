@@ -48,7 +48,6 @@ protected:
 	glm::mat4 m_projectionMatrix{};
 	glm::mat4 m_viewMatrix{};
 	glm::mat4 m_viewProjectionMatrix{};
-	// world space frustum TODO:
 	math::Frustum m_frustum{};
 
 	int32 m_viewportWidth{ 1280 };

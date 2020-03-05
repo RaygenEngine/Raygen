@@ -1,5 +1,4 @@
 #pragma once
-// TODO: move this
 #include "reflection/ReflEnum.h"
 #include "asset/AssetManager.h"
 

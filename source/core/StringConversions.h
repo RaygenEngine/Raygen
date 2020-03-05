@@ -19,7 +19,7 @@ T FromStr(std::string str)
 }
 
 
-// TODO: not more performant, for now copies string
+// PERF: not more performant, for now copies string
 template<typename T>
 T FromStrView(std::string_view view)
 {

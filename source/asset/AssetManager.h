@@ -342,7 +342,7 @@ public:
 		auto [it, didInsert] = inst->m_importedPathsCache.try_emplace(inFullPath.string(), PodHandle<PodType>{});
 
 		if (!didInsert) {
-			// TODO: type check this handle
+			// TODO: ASSETS: type check this handle
 			return PodHandle<PodType>(it->second);
 		}
 
@@ -445,7 +445,7 @@ private:
 		}
 
 
-		auto ext = entry->metadata.preferedDiskType == PodDiskType::Binary ? "bin" : "json";
+		auto ext = "bin";
 
 		auto name = fmt::format("{}.{}", fs::path(entry->name).filename().string(), ext);
 		entry->name = AssetHandlerManager::SuggestFilename(uri::GetDir(fullRelativePath), name);

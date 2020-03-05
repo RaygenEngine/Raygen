@@ -74,8 +74,8 @@ void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 			auto count = entry->sumDuration.count();
 			float perHit = (static_cast<float>(count) / entry->hits) * c_PrecisionToMicros;
 
-			// TODO: C++20 use chrono operator<<
-			// TODO: assumes precision
+			// CHECK: C++20 use chrono operator<<
+			// CHECK: assumes precision
 			float micros = c_PrecisionToMicros * count;
 
 			if (micros < 1000.f) {

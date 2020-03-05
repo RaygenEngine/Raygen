@@ -63,7 +63,6 @@ set(SOURCE_FILES
 	
 	world/nodes/Node.cpp
 	world/nodes/RootNode.cpp
-	world/nodes/vr/OVRNode.cpp
 	world/nodes/camera/CameraNode.cpp
 	world/nodes/camera/WindowCameraNode.cpp
 	world/nodes/camera/EditorCameraNode.cpp
@@ -180,7 +179,7 @@ add_compile_definitions(NOMINMAX NODRAWTEXT NOOPENFILE) # TODO:
 if(MSVC)
 	target_compile_options(Raygen PRIVATE "/MP")
 	# unsafe strcpy used by some dependencies
-	add_definitions(-D_CRT_SECURE_NO_WARNINGS) # TODO:
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS) # CHECK:
 endif()
 
 

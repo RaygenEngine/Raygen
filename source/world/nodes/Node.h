@@ -97,7 +97,6 @@ private:
 protected:
 	std::string m_name;
 
-	// TODO: keep only the local space one
 	// currently world space
 	math::AABB m_aabb{};
 	math::AABB m_localBB{ { -0.3, -0.3, -0.3 }, { 0.3, 0.3, 0.3 } };

@@ -22,10 +22,6 @@ struct BoolFlag {
 	bool operator!() { return !Access(); }
 	bool operator*() { return Access(); }
 
-	// TODO: Should we add these:
-	// operator bool() { return Access(); }
-	// void operator=(bool newValue) { isTrue = newValue; }
-
 protected:
 	bool isTrue{ false };
 };

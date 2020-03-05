@@ -131,7 +131,7 @@ void Draw(const char* iconTxt, const char* nameTxt, OnOpen onOpen = {}, OnEndGro
 			onOpen();
 		}
 		else { // Select
-			   // TODO:
+			   // TODO: ASSETS:
 		}
 	}
 
@@ -323,13 +323,11 @@ void AssetsWindow::ImguiDraw()
 	ImGui::Columns(1);
 }
 
-void AssetsWindow::ImportFiles(std::vector<std::string>&& files)
+void AssetsWindow::ImportFiles(std::vector<fs::path>&& files)
 {
-
 	for (auto& file : files) {
-		auto path = fs::path(file);
-		if (path.extension() == ".gltf") {
-			AssetImporterManager::ResolveOrImport<ModelPod>(path, "", fs::path(m_currentPath));
+		if (file.extension() == ".gltf") {
+			AssetImporterManager::ResolveOrImport<ModelPod>(file, "", fs::path(m_currentPath));
 		}
 	}
 	ReloadEntries();

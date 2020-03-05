@@ -20,12 +20,10 @@ namespace asset {
 				"Trans: {}\n"
 				"====================\n"
 				"  Orig. Loc.: {}\n"
-				"  Pref. Disk: {}\n"
 				"Exp. On Save: {}\n"
 				"Imp. On Load: {}\n",
 				entry->path, entry->name, entry->type.name(), entry->ptr, entry->uid, entry->transient, //
-				entry->metadata.originalImportLocation, magic_enum::enum_name(entry->metadata.preferedDiskType),
-				entry->metadata.exportOnSave, entry->metadata.reimportOnLoad);
+				entry->metadata.originalImportLocation, entry->metadata.exportOnSave, entry->metadata.reimportOnLoad);
 
 			ImEd::BeginCodeFont();
 			constexpr float scale = 0.8f;

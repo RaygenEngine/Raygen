@@ -10,20 +10,20 @@
 std::stringstream Log::s_editorLogStream;
 std::shared_ptr<spdlog::logger> g_logger;
 
-void Log::Init(LogLevelTarget level)
+void Log::Init(LogLevel level)
 {
 	if (!g_logger) {
 		BasicSetup();
 	}
 
 	switch (level) {
-		case LogLevelTarget::Trace: g_logger->set_level(spdlog::level::level_enum::trace); break;
-		case LogLevelTarget::Debug: g_logger->set_level(spdlog::level::level_enum::debug); break;
-		case LogLevelTarget::Info: g_logger->set_level(spdlog::level::level_enum::info); break;
-		case LogLevelTarget::Warn: g_logger->set_level(spdlog::level::level_enum::warn); break;
-		case LogLevelTarget::Error: g_logger->set_level(spdlog::level::level_enum::err); break;
-		case LogLevelTarget::Critical: g_logger->set_level(spdlog::level::level_enum::critical); break;
-		case LogLevelTarget::Off:
+		case LogLevel::Trace: g_logger->set_level(spdlog::level::level_enum::trace); break;
+		case LogLevel::Debug: g_logger->set_level(spdlog::level::level_enum::debug); break;
+		case LogLevel::Info: g_logger->set_level(spdlog::level::level_enum::info); break;
+		case LogLevel::Warn: g_logger->set_level(spdlog::level::level_enum::warn); break;
+		case LogLevel::Error: g_logger->set_level(spdlog::level::level_enum::err); break;
+		case LogLevel::Critical: g_logger->set_level(spdlog::level::level_enum::critical); break;
+		case LogLevel::Off:
 		default: g_logger->set_level(spdlog::level::level_enum::off); break;
 	}
 

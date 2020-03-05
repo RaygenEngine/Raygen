@@ -39,7 +39,7 @@ void serialize(Archive& ar, glm::vec4& v)
 template<typename Archive>
 void serialize(Archive& ar, glm::mat4x4& v)
 {
-	LOG_ABORT("TODO: Serialize mat4x4 is currently undone");
+	ar(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15]);
 }
 } // namespace glm
 
@@ -101,15 +101,13 @@ void save(Archive& ar, const AssetPod& podRef)
 template<typename Archive>
 void save(Archive& ar, const PodMetaData& metadata)
 {
-	ar(metadata.podTypeHash, metadata.originalImportLocation, metadata.preferedDiskType, metadata.exportOnSave,
-		metadata.reimportOnLoad);
+	ar(metadata.podTypeHash, metadata.originalImportLocation, metadata.exportOnSave, metadata.reimportOnLoad);
 }
 
 template<typename Archive>
 void load(Archive& ar, PodMetaData& metadata)
 {
-	ar(metadata.podTypeHash, metadata.originalImportLocation, metadata.preferedDiskType, metadata.exportOnSave,
-		metadata.reimportOnLoad);
+	ar(metadata.podTypeHash, metadata.originalImportLocation, metadata.exportOnSave, metadata.reimportOnLoad);
 }
 
 
@@ -124,7 +122,6 @@ void SerializePodToBinary(PodMetaData& metadata, AssetPod* pod, const fs::path& 
 	}
 	cereal::BinaryOutputArchive archive(os);
 
-	metadata.preferedDiskType = PodDiskType::Binary;
 	archive(metadata);
 	archive(*pod);
 }
@@ -146,13 +143,8 @@ void DeserializePodFromBinary(PodEntry* entry)
 	archive(meta);
 
 
-	CLOG_ERROR(meta.preferedDiskType != PodDiskType::Binary, "Found a binary pod with prefered type as json: {}", file);
-
-
 	// determine pod type and allocate it
-	podtools::VisitPodHash(meta.podTypeHash, [&](auto type) {
-		using PodType = std::remove_pointer_t<decltype(type)>;
-		static_assert(!std::is_pointer_v<PodType>);
+	podtools::VisitPodHash(meta.podTypeHash, [&]<typename PodType>() {
 		entry->ptr.reset(new PodType());
 		entry->type = mti::GetTypeId<PodType>();
 		entry->Z_AssignClass(&PodType::StaticClass());

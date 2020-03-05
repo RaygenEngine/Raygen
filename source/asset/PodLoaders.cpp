@@ -2,7 +2,6 @@
 
 #include "asset/PodIncludes.h"
 
-#include "asset/loaders/CubemapLoader.h"
 #include "asset/loaders/DummyLoader.h"
 #include "asset/loaders/GltfFileLoader.h"
 #include "asset/loaders/GltfMaterialLoader.h"

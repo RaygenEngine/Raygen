@@ -24,7 +24,7 @@ static void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 
 	// if image exists
 
-	// TODO: check image settings
+	// CHECK: check image settings
 	// this should exist (missing is handled from within material)
 	CLOG_ABORT(imageIndex == -1, "This model is unsafe to use, handle missing image from material: {}", path);
 

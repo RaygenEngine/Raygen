@@ -165,7 +165,6 @@ void FileBrowser::ChangeDirectory(const fs::path& newPath)
 		}
 	} catch (std::exception e) {
 		LOG_ERROR("Failed to open a folder in the file browser. Exception was:\n{}", e.what());
-		// TODO: possible stack overflow (rare) can happen here, when the directory we came from is inaccessible
 		ChangeDirectory(prevPath);
 	}
 }

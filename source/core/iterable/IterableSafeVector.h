@@ -6,6 +6,7 @@
 #include <utility>
 
 // Provides necessary tools for adding/removing elements on a vector while iterating it without errors.
+// Order of elements is not preserved
 template<typename T>
 struct IterableSafeVector {
 	using Iterator = typename std::vector<T>::iterator;
@@ -28,7 +29,6 @@ struct IterableSafeVector {
 	{
 		int64 swapPos = static_cast<int64>(vec.size() - 1);
 		for (auto& removalPos : erasingCacheIndicies) {
-			// std::iter_swap(vec.begin() + removalPos, );
 			std::swap(vec[removalPos], vec[swapPos]);
 			swapPos--;
 		}

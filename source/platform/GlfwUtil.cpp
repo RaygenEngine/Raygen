@@ -143,7 +143,7 @@ void WindowCharacterCb(GLFWwindow* window, uint32 unicodeCharacter)
 // Drag 'n' drop on top of window
 void WindowPathDropCb(GLFWwindow* window, int32 elementCount, const char* paths[])
 {
-	std::vector<std::string> strPaths;
+	std::vector<fs::path> strPaths;
 	for (int32 i = 0; i < elementCount; i++) {
 		strPaths.push_back(paths[i]);
 	}

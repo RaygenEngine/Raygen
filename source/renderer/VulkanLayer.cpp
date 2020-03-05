@@ -15,7 +15,7 @@
 #include <array>
 
 namespace {
-vk::Extent2D SuggestFrameubfferSize(vk::Extent2D viewportSize)
+vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 {
 	vk::Extent2D sizes[] = {
 		{ 1280, 800 },
@@ -77,7 +77,7 @@ void VulkanLayer::InitVulkanLayer(std::vector<const char*>& extensions, WindowTy
 	defPass.InitPipeline(swapchain->renderPass.get());
 
 
-	// TODO: can be done with a single allocation
+	// NEXT: can be done with a single allocation
 	vk::CommandBufferAllocateInfo allocInfo{};
 	allocInfo.setCommandPool(device->graphicsCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
@@ -113,7 +113,7 @@ void VulkanLayer::ReinitModels()
 	models.clear();
 	for (auto geomNode : world->GetNodeIterator<GeometryNode>()) {
 		auto model = geomNode->GetModel();
-		models.emplace_back(std::make_unique<Model>(model)); // TODO: RENDERER
+		models.emplace_back(std::make_unique<Model>(model));
 		models.back()->m_node = geomNode;
 	}
 }
@@ -269,8 +269,8 @@ void VulkanLayer::OnViewportResize()
 	viewportRect.offset = vk::Offset2D(g_ViewportCoordinates.position.x, g_ViewportCoordinates.position.y);
 
 	// NEXT: fix while keeping 1 to 1 ratio
-	// vk::Extent2D fbSize = SuggestFrameubfferSize(viewportSize);
-	vk::Extent2D fbSize = viewportSize;
+	vk::Extent2D fbSize = SuggestFramebufferSize(viewportSize);
+	// vk::Extent2D fbSize = viewportSize;
 
 	if (fbSize != viewportFramebufferSize) {
 		viewportFramebufferSize = fbSize;

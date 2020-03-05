@@ -103,8 +103,6 @@ Model::Model(PodHandle<ModelPod> podHandle)
 
 			device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 
-
-			// TODO: check moves
 			geometryGroups.emplace_back(std::move(vgg));
 		}
 	}

@@ -41,9 +41,8 @@ LogicalDevice::LogicalDevice(PhysicalDevice* pd, std::vector<const char*> device
 		queueCreateInfos.push_back(createInfo);
 	}
 
-	// TODO: (get from assoc)
+	// NEXT: check if supported by the pd..
 	vk::PhysicalDeviceFeatures deviceFeatures{};
-	// TODO: check if supported by the pd..
 	deviceFeatures.setSamplerAnisotropy(VK_TRUE);
 
 	vk::DeviceCreateInfo deviceCreateInfo{};

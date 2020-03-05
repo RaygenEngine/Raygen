@@ -36,8 +36,6 @@ protected:
 	float m_near{ 0.05f };
 	float m_far{ 20.0f };
 
-	// TODO: consider moving stuff used by shaders as renderer reflected properties
-	// e.g. maxShadowBias, samples etc
 	float m_maxShadowBias{ 0.005f };
 	int32 m_samples{ 4 };
 
