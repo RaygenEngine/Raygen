@@ -5,7 +5,7 @@
 #include "asset/pods/GltfFilePod.h"
 #include "asset/loaders/DummyLoader.h"
 #include "asset/util/GltfAux.h"
-#include "core/MathAux.h"
+#include "core/MathUtl.h"
 
 #include <tiny_gltf.h>
 
@@ -558,7 +558,7 @@ inline void Load(PodEntry* entry, ModelPod* pod, const uri::Uri& path)
 					scale[2] = static_cast<float>(childNode.scale[2]);
 				}
 
-				localTransformMat = math::TransformMatrixFromSOT(scale, orientation, translation);
+				localTransformMat = math::transformMat(scale, orientation, translation);
 			}
 
 			localTransformMat = parentTransformMat * localTransformMat;

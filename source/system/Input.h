@@ -1,7 +1,7 @@
 #pragma once
 
 #include "system/InputEnums.h"
-#include "core/MathAux.h"
+#include "core/MathUtl.h"
 
 #include <unordered_set>
 #include <bitset>
@@ -23,7 +23,7 @@ struct Input {
 
 		float GetXAxisValue(float multiplyBy = 1.f) const { return direction.x * magnitude * multiplyBy; }
 		float GetYAxisValue(float multiplyBy = 1.f) const { return direction.y * magnitude * multiplyBy; }
-		bool IsResting() const { return math::EpsilonEqualsZero(magnitude); }
+		bool IsResting() const { return math::equalsZero(magnitude); }
 	};
 
 	struct GamepadState {
@@ -34,8 +34,8 @@ struct Input {
 		float lt{ 0.0f }; // left trigger
 		float rt{ 0.0f }; // right trigger
 
-		[[nodiscard]] bool IsLTResting() const { return math::EpsilonEqualsZero(lt); }
-		[[nodiscard]] bool IsRTResting() const { return math::EpsilonEqualsZero(rt); }
+		[[nodiscard]] bool IsLTResting() const { return math::equalsZero(lt); }
+		[[nodiscard]] bool IsRTResting() const { return math::equalsZero(rt); }
 	};
 
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "core/StringAux.h"
+#include "core/StringUtl.h"
 #include "system/Logger.h"
 #include <unordered_map>
 #include <string>

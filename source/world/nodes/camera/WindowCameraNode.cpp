@@ -1,4 +1,4 @@
-#include "pch/pch.h"
+#include "pch.h"
 
 #include "world/nodes/camera/WindowCameraNode.h"
 #include "system/Engine.h"
@@ -37,5 +37,5 @@ void WindowCameraNode::OnWindowResizeEvent(int32 width, int32 height)
 
 void WindowCameraNode::OnViewportUpdatedEvent()
 {
-	WindowResize(math::RoundToInt(g_ViewportCoordinates.size.x), math::RoundToInt(g_ViewportCoordinates.size.y));
+	WindowResize(math::roundToInt(g_ViewportCoordinates.size.x), math::roundToInt(g_ViewportCoordinates.size.y));
 }

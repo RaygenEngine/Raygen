@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/StringAux.h"
+#include "core/StringUtl.h"
 
 #include <tiny_gltf.h>
 enum class ComponentType

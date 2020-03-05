@@ -2,7 +2,7 @@
 
 #include "world/nodes/Node.h"
 #include "asset/pods/ModelPod.h"
-#include "core/MathAux.h"
+#include "core/MathUtl.h"
 
 class GeometryNode : public Node {
 	REFLECTED_NODE(GeometryNode, Node, DF_FLAGS(ModelChange))

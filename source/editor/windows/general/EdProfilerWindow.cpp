@@ -1,4 +1,4 @@
-#include "pch/pch.h"
+#include "pch.h"
 #include "editor/windows/general/EdProfilerWindow.h"
 #include "system/profiler/ProfileScope.h"
 #include "editor/misc/NativeFileBrowser.h"
@@ -29,9 +29,7 @@ ProfilerWindow::ProfilerWindow(std::string_view name)
 }
 
 
-void ProfilerWindow::ShowCategoryCheckbox(ProfilerSetup::Module category)
-{
-}
+void ProfilerWindow::ShowCategoryCheckbox(ProfilerSetup::Module category) {}
 
 void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 {

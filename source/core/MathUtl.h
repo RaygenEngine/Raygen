@@ -4,28 +4,21 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <concepts>
 
 namespace math {
 template<typename T>
-bool EpsilonEqualsValue(T input, T value)
+bool equals(T input, T value, T epsilon = glm::epsilon<T>())
 {
 	return glm::epsilonEqual(input, value, glm::epsilon<T>());
 }
 
 template<typename T>
-bool EpsilonEquals(T input, T value)
+bool equalsZero(T input, T epsilon = glm::epsilon<T>())
 {
-	return glm::epsilonEqual(input, value, glm::epsilon<T>());
+	return equals(input, {}, epsilon);
 }
 
-template<typename T>
-bool EpsilonEqualsZero(T input)
-{
-	return EpsilonEqualsValue(input, T{ 0.f });
-}
-
-inline glm::mat4 TransformMatrixFromSOT(glm::vec3 scale, glm::quat orientation, glm::vec3 translation)
+inline glm::mat4 transformMat(glm::vec3 scale, glm::quat orientation, glm::vec3 translation)
 {
 	const auto s = glm::scale(scale);
 	const auto r = glm::toMat4(orientation);
@@ -34,7 +27,7 @@ inline glm::mat4 TransformMatrixFromSOT(glm::vec3 scale, glm::quat orientation, 
 	return t * r * s;
 }
 
-inline glm::mat4 TransformMatrixFromSRT(glm::vec3 scale, glm::vec3 raxis, float rads, glm::vec3 translation)
+inline glm::mat4 transformMat(glm::vec3 scale, glm::vec3 raxis, float rads, glm::vec3 translation)
 {
 	const auto s = glm::scale(scale);
 	const auto r = glm::rotate(rads, raxis);
@@ -43,11 +36,11 @@ inline glm::mat4 TransformMatrixFromSRT(glm::vec3 scale, glm::vec3 raxis, float 
 	return t * r * s;
 }
 
-inline glm::quat OrientationFromLookatAndPosition(glm::vec3 lookat, glm::vec3 position)
+inline glm::quat findOrientation(glm::vec3 lookat, glm::vec3 position)
 {
 	const auto dlp = glm::distance(lookat, position);
 	// if can't get orientation return unit
-	if (EpsilonEqualsZero(dlp)) {
+	if (equalsZero(dlp)) {
 		return glm::quat{ 1.f, 0.f, 0.f, 0.f };
 	}
 
@@ -55,7 +48,7 @@ inline glm::quat OrientationFromLookatAndPosition(glm::vec3 lookat, glm::vec3 po
 
 	// if parallel use right as up
 	const auto ddu = abs(glm::dot(direction, glm::vec3(0.f, 1.f, 0.f)));
-	if (EpsilonEqualsValue(ddu, 1.f)) {
+	if (equals(ddu, 1.f)) {
 		return glm::normalize(glm::quatLookAt(direction, glm::vec3(1.f, 0.f, 0.f)));
 	}
 
@@ -63,16 +56,16 @@ inline glm::quat OrientationFromLookatAndPosition(glm::vec3 lookat, glm::vec3 po
 }
 
 template<typename T>
-inline int32 RoundToInt(T number)
+int32 roundToInt(T number)
 {
 	return static_cast<int32>(glm::round(number));
 }
 
 enum class Intersection
 {
-	OUTSIDE,
-	INSIDE,
-	INTERSECT
+	Outside,
+	Inside,
+	Intersect
 };
 
 struct AABB {
@@ -226,7 +219,7 @@ struct Frustum {
 	// considers aabb and f are in same space
 	[[nodiscard]] Intersection IntersectionTestWithAABB(AABB aabb)
 	{
-		auto res = Intersection::INSIDE;
+		auto res = Intersection::Inside;
 
 		// for each plane do ...
 		for (auto& pl : planes) {
@@ -250,11 +243,11 @@ struct Frustum {
 				vertexN.z = aabb.min.z;
 
 			if (pl.DistanceFromPoint(vertexP) < 0) {
-				return Intersection::OUTSIDE;
+				return Intersection::Outside;
 			}
 
 			if (pl.DistanceFromPoint(vertexN) < 0) {
-				res = Intersection::INTERSECT;
+				res = Intersection::Intersect;
 			}
 		}
 		return res;
@@ -263,9 +256,9 @@ struct Frustum {
 	[[nodiscard]] bool IntersectsAABB(AABB aabb)
 	{
 		switch (IntersectionTestWithAABB(aabb)) {
-			case Intersection::INSIDE:
-			case Intersection::INTERSECT: return true;
-			case Intersection::OUTSIDE:;
+			case Intersection::Inside:
+			case Intersection::Intersect: return true;
+			case Intersection::Outside:;
 		}
 		return false;
 	}

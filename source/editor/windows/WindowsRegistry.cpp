@@ -1,4 +1,4 @@
-#include "pch/pch.h"
+#include "pch.h"
 
 #include "editor/windows/WindowsRegistry.h"
 #include "editor/EdComponentWindows.h"

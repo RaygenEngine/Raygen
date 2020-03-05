@@ -1,4 +1,4 @@
-#include "pch/pch.h"
+#include "pch.h"
 
 #include "editor/SceneSave.h"
 #include "system/Engine.h"
@@ -20,9 +20,7 @@
 #include <string>
 #include <fstream>
 
-SceneSave::SceneSave()
-{
-}
+SceneSave::SceneSave() {}
 
 void SceneSave::OpenBrowser()
 {

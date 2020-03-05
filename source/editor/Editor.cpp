@@ -1,5 +1,5 @@
 
-#include "pch/pch.h"
+#include "pch.h"
 
 #include "editor/Editor.h"
 #include "editor/imgui/ImguiImpl.h"
@@ -954,7 +954,7 @@ void Editor::TeleportToCamera(Node* node)
 {
 	auto camera = Engine::GetWorld()->GetActiveCamera();
 	if (camera) {
-		auto newMat = math::TransformMatrixFromSOT(
+		auto newMat = math::transformMat(
 			node->GetNodeScaleWCS(), camera->GetNodeOrientationWCS(), camera->GetNodePositionWCS());
 		node->SetNodeTransformWCS(newMat);
 	}

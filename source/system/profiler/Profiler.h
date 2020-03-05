@@ -3,7 +3,7 @@
 #include <chrono>
 #include <map>
 #include <vector>
-#include "core/StringAux.h"
+#include "core/StringUtl.h"
 
 namespace ch = std::chrono;
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "core/StringAux.h"
+#include "core/StringUtl.h"
 #include "core/StringConversions.h"
 #include "system/console/Console.h"
 #include "system/Logger.h"
@@ -50,7 +50,7 @@ protected:
 			LOG_REPORT("{}: {}", name, value);
 			return false;
 		}
-		value = conv::FromStrView<T>(vec[1]);
+		value = str::fromStrView<T>(vec[1]);
 		LOG_REPORT("Console set {}: {} - {}", name, value, tooltip);
 		return true;
 	}
@@ -83,7 +83,7 @@ struct ConsoleFunctionGeneric : public ConsoleEntry {
 
 	// Func param can be left empty to be set later
 	// Lambda params of func is a std::string_view of the console command (including the command itself)
-	// Recommended to use with str::split (StringAux) and conv::FromStrView. Automated templated variants to be provided
+	// Recommended to use with str::split (StringUtl) and str::fromStrView. Automated templated variants to be provided
 	// at a future update.
 	ConsoleFunctionGeneric(
 		const char* name, std::function<void(std::string_view)> func = {}, const char* inTooltip = "")
@@ -106,7 +106,7 @@ struct ConsoleFunctionGeneric : public ConsoleEntry {
 
 // Templated console function.
 // Declared as: ConsoleFunction<int32, int32> myConsoleFunction{"callme"};
-// Automatically parses console using conv::FromStrView (or operator<<)
+// Automatically parses console using str::fromStrView (or operator<<)
 template<typename... Args>
 struct ConsoleFunction : public ConsoleEntry {
 
@@ -139,7 +139,7 @@ struct ConsoleFunction : public ConsoleEntry {
 		std::apply(
 			[&](auto&&... elem) {
 				int currentArg = 1;
-				((void)(elem = conv::FromStrView<std::remove_reference_t<decltype(elem)>>(vec[currentArg++])), ...);
+				((void)(elem = str::fromStrView<std::remove_reference_t<decltype(elem)>>(vec[currentArg++])), ...);
 			},
 			args);
 

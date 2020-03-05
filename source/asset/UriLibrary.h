@@ -1,7 +1,7 @@
 #pragma once
 
 #include "system/Logger.h"
-#include "core/StringAux.h"
+#include "core/StringUtl.h"
 
 // The central library for the engines Uri convention.
 #include <nlohmann/json.hpp>

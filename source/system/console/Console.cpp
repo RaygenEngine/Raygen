@@ -1,6 +1,6 @@
 #include "system/console/Console.h"
 #include "system/console/ConsoleVariable.h"
-#include "core/StringAux.h"
+#include "core/StringUtl.h"
 
 ConsoleFunctionGeneric commandAll(
 	"all",
