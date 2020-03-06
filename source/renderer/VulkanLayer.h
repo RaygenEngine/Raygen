@@ -4,7 +4,7 @@
 #include "renderer/PhysicalDevice.h"
 #include "renderer/Swapchain.h"
 #include "renderer/LogicalDevice.h"
-#include "platform/GlfwUtil.h"
+#include "platform/GlfwUtl.h"
 #include "renderer/Model.h"
 #include "renderer/GeometryPass.h"
 #include "renderer/DeferredPass.h"
@@ -12,6 +12,7 @@
 #include "engine/Events.h"
 
 #include <vulkan/vulkan.hpp>
+
 struct UniformBufferObject {
 	glm::mat4 view;
 	glm::mat4 proj;
@@ -62,7 +63,7 @@ public:
 	//
 	//
 	//
-	static void InitVulkanLayer(std::vector<const char*>& extensions, WindowType* window);
+	static void InitVulkanLayer(std::vector<const char*>& extensions, GLFWwindow* window);
 	static void ReconstructSwapchain();
 
 	inline static std::unique_ptr<Instance> instance;

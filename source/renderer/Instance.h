@@ -15,6 +15,6 @@ struct Instance : public vk::Instance {
 
 	std::vector<std::unique_ptr<PhysicalDevice>> capablePhysicalDevices;
 
-	Instance(std::vector<const char*> requiredExtensions, WindowType* window);
+	Instance(std::vector<const char*> requiredExtensions, GLFWwindow* window);
 	~Instance();
 };

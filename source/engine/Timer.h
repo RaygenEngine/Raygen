@@ -2,7 +2,9 @@
 
 #include "engine/Logger.h"
 #include "core/MacroUtl.h"
+
 #include <chrono>
+
 namespace ch = std::chrono;
 
 namespace timer {
@@ -23,13 +25,13 @@ struct Timer {
 
 	// If no duration type is passed, takes the parameter of the declaration
 	template<typename DurationType = ch::microseconds>
-	long long Get() const
+	[[nodiscard]] long long Get() const
 	{
 		return ch::duration_cast<DurationType>(ch::system_clock::now() - startTime).count();
 	}
 
 
-	auto GetTimeDiff() const { return ch::system_clock::now() - startTime; }
+	[[nodiscard]] auto GetTimeDiff() const { return ch::system_clock::now() - startTime; }
 };
 
 // Multitimer, can be used to time multiple passes of the same code and return each time and total.

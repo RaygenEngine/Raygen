@@ -45,7 +45,7 @@ set(SOURCE_FILES
 	engine/profiler/Profiler.cpp
 	engine/reflection/ReflectionDb.cpp
 	
-	platform/GlfwUtil.cpp
+	platform/GlfwUtl.cpp
 
 	renderer/GeometryPass.cpp
 	renderer/DeferredPass.cpp

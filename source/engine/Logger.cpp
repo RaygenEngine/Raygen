@@ -2,15 +2,14 @@
 
 #include "engine/Logger.h"
 
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include "spdlog/sinks/ostream_sink.h"
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/ostream_sink.h>
 
 
-std::stringstream Log::s_editorLogStream;
 std::shared_ptr<spdlog::logger> g_logger;
 
-void Log::Init(LogLevel level)
+void S_Log::Init(LogLevel level)
 {
 	if (!g_logger) {
 		BasicSetup();
@@ -30,7 +29,7 @@ void Log::Init(LogLevel level)
 	LOG_INFO("Raygen Logger level: {}", spdlog::level::to_string_view(g_logger->level()));
 }
 
-void Log::EarlyInit()
+void S_Log::EarlyInit()
 {
 	if (!g_logger) {
 		BasicSetup();
@@ -38,37 +37,37 @@ void Log::EarlyInit()
 	}
 }
 
-void Log::Debug(const std::string& str)
+void S_Log::Debug(const std::string& str)
 {
 	g_logger->debug(str);
 }
 
-void Log::Info(const std::string& str)
+void S_Log::Info(const std::string& str)
 {
 	g_logger->info(str);
 }
 
-void Log::Warn(const std::string& str)
+void S_Log::Warn(const std::string& str)
 {
 	g_logger->warn(str);
 }
 
-void Log::Error(const std::string& str)
+void S_Log::Error(const std::string& str)
 {
 	g_logger->error(str);
 }
 
-void Log::Critical(const std::string& str)
+void S_Log::Critical(const std::string& str)
 {
 	g_logger->critical(str);
 }
 
-void Log::Flush()
+void S_Log::Flush()
 {
 	g_logger->flush();
 }
 
-void Log::BasicSetup()
+void S_Log::BasicSetup()
 {
 	spdlog::set_pattern("%^[%T] %n: %v%$");
 	// colored multi-threaded

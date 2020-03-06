@@ -7,17 +7,17 @@
 #include "editor/Editor.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"
-#include "platform/GlfwUtil.h"
+#include "platform/GlfwUtl.h"
 #include "engine/reflection/ReflectionDb.h"
 #include <glfw/glfw3.h>
 #include "renderer/VulkanLayer.h"
 #include <algorithm>
 
-ConsoleFunction<> debugCoords{ "d.viewport", []() {
-								  auto& c = g_ViewportCoordinates;
-								  LOG_REPORT("\n viewport.Size: {}, {}\n viewport.Pos: {} {}", c.size.x, c.size.y,
-									  c.position.x, c.position.y);
-							  } };
+ConsoleFunction<> debugCoords{ "d.viewport", //
+	[]() {
+		auto& c = g_ViewportCoordinates;
+		LOG_REPORT("\n viewport.Size: {}, {}\n viewport.Pos: {} {}", c.size.x, c.size.y, c.position.x, c.position.y);
+	} };
 
 Engine::~Engine()
 {

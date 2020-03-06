@@ -1,6 +1,5 @@
 #pragma once
 struct GLFWwindow;
-using WindowType = GLFWwindow;
 
 class AssetImporterManager;
 class AssetFrontEndManager;
@@ -52,7 +51,7 @@ public:
 	// Not guaranteed to exist at all times.
 	[[nodiscard]] static World* GetWorld() { return Get().m_world; }
 
-	[[nodiscard]] static WindowType* GetMainWindow() { return Get().m_window; }
+	[[nodiscard]] static GLFWwindow* GetMainWindow() { return Get().m_window; }
 
 	[[nodiscard]] static AssetImporterManager* GetAssetImporterManager() { return Get().m_assetImporterManager; }
 
@@ -84,7 +83,7 @@ private:
 
 
 	// Owning Pointer, Expected to be valid 'forever' after InitEngine at this time.
-	WindowType* m_window{ nullptr };
+	GLFWwindow* m_window{ nullptr };
 
 	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
 	Input* m_input{ nullptr };

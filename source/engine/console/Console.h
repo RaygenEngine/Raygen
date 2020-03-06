@@ -30,7 +30,7 @@ public:
 	{
 		auto& c = Get();
 		if (!c.m_entries.emplace(name, entry).second) {
-			Log::EarlyInit(); // Required since this may be called before main
+			Log.EarlyInit(); // Required since this may be called before main
 			LOG_ERROR("Failed to register a duplicate console variable: {}", name);
 		}
 	}
