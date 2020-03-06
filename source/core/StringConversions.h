@@ -2,7 +2,6 @@
 
 #include <string>
 
-
 namespace str {
 template<typename T>
 std::string toStr(T& value)

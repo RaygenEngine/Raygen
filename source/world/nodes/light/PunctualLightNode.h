@@ -30,5 +30,5 @@ public:
 	[[nodiscard]] const std::array<glm::mat4, 6>& GetViewProjectionMatrices() const { return m_viewProjectionMatrices; }
 	[[nodiscard]] AttenuationMode GetAttenuationMode() const { return m_attenuationMode; }
 
-	bool IsNodeInsideAABB(Node* node) const { return m_aabb.IntersectsAABB(node->GetAABB()); }
+	bool IsNodeInsideAABB(Node* node) const { return m_aabb.Intersects(node->GetAABB()); }
 };

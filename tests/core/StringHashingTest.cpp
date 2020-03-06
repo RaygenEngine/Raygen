@@ -1,6 +1,6 @@
 #include "Test.h"
 
-#include "core/StringAux.h"
+#include "core/StringUtl.h"
 #include <unordered_map>
 
 using namespace std::literals;

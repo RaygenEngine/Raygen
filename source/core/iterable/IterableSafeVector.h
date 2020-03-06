@@ -1,9 +1,9 @@
 #pragma once
 
-#include <vector>
-#include <set>
 #include <algorithm>
+#include <set>
 #include <utility>
+#include <vector>
 
 // Provides necessary tools for adding/removing elements on a vector while iterating it without errors.
 // Order of elements is not preserved

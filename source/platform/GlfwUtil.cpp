@@ -1,11 +1,13 @@
 #include "pch.h"
-#include "editor/Editor.h"
+
 #include "platform/GlfwUtil.h"
+#include "editor/Editor.h"
 #include "system/Logger.h"
 #include "system/Input.h"
-#include "system/Engine.h"
 #include "system/EngineEvents.h"
+
 #include <vector>
+
 
 Key ToEngineKey(int32 glfwKey, Key& outSpecialKey);
 Key MouseToEngineKey(int32 glfwMouse);

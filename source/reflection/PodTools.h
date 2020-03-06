@@ -1,7 +1,7 @@
 #pragma once
 
-#include "reflection/PodReflection.h"
 #include "reflection/GetClass.h"
+#include "reflection/PodReflection.h"
 
 namespace podtools {
 namespace detail {

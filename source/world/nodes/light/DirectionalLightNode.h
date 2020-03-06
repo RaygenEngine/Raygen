@@ -1,7 +1,7 @@
 #pragma once
 
 #include "world/nodes/light/LightNode.h"
-#include "core/MathUtl.h"
+#include "core/math-ext/Frustum.h"
 
 class DirectionalLightNode : public LightNode {
 
@@ -46,5 +46,5 @@ public:
 	[[nodiscard]] glm::mat4 GetViewProjectionMatrix() const { return m_viewProjectionMatrix; }
 	//[[nodiscard]] math::Frustum GetFrustum() const { return m_frustum; }
 
-	bool IsNodeInsideFrustum(Node* node) { return m_frustum.IntersectsAABB(node->GetAABB()); }
+	bool IsNodeInsideFrustum(Node* node) { return m_frustum.Intersects(node->GetAABB()); }
 };

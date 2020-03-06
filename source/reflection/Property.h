@@ -1,9 +1,9 @@
 #pragma once
 
-#include "reflection/TypeId.h"
 #include "reflection/PropertyFlags.h"
 #include "reflection/PropertyTypes.h"
 #include "reflection/ReflEnum.h"
+#include "reflection/TypeId.h"
 
 #include <string_view>
 
