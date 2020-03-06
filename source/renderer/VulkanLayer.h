@@ -4,13 +4,12 @@
 #include "renderer/PhysicalDevice.h"
 #include "renderer/Swapchain.h"
 #include "renderer/LogicalDevice.h"
-#include "core/Event.h"
 #include "platform/GlfwUtil.h"
 #include "renderer/Model.h"
 #include "renderer/GeometryPass.h"
 #include "renderer/DeferredPass.h"
 #include "renderer/EditorPass.h"
-#include "engine/EngineEvents.h"
+#include "engine/Events.h"
 
 #include <vulkan/vulkan.hpp>
 struct UniformBufferObject {
@@ -50,12 +49,14 @@ protected:
 	inline static BoolFlag didViewportResize;
 	inline static BoolFlag didWindowResize;
 
-	inline static DECLARE_EVENT_LISTENER(viewportUpdateListener, Event::OnViewportUpdated);
-	inline static DECLARE_EVENT_LISTENER(windowResizeListener, Event::OnWindowResize);
+	struct EventInstance : public Object {
+	};
 
 	static void OnViewportResize();
 	static void OnWindowResize();
 	static void UpdateQuadDescriptorSet();
+
+	inline static EventInstance eventHandler;
 
 public:
 	//

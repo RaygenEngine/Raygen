@@ -10,7 +10,7 @@
 #include "world/nodes/geometry/GeometryNode.h"
 #include "editor/Editor.h"
 #include "reflection/ReflectionTools.h"
-#include "engine/EngineEvents.h"
+#include "engine/Events.h"
 #include "engine/profiler/ProfileScope.h"
 #include "renderer/VulkanLayer.h"
 

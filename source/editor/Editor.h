@@ -6,7 +6,7 @@
 
 #include "editor/PropertyEditor.h"
 #include "editor/NodeContextActions.h"
-#include "engine/EngineEvents.h"
+#include "engine/Events.h"
 #include "world/nodes/camera/EditorCameraNode.h"
 #include "editor/EdComponentWindows.h"
 #include "editor/imgui/ImEd.h"
@@ -27,7 +27,7 @@ enum class EditorBBoxDrawing
 	AllNodes,
 };
 
-class Editor {
+class Editor : public Object {
 public:
 	// Status queries for Renderers / Other engine modules The only functions that are intended for cross module use.
 
@@ -131,9 +131,6 @@ protected:
 	void UpdateViewportCoordsFromDockspace();
 
 public:
-	DECLARE_EVENT_LISTENER(m_onNodeRemoved, Event::OnWorldNodeRemoved);
-	DECLARE_EVENT_LISTENER(m_onWorldLoaded, Event::OnWorldLoaded);
-
 	EditorCameraNode* m_editorCamera;
 	bool m_hasEditorCameraCachedMatrix{ false };
 	glm::mat4 m_editorCameraCachedMatrix{ glm::identity<glm::mat4>() };

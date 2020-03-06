@@ -11,7 +11,7 @@
 #include "reflection/PodTools.h"
 #include "reflection/ReflectionTools.h"
 #include "engine/Engine.h"
-#include "engine/EngineEvents.h"
+#include "engine/Events.h"
 #include "world/nodes/camera/CameraNode.h"
 
 #include "world/nodes/Node.h"
@@ -52,7 +52,7 @@ Editor::Editor()
 	m_nodeContextActions = std::make_unique<NodeContextActions>();
 	m_propertyEditor = std::make_unique<PropertyEditor>();
 
-	m_onNodeRemoved.Bind([&](Node* node) {
+	Event::OnWorldNodeRemoved.Bind(this, [&](Node* node) {
 		if (node == m_selectedNode) {
 			if (node->GetParent()) {
 				m_selectedNode = node->GetParent();
@@ -66,7 +66,7 @@ Editor::Editor()
 		}
 	});
 
-	m_onWorldLoaded.Bind([&]() { SpawnEditorCamera(); });
+	Event::OnWorldLoaded.Bind(this, [&] { SpawnEditorCamera(); });
 
 	MakeMainMenu();
 }

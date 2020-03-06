@@ -37,6 +37,14 @@ set(SOURCE_FILES
 	
 	editor/misc/NativeFileBrowser.cpp
 
+	engine/Engine.cpp
+	engine/Object.cpp
+	engine/Input.cpp
+	engine/Logger.cpp
+	engine/console/Console.cpp
+	engine/profiler/Profiler.cpp
+	engine/reflection/ReflectionDb.cpp
+	
 	platform/GlfwUtil.cpp
 
 	renderer/GeometryPass.cpp
@@ -50,13 +58,6 @@ set(SOURCE_FILES
 	renderer/Model.cpp
 	renderer/Texture.cpp
 	
-
-	engine/Engine.cpp
-	engine/Input.cpp
-	engine/Logger.cpp
-	engine/console/Console.cpp
-	engine/profiler/Profiler.cpp
-	engine/reflection/ReflectionDb.cpp
 
 	world/World.cpp
 	world/NodeFactory.cpp

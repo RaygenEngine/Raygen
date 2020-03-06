@@ -4,7 +4,7 @@
 #include "engine/profiler/ProfileScope.h"
 
 #include "engine/Engine.h"
-#include "engine/EngineEvents.h"
+#include "engine/Events.h"
 #include "engine/Input.h"
 #include "renderer/Model.h"
 
@@ -98,8 +98,8 @@ void VulkanLayer::InitVulkanLayer(std::vector<const char*>& extensions, WindowTy
 	imageAvailableSemaphore = device->createSemaphoreUnique({});
 	renderFinishedSemaphore = device->createSemaphoreUnique({});
 
-	viewportUpdateListener.Bind([] { didViewportResize.Set(); });
-	windowResizeListener.Bind([](auto, auto) { didWindowResize.Set(); });
+	Event::OnViewportUpdated.Bind(&eventHandler, [] { didViewportResize.Set(); });
+	Event::OnWindowResize.Bind(&eventHandler, [](auto, auto) { didWindowResize.Set(); });
 }
 
 void VulkanLayer::ReconstructSwapchain()
