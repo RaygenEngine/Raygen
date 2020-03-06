@@ -1,5 +1,5 @@
-#include "system/console/Console.h"
-#include "system/console/ConsoleVariable.h"
+#include "engine/console/Console.h"
+#include "engine/console/ConsoleVariable.h"
 #include "core/StringUtl.h"
 
 ConsoleFunctionGeneric commandAll(

@@ -1,8 +1,8 @@
 #pragma once
 #include "core/StringUtl.h"
 #include "core/StringConversions.h"
-#include "system/console/Console.h"
-#include "system/Logger.h"
+#include "engine/console/Console.h"
+#include "engine/Logger.h"
 #include <string_view>
 #include <functional>
 

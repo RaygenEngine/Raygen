@@ -2,8 +2,8 @@
 
 #include "renderer/GeometryPass.h"
 #include "renderer/VulkanLayer.h"
-#include "system/profiler/ProfileScope.h"
-#include "system/Engine.h"
+#include "engine/profiler/ProfileScope.h"
+#include "engine/Engine.h"
 
 
 void GeometryPass::InitRenderPass()

@@ -2,8 +2,8 @@
 
 #include "world/nodes/Node.h"
 #include "world/nodes/camera/CameraNode.h"
-#include "system/reflection/ReflectionDb.h"
-#include "system/EngineEvents.h"
+#include "engine/reflection/ReflectionDb.h"
+#include "engine/EngineEvents.h"
 
 class WindowCameraNode : public CameraNode {
 	REFLECTED_NODE(WindowCameraNode, CameraNode) {}

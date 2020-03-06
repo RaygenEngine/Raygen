@@ -2,9 +2,9 @@
 
 #include "platform/GlfwUtil.h"
 #include "editor/Editor.h"
-#include "system/Logger.h"
-#include "system/Input.h"
-#include "system/EngineEvents.h"
+#include "engine/Logger.h"
+#include "engine/Input.h"
+#include "engine/EngineEvents.h"
 
 #include <vector>
 

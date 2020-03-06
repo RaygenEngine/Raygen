@@ -1,10 +1,10 @@
 #include "pch.h"
 
-#include "system/profiler/ProfileScope.h"
+#include "engine/profiler/ProfileScope.h"
 #include "renderer/DeferredPass.h"
 #include "renderer/VulkanLayer.h"
 #include "editor/imgui/ImguiImpl.h"
-#include "system/Engine.h"
+#include "engine/Engine.h"
 
 void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 {

@@ -9,7 +9,7 @@
 // values are stored in rads (use (constexpr) glm::radians to convert)
 
 #include "asset/AssetManager.h"
-#include "system/Object.h"
+#include "engine/Object.h"
 #include "world/nodes/NodeIterator.h"
 #include "world/NodeFactory.h" // Not required directly, used in templates
 #include "asset/pods/JsonDocPod.h"
@@ -25,7 +25,7 @@ class SpotLightNode;
 class DirectionalLightNode;
 
 
-class World : public Object {
+class World {
 
 	friend class Editor;
 	friend class NodeFactory;
@@ -74,7 +74,7 @@ public:
 	[[nodiscard]] RootNode* GetRoot() const { return m_root.get(); }
 
 	World(NodeFactory* factory);
-	~World() override;
+	~World();
 
 	// available node may differ later in runtime.
 	// returns nodes of subclasses ONLY IF no exact type was found.

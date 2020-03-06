@@ -51,12 +51,12 @@ set(SOURCE_FILES
 	renderer/Texture.cpp
 	
 
-	system/Engine.cpp
-	system/Input.cpp
-	system/Logger.cpp
-	system/console/Console.cpp
-	system/profiler/Profiler.cpp
-	system/reflection/ReflectionDb.cpp
+	engine/Engine.cpp
+	engine/Input.cpp
+	engine/Logger.cpp
+	engine/console/Console.cpp
+	engine/profiler/Profiler.cpp
+	engine/reflection/ReflectionDb.cpp
 
 	world/World.cpp
 	world/NodeFactory.cpp

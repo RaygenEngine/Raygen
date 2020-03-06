@@ -1,7 +1,7 @@
 #pragma once
 
 #include "reflection/TypeId.h"
-#include "system/Logger.h"
+#include "engine/Logger.h"
 
 #define MAGIC_ENUM_RANGE_MIN -1
 #define MAGIC_ENUM_RANGE_MAX 24

@@ -2,9 +2,9 @@
 
 #include "renderer/Swapchain.h"
 
-#include "system/Engine.h"
+#include "engine/Engine.h"
 
-#include "system/Logger.h"
+#include "engine/Logger.h"
 #include "renderer/VulkanLayer.h"
 
 #include <glfw/glfw3.h>
