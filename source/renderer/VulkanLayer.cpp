@@ -45,7 +45,7 @@ vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 } // namespace
 
 
-void VulkanLayer::InitVulkanLayer(std::vector<const char*>& extensions, WindowType* window)
+void VulkanLayer::InitVulkanLayer(std::vector<const char*>& extensions, GLFWwindow* window)
 {
 	// create vulkan instance with required extensions
 	auto requiredExtensions = extensions;

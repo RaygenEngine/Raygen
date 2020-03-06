@@ -2,6 +2,7 @@
 
 #include "world/nodes/camera/WindowCameraNode.h"
 #include "engine/Engine.h"
+
 #include <glfw/glfw3.h>
 
 WindowCameraNode::WindowCameraNode()

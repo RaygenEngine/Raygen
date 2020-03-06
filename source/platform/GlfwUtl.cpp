@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "platform/GlfwUtil.h"
+#include "platform/GlfwUtl.h"
 #include "editor/Editor.h"
 #include "engine/Logger.h"
 #include "engine/Input.h"

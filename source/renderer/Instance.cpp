@@ -80,7 +80,7 @@ bool CheckLayers(std::vector<char const*> const& layers, std::vector<vk::LayerPr
 }
 } // namespace
 
-Instance::Instance(std::vector<const char*> requiredExtensions, WindowType* window)
+Instance::Instance(std::vector<const char*> requiredExtensions, GLFWwindow* window)
 {
 	auto allExtensions = requiredExtensions;
 	allExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);

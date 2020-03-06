@@ -1,6 +1,8 @@
 #pragma once
-#include <functional>
+
 #include "reflection/TypeId.h"
+
+#include <functional>
 
 struct MulticastObjectEventBase;
 class Object {

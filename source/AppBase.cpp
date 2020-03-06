@@ -50,7 +50,7 @@ int32 AppBase::Main(int32 argc, char* argv[]) // NOLINT
 
 	engine.InitEngine(this);
 
-	WindowType* window = Engine::GetMainWindow();
+	GLFWwindow* window = Engine::GetMainWindow();
 
 	engine.CreateWorldFromFile(m_initialScene);
 

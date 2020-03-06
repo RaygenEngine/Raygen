@@ -15,30 +15,26 @@ enum class LogLevel
 	Off
 };
 
-class Log {
+inline class S_Log {
 public:
 	// NOTE: logging and levels my be discarded by build configuration
-	static void Init(LogLevel level);
+	void Init(LogLevel level);
+
+	std::stringstream s_editorLogStream;
+	void EarlyInit();
 
 
-	static std::stringstream s_editorLogStream;
-	static void EarlyInit();
+	void Debug(const std::string& str);
+	void Info(const std::string& str);
+	void Warn(const std::string& str);
+	void Error(const std::string& str);
+	void Critical(const std::string& str);
 
-
-	static void Debug(const std::string& str);
-	static void Info(const std::string& str);
-	static void Warn(const std::string& str);
-	static void Error(const std::string& str);
-	static void Critical(const std::string& str);
-
-	static void Flush();
+	void Flush();
 
 private:
-	static void BasicSetup();
-};
-
-#define LOGGER_INIT(level) Log::Init(level)
-
+	void BasicSetup();
+} Log;
 
 #define _RGN_DO_NOTHING_REQUIRE_SEMICOL()                                                                              \
 	do {                                                                                                               \
@@ -49,17 +45,17 @@ private:
 // BASIC LOGGING
 //
 #if RGN_WITH_LOG(LOG_BELOW_WARN)
-#	define LOG_DEBUG(...) Log::Debug(fmt::format(__VA_ARGS__))
-#	define LOG_INFO(...)  Log::Info(fmt::format(__VA_ARGS__))
+#	define LOG_DEBUG(...) Log.Debug(fmt::format(__VA_ARGS__))
+#	define LOG_INFO(...)  Log.Info(fmt::format(__VA_ARGS__))
 #else
 #	define LOG_DEBUG(...) _RGN_DO_NOTHING_REQUIRE_SEMICOL()
 #	define LOG_INFO(...)  _RGN_DO_NOTHING_REQUIRE_SEMICOL()
 #endif
 
 #if RGN_WITH_LOG(LOG_ANY)
-#	define LOG_WARN(...)   Log::Warn(fmt::format(__VA_ARGS__))
-#	define LOG_REPORT(...) Log::Warn(fmt::format(__VA_ARGS__))
-#	define LOG_ERROR(...)  Log::Error(fmt::format(__VA_ARGS__))
+#	define LOG_WARN(...)   Log.Warn(fmt::format(__VA_ARGS__))
+#	define LOG_REPORT(...) Log.Warn(fmt::format(__VA_ARGS__))
+#	define LOG_ERROR(...)  Log.Error(fmt::format(__VA_ARGS__))
 #else
 #	define LOG_WARN(...)   _RGN_DO_NOTHING_REQUIRE_SEMICOL()
 #	define LOG_REPORT(...) _RGN_DO_NOTHING_REQUIRE_SEMICOL()
@@ -72,8 +68,8 @@ private:
 #if RGN_WITH_LOG(LOG_ANY)
 #	define LOG_ABORT(...)                                                                                             \
 		do {                                                                                                           \
-			Log::Critical(fmt::format(__VA_ARGS__));                                                                   \
-			Log::Flush();                                                                                              \
+			Log.Critical(fmt::format(__VA_ARGS__));                                                                    \
+			Log.Flush();                                                                                               \
 			std::abort();                                                                                              \
 		} while (0)
 #else

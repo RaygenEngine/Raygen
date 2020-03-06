@@ -183,7 +183,7 @@ namespace ed {
 void ConsoleWindow::OnDraw(const char* title, bool* keepOpen)
 {
 	static ImguiLogState log;
-	auto& ss = Log::s_editorLogStream;
+	auto& ss = Log.s_editorLogStream;
 
 	std::string line;
 	while (std::getline(ss, line)) {
