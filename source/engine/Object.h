@@ -1,21 +1,17 @@
 #pragma once
-#include "core/Event.h"
 #include <functional>
+#include "reflection/TypeId.h"
 
+struct MulticastObjectEventBase;
 class Object {
 	std::vector<MulticastObjectEventBase*> m_boundEvents;
 
 protected:
 	Object() = default;
-	~Object()
-	{
-		for (auto& event : m_boundEvents) {
-			event->UnbindNoRemoveFromObject(this);
-		}
-	};
+	~Object();
 
 	template<typename... Args>
-	friend struct MulticastObjectEvent;
+	friend struct MulticastEvent;
 
 public:
 	Object(const Object&) = delete;

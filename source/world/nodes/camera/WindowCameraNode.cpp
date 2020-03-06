@@ -7,8 +7,8 @@
 WindowCameraNode::WindowCameraNode()
 	: CameraNode()
 {
-	m_resizeListener.BindMember(this, &WindowCameraNode::OnWindowResizeEvent);
-	m_viewportListener.BindMember(this, &WindowCameraNode::OnViewportUpdatedEvent);
+	Event::OnWindowResize.Bind(this, &WindowCameraNode::OnWindowResizeEvent);
+	Event::OnViewportUpdated.Bind(this, &WindowCameraNode::OnViewportUpdatedEvent);
 	auto mainWindow = Engine::GetMainWindow();
 
 	int32 width;
