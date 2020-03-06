@@ -1,31 +1,15 @@
 #pragma once
 
-#include <filesystem>
-namespace fs = std::filesystem;
-
-#include <cinttypes>
-#include <cstddef>
-
-
-#define GLM_ENABLE_EXPERIMENTAL
-#define GLM_FORCE_CXX17
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
-
-#include <type_traits>
-
 // ALWAYS, ALWAYS keep this before ANY of Raygen's header includes
 #include "FeatureMacros.h"
 
-// int types
 #include "core/Types.h"
-// meta
-#include "core/MetaTemplates.h"
-
-#include "core/MacroUtl.h"
-
-#include "core/Icons.h"
 
 #include "core/BoolFlag.h"
+#include "core/Icons.h"
+#include "core/MacroUtl.h"
+#include "core/MathUtl.h"
+#include "core/MetaTemplates.h"
+
+#include <filesystem>
+namespace fs = std::filesystem;

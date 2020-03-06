@@ -1,7 +1,6 @@
 #pragma once
 
 #include "world/nodes/light/LightNode.h"
-#include "core/MathUtl.h"
 #include "core/math-ext/Frustum.h"
 
 

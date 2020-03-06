@@ -1,7 +1,6 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "core/MathUtl.h"
 #include "core/math-ext/Frustum.h"
 
 // Note: to make a automatic camera that resizes to window size see WindowCameraNode
