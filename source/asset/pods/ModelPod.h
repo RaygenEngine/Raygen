@@ -2,7 +2,6 @@
 
 #include "asset/AssetPod.h"
 #include "asset/pods/MaterialPod.h"
-#include "core/MathUtl.h"
 #include "core/math-ext/AABB.h"
 
 enum class GeometryMode

@@ -5,7 +5,6 @@
 #include "asset/pods/GltfFilePod.h"
 #include "asset/loaders/DummyLoader.h"
 #include "asset/util/GltfAux.h"
-#include "core/MathUtl.h"
 
 #include <tiny_gltf.h>
 

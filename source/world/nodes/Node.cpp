@@ -5,7 +5,6 @@
 #include "asset/AssetManager.h"
 #include "reflection/ReflectionTools.h"
 #include "world/World.h"
-#include "core/MathUtl.h"
 
 #include <glm/gtx/matrix_decompose.hpp>
 
