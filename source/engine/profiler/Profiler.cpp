@@ -4,40 +4,35 @@
 #include "engine/Logger.h"
 #include <fstream>
 
-Profiler::Profiler()
+S_Profiler::S_Profiler()
 {
 	m_sessionRecords.resize(1);
 	m_sessionCurrentVector = &m_sessionRecords[0];
 	m_initTime = ch::system_clock::now();
 }
 
-void Profiler::Register(ProfileScopeBase* profObj)
+void S_Profiler::Register(ProfileScopeBase* profObj)
 {
-	auto& p = Get();
-
-	p.m_entries.insert({ profObj->engModule, {} }).first->second.push_back(profObj);
+	m_entries.insert({ profObj->engModule, {} }).first->second.push_back(profObj);
 }
 
-void Profiler::BeginFrame()
+void S_Profiler::BeginFrame()
 {
-	if (s_shouldStartProfiling) {
-		s_shouldStartProfiling = false;
-		s_isProfiling = true;
+	if (*m_shouldStartProfiling) {
+		m_isProfiling = true;
 	}
 
-	if (s_shouldEndProfiling) {
-		s_shouldEndProfiling = false;
-		s_isProfiling = false;
+	if (*m_shouldEndProfiling) {
+		m_isProfiling = false;
 	}
 
-	if (!s_isProfiling) {
+	if (!m_isProfiling) {
 		return;
 	}
 
-	auto& p = Get();
-	p.BeginFrameSession();
+	BeginFrameSession();
 
-	for (auto& [cat, vec] : p.m_entries) {
+	for (auto& [cat, vec] : m_entries) {
 		for (auto& entry : vec) {
 			entry->Reset();
 		}
@@ -45,13 +40,13 @@ void Profiler::BeginFrame()
 
 	auto now = ch::system_clock::now();
 
-	p.m_lastFrameTime = ch::duration_cast<Precision>(now - p.m_frameBeginTime);
-	p.m_frameBeginTime = now;
+	m_lastFrameTime = ch::duration_cast<Precision>(now - m_frameBeginTime);
+	m_frameBeginTime = now;
 }
 
-void Profiler::ExportSessionToJson(const fs::path& file)
+void S_Profiler::ExportSessionToJson(const fs::path& file)
 {
-	auto& records = Get().m_sessionRecords;
+	auto& records = m_sessionRecords;
 
 	std::ofstream output(file);
 
@@ -62,7 +57,7 @@ void Profiler::ExportSessionToJson(const fs::path& file)
 		for (auto& record : vec) {
 			[[likely]] if (entries++ > 0) { output << ","; }
 
-			long long enter = ch::duration_cast<ch::microseconds>(record.enterTime - Get().m_initTime).count();
+			long long enter = ch::duration_cast<ch::microseconds>(record.enterTime - m_initTime).count();
 			long long duration = ch::duration_cast<ch::microseconds>(record.exitTime - record.enterTime).count();
 
 			output << "{";
@@ -81,16 +76,14 @@ void Profiler::ExportSessionToJson(const fs::path& file)
 	LOG_INFO("Exported Profiler Session: {} entries at: {}", entries, file.generic_string());
 }
 
-void Profiler::ResetSession()
+void S_Profiler::ResetSession()
 {
-	auto& p = Get();
-
-	p.m_sessionRecords.clear();
-	p.m_sessionRecords.resize(1);
-	p.m_sessionCurrentVector = &p.m_sessionRecords[0];
+	m_sessionRecords.clear();
+	m_sessionRecords.resize(1);
+	m_sessionCurrentVector = &m_sessionRecords[0];
 };
 
-void Profiler::BeginFrameSession()
+void S_Profiler::BeginFrameSession()
 {
 	constexpr size_t minElementsPerBatch = 2048 - 512;
 

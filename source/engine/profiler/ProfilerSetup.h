@@ -6,7 +6,7 @@ namespace ProfilerSetup {
 enum Module : size_t
 {
 	Core,
-	System,
+	Engine,
 	Editor,
 	Asset,
 	Platform,
@@ -30,7 +30,7 @@ constexpr bool c_shouldOverrideAllWithDefault = false;
 // Enabled Modules
 constexpr std::array Enabled = {
 	//	Core,
-	System, Editor,
+	Engine, Editor,
 	//	Asset,
 	//	Platform,
 	Renderer, World,

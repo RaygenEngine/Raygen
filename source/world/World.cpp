@@ -182,7 +182,7 @@ void World::RegisterNode(Node* node, Node* parent)
 
 	parent->m_children.emplace_back(node, [](Node* node) {
 		// custom deleter to remove node from world when it is deleted
-		Engine::GetWorld()->CleanupNodeReferences(node);
+		Engine.GetWorld()->CleanupNodeReferences(node);
 		delete node;
 	});
 
@@ -212,7 +212,7 @@ void World::Update()
 		PROFILE_SCOPE(World);
 		UpdateFrameTimers();
 
-		if (Engine::ShouldUpdateWorld()) {
+		if (Engine.ShouldUpdateWorld()) {
 			m_isIteratingNodeSet = true;
 			// Update after input and delta calculation
 			for (auto* node : m_nodes) {
@@ -222,10 +222,7 @@ void World::Update()
 		}
 	}
 
-	if (Engine::IsEditorActive()) {
-		Engine::GetEditor()->UpdateEditor();
-	}
-
+	Engine.GetEditor()->UpdateEditor();
 
 	do {
 		for (auto& cmd : m_postIterateCommandList) {

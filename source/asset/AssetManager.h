@@ -336,7 +336,7 @@ public:
 	static PodHandle<PodType> ResolveOrImport(
 		const fs::path& inFullPath, const uri::Uri& suggestedName = "", fs::path& importingPath = fs::path())
 	{
-		auto inst = Engine::GetAssetImporterManager();
+		auto inst = Engine.GetAssetImporterManager();
 
 
 		auto [it, didInsert] = inst->m_importedPathsCache.try_emplace(inFullPath.string(), PodHandle<PodType>{});

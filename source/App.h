@@ -5,7 +5,7 @@
 
 class NodeFactory;
 
-class AppBase {
+class App {
 protected:
 	std::string m_name;
 	std::string m_initialScene;
@@ -23,12 +23,10 @@ protected:
 	int32 m_argc;
 	char** m_argv;
 
-	bool m_enableEditor;
-
 public:
-	AppBase();
+	App();
 
-	virtual ~AppBase() = default;
+	virtual ~App() = default;
 
 public:
 	virtual void PreMainInit(int32 argc, char* argv[]);
@@ -39,8 +37,5 @@ public:
 	// Return a 'new NodeFactory()' subtype of node factory with your own factory
 	virtual NodeFactory* MakeNodeFactory();
 
-	friend class Engine;
-};
-
-class App : public AppBase {
+	friend class S_Engine;
 };

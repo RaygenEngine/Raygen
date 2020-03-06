@@ -10,7 +10,7 @@ WindowCameraNode::WindowCameraNode()
 {
 	Event::OnWindowResize.Bind(this, &WindowCameraNode::OnWindowResizeEvent);
 	Event::OnViewportUpdated.Bind(this, &WindowCameraNode::OnViewportUpdatedEvent);
-	auto mainWindow = Engine::GetMainWindow();
+	auto mainWindow = Engine.GetMainWindow();
 
 	int32 width;
 	int32 height;
@@ -31,9 +31,7 @@ void WindowCameraNode::WindowResize(int32 width, int32 height)
 
 void WindowCameraNode::OnWindowResizeEvent(int32 width, int32 height)
 {
-	if (!Engine::IsEditorActive()) {
-		WindowResize(width, height);
-	}
+	WindowResize(width, height);
 }
 
 void WindowCameraNode::OnViewportUpdatedEvent()

@@ -24,7 +24,7 @@ using json = nlohmann::json;
 void NodeFactory::RegisterNodes()
 {
 	RegisterListToFactory<CameraNode, WindowCameraNode, GeometryNode, DirectionalLightNode, PunctualLightNode,
-		SpotLightNode, AmbientNode, FreeformUserNode, TransformNode, FlyingUserNode /*, OVRNode*/>();
+		SpotLightNode, AmbientNode, FreeformUserNode, TransformNode, FlyingUserNode>();
 }
 
 Node* NodeFactory::NewNodeFromType(const std::string& type)
@@ -72,7 +72,7 @@ void NodeFactory::LoadNodeAndChildren(const json& jsonObject, Node* parent)
 	}
 
 	LoadNode_Properties(jsonObject, node);
-	Engine::GetWorld()->RegisterNode(node, parent);
+	Engine.GetWorld()->RegisterNode(node, parent);
 
 
 	auto itChildren = jsonObject.find(childrenLabel);
@@ -108,7 +108,7 @@ void NodeFactory::LoadNode_Trs(const nlohmann::json& jsonTrsObject, Node* nodeTo
 
 void NodeFactory::LoadNode_Properties(const nlohmann::json& j, Node* node)
 {
-	auto local = refltools::JsonToPropVisitor_WithRelativePath(j, Engine::GetWorld()->GetLoadedFromHandle(), true);
+	auto local = refltools::JsonToPropVisitor_WithRelativePath(j, Engine.GetWorld()->GetLoadedFromHandle(), true);
 
 	refltools::CallVisitorOnEveryProperty(node, local);
 }
