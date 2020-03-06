@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "system/Logger.h"
+#include "engine/Logger.h"
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>
 
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 #include "pch/pch.h"
 
 #include "AppBase.h"
-#include "system/Logger.h"
+#include "engine/Logger.h"
 
 #include <iostream>
 

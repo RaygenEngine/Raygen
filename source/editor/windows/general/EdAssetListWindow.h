@@ -1,6 +1,6 @@
 #pragma once
 #include "editor/windows/EdWindow.h"
-#include "system/profiler/ProfilerSetup.h"
+#include "engine/profiler/ProfilerSetup.h"
 #include "asset/AssetManager.h"
 
 namespace ed {

@@ -4,9 +4,9 @@
 #include "asset/UriLibrary.h"
 #include "asset/PodHandle.h"
 #include "reflection/PodReflection.h"
-#include "system/Engine.h"
-#include "system/Logger.h"
-#include "system/console/ConsoleVariable.h"
+#include "engine/Engine.h"
+#include "engine/Logger.h"
+#include "engine/console/ConsoleVariable.h"
 #include "core/StringUtl.h"
 #include <future>
 

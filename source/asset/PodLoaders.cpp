@@ -15,7 +15,7 @@
 #include "asset/loaders/BinaryLoader.h"
 
 #include "asset/UriLibrary.h"
-#include "system/Logger.h"
+#include "engine/Logger.h"
 
 void GltfFilePod::Load(PodEntry* entry, GltfFilePod* pod, const uri::Uri& path)
 {

@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "editor/windows/general/EdProfilerWindow.h"
-#include "system/profiler/ProfileScope.h"
+#include "engine/profiler/ProfileScope.h"
 #include "editor/misc/NativeFileBrowser.h"
 
 #include "reflection/ReflEnum.h"

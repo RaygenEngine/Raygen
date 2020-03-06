@@ -10,8 +10,8 @@
 #include "world/nodes/geometry/GeometryNode.h"
 #include "editor/Editor.h"
 #include "reflection/ReflectionTools.h"
-#include "system/EngineEvents.h"
-#include "system/profiler/ProfileScope.h"
+#include "engine/EngineEvents.h"
+#include "engine/profiler/ProfileScope.h"
 #include "renderer/VulkanLayer.h"
 
 World::World(NodeFactory* factory)

@@ -2,13 +2,13 @@
 
 #include "AppBase.h"
 #include "editor/Editor.h"
-#include "system/Engine.h"
-#include "system/Input.h"
-#include "system/Logger.h"
+#include "engine/Engine.h"
+#include "engine/Input.h"
+#include "engine/Logger.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"
 #include "renderer/VulkanLayer.h"
-#include "system/profiler/ProfileScope.h"
+#include "engine/profiler/ProfileScope.h"
 #include <glfw/glfw3.h>
 
 AppBase::AppBase()

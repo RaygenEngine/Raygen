@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "editor/windows/EdWindow.h"
-#include "system/Logger.h"
+#include "engine/Logger.h"
 #include "imgui/imgui.h"
 
 namespace ed {

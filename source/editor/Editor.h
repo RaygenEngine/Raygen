@@ -6,7 +6,7 @@
 
 #include "editor/PropertyEditor.h"
 #include "editor/NodeContextActions.h"
-#include "system/EngineEvents.h"
+#include "engine/EngineEvents.h"
 #include "world/nodes/camera/EditorCameraNode.h"
 #include "editor/EdComponentWindows.h"
 #include "editor/imgui/ImEd.h"

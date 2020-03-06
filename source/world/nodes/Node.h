@@ -1,7 +1,7 @@
 #pragma once
 
 #include "reflection/GenMacros.h" // include gen macros here even if not needed to propagate to all node headers
-#include "system/Object.h"
+#include "engine/Object.h"
 #include "core/math-ext/AABB.h"
 
 #include <bitset>

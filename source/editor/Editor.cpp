@@ -10,14 +10,14 @@
 #include "asset/PodIncludes.h"
 #include "reflection/PodTools.h"
 #include "reflection/ReflectionTools.h"
-#include "system/Engine.h"
-#include "system/EngineEvents.h"
+#include "engine/Engine.h"
+#include "engine/EngineEvents.h"
 #include "world/nodes/camera/CameraNode.h"
 
 #include "world/nodes/Node.h"
 #include "world/nodes/RootNode.h"
 #include "world/World.h"
-#include "system/Input.h"
+#include "engine/Input.h"
 #include "world/NodeFactory.h"
 
 #include "editor/imgui/ImguiUtil.h"
@@ -26,12 +26,12 @@
 #include "editor/DataStrings.h"
 #include "editor/imgui/ImEd.h"
 
-#include "system/console/Console.h"
+#include "engine/console/Console.h"
 #include "editor/windows/WindowsRegistry.h"
-#include "system/profiler/ProfileScope.h"
+#include "engine/profiler/ProfileScope.h"
 
 #include "editor/EdUserSettings.h"
-#include "system/console/ConsoleVariable.h"
+#include "engine/console/ConsoleVariable.h"
 
 #include "editor/misc/NativeFileBrowser.h"
 #include "editor/utl/EdAssetUtils.h"
@@ -379,7 +379,7 @@ void Editor::Outliner()
 	RecurseNodes(Engine::GetWorld()->GetRoot(), [&](Node* node, int32 depth) {
 		auto str = std::string(depth * 6, ' ') + U8(node->GetClass().GetIcon()) + "  "
 				   + sceneconv::FilterNodeClassName(node->GetClass().GetName()) + "> " + node->m_name;
-		ImGui::PushID(node->GetUID());
+		ImGui::PushID(node);
 
 		if (node == m_editorCamera) {
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.58f, 0.58f, 0.95f));

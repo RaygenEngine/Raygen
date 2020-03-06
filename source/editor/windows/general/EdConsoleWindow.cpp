@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "editor/windows/general/EdConsoleWindow.h"
-#include "system/console/Console.h"
+#include "engine/console/Console.h"
 
 #include "editor/imgui/ImguiImpl.h"
 #include "editor/imgui/ImEd.h"
