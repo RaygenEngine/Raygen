@@ -3,7 +3,7 @@ project (Raygen)
 
 
 set(SOURCE_FILES 
-	AppBase.cpp
+	App.cpp
 
 	asset/AssetManager.cpp
 	asset/PodLoaders.cpp

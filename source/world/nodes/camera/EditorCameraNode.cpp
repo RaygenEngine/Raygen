@@ -12,7 +12,7 @@ void EditorCameraNode::UpdateFromEditor(float deltaTime)
 {
 	CameraNode::Update(deltaTime);
 
-	auto& input = Engine::GetInput();
+	auto& input = Engine.GetInput();
 	auto& gamepad = input.GetGamepadState();
 
 	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetScrollDelta() / 240.f * 2.0f, 2.0f, 100.0f);
@@ -38,7 +38,7 @@ void EditorCameraNode::UpdateFromEditor(float deltaTime)
 		applyTo->SetNodeTransformWCS(GetNodeTransformWCS());
 		SetNodeTransformLCS(glm::identity<glm::mat4>());
 	}
-	auto root = Engine::GetWorld()->GetRoot();
+	auto root = Engine.GetWorld()->GetRoot();
 
 	if (input.IsJustPressed(Key::X)) {
 		m_worldAlign = !m_worldAlign;
@@ -126,5 +126,5 @@ void EditorCameraNode::ResetRotation()
 {
 	auto pyr = GetNodeEulerAnglesWCS();
 	SetNodeOrientationWCS(glm::identity<glm::quat>());
-	RotateNodeAroundAxisWCS(Engine::GetWorld()->GetRoot()->GetNodeUpWCS(), pyr.y);
+	RotateNodeAroundAxisWCS(Engine.GetWorld()->GetRoot()->GetNodeUpWCS(), pyr.y);
 }

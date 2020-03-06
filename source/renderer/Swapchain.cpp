@@ -44,7 +44,7 @@ vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
 	else {
 		int32 height;
 		int32 width;
-		glfwGetWindowSize(Engine::GetMainWindow(), &width, &height);
+		glfwGetWindowSize(Engine.GetMainWindow(), &width, &height);
 
 		VkExtent2D actualExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
 

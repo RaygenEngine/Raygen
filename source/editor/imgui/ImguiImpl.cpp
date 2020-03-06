@@ -9,10 +9,10 @@
 
 #include "renderer/VulkanLayer.h"
 
-#include <glfw/glfw3.h>
 #include <imgui.h>
 #include <examples/imgui_impl_vulkan.h>
 #include <examples/imgui_impl_glfw.h>
+#include <glfw/glfw3.h>
 
 namespace imguisyle {
 void AddLargeAssetIconsFont(ImFontAtlas* atlas)
@@ -164,7 +164,7 @@ void SetStyle()
 } // namespace imguisyle
 void ImguiImpl::InitContext()
 {
-	if (!Engine::GetMainWindow()) {
+	if (!Engine.GetMainWindow()) {
 		LOG_ERROR("Failed to load imgui, window not created yet. Please make a main window before imgui init.");
 		return;
 	}
@@ -177,7 +177,7 @@ void ImguiImpl::InitContext()
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	// ImGui::GetIO().ConfigViewportsNoDecoration = false;
 
-	ImGui_ImplGlfw_InitForVulkan(Engine::GetMainWindow(), true);
+	ImGui_ImplGlfw_InitForVulkan(Engine.GetMainWindow(), true);
 	ImGui::GetIO().IniFilename = "EditorImgui.ini";
 }
 

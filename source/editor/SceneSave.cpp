@@ -26,7 +26,7 @@ void SceneSave::OpenBrowser()
 {
 	if (auto file = ed::NativeFileBrowser::SaveFile({ "json" })) {
 		file->replace_extension(".json");
-		SaveAs(Engine::GetWorld(), file->string());
+		SaveAs(Engine.GetWorld(), file->string());
 	}
 }
 
@@ -61,7 +61,6 @@ void SceneSave::SaveAs(World* world, const uri::Uri& p)
 	std::ofstream ofile(p);
 
 	if (!ofile.is_open()) {
-		Engine::SetStatusLine("Failed to save scene.");
 		LOG_ERROR("Failed to open file for world save: {}", p);
 		return;
 	}

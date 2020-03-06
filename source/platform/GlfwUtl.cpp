@@ -5,9 +5,8 @@
 #include "engine/Logger.h"
 #include "engine/Input.h"
 #include "engine/Events.h"
-
+#include <glfw/glfw3.h>
 #include <vector>
-
 
 Key ToEngineKey(int32 glfwKey, Key& outSpecialKey);
 Key MouseToEngineKey(int32 glfwMouse);
@@ -79,14 +78,14 @@ void WindowMouseButtonCb(GLFWwindow* window, int32 button, int32 action, int32 m
 	}
 
 	switch (action) {
-		case GLFW_PRESS: Engine::GetInput().Z_UpdateKeyPressed(MouseToEngineKey(button), Key::None); break;
-		case GLFW_RELEASE: Engine::GetInput().Z_UpdateKeyReleased(MouseToEngineKey(button), Key::None); break;
+		case GLFW_PRESS: Engine.GetInput().Z_UpdateKeyPressed(MouseToEngineKey(button), Key::None); break;
+		case GLFW_RELEASE: Engine.GetInput().Z_UpdateKeyReleased(MouseToEngineKey(button), Key::None); break;
 	}
 }
 
 void WindowCursorPositionCb(GLFWwindow* window, double xcoord, double ycoord)
 {
-	Engine::GetInput().Z_UpdateMouseMove({ xcoord, ycoord });
+	Engine.GetInput().Z_UpdateMouseMove({ xcoord, ycoord });
 }
 
 void WindowCursorEnterCb(GLFWwindow* window, int32 hasJustEntered) {}
@@ -99,7 +98,7 @@ void WindowScrollCb(GLFWwindow* window, double xoffset, double yoffset)
 		}
 	}
 	// FIXME: Possible bug on other platforms due to rounding
-	Engine::GetInput().Z_UpdateScrollWheel(static_cast<int32>(yoffset));
+	Engine.GetInput().Z_UpdateScrollWheel(static_cast<int32>(yoffset));
 }
 
 void WindowKeyCb(GLFWwindow* window, int32 key, int32 scancode, int32 action, int32 modifiers)
@@ -119,8 +118,8 @@ void WindowKeyCb(GLFWwindow* window, int32 key, int32 scancode, int32 action, in
 	Key specialKey{};
 	Key engineKey = ToEngineKey(key, specialKey);
 	switch (action) {
-		case GLFW_PRESS: Engine::GetInput().Z_UpdateKeyPressed(engineKey, specialKey); break;
-		case GLFW_RELEASE: Engine::GetInput().Z_UpdateKeyReleased(engineKey, specialKey); break;
+		case GLFW_PRESS: Engine.GetInput().Z_UpdateKeyPressed(engineKey, specialKey); break;
+		case GLFW_RELEASE: Engine.GetInput().Z_UpdateKeyReleased(engineKey, specialKey); break;
 	}
 }
 
@@ -134,7 +133,7 @@ void WindowPathDropCb(GLFWwindow* window, int32 elementCount, const char* paths[
 		strPaths.push_back(paths[i]);
 	}
 
-	if (auto editor = Engine::GetEditor(); editor) {
+	if (auto editor = Engine.GetEditor(); editor) {
 		editor->OnFileDrop(std::move(strPaths));
 	}
 }

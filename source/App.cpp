@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "AppBase.h"
+#include "App.h"
 #include "editor/Editor.h"
 #include "engine/Engine.h"
 #include "engine/Input.h"
@@ -11,7 +11,7 @@
 #include "engine/profiler/ProfileScope.h"
 #include <glfw/glfw3.h>
 
-AppBase::AppBase()
+App::App()
 {
 
 	m_name = "Raygen Engine";
@@ -23,15 +23,11 @@ AppBase::AppBase()
 	m_windowWidth = 1920;
 	m_windowHeight = 1080;
 
-	m_lockMouse = false;
-
 	m_argc = 1;
 	m_argv = nullptr;
-
-	m_enableEditor = true;
 }
 
-void AppBase::PreMainInit(int32 argc, char* argv[]) // NOLINT
+void App::PreMainInit(int32 argc, char* argv[]) // NOLINT
 {
 	// Copy the arguments for later use.
 	m_argc = argc;
@@ -42,62 +38,59 @@ void AppBase::PreMainInit(int32 argc, char* argv[]) // NOLINT
 	}
 }
 
-int32 AppBase::Main(int32 argc, char* argv[]) // NOLINT
+int32 App::Main(int32 argc, char* argv[]) // NOLINT
 {
 	LOG_INFO("Running app: {}", m_name);
 
-	Engine& engine = Engine::Get();
 
-	engine.InitEngine(this);
+	Engine.InitEngine(this);
 
-	GLFWwindow* window = Engine::GetMainWindow();
+	GLFWwindow* window = Engine.GetMainWindow();
 
-	engine.CreateWorldFromFile(m_initialScene);
+	Engine.CreateWorldFromFile(m_initialScene);
 
 	// Allow for world to update any flags that became dirty since InitWorld to here. (eg: resize events, nodes added
 	// later etc)
-	Engine::GetWorld()->DirtyUpdateWorld();
+	Engine.GetWorld()->DirtyUpdateWorld();
 
 	MainLoop();
 
 
 	VulkanLayer::quadDescriptorSet.reset(); // NEXT: This is here to log the proper error
-	engine.DeinitEngine();
+	Engine.DeinitEngine();
 
 	return 0;
 }
 
-void AppBase::MainLoop()
+void App::MainLoop()
 {
-	GLFWwindow* window = Engine::GetMainWindow();
-	while (!glfwWindowShouldClose(Engine::GetMainWindow())) {
-		Profiler::BeginFrame();
+	GLFWwindow* window = Engine.GetMainWindow();
+	while (!glfwWindowShouldClose(Engine.GetMainWindow())) {
+		Profiler.BeginFrame();
 
-		PROFILE_SCOPE(System)
-		if (Engine::IsEditorActive()) {
-			Engine::GetEditor()->PreBeginFrame();
-		}
+		PROFILE_SCOPE(Engine);
+		Engine.GetEditor()->PreBeginFrame();
 
 		// clear input soft state (pressed keys, etc.)
-		Engine::GetInput().Z_ClearFrameState();
-		Engine::GetWorld()->ClearDirtyFlags();
+		Engine.GetInput().Z_ClearFrameState();
+		Engine.GetWorld()->ClearDirtyFlags();
 
 		// TODO: full update on window resize
 		// Let our window handle any events.
 		glfwPollEvents();
 
-		Engine::GetWorld()->Update();
+		Engine.GetWorld()->Update();
 
-		// Engine::GetRenderer()->DrawFrame();
+		// Engine.GetRenderer()->DrawFrame();
 		VulkanLayer::DrawFrame();
 
-		Engine::Get().ReportFrameDrawn();
+		Engine.ReportFrameDrawn();
 
-		window = Engine::GetMainWindow();
+		window = Engine.GetMainWindow();
 	}
 }
 
-NodeFactory* AppBase::MakeNodeFactory()
+NodeFactory* App::MakeNodeFactory()
 {
 	return new NodeFactory();
 }

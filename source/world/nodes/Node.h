@@ -225,6 +225,6 @@ protected:
 			}
 		}
 
-		return Engine::GetWorld()->CreateNode<T>(name, this);
+		return Engine.GetWorld()->CreateNode<T>(name, this);
 	}
 };

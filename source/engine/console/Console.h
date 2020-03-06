@@ -1,8 +1,9 @@
 #pragma once
 #include "core/StringUtl.h"
 #include "engine/Logger.h"
-#include <unordered_map>
+
 #include <string>
+#include <unordered_map>
 
 struct ConsoleEntry;
 
@@ -20,36 +21,22 @@ protected:
 	[[nodiscard]] static Console& Get()
 	{
 		static Console* instance = new Console(); // Avoid de initialisation errors.
-		return *instance;
+		return *instance;                         // ConsoleVars auto unregister on destruction and may be global
 	}
 
 	std::unordered_map<std::string, ConsoleEntry*, str::HashInsensitive, str::EqualInsensitive> m_entries;
 
 public:
-	static void AutoRegister(const char* name, ConsoleEntry* entry)
-	{
-		auto& c = Get();
-		if (!c.m_entries.emplace(name, entry).second) {
-			Log.EarlyInit(); // Required since this may be called before main
-			LOG_ERROR("Failed to register a duplicate console variable: {}", name);
-		}
-	}
+	static void AutoRegister(const char* name, ConsoleEntry* entry);
+
 
 	static void Execute(const std::string& command);
 	static void Execute(std::string_view command);
 
 	// BOTH must match for safety reasons. (avoid removing collision)
-	static void Unregister(const std::string& command, ConsoleEntry* entry)
-	{
-		auto& entries = Get().m_entries;
-		auto it = entries.find(command);
+	static void Unregister(const std::string& command, ConsoleEntry* entry);
 
-		if (it != entries.end() && it->second == entry) {
-			entries.erase(command);
-		}
-	}
+	[[nodiscard]] static std::vector<ConsoleEntry*> AutoCompleteSuggest(std::string_view currentPart);
 
-	static std::vector<ConsoleEntry*> AutoCompleteSuggest(std::string_view currentPart);
-
-	static decltype(m_entries)& Z_GetEntries();
+	[[nodiscard]] static auto& Z_GetEntries() { return Get().m_entries; }
 };

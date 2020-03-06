@@ -1,4 +1,6 @@
 #pragma once
+#include "engine/Object.h"
+
 struct GLFWwindow;
 
 class AssetImporterManager;
@@ -9,13 +11,9 @@ class World;
 struct Input;
 class Editor;
 
-class AppBase;
+class App;
 
 class NodeFactory;
-
-class VkSampleRenderer;
-
-using RendererT = VkSampleRenderer;
 
 #include "engine/Timer.h"
 
@@ -26,55 +24,33 @@ inline struct ViewportCoordinates {
 } g_ViewportCoordinates;
 
 
-class Engine {
-private:
-	Engine() = default;
+inline class S_Engine : public Object {
 
 public:
-	struct DrawReporter {
-
-		uint64 tris{ 0ull };
-		uint64 draws{ 0ull };
-
-		void Reset();
-	};
-
-public:
-	[[nodiscard]] static Engine& Get()
-	{
-		static Engine instance;
-		return instance;
-	}
-
-	bool m_remakeWindow{ true };
+	S_Engine() = default;
 
 	// Not guaranteed to exist at all times.
-	[[nodiscard]] static World* GetWorld() { return Get().m_world; }
+	[[nodiscard]] World* GetWorld() { return m_world; }
 
-	[[nodiscard]] static GLFWwindow* GetMainWindow() { return Get().m_window; }
+	[[nodiscard]] GLFWwindow* GetMainWindow() { return m_window; }
 
-	[[nodiscard]] static AssetImporterManager* GetAssetImporterManager() { return Get().m_assetImporterManager; }
+	[[nodiscard]] AssetImporterManager* GetAssetImporterManager() { return m_assetImporterManager; }
 
-	[[nodiscard]] static AssetFrontEndManager* GetAssetFrontEndManager() { return Get().m_assetFrontEndManager; }
+	[[nodiscard]] AssetFrontEndManager* GetAssetFrontEndManager() { return m_assetFrontEndManager; }
 
 	// Input will be valid forever after initialization.
-	[[nodiscard]] static Input& GetInput() { return *Get().m_input; }
+	[[nodiscard]] Input& GetInput() { return *m_input; }
 
-	[[nodiscard]] static Editor* GetEditor() { return Get().m_editor; }
+	[[nodiscard]] Editor* GetEditor() { return m_editor; }
 
-	[[nodiscard]] static DrawReporter* GetDrawReporter() { return &Get().m_drawReporter; }
+	~S_Engine();
 
-	~Engine();
-
-	Engine(Engine const&) = delete;
-	Engine(Engine&&) = delete;
-
-	Engine& operator=(Engine const&) = delete;
-	Engine& operator=(Engine&&) = delete;
+	S_Engine(S_Engine const&) = delete;
+	S_Engine(S_Engine&&) = delete;
+	S_Engine& operator=(S_Engine const&) = delete;
+	S_Engine& operator=(S_Engine&&) = delete;
 
 private:
-	DrawReporter m_drawReporter;
-
 	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
 	AssetImporterManager* m_assetImporterManager{ nullptr };
 
@@ -93,17 +69,13 @@ private:
 	World* m_world{ nullptr };
 
 	// Non owning pointer, expected to be valid for the whole program execution
-	AppBase* m_app{ nullptr };
+	App* m_app{ nullptr };
 
 	Editor* m_editor{ nullptr };
 
 	timer::Timer m_initToFrameTimer{};
 	timer::Timer m_frameTimer{ true };
 
-	bool m_isEditorActive{ true };
-	bool m_isEditorEnabled{ true };
-
-	std::string m_statusLine{};
 	float m_lastFrameTime{ 0.f };
 
 	float m_steadyFps{ 0.f };
@@ -118,34 +90,18 @@ public:
 	//
 	// Expects a non-owning pointer to the external App object.
 	//
-	void InitEngine(AppBase* app);
+	void InitEngine(App* app);
 
 	void CreateWorldFromFile(const std::string& filename);
 
 	// Avoid this if possible and always refactor cmd debug features to normal features.
-	static bool HasCmdArgument(const std::string& argument);
+	bool HasCmdArgument(const std::string& argument);
 
-	[[nodiscard]] static bool ShouldUpdateWorld();
+	[[nodiscard]] bool ShouldUpdateWorld();
 
-	// Query if the editor is currently active. Can be changed any frame
-	[[nodiscard]] static bool IsEditorActive();
-
-	// Query if the editor could be activated during runtime. Cannot change after engine initialization
-	[[nodiscard]] static bool IsEditorEnabled();
-
-	static void SetStatusLine(const std::string& newLine) { Get().m_statusLine = newLine; }
-	[[nodiscard]] static std::string GetStatusLine() { return Get().m_statusLine; }
-
-	// Not completely accurate, for now its just 1 / lastFrameTime.
-	// Completely independant of world timers.
-	[[nodiscard]] static float GetFPS();
+	[[nodiscard]] float GetFPS();
 
 	void ReportFrameDrawn();
 
-	void ToggleEditor();
-	void ActivateEditor();
-	void DeactivateEditor();
-
-
 	void DeinitEngine();
-};
+} Engine;

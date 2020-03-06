@@ -109,7 +109,7 @@ void VulkanLayer::ReconstructSwapchain()
 
 void VulkanLayer::ReinitModels()
 {
-	auto world = Engine::GetWorld();
+	auto world = Engine.GetWorld();
 	models.clear();
 	for (auto geomNode : world->GetNodeIterator<GeometryNode>()) {
 		auto model = geomNode->GetModel();
@@ -299,7 +299,7 @@ void VulkanLayer::DrawFrame()
 
 	// NEXT: UNIFORM BUFFER UPDATES
 	{
-		auto world = Engine::GetWorld();
+		auto world = Engine.GetWorld();
 		auto camera = world->GetActiveCamera();
 
 		UniformBufferObject ubo{};

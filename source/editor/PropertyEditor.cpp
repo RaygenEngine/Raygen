@@ -492,7 +492,7 @@ void PropertyEditor::Run_BaseProperties(Node* node)
 
 void PropertyEditor::Run_ContextActions(Node* node)
 {
-	auto v = Engine::GetEditor()->m_nodeContextActions->GetActions(node, false);
+	auto v = Engine.GetEditor()->m_nodeContextActions->GetActions(node, false);
 
 	ImGui::Indent();
 
@@ -543,7 +543,7 @@ void PropertyEditor::Run_ReflectedProperties(Node* node)
 
 void PropertyEditor::Run_ImGuizmo(Node* node)
 {
-	auto world = Engine::GetWorld();
+	auto world = Engine.GetWorld();
 	auto camera = world->GetActiveCamera();
 
 	if (!camera) {

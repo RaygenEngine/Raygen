@@ -17,7 +17,7 @@ struct ProfileScopeBase {
 	std::string_view frontFacingName;
 
 	size_t hits;
-	Profiler::Precision sumDuration;
+	S_Profiler::Precision sumDuration;
 
 
 	ProfileScopeBase(const char* file, int32 line, const char* function, ProfilerSetup::Module engModule)
@@ -37,10 +37,10 @@ struct ProfileScopeBase {
 		if (trimLoc != std::string::npos) {
 			frontFacingName = frontFacingName.substr(trimLoc + trim.size());
 		}
-		Profiler::Register(this);
+		Profiler.Register(this);
 	}
 
-	void AddExecution(Profiler::Precision duration)
+	void AddExecution(S_Profiler::Precision duration)
 	{
 		hits++;
 		sumDuration += duration;
@@ -68,19 +68,19 @@ struct ProfileScopeBase {
 		Scope(ProfileScopeBase& o)
 			: owner(o)
 		{
-			if (Profiler::s_isProfiling) {
+			if (Profiler.m_isProfiling) {
 				time = ch::system_clock::now();
 			}
 		}
 
 		~Scope()
 		{
-			if (Profiler::s_isProfiling) {
+			if (Profiler.m_isProfiling) {
 				auto now = ch::system_clock::now();
 				owner.AddExecution(now - time);
 
 				if constexpr (isExtendedScope()) {
-					Profiler::ReportExtendedScope(&owner, time, now);
+					Profiler.ReportExtendedScope(&owner, time, now);
 				}
 			}
 		}

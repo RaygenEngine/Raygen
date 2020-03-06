@@ -1,16 +1,17 @@
 #include "pch.h"
 
 #include "engine/Engine.h"
-#include "engine/Input.h"
-#include "AppBase.h"
+#include "App.h"
 #include "asset/AssetManager.h"
 #include "editor/Editor.h"
+#include "engine/Input.h"
+#include "engine/reflection/ReflectionDb.h"
+#include "platform/GlfwUtl.h"
+#include "renderer/VulkanLayer.h"
 #include "world/NodeFactory.h"
 #include "world/World.h"
-#include "platform/GlfwUtl.h"
-#include "engine/reflection/ReflectionDb.h"
+
 #include <glfw/glfw3.h>
-#include "renderer/VulkanLayer.h"
 #include <algorithm>
 
 ConsoleFunction<> debugCoords{ "d.viewport", //
@@ -19,23 +20,16 @@ ConsoleFunction<> debugCoords{ "d.viewport", //
 		LOG_REPORT("\n viewport.Size: {}, {}\n viewport.Pos: {} {}", c.size.x, c.size.y, c.position.x, c.position.y);
 	} };
 
-Engine::~Engine()
+S_Engine::~S_Engine()
 {
 	// Destruction of objects is done at Deinit
 }
 
-void Engine::DrawReporter::Reset()
-{
-	tris = 0ull;
-	draws = 0ull;
-}
-
-void Engine::InitEngine(AppBase* app)
+void S_Engine::InitEngine(App* app)
 {
 	m_initToFrameTimer.Start();
 
 	m_app = app;
-	m_isEditorEnabled = app->m_enableEditor;
 
 	m_input = new Input();
 	m_assetImporterManager = new AssetImporterManager();
@@ -47,7 +41,7 @@ void Engine::InitEngine(AppBase* app)
 	InitRenderer();
 }
 
-void Engine::CreateWorldFromFile(const std::string& filename)
+void S_Engine::CreateWorldFromFile(const std::string& filename)
 {
 	if (m_world) {
 
@@ -59,7 +53,7 @@ void Engine::CreateWorldFromFile(const std::string& filename)
 	m_world->LoadAndPrepareWorld(json);
 }
 
-void Engine::InitRenderer()
+void S_Engine::InitRenderer()
 {
 	glfwInit();
 
@@ -71,19 +65,15 @@ void Engine::InitRenderer()
 
 	VulkanLayer::InitVulkanLayer(glfwutl::GetVulkanExtensions(), m_window);
 
-	if (m_isEditorEnabled) {
-		m_editor = new Editor();
-	}
+	m_editor = new Editor();
 
 	ImguiImpl::InitVulkan();
 }
 
-bool Engine::HasCmdArgument(const std::string& argument)
+bool S_Engine::HasCmdArgument(const std::string& argument)
 {
-	Engine& eng = Engine::Get();
-
-	int32 argc = eng.m_app->m_argc;
-	char** argv = eng.m_app->m_argv;
+	int32 argc = m_app->m_argc;
+	char** argv = m_app->m_argv;
 	for (int32 i = 0; i < argc; ++i) {
 		if (strcmp(argv[i], argument.c_str())) {
 			return true;
@@ -92,30 +82,17 @@ bool Engine::HasCmdArgument(const std::string& argument)
 	return false;
 }
 
-bool Engine::ShouldUpdateWorld()
+bool S_Engine::ShouldUpdateWorld()
 {
-	if (IsEditorActive()) {
-		return Get().m_editor->ShouldUpdateWorld();
-	}
-	return true;
+	return m_editor->ShouldUpdateWorld();
 }
 
-bool Engine::IsEditorActive()
+float S_Engine::GetFPS()
 {
-	return Get().m_editor && Get().m_isEditorActive;
+	return m_steadyFps;
 }
 
-bool Engine::IsEditorEnabled()
-{
-	return Get().m_isEditorEnabled;
-}
-
-float Engine::GetFPS()
-{
-	return Get().m_steadyFps;
-}
-
-void Engine::ReportFrameDrawn()
+void S_Engine::ReportFrameDrawn()
 {
 	m_lastFrameTime = m_frameTimer.Get<ch::microseconds>() / 1e6f;
 	m_frameTimer.Start();
@@ -135,12 +112,13 @@ void Engine::ReportFrameDrawn()
 		static int32 titleCounter = 0;
 		if (titleCounter == 0) {
 			static std::string s_title;
-			s_title = fmt::format("Raygen - {:4.2f} FPS", m_steadyFps);
+			s_title = fmt::format("{} - {:4.2f} FPS", m_app->m_windowTitle, m_steadyFps);
 			glfwSetWindowTitle(m_window, s_title.c_str());
 		}
 		titleCounter = (titleCounter + 1) % 5;
 	}
 
+	// CHECK:
 	static bool hasFrameReport = false;
 
 	if (!hasFrameReport) {
@@ -149,28 +127,7 @@ void Engine::ReportFrameDrawn()
 	}
 }
 
-void Engine::ToggleEditor()
-{
-	// CHECK:
-}
-
-void Engine::ActivateEditor()
-{
-	if (!m_isEditorActive) {
-		m_editor->OnEnableEditor();
-		m_isEditorActive = true;
-	}
-}
-
-void Engine::DeactivateEditor()
-{
-	if (m_isEditorActive) {
-		m_editor->OnDisableEditor();
-		m_isEditorActive = false;
-	}
-}
-
-void Engine::DeinitEngine()
+void S_Engine::DeinitEngine()
 {
 	// NOTE: It is REALLY important to remember the reverse order here
 	delete m_editor;

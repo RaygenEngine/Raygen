@@ -1,6 +1,8 @@
+#include "pch.h"
+
+#include "core/StringUtl.h"
 #include "engine/console/Console.h"
 #include "engine/console/ConsoleVariable.h"
-#include "core/StringUtl.h"
 
 ConsoleFunctionGeneric commandAll(
 	"all",
@@ -54,7 +56,21 @@ std::vector<ConsoleEntry*> Console::AutoCompleteSuggest(std::string_view current
 	return found;
 }
 
-auto Console::Z_GetEntries() -> decltype(m_entries)&
+void Console::AutoRegister(const char* name, ConsoleEntry* entry)
 {
-	return Get().m_entries;
+	auto& c = Get();
+	if (!c.m_entries.emplace(name, entry).second) {
+		Log.EarlyInit(); // Required since this may be called before main
+		LOG_ERROR("Failed to register a duplicate console variable: {}", name);
+	}
+}
+
+void Console::Unregister(const std::string& command, ConsoleEntry* entry)
+{
+	auto& entries = Get().m_entries;
+	auto it = entries.find(command);
+
+	if (it != entries.end() && it->second == entry) {
+		entries.erase(command);
+	}
 }

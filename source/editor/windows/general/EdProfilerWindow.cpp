@@ -33,12 +33,12 @@ void ProfilerWindow::ShowCategoryCheckbox(ProfilerSetup::Module category) {}
 
 void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 {
-	auto* vec = Profiler::GetModule(category);
+	auto* vec = Profiler.GetModule(category);
 	if (!vec) {
 		return;
 	}
 
-	auto frametime = Profiler::GetLastFrameTime();
+	auto frametime = Profiler.GetLastFrameTime();
 
 	if (frametime.count() == 0) {
 		return;
@@ -48,13 +48,8 @@ void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 	auto& entries = *vec;
 
 	for (auto& entry : entries) {
-
-
 		float perc = static_cast<float>(entry->sumDuration.count()) / frametime.count();
-
-
 		auto totWidth = ImGui::GetContentRegionAvail().x;
-
 
 		ImGui::ProgressBar(perc, ImVec2(totWidth / 4.f, 0));
 		ImGui::SameLine();
@@ -64,7 +59,6 @@ void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 		ImEd::SetNextItemPerc(0.3f);
 		ImGui::Text(loc.c_str());
 		ImGui::SameLine(totWidth * 0.70f);
-
 
 		std::string hits;
 		if (entry->hits > 0) {
@@ -104,28 +98,28 @@ void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 
 void ProfilerWindow::ImguiDraw()
 {
-	bool current = Profiler::s_isProfiling;
+	bool current = Profiler.m_isProfiling;
 
 	if (current) {
 		if (ImEd::Button("Pause Profiling")) {
-			Profiler::EndProfiling();
+			Profiler.EndProfiling();
 		}
 	}
 	else {
 		if (ImEd::Button("Start Profiling")) {
-			Profiler::BeginProfiling();
+			Profiler.BeginProfiling();
 		}
 	}
 	ImGui::SameLine();
 	if (ImEd::Button("Export Session")) {
 		if (auto file = ed::NativeFileBrowser::SaveFile({ "json" })) {
-			Profiler::ExportSessionToJson(*file);
+			Profiler.ExportSessionToJson(*file);
 		}
 	}
 
 	ImGui::SameLine();
 	if (ImEd::Button("Reset Session")) {
-		Profiler::ResetSession();
+		Profiler.ResetSession();
 	}
 
 

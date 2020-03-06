@@ -1,10 +1,11 @@
 #pragma once
-#include "core/StringUtl.h"
 #include "core/StringConversions.h"
+#include "core/StringUtl.h"
 #include "engine/console/Console.h"
 #include "engine/Logger.h"
-#include <string_view>
+
 #include <functional>
+#include <string_view>
 
 // TODO: Genericly support strings in quotes as parameters
 
@@ -37,9 +38,10 @@ struct ConsoleVariable : public ConsoleEntry {
 
 	void Execute(std::string_view command) override { TryUpdateValue(command); }
 
-	T& Get() { return value; }
+	[[nodiscard]] T& Get() { return value; }
 
-	explicit operator T&() { return value; }
+	[[nodiscard]] explicit operator T&() { return value; }
+
 	virtual ~ConsoleVariable() = default;
 
 protected:
