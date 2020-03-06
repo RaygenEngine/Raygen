@@ -2,6 +2,7 @@
 
 #include "world/nodes/Node.h"
 #include "core/MathUtl.h"
+#include "core/math-ext/Frustum.h"
 
 // Note: to make a automatic camera that resizes to window size see WindowCameraNode
 class CameraNode : public Node {
@@ -78,7 +79,7 @@ public:
 
 	//[[nodiscard]] math::Frustum GetFrustum() const { return m_frustum; }
 
-	bool IsNodeInsideFrustum(Node* node) { return m_frustum.IntersectsAABB(node->GetAABB()); }
+	bool IsNodeInsideFrustum(Node* node) { return m_frustum.Intersects(node->GetAABB()); }
 
 	void DirtyUpdate(DirtyFlagset flags) override;
 };

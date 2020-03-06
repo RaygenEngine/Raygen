@@ -1,6 +1,5 @@
 #pragma once
 
-
 // Boolean flag that automatically resets to false when read.
 // BoolFlags should wherever there are "delayed" event-like notifications and the results need to be processed at a
 // specific time

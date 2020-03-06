@@ -2,6 +2,7 @@
 
 #include "world/nodes/light/LightNode.h"
 #include "core/MathUtl.h"
+#include "core/math-ext/Frustum.h"
 
 
 class SpotLightNode : public LightNode {
@@ -49,5 +50,5 @@ public:
 	[[nodiscard]] AttenuationMode GetAttenuationMode() const { return m_attenuationMode; }
 	//[[nodiscard]] math::Frustum GetFrustum() const { return m_frustum; }
 
-	bool IsNodeInsideFrustum(Node* node) { return m_frustum.IntersectsAABB(node->GetAABB()); }
+	bool IsNodeInsideFrustum(Node* node) { return m_frustum.Intersects(node->GetAABB()); }
 };

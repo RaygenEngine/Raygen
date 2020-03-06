@@ -3,7 +3,7 @@
 
 #include "system/console/Console.h"
 #include "system/console/ConsoleVariable.h"
-#include "core/MathAux.h"
+#include "core/MathUtl.h"
 #include <string_view>
 
 ConsoleVariable<int32> g_variable("_t_var", 42);
@@ -22,9 +22,9 @@ ConsoleVariable<float> g_float("_t_floatv", 0.1f);
 TEST("Console Float Variable")
 {
 	using namespace std::literals;
-	REQ(math::EpsilonEquals(g_float.Get(), 0.1f));
+	REQ(math::equals(g_float.Get(), 0.1f));
 	Console::Execute("_t_floatv 3.125e7"sv);
-	REQ(math::EpsilonEquals(g_float.Get(), 3.125e7f));
+	REQ(math::equals(g_float.Get(), 3.125e7f));
 }
 
 TEST("Console Runtime registration")

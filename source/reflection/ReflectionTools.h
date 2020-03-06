@@ -1,13 +1,14 @@
 #pragma once
 
-#include "reflection/ReflClass.h"
-#include "reflection/PodReflection.h"
 #include "asset/PodIncludes.h"
-#include "reflection/GetClass.h"
 #include "asset/util/ParsingAux.h"
-#include <type_traits>
-#include <sstream>
+#include "reflection/GetClass.h"
+#include "reflection/PodReflection.h"
+#include "reflection/ReflClass.h"
+
 #include <fstream>
+#include <sstream>
+#include <type_traits>
 
 namespace refltools {
 using json = nlohmann::json;

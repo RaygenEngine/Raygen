@@ -1,7 +1,7 @@
 #pragma once
 
-#include <unordered_map>
 #include <algorithm>
+#include <unordered_map>
 #include <vector>
 
 // Provides necessary tools for adding/removing elements on a unordered_map while iterating it without errors.

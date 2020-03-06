@@ -3,9 +3,9 @@
 #include "reflection/Property.h"
 
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 // Object that describes a reflected class.
 class ReflClass {
