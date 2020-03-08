@@ -1,10 +1,10 @@
 #pragma once
 
-#include "engine/InputEnums.h"
 #include "core/MathUtl.h"
+#include "engine/InputEnums.h"
 
-#include <unordered_set>
 #include <bitset>
+#include <unordered_set>
 
 using KeyStates = std::bitset<static_cast<int32>(Key::_NUM)>;
 

@@ -1,4 +1,5 @@
 #pragma once
+
 #include "core/StringConversions.h"
 #include "core/StringUtl.h"
 #include "engine/console/Console.h"
