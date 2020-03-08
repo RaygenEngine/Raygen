@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer/LogicalDevice.h"
+#include "renderer/Device.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -18,7 +18,7 @@ struct Swapchain {
 	std::vector<vk::UniqueFramebuffer> framebuffers;
 	vk::UniqueRenderPass renderPass;
 
-	Swapchain(LogicalDevice* ld, vk::SurfaceKHR surface);
+	Swapchain(Device* ld, vk::SurfaceKHR surface);
 
 private:
 	void InitRenderPass();

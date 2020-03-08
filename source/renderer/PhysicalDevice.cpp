@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include "renderer/PhysicalDevice.h"
-#include "renderer/LogicalDevice.h"
+#include "renderer/Device.h"
 
 #include "engine/Logger.h"
 

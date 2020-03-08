@@ -3,7 +3,7 @@
 #include "renderer/Instance.h"
 #include "renderer/PhysicalDevice.h"
 #include "renderer/Swapchain.h"
-#include "renderer/LogicalDevice.h"
+#include "renderer/Device.h"
 #include "platform/GlfwUtl.h"
 #include "renderer/Model.h"
 #include "renderer/GeometryPass.h"
@@ -67,7 +67,7 @@ public:
 	static void ReconstructSwapchain();
 
 	inline static std::unique_ptr<Instance> instance;
-	inline static std::unique_ptr<LogicalDevice> device;
+	inline static std::unique_ptr<Device> device;
 	inline static std::unique_ptr<Swapchain> swapchain;
 
 	// Model descriptors
