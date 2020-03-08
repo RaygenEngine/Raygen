@@ -1,10 +1,8 @@
 #pragma once
-
 #include "engine/Engine.h"
 #include "renderer/PhysicalDevice.h"
 
 #include <vulkan/vulkan.hpp>
-
 
 // Instance layer wrapper
 struct Instance : public vk::Instance {

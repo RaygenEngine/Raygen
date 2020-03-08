@@ -46,7 +46,8 @@ Texture::Texture(PodHandle<TexturePod> podHandle)
 	// sampler
 	// NEXT: values should be chosen based on Texture pod
 	vk::SamplerCreateInfo samplerInfo{};
-	samplerInfo.setMagFilter(vk::Filter::eLinear)
+	samplerInfo
+		.setMagFilter(vk::Filter::eLinear) //
 		.setMinFilter(vk::Filter::eLinear)
 		.setAddressModeU(vk::SamplerAddressMode::eRepeat)
 		.setAddressModeV(vk::SamplerAddressMode::eRepeat)

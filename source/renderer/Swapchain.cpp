@@ -57,9 +57,11 @@ vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
 } // namespace
 
 
-Swapchain::Swapchain(Device* ld, vk::SurfaceKHR surface)
+Swapchain::Swapchain(vk::SurfaceKHR surface)
 {
-	auto pd = ld->pd;
+	auto& device = VulkanLayer::device;
+
+	auto pd = device->pd;
 
 	auto details = pd->ssDetails;
 
@@ -74,42 +76,42 @@ Swapchain::Swapchain(Device* ld, vk::SurfaceKHR surface)
 	}
 
 	vk::SwapchainCreateInfoKHR createInfo{};
-	createInfo //
-		.setSurface(surface)
+	createInfo
+		.setSurface(surface) //
 		.setMinImageCount(imageCount)
 		.setImageFormat(surfaceFormat.format)
 		.setImageColorSpace(surfaceFormat.colorSpace)
 		.setImageExtent(extent)
-		.setImageArrayLayers(1)
+		.setImageArrayLayers(1u)
 		.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
 
-	auto graphicsQueueFamily = ld->graphicsQueue.familyIndex;
-	auto presentQueueFamily = ld->presentQueue.familyIndex;
+	auto graphicsQueueFamily = device->graphicsQueue.familyIndex;
+	auto presentQueueFamily = device->presentQueue.familyIndex;
 
 	uint32 queueFamilyIndices[] = { graphicsQueueFamily, presentQueueFamily };
 	if (graphicsQueueFamily != presentQueueFamily) {
-		createInfo //
-			.setImageSharingMode(vk::SharingMode::eConcurrent)
-			.setQueueFamilyIndexCount(2)
+		createInfo
+			.setImageSharingMode(vk::SharingMode::eConcurrent) //
+			.setQueueFamilyIndexCount(2u)
 			.setPQueueFamilyIndices(queueFamilyIndices);
 	}
 	else {
-		createInfo //
-			.setImageSharingMode(vk::SharingMode::eExclusive)
-			.setQueueFamilyIndexCount(0)
+		createInfo
+			.setImageSharingMode(vk::SharingMode::eExclusive) //
+			.setQueueFamilyIndexCount(0u)
 			.setPQueueFamilyIndices(nullptr);
 	}
 
-	createInfo //
-		.setPreTransform(details.capabilities.currentTransform)
+	createInfo
+		.setPreTransform(details.capabilities.currentTransform) //
 		.setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque)
 		.setPresentMode(presentMode)
 		.setClipped(VK_TRUE)
 		.setOldSwapchain(nullptr);
 
 
-	handle = ld->createSwapchainKHRUnique(createInfo);
-	images = ld->getSwapchainImagesKHR(handle.get());
+	handle = device->createSwapchainKHRUnique(createInfo);
+	images = device->getSwapchainImagesKHR(handle.get());
 
 	// Store swap chain image format and extent
 	imageFormat = surfaceFormat.format;
@@ -119,8 +121,8 @@ Swapchain::Swapchain(Device* ld, vk::SurfaceKHR surface)
 	for (const auto& img : images) {
 
 		vk::ImageViewCreateInfo viewInfo{};
-		viewInfo //
-			.setImage(img)
+		viewInfo
+			.setImage(img) //
 			.setViewType(vk::ImageViewType::e2D)
 			.setFormat(imageFormat);
 		viewInfo.subresourceRange
@@ -130,7 +132,7 @@ Swapchain::Swapchain(Device* ld, vk::SurfaceKHR surface)
 			.setBaseArrayLayer(0u)
 			.setLayerCount(1u);
 
-		imageViews.emplace_back(ld->createImageViewUnique(viewInfo));
+		imageViews.emplace_back(device->createImageViewUnique(viewInfo));
 	}
 
 	InitRenderPass();
@@ -142,8 +144,8 @@ void Swapchain::InitRenderPass()
 	auto& device = VulkanLayer::device;
 
 	vk::AttachmentDescription colorAttachment{};
-	colorAttachment //
-		.setFormat(imageFormat)
+	colorAttachment
+		.setFormat(imageFormat) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -154,20 +156,20 @@ void Swapchain::InitRenderPass()
 
 
 	vk::AttachmentReference colorAttachmentRef{};
-	colorAttachmentRef //
-		.setAttachment(0)
+	colorAttachmentRef
+		.setAttachment(0u) //
 		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
 
 	vk::SubpassDescription subpass{};
-	subpass //
-		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
+	subpass
+		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
 		.setColorAttachmentCount(1)
 		.setPColorAttachments(&colorAttachmentRef);
 
 	vk::SubpassDependency dependency{};
-	dependency //
-		.setSrcSubpass(VK_SUBPASS_EXTERNAL)
-		.setDstSubpass(0)
+	dependency
+		.setSrcSubpass(VK_SUBPASS_EXTERNAL) //
+		.setDstSubpass(0u)
 		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
 		.setSrcAccessMask(vk::AccessFlags(0)) // 0
 		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
@@ -175,12 +177,12 @@ void Swapchain::InitRenderPass()
 
 	std::array attachments = { colorAttachment };
 	vk::RenderPassCreateInfo renderPassInfo{};
-	renderPassInfo //
-		.setAttachmentCount(static_cast<uint32>(attachments.size()))
+	renderPassInfo
+		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
 		.setPAttachments(attachments.data())
-		.setSubpassCount(1)
+		.setSubpassCount(1u)
 		.setPSubpasses(&subpass)
-		.setDependencyCount(1)
+		.setDependencyCount(1u)
 		.setPDependencies(&dependency);
 
 	renderPass = device->createRenderPassUnique(renderPassInfo);
@@ -194,13 +196,13 @@ void Swapchain::InitFrameBuffers()
 	for (auto i = 0; i < images.size(); ++i) {
 		std::array attachments = { imageViews[i].get() };
 		vk::FramebufferCreateInfo createInfo{};
-		createInfo //
-			.setRenderPass(renderPass.get())
+		createInfo
+			.setRenderPass(renderPass.get()) //
 			.setAttachmentCount(static_cast<uint32>(attachments.size()))
 			.setPAttachments(attachments.data())
 			.setWidth(extent.width)
 			.setHeight(extent.height)
-			.setLayers(1);
+			.setLayers(1u);
 
 		framebuffers[i] = VulkanLayer::device->createFramebufferUnique(createInfo);
 	}

@@ -1,9 +1,7 @@
 #pragma once
-
 #include "renderer/Device.h"
 
 #include <vulkan/vulkan.hpp>
-
 
 struct Swapchain {
 
@@ -18,7 +16,7 @@ struct Swapchain {
 	std::vector<vk::UniqueFramebuffer> framebuffers;
 	vk::UniqueRenderPass renderPass;
 
-	Swapchain(Device* ld, vk::SurfaceKHR surface);
+	Swapchain(vk::SurfaceKHR surface);
 
 private:
 	void InitRenderPass();
