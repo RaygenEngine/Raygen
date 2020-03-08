@@ -1,15 +1,14 @@
 #pragma once
-
+#include "engine/Events.h"
+#include "platform/GlfwUtl.h"
+#include "renderer/DeferredPass.h"
+#include "renderer/Device.h"
+#include "renderer/EditorPass.h"
+#include "renderer/GeometryPass.h"
 #include "renderer/Instance.h"
+#include "renderer/Model.h"
 #include "renderer/PhysicalDevice.h"
 #include "renderer/Swapchain.h"
-#include "renderer/Device.h"
-#include "platform/GlfwUtl.h"
-#include "renderer/Model.h"
-#include "renderer/GeometryPass.h"
-#include "renderer/DeferredPass.h"
-#include "renderer/EditorPass.h"
-#include "engine/Events.h"
 
 #include <vulkan/vulkan.hpp>
 

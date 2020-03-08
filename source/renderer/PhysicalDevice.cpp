@@ -1,12 +1,10 @@
 #include "pch.h"
-
 #include "renderer/PhysicalDevice.h"
-#include "renderer/Device.h"
 
 #include "engine/Logger.h"
+#include "renderer/Device.h"
 
 #include <set>
-
 
 PhysicalDevice::PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surface)
 	: vk::PhysicalDevice(vkHandle)

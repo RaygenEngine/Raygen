@@ -1,8 +1,8 @@
 #pragma once
-
 #include "renderer/PhysicalDevice.h"
-#include "renderer/Texture.h"
 #include "asset/pods/TexturePod.h"
+#include "renderer/Texture.h"
+
 #include <vulkan/vulkan.hpp>
 
 struct DeviceQueue : public vk::Queue {

@@ -1,9 +1,8 @@
 #include "pch.h"
-
 #include "renderer/Model.h"
-#include "renderer/VulkanLayer.h"
-#include "asset/AssetManager.h"
 
+#include "asset/AssetManager.h"
+#include "renderer/VulkanLayer.h"
 
 // PERF:
 Model::Model(PodHandle<ModelPod> podHandle)
@@ -70,10 +69,14 @@ Model::Model(PodHandle<ModelPod> podHandle)
 
 			// uniform sets
 			vk::DescriptorBufferInfo bufferInfo{};
-			bufferInfo.setBuffer(VulkanLayer::uniformBuffers.get()).setOffset(0).setRange(sizeof(UniformBufferObject));
+			bufferInfo
+				.setBuffer(VulkanLayer::uniformBuffers.get()) //
+				.setOffset(0)
+				.setRange(sizeof(UniformBufferObject));
 
 			vk::WriteDescriptorSet descriptorWrite{};
-			descriptorWrite.setDstSet(vgg.descriptorSet)
+			descriptorWrite
+				.setDstSet(vgg.descriptorSet) //
 				.setDstBinding(0)
 				.setDstArrayElement(0)
 				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
@@ -88,11 +91,13 @@ Model::Model(PodHandle<ModelPod> podHandle)
 			// images (material)
 
 			vk::DescriptorImageInfo imageInfo{};
-			imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+			imageInfo
+				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
 				.setImageView(vgg.albedoText->view.get())
 				.setSampler(vgg.albedoText->sampler.get());
 
-			descriptorWrite.setDstSet(vgg.descriptorSet)
+			descriptorWrite
+				.setDstSet(vgg.descriptorSet) //
 				.setDstBinding(1)
 				.setDstArrayElement(0)
 				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)

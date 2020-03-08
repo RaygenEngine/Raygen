@@ -1,11 +1,9 @@
 #include "pch.h"
-
 #include "renderer/Instance.h"
 
 #include "engine/Logger.h"
 
 #include <glfw/glfw3.h>
-
 
 PFN_vkCreateDebugUtilsMessengerEXT pfnVkCreateDebugUtilsMessengerEXT;
 PFN_vkDestroyDebugUtilsMessengerEXT pfnVkDestroyDebugUtilsMessengerEXT;
@@ -22,6 +20,7 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(
 {
 	return pfnVkDestroyDebugUtilsMessengerEXT(instance, messenger, pAllocator);
 }
+
 namespace {
 VkBool32 DebugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 	VkDebugUtilsMessageTypeFlagsEXT messageTypes, VkDebugUtilsMessengerCallbackDataEXT const* pCallbackData,
@@ -90,7 +89,6 @@ Instance::Instance(std::vector<const char*> requiredExtensions, GLFWwindow* wind
 
 	/* VULKAN_KEY_START */
 
-
 	std::vector<char const*> instanceLayerNames = { "VK_LAYER_KHRONOS_validation" };
 
 	const bool foundLayers = CheckLayers(instanceLayerNames, instanceLayerProperties);
@@ -99,19 +97,22 @@ Instance::Instance(std::vector<const char*> requiredExtensions, GLFWwindow* wind
 
 	// create instance
 	vk::ApplicationInfo appInfo{};
-	appInfo.setPApplicationName("RaygenApp")
+	appInfo
+		.setPApplicationName("RaygenApp") //
 		.setApplicationVersion(VK_MAKE_VERSION(1, 0, 0))
 		.setPEngineName("RaygenEngine")
 		.setEngineVersion(VK_MAKE_VERSION(1, 0, 0))
 		.setApiVersion(VK_API_VERSION_1_2);
 
 	vk::InstanceCreateInfo createInfo{};
-	createInfo.setPApplicationInfo(&appInfo)
+	createInfo
+		.setPApplicationInfo(&appInfo) //
 		.setEnabledExtensionCount(static_cast<uint32>(allExtensions.size()))
 		.setPpEnabledExtensionNames(allExtensions.data());
 
 	if (foundLayers) {
-		createInfo.setEnabledLayerCount(static_cast<uint32>(instanceLayerNames.size()))
+		createInfo
+			.setEnabledLayerCount(static_cast<uint32>(instanceLayerNames.size())) //
 			.setPpEnabledLayerNames(instanceLayerNames.data());
 	}
 
@@ -138,7 +139,6 @@ Instance::Instance(std::vector<const char*> requiredExtensions, GLFWwindow* wind
 		debugUtilsMessenger = createDebugUtilsMessengerEXTUnique(
 			vk::DebugUtilsMessengerCreateInfoEXT({}, severityFlags, messageTypeFlags, &DebugMessageFunc));
 	}
-
 
 	VkSurfaceKHR tmp;
 	if (glfwCreateWindowSurface(*this, window, nullptr, &tmp) != VK_SUCCESS) {

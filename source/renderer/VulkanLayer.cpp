@@ -1,17 +1,16 @@
 #include "pch.h"
-
 #include "renderer/VulkanLayer.h"
-#include "engine/profiler/ProfileScope.h"
 
+#include "editor/imgui/ImguiImpl.h"
 #include "engine/Engine.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
+#include "engine/profiler/ProfileScope.h"
 #include "renderer/Model.h"
-
-#include "world/World.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "world/nodes/geometry/GeometryNode.h"
-#include "editor/imgui/ImguiImpl.h"
+#include "world/World.h"
+
 #include <array>
 
 namespace {
@@ -104,7 +103,7 @@ void VulkanLayer::InitVulkanLayer(std::vector<const char*>& extensions, GLFWwind
 
 void VulkanLayer::ReconstructSwapchain()
 {
-	swapchain = std::make_unique<Swapchain>(device.get(), instance->surface);
+	swapchain = std::make_unique<Swapchain>(instance->surface);
 }
 
 void VulkanLayer::ReinitModels()
