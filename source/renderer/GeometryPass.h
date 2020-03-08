@@ -1,7 +1,6 @@
 #pragma once
-
-
 #include "renderer/Model.h"
+
 #include <vulkan/vulkan.hpp>
 
 class GeometryPass {
@@ -9,12 +8,10 @@ public:
 	vk::UniqueRenderPass m_renderPass;
 	vk::UniqueFramebuffer m_framebuffer;
 
-	vk::UniqueImage albedoImage;
-	vk::UniqueDeviceMemory albedoImageMemory;
+	std::unique_ptr<Image> albedoImage;
 	vk::UniqueImageView albedoImageView;
 
-	vk::UniqueImage depthImage;
-	vk::UniqueDeviceMemory depthImageMemory;
+	std::unique_ptr<Image> depthImage;
 	vk::UniqueImageView depthImageView;
 
 	// pipeline stuffs

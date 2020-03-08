@@ -1,19 +1,13 @@
 #pragma once
-
-
-#include "asset/pods/TexturePod.h"
-
 #include "asset/AssetManager.h"
+#include "asset/pods/TexturePod.h"
+#include "renderer/Image.h"
 
 #include <vulkan/vulkan.hpp>
 
-
-class DeviceWrapper;
-
 struct Texture {
 
-	vk::UniqueImage handle;
-	vk::UniqueDeviceMemory memory;
+	std::unique_ptr<Image> image;
 
 	vk::UniqueImageView view;
 

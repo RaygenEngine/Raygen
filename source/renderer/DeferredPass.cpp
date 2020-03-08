@@ -1,10 +1,10 @@
 #include "pch.h"
-
-#include "engine/profiler/ProfileScope.h"
 #include "renderer/DeferredPass.h"
-#include "renderer/VulkanLayer.h"
+
 #include "editor/imgui/ImguiImpl.h"
 #include "engine/Engine.h"
+#include "engine/profiler/ProfileScope.h"
+#include "renderer/VulkanLayer.h"
 
 void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 {
@@ -14,7 +14,6 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 	// shaders
 	auto vertShaderModule = device->CompileCreateShaderModule("engine-data/spv/deferred.vert");
 	auto fragShaderModule = device->CompileCreateShaderModule("engine-data/spv/deferred.frag");
-
 
 	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo
@@ -28,22 +27,29 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 		.setModule(fragShaderModule.get())
 		.setPName("main");
 
-	vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+	std::array shaderStages = { vertShaderStageInfo, fragShaderStageInfo };
 
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
-	inputAssembly.setTopology(vk::PrimitiveTopology::eTriangleList).setPrimitiveRestartEnable(VK_FALSE);
+	inputAssembly
+		.setTopology(vk::PrimitiveTopology::eTriangleList) //
+		.setPrimitiveRestartEnable(VK_FALSE);
 
 	vk::Viewport viewport = GetViewport();
 	vk::Rect2D scissor = GetScissor();
 
 	vk::PipelineViewportStateCreateInfo viewportState{};
-	viewportState.setViewportCount(1u).setPViewports(&viewport).setScissorCount(1u).setPScissors(&scissor);
+	viewportState
+		.setViewportCount(1u) //
+		.setPViewports(&viewport)
+		.setScissorCount(1u)
+		.setPScissors(&scissor);
 
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
-	rasterizer.setDepthClampEnable(VK_FALSE)
+	rasterizer
+		.setDepthClampEnable(VK_FALSE) //
 		.setRasterizerDiscardEnable(VK_FALSE)
 		.setPolygonMode(vk::PolygonMode::eFill)
 		.setLineWidth(1.f)
@@ -55,7 +61,8 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 		.setDepthBiasSlopeFactor(0.f);
 
 	vk::PipelineMultisampleStateCreateInfo multisampling{};
-	multisampling.setSampleShadingEnable(VK_FALSE)
+	multisampling
+		.setSampleShadingEnable(VK_FALSE) //
 		.setRasterizationSamples(vk::SampleCountFlagBits::e1)
 		.setMinSampleShading(1.f)
 		.setPSampleMask(nullptr)
@@ -65,7 +72,7 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
 	colorBlendAttachment
 		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
-						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA)
+						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
 		.setBlendEnable(VK_FALSE)
 		.setSrcColorBlendFactor(vk::BlendFactor::eOne)
 		.setDstColorBlendFactor(vk::BlendFactor::eZero)
@@ -75,7 +82,8 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 		.setAlphaBlendOp(vk::BlendOp::eAdd);
 
 	vk::PipelineColorBlendStateCreateInfo colorBlending{};
-	colorBlending.setLogicOpEnable(VK_FALSE)
+	colorBlending
+		.setLogicOpEnable(VK_FALSE) //
 		.setLogicOp(vk::LogicOp::eCopy)
 		.setAttachmentCount(1u)
 		.setPAttachments(&colorBlendAttachment)
@@ -86,39 +94,37 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 	vk::DynamicState dynamicStates[] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
 
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo //
-		.setDynamicStateCount(2u)
+	dynamicStateInfo
+		.setDynamicStateCount(2u) //
 		.setPDynamicStates(dynamicStates);
 
 	// pipeline layout
-	vk::PushConstantRange pushConstantRange{};
-
-	std::array layouts = { descriptorSetLayout.get() };
-
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.setSetLayoutCount(1u)
-		.setPSetLayouts(layouts.data())
+	pipelineLayoutInfo
+		.setSetLayoutCount(1u) //
+		.setPSetLayouts(&descriptorSetLayout.get())
 		.setPushConstantRangeCount(0u)
-		.setPPushConstantRanges(&pushConstantRange);
+		.setPPushConstantRanges(nullptr);
 
 	m_pipelineLayout = device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
-	// NEXT: remove depth from deferred pass
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
-	depthStencil.setDepthTestEnable(VK_FALSE);
-	depthStencil.setDepthWriteEnable(VK_FALSE);
-	depthStencil.setDepthCompareOp(vk::CompareOp::eLess);
-	depthStencil.setDepthBoundsTestEnable(VK_FALSE);
-	depthStencil.setMinDepthBounds(0.0f); // Optional
-	depthStencil.setMaxDepthBounds(1.0f); // Optional
-	depthStencil.setStencilTestEnable(VK_FALSE);
-	depthStencil.setFront({}); // Optional
-	depthStencil.setBack({});  // Optional
+	depthStencil
+		.setDepthTestEnable(VK_FALSE) //
+		.setDepthWriteEnable(VK_FALSE)
+		.setDepthCompareOp(vk::CompareOp::eLess)
+		.setDepthBoundsTestEnable(VK_FALSE)
+		.setMinDepthBounds(0.0f) // Optional
+		.setMaxDepthBounds(1.0f) // Optional
+		.setStencilTestEnable(VK_FALSE)
+		.setFront({}) // Optional
+		.setBack({}); // Optional
 
 	vk::GraphicsPipelineCreateInfo pipelineInfo{};
-	pipelineInfo.setStageCount(2u)
-		.setPStages(shaderStages)
+	pipelineInfo
+		.setStageCount(static_cast<uint32>(shaderStages.size())) //
+		.setPStages(shaderStages.data())
 		.setPVertexInputState(&vertexInputInfo)
 		.setPInputAssemblyState(&inputAssembly)
 		.setPViewportState(&viewportState)
@@ -165,8 +171,8 @@ vk::Viewport DeferredPass::GetViewport() const
 	const float height = static_cast<float>(rect.extent.height);
 
 	vk::Viewport viewport{};
-	viewport //
-		.setX(x)
+	viewport
+		.setX(x) //
 		.setY(y)
 		.setWidth(width)
 		.setHeight(height)

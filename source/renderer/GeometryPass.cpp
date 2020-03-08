@@ -1,10 +1,9 @@
 #include "pch.h"
-
 #include "renderer/GeometryPass.h"
-#include "renderer/VulkanLayer.h"
-#include "engine/profiler/ProfileScope.h"
-#include "engine/Engine.h"
 
+#include "engine/Engine.h"
+#include "engine/profiler/ProfileScope.h"
+#include "renderer/VulkanLayer.h"
 
 void GeometryPass::InitRenderPass()
 {
@@ -21,11 +20,13 @@ void GeometryPass::InitRenderPass()
 		.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal); // CHECK:
 
 	vk::AttachmentReference colorAttachmentRef{};
-	colorAttachmentRef.setAttachment(0);
-	colorAttachmentRef.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+	colorAttachmentRef
+		.setAttachment(0u) //
+		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
 
 	vk::AttachmentDescription depthAttachment{};
-	depthAttachment.setFormat(device->pd->FindDepthFormat())
+	depthAttachment
+		.setFormat(device->pd->FindDepthFormat()) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eDontCare)
@@ -35,30 +36,34 @@ void GeometryPass::InitRenderPass()
 		.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
 	vk::AttachmentReference depthAttachmentRef{};
-	depthAttachmentRef.setAttachment(1);
-	depthAttachmentRef.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+	depthAttachmentRef
+		.setAttachment(1u) //
+		.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
 	vk::SubpassDescription subpass{};
-	subpass.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
-	subpass.setColorAttachmentCount(1)
+	subpass
+		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
+		.setColorAttachmentCount(1u)
 		.setPColorAttachments(&colorAttachmentRef)
 		.setPDepthStencilAttachment(&depthAttachmentRef);
 
 	vk::SubpassDependency dependency{};
-	dependency.setSrcSubpass(VK_SUBPASS_EXTERNAL)
-		.setDstSubpass(0)
+	dependency
+		.setSrcSubpass(VK_SUBPASS_EXTERNAL) //
+		.setDstSubpass(0u)
 		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
 		.setSrcAccessMask(vk::AccessFlags(0)) // 0
 		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
 		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
 
-	std::array<vk::AttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
+	std::array attachments = { colorAttachment, depthAttachment };
 	vk::RenderPassCreateInfo renderPassInfo{};
-	renderPassInfo.setAttachmentCount(static_cast<uint32>(attachments.size()))
+	renderPassInfo
+		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
 		.setPAttachments(attachments.data())
-		.setSubpassCount(1)
+		.setSubpassCount(1u)
 		.setPSubpasses(&subpass)
-		.setDependencyCount(1)
+		.setDependencyCount(1u)
 		.setPDependencies(&dependency);
 
 	m_renderPass = device->createRenderPassUnique(renderPassInfo);
@@ -74,49 +79,32 @@ void GeometryPass::InitFramebuffers()
 	// albedo buffer
 	vk::Format format = vk::Format::eR8G8B8A8Srgb;
 
-	device->CreateImage(fbSize.width, fbSize.height, format, vk::ImageTiling::eOptimal,
+	albedoImage = std::make_unique<Image>(fbSize.width, fbSize.height, format, vk::ImageTiling::eOptimal,
 		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, albedoImage, albedoImageMemory);
+		vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-	// NEXT:
-	// device->TransitionImageLayout(
-	//	albedoImage.get(), format, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+	albedoImage->TransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal);
 
-	vk::ImageViewCreateInfo viewInfo{};
-	viewInfo.setImage(albedoImage.get()).setViewType(vk::ImageViewType::e2D).setFormat(format);
-	viewInfo.subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eColor)
-		.setBaseMipLevel(0)
-		.setLevelCount(1)
-		.setBaseArrayLayer(0)
-		.setLayerCount(1);
-
-	albedoImageView = device->createImageViewUnique(viewInfo);
+	albedoImageView = albedoImage->RequestImageView2D_0_0();
 
 
 	// depth buffer
 	vk::Format depthFormat = device->pd->FindDepthFormat();
-	device->CreateImage(fbSize.width, fbSize.height, depthFormat, vk::ImageTiling::eOptimal,
-		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, depthImage,
-		depthImageMemory);
 
-	device->TransitionImageLayout(
-		depthImage.get(), depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+	depthImage = std::make_unique<Image>(fbSize.width, fbSize.height, depthFormat, vk::ImageTiling::eOptimal,
+		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-	viewInfo.setImage(depthImage.get()).setViewType(vk::ImageViewType::e2D).setFormat(depthFormat);
-	viewInfo.subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eDepth)
-		.setBaseMipLevel(0)
-		.setLevelCount(1)
-		.setBaseArrayLayer(0)
-		.setLayerCount(1);
+	depthImage->TransitionToLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
-	depthImageView = device->createImageViewUnique(viewInfo);
+	depthImageView = depthImage->RequestImageView2D_0_0();
 
 
 	// framebuffers
 
-	std::array<vk::ImageView, 2> imAttachments = { albedoImageView.get(), depthImageView.get() };
+	std::array imAttachments = { albedoImageView.get(), depthImageView.get() };
 	vk::FramebufferCreateInfo createInfo{};
-	createInfo.setRenderPass(m_renderPass.get())
+	createInfo
+		.setRenderPass(m_renderPass.get()) //
 		.setAttachmentCount(static_cast<uint32>(imAttachments.size()))
 		.setPAttachments(imAttachments.data())
 		.setWidth(fbSize.width)
@@ -154,56 +142,67 @@ void GeometryPass::InitPipelineAndStuff()
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 
 	vk::VertexInputBindingDescription bindingDescription{};
-	bindingDescription.setBinding(0u).setStride(sizeof(VertexData)).setInputRate(vk::VertexInputRate::eVertex);
+	bindingDescription
+		.setBinding(0u) //
+		.setStride(sizeof(VertexData))
+		.setInputRate(vk::VertexInputRate::eVertex);
 
 	std::array<vk::VertexInputAttributeDescription, 6> attributeDescriptions{};
 
-	attributeDescriptions[0].binding = 0;
-	attributeDescriptions[0].location = 0;
+	attributeDescriptions[0].binding = 0u;
+	attributeDescriptions[0].location = 0u;
 	attributeDescriptions[0].format = vk::Format::eR32G32B32Sfloat;
 	attributeDescriptions[0].offset = offsetof(VertexData, position);
 
-	attributeDescriptions[1].binding = 0;
-	attributeDescriptions[1].location = 1;
+	attributeDescriptions[1].binding = 0u;
+	attributeDescriptions[1].location = 1u;
 	attributeDescriptions[1].format = vk::Format::eR32G32B32Sfloat;
 	attributeDescriptions[1].offset = offsetof(VertexData, normal);
 
-	attributeDescriptions[2].binding = 0;
-	attributeDescriptions[2].location = 2;
+	attributeDescriptions[2].binding = 0u;
+	attributeDescriptions[2].location = 2u;
 	attributeDescriptions[2].format = vk::Format::eR32G32B32Sfloat;
 	attributeDescriptions[2].offset = offsetof(VertexData, tangent);
 
-	attributeDescriptions[3].binding = 0;
-	attributeDescriptions[3].location = 3;
+	attributeDescriptions[3].binding = 0u;
+	attributeDescriptions[3].location = 3u;
 	attributeDescriptions[3].format = vk::Format::eR32G32B32Sfloat;
 	attributeDescriptions[3].offset = offsetof(VertexData, bitangent);
 
-	attributeDescriptions[4].binding = 0;
-	attributeDescriptions[4].location = 4;
+	attributeDescriptions[4].binding = 0u;
+	attributeDescriptions[4].location = 4u;
 	attributeDescriptions[4].format = vk::Format::eR32G32Sfloat;
 	attributeDescriptions[4].offset = offsetof(VertexData, textCoord0);
 
-	attributeDescriptions[5].binding = 0;
-	attributeDescriptions[5].location = 5;
+	attributeDescriptions[5].binding = 0u;
+	attributeDescriptions[5].location = 5u;
 	attributeDescriptions[5].format = vk::Format::eR32G32Sfloat;
 	attributeDescriptions[5].offset = offsetof(VertexData, textCoord1);
 
-	vertexInputInfo.setVertexBindingDescriptionCount(1u)
+	vertexInputInfo
+		.setVertexBindingDescriptionCount(1u) //
 		.setVertexAttributeDescriptionCount(static_cast<uint32_t>(attributeDescriptions.size()))
 		.setPVertexBindingDescriptions(&bindingDescription)
 		.setPVertexAttributeDescriptions(attributeDescriptions.data());
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
-	inputAssembly.setTopology(vk::PrimitiveTopology::eTriangleList).setPrimitiveRestartEnable(VK_FALSE);
+	inputAssembly
+		.setTopology(vk::PrimitiveTopology::eTriangleList) //
+		.setPrimitiveRestartEnable(VK_FALSE);
 
 	vk::Viewport viewport = GetViewport();
 	vk::Rect2D scissor = GetScissor();
 
 	vk::PipelineViewportStateCreateInfo viewportState{};
-	viewportState.setViewportCount(1u).setPViewports(&viewport).setScissorCount(1u).setPScissors(&scissor);
+	viewportState
+		.setViewportCount(1u) //
+		.setPViewports(&viewport)
+		.setScissorCount(1u)
+		.setPScissors(&scissor);
 
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
-	rasterizer.setDepthClampEnable(VK_FALSE)
+	rasterizer
+		.setDepthClampEnable(VK_FALSE) //
 		.setRasterizerDiscardEnable(VK_FALSE)
 		.setPolygonMode(vk::PolygonMode::eFill)
 		.setLineWidth(1.f)
@@ -215,7 +214,8 @@ void GeometryPass::InitPipelineAndStuff()
 		.setDepthBiasSlopeFactor(0.f);
 
 	vk::PipelineMultisampleStateCreateInfo multisampling{};
-	multisampling.setSampleShadingEnable(VK_FALSE)
+	multisampling
+		.setSampleShadingEnable(VK_FALSE) //
 		.setRasterizationSamples(vk::SampleCountFlagBits::e1)
 		.setMinSampleShading(1.f)
 		.setPSampleMask(nullptr)
@@ -225,7 +225,7 @@ void GeometryPass::InitPipelineAndStuff()
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
 	colorBlendAttachment
 		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
-						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA)
+						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
 		.setBlendEnable(VK_FALSE)
 		.setSrcColorBlendFactor(vk::BlendFactor::eOne)
 		.setDstColorBlendFactor(vk::BlendFactor::eZero)
@@ -235,7 +235,8 @@ void GeometryPass::InitPipelineAndStuff()
 		.setAlphaBlendOp(vk::BlendOp::eAdd);
 
 	vk::PipelineColorBlendStateCreateInfo colorBlending{};
-	colorBlending.setLogicOpEnable(VK_FALSE)
+	colorBlending
+		.setLogicOpEnable(VK_FALSE) //
 		.setLogicOp(vk::LogicOp::eCopy)
 		.setAttachmentCount(1u)
 		.setPAttachments(&colorBlendAttachment)
@@ -244,20 +245,22 @@ void GeometryPass::InitPipelineAndStuff()
 	// Dynamic vieport
 	vk::DynamicState dynamicStates[2] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo //
-		.setDynamicStateCount(2u)
+	dynamicStateInfo
+		.setDynamicStateCount(2u) //
 		.setPDynamicStates(&dynamicStates[0]);
 
 
 	// pipeline layout
 	vk::PushConstantRange pushConstantRange{};
-	pushConstantRange.setStageFlags(vk::ShaderStageFlagBits::eVertex).setSize(sizeof(glm::mat4)).setOffset(0u);
-
-	std::array layouts = { descriptorSetLayout.get() };
+	pushConstantRange
+		.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
+		.setSize(sizeof(glm::mat4))
+		.setOffset(0u);
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.setSetLayoutCount(1u)
-		.setPSetLayouts(layouts.data())
+	pipelineLayoutInfo
+		.setSetLayoutCount(1u) //
+		.setPSetLayouts(&descriptorSetLayout.get())
 		.setPushConstantRangeCount(1u)
 		.setPPushConstantRanges(&pushConstantRange);
 
@@ -265,18 +268,20 @@ void GeometryPass::InitPipelineAndStuff()
 
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
-	depthStencil.setDepthTestEnable(VK_TRUE);
-	depthStencil.setDepthWriteEnable(VK_TRUE);
-	depthStencil.setDepthCompareOp(vk::CompareOp::eLess);
-	depthStencil.setDepthBoundsTestEnable(VK_FALSE);
-	depthStencil.setMinDepthBounds(0.0f); // Optional
-	depthStencil.setMaxDepthBounds(1.0f); // Optional
-	depthStencil.setStencilTestEnable(VK_FALSE);
-	depthStencil.setFront({}); // Optional
-	depthStencil.setBack({});  // Optional
+	depthStencil
+		.setDepthTestEnable(VK_TRUE) //
+		.setDepthWriteEnable(VK_TRUE)
+		.setDepthCompareOp(vk::CompareOp::eLess)
+		.setDepthBoundsTestEnable(VK_FALSE)
+		.setMinDepthBounds(0.0f) // Optional
+		.setMaxDepthBounds(1.0f) // Optional
+		.setStencilTestEnable(VK_FALSE)
+		.setFront({}) // Optional
+		.setBack({}); // Optional
 
 	vk::GraphicsPipelineCreateInfo pipelineInfo{};
-	pipelineInfo.setStageCount(2u)
+	pipelineInfo
+		.setStageCount(2u) //
 		.setPStages(shaderStages)
 		.setPVertexInputState(&vertexInputInfo)
 		.setPInputAssemblyState(&inputAssembly)
@@ -308,14 +313,19 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 	cmdBuffer->begin(beginInfo);
 	{
 		vk::RenderPassBeginInfo renderPassInfo{};
-		renderPassInfo.setRenderPass(m_renderPass.get()).setFramebuffer(m_framebuffer.get());
-		renderPassInfo.renderArea.setOffset({ 0, 0 }).setExtent(VulkanLayer::viewportRect.extent);
+		renderPassInfo
+			.setRenderPass(m_renderPass.get()) //
+			.setFramebuffer(m_framebuffer.get());
+		renderPassInfo.renderArea
+			.setOffset({ 0, 0 }) //
+			.setExtent(VulkanLayer::viewportRect.extent);
 
 		std::array<vk::ClearValue, 2> clearValues = {};
 		clearValues[0].setColor(std::array{ 0.0f, 0.1f, 0.15f, 1.0f });
 		clearValues[1].setDepthStencil({ 1.0f, 0 });
-		renderPassInfo.setClearValueCount(static_cast<uint32>(clearValues.size()));
-		renderPassInfo.setPClearValues(clearValues.data());
+		renderPassInfo
+			.setClearValueCount(static_cast<uint32>(clearValues.size())) //
+			.setPClearValues(clearValues.data());
 
 		// PERF: needs render pass?
 		// begin render pass
@@ -361,15 +371,13 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 void GeometryPass::TransitionGBufferForShaderRead()
 {
 	auto& device = VulkanLayer::device;
-	device->TransitionImageLayout(albedoImage.get(), vk::Format::eR8G8B8A8Srgb,
-		vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+	albedoImage->TransitionToLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 }
 
 void GeometryPass::TransitionGBufferForAttachmentWrite()
 {
 	auto& device = VulkanLayer::device;
-	device->TransitionImageLayout(albedoImage.get(), vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eShaderReadOnlyOptimal,
-		vk::ImageLayout::eColorAttachmentOptimal);
+	albedoImage->TransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal);
 }
 
 vk::Viewport GeometryPass::GetViewport() const
@@ -377,7 +385,8 @@ vk::Viewport GeometryPass::GetViewport() const
 	auto vpSize = VulkanLayer::viewportRect.extent;
 
 	vk::Viewport viewport{};
-	viewport.setX(0)
+	viewport
+		.setX(0) //
 		.setY(static_cast<float>(vpSize.height))
 		.setWidth(static_cast<float>(vpSize.width))
 		.setHeight(-static_cast<float>(vpSize.height))
@@ -390,8 +399,9 @@ vk::Rect2D GeometryPass::GetScissor() const
 {
 	vk::Rect2D scissor{};
 
-	scissor.setOffset({ 0, 0 });
-	scissor.setExtent(VulkanLayer::viewportRect.extent);
+	scissor
+		.setOffset({ 0, 0 }) //
+		.setExtent(VulkanLayer::viewportRect.extent);
 
 	return scissor;
 }

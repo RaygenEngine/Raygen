@@ -1,12 +1,9 @@
 #include "pch.h"
-
-#include "renderer/LogicalDevice.h"
-
-#include "renderer/VulkanLayer.h"
-
 #include "renderer/Texture.h"
-#include "asset/AssetManager.h"
 
+#include "asset/AssetManager.h"
+#include "renderer/LogicalDevice.h"
+#include "renderer/VulkanLayer.h"
 
 Texture::Texture(PodHandle<TexturePod> podHandle)
 {
@@ -32,32 +29,19 @@ Texture::Texture(PodHandle<TexturePod> podHandle)
 
 	vk::Format format = imgData->isHdr ? vk::Format::eR32G32B32A32Sfloat : vk::Format::eR8G8B8A8Srgb;
 
-	device->CreateImage(imgData->width, imgData->height, format, vk::ImageTiling::eOptimal,
+	image = std::make_unique<Image>(imgData->width, imgData->height, format, vk::ImageTiling::eOptimal,
 		vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, handle, memory);
+		vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-	// transition from undefined to transfer layout
-	device->TransitionImageLayout(
-		handle.get(), format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+	// copy (internally transitions to transfer optimal)
+	image->CopyBufferToImage(stagingBuffer.get());
 
-	// copy
-	device->CopyBufferToImage(
-		stagingBuffer.get(), handle.get(), static_cast<uint32>(imgData->width), static_cast<uint32>(imgData->height));
 
 	// finally transiton to graphics layout for shader access
-	device->TransitionImageLayout(
-		handle.get(), format, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+	image->TransitionToLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
-
-	vk::ImageViewCreateInfo viewInfo{};
-	viewInfo.setImage(handle.get()).setViewType(vk::ImageViewType::e2D).setFormat(format);
-	viewInfo.subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eColor)
-		.setBaseMipLevel(0u)
-		.setLevelCount(1u)
-		.setBaseArrayLayer(0u)
-		.setLayerCount(1u);
-
-	view = device->createImageViewUnique(viewInfo);
+	// request
+	view = image->RequestImageView2D_0_0();
 
 	// sampler
 	// NEXT: values should be chosen based on Texture pod
