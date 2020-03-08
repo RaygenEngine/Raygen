@@ -11,8 +11,8 @@
 #include "world/NodeFactory.h"
 #include "world/World.h"
 
-#include <glfw/glfw3.h>
 #include <algorithm>
+#include <glfw/glfw3.h>
 
 ConsoleFunction<> debugCoords{ "d.viewport", //
 	[]() {

@@ -1,7 +1,9 @@
 #include "pch.h"
+
 #include "engine/profiler/Profiler.h"
-#include "engine/profiler/ProfileScope.h"
 #include "engine/Logger.h"
+#include "engine/profiler/ProfileScope.h"
+
 #include <fstream>
 
 S_Profiler::S_Profiler()

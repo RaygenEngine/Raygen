@@ -1,4 +1,5 @@
 #pragma once
+
 #include "engine/Object.h"
 
 struct GLFWwindow;

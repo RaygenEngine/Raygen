@@ -2,9 +2,9 @@
 
 #include "engine/Logger.h"
 
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/ostream_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 
 
 std::shared_ptr<spdlog::logger> g_logger;
