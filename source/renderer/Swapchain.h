@@ -15,11 +15,6 @@ struct Swapchain {
 	std::vector<vk::Image> images;
 	std::vector<vk::UniqueImageView> imageViews;
 
-	vk::UniqueImage depthImage;
-	vk::UniqueDeviceMemory depthImageMemory;
-	vk::UniqueImageView depthImageView;
-
-
 	std::vector<vk::UniqueFramebuffer> framebuffers;
 	vk::UniqueRenderPass renderPass;
 

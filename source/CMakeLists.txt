@@ -53,10 +53,11 @@ set(SOURCE_FILES
 	renderer/VulkanLayer.cpp
 	renderer/Instance.cpp
 	renderer/PhysicalDevice.cpp
-	renderer/LogicalDevice.cpp
+	renderer/Device.cpp
 	renderer/Swapchain.cpp
 	renderer/Model.cpp
 	renderer/Texture.cpp
+	renderer/Image.cpp
 	
 
 	world/World.cpp

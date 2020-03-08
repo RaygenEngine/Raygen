@@ -1,9 +1,7 @@
 #include "pch.h"
-
 #include "renderer/Swapchain.h"
 
 #include "engine/Engine.h"
-
 #include "engine/Logger.h"
 #include "renderer/VulkanLayer.h"
 
@@ -76,7 +74,8 @@ Swapchain::Swapchain(LogicalDevice* ld, vk::SurfaceKHR surface)
 	}
 
 	vk::SwapchainCreateInfoKHR createInfo{};
-	createInfo.setSurface(surface)
+	createInfo //
+		.setSurface(surface)
 		.setMinImageCount(imageCount)
 		.setImageFormat(surfaceFormat.format)
 		.setImageColorSpace(surfaceFormat.colorSpace)
@@ -89,17 +88,20 @@ Swapchain::Swapchain(LogicalDevice* ld, vk::SurfaceKHR surface)
 
 	uint32 queueFamilyIndices[] = { graphicsQueueFamily, presentQueueFamily };
 	if (graphicsQueueFamily != presentQueueFamily) {
-		createInfo.setImageSharingMode(vk::SharingMode::eConcurrent)
+		createInfo //
+			.setImageSharingMode(vk::SharingMode::eConcurrent)
 			.setQueueFamilyIndexCount(2)
 			.setPQueueFamilyIndices(queueFamilyIndices);
 	}
 	else {
-		createInfo.setImageSharingMode(vk::SharingMode::eExclusive)
+		createInfo //
+			.setImageSharingMode(vk::SharingMode::eExclusive)
 			.setQueueFamilyIndexCount(0)
 			.setPQueueFamilyIndices(nullptr);
 	}
 
-	createInfo.setPreTransform(details.capabilities.currentTransform)
+	createInfo //
+		.setPreTransform(details.capabilities.currentTransform)
 		.setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque)
 		.setPresentMode(presentMode)
 		.setClipped(VK_TRUE)
@@ -117,8 +119,12 @@ Swapchain::Swapchain(LogicalDevice* ld, vk::SurfaceKHR surface)
 	for (const auto& img : images) {
 
 		vk::ImageViewCreateInfo viewInfo{};
-		viewInfo.setImage(img).setViewType(vk::ImageViewType::e2D).setFormat(imageFormat);
-		viewInfo.subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eColor)
+		viewInfo //
+			.setImage(img)
+			.setViewType(vk::ImageViewType::e2D)
+			.setFormat(imageFormat);
+		viewInfo.subresourceRange
+			.setAspectMask(vk::ImageAspectFlagBits::eColor) //
 			.setBaseMipLevel(0u)
 			.setLevelCount(1u)
 			.setBaseArrayLayer(0u)
@@ -126,26 +132,6 @@ Swapchain::Swapchain(LogicalDevice* ld, vk::SurfaceKHR surface)
 
 		imageViews.emplace_back(ld->createImageViewUnique(viewInfo));
 	}
-
-	// depth buffer
-	vk::Format depthFormat = pd->FindDepthFormat();
-	ld->CreateImage(extent.width, extent.height, depthFormat, vk::ImageTiling::eOptimal,
-		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, depthImage,
-		depthImageMemory);
-
-	ld->TransitionImageLayout(
-		depthImage.get(), depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-	vk::ImageViewCreateInfo viewInfo{};
-	viewInfo.setImage(depthImage.get()).setViewType(vk::ImageViewType::e2D).setFormat(depthFormat);
-	viewInfo.subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eDepth)
-		.setBaseMipLevel(0)
-		.setLevelCount(1)
-		.setBaseArrayLayer(0)
-		.setLayerCount(1);
-
-	depthImageView = ld->createImageViewUnique(viewInfo);
-
 
 	InitRenderPass();
 	InitFrameBuffers();
@@ -156,7 +142,8 @@ void Swapchain::InitRenderPass()
 	auto& device = VulkanLayer::device;
 
 	vk::AttachmentDescription colorAttachment{};
-	colorAttachment.setFormat(imageFormat)
+	colorAttachment //
+		.setFormat(imageFormat)
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -167,41 +154,29 @@ void Swapchain::InitRenderPass()
 
 
 	vk::AttachmentReference colorAttachmentRef{};
-	colorAttachmentRef.setAttachment(0);
-	colorAttachmentRef.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-	vk::AttachmentDescription depthAttachment{};
-	depthAttachment.setFormat(device->pd->FindDepthFormat())
-		.setSamples(vk::SampleCountFlagBits::e1)
-		.setLoadOp(vk::AttachmentLoadOp::eClear)
-		.setStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eUndefined)
-		.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-	vk::AttachmentReference depthAttachmentRef{};
-	depthAttachmentRef.setAttachment(1);
-	depthAttachmentRef.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+	colorAttachmentRef //
+		.setAttachment(0)
+		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
 
 	vk::SubpassDescription subpass{};
-	subpass.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
-	subpass.setColorAttachmentCount(1)
+	subpass //
+		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
 		.setColorAttachmentCount(1)
-		.setPColorAttachments(&colorAttachmentRef)
-		.setPDepthStencilAttachment(&depthAttachmentRef);
+		.setPColorAttachments(&colorAttachmentRef);
 
 	vk::SubpassDependency dependency{};
-	dependency.setSrcSubpass(VK_SUBPASS_EXTERNAL)
+	dependency //
+		.setSrcSubpass(VK_SUBPASS_EXTERNAL)
 		.setDstSubpass(0)
 		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
 		.setSrcAccessMask(vk::AccessFlags(0)) // 0
 		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
 		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
 
-	std::array<vk::AttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
+	std::array attachments = { colorAttachment };
 	vk::RenderPassCreateInfo renderPassInfo{};
-	renderPassInfo.setAttachmentCount(static_cast<uint32>(attachments.size()))
+	renderPassInfo //
+		.setAttachmentCount(static_cast<uint32>(attachments.size()))
 		.setPAttachments(attachments.data())
 		.setSubpassCount(1)
 		.setPSubpasses(&subpass)
@@ -217,9 +192,10 @@ void Swapchain::InitFrameBuffers()
 	framebuffers.resize(images.size());
 	// framebuffers
 	for (auto i = 0; i < images.size(); ++i) {
-		std::array<vk::ImageView, 2> attachments = { imageViews[i].get(), depthImageView.get() };
+		std::array attachments = { imageViews[i].get() };
 		vk::FramebufferCreateInfo createInfo{};
-		createInfo.setRenderPass(renderPass.get())
+		createInfo //
+			.setRenderPass(renderPass.get())
 			.setAttachmentCount(static_cast<uint32>(attachments.size()))
 			.setPAttachments(attachments.data())
 			.setWidth(extent.width)
