@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer/LogicalDevice.h"
+#include "renderer/Device.h"
 #include "asset/pods/ModelPod.h"
 #include "world/nodes/geometry/GeometryNode.h"
 

@@ -57,7 +57,7 @@ vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
 } // namespace
 
 
-Swapchain::Swapchain(LogicalDevice* ld, vk::SurfaceKHR surface)
+Swapchain::Swapchain(Device* ld, vk::SurfaceKHR surface)
 {
 	auto pd = ld->pd;
 

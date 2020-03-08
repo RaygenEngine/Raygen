@@ -2,7 +2,7 @@
 #include "renderer/Texture.h"
 
 #include "asset/AssetManager.h"
-#include "renderer/LogicalDevice.h"
+#include "renderer/Device.h"
 #include "renderer/VulkanLayer.h"
 
 Texture::Texture(PodHandle<TexturePod> podHandle)

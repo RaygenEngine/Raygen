@@ -59,7 +59,7 @@ void VulkanLayer::InitVulkanLayer(std::vector<const char*>& extensions, GLFWwind
 
 	// create logical device
 	auto deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_MAINTENANCE1_EXTENSION_NAME };
-	device = std::make_unique<LogicalDevice>(pd, deviceExtensions);
+	device = std::make_unique<Device>(pd, deviceExtensions);
 
 
 	// create swapchain
