@@ -8,12 +8,11 @@
 
 void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 {
-	auto& device = VulkanLayer::device;
-	auto& descriptorSetLayout = VulkanLayer::quadDescriptorSetLayout;
+	auto& descriptorSetLayout = Layer->quadDescriptorSetLayout;
 
 	// shaders
-	auto vertShaderModule = device->CompileCreateShaderModule("engine-data/spv/deferred.vert");
-	auto fragShaderModule = device->CompileCreateShaderModule("engine-data/spv/deferred.frag");
+	auto vertShaderModule = Device->CompileCreateShaderModule("engine-data/spv/deferred.vert");
+	auto fragShaderModule = Device->CompileCreateShaderModule("engine-data/spv/deferred.frag");
 
 	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo
@@ -106,7 +105,7 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 		.setPushConstantRangeCount(0u)
 		.setPPushConstantRanges(nullptr);
 
-	m_pipelineLayout = device->createPipelineLayoutUnique(pipelineLayoutInfo);
+	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
@@ -139,7 +138,7 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 
-	m_pipeline = device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
 
@@ -155,8 +154,8 @@ void DeferredPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
 	cmdBuffer->setScissor(0, { GetScissor() });
 
 	// descriptor sets
-	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-		&(*VulkanLayer::quadDescriptorSet), 0u, nullptr);
+	cmdBuffer->bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &(*Layer->quadDescriptorSet), 0u, nullptr);
 
 	// draw call (triangle)
 	cmdBuffer->draw(3u, 1u, 0u, 0u);
@@ -164,7 +163,7 @@ void DeferredPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
 
 vk::Viewport DeferredPass::GetViewport() const
 {
-	auto& rect = VulkanLayer::viewportRect;
+	auto& rect = Layer->viewportRect;
 	const float x = static_cast<float>(rect.offset.x);
 	const float y = static_cast<float>(rect.offset.y);
 	const float width = static_cast<float>(rect.extent.width);
@@ -184,5 +183,5 @@ vk::Viewport DeferredPass::GetViewport() const
 
 vk::Rect2D DeferredPass::GetScissor() const
 {
-	return VulkanLayer::viewportRect;
+	return Layer->viewportRect;
 }

@@ -202,9 +202,13 @@ void ImguiImpl::EndFrame()
 	ImGui::RenderPlatformWindowsDefault();
 }
 
-void ImguiImpl::CleanupContext()
+void ImguiImpl::CleanupVulkan()
 {
 	ImGui_ImplVulkan_Shutdown();
+}
+
+void ImguiImpl::CleanupContext()
+{
 	ImGui_ImplGlfw_Shutdown();
 
 	ImGui::DestroyContext();
@@ -213,25 +217,25 @@ void ImguiImpl::CleanupContext()
 
 void ImguiImpl::InitVulkan()
 {
-	auto physDev = VulkanLayer::device->pd;
-	auto& device = VulkanLayer::device;
+	auto physDev = Device->pd;
+	auto& device = *Device;
 
 	ImGui_ImplVulkan_InitInfo init = {};
-	init.Instance = *VulkanLayer::instance;
+	init.Instance = *Layer->instance;
 	init.PhysicalDevice = *physDev;
-	init.Device = *device;
-	init.QueueFamily = device->graphicsQueue.familyIndex;
-	init.Queue = device->graphicsQueue;
+	init.Device = device;
+	init.QueueFamily = Device->graphicsQueue.familyIndex;
+	init.Queue = Device->graphicsQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
-	init.DescriptorPool = VulkanLayer::quadDescriptorPool.get();
-	init.ImageCount = static_cast<uint32>(VulkanLayer::swapchain->images.size());
-	init.MinImageCount = static_cast<uint32>(VulkanLayer::swapchain->images.size());
+	init.DescriptorPool = Layer->quadDescriptorPool.get();
+	init.ImageCount = static_cast<uint32>(Layer->swapchain->images.size());
+	init.MinImageCount = static_cast<uint32>(Layer->swapchain->images.size());
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init, VulkanLayer::swapchain->renderPass.get());
+	ImGui_ImplVulkan_Init(&init, Layer->swapchain->renderPass.get());
 
 
-	auto cmdBuffer = device->transferCmdBuffer.get();
+	auto cmdBuffer = Device->transferCmdBuffer;
 
 	//	vkCall(vkResetCommandPool(m_device, m_commandPool, 0));
 
@@ -249,8 +253,8 @@ void ImguiImpl::InitVulkan()
 
 	cmdBuffer.end();
 
-	device->transferQueue.submit(1, &end_info, {});
-	device->transferQueue.waitIdle();
+	Device->transferQueue.submit(1, &end_info, {});
+	Device->transferQueue.waitIdle();
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }

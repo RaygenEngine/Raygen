@@ -20,7 +20,7 @@ QueueFamily GetQueueFamilyWithBestRating(const std::vector<QueueFamily>& queueFa
 }
 } // namespace
 
-Device::Device(PhysicalDevice* pd, std::vector<const char*> deviceExtensions)
+S_Device::S_Device(PhysicalDevice* pd, std::vector<const char*> deviceExtensions)
 	: pd(pd)
 {
 	auto graphicsQueueFamily = GetQueueFamilyWithBestRating(pd->graphicsFamilies);
@@ -83,20 +83,22 @@ Device::Device(PhysicalDevice* pd, std::vector<const char*> deviceExtensions)
 		.setCommandPool(transferCmdPool.get())
 		.setCommandBufferCount(1u);
 
-	transferCmdBuffer = std::move(allocateCommandBuffersUnique(allocInfo)[0]);
+	transferCmdBuffer = allocateCommandBuffers(allocInfo)[0];
 
 	allocInfo.setCommandPool(graphicsCmdPool.get());
 
-	graphicsCmdBuffer = std::move(allocateCommandBuffersUnique(allocInfo)[0]);
+	graphicsCmdBuffer = allocateCommandBuffers(allocInfo)[0];
 }
 
-Device::~Device()
+S_Device::~S_Device()
 {
-	// NEXT:
-	// destroy();
+	transferCmdPool.reset();
+	graphicsCmdPool.reset();
+
+	destroy();
 }
 
-vk::UniqueShaderModule Device::CreateShaderModule(const std::string& binPath)
+vk::UniqueShaderModule S_Device::CreateShaderModule(const std::string& binPath)
 {
 	auto& data = AssetImporterManager::ResolveOrImportFromParentUri<BinaryPod>(binPath, "/").Lock()->data;
 
@@ -106,7 +108,7 @@ vk::UniqueShaderModule Device::CreateShaderModule(const std::string& binPath)
 	return createShaderModuleUnique(createInfo);
 }
 
-vk::UniqueShaderModule Device::CompileCreateShaderModule(const std::string& path)
+vk::UniqueShaderModule S_Device::CompileCreateShaderModule(const std::string& path)
 {
 	auto binary = ShaderCompiler::Compile(path);
 
@@ -116,7 +118,7 @@ vk::UniqueShaderModule Device::CompileCreateShaderModule(const std::string& path
 	return createShaderModuleUnique(createInfo);
 }
 
-void Device::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
+void S_Device::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
 	vk::UniqueBuffer& buffer, vk::UniqueDeviceMemory& memory)
 {
 	vk::BufferCreateInfo bufferInfo{};
@@ -141,23 +143,23 @@ void Device::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::M
 	bindBufferMemory(buffer.get(), memory.get(), 0);
 }
 
-void Device::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size)
+void S_Device::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-	transferCmdBuffer->begin(beginInfo);
+	transferCmdBuffer.begin(beginInfo);
 
 	vk::BufferCopy copyRegion{};
 	copyRegion.setSize(size);
 
-	transferCmdBuffer->copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
+	transferCmdBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
 
-	transferCmdBuffer->end();
+	transferCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo.setCommandBufferCount(1u);
-	submitInfo.setPCommandBuffers(&transferCmdBuffer.get());
+	submitInfo.setPCommandBuffers(&transferCmdBuffer);
 
 	transferQueue.submit(1u, &submitInfo, {});
 	// PERF:

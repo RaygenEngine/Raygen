@@ -9,12 +9,12 @@ struct DeviceQueue : public vk::Queue {
 	uint32 familyIndex;
 
 private:
-	friend struct Device;
+	friend struct S_Device;
 	void SetHandle(vk::Queue queue) { vk::Queue::operator=(queue); }
 };
 
 // Info about a logical device
-struct Device : public vk::Device {
+inline struct S_Device : public vk::Device {
 
 	DeviceQueue graphicsQueue;
 	DeviceQueue transferQueue;
@@ -25,11 +25,11 @@ struct Device : public vk::Device {
 	vk::UniqueCommandPool graphicsCmdPool;
 	vk::UniqueCommandPool transferCmdPool;
 
-	vk::UniqueCommandBuffer transferCmdBuffer;
-	vk::UniqueCommandBuffer graphicsCmdBuffer;
+	vk::CommandBuffer transferCmdBuffer;
+	vk::CommandBuffer graphicsCmdBuffer;
 
-	Device(PhysicalDevice* pd, std::vector<const char*> deviceExtensions);
-	~Device();
+	S_Device(PhysicalDevice* pd, std::vector<const char*> deviceExtensions);
+	~S_Device();
 
 	vk::UniqueShaderModule CreateShaderModule(const std::string& binPath);
 	vk::UniqueShaderModule CompileCreateShaderModule(const std::string& path);
@@ -37,4 +37,4 @@ struct Device : public vk::Device {
 	void CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
 		vk::UniqueBuffer& buffer, vk::UniqueDeviceMemory& memory);
 	void CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
-};
+} * Device;

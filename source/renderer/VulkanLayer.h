@@ -17,7 +17,7 @@ struct UniformBufferObject {
 	glm::mat4 proj;
 };
 
-class VulkanLayer {
+inline class VulkanLayer : public Object {
 
 public:
 	//
@@ -38,74 +38,73 @@ public:
 
 
 	// The recommended framebuffer allocation size for the viewport.
-	inline static vk::Extent2D viewportFramebufferSize{};
+	vk::Extent2D viewportFramebufferSize{};
 
 	// The actual game viewport rectangle in swapchain coords
-	inline static vk::Rect2D viewportRect{};
+	vk::Rect2D viewportRect{};
 
 
 protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)
-	inline static BoolFlag didViewportResize;
-	inline static BoolFlag didWindowResize;
+	BoolFlag didViewportResize;
+	BoolFlag didWindowResize;
 
-	struct EventInstance : public Object {
-	};
+	void OnViewportResize();
+	void OnWindowResize();
+	void UpdateQuadDescriptorSet();
 
-	static void OnViewportResize();
-	static void OnWindowResize();
-	static void UpdateQuadDescriptorSet();
-
-	inline static EventInstance eventHandler;
 
 public:
 	//
 	//
 	//
-	static void InitVulkanLayer(std::vector<const char*>& extensions, GLFWwindow* window);
-	static void ReconstructSwapchain();
+	VulkanLayer(std::vector<const char*>& extensions, GLFWwindow* window);
+	~VulkanLayer();
 
-	inline static std::unique_ptr<Instance> instance;
-	inline static std::unique_ptr<Device> device;
-	inline static std::unique_ptr<Swapchain> swapchain;
+
+	void Init();
+	void ReconstructSwapchain();
+
+	Instance* instance;
+	std::unique_ptr<Swapchain> swapchain;
+
 
 	// Model descriptors
 	//
-	inline static vk::UniqueDescriptorSetLayout modelDescriptorSetLayout;
-	inline static vk::UniqueDescriptorPool modelDescriptorPool;
-	inline static std::vector<std::unique_ptr<Model>> models;
-	inline static vk::UniqueBuffer uniformBuffers;
-	inline static vk::UniqueDeviceMemory uniformBuffersMemory;
+	vk::UniqueDescriptorSetLayout modelDescriptorSetLayout;
+	vk::UniqueDescriptorPool modelDescriptorPool;
+	std::vector<std::unique_ptr<Model>> models;
+	vk::UniqueBuffer uniformBuffers;
+	vk::UniqueDeviceMemory uniformBuffersMemory;
 	//
 
 	// Quad descriptors
-	inline static vk::UniqueDescriptorSetLayout quadDescriptorSetLayout;
-	inline static vk::UniqueDescriptorPool quadDescriptorPool;
-	inline static vk::UniqueDescriptorSet quadDescriptorSet;
-	inline static vk::UniqueSampler quadSampler;
+	vk::UniqueDescriptorSetLayout quadDescriptorSetLayout;
+	vk::UniqueDescriptorPool quadDescriptorPool;
+	vk::UniqueDescriptorSet quadDescriptorSet;
+	vk::UniqueSampler quadSampler;
 
 	//
 
-	inline static vk::UniqueCommandBuffer geometryCmdBuffer;
+	vk::CommandBuffer geometryCmdBuffer;
 
-	inline static std::vector<vk::UniqueCommandBuffer> outCmdBuffer;
+	std::vector<vk::CommandBuffer> outCmdBuffer;
 
 	// sync objects
-	inline static vk::UniqueSemaphore imageAvailableSemaphore;
-	inline static vk::UniqueSemaphore renderFinishedSemaphore;
+	vk::UniqueSemaphore imageAvailableSemaphore;
+	vk::UniqueSemaphore renderFinishedSemaphore;
 
-	inline static GeometryPass geomPass;
-	inline static DeferredPass defPass;
-	inline static EditorPass editorPass;
-
-
-	static void ReinitModels();
-
-	static void InitModelDescriptors();
-	static vk::DescriptorSet GetModelDescriptorSet();
-
-	static void InitQuadDescriptor();
+	GeometryPass geomPass;
+	DeferredPass defPass;
+	EditorPass editorPass;
 
 
-	static void DrawFrame();
-};
+	void ReinitModels();
+
+	void InitModelDescriptors();
+	vk::DescriptorSet GetModelDescriptorSet();
+
+	void InitQuadDescriptor();
+	void DrawFrame();
+
+} * Layer;

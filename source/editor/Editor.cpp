@@ -49,7 +49,7 @@ void DrawTextureDebugger()
 {
 	ImGui::Begin("Image Debugger.");
 
-	auto descrSet = *VulkanLayer::quadDescriptorSet;
+	auto descrSet = *Layer->quadDescriptorSet;
 	if (!descrSet) {
 		ImGui::Text("Null handle");
 		ImGui::End();

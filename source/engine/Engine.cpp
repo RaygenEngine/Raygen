@@ -63,7 +63,9 @@ void S_Engine::InitRenderer()
 
 	glfwutl::SetupEventCallbacks(m_window);
 
-	VulkanLayer::InitVulkanLayer(glfwutl::GetVulkanExtensions(), m_window);
+	// WIP
+	Layer = new VulkanLayer(glfwutl::GetVulkanExtensions(), m_window);
+	Layer->Init();
 
 	m_editor = new Editor();
 
@@ -130,6 +132,8 @@ void S_Engine::ReportFrameDrawn()
 void S_Engine::DeinitEngine()
 {
 	// NOTE: It is REALLY important to remember the reverse order here
+	delete Layer;
+	delete Device;
 	delete m_editor;
 	delete m_world;
 	glfwDestroyWindow(m_window);

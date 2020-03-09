@@ -7,9 +7,6 @@
 
 Texture::Texture(PodHandle<TexturePod> podHandle)
 {
-	auto& device = VulkanLayer::device;
-
-
 	auto textureData = podHandle.Lock();
 	auto imgData = textureData->image.Lock();
 
@@ -17,14 +14,14 @@ Texture::Texture(PodHandle<TexturePod> podHandle)
 
 	vk::UniqueBuffer stagingBuffer;
 	vk::UniqueDeviceMemory stagingBufferMemory;
-	device->CreateBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc,
+	Device->CreateBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer,
 		stagingBufferMemory);
 
 	// copy data to buffer
-	void* bufferData = device->mapMemory(stagingBufferMemory.get(), 0, imageSize);
+	void* bufferData = Device->mapMemory(stagingBufferMemory.get(), 0, imageSize);
 	memcpy(bufferData, imgData->data.data(), static_cast<size_t>(imageSize));
-	device->unmapMemory(stagingBufferMemory.get());
+	Device->unmapMemory(stagingBufferMemory.get());
 
 
 	vk::Format format = imgData->isHdr ? vk::Format::eR32G32B32A32Sfloat : vk::Format::eR8G8B8A8Srgb;
@@ -64,5 +61,5 @@ Texture::Texture(PodHandle<TexturePod> podHandle)
 		.setMinLod(0.f)
 		.setMaxLod(0.f);
 
-	sampler = device->createSamplerUnique(samplerInfo);
+	sampler = Device->createSamplerUnique(samplerInfo);
 }

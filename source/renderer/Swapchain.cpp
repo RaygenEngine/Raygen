@@ -59,9 +59,8 @@ vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
 
 Swapchain::Swapchain(vk::SurfaceKHR surface)
 {
-	auto& device = VulkanLayer::device;
 
-	auto pd = device->pd;
+	auto pd = Device->pd;
 
 	auto details = pd->ssDetails;
 
@@ -85,8 +84,8 @@ Swapchain::Swapchain(vk::SurfaceKHR surface)
 		.setImageArrayLayers(1u)
 		.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
 
-	auto graphicsQueueFamily = device->graphicsQueue.familyIndex;
-	auto presentQueueFamily = device->presentQueue.familyIndex;
+	auto graphicsQueueFamily = Device->graphicsQueue.familyIndex;
+	auto presentQueueFamily = Device->presentQueue.familyIndex;
 
 	uint32 queueFamilyIndices[] = { graphicsQueueFamily, presentQueueFamily };
 	if (graphicsQueueFamily != presentQueueFamily) {
@@ -110,8 +109,8 @@ Swapchain::Swapchain(vk::SurfaceKHR surface)
 		.setOldSwapchain(nullptr);
 
 
-	handle = device->createSwapchainKHRUnique(createInfo);
-	images = device->getSwapchainImagesKHR(handle.get());
+	handle = Device->createSwapchainKHRUnique(createInfo);
+	images = Device->getSwapchainImagesKHR(handle.get());
 
 	// Store swap chain image format and extent
 	imageFormat = surfaceFormat.format;
@@ -132,7 +131,7 @@ Swapchain::Swapchain(vk::SurfaceKHR surface)
 			.setBaseArrayLayer(0u)
 			.setLayerCount(1u);
 
-		imageViews.emplace_back(device->createImageViewUnique(viewInfo));
+		imageViews.emplace_back(Device->createImageViewUnique(viewInfo));
 	}
 
 	InitRenderPass();
@@ -141,8 +140,6 @@ Swapchain::Swapchain(vk::SurfaceKHR surface)
 
 void Swapchain::InitRenderPass()
 {
-	auto& device = VulkanLayer::device;
-
 	vk::AttachmentDescription colorAttachment{};
 	colorAttachment
 		.setFormat(imageFormat) //
@@ -185,7 +182,7 @@ void Swapchain::InitRenderPass()
 		.setDependencyCount(1u)
 		.setPDependencies(&dependency);
 
-	renderPass = device->createRenderPassUnique(renderPassInfo);
+	renderPass = Device->createRenderPassUnique(renderPassInfo);
 }
 
 void Swapchain::InitFrameBuffers()
@@ -204,6 +201,6 @@ void Swapchain::InitFrameBuffers()
 			.setHeight(extent.height)
 			.setLayers(1u);
 
-		framebuffers[i] = VulkanLayer::device->createFramebufferUnique(createInfo);
+		framebuffers[i] = Device->createFramebufferUnique(createInfo);
 	}
 }

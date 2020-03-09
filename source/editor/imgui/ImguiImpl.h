@@ -16,6 +16,7 @@ public:
 	static void EndFrame();
 
 	static void InitVulkan();
+	static void CleanupVulkan();
 	static void RenderVulkan(vk::CommandBuffer* drawCommandBuffer);
 
 	inline static ImFont* s_EditorFont{ nullptr };

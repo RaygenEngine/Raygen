@@ -7,7 +7,6 @@
 
 void GeometryPass::InitRenderPass()
 {
-	auto& device = VulkanLayer::device;
 	vk::AttachmentDescription colorAttachment{};
 	colorAttachment
 		.setFormat(vk::Format::eR8G8B8A8Srgb) // CHECK:
@@ -26,7 +25,7 @@ void GeometryPass::InitRenderPass()
 
 	vk::AttachmentDescription depthAttachment{};
 	depthAttachment
-		.setFormat(device->pd->FindDepthFormat()) //
+		.setFormat(Device->pd->FindDepthFormat()) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eDontCare)
@@ -66,14 +65,12 @@ void GeometryPass::InitRenderPass()
 		.setDependencyCount(1u)
 		.setPDependencies(&dependency);
 
-	m_renderPass = device->createRenderPassUnique(renderPassInfo);
+	m_renderPass = Device->createRenderPassUnique(renderPassInfo);
 }
 
 void GeometryPass::InitFramebuffers()
 {
-
-	auto& device = VulkanLayer::device;
-	vk::Extent2D fbSize = VulkanLayer::viewportFramebufferSize;
+	vk::Extent2D fbSize = Layer->viewportFramebufferSize;
 
 
 	// albedo buffer
@@ -89,7 +86,7 @@ void GeometryPass::InitFramebuffers()
 
 
 	// depth buffer
-	vk::Format depthFormat = device->pd->FindDepthFormat();
+	vk::Format depthFormat = Device->pd->FindDepthFormat();
 
 	depthImage = std::make_unique<Image>(fbSize.width, fbSize.height, depthFormat, vk::ImageTiling::eOptimal,
 		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal);
@@ -111,17 +108,16 @@ void GeometryPass::InitFramebuffers()
 		.setHeight(fbSize.height)
 		.setLayers(1);
 
-	m_framebuffer = device->createFramebufferUnique(createInfo);
+	m_framebuffer = Device->createFramebufferUnique(createInfo);
 }
 
 void GeometryPass::InitPipelineAndStuff()
 {
-	auto& device = VulkanLayer::device;
-	auto& descriptorSetLayout = VulkanLayer::modelDescriptorSetLayout;
+	auto& descriptorSetLayout = Layer->modelDescriptorSetLayout;
 
 	// shaders
-	auto vertShaderModule = device->CompileCreateShaderModule("engine-data/spv/gbuffer.vert");
-	auto fragShaderModule = device->CompileCreateShaderModule("engine-data/spv/gbuffer.frag");
+	auto vertShaderModule = Device->CompileCreateShaderModule("engine-data/spv/gbuffer.vert");
+	auto fragShaderModule = Device->CompileCreateShaderModule("engine-data/spv/gbuffer.frag");
 
 
 	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
@@ -264,7 +260,7 @@ void GeometryPass::InitPipelineAndStuff()
 		.setPushConstantRangeCount(1u)
 		.setPPushConstantRanges(&pushConstantRange);
 
-	m_pipelineLayout = device->createPipelineLayoutUnique(pipelineLayoutInfo);
+	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
@@ -297,7 +293,7 @@ void GeometryPass::InitPipelineAndStuff()
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 
-	m_pipeline = device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
 
@@ -318,7 +314,7 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 			.setFramebuffer(m_framebuffer.get());
 		renderPassInfo.renderArea
 			.setOffset({ 0, 0 }) //
-			.setExtent(VulkanLayer::viewportRect.extent);
+			.setExtent(Layer->viewportRect.extent);
 
 		std::array<vk::ClearValue, 2> clearValues = {};
 		clearValues[0].setColor(std::array{ 0.0f, 0.1f, 0.15f, 1.0f });
@@ -338,7 +334,7 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 			cmdBuffer->setViewport(0, { GetViewport() });
 			cmdBuffer->setScissor(0, { GetScissor() });
 
-			for (auto& model : VulkanLayer::models) {
+			for (auto& model : Layer->models) {
 				for (auto& gg : model->geometryGroups) {
 					// Submit via push constant (rather than a UBO)
 					cmdBuffer->pushConstants(m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u,
@@ -370,19 +366,17 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 
 void GeometryPass::TransitionGBufferForShaderRead()
 {
-	auto& device = VulkanLayer::device;
 	albedoImage->TransitionToLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 }
 
 void GeometryPass::TransitionGBufferForAttachmentWrite()
 {
-	auto& device = VulkanLayer::device;
 	albedoImage->TransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal);
 }
 
 vk::Viewport GeometryPass::GetViewport() const
 {
-	auto vpSize = VulkanLayer::viewportRect.extent;
+	auto vpSize = Layer->viewportRect.extent;
 
 	vk::Viewport viewport{};
 	viewport
@@ -401,7 +395,7 @@ vk::Rect2D GeometryPass::GetScissor() const
 
 	scissor
 		.setOffset({ 0, 0 }) //
-		.setExtent(VulkanLayer::viewportRect.extent);
+		.setExtent(Layer->viewportRect.extent);
 
 	return scissor;
 }
