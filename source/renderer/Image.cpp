@@ -50,8 +50,7 @@ void Image::Init(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels,
 	vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage, vk::SampleCountFlagBits samples,
 	vk::SharingMode sharingMode, vk::MemoryPropertyFlags properties)
 {
-	auto& device = VulkanLayer::device;
-	auto pd = device->pd;
+	auto pd = Device->pd;
 
 	m_imageInfo //
 		.setImageType(imageType)
@@ -65,17 +64,17 @@ void Image::Init(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels,
 		.setSamples(samples)
 		.setSharingMode(sharingMode);
 
-	m_handle = device->createImageUnique(m_imageInfo);
+	m_handle = Device->createImageUnique(m_imageInfo);
 
-	vk::MemoryRequirements memRequirements = device->getImageMemoryRequirements(m_handle.get());
+	vk::MemoryRequirements memRequirements = Device->getImageMemoryRequirements(m_handle.get());
 
 	vk::MemoryAllocateInfo allocInfo{};
 	allocInfo.setAllocationSize(memRequirements.size);
 	allocInfo.setMemoryTypeIndex(pd->FindMemoryType(memRequirements.memoryTypeBits, properties));
 
-	m_memory = device->allocateMemoryUnique(allocInfo);
+	m_memory = Device->allocateMemoryUnique(allocInfo);
 
-	device->bindImageMemory(m_handle.get(), m_memory.get(), 0);
+	Device->bindImageMemory(m_handle.get(), m_memory.get(), 0);
 
 	m_currentLayout = initialLayout;
 }
@@ -104,8 +103,6 @@ vk::UniqueImageView Image::RequestImageView2D_0_0()
 
 	CLOG_ABORT(!testComp(), "Could not create view");
 
-	auto& device = VulkanLayer::device;
-
 	vk::ImageViewCreateInfo viewInfo{};
 	viewInfo
 		.setImage(m_handle.get()) //
@@ -118,7 +115,7 @@ vk::UniqueImageView Image::RequestImageView2D_0_0()
 		.setBaseArrayLayer(0u)
 		.setLayerCount(1u);
 
-	return device->createImageViewUnique(viewInfo);
+	return Device->createImageViewUnique(viewInfo);
 }
 
 // PERF: benchmark
@@ -129,8 +126,6 @@ void Image::TransitionToLayout(vk::ImageLayout newLayout)
 		LOG_WARN("Image layout transition, new layout is the same with the current layout of the image");
 		return;
 	}
-
-	auto& device = VulkanLayer::device;
 
 	vk::ImageMemoryBarrier barrier{};
 	barrier //
@@ -157,19 +152,19 @@ void Image::TransitionToLayout(vk::ImageLayout newLayout)
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-	device->graphicsCmdBuffer->begin(beginInfo);
+	Device->graphicsCmdBuffer.begin(beginInfo);
 
-	device->graphicsCmdBuffer->pipelineBarrier(
+	Device->graphicsCmdBuffer.pipelineBarrier(
 		sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 
-	device->graphicsCmdBuffer->end();
+	Device->graphicsCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo.setCommandBufferCount(1u);
-	submitInfo.setPCommandBuffers(&device->graphicsCmdBuffer.get());
+	submitInfo.setPCommandBuffers(&Device->graphicsCmdBuffer);
 
-	device->graphicsQueue.submit(1u, &submitInfo, {});
-	device->graphicsQueue.waitIdle();
+	Device->graphicsQueue.submit(1u, &submitInfo, {});
+	Device->graphicsQueue.waitIdle();
 
 	// change layout
 	m_currentLayout = newLayout;
@@ -177,8 +172,6 @@ void Image::TransitionToLayout(vk::ImageLayout newLayout)
 
 void Image::CopyBufferToImage(vk::Buffer buffer)
 {
-	auto& device = VulkanLayer::device;
-
 	// transition layout to transfer optimal if not already
 	if (m_currentLayout != vk::ImageLayout::eTransferDstOptimal) {
 		TransitionToLayout(vk::ImageLayout::eTransferDstOptimal);
@@ -187,7 +180,7 @@ void Image::CopyBufferToImage(vk::Buffer buffer)
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-	device->transferCmdBuffer->begin(beginInfo);
+	Device->transferCmdBuffer.begin(beginInfo);
 
 	vk::BufferImageCopy region{};
 	region
@@ -204,18 +197,18 @@ void Image::CopyBufferToImage(vk::Buffer buffer)
 		.setLayerCount(m_imageInfo.arrayLayers);
 
 	// m_currentLayout is ensured to be vk::ImageLayout::eTransferDstOptimal here
-	device->transferCmdBuffer->copyBufferToImage(buffer, m_handle.get(), m_currentLayout, std::array{ region });
+	Device->transferCmdBuffer.copyBufferToImage(buffer, m_handle.get(), m_currentLayout, std::array{ region });
 
-	device->transferCmdBuffer->end();
+	Device->transferCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo
 		.setCommandBufferCount(1u) //
-		.setPCommandBuffers(&device->transferCmdBuffer.get());
+		.setPCommandBuffers(&Device->transferCmdBuffer);
 
-	device->transferQueue.submit(1u, &submitInfo, {});
+	Device->transferQueue.submit(1u, &submitInfo, {});
 	// PERF:
 	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.
-	device->transferQueue.waitIdle();
+	Device->transferQueue.waitIdle();
 }

@@ -56,7 +56,7 @@ int32 App::Main(int32 argc, char* argv[]) // NOLINT
 	MainLoop();
 
 
-	VulkanLayer::quadDescriptorSet.reset(); // NEXT: This is here to log the proper error
+	Layer->quadDescriptorSet.reset(); // NEXT: This is here to log the proper error
 	Engine.DeinitEngine();
 
 	return 0;
@@ -82,7 +82,7 @@ void App::MainLoop()
 		Engine.GetWorld()->Update();
 
 		// Engine.GetRenderer()->DrawFrame();
-		VulkanLayer::DrawFrame();
+		Layer->DrawFrame();
 
 		Engine.ReportFrameDrawn();
 
