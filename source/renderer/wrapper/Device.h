@@ -1,7 +1,5 @@
 #pragma once
-#include "renderer/PhysicalDevice.h"
-#include "asset/pods/TexturePod.h"
-#include "renderer/Texture.h"
+#include "renderer/wrapper/PhysicalDevice.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -33,8 +31,4 @@ inline struct S_Device : public vk::Device {
 
 	vk::UniqueShaderModule CreateShaderModule(const std::string& binPath);
 	vk::UniqueShaderModule CompileCreateShaderModule(const std::string& path);
-
-	void CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
-		vk::UniqueBuffer& buffer, vk::UniqueDeviceMemory& memory);
-	void CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
 } * Device;

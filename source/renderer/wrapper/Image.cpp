@@ -1,7 +1,8 @@
 #include "pch.h"
-#include "renderer/Image.h"
+#include "renderer/wrapper/Image.h"
 
 #include "renderer/VulkanLayer.h"
+#include "renderer/wrapper/Device.h"
 
 namespace {
 vk::AccessFlags GetAccessMask(vk::ImageLayout imL)
@@ -170,7 +171,7 @@ void Image::TransitionToLayout(vk::ImageLayout newLayout)
 	m_currentLayout = newLayout;
 }
 
-void Image::CopyBufferToImage(vk::Buffer buffer)
+void Image::CopyBufferToImage(const Buffer& buffer)
 {
 	// transition layout to transfer optimal if not already
 	if (m_currentLayout != vk::ImageLayout::eTransferDstOptimal) {

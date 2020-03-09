@@ -1,6 +1,5 @@
 #pragma once
-#include "asset/AssetManager.h"
-#include "asset/pods/TexturePod.h"
+#include "renderer/wrapper/Buffer.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -35,5 +34,7 @@ public:
 	// Transitions
 	void TransitionToLayout(vk::ImageLayout newLayout);
 
-	void CopyBufferToImage(vk::Buffer buffer);
+	void CopyBufferToImage(const Buffer& buffer);
+
+	operator vk::Image() const noexcept { return m_handle.get(); }
 };

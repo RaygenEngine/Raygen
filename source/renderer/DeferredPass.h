@@ -1,6 +1,4 @@
 #pragma once
-#include "renderer/Model.h"
-
 #include <vulkan/vulkan.hpp>
 
 class DeferredPass {

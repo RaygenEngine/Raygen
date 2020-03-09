@@ -1,9 +1,9 @@
 #pragma once
 #include "asset/pods/ModelPod.h"
-#include "renderer/Device.h"
-#include "vulkan/vulkan.hpp"
+#include "renderer/asset/Material.h"
 #include "world/nodes/geometry/GeometryNode.h"
-#include "renderer/Material.h"
+
+#include <vulkan/vulkan.hpp>
 
 // TODO: GPU ASSETS From https://vulkan-tutorial.com/en/Vertex_buffers/Index_buffer
 // store multiple buffers, like the vertex and index buffer, into a single VkBuffer and use offsets in commands like
@@ -15,11 +15,8 @@
 // PERF: batching
 struct GPUGeometryGroup {
 
-	vk::UniqueBuffer vertexBuffer;
-	vk::UniqueDeviceMemory vertexBufferMemory;
-
-	vk::UniqueBuffer indexBuffer;
-	vk::UniqueDeviceMemory indexBufferMemory;
+	std::unique_ptr<Buffer> vertexBuffer;
+	std::unique_ptr<Buffer> indexBuffer;
 
 	std::unique_ptr<Material> material;
 
@@ -36,5 +33,5 @@ struct Model {
 
 	Model(PodHandle<ModelPod> podHandle);
 
-	GeometryNode* m_node;
+	GeometryNode* m_node{ nullptr };
 };

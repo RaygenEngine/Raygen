@@ -1,14 +1,26 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
+// out
+
 layout(location = 0) out vec4 outColor;
+
+// in 
 
 layout(location = 0) in vec2 uv;
 
-layout(binding = 0) uniform sampler2D albedoSampler;
+// uniform
+
+layout(binding = 0) uniform sampler2D positionsSampler;
+layout(binding = 1) uniform sampler2D normalsSampler;
+layout(binding = 2) uniform sampler2D albedoOpacitySampler;
+layout(binding = 3) uniform sampler2D specularSampler;
+layout(binding = 4) uniform sampler2D emissiveSampler;
+layout(binding = 5) uniform sampler2D depthSampler;
+
 
 void main() {
-    vec3 hdrColor = texture(albedoSampler, uv).rgb;
+    vec3 hdrColor = texture(depthSampler, uv).rgb;
   
     // Exposure tone mapping
     vec3 mapped = vec3(1.0) - exp(-hdrColor * 1.5);

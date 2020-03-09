@@ -5,6 +5,7 @@
 #include "engine/Engine.h"
 #include "engine/profiler/ProfileScope.h"
 #include "renderer/VulkanLayer.h"
+#include "renderer/wrapper/Device.h"
 
 void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 {
@@ -26,7 +27,7 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 		.setModule(fragShaderModule.get())
 		.setPName("main");
 
-	std::array shaderStages = { vertShaderStageInfo, fragShaderStageInfo };
+	std::array shaderStages{ vertShaderStageInfo, fragShaderStageInfo };
 
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
