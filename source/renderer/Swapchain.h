@@ -1,9 +1,7 @@
 #pragma once
-
-#include "renderer/LogicalDevice.h"
+#include "renderer/Device.h"
 
 #include <vulkan/vulkan.hpp>
-
 
 struct Swapchain {
 
@@ -15,15 +13,10 @@ struct Swapchain {
 	std::vector<vk::Image> images;
 	std::vector<vk::UniqueImageView> imageViews;
 
-	vk::UniqueImage depthImage;
-	vk::UniqueDeviceMemory depthImageMemory;
-	vk::UniqueImageView depthImageView;
-
-
 	std::vector<vk::UniqueFramebuffer> framebuffers;
 	vk::UniqueRenderPass renderPass;
 
-	Swapchain(LogicalDevice* ld, vk::SurfaceKHR surface);
+	Swapchain(vk::SurfaceKHR surface);
 
 private:
 	void InitRenderPass();

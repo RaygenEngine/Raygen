@@ -87,7 +87,6 @@ public:
 	~ComponentWindows();
 
 	template<CONC(UniqueWindowClass) T>
-	// template<typename T>
 	T* GetUniqueWindow()
 	{
 		// TODO: should not open the window

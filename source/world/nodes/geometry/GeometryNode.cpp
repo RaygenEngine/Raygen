@@ -1,6 +1,5 @@
 #include "world/nodes/geometry/GeometryNode.h"
 #include "asset/AssetManager.h"
-#include "core/MathAux.h"
 
 void GeometryNode::SetModel(PodHandle<ModelPod> newModel)
 {

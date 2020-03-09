@@ -1,4 +1,4 @@
-#include "pch/pch.h"
+#include "pch.h"
 
 #include "asset/util/SpirvCompiler.h"
 
@@ -51,7 +51,7 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& filename)
 
 	DirStackFileIncluder Includer;
 
-	// TODO: this requires path only not path + filename.
+	// TODO: ASSETS: this requires path only not path + filename.
 	// use std::filesystem
 	Includer.pushExternalLocalDirectory("");
 	Includer.pushExternalLocalDirectory("./engine-data/spv/");

@@ -1,6 +1,6 @@
-#include "pch/pch.h"
+#include "pch.h"
 #include "editor/windows/general/EdProfilerWindow.h"
-#include "system/profiler/ProfileScope.h"
+#include "engine/profiler/ProfileScope.h"
 #include "editor/misc/NativeFileBrowser.h"
 
 #include "reflection/ReflEnum.h"
@@ -29,18 +29,16 @@ ProfilerWindow::ProfilerWindow(std::string_view name)
 }
 
 
-void ProfilerWindow::ShowCategoryCheckbox(ProfilerSetup::Module category)
-{
-}
+void ProfilerWindow::ShowCategoryCheckbox(ProfilerSetup::Module category) {}
 
 void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 {
-	auto* vec = Profiler::GetModule(category);
+	auto* vec = Profiler.GetModule(category);
 	if (!vec) {
 		return;
 	}
 
-	auto frametime = Profiler::GetLastFrameTime();
+	auto frametime = Profiler.GetLastFrameTime();
 
 	if (frametime.count() == 0) {
 		return;
@@ -50,13 +48,8 @@ void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 	auto& entries = *vec;
 
 	for (auto& entry : entries) {
-
-
 		float perc = static_cast<float>(entry->sumDuration.count()) / frametime.count();
-
-
 		auto totWidth = ImGui::GetContentRegionAvail().x;
-
 
 		ImGui::ProgressBar(perc, ImVec2(totWidth / 4.f, 0));
 		ImGui::SameLine();
@@ -67,15 +60,14 @@ void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 		ImGui::Text(loc.c_str());
 		ImGui::SameLine(totWidth * 0.70f);
 
-
 		std::string hits;
 		if (entry->hits > 0) {
 			const float c_PrecisionToMicros = 1.f / (1000.f);
 			auto count = entry->sumDuration.count();
 			float perHit = (static_cast<float>(count) / entry->hits) * c_PrecisionToMicros;
 
-			// TODO: C++20 use chrono operator<<
-			// TODO: assumes precision
+			// CHECK: C++20 use chrono operator<<
+			// CHECK: assumes precision
 			float micros = c_PrecisionToMicros * count;
 
 			if (micros < 1000.f) {
@@ -106,28 +98,28 @@ void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 
 void ProfilerWindow::ImguiDraw()
 {
-	bool current = Profiler::s_isProfiling;
+	bool current = Profiler.m_isProfiling;
 
 	if (current) {
 		if (ImEd::Button("Pause Profiling")) {
-			Profiler::EndProfiling();
+			Profiler.EndProfiling();
 		}
 	}
 	else {
 		if (ImEd::Button("Start Profiling")) {
-			Profiler::BeginProfiling();
+			Profiler.BeginProfiling();
 		}
 	}
 	ImGui::SameLine();
 	if (ImEd::Button("Export Session")) {
 		if (auto file = ed::NativeFileBrowser::SaveFile({ "json" })) {
-			Profiler::ExportSessionToJson(*file);
+			Profiler.ExportSessionToJson(*file);
 		}
 	}
 
 	ImGui::SameLine();
 	if (ImEd::Button("Reset Session")) {
-		Profiler::ResetSession();
+		Profiler.ResetSession();
 	}
 
 

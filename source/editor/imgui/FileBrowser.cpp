@@ -1,7 +1,7 @@
-#include "pch/pch.h"
+#include "pch.h"
 #include "editor/imgui/FileBrowser.h"
 
-#include "system/Logger.h"
+#include "engine/Logger.h"
 #include "editor/imgui/ImEd.h"
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -70,7 +70,6 @@ void FileBrowser::ImguiHeader()
 		create |= ImGui::Button("Create");
 
 		if (create) {
-			// WIP
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();
@@ -166,7 +165,6 @@ void FileBrowser::ChangeDirectory(const fs::path& newPath)
 		}
 	} catch (std::exception e) {
 		LOG_ERROR("Failed to open a folder in the file browser. Exception was:\n{}", e.what());
-		// TODO: possible stack overflow (rare) can happen here, when the directory we came from is inaccessible
 		ChangeDirectory(prevPath);
 	}
 }

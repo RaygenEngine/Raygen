@@ -1,4 +1,4 @@
-#include "pch/pch.h"
+#include "pch.h"
 
 #include "world/World.h"
 #include "world/NodeFactory.h"
@@ -10,8 +10,8 @@
 #include "world/nodes/geometry/GeometryNode.h"
 #include "editor/Editor.h"
 #include "reflection/ReflectionTools.h"
-#include "system/EngineEvents.h"
-#include "system/profiler/ProfileScope.h"
+#include "engine/Events.h"
+#include "engine/profiler/ProfileScope.h"
 #include "renderer/VulkanLayer.h"
 
 World::World(NodeFactory* factory)
@@ -59,8 +59,6 @@ Node* World::GetNodeByName(const std::string& name) const
 void World::SetActiveCamera(CameraNode* cam)
 {
 	m_activeCamera = cam;
-
-	Event::OnWorldActiveCameraChanged.Broadcast(cam);
 }
 
 void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
@@ -86,8 +84,8 @@ void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 	ClearDirtyFlags();
 	LOG_INFO("World loaded succesfully");
 
-	// WIP: fix
-	VulkanLayer::ReinitModels();
+	// NEXT: fix
+	Layer->ReinitModels();
 }
 
 void World::DirtyUpdateWorld()
@@ -184,7 +182,7 @@ void World::RegisterNode(Node* node, Node* parent)
 
 	parent->m_children.emplace_back(node, [](Node* node) {
 		// custom deleter to remove node from world when it is deleted
-		Engine::GetWorld()->CleanupNodeReferences(node);
+		Engine.GetWorld()->CleanupNodeReferences(node);
 		delete node;
 	});
 
@@ -214,7 +212,7 @@ void World::Update()
 		PROFILE_SCOPE(World);
 		UpdateFrameTimers();
 
-		if (Engine::ShouldUpdateWorld()) {
+		if (Engine.ShouldUpdateWorld()) {
 			m_isIteratingNodeSet = true;
 			// Update after input and delta calculation
 			for (auto* node : m_nodes) {
@@ -224,10 +222,7 @@ void World::Update()
 		}
 	}
 
-	if (Engine::IsEditorActive()) {
-		Engine::GetEditor()->UpdateEditor();
-	}
-
+	Engine.GetEditor()->UpdateEditor();
 
 	do {
 		for (auto& cmd : m_postIterateCommandList) {

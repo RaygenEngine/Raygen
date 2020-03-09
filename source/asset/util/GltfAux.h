@@ -1,8 +1,60 @@
 #pragma once
 
-#include "core/StringAux.h"
+#include "core/StringUtl.h"
 
 #include <tiny_gltf.h>
+enum class ComponentType
+{
+	CHAR,
+	BYTE,
+	SHORT,
+	USHORT,
+	INT,
+	UINT,
+	FLOAT,
+	DOUBLE
+};
+
+enum class ElementType
+{
+	SCALAR,
+	VEC2,
+	VEC3,
+	VEC4,
+	MAT2,
+	MAT3,
+	MAT4
+};
+namespace utl {
+
+inline int32 ComponentTypeByteCount(ComponentType bct)
+{
+	switch (bct) {
+		case ComponentType::CHAR:
+		case ComponentType::BYTE: return 1;
+		case ComponentType::SHORT:
+		case ComponentType::USHORT: return 2;
+		case ComponentType::INT:
+		case ComponentType::UINT:
+		case ComponentType::FLOAT: return 4;
+		case ComponentType::DOUBLE: return 8;
+		default: return -1;
+	}
+}
+inline int32 ElementComponentCount(ElementType bet)
+{
+	switch (bet) {
+		case ElementType::SCALAR: return 1;
+		case ElementType::VEC2: return 2;
+		case ElementType::VEC3: return 3;
+		case ElementType::VEC4:
+		case ElementType::MAT2: return 4;
+		case ElementType::MAT3: return 9;
+		case ElementType::MAT4: return 16;
+		default: return -1;
+	}
+}
+} // namespace utl
 
 namespace gltfaux {
 inline GeometryMode GetGeometryMode(int32 gltfMode)
@@ -22,35 +74,35 @@ inline GeometryMode GetGeometryMode(int32 gltfMode)
 inline TextureFiltering GetTextureFiltering(int32 gltfFiltering)
 {
 	switch (gltfFiltering) {
-		case TINYGLTF_TEXTURE_FILTER_NEAREST: return TextureFiltering::NEAREST;
-		case TINYGLTF_TEXTURE_FILTER_LINEAR: return TextureFiltering::LINEAR;
-		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST: return TextureFiltering::NEAREST_MIPMAP_NEAREST;
-		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST: return TextureFiltering::LINEAR_MIPMAP_NEAREST;
-		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR: return TextureFiltering::NEAREST_MIPMAP_LINEAR;
-		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR: return TextureFiltering::LINEAR_MIPMAP_LINEAR;
-		default: return TextureFiltering::LINEAR;
+		case TINYGLTF_TEXTURE_FILTER_NEAREST: return TextureFiltering::Nearest;
+		case TINYGLTF_TEXTURE_FILTER_LINEAR: return TextureFiltering::Linear;
+		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST: return TextureFiltering::NearestMipmapNearest;
+		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST: return TextureFiltering::LinearMipmapNearest;
+		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR: return TextureFiltering::NearestMipmapLinear;
+		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR: return TextureFiltering::LinearMipmapLinear;
+		default: return TextureFiltering::Linear;
 	}
 };
 
 inline TextureWrapping GetTextureWrapping(int32 gltfWrapping)
 {
 	switch (gltfWrapping) {
-		case TINYGLTF_TEXTURE_WRAP_REPEAT: return TextureWrapping::REPEAT;
-		case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE: return TextureWrapping::CLAMP_TO_EDGE;
-		case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT: return TextureWrapping::MIRRORED_REPEAT;
-		default: return TextureWrapping::REPEAT;
+		case TINYGLTF_TEXTURE_WRAP_REPEAT: return TextureWrapping::Repeat;
+		case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE: return TextureWrapping::ClampToEdge;
+		case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT: return TextureWrapping::MirroredRepeat;
+		default: return TextureWrapping::Repeat;
 	}
 };
 
 inline MaterialPod::AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
 {
-	if (smath::CaseInsensitiveCompare(gltfAlphaMode, "OPAQUE")) {
+	if (str::equalInsensitive(gltfAlphaMode, "OPAQUE")) {
 		return MaterialPod::OPAQUE_;
 	}
-	if (smath::CaseInsensitiveCompare(gltfAlphaMode, "MASK")) {
+	if (str::equalInsensitive(gltfAlphaMode, "MASK")) {
 		return MaterialPod::MASK;
 	}
-	if (smath::CaseInsensitiveCompare(gltfAlphaMode, "BLEND")) {
+	if (str::equalInsensitive(gltfAlphaMode, "BLEND")) {
 		return MaterialPod::BLEND;
 	}
 	// not defined -> opaque

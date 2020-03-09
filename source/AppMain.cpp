@@ -1,12 +1,14 @@
-#include "pch/pch.h"
+#include "pch.h"
 
-#include "AppBase.h"
-#include "system/Logger.h"
+#include "App.h"
+#include "engine/Logger.h"
+#include "world/nodes/Node.h"
 
 int32 main(int32 argc, char* argv[])
 {
 	// Init logger (global access, not engine, app or window bound)
-	LOGGER_INIT(LogLevelTarget::Info);
+	Log.Init(LogLevel::Info);
+
 	App app;
 	app.PreMainInit(argc, argv);
 	return app.Main(argc, argv);

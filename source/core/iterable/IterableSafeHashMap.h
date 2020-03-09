@@ -1,8 +1,7 @@
 #pragma once
 
-#include <unordered_map>
-#include <unordered_set>
 #include <algorithm>
+#include <unordered_map>
 #include <vector>
 
 // Provides necessary tools for adding/removing elements on a unordered_map while iterating it without errors.
@@ -38,7 +37,7 @@ struct IterableSafeHashMap {
 		erasingCache.clear();
 	}
 
-	// TODO: forward does not work in this context, provide emplace by copy
+	// CHECK: forward does not work in this context, provide emplace by copy
 	auto Emplace(std::pair<KeyT, ValueT>&& elem)
 	{
 		if (isIterating) {

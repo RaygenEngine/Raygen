@@ -1,8 +1,8 @@
 #pragma once
 
 #include "reflection/GenMacros.h" // include gen macros here even if not needed to propagate to all node headers
-#include "system/Object.h"
-#include "core/MathAux.h"
+#include "engine/Object.h"
+#include "core/math-ext/AABB.h"
 
 #include <bitset>
 
@@ -97,7 +97,6 @@ private:
 protected:
 	std::string m_name;
 
-	// TODO: keep only the local space one
 	// currently world space
 	math::AABB m_aabb{};
 	math::AABB m_localBB{ { -0.3, -0.3, -0.3 }, { 0.3, 0.3, 0.3 } };
@@ -226,6 +225,6 @@ protected:
 			}
 		}
 
-		return Engine::GetWorld()->CreateNode<T>(name, this);
+		return Engine.GetWorld()->CreateNode<T>(name, this);
 	}
 };

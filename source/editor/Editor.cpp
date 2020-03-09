@@ -1,5 +1,5 @@
 
-#include "pch/pch.h"
+#include "pch.h"
 
 #include "editor/Editor.h"
 #include "editor/imgui/ImguiImpl.h"
@@ -10,14 +10,14 @@
 #include "asset/PodIncludes.h"
 #include "reflection/PodTools.h"
 #include "reflection/ReflectionTools.h"
-#include "system/Engine.h"
-#include "system/EngineEvents.h"
+#include "engine/Engine.h"
+#include "engine/Events.h"
 #include "world/nodes/camera/CameraNode.h"
 
 #include "world/nodes/Node.h"
 #include "world/nodes/RootNode.h"
 #include "world/World.h"
-#include "system/Input.h"
+#include "engine/Input.h"
 #include "world/NodeFactory.h"
 
 #include "editor/imgui/ImguiUtil.h"
@@ -26,12 +26,12 @@
 #include "editor/DataStrings.h"
 #include "editor/imgui/ImEd.h"
 
-#include "system/console/Console.h"
+#include "engine/console/Console.h"
 #include "editor/windows/WindowsRegistry.h"
-#include "system/profiler/ProfileScope.h"
+#include "engine/profiler/ProfileScope.h"
 
 #include "editor/EdUserSettings.h"
-#include "system/console/ConsoleVariable.h"
+#include "engine/console/ConsoleVariable.h"
 
 #include "editor/misc/NativeFileBrowser.h"
 #include "editor/utl/EdAssetUtils.h"
@@ -44,6 +44,23 @@
 #include <iostream>
 #include <set>
 
+namespace {
+void DrawTextureDebugger()
+{
+	ImGui::Begin("Image Debugger.");
+
+	auto descrSet = *Layer->quadDescriptorSet;
+	if (!descrSet) {
+		ImGui::Text("Null handle");
+		ImGui::End();
+		return;
+	}
+
+	ImGui::Image(descrSet, ImVec2(512, 512));
+	ImGui::End();
+}
+} // namespace
+
 Editor::Editor()
 {
 	ImguiImpl::InitContext();
@@ -52,7 +69,7 @@ Editor::Editor()
 	m_nodeContextActions = std::make_unique<NodeContextActions>();
 	m_propertyEditor = std::make_unique<PropertyEditor>();
 
-	m_onNodeRemoved.Bind([&](Node* node) {
+	Event::OnWorldNodeRemoved.Bind(this, [&](Node* node) {
 		if (node == m_selectedNode) {
 			if (node->GetParent()) {
 				m_selectedNode = node->GetParent();
@@ -66,7 +83,7 @@ Editor::Editor()
 		}
 	});
 
-	m_onWorldLoaded.Bind([&]() { SpawnEditorCamera(); });
+	Event::OnWorldLoaded.Bind(this, [&] { SpawnEditorCamera(); });
 
 	MakeMainMenu();
 }
@@ -97,19 +114,19 @@ struct ImRendererMenu : public Editor::ImMenu {
 
 Node* Editor::GetSelectedNode()
 {
-	auto editor = Engine::GetEditor();
-	if (editor && Engine::IsEditorActive()) {
-		return editor->m_selectedNode;
-	}
+	auto editor = Engine.GetEditor();
+	//	if (editor && Engine.IsEditorActive()) {
+	return editor->m_selectedNode;
+	//}
 	return nullptr;
 }
 
 EditorBBoxDrawing Editor::GetBBoxDrawing()
 {
-	auto editor = Engine::GetEditor();
-	if (editor && Engine::IsEditorActive()) {
-		return editor->m_bboxDrawing;
-	}
+	auto editor = Engine.GetEditor();
+	// if (editor && Engine.IsEditorActive()) {
+	return editor->m_bboxDrawing;
+	//}
 	return EditorBBoxDrawing::None;
 }
 
@@ -124,7 +141,7 @@ void Editor::MakeMainMenu()
 	sceneMenu->AddEntry(U8(FA_FOLDER_OPEN u8"  Load"), [&]() { OpenLoadDialog(); });
 	sceneMenu->AddEntry(U8(FA_REDO_ALT u8"  Revert"), [&]() { ReloadScene(); });
 	sceneMenu->AddSeperator();
-	sceneMenu->AddEntry(U8(FA_DOOR_OPEN u8"  Exit"), []() { glfwSetWindowShouldClose(Engine::GetMainWindow(), 1); });
+	sceneMenu->AddEntry(U8(FA_DOOR_OPEN u8"  Exit"), []() { glfwSetWindowShouldClose(Engine.GetMainWindow(), 1); });
 	m_menus.emplace_back(std::move(sceneMenu));
 
 	auto renderersMenu = std::make_unique<ImRendererMenu>();
@@ -186,33 +203,31 @@ void Editor::Dockspace()
 
 	// DockSpace
 	ImGuiIO& io = ImGui::GetIO();
-	ImGuiID dockspace_id = ImGui::GetID("MainDockspace");
-	ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+	m_dockspaceId = ImGui::GetID("MainDockspace");
+	ImGui::DockSpace(m_dockspaceId, ImVec2(0.0f, 0.0f), dockspace_flags);
 	ImGuizmo::SetDrawlist();
 	Run_MenuBar();
 
 
-	auto centralNode = ImGui::DockBuilderGetCentralNode(dockspace_id);
+	ImGui::End();
+}
+
+void Editor::UpdateViewportCoordsFromDockspace()
+{
+	auto centralNode = ImGui::DockBuilderGetCentralNode(m_dockspaceId);
 
 	if (centralNode) {
 		auto copy = g_ViewportCoordinates;
 		auto rect = centralNode->Rect();
 
-		static bool hasValidSize = false;
 
-		if (hasValidSize) {
-			g_ViewportCoordinates.position
-				= { rect.Min.x - ImGui::GetWindowViewport()->Pos.x, rect.Min.y - ImGui::GetWindowViewport()->Pos.y };
-			g_ViewportCoordinates.size = { rect.GetWidth(), rect.GetHeight() };
-			if (copy != g_ViewportCoordinates) {
-				Event::OnViewportUpdated.Broadcast();
-			}
+		g_ViewportCoordinates.position
+			= { rect.Min.x - ImGui::GetWindowViewport()->Pos.x, rect.Min.y - ImGui::GetWindowViewport()->Pos.y };
+		g_ViewportCoordinates.size = { rect.GetWidth(), rect.GetHeight() };
+		if (copy != g_ViewportCoordinates) {
+			Event::OnViewportUpdated.Broadcast();
 		}
-		hasValidSize = true;
 	}
-
-
-	ImGui::End();
 
 	auto& coord = g_ViewportCoordinates;
 
@@ -225,7 +240,7 @@ void Editor::UpdateEditor()
 {
 	PROFILE_SCOPE(Editor);
 	if (m_editorCamera) {
-		m_editorCamera->UpdateFromEditor(Engine::GetWorld()->GetDeltaTime());
+		m_editorCamera->UpdateFromEditor(Engine.GetWorld()->GetDeltaTime());
 	}
 	HandleInput();
 
@@ -233,7 +248,9 @@ void Editor::UpdateEditor()
 	Dockspace();
 
 	m_windowsComponent.Draw();
-	m_myBrowser.Draw();
+
+
+	DrawTextureDebugger();
 
 	// Attempt to predict the viewport size for the first run, might be a bit off.
 	ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
@@ -265,15 +282,9 @@ void Editor::UpdateEditor()
 	if (ImEd::Button(U8(FA_FOLDER_OPEN u8"  Load"))) {
 		OpenLoadDialog();
 	}
-	ImGui::SameLine();
-	if (ImEd::Button(U8(u8"Imgui File"))) {
-		m_myBrowser.OpenDialog([](auto& p) { LOG_REPORT("Selected file: {}", p.string()); });
-	}
 
 
-	auto linesAtBottom = Engine::GetStatusLine().empty() ? 1 : 2;
-
-	if (ImGui::BeginChild("EditorScrollable", ImVec2(0, -ImGui::GetTextLineHeightWithSpacing() * linesAtBottom))) {
+	if (ImGui::BeginChild("EditorScrollable", ImVec2(0, -ImGui::GetTextLineHeightWithSpacing()))) {
 		auto open = ImGui::CollapsingHeader("Outliner", ImGuiTreeNodeFlags_DefaultOpen);
 		CollapsingHeaderTooltip(help_Outliner);
 		if (open) {
@@ -298,26 +309,16 @@ void Editor::UpdateEditor()
 
 	ImGui::EndChild();
 
-	auto& eng = Engine::Get();
-
-
-	auto drawReporter = Engine::GetDrawReporter();
-	std::string s = fmt::format(
-		"Draws: {:n} | Tris: {:n} | {:.1f} FPS", drawReporter->draws, drawReporter->tris, Engine::GetFPS());
-
+	std::string s = fmt::format("{:.1f} FPS", Engine.GetFPS());
 	ImGui::Text(s.c_str());
-
-	if (!Engine::GetStatusLine().empty()) {
-		ImGui::Text(Engine::GetStatusLine().c_str());
-	}
-
-
 	ImGui::End();
 
+	// NEXT:
 	if (m_showGltfWindow) {
 		m_showGltfWindow = m_assetWindow->Draw();
 	}
 
+	UpdateViewportCoordsFromDockspace();
 	ImguiImpl::EndFrame();
 
 	for (auto& cmd : m_postDrawCommands) {
@@ -328,7 +329,7 @@ void Editor::UpdateEditor()
 	ed::GetSettings().SaveIfDirty();
 }
 
-void Editor::OnFileDrop(std::vector<std::string>&& files)
+void Editor::OnFileDrop(std::vector<fs::path>&& files)
 {
 	m_windowsComponent.GetUniqueWindow<ed::AssetsWindow>()->ImportFiles(std::move(files));
 }
@@ -336,7 +337,7 @@ void Editor::OnFileDrop(std::vector<std::string>&& files)
 
 void Editor::SpawnEditorCamera()
 {
-	auto world = Engine::GetWorld();
+	auto world = Engine.GetWorld();
 	m_editorCamera = NodeFactory::NewNode<EditorCameraNode>();
 	m_editorCamera->SetName("Editor Camera");
 	world->RegisterNode(m_editorCamera, world->GetRoot());
@@ -362,10 +363,10 @@ void Editor::Outliner()
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.f, 6.f));
 
 	bool foundOpen = false;
-	RecurseNodes(Engine::GetWorld()->GetRoot(), [&](Node* node, int32 depth) {
+	RecurseNodes(Engine.GetWorld()->GetRoot(), [&](Node* node, int32 depth) {
 		auto str = std::string(depth * 6, ' ') + U8(node->GetClass().GetIcon()) + "  "
 				   + sceneconv::FilterNodeClassName(node->GetClass().GetName()) + "> " + node->m_name;
-		ImGui::PushID(node->GetUID());
+		ImGui::PushID(node);
 
 		if (node == m_editorCamera) {
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.58f, 0.58f, 0.95f));
@@ -389,12 +390,12 @@ void Editor::Outliner()
 			if (ImGui::BeginPopupContextItem("OutlinerElemContext")) {
 				if (!m_editorCamera->GetParent()->IsRoot()) {
 					if (ImGui::MenuItem("Stop piloting")) {
-						Editor::MakeChildOf(Engine::GetWorld()->GetRoot(), m_editorCamera);
+						Editor::MakeChildOf(Engine.GetWorld()->GetRoot(), m_editorCamera);
 						m_editorCamera->ResetRotation();
 					}
 				}
 				if (ImGui::MenuItem("Set As Active")) {
-					Engine::GetWorld()->SetActiveCamera(m_editorCamera);
+					Engine.GetWorld()->SetActiveCamera(m_editorCamera);
 				}
 				ImGui::EndPopup();
 			}
@@ -417,7 +418,7 @@ void Editor::Outliner()
 
 			newNode->SetName(entry->GetNameStr());
 			newNode->SetModel(entry->GetHandleAs<ModelPod>());
-			Engine::GetWorld()->RegisterNode(newNode, Engine::GetWorld()->GetRoot());
+			Engine.GetWorld()->RegisterNode(newNode, Engine.GetWorld()->GetRoot());
 			if (!IsCameraPiloting()) {
 				PushPostFrameCommand([newNode]() { FocusNode(newNode); });
 			}
@@ -440,7 +441,7 @@ void Editor::Outliner()
 
 				newNode->SetName(podEntry->name);
 				newNode->SetModel(PodHandle<ModelPod>{ uid });
-				Engine::GetWorld()->RegisterNode(newNode, Engine::GetWorld()->GetRoot());
+				Engine.GetWorld()->RegisterNode(newNode, Engine.GetWorld()->GetRoot());
 				if (!IsCameraPiloting()) {
 					PushPostFrameCommand([newNode]() { FocusNode(newNode); });
 				}
@@ -455,7 +456,7 @@ void Editor::Outliner()
 		ImGui::PushID(989);
 		if (ImGui::BeginPopupContextItem("RightclickOutliner Context")) {
 			if (ImGui::BeginMenu("New Node")) {
-				Run_NewNodeMenu(Engine::GetWorld()->GetRoot());
+				Run_NewNodeMenu(Engine.GetWorld()->GetRoot());
 				ImGui::EndMenu();
 			}
 			if (IsCameraPiloting() && ImGui::MenuItem("Stop piloting")) {
@@ -477,26 +478,25 @@ void Editor::OpenLoadDialog()
 
 void Editor::LoadScene(const fs::path& scenefile)
 {
-	// WIP:
+	// TODO:
 	LOG_ERROR("Reimplement Scene Loading.");
 	return;
 
 	m_updateWorld = false;
 	m_selectedNode = nullptr;
 
-	Engine::Get().CreateWorldFromFile(fs::relative(scenefile).string());
-	// Engine::Get().SwitchRenderer();
+	Engine.CreateWorldFromFile(fs::relative(scenefile).string());
 
 	int32 width;
 	int32 height;
 
-	glfwGetWindowSize(Engine::GetMainWindow(), &width, &height);
+	glfwGetWindowSize(Engine.GetMainWindow(), &width, &height);
 	Event::OnWindowResize.Broadcast(width, height);
 }
 
 void Editor::ReloadScene()
 {
-	auto path = AssetHandlerManager::GetPodUri(Engine::GetWorld()->GetLoadedFromHandle());
+	auto path = AssetHandlerManager::GetPodUri(Engine.GetWorld()->GetLoadedFromHandle());
 	m_sceneToLoad = uri::ToSystemPath(path);
 }
 
@@ -515,11 +515,11 @@ void Editor::OnPlay()
 	if (m_editorCamera) {
 		m_editorCameraCachedMatrix = m_editorCamera->GetNodeTransformWCS();
 		m_hasEditorCameraCachedMatrix = true;
-		Engine::GetWorld()->DeleteNode(m_editorCamera);
+		Engine.GetWorld()->DeleteNode(m_editorCamera);
 	}
 	m_hasRestoreSave = false;
 	if (m_autoRestoreWorld) {
-		SceneSave::SaveAs(Engine::GetWorld(), "__scene.tmp");
+		SceneSave::SaveAs(Engine.GetWorld(), "__scene.tmp");
 		m_hasRestoreSave = true;
 	}
 }
@@ -565,7 +565,7 @@ bool Editor::Run_ContextPopup(Node* node)
 
 void Editor::Run_NewNodeMenu(Node* underNode)
 {
-	auto factory = Engine::GetWorld()->m_nodeFactory;
+	auto factory = Engine.GetWorld()->m_nodeFactory;
 
 
 	for (auto& entry : factory->m_nodeEntries) {
@@ -575,7 +575,7 @@ void Editor::Run_NewNodeMenu(Node* underNode)
 				auto newNode = entry.second.newInstance();
 
 				newNode->SetName(entry.first + "_new");
-				Engine::GetWorld()->RegisterNode(newNode, underNode);
+				Engine.GetWorld()->RegisterNode(newNode, underNode);
 
 				DirtyFlagset temp;
 				temp.set();
@@ -590,31 +590,8 @@ void Editor::Run_NewNodeMenu(Node* underNode)
 
 void Editor::Run_AssetView()
 {
-	auto reloadAssetLambda = [](std::unique_ptr<PodEntry>& assetEntry) {
-		auto l = [&assetEntry](auto tptr) {
-			using PodType = std::remove_pointer_t<decltype(tptr)>;
-			PodHandle<PodType> p;
-			p.podId = assetEntry->uid;
-			// WIP:
-			// AssetImporterManager::Reload(p);
-		};
-
-		podtools::VisitPodType(assetEntry->type, l);
-	};
-
-
 	ImGui::Indent(10.f);
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(7, 7));
-	bool UnloadAll = ImGui::Button("Unload All");
-	HelpTooltipInline(help_AssetUnloadAll);
-	ImGui::SameLine();
-	bool ReloadUnloaded = ImGui::Button("Reload Unloaded");
-	HelpTooltipInline(help_AssetReloadUnloaded);
-	ImGui::SameLine();
-	bool ReloadAll = ImGui::Button("Reload All");
-	HelpTooltipInline(help_AssetReloadAll);
-	ImGui::SameLine();
-	if (ImGui::Button("Search for GLTFs")) {
+	if (ImEd::Button("Search for GLTFs")) {
 		m_showGltfWindow = true;
 	}
 	Editor::HelpTooltipInline(help_AssetSearchGltf);
@@ -623,8 +600,6 @@ void Editor::Run_AssetView()
 	static ImGuiTextFilter filter;
 	filter.Draw("Filter Assets", ImGui::GetFontSize() * 16);
 	HelpTooltip(help_AssetFilter);
-	ImGui::PopStyleVar();
-
 
 	std::string text;
 	for (auto& assetEntry : AssetHandlerManager::Z_GetPods()) {
@@ -633,38 +608,9 @@ void Editor::Run_AssetView()
 		}
 
 		ImGui::PushID(static_cast<int32>(assetEntry->uid));
-		bool disabled = !(assetEntry->ptr);
 
-		if (disabled) {
-			ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0, 0.6f, 0.6f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0, 0.6f, 0.7f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0, 0.7f, 0.6f));
-			if (ImGui::Button("Reload") || ReloadUnloaded) {
-				reloadAssetLambda(assetEntry);
-			}
-			ImGui::PopStyleColor(3);
-			ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.4f);
-		}
-		else {
-			if (ImGui::Button("Unload") || UnloadAll) {
-				// WIP:
-				// AssetImporterManager::Unload(BasePodHandle{ assetEntry->uid });
-			}
-		}
-
-		if (ReloadAll) {
-			reloadAssetLambda(assetEntry);
-		}
-
-		ImGui::SameLine();
 		ImGui::Text(assetEntry->path.c_str());
-		if (disabled) {
-			ImGui::PopItemFlag();
-			ImGui::PopStyleVar();
-		}
 		ed::asset::MaybeHoverTooltip(assetEntry.get());
-
 
 		ImGui::PopID();
 	}
@@ -699,7 +645,7 @@ void Editor::Run_MenuBar()
 
 void Editor::HandleInput()
 {
-	auto& input = Engine::GetInput();
+	auto& input = Engine.GetInput();
 	if (input.IsDown(Key::LeftShift) && input.IsJustPressed(Key::F)) {
 		PilotThis(m_selectedNode);
 	}
@@ -730,14 +676,15 @@ void Editor::HandleInput()
 		}
 	}
 }
+
 void Editor::PushCommand(std::function<void()>&& func)
 {
-	Engine::GetEditor()->m_postDrawCommands.emplace_back(func);
+	Engine.GetEditor()->m_postDrawCommands.emplace_back(func);
 }
 
 void Editor::PushPostFrameCommand(std::function<void()>&& func)
 {
-	Engine::GetEditor()->m_postFrameCommands.emplace_back(func);
+	Engine.GetEditor()->m_postFrameCommands.emplace_back(func);
 }
 
 void Editor::HelpTooltip(const char* tooltip)
@@ -800,7 +747,6 @@ void Editor::CollapsingHeaderTooltip(const char* tooltip)
 	}
 }
 
-
 void Editor::PreBeginFrame()
 {
 	if (!m_sceneToLoad.empty()) {
@@ -816,12 +762,12 @@ void Editor::PreBeginFrame()
 
 void Editor::Duplicate(Node* node)
 {
-	PushCommand([node]() { Engine::GetWorld()->DeepDuplicateNode(node); });
+	PushCommand([node]() { Engine.GetWorld()->DeepDuplicateNode(node); });
 }
 
 void Editor::Delete(Node* node)
 {
-	PushCommand([node]() { Engine::GetWorld()->DeleteNode(node); });
+	PushCommand([node]() { Engine.GetWorld()->DeleteNode(node); });
 }
 
 void Editor::MoveChildUp(Node* node)
@@ -890,8 +836,8 @@ void Editor::MoveChildOut(Node* node)
 
 void Editor::MoveSelectedUnder(Node* node)
 {
-	if (Engine::GetEditor()->m_selectedNode != Engine::GetEditor()->m_editorCamera) {
-		MakeChildOf(node, Engine::GetEditor()->m_selectedNode);
+	if (Engine.GetEditor()->m_selectedNode != Engine.GetEditor()->m_editorCamera) {
+		MakeChildOf(node, Engine.GetEditor()->m_selectedNode);
 	}
 }
 
@@ -939,25 +885,25 @@ void Editor::MakeChildOf(Node* newParent, Node* node)
 
 void Editor::PilotThis(Node* node)
 {
-	auto camera = Engine::GetEditor()->m_editorCamera;
+	auto camera = Engine.GetEditor()->m_editorCamera;
 	if (!camera) {
 		LOG_WARN("Only possible to pilot nodes if there is an editor camera");
 		return;
 	}
 
-	bool wasPiloting = Engine::GetEditor()->IsCameraPiloting();
+	bool wasPiloting = Engine.GetEditor()->IsCameraPiloting();
 
 	if (camera->GetParent() == node || node == nullptr) {
 		if (!wasPiloting) {
 			return;
 		}
-		Editor::MakeChildOf(Engine::GetWorld()->GetRoot(), camera);
-		camera->SetNodeTransformWCS(Engine::GetEditor()->m_editorCameraPrePilotPos);
+		Editor::MakeChildOf(Engine.GetWorld()->GetRoot(), camera);
+		camera->SetNodeTransformWCS(Engine.GetEditor()->m_editorCameraPrePilotPos);
 		return;
 	}
 
 	if (!wasPiloting) {
-		Engine::GetEditor()->m_editorCameraPrePilotPos = camera->GetNodeTransformWCS();
+		Engine.GetEditor()->m_editorCameraPrePilotPos = camera->GetNodeTransformWCS();
 	}
 	Editor::MakeChildOf(node, camera);
 	camera->SetNodeTransformWCS(node->GetNodeTransformWCS());
@@ -968,7 +914,7 @@ void Editor::FocusNode(Node* node)
 	if (!node) {
 		return;
 	}
-	auto cam = Engine::GetEditor()->m_editorCamera;
+	auto cam = Engine.GetEditor()->m_editorCamera;
 	if (!cam) {
 		return;
 	}
@@ -992,9 +938,9 @@ void Editor::FocusNode(Node* node)
 // node->SetMatrix(newMat);
 void Editor::TeleportToCamera(Node* node)
 {
-	auto camera = Engine::GetWorld()->GetActiveCamera();
+	auto camera = Engine.GetWorld()->GetActiveCamera();
 	if (camera) {
-		auto newMat = math::TransformMatrixFromSOT(
+		auto newMat = math::transformMat(
 			node->GetNodeScaleWCS(), camera->GetNodeOrientationWCS(), camera->GetNodePositionWCS());
 		node->SetNodeTransformWCS(newMat);
 	}
@@ -1003,6 +949,6 @@ void Editor::TeleportToCamera(Node* node)
 void Editor::MakeActiveCamera(Node* node)
 {
 	if (node->IsA<CameraNode>()) {
-		Engine::GetWorld()->SetActiveCamera(NodeCast<CameraNode>(node));
+		Engine.GetWorld()->SetActiveCamera(NodeCast<CameraNode>(node));
 	}
 }

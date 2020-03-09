@@ -2,16 +2,15 @@
 
 #include <string>
 
-
-namespace conv {
+namespace str {
 template<typename T>
-std::string ToStr(T& value)
+std::string toStr(T& value)
 {
 	return std::to_string(value);
 }
 
 template<typename T>
-T FromStr(std::string str)
+T fromStr(std::string str)
 {
 	T value;
 	std::istringstream(str) >> value;
@@ -19,13 +18,13 @@ T FromStr(std::string str)
 }
 
 
-// TODO: not more performant, for now copies string
+// PERF: not more performant, for now copies string
 template<typename T>
-T FromStrView(std::string_view view)
+T fromStrView(std::string_view view)
 {
 	T value;
 	std::istringstream(std::string(view)) >> value;
 	return value;
 }
 
-} // namespace conv
+} // namespace str

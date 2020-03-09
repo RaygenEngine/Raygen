@@ -1,14 +1,11 @@
 #pragma once
-
-#include "renderer/LogicalDevice.h"
 #include "asset/pods/ModelPod.h"
+#include "renderer/Device.h"
+#include "vulkan/vulkan.hpp"
 #include "world/nodes/geometry/GeometryNode.h"
 #include "renderer/Material.h"
 
-#include "vulkan/vulkan.hpp"
-
-
-// TODO: From https://vulkan-tutorial.com/en/Vertex_buffers/Index_buffer
+// TODO: GPU ASSETS From https://vulkan-tutorial.com/en/Vertex_buffers/Index_buffer
 // store multiple buffers, like the vertex and index buffer, into a single VkBuffer and use offsets in commands like
 // vkCmdBindVertexBuffers. The advantage is that your data is more cache friendly in that case, because it's closer
 // together. It is even possible to reuse the same chunk of memory for multiple resources if they are not used
