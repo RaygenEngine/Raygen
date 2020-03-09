@@ -1,8 +1,7 @@
 #include "pch.h"
-#include "renderer/PhysicalDevice.h"
+#include "renderer/wrapper/PhysicalDevice.h"
 
 #include "engine/Logger.h"
-#include "renderer/Device.h"
 
 #include <set>
 

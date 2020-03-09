@@ -1,6 +1,4 @@
 #pragma once
-#include "renderer/Device.h"
-
 #include <vulkan/vulkan.hpp>
 
 struct Swapchain {

@@ -1,9 +1,9 @@
 #include "pch.h"
-#include "renderer/Texture.h"
+#include "renderer/asset/Texture.h"
 
 #include "asset/AssetManager.h"
-#include "renderer/Device.h"
-#include "renderer/VulkanLayer.h"
+#include "renderer/wrapper/Device.h"
+#include "renderer/wrapper/Buffer.h"
 
 Texture::Texture(PodHandle<TexturePod> podHandle)
 {
@@ -12,17 +12,11 @@ Texture::Texture(PodHandle<TexturePod> podHandle)
 
 	vk::DeviceSize imageSize = imgData->data.size();
 
-	vk::UniqueBuffer stagingBuffer;
-	vk::UniqueDeviceMemory stagingBufferMemory;
-	Device->CreateBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer,
-		stagingBufferMemory);
+	Buffer stagingBuffer{ imageSize, vk::BufferUsageFlagBits::eTransferSrc,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 	// copy data to buffer
-	void* bufferData = Device->mapMemory(stagingBufferMemory.get(), 0, imageSize);
-	memcpy(bufferData, imgData->data.data(), static_cast<size_t>(imageSize));
-	Device->unmapMemory(stagingBufferMemory.get());
-
+	stagingBuffer.UploadData(imgData->data.data(), static_cast<size_t>(imageSize));
 
 	vk::Format format = imgData->isHdr ? vk::Format::eR32G32B32A32Sfloat : vk::Format::eR8G8B8A8Srgb;
 
@@ -31,7 +25,7 @@ Texture::Texture(PodHandle<TexturePod> podHandle)
 		vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 	// copy (internally transitions to transfer optimal)
-	image->CopyBufferToImage(stagingBuffer.get());
+	image->CopyBufferToImage(stagingBuffer);
 
 
 	// finally transiton to graphics layout for shader access

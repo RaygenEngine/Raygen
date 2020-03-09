@@ -50,16 +50,18 @@ set(SOURCE_FILES
 	renderer/GeometryPass.cpp
 	renderer/DeferredPass.cpp
 	renderer/EditorPass.cpp
-	renderer/VulkanLayer.cpp
-	renderer/Instance.cpp
-	renderer/PhysicalDevice.cpp
-	renderer/Device.cpp
-	renderer/Swapchain.cpp
-	renderer/Model.cpp
-	renderer/Texture.cpp
-	renderer/Image.cpp
-	renderer/Material.cpp
-	
+	renderer/VulkanLayer.cpp	
+	renderer/asset/Model.cpp
+	renderer/asset/Texture.cpp
+	renderer/asset/Material.cpp
+	renderer/wrapper/Image.cpp
+	renderer/wrapper/Instance.cpp
+	renderer/wrapper/PhysicalDevice.cpp
+	renderer/wrapper/Device.cpp
+	renderer/wrapper/Swapchain.cpp
+	renderer/wrapper/GBuffer.cpp
+	renderer/wrapper/Attachment.cpp
+	renderer/wrapper/Buffer.cpp
 
 	world/World.cpp
 	world/NodeFactory.cpp

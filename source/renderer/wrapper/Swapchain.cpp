@@ -1,9 +1,9 @@
 #include "pch.h"
-#include "renderer/Swapchain.h"
+#include "renderer/wrapper/Swapchain.h"
 
 #include "engine/Engine.h"
 #include "engine/Logger.h"
-#include "renderer/VulkanLayer.h"
+#include "renderer/wrapper/Device.h"
 
 #include <glfw/glfw3.h>
 
@@ -172,7 +172,7 @@ void Swapchain::InitRenderPass()
 		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
 		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
 
-	std::array attachments = { colorAttachment };
+	std::array attachments{ colorAttachment };
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
 		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
@@ -191,7 +191,7 @@ void Swapchain::InitFrameBuffers()
 	framebuffers.resize(images.size());
 	// framebuffers
 	for (auto i = 0; i < images.size(); ++i) {
-		std::array attachments = { imageViews[i].get() };
+		std::array attachments{ imageViews[i].get() };
 		vk::FramebufferCreateInfo createInfo{};
 		createInfo
 			.setRenderPass(renderPass.get()) //

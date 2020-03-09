@@ -1,18 +1,18 @@
 #pragma once
 #include "engine/Events.h"
 #include "platform/GlfwUtl.h"
+#include "renderer/asset/Model.h"
 #include "renderer/DeferredPass.h"
-#include "renderer/Device.h"
 #include "renderer/EditorPass.h"
 #include "renderer/GeometryPass.h"
-#include "renderer/Instance.h"
-#include "renderer/Model.h"
-#include "renderer/PhysicalDevice.h"
-#include "renderer/Swapchain.h"
+#include "renderer/wrapper/Instance.h"
+#include "renderer/wrapper/PhysicalDevice.h"
+#include "renderer/wrapper/Swapchain.h"
+#include "renderer/wrapper/Buffer.h"
 
 #include <vulkan/vulkan.hpp>
 
-struct UniformBufferObject {
+struct UBO_Globals {
 	glm::mat4 viewProj;
 };
 
@@ -73,8 +73,8 @@ public:
 	vk::UniqueDescriptorSetLayout modelDescriptorSetLayout;
 	vk::UniqueDescriptorPool modelDescriptorPool;
 	std::vector<std::unique_ptr<Model>> models;
-	vk::UniqueBuffer uniformBuffers;
-	vk::UniqueDeviceMemory uniformBuffersMemory;
+	std::unique_ptr<Buffer> globalsUBO;
+
 	//
 
 	// Quad descriptors

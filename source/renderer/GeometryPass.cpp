@@ -4,46 +4,50 @@
 #include "engine/Engine.h"
 #include "engine/profiler/ProfileScope.h"
 #include "renderer/VulkanLayer.h"
+#include "renderer/wrapper/Device.h"
 
 void GeometryPass::InitRenderPass()
 {
-	vk::AttachmentDescription colorAttachment{};
-	colorAttachment
-		.setFormat(vk::Format::eR8G8B8A8Srgb) // CHECK:
-		.setSamples(vk::SampleCountFlagBits::e1)
-		.setLoadOp(vk::AttachmentLoadOp::eClear)
-		.setStoreOp(vk::AttachmentStoreOp::eStore)
-		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eUndefined)
-		.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal); // CHECK:
+	std::array<vk::AttachmentDescription, 5> colorAttachmentDescs{};
+	std::array<vk::AttachmentReference, 5> colorAttachmentRefs{};
 
-	vk::AttachmentReference colorAttachmentRef{};
-	colorAttachmentRef
-		.setAttachment(0u) //
-		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+	for (uint32 i = 0; i < 5; ++i) {
+		colorAttachmentDescs[i]
+			.setFormat(vk::Format::eR8G8B8A8Srgb) // CHECK:
+			.setSamples(vk::SampleCountFlagBits::e1)
+			.setLoadOp(vk::AttachmentLoadOp::eClear)
+			.setStoreOp(vk::AttachmentStoreOp::eStore)
+			.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+			.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+			.setInitialLayout(vk::ImageLayout::eUndefined) // CHECK: vk::ImageLayout::eShaderReadOnlyOptimal?
+			.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal); // CHECK:
 
-	vk::AttachmentDescription depthAttachment{};
-	depthAttachment
+		colorAttachmentRefs[i]
+			.setAttachment(i) //
+			.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+	}
+
+	vk::AttachmentDescription depthAttachmentDesc{};
+	depthAttachmentDesc
 		.setFormat(Device->pd->FindDepthFormat()) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eDontCare)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eUndefined)
-		.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+		.setInitialLayout(vk::ImageLayout::eUndefined) // CHECK: vk::ImageLayout::eShaderReadOnlyOptimal?
+		.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal); // CHECK:
 
 	vk::AttachmentReference depthAttachmentRef{};
 	depthAttachmentRef
-		.setAttachment(1u) //
+		.setAttachment(5u) //
 		.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
 	vk::SubpassDescription subpass{};
 	subpass
 		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachmentCount(1u)
-		.setPColorAttachments(&colorAttachmentRef)
+		.setColorAttachmentCount(static_cast<uint32>(colorAttachmentRefs.size()))
+		.setPColorAttachments(colorAttachmentRefs.data())
 		.setPDepthStencilAttachment(&depthAttachmentRef);
 
 	vk::SubpassDependency dependency{};
@@ -55,7 +59,8 @@ void GeometryPass::InitRenderPass()
 		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
 		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
 
-	std::array attachments = { colorAttachment, depthAttachment };
+	std::array attachments{ colorAttachmentDescs[0], colorAttachmentDescs[1], colorAttachmentDescs[2],
+		colorAttachmentDescs[3], colorAttachmentDescs[4], depthAttachmentDesc };
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
 		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
@@ -72,33 +77,12 @@ void GeometryPass::InitFramebuffers()
 {
 	vk::Extent2D fbSize = Layer->viewportFramebufferSize;
 
-
-	// albedo buffer
-	vk::Format format = vk::Format::eR8G8B8A8Srgb;
-
-	albedoImage = std::make_unique<Image>(fbSize.width, fbSize.height, format, vk::ImageTiling::eOptimal,
-		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal);
-
-	albedoImage->TransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-	albedoImageView = albedoImage->RequestImageView2D_0_0();
-
-
-	// depth buffer
-	vk::Format depthFormat = Device->pd->FindDepthFormat();
-
-	depthImage = std::make_unique<Image>(fbSize.width, fbSize.height, depthFormat, vk::ImageTiling::eOptimal,
-		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal);
-
-	depthImage->TransitionToLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-	depthImageView = depthImage->RequestImageView2D_0_0();
-
+	m_gBuffer = std::make_unique<GBuffer>(fbSize.width, fbSize.height);
 
 	// framebuffers
 
-	std::array imAttachments = { albedoImageView.get(), depthImageView.get() };
+	auto imAttachments = m_gBuffer->GetViewsArray();
+
 	vk::FramebufferCreateInfo createInfo{};
 	createInfo
 		.setRenderPass(m_renderPass.get()) //
@@ -218,24 +202,27 @@ void GeometryPass::InitPipelineAndStuff()
 		.setAlphaToCoverageEnable(VK_FALSE)
 		.setAlphaToOneEnable(VK_FALSE);
 
-	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
-	colorBlendAttachment
-		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
-						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
-		.setBlendEnable(VK_FALSE)
-		.setSrcColorBlendFactor(vk::BlendFactor::eOne)
-		.setDstColorBlendFactor(vk::BlendFactor::eZero)
-		.setColorBlendOp(vk::BlendOp::eAdd)
-		.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
-		.setDstAlphaBlendFactor(vk::BlendFactor::eZero)
-		.setAlphaBlendOp(vk::BlendOp::eAdd);
+	std::array<vk::PipelineColorBlendAttachmentState, 5> colorBlendAttachment{};
+	for (uint32 i = 0u; i < 5; ++i) {
+		colorBlendAttachment[i]
+			.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
+							   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
+			.setBlendEnable(VK_FALSE)
+			.setSrcColorBlendFactor(vk::BlendFactor::eOne)
+			.setDstColorBlendFactor(vk::BlendFactor::eZero)
+			.setColorBlendOp(vk::BlendOp::eAdd)
+			.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
+			.setDstAlphaBlendFactor(vk::BlendFactor::eZero)
+			.setAlphaBlendOp(vk::BlendOp::eAdd);
+	}
+
 
 	vk::PipelineColorBlendStateCreateInfo colorBlending{};
 	colorBlending
 		.setLogicOpEnable(VK_FALSE) //
 		.setLogicOp(vk::LogicOp::eCopy)
-		.setAttachmentCount(1u)
-		.setPAttachments(&colorBlendAttachment)
+		.setAttachmentCount(static_cast<uint32>(colorBlendAttachment.size()))
+		.setPAttachments(colorBlendAttachment.data())
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	// Dynamic vieport
@@ -316,9 +303,13 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 			.setOffset({ 0, 0 }) //
 			.setExtent(Layer->viewportRect.extent);
 
-		std::array<vk::ClearValue, 2> clearValues = {};
-		clearValues[0].setColor(std::array{ 0.0f, 0.1f, 0.15f, 1.0f });
-		clearValues[1].setDepthStencil({ 1.0f, 0 });
+		std::array<vk::ClearValue, 6> clearValues = {};
+		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+		clearValues[1].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+		clearValues[2].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+		clearValues[3].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+		clearValues[4].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+		clearValues[5].setDepthStencil({ 1.0f, 0 });
 		renderPassInfo
 			.setClearValueCount(static_cast<uint32>(clearValues.size())) //
 			.setPClearValues(clearValues.data());
@@ -340,13 +331,13 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 					cmdBuffer->pushConstants(m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u,
 						sizeof(glm::mat4), &model->m_node->GetNodeTransformWCS());
 
-					vk::Buffer vertexBuffers[] = { gg.vertexBuffer.get() };
+					vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
 					vk::DeviceSize offsets[] = { 0 };
 					// geom
 					cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
 
 					// indices
-					cmdBuffer->bindIndexBuffer(gg.indexBuffer.get(), 0, vk::IndexType::eUint32);
+					cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
 
 					// descriptor sets
 					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
@@ -366,12 +357,12 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 
 void GeometryPass::TransitionGBufferForShaderRead()
 {
-	albedoImage->TransitionToLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+	m_gBuffer->TransitionForShaderRead();
 }
 
 void GeometryPass::TransitionGBufferForAttachmentWrite()
 {
-	albedoImage->TransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal);
+	m_gBuffer->TransitionForAttachmentWrite();
 }
 
 vk::Viewport GeometryPass::GetViewport() const

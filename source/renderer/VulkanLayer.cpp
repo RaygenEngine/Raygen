@@ -6,7 +6,7 @@
 #include "engine/Events.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
-#include "renderer/Model.h"
+#include "renderer/wrapper/Device.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "world/nodes/geometry/GeometryNode.h"
 #include "world/World.h"
@@ -127,47 +127,60 @@ void VulkanLayer::ReinitModels()
 void VulkanLayer::InitModelDescriptors()
 {
 	// uniforms
-
-	vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
-
-	Device->CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eUniformBuffer,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, uniformBuffers,
-		uniformBuffersMemory);
-
+	globalsUBO = std::make_unique<Buffer>(sizeof(UBO_Globals), vk::BufferUsageFlagBits::eUniformBuffer,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
 	// descriptor layout
-	vk::DescriptorSetLayoutBinding uboLayoutBinding{};
-	uboLayoutBinding.setBinding(0u)
+	vk::DescriptorSetLayoutBinding globalsUBOLayoutBinding{};
+	globalsUBOLayoutBinding
+		.setBinding(0u) //
 		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
 		.setDescriptorCount(1u)
 		.setStageFlags(vk::ShaderStageFlagBits::eVertex)
 		.setPImmutableSamplers(nullptr);
 
-	vk::DescriptorSetLayoutBinding samplerLayoutBinding{};
-	samplerLayoutBinding.setBinding(1u)
+	vk::DescriptorSetLayoutBinding materialUBOLayoutBinding{};
+	materialUBOLayoutBinding
+		.setBinding(1u) //
+		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
 		.setDescriptorCount(1u)
-		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setPImmutableSamplers(nullptr)
-		.setStageFlags(vk::ShaderStageFlagBits::eFragment);
+		.setStageFlags(vk::ShaderStageFlagBits::eFragment)
+		.setPImmutableSamplers(nullptr);
 
-	std::array<vk::DescriptorSetLayoutBinding, 2> bindings{ uboLayoutBinding, samplerLayoutBinding };
+	std::array<vk::DescriptorSetLayoutBinding, 5> materialSamplerLayoutBindings{};
+	for (uint32 i = 0; i < 5u; ++i) {
+		materialSamplerLayoutBindings[i]
+			.setBinding(2u + i) //
+			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+			.setDescriptorCount(1u)
+			.setStageFlags(vk::ShaderStageFlagBits::eFragment)
+			.setPImmutableSamplers(nullptr);
+	}
+
+
+	std::array bindings{ globalsUBOLayoutBinding, materialUBOLayoutBinding, materialSamplerLayoutBindings[0],
+		materialSamplerLayoutBindings[1], materialSamplerLayoutBindings[2], materialSamplerLayoutBindings[3],
+		materialSamplerLayoutBindings[4] };
 	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.setBindingCount(static_cast<uint32>(bindings.size())).setPBindings(bindings.data());
+	layoutInfo
+		.setBindingCount(static_cast<uint32>(bindings.size())) //
+		.setPBindings(bindings.data());
 
 	modelDescriptorSetLayout = Device->createDescriptorSetLayoutUnique(layoutInfo);
 
-	// TODO: RENDERER Global uniforms
 	std::array<vk::DescriptorPoolSize, 2> poolSizes{};
-	// for global uniforms
-	poolSizes[0].setType(vk::DescriptorType::eUniformBuffer).setDescriptorCount(1);
-	// for image sampler combinations
-	poolSizes[1].setType(vk::DescriptorType::eCombinedImageSampler).setDescriptorCount(1);
+	poolSizes[0]
+		.setType(vk::DescriptorType::eUniformBuffer) //
+		.setDescriptorCount(2);
+	poolSizes[1]
+		.setType(vk::DescriptorType::eCombinedImageSampler) //
+		.setDescriptorCount(materialSamplerLayoutBindings.size());
 
 	vk::DescriptorPoolCreateInfo poolInfo{};
-	poolInfo //
-		.setPoolSizeCount(static_cast<uint32>(poolSizes.size()))
+	poolInfo
+		.setPoolSizeCount(static_cast<uint32>(poolSizes.size())) //
 		.setPPoolSizes(poolSizes.data())
-		.setMaxSets(500);
+		.setMaxSets(500u);
 
 	modelDescriptorPool = Device->createDescriptorPoolUnique(poolInfo);
 }
@@ -176,8 +189,8 @@ vk::DescriptorSet VulkanLayer::GetModelDescriptorSet()
 {
 	vk::DescriptorSetAllocateInfo allocInfo{};
 
-	allocInfo //
-		.setDescriptorPool(modelDescriptorPool.get())
+	allocInfo
+		.setDescriptorPool(modelDescriptorPool.get()) //
 		.setDescriptorSetCount(1)
 		.setPSetLayouts(&modelDescriptorSetLayout.get());
 
@@ -188,31 +201,38 @@ vk::DescriptorSet VulkanLayer::GetModelDescriptorSet()
 void VulkanLayer::InitQuadDescriptor()
 {
 	// descriptor layout
-	vk::DescriptorSetLayoutBinding samplerLayoutBinding{};
-	samplerLayoutBinding.setBinding(0u)
-		.setDescriptorCount(1u)
-		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setPImmutableSamplers(nullptr)
-		.setStageFlags(vk::ShaderStageFlagBits::eFragment);
+	std::array<vk::DescriptorSetLayoutBinding, 6> samplerLayoutBindings{};
+
+	for (uint32 i = 0u; i < 6u; ++i) {
+		samplerLayoutBindings[i]
+			.setBinding(i) //
+			.setDescriptorCount(1u)
+			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+			.setPImmutableSamplers(nullptr)
+			.setStageFlags(vk::ShaderStageFlagBits::eFragment);
+	}
 
 	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.setBindingCount(1u).setPBindings(&samplerLayoutBinding);
+	layoutInfo
+		.setBindingCount(static_cast<uint32>(samplerLayoutBindings.size())) //
+		.setPBindings(samplerLayoutBindings.data());
 
 	quadDescriptorSetLayout = Device->createDescriptorSetLayoutUnique(layoutInfo);
 
 	std::array<vk::DescriptorPoolSize, 1> poolSizes{};
 	// for image sampler combinations
-	poolSizes[0].setType(vk::DescriptorType::eCombinedImageSampler).setDescriptorCount(1);
+	poolSizes[0]
+		.setType(vk::DescriptorType::eCombinedImageSampler) //
+		.setDescriptorCount(samplerLayoutBindings.size());
 
 
 	vk::DescriptorPoolCreateInfo poolInfo{};
-	poolInfo //
-		.setPoolSizeCount(static_cast<uint32>(poolSizes.size()))
+	poolInfo
+		.setPoolSizeCount(static_cast<uint32>(poolSizes.size())) //
 		.setPPoolSizes(poolSizes.data())
-		.setMaxSets(500); // TODO: GPU ASSETS
+		.setMaxSets(500u); // TODO: GPU ASSETS
 
 	quadDescriptorPool = Device->createDescriptorPoolUnique(poolInfo);
-
 
 	vk::DescriptorSetAllocateInfo allocInfo{};
 
@@ -225,7 +245,8 @@ void VulkanLayer::InitQuadDescriptor()
 
 	// sampler
 	vk::SamplerCreateInfo samplerInfo{};
-	samplerInfo.setMagFilter(vk::Filter::eLinear)
+	samplerInfo
+		.setMagFilter(vk::Filter::eLinear) //
 		.setMinFilter(vk::Filter::eLinear)
 		.setAddressModeU(vk::SamplerAddressMode::eRepeat)
 		.setAddressModeV(vk::SamplerAddressMode::eRepeat)
@@ -242,27 +263,39 @@ void VulkanLayer::InitQuadDescriptor()
 		.setMinLod(0.f)
 		.setMaxLod(0.f);
 
+	// CHECK: same for all?
 	quadSampler = std::move(Device->createSamplerUnique(samplerInfo));
 }
 
 void VulkanLayer::UpdateQuadDescriptorSet()
 {
-	vk::DescriptorImageInfo imageInfo{};
-	imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
-		.setImageView(geomPass.albedoImageView.get())
-		.setSampler(*quadSampler);
+	auto UpdateImageSamplerInDescriptorSet = [&](vk::ImageView& view, vk::Sampler& sampler, uint32 dstBinding) {
+		vk::DescriptorImageInfo imageInfo{};
+		imageInfo
+			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+			.setImageView(view)
+			.setSampler(sampler);
 
-	vk::WriteDescriptorSet descriptorWrite{};
-	descriptorWrite.setDstSet(quadDescriptorSet.get())
-		.setDstBinding(0)
-		.setDstArrayElement(0)
-		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setDescriptorCount(1u)
-		.setPBufferInfo(nullptr)
-		.setPImageInfo(&imageInfo)
-		.setPTexelBufferView(nullptr);
+		vk::WriteDescriptorSet descriptorWrite{};
+		descriptorWrite
+			.setDstSet(quadDescriptorSet.get()) //
+			.setDstBinding(dstBinding)
+			.setDstArrayElement(0u)
+			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+			.setDescriptorCount(1u)
+			.setPBufferInfo(nullptr)
+			.setPImageInfo(&imageInfo)
+			.setPTexelBufferView(nullptr);
 
-	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+	};
+
+	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->position->view.get(), quadSampler.get(), 0u);
+	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->normal->view.get(), quadSampler.get(), 1u);
+	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->albedo->view.get(), quadSampler.get(), 2u);
+	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->specular->view.get(), quadSampler.get(), 3u);
+	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->emissive->view.get(), quadSampler.get(), 4u);
+	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->depth->view.get(), quadSampler.get(), 5u);
 }
 
 
@@ -302,17 +335,15 @@ void VulkanLayer::DrawFrame()
 		OnViewportResize();
 	}
 
-	// NEXT: UNIFORM BUFFER UPDATES
+	// Globals buffer updates (one uniform buffer update for all draw calls of this render pass)
 	{
 		auto world = Engine.GetWorld();
 		auto camera = world->GetActiveCamera();
 
-		UniformBufferObject ubo{};
+		UBO_Globals ubo{};
 		ubo.viewProj = camera->GetViewProjectionMatrix();
 
-		void* data = Device->mapMemory(uniformBuffersMemory.get(), 0, sizeof(ubo));
-		memcpy(data, &ubo, sizeof(ubo));
-		Device->unmapMemory(uniformBuffersMemory.get());
+		globalsUBO->UploadData(&ubo, sizeof(ubo));
 	}
 
 	// GEOMETRY PASS
