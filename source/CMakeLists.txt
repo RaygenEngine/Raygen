@@ -49,6 +49,7 @@ set(SOURCE_FILES
 	renderer/Swapchain.cpp
 	renderer/Model.cpp
 	renderer/Texture.cpp
+	renderer/Material.cpp
 	
 
 	system/Engine.cpp

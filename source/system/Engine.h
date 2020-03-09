@@ -14,15 +14,11 @@ class AppBase;
 
 class NodeFactory;
 
-class VkSampleRenderer;
-
-using RendererT = VkSampleRenderer;
-
 #include "system/Timer.h"
 
 inline struct ViewportCoordinates {
 	glm::uvec2 position{ 413, 32 }; // WIP:
-	glm::uvec2 size{ 972, 551 };
+	glm::uvec2 size{ 972, 555 };
 	bool operator==(const ViewportCoordinates&) const = default;
 } g_ViewportCoordinates;
 

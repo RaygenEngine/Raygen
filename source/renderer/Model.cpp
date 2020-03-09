@@ -63,7 +63,7 @@ Model::Model(PodHandle<ModelPod> podHandle)
 			// albedo texture
 
 			// WIP: asset caching
-			vgg.albedoText = std::make_unique<Texture>(data->materials[gg.materialIndex].Lock()->baseColorTexture);
+			vgg.material = std::make_unique<Material>(data->materials[gg.materialIndex]);
 
 			// descriptors
 			vgg.descriptorSet = VulkanLayer::GetModelDescriptorSet();

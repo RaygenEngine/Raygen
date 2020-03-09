@@ -7,9 +7,6 @@
 
 #include <vulkan/vulkan.hpp>
 
-
-class DeviceWrapper;
-
 struct Texture {
 
 	vk::UniqueImage handle;

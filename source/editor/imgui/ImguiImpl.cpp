@@ -227,8 +227,8 @@ void ImguiImpl::InitVulkan()
 	init.PipelineCache = VK_NULL_HANDLE;
 	init.DescriptorPool = VulkanLayer::quadDescriptorPool.get();
 
-	init.ImageCount = VulkanLayer::swapchain->images.size();
-	init.MinImageCount = VulkanLayer::swapchain->images.size();
+	init.ImageCount = static_cast<uint32>(VulkanLayer::swapchain->images.size());
+	init.MinImageCount = static_cast<uint32>(VulkanLayer::swapchain->images.size());
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
 	ImGui_ImplVulkan_Init(&init, VulkanLayer::swapchain->renderPass.get());

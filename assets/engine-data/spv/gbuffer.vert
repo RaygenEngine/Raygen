@@ -1,27 +1,39 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inNormal;
-layout(location = 2) in vec3 inTangent;
-layout(location = 3) in vec3 inBitangent;
-layout(location = 4) in vec2 inTexCoord0;
-layout(location = 5) in vec2 inTexCoord1;
-
-layout(location = 0) out vec3 fragColor;
-layout(location = 1) out vec2 fragTexCoord;
+layout(location = 0) in vec3 pos;
+layout(location = 1) in vec3 normal;
+layout(location = 2) in vec3 tangent;
+layout(location = 3) in vec3 bitangent;
+layout(location = 4) in vec2 uv0;
+layout(location = 5) in vec2 uv1;
 
 layout(push_constant) uniform ModelData {
-  mat4 modelMat;
-} Push;
+	mat4 modelMat;
+	mat4 normalMat;
+} push;
 
 layout(binding = 0) uniform UniformBufferObject {
-    mat4 view;
-    mat4 proj;
+	mat4 viewProj;
 } ubo;
 
+out Data
+{ 
+	vec3 fragPos; 
+	vec2 uv[2];
+	mat3 TBN;
+} OUT;
+
 void main() {
-    gl_Position = ubo.proj * ubo.view * Push.modelMat * vec4(inPosition, 1.0);
-    fragColor = inNormal;
-    fragTexCoord = inTexCoord0;
+	gl_Position = ubo.viewProj * push.modelMat * vec4(pos, 1.0);
+
+	OUT.fragPos = vec3(modelMat * vec4(pos,1));
+	OUT.uv[0] = uv0; 
+	OUT.uv[1] = uv1; 
+	
+	vec3 T = normalize(normalMat * tangent);
+	vec3 B = normalize(normalMat * bitangent);
+	vec3 N = normalize(normalMat * normal);
+	
+    OUT.TBN = mat3(T, B, N);
 }
