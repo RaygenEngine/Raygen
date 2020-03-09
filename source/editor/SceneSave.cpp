@@ -1,7 +1,7 @@
-#include "pch/pch.h"
+#include "pch.h"
 
 #include "editor/SceneSave.h"
-#include "system/Engine.h"
+#include "engine/Engine.h"
 #include "world/nodes/Node.h"
 #include "reflection/ReflectionTools.h"
 #include "world/World.h"
@@ -20,15 +20,13 @@
 #include <string>
 #include <fstream>
 
-SceneSave::SceneSave()
-{
-}
+SceneSave::SceneSave() {}
 
 void SceneSave::OpenBrowser()
 {
 	if (auto file = ed::NativeFileBrowser::SaveFile({ "json" })) {
 		file->replace_extension(".json");
-		SaveAs(Engine::GetWorld(), file->string());
+		SaveAs(Engine.GetWorld(), file->string());
 	}
 }
 
@@ -63,7 +61,6 @@ void SceneSave::SaveAs(World* world, const uri::Uri& p)
 	std::ofstream ofile(p);
 
 	if (!ofile.is_open()) {
-		Engine::SetStatusLine("Failed to save scene.");
 		LOG_ERROR("Failed to open file for world save: {}", p);
 		return;
 	}

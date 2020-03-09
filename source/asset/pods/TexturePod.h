@@ -3,37 +3,45 @@
 #include "asset/PodHandle.h"
 #include "asset/pods/ImagePod.h"
 
+enum class TextureFiltering
+{
+	Nearest,
+	Linear,
+	NearestMipmapNearest,
+	NearestMipmapLinear,
+	LinearMipmapNearest,
+	LinearMipmapLinear
+};
+
+enum class TextureWrapping
+{
+	ClampToEdge,
+	MirroredRepeat,
+	Repeat
+};
+
 struct TexturePod : AssetPod {
 	REFLECTED_POD(TexturePod)
 	{
 		REFLECT_ICON(FA_IMAGES);
 
+		REFLECT_VAR(image);
+
 		REFLECT_VAR(minFilter);
 		REFLECT_VAR(magFilter);
 
-		REFLECT_VAR(wrapS);
-		REFLECT_VAR(wrapT);
-		REFLECT_VAR(wrapR);
-
-		REFLECT_VAR(target);
-
-		REFLECT_VAR(isLinear, PropertyFlags::Generated);
-
-		REFLECT_VAR(images);
+		REFLECT_VAR(wrapU);
+		REFLECT_VAR(wrapV);
+		REFLECT_VAR(wrapW);
 	}
 	static void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path);
 
-	TextureFiltering minFilter{ TextureFiltering::LINEAR };
-	TextureFiltering magFilter{ TextureFiltering::LINEAR };
+	PodHandle<ImagePod> image{};
 
-	TextureWrapping wrapS{ TextureWrapping::REPEAT };
-	TextureWrapping wrapT{ TextureWrapping::REPEAT };
-	TextureWrapping wrapR{ TextureWrapping::REPEAT };
+	TextureFiltering minFilter{ TextureFiltering::Linear };
+	TextureFiltering magFilter{ TextureFiltering::Linear };
 
-	TextureTarget target{ TextureTarget::TEXTURE_2D };
-
-	// !isSRGB...
-	bool isLinear{ true };
-
-	std::vector<PodHandle<ImagePod>> images{};
+	TextureWrapping wrapU{ TextureWrapping::Repeat };
+	TextureWrapping wrapV{ TextureWrapping::Repeat };
+	TextureWrapping wrapW{ TextureWrapping::Repeat };
 };

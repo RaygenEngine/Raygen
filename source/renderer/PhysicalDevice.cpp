@@ -1,17 +1,15 @@
-#include "pch/pch.h"
-
+#include "pch.h"
 #include "renderer/PhysicalDevice.h"
-#include "renderer/LogicalDevice.h"
 
-#include "system/Logger.h"
+#include "engine/Logger.h"
+#include "renderer/Device.h"
 
 #include <set>
 
-
 PhysicalDevice::PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surface)
-	: handle(vkHandle)
+	: vk::PhysicalDevice(vkHandle)
 {
-	std::vector<vk::QueueFamilyProperties> queueFamilyProperties = handle.getQueueFamilyProperties();
+	std::vector<vk::QueueFamilyProperties> queueFamilyProperties = getQueueFamilyProperties();
 
 	uint32 i = 0;
 	for (const auto& qFP : queueFamilyProperties) {
@@ -22,10 +20,10 @@ PhysicalDevice::PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surfa
 		queueFamily.rating += qFP.queueCount / 4.f;
 
 		// if queue supports presentation
-		auto supportsPresent = handle.getSurfaceSupportKHR(i, surface);
+		auto supportsPresent = getSurfaceSupportKHR(i, surface);
 
 
-		// WIP: the more functionality a queue supports the lesser the score
+		// CHECK: the more functionality a queue supports the lesser the score
 		queueFamily.rating /= float(((4 * bool(qFP.queueFlags & vk::QueueFlagBits::eGraphics))
 									 + (4 * bool(qFP.queueFlags & vk::QueueFlagBits::eCompute))
 									 + bool(qFP.queueFlags & vk::QueueFlagBits::eTransfer) + supportsPresent));
@@ -49,7 +47,7 @@ PhysicalDevice::PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surfa
 		i++;
 	}
 
-	// TODO: score device based on eg. NV_raytracing, queues: eg. missing graphics queue, deticated transfer queue,
+	// CHECK: score device based on eg. NV_raytracing, queues: eg. missing graphics queue, deticated transfer queue,
 	// etc)
 	// If device isn't capable for the required rendering rating = 0;
 	// auto extensionProperties = device.enumerateDeviceExtensionProperties();
@@ -66,9 +64,7 @@ PhysicalDevice::PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surfa
 	// indices.IsComplete() && CheckNeededDeviceProperties(device) && CheckIfDeviceExtensionsAreAvailable(device)
 	//	&& CheckSwapChainSupport(device, surface);
 
-	// WIP:
-
-	// TODO: this device must support presentation
+	// CHECK: this device must support presentation
 	if (presentFamilies.empty()) {
 		rating = 0.f;
 	}
@@ -77,14 +73,14 @@ PhysicalDevice::PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surfa
 
 	// specific surface support details
 
-	ssDetails.capabilities = handle.getSurfaceCapabilitiesKHR(surface);
-	ssDetails.formats = handle.getSurfaceFormatsKHR(surface);
-	ssDetails.presentModes = handle.getSurfacePresentModesKHR(surface);
+	ssDetails.capabilities = getSurfaceCapabilitiesKHR(surface);
+	ssDetails.formats = getSurfaceFormatsKHR(surface);
+	ssDetails.presentModes = getSurfacePresentModesKHR(surface);
 }
 
 uint32 PhysicalDevice::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties)
 {
-	vk::PhysicalDeviceMemoryProperties memProperties = handle.getMemoryProperties();
+	vk::PhysicalDeviceMemoryProperties memProperties = getMemoryProperties();
 
 	for (uint32 i = 0; i < memProperties.memoryTypeCount; ++i) {
 		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
@@ -99,7 +95,7 @@ vk::Format PhysicalDevice::FindSupportedFormat(
 	const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features)
 {
 	for (auto format : candidates) {
-		vk::FormatProperties props = handle.getFormatProperties(format);
+		vk::FormatProperties props = getFormatProperties(format);
 
 		if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
 			return format;

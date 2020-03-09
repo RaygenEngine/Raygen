@@ -1,9 +1,9 @@
-#include "pch/pch.h"
+#include "pch.h"
 
 #include "editor/windows/WindowsRegistry.h"
 #include "editor/EdComponentWindows.h"
 
-#include "system/EngineEvents.h"
+#include "engine/Events.h"
 
 #include "editor/windows/general/EdMiscWindow.h"
 #include "editor/windows/general/EdConsoleWindow.h"

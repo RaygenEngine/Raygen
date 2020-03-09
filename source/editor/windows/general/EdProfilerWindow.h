@@ -1,7 +1,7 @@
 #pragma once
 #include "editor/windows/EdWindow.h"
 
-#include "system/profiler/ProfilerSetup.h"
+#include "engine/profiler/ProfilerSetup.h"
 
 namespace ed {
 class ProfilerWindow : public UniqueWindow {

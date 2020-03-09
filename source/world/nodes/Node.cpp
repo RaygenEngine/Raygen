@@ -1,17 +1,16 @@
-#include "pch/pch.h"
+#include "pch.h"
 
 #include "world/nodes/Node.h"
 #include "asset/util/ParsingAux.h"
 #include "asset/AssetManager.h"
 #include "reflection/ReflectionTools.h"
 #include "world/World.h"
-#include "core/MathAux.h"
 
 #include <glm/gtx/matrix_decompose.hpp>
 
 RootNode* Node::GetWorldRoot() const
 {
-	return Engine::GetWorld()->GetRoot();
+	return Engine.GetWorld()->GetRoot();
 }
 
 void Node::SetNodePositionLCS(glm::vec3 lt)
@@ -49,7 +48,7 @@ void Node::SetNodeTransformLCS(const glm::mat4& lm)
 
 void Node::SetNodeLookAtLCS(glm::vec3 lookAt)
 {
-	SetNodeOrientationLCS(math::OrientationFromLookatAndPosition(lookAt, m_localPosition));
+	SetNodeOrientationLCS(math::findOrientation(lookAt, m_localPosition));
 }
 
 void Node::SetNodePositionWCS(glm::vec3 wt)
@@ -60,7 +59,7 @@ void Node::SetNodePositionWCS(glm::vec3 wt)
 
 void Node::SetNodeOrientationWCS(glm::quat wo)
 {
-	auto worldMatrix = math::TransformMatrixFromSOT(m_scale, wo, m_position);
+	auto worldMatrix = math::transformMat(m_scale, wo, m_position);
 	SetNodeTransformWCS(worldMatrix);
 }
 
@@ -83,7 +82,7 @@ void Node::RotateNodeAroundAxisLCS(glm::vec3 localAxis, float degrees)
 
 void Node::SetNodeScaleWCS(glm::vec3 ws)
 {
-	auto worldMatrix = math::TransformMatrixFromSOT(ws, m_orientation, m_position);
+	auto worldMatrix = math::transformMat(ws, m_orientation, m_position);
 	SetNodeTransformWCS(worldMatrix);
 }
 
@@ -95,7 +94,7 @@ void Node::SetNodeTransformWCS(const glm::mat4& newWorldMatrix)
 
 void Node::SetNodeLookAtWCS(glm::vec3 lookAt)
 {
-	SetNodeOrientationWCS(math::OrientationFromLookatAndPosition(lookAt, m_position));
+	SetNodeOrientationWCS(math::findOrientation(lookAt, m_position));
 }
 
 void Node::CalculateWorldAABB()
@@ -113,7 +112,7 @@ void Node::UpdateTransforms(const glm::mat4& parentMatrix)
 {
 	m_dirty.set(DF::SRT);
 
-	m_localTransform = math::TransformMatrixFromSOT(m_localScale, m_localOrientation, m_localPosition);
+	m_localTransform = math::transformMat(m_localScale, m_localOrientation, m_localPosition);
 	m_transform = parentMatrix * m_localTransform;
 
 	CalculateWorldAABB();

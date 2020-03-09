@@ -1,18 +1,18 @@
 
 #include "editor/imgui/ImguiImpl.h"
-#include "system/Engine.h"
+#include "engine/Engine.h"
 #include "reflection/PodTools.h"
 #include "asset/PodIncludes.h"
-#include "system/console/ConsoleVariable.h"
-#include "system/profiler/ProfileScope.h"
+#include "engine/console/ConsoleVariable.h"
+#include "engine/profiler/ProfileScope.h"
 #include "editor/imgui/ImGuizmo.h"
 
 #include "renderer/VulkanLayer.h"
 
-#include <glfw/glfw3.h>
 #include <imgui.h>
 #include <examples/imgui_impl_vulkan.h>
 #include <examples/imgui_impl_glfw.h>
+#include <glfw/glfw3.h>
 
 namespace imguisyle {
 void AddLargeAssetIconsFont(ImFontAtlas* atlas)
@@ -21,8 +21,7 @@ void AddLargeAssetIconsFont(ImFontAtlas* atlas)
 	ImFontAtlas::GlyphRangesBuilder builder;
 
 
-	podtools::ForEachPodType([&](auto dummy) {
-		using PodT = std::remove_pointer_t<decltype(dummy)>;
+	podtools::ForEachPodType([&]<typename PodT>() {
 		const ReflClass& cl = PodT::StaticClass();
 		builder.AddText(U8(cl.GetIcon()));
 	});
@@ -165,7 +164,7 @@ void SetStyle()
 } // namespace imguisyle
 void ImguiImpl::InitContext()
 {
-	if (!Engine::GetMainWindow()) {
+	if (!Engine.GetMainWindow()) {
 		LOG_ERROR("Failed to load imgui, window not created yet. Please make a main window before imgui init.");
 		return;
 	}
@@ -178,7 +177,7 @@ void ImguiImpl::InitContext()
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	// ImGui::GetIO().ConfigViewportsNoDecoration = false;
 
-	ImGui_ImplGlfw_InitForVulkan(Engine::GetMainWindow(), true);
+	ImGui_ImplGlfw_InitForVulkan(Engine.GetMainWindow(), true);
 	ImGui::GetIO().IniFilename = "EditorImgui.ini";
 }
 
@@ -203,38 +202,40 @@ void ImguiImpl::EndFrame()
 	ImGui::RenderPlatformWindowsDefault();
 }
 
+void ImguiImpl::CleanupVulkan()
+{
+	ImGui_ImplVulkan_Shutdown();
+}
+
 void ImguiImpl::CleanupContext()
 {
-	// WIP
-	// ImGui_ImplVulkan_Shutdown();
-	// ImGui_ImplGlfw_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
 
-	// ImGui::DestroyContext();
+	ImGui::DestroyContext();
 }
 
 
 void ImguiImpl::InitVulkan()
 {
-	auto physDev = VulkanLayer::device->pd;
-	auto& device = VulkanLayer::device;
+	auto physDev = Device->pd;
+	auto& device = *Device;
 
 	ImGui_ImplVulkan_InitInfo init = {};
-	init.Instance = VulkanLayer::instance->handle.get();
-	init.PhysicalDevice = physDev->handle;
-	init.Device = device->handle.get();
-	init.QueueFamily = device->graphicsQueue.familyIndex;
-	init.Queue = device->graphicsQueue.handle;
+	init.Instance = *Layer->instance;
+	init.PhysicalDevice = *physDev;
+	init.Device = device;
+	init.QueueFamily = Device->graphicsQueue.familyIndex;
+	init.Queue = Device->graphicsQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
-	init.DescriptorPool = VulkanLayer::quadDescriptorPool.get();
-
-	init.ImageCount = static_cast<uint32>(VulkanLayer::swapchain->images.size());
-	init.MinImageCount = static_cast<uint32>(VulkanLayer::swapchain->images.size());
+	init.DescriptorPool = Layer->quadDescriptorPool.get();
+	init.ImageCount = static_cast<uint32>(Layer->swapchain->images.size());
+	init.MinImageCount = static_cast<uint32>(Layer->swapchain->images.size());
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init, VulkanLayer::swapchain->renderPass.get());
+	ImGui_ImplVulkan_Init(&init, Layer->swapchain->renderPass.get());
 
 
-	auto cmdBuffer = device->transferCmdBuffer.get();
+	auto cmdBuffer = Device->transferCmdBuffer;
 
 	//	vkCall(vkResetCommandPool(m_device, m_commandPool, 0));
 
@@ -252,8 +253,8 @@ void ImguiImpl::InitVulkan()
 
 	cmdBuffer.end();
 
-	device->transferQueue.handle.submit(1, &end_info, {});
-	device->transferQueue.handle.waitIdle();
+	Device->transferQueue.submit(1, &end_info, {});
+	Device->transferQueue.waitIdle();
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }

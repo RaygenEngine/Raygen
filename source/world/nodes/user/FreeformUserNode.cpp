@@ -1,16 +1,16 @@
-﻿#include "pch/pch.h"
+﻿#include "pch.h"
 
 #include "world/nodes/user/FreeformUserNode.h"
 #include "world/nodes/RootNode.h"
 #include "asset/util/ParsingAux.h"
-#include "system/profiler/ProfileScope.h"
-#include "system/Engine.h"
-#include "system/Input.h"
+#include "engine/profiler/ProfileScope.h"
+#include "engine/Engine.h"
+#include "engine/Input.h"
 
 void FreeformUserNode::Update(float deltaTime)
 {
 	PROFILE_SCOPE(World);
-	auto& input = Engine::GetInput();
+	auto& input = Engine.GetInput();
 	auto& gamepad = input.GetGamepadState();
 
 	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetScrollDelta() / 240.f * 2.0f, 1.0f, 100.0f);

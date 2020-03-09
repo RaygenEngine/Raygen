@@ -1,8 +1,7 @@
-#include "pch/pch.h"
+#include "pch.h"
 
 #include "asset/PodIncludes.h"
 
-#include "asset/loaders/CubemapLoader.h"
 #include "asset/loaders/DummyLoader.h"
 #include "asset/loaders/GltfFileLoader.h"
 #include "asset/loaders/GltfMaterialLoader.h"
@@ -16,7 +15,7 @@
 #include "asset/loaders/BinaryLoader.h"
 
 #include "asset/UriLibrary.h"
-#include "system/Logger.h"
+#include "engine/Logger.h"
 
 void GltfFilePod::Load(PodEntry* entry, GltfFilePod* pod, const uri::Uri& path)
 {
@@ -74,9 +73,7 @@ void TexturePod::Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 		return;
 	}
 	if (uri::MatchesExtension(path, ".json")) {
-		if (!CubemapLoader::Load(pod, path)) {
-			GenericJsonLoader::Load(pod, path);
-		}
+		GenericJsonLoader::Load(pod, path);
 		return;
 	}
 

@@ -1,81 +1,125 @@
-#include "pch/pch.h"
-
+#include "pch.h"
 #include "renderer/VulkanLayer.h"
 
-#include "system/Engine.h"
-#include "system/EngineEvents.h"
-#include "system/Input.h"
+#include "editor/imgui/ImguiImpl.h"
+#include "engine/Engine.h"
+#include "engine/Events.h"
+#include "engine/Input.h"
+#include "engine/profiler/ProfileScope.h"
 #include "renderer/Model.h"
-#include "world/World.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "world/nodes/geometry/GeometryNode.h"
-#include "editor/imgui/ImguiImpl.h"
+#include "world/World.h"
 
+#include <array>
 
-void VulkanLayer::InitVulkanLayer(std::vector<const char*>& extensions, WindowType* window)
+namespace {
+vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
+{
+	vk::Extent2D sizes[] = {
+		{ 1280, 800 },
+		{ 1920, 1080 },
+		{ 2560, 1440 },
+		{ 4096, 2160 },
+	};
+	constexpr size_t sizesLen = sizeof(sizes) / sizeof(vk::Extent2D);
+
+	vk::Extent2D result = viewportSize;
+	for (size_t i = 0; i < sizesLen; i++) {
+		if (sizes[i].width >= viewportSize.width) {
+			result.width = sizes[i].width;
+			break;
+		}
+	}
+
+	for (size_t i = 0; i < sizesLen; i++) {
+		if (sizes[i].height >= viewportSize.height) {
+			result.height = sizes[i].height;
+			break;
+		}
+	}
+
+	return result;
+}
+} // namespace
+
+VulkanLayer::VulkanLayer(std::vector<const char*>& extensions, GLFWwindow* window)
 {
 	// create vulkan instance with required extensions
 	auto requiredExtensions = extensions;
 	requiredExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
 	requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
-	instance = std::make_unique<Instance>(requiredExtensions, window);
+	instance = new Instance(requiredExtensions, window);
 
 	// get first capable physical devices
 	auto pd = instance->capablePhysicalDevices[0].get();
 
 	// create logical device
 	auto deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_MAINTENANCE1_EXTENSION_NAME };
-	device = std::make_unique<LogicalDevice>(pd, deviceExtensions);
+	Device = new S_Device(pd, deviceExtensions);
+
 
 	// create swapchain
 	ReconstructSwapchain();
+}
 
+void VulkanLayer::Init()
+{
 	InitModelDescriptors();
 
-	geomPass.InitRenderPassAndFramebuffers();
+	// CHECK: Code smell, needs internal first init function
+	geomPass.InitRenderPass();
 	geomPass.InitPipelineAndStuff();
 
-
 	InitQuadDescriptor();
+	OnViewportResize();
 
 	defPass.InitPipeline(swapchain->renderPass.get());
 
-	// WIP
+
+	// NEXT: can be done with a single allocation
 	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(device->graphicsCmdPool.get())
+	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(1);
 
 
-	geometryCmdBuffer = std::move(device->handle->allocateCommandBuffersUnique(allocInfo)[0]);
+	geometryCmdBuffer = Device->allocateCommandBuffers(allocInfo)[0];
 
 
 	vk::CommandBufferAllocateInfo allocInfo2{};
-	allocInfo2.setCommandPool(device->graphicsCmdPool.get())
+	allocInfo2.setCommandPool(Device->graphicsCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(static_cast<uint32>(swapchain->images.size()));
 
-	outCmdBuffer = device->handle->allocateCommandBuffersUnique(allocInfo2);
+	outCmdBuffer = Device->allocateCommandBuffers(allocInfo2);
 
 
-	imageAvailableSemaphore = device->handle->createSemaphoreUnique({});
-	renderFinishedSemaphore = device->handle->createSemaphoreUnique({});
+	imageAvailableSemaphore = Device->createSemaphoreUnique({});
+	renderFinishedSemaphore = Device->createSemaphoreUnique({});
+
+	Event::OnViewportUpdated.Bind(this, [&] { didViewportResize.Set(); });
+	Event::OnWindowResize.Bind(this, [&](auto, auto) { didWindowResize.Set(); });
+}
+
+VulkanLayer::~VulkanLayer()
+{
+	ImguiImpl::CleanupVulkan();
 }
 
 void VulkanLayer::ReconstructSwapchain()
 {
-	swapchain = std::make_unique<Swapchain>(device.get(), instance->surface);
+	swapchain = std::make_unique<Swapchain>(instance->surface);
 }
-
 
 void VulkanLayer::ReinitModels()
 {
-	auto world = Engine::GetWorld();
+	auto world = Engine.GetWorld();
 	models.clear();
 	for (auto geomNode : world->GetNodeIterator<GeometryNode>()) {
 		auto model = geomNode->GetModel();
-		models.emplace_back(std::make_unique<Model>(model)); // TODO: RENDERER
+		models.emplace_back(std::make_unique<Model>(model));
 		models.back()->m_node = geomNode;
 	}
 }
@@ -86,7 +130,7 @@ void VulkanLayer::InitModelDescriptors()
 
 	vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
 
-	device->CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eUniformBuffer,
+	Device->CreateBuffer(bufferSize, vk::BufferUsageFlagBits::eUniformBuffer,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, uniformBuffers,
 		uniformBuffersMemory);
 
@@ -110,7 +154,7 @@ void VulkanLayer::InitModelDescriptors()
 	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
 	layoutInfo.setBindingCount(static_cast<uint32>(bindings.size())).setPBindings(bindings.data());
 
-	modelDescriptorSetLayout = device->handle->createDescriptorSetLayoutUnique(layoutInfo);
+	modelDescriptorSetLayout = Device->createDescriptorSetLayoutUnique(layoutInfo);
 
 	// TODO: RENDERER Global uniforms
 	std::array<vk::DescriptorPoolSize, 2> poolSizes{};
@@ -125,7 +169,7 @@ void VulkanLayer::InitModelDescriptors()
 		.setPPoolSizes(poolSizes.data())
 		.setMaxSets(500);
 
-	modelDescriptorPool = device->handle->createDescriptorPoolUnique(poolInfo);
+	modelDescriptorPool = Device->createDescriptorPoolUnique(poolInfo);
 }
 
 vk::DescriptorSet VulkanLayer::GetModelDescriptorSet()
@@ -137,8 +181,8 @@ vk::DescriptorSet VulkanLayer::GetModelDescriptorSet()
 		.setDescriptorSetCount(1)
 		.setPSetLayouts(&modelDescriptorSetLayout.get());
 
-	// WIP: are those destructed?
-	return device->handle->allocateDescriptorSets(allocInfo)[0];
+	// CHECK: are those destructed?
+	return Device->allocateDescriptorSets(allocInfo)[0];
 }
 
 void VulkanLayer::InitQuadDescriptor()
@@ -154,9 +198,8 @@ void VulkanLayer::InitQuadDescriptor()
 	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
 	layoutInfo.setBindingCount(1u).setPBindings(&samplerLayoutBinding);
 
-	quadDescriptorSetLayout = device->handle->createDescriptorSetLayoutUnique(layoutInfo);
+	quadDescriptorSetLayout = Device->createDescriptorSetLayoutUnique(layoutInfo);
 
-	// WIP: Global uniforms
 	std::array<vk::DescriptorPoolSize, 1> poolSizes{};
 	// for image sampler combinations
 	poolSizes[0].setType(vk::DescriptorType::eCombinedImageSampler).setDescriptorCount(1);
@@ -166,9 +209,9 @@ void VulkanLayer::InitQuadDescriptor()
 	poolInfo //
 		.setPoolSizeCount(static_cast<uint32>(poolSizes.size()))
 		.setPPoolSizes(poolSizes.data())
-		.setMaxSets(500); // WIP
+		.setMaxSets(500); // TODO: GPU ASSETS
 
-	quadDescriptorPool = device->handle->createDescriptorPoolUnique(poolInfo);
+	quadDescriptorPool = Device->createDescriptorPoolUnique(poolInfo);
 
 
 	vk::DescriptorSetAllocateInfo allocInfo{};
@@ -178,8 +221,7 @@ void VulkanLayer::InitQuadDescriptor()
 		.setDescriptorSetCount(1)
 		.setPSetLayouts(&quadDescriptorSetLayout.get());
 
-	// WIP: are those destructed?
-	quadDescriptorSet = std::move(device->handle->allocateDescriptorSetsUnique(allocInfo)[0]);
+	quadDescriptorSet = std::move(Device->allocateDescriptorSetsUnique(allocInfo)[0]);
 
 	// sampler
 	vk::SamplerCreateInfo samplerInfo{};
@@ -200,12 +242,15 @@ void VulkanLayer::InitQuadDescriptor()
 		.setMinLod(0.f)
 		.setMaxLod(0.f);
 
-	static auto sampler = device->handle->createSamplerUnique(samplerInfo);
+	quadSampler = std::move(Device->createSamplerUnique(samplerInfo));
+}
 
+void VulkanLayer::UpdateQuadDescriptorSet()
+{
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
 		.setImageView(geomPass.albedoImageView.get())
-		.setSampler(sampler.get());
+		.setSampler(*quadSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};
 	descriptorWrite.setDstSet(quadDescriptorSet.get())
@@ -217,30 +262,63 @@ void VulkanLayer::InitQuadDescriptor()
 		.setPImageInfo(&imageInfo)
 		.setPTexelBufferView(nullptr);
 
-	device->handle->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+}
+
+
+void VulkanLayer::OnViewportResize()
+{
+	vk::Extent2D viewportSize{ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y };
+
+	viewportRect.extent = viewportSize;
+	viewportRect.offset = vk::Offset2D(g_ViewportCoordinates.position.x, g_ViewportCoordinates.position.y);
+
+	// NEXT: fix while keeping 1 to 1 ratio
+	vk::Extent2D fbSize = SuggestFramebufferSize(viewportSize);
+	// vk::Extent2D fbSize = viewportSize;
+
+	if (fbSize != viewportFramebufferSize) {
+		viewportFramebufferSize = fbSize;
+		geomPass.InitFramebuffers();
+		UpdateQuadDescriptorSet();
+	}
+}
+
+void VulkanLayer::OnWindowResize()
+{
+	// NEXT:
 }
 
 
 void VulkanLayer::DrawFrame()
 {
+	PROFILE_SCOPE(Renderer);
 
-	// WIP: UNIFORM BUFFER UPDATES
+	if (*didWindowResize) {
+		OnWindowResize();
+	}
+
+	if (*didViewportResize) {
+		OnViewportResize();
+	}
+
+	// NEXT: UNIFORM BUFFER UPDATES
 	{
-		auto world = Engine::GetWorld();
+		auto world = Engine.GetWorld();
 		auto camera = world->GetActiveCamera();
 
 		UniformBufferObject ubo{};
 		ubo.viewProj = camera->GetViewProjectionMatrix();
 
-		void* data = device->handle->mapMemory(uniformBuffersMemory.get(), 0, sizeof(ubo));
+		void* data = Device->mapMemory(uniformBuffersMemory.get(), 0, sizeof(ubo));
 		memcpy(data, &ubo, sizeof(ubo));
-		device->handle->unmapMemory(uniformBuffersMemory.get());
+		Device->unmapMemory(uniformBuffersMemory.get());
 	}
 
 	// GEOMETRY PASS
 	geomPass.TransitionGBufferForAttachmentWrite();
 
-	geomPass.RecordGeometryDraw(&geometryCmdBuffer.get());
+	geomPass.RecordGeometryDraw(&geometryCmdBuffer);
 
 	vk::SubmitInfo submitInfo{};
 	// vk::Semaphore waitSemaphores[] = { imageAvailableSemaphore.get() };
@@ -253,21 +331,21 @@ void VulkanLayer::DrawFrame()
 		.setPWaitSemaphores(nullptr)
 		.setPWaitDstStageMask(waitStages)
 		.setCommandBufferCount(1u)
-		.setPCommandBuffers(&geometryCmdBuffer.get());
+		.setPCommandBuffers(&geometryCmdBuffer);
 
 	// which semaphores to signal once the command buffer(s) have finished execution
 	// vk::Semaphore signalSemaphores[] = { m_renderFinishedSemaphore.get() };
 	// submitInfo.setSignalSemaphoreCount(1u).setPSignalSemaphores(signalSemaphores);
 
-	device->graphicsQueue.handle.submit(1u, &submitInfo, {});
-	device->graphicsQueue.handle.waitIdle();
+	Device->graphicsQueue.submit(1u, &submitInfo, {});
+	Device->graphicsQueue.waitIdle();
 
 	// DEFERRED
 	geomPass.TransitionGBufferForShaderRead();
 
 	uint32 imageIndex;
 
-	vk::Result result0 = device->handle->acquireNextImageKHR(
+	vk::Result result0 = Device->acquireNextImageKHR(
 		swapchain->handle.get(), UINT64_MAX, imageAvailableSemaphore.get(), {}, &imageIndex);
 
 	switch (result0) {
@@ -277,7 +355,7 @@ void VulkanLayer::DrawFrame()
 		default: LOG_ABORT("failed to acquire swap chain image!");
 	}
 
-	auto cmdBuffer = &outCmdBuffer[imageIndex].get();
+	auto cmdBuffer = &outCmdBuffer[imageIndex];
 	auto& framebuffer = swapchain->framebuffers[imageIndex].get();
 	{
 		vk::CommandBufferBeginInfo beginInfo{};
@@ -317,10 +395,10 @@ void VulkanLayer::DrawFrame()
 		.setPWaitSemaphores(nullptr)
 		.setPWaitDstStageMask(waitStages2)
 		.setCommandBufferCount(1u)
-		.setPCommandBuffers(&outCmdBuffer[imageIndex].get());
+		.setPCommandBuffers(&outCmdBuffer[imageIndex]);
 
-	device->graphicsQueue.handle.submit(1u, &submitInfo2, {});
-	device->graphicsQueue.handle.waitIdle();
+	Device->graphicsQueue.submit(1u, &submitInfo2, {});
+	Device->graphicsQueue.waitIdle();
 
 
 	vk::PresentInfoKHR presentInfo;
@@ -329,9 +407,9 @@ void VulkanLayer::DrawFrame()
 	vk::SwapchainKHR swapChains[] = { swapchain->handle.get() };
 	presentInfo.setSwapchainCount(1u).setPSwapchains(swapChains).setPImageIndices(&imageIndex).setPResults(nullptr);
 
-	vk::Result result1 = device->presentQueue.handle.presentKHR(presentInfo);
+	vk::Result result1 = Device->presentQueue.presentKHR(presentInfo);
 
-	device->presentQueue.handle.waitIdle();
+	Device->presentQueue.waitIdle();
 
 	switch (result1) {
 		case vk::Result::eErrorOutOfDateKHR:

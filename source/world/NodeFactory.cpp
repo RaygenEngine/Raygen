@@ -1,4 +1,4 @@
-#include "pch/pch.h"
+#include "pch.h"
 
 #include "world/NodeFactory.h"
 #include "world/World.h"
@@ -12,10 +12,9 @@
 #include "world/nodes/user/FreeformUserNode.h"
 #include "world/nodes/user/FlyingUserNode.h"
 #include "world/nodes/TransformNode.h"
-#include "world/nodes/vr/OVRNode.h"
 #include "asset/util/ParsingAux.h"
 #include "reflection/ReflectionTools.h"
-#include "core/MathAux.h"
+#include "core/MathUtl.h"
 
 #include <nlohmann/json.hpp>
 
@@ -25,14 +24,13 @@ using json = nlohmann::json;
 void NodeFactory::RegisterNodes()
 {
 	RegisterListToFactory<CameraNode, WindowCameraNode, GeometryNode, DirectionalLightNode, PunctualLightNode,
-		SpotLightNode, AmbientNode, FreeformUserNode, TransformNode, FlyingUserNode /*, OVRNode*/>();
+		SpotLightNode, AmbientNode, FreeformUserNode, TransformNode, FlyingUserNode>();
 }
 
 Node* NodeFactory::NewNodeFromType(const std::string& type)
 {
-	auto it = std::find_if(begin(m_nodeEntries), end(m_nodeEntries), [type](auto& other) {
-		return smath::CaseInsensitiveCompare(sceneconv::FilterNodeClassName(type), other.first);
-	});
+	auto it = std::find_if(begin(m_nodeEntries), end(m_nodeEntries),
+		[type](auto& other) { return str::equalInsensitive(sceneconv::FilterNodeClassName(type), other.first); });
 
 	if (it != m_nodeEntries.end()) {
 		return it->second.newInstance();
@@ -74,7 +72,7 @@ void NodeFactory::LoadNodeAndChildren(const json& jsonObject, Node* parent)
 	}
 
 	LoadNode_Properties(jsonObject, node);
-	Engine::GetWorld()->RegisterNode(node, parent);
+	Engine.GetWorld()->RegisterNode(node, parent);
 
 
 	auto itChildren = jsonObject.find(childrenLabel);
@@ -99,7 +97,7 @@ void NodeFactory::LoadNode_Trs(const nlohmann::json& jsonTrsObject, Node* nodeTo
 	auto it = j.find(lookatLabel);
 	if (it != j.end()) {
 		auto lookat = j.value<glm::vec3>(lookatLabel, {});
-		node->m_localOrientation = math::OrientationFromLookatAndPosition(lookat, node->GetNodePositionLCS());
+		node->m_localOrientation = math::findOrientation(lookat, node->GetNodePositionLCS());
 		return;
 	}
 
@@ -110,7 +108,7 @@ void NodeFactory::LoadNode_Trs(const nlohmann::json& jsonTrsObject, Node* nodeTo
 
 void NodeFactory::LoadNode_Properties(const nlohmann::json& j, Node* node)
 {
-	auto local = refltools::JsonToPropVisitor_WithRelativePath(j, Engine::GetWorld()->GetLoadedFromHandle(), true);
+	auto local = refltools::JsonToPropVisitor_WithRelativePath(j, Engine.GetWorld()->GetLoadedFromHandle(), true);
 
 	refltools::CallVisitorOnEveryProperty(node, local);
 }

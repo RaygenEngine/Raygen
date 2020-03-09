@@ -1,8 +1,7 @@
 #pragma once
 #include "editor/windows/EdWindow.h"
-#include "system/profiler/ProfilerSetup.h"
+#include "engine/profiler/ProfilerSetup.h"
 #include "asset/AssetManager.h"
-#include "core/StringHashing.h"
 #include "imgui/imgui.h"
 #include <map>
 
@@ -81,7 +80,7 @@ public:
 	virtual ~AssetsWindow() = default;
 
 
-	void ImportFiles(std::vector<std::string>&& files); // WIP: ASSETS interface, decide std::string vs fs::path
+	void ImportFiles(std::vector<fs::path>&& files);
 
 private:
 	assetentry::FolderEntry m_root{ "Assets", nullptr };

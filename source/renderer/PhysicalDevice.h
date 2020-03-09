@@ -1,5 +1,4 @@
 #pragma once
-
 #include <vulkan/vulkan.hpp>
 
 struct QueueFamily {
@@ -17,9 +16,7 @@ struct SwapchainSupportDetails {
 
 
 // Info about a physical device and a given surface (support details)
-struct PhysicalDevice {
-
-	vk::PhysicalDevice handle;
+struct PhysicalDevice : public vk::PhysicalDevice {
 
 	float rating{ 0.0f };
 

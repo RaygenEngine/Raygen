@@ -1,9 +1,9 @@
-#include "pch/pch.h"
+#include "pch.h"
 #define IMGUI_DEFINE_MATH_OPERATORS
 
 #include "editor/windows/general/EdAssetsWindow.h"
 #include "asset/AssetManager.h"
-#include "core/StringAux.h"
+#include "core/StringUtl.h"
 #include "editor/imgui/ImEd.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "reflection/ReflectionTools.h"
@@ -39,7 +39,7 @@ void AssetsWindow::ReloadEntries()
 			continue;
 		}
 
-		auto parts = str::Split(uri, "/");
+		auto parts = str::split(uri, "/");
 		auto* currentNode = &m_root;
 		for (auto& subpath : parts) {
 			currentNode = currentNode->FindOrAddFolder(subpath);
@@ -131,7 +131,7 @@ void Draw(const char* iconTxt, const char* nameTxt, OnOpen onOpen = {}, OnEndGro
 			onOpen();
 		}
 		else { // Select
-			   // TODO:
+			   // TODO: ASSETS:
 		}
 	}
 
@@ -259,7 +259,7 @@ void AssetsWindow::ImguiDraw()
 	if (ImEd::Button(ETXT(FA_FILE_IMPORT, "Import Files"))) {
 		if (auto files = ed::NativeFileBrowser::OpenFileMultiple({ "gltf" })) {
 			for (auto& path : *files) {
-				// WIP: ASSETS
+				// TODO: IMPORTERS
 				if (path.extension() == ".gltf") {
 					AssetImporterManager::ResolveOrImport<ModelPod>(path, "", fs::path(m_currentPath));
 				}
@@ -323,13 +323,11 @@ void AssetsWindow::ImguiDraw()
 	ImGui::Columns(1);
 }
 
-void AssetsWindow::ImportFiles(std::vector<std::string>&& files)
+void AssetsWindow::ImportFiles(std::vector<fs::path>&& files)
 {
-
 	for (auto& file : files) {
-		auto path = fs::path(file);
-		if (path.extension() == ".gltf") {
-			AssetImporterManager::ResolveOrImport<ModelPod>(path, "", fs::path(m_currentPath));
+		if (file.extension() == ".gltf") {
+			AssetImporterManager::ResolveOrImport<ModelPod>(file, "", fs::path(m_currentPath));
 		}
 	}
 	ReloadEntries();

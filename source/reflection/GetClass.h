@@ -1,7 +1,7 @@
 #pragma once
 
-#include "reflection/ReflClass.h"
 #include "reflection/PodReflection.h"
+#include "reflection/ReflClass.h"
 
 class Node;
 
@@ -30,7 +30,7 @@ namespace detail {
 	}
 
 
-	// TODO: Reflected concept should be declared somewhere concretely
+	// CHECK: Reflected concept should be declared somewhere concretely
 	template<typename T>
 	concept Reflected = requires(T t)
 	{

@@ -4,14 +4,14 @@
 #include "asset/UriLibrary.h"
 #include "asset/PodHandle.h"
 #include "reflection/PodReflection.h"
-#include "system/Engine.h"
-#include "system/Logger.h"
-#include "system/console/ConsoleVariable.h"
-
+#include "engine/Engine.h"
+#include "engine/Logger.h"
+#include "engine/console/ConsoleVariable.h"
+#include "core/StringUtl.h"
 #include <future>
 
 // ASSET URI:
-// Documentation of Asset URI convention: (WIP: ASSETS After refactor is finished)
+// Documentation of Asset URI convention: (DOC: ASSETS After refactor is finished)
 //
 // 4 types of assets: (first letter of the URI categorizes the type)
 //
@@ -48,7 +48,7 @@ struct PodEntry {
 	size_t uid{ 0 };
 	uri::Uri path{};
 
-	std::string name{}; // TODO: fix data duplication
+	std::string name{}; // TODO: ASSETS fix data duplication
 
 	// Mark pods as transient ones when they are just used for importing (or are generated) and "file-like" operations
 	// like save and reimport are not allowed on them. eg: GltfFilePod, default constructed empty pods
@@ -143,7 +143,7 @@ private:
 	AssetHandlerManager() {}
 
 	std::vector<std::unique_ptr<PodEntry>> m_pods;
-	std::unordered_map<uri::Uri, size_t> m_pathCache;
+	std::unordered_map<uri::Uri, size_t, str::HashInsensitive> m_pathCache;
 
 
 	uri::Uri SuggestFilenameImpl(std::string_view directory, const uri::Uri& desired)
@@ -156,25 +156,21 @@ private:
 			std::replace(desiredFilename.begin(), desiredFilename.begin() + dotLoc - 1, '.', '_');
 		}
 
-		auto desiredFullPath = (fs::path(directory) / uri::StripExt(desiredFilename)).string();
+		auto desiredFullPath = (fs::path(directory) / desiredFilename).string();
 
-		// WIP: ASSETS implement with hashmaps and/or internal directory format
-		// THIS IS ULTRA SLOW N^2
-		for (auto& pod : m_pods) {
-			if (uri::StripExt(pod->path) == desiredFullPath) {
-				std::string resultFilename = fmt::format(
-					"{}_{}{}", uri::StripExt(desiredFilename), std::rand(), uri::GetDiskExtension(desiredFilename));
-				return fs::path(desiredFilename).replace_filename(resultFilename).generic_string();
-			}
+		if (!m_pathCache.count(desiredFullPath)) {
+			return desiredFilename;
 		}
 
-		return desiredFilename;
+		std::string resultFilename = fmt::format(
+			"{}_{}{}", uri::StripExt(desiredFilename), std::rand(), uri::GetDiskExtension(desiredFilename));
+		return fs::path(desiredFilename).replace_filename(resultFilename).generic_string();
 	}
 
 
 	void SaveToDiskInternal(PodEntry* entry);
 	void LoadAllPodsInDirectory(const fs::path& path);
-	void LoadFromDiskTypelesskInternal(PodEntry* entry);
+	void LoadFromDiskTypelessInternal(PodEntry* entry);
 
 	template<CONC(CAssetPod) T>
 	PodHandle<T> GetAsyncHandleInternal(const uri::Uri& str)
@@ -188,6 +184,8 @@ private:
 	}
 
 public:
+	static void RegisterPathCache(PodEntry* entry) { Get().m_pathCache.emplace(entry->path, entry->uid); }
+
 	static void SaveAll()
 	{
 		for (auto& entry : Get().m_pods) {
@@ -254,7 +252,7 @@ public:
 	static void LoadFromDiskTypeless(T asset)
 	{
 		size_t uid = ToAssetUid(asset);
-		Get().LoadFromDiskTypelesskInternal(Get().m_pods[uid].get());
+		Get().LoadFromDiskTypelessInternal(Get().m_pods[uid].get());
 	}
 
 
@@ -271,9 +269,7 @@ public:
 		return static_cast<PodType*>(Get().m_pods[podId]->ptr.get());
 	}
 
-
 	// AVOID THIS. This is for internal use.
-	// TODO: private and friend this
 	[[nodiscard]] static std::vector<std::unique_ptr<PodEntry>>& Z_GetPods() { return Get().m_pods; }
 };
 
@@ -340,13 +336,13 @@ public:
 	static PodHandle<PodType> ResolveOrImport(
 		const fs::path& inFullPath, const uri::Uri& suggestedName = "", fs::path& importingPath = fs::path())
 	{
-		auto inst = Engine::GetAssetImporterManager();
+		auto inst = Engine.GetAssetImporterManager();
 
 
 		auto [it, didInsert] = inst->m_importedPathsCache.try_emplace(inFullPath.string(), PodHandle<PodType>{});
 
 		if (!didInsert) {
-			// TODO: type check this handle
+			// TODO: ASSETS: type check this handle
 			return PodHandle<PodType>(it->second);
 		}
 
@@ -432,8 +428,8 @@ private:
 		//
 		// Post import guarantees (all fields must be initialized)
 		//
-		// WIP: ASSETS: some stuff should be moved in import functions because it depends on specific loaders + asset
-		// types
+		// TODO: IMPORTERS: some stuff should be moved in import functions because it depends on specific loaders +
+		// asset types
 		auto interm = (importingPath / uri::GetFilename(entry->metadata.originalImportLocation));
 		auto fullRelativePath = interm.relative_path().generic_string();
 
@@ -449,7 +445,7 @@ private:
 		}
 
 
-		auto ext = entry->metadata.preferedDiskType == PodDiskType::Binary ? "bin" : "json";
+		auto ext = "bin";
 
 		auto name = fmt::format("{}.{}", fs::path(entry->name).filename().string(), ext);
 		entry->name = AssetHandlerManager::SuggestFilename(uri::GetDir(fullRelativePath), name);
@@ -458,6 +454,7 @@ private:
 
 		LOG_INFO("Imported {:<12}: {}", entry->type.name(), entry->path);
 		entry->MarkSave();
+		AssetHandlerManager::RegisterPathCache(entry);
 		return true;
 	}
 };

@@ -1,11 +1,9 @@
-#include "pch/pch.h"
-
+#include "pch.h"
 #include "renderer/Instance.h"
 
-#include "system/Logger.h"
+#include "engine/Logger.h"
 
 #include <glfw/glfw3.h>
-
 
 PFN_vkCreateDebugUtilsMessengerEXT pfnVkCreateDebugUtilsMessengerEXT;
 PFN_vkDestroyDebugUtilsMessengerEXT pfnVkDestroyDebugUtilsMessengerEXT;
@@ -22,6 +20,7 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(
 {
 	return pfnVkDestroyDebugUtilsMessengerEXT(instance, messenger, pAllocator);
 }
+
 namespace {
 VkBool32 DebugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 	VkDebugUtilsMessageTypeFlagsEXT messageTypes, VkDebugUtilsMessengerCallbackDataEXT const* pCallbackData,
@@ -80,7 +79,7 @@ bool CheckLayers(std::vector<char const*> const& layers, std::vector<vk::LayerPr
 }
 } // namespace
 
-Instance::Instance(std::vector<const char*> requiredExtensions, WindowType* window)
+Instance::Instance(std::vector<const char*> requiredExtensions, GLFWwindow* window)
 {
 	auto allExtensions = requiredExtensions;
 	allExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
@@ -90,7 +89,6 @@ Instance::Instance(std::vector<const char*> requiredExtensions, WindowType* wind
 
 	/* VULKAN_KEY_START */
 
-
 	std::vector<char const*> instanceLayerNames = { "VK_LAYER_KHRONOS_validation" };
 
 	const bool foundLayers = CheckLayers(instanceLayerNames, instanceLayerProperties);
@@ -99,33 +97,36 @@ Instance::Instance(std::vector<const char*> requiredExtensions, WindowType* wind
 
 	// create instance
 	vk::ApplicationInfo appInfo{};
-	appInfo.setPApplicationName("RaygenApp")
+	appInfo
+		.setPApplicationName("RaygenApp") //
 		.setApplicationVersion(VK_MAKE_VERSION(1, 0, 0))
 		.setPEngineName("RaygenEngine")
 		.setEngineVersion(VK_MAKE_VERSION(1, 0, 0))
 		.setApiVersion(VK_API_VERSION_1_2);
 
 	vk::InstanceCreateInfo createInfo{};
-	createInfo.setPApplicationInfo(&appInfo)
+	createInfo
+		.setPApplicationInfo(&appInfo) //
 		.setEnabledExtensionCount(static_cast<uint32>(allExtensions.size()))
 		.setPpEnabledExtensionNames(allExtensions.data());
 
 	if (foundLayers) {
-		createInfo.setEnabledLayerCount(static_cast<uint32>(instanceLayerNames.size()))
+		createInfo
+			.setEnabledLayerCount(static_cast<uint32>(instanceLayerNames.size())) //
 			.setPpEnabledLayerNames(instanceLayerNames.data());
 	}
 
-	handle = vk::createInstanceUnique(createInfo);
+	vk::Instance::operator=(vk::createInstance(createInfo));
 
 	if (foundLayers) {
-		pfnVkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
-			handle->getProcAddr("vkCreateDebugUtilsMessengerEXT"));
+		pfnVkCreateDebugUtilsMessengerEXT
+			= reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(getProcAddr("vkCreateDebugUtilsMessengerEXT"));
 		if (!pfnVkCreateDebugUtilsMessengerEXT) {
 			LOG_ABORT("GetInstanceProcAddr: Unable to find pfnVkCreateDebugUtilsMessengerEXT function.");
 		}
 
-		pfnVkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-			handle->getProcAddr("vkDestroyDebugUtilsMessengerEXT"));
+		pfnVkDestroyDebugUtilsMessengerEXT
+			= reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(getProcAddr("vkDestroyDebugUtilsMessengerEXT"));
 		if (!pfnVkDestroyDebugUtilsMessengerEXT) {
 			LOG_ABORT("GetInstanceProcAddr: Unable to find pfnVkDestroyDebugUtilsMessengerEXT function.");
 		}
@@ -135,19 +136,18 @@ Instance::Instance(std::vector<const char*> requiredExtensions, WindowType* wind
 		vk::DebugUtilsMessageTypeFlagsEXT messageTypeFlags(vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral
 														   | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance
 														   | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation);
-		debugUtilsMessenger = handle->createDebugUtilsMessengerEXTUnique(
+		debugUtilsMessenger = createDebugUtilsMessengerEXTUnique(
 			vk::DebugUtilsMessengerCreateInfoEXT({}, severityFlags, messageTypeFlags, &DebugMessageFunc));
 	}
 
-
 	VkSurfaceKHR tmp;
-	if (glfwCreateWindowSurface(handle.get(), window, nullptr, &tmp) != VK_SUCCESS) {
+	if (glfwCreateWindowSurface(*this, window, nullptr, &tmp) != VK_SUCCESS) {
 		LOG_ABORT("Failed to create glfw window surface");
 	}
 	surface = tmp;
 
 	// get capable physical devices
-	auto deviceHandles = handle->enumeratePhysicalDevices();
+	auto deviceHandles = enumeratePhysicalDevices();
 
 	for (const auto dH : deviceHandles) {
 		auto pd = std::make_unique<PhysicalDevice>(dH, surface);
@@ -160,5 +160,6 @@ Instance::Instance(std::vector<const char*> requiredExtensions, WindowType* wind
 
 Instance::~Instance()
 {
-	handle->destroySurfaceKHR(surface);
+	destroySurfaceKHR(surface);
+	destroy();
 }

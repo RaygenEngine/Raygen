@@ -5,7 +5,6 @@
 
 #include <fstream>
 
-// TODO options
 namespace BinaryLoader {
 inline void Load(BinaryPod* pod, const uri::Uri& path)
 {

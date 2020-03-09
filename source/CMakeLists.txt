@@ -3,7 +3,7 @@ project (Raygen)
 
 
 set(SOURCE_FILES 
-	AppBase.cpp
+	App.cpp
 
 	asset/AssetManager.cpp
 	asset/PodLoaders.cpp
@@ -37,7 +37,15 @@ set(SOURCE_FILES
 	
 	editor/misc/NativeFileBrowser.cpp
 
-	platform/GlfwUtil.cpp
+	engine/Engine.cpp
+	engine/Object.cpp
+	engine/Input.cpp
+	engine/Logger.cpp
+	engine/console/Console.cpp
+	engine/profiler/Profiler.cpp
+	engine/reflection/ReflectionDb.cpp
+	
+	platform/GlfwUtl.cpp
 
 	renderer/GeometryPass.cpp
 	renderer/DeferredPass.cpp
@@ -45,26 +53,19 @@ set(SOURCE_FILES
 	renderer/VulkanLayer.cpp
 	renderer/Instance.cpp
 	renderer/PhysicalDevice.cpp
-	renderer/LogicalDevice.cpp
+	renderer/Device.cpp
 	renderer/Swapchain.cpp
 	renderer/Model.cpp
 	renderer/Texture.cpp
+	renderer/Image.cpp
 	renderer/Material.cpp
 	
-
-	system/Engine.cpp
-	system/Input.cpp
-	system/Logger.cpp
-	system/console/Console.cpp
-	system/profiler/Profiler.cpp
-	system/reflection/ReflectionDb.cpp
 
 	world/World.cpp
 	world/NodeFactory.cpp
 	
 	world/nodes/Node.cpp
 	world/nodes/RootNode.cpp
-	world/nodes/vr/OVRNode.cpp
 	world/nodes/camera/CameraNode.cpp
 	world/nodes/camera/WindowCameraNode.cpp
 	world/nodes/camera/EditorCameraNode.cpp
@@ -89,17 +90,17 @@ set(APP_SOURCES
 if(MSVC)
 	set(PrecompiledBinary "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIGURATION>_pch/pch.pch")
 
-	set_source_files_properties(pch/pch.cpp
+	set_source_files_properties(pch.cpp
 								PROPERTIES 
-								COMPILE_FLAGS "/Yc\"pch/pch.h\" /Fp\"${PrecompiledBinary}\""
+								COMPILE_FLAGS "/Yc\"pch.h\" /Fp\"${PrecompiledBinary}\""
 								OBJECT_OUTPUTS "${PrecompiledBinary}")
 	
 	set_source_files_properties(${SOURCE_FILES}
 								PROPERTIES 
-								COMPILE_FLAGS "/Yu\"pch/pch.h\" /FI\"pch/pch.h\" /Fp\"${PrecompiledBinary}\""
+								COMPILE_FLAGS "/Yu\"pch.h\" /FI\"pch.h\" /Fp\"${PrecompiledBinary}\""
 							    OBJECT_DEPENDS "${PrecompiledBinary}")  
 										   
-	list(APPEND SOURCE_FILES pch/pch.cpp)
+	list(APPEND SOURCE_FILES pch.cpp)
 	list(APPEND APP_SOURCES platform/windows/resources/WinResource.rc)
 endif()
 
@@ -181,7 +182,7 @@ add_compile_definitions(NOMINMAX NODRAWTEXT NOOPENFILE) # TODO:
 if(MSVC)
 	target_compile_options(Raygen PRIVATE "/MP")
 	# unsafe strcpy used by some dependencies
-	add_definitions(-D_CRT_SECURE_NO_WARNINGS) # TODO:
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS) # CHECK:
 endif()
 
 

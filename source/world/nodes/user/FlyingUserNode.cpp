@@ -1,18 +1,18 @@
-﻿#include "pch/pch.h"
+﻿#include "pch.h"
 
 #include "world/nodes/user/FlyingUserNode.h"
 #include "world/nodes/camera/WindowCameraNode.h"
 #include "world/NodeFactory.h"
 #include "asset/util/ParsingAux.h"
 #include "world/World.h"
-#include "system/Engine.h"
-#include "system/Input.h"
+#include "engine/Engine.h"
+#include "engine/Input.h"
 
 void FlyingUserNode::Update(float deltaTime)
 {
 	UserNode::Update(deltaTime);
 
-	auto& input = Engine::GetInput();
+	auto& input = Engine.GetInput();
 	auto& gamepad = input.GetGamepadState();
 
 	float pitch = 0.f;

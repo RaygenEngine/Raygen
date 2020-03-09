@@ -1,5 +1,5 @@
-#include "pch/pch.h"
-#include "system/Logger.h"
+#include "pch.h"
+#include "engine/Logger.h"
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>
 
@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 
 	int height = 0; // Some user variable you want to be able to set
 
-	LOGGER_INIT(LogLevelTarget::Error);
+	Log.Init(LogLevel::Error);
 
 
 	// Build a new parser on top of Catch's
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 #include "pch/pch.h"
 
 #include "AppBase.h"
-#include "system/Logger.h"
+#include "engine/Logger.h"
 
 #include <iostream>
 
@@ -46,7 +46,7 @@ int32 main(int32 argc, char* argv[])
 {
 	std::cout << "Hello Test!\n";
 	// Init logger (global access, not engine, app or window bound)
-	LOGGER_INIT(LogLevelTarget::INFO);
+	LOGGER_INIT(LogLevel::INFO);
 	App app;
 	app.PreMainInit(argc, argv);
 	return app.Main(argc, argv);

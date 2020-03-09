@@ -1,8 +1,8 @@
 #pragma once
 
-#include "reflection/TypeId.h"
 #include "asset/AssetPod.h"
 #include "asset/PodFwd.h"
+#include "reflection/TypeId.h"
 
 #include <type_traits>
 
