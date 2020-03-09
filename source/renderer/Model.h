@@ -3,6 +3,7 @@
 #include "renderer/LogicalDevice.h"
 #include "asset/pods/ModelPod.h"
 #include "world/nodes/geometry/GeometryNode.h"
+#include "renderer/Material.h"
 
 #include "vulkan/vulkan.hpp"
 
@@ -23,7 +24,7 @@ struct GPUGeometryGroup {
 	vk::UniqueBuffer indexBuffer;
 	vk::UniqueDeviceMemory indexBufferMemory;
 
-	std::unique_ptr<Texture> albedoText;
+	std::unique_ptr<Material> material;
 
 	// one for each swapchain image
 	// TODO: check

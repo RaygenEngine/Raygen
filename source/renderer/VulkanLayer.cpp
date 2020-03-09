@@ -230,8 +230,7 @@ void VulkanLayer::DrawFrame()
 		auto camera = world->GetActiveCamera();
 
 		UniformBufferObject ubo{};
-		ubo.view = camera->GetViewMatrix();
-		ubo.proj = camera->GetProjectionMatrix();
+		ubo.viewProj = camera->GetViewProjectionMatrix();
 
 		void* data = device->handle->mapMemory(uniformBuffersMemory.get(), 0, sizeof(ubo));
 		memcpy(data, &ubo, sizeof(ubo));
