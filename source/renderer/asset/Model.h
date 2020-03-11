@@ -22,11 +22,6 @@ struct GPUGeometryGroup {
 
 	GpuHandle<MaterialPod> material;
 
-	// one for each swapchain image
-	// TODO: check
-	// https://stackoverflow.com/questions/36772607/vulkan-texture-rendering-on-multiple-meshes this
-	vk::DescriptorSet descriptorSet;
-
 	uint32 indexCount{ 0u };
 };
 

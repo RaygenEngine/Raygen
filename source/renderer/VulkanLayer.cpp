@@ -134,59 +134,35 @@ void VulkanLayer::InitModelDescriptors()
 	globalsUBO = std::make_unique<Buffer>(sizeof(UBO_Globals), vk::BufferUsageFlagBits::eUniformBuffer,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
-	// descriptor layout
-	vk::DescriptorSetLayoutBinding globalsUBOLayoutBinding{};
-	globalsUBOLayoutBinding
-		.setBinding(0u) //
-		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-		.setDescriptorCount(1u)
-		.setStageFlags(vk::ShaderStageFlagBits::eVertex)
-		.setPImmutableSamplers(nullptr);
+	{
+		R_DescriptorLayoutCreate layout;
+		layout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex);
 
-	vk::DescriptorSetLayoutBinding materialUBOLayoutBinding{};
-	materialUBOLayoutBinding
-		.setBinding(1u) //
-		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-		.setDescriptorCount(1u)
-		.setStageFlags(vk::ShaderStageFlagBits::eFragment)
-		.setPImmutableSamplers(nullptr);
+		globalUboDescriptorSetLayout = layout.Create();
+		globalUboDescriptorPool = layout.CreatePool(100u);
 
-	std::array<vk::DescriptorSetLayoutBinding, 5> materialSamplerLayoutBindings{};
-	for (uint32 i = 0; i < 5u; ++i) {
-		materialSamplerLayoutBindings[i]
-			.setBinding(2u + i) //
-			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-			.setDescriptorCount(1u)
-			.setStageFlags(vk::ShaderStageFlagBits::eFragment)
-			.setPImmutableSamplers(nullptr);
+
+		vk::DescriptorSetAllocateInfo allocInfo{};
+
+		allocInfo
+			.setDescriptorPool(globalUboDescriptorPool.get()) //
+			.setDescriptorSetCount(1)
+			.setPSetLayouts(&globalUboDescriptorSetLayout.get());
+
+		globalUboDescriptorSet = Device->allocateDescriptorSets(allocInfo)[0];
 	}
 
+	R_DescriptorLayoutCreate layout;
 
-	std::array bindings{ globalsUBOLayoutBinding, materialUBOLayoutBinding, materialSamplerLayoutBindings[0],
-		materialSamplerLayoutBindings[1], materialSamplerLayoutBindings[2], materialSamplerLayoutBindings[3],
-		materialSamplerLayoutBindings[4] };
-	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo
-		.setBindingCount(static_cast<uint32>(bindings.size())) //
-		.setPBindings(bindings.data());
+	// materialUBOLayoutBinding
+	layout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
 
-	modelDescriptorSetLayout = Device->createDescriptorSetLayoutUnique(layoutInfo);
+	for (uint32 i = 0; i < 5u; ++i) {
+		layout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+	}
 
-	std::array<vk::DescriptorPoolSize, 2> poolSizes{};
-	poolSizes[0]
-		.setType(vk::DescriptorType::eUniformBuffer) //
-		.setDescriptorCount(2);
-	poolSizes[1]
-		.setType(vk::DescriptorType::eCombinedImageSampler) //
-		.setDescriptorCount(materialSamplerLayoutBindings.size());
-
-	vk::DescriptorPoolCreateInfo poolInfo{};
-	poolInfo
-		.setPoolSizeCount(static_cast<uint32>(poolSizes.size())) //
-		.setPPoolSizes(poolSizes.data())
-		.setMaxSets(500u);
-
-	modelDescriptorPool = Device->createDescriptorPoolUnique(poolInfo);
+	modelDescriptorSetLayout = layout.Create();
+	modelDescriptorPool = layout.CreatePool(500u);
 }
 
 
@@ -243,7 +219,7 @@ vk::DescriptorSet VulkanLayer::GetDebugDescriptorSet()
 
 	allocInfo
 		.setDescriptorPool(debugDescriptorPool.get()) //
-		.setDescriptorSetCount(1)
+		.setDescriptorSetCount(1u)
 		.setPSetLayouts(&debugDescriptorSetLayout.get());
 
 	// CHECK: are those destructed?
@@ -348,6 +324,27 @@ void VulkanLayer::UpdateQuadDescriptorSet()
 	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->specular->view.get(), quadSampler.get(), 3u);
 	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->emissive->view.get(), quadSampler.get(), 4u);
 	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->depth->view.get(), quadSampler.get(), 5u); // NEXT:
+
+
+	vk::DescriptorBufferInfo bufferInfo{};
+
+	bufferInfo
+		.setBuffer(*globalsUBO) //
+		.setOffset(0u)
+		.setRange(sizeof(UBO_Globals));
+	vk::WriteDescriptorSet descriptorWrite{};
+
+	descriptorWrite
+		.setDstSet(globalUboDescriptorSet) //
+		.setDstBinding(0u)
+		.setDstArrayElement(0u)
+		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		.setDescriptorCount(1u)
+		.setPBufferInfo(&bufferInfo)
+		.setPImageInfo(nullptr)
+		.setPTexelBufferView(nullptr);
+
+	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 }
 
 
@@ -500,4 +497,53 @@ void VulkanLayer::DrawFrame()
 		case vk::Result::eSuccess: break;
 		default: LOG_ABORT("failed to acquire swap chain image!");
 	}
+}
+
+void R_DescriptorLayoutCreate::AddBinding(
+	vk::DescriptorType type, vk::ShaderStageFlags stageFlags, uint32 descriptorCount)
+{
+	{
+		vk::DescriptorSetLayoutBinding binding{};
+		binding
+			.setBinding(static_cast<uint32>(bindings.size())) //
+			.setDescriptorType(type)
+			.setDescriptorCount(descriptorCount)
+			.setStageFlags(stageFlags)
+			.setPImmutableSamplers(nullptr);
+
+		bindings.push_back(binding);
+
+		auto it = std::find_if(poolSizes.begin(), poolSizes.end(), [&](auto& size) { return size.type == type; });
+		if (it != poolSizes.end()) {
+			it->descriptorCount++;
+		}
+		else {
+			vk::DescriptorPoolSize size{};
+			size.setDescriptorCount(1) //
+				.setType(type);
+
+			poolSizes.push_back(size);
+		}
+	}
+}
+
+vk::UniqueDescriptorSetLayout R_DescriptorLayoutCreate::Create()
+{
+	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
+	layoutInfo
+		.setBindingCount(static_cast<uint32>(bindings.size())) //
+		.setPBindings(bindings.data());
+
+	return Device->createDescriptorSetLayoutUnique(layoutInfo);
+}
+
+vk::UniqueDescriptorPool R_DescriptorLayoutCreate::CreatePool(uint32 maxSetCount)
+{
+	vk::DescriptorPoolCreateInfo poolInfo{};
+	poolInfo
+		.setPoolSizeCount(static_cast<uint32>(poolSizes.size())) //
+		.setPPoolSizes(poolSizes.data())
+		.setMaxSets(maxSetCount);
+
+	return Device->createDescriptorPoolUnique(poolInfo);
 }

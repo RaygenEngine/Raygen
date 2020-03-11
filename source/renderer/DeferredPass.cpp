@@ -9,7 +9,6 @@
 
 void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 {
-	auto& descriptorSetLayout = Layer->quadDescriptorSetLayout;
 
 	// shaders
 	auto vertShaderModule = Device->CompileCreateShaderModule("engine-data/spv/deferred.vert");
@@ -97,6 +96,8 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 	dynamicStateInfo
 		.setDynamicStateCount(2u) //
 		.setPDynamicStates(dynamicStates);
+
+	auto& descriptorSetLayout = Layer->quadDescriptorSetLayout;
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};

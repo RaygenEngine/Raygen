@@ -44,5 +44,10 @@ struct GpuAssetBaseTyped<MaterialPod> : public GpuAssetBase {
 
 	std::unique_ptr<Buffer> materialUBO;
 
+	// one for each swapchain image
+	// TODO: check
+	// https://stackoverflow.com/questions/36772607/vulkan-texture-rendering-on-multiple-meshes this
+	vk::DescriptorSet descriptorSet;
+
 	GpuAssetBaseTyped<MaterialPod>(PodHandle<MaterialPod> podHandle);
 };

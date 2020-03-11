@@ -54,8 +54,9 @@ void DrawTextureDebugger()
 	ImGui::Begin("Image Debugger.");
 
 	auto showAttachment = [](const char* name, Attachment& att) {
-		auto descrSet = att.GetDebugDescriptor();
 		if (ImGui::CollapsingHeader(name)) {
+			auto descrSet = att.GetDebugDescriptor();
+
 			if (!descrSet) {
 				ImGui::Text("Null handle");
 				ImGui::End();
@@ -64,6 +65,7 @@ void DrawTextureDebugger()
 			ImGui::Image(descrSet, ImVec2(256, 256));
 		}
 	};
+
 
 	showAttachment("normal", *gbuff->normal);
 	showAttachment("position", *gbuff->position);
