@@ -73,6 +73,7 @@ void VulkanLayer::Init()
 	geomPass.InitPipelineAndStuff();
 
 	InitQuadDescriptor();
+	InitDebugDescriptors();
 	OnViewportResize();
 
 	defPass.InitPipeline(swapchain->renderPass.get());
@@ -185,6 +186,7 @@ void VulkanLayer::InitModelDescriptors()
 	modelDescriptorPool = Device->createDescriptorPoolUnique(poolInfo);
 }
 
+
 vk::DescriptorSet VulkanLayer::GetModelDescriptorSet()
 {
 	vk::DescriptorSetAllocateInfo allocInfo{};
@@ -193,6 +195,53 @@ vk::DescriptorSet VulkanLayer::GetModelDescriptorSet()
 		.setDescriptorPool(modelDescriptorPool.get()) //
 		.setDescriptorSetCount(1)
 		.setPSetLayouts(&modelDescriptorSetLayout.get());
+
+	// CHECK: are those destructed?
+	return Device->allocateDescriptorSets(allocInfo)[0];
+}
+void VulkanLayer::InitDebugDescriptors()
+{
+	vk::DescriptorSetLayoutBinding samplerLayoutBindings;
+
+	samplerLayoutBindings
+		.setBinding(0) //
+		.setDescriptorCount(1u)
+		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+		.setPImmutableSamplers(nullptr)
+		.setStageFlags(vk::ShaderStageFlagBits::eFragment);
+
+
+	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
+	layoutInfo
+		.setBindingCount(1u) //
+		.setPBindings(&samplerLayoutBindings);
+
+	debugDescriptorSetLayout = Device->createDescriptorSetLayoutUnique(layoutInfo);
+
+	std::array<vk::DescriptorPoolSize, 1> poolSizes{};
+	// for image sampler combinations
+	poolSizes[0]
+		.setType(vk::DescriptorType::eCombinedImageSampler) //
+		.setDescriptorCount(1u);
+
+
+	vk::DescriptorPoolCreateInfo poolInfo{};
+	poolInfo
+		.setPoolSizeCount(static_cast<uint32>(poolSizes.size())) //
+		.setPPoolSizes(poolSizes.data())
+		.setMaxSets(500u); // TODO: GPU ASSETS
+
+	debugDescriptorPool = Device->createDescriptorPoolUnique(poolInfo);
+}
+
+vk::DescriptorSet VulkanLayer::GetDebugDescriptorSet()
+{
+	vk::DescriptorSetAllocateInfo allocInfo{};
+
+	allocInfo
+		.setDescriptorPool(debugDescriptorPool.get()) //
+		.setDescriptorSetCount(1)
+		.setPSetLayouts(&debugDescriptorSetLayout.get());
 
 	// CHECK: are those destructed?
 	return Device->allocateDescriptorSets(allocInfo)[0];
@@ -295,7 +344,7 @@ void VulkanLayer::UpdateQuadDescriptorSet()
 	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->albedo->view.get(), quadSampler.get(), 2u);
 	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->specular->view.get(), quadSampler.get(), 3u);
 	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->emissive->view.get(), quadSampler.get(), 4u);
-	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->depth->view.get(), quadSampler.get(), 5u);
+	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->depth->view.get(), quadSampler.get(), 5u); // NEXT:
 }
 
 

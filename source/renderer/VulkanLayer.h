@@ -83,6 +83,10 @@ public:
 	vk::UniqueDescriptorSet quadDescriptorSet;
 	vk::UniqueSampler quadSampler;
 
+	vk::UniqueDescriptorSetLayout debugDescriptorSetLayout;
+	vk::UniqueDescriptorPool debugDescriptorPool;
+
+
 	//
 
 	vk::CommandBuffer geometryCmdBuffer;
@@ -101,7 +105,10 @@ public:
 	void ReinitModels();
 
 	void InitModelDescriptors();
+	void InitDebugDescriptors();
 	vk::DescriptorSet GetModelDescriptorSet();
+
+	vk::DescriptorSet GetDebugDescriptorSet();
 
 	void InitQuadDescriptor();
 	void DrawFrame();
