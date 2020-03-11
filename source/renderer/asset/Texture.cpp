@@ -5,7 +5,7 @@
 #include "renderer/wrapper/Device.h"
 #include "renderer/wrapper/Buffer.h"
 
-Texture::Texture(PodHandle<TexturePod> podHandle)
+GpuAssetBaseTyped<TexturePod>::GpuAssetBaseTyped(PodHandle<TexturePod> podHandle)
 {
 	auto textureData = podHandle.Lock();
 	auto imgData = textureData->image.Lock();

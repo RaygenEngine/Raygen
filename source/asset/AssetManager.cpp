@@ -3,6 +3,7 @@
 #include "asset/AssetManager.h"
 #include "reflection/PodTools.h"
 #include "asset/PodIncludes.h"
+#include "renderer/asset/GpuAssetManager.h"
 
 #include "asset/Serialization.h"
 #include <vulkan/vulkan.hpp>
@@ -33,6 +34,7 @@ void AssetImporterManager::Init(const fs::path& assetPath)
 	LOG_INFO("Current working dir: {}", fs::current_path());
 
 	AssetHandlerManager::Get().LoadAllPodsInDirectory("gen-data/");
+	GpuAssetManager.LoadAll();
 }
 
 

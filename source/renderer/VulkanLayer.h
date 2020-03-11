@@ -72,7 +72,7 @@ public:
 	//
 	vk::UniqueDescriptorSetLayout modelDescriptorSetLayout;
 	vk::UniqueDescriptorPool modelDescriptorPool;
-	std::vector<std::unique_ptr<Model>> models;
+	std::vector<std::unique_ptr<Scene_Model>> models;
 	std::unique_ptr<Buffer> globalsUBO;
 
 	//

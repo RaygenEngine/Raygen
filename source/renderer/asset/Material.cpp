@@ -3,8 +3,9 @@
 
 #include "asset/AssetManager.h"
 #include "asset/pods/MaterialPod.h"
+#include "renderer/asset/GpuAssetManager.h"
 
-Material::Material(PodHandle<MaterialPod> podHandle)
+GpuAssetBaseTyped<MaterialPod>::GpuAssetBaseTyped(PodHandle<MaterialPod> podHandle)
 {
 	auto data = podHandle.Lock();
 
@@ -26,11 +27,11 @@ Material::Material(PodHandle<MaterialPod> podHandle)
 	matData.alphaCutoff = data->alphaCutoff;
 	matData.mask = data->alphaMode == MaterialPod::AlphaMode::MASK;
 
-	baseColorTexture = std::make_unique<Texture>(data->baseColorTexture);
-	metallicRoughnessTexture = std::make_unique<Texture>(data->metallicRoughnessTexture);
-	occlusionTexture = std::make_unique<Texture>(data->occlusionTexture);
-	normalTexture = std::make_unique<Texture>(data->normalTexture);
-	emissiveTexture = std::make_unique<Texture>(data->emissiveTexture);
+	baseColorTexture = GpuAssetManager.GetGpuHandle(data->baseColorTexture);
+	metallicRoughnessTexture = GpuAssetManager.GetGpuHandle(data->metallicRoughnessTexture);
+	occlusionTexture = GpuAssetManager.GetGpuHandle(data->occlusionTexture);
+	normalTexture = GpuAssetManager.GetGpuHandle(data->normalTexture);
+	emissiveTexture = GpuAssetManager.GetGpuHandle(data->emissiveTexture);
 
 	// CHECK: upload once for now (not dynamic changes)
 	materialUBO = std::make_unique<Buffer>(sizeof(UBO_Material), vk::BufferUsageFlagBits::eUniformBuffer,

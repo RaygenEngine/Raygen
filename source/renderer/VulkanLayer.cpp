@@ -7,6 +7,7 @@
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "renderer/wrapper/Device.h"
+#include "renderer/asset/GpuAssetManager.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "world/nodes/geometry/GeometryNode.h"
 #include "world/World.h"
@@ -107,6 +108,7 @@ void VulkanLayer::Init()
 VulkanLayer::~VulkanLayer()
 {
 	ImguiImpl::CleanupVulkan();
+	GpuAssetManager.UnloadAll();
 }
 
 void VulkanLayer::ReconstructSwapchain()
@@ -120,8 +122,9 @@ void VulkanLayer::ReinitModels()
 	models.clear();
 	for (auto geomNode : world->GetNodeIterator<GeometryNode>()) {
 		auto model = geomNode->GetModel();
-		models.emplace_back(std::make_unique<Model>(model));
-		models.back()->m_node = geomNode;
+		models.emplace_back(std::make_unique<Scene_Model>());
+		models.back()->node = geomNode;
+		models.back()->model = GpuAssetManager.GetGpuHandle(model);
 	}
 }
 

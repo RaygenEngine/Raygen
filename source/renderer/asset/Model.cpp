@@ -3,12 +3,13 @@
 
 #include "asset/AssetManager.h"
 #include "renderer/VulkanLayer.h"
+#include "renderer/asset/GpuAssetManager.h"
 #include "renderer/wrapper/Device.h"
 
 // PERF:
-Model::Model(PodHandle<ModelPod> podHandle)
+GpuAssetBaseTyped<ModelPod>::GpuAssetBaseTyped(PodHandle<ModelPod> podHandle)
 {
-	auto data = podHandle.LockGPU();
+	auto data = podHandle.Lock();
 
 	// PERF:
 	for (const auto& mesh : data->meshes) {
@@ -49,7 +50,7 @@ Model::Model(PodHandle<ModelPod> podHandle)
 			// albedo texture
 
 			// WIP: asset caching
-			vgg.material = std::make_unique<Material>(data->materials[gg.materialIndex]);
+			vgg.material = GpuAssetManager.GetGpuHandle(data->materials[gg.materialIndex]);
 
 			// descriptors
 			vgg.descriptorSet = Layer->GetModelDescriptorSet();
@@ -75,8 +76,9 @@ Model::Model(PodHandle<ModelPod> podHandle)
 			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 
 			// material uniform sets CHECK: (those buffers should be set again when material changes)
+			auto& mat = GpuAssetManager.LockHandle(vgg.material);
 			bufferInfo
-				.setBuffer(*vgg.material->materialUBO) //
+				.setBuffer(*mat.materialUBO) //
 				.setOffset(0u)
 				.setRange(sizeof(UBO_Material));
 
@@ -95,12 +97,14 @@ Model::Model(PodHandle<ModelPod> podHandle)
 
 			// images (material)
 
-			auto UpdateImageSamplerInDescriptorSet = [&](Texture* text, uint32 dstBinding) {
+			auto UpdateImageSamplerInDescriptorSet = [&](GpuHandle<TexturePod> texture, uint32 dstBinding) {
+				auto& text = GpuAssetManager.LockHandle(texture);
+
 				vk::DescriptorImageInfo imageInfo{};
 				imageInfo
 					.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-					.setImageView(text->view.get())
-					.setSampler(text->sampler.get());
+					.setImageView(text.view.get())
+					.setSampler(text.sampler.get());
 
 				vk::WriteDescriptorSet descriptorWrite{};
 				descriptorWrite
@@ -116,11 +120,11 @@ Model::Model(PodHandle<ModelPod> podHandle)
 				Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 			};
 
-			UpdateImageSamplerInDescriptorSet(vgg.material->baseColorTexture.get(), 2u);
-			UpdateImageSamplerInDescriptorSet(vgg.material->metallicRoughnessTexture.get(), 3u);
-			UpdateImageSamplerInDescriptorSet(vgg.material->occlusionTexture.get(), 4u);
-			UpdateImageSamplerInDescriptorSet(vgg.material->normalTexture.get(), 5u);
-			UpdateImageSamplerInDescriptorSet(vgg.material->emissiveTexture.get(), 6u);
+			UpdateImageSamplerInDescriptorSet(mat.baseColorTexture, 2u);
+			UpdateImageSamplerInDescriptorSet(mat.metallicRoughnessTexture, 3u);
+			UpdateImageSamplerInDescriptorSet(mat.occlusionTexture, 4u);
+			UpdateImageSamplerInDescriptorSet(mat.normalTexture, 5u);
+			UpdateImageSamplerInDescriptorSet(mat.emissiveTexture, 6u);
 
 			geometryGroups.emplace_back(std::move(vgg));
 		}
