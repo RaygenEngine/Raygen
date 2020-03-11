@@ -38,6 +38,8 @@
 #include "editor/windows/general/EdAssetsWindow.h"
 #include "editor/imgui/ImGuizmo.h"
 #include "renderer/VulkanLayer.h"
+#include "renderer/GeometryPass.h"
+#include "renderer/wrapper/GBuffer.h"
 
 #include <glfw/glfw3.h>
 
@@ -47,16 +49,29 @@
 namespace {
 void DrawTextureDebugger()
 {
+	auto& gbuff = Layer->geomPass.m_gBuffer;
+
 	ImGui::Begin("Image Debugger.");
 
-	auto descrSet = *Layer->quadDescriptorSet;
-	if (!descrSet) {
-		ImGui::Text("Null handle");
-		ImGui::End();
-		return;
-	}
+	auto showAttachment = [](const char* name, Attachment& att) {
+		auto descrSet = att.GetDebugDescriptor();
+		if (ImGui::CollapsingHeader(name)) {
+			if (!descrSet) {
+				ImGui::Text("Null handle");
+				ImGui::End();
+				return;
+			}
+			ImGui::Image(descrSet, ImVec2(256, 256));
+		}
+	};
 
-	ImGui::Image(descrSet, ImVec2(512, 512));
+	showAttachment("normal", *gbuff->normal);
+	showAttachment("position", *gbuff->position);
+	showAttachment("albedo", *gbuff->albedo);
+	showAttachment("specular", *gbuff->specular);
+	showAttachment("emissive", *gbuff->emissive);
+	showAttachment("depth", *gbuff->depth);
+
 	ImGui::End();
 }
 } // namespace

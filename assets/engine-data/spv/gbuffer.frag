@@ -3,8 +3,8 @@
 
 // out
 
-layout (location = 0) out vec3 gPosition;
-layout (location = 1) out vec3 gNormal;
+layout (location = 0) out vec4 gPosition;
+layout (location = 1) out vec4 gNormal;
 // rgb: albedo, a: opacity
 layout (location = 2) out vec4 gAlbedoOpacity;
 // r: metallic, g: roughness, b: occlusion, a: occlusion strength
@@ -73,10 +73,10 @@ void main() {
 	// opacity set from above
 
     // position
-    gPosition = fragPos;
+    gPosition = vec4(fragPos, 1.f);
 	
     // normal (with normal mapping)
-    gNormal = normalize(TBN * normal);
+    gNormal = vec4(normalize(TBN * normal), 1.f);
 	
     // albedo opacity
     gAlbedoOpacity = vec4(albedo, opacity);

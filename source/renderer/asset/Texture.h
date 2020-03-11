@@ -13,5 +13,6 @@ struct Texture {
 	// PERF: one to many views
 	vk::UniqueSampler sampler;
 
+
 	Texture(PodHandle<TexturePod> podHandle);
 };

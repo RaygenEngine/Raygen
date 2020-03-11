@@ -8,7 +8,7 @@
 // PERF:
 Model::Model(PodHandle<ModelPod> podHandle)
 {
-	auto data = podHandle.Lock();
+	auto data = podHandle.LockGPU();
 
 	// PERF:
 	for (const auto& mesh : data->meshes) {
