@@ -1,5 +1,6 @@
 #pragma once
 #include "renderer/wrapper/GBuffer.h"
+#include "renderer/asset/Model.h"
 
 #include <vulkan/vulkan.hpp>
 

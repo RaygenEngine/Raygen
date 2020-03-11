@@ -54,6 +54,7 @@ set(SOURCE_FILES
 	renderer/asset/Model.cpp
 	renderer/asset/Texture.cpp
 	renderer/asset/Material.cpp
+	renderer/asset/GpuAssetManager.cpp
 	renderer/wrapper/Image.cpp
 	renderer/wrapper/Instance.cpp
 	renderer/wrapper/PhysicalDevice.cpp

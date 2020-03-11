@@ -4,6 +4,7 @@
 #include "engine/Engine.h"
 #include "engine/profiler/ProfileScope.h"
 #include "renderer/VulkanLayer.h"
+#include "renderer/asset/GpuAssetManager.h"
 #include "renderer/wrapper/Device.h"
 
 void GeometryPass::InitRenderPass()
@@ -325,11 +326,14 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 			cmdBuffer->setViewport(0, { GetViewport() });
 			cmdBuffer->setScissor(0, { GetScissor() });
 
+			auto identity = glm::identity<glm::mat4>();
+
+
 			for (auto& model : Layer->models) {
-				for (auto& gg : model->geometryGroups) {
+				for (auto& gg : GpuAssetManager.LockHandle(model->model).geometryGroups) {
 					// Submit via push constant (rather than a UBO)
 					cmdBuffer->pushConstants(m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u,
-						sizeof(glm::mat4), &model->m_node->GetNodeTransformWCS());
+						sizeof(glm::mat4), &model->node->GetNodeTransformWCS());
 
 					vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
 					vk::DeviceSize offsets[] = { 0 };

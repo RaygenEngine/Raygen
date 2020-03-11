@@ -1,6 +1,8 @@
 #pragma once
-#include "renderer/asset/Texture.h"
 #include "asset/pods/MaterialPod.h"
+#include "renderer/asset/Texture.h"
+#include "renderer/asset/GpuAssetHandle.h"
+
 
 #include <vulkan/vulkan.hpp>
 
@@ -25,18 +27,22 @@ struct UBO_Material {
 	int mask;
 };
 
+template<>
+struct GpuAssetBaseTyped<MaterialPod>;
+using Material = GpuAssetBaseTyped<MaterialPod>;
 
-struct Material {
+template<>
+struct GpuAssetBaseTyped<MaterialPod> : public GpuAssetBase {
 
-	std::unique_ptr<Texture> baseColorTexture;
-	std::unique_ptr<Texture> metallicRoughnessTexture;
-	std::unique_ptr<Texture> occlusionTexture;
-	std::unique_ptr<Texture> normalTexture;
-	std::unique_ptr<Texture> emissiveTexture;
+	GpuHandle<TexturePod> baseColorTexture;
+	GpuHandle<TexturePod> metallicRoughnessTexture;
+	GpuHandle<TexturePod> occlusionTexture;
+	GpuHandle<TexturePod> normalTexture;
+	GpuHandle<TexturePod> emissiveTexture;
 
 	UBO_Material matData;
 
 	std::unique_ptr<Buffer> materialUBO;
 
-	Material(PodHandle<MaterialPod> podHandle);
+	GpuAssetBaseTyped<MaterialPod>(PodHandle<MaterialPod> podHandle);
 };
