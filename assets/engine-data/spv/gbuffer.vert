@@ -26,7 +26,7 @@ layout(push_constant) uniform ModelData {
 	//mat4 normalMat;
 } push;
 
-layout(binding = 0) uniform UBO_Globals {
+layout(set = 0, binding = 0) uniform UBO_Globals {
 	mat4 viewProj;
 } globals;
 

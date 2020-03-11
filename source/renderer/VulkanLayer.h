@@ -16,6 +16,17 @@ struct UBO_Globals {
 	glm::mat4 viewProj;
 };
 
+struct R_DescriptorLayoutCreate {
+
+	std::vector<vk::DescriptorSetLayoutBinding> bindings;
+	std::vector<vk::DescriptorPoolSize> poolSizes;
+
+	void AddBinding(vk::DescriptorType type, vk::ShaderStageFlags stageFlags, uint32 descriptorCount = 1u);
+	vk::UniqueDescriptorSetLayout Create();
+	vk::UniqueDescriptorPool CreatePool(uint32 maxSetCount);
+};
+
+
 inline class VulkanLayer : public Object {
 
 public:
@@ -68,12 +79,18 @@ public:
 	std::unique_ptr<Swapchain> swapchain;
 
 
+	// Global descriptors
+	vk::UniqueDescriptorSetLayout globalUboDescriptorSetLayout;
+	vk::UniqueDescriptorPool globalUboDescriptorPool;
+	vk::DescriptorSet globalUboDescriptorSet;
+
 	// Model descriptors
 	//
 	vk::UniqueDescriptorSetLayout modelDescriptorSetLayout;
 	vk::UniqueDescriptorPool modelDescriptorPool;
 	std::vector<std::unique_ptr<Scene_Model>> models;
 	std::unique_ptr<Buffer> globalsUBO;
+
 
 	//
 

@@ -5,19 +5,19 @@
 
 GBuffer::GBuffer(uint32 width, uint32 height)
 {
-	position = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Snorm,
+	position = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Srgb,
 		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-	normal = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Snorm,
+	normal = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Srgb,
 		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-	albedo = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Snorm,
+	albedo = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Srgb,
 		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-	specular = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Snorm,
+	specular = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Srgb,
 		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-	emissive = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Snorm,
+	emissive = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Srgb,
 		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
 	vk::Format depthFormat = Device->pd->FindDepthFormat();

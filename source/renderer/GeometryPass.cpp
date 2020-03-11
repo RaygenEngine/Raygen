@@ -98,8 +98,6 @@ void GeometryPass::InitFramebuffers()
 
 void GeometryPass::InitPipelineAndStuff()
 {
-	auto& descriptorSetLayout = Layer->modelDescriptorSetLayout;
-
 	// shaders
 	auto vertShaderModule = Device->CompileCreateShaderModule("engine-data/spv/gbuffer.vert");
 	auto fragShaderModule = Device->CompileCreateShaderModule("engine-data/spv/gbuffer.frag");
@@ -241,10 +239,15 @@ void GeometryPass::InitPipelineAndStuff()
 		.setSize(sizeof(glm::mat4))
 		.setOffset(0u);
 
+	auto& globalDescriptorSetLayout = Layer->globalUboDescriptorSetLayout;
+	auto& descriptorSetLayout = Layer->modelDescriptorSetLayout;
+
+	std::array layouts = { globalDescriptorSetLayout.get(), descriptorSetLayout.get() };
+
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
-		.setSetLayoutCount(1u) //
-		.setPSetLayouts(&descriptorSetLayout.get())
+		.setSetLayoutCount(2u) //
+		.setPSetLayouts(layouts.data())
 		.setPushConstantRangeCount(1u)
 		.setPPushConstantRanges(&pushConstantRange);
 
@@ -326,15 +329,15 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 			cmdBuffer->setViewport(0, { GetViewport() });
 			cmdBuffer->setScissor(0, { GetScissor() });
 
-			auto identity = glm::identity<glm::mat4>();
-
+			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
+				&Layer->globalUboDescriptorSet, 0u, nullptr);
 
 			for (auto& model : Layer->models) {
-				for (auto& gg : GpuAssetManager.LockHandle(model->model).geometryGroups) {
-					// Submit via push constant (rather than a UBO)
-					cmdBuffer->pushConstants(m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u,
-						sizeof(glm::mat4), &model->node->GetNodeTransformWCS());
+				// Submit via push constant (rather than a UBO)
+				cmdBuffer->pushConstants(m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u,
+					sizeof(glm::mat4), &model->node->GetNodeTransformWCS());
 
+				for (auto& gg : GpuAssetManager.LockHandle(model->model).geometryGroups) {
 					vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
 					vk::DeviceSize offsets[] = { 0 };
 					// geom
@@ -344,8 +347,8 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 					cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
 
 					// descriptor sets
-					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-						&(gg.descriptorSet), 0u, nullptr);
+					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
+						&GpuAssetManager.LockHandle(gg.material).descriptorSet, 0u, nullptr);
 
 					// draw call (triangle)
 					cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
