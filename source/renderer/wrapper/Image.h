@@ -24,6 +24,9 @@ public:
 	Image(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage,
 		vk::MemoryPropertyFlags properties);
 
+	Image(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling, vk::ImageLayout initalLayout,
+		vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties);
+
 	// Viewers
 	// see for compatibily
 	// https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#resources-image-views-compatibility
@@ -37,4 +40,7 @@ public:
 	void CopyBufferToImage(const Buffer& buffer);
 
 	operator vk::Image() const noexcept { return m_handle.get(); }
+
+
+	vk::ImageMemoryBarrier CreateTransitionBarrier(vk::ImageLayout currentLayout, vk::ImageLayout newLayout);
 };

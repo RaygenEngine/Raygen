@@ -50,6 +50,7 @@ set(SOURCE_FILES
 	renderer/GeometryPass.cpp
 	renderer/DeferredPass.cpp
 	renderer/EditorPass.cpp
+	renderer/PoolAllocator.cpp	
 	renderer/VulkanLayer.cpp	
 	renderer/asset/Model.cpp
 	renderer/asset/Texture.cpp

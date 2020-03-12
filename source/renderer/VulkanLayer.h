@@ -9,23 +9,13 @@
 #include "renderer/wrapper/PhysicalDevice.h"
 #include "renderer/wrapper/Swapchain.h"
 #include "renderer/wrapper/Buffer.h"
-
+#include "renderer/PoolAllocator.h"
 #include <vulkan/vulkan.hpp>
 
 struct UBO_Globals {
 	glm::mat4 viewProj;
 };
-
-struct R_DescriptorLayoutCreate {
-
-	std::vector<vk::DescriptorSetLayoutBinding> bindings;
-	std::vector<vk::DescriptorPoolSize> poolSizes;
-
-	void AddBinding(vk::DescriptorType type, vk::ShaderStageFlags stageFlags, uint32 descriptorCount = 1u);
-	vk::UniqueDescriptorSetLayout Create();
-	vk::UniqueDescriptorPool CreatePool(uint32 maxSetCount);
-};
-
+using SemVec = std::vector<vk::Semaphore>;
 
 inline class VulkanLayer : public Object {
 
@@ -65,6 +55,8 @@ protected:
 
 
 public:
+	PoolAllocator poolAllocator;
+
 	//
 	//
 	//
@@ -76,56 +68,60 @@ public:
 	void ReconstructSwapchain();
 
 	Instance* instance;
-	std::unique_ptr<Swapchain> swapchain;
-
+	UniquePtr<Swapchain> swapchain;
 
 	// Global descriptors
-	vk::UniqueDescriptorSetLayout globalUboDescriptorSetLayout;
-	vk::UniqueDescriptorPool globalUboDescriptorPool;
-	vk::DescriptorSet globalUboDescriptorSet;
+	R_DescriptorLayout globalUboDescLayout;
+	vk::DescriptorSet globalUboDescSet;
 
-	// Model descriptors
-	//
-	vk::UniqueDescriptorSetLayout modelDescriptorSetLayout;
-	vk::UniqueDescriptorPool modelDescriptorPool;
+	UniquePtr<Buffer> globalsUbo;
+
 	std::vector<std::unique_ptr<Scene_Model>> models;
-	std::unique_ptr<Buffer> globalsUBO;
 
-
-	//
 
 	// Quad descriptors
-	vk::UniqueDescriptorSetLayout quadDescriptorSetLayout;
-	vk::UniqueDescriptorPool quadDescriptorPool;
-	vk::UniqueDescriptorSet quadDescriptorSet;
+
+	R_DescriptorLayout quadDescLayout;
+
+	vk::DescriptorSet quadDescSet;
 	vk::UniqueSampler quadSampler;
 
-	vk::UniqueDescriptorSetLayout debugDescriptorSetLayout;
-	vk::UniqueDescriptorPool debugDescriptorPool;
 
+	R_DescriptorLayout debugDescSetLayout;
 
 	//
-
 	vk::CommandBuffer geometryCmdBuffer;
 
 	std::vector<vk::CommandBuffer> outCmdBuffer;
 
 	// sync objects
-	vk::UniqueSemaphore imageAvailableSemaphore;
+
+
+	vk::UniqueSemaphore swapchainImageReadySem;
+	vk::UniqueSemaphore gbufferReadySem;
+
 	vk::UniqueSemaphore renderFinishedSemaphore;
+
+	vk::UniqueSemaphore imageAcquiredSem;
 
 	GeometryPass geomPass;
 	DeferredPass defPass;
 	EditorPass editorPass;
 
 
+	void DrawGeometryPass(
+		std::vector<vk::PipelineStageFlags> waitStages, SemVec waitSemaphores, SemVec signalSemaphores);
+	void UpdateForFrame();
+	void DrawDeferredPass(std::vector<vk::PipelineStageFlags> waitStages, SemVec waitSemaphores,
+		SemVec signalSemaphores, vk::CommandBuffer cmdBuffer, vk::Framebuffer framebuffer);
+
+
 	void ReinitModels();
 
 	void InitModelDescriptors();
 	void InitDebugDescriptors();
-	vk::DescriptorSet GetModelDescriptorSet();
 
-	vk::DescriptorSet GetDebugDescriptorSet();
+	vk::UniqueSampler GetDefaultSampler();
 
 	void InitQuadDescriptor();
 	void DrawFrame();

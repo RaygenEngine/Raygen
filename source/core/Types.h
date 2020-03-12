@@ -2,6 +2,7 @@
 
 #include <cinttypes>
 #include <stddef.h>
+#include <memory>
 
 using int8 = std::int8_t;
 using int16 = std::int16_t;
@@ -22,3 +23,7 @@ using char16 = char16_t;
 {
 	return reinterpret_cast<const char*>(txt);
 }
+
+
+template<typename T>
+using UniquePtr = std::unique_ptr<T>;

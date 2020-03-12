@@ -2,10 +2,29 @@
 #include "renderer/GeometryPass.h"
 
 #include "engine/Engine.h"
+#include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "renderer/VulkanLayer.h"
 #include "renderer/asset/GpuAssetManager.h"
 #include "renderer/wrapper/Device.h"
+
+void GeometryPass::InitAll()
+{
+	InitRenderPass();
+
+
+	// materialUBOLayoutBinding
+	m_materialDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
+
+	for (uint32 i = 0; i < 5u; ++i) {
+		m_materialDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+	}
+
+	m_materialDescLayout.Generate();
+
+
+	MakePipeline();
+}
 
 void GeometryPass::InitRenderPass()
 {
@@ -20,8 +39,9 @@ void GeometryPass::InitRenderPass()
 			.setStoreOp(vk::AttachmentStoreOp::eStore)
 			.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 			.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-			.setInitialLayout(vk::ImageLayout::eUndefined) // CHECK: vk::ImageLayout::eShaderReadOnlyOptimal?
-			.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal); // CHECK:
+			.setInitialLayout(
+				vk::ImageLayout::eColorAttachmentOptimal)             // CHECK: vk::ImageLayout::eShaderReadOnlyOptimal?
+			.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal); // CHECK:
 
 		colorAttachmentRefs[i]
 			.setAttachment(i) //
@@ -36,8 +56,9 @@ void GeometryPass::InitRenderPass()
 		.setStoreOp(vk::AttachmentStoreOp::eDontCare)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eUndefined) // CHECK: vk::ImageLayout::eShaderReadOnlyOptimal?
-		.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal); // CHECK:
+		.setInitialLayout(
+			vk::ImageLayout::eDepthStencilAttachmentOptimal)      // CHECK: vk::ImageLayout::eShaderReadOnlyOptimal?
+		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal); // CHECK:
 
 	vk::AttachmentReference depthAttachmentRef{};
 	depthAttachmentRef
@@ -96,27 +117,19 @@ void GeometryPass::InitFramebuffers()
 	m_framebuffer = Device->createFramebufferUnique(createInfo);
 }
 
-void GeometryPass::InitPipelineAndStuff()
+void GeometryPass::MakePipeline()
 {
 	// shaders
 	auto vertShaderModule = Device->CompileCreateShaderModule("engine-data/spv/gbuffer.vert");
-	auto fragShaderModule = Device->CompileCreateShaderModule("engine-data/spv/gbuffer.frag");
-
+	if (!vertShaderModule) {
+		return;
+	}
 
 	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo
 		.setStage(vk::ShaderStageFlagBits::eVertex) //
-		.setModule(vertShaderModule.get())
+		.setModule(vertShaderModule->get())
 		.setPName("main");
-
-	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
-	fragShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(fragShaderModule.get())
-		.setPName("main");
-
-	vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
-
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 
@@ -163,6 +176,20 @@ void GeometryPass::InitPipelineAndStuff()
 		.setVertexAttributeDescriptionCount(static_cast<uint32_t>(attributeDescriptions.size()))
 		.setPVertexBindingDescriptions(&bindingDescription)
 		.setPVertexAttributeDescriptions(attributeDescriptions.data());
+
+
+	auto fragShaderModule = Device->CompileCreateShaderModule("engine-data/spv/gbuffer.frag");
+	if (!fragShaderModule) {
+		return;
+	}
+	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
+	fragShaderStageInfo
+		.setStage(vk::ShaderStageFlagBits::eFragment) //
+		.setModule(fragShaderModule->get())
+		.setPName("main");
+
+	vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly
@@ -239,8 +266,8 @@ void GeometryPass::InitPipelineAndStuff()
 		.setSize(sizeof(glm::mat4))
 		.setOffset(0u);
 
-	auto& globalDescriptorSetLayout = Layer->globalUboDescriptorSetLayout;
-	auto& descriptorSetLayout = Layer->modelDescriptorSetLayout;
+	auto& globalDescriptorSetLayout = Layer->globalUboDescLayout.setLayout;
+	auto& descriptorSetLayout = m_materialDescLayout.setLayout;
 
 	std::array layouts = { globalDescriptorSetLayout.get(), descriptorSetLayout.get() };
 
@@ -287,11 +314,17 @@ void GeometryPass::InitPipelineAndStuff()
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-
 void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 {
 	PROFILE_SCOPE(Renderer);
 
+
+	if (Engine.GetInput().IsJustPressed(Key::Comma)) {
+		Device->waitIdle();
+		MakePipeline();
+		LOG_REPORT("Remade pipeline");
+		Device->waitIdle();
+	}
 
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
@@ -330,7 +363,7 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 			cmdBuffer->setScissor(0, { GetScissor() });
 
 			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-				&Layer->globalUboDescriptorSet, 0u, nullptr);
+				&Layer->globalUboDescSet, 0u, nullptr);
 
 			for (auto& model : Layer->models) {
 				// Submit via push constant (rather than a UBO)
@@ -362,14 +395,9 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 	cmdBuffer->end();
 }
 
-void GeometryPass::TransitionGBufferForShaderRead()
+vk::DescriptorSet GeometryPass::GetMaterialDescriptorSet() const
 {
-	m_gBuffer->TransitionForShaderRead();
-}
-
-void GeometryPass::TransitionGBufferForAttachmentWrite()
-{
-	m_gBuffer->TransitionForAttachmentWrite();
+	return m_materialDescLayout.GetDescriptorSet();
 }
 
 vk::Viewport GeometryPass::GetViewport() const

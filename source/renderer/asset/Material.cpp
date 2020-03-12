@@ -42,7 +42,7 @@ GpuAssetBaseTyped<MaterialPod>::GpuAssetBaseTyped(PodHandle<MaterialPod> podHand
 
 
 	// descriptors
-	descriptorSet = Layer->GetModelDescriptorSet();
+	descriptorSet = Layer->geomPass.GetMaterialDescriptorSet();
 
 	// material uniform sets CHECK: (those buffers should be set again when material changes)
 	vk::DescriptorBufferInfo bufferInfo{};

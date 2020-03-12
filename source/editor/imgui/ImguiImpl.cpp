@@ -228,7 +228,7 @@ void ImguiImpl::InitVulkan()
 	init.QueueFamily = Device->graphicsQueue.familyIndex;
 	init.Queue = Device->graphicsQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
-	init.DescriptorPool = Layer->quadDescriptorPool.get();
+	init.DescriptorPool = Layer->poolAllocator.GetImguiPool();
 	init.ImageCount = static_cast<uint32>(Layer->swapchain->images.size());
 	init.MinImageCount = static_cast<uint32>(Layer->swapchain->images.size());
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
