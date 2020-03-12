@@ -4,10 +4,11 @@
 #include "renderer/VulkanLayer.h"
 #include "renderer/wrapper/Device.h"
 
-Attachment::Attachment(uint32 width, uint32 height, vk::Format format, vk::ImageUsageFlags usage)
+Attachment::Attachment(
+	uint32 width, uint32 height, vk::Format format, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage)
 {
-	image = std::make_unique<Image>(
-		width, height, format, vk::ImageTiling::eOptimal, usage, vk::MemoryPropertyFlagBits::eDeviceLocal);
+	image.reset(new Image(width, height, format, vk::ImageTiling::eOptimal, initialLayout, usage,
+		vk::MemoryPropertyFlagBits::eDeviceLocal));
 
 	view = image->RequestImageView2D_0_0();
 }
@@ -19,7 +20,7 @@ vk::DescriptorSet Attachment::GetDebugDescriptor()
 		return *debugDescriptorSet;
 	}
 
-	debugDescriptorSet = Layer->GetDebugDescriptorSet();
+	debugDescriptorSet = Layer->debugDescSetLayout.GetDescriptorSet();
 
 	auto UpdateImageSamplerInDescriptorSet = [&](vk::ImageView& view, vk::Sampler& sampler, uint32 dstBinding) {
 		vk::DescriptorImageInfo imageInfo{};

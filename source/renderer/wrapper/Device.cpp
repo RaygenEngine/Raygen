@@ -106,9 +106,13 @@ vk::UniqueShaderModule S_Device::CreateShaderModule(const std::string& binPath)
 	return createShaderModuleUnique(createInfo);
 }
 
-vk::UniqueShaderModule S_Device::CompileCreateShaderModule(const std::string& path)
+std::optional<vk::UniqueShaderModule> S_Device::CompileCreateShaderModule(const std::string& path)
 {
 	auto binary = ShaderCompiler::Compile(path);
+
+	if (binary.size() == 0) {
+		return {};
+	}
 
 	vk::ShaderModuleCreateInfo createInfo{};
 	createInfo.setCodeSize(binary.size() * 4).setPCode(binary.data());

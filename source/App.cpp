@@ -56,7 +56,6 @@ int32 App::Main(int32 argc, char* argv[]) // NOLINT
 	MainLoop();
 
 
-	Layer->quadDescriptorSet.reset(); // NEXT: This is here to log the proper error
 	Engine.DeinitEngine();
 
 	return 0;

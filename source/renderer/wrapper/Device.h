@@ -2,6 +2,7 @@
 #include "renderer/wrapper/PhysicalDevice.h"
 
 #include <vulkan/vulkan.hpp>
+#include <optional>
 
 struct DeviceQueue : public vk::Queue {
 	uint32 familyIndex;
@@ -30,5 +31,5 @@ inline struct S_Device : public vk::Device {
 	~S_Device();
 
 	vk::UniqueShaderModule CreateShaderModule(const std::string& binPath);
-	vk::UniqueShaderModule CompileCreateShaderModule(const std::string& path);
+	std::optional<vk::UniqueShaderModule> CompileCreateShaderModule(const std::string& path);
 } * Device;

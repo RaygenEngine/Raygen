@@ -16,8 +16,7 @@ struct GBuffer {
 
 	GBuffer(uint32 width, uint32 height);
 
-	void TransitionForShaderRead();
-	void TransitionForAttachmentWrite();
+	void TransitionForAttachmentWrite(vk::CommandBuffer cmdBuffer);
 
 	std::array<vk::ImageView, 6> GetViewsArray();
 };

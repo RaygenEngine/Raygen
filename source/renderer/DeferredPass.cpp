@@ -9,7 +9,6 @@
 
 void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 {
-
 	// shaders
 	auto vertShaderModule = Device->CompileCreateShaderModule("engine-data/spv/deferred.vert");
 	auto fragShaderModule = Device->CompileCreateShaderModule("engine-data/spv/deferred.frag");
@@ -17,13 +16,13 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo
 		.setStage(vk::ShaderStageFlagBits::eVertex) //
-		.setModule(vertShaderModule.get())
+		.setModule(vertShaderModule->get())
 		.setPName("main");
 
 	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
 	fragShaderStageInfo
 		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(fragShaderModule.get())
+		.setModule(fragShaderModule->get())
 		.setPName("main");
 
 	std::array shaderStages{ vertShaderStageInfo, fragShaderStageInfo };
@@ -97,7 +96,7 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 		.setDynamicStateCount(2u) //
 		.setPDynamicStates(dynamicStates);
 
-	auto& descriptorSetLayout = Layer->quadDescriptorSetLayout;
+	auto& descriptorSetLayout = Layer->quadDescLayout.setLayout;
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -157,7 +156,7 @@ void DeferredPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
 
 	// descriptor sets
 	cmdBuffer->bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &(*Layer->quadDescriptorSet), 0u, nullptr);
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &Layer->quadDescSet, 0u, nullptr);
 
 	// draw call (triangle)
 	cmdBuffer->draw(3u, 1u, 0u, 0u);

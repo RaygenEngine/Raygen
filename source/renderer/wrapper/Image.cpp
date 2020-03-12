@@ -95,6 +95,14 @@ Image::Image(uint32 width, uint32 height, vk::Format format, vk::ImageTiling til
 		vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, properties);
 }
 
+
+Image::Image(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling, vk::ImageLayout initalLayout,
+	vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
+{
+	Init(vk::ImageType::e2D, { width, height, 1u }, 1u, 1u, format, tiling, initalLayout, usage,
+		vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, properties);
+}
+
 vk::UniqueImageView Image::RequestImageView2D_0_0()
 {
 	auto testComp = [&]() {
@@ -212,4 +220,29 @@ void Image::CopyBufferToImage(const Buffer& buffer)
 	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.
 	Device->transferQueue.waitIdle();
+}
+
+vk::ImageMemoryBarrier Image::CreateTransitionBarrier(vk::ImageLayout currentLayout, vk::ImageLayout newLayout)
+{
+	m_currentLayout = currentLayout;
+
+	vk::ImageMemoryBarrier barrier{};
+	barrier //
+		.setOldLayout(m_currentLayout)
+		.setNewLayout(newLayout)
+		.setImage(m_handle.get())
+		.setSrcAccessMask(GetAccessMask(m_currentLayout))
+		.setDstAccessMask(GetAccessMask(newLayout))
+		// CHECK: family indices
+		.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+		.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+
+	barrier.subresourceRange
+		.setAspectMask(GetAspectMask(m_imageInfo)) //
+		.setBaseMipLevel(0u)
+		.setLevelCount(m_imageInfo.mipLevels)
+		.setBaseArrayLayer(0u)
+		.setLayerCount(m_imageInfo.arrayLayers);
+
+	return barrier;
 }

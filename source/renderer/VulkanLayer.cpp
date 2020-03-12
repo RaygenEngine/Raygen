@@ -70,8 +70,7 @@ void VulkanLayer::Init()
 	InitModelDescriptors();
 
 	// CHECK: Code smell, needs internal first init function
-	geomPass.InitRenderPass();
-	geomPass.InitPipelineAndStuff();
+	geomPass.InitAll();
 
 	InitQuadDescriptor();
 	InitDebugDescriptors();
@@ -98,8 +97,8 @@ void VulkanLayer::Init()
 	outCmdBuffer = Device->allocateCommandBuffers(allocInfo2);
 
 
-	imageAvailableSemaphore = Device->createSemaphoreUnique({});
 	renderFinishedSemaphore = Device->createSemaphoreUnique({});
+	imageAcquiredSem = Device->createSemaphoreUnique({});
 
 	Event::OnViewportUpdated.Bind(this, [&] { didViewportResize.Set(); });
 	Event::OnWindowResize.Bind(this, [&](auto, auto) { didWindowResize.Set(); });
@@ -131,146 +130,23 @@ void VulkanLayer::ReinitModels()
 void VulkanLayer::InitModelDescriptors()
 {
 	// uniforms
-	globalsUBO = std::make_unique<Buffer>(sizeof(UBO_Globals), vk::BufferUsageFlagBits::eUniformBuffer,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+	globalsUbo.reset(new Buffer(sizeof(UBO_Globals), vk::BufferUsageFlagBits::eUniformBuffer,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
 
-	{
-		R_DescriptorLayoutCreate layout;
-		layout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex);
-
-		globalUboDescriptorSetLayout = layout.Create();
-		globalUboDescriptorPool = layout.CreatePool(100u);
-
-
-		vk::DescriptorSetAllocateInfo allocInfo{};
-
-		allocInfo
-			.setDescriptorPool(globalUboDescriptorPool.get()) //
-			.setDescriptorSetCount(1)
-			.setPSetLayouts(&globalUboDescriptorSetLayout.get());
-
-		globalUboDescriptorSet = Device->allocateDescriptorSets(allocInfo)[0];
-	}
-
-	R_DescriptorLayoutCreate layout;
-
-	// materialUBOLayoutBinding
-	layout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
-
-	for (uint32 i = 0; i < 5u; ++i) {
-		layout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
-	}
-
-	modelDescriptorSetLayout = layout.Create();
-	modelDescriptorPool = layout.CreatePool(500u);
+	globalUboDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex);
+	globalUboDescLayout.Generate();
+	globalUboDescSet = globalUboDescLayout.GetDescriptorSet();
 }
 
-
-vk::DescriptorSet VulkanLayer::GetModelDescriptorSet()
-{
-	vk::DescriptorSetAllocateInfo allocInfo{};
-
-	allocInfo
-		.setDescriptorPool(modelDescriptorPool.get()) //
-		.setDescriptorSetCount(1)
-		.setPSetLayouts(&modelDescriptorSetLayout.get());
-
-	// CHECK: are those destructed?
-	return Device->allocateDescriptorSets(allocInfo)[0];
-}
 void VulkanLayer::InitDebugDescriptors()
 {
-	vk::DescriptorSetLayoutBinding samplerLayoutBindings;
-
-	samplerLayoutBindings
-		.setBinding(0) //
-		.setDescriptorCount(1u)
-		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setPImmutableSamplers(nullptr)
-		.setStageFlags(vk::ShaderStageFlagBits::eFragment);
-
-
-	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo
-		.setBindingCount(1u) //
-		.setPBindings(&samplerLayoutBindings);
-
-	debugDescriptorSetLayout = Device->createDescriptorSetLayoutUnique(layoutInfo);
-
-	std::array<vk::DescriptorPoolSize, 1> poolSizes{};
-	// for image sampler combinations
-	poolSizes[0]
-		.setType(vk::DescriptorType::eCombinedImageSampler) //
-		.setDescriptorCount(1u);
-
-
-	vk::DescriptorPoolCreateInfo poolInfo{};
-	poolInfo
-		.setPoolSizeCount(static_cast<uint32>(poolSizes.size())) //
-		.setPPoolSizes(poolSizes.data())
-		.setMaxSets(500u); // TODO: GPU ASSETS
-
-	debugDescriptorPool = Device->createDescriptorPoolUnique(poolInfo);
+	debugDescSetLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+	debugDescSetLayout.Generate();
 }
 
-vk::DescriptorSet VulkanLayer::GetDebugDescriptorSet()
+vk::UniqueSampler VulkanLayer::GetDefaultSampler()
 {
-	vk::DescriptorSetAllocateInfo allocInfo{};
-
-	allocInfo
-		.setDescriptorPool(debugDescriptorPool.get()) //
-		.setDescriptorSetCount(1u)
-		.setPSetLayouts(&debugDescriptorSetLayout.get());
-
-	// CHECK: are those destructed?
-	return Device->allocateDescriptorSets(allocInfo)[0];
-}
-
-void VulkanLayer::InitQuadDescriptor()
-{
-	// descriptor layout
-	std::array<vk::DescriptorSetLayoutBinding, 6> samplerLayoutBindings{};
-
-	for (uint32 i = 0u; i < 6u; ++i) {
-		samplerLayoutBindings[i]
-			.setBinding(i) //
-			.setDescriptorCount(1u)
-			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-			.setPImmutableSamplers(nullptr)
-			.setStageFlags(vk::ShaderStageFlagBits::eFragment);
-	}
-
-	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo
-		.setBindingCount(static_cast<uint32>(samplerLayoutBindings.size())) //
-		.setPBindings(samplerLayoutBindings.data());
-
-	quadDescriptorSetLayout = Device->createDescriptorSetLayoutUnique(layoutInfo);
-
-	std::array<vk::DescriptorPoolSize, 1> poolSizes{};
-	// for image sampler combinations
-	poolSizes[0]
-		.setType(vk::DescriptorType::eCombinedImageSampler) //
-		.setDescriptorCount(samplerLayoutBindings.size());
-
-
-	vk::DescriptorPoolCreateInfo poolInfo{};
-	poolInfo
-		.setPoolSizeCount(static_cast<uint32>(poolSizes.size())) //
-		.setPPoolSizes(poolSizes.data())
-		.setMaxSets(500u); // TODO: GPU ASSETS
-
-	quadDescriptorPool = Device->createDescriptorPoolUnique(poolInfo);
-
-	vk::DescriptorSetAllocateInfo allocInfo{};
-
-	allocInfo //
-		.setDescriptorPool(quadDescriptorPool.get())
-		.setDescriptorSetCount(1)
-		.setPSetLayouts(&quadDescriptorSetLayout.get());
-
-	quadDescriptorSet = std::move(Device->allocateDescriptorSetsUnique(allocInfo)[0]);
-
+	// CHECK: same for all?
 	// sampler
 	vk::SamplerCreateInfo samplerInfo{};
 	samplerInfo
@@ -291,8 +167,18 @@ void VulkanLayer::InitQuadDescriptor()
 		.setMinLod(0.f)
 		.setMaxLod(0.f);
 
-	// CHECK: same for all?
-	quadSampler = std::move(Device->createSamplerUnique(samplerInfo));
+	return Device->createSamplerUnique(samplerInfo);
+}
+
+void VulkanLayer::InitQuadDescriptor()
+{
+	for (uint32 i = 0u; i < 6u; ++i) {
+		quadDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+	}
+	quadDescLayout.Generate();
+	quadDescSet = quadDescLayout.GetDescriptorSet();
+
+	quadSampler = GetDefaultSampler();
 }
 
 void VulkanLayer::UpdateQuadDescriptorSet()
@@ -306,7 +192,7 @@ void VulkanLayer::UpdateQuadDescriptorSet()
 
 		vk::WriteDescriptorSet descriptorWrite{};
 		descriptorWrite
-			.setDstSet(quadDescriptorSet.get()) //
+			.setDstSet(quadDescSet) //
 			.setDstBinding(dstBinding)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
@@ -329,13 +215,13 @@ void VulkanLayer::UpdateQuadDescriptorSet()
 	vk::DescriptorBufferInfo bufferInfo{};
 
 	bufferInfo
-		.setBuffer(*globalsUBO) //
+		.setBuffer(*globalsUbo) //
 		.setOffset(0u)
 		.setRange(sizeof(UBO_Globals));
 	vk::WriteDescriptorSet descriptorWrite{};
 
 	descriptorWrite
-		.setDstSet(globalUboDescriptorSet) //
+		.setDstSet(globalUboDescSet) //
 		.setDstBinding(0u)
 		.setDstArrayElement(0u)
 		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
@@ -371,10 +257,8 @@ void VulkanLayer::OnWindowResize()
 	// NEXT:
 }
 
-
-void VulkanLayer::DrawFrame()
+void VulkanLayer::UpdateForFrame()
 {
-	PROFILE_SCOPE(Renderer);
 
 	if (*didWindowResize) {
 		OnWindowResize();
@@ -392,158 +276,120 @@ void VulkanLayer::DrawFrame()
 		UBO_Globals ubo{};
 		ubo.viewProj = camera->GetViewProjectionMatrix();
 
-		globalsUBO->UploadData(&ubo, sizeof(ubo));
+		globalsUbo->UploadData(&ubo, sizeof(ubo));
 	}
+}
 
-	// GEOMETRY PASS
-	geomPass.TransitionGBufferForAttachmentWrite();
+void VulkanLayer::DrawGeometryPass(
+	std::vector<vk::PipelineStageFlags> waitStages, SemVec waitSemaphores, SemVec signalSemaphores)
+{
+	PROFILE_SCOPE(Renderer);
+
 
 	geomPass.RecordGeometryDraw(&geometryCmdBuffer);
 
 	vk::SubmitInfo submitInfo{};
-	// vk::Semaphore waitSemaphores[] = { imageAvailableSemaphore.get() };
-	// wait with writing colors to the image until it's available
-	// the implementation can already start executing our vertex shader and such while the image is not yet
-	// available
-	vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+	submitInfo
+		.setWaitSemaphoreCount(waitSemaphores.size()) //
+		.setPWaitSemaphores(waitSemaphores.data())
+		.setPWaitDstStageMask(waitStages.data())
 
-	submitInfo.setWaitSemaphoreCount(0u)
-		.setPWaitSemaphores(nullptr)
-		.setPWaitDstStageMask(waitStages)
+		.setSignalSemaphoreCount(signalSemaphores.size())
+		.setPSignalSemaphores(signalSemaphores.data())
+
 		.setCommandBufferCount(1u)
 		.setPCommandBuffers(&geometryCmdBuffer);
 
-	// which semaphores to signal once the command buffer(s) have finished execution
-	// vk::Semaphore signalSemaphores[] = { m_renderFinishedSemaphore.get() };
-	// submitInfo.setSignalSemaphoreCount(1u).setPSignalSemaphores(signalSemaphores);
+	Device->graphicsQueue.submit(1u, &submitInfo, {});
+}
+
+
+void VulkanLayer::DrawDeferredPass(                 //
+	std::vector<vk::PipelineStageFlags> waitStages, //
+	SemVec waitSemaphores,                          //
+	SemVec signalSemaphores,                        //
+	vk::CommandBuffer cmdBuffer,                    //
+	vk::Framebuffer framebuffer)
+{
+	PROFILE_SCOPE(Renderer);
+
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
+
+	// begin command buffer recording
+	cmdBuffer.begin(beginInfo);
+
+
+	vk::RenderPassBeginInfo renderPassInfo{};
+	renderPassInfo.setRenderPass(VulkanLayer::swapchain->renderPass.get()).setFramebuffer(framebuffer);
+	renderPassInfo.renderArea
+		.setOffset({ 0, 0 }) //
+		.setExtent(VulkanLayer::swapchain->extent);
+
+	std::array<vk::ClearValue, 2> clearValues = {};
+	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	clearValues[1].setDepthStencil({ 1.0f, 0 });
+	renderPassInfo.setClearValueCount(static_cast<uint32>(clearValues.size()));
+	renderPassInfo.setPClearValues(clearValues.data());
+
+
+	cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+
+	defPass.RecordCmd(&cmdBuffer);
+	editorPass.RecordCmd(&cmdBuffer);
+
+	cmdBuffer.endRenderPass();
+	geomPass.m_gBuffer->TransitionForAttachmentWrite(cmdBuffer);
+
+	cmdBuffer.end();
+
+
+	vk::SubmitInfo submitInfo{};
+	submitInfo
+		.setWaitSemaphoreCount(waitSemaphores.size()) //
+		.setPWaitSemaphores(waitSemaphores.data())
+		.setPWaitDstStageMask(waitStages.data())
+
+		.setSignalSemaphoreCount(signalSemaphores.size())
+		.setPSignalSemaphores(signalSemaphores.data())
+
+		.setCommandBufferCount(1u)
+		.setPCommandBuffers(&cmdBuffer);
 
 	Device->graphicsQueue.submit(1u, &submitInfo, {});
-	Device->graphicsQueue.waitIdle();
+}
 
+void VulkanLayer::DrawFrame()
+{
+	PROFILE_SCOPE(Renderer);
+
+	UpdateForFrame();
+
+	// DrawGeometryPass({}, {}, { *gbufferReadySem });
+	DrawGeometryPass({}, {}, {});
 	// DEFERRED
-	geomPass.TransitionGBufferForShaderRead();
-
 	uint32 imageIndex;
+	Device->acquireNextImageKHR(swapchain->handle.get(), UINT64_MAX, { *imageAcquiredSem }, {}, &imageIndex);
 
-	vk::Result result0 = Device->acquireNextImageKHR(
-		swapchain->handle.get(), UINT64_MAX, imageAvailableSemaphore.get(), {}, &imageIndex);
+	DrawDeferredPass(
+		//
+		{ vk::PipelineStageFlagBits::eColorAttachmentOutput }, //
+		{ *imageAcquiredSem },                                 //
+		{},                                                    //
+		outCmdBuffer[imageIndex],
+		swapchain->framebuffers[imageIndex].get() //
+	);
 
-	switch (result0) {
-		case vk::Result::eErrorOutOfDateKHR: return;
-		case vk::Result::eSuccess:
-		case vk::Result::eSuboptimalKHR: break;
-		default: LOG_ABORT("failed to acquire swap chain image!");
-	}
-
-	auto cmdBuffer = &outCmdBuffer[imageIndex];
-	auto& framebuffer = swapchain->framebuffers[imageIndex].get();
-	{
-		vk::CommandBufferBeginInfo beginInfo{};
-		beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
-
-		// begin command buffer recording
-		cmdBuffer->begin(beginInfo);
-
-
-		vk::RenderPassBeginInfo renderPassInfo{};
-		renderPassInfo.setRenderPass(VulkanLayer::swapchain->renderPass.get()).setFramebuffer(framebuffer);
-		renderPassInfo.renderArea
-			.setOffset({ 0, 0 }) //
-			.setExtent(VulkanLayer::swapchain->extent);
-
-		std::array<vk::ClearValue, 2> clearValues = {};
-		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-		clearValues[1].setDepthStencil({ 1.0f, 0 });
-		renderPassInfo.setClearValueCount(static_cast<uint32>(clearValues.size()));
-		renderPassInfo.setPClearValues(clearValues.data());
-
-		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-
-		defPass.RecordCmd(cmdBuffer);
-		editorPass.RecordCmd(cmdBuffer);
-
-		cmdBuffer->endRenderPass();
-		cmdBuffer->end();
-	}
-
-
-	vk::SubmitInfo submitInfo2{};
-	vk::Semaphore waitSemaphores[] = { imageAvailableSemaphore.get() };
-	vk::PipelineStageFlags waitStages2[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
-
-	submitInfo2.setWaitSemaphoreCount(0u)
-		.setPWaitSemaphores(nullptr)
-		.setPWaitDstStageMask(waitStages2)
-		.setCommandBufferCount(1u)
-		.setPCommandBuffers(&outCmdBuffer[imageIndex]);
-
-	Device->graphicsQueue.submit(1u, &submitInfo2, {});
-	Device->graphicsQueue.waitIdle();
-
+	PROFILE_SCOPE(Renderer);
 
 	vk::PresentInfoKHR presentInfo;
-	presentInfo.setWaitSemaphoreCount(1u).setPWaitSemaphores(waitSemaphores);
+	presentInfo //
+		.setWaitSemaphoreCount(0)
+		.setPWaitSemaphores(nullptr);
 
 	vk::SwapchainKHR swapChains[] = { swapchain->handle.get() };
 	presentInfo.setSwapchainCount(1u).setPSwapchains(swapChains).setPImageIndices(&imageIndex).setPResults(nullptr);
 
-	vk::Result result1 = Device->presentQueue.presentKHR(presentInfo);
-
-	Device->presentQueue.waitIdle();
-
-	switch (result1) {
-		case vk::Result::eErrorOutOfDateKHR:
-		case vk::Result::eSuboptimalKHR: return;
-		case vk::Result::eSuccess: break;
-		default: LOG_ABORT("failed to acquire swap chain image!");
-	}
-}
-
-void R_DescriptorLayoutCreate::AddBinding(
-	vk::DescriptorType type, vk::ShaderStageFlags stageFlags, uint32 descriptorCount)
-{
-	{
-		vk::DescriptorSetLayoutBinding binding{};
-		binding
-			.setBinding(static_cast<uint32>(bindings.size())) //
-			.setDescriptorType(type)
-			.setDescriptorCount(descriptorCount)
-			.setStageFlags(stageFlags)
-			.setPImmutableSamplers(nullptr);
-
-		bindings.push_back(binding);
-
-		auto it = std::find_if(poolSizes.begin(), poolSizes.end(), [&](auto& size) { return size.type == type; });
-		if (it != poolSizes.end()) {
-			it->descriptorCount++;
-		}
-		else {
-			vk::DescriptorPoolSize size{};
-			size.setDescriptorCount(1) //
-				.setType(type);
-
-			poolSizes.push_back(size);
-		}
-	}
-}
-
-vk::UniqueDescriptorSetLayout R_DescriptorLayoutCreate::Create()
-{
-	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo
-		.setBindingCount(static_cast<uint32>(bindings.size())) //
-		.setPBindings(bindings.data());
-
-	return Device->createDescriptorSetLayoutUnique(layoutInfo);
-}
-
-vk::UniqueDescriptorPool R_DescriptorLayoutCreate::CreatePool(uint32 maxSetCount)
-{
-	vk::DescriptorPoolCreateInfo poolInfo{};
-	poolInfo
-		.setPoolSizeCount(static_cast<uint32>(poolSizes.size())) //
-		.setPPoolSizes(poolSizes.data())
-		.setMaxSets(maxSetCount);
-
-	return Device->createDescriptorPoolUnique(poolInfo);
+	PROFILE_SCOPE(Renderer);
+	Device->presentQueue.presentKHR(presentInfo);
 }
