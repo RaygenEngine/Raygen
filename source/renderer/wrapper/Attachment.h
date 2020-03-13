@@ -6,7 +6,7 @@
 
 struct Attachment {
 
-	std::unique_ptr<Image> image;
+	UniquePtr<Image> image;
 	vk::UniqueImageView view;
 
 	std::optional<vk::DescriptorSet> debugDescriptorSet;

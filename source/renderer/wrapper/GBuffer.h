@@ -5,14 +5,14 @@
 
 struct GBuffer {
 
-	std::unique_ptr<Attachment> position;
-	std::unique_ptr<Attachment> normal;
+	UniquePtr<Attachment> position;
+	UniquePtr<Attachment> normal;
 	// rgb: albedo, a: opacity
-	std::unique_ptr<Attachment> albedo;
+	UniquePtr<Attachment> albedo;
 	// r: metallic, g: roughness, b: occlusion, a: occlusion strength
-	std::unique_ptr<Attachment> specular;
-	std::unique_ptr<Attachment> emissive;
-	std::unique_ptr<Attachment> depth;
+	UniquePtr<Attachment> specular;
+	UniquePtr<Attachment> emissive;
+	UniquePtr<Attachment> depth;
 
 	GBuffer(uint32 width, uint32 height);
 

@@ -2,8 +2,8 @@
 #include "renderer/asset/Model.h"
 
 #include "asset/AssetManager.h"
-#include "renderer/VulkanLayer.h"
 #include "renderer/asset/GpuAssetManager.h"
+#include "renderer/VulkanLayer.h"
 #include "renderer/wrapper/Device.h"
 
 // PERF:
@@ -33,25 +33,22 @@ GpuAssetBaseTyped<ModelPod>::GpuAssetBaseTyped(PodHandle<ModelPod> podHandle)
 			indexStagingBuffer.UploadData(gg.indices.data(), indexBufferSize);
 
 			// device local
-			vgg.vertexBuffer = std::make_unique<Buffer>(vertexBufferSize,
+			vgg.vertexBuffer.reset(new Buffer(vertexBufferSize,
 				vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-				vk::MemoryPropertyFlagBits::eDeviceLocal);
+				vk::MemoryPropertyFlagBits::eDeviceLocal));
 
-			vgg.indexBuffer = std::make_unique<Buffer>(indexBufferSize,
+			vgg.indexBuffer.reset(new Buffer(indexBufferSize,
 				vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
-				vk::MemoryPropertyFlagBits::eDeviceLocal);
+				vk::MemoryPropertyFlagBits::eDeviceLocal));
 
-			// copy host to device local
+			// copy from host to device local
 			vgg.vertexBuffer->CopyBuffer(vertexStagingBuffer);
 			vgg.indexBuffer->CopyBuffer(indexStagingBuffer);
 
 			vgg.indexCount = static_cast<uint32>(gg.indices.size());
 
-			// albedo texture
-
 			// WIP: asset caching
 			vgg.material = GpuAssetManager.GetGpuHandle(data->materials[gg.materialIndex]);
-
 
 			geometryGroups.emplace_back(std::move(vgg));
 		}

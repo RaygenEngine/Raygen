@@ -6,7 +6,6 @@
 
 #include <vulkan/vulkan.hpp>
 
-
 // TODO: GPU ASSETS From https://vulkan-tutorial.com/en/Vertex_buffers/Index_buffer
 // store multiple buffers, like the vertex and index buffer, into a single VkBuffer and use offsets in commands like
 // vkCmdBindVertexBuffers. The advantage is that your data is more cache friendly in that case, because it's closer
@@ -17,8 +16,8 @@
 // PERF: batching
 struct GPUGeometryGroup {
 
-	std::unique_ptr<Buffer> vertexBuffer;
-	std::unique_ptr<Buffer> indexBuffer;
+	UniquePtr<Buffer> vertexBuffer;
+	UniquePtr<Buffer> indexBuffer;
 
 	GpuHandle<MaterialPod> material;
 
