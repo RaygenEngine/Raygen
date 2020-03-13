@@ -8,12 +8,11 @@
 
 DECLARE_GPU_ASSET(Texture, TexturePod)
 {
-	std::unique_ptr<Image> image;
+	UniquePtr<Image> image;
 	vk::UniqueImageView view;
 
 	// PERF: one to many views
 	vk::UniqueSampler sampler;
-
 
 	GpuAssetBaseTyped<TexturePod>(PodHandle<TexturePod> podHandle);
 };

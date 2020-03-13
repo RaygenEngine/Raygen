@@ -2,8 +2,9 @@
 #include "renderer/asset/Texture.h"
 
 #include "asset/AssetManager.h"
-#include "renderer/wrapper/Device.h"
+#include "renderer/VulkanUtl.h"
 #include "renderer/wrapper/Buffer.h"
+#include "renderer/wrapper/Device.h"
 
 GpuAssetBaseTyped<TexturePod>::GpuAssetBaseTyped(PodHandle<TexturePod> podHandle)
 {
@@ -20,16 +21,18 @@ GpuAssetBaseTyped<TexturePod>::GpuAssetBaseTyped(PodHandle<TexturePod> podHandle
 
 	vk::Format format = imgData->isHdr ? vk::Format::eR32G32B32A32Sfloat : vk::Format::eR8G8B8A8Srgb;
 
-	image = std::make_unique<Image>(imgData->width, imgData->height, format, vk::ImageTiling::eOptimal,
-		vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal);
+	image.reset(new Image(imgData->width, imgData->height, format, vk::ImageTiling::eOptimal,
+		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+		vk::MemoryPropertyFlagBits::eDeviceLocal));
+
+	// transiton to transfer optimal
+	image->TransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
 
 	// copy (internally transitions to transfer optimal)
 	image->CopyBufferToImage(stagingBuffer);
 
-
 	// finally transiton to graphics layout for shader access
-	image->TransitionToLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+	image->TransitionToLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	// request
 	view = image->RequestImageView2D_0_0();
@@ -38,11 +41,11 @@ GpuAssetBaseTyped<TexturePod>::GpuAssetBaseTyped(PodHandle<TexturePod> podHandle
 	// NEXT: values should be chosen based on Texture pod
 	vk::SamplerCreateInfo samplerInfo{};
 	samplerInfo
-		.setMagFilter(vk::Filter::eLinear) //
-		.setMinFilter(vk::Filter::eLinear)
-		.setAddressModeU(vk::SamplerAddressMode::eRepeat)
-		.setAddressModeV(vk::SamplerAddressMode::eRepeat)
-		.setAddressModeW(vk::SamplerAddressMode::eRepeat)
+		.setMagFilter(GetFilter(textureData->magFilter)) //
+		.setMinFilter(GetFilter(textureData->minFilter))
+		.setAddressModeU(GetWrapping(textureData->wrapU))
+		.setAddressModeV(GetWrapping(textureData->wrapV))
+		.setAddressModeW(GetWrapping(textureData->wrapW))
 		// PERF:
 		.setAnisotropyEnable(VK_TRUE)
 		.setMaxAnisotropy(1u)
@@ -50,7 +53,9 @@ GpuAssetBaseTyped<TexturePod>::GpuAssetBaseTyped(PodHandle<TexturePod> podHandle
 		.setUnnormalizedCoordinates(VK_FALSE)
 		.setCompareEnable(VK_FALSE)
 		.setCompareOp(vk::CompareOp::eAlways)
-		.setMipmapMode(vk::SamplerMipmapMode::eLinear)
+
+		// CHECK: texture pod should match the vk sampler
+		.setMipmapMode(GetMipmapFilter(textureData->magFilter))
 		.setMipLodBias(0.f)
 		.setMinLod(0.f)
 		.setMaxLod(0.f);

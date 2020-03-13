@@ -1,36 +1,39 @@
 #include "pch.h"
 #include "renderer/wrapper/GBuffer.h"
 
-#include "renderer/wrapper/Device.h"
-#include "engine/profiler/ProfileScope.h"
 #include "engine/Logger.h"
+#include "engine/profiler/ProfileScope.h"
+#include "renderer/wrapper/Device.h"
 
 GBuffer::GBuffer(uint32 width, uint32 height)
 {
-	position = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Srgb,
-		vk::ImageLayout::eColorAttachmentOptimal,
-		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+	auto initAttachment = [&](auto& att, vk::Format format, vk::ImageUsageFlags usage, vk::ImageLayout finalLayout) {
+		att.reset(new Attachment(
+			width, height, format, vk::ImageLayout::eUndefined, usage | vk::ImageUsageFlagBits::eSampled));
+		att->image->TransitionToLayout(vk::ImageLayout::eUndefined, finalLayout);
+	};
 
-	normal = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Srgb,
-		vk::ImageLayout::eColorAttachmentOptimal,
-		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
 
-	albedo = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Srgb,
-		vk::ImageLayout::eColorAttachmentOptimal,
-		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+	initAttachment(position, vk::Format::eR8G8B8A8Srgb, vk::ImageUsageFlagBits::eColorAttachment,
+		vk::ImageLayout::eColorAttachmentOptimal);
 
-	specular = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Srgb,
-		vk::ImageLayout::eColorAttachmentOptimal,
-		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+	initAttachment(normal, vk::Format::eR8G8B8A8Srgb, vk::ImageUsageFlagBits::eColorAttachment,
+		vk::ImageLayout::eColorAttachmentOptimal);
 
-	emissive = std::make_unique<Attachment>(width, height, vk::Format::eR8G8B8A8Srgb,
-		vk::ImageLayout::eColorAttachmentOptimal,
-		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+	initAttachment(albedo, vk::Format::eR8G8B8A8Srgb, vk::ImageUsageFlagBits::eColorAttachment,
+		vk::ImageLayout::eColorAttachmentOptimal);
+
+	initAttachment(specular, vk::Format::eR8G8B8A8Srgb, vk::ImageUsageFlagBits::eColorAttachment,
+		vk::ImageLayout::eColorAttachmentOptimal);
+
+	initAttachment(emissive, vk::Format::eR8G8B8A8Srgb, vk::ImageUsageFlagBits::eColorAttachment,
+		vk::ImageLayout::eColorAttachmentOptimal);
+
 
 	vk::Format depthFormat = Device->pd->FindDepthFormat();
 
-	depth = std::make_unique<Attachment>(width, height, depthFormat, vk::ImageLayout::eDepthStencilAttachmentOptimal,
-		vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
+	initAttachment(depth, depthFormat, vk::ImageUsageFlagBits::eDepthStencilAttachment,
+		vk::ImageLayout::eDepthStencilAttachmentOptimal);
 }
 
 namespace {

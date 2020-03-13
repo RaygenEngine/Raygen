@@ -1,10 +1,11 @@
 #include "pch.h"
 #include "renderer/asset/Material.h"
-#include "renderer/VulkanLayer.h"
-#include "renderer/wrapper/Device.h"
+
 #include "asset/AssetManager.h"
 #include "asset/pods/MaterialPod.h"
 #include "renderer/asset/GpuAssetManager.h"
+#include "renderer/VulkanLayer.h"
+#include "renderer/wrapper/Device.h"
 
 GpuAssetBaseTyped<MaterialPod>::GpuAssetBaseTyped(PodHandle<MaterialPod> podHandle)
 {
@@ -35,8 +36,8 @@ GpuAssetBaseTyped<MaterialPod>::GpuAssetBaseTyped(PodHandle<MaterialPod> podHand
 	emissiveTexture = GpuAssetManager.GetGpuHandle(data->emissiveTexture);
 
 	// CHECK: upload once for now (not dynamic changes)
-	materialUBO = std::make_unique<Buffer>(sizeof(UBO_Material), vk::BufferUsageFlagBits::eUniformBuffer,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+	materialUBO.reset(new Buffer(sizeof(UBO_Material), vk::BufferUsageFlagBits::eUniformBuffer,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
 
 	materialUBO->UploadData(&matData, sizeof(UBO_Material));
 

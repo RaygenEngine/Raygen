@@ -6,7 +6,6 @@
 class Image {
 	// keep createInfo for compatibility testing
 	vk::ImageCreateInfo m_imageInfo;
-	vk::ImageLayout m_currentLayout;
 
 
 	vk::UniqueImage m_handle;
@@ -21,9 +20,6 @@ public:
 		vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage,
 		vk::SampleCountFlagBits samples, vk::SharingMode sharingMode, vk::MemoryPropertyFlags properties);
 
-	Image(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage,
-		vk::MemoryPropertyFlags properties);
-
 	Image(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling, vk::ImageLayout initalLayout,
 		vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties);
 
@@ -34,13 +30,13 @@ public:
 	// Getters are also expected to test for view - image compatibility
 	vk::UniqueImageView RequestImageView2D_0_0();
 
-	// Transitions
-	void TransitionToLayout(vk::ImageLayout newLayout);
+	// Blocking transition to layout
+	void TransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
 	void CopyBufferToImage(const Buffer& buffer);
 
 	operator vk::Image() const noexcept { return m_handle.get(); }
 
 
-	vk::ImageMemoryBarrier CreateTransitionBarrier(vk::ImageLayout currentLayout, vk::ImageLayout newLayout);
+	vk::ImageMemoryBarrier CreateTransitionBarrier(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 };

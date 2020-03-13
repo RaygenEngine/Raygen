@@ -1,8 +1,7 @@
 #pragma once
 #include "asset/pods/MaterialPod.h"
-#include "renderer/asset/Texture.h"
 #include "renderer/asset/GpuAssetHandle.h"
-
+#include "renderer/asset/Texture.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -42,7 +41,7 @@ struct GpuAssetBaseTyped<MaterialPod> : public GpuAssetBase {
 
 	UBO_Material matData;
 
-	std::unique_ptr<Buffer> materialUBO;
+	UniquePtr<Buffer> materialUBO;
 
 	// one for each swapchain image
 	// TODO: check

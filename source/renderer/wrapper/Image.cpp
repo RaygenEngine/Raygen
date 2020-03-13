@@ -76,8 +76,6 @@ void Image::Init(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels,
 	m_memory = Device->allocateMemoryUnique(allocInfo);
 
 	Device->bindImageMemory(m_handle.get(), m_memory.get(), 0);
-
-	m_currentLayout = initialLayout;
 }
 
 Image::Image(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
@@ -87,14 +85,6 @@ Image::Image(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uin
 	Init(imageType, extent, mipLevels, arrayLayers, format, tiling, initialLayout, usage, samples, sharingMode,
 		properties);
 }
-
-Image::Image(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage,
-	vk::MemoryPropertyFlags properties)
-{
-	Init(vk::ImageType::e2D, { width, height, 1u }, 1u, 1u, format, tiling, vk::ImageLayout::eUndefined, usage,
-		vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, properties);
-}
-
 
 Image::Image(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling, vk::ImageLayout initalLayout,
 	vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
@@ -127,21 +117,14 @@ vk::UniqueImageView Image::RequestImageView2D_0_0()
 	return Device->createImageViewUnique(viewInfo);
 }
 
-// PERF: benchmark
-// TEST:
-void Image::TransitionToLayout(vk::ImageLayout newLayout)
+void Image::TransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
-	if (m_currentLayout == newLayout) {
-		LOG_WARN("Image layout transition, new layout is the same with the current layout of the image");
-		return;
-	}
-
 	vk::ImageMemoryBarrier barrier{};
-	barrier //
-		.setOldLayout(m_currentLayout)
+	barrier
+		.setOldLayout(oldLayout) //
 		.setNewLayout(newLayout)
 		.setImage(m_handle.get())
-		.setSrcAccessMask(GetAccessMask(m_currentLayout))
+		.setSrcAccessMask(GetAccessMask(oldLayout))
 		.setDstAccessMask(GetAccessMask(newLayout))
 		// CHECK: family indices
 		.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
@@ -155,7 +138,7 @@ void Image::TransitionToLayout(vk::ImageLayout newLayout)
 		.setLayerCount(m_imageInfo.arrayLayers);
 
 
-	vk::PipelineStageFlags sourceStage = GetPipelineStage(m_currentLayout);
+	vk::PipelineStageFlags sourceStage = GetPipelineStage(oldLayout);
 	vk::PipelineStageFlags destinationStage = GetPipelineStage(newLayout);
 
 	vk::CommandBufferBeginInfo beginInfo{};
@@ -174,18 +157,10 @@ void Image::TransitionToLayout(vk::ImageLayout newLayout)
 
 	Device->graphicsQueue.submit(1u, &submitInfo, {});
 	Device->graphicsQueue.waitIdle();
-
-	// change layout
-	m_currentLayout = newLayout;
 }
 
 void Image::CopyBufferToImage(const Buffer& buffer)
 {
-	// transition layout to transfer optimal if not already
-	if (m_currentLayout != vk::ImageLayout::eTransferDstOptimal) {
-		TransitionToLayout(vk::ImageLayout::eTransferDstOptimal);
-	}
-
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
@@ -206,7 +181,8 @@ void Image::CopyBufferToImage(const Buffer& buffer)
 		.setLayerCount(m_imageInfo.arrayLayers);
 
 	// m_currentLayout is ensured to be vk::ImageLayout::eTransferDstOptimal here
-	Device->transferCmdBuffer.copyBufferToImage(buffer, m_handle.get(), m_currentLayout, std::array{ region });
+	Device->transferCmdBuffer.copyBufferToImage(
+		buffer, m_handle.get(), vk::ImageLayout::eTransferDstOptimal, std::array{ region });
 
 	Device->transferCmdBuffer.end();
 
@@ -222,16 +198,14 @@ void Image::CopyBufferToImage(const Buffer& buffer)
 	Device->transferQueue.waitIdle();
 }
 
-vk::ImageMemoryBarrier Image::CreateTransitionBarrier(vk::ImageLayout currentLayout, vk::ImageLayout newLayout)
+vk::ImageMemoryBarrier Image::CreateTransitionBarrier(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
-	m_currentLayout = currentLayout;
-
 	vk::ImageMemoryBarrier barrier{};
 	barrier //
-		.setOldLayout(m_currentLayout)
+		.setOldLayout(oldLayout)
 		.setNewLayout(newLayout)
 		.setImage(m_handle.get())
-		.setSrcAccessMask(GetAccessMask(m_currentLayout))
+		.setSrcAccessMask(GetAccessMask(oldLayout))
 		.setDstAccessMask(GetAccessMask(newLayout))
 		// CHECK: family indices
 		.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)

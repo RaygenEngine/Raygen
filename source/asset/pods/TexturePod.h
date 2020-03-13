@@ -13,6 +13,7 @@ enum class TextureFiltering
 	LinearMipmapLinear
 };
 
+// CHECK: (mirrored clamping etc)
 enum class TextureWrapping
 {
 	ClampToEdge,

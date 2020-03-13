@@ -290,11 +290,11 @@ void VulkanLayer::DrawGeometryPass(
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo
-		.setWaitSemaphoreCount(waitSemaphores.size()) //
+		.setWaitSemaphoreCount(static_cast<uint32>(waitSemaphores.size())) //
 		.setPWaitSemaphores(waitSemaphores.data())
 		.setPWaitDstStageMask(waitStages.data())
 
-		.setSignalSemaphoreCount(signalSemaphores.size())
+		.setSignalSemaphoreCount(static_cast<uint32>(signalSemaphores.size()))
 		.setPSignalSemaphores(signalSemaphores.data())
 
 		.setCommandBufferCount(1u)
@@ -346,11 +346,11 @@ void VulkanLayer::DrawDeferredPass(                 //
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo
-		.setWaitSemaphoreCount(waitSemaphores.size()) //
+		.setWaitSemaphoreCount(static_cast<uint32>(waitSemaphores.size())) //
 		.setPWaitSemaphores(waitSemaphores.data())
 		.setPWaitDstStageMask(waitStages.data())
 
-		.setSignalSemaphoreCount(signalSemaphores.size())
+		.setSignalSemaphoreCount(static_cast<uint32>(signalSemaphores.size()))
 		.setPSignalSemaphores(signalSemaphores.data())
 
 		.setCommandBufferCount(1u)
@@ -392,4 +392,6 @@ void VulkanLayer::DrawFrame()
 
 	PROFILE_SCOPE(Renderer);
 	Device->presentQueue.presentKHR(presentInfo);
+
+	Device->waitIdle();
 }
