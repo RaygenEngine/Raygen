@@ -63,6 +63,7 @@ int32 App::Main(int32 argc, char* argv[]) // NOLINT
 
 void App::MainLoop()
 {
+
 	while (!glfwWindowShouldClose(Engine.GetMainWindow())) {
 		Profiler.BeginFrame();
 
@@ -77,9 +78,15 @@ void App::MainLoop()
 
 		Engine.GetWorld()->Update();
 
-		Layer->DrawFrame();
+		// Layer->DrawFrame();
 
 		Engine.ReportFrameDrawn();
+
+		static auto p = std::thread::thread([]() {
+			for (;;) {
+				Layer->DrawFrame();
+			}
+		});
 	}
 }
 
@@ -87,7 +94,7 @@ void App::WhileResizing()
 {
 	Engine.GetWorld()->Update();
 
-	Layer->DrawFrame();
+	// Layer->DrawFrame();
 
 	Engine.ReportFrameDrawn();
 

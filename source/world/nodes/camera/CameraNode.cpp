@@ -2,6 +2,17 @@
 
 #include "world/nodes/camera/CameraNode.h"
 
+
+CameraNode::CameraNode()
+{
+	sceneUid = Scene->EnqueueCreateCmd<SceneCamera>();
+}
+
+CameraNode::~CameraNode()
+{
+	Scene->EnqueueDestroyCmd<SceneCamera>(sceneUid);
+}
+
 void CameraNode::CalculateWorldAABB()
 {
 	m_aabb = m_frustum.FrustumPyramidAABB(GetNodePositionWCS());
@@ -43,9 +54,19 @@ void CameraNode::DirtyUpdate(DirtyFlagset flags)
 	Node::DirtyUpdate(flags);
 	if (flags[DF::Projection] || flags[DF::ViewportSize]) {
 		RecalculateProjectionFov();
+
+		Enqueue([=](SceneCamera& cam) {
+			cam.proj = m_projectionMatrix;
+			cam.viewProj = m_viewProjectionMatrix;
+		});
 	}
 
 	if (flags[DF::SRT] || flags[DF::FocalLength]) {
 		RecalculateViewMatrix();
+
+		Enqueue([=](SceneCamera& cam) {
+			cam.view = m_viewMatrix;
+			cam.viewProj = m_viewProjectionMatrix;
+		});
 	}
 }

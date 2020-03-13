@@ -83,8 +83,6 @@ private:
 	ch::system_clock::time_point m_lastRecordTime;
 	size_t m_framesSinceLastRecord{ 0 }; // WARNING: use 64 bits to avoid overflow.
 
-	void InitRenderer();
-
 public:
 	// Init the internal engine systems.
 	// You MUST run this to properly init the engine
@@ -107,4 +105,5 @@ public:
 	void DeinitEngine();
 
 	[[nodiscard]] App* GetApp() const { return m_app; }
+
 } Engine;

@@ -30,9 +30,3 @@ DECLARE_GPU_ASSET(Model, ModelPod)
 	std::vector<GPUGeometryGroup> geometryGroups;
 	GpuAssetBaseTyped<ModelPod>(PodHandle<ModelPod> podHandle);
 };
-
-
-struct Scene_Model {
-	GeometryNode* node;
-	GpuHandle<ModelPod> model;
-};
