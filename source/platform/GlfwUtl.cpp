@@ -1,10 +1,12 @@
 #include "pch.h"
-
 #include "platform/GlfwUtl.h"
+
 #include "editor/Editor.h"
 #include "engine/Logger.h"
 #include "engine/Input.h"
 #include "engine/Events.h"
+#include "App.h"
+
 #include <glfw/glfw3.h>
 #include <vector>
 
@@ -41,7 +43,10 @@ void WindowSizeCb(GLFWwindow* window, int32 newWidth, int32 newHeight) {}
 void WindowCloseCb(GLFWwindow* window) {}
 
 // Is called during resize & moving and can be used to keep rendering
-void WindowRefreshCb(GLFWwindow* window) {}
+void WindowRefreshCb(GLFWwindow* window)
+{
+	Engine.GetApp()->WhileResizing();
+}
 
 void WindowFocusCb(GLFWwindow* window, int32 isFocused) // Unfortunately we can't implicit convert to bool here
 {
@@ -59,7 +64,9 @@ void WindowMaximizeCb(GLFWwindow* window, int32 isMaximised) {}
 // This should probably preferred for "resize" over window size, check glfw docs.
 void WindowFramebufferSizeCb(GLFWwindow* window, int32 newWidth, int32 newHeight)
 {
-	Event::OnWindowResize.Broadcast(newWidth, newHeight);
+	if (newWidth != 0 && newHeight != 0) {
+		Event::OnWindowResize.Broadcast(newWidth, newHeight);
+	}
 }
 
 void WindowContentScaleCb(GLFWwindow* window, float newXScale, float newYScale) {}
@@ -155,7 +162,8 @@ void glfwutl::SetupEventCallbacks(GLFWwindow* window)
 	// glfwSetWindowPosCallback(window, WindowPositionCb);
 	// glfwSetWindowSizeCallback(window, WindowSizeCb);
 	// glfwSetWindowCloseCallback(window, WindowCloseCb);
-	// glfwSetWindowRefreshCallback(window, WindowRefreshCb); TODO: Use refresh for rendering
+	glfwSetWindowRefreshCallback(window, WindowRefreshCb);
+
 	glfwSetWindowFocusCallback(window, WindowFocusCb);
 	glfwSetWindowIconifyCallback(window, WindowIconifyCb);
 	// glfwSetWindowMaximizeCallback(window, WindowMaximizeCb);

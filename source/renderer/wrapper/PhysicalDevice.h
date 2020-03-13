@@ -9,9 +9,9 @@ struct QueueFamily {
 };
 
 struct SwapchainSupportDetails {
-	vk::SurfaceCapabilitiesKHR capabilities;
 	std::vector<vk::SurfaceFormatKHR> formats;
 	std::vector<vk::PresentModeKHR> presentModes;
+	vk::SurfaceCapabilitiesKHR capabilities;
 };
 
 
@@ -25,7 +25,6 @@ struct PhysicalDevice : public vk::PhysicalDevice {
 	std::vector<QueueFamily> computeFamilies;
 	std::vector<QueueFamily> presentFamilies;
 
-	SwapchainSupportDetails ssDetails;
 
 	PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surface);
 
@@ -34,5 +33,9 @@ struct PhysicalDevice : public vk::PhysicalDevice {
 	vk::Format FindSupportedFormat(
 		const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features);
 
+	vk::SurfaceKHR surface;
+
 	vk::Format FindDepthFormat();
+
+	[[nodiscard]] SwapchainSupportDetails GetSwapchainSupportDetails() const;
 };

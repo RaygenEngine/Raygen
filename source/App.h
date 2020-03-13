@@ -34,6 +34,8 @@ public:
 
 	virtual void MainLoop();
 
+	virtual void WhileResizing();
+
 	// Return a 'new NodeFactory()' subtype of node factory with your own factory
 	virtual NodeFactory* MakeNodeFactory();
 
