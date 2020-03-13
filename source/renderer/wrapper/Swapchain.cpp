@@ -56,13 +56,13 @@ vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
 }
 } // namespace
 
+Swapchain::~Swapchain() {}
 
 Swapchain::Swapchain(vk::SurfaceKHR surface)
 {
-
 	auto pd = Device->pd;
 
-	auto details = pd->ssDetails;
+	auto details = pd->GetSwapchainSupportDetails();
 
 	vk::SurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(details.formats);
 	vk::PresentModeKHR presentMode = ChooseSwapPresentMode(details.presentModes);

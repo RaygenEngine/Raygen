@@ -5,8 +5,9 @@
 
 #include <set>
 
-PhysicalDevice::PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surface)
+PhysicalDevice::PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inSurface)
 	: vk::PhysicalDevice(vkHandle)
+	, surface(inSurface)
 {
 	std::vector<vk::QueueFamilyProperties> queueFamilyProperties = getQueueFamilyProperties();
 
@@ -70,11 +71,7 @@ PhysicalDevice::PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surfa
 
 	rating = 1.f;
 
-	// specific surface support details
-
-	ssDetails.capabilities = getSurfaceCapabilitiesKHR(surface);
-	ssDetails.formats = getSurfaceFormatsKHR(surface);
-	ssDetails.presentModes = getSurfacePresentModesKHR(surface);
+	// specific surface suppor[t details
 }
 
 uint32 PhysicalDevice::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties)
@@ -111,4 +108,14 @@ vk::Format PhysicalDevice::FindDepthFormat()
 {
 	return FindSupportedFormat({ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint },
 		vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+}
+
+SwapchainSupportDetails PhysicalDevice::GetSwapchainSupportDetails() const
+{
+	SwapchainSupportDetails ssDetails;
+
+	ssDetails.capabilities = getSurfaceCapabilitiesKHR(surface);
+	ssDetails.formats = getSurfaceFormatsKHR(surface);
+	ssDetails.presentModes = getSurfacePresentModesKHR(surface);
+	return ssDetails;
 }

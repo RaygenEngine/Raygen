@@ -63,7 +63,6 @@ int32 App::Main(int32 argc, char* argv[]) // NOLINT
 
 void App::MainLoop()
 {
-	GLFWwindow* window = Engine.GetMainWindow();
 	while (!glfwWindowShouldClose(Engine.GetMainWindow())) {
 		Profiler.BeginFrame();
 
@@ -74,19 +73,28 @@ void App::MainLoop()
 		Engine.GetInput().Z_ClearFrameState();
 		Engine.GetWorld()->ClearDirtyFlags();
 
-		// TODO: full update on window resize
-		// Let our window handle any events.
 		glfwPollEvents();
 
 		Engine.GetWorld()->Update();
 
-		// Engine.GetRenderer()->DrawFrame();
 		Layer->DrawFrame();
 
 		Engine.ReportFrameDrawn();
-
-		window = Engine.GetMainWindow();
 	}
+}
+
+void App::WhileResizing()
+{
+	Engine.GetWorld()->Update();
+
+	Layer->DrawFrame();
+
+	Engine.ReportFrameDrawn();
+
+	//
+	//
+
+	Engine.GetEditor()->PreBeginFrame();
 }
 
 NodeFactory* App::MakeNodeFactory()

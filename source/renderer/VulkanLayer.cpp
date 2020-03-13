@@ -17,30 +17,47 @@
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 {
-	vk::Extent2D sizes[] = {
-		{ 1280, 800 },
-		{ 1920, 1080 },
-		{ 2560, 1440 },
-		{ 4096, 2160 },
-	};
-	constexpr size_t sizesLen = sizeof(sizes) / sizeof(vk::Extent2D);
+	return viewportSize;
 
-	vk::Extent2D result = viewportSize;
-	for (size_t i = 0; i < sizesLen; i++) {
-		if (sizes[i].width >= viewportSize.width) {
-			result.width = sizes[i].width;
-			break;
-		}
-	}
 
-	for (size_t i = 0; i < sizesLen; i++) {
-		if (sizes[i].height >= viewportSize.height) {
-			result.height = sizes[i].height;
-			break;
-		}
-	}
+	//// TODO:
 
-	return result;
+	//// Viewport Framebuffer Size: (recommended framebuffer size)
+	//// The size we actually want our framebuffers to allocate.
+	//// This usually should be larger than the actual viewport size to allow seamless resizing (dynamic state) of the
+	//// viewport while in the editor. In the real game this would always match the swapchain size and not waste any
+	//// memory.
+	//// The algorithm works like this:
+	////   if: x <= 1920 & y <= 1080 -> framebufferSize == 1920x1080
+	//// elif: x <= 2560 & y <= 1440 -> framebufferSize == 2560x1440
+	//// elif: x <= 4096 & y <= 2160 -> framebufferSize == 4096x2160
+	//// else: framebufferSize == viewport
+
+
+	// vk::Extent2D sizes[] = {
+	//	{ 1280, 800 },
+	//	{ 1920, 1080 },
+	//	{ 2560, 1440 },
+	//	{ 4096, 2160 },
+	//};
+	// constexpr size_t sizesLen = sizeof(sizes) / sizeof(vk::Extent2D);
+
+	// vk::Extent2D result = viewportSize;
+	// for (size_t i = 0; i < sizesLen; i++) {
+	//	if (sizes[i].width >= viewportSize.width) {
+	//		result.width = sizes[i].width;
+	//		break;
+	//	}
+	//}
+
+	// for (size_t i = 0; i < sizesLen; i++) {
+	//	if (sizes[i].height >= viewportSize.height) {
+	//		result.height = sizes[i].height;
+	//		break;
+	//	}
+	//}
+
+	// return result;
 }
 } // namespace
 
@@ -102,6 +119,7 @@ void VulkanLayer::Init()
 
 	Event::OnViewportUpdated.Bind(this, [&] { didViewportResize.Set(); });
 	Event::OnWindowResize.Bind(this, [&](auto, auto) { didWindowResize.Set(); });
+	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimzed) { isMinimzed = newIsMinimzed; });
 }
 
 VulkanLayer::~VulkanLayer()
@@ -112,7 +130,8 @@ VulkanLayer::~VulkanLayer()
 
 void VulkanLayer::ReconstructSwapchain()
 {
-	swapchain.reset(new Swapchain(instance->surface));
+	swapchain.reset();
+	swapchain = std::make_unique<Swapchain>(instance->surface);
 }
 
 void VulkanLayer::ReinitModels()
@@ -233,7 +252,6 @@ void VulkanLayer::UpdateQuadDescriptorSet()
 	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 }
 
-
 void VulkanLayer::OnViewportResize()
 {
 	vk::Extent2D viewportSize{ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y };
@@ -241,9 +259,7 @@ void VulkanLayer::OnViewportResize()
 	viewportRect.extent = viewportSize;
 	viewportRect.offset = vk::Offset2D(g_ViewportCoordinates.position.x, g_ViewportCoordinates.position.y);
 
-	// NEXT: fix while keeping 1 to 1 ratio
 	vk::Extent2D fbSize = SuggestFramebufferSize(viewportSize);
-	// vk::Extent2D fbSize = viewportSize;
 
 	if (fbSize != viewportFramebufferSize) {
 		viewportFramebufferSize = fbSize;
@@ -254,12 +270,12 @@ void VulkanLayer::OnViewportResize()
 
 void VulkanLayer::OnWindowResize()
 {
-	// NEXT:
+	Device->waitIdle();
+	ReconstructSwapchain();
 }
 
 void VulkanLayer::UpdateForFrame()
 {
-
 	if (*didWindowResize) {
 		OnWindowResize();
 	}
@@ -361,6 +377,10 @@ void VulkanLayer::DrawDeferredPass(                 //
 
 void VulkanLayer::DrawFrame()
 {
+	if (isMinimzed) {
+		return;
+	}
+
 	PROFILE_SCOPE(Renderer);
 
 	UpdateForFrame();

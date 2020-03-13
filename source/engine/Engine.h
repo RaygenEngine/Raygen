@@ -20,7 +20,7 @@ class NodeFactory;
 
 inline struct ViewportCoordinates {
 	glm::uvec2 position{};
-	glm::uvec2 size{};
+	glm::uvec2 size{ 128, 128 };
 	bool operator==(const ViewportCoordinates&) const = default;
 } g_ViewportCoordinates;
 
@@ -105,4 +105,6 @@ public:
 	void ReportFrameDrawn();
 
 	void DeinitEngine();
+
+	[[nodiscard]] App* GetApp() const { return m_app; }
 } Engine;
