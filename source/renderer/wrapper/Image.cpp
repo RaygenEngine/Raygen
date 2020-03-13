@@ -180,9 +180,8 @@ void Image::CopyBufferToImage(const Buffer& buffer)
 		.setBaseArrayLayer(0u)
 		.setLayerCount(m_imageInfo.arrayLayers);
 
-	// m_currentLayout is ensured to be vk::ImageLayout::eTransferDstOptimal here
 	Device->transferCmdBuffer.copyBufferToImage(
-		buffer, m_handle.get(), vk::ImageLayout::eTransferDstOptimal, std::array{ region });
+		buffer, m_handle.get(), vk::ImageLayout::eTransferDstOptimal, { region });
 
 	Device->transferCmdBuffer.end();
 

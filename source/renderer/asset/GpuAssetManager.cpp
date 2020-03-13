@@ -12,7 +12,7 @@
 	template<>                                                                                                         \
 	NOINLINE void S_GpuAssetManager::Load<Pod>(PodHandle<Pod> handle)                                                  \
 	{                                                                                                                  \
-		gpuAssets[handle.podId] = std::make_unique<Struct>(handle);                                                    \
+		gpuAssets[handle.podId].reset(new Struct(handle));                                                             \
 	}
 
 DECLARE_LOADER(Model, ModelPod);

@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "renderer/PoolAllocator.h"
 
+#include "engine/console/ConsoleVariable.h"
+#include "engine/Logger.h"
 #include "renderer/VulkanLayer.h"
 #include "renderer/wrapper/Device.h"
-#include "engine/Logger.h"
-#include "engine/console/ConsoleVariable.h"
 
 ConsoleFunction<> g_showPoolAllocations{ "r.mem.showDescriptorPools",
 	[]() { LOG_REPORT("Pools: {}", Layer->poolAllocator.GetAllocations()); },

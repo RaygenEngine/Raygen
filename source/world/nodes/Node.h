@@ -14,7 +14,7 @@ class Node;
 
 using DirtyFlagset = std::bitset<64>;
 using NodeDeleterFunc = void (*)(Node*);
-using NodeUniquePtr = std::unique_ptr<Node, NodeDeleterFunc>;
+using NodeUniquePtr = UniquePtr<Node, NodeDeleterFunc>;
 
 // Casts a generic node to T without dynamic_cast, using the underlying reflection for checks
 // Aborts if node was not of this type.
