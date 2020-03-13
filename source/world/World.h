@@ -33,7 +33,7 @@ class World {
 	template<typename T>
 	friend struct NodeIterator;
 
-	std::unique_ptr<RootNode> m_root;
+	UniquePtr<RootNode> m_root;
 	std::unordered_set<Node*> m_nodes;
 
 	std::unordered_map<size_t, std::unordered_set<Node*>> m_typeHashToNodes;

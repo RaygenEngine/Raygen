@@ -4,8 +4,8 @@
 #include "engine/Engine.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
-#include "renderer/VulkanLayer.h"
 #include "renderer/asset/GpuAssetManager.h"
+#include "renderer/VulkanLayer.h"
 #include "renderer/wrapper/Device.h"
 
 void GeometryPass::InitAll()
@@ -99,7 +99,7 @@ void GeometryPass::InitFramebuffers()
 {
 	vk::Extent2D fbSize = Layer->viewportFramebufferSize;
 
-	m_gBuffer = std::make_unique<GBuffer>(fbSize.width, fbSize.height);
+	m_gBuffer.reset(new GBuffer(fbSize.width, fbSize.height));
 
 	// framebuffers
 

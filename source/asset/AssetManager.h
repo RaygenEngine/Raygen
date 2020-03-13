@@ -43,7 +43,7 @@ struct PodEntry {
 	struct UnitializedPod {
 	};
 
-	std::unique_ptr<AssetPod, PodDeleter> ptr{};
+	UniquePtr<AssetPod, PodDeleter> ptr{};
 	TypeId type{ refl::GetId<UnitializedPod>() };
 	size_t uid{ 0 };
 	uri::Uri path{};
@@ -142,7 +142,7 @@ private:
 
 	AssetHandlerManager() {}
 
-	std::vector<std::unique_ptr<PodEntry>> m_pods;
+	std::vector<UniquePtr<PodEntry>> m_pods;
 	std::unordered_map<uri::Uri, size_t, str::HashInsensitive> m_pathCache;
 
 
@@ -270,7 +270,7 @@ public:
 	}
 
 	// AVOID THIS. This is for internal use.
-	[[nodiscard]] static std::vector<std::unique_ptr<PodEntry>>& Z_GetPods() { return Get().m_pods; }
+	[[nodiscard]] static std::vector<UniquePtr<PodEntry>>& Z_GetPods() { return Get().m_pods; }
 };
 
 

@@ -77,7 +77,7 @@ public:
 
 	UniquePtr<Buffer> globalsUbo;
 
-	std::vector<std::unique_ptr<Scene_Model>> models;
+	std::vector<UniquePtr<Scene_Model>> models;
 
 
 	// Quad descriptors

@@ -11,7 +11,7 @@ struct Instance : public vk::Instance {
 
 	vk::UniqueDebugUtilsMessengerEXT debugUtilsMessenger;
 
-	std::vector<std::unique_ptr<PhysicalDevice>> capablePhysicalDevices;
+	std::vector<UniquePtr<PhysicalDevice>> capablePhysicalDevices;
 
 	Instance(std::vector<const char*> requiredExtensions, GLFWwindow* window);
 	~Instance();

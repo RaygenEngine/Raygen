@@ -3,7 +3,7 @@
 #include "renderer/asset/GpuAssetHandle.h"
 
 inline class S_GpuAssetManager {
-	std::vector<std::unique_ptr<GpuAssetBase>> gpuAssets;
+	std::vector<UniquePtr<GpuAssetBase>> gpuAssets;
 
 public:
 	template<typename T>

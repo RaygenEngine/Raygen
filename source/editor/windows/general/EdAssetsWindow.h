@@ -11,8 +11,8 @@ namespace assetentry {
 	struct FolderEntry;
 
 
-	using FileContainer = std::map<std::string, std::unique_ptr<FileEntry>, str::LessInsensitive>;
-	using FolderContainer = std::map<std::string, std::unique_ptr<FolderEntry>, str::LessInsensitive>;
+	using FileContainer = std::map<std::string, UniquePtr<FileEntry>, str::LessInsensitive>;
+	using FolderContainer = std::map<std::string, UniquePtr<FolderEntry>, str::LessInsensitive>;
 
 	struct FileEntry {
 		std::string name;

@@ -119,8 +119,8 @@ protected:
 
 	SceneSave m_sceneSave;
 
-	std::unique_ptr<AssetWindow> m_assetWindow;
-	std::unique_ptr<PropertyEditor> m_propertyEditor;
+	UniquePtr<AssetWindow> m_assetWindow;
+	UniquePtr<PropertyEditor> m_propertyEditor;
 
 	void MakeMainMenu();
 
@@ -136,11 +136,11 @@ public:
 	glm::mat4 m_editorCameraCachedMatrix{ glm::identity<glm::mat4>() };
 	glm::mat4 m_editorCameraPrePilotPos{ glm::identity<glm::mat4>() };
 
-	std::unique_ptr<NodeContextActions> m_nodeContextActions;
+	UniquePtr<NodeContextActions> m_nodeContextActions;
 
 	fs::path m_sceneToLoad{};
 
-	std::vector<std::unique_ptr<ImMenu>> m_menus;
+	std::vector<UniquePtr<ImMenu>> m_menus;
 
 	ed::ComponentWindows m_windowsComponent;
 

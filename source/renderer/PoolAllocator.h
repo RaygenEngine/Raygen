@@ -1,9 +1,6 @@
 #pragma once
-
-
 #include <vulkan/vulkan.hpp>
 #include <unordered_map>
-
 
 struct R_DescriptorLayout {
 private:

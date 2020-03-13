@@ -11,16 +11,17 @@ inline vk::Filter GetFilter(TextureFiltering f)
 		case TextureFiltering::Linear:
 		case TextureFiltering::LinearMipmapNearest:
 		case TextureFiltering::LinearMipmapLinear: return vk::Filter::eLinear;
+		default: return vk::Filter::eLinear;
 	}
 }
 
 inline vk::SamplerAddressMode GetWrapping(TextureWrapping w)
 {
-
 	switch (w) {
 		case TextureWrapping::ClampToEdge: return vk::SamplerAddressMode::eClampToEdge;
 		case TextureWrapping::MirroredRepeat: return vk::SamplerAddressMode::eMirroredRepeat;
 		case TextureWrapping::Repeat: return vk::SamplerAddressMode::eRepeat;
+		default: return vk::SamplerAddressMode::eRepeat;
 	}
 }
 
@@ -33,5 +34,6 @@ inline vk::SamplerMipmapMode GetMipmapFilter(TextureFiltering f)
 		case TextureFiltering::Linear:
 		case TextureFiltering::NearestMipmapLinear:
 		case TextureFiltering::LinearMipmapLinear: return vk::SamplerMipmapMode::eLinear;
+		default: return vk::SamplerMipmapMode::eLinear;
 	}
 }

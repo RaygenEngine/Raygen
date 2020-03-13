@@ -31,7 +31,7 @@ public:
 	IterableSafeHashMap<mti::Hash, UniqueWindow*> m_openUniqueWindows;
 	std::unordered_map<mti::Hash, UniqueWindow*> m_closedUniqueWindows;
 
-	IterableSafeVector<std::unique_ptr<Window>> m_multiWindows;
+	IterableSafeVector<UniquePtr<Window>> m_multiWindows;
 
 
 	template<CONC(UniqueWindowClass) T>
