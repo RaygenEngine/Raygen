@@ -56,6 +56,7 @@ set(SOURCE_FILES
 	renderer/asset/Texture.cpp
 	renderer/asset/Material.cpp
 	renderer/asset/GpuAssetManager.cpp
+	renderer/scene/Scene.cpp
 	renderer/wrapper/Image.cpp
 	renderer/wrapper/Instance.cpp
 	renderer/wrapper/PhysicalDevice.cpp
@@ -64,6 +65,7 @@ set(SOURCE_FILES
 	renderer/wrapper/GBuffer.cpp
 	renderer/wrapper/Attachment.cpp
 	renderer/wrapper/Buffer.cpp
+
 
 	world/World.cpp
 	world/NodeFactory.cpp

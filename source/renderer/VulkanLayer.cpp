@@ -120,12 +120,16 @@ void VulkanLayer::Init()
 	Event::OnViewportUpdated.Bind(this, [&] { didViewportResize.Set(); });
 	Event::OnWindowResize.Bind(this, [&](auto, auto) { didWindowResize.Set(); });
 	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimzed) { isMinimzed = newIsMinimzed; });
+
+
+	Scene = new S_Scene();
 }
 
 VulkanLayer::~VulkanLayer()
 {
 	ImguiImpl::CleanupVulkan();
 	GpuAssetManager.UnloadAll();
+	delete Scene;
 }
 
 void VulkanLayer::ReconstructSwapchain()
@@ -134,17 +138,6 @@ void VulkanLayer::ReconstructSwapchain()
 	swapchain = std::make_unique<Swapchain>(instance->surface);
 }
 
-void VulkanLayer::ReinitModels()
-{
-	auto world = Engine.GetWorld();
-	models.clear();
-	for (auto geomNode : world->GetNodeIterator<GeometryNode>()) {
-		auto model = geomNode->GetModel();
-		models.emplace_back(new Scene_Model());
-		models.back()->node = geomNode;
-		models.back()->model = GpuAssetManager.GetGpuHandle(model);
-	}
-}
 
 void VulkanLayer::InitModelDescriptors()
 {
@@ -284,13 +277,17 @@ void VulkanLayer::UpdateForFrame()
 		OnViewportResize();
 	}
 
+	Scene->ConsumeCmdQueue();
+
+
 	// Globals buffer updates (one uniform buffer update for all draw calls of this render pass)
 	{
-		auto world = Engine.GetWorld();
-		auto camera = world->GetActiveCamera();
-
 		UBO_Globals ubo{};
-		ubo.viewProj = camera->GetViewProjectionMatrix();
+		if (Scene->cameras.elements.size()) {
+			if (Scene->cameras.elements[0]) {
+				ubo.viewProj = Scene->cameras.elements[0]->viewProj;
+			}
+		}
 
 		globalsUbo->UploadData(&ubo, sizeof(ubo));
 	}
@@ -299,8 +296,6 @@ void VulkanLayer::UpdateForFrame()
 void VulkanLayer::DrawGeometryPass(
 	std::vector<vk::PipelineStageFlags> waitStages, SemVec waitSemaphores, SemVec signalSemaphores)
 {
-	PROFILE_SCOPE(Renderer);
-
 
 	geomPass.RecordGeometryDraw(&geometryCmdBuffer);
 
@@ -387,6 +382,7 @@ void VulkanLayer::DrawFrame()
 
 	// DrawGeometryPass({}, {}, { *gbufferReadySem });
 	DrawGeometryPass({}, {}, {});
+
 	// DEFERRED
 	uint32 imageIndex;
 	Device->acquireNextImageKHR(swapchain->handle.get(), UINT64_MAX, { *imageAcquiredSem }, {}, &imageIndex);
@@ -413,5 +409,5 @@ void VulkanLayer::DrawFrame()
 	PROFILE_SCOPE(Renderer);
 	Device->presentQueue.presentKHR(presentInfo);
 
-	Device->waitIdle();
+	// Device->waitIdle();
 }

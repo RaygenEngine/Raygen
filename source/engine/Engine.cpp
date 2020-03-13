@@ -39,23 +39,6 @@ void S_Engine::InitEngine(App* app)
 
 	m_lastRecordTime = ch::system_clock::now();
 
-	InitRenderer();
-}
-
-void S_Engine::CreateWorldFromFile(const std::string& filename)
-{
-	if (m_world) {
-
-		delete m_world;
-	}
-	m_world = new World(m_app->MakeNodeFactory());
-
-	auto json = AssetImporterManager::ResolveOrImportFromParentUri<JsonDocPod>(filename, "/");
-	m_world->LoadAndPrepareWorld(json);
-}
-
-void S_Engine::InitRenderer()
-{
 	glfwInit();
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -72,6 +55,19 @@ void S_Engine::InitRenderer()
 
 	ImguiImpl::InitVulkan();
 }
+
+void S_Engine::CreateWorldFromFile(const std::string& filename)
+{
+	if (m_world) {
+
+		delete m_world;
+	}
+	m_world = new World(m_app->MakeNodeFactory());
+
+	auto json = AssetImporterManager::ResolveOrImportFromParentUri<JsonDocPod>(filename, "/");
+	m_world->LoadAndPrepareWorld(json);
+}
+
 
 bool S_Engine::HasCmdArgument(const std::string& argument)
 {
@@ -133,10 +129,10 @@ void S_Engine::ReportFrameDrawn()
 void S_Engine::DeinitEngine()
 {
 	// NOTE: It is REALLY important to remember the reverse order here
-	delete Layer;
-	delete Device;
 	delete m_editor;
 	delete m_world;
+	delete Layer;
+	delete Device;
 	glfwDestroyWindow(m_window);
 	glfwTerminate();
 	delete m_assetImporterManager;

@@ -83,9 +83,6 @@ void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
 	m_root->m_dirty.reset();
 	ClearDirtyFlags();
 	LOG_INFO("World loaded succesfully");
-
-	// NEXT: fix
-	Layer->ReinitModels();
 }
 
 void World::DirtyUpdateWorld()
@@ -232,4 +229,7 @@ void World::Update()
 
 		DirtyUpdateWorld();
 	} while (!m_postIterateCommandList.empty());
+
+
+	Scene->EnqueueEndFrame();
 }
