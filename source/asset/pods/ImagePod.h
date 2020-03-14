@@ -15,11 +15,10 @@ struct ImagePod : AssetPod {
 	}
 	static void Load(PodEntry* entry, ImagePod* pod, const uri::Uri& path);
 
-	int32 width{ 0 };
-	int32 height{ 0 };
+	int32 width{ 1 };
+	int32 height{ 1 };
 
-
-	std::vector<byte> data{};
+	std::vector<byte> data{ 0, 0, 0, 0 };
 
 	// DOC: if(isHdr) data -> float* else data -> byte*
 	bool isHdr{ false };

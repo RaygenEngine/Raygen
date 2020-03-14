@@ -24,8 +24,5 @@ public:
 
 	[[nodiscard]] const PodType* Lock() const { return AssetHandlerManager::Z_Handle_AccessPod<PodType>(podId); }
 
-	[[nodiscard]] PodType* Z_GetMutable() { return AssetHandlerManager::Z_Handle_AccessPod<PodType>(podId); }
-
-
 	friend class AssetImporterManager;
 };
