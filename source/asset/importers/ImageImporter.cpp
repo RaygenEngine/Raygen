@@ -1,11 +1,9 @@
 #include "pch.h"
 #include "asset/importers/ImageImporter.h"
 
-#include "asset/UriLibrary.h"
 #include "asset/AssetManager.h"
 
 #include <stb/stb_image.h>
-
 
 BasePodHandle ImageImporter::Import(const fs::path& path)
 {
@@ -30,6 +28,7 @@ BasePodHandle ImageImporter::Import(const fs::path& path)
 
 	// PERF: crappy std::vector initialization on resize,
 	// to solve fork stb_image and pass preallocated pointer to loading functions
+	// CHECK: C26451
 	size_t byteCount = (pod->width * pod->height * 4) * (pod->isHdr ? sizeof(float) : sizeof(byte));
 	pod->data.resize(byteCount);
 

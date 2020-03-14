@@ -2,7 +2,7 @@
 #include "core/MetaTemplates.h"
 // When adding a pod, add it to both of these
 
-#define ENGINE_POD_TYPES GltfFilePod, ImagePod, MaterialPod, ModelPod, ShaderPod, TexturePod
+#define ENGINE_POD_TYPES GltfFilePod, ImagePod, MaterialPod, ModelPod, ShaderPod, SamplerPod
 
 // Can be macroed
 struct GltfFilePod;
@@ -10,7 +10,7 @@ struct ImagePod;
 struct MaterialPod;
 struct ModelPod;
 struct ShaderPod;
-struct TexturePod;
+struct SamplerPod;
 
 
 // Returns the default uid for this pod in the asset manager, all pod handles are initialized with the the valid

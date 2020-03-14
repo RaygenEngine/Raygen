@@ -19,21 +19,30 @@ GpuAssetBaseTyped<MaterialPod>::GpuAssetBaseTyped(PodHandle<MaterialPod> podHand
 	matData.occlusionStrength = data->occlusionStrength;
 
 	// text coord indices
-	matData.baseColorTexcoordIndex = data->baseColorTexCoordIndex;
-	matData.metallicRoughnessTexcoordIndex = data->metallicRoughnessTexCoordIndex;
-	matData.emissiveTexcoordIndex = data->emissiveTexCoordIndex;
-	matData.normalTexcoordIndex = data->normalTexCoordIndex;
-	matData.occlusionTexcoordIndex = data->occlusionTexCoordIndex;
+	matData.baseColorTexcoordIndex = data->baseColorTexcoordIndex;
+	matData.metallicRoughnessTexcoordIndex = data->metallicRoughnessTexcoordIndex;
+	matData.emissiveTexcoordIndex = data->emissiveTexcoordIndex;
+	matData.normalTexcoordIndex = data->normalTexcoordIndex;
+	matData.occlusionTexcoordIndex = data->occlusionTexcoordIndex;
 
 	// alpha mask
 	matData.alphaCutoff = data->alphaCutoff;
 	matData.mask = data->alphaMode == MaterialPod::AlphaMode::MASK;
 
-	baseColorTexture = GpuAssetManager.GetGpuHandle(data->baseColorTexture);
-	metallicRoughnessTexture = GpuAssetManager.GetGpuHandle(data->metallicRoughnessTexture);
-	occlusionTexture = GpuAssetManager.GetGpuHandle(data->occlusionTexture);
-	normalTexture = GpuAssetManager.GetGpuHandle(data->normalTexture);
-	emissiveTexture = GpuAssetManager.GetGpuHandle(data->emissiveTexture);
+	baseColorSampler = GpuAssetManager.GetGpuHandle(data->baseColorSampler);
+	baseColorImage = GpuAssetManager.GetGpuHandle(data->baseColorImage);
+
+	metallicRoughnessSampler = GpuAssetManager.GetGpuHandle(data->metallicRoughnessSampler);
+	metallicRoughnessImage = GpuAssetManager.GetGpuHandle(data->metallicRoughnessImage);
+
+	occlusionSampler = GpuAssetManager.GetGpuHandle(data->occlusionSampler);
+	occlusionImage = GpuAssetManager.GetGpuHandle(data->occlusionImage);
+
+	normalSampler = GpuAssetManager.GetGpuHandle(data->normalSampler);
+	normalImage = GpuAssetManager.GetGpuHandle(data->normalImage);
+
+	emissiveSampler = GpuAssetManager.GetGpuHandle(data->emissiveSampler);
+	emissiveImage = GpuAssetManager.GetGpuHandle(data->emissiveImage);
 
 	// CHECK: upload once for now (not dynamic changes)
 	materialUBO.reset(new Buffer(sizeof(UBO_Material), vk::BufferUsageFlagBits::eUniformBuffer,
@@ -69,32 +78,34 @@ GpuAssetBaseTyped<MaterialPod>::GpuAssetBaseTyped(PodHandle<MaterialPod> podHand
 
 	// images (material)
 
-	auto UpdateImageSamplerInDescriptorSet = [&](GpuHandle<TexturePod> texture, uint32 dstBinding) {
-		auto& text = GpuAssetManager.LockHandle(texture);
+	auto UpdateImageSamplerInDescriptorSet
+		= [&](GpuHandle<SamplerPod> sampler, GpuHandle<ImagePod> image, uint32 dstBinding) {
+			  auto& sam = GpuAssetManager.LockHandle(sampler);
+			  auto& img = GpuAssetManager.LockHandle(image);
 
-		vk::DescriptorImageInfo imageInfo{};
-		imageInfo
-			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-			.setImageView(text.view.get())
-			.setSampler(text.sampler.get());
+			  vk::DescriptorImageInfo imageInfo{};
+			  imageInfo
+				  .setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+				  .setImageView(img.view.get())
+				  .setSampler(sam.sampler.get());
 
-		vk::WriteDescriptorSet descriptorWrite{};
-		descriptorWrite
-			.setDstSet(descriptorSet) //
-			.setDstBinding(dstBinding)
-			.setDstArrayElement(0u)
-			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-			.setDescriptorCount(1u)
-			.setPBufferInfo(nullptr)
-			.setPImageInfo(&imageInfo)
-			.setPTexelBufferView(nullptr);
+			  vk::WriteDescriptorSet descriptorWrite{};
+			  descriptorWrite
+				  .setDstSet(descriptorSet) //
+				  .setDstBinding(dstBinding)
+				  .setDstArrayElement(0u)
+				  .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+				  .setDescriptorCount(1u)
+				  .setPBufferInfo(nullptr)
+				  .setPImageInfo(&imageInfo)
+				  .setPTexelBufferView(nullptr);
 
-		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
-	};
+			  Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+		  };
 
-	UpdateImageSamplerInDescriptorSet(baseColorTexture, 1u);
-	UpdateImageSamplerInDescriptorSet(metallicRoughnessTexture, 2u);
-	UpdateImageSamplerInDescriptorSet(occlusionTexture, 3u);
-	UpdateImageSamplerInDescriptorSet(normalTexture, 4u);
-	UpdateImageSamplerInDescriptorSet(emissiveTexture, 5u);
+	UpdateImageSamplerInDescriptorSet(baseColorSampler, baseColorImage, 1u);
+	UpdateImageSamplerInDescriptorSet(metallicRoughnessSampler, metallicRoughnessImage, 2u);
+	UpdateImageSamplerInDescriptorSet(occlusionSampler, occlusionImage, 3u);
+	UpdateImageSamplerInDescriptorSet(normalSampler, normalImage, 4u);
+	UpdateImageSamplerInDescriptorSet(emissiveSampler, emissiveImage, 5u);
 }

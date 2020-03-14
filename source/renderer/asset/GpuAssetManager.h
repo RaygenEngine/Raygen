@@ -16,7 +16,7 @@ public:
 	void Load<ModelPod>(PodHandle<ModelPod> handle);
 
 	template<>
-	void Load<TexturePod>(PodHandle<TexturePod> handle);
+	void Load<SamplerPod>(PodHandle<SamplerPod> handle);
 
 	template<>
 	void Load<MaterialPod>(PodHandle<MaterialPod> handle);

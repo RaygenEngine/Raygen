@@ -1,12 +1,12 @@
 #pragma once
 
 #include "asset/AssetManager.h"
-#include "asset/pods/TexturePod.h"
+#include "asset/pods/SamplerPod.h"
 #include "asset/pods/GltfFilePod.h"
 #include "asset/util/GltfAux.h"
 
 namespace GltfTextureLoader {
-static void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
+static void Load(PodEntry* entry, SamplerPod* pod, const uri::Uri& path)
 {
 	const auto pPath = uri::GetDiskPath(path);
 	auto pParent = AssetImporterManager::OLD_ResolveOrImport<GltfFilePod>(pPath + "{}");
@@ -34,7 +34,7 @@ static void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 		entry->name = fmt::format("{}_texture", uri::GetFilenameNoExt(gltfImage.uri));
 	}
 
-	pod->image = imgAsset;
+	// pod->image = imgAsset;
 
 	const auto samplerIndex = gltfTexture.sampler;
 	// if sampler exists

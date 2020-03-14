@@ -49,14 +49,14 @@ inline void Load(MaterialPod* pod, const uri::Uri& path)
 		Normal
 	};
 
-	auto LoadTexture = [&](auto textureInfo, PodHandle<TexturePod>& sampler, int32& textCoordIndex, DefType defType,
+	auto LoadTexture = [&](auto textureInfo, PodHandle<SamplerPod>& sampler, int32& textCoordIndex, DefType defType,
 						   bool isLinear = true) {
 		if (textureInfo.index != -1) {
 			json data;
 			data["texture"] = textureInfo.index;
 			data["isLinear"] = isLinear;
 			auto textPath = uri::MakeChildJson(path, data);
-			sampler = AssetImporterManager::OLD_ResolveOrImport<TexturePod>(textPath);
+			sampler = AssetImporterManager::OLD_ResolveOrImport<SamplerPod>(textPath);
 
 			textCoordIndex = textureInfo.texCoord;
 		}
@@ -72,19 +72,19 @@ inline void Load(MaterialPod* pod, const uri::Uri& path)
 
 	// samplers
 	auto& baseColorTextureInfo = gltfMaterial.pbrMetallicRoughness.baseColorTexture;
-	LoadTexture(baseColorTextureInfo, pod->baseColorTexture, pod->baseColorTexCoordIndex, DefType::White, false);
+	LoadTexture(baseColorTextureInfo, pod->baseColorSampler, pod->baseColorTexcoordIndex, DefType::White, false);
 
 	auto& emissiveTextureInfo = gltfMaterial.emissiveTexture;
-	LoadTexture(emissiveTextureInfo, pod->emissiveTexture, pod->emissiveTexCoordIndex, DefType::White, false);
+	LoadTexture(emissiveTextureInfo, pod->emissiveSampler, pod->emissiveTexcoordIndex, DefType::White, false);
 
 	auto& normalTextureInfo = gltfMaterial.normalTexture;
-	LoadTexture(normalTextureInfo, pod->normalTexture, pod->normalTexCoordIndex, DefType::Normal);
+	LoadTexture(normalTextureInfo, pod->normalSampler, pod->normalTexcoordIndex, DefType::Normal);
 
 	auto& metallicRougnessTextureInfo = gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture;
-	LoadTexture(metallicRougnessTextureInfo, pod->metallicRoughnessTexture, pod->metallicRoughnessTexCoordIndex,
+	LoadTexture(metallicRougnessTextureInfo, pod->metallicRoughnessSampler, pod->metallicRoughnessTexcoordIndex,
 		DefType::White);
 
 	auto& occlusionTextureInfo = gltfMaterial.occlusionTexture;
-	LoadTexture(occlusionTextureInfo, pod->occlusionTexture, pod->occlusionTexCoordIndex, DefType::White);
+	LoadTexture(occlusionTextureInfo, pod->occlusionSampler, pod->occlusionTexcoordIndex, DefType::White);
 }
 }; // namespace GltfMaterialLoader
