@@ -23,7 +23,7 @@ inline void Load(ImagePod* pod, const uri::Uri& path)
 
 	const bool hasNotResult = !data || (pod->width == 0) || (pod->height == 0);
 
-	CLOG_ABORT(hasNotResult, "TexturePod loading failed, filepath: {}, data_empty: {} width: {} height: {}", finalPath,
+	CLOG_ABORT(hasNotResult, "SamplerPod loading failed, filepath: {}, data_empty: {} width: {} height: {}", finalPath,
 		static_cast<bool>(data), pod->width, pod->height);
 
 	// PERF: crappy std::vector initialization on resize,

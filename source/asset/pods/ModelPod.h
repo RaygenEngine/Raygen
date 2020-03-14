@@ -1,5 +1,4 @@
 #pragma once
-
 #include "asset/AssetPod.h"
 #include "asset/pods/MaterialPod.h"
 #include "core/math-ext/AABB.h"

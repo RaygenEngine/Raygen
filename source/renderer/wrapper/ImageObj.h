@@ -3,7 +3,7 @@
 
 #include <vulkan/vulkan.hpp>
 
-class Image {
+class ImageObj {
 	// keep createInfo for compatibility testing
 	vk::ImageCreateInfo m_imageInfo;
 
@@ -16,11 +16,11 @@ class Image {
 		vk::SampleCountFlagBits samples, vk::SharingMode sharingMode, vk::MemoryPropertyFlags properties);
 
 public:
-	Image(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
+	ImageObj(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
 		vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage,
 		vk::SampleCountFlagBits samples, vk::SharingMode sharingMode, vk::MemoryPropertyFlags properties);
 
-	Image(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling, vk::ImageLayout initalLayout,
+	ImageObj(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling, vk::ImageLayout initalLayout,
 		vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties);
 
 	// Viewers

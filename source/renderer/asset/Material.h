@@ -1,7 +1,8 @@
 #pragma once
 #include "asset/pods/MaterialPod.h"
 #include "renderer/asset/GpuAssetHandle.h"
-#include "renderer/asset/Texture.h"
+#include "renderer/asset/Image.h"
+#include "renderer/asset/Sampler.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -33,11 +34,20 @@ using Material = GpuAssetBaseTyped<MaterialPod>;
 template<>
 struct GpuAssetBaseTyped<MaterialPod> : public GpuAssetBase {
 
-	GpuHandle<TexturePod> baseColorTexture;
-	GpuHandle<TexturePod> metallicRoughnessTexture;
-	GpuHandle<TexturePod> occlusionTexture;
-	GpuHandle<TexturePod> normalTexture;
-	GpuHandle<TexturePod> emissiveTexture;
+	GpuHandle<SamplerPod> baseColorSampler;
+	GpuHandle<ImagePod> baseColorImage;
+
+	GpuHandle<SamplerPod> metallicRoughnessSampler;
+	GpuHandle<ImagePod> metallicRoughnessImage;
+
+	GpuHandle<SamplerPod> occlusionSampler;
+	GpuHandle<ImagePod> occlusionImage;
+
+	GpuHandle<SamplerPod> normalSampler;
+	GpuHandle<ImagePod> normalImage;
+
+	GpuHandle<SamplerPod> emissiveSampler;
+	GpuHandle<ImagePod> emissiveImage;
 
 	UBO_Material matData;
 

@@ -1,12 +1,12 @@
 #pragma once
-#include "renderer/wrapper/Image.h"
+#include "renderer/wrapper/ImageObj.h"
 
 #include <vulkan/vulkan.hpp>
 #include <optional>
 
 struct Attachment {
 
-	UniquePtr<Image> image;
+	UniquePtr<ImageObj> image;
 	vk::UniqueImageView view;
 
 	std::optional<vk::DescriptorSet> debugDescriptorSet;

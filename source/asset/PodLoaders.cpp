@@ -54,7 +54,7 @@ void ShaderPod::Load(PodEntry* entry, ShaderPod* pod, const uri::Uri& path)
 	return ShaderLoader::Load(pod, path);
 }
 
-void TexturePod::Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
+void SamplerPod::Load(PodEntry* entry, SamplerPod* pod, const uri::Uri& path)
 {
 	if (uri::MatchesExtension(path, ".gltf")) {
 		GltfTextureLoader::Load(entry, pod, path);

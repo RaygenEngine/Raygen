@@ -35,7 +35,7 @@ struct PodDeleter {
 };
 
 struct ImagePod;
-struct TexturePod;
+struct SamplerPod;
 struct ShaderPod;
 struct StringPod;
 class ReflClass;
@@ -491,7 +491,7 @@ public:
 			return it->second;
 		}
 
-		return importerRegistry.ImportFile<T>(path);
+		return AssetFrontEndManager::importerRegistry.ImportFile<T>(path);
 	}
 
 private:
@@ -537,9 +537,10 @@ private:
 
 
 class AssetFrontEndManager {
-	inline static ImporterRegsitry importerRegistry;
+
 
 public:
+	inline static ImporterRegsitry importerRegistry{};
 	// Used to determine whether to use importer vs async handles until the assets get a proper front-end for
 	// importing
 	template<CONC(CAssetPod) PodType>

@@ -3,9 +3,10 @@
 
 #include "asset/PodIncludes.h"
 #include "reflection/PodTools.h"
+#include "renderer/asset/Image.h"
 #include "renderer/asset/Material.h"
 #include "renderer/asset/Model.h"
-#include "renderer/asset/Texture.h"
+#include "renderer/asset/Sampler.h"
 
 
 #define DECLARE_LOADER(Struct, Pod)                                                                                    \
@@ -17,13 +18,15 @@
 
 DECLARE_LOADER(Model, ModelPod);
 DECLARE_LOADER(Material, MaterialPod);
-DECLARE_LOADER(Texture, TexturePod);
+DECLARE_LOADER(Sampler, SamplerPod);
+DECLARE_LOADER(Image, ImagePod);
 
 void Dummy()
 {
 	GpuAssetManager.Load<ModelPod>({});
 	GpuAssetManager.Load<MaterialPod>({});
-	GpuAssetManager.Load<TexturePod>({});
+	GpuAssetManager.Load<SamplerPod>({});
+	GpuAssetManager.Load<ImagePod>({});
 }
 
 

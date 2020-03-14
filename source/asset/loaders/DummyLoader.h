@@ -1,7 +1,7 @@
 #pragma once
 
 #include "asset/AssetManager.h"
-#include "asset/pods/TexturePod.h"
+#include "asset/pods/SamplerPod.h"
 #include "asset/pods/MaterialPod.h"
 #include "asset/pods/ImagePod.h"
 
@@ -9,18 +9,18 @@
 
 namespace CustomLoader {
 
-inline PodHandle<TexturePod> GetWhiteTexture()
+inline PodHandle<SamplerPod> GetWhiteTexture()
 {
 	nlohmann::json j;
 	j["color"] = "white";
-	return AssetImporterManager::OLD_ResolveOrImport<TexturePod>(uri::MakeChildJson("/genTexture", j));
+	return AssetImporterManager::OLD_ResolveOrImport<SamplerPod>(uri::MakeChildJson("/genTexture", j));
 }
 
-inline PodHandle<TexturePod> GetNormalTexture()
+inline PodHandle<SamplerPod> GetNormalTexture()
 {
 	nlohmann::json j;
 	j["color"] = "normal";
-	return AssetImporterManager::OLD_ResolveOrImport<TexturePod>(uri::MakeChildJson("/genTexture", j));
+	return AssetImporterManager::OLD_ResolveOrImport<SamplerPod>(uri::MakeChildJson("/genTexture", j));
 }
 
 inline PodHandle<MaterialPod> GetDefaultMat()
@@ -58,19 +58,19 @@ inline void Load(PodEntry* entry, ImagePod* pod, const uri::Uri& path)
 	AllocateImage(pod, glm::u8vec4(255));
 }
 
-inline void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
+inline void Load(PodEntry* entry, SamplerPod* pod, const uri::Uri& path)
 {
 	nlohmann::json j = uri::GetJson(path);
-	pod->image = AssetImporterManager::OLD_ResolveOrImport<ImagePod>(uri::MakeChildJson("/genImg", j));
+	// pod->image = AssetImporterManager::OLD_ResolveOrImport<ImagePod>(uri::MakeChildJson("/genImg", j));
 }
 
 inline void Load(PodEntry* entry, MaterialPod* pod, const uri::Uri&)
 {
-	pod->baseColorTexture = GetWhiteTexture();
-	pod->normalTexture = GetNormalTexture();
-	pod->emissiveTexture = GetWhiteTexture();
-	pod->metallicRoughnessTexture = GetWhiteTexture();
-	pod->occlusionTexture = GetWhiteTexture();
+	pod->baseColorSampler = GetWhiteTexture();
+	pod->normalSampler = GetNormalTexture();
+	pod->emissiveSampler = GetWhiteTexture();
+	pod->metallicRoughnessSampler = GetWhiteTexture();
+	pod->occlusionSampler = GetWhiteTexture();
 }
 
 

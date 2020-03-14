@@ -8,4 +8,4 @@
 #include "asset/pods/MaterialPod.h"
 #include "asset/pods/ModelPod.h"
 #include "asset/pods/ShaderPod.h"
-#include "asset/pods/TexturePod.h"
+#include "asset/pods/SamplerPod.h"

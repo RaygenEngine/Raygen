@@ -14,6 +14,8 @@ set(SOURCE_FILES
 	asset/util/SpirvCompiler.cpp
 
 	asset/importers/ImageImporter.cpp
+	asset/importers/GltfImporter.cpp
+	asset/importers/ShaderImporter.cpp
 
 	editor/Editor.cpp
 	editor/AssetWindow.cpp
@@ -56,10 +58,11 @@ set(SOURCE_FILES
 	renderer/PoolAllocator.cpp	
 	renderer/VulkanLayer.cpp	
 	renderer/asset/Model.cpp
-	renderer/asset/Texture.cpp
+	renderer/asset/Image.cpp
+	renderer/asset/Sampler.cpp
 	renderer/asset/Material.cpp
 	renderer/asset/GpuAssetManager.cpp
-	renderer/wrapper/Image.cpp
+	renderer/wrapper/ImageObj.cpp
 	renderer/wrapper/Instance.cpp
 	renderer/wrapper/PhysicalDevice.cpp 
 	renderer/wrapper/Device.cpp

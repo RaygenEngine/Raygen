@@ -1,7 +1,7 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "asset/pods/TexturePod.h"
+#include "asset/pods/SamplerPod.h"
 
 class AmbientNode : public Node {
 	REFLECTED_NODE(AmbientNode, Node, DF_FLAGS(SkyTexture))
@@ -10,11 +10,11 @@ class AmbientNode : public Node {
 		REFLECT_VAR(m_skybox).OnDirty(DF::SkyTexture);
 	}
 
-	PodHandle<TexturePod> m_skybox;
+	PodHandle<SamplerPod> m_skybox;
 
 	glm::vec3 m_ambientTerm{ 0.02f, 0.02f, 0.02f };
 
 public:
-	[[nodiscard]] PodHandle<TexturePod> GetSkybox() const { return m_skybox; }
+	[[nodiscard]] PodHandle<SamplerPod> GetSkybox() const { return m_skybox; }
 	[[nodiscard]] glm::vec3 GetAmbientTerm() const { return m_ambientTerm; }
 };

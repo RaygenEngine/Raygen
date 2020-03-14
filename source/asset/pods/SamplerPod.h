@@ -21,12 +21,10 @@ enum class TextureWrapping
 	Repeat
 };
 
-struct TexturePod : AssetPod {
-	REFLECTED_POD(TexturePod)
+struct SamplerPod : AssetPod {
+	REFLECTED_POD(SamplerPod)
 	{
 		REFLECT_ICON(FA_IMAGES);
-
-		REFLECT_VAR(image);
 
 		REFLECT_VAR(minFilter);
 		REFLECT_VAR(magFilter);
@@ -35,9 +33,7 @@ struct TexturePod : AssetPod {
 		REFLECT_VAR(wrapV);
 		REFLECT_VAR(wrapW);
 	}
-	static void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path);
-
-	PodHandle<ImagePod> image{};
+	static void Load(PodEntry* entry, SamplerPod* pod, const uri::Uri& path);
 
 	TextureFiltering minFilter{ TextureFiltering::Linear };
 	TextureFiltering magFilter{ TextureFiltering::Linear };

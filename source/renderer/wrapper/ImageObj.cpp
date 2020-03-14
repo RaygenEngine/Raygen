@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "renderer/wrapper/Image.h"
+#include "renderer/wrapper/ImageObj.h"
 
 #include "renderer/VulkanLayer.h"
 #include "renderer/wrapper/Device.h"
@@ -47,9 +47,9 @@ vk::ImageAspectFlags GetAspectMask(const vk::ImageCreateInfo& ici)
 }
 } // namespace
 
-void Image::Init(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
-	vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage, vk::SampleCountFlagBits samples,
-	vk::SharingMode sharingMode, vk::MemoryPropertyFlags properties)
+void ImageObj::Init(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers,
+	vk::Format format, vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage,
+	vk::SampleCountFlagBits samples, vk::SharingMode sharingMode, vk::MemoryPropertyFlags properties)
 {
 	auto pd = Device->pd;
 
@@ -78,22 +78,22 @@ void Image::Init(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels,
 	Device->bindImageMemory(m_handle.get(), m_memory.get(), 0);
 }
 
-Image::Image(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
-	vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage, vk::SampleCountFlagBits samples,
-	vk::SharingMode sharingMode, vk::MemoryPropertyFlags properties)
+ImageObj::ImageObj(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers,
+	vk::Format format, vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage,
+	vk::SampleCountFlagBits samples, vk::SharingMode sharingMode, vk::MemoryPropertyFlags properties)
 {
 	Init(imageType, extent, mipLevels, arrayLayers, format, tiling, initialLayout, usage, samples, sharingMode,
 		properties);
 }
 
-Image::Image(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling, vk::ImageLayout initalLayout,
+ImageObj::ImageObj(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling, vk::ImageLayout initalLayout,
 	vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
 {
 	Init(vk::ImageType::e2D, { width, height, 1u }, 1u, 1u, format, tiling, initalLayout, usage,
 		vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, properties);
 }
 
-vk::UniqueImageView Image::RequestImageView2D_0_0()
+vk::UniqueImageView ImageObj::RequestImageView2D_0_0()
 {
 	auto testComp = [&]() {
 		return m_imageInfo.extent.width >= 1 && m_imageInfo.extent.height >= 1 && m_imageInfo.extent.depth == 1
@@ -117,7 +117,7 @@ vk::UniqueImageView Image::RequestImageView2D_0_0()
 	return Device->createImageViewUnique(viewInfo);
 }
 
-void Image::TransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
+void ImageObj::TransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
 	vk::ImageMemoryBarrier barrier{};
 	barrier
@@ -159,7 +159,7 @@ void Image::TransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLay
 	Device->graphicsQueue.waitIdle();
 }
 
-void Image::CopyBufferToImage(const Buffer& buffer)
+void ImageObj::CopyBufferToImage(const Buffer& buffer)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -197,7 +197,7 @@ void Image::CopyBufferToImage(const Buffer& buffer)
 	Device->transferQueue.waitIdle();
 }
 
-vk::ImageMemoryBarrier Image::CreateTransitionBarrier(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
+vk::ImageMemoryBarrier ImageObj::CreateTransitionBarrier(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
 	vk::ImageMemoryBarrier barrier{};
 	barrier //

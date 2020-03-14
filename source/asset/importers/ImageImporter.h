@@ -1,5 +1,4 @@
 #pragma once
-
 #include "asset/importers/PodImporter.h"
 #include "asset/pods/ImagePod.h"
 
