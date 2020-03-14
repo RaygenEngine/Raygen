@@ -326,7 +326,8 @@ void Editor::UpdateEditor()
 
 	ImGui::EndChild();
 
-	std::string s = fmt::format("{:.1f} FPS", Engine.GetFPS());
+	std::string s = fmt::format("Game: {:>4.0f} Render: {:>4.0f}", Engine.m_gameThreadFps.GetSteadyFps(),
+		Engine.m_sceneThreadFps.GetSteadyFps());
 	ImGui::Text(s.c_str());
 	ImGui::End();
 

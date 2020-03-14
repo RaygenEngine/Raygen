@@ -27,17 +27,27 @@ S_Device::S_Device(PhysicalDevice* pd, std::vector<const char*> deviceExtensions
 
 	// Get device's presentation queue
 	std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
-	std::set<uint32> uniqueQueueFamilies
-		= { graphicsQueueFamily.index, transferQueueFamily.index, presentQueueFamily.index };
+	std::set<uint32> uniqueQueueFamilies = { transferQueueFamily.index, presentQueueFamily.index };
 
 	float qp1 = 1.0f;
+
+	// Allocate an extra graphics queue for imgui used by main thread
+	vk::DeviceQueueCreateInfo createInfo{};
+	createInfo
+		.setQueueFamilyIndex(graphicsQueueFamily.index) //
+		.setQueueCount(2u)
+		.setPQueuePriorities(&qp1);
+	queueCreateInfos.push_back(createInfo);
+
+
 	for (uint32 queueFamily : uniqueQueueFamilies) {
 		vk::DeviceQueueCreateInfo createInfo{};
 		createInfo.setQueueFamilyIndex(queueFamily)
-			.setQueueCount(1) //
+			.setQueueCount(1u) //
 			.setPQueuePriorities(&qp1);
 		queueCreateInfos.push_back(createInfo);
 	}
+
 
 	// NEXT: check if supported by the pd..
 	vk::PhysicalDeviceFeatures deviceFeatures{};
@@ -56,6 +66,10 @@ S_Device::S_Device(PhysicalDevice* pd, std::vector<const char*> deviceExtensions
 	// Device queues
 	graphicsQueue.familyIndex = graphicsQueueFamily.index;
 	graphicsQueue.SetHandle(getQueue(graphicsQueueFamily.index, 0));
+
+	imguiGraphicsQueue.familyIndex = graphicsQueueFamily.index;
+	imguiGraphicsQueue.SetHandle(getQueue(graphicsQueueFamily.index, 1));
+
 
 	transferQueue.familyIndex = transferQueueFamily.index;
 	transferQueue.SetHandle(getQueue(transferQueueFamily.index, 0));

@@ -106,16 +106,23 @@ public:
 	void ConsumeCmdQueue()
 	{
 		ExecuteCreations();
-		// Release CreateCmd Mutex
 
-		std::lock_guard<std::mutex> guard(cmdBuffersVectorMutex);
-		// LOG_REPORT("Frames: {}", commands.size());
-		while (commands.size() > 1) {
-			for (auto& cmd : *commands[0]) {
+		size_t begin = 0;
+		size_t end = commands.size() - 1;
+
+		if (end <= 0) {
+			return;
+		}
+
+		for (size_t i = 0; i < end; ++i) {
+			for (auto& cmd : *commands[i]) {
 				cmd();
 			}
-			commands.erase(commands.begin());
 		}
+
+
+		std::lock_guard<std::mutex> guard(cmdBuffersVectorMutex);
+		commands.erase(commands.begin(), commands.begin() + end);
 	}
 
 } * Scene;

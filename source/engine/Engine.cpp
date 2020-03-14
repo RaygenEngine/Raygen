@@ -37,8 +37,6 @@ void S_Engine::InitEngine(App* app)
 	m_assetFrontEndManager = new AssetFrontEndManager();
 	m_assetImporterManager->Init(m_app->m_assetPath);
 
-	m_lastRecordTime = ch::system_clock::now();
-
 	glfwInit();
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -88,33 +86,23 @@ bool S_Engine::ShouldUpdateWorld()
 
 float S_Engine::GetFPS()
 {
-	return m_steadyFps;
+	return m_gameThreadFps.GetSteadyFps();
 }
 
 void S_Engine::ReportFrameDrawn()
 {
-	m_lastFrameTime = m_frameTimer.Get<ch::microseconds>() / 1e6f;
-	m_frameTimer.Start();
-
 	using namespace std::literals;
-	++m_framesSinceLastRecord;
 
-	auto now = ch::system_clock::now();
-	auto diff = now - m_lastRecordTime;
-	constexpr auto c_reportPeriod = 100ms;
-	if (diff >= c_reportPeriod) {
-		m_steadyFps
-			= static_cast<float>(m_framesSinceLastRecord) / ((ch::duration_cast<ch::nanoseconds>(diff).count() / 1e9f));
-		m_lastRecordTime = now;
-		m_framesSinceLastRecord = 0;
+	static int32 titleCounter = 0;
+	if (m_gameThreadFps.CountFrame()) {
+		titleCounter = (titleCounter + 1) % 5;
 
-		static int32 titleCounter = 0;
-		if (titleCounter == 0) {
-			static std::string s_title;
-			s_title = fmt::format("{} - {:4.2f} FPS", m_app->m_windowTitle, m_steadyFps);
+		if (titleCounter == 1) {
+			std::string s_title;
+			s_title = fmt::format("{} - Game: {:4.2f} - Render: {:4.2f}", m_app->m_windowTitle,
+				m_gameThreadFps.GetSteadyFps(), m_sceneThreadFps.GetSteadyFps());
 			glfwSetWindowTitle(m_window, s_title.c_str());
 		}
-		titleCounter = (titleCounter + 1) % 5;
 	}
 
 	// CHECK:
@@ -138,4 +126,27 @@ void S_Engine::DeinitEngine()
 	delete m_assetImporterManager;
 	delete m_assetFrontEndManager;
 	delete m_input;
+}
+
+bool S_Engine::ThreadFpsCounter::CountFrame()
+{
+	using namespace std::literals;
+	constexpr static auto c_reportPeriod = 100ms;
+
+
+	lastFrameTime = frameTimer.Get<ch::microseconds>() / 1e6f;
+	frameTimer.Start();
+
+	++framesSinceLastRecord;
+
+	auto now = ch::system_clock::now();
+	auto diff = now - lastRecordTime;
+	if (diff >= c_reportPeriod) {
+		steadyFps
+			= static_cast<float>(framesSinceLastRecord) / ((ch::duration_cast<ch::nanoseconds>(diff).count() / 1e9f));
+		lastRecordTime = now;
+		framesSinceLastRecord = 0;
+		return true;
+	}
+	return false;
 }
