@@ -13,19 +13,19 @@ inline PodHandle<TexturePod> GetWhiteTexture()
 {
 	nlohmann::json j;
 	j["color"] = "white";
-	return AssetImporterManager::ResolveOrImport<TexturePod>(uri::MakeChildJson("/genTexture", j));
+	return AssetImporterManager::OLD_ResolveOrImport<TexturePod>(uri::MakeChildJson("/genTexture", j));
 }
 
 inline PodHandle<TexturePod> GetNormalTexture()
 {
 	nlohmann::json j;
 	j["color"] = "normal";
-	return AssetImporterManager::ResolveOrImport<TexturePod>(uri::MakeChildJson("/genTexture", j));
+	return AssetImporterManager::OLD_ResolveOrImport<TexturePod>(uri::MakeChildJson("/genTexture", j));
 }
 
 inline PodHandle<MaterialPod> GetDefaultMat()
 {
-	return AssetImporterManager::ResolveOrImport<MaterialPod>("/defaultMat");
+	return AssetImporterManager::OLD_ResolveOrImport<MaterialPod>("/defaultMat");
 }
 
 inline void AllocateImage(ImagePod* pod, glm::u8vec4 color)
@@ -61,7 +61,7 @@ inline void Load(PodEntry* entry, ImagePod* pod, const uri::Uri& path)
 inline void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 {
 	nlohmann::json j = uri::GetJson(path);
-	pod->image = AssetImporterManager::ResolveOrImport<ImagePod>(uri::MakeChildJson("/genImg", j));
+	pod->image = AssetImporterManager::OLD_ResolveOrImport<ImagePod>(uri::MakeChildJson("/genImg", j));
 }
 
 inline void Load(PodEntry* entry, MaterialPod* pod, const uri::Uri&)

@@ -83,7 +83,7 @@ template<typename T>
 inline void from_json(const nlohmann::json& j, PodHandle<T>& handle)
 {
 	if (j.is_string()) {
-		handle = AssetImporterManager::ResolveOrImport<T>(j.get<std::string>());
+		handle = AssetImporterManager::OLD_ResolveOrImport<T>(j.get<std::string>());
 	}
 }
 

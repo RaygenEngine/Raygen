@@ -9,7 +9,7 @@ namespace GltfTextureLoader {
 static void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 {
 	const auto pPath = uri::GetDiskPath(path);
-	auto pParent = AssetImporterManager::ResolveOrImport<GltfFilePod>(pPath + "{}");
+	auto pParent = AssetImporterManager::OLD_ResolveOrImport<GltfFilePod>(pPath + "{}");
 
 	nlohmann::json j = uri::GetJson(path);
 	int32 ext = j["texture"].get<int32>();
@@ -30,7 +30,7 @@ static void Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 
 	if (imageIndex != -1) {
 		auto& gltfImage = model.images.at(imageIndex);
-		imgAsset = AssetImporterManager::ResolveOrImportFromParentUri<ImagePod>(gltfImage.uri, path);
+		imgAsset = AssetImporterManager::OLD_ResolveOrImportFromParentUri<ImagePod>(gltfImage.uri, path);
 		entry->name = fmt::format("{}_texture", uri::GetFilenameNoExt(gltfImage.uri));
 	}
 

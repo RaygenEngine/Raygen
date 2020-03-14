@@ -19,7 +19,7 @@ void AssetImporterManager::Init(const fs::path& assetPath)
 	AssetHandlerManager::Get().m_pods.push_back(std::make_unique<PodEntry>());
 
 	podtools::ForEachPodType([]<typename PodType>() {
-		auto entry = AssetHandlerManager::CreateNew<PodType>();
+		auto entry = AssetHandlerManager::OLD_CreateNew<PodType>();
 		entry->path = fmt::format("~{}", GetDefaultPodUid<PodType>());
 		entry->ptr.reset(new PodType());
 	});

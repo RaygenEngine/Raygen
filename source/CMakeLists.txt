@@ -6,11 +6,14 @@ set(SOURCE_FILES
 	App.cpp
 
 	asset/AssetManager.cpp
+	asset/ImporterRegistry.cpp
 	asset/PodLoaders.cpp
 	asset/Serialization.cpp
 
 	asset/util/DependenciesImpl.cpp
 	asset/util/SpirvCompiler.cpp
+
+	asset/importers/ImageImporter.cpp
 
 	editor/Editor.cpp
 	editor/AssetWindow.cpp
@@ -58,7 +61,7 @@ set(SOURCE_FILES
 	renderer/asset/GpuAssetManager.cpp
 	renderer/wrapper/Image.cpp
 	renderer/wrapper/Instance.cpp
-	renderer/wrapper/PhysicalDevice.cpp
+	renderer/wrapper/PhysicalDevice.cpp 
 	renderer/wrapper/Device.cpp
 	renderer/wrapper/Swapchain.cpp
 	renderer/wrapper/GBuffer.cpp

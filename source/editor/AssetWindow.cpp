@@ -59,7 +59,7 @@ void AssetWindow::DrawFileLibrary()
 					}
 				}
 
-				auto h = AssetImporterManager::ResolveOrImport<ModelPod>(strPath);
+				auto h = AssetImporterManager::OLD_ResolveOrImport<ModelPod>(strPath);
 
 				std::string payloadTag = "POD_UID_" + std::to_string(h.Lock()->type.hash());
 				ImGui::SetDragDropPayload(payloadTag.c_str(), &h.podId, sizeof(size_t));
@@ -76,7 +76,7 @@ void AssetWindow::DrawFileLibrary()
 
 		for (auto& s : m_gltf) {
 			auto strPath = "/" + s.second.generic_string();
-			AssetImporterManager::ResolveOrImport<ModelPod>(strPath);
+			AssetImporterManager::OLD_ResolveOrImport<ModelPod>(strPath);
 		}
 	}
 }
