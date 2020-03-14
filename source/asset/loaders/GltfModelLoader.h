@@ -492,7 +492,7 @@ inline void Load(PodEntry* entry, ModelPod* pod, const uri::Uri& path)
 	pod->bbox = { glm::vec3(std::numeric_limits<float>::max()), glm::vec3(-std::numeric_limits<float>::max()) };
 
 	const auto pPath = uri::GetDiskPath(path);
-	auto pParent = AssetImporterManager::ResolveOrImport<GltfFilePod>(pPath + "{}");
+	auto pParent = AssetImporterManager::OLD_ResolveOrImport<GltfFilePod>(pPath + "{}");
 
 	const tinygltf::Model& model = pParent.Lock()->data;
 
@@ -512,7 +512,7 @@ inline void Load(PodEntry* entry, ModelPod* pod, const uri::Uri& path)
 
 		std::string name = gltfMaterial.name.empty() ? "Mat." + std::to_string(matIndex) : gltfMaterial.name;
 
-		auto matHandle = AssetImporterManager::ResolveOrImport<MaterialPod>(matPath, name);
+		auto matHandle = AssetImporterManager::OLD_ResolveOrImport<MaterialPod>(matPath, name);
 
 		pod->materials.push_back(matHandle);
 	}

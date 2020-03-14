@@ -7,6 +7,7 @@
 #include "engine/Engine.h"
 #include "engine/Logger.h"
 #include "engine/console/ConsoleVariable.h"
+#include "asset/ImporterRegistry.h"
 #include "core/StringUtl.h"
 #include <future>
 
@@ -205,13 +206,13 @@ public:
 	}
 
 	template<CONC(CAssetPod) PodT>
-	static PodEntry* CreateNew()
+	static PodEntry* OLD_CreateNew()
 	{
 		// Add entry here. Return entry to allow edits / w.e else.
 		// Whoever "Creates" the asset should be responsible for filling in the metadat
 		// (feels like a less decoupled instead of having multple CreateNewFromDisk etc)
 
-		auto entry = CreateNewTypeless();
+		auto entry = OLD_CreateNewTypeless();
 		entry->type = mti::GetTypeId<PodT>();
 		entry->metadata.podTypeHash = entry->type.hash();
 		entry->Z_AssignClass(&PodT::StaticClass());
@@ -220,7 +221,7 @@ public:
 
 	// Initialized fields:
 	// entry->uid
-	static PodEntry* CreateNewTypeless()
+	static PodEntry* OLD_CreateNewTypeless()
 	{
 		auto entryUnq = std::make_unique<PodEntry>();
 		auto entry = entryUnq.get();
@@ -283,7 +284,7 @@ public:
 	void Init(const fs::path& assetPath);
 
 private:
-	// Stores this session's known imported paths. Any ResolveOrImport that hits this just returns the handle
+	// Stores this session's known imported paths. Any OLD_ResolveOrImport that hits this just returns the handle
 	std::unordered_map<uri::Uri, BasePodHandle> m_importedPathsCache;
 
 	fs::path m_defaultImportingPath{ "gen-data/" };
@@ -296,11 +297,11 @@ private:
 		{
 			if (stackSize == 0) {
 				if (inOutImportingPath.empty()) {
-					// This warning happens when an arbitiary (as in: Not from importers) ResolveOrImport attempts to
-					// import an asset but is not given an importingPath argument. This means that the imported assets
-					// will go to a "random" folder in the assets and not the user selected one. Technically importing
-					// should only ever be done from the asset window or other editor UI that allows the user to select
-					// where to import.
+					// This warning happens when an arbitiary (as in: Not from importers) OLD_ResolveOrImport attempts
+					// to import an asset but is not given an importingPath argument. This means that the imported
+					// assets will go to a "random" folder in the assets and not the user selected one. Technically
+					// importing should only ever be done from the asset window or other editor UI that allows the user
+					// to select where to import.
 					LOG_WARN("Importing assets with default import path! (Manual import from code?)");
 
 					currentOpImportingPath = importer.m_defaultImportingPath;
@@ -333,7 +334,7 @@ public:
 	// code)
 	// NOTE: We only cache since the execution of the program
 	template<CONC(CAssetPod) PodType>
-	static PodHandle<PodType> ResolveOrImport(
+	static PodHandle<PodType> OLD_ResolveOrImport(
 		const fs::path& inFullPath, const uri::Uri& suggestedName = "", fs::path& importingPath = fs::path())
 	{
 		auto inst = Engine.GetAssetImporterManager();
@@ -347,33 +348,33 @@ public:
 		}
 
 		inst->m_currentOperation.PushOperation(*inst, importingPath);
-		PodHandle<PodType> handle = inst->ImportFromDisk<PodType>(inFullPath, suggestedName, importingPath);
+		PodHandle<PodType> handle = inst->OLD_ImportFromDisk<PodType>(inFullPath, suggestedName, importingPath);
 		inst->m_currentOperation.PopOperation();
 		it->second = handle;
 		return handle;
 	}
 
 	template<CONC(CAssetPod) PodType>
-	static PodHandle<PodType> ResolveOrImportFromParentUri(const fs::path& path, const uri::Uri& parentUri,
+	static PodHandle<PodType> OLD_ResolveOrImportFromParentUri(const fs::path& path, const uri::Uri& parentUri,
 		const uri::Uri& suggestedName = "", fs::path& importingPath = fs::path())
 	{
 		if (parentUri.size() <= 1) {
-			return AssetImporterManager::ResolveOrImport<PodType>(path, suggestedName, importingPath);
+			return AssetImporterManager::OLD_ResolveOrImport<PodType>(path, suggestedName, importingPath);
 		}
 
 		auto dskPath = uri::GetDiskPath(parentUri);
 		auto parentDir = uri::GetDir(dskPath);             // Get parent directory. (Also removes json)
 		fs::path resolvedUri = fs::path(parentDir) / path; // add path (path may include json data at the end)
 
-		return AssetImporterManager::ResolveOrImport<PodType>(resolvedUri, suggestedName, importingPath);
+		return AssetImporterManager::OLD_ResolveOrImport<PodType>(resolvedUri, suggestedName, importingPath);
 	}
 
 	template<CONC(CAssetPod) PodType>
-	static PodHandle<PodType> ResolveOrImportFromParent(const fs::path& path, BasePodHandle parentHandle,
+	static PodHandle<PodType> OLD_ResolveOrImportFromParent(const fs::path& path, BasePodHandle parentHandle,
 		const uri::Uri& suggestedName = "", fs::path& importingPath = fs::path())
 	{
 		CLOG_ABORT(path.empty(), "Path was empty. Parent was: {}", AssetHandlerManager::GetPodImportPath(parentHandle));
-		return ResolveOrImportFromParentUri<PodType>(
+		return OLD_ResolveOrImportFromParentUri<PodType>(
 			path, AssetHandlerManager::GetPodImportPath(parentHandle), suggestedName, importingPath);
 	}
 
@@ -382,13 +383,13 @@ private:
 	ConsoleVariable<bool> m_longImportPaths{ "a.longImportPaths", false };
 
 	template<CONC(CAssetPod) PodType>
-	PodHandle<PodType> ImportFromDisk(
+	PodHandle<PodType> OLD_ImportFromDisk(
 		const fs::path& path, const uri::Uri& suggestedName, const fs::path& importingPath)
 	{
-		PodEntry* entry = AssetHandlerManager::CreateNew<PodType>();
+		PodEntry* entry = AssetHandlerManager::OLD_CreateNew<PodType>();
 		entry->metadata.originalImportLocation = path.generic_string();
 		entry->name = suggestedName;
-		if (!TryImport<PodType>(entry, importingPath)) {
+		if (!OLD_TryImport<PodType>(entry, importingPath)) {
 			AssetHandlerManager::RemoveEntry(entry->uid);
 			return PodHandle<PodType>(); // Will return the proper "default" pod of this type
 		}
@@ -396,7 +397,7 @@ private:
 	}
 
 	template<CONC(CAssetPod) T>
-	bool TryImport(PodEntry* entry, const fs::path& importingPath)
+	bool OLD_TryImport(PodEntry* entry, const fs::path& importingPath)
 	{
 		if (entry->metadata.originalImportLocation.empty()) {
 			LOG_ERROR("Failed to import. No asset location");
@@ -457,19 +458,103 @@ private:
 		AssetHandlerManager::RegisterPathCache(entry);
 		return true;
 	}
+	//
+	//
+	//
+
+	uri::Uri GeneratePath(uri::Uri importPath)
+	{
+		auto directory = m_currentOperation.currentOpImportingPath.string();
+		uri::Uri str = uri::Uri(uri::GetFilenameNoExt(importPath));
+		auto filename = AssetHandlerManager::SuggestFilename(directory, str);
+		return directory + "/" + filename;
+	}
+
+public:
+	// PodHandle, didCreate
+	template<CONC(CAssetPod) PodType>
+	static std::pair<PodHandle<PodType>, bool> CreateEntry(
+		const uri::Uri& importPath, const uri::Uri& name, bool reimportOnLoad = false, bool exportOnSave = false)
+	{
+		return CreateEntryImpl<PodType>(importPath, name, false, reimportOnLoad, exportOnSave);
+	}
+
+	// PodHandle, didCreate
+	template<CONC(CAssetPod) PodType>
+	static std::pair<PodHandle<PodType>, bool> CreateTransientEntry(const uri::Uri& name)
+	{
+		return CreateEntryImpl<PodType>(name, name, true, false, false);
+	}
+
+private:
+	template<CONC(CAssetPod) PodType>
+	static std::pair<PodHandle<PodType>, bool> CreateEntryImpl(
+		const uri::Uri& importPath, const uri::Uri& name, bool transient, bool reimportOnLoad, bool exportOnSave)
+	{
+		auto inst = Engine.GetAssetImporterManager();
+
+
+		auto [it, didInsert] = inst->m_importedPathsCache.try_emplace(importPath, PodHandle<PodType>{});
+
+		if (!didInsert) {
+			// TODO: ASSETS: type check this handle
+			return std::make_pair(PodHandle<PodType>(it->second), false);
+		}
+
+		PodEntry* e = new PodEntry();
+
+		// Populate Metadata
+		e->metadata.originalImportLocation = importPath;
+		e->metadata.reimportOnLoad = reimportOnLoad;
+		e->metadata.exportOnSave = exportOnSave;
+		e->metadata.podTypeHash = mti::GetHash<PodType>();
+
+		// Populate entry data
+		e->requiresSave = true;
+
+		auto ptr = new PodType();
+		e->ptr.reset(ptr);
+		e->transient = transient;
+		e->Z_AssignClass(&PodType::StaticClass());
+		e->type = mti::GetTypeId<PodType>();
+
+
+		// WIP: Generate
+		e->path = inst->GeneratePath(importPath);
+		e->name = uri::GetFilename(e->path);
+
+		e->uid = AssetHandlerManager::Get().m_pods.size();
+		AssetHandlerManager::Get().m_pods.emplace_back(e);
+		AssetHandlerManager::RegisterPathCache(e);
+
+		PodHandle<PodType> handle{ e->uid };
+		it->second = handle;
+
+		return std::make_pair(handle, true);
+	}
 };
 
 
 class AssetFrontEndManager {
+	inline static ImporterRegsitry importerRegistry;
 
 public:
-	// Used to determine whether to use importer vs async handles until the assets get a proper front-end for importing
+	// Used to determine whether to use importer vs async handles until the assets get a proper front-end for
+	// importing
 	template<CONC(CAssetPod) PodType>
 	static PodHandle<PodType> TransitionalLoadAsset(const uri::Uri& str)
 	{
 		if (str.starts_with('/')) {
-			return AssetImporterManager::ResolveOrImport<PodType>(str);
+			return AssetImporterManager::OLD_ResolveOrImport<PodType>(str);
 		}
 		return AssetHandlerManager::GetAsyncHandle<PodType>(str);
+	}
+
+	static void Import(const fs::path& path) { importerRegistry.ImportFile(path); }
+
+	template<CONC(CAssetPod) T>
+	static PodHandle<T> ImportGet(const fs::path& path)
+	{
+		return importerRegistry.ImportFile<T>(path);
 	}
 };

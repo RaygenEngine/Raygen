@@ -261,10 +261,10 @@ void AssetsWindow::ImguiDraw()
 			for (auto& path : *files) {
 				// TODO: IMPORTERS
 				if (path.extension() == ".gltf") {
-					AssetImporterManager::ResolveOrImport<ModelPod>(path, "", fs::path(m_currentPath));
+					AssetImporterManager::OLD_ResolveOrImport<ModelPod>(path, "", fs::path(m_currentPath));
 				}
 				else {
-					AssetImporterManager::ResolveOrImport<ImagePod>(path, "", fs::path(m_currentPath));
+					AssetImporterManager::OLD_ResolveOrImport<ImagePod>(path, "", fs::path(m_currentPath));
 				}
 			}
 			ReloadEntries();
@@ -326,9 +326,7 @@ void AssetsWindow::ImguiDraw()
 void AssetsWindow::ImportFiles(std::vector<fs::path>&& files)
 {
 	for (auto& file : files) {
-		if (file.extension() == ".gltf") {
-			AssetImporterManager::ResolveOrImport<ModelPod>(file, "", fs::path(m_currentPath));
-		}
+		AssetFrontEndManager::Import(file);
 	}
 	ReloadEntries();
 }
