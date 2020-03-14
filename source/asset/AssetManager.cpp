@@ -21,7 +21,7 @@ void AssetImporterManager::Init(const fs::path& assetPath)
 	podtools::ForEachPodType([]<typename PodType>() {
 		auto entry = AssetHandlerManager::OLD_CreateNew<PodType>();
 		entry->path = fmt::format("~{}", GetDefaultPodUid<PodType>());
-		entry->ptr.reset(new PodType());
+		entry->ptr.reset(new PodType()); // CHECK: Default image
 	});
 
 

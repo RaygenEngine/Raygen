@@ -471,36 +471,45 @@ private:
 	}
 
 public:
-	// PodHandle, didCreate
+	//
+	// Interface designed for Pod Importers
+	// contains utilities for entry registrations and calling other importers.
+	// All functions in this section expect to be called from the body of a PodImporter's import function
+	//
+
+
 	template<CONC(CAssetPod) PodType>
-	static std::pair<PodHandle<PodType>, bool> CreateEntry(
+	static std::pair<PodHandle<PodType>, PodType*> CreateEntry(
 		const uri::Uri& importPath, const uri::Uri& name, bool reimportOnLoad = false, bool exportOnSave = false)
 	{
 		return CreateEntryImpl<PodType>(importPath, name, false, reimportOnLoad, exportOnSave);
 	}
 
-	// PodHandle, didCreate
 	template<CONC(CAssetPod) PodType>
-	static std::pair<PodHandle<PodType>, bool> CreateTransientEntry(const uri::Uri& name)
+	static std::pair<PodHandle<PodType>, PodType*> CreateTransientEntry(const uri::Uri& name)
 	{
 		return CreateEntryImpl<PodType>(name, name, true, false, false);
 	}
 
+	template<CONC(CAssetPod) T>
+	static PodHandle<T> ImportRequest(const fs::path& path)
+	{
+		auto inst = Engine.GetAssetImporterManager();
+		auto it = inst->m_importedPathsCache.find(path.generic_string());
+
+		if (it != inst->m_importedPathsCache.end()) {
+			return it->second;
+		}
+
+		return importerRegistry.ImportFile<T>(path);
+	}
+
 private:
 	template<CONC(CAssetPod) PodType>
-	static std::pair<PodHandle<PodType>, bool> CreateEntryImpl(
+	static std::pair<PodHandle<PodType>, PodType*> CreateEntryImpl(
 		const uri::Uri& importPath, const uri::Uri& name, bool transient, bool reimportOnLoad, bool exportOnSave)
 	{
 		auto inst = Engine.GetAssetImporterManager();
-
-
-		auto [it, didInsert] = inst->m_importedPathsCache.try_emplace(importPath, PodHandle<PodType>{});
-
-		if (!didInsert) {
-			// TODO: ASSETS: type check this handle
-			return std::make_pair(PodHandle<PodType>(it->second), false);
-		}
-
 		PodEntry* e = new PodEntry();
 
 		// Populate Metadata
@@ -527,10 +536,12 @@ private:
 		AssetHandlerManager::Get().m_pods.emplace_back(e);
 		AssetHandlerManager::RegisterPathCache(e);
 
-		PodHandle<PodType> handle{ e->uid };
-		it->second = handle;
 
-		return std::make_pair(handle, true);
+		PodHandle<PodType> handle{ e->uid };
+
+		inst->m_importedPathsCache.emplace(importPath, handle);
+
+		return std::make_pair(handle, ptr);
 	}
 };
 
@@ -553,7 +564,7 @@ public:
 	static void Import(const fs::path& path) { importerRegistry.ImportFile(path); }
 
 	template<CONC(CAssetPod) T>
-	static PodHandle<T> ImportGet(const fs::path& path)
+	static PodHandle<T> ImportAs(const fs::path& path)
 	{
 		return importerRegistry.ImportFile<T>(path);
 	}
