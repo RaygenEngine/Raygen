@@ -1,7 +1,6 @@
-
 #include "pch.h"
-
 #include "editor/Editor.h"
+
 #include "editor/imgui/ImguiImpl.h"
 #include "editor/NodeContextActions.h"
 #include "editor/PropertyEditor.h"
@@ -513,8 +512,9 @@ void Editor::LoadScene(const fs::path& scenefile)
 
 void Editor::ReloadScene()
 {
-	auto path = AssetHandlerManager::GetPodUri(Engine.GetWorld()->GetLoadedFromHandle());
-	m_sceneToLoad = uri::ToSystemPath(path);
+	// TODO:
+	// auto path = AssetHandlerManager::GetPodUri(Engine.GetWorld()->GetLoadedFromHandle());
+	// m_sceneToLoad = uri::ToSystemPath(path);
 }
 
 void Editor::OnDisableEditor()

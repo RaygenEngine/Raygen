@@ -2,7 +2,6 @@
 #include "renderer/wrapper/Device.h"
 
 #include "asset/AssetManager.h"
-#include "asset/pods/BinaryPod.h"
 #include "asset/util/SpirvCompiler.h"
 #include "engine/Logger.h"
 
@@ -94,16 +93,6 @@ S_Device::~S_Device()
 	graphicsCmdPool.reset();
 
 	destroy();
-}
-
-vk::UniqueShaderModule S_Device::CreateShaderModule(const std::string& binPath)
-{
-	auto& data = AssetImporterManager::OLD_ResolveOrImportFromParentUri<BinaryPod>(binPath, "/").Lock()->data;
-
-	vk::ShaderModuleCreateInfo createInfo{};
-	createInfo.setCodeSize(data.size()).setPCode(reinterpret_cast<const uint32*>(data.data()));
-
-	return createShaderModuleUnique(createInfo);
 }
 
 std::optional<vk::UniqueShaderModule> S_Device::CompileCreateShaderModule(const std::string& path)

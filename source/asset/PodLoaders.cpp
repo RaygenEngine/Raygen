@@ -9,10 +9,8 @@
 #include "asset/loaders/GltfTextureLoader.h"
 #include "asset/loaders/ImageLoader.h"
 #include "asset/loaders/ShaderLoader.h"
-#include "asset/loaders/TextLoader.h"
 #include "asset/loaders/JsonDocLoader.h"
 #include "asset/loaders/JsonGenericLoader.h"
-#include "asset/loaders/BinaryLoader.h"
 
 #include "asset/UriLibrary.h"
 #include "engine/Logger.h"
@@ -56,16 +54,6 @@ void ShaderPod::Load(PodEntry* entry, ShaderPod* pod, const uri::Uri& path)
 	return ShaderLoader::Load(pod, path);
 }
 
-void StringPod::Load(PodEntry* entry, StringPod* pod, const uri::Uri& path)
-{
-	return TextLoader::Load(pod, path);
-}
-
-void BinaryPod::Load(PodEntry* entry, BinaryPod* pod, const uri::Uri& path)
-{
-	return BinaryLoader::Load(pod, path);
-}
-
 void TexturePod::Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 {
 	if (uri::MatchesExtension(path, ".gltf")) {
@@ -78,9 +66,4 @@ void TexturePod::Load(PodEntry* entry, TexturePod* pod, const uri::Uri& path)
 	}
 
 	CustomLoader::Load(entry, pod, path);
-}
-
-void JsonDocPod::Load(PodEntry* entry, JsonDocPod* pod, const uri::Uri& path)
-{
-	JsonDocLoader::Load(entry, pod, path);
 }

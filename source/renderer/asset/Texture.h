@@ -15,4 +15,9 @@ DECLARE_GPU_ASSET(Texture, TexturePod)
 	vk::UniqueSampler sampler;
 
 	GpuAssetBaseTyped<TexturePod>(PodHandle<TexturePod> podHandle);
+
+	inline static std::optional<vk::DescriptorSet> editorDescSet; // NEXT:
+	inline static PodHandle<TexturePod> lastEditorPod;
+
+	vk::DescriptorSet GetDebugDescriptor();
 };

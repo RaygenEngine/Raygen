@@ -61,16 +61,18 @@ void World::SetActiveCamera(CameraNode* cam)
 	m_activeCamera = cam;
 }
 
-void World::LoadAndPrepareWorld(PodHandle<JsonDocPod> scene)
+void World::LoadAndPrepareWorld(const fs::path& scene)
 {
-	LOG_INFO("Loading World file: \'{}\'", AssetHandlerManager::GetPodUri(scene));
+	LOG_INFO("Loading World file: \'{}\'", scene);
 
-	m_loadedFrom = scene;
+	std::ifstream f(scene);
+	f >> m_loadedFrom;
+	m_loadedFromPath = scene;
 
 	m_root = std::make_unique<RootNode>();
 
 
-	m_nodeFactory->LoadChildren(scene.Lock()->document, m_root.get());
+	m_nodeFactory->LoadChildren(m_loadedFrom, m_root.get());
 	m_root->m_dirty.set();
 
 	auto mat = glm::identity<glm::mat4>();

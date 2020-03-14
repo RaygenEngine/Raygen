@@ -2,6 +2,9 @@
 
 #include "editor/utl/EdAssetUtils.h"
 #include "editor/imgui/ImEd.h"
+#include "renderer/asset/GpuAssetManager.h"
+#include "renderer/asset/Texture.h"
+
 #include "reflection/ReflEnum.h"
 #include "reflection/ReflectionTools.h"
 
@@ -40,6 +43,15 @@ namespace asset {
 			text += refltools::PropertiesToText(entry->ptr.get());
 
 			ImUtil::TextTooltipUtil(text, scale);
+
+			if (entry->type == mti::GetTypeId<TexturePod>()) {
+				ImGui::BeginTooltip();
+
+				auto handle = GpuAssetManager.GetGpuHandle<TexturePod>(entry->GetHandleAs<TexturePod>());
+				ImGui::Image(GpuAssetManager.LockHandle(handle).GetDebugDescriptor(), ImVec2(256, 256));
+				ImGui::EndTooltip();
+			}
+
 			ImEd::EndCodeFont();
 		}
 	}

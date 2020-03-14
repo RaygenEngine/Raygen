@@ -5,6 +5,7 @@
 inline class S_GpuAssetManager {
 	std::vector<UniquePtr<GpuAssetBase>> gpuAssets;
 
+
 public:
 	template<typename T>
 	void Load(PodHandle<T> handle)

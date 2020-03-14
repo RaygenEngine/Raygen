@@ -49,9 +49,7 @@ void S_Engine::CreateWorldFromFile(const std::string& filename)
 		delete m_world;
 	}
 	m_world = new World(m_app->MakeNodeFactory());
-
-	auto json = AssetImporterManager::OLD_ResolveOrImportFromParentUri<JsonDocPod>(filename, "/");
-	m_world->LoadAndPrepareWorld(json);
+	m_world->LoadAndPrepareWorld(filename);
 }
 
 void S_Engine::InitRenderer()
