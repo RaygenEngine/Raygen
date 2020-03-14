@@ -19,6 +19,8 @@ inline struct S_Device : public vk::Device {
 	DeviceQueue transferQueue;
 	DeviceQueue presentQueue;
 
+	DeviceQueue imguiGraphicsQueue;
+
 	PhysicalDevice* pd;
 
 	vk::UniqueCommandPool graphicsCmdPool;

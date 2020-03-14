@@ -190,19 +190,6 @@ void ImguiImpl::NewFrame()
 	ImGui::NewFrame();
 }
 
-void ImguiImpl::EndFrame()
-{
-	{
-		PROFILE_SCOPE(Editor);
-		ImGui::EndFrame();
-
-
-		ImGui::Render();
-	}
-	ImGui::UpdatePlatformWindows();
-	ImGui::RenderPlatformWindowsDefault();
-}
-
 void ImguiImpl::CleanupVulkan()
 {
 	ImGui_ImplVulkan_Shutdown();
@@ -225,8 +212,8 @@ void ImguiImpl::InitVulkan()
 	init.Instance = *Layer->instance;
 	init.PhysicalDevice = *physDev;
 	init.Device = device;
-	init.QueueFamily = Device->graphicsQueue.familyIndex;
-	init.Queue = Device->graphicsQueue;
+	init.QueueFamily = Device->imguiGraphicsQueue.familyIndex;
+	init.Queue = Device->imguiGraphicsQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
 	init.DescriptorPool = Layer->poolAllocator.GetImguiPool();
 	init.ImageCount = static_cast<uint32>(Layer->swapchain->images.size());
@@ -260,9 +247,81 @@ void ImguiImpl::InitVulkan()
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
 
+ImDrawData copyOfDrawData[2];
+std::vector<ImDrawList*> drawLists[2];
+std::atomic<int32> latestDataIndex{ 0 };
+std::atomic<int32> readingFromDataIndex{ -1 };
 
+namespace {
+
+void DuplicateDrawData()
+{
+	int32 dataIndex = -1;
+	int32 readingIndex = readingFromDataIndex;
+	if (readingIndex < 0) {
+		dataIndex = (latestDataIndex + 1) % 2;
+	}
+	else {
+		dataIndex = (readingIndex + 1) % 2;
+	}
+
+	ImDrawData& dst = copyOfDrawData[dataIndex];
+	std::vector<ImDrawList*>& dstDrawListVec = drawLists[dataIndex];
+	for (auto list : dstDrawListVec) {
+		delete list;
+	}
+	dstDrawListVec.clear();
+
+	const ImDrawData* src = ImGui::GetDrawData();
+
+	CLOG_ABORT(!src->Valid, "attempting to copy a non valid ImGui DrawData. Did you forget to ImGui::Render?");
+
+
+	dst.Valid = true;
+	dst.CmdListsCount = src->CmdListsCount;
+	dst.TotalIdxCount = src->TotalIdxCount;
+	dst.TotalVtxCount = src->TotalVtxCount;
+
+	dst.DisplayPos = src->DisplayPos;
+	dst.DisplaySize = src->DisplaySize;
+	dst.FramebufferScale = src->FramebufferScale;
+	dst.OwnerViewport = src->OwnerViewport;
+
+	dstDrawListVec.resize(src->CmdListsCount);
+	for (int32 n = 0; n < src->CmdListsCount; ++n) {
+		const ImDrawList* srcList = src->CmdLists[n];
+		dstDrawListVec[n] = new ImDrawList(ImGui::GetDrawListSharedData());
+		ImDrawList& dstList = *dstDrawListVec[n];
+
+		dstList.CmdBuffer = srcList->CmdBuffer;
+		dstList.IdxBuffer = srcList->IdxBuffer;
+		dstList.VtxBuffer = srcList->VtxBuffer;
+		dstList.Flags = srcList->Flags;
+	}
+	dst.CmdLists = dstDrawListVec.data();
+
+	latestDataIndex = dataIndex;
+}
+} // namespace
+void ImguiImpl::EndFrame()
+{
+	{
+		PROFILE_SCOPE(Editor);
+		ImGui::EndFrame();
+
+
+		ImGui::Render();
+		DuplicateDrawData();
+	}
+	ImGui::UpdatePlatformWindows();
+	ImGui::RenderPlatformWindowsDefault();
+}
 void ImguiImpl::RenderVulkan(vk::CommandBuffer* drawCommandBuffer)
 {
 	PROFILE_SCOPE(Editor);
-	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), *drawCommandBuffer);
+
+	int32 latestData = latestDataIndex;
+	readingFromDataIndex = latestData;
+	ImGui_ImplVulkan_RenderDrawData(&copyOfDrawData[latestData], *drawCommandBuffer);
+	readingFromDataIndex = -1;
 }

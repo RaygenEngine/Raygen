@@ -408,6 +408,7 @@ void VulkanLayer::DrawFrame()
 
 	PROFILE_SCOPE(Renderer);
 	Device->presentQueue.presentKHR(presentInfo);
-
+	Device->waitIdle();
 	// Device->waitIdle();
+	Engine.m_sceneThreadFps.CountFrame();
 }
