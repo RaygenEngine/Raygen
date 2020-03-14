@@ -12,7 +12,7 @@
 #include "engine/Object.h"
 #include "world/nodes/NodeIterator.h"
 #include "world/NodeFactory.h" // Not required directly, used in templates
-#include "asset/pods/JsonDocPod.h"
+#include <nlohmann/json.hpp>
 
 #include <unordered_set>
 
@@ -40,7 +40,8 @@ class World {
 
 	NodeFactory* m_nodeFactory;
 
-	PodHandle<JsonDocPod> m_loadedFrom;
+	nlohmann::json m_loadedFrom;
+	fs::path m_loadedFromPath;
 
 	CameraNode* m_activeCamera{ nullptr };
 
@@ -62,6 +63,7 @@ class World {
 
 	// Removes node from any tracking sets / active cameras etc.
 	void CleanupNodeReferences(Node* node);
+
 
 public:
 	// Returns float seconds
@@ -115,11 +117,12 @@ public:
 
 	void Update();
 
-	void LoadAndPrepareWorld(PodHandle<JsonDocPod> scenePod);
+	void LoadAndPrepareWorld(const fs::path& scenePath);
 
 	[[nodiscard]] NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
 
-	[[nodiscard]] PodHandle<JsonDocPod> GetLoadedFromHandle() const { return m_loadedFrom; }
+	[[nodiscard]] nlohmann::json& GetLoadedFromJson() { return m_loadedFrom; }
+	[[nodiscard]] fs::path& GetLoadedFromPath() { return m_loadedFromPath; }
 
 	void DirtyUpdateWorld();
 	void ClearDirtyFlags();

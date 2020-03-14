@@ -355,12 +355,14 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 		// begin render pass
 		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{
-			// bind the graphics pipeline
-			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 			// Dynamic viewport & scissor
 			cmdBuffer->setViewport(0, { GetViewport() });
 			cmdBuffer->setScissor(0, { GetScissor() });
+
+
+			// bind the graphics pipeline
+			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
 				&Layer->globalUboDescSet, 0u, nullptr);

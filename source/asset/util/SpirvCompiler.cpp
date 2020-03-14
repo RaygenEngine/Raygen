@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "asset/util/SpirvCompiler.h"
+#include "engine/Logger.h"
 
 #include <glslang/Public/ShaderLang.h>
 #include <SPIRV/GlslangToSpv.h>

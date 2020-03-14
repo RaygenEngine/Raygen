@@ -17,6 +17,8 @@ struct GpuHandleBase {
 template<CONC(CAssetPod) T>
 struct GpuHandle : public GpuHandleBase {
 	// GpuAssetBaseTyped<T>& Lock() { GpuAssetManager.Get<T>(uid); }
+	GpuHandle<T>() { uid = GetDefaultPodUid<T>(); }
+	GpuHandle<T>(size_t inUid) { uid = inUid; }
 };
 
 

@@ -3,8 +3,10 @@
 
 #include "asset/AssetManager.h"
 #include "renderer/VulkanUtl.h"
+#include "renderer/VulkanLayer.h"
 #include "renderer/wrapper/Buffer.h"
 #include "renderer/wrapper/Device.h"
+
 
 GpuAssetBaseTyped<TexturePod>::GpuAssetBaseTyped(PodHandle<TexturePod> podHandle)
 {
@@ -61,4 +63,34 @@ GpuAssetBaseTyped<TexturePod>::GpuAssetBaseTyped(PodHandle<TexturePod> podHandle
 		.setMaxLod(0.f);
 
 	sampler = Device->createSamplerUnique(samplerInfo);
+}
+
+vk::DescriptorSet GpuAssetBaseTyped<TexturePod>::GetDebugDescriptor()
+{
+	if (editorDescSet && lastEditorPod.podId == uid) {
+		return *editorDescSet;
+	}
+
+	editorDescSet = Layer->debugDescSetLayout.GetDescriptorSet();
+
+	vk::DescriptorImageInfo imageInfo{};
+	imageInfo
+		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+		.setImageView(*view)
+		.setSampler(*Layer->quadSampler);
+
+	vk::WriteDescriptorSet descriptorWrite{};
+	descriptorWrite
+		.setDstSet(*editorDescSet) //
+		.setDstBinding(0u)
+		.setDstArrayElement(0u)
+		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+		.setDescriptorCount(1u)
+		.setPBufferInfo(nullptr)
+		.setPImageInfo(&imageInfo)
+		.setPTexelBufferView(nullptr);
+
+	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+
+	return *editorDescSet;
 }

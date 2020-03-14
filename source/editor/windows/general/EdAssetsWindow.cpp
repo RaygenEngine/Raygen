@@ -210,7 +210,7 @@ void AssetsWindow::DrawAsset(PodEntry* assetEntry)
 
 	ImGui::PushID(assetEntry);
 	Draw<false>(
-		U8(assetEntry->GetClass()->GetIcon()), assetEntry->name.c_str(),
+		U8(assetEntry->GetClass()->GetIcon()), assetEntry->name.c_str(), []() {},
 		[&]() { ed::asset::MaybeHoverTooltip(assetEntry); }, [&]() { ImEd::CreateTypedPodDrag(assetEntry); });
 	ImGui::PopID();
 }

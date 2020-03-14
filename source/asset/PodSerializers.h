@@ -22,14 +22,6 @@ void AdditionalSerializeSave(Archive& ar, PodType* pod)
 	AdditionalSerializeBoth(ar, pod);
 }
 
-//
-// BinaryPod
-//
-template<typename Archive>
-void AdditionalSerializeBoth(Archive& ar, BinaryPod* pod)
-{
-	ar(pod->data);
-}
 
 //
 // ImagePod

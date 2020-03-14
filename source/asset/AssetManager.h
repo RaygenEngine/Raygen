@@ -323,16 +323,6 @@ private:
 	ImportOperation m_currentOperation;
 
 public:
-	//
-	// PUBLIC ASSET IMPORTING INTERFACE
-	//
-
-	// Search in main AssetHandlerManager import paths to find this as an absolute path
-	// if found return it,
-	// otherwise load it right away and forward it in AssetHandlerManager
-	// NOTE: this can make infinite recursion on circlar dependencies, do we handle this? (possible, needs extra
-	// code)
-	// NOTE: We only cache since the execution of the program
 	template<CONC(CAssetPod) PodType>
 	static PodHandle<PodType> OLD_ResolveOrImport(
 		const fs::path& inFullPath, const uri::Uri& suggestedName = "", fs::path& importingPath = fs::path())
