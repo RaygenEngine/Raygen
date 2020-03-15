@@ -112,14 +112,11 @@ protected:
 	bool m_updateWorld{ false };
 	Node* m_selectedNode{ nullptr };
 
-	bool m_showGltfWindow{ false };
-
 	bool m_autoRestoreWorld{ false };
 	bool m_hasRestoreSave{ false };
 
 	SceneSave m_sceneSave;
 
-	UniquePtr<AssetWindow> m_assetWindow;
 	UniquePtr<PropertyEditor> m_propertyEditor;
 
 	void MakeMainMenu();

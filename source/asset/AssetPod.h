@@ -7,7 +7,11 @@ using Uri = std::string;
 }
 struct PodEntry;
 
-// ADDING PODS:
+
+//
+//
+// Adding Pods:
+// DOC: !! OUTDATED, PLEASE UPDATE ME !!
 //
 // To properly add a pod to the engine, you need to register it to the pod type system as well.
 // This allows pods to remain "pods" in memory without virtual functions while allowing the engine to safely type cast

@@ -258,14 +258,10 @@ void AssetsWindow::ImguiDraw()
 	ImGui::SameLine();
 	if (ImEd::Button(ETXT(FA_FILE_IMPORT, "Import Files"))) {
 		if (auto files = ed::NativeFileBrowser::OpenFileMultiple({ "gltf" })) {
+			// TODO: push import operation
+
 			for (auto& path : *files) {
-				// TODO: IMPORTERS
-				if (path.extension() == ".gltf") {
-					AssetImporterManager::OLD_ResolveOrImport<ModelPod>(path, "", fs::path(m_currentPath));
-				}
-				else {
-					AssetImporterManager::OLD_ResolveOrImport<ImagePod>(path, "", fs::path(m_currentPath));
-				}
+				AssetFrontEndManager::Import(path);
 			}
 			ReloadEntries();
 		}

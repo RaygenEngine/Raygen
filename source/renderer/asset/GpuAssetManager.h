@@ -21,8 +21,9 @@ public:
 	template<>
 	void Load<MaterialPod>(PodHandle<MaterialPod> handle);
 
-	// template<>
-	// void Load<ShaderPod>(PodHandle<ShaderPod> handle);
+	template<>
+	void Load<ImagePod>(PodHandle<ImagePod> handle);
+
 
 	template<CONC(CAssetPod) T>
 	GpuHandle<T> GetGpuHandle(PodHandle<T> handle)

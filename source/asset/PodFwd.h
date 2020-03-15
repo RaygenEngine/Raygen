@@ -2,10 +2,9 @@
 #include "core/MetaTemplates.h"
 // When adding a pod, add it to both of these
 
-#define ENGINE_POD_TYPES GltfFilePod, ImagePod, MaterialPod, ModelPod, ShaderPod, SamplerPod
+#define ENGINE_POD_TYPES ImagePod, MaterialPod, ModelPod, ShaderPod, SamplerPod
 
 // Can be macroed
-struct GltfFilePod;
 struct ImagePod;
 struct MaterialPod;
 struct ModelPod;

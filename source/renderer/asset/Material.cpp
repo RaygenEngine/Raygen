@@ -27,7 +27,7 @@ GpuAssetBaseTyped<MaterialPod>::GpuAssetBaseTyped(PodHandle<MaterialPod> podHand
 
 	// alpha mask
 	matData.alphaCutoff = data->alphaCutoff;
-	matData.mask = data->alphaMode == MaterialPod::AlphaMode::MASK;
+	matData.mask = data->alphaMode == MaterialPod::AlphaMode::Mask;
 
 	baseColorSampler = GpuAssetManager.GetGpuHandle(data->baseColorSampler);
 	baseColorImage = GpuAssetManager.GetGpuHandle(data->baseColorImage);

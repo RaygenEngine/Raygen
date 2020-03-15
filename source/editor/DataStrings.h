@@ -98,9 +98,6 @@ Filter assets, can accept multiple terms by ',' and negative matches by '-'
 eg: '-mat, .gltf'
 )";
 
-inline const char* help_AssetSearchGltf = R"(
-Opens the gltf file list window.
-)";
 
 inline const char* help_GltfWindowRefresh = R"(
 This window contains all .gtlf files found in assets/ folders.

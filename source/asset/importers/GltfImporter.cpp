@@ -718,6 +718,7 @@ BasePodHandle GltfLoader::LoadModel()
 
 	// NEXT: default material (should we change the way materials are stored in models?)
 	pod->materials.push_back({});
+	return handle;
 }
 
 } // namespace

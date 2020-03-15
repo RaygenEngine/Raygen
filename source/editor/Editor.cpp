@@ -81,7 +81,6 @@ Editor::Editor()
 {
 	ImguiImpl::InitContext();
 
-	m_assetWindow = std::make_unique<AssetWindow>();
 	m_nodeContextActions = std::make_unique<NodeContextActions>();
 	m_propertyEditor = std::make_unique<PropertyEditor>();
 
@@ -329,11 +328,6 @@ void Editor::UpdateEditor()
 	ImGui::Text(s.c_str());
 	ImGui::End();
 
-	// NEXT:
-	if (m_showGltfWindow) {
-		m_showGltfWindow = m_assetWindow->Draw();
-	}
-
 	UpdateViewportCoordsFromDockspace();
 	ImguiImpl::EndFrame();
 
@@ -443,7 +437,7 @@ void Editor::Outliner()
 		PushCommand(cmd);
 	}
 
-	/*
+
 	if (ImGui::BeginDragDropTarget()) {
 		std::string payloadTag = "POD_UID_" + std::to_string(refl::GetId<ModelPod>().hash());
 		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(payloadTag.c_str())) {
@@ -467,7 +461,8 @@ void Editor::Outliner()
 		}
 		ImGui::EndDragDropTarget();
 	}
-	*/
+
+
 	if (!foundOpen) {
 		ImGui::PushID(989);
 		if (ImGui::BeginPopupContextItem("RightclickOutliner Context")) {
@@ -608,10 +603,6 @@ void Editor::Run_NewNodeMenu(Node* underNode)
 void Editor::Run_AssetView()
 {
 	ImGui::Indent(10.f);
-	if (ImEd::Button("Search for GLTFs")) {
-		m_showGltfWindow = true;
-	}
-	Editor::HelpTooltipInline(help_AssetSearchGltf);
 
 	// Static meh..
 	static ImGuiTextFilter filter;
