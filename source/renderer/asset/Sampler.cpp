@@ -16,11 +16,12 @@ GpuAssetBaseTyped<SamplerPod>::GpuAssetBaseTyped(PodHandle<SamplerPod> podHandle
 	// NEXT: values should be chosen based on Texture pod
 	vk::SamplerCreateInfo samplerInfo{};
 	samplerInfo
-		.setMagFilter(GetFilter(textureData->magFilter)) //
-		.setMinFilter(GetFilter(textureData->minFilter))
+		.setMagFilter(GetTextureFilter(textureData->magFilter)) //
+		.setMinFilter(GetTextureFilter(textureData->minFilter))
 		.setAddressModeU(GetWrapping(textureData->wrapU))
 		.setAddressModeV(GetWrapping(textureData->wrapV))
 		.setAddressModeW(GetWrapping(textureData->wrapW))
+
 		// PERF:
 		.setAnisotropyEnable(VK_TRUE)
 		.setMaxAnisotropy(1u)
@@ -30,7 +31,7 @@ GpuAssetBaseTyped<SamplerPod>::GpuAssetBaseTyped(PodHandle<SamplerPod> podHandle
 		.setCompareOp(vk::CompareOp::eAlways)
 
 		// CHECK: texture pod should match the vk sampler
-		.setMipmapMode(GetMipmapFilter(textureData->magFilter))
+		.setMipmapMode(GetMipmapFilter(textureData->mipmapFilter))
 		.setMipLodBias(0.f)
 		.setMinLod(0.f)
 		.setMaxLod(0.f);

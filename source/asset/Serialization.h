@@ -1,7 +1,7 @@
 #pragma once
-
-#include "asset/AssetPod.h"
 #include "asset/AssetManager.h"
+#include "asset/AssetPod.h"
+
 #include <fstream>
 
 // Serializes pod -> file

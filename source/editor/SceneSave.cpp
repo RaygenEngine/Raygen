@@ -6,7 +6,7 @@
 #include "reflection/ReflectionTools.h"
 #include "world/World.h"
 #include "asset/AssetManager.h"
-#include "asset/util/ParsingAux.h"
+#include "asset/util/ParsingUtl.h"
 #include "asset/PodIncludes.h"
 #include "asset/UriLibrary.h"
 #include "world/nodes/RootNode.h"

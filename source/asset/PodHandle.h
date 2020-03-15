@@ -1,11 +1,9 @@
 #pragma once
-
 #include "asset/AssetPod.h"
 #include "asset/PodFwd.h"
 #include "engine/Engine.h"
 
 struct PodEntry;
-
 
 template<typename PodTypeT>
 struct PodHandle : BasePodHandle {

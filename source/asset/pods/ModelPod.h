@@ -3,17 +3,6 @@
 #include "asset/pods/MaterialPod.h"
 #include "core/math-ext/AABB.h"
 
-enum class GeometryMode
-{
-	POINTS,
-	LINE,
-	LINE_LOOP,
-	LINE_STRIP,
-	TRIANGLES,
-	TRIANGLE_STRIP,
-	TRIANGLE_FAN
-};
-
 struct VertexData {
 	glm::vec3 position{};
 	glm::vec3 normal{};
@@ -27,7 +16,6 @@ struct GeometryGroup {
 	std::vector<uint32> indices{};
 	std::vector<VertexData> vertices{};
 
-	GeometryMode mode{ GeometryMode::TRIANGLES };
 	uint32 materialIndex{ 0u };
 };
 
@@ -42,8 +30,6 @@ struct ModelPod : public AssetPod {
 		REFLECT_ICON(FA_CUBE);
 		REFLECT_VAR(materials);
 	}
-
-	static void Load(PodEntry* entry, ModelPod* pod, const uri::Uri& path);
 
 	std::vector<Mesh> meshes{};
 

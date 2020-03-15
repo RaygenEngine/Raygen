@@ -1,13 +1,13 @@
 #include "pch.h"
-
 #include "asset/util/SpirvCompiler.h"
+
 #include "engine/Logger.h"
 
+#include <glslang/OSDependent/osinclude.h>
 #include <glslang/Public/ShaderLang.h>
 #include <SPIRV/GlslangToSpv.h>
 #include <StandAlone/DirStackFileIncluder.h>
 #include <StandAlone/ResourceLimits.h>
-#include <glslang/OSDependent/osinclude.h>
 
 EShLanguage FindLanguage(const std::string& filename);
 

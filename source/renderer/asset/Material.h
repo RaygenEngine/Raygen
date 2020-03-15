@@ -16,11 +16,11 @@ struct UBO_Material {
 	float occlusionStrength;
 
 	// text coord indices
-	int baseColorTexcoordIndex;
-	int metallicRoughnessTexcoordIndex;
-	int emissiveTexcoordIndex;
-	int normalTexcoordIndex;
-	int occlusionTexcoordIndex;
+	int baseColorUvIndex;
+	int metallicRoughnessUvIndex;
+	int emissiveUvIndex;
+	int normalUvIndex;
+	int occlusionUvIndex;
 
 	// alpha mask
 	float alphaCutoff;

@@ -55,7 +55,7 @@ void serialize(Archive& ar, VertexData& vtx)
 template<typename Archive>
 void serialize(Archive& ar, GeometryGroup& gg)
 {
-	ar(gg.indices, gg.vertices, gg.mode, gg.materialIndex);
+	ar(gg.indices, gg.vertices, gg.materialIndex);
 }
 
 template<typename Archive>

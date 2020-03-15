@@ -1,6 +1,6 @@
 [
     {
-        "+name": "sponza",
+        "+name": "lantern",
         "+trs": {
             "pos": {
                 "x": 0.0,
@@ -19,7 +19,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/FlightHelmet.bin",
+        "model": "gen-data/Lantern",
         "~children": []
     },
     {

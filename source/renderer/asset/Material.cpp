@@ -19,11 +19,11 @@ GpuAssetBaseTyped<MaterialPod>::GpuAssetBaseTyped(PodHandle<MaterialPod> podHand
 	matData.occlusionStrength = data->occlusionStrength;
 
 	// text coord indices
-	matData.baseColorTexcoordIndex = data->baseColorTexcoordIndex;
-	matData.metallicRoughnessTexcoordIndex = data->metallicRoughnessTexcoordIndex;
-	matData.emissiveTexcoordIndex = data->emissiveTexcoordIndex;
-	matData.normalTexcoordIndex = data->normalTexcoordIndex;
-	matData.occlusionTexcoordIndex = data->occlusionTexcoordIndex;
+	matData.baseColorUvIndex = data->baseColorUvIndex;
+	matData.metallicRoughnessUvIndex = data->metallicRoughnessUvIndex;
+	matData.emissiveUvIndex = data->emissiveUvIndex;
+	matData.normalUvIndex = data->normalUvIndex;
+	matData.occlusionUvIndex = data->occlusionUvIndex;
 
 	// alpha mask
 	matData.alphaCutoff = data->alphaCutoff;

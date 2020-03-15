@@ -2,7 +2,7 @@
 
 #include "world/nodes/user/FreeformUserNode.h"
 #include "world/nodes/RootNode.h"
-#include "asset/util/ParsingAux.h"
+#include "asset/util/ParsingUtl.h"
 #include "engine/profiler/ProfileScope.h"
 #include "engine/Engine.h"
 #include "engine/Input.h"

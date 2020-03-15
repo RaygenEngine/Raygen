@@ -1,7 +1,7 @@
 #pragma once
-
 #include "asset/pods/SamplerPod.h"
 #include "reflection/GenMacros.h"
+
 // This material is based on the glTF standard for materials (not all extensions included)
 // see -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#materials)
 struct MaterialPod : AssetPod {
@@ -18,16 +18,15 @@ struct MaterialPod : AssetPod {
 		Blend
 	};
 
-
 	REFLECTED_POD(MaterialPod)
 	{
 		REFLECT_ICON(FA_SWATCHBOOK);
 
-		REFLECT_VAR(baseColorTexcoordIndex, PropertyFlags::Hidden);
-		REFLECT_VAR(metallicRoughnessTexcoordIndex, PropertyFlags::Hidden);
-		REFLECT_VAR(occlusionTexcoordIndex, PropertyFlags::Hidden);
-		REFLECT_VAR(normalTexcoordIndex, PropertyFlags::Hidden);
-		REFLECT_VAR(emissiveTexcoordIndex, PropertyFlags::Hidden);
+		REFLECT_VAR(baseColorUvIndex, PropertyFlags::Hidden);
+		REFLECT_VAR(metallicRoughnessUvIndex, PropertyFlags::Hidden);
+		REFLECT_VAR(occlusionUvIndex, PropertyFlags::Hidden);
+		REFLECT_VAR(normalUvIndex, PropertyFlags::Hidden);
+		REFLECT_VAR(emissiveUvIndex, PropertyFlags::Hidden);
 
 		REFLECT_VAR(baseColorFactor, PropertyFlags::Color);
 		REFLECT_VAR(emissiveFactor, PropertyFlags::Color);
@@ -54,8 +53,6 @@ struct MaterialPod : AssetPod {
 		REFLECT_VAR(emissiveSampler, PropertyFlags::Advanced);
 	}
 
-	static void Load(PodEntry* entry, MaterialPod* pod, const uri::Uri& path);
-
 	// The value for each property(baseColor, metallic, roughness) can be defined using factors or textures.
 
 	// If a texture is not given, all respective texture components within this material model are assumed to have a
@@ -71,13 +68,13 @@ struct MaterialPod : AssetPod {
 	// any computations. R-red, G-green, B-blue, A-alpha
 	PodHandle<ImagePod> baseColorImage;
 	PodHandle<SamplerPod> baseColorSampler;
-	int32 baseColorTexcoordIndex{ 0 };
+	int32 baseColorUvIndex{ 0 };
 
 	// The metallic and roughness properties are packed together in a single texture called metallicRoughnessTexture.
 	// R-occlusion, G-roughness, B-metal, A-empty
 	PodHandle<ImagePod> metallicRoughnessImage;
 	PodHandle<SamplerPod> metallicRoughnessSampler;
-	int32 metallicRoughnessTexcoordIndex{ 0 };
+	int32 metallicRoughnessUvIndex{ 0 };
 
 	// The metallic and roughness properties are packed together in a single texture called metallicRoughnessTexture.
 	// R-occlusion, G-occlusion, B-occlusion, A-empty
@@ -85,17 +82,17 @@ struct MaterialPod : AssetPod {
 	// use the R channel ALWAYS
 	PodHandle<ImagePod> occlusionImage;
 	PodHandle<SamplerPod> occlusionSampler;
-	int32 occlusionTexcoordIndex{ 0 };
+	int32 occlusionUvIndex{ 0 };
 
 	// A tangent space normal map
-	PodHandle<ImagePod> normalImage;
+	PodHandle<ImagePod> normalImage{ GetDefaultNormalImagePodUid() };
 	PodHandle<SamplerPod> normalSampler;
-	int32 normalTexcoordIndex{ 0 };
+	int32 normalUvIndex{ 0 };
 
 	// The emissive map controls the color and intensity of the light being emitted by the material.
 	PodHandle<ImagePod> emissiveImage;
 	PodHandle<SamplerPod> emissiveSampler;
-	int32 emissiveTexcoordIndex{ 0 };
+	int32 emissiveUvIndex{ 0 };
 
 	// Factor values act as linear multipliers for the corresponding texture values.
 	glm::vec4 baseColorFactor{ 1.f, 1.f, 1.f, 1.f };
