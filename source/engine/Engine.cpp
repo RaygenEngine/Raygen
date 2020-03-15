@@ -62,7 +62,7 @@ void S_Engine::InitRenderer()
 
 	glfwutl::SetupEventCallbacks(m_window);
 
-	// WIP
+	// NEXT:
 	Layer = new VulkanLayer(glfwutl::GetVulkanExtensions(), m_window);
 	Layer->Init();
 

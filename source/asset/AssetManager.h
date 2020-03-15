@@ -361,9 +361,9 @@ private:
 		e->type = mti::GetTypeId<PodType>();
 
 
-		// WIP: Generate
-		e->path = inst->GeneratePath(importPath);
+		e->path = transient ? AssetHandlerManager::SuggestFilename("", name) : inst->GeneratePath(importPath);
 		e->name = uri::GetFilename(e->path);
+
 
 		e->uid = AssetHandlerManager::Get().m_pods.size();
 		AssetHandlerManager::Get().m_pods.emplace_back(e);

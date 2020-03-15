@@ -45,13 +45,13 @@ namespace asset {
 			ImUtil::TextTooltipUtil(text, scale);
 
 			// WIP:
-			/*if (entry->type == mti::GetTypeId<SamplerPod>()) {
-				ImGui::BeginTooltip();
+			// if (entry->type == mti::GetTypeId<SamplerPod>()) {
+			//	ImGui::BeginTooltip();
 
-				auto handle = GpuAssetManager.GetGpuHandle<SamplerPod>(entry->GetHandleAs<SamplerPod>());
-				ImGui::Image(GpuAssetManager.LockHandle(handle).GetDebugDescriptor(), ImVec2(256, 256));
-				ImGui::EndTooltip();
-			}*/
+			//	auto handle = GpuAssetManager.GetGpuHandle<SamplerPod>(entry->GetHandleAs<SamplerPod>());
+			//	ImGui::Image(GpuAssetManager.LockHandle(handle).GetDebugDescriptor(), ImVec2(256, 256));
+			//	ImGui::EndTooltip();
+			//}
 
 			ImEd::EndCodeFont();
 		}

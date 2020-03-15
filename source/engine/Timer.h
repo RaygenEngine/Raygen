@@ -117,10 +117,4 @@ public:
 
 } // namespace timer
 
-#define TIMER_STATIC_SCOPE(Name)                                                                                       \
-	static timer::MultiTimer MACRO_PASTE(z_scope_t, __LINE__);                                                         \
-	auto MACRO_PASTE(z_scope_t_s, __LINE__) = MACRO_PASTE(z_scope_t, __LINE__).StartScope(Name);
-
-#define TIMER_STATIC_SCOPE_MS(Name)                                                                                    \
-	static timer::MultiTimer<std::chrono::milliseconds> MACRO_PASTE(z_scope_t, __LINE__);                              \
-	auto MACRO_PASTE(z_scope_t_s, __LINE__) = MACRO_PASTE(z_scope_t, __LINE__).StartScope(Name);
+#define TIMER_STATIC_SCOPE(Name) timer::ScopedTimer MACRO_PASTE(z_scope_t, __LINE__)(Name);
