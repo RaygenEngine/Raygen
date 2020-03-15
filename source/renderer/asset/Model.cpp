@@ -47,7 +47,6 @@ GpuAssetBaseTyped<ModelPod>::GpuAssetBaseTyped(PodHandle<ModelPod> podHandle)
 
 			vgg.indexCount = static_cast<uint32>(gg.indices.size());
 
-			// WIP: asset caching
 			vgg.material = GpuAssetManager.GetGpuHandle(data->materials[gg.materialIndex]);
 
 			geometryGroups.emplace_back(std::move(vgg));

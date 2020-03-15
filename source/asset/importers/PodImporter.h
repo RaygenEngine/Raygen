@@ -19,7 +19,7 @@ public:
 	std::vector<const char*>& GetSupportedExtensions() { return m_supportedExtensions; };
 	[[nodiscard]] virtual mti::TypeId GetPrimaryPodType() const { return m_primaryPodType; }
 
-
+	std::string_view GetName() const { return m_name; };
 	virtual BasePodHandle Import(const fs::path& path) = 0;
 	virtual ~PodImporterBase() = default;
 };

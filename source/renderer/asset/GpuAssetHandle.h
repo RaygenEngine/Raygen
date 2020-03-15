@@ -3,7 +3,14 @@
 struct GpuAssetBase {
 	size_t uid{ 0 };
 	virtual ~GpuAssetBase() = default;
-	// WIP: rule 5, delete copy
+
+	GpuAssetBase() = default;
+
+	GpuAssetBase(const GpuAssetBase&) = delete;
+	GpuAssetBase& operator=(const GpuAssetBase&) = delete;
+
+	GpuAssetBase(GpuAssetBase&&) = default;
+	GpuAssetBase& operator=(GpuAssetBase&&) = default;
 };
 
 template<CONC(CAssetPod) T>

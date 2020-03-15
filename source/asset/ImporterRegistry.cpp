@@ -15,6 +15,7 @@ BasePodHandle ImporterRegsitry::ImportImpl(const fs::path& path, mti::TypeId& ou
 {
 	outHandleType = mti::TypeId{};
 	if (auto it = m_extToImporters.find(path.extension().string()); it != m_extToImporters.end()) {
+		LOG_REPORT("Executing importer: {} for {}", it->second->GetName(), path.generic_string());
 		auto handle = it->second->Import(path);
 		outHandleType = it->second->GetPrimaryPodType();
 		return handle;

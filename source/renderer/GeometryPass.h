@@ -5,7 +5,6 @@
 
 #include <vulkan/vulkan.hpp>
 
-// WIP:
 class GeometryPass {
 	vk::UniqueRenderPass m_renderPass;
 	vk::UniqueFramebuffer m_framebuffer;

@@ -17,7 +17,6 @@ set(SOURCE_FILES
 	asset/importers/ShaderImporter.cpp
 
 	editor/Editor.cpp
-	editor/AssetWindow.cpp
 	editor/NodeContextActions.cpp
 	editor/PropertyEditor.cpp
 	editor/SceneSave.cpp

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "editor/SceneSave.h"
-#include "editor/AssetWindow.h"
 #include "editor/windows/EdWindow.h"
 
 #include "editor/PropertyEditor.h"
