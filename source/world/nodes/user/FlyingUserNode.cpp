@@ -3,7 +3,7 @@
 #include "world/nodes/user/FlyingUserNode.h"
 #include "world/nodes/camera/WindowCameraNode.h"
 #include "world/NodeFactory.h"
-#include "asset/util/ParsingAux.h"
+#include "asset/util/ParsingUtl.h"
 #include "world/World.h"
 #include "engine/Engine.h"
 #include "engine/Input.h"

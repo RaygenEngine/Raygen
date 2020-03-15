@@ -1,13 +1,12 @@
 #include "pch.h"
-
 #include "asset/AssetManager.h"
-#include "reflection/PodTools.h"
-#include "asset/PodIncludes.h"
+
 #include "renderer/asset/GpuAssetManager.h"
-
+#include "asset/PodIncludes.h"
 #include "asset/Serialization.h"
-#include <vulkan/vulkan.hpp>
+#include "reflection/PodTools.h"
 
+#include <vulkan/vulkan.hpp>
 #include <iostream>
 
 ConsoleFunction<> console_SaveAll{ "a.saveAll", []() { AssetHandlerManager::SaveAll(); },
@@ -19,8 +18,15 @@ void AssetImporterManager::Init(const fs::path& assetPath)
 	AssetHandlerManager::Get().m_pods.push_back(std::make_unique<PodEntry>());
 
 	podtools::ForEachPodType([]<typename PodType>() {
-		AssetImporterManager::CreateTransientEntry<PodType>(fmt::format("~{}", GetDefaultPodUid<PodType>()));
+		AssetImporterManager::CreateTransientEntry<PodType>(fmt::format("~{}", mti::GetName<PodType>()));
 	});
+
+	// Default normal image
+	auto& [handle, pod] = AssetImporterManager::CreateTransientEntry<ImagePod>("~NormalImagePod");
+	pod->data[0] = 0x80;
+	pod->data[1] = 0x80;
+	pod->data[2] = 0xFF;
+	pod->data[3] = 0xFF;
 
 	fs::current_path(fs::current_path() / assetPath);
 

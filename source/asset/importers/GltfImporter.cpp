@@ -2,15 +2,111 @@
 #include "asset/importers/GltfImporter.h"
 
 #include "asset/AssetManager.h"
-#include "asset/util/GltfAux.h"
 
-#include <tiny_gltf.h>
+#include <tinygltf/tiny_gltf.h>
 
 #undef LoadImage
 
 namespace tg = tinygltf;
 
 namespace {
+
+enum class ComponentType
+{
+	CHAR,
+	BYTE,
+	SHORT,
+	USHORT,
+	INT,
+	UINT,
+	FLOAT,
+	DOUBLE
+};
+
+inline int32 ComponentTypeByteCount(ComponentType bct)
+{
+	switch (bct) {
+		case ComponentType::CHAR:
+		case ComponentType::BYTE: return 1;
+		case ComponentType::SHORT:
+		case ComponentType::USHORT: return 2;
+		case ComponentType::INT:
+		case ComponentType::UINT:
+		case ComponentType::FLOAT: return 4;
+		case ComponentType::DOUBLE: return 8;
+		default: return -1;
+	}
+}
+
+
+// min
+inline TextureFiltering GetTextureFiltering(int32 gltfFiltering)
+{
+	switch (gltfFiltering) {
+		case TINYGLTF_TEXTURE_FILTER_NEAREST:
+		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST:
+		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR: return TextureFiltering::Nearest;
+		case TINYGLTF_TEXTURE_FILTER_LINEAR:
+		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST:
+		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR: return TextureFiltering::Linear;
+		default: return TextureFiltering::Linear;
+	}
+}
+
+// min
+inline MipmapFiltering GetMipmapFiltering(int32 gltfFiltering)
+{
+	switch (gltfFiltering) {
+		case TINYGLTF_TEXTURE_FILTER_NEAREST:
+		case TINYGLTF_TEXTURE_FILTER_LINEAR: return MipmapFiltering::NoMipmap;
+		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST:
+		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST: return MipmapFiltering::Nearest;
+		case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR:
+		case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR: return MipmapFiltering::Linear;
+		default: return MipmapFiltering::Linear;
+	}
+}
+
+inline TextureWrapping GetTextureWrapping(int32 gltfWrapping)
+{
+	switch (gltfWrapping) {
+		case TINYGLTF_TEXTURE_WRAP_REPEAT: return TextureWrapping::Repeat;
+		case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE: return TextureWrapping::ClampToEdge;
+		case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT: return TextureWrapping::MirroredRepeat;
+		default: return TextureWrapping::Repeat;
+	}
+};
+
+inline MaterialPod::AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
+{
+	if (str::equalInsensitive(gltfAlphaMode, "OPAQUE")) {
+		return MaterialPod::Opaque;
+	}
+	if (str::equalInsensitive(gltfAlphaMode, "MASK")) {
+		return MaterialPod::Mask;
+	}
+	if (str::equalInsensitive(gltfAlphaMode, "BLEND")) {
+		return MaterialPod::Blend;
+	}
+	// not defined -> opaque
+	return MaterialPod::Opaque;
+}
+
+
+inline ComponentType GetComponentType(int32 gltfComponentType)
+{
+	switch (gltfComponentType) {
+		case TINYGLTF_COMPONENT_TYPE_BYTE: return ComponentType::CHAR;
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: return ComponentType::BYTE;
+		case TINYGLTF_COMPONENT_TYPE_SHORT: return ComponentType::SHORT;
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: return ComponentType::USHORT;
+		case TINYGLTF_COMPONENT_TYPE_INT: return ComponentType::INT;
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: return ComponentType::UINT;
+		case TINYGLTF_COMPONENT_TYPE_FLOAT: return ComponentType::FLOAT;
+		case TINYGLTF_COMPONENT_TYPE_DOUBLE: return ComponentType::DOUBLE;
+		default: return ComponentType::FLOAT;
+	}
+}
 
 struct AccessorDescription {
 	//
@@ -40,11 +136,11 @@ struct AccessorDescription {
 		const tinygltf::Buffer& gltfBuffer = modelData.buffers.at(bufferView.buffer);
 
 
-		componentType = gltfaux::GetComponentType(accessor.componentType);
+		componentType = GetComponentType(accessor.componentType);
 		elementCount = accessor.count;
 		beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
 		strideByteOffset = accessor.ByteStride(bufferView);
-		componentCount = utl::ElementComponentCount(gltfaux::GetElementType(accessor.type));
+		componentCount = tg::GetNumComponentsInType(accessor.type);
 		beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
 	}
 };
@@ -317,9 +413,8 @@ GltfLoader::GltfLoader(const fs::path& path)
 void GltfLoader::LoadGeometryGroup(
 	ModelPod* pod, GeometryGroup& geom, const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat)
 {
-	// mode
-	// CHECK: handle non triangle case somewhere in code
-	geom.mode = gltfaux::GetGeometryMode(primitiveData.mode);
+
+	CLOG_WARN(primitiveData.mode != TINYGLTF_MODE_TRIANGLES, "Unsupported primitive data mode {}", filename);
 
 	// material
 	const auto materialIndex = primitiveData.material;
@@ -552,14 +647,12 @@ void GltfLoader::LoadMaterial(MaterialPod* pod, size_t index)
 	pod->occlusionStrength = static_cast<float>(data.occlusionTexture.strength);
 
 	// alpha
-	pod->alphaMode = gltfaux::GetAlphaMode(data.alphaMode);
+	pod->alphaMode = GetAlphaMode(data.alphaMode);
 
 	pod->alphaCutoff = static_cast<float>(data.alphaCutoff);
 	// doublesided-ness
 	pod->doubleSided = data.doubleSided;
 
-
-	// NEXT: load normal map default
 	auto fillMatTexture
 		= [&](auto textureInfo, PodHandle<SamplerPod>& sampler, PodHandle<ImagePod>& image, int32& uvIndex) {
 			  if (textureInfo.index != -1) {
@@ -577,25 +670,25 @@ void GltfLoader::LoadMaterial(MaterialPod* pod, size_t index)
 				  } // else default
 
 				  uvIndex = textureInfo.texCoord;
-			  } // else defaults (NEXT: normal map not correct)
+			  }
 		  };
 
 	// samplers
 	auto& baseColorTextureInfo = data.pbrMetallicRoughness.baseColorTexture;
-	fillMatTexture(baseColorTextureInfo, pod->baseColorSampler, pod->baseColorImage, pod->baseColorTexcoordIndex);
+	fillMatTexture(baseColorTextureInfo, pod->baseColorSampler, pod->baseColorImage, pod->baseColorUvIndex);
 
 	auto& emissiveTextureInfo = data.emissiveTexture;
-	fillMatTexture(emissiveTextureInfo, pod->emissiveSampler, pod->emissiveImage, pod->emissiveTexcoordIndex);
+	fillMatTexture(emissiveTextureInfo, pod->emissiveSampler, pod->emissiveImage, pod->emissiveUvIndex);
 
 	auto& normalTextureInfo = data.normalTexture;
-	fillMatTexture(normalTextureInfo, pod->normalSampler, pod->normalImage, pod->normalTexcoordIndex);
+	fillMatTexture(normalTextureInfo, pod->normalSampler, pod->normalImage, pod->normalUvIndex);
 
 	auto& metallicRougnessTextureInfo = data.pbrMetallicRoughness.metallicRoughnessTexture;
 	fillMatTexture(metallicRougnessTextureInfo, pod->metallicRoughnessSampler, pod->metallicRoughnessImage,
-		pod->metallicRoughnessTexcoordIndex);
+		pod->metallicRoughnessUvIndex);
 
 	auto& occlusionTextureInfo = data.occlusionTexture;
-	fillMatTexture(occlusionTextureInfo, pod->occlusionSampler, pod->occlusionImage, pod->occlusionTexcoordIndex);
+	fillMatTexture(occlusionTextureInfo, pod->occlusionSampler, pod->occlusionImage, pod->occlusionUvIndex);
 }
 
 void GltfLoader::LoadImages()
@@ -620,12 +713,15 @@ void GltfLoader::LoadSamplers()
 
 		auto& [handle, pod] = AssetImporterManager::CreateEntry<SamplerPod>(samplerPath, name);
 
-		// NEXT:
-		pod->minFilter = gltfaux::GetTextureFiltering(sampler.minFilter);
-		pod->magFilter = gltfaux::GetTextureFiltering(sampler.magFilter);
-		pod->wrapU = gltfaux::GetTextureWrapping(sampler.wrapS);
-		pod->wrapV = gltfaux::GetTextureWrapping(sampler.wrapT);
-		pod->wrapW = gltfaux::GetTextureWrapping(sampler.wrapR);
+		pod->minFilter = GetTextureFiltering(sampler.minFilter);
+		pod->magFilter = GetTextureFiltering(sampler.magFilter);
+
+		// Based on opengl convections min filter contains the mip map filtering information
+		pod->mipmapFilter = GetMipmapFiltering(sampler.minFilter);
+
+		pod->wrapU = GetTextureWrapping(sampler.wrapS);
+		pod->wrapV = GetTextureWrapping(sampler.wrapT);
+		pod->wrapW = GetTextureWrapping(sampler.wrapR);
 
 		samplerPods.push_back(handle);
 		samplerIndex++;
@@ -650,6 +746,8 @@ void GltfLoader::LoadMaterials()
 		materialPods.emplace_back(handle);
 		matIndex++;
 	}
+	// auto& [handle, pod]
+	//	= AssetImporterManager::CreateEntry<ModelPod>(gltfFilePath, std::string(uri::GetFilenameNoExt(gltfFilePath)));
 
 	materialPods.push_back({}); // bleh
 }
@@ -673,7 +771,7 @@ void GltfLoader::LoadModel(ModelPod* pod, int32 sceneIndex)
 			if (!childNode.matrix.empty()) {
 				for (int32 row = 0; row < 4; ++row) {
 					for (int32 column = 0; column < 4; ++column) {
-						localTransformMat[row][column] = static_cast<float>(childNode.matrix[column + 4 * row]);
+						localTransformMat[row][column] = static_cast<float>(childNode.matrix[column + 4llu * row]);
 					}
 				}
 			}
@@ -739,8 +837,6 @@ BasePodHandle GltfLoader::Load()
 {
 	auto& [handle, pod]
 		= AssetImporterManager::CreateEntry<ModelPod>(gltfFilePath, std::string(uri::GetFilenameNoExt(gltfFilePath)));
-
-	// NEXT: default material (should we change the way materials are stored in models?)
 
 	LoadImages();
 	LoadSamplers();

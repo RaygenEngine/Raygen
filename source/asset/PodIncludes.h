@@ -6,5 +6,5 @@
 #include "asset/pods/ImagePod.h"
 #include "asset/pods/MaterialPod.h"
 #include "asset/pods/ModelPod.h"
-#include "asset/pods/ShaderPod.h"
 #include "asset/pods/SamplerPod.h"
+#include "asset/pods/ShaderPod.h"

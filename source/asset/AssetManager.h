@@ -1,14 +1,14 @@
 #pragma once
-
 #include "asset/AssetPod.h"
-#include "asset/UriLibrary.h"
+#include "asset/ImporterRegistry.h"
 #include "asset/PodHandle.h"
-#include "reflection/PodReflection.h"
+#include "asset/UriLibrary.h"
+#include "core/StringUtl.h"
+#include "engine/console/ConsoleVariable.h"
 #include "engine/Engine.h"
 #include "engine/Logger.h"
-#include "engine/console/ConsoleVariable.h"
-#include "asset/ImporterRegistry.h"
-#include "core/StringUtl.h"
+#include "reflection/PodReflection.h"
+
 #include <future>
 
 // DOC: OUTDATED, Please update.
@@ -50,7 +50,7 @@ struct PodEntry {
 	size_t uid{ 0 };
 	uri::Uri path{};
 
-	std::string name{}; // TODO: ASSETS fix data duplication
+	std::string name{};
 
 	// Mark pods as transient ones when they are just used for importing (or are generated) and "file-like" operations
 	// like save and reimport are not allowed on them. eg: GltfFilePod, default constructed empty pods
@@ -296,7 +296,7 @@ private:
 private:
 	uri::Uri GeneratePath(uri::Uri importPath, uri::Uri name)
 	{
-		auto directory = m_defaultImportingPath.string(); // WIP: Use importing operation
+		auto directory = m_defaultImportingPath.string(); // NEXT: Use importing operation
 		auto filename = AssetHandlerManager::SuggestFilename(directory, name);
 		return directory + filename;
 	}

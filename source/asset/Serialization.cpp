@@ -1,21 +1,20 @@
 #include "pch.h"
-#include "engine/Logger.h"
-
 #include "asset/Serialization.h"
-#include "reflection/PodTools.h"
-#include "reflection/ReflectionTools.h"
+
 #include "asset/PodIncludes.h"
 #include "asset/PodSerializers.h"
-#include <cereal/cereal.hpp>
-#include <cereal/archives/binary.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/string.hpp>
+#include "engine/Logger.h"
+#include "reflection/PodTools.h"
+#include "reflection/ReflectionTools.h"
 
+#include <cereal/archives/binary.hpp>
+#include <cereal/cereal.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
 
 //
 // CEREAL BINARY VISITORS
 //
-
 
 namespace glm {
 template<typename Archive>

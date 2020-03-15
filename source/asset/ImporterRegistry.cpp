@@ -1,10 +1,9 @@
 #include "pch.h"
 #include "asset/ImporterRegistry.h"
 
-#include "asset/importers/ImageImporter.h"
 #include "asset/importers/GltfImporter.h"
+#include "asset/importers/ImageImporter.h"
 #include "asset/importers/ShaderImporter.h"
-
 
 ImporterRegsitry::ImporterRegsitry()
 {

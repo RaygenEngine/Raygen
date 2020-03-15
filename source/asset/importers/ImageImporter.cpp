@@ -29,8 +29,7 @@ BasePodHandle ImageImporter::Import(const fs::path& path)
 
 	// PERF: crappy std::vector initialization on resize,
 	// to solve fork stb_image and pass preallocated pointer to loading functions
-	// CHECK: C26451
-	size_t byteCount = (pod->width * pod->height * 4) * (pod->isHdr ? sizeof(float) : sizeof(byte));
+	size_t byteCount = (pod->width * pod->height * 4llu) * (pod->isHdr ? sizeof(float) : sizeof(byte));
 	pod->data.resize(byteCount);
 
 	memcpy(pod->data.data(), data, byteCount);

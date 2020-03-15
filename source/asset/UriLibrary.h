@@ -1,11 +1,12 @@
 #pragma once
-
-#include "engine/Logger.h"
 #include "core/StringUtl.h"
+#include "engine/Logger.h"
 
 // The central library for the engines Uri convention.
 #include <nlohmann/json.hpp>
 
+// TEST: lib
+// DOC: lib
 namespace uri {
 using Uri = std::string;
 
@@ -14,7 +15,6 @@ namespace detail {
 	constexpr char JsonEnd = '}';
 
 } // namespace detail
-// DOC:
 
 inline bool IsCpu(const Uri& path)
 {
