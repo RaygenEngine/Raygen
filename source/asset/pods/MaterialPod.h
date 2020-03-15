@@ -47,11 +47,11 @@ struct MaterialPod : AssetPod {
 		REFLECT_VAR(normalImage);
 		REFLECT_VAR(emissiveImage);
 
-		REFLECT_VAR(baseColorSampler);
-		REFLECT_VAR(metallicRoughnessSampler);
-		REFLECT_VAR(occlusionSampler);
-		REFLECT_VAR(normalSampler);
-		REFLECT_VAR(emissiveSampler);
+		REFLECT_VAR(baseColorSampler, PropertyFlags::Advanced);
+		REFLECT_VAR(metallicRoughnessSampler, PropertyFlags::Advanced);
+		REFLECT_VAR(occlusionSampler, PropertyFlags::Advanced);
+		REFLECT_VAR(normalSampler, PropertyFlags::Advanced);
+		REFLECT_VAR(emissiveSampler, PropertyFlags::Advanced);
 	}
 
 	static void Load(PodEntry* entry, MaterialPod* pod, const uri::Uri& path);

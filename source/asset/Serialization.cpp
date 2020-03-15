@@ -129,11 +129,10 @@ void SerializePodToBinary(PodMetaData& metadata, AssetPod* pod, const fs::path& 
 void DeserializePodFromBinary(PodEntry* entry)
 {
 	fs::path file = entry->path;
-	CLOG_ABORT(file.extension() == "bin", "Incorrect extension");
 
 	auto& meta = entry->metadata;
 
-	std::ifstream is(file, std::ios::binary);
+	std::ifstream is(file.replace_extension(".bin"), std::ios::binary);
 	if (!is) {
 		LOG_ERROR("Failed to open file for pod reading: {}", file);
 		return;

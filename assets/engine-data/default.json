@@ -189,7 +189,7 @@
         "~children": []
     },
     {
-        "+name": "Sponza.bin",
+        "+name": "WaterBottle",
         "+trs": {
             "pos": {
                 "x": 0.0,
@@ -208,7 +208,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/Sponza.bin",
+        "model": "gen-data/Sponza",
         "~children": []
     }
 ]
