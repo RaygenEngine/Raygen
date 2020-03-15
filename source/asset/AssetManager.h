@@ -294,12 +294,11 @@ private:
 
 
 private:
-	uri::Uri GeneratePath(uri::Uri importPath)
+	uri::Uri GeneratePath(uri::Uri importPath, uri::Uri name)
 	{
-		auto directory = m_currentOperation.currentOpImportingPath.string();
-		uri::Uri str = uri::Uri(uri::GetFilenameNoExt(importPath));
-		auto filename = AssetHandlerManager::SuggestFilename(directory, str);
-		return directory + "/" + filename;
+		auto directory = m_defaultImportingPath.string(); // WIP: Use importing operation
+		auto filename = AssetHandlerManager::SuggestFilename(directory, name);
+		return directory + filename;
 	}
 
 public:
@@ -361,7 +360,7 @@ private:
 		e->type = mti::GetTypeId<PodType>();
 
 
-		e->path = transient ? AssetHandlerManager::SuggestFilename("", name) : inst->GeneratePath(importPath);
+		e->path = transient ? AssetHandlerManager::SuggestFilename("", name) : inst->GeneratePath(importPath, name);
 		e->name = uri::GetFilename(e->path);
 
 

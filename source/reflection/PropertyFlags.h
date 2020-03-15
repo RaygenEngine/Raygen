@@ -8,6 +8,7 @@ constexpr Type NoLoad = (1 << 1);
 constexpr Type NoCopy = (1 << 2);
 
 constexpr Type Hidden = (1 << 3);
+constexpr Type Advanced = (1 << 4);
 
 constexpr Type NoEdit = (1 << 8);
 

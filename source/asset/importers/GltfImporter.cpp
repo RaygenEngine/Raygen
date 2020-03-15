@@ -265,6 +265,8 @@ void LoadIntoVertexData(const tg::Model& modelData, int32 accessorIndex, std::ve
 
 class GltfLoader {
 	uri::Uri gltfFilePath;
+	uri::Uri filename;
+	fs::path systemPath;
 
 	tg::Model model;
 
@@ -283,29 +285,33 @@ class GltfLoader {
 	void LoadSamplers();
 	void LoadMaterials();
 
-public:
-	GltfLoader(const uri::Uri& path);
-
 	// CHECK: currently loads default scene as model, could also load all the other scenes in the future
-	BasePodHandle LoadModel();
+	void LoadModel(ModelPod* pod, int32 sceneIndex);
+
+	// Model specific state
+	bool tempModelRequiresDefaultMat{ false };
+
+public:
+	GltfLoader(const fs::path& path);
+
+	BasePodHandle Load();
 };
 
-GltfLoader::GltfLoader(const uri::Uri& path)
-	: gltfFilePath(path)
+GltfLoader::GltfLoader(const fs::path& path)
+	: gltfFilePath(path.generic_string())
+	, systemPath(path)
 {
 	tg::TinyGLTF loader;
 
 	std::string err;
 	std::string warn;
 
-	const bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, path.c_str());
+	filename = path.filename().replace_extension().generic_string();
+
+	const bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, gltfFilePath.c_str());
 
 	CLOG_WARN(!warn.empty(), "Gltf Load warning for {}: {}", path, warn.c_str());
 	CLOG_ABORT(!err.empty(), "Gltf Load error for {}: {}", path, err.c_str());
-
-	LoadImages();
-	LoadSamplers();
-	LoadMaterials();
 }
 
 void GltfLoader::LoadGeometryGroup(
@@ -321,7 +327,8 @@ void GltfLoader::LoadGeometryGroup(
 	// If material is -1, we need default material.
 	if (materialIndex == -1) {
 		// Default material will be placed at last slot.
-		geom.materialIndex = static_cast<uint32>(pod->materials.size());
+		geom.materialIndex = static_cast<uint32>(materialPods.size() - 1);
+		tempModelRequiresDefaultMat = true;
 	}
 	else {
 		geom.materialIndex = materialIndex;
@@ -595,7 +602,8 @@ void GltfLoader::LoadImages()
 {
 	// CHECK: embedded images not supported currently
 	for (auto& img : model.images) {
-		imagePods.push_back(AssetImporterManager::ImportRequest<ImagePod>(img.uri));
+		fs::path imgPath = systemPath.remove_filename() / img.uri;
+		imagePods.push_back(AssetImporterManager::ImportRequest<ImagePod>(imgPath));
 	}
 }
 
@@ -605,10 +613,10 @@ void GltfLoader::LoadSamplers()
 	for (auto& sampler : model.samplers) {
 
 		nlohmann::json data;
-		data["sampler"] = samplerIndex++;
+		data["sampler"] = samplerIndex;
 		auto samplerPath = uri::MakeChildJson(gltfFilePath, data);
 
-		std::string name = sampler.name.empty() ? "Sampler." + std::to_string(samplerIndex) : sampler.name;
+		std::string name = sampler.name.empty() ? filename + "_Sampler_" + std::to_string(samplerIndex) : sampler.name;
 
 		auto& [handle, pod] = AssetImporterManager::CreateEntry<SamplerPod>(samplerPath, name);
 
@@ -620,6 +628,7 @@ void GltfLoader::LoadSamplers()
 		pod->wrapW = gltfaux::GetTextureWrapping(sampler.wrapR);
 
 		samplerPods.push_back(handle);
+		samplerIndex++;
 	}
 }
 
@@ -629,27 +638,29 @@ void GltfLoader::LoadMaterials()
 	for (auto& mat : model.materials) {
 
 		nlohmann::json data;
-		data["material"] = matIndex++;
+		data["material"] = matIndex;
 		auto matPath = uri::MakeChildJson(gltfFilePath, data);
 
-		std::string name = mat.name.empty() ? "Mat." + std::to_string(matIndex) : mat.name;
+		std::string name = mat.name.empty() ? filename + "_Mat_" + std::to_string(matIndex) : mat.name;
 
 		auto& [handle, pod] = AssetImporterManager::CreateEntry<MaterialPod>(matPath, name);
 
 		LoadMaterial(pod, matIndex);
 
-		materialPods.push_back(handle);
+		materialPods.emplace_back(handle);
+		matIndex++;
 	}
+
+	materialPods.push_back({}); // bleh
 }
 
-BasePodHandle GltfLoader::LoadModel()
+void GltfLoader::LoadModel(ModelPod* pod, int32 sceneIndex)
 {
-	auto& [handle, pod] // TODO:
-		= AssetImporterManager::CreateEntry<ModelPod>(gltfFilePath, std::string(uri::GetFilenameNoExt(gltfFilePath)));
-
-	int32 scene = model.defaultScene >= 0 ? model.defaultScene : 0;
+	int32 scene = sceneIndex >= 0 ? sceneIndex : 0;
 
 	auto& defaultScene = model.scenes.at(scene);
+
+	tempModelRequiresDefaultMat = false;
 
 	std::function<bool(const std::vector<int>&, glm::mat4)> RecurseChildren;
 	RecurseChildren = [&](const std::vector<int>& childrenIndices, glm::mat4 parentTransformMat) {
@@ -716,21 +727,33 @@ BasePodHandle GltfLoader::LoadModel()
 
 	RecurseChildren(defaultScene.nodes, glm::mat4(1.f));
 
-	// NEXT: default material (should we change the way materials are stored in models?)
-	pod->materials.push_back({});
-	return handle;
+
+	pod->materials = materialPods;
+
+	if (!tempModelRequiresDefaultMat) {
+		pod->materials.pop_back();
+	}
 }
 
+BasePodHandle GltfLoader::Load()
+{
+	auto& [handle, pod]
+		= AssetImporterManager::CreateEntry<ModelPod>(gltfFilePath, std::string(uri::GetFilenameNoExt(gltfFilePath)));
+
+	// NEXT: default material (should we change the way materials are stored in models?)
+
+	LoadImages();
+	LoadSamplers();
+	LoadMaterials();
+
+	LoadModel(pod, model.defaultScene);
+
+	return handle;
+}
 } // namespace
 
 BasePodHandle GltfImporter::Import(const fs::path& path)
 {
-	// const auto finalPath = path.generic_string();
-
-	// auto& [handle, pod] = AssetImporterManager::CreateEntry<ModelPod>(path.generic_string(),
-	// path.filename().string());
-
-
-	GltfLoader loader{ path.generic_string() };
-	return loader.LoadModel();
+	GltfLoader loader{ path };
+	return loader.Load();
 }

@@ -65,7 +65,8 @@ void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 
 	auto& meta = entry->metadata;
 
-	SerializePodToBinary(entry->metadata, entry->ptr.get(), entry->path);
+	fs::path path = entry->path;
+	SerializePodToBinary(entry->metadata, entry->ptr.get(), path.replace_extension(".bin"));
 
 
 	if (meta.exportOnSave) {
@@ -89,7 +90,7 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 			}
 
 			if (entry.path().extension() == ".bin") {
-				auto key = fs::relative(entry.path()).generic_string();
+				auto key = fs::relative(entry.path()).replace_extension().generic_string();
 				size_t uid = m_pods.size();
 				m_pathCache.emplace(key, uid);
 
