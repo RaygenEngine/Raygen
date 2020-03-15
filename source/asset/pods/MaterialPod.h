@@ -9,13 +9,13 @@ struct MaterialPod : AssetPod {
 	enum AlphaMode : int32
 	{
 		// The rendered output is fully opaque and any alpha value is ignored.
-		OPAQUE_,
+		Opaque,
 		// The rendered output is either fully opaque or fully transparent depending on the alpha value and the
 		// specified alpha cutoff value. This mode is used to simulate geometry such as tree leaves or wire fences.
-		MASK,
+		Mask,
 		// The rendered output is combined with the background using the normal painting operation (i.e. the Porter and
 		// Duff over operator). This mode is used to simulate geometry such as guaze cloth or animal fur.
-		BLEND
+		Blend
 	};
 
 
@@ -41,17 +41,17 @@ struct MaterialPod : AssetPod {
 		REFLECT_VAR(doubleSided);
 		REFLECT_VAR(castsShadows);
 
-		REFLECT_VAR(baseColorSampler);
-		REFLECT_VAR(metallicRoughnessSampler);
-		REFLECT_VAR(occlusionSampler);
-		REFLECT_VAR(normalSampler);
-		REFLECT_VAR(emissiveSampler);
-
 		REFLECT_VAR(baseColorImage);
 		REFLECT_VAR(metallicRoughnessImage);
 		REFLECT_VAR(occlusionImage);
 		REFLECT_VAR(normalImage);
 		REFLECT_VAR(emissiveImage);
+
+		REFLECT_VAR(baseColorSampler);
+		REFLECT_VAR(metallicRoughnessSampler);
+		REFLECT_VAR(occlusionSampler);
+		REFLECT_VAR(normalSampler);
+		REFLECT_VAR(emissiveSampler);
 	}
 
 	static void Load(PodEntry* entry, MaterialPod* pod, const uri::Uri& path);
@@ -110,11 +110,11 @@ struct MaterialPod : AssetPod {
 	// occludedColor = lerp(color, color * <sampled occlusion texture value>, <occlusion strength>)
 	float occlusionStrength{ 1.f };
 
-	// When alphaMode is set to MASK the alphaCutoff property specifies the cutoff threshold. If the alpha value is
+	// When alphaMode is set to Mask the alphaCutoff property specifies the cutoff threshold. If the alpha value is
 	// greater than or equal to the alphaCutoff value then it is rendered as fully opaque, otherwise, it is rendered as
 	// fully transparent. alphaCutoff value is ignored for other modes. The alpha value is defined in the
 	// baseColorTexture for metallic-roughness material model.
-	AlphaMode alphaMode{ OPAQUE_ };
+	AlphaMode alphaMode{ Opaque };
 	float alphaCutoff{ 0.5f };
 
 	// The doubleSided property specifies whether the material is double sided. When this value is false, back-face

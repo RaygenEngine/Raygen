@@ -22,7 +22,7 @@ public:
 	{
 		mti::TypeId type{};
 		BasePodHandle baseHandle = ImportImpl(path, type);
-		if (type == mti::TypeId<T>()) {
+		if (type == mti::GetTypeId<T>()) {
 			return PodHandle<T>{ baseHandle.podId };
 		}
 		return {};

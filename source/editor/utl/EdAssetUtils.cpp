@@ -44,6 +44,7 @@ namespace asset {
 
 			ImUtil::TextTooltipUtil(text, scale);
 
+			// WIP:
 			/*if (entry->type == mti::GetTypeId<SamplerPod>()) {
 				ImGui::BeginTooltip();
 

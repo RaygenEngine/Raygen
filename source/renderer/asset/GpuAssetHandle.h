@@ -3,6 +3,7 @@
 struct GpuAssetBase {
 	size_t uid{ 0 };
 	virtual ~GpuAssetBase() = default;
+	// WIP: rule 5, delete copy
 };
 
 template<CONC(CAssetPod) T>

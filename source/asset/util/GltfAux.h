@@ -97,16 +97,16 @@ inline TextureWrapping GetTextureWrapping(int32 gltfWrapping)
 inline MaterialPod::AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
 {
 	if (str::equalInsensitive(gltfAlphaMode, "OPAQUE")) {
-		return MaterialPod::OPAQUE_;
+		return MaterialPod::Opaque;
 	}
 	if (str::equalInsensitive(gltfAlphaMode, "MASK")) {
-		return MaterialPod::MASK;
+		return MaterialPod::Mask;
 	}
 	if (str::equalInsensitive(gltfAlphaMode, "BLEND")) {
-		return MaterialPod::BLEND;
+		return MaterialPod::Blend;
 	}
 	// not defined -> opaque
-	return MaterialPod::OPAQUE_;
+	return MaterialPod::Opaque;
 }
 
 inline ElementType GetElementType(int32 gltfElementType)
