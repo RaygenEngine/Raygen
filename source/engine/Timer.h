@@ -117,4 +117,4 @@ public:
 
 } // namespace timer
 
-#define TIMER_STATIC_SCOPE(Name) timer::ScopedTimer MACRO_PASTE(z_scope_t, __LINE__)(Name);
+#define TIMER_SCOPE(Name) timer::ScopedTimer MACRO_PASTE(z_scope_t, __LINE__)(Name);

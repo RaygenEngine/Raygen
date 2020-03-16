@@ -86,10 +86,8 @@ void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 
 void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 {
-	TIMER_STATIC_SCOPE("LOAD ALL PODS");
 	size_t beginUid = m_pods.size();
 	{
-		TIMER_STATIC_SCOPE("Searching for pods.");
 		for (const auto& entry : fs::recursive_directory_iterator(path)) {
 			if (entry.is_directory()) {
 				continue;
@@ -109,17 +107,15 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 		}
 	}
 
-	LOG_REPORT("Found {} pods", m_pods.size() - beginUid);
+	LOG_REPORT("Found {} binary pods.", m_pods.size() - beginUid);
 
 	{
-		TIMER_STATIC_SCOPE("Loading pods.");
+		TIMER_SCOPE("Loading pods");
 
 		size_t podsToLoad = m_pods.size() - beginUid;
 		size_t jobCount = std::max(std::thread::hardware_concurrency(), static_cast<uint>(2));
 		size_t podsPerJob
 			= static_cast<size_t>(std::ceil(static_cast<float>(podsToLoad) / static_cast<float>(jobCount)));
-
-		LOG_REPORT("Loading in {} jobs: {} pods per job.", jobCount, podsPerJob);
 
 		auto loadRange = [&](size_t start, size_t stop) {
 			stop = std::min(stop, m_pods.size());
