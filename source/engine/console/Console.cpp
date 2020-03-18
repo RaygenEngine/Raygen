@@ -11,7 +11,7 @@ ConsoleFunctionGeneric commandAll(
 
 		if (parts.size() <= 1) {
 			for (auto& [key, entry] : Console::Z_GetEntries()) {
-				LOG_REPORT("{:<30} - {}", key, entry->tooltip);
+				LOG_REPORT("{}", entry->GetDescriptionLine());
 			}
 			return;
 		}
@@ -20,11 +20,13 @@ ConsoleFunctionGeneric commandAll(
 
 		for (auto& [key, entry] : Console::Z_GetEntries()) {
 			if (str::startsWithInsensitive(key, filter)) {
-				LOG_REPORT("{:<30} - {}", key, entry->tooltip);
+				LOG_REPORT("{}", entry->GetDescriptionLine());
 			}
 		}
 	},
 	"Lists all available commands [starting with the text passed as param]");
+
+ConsoleFunction<int32, bool> g("test", [](auto, bool) {});
 
 void Console::Execute(const std::string& command)
 {

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <iomanip>
+#include <sstream>
 
 namespace str {
 template<typename T>
@@ -27,4 +29,12 @@ T fromStrView(std::string_view view)
 	return value;
 }
 
+
+template<>
+inline bool fromStrView<bool>(std::string_view view)
+{
+	bool value;
+	std::istringstream(std::string(view)) >> std::boolalpha >> value;
+	return value;
+}
 } // namespace str

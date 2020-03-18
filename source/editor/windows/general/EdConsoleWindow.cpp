@@ -272,7 +272,7 @@ struct ConsoleState {
 		}
 		ImEd::HSpace();
 		ImGui::SameLine();
-		ImGui::Text("Filter:");
+		ImGui::Text("Filter: ");
 		ImGui::SameLine();
 		filter.Draw("##LogFilter");
 	}
@@ -379,7 +379,7 @@ struct ConsoleState {
 					for (int i = 0; i < candidates.size(); i++) {
 						// WIP: Add function to consoleentry that "displays" entry with values for variables and aligned
 						// tooltips for everything
-						AddLogConsole(candidates[i]->name);
+						AddLogConsole(candidates[i]->GetDescriptionLine());
 					}
 				}
 

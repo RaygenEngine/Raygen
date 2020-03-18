@@ -15,6 +15,8 @@ protected:
 
 	void DrawCategoryContents(ProfilerSetup::Module category);
 
+	int32 m_currentExportFrame{ 0 }; // when 0 we are not exporting burst of frames
+
 public:
 	virtual void ImguiDraw();
 	virtual ~ProfilerWindow() = default;

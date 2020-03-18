@@ -48,23 +48,23 @@ void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 	auto& entries = *vec;
 
 	for (auto& entry : entries) {
-		float perc = static_cast<float>(entry->sumDuration.count()) / frametime.count();
+		float perc = static_cast<float>(entry->prevSumDuration.count()) / frametime.count();
 		auto totWidth = ImGui::GetContentRegionAvail().x;
 
 		ImGui::ProgressBar(perc, ImVec2(totWidth / 4.f, 0));
 		ImGui::SameLine();
 
-		std::string loc = fmt::format("{} {}", entry->frontFacingName, entry->line);
-
+		std::string loc = fmt::format("{:.{}} [{}]", entry->frontFacingName,
+			static_cast<int32>((totWidth * 1.2) / std::max(ImGui::GetFontSize(), 1.f)), entry->line);
 		ImEd::SetNextItemPerc(0.3f);
 		ImGui::Text(loc.c_str());
-		ImGui::SameLine(totWidth * 0.70f);
+		ImGui::SameLine(totWidth * 0.85f);
 
 		std::string hits;
-		if (entry->hits > 0) {
+		if (entry->prevHits > 0) {
 			const float c_PrecisionToMicros = 1.f / (1000.f);
-			auto count = entry->sumDuration.count();
-			float perHit = (static_cast<float>(count) / entry->hits) * c_PrecisionToMicros;
+			auto count = entry->prevSumDuration.count();
+			float perHit = (static_cast<float>(count) / entry->prevHits) * c_PrecisionToMicros;
 
 			// CHECK: C++20 use chrono operator<<
 			// CHECK: assumes precision
@@ -72,25 +72,24 @@ void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 
 			if (micros < 1000.f) {
 				hits = fmt::format("{:04.2f} us", micros);
-				ImGui::Text(hits.c_str());
 
-				hits = fmt::format("{} Hits | {:04.2f} us avg.", entry->hits, perHit);
-				ImGui::SameLine(totWidth * 0.8f);
 				ImGui::Text(hits.c_str());
+				hits = fmt::format("{}", entry->prevHits + 100);
+				ImGui::SameLine(totWidth * 0.975f);
+				ImGui::Text(hits.c_str());
+				TEXT_TOOLTIP("Number of times hit last frame.\n\n{} Hits\n{:04.2f} us/hit", entry->prevHits, perHit);
 			}
 			else {
 
 				hits = fmt::format("{:04.2f} ms", micros / 1000.f);
 				ImGui::Text(hits.c_str());
 
-				hits = fmt::format("{} Hits | {:04.2f} ms avg.", entry->hits, perHit / 1000.f);
-				ImGui::SameLine(totWidth * 0.8f);
+				hits = fmt::format("{}", entry->prevHits);
+				ImGui::SameLine(totWidth * 0.98f);
 				ImGui::Text(hits.c_str());
+				TEXT_TOOLTIP(
+					"Number of times hit last frame.\n\n{} Hits\n{:04.2f} ms/hit", entry->prevHits, perHit / 1000.f);
 			}
-		}
-		else {
-			hits = fmt::format("0 | 0 Hits");
-			ImGui::Text(hits.c_str());
 		}
 	}
 }
@@ -99,6 +98,28 @@ void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 void ProfilerWindow::ImguiDraw()
 {
 	bool current = Profiler.m_isProfiling;
+
+	if (m_currentExportFrame > 0) {
+		ImGui::Text("Recording frames...");
+
+		if (m_currentExportFrame == 1) {
+			Profiler.ResetSession();
+			Profiler.BeginProfiling();
+		}
+		else if (m_currentExportFrame == 11) {
+			Profiler.EndProfiling();
+		}
+		else if (m_currentExportFrame == 12) {
+			if (auto file = ed::NativeFileBrowser::SaveFile({ "json" })) {
+				Profiler.ExportSessionToJson(*file);
+			}
+			m_currentExportFrame = 0;
+			Profiler.ResetSession();
+			return;
+		}
+		m_currentExportFrame++;
+		return;
+	}
 
 	if (current) {
 		if (ImEd::Button("Pause Profiling")) {
@@ -116,10 +137,15 @@ void ProfilerWindow::ImguiDraw()
 			Profiler.ExportSessionToJson(*file);
 		}
 	}
-
 	ImGui::SameLine();
 	if (ImEd::Button("Reset Session")) {
 		Profiler.ResetSession();
+	}
+
+	ImGui::SameLine();
+	if (ImEd::Button("Export Frames")) {
+		m_currentExportFrame = 1;
+		Profiler.EndProfiling();
 	}
 
 

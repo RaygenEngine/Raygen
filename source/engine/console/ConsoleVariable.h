@@ -4,9 +4,10 @@
 #include "core/StringUtl.h"
 #include "engine/console/Console.h"
 #include "engine/Logger.h"
+#include "reflection/TypeId.h"
 
 #include <functional>
-#include <string_view>
+#include <string>
 
 // TODO: Genericly support strings in quotes as parameters
 
@@ -21,6 +22,14 @@ struct ConsoleEntry {
 		Console::AutoRegister(name, this);
 	}
 
+
+	[[nodiscard]] virtual std::string GetDescriptionLine() const
+	{
+		if (tooltip[0] == '\0') {
+			return fmt::format("{}", name);
+		}
+		return fmt::format("{:<30} - {}", name, tooltip);
+	}
 	virtual void Execute(std::string_view command) { LOG_REPORT("CMD: {}", command); }
 	virtual ~ConsoleEntry() { Console::Unregister(name, this); }
 };
@@ -35,6 +44,15 @@ struct ConsoleVariable : public ConsoleEntry {
 		: ConsoleEntry(name, inTooltip)
 		, value(defValue)
 	{
+	}
+
+	[[nodiscard]] std::string GetDescriptionLine() const override
+	{
+		auto str = fmt::format("{}: [{}]", name, value);
+		if (tooltip[0] == '\0') {
+			return str;
+		}
+		return fmt::format("{:<30} - {}", str, tooltip);
 	}
 
 	void Execute(std::string_view command) override { TryUpdateValue(command); }
@@ -54,7 +72,7 @@ protected:
 			return false;
 		}
 		value = str::fromStrView<T>(vec[1]);
-		LOG_REPORT("Console set {}: {} - {}", name, value, tooltip);
+		LOG_REPORT("Console set {}: {}", name, value);
 		return true;
 	}
 };
@@ -132,7 +150,7 @@ struct ConsoleFunction : public ConsoleEntry {
 
 		auto vec = str::split(command);
 		if (vec.size() - 1 != argCount) {
-			LOG_REPORT("Incorrect number of arguments for console command: {}. Expected: {}", name, argCount);
+			LOG_REPORT("Incorrect number of arguments: {}", GetDescriptionLine());
 			return;
 		}
 
@@ -147,6 +165,21 @@ struct ConsoleFunction : public ConsoleEntry {
 			args);
 
 		std::apply(function, args);
+	}
+
+	[[nodiscard]] std::string GetDescriptionLine() const override
+	{
+		if constexpr (sizeof...(Args) > 0) {
+			std::stringstream args;
+
+			((args << mti::GetName<Args>() << ", "), ...);
+			if (tooltip[0] == '\0') {
+				return fmt::format("{} [{}]", name, args.str());
+			}
+			return fmt::format("{:<19} [{:<9}] - {}", name, args.str(), tooltip);
+		}
+
+		return ConsoleEntry::GetDescriptionLine();
 	}
 
 
