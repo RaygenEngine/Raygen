@@ -83,7 +83,7 @@ template<typename T>
 inline void from_json(const nlohmann::json& j, PodHandle<T>& handle)
 {
 	if (j.is_string()) {
-		handle = AssetFrontEndManager::TransitionalLoadAsset<T>(j.get<std::string>());
+		handle = AssetHandlerManager::GetAsyncHandle<T>(j.get<std::string>());
 	}
 }
 
