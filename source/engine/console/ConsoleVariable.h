@@ -59,7 +59,7 @@ struct ConsoleVariable : public ConsoleEntry {
 
 	[[nodiscard]] T& Get() { return value; }
 
-	[[nodiscard]] explicit operator T&() { return value; }
+	[[nodiscard]] operator T&() { return value; }
 
 	virtual ~ConsoleVariable() = default;
 

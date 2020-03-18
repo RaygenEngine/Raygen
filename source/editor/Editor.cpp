@@ -45,23 +45,28 @@
 #include <iostream>
 #include <set>
 
-namespace {
-void DrawTextureDebugger()
+void Editor::DrawTextureDebugger()
 {
 	auto& gbuff = Layer->geomPass.m_gBuffer;
 
-	ImGui::Begin("Image Debugger.");
+	bool shouldShowDescriptors = !willDescriptorsBeDestroyed.Access();
 
-	auto showAttachment = [](const char* name, Attachment& att) {
+	ImGui::Begin("GBuffer Debugger");
+
+	auto showAttachment = [shouldShowDescriptors](const char* name, Attachment& att) {
 		if (ImGui::CollapsingHeader(name)) {
 			auto descrSet = att.GetDebugDescriptor();
 
 			if (!descrSet) {
 				ImGui::Text("Null handle");
-				ImGui::End();
 				return;
 			}
-			ImGui::Image(descrSet, ImVec2(256, 256));
+			if (shouldShowDescriptors) {
+				ImGui::Image(descrSet, ImVec2(256, 256));
+			}
+			else {
+				ImGui::Image(ImGui::GetIO().Fonts->TexID, ImVec2(256, 256), ImVec2(0, 0), ImVec2(0, 0));
+			}
 		}
 	};
 
@@ -75,7 +80,6 @@ void DrawTextureDebugger()
 
 	ImGui::End();
 }
-} // namespace
 
 Editor::Editor()
 {
@@ -241,6 +245,7 @@ void Editor::UpdateViewportCoordsFromDockspace()
 		g_ViewportCoordinates.size = { rect.GetWidth(), rect.GetHeight() };
 		if (copy != g_ViewportCoordinates) {
 			Event::OnViewportUpdated.Broadcast();
+			willDescriptorsBeDestroyed.Set();
 		}
 	}
 
@@ -264,8 +269,6 @@ void Editor::UpdateEditor()
 
 	m_windowsComponent.Draw();
 
-
-	DrawTextureDebugger();
 
 	// Attempt to predict the viewport size for the first run, might be a bit off.
 	ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
@@ -329,6 +332,8 @@ void Editor::UpdateEditor()
 	ImGui::End();
 
 	UpdateViewportCoordsFromDockspace();
+	DrawTextureDebugger();
+
 	ImguiImpl::EndFrame();
 
 	for (auto& cmd : m_postDrawCommands) {
