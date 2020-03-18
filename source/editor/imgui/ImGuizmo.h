@@ -24,7 +24,7 @@
 // SOFTWARE.
 //
 // -------------------------------------------------------------------------------------------
-// History :
+// history :
 // 2019/11/03 View gizmo
 // 2016/09/11 Behind camera culling. Scaling Delta matrix not multiplied by source matrix scales. local/world rotation
 // and translation fixed. Display message is incorrect (X: ... Y:...) in local mode. 2016/09/09 Hatched negative axis.
