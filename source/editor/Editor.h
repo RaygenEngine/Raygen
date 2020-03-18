@@ -126,6 +126,9 @@ protected:
 
 	void UpdateViewportCoordsFromDockspace();
 
+	void DrawTextureDebugger();
+	BoolFlag willDescriptorsBeDestroyed{ false };
+
 public:
 	EditorCameraNode* m_editorCamera;
 	bool m_hasEditorCameraCachedMatrix{ false };
@@ -189,6 +192,7 @@ public:
 	static void HelpTooltip(const char* tooltip);
 	static void HelpTooltipInline(const char* tooltip);
 	static void CollapsingHeaderTooltip(const char* tooltip);
+
 
 	void OnPlay();
 	void OnStopPlay();
