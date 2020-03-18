@@ -20,6 +20,9 @@ struct ProfileScopeBase {
 	size_t hits;
 	S_Profiler::Precision sumDuration;
 
+	size_t prevHits;
+	S_Profiler::Precision prevSumDuration;
+
 
 	ProfileScopeBase(const char* file, int32 line, const char* function, ProfilerSetup::Module engModule)
 		: file(file)
@@ -38,6 +41,14 @@ struct ProfileScopeBase {
 		if (trimLoc != std::string::npos) {
 			frontFacingName = frontFacingName.substr(trimLoc + trim.size());
 		}
+
+		trimLoc = frontFacingName.find_first_of('(');
+		if (trimLoc != std::string::npos) {
+			frontFacingName = frontFacingName.substr(0, trimLoc);
+		}
+
+		frontFacingName = frontFacingName.substr(0, 35);
+
 		Profiler.Register(this);
 	}
 
@@ -49,6 +60,8 @@ struct ProfileScopeBase {
 
 	void Reset()
 	{
+		prevHits = hits;
+		prevSumDuration = sumDuration;
 		hits = 0;
 		sumDuration = {};
 	}
