@@ -3,7 +3,6 @@
 
 #include "editor/imgui/ImguiImpl.h"
 #include "editor/NodeContextActions.h"
-#include "editor/PropertyEditor.h"
 
 #include "asset/AssetManager.h"
 #include "asset/PodIncludes.h"
@@ -39,54 +38,19 @@
 #include "renderer/VulkanLayer.h"
 #include "renderer/GeometryPass.h"
 #include "renderer/wrapper/GBuffer.h"
+#include "world/WorldOperationsUtl.h"
+#include "editor/windows/general/EdPropertyEditorWindow.h"
 
 #include <glfw/glfw3.h>
 
 #include <iostream>
 #include <set>
 
-void Editor::DrawTextureDebugger()
-{
-	auto& gbuff = Layer->geomPass.m_gBuffer;
-
-	bool shouldShowDescriptors = !willDescriptorsBeDestroyed.Access();
-
-	ImGui::Begin("GBuffer Debugger");
-
-	auto showAttachment = [shouldShowDescriptors](const char* name, Attachment& att) {
-		if (ImGui::CollapsingHeader(name)) {
-			auto descrSet = att.GetDebugDescriptor();
-
-			if (!descrSet) {
-				ImGui::Text("Null handle");
-				return;
-			}
-			if (shouldShowDescriptors) {
-				ImGui::Image(descrSet, ImVec2(256, 256));
-			}
-			else {
-				ImGui::Image(ImGui::GetIO().Fonts->TexID, ImVec2(256, 256), ImVec2(0, 0), ImVec2(0, 0));
-			}
-		}
-	};
-
-
-	showAttachment("normal", *gbuff->normal);
-	showAttachment("position", *gbuff->position);
-	showAttachment("albedo", *gbuff->albedo);
-	showAttachment("specular", *gbuff->specular);
-	showAttachment("emissive", *gbuff->emissive);
-	showAttachment("depth", *gbuff->depth);
-
-	ImGui::End();
-}
-
 Editor::Editor()
 {
 	ImguiImpl::InitContext();
 
 	m_nodeContextActions = std::make_unique<NodeContextActions>();
-	m_propertyEditor = std::make_unique<PropertyEditor>();
 
 	Event::OnWorldNodeRemoved.Bind(this, [&](Node* node) {
 		if (node == m_selectedNode) {
@@ -245,7 +209,6 @@ void Editor::UpdateViewportCoordsFromDockspace()
 		g_ViewportCoordinates.size = { rect.GetWidth(), rect.GetHeight() };
 		if (copy != g_ViewportCoordinates) {
 			Event::OnViewportUpdated.Broadcast();
-			willDescriptorsBeDestroyed.Set();
 		}
 	}
 
@@ -284,13 +247,13 @@ void Editor::UpdateEditor()
 			OnStopPlay();
 		}
 	}
-	HelpTooltip(help_UpdateWorld);
+	ImEd::HelpTooltip(help_UpdateWorld);
 
 	if (!(m_updateWorld && !m_hasRestoreSave)) {
 		ImEd::HSpace(4.f);
 		ImGui::SameLine();
 		ImGui::Checkbox("Restore update state", &m_autoRestoreWorld);
-		HelpTooltip(help_RestoreWorld);
+		ImEd::HelpTooltip(help_RestoreWorld);
 	}
 
 
@@ -301,26 +264,6 @@ void Editor::UpdateEditor()
 	if (ImEd::Button(U8(FA_FOLDER_OPEN u8"  Load"))) {
 		OpenLoadDialog();
 	}
-
-
-	if (ImGui::BeginChild("EditorScrollable", ImVec2(0, -ImGui::GetTextLineHeightWithSpacing()))) {
-		auto open = ImGui::CollapsingHeader("Outliner", ImGuiTreeNodeFlags_DefaultOpen);
-		CollapsingHeaderTooltip(help_Outliner);
-		if (open) {
-			Outliner();
-		}
-
-		if (m_selectedNode) {
-			open = ImGui::CollapsingHeader(
-				refl::GetClass(m_selectedNode).GetNameStr().c_str(), ImGuiTreeNodeFlags_DefaultOpen);
-			CollapsingHeaderTooltip(help_PropertyEditor);
-			if (open) {
-				m_propertyEditor->Inject(m_selectedNode);
-			}
-		}
-	}
-
-	ImGui::EndChild();
 
 	std::string s = fmt::format("{:.1f} FPS", Engine.GetFPS());
 	ImGui::Text(s.c_str());
@@ -342,13 +285,12 @@ void Editor::OnFileDrop(std::vector<fs::path>&& files)
 	m_windowsComponent.GetUniqueWindow<ed::AssetsWindow>()->ImportFiles(std::move(files));
 }
 
-
 void Editor::SpawnEditorCamera()
 {
 	auto world = Engine.GetWorld();
 	m_editorCamera = NodeFactory::NewNode<EditorCameraNode>();
 	m_editorCamera->SetName("Editor Camera");
-	world->RegisterNode(m_editorCamera, world->GetRoot());
+	world->Z_RegisterNode(m_editorCamera, world->GetRoot());
 
 	auto prevActive = world->GetActiveCamera();
 	if (m_hasEditorCameraCachedMatrix) {
@@ -358,123 +300,6 @@ void Editor::SpawnEditorCamera()
 		m_editorCamera->SetNodeTransformWCS(prevActive->GetNodeTransformWCS());
 	}
 	world->SetActiveCamera(m_editorCamera);
-}
-
-void Editor::Outliner()
-{
-	PROFILE_SCOPE(Editor);
-
-	ImGui::BeginChild(
-		"Outliner", ImVec2(ImGui::GetWindowContentRegionWidth(), 300), false, ImGuiWindowFlags_HorizontalScrollbar);
-	ImGui::Spacing();
-	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3.f, 6.f));
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.f, 6.f));
-
-	bool foundOpen = false;
-	RecurseNodes(Engine.GetWorld()->GetRoot(), [&](Node* node, int32 depth) {
-		auto str = std::string(depth * 6, ' ') + U8(node->GetClass().GetIcon()) + "  "
-				   + sceneconv::FilterNodeClassName(node->GetClass().GetName()) + "> " + node->m_name;
-		ImGui::PushID(node);
-
-		if (node == m_editorCamera) {
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.58f, 0.58f, 0.95f));
-			// ImGui::PushStyleColor(ImGuiCol_TextSelectedBg, ImVec4(0.5f, 0.0f, 0.0f, 0.95f));
-			ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.28f, 0.01f, 0.10f, 0.95f));
-			ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.3f, 0.02f, 0.09f, 0.95f));
-			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.36f, 0.04f, 0.11f, 0.95f));
-		}
-
-		if (ImGui::Selectable(str.c_str(), node == m_selectedNode)) {
-			m_selectedNode = node;
-		}
-
-		if (node != m_editorCamera) {
-			Run_ContextPopup(node);
-			Run_OutlinerDropTarget(node);
-		}
-		else {
-			ImGui::PopStyleColor(4);
-
-			if (ImGui::BeginPopupContextItem("OutlinerElemContext")) {
-				if (!m_editorCamera->GetParent()->IsRoot()) {
-					if (ImGui::MenuItem("Stop piloting")) {
-						Editor::MakeChildOf(Engine.GetWorld()->GetRoot(), m_editorCamera);
-						m_editorCamera->ResetRotation();
-					}
-				}
-				if (ImGui::MenuItem("Set As Active")) {
-					Engine.GetWorld()->SetActiveCamera(m_editorCamera);
-				}
-				ImGui::EndPopup();
-			}
-			else {
-				Editor::CollapsingHeaderTooltip(help_EditorCamera);
-			}
-		}
-		if (ImGui::IsPopupOpen("OutlinerElemContext")) {
-			foundOpen = true;
-		}
-		ImGui::PopID();
-	});
-
-	ImGui::PopStyleVar(2);
-	ImGui::EndChild();
-
-	if (auto entry = ImEd::AcceptTypedPodDrop<ModelPod>()) {
-		auto cmd = [&, entry]() {
-			auto newNode = NodeFactory::NewNode<GeometryNode>();
-
-			newNode->SetName(entry->GetNameStr());
-			newNode->SetModel(entry->GetHandleAs<ModelPod>());
-			Engine.GetWorld()->RegisterNode(newNode, Engine.GetWorld()->GetRoot());
-			if (!IsCameraPiloting()) {
-				PushPostFrameCommand([newNode]() { FocusNode(newNode); });
-			}
-		};
-
-		PushCommand(cmd);
-	}
-
-
-	if (ImGui::BeginDragDropTarget()) {
-		std::string payloadTag = "POD_UID_" + std::to_string(refl::GetId<ModelPod>().hash());
-		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(payloadTag.c_str())) {
-			assert(payload->DataSize == sizeof(size_t));
-			size_t uid = *reinterpret_cast<size_t*>(payload->Data);
-
-			auto* podEntry = AssetHandlerManager::GetEntry(BasePodHandle{ uid });
-
-			auto cmd = [&, uid, podEntry]() {
-				auto newNode = NodeFactory::NewNode<GeometryNode>();
-
-				newNode->SetName(podEntry->name);
-				newNode->SetModel(PodHandle<ModelPod>{ uid });
-				Engine.GetWorld()->RegisterNode(newNode, Engine.GetWorld()->GetRoot());
-				if (!IsCameraPiloting()) {
-					PushPostFrameCommand([newNode]() { FocusNode(newNode); });
-				}
-			};
-
-			PushCommand(cmd);
-		}
-		ImGui::EndDragDropTarget();
-	}
-
-
-	if (!foundOpen) {
-		ImGui::PushID(989);
-		if (ImGui::BeginPopupContextItem("RightclickOutliner Context")) {
-			if (ImGui::BeginMenu("New Node")) {
-				Run_NewNodeMenu(Engine.GetWorld()->GetRoot());
-				ImGui::EndMenu();
-			}
-			if (IsCameraPiloting() && ImGui::MenuItem("Stop piloting")) {
-				Editor::PilotThis(nullptr);
-			}
-			ImGui::EndPopup();
-		}
-		ImGui::PopID();
-	}
 }
 
 void Editor::OpenLoadDialog()
@@ -547,74 +372,6 @@ void Editor::OnStopPlay()
 	}
 }
 
-bool Editor::Run_ContextPopup(Node* node)
-{
-	if (ImGui::BeginPopupContextItem("OutlinerElemContext")) {
-		for (auto& action : m_nodeContextActions->GetActions(node, true)) {
-			if (!action.IsSplitter()) {
-				if (ImGui::MenuItem(action.name)) {
-					action.function(node);
-				}
-			}
-			else {
-				ImGui::Separator();
-			}
-		}
-		ImGui::Separator();
-
-		if (ImGui::BeginMenu("Add Child")) {
-			Run_NewNodeMenu(node);
-			ImGui::EndMenu();
-		}
-
-		ImGui::EndPopup();
-		return true;
-	}
-	return false;
-}
-
-void Editor::Run_NewNodeMenu(Node* underNode)
-{
-	auto factory = Engine.GetWorld()->m_nodeFactory;
-
-
-	for (auto& entry : factory->m_nodeEntries) {
-		if (ImGui::MenuItem(entry.first.c_str())) {
-
-			auto cmd = [underNode, &entry]() {
-				auto newNode = entry.second.newInstance();
-
-				newNode->SetName(entry.first + "_new");
-				Engine.GetWorld()->RegisterNode(newNode, underNode);
-
-				DirtyFlagset temp;
-				temp.set();
-
-				newNode->SetDirtyMultiple(temp);
-			};
-
-			PushCommand(cmd);
-		}
-	}
-}
-
-void Editor::Run_OutlinerDropTarget(Node* node)
-{
-	// Drag Source
-	if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-		ImGui::SetDragDropPayload("WORLD_REORDER", &node, sizeof(Node**));
-		ImGui::EndDragDropSource();
-	}
-	if (ImGui::BeginDragDropTarget()) {
-		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("WORLD_REORDER")) {
-			CLOG_ABORT(payload->DataSize != sizeof(Node**), "Incorrect drop operation.");
-			Node** dropSource = reinterpret_cast<Node**>(payload->Data);
-			Editor::MakeChildOf(node, *dropSource);
-		}
-		ImGui::EndDragDropTarget();
-	}
-}
-
 void Editor::Run_MenuBar()
 {
 	if (ImEd::BeginMenuBar()) {
@@ -640,21 +397,22 @@ void Editor::HandleInput()
 	if (!input.IsDown(Key::Mouse_RightClick)) {
 		using op = ed::ManipOperationMode::Operation;
 
+		auto& manipMode = m_windowsComponent.GetUniqueWindow<ed::PropertyEditorWindow>()->m_manipMode;
+
 		if (input.IsJustPressed(Key::W)) {
-			m_propertyEditor->m_manipMode.op = op::Translate;
+			manipMode.op = op::Translate;
 		}
 		else if (input.IsJustPressed(Key::E)) {
-			m_propertyEditor->m_manipMode.op = op::Rotate;
+			manipMode.op = op::Rotate;
 		}
 		else if (input.IsJustPressed(Key::R)) {
-			m_propertyEditor->m_manipMode.op = op::Scale;
+			manipMode.op = op::Scale;
 		}
 
 		if (input.IsJustPressed(Key::Q)) {
-			m_propertyEditor->m_manipMode.mode
-				= m_propertyEditor->m_manipMode.mode == ed::ManipOperationMode::Space::Local
-					  ? ed::ManipOperationMode::Space::World
-					  : ed::ManipOperationMode::Space::Local;
+			manipMode.mode = manipMode.mode == ed::ManipOperationMode::Space::Local
+								 ? ed::ManipOperationMode::Space::World
+								 : ed::ManipOperationMode::Space::Local;
 		}
 	}
 }
@@ -669,65 +427,6 @@ void Editor::PushPostFrameCommand(std::function<void()>&& func)
 	Engine.GetEditor()->m_postFrameCommands.emplace_back(func);
 }
 
-void Editor::HelpTooltip(const char* tooltip)
-{
-	if (!Editor::s_showHelpTooltips) {
-		return;
-	}
-	ImEd::HSpace(1.f);
-	ImGui::SameLine();
-	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 0.95f));
-	ImGui::TextUnformatted("\xc2\xb0"); // help symbol: aka U+00b0
-	ImGui::PopStyleColor();
-	if (ImGui::IsItemHovered()) {
-		ImGui::BeginTooltip();
-		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 30.0f);
-		if (tooltip[0] == '\n') {
-			tooltip++;
-		}
-		ImGui::TextUnformatted(tooltip);
-		ImGui::PopTextWrapPos();
-		ImGui::EndTooltip();
-	}
-}
-void Editor::HelpTooltipInline(const char* tooltip)
-{
-	if (!Editor::s_showHelpTooltips) {
-		return;
-	}
-	if (ImGui::IsItemHovered()) {
-		ImGui::BeginTooltip();
-		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 30.0f);
-		if (tooltip[0] == '\n') {
-			tooltip++;
-		}
-		ImGui::TextUnformatted(tooltip);
-		ImGui::PopTextWrapPos();
-		ImGui::EndTooltip();
-	}
-}
-
-void Editor::CollapsingHeaderTooltip(const char* tooltip)
-{
-	if (!Editor::s_showHelpTooltips) {
-		return;
-	}
-	ImGui::SameLine();
-	ImGui::SetCursorPosX(ImGui::GetContentRegionMax().x - 12.f);
-	ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 0.6f, 0.95f));
-	ImGui::TextUnformatted("?");
-	ImGui::PopStyleColor();
-	if (ImGui::IsItemHovered()) {
-		ImGui::BeginTooltip();
-		ImGui::PushTextWrapPos(ImGui::GetFontSize() * 30.0f);
-		if (tooltip[0] == '\n') {
-			tooltip++;
-		}
-		ImGui::TextUnformatted(tooltip);
-		ImGui::PopTextWrapPos();
-		ImGui::EndTooltip();
-	}
-}
 
 void Editor::PreBeginFrame()
 {
@@ -742,6 +441,18 @@ void Editor::PreBeginFrame()
 	m_postFrameCommands.clear();
 }
 
+void Editor::SelectNode(Node* node)
+{
+	Engine.GetEditor()->m_selectedNode = node;
+}
+
+void Editor::MoveSelectedUnder(Node* node)
+{
+	if (Engine.GetEditor()->m_selectedNode != Engine.GetEditor()->m_editorCamera) {
+		worldop::MakeChildOf(node, Engine.GetEditor()->m_selectedNode);
+	}
+}
+
 void Editor::Duplicate(Node* node)
 {
 	PushCommand([node]() { Engine.GetWorld()->DeepDuplicateNode(node); });
@@ -750,119 +461,6 @@ void Editor::Duplicate(Node* node)
 void Editor::Delete(Node* node)
 {
 	PushCommand([node]() { Engine.GetWorld()->DeleteNode(node); });
-}
-
-void Editor::MoveChildUp(Node* node)
-{
-	auto& children = node->GetParent()->m_children;
-
-	auto thisIt = std::find_if(begin(children), end(children), [&node](auto& elem) { return node == elem.get(); });
-
-	// Should be impossible unless world ptrs are corrupted
-	CLOG_ABORT(thisIt == end(children), "Attempting to move child not in its parent container.");
-
-	if (thisIt != begin(children)) {
-		std::iter_swap(thisIt, thisIt - 1);
-	}
-	node->SetDirty(Node::DF::Children);
-}
-
-void Editor::MoveChildDown(Node* node)
-{
-	auto& children = node->GetParent()->m_children;
-	auto thisIt = std::find_if(begin(children), end(children), [&node](auto& elem) { return node == elem.get(); });
-
-	// Should be impossible unless world ptrs are corrupted
-	CLOG_ABORT(thisIt == end(children), "Attempting to move child not in its parent container.");
-
-	if (thisIt + 1 != end(children)) {
-		std::iter_swap(thisIt, thisIt + 1);
-	}
-	node->SetDirty(Node::DF::Children);
-}
-
-void Editor::MoveChildOut(Node* node)
-{
-	if (node->GetParent()->IsRoot()) {
-		return;
-	}
-	auto lateCmd = [node]() {
-		auto worldMatrix = node->GetNodeTransformWCS();
-		node->GetParent()->SetDirty(Node::DF::Children);
-
-		auto& children = node->GetParent()->m_children;
-		std::vector<NodeUniquePtr>::iterator thisIt
-			= std::find_if(begin(children), end(children), [&node](auto& elem) { return node == elem.get(); });
-
-		NodeUniquePtr src = std::move(*thisIt);
-
-		children.erase(thisIt);
-
-		Node* insertBefore = node->GetParent();
-		auto& newChildren = insertBefore->GetParent()->m_children;
-
-		auto insertAt = std::find_if(
-			begin(newChildren), end(newChildren), [&insertBefore](auto& elem) { return insertBefore == elem.get(); });
-
-		newChildren.emplace(insertAt, std::move(src));
-
-		node->m_parent = insertBefore->GetParent();
-		node->SetNodeTransformWCS(worldMatrix);
-		node->SetDirty(Node::DF::Hierarchy);
-		node->GetParent()->SetDirty(Node::DF::Children);
-	};
-
-	PushCommand(lateCmd);
-}
-
-
-void Editor::MoveSelectedUnder(Node* node)
-{
-	if (Engine.GetEditor()->m_selectedNode != Engine.GetEditor()->m_editorCamera) {
-		MakeChildOf(node, Engine.GetEditor()->m_selectedNode);
-	}
-}
-
-
-void Editor::MakeChildOf(Node* newParent, Node* node)
-{
-	if (!node || !newParent || node == newParent) {
-		return;
-	}
-
-	// We cannot move a parent to a child. Start from node and iterate to root. If we find "selectedNode" we cannot
-	// move.
-	Node* pathNext = newParent->GetParent();
-	while (pathNext) {
-		if (pathNext == node) {
-			LOG_INFO("Cannot move '{}' under '{}' because the second is a child of the first.", node->GetName(),
-				newParent->GetName());
-			return;
-		}
-		pathNext = pathNext->GetParent();
-	}
-
-	auto lateCmd = [newParent, node]() {
-		auto worldMatrix = node->GetNodeTransformWCS();
-		node->GetParent()->SetDirty(Node::DF::Children); // That parent is losing a child.
-
-		auto& children = node->GetParent()->m_children;
-		std::vector<NodeUniquePtr>::iterator thisIt
-			= std::find_if(begin(children), end(children), [&node](auto& elem) { return node == elem.get(); });
-
-		NodeUniquePtr src = std::move(*thisIt);
-
-		children.erase(thisIt);
-
-		newParent->m_children.emplace_back(std::move(src));
-
-		node->m_parent = newParent;
-		node->SetNodeTransformWCS(worldMatrix);
-		node->SetDirty(Node::DF::Hierarchy);
-		node->GetParent()->SetDirty(Node::DF::Children);
-	};
-
-	PushCommand(lateCmd);
 }
 
 void Editor::PilotThis(Node* node)
@@ -879,7 +477,7 @@ void Editor::PilotThis(Node* node)
 		if (!wasPiloting) {
 			return;
 		}
-		Editor::MakeChildOf(Engine.GetWorld()->GetRoot(), camera);
+		worldop::MakeChildOf(Engine.GetWorld()->GetRoot(), camera);
 		camera->SetNodeTransformWCS(Engine.GetEditor()->m_editorCameraPrePilotPos);
 		return;
 	}
@@ -887,7 +485,7 @@ void Editor::PilotThis(Node* node)
 	if (!wasPiloting) {
 		Engine.GetEditor()->m_editorCameraPrePilotPos = camera->GetNodeTransformWCS();
 	}
-	Editor::MakeChildOf(node, camera);
+	worldop::MakeChildOf(node, camera);
 	camera->SetNodeTransformWCS(node->GetNodeTransformWCS());
 }
 
@@ -915,9 +513,7 @@ void Editor::FocusNode(Node* node)
 	cam->AddNodePositionOffsetWCS(glm::vec3(-1.f, 0.25f, 0.f) * dist);
 	cam->SetNodeLookAtWCS(node->GetNodePositionWCS());
 }
-//		auto newMat
-//= math::TransformMatrixFromTOS(camera->GetTranslation(), camera->GetOrientation(), node->GetScale());
-// node->SetMatrix(newMat);
+
 void Editor::TeleportToCamera(Node* node)
 {
 	auto camera = Engine.GetWorld()->GetActiveCamera();
@@ -925,12 +521,5 @@ void Editor::TeleportToCamera(Node* node)
 		auto newMat = math::transformMat(
 			node->GetNodeScaleWCS(), camera->GetNodeOrientationWCS(), camera->GetNodePositionWCS());
 		node->SetNodeTransformWCS(newMat);
-	}
-}
-
-void Editor::MakeActiveCamera(Node* node)
-{
-	if (node->IsA<CameraNode>()) {
-		Engine.GetWorld()->SetActiveCamera(NodeCast<CameraNode>(node));
 	}
 }

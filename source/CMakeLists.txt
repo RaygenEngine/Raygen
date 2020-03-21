@@ -18,7 +18,6 @@ set(SOURCE_FILES
 
 	editor/Editor.cpp
 	editor/NodeContextActions.cpp
-	editor/PropertyEditor.cpp
 	editor/SceneSave.cpp
 	editor/EdComponentWindows.cpp
 	editor/EdUserSettings.cpp
@@ -32,10 +31,13 @@ set(SOURCE_FILES
 	editor/windows/general/EdAssetsWindow.cpp
 	editor/windows/general/EdConsoleWindow.cpp
 	editor/windows/general/EdMiscWindow.cpp
+	editor/windows/general/EdOutlinerWindow.cpp
 	editor/windows/general/EdProfilerWindow.cpp
+	editor/windows/general/EdPropertyEditorWindow.cpp
 	
-	editor/imgui/ImguiImpl.cpp
 	editor/imgui/FileBrowser.cpp
+	editor/imgui/ImEd.cpp
+	editor/imgui/ImguiImpl.cpp
 	editor/imgui/ImGuizmo.cpp
 	
 	editor/misc/NativeFileBrowser.cpp
@@ -70,6 +72,7 @@ set(SOURCE_FILES
 	renderer/wrapper/Buffer.cpp
 
 	world/World.cpp
+	world/WorldOperationsUtl.cpp
 	world/NodeFactory.cpp
 	
 	world/nodes/Node.cpp

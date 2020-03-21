@@ -297,6 +297,11 @@ void AssetsWindow::ImguiDraw()
 
 	ImGui::Columns(2, NULL, true);
 
+	if (m_resizeColumn.Access()) {
+		ImGui::SetColumnWidth(0, ImGui::GetWindowWidth() * 0.25f);
+	}
+
+
 	if (ImGui::BeginChild("AssetsFolderView", ImVec2(0, -5.f))) {
 		DrawDirectoryToList(&m_root);
 	}

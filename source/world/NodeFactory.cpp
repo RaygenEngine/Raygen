@@ -72,7 +72,7 @@ void NodeFactory::LoadNodeAndChildren(const json& jsonObject, Node* parent)
 	}
 
 	LoadNode_Properties(jsonObject, node);
-	Engine.GetWorld()->RegisterNode(node, parent);
+	Engine.GetWorld()->Z_RegisterNode(node, parent);
 
 
 	auto itChildren = jsonObject.find(childrenLabel);

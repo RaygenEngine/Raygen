@@ -10,6 +10,8 @@
 #include "editor/windows/general/EdProfilerWindow.h"
 #include "editor/windows/general/EdAssetsWindow.h"
 #include "editor/windows/general/EdAssetListWindow.h"
+#include "editor/windows/general/EdOutlinerWindow.h"
+#include "editor/windows/general/EdPropertyEditorWindow.h"
 
 
 #include "glfw/glfw3.h"
@@ -19,6 +21,9 @@
 namespace ed {
 void RegisterWindows(ed::ComponentWindows& windowsComponent)
 {
+	windowsComponent.AddWindowEntry<OutlinerWindow>("Outliner");
+	windowsComponent.AddWindowEntry<PropertyEditorWindow>("Property Editor");
+
 	windowsComponent.AddWindowEntry<AssetsWindow>("Asset Browser");
 	windowsComponent.AddWindowEntry<AssetListWindow>("Asset List");
 

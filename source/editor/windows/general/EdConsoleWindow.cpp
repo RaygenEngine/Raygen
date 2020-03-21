@@ -177,7 +177,7 @@ struct ConsoleState {
 		}
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, -1.5f));
-		ImGui::PushFont(ImguiImpl::s_CodeFont);
+		ImEd::BeginCodeFont();
 
 
 		if (copyToClipboard) {
@@ -234,7 +234,7 @@ struct ConsoleState {
 			ImGui::LogFinish();
 		}
 
-		ImGui::PopFont();
+		ImEd::EndCodeFont();
 		ImGui::PopStyleVar();
 
 		if (scrollToBottom || (autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())) {
