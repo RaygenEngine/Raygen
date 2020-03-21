@@ -109,6 +109,7 @@ private:
 	friend class Editor;
 	friend class World;
 	friend class NodeFactory;
+	friend struct worldop;
 
 	void AutoUpdateTransforms();
 

@@ -127,7 +127,7 @@ Node* World::DuplicateNode_Utl(Node* src, Node* newParent)
 
 	created->m_name = src->m_name + "_Copy";
 
-	RegisterNode(created, newParent);
+	Z_RegisterNode(created, newParent);
 
 	created->SetNodeTransformLCS(src->GetNodeTransformLCS());
 
@@ -157,7 +157,7 @@ void World::DeleteNode(Node* src)
 }
 
 
-void World::RegisterNode(Node* node, Node* parent)
+void World::Z_RegisterNode(Node* node, Node* parent)
 {
 	CLOG_ABORT(node->m_parent, "Attempting to register a node that already has a parent.");
 	if (parent == nullptr) {

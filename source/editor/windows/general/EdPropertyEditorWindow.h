@@ -1,5 +1,5 @@
 #pragma once
-
+#include "editor/windows/EdWindow.h"
 #include "editor/Editor.h"
 #include "editor/imgui/ImGuizmo.h"
 #include "reflection/Property.h"
@@ -23,10 +23,17 @@ struct ManipOperationMode {
 	Operation op;
 	Space mode;
 };
-} // namespace ed
 
-class PropertyEditor {
+class PropertyEditorWindow : public UniqueWindow {
 public:
+	PropertyEditorWindow(std::string_view name)
+		: ed::UniqueWindow(name)
+	{
+	}
+
+	virtual void ImguiDraw();
+	virtual ~PropertyEditorWindow() = default;
+
 	bool m_localMode{ true };
 	bool m_displayMatrix{ false };
 	bool m_lockedScale{ false };
@@ -38,8 +45,7 @@ public:
 
 	ed::ManipOperationMode m_manipMode{};
 
-	// Injects the imgui code of a property editor from a node.
-	void Inject(Node* node);
+	// Injects the imgui code of a prope
 
 	void Run_BaseProperties(Node* node);
 
@@ -49,3 +55,4 @@ public:
 
 	void Run_ImGuizmo(Node* node);
 };
+} // namespace ed

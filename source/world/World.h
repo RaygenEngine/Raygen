@@ -58,14 +58,16 @@ class World {
 
 	void UpdateFrameTimers();
 
-	// Parent == nullptr means root
-	void RegisterNode(Node* node, Node* parent = nullptr);
 
 	// Removes node from any tracking sets / active cameras etc.
 	void CleanupNodeReferences(Node* node);
 
 
 public:
+	// Parent == nullptr means root
+	void Z_RegisterNode(Node* node, Node* parent = nullptr);
+
+
 	// Returns float seconds
 	float GetDeltaTime() { return m_deltaTime; }
 
@@ -134,7 +136,7 @@ public:
 	{
 		auto node = m_nodeFactory->NewNode<T>();
 		node->SetName(name);
-		RegisterNode(node, parent);
+		Z_RegisterNode(node, parent);
 		return node;
 	}
 

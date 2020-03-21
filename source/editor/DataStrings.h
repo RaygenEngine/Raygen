@@ -25,22 +25,6 @@ Right click nodes to open their context menu.
 Drag-n-drop a node onto another to change the hierarchy.
 )";
 
-inline const char* help_PropertyEditor = R"(
-Instance editor allows viewing and editing the name and transform of the node.
-Transform can be edited in local or world space and the full matrix can also be edited.
-
-Right-clicking on scale provides an additional locked scale mode.
-
-
-Property editor (below) enables editing any reflected variable of the selected node.
-
-No filtering is done to the input and illegal values can be set to some properties that may cause system instability (eg: negative texture sizes).
-Asset references can also be edited inline.
-
-Note:
-All values are updated bidirectionaly in realtime
-)";
-
 inline const char* help_AssetView = R"(
 Assets panel provides an overview of all the currently registered assets.
 

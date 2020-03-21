@@ -89,12 +89,18 @@ public:
 	template<CONC(UniqueWindowClass) T>
 	T* GetUniqueWindow()
 	{
-		// TODO: should not open the window
-		OpenUnique<T>();
-		return static_cast<T*>(m_openUniqueWindows.map.at(mti::GetHash<T>()));
+		if (IsUniqueOpen<T>()) {
+			return static_cast<T*>(m_openUniqueWindows.map.at(mti::GetHash<T>()));
+		}
+
+		ConstructUniqueIfNotExists(mti::GetHash<T>());
+		return static_cast<T*>(m_closedUniqueWindows.at(mti::GetHash<T>()));
 	}
 
 private:
+	void ConstructUniqueIfNotExists(mti::Hash hash);
+
+
 	template<typename DrawFunc>
 	void InternalDraw(DrawFunc&& func);
 

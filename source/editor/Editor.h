@@ -3,19 +3,15 @@
 #include "editor/SceneSave.h"
 #include "editor/windows/EdWindow.h"
 
-#include "editor/PropertyEditor.h"
 #include "editor/NodeContextActions.h"
-#include "engine/Events.h"
 #include "world/nodes/camera/EditorCameraNode.h"
 #include "editor/EdComponentWindows.h"
 #include "editor/imgui/ImEd.h"
-#include "editor/imgui/FileBrowser.h"
 
 #include <memory>
 #include <functional>
 
 class Node;
-class PropertyEditor;
 class AssetWindow;
 
 
@@ -29,19 +25,9 @@ enum class EditorBBoxDrawing
 
 class Editor : public Object {
 public:
-	// Status queries for Renderers / Other engine modules The only functions that are intended for cross module use.
-
-	// All are static calls with 'reasonable' default behavior for when there is no editor instance, you can call them
-	// without checking the editor existance first.
-
-	// Will be null when no node is selected or there is no editor.
-	// Can change any frame
 	static Node* GetSelectedNode();
-
-	// Always None if there is no editor, can change any frame
 	static EditorBBoxDrawing GetBBoxDrawing();
 
-	// End of cross module functions
 public:
 	struct ImMenu {
 		ImMenu(const char* inName)
@@ -117,18 +103,11 @@ protected:
 
 	SceneSave m_sceneSave;
 
-	UniquePtr<PropertyEditor> m_propertyEditor;
-
 	void MakeMainMenu();
-
-	inline static bool s_showHelpTooltips{ true };
 
 	ImGuiID m_dockspaceId;
 
 	void UpdateViewportCoordsFromDockspace();
-
-	void DrawTextureDebugger();
-	BoolFlag willDescriptorsBeDestroyed{ false };
 
 public:
 	EditorCameraNode* m_editorCamera;
@@ -162,35 +141,22 @@ public:
 
 	void PreBeginFrame();
 
+	static void SelectNode(Node* node);
+
+	static void MoveSelectedUnder(Node* node);
+
 	static void Duplicate(Node* node);
 	static void Delete(Node* node);
-
-	static void MoveChildUp(Node* node);
-	static void MoveChildDown(Node* node);
-
-	static void MoveChildOut(Node* node);
-	static void MoveSelectedUnder(Node* node);
-	static void MakeChildOf(Node* newParent, Node* node);
 
 	static void PilotThis(Node* node);
 	static void FocusNode(Node* node);
 	static void TeleportToCamera(Node* node);
 
-	static void MakeActiveCamera(Node* node);
-
-	bool Run_ContextPopup(Node* node);
-	void Run_NewNodeMenu(Node* underNode);
-
-	void Run_OutlinerDropTarget(Node* node);
 
 	void Run_MenuBar();
 
 	static void PushCommand(std::function<void()>&& func);
 	static void PushPostFrameCommand(std::function<void()>&& func);
-
-	static void HelpTooltip(const char* tooltip);
-	static void HelpTooltipInline(const char* tooltip);
-	static void CollapsingHeaderTooltip(const char* tooltip);
 
 
 	void OnPlay();
@@ -216,7 +182,6 @@ public:
 
 private:
 	void SpawnEditorCamera();
-	void Outliner();
 
 	void OpenLoadDialog();
 	void LoadScene(const fs::path& scenefile);

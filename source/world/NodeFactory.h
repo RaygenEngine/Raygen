@@ -63,6 +63,8 @@ public:
 		return static_cast<T*>(T::NewInstance());
 	}
 
+	auto Z_GetEntries() { return m_nodeEntries; }
+
 private:
 	// Utility helpers for loading
 	void LoadNode_Trs(const nlohmann::json& jsonTrsObject, Node* nodeToLoadInto);

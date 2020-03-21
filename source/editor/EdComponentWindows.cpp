@@ -18,6 +18,8 @@ void ComponentWindows::OpenUnique(mti::Hash hash)
 
 	UpdateSettingsForWindow(m_entries[it->second].name, true);
 
+	ConstructUniqueIfNotExists(hash);
+
 	// Find out if we need creation, or we have already made this window
 	auto itClosed = m_closedUniqueWindows.find(hash);
 
@@ -27,9 +29,6 @@ void ComponentWindows::OpenUnique(mti::Hash hash)
 		m_openUniqueWindows.Emplace({ hash, winPtr });
 		return;
 	}
-
-	auto& elem = m_entries[it->second];
-	m_openUniqueWindows.Emplace({ hash, elem.constructor(elem.name) });
 	return;
 }
 
@@ -101,6 +100,27 @@ ComponentWindows::~ComponentWindows()
 	for (auto& [key, val] : m_closedUniqueWindows) {
 		delete val;
 	}
+}
+
+void ComponentWindows::ConstructUniqueIfNotExists(mti::Hash hash)
+{
+	auto it = m_entiresHash.find(hash);
+
+	if (it == m_entiresHash.end()) {
+		return;
+	}
+	if (IsUniqueOpen(hash)) {
+		return;
+	}
+
+	auto itClosed = m_closedUniqueWindows.find(hash);
+	if (itClosed != m_closedUniqueWindows.end()) {
+		return;
+	}
+
+	auto& elem = m_entries[it->second];
+	m_closedUniqueWindows.insert({ hash, elem.constructor(elem.name) });
+	return;
 }
 
 void ComponentWindows::LoadWindowFromSettings(const std::string& name, mti::Hash hash)

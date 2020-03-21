@@ -5,6 +5,7 @@
 #include "editor/Editor.h"
 #include "world/nodes/Node.h"
 #include "world/nodes/camera/CameraNode.h"
+#include "world/WorldOperationsUtl.h"
 #include <imgui.h>
 
 
@@ -14,9 +15,9 @@ NodeContextActions::NodeContextActions()
 	baseActions.emplace_back("Delete", &Editor::Delete);
 	baseActions.emplace_back();
 
-	baseActions.emplace_back("Up", &Editor::MoveChildUp);
-	baseActions.emplace_back("Down", &Editor::MoveChildDown);
-	baseActions.emplace_back("Out", &Editor::MoveChildOut);
+	baseActions.emplace_back("Up", &worldop::MoveChildUp);
+	baseActions.emplace_back("Down", &worldop::MoveChildDown);
+	baseActions.emplace_back("Out", &worldop::MoveChildOut);
 }
 
 std::vector<NodeContextActions::Entry> NodeContextActions::GetActions(Node* node, bool extendedList)
@@ -51,7 +52,7 @@ std::vector<NodeContextActions::Entry> NodeContextActions::GetActions(Node* node
 
 		if (node->IsA<CameraNode>()) {
 			actions.emplace_back();
-			actions.emplace_back("Set As Active", &Editor::MakeActiveCamera);
+			actions.emplace_back("Set As Active", &worldop::MakeActiveCamera);
 		}
 	}
 

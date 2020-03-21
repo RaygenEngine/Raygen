@@ -88,6 +88,7 @@ private:
 	std::string m_currentPath{};
 	ImGuiTextFilter m_fileFilter{};
 
+	BoolFlag m_resizeColumn{ true };
 
 	void ReloadEntries();
 
