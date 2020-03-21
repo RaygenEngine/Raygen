@@ -29,8 +29,6 @@ ProfilerWindow::ProfilerWindow(std::string_view name)
 }
 
 
-void ProfilerWindow::ShowCategoryCheckbox(ProfilerSetup::Module category) {}
-
 void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 {
 	auto* vec = Profiler.GetModule(category);
@@ -74,7 +72,7 @@ void ProfilerWindow::DrawCategoryContents(ProfilerSetup::Module category)
 				hits = fmt::format("{:04.2f} us", micros);
 
 				ImGui::Text(hits.c_str());
-				hits = fmt::format("{}", entry->prevHits + 100);
+				hits = fmt::format("{}", entry->prevHits);
 				ImGui::SameLine(totWidth * 0.975f);
 				ImGui::Text(hits.c_str());
 				TEXT_TOOLTIP("Number of times hit last frame.\n\n{} Hits\n{:04.2f} us/hit", entry->prevHits, perHit);

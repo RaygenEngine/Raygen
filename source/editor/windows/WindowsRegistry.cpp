@@ -24,6 +24,9 @@ void RegisterWindows(ed::ComponentWindows& windowsComponent)
 
 	windowsComponent.AddWindowEntry<ConsoleWindow>("Console");
 
+	windowsComponent.AddWindowEntry<GBufferDebugWindow>("GBuffer Debugger");
+
+
 	windowsComponent.AddWindowEntry<ProfilerWindow>("Profiler");
 
 	windowsComponent.AddWindowEntry<AboutWindow>("About");

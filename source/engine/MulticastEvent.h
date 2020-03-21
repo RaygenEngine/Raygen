@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/BoolFlag.h"
 #include "engine/Logger.h"
 #include "engine/Object.h"
 
@@ -50,6 +51,12 @@ public:
 		Bind(obj, [f, obj](Args... args) { (obj->*f)(args...); });
 	}
 
+	// Utility to bind member bool flags.
+	// Only bind members of obj as the flag otherwise you invoke UB.
+	void BindFlag(Object* obj, BoolFlag& inFlag)
+	{
+		Bind(obj, [flag = &inFlag](Args... args) { flag->Set(); });
+	}
 
 	void Broadcast(Args... args)
 	{

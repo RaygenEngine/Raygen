@@ -1,5 +1,7 @@
 #pragma once
 #include "editor/EdInput.h"
+#include "engine/Object.h"
+
 #include <string>
 #include <concepts>
 
@@ -16,7 +18,7 @@
 
 namespace ed {
 // Base Window / Tab to be used in the editor as a view
-class Window {
+class Window : public Object {
 
 
 protected:

@@ -20,8 +20,8 @@ App::App()
 
 	m_windowTitle = "Raygen";
 
-	m_windowWidth = 1920;
-	m_windowHeight = 1080;
+	m_windowWidth = 2304;
+	m_windowHeight = 1296;
 
 	m_argc = 1;
 	m_argv = nullptr;

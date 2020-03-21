@@ -12,6 +12,7 @@ struct BoolFlag {
 	{
 	}
 
+	// Accesses the value and clears the flag
 	bool Access()
 	{
 		if (!isTrue) {
@@ -24,10 +25,13 @@ struct BoolFlag {
 	void Set() { isTrue = true; }
 	void Clear() { isTrue = false; }
 
+	void Assign(bool newValue) { isTrue = newValue; }
+
 	bool operator==(bool other) { return Access() == other; }
 	bool operator!=(bool other) { return Access() != other; }
 	bool operator!() { return !Access(); }
 	bool operator*() { return Access(); }
+
 
 protected:
 	bool isTrue{ false };

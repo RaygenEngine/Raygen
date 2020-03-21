@@ -18,6 +18,7 @@ class Node;
 class PropertyEditor;
 class AssetWindow;
 
+
 // This is a reflected enum, putting more options will appear directly in the editor. (Make sure None still exists)
 enum class EditorBBoxDrawing
 {
@@ -179,9 +180,7 @@ public:
 
 	bool Run_ContextPopup(Node* node);
 	void Run_NewNodeMenu(Node* underNode);
-	void Run_AssetView();
 
-	void Run_MaybeAssetTooltip(PodEntry* entry);
 	void Run_OutlinerDropTarget(Node* node);
 
 	void Run_MenuBar();

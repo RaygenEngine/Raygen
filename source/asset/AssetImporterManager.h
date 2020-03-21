@@ -103,7 +103,7 @@ private:
 		e->metadata.podTypeHash = mti::GetHash<PodType>();
 
 		// Populate entry data
-		e->requiresSave = true;
+		e->requiresSave = !transient;
 
 		auto ptr = new PodType();
 		e->ptr.reset(ptr);

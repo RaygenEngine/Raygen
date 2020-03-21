@@ -20,29 +20,23 @@ AssetListWindow::AssetListWindow(std::string_view name)
 
 void AssetListWindow::ImguiDraw()
 {
-
-
-	ImGui::Checkbox("Unsaved", &m_showUnsaved);
-	ImGui::SameLine(0, 5.f);
-	ImGui::Checkbox("Saved", &m_showSaved);
-	ImGui::SameLine(0, 5.f);
-	ImGui::Checkbox("Transient", &m_showTransient);
-
-
 	static ImGuiTextFilter filter;
-	filter.Draw(U8(FA_FILTER), ImGui::GetFontSize() * 16);
+	ImGui::Text(U8(FA_SEARCH));
+	ImGui::SameLine();
+	filter.Draw("###SearchFilter", ImGui::GetFontSize() * 14);
 
-	// Allow easy closing of the interace because creating this list is expensive
-	m_isVisible = m_isVisible ? !ImEd::Button("Show List") : ImEd::Button("Hide List");
-	Editor::HelpTooltipInline("Rendering this list is expensive, use the button to toggle it when you need it.");
-
-	if (m_isVisible) {
-		return;
+	ImGui::SameLine();
+	if (ImGui::Button(ETXT(FA_FILTER, "Filter"))) {
+		ImGui::OpenPopup("###AssetListWindowFilterContext");
 	}
 
-	ImGui::Dummy({ 0.f, 3.f });
-	ImGui::Separator();
-	ImGui::Dummy({ 0.f, 3.f });
+	if (ImGui::BeginPopup("###AssetListWindowFilterContext")) {
+		ImGui::Checkbox("Unsaved", &m_showUnsaved);
+		ImGui::Checkbox("Saved", &m_showSaved);
+		ImGui::Checkbox("Transient", &m_showTransient);
+		ImGui::EndPopup();
+	}
+
 
 	bool saveAll = ImEd::Button(U8(FA_SAVE u8"  Save All"));
 	ImGui::SameLine();
@@ -51,6 +45,14 @@ void AssetListWindow::ImguiDraw()
 	ImGui::SameLine();
 
 	bool reimportAll = ImEd::Button(U8(FA_FILE_IMPORT u8"  Reimport All"));
+
+	if (!ImGui::CollapsingHeader("Asset List")) {
+		return;
+	}
+
+	ImGui::Dummy({ 0.f, 3.f });
+	ImGui::Separator();
+	ImGui::Dummy({ 0.f, 3.f });
 
 
 	if (!ImGui::BeginChild("AssetList_SubWindow_List")) {

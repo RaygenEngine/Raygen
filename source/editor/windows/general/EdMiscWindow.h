@@ -36,4 +36,20 @@ public:
 
 	virtual ~ImGuiDemoWindow() = default;
 };
+
+class GBufferDebugWindow : public ed::UniqueWindow {
+	BoolFlag m_willInvalidateDescriptors;
+
+	glm::ivec2 m_imgSize{ 256, 256 };
+
+
+public:
+	GBufferDebugWindow(std::string_view name);
+
+
+	virtual void ImguiDraw();
+
+
+	virtual ~GBufferDebugWindow() = default;
+};
 } // namespace ed
