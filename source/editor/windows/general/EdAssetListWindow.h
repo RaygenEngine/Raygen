@@ -18,7 +18,7 @@ private:
 	bool m_isVisible{ true };
 	bool m_showUnsaved{ true };
 	bool m_showSaved{ true };
-	bool m_showTransient{ false };
+	bool m_showTransient{ true };
 };
 
 } // namespace ed

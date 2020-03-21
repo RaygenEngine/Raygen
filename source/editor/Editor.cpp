@@ -266,6 +266,7 @@ void Editor::UpdateEditor()
 
 	ImguiImpl::NewFrame();
 	Dockspace();
+	UpdateViewportCoordsFromDockspace();
 
 	m_windowsComponent.Draw();
 
@@ -317,12 +318,6 @@ void Editor::UpdateEditor()
 				m_propertyEditor->Inject(m_selectedNode);
 			}
 		}
-
-		open = ImGui::CollapsingHeader("Assets");
-		CollapsingHeaderTooltip(help_AssetView);
-		if (open) {
-			Run_AssetView();
-		}
 	}
 
 	ImGui::EndChild();
@@ -331,8 +326,6 @@ void Editor::UpdateEditor()
 	ImGui::Text(s.c_str());
 	ImGui::End();
 
-	UpdateViewportCoordsFromDockspace();
-	DrawTextureDebugger();
 
 	ImguiImpl::EndFrame();
 
@@ -602,30 +595,6 @@ void Editor::Run_NewNodeMenu(Node* underNode)
 
 			PushCommand(cmd);
 		}
-	}
-}
-
-void Editor::Run_AssetView()
-{
-	ImGui::Indent(10.f);
-
-	// Static meh..
-	static ImGuiTextFilter filter;
-	filter.Draw("Filter Assets", ImGui::GetFontSize() * 16);
-	HelpTooltip(help_AssetFilter);
-
-	std::string text;
-	for (auto& assetEntry : AssetHandlerManager::Z_GetPods()) {
-		if (!filter.PassFilter(assetEntry->path.c_str()) && !filter.PassFilter(assetEntry->name.c_str())) {
-			continue;
-		}
-
-		ImGui::PushID(static_cast<int32>(assetEntry->uid));
-
-		ImGui::Text(assetEntry->path.c_str());
-		ed::asset::MaybeHoverTooltip(assetEntry.get());
-
-		ImGui::PopID();
 	}
 }
 

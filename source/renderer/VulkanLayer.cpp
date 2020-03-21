@@ -117,8 +117,9 @@ void VulkanLayer::Init()
 	renderFinishedSemaphore = Device->createSemaphoreUnique({});
 	imageAcquiredSem = Device->createSemaphoreUnique({});
 
-	Event::OnViewportUpdated.Bind(this, [&] { didViewportResize.Set(); });
-	Event::OnWindowResize.Bind(this, [&](auto, auto) { didWindowResize.Set(); });
+
+	Event::OnViewportUpdated.BindFlag(this, didViewportResize);
+	Event::OnWindowResize.BindFlag(this, didWindowResize);
 	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimzed) { isMinimzed = newIsMinimzed; });
 }
 
