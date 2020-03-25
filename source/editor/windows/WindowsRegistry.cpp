@@ -1,22 +1,15 @@
 #include "pch.h"
-
 #include "editor/windows/WindowsRegistry.h"
+
 #include "editor/EdComponentWindows.h"
-
-#include "engine/Events.h"
-
-#include "editor/windows/general/EdMiscWindow.h"
-#include "editor/windows/general/EdConsoleWindow.h"
-#include "editor/windows/general/EdProfilerWindow.h"
-#include "editor/windows/general/EdAssetsWindow.h"
 #include "editor/windows/general/EdAssetListWindow.h"
+#include "editor/windows/general/EdAssetsWindow.h"
+#include "editor/windows/general/EdConsoleWindow.h"
+#include "editor/windows/general/EdMiscWindow.h"
 #include "editor/windows/general/EdOutlinerWindow.h"
+#include "editor/windows/general/EdProfilerWindow.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
-
-
-#include "glfw/glfw3.h"
-#include "imgui/imgui.h"
-
+#include "engine/Events.h"
 
 namespace ed {
 void RegisterWindows(ed::ComponentWindows& windowsComponent)

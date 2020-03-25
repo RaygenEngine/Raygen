@@ -1,7 +1,8 @@
 #pragma once
-
 #include "asset/AssetPod.h"
+
 #include <functional>
+
 class Node;
 
 struct NodeContextActions {

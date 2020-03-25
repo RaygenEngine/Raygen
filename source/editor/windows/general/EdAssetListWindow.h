@@ -1,7 +1,7 @@
 #pragma once
+#include "asset/AssetManager.h"
 #include "editor/windows/EdWindow.h"
 #include "engine/profiler/ProfilerSetup.h"
-#include "asset/AssetManager.h"
 
 namespace ed {
 // The "programmer" friendly version of an asset view.

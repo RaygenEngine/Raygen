@@ -38,7 +38,8 @@ void Console::Execute(std::string_view command)
 	auto parts = str::split(command);
 	auto& entries = Get().m_entries;
 
-	auto it = entries.find(parts[0]);
+	// WIP: should be string view
+	auto it = entries.find(std::string(parts[0]));
 	if (it != entries.end()) {
 		it->second->Execute(command);
 		return;

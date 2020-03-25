@@ -1,8 +1,9 @@
 #pragma once
+#include "asset/AssetManager.h"
 #include "editor/windows/EdWindow.h"
 #include "engine/profiler/ProfilerSetup.h"
-#include "asset/AssetManager.h"
-#include "imgui/imgui.h"
+
+#include <imgui/imgui.h>
 #include <map>
 
 namespace ed {

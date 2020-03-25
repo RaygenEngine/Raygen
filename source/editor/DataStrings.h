@@ -1,4 +1,6 @@
 #pragma once
+// DOC:
+
 // For editor use only, contains the actual text pieces for the editor help and other stuff.
 
 inline const char* txt_about = R"(

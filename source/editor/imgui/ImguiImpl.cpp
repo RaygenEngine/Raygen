@@ -10,9 +10,9 @@
 #include "renderer/VulkanLayer.h"
 #include "renderer/wrapper/Device.h"
 
-#include <imgui.h>
-#include <examples/imgui_impl_vulkan.h>
-#include <examples/imgui_impl_glfw.h>
+#include <imgui/imgui.h>
+#include <imgui/examples/imgui_impl_glfw.h>
+#include <imgui/examples/imgui_impl_vulkan.h>
 #include <glfw/glfw3.h>
 
 namespace imguisyle {

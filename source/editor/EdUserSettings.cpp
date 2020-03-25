@@ -1,9 +1,10 @@
 #include "pch.h"
 #include "editor/EdUserSettings.h"
+
 #include "engine/Logger.h"
 #include "reflection/ReflectionTools.h"
-#include <nlohmann/json.hpp>
 
+#include <nlohmann/json.hpp>
 
 namespace ed {
 UserSettings UserSettings::Load(fs::path filename)

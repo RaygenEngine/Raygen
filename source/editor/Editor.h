@@ -1,12 +1,10 @@
 #pragma once
-
-#include "editor/SceneSave.h"
-#include "editor/windows/EdWindow.h"
-
-#include "editor/NodeContextActions.h"
-#include "world/nodes/camera/EditorCameraNode.h"
 #include "editor/EdComponentWindows.h"
 #include "editor/imgui/ImEd.h"
+#include "editor/NodeContextActions.h"
+#include "editor/SceneSave.h"
+#include "editor/windows/EdWindow.h"
+#include "world/nodes/camera/EditorCameraNode.h"
 
 #include <memory>
 #include <functional>
@@ -14,19 +12,9 @@
 class Node;
 class AssetWindow;
 
-
-// This is a reflected enum, putting more options will appear directly in the editor. (Make sure None still exists)
-enum class EditorBBoxDrawing
-{
-	None,
-	SelectedNode,
-	AllNodes,
-};
-
 class Editor : public Object {
 public:
 	static Node* GetSelectedNode();
-	static EditorBBoxDrawing GetBBoxDrawing();
 
 public:
 	struct ImMenu {
@@ -169,8 +157,6 @@ public:
 		}
 		return false;
 	}
-	EditorBBoxDrawing m_bboxDrawing{ EditorBBoxDrawing::None };
-
 
 	static bool EditorHandleKeyEvent(int32 glfwKey, int32 glfwScancode, int32 glfwAction, int32 glfwModifiers)
 	{

@@ -1,13 +1,14 @@
 #include "pch.h"
 #include "editor/windows/general/EdAssetListWindow.h"
+
 #include "asset/AssetManager.h"
 #include "core/StringUtl.h"
-#include "editor/imgui/ImEd.h"
-#include "editor/imgui/ImguiUtil.h"
-#include "reflection/ReflectionTools.h"
-#include "editor/imgui/ImguiImpl.h"
 #include "editor/Editor.h"
+#include "editor/imgui/ImEd.h"
+#include "editor/imgui/ImguiImpl.h"
+#include "editor/imgui/ImguiUtil.h"
 #include "editor/utl/EdAssetUtils.h"
+#include "reflection/ReflectionTools.h"
 
 #include <spdlog/fmt/fmt.h>
 #include <imgui_internal.h>

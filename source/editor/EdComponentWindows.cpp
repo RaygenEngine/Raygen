@@ -1,15 +1,16 @@
 #include "pch.h"
-#include "engine/Logger.h"
 #include "editor/EdComponentWindows.h"
+
 #include "editor/EdUserSettings.h"
+#include "engine/Logger.h"
 
 namespace ed {
 
 void ComponentWindows::OpenUnique(mti::Hash hash)
 {
-	auto it = m_entiresHash.find(hash);
+	auto it = m_entriesHash.find(hash);
 
-	if (it == m_entiresHash.end()) {
+	if (it == m_entriesHash.end()) {
 		return;
 	}
 	if (IsUniqueOpen(hash)) {
@@ -39,7 +40,7 @@ void ComponentWindows::CloseUnique(mti::Hash hash)
 		return;
 	}
 
-	UpdateSettingsForWindow(m_entries[m_entiresHash.at(hash)].name, false);
+	UpdateSettingsForWindow(m_entries[m_entriesHash.at(hash)].name, false);
 
 	UniqueWindow* winPtr = it->second;
 	m_openUniqueWindows.Remove(it);
@@ -104,9 +105,9 @@ ComponentWindows::~ComponentWindows()
 
 void ComponentWindows::ConstructUniqueIfNotExists(mti::Hash hash)
 {
-	auto it = m_entiresHash.find(hash);
+	auto it = m_entriesHash.find(hash);
 
-	if (it == m_entiresHash.end()) {
+	if (it == m_entriesHash.end()) {
 		return;
 	}
 	if (IsUniqueOpen(hash)) {

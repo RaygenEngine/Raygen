@@ -401,8 +401,6 @@ void VulkanLayer::DrawFrame()
 		swapchain->framebuffers[imageIndex].get() //
 	);
 
-	PROFILE_SCOPE(Renderer);
-
 	vk::PresentInfoKHR presentInfo;
 	presentInfo //
 		.setWaitSemaphoreCount(0)

@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "editor/misc/NativeFileBrowser.h"
+
 #include "engine/Logger.h"
+
 #include <nativefiledialog/src/include/nfd.h>
 
 namespace {

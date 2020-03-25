@@ -12,6 +12,8 @@
 #include "world/nodes/Node.h"
 #include "world/World.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 namespace ed {
 
 namespace {
@@ -554,10 +556,12 @@ void PropertyEditorWindow::Run_ImGuizmo(Node* node)
 
 	auto nodeMatrix = node->GetNodeTransformWCS();
 
+	// auto i = glm::identity<glm::mat4>();
+	// ImGuizmo::DrawGrid(glm::value_ptr(cameraView), glm::value_ptr(cameraProj), glm::value_ptr(i), 10.f);
 
-	ImGuizmo::Manipulate(reinterpret_cast<float*>(&cameraView), reinterpret_cast<float*>(&cameraProj),
+	ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProj),
 		static_cast<ImGuizmo::OPERATION>(m_manipMode.op), static_cast<ImGuizmo::MODE>(m_manipMode.mode),
-		reinterpret_cast<float*>(&nodeMatrix));
+		glm::value_ptr(nodeMatrix));
 
 	node->SetNodeTransformWCS(nodeMatrix);
 }

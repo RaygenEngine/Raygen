@@ -1,11 +1,12 @@
 #include "pch.h"
-
 #include "NodeContextActions.h"
-#include "engine/Engine.h"
+
 #include "editor/Editor.h"
-#include "world/nodes/Node.h"
+#include "engine/Engine.h"
 #include "world/nodes/camera/CameraNode.h"
+#include "world/nodes/Node.h"
 #include "world/WorldOperationsUtl.h"
+
 #include <imgui.h>
 
 
@@ -56,5 +57,5 @@ std::vector<NodeContextActions::Entry> NodeContextActions::GetActions(Node* node
 		}
 	}
 
-	return std::move(actions);
+	return actions;
 }
