@@ -166,7 +166,7 @@ void OutlinerWindow::Run_NewNodeMenu(Node* underNode)
 	for (auto& entry : factory->Z_GetEntries()) {
 		if (ImGui::MenuItem(entry.first.c_str())) {
 
-			auto cmd = [underNode, &entry]() {
+			auto cmd = [underNode, entry]() {
 				auto newNode = entry.second.newInstance();
 
 				newNode->SetName(entry.first + "_new");

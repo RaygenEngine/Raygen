@@ -21,14 +21,4 @@ inline void TextTooltipUtil(const std::string& Tooltip, float tooltipTextScale =
 	ImGui::EndTooltip();
 }
 
-[[deprecated("Use glm::value_ptr")]] inline float* FromVec3(glm::vec3& vec3)
-{
-	return glm::value_ptr(vec3);
-}
-
-[[deprecated("Use glm::value_ptr")]] inline float* FromVec4(glm::vec4& vec4)
-{
-	return glm::value_ptr(vec4);
-}
-
 } // namespace ImUtil

@@ -2,6 +2,7 @@
 
 #include "world/nodes/Node.h"
 #include "core/math-ext/Frustum.h"
+#include "renderer/scene/Scene.h"
 
 // Note: to make a automatic camera that resizes to window size see WindowCameraNode
 class CameraNode : public Node {
@@ -81,4 +82,16 @@ public:
 	bool IsNodeInsideFrustum(Node* node) { return m_frustum.Intersects(node->GetAABB()); }
 
 	void DirtyUpdate(DirtyFlagset flags) override;
+
+
+	CameraNode();
+	~CameraNode() override;
+
+private:
+	size_t sceneUid;
+	template<typename Lambda>
+	void Enqueue(Lambda&& l)
+	{
+		Scene->EnqueueCmd<SceneCamera>(sceneUid, l);
+	}
 };

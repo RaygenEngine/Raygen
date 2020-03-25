@@ -10,6 +10,8 @@
 #include "renderer/wrapper/Instance.h"
 #include "renderer/wrapper/PhysicalDevice.h"
 #include "renderer/wrapper/Swapchain.h"
+#include "renderer/scene/SceneStructs.h"
+#include "renderer/scene/Scene.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -65,9 +67,6 @@ public:
 
 	UniquePtr<Buffer> globalsUbo;
 
-	std::vector<UniquePtr<Scene_Model>> models;
-
-
 	// Quad descriptors
 
 	R_DescriptorLayout quadDescLayout;
@@ -104,9 +103,6 @@ public:
 	void DrawDeferredPass(std::vector<vk::PipelineStageFlags> waitStages, SemVec waitSemaphores,
 		SemVec signalSemaphores, vk::CommandBuffer cmdBuffer, vk::Framebuffer framebuffer);
 
-
-	void ReinitModels();
-
 	void InitModelDescriptors();
 	void InitDebugDescriptors();
 
@@ -114,5 +110,4 @@ public:
 
 	void InitQuadDescriptor();
 	void DrawFrame();
-
 } * Layer;

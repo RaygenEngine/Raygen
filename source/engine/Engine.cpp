@@ -37,23 +37,6 @@ void S_Engine::InitEngine(App* app)
 	m_assetFrontEndManager = new AssetFrontEndManager();
 	m_assetImporterManager->Init(m_app->m_assetPath);
 
-	m_lastRecordTime = ch::system_clock::now();
-
-	InitRenderer();
-}
-
-void S_Engine::CreateWorldFromFile(const std::string& filename)
-{
-	if (m_world) {
-
-		delete m_world;
-	}
-	m_world = new World(m_app->MakeNodeFactory());
-	m_world->LoadAndPrepareWorld(filename);
-}
-
-void S_Engine::InitRenderer()
-{
 	glfwInit();
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -69,6 +52,16 @@ void S_Engine::InitRenderer()
 	m_editor = new Editor();
 
 	ImguiImpl::InitVulkan();
+}
+
+void S_Engine::CreateWorldFromFile(const std::string& filename)
+{
+	if (m_world) {
+
+		delete m_world;
+	}
+	m_world = new World(m_app->MakeNodeFactory());
+	m_world->LoadAndPrepareWorld(filename);
 }
 
 bool S_Engine::HasCmdArgument(const std::string& argument)
@@ -90,33 +83,22 @@ bool S_Engine::ShouldUpdateWorld()
 
 float S_Engine::GetFPS()
 {
-	return m_steadyFps;
+	return m_gameThreadFps.GetSteadyFps();
 }
 
 void S_Engine::ReportFrameDrawn()
 {
-	m_lastFrameTime = m_frameTimer.Get<ch::microseconds>() / 1e6f;
-	m_frameTimer.Start();
-
 	using namespace std::literals;
-	++m_framesSinceLastRecord;
 
-	auto now = ch::system_clock::now();
-	auto diff = now - m_lastRecordTime;
-	constexpr auto c_reportPeriod = 100ms;
-	if (diff >= c_reportPeriod) {
-		m_steadyFps
-			= static_cast<float>(m_framesSinceLastRecord) / ((ch::duration_cast<ch::nanoseconds>(diff).count() / 1e9f));
-		m_lastRecordTime = now;
-		m_framesSinceLastRecord = 0;
+	static int32 titleCounter = 0;
+	if (m_gameThreadFps.CountFrame()) {
+		titleCounter = (titleCounter + 1) % 5;
 
-		static int32 titleCounter = 0;
-		if (titleCounter == 0) {
-			static std::string s_title;
-			s_title = fmt::format("{} - {:4.2f} FPS", m_app->m_windowTitle, m_steadyFps);
+		if (titleCounter == 1) {
+			std::string s_title;
+			s_title = fmt::format("{} - {:4.2f}", m_app->m_windowTitle, m_gameThreadFps.GetSteadyFps());
 			glfwSetWindowTitle(m_window, s_title.c_str());
 		}
-		titleCounter = (titleCounter + 1) % 5;
 	}
 
 	// CHECK:
@@ -131,13 +113,36 @@ void S_Engine::ReportFrameDrawn()
 void S_Engine::DeinitEngine()
 {
 	// NOTE: It is REALLY important to remember the reverse order here
+	delete m_world;
 	delete Layer;
 	delete Device;
 	delete m_editor;
-	delete m_world;
 	glfwDestroyWindow(m_window);
 	glfwTerminate();
 	delete m_assetImporterManager;
 	delete m_assetFrontEndManager;
 	delete m_input;
+}
+
+bool S_Engine::ThreadFpsCounter::CountFrame()
+{
+	using namespace std::literals;
+	constexpr static auto c_reportPeriod = 100ms;
+
+
+	lastFrameTime = frameTimer.Get<ch::microseconds>() / 1e6f;
+	frameTimer.Start();
+
+	++framesSinceLastRecord;
+
+	auto now = ch::system_clock::now();
+	auto diff = now - lastRecordTime;
+	if (diff >= c_reportPeriod) {
+		steadyFps
+			= static_cast<float>(framesSinceLastRecord) / ((ch::duration_cast<ch::nanoseconds>(diff).count() / 1e9f));
+		lastRecordTime = now;
+		framesSinceLastRecord = 0;
+		return true;
+	}
+	return false;
 }

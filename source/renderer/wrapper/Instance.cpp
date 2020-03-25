@@ -2,6 +2,7 @@
 #include "renderer/wrapper/Instance.h"
 
 #include "engine/Logger.h"
+#include "engine/console/ConsoleVariable.h"
 
 #include <glfw/glfw3.h>
 
@@ -21,11 +22,17 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(
 	return pfnVkDestroyDebugUtilsMessengerEXT(instance, messenger, pAllocator);
 }
 
+ConsoleVariable<bool> showValidationErrors{ "r.showValidation", false, "Enables vulkan validation layer errors" };
+
 namespace {
 VkBool32 DebugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 	VkDebugUtilsMessageTypeFlagsEXT messageTypes, VkDebugUtilsMessengerCallbackDataEXT const* pCallbackData,
 	void* /*pUserData*/)
 {
+	if (!showValidationErrors) {
+		return false;
+	}
+
 	std::string message;
 
 	message += vk::to_string(static_cast<vk::DebugUtilsMessageSeverityFlagBitsEXT>(messageSeverity)) + ": "
