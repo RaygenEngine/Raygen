@@ -75,17 +75,27 @@ private:
 	Editor* m_editor{ nullptr };
 
 	timer::Timer m_initToFrameTimer{};
-	timer::Timer m_frameTimer{ true };
 
-	float m_lastFrameTime{ 0.f };
 
-	float m_steadyFps{ 0.f };
-	ch::system_clock::time_point m_lastRecordTime;
-	size_t m_framesSinceLastRecord{ 0 }; // WARNING: use 64 bits to avoid overflow.
+	struct ThreadFpsCounter {
+		timer::Timer frameTimer{ true };
+		float lastFrameTime{ 0.f };
 
-	void InitRenderer();
+		float steadyFps{ 0.f };
+		ch::system_clock::time_point lastRecordTime{};
+		size_t framesSinceLastRecord{ 0 };
+
+		float GetSteadyFps() const { return steadyFps; }
+
+		// Returns true every time steadyFps was updated. (every 100ms)
+		bool CountFrame();
+	};
+
 
 public:
+	ThreadFpsCounter m_gameThreadFps;
+	// ThreadFpsCounter m_sceneThreadFps;
+
 	// Init the internal engine systems.
 	// You MUST run this to properly init the engine
 	//
@@ -107,4 +117,5 @@ public:
 	void DeinitEngine();
 
 	[[nodiscard]] App* GetApp() const { return m_app; }
+
 } Engine;

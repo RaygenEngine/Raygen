@@ -295,19 +295,6 @@ void ImguiImpl::NewFrame()
 	ImGui::NewFrame();
 }
 
-void ImguiImpl::EndFrame()
-{
-	{
-		PROFILE_SCOPE(Editor);
-		ImGui::EndFrame();
-
-
-		ImGui::Render();
-	}
-	ImGui::UpdatePlatformWindows();
-	ImGui::RenderPlatformWindowsDefault();
-}
-
 void ImguiImpl::CleanupVulkan()
 {
 	ImGui_ImplVulkan_Shutdown();
@@ -365,6 +352,18 @@ void ImguiImpl::InitVulkan()
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
 
+void ImguiImpl::EndFrame()
+{
+	{
+		PROFILE_SCOPE(Editor);
+		ImGui::EndFrame();
+
+
+		ImGui::Render();
+	}
+	ImGui::UpdatePlatformWindows();
+	ImGui::RenderPlatformWindowsDefault();
+}
 
 void ImguiImpl::RenderVulkan(vk::CommandBuffer* drawCommandBuffer)
 {

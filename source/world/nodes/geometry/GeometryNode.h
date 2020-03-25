@@ -12,10 +12,22 @@ class GeometryNode : public Node {
 
 	PodHandle<ModelPod> m_model;
 
+
 public:
+	GeometryNode();
+	~GeometryNode() override;
+
 	[[nodiscard]] PodHandle<ModelPod> GetModel() const { return m_model; }
 
 	void SetModel(PodHandle<ModelPod> newModel);
 
 	void DirtyUpdate(DirtyFlagset dirtyFlags) override;
+
+private:
+	size_t sceneUid;
+	template<typename Lambda>
+	void Enqueue(Lambda&& l)
+	{
+		Scene->EnqueueCmd<typename SceneGeometry>(sceneUid, l);
+	}
 };

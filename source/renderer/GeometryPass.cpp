@@ -367,10 +367,14 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
 				&Layer->globalUboDescSet, 0u, nullptr);
 
-			for (auto& model : Layer->models) {
+			for (auto model : Scene->geometries.elements) {
+				if (!model) {
+					continue;
+				}
+
 				// Submit via push constant (rather than a UBO)
-				cmdBuffer->pushConstants(m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u,
-					sizeof(glm::mat4), &model->node->GetNodeTransformWCS());
+				cmdBuffer->pushConstants(
+					m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(glm::mat4), &model->transform);
 
 				for (auto& gg : GpuAssetManager.LockHandle(model->model).geometryGroups) {
 					vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };

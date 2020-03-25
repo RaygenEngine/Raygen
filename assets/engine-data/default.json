@@ -45,35 +45,7 @@
         "movementSpeed": 10.0,
         "turningSpeed": 0.699999988079071,
         "~children": [
-            {
-                "+name": "WindowCamera_new",
-                "+trs": {
-                    "pos": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "rot": {
-                        "x": 0.0,
-                        "y": -0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                "+type": "WindowCamera",
-                "far": 1000.0,
-                "focalLength": 1.0,
-                "hFov": 2.2109603881835938,
-                "hFovOffset": 0.0,
-                "near": 0.20000000298023224,
-                "vFov": 1.2566370964050293,
-                "vFovOffset": 0.0,
-                "~children": []
-            }
+            
         ]
     },
     {

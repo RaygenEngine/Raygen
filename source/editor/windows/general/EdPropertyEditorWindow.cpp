@@ -14,6 +14,11 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+inline float* FromVec4(glm::vec4& vec4)
+{
+	return glm::value_ptr(vec4);
+}
+
 namespace ed {
 
 namespace {
@@ -97,19 +102,19 @@ namespace {
 		bool Inner(glm::vec3& t, const Property& p)
 		{
 			if (p.HasFlags(PropertyFlags::Color)) {
-				return ImGui::ColorEdit3(name, ImUtil::FromVec3(t), ImGuiColorEditFlags_DisplayHSV);
+				return ImGui::ColorEdit3(name, glm::value_ptr(t), ImGuiColorEditFlags_DisplayHSV);
 			}
 
-			return ImGui::DragFloat3(name, ImUtil::FromVec3(t), 0.01f);
+			return ImGui::DragFloat3(name, glm::value_ptr(t), 0.01f);
 		}
 
 		bool Inner(glm::vec4& t, const Property& p)
 		{
 			if (p.HasFlags(PropertyFlags::Color)) {
-				return ImGui::ColorEdit4(name, ImUtil::FromVec4(t), ImGuiColorEditFlags_DisplayHSV);
+				return ImGui::ColorEdit4(name, glm::value_ptr(t), ImGuiColorEditFlags_DisplayHSV);
 			}
 
-			return ImGui::DragFloat4(name, ImUtil::FromVec4(t), 0.01f);
+			return ImGui::DragFloat4(name, glm::value_ptr(t), 0.01f);
 		}
 
 		bool Inner(std::string& ref, const Property& p)
@@ -151,10 +156,10 @@ namespace {
 			buffers[3] = p.GetNameStr() + "[3]";
 
 
-			edited |= ImGui::DragFloat4(buffers[0].c_str(), ImUtil::FromVec4(rowMajor[0]), 0.01f);
-			edited |= ImGui::DragFloat4(buffers[1].c_str(), ImUtil::FromVec4(rowMajor[1]), 0.01f);
-			edited |= ImGui::DragFloat4(buffers[2].c_str(), ImUtil::FromVec4(rowMajor[2]), 0.01f);
-			edited |= ImGui::DragFloat4(buffers[3].c_str(), ImUtil::FromVec4(rowMajor[3]), 0.01f);
+			edited |= ImGui::DragFloat4(buffers[0].c_str(), FromVec4(rowMajor[0]), 0.01f);
+			edited |= ImGui::DragFloat4(buffers[1].c_str(), FromVec4(rowMajor[1]), 0.01f);
+			edited |= ImGui::DragFloat4(buffers[2].c_str(), FromVec4(rowMajor[2]), 0.01f);
+			edited |= ImGui::DragFloat4(buffers[3].c_str(), FromVec4(rowMajor[3]), 0.01f);
 			ImGui::Separator();
 			if (edited) {
 				t = glm::transpose(rowMajor);
@@ -381,7 +386,7 @@ void PropertyEditorWindow::Run_BaseProperties(Node* node)
 		UpdateLookAtReference();
 	}
 
-	if (ImGui::DragFloat3("Position", ImUtil::FromVec3(location), 0.01f)) {
+	if (ImGui::DragFloat3("Position", glm::value_ptr(location), 0.01f)) {
 		m_localMode ? node->SetNodePositionLCS(location) : node->SetNodePositionWCS(location);
 	}
 	if (ImGui::BeginPopupContextItem("PositionPopup")) {
@@ -391,7 +396,7 @@ void PropertyEditorWindow::Run_BaseProperties(Node* node)
 		ImGui::EndPopup();
 	}
 	if (!m_lookAtMode) {
-		if (ImGui::DragFloat3("Rotation", ImUtil::FromVec3(eulerPyr), 0.1f)) {
+		if (ImGui::DragFloat3("Rotation", glm::value_ptr(eulerPyr), 0.1f)) {
 			auto deltaAxis = eulerPyr - (m_localMode ? node->GetNodeEulerAnglesLCS() : node->GetNodeEulerAnglesWCS());
 			if (ImGui::IsAnyMouseDown()) {
 				// On user drag use quat diff, prevents gimbal locks while dragging
@@ -406,7 +411,7 @@ void PropertyEditorWindow::Run_BaseProperties(Node* node)
 		}
 	}
 	else {
-		ImGui::DragFloat3("Look At", ImUtil::FromVec3(m_lookAtPos), 0.1f);
+		ImGui::DragFloat3("Look At", glm::value_ptr(m_lookAtPos), 0.1f);
 		ImEd::HelpTooltipInline(
 			"Look at will lock lookat position of the selected node for as long as it is active. This way you can "
 			"adjust the position of your node while keeping the lookat position fixed.");
@@ -428,13 +433,13 @@ void PropertyEditorWindow::Run_BaseProperties(Node* node)
 	}
 
 	if (!m_lockedScale) {
-		if (ImGui::DragFloat3("Scale", ImUtil::FromVec3(scale), 0.01f)) {
+		if (ImGui::DragFloat3("Scale", glm::value_ptr(scale), 0.01f)) {
 			m_localMode ? node->SetNodeScaleLCS(scale) : node->SetNodeScaleWCS(scale);
 		}
 	}
 	else {
 		glm::vec3 newScale = m_localMode ? node->GetNodeScaleLCS() : node->GetNodeScaleWCS();
-		if (ImGui::DragFloat3("Locked Scale", ImUtil::FromVec3(newScale), 0.01f)) {
+		if (ImGui::DragFloat3("Locked Scale", glm::value_ptr(newScale), 0.01f)) {
 			glm::vec3 initialScale = m_localMode ? node->GetNodeScaleLCS() : node->GetNodeScaleWCS();
 
 			float ratio = 1.f;
@@ -480,10 +485,10 @@ void PropertyEditorWindow::Run_BaseProperties(Node* node)
 
 		bool edited = false;
 
-		edited |= ImGui::DragFloat4("mat.row[0]", ImUtil::FromVec4(rowMajor[0]), 0.01f);
-		edited |= ImGui::DragFloat4("mat.row[1]", ImUtil::FromVec4(rowMajor[1]), 0.01f);
-		edited |= ImGui::DragFloat4("mat.row[2]", ImUtil::FromVec4(rowMajor[2]), 0.01f);
-		edited |= ImGui::DragFloat4("mat.row[3]", ImUtil::FromVec4(rowMajor[3]), 0.01f);
+		edited |= ImGui::DragFloat4("mat.row[0]", glm::value_ptr(rowMajor[0]), 0.01f);
+		edited |= ImGui::DragFloat4("mat.row[1]", glm::value_ptr(rowMajor[1]), 0.01f);
+		edited |= ImGui::DragFloat4("mat.row[2]", glm::value_ptr(rowMajor[2]), 0.01f);
+		edited |= ImGui::DragFloat4("mat.row[3]", glm::value_ptr(rowMajor[3]), 0.01f);
 		if (edited) {
 			m_localMode ? node->SetNodeTransformLCS(glm::transpose(rowMajor))
 						: node->SetNodeTransformWCS(glm::transpose(rowMajor));
