@@ -1,7 +1,6 @@
 #pragma once
 #include "reflection/GenMacros.h"
 
-
 namespace ed {
 
 // Editor user settings.
@@ -48,7 +47,6 @@ protected:
 	UserSettings(const UserSettings& other) = default;
 	UserSettings& operator=(const UserSettings& other) = default;
 };
-
 
 // Singleton like access for user settings with hardcoded file
 inline UserSettings& GetSettings()

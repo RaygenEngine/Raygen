@@ -1,9 +1,8 @@
 #pragma once
 #include "asset/AssetManager.h"
 
-namespace ed {
-namespace asset {
+namespace ed::asset {
 
-	void MaybeHoverTooltip(PodEntry* entry);
-} // namespace asset
-} // namespace ed
+void MaybeHoverTooltip(PodEntry* entry);
+
+} // namespace ed::asset

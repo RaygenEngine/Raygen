@@ -1,50 +1,23 @@
 #include "pch.h"
 #include "editor/Editor.h"
 
-#include "editor/imgui/ImguiImpl.h"
-#include "editor/NodeContextActions.h"
-
-#include "asset/AssetManager.h"
-#include "asset/PodIncludes.h"
-#include "reflection/PodTools.h"
-#include "reflection/ReflectionTools.h"
+#include "editor/DataStrings.h"
+#include "editor/EdUserSettings.h"
+#include "editor/imgui/ImGuizmo.h"
+#include "editor/misc/NativeFileBrowser.h"
+#include "editor/windows/general/EdAssetsWindow.h"
+#include "editor/windows/general/EdPropertyEditorWindow.h"
+#include "editor/windows/WindowsRegistry.h"
 #include "engine/Engine.h"
-#include "engine/Events.h"
-#include "world/nodes/camera/CameraNode.h"
-
-#include "world/nodes/Node.h"
+#include "engine/Input.h"
+#include "engine/profiler/ProfileScope.h"
+#include "world/nodes/geometry/GeometryNode.h"
 #include "world/nodes/RootNode.h"
 #include "world/World.h"
-#include "engine/Input.h"
-#include "world/NodeFactory.h"
-
-#include "editor/imgui/ImguiUtil.h"
-#include "world/nodes/geometry/GeometryNode.h"
-#include "reflection/ReflEnum.h"
-#include "editor/DataStrings.h"
-#include "editor/imgui/ImEd.h"
-
-#include "engine/console/Console.h"
-#include "editor/windows/WindowsRegistry.h"
-#include "engine/profiler/ProfileScope.h"
-
-#include "editor/EdUserSettings.h"
-#include "engine/console/ConsoleVariable.h"
-
-#include "editor/misc/NativeFileBrowser.h"
-#include "editor/utl/EdAssetUtils.h"
-#include "editor/windows/general/EdAssetsWindow.h"
-#include "editor/imgui/ImGuizmo.h"
-#include "renderer/VulkanLayer.h"
-#include "renderer/GeometryPass.h"
-#include "renderer/wrapper/GBuffer.h"
 #include "world/WorldOperationsUtl.h"
-#include "editor/windows/general/EdPropertyEditorWindow.h"
 
 #include <glfw/glfw3.h>
 
-#include <iostream>
-#include <set>
 
 Editor::Editor()
 {
@@ -71,30 +44,6 @@ Editor::Editor()
 	MakeMainMenu();
 }
 
-struct ImRendererMenu : public Editor::ImMenu {
-	ImRendererMenu()
-		: Editor::ImMenu("Renderer")
-	{
-	}
-
-	void DrawOptions(Editor* editor) override
-	{
-		if (ImGui::BeginMenu("BBox Debugging")) {
-			auto& bboxEnum = ReflEnum::GetMeta<EditorBBoxDrawing>();
-			auto bboxEnumTie = bboxEnum.TieEnum(editor->m_bboxDrawing);
-
-			for (auto& [value, str] : bboxEnum.GetValues()) {
-				std::string s;
-				s = str;
-				if (ImGui::MenuItem(s.c_str(), nullptr, bboxEnumTie.GetValue() == value)) {
-					bboxEnumTie.SetValue(value);
-				}
-			}
-			ImGui::EndMenu();
-		}
-	}
-};
-
 Node* Editor::GetSelectedNode()
 {
 	auto editor = Engine.GetEditor();
@@ -102,15 +51,6 @@ Node* Editor::GetSelectedNode()
 	return editor->m_selectedNode;
 	//}
 	return nullptr;
-}
-
-EditorBBoxDrawing Editor::GetBBoxDrawing()
-{
-	auto editor = Engine.GetEditor();
-	// if (editor && Engine.IsEditorActive()) {
-	return editor->m_bboxDrawing;
-	//}
-	return EditorBBoxDrawing::None;
 }
 
 void Editor::MakeMainMenu()
@@ -127,8 +67,6 @@ void Editor::MakeMainMenu()
 	sceneMenu->AddEntry(U8(FA_DOOR_OPEN u8"  Exit"), []() { glfwSetWindowShouldClose(Engine.GetMainWindow(), 1); });
 	m_menus.emplace_back(std::move(sceneMenu));
 
-	auto renderersMenu = std::make_unique<ImRendererMenu>();
-	m_menus.emplace_back(std::move(renderersMenu));
 
 	auto windowsMenu = std::make_unique<ImMenu>("Windows");
 	for (auto& winEntry : m_windowsComponent.m_entries) {

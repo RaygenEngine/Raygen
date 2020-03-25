@@ -1,26 +1,12 @@
 #include "pch.h"
-
 #include "editor/SceneSave.h"
-#include "engine/Engine.h"
-#include "world/nodes/Node.h"
-#include "reflection/ReflectionTools.h"
-#include "world/World.h"
-#include "asset/AssetManager.h"
-#include "asset/util/ParsingUtl.h"
-#include "asset/PodIncludes.h"
-#include "asset/UriLibrary.h"
-#include "world/nodes/RootNode.h"
-#include "world/nodes/camera/EditorCameraNode.h"
 
 #include "editor/misc/NativeFileBrowser.h"
+#include "reflection/ReflectionTools.h"
+#include "world/nodes/camera/EditorCameraNode.h"
+#include "world/nodes/RootNode.h"
+#include "world/World.h"
 
-#include <imgui.h>
-#include <glm/glm.hpp>
-
-#include <string>
-#include <fstream>
-
-SceneSave::SceneSave() {}
 
 void SceneSave::OpenBrowser()
 {

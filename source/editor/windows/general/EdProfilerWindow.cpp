@@ -1,11 +1,12 @@
 #include "pch.h"
 #include "editor/windows/general/EdProfilerWindow.h"
-#include "engine/profiler/ProfileScope.h"
-#include "editor/misc/NativeFileBrowser.h"
 
-#include "reflection/ReflEnum.h"
-#include <spdlog/fmt/fmt.h>
 #include "editor/imgui/ImEd.h"
+#include "editor/misc/NativeFileBrowser.h"
+#include "engine/profiler/ProfileScope.h"
+#include "reflection/ReflEnum.h"
+
+#include <spdlog/fmt/fmt.h>
 
 namespace ed {
 

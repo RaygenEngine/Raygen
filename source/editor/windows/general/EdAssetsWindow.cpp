@@ -1,19 +1,19 @@
 #include "pch.h"
 #define IMGUI_DEFINE_MATH_OPERATORS
-
 #include "editor/windows/general/EdAssetsWindow.h"
+
 #include "asset/AssetManager.h"
 #include "core/StringUtl.h"
 #include "editor/imgui/ImEd.h"
-#include "editor/imgui/ImguiUtil.h"
-#include "reflection/ReflectionTools.h"
 #include "editor/imgui/ImguiImpl.h"
-#include "editor/utl/EdAssetUtils.h"
+#include "editor/imgui/ImguiUtil.h"
 #include "editor/misc/NativeFileBrowser.h"
+#include "editor/utl/EdAssetUtils.h"
+#include "reflection/ReflectionTools.h"
 #include "reflection/ReflEnum.h"
 
-#include <spdlog/fmt/fmt.h>
 #include <imgui_internal.h>
+#include <spdlog/fmt/fmt.h>
 
 namespace ed {
 using namespace assetentry;

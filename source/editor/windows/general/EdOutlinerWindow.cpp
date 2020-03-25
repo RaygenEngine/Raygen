@@ -3,12 +3,12 @@
 
 #include "editor/DataStrings.h"
 #include "editor/Editor.h"
-#include "world/World.h"
 #include "world/NodeFactory.h"
-#include "world/WorldOperationsUtl.h"
-#include "world/nodes/RootNode.h"
 #include "world/nodes/camera/CameraNode.h"
 #include "world/nodes/geometry/GeometryNode.h"
+#include "world/nodes/RootNode.h"
+#include "world/World.h"
+#include "world/WorldOperationsUtl.h"
 
 #include <imgui/imgui.h>
 namespace ed {

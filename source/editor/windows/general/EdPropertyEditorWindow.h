@@ -1,8 +1,9 @@
 #pragma once
-#include "editor/windows/EdWindow.h"
 #include "editor/Editor.h"
 #include "editor/imgui/ImGuizmo.h"
+#include "editor/windows/EdWindow.h"
 #include "reflection/Property.h"
+
 class Node;
 
 namespace ed {

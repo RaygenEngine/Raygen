@@ -1,9 +1,9 @@
 #pragma once
-
-#include "reflection/TypeId.h"
-#include "editor/windows/EdWindow.h"
-#include "core/iterable/IterableSafeVector.h"
 #include "core/iterable/IterableSafeHashMap.h"
+#include "core/iterable/IterableSafeVector.h"
+#include "editor/windows/EdWindow.h"
+#include "reflection/TypeId.h"
+
 #include <functional>
 #include <unordered_set>
 #include <vector>
@@ -26,7 +26,7 @@ public:
 
 public:
 	std::vector<UniqueWindowEntry> m_entries;
-	std::unordered_map<mti::Hash, size_t> m_entiresHash;
+	std::unordered_map<mti::Hash, size_t> m_entriesHash;
 
 	IterableSafeHashMap<mti::Hash, UniqueWindow*> m_openUniqueWindows;
 	std::unordered_map<mti::Hash, UniqueWindow*> m_closedUniqueWindows;
@@ -38,7 +38,7 @@ public:
 	void AddWindowEntry(const std::string& name)
 	{
 		auto hash = mti::GetHash<T>();
-		if (m_entiresHash.insert({ hash, m_entries.size() }).second) {
+		if (m_entriesHash.insert({ hash, m_entries.size() }).second) {
 			m_entries.emplace_back(
 				UniqueWindowEntry{ [](const std::string& name) { return new T(name); }, hash, name });
 		}

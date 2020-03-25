@@ -2,95 +2,9 @@ project (Raygen-App)
 project (Raygen)
 
 
-set(SOURCE_FILES 
-	App.cpp
-
-	asset/AssetManager.cpp
-	asset/ImporterRegistry.cpp
-	asset/Serialization.cpp
-
-	asset/util/DependenciesImpl.cpp
-	asset/util/SpirvCompiler.cpp
-
-	asset/importers/ImageImporter.cpp
-	asset/importers/GltfImporter.cpp
-	asset/importers/ShaderImporter.cpp
-
-	editor/Editor.cpp
-	editor/NodeContextActions.cpp
-	editor/SceneSave.cpp
-	editor/EdComponentWindows.cpp
-	editor/EdUserSettings.cpp
-
-	editor/utl/EdAssetUtils.cpp
-
-	editor/windows/EdWindow.cpp
-	editor/windows/WindowsRegistry.cpp
-	
-	editor/windows/general/EdAssetListWindow.cpp
-	editor/windows/general/EdAssetsWindow.cpp
-	editor/windows/general/EdConsoleWindow.cpp
-	editor/windows/general/EdMiscWindow.cpp
-	editor/windows/general/EdOutlinerWindow.cpp
-	editor/windows/general/EdProfilerWindow.cpp
-	editor/windows/general/EdPropertyEditorWindow.cpp
-	
-	editor/imgui/FileBrowser.cpp
-	editor/imgui/ImEd.cpp
-	editor/imgui/ImguiImpl.cpp
-	editor/imgui/ImGuizmo.cpp
-	
-	editor/misc/NativeFileBrowser.cpp
-
-	engine/Engine.cpp
-	engine/Object.cpp
-	engine/Input.cpp
-	engine/Logger.cpp
-	engine/console/Console.cpp
-	engine/profiler/Profiler.cpp
-	engine/reflection/ReflectionDb.cpp
-	
-	platform/GlfwUtl.cpp
-
-	renderer/GeometryPass.cpp
-	renderer/DeferredPass.cpp
-	renderer/EditorPass.cpp
-	renderer/PoolAllocator.cpp	
-	renderer/VulkanLayer.cpp	
-	renderer/asset/Model.cpp
-	renderer/asset/Image.cpp
-	renderer/asset/Sampler.cpp
-	renderer/asset/Material.cpp
-	renderer/asset/GpuAssetManager.cpp
-	renderer/wrapper/ImageObj.cpp
-	renderer/wrapper/Instance.cpp
-	renderer/wrapper/PhysicalDevice.cpp 
-	renderer/wrapper/Device.cpp
-	renderer/wrapper/Swapchain.cpp
-	renderer/wrapper/GBuffer.cpp
-	renderer/wrapper/Attachment.cpp
-	renderer/wrapper/Buffer.cpp
-
-	world/World.cpp
-	world/WorldOperationsUtl.cpp
-	world/NodeFactory.cpp
-	
-	world/nodes/Node.cpp
-	world/nodes/RootNode.cpp
-	world/nodes/camera/CameraNode.cpp
-	world/nodes/camera/WindowCameraNode.cpp
-	world/nodes/camera/EditorCameraNode.cpp
-	world/nodes/geometry/GeometryNode.cpp
-	world/nodes/light/PunctualLightNode.cpp
-	world/nodes/light/DirectionalLightNode.cpp
-	world/nodes/light/SpotLightNode.cpp
-	world/nodes/light/LightNode.cpp
-	world/nodes/light/AmbientNode.cpp
-	world/nodes/user/FreeformUserNode.cpp
-	world/nodes/user/UserNode.cpp
-	world/nodes/user/FlyingUserNode.cpp
-)
-
+file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS "*.cpp")
+list(REMOVE_ITEM SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/AppMain.cpp")
+list(REMOVE_ITEM SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pch.cpp")
 file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS "*.h")
 
 set(APP_SOURCES
@@ -111,7 +25,7 @@ if(MSVC)
 								COMPILE_FLAGS "/Yu\"pch.h\" /FI\"pch.h\" /Fp\"${PrecompiledBinary}\""
 							    OBJECT_DEPENDS "${PrecompiledBinary}")  
 										   
-	list(APPEND SOURCE_FILES pch.cpp)
+	list(APPEND SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pch.cpp")
 	list(APPEND APP_SOURCES platform/windows/resources/WinResource.rc)
 endif()
 
