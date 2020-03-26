@@ -76,9 +76,6 @@ public:
 	//
 	void InitEngine(App* app);
 
-
-	[[nodiscard]] bool ShouldUpdateWorld();
-
 	[[nodiscard]] float GetFPS();
 
 	void ReportFrameDrawn();

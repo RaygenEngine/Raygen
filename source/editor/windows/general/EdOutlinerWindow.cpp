@@ -2,7 +2,7 @@
 #include "EdOutlinerWindow.h"
 
 #include "editor/DataStrings.h"
-#include "editor/Editor.h"
+#include "editor/EditorObject.h"
 #include "universe/NodeFactory.h"
 #include "universe/nodes/camera/CameraNode.h"
 #include "universe/nodes/geometry/GeometryNode.h"
@@ -27,7 +27,7 @@ void OutlinerWindow::ImguiDraw()
 				   + sceneconv::FilterNodeClassName(node->GetClass().GetName()) + "> " + node->GetName();
 		ImGui::PushID(node);
 
-		auto editorCam = Editor::EditorInst->m_editorCamera;
+		auto editorCam = EditorObj->m_editorCamera;
 
 
 		if (node == editorCam) {
@@ -81,7 +81,7 @@ void OutlinerWindow::ImguiDraw()
 			newNode->SetName(entry->GetNameStr());
 			newNode->SetModel(entry->GetHandleAs<ModelPod>());
 			Universe::GetMainWorld()->Z_RegisterNode(newNode, Universe::GetMainWorld()->GetRoot());
-			if (!Editor::EditorInst->IsCameraPiloting()) {
+			if (!EditorObj->IsCameraPiloting()) {
 				EditorObject::PushPostFrameCommand([newNode]() { EditorObject::FocusNode(newNode); });
 			}
 		};
@@ -104,7 +104,7 @@ void OutlinerWindow::ImguiDraw()
 				newNode->SetName(podEntry->name);
 				newNode->SetModel(PodHandle<ModelPod>{ uid });
 				Universe::GetMainWorld()->Z_RegisterNode(newNode, Universe::GetMainWorld()->GetRoot());
-				if (!Editor::EditorInst->IsCameraPiloting()) {
+				if (!EditorObj->IsCameraPiloting()) {
 					EditorObject::PushPostFrameCommand([newNode]() { EditorObject::FocusNode(newNode); });
 				}
 			};
@@ -122,7 +122,7 @@ void OutlinerWindow::ImguiDraw()
 				Run_NewNodeMenu(Universe::GetMainWorld()->GetRoot());
 				ImGui::EndMenu();
 			}
-			if (Editor::EditorInst->IsCameraPiloting() && ImGui::MenuItem("Stop piloting")) {
+			if (EditorObj->IsCameraPiloting() && ImGui::MenuItem("Stop piloting")) {
 				EditorObject::PilotThis(nullptr);
 			}
 			ImGui::EndPopup();
@@ -135,7 +135,7 @@ void OutlinerWindow::ImguiDraw()
 bool OutlinerWindow::Run_ContextPopup(Node* node)
 {
 	if (ImGui::BeginPopupContextItem("OutlinerElemContext")) {
-		for (auto& action : Editor::EditorInst->m_nodeContextActions->GetActions(node, true)) {
+		for (auto& action : EditorObj->m_nodeContextActions->GetActions(node, true)) {
 			if (!action.IsSplitter()) {
 				if (ImGui::MenuItem(action.name)) {
 					action.function(node);

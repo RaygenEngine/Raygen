@@ -23,12 +23,6 @@ public:
 
 	[[nodiscard]] GLFWwindow* GetHandle() const { return m_window; }
 
-	struct GlfwContext {
-		GlfwContext();
-		~GlfwContext();
-	};
-
 private:
 	GLFWwindow* m_window;
-	std::shared_ptr<GlfwContext> m_glfwContext;
 };

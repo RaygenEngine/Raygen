@@ -47,7 +47,7 @@ EditorObject::EditorObject()
 
 Node* EditorObject::GetSelectedNode()
 {
-	auto editor = Editor::EditorInst;
+	auto editor = EditorObj;
 	//	if (editor && Engine.IsEditorActive()) {
 	return editor->m_selectedNode;
 	//}
@@ -350,12 +350,12 @@ void EditorObject::HandleInput()
 
 void EditorObject::PushCommand(std::function<void()>&& func)
 {
-	Editor::EditorInst->m_postDrawCommands.emplace_back(func);
+	EditorObj->m_postDrawCommands.emplace_back(func);
 }
 
 void EditorObject::PushPostFrameCommand(std::function<void()>&& func)
 {
-	Editor::EditorInst->m_postFrameCommands.emplace_back(func);
+	EditorObj->m_postFrameCommands.emplace_back(func);
 }
 
 
@@ -374,13 +374,13 @@ void EditorObject::PreBeginFrame()
 
 void EditorObject::SelectNode(Node* node)
 {
-	Editor::EditorInst->m_selectedNode = node;
+	EditorObj->m_selectedNode = node;
 }
 
 void EditorObject::MoveSelectedUnder(Node* node)
 {
-	if (Editor::EditorInst->m_selectedNode != Editor::EditorInst->m_editorCamera) {
-		worldop::MakeChildOf(node, Editor::EditorInst->m_selectedNode);
+	if (EditorObj->m_selectedNode != EditorObj->m_editorCamera) {
+		worldop::MakeChildOf(node, EditorObj->m_selectedNode);
 	}
 }
 
@@ -396,25 +396,25 @@ void EditorObject::Delete(Node* node)
 
 void EditorObject::PilotThis(Node* node)
 {
-	auto camera = Editor::EditorInst->m_editorCamera;
+	auto camera = EditorObj->m_editorCamera;
 	if (!camera) {
 		LOG_WARN("Only possible to pilot nodes if there is an editor camera");
 		return;
 	}
 
-	bool wasPiloting = Editor::EditorInst->IsCameraPiloting();
+	bool wasPiloting = EditorObj->IsCameraPiloting();
 
 	if (camera->GetParent() == node || node == nullptr) {
 		if (!wasPiloting) {
 			return;
 		}
 		worldop::MakeChildOf(Universe::GetMainWorld()->GetRoot(), camera);
-		camera->SetNodeTransformWCS(Editor::EditorInst->m_editorCameraPrePilotPos);
+		camera->SetNodeTransformWCS(EditorObj->m_editorCameraPrePilotPos);
 		return;
 	}
 
 	if (!wasPiloting) {
-		Editor::EditorInst->m_editorCameraPrePilotPos = camera->GetNodeTransformWCS();
+		EditorObj->m_editorCameraPrePilotPos = camera->GetNodeTransformWCS();
 	}
 	worldop::MakeChildOf(node, camera);
 	camera->SetNodeTransformWCS(node->GetNodeTransformWCS());
@@ -425,7 +425,7 @@ void EditorObject::FocusNode(Node* node)
 	if (!node) {
 		return;
 	}
-	auto cam = Editor::EditorInst->m_editorCamera;
+	auto cam = EditorObj->m_editorCamera;
 	if (!cam) {
 		return;
 	}

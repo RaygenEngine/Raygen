@@ -2,11 +2,12 @@
 #include "GlfwUtl.h"
 
 #include "App.h"
-#include "editor/Editor.h"
+#include "editor/EditorObject.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
 #include "engine/Logger.h"
 
+#include <imgui/imgui.h>
 #include <glfw/glfw3.h>
 #include <vector>
 
@@ -140,7 +141,7 @@ void WindowPathDropCb(GLFWwindow* window, int32 elementCount, const char* paths[
 		strPaths.push_back(paths[i]);
 	}
 
-	if (auto editor = Editor::EditorInst; editor) {
+	if (auto editor = EditorObj; editor) {
 		editor->OnFileDrop(std::move(strPaths));
 	}
 }

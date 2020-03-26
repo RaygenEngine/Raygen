@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "NodeContextActions.h"
 
-#include "editor/Editor.h"
+#include "editor/EditorObject.h"
 #include "engine/Engine.h"
 #include "universe/nodes/camera/CameraNode.h"
 #include "universe/nodes/Node.h"
@@ -42,7 +42,7 @@ std::vector<NodeContextActions::Entry> NodeContextActions::GetActions(Node* node
 		actions.emplace_back();
 		actions.emplace_back("Teleport to Camera", &EditorObject::TeleportToCamera);
 
-		auto editorCam = Editor::EditorInst->m_editorCamera;
+		auto editorCam = EditorObj->m_editorCamera;
 		if (editorCam && editorCam->GetParent() == node) {
 			actions.emplace_back("Stop Piloting", &EditorObject::PilotThis);
 		}

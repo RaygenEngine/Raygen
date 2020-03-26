@@ -69,7 +69,7 @@ void App::MainLoop()
 		Profiler.BeginFrame();
 
 		PROFILE_SCOPE(Engine);
-		Editor::EditorInst->PreBeginFrame();
+		Editor::PreBeginFrame();
 
 		// clear input soft state (pressed keys, etc.)
 		Engine.GetInput().Z_ClearFrameState();
@@ -94,7 +94,7 @@ void App::WhileResizing()
 	//
 	//
 
-	Editor::EditorInst->PreBeginFrame();
+	Editor::PreBeginFrame();
 }
 
 NodeFactory* App::MakeNodeFactory()
