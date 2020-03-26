@@ -1,14 +1,14 @@
 #include "pch.h"
-#include "editor/windows/general/EdOutlinerWindow.h"
+#include "EdOutlinerWindow.h"
 
 #include "editor/DataStrings.h"
 #include "editor/Editor.h"
-#include "world/NodeFactory.h"
-#include "world/nodes/camera/CameraNode.h"
-#include "world/nodes/geometry/GeometryNode.h"
-#include "world/nodes/RootNode.h"
-#include "world/World.h"
-#include "world/WorldOperationsUtl.h"
+#include "universe/NodeFactory.h"
+#include "universe/nodes/camera/CameraNode.h"
+#include "universe/nodes/geometry/GeometryNode.h"
+#include "universe/nodes/RootNode.h"
+#include "universe/Universe.h"
+#include "universe/WorldOperationsUtl.h"
 
 #include <imgui/imgui.h>
 namespace ed {
@@ -22,12 +22,12 @@ void OutlinerWindow::ImguiDraw()
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.f, 6.f));
 
 	bool foundOpen = false;
-	RecurseNodes(Engine.GetWorld()->GetRoot(), [&](Node* node, int32 depth) {
+	RecurseNodes(Universe::MainWorld->GetRoot(), [&](Node* node, int32 depth) {
 		auto str = std::string(depth * 6, ' ') + U8(node->GetClass().GetIcon()) + "  "
 				   + sceneconv::FilterNodeClassName(node->GetClass().GetName()) + "> " + node->GetName();
 		ImGui::PushID(node);
 
-		auto editorCam = Engine.GetEditor()->m_editorCamera;
+		auto editorCam = Editor::EditorInst->m_editorCamera;
 
 
 		if (node == editorCam) {
@@ -38,8 +38,8 @@ void OutlinerWindow::ImguiDraw()
 			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.36f, 0.04f, 0.11f, 0.95f));
 		}
 
-		if (ImGui::Selectable(str.c_str(), node == Editor::GetSelectedNode())) {
-			Editor::SelectNode(node);
+		if (ImGui::Selectable(str.c_str(), node == EditorObject::GetSelectedNode())) {
+			EditorObject::SelectNode(node);
 		}
 
 		if (node != editorCam) {
@@ -52,12 +52,12 @@ void OutlinerWindow::ImguiDraw()
 			if (ImGui::BeginPopupContextItem("OutlinerElemContext")) {
 				if (!editorCam->GetParent()->IsRoot()) {
 					if (ImGui::MenuItem("Stop piloting")) {
-						worldop::MakeChildOf(Engine.GetWorld()->GetRoot(), editorCam);
+						worldop::MakeChildOf(Universe::MainWorld->GetRoot(), editorCam);
 						editorCam->ResetRotation();
 					}
 				}
 				if (ImGui::MenuItem("Set As Active")) {
-					Engine.GetWorld()->SetActiveCamera(editorCam);
+					Universe::MainWorld->SetActiveCamera(editorCam);
 				}
 				ImGui::EndPopup();
 			}
@@ -80,13 +80,13 @@ void OutlinerWindow::ImguiDraw()
 
 			newNode->SetName(entry->GetNameStr());
 			newNode->SetModel(entry->GetHandleAs<ModelPod>());
-			Engine.GetWorld()->Z_RegisterNode(newNode, Engine.GetWorld()->GetRoot());
-			if (!Engine.GetEditor()->IsCameraPiloting()) {
-				Editor::PushPostFrameCommand([newNode]() { Editor::FocusNode(newNode); });
+			Universe::MainWorld->Z_RegisterNode(newNode, Universe::MainWorld->GetRoot());
+			if (!Editor::EditorInst->IsCameraPiloting()) {
+				EditorObject::PushPostFrameCommand([newNode]() { EditorObject::FocusNode(newNode); });
 			}
 		};
 
-		Editor::PushCommand(cmd);
+		EditorObject::PushCommand(cmd);
 	}
 
 
@@ -103,13 +103,13 @@ void OutlinerWindow::ImguiDraw()
 
 				newNode->SetName(podEntry->name);
 				newNode->SetModel(PodHandle<ModelPod>{ uid });
-				Engine.GetWorld()->Z_RegisterNode(newNode, Engine.GetWorld()->GetRoot());
-				if (!Engine.GetEditor()->IsCameraPiloting()) {
-					Editor::PushPostFrameCommand([newNode]() { Editor::FocusNode(newNode); });
+				Universe::MainWorld->Z_RegisterNode(newNode, Universe::MainWorld->GetRoot());
+				if (!Editor::EditorInst->IsCameraPiloting()) {
+					EditorObject::PushPostFrameCommand([newNode]() { EditorObject::FocusNode(newNode); });
 				}
 			};
 
-			Editor::PushCommand(cmd);
+			EditorObject::PushCommand(cmd);
 		}
 		ImGui::EndDragDropTarget();
 	}
@@ -119,11 +119,11 @@ void OutlinerWindow::ImguiDraw()
 		ImGui::PushID(989);
 		if (ImGui::BeginPopupContextItem("RightclickOutliner Context")) {
 			if (ImGui::BeginMenu("New Node")) {
-				Run_NewNodeMenu(Engine.GetWorld()->GetRoot());
+				Run_NewNodeMenu(Universe::MainWorld->GetRoot());
 				ImGui::EndMenu();
 			}
-			if (Engine.GetEditor()->IsCameraPiloting() && ImGui::MenuItem("Stop piloting")) {
-				Editor::PilotThis(nullptr);
+			if (Editor::EditorInst->IsCameraPiloting() && ImGui::MenuItem("Stop piloting")) {
+				EditorObject::PilotThis(nullptr);
 			}
 			ImGui::EndPopup();
 		}
@@ -135,7 +135,7 @@ void OutlinerWindow::ImguiDraw()
 bool OutlinerWindow::Run_ContextPopup(Node* node)
 {
 	if (ImGui::BeginPopupContextItem("OutlinerElemContext")) {
-		for (auto& action : Engine.GetEditor()->m_nodeContextActions->GetActions(node, true)) {
+		for (auto& action : Editor::EditorInst->m_nodeContextActions->GetActions(node, true)) {
 			if (!action.IsSplitter()) {
 				if (ImGui::MenuItem(action.name)) {
 					action.function(node);
@@ -160,7 +160,7 @@ bool OutlinerWindow::Run_ContextPopup(Node* node)
 
 void OutlinerWindow::Run_NewNodeMenu(Node* underNode)
 {
-	auto factory = Engine.GetWorld()->GetNodeFactory();
+	auto factory = Universe::MainWorld->GetNodeFactory();
 
 
 	for (auto& entry : factory->Z_GetEntries()) {
@@ -170,7 +170,7 @@ void OutlinerWindow::Run_NewNodeMenu(Node* underNode)
 				auto newNode = entry.second.newInstance();
 
 				newNode->SetName(entry.first + "_new");
-				Engine.GetWorld()->Z_RegisterNode(newNode, underNode);
+				Universe::MainWorld->Z_RegisterNode(newNode, underNode);
 
 				DirtyFlagset temp;
 				temp.set();
@@ -178,7 +178,7 @@ void OutlinerWindow::Run_NewNodeMenu(Node* underNode)
 				newNode->SetDirtyMultiple(temp);
 			};
 
-			Editor::PushCommand(cmd);
+			EditorObject::PushCommand(cmd);
 		}
 	}
 }

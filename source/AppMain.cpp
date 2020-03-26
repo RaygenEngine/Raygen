@@ -2,7 +2,7 @@
 
 #include "App.h"
 #include "engine/Logger.h"
-#include "world/nodes/Node.h"
+#include "universe/nodes/Node.h"
 
 int32 main(int32 argc, char* argv[])
 {

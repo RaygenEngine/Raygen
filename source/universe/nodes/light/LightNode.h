@@ -1,0 +1,51 @@
+#pragma once
+#include "engine/console/ConsoleVariable.h"
+#include "universe/nodes/Node.h"
+
+class LightNode : public Node {
+
+	REFLECTED_NODE(LightNode, Node, DF_FLAGS(Flux, NearFar, ShadowsTextSize))
+	{
+		REFLECT_ICON(FA_LIGHTBULB);
+
+		REFLECT_VAR(m_color, PropertyFlags::Color).OnDirty(DF::Flux);
+		REFLECT_VAR(m_intensity).OnDirty(DF::Flux);
+
+		REFLECT_VAR(m_near).OnDirty(DF::NearFar);
+		REFLECT_VAR(m_far).OnDirty(DF::NearFar);
+
+		REFLECT_VAR(m_shadowMapWidth).OnDirty(DF::ShadowsTextSize);
+		REFLECT_VAR(m_shadowMapHeight).OnDirty(DF::ShadowsTextSize);
+
+		REFLECT_VAR(m_maxShadowBias);
+		REFLECT_VAR(m_samples);
+
+		REFLECT_VAR(m_hasShadow);
+	}
+
+protected:
+	glm::vec3 m_color{ glm::vec3(1.f) };
+	float m_intensity{ 30.f };
+
+	bool m_hasShadow{ true };
+
+	int32 m_shadowMapWidth{ 2048 };
+	int32 m_shadowMapHeight{ 2048 };
+
+	float m_near{ 0.05f };
+	float m_far{ 20.0f };
+
+	float m_maxShadowBias{ 0.005f };
+	int32 m_samples{ 4 };
+
+public:
+	[[nodiscard]] glm::vec3 GetColor() const { return m_color; }
+	[[nodiscard]] float GetIntensity() const { return m_intensity; }
+	[[nodiscard]] float GetMaxShadowBias() const { return m_maxShadowBias; }
+	[[nodiscard]] int32 GetShadowMapWidth() const { return m_shadowMapWidth; }
+	[[nodiscard]] int32 GetShadowMapHeight() const { return m_shadowMapHeight; }
+	[[nodiscard]] float GetNear() const { return m_near; }
+	[[nodiscard]] float GetFar() const { return m_far; }
+	[[nodiscard]] bool HasShadow() const { return m_hasShadow; }
+	[[nodiscard]] int32 GetSamples() const { return m_samples; }
+};

@@ -9,8 +9,8 @@
 #include "platform/GlfwUtl.h"
 #include "renderer/VulkanLayer.h"
 #include "renderer/wrapper/Device.h"
-#include "world/NodeFactory.h"
-#include "world/World.h"
+#include "universe/NodeFactory.h"
+#include "universe/Universe.h"
 
 #include <glfw/glfw3.h>
 #include <algorithm>
@@ -49,19 +49,15 @@ void S_Engine::InitEngine(App* app)
 	Layer = new VulkanLayer(glfwutl::GetVulkanExtensions(), m_window);
 	Layer->Init();
 
-	m_editor = new Editor();
+	Editor::EditorInst = new EditorObject();
 
 	ImguiImpl::InitVulkan();
 }
 
 void S_Engine::CreateWorldFromFile(const std::string& filename)
 {
-	if (m_world) {
-
-		delete m_world;
-	}
-	m_world = new World(m_app->MakeNodeFactory());
-	m_world->LoadAndPrepareWorld(filename);
+	Universe::MainWorld = new World(m_app->MakeNodeFactory());
+	Universe::MainWorld->LoadAndPrepareWorld(filename);
 }
 
 bool S_Engine::HasCmdArgument(const std::string& argument)
@@ -78,7 +74,7 @@ bool S_Engine::HasCmdArgument(const std::string& argument)
 
 bool S_Engine::ShouldUpdateWorld()
 {
-	return m_editor->ShouldUpdateWorld();
+	return Editor::EditorInst->ShouldUpdateWorld();
 }
 
 float S_Engine::GetFPS()
@@ -113,10 +109,10 @@ void S_Engine::ReportFrameDrawn()
 void S_Engine::DeinitEngine()
 {
 	// NOTE: It is REALLY important to remember the reverse order here
-	delete m_world;
+	delete Universe::MainWorld;
 	delete Layer;
 	delete Device;
-	delete m_editor;
+	delete Editor::EditorInst;
 	glfwDestroyWindow(m_window);
 	glfwTerminate();
 	delete m_assetImporterManager;

@@ -3,17 +3,17 @@
 
 #include "editor/Editor.h"
 #include "engine/Engine.h"
-#include "world/nodes/camera/CameraNode.h"
-#include "world/nodes/Node.h"
-#include "world/WorldOperationsUtl.h"
+#include "universe/nodes/camera/CameraNode.h"
+#include "universe/nodes/Node.h"
+#include "universe/WorldOperationsUtl.h"
 
 #include <imgui.h>
 
 
 NodeContextActions::NodeContextActions()
 {
-	baseActions.emplace_back("Duplicate", &Editor::Duplicate);
-	baseActions.emplace_back("Delete", &Editor::Delete);
+	baseActions.emplace_back("Duplicate", &EditorObject::Duplicate);
+	baseActions.emplace_back("Delete", &EditorObject::Delete);
 	baseActions.emplace_back();
 
 	baseActions.emplace_back("Up", &worldop::MoveChildUp);
@@ -25,7 +25,7 @@ std::vector<NodeContextActions::Entry> NodeContextActions::GetActions(Node* node
 {
 	if (node->IsRoot()) {
 		std::vector<Entry> actions;
-		actions.emplace_back("Move Selected Under", &Editor::MoveSelectedUnder);
+		actions.emplace_back("Move Selected Under", &EditorObject::MoveSelectedUnder);
 		return std::move(actions);
 	}
 
@@ -37,18 +37,18 @@ std::vector<NodeContextActions::Entry> NodeContextActions::GetActions(Node* node
 	std::vector<Entry> actions = baseActions;
 
 	if (extendedList) {
-		actions.emplace_back("Move Selected Under", &Editor::MoveSelectedUnder);
+		actions.emplace_back("Move Selected Under", &EditorObject::MoveSelectedUnder);
 
 		actions.emplace_back();
-		actions.emplace_back("Teleport to Camera", &Editor::TeleportToCamera);
+		actions.emplace_back("Teleport to Camera", &EditorObject::TeleportToCamera);
 
-		auto editorCam = Engine.GetEditor()->m_editorCamera;
+		auto editorCam = Editor::EditorInst->m_editorCamera;
 		if (editorCam && editorCam->GetParent() == node) {
-			actions.emplace_back("Stop Piloting", &Editor::PilotThis);
+			actions.emplace_back("Stop Piloting", &EditorObject::PilotThis);
 		}
 		else {
-			actions.emplace_back("Focus", &Editor::FocusNode);
-			actions.emplace_back("Pilot", &Editor::PilotThis);
+			actions.emplace_back("Focus", &EditorObject::FocusNode);
+			actions.emplace_back("Pilot", &EditorObject::PilotThis);
 		}
 
 		if (node->IsA<CameraNode>()) {

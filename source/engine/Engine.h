@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/Object.h"
+#include "engine/Listener.h"
 
 struct GLFWwindow;
 
@@ -10,7 +10,7 @@ class Renderer;
 class Window;
 class World;
 struct Input;
-class Editor;
+class EditorObject;
 
 class App;
 
@@ -25,13 +25,10 @@ inline struct ViewportCoordinates {
 } g_ViewportCoordinates;
 
 
-inline class S_Engine : public Object {
+inline class S_Engine : public Listener {
 
 public:
 	S_Engine() = default;
-
-	// Not guaranteed to exist at all times.
-	[[nodiscard]] World* GetWorld() { return m_world; }
 
 	[[nodiscard]] GLFWwindow* GetMainWindow() { return m_window; }
 
@@ -41,8 +38,6 @@ public:
 
 	// Input will be valid forever after initialization.
 	[[nodiscard]] Input& GetInput() { return *m_input; }
-
-	[[nodiscard]] Editor* GetEditor() { return m_editor; }
 
 	~S_Engine();
 
@@ -65,14 +60,8 @@ private:
 	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
 	Input* m_input{ nullptr };
 
-	// Owning Pointer. No guarantees can be made for world pointer.
-	// It may be invalidated during runtime when loading other worlds etc.
-	World* m_world{ nullptr };
-
 	// Non owning pointer, expected to be valid for the whole program execution
 	App* m_app{ nullptr };
-
-	Editor* m_editor{ nullptr };
 
 	timer::Timer m_initToFrameTimer{};
 

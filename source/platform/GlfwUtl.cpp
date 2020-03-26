@@ -1,11 +1,11 @@
 #include "pch.h"
-#include "platform/GlfwUtl.h"
+#include "GlfwUtl.h"
 
-#include "editor/Editor.h"
-#include "engine/Logger.h"
-#include "engine/Input.h"
-#include "engine/Events.h"
 #include "App.h"
+#include "editor/Editor.h"
+#include "engine/Events.h"
+#include "engine/Input.h"
+#include "engine/Logger.h"
 
 #include <glfw/glfw3.h>
 #include <vector>
@@ -80,7 +80,7 @@ void WindowMouseButtonCb(GLFWwindow* window, int32 button, int32 action, int32 m
 	}
 
 	// PERF: Use different callbacks when no editor
-	if (Editor::EditorHandleKeyEvent(button, action, -1, modifiers)) {
+	if (EditorObject::EditorHandleKeyEvent(button, action, -1, modifiers)) {
 		return;
 	}
 
@@ -117,7 +117,7 @@ void WindowKeyCb(GLFWwindow* window, int32 key, int32 scancode, int32 action, in
 	}
 
 	// PERF: Use different callbacks when no editor
-	if (Editor::EditorHandleKeyEvent(key, scancode, action, modifiers)) {
+	if (EditorObject::EditorHandleKeyEvent(key, scancode, action, modifiers)) {
 		return;
 	}
 
@@ -140,7 +140,7 @@ void WindowPathDropCb(GLFWwindow* window, int32 elementCount, const char* paths[
 		strPaths.push_back(paths[i]);
 	}
 
-	if (auto editor = Engine.GetEditor(); editor) {
+	if (auto editor = Editor::EditorInst; editor) {
 		editor->OnFileDrop(std::move(strPaths));
 	}
 }
