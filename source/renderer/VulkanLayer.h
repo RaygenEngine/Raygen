@@ -20,7 +20,7 @@ struct UBO_Globals {
 };
 using SemVec = std::vector<vk::Semaphore>;
 
-inline class VulkanLayer : public Object {
+inline class VulkanLayer : public Listener {
 
 public:
 	//

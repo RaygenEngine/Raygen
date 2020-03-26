@@ -1,5 +1,5 @@
 #pragma once
-#include "editor/Editor.h"
+#include "editor/EditorObject.h"
 #include "editor/imgui/ImGuizmo.h"
 #include "editor/windows/EdWindow.h"
 #include "reflection/Property.h"

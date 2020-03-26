@@ -2,7 +2,7 @@
 #include "asset/pods/ModelPod.h"
 #include "renderer/asset/GpuAssetHandle.h"
 #include "renderer/asset/Material.h"
-#include "world/nodes/geometry/GeometryNode.h"
+#include "universe/nodes/geometry/GeometryNode.h"
 
 #include <vulkan/vulkan.hpp>
 

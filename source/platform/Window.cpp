@@ -45,11 +45,6 @@ void Window::SetTitle(const char* title)
 	glfwSetWindowTitle(m_window, title);
 }
 
-GLFWwindow* Window::GetHandle() const
-{
-	return nullptr;
-}
-
 Window::GlfwContext::GlfwContext()
 {
 	glfwInit();

@@ -3,7 +3,7 @@
 
 #include "asset/AssetManager.h"
 #include "core/StringUtl.h"
-#include "editor/Editor.h"
+#include "editor/EditorObject.h"
 #include "editor/imgui/ImEd.h"
 #include "editor/imgui/ImguiImpl.h"
 #include "editor/imgui/ImguiUtil.h"
