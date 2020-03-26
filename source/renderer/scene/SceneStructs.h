@@ -1,5 +1,5 @@
 #pragma once
-#include "asset/AssetManager.h"
+#include "assets/AssetManager.h"
 #include "renderer/asset/GpuAssetHandle.h"
 #include "world/nodes/geometry/GeometryNode.h"
 

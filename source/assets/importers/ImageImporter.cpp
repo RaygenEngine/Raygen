@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "asset/importers/ImageImporter.h"
+#include "assets/importers/ImageImporter.h"
 
-#include "asset/AssetManager.h"
+#include "assets/AssetManager.h"
 
 #include <stb/stb_image.h>
 

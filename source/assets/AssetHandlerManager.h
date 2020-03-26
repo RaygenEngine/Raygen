@@ -1,9 +1,9 @@
 #pragma once
-#include "asset/AssetPod.h"
-#include "asset/PodHandle.h"
-#include "asset/PodEntry.h"
+#include "assets/AssetPod.h"
+#include "assets/PodHandle.h"
+#include "assets/PodEntry.h"
 #include "core/StringUtl.h"
-#include "asset/UriLibrary.h"
+#include "assets/UriLibrary.h"
 
 
 struct ImagePod;

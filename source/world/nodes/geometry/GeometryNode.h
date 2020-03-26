@@ -1,7 +1,7 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "asset/pods/ModelPod.h"
+#include "assets/pods/ModelPod.h"
 
 class GeometryNode : public Node {
 	REFLECTED_NODE(GeometryNode, Node, DF_FLAGS(ModelChange))

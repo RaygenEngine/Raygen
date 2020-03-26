@@ -1,6 +1,6 @@
 #pragma once
-#include "asset/AssetManager.h"
-#include "asset/AssetPod.h"
+#include "assets/AssetManager.h"
+#include "assets/AssetPod.h"
 
 #include <fstream>
 

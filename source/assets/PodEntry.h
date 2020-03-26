@@ -1,6 +1,6 @@
 #pragma once
-#include "asset/AssetPod.h"
-#include "asset/PodHandle.h"
+#include "assets/AssetPod.h"
+#include "assets/PodHandle.h"
 
 class ReflClass;
 

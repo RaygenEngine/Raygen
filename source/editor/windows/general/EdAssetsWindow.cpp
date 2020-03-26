@@ -2,7 +2,7 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "editor/windows/general/EdAssetsWindow.h"
 
-#include "asset/AssetManager.h"
+#include "assets/AssetManager.h"
 #include "core/StringUtl.h"
 #include "editor/imgui/ImEd.h"
 #include "editor/imgui/ImguiImpl.h"

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "renderer/asset/Sampler.h"
 
-#include "asset/AssetManager.h"
+#include "assets/AssetManager.h"
 #include "renderer/VulkanUtl.h"
 #include "renderer/VulkanLayer.h"
 #include "renderer/wrapper/Buffer.h"

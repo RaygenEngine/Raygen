@@ -1,5 +1,5 @@
 #pragma once
-#include "asset/AssetPod.h"
+#include "assets/AssetPod.h"
 
 struct ShaderPod : public AssetPod {
 	REFLECTED_POD(ShaderPod) { REFLECT_VAR(files); }

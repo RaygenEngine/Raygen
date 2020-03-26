@@ -1,12 +1,12 @@
 #pragma once
 #include "engine/Engine.h"
 
-class GLFWwindow;
+struct GLFWwindow;
 
 // External Window interface
 class Window {
 public:
-	Window(glm::vec2 size = { 1920, 1080 }, const char* title = "Raygen");
+	Window(glm::uvec2 size = { 1920, 1080 }, const char* title = "Raygen");
 	~Window();
 
 	// PERF: store window size to avoid windows API call

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "asset/util/SpirvCompiler.h"
+#include "assets/util/SpirvCompiler.h"
 
 #include "engine/Logger.h"
 

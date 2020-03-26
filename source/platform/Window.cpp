@@ -9,7 +9,7 @@
 std::shared_ptr<Window::GlfwContext> glfwContext;
 
 
-Window::Window(glm::vec2 size, const char* title)
+Window::Window(glm::uvec2 size, const char* title)
 {
 	if (!glfwContext) {
 		glfwContext = std::make_shared<Window::GlfwContext>();
@@ -43,11 +43,6 @@ glm::uvec2 Window::GetSize() const
 void Window::SetTitle(const char* title)
 {
 	glfwSetWindowTitle(m_window, title);
-}
-
-GLFWwindow* Window::GetHandle() const
-{
-	return nullptr;
 }
 
 Window::GlfwContext::GlfwContext()

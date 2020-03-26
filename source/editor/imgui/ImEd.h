@@ -1,5 +1,5 @@
 #pragma once
-#include "asset/AssetManager.h"
+#include "assets/AssetManager.h"
 #include "editor/imgui/ImguiImpl.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "reflection/ReflClass.h"

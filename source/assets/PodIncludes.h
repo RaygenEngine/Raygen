@@ -3,8 +3,8 @@
 // All pod headers are required in a decent amount of files (especially reflection) therefore a central
 // location to include them is prefered over changing multiple cpp files when a new pod is added.
 
-#include "asset/pods/ImagePod.h"
-#include "asset/pods/MaterialPod.h"
-#include "asset/pods/ModelPod.h"
-#include "asset/pods/SamplerPod.h"
-#include "asset/pods/ShaderPod.h"
+#include "assets/pods/ImagePod.h"
+#include "assets/pods/MaterialPod.h"
+#include "assets/pods/ModelPod.h"
+#include "assets/pods/SamplerPod.h"
+#include "assets/pods/ShaderPod.h"

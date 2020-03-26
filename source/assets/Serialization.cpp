@@ -1,8 +1,8 @@
 #include "pch.h"
-#include "asset/Serialization.h"
+#include "assets/Serialization.h"
 
-#include "asset/PodIncludes.h"
-#include "asset/PodSerializers.h"
+#include "assets/PodIncludes.h"
+#include "assets/PodSerializers.h"
 #include "engine/Logger.h"
 #include "reflection/PodTools.h"
 #include "reflection/ReflectionTools.h"

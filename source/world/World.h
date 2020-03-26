@@ -8,7 +8,7 @@
 // right-handed coordinate system (mary require conversion to left when used by DirectX, Vulkan and other renderers)
 // values are stored in rads (use (constexpr) glm::radians to convert)
 
-#include "asset/AssetManager.h"
+#include "assets/AssetManager.h"
 #include "engine/Object.h"
 #include "world/nodes/NodeIterator.h"
 #include "world/NodeFactory.h" // Not required directly, used in templates

@@ -1,5 +1,5 @@
 #pragma once
-#include "asset/importers/PodImporter.h"
+#include "assets/importers/PodImporter.h"
 
 struct ShaderImporter : public PodImporter<ImagePod> {
 	ShaderImporter(std::string_view name)
