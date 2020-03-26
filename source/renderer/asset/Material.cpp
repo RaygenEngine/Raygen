@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "renderer/asset/Material.h"
 
-#include "asset/AssetManager.h"
-#include "asset/pods/MaterialPod.h"
+#include "assets/AssetManager.h"
+#include "assets/pods/MaterialPod.h"
 #include "renderer/asset/GpuAssetManager.h"
 #include "renderer/VulkanLayer.h"
 #include "renderer/wrapper/Device.h"

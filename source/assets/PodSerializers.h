@@ -1,5 +1,5 @@
 #pragma once
-#include "asset/PodIncludes.h"
+#include "assets/PodIncludes.h"
 
 // These are called after all properties have been serialized / deserialized.
 // Included at a different file and should only be included where they are required

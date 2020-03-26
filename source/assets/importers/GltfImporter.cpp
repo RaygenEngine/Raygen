@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "asset/importers/GltfImporter.h"
+#include "assets/importers/GltfImporter.h"
 
-#include "asset/AssetManager.h"
+#include "assets/AssetManager.h"
 
 #include <tinygltf/tiny_gltf.h>
 

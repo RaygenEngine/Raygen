@@ -1,5 +1,5 @@
 #pragma once
-#include "asset/AssetHandlerManager.h"
+#include "assets/AssetHandlerManager.h"
 
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
 class AssetImporterManager {

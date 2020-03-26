@@ -1,6 +1,6 @@
 #pragma once
-#include "asset/importers/PodImporter.h"
-#include "asset/pods/ModelPod.h"
+#include "assets/importers/PodImporter.h"
+#include "assets/pods/ModelPod.h"
 
 struct GltfImporter : public PodImporter<ModelPod> {
 	GltfImporter(std::string_view name)

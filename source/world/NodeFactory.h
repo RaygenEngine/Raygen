@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nodes/Node.h"
-#include "asset/util/ParsingUtl.h"
+#include "assets/util/ParsingUtl.h"
 #include "core/StringUtl.h"
 
 #include <functional>

@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "renderer/wrapper/Device.h"
 
-#include "asset/AssetManager.h"
-#include "asset/util/SpirvCompiler.h"
+#include "assets/AssetManager.h"
+#include "assets/util/SpirvCompiler.h"
 #include "engine/Logger.h"
 
 #include <set>

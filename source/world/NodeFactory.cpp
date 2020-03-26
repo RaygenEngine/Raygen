@@ -12,7 +12,7 @@
 #include "world/nodes/user/FreeformUserNode.h"
 #include "world/nodes/user/FlyingUserNode.h"
 #include "world/nodes/TransformNode.h"
-#include "asset/util/ParsingUtl.h"
+#include "assets/util/ParsingUtl.h"
 #include "reflection/ReflectionTools.h"
 #include "core/MathUtl.h"
 

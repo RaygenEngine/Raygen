@@ -1,5 +1,5 @@
 #pragma once
-#include "asset/AssetPod.h"
+#include "assets/AssetPod.h"
 #include "reflection/GenMacros.h"
 
 struct ImagePod : AssetPod {

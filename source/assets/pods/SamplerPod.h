@@ -1,6 +1,6 @@
 #pragma once
-#include "asset/PodHandle.h"
-#include "asset/pods/ImagePod.h"
+#include "assets/PodHandle.h"
+#include "assets/pods/ImagePod.h"
 
 enum class TextureFiltering
 {

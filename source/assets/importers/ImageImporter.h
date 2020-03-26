@@ -1,6 +1,6 @@
 #pragma once
-#include "asset/importers/PodImporter.h"
-#include "asset/pods/ImagePod.h"
+#include "assets/importers/PodImporter.h"
+#include "assets/pods/ImagePod.h"
 
 struct ImageImporter : public PodImporter<ImagePod> {
 	ImageImporter(std::string_view name)

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
 
-#include "asset/AssetManager.h"
+#include "assets/AssetManager.h"
 #include "editor/DataStrings.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "editor/imgui/ImGuizmo.h"

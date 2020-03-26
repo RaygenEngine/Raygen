@@ -1,5 +1,5 @@
 #pragma once
-#include "asset/pods/SamplerPod.h"
+#include "assets/pods/SamplerPod.h"
 #include "reflection/GenMacros.h"
 
 // This material is based on the glTF standard for materials (not all extensions included)

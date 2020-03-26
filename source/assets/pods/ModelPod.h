@@ -1,6 +1,6 @@
 #pragma once
-#include "asset/AssetPod.h"
-#include "asset/pods/MaterialPod.h"
+#include "assets/AssetPod.h"
+#include "assets/pods/MaterialPod.h"
 #include "core/math-ext/AABB.h"
 
 struct VertexData {

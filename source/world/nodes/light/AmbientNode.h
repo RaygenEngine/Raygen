@@ -1,7 +1,7 @@
 #pragma once
 
 #include "world/nodes/Node.h"
-#include "asset/pods/SamplerPod.h"
+#include "assets/pods/SamplerPod.h"
 
 class AmbientNode : public Node {
 	REFLECTED_NODE(AmbientNode, Node, DF_FLAGS(SkyTexture))

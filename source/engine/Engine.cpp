@@ -2,7 +2,7 @@
 #include "engine/Engine.h"
 
 #include "App.h"
-#include "asset/AssetManager.h"
+#include "assets/AssetManager.h"
 #include "editor/Editor.h"
 #include "engine/Input.h"
 #include "engine/reflection/ReflectionDb.h"

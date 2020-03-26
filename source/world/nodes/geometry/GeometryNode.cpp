@@ -2,7 +2,7 @@
 #include "world/nodes/geometry/GeometryNode.h"
 
 #include "renderer/asset/GpuAssetManager.h"
-#include "asset/AssetManager.h"
+#include "assets/AssetManager.h"
 #include "renderer/scene/Scene.h"
 
 GeometryNode::GeometryNode()
