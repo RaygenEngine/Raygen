@@ -9,7 +9,7 @@
 std::shared_ptr<Window::GlfwContext> glfwContext;
 
 
-Window::Window(glm::uvec2 size, const char* title)
+Window::Window(WindowCreationParams params)
 {
 	if (!glfwContext) {
 		glfwContext = std::make_shared<Window::GlfwContext>();
@@ -17,7 +17,7 @@ Window::Window(glm::uvec2 size, const char* title)
 	m_glfwContext = glfwContext;
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwCreateWindow(size.x, size.y, title, nullptr, nullptr);
+	m_window = glfwCreateWindow(params.size.x, params.size.y, params.title, nullptr, nullptr);
 
 	glfwutl::SetupEventCallbacks(m_window);
 };

@@ -226,6 +226,6 @@ protected:
 			}
 		}
 
-		return Universe::MainWorld->CreateNode<T>(name, this);
+		return Universe::GetMainWorld()->CreateNode<T>(name, this);
 	}
 };

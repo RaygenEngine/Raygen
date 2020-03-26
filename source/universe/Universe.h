@@ -1,7 +1,13 @@
 #pragma once
 #include "universe/World.h"
 
-namespace Universe {
-inline World* MainWorld{};
+class Universe {
+	friend class S_Engine;
 
-} // namespace Universe
+	static void Init();
+	static void Destroy();
+
+public:
+	static World* GetMainWorld() { return MainWorld; }
+
+}; // namespace Universe

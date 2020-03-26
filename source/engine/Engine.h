@@ -30,8 +30,6 @@ inline class S_Engine : public Listener {
 public:
 	S_Engine() = default;
 
-	[[nodiscard]] GLFWwindow* GetMainWindow() { return m_window; }
-
 	// Input will be valid forever after initialization.
 	[[nodiscard]] Input& GetInput() { return *m_input; }
 
@@ -43,9 +41,6 @@ public:
 	S_Engine& operator=(S_Engine&&) = delete;
 
 private:
-	// Owning Pointer, Expected to be valid 'forever' after InitEngine at this time.
-	GLFWwindow* m_window{ nullptr };
-
 	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
 	Input* m_input{ nullptr };
 
@@ -81,10 +76,6 @@ public:
 	//
 	void InitEngine(App* app);
 
-	void CreateWorldFromFile(const std::string& filename);
-
-	// Avoid this if possible and always refactor cmd debug features to normal features.
-	bool HasCmdArgument(const std::string& argument);
 
 	[[nodiscard]] bool ShouldUpdateWorld();
 

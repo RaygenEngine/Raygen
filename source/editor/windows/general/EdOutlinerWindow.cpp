@@ -22,7 +22,7 @@ void OutlinerWindow::ImguiDraw()
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.f, 6.f));
 
 	bool foundOpen = false;
-	RecurseNodes(Universe::MainWorld->GetRoot(), [&](Node* node, int32 depth) {
+	RecurseNodes(Universe::GetMainWorld()->GetRoot(), [&](Node* node, int32 depth) {
 		auto str = std::string(depth * 6, ' ') + U8(node->GetClass().GetIcon()) + "  "
 				   + sceneconv::FilterNodeClassName(node->GetClass().GetName()) + "> " + node->GetName();
 		ImGui::PushID(node);
@@ -52,12 +52,12 @@ void OutlinerWindow::ImguiDraw()
 			if (ImGui::BeginPopupContextItem("OutlinerElemContext")) {
 				if (!editorCam->GetParent()->IsRoot()) {
 					if (ImGui::MenuItem("Stop piloting")) {
-						worldop::MakeChildOf(Universe::MainWorld->GetRoot(), editorCam);
+						worldop::MakeChildOf(Universe::GetMainWorld()->GetRoot(), editorCam);
 						editorCam->ResetRotation();
 					}
 				}
 				if (ImGui::MenuItem("Set As Active")) {
-					Universe::MainWorld->SetActiveCamera(editorCam);
+					Universe::GetMainWorld()->SetActiveCamera(editorCam);
 				}
 				ImGui::EndPopup();
 			}
@@ -80,7 +80,7 @@ void OutlinerWindow::ImguiDraw()
 
 			newNode->SetName(entry->GetNameStr());
 			newNode->SetModel(entry->GetHandleAs<ModelPod>());
-			Universe::MainWorld->Z_RegisterNode(newNode, Universe::MainWorld->GetRoot());
+			Universe::GetMainWorld()->Z_RegisterNode(newNode, Universe::GetMainWorld()->GetRoot());
 			if (!Editor::EditorInst->IsCameraPiloting()) {
 				EditorObject::PushPostFrameCommand([newNode]() { EditorObject::FocusNode(newNode); });
 			}
@@ -103,7 +103,7 @@ void OutlinerWindow::ImguiDraw()
 
 				newNode->SetName(podEntry->name);
 				newNode->SetModel(PodHandle<ModelPod>{ uid });
-				Universe::MainWorld->Z_RegisterNode(newNode, Universe::MainWorld->GetRoot());
+				Universe::GetMainWorld()->Z_RegisterNode(newNode, Universe::GetMainWorld()->GetRoot());
 				if (!Editor::EditorInst->IsCameraPiloting()) {
 					EditorObject::PushPostFrameCommand([newNode]() { EditorObject::FocusNode(newNode); });
 				}
@@ -119,7 +119,7 @@ void OutlinerWindow::ImguiDraw()
 		ImGui::PushID(989);
 		if (ImGui::BeginPopupContextItem("RightclickOutliner Context")) {
 			if (ImGui::BeginMenu("New Node")) {
-				Run_NewNodeMenu(Universe::MainWorld->GetRoot());
+				Run_NewNodeMenu(Universe::GetMainWorld()->GetRoot());
 				ImGui::EndMenu();
 			}
 			if (Editor::EditorInst->IsCameraPiloting() && ImGui::MenuItem("Stop piloting")) {
@@ -160,7 +160,7 @@ bool OutlinerWindow::Run_ContextPopup(Node* node)
 
 void OutlinerWindow::Run_NewNodeMenu(Node* underNode)
 {
-	auto factory = Universe::MainWorld->GetNodeFactory();
+	auto factory = Universe::GetMainWorld()->GetNodeFactory();
 
 
 	for (auto& entry : factory->Z_GetEntries()) {
@@ -170,7 +170,7 @@ void OutlinerWindow::Run_NewNodeMenu(Node* underNode)
 				auto newNode = entry.second.newInstance();
 
 				newNode->SetName(entry.first + "_new");
-				Universe::MainWorld->Z_RegisterNode(newNode, underNode);
+				Universe::GetMainWorld()->Z_RegisterNode(newNode, underNode);
 
 				DirtyFlagset temp;
 				temp.set();

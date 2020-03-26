@@ -2,6 +2,7 @@
 #include "WindowCameraNode.h"
 
 #include "engine/Engine.h"
+#include "platform/Platform.h"
 
 #include <glfw/glfw3.h>
 
@@ -10,13 +11,14 @@ WindowCameraNode::WindowCameraNode()
 {
 	Event::OnWindowResize.Bind(this, &WindowCameraNode::OnWindowResizeEvent);
 	Event::OnViewportUpdated.Bind(this, &WindowCameraNode::OnViewportUpdatedEvent);
-	auto mainWindow = Engine.GetMainWindow();
 
-	int32 width;
-	int32 height;
-	glfwGetWindowSize(mainWindow, &width, &height);
 
-	if (mainWindow && width > 0 && height > 0) {
+	auto size = Platform::GetMainSize();
+	// TODO: use uvec2 for viewport
+	int32 width = size.x;
+	int32 height = size.y;
+
+	if (width > 0 && height > 0) {
 		m_viewportWidth = width;
 		m_viewportHeight = height;
 	}

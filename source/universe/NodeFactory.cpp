@@ -72,7 +72,7 @@ void NodeFactory::LoadNodeAndChildren(const json& jsonObject, Node* parent)
 	}
 
 	LoadNode_Properties(jsonObject, node);
-	Universe::MainWorld->Z_RegisterNode(node, parent);
+	Universe::GetMainWorld()->Z_RegisterNode(node, parent);
 
 
 	auto itChildren = jsonObject.find(childrenLabel);
@@ -109,7 +109,7 @@ void NodeFactory::LoadNode_Trs(const nlohmann::json& jsonTrsObject, Node* nodeTo
 void NodeFactory::LoadNode_Properties(const nlohmann::json& j, Node* node)
 {
 	auto local = refltools::JsonToPropVisitor_WithRelativePath(
-		j, Universe::MainWorld->GetLoadedFromPath().generic_string(), true);
+		j, Universe::GetMainWorld()->GetLoadedFromPath().generic_string(), true);
 
 	refltools::CallVisitorOnEveryProperty(node, local);
 }

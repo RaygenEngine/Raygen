@@ -23,7 +23,7 @@ class SpotLightNode;
 class DirectionalLightNode;
 
 
-class World {
+inline class World {
 
 	friend class EditorObject;
 	friend class NodeFactory;
@@ -180,4 +180,4 @@ private:
 		}
 		return nullptr;
 	}
-};
+} * MainWorld;

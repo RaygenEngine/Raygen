@@ -10,7 +10,7 @@
 
 RootNode* Node::GetWorldRoot() const
 {
-	return Universe::MainWorld->GetRoot();
+	return Universe::GetMainWorld()->GetRoot();
 }
 
 void Node::SetNodePositionLCS(glm::vec3 lt)
