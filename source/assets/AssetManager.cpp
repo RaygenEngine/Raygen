@@ -13,34 +13,6 @@ ConsoleFunction<> console_SaveAll{ "a.saveAll", []() { AssetHandlerManager::Save
 	"Saves all currently unsaved assets" };
 
 
-void AssetImporterManager::Init(const fs::path& assetPath)
-{
-	AssetHandlerManager::Get().m_pods.push_back(std::make_unique<PodEntry>());
-
-	podtools::ForEachPodType([]<typename PodType>() {
-		AssetImporterManager::CreateTransientEntry<PodType>(fmt::format("~{}", mti::GetName<PodType>()));
-	});
-
-	// Default normal image
-	auto& [handle, pod] = AssetImporterManager::CreateTransientEntry<ImagePod>("~NormalImagePod");
-	pod->data[0] = 0x80;
-	pod->data[1] = 0x80;
-	pod->data[2] = 0xFF;
-	pod->data[3] = 0xFF;
-
-	fs::current_path(fs::current_path() / assetPath);
-
-	if (!fs::is_directory("gen-data")) {
-		fs::create_directory("gen-data");
-	}
-
-	LOG_INFO("Current working dir: {}", fs::current_path());
-
-	AssetHandlerManager::Get().LoadAllPodsInDirectory("gen-data/");
-	GpuAssetManager.LoadAll();
-}
-
-
 void PodDeleter::operator()(AssetPod* p)
 {
 	auto l = [](auto* pod) {
@@ -143,4 +115,30 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 void AssetHandlerManager::LoadFromDiskTypelessInternal(PodEntry* entry)
 {
 	DeserializePodFromBinary(entry);
+}
+
+S_AssetManager::S_AssetManager(const fs::path& workingDir, const fs::path& defaultBinPath)
+{
+	AssetHandlerManager::Get().m_pods.push_back(std::make_unique<PodEntry>());
+
+	podtools::ForEachPodType([]<typename PodType>() {
+		ImporterManager->CreateTransientEntry<PodType>(fmt::format("~{}", mti::GetName<PodType>()));
+	});
+
+	// Default normal image
+	auto& [handle, pod] = ImporterManager->CreateTransientEntry<ImagePod>("~NormalImagePod");
+	pod->data[0] = 0x80;
+	pod->data[1] = 0x80;
+	pod->data[2] = 0xFF;
+	pod->data[3] = 0xFF;
+
+	fs::current_path(fs::current_path() / workingDir);
+
+	if (!fs::is_directory(defaultBinPath)) {
+		fs::create_directory(defaultBinPath);
+	}
+
+	LOG_INFO("Current working dir: {}", fs::current_path());
+
+	AssetHandlerManager::Get().LoadAllPodsInDirectory(defaultBinPath);
 }

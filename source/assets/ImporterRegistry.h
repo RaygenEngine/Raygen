@@ -4,14 +4,14 @@
 
 #include <unordered_map>
 
-class ImporterRegsitry {
+class ImporterRegistry {
 	std::vector<UniquePtr<PodImporterBase>> m_importers;
 
 	std::unordered_map<std::string, PodImporterBase*, str::HashInsensitive> m_extToImporters;
 
 
 public:
-	ImporterRegsitry();
+	ImporterRegistry();
 
 	bool ImportFile(const fs::path& path);
 

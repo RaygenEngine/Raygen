@@ -1,12 +1,13 @@
 #pragma once
 #include "assets/AssetHandlerManager.h"
+#include "assets/ImporterRegistry.h"
 
 // asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
-class AssetImporterManager {
-public:
-	void Init(const fs::path& assetPath);
+inline class S_AssetImporterManager {
+	friend class S_AssetManager;
+	ImporterRegistry m_importerRegistry;
 
-private:
+
 	// Stores this session's known imported paths.
 	std::unordered_map<uri::Uri, BasePodHandle> m_importedPathsCache;
 
@@ -16,7 +17,7 @@ private:
 		int32 stackSize{ 0 };
 		fs::path currentOpImportingPath{};
 
-		void PushOperation(AssetImporterManager& importer, fs::path& inOutImportingPath)
+		void PushOperation(S_AssetImporterManager& importer, fs::path& inOutImportingPath)
 		{
 			if (stackSize == 0) {
 				if (inOutImportingPath.empty()) {
@@ -44,8 +45,6 @@ private:
 
 	ImportOperation m_currentOperation;
 
-
-private:
 	uri::Uri GeneratePath(uri::Uri importPath, uri::Uri name)
 	{
 		auto directory = m_defaultImportingPath.string(); // NEXT: Use importing operation
@@ -55,7 +54,7 @@ private:
 
 public:
 	template<CONC(CAssetPod) PodType>
-	static std::pair<PodHandle<PodType>, PodType*> CreateTransientEntry(const uri::Uri& name)
+	std::pair<PodHandle<PodType>, PodType*> CreateTransientEntry(const uri::Uri& name)
 	{
 		return CreateEntryImpl<PodType>(name, name, true, false, false);
 	}
@@ -68,7 +67,7 @@ public:
 
 
 	template<CONC(CAssetPod) PodType>
-	static std::pair<PodHandle<PodType>, PodType*> CreateEntry(
+	std::pair<PodHandle<PodType>, PodType*> CreateEntry(
 		const uri::Uri& importPath, const uri::Uri& name, bool reimportOnLoad = false, bool exportOnSave = false)
 	{
 		return CreateEntryImpl<PodType>(importPath, name, false, reimportOnLoad, exportOnSave);
@@ -76,24 +75,22 @@ public:
 
 
 	template<CONC(CAssetPod) T>
-	static PodHandle<T> ImportRequest(const fs::path& path)
+	PodHandle<T> ImportRequest(const fs::path& path)
 	{
-		auto inst = Engine.GetAssetImporterManager();
-		auto it = inst->m_importedPathsCache.find(path.generic_string());
+		auto it = m_importedPathsCache.find(path.generic_string());
 
-		if (it != inst->m_importedPathsCache.end()) {
+		if (it != m_importedPathsCache.end()) {
 			return it->second;
 		}
 
-		return AssetFrontEndManager::importerRegistry.ImportFile<T>(path);
+		return m_importerRegistry.ImportFile<T>(path);
 	}
 
 private:
 	template<CONC(CAssetPod) PodType>
-	static std::pair<PodHandle<PodType>, PodType*> CreateEntryImpl(
+	std::pair<PodHandle<PodType>, PodType*> CreateEntryImpl(
 		const uri::Uri& importPath, const uri::Uri& name, bool transient, bool reimportOnLoad, bool exportOnSave)
 	{
-		auto inst = Engine.GetAssetImporterManager();
 		PodEntry* e = new PodEntry();
 
 		// Populate Metadata
@@ -112,7 +109,7 @@ private:
 		e->type = mti::GetTypeId<PodType>();
 
 
-		e->path = transient ? AssetHandlerManager::SuggestFilename("", name) : inst->GeneratePath(importPath, name);
+		e->path = transient ? AssetHandlerManager::SuggestFilename("", name) : GeneratePath(importPath, name);
 		e->name = uri::GetFilename(e->path);
 
 
@@ -123,8 +120,8 @@ private:
 
 		PodHandle<PodType> handle{ e->uid };
 
-		inst->m_importedPathsCache.emplace(importPath, handle);
+		m_importedPathsCache.emplace(importPath, handle);
 
 		return std::make_pair(handle, ptr);
 	}
-};
+} * ImporterManager;

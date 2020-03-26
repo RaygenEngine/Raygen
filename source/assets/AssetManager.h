@@ -4,7 +4,6 @@
 #include "assets/AssetHandlerManager.h"
 #include "assets/PodHandle.h"
 #include "assets/PodEntry.h"
-#include "assets/ImporterRegistry.h"
 #include "assets/UriLibrary.h"
 #include "engine/console/ConsoleVariable.h"
 #include "engine/Engine.h"
@@ -34,25 +33,15 @@
 //
 
 
-class AssetFrontEndManager {
+inline class S_AssetManager {
 public:
-	inline static ImporterRegsitry importerRegistry{};
-	// Used to determine whether to use importer vs async handles until the assets get a proper front-end for
-	// importing
-	template<CONC(CAssetPod) PodType>
-	static PodHandle<PodType> TransitionalLoadAsset(const uri::Uri& str)
-	{
-		if (str.starts_with('/')) {
-			return AssetFrontEndManager::ImportAs<PodType>(fs::path(str.substr(1)));
-		}
-		return AssetHandlerManager::GetAsyncHandle<PodType>(str);
-	}
+	S_AssetManager(const fs::path& workingDir = "assets/", const fs::path& defaultBinPath = "gen-data/");
 
-	static void Import(const fs::path& path) { importerRegistry.ImportFile(path); }
+	void Import(const fs::path& path) { ImporterManager->m_importerRegistry.ImportFile(path); }
 
 	template<CONC(CAssetPod) T>
-	static PodHandle<T> ImportAs(const fs::path& path)
+	PodHandle<T> ImportAs(const fs::path& path)
 	{
-		return importerRegistry.ImportFile<T>(path);
+		return m_importerManager.m_importerRegistry.ImportFile<T>(path);
 	}
-};
+} * AssetManager;
