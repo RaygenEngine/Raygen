@@ -1,14 +1,15 @@
 #include "pch.h"
-
 #include "App.h"
+
 #include "editor/Editor.h"
 #include "engine/Engine.h"
 #include "engine/Input.h"
 #include "engine/Logger.h"
-#include "world/NodeFactory.h"
-#include "world/World.h"
-#include "renderer/VulkanLayer.h"
 #include "engine/profiler/ProfileScope.h"
+#include "renderer/VulkanLayer.h"
+#include "universe/NodeFactory.h"
+#include "universe/Universe.h"
+
 #include <glfw/glfw3.h>
 
 App::App()
@@ -51,7 +52,7 @@ int32 App::Main(int32 argc, char* argv[]) // NOLINT
 
 	// Allow for world to update any flags that became dirty since InitWorld to here. (eg: resize events, nodes added
 	// later etc)
-	Engine.GetWorld()->DirtyUpdateWorld();
+	Universe::MainWorld->DirtyUpdateWorld();
 
 	MainLoop();
 
@@ -68,15 +69,15 @@ void App::MainLoop()
 		Profiler.BeginFrame();
 
 		PROFILE_SCOPE(Engine);
-		Engine.GetEditor()->PreBeginFrame();
+		Editor::EditorInst->PreBeginFrame();
 
 		// clear input soft state (pressed keys, etc.)
 		Engine.GetInput().Z_ClearFrameState();
-		Engine.GetWorld()->ClearDirtyFlags();
+		Universe::MainWorld->ClearDirtyFlags();
 
 		glfwPollEvents();
 
-		Engine.GetWorld()->Update();
+		Universe::MainWorld->Update();
 
 		Layer->DrawFrame();
 
@@ -86,14 +87,14 @@ void App::MainLoop()
 
 void App::WhileResizing()
 {
-	Engine.GetWorld()->Update();
+	Universe::MainWorld->Update();
 	Layer->DrawFrame();
 	Engine.ReportFrameDrawn();
 
 	//
 	//
 
-	Engine.GetEditor()->PreBeginFrame();
+	Editor::EditorInst->PreBeginFrame();
 }
 
 NodeFactory* App::MakeNodeFactory()

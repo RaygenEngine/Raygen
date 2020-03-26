@@ -8,9 +8,9 @@
 #include "engine/profiler/ProfileScope.h"
 #include "renderer/asset/GpuAssetManager.h"
 #include "renderer/wrapper/Device.h"
-#include "world/nodes/camera/CameraNode.h"
-#include "world/nodes/geometry/GeometryNode.h"
-#include "world/World.h"
+#include "universe/nodes/camera/CameraNode.h"
+#include "universe/nodes/geometry/GeometryNode.h"
+#include "universe/World.h"
 
 #include <array>
 

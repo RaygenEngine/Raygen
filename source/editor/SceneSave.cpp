@@ -1,18 +1,18 @@
 #include "pch.h"
-#include "editor/SceneSave.h"
+#include "SceneSave.h"
 
 #include "editor/misc/NativeFileBrowser.h"
 #include "reflection/ReflectionTools.h"
-#include "world/nodes/camera/EditorCameraNode.h"
-#include "world/nodes/RootNode.h"
-#include "world/World.h"
+#include "universe/nodes/camera/EditorCameraNode.h"
+#include "universe/nodes/RootNode.h"
+#include "universe/Universe.h"
 
 
 void SceneSave::OpenBrowser()
 {
 	if (auto file = ed::NativeFileBrowser::SaveFile({ "json" })) {
 		file->replace_extension(".json");
-		SaveAs(Engine.GetWorld(), file->string());
+		SaveAs(Universe::MainWorld, file->string());
 	}
 }
 

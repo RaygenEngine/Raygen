@@ -1,16 +1,17 @@
 #include "pch.h"
-#include "editor/windows/general/EdPropertyEditorWindow.h"
+#include "EdPropertyEditorWindow.h"
 
 #include "assets/AssetManager.h"
 #include "editor/DataStrings.h"
+#include "editor/Editor.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "editor/imgui/ImGuizmo.h"
 #include "engine/profiler/ProfileScope.h"
 #include "reflection/PodTools.h"
 #include "reflection/ReflectionTools.h"
-#include "world/nodes/camera/CameraNode.h"
-#include "world/nodes/Node.h"
-#include "world/World.h"
+#include "universe/nodes/camera/CameraNode.h"
+#include "universe/nodes/Node.h"
+#include "universe/Universe.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -327,9 +328,9 @@ namespace {
 
 void PropertyEditorWindow::ImguiDraw()
 {
-	PROFILE_SCOPE(Editor);
+	PROFILE_SCOPE(EditorObject);
 
-	Node* node = Editor::GetSelectedNode();
+	Node* node = EditorObject::GetSelectedNode();
 	if (!node) {
 		ImGui::Text("No node selected.");
 		return;
@@ -499,7 +500,7 @@ void PropertyEditorWindow::Run_BaseProperties(Node* node)
 void PropertyEditorWindow::Run_ContextActions(Node* node)
 {
 	return;
-	auto v = Engine.GetEditor()->m_nodeContextActions->GetActions(node, false);
+	auto v = Editor::EditorInst->m_nodeContextActions->GetActions(node, false);
 
 	ImGui::Indent();
 
@@ -549,7 +550,7 @@ void PropertyEditorWindow::Run_ReflectedProperties(Node* node)
 
 void PropertyEditorWindow::Run_ImGuizmo(Node* node)
 {
-	auto world = Engine.GetWorld();
+	auto world = Universe::MainWorld;
 	auto camera = world->GetActiveCamera();
 
 	if (!camera) {
