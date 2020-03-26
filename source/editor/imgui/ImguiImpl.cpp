@@ -6,6 +6,7 @@
 #include "engine/console/ConsoleVariable.h"
 #include "engine/Engine.h"
 #include "engine/profiler/ProfileScope.h"
+#include "platform/Platform.h"
 #include "reflection/PodTools.h"
 #include "renderer/VulkanLayer.h"
 #include "renderer/wrapper/Device.h"
@@ -270,10 +271,6 @@ void SetStyle()
 } // namespace imguisyle
 void ImguiImpl::InitContext()
 {
-	if (!Engine.GetMainWindow()) {
-		LOG_ERROR("Failed to load imgui, window not created yet. Please make a main window before imgui init.");
-		return;
-	}
 	ImGui::CreateContext();
 
 	ImGui::StyleColorsDark();
@@ -283,7 +280,7 @@ void ImguiImpl::InitContext()
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	// ImGui::GetIO().ConfigViewportsNoDecoration = false;
 
-	ImGui_ImplGlfw_InitForVulkan(Engine.GetMainWindow(), true);
+	ImGui_ImplGlfw_InitForVulkan(Platform::GetMainHandle(), true);
 	ImGui::GetIO().IniFilename = "EditorImgui.ini";
 }
 

@@ -12,7 +12,7 @@ void SceneSave::OpenBrowser()
 {
 	if (auto file = ed::NativeFileBrowser::SaveFile({ "json" })) {
 		file->replace_extension(".json");
-		SaveAs(Universe::MainWorld, file->string());
+		SaveAs(Universe::GetMainWorld(), file->string());
 	}
 }
 

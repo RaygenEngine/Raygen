@@ -11,6 +11,7 @@
 #include "engine/Engine.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
+#include "platform/Platform.h"
 #include "universe/nodes/geometry/GeometryNode.h"
 #include "universe/nodes/RootNode.h"
 #include "universe/Universe.h"
@@ -64,7 +65,7 @@ void EditorObject::MakeMainMenu()
 	sceneMenu->AddEntry(U8(FA_FOLDER_OPEN u8"  Load"), [&]() { OpenLoadDialog(); });
 	sceneMenu->AddEntry(U8(FA_REDO_ALT u8"  Revert"), [&]() { ReloadScene(); });
 	sceneMenu->AddSeperator();
-	sceneMenu->AddEntry(U8(FA_DOOR_OPEN u8"  Exit"), []() { glfwSetWindowShouldClose(Engine.GetMainWindow(), 1); });
+	sceneMenu->AddEntry(U8(FA_DOOR_OPEN u8"  Exit"), []() { glfwSetWindowShouldClose(Platform::GetMainHandle(), 1); });
 	m_menus.emplace_back(std::move(sceneMenu));
 
 
@@ -161,7 +162,7 @@ void EditorObject::UpdateEditor()
 {
 	PROFILE_SCOPE(EditorObject);
 	if (m_editorCamera) {
-		m_editorCamera->UpdateFromEditor(Universe::MainWorld->GetDeltaTime());
+		m_editorCamera->UpdateFromEditor(Universe::GetMainWorld()->GetDeltaTime());
 	}
 	HandleInput();
 
@@ -225,7 +226,7 @@ void EditorObject::OnFileDrop(std::vector<fs::path>&& files)
 
 void EditorObject::SpawnEditorCamera()
 {
-	auto world = Universe::MainWorld;
+	auto world = Universe::GetMainWorld();
 	m_editorCamera = NodeFactory::NewNode<EditorCameraNode>();
 	m_editorCamera->SetName("Editor Camera");
 	world->Z_RegisterNode(m_editorCamera, world->GetRoot());
@@ -256,20 +257,12 @@ void EditorObject::LoadScene(const fs::path& scenefile)
 
 	m_updateWorld = false;
 	m_selectedNode = nullptr;
-
-	Engine.CreateWorldFromFile(fs::relative(scenefile).string());
-
-	int32 width;
-	int32 height;
-
-	glfwGetWindowSize(Engine.GetMainWindow(), &width, &height);
-	Event::OnWindowResize.Broadcast(width, height);
 }
 
 void EditorObject::ReloadScene()
 {
 	// TODO:
-	// auto path = AssetHandlerManager::GetPodUri(Universe::MainWorld->GetLoadedFromHandle());
+	// auto path = AssetHandlerManager::GetPodUri(Universe::GetMainWorld()->GetLoadedFromHandle());
 	// m_sceneToLoad = uri::ToSystemPath(path);
 }
 
@@ -288,11 +281,11 @@ void EditorObject::OnPlay()
 	if (m_editorCamera) {
 		m_editorCameraCachedMatrix = m_editorCamera->GetNodeTransformWCS();
 		m_hasEditorCameraCachedMatrix = true;
-		Universe::MainWorld->DeleteNode(m_editorCamera);
+		Universe::GetMainWorld()->DeleteNode(m_editorCamera);
 	}
 	m_hasRestoreSave = false;
 	if (m_autoRestoreWorld) {
-		SceneSave::SaveAs(Universe::MainWorld, "__scene.tmp");
+		SceneSave::SaveAs(Universe::GetMainWorld(), "__scene.tmp");
 		m_hasRestoreSave = true;
 	}
 }
@@ -393,12 +386,12 @@ void EditorObject::MoveSelectedUnder(Node* node)
 
 void EditorObject::Duplicate(Node* node)
 {
-	PushCommand([node]() { Universe::MainWorld->DeepDuplicateNode(node); });
+	PushCommand([node]() { Universe::GetMainWorld()->DeepDuplicateNode(node); });
 }
 
 void EditorObject::Delete(Node* node)
 {
-	PushCommand([node]() { Universe::MainWorld->DeleteNode(node); });
+	PushCommand([node]() { Universe::GetMainWorld()->DeleteNode(node); });
 }
 
 void EditorObject::PilotThis(Node* node)
@@ -415,7 +408,7 @@ void EditorObject::PilotThis(Node* node)
 		if (!wasPiloting) {
 			return;
 		}
-		worldop::MakeChildOf(Universe::MainWorld->GetRoot(), camera);
+		worldop::MakeChildOf(Universe::GetMainWorld()->GetRoot(), camera);
 		camera->SetNodeTransformWCS(Editor::EditorInst->m_editorCameraPrePilotPos);
 		return;
 	}
@@ -454,7 +447,7 @@ void EditorObject::FocusNode(Node* node)
 
 void EditorObject::TeleportToCamera(Node* node)
 {
-	auto camera = Universe::MainWorld->GetActiveCamera();
+	auto camera = Universe::GetMainWorld()->GetActiveCamera();
 	if (camera) {
 		auto newMat = math::transformMat(
 			node->GetNodeScaleWCS(), camera->GetNodeOrientationWCS(), camera->GetNodePositionWCS());

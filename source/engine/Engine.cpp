@@ -6,7 +6,7 @@
 #include "editor/Editor.h"
 #include "engine/Input.h"
 #include "engine/reflection/ReflectionDb.h"
-#include "platform/GlfwUtl.h"
+#include "platform/Platform.h"
 #include "renderer/VulkanLayer.h"
 #include "renderer/asset/GpuAssetManager.h"
 #include "renderer/wrapper/Device.h"
@@ -36,39 +36,19 @@ void S_Engine::InitEngine(App* app)
 	m_input = new Input();
 	Assets::Init();
 
-	glfwInit();
+	WindowCreationParams mainWindowParams;
+	mainWindowParams.size = { m_app->m_windowWidth, m_app->m_windowHeight };
+	Platform::Init(mainWindowParams);
 
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	m_window
-		= glfwCreateWindow(m_app->m_windowWidth, m_app->m_windowHeight, m_app->m_windowTitle.c_str(), nullptr, nullptr);
-
-	glfwutl::SetupEventCallbacks(m_window);
 	GpuAssetManager.LoadAll();
 	// NEXT:
-	Layer = new VulkanLayer(glfwutl::GetVulkanExtensions(), m_window);
+	Layer = new VulkanLayer(glfwutl::GetVulkanExtensions(), Platform::GetMainHandle());
 	Layer->Init();
 
 	Editor::EditorInst = new EditorObject();
 
 	ImguiImpl::InitVulkan();
-}
-
-void S_Engine::CreateWorldFromFile(const std::string& filename)
-{
-	Universe::MainWorld = new World(m_app->MakeNodeFactory());
-	Universe::MainWorld->LoadAndPrepareWorld(filename);
-}
-
-bool S_Engine::HasCmdArgument(const std::string& argument)
-{
-	int32 argc = m_app->m_argc;
-	char** argv = m_app->m_argv;
-	for (int32 i = 0; i < argc; ++i) {
-		if (strcmp(argv[i], argument.c_str())) {
-			return true;
-		}
-	}
-	return false;
+	Universe::Init();
 }
 
 bool S_Engine::ShouldUpdateWorld()
@@ -92,7 +72,7 @@ void S_Engine::ReportFrameDrawn()
 		if (titleCounter == 1) {
 			std::string s_title;
 			s_title = fmt::format("{} - {:4.2f}", m_app->m_windowTitle, m_gameThreadFps.GetSteadyFps());
-			glfwSetWindowTitle(m_window, s_title.c_str());
+			Platform::GetMainWindow()->SetTitle(s_title.c_str());
 		}
 	}
 
@@ -108,12 +88,11 @@ void S_Engine::ReportFrameDrawn()
 void S_Engine::DeinitEngine()
 {
 	// NOTE: It is REALLY important to remember the reverse order here
-	delete Universe::MainWorld;
+	delete Universe::GetMainWorld();
 	delete Layer;
 	delete Device;
 	delete Editor::EditorInst;
-	glfwDestroyWindow(m_window);
-	glfwTerminate();
+	Platform::Destroy();
 	Assets::Destroy();
 	delete m_input;
 }

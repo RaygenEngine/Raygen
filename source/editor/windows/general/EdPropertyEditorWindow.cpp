@@ -550,7 +550,7 @@ void PropertyEditorWindow::Run_ReflectedProperties(Node* node)
 
 void PropertyEditorWindow::Run_ImGuizmo(Node* node)
 {
-	auto world = Universe::MainWorld;
+	auto world = Universe::GetMainWorld();
 	auto camera = world->GetActiveCamera();
 
 	if (!camera) {

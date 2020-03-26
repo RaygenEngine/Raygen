@@ -37,7 +37,7 @@ void EditorCameraNode::UpdateFromEditor(float deltaTime)
 		applyTo->SetNodeTransformWCS(GetNodeTransformWCS());
 		SetNodeTransformLCS(glm::identity<glm::mat4>());
 	}
-	auto root = Universe::MainWorld->GetRoot();
+	auto root = Universe::GetMainWorld()->GetRoot();
 
 	if (input.IsJustPressed(Key::X)) {
 		m_worldAlign = !m_worldAlign;
@@ -125,5 +125,5 @@ void EditorCameraNode::ResetRotation()
 {
 	auto pyr = GetNodeEulerAnglesWCS();
 	SetNodeOrientationWCS(glm::identity<glm::quat>());
-	RotateNodeAroundAxisWCS(Universe::MainWorld->GetRoot()->GetNodeUpWCS(), pyr.y);
+	RotateNodeAroundAxisWCS(Universe::GetMainWorld()->GetRoot()->GetNodeUpWCS(), pyr.y);
 }

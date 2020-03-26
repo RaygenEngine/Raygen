@@ -182,7 +182,7 @@ void World::Z_RegisterNode(Node* node, Node* parent)
 	parent->m_children.emplace_back(node, [](Node* node) {
 		// custom deleter to remove node from world when it is deleted
 		// TODO: use node's world instead of this monster
-		Universe::MainWorld->CleanupNodeReferences(node);
+		MainWorld->CleanupNodeReferences(node);
 		delete node;
 	});
 

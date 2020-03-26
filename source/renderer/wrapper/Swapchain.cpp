@@ -3,6 +3,7 @@
 
 #include "engine/Engine.h"
 #include "engine/Logger.h"
+#include "platform/Platform.h"
 #include "renderer/wrapper/Device.h"
 
 #include <glfw/glfw3.h>
@@ -42,7 +43,7 @@ vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
 	else {
 		int32 height;
 		int32 width;
-		glfwGetWindowSize(Engine.GetMainWindow(), &width, &height);
+		glfwGetWindowSize(Platform::GetMainHandle(), &width, &height);
 
 		VkExtent2D actualExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
 

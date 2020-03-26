@@ -3,10 +3,15 @@
 
 struct GLFWwindow;
 
+struct WindowCreationParams {
+	glm::uvec2 size{ 1920, 1080 };
+	const char* title{ "Raygen" };
+};
+
 // External Window interface
 class Window {
 public:
-	Window(glm::uvec2 size = { 1920, 1080 }, const char* title = "Raygen");
+	Window(WindowCreationParams params);
 	~Window();
 
 	// PERF: store window size to avoid windows API call

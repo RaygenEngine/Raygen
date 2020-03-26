@@ -3,8 +3,17 @@
 #include "platform/Window.h"
 
 
-namespace Platform {
-inline Window* MainWindow{};
+class Platform {
+	friend class S_Engine;
 
-std::vector<const char*> GetVulkanExtensions();
-} // namespace Platform
+
+	static void Init(WindowCreationParams mainWindowParams = {});
+	static void Destroy();
+
+public:
+	static std::vector<const char*> GetVulkanExtensions();
+
+	[[nodiscard]] static Window* GetMainWindow();
+	[[nodiscard]] static GLFWwindow* GetMainHandle() { return GetMainWindow()->GetHandle(); }
+	[[nodiscard]] static glm::uvec2 GetMainSize() { return GetMainWindow()->GetSize(); }
+};
