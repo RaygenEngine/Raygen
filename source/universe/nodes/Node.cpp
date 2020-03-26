@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "Node.h"
 
-#include "asset/AssetManager.h"
-#include "asset/util/ParsingUtl.h"
+#include "assets/AssetManager.h"
+#include "assets/util/ParsingUtl.h"
 #include "reflection/ReflectionTools.h"
 #include "universe/Universe.h"
 

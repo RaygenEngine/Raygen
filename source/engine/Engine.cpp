@@ -8,6 +8,7 @@
 #include "engine/reflection/ReflectionDb.h"
 #include "platform/GlfwUtl.h"
 #include "renderer/VulkanLayer.h"
+#include "renderer/asset/GpuAssetManager.h"
 #include "renderer/wrapper/Device.h"
 #include "universe/NodeFactory.h"
 #include "universe/Universe.h"
@@ -42,7 +43,7 @@ void S_Engine::InitEngine(App* app)
 		= glfwCreateWindow(m_app->m_windowWidth, m_app->m_windowHeight, m_app->m_windowTitle.c_str(), nullptr, nullptr);
 
 	glfwutl::SetupEventCallbacks(m_window);
-
+	GpuAssetManager.LoadAll();
 	// NEXT:
 	Layer = new VulkanLayer(glfwutl::GetVulkanExtensions(), m_window);
 	Layer->Init();

@@ -1,5 +1,5 @@
 #pragma once
-#include "asset/pods/SamplerPod.h"
+#include "assets/pods/SamplerPod.h"
 #include "universe/nodes/Node.h"
 
 class AmbientNode : public Node {
