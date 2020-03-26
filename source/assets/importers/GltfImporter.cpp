@@ -696,7 +696,7 @@ void GltfLoader::LoadImages()
 	// CHECK: embedded images not supported currently
 	for (auto& img : model.images) {
 		fs::path imgPath = systemPath.remove_filename() / img.uri;
-		imagePods.push_back(AssetImporterManager::ImportRequest<ImagePod>(imgPath));
+		imagePods.push_back(ImporterManager->ImportRequest<ImagePod>(imgPath));
 	}
 }
 
@@ -711,7 +711,7 @@ void GltfLoader::LoadSamplers()
 
 		std::string name = sampler.name.empty() ? filename + "_Sampler_" + std::to_string(samplerIndex) : sampler.name;
 
-		auto& [handle, pod] = AssetImporterManager::CreateEntry<SamplerPod>(samplerPath, name);
+		auto& [handle, pod] = ImporterManager->CreateEntry<SamplerPod>(samplerPath, name);
 
 		pod->minFilter = GetTextureFiltering(sampler.minFilter);
 		pod->magFilter = GetTextureFiltering(sampler.magFilter);
@@ -739,7 +739,7 @@ void GltfLoader::LoadMaterials()
 
 		std::string name = mat.name.empty() ? filename + "_Mat_" + std::to_string(matIndex) : mat.name;
 
-		auto& [handle, pod] = AssetImporterManager::CreateEntry<MaterialPod>(matPath, name);
+		auto& [handle, pod] = ImporterManager->CreateEntry<MaterialPod>(matPath, name);
 
 		LoadMaterial(pod, matIndex);
 
@@ -836,7 +836,7 @@ void GltfLoader::LoadModel(ModelPod* pod, int32 sceneIndex)
 BasePodHandle GltfLoader::Load()
 {
 	auto& [handle, pod]
-		= AssetImporterManager::CreateEntry<ModelPod>(gltfFilePath, std::string(uri::GetFilenameNoExt(gltfFilePath)));
+		= ImporterManager->CreateEntry<ModelPod>(gltfFilePath, std::string(uri::GetFilenameNoExt(gltfFilePath)));
 
 	LoadImages();
 	LoadSamplers();

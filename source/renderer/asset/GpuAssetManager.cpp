@@ -30,6 +30,7 @@ void Dummy()
 }
 
 
+// WIP: Call when initialized to allocate space for pods
 void S_GpuAssetManager::LoadAll()
 {
 	gpuAssets.resize(AssetHandlerManager::Z_GetPods().size());

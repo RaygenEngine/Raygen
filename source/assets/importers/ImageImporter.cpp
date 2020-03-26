@@ -9,8 +9,8 @@ BasePodHandle ImageImporter::Import(const fs::path& path)
 {
 	const auto finalPath = path.generic_string();
 
-	auto& [handle, pod] = AssetImporterManager::CreateEntry<ImagePod>(
-		path.generic_string(), path.filename().replace_extension().string());
+	auto& [handle, pod]
+		= ImporterManager->CreateEntry<ImagePod>(path.generic_string(), path.filename().replace_extension().string());
 
 	pod->isHdr = stbi_is_hdr(finalPath.c_str()) == 1;
 

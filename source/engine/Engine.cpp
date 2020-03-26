@@ -2,7 +2,7 @@
 #include "engine/Engine.h"
 
 #include "App.h"
-#include "assets/AssetManager.h"
+#include "assets/Assets.h"
 #include "editor/Editor.h"
 #include "engine/Input.h"
 #include "engine/reflection/ReflectionDb.h"
@@ -33,9 +33,7 @@ void S_Engine::InitEngine(App* app)
 	m_app = app;
 
 	m_input = new Input();
-	m_assetImporterManager = new AssetImporterManager();
-	m_assetFrontEndManager = new AssetFrontEndManager();
-	m_assetImporterManager->Init(m_app->m_assetPath);
+	Assets::Init();
 
 	glfwInit();
 
@@ -119,8 +117,7 @@ void S_Engine::DeinitEngine()
 	delete m_editor;
 	glfwDestroyWindow(m_window);
 	glfwTerminate();
-	delete m_assetImporterManager;
-	delete m_assetFrontEndManager;
+	Assets::Destroy();
 	delete m_input;
 }
 

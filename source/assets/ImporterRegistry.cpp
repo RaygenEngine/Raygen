@@ -5,12 +5,12 @@
 #include "assets/importers/ImageImporter.h"
 #include "assets/importers/ShaderImporter.h"
 
-ImporterRegsitry::ImporterRegsitry()
+ImporterRegistry::ImporterRegistry()
 {
 	RegisterImporters<ImageImporter, GltfImporter, ShaderImporter>();
 }
 
-BasePodHandle ImporterRegsitry::ImportImpl(const fs::path& path, mti::TypeId& outHandleType)
+BasePodHandle ImporterRegistry::ImportImpl(const fs::path& path, mti::TypeId& outHandleType)
 {
 	outHandleType = mti::TypeId{};
 	if (auto it = m_extToImporters.find(path.extension().string()); it != m_extToImporters.end()) {
@@ -22,7 +22,7 @@ BasePodHandle ImporterRegsitry::ImportImpl(const fs::path& path, mti::TypeId& ou
 	return {};
 }
 
-bool ImporterRegsitry::ImportFile(const fs::path& path)
+bool ImporterRegistry::ImportFile(const fs::path& path)
 {
 	mti::TypeId typeId;
 	auto handle = ImportImpl(path, typeId);

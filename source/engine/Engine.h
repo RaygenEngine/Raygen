@@ -35,10 +35,6 @@ public:
 
 	[[nodiscard]] GLFWwindow* GetMainWindow() { return m_window; }
 
-	[[nodiscard]] AssetImporterManager* GetAssetImporterManager() { return m_assetImporterManager; }
-
-	[[nodiscard]] AssetFrontEndManager* GetAssetFrontEndManager() { return m_assetFrontEndManager; }
-
 	// Input will be valid forever after initialization.
 	[[nodiscard]] Input& GetInput() { return *m_input; }
 
@@ -52,13 +48,6 @@ public:
 	S_Engine& operator=(S_Engine&&) = delete;
 
 private:
-	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
-	AssetImporterManager* m_assetImporterManager{ nullptr };
-
-	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
-	AssetFrontEndManager* m_assetFrontEndManager{ nullptr };
-
-
 	// Owning Pointer, Expected to be valid 'forever' after InitEngine at this time.
 	GLFWwindow* m_window{ nullptr };
 

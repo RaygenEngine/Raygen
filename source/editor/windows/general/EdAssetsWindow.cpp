@@ -1,8 +1,8 @@
 #include "pch.h"
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "editor/windows/general/EdAssetsWindow.h"
+#include "EdAssetsWindow.h"
 
-#include "assets/AssetManager.h"
+#include "assets/Assets.h"
 #include "core/StringUtl.h"
 #include "editor/imgui/ImEd.h"
 #include "editor/imgui/ImguiImpl.h"
@@ -12,7 +12,7 @@
 #include "reflection/ReflectionTools.h"
 #include "reflection/ReflEnum.h"
 
-#include <imgui_internal.h>
+#include <imgui/imgui_internal.h>
 #include <spdlog/fmt/fmt.h>
 
 namespace ed {
@@ -261,7 +261,7 @@ void AssetsWindow::ImguiDraw()
 			// TODO: push import operation
 
 			for (auto& path : *files) {
-				AssetFrontEndManager::Import(path);
+				Assets::Import(path);
 			}
 			ReloadEntries();
 		}
@@ -327,7 +327,7 @@ void AssetsWindow::ImguiDraw()
 void AssetsWindow::ImportFiles(std::vector<fs::path>&& files)
 {
 	for (auto& file : files) {
-		AssetFrontEndManager::Import(file);
+		Assets::Import(file);
 	}
 	ReloadEntries();
 }

@@ -16,8 +16,8 @@ class ReflClass;
 class AssetHandlerManager {
 
 private:
-	friend class AssetImporterManager;
-	friend class AssetFrontEndManager;
+	friend class S_AssetImporterManager;
+	friend class S_AssetManager;
 
 	static AssetHandlerManager& Get()
 	{
