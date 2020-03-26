@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "GeometryNode.h"
 
-#include "asset/AssetManager.h"
+#include "assets/AssetManager.h"
 #include "renderer/asset/GpuAssetManager.h"
 #include "renderer/scene/Scene.h"
 

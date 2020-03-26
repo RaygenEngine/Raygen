@@ -3,12 +3,12 @@
 
 void Assets::Init()
 {
-	AssetManager = new S_AssetManager();
 	ImporterManager = new S_AssetImporterManager();
+	AssetManager = new S_AssetManager();
 }
 
 void Assets::Destroy()
 {
-	delete ImporterManager;
 	delete AssetManager;
+	delete ImporterManager;
 }

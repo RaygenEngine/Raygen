@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "NodeFactory.h"
 
-#include "asset/util/ParsingUtl.h"
+#include "assets/util/ParsingUtl.h"
 #include "core/MathUtl.h"
 #include "reflection/ReflectionTools.h"
 #include "universe/nodes/camera/CameraNode.h"

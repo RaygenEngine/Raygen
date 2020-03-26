@@ -1,5 +1,5 @@
 #pragma once
-#include "asset/pods/ModelPod.h"
+#include "assets/pods/ModelPod.h"
 #include "universe/nodes/Node.h"
 
 class GeometryNode : public Node {

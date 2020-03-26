@@ -1,5 +1,5 @@
 #pragma once
-#include "asset/util/ParsingUtl.h"
+#include "assets/util/ParsingUtl.h"
 #include "core/StringUtl.h"
 
 #include <nlohmann/json_fwd.hpp>
