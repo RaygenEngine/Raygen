@@ -2,7 +2,7 @@
 #include "editor/windows/general/EdMiscWindow.h"
 
 #include "editor/DataStrings.h"
-#include "editor/Editor.h"
+#include "editor/EditorObject.h"
 #include "editor/imgui/ImEd.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "renderer/VulkanLayer.h"

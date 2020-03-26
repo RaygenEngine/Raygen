@@ -1,7 +1,7 @@
 #pragma once
 #include "assets/AssetManager.h"
 #include "renderer/asset/GpuAssetHandle.h"
-#include "world/nodes/geometry/GeometryNode.h"
+#include "universe/nodes/geometry/GeometryNode.h"
 
 
 struct SceneGeometry {

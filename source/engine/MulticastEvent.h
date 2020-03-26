@@ -2,7 +2,7 @@
 
 #include "core/BoolFlag.h"
 #include "engine/Logger.h"
-#include "engine/Object.h"
+#include "engine/Listener.h"
 
 #include <algorithm>
 #include <functional>
@@ -11,25 +11,25 @@
 
 struct MulticastObjectEventBase {
 protected:
-	friend class Object;
-	virtual void UnbindFromDestructor(Object* obj) = 0;
+	friend class Listener;
+	virtual void UnbindFromDestructor(Listener* obj) = 0;
 
 public:
-	virtual void Unbind(Object* obj) = 0;
+	virtual void Unbind(Listener* obj) = 0;
 };
 
 template<class... Args>
 struct MulticastEvent : public MulticastObjectEventBase {
 	using FunctionType = std::function<void(Args...)>;
-	friend class Object;
+	friend class Listener;
 
 protected:
-	std::unordered_map<Object*, FunctionType> m_binds;
+	std::unordered_map<Listener*, FunctionType> m_binds;
 
-	void UnbindFromDestructor(Object* obj) override { m_binds.erase(obj); }
+	void UnbindFromDestructor(Listener* obj) override { m_binds.erase(obj); }
 
 public:
-	void Unbind(Object* obj) override
+	void Unbind(Listener* obj) override
 	{
 		m_binds.erase(obj);
 		obj->m_boundEvents.erase(std::remove_if(
@@ -37,7 +37,7 @@ public:
 	}
 
 
-	void Bind(Object* obj, FunctionType&& f)
+	void Bind(Listener* obj, FunctionType&& f)
 	{
 		CLOG_ABORT(m_binds.count(obj), "Binding an object that is already bound.");
 
@@ -53,7 +53,7 @@ public:
 
 	// Utility to bind member bool flags.
 	// Only bind members of obj as the flag otherwise you invoke UB.
-	void BindFlag(Object* obj, BoolFlag& inFlag)
+	void BindFlag(Listener* obj, BoolFlag& inFlag)
 	{
 		Bind(obj, [flag = &inFlag](Args... args) { flag->Set(); });
 	}
