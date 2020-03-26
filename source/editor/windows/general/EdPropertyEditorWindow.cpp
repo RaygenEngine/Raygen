@@ -500,7 +500,7 @@ void PropertyEditorWindow::Run_BaseProperties(Node* node)
 void PropertyEditorWindow::Run_ContextActions(Node* node)
 {
 	return;
-	auto v = Editor::EditorInst->m_nodeContextActions->GetActions(node, false);
+	auto v = EditorObj->m_nodeContextActions->GetActions(node, false);
 
 	ImGui::Indent();
 

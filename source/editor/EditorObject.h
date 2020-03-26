@@ -12,7 +12,7 @@
 class Node;
 class AssetWindow;
 
-class EditorObject : public Listener {
+inline class EditorObject : public Listener {
 public:
 	static Node* GetSelectedNode();
 
@@ -178,7 +178,7 @@ private:
 
 	std::vector<std::function<void()>> m_postDrawCommands;
 	std::vector<std::function<void()>> m_postFrameCommands;
-};
+} * EditorObj;
 
 template<typename Lambda>
 void RecurseNodes(Node* root, Lambda f, int32 depth = 0)

@@ -212,7 +212,7 @@ void World::Update()
 		PROFILE_SCOPE(World);
 		UpdateFrameTimers();
 
-		if (Engine.ShouldUpdateWorld()) {
+		if (Editor::ShouldUpdateWorld()) {
 			m_isIteratingNodeSet = true;
 			// Update after input and delta calculation
 			for (auto* node : m_nodes) {
@@ -222,7 +222,7 @@ void World::Update()
 		}
 	}
 
-	Editor::EditorInst->UpdateEditor();
+	Editor::Update();
 
 	do {
 		for (auto& cmd : m_postIterateCommandList) {

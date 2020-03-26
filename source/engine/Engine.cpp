@@ -4,6 +4,7 @@
 #include "App.h"
 #include "assets/Assets.h"
 #include "editor/Editor.h"
+#include "editor/imgui/ImguiImpl.h"
 #include "engine/Input.h"
 #include "engine/reflection/ReflectionDb.h"
 #include "platform/Platform.h"
@@ -12,6 +13,7 @@
 #include "renderer/wrapper/Device.h"
 #include "universe/NodeFactory.h"
 #include "universe/Universe.h"
+
 
 #include <glfw/glfw3.h>
 #include <algorithm>
@@ -45,15 +47,10 @@ void S_Engine::InitEngine(App* app)
 	Layer = new VulkanLayer(glfwutl::GetVulkanExtensions(), Platform::GetMainHandle());
 	Layer->Init();
 
-	Editor::EditorInst = new EditorObject();
+	Editor::Init();
 
 	ImguiImpl::InitVulkan();
 	Universe::Init();
-}
-
-bool S_Engine::ShouldUpdateWorld()
-{
-	return Editor::EditorInst->ShouldUpdateWorld();
 }
 
 float S_Engine::GetFPS()
@@ -91,7 +88,7 @@ void S_Engine::DeinitEngine()
 	delete Universe::GetMainWorld();
 	delete Layer;
 	delete Device;
-	delete Editor::EditorInst;
+	Editor::Destroy();
 	Platform::Destroy();
 	Assets::Destroy();
 	delete m_input;

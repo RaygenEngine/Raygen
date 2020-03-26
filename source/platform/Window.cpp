@@ -6,15 +6,13 @@
 #include <glfw/glfw3.h>
 #include <memory>
 
-std::shared_ptr<Window::GlfwContext> glfwContext;
-
+inline size_t g_currentWindows{ 0 };
 
 Window::Window(WindowCreationParams params)
 {
-	if (!glfwContext) {
-		glfwContext = std::make_shared<Window::GlfwContext>();
+	if (++g_currentWindows == 1) {
+		glfwInit();
 	}
-	m_glfwContext = glfwContext;
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	m_window = glfwCreateWindow(params.size.x, params.size.y, params.title, nullptr, nullptr);
@@ -26,9 +24,8 @@ Window::~Window()
 {
 	glfwDestroyWindow(m_window);
 
-	m_glfwContext.reset();
-	if (glfwContext.use_count() == 1) {
-		glfwContext.reset();
+	if (--g_currentWindows == 0) {
+		glfwTerminate();
 	}
 }
 
@@ -43,14 +40,4 @@ glm::uvec2 Window::GetSize() const
 void Window::SetTitle(const char* title)
 {
 	glfwSetWindowTitle(m_window, title);
-}
-
-Window::GlfwContext::GlfwContext()
-{
-	glfwInit();
-}
-
-Window::GlfwContext::~GlfwContext()
-{
-	glfwTerminate();
 }
