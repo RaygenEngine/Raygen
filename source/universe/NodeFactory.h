@@ -19,7 +19,7 @@ class NodeFactory : public Listener {
 	std::map<std::string, NodeClassEntry> m_nodeEntries;
 
 	friend class World;
-	friend class EditorObject;
+	friend class EditorObject_;
 
 protected:
 	template<typename T>

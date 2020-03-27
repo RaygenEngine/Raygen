@@ -105,7 +105,7 @@ private:
 	// Dirty Functions
 	void CallDirtyUpdate() { DirtyUpdate(m_dirty); };
 
-	friend class EditorObject;
+	friend class EditorObject_;
 	friend class World;
 	friend class NodeFactory;
 	friend struct worldop;

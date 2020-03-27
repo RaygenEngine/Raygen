@@ -327,9 +327,9 @@ namespace {
 
 void PropertyEditorWindow::ImguiDraw()
 {
-	PROFILE_SCOPE(EditorObject);
+	PROFILE_SCOPE(EditorObject_);
 
-	Node* node = EditorObject::GetSelectedNode();
+	Node* node = EditorObject_::GetSelectedNode();
 	if (!node) {
 		ImGui::Text("No node selected.");
 		return;
@@ -499,7 +499,7 @@ void PropertyEditorWindow::Run_BaseProperties(Node* node)
 void PropertyEditorWindow::Run_ContextActions(Node* node)
 {
 	return;
-	auto v = EditorObj->m_nodeContextActions->GetActions(node, false);
+	auto v = EditorObject->m_nodeContextActions->GetActions(node, false);
 
 	ImGui::Indent();
 

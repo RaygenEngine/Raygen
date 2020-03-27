@@ -8,7 +8,7 @@ enum Module : size_t
 {
 	Core,
 	Engine,
-	EditorObject,
+	EditorObject_,
 	Asset,
 	Platform,
 	Renderer,
@@ -31,7 +31,7 @@ constexpr bool c_shouldOverrideAllWithDefault = false;
 // Enabled Modules
 constexpr std::array Enabled = {
 	//	Core,
-	Engine, EditorObject,
+	Engine, EditorObject_,
 	//	Asset,
 	//	Platform,
 	Renderer, World,

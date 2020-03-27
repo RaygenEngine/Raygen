@@ -5,25 +5,25 @@
 
 void Editor::Init()
 {
-	EditorObj = new EditorObject();
+	EditorObject = new EditorObject_();
 }
 
 void Editor::Destroy()
 {
-	delete EditorObj;
+	delete EditorObject;
 }
 
 void Editor::Update()
 {
-	EditorObj->UpdateEditor();
+	EditorObject->UpdateEditor();
 }
 
 void Editor::PreBeginFrame()
 {
-	EditorObj->PreBeginFrame();
+	EditorObject->PreBeginFrame();
 }
 
 bool Editor::ShouldUpdateWorld()
 {
-	return EditorObj->ShouldUpdateWorld();
+	return EditorObject->ShouldUpdateWorld();
 }

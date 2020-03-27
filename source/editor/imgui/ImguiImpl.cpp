@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "editor/imgui/ImguiImpl.h"
+#include "ImguiImpl.h"
 
 #include "assets/PodIncludes.h"
 #include "editor/imgui/ImGuizmo.h"
@@ -9,8 +9,8 @@
 #include "platform/Platform.h"
 #include "reflection/PodTools.h"
 #include "rendering/Device.h"
-#include "rendering/renderer/Renderer.h"
 #include "rendering/Instance.h"
+#include "rendering/renderer/Renderer.h"
 
 #include <imgui/imgui.h>
 #include <imgui/examples/imgui_impl_glfw.h>
@@ -352,7 +352,7 @@ void ImguiImpl::CleanupContext()
 void ImguiImpl::EndFrame()
 {
 	{
-		PROFILE_SCOPE(EditorObject);
+		PROFILE_SCOPE(EditorObject_);
 		ImGui::EndFrame();
 
 
@@ -364,6 +364,6 @@ void ImguiImpl::EndFrame()
 
 void ImguiImpl::RenderVulkan(vk::CommandBuffer* drawCommandBuffer)
 {
-	PROFILE_SCOPE(EditorObject);
+	PROFILE_SCOPE(EditorObject_);
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), *drawCommandBuffer);
 }

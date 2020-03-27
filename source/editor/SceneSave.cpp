@@ -7,7 +7,6 @@
 #include "universe/nodes/RootNode.h"
 #include "universe/Universe.h"
 
-
 void SceneSave::OpenBrowser()
 {
 	if (auto file = ed::NativeFileBrowser::SaveFile({ "json" })) {

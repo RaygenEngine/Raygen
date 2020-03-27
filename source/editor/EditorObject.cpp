@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "Editor.h"
+#include "EditorObject.h"
 
 #include "editor/DataStrings.h"
 #include "editor/EdUserSettings.h"
@@ -20,7 +20,7 @@
 #include <glfw/glfw3.h>
 
 
-EditorObject::EditorObject()
+EditorObject_::EditorObject_()
 {
 	ImguiImpl::InitContext();
 
@@ -45,16 +45,16 @@ EditorObject::EditorObject()
 	MakeMainMenu();
 }
 
-Node* EditorObject::GetSelectedNode()
+Node* EditorObject_::GetSelectedNode()
 {
-	auto editor = EditorObj;
+	auto editor = EditorObject;
 	//	if (editor && Engine.IsEditorActive()) {
 	return editor->m_selectedNode;
 	//}
 	return nullptr;
 }
 
-void EditorObject::MakeMainMenu()
+void EditorObject_::MakeMainMenu()
 {
 	RegisterWindows(m_windowsComponent);
 
@@ -79,13 +79,13 @@ void EditorObject::MakeMainMenu()
 	m_menus.emplace_back(std::move(windowsMenu));
 }
 
-EditorObject::~EditorObject()
+EditorObject_::~EditorObject_()
 {
 	ImguiImpl::CleanupContext();
 }
 
 
-void EditorObject::Dockspace()
+void EditorObject_::Dockspace()
 {
 	static bool opt_fullscreen_persistant = true;
 	bool opt_fullscreen = opt_fullscreen_persistant;
@@ -134,7 +134,7 @@ void EditorObject::Dockspace()
 	ImGui::End();
 }
 
-void EditorObject::UpdateViewportCoordsFromDockspace()
+void EditorObject_::UpdateViewportCoordsFromDockspace()
 {
 	auto centralNode = ImGui::DockBuilderGetCentralNode(m_dockspaceId);
 
@@ -158,9 +158,9 @@ void EditorObject::UpdateViewportCoordsFromDockspace()
 		static_cast<float>(coord.size.y));
 }
 
-void EditorObject::UpdateEditor()
+void EditorObject_::UpdateEditor()
 {
-	PROFILE_SCOPE(EditorObject);
+	PROFILE_SCOPE(EditorObject_);
 	if (m_editorCamera) {
 		m_editorCamera->UpdateFromEditor(Universe::GetMainWorld()->GetDeltaTime());
 	}
@@ -219,12 +219,12 @@ void EditorObject::UpdateEditor()
 	ed::GetSettings().SaveIfDirty();
 }
 
-void EditorObject::OnFileDrop(std::vector<fs::path>&& files)
+void EditorObject_::OnFileDrop(std::vector<fs::path>&& files)
 {
 	m_windowsComponent.GetUniqueWindow<ed::AssetsWindow>()->ImportFiles(std::move(files));
 }
 
-void EditorObject::SpawnEditorCamera()
+void EditorObject_::SpawnEditorCamera()
 {
 	auto world = Universe::GetMainWorld();
 	m_editorCamera = NodeFactory::NewNode<EditorCameraNode>();
@@ -241,7 +241,7 @@ void EditorObject::SpawnEditorCamera()
 	world->SetActiveCamera(m_editorCamera);
 }
 
-void EditorObject::OpenLoadDialog()
+void EditorObject_::OpenLoadDialog()
 {
 	if (auto file = ed::NativeFileBrowser::OpenFile({ "json" })) {
 		LOG_REPORT("LOADING: {}", *file);
@@ -249,7 +249,7 @@ void EditorObject::OpenLoadDialog()
 	}
 }
 
-void EditorObject::LoadScene(const fs::path& scenefile)
+void EditorObject_::LoadScene(const fs::path& scenefile)
 {
 	// TODO:
 	LOG_ERROR("Reimplement Scene Loading.");
@@ -259,24 +259,24 @@ void EditorObject::LoadScene(const fs::path& scenefile)
 	m_selectedNode = nullptr;
 }
 
-void EditorObject::ReloadScene()
+void EditorObject_::ReloadScene()
 {
 	// TODO:
 	// auto path = AssetHandlerManager::GetPodUri(Universe::GetMainWorld()->GetLoadedFromHandle());
 	// m_sceneToLoad = uri::ToSystemPath(path);
 }
 
-void EditorObject::OnDisableEditor()
+void EditorObject_::OnDisableEditor()
 {
 	OnPlay();
 }
 
-void EditorObject::OnEnableEditor()
+void EditorObject_::OnEnableEditor()
 {
 	OnStopPlay();
 }
 
-void EditorObject::OnPlay()
+void EditorObject_::OnPlay()
 {
 	if (m_editorCamera) {
 		m_editorCameraCachedMatrix = m_editorCamera->GetNodeTransformWCS();
@@ -290,7 +290,7 @@ void EditorObject::OnPlay()
 	}
 }
 
-void EditorObject::OnStopPlay()
+void EditorObject_::OnStopPlay()
 {
 	if (!m_updateWorld) {
 		if (!m_editorCamera) {
@@ -303,7 +303,7 @@ void EditorObject::OnStopPlay()
 	}
 }
 
-void EditorObject::Run_MenuBar()
+void EditorObject_::Run_MenuBar()
 {
 	if (ImEd::BeginMenuBar()) {
 		for (auto& entry : m_menus) {
@@ -313,7 +313,7 @@ void EditorObject::Run_MenuBar()
 	}
 }
 
-void EditorObject::HandleInput()
+void EditorObject_::HandleInput()
 {
 	if (Input.IsDown(Key::LeftShift) && Input.IsJustPressed(Key::F)) {
 		PilotThis(m_selectedNode);
@@ -347,18 +347,18 @@ void EditorObject::HandleInput()
 	}
 }
 
-void EditorObject::PushCommand(std::function<void()>&& func)
+void EditorObject_::PushCommand(std::function<void()>&& func)
 {
-	EditorObj->m_postDrawCommands.emplace_back(func);
+	EditorObject->m_postDrawCommands.emplace_back(func);
 }
 
-void EditorObject::PushPostFrameCommand(std::function<void()>&& func)
+void EditorObject_::PushPostFrameCommand(std::function<void()>&& func)
 {
-	EditorObj->m_postFrameCommands.emplace_back(func);
+	EditorObject->m_postFrameCommands.emplace_back(func);
 }
 
 
-void EditorObject::PreBeginFrame()
+void EditorObject_::PreBeginFrame()
 {
 	if (!m_sceneToLoad.empty()) {
 		LoadScene(m_sceneToLoad);
@@ -371,60 +371,60 @@ void EditorObject::PreBeginFrame()
 	m_postFrameCommands.clear();
 }
 
-void EditorObject::SelectNode(Node* node)
+void EditorObject_::SelectNode(Node* node)
 {
-	EditorObj->m_selectedNode = node;
+	EditorObject->m_selectedNode = node;
 }
 
-void EditorObject::MoveSelectedUnder(Node* node)
+void EditorObject_::MoveSelectedUnder(Node* node)
 {
-	if (EditorObj->m_selectedNode != EditorObj->m_editorCamera) {
-		worldop::MakeChildOf(node, EditorObj->m_selectedNode);
+	if (EditorObject->m_selectedNode != EditorObject->m_editorCamera) {
+		worldop::MakeChildOf(node, EditorObject->m_selectedNode);
 	}
 }
 
-void EditorObject::Duplicate(Node* node)
+void EditorObject_::Duplicate(Node* node)
 {
 	PushCommand([node]() { Universe::GetMainWorld()->DeepDuplicateNode(node); });
 }
 
-void EditorObject::Delete(Node* node)
+void EditorObject_::Delete(Node* node)
 {
 	PushCommand([node]() { Universe::GetMainWorld()->DeleteNode(node); });
 }
 
-void EditorObject::PilotThis(Node* node)
+void EditorObject_::PilotThis(Node* node)
 {
-	auto camera = EditorObj->m_editorCamera;
+	auto camera = EditorObject->m_editorCamera;
 	if (!camera) {
 		LOG_WARN("Only possible to pilot nodes if there is an editor camera");
 		return;
 	}
 
-	bool wasPiloting = EditorObj->IsCameraPiloting();
+	bool wasPiloting = EditorObject->IsCameraPiloting();
 
 	if (camera->GetParent() == node || node == nullptr) {
 		if (!wasPiloting) {
 			return;
 		}
 		worldop::MakeChildOf(Universe::GetMainWorld()->GetRoot(), camera);
-		camera->SetNodeTransformWCS(EditorObj->m_editorCameraPrePilotPos);
+		camera->SetNodeTransformWCS(EditorObject->m_editorCameraPrePilotPos);
 		return;
 	}
 
 	if (!wasPiloting) {
-		EditorObj->m_editorCameraPrePilotPos = camera->GetNodeTransformWCS();
+		EditorObject->m_editorCameraPrePilotPos = camera->GetNodeTransformWCS();
 	}
 	worldop::MakeChildOf(node, camera);
 	camera->SetNodeTransformWCS(node->GetNodeTransformWCS());
 }
 
-void EditorObject::FocusNode(Node* node)
+void EditorObject_::FocusNode(Node* node)
 {
 	if (!node) {
 		return;
 	}
-	auto cam = EditorObj->m_editorCamera;
+	auto cam = EditorObject->m_editorCamera;
 	if (!cam) {
 		return;
 	}
@@ -444,7 +444,7 @@ void EditorObject::FocusNode(Node* node)
 	cam->SetNodeLookAtWCS(node->GetNodePositionWCS());
 }
 
-void EditorObject::TeleportToCamera(Node* node)
+void EditorObject_::TeleportToCamera(Node* node)
 {
 	auto camera = Universe::GetMainWorld()->GetActiveCamera();
 	if (camera) {

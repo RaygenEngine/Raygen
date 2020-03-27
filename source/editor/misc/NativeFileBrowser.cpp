@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "editor/misc/NativeFileBrowser.h"
+#include "NativeFileBrowser.h"
 
 #include "engine/Logger.h"
 
