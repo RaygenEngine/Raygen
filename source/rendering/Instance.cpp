@@ -22,7 +22,7 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(
 	return pfnVkDestroyDebugUtilsMessengerEXT(instance, messenger, pAllocator);
 }
 
-ConsoleVariable<bool> showValidationErrors{ "r.showValidation", false, "Enables vulkan validation layer errors" };
+ConsoleVariable<bool> showValidationErrors{ "r.showValidation", true, "Enables vulkan validation layer errors" };
 
 namespace {
 VkBool32 DebugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

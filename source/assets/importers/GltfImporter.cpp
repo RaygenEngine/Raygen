@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "assets/importers/GltfImporter.h"
+#include "GltfImporter.h"
 
 #include "assets/AssetManager.h"
 
@@ -11,35 +11,6 @@ namespace tg = tinygltf;
 
 namespace {
 
-enum class ComponentType
-{
-	CHAR,
-	BYTE,
-	SHORT,
-	USHORT,
-	INT,
-	UINT,
-	FLOAT,
-	DOUBLE
-};
-
-inline int32 ComponentTypeByteCount(ComponentType bct)
-{
-	switch (bct) {
-		case ComponentType::CHAR:
-		case ComponentType::BYTE: return 1;
-		case ComponentType::SHORT:
-		case ComponentType::USHORT: return 2;
-		case ComponentType::INT:
-		case ComponentType::UINT:
-		case ComponentType::FLOAT: return 4;
-		case ComponentType::DOUBLE: return 8;
-		default: return -1;
-	}
-}
-
-
-// min
 inline TextureFiltering GetTextureFiltering(int32 gltfFiltering)
 {
 	switch (gltfFiltering) {
@@ -53,7 +24,6 @@ inline TextureFiltering GetTextureFiltering(int32 gltfFiltering)
 	}
 }
 
-// min
 inline MipmapFiltering GetMipmapFiltering(int32 gltfFiltering)
 {
 	switch (gltfFiltering) {
@@ -92,22 +62,6 @@ inline MaterialPod::AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
 	return MaterialPod::Opaque;
 }
 
-
-inline ComponentType GetComponentType(int32 gltfComponentType)
-{
-	switch (gltfComponentType) {
-		case TINYGLTF_COMPONENT_TYPE_BYTE: return ComponentType::CHAR;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: return ComponentType::BYTE;
-		case TINYGLTF_COMPONENT_TYPE_SHORT: return ComponentType::SHORT;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: return ComponentType::USHORT;
-		case TINYGLTF_COMPONENT_TYPE_INT: return ComponentType::INT;
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: return ComponentType::UINT;
-		case TINYGLTF_COMPONENT_TYPE_FLOAT: return ComponentType::FLOAT;
-		case TINYGLTF_COMPONENT_TYPE_DOUBLE: return ComponentType::DOUBLE;
-		default: return ComponentType::FLOAT;
-	}
-}
-
 struct AccessorDescription {
 	//
 	// Actual example of a possible complex gltf buffer:
@@ -126,7 +80,7 @@ struct AccessorDescription {
 	byte* beginPtr; // Pointer to the first byte we care about.
 					// This may not be the actual start of the buffer of the binary file.
 
-	ComponentType componentType; // this particular model's underlying buffer type to read as.
+	uint32 componentType; // this particular model's underlying buffer type to read as.
 
 	AccessorDescription(const tg::Model& modelData, int32 accessorIndex)
 	{
@@ -136,7 +90,7 @@ struct AccessorDescription {
 		const tinygltf::Buffer& gltfBuffer = modelData.buffers.at(bufferView.buffer);
 
 
-		componentType = GetComponentType(accessor.componentType);
+		componentType = accessor.componentType;
 		elementCount = accessor.count;
 		beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
 		strideByteOffset = accessor.ByteStride(bufferView);
@@ -170,29 +124,29 @@ void ExtractIndicesInto(const tg::Model& modelData, int32 accessorIndex, std::ve
 			// Conversions from signed to unsigned types are "implementation defined".
 			// This code assumes the implementation will not do any bit arethmitic from signed x to unsigned x.
 
-		case ComponentType::CHAR:
-		case ComponentType::BYTE: {
+		case TINYGLTF_COMPONENT_TYPE_BYTE:
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: {
 			CopyToVector<unsigned char>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 			return;
 		}
-		case ComponentType::SHORT: {
+		case TINYGLTF_COMPONENT_TYPE_SHORT: {
 			CopyToVector<short>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 			return;
 		}
-		case ComponentType::USHORT: {
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: {
 			CopyToVector<unsigned short>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 			return;
 		}
-		case ComponentType::INT: {
+		case TINYGLTF_COMPONENT_TYPE_INT: {
 			CopyToVector<int>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 			return;
 		}
-		case ComponentType::UINT: {
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: {
 			CopyToVector<uint32>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 			return;
 		}
-		case ComponentType::FLOAT:
-		case ComponentType::DOUBLE: return;
+		case TINYGLTF_COMPONENT_TYPE_FLOAT:
+		case TINYGLTF_COMPONENT_TYPE_DOUBLE: return;
 	}
 }
 
@@ -204,12 +158,12 @@ void CopyToVertexData_Position(
 		byte* elementPtr = &beginPtr[perElementOffset * i];
 		ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-		if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
+		if constexpr (std::is_same_v<double, ComponentType>) {
 			result[i].position[0] = static_cast<float>(data[0]);
 			result[i].position[1] = static_cast<float>(data[1]);
 			result[i].position[2] = static_cast<float>(data[2]);
 		}
-		else { // NOLINT
+		else {
 			static_assert(std::is_same_v<float, ComponentType>);
 			result[i].position[0] = data[0];
 			result[i].position[1] = data[1];
@@ -226,12 +180,12 @@ void CopyToVertexData_Normal(
 		byte* elementPtr = &beginPtr[perElementOffset * i];
 		ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-		if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
+		if constexpr (std::is_same_v<double, ComponentType>) {
 			result[i].normal[0] = static_cast<float>(data[0]);
 			result[i].normal[1] = static_cast<float>(data[1]);
 			result[i].normal[2] = static_cast<float>(data[2]);
 		}
-		else { // NOLINT
+		else {
 			static_assert(std::is_same_v<float, ComponentType>);
 			result[i].normal[0] = data[0];
 			result[i].normal[1] = data[1];
@@ -250,13 +204,13 @@ void CopyToVertexData_Tangent(
 
 		float handness = 1.f;
 
-		if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
+		if constexpr (std::is_same_v<double, ComponentType>) {
 			result[i].tangent[0] = static_cast<float>(data[0]);
 			result[i].tangent[1] = static_cast<float>(data[1]);
 			result[i].tangent[2] = static_cast<float>(data[2]);
 			handness = static_cast<float>(data[3]);
 		}
-		else { // NOLINT
+		else {
 			static_assert(std::is_same_v<float, ComponentType>);
 			result[i].tangent[0] = data[0];
 			result[i].tangent[1] = data[1];
@@ -279,11 +233,11 @@ void CopyToVertexData_TexCoord0(
 		byte* elementPtr = &beginPtr[perElementOffset * i];
 		ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-		if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
+		if constexpr (std::is_same_v<double, ComponentType>) {
 			result[i].textCoord0[0] = static_cast<float>(data[0]);
 			result[i].textCoord0[1] = static_cast<float>(data[1]);
 		}
-		else { // NOLINT
+		else {
 			static_assert(std::is_same_v<float, ComponentType>);
 			result[i].textCoord0[0] = data[0];
 			result[i].textCoord0[1] = data[1];
@@ -302,11 +256,11 @@ void CopyToVertexData_TexCoord1(
 		byte* elementPtr = &beginPtr[perElementOffset * i];
 		ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-		if constexpr (std::is_same_v<double, ComponentType>) { // NOLINT
+		if constexpr (std::is_same_v<double, ComponentType>) {
 			result[i].textCoord1[0] = static_cast<float>(data[0]);
 			result[i].textCoord1[1] = static_cast<float>(data[1]);
 		}
-		else { // NOLINT
+		else {
 			static_assert(std::is_same_v<float, ComponentType>);
 			result[i].textCoord1[0] = data[0];
 			result[i].textCoord1[1] = data[1];
@@ -318,19 +272,19 @@ template<size_t VertexElementIndex, typename ComponentType>
 void LoadIntoVertexData_Selector(
 	std::vector<VertexData>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 {
-	if constexpr (VertexElementIndex == 0) { // NOLINT
+	if constexpr (VertexElementIndex == 0) {
 		CopyToVertexData_Position<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 	}
-	else if constexpr (VertexElementIndex == 1) { // NOLINT
+	else if constexpr (VertexElementIndex == 1) {
 		CopyToVertexData_Normal<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 	}
-	else if constexpr (VertexElementIndex == 2) { // NOLINT
+	else if constexpr (VertexElementIndex == 2) {
 		CopyToVertexData_Tangent<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 	}
-	else if constexpr (VertexElementIndex == 3) { // NOLINT
+	else if constexpr (VertexElementIndex == 3) {
 		CopyToVertexData_TexCoord0<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 	}
-	else if constexpr (VertexElementIndex == 4) { // NOLINT
+	else if constexpr (VertexElementIndex == 4) {
 		CopyToVertexData_TexCoord1<ComponentType>(result, beginPtr, perElementOffset, elementCount);
 	}
 }
@@ -341,23 +295,22 @@ void LoadIntoVertexData(const tg::Model& modelData, int32 accessorIndex, std::ve
 	AccessorDescription desc(modelData, accessorIndex);
 
 	switch (desc.componentType) {
-		case ComponentType::CHAR:
-		case ComponentType::BYTE:
-		case ComponentType::SHORT:
-		case ComponentType::USHORT:
-		case ComponentType::INT:
-		case ComponentType::UINT: LOG_ABORT("Incorrect buffers, debug model...");
-		case ComponentType::FLOAT:
+		case TINYGLTF_COMPONENT_TYPE_BYTE:
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+		case TINYGLTF_COMPONENT_TYPE_SHORT:
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+		case TINYGLTF_COMPONENT_TYPE_INT:
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: LOG_ABORT("Incorrect buffers, debug model...");
+		case TINYGLTF_COMPONENT_TYPE_FLOAT:
 			LoadIntoVertexData_Selector<VertexElementIndex, float>(
 				out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 			return;
-		case ComponentType::DOUBLE:
+		case TINYGLTF_COMPONENT_TYPE_DOUBLE:
 			LoadIntoVertexData_Selector<VertexElementIndex, double>(
 				out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 			return;
 	}
 }
-
 
 class GltfLoader {
 	uri::Uri gltfFilePath;
