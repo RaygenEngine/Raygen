@@ -5,7 +5,7 @@
 #include "engine/Events.h"
 #include "engine/profiler/ProfileScope.h"
 #include "reflection/ReflectionTools.h"
-#include "renderer/VulkanLayer.h"
+#include "rendering/renderer/Renderer.h"
 #include "universe/NodeFactory.h"
 #include "universe/nodes/camera/CameraNode.h"
 #include "universe/nodes/geometry/GeometryNode.h"

@@ -4,8 +4,8 @@
 #include "editor/imgui/ImEd.h"
 #include "reflection/ReflectionTools.h"
 #include "reflection/ReflEnum.h"
-#include "renderer/asset/GpuAssetManager.h"
-#include "renderer/asset/Image.h"
+#include "rendering/asset/GpuAssetManager.h"
+#include "rendering/asset/Image.h"
 
 namespace ed::asset {
 
@@ -43,12 +43,12 @@ void MaybeHoverTooltip(PodEntry* entry)
 
 		ImUtil::TextTooltipUtil(text, scale);
 
-		// WIP:
+		// NEXT:
 		// if (entry->type == mti::GetTypeId<SamplerPod>()) {
 		//	ImGui::BeginTooltip();
 
-		//	auto handle = GpuAssetManager.GetGpuHandle<SamplerPod>(entry->GetHandleAs<SamplerPod>());
-		//	ImGui::Image(GpuAssetManager.LockHandle(handle).GetDebugDescriptor(), ImVec2(256, 256));
+		//	auto handle = GpuAssetManager->GetGpuHandle<SamplerPod>(entry->GetHandleAs<SamplerPod>());
+		//	ImGui::Image(GpuAssetManager->LockHandle(handle).GetDebugDescriptor(), ImVec2(256, 256));
 		//	ImGui::EndTooltip();
 		//}
 

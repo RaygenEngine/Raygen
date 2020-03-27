@@ -8,15 +8,16 @@
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
 #include "reflection/PodTools.h"
-#include "renderer/VulkanLayer.h"
-#include "renderer/wrapper/Device.h"
+#include "rendering/Device.h"
+#include "rendering/renderer/Renderer.h"
+#include "rendering/Instance.h"
 
 #include <imgui/imgui.h>
 #include <imgui/examples/imgui_impl_glfw.h>
 #include <imgui/examples/imgui_impl_vulkan.h>
 #include <glfw/glfw3.h>
 
-namespace imguisyle {
+namespace imguistyle {
 void AddLargeAssetIconsFont(ImFontAtlas* atlas)
 {
 	static ImVector<ImWchar> ranges;
@@ -268,61 +269,27 @@ void SetStyle()
 
 	SetColors();
 }
-} // namespace imguisyle
-void ImguiImpl::InitContext()
-{
-	ImGui::CreateContext();
-
-	ImGui::StyleColorsDark();
-	imguisyle::SetStyle();
-
-	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-	// ImGui::GetIO().ConfigViewportsNoDecoration = false;
-
-	ImGui_ImplGlfw_InitForVulkan(Platform::GetMainHandle(), true);
-	ImGui::GetIO().IniFilename = "EditorImgui.ini";
-}
-
-void ImguiImpl::NewFrame()
-{
-
-	ImGui_ImplGlfw_NewFrame();
-	ImGui_ImplVulkan_NewFrame();
-	ImGui::NewFrame();
-}
-
-void ImguiImpl::CleanupVulkan()
-{
-	ImGui_ImplVulkan_Shutdown();
-}
-
-void ImguiImpl::CleanupContext()
-{
-	ImGui_ImplGlfw_Shutdown();
-
-	ImGui::DestroyContext();
-}
+} // namespace imguistyle
 
 
-void ImguiImpl::InitVulkan()
+void InitVulkan()
 {
 	auto physDev = Device->pd;
 	auto& device = *Device;
 
 	ImGui_ImplVulkan_InitInfo init = {};
-	init.Instance = *Layer->instance;
+	init.Instance = *vl::Instance;
 	init.PhysicalDevice = *physDev;
 	init.Device = device;
 	init.QueueFamily = Device->graphicsQueue.familyIndex;
 	init.Queue = Device->graphicsQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
-	init.DescriptorPool = Layer->poolAllocator.GetImguiPool();
-	init.ImageCount = static_cast<uint32>(Layer->swapchain->images.size());
-	init.MinImageCount = static_cast<uint32>(Layer->swapchain->images.size());
+	init.DescriptorPool = vl::Renderer->poolAllocator.GetImguiPool();
+	init.ImageCount = static_cast<uint32>(vl::Renderer->swapchain->images.size());
+	init.MinImageCount = static_cast<uint32>(vl::Renderer->swapchain->images.size());
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init, Layer->swapchain->renderPass.get());
+	ImGui_ImplVulkan_Init(&init, vl::Renderer->swapchain->renderPass.get());
 
 
 	auto cmdBuffer = Device->transferCmdBuffer;
@@ -348,6 +315,39 @@ void ImguiImpl::InitVulkan()
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
+
+
+void ImguiImpl::InitContext()
+{
+	ImGui::CreateContext();
+
+	ImGui::StyleColorsDark();
+	imguistyle::SetStyle();
+
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	// ImGui::GetIO().ConfigViewportsNoDecoration = false;
+
+	ImGui_ImplGlfw_InitForVulkan(Platform::GetMainHandle(), true);
+	ImGui::GetIO().IniFilename = "EditorImgui.ini";
+	InitVulkan();
+}
+
+void ImguiImpl::NewFrame()
+{
+
+	ImGui_ImplGlfw_NewFrame();
+	ImGui_ImplVulkan_NewFrame();
+	ImGui::NewFrame();
+}
+
+void ImguiImpl::CleanupContext()
+{
+	ImGui_ImplVulkan_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+}
+
 
 void ImguiImpl::EndFrame()
 {

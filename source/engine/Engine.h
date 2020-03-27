@@ -6,7 +6,7 @@ struct GLFWwindow;
 
 class AssetImporterManager;
 class AssetFrontEndManager;
-class Renderer;
+class S_Renderer;
 class Window;
 class World;
 struct Input;

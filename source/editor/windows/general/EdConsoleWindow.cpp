@@ -377,8 +377,6 @@ struct ConsoleState {
 
 					AddLog(" ");
 					for (int i = 0; i < candidates.size(); i++) {
-						// WIP: Add function to consoleentry that "displays" entry with values for variables and aligned
-						// tooltips for everything
 						AddLogConsole(candidates[i]->GetDescriptionLine());
 					}
 				}

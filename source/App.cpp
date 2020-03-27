@@ -7,7 +7,7 @@
 #include "engine/Logger.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
-#include "renderer/VulkanLayer.h"
+#include "rendering/Rendering.h"
 #include "universe/NodeFactory.h"
 #include "universe/Universe.h"
 
@@ -75,11 +75,11 @@ void App::MainLoop()
 		Input.Z_ClearFrameState();
 		Universe::GetMainWorld()->ClearDirtyFlags();
 
-		glfwPollEvents();
+		glfwPollEvents(); // TODO:
 
 		Universe::GetMainWorld()->Update();
 
-		Layer->DrawFrame();
+		Rendering::DrawFrame();
 
 		Engine.ReportFrameDrawn();
 	}
@@ -88,7 +88,7 @@ void App::MainLoop()
 void App::WhileResizing()
 {
 	Universe::GetMainWorld()->Update();
-	Layer->DrawFrame();
+	Rendering::DrawFrame();
 	Engine.ReportFrameDrawn();
 
 	//

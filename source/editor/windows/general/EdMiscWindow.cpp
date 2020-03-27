@@ -5,7 +5,7 @@
 #include "editor/EditorObject.h"
 #include "editor/imgui/ImEd.h"
 #include "editor/imgui/ImguiUtil.h"
-#include "renderer/VulkanLayer.h"
+#include "rendering/renderer/Renderer.h"
 
 #include <imgui/imgui.h>
 namespace ed {
@@ -48,14 +48,14 @@ GBufferDebugWindow::GBufferDebugWindow(std::string_view name)
 
 void GBufferDebugWindow::ImguiDraw()
 {
-	auto& gbuff = Layer->geomPass.m_gBuffer;
+	auto& gbuff = vl::Renderer->geomPass.m_gBuffer;
 
 	bool shouldShowDescriptors = !m_willInvalidateDescriptors.Access();
 
 	ImGui::DragInt2("Preview Size", &m_imgSize.x, 1.f, 0, 4096);
 
 
-	auto showAttachment = [&, shouldShowDescriptors](const char* name, Attachment& att) {
+	auto showAttachment = [&, shouldShowDescriptors](const char* name, vl::Attachment& att) {
 		if (ImGui::CollapsingHeader(name)) {
 			auto descrSet = att.GetDebugDescriptor();
 

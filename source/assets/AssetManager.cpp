@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "assets/AssetManager.h"
 
-#include "renderer/asset/GpuAssetManager.h"
+#include "rendering/asset/GpuAssetManager.h"
 #include "assets/PodIncludes.h"
 #include "assets/Serialization.h"
 #include "reflection/PodTools.h"

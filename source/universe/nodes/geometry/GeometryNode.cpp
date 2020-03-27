@@ -2,8 +2,8 @@
 #include "GeometryNode.h"
 
 #include "assets/AssetManager.h"
-#include "renderer/asset/GpuAssetManager.h"
-#include "renderer/scene/Scene.h"
+#include "rendering/asset/GpuAssetManager.h"
+#include "rendering/scene/Scene.h"
 
 GeometryNode::GeometryNode()
 {
@@ -24,7 +24,7 @@ void GeometryNode::DirtyUpdate(DirtyFlagset dirtyFlags)
 		m_localBB = m_model.Lock()->bbox;
 		CalculateWorldAABB();
 
-		Enqueue([model = GetModel()](SceneGeometry& geom) { geom.model = GpuAssetManager.GetGpuHandle(model); });
+		Enqueue([model = GetModel()](SceneGeometry& geom) { geom.model = vl::GpuAssetManager->GetGpuHandle(model); });
 	}
 
 	if (dirtyFlags[DF::SRT]) {
