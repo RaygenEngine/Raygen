@@ -1,6 +1,5 @@
 #include "pch.h"
-
-#include "engine/Input.h"
+#include "Input.h"
 
 void Input::ReleaseSpecialKey(Key released, Key special)
 {

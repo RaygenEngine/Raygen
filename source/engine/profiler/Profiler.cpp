@@ -1,6 +1,6 @@
 #include "pch.h"
+#include "Profiler.h"
 
-#include "engine/profiler/Profiler.h"
 #include "engine/Logger.h"
 #include "engine/profiler/ProfileScope.h"
 

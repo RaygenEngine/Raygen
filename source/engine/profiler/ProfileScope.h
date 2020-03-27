@@ -1,5 +1,4 @@
 #pragma once
-
 #include "engine/profiler/Profiler.h"
 #include "reflection/TypeId.h"
 

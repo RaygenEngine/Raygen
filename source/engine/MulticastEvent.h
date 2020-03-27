@@ -1,8 +1,7 @@
 #pragma once
-
 #include "core/BoolFlag.h"
-#include "engine/Logger.h"
 #include "engine/Listener.h"
+#include "engine/Logger.h"
 
 #include <algorithm>
 #include <functional>
