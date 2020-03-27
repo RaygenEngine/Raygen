@@ -72,7 +72,7 @@ void App::MainLoop()
 		Editor::PreBeginFrame();
 
 		// clear input soft state (pressed keys, etc.)
-		Engine.GetInput().Z_ClearFrameState();
+		Input.Z_ClearFrameState();
 		Universe::GetMainWorld()->ClearDirtyFlags();
 
 		glfwPollEvents();

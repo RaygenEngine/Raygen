@@ -35,7 +35,6 @@ void S_Engine::InitEngine(App* app)
 
 	m_app = app;
 
-	m_input = new Input();
 	Assets::Init();
 
 	WindowCreationParams mainWindowParams;
@@ -85,13 +84,12 @@ void S_Engine::ReportFrameDrawn()
 void S_Engine::DeinitEngine()
 {
 	// NOTE: It is REALLY important to remember the reverse order here
-	delete Universe::GetMainWorld();
+	Universe::Destroy();
 	delete Layer;
 	delete Device;
 	Editor::Destroy();
 	Platform::Destroy();
 	Assets::Destroy();
-	delete m_input;
 }
 
 bool S_Engine::ThreadFpsCounter::CountFrame()

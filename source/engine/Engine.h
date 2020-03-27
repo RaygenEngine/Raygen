@@ -29,10 +29,6 @@ inline class S_Engine : public Listener {
 
 public:
 	S_Engine() = default;
-
-	// Input will be valid forever after initialization.
-	[[nodiscard]] Input& GetInput() { return *m_input; }
-
 	~S_Engine();
 
 	S_Engine(S_Engine const&) = delete;
@@ -41,9 +37,6 @@ public:
 	S_Engine& operator=(S_Engine&&) = delete;
 
 private:
-	// Owning Pointer, Expected to be valid 'forever' after InitEngine.
-	Input* m_input{ nullptr };
-
 	// Non owning pointer, expected to be valid for the whole program execution
 	App* m_app{ nullptr };
 

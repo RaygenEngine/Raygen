@@ -315,32 +315,31 @@ void EditorObject::Run_MenuBar()
 
 void EditorObject::HandleInput()
 {
-	auto& input = Engine.GetInput();
-	if (input.IsDown(Key::LeftShift) && input.IsJustPressed(Key::F)) {
+	if (Input.IsDown(Key::LeftShift) && Input.IsJustPressed(Key::F)) {
 		PilotThis(m_selectedNode);
 	}
-	else if (input.IsDown(Key::F)) {
+	else if (Input.IsDown(Key::F)) {
 		if (m_selectedNode) {
 			FocusNode(m_selectedNode);
 		}
 	}
 
-	if (!input.IsDown(Key::Mouse_RightClick)) {
+	if (!Input.IsDown(Key::Mouse_RightClick)) {
 		using op = ed::ManipOperationMode::Operation;
 
 		auto& manipMode = m_windowsComponent.GetUniqueWindow<ed::PropertyEditorWindow>()->m_manipMode;
 
-		if (input.IsJustPressed(Key::W)) {
+		if (Input.IsJustPressed(Key::W)) {
 			manipMode.op = op::Translate;
 		}
-		else if (input.IsJustPressed(Key::E)) {
+		else if (Input.IsJustPressed(Key::E)) {
 			manipMode.op = op::Rotate;
 		}
-		else if (input.IsJustPressed(Key::R)) {
+		else if (Input.IsJustPressed(Key::R)) {
 			manipMode.op = op::Scale;
 		}
 
-		if (input.IsJustPressed(Key::Q)) {
+		if (Input.IsJustPressed(Key::Q)) {
 			manipMode.mode = manipMode.mode == ed::ManipOperationMode::Space::Local
 								 ? ed::ManipOperationMode::Space::World
 								 : ed::ManipOperationMode::Space::Local;

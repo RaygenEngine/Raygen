@@ -16,7 +16,7 @@ using KeyStates = std::bitset<static_cast<int32>(Key::_NUM)>;
 // * Modifier support for key presses, useful for the editor - circumvented by event calls
 // * Drop mouse move event for glfwGetMousePosition()
 
-struct Input {
+inline struct Input {
 	struct Stick {
 		float magnitude{ 0.0f };
 		glm::vec2 direction;
@@ -90,4 +90,4 @@ public:
 	{
 		return IsDown(key) && AreKeysDown(keys...);
 	}
-};
+} Input;
