@@ -9,11 +9,10 @@
 
 #include <imgui.h>
 
-
 NodeContextActions::NodeContextActions()
 {
-	baseActions.emplace_back("Duplicate", &EditorObject::Duplicate);
-	baseActions.emplace_back("Delete", &EditorObject::Delete);
+	baseActions.emplace_back("Duplicate", &EditorObject_::Duplicate);
+	baseActions.emplace_back("Delete", &EditorObject_::Delete);
 	baseActions.emplace_back();
 
 	baseActions.emplace_back("Up", &worldop::MoveChildUp);
@@ -25,7 +24,7 @@ std::vector<NodeContextActions::Entry> NodeContextActions::GetActions(Node* node
 {
 	if (node->IsRoot()) {
 		std::vector<Entry> actions;
-		actions.emplace_back("Move Selected Under", &EditorObject::MoveSelectedUnder);
+		actions.emplace_back("Move Selected Under", &EditorObject_::MoveSelectedUnder);
 		return std::move(actions);
 	}
 
@@ -37,18 +36,18 @@ std::vector<NodeContextActions::Entry> NodeContextActions::GetActions(Node* node
 	std::vector<Entry> actions = baseActions;
 
 	if (extendedList) {
-		actions.emplace_back("Move Selected Under", &EditorObject::MoveSelectedUnder);
+		actions.emplace_back("Move Selected Under", &EditorObject_::MoveSelectedUnder);
 
 		actions.emplace_back();
-		actions.emplace_back("Teleport to Camera", &EditorObject::TeleportToCamera);
+		actions.emplace_back("Teleport to Camera", &EditorObject_::TeleportToCamera);
 
-		auto editorCam = EditorObj->m_editorCamera;
+		auto editorCam = EditorObject->m_editorCamera;
 		if (editorCam && editorCam->GetParent() == node) {
-			actions.emplace_back("Stop Piloting", &EditorObject::PilotThis);
+			actions.emplace_back("Stop Piloting", &EditorObject_::PilotThis);
 		}
 		else {
-			actions.emplace_back("Focus", &EditorObject::FocusNode);
-			actions.emplace_back("Pilot", &EditorObject::PilotThis);
+			actions.emplace_back("Focus", &EditorObject_::FocusNode);
+			actions.emplace_back("Pilot", &EditorObject_::PilotThis);
 		}
 
 		if (node->IsA<CameraNode>()) {

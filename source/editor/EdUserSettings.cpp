@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "editor/EdUserSettings.h"
+#include "EdUserSettings.h"
 
 #include "engine/Logger.h"
 #include "reflection/ReflectionTools.h"

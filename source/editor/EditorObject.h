@@ -12,7 +12,7 @@
 class Node;
 class AssetWindow;
 
-inline class EditorObject : public Listener {
+inline class EditorObject_ : public Listener {
 public:
 	static Node* GetSelectedNode();
 
@@ -56,7 +56,7 @@ public:
 			options.emplace_back(option);
 		}
 
-		virtual void DrawOptions(EditorObject* editor)
+		virtual void DrawOptions(EditorObject_* editor)
 		{
 			for (auto& entry : options) {
 				if (entry.name == nullptr) {
@@ -70,7 +70,7 @@ public:
 			}
 		}
 
-		void Draw(EditorObject* editor)
+		void Draw(EditorObject_* editor)
 		{
 			bool open = ImEd::BeginMenu(name);
 			if (open) {
@@ -111,12 +111,12 @@ public:
 
 	ed::ComponentWindows m_windowsComponent;
 
-	EditorObject();
-	virtual ~EditorObject();
-	EditorObject(const EditorObject&) = delete;
-	EditorObject(EditorObject&&) = delete;
-	EditorObject& operator=(const EditorObject&) = delete;
-	EditorObject& operator=(EditorObject&&) = delete;
+	EditorObject_();
+	virtual ~EditorObject_();
+	EditorObject_(const EditorObject_&) = delete;
+	EditorObject_(EditorObject_&&) = delete;
+	EditorObject_& operator=(const EditorObject_&) = delete;
+	EditorObject_& operator=(EditorObject_&&) = delete;
 
 
 	void UpdateEditor();
@@ -178,7 +178,7 @@ private:
 
 	std::vector<std::function<void()>> m_postDrawCommands;
 	std::vector<std::function<void()>> m_postFrameCommands;
-} * EditorObj;
+} * EditorObject;
 
 template<typename Lambda>
 void RecurseNodes(Node* root, Lambda f, int32 depth = 0)

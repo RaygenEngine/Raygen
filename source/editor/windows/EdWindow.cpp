@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "editor/windows/EdWindow.h"
+#include "EdWindow.h"
 
 #include "engine/Logger.h"
 

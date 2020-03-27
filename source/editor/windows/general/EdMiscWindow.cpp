@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "editor/windows/general/EdMiscWindow.h"
+#include "EdMiscWindow.h"
 
 #include "editor/DataStrings.h"
 #include "editor/EditorObject.h"

@@ -24,7 +24,7 @@ class DirectionalLightNode;
 
 inline class World {
 
-	friend class EditorObject;
+	friend class EditorObject_;
 	friend class NodeFactory;
 
 	template<typename T>

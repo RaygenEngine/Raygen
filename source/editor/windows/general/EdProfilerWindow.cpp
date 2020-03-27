@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "editor/windows/general/EdProfilerWindow.h"
+#include "EdProfilerWindow.h"
 
 #include "editor/imgui/ImEd.h"
 #include "editor/misc/NativeFileBrowser.h"

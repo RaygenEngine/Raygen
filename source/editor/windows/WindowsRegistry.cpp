@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "editor/windows/WindowsRegistry.h"
+#include "WindowsRegistry.h"
 
 #include "editor/EdComponentWindows.h"
 #include "editor/windows/general/EdAssetListWindow.h"

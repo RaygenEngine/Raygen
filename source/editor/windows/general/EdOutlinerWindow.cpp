@@ -27,7 +27,7 @@ void OutlinerWindow::ImguiDraw()
 				   + sceneconv::FilterNodeClassName(node->GetClass().GetName()) + "> " + node->GetName();
 		ImGui::PushID(node);
 
-		auto editorCam = EditorObj->m_editorCamera;
+		auto editorCam = EditorObject->m_editorCamera;
 
 
 		if (node == editorCam) {
@@ -38,8 +38,8 @@ void OutlinerWindow::ImguiDraw()
 			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.36f, 0.04f, 0.11f, 0.95f));
 		}
 
-		if (ImGui::Selectable(str.c_str(), node == EditorObject::GetSelectedNode())) {
-			EditorObject::SelectNode(node);
+		if (ImGui::Selectable(str.c_str(), node == EditorObject_::GetSelectedNode())) {
+			EditorObject_::SelectNode(node);
 		}
 
 		if (node != editorCam) {
@@ -81,12 +81,12 @@ void OutlinerWindow::ImguiDraw()
 			newNode->SetName(entry->GetNameStr());
 			newNode->SetModel(entry->GetHandleAs<ModelPod>());
 			Universe::GetMainWorld()->Z_RegisterNode(newNode, Universe::GetMainWorld()->GetRoot());
-			if (!EditorObj->IsCameraPiloting()) {
-				EditorObject::PushPostFrameCommand([newNode]() { EditorObject::FocusNode(newNode); });
+			if (!EditorObject->IsCameraPiloting()) {
+				EditorObject_::PushPostFrameCommand([newNode]() { EditorObject_::FocusNode(newNode); });
 			}
 		};
 
-		EditorObject::PushCommand(cmd);
+		EditorObject_::PushCommand(cmd);
 	}
 
 
@@ -104,12 +104,12 @@ void OutlinerWindow::ImguiDraw()
 				newNode->SetName(podEntry->name);
 				newNode->SetModel(PodHandle<ModelPod>{ uid });
 				Universe::GetMainWorld()->Z_RegisterNode(newNode, Universe::GetMainWorld()->GetRoot());
-				if (!EditorObj->IsCameraPiloting()) {
-					EditorObject::PushPostFrameCommand([newNode]() { EditorObject::FocusNode(newNode); });
+				if (!EditorObject->IsCameraPiloting()) {
+					EditorObject_::PushPostFrameCommand([newNode]() { EditorObject_::FocusNode(newNode); });
 				}
 			};
 
-			EditorObject::PushCommand(cmd);
+			EditorObject_::PushCommand(cmd);
 		}
 		ImGui::EndDragDropTarget();
 	}
@@ -122,8 +122,8 @@ void OutlinerWindow::ImguiDraw()
 				Run_NewNodeMenu(Universe::GetMainWorld()->GetRoot());
 				ImGui::EndMenu();
 			}
-			if (EditorObj->IsCameraPiloting() && ImGui::MenuItem("Stop piloting")) {
-				EditorObject::PilotThis(nullptr);
+			if (EditorObject->IsCameraPiloting() && ImGui::MenuItem("Stop piloting")) {
+				EditorObject_::PilotThis(nullptr);
 			}
 			ImGui::EndPopup();
 		}
@@ -135,7 +135,7 @@ void OutlinerWindow::ImguiDraw()
 bool OutlinerWindow::Run_ContextPopup(Node* node)
 {
 	if (ImGui::BeginPopupContextItem("OutlinerElemContext")) {
-		for (auto& action : EditorObj->m_nodeContextActions->GetActions(node, true)) {
+		for (auto& action : EditorObject->m_nodeContextActions->GetActions(node, true)) {
 			if (!action.IsSplitter()) {
 				if (ImGui::MenuItem(action.name)) {
 					action.function(node);
@@ -178,7 +178,7 @@ void OutlinerWindow::Run_NewNodeMenu(Node* underNode)
 				newNode->SetDirtyMultiple(temp);
 			};
 
-			EditorObject::PushCommand(cmd);
+			EditorObject_::PushCommand(cmd);
 		}
 	}
 }

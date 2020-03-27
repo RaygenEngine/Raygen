@@ -1,6 +1,5 @@
 #pragma once
 
-
 class Editor {
 	friend class S_Engine;
 
