@@ -8,5 +8,5 @@ struct ImageImporter : public PodImporter<ImagePod> {
 	{
 	}
 
-	BasePodHandle Import(const fs::path& path) override;
+	[[nodiscard]] BasePodHandle Import(const fs::path& path) override;
 };

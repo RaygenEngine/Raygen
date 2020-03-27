@@ -1,22 +1,8 @@
 #pragma once
-
 #include "engine/Listener.h"
-
-struct GLFWwindow;
-
-class AssetImporterManager;
-class AssetFrontEndManager;
-class S_Renderer;
-class Window;
-class World;
-struct Input;
-class EditorObject;
+#include "engine/Timer.h"
 
 class App;
-
-class NodeFactory;
-
-#include "engine/Timer.h"
 
 inline struct ViewportCoordinates {
 	glm::uvec2 position{};

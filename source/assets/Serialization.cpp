@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "assets/Serialization.h"
+#include "Serialization.h"
 
 #include "assets/PodIncludes.h"
 #include "assets/PodSerializers.h"

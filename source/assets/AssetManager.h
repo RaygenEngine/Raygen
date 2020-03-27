@@ -1,9 +1,9 @@
 #pragma once
-#include "assets/AssetPod.h"
 #include "assets/AssetImporterManager.h"
-#include "assets/AssetHandlerManager.h"
-#include "assets/PodHandle.h"
+#include "assets/AssetPod.h"
+#include "assets/AssetRegistry.h"
 #include "assets/PodEntry.h"
+#include "assets/PodHandle.h"
 #include "assets/UriLibrary.h"
 #include "engine/console/ConsoleVariable.h"
 #include "engine/Engine.h"
@@ -33,15 +33,15 @@
 //
 
 
-inline class S_AssetManager {
+inline class AssetManager_ {
 public:
-	S_AssetManager(const fs::path& workingDir = "assets/", const fs::path& defaultBinPath = "gen-data/");
+	AssetManager_(const fs::path& workingDir = "assets/", const fs::path& defaultBinPath = "gen-data/");
 
 	void Import(const fs::path& path) { ImporterManager->m_importerRegistry.ImportFile(path); }
 
 	template<CONC(CAssetPod) T>
-	PodHandle<T> ImportAs(const fs::path& path)
+	[[nodiscard]] PodHandle<T> ImportAs(const fs::path& path)
 	{
 		return m_importerManager.m_importerRegistry.ImportFile<T>(path);
 	}
-} * AssetManager;
+} * AssetManager{};

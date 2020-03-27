@@ -1,10 +1,9 @@
 #pragma once
 #include "assets/AssetPod.h"
-#include "assets/PodHandle.h"
 #include "assets/PodEntry.h"
-#include "core/StringUtl.h"
+#include "assets/PodHandle.h"
 #include "assets/UriLibrary.h"
-
+#include "core/StringUtl.h"
 
 struct ImagePod;
 struct SamplerPod;
@@ -12,12 +11,11 @@ struct ShaderPod;
 struct StringPod;
 class ReflClass;
 
-
 class AssetHandlerManager {
 
 private:
-	friend class S_AssetImporterManager;
-	friend class S_AssetManager;
+	friend class AssetImporterManager_;
+	friend class AssetManager_;
 
 	static AssetHandlerManager& Get()
 	{

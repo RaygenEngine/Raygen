@@ -1,5 +1,4 @@
 #pragma once
-
 #include "core/math-ext/AABB.h"
 #include "core/math-ext/Plane.h"
 

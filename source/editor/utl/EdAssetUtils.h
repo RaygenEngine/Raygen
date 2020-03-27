@@ -1,5 +1,5 @@
 #pragma once
-#include "assets/AssetManager.h"
+#include "assets/PodEntry.h"
 
 namespace ed::asset {
 

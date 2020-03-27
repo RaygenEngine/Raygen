@@ -4,7 +4,6 @@
 #include "engine/Logger.h"
 #include "engine/console/ConsoleVariable.h"
 
-#include <glfw/glfw3.h>
 
 PFN_vkCreateDebugUtilsMessengerEXT pfnVkCreateDebugUtilsMessengerEXT;
 PFN_vkDestroyDebugUtilsMessengerEXT pfnVkDestroyDebugUtilsMessengerEXT;

@@ -8,5 +8,5 @@ struct GltfImporter : public PodImporter<ModelPod> {
 	{
 	}
 
-	BasePodHandle Import(const fs::path& path) override;
+	[[nodiscard]] BasePodHandle Import(const fs::path& path) override;
 };

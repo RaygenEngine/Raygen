@@ -1,7 +1,6 @@
 #include "pch.h"
-#include "rendering/Device.h"
+#include "Device.h"
 
-#include "assets/AssetManager.h"
 #include "assets/util/SpirvCompiler.h"
 #include "engine/Logger.h"
 

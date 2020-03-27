@@ -1,9 +1,10 @@
 #include "pch.h"
-#include "editor/windows/general/EdConsoleWindow.h"
+#include "EdConsoleWindow.h"
 
 #include "editor/imgui/ImEd.h"
 #include "editor/imgui/ImguiImpl.h"
 #include "engine/console/Console.h"
+#include "engine/console/ConsoleVariable.h"
 
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>

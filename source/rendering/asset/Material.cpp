@@ -1,7 +1,6 @@
 #include "pch.h"
-#include "rendering/asset/Material.h"
+#include "Material.h"
 
-#include "assets/AssetManager.h"
 #include "assets/pods/MaterialPod.h"
 #include "rendering/asset/GpuAssetManager.h"
 #include "rendering/renderer/Renderer.h"

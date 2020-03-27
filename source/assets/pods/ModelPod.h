@@ -23,7 +23,7 @@ struct Mesh {
 	std::vector<GeometryGroup> geometryGroups{};
 };
 
-struct ModelPod : public AssetPod {
+struct ModelPod : AssetPod {
 
 	REFLECTED_POD(ModelPod)
 	{
