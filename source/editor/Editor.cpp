@@ -18,11 +18,6 @@ void Editor::Update()
 	EditorObj->UpdateEditor();
 }
 
-void Editor::PreBeginFrame()
-{
-	EditorObj->PreBeginFrame();
-}
-
 bool Editor::ShouldUpdateWorld()
 {
 	return EditorObj->ShouldUpdateWorld();

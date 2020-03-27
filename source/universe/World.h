@@ -124,9 +124,11 @@ public:
 	[[nodiscard]] nlohmann::json& GetLoadedFromJson() { return m_loadedFrom; }
 	[[nodiscard]] fs::path& GetLoadedFromPath() { return m_loadedFromPath; }
 
+private:
 	void DirtyUpdateWorld();
 	void ClearDirtyFlags();
 
+public:
 	// Default nullptr parent means this will be registered to root.
 	// DOC: No documentation as to when it is safe to call this. Usually it is not.
 	template<typename T>
@@ -180,4 +182,4 @@ private:
 		}
 		return nullptr;
 	}
-} * MainWorld;
+} * MainWorld{};

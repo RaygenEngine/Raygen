@@ -1,4 +1,5 @@
 #pragma once
+#include "core/iterable/IterableSafeVector.h"
 #include "editor/EdComponentWindows.h"
 #include "editor/imgui/ImEd.h"
 #include "editor/NodeContextActions.h"
@@ -105,8 +106,6 @@ public:
 
 	UniquePtr<NodeContextActions> m_nodeContextActions;
 
-	fs::path m_sceneToLoad{};
-
 	std::vector<UniquePtr<ImMenu>> m_menus;
 
 	ed::ComponentWindows m_windowsComponent;
@@ -127,8 +126,6 @@ public:
 
 	[[nodiscard]] bool ShouldUpdateWorld() const { return m_updateWorld; }
 
-	void PreBeginFrame();
-
 	static void SelectNode(Node* node);
 
 	static void MoveSelectedUnder(Node* node);
@@ -144,8 +141,7 @@ public:
 	void Run_MenuBar();
 
 	static void PushCommand(std::function<void()>&& func);
-	static void PushPostFrameCommand(std::function<void()>&& func);
-
+	static void PushDeferredCommand(std::function<void()>&& func);
 
 	void OnPlay();
 	void OnStopPlay();
@@ -170,14 +166,14 @@ private:
 	void SpawnEditorCamera();
 
 	void OpenLoadDialog();
-	void LoadScene(const fs::path& scenefile);
 	void ReloadScene();
 
 	void HandleInput();
 	void Dockspace();
 
-	std::vector<std::function<void()>> m_postDrawCommands;
-	std::vector<std::function<void()>> m_postFrameCommands;
+	IterableSafeVector<std::function<void()>> m_postDrawCommands;
+	std::vector<std::function<void()>> m_deferredCommands;
+
 } * EditorObj;
 
 template<typename Lambda>

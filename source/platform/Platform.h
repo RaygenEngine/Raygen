@@ -16,4 +16,6 @@ public:
 	[[nodiscard]] static Window* GetMainWindow();
 	[[nodiscard]] static GLFWwindow* GetMainHandle() { return GetMainWindow()->GetHandle(); }
 	[[nodiscard]] static glm::uvec2 GetMainSize() { return GetMainWindow()->GetSize(); }
+
+	static void PollEvents();
 };
