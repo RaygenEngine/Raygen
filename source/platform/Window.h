@@ -1,6 +1,4 @@
 #pragma once
-#include "engine/Engine.h"
-
 struct GLFWwindow;
 
 struct WindowCreationParams {
