@@ -2,7 +2,7 @@
 #include "Platform.h"
 
 #include "platform/GlfwUtl.h"
-
+#include <glfw/glfw3.h>
 
 Window* MainWindow{};
 
@@ -24,4 +24,9 @@ std::vector<const char*> Platform::GetVulkanExtensions()
 Window* Platform::GetMainWindow()
 {
 	return MainWindow;
+}
+
+void Platform::PollEvents()
+{
+	glfwPollEvents();
 }

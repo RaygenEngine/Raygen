@@ -42,21 +42,11 @@ void App::PreMainInit(int32 argc, char* argv[]) // NOLINT
 
 int32 App::Main(int32 argc, char* argv[]) // NOLINT
 {
-	LOG_INFO("Running app: {}", m_name);
-
-
 	Engine.InitEngine(this);
 
-
-	Universe::GetMainWorld()->LoadAndPrepareWorld(m_initialScene);
-
-
-	// Allow for world to update any flags that became dirty since InitWorld to here. (eg: resize events, nodes added
-	// later etc)
-	Universe::GetMainWorld()->DirtyUpdateWorld();
+	Universe::LoadMainWorld(m_initialScene);
 
 	MainLoop();
-
 
 	Engine.DeinitEngine();
 
@@ -67,18 +57,14 @@ void App::MainLoop()
 {
 	while (!glfwWindowShouldClose(Platform::GetMainHandle())) {
 		Profiler.BeginFrame();
-
 		PROFILE_SCOPE(Engine);
-		Editor::PreBeginFrame();
 
-		// clear input soft state (pressed keys, etc.)
+		Universe::LoadPendingWorlds();
+
 		Input.Z_ClearFrameState();
-		Universe::GetMainWorld()->ClearDirtyFlags();
-
-		glfwPollEvents(); // TODO:
+		Platform::PollEvents();
 
 		Universe::GetMainWorld()->Update();
-
 		Rendering::DrawFrame();
 
 		Engine.ReportFrameDrawn();
@@ -87,14 +73,11 @@ void App::MainLoop()
 
 void App::WhileResizing()
 {
+	Universe::LoadPendingWorlds();
 	Universe::GetMainWorld()->Update();
+
 	Rendering::DrawFrame();
 	Engine.ReportFrameDrawn();
-
-	//
-	//
-
-	Editor::PreBeginFrame();
 }
 
 NodeFactory* App::MakeNodeFactory()

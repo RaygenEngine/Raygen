@@ -37,6 +37,7 @@ struct IterableSafeVector {
 
 		vec.insert(end(vec), make_move_iterator(addingCache.begin()), make_move_iterator(addingCache.end()));
 		addingCache.clear();
+		isIterating = false;
 	}
 
 	template<typename Tt>
@@ -64,5 +65,28 @@ struct IterableSafeVector {
 			return;
 		}
 		erasingCacheIndicies.insert(iterator - vec.begin());
+	}
+
+	// a "safe" region that keeps consuming objects (as a queue) until the vector is empty.
+	// eg:
+	// while (safeVec.ConsumingRegion()) {
+	//     for (auto& elem : safeVec.vec) {
+	//			[Safe to .Emplace()]
+	//	   }
+	// }
+	// Returns true if you should keep iterating.
+	//
+	// NOTE: Do not mix Begin/EndSafeRegion with ConsumingRegion.
+	// NOTE: Removing elements from the queue is currently not supported during consuming region
+	// TODO: Test
+	bool ConsumingRegion()
+	{
+		if (isIterating) {
+			vec.clear();
+			vec.swap(addingCache);
+		}
+
+		isIterating = vec.size() > 0;
+		return isIterating;
 	}
 };

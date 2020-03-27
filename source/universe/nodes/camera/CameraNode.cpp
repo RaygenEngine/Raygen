@@ -2,6 +2,11 @@
 #include "CameraNode.h"
 
 
+void CameraNode::EnqueueActiveCamera()
+{
+	Scene->EnqueueActiveCameraCmd(sceneUid);
+}
+
 CameraNode::CameraNode()
 {
 	sceneUid = Scene->EnqueueCreateCmd<SceneCamera>();

@@ -112,5 +112,5 @@ public:
 
 	void InitQuadDescriptor();
 	void DrawFrame();
-} * Renderer;
+} * Renderer{};
 } // namespace vl
