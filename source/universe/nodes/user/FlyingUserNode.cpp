@@ -12,7 +12,7 @@ void FlyingUserNode::Update(float deltaTime)
 {
 	UserNode::Update(deltaTime);
 
-	auto& input = Engine.GetInput();
+	auto& input = Input;
 	auto& gamepad = input.GetGamepadState();
 
 	float pitch = 0.f;

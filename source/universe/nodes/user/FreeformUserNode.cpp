@@ -10,7 +10,7 @@
 void FreeformUserNode::Update(float deltaTime)
 {
 	PROFILE_SCOPE(World);
-	auto& input = Engine.GetInput();
+	auto& input = Input;
 	auto& gamepad = input.GetGamepadState();
 
 	m_movementSpeed = glm::clamp(m_movementSpeed + input.GetScrollDelta() / 240.f * 2.0f, 1.0f, 100.0f);

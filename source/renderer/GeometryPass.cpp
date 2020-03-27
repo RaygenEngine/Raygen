@@ -319,7 +319,7 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 	PROFILE_SCOPE(Renderer);
 
 
-	if (Engine.GetInput().IsJustPressed(Key::Comma)) {
+	if (Input.IsJustPressed(Key::Comma)) {
 		Device->waitIdle();
 		MakePipeline();
 		LOG_REPORT("Remade pipeline");

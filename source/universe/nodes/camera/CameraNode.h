@@ -6,8 +6,6 @@
 // Note: to make a automatic camera that resizes to window size see WindowCameraNode
 class CameraNode : public Node {
 
-	friend class OVRNode;
-
 	REFLECTED_NODE(CameraNode, Node, DF_FLAGS(Projection, ViewportSize, FocalLength))
 	{
 		REFLECT_ICON(FA_CAMERA_RETRO);
