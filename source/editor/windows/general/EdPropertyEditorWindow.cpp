@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "EdPropertyEditorWindow.h"
 
-#include "assets/AssetManager.h"
 #include "editor/DataStrings.h"
 #include "editor/Editor.h"
 #include "editor/imgui/ImguiUtil.h"

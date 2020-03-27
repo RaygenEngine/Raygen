@@ -1,10 +1,10 @@
 #include "pch.h"
-#include "assets/AssetManager.h"
+#include "AssetManager.h"
 
-#include "rendering/asset/GpuAssetManager.h"
 #include "assets/PodIncludes.h"
 #include "assets/Serialization.h"
 #include "reflection/PodTools.h"
+#include "rendering/asset/GpuAssetManager.h"
 
 #include <vulkan/vulkan.hpp>
 #include <iostream>
@@ -117,7 +117,7 @@ void AssetHandlerManager::LoadFromDiskTypelessInternal(PodEntry* entry)
 	DeserializePodFromBinary(entry);
 }
 
-S_AssetManager::S_AssetManager(const fs::path& workingDir, const fs::path& defaultBinPath)
+AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& defaultBinPath)
 {
 	AssetHandlerManager::Get().m_pods.push_back(std::make_unique<PodEntry>());
 

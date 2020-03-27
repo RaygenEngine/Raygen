@@ -1,7 +1,6 @@
 #include "pch.h"
-#include "rendering/asset/Model.h"
+#include "Model.h"
 
-#include "assets/AssetManager.h"
 #include "rendering/asset/GpuAssetManager.h"
 #include "rendering/renderer/Renderer.h"
 #include "rendering/Device.h"

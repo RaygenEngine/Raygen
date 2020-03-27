@@ -1,5 +1,5 @@
 #pragma once
-#include "assets/AssetManager.h"
+#include "assets/PodEntry.h"
 #include "editor/windows/EdWindow.h"
 #include "engine/profiler/ProfilerSetup.h"
 

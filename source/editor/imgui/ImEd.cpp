@@ -1,5 +1,8 @@
 #include "pch.h"
-#include "editor/imgui/ImEd.h"
+#include "ImEd.h"
+
+#include "assets/PodEntry.h"
+#include "assets/AssetRegistry.h"
 
 namespace ImEd {
 int InputTextCallback(ImGuiInputTextCallbackData* data);

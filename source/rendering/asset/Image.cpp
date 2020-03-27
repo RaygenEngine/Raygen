@@ -1,11 +1,10 @@
 #include "pch.h"
-#include "rendering/asset/Image.h"
+#include "Image.h"
 
-#include "assets/AssetManager.h"
-#include "rendering/VulkanUtl.h"
-#include "rendering/renderer/Renderer.h"
-#include "rendering/wrapper/Buffer.h"
 #include "rendering/Device.h"
+#include "rendering/renderer/Renderer.h"
+#include "rendering/VulkanUtl.h"
+#include "rendering/wrapper/Buffer.h"
 
 
 GpuAssetBaseTyped<ImagePod>::GpuAssetBaseTyped(PodHandle<ImagePod> podHandle)

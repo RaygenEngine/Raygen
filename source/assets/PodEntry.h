@@ -2,6 +2,8 @@
 #include "assets/AssetPod.h"
 #include "assets/PodHandle.h"
 
+#include "engine/Logger.h"
+
 class ReflClass;
 
 struct PodDeleter {

@@ -2,6 +2,7 @@
 #include "assets/AssetPod.h"
 #include "reflection/GenMacros.h"
 
+// DOC:
 struct ImagePod : AssetPod {
 	REFLECTED_POD(ImagePod)
 	{
@@ -14,11 +15,12 @@ struct ImagePod : AssetPod {
 		REFLECT_VAR(isHdr, NoEdit);
 	}
 
+	// default imagepod is byte/1x1/white
 	int32 width{ 1 };
 	int32 height{ 1 };
 
 	std::vector<byte> data{ 0xFF, 0xFF, 0xFF, 0xFF };
 
-	// DOC: if(isHdr) data -> float* else data -> byte*
+	// byte* or float*
 	bool isHdr{ false };
 };

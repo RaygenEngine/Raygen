@@ -1,7 +1,6 @@
 #pragma once
 #include "assets/AssetPod.h"
 #include "assets/PodFwd.h"
-#include "engine/Engine.h"
 
 struct PodEntry;
 

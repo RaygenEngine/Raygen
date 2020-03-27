@@ -1,5 +1,4 @@
 #pragma once
-#include "assets/AssetManager.h"
 #include "assets/pods/SamplerPod.h"
 #include "rendering/asset/GpuAssetHandle.h"
 #include "rendering/wrapper/ImageObj.h"

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "assets/ImporterRegistry.h"
+#include "ImporterRegistry.h"
 
 #include "assets/importers/GltfImporter.h"
 #include "assets/importers/ImageImporter.h"

@@ -1,7 +1,6 @@
 #include "pch.h"
-#include "editor/windows/general/EdAssetListWindow.h"
+#include "EdAssetListWindow.h"
 
-#include "assets/AssetManager.h"
 #include "core/StringUtl.h"
 #include "editor/EditorObject.h"
 #include "editor/imgui/ImEd.h"
@@ -11,7 +10,7 @@
 #include "reflection/ReflectionTools.h"
 
 #include <spdlog/fmt/fmt.h>
-#include <imgui_internal.h>
+#include <imgui/imgui_internal.h>
 
 namespace ed {
 AssetListWindow::AssetListWindow(std::string_view name)

@@ -1,7 +1,6 @@
 #pragma once
 #include "assets/AssetManager.h"
 
-
 class Assets {
 	friend class S_Engine;
 

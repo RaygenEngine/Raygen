@@ -6,7 +6,6 @@
 
 #include <bitset>
 
-class AssetManager;
 class World;
 class RootNode;
 

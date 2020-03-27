@@ -1,7 +1,8 @@
 #include "pch.h"
 #include "GltfImporter.h"
 
-#include "assets/AssetManager.h"
+#include "assets/AssetImporterManager.h"
+#include "core/StringUtl.h"
 
 #include <tinygltf/tiny_gltf.h>
 
@@ -343,7 +344,7 @@ class GltfLoader {
 public:
 	GltfLoader(const fs::path& path);
 
-	BasePodHandle Load();
+	[[nodiscard]] BasePodHandle Load();
 };
 
 GltfLoader::GltfLoader(const fs::path& path)

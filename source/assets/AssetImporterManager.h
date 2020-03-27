@@ -1,10 +1,9 @@
 #pragma once
-#include "assets/AssetHandlerManager.h"
+#include "assets/AssetRegistry.h"
 #include "assets/ImporterRegistry.h"
 
-// asset cache responsible for "cpu" files (xmd, images, string files, xml files, etc)
-inline class S_AssetImporterManager {
-	friend class S_AssetManager;
+inline class AssetImporterManager_ {
+	friend class AssetManager_;
 	ImporterRegistry m_importerRegistry;
 
 
@@ -17,7 +16,7 @@ inline class S_AssetImporterManager {
 		int32 stackSize{ 0 };
 		fs::path currentOpImportingPath{};
 
-		void PushOperation(S_AssetImporterManager& importer, fs::path& inOutImportingPath)
+		void PushOperation(AssetImporterManager_& importer, fs::path& inOutImportingPath)
 		{
 			if (stackSize == 0) {
 				if (inOutImportingPath.empty()) {
@@ -45,7 +44,7 @@ inline class S_AssetImporterManager {
 
 	ImportOperation m_currentOperation;
 
-	uri::Uri GeneratePath(uri::Uri importPath, uri::Uri name)
+	[[nodiscard]] uri::Uri GeneratePath(uri::Uri importPath, uri::Uri name)
 	{
 		auto directory = m_defaultImportingPath.string(); // NEXT: Use importing operation
 		auto filename = AssetHandlerManager::SuggestFilename(directory, name);
@@ -67,7 +66,7 @@ public:
 
 
 	template<CONC(CAssetPod) PodType>
-	std::pair<PodHandle<PodType>, PodType*> CreateEntry(
+	[[nodiscard]] std::pair<PodHandle<PodType>, PodType*> CreateEntry(
 		const uri::Uri& importPath, const uri::Uri& name, bool reimportOnLoad = false, bool exportOnSave = false)
 	{
 		return CreateEntryImpl<PodType>(importPath, name, false, reimportOnLoad, exportOnSave);
@@ -75,7 +74,7 @@ public:
 
 
 	template<CONC(CAssetPod) T>
-	PodHandle<T> ImportRequest(const fs::path& path)
+	[[nodiscard]] PodHandle<T> ImportRequest(const fs::path& path)
 	{
 		auto it = m_importedPathsCache.find(path.generic_string());
 
@@ -88,7 +87,7 @@ public:
 
 private:
 	template<CONC(CAssetPod) PodType>
-	std::pair<PodHandle<PodType>, PodType*> CreateEntryImpl(
+	[[nodiscard]] std::pair<PodHandle<PodType>, PodType*> CreateEntryImpl(
 		const uri::Uri& importPath, const uri::Uri& name, bool transient, bool reimportOnLoad, bool exportOnSave)
 	{
 		PodEntry* e = new PodEntry();
@@ -124,4 +123,4 @@ private:
 
 		return std::make_pair(handle, ptr);
 	}
-} * ImporterManager;
+} * ImporterManager{};
