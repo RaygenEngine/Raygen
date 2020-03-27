@@ -127,11 +127,11 @@ struct ProfileScope<M, true> : ProfileScopeBase {
 #ifndef __INTELLISENSE__
 
 // TODO: use a single macro and forward arguments
-// For parameter use one of ProfilerSetup.h (System, Core, Editor, Renderer, World etc)
+// For parameter use one of ProfilerSetup.h (System, Core, Editor, S_Renderer, World etc)
 #	define PROFILE_SCOPE(EngineModule)                                                                                \
-		static ProfileScope<ProfilerSetup::##EngineModule> MACRO_PASTE(z_prof_, __LINE__)(                             \
+		static ProfileScope<::ProfilerSetup::##EngineModule> MACRO_PASTE(z_prof_, __LINE__)(                           \
 			__FILE__, __LINE__, MTI_PRETTY_FUNC);                                                                      \
-		ProfileScope<ProfilerSetup::##EngineModule>::Scope MACRO_PASTE(z_prof_sc, __LINE__)(                           \
+		ProfileScope<::ProfilerSetup::##EngineModule>::Scope MACRO_PASTE(z_prof_sc, __LINE__)(                         \
 			MACRO_PASTE(z_prof_, __LINE__));
 
 #	define PROFILE_SCOPE_CHEAP(EngineModule)                                                                          \

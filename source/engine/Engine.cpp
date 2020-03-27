@@ -8,9 +8,9 @@
 #include "engine/Input.h"
 #include "engine/reflection/ReflectionDb.h"
 #include "platform/Platform.h"
-#include "renderer/VulkanLayer.h"
-#include "renderer/asset/GpuAssetManager.h"
-#include "renderer/wrapper/Device.h"
+#include "rendering/renderer/Renderer.h"
+#include "rendering/asset/GpuAssetManager.h"
+#include "rendering/Rendering.h"
 #include "universe/NodeFactory.h"
 #include "universe/Universe.h"
 
@@ -41,14 +41,10 @@ void S_Engine::InitEngine(App* app)
 	mainWindowParams.size = { m_app->m_windowWidth, m_app->m_windowHeight };
 	Platform::Init(mainWindowParams);
 
-	GpuAssetManager.LoadAll();
-	// NEXT:
-	Layer = new VulkanLayer(glfwutl::GetVulkanExtensions(), Platform::GetMainHandle());
-	Layer->Init();
+	Rendering::Init();
 
 	Editor::Init();
 
-	ImguiImpl::InitVulkan();
 	Universe::Init();
 }
 
@@ -85,9 +81,8 @@ void S_Engine::DeinitEngine()
 {
 	// NOTE: It is REALLY important to remember the reverse order here
 	Universe::Destroy();
-	delete Layer;
-	delete Device;
 	Editor::Destroy();
+	Rendering::Destroy();
 	Platform::Destroy();
 	Assets::Destroy();
 }
