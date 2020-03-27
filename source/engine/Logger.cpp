@@ -1,6 +1,5 @@
 #include "pch.h"
-
-#include "engine/Logger.h"
+#include "Logger.h"
 
 #include <spdlog/sinks/ostream_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
