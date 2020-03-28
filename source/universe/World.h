@@ -179,4 +179,4 @@ private:
 		}
 		return nullptr;
 	}
-} * MainWorld;
+} * MainWorld{};

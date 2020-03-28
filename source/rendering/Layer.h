@@ -11,5 +11,5 @@ public:
 
 	void DrawFrame();
 
-} * Layer;
+} * Layer{};
 } // namespace vl

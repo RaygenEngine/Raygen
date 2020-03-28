@@ -49,5 +49,5 @@ public:
 	void LoadAll();
 	void UnloadAll() { gpuAssets.clear(); }
 
-} * GpuAssetManager;
+} * GpuAssetManager{};
 } // namespace vl
