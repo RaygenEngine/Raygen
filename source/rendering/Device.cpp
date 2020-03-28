@@ -17,7 +17,7 @@ QueueFamily GetQueueFamilyWithBestRating(const std::vector<QueueFamily>& queueFa
 }
 } // namespace
 
-S_Device::S_Device(PhysicalDevice* pd, std::vector<const char*> deviceExtensions)
+Device_::Device_(PhysicalDevice* pd, std::vector<const char*> deviceExtensions)
 	: pd(pd)
 {
 	auto graphicsQueueFamily = GetQueueFamilyWithBestRating(pd->graphicsFamilies);
@@ -97,7 +97,7 @@ S_Device::S_Device(PhysicalDevice* pd, std::vector<const char*> deviceExtensions
 	graphicsCmdBuffer = allocateCommandBuffers(allocInfo)[0];
 }
 
-S_Device::~S_Device()
+Device_::~Device_()
 {
 	transferCmdPool.reset();
 	graphicsCmdPool.reset();
@@ -105,7 +105,7 @@ S_Device::~S_Device()
 	destroy();
 }
 
-std::optional<vk::UniqueShaderModule> S_Device::CompileCreateShaderModule(const std::string& path)
+std::optional<vk::UniqueShaderModule> Device_::CompileCreateShaderModule(const std::string& path)
 {
 	auto binary = ShaderCompiler::Compile(path);
 

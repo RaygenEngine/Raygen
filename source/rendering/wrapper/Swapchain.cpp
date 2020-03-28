@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "rendering/wrapper/Swapchain.h"
+#include "Swapchain.h"
 
 #include "engine/Engine.h"
 #include "engine/Logger.h"

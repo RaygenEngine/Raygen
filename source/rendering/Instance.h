@@ -9,7 +9,7 @@
 namespace vl {
 
 // Instance layer wrapper
-inline struct S_Instance : public vk::Instance {
+inline struct Instance_ : public vk::Instance {
 
 	vk::SurfaceKHR surface;
 
@@ -17,8 +17,8 @@ inline struct S_Instance : public vk::Instance {
 
 	std::vector<UniquePtr<PhysicalDevice>> capablePhysicalDevices;
 
-	S_Instance(std::vector<const char*> requiredExtensions, GLFWwindow* window);
-	~S_Instance();
+	Instance_(std::vector<const char*> requiredExtensions, GLFWwindow* window);
+	~Instance_();
 } * Instance;
 
 

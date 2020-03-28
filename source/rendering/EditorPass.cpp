@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "rendering/EditorPass.h"
+#include "EditorPass.h"
 
 #include "editor/imgui/ImguiImpl.h"
 #include "engine/Engine.h"

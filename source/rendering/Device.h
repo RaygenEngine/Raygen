@@ -8,12 +8,12 @@ struct DeviceQueue : public vk::Queue {
 	uint32 familyIndex;
 
 private:
-	friend struct S_Device;
+	friend struct Device_;
 	void SetHandle(vk::Queue queue) { vk::Queue::operator=(queue); }
 };
 
 // Info about a logical device
-inline struct S_Device : public vk::Device {
+inline struct Device_ : public vk::Device {
 
 	DeviceQueue graphicsQueue;
 	DeviceQueue transferQueue;
@@ -27,8 +27,8 @@ inline struct S_Device : public vk::Device {
 	vk::CommandBuffer transferCmdBuffer;
 	vk::CommandBuffer graphicsCmdBuffer;
 
-	S_Device(PhysicalDevice* pd, std::vector<const char*> deviceExtensions);
-	~S_Device();
+	Device_(PhysicalDevice* pd, std::vector<const char*> deviceExtensions);
+	~Device_();
 
 	std::optional<vk::UniqueShaderModule> CompileCreateShaderModule(const std::string& path);
 } * Device;

@@ -13,8 +13,8 @@ struct SceneVector {
 	void AppendPendingElements() { elements.resize(elements.size() + pendingElements); }
 };
 
-inline struct S_Scene {
-	S_Scene() { EnqueueEndFrame(); } // WIP:
+inline struct Scene_ {
+	Scene_() { EnqueueEndFrame(); } // WIP:
 
 	SceneVector<SceneGeometry> geometries;
 	SceneVector<SceneCamera> cameras;

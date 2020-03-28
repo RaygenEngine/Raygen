@@ -1,8 +1,8 @@
 #include "pch.h"
-#include "rendering/wrapper/ImageObj.h"
+#include "ImageObj.h"
 
-#include "rendering/renderer/Renderer.h"
 #include "rendering/Device.h"
+#include "rendering/renderer/Renderer.h"
 
 namespace {
 vk::AccessFlags GetAccessMask(vk::ImageLayout imL)
