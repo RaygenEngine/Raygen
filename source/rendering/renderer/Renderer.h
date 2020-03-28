@@ -66,28 +66,22 @@ public:
 	void InitDebugDescriptors();
 
 	//
-	vk::CommandBuffer geometryCmdBuffer;
-
+	std::vector<vk::CommandBuffer> geometryCmdBuffer;
 	std::vector<vk::CommandBuffer> outCmdBuffer;
 
-	// sync objects
 
+	std::vector<vk::UniqueFence> inFlightFence;
 
-	vk::UniqueSemaphore swapchainImageReadySem;
-	vk::UniqueSemaphore gbufferReadySem;
+	std::vector<vk::UniqueSemaphore> renderFinishedSem;
+	std::vector<vk::UniqueSemaphore> imageAvailSem;
 
-	vk::UniqueSemaphore renderFinishedSemaphore;
+	uint32 currentFrame{ 0 };
 
-	vk::UniqueSemaphore imageAcquiredSem;
-
-
-	void DrawGeometryPass(
-		std::vector<vk::PipelineStageFlags> waitStages, SemVec waitSemaphores, SemVec signalSemaphores);
+	void DrawGeometryPass(vk::CommandBuffer cmdBuffer);
 
 	void UpdateForFrame();
 
-	void DrawDeferredPass(std::vector<vk::PipelineStageFlags> waitStages, SemVec waitSemaphores,
-		SemVec signalSemaphores, vk::CommandBuffer cmdBuffer, vk::Framebuffer framebuffer);
+	void DrawDeferredPass(vk::CommandBuffer cmdBuffer, vk::Framebuffer framebuffer);
 
 
 	void DrawFrame();

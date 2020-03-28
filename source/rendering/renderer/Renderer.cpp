@@ -16,6 +16,8 @@
 
 #include <array>
 
+
+constexpr int32 c_framesInFlight = 2;
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 {
@@ -42,26 +44,24 @@ void Renderer_::Init()
 
 	defPass.InitPipeline(swapchain->renderPass.get());
 
-	// NEXT: can be done with a single allocation
 	vk::CommandBufferAllocateInfo allocInfo{};
 	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(1);
-
-
-	geometryCmdBuffer = Device->allocateCommandBuffers(allocInfo)[0];
-
-
-	vk::CommandBufferAllocateInfo allocInfo2{};
-	allocInfo2.setCommandPool(Device->graphicsCmdPool.get())
-		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(static_cast<uint32>(swapchain->images.size()));
 
-	outCmdBuffer = Device->allocateCommandBuffers(allocInfo2);
+	geometryCmdBuffer = Device->allocateCommandBuffers(allocInfo);
+	outCmdBuffer = Device->allocateCommandBuffers(allocInfo);
 
 
-	renderFinishedSemaphore = Device->createSemaphoreUnique({});
-	imageAcquiredSem = Device->createSemaphoreUnique({});
+	vk::FenceCreateInfo fci{};
+	fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+		renderFinishedSem.push_back(Device->createSemaphoreUnique({}));
+		imageAvailSem.push_back(Device->createSemaphoreUnique({}));
+
+		inFlightFence.push_back(Device->createFenceUnique(fci));
+	}
 
 
 	Event::OnViewportUpdated.BindFlag(this, didViewportResize);
@@ -124,34 +124,14 @@ void Renderer_::UpdateForFrame()
 	Scene->ConsumeCmdQueue();
 }
 
-void Renderer_::DrawGeometryPass(
-	std::vector<vk::PipelineStageFlags> waitStages, SemVec waitSemaphores, SemVec signalSemaphores)
+void Renderer_::DrawGeometryPass(vk::CommandBuffer cmdBuffer)
 {
 
-	geomPass.RecordGeometryDraw(&geometryCmdBuffer);
-
-	vk::SubmitInfo submitInfo{};
-	submitInfo
-		.setWaitSemaphoreCount(static_cast<uint32>(waitSemaphores.size())) //
-		.setPWaitSemaphores(waitSemaphores.data())
-		.setPWaitDstStageMask(waitStages.data())
-
-		.setSignalSemaphoreCount(static_cast<uint32>(signalSemaphores.size()))
-		.setPSignalSemaphores(signalSemaphores.data())
-
-		.setCommandBufferCount(1u)
-		.setPCommandBuffers(&geometryCmdBuffer);
-
-	Device->graphicsQueue.submit(1u, &submitInfo, {});
+	geomPass.RecordGeometryDraw(&cmdBuffer);
 }
 
 
-void Renderer_::DrawDeferredPass(                   //
-	std::vector<vk::PipelineStageFlags> waitStages, //
-	SemVec waitSemaphores,                          //
-	SemVec signalSemaphores,                        //
-	vk::CommandBuffer cmdBuffer,                    //
-	vk::Framebuffer framebuffer)
+void Renderer_::DrawDeferredPass(vk::CommandBuffer cmdBuffer, vk::Framebuffer framebuffer)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -184,21 +164,6 @@ void Renderer_::DrawDeferredPass(                   //
 	geomPass.m_gBuffer->TransitionForAttachmentWrite(cmdBuffer);
 
 	cmdBuffer.end();
-
-
-	vk::SubmitInfo submitInfo{};
-	submitInfo
-		.setWaitSemaphoreCount(static_cast<uint32>(waitSemaphores.size())) //
-		.setPWaitSemaphores(waitSemaphores.data())
-		.setPWaitDstStageMask(waitStages.data())
-
-		.setSignalSemaphoreCount(static_cast<uint32>(signalSemaphores.size()))
-		.setPSignalSemaphores(signalSemaphores.data())
-
-		.setCommandBufferCount(1u)
-		.setPCommandBuffers(&cmdBuffer);
-
-	Device->graphicsQueue.submit(1u, &submitInfo, {});
 }
 
 void Renderer_::DrawFrame()
@@ -207,32 +172,52 @@ void Renderer_::DrawFrame()
 		return;
 	}
 
-	PROFILE_SCOPE(Renderer);
 
 	UpdateForFrame();
 
-	// DrawGeometryPass({}, {}, { *gbufferReadySem });
-	DrawGeometryPass({}, {}, {});
-
-	// DEFERRED
+	PROFILE_SCOPE(Renderer);
 	uint32 imageIndex;
-	Device->acquireNextImageKHR(swapchain->handle.get(), UINT64_MAX, { *imageAcquiredSem }, {}, &imageIndex);
+
+	currentFrame = (currentFrame + 1) % c_framesInFlight;
+
+	Device->waitForFences({ *inFlightFence[currentFrame] }, true, UINT64_MAX);
+	Device->resetFences({ *inFlightFence[currentFrame] });
+
+	Device->acquireNextImageKHR(swapchain->handle.get(), UINT64_MAX, { *imageAvailSem[currentFrame] }, {}, &imageIndex);
 
 
-	DrawDeferredPass(
-		//
-		{ vk::PipelineStageFlagBits::eColorAttachmentOutput }, //
-		{ *imageAcquiredSem },                                 //
-		{},                                                    //
-		outCmdBuffer[imageIndex],
-		swapchain->framebuffers[imageIndex].get() //
-	);
+	DrawGeometryPass(geometryCmdBuffer[currentFrame]);
+	DrawDeferredPass(outCmdBuffer[currentFrame], swapchain->framebuffers[currentFrame].get());
+
+
+	std::array bufs = { geometryCmdBuffer[currentFrame], outCmdBuffer[currentFrame] };
+
+
+	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput }; //
+	std::array waitSems = { *imageAvailSem[currentFrame] };                                                  //
+	std::array signalSems = { *renderFinishedSem[currentFrame] };
+
+
+	vk::SubmitInfo submitInfo{};
+	submitInfo
+		.setWaitSemaphoreCount(static_cast<uint32>(waitSems.size())) //
+		.setPWaitSemaphores(waitSems.data())
+		.setPWaitDstStageMask(waitStage.data())
+
+		.setSignalSemaphoreCount(static_cast<uint32>(signalSems.size()))
+		.setPSignalSemaphores(signalSems.data())
+
+		.setCommandBufferCount(2u)
+		.setPCommandBuffers(bufs.data());
+
+
+	Device->graphicsQueue.submit(1u, &submitInfo, *inFlightFence[currentFrame]);
 
 
 	vk::PresentInfoKHR presentInfo;
 	presentInfo //
-		.setWaitSemaphoreCount(0)
-		.setPWaitSemaphores(nullptr);
+		.setWaitSemaphoreCount(1u)
+		.setPWaitSemaphores(&*renderFinishedSem[currentFrame]);
 
 
 	vk::SwapchainKHR swapChains[] = { swapchain->handle.get() };
@@ -245,6 +230,6 @@ void Renderer_::DrawFrame()
 
 	PROFILE_SCOPE(Renderer);
 	Device->presentQueue.presentKHR(presentInfo);
-	Device->waitIdle();
+	// Device->waitIdle();
 }
 } // namespace vl

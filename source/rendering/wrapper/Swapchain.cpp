@@ -71,7 +71,7 @@ Swapchain::Swapchain(vk::SurfaceKHR surface)
 	vk::PresentModeKHR presentMode = ChooseSwapPresentMode(details.presentModes);
 	extent = ChooseSwapExtent(details.capabilities);
 
-	uint32 imageCount = details.capabilities.minImageCount + 1;
+	uint32 imageCount = details.capabilities.minImageCount;
 
 	if (details.capabilities.maxImageCount > 0 && imageCount > details.capabilities.maxImageCount) {
 		imageCount = details.capabilities.maxImageCount;
@@ -81,6 +81,7 @@ Swapchain::Swapchain(vk::SurfaceKHR surface)
 	createInfo
 		.setSurface(surface) //
 		.setMinImageCount(imageCount)
+
 		.setImageFormat(surfaceFormat.format)
 		.setImageColorSpace(surfaceFormat.colorSpace)
 		.setImageExtent(extent)
