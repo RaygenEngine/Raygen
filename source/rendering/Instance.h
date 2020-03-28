@@ -19,7 +19,7 @@ inline struct Instance_ : public vk::Instance {
 
 	Instance_(std::vector<const char*> requiredExtensions, GLFWwindow* window);
 	~Instance_();
-} * Instance;
+} * Instance{};
 
 
 } // namespace vl

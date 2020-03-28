@@ -125,4 +125,4 @@ public:
 		commands.erase(commands.begin(), commands.begin() + end);
 	}
 
-} * Scene;
+} * Scene{};
