@@ -7,7 +7,7 @@ using namespace vl;
 
 void Rendering::Init()
 {
-	Layer = new S_Layer();
+	Layer = new Layer_();
 }
 
 void Rendering::Destroy()

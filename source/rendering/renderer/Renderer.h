@@ -23,7 +23,7 @@ struct UBO_Globals {
 };
 using SemVec = std::vector<vk::Semaphore>;
 
-inline class S_Renderer : public Listener {
+inline class Renderer_ : public Listener {
 public:
 	//
 	// Framebuffer size, Window size, recommended framebuffer size and more
@@ -53,8 +53,8 @@ public:
 	//
 	//
 	//
-	S_Renderer();
-	~S_Renderer();
+	Renderer_();
+	~Renderer_();
 
 
 	void Init();

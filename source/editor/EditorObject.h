@@ -178,7 +178,7 @@ private:
 
 	std::vector<std::function<void()>> m_postDrawCommands;
 	std::vector<std::function<void()>> m_postFrameCommands;
-} * EditorObject;
+} * EditorObject{};
 
 template<typename Lambda>
 void RecurseNodes(Node* root, Lambda f, int32 depth = 0)

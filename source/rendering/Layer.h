@@ -4,10 +4,10 @@
 namespace vl {
 struct Swapchain;
 
-inline class S_Layer {
+inline class Layer_ {
 public:
-	S_Layer();
-	~S_Layer();
+	Layer_();
+	~Layer_();
 
 	void DrawFrame();
 

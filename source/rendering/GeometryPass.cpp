@@ -1,12 +1,13 @@
 #include "pch.h"
-#include "rendering/GeometryPass.h"
+#include "GeometryPass.h"
 
 #include "engine/Engine.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/asset/GpuAssetManager.h"
-#include "rendering/renderer/Renderer.h"
 #include "rendering/Device.h"
+#include "rendering/renderer/Renderer.h"
+
 namespace vl {
 
 void GeometryPass::InitAll()

@@ -65,15 +65,15 @@ vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 
 namespace vl {
 
-S_Renderer::S_Renderer()
+Renderer_::Renderer_()
 {
-	Scene = new S_Scene();
+	Scene = new Scene_();
 
 	// create swapchain
 	ReconstructSwapchain();
 }
 
-void S_Renderer::Init()
+void Renderer_::Init()
 {
 	InitModelDescriptors();
 
@@ -114,21 +114,21 @@ void S_Renderer::Init()
 	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimzed) { isMinimzed = newIsMinimzed; });
 }
 
-S_Renderer::~S_Renderer()
+Renderer_::~Renderer_()
 {
 	delete swapchain;
 
 	delete Scene;
 }
 
-void S_Renderer::ReconstructSwapchain()
+void Renderer_::ReconstructSwapchain()
 {
 	delete swapchain;
 	swapchain = new Swapchain(Instance->surface);
 }
 
 
-void S_Renderer::InitModelDescriptors()
+void Renderer_::InitModelDescriptors()
 {
 	// uniforms
 	globalsUbo.reset(new Buffer(sizeof(UBO_Globals), vk::BufferUsageFlagBits::eUniformBuffer,
@@ -139,13 +139,13 @@ void S_Renderer::InitModelDescriptors()
 	globalUboDescSet = globalUboDescLayout.GetDescriptorSet();
 }
 
-void S_Renderer::InitDebugDescriptors()
+void Renderer_::InitDebugDescriptors()
 {
 	debugDescSetLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	debugDescSetLayout.Generate();
 }
 
-vk::UniqueSampler S_Renderer::GetDefaultSampler()
+vk::UniqueSampler Renderer_::GetDefaultSampler()
 {
 	// CHECK: same for all?
 	// sampler
@@ -171,7 +171,7 @@ vk::UniqueSampler S_Renderer::GetDefaultSampler()
 	return Device->createSamplerUnique(samplerInfo);
 }
 
-void S_Renderer::InitQuadDescriptor()
+void Renderer_::InitQuadDescriptor()
 {
 	for (uint32 i = 0u; i < 6u; ++i) {
 		quadDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
@@ -182,7 +182,7 @@ void S_Renderer::InitQuadDescriptor()
 	quadSampler = GetDefaultSampler();
 }
 
-void S_Renderer::UpdateQuadDescriptorSet()
+void Renderer_::UpdateQuadDescriptorSet()
 {
 	auto UpdateImageSamplerInDescriptorSet = [&](vk::ImageView& view, vk::Sampler& sampler, uint32 dstBinding) {
 		vk::DescriptorImageInfo imageInfo{};
@@ -234,7 +234,7 @@ void S_Renderer::UpdateQuadDescriptorSet()
 	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 }
 
-void S_Renderer::OnViewportResize()
+void Renderer_::OnViewportResize()
 {
 	vk::Extent2D viewportSize{ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y };
 
@@ -250,13 +250,13 @@ void S_Renderer::OnViewportResize()
 	}
 }
 
-void S_Renderer::OnWindowResize()
+void Renderer_::OnWindowResize()
 {
 	Device->waitIdle();
 	ReconstructSwapchain();
 }
 
-void S_Renderer::UpdateForFrame()
+void Renderer_::UpdateForFrame()
 {
 	if (*didWindowResize) {
 		OnWindowResize();
@@ -282,7 +282,7 @@ void S_Renderer::UpdateForFrame()
 	}
 }
 
-void S_Renderer::DrawGeometryPass(
+void Renderer_::DrawGeometryPass(
 	std::vector<vk::PipelineStageFlags> waitStages, SemVec waitSemaphores, SemVec signalSemaphores)
 {
 
@@ -304,7 +304,7 @@ void S_Renderer::DrawGeometryPass(
 }
 
 
-void S_Renderer::DrawDeferredPass(                  //
+void Renderer_::DrawDeferredPass(                   //
 	std::vector<vk::PipelineStageFlags> waitStages, //
 	SemVec waitSemaphores,                          //
 	SemVec signalSemaphores,                        //
@@ -359,7 +359,7 @@ void S_Renderer::DrawDeferredPass(                  //
 	Device->graphicsQueue.submit(1u, &submitInfo, {});
 }
 
-void S_Renderer::DrawFrame()
+void Renderer_::DrawFrame()
 {
 	if (isMinimzed) {
 		return;

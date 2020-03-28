@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "Instance.h"
 
-#include "engine/Logger.h"
 #include "engine/console/ConsoleVariable.h"
+#include "engine/Logger.h"
 
 
 PFN_vkCreateDebugUtilsMessengerEXT pfnVkCreateDebugUtilsMessengerEXT;
@@ -86,7 +86,7 @@ bool CheckLayers(std::vector<char const*> const& layers, std::vector<vk::LayerPr
 } // namespace
 
 namespace vl {
-S_Instance::S_Instance(std::vector<const char*> requiredExtensions, GLFWwindow* window)
+Instance_::Instance_(std::vector<const char*> requiredExtensions, GLFWwindow* window)
 {
 	auto allExtensions = requiredExtensions;
 	allExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
@@ -165,7 +165,7 @@ S_Instance::S_Instance(std::vector<const char*> requiredExtensions, GLFWwindow* 
 	}
 }
 
-S_Instance::~S_Instance()
+Instance_::~Instance_()
 {
 	destroySurfaceKHR(surface);
 	destroy();
