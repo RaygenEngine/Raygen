@@ -8,7 +8,7 @@
 
 std::shared_ptr<spdlog::logger> g_logger;
 
-void S_Log::Init(LogLevel level)
+void Log_::Init(LogLevel level)
 {
 	if (!g_logger) {
 		BasicSetup();
@@ -28,7 +28,7 @@ void S_Log::Init(LogLevel level)
 	LOG_INFO("Raygen Logger level: {}", spdlog::level::to_string_view(g_logger->level()));
 }
 
-void S_Log::EarlyInit()
+void Log_::EarlyInit()
 {
 	if (!g_logger) {
 		BasicSetup();
@@ -36,37 +36,37 @@ void S_Log::EarlyInit()
 	}
 }
 
-void S_Log::Debug(const std::string& str)
+void Log_::Debug(const std::string& str)
 {
 	g_logger->debug(str);
 }
 
-void S_Log::Info(const std::string& str)
+void Log_::Info(const std::string& str)
 {
 	g_logger->info(str);
 }
 
-void S_Log::Warn(const std::string& str)
+void Log_::Warn(const std::string& str)
 {
 	g_logger->warn(str);
 }
 
-void S_Log::Error(const std::string& str)
+void Log_::Error(const std::string& str)
 {
 	g_logger->error(str);
 }
 
-void S_Log::Critical(const std::string& str)
+void Log_::Critical(const std::string& str)
 {
 	g_logger->critical(str);
 }
 
-void S_Log::Flush()
+void Log_::Flush()
 {
 	g_logger->flush();
 }
 
-void S_Log::BasicSetup()
+void Log_::BasicSetup()
 {
 	spdlog::set_pattern("%^[%T] %n: %v%$");
 	// colored multi-threaded

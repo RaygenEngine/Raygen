@@ -24,12 +24,12 @@ ConsoleFunction<> debugCoords{ "d.viewport", //
 		LOG_REPORT("\n viewport.Size: {}, {}\n viewport.Pos: {} {}", c.size.x, c.size.y, c.position.x, c.position.y);
 	} };
 
-S_Engine::~S_Engine()
+Engine_::~Engine_()
 {
 	// Destruction of objects is done at Deinit
 }
 
-void S_Engine::InitEngine(App* app)
+void Engine_::InitEngine(App* app)
 {
 	m_initToFrameTimer.Start();
 
@@ -48,12 +48,12 @@ void S_Engine::InitEngine(App* app)
 	Universe::Init();
 }
 
-float S_Engine::GetFPS()
+float Engine_::GetFPS()
 {
 	return m_gameThreadFps.GetSteadyFps();
 }
 
-void S_Engine::ReportFrameDrawn()
+void Engine_::ReportFrameDrawn()
 {
 	using namespace std::literals;
 
@@ -77,7 +77,7 @@ void S_Engine::ReportFrameDrawn()
 	}
 }
 
-void S_Engine::DeinitEngine()
+void Engine_::DeinitEngine()
 {
 	// NOTE: It is REALLY important to remember the reverse order here
 	Universe::Destroy();
@@ -87,7 +87,7 @@ void S_Engine::DeinitEngine()
 	Assets::Destroy();
 }
 
-bool S_Engine::ThreadFpsCounter::CountFrame()
+bool Engine_::ThreadFpsCounter::CountFrame()
 {
 	using namespace std::literals;
 	constexpr static auto c_reportPeriod = 100ms;

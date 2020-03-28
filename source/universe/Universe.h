@@ -2,7 +2,7 @@
 #include "universe/World.h"
 
 class Universe {
-	friend class S_Engine;
+	friend class Engine_;
 
 	static void Init();
 	static void Destroy();

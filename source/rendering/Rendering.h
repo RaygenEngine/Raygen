@@ -1,7 +1,7 @@
 #pragma once
 
 class Rendering {
-	friend class S_Engine;
+	friend class Engine_;
 	static void Init();
 	static void Destroy();
 

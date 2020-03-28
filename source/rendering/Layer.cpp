@@ -23,7 +23,7 @@ Layer_::Layer_()
 	auto deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_MAINTENANCE1_EXTENSION_NAME };
 	Device = new Device_(Instance->capablePhysicalDevices[0].get(), deviceExtensions);
 
-	GpuAssetManager = new S_GpuAssetManager();
+	GpuAssetManager = new GpuAssetManager_();
 
 
 	Renderer = new Renderer_();
