@@ -5,10 +5,9 @@
 
 #include <vulkan/vulkan.hpp>
 
-DECLARE_GPU_ASSET(Sampler, SamplerPod)
-{
+struct Sampler::Gpu : public GpuAssetBase {
 	// PERF: one to many views
 	vk::UniqueSampler sampler;
 
-	GpuAssetBaseTyped<SamplerPod>(PodHandle<SamplerPod> podHandle);
+	Sampler::Gpu(PodHandle<Sampler> podHandle);
 };

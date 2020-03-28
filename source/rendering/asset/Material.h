@@ -27,27 +27,22 @@ struct UBO_Material {
 	int mask;
 };
 
-template<>
-struct GpuAssetBaseTyped<MaterialPod>;
-using Material = GpuAssetBaseTyped<MaterialPod>;
+struct Material::Gpu : public GpuAssetBase {
 
-template<>
-struct GpuAssetBaseTyped<MaterialPod> : public GpuAssetBase {
+	GpuHandle<Sampler> baseColorSampler;
+	GpuHandle<Image> baseColorImage;
 
-	GpuHandle<SamplerPod> baseColorSampler;
-	GpuHandle<ImagePod> baseColorImage;
+	GpuHandle<Sampler> metallicRoughnessSampler;
+	GpuHandle<Image> metallicRoughnessImage;
 
-	GpuHandle<SamplerPod> metallicRoughnessSampler;
-	GpuHandle<ImagePod> metallicRoughnessImage;
+	GpuHandle<Sampler> occlusionSampler;
+	GpuHandle<Image> occlusionImage;
 
-	GpuHandle<SamplerPod> occlusionSampler;
-	GpuHandle<ImagePod> occlusionImage;
+	GpuHandle<Sampler> normalSampler;
+	GpuHandle<Image> normalImage;
 
-	GpuHandle<SamplerPod> normalSampler;
-	GpuHandle<ImagePod> normalImage;
-
-	GpuHandle<SamplerPod> emissiveSampler;
-	GpuHandle<ImagePod> emissiveImage;
+	GpuHandle<Sampler> emissiveSampler;
+	GpuHandle<Image> emissiveImage;
 
 	UBO_Material matData;
 
@@ -58,5 +53,5 @@ struct GpuAssetBaseTyped<MaterialPod> : public GpuAssetBase {
 	// https://stackoverflow.com/questions/36772607/vulkan-texture-rendering-on-multiple-meshes this
 	vk::DescriptorSet descriptorSet;
 
-	GpuAssetBaseTyped<MaterialPod>(PodHandle<MaterialPod> podHandle);
+	Material::Gpu(PodHandle<Material> podHandle);
 };

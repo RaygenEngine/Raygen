@@ -48,7 +48,7 @@ void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 
 
 	if (meta.exportOnSave) {
-		// TODO: ShaderPod
+		// TODO: Shader
 	}
 
 
@@ -126,7 +126,7 @@ AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& default
 	});
 
 	// Default normal image
-	auto& [handle, pod] = ImporterManager->CreateTransientEntry<ImagePod>("~NormalImagePod");
+	auto& [handle, pod] = ImporterManager->CreateTransientEntry<Image>("~NormalImagePod");
 	pod->data[0] = 0x80;
 	pod->data[1] = 0x80;
 	pod->data[2] = 0xFF;

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "rendering/wrapper/Attachment.h"
 
+#include "rendering/asset/GpuAssetManager.h"
 #include "rendering/renderer/Renderer.h"
 #include "rendering/Device.h"
 
@@ -26,7 +27,7 @@ vk::DescriptorSet Attachment::GetDebugDescriptor()
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
 		.setImageView(*view)
-		.setSampler(*Renderer->quadSampler);
+		.setSampler(GpuAssetManager->GetDefaultSampler());
 
 	vk::WriteDescriptorSet descriptorWrite{};
 	descriptorWrite

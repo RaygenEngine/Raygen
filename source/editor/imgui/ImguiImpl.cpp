@@ -284,7 +284,7 @@ void InitVulkan()
 	init.QueueFamily = Device->graphicsQueue.familyIndex;
 	init.Queue = Device->graphicsQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
-	init.DescriptorPool = vl::Renderer->poolAllocator.GetImguiPool();
+	init.DescriptorPool = vl::GpuResources->descPools.GetImguiPool();
 	init.ImageCount = static_cast<uint32>(vl::Renderer->swapchain->images.size());
 	init.MinImageCount = static_cast<uint32>(vl::Renderer->swapchain->images.size());
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;

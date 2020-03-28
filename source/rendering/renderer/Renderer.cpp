@@ -35,17 +35,12 @@ Renderer_::Renderer_()
 
 void Renderer_::Init()
 {
-	InitModelDescriptors();
-
 	// CHECK: Code smell, needs internal first init function
 	geomPass.InitAll();
 
-	InitQuadDescriptor();
 	InitDebugDescriptors();
-	OnViewportResize();
 
 	defPass.InitPipeline(swapchain->renderPass.get());
-
 
 	// NEXT: can be done with a single allocation
 	vk::CommandBufferAllocateInfo allocInfo{};
@@ -87,112 +82,12 @@ void Renderer_::ReconstructSwapchain()
 	swapchain = new Swapchain(Instance->surface);
 }
 
-
-void Renderer_::InitModelDescriptors()
-{
-	// uniforms
-	globalsUbo.reset(new Buffer(sizeof(UBO_Globals), vk::BufferUsageFlagBits::eUniformBuffer,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
-
-	globalUboDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex);
-	globalUboDescLayout.Generate();
-	globalUboDescSet = globalUboDescLayout.GetDescriptorSet();
-}
-
 void Renderer_::InitDebugDescriptors()
 {
 	debugDescSetLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	debugDescSetLayout.Generate();
 }
 
-vk::UniqueSampler Renderer_::GetDefaultSampler()
-{
-	// CHECK: same for all?
-	// sampler
-	vk::SamplerCreateInfo samplerInfo{};
-	samplerInfo
-		.setMagFilter(vk::Filter::eLinear) //
-		.setMinFilter(vk::Filter::eLinear)
-		.setAddressModeU(vk::SamplerAddressMode::eRepeat)
-		.setAddressModeV(vk::SamplerAddressMode::eRepeat)
-		.setAddressModeW(vk::SamplerAddressMode::eRepeat)
-		// PERF:
-		.setAnisotropyEnable(VK_FALSE)
-		.setMaxAnisotropy(1u)
-		.setBorderColor(vk::BorderColor::eIntOpaqueBlack)
-		.setUnnormalizedCoordinates(VK_FALSE)
-		.setCompareEnable(VK_FALSE)
-		.setCompareOp(vk::CompareOp::eAlways)
-		.setMipmapMode(vk::SamplerMipmapMode::eLinear)
-		.setMipLodBias(0.f)
-		.setMinLod(0.f)
-		.setMaxLod(0.f);
-
-	return Device->createSamplerUnique(samplerInfo);
-}
-
-void Renderer_::InitQuadDescriptor()
-{
-	for (uint32 i = 0u; i < 6u; ++i) {
-		quadDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
-	}
-	quadDescLayout.Generate();
-	quadDescSet = quadDescLayout.GetDescriptorSet();
-
-	quadSampler = GetDefaultSampler();
-}
-
-void Renderer_::UpdateQuadDescriptorSet()
-{
-	auto UpdateImageSamplerInDescriptorSet = [&](vk::ImageView& view, vk::Sampler& sampler, uint32 dstBinding) {
-		vk::DescriptorImageInfo imageInfo{};
-		imageInfo
-			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-			.setImageView(view)
-			.setSampler(sampler);
-
-		vk::WriteDescriptorSet descriptorWrite{};
-		descriptorWrite
-			.setDstSet(quadDescSet) //
-			.setDstBinding(dstBinding)
-			.setDstArrayElement(0u)
-			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-			.setDescriptorCount(1u)
-			.setPBufferInfo(nullptr)
-			.setPImageInfo(&imageInfo)
-			.setPTexelBufferView(nullptr);
-
-		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
-	};
-
-	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->position->view.get(), quadSampler.get(), 0u);
-	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->normal->view.get(), quadSampler.get(), 1u);
-	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->albedo->view.get(), quadSampler.get(), 2u);
-	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->specular->view.get(), quadSampler.get(), 3u);
-	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->emissive->view.get(), quadSampler.get(), 4u);
-	UpdateImageSamplerInDescriptorSet(geomPass.m_gBuffer->depth->view.get(), quadSampler.get(), 5u); // NEXT:
-
-
-	vk::DescriptorBufferInfo bufferInfo{};
-
-	bufferInfo
-		.setBuffer(*globalsUbo) //
-		.setOffset(0u)
-		.setRange(sizeof(UBO_Globals));
-	vk::WriteDescriptorSet descriptorWrite{};
-
-	descriptorWrite
-		.setDstSet(globalUboDescSet) //
-		.setDstBinding(0u)
-		.setDstArrayElement(0u)
-		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-		.setDescriptorCount(1u)
-		.setPBufferInfo(&bufferInfo)
-		.setPImageInfo(nullptr)
-		.setPTexelBufferView(nullptr);
-
-	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
-}
 
 void Renderer_::OnViewportResize()
 {
@@ -206,7 +101,7 @@ void Renderer_::OnViewportResize()
 	if (fbSize != viewportFramebufferSize) {
 		viewportFramebufferSize = fbSize;
 		geomPass.InitFramebuffers();
-		UpdateQuadDescriptorSet();
+		defPass.UpdateDescriptorSets(*geomPass.m_gBuffer.get());
 	}
 }
 
@@ -227,20 +122,6 @@ void Renderer_::UpdateForFrame()
 	}
 
 	Scene->ConsumeCmdQueue();
-
-
-	// Globals buffer updates (one uniform buffer update for all draw calls of this render pass)
-	{
-		UBO_Globals ubo{};
-		if (Scene->cameras.elements.size() > Scene->activeCamera) {
-			auto cam = Scene->cameras.elements[Scene->activeCamera];
-			if (cam) {
-				ubo.viewProj = cam->viewProj;
-			}
-		}
-
-		globalsUbo->UploadData(&ubo, sizeof(ubo));
-	}
 }
 
 void Renderer_::DrawGeometryPass(
@@ -337,6 +218,7 @@ void Renderer_::DrawFrame()
 	uint32 imageIndex;
 	Device->acquireNextImageKHR(swapchain->handle.get(), UINT64_MAX, { *imageAcquiredSem }, {}, &imageIndex);
 
+
 	DrawDeferredPass(
 		//
 		{ vk::PipelineStageFlagBits::eColorAttachmentOutput }, //
@@ -346,10 +228,12 @@ void Renderer_::DrawFrame()
 		swapchain->framebuffers[imageIndex].get() //
 	);
 
+
 	vk::PresentInfoKHR presentInfo;
 	presentInfo //
 		.setWaitSemaphoreCount(0)
 		.setPWaitSemaphores(nullptr);
+
 
 	vk::SwapchainKHR swapChains[] = { swapchain->handle.get() };
 	presentInfo //
@@ -357,6 +241,7 @@ void Renderer_::DrawFrame()
 		.setPSwapchains(swapChains)
 		.setPImageIndices(&imageIndex)
 		.setPResults(nullptr);
+
 
 	PROFILE_SCOPE(Renderer);
 	Device->presentQueue.presentKHR(presentInfo);

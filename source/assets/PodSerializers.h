@@ -24,16 +24,16 @@ void AdditionalSerializeSave(Archive& ar, PodType* pod)
 
 
 //
-// ImagePod
+// Image
 //
 template<typename Archive>
-void AdditionalSerializeBoth(Archive& ar, ImagePod* pod)
+void AdditionalSerializeBoth(Archive& ar, Image* pod)
 {
 	ar(pod->data);
 }
 
 //
-// ModelPod
+// Model
 // Model pod requires a few additional struct serialization specializations
 // (Mesh, GeometryGroup, VertexData)
 //
@@ -66,7 +66,7 @@ void serialize(Archive& ar, Mesh& mesh)
 
 
 template<typename Archive>
-void AdditionalSerializeBoth(Archive& ar, ModelPod* pod)
+void AdditionalSerializeBoth(Archive& ar, Model* pod)
 {
 	ar(pod->meshes, pod->bbox);
 }

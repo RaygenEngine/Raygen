@@ -7,6 +7,9 @@
 #include "rendering/asset/GpuAssetManager.h"
 #include "rendering/Device.h"
 #include "rendering/renderer/Renderer.h"
+#include "rendering/asset/Model.h"
+
+#include <glm/gtc/matrix_inverse.hpp>
 
 namespace vl {
 
@@ -265,17 +268,16 @@ void GeometryPass::MakePipeline()
 	vk::PushConstantRange pushConstantRange{};
 	pushConstantRange
 		.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
-		.setSize(sizeof(glm::mat4))
+		.setSize(sizeof(glm::mat4) * 4)
 		.setOffset(0u);
 
-	auto& globalDescriptorSetLayout = Renderer->globalUboDescLayout.setLayout;
 	auto& descriptorSetLayout = m_materialDescLayout.setLayout;
 
-	std::array layouts = { globalDescriptorSetLayout.get(), descriptorSetLayout.get() };
+	std::array layouts = { descriptorSetLayout.get() };
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
-		.setSetLayoutCount(2u) //
+		.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
 		.setPSetLayouts(layouts.data())
 		.setPushConstantRangeCount(1u)
 		.setPPushConstantRanges(&pushConstantRange);
@@ -315,6 +317,17 @@ void GeometryPass::MakePipeline()
 
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
+
+namespace {
+	struct PushConstant {
+		glm::mat4 modelMat;
+		glm::mat4 viewProj;
+		glm::mat3 normalMat;
+		float padding1[6];
+	};
+
+	static_assert(sizeof(PushConstant) <= 256);
+} // namespace
 
 void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 {
@@ -357,28 +370,34 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 		// begin render pass
 		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{
+			auto camera = Scene->GetActiveCamera();
+			if (!camera) {
+				cmdBuffer->endRenderPass();
+				cmdBuffer->end();
+				return;
+			}
 
 			// Dynamic viewport & scissor
 			cmdBuffer->setViewport(0, { GetViewport() });
 			cmdBuffer->setScissor(0, { GetScissor() });
 
-
 			// bind the graphics pipeline
 			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
-
-			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-				&Renderer->globalUboDescSet, 0u, nullptr);
 
 			for (auto model : Scene->geometries.elements) {
 				if (!model) {
 					continue;
 				}
 
+				PushConstant pc{ //
+					model->transform, camera->viewProj, glm::inverseTranspose(model->transform)
+				};
+
 				// Submit via push constant (rather than a UBO)
 				cmdBuffer->pushConstants(
-					m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(glm::mat4), &model->transform);
+					m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
-				for (auto& gg : GpuAssetManager->LockHandle(model->model).geometryGroups) {
+				for (auto& gg : model->model.Lock().geometryGroups) {
 					vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
 					vk::DeviceSize offsets[] = { 0 };
 					// geom
@@ -388,8 +407,8 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 					cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
 
 					// descriptor sets
-					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
-						&GpuAssetManager->LockHandle(gg.material).descriptorSet, 0u, nullptr);
+					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
+						&gg.material.Lock().descriptorSet, 0u, nullptr);
 
 					// draw call (triangle)
 					cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);

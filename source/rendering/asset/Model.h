@@ -19,13 +19,13 @@ struct GPUGeometryGroup {
 	UniquePtr<Buffer> vertexBuffer;
 	UniquePtr<Buffer> indexBuffer;
 
-	GpuHandle<MaterialPod> material;
+	GpuHandle<Material> material;
 
 	uint32 indexCount{ 0u };
 };
 
-DECLARE_GPU_ASSET(Model, ModelPod)
-{
+struct Model::Gpu : public GpuAssetBase {
 	std::vector<GPUGeometryGroup> geometryGroups;
-	GpuAssetBaseTyped<ModelPod>(PodHandle<ModelPod> podHandle);
+
+	Model::Gpu(PodHandle<Model> podHandle);
 };

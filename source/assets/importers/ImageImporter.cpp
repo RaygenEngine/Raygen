@@ -10,7 +10,7 @@ BasePodHandle ImageImporter::Import(const fs::path& path)
 	const auto finalPath = path.generic_string();
 
 	auto& [handle, pod]
-		= ImporterManager->CreateEntry<ImagePod>(path.generic_string(), path.filename().replace_extension().string());
+		= ImporterManager->CreateEntry<Image>(path.generic_string(), path.filename().replace_extension().string());
 
 	pod->isHdr = stbi_is_hdr(finalPath.c_str()) == 1;
 
@@ -24,7 +24,7 @@ BasePodHandle ImageImporter::Import(const fs::path& path)
 
 	const bool hasNotResult = !data || (pod->width == 0) || (pod->height == 0);
 
-	CLOG_ABORT(hasNotResult, "ImagePod loading failed, filepath: {}, data_empty: {} width: {} height: {}", finalPath,
+	CLOG_ABORT(hasNotResult, "Image loading failed, filepath: {}, data_empty: {} width: {} height: {}", finalPath,
 		static_cast<bool>(data), pod->width, pod->height);
 
 	// PERF: crappy std::vector initialization on resize,

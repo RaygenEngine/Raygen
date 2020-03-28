@@ -8,7 +8,7 @@
 using namespace vl;
 
 // PERF:
-GpuAssetBaseTyped<ModelPod>::GpuAssetBaseTyped(PodHandle<ModelPod> podHandle)
+Model::Gpu::Gpu(PodHandle<Model> podHandle)
 {
 	auto data = podHandle.Lock();
 

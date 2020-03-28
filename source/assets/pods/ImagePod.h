@@ -2,9 +2,11 @@
 #include "assets/AssetPod.h"
 #include "reflection/GenMacros.h"
 
+
 // DOC:
-struct ImagePod : AssetPod {
-	REFLECTED_POD(ImagePod)
+struct Image : AssetPod {
+
+	REFLECTED_POD(Image)
 	{
 		using namespace PropertyFlags;
 		REFLECT_ICON(FA_IMAGE);

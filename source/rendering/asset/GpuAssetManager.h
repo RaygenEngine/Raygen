@@ -2,6 +2,8 @@
 #include "assets/AssetManager.h"
 #include "rendering/asset/GpuAssetHandle.h"
 
+#include <vulkan/vulkan.hpp>
+
 namespace vl {
 
 inline class GpuAssetManager_ {
@@ -17,22 +19,22 @@ public:
 	}
 
 	template<>
-	void Load<ModelPod>(PodHandle<ModelPod> handle);
+	void Load<Model>(PodHandle<Model> handle);
 
 	template<>
-	void Load<SamplerPod>(PodHandle<SamplerPod> handle);
+	void Load<Sampler>(PodHandle<Sampler> handle);
 
 	template<>
-	void Load<MaterialPod>(PodHandle<MaterialPod> handle);
+	void Load<Material>(PodHandle<Material> handle);
 
 	template<>
-	void Load<ImagePod>(PodHandle<ImagePod> handle);
+	void Load<Image>(PodHandle<Image> handle);
 
 
 	template<CONC(CAssetPod) T>
 	GpuHandle<T> GetGpuHandle(PodHandle<T> handle)
 	{
-		size_t id = handle.podId;
+		size_t id = handle.uid;
 		if (!gpuAssets[id]) {
 			Load(handle);
 		}
@@ -40,11 +42,13 @@ public:
 	}
 
 	template<CONC(CAssetPod) T>
-	GpuAssetBaseTyped<T>& LockHandle(GpuHandle<T> handle)
+	GpuAsset<T>& LockHandle(GpuHandle<T> handle)
 	{
-		return static_cast<GpuAssetBaseTyped<T>&>(*gpuAssets[handle.uid]);
+		return static_cast<GpuAsset<T>&>(*gpuAssets[handle.uid]);
 	}
 
+
+	vk::Sampler GetDefaultSampler();
 
 	void LoadAll();
 	void UnloadAll() { gpuAssets.clear(); }

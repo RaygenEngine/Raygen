@@ -23,8 +23,8 @@ enum class TextureWrapping
 	Repeat
 };
 
-struct SamplerPod : AssetPod {
-	REFLECTED_POD(SamplerPod)
+struct Sampler : AssetPod {
+	REFLECTED_POD(Sampler)
 	{
 		REFLECT_ICON(FA_IMAGES);
 

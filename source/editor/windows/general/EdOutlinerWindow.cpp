@@ -74,12 +74,12 @@ void OutlinerWindow::ImguiDraw()
 	ImGui::PopStyleVar(2);
 	ImGui::EndChild();
 
-	if (auto entry = ImEd::AcceptTypedPodDrop<ModelPod>()) {
+	if (auto entry = ImEd::AcceptTypedPodDrop<Model>()) {
 		auto cmd = [&, entry]() {
 			auto newNode = NodeFactory::NewNode<GeometryNode>();
 
 			newNode->SetName(entry->GetNameStr());
-			newNode->SetModel(entry->GetHandleAs<ModelPod>());
+			newNode->SetModel(entry->GetHandleAs<Model>());
 			Universe::GetMainWorld()->Z_RegisterNode(newNode, Universe::GetMainWorld()->GetRoot());
 			if (!EditorObject->IsCameraPiloting()) {
 				EditorObject_::PushDeferredCommand([newNode]() { EditorObject_::FocusNode(newNode); });

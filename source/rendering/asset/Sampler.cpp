@@ -7,7 +7,7 @@
 #include "rendering/Device.h"
 
 
-GpuAssetBaseTyped<SamplerPod>::GpuAssetBaseTyped(PodHandle<SamplerPod> podHandle)
+Sampler::Gpu::Gpu(PodHandle<Sampler> podHandle)
 {
 	auto textureData = podHandle.Lock();
 

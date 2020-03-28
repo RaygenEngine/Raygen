@@ -9,7 +9,7 @@ GeometryNode::GeometryNode()
 	sceneUid = Scene->EnqueueCreateCmd<SceneGeometry>();
 }
 
-void GeometryNode::SetModel(PodHandle<ModelPod> newModel)
+void GeometryNode::SetModel(PodHandle<Model> newModel)
 {
 	m_model = newModel;
 	SetDirty(DF::ModelChange);

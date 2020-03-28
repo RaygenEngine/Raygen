@@ -52,7 +52,7 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& filename)
 
 	DirStackFileIncluder Includer;
 
-	// TODO: ShaderPod
+	// TODO: Shader
 	// use std::filesystem
 	Includer.pushExternalLocalDirectory("");
 	Includer.pushExternalLocalDirectory("./engine-data/spv/");

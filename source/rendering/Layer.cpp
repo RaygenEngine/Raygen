@@ -3,6 +3,7 @@
 
 #include "platform/Platform.h"
 #include "rendering/asset/GpuAssetManager.h"
+#include "rendering/resource/GpuResources.h"
 #include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/renderer/Renderer.h"
@@ -23,6 +24,8 @@ Layer_::Layer_()
 	auto deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_MAINTENANCE1_EXTENSION_NAME };
 	Device = new Device_(Instance->capablePhysicalDevices[0].get(), deviceExtensions);
 
+
+	GpuResources = new GpuResources_();
 	GpuAssetManager = new GpuAssetManager_();
 
 
@@ -33,6 +36,7 @@ Layer_::Layer_()
 Layer_::~Layer_()
 {
 	delete GpuAssetManager;
+	delete GpuResources;
 
 	delete Renderer;
 	delete Device;

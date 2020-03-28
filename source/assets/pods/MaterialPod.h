@@ -4,7 +4,7 @@
 
 // This material is based on the glTF standard for materials (not all extensions included)
 // see -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#materials)
-struct MaterialPod : AssetPod {
+struct Material : AssetPod {
 
 	enum AlphaMode : int32
 	{
@@ -18,7 +18,7 @@ struct MaterialPod : AssetPod {
 		Blend
 	};
 
-	REFLECTED_POD(MaterialPod)
+	REFLECTED_POD(Material)
 	{
 		REFLECT_ICON(FA_SWATCHBOOK);
 
@@ -66,32 +66,32 @@ struct MaterialPod : AssetPod {
 	// In this model it is not possible to specify a F0 value for non-metals, and a linear value of 4% (0.04) is used.
 	// The baseColorTexture uses the sRGB transfer function and must be converted to linear space before it is used for
 	// any computations. R-red, G-green, B-blue, A-alpha
-	PodHandle<ImagePod> baseColorImage;
-	PodHandle<SamplerPod> baseColorSampler;
+	PodHandle<Image> baseColorImage;
+	PodHandle<Sampler> baseColorSampler;
 	int32 baseColorUvIndex{ 0 };
 
 	// The metallic and roughness properties are packed together in a single texture called metallicRoughnessTexture.
 	// R-occlusion, G-roughness, B-metal, A-empty
-	PodHandle<ImagePod> metallicRoughnessImage;
-	PodHandle<SamplerPod> metallicRoughnessSampler;
+	PodHandle<Image> metallicRoughnessImage;
+	PodHandle<Sampler> metallicRoughnessSampler;
 	int32 metallicRoughnessUvIndex{ 0 };
 
 	// The metallic and roughness properties are packed together in a single texture called metallicRoughnessTexture.
 	// R-occlusion, G-occlusion, B-occlusion, A-empty
 	// Note: may point to an occlusionMetallicRoughness packed image where the R channel is equal to occlusion
 	// use the R channel ALWAYS
-	PodHandle<ImagePod> occlusionImage;
-	PodHandle<SamplerPod> occlusionSampler;
+	PodHandle<Image> occlusionImage;
+	PodHandle<Sampler> occlusionSampler;
 	int32 occlusionUvIndex{ 0 };
 
 	// A tangent space normal map
-	PodHandle<ImagePod> normalImage{ GetDefaultNormalImagePodUid() };
-	PodHandle<SamplerPod> normalSampler;
+	PodHandle<Image> normalImage{ GetDefaultNormalImagePodUid() };
+	PodHandle<Sampler> normalSampler;
 	int32 normalUvIndex{ 0 };
 
 	// The emissive map controls the color and intensity of the light being emitted by the material.
-	PodHandle<ImagePod> emissiveImage;
-	PodHandle<SamplerPod> emissiveSampler;
+	PodHandle<Image> emissiveImage;
+	PodHandle<Sampler> emissiveSampler;
 	int32 emissiveUvIndex{ 0 };
 
 	// Factor values act as linear multipliers for the corresponding texture values.

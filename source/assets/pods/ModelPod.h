@@ -23,9 +23,9 @@ struct Mesh {
 	std::vector<GeometryGroup> geometryGroups{};
 };
 
-struct ModelPod : AssetPod {
+struct Model : AssetPod {
 
-	REFLECTED_POD(ModelPod)
+	REFLECTED_POD(Model)
 	{
 		REFLECT_ICON(FA_CUBE);
 		REFLECT_VAR(materials);
@@ -35,5 +35,5 @@ struct ModelPod : AssetPod {
 
 	math::AABB bbox{ glm::vec3(.5f), glm::vec3(-.5f) };
 
-	std::vector<PodHandle<MaterialPod>> materials{};
+	std::vector<PodHandle<Material>> materials{};
 };

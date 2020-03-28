@@ -49,6 +49,9 @@ GBufferDebugWindow::GBufferDebugWindow(std::string_view name)
 void GBufferDebugWindow::ImguiDraw()
 {
 	auto& gbuff = vl::Renderer->geomPass.m_gBuffer;
+	if (!gbuff) {
+		return;
+	}
 
 	bool shouldShowDescriptors = !m_willInvalidateDescriptors.Access();
 
@@ -75,13 +78,12 @@ void GBufferDebugWindow::ImguiDraw()
 		}
 	};
 
-
 	showAttachment("normal", *gbuff->normal);
 	showAttachment("position", *gbuff->position);
 	showAttachment("albedo", *gbuff->albedo);
 	showAttachment("specular", *gbuff->specular);
 	showAttachment("emissive", *gbuff->emissive);
 	showAttachment("depth", *gbuff->depth);
-}
+} // namespace ed
 
 } // namespace ed

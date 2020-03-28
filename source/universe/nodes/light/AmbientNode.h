@@ -9,11 +9,11 @@ class AmbientNode : public Node {
 		REFLECT_VAR(m_skybox).OnDirty(DF::SkyTexture);
 	}
 
-	PodHandle<SamplerPod> m_skybox;
+	PodHandle<Sampler> m_skybox;
 
 	glm::vec3 m_ambientTerm{ 0.02f, 0.02f, 0.02f };
 
 public:
-	[[nodiscard]] PodHandle<SamplerPod> GetSkybox() const { return m_skybox; }
+	[[nodiscard]] PodHandle<Sampler> GetSkybox() const { return m_skybox; }
 	[[nodiscard]] glm::vec3 GetAmbientTerm() const { return m_ambientTerm; }
 };

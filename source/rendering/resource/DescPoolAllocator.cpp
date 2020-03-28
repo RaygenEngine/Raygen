@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "PoolAllocator.h"
+#include "DescPoolAllocator.h"
 
 #include "engine/console/ConsoleVariable.h"
 #include "engine/Logger.h"
@@ -7,7 +7,7 @@
 #include "rendering/renderer/Renderer.h"
 
 ConsoleFunction<> g_showPoolAllocations{ "r.mem.showDescriptorPools",
-	[]() { LOG_REPORT("Pools: {}", vl::Renderer->poolAllocator.GetAllocations()); },
+	[]() { LOG_REPORT("Pools: {}", vl::GpuResources->descPools.GetAllocations()); },
 	"Shows number of allocated descriptor pools." };
 
 
@@ -77,11 +77,12 @@ void R_DescriptorLayout::Generate()
 vk::DescriptorSet R_DescriptorLayout::GetDescriptorSet() const
 {
 	CLOG_ABORT(!hasBeenGenerated, "Attempting to get a descriptor set from a non generated R_DescriptorLayout ");
-	return vl::Renderer->poolAllocator.AllocateDescritporSet(poolSizeHash, *this);
+	return vl::GpuResources->descPools.AllocateDescritporSet(poolSizeHash, *this);
 }
 
+namespace vl {
 
-vk::DescriptorSet PoolAllocator::AllocateDescritporSet(size_t hash, const R_DescriptorLayout& layout)
+vk::DescriptorSet DescPoolAllocator::AllocateDescritporSet(size_t hash, const R_DescriptorLayout& layout)
 {
 	auto addPool = [&](Entry& entry) {
 		vk::DescriptorPoolCreateInfo poolInfo{};
@@ -124,7 +125,7 @@ vk::DescriptorSet PoolAllocator::AllocateDescritporSet(size_t hash, const R_Desc
 	return Device->allocateDescriptorSets(allocInfo)[0];
 }
 
-vk::DescriptorPool PoolAllocator::GetImguiPool()
+vk::DescriptorPool DescPoolAllocator::GetImguiPool()
 {
 	if (!imguiPool) {
 		vk::DescriptorSetLayoutBinding binding{};
@@ -155,3 +156,4 @@ vk::DescriptorPool PoolAllocator::GetImguiPool()
 	}
 	return *imguiPool;
 }
+} // namespace vl

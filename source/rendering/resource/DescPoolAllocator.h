@@ -22,8 +22,8 @@ public:
 	vk::DescriptorSet GetDescriptorSet() const;
 };
 
-
-class PoolAllocator {
+namespace vl {
+class DescPoolAllocator {
 	static constexpr size_t c_setsPerPool = 100;
 	struct Entry {
 		std::vector<vk::DescriptorPoolSize> poolSizes;
@@ -44,3 +44,4 @@ public:
 
 	size_t GetAllocations() { return allocCount; }
 };
+} // namespace vl

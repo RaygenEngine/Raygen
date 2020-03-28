@@ -44,10 +44,10 @@ void MaybeHoverTooltip(PodEntry* entry)
 		ImUtil::TextTooltipUtil(text, scale);
 
 		// NEXT:
-		// if (entry->type == mti::GetTypeId<SamplerPod>()) {
+		// if (entry->type == mti::GetTypeId<Sampler>()) {
 		//	ImGui::BeginTooltip();
 
-		//	auto handle = GpuAssetManager->GetGpuHandle<SamplerPod>(entry->GetHandleAs<SamplerPod>());
+		//	auto handle = GpuAssetManager->GetGpuHandle<Sampler>(entry->GetHandleAs<Sampler>());
 		//	ImGui::Image(GpuAssetManager->LockHandle(handle).GetDebugDescriptor(), ImVec2(256, 256));
 		//	ImGui::EndTooltip();
 		//}

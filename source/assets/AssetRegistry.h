@@ -5,9 +5,9 @@
 #include "assets/UriLibrary.h"
 #include "core/StringUtl.h"
 
-struct ImagePod;
-struct SamplerPod;
-struct ShaderPod;
+struct Image;
+struct Sampler;
+struct Shader;
 struct StringPod;
 class ReflClass;
 
@@ -84,16 +84,16 @@ public:
 
 	static uri::Uri GetPodImportPath(BasePodHandle handle)
 	{
-		return Get().m_pods[handle.podId]->metadata.originalImportLocation;
+		return Get().m_pods[handle.uid]->metadata.originalImportLocation;
 	}
 
 	static void RemoveEntry(size_t uid) { Get().m_pods[uid].reset(); }
 
-	static void RemoveEntry(BasePodHandle handle) { RemoveEntry(handle.podId); }
+	static void RemoveEntry(BasePodHandle handle) { RemoveEntry(handle.uid); }
 
-	static uri::Uri GetPodUri(BasePodHandle handle) { return Get().m_pods[handle.podId]->path; }
+	static uri::Uri GetPodUri(BasePodHandle handle) { return Get().m_pods[handle.uid]->path; }
 
-	static PodEntry* GetEntry(BasePodHandle handle) { return Get().m_pods[handle.podId].get(); }
+	static PodEntry* GetEntry(BasePodHandle handle) { return Get().m_pods[handle.uid].get(); }
 
 
 	template<CONC(CUidConvertible) T>
@@ -120,9 +120,9 @@ public:
 	}
 
 	template<CONC(CAssetPod) PodType>
-	static PodType* Z_Handle_AccessPod(size_t podId)
+	static PodType* Z_Handle_AccessPod(size_t uid)
 	{
-		return static_cast<PodType*>(Get().m_pods[podId]->ptr.get());
+		return static_cast<PodType*>(Get().m_pods[uid]->ptr.get());
 	}
 
 	// AVOID THIS. This is for internal use.
