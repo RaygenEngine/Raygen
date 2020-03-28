@@ -169,6 +169,7 @@ Instance_::Instance_(std::vector<const char*> requiredExtensions, GLFWwindow* wi
 Instance_::~Instance_()
 {
 	destroySurfaceKHR(surface);
+	debugUtilsMessenger.reset();
 	destroy();
 }
 } // namespace vl
