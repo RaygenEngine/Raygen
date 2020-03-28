@@ -30,7 +30,7 @@ namespace {
 
 	template<typename T>
 	constexpr bool IsJsonLoadable
-		= std::is_same_v<MaterialPod, T> || std::is_same_v<ShaderPod, T> || std::is_same_v<SamplerPod, T>;
+		= std::is_same_v<Material, T> || std::is_same_v<Shader, T> || std::is_same_v<Sampler, T>;
 
 	struct ReflectionToImguiVisitor {
 		int32 depth{ 0 };
@@ -176,7 +176,7 @@ namespace {
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(payloadTag.c_str())) {
 					assert(payload->DataSize == sizeof(size_t));
 					size_t uid = *reinterpret_cast<size_t*>(payload->Data);
-					pod.podId = uid;
+					pod.uid = uid;
 					dirtyFlags.set(Node::DF::Properties);
 					result = true;
 				}
@@ -257,7 +257,7 @@ namespace {
 		}
 
 		template<>
-		bool Inner(std::vector<PodHandle<MaterialPod>>& t, const Property& p)
+		bool Inner(std::vector<PodHandle<Material>>& t, const Property& p)
 		{
 			bool result = false;
 			if (ImGui::CollapsingHeader(name)) {

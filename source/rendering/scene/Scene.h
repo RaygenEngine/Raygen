@@ -151,4 +151,14 @@ public:
 		commands.erase(commands.begin(), commands.begin() + end);
 	}
 
+	SceneCamera* GetActiveCamera()
+	{
+		if (cameras.elements.size() > activeCamera) { // PERF:
+			auto cam = cameras.elements[activeCamera];
+			if (cam) {
+				return cam;
+			}
+		}
+		return nullptr;
+	}
 } * Scene{};

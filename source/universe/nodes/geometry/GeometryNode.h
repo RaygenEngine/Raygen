@@ -9,16 +9,16 @@ class GeometryNode : public Node {
 		REFLECT_VAR(m_model).OnDirty(DF::ModelChange);
 	}
 
-	PodHandle<ModelPod> m_model;
+	PodHandle<Model> m_model;
 
 
 public:
 	GeometryNode();
 	~GeometryNode() override;
 
-	[[nodiscard]] PodHandle<ModelPod> GetModel() const { return m_model; }
+	[[nodiscard]] PodHandle<Model> GetModel() const { return m_model; }
 
-	void SetModel(PodHandle<ModelPod> newModel);
+	void SetModel(PodHandle<Model> newModel);
 
 	void DirtyUpdate(DirtyFlagset dirtyFlags) override;
 

@@ -9,27 +9,33 @@
 #include "rendering/asset/Sampler.h"
 
 
-#define DECLARE_LOADER(Struct, Pod)                                                                                    \
+#define DECLARE_LOADER(Pod)                                                                                            \
 	template<>                                                                                                         \
 	NOINLINE void GpuAssetManager_::Load<Pod>(PodHandle<Pod> handle)                                                   \
 	{                                                                                                                  \
-		gpuAssets[handle.podId].reset(new Struct(handle));                                                             \
+		gpuAssets[handle.uid].reset(new GpuAsset<Pod>(handle));                                                        \
 	}
 
 namespace vl {
-DECLARE_LOADER(Model, ModelPod);
-DECLARE_LOADER(Material, MaterialPod);
-DECLARE_LOADER(Sampler, SamplerPod);
-DECLARE_LOADER(Image, ImagePod);
+DECLARE_LOADER(Model);
+DECLARE_LOADER(Material);
+DECLARE_LOADER(Sampler);
+DECLARE_LOADER(Image);
 
 void Dummy()
 {
-	GpuAssetManager->Load<ModelPod>({});
-	GpuAssetManager->Load<MaterialPod>({});
-	GpuAssetManager->Load<SamplerPod>({});
-	GpuAssetManager->Load<ImagePod>({});
+	GpuAssetManager->Load<Model>({});
+	GpuAssetManager->Load<Material>({});
+	GpuAssetManager->Load<Sampler>({});
+	GpuAssetManager->Load<Image>({});
 }
 
+
+vk::Sampler GpuAssetManager_::GetDefaultSampler()
+{
+	// TODO: auto load the defaults of each asset type
+	return LockHandle(GetGpuHandle<Sampler>({})).sampler.get();
+}
 
 void GpuAssetManager_::LoadAll()
 {

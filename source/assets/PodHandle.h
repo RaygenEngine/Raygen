@@ -9,9 +9,9 @@ struct PodHandle : BasePodHandle {
 public:
 	using PodType = PodTypeT;
 
-	constexpr PodHandle() { podId = GetDefaultPodUid<PodType>(); }
-	constexpr PodHandle(size_t id) { podId = id; }
-	constexpr PodHandle(BasePodHandle handle) { podId = handle.podId; }
+	constexpr PodHandle() { uid = GetDefaultPodUid<PodType>(); }
+	constexpr PodHandle(size_t id) { uid = id; }
+	constexpr PodHandle(BasePodHandle handle) { uid = handle.uid; }
 
 
 	static_assert(std::is_base_of_v<AssetPod, PodType>, "Pod type should be a pod");
@@ -19,7 +19,7 @@ public:
 	[[nodiscard]] const PodEntry* _Debug() const { return AssetHandlerManager::GetEntry(*this); }
 
 
-	[[nodiscard]] const PodType* Lock() const { return AssetHandlerManager::Z_Handle_AccessPod<PodType>(podId); }
+	[[nodiscard]] const PodType* Lock() const { return AssetHandlerManager::Z_Handle_AccessPod<PodType>(uid); }
 
 	friend class AssetImporterManager;
 };

@@ -6,7 +6,7 @@
 
 struct SceneGeometry {
 	glm::mat4 transform;
-	GpuHandle<ModelPod> model;
+	GpuHandle<Model> model;
 
 	GeometryNode* node;
 };

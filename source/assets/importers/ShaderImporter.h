@@ -1,9 +1,9 @@
 #pragma once
 #include "assets/importers/PodImporter.h"
 
-struct ShaderImporter : public PodImporter<ImagePod> {
+struct ShaderImporter : public PodImporter<Image> {
 	ShaderImporter(std::string_view name)
-		: PodImporter<ImagePod>(
+		: PodImporter<Image>(
 			{
 				".vert",
 				".tesc",

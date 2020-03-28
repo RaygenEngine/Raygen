@@ -3,7 +3,7 @@
 #include "reflection/ReflClass.h"
 #include "engine/reflection/ReflectionDb.h"
 
-#define REFLECTED_POD(Class)                                                                                           \
+#define REFLECTED_POD(Class, ...)                                                                                      \
 private:                                                                                                               \
 	Class() { type = refl::GetId<Class>(); }                                                                           \
                                                                                                                        \
@@ -18,9 +18,16 @@ public:                                                                         
 		static ReflClass cl = ReflClass::Generate<Class>(FA_MAIL_BULK);                                                \
 		return cl;                                                                                                     \
 	}                                                                                                                  \
+	struct Gpu;                                                                                                        \
                                                                                                                        \
 public:                                                                                                                \
 	static void GenerateReflection(ReflClass& refl)
+
+
+#define FWD_GPU_POD(Class)                                                                                             \
+	namespace vl {                                                                                                     \
+	struct Class;                                                                                                      \
+	}
 
 
 #define REFLECTED_NODE(Class, ParentClass, /*optional DF_FLAGS()*/...)                                                 \

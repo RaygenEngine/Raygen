@@ -81,7 +81,7 @@ inline size_t ToAssetUid<size_t>(size_t t)
 template<>
 inline size_t ToAssetUid<BasePodHandle>(BasePodHandle handle)
 {
-	return handle.podId;
+	return handle.uid;
 }
 
 template<>

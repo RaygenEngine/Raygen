@@ -1,4 +1,7 @@
 #pragma once
+#include "rendering/resource/DescPoolAllocator.h"
+#include "rendering/wrapper/GBuffer.h"
+
 #include <vulkan/vulkan.hpp>
 namespace vl {
 
@@ -8,12 +11,21 @@ public:
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;
 
+
 	void InitPipeline(vk::RenderPass renderPass);
 
 	void RecordCmd(vk::CommandBuffer* cmdBuffer);
-
+	void UpdateDescriptorSets(GBuffer& gbuffer);
 
 protected:
+	R_DescriptorLayout descLayout;
+
+	vk::DescriptorSet descSet;
+
+
+	void InitQuadDescriptor();
+
+
 	vk::Viewport GetViewport() const;
 	vk::Rect2D GetScissor() const;
 };

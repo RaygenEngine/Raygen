@@ -5,7 +5,7 @@
 #include "rendering/DeferredPass.h"
 #include "rendering/EditorPass.h"
 #include "rendering/GeometryPass.h"
-#include "rendering/PoolAllocator.h"
+#include "rendering/resource/GpuResources.h"
 #include "rendering/wrapper/Buffer.h"
 #include "rendering/wrapper/PhysicalDevice.h"
 #include "rendering/wrapper/Swapchain.h"
@@ -43,16 +43,10 @@ protected:
 
 	void OnViewportResize();
 	void OnWindowResize();
-	void UpdateQuadDescriptorSet();
 
 	bool isMinimzed{ false };
 
 public:
-	PoolAllocator poolAllocator;
-
-	//
-	//
-	//
 	Renderer_();
 	~Renderer_();
 
@@ -60,24 +54,16 @@ public:
 	void Init();
 	void ReconstructSwapchain();
 
+	GeometryPass geomPass;
+	DeferredPass defPass;
+	EditorPass editorPass;
+
+
 	Swapchain* swapchain{};
 
-
-	// Global descriptors
-	R_DescriptorLayout globalUboDescLayout;
-	vk::DescriptorSet globalUboDescSet;
-
-	UniquePtr<Buffer> globalsUbo;
-
-	// Quad descriptors
-
-	R_DescriptorLayout quadDescLayout;
-
-	vk::DescriptorSet quadDescSet;
-	vk::UniqueSampler quadSampler;
-
-
+	// NEXT:
 	R_DescriptorLayout debugDescSetLayout;
+	void InitDebugDescriptors();
 
 	//
 	vk::CommandBuffer geometryCmdBuffer;
@@ -94,23 +80,16 @@ public:
 
 	vk::UniqueSemaphore imageAcquiredSem;
 
-	GeometryPass geomPass;
-	DeferredPass defPass;
-	EditorPass editorPass;
-
 
 	void DrawGeometryPass(
 		std::vector<vk::PipelineStageFlags> waitStages, SemVec waitSemaphores, SemVec signalSemaphores);
+
 	void UpdateForFrame();
+
 	void DrawDeferredPass(std::vector<vk::PipelineStageFlags> waitStages, SemVec waitSemaphores,
 		SemVec signalSemaphores, vk::CommandBuffer cmdBuffer, vk::Framebuffer framebuffer);
 
-	void InitModelDescriptors();
-	void InitDebugDescriptors();
 
-	vk::UniqueSampler GetDefaultSampler();
-
-	void InitQuadDescriptor();
 	void DrawFrame();
 } * Renderer{};
 } // namespace vl

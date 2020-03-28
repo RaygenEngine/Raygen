@@ -48,19 +48,19 @@ inline TextureWrapping GetTextureWrapping(int32 gltfWrapping)
 	}
 };
 
-inline MaterialPod::AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
+inline Material::AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
 {
 	if (str::equalInsensitive(gltfAlphaMode, "OPAQUE")) {
-		return MaterialPod::Opaque;
+		return Material::Opaque;
 	}
 	if (str::equalInsensitive(gltfAlphaMode, "MASK")) {
-		return MaterialPod::Mask;
+		return Material::Mask;
 	}
 	if (str::equalInsensitive(gltfAlphaMode, "BLEND")) {
-		return MaterialPod::Blend;
+		return Material::Blend;
 	}
 	// not defined -> opaque
-	return MaterialPod::Opaque;
+	return Material::Opaque;
 }
 
 struct AccessorDescription {
@@ -320,23 +320,23 @@ class GltfLoader {
 
 	tg::Model model;
 
-	std::vector<PodHandle<ImagePod>> imagePods;
-	std::vector<PodHandle<SamplerPod>> samplerPods;
-	std::vector<PodHandle<MaterialPod>> materialPods;
-	// std::vector<PodHandle<ModelPod>> modelPods;
+	std::vector<PodHandle<Image>> imagePods;
+	std::vector<PodHandle<Sampler>> samplerPods;
+	std::vector<PodHandle<Material>> materialPods;
+	// std::vector<PodHandle<Model>> modelPods;
 
 	void LoadGeometryGroup(
-		ModelPod* pod, GeometryGroup& geom, const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat);
-	void LoadMesh(ModelPod* pod, Mesh& mesh, const tinygltf::Mesh& meshData, const glm::mat4& transformMat);
+		Model* pod, GeometryGroup& geom, const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat);
+	void LoadMesh(Model* pod, Mesh& mesh, const tinygltf::Mesh& meshData, const glm::mat4& transformMat);
 
-	void LoadMaterial(MaterialPod* pod, size_t index);
+	void LoadMaterial(Material* pod, size_t index);
 
 	void LoadImages();
 	void LoadSamplers();
 	void LoadMaterials();
 
 	// CHECK: currently loads default scene as model, could also load all the other scenes in the future
-	void LoadModel(ModelPod* pod, int32 sceneIndex);
+	void LoadModel(Model* pod, int32 sceneIndex);
 
 	// Model specific state
 	bool tempModelRequiresDefaultMat{ false };
@@ -365,7 +365,7 @@ GltfLoader::GltfLoader(const fs::path& path)
 }
 
 void GltfLoader::LoadGeometryGroup(
-	ModelPod* pod, GeometryGroup& geom, const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat)
+	Model* pod, GeometryGroup& geom, const tinygltf::Primitive& primitiveData, const glm::mat4& transformMat)
 {
 
 	CLOG_WARN(primitiveData.mode != TINYGLTF_MODE_TRIANGLES, "Unsupported primitive data mode {}", filename);
@@ -569,7 +569,7 @@ void GltfLoader::LoadGeometryGroup(
 	}
 }
 
-void GltfLoader::LoadMesh(ModelPod* pod, Mesh& mesh, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
+void GltfLoader::LoadMesh(Model* pod, Mesh& mesh, const tinygltf::Mesh& meshData, const glm::mat4& transformMat)
 {
 	mesh.geometryGroups.resize(meshData.primitives.size());
 
@@ -584,7 +584,7 @@ void GltfLoader::LoadMesh(ModelPod* pod, Mesh& mesh, const tinygltf::Mesh& meshD
 	}
 }
 
-void GltfLoader::LoadMaterial(MaterialPod* pod, size_t index)
+void GltfLoader::LoadMaterial(Material* pod, size_t index)
 {
 	auto& data = model.materials.at(index);
 
@@ -607,25 +607,24 @@ void GltfLoader::LoadMaterial(MaterialPod* pod, size_t index)
 	// doublesided-ness
 	pod->doubleSided = data.doubleSided;
 
-	auto fillMatTexture
-		= [&](auto textureInfo, PodHandle<SamplerPod>& sampler, PodHandle<ImagePod>& image, int32& uvIndex) {
-			  if (textureInfo.index != -1) {
+	auto fillMatTexture = [&](auto textureInfo, PodHandle<Sampler>& sampler, PodHandle<Image>& image, int32& uvIndex) {
+		if (textureInfo.index != -1) {
 
-				  auto texture = model.textures.at(textureInfo.index);
+			auto texture = model.textures.at(textureInfo.index);
 
-				  const auto imageIndex = texture.source;
-				  CLOG_ABORT(imageIndex == -1, "This model is unsafe to use");
+			const auto imageIndex = texture.source;
+			CLOG_ABORT(imageIndex == -1, "This model is unsafe to use");
 
-				  image = imagePods.at(imageIndex);
+			image = imagePods.at(imageIndex);
 
-				  const auto samplerIndex = texture.sampler;
-				  if (samplerIndex != -1) {
-					  sampler = samplerPods.at(samplerIndex);
-				  } // else default
+			const auto samplerIndex = texture.sampler;
+			if (samplerIndex != -1) {
+				sampler = samplerPods.at(samplerIndex);
+			} // else default
 
-				  uvIndex = textureInfo.texCoord;
-			  }
-		  };
+			uvIndex = textureInfo.texCoord;
+		}
+	};
 
 	// samplers
 	auto& baseColorTextureInfo = data.pbrMetallicRoughness.baseColorTexture;
@@ -650,7 +649,7 @@ void GltfLoader::LoadImages()
 	// CHECK: embedded images not supported currently
 	for (auto& img : model.images) {
 		fs::path imgPath = systemPath.remove_filename() / img.uri;
-		imagePods.push_back(ImporterManager->ImportRequest<ImagePod>(imgPath));
+		imagePods.push_back(ImporterManager->ImportRequest<Image>(imgPath));
 	}
 }
 
@@ -665,7 +664,7 @@ void GltfLoader::LoadSamplers()
 
 		std::string name = sampler.name.empty() ? filename + "_Sampler_" + std::to_string(samplerIndex) : sampler.name;
 
-		auto& [handle, pod] = ImporterManager->CreateEntry<SamplerPod>(samplerPath, name);
+		auto& [handle, pod] = ImporterManager->CreateEntry<Sampler>(samplerPath, name);
 
 		pod->minFilter = GetTextureFiltering(sampler.minFilter);
 		pod->magFilter = GetTextureFiltering(sampler.magFilter);
@@ -693,7 +692,7 @@ void GltfLoader::LoadMaterials()
 
 		std::string name = mat.name.empty() ? filename + "_Mat_" + std::to_string(matIndex) : mat.name;
 
-		auto& [handle, pod] = ImporterManager->CreateEntry<MaterialPod>(matPath, name);
+		auto& [handle, pod] = ImporterManager->CreateEntry<Material>(matPath, name);
 
 		LoadMaterial(pod, matIndex);
 
@@ -701,12 +700,12 @@ void GltfLoader::LoadMaterials()
 		matIndex++;
 	}
 	// auto& [handle, pod]
-	//	= AssetImporterManager::CreateEntry<ModelPod>(gltfFilePath, std::string(uri::GetFilenameNoExt(gltfFilePath)));
+	//	= AssetImporterManager::CreateEntry<Model>(gltfFilePath, std::string(uri::GetFilenameNoExt(gltfFilePath)));
 
 	materialPods.push_back({}); // bleh
 }
 
-void GltfLoader::LoadModel(ModelPod* pod, int32 sceneIndex)
+void GltfLoader::LoadModel(Model* pod, int32 sceneIndex)
 {
 	int32 scene = sceneIndex >= 0 ? sceneIndex : 0;
 
@@ -790,7 +789,7 @@ void GltfLoader::LoadModel(ModelPod* pod, int32 sceneIndex)
 BasePodHandle GltfLoader::Load()
 {
 	auto& [handle, pod]
-		= ImporterManager->CreateEntry<ModelPod>(gltfFilePath, std::string(uri::GetFilenameNoExt(gltfFilePath)));
+		= ImporterManager->CreateEntry<Model>(gltfFilePath, std::string(uri::GetFilenameNoExt(gltfFilePath)));
 
 	LoadImages();
 	LoadSamplers();

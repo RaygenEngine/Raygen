@@ -23,24 +23,21 @@ layout(location = 5) in vec2 uv1;
 
 layout(push_constant) uniform ModelData {
 	mat4 modelMat;
-	//mat4 normalMat;
+	mat4 viewProj;
+	mat3 normalMat;
+	float padding[9];
 } push;
 
-layout(set = 0, binding = 0) uniform UBO_Globals {
-	mat4 viewProj;
-} globals;
-
 void main() {
-	gl_Position = globals.viewProj * push.modelMat * vec4(pos, 1.0);
+	gl_Position = push.viewProj * push.modelMat * vec4(pos, 1.0);
 
 	fragPos = vec3(push.modelMat * vec4(pos,1));
 	uv[0] = uv0; 
 	uv[1] = uv1; 
 	
-	// TODO: normal matrix
-	vec3 T = normalize(vec3(push.modelMat) * tangent);
-	vec3 B = normalize(vec3(push.modelMat) * bitangent);
-	vec3 N = normalize(vec3(push.modelMat) * normal);
+	vec3 T = normalize(push.normalMat * tangent.xyz);
+	vec3 N = normalize(push.normalMat * normal.xyz);
+	vec3 B = normalize(push.normalMat * bitangent.xyz);
 	
     TBN = mat3(T, B, N);
 }

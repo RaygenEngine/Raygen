@@ -4,13 +4,60 @@
 #include "editor/imgui/ImguiImpl.h"
 #include "engine/Engine.h"
 #include "engine/profiler/ProfileScope.h"
+#include "rendering/asset/GpuAssetManager.h"
 #include "rendering/Device.h"
 #include "rendering/renderer/Renderer.h"
 
+
 namespace vl {
+void DeferredPass::InitQuadDescriptor()
+{
+	for (uint32 i = 0u; i < 6u; ++i) {
+		descLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+	}
+	descLayout.Generate();
+	descSet = descLayout.GetDescriptorSet();
+}
+
+void DeferredPass::UpdateDescriptorSets(GBuffer& gbuffer)
+{
+	auto quadSampler = GpuAssetManager->GetDefaultSampler();
+
+
+	auto updateImageSamplerInDescriptorSet = [&](vk::ImageView& view, vk::Sampler& sampler, uint32 dstBinding) {
+		vk::DescriptorImageInfo imageInfo{};
+		imageInfo
+			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+			.setImageView(view)
+			.setSampler(sampler);
+
+		vk::WriteDescriptorSet descriptorWrite{};
+		descriptorWrite
+			.setDstSet(descSet) //
+			.setDstBinding(dstBinding)
+			.setDstArrayElement(0u)
+			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+			.setDescriptorCount(1u)
+			.setPBufferInfo(nullptr)
+			.setPImageInfo(&imageInfo)
+			.setPTexelBufferView(nullptr);
+
+		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+	};
+
+	updateImageSamplerInDescriptorSet(gbuffer.position->view.get(), quadSampler, 0u);
+	updateImageSamplerInDescriptorSet(gbuffer.normal->view.get(), quadSampler, 1u);
+	updateImageSamplerInDescriptorSet(gbuffer.albedo->view.get(), quadSampler, 2u);
+	updateImageSamplerInDescriptorSet(gbuffer.specular->view.get(), quadSampler, 3u);
+	updateImageSamplerInDescriptorSet(gbuffer.emissive->view.get(), quadSampler, 4u);
+	updateImageSamplerInDescriptorSet(gbuffer.depth->view.get(), quadSampler, 5u); // NEXT
+}
+
 
 void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 {
+	InitQuadDescriptor();
+
 	// shaders
 	auto vertShaderModule = Device->CompileCreateShaderModule("engine-data/spv/deferred.vert");
 	auto fragShaderModule = Device->CompileCreateShaderModule("engine-data/spv/deferred.frag");
@@ -98,13 +145,11 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 		.setDynamicStateCount(2u) //
 		.setPDynamicStates(dynamicStates);
 
-	auto& descriptorSetLayout = Renderer->quadDescLayout.setLayout;
-
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
 		.setSetLayoutCount(1u) //
-		.setPSetLayouts(&descriptorSetLayout.get())
+		.setPSetLayouts(&descLayout.setLayout.get())
 		.setPushConstantRangeCount(0u)
 		.setPPushConstantRanges(nullptr);
 
@@ -158,7 +203,7 @@ void DeferredPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
 
 	// descriptor sets
 	cmdBuffer->bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &Renderer->quadDescSet, 0u, nullptr);
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &descSet, 0u, nullptr);
 
 	// draw call (triangle)
 	cmdBuffer->draw(3u, 1u, 0u, 0u);

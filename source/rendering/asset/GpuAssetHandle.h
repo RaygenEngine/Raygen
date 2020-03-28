@@ -14,26 +14,13 @@ struct GpuAssetBase {
 };
 
 template<CONC(CAssetPod) T>
-struct GpuAssetBaseTyped : public GpuAssetBase {
-};
+using GpuAsset = typename T::Gpu;
 
-
-struct GpuHandleBase {
-	size_t uid{ 0 };
-};
 
 template<CONC(CAssetPod) T>
-struct GpuHandle : public GpuHandleBase {
-	// GpuAssetBaseTyped<T>& Lock() { GpuAssetManager->Get<T>(uid); }
+struct GpuHandle : public BasePodHandle {
 	GpuHandle<T>() { uid = GetDefaultPodUid<T>(); }
 	GpuHandle<T>(size_t inUid) { uid = inUid; }
+
+	[[nodiscard]] GpuAsset<T>& Lock() const { return vl::GpuAssetManager->LockHandle<T>(uid); }
 };
-
-
-#define DECLARE_GPU_ASSET(StructName, PodType)                                                                         \
-	template<>                                                                                                         \
-	struct GpuAssetBaseTyped<PodType>;                                                                                 \
-	using StructName = GpuAssetBaseTyped<PodType>;                                                                     \
-                                                                                                                       \
-	template<>                                                                                                         \
-	struct GpuAssetBaseTyped<PodType> : public GpuAssetBase

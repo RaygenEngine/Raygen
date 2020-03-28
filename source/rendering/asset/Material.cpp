@@ -8,7 +8,7 @@
 
 using namespace vl;
 
-GpuAssetBaseTyped<MaterialPod>::GpuAssetBaseTyped(PodHandle<MaterialPod> podHandle)
+Material::Gpu::Gpu(PodHandle<Material> podHandle)
 {
 	auto data = podHandle.Lock();
 
@@ -28,7 +28,7 @@ GpuAssetBaseTyped<MaterialPod>::GpuAssetBaseTyped(PodHandle<MaterialPod> podHand
 
 	// alpha mask
 	matData.alphaCutoff = data->alphaCutoff;
-	matData.mask = data->alphaMode == MaterialPod::AlphaMode::Mask;
+	matData.mask = data->alphaMode == Material::AlphaMode::Mask;
 
 	baseColorSampler = GpuAssetManager->GetGpuHandle(data->baseColorSampler);
 	baseColorImage = GpuAssetManager->GetGpuHandle(data->baseColorImage);
@@ -80,9 +80,9 @@ GpuAssetBaseTyped<MaterialPod>::GpuAssetBaseTyped(PodHandle<MaterialPod> podHand
 	// images (material)
 
 	auto UpdateImageSamplerInDescriptorSet
-		= [&](GpuHandle<SamplerPod> sampler, GpuHandle<ImagePod> image, uint32 dstBinding) {
-			  auto& sam = GpuAssetManager->LockHandle(sampler);
-			  auto& img = GpuAssetManager->LockHandle(image);
+		= [&](GpuHandle<Sampler> sampler, GpuHandle<Image> image, uint32 dstBinding) {
+			  auto& sam = sampler.Lock();
+			  auto& img = image.Lock();
 
 			  vk::DescriptorImageInfo imageInfo{};
 			  imageInfo

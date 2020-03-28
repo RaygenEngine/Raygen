@@ -1,6 +1,6 @@
 #pragma once
 #include "rendering/asset/Model.h"
-#include "rendering/PoolAllocator.h"
+#include "rendering/resource/GpuResources.h"
 #include "rendering/wrapper/GBuffer.h"
 
 #include <vulkan/vulkan.hpp>

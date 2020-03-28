@@ -22,7 +22,7 @@ layout(location=0) in Data
 
 // uniforms
 
-layout(set = 1, binding = 0) uniform UBO_Material {
+layout(set = 0, binding = 0) uniform UBO_Material {
 	// factors
     vec4 baseColorFactor;
 	vec4 emissiveFactor;
@@ -43,11 +43,11 @@ layout(set = 1, binding = 0) uniform UBO_Material {
 	int mask;
 } material;
 
-layout(set = 1, binding = 1) uniform sampler2D baseColorSampler;
-layout(set = 1, binding = 2) uniform sampler2D metallicRoughnessSampler;
-layout(set = 1, binding = 3) uniform sampler2D occlusionSampler;
-layout(set = 1, binding = 4) uniform sampler2D normalSampler;
-layout(set = 1, binding = 5) uniform sampler2D emissiveSampler;
+layout(set = 0, binding = 1) uniform sampler2D baseColorSampler;
+layout(set = 0, binding = 2) uniform sampler2D metallicRoughnessSampler;
+layout(set = 0, binding = 3) uniform sampler2D occlusionSampler;
+layout(set = 0, binding = 4) uniform sampler2D normalSampler;
+layout(set = 0, binding = 5) uniform sampler2D emissiveSampler;
 
 void main() {
 	// sample material textures

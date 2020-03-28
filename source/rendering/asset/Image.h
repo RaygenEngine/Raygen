@@ -5,10 +5,9 @@
 
 #include <vulkan/vulkan.hpp>
 
-DECLARE_GPU_ASSET(Image, ImagePod)
-{
+struct Image::Gpu : public GpuAssetBase {
 	UniquePtr<ImageObj> image;
 	vk::UniqueImageView view;
 
-	GpuAssetBaseTyped<ImagePod>(PodHandle<ImagePod> podHandle);
+	Image::Gpu(PodHandle<Image> podHandle);
 };

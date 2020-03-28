@@ -6,8 +6,7 @@
 #include "rendering/VulkanUtl.h"
 #include "rendering/wrapper/Buffer.h"
 
-
-GpuAssetBaseTyped<ImagePod>::GpuAssetBaseTyped(PodHandle<ImagePod> podHandle)
+Image::Gpu::Gpu(PodHandle<Image> podHandle)
 {
 	auto imgData = podHandle.Lock();
 
