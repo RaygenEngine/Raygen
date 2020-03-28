@@ -3,7 +3,7 @@
 #include "reflection/PodReflection.h"
 
 
-#include "asset/AssetPod.h"
+#include "assets/AssetPod.h"
 
 
 TEST("Pod Reflection")
