@@ -181,7 +181,7 @@ constexpr bool is_vector_v = is_specialization<std::decay_t<Vector>, std::vector
 template<typename V, typename C>
 constexpr bool is_vector_of_base()
 {
-	if constexpr (is_vector_v<V>) { // NOLINT
+	if constexpr (is_vector_v<V>) {
 		return std::is_base_of_v<C, typename V::value_type> || std::is_same_v<C, typename V::value_type>;
 	}
 	return false;
@@ -190,7 +190,7 @@ constexpr bool is_vector_of_base()
 template<typename V, typename C>
 constexpr bool is_vector_of_same()
 {
-	if constexpr (is_vector_v<V>) { // NOLINT
+	if constexpr (is_vector_v<V>) {
 		return std::is_same_v<C, typename V::value_type>;
 	}
 	return false;

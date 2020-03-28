@@ -81,6 +81,8 @@ public:
 	void DirtyUpdate(DirtyFlagset flags) override;
 
 
+	void EnqueueActiveCamera();
+
 	CameraNode();
 	~CameraNode() override;
 

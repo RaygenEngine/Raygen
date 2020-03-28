@@ -52,12 +52,12 @@ template<typename T>
 const ReflClass& GetClass(const T* obj)
 {
 	static_assert(detail::SupportsGetClassF<T>(), "Cannot get class from this object type.");
-	if constexpr (std::is_base_of_v<Node, T>) { // NOLINT
+	if constexpr (std::is_base_of_v<Node, T>) {
 		// Virtual call to get the lowest reflector even if T == Node
 		return obj->GetClass();
 	}
-	else if constexpr (std::is_base_of_v<AssetPod, T>) { // NOLINT
-		if constexpr (std::is_same_v<AssetPod, T>) {     // NOLINT
+	else if constexpr (std::is_base_of_v<AssetPod, T>) {
+		if constexpr (std::is_same_v<AssetPod, T>) {
 			const ReflClass* ptr;
 			auto l = [&ptr](auto pod) {
 				ptr = &std::remove_pointer_t<std::decay_t<decltype(pod)>>::StaticClass();

@@ -327,7 +327,7 @@ namespace {
 
 void PropertyEditorWindow::ImguiDraw()
 {
-	PROFILE_SCOPE(EditorObject_);
+	PROFILE_SCOPE(Editor);
 
 	Node* node = EditorObject_::GetSelectedNode();
 	if (!node) {

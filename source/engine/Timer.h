@@ -94,10 +94,10 @@ public:
 	void Report()
 	{
 		long long last = Get<ChronoDuration>();
-		if constexpr (std::is_same_v<ChronoDuration, ch::microseconds>) { // NOLINT
+		if constexpr (std::is_same_v<ChronoDuration, ch::microseconds>) {
 			LOG_INFO("{0}: {1} micros", m_name, last);
 		}
-		else if constexpr (std::is_same_v<ChronoDuration, ch::milliseconds>) { // NOLINT
+		else if constexpr (std::is_same_v<ChronoDuration, ch::milliseconds>) {
 			LOG_INFO("{0}: {1} ms", m_name, last);
 		}
 		else {

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "EditorObject.h"
+#include "Editor.h"
 
 #include "editor/DataStrings.h"
 #include "editor/EdUserSettings.h"
@@ -18,7 +18,6 @@
 #include "universe/WorldOperationsUtl.h"
 
 #include <glfw/glfw3.h>
-
 
 EditorObject_::EditorObject_()
 {
@@ -40,7 +39,10 @@ EditorObject_::EditorObject_()
 		}
 	});
 
-	Event::OnWorldLoaded.Bind(this, [&] { SpawnEditorCamera(); });
+	Event::OnWorldLoaded.Bind(this, [&] {
+		SpawnEditorCamera();
+		m_selectedNode = nullptr;
+	});
 
 	MakeMainMenu();
 }
@@ -160,7 +162,13 @@ void EditorObject_::UpdateViewportCoordsFromDockspace()
 
 void EditorObject_::UpdateEditor()
 {
-	PROFILE_SCOPE(EditorObject_);
+	PROFILE_SCOPE(Editor);
+
+	for (auto& cmd : m_deferredCommands) {
+		cmd();
+	}
+	m_deferredCommands.clear();
+
 	if (m_editorCamera) {
 		m_editorCamera->UpdateFromEditor(Universe::GetMainWorld()->GetDeltaTime());
 	}
@@ -211,10 +219,11 @@ void EditorObject_::UpdateEditor()
 
 	ImguiImpl::EndFrame();
 
-	for (auto& cmd : m_postDrawCommands) {
-		cmd();
+	while (m_postDrawCommands.ConsumingRegion()) {
+		for (auto& cmd : m_postDrawCommands.vec) {
+			cmd();
+		}
 	}
-	m_postDrawCommands.clear();
 
 	ed::GetSettings().SaveIfDirty();
 }
@@ -244,26 +253,16 @@ void EditorObject_::SpawnEditorCamera()
 void EditorObject_::OpenLoadDialog()
 {
 	if (auto file = ed::NativeFileBrowser::OpenFile({ "json" })) {
-		LOG_REPORT("LOADING: {}", *file);
-		m_sceneToLoad = *file;
+		m_updateWorld = false;
+		m_selectedNode = nullptr;
+
+		Universe::LoadMainWorld(*file);
 	}
-}
-
-void EditorObject_::LoadScene(const fs::path& scenefile)
-{
-	// TODO:
-	LOG_ERROR("Reimplement Scene Loading.");
-	return;
-
-	m_updateWorld = false;
-	m_selectedNode = nullptr;
 }
 
 void EditorObject_::ReloadScene()
 {
-	// TODO:
-	// auto path = AssetHandlerManager::GetPodUri(Universe::GetMainWorld()->GetLoadedFromHandle());
-	// m_sceneToLoad = uri::ToSystemPath(path);
+	Universe::LoadMainWorld(Universe::GetMainWorld()->GetLoadedFromPath());
 }
 
 void EditorObject_::OnDisableEditor()
@@ -299,7 +298,7 @@ void EditorObject_::OnStopPlay()
 		}
 	}
 	if (m_autoRestoreWorld && m_hasRestoreSave) {
-		m_sceneToLoad = "__scene.tmp";
+		Universe::LoadMainWorld("__scene.tmp");
 	}
 }
 
@@ -349,27 +348,14 @@ void EditorObject_::HandleInput()
 
 void EditorObject_::PushCommand(std::function<void()>&& func)
 {
-	EditorObject->m_postDrawCommands.emplace_back(func);
+	EditorObject->m_postDrawCommands.Emplace(func);
 }
 
-void EditorObject_::PushPostFrameCommand(std::function<void()>&& func)
+void EditorObject_::PushDeferredCommand(std::function<void()>&& func)
 {
-	EditorObject->m_postFrameCommands.emplace_back(func);
+	EditorObject->m_deferredCommands.push_back(std::move(func));
 }
 
-
-void EditorObject_::PreBeginFrame()
-{
-	if (!m_sceneToLoad.empty()) {
-		LoadScene(m_sceneToLoad);
-		m_sceneToLoad = "";
-	}
-
-	for (auto& cmd : m_postFrameCommands) {
-		cmd();
-	}
-	m_postFrameCommands.clear();
-}
 
 void EditorObject_::SelectNode(Node* node)
 {

@@ -43,7 +43,7 @@ struct MetaEnumInst;
 			static constexpr int min = (Min);                                                                          \
 			static constexpr int max = (Max);                                                                          \
 		};                                                                                                             \
-	} // NOLINT
+	}
 
 //
 // Enum Reflection for our reflection system.

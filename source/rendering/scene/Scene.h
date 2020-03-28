@@ -10,7 +10,11 @@ struct SceneVector {
 	size_t pendingElements{ 0 };
 
 
-	void AppendPendingElements() { elements.resize(elements.size() + pendingElements); }
+	void AppendPendingElements()
+	{
+		elements.resize(elements.size() + pendingElements);
+		pendingElements = 0;
+	}
 };
 
 inline struct Scene_ {
@@ -26,6 +30,8 @@ inline struct Scene_ {
 
 	std::mutex cmdBuffersVectorMutex;
 	std::mutex cmdAddPendingElementsMutex;
+
+	size_t activeCamera{ 0 };
 
 
 	template<CONC(CSceneElem) T>
@@ -46,7 +52,10 @@ inline struct Scene_ {
 	template<CONC(CSceneElem) T>
 	void EnqueueCmd(size_t uid, std::function<void(T&)>&& command)
 	{
-		currentCommandBuffer->emplace_back([uid, cmd = std::move(command)]() { cmd(*Scene->GetElement<T>(uid)); });
+		currentCommandBuffer->emplace_back([uid, cmd = std::move(command)]() {
+			//
+			cmd(*Scene->GetElement<T>(uid));
+		});
 	}
 
 	template<CONC(CSceneElem) T>
@@ -74,15 +83,26 @@ inline struct Scene_ {
 	template<CONC(CSceneElem) T>
 	void EnqueueDestroyCmd(size_t uid)
 	{
-		// WIP: Actual delete
 		if constexpr (std::is_same_v<SceneGeometry, T>) {
-			currentCommandBuffer->emplace_back([uid]() { Scene->geometries.elements[uid] = nullptr; });
+			currentCommandBuffer->emplace_back([uid]() {
+				auto elem = static_cast<T*>(Scene->geometries.elements[uid]);
+				Scene->geometries.elements[uid] = nullptr;
+				delete elem;
+			});
 		}
 		else if constexpr (std::is_same_v<SceneCamera, T>) {
-			currentCommandBuffer->emplace_back([uid]() { Scene->cameras.elements[uid] = nullptr; });
+			currentCommandBuffer->emplace_back([uid]() {
+				auto elem = static_cast<T*>(Scene->cameras.elements[uid]);
+				Scene->cameras.elements[uid] = nullptr;
+				delete elem;
+			});
 		}
 		else if constexpr (std::is_same_v<SceneSpotlight, T>) {
-			currentCommandBuffer->emplace_back([uid]() { Scene->spotlights.elements[uid] = nullptr; });
+			currentCommandBuffer->emplace_back([uid]() {
+				auto elem = static_cast<T*>(Scene->spotlights.elements[uid]);
+				Scene->spotlights.elements[uid] = nullptr;
+				delete elem;
+			});
 		}
 	}
 
@@ -91,6 +111,11 @@ inline struct Scene_ {
 	{
 		// std::lock_guard<std::mutex> guard(cmdBuffersVectorMutex);
 		currentCommandBuffer = commands.emplace_back(std::make_unique<std::vector<std::function<void()>>>()).get();
+	}
+
+	void EnqueueActiveCameraCmd(size_t uid)
+	{
+		currentCommandBuffer->emplace_back([uid]() { Scene->activeCamera = uid; });
 	}
 
 private:
