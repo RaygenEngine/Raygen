@@ -59,6 +59,9 @@ Node* World::GetNodeByName(const std::string& name) const
 void World::SetActiveCamera(CameraNode* cam)
 {
 	m_activeCamera = cam;
+	if (cam) {
+		cam->EnqueueActiveCamera();
+	}
 }
 
 void World::LoadAndPrepareWorld(const fs::path& scene)
@@ -235,4 +238,5 @@ void World::Update()
 
 
 	Scene->EnqueueEndFrame();
+	ClearDirtyFlags();
 }

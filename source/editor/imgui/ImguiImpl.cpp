@@ -352,7 +352,7 @@ void ImguiImpl::CleanupContext()
 void ImguiImpl::EndFrame()
 {
 	{
-		PROFILE_SCOPE(EditorObject_);
+		PROFILE_SCOPE(Editor);
 		ImGui::EndFrame();
 
 
@@ -364,6 +364,6 @@ void ImguiImpl::EndFrame()
 
 void ImguiImpl::RenderVulkan(vk::CommandBuffer* drawCommandBuffer)
 {
-	PROFILE_SCOPE(EditorObject_);
+	PROFILE_SCOPE(Editor);
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), *drawCommandBuffer);
 }

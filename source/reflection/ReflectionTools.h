@@ -101,13 +101,13 @@ void CallVisitorOnEveryProperty(ReflectedObj* obj, Visitor& v)
 
 	const ReflClass& cl = refl::GetClass(obj);
 
-	if constexpr (HasBegin<Visitor>::value) { // NOLINT
+	if constexpr (HasBegin<Visitor>::value) {
 		v.Begin(obj, cl);
 	}
 
 	for (auto& p : cl.GetProperties()) {
-		if constexpr (HasPreProperty<Visitor>::value) {                                           // NOLINT
-			if constexpr (std::is_same_v<return_type_t<decltype(&Visitor::PreProperty)>, bool>) { // NOLINT
+		if constexpr (HasPreProperty<Visitor>::value) {
+			if constexpr (std::is_same_v<return_type_t<decltype(&Visitor::PreProperty)>, bool>) {
 				if (!v.PreProperty(p)) {
 					continue;
 				}
@@ -119,12 +119,12 @@ void CallVisitorOnEveryProperty(ReflectedObj* obj, Visitor& v)
 
 		CallVisitorOnProperty(v, p, obj);
 
-		if constexpr (HasPostProperty<Visitor>::value) { // NOLINT
+		if constexpr (HasPostProperty<Visitor>::value) {
 			v.PostProperty(p);
 		}
 	}
 
-	if constexpr (HasEnd<Visitor>::value) { // NOLINT
+	if constexpr (HasEnd<Visitor>::value) {
 		v.End(cl);
 	}
 }

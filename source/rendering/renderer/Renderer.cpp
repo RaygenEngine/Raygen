@@ -272,9 +272,10 @@ void Renderer_::UpdateForFrame()
 	// Globals buffer updates (one uniform buffer update for all draw calls of this render pass)
 	{
 		UBO_Globals ubo{};
-		if (Scene->cameras.elements.size()) {
-			if (Scene->cameras.elements[0]) {
-				ubo.viewProj = Scene->cameras.elements[0]->viewProj;
+		if (Scene->cameras.elements.size() > Scene->activeCamera) {
+			auto cam = Scene->cameras.elements[Scene->activeCamera];
+			if (cam) {
+				ubo.viewProj = cam->viewProj;
 			}
 		}
 

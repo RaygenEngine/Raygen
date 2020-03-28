@@ -82,36 +82,11 @@ void OutlinerWindow::ImguiDraw()
 			newNode->SetModel(entry->GetHandleAs<ModelPod>());
 			Universe::GetMainWorld()->Z_RegisterNode(newNode, Universe::GetMainWorld()->GetRoot());
 			if (!EditorObject->IsCameraPiloting()) {
-				EditorObject_::PushPostFrameCommand([newNode]() { EditorObject_::FocusNode(newNode); });
+				EditorObject_::PushDeferredCommand([newNode]() { EditorObject_::FocusNode(newNode); });
 			}
 		};
 
 		EditorObject_::PushCommand(cmd);
-	}
-
-
-	if (ImGui::BeginDragDropTarget()) {
-		std::string payloadTag = "POD_UID_" + std::to_string(refl::GetId<ModelPod>().hash());
-		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(payloadTag.c_str())) {
-			assert(payload->DataSize == sizeof(size_t));
-			size_t uid = *reinterpret_cast<size_t*>(payload->Data);
-
-			auto* podEntry = AssetHandlerManager::GetEntry(BasePodHandle{ uid });
-
-			auto cmd = [&, uid, podEntry]() {
-				auto newNode = NodeFactory::NewNode<GeometryNode>();
-
-				newNode->SetName(podEntry->name);
-				newNode->SetModel(PodHandle<ModelPod>{ uid });
-				Universe::GetMainWorld()->Z_RegisterNode(newNode, Universe::GetMainWorld()->GetRoot());
-				if (!EditorObject->IsCameraPiloting()) {
-					EditorObject_::PushPostFrameCommand([newNode]() { EditorObject_::FocusNode(newNode); });
-				}
-			};
-
-			EditorObject_::PushCommand(cmd);
-		}
-		ImGui::EndDragDropTarget();
 	}
 
 

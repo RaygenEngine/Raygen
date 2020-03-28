@@ -8,6 +8,5 @@ class Editor {
 
 public:
 	static void Update();
-	static void PreBeginFrame();
 	[[nodiscard]] static bool ShouldUpdateWorld();
 };
