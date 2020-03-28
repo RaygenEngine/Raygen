@@ -9,7 +9,6 @@ using KeyStates = std::bitset<static_cast<int32>(Key::_NUM)>;
 
 // TODO:
 // * Gamepad Support
-// * Actual input system with focus
 // CHECK: Workaround mouse reporting outside of window
 // * Implement reflection for Input Enum keys to support editor and Key Properties
 // * Modifier support for key presses, useful for the editor - circumvented by event calls

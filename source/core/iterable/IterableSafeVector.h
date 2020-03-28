@@ -77,7 +77,7 @@ struct IterableSafeVector {
 	//
 	// NOTE: Do not mix Begin/EndSafeRegion with ConsumingRegion.
 	// NOTE: Removing elements from the queue is currently not supported during consuming region
-	// TODO: Test
+	// TEST:
 	bool ConsumingRegion()
 	{
 		if (isIterating) {

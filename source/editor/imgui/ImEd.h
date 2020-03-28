@@ -73,8 +73,6 @@ struct NoFunc {
 template<CONC(CAssetPod) T, typename Callback = NoFunc>
 inline PodEntry* AcceptTypedPodDrop(Callback onDropped = {})
 {
-	// TODO: This function probably contains a bug
-
 	if (!ImGui::BeginDragDropTarget()) {
 		return nullptr;
 	}

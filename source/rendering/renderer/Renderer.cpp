@@ -20,46 +20,6 @@ namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 {
 	return viewportSize;
-
-
-	//// TODO:
-
-	//// Viewport Framebuffer Size: (recommended framebuffer size)
-	//// The size we actually want our framebuffers to allocate.
-	//// This usually should be larger than the actual viewport size to allow seamless resizing (dynamic state) of the
-	//// viewport while in the editor. In the real game this would always match the swapchain size and not waste any
-	//// memory.
-	//// The algorithm works like this:
-	////   if: x <= 1920 & y <= 1080 -> framebufferSize == 1920x1080
-	//// elif: x <= 2560 & y <= 1440 -> framebufferSize == 2560x1440
-	//// elif: x <= 4096 & y <= 2160 -> framebufferSize == 4096x2160
-	//// else: framebufferSize == viewport
-
-
-	// vk::Extent2D sizes[] = {
-	//	{ 1280, 800 },
-	//	{ 1920, 1080 },
-	//	{ 2560, 1440 },
-	//	{ 4096, 2160 },
-	//};
-	// constexpr size_t sizesLen = sizeof(sizes) / sizeof(vk::Extent2D);
-
-	// vk::Extent2D result = viewportSize;
-	// for (size_t i = 0; i < sizesLen; i++) {
-	//	if (sizes[i].width >= viewportSize.width) {
-	//		result.width = sizes[i].width;
-	//		break;
-	//	}
-	//}
-
-	// for (size_t i = 0; i < sizesLen; i++) {
-	//	if (sizes[i].height >= viewportSize.height) {
-	//		result.height = sizes[i].height;
-	//		break;
-	//	}
-	//}
-
-	// return result;
 }
 } // namespace
 
