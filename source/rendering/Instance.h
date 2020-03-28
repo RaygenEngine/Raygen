@@ -1,11 +1,9 @@
 #pragma once
 #include "rendering/wrapper/PhysicalDevice.h"
 
-// CHECK:
-#include <glfw/glfw3.h>
 #include <vulkan/vulkan.hpp>
 
-
+struct GLFWwindow;
 namespace vl {
 
 // Instance layer wrapper
