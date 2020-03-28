@@ -48,7 +48,7 @@ void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 
 
 	if (meta.exportOnSave) {
-		// TODO: ASSETS implement
+		// TODO: ShaderPod
 	}
 
 

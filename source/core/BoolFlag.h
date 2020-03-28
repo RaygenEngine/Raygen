@@ -3,11 +3,10 @@
 // Boolean flag that automatically resets to false when read.
 // BoolFlags should wherever there are "delayed" event-like notifications and the results need to be processed at a
 // specific time
-// TODO: make non default constructor, add constexpr
 struct BoolFlag {
 
-	BoolFlag() {}
-	BoolFlag(bool initialValue)
+	constexpr BoolFlag() {}
+	constexpr BoolFlag(bool initialValue)
 		: isTrue(initialValue)
 	{
 	}
@@ -27,10 +26,10 @@ struct BoolFlag {
 
 	void Assign(bool newValue) { isTrue = newValue; }
 
-	bool operator==(bool other) { return Access() == other; }
-	bool operator!=(bool other) { return Access() != other; }
-	bool operator!() { return !Access(); }
-	bool operator*() { return Access(); }
+	[[nodiscard]] bool operator==(bool other) { return Access() == other; }
+	[[nodiscard]] bool operator!=(bool other) { return Access() != other; }
+	[[nodiscard]] bool operator!() { return !Access(); }
+	[[nodiscard]] bool operator*() { return Access(); }
 
 
 protected:

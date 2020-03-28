@@ -18,7 +18,8 @@ struct SceneVector {
 };
 
 inline struct Scene_ {
-	Scene_() { EnqueueEndFrame(); } // WIP:
+	// CHECK: runs 2 frames behind
+	Scene_() { EnqueueEndFrame(); }
 
 	SceneVector<SceneGeometry> geometries;
 	SceneVector<SceneCamera> cameras;

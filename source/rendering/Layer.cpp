@@ -32,9 +32,7 @@ Layer_::Layer_()
 
 Layer_::~Layer_()
 {
-	// ImguiImpl::CleanupVulkan(); // WIP:
 	delete GpuAssetManager;
-
 
 	delete Renderer;
 	delete Device;

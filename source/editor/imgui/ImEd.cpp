@@ -134,7 +134,7 @@ void CreateTypedPodDrag(BasePodHandle handle, ImGuiDragDropFlags flags)
 
 int AssetNameFilter::FilterImGuiLetters(ImGuiInputTextCallbackData* data)
 {
-	// TODO: Define and use in asset manager somewhere
+	// CHECK: Define and use in asset manager somewhere
 	if (data->EventChar < 256 && !strchr("./<>:\\|?*~#", (char)data->EventChar)) {
 		return 0;
 	}

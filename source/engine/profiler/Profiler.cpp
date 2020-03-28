@@ -68,7 +68,6 @@ void Profiler_::ExportSessionToJson(const fs::path& file)
 			output << "\"name\":\"" << record.scope->frontFacingName << "\",";
 			output << "\"ph\":\"X\",";
 			output << "\"pid\":0,";
-			// TODO: THREAD:
 			// output << "\"tid\":" << result.ThreadID << ",";
 			output << "\"ts\":" << enter;
 			output << "}";

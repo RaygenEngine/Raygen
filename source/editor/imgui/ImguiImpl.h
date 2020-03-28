@@ -6,7 +6,7 @@ class CommandBuffer;
 
 struct ImFont;
 
-// NEXT: singleton
+// TODO: refactor
 class ImguiImpl {
 public:
 	static void InitContext();
