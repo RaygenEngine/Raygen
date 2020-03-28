@@ -6,19 +6,19 @@
 
 #include <fstream>
 
-S_Profiler::S_Profiler()
+Profiler_::Profiler_()
 {
 	m_sessionRecords.resize(1);
 	m_sessionCurrentVector = &m_sessionRecords[0];
 	m_initTime = ch::system_clock::now();
 }
 
-void S_Profiler::Register(ProfileScopeBase* profObj)
+void Profiler_::Register(ProfileScopeBase* profObj)
 {
 	m_entries.insert({ profObj->engModule, {} }).first->second.push_back(profObj);
 }
 
-void S_Profiler::BeginFrame()
+void Profiler_::BeginFrame()
 {
 	if (*m_shouldStartProfiling) {
 		m_isProfiling = true;
@@ -46,7 +46,7 @@ void S_Profiler::BeginFrame()
 	m_frameBeginTime = now;
 }
 
-void S_Profiler::ExportSessionToJson(const fs::path& file)
+void Profiler_::ExportSessionToJson(const fs::path& file)
 {
 	auto& records = m_sessionRecords;
 
@@ -78,14 +78,14 @@ void S_Profiler::ExportSessionToJson(const fs::path& file)
 	LOG_INFO("Exported Profiler Session: {} entries at: {}", entries, file.generic_string());
 }
 
-void S_Profiler::ResetSession()
+void Profiler_::ResetSession()
 {
 	m_sessionRecords.clear();
 	m_sessionRecords.resize(1);
 	m_sessionCurrentVector = &m_sessionRecords[0];
 };
 
-void S_Profiler::BeginFrameSession()
+void Profiler_::BeginFrameSession()
 {
 	constexpr size_t minElementsPerBatch = 2048 - 512;
 

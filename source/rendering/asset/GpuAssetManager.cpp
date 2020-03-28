@@ -11,7 +11,7 @@
 
 #define DECLARE_LOADER(Struct, Pod)                                                                                    \
 	template<>                                                                                                         \
-	NOINLINE void S_GpuAssetManager::Load<Pod>(PodHandle<Pod> handle)                                                  \
+	NOINLINE void GpuAssetManager_::Load<Pod>(PodHandle<Pod> handle)                                                   \
 	{                                                                                                                  \
 		gpuAssets[handle.podId].reset(new Struct(handle));                                                             \
 	}
@@ -31,7 +31,7 @@ void Dummy()
 }
 
 
-void S_GpuAssetManager::LoadAll()
+void GpuAssetManager_::LoadAll()
 {
 	gpuAssets.resize(AssetHandlerManager::Z_GetPods().size());
 }

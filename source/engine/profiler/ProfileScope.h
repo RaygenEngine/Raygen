@@ -17,10 +17,10 @@ struct ProfileScopeBase {
 	std::string_view frontFacingName;
 
 	size_t hits;
-	S_Profiler::Precision sumDuration;
+	Profiler_::Precision sumDuration;
 
 	size_t prevHits;
-	S_Profiler::Precision prevSumDuration;
+	Profiler_::Precision prevSumDuration;
 
 
 	ProfileScopeBase(const char* file, int32 line, const char* function, ProfilerSetup::Module engModule)
@@ -51,7 +51,7 @@ struct ProfileScopeBase {
 		Profiler.Register(this);
 	}
 
-	void AddExecution(S_Profiler::Precision duration)
+	void AddExecution(Profiler_::Precision duration)
 	{
 		hits++;
 		sumDuration += duration;

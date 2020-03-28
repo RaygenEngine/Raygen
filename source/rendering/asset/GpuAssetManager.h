@@ -4,12 +4,12 @@
 
 namespace vl {
 
-inline class S_GpuAssetManager {
+inline class GpuAssetManager_ {
 	std::vector<UniquePtr<GpuAssetBase>> gpuAssets;
 
 
 public:
-	S_GpuAssetManager() { LoadAll(); }
+	GpuAssetManager_() { LoadAll(); }
 
 	template<typename T>
 	void Load(PodHandle<T> handle)

@@ -10,17 +10,17 @@ namespace ch = std::chrono;
 
 struct ProfileScopeBase;
 
-inline class S_Profiler {
+inline class Profiler_ {
 public:
 	using Precision = ch::nanoseconds;
 	using Timepoint = ch::time_point<ch::system_clock>;
 
-	S_Profiler();
+	Profiler_();
 
-	S_Profiler(const S_Profiler&) = delete;
-	S_Profiler(S_Profiler&&) = delete;
-	S_Profiler operator=(const S_Profiler&) = delete;
-	S_Profiler operator=(S_Profiler&&) = delete;
+	Profiler_(const Profiler_&) = delete;
+	Profiler_(Profiler_&&) = delete;
+	Profiler_ operator=(const Profiler_&) = delete;
+	Profiler_ operator=(Profiler_&&) = delete;
 
 protected:
 	std::map<ProfilerSetup::Module, std::vector<ProfileScopeBase*>> m_entries;
@@ -82,4 +82,4 @@ public:
 
 	// WARNING: All currently registered entries will be lost until application restart with no way of restoring them
 	void Z_ClearRegistrations() { m_entries.clear(); };
-} Profiler;
+} Profiler{};

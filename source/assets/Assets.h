@@ -2,7 +2,7 @@
 #include "assets/AssetManager.h"
 
 class Assets {
-	friend class S_Engine;
+	friend class Engine_;
 
 private:
 	static void Init();

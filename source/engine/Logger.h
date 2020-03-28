@@ -15,7 +15,7 @@ enum class LogLevel
 	Off
 };
 
-inline class S_Log {
+inline class Log_ {
 public:
 	// NOTE: logging and levels my be discarded by build configuration
 	void Init(LogLevel level);

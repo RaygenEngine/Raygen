@@ -39,5 +39,5 @@ public:
 	// Return a 'new NodeFactory()' subtype of node factory with your own factory
 	virtual NodeFactory* MakeNodeFactory();
 
-	friend class S_Engine;
+	friend class Engine_;
 };

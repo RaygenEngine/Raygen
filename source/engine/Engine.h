@@ -11,16 +11,16 @@ inline struct ViewportCoordinates {
 } g_ViewportCoordinates;
 
 
-inline class S_Engine : public Listener {
+inline class Engine_ : public Listener {
 
 public:
-	S_Engine() = default;
-	~S_Engine();
+	Engine_() = default;
+	~Engine_();
 
-	S_Engine(S_Engine const&) = delete;
-	S_Engine(S_Engine&&) = delete;
-	S_Engine& operator=(S_Engine const&) = delete;
-	S_Engine& operator=(S_Engine&&) = delete;
+	Engine_(Engine_ const&) = delete;
+	Engine_(Engine_&&) = delete;
+	Engine_& operator=(Engine_ const&) = delete;
+	Engine_& operator=(Engine_&&) = delete;
 
 private:
 	// Non owning pointer, expected to be valid for the whole program execution
@@ -63,4 +63,4 @@ public:
 
 	[[nodiscard]] App* GetApp() const { return m_app; }
 
-} Engine;
+} Engine{};

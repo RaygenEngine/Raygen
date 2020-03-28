@@ -89,4 +89,4 @@ public:
 	{
 		return IsDown(key) && AreKeysDown(keys...);
 	}
-} Input;
+} Input{};
