@@ -5,7 +5,7 @@
 
 MulticastEvent<int32> testEvent;
 
-struct TestObj : public Object {
+struct TestObj : public Listener {
 	int32 x{ 0 };
 	void MemberFunc(int32 v) { x = v; }
 	void MemberFunc2(int32 v) { x = -1; }
