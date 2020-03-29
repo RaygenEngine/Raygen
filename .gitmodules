@@ -44,3 +44,6 @@
 [submodule "dependencies/nativefiledialog"]
 	path = dependencies/nativefiledialog
 	url = https://github.com/raygengroup/nativefiledialog
+[submodule "dependencies/spirv-cross"]
+	path = dependencies/spirv-cross
+	url = https://github.com/khronosgroup/spirv-cross
