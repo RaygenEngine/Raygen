@@ -52,6 +52,8 @@ target_link_libraries(Raygen
 	#end of shader compiler
 	glfw
 	${GLFW_LIBRARIES}
+	${RAYGEN_SPIRV_CROSS_MODULES}
+
 )
 
 target_link_libraries(Raygen-App
@@ -83,6 +85,7 @@ target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/imfilebrowser
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/GLFW/include)
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/cereal/include)
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/nativefiledialog/src/include)
+target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/spirv-cross/include)
 
 
 target_include_directories(Raygen PUBLIC ${Vulkan_INCLUDE_DIR}/../glslang)

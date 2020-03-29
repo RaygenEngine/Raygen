@@ -2,6 +2,7 @@
 #include "SpirvCompiler.h"
 
 #include "engine/Logger.h"
+#include "assets/util/SpirvReflector.h"
 
 #include <glslang/OSDependent/osinclude.h>
 #include <glslang/Public/ShaderLang.h>
@@ -107,6 +108,10 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& filename)
 	// AppendErrors += fmt::format("{}...\n", filename);
 
 	// TODO: FIX glslang::FinalizeProcess
+
+
+	SpirvReflector::Reflect(outCode);
+
 	return outCode;
 }
 
