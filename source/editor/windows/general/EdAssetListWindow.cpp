@@ -96,7 +96,9 @@ void AssetListWindow::DrawEntry(PodEntry& entry)
 	ImGui::Button(U8(FA_REFRESH_A));
 
 	ImGui::SameLine();
-	ImGui::Text(entry.path.c_str());
+	bool f = false;
+	ImGui::Selectable(entry.path.c_str(), &f);
+	ImEd::CreateTypedPodDrag(&entry);
 	ed::asset::MaybeHoverTooltip(&entry);
 }
 
