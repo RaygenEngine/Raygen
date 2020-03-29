@@ -171,16 +171,10 @@ namespace {
 		bool PodDropTarget(PodHandle<PodType>& pod)
 		{
 			bool result = false;
-			if (ImGui::BeginDragDropTarget()) {
-				std::string payloadTag = "POD_UID_" + std::to_string(refl::GetId<PodType>().hash());
-				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(payloadTag.c_str())) {
-					assert(payload->DataSize == sizeof(size_t));
-					size_t uid = *reinterpret_cast<size_t*>(payload->Data);
-					pod.uid = uid;
-					dirtyFlags.set(Node::DF::Properties);
-					result = true;
-				}
-				ImGui::EndDragDropTarget();
+			if (PodEntry* entry = ImEd::AcceptTypedPodDrop<PodType>()) {
+				pod.uid = entry->uid;
+				dirtyFlags.set(Node::DF::Properties);
+				result = true;
 			}
 			return result;
 		}
