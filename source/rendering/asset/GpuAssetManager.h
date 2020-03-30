@@ -30,11 +30,17 @@ public:
 	template<>
 	void Load<Image>(PodHandle<Image> handle);
 
+	template<>
+	void Load<Shader>(PodHandle<Shader> handle);
+
 
 	template<CONC(CAssetPod) T>
 	GpuHandle<T> GetGpuHandle(PodHandle<T> handle)
 	{
 		size_t id = handle.uid;
+		if (id >= gpuAssets.size()) {
+			gpuAssets.resize(id + 1);
+		}
 		if (!gpuAssets[id]) {
 			Load(handle);
 		}

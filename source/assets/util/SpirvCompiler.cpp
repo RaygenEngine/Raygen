@@ -109,9 +109,6 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& filename)
 
 	// TODO: FIX glslang::FinalizeProcess
 
-
-	SpirvReflector::Reflect(outCode);
-
 	return outCode;
 }
 

@@ -42,6 +42,6 @@ public:
 	template<CONC(CAssetPod) T>
 	[[nodiscard]] PodHandle<T> ImportAs(const fs::path& path)
 	{
-		return m_importerManager.m_importerRegistry.ImportFile<T>(path);
+		return ImporterManager->m_importerRegistry.ImportFile<T>(path);
 	}
 } * AssetManager{};

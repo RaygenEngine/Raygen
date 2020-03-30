@@ -257,7 +257,7 @@ void AssetsWindow::ImguiDraw()
 
 	ImGui::SameLine();
 	if (ImEd::Button(ETXT(FA_FILE_IMPORT, "Import Files"))) {
-		if (auto files = ed::NativeFileBrowser::OpenFileMultiple({ "gltf" })) {
+		if (auto files = ed::NativeFileBrowser::OpenFileMultiple({ "gltf;png,jpg,jpeg,tiff;vert,frag" })) {
 			// TODO: push import operation
 
 			for (auto& path : *files) {

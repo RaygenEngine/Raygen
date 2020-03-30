@@ -17,6 +17,7 @@ Window::Window(WindowCreationParams params)
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	m_window = glfwCreateWindow(params.size.x, params.size.y, params.title, nullptr, nullptr);
 
+	glfwPollEvents(); // drop current events in the queue
 	glfwutl::SetupEventCallbacks(m_window);
 };
 

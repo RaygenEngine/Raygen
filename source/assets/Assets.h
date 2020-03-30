@@ -14,7 +14,7 @@ public:
 	template<CONC(CAssetPod) T>
 	static PodHandle<T> ImportAs(const fs::path& path)
 	{
-		AssetManager->ImportAs<T>(path);
+		return AssetManager->ImportAs<T>(path);
 	}
 
 	template<CONC(CAssetPod) T>

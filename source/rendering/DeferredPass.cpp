@@ -1,10 +1,11 @@
 #include "pch.h"
 #include "DeferredPass.h"
 
-#include "editor/imgui/ImguiImpl.h"
+#include "assets/Assets.h"
 #include "engine/Engine.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/asset/GpuAssetManager.h"
+#include "rendering/asset/Shader.h"
 #include "rendering/Device.h"
 #include "rendering/renderer/Renderer.h"
 
@@ -58,30 +59,34 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 {
 	InitQuadDescriptor();
 
+
+	auto shaderHandle = Assets::ImportAs<Shader>("engine-data/spv/deferred.vert");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->GetGpuHandle(shaderHandle).Lock();
+
 	// shaders
-	auto vertShaderModule = Device->CompileCreateShaderModule("engine-data/spv/deferred.vert");
-	auto fragShaderModule = Device->CompileCreateShaderModule("engine-data/spv/deferred.frag");
+	auto vertShaderModule = *gpuShader.vert;
+	auto fragShaderModule = *gpuShader.frag;
 
 	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo
 		.setStage(vk::ShaderStageFlagBits::eVertex) //
-		.setModule(vertShaderModule->get())
+		.setModule(vertShaderModule)
 		.setPName("main");
 
 	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
 	fragShaderStageInfo
 		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(fragShaderModule->get())
+		.setModule(fragShaderModule)
 		.setPName("main");
 
-	std::array shaderStages{ vertShaderStageInfo, fragShaderStageInfo };
+	std::array shaderStages{ vertShaderStageInfo, fragShaderStageInfo }; // -> Done
 
 	// fixed-function stage
-	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
+	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{}; // -> Done
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly
-		.setTopology(vk::PrimitiveTopology::eTriangleList) //
+		.setTopology(vk::PrimitiveTopology::eTriangleList) // -> Done
 		.setPrimitiveRestartEnable(VK_FALSE);
 
 	vk::Viewport viewport = GetViewport();
