@@ -7,6 +7,7 @@
 #include "rendering/asset/Material.h"
 #include "rendering/asset/Model.h"
 #include "rendering/asset/Sampler.h"
+#include "rendering/asset/Shader.h"
 
 
 #define DECLARE_LOADER(Pod)                                                                                            \
@@ -21,6 +22,7 @@ DECLARE_LOADER(Model);
 DECLARE_LOADER(Material);
 DECLARE_LOADER(Sampler);
 DECLARE_LOADER(Image);
+DECLARE_LOADER(Shader);
 
 void Dummy()
 {
@@ -28,8 +30,8 @@ void Dummy()
 	GpuAssetManager->Load<Material>({});
 	GpuAssetManager->Load<Sampler>({});
 	GpuAssetManager->Load<Image>({});
+	GpuAssetManager->Load<Shader>({});
 }
-
 
 vk::Sampler GpuAssetManager_::GetDefaultSampler()
 {

@@ -1,7 +1,6 @@
 #pragma once
 
 struct GpuAssetBase {
-	size_t uid{ 0 };
 	virtual ~GpuAssetBase() = default;
 
 	GpuAssetBase() = default;
