@@ -1,6 +1,7 @@
 #pragma once
 #include "assets/importers/PodImporter.h"
 #include "assets/pods/ShaderPod.h"
+#include "assets/util/SpirvCompiler.h"
 
 struct ShaderImporter : public PodImporter<Shader> {
 	ShaderImporter(std::string_view name)
@@ -30,5 +31,6 @@ struct ShaderImporter : public PodImporter<Shader> {
 
 namespace shd {
 // WIP:
-ShaderStage LoadAndCompileStage(const std::string& pathNoExt, const std::string& ext);
+ShaderStage LoadAndCompileStage(
+	const std::string& pathNoExt, const std::string& ext, TextCompilerErrors* outErrors = nullptr);
 } // namespace shd
