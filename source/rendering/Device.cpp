@@ -98,17 +98,3 @@ Device_::~Device_()
 
 	destroy();
 }
-
-std::optional<vk::UniqueShaderModule> Device_::CompileCreateShaderModule(const std::string& path)
-{
-	auto binary = ShaderCompiler::Compile(path);
-
-	if (binary.size() == 0) {
-		return {};
-	}
-
-	vk::ShaderModuleCreateInfo createInfo{};
-	createInfo.setCodeSize(binary.size() * 4).setPCode(binary.data());
-
-	return createShaderModuleUnique(createInfo);
-}

@@ -5,6 +5,7 @@
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/asset/GpuAssetManager.h"
+#include "rendering/asset/Shader.h"
 #include "rendering/Device.h"
 #include "rendering/renderer/Renderer.h"
 #include "rendering/asset/Model.h"
@@ -125,15 +126,19 @@ void GeometryPass::InitFramebuffers()
 void GeometryPass::MakePipeline()
 {
 	// shaders
-	auto vertShaderModule = Device->CompileCreateShaderModule("engine-data/spv/gbuffer.vert");
-	if (!vertShaderModule) {
+	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/gbuffer.vert");
+
+	if (!gpuShader.HasCompiledSuccessfully()) {
+		LOG_ERROR("Geometry Pipeline skipped due to shader compilation errors.");
 		return;
 	}
+	auto& fragShaderModule = gpuShader.frag;
+	auto& vertShaderModule = gpuShader.vert;
 
 	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo
 		.setStage(vk::ShaderStageFlagBits::eVertex) //
-		.setModule(vertShaderModule->get())
+		.setModule(*vertShaderModule)
 		.setPName("main");
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
@@ -183,14 +188,10 @@ void GeometryPass::MakePipeline()
 		.setPVertexAttributeDescriptions(attributeDescriptions.data());
 
 
-	auto fragShaderModule = Device->CompileCreateShaderModule("engine-data/spv/gbuffer.frag");
-	if (!fragShaderModule) {
-		return;
-	}
 	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
 	fragShaderStageInfo
 		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(fragShaderModule->get())
+		.setModule(*fragShaderModule)
 		.setPName("main");
 
 	vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };

@@ -1,5 +1,6 @@
 #pragma once
 #include "assets/AssetManager.h"
+#include "assets/pods/ShaderPod.h"
 #include "rendering/asset/GpuAssetHandle.h"
 
 #include <vulkan/vulkan.hpp>
@@ -58,6 +59,9 @@ public:
 
 	void LoadAll();
 	void UnloadAll() { gpuAssets.clear(); }
+
+
+	GpuAsset<Shader>& CompileShader(const fs::path& path);
 
 } * GpuAssetManager{};
 } // namespace vl

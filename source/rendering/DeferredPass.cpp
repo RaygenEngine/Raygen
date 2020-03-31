@@ -59,9 +59,8 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 {
 	InitQuadDescriptor();
 
+	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/deferred.vert");
 
-	auto shaderHandle = Assets::ImportAs<Shader>("engine-data/spv/deferred.vert");
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->GetGpuHandle(shaderHandle).Lock();
 
 	// shaders
 	auto vertShaderModule = *gpuShader.vert;
@@ -79,14 +78,14 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 		.setModule(fragShaderModule)
 		.setPName("main");
 
-	std::array shaderStages{ vertShaderStageInfo, fragShaderStageInfo }; // -> Done
+	std::array shaderStages{ vertShaderStageInfo, fragShaderStageInfo };
 
 	// fixed-function stage
-	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{}; // -> Done
+	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly
-		.setTopology(vk::PrimitiveTopology::eTriangleList) // -> Done
+		.setTopology(vk::PrimitiveTopology::eTriangleList) //
 		.setPrimitiveRestartEnable(VK_FALSE);
 
 	vk::Viewport viewport = GetViewport();
