@@ -76,6 +76,9 @@ void WindowMouseButtonCb(GLFWwindow* window, int32 button, int32 action, int32 m
 {
 	if (ImGui::GetCurrentContext()) {
 		if (ImGui::GetIO().WantCaptureMouse) {
+			if (action == GLFW_RELEASE) {
+				Input.Z_FocusLostKeyRelease(MouseToEngineKey(button), Key::None);
+			}
 			return;
 		}
 	}

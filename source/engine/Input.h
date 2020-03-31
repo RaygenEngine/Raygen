@@ -63,6 +63,10 @@ public:
 	void Z_UpdateScrollWheel(int32 newDelta);
 	void Z_ClearFrameState();
 
+	// Special function that handles probable focus lost. Called when we only release the key if it was already down.
+	// Cases of this is ImGui consumes KeyRelease but we are not sure if we have updated our state.
+	void Z_FocusLostKeyRelease(Key key, Key special);
+
 	[[nodiscard]] bool IsMouseDragging() const noexcept { return isMouseDragging; }
 
 	[[nodiscard]] glm::vec2 GetMouseDelta() const noexcept { return relativeCursorPosition; }

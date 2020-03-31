@@ -61,3 +61,10 @@ void Input::Z_ClearFrameState()
 	isMouseDragging = false;
 	relativeCursorPosition = {};
 }
+
+void Input::Z_FocusLostKeyRelease(Key key, Key special)
+{
+	if (keyStates[static_cast<int32>(key)]) {
+		Z_UpdateKeyReleased(key, special);
+	}
+}

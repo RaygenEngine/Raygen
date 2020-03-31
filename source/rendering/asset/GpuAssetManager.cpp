@@ -40,7 +40,7 @@ vk::Sampler GpuAssetManager_::GetDefaultSampler()
 	return LockHandle(GetGpuHandle<Sampler>({})).sampler.get();
 }
 
-void GpuAssetManager_::LoadAll()
+void GpuAssetManager_::AllocForAll()
 {
 	gpuAssets.resize(AssetHandlerManager::Z_GetPods().size());
 }

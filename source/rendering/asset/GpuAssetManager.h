@@ -12,7 +12,7 @@ inline class GpuAssetManager_ {
 
 
 public:
-	GpuAssetManager_() { LoadAll(); }
+	GpuAssetManager_() { AllocForAll(); }
 
 	template<typename T>
 	void Load(PodHandle<T> handle)
@@ -40,7 +40,7 @@ public:
 	{
 		size_t id = handle.uid;
 		if (id >= gpuAssets.size()) {
-			gpuAssets.resize(id + 1);
+			AllocForAll();
 		}
 		if (!gpuAssets[id]) {
 			Load(handle);
@@ -57,7 +57,7 @@ public:
 
 	vk::Sampler GetDefaultSampler();
 
-	void LoadAll();
+	void AllocForAll();
 	void UnloadAll() { gpuAssets.clear(); }
 
 
