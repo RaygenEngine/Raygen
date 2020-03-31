@@ -29,10 +29,6 @@ void GeometryPass::InitAll()
 	m_materialDescLayout.Generate();
 
 
-	gpuShaderPtr = &GpuAssetManager->CompileShader("engine-data/spv/gbuffer.vert");
-	gpuShaderPtr->onCompile = [&]() {
-		MakePipeline();
-	};
 	MakePipeline();
 }
 
@@ -129,7 +125,11 @@ void GeometryPass::InitFramebuffers()
 
 void GeometryPass::MakePipeline()
 {
-	auto& gpuShader = *gpuShaderPtr;
+	static auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/gbuffer.vert");
+	gpuShader.onCompile = [&]() {
+		Device->waitIdle();
+		MakePipeline();
+	};
 
 
 	if (!gpuShader.HasCompiledSuccessfully()) {
