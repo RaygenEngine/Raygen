@@ -12,7 +12,7 @@
 
 EShLanguage FindLanguage(const std::string& filename);
 
-std::vector<uint32> ShaderCompiler::Compile(const std::string& filename)
+std::vector<uint32> ShaderCompiler::Compile(const std::string& code, const std::string& shadername)
 {
 	using namespace glslang;
 
@@ -24,20 +24,9 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& filename)
 		HasInitGlslLang = true;
 	}
 
-	std::ifstream file(filename);
-	if (!file.is_open()) {
-		auto er = fmt::format("Failed to open shader file for compilation: [{}]\n", filename);
-		// AppendErrors += er;
-		LOG_WARN("{}", er);
-		return {};
-	}
-
-
-	std::string InputGLSL((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-	const char* InputCString = InputGLSL.c_str();
-	const char* fname = filename.c_str();
-	EShLanguage ShaderType = FindLanguage(filename);
+	const char* InputCString = code.c_str();
+	const char* fname = shadername.c_str();
+	EShLanguage ShaderType = FindLanguage(shadername);
 	glslang::TShader Shader(ShaderType);
 	// Shader.setStrings(&InputCString, 1);
 	Shader.setStringsWithLengthsAndNames(&InputCString, nullptr, &fname, 1);
@@ -64,7 +53,7 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& filename)
 	if (!Shader.preprocess(&DefaultTBuiltInResource, ShaderLanguageVersion, ENoProfile, false, false,
 			(EShMessages)(EShMsgSpvRules | EShMsgVulkanRules), &PreprocessedGLSL, Includer)) {
 		auto er = fmt::format(
-			"\nGLSL preprocessing failed: {}.\n{}\n{}\n", filename, Shader.getInfoLog(), Shader.getInfoDebugLog());
+			"\nGLSL preprocessing failed: {}.\n{}\n{}\n", shadername, Shader.getInfoLog(), Shader.getInfoDebugLog());
 		// AppendErrors += er;
 		LOG_ERROR("{}", er);
 		return {};
@@ -76,7 +65,7 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& filename)
 	if (!Shader.parse(
 			&DefaultTBuiltInResource, ShaderLanguageVersion, true, (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules))) {
 		auto er = fmt::format(
-			"\nGLSL parsing failed: {}.\n{}\n{}\n", filename, Shader.getInfoLog(), Shader.getInfoDebugLog());
+			"\nGLSL parsing failed: {}.\n{}\n{}\n", shadername, Shader.getInfoLog(), Shader.getInfoDebugLog());
 		// AppendErrors += er;
 		LOG_ERROR("{}", er);
 		return {};
@@ -87,7 +76,7 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& filename)
 
 	if (!Program.link((EShMessages)(EShMsgSpvRules | EShMsgVulkanRules))) {
 		auto er = fmt::format(
-			"\nGLSL linking failed: {}.\n{}\n{}\n", filename, Shader.getInfoLog(), Shader.getInfoDebugLog());
+			"\nGLSL linking failed: {}.\n{}\n{}\n", shadername, Shader.getInfoLog(), Shader.getInfoDebugLog());
 		// AppendErrors += er;
 		LOG_ERROR("{}", er);
 		return {};

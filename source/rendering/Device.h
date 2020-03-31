@@ -29,6 +29,4 @@ inline struct Device_ : public vk::Device {
 
 	Device_(PhysicalDevice* pd, std::vector<const char*> deviceExtensions);
 	~Device_();
-
-	std::optional<vk::UniqueShaderModule> CompileCreateShaderModule(const std::string& path);
 } * Device{};

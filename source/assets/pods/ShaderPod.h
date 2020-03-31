@@ -48,6 +48,7 @@ struct SpirvReflection {
 struct ShaderStage {
 	SpirvReflection reflection;
 	std::vector<uint32_t> binary;
+	std::string code;
 };
 
 

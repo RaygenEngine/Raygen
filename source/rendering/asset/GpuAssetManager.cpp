@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "rendering/asset/GpuAssetManager.h"
 
+#include "assets/Assets.h"
 #include "assets/PodIncludes.h"
 #include "reflection/PodTools.h"
 #include "rendering/asset/Image.h"
@@ -42,5 +43,10 @@ vk::Sampler GpuAssetManager_::GetDefaultSampler()
 void GpuAssetManager_::LoadAll()
 {
 	gpuAssets.resize(AssetHandlerManager::Z_GetPods().size());
+}
+GpuAsset<Shader>& GpuAssetManager_::CompileShader(const fs::path& path)
+{
+	auto shaderHandle = Assets::ImportAs<Shader>(path);
+	return GpuAssetManager->GetGpuHandle(shaderHandle).Lock();
 }
 } // namespace vl

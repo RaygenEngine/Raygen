@@ -13,6 +13,8 @@ struct Shader::Gpu : public GpuAssetBase {
 
 	Shader::Gpu(PodHandle<Shader> podHandle);
 
+	[[nodiscard]] bool HasCompiledSuccessfully() const;
+
 private:
 	std::vector<vk::PipelineShaderStageCreateInfo> shaderStagesCi;
 	R_DescriptorLayout descLayout;

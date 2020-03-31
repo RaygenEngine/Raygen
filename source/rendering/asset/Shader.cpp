@@ -25,6 +25,11 @@ Shader::Gpu::Gpu(PodHandle<Shader> podHandle)
 	// GenerateLayouts(pod);
 }
 
+bool Shader::Gpu::HasCompiledSuccessfully() const
+{
+	return frag && vert;
+}
+
 void Shader::Gpu::GenerateLayouts(const Shader* pod)
 {
 	// Assume for now that both and only stages are frag & vert and they are valid
