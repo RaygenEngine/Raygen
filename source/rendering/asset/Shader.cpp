@@ -3,31 +3,47 @@
 
 #include "rendering/Device.h"
 
-Shader::Gpu::Gpu(PodHandle<Shader> podHandle)
+namespace {
+void Compile(const Shader* pod, Shader::Gpu* gpu)
 {
-	auto pod = podHandle.Lock();
-
+	if (!(pod->frag.binary.size() && pod->vert.binary.size())) {
+		return;
+	}
 
 	if (pod->frag.binary.size()) {
 		vk::ShaderModuleCreateInfo createInfo{};
 		createInfo.setCodeSize(pod->frag.binary.size() * 4).setPCode(pod->frag.binary.data());
 
-		frag = Device->createShaderModuleUnique(createInfo);
+		gpu->frag = Device->createShaderModuleUnique(createInfo);
 	}
 
 	if (pod->vert.binary.size()) {
 		vk::ShaderModuleCreateInfo createInfo{};
 		createInfo.setCodeSize(pod->vert.binary.size() * 4).setPCode(pod->vert.binary.data());
 
-		vert = Device->createShaderModuleUnique(createInfo);
+		gpu->vert = Device->createShaderModuleUnique(createInfo);
 	}
+}
+} // namespace
 
-	// GenerateLayouts(pod);
+Shader::Gpu::Gpu(PodHandle<Shader> podHandle)
+{
+	auto pod = podHandle.Lock();
+	Compile(pod, this);
+	podPtr = pod;
 }
 
 bool Shader::Gpu::HasCompiledSuccessfully() const
 {
 	return frag && vert;
+}
+
+void Shader::Gpu::Z_Recompile()
+{
+	Compile(podPtr, this);
+	if (onCompile) {
+		onCompile();
+	}
 }
 
 void Shader::Gpu::GenerateLayouts(const Shader* pod)

@@ -63,5 +63,7 @@ public:
 
 	GpuAsset<Shader>& CompileShader(const fs::path& path);
 
+	void ShaderChanged(PodHandle<Shader> handle);
+
 } * GpuAssetManager{};
 } // namespace vl

@@ -16,6 +16,7 @@
 #include "universe/nodes/RootNode.h"
 #include "universe/Universe.h"
 #include "universe/WorldOperationsUtl.h"
+#include <imguicolortextedit/TextEditor.h>
 
 #include <glfw/glfw3.h>
 

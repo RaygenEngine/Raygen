@@ -47,6 +47,11 @@ void GpuAssetManager_::LoadAll()
 GpuAsset<Shader>& GpuAssetManager_::CompileShader(const fs::path& path)
 {
 	auto shaderHandle = Assets::ImportAs<Shader>(path);
-	return GpuAssetManager->GetGpuHandle(shaderHandle).Lock();
+	return GetGpuHandle(shaderHandle).Lock();
+}
+
+void GpuAssetManager_::ShaderChanged(PodHandle<Shader> handle)
+{
+	GetGpuHandle(handle).Lock().Z_Recompile();
 }
 } // namespace vl

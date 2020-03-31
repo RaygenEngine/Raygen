@@ -53,6 +53,7 @@ target_link_libraries(Raygen
 	glfw
 	${GLFW_LIBRARIES}
 	${RAYGEN_SPIRV_CROSS_MODULES}
+	ImGuiColorTextEdit
 
 )
 

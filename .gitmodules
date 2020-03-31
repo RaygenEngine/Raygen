@@ -47,3 +47,6 @@
 [submodule "dependencies/spirv-cross"]
 	path = dependencies/spirv-cross
 	url = https://github.com/khronosgroup/spirv-cross
+[submodule "dependencies/imguicolortextedit"]
+	path = dependencies/imguicolortextedit
+	url = https://github.com/RaygenGroup/ImGuiColorTextEdit

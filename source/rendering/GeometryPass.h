@@ -1,5 +1,6 @@
 #pragma once
 #include "rendering/asset/Model.h"
+#include "rendering/asset/Shader.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/wrapper/GBuffer.h"
 
@@ -37,6 +38,9 @@ public:
 	vk::DescriptorSet GetMaterialDescriptorSet() const;
 
 protected:
+	GpuAsset<Shader>* gpuShaderPtr;
+
+
 	vk::Viewport GetViewport() const;
 	vk::Rect2D GetScissor() const;
 };

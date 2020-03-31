@@ -9,6 +9,7 @@
 #include "editor/windows/general/EdOutlinerWindow.h"
 #include "editor/windows/general/EdProfilerWindow.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
+#include "editor/windows/general/EdShaderEditorWindow.h"
 #include "engine/Events.h"
 
 namespace ed {
@@ -30,5 +31,8 @@ void RegisterWindows(ed::ComponentWindows& windowsComponent)
 	windowsComponent.AddWindowEntry<AboutWindow>("About");
 	windowsComponent.AddWindowEntry<HelpWindow>("Help");
 	windowsComponent.AddWindowEntry<ImGuiDemoWindow>("ImGui Demo");
+
+
+	windowsComponent.AddWindowEntry<ShaderEditorWindow>("Shader Editor");
 }
 } // namespace ed
