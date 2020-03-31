@@ -20,13 +20,13 @@ std::string StringFromFile(const std::string& path)
 } // namespace
 
 namespace shd {
-ShaderStage LoadAndCompileStage(const std::string& pathNoExt, const std::string& ext)
+ShaderStage LoadAndCompileStage(const std::string& pathNoExt, const std::string& ext, TextCompilerErrors* outErrors)
 {
 	std::string path = pathNoExt + ext;
 
 	ShaderStage stage;
 	stage.code = StringFromFile(path);
-	stage.binary = ShaderCompiler::Compile(stage.code, path);
+	stage.binary = ShaderCompiler::Compile(stage.code, path, outErrors);
 	if (stage.binary.size() > 0) {
 		stage.reflection = SpirvReflector::Reflect(stage.binary);
 	}

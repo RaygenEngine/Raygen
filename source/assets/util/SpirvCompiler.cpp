@@ -2,6 +2,7 @@
 #include "SpirvCompiler.h"
 
 #include "engine/Logger.h"
+#include "core/StringConversions.h"
 #include "assets/util/SpirvReflector.h"
 
 #include <glslang/OSDependent/osinclude.h>
@@ -12,9 +13,61 @@
 
 EShLanguage FindLanguage(const std::string& filename);
 
-std::vector<uint32> ShaderCompiler::Compile(const std::string& code, const std::string& shadername)
+std::vector<uint32> ShaderCompiler::Compile(
+	const std::string& code, const std::string& shadername, TextCompilerErrors* outError)
 {
 	using namespace glslang;
+
+	auto reportError = [&](TShader& shader) {
+		if (!outError) {
+			auto er = fmt::format("\nGLSL Compiler Error: {}.\n===\n{}\n====", shadername, shader.getInfoLog());
+			LOG_ERROR("{}", er);
+		}
+		else {
+			// auto er = fmt::format("\nGLSL Compiler Error: {}.\n===\n{}\n====", shadername, shader.getInfoLog());
+
+			// PERF: can be done with just string_views
+
+			std::stringstream ss;
+			ss.str(shader.getInfoLog());
+			std::string item;
+
+			// Parsing example:
+			// ERROR: gbuffer.frag:39: '' :  syntax error, unexpected IDENTIFIER
+			// We want to parse the line number
+
+			while (std::getline(ss, item)) {
+				using namespace std::literals;
+				constexpr std::string_view errorStr = "ERROR: "sv;
+				constexpr size_t size = errorStr.size();
+
+				if (item.starts_with(errorStr)) {
+					std::string_view view{ item.c_str() };
+					view = view.substr(size);
+
+					auto loc = view.find_first_of(':');
+					if (loc == std::string::npos) {
+						continue;
+					}
+
+					view = view.substr(loc + 1);
+
+					// Find Next ':'
+					loc = view.find_first_of(':');
+					if (loc == std::string::npos) {
+						continue;
+					}
+
+					auto numView = view.substr(0, loc);
+					int32 errorLine = str::fromStrView<int32>(numView);
+
+					view = view.substr(loc + 1);
+					outError->errors.emplace(errorLine, std::string(view));
+				}
+			}
+		}
+	};
+
 
 	std::vector<uint32> outCode;
 
@@ -52,10 +105,7 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& code, const std::
 
 	if (!Shader.preprocess(&DefaultTBuiltInResource, ShaderLanguageVersion, ENoProfile, false, false,
 			(EShMessages)(EShMsgSpvRules | EShMsgVulkanRules), &PreprocessedGLSL, Includer)) {
-		auto er = fmt::format(
-			"\nGLSL preprocessing failed: {}.\n{}\n{}\n", shadername, Shader.getInfoLog(), Shader.getInfoDebugLog());
-		// AppendErrors += er;
-		LOG_ERROR("{}", er);
+		reportError(Shader);
 		return {};
 	}
 
@@ -64,10 +114,7 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& code, const std::
 
 	if (!Shader.parse(
 			&DefaultTBuiltInResource, ShaderLanguageVersion, true, (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules))) {
-		auto er = fmt::format(
-			"\nGLSL parsing failed: {}.\n{}\n{}\n", shadername, Shader.getInfoLog(), Shader.getInfoDebugLog());
-		// AppendErrors += er;
-		LOG_ERROR("{}", er);
+		reportError(Shader);
 		return {};
 	}
 
@@ -77,7 +124,6 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& code, const std::
 	if (!Program.link((EShMessages)(EShMsgSpvRules | EShMsgVulkanRules))) {
 		auto er = fmt::format(
 			"\nGLSL linking failed: {}.\n{}\n{}\n", shadername, Shader.getInfoLog(), Shader.getInfoDebugLog());
-		// AppendErrors += er;
 		LOG_ERROR("{}", er);
 		return {};
 	}
