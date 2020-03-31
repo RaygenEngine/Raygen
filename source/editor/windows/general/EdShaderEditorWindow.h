@@ -9,7 +9,7 @@ public:
 
 	void OpenShaderForEditing(PodEntry* entry, bool isFrag);
 
-	virtual void ImguiDraw();
+	virtual void OnDraw(const char* title, bool* keepOpen);
 	virtual ~ShaderEditorWindow() = default;
 
 private:

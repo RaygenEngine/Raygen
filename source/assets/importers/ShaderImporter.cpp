@@ -42,8 +42,7 @@ BasePodHandle ShaderImporter::Import(const fs::path& path)
 	noExtPath.replace_extension();
 
 	// TODO: Reimport on load
-	auto& [handle, pod]
-		= ImporterManager->CreateEntry<Shader>(path.generic_string(), path.filename().replace_extension().string());
+	auto& [handle, pod] = ImporterManager->CreateTransientEntry<Shader>(path.filename().replace_extension().string());
 
 	pod->vert = shd::LoadAndCompileStage(noExtPath.string(), ".vert");
 	pod->frag = shd::LoadAndCompileStage(noExtPath.string(), ".frag");

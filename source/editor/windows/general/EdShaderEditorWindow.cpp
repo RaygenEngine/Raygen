@@ -74,6 +74,7 @@ struct ShaderDocumentEditor {
 			}
 			ImEd::BeginCodeFont();
 			editor.Render(windowName.c_str());
+
 			if (editor.IsTextChanged()) {
 				needsSave = true;
 			}
@@ -128,9 +129,9 @@ void ShaderEditorWindow::OpenShaderForEditing(PodEntry* entry, bool isFrag)
 	}
 } // namespace ed
 
-void ShaderEditorWindow::ImguiDraw()
+void ShaderEditorWindow::OnDraw(const char* title, bool* keepOpen)
 {
-	if (ImGui::BeginChild("ShaderEditorBrowser", ImVec2(140.f, 0), true)) {
+	if (ImGui::Begin(title, keepOpen)) {
 		for (auto& entry : AssetHandlerManager::Z_GetPods()) {
 			if (entry->IsA<Shader>() && !entry->name.starts_with('~')) {
 				std::string fragName = entry->name + ".frag";
@@ -147,8 +148,8 @@ void ShaderEditorWindow::ImguiDraw()
 				ImEd::CreateTypedPodDrag(entry.get());
 			}
 		}
-		ImGui::EndChild();
 	}
+	ImGui::End();
 
 	documentWindows.BeginSafeRegion();
 	for (auto& docWin : documentWindows.vec) {

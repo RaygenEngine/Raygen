@@ -220,6 +220,13 @@ void EditorObject_::UpdateEditor()
 
 	ImguiImpl::EndFrame();
 
+	auto& g = *ImGui::GetCurrentContext();
+	if (g.HoveredWindow == NULL && ImGui::GetTopMostPopupModal() == NULL && g.NavWindow != NULL
+		&& g.IO.MouseClicked[1]) {
+		ImGui::FocusWindow(nullptr);
+		ImGui::ClearActiveID();
+	}
+
 	while (m_postDrawCommands.ConsumingRegion()) {
 		for (auto& cmd : m_postDrawCommands.vec) {
 			cmd();

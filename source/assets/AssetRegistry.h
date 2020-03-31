@@ -29,7 +29,7 @@ private:
 	std::unordered_map<uri::Uri, size_t, str::HashInsensitive> m_pathCache;
 
 
-	uri::Uri SuggestFilenameImpl(std::string_view directory, const uri::Uri& desired)
+	uri::Uri SuggestFilenameImpl(const fs::path& directory, const uri::Uri& desired)
 	{
 		uri::Uri desiredFilename = desired;
 
@@ -39,7 +39,7 @@ private:
 			std::replace(desiredFilename.begin(), desiredFilename.begin() + dotLoc - 1, '.', '_');
 		}
 
-		auto desiredFullPath = (fs::path(directory) / desiredFilename).string();
+		auto desiredFullPath = (directory / desiredFilename).string();
 
 		if (!m_pathCache.count(desiredFullPath)) {
 			return desiredFilename;
@@ -114,7 +114,7 @@ public:
 
 	// Returns an alternative "valid" path for this asset. ie one that will not collide with a current asset.
 	// If the passed in path is corret it will be returned instead
-	static uri::Uri SuggestFilename(std::string_view directory, const uri::Uri& desiredFilename)
+	static uri::Uri SuggestFilename(const fs::path& directory, const uri::Uri& desiredFilename)
 	{
 		return Get().SuggestFilenameImpl(directory, desiredFilename);
 	}
