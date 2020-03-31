@@ -10,6 +10,7 @@ add_subdirectory(glfw)
 
 add_subdirectory(spdlog)
 add_subdirectory(imgui)
+add_subdirectory(imguicolortextedit)
 add_subdirectory(nativefiledialog)
 
 
@@ -35,6 +36,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_target_properties(
 	glfw
 	ImGui
+	ImGuiColorTextEdit
 PROPERTIES FOLDER forks)
 
 

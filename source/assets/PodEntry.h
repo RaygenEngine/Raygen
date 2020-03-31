@@ -33,7 +33,7 @@ struct PodEntry {
 
 
 	template<typename T>
-	T* UnsafeGet()
+	[[nodiscard]] T* UnsafeGet()
 	{
 		static_assert(
 			std::is_base_of_v<AssetPod, T> && !std::is_same_v<AssetPod, T>, "Unsafe get called without a pod type");
@@ -41,11 +41,18 @@ struct PodEntry {
 	}
 
 	template<CONC(CAssetPod) T>
-	PodHandle<T> GetHandleAs()
+	[[nodiscard]] PodHandle<T> GetHandleAs()
 	{
 		CLOG_ABORT(type != mti::GetTypeId<T>(), "Entry->GetAs() Cast failure");
 		return PodHandle<T>{ uid };
 	}
+
+	template<CONC(CAssetPod) T>
+	[[nodiscard]] bool IsA()
+	{
+		return type == mti::GetTypeId<T>();
+	}
+
 
 	void MarkSave() { requiresSave = true; }
 

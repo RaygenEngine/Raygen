@@ -29,6 +29,10 @@ void GeometryPass::InitAll()
 	m_materialDescLayout.Generate();
 
 
+	gpuShaderPtr = &GpuAssetManager->CompileShader("engine-data/spv/gbuffer.vert");
+	gpuShaderPtr->onCompile = [&]() {
+		MakePipeline();
+	};
 	MakePipeline();
 }
 
@@ -125,8 +129,8 @@ void GeometryPass::InitFramebuffers()
 
 void GeometryPass::MakePipeline()
 {
-	// shaders
-	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/gbuffer.vert");
+	auto& gpuShader = *gpuShaderPtr;
+
 
 	if (!gpuShader.HasCompiledSuccessfully()) {
 		LOG_ERROR("Geometry Pipeline skipped due to shader compilation errors.");

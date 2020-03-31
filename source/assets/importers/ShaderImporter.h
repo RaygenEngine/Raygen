@@ -1,5 +1,6 @@
 #pragma once
 #include "assets/importers/PodImporter.h"
+#include "assets/pods/ShaderPod.h"
 
 struct ShaderImporter : public PodImporter<Shader> {
 	ShaderImporter(std::string_view name)
@@ -26,3 +27,8 @@ struct ShaderImporter : public PodImporter<Shader> {
 
 	[[nodiscard]] BasePodHandle Import(const fs::path& path) override;
 };
+
+namespace shd {
+// WIP:
+ShaderStage LoadAndCompileStage(const std::string& pathNoExt, const std::string& ext);
+} // namespace shd

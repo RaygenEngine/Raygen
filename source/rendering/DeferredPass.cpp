@@ -59,8 +59,11 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 {
 	InitQuadDescriptor();
 
-	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/deferred.vert");
 
+	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/deferred.vert");
+	gpuShader.onCompile = [&]() {
+		InitPipeline(*Renderer->swapchain->renderPass);
+	};
 
 	// shaders
 	auto vertShaderModule = *gpuShader.vert;

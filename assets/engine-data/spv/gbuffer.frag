@@ -86,4 +86,11 @@ void main() {
 	
 	// emissive
 	gEmissive = vec4(emissive, 1.f);
-}
+}                                                                                        
+                                                                                         
+                                                                                          
+                                                                                           
+                                                                                            
+                                                                                             
+                                                                                              
+                                                                                               

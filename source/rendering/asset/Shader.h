@@ -15,7 +15,14 @@ struct Shader::Gpu : public GpuAssetBase {
 
 	[[nodiscard]] bool HasCompiledSuccessfully() const;
 
+
+	void Z_Recompile();
+
+	std::function<void()> onCompile;
+
+
 private:
+	const Shader* podPtr;
 	std::vector<vk::PipelineShaderStageCreateInfo> shaderStagesCi;
 	R_DescriptorLayout descLayout;
 	vk::UniquePipelineLayout pipelineLayout;
