@@ -791,11 +791,15 @@ BasePodHandle GltfLoader::Load()
 	auto& [handle, pod]
 		= ImporterManager->CreateEntry<Model>(gltfFilePath, std::string(uri::GetFilenameNoExt(gltfFilePath)));
 
+	ImporterManager->PushPath(uri::GetFilenameNoExt(gltfFilePath));
+
 	LoadImages();
 	LoadSamplers();
 	LoadMaterials();
 
 	LoadModel(pod, model.defaultScene);
+
+	ImporterManager->PopPath();
 
 	return handle;
 }

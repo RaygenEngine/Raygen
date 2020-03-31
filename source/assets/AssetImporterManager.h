@@ -2,6 +2,7 @@
 #include "assets/AssetRegistry.h"
 #include "assets/ImporterRegistry.h"
 
+
 inline class AssetImporterManager_ {
 	friend class AssetManager_;
 	ImporterRegistry m_importerRegistry;
@@ -10,48 +11,33 @@ inline class AssetImporterManager_ {
 	// Stores this session's known imported paths.
 	std::unordered_map<uri::Uri, BasePodHandle> m_importedPathsCache;
 
-	fs::path m_defaultImportingPath{ "gen-data/" };
 
-	struct ImportOperation {
-		int32 stackSize{ 0 };
-		fs::path currentOpImportingPath{};
+	std::vector<fs::path> m_pathsStack{ "gen-data/" };
 
-		void PushOperation(AssetImporterManager_& importer, fs::path& inOutImportingPath)
-		{
-			if (stackSize == 0) {
-				if (inOutImportingPath.empty()) {
-					// This warning happens when there is an  attempt to import an asset but an operation has not
-					// started. This means that the imported assets will go to a "random" folder in the assets and not
-					// the user selected one. Technically importing should only ever be done from the asset window or
-					// other editor UI that allows the user to select where to import.
-					LOG_WARN("Importing assets with default import path! (Manual import from code?)");
-
-					currentOpImportingPath = importer.m_defaultImportingPath;
-				}
-				else {
-					currentOpImportingPath = inOutImportingPath;
-				}
-			}
-
-			stackSize++;
-			if (inOutImportingPath.empty()) {
-				inOutImportingPath = currentOpImportingPath;
-			}
-		}
-
-		void PopOperation() { stackSize--; }
-	};
-
-	ImportOperation m_currentOperation;
 
 	[[nodiscard]] uri::Uri GeneratePath(uri::Uri importPath, uri::Uri name)
 	{
-		auto directory = m_defaultImportingPath.string(); // NEXT: Use importing operation
-		auto filename = AssetHandlerManager::SuggestFilename(directory, name);
-		return directory + filename;
+		auto& directory = m_pathsStack.back();
+		auto filename = AssetHandlerManager::SuggestFilename(m_pathsStack.back(), name);
+		return fs::path(directory / filename).generic_string();
 	}
 
 public:
+	//
+	// Handling of paths we import to.
+	//
+	void PushPath(const fs::path& path) { m_pathsStack.emplace_back(m_pathsStack.back() / path); }
+	void PushPath(std::string_view path) { m_pathsStack.emplace_back(m_pathsStack.back() / path); }
+
+	void PopPath()
+	{
+		CLOG_ERROR(m_pathsStack.size() == 1, "More pops than pushes for importing path found!");
+		if (m_pathsStack.size() > 1) {
+			m_pathsStack.pop_back();
+		}
+	}
+	//
+
 	template<CONC(CAssetPod) PodType>
 	std::pair<PodHandle<PodType>, PodType*> CreateTransientEntry(const uri::Uri& name)
 	{
@@ -81,8 +67,13 @@ public:
 		if (it != m_importedPathsCache.end()) {
 			return it->second;
 		}
+		size_t stack = m_pathsStack.size();
+		auto handle = m_importerRegistry.ImportFile<T>(path);
 
-		return m_importerRegistry.ImportFile<T>(path);
+		CLOG_ABORT(m_pathsStack.size() != stack,
+			"Stack missmatch at importing directory, did you forget to pop stack in your importer?");
+
+		return handle;
 	}
 
 private:
