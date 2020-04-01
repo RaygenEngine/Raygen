@@ -48,7 +48,7 @@ GBufferDebugWindow::GBufferDebugWindow(std::string_view name)
 
 void GBufferDebugWindow::ImguiDraw()
 {
-	auto& gbuff = vl::Renderer->geomPass.m_gBuffer;
+	auto gbuff = vl::Renderer->geomPass.GetGBuffer();
 	if (!gbuff) {
 		return;
 	}

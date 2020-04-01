@@ -10,6 +10,8 @@ struct Attachment {
 	UniquePtr<ImageObj> image;
 	vk::UniqueImageView view;
 
+	vk::Format format;
+
 	std::optional<vk::DescriptorSet> debugDescriptorSet;
 
 

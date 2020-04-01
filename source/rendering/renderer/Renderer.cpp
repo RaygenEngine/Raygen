@@ -114,7 +114,7 @@ void Renderer_::OnViewportResize()
 	if (fbSize != viewportFramebufferSize) {
 		viewportFramebufferSize = fbSize;
 		geomPass.InitFramebuffers();
-		defPass.UpdateDescriptorSets(*geomPass.m_gBuffer.get());
+		defPass.UpdateDescriptorSets(*geomPass.GetGBuffer());
 	}
 }
 
@@ -173,7 +173,7 @@ void Renderer_::DrawDeferredPass(vk::CommandBuffer cmdBuffer, vk::Framebuffer fr
 	editorPass.RecordCmd(&cmdBuffer);
 
 	cmdBuffer.endRenderPass();
-	geomPass.m_gBuffer->TransitionForAttachmentWrite(cmdBuffer);
+	geomPass.GetGBuffer()->TransitionForAttachmentWrite(cmdBuffer);
 
 	cmdBuffer.end();
 }

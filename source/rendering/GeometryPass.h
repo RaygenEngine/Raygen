@@ -8,11 +8,11 @@
 
 namespace vl {
 
-
 class GeometryPass {
 	vk::UniqueRenderPass m_renderPass;
 	vk::UniqueFramebuffer m_framebuffer;
 
+	UniquePtr<GBuffer> m_gBuffer;
 
 	// pipeline stuffs
 	// GENERIC MODEL GEOMETRY PASS PIPELINE
@@ -32,11 +32,8 @@ public:
 
 	void RecordGeometryDraw(vk::CommandBuffer* cmdBuffer);
 
-	// void TransitionGBufferForShaderRead();
-	// void TransitionGBufferForAttachmentWrite();
-	UniquePtr<GBuffer> m_gBuffer;
-
 	vk::DescriptorSet GetMaterialDescriptorSet() const;
+	GBuffer* GetGBuffer() const { return m_gBuffer.get(); }
 
 protected:
 	vk::Viewport GetViewport() const;

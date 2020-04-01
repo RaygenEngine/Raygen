@@ -8,6 +8,7 @@
 namespace vl {
 Attachment::Attachment(
 	uint32 width, uint32 height, vk::Format format, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage)
+	: format(format)
 {
 	image.reset(new ImageObj(width, height, format, vk::ImageTiling::eOptimal, initialLayout, usage,
 		vk::MemoryPropertyFlagBits::eDeviceLocal));
