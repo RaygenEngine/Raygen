@@ -2,6 +2,12 @@
 #include "assets/AssetPod.h"
 #include "reflection/GenMacros.h"
 
+enum class ImageFormat
+{
+	Unorm,
+	Srgb,
+	Hdr
+};
 
 // DOC:
 struct Image : AssetPod {
@@ -14,7 +20,7 @@ struct Image : AssetPod {
 		REFLECT_VAR(width, NoEdit);
 		REFLECT_VAR(height, NoEdit);
 
-		REFLECT_VAR(isHdr, NoEdit);
+		REFLECT_VAR(format, NoEdit);
 	}
 
 	// default imagepod is byte/1x1/white
@@ -23,6 +29,5 @@ struct Image : AssetPod {
 
 	std::vector<byte> data{ 0xFF, 0xFF, 0xFF, 0xFF };
 
-	// byte* or float*
-	bool isHdr{ false };
+	ImageFormat format{ ImageFormat::Unorm };
 };

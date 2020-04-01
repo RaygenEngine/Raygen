@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/Events.h"
 #include "platform/GlfwUtl.h"
-#include "rendering/asset/Model.h"
+#include "rendering/asset/Mesh.h"
 #include "rendering/DeferredPass.h"
 #include "rendering/EditorPass.h"
 #include "rendering/GeometryPass.h"
@@ -18,7 +18,8 @@
 
 namespace vl {
 
-struct UBO_Globals {
+// WIP: position, direction, etc
+struct UBO_Camera {
 	glm::mat4 viewProj;
 };
 using SemVec = std::vector<vk::Semaphore>;
@@ -35,6 +36,10 @@ public:
 	// The actual game viewport rectangle in swapchain coords
 	vk::Rect2D viewportRect{};
 
+	// Camera desc
+	R_DescriptorLayout m_cameraDescLayout;
+	std::vector<vk::DescriptorSet> camDescSet;
+	std::vector<UniquePtr<Buffer>> cameraUBO;
 
 protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)
@@ -83,6 +88,10 @@ public:
 
 	void DrawDeferredPass(vk::CommandBuffer cmdBuffer, vk::Framebuffer framebuffer);
 
+	vk::DescriptorSetLayout GetCameraDescLayout() { return m_cameraDescLayout.setLayout.get(); }
+	vk::DescriptorSet GetCameraDescSet() { return camDescSet[currentFrame]; }
+
+	void UpdateCamera();
 
 	void DrawFrame();
 } * Renderer{};

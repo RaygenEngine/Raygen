@@ -183,7 +183,7 @@ public:
 
 	virtual void Update(float deltaSeconds){};
 
-	// cache world transform top down (and where needed to be updated)
+	// m_cache world transform top down (and where needed to be updated)
 	void UpdateTransforms(const glm::mat4& parentMatrix);
 
 	void SetDirty(uint32 flagIndex) { m_dirty.set(flagIndex); }

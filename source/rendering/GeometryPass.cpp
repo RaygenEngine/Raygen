@@ -8,7 +8,7 @@
 #include "rendering/asset/Shader.h"
 #include "rendering/Device.h"
 #include "rendering/renderer/Renderer.h"
-#include "rendering/asset/Model.h"
+#include "rendering/asset/Mesh.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
 
@@ -17,7 +17,6 @@ namespace vl {
 void GeometryPass::InitAll()
 {
 	InitRenderPass();
-
 
 	// materialUBOLayoutBinding
 	m_materialDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
@@ -131,7 +130,6 @@ void GeometryPass::MakePipeline()
 		MakePipeline();
 	};
 
-
 	if (!gpuShader.HasCompiledSuccessfully()) {
 		LOG_ERROR("Geometry Pipeline skipped due to shader compilation errors.");
 		return;
@@ -150,40 +148,35 @@ void GeometryPass::MakePipeline()
 	vk::VertexInputBindingDescription bindingDescription{};
 	bindingDescription
 		.setBinding(0u) //
-		.setStride(sizeof(VertexData))
+		.setStride(sizeof(Vertex))
 		.setInputRate(vk::VertexInputRate::eVertex);
 
-	std::array<vk::VertexInputAttributeDescription, 6> attributeDescriptions{};
+	std::array<vk::VertexInputAttributeDescription, 5> attributeDescriptions{};
 
 	attributeDescriptions[0].binding = 0u;
 	attributeDescriptions[0].location = 0u;
 	attributeDescriptions[0].format = vk::Format::eR32G32B32Sfloat;
-	attributeDescriptions[0].offset = offsetof(VertexData, position);
+	attributeDescriptions[0].offset = offsetof(Vertex, position);
 
 	attributeDescriptions[1].binding = 0u;
 	attributeDescriptions[1].location = 1u;
 	attributeDescriptions[1].format = vk::Format::eR32G32B32Sfloat;
-	attributeDescriptions[1].offset = offsetof(VertexData, normal);
+	attributeDescriptions[1].offset = offsetof(Vertex, normal);
 
 	attributeDescriptions[2].binding = 0u;
 	attributeDescriptions[2].location = 2u;
 	attributeDescriptions[2].format = vk::Format::eR32G32B32Sfloat;
-	attributeDescriptions[2].offset = offsetof(VertexData, tangent);
+	attributeDescriptions[2].offset = offsetof(Vertex, tangent);
 
 	attributeDescriptions[3].binding = 0u;
 	attributeDescriptions[3].location = 3u;
 	attributeDescriptions[3].format = vk::Format::eR32G32B32Sfloat;
-	attributeDescriptions[3].offset = offsetof(VertexData, bitangent);
+	attributeDescriptions[3].offset = offsetof(Vertex, bitangent);
 
 	attributeDescriptions[4].binding = 0u;
 	attributeDescriptions[4].location = 4u;
 	attributeDescriptions[4].format = vk::Format::eR32G32Sfloat;
-	attributeDescriptions[4].offset = offsetof(VertexData, textCoord0);
-
-	attributeDescriptions[5].binding = 0u;
-	attributeDescriptions[5].location = 5u;
-	attributeDescriptions[5].format = vk::Format::eR32G32Sfloat;
-	attributeDescriptions[5].offset = offsetof(VertexData, textCoord1);
+	attributeDescriptions[4].offset = offsetof(Vertex, uv);
 
 	vertexInputInfo
 		.setVertexBindingDescriptionCount(1u) //
@@ -273,12 +266,11 @@ void GeometryPass::MakePipeline()
 	vk::PushConstantRange pushConstantRange{};
 	pushConstantRange
 		.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
-		.setSize(sizeof(glm::mat4) * 4)
+		.setSize(sizeof(glm::mat4) * 2)
 		.setOffset(0u);
 
-	auto& descriptorSetLayout = m_materialDescLayout.setLayout;
 
-	std::array layouts = { descriptorSetLayout.get() };
+	std::array layouts = { m_materialDescLayout.setLayout.get(), Renderer->GetCameraDescLayout() };
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
@@ -326,12 +318,10 @@ void GeometryPass::MakePipeline()
 namespace {
 	struct PushConstant {
 		glm::mat4 modelMat;
-		glm::mat4 viewProj;
-		glm::mat3 normalMat;
-		float padding1[6];
+		glm::mat4 normalMat;
 	};
 
-	static_assert(sizeof(PushConstant) <= 256);
+	static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
@@ -382,6 +372,10 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 				return;
 			}
 
+			// descriptor sets
+			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
+				&Renderer->GetCameraDescSet(), 0u, nullptr);
+
 			// Dynamic viewport & scissor
 			cmdBuffer->setViewport(0, { GetViewport() });
 			cmdBuffer->setScissor(0, { GetScissor() });
@@ -394,8 +388,9 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 					continue;
 				}
 
+				glm::mat4 normalMat = glm::inverseTranspose(glm::mat3(model->transform));
 				PushConstant pc{ //
-					model->transform, camera->viewProj, glm::inverseTranspose(model->transform)
+					model->transform, normalMat
 				};
 
 				// Submit via push constant (rather than a UBO)

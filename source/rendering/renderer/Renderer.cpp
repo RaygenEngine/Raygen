@@ -37,12 +37,26 @@ Renderer_::Renderer_()
 
 void Renderer_::Init()
 {
+	// Camera ubo WIP: (potentially used by many pipelines)
+	m_cameraDescLayout.AddBinding(
+		vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex /*| vk::ShaderStageFlagBits::eFragment*/);
+	m_cameraDescLayout.Generate();
+
+	for (int32 i = 0; i < swapchain->images.size(); ++i) {
+		camDescSet.push_back(m_cameraDescLayout.GetDescriptorSet());
+		cameraUBO.emplace_back(std::make_unique<Buffer>(sizeof(UBO_Material), vk::BufferUsageFlagBits::eUniformBuffer,
+			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
+	}
+
+
 	// CHECK: Code smell, needs internal first init function
 	geomPass.InitAll();
 
 	InitDebugDescriptors();
 
+	defPass.InitQuadDescriptor();
 	defPass.InitPipeline(swapchain->renderPass.get());
+
 
 	vk::CommandBufferAllocateInfo allocInfo{};
 	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
@@ -62,7 +76,6 @@ void Renderer_::Init()
 
 		inFlightFence.push_back(Device->createFenceUnique(fci));
 	}
-
 
 	Event::OnViewportUpdated.BindFlag(this, didViewportResize);
 	Event::OnWindowResize.BindFlag(this, didWindowResize);
@@ -154,7 +167,6 @@ void Renderer_::DrawDeferredPass(vk::CommandBuffer cmdBuffer, vk::Framebuffer fr
 	renderPassInfo.setClearValueCount(static_cast<uint32>(clearValues.size()));
 	renderPassInfo.setPClearValues(clearValues.data());
 
-
 	cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 
 	defPass.RecordCmd(&cmdBuffer);
@@ -166,12 +178,43 @@ void Renderer_::DrawDeferredPass(vk::CommandBuffer cmdBuffer, vk::Framebuffer fr
 	cmdBuffer.end();
 }
 
+void Renderer_::UpdateCamera()
+{
+	// update camera UBO
+	auto camera = Scene->GetActiveCamera();
+	if (camera) {
+
+		UBO_Camera camData{ camera->viewProj };
+
+		cameraUBO[currentFrame]->UploadData(&camData, sizeof(UBO_Camera));
+
+		vk::DescriptorBufferInfo bufferInfo{};
+
+		bufferInfo
+			.setBuffer(*cameraUBO[currentFrame]) //
+			.setOffset(0u)
+			.setRange(sizeof(UBO_Camera));
+		vk::WriteDescriptorSet descriptorWrite{};
+
+		descriptorWrite
+			.setDstSet(camDescSet[currentFrame]) //
+			.setDstBinding(0u)
+			.setDstArrayElement(0u)
+			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+			.setDescriptorCount(1u)
+			.setPBufferInfo(&bufferInfo)
+			.setPImageInfo(nullptr)
+			.setPTexelBufferView(nullptr);
+
+		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+	}
+}
+
 void Renderer_::DrawFrame()
 {
 	if (isMinimzed) {
 		return;
 	}
-
 
 	UpdateForFrame();
 
@@ -183,12 +226,12 @@ void Renderer_::DrawFrame()
 	Device->waitForFences({ *inFlightFence[currentFrame] }, true, UINT64_MAX);
 	Device->resetFences({ *inFlightFence[currentFrame] });
 
-	Device->acquireNextImageKHR(swapchain->handle.get(), UINT64_MAX, { *imageAvailSem[currentFrame] }, {}, &imageIndex);
+	UpdateCamera();
 
+	Device->acquireNextImageKHR(swapchain->handle.get(), UINT64_MAX, { *imageAvailSem[currentFrame] }, {}, &imageIndex);
 
 	DrawGeometryPass(geometryCmdBuffer[currentFrame]);
 	DrawDeferredPass(outCmdBuffer[currentFrame], swapchain->framebuffers[currentFrame].get());
-
 
 	std::array bufs = { geometryCmdBuffer[currentFrame], outCmdBuffer[currentFrame] };
 
@@ -230,6 +273,5 @@ void Renderer_::DrawFrame()
 
 	PROFILE_SCOPE(Renderer);
 	Device->presentQueue.presentKHR(presentInfo);
-	// Device->waitIdle();
 }
 } // namespace vl

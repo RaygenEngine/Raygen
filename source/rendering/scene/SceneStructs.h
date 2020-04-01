@@ -1,12 +1,13 @@
 #pragma once
-#include "assets/pods/ModelPod.h"
+#include "assets/pods/Mesh.h"
 #include "rendering/asset/GpuAssetHandle.h"
 #include "universe/nodes/geometry/GeometryNode.h"
+#include "rendering/resource/DescPoolAllocator.h"
 
 
 struct SceneGeometry {
 	glm::mat4 transform;
-	GpuHandle<Model> model;
+	GpuHandle<Mesh> model;
 
 	GeometryNode* node;
 };

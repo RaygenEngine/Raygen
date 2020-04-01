@@ -22,7 +22,7 @@ class Window : public Listener {
 
 
 protected:
-	// The interal title passed to imgui, acts as cache to avoid allocations
+	// The interal title passed to imgui, acts as m_cache to avoid allocations
 	std::string m_fullTitle{};
 
 	std::string m_identifier{};

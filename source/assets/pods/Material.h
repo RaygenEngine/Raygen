@@ -1,5 +1,5 @@
 #pragma once
-#include "assets/pods/SamplerPod.h"
+#include "assets/pods/Sampler.h"
 #include "reflection/GenMacros.h"
 
 // This material is based on the glTF standard for materials (not all extensions included)
@@ -21,12 +21,6 @@ struct Material : AssetPod {
 	REFLECTED_POD(Material)
 	{
 		REFLECT_ICON(FA_SWATCHBOOK);
-
-		REFLECT_VAR(baseColorUvIndex, PropertyFlags::Hidden);
-		REFLECT_VAR(metallicRoughnessUvIndex, PropertyFlags::Hidden);
-		REFLECT_VAR(occlusionUvIndex, PropertyFlags::Hidden);
-		REFLECT_VAR(normalUvIndex, PropertyFlags::Hidden);
-		REFLECT_VAR(emissiveUvIndex, PropertyFlags::Hidden);
 
 		REFLECT_VAR(baseColorFactor, PropertyFlags::Color);
 		REFLECT_VAR(emissiveFactor, PropertyFlags::Color);
@@ -68,13 +62,11 @@ struct Material : AssetPod {
 	// any computations. R-red, G-green, B-blue, A-alpha
 	PodHandle<Image> baseColorImage;
 	PodHandle<Sampler> baseColorSampler;
-	int32 baseColorUvIndex{ 0 };
 
 	// The metallic and roughness properties are packed together in a single texture called metallicRoughnessTexture.
 	// R-occlusion, G-roughness, B-metal, A-empty
 	PodHandle<Image> metallicRoughnessImage;
 	PodHandle<Sampler> metallicRoughnessSampler;
-	int32 metallicRoughnessUvIndex{ 0 };
 
 	// The metallic and roughness properties are packed together in a single texture called metallicRoughnessTexture.
 	// R-occlusion, G-occlusion, B-occlusion, A-empty
@@ -82,17 +74,14 @@ struct Material : AssetPod {
 	// use the R channel ALWAYS
 	PodHandle<Image> occlusionImage;
 	PodHandle<Sampler> occlusionSampler;
-	int32 occlusionUvIndex{ 0 };
 
 	// A tangent space normal map
 	PodHandle<Image> normalImage{ GetDefaultNormalImagePodUid() };
 	PodHandle<Sampler> normalSampler;
-	int32 normalUvIndex{ 0 };
 
 	// The emissive map controls the color and intensity of the light being emitted by the material.
 	PodHandle<Image> emissiveImage;
 	PodHandle<Sampler> emissiveSampler;
-	int32 emissiveUvIndex{ 0 };
 
 	// Factor values act as linear multipliers for the corresponding texture values.
 	glm::vec4 baseColorFactor{ 1.f, 1.f, 1.f, 1.f };

@@ -1,6 +1,6 @@
 #pragma once
 #include "assets/AssetManager.h"
-#include "assets/pods/ShaderPod.h"
+#include "assets/pods/Shader.h"
 #include "rendering/asset/GpuAssetHandle.h"
 
 #include <vulkan/vulkan.hpp>
@@ -20,7 +20,7 @@ public:
 	}
 
 	template<>
-	void Load<Model>(PodHandle<Model> handle);
+	void Load<Mesh>(PodHandle<Mesh> handle);
 
 	template<>
 	void Load<Sampler>(PodHandle<Sampler> handle);

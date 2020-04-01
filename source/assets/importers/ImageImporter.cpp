@@ -12,13 +12,14 @@ BasePodHandle ImageImporter::Import(const fs::path& path)
 	auto& [handle, pod]
 		= ImporterManager->CreateEntry<Image>(path.generic_string(), path.filename().replace_extension().string());
 
-	pod->isHdr = stbi_is_hdr(finalPath.c_str()) == 1;
+	auto isHdr = stbi_is_hdr(finalPath.c_str()) == 1;
 
 	void* data = nullptr;
-	if (!pod->isHdr) {
+	if (!isHdr) {
 		data = stbi_load(finalPath.c_str(), &pod->width, &pod->height, nullptr, STBI_rgb_alpha);
 	}
 	else {
+		pod->format = ImageFormat::Hdr;
 		data = stbi_loadf(finalPath.c_str(), &pod->width, &pod->height, nullptr, STBI_rgb_alpha);
 	}
 
@@ -29,7 +30,7 @@ BasePodHandle ImageImporter::Import(const fs::path& path)
 
 	// PERF: crappy std::vector initialization on resize,
 	// to solve fork stb_image and pass preallocated pointer to loading functions
-	size_t byteCount = (pod->width * pod->height * 4llu) * (pod->isHdr ? sizeof(float) : sizeof(byte));
+	size_t byteCount = (pod->width * pod->height * 4llu) * (isHdr ? sizeof(float) : sizeof(byte));
 	pod->data.resize(byteCount);
 
 	memcpy(pod->data.data(), data, byteCount);

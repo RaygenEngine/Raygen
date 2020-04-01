@@ -77,12 +77,12 @@ void R_DescriptorLayout::Generate()
 vk::DescriptorSet R_DescriptorLayout::GetDescriptorSet() const
 {
 	CLOG_ABORT(!hasBeenGenerated, "Attempting to get a descriptor set from a non generated R_DescriptorLayout ");
-	return vl::GpuResources->descPools.AllocateDescritporSet(poolSizeHash, *this);
+	return vl::GpuResources->descPools.AllocateDescriptorSet(poolSizeHash, *this);
 }
 
 namespace vl {
 
-vk::DescriptorSet DescPoolAllocator::AllocateDescritporSet(size_t hash, const R_DescriptorLayout& layout)
+vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const R_DescriptorLayout& layout)
 {
 	auto addPool = [&](Entry& entry) {
 		vk::DescriptorPoolCreateInfo poolInfo{};

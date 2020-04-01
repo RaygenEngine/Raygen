@@ -16,7 +16,7 @@ layout (location = 4) out vec4 gEmissive;
 layout(location=0) in Data
 { 
 	vec3 fragPos; 
-	vec2 uv[2];
+	vec2 uv;
 	mat3 TBN;
 };
 
@@ -31,16 +31,11 @@ layout(set = 0, binding = 0) uniform UBO_Material {
 	float normalScale;
 	float occlusionStrength;
 
-	// text coord indices
-	int baseColorTexcoordIndex;
-	int metallicRoughnessTexcoordIndex;
-	int emissiveTexcoordIndex;
-	int normalTexcoordIndex;
-	int occlusionTexcoordIndex;
-
 	// alpha mask
 	float alphaCutoff;
 	int mask;
+
+	float padding[2];
 } material;
 
 layout(set = 0, binding = 1) uniform sampler2D baseColorSampler;
@@ -51,17 +46,17 @@ layout(set = 0, binding = 5) uniform sampler2D emissiveSampler;
 
 void main() {
 	// sample material textures
-	vec4 sampledBaseColor = texture(baseColorSampler, uv[material.baseColorTexcoordIndex]);
+	vec4 sampledBaseColor = texture(baseColorSampler, uv);
 	
 	float opacity = sampledBaseColor.a * material.baseColorFactor.a;
 	// mask mode and cutoff
 	if(material.mask == 1 && opacity < material.alphaCutoff)
 		discard;
 	
-	vec4 sampledMetallicRoughness = texture(metallicRoughnessSampler, uv[material.metallicRoughnessTexcoordIndex]); 
-	vec4 sampledEmissive = texture(emissiveSampler, uv[material.emissiveTexcoordIndex]);
-	vec4 sampledNormal = texture(normalSampler, uv[material.normalTexcoordIndex]);
-	vec4 sampledOcclusion = texture(occlusionSampler, uv[material.occlusionTexcoordIndex]);
+	vec4 sampledMetallicRoughness = texture(metallicRoughnessSampler, uv); 
+	vec4 sampledEmissive = texture(emissiveSampler, uv);
+	vec4 sampledNormal = texture(normalSampler, uv);
+	vec4 sampledOcclusion = texture(occlusionSampler, uv);
 	
 	// final material values
 	vec3 albedo = sampledBaseColor.rgb * material.baseColorFactor.rgb;
@@ -69,14 +64,14 @@ void main() {
 	float roughness = sampledMetallicRoughness.g * material.roughnessFactor;
 	vec3 emissive = sampledEmissive.rgb * material.emissiveFactor.rgb;
 	float occlusion = sampledOcclusion.r;
-	vec3 normal = normalize((sampledNormal.rgb * 2.0 - 1.0) * vec3(material.normalScale, material.normalScale, 1.0));
+	vec3 normal = normalize((sampledNormal.rgb* 2.0 - 1.0) * vec3(material.normalScale, material.normalScale, 1.0));
 	// opacity set from above
 
     // position
     gPosition = vec4(fragPos, 1.f);
 	
     // normal (with normal mapping)
-    gNormal = vec4(normalize(TBN * normal), 1.f);
+    gNormal = vec4(normalize(TBN * normal.rgb), 1.f);
 	
     // albedo opacity
     gAlbedoOpacity = vec4(albedo, opacity);
@@ -94,3 +89,11 @@ void main() {
                                                                                              
                                                                                               
                                                                                                
+                                                                                           
+                                                                                            
+                                                                                             
+                                                                                              
+                                                                                               
+                                                                                                
+                                                                                                 
+                                                                                                  

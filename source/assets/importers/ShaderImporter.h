@@ -1,6 +1,6 @@
 #pragma once
 #include "assets/importers/PodImporter.h"
-#include "assets/pods/ShaderPod.h"
+#include "assets/pods/Shader.h"
 #include "assets/util/SpirvCompiler.h"
 
 struct ShaderImporter : public PodImporter<Shader> {

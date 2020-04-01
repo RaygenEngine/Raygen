@@ -16,16 +16,16 @@ GBuffer::GBuffer(uint32 width, uint32 height)
 	};
 
 
-	initAttachment(position, vk::Format::eR8G8B8A8Srgb, vk::ImageUsageFlagBits::eColorAttachment,
+	initAttachment(position, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eColorAttachment,
 		vk::ImageLayout::eColorAttachmentOptimal);
 
-	initAttachment(normal, vk::Format::eR8G8B8A8Srgb, vk::ImageUsageFlagBits::eColorAttachment,
+	initAttachment(normal, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eColorAttachment,
 		vk::ImageLayout::eColorAttachmentOptimal);
 
 	initAttachment(albedo, vk::Format::eR8G8B8A8Srgb, vk::ImageUsageFlagBits::eColorAttachment,
 		vk::ImageLayout::eColorAttachmentOptimal);
 
-	initAttachment(specular, vk::Format::eR8G8B8A8Srgb, vk::ImageUsageFlagBits::eColorAttachment,
+	initAttachment(specular, vk::Format::eR8G8B8A8Unorm, vk::ImageUsageFlagBits::eColorAttachment,
 		vk::ImageLayout::eColorAttachmentOptimal);
 
 	initAttachment(emissive, vk::Format::eR8G8B8A8Srgb, vk::ImageUsageFlagBits::eColorAttachment,

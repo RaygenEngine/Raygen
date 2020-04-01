@@ -4,14 +4,16 @@
 #include <algorithm>
 // When adding a pod, add it to both of these
 
-#define ENGINE_POD_TYPES Image, Material, Model, Shader, Sampler
+#define ENGINE_POD_TYPES Image, Material, Mesh, Shader, Sampler, SkinnedMesh, Animation
 
 // Can be macroed
 struct Image;
 struct Material;
-struct Model;
+struct Mesh;
 struct Shader;
 struct Sampler;
+struct SkinnedMesh;
+struct Animation;
 
 
 // Returns the default uid for this pod in the asset manager, all pod handles are initialized with the the valid

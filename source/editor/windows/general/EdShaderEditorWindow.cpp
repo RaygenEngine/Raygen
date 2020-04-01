@@ -3,7 +3,7 @@
 
 
 #include "assets/AssetRegistry.h"
-#include "assets/pods/ShaderPod.h"
+#include "assets/pods/Shader.h"
 #include "engine/Input.h"
 #include "core/iterable/IterableSafeVector.h"
 #include "editor/imgui/ImEd.h"
