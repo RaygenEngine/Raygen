@@ -18,7 +18,12 @@ Image::Gpu::Gpu(PodHandle<Image> podHandle)
 	// copy data to buffer
 	stagingBuffer.UploadData(imgData->data.data(), static_cast<size_t>(imageSize));
 
-	vk::Format format = imgData->isHdr ? vk::Format::eR32G32B32A32Sfloat : vk::Format::eR8G8B8A8Srgb;
+	vk::Format format;
+	switch (imgData->format) {
+		case ImageFormat::Hdr: format = vk::Format::eR32G32B32A32Sfloat; break;
+		case ImageFormat::Srgb: format = vk::Format::eR8G8B8A8Srgb; break;
+		case ImageFormat::Unorm: format = vk::Format::eR8G8B8A8Unorm; break;
+	}
 
 	image.reset(new ImageObj(imgData->width, imgData->height, format, vk::ImageTiling::eOptimal,
 		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,

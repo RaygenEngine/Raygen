@@ -1,7 +1,7 @@
 #pragma once
 
 #include "assets/AssetManager.h"
-#include "assets/pods/ShaderPod.h"
+#include "assets/pods/Shader.h"
 #include "rendering/asset/GpuAssetHandle.h"
 #include "rendering/resource/DescPoolAllocator.h"
 

@@ -9,7 +9,7 @@ GeometryNode::GeometryNode()
 	sceneUid = Scene->EnqueueCreateCmd<SceneGeometry>();
 }
 
-void GeometryNode::SetModel(PodHandle<Model> newModel)
+void GeometryNode::SetModel(PodHandle<Mesh> newModel)
 {
 	m_model = newModel;
 	SetDirty(DF::ModelChange);
@@ -20,7 +20,6 @@ void GeometryNode::DirtyUpdate(DirtyFlagset dirtyFlags)
 	Node::DirtyUpdate(dirtyFlags);
 
 	if (dirtyFlags[DF::ModelChange]) {
-		m_localBB = m_model.Lock()->bbox;
 		CalculateWorldAABB();
 
 		Enqueue([model = GetModel()](SceneGeometry& geom) { geom.model = vl::GpuAssetManager->GetGpuHandle(model); });

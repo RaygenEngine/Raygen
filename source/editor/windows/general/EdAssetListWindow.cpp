@@ -56,6 +56,7 @@ void AssetListWindow::ImguiDraw()
 
 
 	if (!ImGui::BeginChild("AssetList_SubWindow_List")) {
+		ImGui::EndChild();
 		return;
 	}
 	auto& entries = AssetHandlerManager::Z_GetPods();

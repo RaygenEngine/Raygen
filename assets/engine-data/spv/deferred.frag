@@ -20,5 +20,33 @@ layout(binding = 5) uniform sampler2D depthSampler;
 
 
 void main() {
-    outColor = texture(albedoOpacitySampler, uv);
-}
+
+    vec3 hdrColor = texture(albedoOpacitySampler, uv).rgb;
+    
+    // direct light test
+    vec3 n = texture(normalsSampler, uv).rgb;
+    vec3 l = normalize(vec3(-1, -1, -1));
+    vec3 lightColor = vec3(1, 1, 1);
+    float li = 2.f;
+    float NoL =  dot(n, -l);
+    // c = hdrcolor * lightcolor  * light power * n o l
+    hdrColor *= lightColor * li * NoL;  
+  
+    // Exposure tone mapping
+    vec3 mapped = vec3(1.0) - exp(-hdrColor * 1.2);
+    // Gamma correction 
+	mapped = pow(mapped, vec3(1.0 / 2.2));
+  
+    outColor = vec4(hdrColor, 1.0);
+}                               
+                                
+                                 
+                                  
+                                   
+                                    
+                                     
+                                            
+                                               
+                                                 
+                                                  
+                                                   

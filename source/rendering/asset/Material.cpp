@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Material.h"
 
-#include "assets/pods/MaterialPod.h"
+#include "assets/pods/Material.h"
 #include "rendering/asset/GpuAssetManager.h"
 #include "rendering/renderer/Renderer.h"
 #include "rendering/Device.h"
@@ -18,13 +18,6 @@ Material::Gpu::Gpu(PodHandle<Material> podHandle)
 	matData.roughnessFactor = data->roughnessFactor;
 	matData.normalScale = data->normalScale;
 	matData.occlusionStrength = data->occlusionStrength;
-
-	// text coord indices
-	matData.baseColorUvIndex = data->baseColorUvIndex;
-	matData.metallicRoughnessUvIndex = data->metallicRoughnessUvIndex;
-	matData.emissiveUvIndex = data->emissiveUvIndex;
-	matData.normalUvIndex = data->normalUvIndex;
-	matData.occlusionUvIndex = data->occlusionUvIndex;
 
 	// alpha mask
 	matData.alphaCutoff = data->alphaCutoff;
@@ -46,11 +39,10 @@ Material::Gpu::Gpu(PodHandle<Material> podHandle)
 	emissiveImage = GpuAssetManager->GetGpuHandle(data->emissiveImage);
 
 	// CHECK: upload once for now (not dynamic changes)
-	materialUBO.reset(new Buffer(sizeof(UBO_Material), vk::BufferUsageFlagBits::eUniformBuffer,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
+	materialUBO = std::make_unique<Buffer>(sizeof(UBO_Material), vk::BufferUsageFlagBits::eUniformBuffer,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
 	materialUBO->UploadData(&matData, sizeof(UBO_Material));
-
 
 	// descriptors
 	descriptorSet = Renderer->geomPass.GetMaterialDescriptorSet();

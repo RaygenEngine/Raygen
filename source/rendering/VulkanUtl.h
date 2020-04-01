@@ -1,4 +1,5 @@
-#include "assets/pods/SamplerPod.h"
+#pragma once
+#include "assets/pods/Sampler.h"
 
 #include <vulkan/vulkan.hpp>
 

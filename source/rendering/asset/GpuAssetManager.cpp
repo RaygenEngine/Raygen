@@ -6,7 +6,7 @@
 #include "reflection/PodTools.h"
 #include "rendering/asset/Image.h"
 #include "rendering/asset/Material.h"
-#include "rendering/asset/Model.h"
+#include "rendering/asset/Mesh.h"
 #include "rendering/asset/Sampler.h"
 #include "rendering/asset/Shader.h"
 
@@ -19,7 +19,7 @@
 	}
 
 namespace vl {
-DECLARE_LOADER(Model);
+DECLARE_LOADER(Mesh);
 DECLARE_LOADER(Material);
 DECLARE_LOADER(Sampler);
 DECLARE_LOADER(Image);
@@ -27,7 +27,7 @@ DECLARE_LOADER(Shader);
 
 void Dummy()
 {
-	GpuAssetManager->Load<Model>({});
+	GpuAssetManager->Load<Mesh>({});
 	GpuAssetManager->Load<Material>({});
 	GpuAssetManager->Load<Sampler>({});
 	GpuAssetManager->Load<Image>({});

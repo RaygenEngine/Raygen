@@ -1,5 +1,5 @@
 #pragma once
-#include "assets/pods/MaterialPod.h"
+#include "assets/pods/Material.h"
 #include "rendering/asset/GpuAssetHandle.h"
 #include "rendering/asset/Image.h"
 #include "rendering/asset/Sampler.h"
@@ -15,16 +15,11 @@ struct UBO_Material {
 	float normalScale;
 	float occlusionStrength;
 
-	// text coord indices
-	int baseColorUvIndex;
-	int metallicRoughnessUvIndex;
-	int emissiveUvIndex;
-	int normalUvIndex;
-	int occlusionUvIndex;
-
 	// alpha mask
 	float alphaCutoff;
 	int mask;
+
+	float padding[2];
 };
 
 struct Material::Gpu : public GpuAssetBase {

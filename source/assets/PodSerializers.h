@@ -1,5 +1,6 @@
 #pragma once
 #include "assets/PodIncludes.h"
+#include "core/math-ext/AABB.h"
 
 // These are called after all properties have been serialized / deserialized.
 // Included at a different file and should only be included where they are required
@@ -33,23 +34,16 @@ void AdditionalSerializeBoth(Archive& ar, Image* pod)
 }
 
 //
-// Model
-// Model pod requires a few additional struct serialization specializations
-// (Mesh, GeometryGroup, VertexData)
+// Mesh
+// Mesh pod requires a few additional struct serialization specializations
+// (Mesh, GeometryGroup, Vertex)
 //
 
-namespace math {
-template<typename Archive>
-void serialize(Archive& ar, math::AABB& box)
-{
-	ar(box.min, box.max);
-}
-} // namespace math
 
 template<typename Archive>
-void serialize(Archive& ar, VertexData& vtx)
+void serialize(Archive& ar, Vertex& vtx)
 {
-	ar(vtx.position, vtx.normal, vtx.tangent, vtx.bitangent, vtx.textCoord0, vtx.textCoord1);
+	ar(vtx.position, vtx.normal, vtx.tangent, vtx.bitangent, vtx.uv);
 }
 
 template<typename Archive>
@@ -59,14 +53,7 @@ void serialize(Archive& ar, GeometryGroup& gg)
 }
 
 template<typename Archive>
-void serialize(Archive& ar, Mesh& mesh)
+void AdditionalSerializeBoth(Archive& ar, Mesh* pod)
 {
-	ar(mesh.geometryGroups);
-}
-
-
-template<typename Archive>
-void AdditionalSerializeBoth(Archive& ar, Model* pod)
-{
-	ar(pod->meshes, pod->bbox);
+	ar(pod->geometryGroups);
 }
