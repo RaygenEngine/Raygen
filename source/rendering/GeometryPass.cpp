@@ -18,7 +18,6 @@ void GeometryPass::InitAll()
 {
 	InitRenderPass();
 
-	// materialUBOLayoutBinding
 	m_materialDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
 
 	for (uint32 i = 0; i < 5u; ++i) {
@@ -36,9 +35,9 @@ void GeometryPass::InitRenderPass()
 	std::array<vk::AttachmentDescription, 5> colorAttachmentDescs{};
 	std::array<vk::AttachmentReference, 5> colorAttachmentRefs{};
 
-	for (uint32 i = 0; i < 5; ++i) {
+	for (size_t i = 0; i < 5; ++i) {
 		colorAttachmentDescs[i]
-			.setFormat(vk::Format::eR8G8B8A8Srgb) // CHECK:
+			.setFormat(GBuffer::GetGBufferAttachmentFormat(i)) // CHECK:
 			.setSamples(vk::SampleCountFlagBits::e1)
 			.setLoadOp(vk::AttachmentLoadOp::eClear)
 			.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -58,8 +57,8 @@ void GeometryPass::InitRenderPass()
 		.setFormat(Device->pd->FindDepthFormat()) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
-		.setStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+		.setStoreOp(vk::AttachmentStoreOp::eStore)
+		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare) // CHECK: if use stencil dont forget those two
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
 		.setInitialLayout(
 			vk::ImageLayout::eDepthStencilAttachmentOptimal)      // CHECK: vk::ImageLayout::eShaderReadOnlyOptimal?
@@ -104,7 +103,7 @@ void GeometryPass::InitFramebuffers()
 {
 	vk::Extent2D fbSize = Renderer->viewportFramebufferSize;
 
-	m_gBuffer.reset(new GBuffer(fbSize.width, fbSize.height));
+	m_gBuffer = std::make_unique<GBuffer>(fbSize.width, fbSize.height);
 
 	// framebuffers
 

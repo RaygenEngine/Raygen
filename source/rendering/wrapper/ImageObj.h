@@ -7,7 +7,6 @@ class ImageObj {
 	// keep createInfo for compatibility testing
 	vk::ImageCreateInfo m_imageInfo;
 
-
 	vk::UniqueImage m_handle;
 	vk::UniqueDeviceMemory m_memory;
 
