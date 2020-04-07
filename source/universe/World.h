@@ -113,7 +113,6 @@ public:
 	[[nodiscard]] CameraNode* GetActiveCamera() const { return m_activeCamera; }
 	void SetActiveCamera(CameraNode* cam);
 
-
 	void Update();
 
 	void LoadAndPrepareWorld(const fs::path& scenePath);

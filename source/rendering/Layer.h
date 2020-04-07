@@ -2,8 +2,6 @@
 
 
 namespace vl {
-struct Swapchain;
-
 inline class Layer_ {
 public:
 	Layer_();
