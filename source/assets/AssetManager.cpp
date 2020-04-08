@@ -4,7 +4,7 @@
 #include "assets/PodIncludes.h"
 #include "assets/Serialization.h"
 #include "reflection/PodTools.h"
-#include "rendering/asset/GpuAssetManager.h"
+#include "rendering/assets/GpuAssetManager.h"
 
 #include <vulkan/vulkan.hpp>
 #include <iostream>

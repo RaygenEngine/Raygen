@@ -1,11 +1,11 @@
 #pragma once
 #include "assets/pods/Sampler.h"
-#include "rendering/asset/GpuAssetHandle.h"
-#include "rendering/wrapper/ImageObj.h"
+#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/objects/Image.h"
 
 #include <vulkan/vulkan.hpp>
 
-struct Sampler::Gpu : public GpuAssetBase {
+struct Sampler::Gpu : public vl::GpuAssetBase {
 	// PERF: one to many views
 	vk::UniqueSampler sampler;
 

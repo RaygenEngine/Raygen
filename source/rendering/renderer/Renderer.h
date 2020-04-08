@@ -1,27 +1,26 @@
 #pragma once
 #include "engine/Events.h"
 #include "platform/GlfwUtl.h"
-#include "rendering/asset/Mesh.h"
+#include "rendering/assets/GpuMesh.h"
 #include "rendering/DeferredPass.h"
 #include "rendering/EditorPass.h"
 #include "rendering/GeometryPass.h"
 #include "rendering/resource/GpuResources.h"
-#include "rendering/wrapper/Buffer.h"
-#include "rendering/wrapper/PhysicalDevice.h"
-#include "rendering/wrapper/Swapchain.h"
+#include "rendering/objects/Buffer.h"
+#include "rendering/objects/PhysicalDevice.h"
+#include "rendering/renderer/Swapchain.h"
 #include "rendering/scene/SceneStructs.h"
 #include "rendering/scene/Scene.h"
 
 
 #include <vulkan/vulkan.hpp>
 
-
-namespace vl {
-
 // WIP: position, direction, etc
 struct UBO_Camera {
 	glm::mat4 viewProj;
 };
+
+namespace vl {
 using SemVec = std::vector<vk::Semaphore>;
 
 inline class Renderer_ : public Listener {
@@ -37,9 +36,9 @@ public:
 	vk::Rect2D viewportRect{};
 
 	// Camera desc
-	R_DescriptorLayout m_cameraDescLayout;
+	DescriptorLayout m_cameraDescLayout;
 	std::vector<vk::DescriptorSet> camDescSet;
-	std::vector<UniquePtr<Buffer>> cameraUBO;
+	std::vector<UniquePtr<Buffer<UBO_Camera>>> cameraUBO;
 
 protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)
@@ -65,10 +64,6 @@ public:
 
 
 	Swapchain* swapchain{};
-
-	// NEXT:
-	R_DescriptorLayout debugDescSetLayout;
-	void InitDebugDescriptors();
 
 	//
 	std::vector<vk::CommandBuffer> geometryCmdBuffer;

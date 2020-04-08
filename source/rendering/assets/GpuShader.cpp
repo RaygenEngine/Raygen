@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "Shader.h"
+#include "GpuShader.h"
 
 #include "rendering/Device.h"
 
@@ -14,14 +14,14 @@ void Compile(const Shader* pod, Shader::Gpu* gpu)
 		vk::ShaderModuleCreateInfo createInfo{};
 		createInfo.setCodeSize(pod->frag.binary.size() * 4).setPCode(pod->frag.binary.data());
 
-		gpu->frag = Device->createShaderModuleUnique(createInfo);
+		gpu->frag = vl::Device->createShaderModuleUnique(createInfo);
 	}
 
 	if (pod->vert.binary.size()) {
 		vk::ShaderModuleCreateInfo createInfo{};
 		createInfo.setCodeSize(pod->vert.binary.size() * 4).setPCode(pod->vert.binary.data());
 
-		gpu->vert = Device->createShaderModuleUnique(createInfo);
+		gpu->vert = vl::Device->createShaderModuleUnique(createInfo);
 	}
 }
 } // namespace

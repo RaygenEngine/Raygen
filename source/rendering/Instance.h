@@ -1,12 +1,11 @@
 #pragma once
-#include "rendering/wrapper/PhysicalDevice.h"
+#include "rendering/objects/PhysicalDevice.h"
 
 #include <vulkan/vulkan.hpp>
 
 struct GLFWwindow;
-namespace vl {
 
-// Instance layer wrapper
+namespace vl {
 inline struct Instance_ : public vk::Instance {
 
 	vk::SurfaceKHR surface;
@@ -18,6 +17,4 @@ inline struct Instance_ : public vk::Instance {
 	Instance_(std::vector<const char*> requiredExtensions, GLFWwindow* window);
 	~Instance_();
 } * Instance{};
-
-
 } // namespace vl

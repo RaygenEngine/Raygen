@@ -1,26 +1,8 @@
 #pragma once
+#include "rendering/objects/DescriptorLayout.h"
+
 #include <vulkan/vulkan.hpp>
 #include <unordered_map>
-
-struct R_DescriptorLayout {
-private:
-	size_t poolSizeHash;
-
-public:
-	std::vector<vk::DescriptorSetLayoutBinding> bindings;
-	std::vector<vk::DescriptorPoolSize> perSetPoolSizes;
-
-	vk::UniqueDescriptorSetLayout setLayout;
-
-	bool hasBeenGenerated{ false };
-
-
-	void AddBinding(vk::DescriptorType type, vk::ShaderStageFlags stageFlags, uint32 descriptorCount = 1u);
-
-	void Generate();
-
-	vk::DescriptorSet GetDescriptorSet() const;
-};
 
 namespace vl {
 class DescPoolAllocator {
@@ -38,7 +20,7 @@ class DescPoolAllocator {
 	size_t allocCount{ 0 };
 
 public:
-	vk::DescriptorSet AllocateDescriptorSet(size_t hash, const R_DescriptorLayout& layout);
+	vk::DescriptorSet AllocateDescriptorSet(size_t hash, const DescriptorLayout& layout);
 
 	vk::DescriptorPool GetImguiPool();
 

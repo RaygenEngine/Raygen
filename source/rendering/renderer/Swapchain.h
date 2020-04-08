@@ -1,7 +1,6 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 
-
 namespace vl {
 struct Swapchain {
 

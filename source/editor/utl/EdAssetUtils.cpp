@@ -4,8 +4,8 @@
 #include "editor/imgui/ImEd.h"
 #include "reflection/ReflectionTools.h"
 #include "reflection/ReflEnum.h"
-#include "rendering/asset/GpuAssetManager.h"
-#include "rendering/asset/Image.h"
+#include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuImage.h"
 
 namespace ed::asset {
 

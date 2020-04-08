@@ -1,6 +1,7 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 
+namespace vl {
 struct QueueFamily {
 	vk::QueueFamilyProperties props;
 	uint32 index;
@@ -39,3 +40,4 @@ struct PhysicalDevice : public vk::PhysicalDevice {
 
 	[[nodiscard]] SwapchainSupportDetails GetSwapchainSupportDetails() const;
 };
+} // namespace vl

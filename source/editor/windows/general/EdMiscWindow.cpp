@@ -58,9 +58,9 @@ void GBufferDebugWindow::ImguiDraw()
 	ImGui::DragInt2("Preview Size", &m_imgSize.x, 1.f, 0, 4096);
 
 
-	auto showAttachment = [&, shouldShowDescriptors](const char* name, vl::Attachment& att) {
+	auto showAttachment = [&, shouldShowDescriptors](const char* name, vl::Image2D* att) {
 		if (ImGui::CollapsingHeader(name)) {
-			auto descrSet = att.GetDebugDescriptor();
+			auto descrSet = att->GetDebugDescriptor();
 
 			if (!descrSet) {
 				ImGui::Text("Null handle");
@@ -78,12 +78,8 @@ void GBufferDebugWindow::ImguiDraw()
 		}
 	};
 
-	showAttachment("normal", *gbuff->normal);
-	showAttachment("position", *gbuff->position);
-	showAttachment("albedo", *gbuff->albedo);
-	showAttachment("specular", *gbuff->specular);
-	showAttachment("emissive", *gbuff->emissive);
-	showAttachment("depth", *gbuff->depth);
-} // namespace ed
-
+	for (uint32 i = 0; i < vl::GCount; ++i) {
+		showAttachment(vl::GetGAttachmentName(i), (*gbuff)[i]);
+	}
+}
 } // namespace ed

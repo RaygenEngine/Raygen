@@ -1,7 +1,7 @@
 #pragma once
 #include "assets/pods/Mesh.h"
-#include "rendering/asset/GpuAssetHandle.h"
-#include "rendering/asset/Material.h"
+#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuMaterial.h"
 #include "universe/nodes/geometry/GeometryNode.h"
 
 #include <vulkan/vulkan.hpp>
@@ -14,18 +14,18 @@
 // and some Vulkan functions have explicit flags to specify that you want to do this.
 
 // PERF: batching
-struct GPUGeometryGroup {
+struct GpuGeometryGroup {
 
-	UniquePtr<Buffer> vertexBuffer;
-	UniquePtr<Buffer> indexBuffer;
+	UniquePtr<vl::RawBuffer> vertexBuffer;
+	UniquePtr<vl::RawBuffer> indexBuffer;
 
-	GpuHandle<Material> material;
+	vl::GpuHandle<Material> material;
 
 	uint32 indexCount{ 0u };
 };
 
-struct Mesh::Gpu : public GpuAssetBase {
-	std::vector<GPUGeometryGroup> geometryGroups;
+struct Mesh::Gpu : public vl::GpuAssetBase {
+	std::vector<GpuGeometryGroup> geometryGroups;
 
 	Mesh::Gpu(PodHandle<Mesh> podHandle);
 };

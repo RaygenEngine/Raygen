@@ -1,12 +1,11 @@
 #pragma once
 #include "assets/AssetManager.h"
 #include "assets/pods/Shader.h"
-#include "rendering/asset/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetHandle.h"
 
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
-
 inline class GpuAssetManager_ {
 	std::vector<UniquePtr<GpuAssetBase>> gpuAssets;
 

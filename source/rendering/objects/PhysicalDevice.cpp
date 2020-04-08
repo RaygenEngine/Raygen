@@ -5,6 +5,7 @@
 
 #include <set>
 
+namespace vl {
 PhysicalDevice::PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inSurface)
 	: vk::PhysicalDevice(vkHandle)
 	, surface(inSurface)
@@ -119,3 +120,4 @@ SwapchainSupportDetails PhysicalDevice::GetSwapchainSupportDetails() const
 	ssDetails.presentModes = getSurfacePresentModesKHR(surface);
 	return ssDetails;
 }
+} // namespace vl

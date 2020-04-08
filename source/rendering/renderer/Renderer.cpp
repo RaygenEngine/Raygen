@@ -6,10 +6,9 @@
 #include "engine/Events.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
-#include "rendering/asset/GpuAssetManager.h"
+#include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
 #include "rendering/Instance.h"
-#include "rendering/wrapper/Swapchain.h"
 #include "universe/nodes/camera/CameraNode.h"
 #include "universe/nodes/geometry/GeometryNode.h"
 #include "universe/World.h"
@@ -44,15 +43,13 @@ void Renderer_::Init()
 
 	for (int32 i = 0; i < swapchain->images.size(); ++i) {
 		camDescSet.push_back(m_cameraDescLayout.GetDescriptorSet());
-		cameraUBO.emplace_back(std::make_unique<Buffer>(sizeof(UBO_Material), vk::BufferUsageFlagBits::eUniformBuffer,
+		cameraUBO.emplace_back(std::make_unique<Buffer<UBO_Camera>>(vk::BufferUsageFlagBits::eUniformBuffer,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
 	}
 
 
 	// CHECK: Code smell, needs internal first init function
 	geomPass.InitAll();
-
-	InitDebugDescriptors();
 
 	defPass.InitQuadDescriptor();
 	defPass.InitPipeline(swapchain->renderPass.get());
@@ -94,13 +91,6 @@ void Renderer_::ReconstructSwapchain()
 	delete swapchain;
 	swapchain = new Swapchain(Instance->surface);
 }
-
-void Renderer_::InitDebugDescriptors()
-{
-	debugDescSetLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
-	debugDescSetLayout.Generate();
-}
-
 
 void Renderer_::OnViewportResize()
 {
@@ -186,7 +176,7 @@ void Renderer_::UpdateCamera()
 
 		UBO_Camera camData{ camera->viewProj };
 
-		cameraUBO[currentFrame]->UploadData(&camData, sizeof(UBO_Camera));
+		cameraUBO[currentFrame]->UploadData(camData);
 
 		vk::DescriptorBufferInfo bufferInfo{};
 

@@ -1,18 +1,17 @@
 #include "pch.h"
-#include "rendering/wrapper/GBuffer.h"
+#include "rendering/objects/GBuffer.h"
 
 #include "engine/Logger.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/Device.h"
 
 namespace vl {
-
 GBuffer::GBuffer(uint32 width, uint32 height)
 {
 	auto initAttachment = [&](auto& att, vk::Format format, vk::ImageUsageFlags usage, vk::ImageLayout finalLayout) {
-		att.reset(new Attachment(
-			width, height, format, vk::ImageLayout::eUndefined, usage | vk::ImageUsageFlagBits::eSampled));
-		att->image->TransitionToLayout(vk::ImageLayout::eUndefined, finalLayout);
+		att = std::make_unique<Image2D>(width, height, format, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+			usage | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal);
+		att->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, finalLayout);
 	};
 
 	initAttachment(position, GetGBufferAttachmentFormat(0), vk::ImageUsageFlagBits::eColorAttachment,
@@ -29,7 +28,6 @@ GBuffer::GBuffer(uint32 width, uint32 height)
 
 	initAttachment(emissive, GetGBufferAttachmentFormat(4), vk::ImageUsageFlagBits::eColorAttachment,
 		vk::ImageLayout::eColorAttachmentOptimal);
-
 
 	vk::Format depthFormat = Device->pd->FindDepthFormat();
 
@@ -55,32 +53,31 @@ void GBuffer::TransitionForAttachmentWrite(vk::CommandBuffer cmdBuffer)
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto recordTransition
-		= [&](Attachment& attachment, vk::ImageLayout target = vk::ImageLayout::eColorAttachmentOptimal) {
-			  auto barrier = attachment.image->CreateTransitionBarrier(vk::ImageLayout::eShaderReadOnlyOptimal, target);
+	auto recordTransition = [&](auto& attachment, vk::ImageLayout target = vk::ImageLayout::eColorAttachmentOptimal) {
+		auto barrier = attachment->CreateTransitionBarrier(vk::ImageLayout::eShaderReadOnlyOptimal, target);
 
-			  vk::PipelineStageFlags sourceStage = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);
-			  vk::PipelineStageFlags destinationStage = GetPipelineStage(target);
+		vk::PipelineStageFlags sourceStage = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);
+		vk::PipelineStageFlags destinationStage = GetPipelineStage(target);
 
-			  cmdBuffer.pipelineBarrier(
-				  sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
-		  };
+		cmdBuffer.pipelineBarrier(
+			sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+	};
 
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
 
-	recordTransition(*position);
-	recordTransition(*normal);
-	recordTransition(*albedo);
-	recordTransition(*specular);
-	recordTransition(*emissive);
-	recordTransition(*depth, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+	recordTransition(position);
+	recordTransition(normal);
+	recordTransition(albedo);
+	recordTransition(specular);
+	recordTransition(emissive);
+	recordTransition(depth, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 }
 
 std::array<vk::ImageView, 6> GBuffer::GetViewsArray()
 {
-	return { position->view.get(), normal->view.get(), albedo->view.get(), specular->view.get(), emissive->view.get(),
-		depth->view.get() };
+	return { position->GetView(), normal->GetView(), albedo->GetView(), specular->GetView(), emissive->GetView(),
+		depth->GetView() };
 }
 } // namespace vl

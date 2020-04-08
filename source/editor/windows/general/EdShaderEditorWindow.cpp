@@ -8,7 +8,7 @@
 #include "core/iterable/IterableSafeVector.h"
 #include "editor/imgui/ImEd.h"
 #include "assets/importers/ShaderImporter.h"
-#include "rendering/asset/GpuAssetManager.h"
+#include "rendering/assets/GpuAssetManager.h"
 
 #include <imguicolortextedit/TextEditor.h>
 #include <fstream>
