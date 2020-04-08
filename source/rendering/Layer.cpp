@@ -2,13 +2,11 @@
 #include "Layer.h"
 
 #include "platform/Platform.h"
-#include "rendering/asset/GpuAssetManager.h"
+#include "rendering/assets/GpuAssetManager.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/renderer/Renderer.h"
-#include "rendering/wrapper/Swapchain.h"
-
 
 namespace vl {
 

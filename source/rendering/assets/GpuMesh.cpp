@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "Mesh.h"
+#include "GpuMesh.h"
 
-#include "rendering/asset/GpuAssetManager.h"
+#include "rendering/assets/GpuAssetManager.h"
 #include "rendering/renderer/Renderer.h"
 #include "rendering/Device.h"
 
@@ -15,31 +15,31 @@ Mesh::Gpu::Gpu(PodHandle<Mesh> podHandle)
 	// PERF:
 	for (const auto& gg : data->geometryGroups) {
 
-		GPUGeometryGroup vgg;
+		GpuGeometryGroup vgg;
 
 		vk::DeviceSize vertexBufferSize = sizeof(gg.vertices[0]) * gg.vertices.size();
 		vk::DeviceSize indexBufferSize = sizeof(gg.indices[0]) * gg.indices.size();
 
-		Buffer vertexStagingBuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
+		RawBuffer vertexStagingBuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 		// copy data to buffer
 		vertexStagingBuffer.UploadData(gg.vertices.data(), vertexBufferSize);
 
-		Buffer indexStagingBuffer{ indexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
+		RawBuffer indexStagingBuffer{ indexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 		// copy data to buffer
 		indexStagingBuffer.UploadData(gg.indices.data(), indexBufferSize);
 
 		// device local
-		vgg.vertexBuffer.reset(
-			new Buffer(vertexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-				vk::MemoryPropertyFlagBits::eDeviceLocal));
+		vgg.vertexBuffer.reset(new RawBuffer(vertexBufferSize,
+			vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+			vk::MemoryPropertyFlagBits::eDeviceLocal));
 
-		vgg.indexBuffer.reset(
-			new Buffer(indexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
-				vk::MemoryPropertyFlagBits::eDeviceLocal));
+		vgg.indexBuffer.reset(new RawBuffer(indexBufferSize,
+			vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
+			vk::MemoryPropertyFlagBits::eDeviceLocal));
 
 		// copy from host to device local
 		vgg.vertexBuffer->CopyBuffer(vertexStagingBuffer);

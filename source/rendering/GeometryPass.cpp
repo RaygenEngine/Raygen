@@ -4,11 +4,11 @@
 #include "engine/Engine.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
-#include "rendering/asset/GpuAssetManager.h"
-#include "rendering/asset/Shader.h"
+#include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
 #include "rendering/renderer/Renderer.h"
-#include "rendering/asset/Mesh.h"
+#include "rendering/assets/GpuMesh.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
 
@@ -48,7 +48,7 @@ void GeometryPass::InitRenderPass()
 			.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal); // CHECK:
 
 		colorAttachmentRefs[i]
-			.setAttachment(i) //
+			.setAttachment(static_cast<uint32>(i)) //
 			.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
 	}
 

@@ -1,5 +1,4 @@
 #pragma once
-
 #include "rendering/resource/DescPoolAllocator.h"
 
 namespace vl {

@@ -1,9 +1,10 @@
 #pragma once
-#include "rendering/wrapper/PhysicalDevice.h"
+#include "rendering/objects/PhysicalDevice.h"
 
 #include <vulkan/vulkan.hpp>
 #include <optional>
 
+namespace vl {
 struct DeviceQueue : public vk::Queue {
 	uint32 familyIndex;
 
@@ -30,3 +31,4 @@ inline struct Device_ : public vk::Device {
 	Device_(PhysicalDevice* pd, std::vector<const char*> deviceExtensions);
 	~Device_();
 } * Device{};
+} // namespace vl

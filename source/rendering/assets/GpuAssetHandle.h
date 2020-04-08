@@ -1,5 +1,7 @@
 #pragma once
 
+namespace vl {
+
 struct GpuAssetBase {
 	virtual ~GpuAssetBase() = default;
 
@@ -23,3 +25,5 @@ struct GpuHandle : public BasePodHandle {
 
 	[[nodiscard]] GpuAsset<T>& Lock() const { return vl::GpuAssetManager->LockHandle<T>(uid); }
 };
+
+} // namespace vl

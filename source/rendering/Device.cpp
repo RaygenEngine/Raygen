@@ -6,8 +6,7 @@
 
 #include <set>
 
-
-namespace {
+namespace vl {
 QueueFamily GetQueueFamilyWithBestRating(const std::vector<QueueFamily>& queueFamilies)
 {
 	auto it = std::max_element(
@@ -15,7 +14,6 @@ QueueFamily GetQueueFamilyWithBestRating(const std::vector<QueueFamily>& queueFa
 
 	return { *it };
 }
-} // namespace
 
 Device_::Device_(PhysicalDevice* pd, std::vector<const char*> deviceExtensions)
 	: pd(pd)
@@ -98,3 +96,4 @@ Device_::~Device_()
 
 	destroy();
 }
+} // namespace vl

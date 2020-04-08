@@ -1,14 +1,14 @@
 #include "pch.h"
-#include "rendering/asset/GpuAssetManager.h"
+#include "rendering/assets/GpuAssetManager.h"
 
 #include "assets/Assets.h"
 #include "assets/PodIncludes.h"
 #include "reflection/PodTools.h"
-#include "rendering/asset/Image.h"
-#include "rendering/asset/Material.h"
-#include "rendering/asset/Mesh.h"
-#include "rendering/asset/Sampler.h"
-#include "rendering/asset/Shader.h"
+#include "rendering/assets/GpuImage.h"
+#include "rendering/assets/GpuMaterial.h"
+#include "rendering/assets/GpuMesh.h"
+#include "rendering/assets/GpuSampler.h"
+#include "rendering/assets/GpuShader.h"
 
 
 #define DECLARE_LOADER(Pod)                                                                                            \
@@ -22,7 +22,7 @@ namespace vl {
 DECLARE_LOADER(Mesh);
 DECLARE_LOADER(Material);
 DECLARE_LOADER(Sampler);
-DECLARE_LOADER(Image);
+DECLARE_LOADER(::Image);
 DECLARE_LOADER(Shader);
 
 void Dummy()
@@ -30,7 +30,7 @@ void Dummy()
 	GpuAssetManager->Load<Mesh>({});
 	GpuAssetManager->Load<Material>({});
 	GpuAssetManager->Load<Sampler>({});
-	GpuAssetManager->Load<Image>({});
+	GpuAssetManager->Load<::Image>({});
 	GpuAssetManager->Load<Shader>({});
 }
 

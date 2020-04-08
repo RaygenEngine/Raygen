@@ -274,15 +274,15 @@ void SetStyle()
 
 void InitVulkan()
 {
-	auto physDev = Device->pd;
-	auto& device = *Device;
+	auto physDev = vl::Device->pd;
+	auto& device = *vl::Device;
 
 	ImGui_ImplVulkan_InitInfo init = {};
 	init.Instance = *vl::Instance;
 	init.PhysicalDevice = *physDev;
 	init.Device = device;
-	init.QueueFamily = Device->graphicsQueue.familyIndex;
-	init.Queue = Device->graphicsQueue;
+	init.QueueFamily = vl::Device->graphicsQueue.familyIndex;
+	init.Queue = vl::Device->graphicsQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
 	init.DescriptorPool = vl::GpuResources->descPools.GetImguiPool();
 	init.ImageCount = static_cast<uint32>(vl::Renderer->swapchain->images.size());
@@ -292,7 +292,7 @@ void InitVulkan()
 	ImGui_ImplVulkan_Init(&init, vl::Renderer->swapchain->renderPass.get());
 
 
-	auto cmdBuffer = Device->transferCmdBuffer;
+	auto cmdBuffer = vl::Device->transferCmdBuffer;
 
 	//	vkCall(vkResetCommandPool(m_device, m_commandPool, 0));
 
@@ -310,8 +310,8 @@ void InitVulkan()
 
 	cmdBuffer.end();
 
-	Device->transferQueue.submit(1, &end_info, {});
-	Device->transferQueue.waitIdle();
+	vl::Device->transferQueue.submit(1, &end_info, {});
+	vl::Device->transferQueue.waitIdle();
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }

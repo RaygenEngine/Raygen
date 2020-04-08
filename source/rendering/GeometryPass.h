@@ -1,8 +1,8 @@
 #pragma once
-#include "rendering/asset/Mesh.h"
-#include "rendering/asset/Shader.h"
+#include "rendering/assets/GpuMesh.h"
+#include "rendering/assets/GpuShader.h"
 #include "rendering/resource/GpuResources.h"
-#include "rendering/wrapper/GBuffer.h"
+#include "rendering/objects/GBuffer.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -20,7 +20,7 @@ class GeometryPass {
 	vk::UniquePipelineLayout m_pipelineLayout;
 
 	// Mesh descriptors
-	R_DescriptorLayout m_materialDescLayout;
+	DescriptorLayout m_materialDescLayout;
 
 public:
 	void InitAll();

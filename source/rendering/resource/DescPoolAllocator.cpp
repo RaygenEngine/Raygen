@@ -10,79 +10,8 @@ ConsoleFunction<> g_showPoolAllocations{ "r.mem.showDescriptorPools",
 	[]() { LOG_REPORT("Pools: {}", vl::GpuResources->descPools.GetAllocations()); },
 	"Shows number of allocated descriptor pools." };
 
-
-namespace detail {
-template<class T>
-inline void hash_combine(size_t& seed, const T& v)
-{
-	std::hash<T> hasher;
-	seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-}
-
-struct PoolHasher {
-	size_t operator()(const R_DescriptorLayout& layoutSize)
-	{
-		size_t hash = 0;
-		for (auto& size : layoutSize.perSetPoolSizes) {
-			hash_combine(hash, size.descriptorCount);
-			hash_combine(hash, size.type);
-		}
-		return hash;
-	}
-};
-} // namespace detail
-
-void R_DescriptorLayout::AddBinding(vk::DescriptorType type, vk::ShaderStageFlags stageFlags, uint32 descriptorCount)
-{
-	CLOG_ABORT(hasBeenGenerated, "Attempting to add binding to an R_DescriptorLayout that is already generated");
-
-	vk::DescriptorSetLayoutBinding binding{};
-	binding
-		.setBinding(static_cast<uint32>(bindings.size())) //
-		.setDescriptorType(type)
-		.setDescriptorCount(descriptorCount)
-		.setStageFlags(stageFlags)
-		.setPImmutableSamplers(nullptr);
-
-	bindings.push_back(binding);
-
-	auto it
-		= std::find_if(perSetPoolSizes.begin(), perSetPoolSizes.end(), [&](auto& size) { return size.type == type; });
-	if (it != perSetPoolSizes.end()) {
-		it->descriptorCount++;
-	}
-	else {
-		vk::DescriptorPoolSize size{};
-		size.setDescriptorCount(1) //
-			.setType(type);
-
-		perSetPoolSizes.push_back(size);
-	}
-}
-
-void R_DescriptorLayout::Generate()
-{
-	CLOG_ABORT(hasBeenGenerated, "Attempting to generate an R_DescriptorLayout that is already generated");
-
-	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo
-		.setBindingCount(static_cast<uint32>(bindings.size())) //
-		.setPBindings(bindings.data());
-
-	hasBeenGenerated = true;
-	setLayout = Device->createDescriptorSetLayoutUnique(layoutInfo);
-	poolSizeHash = detail::PoolHasher{}(*this);
-}
-
-vk::DescriptorSet R_DescriptorLayout::GetDescriptorSet() const
-{
-	CLOG_ABORT(!hasBeenGenerated, "Attempting to get a descriptor set from a non generated R_DescriptorLayout ");
-	return vl::GpuResources->descPools.AllocateDescriptorSet(poolSizeHash, *this);
-}
-
 namespace vl {
-
-vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const R_DescriptorLayout& layout)
+vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const DescriptorLayout& layout)
 {
 	auto addPool = [&](Entry& entry) {
 		vk::DescriptorPoolCreateInfo poolInfo{};

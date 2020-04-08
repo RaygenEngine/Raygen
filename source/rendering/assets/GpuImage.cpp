@@ -1,18 +1,20 @@
 #include "pch.h"
-#include "Image.h"
+#include "GpuImage.h"
 
 #include "rendering/Device.h"
+#include "rendering/objects/Buffer.h"
 #include "rendering/renderer/Renderer.h"
 #include "rendering/VulkanUtl.h"
-#include "rendering/wrapper/Buffer.h"
 
-Image::Gpu::Gpu(PodHandle<Image> podHandle)
+using namespace vl;
+
+::Image::Gpu::Gpu(PodHandle<::Image> podHandle)
 {
 	auto imgData = podHandle.Lock();
 
 	vk::DeviceSize imageSize = imgData->data.size();
 
-	Buffer stagingBuffer{ imageSize, vk::BufferUsageFlagBits::eTransferSrc,
+	RawBuffer stagingBuffer{ imageSize, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 	// copy data to buffer
@@ -25,19 +27,16 @@ Image::Gpu::Gpu(PodHandle<Image> podHandle)
 		case ImageFormat::Unorm: format = vk::Format::eR8G8B8A8Unorm; break;
 	}
 
-	image.reset(new ImageObj(imgData->width, imgData->height, format, vk::ImageTiling::eOptimal,
+	image = std::make_unique<Image2D>(imgData->width, imgData->height, format, vk::ImageTiling::eOptimal,
 		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal));
+		vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 	// transiton to transfer optimal
-	image->TransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+	image->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
 
 	// copy (internally transitions to transfer optimal)
 	image->CopyBufferToImage(stagingBuffer);
 
 	// finally transiton to graphics layout for shader access
-	image->TransitionToLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
-
-	// request
-	view = image->RequestImageView2D_0_0();
+	image->BlockingTransitionToLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 }

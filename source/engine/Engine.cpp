@@ -8,7 +8,7 @@
 #include "engine/Input.h"
 #include "engine/reflection/ReflectionDb.h"
 #include "platform/Platform.h"
-#include "rendering/asset/GpuAssetManager.h"
+#include "rendering/assets/GpuAssetManager.h"
 #include "rendering/renderer/Renderer.h"
 #include "rendering/Rendering.h"
 #include "universe/NodeFactory.h"

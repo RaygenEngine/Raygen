@@ -1,9 +1,10 @@
 #include "pch.h"
-#include "rendering/wrapper/Buffer.h"
+#include "Buffer.h"
 
 #include "rendering/Device.h"
 
-Buffer::Buffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties)
+namespace vl {
+RawBuffer::RawBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties)
 	: m_size(size)
 {
 	vk::BufferCreateInfo bufferInfo{};
@@ -28,7 +29,7 @@ Buffer::Buffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryProper
 	Device->bindBufferMemory(m_handle.get(), m_memory.get(), 0);
 }
 
-void Buffer::CopyBuffer(const Buffer& other)
+void RawBuffer::CopyBuffer(const RawBuffer& other)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -53,9 +54,10 @@ void Buffer::CopyBuffer(const Buffer& other)
 	Device->transferQueue.waitIdle();
 }
 
-void Buffer::UploadData(const void* data, size_t size)
+void RawBuffer::UploadData(const void* data, size_t size)
 {
 	void* dptr = Device->mapMemory(m_memory.get(), 0, size);
 	memcpy(dptr, data, size);
 	Device->unmapMemory(m_memory.get());
 }
+} // namespace vl

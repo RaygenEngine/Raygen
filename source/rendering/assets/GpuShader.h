@@ -2,12 +2,12 @@
 
 #include "assets/AssetManager.h"
 #include "assets/pods/Shader.h"
-#include "rendering/asset/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetHandle.h"
 #include "rendering/resource/DescPoolAllocator.h"
 
 #include <vulkan/vulkan.hpp>
 
-struct Shader::Gpu : public GpuAssetBase {
+struct Shader::Gpu : public vl::GpuAssetBase {
 	vk::UniqueShaderModule frag;
 	vk::UniqueShaderModule vert;
 
@@ -24,7 +24,7 @@ struct Shader::Gpu : public GpuAssetBase {
 private:
 	const Shader* podPtr;
 	std::vector<vk::PipelineShaderStageCreateInfo> shaderStagesCi;
-	R_DescriptorLayout descLayout;
+	vl::DescriptorLayout descLayout;
 	vk::UniquePipelineLayout pipelineLayout;
 
 	std::vector<vk::PushConstantRange> pushConstantRanges;

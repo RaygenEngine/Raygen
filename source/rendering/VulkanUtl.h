@@ -3,6 +3,7 @@
 
 #include <vulkan/vulkan.hpp>
 
+namespace vl {
 inline vk::Filter GetTextureFilter(TextureFiltering f)
 {
 	switch (f) {
@@ -31,3 +32,45 @@ inline vk::SamplerMipmapMode GetMipmapFilter(MipmapFiltering f)
 		default: return vk::SamplerMipmapMode::eLinear;
 	}
 }
+
+inline vk::AccessFlags GetAccessMask(vk::ImageLayout imL)
+{
+	switch (imL) {
+		case vk::ImageLayout::eUndefined: return vk::AccessFlags{ 0u };
+		case vk::ImageLayout::eColorAttachmentOptimal: return vk::AccessFlagBits::eColorAttachmentWrite;
+		case vk::ImageLayout::eShaderReadOnlyOptimal: return vk::AccessFlagBits::eShaderRead;
+		case vk::ImageLayout::eTransferDstOptimal: return vk::AccessFlagBits::eTransferWrite;
+		case vk::ImageLayout::eDepthStencilAttachmentOptimal:
+			return vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+		default: LOG_ABORT("Unsupported");
+	}
+}
+
+inline vk::PipelineStageFlags GetPipelineStage(vk::ImageLayout imL)
+{
+	switch (imL) {
+		case vk::ImageLayout::eUndefined: return vk::PipelineStageFlagBits::eTopOfPipe;
+		case vk::ImageLayout::eColorAttachmentOptimal: return vk::PipelineStageFlagBits::eColorAttachmentOutput;
+		case vk::ImageLayout::eShaderReadOnlyOptimal: return vk::PipelineStageFlagBits::eFragmentShader;
+		case vk::ImageLayout::eTransferDstOptimal: return vk::PipelineStageFlagBits::eTransfer;
+		case vk::ImageLayout::eDepthStencilAttachmentOptimal: return vk::PipelineStageFlagBits::eEarlyFragmentTests;
+		default: LOG_ABORT("Unsupported");
+	}
+}
+
+// CHECK: how should we get the aspect mask of this image?
+inline vk::ImageAspectFlags GetAspectMask(const vk::ImageCreateInfo& ici)
+{
+	auto aspectMask = vk::ImageAspectFlagBits::eColor;
+
+	if (ici.usage & vk::ImageUsageFlagBits::eDepthStencilAttachment) {
+		aspectMask = vk::ImageAspectFlagBits::eDepth;
+
+		// if has stencil component
+		if (ici.format == vk::Format::eD32SfloatS8Uint || ici.format == vk::Format::eD24UnormS8Uint) {
+			return aspectMask | vk::ImageAspectFlagBits::eStencil;
+		}
+	}
+	return aspectMask;
+}
+} // namespace vl

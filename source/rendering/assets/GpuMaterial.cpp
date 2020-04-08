@@ -1,8 +1,8 @@
 #include "pch.h"
-#include "Material.h"
+#include "GpuMaterial.h"
 
 #include "assets/pods/Material.h"
-#include "rendering/asset/GpuAssetManager.h"
+#include "rendering/assets/GpuAssetManager.h"
 #include "rendering/renderer/Renderer.h"
 #include "rendering/Device.h"
 
@@ -39,10 +39,10 @@ Material::Gpu::Gpu(PodHandle<Material> podHandle)
 	emissiveImage = GpuAssetManager->GetGpuHandle(data->emissiveImage);
 
 	// CHECK: upload once for now (not dynamic changes)
-	materialUBO = std::make_unique<Buffer>(sizeof(UBO_Material), vk::BufferUsageFlagBits::eUniformBuffer,
+	materialUBO = std::make_unique<Buffer<UBO_Material>>(vk::BufferUsageFlagBits::eUniformBuffer,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
-	materialUBO->UploadData(&matData, sizeof(UBO_Material));
+	materialUBO->UploadData(matData);
 
 	// descriptors
 	descriptorSet = Renderer->geomPass.GetMaterialDescriptorSet();
@@ -72,14 +72,14 @@ Material::Gpu::Gpu(PodHandle<Material> podHandle)
 	// images (material)
 
 	auto UpdateImageSamplerInDescriptorSet
-		= [&](GpuHandle<Sampler> sampler, GpuHandle<Image> image, uint32 dstBinding) {
+		= [&](GpuHandle<Sampler> sampler, GpuHandle<::Image> image, uint32 dstBinding) {
 			  auto& sam = sampler.Lock();
 			  auto& img = image.Lock();
 
 			  vk::DescriptorImageInfo imageInfo{};
 			  imageInfo
 				  .setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				  .setImageView(img.view.get())
+				  .setImageView(img.image->GetView())
 				  .setSampler(sam.sampler.get());
 
 			  vk::WriteDescriptorSet descriptorWrite{};

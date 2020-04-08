@@ -4,8 +4,8 @@
 #include "assets/Assets.h"
 #include "engine/Engine.h"
 #include "engine/profiler/ProfileScope.h"
-#include "rendering/asset/GpuAssetManager.h"
-#include "rendering/asset/Shader.h"
+#include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
 #include "rendering/renderer/Renderer.h"
 
@@ -24,18 +24,18 @@ void DeferredPass::UpdateDescriptorSets(GBuffer& gbuffer)
 {
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
+	for (uint32 i = 0; i < GCount; ++i) {
 
-	auto updateImageSamplerInDescriptorSet = [&](vk::ImageView& view, vk::Sampler& sampler, uint32 dstBinding) {
 		vk::DescriptorImageInfo imageInfo{};
 		imageInfo
 			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-			.setImageView(view)
-			.setSampler(sampler);
+			.setImageView(gbuffer[i]->GetView())
+			.setSampler(quadSampler);
 
 		vk::WriteDescriptorSet descriptorWrite{};
 		descriptorWrite
 			.setDstSet(descSet) //
-			.setDstBinding(dstBinding)
+			.setDstBinding(i)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
 			.setDescriptorCount(1u)
@@ -44,14 +44,7 @@ void DeferredPass::UpdateDescriptorSets(GBuffer& gbuffer)
 			.setPTexelBufferView(nullptr);
 
 		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
-	};
-
-	updateImageSamplerInDescriptorSet(gbuffer.position->view.get(), quadSampler, 0u);
-	updateImageSamplerInDescriptorSet(gbuffer.normal->view.get(), quadSampler, 1u);
-	updateImageSamplerInDescriptorSet(gbuffer.albedo->view.get(), quadSampler, 2u);
-	updateImageSamplerInDescriptorSet(gbuffer.specular->view.get(), quadSampler, 3u);
-	updateImageSamplerInDescriptorSet(gbuffer.emissive->view.get(), quadSampler, 4u);
-	updateImageSamplerInDescriptorSet(gbuffer.depth->view.get(), quadSampler, 5u); // NEXT
+	}
 }
 
 
