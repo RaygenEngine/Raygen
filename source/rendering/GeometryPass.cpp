@@ -269,7 +269,7 @@ void GeometryPass::MakePipeline()
 		.setOffset(0u);
 
 
-	std::array layouts = { m_materialDescLayout.setLayout.get(), Renderer->GetCameraDescLayout() };
+	std::array layouts = { m_materialDescLayout.setLayout.get(), Scene->cameraDescLayout.setLayout.get() };
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
@@ -373,7 +373,7 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 
 			// descriptor sets
 			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
-				&Renderer->GetCameraDescSet(), 0u, nullptr);
+				&Renderer->GetActiveCameraDescSet(), 0u, nullptr);
 
 			// Dynamic viewport & scissor
 			cmdBuffer->setViewport(0, { GetViewport() });

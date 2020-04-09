@@ -60,8 +60,8 @@ void CameraNode::DirtyUpdate(DirtyFlagset flags)
 		RecalculateProjectionFov();
 
 		Enqueue([=](SceneCamera& cam) {
-			cam.proj = m_projectionMatrix;
-			cam.viewProj = m_viewProjectionMatrix;
+			cam.ubo.position = glm::vec4(GetNodePositionWCS(), 1.f);
+			cam.ubo.viewProj = m_viewProjectionMatrix;
 		});
 	}
 
@@ -69,8 +69,8 @@ void CameraNode::DirtyUpdate(DirtyFlagset flags)
 		RecalculateViewMatrix();
 
 		Enqueue([=](SceneCamera& cam) {
-			cam.view = m_viewMatrix;
-			cam.viewProj = m_viewProjectionMatrix;
+			cam.ubo.position = glm::vec4(GetNodePositionWCS(), 1.f);
+			cam.ubo.viewProj = m_viewProjectionMatrix;
 		});
 	}
 }

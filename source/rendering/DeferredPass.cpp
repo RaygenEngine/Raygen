@@ -142,11 +142,14 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 		.setDynamicStateCount(2u) //
 		.setPDynamicStates(dynamicStates);
 
+	std::array layouts = { m_descLayout.setLayout.get(), Scene->cameraDescLayout.setLayout.get(),
+		Scene->spotLightDescLayout.setLayout.get() };
+
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
-		.setSetLayoutCount(1u) //
-		.setPSetLayouts(&m_descLayout.setLayout.get())
+		.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
+		.setPSetLayouts(layouts.data())
 		.setPushConstantRangeCount(0u)
 		.setPPushConstantRanges(nullptr);
 
@@ -201,6 +204,12 @@ void DeferredPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
 	// descriptor sets
 	cmdBuffer->bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &m_descSet, 0u, nullptr);
+
+	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
+		&Renderer->GetActiveCameraDescSet(), 0u, nullptr);
+
+	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
+		&Renderer->GetActiveSpotlightDescSet(), 0u, nullptr);
 
 	// draw call (triangle)
 	cmdBuffer->draw(3u, 1u, 0u, 0u);

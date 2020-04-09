@@ -5,6 +5,10 @@
 
 layout (location = 0) out vec2 uv;
 
+// in
+
+// uniforms
+
 void main() 
 {
 	// 2, 1, 0

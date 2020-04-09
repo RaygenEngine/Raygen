@@ -37,6 +37,8 @@ class SpotLightNode : public LightNode {
 	void RecalculateFrustum();
 
 public:
+	SpotLightNode();
+
 	void DirtyUpdate(DirtyFlagset flags) override;
 
 	[[nodiscard]] float GetOuterAperture() const { return m_outerAperture; }
@@ -49,4 +51,12 @@ public:
 	//[[nodiscard]] math::Frustum GetFrustum() const { return m_frustum; }
 
 	bool IsNodeInsideFrustum(Node* node) { return m_frustum.Intersects(node->GetAABB()); }
+
+private:
+	size_t sceneUid;
+	template<typename Lambda>
+	void Enqueue(Lambda&& l)
+	{
+		Scene->EnqueueCmd<typename SceneSpotlight>(sceneUid, l);
+	}
 };

@@ -18,6 +18,7 @@ public:
 	void UpdateDescriptorSets(GBuffer& gbuffer);
 
 protected:
+	// WIP: rename for g buffer
 	DescriptorLayout m_descLayout;
 
 	vk::DescriptorSet m_descSet;

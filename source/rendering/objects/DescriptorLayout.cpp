@@ -29,7 +29,7 @@ struct PoolHasher {
 namespace vl {
 void DescriptorLayout::AddBinding(vk::DescriptorType type, vk::ShaderStageFlags stageFlags, uint32 descriptorCount)
 {
-	CLOG_ABORT(hasBeenGenerated, "Attempting to add binding to an R_DescriptorLayout that is already generated");
+	CLOG_ABORT(hasBeenGenerated, "Attempting to add binding to an DescriptorLayout that is already generated");
 
 	vk::DescriptorSetLayoutBinding binding{};
 	binding
@@ -57,7 +57,7 @@ void DescriptorLayout::AddBinding(vk::DescriptorType type, vk::ShaderStageFlags 
 
 void DescriptorLayout::Generate()
 {
-	CLOG_ABORT(hasBeenGenerated, "Attempting to generate an R_DescriptorLayout that is already generated");
+	CLOG_ABORT(hasBeenGenerated, "Attempting to generate an DescriptorLayout that is already generated");
 
 	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
 	layoutInfo
@@ -71,7 +71,7 @@ void DescriptorLayout::Generate()
 
 vk::DescriptorSet DescriptorLayout::GetDescriptorSet() const
 {
-	CLOG_ABORT(!hasBeenGenerated, "Attempting to get a descriptor set from a non generated R_DescriptorLayout ");
+	CLOG_ABORT(!hasBeenGenerated, "Attempting to get a descriptor set from a non generated DescriptorLayout ");
 	return GpuResources->descPools.AllocateDescriptorSet(poolSizeHash, *this);
 }
 } // namespace vl

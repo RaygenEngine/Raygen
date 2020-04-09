@@ -26,6 +26,7 @@ layout(push_constant) uniform ModelData {
 } push;
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
+	vec4 position;
 	mat4 viewProj;
 } camera;
 
