@@ -14,24 +14,14 @@ GBuffer::GBuffer(uint32 width, uint32 height)
 		att->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, finalLayout);
 	};
 
-	initAttachment(position, GetGBufferAttachmentFormat(0), vk::ImageUsageFlagBits::eColorAttachment,
-		vk::ImageLayout::eColorAttachmentOptimal);
-
-	initAttachment(normal, GetGBufferAttachmentFormat(1), vk::ImageUsageFlagBits::eColorAttachment,
-		vk::ImageLayout::eColorAttachmentOptimal);
-
-	initAttachment(albedo, GetGBufferAttachmentFormat(2), vk::ImageUsageFlagBits::eColorAttachment,
-		vk::ImageLayout::eColorAttachmentOptimal);
-
-	initAttachment(specular, GetGBufferAttachmentFormat(3), vk::ImageUsageFlagBits::eColorAttachment,
-		vk::ImageLayout::eColorAttachmentOptimal);
-
-	initAttachment(emissive, GetGBufferAttachmentFormat(4), vk::ImageUsageFlagBits::eColorAttachment,
-		vk::ImageLayout::eColorAttachmentOptimal);
+	for (size_t i = 0; i < 5; ++i) {
+		initAttachment(attachments[i], colorAttachmentFormats[i], vk::ImageUsageFlagBits::eColorAttachment,
+			vk::ImageLayout::eColorAttachmentOptimal);
+	}
 
 	vk::Format depthFormat = Device->pd->FindDepthFormat();
 
-	initAttachment(depth, depthFormat, vk::ImageUsageFlagBits::eDepthStencilAttachment,
+	initAttachment(attachments[GDepth], depthFormat, vk::ImageUsageFlagBits::eDepthStencilAttachment,
 		vk::ImageLayout::eDepthStencilAttachmentOptimal);
 }
 
@@ -66,18 +56,15 @@ void GBuffer::TransitionForAttachmentWrite(vk::CommandBuffer cmdBuffer)
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-
-	recordTransition(position);
-	recordTransition(normal);
-	recordTransition(albedo);
-	recordTransition(specular);
-	recordTransition(emissive);
-	recordTransition(depth, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+	for (size_t i = 0; i < 5; ++i) {
+		recordTransition(attachments[i]);
+	}
+	recordTransition(attachments[GDepth], vk::ImageLayout::eDepthStencilAttachmentOptimal);
 }
 
 std::array<vk::ImageView, 6> GBuffer::GetViewsArray()
 {
-	return { position->GetView(), normal->GetView(), albedo->GetView(), specular->GetView(), emissive->GetView(),
-		depth->GetView() };
+	return { attachments[GPosition]->GetView(), attachments[GNormal]->GetView(), attachments[GAlbedo]->GetView(),
+		attachments[GSpecular]->GetView(), attachments[GEmissive]->GetView(), attachments[GDepth]->GetView() };
 }
 } // namespace vl

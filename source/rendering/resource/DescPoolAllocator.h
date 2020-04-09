@@ -13,17 +13,17 @@ class DescPoolAllocator {
 		size_t allocated{ 0 };
 	};
 
-	std::unordered_map<size_t, Entry> entries;
+	std::unordered_map<size_t, Entry> m_entries;
 
-	vk::UniqueDescriptorPool imguiPool;
+	vk::UniqueDescriptorPool m_imguiPool;
 
-	size_t allocCount{ 0 };
+	size_t m_allocCount{ 0 };
 
 public:
 	vk::DescriptorSet AllocateDescriptorSet(size_t hash, const DescriptorLayout& layout);
 
 	vk::DescriptorPool GetImguiPool();
 
-	size_t GetAllocations() { return allocCount; }
+	size_t GetAllocations() { return m_allocCount; }
 };
 } // namespace vl

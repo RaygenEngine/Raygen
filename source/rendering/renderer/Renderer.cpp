@@ -30,7 +30,7 @@ Renderer_::Renderer_()
 {
 	Scene = new Scene_();
 
-	// create swapchain
+	// create m_swapchain
 	ReconstructSwapchain();
 }
 
@@ -41,70 +41,70 @@ void Renderer_::Init()
 		vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex /*| vk::ShaderStageFlagBits::eFragment*/);
 	m_cameraDescLayout.Generate();
 
-	for (int32 i = 0; i < swapchain->images.size(); ++i) {
-		camDescSet.push_back(m_cameraDescLayout.GetDescriptorSet());
-		cameraUBO.emplace_back(std::make_unique<Buffer<UBO_Camera>>(vk::BufferUsageFlagBits::eUniformBuffer,
+	for (int32 i = 0; i < m_swapchain->images.size(); ++i) {
+		m_camDescSet.push_back(m_cameraDescLayout.GetDescriptorSet());
+		m_cameraUBO.emplace_back(std::make_unique<Buffer<UBO_Camera>>(vk::BufferUsageFlagBits::eUniformBuffer,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
 	}
 
 
 	// CHECK: Code smell, needs internal first init function
-	geomPass.InitAll();
+	m_geomPass.InitAll();
 
-	defPass.InitQuadDescriptor();
-	defPass.InitPipeline(swapchain->renderPass.get());
+	m_defPass.InitQuadDescriptor();
+	m_defPass.InitPipeline(m_swapchain->renderPass.get());
 
 
 	vk::CommandBufferAllocateInfo allocInfo{};
 	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(static_cast<uint32>(swapchain->images.size()));
+		.setCommandBufferCount(static_cast<uint32>(m_swapchain->images.size()));
 
-	geometryCmdBuffer = Device->allocateCommandBuffers(allocInfo);
-	outCmdBuffer = Device->allocateCommandBuffers(allocInfo);
+	m_geometryCmdBuffer = Device->allocateCommandBuffers(allocInfo);
+	m_outCmdBuffer = Device->allocateCommandBuffers(allocInfo);
 
 
 	vk::FenceCreateInfo fci{};
 	fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
 
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
-		renderFinishedSem.push_back(Device->createSemaphoreUnique({}));
-		imageAvailSem.push_back(Device->createSemaphoreUnique({}));
+		m_renderFinishedSem.push_back(Device->createSemaphoreUnique({}));
+		m_imageAvailSem.push_back(Device->createSemaphoreUnique({}));
 
-		inFlightFence.push_back(Device->createFenceUnique(fci));
+		m_inFlightFence.push_back(Device->createFenceUnique(fci));
 	}
 
-	Event::OnViewportUpdated.BindFlag(this, didViewportResize);
-	Event::OnWindowResize.BindFlag(this, didWindowResize);
-	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimzed) { isMinimzed = newIsMinimzed; });
+	Event::OnViewportUpdated.BindFlag(this, m_didViewportResize);
+	Event::OnWindowResize.BindFlag(this, m_didWindowResize);
+	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimzed) { m_isMinimzed = newIsMinimzed; });
 }
 
 Renderer_::~Renderer_()
 {
-	delete swapchain;
+	delete m_swapchain;
 
 	delete Scene;
 }
 
 void Renderer_::ReconstructSwapchain()
 {
-	delete swapchain;
-	swapchain = new Swapchain(Instance->surface);
+	delete m_swapchain;
+	m_swapchain = new Swapchain(Instance->surface);
 }
 
 void Renderer_::OnViewportResize()
 {
 	vk::Extent2D viewportSize{ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y };
 
-	viewportRect.extent = viewportSize;
-	viewportRect.offset = vk::Offset2D(g_ViewportCoordinates.position.x, g_ViewportCoordinates.position.y);
+	m_viewportRect.extent = viewportSize;
+	m_viewportRect.offset = vk::Offset2D(g_ViewportCoordinates.position.x, g_ViewportCoordinates.position.y);
 
 	vk::Extent2D fbSize = SuggestFramebufferSize(viewportSize);
 
-	if (fbSize != viewportFramebufferSize) {
-		viewportFramebufferSize = fbSize;
-		geomPass.InitFramebuffers();
-		defPass.UpdateDescriptorSets(*geomPass.GetGBuffer());
+	if (fbSize != m_viewportFramebufferSize) {
+		m_viewportFramebufferSize = fbSize;
+		m_geomPass.InitFramebuffers();
+		m_defPass.UpdateDescriptorSets(*m_geomPass.GetGBuffer());
 	}
 }
 
@@ -116,11 +116,11 @@ void Renderer_::OnWindowResize()
 
 void Renderer_::UpdateForFrame()
 {
-	if (*didWindowResize) {
+	if (*m_didWindowResize) {
 		OnWindowResize();
 	}
 
-	if (*didViewportResize) {
+	if (*m_didViewportResize) {
 		OnViewportResize();
 	}
 
@@ -130,7 +130,7 @@ void Renderer_::UpdateForFrame()
 void Renderer_::DrawGeometryPass(vk::CommandBuffer cmdBuffer)
 {
 
-	geomPass.RecordGeometryDraw(&cmdBuffer);
+	m_geomPass.RecordGeometryDraw(&cmdBuffer);
 }
 
 
@@ -146,10 +146,10 @@ void Renderer_::DrawDeferredPass(vk::CommandBuffer cmdBuffer, vk::Framebuffer fr
 
 
 	vk::RenderPassBeginInfo renderPassInfo{};
-	renderPassInfo.setRenderPass(swapchain->renderPass.get()).setFramebuffer(framebuffer);
+	renderPassInfo.setRenderPass(m_swapchain->renderPass.get()).setFramebuffer(framebuffer);
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //
-		.setExtent(swapchain->extent);
+		.setExtent(m_swapchain->extent);
 
 	std::array<vk::ClearValue, 2> clearValues = {};
 	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
@@ -159,11 +159,11 @@ void Renderer_::DrawDeferredPass(vk::CommandBuffer cmdBuffer, vk::Framebuffer fr
 
 	cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 
-	defPass.RecordCmd(&cmdBuffer);
-	editorPass.RecordCmd(&cmdBuffer);
+	m_defPass.RecordCmd(&cmdBuffer);
+	m_editorPass.RecordCmd(&cmdBuffer);
 
 	cmdBuffer.endRenderPass();
-	geomPass.GetGBuffer()->TransitionForAttachmentWrite(cmdBuffer);
+	m_geomPass.GetGBuffer()->TransitionForAttachmentWrite(cmdBuffer);
 
 	cmdBuffer.end();
 }
@@ -176,18 +176,18 @@ void Renderer_::UpdateCamera()
 
 		UBO_Camera camData{ camera->viewProj };
 
-		cameraUBO[currentFrame]->UploadData(camData);
+		m_cameraUBO[m_currentFrame]->UploadData(camData);
 
 		vk::DescriptorBufferInfo bufferInfo{};
 
 		bufferInfo
-			.setBuffer(*cameraUBO[currentFrame]) //
+			.setBuffer(*m_cameraUBO[m_currentFrame]) //
 			.setOffset(0u)
 			.setRange(sizeof(UBO_Camera));
 		vk::WriteDescriptorSet descriptorWrite{};
 
 		descriptorWrite
-			.setDstSet(camDescSet[currentFrame]) //
+			.setDstSet(m_camDescSet[m_currentFrame]) //
 			.setDstBinding(0u)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
@@ -202,7 +202,7 @@ void Renderer_::UpdateCamera()
 
 void Renderer_::DrawFrame()
 {
-	if (isMinimzed) {
+	if (m_isMinimzed) {
 		return;
 	}
 
@@ -211,24 +211,25 @@ void Renderer_::DrawFrame()
 	PROFILE_SCOPE(Renderer);
 	uint32 imageIndex;
 
-	currentFrame = (currentFrame + 1) % c_framesInFlight;
+	m_currentFrame = (m_currentFrame + 1) % c_framesInFlight;
 
-	Device->waitForFences({ *inFlightFence[currentFrame] }, true, UINT64_MAX);
-	Device->resetFences({ *inFlightFence[currentFrame] });
+	Device->waitForFences({ *m_inFlightFence[m_currentFrame] }, true, UINT64_MAX);
+	Device->resetFences({ *m_inFlightFence[m_currentFrame] });
 
 	UpdateCamera();
 
-	Device->acquireNextImageKHR(swapchain->handle.get(), UINT64_MAX, { *imageAvailSem[currentFrame] }, {}, &imageIndex);
+	Device->acquireNextImageKHR(
+		m_swapchain->handle.get(), UINT64_MAX, { *m_imageAvailSem[m_currentFrame] }, {}, &imageIndex);
 
-	DrawGeometryPass(geometryCmdBuffer[currentFrame]);
-	DrawDeferredPass(outCmdBuffer[currentFrame], swapchain->framebuffers[currentFrame].get());
+	DrawGeometryPass(m_geometryCmdBuffer[m_currentFrame]);
+	DrawDeferredPass(m_outCmdBuffer[m_currentFrame], m_swapchain->framebuffers[m_currentFrame].get());
 
-	std::array bufs = { geometryCmdBuffer[currentFrame], outCmdBuffer[currentFrame] };
+	std::array bufs = { m_geometryCmdBuffer[m_currentFrame], m_outCmdBuffer[m_currentFrame] };
 
 
 	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput }; //
-	std::array waitSems = { *imageAvailSem[currentFrame] };                                                  //
-	std::array signalSems = { *renderFinishedSem[currentFrame] };
+	std::array waitSems = { *m_imageAvailSem[m_currentFrame] };                                              //
+	std::array signalSems = { *m_renderFinishedSem[m_currentFrame] };
 
 
 	vk::SubmitInfo submitInfo{};
@@ -244,16 +245,16 @@ void Renderer_::DrawFrame()
 		.setPCommandBuffers(bufs.data());
 
 
-	Device->graphicsQueue.submit(1u, &submitInfo, *inFlightFence[currentFrame]);
+	Device->graphicsQueue.submit(1u, &submitInfo, *m_inFlightFence[m_currentFrame]);
 
 
 	vk::PresentInfoKHR presentInfo;
 	presentInfo //
 		.setWaitSemaphoreCount(1u)
-		.setPWaitSemaphores(&*renderFinishedSem[currentFrame]);
+		.setPWaitSemaphores(&*m_renderFinishedSem[m_currentFrame]);
 
 
-	vk::SwapchainKHR swapChains[] = { swapchain->handle.get() };
+	vk::SwapchainKHR swapChains[] = { m_swapchain->handle.get() };
 	presentInfo //
 		.setSwapchainCount(1u)
 		.setPSwapchains(swapChains)

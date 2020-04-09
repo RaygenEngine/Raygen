@@ -125,17 +125,11 @@ vk::ImageMemoryBarrier Image::CreateTransitionBarrier(
 
 vk::DescriptorSet Image::GetDebugDescriptor()
 {
-	if (!s_imageDebugDescLayout.hasBeenGenerated) {
-		s_imageDebugDescLayout.AddBinding(
-			vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
-		s_imageDebugDescLayout.Generate();
-	}
-
 	if (m_debugDescriptorSet) {
 		return *m_debugDescriptorSet;
 	}
 
-	m_debugDescriptorSet = s_imageDebugDescLayout.GetDescriptorSet();
+	m_debugDescriptorSet = GpuResources->imageDebugDescLayout.GetDescriptorSet();
 
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo

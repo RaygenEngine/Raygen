@@ -5,9 +5,9 @@
 #include <vulkan/vulkan.hpp>
 #include <optional>
 
+// DOC: child classes should create the appropriate view
 namespace vl {
 class Image {
-	inline static DescriptorLayout s_imageDebugDescLayout;
 	std::optional<vk::DescriptorSet> m_debugDescriptorSet;
 
 protected:

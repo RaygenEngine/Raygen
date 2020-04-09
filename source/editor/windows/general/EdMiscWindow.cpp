@@ -48,7 +48,7 @@ GBufferDebugWindow::GBufferDebugWindow(std::string_view name)
 
 void GBufferDebugWindow::ImguiDraw()
 {
-	auto gbuff = vl::Renderer->geomPass.GetGBuffer();
+	auto gbuff = vl::Renderer->m_geomPass.GetGBuffer();
 	if (!gbuff) {
 		return;
 	}
@@ -79,7 +79,7 @@ void GBufferDebugWindow::ImguiDraw()
 	};
 
 	for (uint32 i = 0; i < vl::GCount; ++i) {
-		showAttachment(vl::GetGAttachmentName(i), (*gbuff)[i]);
+		showAttachment(vl::GBuffer::attachmentNames[i], (*gbuff)[i]);
 	}
 }
 } // namespace ed
