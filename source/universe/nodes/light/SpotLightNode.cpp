@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "SpotLightNode.h"
 
+#include "rendering/scene/Scene.h"
+
 void SpotLightNode::CalculateWorldAABB()
 {
 	m_aabb = m_frustum.FrustumPyramidAABB(GetNodePositionWCS());
@@ -36,13 +38,40 @@ void SpotLightNode::RecalculateFrustum()
 	CalculateWorldAABB();
 }
 
+SpotLightNode::SpotLightNode()
+{
+	sceneUid = Scene->EnqueueCreateCmd<SceneSpotlight>();
+}
+
 void SpotLightNode::DirtyUpdate(DirtyFlagset flags)
 {
 	if (flags[DF::Aperture] || flags[DF::NearFar] || flags[DF::ShadowsTextSize]) {
 		RecalculateProjectionMatrix();
+		Enqueue([&](SceneSpotlight& sl) {
+			sl.ubo.position = glm::vec4(GetNodePositionWCS(), 1.f);
+			sl.ubo.forward = glm::vec4(GetNodeForwardWCS(), 1.f);
+			sl.ubo.viewProj = m_viewProjectionMatrix;
+			sl.ubo.color = glm::vec4(m_color, 1.f);
+			sl.ubo.intensity = m_intensity;
+			sl.ubo.near_ = m_near;
+			sl.ubo.far_ = m_far;
+			sl.ubo.outerCutOff = glm::cos(m_outerAperture / 2.f);
+			sl.ubo.innerCutOff = glm::cos(m_innerAperture / 2.f);
+		});
 	}
 
 	if (flags[DF::SRT]) {
 		RecalculateViewMatrix();
+		Enqueue([&](SceneSpotlight& sl) {
+			sl.ubo.position = glm::vec4(GetNodePositionWCS(), 1.f);
+			sl.ubo.forward = glm::vec4(GetNodeForwardWCS(), 1.f);
+			sl.ubo.viewProj = m_viewProjectionMatrix;
+			sl.ubo.color = glm::vec4(m_color, 1.f);
+			sl.ubo.intensity = m_intensity;
+			sl.ubo.near_ = m_near;
+			sl.ubo.far_ = m_far;
+			sl.ubo.outerCutOff = glm::cos(m_outerAperture / 2.f);
+			sl.ubo.innerCutOff = glm::cos(m_innerAperture / 2.f);
+		});
 	}
 }

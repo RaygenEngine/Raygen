@@ -28,26 +28,14 @@ namespace vl {
 
 Renderer_::Renderer_()
 {
-	Scene = new Scene_();
-
 	// create m_swapchain
 	ReconstructSwapchain();
+
+	Scene = new Scene_(m_swapchain->images.size());
 }
 
 void Renderer_::Init()
 {
-	// Camera ubo WIP: (potentially used by many pipelines)
-	m_cameraDescLayout.AddBinding(
-		vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex /*| vk::ShaderStageFlagBits::eFragment*/);
-	m_cameraDescLayout.Generate();
-
-	for (int32 i = 0; i < m_swapchain->images.size(); ++i) {
-		m_camDescSet.push_back(m_cameraDescLayout.GetDescriptorSet());
-		m_cameraUBO.emplace_back(std::make_unique<Buffer<UBO_Camera>>(vk::BufferUsageFlagBits::eUniformBuffer,
-			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
-	}
-
-
 	// CHECK: Code smell, needs internal first init function
 	m_geomPass.InitAll();
 
@@ -168,38 +156,6 @@ void Renderer_::DrawDeferredPass(vk::CommandBuffer cmdBuffer, vk::Framebuffer fr
 	cmdBuffer.end();
 }
 
-void Renderer_::UpdateCamera()
-{
-	// update camera UBO
-	auto camera = Scene->GetActiveCamera();
-	if (camera) {
-
-		UBO_Camera camData{ camera->viewProj };
-
-		m_cameraUBO[m_currentFrame]->UploadData(camData);
-
-		vk::DescriptorBufferInfo bufferInfo{};
-
-		bufferInfo
-			.setBuffer(*m_cameraUBO[m_currentFrame]) //
-			.setOffset(0u)
-			.setRange(sizeof(UBO_Camera));
-		vk::WriteDescriptorSet descriptorWrite{};
-
-		descriptorWrite
-			.setDstSet(m_camDescSet[m_currentFrame]) //
-			.setDstBinding(0u)
-			.setDstArrayElement(0u)
-			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-			.setDescriptorCount(1u)
-			.setPBufferInfo(&bufferInfo)
-			.setPImageInfo(nullptr)
-			.setPTexelBufferView(nullptr);
-
-		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
-	}
-}
-
 void Renderer_::DrawFrame()
 {
 	if (m_isMinimzed) {
@@ -216,7 +172,7 @@ void Renderer_::DrawFrame()
 	Device->waitForFences({ *m_inFlightFence[m_currentFrame] }, true, UINT64_MAX);
 	Device->resetFences({ *m_inFlightFence[m_currentFrame] });
 
-	UpdateCamera();
+	Scene->Upload(m_currentFrame);
 
 	Device->acquireNextImageKHR(
 		m_swapchain->handle.get(), UINT64_MAX, { *m_imageAvailSem[m_currentFrame] }, {}, &imageIndex);

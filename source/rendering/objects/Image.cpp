@@ -104,6 +104,13 @@ void Image::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Imag
 	// Check if image format supports linear blitting
 	vk::FormatProperties formatProperties = Device->pd->getFormatProperties(m_imageInfo.format);
 
+	// CHECK: from https://vulkan-tutorial.com/Generating_Mipmaps
+	// There are two alternatives in this case. You could implement a function that searches common texture
+	// image formats for one that does support linear blitting, or you could implement the mipmap generation in
+	// software with a library like stb_image_resize. Each mip level can then be loaded into the image in the same
+	// way that you loaded the original image. It should be noted that it is uncommon in practice to generate the
+	// mipmap levels at runtime anyway. Usually they are pregenerated and stored in the texture file alongside the base
+	// level to improve loading speed.
 	CLOG_ABORT(!(formatProperties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear),
 		"Image format does not support linear blitting!");
 

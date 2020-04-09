@@ -12,13 +12,7 @@
 #include "rendering/scene/SceneStructs.h"
 #include "rendering/scene/Scene.h"
 
-
 #include <vulkan/vulkan.hpp>
-
-// WIP: position, direction, etc
-struct UBO_Camera {
-	glm::mat4 viewProj;
-};
 
 namespace vl {
 using SemVec = std::vector<vk::Semaphore>;
@@ -34,11 +28,6 @@ public:
 
 	// The actual game viewport rectangle in m_swapchain coords
 	vk::Rect2D m_viewportRect{};
-
-	// Camera desc
-	DescriptorLayout m_cameraDescLayout;
-	std::vector<vk::DescriptorSet> m_camDescSet;
-	std::vector<UniquePtr<Buffer<UBO_Camera>>> m_cameraUBO;
 
 protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)
@@ -83,11 +72,13 @@ public:
 
 	void DrawDeferredPass(vk::CommandBuffer cmdBuffer, vk::Framebuffer framebuffer);
 
-	vk::DescriptorSetLayout GetCameraDescLayout() { return m_cameraDescLayout.setLayout.get(); }
-	vk::DescriptorSet GetCameraDescSet() { return m_camDescSet[m_currentFrame]; }
-
-	void UpdateCamera();
-
 	void DrawFrame();
+
+	// WIP: remove
+	vk::DescriptorSet GetActiveCameraDescSet() const { return Scene->GetActiveCamera()->descSets[m_currentFrame]; }
+	vk::DescriptorSet GetActiveSpotlightDescSet() const
+	{
+		return Scene->spotlights.elements.at(0)->descSets[m_currentFrame];
+	}
 } * Renderer{};
 } // namespace vl

@@ -15,15 +15,22 @@ struct SceneVector {
 		elements.resize(elements.size() + pendingElements);
 		pendingElements = 0;
 	}
+
+	void Upload(uint32 i)
+	{
+		for (auto& e : elements) {
+			e->Upload(i);
+		}
+	}
 };
 
 inline struct Scene_ {
-	// CHECK: runs 2 frames behind
-	Scene_() { EnqueueEndFrame(); }
-
 	SceneVector<SceneGeometry> geometries;
 	SceneVector<SceneCamera> cameras;
 	SceneVector<SceneSpotlight> spotlights;
+
+	vl::DescriptorLayout cameraDescLayout;
+	vl::DescriptorLayout spotLightDescLayout;
 
 	std::vector<UniquePtr<std::vector<std::function<void()>>>> commands;
 
@@ -33,7 +40,7 @@ inline struct Scene_ {
 	std::mutex cmdAddPendingElementsMutex;
 
 	size_t activeCamera{ 0 };
-
+	size_t size{ 0 };
 
 	template<CONC(CSceneElem) T>
 	T* GetElement(size_t uid)
@@ -71,12 +78,13 @@ inline struct Scene_ {
 		}
 		else if constexpr (std::is_same_v<SceneCamera, T>) {
 			uid = cameras.elements.size() + cameras.pendingElements++;
-			currentCommandBuffer->emplace_back([uid]() { Scene->cameras.elements[uid] = new SceneCamera(); });
+			currentCommandBuffer->emplace_back([=]() { Scene->cameras.elements[uid] = new SceneCamera(size); });
 		}
 		else if constexpr (std::is_same_v<SceneSpotlight, T>) {
 			uid = spotlights.elements.size() + spotlights.pendingElements++;
-			currentCommandBuffer->emplace_back([uid]() { Scene->spotlights.elements[uid] = new SceneSpotlight(); });
+			currentCommandBuffer->emplace_back([=]() { Scene->spotlights.elements[uid] = new SceneSpotlight(size); });
 		}
+
 		return uid;
 	}
 
@@ -161,4 +169,10 @@ public:
 		}
 		return nullptr;
 	}
+
+	// CHECK: runs 2 frames behind
+	Scene_(size_t size);
+
+	void Upload(uint32 i);
+
 } * Scene{};
