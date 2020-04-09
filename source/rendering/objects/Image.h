@@ -6,6 +6,7 @@
 #include <optional>
 
 // DOC: child classes should create the appropriate view
+// TODO: find a way to avoid the device wait idles in this class
 namespace vl {
 class Image {
 	std::optional<vk::DescriptorSet> m_debugDescriptorSet;
@@ -29,6 +30,10 @@ public:
 
 	void CopyBufferToImage(const RawBuffer& buffer);
 
+	// WIP: virtual (split image classes correctly...)
+	virtual void GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout);
+
+	// Affects all mips and array elements
 	vk::ImageMemoryBarrier CreateTransitionBarrier(
 		vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32 baseMipLevel = 0u, uint32 baseArrayLevel = 0u);
 

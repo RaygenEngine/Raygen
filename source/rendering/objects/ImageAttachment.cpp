@@ -1,14 +1,16 @@
 #include "pch.h"
-#include "Image2D.h"
+#include "ImageAttachment.h"
 
 #include "rendering/Device.h"
 #include "rendering/VulkanUtl.h"
 
 namespace vl {
-Image2D::Image2D(uint32 width, uint32 height, uint32 mipLevels, vk::Format format, vk::ImageTiling tiling,
+
+ImageAttachment::ImageAttachment(const std::string& name, uint32 width, uint32 height, vk::Format format,
 	vk::ImageLayout initalLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
-	: Image(vk::ImageType::e2D, { width, height, 1u }, mipLevels, 1u, format, tiling, initalLayout, usage,
+	: Image(vk::ImageType::e2D, { width, height, 1u }, 1u, 1u, format, vk::ImageTiling::eOptimal, initalLayout, usage,
 		vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, properties)
+	, m_name(name)
 {
 	auto testComp = m_imageInfo.extent.width >= 1 && m_imageInfo.extent.height >= 1 && m_imageInfo.extent.depth == 1
 					&& m_imageInfo.arrayLayers >= 1 && m_imageInfo.samples == vk::SampleCountFlagBits::e1;
@@ -23,7 +25,7 @@ Image2D::Image2D(uint32 width, uint32 height, uint32 mipLevels, vk::Format forma
 	viewInfo.subresourceRange
 		.setAspectMask(GetAspectMask(m_imageInfo)) //
 		.setBaseMipLevel(0u)
-		.setLevelCount(m_imageInfo.mipLevels)
+		.setLevelCount(1u)
 		.setBaseArrayLayer(0u)
 		.setLayerCount(1u);
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/objects/Image2D.h"
+#include "rendering/objects/ImageAttachment.h"
 #include "rendering/Device.h"
 
 #include <vulkan/vulkan.hpp>
@@ -25,7 +25,7 @@ struct GBuffer {
 	inline constexpr static std::array<const char*, 6> attachmentNames
 		= { "position", "normal", "albedo", "specular", "emissive", "depth" };
 
-	std::array<UniquePtr<Image2D>, 6> attachments;
+	std::array<UniquePtr<ImageAttachment>, 6> attachments;
 
 	GBuffer(uint32 width, uint32 height);
 
@@ -33,6 +33,6 @@ struct GBuffer {
 
 	std::array<vk::ImageView, 6> GetViewsArray();
 
-	Image2D* operator[](uint32 i) const { return attachments[i].get(); }
+	ImageAttachment* operator[](uint32 i) const { return attachments[i].get(); }
 };
 } // namespace vl

@@ -40,8 +40,8 @@ void Image::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayou
 {
 	vk::ImageMemoryBarrier barrier = CreateTransitionBarrier(oldLayout, newLayout);
 
-	vk::PipelineStageFlags sourceStage = vl::GetPipelineStage(oldLayout);
-	vk::PipelineStageFlags destinationStage = vl::GetPipelineStage(newLayout);
+	vk::PipelineStageFlags sourceStage = GetPipelineStage(oldLayout);
+	vk::PipelineStageFlags destinationStage = GetPipelineStage(newLayout);
 
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -77,7 +77,7 @@ void Image::CopyBufferToImage(const RawBuffer& buffer)
 		.setImageExtent(m_imageInfo.extent);
 
 	region.imageSubresource
-		.setAspectMask(vl::GetAspectMask(m_imageInfo)) //
+		.setAspectMask(GetAspectMask(m_imageInfo)) //
 		.setMipLevel(0u)
 		.setBaseArrayLayer(0u)
 		.setLayerCount(m_imageInfo.arrayLayers);
@@ -99,6 +99,105 @@ void Image::CopyBufferToImage(const RawBuffer& buffer)
 	Device->transferQueue.waitIdle();
 }
 
+void Image::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout)
+{
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+	Device->graphicsCmdBuffer.begin(beginInfo);
+
+	vk::ImageMemoryBarrier barrier{};
+	barrier
+		.setImage(m_handle.get()) //
+		.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+		.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+	barrier.subresourceRange
+		.setAspectMask(GetAspectMask(m_imageInfo)) //
+		.setBaseArrayLayer(0u)
+		.setLayerCount(1u)
+		.setLevelCount(1u);
+
+	int32 mipWidth = m_imageInfo.extent.width;
+	int32 mipHeight = m_imageInfo.extent.height;
+
+	auto intermediateLayout = vk::ImageLayout::eTransferSrcOptimal;
+
+	vk::PipelineStageFlags oldStage = GetPipelineStage(oldLayout);
+	vk::PipelineStageFlags intermediateStage = GetPipelineStage(intermediateLayout);
+	vk::PipelineStageFlags finalStage = GetPipelineStage(finalLayout);
+
+	for (uint32 i = 1; i < m_imageInfo.mipLevels; i++) {
+
+		barrier.subresourceRange.setBaseMipLevel(i - 1);
+
+		barrier
+			.setOldLayout(oldLayout) //
+			.setNewLayout(intermediateLayout)
+			.setSrcAccessMask(GetAccessMask(oldLayout))
+			.setDstAccessMask(GetAccessMask(intermediateLayout));
+
+		// old to intermediate
+		Device->graphicsCmdBuffer.pipelineBarrier(
+			oldStage, intermediateStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+
+		vk::ImageBlit blit{};
+		blit.srcOffsets[0] = { 0, 0, 0 };
+		blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
+		blit.srcSubresource
+			.setAspectMask(GetAspectMask(m_imageInfo)) //
+			.setMipLevel(i - 1)
+			.setBaseArrayLayer(0u)
+			.setLayerCount(1u);
+		blit.dstOffsets[0] = { 0, 0, 0 };
+		blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
+		blit.dstSubresource
+			.setAspectMask(GetAspectMask(m_imageInfo)) //
+			.setMipLevel(i)
+			.setBaseArrayLayer(0u)
+			.setLayerCount(1u);
+
+		Device->graphicsCmdBuffer.blitImage(
+			m_handle.get(), intermediateLayout, m_handle.get(), oldLayout, 1, &blit, vk::Filter::eLinear);
+
+		barrier
+			.setOldLayout(intermediateLayout) //
+			.setNewLayout(finalLayout)
+			.setSrcAccessMask(GetAccessMask(intermediateLayout))
+			.setDstAccessMask(GetAccessMask(finalLayout));
+
+
+		// intermediate to final
+		Device->graphicsCmdBuffer.pipelineBarrier(
+			intermediateStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+
+		if (mipWidth > 1)
+			mipWidth /= 2;
+		if (mipHeight > 1)
+			mipHeight /= 2;
+	}
+
+	// barier for final mip
+	barrier.subresourceRange.setBaseMipLevel(m_imageInfo.mipLevels - 1);
+
+	barrier
+		.setOldLayout(oldLayout) //
+		.setNewLayout(finalLayout)
+		.setSrcAccessMask(GetAccessMask(oldLayout))
+		.setDstAccessMask(GetAccessMask(finalLayout));
+
+	Device->graphicsCmdBuffer.pipelineBarrier(
+		oldStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+
+	Device->graphicsCmdBuffer.end();
+
+	vk::SubmitInfo submitInfo{};
+	submitInfo.setCommandBufferCount(1u);
+	submitInfo.setPCommandBuffers(&Device->graphicsCmdBuffer);
+
+	Device->graphicsQueue.submit(1u, &submitInfo, {});
+	Device->graphicsQueue.waitIdle();
+}
+
 vk::ImageMemoryBarrier Image::CreateTransitionBarrier(
 	vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32 baseMipLevel, uint32 baseArrayLevel)
 {
@@ -107,14 +206,14 @@ vk::ImageMemoryBarrier Image::CreateTransitionBarrier(
 		.setOldLayout(oldLayout) //
 		.setNewLayout(newLayout)
 		.setImage(m_handle.get())
-		.setSrcAccessMask(vl::GetAccessMask(oldLayout))
-		.setDstAccessMask(vl::GetAccessMask(newLayout))
+		.setSrcAccessMask(GetAccessMask(oldLayout))
+		.setDstAccessMask(GetAccessMask(newLayout))
 		// CHECK: family indices
 		.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
 		.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
 
 	barrier.subresourceRange
-		.setAspectMask(vl::GetAspectMask(m_imageInfo)) //
+		.setAspectMask(GetAspectMask(m_imageInfo)) //
 		.setBaseMipLevel(baseMipLevel)
 		.setLevelCount(m_imageInfo.mipLevels)
 		.setBaseArrayLayer(baseArrayLevel)

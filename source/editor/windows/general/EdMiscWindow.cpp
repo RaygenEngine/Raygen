@@ -58,8 +58,8 @@ void GBufferDebugWindow::ImguiDraw()
 	ImGui::DragInt2("Preview Size", &m_imgSize.x, 1.f, 0, 4096);
 
 
-	auto showAttachment = [&, shouldShowDescriptors](const char* name, vl::Image2D* att) {
-		if (ImGui::CollapsingHeader(name)) {
+	auto showAttachment = [&, shouldShowDescriptors](vl::ImageAttachment* att) {
+		if (ImGui::CollapsingHeader(att->GetName().c_str())) {
 			auto descrSet = att->GetDebugDescriptor();
 
 			if (!descrSet) {
@@ -79,7 +79,7 @@ void GBufferDebugWindow::ImguiDraw()
 	};
 
 	for (uint32 i = 0; i < vl::GCount; ++i) {
-		showAttachment(vl::GBuffer::attachmentNames[i], (*gbuff)[i]);
+		showAttachment((*gbuff)[i]);
 	}
 }
 } // namespace ed

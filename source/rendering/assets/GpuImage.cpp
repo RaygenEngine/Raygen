@@ -27,16 +27,19 @@ using namespace vl;
 		case ImageFormat::Unorm: format = vk::Format::eR8G8B8A8Unorm; break;
 	}
 
-	image = std::make_unique<Image2D>(imgData->width, imgData->height, format, vk::ImageTiling::eOptimal,
-		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+	uint32 mipLevels = static_cast<uint32>(std::floor(std::log2(glm::max(imgData->width, imgData->height)))) + 1;
+
+	image = std::make_unique<Image2D>(imgData->width, imgData->height, mipLevels, format, vk::ImageTiling::eOptimal,
+		vk::ImageLayout::eUndefined,
+		vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
 		vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-	// transiton to transfer optimal
+	// transiton all mips to transfer optimal
 	image->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
 
 	// copy (internally transitions to transfer optimal)
 	image->CopyBufferToImage(stagingBuffer);
 
-	// finally transiton to graphics layout for shader access
-	image->BlockingTransitionToLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+	image->GenerateMipmapsAndTransitionEach(
+		vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 }

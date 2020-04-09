@@ -8,21 +8,22 @@
 namespace vl {
 GBuffer::GBuffer(uint32 width, uint32 height)
 {
-	auto initAttachment = [&](auto& att, vk::Format format, vk::ImageUsageFlags usage, vk::ImageLayout finalLayout) {
-		att = std::make_unique<Image2D>(width, height, format, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+	auto initAttachment = [&](auto& att, const std::string& name, vk::Format format, vk::ImageUsageFlags usage,
+							  vk::ImageLayout finalLayout) {
+		att = std::make_unique<ImageAttachment>(name, width, height, format, vk::ImageLayout::eUndefined,
 			usage | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal);
 		att->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, finalLayout);
 	};
 
 	for (size_t i = 0; i < 5; ++i) {
-		initAttachment(attachments[i], colorAttachmentFormats[i], vk::ImageUsageFlagBits::eColorAttachment,
-			vk::ImageLayout::eColorAttachmentOptimal);
+		initAttachment(attachments[i], attachmentNames[i], colorAttachmentFormats[i],
+			vk::ImageUsageFlagBits::eColorAttachment, vk::ImageLayout::eColorAttachmentOptimal);
 	}
 
 	vk::Format depthFormat = Device->pd->FindDepthFormat();
 
-	initAttachment(attachments[GDepth], depthFormat, vk::ImageUsageFlagBits::eDepthStencilAttachment,
-		vk::ImageLayout::eDepthStencilAttachmentOptimal);
+	initAttachment(attachments[GDepth], attachmentNames[GDepth], depthFormat,
+		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 }
 
 namespace {

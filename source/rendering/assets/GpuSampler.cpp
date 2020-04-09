@@ -32,9 +32,9 @@ Sampler::Gpu::Gpu(PodHandle<Sampler> podHandle)
 
 		// CHECK: texture pod should match the vk sampler
 		.setMipmapMode(vl::GetMipmapFilter(textureData->mipmapFilter))
-		.setMipLodBias(0.f)
+		.setMipLodBias(0.f) // CHECK:
 		.setMinLod(0.f)
-		.setMaxLod(0.f);
+		.setMaxLod(32.f); // CHECK:
 
 	sampler = vl::Device->createSamplerUnique(samplerInfo);
 }
