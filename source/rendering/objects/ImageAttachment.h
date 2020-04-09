@@ -4,10 +4,14 @@
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
-class Image2D : public Image {
+class ImageAttachment : public Image {
+
+	std::string m_name;
 
 public:
-	Image2D(uint32 width, uint32 height, uint32 mipLevels, vk::Format format, vk::ImageTiling tiling,
+	ImageAttachment(const std::string& name, uint32 width, uint32 height, vk::Format format,
 		vk::ImageLayout initalLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties);
+
+	[[nodiscard]] std::string GetName() const { return m_name; }
 };
 } // namespace vl

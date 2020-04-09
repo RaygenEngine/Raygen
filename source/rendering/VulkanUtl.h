@@ -40,6 +40,7 @@ inline vk::AccessFlags GetAccessMask(vk::ImageLayout imL)
 		case vk::ImageLayout::eColorAttachmentOptimal: return vk::AccessFlagBits::eColorAttachmentWrite;
 		case vk::ImageLayout::eShaderReadOnlyOptimal: return vk::AccessFlagBits::eShaderRead;
 		case vk::ImageLayout::eTransferDstOptimal: return vk::AccessFlagBits::eTransferWrite;
+		case vk::ImageLayout::eTransferSrcOptimal: return vk::AccessFlagBits::eTransferRead;
 		case vk::ImageLayout::eDepthStencilAttachmentOptimal:
 			return vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
 		default: LOG_ABORT("Unsupported");
@@ -52,6 +53,7 @@ inline vk::PipelineStageFlags GetPipelineStage(vk::ImageLayout imL)
 		case vk::ImageLayout::eUndefined: return vk::PipelineStageFlagBits::eTopOfPipe;
 		case vk::ImageLayout::eColorAttachmentOptimal: return vk::PipelineStageFlagBits::eColorAttachmentOutput;
 		case vk::ImageLayout::eShaderReadOnlyOptimal: return vk::PipelineStageFlagBits::eFragmentShader;
+		case vk::ImageLayout::eTransferSrcOptimal:
 		case vk::ImageLayout::eTransferDstOptimal: return vk::PipelineStageFlagBits::eTransfer;
 		case vk::ImageLayout::eDepthStencilAttachmentOptimal: return vk::PipelineStageFlagBits::eEarlyFragmentTests;
 		default: LOG_ABORT("Unsupported");
