@@ -14,10 +14,10 @@ namespace vl {
 void DeferredPass::InitQuadDescriptor()
 {
 	for (uint32 i = 0u; i < 6u; ++i) {
-		descLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+		m_descLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	}
-	descLayout.Generate();
-	descSet = descLayout.GetDescriptorSet();
+	m_descLayout.Generate();
+	m_descSet = m_descLayout.GetDescriptorSet();
 }
 
 void DeferredPass::UpdateDescriptorSets(GBuffer& gbuffer)
@@ -34,7 +34,7 @@ void DeferredPass::UpdateDescriptorSets(GBuffer& gbuffer)
 
 		vk::WriteDescriptorSet descriptorWrite{};
 		descriptorWrite
-			.setDstSet(descSet) //
+			.setDstSet(m_descSet) //
 			.setDstBinding(i)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
@@ -52,7 +52,7 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 {
 	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/deferred.vert");
 	gpuShader.onCompile = [&]() {
-		InitPipeline(*Renderer->swapchain->renderPass);
+		InitPipeline(*Renderer->m_swapchain->renderPass);
 	};
 
 	// shaders
@@ -146,7 +146,7 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
 		.setSetLayoutCount(1u) //
-		.setPSetLayouts(&descLayout.setLayout.get())
+		.setPSetLayouts(&m_descLayout.setLayout.get())
 		.setPushConstantRangeCount(0u)
 		.setPPushConstantRanges(nullptr);
 
@@ -200,7 +200,7 @@ void DeferredPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
 
 	// descriptor sets
 	cmdBuffer->bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &descSet, 0u, nullptr);
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &m_descSet, 0u, nullptr);
 
 	// draw call (triangle)
 	cmdBuffer->draw(3u, 1u, 0u, 0u);
@@ -208,7 +208,7 @@ void DeferredPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
 
 vk::Viewport DeferredPass::GetViewport() const
 {
-	auto& rect = Renderer->viewportRect;
+	auto& rect = Renderer->m_viewportRect;
 	const float x = static_cast<float>(rect.offset.x);
 	const float y = static_cast<float>(rect.offset.y);
 	const float width = static_cast<float>(rect.extent.width);
@@ -228,6 +228,6 @@ vk::Viewport DeferredPass::GetViewport() const
 
 vk::Rect2D DeferredPass::GetScissor() const
 {
-	return Renderer->viewportRect;
+	return Renderer->m_viewportRect;
 }
 } // namespace vl

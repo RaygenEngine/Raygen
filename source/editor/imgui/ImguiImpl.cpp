@@ -285,11 +285,11 @@ void InitVulkan()
 	init.Queue = vl::Device->graphicsQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
 	init.DescriptorPool = vl::GpuResources->descPools.GetImguiPool();
-	init.ImageCount = static_cast<uint32>(vl::Renderer->swapchain->images.size());
-	init.MinImageCount = static_cast<uint32>(vl::Renderer->swapchain->images.size());
+	init.ImageCount = static_cast<uint32>(vl::Renderer->m_swapchain->images.size());
+	init.MinImageCount = static_cast<uint32>(vl::Renderer->m_swapchain->images.size());
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init, vl::Renderer->swapchain->renderPass.get());
+	ImGui_ImplVulkan_Init(&init, vl::Renderer->m_swapchain->renderPass.get());
 
 
 	auto cmdBuffer = vl::Device->transferCmdBuffer;

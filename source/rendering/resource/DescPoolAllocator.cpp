@@ -22,19 +22,19 @@ vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const De
 
 		entry.pools.emplace_back(std::move(Device->createDescriptorPoolUnique(poolInfo)));
 		entry.allocated = 0;
-		allocCount++;
+		m_allocCount++;
 	};
 
-	auto it = entries.find(hash);
+	auto it = m_entries.find(hash);
 
-	if (it == entries.end()) {
+	if (it == m_entries.end()) {
 		Entry e{};
 		e.poolSizes = layout.perSetPoolSizes;
 		for (auto& poolSize : e.poolSizes) {
 			poolSize.descriptorCount *= c_setsPerPool;
 		}
 		addPool(e);
-		it = entries.emplace(hash, std::move(e)).first;
+		it = m_entries.emplace(hash, std::move(e)).first;
 	}
 
 	auto& entry = it->second;
@@ -56,7 +56,7 @@ vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const De
 
 vk::DescriptorPool DescPoolAllocator::GetImguiPool()
 {
-	if (!imguiPool) {
+	if (!m_imguiPool) {
 		vk::DescriptorSetLayoutBinding binding{};
 		binding
 			.setBinding(1u) //
@@ -81,8 +81,8 @@ vk::DescriptorPool DescPoolAllocator::GetImguiPool()
 			.setPPoolSizes(&poolSize)
 			.setMaxSets(2u);
 
-		imguiPool = std::move(Device->createDescriptorPoolUnique(poolInfo));
+		m_imguiPool = std::move(Device->createDescriptorPoolUnique(poolInfo));
 	}
-	return *imguiPool;
+	return *m_imguiPool;
 }
 } // namespace vl

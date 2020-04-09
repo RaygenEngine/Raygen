@@ -18,9 +18,9 @@ public:
 	void UpdateDescriptorSets(GBuffer& gbuffer);
 
 protected:
-	DescriptorLayout descLayout;
+	DescriptorLayout m_descLayout;
 
-	vk::DescriptorSet descSet;
+	vk::DescriptorSet m_descSet;
 
 
 	vk::Viewport GetViewport() const;

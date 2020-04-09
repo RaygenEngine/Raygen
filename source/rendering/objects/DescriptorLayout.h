@@ -11,12 +11,11 @@ struct DescriptorLayout {
 
 	bool hasBeenGenerated{ false };
 
-
 	void AddBinding(vk::DescriptorType type, vk::ShaderStageFlags stageFlags, uint32 descriptorCount = 1u);
 
 	void Generate();
 
-	vk::DescriptorSet GetDescriptorSet() const;
+	[[nodiscard]] vk::DescriptorSet GetDescriptorSet() const;
 
 private:
 	size_t poolSizeHash;

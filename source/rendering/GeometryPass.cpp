@@ -37,7 +37,7 @@ void GeometryPass::InitRenderPass()
 
 	for (size_t i = 0; i < 5; ++i) {
 		colorAttachmentDescs[i]
-			.setFormat(GBuffer::GetGBufferAttachmentFormat(i)) // CHECK:
+			.setFormat(GBuffer::colorAttachmentFormats[i]) // CHECK:
 			.setSamples(vk::SampleCountFlagBits::e1)
 			.setLoadOp(vk::AttachmentLoadOp::eClear)
 			.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -54,7 +54,7 @@ void GeometryPass::InitRenderPass()
 
 	vk::AttachmentDescription depthAttachmentDesc{};
 	depthAttachmentDesc
-		.setFormat(Device->pd->FindDepthFormat()) //
+		.setFormat(Device->pd->FindDepthFormat()) // CHECK:
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -101,7 +101,7 @@ void GeometryPass::InitRenderPass()
 
 void GeometryPass::InitFramebuffers()
 {
-	vk::Extent2D fbSize = Renderer->viewportFramebufferSize;
+	vk::Extent2D fbSize = Renderer->m_viewportFramebufferSize;
 
 	m_gBuffer = std::make_unique<GBuffer>(fbSize.width, fbSize.height);
 
@@ -347,7 +347,7 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 			.setFramebuffer(m_framebuffer.get());
 		renderPassInfo.renderArea
 			.setOffset({ 0, 0 }) //
-			.setExtent(Renderer->viewportRect.extent);
+			.setExtent(Renderer->m_viewportRect.extent);
 
 		std::array<vk::ClearValue, 6> clearValues = {};
 		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
@@ -428,7 +428,7 @@ vk::DescriptorSet GeometryPass::GetMaterialDescriptorSet() const
 
 vk::Viewport GeometryPass::GetViewport() const
 {
-	auto vpSize = Renderer->viewportRect.extent;
+	auto vpSize = Renderer->m_viewportRect.extent;
 
 	vk::Viewport viewport{};
 	viewport
@@ -447,7 +447,7 @@ vk::Rect2D GeometryPass::GetScissor() const
 
 	scissor
 		.setOffset({ 0, 0 }) //
-		.setExtent(Renderer->viewportRect.extent);
+		.setExtent(Renderer->m_viewportRect.extent);
 
 	return scissor;
 }

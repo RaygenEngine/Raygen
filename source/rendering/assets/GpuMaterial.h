@@ -43,7 +43,7 @@ struct Material::Gpu : public vl::GpuAssetBase {
 
 	UniquePtr<vl::Buffer<UBO_Material>> materialUBO;
 
-	// one for each swapchain image
+	// one for each m_swapchain image
 	// TODO: check
 	// https://stackoverflow.com/questions/36772607/vulkan-texture-rendering-on-multiple-meshes this
 	vk::DescriptorSet descriptorSet;

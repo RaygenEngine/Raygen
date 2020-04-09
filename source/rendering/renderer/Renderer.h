@@ -30,25 +30,25 @@ public:
 	//
 
 	// The recommended framebuffer allocation size for the viewport.
-	vk::Extent2D viewportFramebufferSize{};
+	vk::Extent2D m_viewportFramebufferSize{};
 
-	// The actual game viewport rectangle in swapchain coords
-	vk::Rect2D viewportRect{};
+	// The actual game viewport rectangle in m_swapchain coords
+	vk::Rect2D m_viewportRect{};
 
 	// Camera desc
 	DescriptorLayout m_cameraDescLayout;
-	std::vector<vk::DescriptorSet> camDescSet;
-	std::vector<UniquePtr<Buffer<UBO_Camera>>> cameraUBO;
+	std::vector<vk::DescriptorSet> m_camDescSet;
+	std::vector<UniquePtr<Buffer<UBO_Camera>>> m_cameraUBO;
 
 protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)
-	BoolFlag didViewportResize;
-	BoolFlag didWindowResize;
+	BoolFlag m_didViewportResize;
+	BoolFlag m_didWindowResize;
 
 	void OnViewportResize();
 	void OnWindowResize();
 
-	bool isMinimzed{ false };
+	bool m_isMinimzed{ false };
 
 public:
 	Renderer_();
@@ -58,24 +58,24 @@ public:
 	void Init();
 	void ReconstructSwapchain();
 
-	GeometryPass geomPass;
-	DeferredPass defPass;
-	EditorPass editorPass;
+	GeometryPass m_geomPass;
+	DeferredPass m_defPass;
+	EditorPass m_editorPass;
 
 
-	Swapchain* swapchain{};
+	Swapchain* m_swapchain{};
 
 	//
-	std::vector<vk::CommandBuffer> geometryCmdBuffer;
-	std::vector<vk::CommandBuffer> outCmdBuffer;
+	std::vector<vk::CommandBuffer> m_geometryCmdBuffer;
+	std::vector<vk::CommandBuffer> m_outCmdBuffer;
 
 
-	std::vector<vk::UniqueFence> inFlightFence;
+	std::vector<vk::UniqueFence> m_inFlightFence;
 
-	std::vector<vk::UniqueSemaphore> renderFinishedSem;
-	std::vector<vk::UniqueSemaphore> imageAvailSem;
+	std::vector<vk::UniqueSemaphore> m_renderFinishedSem;
+	std::vector<vk::UniqueSemaphore> m_imageAvailSem;
 
-	uint32 currentFrame{ 0 };
+	uint32 m_currentFrame{ 0 };
 
 	void DrawGeometryPass(vk::CommandBuffer cmdBuffer);
 
@@ -84,7 +84,7 @@ public:
 	void DrawDeferredPass(vk::CommandBuffer cmdBuffer, vk::Framebuffer framebuffer);
 
 	vk::DescriptorSetLayout GetCameraDescLayout() { return m_cameraDescLayout.setLayout.get(); }
-	vk::DescriptorSet GetCameraDescSet() { return camDescSet[currentFrame]; }
+	vk::DescriptorSet GetCameraDescSet() { return m_camDescSet[m_currentFrame]; }
 
 	void UpdateCamera();
 

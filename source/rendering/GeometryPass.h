@@ -14,12 +14,9 @@ class GeometryPass {
 
 	UniquePtr<GBuffer> m_gBuffer;
 
-	// pipeline stuffs
-	// GENERIC MODEL GEOMETRY PASS PIPELINE
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;
 
-	// Mesh descriptors
 	DescriptorLayout m_materialDescLayout;
 
 public:

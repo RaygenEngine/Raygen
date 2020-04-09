@@ -45,7 +45,7 @@ Material::Gpu::Gpu(PodHandle<Material> podHandle)
 	materialUBO->UploadData(matData);
 
 	// descriptors
-	descriptorSet = Renderer->geomPass.GetMaterialDescriptorSet();
+	descriptorSet = Renderer->m_geomPass.GetMaterialDescriptorSet();
 
 	// material uniform sets CHECK: (those buffers should be set again when material changes)
 	vk::DescriptorBufferInfo bufferInfo{};
