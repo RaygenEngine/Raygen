@@ -101,6 +101,12 @@ void Image::CopyBufferToImage(const RawBuffer& buffer)
 
 void Image::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout)
 {
+	// Check if image format supports linear blitting
+	vk::FormatProperties formatProperties = Device->pd->getFormatProperties(m_imageInfo.format);
+
+	CLOG_ABORT(!(formatProperties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear),
+		"Image format does not support linear blitting!");
+
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
@@ -127,7 +133,6 @@ void Image::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Imag
 	vk::PipelineStageFlags finalStage = GetPipelineStage(finalLayout);
 
 	for (uint32 i = 1; i < m_imageInfo.mipLevels; i++) {
-
 		barrier.subresourceRange.setBaseMipLevel(i - 1);
 
 		barrier
