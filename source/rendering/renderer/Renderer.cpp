@@ -84,6 +84,7 @@ void Renderer_::OnViewportResize()
 void Renderer_::OnWindowResize()
 {
 	Device->waitIdle();
+	m_swapchain.reset();
 	m_swapchain = std::make_unique<Swapchain>(Instance->surface);
 }
 
