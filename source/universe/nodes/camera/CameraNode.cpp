@@ -59,7 +59,7 @@ void CameraNode::DirtyUpdate(DirtyFlagset flags)
 	if (flags[DF::Projection] || flags[DF::ViewportSize]) {
 		RecalculateProjectionFov();
 
-		Enqueue([=](SceneCamera& cam) {
+		Enqueue([&](SceneCamera& cam) {
 			cam.ubo.position = glm::vec4(GetNodePositionWCS(), 1.f);
 			cam.ubo.viewProj = m_viewProjectionMatrix;
 		});
@@ -68,7 +68,7 @@ void CameraNode::DirtyUpdate(DirtyFlagset flags)
 	if (flags[DF::SRT] || flags[DF::FocalLength]) {
 		RecalculateViewMatrix();
 
-		Enqueue([=](SceneCamera& cam) {
+		Enqueue([&](SceneCamera& cam) {
 			cam.ubo.position = glm::vec4(GetNodePositionWCS(), 1.f);
 			cam.ubo.viewProj = m_viewProjectionMatrix;
 		});

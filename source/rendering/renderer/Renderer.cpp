@@ -5,6 +5,7 @@
 #include "engine/Engine.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
+#include "engine/Logger.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
@@ -14,7 +15,6 @@
 #include "universe/World.h"
 
 #include <array>
-
 
 constexpr int32 c_framesInFlight = 2;
 namespace {
@@ -28,20 +28,13 @@ namespace vl {
 
 Renderer_::Renderer_()
 {
-	// create m_swapchain
-	ReconstructSwapchain();
+	m_swapchain = std::make_unique<Swapchain>(Instance->surface);
 
 	Scene = new Scene_(m_swapchain->images.size());
-}
 
-void Renderer_::Init()
-{
-	// CHECK: Code smell, needs internal first init function
-	m_geomPass.InitAll();
-
-	m_defPass.InitQuadDescriptor();
-	m_defPass.InitPipeline(m_swapchain->renderPass.get());
-
+	m_geomPass = std::make_unique<GeometryPass>();
+	m_defPass = std::make_unique<DeferredPass>(m_swapchain->renderPass.get());
+	m_editorPass = std::make_unique<EditorPass>();
 
 	vk::CommandBufferAllocateInfo allocInfo{};
 	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
@@ -50,7 +43,6 @@ void Renderer_::Init()
 
 	m_geometryCmdBuffer = Device->allocateCommandBuffers(allocInfo);
 	m_outCmdBuffer = Device->allocateCommandBuffers(allocInfo);
-
 
 	vk::FenceCreateInfo fci{};
 	fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
@@ -69,15 +61,7 @@ void Renderer_::Init()
 
 Renderer_::~Renderer_()
 {
-	delete m_swapchain;
-
 	delete Scene;
-}
-
-void Renderer_::ReconstructSwapchain()
-{
-	delete m_swapchain;
-	m_swapchain = new Swapchain(Instance->surface);
 }
 
 void Renderer_::OnViewportResize()
@@ -91,15 +75,16 @@ void Renderer_::OnViewportResize()
 
 	if (fbSize != m_viewportFramebufferSize) {
 		m_viewportFramebufferSize = fbSize;
-		m_geomPass.InitFramebuffers();
-		m_defPass.UpdateDescriptorSets(*m_geomPass.GetGBuffer());
+		m_gBuffer = std::make_unique<GBuffer>(fbSize.width, fbSize.height);
+		m_geomPass->MakeFramebuffers(*m_gBuffer);
+		m_defPass->UpdateDescriptorSet(*m_gBuffer);
 	}
 }
 
 void Renderer_::OnWindowResize()
 {
 	Device->waitIdle();
-	ReconstructSwapchain();
+	m_swapchain = std::make_unique<Swapchain>(Instance->surface);
 }
 
 void Renderer_::UpdateForFrame()
@@ -117,8 +102,7 @@ void Renderer_::UpdateForFrame()
 
 void Renderer_::DrawGeometryPass(vk::CommandBuffer cmdBuffer)
 {
-
-	m_geomPass.RecordGeometryDraw(&cmdBuffer);
+	m_geomPass->RecordGeometryDraw(&cmdBuffer);
 }
 
 
@@ -147,11 +131,12 @@ void Renderer_::DrawDeferredPass(vk::CommandBuffer cmdBuffer, vk::Framebuffer fr
 
 	cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 
-	m_defPass.RecordCmd(&cmdBuffer);
-	m_editorPass.RecordCmd(&cmdBuffer);
+	m_defPass->RecordCmd(&cmdBuffer);
+	m_editorPass->RecordCmd(&cmdBuffer);
 
 	cmdBuffer.endRenderPass();
-	m_geomPass.GetGBuffer()->TransitionForAttachmentWrite(cmdBuffer);
+
+	m_gBuffer->TransitionForAttachmentWrite(cmdBuffer);
 
 	cmdBuffer.end();
 }
@@ -167,25 +152,25 @@ void Renderer_::DrawFrame()
 	PROFILE_SCOPE(Renderer);
 	uint32 imageIndex;
 
-	m_currentFrame = (m_currentFrame + 1) % c_framesInFlight;
+	currentFrame = (currentFrame + 1) % c_framesInFlight;
 
-	Device->waitForFences({ *m_inFlightFence[m_currentFrame] }, true, UINT64_MAX);
-	Device->resetFences({ *m_inFlightFence[m_currentFrame] });
+	Device->waitForFences({ *m_inFlightFence[currentFrame] }, true, UINT64_MAX);
+	Device->resetFences({ *m_inFlightFence[currentFrame] });
 
-	Scene->Upload(m_currentFrame);
+	Scene->UploadDirty();
 
 	Device->acquireNextImageKHR(
-		m_swapchain->handle.get(), UINT64_MAX, { *m_imageAvailSem[m_currentFrame] }, {}, &imageIndex);
+		m_swapchain->handle.get(), UINT64_MAX, { *m_imageAvailSem[currentFrame] }, {}, &imageIndex);
 
-	DrawGeometryPass(m_geometryCmdBuffer[m_currentFrame]);
-	DrawDeferredPass(m_outCmdBuffer[m_currentFrame], m_swapchain->framebuffers[m_currentFrame].get());
+	DrawGeometryPass(m_geometryCmdBuffer[currentFrame]);
+	DrawDeferredPass(m_outCmdBuffer[currentFrame], m_swapchain->framebuffers[currentFrame].get());
 
-	std::array bufs = { m_geometryCmdBuffer[m_currentFrame], m_outCmdBuffer[m_currentFrame] };
+	std::array bufs = { m_geometryCmdBuffer[currentFrame], m_outCmdBuffer[currentFrame] };
 
 
 	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput }; //
-	std::array waitSems = { *m_imageAvailSem[m_currentFrame] };                                              //
-	std::array signalSems = { *m_renderFinishedSem[m_currentFrame] };
+	std::array waitSems = { *m_imageAvailSem[currentFrame] };                                                //
+	std::array signalSems = { *m_renderFinishedSem[currentFrame] };
 
 
 	vk::SubmitInfo submitInfo{};
@@ -201,13 +186,13 @@ void Renderer_::DrawFrame()
 		.setPCommandBuffers(bufs.data());
 
 
-	Device->graphicsQueue.submit(1u, &submitInfo, *m_inFlightFence[m_currentFrame]);
+	Device->graphicsQueue.submit(1u, &submitInfo, *m_inFlightFence[currentFrame]);
 
 
 	vk::PresentInfoKHR presentInfo;
 	presentInfo //
 		.setWaitSemaphoreCount(1u)
-		.setPWaitSemaphores(&*m_renderFinishedSem[m_currentFrame]);
+		.setPWaitSemaphores(&*m_renderFinishedSem[currentFrame]);
 
 
 	vk::SwapchainKHR swapChains[] = { m_swapchain->handle.get() };

@@ -28,7 +28,6 @@ Layer_::Layer_()
 
 
 	Renderer = new Renderer_();
-	Renderer->Init();
 }
 
 Layer_::~Layer_()

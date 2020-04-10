@@ -57,6 +57,9 @@ void SpotLightNode::DirtyUpdate(DirtyFlagset flags)
 			sl.ubo.far_ = m_far;
 			sl.ubo.outerCutOff = glm::cos(m_outerAperture / 2.f);
 			sl.ubo.innerCutOff = glm::cos(m_innerAperture / 2.f);
+			sl.ubo.constantTerm = m_contantTerm;
+			sl.ubo.linearTerm = m_linearTerm;
+			sl.ubo.quadraticTerm = m_quadraticTerm;
 		});
 	}
 
@@ -72,6 +75,9 @@ void SpotLightNode::DirtyUpdate(DirtyFlagset flags)
 			sl.ubo.far_ = m_far;
 			sl.ubo.outerCutOff = glm::cos(m_outerAperture / 2.f);
 			sl.ubo.innerCutOff = glm::cos(m_innerAperture / 2.f);
+			sl.ubo.constantTerm = m_contantTerm;
+			sl.ubo.linearTerm = m_linearTerm;
+			sl.ubo.quadraticTerm = m_quadraticTerm;
 		});
 	}
 }

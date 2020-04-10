@@ -18,8 +18,6 @@ struct UBO_Material {
 	// alpha mask
 	float alphaCutoff;
 	int mask;
-
-	float padding[2];
 };
 
 struct Material::Gpu : public vl::GpuAssetBase {

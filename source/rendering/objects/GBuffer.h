@@ -20,19 +20,21 @@ enum GColorAttachment : uint32
 
 struct GBuffer {
 
-	inline constexpr static std::array<vk::Format, 5> colorAttachmentFormats = { vk::Format::eR8G8B8A8Unorm,
-		vk::Format::eR8G8B8A8Unorm, vk::Format::eR8G8B8A8Srgb, vk::Format::eR8G8B8A8Unorm, vk::Format::eR8G8B8A8Srgb };
+	inline constexpr static std::array<vk::Format, 5> colorAttachmentFormats
+		= { vk::Format::eR32G32B32A32Sfloat, vk::Format::eR32G32B32A32Sfloat, vk::Format::eR8G8B8A8Srgb,
+			  vk::Format::eR8G8B8A8Unorm, vk::Format::eR8G8B8A8Srgb };
 	inline constexpr static std::array<const char*, 6> attachmentNames
 		= { "position", "normal", "albedo", "specular", "emissive", "depth" };
 
+	uint32 width{};
+	uint32 height{};
 	std::array<UniquePtr<ImageAttachment>, 6> attachments;
 
 	GBuffer(uint32 width, uint32 height);
 
 	void TransitionForAttachmentWrite(vk::CommandBuffer cmdBuffer);
 
-	std::array<vk::ImageView, 6> GetViewsArray();
-
-	ImageAttachment* operator[](uint32 i) const { return attachments[i].get(); }
+	[[nodiscard]] std::array<vk::ImageView, 6> GetViewsArray();
+	[[nodiscard]] ImageAttachment* operator[](uint32 i) const { return attachments[i].get(); }
 };
 } // namespace vl

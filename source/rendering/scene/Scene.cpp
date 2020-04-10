@@ -1,5 +1,7 @@
 #include "pch.h"
-#include "rendering/scene/Scene.h"
+#include "Scene.h"
+
+#include "rendering/renderer/Renderer.h"
 
 Scene_::Scene_(size_t size)
 	: size(size)
@@ -15,8 +17,30 @@ Scene_::Scene_(size_t size)
 	spotLightDescLayout.Generate();
 }
 
-void Scene_::Upload(uint32 i)
+vk::DescriptorSet Scene_::GetActiveCameraDescSet()
 {
-	cameras.Upload(i);
-	spotlights.Upload(i);
+	return GetActiveCamera()->descSets[vl::Renderer_::currentFrame];
+}
+
+vk::DescriptorSet Scene_::GetActiveSpotlightDescSet() const
+{
+	return spotlights.elements.at(0)->descSets[vl::Renderer_::currentFrame];
+}
+
+// WIP: we should have a dirty per frace
+void Scene_::UploadDirty()
+{
+	for (auto cam : cameras.elements) {
+		if (cam->isDirty[vl::Renderer_::currentFrame]) {
+			cam->Upload();
+			cam->isDirty[vl::Renderer_::currentFrame] = false;
+		}
+	}
+
+	for (auto sl : spotlights.elements) {
+		if (sl->isDirty[vl::Renderer_::currentFrame]) {
+			sl->Upload();
+			sl->isDirty[vl::Renderer_::currentFrame] = false;
+		}
+	}
 }

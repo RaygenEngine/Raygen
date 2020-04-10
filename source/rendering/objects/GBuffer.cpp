@@ -3,10 +3,14 @@
 
 #include "engine/Logger.h"
 #include "engine/profiler/ProfileScope.h"
+#include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
+#include "rendering/VulkanUtl.h"
 
 namespace vl {
 GBuffer::GBuffer(uint32 width, uint32 height)
+	: width(width)
+	, height(height)
 {
 	auto initAttachment = [&](auto& att, const std::string& name, vk::Format format, vk::ImageUsageFlags usage,
 							  vk::ImageLayout finalLayout) {
@@ -25,20 +29,6 @@ GBuffer::GBuffer(uint32 width, uint32 height)
 	initAttachment(attachments[GDepth], attachmentNames[GDepth], depthFormat,
 		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 }
-
-namespace {
-	vk::PipelineStageFlags GetPipelineStage(vk::ImageLayout imL)
-	{
-		switch (imL) {
-			case vk::ImageLayout::eUndefined: return vk::PipelineStageFlagBits::eTopOfPipe;
-			case vk::ImageLayout::eColorAttachmentOptimal: return vk::PipelineStageFlagBits::eColorAttachmentOutput;
-			case vk::ImageLayout::eShaderReadOnlyOptimal: return vk::PipelineStageFlagBits::eFragmentShader;
-			case vk::ImageLayout::eTransferDstOptimal: return vk::PipelineStageFlagBits::eTransfer;
-			case vk::ImageLayout::eDepthStencilAttachmentOptimal: return vk::PipelineStageFlagBits::eEarlyFragmentTests;
-			default: LOG_ABORT("Unsupported");
-		}
-	}
-} // namespace
 
 void GBuffer::TransitionForAttachmentWrite(vk::CommandBuffer cmdBuffer)
 {
