@@ -44,6 +44,13 @@ public:
 		return CreateEntryImpl<PodType>(name, name, true, false, false);
 	}
 
+	template<CONC(CAssetPod) PodType>
+	std::pair<PodHandle<PodType>, PodType*> CreateTransientEntryFromFile(
+		const uri::Uri& name, const uri::Uri& importPath)
+	{
+		return CreateEntryImpl<PodType>(importPath, name, true, false, false);
+	}
+
 	//
 	// Interface below designed for Pod Importers
 	// contains utilities for entry registrations and calling other importers.
