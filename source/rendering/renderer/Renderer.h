@@ -5,12 +5,10 @@
 #include "rendering/DeferredPass.h"
 #include "rendering/EditorPass.h"
 #include "rendering/GeometryPass.h"
-#include "rendering/resource/GpuResources.h"
 #include "rendering/objects/Buffer.h"
 #include "rendering/objects/PhysicalDevice.h"
 #include "rendering/renderer/Swapchain.h"
-#include "rendering/scene/SceneStructs.h"
-#include "rendering/scene/Scene.h"
+#include "rendering/resource/GpuResources.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -18,7 +16,7 @@ namespace vl {
 using SemVec = std::vector<vk::Semaphore>;
 
 inline class Renderer_ : public Listener {
-public:
+
 	//
 	// Framebuffer size, Window size, recommended framebuffer size and more
 	//
@@ -28,6 +26,21 @@ public:
 
 	// The actual game viewport rectangle in m_swapchain coords
 	vk::Rect2D m_viewportRect{};
+
+	UniquePtr<GeometryPass> m_geomPass;
+	UniquePtr<DeferredPass> m_defPass;
+	UniquePtr<EditorPass> m_editorPass;
+
+	UniquePtr<GBuffer> m_gBuffer;
+	UniquePtr<Swapchain> m_swapchain;
+
+	std::vector<vk::CommandBuffer> m_geometryCmdBuffer;
+	std::vector<vk::CommandBuffer> m_outCmdBuffer;
+
+	std::vector<vk::UniqueFence> m_inFlightFence;
+
+	std::vector<vk::UniqueSemaphore> m_renderFinishedSem;
+	std::vector<vk::UniqueSemaphore> m_imageAvailSem;
 
 protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)
@@ -43,29 +56,6 @@ public:
 	Renderer_();
 	~Renderer_();
 
-
-	void Init();
-	void ReconstructSwapchain();
-
-	GeometryPass m_geomPass;
-	DeferredPass m_defPass;
-	EditorPass m_editorPass;
-
-
-	Swapchain* m_swapchain{};
-
-	//
-	std::vector<vk::CommandBuffer> m_geometryCmdBuffer;
-	std::vector<vk::CommandBuffer> m_outCmdBuffer;
-
-
-	std::vector<vk::UniqueFence> m_inFlightFence;
-
-	std::vector<vk::UniqueSemaphore> m_renderFinishedSem;
-	std::vector<vk::UniqueSemaphore> m_imageAvailSem;
-
-	uint32 m_currentFrame{ 0 };
-
 	void DrawGeometryPass(vk::CommandBuffer cmdBuffer);
 
 	void UpdateForFrame();
@@ -74,11 +64,17 @@ public:
 
 	void DrawFrame();
 
-	// WIP: remove
-	vk::DescriptorSet GetActiveCameraDescSet() const { return Scene->GetActiveCamera()->descSets[m_currentFrame]; }
-	vk::DescriptorSet GetActiveSpotlightDescSet() const
-	{
-		return Scene->spotlights.elements.at(0)->descSets[m_currentFrame];
-	}
+	[[nodiscard]] vk::Extent2D GetViewportFramebufferSize() { return m_viewportFramebufferSize; }
+	[[nodiscard]] vk::Rect2D GetViewportRect() { return m_viewportRect; }
+
+	[[nodiscard]] GBuffer* GetGBuffer() const { return m_gBuffer.get(); }
+	[[nodiscard]] Swapchain* GetSwapchain() const { return m_swapchain.get(); }
+
+	[[nodiscard]] GeometryPass* GetGeometryPass() const { return m_geomPass.get(); }
+	[[nodiscard]] DeferredPass* GetDeferredPass() const { return m_defPass.get(); }
+	[[nodiscard]] EditorPass* GetEditorPass() const { return m_editorPass.get(); }
+
+	inline static uint32 currentFrame{ 0 };
+
 } * Renderer{};
 } // namespace vl

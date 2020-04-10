@@ -15,13 +15,6 @@ struct SceneVector {
 		elements.resize(elements.size() + pendingElements);
 		pendingElements = 0;
 	}
-
-	void Upload(uint32 i)
-	{
-		for (auto& e : elements) {
-			e->Upload(i);
-		}
-	}
 };
 
 inline struct Scene_ {
@@ -32,9 +25,9 @@ inline struct Scene_ {
 	vl::DescriptorLayout cameraDescLayout;
 	vl::DescriptorLayout spotLightDescLayout;
 
-	std::vector<UniquePtr<std::vector<std::function<void()>>>> commands;
+	std::vector<UniquePtr<std::vector<std::function<void()>>>> cmds;
 
-	std::vector<std::function<void()>>* currentCommandBuffer;
+	std::vector<std::function<void()>>* currentCmdBuffer;
 
 	std::mutex cmdBuffersVectorMutex;
 	std::mutex cmdAddPendingElementsMutex;
@@ -60,9 +53,11 @@ inline struct Scene_ {
 	template<CONC(CSceneElem) T>
 	void EnqueueCmd(size_t uid, std::function<void(T&)>&& command)
 	{
-		currentCommandBuffer->emplace_back([uid, cmd = std::move(command)]() {
+		currentCmdBuffer->emplace_back([uid, cmd = std::move(command)]() {
 			//
 			cmd(*Scene->GetElement<T>(uid));
+			auto& dirtyVec = Scene->GetElement<T>(uid)->isDirty;
+			std::fill(dirtyVec.begin(), dirtyVec.end(), true);
 		});
 	}
 
@@ -74,15 +69,15 @@ inline struct Scene_ {
 		size_t uid{};
 		if constexpr (std::is_same_v<SceneGeometry, T>) {
 			uid = geometries.elements.size() + geometries.pendingElements++;
-			currentCommandBuffer->emplace_back([uid]() { Scene->geometries.elements[uid] = new SceneGeometry(); });
+			currentCmdBuffer->emplace_back([uid]() { Scene->geometries.elements[uid] = new SceneGeometry(); });
 		}
 		else if constexpr (std::is_same_v<SceneCamera, T>) {
 			uid = cameras.elements.size() + cameras.pendingElements++;
-			currentCommandBuffer->emplace_back([=]() { Scene->cameras.elements[uid] = new SceneCamera(size); });
+			currentCmdBuffer->emplace_back([=]() { Scene->cameras.elements[uid] = new SceneCamera(size); });
 		}
 		else if constexpr (std::is_same_v<SceneSpotlight, T>) {
 			uid = spotlights.elements.size() + spotlights.pendingElements++;
-			currentCommandBuffer->emplace_back([=]() { Scene->spotlights.elements[uid] = new SceneSpotlight(size); });
+			currentCmdBuffer->emplace_back([=]() { Scene->spotlights.elements[uid] = new SceneSpotlight(size); });
 		}
 
 		return uid;
@@ -93,21 +88,21 @@ inline struct Scene_ {
 	void EnqueueDestroyCmd(size_t uid)
 	{
 		if constexpr (std::is_same_v<SceneGeometry, T>) {
-			currentCommandBuffer->emplace_back([uid]() {
+			currentCmdBuffer->emplace_back([uid]() {
 				auto elem = static_cast<T*>(Scene->geometries.elements[uid]);
 				Scene->geometries.elements[uid] = nullptr;
 				delete elem;
 			});
 		}
 		else if constexpr (std::is_same_v<SceneCamera, T>) {
-			currentCommandBuffer->emplace_back([uid]() {
+			currentCmdBuffer->emplace_back([uid]() {
 				auto elem = static_cast<T*>(Scene->cameras.elements[uid]);
 				Scene->cameras.elements[uid] = nullptr;
 				delete elem;
 			});
 		}
 		else if constexpr (std::is_same_v<SceneSpotlight, T>) {
-			currentCommandBuffer->emplace_back([uid]() {
+			currentCmdBuffer->emplace_back([uid]() {
 				auto elem = static_cast<T*>(Scene->spotlights.elements[uid]);
 				Scene->spotlights.elements[uid] = nullptr;
 				delete elem;
@@ -119,12 +114,12 @@ inline struct Scene_ {
 	void EnqueueEndFrame()
 	{
 		// std::lock_guard<std::mutex> guard(cmdBuffersVectorMutex);
-		currentCommandBuffer = commands.emplace_back(std::make_unique<std::vector<std::function<void()>>>()).get();
+		currentCmdBuffer = cmds.emplace_back(std::make_unique<std::vector<std::function<void()>>>()).get();
 	}
 
 	void EnqueueActiveCameraCmd(size_t uid)
 	{
-		currentCommandBuffer->emplace_back([uid]() { Scene->activeCamera = uid; });
+		currentCmdBuffer->emplace_back([uid]() { Scene->activeCamera = uid; });
 	}
 
 private:
@@ -142,21 +137,21 @@ public:
 		ExecuteCreations();
 
 		size_t begin = 0;
-		size_t end = commands.size() - 1;
+		size_t end = cmds.size() - 1;
 
 		if (end <= 0) {
 			return;
 		}
 
 		for (size_t i = 0; i < end; ++i) {
-			for (auto& cmd : *commands[i]) {
+			for (auto& cmd : *cmds[i]) {
 				cmd();
 			}
 		}
 
 
 		// std::lock_guard<std::mutex> guard(cmdBuffersVectorMutex);
-		commands.erase(commands.begin(), commands.begin() + end);
+		cmds.erase(cmds.begin(), cmds.begin() + end);
 	}
 
 	SceneCamera* GetActiveCamera()
@@ -173,6 +168,10 @@ public:
 	// CHECK: runs 2 frames behind
 	Scene_(size_t size);
 
-	void Upload(uint32 i);
+	// WIP: remove
+	vk::DescriptorSet GetActiveCameraDescSet();
+	vk::DescriptorSet GetActiveSpotlightDescSet() const;
+
+	void UploadDirty();
 
 } * Scene{};

@@ -6,24 +6,22 @@
 namespace vl {
 class DeferredPass {
 
-public:
-	// pipeline stuffs
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;
 
-	void InitQuadDescriptor();
-	void InitPipeline(vk::RenderPass renderPass);
+	DescriptorLayout m_gBufferDescLayout;
+	vk::DescriptorSet m_gBufferDescSet;
+
+public:
+	DeferredPass(vk::RenderPass renderPass);
+
+	void MakePipeline(vk::RenderPass renderPass);
 
 	void RecordCmd(vk::CommandBuffer* cmdBuffer);
-	void UpdateDescriptorSets(GBuffer& gbuffer);
+
+	void UpdateDescriptorSet(GBuffer& gbuffer);
 
 protected:
-	// WIP: rename for g buffer
-	DescriptorLayout m_descLayout;
-
-	vk::DescriptorSet m_descSet;
-
-
 	vk::Viewport GetViewport() const;
 	vk::Rect2D GetScissor() const;
 };

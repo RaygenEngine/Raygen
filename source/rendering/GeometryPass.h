@@ -12,25 +12,22 @@ class GeometryPass {
 	vk::UniqueRenderPass m_renderPass;
 	vk::UniqueFramebuffer m_framebuffer;
 
-	UniquePtr<GBuffer> m_gBuffer;
-
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;
 
-	DescriptorLayout m_materialDescLayout;
-
-public:
-	void InitAll();
+	DescriptorLayout m_regularMaterialDescLayout;
 
 	void InitRenderPass();
-	void InitFramebuffers();
+
+public:
+	GeometryPass();
 
 	void MakePipeline();
+	void MakeFramebuffers(GBuffer& gbuffer);
 
 	void RecordGeometryDraw(vk::CommandBuffer* cmdBuffer);
 
-	vk::DescriptorSet GetMaterialDescriptorSet() const;
-	GBuffer* GetGBuffer() const { return m_gBuffer.get(); }
+	vk::DescriptorSet GetRegularMaterialDescriptorSet() const;
 
 protected:
 	vk::Viewport GetViewport() const;

@@ -5,14 +5,14 @@
 #include "rendering/resource/DescPoolAllocator.h"
 #include "rendering/objects/Buffer.h"
 #include "rendering/Device.h"
+#include "rendering/renderer/Renderer.h"
 
 struct SceneGeometry {
 	glm::mat4 transform;
 	vl::GpuHandle<Mesh> model;
 
 	GeometryNode* node;
-
-	void Allocate(uint32 size){};
+	std::vector<bool> isDirty;
 };
 
 struct SceneCamera {
@@ -24,20 +24,20 @@ struct SceneCamera {
 	std::vector<vk::DescriptorSet> descSets;
 	std::vector<UniquePtr<vl::Buffer<Ubo>>> buffers;
 
-	void Upload(uint32 i)
+	void Upload()
 	{
-		buffers[i]->UploadData(ubo);
+		buffers[vl::Renderer_::currentFrame]->UploadData(ubo);
 
 		vk::DescriptorBufferInfo bufferInfo{};
 
 		bufferInfo
-			.setBuffer(*buffers[i]) //
+			.setBuffer(*buffers[vl::Renderer_::currentFrame]) //
 			.setOffset(0u)
 			.setRange(sizeof(Ubo));
 		vk::WriteDescriptorSet descriptorWrite{};
 
 		descriptorWrite
-			.setDstSet(descSets[i]) //
+			.setDstSet(descSets[vl::Renderer_::currentFrame]) //
 			.setDstBinding(0u)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
@@ -48,6 +48,8 @@ struct SceneCamera {
 
 		vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 	}
+
+	std::vector<bool> isDirty;
 
 	SceneCamera(uint32 size);
 };
@@ -68,25 +70,29 @@ struct SceneSpotlight {
 
 		float outerCutOff{};
 		float innerCutOff{};
+
+		float constantTerm{};
+		float linearTerm{};
+		float quadraticTerm{};
 	} ubo;
 
 	std::vector<vk::DescriptorSet> descSets;
 	std::vector<UniquePtr<vl::Buffer<Ubo>>> buffers;
 
-	void Upload(uint32 i)
+	void Upload()
 	{
-		buffers[i]->UploadData(ubo);
+		buffers[vl::Renderer_::currentFrame]->UploadData(ubo);
 
 		vk::DescriptorBufferInfo bufferInfo{};
 
 		bufferInfo
-			.setBuffer(*buffers[i]) //
+			.setBuffer(*buffers[vl::Renderer_::currentFrame]) //
 			.setOffset(0u)
 			.setRange(sizeof(Ubo));
 		vk::WriteDescriptorSet descriptorWrite{};
 
 		descriptorWrite
-			.setDstSet(descSets[i]) //
+			.setDstSet(descSets[vl::Renderer_::currentFrame]) //
 			.setDstBinding(0u)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
@@ -98,7 +104,7 @@ struct SceneSpotlight {
 		vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 	}
 
-	bool isDirty{ true };
+	std::vector<bool> isDirty;
 
 	SceneSpotlight(uint32 size);
 };

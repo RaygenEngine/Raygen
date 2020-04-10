@@ -3,6 +3,7 @@
 #extension GL_GOOGLE_include_directive: enable
 
 #include "microfacet_bsdf.h"
+#include "fragment.h"
 
 // out
 
@@ -22,17 +23,21 @@ layout(set = 0, binding = 4) uniform sampler2D emissiveSampler;
 layout(set = 0, binding = 5) uniform sampler2D depthSampler;
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
-    vec4 position;
+    vec3 position;
+	float pad0;
 	mat4 viewProj;
 } camera;
 
 layout(set = 2, binding = 0) uniform UBO_Spotlight {
-		vec4 position;
-		vec4 direction;
+		vec3 position;
+		float pad0;
+		vec3 direction;
+		float pad1;
 
 		// Lightmap
 		mat4 viewProj;
-		vec4 color;
+		vec3 color;
+		float pad3;
 
 		float intensity;
 
@@ -41,57 +46,47 @@ layout(set = 2, binding = 0) uniform UBO_Spotlight {
 
 		float outerCutOff;
 		float innerCutOff;
+
+		float constantTerm;
+		float linearTerm;
+		float quadraticTerm;
 } light;
-
-// globals
-
-struct Fragment
-{
-    vec3 position;
-    vec3 normal;
-    vec3 albedo;
-    float opacity;
-    vec3 emissive;
-    float metallic;
-    float roughness;
-} fragment;
 
 void main() {
 
-    float currentDepth = texture(depthSampler, uv).r;
+	// PERF:
+	Fragment fragment = GetFragmentFromGBuffer(
+		positionsSampler,
+		normalsSampler,
+		albedoOpacitySampler,
+		specularSampler,
+		emissiveSampler,
+		depthSampler,
+		uv);
 
-	if(currentDepth == 1.0)
+	if(fragment.depth == 1.0)
 	{
-	    outColor = vec4(0,0,0.4,1);
+	    outColor = vec4(light.color, 1);
 		return;
 	}
 
-    fragment.position = texture(positionsSampler, uv).rgb;
-    fragment.normal = texture(normalsSampler, uv).rgb;
-    vec4 albedoOpacity = texture(albedoOpacitySampler, uv);
-    fragment.albedo = albedoOpacity.rgb;
-    fragment.opacity = albedoOpacity.a;
-    fragment.emissive = texture(emissiveSampler, uv).rgb;
-    vec4 metallicRoughnessOcclusionOcclusionStrength = texture(specularSampler, uv);
-    fragment.metallic = metallicRoughnessOcclusionOcclusionStrength.r;
-    fragment.roughness = metallicRoughnessOcclusionOcclusionStrength.g;
-
 	// spot light
 	vec3 N = fragment.normal;
-	vec3 V = normalize(camera.position.rgb - fragment.position);
-	vec3 L = normalize(light.position.rgb - fragment.position); 
+	vec3 V = normalize(camera.position - fragment.position);
+	vec3 L = normalize(light.position - fragment.position); 
 	
 	// attenuation
-	float dist = length(light.position.rgb - fragment.position);
-	float attenuation = 1.0 / pow(dist, /*____attenuation coef______*/ 1.f);
+	float dist = length(light.position - fragment.position);
+	float attenuation = 1.0 / (light.constantTerm + light.linearTerm * dist + 
+  			     light.quadraticTerm * (dist * dist));
 	
     // spot effect (soft edges)
-	float theta = dot(L, normalize(-light.direction.rgb));
+	float theta = dot(L, -light.direction);
     float epsilon = (light.innerCutOff - light.outerCutOff);
     float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 	 
 	//float shadow = ShadowCalculation(wcs_fragPos, max(dot(N, L), 0.0)); 
-	vec3 Li = /*((1.0 - shadow) **/ light.color.rgb * light.intensity * attenuation * spotEffect; 
+	vec3 Li = /*((1.0 - shadow) **/ light.color * light.intensity * attenuation * spotEffect; 
 
 	vec3 Lo = CookTorranceMicrofacetBRDF_GGX(L, V, N, fragment.albedo, fragment.metallic, fragment.roughness) * Li * max(dot(N, L), 0.0);
 
@@ -103,7 +98,7 @@ void main() {
     // Gamma correction 
 	mapped = pow(mapped, vec3(1.0 / 2.2));
   
-    outColor = vec4(mapped, fragment.opacity);
+    outColor = vec4(mapped, 1);
 }                               
                                 
                                  

@@ -9,7 +9,7 @@ struct ConsoleEntry;
 
 class Console {
 private:
-	Console() = default; // Cannot register commands in this constructor
+	Console() = default; // Cannot register cmds in this constructor
 
 protected:
 	Console(const Console&) = delete;

@@ -17,8 +17,6 @@ struct Swapchain {
 
 	Swapchain(vk::SurfaceKHR surface);
 
-	~Swapchain();
-
 private:
 	void InitRenderPass();
 	void InitFrameBuffers();

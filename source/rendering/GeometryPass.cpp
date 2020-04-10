@@ -9,24 +9,23 @@
 #include "rendering/Device.h"
 #include "rendering/renderer/Renderer.h"
 #include "rendering/assets/GpuMesh.h"
+#include "rendering/scene/Scene.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
 
 namespace vl {
-
-void GeometryPass::InitAll()
+GeometryPass::GeometryPass()
 {
-	InitRenderPass();
-
-	m_materialDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
+	m_regularMaterialDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
 
 	for (uint32 i = 0; i < 5u; ++i) {
-		m_materialDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+		m_regularMaterialDescLayout.AddBinding(
+			vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	}
 
-	m_materialDescLayout.Generate();
+	m_regularMaterialDescLayout.Generate();
 
-
+	InitRenderPass();
 	MakePipeline();
 }
 
@@ -99,23 +98,18 @@ void GeometryPass::InitRenderPass()
 	m_renderPass = Device->createRenderPassUnique(renderPassInfo);
 }
 
-void GeometryPass::InitFramebuffers()
+void GeometryPass::MakeFramebuffers(GBuffer& gbuffer)
 {
-	vk::Extent2D fbSize = Renderer->m_viewportFramebufferSize;
-
-	m_gBuffer = std::make_unique<GBuffer>(fbSize.width, fbSize.height);
-
 	// framebuffers
-
-	auto imAttachments = m_gBuffer->GetViewsArray();
+	auto imAttachments = gbuffer.GetViewsArray();
 
 	vk::FramebufferCreateInfo createInfo{};
 	createInfo
 		.setRenderPass(m_renderPass.get()) //
 		.setAttachmentCount(static_cast<uint32>(imAttachments.size()))
 		.setPAttachments(imAttachments.data())
-		.setWidth(fbSize.width)
-		.setHeight(fbSize.height)
+		.setWidth(gbuffer.width)
+		.setHeight(gbuffer.height)
 		.setLayers(1);
 
 	m_framebuffer = Device->createFramebufferUnique(createInfo);
@@ -123,6 +117,7 @@ void GeometryPass::InitFramebuffers()
 
 void GeometryPass::MakePipeline()
 {
+	// WIP: yikes
 	static auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/gbuffer.vert");
 	gpuShader.onCompile = [&]() {
 		Device->waitIdle();
@@ -198,8 +193,9 @@ void GeometryPass::MakePipeline()
 		.setTopology(vk::PrimitiveTopology::eTriangleList) //
 		.setPrimitiveRestartEnable(VK_FALSE);
 
-	vk::Viewport viewport = GetViewport();
-	vk::Rect2D scissor = GetScissor();
+	// those are dynamic so they will be updated when needed
+	vk::Viewport viewport{};
+	vk::Rect2D scissor{};
 
 	vk::PipelineViewportStateCreateInfo viewportState{};
 	viewportState
@@ -244,7 +240,6 @@ void GeometryPass::MakePipeline()
 			.setAlphaBlendOp(vk::BlendOp::eAdd);
 	}
 
-
 	vk::PipelineColorBlendStateCreateInfo colorBlending{};
 	colorBlending
 		.setLogicOpEnable(VK_FALSE) //
@@ -269,7 +264,7 @@ void GeometryPass::MakePipeline()
 		.setOffset(0u);
 
 
-	std::array layouts = { m_materialDescLayout.setLayout.get(), Scene->cameraDescLayout.setLayout.get() };
+	std::array layouts = { m_regularMaterialDescLayout.setLayout.get(), Scene->cameraDescLayout.setLayout.get() };
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
@@ -347,7 +342,7 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 			.setFramebuffer(m_framebuffer.get());
 		renderPassInfo.renderArea
 			.setOffset({ 0, 0 }) //
-			.setExtent(Renderer->m_viewportRect.extent);
+			.setExtent(Renderer->GetViewportRect().extent);
 
 		std::array<vk::ClearValue, 6> clearValues = {};
 		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
@@ -373,7 +368,7 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 
 			// descriptor sets
 			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
-				&Renderer->GetActiveCameraDescSet(), 0u, nullptr);
+				&Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
 			// Dynamic viewport & scissor
 			cmdBuffer->setViewport(0, { GetViewport() });
@@ -387,9 +382,8 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 					continue;
 				}
 
-				glm::mat4 normalMat = glm::inverseTranspose(glm::mat3(model->transform));
 				PushConstant pc{ //
-					model->transform, normalMat
+					model->transform, glm::inverseTranspose(glm::mat3(model->transform))
 				};
 
 				// Submit via push constant (rather than a UBO)
@@ -421,14 +415,14 @@ void GeometryPass::RecordGeometryDraw(vk::CommandBuffer* cmdBuffer)
 	cmdBuffer->end();
 }
 
-vk::DescriptorSet GeometryPass::GetMaterialDescriptorSet() const
+vk::DescriptorSet GeometryPass::GetRegularMaterialDescriptorSet() const
 {
-	return m_materialDescLayout.GetDescriptorSet();
+	return m_regularMaterialDescLayout.GetDescriptorSet();
 }
 
 vk::Viewport GeometryPass::GetViewport() const
 {
-	auto vpSize = Renderer->m_viewportRect.extent;
+	auto vpSize = Renderer->GetViewportRect().extent;
 
 	vk::Viewport viewport{};
 	viewport
@@ -447,7 +441,7 @@ vk::Rect2D GeometryPass::GetScissor() const
 
 	scissor
 		.setOffset({ 0, 0 }) //
-		.setExtent(Renderer->m_viewportRect.extent);
+		.setExtent(Renderer->GetViewportRect().extent);
 
 	return scissor;
 }

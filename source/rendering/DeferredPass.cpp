@@ -8,51 +8,27 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
 #include "rendering/renderer/Renderer.h"
-
+#include "rendering/scene/Scene.h"
 
 namespace vl {
-void DeferredPass::InitQuadDescriptor()
+DeferredPass::DeferredPass(vk::RenderPass renderPass)
 {
 	for (uint32 i = 0u; i < 6u; ++i) {
-		m_descLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+		m_gBufferDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	}
-	m_descLayout.Generate();
-	m_descSet = m_descLayout.GetDescriptorSet();
+	m_gBufferDescLayout.Generate();
+
+	m_gBufferDescSet = m_gBufferDescLayout.GetDescriptorSet();
+
+	MakePipeline(renderPass);
 }
 
-void DeferredPass::UpdateDescriptorSets(GBuffer& gbuffer)
+void DeferredPass::MakePipeline(vk::RenderPass renderPass)
 {
-	auto quadSampler = GpuAssetManager->GetDefaultSampler();
-
-	for (uint32 i = 0; i < GCount; ++i) {
-
-		vk::DescriptorImageInfo imageInfo{};
-		imageInfo
-			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-			.setImageView(gbuffer[i]->GetView())
-			.setSampler(quadSampler);
-
-		vk::WriteDescriptorSet descriptorWrite{};
-		descriptorWrite
-			.setDstSet(m_descSet) //
-			.setDstBinding(i)
-			.setDstArrayElement(0u)
-			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-			.setDescriptorCount(1u)
-			.setPBufferInfo(nullptr)
-			.setPImageInfo(&imageInfo)
-			.setPTexelBufferView(nullptr);
-
-		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
-	}
-}
-
-
-void DeferredPass::InitPipeline(vk::RenderPass renderPass)
-{
+	// WIP: yikes
 	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/deferred.vert");
 	gpuShader.onCompile = [&]() {
-		InitPipeline(*Renderer->m_swapchain->renderPass);
+		MakePipeline(*Renderer->GetSwapchain()->renderPass);
 	};
 
 	// shaders
@@ -81,8 +57,9 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 		.setTopology(vk::PrimitiveTopology::eTriangleList) //
 		.setPrimitiveRestartEnable(VK_FALSE);
 
-	vk::Viewport viewport = GetViewport();
-	vk::Rect2D scissor = GetScissor();
+	// those are dynamic so they will be updated when needed
+	vk::Viewport viewport{};
+	vk::Rect2D scissor{};
 
 	vk::PipelineViewportStateCreateInfo viewportState{};
 	viewportState
@@ -142,7 +119,7 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 		.setDynamicStateCount(2u) //
 		.setPDynamicStates(dynamicStates);
 
-	std::array layouts = { m_descLayout.setLayout.get(), Scene->cameraDescLayout.setLayout.get(),
+	std::array layouts = { m_gBufferDescLayout.setLayout.get(), Scene->cameraDescLayout.setLayout.get(),
 		Scene->spotLightDescLayout.setLayout.get() };
 
 	// pipeline layout
@@ -189,7 +166,6 @@ void DeferredPass::InitPipeline(vk::RenderPass renderPass)
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-
 void DeferredPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
 {
 	PROFILE_SCOPE(Renderer);
@@ -203,21 +179,48 @@ void DeferredPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
 
 	// descriptor sets
 	cmdBuffer->bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &m_descSet, 0u, nullptr);
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &m_gBufferDescSet, 0u, nullptr);
 
 	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
-		&Renderer->GetActiveCameraDescSet(), 0u, nullptr);
+		&Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
 	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
-		&Renderer->GetActiveSpotlightDescSet(), 0u, nullptr);
+		&Scene->GetActiveSpotlightDescSet(), 0u, nullptr);
 
 	// draw call (triangle)
 	cmdBuffer->draw(3u, 1u, 0u, 0u);
 }
 
+void DeferredPass::UpdateDescriptorSet(GBuffer& gbuffer)
+{
+	auto quadSampler = GpuAssetManager->GetDefaultSampler();
+
+	for (uint32 i = 0; i < GCount; ++i) {
+
+		vk::DescriptorImageInfo imageInfo{};
+		imageInfo
+			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+			.setImageView(gbuffer[i]->GetView())
+			.setSampler(quadSampler);
+
+		vk::WriteDescriptorSet descriptorWrite{};
+		descriptorWrite
+			.setDstSet(m_gBufferDescSet) //
+			.setDstBinding(i)
+			.setDstArrayElement(0u)
+			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+			.setDescriptorCount(1u)
+			.setPBufferInfo(nullptr)
+			.setPImageInfo(&imageInfo)
+			.setPTexelBufferView(nullptr);
+
+		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+	}
+}
+
 vk::Viewport DeferredPass::GetViewport() const
 {
-	auto& rect = Renderer->m_viewportRect;
+	auto& rect = Renderer->GetViewportRect();
 	const float x = static_cast<float>(rect.offset.x);
 	const float y = static_cast<float>(rect.offset.y);
 	const float width = static_cast<float>(rect.extent.width);
@@ -237,6 +240,6 @@ vk::Viewport DeferredPass::GetViewport() const
 
 vk::Rect2D DeferredPass::GetScissor() const
 {
-	return Renderer->m_viewportRect;
+	return Renderer->GetViewportRect();
 }
 } // namespace vl
