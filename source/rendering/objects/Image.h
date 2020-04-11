@@ -41,6 +41,7 @@ public:
 	[[nodiscard]] vk::DeviceMemory GetMemory() const { return m_memory.get(); }
 	[[nodiscard]] vk::ImageView GetView() const { return m_view.get(); }
 	[[nodiscard]] vk::Format GetFormat() const { return m_imageInfo.format; }
+	[[nodiscard]] vk::Extent3D GetExtent() const { return m_imageInfo.extent; }
 
 	[[nodiscard]] vk::DescriptorSet GetDebugDescriptor();
 };

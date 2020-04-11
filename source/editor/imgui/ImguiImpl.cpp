@@ -10,7 +10,7 @@
 #include "reflection/PodTools.h"
 #include "rendering/Device.h"
 #include "rendering/Instance.h"
-#include "rendering/renderer/Renderer.h"
+#include "rendering/Renderer.h"
 
 #include <imgui/imgui.h>
 #include <imgui/examples/imgui_impl_glfw.h>
@@ -285,11 +285,11 @@ void InitVulkan()
 	init.Queue = vl::Device->graphicsQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
 	init.DescriptorPool = vl::GpuResources->descPools.GetImguiPool();
-	init.ImageCount = static_cast<uint32>(vl::Renderer->GetSwapchain()->images.size());
-	init.MinImageCount = static_cast<uint32>(vl::Renderer->GetSwapchain()->images.size());
+	init.ImageCount = vl::Swapchain->GetImageCount();
+	init.MinImageCount = vl::Swapchain->GetImageCount();
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init, vl::Renderer->GetSwapchain()->renderPass.get());
+	ImGui_ImplVulkan_Init(&init, vl::Swapchain->GetRenderPass());
 
 
 	auto cmdBuffer = vl::Device->transferCmdBuffer;

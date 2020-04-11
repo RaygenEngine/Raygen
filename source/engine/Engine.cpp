@@ -9,7 +9,7 @@
 #include "engine/reflection/ReflectionDb.h"
 #include "platform/Platform.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/renderer/Renderer.h"
+#include "rendering/Renderer.h"
 #include "rendering/Rendering.h"
 #include "universe/NodeFactory.h"
 #include "universe/Universe.h"

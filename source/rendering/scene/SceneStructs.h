@@ -1,11 +1,12 @@
 #pragma once
 #include "assets/pods/Mesh.h"
 #include "rendering/assets/GpuAssetHandle.h"
-#include "universe/nodes/geometry/GeometryNode.h"
-#include "rendering/resource/DescPoolAllocator.h"
-#include "rendering/objects/Buffer.h"
 #include "rendering/Device.h"
-#include "rendering/renderer/Renderer.h"
+#include "rendering/objects/Buffer.h"
+#include "rendering/objects/ImageAttachment.h"
+#include "rendering/Renderer.h"
+#include "rendering/resource/DescPoolAllocator.h"
+#include "universe/nodes/geometry/GeometryNode.h"
 
 struct SceneGeometry {
 	glm::mat4 transform;
@@ -79,34 +80,18 @@ struct SceneSpotlight {
 	std::vector<vk::DescriptorSet> descSets;
 	std::vector<UniquePtr<vl::Buffer<Ubo>>> buffers;
 
-	void Upload()
-	{
-		buffers[vl::Renderer_::currentFrame]->UploadData(ubo);
+	vl::Framebuffer shadowmap;
 
-		vk::DescriptorBufferInfo bufferInfo{};
+	void Upload();
 
-		bufferInfo
-			.setBuffer(*buffers[vl::Renderer_::currentFrame]) //
-			.setOffset(0u)
-			.setRange(sizeof(Ubo));
-		vk::WriteDescriptorSet descriptorWrite{};
+	void PrepareShadowmap(vk::RenderPass renderPass, uint32 width, uint32 height);
 
-		descriptorWrite
-			.setDstSet(descSets[vl::Renderer_::currentFrame]) //
-			.setDstBinding(0u)
-			.setDstArrayElement(0u)
-			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-			.setDescriptorCount(1u)
-			.setPBufferInfo(&bufferInfo)
-			.setPImageInfo(nullptr)
-			.setPTexelBufferView(nullptr);
-
-		vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
-	}
 
 	std::vector<bool> isDirty;
 
 	SceneSpotlight(uint32 size);
+
+	void TransitionForAttachmentWrite(vk::CommandBuffer* cmdBuffer);
 };
 
 template<typename T>

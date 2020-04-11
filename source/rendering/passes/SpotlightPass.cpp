@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "SpotlightsPass.h"
+#include "SpotlightPass.h"
 
 #include "assets/Assets.h"
 #include "engine/Engine.h"
@@ -7,23 +7,17 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
-#include "rendering/renderer/Renderer.h"
+#include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/Layouts.h"
 
 namespace vl {
-SpotlightsPass::SpotlightsPass(vk::RenderPass renderPass, std::pair<DescriptorLayout&, vk::DescriptorSet&> gBufferDescs)
-	: m_gBufferDescLayout(gBufferDescs.first)
-	, m_gBufferDescSet(gBufferDescs.second)
-{
-	MakePipeline(renderPass);
-}
-
-void SpotlightsPass::MakePipeline(vk::RenderPass renderPass)
+void SpotlightPass::MakePipeline()
 {
 	// WIP: yikes
 	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/spotlight.vert");
-	gpuShader.onCompile = [=]() {
-		MakePipeline(renderPass);
+	gpuShader.onCompile = [&]() {
+		MakePipeline();
 	};
 
 	// shaders
@@ -115,8 +109,8 @@ void SpotlightsPass::MakePipeline(vk::RenderPass renderPass)
 		.setDynamicStateCount(2u) //
 		.setPDynamicStates(dynamicStates);
 
-	std::array layouts = { m_gBufferDescLayout.setLayout.get(), Scene->cameraDescLayout.setLayout.get(),
-		Scene->spotLightDescLayout.setLayout.get() };
+	std::array layouts = { Layouts->gBufferDescLayout.setLayout.get(), Layouts->cameraDescLayout.setLayout.get(),
+		Layouts->spotlightDescLayout.setLayout.get() };
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -154,7 +148,7 @@ void SpotlightsPass::MakePipeline(vk::RenderPass renderPass)
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(renderPass)
+		.setRenderPass(Swapchain->GetRenderPass())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
@@ -162,7 +156,7 @@ void SpotlightsPass::MakePipeline(vk::RenderPass renderPass)
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void SpotlightsPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& viewport, const vk::Rect2D& scissor)
+void SpotlightPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& viewport, const vk::Rect2D& scissor)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -174,8 +168,8 @@ void SpotlightsPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport&
 	cmdBuffer->setScissor(0, { scissor });
 
 	// descriptor sets
-	cmdBuffer->bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &m_gBufferDescSet, 0u, nullptr);
+	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
+		&Renderer->GetGBuffer()->GetDescSet(), 0u, nullptr);
 
 	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
 		&Scene->GetActiveCameraDescSet(), 0u, nullptr);

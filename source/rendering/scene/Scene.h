@@ -22,9 +22,6 @@ inline struct Scene_ {
 	SceneVector<SceneCamera> cameras;
 	SceneVector<SceneSpotlight> spotlights;
 
-	vl::DescriptorLayout cameraDescLayout;
-	vl::DescriptorLayout spotLightDescLayout;
-
 	std::vector<UniquePtr<std::vector<std::function<void()>>>> cmds;
 
 	std::vector<std::function<void()>>* currentCmdBuffer;

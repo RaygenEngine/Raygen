@@ -3,7 +3,7 @@
 
 #include "editor/imgui/ImguiImpl.h"
 #include "engine/Engine.h"
-#include "rendering/renderer/Renderer.h"
+#include "rendering/Renderer.h"
 
 namespace vl {
 void EditorPass::RecordCmd(vk::CommandBuffer* cmdBuffer)

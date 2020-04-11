@@ -6,7 +6,8 @@
 #include "rendering/resource/GpuResources.h"
 #include "rendering/Device.h"
 #include "rendering/Instance.h"
-#include "rendering/renderer/Renderer.h"
+#include "rendering/Renderer.h"
+#include "rendering/Layouts.h"
 
 namespace vl {
 
@@ -26,6 +27,7 @@ Layer_::Layer_()
 	GpuResources = new GpuResources_();
 	GpuAssetManager = new GpuAssetManager_();
 
+	Layouts = new Layouts_();
 
 	Renderer = new Renderer_();
 }

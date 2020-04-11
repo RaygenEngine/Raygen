@@ -34,6 +34,7 @@ layout(set = 2, binding = 0) uniform UBO_Spotlight {
 		vec3 direction;
 		float pad1;
 
+		// CHECK: could pass this mat from push constants (is it better tho?)
 		// Lightmap
 		mat4 viewProj;
 		vec3 color;
@@ -51,6 +52,8 @@ layout(set = 2, binding = 0) uniform UBO_Spotlight {
 		float linearTerm;
 		float quadraticTerm;
 } light;
+
+layout(set = 2, binding = 1) uniform sampler2D shadowmap;
 
 void main() {
 
