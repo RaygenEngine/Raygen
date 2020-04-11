@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/objects/ImageAttachment.h"
+#include "rendering/objects/Framebuffer.h"
 #include "rendering/Device.h"
 
 #include <vulkan/vulkan.hpp>
@@ -18,23 +18,26 @@ enum GColorAttachment : uint32
 	GCount = 6
 };
 
-struct GBuffer {
-
+class GBuffer {
+public:
 	inline constexpr static std::array<vk::Format, 5> colorAttachmentFormats
 		= { vk::Format::eR32G32B32A32Sfloat, vk::Format::eR32G32B32A32Sfloat, vk::Format::eR8G8B8A8Srgb,
 			  vk::Format::eR8G8B8A8Unorm, vk::Format::eR8G8B8A8Srgb };
 	inline constexpr static std::array<const char*, 6> attachmentNames
 		= { "position", "normal", "albedo", "specular", "emissive", "depth" };
 
-	uint32 width{};
-	uint32 height{};
-	std::array<UniquePtr<ImageAttachment>, 6> attachments;
+private:
+	Framebuffer m_framebuffer;
+	vk::DescriptorSet m_descSet;
 
-	GBuffer(uint32 width, uint32 height);
+public:
+	GBuffer(vk::RenderPass renderPass, uint32 width, uint32 height);
 
-	void TransitionForAttachmentWrite(vk::CommandBuffer cmdBuffer);
+	void TransitionForAttachmentWrite(vk::CommandBuffer* cmdBuffer);
 
-	[[nodiscard]] std::array<vk::ImageView, 6> GetViewsArray();
-	[[nodiscard]] ImageAttachment* operator[](uint32 i) const { return attachments[i].get(); }
+	[[nodiscard]] vk::DescriptorSet GetDescSet() const { return m_descSet; }
+	[[nodiscard]] Framebuffer& GetFramebuffer() { return m_framebuffer; }
+
+	void UpdateDescriptorSet();
 };
 } // namespace vl

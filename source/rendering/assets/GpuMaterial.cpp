@@ -3,8 +3,9 @@
 
 #include "assets/pods/Material.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/renderer/Renderer.h"
+#include "rendering/Renderer.h"
 #include "rendering/Device.h"
+#include "rendering/Layouts.h"
 
 using namespace vl;
 
@@ -45,7 +46,7 @@ Material::Gpu::Gpu(PodHandle<Material> podHandle)
 	materialUBO->UploadData(matData);
 
 	// descriptors (WIP:
-	descriptorSet = Renderer->GetGeometryPass()->GetRegularMaterialDescriptorSet();
+	descriptorSet = Layouts->regularMaterialDescLayout.GetDescriptorSet();
 
 	// material uniform sets CHECK: (those buffers should be set again when material changes)
 	vk::DescriptorBufferInfo bufferInfo{};

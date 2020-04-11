@@ -1,61 +1,73 @@
 #include "pch.h"
-#include "rendering/objects/GBuffer.h"
+#include "GBuffer.h"
 
 #include "engine/Logger.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
+#include "rendering/Renderer.h"
 #include "rendering/VulkanUtl.h"
+#include "rendering/Layouts.h"
 
 namespace vl {
-GBuffer::GBuffer(uint32 width, uint32 height)
-	: width(width)
-	, height(height)
+GBuffer::GBuffer(vk::RenderPass renderPass, uint32 width, uint32 height)
 {
-	auto initAttachment = [&](auto& att, const std::string& name, vk::Format format, vk::ImageUsageFlags usage,
-							  vk::ImageLayout finalLayout) {
-		att = std::make_unique<ImageAttachment>(name, width, height, format, vk::ImageLayout::eUndefined,
-			usage | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal);
+	m_descSet = Layouts->gBufferDescLayout.GetDescriptorSet();
+
+	auto initAttachment = [&](const std::string& name, vk::Format format, vk::ImageUsageFlags usage,
+							  vk::ImageLayout finalLayout, bool isDepth) {
+		auto att = std::make_unique<ImageAttachment>(name, width, height, format, vk::ImageLayout::eUndefined,
+			usage | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal, isDepth);
 		att->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, finalLayout);
+		return att;
 	};
 
 	for (size_t i = 0; i < 5; ++i) {
-		initAttachment(attachments[i], attachmentNames[i], colorAttachmentFormats[i],
-			vk::ImageUsageFlagBits::eColorAttachment, vk::ImageLayout::eColorAttachmentOptimal);
+		m_framebuffer.AddAttachment(initAttachment(attachmentNames[i], colorAttachmentFormats[i],
+			vk::ImageUsageFlagBits::eColorAttachment, vk::ImageLayout::eColorAttachmentOptimal, false));
 	}
 
 	vk::Format depthFormat = Device->pd->FindDepthFormat();
 
-	initAttachment(attachments[GDepth], attachmentNames[GDepth], depthFormat,
-		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+	m_framebuffer.AddAttachment(initAttachment(attachmentNames[GDepth], depthFormat,
+		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal, true));
+
+	m_framebuffer.Generate(renderPass);
 }
 
-void GBuffer::TransitionForAttachmentWrite(vk::CommandBuffer cmdBuffer)
+void GBuffer::TransitionForAttachmentWrite(vk::CommandBuffer* cmdBuffer)
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto recordTransition = [&](auto& attachment, vk::ImageLayout target = vk::ImageLayout::eColorAttachmentOptimal) {
-		auto barrier = attachment->CreateTransitionBarrier(vk::ImageLayout::eShaderReadOnlyOptimal, target);
-
-		vk::PipelineStageFlags sourceStage = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);
-		vk::PipelineStageFlags destinationStage = GetPipelineStage(target);
-
-		cmdBuffer.pipelineBarrier(
-			sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
-	};
-
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-
-	for (size_t i = 0; i < 5; ++i) {
-		recordTransition(attachments[i]);
-	}
-	recordTransition(attachments[GDepth], vk::ImageLayout::eDepthStencilAttachmentOptimal);
+	m_framebuffer.TransitionForAttachmentWrite(cmdBuffer);
 }
 
-std::array<vk::ImageView, 6> GBuffer::GetViewsArray()
+void GBuffer::UpdateDescriptorSet()
 {
-	return { attachments[GPosition]->GetView(), attachments[GNormal]->GetView(), attachments[GAlbedo]->GetView(),
-		attachments[GSpecular]->GetView(), attachments[GEmissive]->GetView(), attachments[GDepth]->GetView() };
+	auto quadSampler = GpuAssetManager->GetDefaultSampler();
+
+	auto& atts = m_framebuffer.GetAttachments();
+
+	for (uint32 i = 0; i < GCount; ++i) {
+
+		vk::DescriptorImageInfo imageInfo{};
+		imageInfo
+			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+			.setImageView(atts[i]->GetView())
+			.setSampler(quadSampler);
+
+		vk::WriteDescriptorSet descriptorWrite{};
+		descriptorWrite
+			.setDstSet(m_descSet) //
+			.setDstBinding(i)
+			.setDstArrayElement(0u)
+			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+			.setDescriptorCount(1u)
+			.setPBufferInfo(nullptr)
+			.setPImageInfo(&imageInfo)
+			.setPTexelBufferView(nullptr);
+
+		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+	}
 }
 } // namespace vl

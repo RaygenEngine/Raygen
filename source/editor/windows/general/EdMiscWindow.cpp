@@ -5,7 +5,7 @@
 #include "editor/EditorObject.h"
 #include "editor/imgui/ImEd.h"
 #include "editor/imgui/ImguiUtil.h"
-#include "rendering/renderer/Renderer.h"
+#include "rendering/Renderer.h"
 
 #include <imgui/imgui.h>
 namespace ed {
@@ -79,7 +79,8 @@ void GBufferDebugWindow::ImguiDraw()
 	};
 
 	for (uint32 i = 0; i < vl::GCount; ++i) {
-		showAttachment((*gbuff)[i]);
+		// WIP:
+		//	showAttachment((*gbuff)[i]);
 	}
 }
 } // namespace ed

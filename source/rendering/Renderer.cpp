@@ -12,7 +12,6 @@
 #include "rendering/Instance.h"
 #include "universe/nodes/camera/CameraNode.h"
 #include "universe/nodes/geometry/GeometryNode.h"
-#include "universe/World.h"
 
 #include <array>
 
@@ -28,18 +27,13 @@ namespace vl {
 
 Renderer_::Renderer_()
 {
-	m_swapchain = std::make_unique<Swapchain>(Instance->surface);
-
-	Scene = new Scene_(m_swapchain->images.size());
-
-	m_geomPass = std::make_unique<GeometryPass>();
-	m_defPass = std::make_unique<DeferredPass>(m_swapchain->renderPass.get());
-	m_editorPass = std::make_unique<EditorPass>();
+	Swapchain = new Swapchain_(Instance->surface);
+	Scene = new Scene_(Swapchain->GetImageCount());
 
 	vk::CommandBufferAllocateInfo allocInfo{};
 	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(static_cast<uint32>(m_swapchain->images.size()));
+		.setCommandBufferCount(Swapchain->GetImageCount());
 
 	m_geometryCmdBuffer = Device->allocateCommandBuffers(allocInfo);
 	m_outCmdBuffer = Device->allocateCommandBuffers(allocInfo);
@@ -57,11 +51,70 @@ Renderer_::Renderer_()
 	Event::OnViewportUpdated.BindFlag(this, m_didViewportResize);
 	Event::OnWindowResize.BindFlag(this, m_didWindowResize);
 	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimzed) { m_isMinimzed = newIsMinimzed; });
+
+	m_gBufferPass.MakePipeline();
+	m_shadowmapPass.MakePipeline();
+	m_spotlightPass.MakePipeline();
+
+	OnViewportResize();
 }
 
 Renderer_::~Renderer_()
 {
 	delete Scene;
+	delete Swapchain;
+}
+
+void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
+{
+	PROFILE_SCOPE(Renderer);
+	auto viewport = Renderer->GetSceneViewport();
+	auto scissor = Renderer->GetSceneScissor();
+
+	m_gBufferPass.RecordCmd(cmdBuffer, viewport, scissor);
+	m_shadowmapPass.RecordCmd(cmdBuffer, viewport, scissor);
+}
+
+void Renderer_::RecordDeferredPasses(vk::CommandBuffer* cmdBuffer)
+{
+	PROFILE_SCOPE(Renderer);
+	auto viewport = Renderer->GetViewport();
+	auto scissor = Renderer->GetScissor();
+
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
+
+	// begin command buffer recording
+	cmdBuffer->begin(beginInfo);
+	{
+		vk::RenderPassBeginInfo renderPassInfo{};
+		renderPassInfo
+			.setRenderPass(Swapchain->GetRenderPass()) //
+			.setFramebuffer(Swapchain->GetFramebuffer(Renderer->currentFrame));
+		renderPassInfo.renderArea
+			.setOffset({ 0, 0 }) //
+			.setExtent(Swapchain->GetExtent());
+
+		std::array<vk::ClearValue, 2> clearValues = {};
+		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+		clearValues[1].setDepthStencil({ 1.0f, 0 });
+		renderPassInfo.setClearValueCount(static_cast<uint32>(clearValues.size()));
+		renderPassInfo.setPClearValues(clearValues.data());
+
+		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+		{
+			m_spotlightPass.RecordCmd(cmdBuffer, viewport, scissor);
+			m_editorPass.RecordCmd(cmdBuffer);
+		}
+		cmdBuffer->endRenderPass();
+
+		m_gBuffer->TransitionForAttachmentWrite(cmdBuffer);
+
+		for (auto sl : Scene->spotlights.elements) {
+			sl->TransitionForAttachmentWrite(cmdBuffer);
+		}
+	}
+	cmdBuffer->end();
 }
 
 void Renderer_::OnViewportResize()
@@ -75,17 +128,19 @@ void Renderer_::OnViewportResize()
 
 	if (fbSize != m_viewportFramebufferSize) {
 		m_viewportFramebufferSize = fbSize;
-		m_gBuffer = std::make_unique<GBuffer>(fbSize.width, fbSize.height);
-		m_geomPass->MakeFramebuffers(*m_gBuffer);
-		m_defPass->UpdateGBufferDescriptorSet(*m_gBuffer);
+		m_gBuffer = std::make_unique<GBuffer>(m_gBufferPass.GetRenderPass(), fbSize.width, fbSize.height);
+		for (auto sl : Scene->spotlights.elements) {
+			sl->PrepareShadowmap(m_shadowmapPass.GetRenderPass(), fbSize.width, fbSize.height);
+		}
 	}
 }
 
 void Renderer_::OnWindowResize()
 {
 	Device->waitIdle();
-	m_swapchain.reset();
-	m_swapchain = std::make_unique<Swapchain>(Instance->surface);
+
+	delete Swapchain;
+	Swapchain = new Swapchain_(Instance->surface);
 }
 
 void Renderer_::UpdateForFrame()
@@ -99,47 +154,6 @@ void Renderer_::UpdateForFrame()
 	}
 
 	Scene->ConsumeCmdQueue();
-}
-
-void Renderer_::DrawGeometryPass(vk::CommandBuffer cmdBuffer)
-{
-	m_geomPass->RecordGeometryDraw(&cmdBuffer);
-}
-
-
-void Renderer_::DrawDeferredPass(vk::CommandBuffer cmdBuffer, vk::Framebuffer framebuffer)
-{
-	PROFILE_SCOPE(Renderer);
-
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
-
-	// begin command buffer recording
-	cmdBuffer.begin(beginInfo);
-
-
-	vk::RenderPassBeginInfo renderPassInfo{};
-	renderPassInfo.setRenderPass(m_swapchain->renderPass.get()).setFramebuffer(framebuffer);
-	renderPassInfo.renderArea
-		.setOffset({ 0, 0 }) //
-		.setExtent(m_swapchain->extent);
-
-	std::array<vk::ClearValue, 2> clearValues = {};
-	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[1].setDepthStencil({ 1.0f, 0 });
-	renderPassInfo.setClearValueCount(static_cast<uint32>(clearValues.size()));
-	renderPassInfo.setPClearValues(clearValues.data());
-
-	cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-
-	m_defPass->RecordCmd(&cmdBuffer);
-	m_editorPass->RecordCmd(&cmdBuffer);
-
-	cmdBuffer.endRenderPass();
-
-	m_gBuffer->TransitionForAttachmentWrite(cmdBuffer);
-
-	cmdBuffer.end();
 }
 
 void Renderer_::DrawFrame()
@@ -160,14 +174,13 @@ void Renderer_::DrawFrame()
 
 	Scene->UploadDirty();
 
-	Device->acquireNextImageKHR(
-		m_swapchain->handle.get(), UINT64_MAX, { *m_imageAvailSem[currentFrame] }, {}, &imageIndex);
+	Device->acquireNextImageKHR(*Swapchain, UINT64_MAX, { *m_imageAvailSem[currentFrame] }, {}, &imageIndex);
 
-	DrawGeometryPass(m_geometryCmdBuffer[currentFrame]);
-	DrawDeferredPass(m_outCmdBuffer[currentFrame], m_swapchain->framebuffers[currentFrame].get());
+	// passes
+	RecordGeometryPasses(&m_geometryCmdBuffer[currentFrame]);
+	RecordDeferredPasses(&m_outCmdBuffer[currentFrame]);
 
 	std::array bufs = { m_geometryCmdBuffer[currentFrame], m_outCmdBuffer[currentFrame] };
-
 
 	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput }; //
 	std::array waitSems = { *m_imageAvailSem[currentFrame] };                                                //
@@ -183,7 +196,7 @@ void Renderer_::DrawFrame()
 		.setSignalSemaphoreCount(static_cast<uint32>(signalSems.size()))
 		.setPSignalSemaphores(signalSems.data())
 
-		.setCommandBufferCount(2u)
+		.setCommandBufferCount(static_cast<uint32>(bufs.size()))
 		.setPCommandBuffers(bufs.data());
 
 
@@ -196,7 +209,7 @@ void Renderer_::DrawFrame()
 		.setPWaitSemaphores(&*m_renderFinishedSem[currentFrame]);
 
 
-	vk::SwapchainKHR swapChains[] = { m_swapchain->handle.get() };
+	vk::SwapchainKHR swapChains[] = { *Swapchain };
 	presentInfo //
 		.setSwapchainCount(1u)
 		.setPSwapchains(swapChains)
@@ -206,5 +219,56 @@ void Renderer_::DrawFrame()
 
 	PROFILE_SCOPE(Renderer);
 	Device->presentQueue.presentKHR(presentInfo);
+}
+
+vk::Viewport Renderer_::GetSceneViewport() const
+{
+	auto vpSize = m_viewportRect.extent;
+
+	vk::Viewport viewport{};
+	viewport
+		.setX(0) //
+		.setY(static_cast<float>(vpSize.height))
+		.setWidth(static_cast<float>(vpSize.width))
+		.setHeight(-static_cast<float>(vpSize.height))
+		.setMinDepth(0.f)
+		.setMaxDepth(1.f);
+	return viewport;
+}
+
+vk::Viewport Renderer_::GetViewport() const
+{
+	auto& rect = m_viewportRect;
+	const float x = static_cast<float>(rect.offset.x);
+	const float y = static_cast<float>(rect.offset.y);
+	const float width = static_cast<float>(rect.extent.width);
+	const float height = static_cast<float>(rect.extent.height);
+
+	vk::Viewport viewport{};
+	viewport
+		.setX(x) //
+		.setY(y)
+		.setWidth(width)
+		.setHeight(height)
+		.setMinDepth(0.f)
+		.setMaxDepth(1.f);
+
+	return viewport;
+}
+
+vk::Rect2D Renderer_::GetSceneScissor() const
+{
+	vk::Rect2D scissor{};
+
+	scissor
+		.setOffset({ 0, 0 }) //
+		.setExtent(m_viewportRect.extent);
+
+	return scissor;
+}
+
+vk::Rect2D Renderer_::GetScissor() const
+{
+	return m_viewportRect;
 }
 } // namespace vl

@@ -1,20 +1,12 @@
 #include "pch.h"
 #include "Scene.h"
 
-#include "rendering/renderer/Renderer.h"
+#include "rendering/Renderer.h"
 
 Scene_::Scene_(size_t size)
 	: size(size)
 {
 	EnqueueEndFrame();
-
-	// WIP/PERF: could have two seperate for each stage
-	cameraDescLayout.AddBinding(
-		vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
-	cameraDescLayout.Generate();
-
-	spotLightDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
-	spotLightDescLayout.Generate();
 }
 
 vk::DescriptorSet Scene_::GetActiveCameraDescSet()

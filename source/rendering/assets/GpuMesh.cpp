@@ -2,7 +2,7 @@
 #include "GpuMesh.h"
 
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/renderer/Renderer.h"
+#include "rendering/Renderer.h"
 #include "rendering/Device.h"
 
 using namespace vl;

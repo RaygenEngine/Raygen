@@ -4,7 +4,7 @@
 #include "engine/console/ConsoleVariable.h"
 #include "engine/Logger.h"
 #include "rendering/Device.h"
-#include "rendering/renderer/Renderer.h"
+#include "rendering/Renderer.h"
 
 ConsoleFunction<> g_showPoolAllocations{ "r.mem.showDescriptorPools",
 	[]() { LOG_REPORT("Pools: {}", vl::GpuResources->descPools.GetAllocations()); },

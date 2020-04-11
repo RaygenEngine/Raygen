@@ -58,7 +58,7 @@ vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
 } // namespace
 
 namespace vl {
-Swapchain::Swapchain(vk::SurfaceKHR surface)
+Swapchain_::Swapchain_(vk::SurfaceKHR surface)
 {
 	auto pd = Device->pd;
 
@@ -66,7 +66,7 @@ Swapchain::Swapchain(vk::SurfaceKHR surface)
 
 	vk::SurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(details.formats);
 	vk::PresentModeKHR presentMode = ChooseSwapPresentMode(details.presentModes);
-	extent = ChooseSwapExtent(details.capabilities);
+	m_extent = ChooseSwapExtent(details.capabilities);
 
 	uint32 imageCount = details.capabilities.minImageCount;
 
@@ -81,7 +81,7 @@ Swapchain::Swapchain(vk::SurfaceKHR surface)
 
 		.setImageFormat(surfaceFormat.format)
 		.setImageColorSpace(surfaceFormat.colorSpace)
-		.setImageExtent(extent)
+		.setImageExtent(m_extent)
 		.setImageArrayLayers(1u)
 		.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
 
@@ -110,21 +110,21 @@ Swapchain::Swapchain(vk::SurfaceKHR surface)
 		.setOldSwapchain(nullptr);
 
 
-	handle = Device->createSwapchainKHRUnique(createInfo);
-	images = Device->getSwapchainImagesKHR(handle.get());
+	m_handle = Device->createSwapchainKHRUnique(createInfo);
+	m_images = Device->getSwapchainImagesKHR(m_handle.get());
 
 	// Store swap chain image format and extent
-	imageFormat = surfaceFormat.format;
+	m_imageFormat = surfaceFormat.format;
 
 
 	// views
-	for (const auto& img : images) {
+	for (const auto& img : m_images) {
 
 		vk::ImageViewCreateInfo viewInfo{};
 		viewInfo
 			.setImage(img) //
 			.setViewType(vk::ImageViewType::e2D)
-			.setFormat(imageFormat);
+			.setFormat(m_imageFormat);
 		viewInfo.subresourceRange
 			.setAspectMask(vk::ImageAspectFlagBits::eColor) //
 			.setBaseMipLevel(0u)
@@ -132,18 +132,18 @@ Swapchain::Swapchain(vk::SurfaceKHR surface)
 			.setBaseArrayLayer(0u)
 			.setLayerCount(1u);
 
-		imageViews.emplace_back(Device->createImageViewUnique(viewInfo));
+		m_imageViews.emplace_back(Device->createImageViewUnique(viewInfo));
 	}
 
 	InitRenderPass();
 	InitFrameBuffers();
 }
 
-void Swapchain::InitRenderPass()
+void Swapchain_::InitRenderPass()
 {
 	vk::AttachmentDescription colorAttachment{};
 	colorAttachment
-		.setFormat(imageFormat) //
+		.setFormat(m_imageFormat) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -183,26 +183,26 @@ void Swapchain::InitRenderPass()
 		.setDependencyCount(1u)
 		.setPDependencies(&dependency);
 
-	renderPass = Device->createRenderPassUnique(renderPassInfo);
+	m_renderPass = Device->createRenderPassUnique(renderPassInfo);
 }
 
-void Swapchain::InitFrameBuffers()
+void Swapchain_::InitFrameBuffers()
 {
-	framebuffers.clear();
-	framebuffers.resize(images.size());
+	m_framebuffers.clear();
+	m_framebuffers.resize(m_images.size());
 	// framebuffers
-	for (auto i = 0; i < images.size(); ++i) {
-		std::array attachments{ imageViews[i].get() };
+	for (auto i = 0; i < m_images.size(); ++i) {
+		std::array attachments{ m_imageViews[i].get() };
 		vk::FramebufferCreateInfo createInfo{};
 		createInfo
-			.setRenderPass(renderPass.get()) //
+			.setRenderPass(m_renderPass.get()) //
 			.setAttachmentCount(static_cast<uint32>(attachments.size()))
 			.setPAttachments(attachments.data())
-			.setWidth(extent.width)
-			.setHeight(extent.height)
+			.setWidth(m_extent.width)
+			.setHeight(m_extent.height)
 			.setLayers(1u);
 
-		framebuffers[i] = Device->createFramebufferUnique(createInfo);
+		m_framebuffers[i] = Device->createFramebufferUnique(createInfo);
 	}
 }
 } // namespace vl
