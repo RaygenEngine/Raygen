@@ -77,7 +77,7 @@ void Renderer_::OnViewportResize()
 		m_viewportFramebufferSize = fbSize;
 		m_gBuffer = std::make_unique<GBuffer>(fbSize.width, fbSize.height);
 		m_geomPass->MakeFramebuffers(*m_gBuffer);
-		m_defPass->UpdateDescriptorSet(*m_gBuffer);
+		m_defPass->UpdateGBufferDescriptorSet(*m_gBuffer);
 	}
 }
 
