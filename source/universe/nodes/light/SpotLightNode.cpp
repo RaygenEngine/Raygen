@@ -45,6 +45,12 @@ SpotLightNode::SpotLightNode()
 
 void SpotLightNode::DirtyUpdate(DirtyFlagset flags)
 {
+	// constexpr glm::mat4 biasMatrix(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
+
+	if (flags[DF::ShadowsTextSize]) {
+		Enqueue([&](SceneSpotlight& sl) { sl.UpdateShadowmap(m_shadowMapWidth, m_shadowMapHeight); });
+	}
+
 	if (flags[DF::Aperture] || flags[DF::NearFar] || flags[DF::ShadowsTextSize]) {
 		RecalculateProjectionMatrix();
 		Enqueue([&](SceneSpotlight& sl) {

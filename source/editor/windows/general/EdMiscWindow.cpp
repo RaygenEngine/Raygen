@@ -79,8 +79,13 @@ void GBufferDebugWindow::ImguiDraw()
 	};
 
 	for (uint32 i = 0; i < vl::GCount; ++i) {
-		// WIP:
-		//	showAttachment((*gbuff)[i]);
+		showAttachment((*gbuff)[i]);
+	}
+
+	for (auto sl : Scene->spotlights.elements) {
+		if (sl->shadowmap) {
+			showAttachment(sl->shadowmap->GetDepthAttachment());
+		}
 	}
 }
 } // namespace ed

@@ -1,6 +1,6 @@
 #pragma once
-#include "rendering/objects/Framebuffer.h"
 #include "rendering/Device.h"
+#include "rendering/objects/ImageAttachment.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -27,17 +27,19 @@ public:
 		= { "position", "normal", "albedo", "specular", "emissive", "depth" };
 
 private:
-	Framebuffer m_framebuffer;
+	vk::UniqueFramebuffer m_framebuffer;
+	std::array<UniquePtr<ImageAttachment>, 6> m_attachments;
+
 	vk::DescriptorSet m_descSet;
 
 public:
 	GBuffer(vk::RenderPass renderPass, uint32 width, uint32 height);
 
-	void TransitionForAttachmentWrite(vk::CommandBuffer* cmdBuffer);
+	void TransitionForWrite(vk::CommandBuffer* cmdBuffer);
 
 	[[nodiscard]] vk::DescriptorSet GetDescSet() const { return m_descSet; }
-	[[nodiscard]] Framebuffer& GetFramebuffer() { return m_framebuffer; }
+	[[nodiscard]] vk::Framebuffer GetFramebuffer() const { return m_framebuffer.get(); }
 
-	void UpdateDescriptorSet();
+	[[nodiscard]] ImageAttachment* operator[](uint32 i) const { return m_attachments[i].get(); }
 };
 } // namespace vl

@@ -55,6 +55,22 @@ layout(set = 2, binding = 0) uniform UBO_Spotlight {
 
 layout(set = 2, binding = 1) uniform sampler2D shadowmap;
 
+float ShadowCalculation(vec4 fragPosLightSpace)
+{
+   // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+    projCoords = projCoords ;
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = texture(shadowmap, vec2(projCoords.x,-projCoords.y)* 0.5 + 0.5).r; 
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+    // check whether current frag pos is in shadow
+    float shadow = currentDepth - closestDepth > 0.005  ? 1.0 : 0.0;
+
+    return shadow;
+}  
+
 void main() {
 
 	// PERF:
@@ -87,9 +103,11 @@ void main() {
 	float theta = dot(L, -light.direction);
     float epsilon = (light.innerCutOff - light.outerCutOff);
     float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
-	 
-	//float shadow = ShadowCalculation(wcs_fragPos, max(dot(N, L), 0.0)); 
-	vec3 Li = /*((1.0 - shadow) **/ light.color * light.intensity * attenuation * spotEffect; 
+	
+	vec4 lightSpacePos = light.viewProj * vec4(fragment.position,1.0);
+	float shadow = ShadowCalculation(lightSpacePos);
+		//return; 
+	vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
 
 	vec3 Lo = CookTorranceMicrofacetBRDF_GGX(L, V, N, fragment.albedo, fragment.metallic, fragment.roughness) * Li * max(dot(N, L), 0.0);
 
@@ -114,3 +132,15 @@ void main() {
                                                  
                                                   
                                                    
+                                                                                                                                    
+                                                                                                                                              
+                                                                                                                                               
+                                                                                                                                        
+                                                                                                                                         
+                                                                                                                                          
+                                                                                                                                           
+                                                                                                                                             
+                                                                                                                                             
+                                                                                                                                                
+                                                                                                                                                 
+                                                                                                                                                   

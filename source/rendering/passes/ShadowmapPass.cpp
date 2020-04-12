@@ -228,32 +228,42 @@ void ShadowmapPass::MakePipeline()
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& viewport, const vk::Rect2D& scissor)
+void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
 {
 	PROFILE_SCOPE(Renderer);
 
-	if (Input.IsJustPressed(Key::Comma)) {
-		Device->waitIdle();
-		MakePipeline();
-		LOG_REPORT("Remade pipeline");
-		Device->waitIdle();
-	}
-
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
-
-	// begin command buffer recording
-	cmdBuffer->begin(beginInfo);
-
 	for (auto sl : Scene->spotlights.elements) {
+
+		if (!sl->shadowmap) {
+			continue;
+		}
+
+		auto extent = sl->shadowmap->GetDepthAttachment()->GetExtent2D();
+
+		vk::Rect2D scissor{};
+
+		scissor
+			.setOffset({ 0, 0 }) //
+			.setExtent(extent);
+
+		auto vpSize = extent;
+
+		vk::Viewport viewport{};
+		viewport
+			.setX(0) //
+			.setY(static_cast<float>(vpSize.height))
+			.setWidth(static_cast<float>(vpSize.width))
+			.setHeight(-static_cast<float>(vpSize.height))
+			.setMinDepth(0.f)
+			.setMaxDepth(1.f);
 
 		vk::RenderPassBeginInfo renderPassInfo{};
 		renderPassInfo
 			.setRenderPass(m_renderPass.get()) //
-			.setFramebuffer(sl->shadowmap);
+			.setFramebuffer(sl->shadowmap->GetFramebuffer());
 		renderPassInfo.renderArea
 			.setOffset({ 0, 0 }) //
-			.setExtent(scissor.extent);
+			.setExtent(extent);
 
 		std::array<vk::ClearValue, 1> clearValues = {};
 		clearValues[0].setDepthStencil({ 1.0f, 0 });
@@ -306,8 +316,5 @@ void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& 
 		// end render pass
 		cmdBuffer->endRenderPass();
 	}
-
-	// end command buffer recording
-	cmdBuffer->end();
 }
 } // namespace vl

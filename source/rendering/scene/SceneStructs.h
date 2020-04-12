@@ -1,44 +1,31 @@
 #pragma once
-#include "assets/pods/Mesh.h"
-#include "rendering/assets/GpuAssetHandle.h"
-#include "rendering/Device.h"
 #include "rendering/objects/Buffer.h"
-#include "rendering/objects/ImageAttachment.h"
-#include "rendering/Renderer.h"
-#include "rendering/resource/DescPoolAllocator.h"
-#include "universe/nodes/geometry/GeometryNode.h"
+#include "rendering/Device.h"
 
-struct SceneGeometry {
-	glm::mat4 transform;
-	vl::GpuHandle<Mesh> model;
+// SceneStructs that upload a Ubo when dirty
+template<typename Ubo>
+struct SceneStruct {
+	Ubo ubo;
 
-	GeometryNode* node;
-	std::vector<bool> isDirty;
-};
+	std::array<vk::DescriptorSet, 3> descSets;
+	std::array<UniquePtr<vl::Buffer<Ubo>>, 3> buffers;
 
-struct SceneCamera {
-	struct Ubo {
-		glm::vec4 position;
-		glm::mat4 viewProj;
-	} ubo;
+	std::array<bool, 3> isDirty;
 
-	std::vector<vk::DescriptorSet> descSets;
-	std::vector<UniquePtr<vl::Buffer<Ubo>>> buffers;
-
-	void Upload()
+	void UploadUbo(uint32 curFrame)
 	{
-		buffers[vl::Renderer_::currentFrame]->UploadData(ubo);
+		buffers[curFrame]->UploadData(ubo);
 
 		vk::DescriptorBufferInfo bufferInfo{};
 
 		bufferInfo
-			.setBuffer(*buffers[vl::Renderer_::currentFrame]) //
+			.setBuffer(*buffers[curFrame]) //
 			.setOffset(0u)
 			.setRange(sizeof(Ubo));
 		vk::WriteDescriptorSet descriptorWrite{};
 
 		descriptorWrite
-			.setDstSet(descSets[vl::Renderer_::currentFrame]) //
+			.setDstSet(descSets[curFrame]) //
 			.setDstBinding(0u)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
@@ -50,50 +37,12 @@ struct SceneCamera {
 		vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 	}
 
-	std::vector<bool> isDirty;
-
-	SceneCamera(uint32 size);
+	SceneStruct()
+	{
+		for (uint32 i = 0; i < 3; ++i) {
+			buffers[i] = std::make_unique<vl::Buffer<Ubo>>(vk::BufferUsageFlagBits::eUniformBuffer,
+				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+			isDirty[i] = true;
+		}
+	}
 };
-
-struct SceneSpotlight {
-	struct Ubo {
-		glm::vec4 position;
-		glm::vec4 forward;
-
-		// Lightmap
-		glm::mat4 viewProj{};
-		glm::vec4 color{};
-
-		float intensity{};
-
-		float near_{};
-		float far_{};
-
-		float outerCutOff{};
-		float innerCutOff{};
-
-		float constantTerm{};
-		float linearTerm{};
-		float quadraticTerm{};
-	} ubo;
-
-	std::vector<vk::DescriptorSet> descSets;
-	std::vector<UniquePtr<vl::Buffer<Ubo>>> buffers;
-
-	vl::Framebuffer shadowmap;
-
-	void Upload();
-
-	void PrepareShadowmap(vk::RenderPass renderPass, uint32 width, uint32 height);
-
-
-	std::vector<bool> isDirty;
-
-	SceneSpotlight(uint32 size);
-
-	void TransitionForAttachmentWrite(vk::CommandBuffer* cmdBuffer);
-};
-
-template<typename T>
-concept CSceneElem
-	= std::is_same_v<SceneGeometry, T> || std::is_same_v<SceneCamera, T> || std::is_same_v<SceneSpotlight, T>;

@@ -10,6 +10,7 @@ class ImageAttachment : public Image {
 	bool m_isDepth;
 
 public:
+	// WIP: check depth from format
 	ImageAttachment(const std::string& name, uint32 width, uint32 height, vk::Format format,
 		vk::ImageLayout initalLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, bool isDepth);
 
