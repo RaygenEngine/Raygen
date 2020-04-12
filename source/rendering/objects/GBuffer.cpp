@@ -23,37 +23,39 @@ GBuffer::GBuffer(vk::RenderPass renderPass, uint32 width, uint32 height)
 	};
 
 	for (size_t i = 0; i < 5; ++i) {
-		m_framebuffer.AddAttachment(initAttachment(attachmentNames[i], colorAttachmentFormats[i],
-			vk::ImageUsageFlagBits::eColorAttachment, vk::ImageLayout::eColorAttachmentOptimal, false));
+		m_attachments[i] = initAttachment(attachmentNames[i], colorAttachmentFormats[i],
+			vk::ImageUsageFlagBits::eColorAttachment, vk::ImageLayout::eColorAttachmentOptimal, false);
 	}
 
 	vk::Format depthFormat = Device->pd->FindDepthFormat();
 
-	m_framebuffer.AddAttachment(initAttachment(attachmentNames[GDepth], depthFormat,
-		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal, true));
+	m_attachments[GDepth] = initAttachment(attachmentNames[GDepth], depthFormat,
+		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal, true);
 
-	m_framebuffer.Generate(renderPass);
-}
+	std::array views = { m_attachments[GPosition]->GetView(), m_attachments[GNormal]->GetView(),
+		m_attachments[GAlbedo]->GetView(), m_attachments[GSpecular]->GetView(), m_attachments[GEmissive]->GetView(),
+		m_attachments[GDepth]->GetView() };
 
-void GBuffer::TransitionForAttachmentWrite(vk::CommandBuffer* cmdBuffer)
-{
-	PROFILE_SCOPE(Renderer);
+	vk::FramebufferCreateInfo createInfo{};
+	createInfo
+		.setRenderPass(renderPass) //
+		.setAttachmentCount(static_cast<uint32>(views.size()))
+		.setPAttachments(views.data())
+		.setWidth(width)
+		.setHeight(height)
+		.setLayers(1);
 
-	m_framebuffer.TransitionForAttachmentWrite(cmdBuffer);
-}
+	m_framebuffer = Device->createFramebufferUnique(createInfo);
 
-void GBuffer::UpdateDescriptorSet()
-{
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
-	auto& atts = m_framebuffer.GetAttachments();
-
+	// update descriptor set (WIP: is this once?
 	for (uint32 i = 0; i < GCount; ++i) {
 
 		vk::DescriptorImageInfo imageInfo{};
 		imageInfo
 			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-			.setImageView(atts[i]->GetView())
+			.setImageView(m_attachments[i]->GetView())
 			.setSampler(quadSampler);
 
 		vk::WriteDescriptorSet descriptorWrite{};
@@ -70,4 +72,28 @@ void GBuffer::UpdateDescriptorSet()
 		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 	}
 }
+
+void GBuffer::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
+{
+	PROFILE_SCOPE(Renderer);
+
+	auto recordTransition = [&](auto& attachment) {
+		auto target = !attachment->IsDepth() ? vk::ImageLayout::eColorAttachmentOptimal
+											 : vk::ImageLayout::eDepthStencilAttachmentOptimal;
+
+		auto barrier = attachment->CreateTransitionBarrier(vk::ImageLayout::eShaderReadOnlyOptimal, target);
+
+		vk::PipelineStageFlags sourceStage = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		vk::PipelineStageFlags destinationStage = GetPipelineStage(target);
+
+		cmdBuffer->pipelineBarrier(
+			sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+	};
+
+	for (auto& att : m_attachments) {
+		recordTransition(att);
+	}
+}
+
 } // namespace vl

@@ -291,8 +291,8 @@ void InitVulkan()
 	init.CheckVkResultFn = nullptr;
 	ImGui_ImplVulkan_Init(&init, vl::Swapchain->GetRenderPass());
 
-
-	auto cmdBuffer = vl::Device->transferCmdBuffer;
+	// CHECK: which buffer
+	auto cmdBuffer = vl::Device->graphicsCmdBuffer;
 
 	//	vkCall(vkResetCommandPool(m_device, m_commandPool, 0));
 
@@ -310,8 +310,8 @@ void InitVulkan()
 
 	cmdBuffer.end();
 
-	vl::Device->transferQueue.submit(1, &end_info, {});
-	vl::Device->transferQueue.waitIdle();
+	vl::Device->graphicsQueue.submit(1, &end_info, {});
+	vl::Device->graphicsQueue.waitIdle();
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }

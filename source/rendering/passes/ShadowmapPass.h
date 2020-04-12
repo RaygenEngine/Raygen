@@ -17,7 +17,7 @@ public:
 	ShadowmapPass();
 	void MakePipeline();
 
-	void RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& viewport, const vk::Rect2D& scissor);
+	void RecordCmd(vk::CommandBuffer* cmdBuffer);
 
 	[[nodiscard]] vk::RenderPass GetRenderPass() const { return m_renderPass.get(); }
 };

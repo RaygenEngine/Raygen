@@ -74,5 +74,8 @@ public:
 
 	[[nodiscard]] GBuffer* GetGBuffer() const { return m_gBuffer.get(); }
 
+	// WIP: remove
+	vk::RenderPass GetShadowmapRenderPass() const { return m_shadowmapPass.GetRenderPass(); }
+
 } * Renderer{};
 } // namespace vl

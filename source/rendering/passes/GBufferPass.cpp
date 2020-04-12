@@ -292,95 +292,80 @@ void GBufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& vi
 {
 	PROFILE_SCOPE(Renderer);
 
-	if (Input.IsJustPressed(Key::Comma)) {
-		Device->waitIdle();
-		MakePipeline();
-		LOG_REPORT("Remade pipeline");
-		Device->waitIdle();
-	}
 
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
+	vk::RenderPassBeginInfo renderPassInfo{};
+	renderPassInfo
+		.setRenderPass(m_renderPass.get()) //
+		.setFramebuffer(Renderer->GetGBuffer()->GetFramebuffer());
+	renderPassInfo.renderArea
+		.setOffset({ 0, 0 }) //
+		.setExtent(scissor.extent);
 
-	// begin command buffer recording
-	cmdBuffer->begin(beginInfo);
+	std::array<vk::ClearValue, 6> clearValues = {};
+	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	clearValues[1].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	clearValues[2].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	clearValues[3].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	clearValues[4].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	clearValues[5].setDepthStencil({ 1.0f, 0 });
+	renderPassInfo
+		.setClearValueCount(static_cast<uint32>(clearValues.size())) //
+		.setPClearValues(clearValues.data());
+
+	// PERF: needs render pass?
+	// begin render pass
+	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	{
-		vk::RenderPassBeginInfo renderPassInfo{};
-		renderPassInfo
-			.setRenderPass(m_renderPass.get()) //
-			.setFramebuffer(Renderer->GetGBuffer()->GetFramebuffer());
-		renderPassInfo.renderArea
-			.setOffset({ 0, 0 }) //
-			.setExtent(scissor.extent);
+		auto camera = Scene->GetActiveCamera();
+		if (!camera) {
+			cmdBuffer->endRenderPass();
+			cmdBuffer->end();
+			return;
+		}
 
-		std::array<vk::ClearValue, 6> clearValues = {};
-		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-		clearValues[1].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-		clearValues[2].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-		clearValues[3].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-		clearValues[4].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-		clearValues[5].setDepthStencil({ 1.0f, 0 });
-		renderPassInfo
-			.setClearValueCount(static_cast<uint32>(clearValues.size())) //
-			.setPClearValues(clearValues.data());
+		// descriptor sets
+		cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
+			&Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
-		// PERF: needs render pass?
-		// begin render pass
-		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-		{
-			auto camera = Scene->GetActiveCamera();
-			if (!camera) {
-				cmdBuffer->endRenderPass();
-				cmdBuffer->end();
-				return;
+		// Dynamic viewport & scissor
+		cmdBuffer->setViewport(0, { viewport });
+		cmdBuffer->setScissor(0, { scissor });
+
+		// bind the graphics pipeline
+		cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+
+		for (auto model : Scene->geometries.elements) {
+			if (!model) {
+				continue;
 			}
 
-			// descriptor sets
-			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
-				&Scene->GetActiveCameraDescSet(), 0u, nullptr);
+			PushConstant pc{ //
+				model->transform, glm::inverseTranspose(glm::mat3(model->transform))
+			};
 
-			// Dynamic viewport & scissor
-			cmdBuffer->setViewport(0, { viewport });
-			cmdBuffer->setScissor(0, { scissor });
+			// Submit via push constant (rather than a UBO)
+			cmdBuffer->pushConstants(
+				m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
-			// bind the graphics pipeline
-			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+			for (auto& gg : model->model.Lock().geometryGroups) {
+				vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
+				vk::DeviceSize offsets[] = { 0 };
+				// geom
+				cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
 
-			for (auto model : Scene->geometries.elements) {
-				if (!model) {
-					continue;
-				}
+				// indices
+				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
 
-				PushConstant pc{ //
-					model->transform, glm::inverseTranspose(glm::mat3(model->transform))
-				};
+				// descriptor sets
+				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
+					&gg.material.Lock().descriptorSet, 0u, nullptr);
 
-				// Submit via push constant (rather than a UBO)
-				cmdBuffer->pushConstants(
-					m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-				for (auto& gg : model->model.Lock().geometryGroups) {
-					vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
-					vk::DeviceSize offsets[] = { 0 };
-					// geom
-					cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
-
-					// indices
-					cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
-
-					// descriptor sets
-					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-						&gg.material.Lock().descriptorSet, 0u, nullptr);
-
-					// draw call (triangle)
-					cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
-				}
+				// draw call (triangle)
+				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 			}
 		}
-		// end render pass
-		cmdBuffer->endRenderPass();
 	}
-	// end command buffer recording
-	cmdBuffer->end();
+	// end render pass
+	cmdBuffer->endRenderPass();
 }
 } // namespace vl

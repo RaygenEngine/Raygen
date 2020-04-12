@@ -24,14 +24,14 @@ void Scene_::UploadDirty()
 {
 	for (auto cam : cameras.elements) {
 		if (cam->isDirty[vl::Renderer_::currentFrame]) {
-			cam->Upload();
+			cam->UploadUbo(vl::Renderer_::currentFrame);
 			cam->isDirty[vl::Renderer_::currentFrame] = false;
 		}
 	}
 
 	for (auto sl : spotlights.elements) {
 		if (sl->isDirty[vl::Renderer_::currentFrame]) {
-			sl->Upload();
+			sl->UploadUbo(vl::Renderer_::currentFrame);
 			sl->isDirty[vl::Renderer_::currentFrame] = false;
 		}
 	}

@@ -1,8 +1,13 @@
 #pragma once
 
-#include "rendering/scene/SceneStructs.h"
+#include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/SceneCamera.h"
+#include "rendering/scene/SceneSpotlight.h"
 #include <functional>
 
+template<typename T>
+concept CSceneElem
+	= std::is_same_v<SceneGeometry, T> || std::is_same_v<SceneCamera, T> || std::is_same_v<SceneSpotlight, T>;
 
 template<CONC(CSceneElem) T>
 struct SceneVector {
@@ -70,11 +75,11 @@ inline struct Scene_ {
 		}
 		else if constexpr (std::is_same_v<SceneCamera, T>) {
 			uid = cameras.elements.size() + cameras.pendingElements++;
-			currentCmdBuffer->emplace_back([=]() { Scene->cameras.elements[uid] = new SceneCamera(size); });
+			currentCmdBuffer->emplace_back([=]() { Scene->cameras.elements[uid] = new SceneCamera(); });
 		}
 		else if constexpr (std::is_same_v<SceneSpotlight, T>) {
 			uid = spotlights.elements.size() + spotlights.pendingElements++;
-			currentCmdBuffer->emplace_back([=]() { Scene->spotlights.elements[uid] = new SceneSpotlight(size); });
+			currentCmdBuffer->emplace_back([=]() { Scene->spotlights.elements[uid] = new SceneSpotlight(); });
 		}
 
 		return uid;

@@ -55,8 +55,6 @@ Renderer_::Renderer_()
 	m_gBufferPass.MakePipeline();
 	m_shadowmapPass.MakePipeline();
 	m_spotlightPass.MakePipeline();
-
-	OnViewportResize();
 }
 
 Renderer_::~Renderer_()
@@ -71,8 +69,17 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 	auto viewport = Renderer->GetSceneViewport();
 	auto scissor = Renderer->GetSceneScissor();
 
-	m_gBufferPass.RecordCmd(cmdBuffer, viewport, scissor);
-	m_shadowmapPass.RecordCmd(cmdBuffer, viewport, scissor);
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
+
+	// begin command buffer recording
+	cmdBuffer->begin(beginInfo);
+	{
+		m_gBufferPass.RecordCmd(cmdBuffer, viewport, scissor);
+		m_shadowmapPass.RecordCmd(cmdBuffer);
+	}
+	// end command buffer recording
+	cmdBuffer->end();
 }
 
 void Renderer_::RecordDeferredPasses(vk::CommandBuffer* cmdBuffer)
@@ -104,14 +111,18 @@ void Renderer_::RecordDeferredPasses(vk::CommandBuffer* cmdBuffer)
 		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{
 			m_spotlightPass.RecordCmd(cmdBuffer, viewport, scissor);
+			// all lights
+			// post process
 			m_editorPass.RecordCmd(cmdBuffer);
 		}
 		cmdBuffer->endRenderPass();
 
-		m_gBuffer->TransitionForAttachmentWrite(cmdBuffer);
+		m_gBuffer->TransitionForWrite(cmdBuffer);
 
 		for (auto sl : Scene->spotlights.elements) {
-			sl->TransitionForAttachmentWrite(cmdBuffer);
+			if (sl->shadowmap) {
+				sl->shadowmap->TransitionForWrite(cmdBuffer);
+			}
 		}
 	}
 	cmdBuffer->end();
@@ -129,9 +140,6 @@ void Renderer_::OnViewportResize()
 	if (fbSize != m_viewportFramebufferSize) {
 		m_viewportFramebufferSize = fbSize;
 		m_gBuffer = std::make_unique<GBuffer>(m_gBufferPass.GetRenderPass(), fbSize.width, fbSize.height);
-		for (auto sl : Scene->spotlights.elements) {
-			sl->PrepareShadowmap(m_shadowmapPass.GetRenderPass(), fbSize.width, fbSize.height);
-		}
 	}
 }
 
