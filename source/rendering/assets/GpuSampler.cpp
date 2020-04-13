@@ -36,5 +36,6 @@ Sampler::Gpu::Gpu(PodHandle<Sampler> podHandle)
 		.setMinLod(0.f)
 		.setMaxLod(32.f); // CHECK:
 
+
 	sampler = vl::Device->createSamplerUnique(samplerInfo);
 }

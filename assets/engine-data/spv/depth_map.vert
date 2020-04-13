@@ -3,7 +3,7 @@
 
 // out
 
-layout(location=0) out vec2 uv;
+layout(location = 0) out vec2 uv;
 
 // in
 
@@ -31,3 +31,6 @@ void main() {
                                                     
                                                      
                                                      
+                                 
+                                   
+                                   

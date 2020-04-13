@@ -20,7 +20,7 @@ class PunctualLightNode;
 class GeometryNode;
 class SpotLightNode;
 class DirectionalLightNode;
-
+class ReflectionProbeNode;
 
 inline class World {
 
