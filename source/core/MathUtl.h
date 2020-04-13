@@ -5,7 +5,7 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 // CHECK:
-#define GLM_FORCE_RIGHT_HANDED
+#define GLM_FORCE_LEFT_HANDED
 
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>

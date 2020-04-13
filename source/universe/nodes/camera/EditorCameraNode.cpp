@@ -51,17 +51,17 @@ void EditorCameraNode::UpdateFromEditor(float deltaTime)
 
 	// user rotation
 	if (input.IsMouseDragging()) {
-		const float yaw = -input.GetMouseDelta().x * m_turningSpeed * 0.5f;
-		const float pitch = -input.GetMouseDelta().y * m_turningSpeed * 0.5f;
+		const float yaw = input.GetMouseDelta().x * m_turningSpeed * 0.5f;
+		const float pitch = input.GetMouseDelta().y * m_turningSpeed * 0.5f;
 
 		applyTo->RotateNodeAroundAxisWCS(root->GetNodeUpWCS(), yaw);
 		applyTo->RotateNodeAroundAxisWCS(GetNodeRightWCS(), pitch);
 	}
 
 	if (!gamepad.IsRTResting()) {
-		const auto yaw = -gamepad.rs.GetXAxisValue() * 2.5f * m_turningSpeed * deltaTime;
+		const auto yaw = gamepad.rs.GetXAxisValue() * 2.5f * m_turningSpeed * deltaTime;
 		// upside down with regards to the cursor dragging
-		const auto pitch = -gamepad.rs.GetYAxisValue() * 2.5f * m_turningSpeed * deltaTime;
+		const auto pitch = gamepad.rs.GetYAxisValue() * 2.5f * m_turningSpeed * deltaTime;
 
 		applyTo->RotateNodeAroundAxisWCS(root->GetNodeUpWCS(), glm::radians(yaw));
 		applyTo->RotateNodeAroundAxisWCS(GetNodeRightWCS(), glm::radians(pitch));
