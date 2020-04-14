@@ -8,6 +8,7 @@
 #include "rendering/passes/GBufferPass.h"
 #include "rendering/passes/ShadowmapPass.h"
 #include "rendering/passes/SpotlightPass.h"
+#include "rendering/passes/AmbientPass.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/Swapchain.h"
 
@@ -31,6 +32,7 @@ inline class Renderer_ : public Listener {
 	GBufferPass m_gBufferPass;
 	ShadowmapPass m_shadowmapPass;
 	SpotlightPass m_spotlightPass;
+	AmbientPass m_ambientPass;
 	EditorPass m_editorPass;
 
 	UniquePtr<GBuffer> m_gBuffer;

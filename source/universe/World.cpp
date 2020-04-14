@@ -12,6 +12,7 @@
 #include "universe/nodes/light/DirectionalLightNode.h"
 #include "universe/nodes/light/PunctualLightNode.h"
 #include "universe/nodes/light/SpotLightNode.h"
+#include "universe/nodes/light/ReflectionProbeNode.h"
 #include "universe/nodes/RootNode.h"
 
 World::World(NodeFactory* factory)
@@ -74,7 +75,6 @@ void World::LoadAndPrepareWorld(const fs::path& scene)
 
 	m_root = std::make_unique<RootNode>();
 
-
 	m_nodeFactory->LoadChildren(m_loadedFrom, m_root.get());
 	m_root->m_dirty.set();
 
@@ -93,6 +93,7 @@ void World::LoadAndPrepareWorld(const fs::path& scene)
 void World::DirtyUpdateWorld()
 {
 	m_isIteratingNodeSet = true;
+
 	// PERF: Possible to use unordered_set for dirty nodes
 	for (auto* node : m_nodes) {
 		if (node->m_dirty.any()) {

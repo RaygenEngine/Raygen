@@ -75,4 +75,14 @@ inline vk::ImageAspectFlags GetAspectMask(const vk::ImageCreateInfo& ici)
 	}
 	return aspectMask;
 }
+
+inline vk::Format GetFormat(ImageFormat format)
+{
+	switch (format) {
+		case ImageFormat::Hdr: return vk::Format::eR32G32B32A32Sfloat; break;
+		case ImageFormat::Srgb: return vk::Format::eR8G8B8A8Srgb; break;
+		case ImageFormat::Unorm: return vk::Format::eR8G8B8A8Unorm; break;
+	}
+}
+
 } // namespace vl

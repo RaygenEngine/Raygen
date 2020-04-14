@@ -33,6 +33,9 @@ public:
 	template<>
 	void Load<Shader>(PodHandle<Shader> handle);
 
+	template<>
+	void Load<Cubemap>(PodHandle<Cubemap> handle);
+
 
 	template<CONC(CAssetPod) T>
 	GpuHandle<T> GetGpuHandle(PodHandle<T> handle)

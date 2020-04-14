@@ -8,7 +8,7 @@ namespace vl {
 Image2D::Image2D(uint32 width, uint32 height, uint32 mipLevels, vk::Format format, vk::ImageTiling tiling,
 	vk::ImageLayout initalLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
 	: Image(vk::ImageType::e2D, { width, height, 1u }, mipLevels, 1u, format, tiling, initalLayout, usage,
-		vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, properties)
+		vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, {}, properties)
 {
 	auto testComp = m_imageInfo.extent.width >= 1 && m_imageInfo.extent.height >= 1 && m_imageInfo.extent.depth == 1
 					&& m_imageInfo.arrayLayers >= 1 && m_imageInfo.samples == vk::SampleCountFlagBits::e1;

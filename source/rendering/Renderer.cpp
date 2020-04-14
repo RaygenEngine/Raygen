@@ -55,6 +55,7 @@ Renderer_::Renderer_()
 	m_gBufferPass.MakePipeline();
 	m_shadowmapPass.MakePipeline();
 	m_spotlightPass.MakePipeline();
+	m_ambientPass.MakePipeline();
 }
 
 Renderer_::~Renderer_()
@@ -112,6 +113,7 @@ void Renderer_::RecordDeferredPasses(vk::CommandBuffer* cmdBuffer)
 		{
 			m_spotlightPass.RecordCmd(cmdBuffer, viewport, scissor);
 			// all lights
+			m_ambientPass.RecordCmd(cmdBuffer, viewport, scissor);
 			// post process
 			m_editorPass.RecordCmd(cmdBuffer);
 		}

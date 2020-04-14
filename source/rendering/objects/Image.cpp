@@ -9,7 +9,7 @@
 namespace vl {
 Image::Image(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
 	vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage, vk::SampleCountFlagBits samples,
-	vk::SharingMode sharingMode, vk::MemoryPropertyFlags properties)
+	vk::SharingMode sharingMode, vk::ImageCreateFlags flags, vk::MemoryPropertyFlags properties)
 {
 	m_imageInfo //
 		.setImageType(imageType)
@@ -21,7 +21,8 @@ Image::Image(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uin
 		.setInitialLayout(initialLayout)
 		.setUsage(usage)
 		.setSamples(samples)
-		.setSharingMode(sharingMode);
+		.setSharingMode(sharingMode)
+		.setFlags(flags);
 
 	m_handle = Device->createImageUnique(m_imageInfo);
 

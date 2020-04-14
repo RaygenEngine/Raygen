@@ -4,6 +4,7 @@
 // location to include them is prefered over changing multiple cpp files when a new pod is added.
 
 #include "assets/pods/Animation.h"
+#include "assets/pods/Cubemap.h"
 #include "assets/pods/Image.h"
 #include "assets/pods/Material.h"
 #include "assets/pods/Mesh.h"

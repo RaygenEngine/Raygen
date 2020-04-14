@@ -4,7 +4,7 @@
 #include <algorithm>
 // When adding a pod, add it to both of these
 
-#define ENGINE_POD_TYPES ::Image, Material, Mesh, Shader, Sampler, SkinnedMesh, Animation
+#define ENGINE_POD_TYPES ::Image, Material, Mesh, Shader, Sampler, SkinnedMesh, Animation, ::Cubemap
 
 // Can be macroed
 struct Image;
@@ -14,6 +14,7 @@ struct Shader;
 struct Sampler;
 struct SkinnedMesh;
 struct Animation;
+struct Cubemap;
 
 
 // Returns the default uid for this pod in the asset manager, all pod handles are initialized with the the valid

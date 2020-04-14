@@ -22,7 +22,8 @@ protected:
 
 	Image(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
 		vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage,
-		vk::SampleCountFlagBits samples, vk::SharingMode sharingMode, vk::MemoryPropertyFlags properties);
+		vk::SampleCountFlagBits samples, vk::SharingMode sharingMode, vk::ImageCreateFlags flags,
+		vk::MemoryPropertyFlags properties);
 
 public:
 	// Blocking transition to layout
