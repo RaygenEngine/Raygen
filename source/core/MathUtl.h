@@ -1,9 +1,12 @@
 #pragma once
 
+//#define GLM_FORCE_MESSAGES
 #define GLM_ENABLE_EXPERIMENTAL
-#define GLM_FORCE_CXX17
+#define GLM_FORCE_CXX2A
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+// CHECK: test build times?
+#define GLM_FORCE_SWIZZLE
 // CHECK:
 #define GLM_FORCE_LEFT_HANDED
 

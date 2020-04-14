@@ -61,7 +61,12 @@ void CameraNode::DirtyUpdate(DirtyFlagset flags)
 
 		Enqueue([&](SceneCamera& cam) {
 			cam.ubo.position = glm::vec4(GetNodePositionWCS(), 1.f);
+			cam.ubo.view = m_viewMatrix;
+			cam.ubo.proj = m_projectionMatrix;
 			cam.ubo.viewProj = m_viewProjectionMatrix;
+			cam.ubo.viewInv = glm::inverse(m_viewMatrix);
+			cam.ubo.projInv = glm::inverse(m_projectionMatrix);
+			cam.ubo.viewProjInv = glm::inverse(m_viewProjectionMatrix);
 		});
 	}
 
@@ -70,7 +75,12 @@ void CameraNode::DirtyUpdate(DirtyFlagset flags)
 
 		Enqueue([&](SceneCamera& cam) {
 			cam.ubo.position = glm::vec4(GetNodePositionWCS(), 1.f);
+			cam.ubo.view = m_viewMatrix;
+			cam.ubo.proj = m_projectionMatrix;
 			cam.ubo.viewProj = m_viewProjectionMatrix;
+			cam.ubo.viewInv = glm::inverse(m_viewMatrix);
+			cam.ubo.projInv = glm::inverse(m_projectionMatrix);
+			cam.ubo.viewProjInv = glm::inverse(m_viewProjectionMatrix);
 		});
 	}
 }
