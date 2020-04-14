@@ -9,8 +9,6 @@
 #include "universe/NodeFactory.h"
 #include "universe/nodes/camera/CameraNode.h"
 #include "universe/nodes/geometry/GeometryNode.h"
-#include "universe/nodes/light/DirectionalLightNode.h"
-#include "universe/nodes/light/PunctualLightNode.h"
 #include "universe/nodes/light/SpotLightNode.h"
 #include "universe/nodes/light/ReflectionProbeNode.h"
 #include "universe/nodes/RootNode.h"

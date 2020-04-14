@@ -152,7 +152,7 @@ void ShadowmapPass::MakePipeline()
 		.setRasterizerDiscardEnable(VK_FALSE)
 		.setPolygonMode(vk::PolygonMode::eFill)
 		.setLineWidth(1.f)
-		.setCullMode(vk::CullModeFlagBits::eNone)
+		.setCullMode(vk::CullModeFlagBits::eBack)
 		.setFrontFace(vk::FrontFace::eClockwise)
 		.setDepthBiasEnable(VK_FALSE)
 		.setDepthBiasConstantFactor(0.f)
@@ -251,9 +251,9 @@ void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
 		vk::Viewport viewport{};
 		viewport
 			.setX(0) //
-			.setY(static_cast<float>(vpSize.height))
+			.setY(0)
 			.setWidth(static_cast<float>(vpSize.width))
-			.setHeight(-static_cast<float>(vpSize.height))
+			.setHeight(static_cast<float>(vpSize.height))
 			.setMinDepth(0.f)
 			.setMaxDepth(1.f);
 

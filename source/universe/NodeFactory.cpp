@@ -7,8 +7,6 @@
 #include "universe/nodes/camera/CameraNode.h"
 #include "universe/nodes/camera/WindowCameraNode.h"
 #include "universe/nodes/geometry/GeometryNode.h"
-#include "universe/nodes/light/DirectionalLightNode.h"
-#include "universe/nodes/light/PunctualLightNode.h"
 #include "universe/nodes/light/SpotLightNode.h"
 #include "universe/nodes/light/ReflectionProbeNode.h"
 #include "universe/nodes/TransformNode.h"
@@ -23,8 +21,8 @@ using json = nlohmann::json;
 
 void NodeFactory::RegisterNodes()
 {
-	RegisterListToFactory<CameraNode, WindowCameraNode, GeometryNode, DirectionalLightNode, PunctualLightNode,
-		SpotLightNode, FreeformUserNode, TransformNode, FlyingUserNode, ReflectionProbeNode>();
+	RegisterListToFactory<CameraNode, WindowCameraNode, GeometryNode, SpotLightNode, FreeformUserNode, TransformNode,
+		FlyingUserNode, ReflectionProbeNode>();
 }
 
 Node* NodeFactory::NewNodeFromType(const std::string& type)
