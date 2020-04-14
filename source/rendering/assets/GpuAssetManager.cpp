@@ -9,6 +9,7 @@
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuSampler.h"
 #include "rendering/assets/GpuShader.h"
+#include "rendering/assets/GpuCubemap.h"
 
 
 #define DECLARE_LOADER(Pod)                                                                                            \
@@ -24,6 +25,7 @@ DECLARE_LOADER(Material);
 DECLARE_LOADER(Sampler);
 DECLARE_LOADER(::Image);
 DECLARE_LOADER(Shader);
+DECLARE_LOADER(::Cubemap);
 
 void Dummy()
 {
@@ -32,6 +34,7 @@ void Dummy()
 	GpuAssetManager->Load<Sampler>({});
 	GpuAssetManager->Load<::Image>({});
 	GpuAssetManager->Load<Shader>({});
+	GpuAssetManager->Load<::Cubemap>({});
 }
 
 vk::Sampler GpuAssetManager_::GetDefaultSampler()

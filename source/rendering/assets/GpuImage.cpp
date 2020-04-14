@@ -20,12 +20,7 @@ using namespace vl;
 	// copy data to buffer
 	stagingBuffer.UploadData(imgData->data.data(), static_cast<size_t>(imageSize));
 
-	vk::Format format;
-	switch (imgData->format) {
-		case ImageFormat::Hdr: format = vk::Format::eR32G32B32A32Sfloat; break;
-		case ImageFormat::Srgb: format = vk::Format::eR8G8B8A8Srgb; break;
-		case ImageFormat::Unorm: format = vk::Format::eR8G8B8A8Unorm; break;
-	}
+	vk::Format format = GetFormat(imgData->format);
 
 	uint32 mipLevels = static_cast<uint32>(std::floor(std::log2(glm::max(imgData->width, imgData->height)))) + 1;
 

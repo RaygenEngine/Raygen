@@ -30,5 +30,10 @@ Layouts_::Layouts_()
 	spotlightDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
 	spotlightDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	spotlightDescLayout.Generate();
+
+	// ambient (TODO: reflection probes etc
+	ambientDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
+	ambientDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+	ambientDescLayout.Generate();
 }
 } // namespace vl

@@ -10,6 +10,7 @@ inline struct Layouts_ {
 	DescriptorLayout gBufferDescLayout;
 	DescriptorLayout cameraDescLayout;
 	DescriptorLayout spotlightDescLayout;
+	DescriptorLayout ambientDescLayout;
 
 	Layouts_();
 

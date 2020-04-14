@@ -57,3 +57,14 @@ void AdditionalSerializeBoth(Archive& ar, Mesh* pod)
 {
 	ar(pod->geometryGroups);
 }
+
+
+//
+// Cubemap
+//
+
+template<typename Archive>
+void serialize(Archive& ar, Cubemap* pod)
+{
+	ar(pod);
+}

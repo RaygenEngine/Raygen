@@ -14,11 +14,6 @@ vk::DescriptorSet Scene_::GetActiveCameraDescSet()
 	return GetActiveCamera()->descSets[vl::Renderer_::currentFrame];
 }
 
-vk::DescriptorSet Scene_::GetActiveSpotlightDescSet() const
-{
-	return spotlights.elements.at(0)->descSets[vl::Renderer_::currentFrame];
-}
-
 // WIP: we should have a dirty per frace
 void Scene_::UploadDirty()
 {
@@ -33,6 +28,13 @@ void Scene_::UploadDirty()
 		if (sl->isDirty[vl::Renderer_::currentFrame]) {
 			sl->UploadUbo(vl::Renderer_::currentFrame);
 			sl->isDirty[vl::Renderer_::currentFrame] = false;
+		}
+	}
+
+	for (auto rp : reflProbs.elements) {
+		if (rp->isDirty[vl::Renderer_::currentFrame]) {
+			rp->UploadUbo(vl::Renderer_::currentFrame);
+			rp->isDirty[vl::Renderer_::currentFrame] = false;
 		}
 	}
 }

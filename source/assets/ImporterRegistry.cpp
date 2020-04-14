@@ -4,10 +4,11 @@
 #include "assets/importers/GltfImporter.h"
 #include "assets/importers/ImageImporter.h"
 #include "assets/importers/ShaderImporter.h"
+#include "assets/importers/CubemapImporter.h"
 
 ImporterRegistry::ImporterRegistry()
 {
-	RegisterImporters<ImageImporter, GltfImporter, ShaderImporter>();
+	RegisterImporters<ImageImporter, GltfImporter, ShaderImporter, CubemapImporter>();
 }
 
 BasePodHandle ImporterRegistry::ImportImpl(const fs::path& path, mti::TypeId& outHandleType)

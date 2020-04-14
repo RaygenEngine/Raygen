@@ -1,13 +1,15 @@
 #pragma once
-
-#include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/SceneCamera.h"
+#include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/SceneReflectionProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
+
 #include <functional>
 
 template<typename T>
 concept CSceneElem
-	= std::is_same_v<SceneGeometry, T> || std::is_same_v<SceneCamera, T> || std::is_same_v<SceneSpotlight, T>;
+	= std::is_same_v<SceneGeometry,
+		  T> || std::is_same_v<SceneCamera, T> || std::is_same_v<SceneSpotlight, T> || std::is_same_v<SceneReflectionProbe, T>;
 
 template<CONC(CSceneElem) T>
 struct SceneVector {
@@ -26,6 +28,7 @@ inline struct Scene_ {
 	SceneVector<SceneGeometry> geometries;
 	SceneVector<SceneCamera> cameras;
 	SceneVector<SceneSpotlight> spotlights;
+	SceneVector<SceneReflectionProbe> reflProbs;
 
 	std::vector<UniquePtr<std::vector<std::function<void()>>>> cmds;
 
@@ -48,6 +51,9 @@ inline struct Scene_ {
 		}
 		else if constexpr (std::is_same_v<SceneSpotlight, T>) {
 			return spotlights.elements.at(uid);
+		}
+		else if constexpr (std::is_same_v<SceneReflectionProbe, T>) {
+			return reflProbs.elements.at(uid);
 		}
 		LOG_ABORT("Incorrect type");
 	}
@@ -81,6 +87,10 @@ inline struct Scene_ {
 			uid = spotlights.elements.size() + spotlights.pendingElements++;
 			currentCmdBuffer->emplace_back([=]() { Scene->spotlights.elements[uid] = new SceneSpotlight(); });
 		}
+		else if constexpr (std::is_same_v<SceneReflectionProbe, T>) {
+			uid = reflProbs.elements.size() + reflProbs.pendingElements++;
+			currentCmdBuffer->emplace_back([=]() { Scene->reflProbs.elements[uid] = new SceneReflectionProbe(); });
+		}
 
 		return uid;
 	}
@@ -110,6 +120,13 @@ inline struct Scene_ {
 				delete elem;
 			});
 		}
+		else if constexpr (std::is_same_v<SceneReflectionProbe, T>) {
+			currentCmdBuffer->emplace_back([uid]() {
+				auto elem = static_cast<T*>(Scene->reflProbs.elements[uid]);
+				Scene->reflProbs.elements[uid] = nullptr;
+				delete elem;
+			});
+		}
 	}
 
 
@@ -131,6 +148,7 @@ private:
 		geometries.AppendPendingElements();
 		cameras.AppendPendingElements();
 		spotlights.AppendPendingElements();
+		reflProbs.AppendPendingElements();
 	}
 
 public:
@@ -172,7 +190,6 @@ public:
 
 	// WIP: remove
 	vk::DescriptorSet GetActiveCameraDescSet();
-	vk::DescriptorSet GetActiveSpotlightDescSet() const;
 
 	void UploadDirty();
 
