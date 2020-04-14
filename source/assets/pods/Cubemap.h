@@ -12,12 +12,12 @@ struct Cubemap : AssetPod {
 
 	enum : int32
 	{
-		Front = 0,
-		Back = 1,
+		Right = 0,
+		Left = 1,
 		Up = 2,
 		Down = 3,
-		Right = 4,
-		Left = 5,
+		Front = 4,
+		Back = 5
 	};
 
 	REFLECTED_POD(Cubemap)

@@ -553,6 +553,9 @@ void PropertyEditorWindow::Run_ImGuizmo(Node* node)
 	auto cameraView = camera->GetViewMatrix();
 	auto cameraProj = camera->GetProjectionMatrix();
 
+	// TODO:
+	cameraProj[1][1] *= -1.0;
+
 	auto nodeMatrix = node->GetNodeTransformWCS();
 
 	// auto i = glm::identity<glm::mat4>();
