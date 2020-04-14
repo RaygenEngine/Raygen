@@ -12,7 +12,8 @@ void SpotLightNode::RecalculateProjectionMatrix()
 {
 	const auto ar = static_cast<float>(m_shadowMapWidth) / static_cast<float>(m_shadowMapHeight);
 	m_projectionMatrix = glm::perspective(m_outerAperture, ar, m_near, m_far);
-
+	// Vulkan's inverted y
+	m_projectionMatrix[1][1] *= -1.f;
 	RecalculateViewProjectionMatrix();
 }
 

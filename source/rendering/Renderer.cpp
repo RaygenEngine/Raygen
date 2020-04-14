@@ -238,9 +238,9 @@ vk::Viewport Renderer_::GetSceneViewport() const
 	vk::Viewport viewport{};
 	viewport
 		.setX(0) //
-		.setY(static_cast<float>(vpSize.height))
+		.setY(0)
 		.setWidth(static_cast<float>(vpSize.width))
-		.setHeight(-static_cast<float>(vpSize.height))
+		.setHeight(static_cast<float>(vpSize.height))
 		.setMinDepth(0.f)
 		.setMaxDepth(1.f);
 	return viewport;

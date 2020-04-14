@@ -34,7 +34,8 @@ void CameraNode::RecalculateProjectionFov()
 	const auto left = tan(-m_hFov / 2.f - m_hFovOffset) * m_near;
 
 	m_projectionMatrix = glm::frustum(left, right, bottom, top, m_near, m_far);
-
+	// Vulkan's inverted y
+	m_projectionMatrix[1][1] *= -1.f;
 	RecalculateViewProjectionMatrix();
 }
 
