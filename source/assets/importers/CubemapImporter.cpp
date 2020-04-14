@@ -22,12 +22,13 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 	std::string newFilePath;
 
 	static std::unordered_map<std::string, int32> imageNames = {
-		{ "up", CubemapFace::Up },
-		{ "down", CubemapFace::Down },
-		{ "right", CubemapFace::Right },
-		{ "left", CubemapFace::Left },
-		{ "front", CubemapFace::Front },
-		{ "back", CubemapFace::Back },
+		{ "front", Cubemap::Front },
+		{ "back", Cubemap::Back },
+		{ "up", Cubemap::Up },
+		{ "down", Cubemap::Down },
+		{ "right", Cubemap::Right },
+		{ "left", Cubemap::Left },
+
 	};
 
 	auto& [handle, pod]

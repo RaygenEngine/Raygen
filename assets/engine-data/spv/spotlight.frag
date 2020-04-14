@@ -23,9 +23,14 @@ layout(set = 0, binding = 4) uniform sampler2D emissiveSampler;
 layout(set = 0, binding = 5) uniform sampler2D depthSampler;
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
-    vec3 position;
+	vec3 position;
 	float pad0;
+	mat4 view;
+	mat4 proj;
 	mat4 viewProj;
+	mat4 viewInv;
+	mat4 projInv;
+	mat4 viewProjInv;
 } camera;
 
 layout(set = 2, binding = 0) uniform UBO_Spotlight {

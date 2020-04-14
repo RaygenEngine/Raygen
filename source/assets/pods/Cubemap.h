@@ -6,18 +6,19 @@
 
 #include <array>
 
-enum CubemapFace : int32
-{
-	Up = 0,
-	Down = 1,
-	Right = 2,
-	Left = 3,
-	Front = 4,
-	Back = 5
-};
 
 // DOC: currently Hdr only for IBL support, TODO: split
 struct Cubemap : AssetPod {
+
+	enum : int32
+	{
+		Front = 0,
+		Back = 1,
+		Up = 2,
+		Down = 3,
+		Right = 4,
+		Left = 5,
+	};
 
 	REFLECTED_POD(Cubemap)
 	{

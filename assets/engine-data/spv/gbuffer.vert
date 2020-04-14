@@ -28,7 +28,12 @@ layout(push_constant) uniform ModelData {
 layout(set = 1, binding = 0) uniform UBO_Camera {
 	vec3 position;
 	float pad0;
+	mat4 view;
+	mat4 proj;
 	mat4 viewProj;
+	mat4 viewInv;
+	mat4 projInv;
+	mat4 viewProjInv;
 } camera;
 
 void main() {
