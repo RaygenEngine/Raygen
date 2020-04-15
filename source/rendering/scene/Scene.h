@@ -31,7 +31,6 @@ inline struct Scene_ {
 	SceneVector<SceneReflectionProbe> reflProbs;
 
 	std::vector<UniquePtr<std::vector<std::function<void()>>>> cmds;
-
 	std::vector<std::function<void()>>* currentCmdBuffer;
 
 	std::mutex cmdBuffersVectorMutex;
@@ -103,6 +102,8 @@ inline struct Scene_ {
 			currentCmdBuffer->emplace_back([uid]() {
 				auto elem = static_cast<T*>(Scene->geometries.elements[uid]);
 				Scene->geometries.elements[uid] = nullptr;
+				// TODO: deferred deleting of scene objects
+				vl::Device->waitIdle();
 				delete elem;
 			});
 		}
@@ -110,6 +111,7 @@ inline struct Scene_ {
 			currentCmdBuffer->emplace_back([uid]() {
 				auto elem = static_cast<T*>(Scene->cameras.elements[uid]);
 				Scene->cameras.elements[uid] = nullptr;
+				vl::Device->waitIdle();
 				delete elem;
 			});
 		}
@@ -117,6 +119,7 @@ inline struct Scene_ {
 			currentCmdBuffer->emplace_back([uid]() {
 				auto elem = static_cast<T*>(Scene->spotlights.elements[uid]);
 				Scene->spotlights.elements[uid] = nullptr;
+				vl::Device->waitIdle();
 				delete elem;
 			});
 		}
@@ -124,11 +127,11 @@ inline struct Scene_ {
 			currentCmdBuffer->emplace_back([uid]() {
 				auto elem = static_cast<T*>(Scene->reflProbs.elements[uid]);
 				Scene->reflProbs.elements[uid] = nullptr;
+				vl::Device->waitIdle();
 				delete elem;
 			});
 		}
 	}
-
 
 	void EnqueueEndFrame()
 	{
@@ -174,6 +177,8 @@ public:
 		cmds.erase(cmds.begin(), cmds.begin() + end);
 	}
 
+	void DrainQueueForDestruction();
+
 	SceneCamera* GetActiveCamera()
 	{
 		if (cameras.elements.size() > activeCamera) { // PERF:
@@ -192,5 +197,8 @@ public:
 	vk::DescriptorSet GetActiveCameraDescSet();
 
 	void UploadDirty();
+
+
+	~Scene_() { DrainQueueForDestruction(); }
 
 } * Scene{};

@@ -44,6 +44,11 @@ SpotLightNode::SpotLightNode()
 	sceneUid = Scene->EnqueueCreateCmd<SceneSpotlight>();
 }
 
+SpotLightNode::~SpotLightNode()
+{
+	Scene->EnqueueDestroyCmd<SceneSpotlight>(sceneUid);
+}
+
 void SpotLightNode::DirtyUpdate(DirtyFlagset flags)
 {
 	// constexpr glm::mat4 biasMatrix(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);

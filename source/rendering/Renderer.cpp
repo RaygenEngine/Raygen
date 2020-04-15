@@ -27,8 +27,7 @@ namespace vl {
 
 Renderer_::Renderer_()
 {
-	Swapchain = new Swapchain_(Instance->surface);
-	Scene = new Scene_(Swapchain->GetImageCount());
+
 
 	vk::CommandBufferAllocateInfo allocInfo{};
 	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
@@ -58,11 +57,7 @@ Renderer_::Renderer_()
 	m_ambientPass.MakePipeline();
 }
 
-Renderer_::~Renderer_()
-{
-	delete Scene;
-	delete Swapchain;
-}
+Renderer_::~Renderer_() {}
 
 void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 {
@@ -122,7 +117,7 @@ void Renderer_::RecordDeferredPasses(vk::CommandBuffer* cmdBuffer)
 		m_gBuffer->TransitionForWrite(cmdBuffer);
 
 		for (auto sl : Scene->spotlights.elements) {
-			if (sl->shadowmap) {
+			if (sl && sl->shadowmap) {
 				sl->shadowmap->TransitionForWrite(cmdBuffer);
 			}
 		}

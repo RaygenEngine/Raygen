@@ -46,5 +46,7 @@ public:
 	[[nodiscard]] vk::Extent2D GetExtent2D() const { return { m_imageInfo.extent.width, m_imageInfo.extent.height }; }
 
 	[[nodiscard]] vk::DescriptorSet GetDebugDescriptor();
+
+	virtual ~Image() = default;
 };
 } // namespace vl

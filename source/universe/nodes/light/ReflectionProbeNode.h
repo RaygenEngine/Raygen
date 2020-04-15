@@ -22,6 +22,7 @@ public:
 	void DirtyUpdate(DirtyFlagset flags) override;
 
 	ReflectionProbeNode();
+	~ReflectionProbeNode() override;
 
 private:
 	size_t sceneUid;

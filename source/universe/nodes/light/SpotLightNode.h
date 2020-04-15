@@ -37,6 +37,7 @@ class SpotLightNode : public LightNode {
 
 public:
 	SpotLightNode();
+	~SpotLightNode() override;
 
 	void DirtyUpdate(DirtyFlagset flags) override;
 

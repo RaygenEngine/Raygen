@@ -70,8 +70,21 @@ void main() {
 
 	vec3 emissive = texture(emissiveSampler, uv).rgb;
 	vec4 specular = texture(specularSampler, uv);
+	vec3 albedo = texture(albedoOpacitySampler, uv).rgb;
 	
-	vec3 color = emissive + reflColor;
+	float metallic = specular.r;
+	float roughness = specular.g;
+	
+	
+	
+	metallic = (metallic * 0.4) + 0.15;
+	
+	
+	
+	vec3 specColor = mix(ambient.color * albedo, reflColor, 1-roughness);
+	
+	
+	vec3 color = emissive + specColor;
 	color = mix(color, color * specular.b, specular.a);
 	
 	outColor += vec4(color, 1);
@@ -119,3 +132,4 @@ void main() {
                                                                                                                         
                                                                                                                   
                                                                                                                   
+                                                                                                                         

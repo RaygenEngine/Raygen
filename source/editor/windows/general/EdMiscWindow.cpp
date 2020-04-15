@@ -59,6 +59,7 @@ void GBufferDebugWindow::ImguiDraw()
 
 
 	auto showAttachment = [&, shouldShowDescriptors](vl::ImageAttachment* att) {
+		ImGui::PushID(att);
 		if (ImGui::CollapsingHeader(att->GetName().c_str())) {
 			auto descrSet = att->GetDebugDescriptor();
 
@@ -76,6 +77,7 @@ void GBufferDebugWindow::ImguiDraw()
 				ImGui::Image(ImGui::GetIO().Fonts->TexID, size, ImVec2(0, 0), ImVec2(0, 0));
 			}
 		}
+		ImGui::PopID();
 	};
 
 	for (uint32 i = 0; i < vl::GCount; ++i) {
@@ -83,7 +85,7 @@ void GBufferDebugWindow::ImguiDraw()
 	}
 
 	for (auto sl : Scene->spotlights.elements) {
-		if (sl->shadowmap) {
+		if (sl && sl->shadowmap) {
 			showAttachment(sl->shadowmap->GetDepthAttachment());
 		}
 	}
