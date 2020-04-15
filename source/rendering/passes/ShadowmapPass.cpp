@@ -234,7 +234,7 @@ void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
 
 	for (auto sl : Scene->spotlights.elements) {
 
-		if (!sl->shadowmap) {
+		if (sl == nullptr || !sl->shadowmap) {
 			continue;
 		}
 

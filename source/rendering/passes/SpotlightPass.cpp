@@ -175,6 +175,9 @@ void SpotlightPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& 
 		&Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
 	for (auto sl : Scene->spotlights.elements) {
+		if (!sl) {
+			continue;
+		}
 
 		cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
 			&sl->descSets[Renderer_::currentFrame], 0u, nullptr);

@@ -8,6 +8,7 @@
 #include "rendering/Instance.h"
 #include "rendering/Renderer.h"
 #include "rendering/Layouts.h"
+#include "rendering/scene/Scene.h"
 
 namespace vl {
 
@@ -29,15 +30,24 @@ Layer_::Layer_()
 
 	Layouts = new Layouts_();
 
+	Swapchain = new Swapchain_(Instance->surface);
+	Scene = new Scene_(Swapchain->GetImageCount());
+
 	Renderer = new Renderer_();
 }
 
 Layer_::~Layer_()
 {
+	delete Renderer;
+
+	delete Swapchain;
+	delete Scene;
+
+	delete Layouts;
+
 	delete GpuAssetManager;
 	delete GpuResources;
 
-	delete Renderer;
 	delete Device;
 	delete Instance;
 }

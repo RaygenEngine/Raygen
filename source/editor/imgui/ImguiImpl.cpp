@@ -343,6 +343,7 @@ void ImguiImpl::NewFrame()
 
 void ImguiImpl::CleanupContext()
 {
+	vl::Device->waitIdle();
 	ImGui_ImplVulkan_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();

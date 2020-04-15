@@ -7,6 +7,11 @@ ReflectionProbeNode::ReflectionProbeNode()
 	sceneUid = Scene->EnqueueCreateCmd<SceneReflectionProbe>();
 }
 
+ReflectionProbeNode::~ReflectionProbeNode()
+{
+	Scene->EnqueueDestroyCmd<SceneReflectionProbe>(sceneUid);
+}
+
 
 void ReflectionProbeNode::DirtyUpdate(DirtyFlagset flags)
 {
