@@ -161,6 +161,10 @@ void AmbientPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& vi
 {
 	PROFILE_SCOPE(Renderer);
 
+	if (!Scene->GetActiveCamera()) {
+		return;
+	}
+
 	// bind the graphics pipeline
 	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 

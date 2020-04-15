@@ -160,6 +160,10 @@ void SpotlightPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& 
 {
 	PROFILE_SCOPE(Renderer);
 
+	if (!Scene->GetActiveCamera()) {
+		return;
+	}
+
 	// bind the graphics pipeline
 	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
