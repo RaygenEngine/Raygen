@@ -319,7 +319,6 @@ void GBufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& vi
 		auto camera = Scene->GetActiveCamera();
 		if (!camera) {
 			cmdBuffer->endRenderPass();
-			cmdBuffer->end();
 			return;
 		}
 
