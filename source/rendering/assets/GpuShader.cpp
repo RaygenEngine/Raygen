@@ -42,6 +42,7 @@ void Shader::Gpu::Z_Recompile()
 {
 	Compile(podPtr, this);
 	if (onCompile) {
+		vl::Device->waitIdle();
 		onCompile();
 	}
 }

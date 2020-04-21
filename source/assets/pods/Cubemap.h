@@ -32,10 +32,17 @@ struct Cubemap : AssetPod {
 		REFLECT_VAR(faces, NoEdit);
 	}
 
-	int32 width{ 0 };
-	int32 height{ 0 };
+	int32 width{ 1 };
+	int32 height{ 1 };
 
 	ImageFormat format{ ImageFormat::Unorm };
 
-	std::vector<PodHandle<::Image>> faces;
+	std::vector<PodHandle<::Image>> faces{
+		PodHandle<::Image>(),
+		PodHandle<::Image>(),
+		PodHandle<::Image>(),
+		PodHandle<::Image>(),
+		PodHandle<::Image>(),
+		PodHandle<::Image>(),
+	};
 };

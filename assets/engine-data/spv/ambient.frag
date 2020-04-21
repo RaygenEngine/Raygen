@@ -49,16 +49,42 @@ vec3 ReconstructWorldPosition(float depth)
 	return worldPos.xyz / worldPos.w; // return world space pos xyz
 }
 
-void main() {
+// Attempts to emulate the movement of the camera while reconstructing the world position for the sky.
+vec3 ReconstructWorldPosForSky(float depth)
+{
+	// clip space reconstruction
+	vec4 clipPos; 
+	clipPos.xy = uv.xy * 2.0 - 1;
+	clipPos.z = depth;
+	clipPos.w = 1.0;
+	
+	vec4 worldPos = camera.viewProjInv * clipPos;
+
+	// Probably should include fov for some of these calculations
+	const float maxMovementPercentage = 0.6;
+	vec3 movementEffect = camera.position / 500.0; // Units in world space. Max Movement occurs in 500*maxMovePerc to avoid extreme fish eye effect.
+	movementEffect.x = clamp(movementEffect.x, -maxMovementPercentage, maxMovementPercentage);
+	movementEffect.y = clamp(movementEffect.y, -maxMovementPercentage, maxMovementPercentage);
+	movementEffect.z = clamp(movementEffect.z, -maxMovementPercentage, maxMovementPercentage);
+	
+	worldPos += vec4(movementEffect, 0);
+	
+	return worldPos.xyz / worldPos.w; // return world space pos xyz
+}
+
+
+void main( ) {
 
 	float currentDepth = texture(depthSampler, uv).r;
 
 	outColor = vec4(0.0, 0.0, 0.0, 1.0);
 	
 	vec3 I = normalize(ReconstructWorldPosition(currentDepth) - camera.position);
-	
+
 	if(currentDepth == 1.0)
 	{
+		// ART:
+		I = normalize(ReconstructWorldPosForSky(currentDepth) - camera.position);
 		outColor = texture(skyboxSampler, I);
 		return;
 	}
@@ -77,10 +103,10 @@ void main() {
 	
 	
 	
-	metallic = (metallic * 0.4) + 0.15;
+	//metallic = (metallic * 0.4) + 0.15;
 	
 	
-	
+	// ART:
 	vec3 specColor = mix(ambient.color * albedo, reflColor, 1-roughness);
 	
 	
@@ -88,48 +114,7 @@ void main() {
 	color = mix(color, color * specular.b, specular.a);
 	
 	outColor += vec4(color, 1);
-}                               
-                                
-                                 
-                                  
-                                   
-                                    
-                                     
-                                            
-                                               
-                                                 
-                                                  
-                                                   
-                                                                                                                                    
-                                                                                                                                              
-                                                                                                                                               
-                                                                                                                                        
-                                                                                                                                         
-                                                                                                                                          
-                                                                                                                                           
-                                                                                                                                             
-                                                                                                                                             
-                                                                                                                                                
-                                                                                                                                                 
-                                                                                                                                                   
-                                                                                          
-                                                                                           
-                                                                                            
-                                                                                                
-                                                                                               
-                                                                                                 
-                                                                                                 
-                                                                                                   
-                                                                                                    
-                                                                                                    
-                                                                                                     
-                                                                                                           
-                                                                                                              
-                                                                                                                 
-                                                                                                                  
-                                                                                                                 
+}                                                                                                                          
+                                                                                                                                       
+                                                                                                                                                                 
                                                                                                                        
-                                                                                                                        
-                                                                                                                  
-                                                                                                                  
-                                                                                                                         

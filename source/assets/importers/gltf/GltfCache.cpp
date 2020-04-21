@@ -20,9 +20,12 @@ GltfCache::GltfCache(const fs::path& path)
 	CLOG_WARN(!warn.empty(), "Gltf Load warning for {}: {}", path, warn.c_str());
 	CLOG_ABORT(!err.empty(), "Gltf Load error for {}: {}", path, err.c_str());
 
+
+	ImporterManager->PushPath(std::string_view(filename));
 	LoadImages();
 	LoadSamplers();
 	LoadMaterials();
+	ImporterManager->PopPath();
 }
 
 

@@ -15,8 +15,7 @@ namespace ed {
 void OutlinerWindow::ImguiDraw()
 {
 
-	ImGui::BeginChild(
-		"Outliner", ImVec2(ImGui::GetWindowContentRegionWidth(), 300), false, ImGuiWindowFlags_HorizontalScrollbar);
+	ImGui::BeginChild("Outliner");
 	ImGui::Spacing();
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3.f, 6.f));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.f, 6.f));
