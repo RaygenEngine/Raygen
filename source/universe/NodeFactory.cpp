@@ -3,6 +3,7 @@
 
 #include "assets/util/ParsingUtl.h"
 #include "core/MathUtl.h"
+#include "engine/reflection/ReflectionDb.h"
 #include "reflection/ReflectionTools.h"
 #include "universe/nodes/camera/CameraNode.h"
 #include "universe/nodes/camera/WindowCameraNode.h"
@@ -21,17 +22,25 @@ using json = nlohmann::json;
 
 void NodeFactory::RegisterNodes()
 {
-	RegisterListToFactory<CameraNode, WindowCameraNode, GeometryNode, SpotLightNode, FreeformUserNode, TransformNode,
-		FlyingUserNode, ReflectionProbeNode>();
+	for (auto& entry : ReflectionDb::GetEntries()) {
+		auto* cl = entry.second;
+		if (cl->HasFlags(NodeFlags::NoUserCreated) || !cl->IsDerivedFrom<Node>()) {
+			continue;
+		}
+
+		m_nodeEntries.emplace(sceneconv::FilterNodeClassName(cl->GetName()), cl);
+	}
 }
 
 Node* NodeFactory::NewNodeFromType(const std::string& type)
 {
 	auto it = std::find_if(begin(m_nodeEntries), end(m_nodeEntries),
-		[type](auto& other) { return str::equalInsensitive(sceneconv::FilterNodeClassName(type), other.first); });
+		[type](auto& other) { //
+			return str::equalInsensitive(sceneconv::FilterNodeClassName(type), other.first);
+		});
 
 	if (it != m_nodeEntries.end()) {
-		return it->second.newInstance();
+		return it->second->CreateNodeInstance();
 	}
 
 	LOG_ABORT("Failed to find node registration for: {}", type);

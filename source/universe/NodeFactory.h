@@ -10,37 +10,12 @@ class Node;
 
 class NodeFactory : public Listener {
 
-	struct NodeClassEntry {
-		const ReflClass* classPtr;
-		std::function<Node*()> newInstance;
-	};
 
 	// PERF: use unordered map here. Ordered map enables the the editor to show the list alphabetically.
-	std::map<std::string, NodeClassEntry> m_nodeEntries;
+	std::map<std::string, const ReflClass*> m_nodeEntries;
 
 	friend class World;
 	friend class EditorObject_;
-
-protected:
-	template<typename T>
-	void RegisterTypeToFactory()
-	{
-		static_assert(std::is_base_of_v<Node, T> && !std::is_same_v<Node, T>, "You can only register Node subclasses");
-
-		std::string name{ sceneconv::FilterNodeClassName(refl::GetName<T>()) };
-
-		NodeClassEntry entry;
-		entry.classPtr = &T::StaticClass();
-		entry.newInstance = &T::NewInstance;
-
-		m_nodeEntries.insert({ name, entry });
-	}
-
-	template<typename... Nodes>
-	void RegisterListToFactory()
-	{
-		(RegisterTypeToFactory<Nodes>(), ...);
-	}
 
 
 public:

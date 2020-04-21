@@ -3,5 +3,5 @@
 
 class RootNode : public Node {
 
-	REFLECTED_NODE(RootNode, Node) {}
+	REFLECTED_NODE(RootNode, Node) { REFLECT_FLAGS(NodeFlags::NoUserCreated); }
 };
