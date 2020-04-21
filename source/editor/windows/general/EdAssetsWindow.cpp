@@ -49,8 +49,26 @@ void AssetsWindow::ReloadEntries()
 	ChangeDir(&m_root);
 }
 
+namespace {
+	bool IsInPath(FolderEntry* entry, FolderEntry* currentFolder)
+	{
+		FolderEntry* current = currentFolder;
 
-void AssetsWindow::DrawDirectoryToList(FolderEntry* folder)
+		if (entry->IsRoot()) {
+			return true;
+		}
+
+		while (!current->IsRoot()) {
+			if (current == entry) {
+				return true;
+			}
+			current = current->parent;
+		}
+		return false;
+	}
+} // namespace
+
+void AssetsWindow::DrawDirectoryToList(FolderEntry* folder, bool isInPath)
 {
 	ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick
 								   | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_FramePadding;
@@ -66,6 +84,10 @@ void AssetsWindow::DrawDirectoryToList(FolderEntry* folder)
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0.f, 3.f });
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 15.f, 0.f });
 
+	if (isInPath && m_reopenPath) {
+		ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+	}
+
 	bool open = ImGui::TreeNodeEx(folder->name.c_str(), nodeFlags);
 	ImGui::PopStyleVar(2);
 	if (ImGui::IsItemClicked()) {
@@ -73,7 +95,11 @@ void AssetsWindow::DrawDirectoryToList(FolderEntry* folder)
 	}
 	if (open) {
 		for (auto& c : folder->folders) {
-			DrawDirectoryToList(c.second.get());
+			bool nextIsInPath = false;
+			if (isInPath) {
+				nextIsInPath = IsInPath(c.second.get(), m_currentFolder);
+			}
+			DrawDirectoryToList(c.second.get(), nextIsInPath);
 		}
 		ImGui::TreePop();
 	}
@@ -93,6 +119,7 @@ void AssetsWindow::ChangeDir(FolderEntry* newDirectory)
 	for (auto e : pathFolders) {
 		m_currentPath += e->name + "/";
 	}
+	m_reopenPath = true;
 }
 
 void AssetsWindow::CreateFolder(const std::string& name, assetentry::FolderEntry* where = nullptr)
@@ -124,6 +151,7 @@ void Draw(const char* iconTxt, const char* nameTxt, OnOpen onOpen = {}, OnEndGro
 	ImVec2 cursBegin = ImGui::GetCursorPos();
 
 	ImGui::Selectable("##AssetEntrySelectableGroup", &selected, 0, scaledSize);
+	selected = false;
 	onEndGroup();
 	onDrag();
 	if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
@@ -303,7 +331,8 @@ void AssetsWindow::ImguiDraw()
 
 
 	if (ImGui::BeginChild("AssetsFolderView", ImVec2(0, -5.f))) {
-		DrawDirectoryToList(&m_root);
+		DrawDirectoryToList(&m_root, true);
+		m_reopenPath = false;
 	}
 	ImGui::EndChild();
 

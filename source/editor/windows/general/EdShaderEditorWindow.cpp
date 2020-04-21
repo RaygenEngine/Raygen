@@ -61,6 +61,8 @@ struct ShaderDocumentEditor {
 	void Draw()
 	{
 		bool open = true;
+		ImGui::SetNextWindowSize(ImVec2(500.f, 650.f), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowPos(ImVec2(450.f, 200.f), ImGuiCond_FirstUseEver);
 		if (ImGui::Begin(windowName.c_str(), &open)) {
 			ImGui::Text(filepathCache.c_str());
 			if (needsSave) {

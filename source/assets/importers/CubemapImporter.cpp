@@ -36,6 +36,9 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 
 	pod->faces.resize(imageNames.size());
 
+	ImporterManager->PushPath(path.filename().replace_extension());
+
+
 	bool firstLoaded = true;
 	for (auto& [key, value] : imageNames) {
 		std::string imagePath = j.value(key, "");
@@ -60,6 +63,7 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 				"Cubemap faces resolution missmatch: {}", uri::ToSystemPath(finalPath));
 		}
 	}
+	ImporterManager->PopPath();
 
 	return handle;
 }

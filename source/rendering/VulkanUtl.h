@@ -83,6 +83,7 @@ inline vk::Format GetFormat(ImageFormat format)
 		case ImageFormat::Srgb: return vk::Format::eR8G8B8A8Srgb; break;
 		case ImageFormat::Unorm: return vk::Format::eR8G8B8A8Unorm; break;
 	}
+	return vk::Format::eR8G8B8A8Unorm;
 }
 
 } // namespace vl

@@ -93,12 +93,14 @@ private:
 
 	BoolFlag m_resizeColumn{ true };
 
+	bool m_reopenPath{ true };
+
 	void ReloadEntries();
 
 	void DrawFolder(assetentry::FolderEntry* folderEntry);
 	void DrawAsset(PodEntry* podEntry);
 
-	void DrawDirectoryToList(assetentry::FolderEntry* entry);
+	void DrawDirectoryToList(assetentry::FolderEntry* entry, bool isInPath);
 	void ChangeDir(assetentry::FolderEntry* newDirectory);
 
 	void CreateFolder(const std::string& name, assetentry::FolderEntry* where);
