@@ -4,7 +4,7 @@
 
 // ONLY USE FOR EDITOR PURPOSES
 class EditorCameraNode : public WindowCameraNode {
-	REFLECTED_NODE(EditorCameraNode, WindowCameraNode) {}
+	REFLECTED_NODE(EditorCameraNode, WindowCameraNode) { REFLECT_FLAGS(NodeFlags::NoUserCreated); }
 
 	float m_movementSpeed{ 1.5f };
 	float m_turningSpeed{ 0.3f };

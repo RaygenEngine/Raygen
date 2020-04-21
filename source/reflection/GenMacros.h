@@ -112,3 +112,5 @@ public:                                                                         
 
 
 #define REFLECT_ICON(u8_icon) refl.SetIcon(u8_icon)
+
+#define REFLECT_FLAGS(...) refl.AddFlags(NodeFlags::Pack(__VA_ARGS__));

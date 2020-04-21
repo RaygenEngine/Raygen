@@ -1,11 +1,14 @@
 #pragma once
 
 #include "reflection/Property.h"
+#include "reflection/NodeFlags.h"
 
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+class Node;
 
 // Object that describes a reflected class.
 class ReflClass {
@@ -20,6 +23,10 @@ class ReflClass {
 
 	std::unordered_set<const ReflClass*> m_childClasses;
 
+	// Currently hardcoded for nodes only
+	std::function<Node*()> m_createInstanceFunction{};
+
+	NodeFlags::Type m_classFlags{ 0 };
 
 	static constexpr char8 c_defaultIcon[] = FA_DOT_CIRCLE;
 	// An "optional" icon for this class, as font character. Not the best place to be as it is "editor metadata" but not
@@ -60,6 +67,9 @@ public:
 		ReflClass reflClass;
 		reflClass.m_type = refl::GetId<T>();
 		T::GenerateReflection(reflClass);
+		if constexpr (std::is_base_of_v<Node, T> && !std::is_same_v<Node, T>) {
+			reflClass.m_createInstanceFunction = &T::NewInstance;
+		}
 		reflClass.ReplaceIfDefaultIcon(replaceIcon);
 		return reflClass;
 	}
@@ -70,16 +80,63 @@ public:
 		ReflClass reflClass;
 		reflClass.m_type = refl::GetId<This>();
 		This::GenerateReflection(reflClass);
+		if constexpr (std::is_base_of_v<Node, This> && !std::is_same_v<Node, This>) {
+			reflClass.m_createInstanceFunction = &This::NewInstance;
+		}
 		reflClass.AppendProperties(Parent::StaticClass());
 		Parent::Z_MutableClass().AddChildClass(thisLoc);
 		return reflClass;
 	}
 
+	// Returns true on EXACT type and not children of T.
 	template<typename T>
-	[[nodiscard]] bool IsA() const
+	[[nodiscard]] bool IsExact() const
 	{
 		return refl::GetId<T>() == m_type;
 	}
+
+	// Returns true when the ReflClass instance represents a class that is derived from T AND NOT the same as T.
+	// This call iterates the hierarchy for now and should be avoided for performance reasons. If we actually need
+	// something like this every frame we should implement a parent set or array for each class in the ReflClass.
+	template<typename T>
+	[[nodiscard]] bool IsDerivedFrom() const
+	{
+		const ReflClass* thisCl = this;
+		while (thisCl->m_parentClass != nullptr) {
+			thisCl = thisCl->m_parentClass;
+			if (thisCl->IsExact<T>()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	// Attempts to create an instance of this class.
+	// This will abort if HasCreateInstance returns false.
+	template<typename T>
+	[[nodiscard]] T* CreateInstance() const
+	{
+		CLOG_ABORT(!m_createInstanceFunction,
+			"Attempting to create an instance of a ReflClass that has no instance function.");
+
+		CLOG_ERROR(!IsA<T>(), "Attempting to create an instance of a ReflClass of incorrect type.");
+		if (!IsA<T>()) {
+			return nullptr;
+		}
+		return static_cast<T*>(m_createInstanceFunction());
+	}
+
+	[[nodiscard]] Node* CreateNodeInstance() const
+	{
+		CLOG_ABORT(!m_createInstanceFunction,
+			"Attempting to create an instance of a ReflClass that has no instance function.");
+
+		return m_createInstanceFunction();
+	}
+
+	[[nodiscard]] bool HasCreateInstance() const { return !(!m_createInstanceFunction); }
+
 
 	// Grabs the compiletime type id of the reflected class
 	[[nodiscard]] TypeId GetTypeId() const { return m_type; }
@@ -110,6 +167,12 @@ public:
 		}
 		return m_properties[index];
 	}
+
+	void AddFlags(NodeFlags::Type packedFlags) { m_classFlags |= packedFlags; }
+
+	// True if ALL flags are found.
+	[[nodiscard]] bool HasFlags(NodeFlags::Type flags) const { return ((m_classFlags & flags) == flags); }
+
 
 	[[nodiscard]] bool HasProperty(const std::string& name) const
 	{

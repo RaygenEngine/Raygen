@@ -141,7 +141,7 @@ void OutlinerWindow::Run_NewNodeMenu(Node* underNode)
 		if (ImGui::MenuItem(entry.first.c_str())) {
 
 			auto cmd = [underNode, entry]() {
-				auto newNode = entry.second.newInstance();
+				auto newNode = entry.second->CreateNodeInstance();
 
 				newNode->SetName(entry.first + "_new");
 				Universe::GetMainWorld()->Z_RegisterNode(newNode, underNode);
