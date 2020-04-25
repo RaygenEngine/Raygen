@@ -100,13 +100,15 @@ void save(Archive& ar, const AssetPod& podRef)
 template<typename Archive>
 void save(Archive& ar, const PodMetaData& metadata)
 {
-	ar(metadata.podTypeHash, metadata.originalImportLocation, metadata.exportOnSave, metadata.reimportOnLoad);
+	ar(metadata.podTypeHash, metadata.originalImportLocation, metadata.generated, metadata.exportOnSave,
+		metadata.reimportOnLoad);
 }
 
 template<typename Archive>
 void load(Archive& ar, PodMetaData& metadata)
 {
-	ar(metadata.podTypeHash, metadata.originalImportLocation, metadata.exportOnSave, metadata.reimportOnLoad);
+	ar(metadata.podTypeHash, metadata.originalImportLocation, metadata.generated, metadata.exportOnSave,
+		metadata.reimportOnLoad);
 }
 
 

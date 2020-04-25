@@ -91,10 +91,11 @@ public:
 
 	static void RemoveEntry(BasePodHandle handle) { RemoveEntry(handle.uid); }
 
-	static uri::Uri GetPodUri(BasePodHandle handle) { return Get().m_pods[handle.uid]->path; }
+	[[nodiscard]] static uri::Uri GetPodUri(BasePodHandle handle) { return Get().m_pods[handle.uid]->path; }
 
-	static PodEntry* GetEntry(BasePodHandle handle) { return Get().m_pods[handle.uid].get(); }
+	[[nodiscard]] static PodEntry* GetEntry(BasePodHandle handle) { return Get().m_pods[handle.uid].get(); }
 
+	[[nodiscard]] static PodEntry* GetEntry(size_t uid) { return Get().m_pods[uid].get(); }
 
 	template<CONC(CUidConvertible) T>
 	static void SaveToDisk(T asset)
