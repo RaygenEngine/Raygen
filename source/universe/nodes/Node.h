@@ -174,14 +174,14 @@ public:
 
 	void SetName(const std::string& name) { m_name = name; }
 	void DeleteChild(Node* child);
-	//
-	// LOADING
-	//
 
 	// Runs late in the frame, only on nodes that at least one m_dirty is set.
 	virtual void DirtyUpdate(DirtyFlagset dirtyFlags){};
 
 	virtual void Update(float deltaSeconds){};
+
+	// Called on every node to handle the level build.
+	virtual void OnBuild(){};
 
 	// m_cache world transform top down (and where needed to be updated)
 	void UpdateTransforms(const glm::mat4& parentMatrix);

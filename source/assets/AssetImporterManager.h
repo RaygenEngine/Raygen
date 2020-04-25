@@ -28,6 +28,8 @@ public:
 	//
 	void PushPath(const fs::path& path) { m_pathsStack.emplace_back(m_pathsStack.back() / path); }
 	void PushPath(std::string_view path) { m_pathsStack.emplace_back(m_pathsStack.back() / path); }
+	void PushPath(const std::string& path) { m_pathsStack.emplace_back(m_pathsStack.back() / path); }
+	void PushPath(const char* path) { m_pathsStack.emplace_back(m_pathsStack.back() / path); }
 
 	void PopPath()
 	{
@@ -83,16 +85,37 @@ public:
 		return handle;
 	}
 
+	// Returns a mutable pod handle that should be used temporarily but not stored in objects.
+	// This function will NOT always generate a new pod but may use the old inoutHandleRef pod.
+	// example usage:
+	//
+	// auto editablePod = CreateGeneratedPod(MySkybox->m_generatedSkyboxHandle, false);
+	//
+	template<CONC(CAssetPod) T>
+	MutablePod<T> CreateGeneratedPod(PodHandle<T>& inoutHandleRef, bool transient)
+	{
+		auto entry = AssetHandlerManager::GetEntry(inoutHandleRef.uid);
+		if (entry->metadata.generated) {
+			return MutablePod<T>{ inoutHandleRef.uid };
+		}
+		inoutHandleRef
+			= CreateEntryImpl<T>("#", fmt::format("#_{}_{}", mti::GetName<T>(), rand()), transient, false, false, true)
+				  .first;
+		return MutablePod<T>{ inoutHandleRef.uid };
+	}
+
 private:
 	template<CONC(CAssetPod) PodType>
-	[[nodiscard]] std::pair<PodHandle<PodType>, PodType*> CreateEntryImpl(
-		const uri::Uri& importPath, const uri::Uri& name, bool transient, bool reimportOnLoad, bool exportOnSave)
+	[[nodiscard]] std::pair<PodHandle<PodType>, PodType*> CreateEntryImpl(const uri::Uri& importPath,
+		const uri::Uri& name, bool transient, bool reimportOnLoad, bool exportOnSave, bool generatedPod = false)
 	{
 		PodEntry* e = new PodEntry();
 
 		// Populate Metadata
-		e->metadata.originalImportLocation = importPath;
+
+		e->metadata.originalImportLocation = generatedPod ? "#" : importPath;
 		e->metadata.reimportOnLoad = reimportOnLoad;
+		e->metadata.generated = generatedPod;
 		e->metadata.exportOnSave = exportOnSave;
 		e->metadata.podTypeHash = mti::GetHash<PodType>();
 
@@ -106,7 +129,17 @@ private:
 		e->type = mti::GetTypeId<PodType>();
 
 
-		e->path = transient ? AssetHandlerManager::SuggestFilename("", name) : GeneratePath(importPath, name);
+		if (transient) {
+			e->path = AssetHandlerManager::SuggestFilename("", name);
+		}
+		else if (generatedPod) {
+			e->path = "gen-data/level-data/" + AssetHandlerManager::SuggestFilename("gen-data/level-data", name);
+		}
+		else {
+			e->path = GeneratePath(importPath, name);
+		}
+
+
 		e->name = uri::GetFilename(e->path);
 
 
@@ -117,7 +150,9 @@ private:
 
 		PodHandle<PodType> handle{ e->uid };
 
-		m_importedPathsCache.emplace(importPath, handle);
+		if (!generatedPod) {
+			m_importedPathsCache.emplace(importPath, handle);
+		}
 
 		return std::make_pair(handle, ptr);
 	}
