@@ -348,6 +348,7 @@ struct ToJsonVisitor {
 	template<typename T>
 	void operator()(PodHandle<T>& ref, const Property& p)
 	{
+		j[p.GetNameStr()] = ref;
 		j[p.GetNameStr() + detail::c_importHintSuffix]
 			= fs::relative(fs::path(AssetHandlerManager::GetPodImportPath(ref))).generic_string();
 	}
