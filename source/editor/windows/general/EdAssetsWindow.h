@@ -70,6 +70,28 @@ namespace assetentry {
 
 			return files.emplace_hint(it, name, std::make_unique<FileEntry>(entry, this))->second.get();
 		}
+
+		// Recurse all files *& files in subfolders under this directory
+		template<typename Lambda>
+		void ForEachFile(Lambda& function)
+		{
+			for (auto& file : files) {
+				function(file.second);
+			}
+			for (auto& folder : folders) {
+				folder.second->ForEachFile(function);
+			}
+		}
+
+		// Recurse all folders & subfolders under this directory
+		template<typename Lambda>
+		void ForEachFolder(Lambda& function)
+		{
+			for (auto& folder : folders) {
+				function(folder.second.get());
+				folder.second->ForEachFolder(function);
+			}
+		}
 	};
 } // namespace assetentry
 
@@ -86,7 +108,7 @@ public:
 	void ImportFiles(std::vector<fs::path>&& files);
 
 private:
-	assetentry::FolderEntry m_root{ "Assets", nullptr };
+	assetentry::FolderEntry m_root{ "gen-data", nullptr };
 	assetentry::FolderEntry* m_currentFolder{};
 	std::string m_currentPath{};
 	ImGuiTextFilter m_fileFilter{};
@@ -102,6 +124,7 @@ private:
 
 	void DrawDirectoryToList(assetentry::FolderEntry* entry, bool isInPath);
 	void ChangeDir(assetentry::FolderEntry* newDirectory);
+	void ChangeDirPath(std::string_view newDirectory);
 
 	void CreateFolder(const std::string& name, assetentry::FolderEntry* where);
 };
