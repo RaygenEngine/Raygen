@@ -19,6 +19,7 @@
             }
         },
         "+type": "Geometry",
+        "model": "~Mesh",
         "model_importHint_": "",
         "~children": []
     },
@@ -71,6 +72,7 @@
             "y": 0.0,
             "z": 0.30000001192092896
         },
+        "skybox": "~Cubemap",
         "skybox_importHint_": "",
         "~children": []
     },
@@ -83,9 +85,9 @@
                 "z": -0.0594111867249012
             },
             "rot": {
-                "x": -11.246634483337402,
+                "x": -11.246639251708984,
                 "y": 82.93856048583984,
-                "z": -0.0599353164434433
+                "z": -0.059938784688711166
             },
             "scale": {
                 "x": 1.0000221729278564,
@@ -94,6 +96,7 @@
             }
         },
         "+type": "Geometry",
+        "model": "~Mesh",
         "model_importHint_": "",
         "~children": []
     },
@@ -157,6 +160,7 @@
             }
         },
         "+type": "Geometry",
+        "model": "gen-data/Sponza",
         "model_importHint_": "gltf-samples/2.0/Sponza/glTF/Sponza.gltf",
         "~children": []
     },
