@@ -5,6 +5,7 @@
 #include "assets/Serialization.h"
 #include "reflection/PodTools.h"
 #include "rendering/assets/GpuAssetManager.h"
+#include "assets/util/FindPodUsers.h"
 
 #include <vulkan/vulkan.hpp>
 #include <iostream>
@@ -115,6 +116,25 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 void AssetHandlerManager::LoadFromDiskTypelessInternal(PodEntry* entry)
 {
 	DeserializePodFromBinary(entry);
+}
+
+void AssetHandlerManager::RenameEntryImpl(PodEntry* entry, const std::string_view newFullPath)
+{
+	if (entry->transient) {
+		LOG_ERROR("Renaming transient pod entry. Aborted rename.");
+		return;
+	}
+
+	entry->path = SuggestPathImpl(uri::Uri(newFullPath));
+	entry->name = uri::GetFilename(entry->path);
+
+	// WIP: Delete old file.
+	entry->MarkSave();
+	SaveToDisk(entry);
+	for (auto& e : FindAssetUsersOfPod(entry)) {
+		e->MarkSave();
+		SaveToDisk(e);
+	}
 }
 
 AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& defaultBinPath)

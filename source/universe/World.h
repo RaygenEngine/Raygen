@@ -90,6 +90,9 @@ public:
 		return NodeCast<NodeType>(node);
 	}
 
+	[[nodiscard]] const std::unordered_set<Node*>& GetNodes() const { return m_nodes; }
+
+
 	// Push a command to be executed before dirty update.
 	// Helps with adding/deleting nodes that would otherwise invalidate the iterating set.
 	void PushDelayedCommand(std::function<void()>&& func);
