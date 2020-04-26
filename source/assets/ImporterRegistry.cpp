@@ -14,8 +14,13 @@ ImporterRegistry::ImporterRegistry()
 BasePodHandle ImporterRegistry::ImportImpl(const fs::path& path, mti::TypeId& outHandleType)
 {
 	outHandleType = mti::TypeId{};
+	// DOC: New specification. Pod Importers should not have to check for path existance.
+	if (!fs::exists(path)) {
+		LOG_WARN("Failed to find file: {} during import. Using default pod.", path);
+		return {};
+	}
 	if (auto it = m_extToImporters.find(path.extension().string()); it != m_extToImporters.end()) {
-		LOG_REPORT("Executing importer: {} for {}", it->second->GetName(), path.generic_string());
+		LOG_INFO("Executing importer: {} for {}", it->second->GetName(), path.generic_string());
 		auto handle = it->second->Import(path);
 		outHandleType = it->second->GetPrimaryPodType();
 		return handle;

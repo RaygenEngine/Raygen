@@ -19,7 +19,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/Lantern",
+        "model_importHint_": "",
         "~children": []
     },
     {
@@ -71,7 +71,7 @@
             "y": 0.0,
             "z": 0.30000001192092896
         },
-        "skybox": "gen-data/skyb",
+        "skybox_importHint_": "",
         "~children": []
     },
     {
@@ -85,7 +85,7 @@
             "rot": {
                 "x": -11.246634483337402,
                 "y": 82.93856048583984,
-                "z": -0.05993184819817543
+                "z": -0.0599353164434433
             },
             "scale": {
                 "x": 1.0000221729278564,
@@ -94,7 +94,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "~Mesh",
+        "model_importHint_": "",
         "~children": []
     },
     {
@@ -157,7 +157,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/Sponza",
+        "model_importHint_": "gltf-samples/2.0/Sponza/glTF/Sponza.gltf",
         "~children": []
     },
     {
@@ -182,7 +182,7 @@
         "+type": "WindowCamera",
         "far": 1000.0,
         "focalLength": 1.0,
-        "hFov": 2.0757055282592773,
+        "hFov": 1.1271495819091797,
         "hFovOffset": 0.0,
         "near": 0.10000000149011612,
         "vFov": 1.2566370964050293,
