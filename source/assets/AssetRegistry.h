@@ -45,9 +45,22 @@ private:
 			return desiredFilename;
 		}
 
+		// TODO: Detect and generate a correct numbered system with _1, _2 etc instead of random
 		std::string resultFilename = fmt::format(
 			"{}_{}{}", uri::StripExt(desiredFilename), std::rand(), uri::GetDiskExtension(desiredFilename));
 		return fs::path(desiredFilename).replace_filename(resultFilename).generic_string();
+	}
+
+	uri::Uri SuggestPathImpl(const uri::Uri& desiredFullPath)
+	{
+		if (!m_pathCache.count(desiredFullPath)) {
+			return desiredFullPath;
+		}
+
+		fs::path path = desiredFullPath;
+		// TODO: Use the same system as suggest filename impl.
+		path.replace_filename(path.filename().string() + fmt::format("_{}", std::rand()));
+		return path.generic_string();
 	}
 
 
@@ -65,6 +78,8 @@ private:
 
 		return PodHandle<T>(it->second);
 	}
+
+	void RenameEntryImpl(PodEntry* entry, const std::string_view newFullPath);
 
 public:
 	static void RegisterPathCache(PodEntry* entry) { Get().m_pathCache.emplace(entry->path, entry->uid); }
@@ -95,6 +110,10 @@ public:
 
 	static PodEntry* GetEntry(BasePodHandle handle) { return Get().m_pods[handle.uid].get(); }
 
+	static void RenameEntry(PodEntry* entry, const std::string_view newFullPath)
+	{
+		Get().RenameEntryImpl(entry, newFullPath);
+	}
 
 	template<CONC(CUidConvertible) T>
 	static void SaveToDisk(T asset)

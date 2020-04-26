@@ -222,6 +222,7 @@ void Draw(const char* iconTxt, const char* nameTxt, OnOpen onOpen = {}, OnEndGro
 	}
 	ImGui::EndGroup();
 
+
 	const float nextItemStartX = cursBegin.x + scaledSize.x + padding;
 	const float nextItemEndX = nextItemStartX + scaledSize.x;
 	bool needsWrapping = (ImGui::GetWindowSize().x - nextItemEndX) < 0.f;
@@ -259,7 +260,20 @@ void AssetsWindow::DrawAsset(PodEntry* assetEntry)
 	ImGui::PushID(assetEntry);
 	Draw<false>(
 		U8(assetEntry->GetClass()->GetIcon()), assetEntry->name.c_str(), []() {},
-		[&]() { ed::asset::MaybeHoverTooltip(assetEntry); }, [&]() { ImEd::CreateTypedPodDrag(assetEntry); });
+		[&]() {
+			if (ImGui::BeginPopupContextWindow("AssetsContextRightClickWindow")) {
+				static std::string name;
+
+				if (ImGui::InputText("Rename", &name, ImGuiInputTextFlags_EnterReturnsTrue)) {
+					AssetHandlerManager::RenameEntry(assetEntry, name);
+				}
+				ImGui::EndPopup();
+			}
+
+			//
+			ed::asset::MaybeHoverTooltip(assetEntry);
+		},
+		[&]() { ImEd::CreateTypedPodDrag(assetEntry); });
 	ImGui::PopID();
 }
 
