@@ -264,29 +264,20 @@ struct JsonToPropVisitor {
 	}
 };
 
+namespace detail {
+	constexpr const char* c_importHintSuffix = "_importHint_";
+}
+
+
 // With Parent path override and conditionally gltfPreload
-struct JsonToPropVisitor_WithRelativePath {
+struct JsonToPropVisitor_WorldLoad {
 
 	JsonToPropVisitor parentVisitor;
-	bool gltfPreload;
-	uri::Uri parentUri;
 
-	JsonToPropVisitor_WithRelativePath(const json& inJson, BasePodHandle inParent, bool inGltfPreload = false,
-		PropertyFlags::Type inFlagsToSkip = PropertyFlags::NoLoad)
+	JsonToPropVisitor_WorldLoad(const json& inJson, PropertyFlags::Type inFlagsToSkip = PropertyFlags::NoLoad)
 		: parentVisitor(inJson, inFlagsToSkip)
-		, gltfPreload(inGltfPreload)
-	{
-		parentUri = AssetHandlerManager::GetPodUri(inParent);
-	}
-
-	JsonToPropVisitor_WithRelativePath(const json& inJson, const uri::Uri inParentUri, bool inGltfPreload = false,
-		PropertyFlags::Type inFlagsToSkip = PropertyFlags::NoLoad)
-		: parentVisitor(inJson, inFlagsToSkip)
-		, parentUri(inParentUri)
-		, gltfPreload(inGltfPreload)
 	{
 	}
-
 
 	// forward any non ovreloaded call to parent
 	template<typename T>
@@ -305,10 +296,25 @@ struct JsonToPropVisitor_WithRelativePath {
 	void operator()(PodHandle<T>& p, const Property& prop)
 	{
 		auto it = parentVisitor.j.find(prop.GetName());
-		if (it == parentVisitor.j.end()) {
-			LOG_ABORT("Failed to find pod property: {}", prop.GetName());
+		if (it != parentVisitor.j.end()) {
+			p = LoadHandle<T>(it->get<std::string>());
 		}
-		p = LoadHandle<T>(it->get<std::string>());
+		else {
+			LOG_WARN(
+				"Failed to find pod property: {} (Scene saved with older engine version?) Using default pod or "
+				"\"{}\".",
+				prop.GetName(), detail::c_importHintSuffix);
+		}
+
+		if (p.IsDefault()) {
+			auto it = parentVisitor.j.find(prop.GetNameStr() + detail::c_importHintSuffix);
+			if (it != parentVisitor.j.end()) {
+				p = AssetManager->ImportAs<T>(fs::path(it->get<std::string>()), true);
+				if (!p.IsDefault()) {
+					LOG_INFO("Imported {} during scene loading through the import hint.", it->get<std::string>());
+				}
+			}
+		}
 	}
 
 	template<typename T>
@@ -337,6 +343,13 @@ struct ToJsonVisitor {
 	void operator()(T& ref, const Property& p)
 	{
 		j[p.GetNameStr()] = ref;
+	}
+
+	template<typename T>
+	void operator()(PodHandle<T>& ref, const Property& p)
+	{
+		j[p.GetNameStr() + detail::c_importHintSuffix]
+			= fs::relative(fs::path(AssetHandlerManager::GetPodImportPath(ref))).generic_string();
 	}
 };
 

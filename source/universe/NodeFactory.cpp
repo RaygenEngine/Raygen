@@ -115,8 +115,7 @@ void NodeFactory::LoadNode_Trs(const nlohmann::json& jsonTrsObject, Node* nodeTo
 
 void NodeFactory::LoadNode_Properties(const nlohmann::json& j, Node* node)
 {
-	auto local = refltools::JsonToPropVisitor_WithRelativePath(
-		j, Universe::GetMainWorld()->GetLoadedFromPath().generic_string(), true);
+	auto local = refltools::JsonToPropVisitor_WorldLoad(j);
 
 	refltools::CallVisitorOnEveryProperty(node, local);
 }
