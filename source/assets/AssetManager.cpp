@@ -54,7 +54,7 @@ void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 
 
 	entry->requiresSave = false;
-	LOG_REPORT("Saved pod at: {}", entry->path);
+	LOG_INFO("Saved pod at: {}", entry->path);
 }
 
 void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
@@ -124,16 +124,35 @@ void AssetHandlerManager::RenameEntryImpl(PodEntry* entry, const std::string_vie
 		LOG_ERROR("Renaming transient pod entry. Aborted rename.");
 		return;
 	}
+	if (str::equalInsensitive(entry->path, newFullPath)) {
+		return;
+	}
+
+	// PERF: Logic here deletes and resaves the asset. We can actually juts use fs::move probably to save performance
+	// especially when moving big assets, or save a lot of time if moving folders.
+	DeleteFromDisk(entry);
 
 	entry->path = SuggestPathImpl(uri::Uri(newFullPath));
 	entry->name = uri::GetFilename(entry->path);
 
-	// WIP: Delete old file.
 	entry->MarkSave();
-	SaveToDisk(entry);
+
 	for (auto& e : FindAssetUsersOfPod(entry)) {
 		e->MarkSave();
-		SaveToDisk(e);
+	}
+}
+
+void AssetHandlerManager::DeleteFromDiskInternal(PodEntry* entry)
+{
+	CLOG_WARN(entry->transient, "Attempting to delete transient pod entry: {} {}", entry->path, entry->uid);
+
+	fs::path path = entry->path;
+	path.replace_extension(".bin");
+	if (fs::is_regular_file(path)) {
+		std::error_code er;
+		if (!fs::remove(path, er)) {
+			LOG_WARN("Failed to remove file: {}: {}", path, er.message());
+		}
 	}
 }
 

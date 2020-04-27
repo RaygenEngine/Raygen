@@ -129,5 +129,14 @@ constexpr inline bool startsWithInsensitive(std::string_view who, std::string_vi
 		   && str::EqualInsensitive{}(who.substr(0, startsWithTxt.size()), startsWithTxt);
 }
 
+// Returns true if the string was changed
+inline bool stripIfStartsWithInsensitive(std::string& inoutString, std::string_view startsWith)
+{
+	if (startsWithInsensitive(inoutString, startsWith)) {
+		inoutString.erase(inoutString.begin(), inoutString.begin() + startsWith.size());
+		return true;
+	}
+	return false;
+}
 
 } // namespace str

@@ -45,7 +45,7 @@ Material::Gpu::Gpu(PodHandle<Material> podHandle)
 
 	materialUBO->UploadData(matData);
 
-	// descriptors (WIP:
+	// TODO: descriptors
 	descriptorSet = Layouts->regularMaterialDescLayout.GetDescriptorSet();
 
 	// material uniform sets CHECK: (those buffers should be set again when material changes)

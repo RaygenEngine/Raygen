@@ -6,13 +6,12 @@
 #include "rendering/Renderer.h"
 #include "rendering/VulkanUtl.h"
 
-using namespace vl;
 
-::Cubemap::Gpu::Gpu(PodHandle<::Cubemap> podHandle)
+Cubemap::Gpu::Gpu(PodHandle<Cubemap> podHandle)
 {
 	auto cubemapData = podHandle.Lock();
 
-	vk::Format format = GetFormat(cubemapData->format);
+	vk::Format format = vl::GetFormat(cubemapData->format);
 
 	cubemap = std::make_unique<vl::Cubemap>(cubemapData->width, format, vk::ImageTiling::eOptimal,
 		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
@@ -24,7 +23,7 @@ using namespace vl;
 	for (uint32 i = 0; i < 6u; ++i) {
 		vk::DeviceSize imageSize = cubemapData->faces[i].Lock()->data.size();
 
-		RawBuffer stagingBuffer{ imageSize, vk::BufferUsageFlagBits::eTransferSrc,
+		vl::RawBuffer stagingBuffer{ imageSize, vk::BufferUsageFlagBits::eTransferSrc,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 		// copy data to buffer

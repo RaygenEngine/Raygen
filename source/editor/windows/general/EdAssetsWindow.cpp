@@ -24,23 +24,41 @@ AssetsWindow::AssetsWindow(std::string_view name)
 }
 
 namespace {
-	FolderEntry* FindOrCreatePath(FolderEntry* root, std::string_view path)
+	FolderEntry* FindOrCreatePath(FolderEntry* root, std::string_view path, bool skipCreation = false)
 	{
-		// TODO: Contains bugs. Assumes gen-data assets only.
+		// TODO: Contains bugs because it assumes gen-data assets only.
 		auto parts = str::split(path, "/");
 		parts.erase(parts.begin());
 
 		auto* currentNode = root;
 		for (auto& subpath : parts) {
-			currentNode = currentNode->FindOrAddFolder(subpath);
+			if (!skipCreation) {
+				currentNode = currentNode->FindOrAddFolder(subpath);
+			}
+			else {
+				auto nextNode = currentNode->FindFolder(subpath);
+				if (nextNode == nullptr) {
+					return currentNode;
+				}
+				currentNode = nextNode;
+			}
 		}
 		return currentNode;
 	}
+
+
 } // namespace
 
 void AssetsWindow::ReloadEntries()
 {
+	m_reloadEntries.Set();
+}
+
+void AssetsWindow::ReloadEntriesImpl()
+{
 	auto& pods = AssetHandlerManager::Z_GetPods();
+
+	auto prevDirectory = m_currentPath; // Store by copy, currentpath gets changed on reloadentries
 
 	m_root.folders.clear();
 	m_root.files.clear();
@@ -56,7 +74,7 @@ void AssetsWindow::ReloadEntries()
 
 		FindOrCreatePath(&m_root, uri)->AddFile(pod.get());
 	}
-	ChangeDir(&m_root);
+	ChangeDirPath(prevDirectory);
 }
 
 namespace {
@@ -103,6 +121,7 @@ void AssetsWindow::DrawDirectoryToList(FolderEntry* folder, bool isInPath)
 	if (ImGui::IsItemClicked()) {
 		ChangeDir(folder);
 	}
+	RunPostFolder(folder);
 	if (open) {
 		for (auto& c : folder->folders) {
 			bool nextIsInPath = false;
@@ -118,24 +137,13 @@ void AssetsWindow::DrawDirectoryToList(FolderEntry* folder, bool isInPath)
 void AssetsWindow::ChangeDir(FolderEntry* newDirectory)
 {
 	m_currentFolder = newDirectory;
-
-	std::vector<FolderEntry*> pathFolders;
-	while (!newDirectory->IsRoot()) {
-		pathFolders.push_back(newDirectory);
-		newDirectory = newDirectory->parent;
-	}
-
-	m_currentPath = "gen-data/";
-
-	for (auto it = pathFolders.rbegin(); it != pathFolders.rend(); ++it) {
-		m_currentPath += (*it)->name + "/";
-	}
+	m_currentPath = newDirectory->CalculatePathFromRoot(true);
 	m_reopenPath = true;
 }
 
 void AssetsWindow::ChangeDirPath(std::string_view newDirectory)
 {
-	ChangeDir(FindOrCreatePath(&m_root, newDirectory));
+	ChangeDir(FindOrCreatePath(&m_root, newDirectory, true));
 }
 
 void AssetsWindow::CreateFolder(const std::string& name, assetentry::FolderEntry* where = nullptr)
@@ -243,7 +251,9 @@ void AssetsWindow::DrawFolder(assetentry::FolderEntry* folderEntry)
 	}
 
 	ImGui::PushID(folderEntry);
-	Draw<true>(U8(FA_FOLDER), folderEntry->name.c_str(), [&]() { ChangeDir(folderEntry); });
+	Draw<true>(
+		U8(FA_FOLDER), folderEntry->name.c_str(), [&]() { ChangeDir(folderEntry); },
+		[&]() { RunPostFolder(folderEntry); });
 	ImGui::PopID();
 }
 
@@ -261,15 +271,7 @@ void AssetsWindow::DrawAsset(PodEntry* assetEntry)
 	Draw<false>(
 		U8(assetEntry->GetClass()->GetIcon()), assetEntry->name.c_str(), []() {},
 		[&]() {
-			if (ImGui::BeginPopupContextWindow("AssetsContextRightClickWindow")) {
-				static std::string name;
-
-				if (ImGui::InputText("Rename", &name, ImGuiInputTextFlags_EnterReturnsTrue)) {
-					AssetHandlerManager::RenameEntry(assetEntry, name);
-				}
-				ImGui::EndPopup();
-			}
-
+			RunFileEntryContext(assetEntry);
 			//
 			ed::asset::MaybeHoverTooltip(assetEntry);
 		},
@@ -279,11 +281,14 @@ void AssetsWindow::DrawAsset(PodEntry* assetEntry)
 
 void AssetsWindow::ImguiDraw()
 {
-	static bool init = false;
-	if (ImEd::Button(ETXT(FA_REFRESH_A, "Reload")) || !init) {
+	if (ImEd::Button(ETXT(FA_REFRESH_A, "Reload"))) {
 		ReloadEntries();
-		init = true;
 	}
+
+	if (m_reloadEntries.Access()) {
+		ReloadEntriesImpl();
+	}
+
 
 	ImGui::SameLine();
 	if (ImEd::Button(ETXT(FA_SAVE, "Save All"))) {
@@ -408,4 +413,95 @@ void AssetsWindow::ImportFiles(std::vector<fs::path>&& files)
 	ReloadEntries();
 }
 
+void AssetsWindow::RunFileEntryContext(PodEntry* entry)
+{
+	bool isContextOpen = ImGui::BeginPopupContextItem("AssetsContextRightClickWindow");
+	if (isContextOpen) {
+		if (!m_wasRenamingPrevFrame) {
+			m_wasRenamingPrevFrame = true;
+			m_renameString = entry->path;
+
+			// GEN_DATA:
+			str::stripIfStartsWithInsensitive(m_renameString, "gen-data/");
+		}
+
+		if (ImGui::InputText("Rename", &m_renameString, ImGuiInputTextFlags_EnterReturnsTrue)) {
+			AssetHandlerManager::RenameEntry(entry, "gen-data/" + m_renameString);
+			AssetHandlerManager::SaveAll();
+			ImGui::CloseCurrentPopup();
+			ReloadEntries();
+		}
+
+		ImGui::EndPopup();
+	}
+	else {
+		m_wasRenamingPrevFrame = false;
+	}
+}
+
+namespace {
+	void RenameFolder(FolderEntry* entry, const std::string& newName)
+	{
+		// PERF: can certainly reduce string operations here, should only be relevant for renaming thousands of
+		// assets though
+		std::string initialString = entry->CalculatePathFromRoot(true);
+		std::string newString = "gen-data/" + newName;
+
+		if (!newName.ends_with('/')) {
+			newString += '/';
+		}
+
+		entry->ForEachFile([&](UniquePtr<FileEntry>& file) { //
+			const char* begin = file->entry->path.data() + initialString.size();
+			std::string newPath = fmt::format("{}{}", newString, begin);
+			AssetHandlerManager::RenameEntry(file->entry, newPath);
+
+		});
+		AssetHandlerManager::SaveAll();
+	}
+} // namespace
+
+void AssetsWindow::RunFolderEntryContext(assetentry::FolderEntry* folder)
+{
+	bool isRenaming = ImGui::BeginPopupContextItem("AssetsContextRightClickWindow");
+	if (isRenaming) {
+		if (!m_wasRenamingPrevFrame) {
+			m_wasRenamingPrevFrame = true;
+			m_renameString = folder->CalculatePathFromRoot(false);
+		}
+
+		if (ImGui::InputText("Rename", &m_renameString, ImGuiInputTextFlags_EnterReturnsTrue)) {
+			RenameFolder(folder, m_renameString);
+			ReloadEntries();
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+	else {
+		m_wasRenamingPrevFrame = false;
+	}
+}
+
+void AssetsWindow::RunPostFolder(FolderEntry* folder)
+{
+	RunFolderEntryContext(folder);
+	if (auto dropentry = ImEd::AcceptGenericPodDrop()) {
+		AssetHandlerManager::RenameEntry(dropentry, folder->CalculatePathFromRoot(true) + dropentry->name);
+		AssetHandlerManager::SaveAll();
+		ReloadEntries();
+	}
+	if (auto dropFolder = ImEd::AcceptDropObject<FolderEntry>("ASSET_WINDOW_FOLDER")) {
+		LOG_REPORT("Dropped: {} on {}", dropFolder->name, folder->name);
+		RenameFolder(dropFolder, folder->CalculatePathFromRoot(false) + dropFolder->name + "/");
+		ReloadEntries();
+	}
+	if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+		ImGui::PushFont(ImguiImpl::s_AssetIconFont);
+		ImGui::TextUnformatted(U8(FA_FOLDER));
+		ImGui::PopFont();
+		ImGui::TextUnformatted(std::string(folder->name).c_str());
+
+		ImEd::EndDragDropSourceObject(folder, "ASSET_WINDOW_FOLDER");
+	}
+}
 } // namespace ed

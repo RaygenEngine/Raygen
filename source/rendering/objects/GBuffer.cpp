@@ -49,7 +49,7 @@ GBuffer::GBuffer(vk::RenderPass renderPass, uint32 width, uint32 height)
 
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
-	// update descriptor set (WIP: is this once?
+	// CHECK: update descriptor set (is this once?)
 	for (uint32 i = 0; i < GCount; ++i) {
 
 		vk::DescriptorImageInfo imageInfo{};

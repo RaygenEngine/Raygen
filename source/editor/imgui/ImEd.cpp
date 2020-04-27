@@ -3,6 +3,8 @@
 
 #include "assets/PodEntry.h"
 #include "assets/AssetRegistry.h"
+#include "reflection/PodTools.h"
+#include "assets/PodIncludes.h"
 
 namespace ImEd {
 int InputTextCallback(ImGuiInputTextCallbackData* data);
@@ -191,6 +193,23 @@ void CollapsingHeaderHelpTooltip(const char* tooltip)
 		ImGui::PopTextWrapPos();
 		ImGui::EndTooltip();
 	}
+}
+
+PodEntry* AcceptGenericPodDrop(std::function<void(BasePodHandle, PodEntry*)> onDropped)
+{
+	PodEntry* result = nullptr;
+	podtools::ForEachPodType([&]<typename PodType>() {
+		if (result) {
+			return;
+		}
+		if (onDropped) {
+			result = AcceptTypedPodDrop<PodType>(onDropped);
+		}
+		else {
+			result = AcceptTypedPodDrop<PodType>();
+		}
+	});
+	return result;
 }
 
 
