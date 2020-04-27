@@ -1,5 +1,6 @@
 #pragma once
 #include "core/StringUtl.h"
+#include "core/StringConversions.h"
 #include "engine/Logger.h"
 
 // The central library for the engines Uri convention.
@@ -163,6 +164,35 @@ inline std::string SystemToUri(fs::path& path)
 		}
 	}
 	return strPath;
+}
+
+// Extracts the number from the suffix of the filename or 0 if no suffix found
+// (eg: Mesh_13 would reutrn 13 and outActualName: "Mesh_")
+inline size_t DetectCountFromPath(const Uri& path, std::string_view& outActualName)
+{
+	size_t number = 0;
+	outActualName = path;
+
+	if (path.empty()) {
+		return 0;
+	}
+
+	const char* begin = path.c_str();
+	const char* end = path.c_str() + path.size();
+
+	for (const char* c = end - 1; c != begin; --c) {
+		bool isDigit = *c >= '0' && *c <= '9';
+		if (!isDigit) {
+			if (c == end - 1) {
+				return 0;
+			}
+			auto numview = std::string_view(c + 1, end - (c + 1));
+			number = str::fromStrView<size_t>(numview);
+			outActualName = std::string_view(begin, (end - begin) - numview.size());
+			break;
+		}
+	}
+	return number;
 }
 
 } // namespace uri

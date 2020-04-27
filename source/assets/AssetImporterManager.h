@@ -95,8 +95,8 @@ private:
 		const uri::Uri& importPath, const uri::Uri& name, bool transient, bool reimportOnLoad, bool exportOnSave)
 	{
 		auto& [entry, ptr] = AssetHandlerManager::CreateEntry<PodType>(
-			transient ? AssetHandlerManager::SuggestFilename("", name) : GeneratePath(importPath, name), transient,
-			importPath, reimportOnLoad, exportOnSave);
+			transient ? AssetHandlerManager::SuggestPath(name) : GeneratePath(importPath, name), transient, importPath,
+			reimportOnLoad, exportOnSave);
 
 
 		PodHandle<PodType> handle{ entry->uid };

@@ -31,24 +31,7 @@ private:
 
 	uri::Uri SuggestFilenameImpl(const fs::path& directory, const uri::Uri& desired)
 	{
-		uri::Uri desiredFilename = desired;
-
-		auto dotLoc = desiredFilename.rfind('.');
-
-		if (dotLoc != std::string::npos) {
-			std::replace(desiredFilename.begin(), desiredFilename.begin() + dotLoc - 1, '.', '_');
-		}
-
-		auto desiredFullPath = (directory / desiredFilename).string();
-
-		if (!m_pathCache.count(desiredFullPath)) {
-			return desiredFilename;
-		}
-
-		// TODO: Detect and generate a correct numbered system with _1, _2 etc instead of random
-		std::string resultFilename = fmt::format(
-			"{}_{}{}", uri::StripExt(desiredFilename), std::rand(), uri::GetDiskExtension(desiredFilename));
-		return fs::path(desiredFilename).replace_filename(resultFilename).generic_string();
+		return SuggestPathImpl((directory / desired).string());
 	}
 
 	uri::Uri SuggestPathImpl(const uri::Uri& desiredFullPath)
@@ -57,10 +40,17 @@ private:
 			return desiredFullPath;
 		}
 
-		fs::path path = desiredFullPath;
-		// TODO: Use the same system as suggest filename impl.
-		path.replace_filename(path.filename().string() + fmt::format("_{}", std::rand()));
-		return path.generic_string();
+		std::string_view actualName;
+		size_t num = uri::DetectCountFromPath(desiredFullPath, actualName);
+
+		std::string nameStart = std::string(actualName) + (num == 0 ? "_" : "");
+		std::string nextName;
+
+		do {
+			nextName = fmt::format("{}{}", nameStart, ++num);
+		} while (m_pathCache.count(nextName));
+
+		return nextName;
 	}
 
 
@@ -90,6 +80,7 @@ private:
 
 public:
 	static void RegisterPathCache(PodEntry* entry) { Get().m_pathCache.emplace(entry->path, entry->uid); }
+	static void RemoveFromPathCache(PodEntry* entry) { Get().m_pathCache.erase(entry->path); }
 
 	static void SaveAll()
 	{
