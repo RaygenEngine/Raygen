@@ -81,6 +81,9 @@ private:
 
 	void RenameEntryImpl(PodEntry* entry, const std::string_view newFullPath);
 
+
+	void DeleteFromDiskInternal(PodEntry* entry);
+
 public:
 	static void RegisterPathCache(PodEntry* entry) { Get().m_pathCache.emplace(entry->path, entry->uid); }
 
@@ -128,6 +131,13 @@ public:
 	{
 		size_t uid = ToAssetUid(asset);
 		Get().LoadFromDiskTypelessInternal(Get().m_pods[uid].get());
+	}
+
+	template<CONC(CUidConvertible) T>
+	static void DeleteFromDisk(T asset)
+	{
+		size_t uid = ToAssetUid(asset);
+		Get().DeleteFromDiskInternal(Get().m_pods[uid].get());
 	}
 
 

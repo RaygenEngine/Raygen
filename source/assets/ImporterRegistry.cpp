@@ -15,6 +15,9 @@ BasePodHandle ImporterRegistry::ImportImpl(const fs::path& path, mti::TypeId& ou
 {
 	outHandleType = mti::TypeId{};
 	// DOC: New specification. Pod Importers should not have to check for path existance.
+	if (path.empty()) {
+		return {};
+	}
 	if (!fs::exists(path)) {
 		LOG_WARN("Failed to find file: {} during import. Using default pod.", path);
 		return {};

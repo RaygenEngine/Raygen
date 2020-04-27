@@ -74,7 +74,7 @@ ShadowmapPass::ShadowmapPass()
 
 void ShadowmapPass::MakePipeline()
 {
-	// WIP: yikes
+	// TODO: yikes
 	static auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/depth_map.vert");
 	gpuShader.onCompile = [&]() {
 		Device->waitIdle();

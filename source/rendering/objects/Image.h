@@ -31,7 +31,7 @@ public:
 
 	void CopyBufferToImage(const RawBuffer& buffer);
 
-	// WIP: virtual (split image classes correctly...)
+	// TODO: virtual (split image classes correctly...)
 	virtual void GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout);
 
 	// Affects all mips and array elements

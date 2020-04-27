@@ -35,7 +35,7 @@ vk::DescriptorSet Scene_::GetActiveCameraDescSet()
 	return GetActiveCamera()->descSets[vl::Renderer_::currentFrame];
 }
 
-// WIP: we should have a dirty per frace
+// TODO: we should have a dirty per frace
 void Scene_::UploadDirty()
 {
 	for (auto cam : cameras.elements) {

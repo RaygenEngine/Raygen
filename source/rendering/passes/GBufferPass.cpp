@@ -95,7 +95,7 @@ GBufferPass::GBufferPass()
 
 void GBufferPass::MakePipeline()
 {
-	// WIP: yikes
+	// TODO: yikes
 	static auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/gbuffer.vert");
 	gpuShader.onCompile = [&]() {
 		Device->waitIdle();

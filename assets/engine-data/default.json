@@ -174,7 +174,7 @@
             },
             "rot": {
                 "x": -151.26002502441406,
-                "y": 60.59445571899414,
+                "y": 60.59444046020508,
                 "z": 179.99951171875
             },
             "scale": {
@@ -213,7 +213,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/New Folder/New Folder/WaterBottle",
+        "model": "gen-data/WaterBottle",
         "model_importHint_": "water/WaterBottle.gltf",
         "~children": []
     }

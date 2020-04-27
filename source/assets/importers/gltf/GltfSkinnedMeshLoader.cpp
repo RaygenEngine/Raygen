@@ -187,7 +187,7 @@ void GltfSkinnedMeshLoader::LoadGeometryGroup(SkinnedGeometryGroup& geom, const 
 		}
 	}
 
-	// WIP: Check if missing
+	// TODO: ANIMATIONS Check if missing
 	// JOINTS
 	LoadIntoVertexData<SkinnedVertex, 5>(m_cache.gltfData, joints0Index, geom.vertices);
 	// AccessorDescription desc(m_cache.gltfData, joints0Index);
