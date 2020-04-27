@@ -129,12 +129,14 @@ void AssetHandlerManager::RenameEntryImpl(PodEntry* entry, const std::string_vie
 		return;
 	}
 
-	// PERF: Logic here deletes and resaves the asset. We can actually juts use fs::move probably to save performance
+	// PERF: Logic here deletes and resaves the asset. We can actually just use fs::move probably to save performance
 	// especially when moving big assets, or save a lot of time if moving folders.
 	DeleteFromDisk(entry);
 
+	RemoveFromPathCache(entry);
 	entry->path = SuggestPathImpl(uri::Uri(newFullPath));
 	entry->name = uri::GetFilename(entry->path);
+	RegisterPathCache(entry);
 
 	entry->MarkSave();
 
