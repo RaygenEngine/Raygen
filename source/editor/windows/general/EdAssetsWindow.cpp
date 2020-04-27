@@ -11,6 +11,7 @@
 #include "editor/utl/EdAssetUtils.h"
 #include "reflection/ReflectionTools.h"
 #include "reflection/ReflEnum.h"
+#include "reflection/PodTools.h"
 
 #include <imgui/imgui_internal.h>
 #include <spdlog/fmt/fmt.h>
@@ -402,7 +403,25 @@ void AssetsWindow::ImguiDraw()
 	}
 	ImGui::Unindent(8.f);
 	ImGui::EndChild();
+	RunEmptySpaceContext();
 	ImGui::Columns(1);
+}
+
+void AssetsWindow::RunEmptySpaceContext()
+{
+	if (!m_hasOpenedAssetContextInMainView && ImGui::BeginPopupContextItem("AssetsGenericContextRightClickWindow")) {
+		podtools::ForEachPodType([&]<typename PodType>() {
+			//
+			auto itemName = PodType::StaticClass().GetNameStr();
+			if (ImGui::MenuItem(itemName.c_str())) {
+				AssetHandlerManager::CreateEntry<PodType>(m_currentPath + itemName);
+				ReloadEntries();
+			}
+		});
+
+		ImGui::EndPopup();
+	}
+	m_hasOpenedAssetContextInMainView = false;
 }
 
 void AssetsWindow::ImportFiles(std::vector<fs::path>&& files)
@@ -417,17 +436,23 @@ void AssetsWindow::RunFileEntryContext(PodEntry* entry)
 {
 	bool isContextOpen = ImGui::BeginPopupContextItem("AssetsContextRightClickWindow");
 	if (isContextOpen) {
+		m_hasOpenedAssetContextInMainView = true;
+
 		if (!m_wasRenamingPrevFrame) {
 			m_wasRenamingPrevFrame = true;
-			m_renameString = entry->path;
-
-			// GEN_DATA:
-			str::stripIfStartsWithInsensitive(m_renameString, "gen-data/");
+			m_renameString = entry->name;
 		}
 
 		if (ImGui::InputText("Rename", &m_renameString, ImGuiInputTextFlags_EnterReturnsTrue)) {
-			AssetHandlerManager::RenameEntry(entry, "gen-data/" + m_renameString);
+			AssetHandlerManager::RenameEntry(entry, std::string(uri::GetDir(entry->path)) + m_renameString);
 			AssetHandlerManager::SaveAll();
+			ImGui::CloseCurrentPopup();
+			ReloadEntries();
+		}
+
+		if (ImGui::Button("Duplicate")) {
+			auto newEntry = AssetHandlerManager::Duplicate(entry);
+			AssetHandlerManager::SaveToDisk(newEntry);
 			ImGui::CloseCurrentPopup();
 			ReloadEntries();
 		}
@@ -465,13 +490,15 @@ void AssetsWindow::RunFolderEntryContext(assetentry::FolderEntry* folder)
 {
 	bool isRenaming = ImGui::BeginPopupContextItem("AssetsContextRightClickWindow");
 	if (isRenaming) {
+		m_hasOpenedAssetContextInMainView = true;
+
 		if (!m_wasRenamingPrevFrame) {
 			m_wasRenamingPrevFrame = true;
-			m_renameString = folder->CalculatePathFromRoot(false);
+			m_renameString = folder->name;
 		}
 
 		if (ImGui::InputText("Rename", &m_renameString, ImGuiInputTextFlags_EnterReturnsTrue)) {
-			RenameFolder(folder, m_renameString);
+			RenameFolder(folder, std::string(uri::GetDir(folder->CalculatePathFromRoot(true))) + m_renameString);
 			ReloadEntries();
 			ImGui::CloseCurrentPopup();
 		}

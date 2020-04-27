@@ -151,6 +151,8 @@ private:
 	BoolFlag m_reloadEntries{ true };
 	bool m_reopenPath{ true };
 
+	bool m_hasOpenedAssetContextInMainView{ false };
+
 	void ReloadEntries();
 	void ReloadEntriesImpl();
 
@@ -160,6 +162,8 @@ private:
 	void DrawDirectoryToList(assetentry::FolderEntry* entry, bool isInPath);
 	void ChangeDir(assetentry::FolderEntry* newDirectory);
 	void ChangeDirPath(std::string_view newDirectory);
+
+	void RunEmptySpaceContext();
 
 	void CreateFolder(const std::string& name, assetentry::FolderEntry* where);
 
