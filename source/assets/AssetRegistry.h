@@ -79,10 +79,14 @@ private:
 		return PodHandle<T>(it->second);
 	}
 
+	// TODO: Check for pathCache. Currently does not affect path cache, maybe it should but why?
+	// For name collision. Implement remove & write to path cache
 	void RenameEntryImpl(PodEntry* entry, const std::string_view newFullPath);
 
 
 	void DeleteFromDiskInternal(PodEntry* entry);
+
+	PodEntry* DuplicateImpl(PodEntry* entry);
 
 public:
 	static void RegisterPathCache(PodEntry* entry) { Get().m_pathCache.emplace(entry->path, entry->uid); }
@@ -103,6 +107,14 @@ public:
 	static uri::Uri GetPodImportPath(BasePodHandle handle)
 	{
 		return Get().m_pods[handle.uid]->metadata.originalImportLocation;
+	}
+
+
+	template<CONC(CUidConvertible) T>
+	static PodEntry* Duplicate(T asset)
+	{
+		size_t uid = ToAssetUid(asset);
+		return Get().DuplicateImpl(Get().m_pods[uid].get());
 	}
 
 	static void RemoveEntry(size_t uid) { Get().m_pods[uid].reset(); }
@@ -148,6 +160,9 @@ public:
 		return Get().SuggestFilenameImpl(directory, desiredFilename);
 	}
 
+
+	static uri::Uri SuggestPath(const uri::Uri& desiredFullPath) { return Get().SuggestPathImpl(desiredFullPath); }
+
 	template<CONC(CAssetPod) PodType>
 	static PodType* Z_Handle_AccessPod(size_t uid)
 	{
@@ -156,4 +171,56 @@ public:
 
 	// AVOID THIS. This is for internal use.
 	[[nodiscard]] static std::vector<UniquePtr<PodEntry>>& Z_GetPods() { return Get().m_pods; }
+
+
+	template<CONC(CAssetPod) PodType>
+	static std::pair<PodEntry*, PodType*> CreateEntry(const uri::Uri& desiredPath, bool transient = false,
+		const uri::Uri& originalImportLoc = "", bool reimportOnLoad = false, bool exportOnSave = false)
+	{
+		return Get().CreateEntryImpl<PodType>(desiredPath, transient, originalImportLoc, reimportOnLoad, exportOnSave);
+	}
+
+private:
+	// This probably should reside in AssetHandlerManager.
+	template<CONC(CAssetPod) PodType>
+	[[nodiscard]] std::pair<PodEntry*, PodType*> CreateEntryImpl(const uri::Uri& desiredPath, bool transient = false,
+		const uri::Uri& originalImportLoc = "", bool reimportOnLoad = false, bool exportOnSave = false)
+	{
+		PodEntry* e = new PodEntry();
+
+		if (originalImportLoc.empty()) {
+			reimportOnLoad = false;
+			exportOnSave = false;
+		}
+		if (transient) {
+			reimportOnLoad = false;
+			exportOnSave = false;
+		}
+
+		// Populate Metadata
+		e->metadata.originalImportLocation = originalImportLoc;
+		e->metadata.reimportOnLoad = reimportOnLoad;
+		e->metadata.exportOnSave = exportOnSave;
+		e->metadata.podTypeHash = mti::GetHash<PodType>();
+
+		// Populate entry data
+		e->requiresSave = !transient;
+
+		auto ptr = new PodType();
+		e->ptr.reset(ptr);
+		e->transient = transient;
+		e->Z_AssignClass(&PodType::StaticClass());
+		e->type = mti::GetTypeId<PodType>();
+
+
+		e->path = AssetHandlerManager::SuggestPath(desiredPath);
+		e->name = uri::GetFilename(e->path);
+
+
+		e->uid = AssetHandlerManager::Get().m_pods.size();
+		AssetHandlerManager::Get().m_pods.emplace_back(e);
+		AssetHandlerManager::RegisterPathCache(e);
+
+		return std::make_pair(e, ptr);
+	}
 };

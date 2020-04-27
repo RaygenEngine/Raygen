@@ -6,6 +6,7 @@
 #include "reflection/PodTools.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "assets/util/FindPodUsers.h"
+#include "assets/specializations/PodDuplication.h"
 
 #include <vulkan/vulkan.hpp>
 #include <iostream>
@@ -154,6 +155,23 @@ void AssetHandlerManager::DeleteFromDiskInternal(PodEntry* entry)
 			LOG_WARN("Failed to remove file: {}: {}", path, er.message());
 		}
 	}
+}
+
+PodEntry* AssetHandlerManager::DuplicateImpl(PodEntry* entry)
+{
+	// For transient pods we should require more params when duplicating (like a real name). Also all transient
+	// duplications should in theory only be called directly by code and not caused indirectly by the user.
+	CLOG_WARN(entry->transient, "Using non transient pod duplicate with a transient entry: {}", entry->path);
+
+	PodEntry* result = nullptr;
+	podtools::VisitPodHash(entry->GetClass()->GetTypeId().hash(), [&]<typename PodType> {
+		auto& [newEntry, newPod]
+			= CreateEntry<PodType>(entry->path, false, entry->metadata.originalImportLocation, false, false);
+		podspec::Duplicate(entry->ptr.get(), newPod);
+		result = newEntry;
+	});
+
+	return result;
 }
 
 AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& defaultBinPath)
