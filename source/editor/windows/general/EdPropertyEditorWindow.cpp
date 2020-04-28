@@ -281,7 +281,7 @@ namespace {
 					ImGui::PushID(index);
 					++index;
 
-					InjectPodCode(handle, p, true, index * 1024);
+					result |= InjectPodCode(handle, p, true, index * 1024);
 
 					ImGui::PopID();
 				}
