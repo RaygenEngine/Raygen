@@ -47,6 +47,7 @@ Mesh::Gpu::Gpu(PodHandle<Mesh> podHandle)
 
 		vgg.indexCount = static_cast<uint32>(gg.indices.size());
 
+		// TODO: Convert to material index for material slot editing
 		vgg.material = GpuAssetManager->GetGpuHandle(data->materials[gg.materialIndex]);
 
 		geometryGroups.emplace_back(std::move(vgg));

@@ -94,6 +94,7 @@ Material::Gpu::Gpu(PodHandle<Material> podHandle)
 				  .setPImageInfo(&imageInfo)
 				  .setPTexelBufferView(nullptr);
 
+			  // PERF: Use a single descriptor update
 			  Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 		  };
 
