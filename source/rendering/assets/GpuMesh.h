@@ -15,17 +15,16 @@
 
 // PERF: batching
 struct GpuGeometryGroup {
+	uint32 indexCount{ 0u };
+	vl::GpuHandle<Material> material;
 
 	UniquePtr<vl::RawBuffer> vertexBuffer;
 	UniquePtr<vl::RawBuffer> indexBuffer;
-
-	vl::GpuHandle<Material> material;
-
-	uint32 indexCount{ 0u };
 };
 
 struct Mesh::Gpu : public vl::GpuAssetTemplate<Mesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;
+
 
 	Mesh::Gpu(PodHandle<Mesh> podHandle);
 };

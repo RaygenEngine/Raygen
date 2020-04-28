@@ -14,9 +14,9 @@ Mesh::Gpu::Gpu(PodHandle<Mesh> podHandle)
 	auto data = podHandle.Lock();
 
 	// PERF:
-	for (const auto& gg : data->geometryGroups) {
-
+	for (int32 i = 0; const auto& gg : data->geometrySlots) {
 		GpuGeometryGroup vgg;
+		vgg.material = GpuAssetManager->GetGpuHandle(data->materials[i]);
 
 		vk::DeviceSize vertexBufferSize = sizeof(gg.vertices[0]) * gg.vertices.size();
 		vk::DeviceSize indexBufferSize = sizeof(gg.indices[0]) * gg.indices.size();
@@ -48,9 +48,7 @@ Mesh::Gpu::Gpu(PodHandle<Mesh> podHandle)
 
 		vgg.indexCount = static_cast<uint32>(gg.indices.size());
 
-		// TODO: Convert to material index for material slot editing
-		vgg.material = GpuAssetManager->GetGpuHandle(data->materials[gg.materialIndex]);
-
 		geometryGroups.emplace_back(std::move(vgg));
+		++i;
 	}
 }

@@ -26,7 +26,7 @@ inline void DuplicateData(Image* src, Image* dst)
 template<>
 inline void DuplicateData(Mesh* src, Mesh* dst)
 {
-	dst->geometryGroups = src->geometryGroups;
+	dst->geometrySlots = src->geometrySlots;
 }
 
 

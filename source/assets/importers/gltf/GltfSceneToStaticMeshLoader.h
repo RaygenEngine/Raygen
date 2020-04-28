@@ -13,6 +13,7 @@ class GltfSceneToStaticMeshLoader {
 	bool m_tempModelRequiresDefaultMat{ false };
 
 	void LoadGeometryGroup(GeometryGroup& geom, const tg::Primitive& primitiveData, const glm::mat4& transformMat);
+	void AppendGeometryGroupToSlot(std::vector<GeometrySlot>& slots, GeometryGroup& group);
 
 public:
 	GltfSceneToStaticMeshLoader(GltfCache& cache, tg::Scene& scene);
