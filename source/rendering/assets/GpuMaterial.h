@@ -20,7 +20,7 @@ struct UBO_Material {
 	int mask;
 };
 
-struct Material::Gpu : public vl::GpuAssetBase {
+struct Material::Gpu : public vl::GpuAssetTemplate<Material> {
 
 	vl::GpuHandle<Sampler> baseColorSampler;
 	vl::GpuHandle<Image> baseColorImage;
@@ -47,4 +47,6 @@ struct Material::Gpu : public vl::GpuAssetBase {
 	vk::DescriptorSet descriptorSet;
 
 	Material::Gpu(PodHandle<Material> podHandle);
+
+	void Update(const AssetUpdateInfo& info) override final;
 };

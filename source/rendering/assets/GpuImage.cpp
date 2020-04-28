@@ -9,6 +9,13 @@
 using namespace vl;
 
 ::Image::Gpu::Gpu(PodHandle<::Image> podHandle)
+	: GpuAssetTemplate(podHandle)
+{
+	Update({});
+}
+
+// NEXT: Check usage, probably wrong because we remake "image" member variable.
+void ::Image::Gpu::Update(const AssetUpdateInfo& info)
 {
 	auto imgData = podHandle.Lock();
 

@@ -11,6 +11,7 @@
 #include "universe/nodes/camera/CameraNode.h"
 #include "universe/nodes/Node.h"
 #include "universe/Universe.h"
+#include "assets/PodEditor.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -32,6 +33,7 @@ namespace {
 	constexpr bool IsJsonLoadable
 		= std::is_same_v<Material, T> || std::is_same_v<Shader, T> || std::is_same_v<Sampler, T>;
 
+
 	struct ReflectionToImguiVisitor {
 		int32 depth{ 0 };
 
@@ -47,7 +49,10 @@ namespace {
 		void* currentObject{ nullptr };
 		const Property* currentProperty{ nullptr };
 
+		bool didEditFlag{ false };
+
 		void Begin(void* objPtr, const ReflClass& cl) { currentObject = objPtr; }
+		void End(const ReflClass&) {}
 
 		void PreProperty(const Property& p)
 		{
@@ -67,6 +72,7 @@ namespace {
 			}
 			if (!p.HasFlags(NoEdit)) {
 				if (Inner(t, p)) {
+					didEditFlag = true;
 					if (p.GetDirtyFlagIndex() >= 0) {
 						dirtyFlags.set(p.GetDirtyFlagIndex());
 					}
@@ -215,7 +221,20 @@ namespace {
 				depth++;
 				ImGui::Indent();
 
-				refltools::CallVisitorOnEveryProperty(const_cast<PodType*>(pod.Lock()), *this);
+
+				bool outerDidEdit = didEditFlag; // Stack store the current didEditFlag.
+				didEditFlag = false;
+
+				OptionalPodEditor<PodType> editor(pod);
+				auto ptr = editor.BeginOptionalEditRegion();
+				refltools::CallVisitorOnEveryProperty(ptr, *this);
+				if (didEditFlag) {
+					editor.MarkEdit();
+				}
+				editor.CommitForGpu();
+
+				didEditFlag = outerDidEdit; // Revert did Edit Flag to the stored state now that we are done iterating
+											// the inner object.
 
 				ImGui::Unindent();
 				depth--;

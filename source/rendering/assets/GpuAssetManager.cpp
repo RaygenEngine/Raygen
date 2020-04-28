@@ -1,7 +1,8 @@
 #include "pch.h"
-#include "rendering/assets/GpuAssetManager.h"
+#include "GpuAssetManager.h"
 
 #include "assets/Assets.h"
+#include "assets/AssetRegistry.h"
 #include "assets/PodIncludes.h"
 #include "reflection/PodTools.h"
 #include "rendering/assets/GpuImage.h"
@@ -10,33 +11,9 @@
 #include "rendering/assets/GpuSampler.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuCubemap.h"
-
-
-#define DECLARE_LOADER(Pod)                                                                                            \
-	template<>                                                                                                         \
-	NOINLINE void GpuAssetManager_::Load<Pod>(PodHandle<Pod> handle)                                                   \
-	{                                                                                                                  \
-		gpuAssets[handle.uid].reset(new GpuAsset<Pod>(handle));                                                        \
-	}
+#include "rendering/Device.h"
 
 namespace vl {
-DECLARE_LOADER(Mesh);
-DECLARE_LOADER(Material);
-DECLARE_LOADER(Sampler);
-DECLARE_LOADER(::Image);
-DECLARE_LOADER(Shader);
-DECLARE_LOADER(::Cubemap);
-
-void Dummy()
-{
-	GpuAssetManager->Load<Mesh>({});
-	GpuAssetManager->Load<Material>({});
-	GpuAssetManager->Load<Sampler>({});
-	GpuAssetManager->Load<::Image>({});
-	GpuAssetManager->Load<Shader>({});
-	GpuAssetManager->Load<::Cubemap>({});
-}
-
 vk::Sampler GpuAssetManager_::GetDefaultSampler()
 {
 	// TODO: auto load the defaults of each asset type
@@ -57,4 +34,25 @@ void GpuAssetManager_::ShaderChanged(PodHandle<Shader> handle)
 {
 	GetGpuHandle(handle).Lock().Z_Recompile();
 }
+
+void GpuAssetManager_::PerformAssetUpdates(const std::vector<std::pair<size_t, AssetUpdateInfo>>& updates)
+{
+	Device->waitIdle();
+
+	for (auto& [uid, info] : updates) {
+		if (gpuAssets[uid]) {
+			gpuAssets[uid]->Update(info);
+		}
+	}
+}
+
+void GpuAssetManager_::ConsumeAssetUpdates()
+{
+	auto& updates = AssetHandlerManager::GetGpuUpdateRequests();
+	if (!updates.empty()) {
+		PerformAssetUpdates(updates);
+		AssetHandlerManager::ClearGpuUpdateRequests();
+	}
+}
+
 } // namespace vl

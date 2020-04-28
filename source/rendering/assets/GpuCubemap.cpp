@@ -8,6 +8,7 @@
 
 
 Cubemap::Gpu::Gpu(PodHandle<Cubemap> podHandle)
+	: GpuAssetTemplate(podHandle)
 {
 	auto cubemapData = podHandle.Lock();
 
