@@ -7,7 +7,7 @@
 
 #include <vulkan/vulkan.hpp>
 
-struct Shader::Gpu : public vl::GpuAssetBase {
+struct Shader::Gpu : public vl::GpuAssetTemplate<Shader> {
 	vk::UniqueShaderModule frag;
 	vk::UniqueShaderModule vert;
 

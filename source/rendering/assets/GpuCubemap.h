@@ -5,7 +5,7 @@
 
 #include <vulkan/vulkan.hpp>
 
-struct ::Cubemap::Gpu : public vl::GpuAssetBase {
+struct ::Cubemap::Gpu : public vl::GpuAssetTemplate<::Cubemap> {
 	UniquePtr<vl::Cubemap> cubemap;
 
 	Cubemap::Gpu(PodHandle<Cubemap> podHandle);

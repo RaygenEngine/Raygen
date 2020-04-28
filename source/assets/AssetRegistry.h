@@ -1,9 +1,11 @@
 #pragma once
 #include "assets/AssetPod.h"
+#include "assets/AssetUpdateInfo.h"
 #include "assets/PodEntry.h"
 #include "assets/PodHandle.h"
 #include "assets/UriLibrary.h"
 #include "core/StringUtl.h"
+
 
 struct Image;
 struct Sampler;
@@ -28,6 +30,7 @@ private:
 	std::vector<UniquePtr<PodEntry>> m_pods;
 	std::unordered_map<uri::Uri, size_t, str::HashInsensitive> m_pathCache;
 
+	std::vector<std::pair<size_t, AssetUpdateInfo>> m_gpuPodUpdateRequests;
 
 	uri::Uri SuggestFilenameImpl(const fs::path& directory, const uri::Uri& desired)
 	{
@@ -114,6 +117,15 @@ public:
 
 	static uri::Uri GetPodUri(BasePodHandle handle) { return Get().m_pods[handle.uid]->path; }
 
+
+	template<CONC(CUidConvertible) T>
+	static PodEntry* GetEntry(T asset)
+	{
+		size_t uid = ToAssetUid(asset);
+		return Get().m_pods[uid].get();
+	}
+
+
 	static PodEntry* GetEntry(BasePodHandle handle) { return Get().m_pods[handle.uid].get(); }
 
 	static void RenameEntry(PodEntry* entry, const std::string_view newFullPath)
@@ -142,6 +154,15 @@ public:
 		size_t uid = ToAssetUid(asset);
 		Get().DeleteFromDiskInternal(Get().m_pods[uid].get());
 	}
+
+	static void RequestGpuUpdateFor(size_t uid, AssetUpdateInfo&& info)
+	{
+		Get().m_gpuPodUpdateRequests.emplace_back(uid, std::move(info));
+	}
+
+	// TODO: Forward these two functions through Assets.h
+	static const auto& GetGpuUpdateRequests() { return Get().m_gpuPodUpdateRequests; }
+	static void ClearGpuUpdateRequests() { Get().m_gpuPodUpdateRequests.clear(); }
 
 
 	// Returns an alternative "valid" path for this asset. ie one that will not collide with a current asset.

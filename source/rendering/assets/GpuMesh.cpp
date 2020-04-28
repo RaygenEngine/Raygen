@@ -9,6 +9,7 @@ using namespace vl;
 
 // PERF:
 Mesh::Gpu::Gpu(PodHandle<Mesh> podHandle)
+	: GpuAssetTemplate(podHandle)
 {
 	auto data = podHandle.Lock();
 

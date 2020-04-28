@@ -16,26 +16,8 @@ public:
 	template<typename T>
 	void Load(PodHandle<T> handle)
 	{
+		gpuAssets[handle.uid].reset(new GpuAsset<T>(handle));
 	}
-
-	template<>
-	void Load<Mesh>(PodHandle<Mesh> handle);
-
-	template<>
-	void Load<Sampler>(PodHandle<Sampler> handle);
-
-	template<>
-	void Load<Material>(PodHandle<Material> handle);
-
-	template<>
-	void Load<Image>(PodHandle<Image> handle);
-
-	template<>
-	void Load<Shader>(PodHandle<Shader> handle);
-
-	template<>
-	void Load<Cubemap>(PodHandle<Cubemap> handle);
-
 
 	template<CONC(CAssetPod) T>
 	GpuHandle<T> GetGpuHandle(PodHandle<T> handle)
@@ -67,5 +49,15 @@ public:
 
 	void ShaderChanged(PodHandle<Shader> handle);
 
+
+private:
+	// Updates all gpu side assets that are in use from the list to their current cpu state.
+	// This does device->waitIdle. For now this synchronization is enough, when doing multithreading we should handle
+	// interject this in vulkan layer, synchronize there and call this just for gpu updates or even run the updates in
+	// parallel.
+	void PerformAssetUpdates(const std::vector<std::pair<size_t /*assetUid*/, AssetUpdateInfo>>& updates);
+
+public:
+	void ConsumeAssetUpdates();
 } * GpuAssetManager{};
 } // namespace vl

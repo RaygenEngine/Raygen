@@ -24,7 +24,7 @@ struct GpuGeometryGroup {
 	uint32 indexCount{ 0u };
 };
 
-struct Mesh::Gpu : public vl::GpuAssetBase {
+struct Mesh::Gpu : public vl::GpuAssetTemplate<Mesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;
 
 	Mesh::Gpu(PodHandle<Mesh> podHandle);

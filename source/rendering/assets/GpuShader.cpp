@@ -27,6 +27,7 @@ void Compile(const Shader* pod, Shader::Gpu* gpu)
 } // namespace
 
 Shader::Gpu::Gpu(PodHandle<Shader> podHandle)
+	: GpuAssetTemplate(podHandle)
 {
 	auto pod = podHandle.Lock();
 	Compile(pod, this);

@@ -79,6 +79,13 @@ size_t ToAssetUid(T t)
 	return t;
 };
 
+template<typename T>
+size_t ToAssetUid(PodHandle<T> t)
+{
+	return t.uid;
+};
+
+
 template<>
 inline size_t ToAssetUid<size_t>(size_t t)
 {
