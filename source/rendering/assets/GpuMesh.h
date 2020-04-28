@@ -27,4 +27,6 @@ struct Mesh::Gpu : public vl::GpuAssetTemplate<Mesh> {
 
 
 	Mesh::Gpu(PodHandle<Mesh> podHandle);
+
+	void Update(const AssetUpdateInfo& info) override final;
 };

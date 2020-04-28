@@ -52,3 +52,13 @@ Mesh::Gpu::Gpu(PodHandle<Mesh> podHandle)
 		++i;
 	}
 }
+
+void Mesh::Gpu::Update(const AssetUpdateInfo& info)
+{
+	auto data = podHandle.Lock();
+
+	for (int32 i = 0; auto& gg : geometryGroups) {
+		gg.material = GpuAssetManager->GetGpuHandle(data->materials[i]);
+		++i;
+	}
+}
