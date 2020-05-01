@@ -1,7 +1,7 @@
 #pragma once
 #include "rendering/objects/Buffer.h"
 #include "rendering/objects/ImageAttachment.h"
-#include "rendering/scene/SceneReflectionProbe.h"
+#include "rendering/assets/GpuCubemap.h"
 
 #include <vulkan/vulkan.hpp>
 namespace vl {
@@ -26,16 +26,16 @@ class IrradianceMapCalculation {
 	DescriptorLayout m_skyboxDescLayout;
 	vk::DescriptorSet m_descSet;
 
-	void MakeDesciptors(SceneReflectionProbe* reflProb);
+	void MakeDesciptors(::Cubemap::Gpu* reflProb);
 	void MakeRenderPass();
 	void AllocateCommandBuffers();
 	void AllocateCubeVertexBuffer();
 	void MakePipeline();
 	void PrepareFaceInfo();
-	void RecordAndSubmitCmdBuffers(SceneReflectionProbe* reflProb);
-	void EditPods(SceneReflectionProbe* reflProb);
+	void RecordAndSubmitCmdBuffers(::Cubemap::Gpu* reflProb);
+	void EditPods(::Cubemap::Gpu* reflProb);
 
 public:
-	IrradianceMapCalculation(SceneReflectionProbe* reflProb);
+	IrradianceMapCalculation(::Cubemap::Gpu* reflProb);
 };
 } // namespace vl

@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "ReflectionProbeNode.h"
 
+#include "rendering/assets/GpuAssetManager.h"
+
 
 ReflectionProbeNode::ReflectionProbeNode()
 {
@@ -19,11 +21,13 @@ void ReflectionProbeNode::DirtyUpdate(DirtyFlagset flags)
 	if (flags[DF::SkyTexture]) {
 
 		if (m_skybox.Lock()->width > 0) {
-			Enqueue([&](SceneReflectionProbe& rp) { rp.UploadCubemap(m_skybox); });
+			Enqueue([cubemap = m_skybox](
+						SceneReflectionProbe& rp) { rp.cubemap = vl::GpuAssetManager->GetGpuHandle(cubemap); });
 		}
 	}
 
 	if (flags[DF::AmbientTerm]) {
-		Enqueue([&](SceneReflectionProbe& rp) { rp.ubo.color = glm::vec4(m_ambientTerm, 1.f); });
+		Enqueue(
+			[ambientTerm = m_ambientTerm](SceneReflectionProbe& rp) { rp.ubo.color = glm::vec4(ambientTerm, 1.f); });
 	}
 }

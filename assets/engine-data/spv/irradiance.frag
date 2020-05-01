@@ -27,7 +27,7 @@ void main( ) {
 	up         = cross(normal, right);
 
 	// TODO: uniforms
-	float sampleDelta = 0.025;
+	float sampleDelta = 0.25;
 	float nrSamples = 0.0; 
 	for(float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
 	{
@@ -44,6 +44,14 @@ void main( ) {
 	}
 	irradiance = PI * irradiance * (1.0 / float(nrSamples));
   
-    outColor = vec4(irradiance, 1.0);
+	outColor = vec4(irradiance, 1.f);
 }                                                                                                                          
-                                                                                                                                    
+                                                                                                                                                                                    
+                                                 
+                                                  
+                                                   
+                                                    
+                                                     
+                                                       
+                                                        
+                                                         

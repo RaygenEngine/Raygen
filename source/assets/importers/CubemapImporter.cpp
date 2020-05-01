@@ -35,6 +35,7 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 		= ImporterManager->CreateEntry<Cubemap>(path.generic_string(), path.filename().replace_extension().string());
 
 	pod->faces.resize(imageNames.size());
+	pod->irradiance.resize(imageNames.size());
 
 	ImporterManager->PushPath(path.filename().replace_extension());
 

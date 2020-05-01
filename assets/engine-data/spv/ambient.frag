@@ -1,7 +1,7 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive: enable
-
+#include "microfacet_bsdf.h"
 // out
 
 layout(location = 0) out vec4 outColor;
@@ -29,12 +29,9 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 	mat4 viewProjInv;
 } camera;
 
-layout(set = 2, binding = 0) uniform UBO_Ambient {
-    vec3 color;
-	float pad0;
-} ambient;
 
-layout(set = 2, binding = 1) uniform samplerCube skyboxSampler;
+layout(set = 2, binding = 0) uniform samplerCube skyboxSampler;
+layout(set = 2, binding = 1) uniform samplerCube irradianceSampler;
 
 vec3 ReconstructWorldPosition(float depth)
 {
@@ -72,6 +69,10 @@ vec3 ReconstructWorldPosForSky(float depth)
 	return worldPos.xyz / worldPos.w; // return world space pos xyz
 }
 
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
+}  
 
 void main( ) {
 
@@ -101,20 +102,34 @@ void main( ) {
 	float metallic = specular.r;
 	float roughness = specular.g;
 	
+
 	
-	
-	//metallic = (metallic * 0.4) + 0.15;
-	
+
 	
 	// ART:
-	vec3 specColor = mix(ambient.color * albedo, reflColor, 1-roughness);
+	vec3 specColor = mix(texture(irradianceSampler, N).rgb * albedo, reflColor, 1-roughness);
 	
 	
 	vec3 color = emissive + specColor;
 	color = mix(color, color * specular.b, specular.a);
+
+	vec3 F0 = vec3(0.04); 
+    F0 = mix(F0, albedo, metallic);
+	vec3 kS = fresnelSchlickRoughness(max(dot(N, I), 0.0), F0, roughness); 
+	vec3 kD = 1.0 - kS;
+	vec3 irradiance = texture(irradianceSampler, N).rgb;
+	vec3 diffuse    = irradiance * albedo;
+	vec3 ambient    = (kD * diffuse);
+
 	
-	outColor += vec4(color, 1);
+	outColor += vec4(ambient, 1);
+	
+	outColor += outColor / 4.0f;
 }                                                                                                                          
                                                                                                                                        
                                                                                                                                                                  
                                                                                                                        
+                                                                                                                     
+                                                                                                                      
+                                                                                                                        
+                                                                                                                         

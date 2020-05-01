@@ -23,5 +23,8 @@ void main()
     mat4 rotView = mat4(mat3(push.v)); // remove translation from the view matrix
     vec4 clipPos = push.p * rotView * vec4(localPos, 1.0);
 
-    gl_Position = clipPos.xyww;
-}
+    gl_Position = clipPos.xyzw;
+
+}                          
+                           
+                             
