@@ -154,15 +154,15 @@ void Image::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Imag
 			oldStage, intermediateStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 
 		vk::ImageBlit blit{};
-		blit.srcOffsets[0] = { 0, 0, 0 };
-		blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
+		blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
+		blit.srcOffsets[1] = vk::Offset3D{ mipWidth, mipHeight, 1 };
 		blit.srcSubresource
 			.setAspectMask(GetAspectMask(m_imageInfo)) //
 			.setMipLevel(i - 1)
 			.setBaseArrayLayer(0u)
 			.setLayerCount(1u);
-		blit.dstOffsets[0] = { 0, 0, 0 };
-		blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
+		blit.dstOffsets[0] = vk::Offset3D{ 0, 0, 0 };
+		blit.dstOffsets[1] = vk::Offset3D{ mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
 		blit.dstSubresource
 			.setAspectMask(GetAspectMask(m_imageInfo)) //
 			.setMipLevel(i)

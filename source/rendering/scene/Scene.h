@@ -155,6 +155,13 @@ private:
 	}
 
 public:
+	void BuildAll()
+	{
+		/*for (auto reflProb : reflProbs.elements) {
+			reflProb->Build();
+		}*/
+	}
+
 	void ConsumeCmdQueue()
 	{
 		ExecuteCreations();

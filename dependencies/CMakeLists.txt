@@ -46,24 +46,24 @@ set_target_properties(
 	spdlog
 	glslang
 	HLSL
-	core_tables
-	extinst_tables
-	enum_string_mapping
-	SPIRV-Tools
-	SPIRV-Tools-opt
-	OGLCompiler
-	OSDependent
-	SPIRV
-	spirv-tools-header-DebugInfo
-	spirv-tools-header-OpenCLDebugInfo100
-	spirv-cross-core
-	spirv-cross-glsl
-	spirv-cross-reflect
-	spv-tools-debuginfo
-	spv-tools-spv-amd-gs
-	spv-tools-spv-amd-sb
-	spv-tools-spv-amd-sevp
-	spv-tools-spv-amd-stm
-	spv-tools-cldi100
-	glslang-default-resource-limits
+	# core_tables
+	# extinst_tables
+	# enum_string_mapping
+	# SPIRV-Tools
+	# SPIRV-Tools-opt
+	# OGLCompiler
+	# OSDependent
+	# SPIRV
+	# spirv-tools-header-DebugInfo
+	# spirv-tools-header-OpenCLDebugInfo100
+	# spirv-cross-core
+	# spirv-cross-glsl
+	# spirv-cross-reflect
+	# spv-tools-debuginfo
+	# spv-tools-spv-amd-gs
+	# spv-tools-spv-amd-sb
+	# spv-tools-spv-amd-sevp
+	# spv-tools-spv-amd-stm
+	# spv-tools-cldi100
+	# glslang-default-resource-limits
 PROPERTIES FOLDER ext_dependencies)
