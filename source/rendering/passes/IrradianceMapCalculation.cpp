@@ -24,57 +24,70 @@ static_assert(sizeof(PushConstant) <= 128);
 
 std::array vertices = {
 	// back face
-	-1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-	1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,   // top-right
-	1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f,  // bottom-right
-	1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,   // top-right
-	-1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-	-1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,  // top-left
+	-1.0f, -1.0f, -1.0f, // bottom-left
+	1.0f, 1.0f, -1.0f,   // top-right
+	1.0f, -1.0f, -1.0f,  // bottom-right
+	1.0f, 1.0f, -1.0f,   // top-right
+	-1.0f, -1.0f, -1.0f, // bottom-left
+	-1.0f, 1.0f, -1.0f,  // top-left
 	// front face
-	-1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-	1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,  // bottom-right
-	1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,   // top-right
-	1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,   // top-right
-	-1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,  // top-left
-	-1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+	-1.0f, -1.0f, 1.0f, // bottom-left
+	1.0f, -1.0f, 1.0f,  // bottom-right
+	1.0f, 1.0f, 1.0f,   // top-right
+	1.0f, 1.0f, 1.0f,   // top-right
+	-1.0f, 1.0f, 1.0f,  // top-left
+	-1.0f, -1.0f, 1.0f, // bottom-left
 	// left face
-	-1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,   // top-right
-	-1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f,  // top-left
-	-1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom-left
-	-1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom-left
-	-1.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f,  // bottom-right
-	-1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,   // top-right
-														// right face
-	1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,     // top-left
-	1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,   // bottom-right
-	1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,    // top-right
-	1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,   // bottom-right
-	1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,     // top-left
-	1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,    // bottom-left
+	-1.0f, 1.0f, 1.0f,   // top-right
+	-1.0f, 1.0f, -1.0f,  // top-left
+	-1.0f, -1.0f, -1.0f, // bottom-left
+	-1.0f, -1.0f, -1.0f, // bottom-left
+	-1.0f, -1.0f, 1.0f,  // bottom-right
+	-1.0f, 1.0f, 1.0f,   // top-right
+						 // right face
+	1.0f, 1.0f, 1.0f,    // top-left
+	1.0f, -1.0f, -1.0f,  // bottom-right
+	1.0f, 1.0f, -1.0f,   // top-right
+	1.0f, -1.0f, -1.0f,  // bottom-right
+	1.0f, 1.0f, 1.0f,    // top-left
+	1.0f, -1.0f, 1.0f,   // bottom-left
 	// bottom face
-	-1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // top-right
-	1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,  // top-left
-	1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,   // bottom-left
-	1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,   // bottom-left
-	-1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f,  // bottom-right
-	-1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // top-right
+	-1.0f, -1.0f, -1.0f, // top-right
+	1.0f, -1.0f, -1.0f,  // top-left
+	1.0f, -1.0f, 1.0f,   // bottom-left
+	1.0f, -1.0f, 1.0f,   // bottom-left
+	-1.0f, -1.0f, 1.0f,  // bottom-right
+	-1.0f, -1.0f, -1.0f, // top-right
 	// top face
-	-1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // top-left
-	1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,   // bottom-right
-	1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,  // top-right
-	1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,   // bottom-right
-	-1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // top-left
-	-1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f   // bottom-left
+	-1.0f, 1.0f, -1.0f, // top-left
+	1.0f, 1.0f, 1.0f,   // bottom-right
+	1.0f, 1.0f, -1.0f,  // top-right
+	1.0f, 1.0f, 1.0f,   // bottom-right
+	-1.0f, 1.0f, -1.0f, // top-left
+	-1.0f, 1.0f, 1.0f,  // bottom-left
 };
 
+constexpr float p = 1.0;
+constexpr float n = -1.0;
+
+std::array kvertices = {
+	p, p, p, //
+	p, n, p, //
+	n, p, p, //
+
+	p, n, p, //
+	n, p, p, //
+	n, n, p, //
+			 //
+};
 
 } // namespace
 
 
 namespace vl {
-IrradianceMapCalculation::IrradianceMapCalculation(SceneReflectionProbe* reflProb)
+IrradianceMapCalculation::IrradianceMapCalculation(::Cubemap::Gpu* reflProb)
 {
-	MakeDesciptors();
+	MakeDesciptors(reflProb);
 
 	MakeRenderPass();
 
@@ -91,7 +104,7 @@ IrradianceMapCalculation::IrradianceMapCalculation(SceneReflectionProbe* reflPro
 	EditPods(reflProb);
 }
 
-void IrradianceMapCalculation::MakeDesciptors(SceneReflectionProbe* reflProb)
+void IrradianceMapCalculation::MakeDesciptors(::Cubemap::Gpu* reflProb)
 {
 	m_skyboxDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	m_skyboxDescLayout.Generate();
@@ -104,7 +117,7 @@ void IrradianceMapCalculation::MakeDesciptors(SceneReflectionProbe* reflProb)
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(reflProb->cubemap.Lock().cubemap->GetView())
+		.setImageView(reflProb->cubemap->GetView())
 		.setSampler(quadSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -201,11 +214,8 @@ void IrradianceMapCalculation::AllocateCubeVertexBuffer()
 void IrradianceMapCalculation::MakePipeline()
 {
 	// CHECK:
-	static auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/irradiance.vert");
-	gpuShader.onCompile = [&]() {
-		Device->waitIdle();
-		MakePipeline();
-	};
+	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/irradiance.vert");
+
 
 	if (!gpuShader.HasCompiledSuccessfully()) {
 		LOG_ERROR("Geometry Pipeline skipped due to shader compilation errors.");
@@ -225,7 +235,7 @@ void IrradianceMapCalculation::MakePipeline()
 	vk::VertexInputBindingDescription bindingDescription{};
 	bindingDescription
 		.setBinding(0u) //
-		.setStride(sizeof(Vertex))
+		.setStride(sizeof(float) * 3)
 		.setInputRate(vk::VertexInputRate::eVertex);
 
 	vk::VertexInputAttributeDescription attributeDescription{};
@@ -267,13 +277,15 @@ void IrradianceMapCalculation::MakePipeline()
 		.setScissorCount(1u)
 		.setPScissors(&scissor);
 
+	static ConsoleVariable<uint> fillmode{ "fillmode", 0 };
+
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer
 		.setDepthClampEnable(VK_FALSE) //
 		.setRasterizerDiscardEnable(VK_FALSE)
-		.setPolygonMode(vk::PolygonMode::eFill)
+		.setPolygonMode(static_cast<vk::PolygonMode>(fillmode.Get()))
 		.setLineWidth(1.f)
-		.setCullMode(vk::CullModeFlagBits::eBack)
+		.setCullMode(vk::CullModeFlagBits::eNone)
 		.setFrontFace(vk::FrontFace::eClockwise)
 		.setDepthBiasEnable(VK_FALSE)
 		.setDepthBiasConstantFactor(0.f)
@@ -327,7 +339,7 @@ void IrradianceMapCalculation::MakePipeline()
 		.setOffset(0u);
 
 
-	std::array layouts = { Layouts->ambientDescLayout.setLayout.get() };
+	std::array layouts = { m_skyboxDescLayout.setLayout.get() };
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
@@ -396,17 +408,29 @@ void IrradianceMapCalculation::PrepareFaceInfo()
 		m_framebuffers[i] = Device->createFramebufferUnique(createInfo);
 	}
 
-	m_captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+
+	auto forward = glm::vec3(0.f, 0.f, 1.f);
+	auto up = glm::vec3(0.f, 1.f, 0.f);
+	auto right = glm::vec3(1.f, 0.f, 0.f);
+
+
+	m_captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, 10.0f);
+	static ConsoleVariable<int> m{ "invProj", -1 };
+	m_captureProjection[1][1] *= m;
+
 	m_captureViews
-		= { glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)) };
+
+		= {
+			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)),  //+x
+			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)), //-x
+			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)), //+y
+			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)), // -y
+			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f)),  // +z
+			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f)), // -z
+		  };
 }
 
-void IrradianceMapCalculation::RecordAndSubmitCmdBuffers(SceneReflectionProbe* reflProb)
+void IrradianceMapCalculation::RecordAndSubmitCmdBuffers(::Cubemap::Gpu* reflProb)
 {
 	Device->waitIdle();
 
@@ -436,9 +460,8 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers(SceneReflectionProbe* r
 			.setOffset({ 0, 0 }) //
 			.setExtent(scissor.extent);
 
-		std::array<vk::ClearValue, 2> clearValues = {};
+		std::array<vk::ClearValue, 1> clearValues = {};
 		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-		clearValues[1].setDepthStencil({ 1.0f, 0 });
 		renderPassInfo
 			.setClearValueCount(static_cast<uint32>(clearValues.size())) //
 			.setPClearValues(clearValues.data());
@@ -478,7 +501,7 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers(SceneReflectionProbe* r
 					vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &m_descSet, 0u, nullptr);
 
 				// draw call (cube)
-				m_cmdBuffers[i].draw(12 * 3, 1u, 0u, 0u);
+				m_cmdBuffers[i].draw(vertices.size() / 3, 1u, 0u, 0u);
 			}
 			// end render pass
 			m_cmdBuffers[i].endRenderPass();
@@ -495,9 +518,9 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers(SceneReflectionProbe* r
 	Device->waitIdle();
 }
 
-void IrradianceMapCalculation::EditPods(SceneReflectionProbe* reflProb)
+void IrradianceMapCalculation::EditPods(::Cubemap::Gpu* reflProb)
 {
-	PodHandle<::Cubemap> cubemapHandle{ reflProb->cubemap.uid };
+	PodHandle<::Cubemap> cubemapHandle{ reflProb->podUid };
 	PodEditor editor{ cubemapHandle };
 
 	auto pod = editor.GetEditablePtr();
@@ -519,6 +542,7 @@ void IrradianceMapCalculation::EditPods(SceneReflectionProbe* reflProb)
 
 		auto facePod = faceEditor.GetEditablePtr();
 
+		facePod->data.resize(512 * 512 * 4);
 		facePod->width = 512;
 		facePod->height = 512;
 		memcpy(facePod->data.data(), data, 512 * 512 * 4);

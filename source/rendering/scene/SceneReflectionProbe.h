@@ -13,8 +13,5 @@ struct SceneReflectionProbe : SceneStruct<Ambient_Ubo> {
 
 	SceneReflectionProbe();
 
-	// TODO: this is unsafe, do it like regular upload
-	void UploadCubemap(PodHandle<Cubemap> cubemapData);
-
 	void Build();
 };
