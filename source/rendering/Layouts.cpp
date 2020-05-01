@@ -34,6 +34,7 @@ Layouts_::Layouts_()
 	// ambient (TODO: reflection probes etc
 	ambientDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
 	ambientDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+	ambientDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	ambientDescLayout.Generate();
 }
 } // namespace vl

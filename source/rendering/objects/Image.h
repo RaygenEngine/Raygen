@@ -19,17 +19,18 @@ protected:
 
 	vk::UniqueImageView m_view;
 
-
+public:
 	Image(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
 		vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage,
 		vk::SampleCountFlagBits samples, vk::SharingMode sharingMode, vk::ImageCreateFlags flags,
 		vk::MemoryPropertyFlags properties);
 
-public:
 	// Blocking transition to layout
 	void BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
 	void CopyBufferToImage(const RawBuffer& buffer);
+
+	void CopyImageToBuffer(const RawBuffer& buffer);
 
 	// TODO: virtual (split image classes correctly...)
 	virtual void GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout);

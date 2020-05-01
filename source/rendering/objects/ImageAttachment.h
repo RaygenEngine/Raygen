@@ -11,7 +11,7 @@ class ImageAttachment : public Image {
 
 public:
 	// TODO: check depth from format
-	ImageAttachment(const std::string& name, uint32 width, uint32 height, vk::Format format,
+	ImageAttachment(const std::string& name, uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling,
 		vk::ImageLayout initalLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, bool isDepth);
 
 	[[nodiscard]] std::string GetName() const { return m_name; }
