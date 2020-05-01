@@ -100,6 +100,44 @@ void Image::CopyBufferToImage(const RawBuffer& buffer)
 	Device->transferQueue.waitIdle();
 }
 
+void Image::CopyImageToBuffer(const RawBuffer& buffer)
+{
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+	Device->transferCmdBuffer.begin(beginInfo);
+
+	vk::BufferImageCopy region{};
+	region
+		.setBufferOffset(0u) //
+		.setBufferRowLength(0u)
+		.setBufferImageHeight(0u)
+		.setImageOffset({ 0, 0, 0 })
+		.setImageExtent(m_imageInfo.extent);
+
+	region.imageSubresource
+		.setAspectMask(GetAspectMask(m_imageInfo)) //
+		.setMipLevel(0u)
+		.setBaseArrayLayer(0u)
+		.setLayerCount(m_imageInfo.arrayLayers);
+
+	Device->transferCmdBuffer.copyImageToBuffer(
+		m_handle.get(), vk::ImageLayout::eTransferSrcOptimal, buffer, { region });
+
+	Device->transferCmdBuffer.end();
+
+	vk::SubmitInfo submitInfo{};
+	submitInfo
+		.setCommandBufferCount(1u) //
+		.setPCommandBuffers(&Device->transferCmdBuffer);
+
+	Device->transferQueue.submit(1u, &submitInfo, {});
+	// PERF:
+	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
+	// instead of executing one at a time. That may give the driver more opportunities to optimize.
+	Device->transferQueue.waitIdle();
+}
+
 void Image::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout)
 {
 	// Check if image format supports linear blitting

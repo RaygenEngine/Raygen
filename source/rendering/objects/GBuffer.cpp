@@ -16,8 +16,9 @@ GBuffer::GBuffer(vk::RenderPass renderPass, uint32 width, uint32 height)
 
 	auto initAttachment = [&](const std::string& name, vk::Format format, vk::ImageUsageFlags usage,
 							  vk::ImageLayout finalLayout, bool isDepth) {
-		auto att = std::make_unique<ImageAttachment>(name, width, height, format, vk::ImageLayout::eUndefined,
-			usage | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal, isDepth);
+		auto att = std::make_unique<ImageAttachment>(name, width, height, format, vk::ImageTiling::eOptimal,
+			vk::ImageLayout::eUndefined, usage | vk::ImageUsageFlagBits::eSampled,
+			vk::MemoryPropertyFlagBits::eDeviceLocal, isDepth);
 		att->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, finalLayout);
 		return att;
 	};

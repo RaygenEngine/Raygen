@@ -62,7 +62,19 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 			CLOG_ABORT(pod->width != face->width || pod->height != face->height,
 				"Cubemap faces resolution missmatch: {}", uri::ToSystemPath(finalPath));
 		}
+
+		// TODO: remove, this is temp
+		auto& [handle, opod] = ImporterManager->CreateEntry<Image>(
+			path.generic_string() + "_irr", path.filename().replace_extension().string() + "_irr");
+
+		opod->width = 512;
+		opod->height = 512;
+		opod->format = ImageFormat::Unorm;
+		opod->data.resize(512 * 512 * 4);
+		pod->irradiance[value] = handle;
 	}
+
+
 	ImporterManager->PopPath();
 
 	return handle;

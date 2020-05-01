@@ -161,7 +161,6 @@
         },
         "+type": "Geometry",
         "model": "gen-data/gen-data/Sponza",
-        "model_importHint_": "gltf-samples/2.0/Sponza/glTF/Sponza.gltf",
         "~children": []
     },
     {
