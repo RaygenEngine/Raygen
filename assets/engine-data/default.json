@@ -72,8 +72,8 @@
             "y": 0.0,
             "z": 0.30000001192092896
         },
-        "skybox": "~Cubemap",
-        "skybox_importHint_": "",
+        "skybox": "gen-data/gen-data/skyb",
+        "skybox_importHint_": "engine-data/skybox/sky/skyb.cmp",
         "~children": []
     },
     {
@@ -160,7 +160,7 @@
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/Sponza",
+        "model": "gen-data/gen-data/Sponza",
         "model_importHint_": "gltf-samples/2.0/Sponza/glTF/Sponza.gltf",
         "~children": []
     },
@@ -174,7 +174,7 @@
             },
             "rot": {
                 "x": -151.26002502441406,
-                "y": 60.59444046020508,
+                "y": 60.594425201416016,
                 "z": 179.99951171875
             },
             "scale": {
@@ -186,7 +186,7 @@
         "+type": "WindowCamera",
         "far": 1000.0,
         "focalLength": 1.0,
-        "hFov": 1.1271495819091797,
+        "hFov": 1.9772591590881348,
         "hFovOffset": 0.0,
         "near": 0.10000000149011612,
         "vFov": 1.2566370964050293,
@@ -213,8 +213,8 @@
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/WaterBottle",
-        "model_importHint_": "water/WaterBottle.gltf",
+        "model": "~Mesh",
+        "model_importHint_": "",
         "~children": []
     }
 ]

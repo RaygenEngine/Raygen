@@ -59,3 +59,6 @@ void Scene_::UploadDirty()
 		}
 	}
 }
+
+// WIP:
+ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { Scene->BuildAll(); }, "Builds all build-able scene nodes" };
