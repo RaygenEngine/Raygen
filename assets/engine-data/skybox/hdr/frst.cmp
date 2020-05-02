@@ -1,8 +1,0 @@
-{
-    "right": "px.hdr",
-    "left": "nx.hdr",
-    "up": "py.hdr",
-    "down": "ny.hdr",
-    "front": "pz.hdr",
-    "back": "nz.hdr"
-}

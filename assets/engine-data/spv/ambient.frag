@@ -100,7 +100,7 @@ void main( ) {
 	{
 		// ART:
 		V = normalize(ReconstructWorldPosForSky(currentDepth) - camera.position);
-		outColor = vec4(ApplyGammaExposure(texture(skyboxSampler, V).rgb), 1.0);
+		outColor = vec4(ApplyGammaExposure(texture(irradianceSampler, V).rgb), 1.0);
 		return;
 	}
 	
@@ -145,3 +145,5 @@ void main( ) {
                                                                                                                                
                                                                                                                                                 
                                                                                                                                                   
+                                                                                                                                                   
+                                                                                                                                                    
