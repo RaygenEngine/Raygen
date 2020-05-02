@@ -55,13 +55,14 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 			face->width != face->height, "Cubemap face width/height missmatch: {}", uri::ToSystemPath(finalPath));
 
 		if (firstLoaded) {
-			pod->width = face->width;
-			pod->height = face->height;
+			pod->resolution = face->width;
+			pod->format = face->format;
 			firstLoaded = false;
 		}
 		else {
-			CLOG_ABORT(pod->width != face->width || pod->height != face->height,
-				"Cubemap faces resolution missmatch: {}", uri::ToSystemPath(finalPath));
+			CLOG_ABORT(
+				pod->resolution != face->width, "Cubemap faces resolution missmatch: {}", uri::ToSystemPath(finalPath));
+			CLOG_ABORT(pod->format != face->format, "Cubemap faces format missmatch: {}", uri::ToSystemPath(finalPath));
 		}
 
 		// TODO: remove, this is temp
@@ -70,8 +71,9 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 
 		opod->width = 512;
 		opod->height = 512;
-		opod->format = ImageFormat::Unorm;
-		opod->data.resize(512 * 512 * 4);
+		opod->format = pod->format;
+		auto bytesPerPixel = pod->format == ImageFormat::Hdr ? 4 * 4 : 4;
+		opod->data.resize(512 * 512 * bytesPerPixel);
 		pod->irradiance[value] = handle;
 	}
 

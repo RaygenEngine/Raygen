@@ -26,16 +26,22 @@ class IrradianceMapCalculation {
 	DescriptorLayout m_skyboxDescLayout;
 	vk::DescriptorSet m_descSet;
 
-	void MakeDesciptors(::Cubemap::Gpu* reflProb);
+	::Cubemap::Gpu* m_cubemapAsset;
+
+	uint32 m_resolution;
+
+	void MakeDesciptors();
 	void MakeRenderPass();
 	void AllocateCommandBuffers();
 	void AllocateCubeVertexBuffer();
 	void MakePipeline();
 	void PrepareFaceInfo();
-	void RecordAndSubmitCmdBuffers(::Cubemap::Gpu* reflProb);
-	void EditPods(::Cubemap::Gpu* reflProb);
+	void RecordAndSubmitCmdBuffers();
+	void EditPods();
 
 public:
-	IrradianceMapCalculation(::Cubemap::Gpu* reflProb);
+	IrradianceMapCalculation(::Cubemap::Gpu* cubemapAsset, uint32 calculationResolution = 512);
+
+	void Calculate();
 };
 } // namespace vl

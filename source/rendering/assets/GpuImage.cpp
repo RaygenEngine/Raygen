@@ -25,7 +25,7 @@ void ::Image::Gpu::Update(const AssetUpdateInfo& info)
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 	// copy data to buffer
-	stagingBuffer.UploadData(imgData->data.data(), static_cast<size_t>(imageSize));
+	stagingBuffer.UploadData(imgData->data);
 
 	vk::Format format = GetFormat(imgData->format);
 
