@@ -60,4 +60,10 @@ void RawBuffer::UploadData(const void* data, size_t size)
 	memcpy(dptr, data, size);
 	Device->unmapMemory(m_memory.get());
 }
+
+void RawBuffer::UploadData(const std::vector<byte> data)
+{
+	UploadData(data.data(), data.size());
+}
+
 } // namespace vl

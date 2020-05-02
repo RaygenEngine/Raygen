@@ -44,13 +44,13 @@ std::array vertices = {
 	-1.0f, -1.0f, -1.0f, // bottom-left
 	-1.0f, -1.0f, 1.0f,  // bottom-right
 	-1.0f, 1.0f, 1.0f,   // top-right
-						 // right face
-	1.0f, 1.0f, 1.0f,    // top-left
-	1.0f, -1.0f, -1.0f,  // bottom-right
-	1.0f, 1.0f, -1.0f,   // top-right
-	1.0f, -1.0f, -1.0f,  // bottom-right
-	1.0f, 1.0f, 1.0f,    // top-left
-	1.0f, -1.0f, 1.0f,   // bottom-left
+	// right face
+	1.0f, 1.0f, 1.0f,   // top-left
+	1.0f, -1.0f, -1.0f, // bottom-right
+	1.0f, 1.0f, -1.0f,  // top-right
+	1.0f, -1.0f, -1.0f, // bottom-right
+	1.0f, 1.0f, 1.0f,   // top-left
+	1.0f, -1.0f, 1.0f,  // bottom-left
 	// bottom face
 	-1.0f, -1.0f, -1.0f, // top-right
 	1.0f, -1.0f, -1.0f,  // top-left
@@ -66,28 +66,19 @@ std::array vertices = {
 	-1.0f, 1.0f, -1.0f, // top-left
 	-1.0f, 1.0f, 1.0f,  // bottom-left
 };
-
-constexpr float p = 1.0;
-constexpr float n = -1.0;
-
-std::array kvertices = {
-	p, p, p, //
-	p, n, p, //
-	n, p, p, //
-
-	p, n, p, //
-	n, p, p, //
-	n, n, p, //
-			 //
-};
-
 } // namespace
 
 
 namespace vl {
-IrradianceMapCalculation::IrradianceMapCalculation(::Cubemap::Gpu* reflProb)
+IrradianceMapCalculation::IrradianceMapCalculation(::Cubemap::Gpu* cubemapAsset, uint32 calculationResolution)
+	: m_cubemapAsset(cubemapAsset)
+	, m_resolution(calculationResolution)
 {
-	MakeDesciptors(reflProb);
+}
+
+void IrradianceMapCalculation::Calculate()
+{
+	MakeDesciptors();
 
 	MakeRenderPass();
 
@@ -99,12 +90,12 @@ IrradianceMapCalculation::IrradianceMapCalculation(::Cubemap::Gpu* reflProb)
 
 	PrepareFaceInfo();
 
-	RecordAndSubmitCmdBuffers(reflProb);
+	RecordAndSubmitCmdBuffers();
 
-	EditPods(reflProb);
+	EditPods();
 }
 
-void IrradianceMapCalculation::MakeDesciptors(::Cubemap::Gpu* reflProb)
+void IrradianceMapCalculation::MakeDesciptors()
 {
 	m_skyboxDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	m_skyboxDescLayout.Generate();
@@ -117,7 +108,7 @@ void IrradianceMapCalculation::MakeDesciptors(::Cubemap::Gpu* reflProb)
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(reflProb->cubemap->GetView())
+		.setImageView(m_cubemapAsset->cubemap->GetView())
 		.setSampler(quadSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -138,7 +129,7 @@ void IrradianceMapCalculation::MakeRenderPass()
 {
 	vk::AttachmentDescription colorAttachmentDesc{};
 	colorAttachmentDesc
-		.setFormat(vk::Format::eR8G8B8A8Unorm) // CHECK:
+		.setFormat(m_cubemapAsset->cubemap->GetFormat()) // CHECK:
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -213,9 +204,7 @@ void IrradianceMapCalculation::AllocateCubeVertexBuffer()
 
 void IrradianceMapCalculation::MakePipeline()
 {
-	// CHECK:
 	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/irradiance.vert");
-
 
 	if (!gpuShader.HasCompiledSuccessfully()) {
 		LOG_ERROR("Geometry Pipeline skipped due to shader compilation errors.");
@@ -389,8 +378,8 @@ void IrradianceMapCalculation::PrepareFaceInfo()
 	// create framebuffers for each face
 	for (uint32 i = 0; i < 6; ++i) {
 
-		m_faceAttachments[i] = std::make_unique<ImageAttachment>("face" + i, 512, 512, vk::Format::eR8G8B8A8Unorm,
-			vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+		m_faceAttachments[i] = std::make_unique<ImageAttachment>("face" + i, m_resolution, m_resolution,
+			m_cubemapAsset->cubemap->GetFormat(), vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 			vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc,
 			vk::MemoryPropertyFlagBits::eDeviceLocal, false);
 		m_faceAttachments[i]->BlockingTransitionToLayout(
@@ -401,18 +390,12 @@ void IrradianceMapCalculation::PrepareFaceInfo()
 			.setRenderPass(m_renderPass.get()) //
 			.setAttachmentCount(1u)
 			.setPAttachments(&m_faceAttachments[i]->GetView())
-			.setWidth(512) // CHECK: parameter
-			.setHeight(512)
+			.setWidth(m_resolution) // CHECK: parameter
+			.setHeight(m_resolution)
 			.setLayers(1);
 
 		m_framebuffers[i] = Device->createFramebufferUnique(createInfo);
 	}
-
-
-	auto forward = glm::vec3(0.f, 0.f, 1.f);
-	auto up = glm::vec3(0.f, 1.f, 0.f);
-	auto right = glm::vec3(1.f, 0.f, 0.f);
-
 
 	m_captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, 10.0f);
 	static ConsoleVariable<int> m{ "invProj", -1 };
@@ -430,7 +413,7 @@ void IrradianceMapCalculation::PrepareFaceInfo()
 		  };
 }
 
-void IrradianceMapCalculation::RecordAndSubmitCmdBuffers(::Cubemap::Gpu* reflProb)
+void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 {
 	Device->waitIdle();
 
@@ -440,13 +423,13 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers(::Cubemap::Gpu* reflPro
 
 	scissor
 		.setOffset({ 0, 0 }) //
-		.setExtent({ 512, 512 });
+		.setExtent({ m_resolution, m_resolution });
 
 	vk::Viewport viewport{};
 
 	viewport
-		.setWidth(512) //
-		.setHeight(512);
+		.setWidth(m_resolution) //
+		.setHeight(m_resolution);
 
 
 	// for each framebuffer / face
@@ -518,9 +501,9 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers(::Cubemap::Gpu* reflPro
 	Device->waitIdle();
 }
 
-void IrradianceMapCalculation::EditPods(::Cubemap::Gpu* reflProb)
+void IrradianceMapCalculation::EditPods()
 {
-	PodHandle<::Cubemap> cubemapHandle{ reflProb->podUid };
+	PodHandle<::Cubemap> cubemapHandle{ m_cubemapAsset->podUid };
 	PodEditor editor{ cubemapHandle };
 
 	auto pod = editor.GetEditablePtr();
@@ -531,7 +514,8 @@ void IrradianceMapCalculation::EditPods(::Cubemap::Gpu* reflProb)
 
 		img->BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
 
-		vl::RawBuffer stagingBuffer{ 512 * 512 * 4, vk::BufferUsageFlagBits::eTransferDst,
+		auto bytesPerPixel = pod->format == ImageFormat::Hdr ? 4u * 4u : 4u;
+		vl::RawBuffer stagingBuffer{ m_resolution * m_resolution * bytesPerPixel, vk::BufferUsageFlagBits::eTransferDst,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 		img->CopyImageToBuffer(stagingBuffer);
@@ -542,10 +526,10 @@ void IrradianceMapCalculation::EditPods(::Cubemap::Gpu* reflProb)
 
 		auto facePod = faceEditor.GetEditablePtr();
 
-		facePod->data.resize(512 * 512 * 4);
-		facePod->width = 512;
-		facePod->height = 512;
-		memcpy(facePod->data.data(), data, 512 * 512 * 4);
+		facePod->data.resize(m_resolution * m_resolution * bytesPerPixel);
+		facePod->width = m_resolution;
+		facePod->height = m_resolution;
+		memcpy(facePod->data.data(), data, m_resolution * m_resolution * bytesPerPixel);
 
 		Device->unmapMemory(stagingBuffer.GetMemory());
 	}

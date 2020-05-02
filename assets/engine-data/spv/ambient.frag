@@ -80,20 +80,17 @@ void main( ) {
 
 	outColor = vec4(0.0, 0.0, 0.0, 1.0);
 	
-	vec3 I = normalize(ReconstructWorldPosition(currentDepth) - camera.position);
+	vec3 V = normalize(ReconstructWorldPosition(currentDepth) - camera.position);
 
 	if(currentDepth == 1.0)
 	{
 		// ART:
-		I = normalize(ReconstructWorldPosForSky(currentDepth) - camera.position);
-		outColor = texture(skyboxSampler, I);
+		V = normalize(ReconstructWorldPosForSky(currentDepth) - camera.position);
+		outColor = texture(irradianceSampler, V);
 		return;
 	}
 	
 	vec3 N = normalize(texture(normalsSampler, uv).rgb);
-    vec3 R = reflect(I, N);
-    
-    vec3 reflColor = texture(skyboxSampler, R).rgb;
 
 	vec3 emissive = texture(emissiveSampler, uv).rgb;
 	vec4 specular = texture(specularSampler, uv);
@@ -102,29 +99,20 @@ void main( ) {
 	float metallic = specular.r;
 	float roughness = specular.g;
 	
-
-	
-
-	
-	// ART:
-	vec3 specColor = mix(texture(irradianceSampler, N).rgb * albedo, reflColor, 1-roughness);
-	
-	
-	vec3 color = emissive + specColor;
-	color = mix(color, color * specular.b, specular.a);
-
 	vec3 F0 = vec3(0.04); 
     F0 = mix(F0, albedo, metallic);
-	vec3 kS = fresnelSchlickRoughness(max(dot(N, I), 0.0), F0, roughness); 
+	vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness); 
 	vec3 kD = 1.0 - kS;
 	vec3 irradiance = texture(irradianceSampler, N).rgb;
 	vec3 diffuse    = irradiance * albedo;
 	vec3 ambient    = (kD * diffuse);
 
+	// AO
+	vec3 color = emissive + ambient;
+	color = mix(color, color * specular.b, specular.a);
+
 	
-	outColor += vec4(ambient, 1);
-	
-	outColor += outColor / 4.0f;
+	outColor = vec4(color, 1);
 }                                                                                                                          
                                                                                                                                        
                                                                                                                                                                  
@@ -133,3 +121,7 @@ void main( ) {
                                                                                                                       
                                                                                                                         
                                                                                                                          
+                                                                                                                                       
+                                                                                                                            
+                                                                                                                             
+                                                                                                                              

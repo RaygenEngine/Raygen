@@ -14,5 +14,6 @@ SceneReflectionProbe::SceneReflectionProbe()
 
 void SceneReflectionProbe::Build()
 {
-	vl::IrradianceMapCalculation calc(&cubemap.Lock());
+	vl::IrradianceMapCalculation calc(&cubemap.Lock(), irradianceMapResolution);
+	calc.Calculate();
 }

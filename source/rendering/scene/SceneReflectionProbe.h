@@ -8,8 +8,10 @@ struct Ambient_Ubo {
 };
 
 struct SceneReflectionProbe : SceneStruct<Ambient_Ubo> {
-
+	// WIP: add width, height (from world) -> Build prefiltered maps using width and height
 	vl::GpuHandle<Cubemap> cubemap;
+
+	uint32 irradianceMapResolution{ 512u };
 
 	SceneReflectionProbe();
 

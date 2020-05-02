@@ -5,15 +5,18 @@
 
 class ReflectionProbeNode : public Node {
 
-	REFLECTED_NODE(ReflectionProbeNode, Node, DF_FLAGS(SkyTexture, AmbientTerm))
+	REFLECTED_NODE(ReflectionProbeNode, Node, DF_FLAGS(SkyTexture, AmbientTerm, IrrPreRes))
 	{
 		REFLECT_VAR(m_ambientTerm, PropertyFlags::Color).OnDirty(DF::AmbientTerm);
 		REFLECT_VAR(m_skybox).OnDirty(DF::SkyTexture);
+		REFLECT_VAR(m_irradianceMapResolution).OnDirty(DF::IrrPreRes);
 	}
 
 	PodHandle<Cubemap> m_skybox;
 
 	glm::vec3 m_ambientTerm{ 0.0f, 0.0f, 0.3f };
+
+	int32 m_irradianceMapResolution{ 512 };
 
 public:
 	[[nodiscard]] PodHandle<Cubemap> GetSkybox() const { return m_skybox; }
