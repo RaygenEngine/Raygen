@@ -32,7 +32,7 @@ Cubemap::Cubemap(uint32 dims, vk::Format format, vk::ImageTiling tiling, vk::Ima
 	m_view = Device->createImageViewUnique(viewInfo);
 }
 
-// TODO: pass pointer and size and absract the buffer
+// TODO: pass pointer and size and absract the buffer (overload?)
 void Cubemap::CopyBufferToFace(const RawBuffer& buffer, uint32 face)
 
 {

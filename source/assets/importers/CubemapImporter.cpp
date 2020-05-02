@@ -54,6 +54,11 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 		CLOG_ABORT(
 			face->width != face->height, "Cubemap face width/height missmatch: {}", uri::ToSystemPath(finalPath));
 
+		if (face->format == ImageFormat::Unorm) {
+			// WIP: force srgb for cubemaps
+			const_cast<Image*>(face)->format = ImageFormat::Srgb;
+		}
+
 		if (firstLoaded) {
 			pod->resolution = face->width;
 			pod->format = face->format;

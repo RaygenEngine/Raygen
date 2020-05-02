@@ -72,7 +72,21 @@ vec3 ReconstructWorldPosForSky(float depth)
 vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 {
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
-}  
+} 
+
+vec3 ApplyGammaExposure(vec3 color)
+{
+	// gamma correction / exposure
+	const float gamma = 2.2;
+	
+	const float exposure = 2.5;
+
+    // Exposure tone mapping
+    vec3 mapped = vec3(1.0) - exp(-color * exposure);
+    // Gamma correction 
+    return pow(mapped, vec3(1.0 / gamma));
+	//return color;
+} 
 
 void main( ) {
 
@@ -86,9 +100,10 @@ void main( ) {
 	{
 		// ART:
 		V = normalize(ReconstructWorldPosForSky(currentDepth) - camera.position);
-		outColor = texture(irradianceSampler, V);
+		outColor = vec4(ApplyGammaExposure(texture(skyboxSampler, V).rgb), 1.0);
 		return;
 	}
+	
 	
 	vec3 N = normalize(texture(normalsSampler, uv).rgb);
 
@@ -112,7 +127,9 @@ void main( ) {
 	color = mix(color, color * specular.b, specular.a);
 
 	
-	outColor = vec4(color, 1);
+
+  
+	outColor = vec4(ApplyGammaExposure(color), 1.0);
 }                                                                                                                          
                                                                                                                                        
                                                                                                                                                                  
@@ -125,3 +142,6 @@ void main( ) {
                                                                                                                             
                                                                                                                              
                                                                                                                               
+                                                                                                                               
+                                                                                                                                                
+                                                                                                                                                  
