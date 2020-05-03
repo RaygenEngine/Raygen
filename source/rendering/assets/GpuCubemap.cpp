@@ -17,8 +17,6 @@ Cubemap::Gpu::Gpu(PodHandle<Cubemap> podHandle)
 
 void Cubemap::Gpu::Update(const AssetUpdateInfo&)
 {
-
-	LOG_REPORT("Updating cubemap");
 	auto cubemapData = podHandle.Lock();
 	ClearDependencies();
 	AddDependencies(cubemapData->faces);

@@ -505,17 +505,13 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 void IrradianceMapCalculation::EditPods()
 {
 	PodHandle<::Cubemap> cubemapHandle{ m_cubemapAsset->podUid };
-	PodEditor editor{ cubemapHandle };
-
-	auto pod = editor.GetEditablePtr();
-
 	for (uint32 i = 0; i < 6; ++i) {
 
 		auto& img = m_faceAttachments[i];
 
 		img->BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
 
-		auto bytesPerPixel = pod->format == ImageFormat::Hdr ? 4u * 4u : 4u;
+		auto bytesPerPixel = cubemapHandle.Lock()->format == ImageFormat::Hdr ? 4u * 4u : 4u;
 		vl::RawBuffer stagingBuffer{ m_resolution * m_resolution * bytesPerPixel, vk::BufferUsageFlagBits::eTransferDst,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
@@ -523,7 +519,9 @@ void IrradianceMapCalculation::EditPods()
 
 		void* data = Device->mapMemory(stagingBuffer.GetMemory(), 0, VK_WHOLE_SIZE, {});
 
-		PodEditor faceEditor{ pod->irradiance[i] };
+
+		PodHandle face = cubemapHandle.Lock()->irradiance[i];
+		PodEditor faceEditor(face);
 
 		auto facePod = faceEditor.GetEditablePtr();
 
