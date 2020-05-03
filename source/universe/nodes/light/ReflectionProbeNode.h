@@ -16,7 +16,7 @@ class ReflectionProbeNode : public Node {
 
 	glm::vec3 m_ambientTerm{ 0.0f, 0.0f, 0.3f };
 
-	int32 m_irradianceMapResolution{ 512 };
+	int32 m_irradianceMapResolution{ 32 };
 
 public:
 	[[nodiscard]] PodHandle<Cubemap> GetSkybox() const { return m_skybox; }

@@ -398,9 +398,10 @@ void IrradianceMapCalculation::PrepareFaceInfo()
 	}
 
 	m_captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, 10.0f);
-	static ConsoleVariable<int> m{ "invProj", -1 };
-	m_captureProjection[1][1] *= m;
+	m_captureProjection[1][1] *= -1;
 
+
+#pragma warning(disable : 4305)
 	m_captureViews
 
 		= {
@@ -428,8 +429,8 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 	vk::Viewport viewport{};
 
 	viewport
-		.setWidth(m_resolution) //
-		.setHeight(m_resolution);
+		.setWidth(static_cast<float>(m_resolution)) //
+		.setHeight(static_cast<float>(m_resolution));
 
 
 	// for each framebuffer / face
@@ -484,7 +485,7 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 					vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &m_descSet, 0u, nullptr);
 
 				// draw call (cube)
-				m_cmdBuffers[i].draw(vertices.size() / 3, 1u, 0u, 0u);
+				m_cmdBuffers[i].draw(static_cast<uint32>(vertices.size() / 3), 1u, 0u, 0u);
 			}
 			// end render pass
 			m_cmdBuffers[i].endRenderPass();

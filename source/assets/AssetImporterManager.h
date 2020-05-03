@@ -18,8 +18,8 @@ inline class AssetImporterManager_ {
 	[[nodiscard]] uri::Uri GeneratePath(uri::Uri importPath, uri::Uri name)
 	{
 		auto& directory = m_pathsStack.back();
-		auto filename = AssetHandlerManager::SuggestFilename(m_pathsStack.back(), name);
-		return fs::path(directory / filename).generic_string();
+		auto path = AssetHandlerManager::SuggestPath((m_pathsStack.back() / name).generic_string());
+		return path;
 	}
 
 public:
