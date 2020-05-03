@@ -24,8 +24,6 @@ public:
 	ReflectionProbeNode();
 	~ReflectionProbeNode() override;
 
-	void OnBuild() override;
-
 private:
 	size_t sceneUid;
 	template<typename Lambda>

@@ -64,10 +64,10 @@ struct PodMetaData {
 	mti::Hash podTypeHash{};
 
 	// The original file that this asset got imported from. Allows us to "reimport" an asset.
+	// This string a hybrid of the kaleido uri convention and can contain "meta" json data in it.
+	// It is required if we want reimport for example a single material from a .gltf asset
 	// This field can be empty
 	std::string originalImportLocation;
-
-	bool generated{ false };
 
 	// This will overwrite the file under originalImportLocation with the result of the asset exporter (if an exporter
 	// is available for this asset type)

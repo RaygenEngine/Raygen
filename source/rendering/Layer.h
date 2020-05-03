@@ -8,5 +8,6 @@ public:
 	~Layer_();
 
 	void DrawFrame();
+
 } * Layer{};
 } // namespace vl

@@ -12,8 +12,6 @@
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
-#include "rendering/Rendering.h"
-#include "assets/AssetImporterManager.h"
 #include "universe/nodes/geometry/GeometryNode.h"
 #include "universe/nodes/RootNode.h"
 #include "universe/Universe.h"
@@ -213,17 +211,6 @@ void EditorObject_::UpdateEditor()
 	ImGui::SameLine();
 	if (ImEd::Button(U8(FA_FOLDER_OPEN u8"  Load"))) {
 		OpenLoadDialog();
-	}
-
-	ImGui::SameLine();
-	if (ImEd::Button(U8(FA_HAMMER u8"  Build"))) {
-		auto world = Universe::GetMainWorld();
-		ImporterManager->PushPath("level-data");
-		for (auto* node : world->m_nodes) {
-			node->OnBuild();
-		}
-		ImporterManager->PopPath();
-		AssetHandlerManager::SaveAll();
 	}
 
 	std::string s = fmt::format("{:.1f} FPS", Engine.GetFPS());
