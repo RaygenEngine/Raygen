@@ -9,6 +9,11 @@ namespace vl {
 inline class GpuAssetManager_ {
 	std::vector<UniquePtr<GpuAssetBase>> gpuAssets;
 
+	// We should use GpuAssetEntries if we need more than just a single array for metadata info
+	//
+	// Asset users stores at the specific UID the gpuAssetUsers of the asset with that uid.
+	std::vector<std::vector<size_t>> assetUsers;
+
 
 public:
 	GpuAssetManager_() { AllocForAll(); }
@@ -49,6 +54,12 @@ public:
 
 	void ShaderChanged(PodHandle<Shader> handle);
 
+
+	std::vector<size_t> GetUsersFor(size_t uid);
+
+	// The return value invalidates after calling this again with a higher uid.
+	// The return value is editable (mutable).
+	std::vector<size_t>& GetUsersRef(size_t uid);
 
 private:
 	// Updates all gpu side assets that are in use from the list to their current cpu state.

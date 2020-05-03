@@ -27,10 +27,10 @@ struct Cubemap : AssetPod {
 
 		REFLECT_VAR(resolution, NoEdit);
 
-		REFLECT_VAR(format, NoEdit);
-		REFLECT_VAR(faces, NoEdit);
+		REFLECT_VAR(format);
+		REFLECT_VAR(faces);
 
-		REFLECT_VAR(irradiance, NoEdit);
+		REFLECT_VAR(irradiance);
 	}
 
 	int32 resolution{ 1 };
