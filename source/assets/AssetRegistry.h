@@ -32,11 +32,6 @@ private:
 
 	std::vector<std::pair<size_t, AssetUpdateInfo>> m_gpuPodUpdateRequests;
 
-	uri::Uri SuggestFilenameImpl(const fs::path& directory, const uri::Uri& desired)
-	{
-		return SuggestPathImpl((directory / desired).string());
-	}
-
 	uri::Uri SuggestPathImpl(const uri::Uri& desiredFullPath)
 	{
 		if (!m_pathCache.count(desiredFullPath)) {
@@ -167,12 +162,6 @@ public:
 
 	// Returns an alternative "valid" path for this asset. ie one that will not collide with a current asset.
 	// If the passed in path is corret it will be returned instead
-	static uri::Uri SuggestFilename(const fs::path& directory, const uri::Uri& desiredFilename)
-	{
-		return Get().SuggestFilenameImpl(directory, desiredFilename);
-	}
-
-
 	static uri::Uri SuggestPath(const uri::Uri& desiredFullPath) { return Get().SuggestPathImpl(desiredFullPath); }
 
 	template<CONC(CAssetPod) PodType>

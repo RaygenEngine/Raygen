@@ -201,7 +201,7 @@ void GltfSceneToStaticMeshLoader::AppendGeometryGroupToSlot(std::vector<Geometry
 
 	GeometrySlot& slot = slots[group.materialIndex];
 
-	unsigned int size = slot.vertices.size();
+	uint32 size = static_cast<uint32>(slot.vertices.size());
 	for (auto& ind : group.indices) {
 		ind += size;
 	}
