@@ -4,6 +4,7 @@
 #include "assets/Assets.h"
 #include "assets/AssetRegistry.h"
 #include "assets/PodIncludes.h"
+#include "core/iterable/IterableSafeVector.h"
 #include "reflection/PodTools.h"
 #include "rendering/assets/GpuImage.h"
 #include "rendering/assets/GpuMaterial.h"
@@ -35,13 +36,56 @@ void GpuAssetManager_::ShaderChanged(PodHandle<Shader> handle)
 	GetGpuHandle(handle).Lock().Z_Recompile();
 }
 
+std::vector<size_t> GpuAssetManager_::GetUsersFor(size_t uid)
+{
+	if (uid >= assetUsers.size()) {
+		return {};
+	}
+	return assetUsers[uid];
+}
+
+std::vector<size_t>& GpuAssetManager_::GetUsersRef(size_t uid)
+{
+	if (uid >= assetUsers.size()) {
+		assetUsers.resize(uid + 1);
+	}
+	return assetUsers[uid];
+}
+
 void GpuAssetManager_::PerformAssetUpdates(const std::vector<std::pair<size_t, AssetUpdateInfo>>& updates)
 {
 	Device->waitIdle();
 
+	// PERF: Unordered Set to avoid multiple updates of the same asset and remove the ugly erase unique below
+	IterableSafeVector<size_t> dependentUpdates;
+
+
 	for (auto& [uid, info] : updates) {
 		if (gpuAssets[uid]) {
 			gpuAssets[uid]->Update(info);
+		}
+		if (uid < assetUsers.size()) {
+			auto& usersVec = assetUsers[uid];
+			dependentUpdates.vec.insert(dependentUpdates.vec.begin(), usersVec.begin(), usersVec.end());
+		}
+	}
+
+
+	// PERF: can be done without multiple emplaces
+	// NOTE: If you get an infinite loop here, there is a circular dependency in gpu assets.
+	while (dependentUpdates.ConsumingRegion()) {
+		auto& vecRef = dependentUpdates.vec;
+		vecRef.erase(std::unique(vecRef.begin(), vecRef.end()), vecRef.end());
+
+		for (auto& elem : vecRef) {
+			if (gpuAssets[elem]) {
+				gpuAssets[elem]->Update({}); // TODO: add specific update
+			}
+			if (elem < assetUsers.size()) {
+				for (auto& user : assetUsers[elem]) {
+					dependentUpdates.Emplace(user);
+				}
+			}
 		}
 	}
 }

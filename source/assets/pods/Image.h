@@ -20,7 +20,7 @@ struct Image : AssetPod {
 		REFLECT_VAR(width, NoEdit);
 		REFLECT_VAR(height, NoEdit);
 
-		REFLECT_VAR(format, NoEdit);
+		REFLECT_VAR(format);
 	}
 
 	// default imagepod is byte/1x1/white

@@ -17,7 +17,12 @@ Cubemap::Gpu::Gpu(PodHandle<Cubemap> podHandle)
 
 void Cubemap::Gpu::Update(const AssetUpdateInfo&)
 {
+
+	LOG_REPORT("Updating cubemap");
 	auto cubemapData = podHandle.Lock();
+	ClearDependencies();
+	AddDependencies(cubemapData->faces);
+	AddDependencies(cubemapData->irradiance);
 
 	vk::Format format = vl::GetFormat(cubemapData->format);
 
@@ -27,6 +32,7 @@ void Cubemap::Gpu::Update(const AssetUpdateInfo&)
 
 	// transiton all mips to transfer optimal
 	cubemap->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+
 
 	for (uint32 i = 0; i < 6u; ++i) {
 		auto face = cubemapData->faces[i].Lock();
@@ -54,6 +60,7 @@ void Cubemap::Gpu::Update(const AssetUpdateInfo&)
 
 	// transiton all mips to transfer optimal
 	irradiance->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+
 
 	for (uint32 i = 0; i < 6u; ++i) {
 		auto face = cubemapData->irradiance[i].Lock();
