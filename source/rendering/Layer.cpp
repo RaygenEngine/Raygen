@@ -40,8 +40,8 @@ Layer_::~Layer_()
 {
 	delete Renderer;
 
-	delete Scene;
 	delete Swapchain;
+	delete Scene;
 
 	delete Layouts;
 

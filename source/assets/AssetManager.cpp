@@ -132,7 +132,6 @@ AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& default
 	pod->data[2] = 0xFF;
 	pod->data[3] = 0xFF;
 
-	srand(time(NULL));
 	fs::current_path(fs::current_path() / workingDir);
 
 	if (!fs::is_directory(defaultBinPath)) {
