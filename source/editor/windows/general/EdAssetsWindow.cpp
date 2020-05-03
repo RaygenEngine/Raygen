@@ -12,6 +12,7 @@
 #include "reflection/ReflectionTools.h"
 #include "reflection/ReflEnum.h"
 #include "reflection/PodTools.h"
+#include "editor/EditorObject.h"
 
 #include <imgui/imgui_internal.h>
 #include <spdlog/fmt/fmt.h>
@@ -252,6 +253,7 @@ void AssetsWindow::DrawFolder(assetentry::FolderEntry* folderEntry)
 	}
 
 	ImGui::PushID(folderEntry);
+
 	Draw<true>(
 		U8(FA_FOLDER), folderEntry->name.c_str(), [&]() { ChangeDir(folderEntry); },
 		[&]() { RunPostFolder(folderEntry); });
@@ -455,6 +457,11 @@ void AssetsWindow::RunFileEntryContext(PodEntry* entry)
 			AssetHandlerManager::SaveToDisk(newEntry);
 			ImGui::CloseCurrentPopup();
 			ReloadEntries();
+		}
+
+		if (ImGui::Button("Edit")) {
+			EditorObject->m_windowsComponent.OpenAsset(entry);
+			ImGui::CloseCurrentPopup();
 		}
 
 		ImGui::EndPopup();

@@ -1,8 +1,11 @@
 #include "pch.h"
 #include "EdComponentWindows.h"
 
+#include "assets/AssetManager.h"
+#include "reflection/PodTools.h"
 #include "editor/EdUserSettings.h"
 #include "engine/Logger.h"
+#include "assets/PodIncludes.h"
 
 namespace ed {
 
@@ -84,11 +87,13 @@ void ComponentWindows::Draw()
 	}
 	m_openUniqueWindows.EndSafeRegion();
 
-	m_multiWindows.BeginSafeRegion();
-	for (auto& window : m_multiWindows.vec) {
-		window->Z_Draw();
+	m_assetWindows.BeginSafeRegion();
+	for (auto& [entry, window] : m_assetWindows.map) {
+		if (!window->Z_Draw()) {
+			m_assetWindows.Remove(entry);
+		}
 	}
-	m_multiWindows.EndSafeRegion();
+	m_assetWindows.EndSafeRegion();
 }
 
 
@@ -150,5 +155,42 @@ void ComponentWindows::UpdateSettingsForWindow(const std::string& name, bool isO
 		}
 	}
 }
+
+void ComponentWindows::OpenAsset(PodEntry* entry)
+{
+	if (IsOpenAsset(entry)) {
+		return;
+	}
+
+	m_assetWindows.Emplace(std::make_pair(entry, std::move(CreateAssetEditorWindow(entry))));
+}
+
+bool ComponentWindows::IsOpenAsset(PodEntry* entry) const
+{
+	return m_assetWindows.map.count(entry);
+}
+
+void ComponentWindows::CloseAsset(PodEntry* entry)
+{
+	if (!IsOpenAsset(entry)) {
+		return;
+	}
+	m_assetWindows.Remove(entry);
+}
+
+UniquePtr<AssetEditorWindow> ComponentWindows::CreateAssetEditorWindow(PodEntry* entry)
+{
+	size_t outIndex = 0;
+	auto v = [&]<typename T>(T* pod) {
+		outIndex = GetDefaultPodUid<T>();
+	};
+	podtools::VisitPod(entry->ptr.get(), v);
+	auto& constructor = m_podWindowConstructors[outIndex];
+	if (constructor) {
+		return std::move(constructor(entry));
+	}
+	return std::make_unique<AssetEditorWindow>(entry);
+}
+
 
 } // namespace ed

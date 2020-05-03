@@ -1,9 +1,12 @@
 #pragma once
 #include "editor/EdInput.h"
 #include "engine/Listener.h"
+#include "assets/PodHandle.h"
 
 #include <concepts>
 #include <string>
+
+struct PodEntry;
 
 // Code example for imgui drawing:
 //
@@ -82,18 +85,31 @@ public:
 };
 
 
-class MultiWindow : public Window {
+class AssetEditorWindow : public Window {
 public:
-	MultiWindow(std::string_view title, std::string_view identifier = "");
+	PodEntry* entry{};
 
-	void SetIdentifier(std::string_view newIdentifier)
-	{
-		m_identifier = newIdentifier;
-		ReformatTitle();
-	}
+	AssetEditorWindow(PodEntry* inEntry);
 
-	virtual ~MultiWindow() = default;
+	virtual void ImguiDraw() override;
+
+
+	void SaveToDisk();
 };
+
+template<typename PodTypeT>
+class AssetEditorWindowTemplate : public AssetEditorWindow {
+public:
+	using PodType = PodTypeT;
+	PodHandle<PodType> podHandle;
+
+	AssetEditorWindowTemplate(PodEntry* inEntry)
+		: AssetEditorWindow(inEntry)
+		, podHandle(inEntry->uid)
+	{
+	}
+};
+
 
 template<class T>
 concept WindowClass = std::derived_from<T, Window>;
@@ -102,27 +118,6 @@ template<class T>
 concept UniqueWindowClass = std::derived_from<T, UniqueWindow>;
 
 template<class T>
-concept MultiWindowClass = std::derived_from<T, MultiWindow>;
+concept AssetEditorWindowClass = std::derived_from<T, AssetEditorWindow>;
 
-/*
-class DocumentWindow : public Window {
-	bool m_needsSave{ false };
-
-public:
-	void MarkUnsaved()
-	{
-		m_needsSave = true;
-		m_flags |= ImGuiWindowFlags_UnsavedDocument;
-	}
-
-	void ClearUnsaved()
-	{
-		m_needsSave = false;
-		m_flags &= ~(ImGuiWindowFlags_UnsavedDocument);
-	}
-
-
-	virtual bool OnSave() {}
-};
-*/
 } // namespace ed
