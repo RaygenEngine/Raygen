@@ -62,7 +62,7 @@ void GpuAssetManager_::PerformAssetUpdates(const std::vector<std::pair<size_t, A
 
 
 	for (auto& [uid, info] : updates) {
-		if (gpuAssets[uid]) {
+		if (uid < gpuAssets.size() && gpuAssets[uid]) {
 			gpuAssets[uid]->Update(info);
 		}
 		if (uid < assetUsers.size()) {
@@ -79,7 +79,7 @@ void GpuAssetManager_::PerformAssetUpdates(const std::vector<std::pair<size_t, A
 		vecRef.erase(std::unique(vecRef.begin(), vecRef.end()), vecRef.end());
 
 		for (auto& elem : vecRef) {
-			if (gpuAssets[elem]) {
+			if (elem < gpuAssets.size() && gpuAssets[elem]) {
 				gpuAssets[elem]->Update({}); // TODO: add specific update
 			}
 			if (elem < assetUsers.size()) {

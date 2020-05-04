@@ -2,6 +2,24 @@
 #include "assets/AssetPod.h"
 #include "reflection/GenMacros.h"
 
+
+enum class ShaderStageType
+{
+	Vertex,
+	TessControl,
+	TessEvaluation,
+	Geometry,
+	Fragment,
+	Compute,
+	RayGen,
+	Intersect,
+	AnyHit,
+	ClosestHit,
+	Miss,
+	Callable
+};
+
+
 namespace shd {
 enum class VarType
 {
@@ -36,6 +54,8 @@ struct DescriptorVariable : public Variable {
 	uint32 set{ UINT32_MAX };
 	uint32 binding{ UINT32_MAX };
 };
+
+
 } // namespace shd
 
 struct SpirvReflection {
@@ -46,30 +66,13 @@ struct SpirvReflection {
 };
 
 
-enum class ShaderStageType
-{
-	Vertex,
-	TessControl,
-	TessEvaluation,
-	Geometry,
-	Fragment,
-	Compute,
-	RayGen,
-	Intersect,
-	AnyHit,
-	ClosestHit,
-	Miss,
-	Callable
-};
-
-
 struct ShaderStage : public AssetPod {
 	REFLECTED_POD(ShaderStage)
 	{
 		REFLECT_ICON(FA_CODE);
 
 		REFLECT_VAR(stage);
-		REFLECT_VAR(code);
+		REFLECT_VAR(code, PropertyFlags::Multiline);
 	}
 
 	// TODO: Currently unused

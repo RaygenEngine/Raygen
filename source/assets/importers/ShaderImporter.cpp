@@ -43,7 +43,7 @@ void ShaderStageImporter::Reimport(PodEntry* intoEntry, const uri::Uri& uri)
 void ShaderStageImporter::CompilePod(ShaderStage* pod, const uri::Uri& uri)
 {
 	pod->code = StringFromFile(uri);
-
+	pod->stage = shd::ExtToStage(uri::GetDiskExtension(uri));
 	TextCompilerErrors errors;
 	// PERF: Copying data, can pass by ref and avoid editing in compiler
 
