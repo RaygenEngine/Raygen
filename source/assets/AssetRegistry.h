@@ -81,6 +81,20 @@ public:
 	static void RegisterPathCache(PodEntry* entry) { Get().m_pathCache.emplace(entry->path, entry->uid); }
 	static void RemoveFromPathCache(PodEntry* entry) { Get().m_pathCache.erase(entry->path); }
 
+	// There is no fast version of this function, it is just O(N) for loaded assets doing string comparisons
+	template<CONC(CAssetPod) T>
+	static PodHandle<T> SearchForAssetFromImportPathSlow(std::string_view endsWith)
+	{
+		for (auto& entry : Get().m_pods) {
+			[[unlikely]] //
+			if (entry->IsA<T>() && entry->metadata.originalImportLocation.ends_with(endsWith))
+			{
+				return entry->GetHandleAs<T>();
+			}
+		}
+		return {};
+	}
+
 	static void SaveAll()
 	{
 		for (auto& entry : Get().m_pods) {

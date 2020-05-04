@@ -587,4 +587,9 @@ void PropertyEditorWindow::Run_ImGuizmo(Node* node)
 	node->SetNodeTransformWCS(nodeMatrix);
 }
 
+// TODO:
+// HACK:
+// Declared in EdGenericAssetEditorWindow.h but used here to avoid duplicating the imgui visitor.
+void GenericImguiDrawEntry(PodEntry* entry) {}
+
 } // namespace ed

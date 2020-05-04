@@ -33,7 +33,7 @@ protected:
 	{
 		static_assert(
 			(std::is_base_of_v<BasePodHandle, Handles> && ...), "Expects BasePodHandle, PodHandle<>, GpuHandle<>");
-		AddDependency(handle), ...;
+		(AddDependency(handle), ...);
 	}
 
 	// CHECK: Probably there is a concept for this

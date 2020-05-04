@@ -14,6 +14,7 @@
 #include <fstream>
 
 namespace ed {
+/*
 struct ShaderDocumentEditor;
 
 IterableSafeVector<UniquePtr<ShaderDocumentEditor>> documentWindows;
@@ -115,10 +116,7 @@ bool FindEntry(PodEntry* entry, bool isFrag)
 }
 
 
-ShaderEditorWindow::ShaderEditorWindow(std::string_view name)
-	: UniqueWindow(name)
-{
-}
+
 
 
 void ShaderEditorWindow::OpenShaderForEditing(PodEntry* entry, bool isFrag)
@@ -162,5 +160,5 @@ void ShaderEditorWindow::OnDraw(const char* title, bool* keepOpen)
 	documentWindows.EndSafeRegion();
 }
 
-
+*/
 } // namespace ed

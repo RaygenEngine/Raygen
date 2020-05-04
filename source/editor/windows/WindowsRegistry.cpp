@@ -11,6 +11,7 @@
 #include "editor/windows/general/EdProfilerWindow.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
 #include "editor/windows/general/EdShaderEditorWindow.h"
+#include "editor/windows/editors/EdGenericAssetEditorWindow.h"
 #include "engine/Events.h"
 #include "assets/pods/Image.h"
 #include "assets/PodEditor.h"
@@ -30,37 +31,6 @@ public:
 			PodEditor<Image> ed(podHandle);
 			Image* img = ed.GetEditablePtr();
 			std::reverse(img->data.begin(), img->data.end());
-		}
-	}
-};
-class PodEntryEditorWindow : public UniqueWindow {
-public:
-	PodEntryEditorWindow(std::string_view name)
-		: ed::UniqueWindow(name)
-	{
-	}
-	PodEntry* entry = {};
-
-	void ImguiDraw() override
-	{
-
-		ImEd::Button("Drop an asset here.");
-		ImEd::AcceptGenericPodDrop([&](auto, PodEntry* newEntry) { entry = newEntry; });
-
-		if (entry) {
-			ImGui::Checkbox("Reimport On Load", &entry->metadata.reimportOnLoad);
-			ImGui::Checkbox("Export On Save", &entry->metadata.exportOnSave);
-			ImGui::InputText("Import Path", &entry->metadata.originalImportLocation);
-			ImGui::Text("Hash: %d", &entry->metadata.podTypeHash);
-			ImGui::Text("===", &entry->metadata.podTypeHash);
-
-			if (ImGui::Button("Mark Save")) {
-				entry->MarkSave();
-			}
-
-			if (ImGui::Button("Reload From Disk")) {
-				AssetHandlerManager::ReimportFromOriginal(entry);
-			}
 		}
 	}
 };

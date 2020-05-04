@@ -53,4 +53,16 @@ public:
 
 	virtual ~GBufferDebugWindow() = default;
 };
+
+class PodEntryEditorWindow : public UniqueWindow {
+public:
+	PodEntryEditorWindow(std::string_view name)
+		: ed::UniqueWindow(name)
+	{
+	}
+	PodEntry* entry = {};
+
+	void ImguiDraw() override;
+};
+
 } // namespace ed
