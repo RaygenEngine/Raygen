@@ -55,6 +55,7 @@ private:
 	void SaveToDiskInternal(PodEntry* entry);
 	void LoadAllPodsInDirectory(const fs::path& path);
 	void LoadFromDiskTypelessInternal(PodEntry* entry);
+	void ReimportFromOriginalInternal(PodEntry* entry);
 
 	template<CONC(CAssetPod) T>
 	PodHandle<T> GetAsyncHandleInternal(const uri::Uri& str)
@@ -133,6 +134,13 @@ public:
 	{
 		size_t uid = ToAssetUid(asset);
 		Get().SaveToDiskInternal(Get().m_pods[uid].get());
+	}
+
+	template<CONC(CUidConvertible) T>
+	static void ReimportFromOriginal(T asset)
+	{
+		size_t uid = ToAssetUid(asset);
+		Get().ReimportFromOriginalInternal(Get().m_pods[uid].get());
 	}
 
 

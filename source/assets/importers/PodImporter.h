@@ -1,6 +1,9 @@
 #pragma once
 #include "assets/PodHandle.h"
 #include "reflection/TypeId.h"
+#include "reflection/ReflClass.h"
+
+struct PodEntry;
 
 class PodImporterBase {
 	std::string_view m_name;
@@ -21,6 +24,9 @@ public:
 
 	[[nodiscard]] std::string_view GetName() const { return m_name; };
 	virtual BasePodHandle Import(const fs::path& path) = 0;
+
+	virtual void Reimport(PodEntry* intoEntry, const uri::Uri& uri);
+
 	virtual ~PodImporterBase() = default;
 };
 
