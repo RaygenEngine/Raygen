@@ -1,27 +1,22 @@
 #pragma once
-#include "assets/pods/Cubemap.h"
+#include "assets/pods/EnvironmentMap.h"
 #include "universe/nodes/Node.h"
 #include "rendering/scene/Scene.h"
 
 class ReflectionProbeNode : public Node {
 
-	REFLECTED_NODE(ReflectionProbeNode, Node, DF_FLAGS(SkyTexture, AmbientTerm, IrrPreRes))
+	REFLECTED_NODE(ReflectionProbeNode, Node, DF_FLAGS(EnvMap, AmbientTerm))
 	{
 		REFLECT_VAR(m_ambientTerm, PropertyFlags::Color).OnDirty(DF::AmbientTerm);
-		REFLECT_VAR(m_skybox).OnDirty(DF::SkyTexture);
-		REFLECT_VAR(m_irradianceMapResolution).OnDirty(DF::IrrPreRes);
+		REFLECT_VAR(m_environmentMap).OnDirty(DF::EnvMap);
 	}
 
-	PodHandle<Cubemap> m_skybox;
+	PodHandle<EnvironmentMap> m_environmentMap;
 
+	// for hacked ambient
 	glm::vec3 m_ambientTerm{ 0.0f, 0.0f, 0.3f };
 
-	int32 m_irradianceMapResolution{ 32 };
-
 public:
-	[[nodiscard]] PodHandle<Cubemap> GetSkybox() const { return m_skybox; }
-	[[nodiscard]] glm::vec3 GetAmbientTerm() const { return m_ambientTerm; }
-
 	void DirtyUpdate(DirtyFlagset flags) override;
 
 	ReflectionProbeNode();

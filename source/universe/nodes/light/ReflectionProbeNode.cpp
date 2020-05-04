@@ -18,21 +18,14 @@ ReflectionProbeNode::~ReflectionProbeNode()
 void ReflectionProbeNode::DirtyUpdate(DirtyFlagset flags)
 {
 	Node::DirtyUpdate(flags);
-	if (flags[DF::SkyTexture]) {
+	if (flags[DF::EnvMap]) {
 
-		if (m_skybox.Lock()->resolution > 0) {
-			Enqueue([cubemap = m_skybox](
-						SceneReflectionProbe& rp) { rp.cubemap = vl::GpuAssetManager->GetGpuHandle(cubemap); });
-		}
+		Enqueue([envmap = m_environmentMap](
+					SceneReflectionProbe& rp) { rp.envmap = vl::GpuAssetManager->GetGpuHandle(envmap); });
 	}
 
 	if (flags[DF::AmbientTerm]) {
 		Enqueue(
 			[ambientTerm = m_ambientTerm](SceneReflectionProbe& rp) { rp.ubo.color = glm::vec4(ambientTerm, 1.f); });
-	}
-
-	if (flags[DF::IrrPreRes]) {
-		Enqueue(
-			[irrRes = m_irradianceMapResolution](SceneReflectionProbe& rp) { rp.irradianceMapResolution = irrRes; });
 	}
 }

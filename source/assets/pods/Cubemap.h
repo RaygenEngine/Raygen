@@ -29,8 +29,6 @@ struct Cubemap : AssetPod {
 
 		REFLECT_VAR(format);
 		REFLECT_VAR(faces);
-
-		REFLECT_VAR(irradiance);
 	}
 
 	int32 resolution{ 1 };
@@ -38,15 +36,6 @@ struct Cubemap : AssetPod {
 	ImageFormat format{ ImageFormat::Unorm };
 
 	std::vector<PodHandle<::Image>> faces{
-		PodHandle<::Image>(),
-		PodHandle<::Image>(),
-		PodHandle<::Image>(),
-		PodHandle<::Image>(),
-		PodHandle<::Image>(),
-		PodHandle<::Image>(),
-	};
-
-	std::vector<PodHandle<::Image>> irradiance{
 		PodHandle<::Image>(),
 		PodHandle<::Image>(),
 		PodHandle<::Image>(),

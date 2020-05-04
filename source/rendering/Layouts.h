@@ -11,6 +11,7 @@ inline struct Layouts_ {
 	DescriptorLayout cameraDescLayout;
 	DescriptorLayout spotlightDescLayout;
 	DescriptorLayout cubemapLayout;
+	DescriptorLayout envmapLayout;
 
 	Layouts_();
 

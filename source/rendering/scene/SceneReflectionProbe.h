@@ -1,7 +1,6 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
-#include "rendering/objects/Cubemap.h"
-#include "rendering/assets/GpuCubemap.h"
+#include "rendering/assets/GpuEnvironmentMap.h"
 
 struct Ambient_Ubo {
 	glm::vec4 color{};
@@ -9,11 +8,7 @@ struct Ambient_Ubo {
 
 struct SceneReflectionProbe : SceneStruct<Ambient_Ubo> {
 	// WIP: add width, height (from world) -> Build prefiltered maps using width and height
-	vl::GpuHandle<Cubemap> cubemap;
-
-	uint32 irradianceMapResolution{ 512u };
-
-	SceneReflectionProbe();
+	vl::GpuHandle<EnvironmentMap> envmap;
 
 	void Build();
 };

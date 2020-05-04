@@ -32,6 +32,8 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 
 layout(set = 2, binding = 0) uniform samplerCube skyboxSampler;
 layout(set = 2, binding = 1) uniform samplerCube irradianceSampler;
+layout(set = 2, binding = 2) uniform samplerCube prefilteredSampler;
+layout(set = 2, binding = 3) uniform samplerCube brdfLutSampler;
 
 vec3 ReconstructWorldPosition(float depth)
 {
@@ -148,3 +150,6 @@ void main( ) {
                                                                                                                                                    
                                                                                                                                                     
                                                                                                                                                      
+                                                                                                                                                        
+                                                                                                                                                         
+                                                                                                                                                          

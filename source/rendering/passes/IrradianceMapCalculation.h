@@ -1,7 +1,8 @@
 #pragma once
+#include "assets/pods/EnvironmentMap.h"
+#include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/objects/Buffer.h"
 #include "rendering/objects/ImageAttachment.h"
-#include "rendering/assets/GpuCubemap.h"
 
 #include <vulkan/vulkan.hpp>
 namespace vl {
@@ -26,7 +27,7 @@ class IrradianceMapCalculation {
 	DescriptorLayout m_skyboxDescLayout;
 	vk::DescriptorSet m_descSet;
 
-	::Cubemap::Gpu* m_cubemapAsset;
+	EnvironmentMap::Gpu* m_envmapAsset;
 
 	uint32 m_resolution;
 
@@ -40,7 +41,7 @@ class IrradianceMapCalculation {
 	void EditPods();
 
 public:
-	IrradianceMapCalculation(::Cubemap::Gpu* cubemapAsset, uint32 calculationResolution = 512);
+	IrradianceMapCalculation(EnvironmentMap::Gpu* envmapAsset, uint32 calculationResolution);
 
 	void Calculate();
 };
