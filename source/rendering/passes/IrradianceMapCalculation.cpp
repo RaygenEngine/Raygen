@@ -12,6 +12,8 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/assets/GpuCubemap.h"
+
 
 namespace {
 struct PushConstant {
@@ -70,8 +72,8 @@ std::array vertices = {
 
 
 namespace vl {
-IrradianceMapCalculation::IrradianceMapCalculation(::Cubemap::Gpu* cubemapAsset, uint32 calculationResolution)
-	: m_cubemapAsset(cubemapAsset)
+IrradianceMapCalculation::IrradianceMapCalculation(EnvironmentMap::Gpu* envmapAsset, uint32 calculationResolution)
+	: m_envmapAsset(envmapAsset)
 	, m_resolution(calculationResolution)
 {
 }
@@ -102,13 +104,12 @@ void IrradianceMapCalculation::MakeDesciptors()
 
 	m_descSet = m_skyboxDescLayout.GetDescriptorSet();
 
-
 	auto quadSampler = vl::GpuAssetManager->GetDefaultSampler();
 
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(m_cubemapAsset->cubemap->GetView())
+		.setImageView(m_envmapAsset->skybox.Lock().cubemap->GetView())
 		.setSampler(quadSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -129,7 +130,7 @@ void IrradianceMapCalculation::MakeRenderPass()
 {
 	vk::AttachmentDescription colorAttachmentDesc{};
 	colorAttachmentDesc
-		.setFormat(m_cubemapAsset->cubemap->GetFormat()) // CHECK:
+		.setFormat(m_envmapAsset->skybox.Lock().cubemap->GetFormat()) // CHECK:
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -379,7 +380,7 @@ void IrradianceMapCalculation::PrepareFaceInfo()
 	for (uint32 i = 0; i < 6; ++i) {
 
 		m_faceAttachments[i] = std::make_unique<ImageAttachment>("face" + i, m_resolution, m_resolution,
-			m_cubemapAsset->cubemap->GetFormat(), vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+			m_envmapAsset->skybox.Lock().cubemap->GetFormat(), vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 			vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc,
 			vk::MemoryPropertyFlagBits::eDeviceLocal, false);
 		m_faceAttachments[i]->BlockingTransitionToLayout(
@@ -504,14 +505,24 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 
 void IrradianceMapCalculation::EditPods()
 {
-	PodHandle<::Cubemap> cubemapHandle{ m_cubemapAsset->podUid };
+	auto& irradiance = m_envmapAsset->irradiance.Lock();
+	//.. prefiltered and rest here (or other class)
+
+	PodHandle<::Cubemap> cubemapHandle{ irradiance.podUid };
+
+	PodEditor cubemapEditor(cubemapHandle);
+	auto cubemapPod = cubemapEditor.GetEditablePtr();
+
+	cubemapPod->resolution = m_resolution;
+	cubemapPod->format = m_envmapAsset->skybox.Lock().podHandle.Lock()->format;
+
 	for (uint32 i = 0; i < 6; ++i) {
 
 		auto& img = m_faceAttachments[i];
 
 		img->BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
 
-		auto bytesPerPixel = cubemapHandle.Lock()->format == ImageFormat::Hdr ? 4u * 4u : 4u;
+		auto bytesPerPixel = cubemapPod->format == ImageFormat::Hdr ? 4u * 4u : 4u;
 		vl::RawBuffer stagingBuffer{ m_resolution * m_resolution * bytesPerPixel, vk::BufferUsageFlagBits::eTransferDst,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
@@ -519,8 +530,7 @@ void IrradianceMapCalculation::EditPods()
 
 		void* data = Device->mapMemory(stagingBuffer.GetMemory(), 0, VK_WHOLE_SIZE, {});
 
-
-		PodHandle face = cubemapHandle.Lock()->irradiance[i];
+		PodHandle face = cubemapPod->faces[i];
 		PodEditor faceEditor(face);
 
 		auto facePod = faceEditor.GetEditablePtr();

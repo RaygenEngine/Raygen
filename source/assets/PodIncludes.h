@@ -5,6 +5,7 @@
 
 #include "assets/pods/Animation.h"
 #include "assets/pods/Cubemap.h"
+#include "assets/pods/EnvironmentMap.h"
 #include "assets/pods/Image.h"
 #include "assets/pods/Material.h"
 #include "assets/pods/Mesh.h"

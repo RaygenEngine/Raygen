@@ -111,7 +111,7 @@ void AmbientPass::MakePipeline()
 		.setPDynamicStates(dynamicStates);
 
 	std::array layouts = { Layouts->gBufferDescLayout.setLayout.get(), Layouts->cameraDescLayout.setLayout.get(),
-		Layouts->cubemapLayout.setLayout.get() };
+		Layouts->envmapLayout.setLayout.get() };
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -182,7 +182,7 @@ void AmbientPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& vi
 	for (auto rp : Scene->reflProbs.elements) {
 
 		cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
-			&rp->cubemap.Lock().descriptorSet, 0u, nullptr);
+			&rp->envmap.Lock().descriptorSet, 0u, nullptr);
 
 		// draw call (triangle)
 		cmdBuffer->draw(3u, 1u, 0u, 0u);
