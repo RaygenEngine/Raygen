@@ -5,6 +5,8 @@
 
 inline class AssetImporterManager_ {
 	friend class AssetManager_;
+	friend class AssetHandlerManager;
+
 	ImporterRegistry m_importerRegistry;
 
 

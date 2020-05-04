@@ -131,7 +131,10 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 	}
 }
 
-void AssetHandlerManager::ReimportFromOriginalInternal(PodEntry* entry) {}
+void AssetHandlerManager::ReimportFromOriginalInternal(PodEntry* entry)
+{
+	ImporterManager->m_importerRegistry.ReimportEntry(entry);
+}
 
 void AssetHandlerManager::LoadFromDiskTypelessInternal(PodEntry* entry)
 {

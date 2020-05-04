@@ -5,10 +5,34 @@
 #include "assets/importers/ImageImporter.h"
 #include "assets/importers/ShaderImporter.h"
 #include "assets/importers/CubemapImporter.h"
+#include "assets/AssetImporterManager.h"
+#include <fstream>
 
 ImporterRegistry::ImporterRegistry()
 {
 	RegisterImporters<ImageImporter, GltfImporter, ShaderImporter, CubemapImporter>();
+}
+
+void ImporterRegistry::ReimportEntry(PodEntry* entry)
+{
+	uri::Uri importUri = entry->metadata.originalImportLocation;
+	if (importUri.empty()) {
+		LOG_WARN("Reimporting entry without import location: {}", entry->path);
+		return;
+	}
+	std::string fileExt = std::string(uri::GetDiskExtension(importUri));
+
+	if (!fs::exists(uri::GetDiskPath(importUri))) {
+		LOG_WARN(
+			"Failed to find file: {} during reimport. Aborting reimport."); // Maybe handle in reimport of each importer
+																			// to allow non file uris reimporting
+		return;
+	}
+
+	if (auto it = m_extToImporters.find(fileExt); it != m_extToImporters.end()) {
+		LOG_INFO("Execute reimporting: {} for {}", it->second->GetName(), fileExt);
+		it->second->Reimport(entry, importUri);
+	}
 }
 
 BasePodHandle ImporterRegistry::ImportImpl(const fs::path& path, mti::TypeId& outHandleType)
