@@ -272,7 +272,10 @@ void AssetsWindow::DrawAsset(PodEntry* assetEntry)
 
 	ImGui::PushID(assetEntry);
 	Draw<false>(
-		U8(assetEntry->GetClass()->GetIcon()), assetEntry->name.c_str(), []() {},
+		U8(assetEntry->GetClass()->GetIcon()), assetEntry->name.c_str(),
+		// On Open
+		[&]() { EditorObject->m_windowsComponent.OpenAsset(assetEntry); },
+		// Post Element
 		[&]() {
 			RunFileEntryContext(assetEntry);
 			//

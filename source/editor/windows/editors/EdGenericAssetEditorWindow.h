@@ -7,12 +7,11 @@ namespace ed {
 void GenericImguiDrawEntry(PodEntry* entry);
 
 // DO NOT USE THIS CLASS AS AN EXAMPLE!
-// This class is templated because it supports all possible pod types
-template<CONC(CAssetPod) PodType>
-class GenericAssetEditorWindow : public AssetEditorWindowTemplate<PodType> {
+// This class uses a generic way of handling *any* asset type
+class GenericAssetEditorWindow : public AssetEditorWindow {
 public:
 	GenericAssetEditorWindow(PodEntry* inEntry)
-		: AssetEditorWindowTemplate<PodType>(inEntry)
+		: AssetEditorWindow(inEntry)
 	{
 	}
 

@@ -5,6 +5,7 @@
 
 // Base of templated pod editor
 struct PodEditorBase {
+	static void CommitUpdate(size_t uid, AssetUpdateInfo&& info);
 };
 
 // Pod Editor is a class that wraps around an editing operation for a pod and simplifies
@@ -62,8 +63,7 @@ public:
 	{
 		EndEditRegion();
 		if (needsCommit) {
-			AssetHandlerManager::GetEntry(pod.uid)->MarkSave();
-			AssetHandlerManager::RequestGpuUpdateFor(pod.uid, std::move(info));
+			PodEditorBase::CommitUpdate(pod.uid, std::move(info));
 			needsCommit = false;
 		}
 	}
