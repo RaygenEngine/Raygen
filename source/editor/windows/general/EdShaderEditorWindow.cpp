@@ -100,7 +100,7 @@ struct ShaderDocumentEditor {
 
 		auto& stage = isFragment ? entry->UnsafeGet<Shader>()->frag : entry->UnsafeGet<Shader>()->vert;
 		TextCompilerErrors errors;
-		stage = shd::LoadAndCompileStage(filepathCache, "", &errors); // WIP: Hack params
+		stage = shd::LoadAndCompileStage(filepathCache, "", &errors); // CHECK: Hack params
 
 		editor.SetErrorMarkers(errors.errors);
 		vl::GpuAssetManager->ShaderChanged(PodHandle<Shader>{ entry->uid });

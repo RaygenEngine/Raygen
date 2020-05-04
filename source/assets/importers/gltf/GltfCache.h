@@ -2,6 +2,8 @@
 #include "assets/importers/gltf/GltfUtl.h"
 
 namespace gltfutl {
+
+
 struct GltfCache {
 	uri::Uri gltfFilePath;
 	uri::Uri filename;

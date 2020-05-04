@@ -63,6 +63,7 @@ struct PodMetaData {
 	// This hash is the result from mti::GetHash<> and has the same limitations
 	mti::Hash podTypeHash{};
 
+	// DOC: IMPORTANT: Outdated documentation. Spec has been changed.
 	// The original file that this asset got imported from. Allows us to "reimport" an asset.
 	// This string a hybrid of the kaleido uri convention and can contain "meta" json data in it.
 	// It is required if we want reimport for example a single material from a .gltf asset

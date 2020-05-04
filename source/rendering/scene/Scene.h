@@ -155,6 +155,13 @@ private:
 	}
 
 public:
+	void BuildAll()
+	{
+		for (auto reflProb : reflProbs.elements) {
+			reflProb->Build();
+		}
+	}
+
 	void ConsumeCmdQueue()
 	{
 		ExecuteCreations();
@@ -193,7 +200,7 @@ public:
 	// CHECK: runs 2 frames behind
 	Scene_(size_t size);
 
-	// WIP: remove
+	// TODO: remove
 	vk::DescriptorSet GetActiveCameraDescSet();
 
 	void UploadDirty();

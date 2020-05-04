@@ -100,6 +100,44 @@ void Image::CopyBufferToImage(const RawBuffer& buffer)
 	Device->transferQueue.waitIdle();
 }
 
+void Image::CopyImageToBuffer(const RawBuffer& buffer)
+{
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+	Device->transferCmdBuffer.begin(beginInfo);
+
+	vk::BufferImageCopy region{};
+	region
+		.setBufferOffset(0u) //
+		.setBufferRowLength(0u)
+		.setBufferImageHeight(0u)
+		.setImageOffset({ 0, 0, 0 })
+		.setImageExtent(m_imageInfo.extent);
+
+	region.imageSubresource
+		.setAspectMask(GetAspectMask(m_imageInfo)) //
+		.setMipLevel(0u)
+		.setBaseArrayLayer(0u)
+		.setLayerCount(m_imageInfo.arrayLayers);
+
+	Device->transferCmdBuffer.copyImageToBuffer(
+		m_handle.get(), vk::ImageLayout::eTransferSrcOptimal, buffer, { region });
+
+	Device->transferCmdBuffer.end();
+
+	vk::SubmitInfo submitInfo{};
+	submitInfo
+		.setCommandBufferCount(1u) //
+		.setPCommandBuffers(&Device->transferCmdBuffer);
+
+	Device->transferQueue.submit(1u, &submitInfo, {});
+	// PERF:
+	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
+	// instead of executing one at a time. That may give the driver more opportunities to optimize.
+	Device->transferQueue.waitIdle();
+}
+
 void Image::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout)
 {
 	// Check if image format supports linear blitting
@@ -154,15 +192,15 @@ void Image::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Imag
 			oldStage, intermediateStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 
 		vk::ImageBlit blit{};
-		blit.srcOffsets[0] = { 0, 0, 0 };
-		blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
+		blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
+		blit.srcOffsets[1] = vk::Offset3D{ mipWidth, mipHeight, 1 };
 		blit.srcSubresource
 			.setAspectMask(GetAspectMask(m_imageInfo)) //
 			.setMipLevel(i - 1)
 			.setBaseArrayLayer(0u)
 			.setLayerCount(1u);
-		blit.dstOffsets[0] = { 0, 0, 0 };
-		blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
+		blit.dstOffsets[0] = vk::Offset3D{ 0, 0, 0 };
+		blit.dstOffsets[1] = vk::Offset3D{ mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
 		blit.dstSubresource
 			.setAspectMask(GetAspectMask(m_imageInfo)) //
 			.setMipLevel(i)

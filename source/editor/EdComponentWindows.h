@@ -3,11 +3,12 @@
 #include "core/iterable/IterableSafeVector.h"
 #include "editor/windows/EdWindow.h"
 #include "reflection/TypeId.h"
+#include "assets/PodFwd.h"
 
 #include <functional>
 #include <unordered_set>
 #include <vector>
-
+#include <array>
 
 namespace ed {
 // Responsible for handling and aggregating editor windows.
@@ -31,7 +32,7 @@ public:
 	IterableSafeHashMap<mti::Hash, UniqueWindow*> m_openUniqueWindows;
 	std::unordered_map<mti::Hash, UniqueWindow*> m_closedUniqueWindows;
 
-	IterableSafeVector<UniquePtr<Window>> m_multiWindows;
+	IterableSafeHashMap<PodEntry*, UniquePtr<AssetEditorWindow>> m_assetWindows;
 
 
 	template<CONC(UniqueWindowClass) T>
@@ -96,6 +97,29 @@ public:
 		ConstructUniqueIfNotExists(mti::GetHash<T>());
 		return static_cast<T*>(m_closedUniqueWindows.at(mti::GetHash<T>()));
 	}
+
+
+	//
+	// Assets section (should probably be a different class)
+	//
+	static constexpr size_t c_podWindowSize = GetPodTypesCount() + 1;
+	std::array<std::function<UniquePtr<AssetEditorWindow>(PodEntry*)>, c_podWindowSize> m_podWindowConstructors;
+
+	template<CONC(AssetEditorWindowClass) T>
+	void RegisterAssetWindowEditor()
+	{
+		using PodType = typename T::PodType;
+		m_podWindowConstructors[GetDefaultPodUid<PodType>()] = [](PodEntry* entry) {
+			return std::make_unique<T>(entry);
+		};
+	};
+
+
+	void OpenAsset(PodEntry* entry);
+	bool IsOpenAsset(PodEntry* entry) const;
+	void CloseAsset(PodEntry* entry);
+
+	UniquePtr<AssetEditorWindow> CreateAssetEditorWindow(PodEntry* entry);
 
 private:
 	void ConstructUniqueIfNotExists(mti::Hash hash);

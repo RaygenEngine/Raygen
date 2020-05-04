@@ -5,8 +5,15 @@
 
 #include <vulkan/vulkan.hpp>
 
-struct ::Cubemap::Gpu : public vl::GpuAssetBase {
+struct ::Cubemap::Gpu : public vl::GpuAssetTemplate<::Cubemap> {
 	UniquePtr<vl::Cubemap> cubemap;
 
+	// TODO: temp
+	UniquePtr<vl::Cubemap> irradiance;
+
+	vk::DescriptorSet descriptorSet;
+
 	Cubemap::Gpu(PodHandle<Cubemap> podHandle);
+
+	void Update(const AssetUpdateInfo&) override final;
 };

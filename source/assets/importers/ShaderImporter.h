@@ -30,7 +30,7 @@ struct ShaderImporter : public PodImporter<Shader> {
 };
 
 namespace shd {
-// WIP:
+// TODO:
 ShaderStage LoadAndCompileStage(
 	const std::string& pathNoExt, const std::string& ext, TextCompilerErrors* outErrors = nullptr);
 } // namespace shd

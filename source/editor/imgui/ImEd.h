@@ -92,4 +92,37 @@ inline PodEntry* AcceptTypedPodDrop(Callback onDropped = {})
 	return entry;
 }
 
+// Similar as typed pod drop but accepts *any* pod type. Usefull for generic pod drag & drops (eg renames, or spawns
+// where you will deduce the type again from the entry)
+PodEntry* AcceptGenericPodDrop(std::function<void(BasePodHandle, PodEntry*)> onDropped = {});
+
+
+// Call inside an if(ImGui::BeginDragDrop ...)
+template<typename T>
+inline void EndDragDropSourceObject(T* payload, const char* payloadTag)
+{
+	ImGui::SetDragDropPayload(payloadTag, &payload, sizeof(T*));
+	ImGui::EndDragDropSource();
+}
+
+
+template<typename T>
+inline T* AcceptDropObject(const char* payloadTag)
+{
+	if (!ImGui::BeginDragDropTarget()) {
+		return nullptr;
+	}
+
+	const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(payloadTag);
+	if (!payload) {
+		ImGui::EndDragDropTarget();
+		return nullptr;
+	}
+
+	assert(payload->DataSize == sizeof(T*));
+	T* data = *reinterpret_cast<T**>(payload->Data);
+	ImGui::EndDragDropTarget();
+	return data;
+}
+
 } // namespace ImEd

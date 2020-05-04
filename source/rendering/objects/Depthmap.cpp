@@ -8,8 +8,8 @@ Depthmap::Depthmap(vk::RenderPass renderPass, uint32 width, uint32 height, const
 {
 	vk::Format depthFormat = Device->pd->FindDepthFormat();
 
-	m_depthAttachment = std::make_unique<ImageAttachment>(name, width, height, depthFormat, vk::ImageLayout::eUndefined,
-		vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
+	m_depthAttachment = std::make_unique<ImageAttachment>(name, width, height, depthFormat, vk::ImageTiling::eOptimal,
+		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, true);
 
 	m_depthAttachment->BlockingTransitionToLayout(

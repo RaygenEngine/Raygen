@@ -16,11 +16,10 @@ void GltfSceneToStaticMeshLoader::LoadGeometryGroup(
 	// material
 	const auto materialIndex = primitiveData.material;
 
-	// If material is -1, we need default material.
+	// If material is -1, we use default material.
 	if (materialIndex == -1) {
 		// Default material will be placed at last slot.
 		geom.materialIndex = static_cast<uint32>(m_cache.materialPods.size() - 1);
-		m_tempModelRequiresDefaultMat = true;
 	}
 	else {
 		geom.materialIndex = materialIndex;
@@ -194,6 +193,24 @@ void GltfSceneToStaticMeshLoader::LoadGeometryGroup(
 	}
 }
 
+void GltfSceneToStaticMeshLoader::AppendGeometryGroupToSlot(std::vector<GeometrySlot>& slots, GeometryGroup& group)
+{
+	CLOG_ABORT(group.materialIndex >= slots.size(),
+		"Material index higher than slot count. Gltf file contains a geometry group with material index higher than "
+		"the total materials included.");
+
+	GeometrySlot& slot = slots[group.materialIndex];
+
+	uint32 size = static_cast<uint32>(slot.vertices.size());
+	for (auto& ind : group.indices) {
+		ind += size;
+	}
+
+	slot.vertices.reserve(slot.vertices.size() + group.vertices.size());
+	slot.vertices.insert(slot.vertices.end(), group.vertices.begin(), group.vertices.end());
+	slot.indices.insert(slot.indices.end(), group.indices.begin(), group.indices.end());
+}
+
 GltfSceneToStaticMeshLoader::GltfSceneToStaticMeshLoader(GltfCache& cache, tg::Scene& scene)
 	: m_cache(cache)
 {
@@ -251,8 +268,10 @@ GltfSceneToStaticMeshLoader::GltfSceneToStaticMeshLoader(GltfCache& cache, tg::S
 				auto& gltfMesh = m_cache.gltfData.meshes.at(childNode.mesh);
 
 				for (auto& prim : gltfMesh.primitives) {
-					pod->geometryGroups.emplace_back();
-					LoadGeometryGroup(pod->geometryGroups.back(), prim, localTransformMat);
+					GeometryGroup gg;
+					LoadGeometryGroup(gg, prim, localTransformMat);
+					// PERF: Bake this into the loading code, it will save tons of copies
+					AppendGeometryGroupToSlot(pod->geometrySlots, gg);
 				}
 			}
 
@@ -266,12 +285,21 @@ GltfSceneToStaticMeshLoader::GltfSceneToStaticMeshLoader(GltfCache& cache, tg::S
 		return true;
 	};
 
-	RecurseChildren(scene.nodes, glm::mat4(1.f));
-
+	// Create a slot for each material (+ missing material)
+	// We will then iterate gltf geometry groups and append to slot[gg.materialIndex] vertex and index data.
+	// When finished we will cleanup any slotgroups that have index == 0; Deleting will be fast because we will just
+	// move the underlying vertex buffer vectors
+	pod->geometrySlots.resize(m_cache.materialPods.size());
 	pod->materials = m_cache.materialPods;
 
-	if (!m_tempModelRequiresDefaultMat) {
-		pod->materials.pop_back();
+	RecurseChildren(scene.nodes, glm::mat4(1.f));
+
+	// Cleanup empty geometry slots
+	for (int32 i = static_cast<int32>(pod->geometrySlots.size()) - 1; i >= 0; i--) {
+		if (pod->geometrySlots[i].vertices.empty()) {
+			pod->geometrySlots.erase(pod->geometrySlots.begin() + i);
+			pod->materials.erase(pod->materials.begin() + i);
+		}
 	}
 }
 

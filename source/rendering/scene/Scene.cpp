@@ -35,7 +35,7 @@ vk::DescriptorSet Scene_::GetActiveCameraDescSet()
 	return GetActiveCamera()->descSets[vl::Renderer_::currentFrame];
 }
 
-// WIP: we should have a dirty per frace
+// TODO: we should have a dirty per frace
 void Scene_::UploadDirty()
 {
 	for (auto cam : cameras.elements) {
@@ -52,10 +52,13 @@ void Scene_::UploadDirty()
 		}
 	}
 
-	for (auto rp : reflProbs.elements) {
-		if (rp && rp->isDirty[vl::Renderer_::currentFrame]) {
-			rp->UploadUbo(vl::Renderer_::currentFrame);
-			rp->isDirty[vl::Renderer_::currentFrame] = false;
-		}
-	}
+	// for (auto rp : reflProbs.elements) {
+	//	if (rp && rp->isDirty[vl::Renderer_::currentFrame]) {
+	//		rp->UploadUbo(vl::Renderer_::currentFrame);
+	//		rp->isDirty[vl::Renderer_::currentFrame] = false;
+	//	}
+	//}
 }
+
+// WIP:
+ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { Scene->BuildAll(); }, "Builds all build-able scene nodes" };

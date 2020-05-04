@@ -16,8 +16,9 @@ GBuffer::GBuffer(vk::RenderPass renderPass, uint32 width, uint32 height)
 
 	auto initAttachment = [&](const std::string& name, vk::Format format, vk::ImageUsageFlags usage,
 							  vk::ImageLayout finalLayout, bool isDepth) {
-		auto att = std::make_unique<ImageAttachment>(name, width, height, format, vk::ImageLayout::eUndefined,
-			usage | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal, isDepth);
+		auto att = std::make_unique<ImageAttachment>(name, width, height, format, vk::ImageTiling::eOptimal,
+			vk::ImageLayout::eUndefined, usage | vk::ImageUsageFlagBits::eSampled,
+			vk::MemoryPropertyFlagBits::eDeviceLocal, isDepth);
 		att->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, finalLayout);
 		return att;
 	};
@@ -49,7 +50,7 @@ GBuffer::GBuffer(vk::RenderPass renderPass, uint32 width, uint32 height)
 
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
-	// update descriptor set (WIP: is this once?
+	// CHECK: update descriptor set (is this once?)
 	for (uint32 i = 0; i < GCount; ++i) {
 
 		vk::DescriptorImageInfo imageInfo{};
