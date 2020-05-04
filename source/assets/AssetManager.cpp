@@ -7,6 +7,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "assets/util/FindPodUsers.h"
 #include "assets/specializations/PodDuplication.h"
+#include "assets/specializations/PodExport.h"
 
 #include <vulkan/vulkan.hpp>
 #include <iostream>
@@ -50,7 +51,7 @@ void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 
 
 	if (meta.exportOnSave) {
-		// TODO: Shader
+		podspec::ExportToDisk(entry, entry->metadata.originalImportLocation);
 	}
 
 
@@ -91,10 +92,18 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 		size_t podsPerJob
 			= static_cast<size_t>(std::ceil(static_cast<float>(podsToLoad) / static_cast<float>(jobCount)));
 
-		auto loadRange = [&](size_t start, size_t stop) {
+		std::vector<std::vector<PodEntry*>> reimportEntries;
+		reimportEntries.resize(jobCount);
+
+		auto loadRange = [&](size_t start, size_t stop, size_t threadIndex) {
 			stop = std::min(stop, m_pods.size());
 			for (size_t i = start; i < stop; ++i) {
 				LoadFromDiskTypelessInternal(m_pods[i].get());
+
+				[[unlikely]] if (m_pods[i].get()->metadata.reimportOnLoad)
+				{
+					reimportEntries[threadIndex].push_back(m_pods[i].get());
+				}
 			}
 			return true;
 		};
@@ -102,17 +111,27 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 
 		std::vector<std::thread> results;
 
+		size_t index = 0;
 		for (size_t i = 0; i < podsToLoad; i += podsPerJob) {
 			size_t from = i + beginUid;
 			size_t to = i + beginUid + podsPerJob;
-			results.push_back(std::thread(loadRange, from, to));
+			results.push_back(std::thread(loadRange, from, to, index));
+			index++;
 		}
 
 		for (auto& r : results) {
 			r.join();
 		}
+
+		for (auto& reimportVec : reimportEntries) {
+			for (auto& reimportEntry : reimportVec) {
+				AssetHandlerManager::ReimportFromOriginal(reimportEntry);
+			}
+		}
 	}
 }
+
+void AssetHandlerManager::ReimportFromOriginalInternal(PodEntry* entry) {}
 
 void AssetHandlerManager::LoadFromDiskTypelessInternal(PodEntry* entry)
 {
