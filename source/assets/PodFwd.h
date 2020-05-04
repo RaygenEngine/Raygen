@@ -4,7 +4,7 @@
 #include <algorithm>
 // When adding a pod, add it to both of these
 
-#define ENGINE_POD_TYPES ::Image, Material, Mesh, Shader, Sampler, SkinnedMesh, Animation, ::Cubemap
+#define ENGINE_POD_TYPES ::Image, Material, Mesh, Shader, Sampler, SkinnedMesh, Animation, Cubemap
 
 // Can be macroed
 struct Image;
@@ -36,4 +36,9 @@ constexpr size_t GetMaxDefaultUid()
 constexpr size_t GetDefaultNormalImagePodUid()
 {
 	return detail::GetMaxDefaultUid<ENGINE_POD_TYPES>() + 1;
+}
+
+constexpr size_t GetPodTypesCount()
+{
+	return detail::GetMaxDefaultUid<ENGINE_POD_TYPES>();
 }

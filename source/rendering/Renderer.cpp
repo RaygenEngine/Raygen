@@ -158,6 +158,7 @@ void Renderer_::UpdateForFrame()
 		OnViewportResize();
 	}
 
+	GpuAssetManager->ConsumeAssetUpdates();
 	Scene->ConsumeCmdQueue();
 }
 

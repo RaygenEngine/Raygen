@@ -27,6 +27,9 @@ public:
 		return {};
 	}
 
+	void ReimportEntry(PodEntry* entry);
+
+
 private:
 	BasePodHandle ImportImpl(const fs::path& path, mti::TypeId& outHandleType);
 

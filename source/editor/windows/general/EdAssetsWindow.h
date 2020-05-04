@@ -45,7 +45,7 @@ namespace assetentry {
 		{
 		}
 
-		bool IsRoot() const { return parent == nullptr; }
+		[[nodiscard]] bool IsRoot() const { return parent == nullptr; }
 
 		FolderEntry* FindOrAddFolder(std::string_view folderName)
 		{
@@ -59,6 +59,18 @@ namespace assetentry {
 				->second.get();
 		}
 
+		FolderEntry* FindFolder(std::string_view folderName)
+		{
+			auto it = folders.find(folderName);
+
+			if (it != folders.end()) {
+				return it->second.get();
+			}
+
+			return nullptr;
+		}
+
+
 		FileEntry* AddFile(PodEntry* entry)
 		{
 			const auto name = entry->GetName();
@@ -69,6 +81,46 @@ namespace assetentry {
 			}
 
 			return files.emplace_hint(it, name, std::make_unique<FileEntry>(entry, this))->second.get();
+		}
+
+		// Recurse all files *& files in subfolders under this directory
+		template<typename Lambda>
+		void ForEachFile(Lambda& function)
+		{
+			for (auto& file : files) {
+				function(file.second);
+			}
+			for (auto& folder : folders) {
+				folder.second->ForEachFile(function);
+			}
+		}
+
+		// Recurse all folders & subfolders under this directory
+		template<typename Lambda>
+		void ForEachFolder(Lambda& function)
+		{
+			for (auto& folder : folders) {
+				function(folder.second.get());
+				folder.second->ForEachFolder(function);
+			}
+		}
+
+		[[nodiscard]] std::string CalculatePathFromRoot(bool includeGenData)
+		{
+			FolderEntry* current = this;
+			std::vector<FolderEntry*> pathFolders;
+			while (!current->IsRoot()) {
+				pathFolders.push_back(current);
+				current = current->parent;
+			}
+
+			// TODO: assumes gen-data
+			std::string path = includeGenData ? "gen-data/" : "";
+
+			for (auto it = pathFolders.rbegin(); it != pathFolders.rend(); ++it) {
+				path += (*it)->name + "/";
+			}
+			return path;
 		}
 	};
 } // namespace assetentry
@@ -86,24 +138,39 @@ public:
 	void ImportFiles(std::vector<fs::path>&& files);
 
 private:
-	assetentry::FolderEntry m_root{ "Assets", nullptr };
+	assetentry::FolderEntry m_root{ "gen-data", nullptr };
 	assetentry::FolderEntry* m_currentFolder{};
 	std::string m_currentPath{};
 	ImGuiTextFilter m_fileFilter{};
 
-	BoolFlag m_resizeColumn{ true };
 
+	bool m_wasRenamingPrevFrame{ false };
+	std::string m_renameString;
+
+	BoolFlag m_resizeColumn{ true };
+	BoolFlag m_reloadEntries{ true };
 	bool m_reopenPath{ true };
 
+	bool m_hasOpenedAssetContextInMainView{ false };
+
 	void ReloadEntries();
+	void ReloadEntriesImpl();
 
 	void DrawFolder(assetentry::FolderEntry* folderEntry);
 	void DrawAsset(PodEntry* podEntry);
 
 	void DrawDirectoryToList(assetentry::FolderEntry* entry, bool isInPath);
 	void ChangeDir(assetentry::FolderEntry* newDirectory);
+	void ChangeDirPath(std::string_view newDirectory);
+
+	void RunEmptySpaceContext();
 
 	void CreateFolder(const std::string& name, assetentry::FolderEntry* where);
+
+	void RunFileEntryContext(PodEntry* entry);
+	void RunFolderEntryContext(assetentry::FolderEntry* folder);
+
+	void RunPostFolder(assetentry::FolderEntry* folder);
 };
 
 } // namespace ed

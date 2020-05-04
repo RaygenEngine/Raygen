@@ -9,6 +9,14 @@
 namespace tg = tinygltf;
 
 namespace gltfutl {
+// TODO: remove once the integration of the material slots is complete
+struct GeometryGroup {
+	std::vector<uint32> indices{};
+	std::vector<Vertex> vertices{};
+
+	uint32 materialIndex;
+};
+
 inline TextureFiltering GetTextureFiltering(int32 gltfFiltering)
 {
 	switch (gltfFiltering) {

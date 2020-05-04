@@ -28,6 +28,9 @@ struct ConsoleState {
 	bool scrollToBottom{ false };
 	LogLevel cachedLineLevel{ LogLevel::Off };
 
+	bool shouldPreventScrollbar{ false };
+	bool hadHorizontalScrollPrevFrame{ false };
+
 	ConsoleState()
 	{
 		ClearLog();
@@ -159,7 +162,16 @@ struct ConsoleState {
 	void DrawLog()
 	{
 		ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), false,
-			ImGuiWindowFlags_HorizontalScrollbar); // Leave room for 1 separator + 1 InputText
+			shouldPreventScrollbar ? ImGuiWindowFlags_None : ImGuiWindowFlags_HorizontalScrollbar);
+
+
+		auto verticalScrollbarId = ImGui::GetWindowScrollbarID(ImGui::GetCurrentWindow(), ImGuiAxis_Y);
+		if (ImGui::GetHoveredID() == verticalScrollbarId && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+			shouldPreventScrollbar = true;
+		}
+		else {
+			shouldPreventScrollbar = false;
+		}
 
 		bool copyToClipboard = false;
 		if (ImGui::BeginPopupContextWindow("ContextClick##ConsoleWindow")) {
@@ -204,7 +216,6 @@ struct ConsoleState {
 			}
 		}
 		else {
-
 			// The simplest and easy way to display the entire buffer:
 			//   ImGui::TextUnformatted(buf_begin, buf_end);
 			// And it'll just work. TextUnformatted() has specialization for large blob of text and will
@@ -220,6 +231,24 @@ struct ConsoleState {
 			ImGuiListClipper clipper;
 			clipper.Begin(lineOffsets.Size);
 			while (clipper.Step()) {
+				// Fixes most cases of idle console flickering because of a horizontal scrollbar.
+				// This fix does not fix the flickering while scrolling (because the size of the handle changes while
+				// scrolling if a new horizontal scrollbar is introduced). An additional fix should probably just not
+				// spawn a horizontal scrollbar at all while vertically scrolling
+				if (clipper.DisplayStart > 0 && hadHorizontalScrollPrevFrame) {
+					const char* line_start = buf + lineOffsets[clipper.DisplayStart - 1];
+					const char* line_end = (clipper.DisplayStart < lineOffsets.Size)
+											   ? (buf + lineOffsets[clipper.DisplayStart] - 1)
+											   : buf_end;
+
+					auto txtSize = ImGui::CalcTextSize(line_start, line_end);
+					bool horizontalOverflow = txtSize.x >= ImGui::GetWindowContentRegionWidth();
+
+					if (horizontalOverflow) {
+						ImGui::SetCursorPosY(ImGui::GetCursorPosY() - txtSize.y + 2.0f);
+						DrawTxtLine(line_start, line_end);
+					}
+				}
 				for (int line_no = clipper.DisplayStart; line_no < clipper.DisplayEnd; line_no++) {
 					const char* line_start = buf + lineOffsets[line_no];
 					const char* line_end
@@ -242,8 +271,7 @@ struct ConsoleState {
 			ImGui::SetScrollHereY(1.0f);
 		}
 		scrollToBottom = false;
-
-
+		hadHorizontalScrollPrevFrame = ImGui::GetScrollMaxX() > ImGui::GetWindowContentRegionMax().x;
 		ImGui::EndChild();
 	}
 

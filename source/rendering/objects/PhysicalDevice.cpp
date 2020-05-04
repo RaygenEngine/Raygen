@@ -70,9 +70,12 @@ PhysicalDevice::PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inSur
 		rating = 0.f;
 	}
 
+
+	// auto raytracingFeatures = this->getproperties...
+
 	rating = 1.f;
 
-	// specific surface suppor[t details
+	// specific surface support details
 }
 
 uint32 PhysicalDevice::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties)

@@ -7,7 +7,7 @@
 #include <array>
 
 
-// DOC: currently Hdr only for IBL support, TODO: split
+// DOC: resolution = width = height of each face, same goes for format
 struct Cubemap : AssetPod {
 
 	enum : int32
@@ -25,19 +25,28 @@ struct Cubemap : AssetPod {
 		using namespace PropertyFlags;
 		REFLECT_ICON(FA_CUBE);
 
-		REFLECT_VAR(width, NoEdit);
-		REFLECT_VAR(height, NoEdit);
+		REFLECT_VAR(resolution, NoEdit);
 
-		REFLECT_VAR(format, NoEdit);
-		REFLECT_VAR(faces, NoEdit);
+		REFLECT_VAR(format);
+		REFLECT_VAR(faces);
+
+		REFLECT_VAR(irradiance);
 	}
 
-	int32 width{ 1 };
-	int32 height{ 1 };
+	int32 resolution{ 1 };
 
 	ImageFormat format{ ImageFormat::Unorm };
 
 	std::vector<PodHandle<::Image>> faces{
+		PodHandle<::Image>(),
+		PodHandle<::Image>(),
+		PodHandle<::Image>(),
+		PodHandle<::Image>(),
+		PodHandle<::Image>(),
+		PodHandle<::Image>(),
+	};
+
+	std::vector<PodHandle<::Image>> irradiance{
 		PodHandle<::Image>(),
 		PodHandle<::Image>(),
 		PodHandle<::Image>(),

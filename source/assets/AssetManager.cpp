@@ -5,6 +5,9 @@
 #include "assets/Serialization.h"
 #include "reflection/PodTools.h"
 #include "rendering/assets/GpuAssetManager.h"
+#include "assets/util/FindPodUsers.h"
+#include "assets/specializations/PodDuplication.h"
+#include "assets/specializations/PodExport.h"
 
 #include <vulkan/vulkan.hpp>
 #include <iostream>
@@ -48,12 +51,12 @@ void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 
 
 	if (meta.exportOnSave) {
-		// TODO: Shader
+		podspec::ExportToDisk(entry, entry->metadata.originalImportLocation);
 	}
 
 
 	entry->requiresSave = false;
-	LOG_REPORT("Saved pod at: {}", entry->path);
+	LOG_INFO("Saved pod at: {}", entry->path);
 }
 
 void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
@@ -89,10 +92,18 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 		size_t podsPerJob
 			= static_cast<size_t>(std::ceil(static_cast<float>(podsToLoad) / static_cast<float>(jobCount)));
 
-		auto loadRange = [&](size_t start, size_t stop) {
+		std::vector<std::vector<PodEntry*>> reimportEntries;
+		reimportEntries.resize(jobCount);
+
+		auto loadRange = [&](size_t start, size_t stop, size_t threadIndex) {
 			stop = std::min(stop, m_pods.size());
 			for (size_t i = start; i < stop; ++i) {
 				LoadFromDiskTypelessInternal(m_pods[i].get());
+
+				[[unlikely]] if (m_pods[i].get()->metadata.reimportOnLoad)
+				{
+					reimportEntries[threadIndex].push_back(m_pods[i].get());
+				}
 			}
 			return true;
 		};
@@ -100,21 +111,91 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 
 		std::vector<std::thread> results;
 
+		size_t index = 0;
 		for (size_t i = 0; i < podsToLoad; i += podsPerJob) {
 			size_t from = i + beginUid;
 			size_t to = i + beginUid + podsPerJob;
-			results.push_back(std::thread(loadRange, from, to));
+			results.push_back(std::thread(loadRange, from, to, index));
+			index++;
 		}
 
 		for (auto& r : results) {
 			r.join();
 		}
+
+		for (auto& reimportVec : reimportEntries) {
+			for (auto& reimportEntry : reimportVec) {
+				AssetHandlerManager::ReimportFromOriginal(reimportEntry);
+			}
+		}
 	}
+}
+
+void AssetHandlerManager::ReimportFromOriginalInternal(PodEntry* entry)
+{
+	ImporterManager->m_importerRegistry.ReimportEntry(entry);
 }
 
 void AssetHandlerManager::LoadFromDiskTypelessInternal(PodEntry* entry)
 {
 	DeserializePodFromBinary(entry);
+}
+
+void AssetHandlerManager::RenameEntryImpl(PodEntry* entry, const std::string_view newFullPath)
+{
+	if (entry->transient) {
+		LOG_ERROR("Renaming transient pod entry. Aborted rename.");
+		return;
+	}
+	if (str::equalInsensitive(entry->path, newFullPath)) {
+		return;
+	}
+
+	// PERF: Logic here deletes and resaves the asset. We can actually just use fs::move probably to save performance
+	// especially when moving big assets, or save a lot of time if moving folders.
+	DeleteFromDisk(entry);
+
+	RemoveFromPathCache(entry);
+	entry->path = SuggestPathImpl(uri::Uri(newFullPath));
+	entry->name = uri::GetFilename(entry->path);
+	RegisterPathCache(entry);
+
+	entry->MarkSave();
+
+	for (auto& e : FindAssetUsersOfPod(entry)) {
+		e->MarkSave();
+	}
+}
+
+void AssetHandlerManager::DeleteFromDiskInternal(PodEntry* entry)
+{
+	CLOG_WARN(entry->transient, "Attempting to delete transient pod entry: {} {}", entry->path, entry->uid);
+
+	fs::path path = entry->path;
+	path.replace_extension(".bin");
+	if (fs::is_regular_file(path)) {
+		std::error_code er;
+		if (!fs::remove(path, er)) {
+			LOG_WARN("Failed to remove file: {}: {}", path, er.message());
+		}
+	}
+}
+
+PodEntry* AssetHandlerManager::DuplicateImpl(PodEntry* entry)
+{
+	// For transient pods we should require more params when duplicating (like a real name). Also all transient
+	// duplications should in theory only be called directly by code and not caused indirectly by the user.
+	CLOG_WARN(entry->transient, "Using non transient pod duplicate with a transient entry: {}", entry->path);
+
+	PodEntry* result = nullptr;
+	podtools::VisitPodHash(entry->GetClass()->GetTypeId().hash(), [&]<typename PodType> {
+		auto& [newEntry, newPod]
+			= CreateEntry<PodType>(entry->path, false, entry->metadata.originalImportLocation, false, false);
+		podspec::Duplicate(entry->ptr.get(), newPod);
+		result = newEntry;
+	});
+
+	return result;
 }
 
 AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& defaultBinPath)

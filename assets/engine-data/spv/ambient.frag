@@ -1,7 +1,7 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive: enable
-
+#include "microfacet_bsdf.h"
 // out
 
 layout(location = 0) out vec4 outColor;
@@ -29,12 +29,9 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 	mat4 viewProjInv;
 } camera;
 
-layout(set = 2, binding = 0) uniform UBO_Ambient {
-    vec3 color;
-	float pad0;
-} ambient;
 
-layout(set = 2, binding = 1) uniform samplerCube skyboxSampler;
+layout(set = 2, binding = 0) uniform samplerCube skyboxSampler;
+layout(set = 2, binding = 1) uniform samplerCube irradianceSampler;
 
 vec3 ReconstructWorldPosition(float depth)
 {
@@ -72,6 +69,24 @@ vec3 ReconstructWorldPosForSky(float depth)
 	return worldPos.xyz / worldPos.w; // return world space pos xyz
 }
 
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
+} 
+
+vec3 ApplyGammaExposure(vec3 color)
+{
+	// gamma correction / exposure
+	const float gamma = 2.2;
+	
+	const float exposure = 2.5;
+
+    // Exposure tone mapping
+    vec3 mapped = vec3(1.0) - exp(-color * exposure);
+    // Gamma correction 
+    return pow(mapped, vec3(1.0 / gamma));
+	//return color;
+} 
 
 void main( ) {
 
@@ -79,20 +94,18 @@ void main( ) {
 
 	outColor = vec4(0.0, 0.0, 0.0, 1.0);
 	
-	vec3 I = normalize(ReconstructWorldPosition(currentDepth) - camera.position);
+	vec3 V = normalize(ReconstructWorldPosition(currentDepth) - camera.position);
 
 	if(currentDepth == 1.0)
 	{
 		// ART:
-		I = normalize(ReconstructWorldPosForSky(currentDepth) - camera.position);
-		outColor = texture(skyboxSampler, I);
+		V = normalize(ReconstructWorldPosForSky(currentDepth) - camera.position);
+		outColor = vec4(ApplyGammaExposure(texture(skyboxSampler, V).rgb), 1.0);
 		return;
 	}
 	
+	
 	vec3 N = normalize(texture(normalsSampler, uv).rgb);
-    vec3 R = reflect(I, N);
-    
-    vec3 reflColor = texture(skyboxSampler, R).rgb;
 
 	vec3 emissive = texture(emissiveSampler, uv).rgb;
 	vec4 specular = texture(specularSampler, uv);
@@ -101,20 +114,37 @@ void main( ) {
 	float metallic = specular.r;
 	float roughness = specular.g;
 	
-	
-	
-	//metallic = (metallic * 0.4) + 0.15;
-	
-	
-	// ART:
-	vec3 specColor = mix(ambient.color * albedo, reflColor, 1-roughness);
-	
-	
-	vec3 color = emissive + specColor;
+	vec3 F0 = vec3(0.04); 
+    F0 = mix(F0, albedo, metallic);
+	vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness); 
+	vec3 kD = 1.0 - kS;
+	vec3 irradiance = texture(irradianceSampler, N).rgb;
+	vec3 diffuse    = irradiance * albedo;
+	vec3 ambient    = (kD * diffuse);
+
+	// AO
+	vec3 color = emissive + ambient;
 	color = mix(color, color * specular.b, specular.a);
+
 	
-	outColor += vec4(color, 1);
+
+  
+	outColor = vec4(ApplyGammaExposure(color), 1.0);
 }                                                                                                                          
                                                                                                                                        
                                                                                                                                                                  
                                                                                                                        
+                                                                                                                     
+                                                                                                                      
+                                                                                                                        
+                                                                                                                         
+                                                                                                                                       
+                                                                                                                            
+                                                                                                                             
+                                                                                                                              
+                                                                                                                               
+                                                                                                                                                
+                                                                                                                                                  
+                                                                                                                                                   
+                                                                                                                                                    
+                                                                                                                                                     

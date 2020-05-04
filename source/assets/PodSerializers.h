@@ -47,15 +47,15 @@ void serialize(Archive& ar, Vertex& vtx)
 }
 
 template<typename Archive>
-void serialize(Archive& ar, GeometryGroup& gg)
+void serialize(Archive& ar, GeometrySlot& gs)
 {
-	ar(gg.indices, gg.vertices, gg.materialIndex);
+	ar(gs.indices, gs.vertices);
 }
 
 template<typename Archive>
 void AdditionalSerializeBoth(Archive& ar, Mesh* pod)
 {
-	ar(pod->geometryGroups);
+	ar(pod->geometrySlots);
 }
 
 

@@ -35,6 +35,7 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 		= ImporterManager->CreateEntry<Cubemap>(path.generic_string(), path.filename().replace_extension().string());
 
 	pod->faces.resize(imageNames.size());
+	pod->irradiance.resize(imageNames.size());
 
 	ImporterManager->PushPath(path.filename().replace_extension());
 
@@ -53,16 +54,35 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 		CLOG_ABORT(
 			face->width != face->height, "Cubemap face width/height missmatch: {}", uri::ToSystemPath(finalPath));
 
+		if (face->format == ImageFormat::Unorm) {
+			// WIP: force srgb for cubemaps
+			const_cast<Image*>(face)->format = ImageFormat::Srgb;
+		}
+
 		if (firstLoaded) {
-			pod->width = face->width;
-			pod->height = face->height;
+			pod->resolution = face->width;
+			pod->format = face->format;
 			firstLoaded = false;
 		}
 		else {
-			CLOG_ABORT(pod->width != face->width || pod->height != face->height,
-				"Cubemap faces resolution missmatch: {}", uri::ToSystemPath(finalPath));
+			CLOG_ABORT(
+				pod->resolution != face->width, "Cubemap faces resolution missmatch: {}", uri::ToSystemPath(finalPath));
+			CLOG_ABORT(pod->format != face->format, "Cubemap faces format missmatch: {}", uri::ToSystemPath(finalPath));
 		}
+
+		// TODO: remove, this is temp
+		auto& [handle, opod] = ImporterManager->CreateEntry<Image>(
+			path.generic_string() + "_irr", path.filename().replace_extension().string() + "_irr");
+
+		opod->width = 512;
+		opod->height = 512;
+		opod->format = pod->format;
+		auto bytesPerPixel = pod->format == ImageFormat::Hdr ? 4 * 4 : 4;
+		opod->data.resize(512 * 512 * bytesPerPixel);
+		pod->irradiance[value] = handle;
 	}
+
+
 	ImporterManager->PopPath();
 
 	return handle;

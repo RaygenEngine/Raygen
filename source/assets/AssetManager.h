@@ -40,8 +40,13 @@ public:
 	void Import(const fs::path& path) { ImporterManager->m_importerRegistry.ImportFile(path); }
 
 	template<CONC(CAssetPod) T>
-	[[nodiscard]] PodHandle<T> ImportAs(const fs::path& path)
+	[[nodiscard]] PodHandle<T> ImportAs(const fs::path& path, bool useCache = false)
 	{
+		if (useCache) {
+			return ImporterManager->ImportRequest<T>(path);
+		}
 		return ImporterManager->m_importerRegistry.ImportFile<T>(path);
 	}
+
+
 } * AssetManager{};

@@ -24,4 +24,5 @@ public:
 	}
 
 	static uri::Uri GetPodUri(BasePodHandle handle) { return AssetHandlerManager::GetPodUri(handle); }
+
 }; // namespace Assets

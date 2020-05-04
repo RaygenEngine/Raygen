@@ -2,6 +2,8 @@
 #include "EdWindow.h"
 
 #include "engine/Logger.h"
+#include "assets/AssetManager.h"
+#include "reflection/ReflClass.h"
 
 #include <imgui/imgui.h>
 
@@ -27,6 +29,8 @@ bool Window::Z_Draw()
 
 void Window::OnDraw(const char* title, bool* keepOpen)
 {
+	ImGui::SetNextWindowSize({ 400, 400 }, ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos({ 400, 250 }, ImGuiCond_FirstUseEver);
 	if (ImGui::Begin(title, keepOpen)) {
 		ImguiDraw();
 	}
@@ -51,8 +55,21 @@ UniqueWindow::UniqueWindow(std::string_view initialTitle)
 	ReformatTitle();
 }
 
-MultiWindow::MultiWindow(std::string_view title, std::string_view identifier)
-	: Window(title, identifier)
+AssetEditorWindow::AssetEditorWindow(PodEntry* inEntry)
+	: Window(inEntry->name, inEntry->path)
+	, entry(inEntry)
 {
+}
+
+void AssetEditorWindow::ImguiDraw()
+{
+	std::string txt = fmt::format(
+		"No editor found for this pod type: {}\nPod for edit: {}", entry->GetClass()->GetName(), entry->path);
+	ImGui::Text(txt.c_str());
+}
+
+void AssetEditorWindow::SaveToDisk()
+{
+	AssetHandlerManager::SaveToDisk(entry);
 }
 } // namespace ed

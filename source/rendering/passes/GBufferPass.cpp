@@ -14,6 +14,8 @@
 
 #include <glm/gtc/matrix_inverse.hpp>
 
+ConsoleVariable<int32> console_rCullMode("r.culling", static_cast<int32>(vk::CullModeFlagBits::eBack));
+
 namespace {
 struct PushConstant {
 	glm::mat4 modelMat;
@@ -95,7 +97,7 @@ GBufferPass::GBufferPass()
 
 void GBufferPass::MakePipeline()
 {
-	// WIP: yikes
+	// TODO: yikes
 	static auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/gbuffer.vert");
 	gpuShader.onCompile = [&]() {
 		Device->waitIdle();
@@ -188,7 +190,7 @@ void GBufferPass::MakePipeline()
 		.setRasterizerDiscardEnable(VK_FALSE)
 		.setPolygonMode(vk::PolygonMode::eFill)
 		.setLineWidth(1.f)
-		.setCullMode(vk::CullModeFlagBits::eBack)
+		.setCullMode(static_cast<vk::CullModeFlags>(console_rCullMode.Get()))
 		.setFrontFace(vk::FrontFace::eClockwise)
 		.setDepthBiasEnable(VK_FALSE)
 		.setDepthBiasConstantFactor(0.f)

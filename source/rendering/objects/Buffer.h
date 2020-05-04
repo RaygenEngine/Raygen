@@ -13,6 +13,7 @@ public:
 
 	void CopyBuffer(const RawBuffer& other);
 	void UploadData(const void* data, size_t size);
+	void UploadData(const std::vector<byte> data);
 
 	operator vk::Buffer() const noexcept { return m_handle.get(); }
 	vk::DeviceMemory GetMemory() const { return m_memory.get(); }

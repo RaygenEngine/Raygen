@@ -10,6 +10,17 @@
 using namespace vl;
 
 Material::Gpu::Gpu(PodHandle<Material> podHandle)
+	: GpuAssetTemplate(podHandle)
+{
+	// CHECK: upload once for now (not dynamic changes)
+	materialUBO = std::make_unique<Buffer<UBO_Material>>(vk::BufferUsageFlagBits::eUniformBuffer,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+
+	Update({}); // NOTE: Virtual function call in constructor will not call subclasses overrides, thats why we
+				// explicitly mark this function as final in the header
+}
+
+void Material::Gpu::Update(const AssetUpdateInfo& info)
 {
 	auto data = podHandle.Lock();
 
@@ -39,13 +50,10 @@ Material::Gpu::Gpu(PodHandle<Material> podHandle)
 	emissiveSampler = GpuAssetManager->GetGpuHandle(data->emissiveSampler);
 	emissiveImage = GpuAssetManager->GetGpuHandle(data->emissiveImage);
 
-	// CHECK: upload once for now (not dynamic changes)
-	materialUBO = std::make_unique<Buffer<UBO_Material>>(vk::BufferUsageFlagBits::eUniformBuffer,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
 	materialUBO->UploadData(matData);
 
-	// descriptors (WIP:
+	// TODO: descriptors
 	descriptorSet = Layouts->regularMaterialDescLayout.GetDescriptorSet();
 
 	// material uniform sets CHECK: (those buffers should be set again when material changes)
@@ -94,6 +102,7 @@ Material::Gpu::Gpu(PodHandle<Material> podHandle)
 				  .setPImageInfo(&imageInfo)
 				  .setPTexelBufferView(nullptr);
 
+			  // PERF: Use a single descriptor update
 			  Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 		  };
 

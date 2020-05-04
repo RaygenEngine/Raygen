@@ -10,11 +10,12 @@ struct Vertex {
 	glm::vec2 uv{};
 };
 
-struct GeometryGroup {
+// Transition note: (Former GeometryGroup)
+// This "slot" now batches all vertices per material during importing.
+// GeometrySlots now is a parallel array to the materials array. (ie: geometrySlots[2] material == materials[2])
+struct GeometrySlot {
 	std::vector<uint32> indices{};
 	std::vector<Vertex> vertices{};
-
-	uint32 materialIndex{ 0u };
 };
 
 struct Mesh : AssetPod {
@@ -25,7 +26,7 @@ struct Mesh : AssetPod {
 		REFLECT_VAR(materials);
 	}
 
-	std::vector<GeometryGroup> geometryGroups{};
+	std::vector<GeometrySlot> geometrySlots{};
 
 	std::vector<PodHandle<Material>> materials{};
 };
