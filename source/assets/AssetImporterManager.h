@@ -31,6 +31,7 @@ public:
 	void PushPath(const fs::path& path) { m_pathsStack.emplace_back(m_pathsStack.back() / path); }
 	void PushPath(std::string_view path) { m_pathsStack.emplace_back(m_pathsStack.back() / path); }
 	void PushPath(const std::string& path) { m_pathsStack.emplace_back(m_pathsStack.back() / path); }
+	void PushPath(const char* path) { m_pathsStack.emplace_back(m_pathsStack.back() / path); }
 
 	// Overwrites all current paths and creates a new one relative from the root directory. Requires PopPath as the rest
 	// PushPath functions

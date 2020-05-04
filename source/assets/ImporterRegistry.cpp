@@ -10,7 +10,7 @@
 
 ImporterRegistry::ImporterRegistry()
 {
-	RegisterImporters<ImageImporter, GltfImporter, ShaderImporter, CubemapImporter>();
+	RegisterImporters<ImageImporter, GltfImporter, ShaderStageImporter, ShaderImporter, CubemapImporter>();
 }
 
 void ImporterRegistry::ReimportEntry(PodEntry* entry)
@@ -38,11 +38,11 @@ void ImporterRegistry::ReimportEntry(PodEntry* entry)
 BasePodHandle ImporterRegistry::ImportImpl(const fs::path& path, mti::TypeId& outHandleType)
 {
 	outHandleType = mti::TypeId{};
-	// DOC: New specification. Pod Importers should not have to check for path existance.
 	if (path.empty()) {
 		return {};
 	}
-	if (!fs::exists(path)) {
+	//
+	if (!fs::exists(path) && path.extension().compare(".shader") != 0) {
 		LOG_WARN("Failed to find file: {} during import. Using default pod.", path);
 		return {};
 	}
