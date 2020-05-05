@@ -50,9 +50,7 @@ public:
 	void UnloadAll() { gpuAssets.clear(); }
 
 
-	GpuAsset<Shader>& CompileShader(const fs::path& path);
-
-	void ShaderChanged(PodHandle<Shader> handle);
+	GpuAsset<Shader>& CompileShader(std::string_view path);
 
 
 	std::vector<size_t> GetUsersFor(size_t uid);

@@ -15,7 +15,7 @@ namespace vl {
 void SpotlightPass::MakePipeline()
 {
 	// TODO: yikes
-	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/spotlight.vert");
+	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/spotlight.shader");
 	gpuShader.onCompile = [&]() {
 		MakePipeline();
 	};
