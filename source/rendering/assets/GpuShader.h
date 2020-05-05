@@ -15,19 +15,15 @@ struct Shader::Gpu : public vl::GpuAssetTemplate<Shader> {
 
 	[[nodiscard]] bool HasCompiledSuccessfully() const;
 
-
-	void Z_Recompile();
+	virtual void Update(const AssetUpdateInfo& info) override;
 
 	std::function<void()> onCompile;
 
 
 private:
-	const Shader* podPtr;
 	std::vector<vk::PipelineShaderStageCreateInfo> shaderStagesCi;
 	vl::DescriptorLayout descLayout;
 	vk::UniquePipelineLayout pipelineLayout;
 
 	std::vector<vk::PushConstantRange> pushConstantRanges;
-
-	void GenerateLayouts(const Shader* pod);
 };

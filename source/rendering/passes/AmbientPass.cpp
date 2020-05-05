@@ -16,7 +16,7 @@ namespace vl {
 void AmbientPass::MakePipeline()
 {
 	// TODO: yikes
-	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/ambient.vert");
+	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/ambient.shader");
 	gpuShader.onCompile = [&]() {
 		MakePipeline();
 	};

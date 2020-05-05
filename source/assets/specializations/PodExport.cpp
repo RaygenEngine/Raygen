@@ -8,6 +8,15 @@
 
 
 namespace podspec {
+
+template<>
+inline void ExportPod(ShaderStage* src, const fs::path& path)
+{
+	std::ofstream f(path);
+	f << src->code;
+}
+
+
 void ExportToDisk(PodEntry* entry, const fs::path& inPath)
 {
 	fs::path path = inPath;

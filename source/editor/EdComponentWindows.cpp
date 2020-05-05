@@ -6,6 +6,7 @@
 #include "editor/EdUserSettings.h"
 #include "engine/Logger.h"
 #include "assets/PodIncludes.h"
+#include "editor/windows/editors/EdGenericAssetEditorWindow.h"
 
 namespace ed {
 
@@ -159,6 +160,7 @@ void ComponentWindows::UpdateSettingsForWindow(const std::string& name, bool isO
 void ComponentWindows::OpenAsset(PodEntry* entry)
 {
 	if (IsOpenAsset(entry)) {
+		m_assetWindows.map[entry]->BringToFront();
 		return;
 	}
 
@@ -189,7 +191,7 @@ UniquePtr<AssetEditorWindow> ComponentWindows::CreateAssetEditorWindow(PodEntry*
 	if (constructor) {
 		return std::move(constructor(entry));
 	}
-	return std::make_unique<AssetEditorWindow>(entry);
+	return std::make_unique<GenericAssetEditorWindow>(entry);
 }
 
 

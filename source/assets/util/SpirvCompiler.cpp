@@ -2,6 +2,7 @@
 #include "SpirvCompiler.h"
 
 #include "engine/Logger.h"
+#include "engine/Timer.h"
 #include "core/StringConversions.h"
 #include "assets/util/SpirvReflector.h"
 
@@ -11,10 +12,15 @@
 #include <StandAlone/DirStackFileIncluder.h>
 #include <StandAlone/ResourceLimits.h>
 
-EShLanguage FindLanguage(const std::string& filename);
+#include <thread>
+#include <mutex>
 
-std::vector<uint32> ShaderCompiler::Compile(
-	const std::string& code, const std::string& shadername, TextCompilerErrors* outError)
+EShLanguage FindLanguage(const std::string& filename);
+EShLanguage LangFromStage(ShaderStageType type);
+
+
+std::vector<uint32> CompileImpl(
+	const std::string& code, const std::string& shadername, TextCompilerErrors* outError, EShLanguage stage)
 {
 	using namespace glslang;
 
@@ -73,20 +79,24 @@ std::vector<uint32> ShaderCompiler::Compile(
 
 	static bool HasInitGlslLang = false;
 	if (!HasInitGlslLang) {
-		glslang::InitializeProcess();
-		HasInitGlslLang = true;
+		static std::mutex m;
+		std::lock_guard lock(m);
+		if (!HasInitGlslLang) {
+			HasInitGlslLang = true;
+			glslang::InitializeProcess();
+		}
 	}
 
 	const char* InputCString = code.c_str();
 	const char* fname = shadername.c_str();
-	EShLanguage ShaderType = FindLanguage(shadername);
+	EShLanguage ShaderType = stage;
 	glslang::TShader Shader(ShaderType);
 	// Shader.setStrings(&InputCString, 1);
 	Shader.setStringsWithLengthsAndNames(&InputCString, nullptr, &fname, 1);
 
 
 	const int ShaderLanguageVersion = 450;
-	const EShTargetClientVersion VulkanVersion = glslang::EShTargetVulkan_1_1;
+	const EShTargetClientVersion VulkanVersion = glslang::EShTargetVulkan_1_1; // CHECK: Update for KHR RT
 	const EShTargetLanguageVersion SPIRVVersion = glslang::EShTargetSpv_1_3;
 
 	Shader.setEnvInput(EShSourceGlsl, ShaderType, EShClientVulkan, VulkanVersion);
@@ -95,7 +105,7 @@ std::vector<uint32> ShaderCompiler::Compile(
 
 	DirStackFileIncluder Includer;
 
-	// TODO: Shader
+	// CHECK: Shader
 	// use std::filesystem
 	Includer.pushExternalLocalDirectory("");
 	Includer.pushExternalLocalDirectory("./engine-data/spv/");
@@ -111,7 +121,6 @@ std::vector<uint32> ShaderCompiler::Compile(
 
 	const char* GLSLcharArray = PreprocessedGLSL.c_str();
 	Shader.setStrings(&GLSLcharArray, 1);
-
 	if (!Shader.parse(
 			&DefaultTBuiltInResource, ShaderLanguageVersion, true, (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules))) {
 		reportError(Shader);
@@ -128,10 +137,11 @@ std::vector<uint32> ShaderCompiler::Compile(
 		return {};
 	}
 
+
 	spv::SpvBuildLogger spvLogger;
 	glslang::SpvOptions spvOptions;
 	spvOptions.disableOptimizer = true;
-	spvOptions.generateDebugInfo = true;
+	spvOptions.generateDebugInfo = false;
 	spvOptions.validate = true;
 
 	glslang::GlslangToSpv(*Program.getIntermediate(ShaderType), outCode, &spvLogger, &spvOptions);
@@ -142,9 +152,22 @@ std::vector<uint32> ShaderCompiler::Compile(
 
 	// AppendErrors += fmt::format("{}...\n", filename);
 
-	// TODO: FIX glslang::FinalizeProcess
+	// CHECK: FIX glslang::FinalizeProcess
 
 	return outCode;
+}
+
+
+std::vector<uint32> ShaderCompiler::Compile(
+	const std::string& code, const std::string& shadername, TextCompilerErrors* outError)
+{
+	return CompileImpl(code, shadername, outError, FindLanguage(shadername));
+}
+
+std::vector<uint32> ShaderCompiler::Compile(
+	const std::string& code, ShaderStageType type, const std::string& shadername, TextCompilerErrors* outError)
+{
+	return CompileImpl(code, shadername, outError, LangFromStage(type));
 }
 
 
@@ -209,5 +232,25 @@ EShLanguage FindLanguage(const std::string& filename)
 		return EShLangTaskNV;
 
 	LOG_ERROR("Failed to determine shader stage: {}", filename);
+	return EShLangVertex;
+}
+
+EShLanguage LangFromStage(ShaderStageType type)
+{
+	// TODO: Use non NV versions of the enum
+	switch (type) {
+		case ShaderStageType::Vertex: return EShLangVertex;
+		case ShaderStageType::TessControl: return EShLangTessControl;
+		case ShaderStageType::TessEvaluation: return EShLangTessEvaluation;
+		case ShaderStageType::Geometry: return EShLangGeometry;
+		case ShaderStageType::Fragment: return EShLangFragment;
+		case ShaderStageType::Compute: return EShLangCompute;
+		case ShaderStageType::RayGen: return EShLangRayGenNV;
+		case ShaderStageType::Intersect: return EShLangIntersectNV;
+		case ShaderStageType::AnyHit: return EShLangAnyHitNV;
+		case ShaderStageType::ClosestHit: return EShLangClosestHitNV;
+		case ShaderStageType::Miss: return EShLangMissNV;
+		case ShaderStageType::Callable: return EShLangCallableNV;
+	}
 	return EShLangVertex;
 }
