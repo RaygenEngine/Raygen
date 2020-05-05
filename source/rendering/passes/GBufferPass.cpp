@@ -104,18 +104,13 @@ void GBufferPass::MakePipeline()
 		MakePipeline();
 	};
 
-	if (!gpuShader.HasCompiledSuccessfully()) {
+	if (!gpuShader.HasValidModule()) {
 		LOG_ERROR("Geometry Pipeline skipped due to shader compilation errors.");
 		return;
 	}
-	auto& fragShaderModule = gpuShader.frag;
-	auto& vertShaderModule = gpuShader.vert;
 
-	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
-	vertShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eVertex) //
-		.setModule(*vertShaderModule)
-		.setPName("main");
+	std::vector shaderStages = gpuShader.shaderStages;
+
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 
@@ -157,15 +152,6 @@ void GBufferPass::MakePipeline()
 		.setVertexAttributeDescriptionCount(static_cast<uint32_t>(attributeDescriptions.size()))
 		.setPVertexBindingDescriptions(&bindingDescription)
 		.setPVertexAttributeDescriptions(attributeDescriptions.data());
-
-
-	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
-	fragShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(*fragShaderModule)
-		.setPName("main");
-
-	std::array shaderStages = { vertShaderStageInfo, fragShaderStageInfo };
 
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};

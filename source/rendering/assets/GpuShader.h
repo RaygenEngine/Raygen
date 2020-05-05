@@ -8,22 +8,18 @@
 #include <vulkan/vulkan.hpp>
 
 struct Shader::Gpu : public vl::GpuAssetTemplate<Shader> {
-	vk::UniqueShaderModule frag;
-	vk::UniqueShaderModule vert;
-
 	Shader::Gpu(PodHandle<Shader> podHandle);
 
-	[[nodiscard]] bool HasCompiledSuccessfully() const;
+	vl::GpuHandle<ShaderStage> vert;
+	vl::GpuHandle<ShaderStage> frag;
 
+	std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
+
+
+	[[nodiscard]] bool HasValidModule() const;
 	virtual void Update(const AssetUpdateInfo& info) override;
-
 	std::function<void()> onCompile;
 
-
 private:
-	std::vector<vk::PipelineShaderStageCreateInfo> shaderStagesCi;
-	vl::RDescriptorLayout descLayout;
-	vk::UniquePipelineLayout pipelineLayout;
-
-	std::vector<vk::PushConstantRange> pushConstantRanges;
+	void BuildShaderStages();
 };
