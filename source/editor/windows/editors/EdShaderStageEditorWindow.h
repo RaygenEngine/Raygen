@@ -12,8 +12,11 @@ class ShaderStageEditorWindow : public AssetEditorWindowTemplate<ShaderStage> {
 
 	std::string filepathCache;
 	bool needsSave{ false };
+	bool liveUpdates{ true };
 
 	void SaveInternal();
+
+	void UpdateForGpu();
 
 public:
 	ShaderStageEditorWindow(PodEntry* inEntry);

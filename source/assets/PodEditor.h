@@ -88,7 +88,7 @@ public:
 
 	// Return the editable pointer of the pod. Lock is already done during construction
 	[[nodiscard]] PodType* GetEditablePtr() const { return pod; }
-	[[nodiscard]] AssetUpdateInfo& GetUpdateInfoRef() { optionalEditor.info; }
+	[[nodiscard]] AssetUpdateInfo& GetUpdateInfoRef() { return optionalEditor.info; }
 
 
 	~PodEditor() { optionalEditor.CommitForGpu(); }

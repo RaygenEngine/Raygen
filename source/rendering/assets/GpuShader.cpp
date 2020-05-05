@@ -4,12 +4,13 @@
 #include "rendering/Device.h"
 
 namespace {
-void Compile(const Shader* pod, Shader::Gpu* gpu)
+void Compile(const Shader* pod, Shader::Gpu* gpu, std::string& outError)
 {
 	auto& fragBin = pod->fragment.Lock()->binary;
 	auto& vertBin = pod->vertex.Lock()->binary;
 
 	if (!(fragBin.size() && vertBin.size())) {
+		outError = "Attempting to make shader with no binary data";
 		return;
 	}
 
@@ -19,12 +20,18 @@ void Compile(const Shader* pod, Shader::Gpu* gpu)
 
 		gpu->frag = vl::Device->createShaderModuleUnique(createInfo);
 	}
+	else {
+		outError = "No fragment binary code found (failed to compile)";
+	}
 
 	if (vertBin.size()) {
 		vk::ShaderModuleCreateInfo createInfo{};
 		createInfo.setCodeSize(vertBin.size() * 4).setPCode(vertBin.data());
 
 		gpu->vert = vl::Device->createShaderModuleUnique(createInfo);
+	}
+	else {
+		outError = "No vertex binary code found (failed to compile)";
 	}
 }
 } // namespace
@@ -46,8 +53,16 @@ void Shader::Gpu::Update(const AssetUpdateInfo& info)
 	ClearDependencies();
 	AddDependencies(podPtr->fragment, podPtr->vertex);
 
-	Compile(podHandle.Lock(), this);
-	if (HasCompiledSuccessfully() && onCompile) {
+	std::string err = "";
+	Compile(podHandle.Lock(), this, err);
+
+
+	if (!err.empty()) {
+		if (!info.HasFlag("editor")) {
+			LOG_ERROR("Gpu Shader Asset: {} Error: {}", AssetHandlerManager::GetEntry(podHandle)->path, err);
+		}
+	}
+	else if (onCompile) {
 		onCompile();
 	}
 }

@@ -37,6 +37,11 @@ void Window::OnDraw(const char* title, bool* keepOpen)
 	ImGui::End();
 }
 
+void Window::BringToFront()
+{
+	ImGui::SetWindowFocus(m_fullTitle.c_str());
+}
+
 void Window::ReformatTitle()
 {
 	if (m_identifier.size() > 0) {
