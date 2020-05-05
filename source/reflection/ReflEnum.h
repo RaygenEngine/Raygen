@@ -204,3 +204,11 @@ public:
 		SetValueByStr(t);
 	}
 };
+
+// Helper to generate tied MetaEnumInst ances.
+template<typename T>
+[[nodiscard]] MetaEnumInst GenMetaEnum(T& obj)
+{
+	static const ReflEnum& meta = ReflEnum::GetMeta<T>();
+	return meta.TieEnum(obj);
+}

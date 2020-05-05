@@ -11,6 +11,8 @@
 #include "editor/windows/general/EdProfilerWindow.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
 #include "editor/windows/general/EdShaderEditorWindow.h"
+#include "editor/windows/editors/EdGenericAssetEditorWindow.h"
+#include "editor/windows/editors/EdShaderStageEditorWindow.h"
 #include "engine/Events.h"
 #include "assets/pods/Image.h"
 #include "assets/PodEditor.h"
@@ -34,6 +36,7 @@ public:
 	}
 };
 
+
 void RegisterWindows(ed::ComponentWindows& windowsComponent)
 {
 	windowsComponent.AddWindowEntry<OutlinerWindow>("Outliner");
@@ -56,7 +59,9 @@ void RegisterWindows(ed::ComponentWindows& windowsComponent)
 
 	windowsComponent.AddWindowEntry<ShaderEditorWindow>("Shader Editor");
 
+	windowsComponent.AddWindowEntry<PodEntryEditorWindow>("Entry Editor");
 
 	windowsComponent.RegisterAssetWindowEditor<ImageEditorTest>();
+	windowsComponent.RegisterAssetWindowEditor<ShaderStageEditorWindow>();
 }
 } // namespace ed

@@ -71,6 +71,8 @@ public:
 	}
 
 	virtual ~Window() = default;
+
+	virtual void BringToFront();
 };
 
 // A unique window that has a "unique" instance open at most at the same time.

@@ -3,6 +3,7 @@
 #include "editor/imgui/ImguiImpl.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "reflection/ReflClass.h"
+#include "reflection/ReflEnum.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -123,6 +124,37 @@ inline T* AcceptDropObject(const char* payloadTag)
 	T* data = *reinterpret_cast<T**>(payload->Data);
 	ImGui::EndDragDropTarget();
 	return data;
+}
+
+template<typename T>
+bool EnumDropDown(const char* label, T& enumval)
+{
+	MetaEnumInst t = GenMetaEnum(enumval);
+	auto enumMeta = t.GetEnum();
+
+	// int32 currentItem = ;
+	std::string str;
+	str = t.GetValueStr();
+	int32 currentValue = t.GetValue();
+
+	bool edited = false;
+
+	if (ImGui::BeginCombo(label, str.c_str())) // The second parameter is the label previewed before opening the combo.
+	{
+		for (auto& [enumStr, value] : enumMeta.GetStringsToValues()) {
+			bool selected = (currentValue == value);
+			if (ImGui::Selectable(enumStr.c_str(), &selected)) {
+				t.SetValue(value);
+				edited = true;
+			}
+			if (selected) {
+				ImGui::SetItemDefaultFocus();
+			}
+		}
+		ImGui::EndCombo();
+	}
+
+	return edited;
 }
 
 } // namespace ImEd

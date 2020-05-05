@@ -205,7 +205,7 @@ void IrradianceMapCalculation::AllocateCubeVertexBuffer()
 
 void IrradianceMapCalculation::MakePipeline()
 {
-	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/irradiance.vert");
+	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/irradiance.shader");
 
 	if (!gpuShader.HasCompiledSuccessfully()) {
 		LOG_ERROR("Geometry Pipeline skipped due to shader compilation errors.");

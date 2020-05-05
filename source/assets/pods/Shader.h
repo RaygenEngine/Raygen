@@ -1,60 +1,68 @@
 #pragma once
 #include "assets/AssetPod.h"
+#include "assets/pods/ShaderStage.h"
+#include "assets/PodHandle.h"
 #include "reflection/GenMacros.h"
-
-namespace shd {
-enum class VarType
-{
-	Unsupported,
-	Int,
-	Sampler2D,
-	Float,
-	Vec2,
-	Vec3,
-	Vec4,
-	Mat3,
-	Mat4,
-	// Special
-	Struct,
-};
-
-struct Variable {
-	VarType type{};
-	size_t bytesWithPadding{};
-	std::string name{};
-
-
-	// Only used on structs
-	std::vector<Variable> children;
-};
-
-struct InoutVariable : public Variable {
-	uint32 location{ UINT32_MAX };
-};
-
-struct DescriptorVariable : public Variable {
-	uint32 set{ UINT32_MAX };
-	uint32 binding{ UINT32_MAX };
-};
-} // namespace shd
-
-struct SpirvReflection {
-	std::vector<shd::InoutVariable> inVariables;
-	std::vector<shd::InoutVariable> outVariables;
-	std::vector<shd::DescriptorVariable> uboVariables;
-	std::optional<shd::Variable> pushConstant;
-};
-
-struct ShaderStage {
-	SpirvReflection reflection;
-	std::vector<uint32_t> binary;
-	std::string code;
-};
 
 
 struct Shader : public AssetPod {
-	REFLECTED_POD(Shader) { REFLECT_ICON(FA_CODE); }
+	REFLECTED_POD(Shader)
+	{
+		REFLECT_ICON(FA_QRCODE);
 
-	ShaderStage frag;
-	ShaderStage vert;
+		REFLECT_VAR(vertex);
+		REFLECT_VAR(fragment);
+
+		REFLECT_VAR(rayGen);
+		REFLECT_VAR(intersect);
+		REFLECT_VAR(anyHit);
+		REFLECT_VAR(closestHit);
+		REFLECT_VAR(miss);
+
+		REFLECT_VAR(geometry);
+
+		REFLECT_VAR(tessControl);
+		REFLECT_VAR(tessEvaluation);
+
+
+		REFLECT_VAR(callable);
+		REFLECT_VAR(compute);
+	}
+
+	PodHandle<ShaderStage> vertex;
+	PodHandle<ShaderStage> fragment;
+
+	PodHandle<ShaderStage> rayGen;
+	PodHandle<ShaderStage> intersect;
+	PodHandle<ShaderStage> anyHit;
+	PodHandle<ShaderStage> closestHit;
+	PodHandle<ShaderStage> miss;
+
+	PodHandle<ShaderStage> geometry;
+
+
+	PodHandle<ShaderStage> tessControl;
+	PodHandle<ShaderStage> tessEvaluation;
+
+	PodHandle<ShaderStage> callable;
+	PodHandle<ShaderStage> compute;
+
+
+	PodHandle<ShaderStage> GetStage(ShaderStageType type) const
+	{
+		switch (type) {
+			case ShaderStageType::Vertex: return vertex;
+			case ShaderStageType::Fragment: return fragment;
+			case ShaderStageType::RayGen: return rayGen;
+			case ShaderStageType::Intersect: return intersect;
+			case ShaderStageType::AnyHit: return anyHit;
+			case ShaderStageType::ClosestHit: return closestHit;
+			case ShaderStageType::Miss: return miss;
+			case ShaderStageType::Geometry: return geometry;
+			case ShaderStageType::TessControl: return tessControl;
+			case ShaderStageType::TessEvaluation: return tessEvaluation;
+			case ShaderStageType::Callable: return callable;
+			case ShaderStageType::Compute: return compute;
+		}
+	}
 };

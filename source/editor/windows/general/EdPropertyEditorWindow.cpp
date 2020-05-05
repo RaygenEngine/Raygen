@@ -40,7 +40,6 @@ namespace {
 		std::string nameBuf;
 		const char* name;
 		bool fullDisplayMat4{ false };
-		Node* node;
 
 		DirtyFlagset dirtyFlags{};
 
@@ -126,7 +125,8 @@ namespace {
 		bool Inner(std::string& ref, const Property& p)
 		{
 			if (p.HasFlags(PropertyFlags::Multiline)) {
-				return ImGui::InputTextMultiline(name, &ref, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16));
+				bool val = ImGui::InputTextMultiline(name, &ref, ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16));
+				return val;
 			}
 
 			return ImGui::InputText(name, &ref);
@@ -553,7 +553,6 @@ void PropertyEditorWindow::Run_ContextActions(Node* node)
 void PropertyEditorWindow::Run_ReflectedProperties(Node* node)
 {
 	ReflectionToImguiVisitor visitor;
-	visitor.node = node;
 	visitor.fullDisplayMat4 = m_displayMatrix;
 	refltools::CallVisitorOnEveryProperty(node, visitor);
 
@@ -587,4 +586,16 @@ void PropertyEditorWindow::Run_ImGuizmo(Node* node)
 	node->SetNodeTransformWCS(nodeMatrix);
 }
 
+// TODO:
+// HACK:
+// Declared in EdGenericAssetEditorWindow.h but used here to avoid duplicating the imgui visitor.
+void GenericImguiDrawEntry(PodEntry* entry)
+{
+	ReflectionToImguiVisitor visitor;
+	visitor.fullDisplayMat4 = false;
+	refltools::CallVisitorOnEveryProperty(entry->ptr.get(), visitor);
+	if (visitor.didEditFlag) {
+		PodEditorBase::CommitUpdate(entry->uid, {});
+	}
+}
 } // namespace ed

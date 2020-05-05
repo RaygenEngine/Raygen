@@ -11,6 +11,7 @@ struct Image;
 struct Material;
 struct Mesh;
 struct Shader;
+struct ShaderStage;
 struct Sampler;
 struct SkinnedMesh;
 struct Animation;
