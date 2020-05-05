@@ -7,6 +7,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuShader.h"
+#include "rendering/assets/GpuShaderStage.h"
 #include "rendering/Device.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
@@ -22,8 +23,8 @@ void AmbientPass::MakePipeline()
 	};
 
 	// shaders
-	auto vertShaderModule = *gpuShader.vert;
-	auto fragShaderModule = *gpuShader.frag;
+	auto vertShaderModule = *gpuShader.vert.Lock().module;
+	auto fragShaderModule = *gpuShader.frag.Lock().module;
 
 	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo

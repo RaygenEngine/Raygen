@@ -75,7 +75,6 @@ struct ShaderStage : public AssetPod {
 		REFLECT_VAR(code, PropertyFlags::Multiline);
 	}
 
-	// TODO: Currently unused
 	ShaderStageType stage{};
 
 	SpirvReflection reflection;

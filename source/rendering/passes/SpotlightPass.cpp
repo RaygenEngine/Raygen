@@ -20,23 +20,8 @@ void SpotlightPass::MakePipeline()
 		MakePipeline();
 	};
 
-	// shaders
-	auto vertShaderModule = *gpuShader.vert;
-	auto fragShaderModule = *gpuShader.frag;
+	std::vector shaderStages = gpuShader.shaderStages;
 
-	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
-	vertShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eVertex) //
-		.setModule(vertShaderModule)
-		.setPName("main");
-
-	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
-	fragShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(fragShaderModule)
-		.setPName("main");
-
-	std::array shaderStages{ vertShaderStageInfo, fragShaderStageInfo };
 
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
