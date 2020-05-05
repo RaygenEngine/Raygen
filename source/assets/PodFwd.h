@@ -4,7 +4,8 @@
 #include <algorithm>
 // When adding a pod, add it to both of these
 
-#define ENGINE_POD_TYPES ::Image, Material, Mesh, Shader, Sampler, SkinnedMesh, Animation, ::Cubemap, EnvironmentMap
+#define ENGINE_POD_TYPES                                                                                               \
+	::Image, Material, Mesh, Shader, Sampler, SkinnedMesh, Animation, ::Cubemap, EnvironmentMap, ShaderStage
 
 // Can be macroed
 struct Image;
