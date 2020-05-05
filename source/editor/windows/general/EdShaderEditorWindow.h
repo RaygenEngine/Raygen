@@ -5,11 +5,14 @@ struct PodEntry;
 namespace ed {
 class ShaderEditorWindow : public UniqueWindow {
 public:
-	ShaderEditorWindow(std::string_view name);
+	ShaderEditorWindow::ShaderEditorWindow(std::string_view name)
+		: UniqueWindow(name)
+	{
+	}
 
-	void OpenShaderForEditing(PodEntry* entry, bool isFrag);
+	// void OpenShaderForEditing(PodEntry* entry, bool isFrag);
 
-	virtual void OnDraw(const char* title, bool* keepOpen);
+	virtual void OnDraw(const char* title, bool* keepOpen){};
 	virtual ~ShaderEditorWindow() = default;
 
 private:

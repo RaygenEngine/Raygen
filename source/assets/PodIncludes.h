@@ -10,4 +10,5 @@
 #include "assets/pods/Mesh.h"
 #include "assets/pods/Sampler.h"
 #include "assets/pods/Shader.h"
+#include "assets/pods/ShaderStage.h"
 #include "assets/pods/SkinnedMesh.h"

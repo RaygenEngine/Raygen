@@ -102,7 +102,8 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 
 				[[unlikely]] if (m_pods[i].get()->metadata.reimportOnLoad)
 				{
-					reimportEntries[threadIndex].push_back(m_pods[i].get());
+					// reimportEntries[threadIndex].push_back(m_pods[i].get());
+					AssetHandlerManager::ReimportFromOriginal(m_pods[i].get());
 				}
 			}
 			return true;
@@ -123,11 +124,11 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 			r.join();
 		}
 
-		for (auto& reimportVec : reimportEntries) {
-			for (auto& reimportEntry : reimportVec) {
-				AssetHandlerManager::ReimportFromOriginal(reimportEntry);
-			}
-		}
+		// for (auto& reimportVec : reimportEntries) {
+		//	for (auto& reimportEntry : reimportVec) {
+		//		AssetHandlerManager::ReimportFromOriginal(reimportEntry);
+		//	}
+		//}
 	}
 }
 
