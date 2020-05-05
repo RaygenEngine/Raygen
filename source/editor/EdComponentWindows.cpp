@@ -160,6 +160,7 @@ void ComponentWindows::UpdateSettingsForWindow(const std::string& name, bool isO
 void ComponentWindows::OpenAsset(PodEntry* entry)
 {
 	if (IsOpenAsset(entry)) {
+		m_assetWindows.map[entry]->BringToFront();
 		return;
 	}
 

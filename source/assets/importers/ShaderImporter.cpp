@@ -12,12 +12,18 @@ std::string StringFromFile(const std::string& path)
 	std::ifstream t(path);
 	t.seekg(0, std::ios::end);
 	size_t size = t.tellg();
-	std::string buffer(size, '\0');
+	std::string buffer(size, ' ');
 	t.seekg(0);
 	t.read(&buffer[0], size);
 	return buffer;
 }
 } // namespace
+
+std::string rtrim(const std::string& s)
+{
+	size_t end = s.find_last_not_of(' ');
+	return (end == std::string::npos) ? "" : s.substr(0, end + 1);
+}
 
 
 BasePodHandle ShaderStageImporter::Import(const fs::path& path)
@@ -42,7 +48,7 @@ void ShaderStageImporter::Reimport(PodEntry* intoEntry, const uri::Uri& uri)
 
 void ShaderStageImporter::CompilePod(ShaderStage* pod, const uri::Uri& uri)
 {
-	pod->code = StringFromFile(uri);
+	pod->code = rtrim(StringFromFile(uri));
 	pod->stage = shd::ExtToStage(uri::GetDiskExtension(uri));
 	TextCompilerErrors errors;
 	// PERF: Copying data, can pass by ref and avoid editing in compiler

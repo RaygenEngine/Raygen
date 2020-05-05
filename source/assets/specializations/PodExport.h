@@ -18,11 +18,4 @@ void ExportPod(PodType* pod, const fs::path& path)
 	LOG_ERROR("Attempting to export to disk a pod of type: {} which has no specialization.", mti::GetName<PodType>());
 }
 
-template<>
-inline void ExportPod(Shader* src, const fs::path& path)
-{
-	LOG_REPORT("Exporing shader at: {} ... WIP", path);
-}
-
-
 } // namespace podspec

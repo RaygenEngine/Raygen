@@ -29,6 +29,17 @@ ed::ShaderStageEditorWindow::ShaderStageEditorWindow(PodEntry* inEntry)
 void ed::ShaderStageEditorWindow::ImguiDraw()
 {
 	ImGui::Text(filepathCache.c_str());
+
+	if (entry->metadata.originalImportLocation.empty()) {
+		OptionalPodEditor<ShaderStage> ed(podHandle);
+		ImGui::SameLine();
+		if (ImEd::EnumDropDown("Stage", ed.BeginOptionalEditRegion()->stage)) {
+			ed.CommitForGpu();
+			needsSave = true;
+		}
+	}
+	ImGui::SameLine();
+	ImGui::Checkbox("Live Updates", &liveUpdates);
 	if (needsSave) {
 		ImGui::SameLine();
 		if (ImEd::Button(ETXT(FA_SAVE, "Save"))) {
@@ -38,43 +49,42 @@ void ed::ShaderStageEditorWindow::ImguiDraw()
 			SaveInternal();
 		}
 	}
-	if (entry->metadata.originalImportLocation.empty()) {
-		OptionalPodEditor<ShaderStage> ed(podHandle);
-
-		if (ImEd::EnumDropDown("Stage", ed.BeginOptionalEditRegion()->stage)) {
-			ed.CommitForGpu();
-		}
-	}
 	ImEd::BeginCodeFont();
 	editor->Render(filepathCache.c_str());
 
 	if (editor->IsTextChanged()) {
 		needsSave = true;
-		SaveInternal();
+		if (liveUpdates) {
+			UpdateForGpu();
+		}
 	}
 	ImEd::EndCodeFont();
 }
 
+void ed::ShaderStageEditorWindow::UpdateForGpu()
+{
+	PodEditor podeditor(entry->GetHandleAs<ShaderStage>());
+	auto pod = podeditor.GetEditablePtr();
+
+	podeditor.GetUpdateInfoRef().AddFlag("editor");
+
+	pod->code = editor->GetText();
+
+
+	TextCompilerErrors errors;
+	if (entry->metadata.originalImportLocation.empty()) {
+		pod->binary = ShaderCompiler::Compile(pod->code, pod->stage, entry->name, &errors);
+	}
+	else {
+		pod->binary = ShaderCompiler::Compile(pod->code, std::string(uri::GetFilename(filepathCache)), &errors);
+	}
+
+	editor->SetErrorMarkers(errors.errors);
+}
+
 void ed::ShaderStageEditorWindow::SaveInternal()
 {
+	UpdateForGpu();
 	needsSave = false;
-	{
-
-		PodEditor podeditor(entry->GetHandleAs<ShaderStage>());
-		auto pod = podeditor.GetEditablePtr();
-
-		pod->code = editor->GetText();
-
-
-		TextCompilerErrors errors;
-		if (entry->metadata.originalImportLocation.empty()) {
-			pod->binary = ShaderCompiler::Compile(pod->code, pod->stage, entry->name, &errors);
-		}
-		else {
-			pod->binary = ShaderCompiler::Compile(pod->code, std::string(uri::GetFilename(filepathCache)), &errors);
-		}
-
-		editor->SetErrorMarkers(errors.errors);
-	}
-	// SaveToDisk();
+	SaveToDisk();
 }
