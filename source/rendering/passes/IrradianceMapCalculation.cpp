@@ -186,7 +186,7 @@ void IrradianceMapCalculation::AllocateCubeVertexBuffer()
 {
 	vk::DeviceSize vertexBufferSize = sizeof(vertices[0]) * vertices.size();
 
-	RawBuffer vertexStagingBuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
+	RBuffer vertexStagingBuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 	// copy data to buffer
@@ -194,7 +194,7 @@ void IrradianceMapCalculation::AllocateCubeVertexBuffer()
 
 
 	// device local
-	m_cubeVertexBuffer = std::make_unique<RawBuffer>(vertexBufferSize,
+	m_cubeVertexBuffer = std::make_unique<RBuffer>(vertexBufferSize,
 		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
 		vk::MemoryPropertyFlagBits::eDeviceLocal);
 
@@ -523,7 +523,7 @@ void IrradianceMapCalculation::EditPods()
 		img->BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
 
 		auto bytesPerPixel = cubemapPod->format == ImageFormat::Hdr ? 4u * 4u : 4u;
-		vl::RawBuffer stagingBuffer{ m_resolution * m_resolution * bytesPerPixel, vk::BufferUsageFlagBits::eTransferDst,
+		vl::RBuffer stagingBuffer{ m_resolution * m_resolution * bytesPerPixel, vk::BufferUsageFlagBits::eTransferDst,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 		img->CopyImageToBuffer(stagingBuffer);

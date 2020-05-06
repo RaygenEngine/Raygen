@@ -1,6 +1,6 @@
 #pragma once
-#include "rendering/objects/Buffer.h"
-#include "rendering/objects/DescriptorLayout.h"
+#include "rendering/objects/RBuffer.h"
+#include "rendering/objects/RDescriptorLayout.h"
 
 #include <vulkan/vulkan.hpp>
 #include <optional>
@@ -28,9 +28,9 @@ public:
 	// Blocking transition to layout
 	void BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
-	void CopyBufferToImage(const RawBuffer& buffer);
+	void CopyBufferToImage(const RBuffer& buffer);
 
-	void CopyImageToBuffer(const RawBuffer& buffer);
+	void CopyImageToBuffer(const RBuffer& buffer);
 
 	// TODO: virtual (split image classes correctly...)
 	virtual void GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout);

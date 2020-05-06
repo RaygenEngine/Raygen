@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/objects/Buffer.h"
+#include "rendering/objects/RBuffer.h"
 #include "rendering/Device.h"
 
 // SceneStructs that upload a Ubo when dirty
@@ -8,7 +8,7 @@ struct SceneStruct {
 	Ubo ubo;
 
 	std::array<vk::DescriptorSet, 3> descSets;
-	std::array<UniquePtr<vl::Buffer<Ubo>>, 3> buffers;
+	std::array<UniquePtr<vl::RUboBuffer<Ubo>>, 3> buffers;
 
 	std::array<bool, 3> isDirty;
 
@@ -40,7 +40,7 @@ struct SceneStruct {
 	SceneStruct()
 	{
 		for (uint32 i = 0; i < 3; ++i) {
-			buffers[i] = std::make_unique<vl::Buffer<Ubo>>(vk::BufferUsageFlagBits::eUniformBuffer,
+			buffers[i] = std::make_unique<vl::RUboBuffer<Ubo>>(vk::BufferUsageFlagBits::eUniformBuffer,
 				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 			isDirty[i] = true;
 		}

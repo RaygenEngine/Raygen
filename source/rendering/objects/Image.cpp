@@ -62,7 +62,7 @@ void Image::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayou
 	Device->graphicsQueue.waitIdle();
 }
 
-void Image::CopyBufferToImage(const RawBuffer& buffer)
+void Image::CopyBufferToImage(const RBuffer& buffer)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -100,7 +100,7 @@ void Image::CopyBufferToImage(const RawBuffer& buffer)
 	Device->transferQueue.waitIdle();
 }
 
-void Image::CopyImageToBuffer(const RawBuffer& buffer)
+void Image::CopyImageToBuffer(const RBuffer& buffer)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);

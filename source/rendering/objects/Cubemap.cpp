@@ -33,7 +33,7 @@ Cubemap::Cubemap(uint32 dims, vk::Format format, vk::ImageTiling tiling, vk::Ima
 }
 
 // TODO: pass pointer and size and absract the buffer (overload?)
-void Cubemap::CopyBufferToFace(const RawBuffer& buffer, uint32 face)
+void Cubemap::CopyBufferToFace(const RBuffer& buffer, uint32 face)
 
 {
 	vk::CommandBufferBeginInfo beginInfo{};

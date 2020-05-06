@@ -1,10 +1,10 @@
 #include "pch.h"
-#include "Buffer.h"
+#include "RBuffer.h"
 
 #include "rendering/Device.h"
 
 namespace vl {
-RawBuffer::RawBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties)
+RBuffer::RBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties)
 	: m_size(size)
 {
 	vk::BufferCreateInfo bufferInfo{};
@@ -29,7 +29,7 @@ RawBuffer::RawBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::Memory
 	Device->bindBufferMemory(m_handle.get(), m_memory.get(), 0);
 }
 
-void RawBuffer::CopyBuffer(const RawBuffer& other)
+void RBuffer::CopyBuffer(const RBuffer& other)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -54,14 +54,14 @@ void RawBuffer::CopyBuffer(const RawBuffer& other)
 	Device->transferQueue.waitIdle();
 }
 
-void RawBuffer::UploadData(const void* data, size_t size)
+void RBuffer::UploadData(const void* data, size_t size)
 {
 	void* dptr = Device->mapMemory(m_memory.get(), 0, size);
 	memcpy(dptr, data, size);
 	Device->unmapMemory(m_memory.get());
 }
 
-void RawBuffer::UploadData(const std::vector<byte> data)
+void RBuffer::UploadData(const std::vector<byte> data)
 {
 	UploadData(data.data(), data.size());
 }

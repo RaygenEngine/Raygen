@@ -1,12 +1,12 @@
 #include "pch.h"
-#include "PhysicalDevice.h"
+#include "RPhysicalDevice.h"
 
 #include "engine/Logger.h"
 
 #include <set>
 
 namespace vl {
-PhysicalDevice::PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inSurface)
+RPhysicalDevice::RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inSurface)
 	: vk::PhysicalDevice(vkHandle)
 	, surface(inSurface)
 {
@@ -78,7 +78,7 @@ PhysicalDevice::PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inSur
 	// specific surface support details
 }
 
-uint32 PhysicalDevice::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties)
+uint32 RPhysicalDevice::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties)
 {
 	vk::PhysicalDeviceMemoryProperties memProperties = getMemoryProperties();
 
@@ -91,7 +91,7 @@ uint32 PhysicalDevice::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags
 	LOG_ABORT("Failed to find suitable memory type!");
 }
 
-vk::Format PhysicalDevice::FindSupportedFormat(
+vk::Format RPhysicalDevice::FindSupportedFormat(
 	const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features)
 {
 	for (auto format : candidates) {
@@ -108,13 +108,13 @@ vk::Format PhysicalDevice::FindSupportedFormat(
 	LOG_ABORT("Failed to find supported format!");
 }
 
-vk::Format PhysicalDevice::FindDepthFormat()
+vk::Format RPhysicalDevice::FindDepthFormat()
 {
 	return FindSupportedFormat({ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint },
 		vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 }
 
-SwapchainSupportDetails PhysicalDevice::GetSwapchainSupportDetails() const
+SwapchainSupportDetails RPhysicalDevice::GetSwapchainSupportDetails() const
 {
 	SwapchainSupportDetails ssDetails;
 

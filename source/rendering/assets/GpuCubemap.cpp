@@ -4,7 +4,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
-#include "rendering/objects/Buffer.h"
+#include "rendering/objects/RBuffer.h"
 #include "rendering/Renderer.h"
 #include "rendering/VulkanUtl.h"
 
@@ -36,7 +36,7 @@ void ::Cubemap::Gpu::Update(const AssetUpdateInfo&)
 
 		vk::DeviceSize imageSize = face->data.size();
 
-		vl::RawBuffer stagingBuffer{ imageSize, vk::BufferUsageFlagBits::eTransferSrc,
+		vl::RBuffer stagingBuffer{ imageSize, vk::BufferUsageFlagBits::eTransferSrc,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 		// copy data to buffer

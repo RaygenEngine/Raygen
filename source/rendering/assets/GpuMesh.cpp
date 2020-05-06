@@ -21,24 +21,24 @@ Mesh::Gpu::Gpu(PodHandle<Mesh> podHandle)
 		vk::DeviceSize vertexBufferSize = sizeof(gg.vertices[0]) * gg.vertices.size();
 		vk::DeviceSize indexBufferSize = sizeof(gg.indices[0]) * gg.indices.size();
 
-		RawBuffer vertexStagingBuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
+		RBuffer vertexStagingBuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 		// copy data to buffer
 		vertexStagingBuffer.UploadData(gg.vertices.data(), vertexBufferSize);
 
-		RawBuffer indexStagingBuffer{ indexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
+		RBuffer indexStagingBuffer{ indexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 		// copy data to buffer
 		indexStagingBuffer.UploadData(gg.indices.data(), indexBufferSize);
 
 		// device local
-		vgg.vertexBuffer.reset(new RawBuffer(vertexBufferSize,
+		vgg.vertexBuffer.reset(new RBuffer(vertexBufferSize,
 			vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
 			vk::MemoryPropertyFlagBits::eDeviceLocal));
 
-		vgg.indexBuffer.reset(new RawBuffer(indexBufferSize,
+		vgg.indexBuffer.reset(new RBuffer(indexBufferSize,
 			vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
 			vk::MemoryPropertyFlagBits::eDeviceLocal));
 

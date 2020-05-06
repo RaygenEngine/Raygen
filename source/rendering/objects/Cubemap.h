@@ -11,6 +11,6 @@ public:
 		vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties);
 
 
-	void Cubemap::CopyBufferToFace(const RawBuffer& buffer, uint32 face);
+	void Cubemap::CopyBufferToFace(const RBuffer& buffer, uint32 face);
 };
 } // namespace vl

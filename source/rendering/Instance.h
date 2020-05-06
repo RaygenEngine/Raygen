@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/objects/PhysicalDevice.h"
+#include "rendering/objects/RPhysicalDevice.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -12,7 +12,7 @@ inline struct Instance_ : public vk::Instance {
 
 	vk::UniqueDebugUtilsMessengerEXT debugUtilsMessenger;
 
-	std::vector<UniquePtr<PhysicalDevice>> capablePhysicalDevices;
+	std::vector<UniquePtr<RPhysicalDevice>> capablePhysicalDevices;
 
 	Instance_(std::vector<const char*> requiredExtensions, GLFWwindow* window);
 	~Instance_();
