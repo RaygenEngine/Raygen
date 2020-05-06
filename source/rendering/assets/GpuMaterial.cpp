@@ -13,7 +13,7 @@ Material::Gpu::Gpu(PodHandle<Material> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	// CHECK: upload once for now (not dynamic changes)
-	materialUBO = std::make_unique<Buffer<UBO_Material>>(vk::BufferUsageFlagBits::eUniformBuffer,
+	materialUBO = std::make_unique<RUboBuffer<UBO_Material>>(vk::BufferUsageFlagBits::eUniformBuffer,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 
 	Update({}); // NOTE: Virtual function call in constructor will not call subclasses overrides, thats why we

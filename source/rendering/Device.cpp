@@ -15,7 +15,7 @@ QueueFamily GetQueueFamilyWithBestRating(const std::vector<QueueFamily>& queueFa
 	return { *it };
 }
 
-Device_::Device_(PhysicalDevice* pd, std::vector<const char*> deviceExtensions)
+Device_::Device_(RPhysicalDevice* pd, std::vector<const char*> deviceExtensions)
 	: pd(pd)
 {
 	auto graphicsQueueFamily = GetQueueFamilyWithBestRating(pd->graphicsFamilies);

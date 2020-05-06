@@ -1,17 +1,17 @@
 #pragma once
-#include "rendering/objects/DescriptorLayout.h"
+#include "rendering/objects/RDescriptorLayout.h"
 
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
 inline struct Layouts_ {
 
-	DescriptorLayout regularMaterialDescLayout;
-	DescriptorLayout gBufferDescLayout;
-	DescriptorLayout cameraDescLayout;
-	DescriptorLayout spotlightDescLayout;
-	DescriptorLayout cubemapLayout;
-	DescriptorLayout envmapLayout;
+	RDescriptorLayout regularMaterialDescLayout;
+	RDescriptorLayout gBufferDescLayout;
+	RDescriptorLayout cameraDescLayout;
+	RDescriptorLayout spotlightDescLayout;
+	RDescriptorLayout cubemapLayout;
+	RDescriptorLayout envmapLayout;
 
 	Layouts_();
 

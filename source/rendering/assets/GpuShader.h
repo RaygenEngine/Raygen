@@ -22,7 +22,7 @@ struct Shader::Gpu : public vl::GpuAssetTemplate<Shader> {
 
 private:
 	std::vector<vk::PipelineShaderStageCreateInfo> shaderStagesCi;
-	vl::DescriptorLayout descLayout;
+	vl::RDescriptorLayout descLayout;
 	vk::UniquePipelineLayout pipelineLayout;
 
 	std::vector<vk::PushConstantRange> pushConstantRanges;

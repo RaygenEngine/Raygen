@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "DescriptorLayout.h"
+#include "RDescriptorLayout.h"
 
 #include "engine/Logger.h"
 #include "rendering/Device.h"
@@ -14,7 +14,7 @@ inline void hash_combine(size_t& seed, const T& v)
 }
 
 struct PoolHasher {
-	size_t operator()(const vl::DescriptorLayout& layoutSize)
+	size_t operator()(const vl::RDescriptorLayout& layoutSize)
 	{
 		size_t hash = 0;
 		for (auto& size : layoutSize.perSetPoolSizes) {
@@ -27,7 +27,7 @@ struct PoolHasher {
 } // namespace detail
 
 namespace vl {
-void DescriptorLayout::AddBinding(vk::DescriptorType type, vk::ShaderStageFlags stageFlags, uint32 descriptorCount)
+void RDescriptorLayout::AddBinding(vk::DescriptorType type, vk::ShaderStageFlags stageFlags, uint32 descriptorCount)
 {
 	CLOG_ABORT(hasBeenGenerated, "Attempting to add binding to an DescriptorLayout that is already generated");
 
@@ -55,7 +55,7 @@ void DescriptorLayout::AddBinding(vk::DescriptorType type, vk::ShaderStageFlags 
 	}
 }
 
-void DescriptorLayout::Generate()
+void RDescriptorLayout::Generate()
 {
 	CLOG_ABORT(hasBeenGenerated, "Attempting to generate an DescriptorLayout that is already generated");
 
@@ -69,7 +69,7 @@ void DescriptorLayout::Generate()
 	poolSizeHash = detail::PoolHasher{}(*this);
 }
 
-vk::DescriptorSet DescriptorLayout::GetDescriptorSet() const
+vk::DescriptorSet RDescriptorLayout::GetDescriptorSet() const
 {
 	CLOG_ABORT(!hasBeenGenerated, "Attempting to get a descriptor set from a non generated DescriptorLayout ");
 	return GpuResources->descPools.AllocateDescriptorSet(poolSizeHash, *this);

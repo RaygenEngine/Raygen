@@ -18,7 +18,7 @@ struct SwapchainSupportDetails {
 
 
 // Info about a physical device and a given surface (support details)
-struct PhysicalDevice : public vk::PhysicalDevice {
+struct RPhysicalDevice : public vk::PhysicalDevice {
 
 	float rating{ 0.0f };
 
@@ -28,7 +28,7 @@ struct PhysicalDevice : public vk::PhysicalDevice {
 	std::vector<QueueFamily> presentFamilies;
 
 
-	PhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surface);
+	RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surface);
 
 	uint32 FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties);
 

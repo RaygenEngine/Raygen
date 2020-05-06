@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/objects/DescriptorLayout.h"
+#include "rendering/objects/RDescriptorLayout.h"
 
 #include <vulkan/vulkan.hpp>
 #include <unordered_map>
@@ -20,7 +20,7 @@ class DescPoolAllocator {
 	size_t m_allocCount{ 0 };
 
 public:
-	vk::DescriptorSet AllocateDescriptorSet(size_t hash, const DescriptorLayout& layout);
+	vk::DescriptorSet AllocateDescriptorSet(size_t hash, const RDescriptorLayout& layout);
 
 	vk::DescriptorPool GetImguiPool();
 

@@ -39,7 +39,7 @@ struct Material::Gpu : public vl::GpuAssetTemplate<Material> {
 
 	UBO_Material matData;
 
-	UniquePtr<vl::Buffer<UBO_Material>> materialUBO;
+	UniquePtr<vl::RUboBuffer<UBO_Material>> materialUBO;
 
 	// one for each m_swapchain image
 	// TODO: check

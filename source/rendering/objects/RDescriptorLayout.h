@@ -2,8 +2,8 @@
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
-struct DescriptorLayout {
-
+struct RDescriptorLayout {
+	
 	std::vector<vk::DescriptorSetLayoutBinding> bindings;
 	std::vector<vk::DescriptorPoolSize> perSetPoolSizes;
 

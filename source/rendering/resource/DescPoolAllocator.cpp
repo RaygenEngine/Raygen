@@ -11,7 +11,7 @@ ConsoleFunction<> g_showPoolAllocations{ "r.mem.showDescriptorPools",
 	"Shows number of allocated descriptor pools." };
 
 namespace vl {
-vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const DescriptorLayout& layout)
+vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const RDescriptorLayout& layout)
 {
 	auto addPool = [&](Entry& entry) {
 		vk::DescriptorPoolCreateInfo poolInfo{};

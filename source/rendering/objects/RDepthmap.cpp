@@ -1,10 +1,10 @@
 #include "pch.h"
-#include "Depthmap.h"
+#include "RDepthmap.h"
 
 #include "rendering/VulkanUtl.h"
 
 namespace vl {
-Depthmap::Depthmap(vk::RenderPass renderPass, uint32 width, uint32 height, const char* name)
+RDepthmap::RDepthmap(vk::RenderPass renderPass, uint32 width, uint32 height, const char* name)
 {
 	vk::Format depthFormat = Device->pd->FindDepthFormat();
 
@@ -27,7 +27,7 @@ Depthmap::Depthmap(vk::RenderPass renderPass, uint32 width, uint32 height, const
 	m_framebuffer = Device->createFramebufferUnique(createInfo);
 }
 
-void Depthmap::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
+void RDepthmap::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
 {
 	auto barrier = m_depthAttachment->CreateTransitionBarrier(
 		vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);

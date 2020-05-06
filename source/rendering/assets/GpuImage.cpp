@@ -2,7 +2,7 @@
 #include "GpuImage.h"
 
 #include "rendering/Device.h"
-#include "rendering/objects/Buffer.h"
+#include "rendering/objects/RBuffer.h"
 #include "rendering/Renderer.h"
 #include "rendering/VulkanUtl.h"
 
@@ -21,7 +21,7 @@ void ::Image::Gpu::Update(const AssetUpdateInfo& info)
 
 	vk::DeviceSize imageSize = imgData->data.size();
 
-	RawBuffer stagingBuffer{ imageSize, vk::BufferUsageFlagBits::eTransferSrc,
+	RBuffer stagingBuffer{ imageSize, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 	// copy data to buffer

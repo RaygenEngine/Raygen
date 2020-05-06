@@ -18,8 +18,8 @@ struct GpuGeometryGroup {
 	uint32 indexCount{ 0u };
 	vl::GpuHandle<Material> material;
 
-	UniquePtr<vl::RawBuffer> vertexBuffer;
-	UniquePtr<vl::RawBuffer> indexBuffer;
+	UniquePtr<vl::RBuffer> vertexBuffer;
+	UniquePtr<vl::RBuffer> indexBuffer;
 };
 
 struct Mesh::Gpu : public vl::GpuAssetTemplate<Mesh> {

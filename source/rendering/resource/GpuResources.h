@@ -4,7 +4,7 @@
 namespace vl {
 inline struct GpuResources_ {
 	DescPoolAllocator descPools;
-	DescriptorLayout imageDebugDescLayout;
+	RDescriptorLayout imageDebugDescLayout;
 
 	GpuResources_();
 } * GpuResources{};

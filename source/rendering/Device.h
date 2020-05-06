@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/objects/PhysicalDevice.h"
+#include "rendering/objects/RPhysicalDevice.h"
 
 #include <vulkan/vulkan.hpp>
 #include <optional>
@@ -20,7 +20,7 @@ inline struct Device_ : public vk::Device {
 	DeviceQueue transferQueue;
 	DeviceQueue presentQueue;
 
-	PhysicalDevice* pd;
+	RPhysicalDevice* pd;
 
 	vk::UniqueCommandPool graphicsCmdPool;
 	vk::UniqueCommandPool transferCmdPool;
@@ -28,7 +28,7 @@ inline struct Device_ : public vk::Device {
 	vk::CommandBuffer transferCmdBuffer;
 	vk::CommandBuffer graphicsCmdBuffer;
 
-	Device_(PhysicalDevice* pd, std::vector<const char*> deviceExtensions);
+	Device_(RPhysicalDevice* pd, std::vector<const char*> deviceExtensions);
 	~Device_();
 } * Device{};
 } // namespace vl

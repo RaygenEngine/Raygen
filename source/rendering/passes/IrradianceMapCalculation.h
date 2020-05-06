@@ -1,7 +1,7 @@
 #pragma once
 #include "assets/pods/EnvironmentMap.h"
 #include "rendering/assets/GpuEnvironmentMap.h"
-#include "rendering/objects/Buffer.h"
+#include "rendering/objects/RBuffer.h"
 #include "rendering/objects/ImageAttachment.h"
 
 #include <vulkan/vulkan.hpp>
@@ -13,7 +13,7 @@ class IrradianceMapCalculation {
 
 	std::vector<vk::CommandBuffer> m_cmdBuffers;
 
-	UniquePtr<vl::RawBuffer> m_cubeVertexBuffer;
+	UniquePtr<vl::RBuffer> m_cubeVertexBuffer;
 
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;
@@ -24,7 +24,7 @@ class IrradianceMapCalculation {
 	glm::mat4 m_captureProjection;
 	std::array<glm::mat4, 6> m_captureViews;
 
-	DescriptorLayout m_skyboxDescLayout;
+	RDescriptorLayout m_skyboxDescLayout;
 	vk::DescriptorSet m_descSet;
 
 	EnvironmentMap::Gpu* m_envmapAsset;

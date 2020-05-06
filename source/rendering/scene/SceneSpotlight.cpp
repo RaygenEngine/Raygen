@@ -15,7 +15,7 @@ SceneSpotlight::SceneSpotlight()
 
 void SceneSpotlight::UpdateShadowmap(uint32 width, uint32 height)
 {
-	shadowmap = std::make_unique<vl::Depthmap>(vl::Renderer->GetShadowmapRenderPass(), width, height);
+	shadowmap = std::make_unique<vl::RDepthmap>(vl::Renderer->GetShadowmapRenderPass(), width, height);
 
 	auto quadSampler = vl::GpuAssetManager->GetDefaultSampler();
 
