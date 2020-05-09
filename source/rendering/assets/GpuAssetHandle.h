@@ -2,7 +2,6 @@
 #include "assets/PodHandle.h"
 #include "assets/AssetUpdateInfo.h"
 
-
 namespace vl {
 
 // Generic base for a gpu asset
