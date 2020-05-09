@@ -1,12 +1,7 @@
 #include "pch.h"
 #include "GpuAssetHandle.h"
 
-#include "assets/Assets.h"
-#include "assets/AssetRegistry.h"
-#include "assets/PodIncludes.h"
-#include "reflection/PodTools.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/Device.h"
 
 std::vector<size_t> vl::GpuAssetBase::GetUsers()
 {
