@@ -12,6 +12,7 @@
 #include "rendering/Instance.h"
 #include "universe/nodes/camera/CameraNode.h"
 #include "universe/nodes/geometry/GeometryNode.h"
+#include "rendering/VulkanUtl.h"
 
 #include <array>
 
@@ -50,9 +51,6 @@ Renderer_::Renderer_()
 	Event::OnWindowResize.BindFlag(this, m_didWindowResize);
 	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimzed) { m_isMinimzed = newIsMinimzed; });
 
-	m_shadowmapPass.MakePipeline();
-	m_spotlightPass.MakePipeline();
-	m_ambientPass.MakePipeline();
 
 	// post process render pass
 
@@ -97,7 +95,18 @@ Renderer_::Renderer_()
 		.setDependencyCount(1u)
 		.setPDependencies(&dependency);
 
-	m_renderPass = Device->createRenderPassUnique(renderPassInfo);
+	m_ptRenderpass = Device->createRenderPassUnique(renderPassInfo);
+
+	m_shadowmapPass.MakePipeline();
+	m_spotlightPass.MakePipeline(m_ptRenderpass.get());
+	m_ambientPass.MakePipeline(m_ptRenderpass.get());
+	m_copyPPTexture.MakePipeline();
+
+	// descsets
+	for (uint32 i = 0; i < 3; ++i) {
+
+		m_ppDescSets[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
+	}
 }
 
 Renderer_::~Renderer_() {}
@@ -150,7 +159,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 	{
 		vk::RenderPassBeginInfo renderPassInfo{};
 		renderPassInfo
-			.setRenderPass(m_renderPass.get()) //
+			.setRenderPass(m_ptRenderpass.get()) //
 			.setFramebuffer(m_framebuffers[currentFrame].get());
 		renderPassInfo.renderArea
 			.setOffset({ 0, 0 })                //
@@ -209,10 +218,32 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer)
 
 		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{
+			vk::Rect2D scissor{};
+			scissor
+				.setOffset(m_viewportRect.offset) //
+				.setExtent(m_viewportRect.extent);
 
+			vk::Viewport viewport{};
+			viewport
+				.setX(m_viewportRect.offset.x) //
+				.setY(m_viewportRect.offset.y)
+				.setWidth(static_cast<float>(m_viewportRect.extent.width))
+				.setHeight(static_cast<float>(m_viewportRect.extent.height))
+				.setMinDepth(0.f)
+				.setMaxDepth(1.f);
+
+			m_copyPPTexture.RecordCmd(cmdBuffer, viewport, scissor);
 			m_editorPass.RecordCmd(cmdBuffer);
 		}
 		cmdBuffer->endRenderPass();
+
+		// transition for write again (TODO: image function)
+		auto barrier = m_attachments[currentFrame]->CreateTransitionBarrier(
+			vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
+		vk::PipelineStageFlags sourceStage = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);
+		vk::PipelineStageFlags destinationStage = GetPipelineStage(vk::ImageLayout::eColorAttachmentOptimal);
+		cmdBuffer->pipelineBarrier(
+			sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 	}
 	cmdBuffer->end();
 }
@@ -229,7 +260,8 @@ void Renderer_::OnViewportResize()
 	if (fbSize != m_viewportFramebufferSize) {
 		m_viewportFramebufferSize = fbSize;
 
-		// WIP: remove from here to differentiate gbuffer render scale
+		// fbSize.width *= 0.5;
+		// fbSize.height *= 0.5;
 		m_gBuffer = m_gBufferPass.CreateCompatibleGBuffer(fbSize.width, fbSize.height);
 
 		for (uint32 i = 0; i < 3; ++i) {
@@ -241,10 +273,32 @@ void Renderer_::OnViewportResize()
 			m_attachments[i]->BlockingTransitionToLayout(
 				vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
+			// descSets
+			auto quadSampler = GpuAssetManager->GetDefaultSampler();
+
+			vk::DescriptorImageInfo imageInfo{};
+			imageInfo
+				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+				.setImageView(m_attachments[i]->GetView())
+				.setSampler(quadSampler);
+
+			vk::WriteDescriptorSet descriptorWrite{};
+			descriptorWrite
+				.setDstSet(m_ppDescSets[i]) //
+				.setDstBinding(0u)
+				.setDstArrayElement(0u)
+				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+				.setDescriptorCount(1u)
+				.setPBufferInfo(nullptr)
+				.setPImageInfo(&imageInfo)
+				.setPTexelBufferView(nullptr);
+
+			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+
 			// framebuffer
 			vk::FramebufferCreateInfo createInfo{};
 			createInfo
-				.setRenderPass(m_renderPass.get()) //
+				.setRenderPass(m_ptRenderpass.get()) //
 				.setAttachmentCount(1u)
 				.setPAttachments(&m_attachments[i]->GetView())
 				.setWidth(fbSize.width)
@@ -254,7 +308,7 @@ void Renderer_::OnViewportResize()
 			m_framebuffers[i] = Device->createFramebufferUnique(createInfo);
 		}
 	}
-}
+} // namespace vl
 
 void Renderer_::OnWindowResize()
 {

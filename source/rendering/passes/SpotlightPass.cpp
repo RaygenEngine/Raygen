@@ -12,12 +12,11 @@
 #include "rendering/Layouts.h"
 
 namespace vl {
-void SpotlightPass::MakePipeline()
+void SpotlightPass::MakePipeline(vk::RenderPass renderPass)
 {
-	// TODO: yikes
 	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/spotlight.shader");
-	gpuShader.onCompile = [&]() {
-		MakePipeline();
+	gpuShader.onCompile = [=]() {
+		MakePipeline(renderPass);
 	};
 
 	// shaders
@@ -148,7 +147,7 @@ void SpotlightPass::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(Swapchain->GetRenderPass())
+		.setRenderPass(renderPass)
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
