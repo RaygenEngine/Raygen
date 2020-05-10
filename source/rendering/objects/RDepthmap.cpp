@@ -1,35 +1,63 @@
 #include "pch.h"
 #include "RDepthmap.h"
 
+#include "rendering/assets/GpuAssetManager.h"
+#include "rendering/Layouts.h"
 #include "rendering/VulkanUtl.h"
 
 namespace vl {
 RDepthmap::RDepthmap(vk::RenderPass renderPass, uint32 width, uint32 height, const char* name)
 {
+	// attachment
 	vk::Format depthFormat = Device->pd->FindDepthFormat();
 
-	m_depthAttachment = std::make_unique<ImageAttachment>(name, width, height, depthFormat, vk::ImageTiling::eOptimal,
+	attachment = std::make_unique<ImageAttachment>(name, width, height, depthFormat, vk::ImageTiling::eOptimal,
 		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, true);
 
-	m_depthAttachment->BlockingTransitionToLayout(
+	attachment->BlockingTransitionToLayout(
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
+	// framebuffer
 	vk::FramebufferCreateInfo createInfo{};
 	createInfo
 		.setRenderPass(renderPass) //
 		.setAttachmentCount(1u)
-		.setPAttachments(&m_depthAttachment->GetView())
+		.setPAttachments(&attachment->GetView())
 		.setWidth(width)
 		.setHeight(height)
 		.setLayers(1);
 
-	m_framebuffer = Device->createFramebufferUnique(createInfo);
+	framebuffer = Device->createFramebufferUnique(createInfo);
+
+	// description set
+	descSet = Layouts->singleSamplerDescLayout.GetDescriptorSet();
+
+	auto quadSampler = GpuAssetManager->GetDefaultSampler();
+
+	vk::DescriptorImageInfo imageInfo{};
+	imageInfo
+		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+		.setImageView(attachment->GetView())
+		.setSampler(quadSampler);
+
+	vk::WriteDescriptorSet descriptorWrite{};
+	descriptorWrite
+		.setDstSet(descSet) //
+		.setDstBinding(0u)
+		.setDstArrayElement(0u)
+		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+		.setDescriptorCount(1u)
+		.setPBufferInfo(nullptr)
+		.setPImageInfo(&imageInfo)
+		.setPTexelBufferView(nullptr);
+
+	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 }
 
 void RDepthmap::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
 {
-	auto barrier = m_depthAttachment->CreateTransitionBarrier(
+	auto barrier = attachment->CreateTransitionBarrier(
 		vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
 	vk::PipelineStageFlags sourceStage = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);

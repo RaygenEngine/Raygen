@@ -46,6 +46,7 @@ inline class Renderer_ : public Listener {
 	std::vector<vk::UniqueSemaphore> m_imageAvailSem;
 
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer);
+
 	void RecordDeferredPasses(vk::CommandBuffer* cmdBuffer);
 
 protected:

@@ -22,14 +22,13 @@ Layouts_::Layouts_()
 
 	// camera
 	// WIP/PERF: could have two seperate for each stage
-	cameraDescLayout.AddBinding(
+	singleUboDescLayout.AddBinding(
 		vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
-	cameraDescLayout.Generate();
+	singleUboDescLayout.Generate();
 
 	// spotlights
-	spotlightDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
-	spotlightDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
-	spotlightDescLayout.Generate();
+	singleSamplerDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+	singleSamplerDescLayout.Generate();
 
 	// cubemap
 	cubemapLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);

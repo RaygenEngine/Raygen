@@ -5,10 +5,12 @@
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
-class RDepthmap {
+struct RDepthmap {
 
-	vk::UniqueFramebuffer m_framebuffer;
-	UniquePtr<ImageAttachment> m_depthAttachment;
+	vk::UniqueFramebuffer framebuffer;
+	UniquePtr<ImageAttachment> attachment;
+
+	vk::DescriptorSet descSet;
 
 public:
 	RDepthmap(vk::RenderPass renderPass, uint32 width, uint32 height, const char* name = "depthmap");
@@ -16,8 +18,5 @@ public:
 	// DOC: transitioning for read is generally done automatically from the render pass
 	// if need be create a transition for read method
 	void TransitionForWrite(vk::CommandBuffer* cmdBuffer);
-
-	[[nodiscard]] vk::Framebuffer GetFramebuffer() const { return m_framebuffer.get(); }
-	[[nodiscard]] ImageAttachment* GetDepthAttachment() const { return m_depthAttachment.get(); }
 };
 } // namespace vl

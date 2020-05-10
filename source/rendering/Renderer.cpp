@@ -72,7 +72,10 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 	cmdBuffer->begin(beginInfo);
 	{
 		m_gBufferPass.RecordCmd(cmdBuffer, viewport, scissor);
-		m_shadowmapPass.RecordCmd(cmdBuffer);
+
+		for (auto sl : Scene->spotlights.elements) {
+			m_shadowmapPass.RecordCmd(cmdBuffer, *sl->shadowmap, sl->ubo.viewProj, Scene->geometries.elements);
+		}
 	}
 	// end command buffer recording
 	cmdBuffer->end();

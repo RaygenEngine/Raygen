@@ -12,6 +12,4 @@ struct Camera_Ubo {
 };
 
 struct SceneCamera : SceneStruct<Camera_Ubo> {
-
-	SceneCamera();
 };

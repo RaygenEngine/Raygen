@@ -8,8 +8,8 @@ inline struct Layouts_ {
 
 	RDescriptorLayout regularMaterialDescLayout;
 	RDescriptorLayout gBufferDescLayout;
-	RDescriptorLayout cameraDescLayout;
-	RDescriptorLayout spotlightDescLayout;
+	RDescriptorLayout singleUboDescLayout;
+	RDescriptorLayout singleSamplerDescLayout;
 	RDescriptorLayout cubemapLayout;
 	RDescriptorLayout envmapLayout;
 
