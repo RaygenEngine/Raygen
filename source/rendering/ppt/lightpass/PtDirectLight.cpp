@@ -1,44 +1,41 @@
 #include "pch.h"
-#include "AmbientPass.h"
+#include "PtDirectLight.h"
 
-#include "engine/Engine.h"
-#include "engine/Input.h"
-#include "engine/profiler/ProfileScope.h"
-#include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuMesh.h"
-#include "rendering/assets/GpuShader.h"
-#include "rendering/assets/GpuShaderStage.h"
+#include "rendering/Layouts.h"
 #include "rendering/Device.h"
+#include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuShader.h"
+#include "rendering/Swapchain.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/Layouts.h"
 
 namespace vl {
-void AmbientPass::MakePipeline()
+PtDirectLight::PtDirectLight()
+{
+	std::array layouts = { Layouts->gBufferDescLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
+		Layouts->singleUboDescLayout.setLayout.get(), Layouts->singleSamplerDescLayout.setLayout.get() };
+
+	// pipeline layout
+	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo
+		.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
+		.setPSetLayouts(layouts.data())
+		.setPushConstantRangeCount(0u)
+		.setPPushConstantRanges(nullptr);
+
+	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+}
+
+void PtDirectLight::MakePipeline()
 {
 	// TODO: yikes
-	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/ambient.shader");
+	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/spotlight.shader");
 	gpuShader.onCompile = [&]() {
 		MakePipeline();
 	};
 
-	// shaders
-	auto vertShaderModule = *gpuShader.vert.Lock().module;
-	auto fragShaderModule = *gpuShader.frag.Lock().module;
+	std::vector shaderStages = gpuShader.shaderStages;
 
-	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
-	vertShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eVertex) //
-		.setModule(vertShaderModule)
-		.setPName("main");
-
-	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
-	fragShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(fragShaderModule)
-		.setPName("main");
-
-	std::array shaderStages{ vertShaderStageInfo, fragShaderStageInfo };
 
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
@@ -105,24 +102,10 @@ void AmbientPass::MakePipeline()
 
 	// dynamic states
 	vk::DynamicState dynamicStates[] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
-
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
 	dynamicStateInfo
 		.setDynamicStateCount(2u) //
 		.setPDynamicStates(dynamicStates);
-
-	std::array layouts = { Layouts->gBufferDescLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
-		Layouts->envmapLayout.setLayout.get() };
-
-	// pipeline layout
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo
-		.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
-		.setPSetLayouts(layouts.data())
-		.setPushConstantRangeCount(0u)
-		.setPPushConstantRanges(nullptr);
-
-	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
@@ -150,7 +133,7 @@ void AmbientPass::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(Swapchain->GetRenderPass())
+		.setRenderPass(Swapchain->GetRenderPass()) // WIP: Proper renderpass
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
@@ -158,31 +141,35 @@ void AmbientPass::MakePipeline()
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void AmbientPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& viewport, const vk::Rect2D& scissor)
+void PtDirectLight::Draw(vk::CommandBuffer cmdBuffer, uint32 frameIndex)
 {
-	PROFILE_SCOPE(Renderer);
-
 	if (!Scene->GetActiveCamera()) {
 		return;
 	}
 
 	// bind the graphics pipeline
-	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 	// descriptor sets
-	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
 		&Renderer->GetGBuffer()->GetDescSet(), 0u, nullptr);
 
-	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
 		&Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
-	for (auto rp : Scene->reflProbs.elements) {
+	for (auto sl : Scene->spotlights.elements) {
+		if (!sl) {
+			continue;
+		}
 
-		cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
-			&rp->envmap.Lock().descriptorSet, 0u, nullptr);
+		cmdBuffer.bindDescriptorSets(
+			vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u, &sl->descSets[frameIndex], 0u, nullptr);
+
+		cmdBuffer.bindDescriptorSets(
+			vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 3u, 1u, &sl->shadowmap->descSet, 0u, nullptr);
 
 		// draw call (triangle)
-		cmdBuffer->draw(3u, 1u, 0u, 0u);
+		cmdBuffer.draw(3u, 1u, 0u, 0u);
 	}
 }
 } // namespace vl
