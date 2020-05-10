@@ -10,7 +10,7 @@ class SpotlightPass {
 	vk::UniquePipelineLayout m_pipelineLayout;
 
 public:
-	void MakePipeline();
+	void MakePipeline(vk::RenderPass renderPass);
 
 	void RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& viewport, const vk::Rect2D& scissor);
 };

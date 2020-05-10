@@ -116,15 +116,7 @@ void main() {
 
 	vec3 Lo = CookTorranceMicrofacetBRDF_GGX(L, V, N, fragment.albedo, fragment.metallic, fragment.roughness) * Li * max(dot(N, L), 0.0);
 
-    // TODO: emissive at a later pass
-    vec3 hdrColor = Lo;
-
-    // Exposure tone mapping
-    vec3 mapped = vec3(1.0) - exp(-hdrColor * 1.2);
-    // Gamma correction 
-	mapped = pow(mapped, vec3(1.0 / 2.2));
-  
-    outColor = vec4(mapped, 1);
+    outColor = vec4(Lo, 1);
 }                               
                                 
                                  

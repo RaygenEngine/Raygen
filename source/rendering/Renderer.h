@@ -6,6 +6,7 @@
 #include "rendering/objects/RPhysicalDevice.h"
 #include "rendering/passes/EditorPass.h"
 #include "rendering/passes/GBufferPass.h"
+#include "rendering/passes/CopyPPTexture.h"
 #include "rendering/passes/ShadowmapPass.h"
 #include "rendering/passes/SpotlightPass.h"
 #include "rendering/passes/AmbientPass.h"
@@ -34,6 +35,7 @@ inline class Renderer_ : public Listener {
 	SpotlightPass m_spotlightPass;
 	AmbientPass m_ambientPass;
 	EditorPass m_editorPass;
+	CopyPPTexture m_copyPPTexture;
 
 	UniquePtr<GBuffer> m_gBuffer;
 
@@ -54,7 +56,8 @@ inline class Renderer_ : public Listener {
 	// post process for hdr
 	std::array<vk::UniqueFramebuffer, 3> m_framebuffers;
 	std::array<UniquePtr<ImageAttachment>, 3> m_attachments;
-	vk::UniqueRenderPass m_renderPass;
+
+
 
 protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)
@@ -67,6 +70,9 @@ protected:
 	bool m_isMinimzed{ false };
 
 public:
+	std::array<vk::DescriptorSet, 3> m_ppDescSets;
+	vk::UniqueRenderPass m_ptRenderpass;
+
 	Renderer_();
 	~Renderer_();
 
