@@ -1,6 +1,7 @@
 #pragma once
 #include "rendering/Device.h"
 #include "rendering/objects/ImageAttachment.h"
+#include "rendering/passes/GBufferPass.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -32,13 +33,21 @@ private:
 
 	vk::DescriptorSet m_descSet;
 
+	vk::UniquePipeline m_pipeline;
+
+	vk::Extent2D m_extent;
+
+	void MakePipeline(GBufferPass* passInfo);
+
 public:
-	GBuffer(vk::RenderPass renderPass, uint32 width, uint32 height);
+	GBuffer(GBufferPass* passInfo, uint32 width, uint32 height);
 
 	void TransitionForWrite(vk::CommandBuffer* cmdBuffer);
 
 	[[nodiscard]] vk::DescriptorSet GetDescSet() const { return m_descSet; }
 	[[nodiscard]] vk::Framebuffer GetFramebuffer() const { return m_framebuffer.get(); }
+	[[nodiscard]] vk::Extent2D GetExtent() const { return m_extent; }
+	[[nodiscard]] vk::Pipeline GetPipeline() const { return m_pipeline.get(); }
 
 	[[nodiscard]] ImageAttachment* operator[](uint32 i) const { return m_attachments[i].get(); }
 };

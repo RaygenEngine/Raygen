@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "AmbientPass.h"
+#include "CopyPPTexture.h"
 
 #include "engine/Engine.h"
 #include "engine/Input.h"
@@ -7,23 +7,23 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/assets/GpuShaderStage.h"
 #include "rendering/Device.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/Layouts.h"
 
 namespace vl {
-void AmbientPass::MakePipeline(vk::RenderPass renderPass)
+void CopyPPTexture::MakePipeline()
 {
-	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/ambient.shader");
-	gpuShader.onCompile = [=]() {
-		MakePipeline(renderPass);
+	// TODO: yikes
+	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/cpyppt.shader");
+	gpuShader.onCompile = [&]() {
+		MakePipeline();
 	};
 
 	// shaders
-	auto vertShaderModule = *gpuShader.vert.Lock().module;
-	auto fragShaderModule = *gpuShader.frag.Lock().module;
+	auto vertShaderModule = *gpuShader.vert;
+	auto fragShaderModule = *gpuShader.frag;
 
 	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo
@@ -110,8 +110,7 @@ void AmbientPass::MakePipeline(vk::RenderPass renderPass)
 		.setDynamicStateCount(2u) //
 		.setPDynamicStates(dynamicStates);
 
-	std::array layouts = { Layouts->gBufferDescLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
-		Layouts->envmapLayout.setLayout.get() };
+	std::array layouts = { Layouts->singleSamplerDescLayout.setLayout.get() };
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -149,7 +148,7 @@ void AmbientPass::MakePipeline(vk::RenderPass renderPass)
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(renderPass)
+		.setRenderPass(Swapchain->GetRenderPass())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
@@ -157,7 +156,7 @@ void AmbientPass::MakePipeline(vk::RenderPass renderPass)
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void AmbientPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& viewport, const vk::Rect2D& scissor)
+void CopyPPTexture::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& viewport, const vk::Rect2D& scissor)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -165,23 +164,15 @@ void AmbientPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& vi
 		return;
 	}
 
-	// bind the graphics pipeline
 	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
-	// descriptor sets
+	cmdBuffer->setViewport(0, { viewport });
+	cmdBuffer->setScissor(0, { scissor });
+
 	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-		&Renderer->GetGBuffer()->GetDescSet(), 0u, nullptr);
+		&Renderer->m_ppDescSets[Renderer->currentFrame], 0u, nullptr);
 
-	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
-		&Scene->GetActiveCameraDescSet(), 0u, nullptr);
-
-	for (auto rp : Scene->reflProbs.elements) {
-
-		cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
-			&rp->envmap.Lock().descriptorSet, 0u, nullptr);
-
-		// draw call (triangle)
-		cmdBuffer->draw(3u, 1u, 0u, 0u);
-	}
+	// big triangle
+	cmdBuffer->draw(3u, 1u, 0u, 0u);
 }
 } // namespace vl
