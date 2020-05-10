@@ -22,7 +22,7 @@ class PtCollection {
 		m_postprocTechs.push_back(std::move(e));
 	}
 
-	void PreparePipelines();
+	void RunPrepares();
 
 public:
 	void Draw(vk::CommandBuffer buffer, uint32 frameIndex);

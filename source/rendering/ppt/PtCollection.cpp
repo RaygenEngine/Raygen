@@ -17,14 +17,13 @@ void PtCollection::RegisterTechniques()
 	NextTechnique<PtDirectLight>();
 
 	//
-
-	PreparePipelines();
+	RunPrepares();
 }
 
-void PtCollection::PreparePipelines()
+void PtCollection::RunPrepares()
 {
 	for (auto& entry : m_postprocTechs) {
-		entry.instance->MakePipeline();
+		entry.instance->Prepare();
 	}
 }
 
