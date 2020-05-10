@@ -38,6 +38,7 @@ inline class Renderer_ : public Listener {
 	UniquePtr<GBuffer> m_gBuffer;
 
 	std::vector<vk::CommandBuffer> m_geometryCmdBuffer;
+	std::vector<vk::CommandBuffer> m_pptCmdBuffer;
 	std::vector<vk::CommandBuffer> m_outCmdBuffer;
 
 	std::vector<vk::UniqueFence> m_inFlightFence;
@@ -46,8 +47,14 @@ inline class Renderer_ : public Listener {
 	std::vector<vk::UniqueSemaphore> m_imageAvailSem;
 
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer);
+	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer);
+	void RecordOutPass(vk::CommandBuffer* cmdBuffer);
 
-	void RecordDeferredPasses(vk::CommandBuffer* cmdBuffer);
+
+	// post process for hdr
+	std::array<vk::UniqueFramebuffer, 3> m_framebuffers;
+	std::array<UniquePtr<ImageAttachment>, 3> m_attachments;
+	vk::UniqueRenderPass m_renderPass;
 
 protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)
