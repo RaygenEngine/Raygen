@@ -11,6 +11,7 @@
 #include "rendering/passes/AmbientPass.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/Swapchain.h"
+#include "rendering/ppt/PtCollection.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -48,6 +49,9 @@ inline class Renderer_ : public Listener {
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer);
 
 	void RecordDeferredPasses(vk::CommandBuffer* cmdBuffer);
+
+
+	PtCollection m_postprocCollection;
 
 protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)

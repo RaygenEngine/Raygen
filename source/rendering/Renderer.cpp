@@ -51,10 +51,13 @@ Renderer_::Renderer_()
 	Event::OnWindowResize.BindFlag(this, m_didWindowResize);
 	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimzed) { m_isMinimzed = newIsMinimzed; });
 
+
 	m_gBufferPass.MakePipeline();
 	m_shadowmapPass.MakePipeline();
 	m_spotlightPass.MakePipeline();
 	m_ambientPass.MakePipeline();
+
+	m_postprocCollection.RegisterTechniques();
 }
 
 Renderer_::~Renderer_() {}
@@ -109,10 +112,17 @@ void Renderer_::RecordDeferredPasses(vk::CommandBuffer* cmdBuffer)
 
 		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{
+			// Dynamic viewport & scissor
+			cmdBuffer->setViewport(0, { viewport });
+			cmdBuffer->setScissor(0, { scissor });
+
+			m_postprocCollection.Draw(*cmdBuffer, currentFrame);
+
 			m_spotlightPass.RecordCmd(cmdBuffer, viewport, scissor);
 			// all lights
 			m_ambientPass.RecordCmd(cmdBuffer, viewport, scissor);
 			// post process
+			// NOTE: Resets viewport & scissor
 			m_editorPass.RecordCmd(cmdBuffer);
 		}
 		cmdBuffer->endRenderPass();
