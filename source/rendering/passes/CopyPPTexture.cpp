@@ -15,29 +15,12 @@
 namespace vl {
 void CopyPPTexture::MakePipeline()
 {
-	// TODO: yikes
-	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/cpyppt.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/cpyppt.shader");
 	gpuShader.onCompile = [&]() {
 		MakePipeline();
 	};
 
-	// shaders
-	auto vertShaderModule = *gpuShader.vert;
-	auto fragShaderModule = *gpuShader.frag;
-
-	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
-	vertShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eVertex) //
-		.setModule(vertShaderModule)
-		.setPName("main");
-
-	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
-	fragShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(fragShaderModule)
-		.setPName("main");
-
-	std::array shaderStages{ vertShaderStageInfo, fragShaderStageInfo };
+	std::vector shaderStages = gpuShader.shaderStages;
 
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};

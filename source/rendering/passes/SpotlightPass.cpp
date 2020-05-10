@@ -10,9 +10,3 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/Layouts.h"
-
-namespace vl {
-void SpotlightPass::MakePipeline() {}
-
-void SpotlightPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& viewport, const vk::Rect2D& scissor) {}
-} // namespace vl

@@ -96,18 +96,17 @@ Renderer_::Renderer_()
 		.setPDependencies(&dependency);
 
 	m_ptRenderpass = Device->createRenderPassUnique(renderPassInfo);
+	// descsets
+	for (uint32 i = 0; i < 3; ++i) {
+		m_ppDescSets[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
+	}
+}
 
+void Renderer_::InitPipelines()
+{
 	m_shadowmapPass.MakePipeline();
 	m_ambientPass.MakePipeline(m_ptRenderpass.get());
 	m_copyPPTexture.MakePipeline();
-
-	// descsets
-	for (uint32 i = 0; i < 3; ++i) {
-
-		m_ppDescSets[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
-	}
-	m_ambientPass.MakePipeline();
-
 	m_postprocCollection.RegisterTechniques();
 }
 
@@ -231,8 +230,8 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer)
 
 			vk::Viewport viewport{};
 			viewport
-				.setX(m_viewportRect.offset.x) //
-				.setY(m_viewportRect.offset.y)
+				.setX(static_cast<float>(m_viewportRect.offset.x)) //
+				.setY(static_cast<float>(m_viewportRect.offset.y))
 				.setWidth(static_cast<float>(m_viewportRect.extent.width))
 				.setHeight(static_cast<float>(m_viewportRect.extent.height))
 				.setMinDepth(0.f)

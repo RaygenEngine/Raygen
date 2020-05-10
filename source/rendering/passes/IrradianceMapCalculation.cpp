@@ -494,12 +494,31 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 
 void IrradianceMapCalculation::EditPods()
 {
-	auto& irradiance = m_envmapAsset->irradiance.Lock();
+	PodHandle<EnvironmentMap> envMap = m_envmapAsset->podHandle;
+
+	if (envMap.IsDefault()) {
+		return;
+	}
+
+
 	//.. prefiltered and rest here (or other class)
+	PodHandle<::Cubemap> irradiance = envMap.Lock()->irradiance;
 
-	PodHandle<::Cubemap> cubemapHandle{ irradiance.podUid };
+	if (irradiance.IsDefault()) {
+		PodEditor e(envMap);
+		auto& [entry, irr] = AssetHandlerManager::CreateEntry<::Cubemap>("generated/cubemap");
 
-	PodEditor cubemapEditor(cubemapHandle);
+		e.pod->irradiance = entry->GetHandleAs<::Cubemap>();
+		irradiance = entry->GetHandleAs<::Cubemap>();
+
+		for (size_t i = 0; i < 6; i++) {
+			auto& [entry, image] = AssetHandlerManager::CreateEntry<::Image>("generated/cubemap/image");
+			irr->faces[i] = entry->GetHandleAs<::Image>();
+		}
+	}
+
+
+	PodEditor cubemapEditor(irradiance);
 	auto cubemapPod = cubemapEditor.GetEditablePtr();
 
 	cubemapPod->resolution = m_resolution;
