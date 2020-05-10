@@ -2,6 +2,7 @@
 #include "assets/AssetManager.h"
 #include "assets/pods/Shader.h"
 #include "rendering/assets/GpuAssetHandle.h"
+#include "core/StringUtl.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -14,6 +15,7 @@ inline class GpuAssetManager_ {
 	// Asset users stores at the specific UID the gpuAssetUsers of the asset with that uid.
 	std::vector<std::vector<size_t>> assetUsers;
 
+	std::unordered_map<std::string, PodHandle<Shader>, str::HashInsensitive> shaderPathCache;
 
 public:
 	GpuAssetManager_() { AllocForAll(); }
@@ -50,7 +52,8 @@ public:
 	void UnloadAll() { gpuAssets.clear(); }
 
 
-	GpuAsset<Shader>& CompileShader(std::string_view path);
+	// Now will also cache hit so its safe to call on a non static context (ie every recompile)
+	GpuAsset<Shader>& CompileShader(const char* path);
 
 
 	std::vector<size_t> GetUsersFor(size_t uid);

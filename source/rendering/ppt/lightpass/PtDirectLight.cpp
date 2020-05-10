@@ -10,7 +10,7 @@
 #include "rendering/scene/Scene.h"
 
 namespace vl {
-PtDirectLight::PtDirectLight()
+void PtDirectLight::MakeLayout()
 {
 	std::array layouts = { Layouts->gBufferDescLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
 		Layouts->singleUboDescLayout.setLayout.get(), Layouts->singleSamplerDescLayout.setLayout.get() };
@@ -28,55 +28,10 @@ PtDirectLight::PtDirectLight()
 
 void PtDirectLight::MakePipeline()
 {
-	// TODO: yikes
-	static GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/spotlight.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/spotlight.shader");
 	gpuShader.onCompile = [&]() {
 		MakePipeline();
 	};
-
-	std::vector shaderStages = gpuShader.shaderStages;
-
-
-	// fixed-function stage
-	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
-
-	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
-	inputAssembly
-		.setTopology(vk::PrimitiveTopology::eTriangleList) //
-		.setPrimitiveRestartEnable(VK_FALSE);
-
-	// those are dynamic so they will be updated when needed
-	vk::Viewport viewport{};
-	vk::Rect2D scissor{};
-
-	vk::PipelineViewportStateCreateInfo viewportState{};
-	viewportState
-		.setViewportCount(1u) //
-		.setPViewports(&viewport)
-		.setScissorCount(1u)
-		.setPScissors(&scissor);
-
-	vk::PipelineRasterizationStateCreateInfo rasterizer{};
-	rasterizer
-		.setDepthClampEnable(VK_FALSE) //
-		.setRasterizerDiscardEnable(VK_FALSE)
-		.setPolygonMode(vk::PolygonMode::eFill)
-		.setLineWidth(1.f)
-		.setCullMode(vk::CullModeFlagBits::eBack)
-		.setFrontFace(vk::FrontFace::eClockwise)
-		.setDepthBiasEnable(VK_FALSE)
-		.setDepthBiasConstantFactor(0.f)
-		.setDepthBiasClamp(0.f)
-		.setDepthBiasSlopeFactor(0.f);
-
-	vk::PipelineMultisampleStateCreateInfo multisampling{};
-	multisampling
-		.setSampleShadingEnable(VK_FALSE) //
-		.setRasterizationSamples(vk::SampleCountFlagBits::e1)
-		.setMinSampleShading(1.f)
-		.setPSampleMask(nullptr)
-		.setAlphaToCoverageEnable(VK_FALSE)
-		.setAlphaToOneEnable(VK_FALSE);
 
 	// CHECK: be sure you use the correct blending operations (also check logic ops)
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
@@ -99,46 +54,7 @@ void PtDirectLight::MakePipeline()
 		.setPAttachments(&colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
-
-	// dynamic states
-	vk::DynamicState dynamicStates[] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
-	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo
-		.setDynamicStateCount(2u) //
-		.setPDynamicStates(dynamicStates);
-
-	// depth and stencil state
-	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
-	depthStencil
-		.setDepthTestEnable(VK_FALSE) //
-		.setDepthWriteEnable(VK_FALSE)
-		.setDepthCompareOp(vk::CompareOp::eLess)
-		.setDepthBoundsTestEnable(VK_FALSE)
-		.setMinDepthBounds(0.0f) // Optional
-		.setMaxDepthBounds(1.0f) // Optional
-		.setStencilTestEnable(VK_FALSE)
-		.setFront({}) // Optional
-		.setBack({}); // Optional
-
-	vk::GraphicsPipelineCreateInfo pipelineInfo{};
-	pipelineInfo
-		.setStageCount(static_cast<uint32>(shaderStages.size())) //
-		.setPStages(shaderStages.data())
-		.setPVertexInputState(&vertexInputInfo)
-		.setPInputAssemblyState(&inputAssembly)
-		.setPViewportState(&viewportState)
-		.setPRasterizationState(&rasterizer)
-		.setPMultisampleState(&multisampling)
-		.setPDepthStencilState(&depthStencil)
-		.setPColorBlendState(&colorBlending)
-		.setPDynamicState(&dynamicStateInfo)
-		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(Swapchain->GetRenderPass()) // WIP: Proper renderpass
-		.setSubpass(0u)
-		.setBasePipelineHandle({})
-		.setBasePipelineIndex(-1);
-
-	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+	Utl_CreatePipeline(gpuShader, colorBlending);
 }
 
 void PtDirectLight::Draw(vk::CommandBuffer cmdBuffer, uint32 frameIndex)
