@@ -34,6 +34,7 @@ Layer_::Layer_()
 	Scene = new Scene_(Swapchain->GetImageCount());
 
 	Renderer = new Renderer_();
+	Renderer->InitPipelines();
 }
 
 Layer_::~Layer_()

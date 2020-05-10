@@ -33,7 +33,6 @@ inline class Renderer_ : public Listener {
 
 	GBufferPass m_gBufferPass;
 	ShadowmapPass m_shadowmapPass;
-	SpotlightPass m_spotlightPass;
 	AmbientPass m_ambientPass;
 	EditorPass m_editorPass;
 	CopyPPTexture m_copyPPTexture;
@@ -59,8 +58,6 @@ inline class Renderer_ : public Listener {
 	std::array<UniquePtr<ImageAttachment>, 3> m_attachments;
 
 
-
-
 	PtCollection m_postprocCollection;
 
 protected:
@@ -83,6 +80,7 @@ public:
 	void UpdateForFrame();
 
 	void DrawFrame();
+	void InitPipelines();
 
 	inline static uint32 currentFrame{ 0 };
 

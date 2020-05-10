@@ -3,6 +3,7 @@
 
 #include "rendering/Swapchain.h"
 #include "rendering/Device.h"
+#include "rendering/Renderer.h"
 
 namespace vl {
 
@@ -53,7 +54,6 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 		.setAlphaToCoverageEnable(VK_FALSE)
 		.setAlphaToOneEnable(VK_FALSE);
 
-	//// CHECK: be sure you use the correct blending operations (also check logic ops)
 	// vk::PipelineColorBlendAttachmentState colorBlendAttachment{}; /// CUSTOM
 	// colorBlendAttachment
 	//	.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
@@ -108,7 +108,7 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(Swapchain->GetRenderPass()) // WIP: Proper renderpass
+		.setRenderPass(*Renderer->m_ptRenderpass) // WIP: Proper renderpass
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);

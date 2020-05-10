@@ -18,7 +18,7 @@ void main( ) {
 	vec3 hdrColor = texture(hdrColorSampler, uv).rgb;
 
 	// gamma correction / exposure
-	const float gamma = 2.2;
+	const float gamma = 2.0;
 	const float exposure = 2.5;
 
     // Exposure tone mapping
@@ -46,3 +46,4 @@ void main( ) {
                                                                                                                                                    
                                                                                                                                                     
                                                                                                                                                      
+
