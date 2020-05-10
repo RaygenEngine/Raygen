@@ -4,13 +4,13 @@
 
 #include <vulkan/vulkan.hpp>
 namespace vl {
-class AmbientPass {
+class CopyPPTexture {
 
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;
 
 public:
-	void MakePipeline(vk::RenderPass renderPass);
+	void MakePipeline();
 
 	void RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& viewport, const vk::Rect2D& scissor);
 };

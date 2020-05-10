@@ -6,6 +6,7 @@
 #include "rendering/objects/RPhysicalDevice.h"
 #include "rendering/passes/EditorPass.h"
 #include "rendering/passes/GBufferPass.h"
+#include "rendering/passes/CopyPPTexture.h"
 #include "rendering/passes/ShadowmapPass.h"
 #include "rendering/passes/SpotlightPass.h"
 #include "rendering/passes/AmbientPass.h"
@@ -35,10 +36,12 @@ inline class Renderer_ : public Listener {
 	SpotlightPass m_spotlightPass;
 	AmbientPass m_ambientPass;
 	EditorPass m_editorPass;
+	CopyPPTexture m_copyPPTexture;
 
 	UniquePtr<GBuffer> m_gBuffer;
 
 	std::vector<vk::CommandBuffer> m_geometryCmdBuffer;
+	std::vector<vk::CommandBuffer> m_pptCmdBuffer;
 	std::vector<vk::CommandBuffer> m_outCmdBuffer;
 
 	std::vector<vk::UniqueFence> m_inFlightFence;
@@ -47,8 +50,15 @@ inline class Renderer_ : public Listener {
 	std::vector<vk::UniqueSemaphore> m_imageAvailSem;
 
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer);
+	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer);
+	void RecordOutPass(vk::CommandBuffer* cmdBuffer);
 
-	void RecordDeferredPasses(vk::CommandBuffer* cmdBuffer);
+
+	// post process for hdr
+	std::array<vk::UniqueFramebuffer, 3> m_framebuffers;
+	std::array<UniquePtr<ImageAttachment>, 3> m_attachments;
+
+
 
 
 	PtCollection m_postprocCollection;
@@ -64,6 +74,9 @@ protected:
 	bool m_isMinimzed{ false };
 
 public:
+	std::array<vk::DescriptorSet, 3> m_ppDescSets;
+	vk::UniqueRenderPass m_ptRenderpass;
+
 	Renderer_();
 	~Renderer_();
 

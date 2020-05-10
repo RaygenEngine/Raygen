@@ -1,25 +1,24 @@
 #pragma once
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/objects/GBuffer.h"
 #include "rendering/resource/GpuResources.h"
+#include "rendering/scene/SceneGeometry.h"
 
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
 class GBufferPass {
-	vk::UniqueRenderPass m_renderPass;
+	friend class GBuffer;
 
-	vk::UniquePipeline m_pipeline;
+	vk::UniqueRenderPass m_renderPass;
 	vk::UniquePipelineLayout m_pipelineLayout;
 
 public:
 	GBufferPass();
-	void MakePipeline();
 
-	void RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& viewport, const vk::Rect2D& scissor);
+	void RecordCmd(vk::CommandBuffer* cmdBuffer, GBuffer* gBuffer, const std::vector<SceneGeometry*>& geometries);
 
-	[[nodiscard]] vk::RenderPass GetRenderPass() const { return m_renderPass.get(); }
+	UniquePtr<GBuffer> CreateCompatibleGBuffer(uint32 width, uint32 height);
 };
 
 } // namespace vl
