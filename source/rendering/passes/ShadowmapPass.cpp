@@ -8,9 +8,9 @@
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
+#include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/Layouts.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
 
@@ -227,93 +227,86 @@ void ShadowmapPass::MakePipeline()
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer)
+void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const RDepthmap& depthmap, const glm::mat4& viewProj,
+	const std::vector<SceneGeometry*>& geometries)
 {
 	PROFILE_SCOPE(Renderer);
 
-	for (auto sl : Scene->spotlights.elements) {
+	auto extent = depthmap.attachment->GetExtent2D();
 
-		if (sl == nullptr || !sl->shadowmap) {
-			continue;
-		}
+	vk::Rect2D scissor{};
 
-		auto extent = sl->shadowmap->GetDepthAttachment()->GetExtent2D();
+	scissor
+		.setOffset({ 0, 0 }) //
+		.setExtent(extent);
 
-		vk::Rect2D scissor{};
+	auto vpSize = extent;
 
-		scissor
-			.setOffset({ 0, 0 }) //
-			.setExtent(extent);
+	vk::Viewport viewport{};
+	viewport
+		.setX(0) //
+		.setY(0)
+		.setWidth(static_cast<float>(vpSize.width))
+		.setHeight(static_cast<float>(vpSize.height))
+		.setMinDepth(0.f)
+		.setMaxDepth(1.f);
 
-		auto vpSize = extent;
+	vk::RenderPassBeginInfo renderPassInfo{};
+	renderPassInfo
+		.setRenderPass(m_renderPass.get()) //
+		.setFramebuffer(depthmap.framebuffer.get());
+	renderPassInfo.renderArea
+		.setOffset({ 0, 0 }) //
+		.setExtent(extent);
 
-		vk::Viewport viewport{};
-		viewport
-			.setX(0) //
-			.setY(0)
-			.setWidth(static_cast<float>(vpSize.width))
-			.setHeight(static_cast<float>(vpSize.height))
-			.setMinDepth(0.f)
-			.setMaxDepth(1.f);
+	vk::ClearValue clearValues = {};
+	clearValues.setDepthStencil({ 1.0f, 0 });
+	renderPassInfo
+		.setClearValueCount(1u) //
+		.setPClearValues(&clearValues);
 
-		vk::RenderPassBeginInfo renderPassInfo{};
-		renderPassInfo
-			.setRenderPass(m_renderPass.get()) //
-			.setFramebuffer(sl->shadowmap->GetFramebuffer());
-		renderPassInfo.renderArea
-			.setOffset({ 0, 0 }) //
-			.setExtent(extent);
+	// begin render pass
+	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+	{
+		// bind the graphics pipeline
+		cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
-		std::array<vk::ClearValue, 1> clearValues = {};
-		clearValues[0].setDepthStencil({ 1.0f, 0 });
-		renderPassInfo
-			.setClearValueCount(static_cast<uint32>(clearValues.size())) //
-			.setPClearValues(clearValues.data());
+		// Dynamic viewport & scissor
+		cmdBuffer->setViewport(0, { viewport });
+		cmdBuffer->setScissor(0, { scissor });
 
-		// PERF: needs render pass?
-		// begin render pass
-		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-		{
-			// bind the graphics pipeline
-			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+		for (auto geom : geometries) {
+			if (!geom) {
+				continue;
+			}
 
-			// Dynamic viewport & scissor
-			cmdBuffer->setViewport(0, { viewport });
-			cmdBuffer->setScissor(0, { scissor });
+			PushConstant pc{ //
+				viewProj * geom->transform
+			};
 
-			for (auto model : Scene->geometries.elements) {
-				if (!model) {
-					continue;
-				}
+			// Submit via push constant (rather than a UBO)
+			cmdBuffer->pushConstants(
+				m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
-				PushConstant pc{ //
-					sl->ubo.viewProj * model->transform
-				};
+			for (auto& gg : geom->model.Lock().geometryGroups) {
+				vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
+				vk::DeviceSize offsets[] = { 0 };
+				// geom
+				cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
 
-				// Submit via push constant (rather than a UBO)
-				cmdBuffer->pushConstants(
-					m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+				// indices
+				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
 
-				for (auto& gg : model->model.Lock().geometryGroups) {
-					vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
-					vk::DeviceSize offsets[] = { 0 };
-					// geom
-					cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
+				// descriptor sets
+				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
+					&gg.material.Lock().descriptorSet, 0u, nullptr);
 
-					// indices
-					cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
-
-					// descriptor sets
-					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-						&gg.material.Lock().descriptorSet, 0u, nullptr);
-
-					// draw call (triangle)
-					cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
-				}
+				// draw call (triangle)
+				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 			}
 		}
-		// end render pass
-		cmdBuffer->endRenderPass();
 	}
+	// end render pass
+	cmdBuffer->endRenderPass();
 }
 } // namespace vl

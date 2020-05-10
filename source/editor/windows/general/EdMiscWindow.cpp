@@ -86,7 +86,7 @@ void GBufferDebugWindow::ImguiDraw()
 
 	for (auto sl : Scene->spotlights.elements) {
 		if (sl && sl->shadowmap) {
-			showAttachment(sl->shadowmap->GetDepthAttachment());
+			showAttachment(sl->shadowmap->attachment.get());
 		}
 	}
 }

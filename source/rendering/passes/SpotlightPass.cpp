@@ -109,8 +109,8 @@ void SpotlightPass::MakePipeline()
 		.setDynamicStateCount(2u) //
 		.setPDynamicStates(dynamicStates);
 
-	std::array layouts = { Layouts->gBufferDescLayout.setLayout.get(), Layouts->cameraDescLayout.setLayout.get(),
-		Layouts->spotlightDescLayout.setLayout.get() };
+	std::array layouts = { Layouts->gBufferDescLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
+		Layouts->singleUboDescLayout.setLayout.get(), Layouts->singleSamplerDescLayout.setLayout.get() };
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -185,6 +185,9 @@ void SpotlightPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& 
 
 		cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
 			&sl->descSets[Renderer_::currentFrame], 0u, nullptr);
+
+		cmdBuffer->bindDescriptorSets(
+			vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 3u, 1u, &sl->shadowmap->descSet, 0u, nullptr);
 
 		// draw call (triangle)
 		cmdBuffer->draw(3u, 1u, 0u, 0u);

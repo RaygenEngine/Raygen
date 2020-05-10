@@ -27,8 +27,5 @@ struct SceneSpotlight : SceneStruct<Spotlight_Ubo> {
 
 	UniquePtr<vl::RDepthmap> shadowmap;
 
-	SceneSpotlight();
-
-	// TODO: this is unsafe, do it like regular upload
-	void UpdateShadowmap(uint32 width, uint32 height);
+	void ResizeShadowmap(uint32 width, uint32 height);
 };

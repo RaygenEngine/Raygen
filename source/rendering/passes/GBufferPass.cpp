@@ -245,7 +245,7 @@ void GBufferPass::MakePipeline()
 
 
 	std::array layouts
-		= { Layouts->regularMaterialDescLayout.setLayout.get(), Layouts->cameraDescLayout.setLayout.get() };
+		= { Layouts->regularMaterialDescLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() };
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo

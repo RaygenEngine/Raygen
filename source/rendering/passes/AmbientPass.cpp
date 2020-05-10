@@ -110,7 +110,7 @@ void AmbientPass::MakePipeline()
 		.setDynamicStateCount(2u) //
 		.setPDynamicStates(dynamicStates);
 
-	std::array layouts = { Layouts->gBufferDescLayout.setLayout.get(), Layouts->cameraDescLayout.setLayout.get(),
+	std::array layouts = { Layouts->gBufferDescLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
 		Layouts->envmapLayout.setLayout.get() };
 
 	// pipeline layout

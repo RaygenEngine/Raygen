@@ -58,7 +58,7 @@ layout(set = 2, binding = 0) uniform UBO_Spotlight {
 		float quadraticTerm;
 } light;
 
-layout(set = 2, binding = 1) uniform sampler2D shadowmap;
+layout(set = 3, binding = 0) uniform sampler2D shadowmap;
 
 float ShadowCalculation(vec4 fragPosLightSpace)
 {

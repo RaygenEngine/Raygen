@@ -2,7 +2,9 @@
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/objects/GBuffer.h"
+#include "rendering/objects/RDepthmap.h"
 #include "rendering/resource/GpuResources.h"
+#include "rendering/scene/SceneGeometry.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -17,7 +19,8 @@ public:
 	ShadowmapPass();
 	void MakePipeline();
 
-	void RecordCmd(vk::CommandBuffer* cmdBuffer);
+	void RecordCmd(vk::CommandBuffer* cmdBuffer, const RDepthmap& depthmap, const glm::mat4& viewProj,
+		const std::vector<SceneGeometry*>& geometries);
 
 	[[nodiscard]] vk::RenderPass GetRenderPass() const { return m_renderPass.get(); }
 };
