@@ -26,5 +26,5 @@ struct EnvironmentMap : AssetPod {
 	// specular lobe
 	PodHandle<::Cubemap> prefiltered;
 	// brdf look up texture
-	PodHandle<::Cubemap> brdfLut;
+	PodHandle<::Image> brdfLut;
 };

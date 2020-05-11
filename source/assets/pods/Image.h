@@ -23,11 +23,13 @@ struct Image : AssetPod {
 		REFLECT_VAR(format);
 	}
 
-	// default imagepod is byte/1x1/white
+	// default imagepod is 1mip/byte/1x1/white
 	int32 width{ 1 };
 	int32 height{ 1 };
 
 	std::vector<byte> data{ 0xFF, 0xFF, 0xFF, 0xFF };
+
+	std::vector<std::vector<byte>> mipData;
 
 	ImageFormat format{ ImageFormat::Unorm };
 };
