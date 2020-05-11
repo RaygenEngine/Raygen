@@ -5,9 +5,9 @@
 #include "rendering/VulkanUtl.h"
 
 namespace vl {
-Cubemap::Cubemap(uint32 dims, vk::Format format, vk::ImageTiling tiling, vk::ImageLayout initalLayout,
+Cubemap::Cubemap(uint32 dims, uint32 mipCount, vk::Format format, vk::ImageTiling tiling, vk::ImageLayout initalLayout,
 	vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
-	: Image(vk::ImageType::e2D, { dims, dims, 1u }, 1u, 6u, format, tiling, initalLayout, usage,
+	: Image(vk::ImageType::e2D, { dims, dims, 1u }, mipCount, 6u, format, tiling, initalLayout, usage,
 		vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, vk::ImageCreateFlagBits::eCubeCompatible, properties)
 {
 	auto testComp = m_imageInfo.extent.width >= 1 && m_imageInfo.extent.height == m_imageInfo.extent.width
@@ -33,13 +33,14 @@ Cubemap::Cubemap(uint32 dims, vk::Format format, vk::ImageTiling tiling, vk::Ima
 }
 
 // TODO: pass pointer and size and absract the buffer (overload?)
-void Cubemap::CopyBufferToFace(const RBuffer& buffer, uint32 face)
-
+void Cubemap::CopyBufferToFace(const RBuffer& buffer, uint32 face, uint32 mip)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
 	Device->transferCmdBuffer.begin(beginInfo);
+
+	uint32 res = m_imageInfo.extent.width * std::pow(0.5, mip);
 
 	vk::BufferImageCopy region{};
 	region
@@ -47,11 +48,11 @@ void Cubemap::CopyBufferToFace(const RBuffer& buffer, uint32 face)
 		.setBufferRowLength(0u)
 		.setBufferImageHeight(0u)
 		.setImageOffset({ 0, 0, 0 })
-		.setImageExtent(m_imageInfo.extent);
+		.setImageExtent({ res, res, 1u });
 
 	region.imageSubresource
 		.setAspectMask(GetAspectMask(m_imageInfo)) //
-		.setMipLevel(0u)
+		.setMipLevel(mip)
 		// copy to this face
 		.setBaseArrayLayer(face)
 		.setLayerCount(1u);

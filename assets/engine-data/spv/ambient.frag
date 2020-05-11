@@ -33,7 +33,7 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 layout(set = 2, binding = 0) uniform samplerCube skyboxSampler;
 layout(set = 2, binding = 1) uniform samplerCube irradianceSampler;
 layout(set = 2, binding = 2) uniform samplerCube prefilteredSampler;
-layout(set = 2, binding = 3) uniform samplerCube brdfLutSampler;
+layout(set = 2, binding = 3) uniform sampler2D brdfLutSampler;
 
 vec3 ReconstructWorldPosition(float depth)
 {
@@ -71,11 +71,6 @@ vec3 ReconstructWorldPosForSky(float depth)
 	return worldPos.xyz / worldPos.w; // return world space pos xyz
 }
 
-vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
-{
-    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
-} 
-
 void main( ) {
 
 	float currentDepth = texture(depthSampler, uv).r;
@@ -89,6 +84,9 @@ void main( ) {
 		// ART:
 		V = normalize(ReconstructWorldPosForSky(currentDepth) - camera.position);
 		outColor = vec4(texture(skyboxSampler, V).rgb, 1.0);
+		
+		//outColor = texture(brdfLutSampler, uv).rgba;
+		//outColor = textureLod(prefilteredSampler, V,  0.5 * 5);
 		return;
 	}
 	
@@ -103,13 +101,34 @@ void main( ) {
 	
 	vec3 F0 = vec3(0.04); 
     F0 = mix(F0, albedo, metallic);
-	vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness); 
+	/*vec3 kS = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness); 
 	vec3 kD = 1.0 - kS;
 	vec3 irradiance = texture(irradianceSampler, N).rgb;
 	vec3 diffuse    = irradiance * albedo;
-	vec3 ambient    = (kD * diffuse);
+	vec3 ambient    = (kD * diffuse);*/
 
-	// AO
+	// actual ibl
+	vec3 R = reflect(V, N); 
+
+    const float MAX_REFLECTION_LOD = 4.0;
+	vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+
+	vec3 kS = F;
+	vec3 kD = 1.0 - kS;
+	kD *= 1.0 - metallic;	  
+	
+	vec3 irradiance = texture(irradianceSampler, N).rgb;
+	vec3 diffuse    = irradiance * albedo;
+	
+	vec3 prefilteredColor = textureLod(prefilteredSampler, R,  roughness * MAX_REFLECTION_LOD).rgb;   
+	vec2 envBRDF  = texture(brdfLutSampler, vec2(max(dot(N, V), 0.0), roughness)).rg;
+	vec3 specularC = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+	
+	//We don't multiply specular by kS as we already have a Fresnel multiplication in there.
+	vec3 ambient = (kD * diffuse + specularC); 
+
+	// AO & emissive
+	// TODO: seperate pass, as this will be interpolated for many reflection probes
 	vec3 color = emissive + ambient;
 	color = mix(color, color * specular.b, specular.a);
 
@@ -132,3 +151,5 @@ void main( ) {
                                                                                                                                                    
                                                                                                                                                     
                                                                                                                                                      
+
+
