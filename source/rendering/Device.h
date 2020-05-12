@@ -2,7 +2,6 @@
 #include "rendering/objects/RPhysicalDevice.h"
 
 #include <vulkan/vulkan.hpp>
-#include <optional>
 
 namespace vl {
 struct DeviceQueue : public vk::Queue {
@@ -13,7 +12,6 @@ private:
 	void SetHandle(vk::Queue queue) { vk::Queue::operator=(queue); }
 };
 
-// Info about a logical device
 inline struct Device_ : public vk::Device {
 
 	DeviceQueue graphicsQueue;

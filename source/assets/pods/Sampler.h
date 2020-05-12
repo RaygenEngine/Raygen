@@ -2,27 +2,6 @@
 #include "assets/PodHandle.h"
 #include "assets/pods/Image.h"
 
-enum class TextureFiltering
-{
-	Nearest,
-	Linear,
-};
-
-enum class MipmapFiltering
-{
-	Nearest,
-	Linear,
-	NoMipmap
-};
-
-// CHECK: (mirrored clamping etc)
-enum class TextureWrapping
-{
-	ClampToEdge,
-	MirroredRepeat,
-	Repeat
-};
-
 struct Sampler : AssetPod {
 	REFLECTED_POD(Sampler)
 	{

@@ -2,13 +2,6 @@
 #include "assets/AssetPod.h"
 #include "reflection/GenMacros.h"
 
-enum class ImageFormat
-{
-	Unorm,
-	Srgb,
-	Hdr
-};
-
 // DOC:
 struct Image : AssetPod {
 

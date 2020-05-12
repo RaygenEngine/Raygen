@@ -3,15 +3,12 @@
 
 #include "platform/Platform.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/resource/GpuResources.h"
-#include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/Renderer.h"
-#include "rendering/Layouts.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/Swapchain.h"
 
 namespace vl {
-
 Layer_::Layer_()
 {
 	auto requiredExtensions = Platform::GetVulkanExtensions();
@@ -20,10 +17,8 @@ Layer_::Layer_()
 
 	Instance = new Instance_(requiredExtensions, Platform::GetMainHandle());
 
-
 	auto deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_MAINTENANCE1_EXTENSION_NAME };
 	Device = new Device_(Instance->capablePhysicalDevices[0].get(), deviceExtensions);
-
 
 	GpuResources = new GpuResources_();
 	GpuAssetManager = new GpuAssetManager_();
@@ -53,10 +48,8 @@ Layer_::~Layer_()
 	delete Instance;
 }
 
-
 void Layer_::DrawFrame()
 {
 	Renderer->DrawFrame();
 }
-
 } // namespace vl
