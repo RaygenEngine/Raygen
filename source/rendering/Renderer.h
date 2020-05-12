@@ -12,6 +12,7 @@
 #include "rendering/passes/AmbientPass.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/Swapchain.h"
+#include "rendering/ppt/PtCollection.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -32,7 +33,6 @@ inline class Renderer_ : public Listener {
 
 	GBufferPass m_gBufferPass;
 	ShadowmapPass m_shadowmapPass;
-	SpotlightPass m_spotlightPass;
 	AmbientPass m_ambientPass;
 	EditorPass m_editorPass;
 	CopyPPTexture m_copyPPTexture;
@@ -58,6 +58,7 @@ inline class Renderer_ : public Listener {
 	std::array<UniquePtr<ImageAttachment>, 3> m_attachments;
 
 
+	PtCollection m_postprocCollection;
 
 protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)
@@ -79,6 +80,7 @@ public:
 	void UpdateForFrame();
 
 	void DrawFrame();
+	void InitPipelines();
 
 	inline static uint32 currentFrame{ 0 };
 

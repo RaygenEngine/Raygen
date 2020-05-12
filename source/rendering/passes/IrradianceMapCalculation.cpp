@@ -207,18 +207,16 @@ void IrradianceMapCalculation::MakePipeline()
 {
 	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/irradiance.shader");
 
-	if (!gpuShader.HasCompiledSuccessfully()) {
+	if (!gpuShader.HasValidModule()) {
 		LOG_ERROR("Geometry Pipeline skipped due to shader compilation errors.");
 		return;
 	}
+	std::vector shaderStages = gpuShader.shaderStages;
+
 	auto& fragShaderModule = gpuShader.frag;
 	auto& vertShaderModule = gpuShader.vert;
 
-	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
-	vertShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eVertex) //
-		.setModule(*vertShaderModule)
-		.setPName("main");
+
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 
@@ -241,15 +239,6 @@ void IrradianceMapCalculation::MakePipeline()
 		.setVertexAttributeDescriptionCount(1u)
 		.setPVertexBindingDescriptions(&bindingDescription)
 		.setPVertexAttributeDescriptions(&attributeDescription);
-
-
-	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
-	fragShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(*fragShaderModule)
-		.setPName("main");
-
-	std::array shaderStages = { vertShaderStageInfo, fragShaderStageInfo };
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly
@@ -505,12 +494,31 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 
 void IrradianceMapCalculation::EditPods()
 {
-	auto& irradiance = m_envmapAsset->irradiance.Lock();
+	PodHandle<EnvironmentMap> envMap = m_envmapAsset->podHandle;
+
+	if (envMap.IsDefault()) {
+		return;
+	}
+
+
 	//.. prefiltered and rest here (or other class)
+	PodHandle<::Cubemap> irradiance = envMap.Lock()->irradiance;
 
-	PodHandle<::Cubemap> cubemapHandle{ irradiance.podUid };
+	if (irradiance.IsDefault()) {
+		PodEditor e(envMap);
+		auto& [entry, irr] = AssetHandlerManager::CreateEntry<::Cubemap>("generated/cubemap");
 
-	PodEditor cubemapEditor(cubemapHandle);
+		e.pod->irradiance = entry->GetHandleAs<::Cubemap>();
+		irradiance = entry->GetHandleAs<::Cubemap>();
+
+		for (size_t i = 0; i < 6; i++) {
+			auto& [entry, image] = AssetHandlerManager::CreateEntry<::Image>("generated/cubemap/image");
+			irr->faces[i] = entry->GetHandleAs<::Image>();
+		}
+	}
+
+
+	PodEditor cubemapEditor(irradiance);
 	auto cubemapPod = cubemapEditor.GetEditablePtr();
 
 	cubemapPod->resolution = m_resolution;

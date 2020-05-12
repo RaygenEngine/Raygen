@@ -7,6 +7,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuShader.h"
+#include "rendering/assets/GpuShaderStage.h"
 #include "rendering/Device.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
@@ -21,8 +22,8 @@ void AmbientPass::MakePipeline(vk::RenderPass renderPass)
 	};
 
 	// shaders
-	auto vertShaderModule = *gpuShader.vert;
-	auto fragShaderModule = *gpuShader.frag;
+	auto vertShaderModule = *gpuShader.vert.Lock().module;
+	auto fragShaderModule = *gpuShader.frag.Lock().module;
 
 	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
 	vertShaderStageInfo
@@ -166,10 +167,6 @@ void AmbientPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const vk::Viewport& vi
 
 	// bind the graphics pipeline
 	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
-
-	// Dynamic viewport & scissor
-	cmdBuffer->setViewport(0, { viewport });
-	cmdBuffer->setScissor(0, { scissor });
 
 	// descriptor sets
 	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,

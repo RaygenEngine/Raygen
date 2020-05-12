@@ -26,14 +26,19 @@ void GpuAssetManager_::AllocForAll()
 	gpuAssets.resize(AssetHandlerManager::Z_GetPods().size());
 }
 
-GpuAsset<Shader>& GpuAssetManager_::CompileShader(std::string_view path)
+GpuAsset<Shader>& GpuAssetManager_::CompileShader(const char* path)
 {
+	if (auto it = shaderPathCache.find(path); it != shaderPathCache.end()) {
+		return GetGpuHandle(it->second).Lock();
+	}
+
 	PodHandle<Shader> shaderHandle = AssetHandlerManager::SearchForAssetFromImportPathSlow<Shader>(path);
 	if (shaderHandle.IsDefault()) {
 		ImporterManager->PushPath("shaders/");
 		shaderHandle = Assets::ImportAs<Shader>(fs::path(path));
 		ImporterManager->PopPath();
 	}
+	shaderPathCache.emplace(path, shaderHandle);
 	return GetGpuHandle(shaderHandle).Lock();
 }
 
