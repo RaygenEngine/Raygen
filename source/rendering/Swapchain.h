@@ -16,6 +16,7 @@ inline class Swapchain_ {
 	vk::UniqueRenderPass m_renderPass;
 
 	void InitRenderPass();
+	void InitImageViews();
 	void InitFrameBuffers();
 
 public:
@@ -25,6 +26,7 @@ public:
 	[[nodiscard]] vk::RenderPass GetRenderPass() const { return m_renderPass.get(); }
 	[[nodiscard]] vk::Extent2D GetExtent() const { return m_extent; }
 	[[nodiscard]] vk::Framebuffer GetFramebuffer(uint32 index) const { return m_framebuffers[index].get(); }
+
 	[[nodiscard]] operator vk::SwapchainKHR() const { return m_handle.get(); }
 
 } * Swapchain{};

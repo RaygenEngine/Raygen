@@ -1,20 +1,14 @@
 #include "pch.h"
 #include "Renderer.h"
 
-#include "editor/imgui/ImguiImpl.h"
-#include "engine/Engine.h"
 #include "engine/Events.h"
-#include "engine/Input.h"
-#include "engine/Logger.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "universe/nodes/camera/CameraNode.h"
-#include "universe/nodes/geometry/GeometryNode.h"
 #include "rendering/VulkanUtl.h"
+#include "rendering/Swapchain.h"
 
-#include <array>
 
 constexpr int32 c_framesInFlight = 2;
 namespace {

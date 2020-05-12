@@ -1,20 +1,15 @@
 #pragma once
-#include "engine/Events.h"
-#include "platform/GlfwUtl.h"
-#include "rendering/assets/GpuMesh.h"
-#include "rendering/objects/RBuffer.h"
-#include "rendering/objects/RPhysicalDevice.h"
+
+#include "rendering/objects/GBuffer.h"
+#include "rendering/passes/AmbientPass.h"
+#include "rendering/passes/CopyPPTexture.h"
 #include "rendering/passes/EditorPass.h"
 #include "rendering/passes/GBufferPass.h"
-#include "rendering/passes/CopyPPTexture.h"
 #include "rendering/passes/ShadowmapPass.h"
-#include "rendering/passes/SpotlightPass.h"
-#include "rendering/passes/AmbientPass.h"
-#include "rendering/resource/GpuResources.h"
-#include "rendering/Swapchain.h"
 #include "rendering/ppt/PtCollection.h"
 
 #include <vulkan/vulkan.hpp>
+
 
 namespace vl {
 using SemVec = std::vector<vk::Semaphore>;

@@ -97,28 +97,16 @@ void BrdfLutCalculation::MakePipeline()
 {
 	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/brdflut.shader");
 
-	if (!gpuShader.HasCompiledSuccessfully()) {
+	if (!gpuShader.HasValidModule()) {
 		LOG_ERROR("Geometry Pipeline skipped due to shader compilation errors.");
 		return;
 	}
+	std::vector shaderStages = gpuShader.shaderStages;
+
 	auto& fragShaderModule = gpuShader.frag;
 	auto& vertShaderModule = gpuShader.vert;
 
-	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
-	vertShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eVertex) //
-		.setModule(*vertShaderModule)
-		.setPName("main");
-	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
-
-	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
-	fragShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(*fragShaderModule)
-		.setPName("main");
-
-	std::array shaderStages = { vertShaderStageInfo, fragShaderStageInfo };
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly

@@ -1,6 +1,5 @@
 #pragma once
 
-
 namespace vl {
 inline class Layer_ {
 public:
