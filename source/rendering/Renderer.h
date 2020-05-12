@@ -1,9 +1,8 @@
 #pragma once
 
 #include "rendering/objects/GBuffer.h"
-#include "rendering/passes/AmbientPass.h"
-#include "rendering/passes/CopyPPTexture.h"
-#include "rendering/passes/EditorPass.h"
+#include "rendering/out/CopyHdrTexture.h"
+#include "rendering/out/WriteEditor.h"
 #include "rendering/passes/GBufferPass.h"
 #include "rendering/passes/ShadowmapPass.h"
 #include "rendering/ppt/PtCollection.h"
@@ -28,9 +27,8 @@ inline class Renderer_ : public Listener {
 
 	GBufferPass m_gBufferPass;
 	ShadowmapPass m_shadowmapPass;
-	AmbientPass m_ambientPass;
-	EditorPass m_editorPass;
-	CopyPPTexture m_copyPPTexture;
+	CopyHdrTexture m_copyHdrTexture;
+	WriteEditor m_writeEditor;
 
 	UniquePtr<GBuffer> m_gBuffer;
 
@@ -47,13 +45,9 @@ inline class Renderer_ : public Listener {
 	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer);
 	void RecordOutPass(vk::CommandBuffer* cmdBuffer);
 
-
-	// post process for hdr
-	std::array<vk::UniqueFramebuffer, 3> m_framebuffers;
-	std::array<UniquePtr<ImageAttachment>, 3> m_attachments;
-
-
 	PtCollection m_postprocCollection;
+
+	// Render passes
 
 protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)
@@ -67,7 +61,6 @@ protected:
 
 public:
 	std::array<vk::DescriptorSet, 3> m_ppDescSets;
-	vk::UniqueRenderPass m_ptRenderpass;
 
 	Renderer_();
 	~Renderer_();
@@ -80,10 +73,10 @@ public:
 	inline static uint32 currentFrame{ 0 };
 
 	[[nodiscard]] vk::Viewport GetSceneViewport() const;
-	[[nodiscard]] vk::Viewport GetViewport() const;
+	[[nodiscard]] vk::Viewport GetGameViewport() const;
 
 	[[nodiscard]] vk::Rect2D GetSceneScissor() const;
-	[[nodiscard]] vk::Rect2D GetScissor() const;
+	[[nodiscard]] vk::Rect2D GetGameScissor() const;
 
 	[[nodiscard]] GBuffer* GetGBuffer() const { return m_gBuffer.get(); }
 

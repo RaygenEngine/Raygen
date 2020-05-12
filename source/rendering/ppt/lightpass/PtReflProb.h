@@ -3,7 +3,7 @@
 #include "rendering/ppt/PtBase.h"
 
 namespace vl {
-class PtDirectLight : public PtBase_SinglePipeline {
+class PtReflProb : public PtBase_SinglePipeline {
 public:
 	void MakeLayout() override;
 	void MakePipeline() override;

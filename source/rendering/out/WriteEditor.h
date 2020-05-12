@@ -2,7 +2,7 @@
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
-class EditorPass {
+class WriteEditor {
 public:
 	void RecordCmd(vk::CommandBuffer* cmdBuffer);
 };

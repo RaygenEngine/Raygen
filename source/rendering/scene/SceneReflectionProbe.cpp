@@ -4,9 +4,9 @@
 #include "assets/pods/EnvironmentMap.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Layouts.h"
-#include "rendering/passes/IrradianceMapCalculation.h"
-#include "rendering/passes/PrefilteredMapCalculation.h"
-#include "rendering/passes/BrdfLutCalculation.h"
+#include "rendering/offline/IrradianceMapCalculation.h"
+#include "rendering/offline/PrefilteredMapCalculation.h"
+#include "rendering/offline/BrdfLutCalculation.h"
 #include "rendering/Renderer.h"
 
 void SceneReflectionProbe::Build()
