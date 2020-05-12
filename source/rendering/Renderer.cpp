@@ -96,17 +96,18 @@ Renderer_::Renderer_()
 		.setPDependencies(&dependency);
 
 	m_ptRenderpass = Device->createRenderPassUnique(renderPassInfo);
-
-	m_shadowmapPass.MakePipeline();
-	m_spotlightPass.MakePipeline(m_ptRenderpass.get());
-	m_ambientPass.MakePipeline(m_ptRenderpass.get());
-	m_copyPPTexture.MakePipeline();
-
 	// descsets
 	for (uint32 i = 0; i < 3; ++i) {
-
 		m_ppDescSets[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
 	}
+}
+
+void Renderer_::InitPipelines()
+{
+	m_shadowmapPass.MakePipeline();
+	m_ambientPass.MakePipeline(m_ptRenderpass.get());
+	m_copyPPTexture.MakePipeline();
+	m_postprocCollection.RegisterTechniques();
 }
 
 Renderer_::~Renderer_() {}
@@ -173,8 +174,12 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 
 		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{
-			// fixed pbr ppt
-			m_spotlightPass.RecordCmd(cmdBuffer, viewport, scissor);
+			// Dynamic viewport & scissor
+			cmdBuffer->setViewport(0, { viewport });
+			cmdBuffer->setScissor(0, { scissor });
+
+			m_postprocCollection.Draw(*cmdBuffer, currentFrame);
+
 			m_ambientPass.RecordCmd(cmdBuffer, viewport, scissor);
 			// rest ppt
 		}
@@ -225,8 +230,8 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer)
 
 			vk::Viewport viewport{};
 			viewport
-				.setX(m_viewportRect.offset.x) //
-				.setY(m_viewportRect.offset.y)
+				.setX(static_cast<float>(m_viewportRect.offset.x)) //
+				.setY(static_cast<float>(m_viewportRect.offset.y))
 				.setWidth(static_cast<float>(m_viewportRect.extent.width))
 				.setHeight(static_cast<float>(m_viewportRect.extent.height))
 				.setMinDepth(0.f)

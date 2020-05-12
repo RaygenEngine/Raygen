@@ -24,9 +24,11 @@ protected:
 	PodHandle<PodType> pod;
 
 public:
-	OptionalPodEditor(PodHandle<PodType> handle)
+	OptionalPodEditor(PodHandle<PodType>& handle)
 		: pod(handle)
 	{
+		// TODO:
+		// CLOG_ABORT(handle.IsDefault(), "");
 	}
 	~OptionalPodEditor() { CommitForGpu(); }
 
@@ -79,7 +81,7 @@ private:
 public:
 	PodType* pod;
 
-	PodEditor(PodHandle<PodType> handle)
+	PodEditor(PodHandle<PodType>& handle)
 		: optionalEditor(handle)
 	{
 		pod = optionalEditor.BeginOptionalEditRegion();
@@ -87,7 +89,7 @@ public:
 	}
 
 	// Return the editable pointer of the pod. Lock is already done during construction
-	[[nodiscard]] PodType* GetEditablePtr() const { return pod; }
+	[[deprecated, nodiscard]] PodType* GetEditablePtr() const { return pod; }
 	[[nodiscard]] AssetUpdateInfo& GetUpdateInfoRef() { return optionalEditor.info; }
 
 

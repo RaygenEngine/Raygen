@@ -81,27 +81,12 @@ GBuffer::GBuffer(GBufferPass* passInfo, uint32 width, uint32 height)
 
 void GBuffer::MakePipeline(GBufferPass* passInfo)
 {
-	static auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/gbuffer.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/gbuffer.shader");
 	gpuShader.onCompile = [&]() {
-		Device->waitIdle();
 		MakePipeline(passInfo);
 	};
 
-	if (!gpuShader.HasCompiledSuccessfully()) {
-		LOG_ERROR("Geometry Pipeline skipped due to shader compilation errors.");
-		return;
-	}
-
-	auto& fragShaderModule = gpuShader.frag;
-	auto& vertShaderModule = gpuShader.vert;
-
-	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
-	vertShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eVertex) //
-		.setModule(*vertShaderModule)
-		.setPName("main");
-	// fixed-function stage
-	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
+	std::vector shaderStages = gpuShader.shaderStages;
 
 	vk::VertexInputBindingDescription bindingDescription{};
 	bindingDescription
@@ -136,19 +121,13 @@ void GBuffer::MakePipeline(GBufferPass* passInfo)
 	attributeDescriptions[4].format = vk::Format::eR32G32Sfloat;
 	attributeDescriptions[4].offset = offsetof(Vertex, uv);
 
+	// fixed-function stage
+	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo
 		.setVertexBindingDescriptionCount(1u) //
 		.setVertexAttributeDescriptionCount(static_cast<uint32_t>(attributeDescriptions.size()))
 		.setPVertexBindingDescriptions(&bindingDescription)
 		.setPVertexAttributeDescriptions(attributeDescriptions.data());
-
-	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
-	fragShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(*fragShaderModule)
-		.setPName("main");
-
-	std::array shaderStages = { vertShaderStageInfo, fragShaderStageInfo };
 
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
