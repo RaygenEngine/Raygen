@@ -108,7 +108,7 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(*Renderer->m_ptRenderpass) // WIP: Proper renderpass
+		.setRenderPass(s_ptRenderPass)
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
