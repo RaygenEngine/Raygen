@@ -196,21 +196,24 @@ struct MaterialArchetype : AssetPod {
 	REFLECTED_POD(MaterialArchetype)
 	{
 		REFLECT_ICON(FA_ALIGN_CENTER);
-		REFLECT_VAR(fragShader);
+		REFLECT_VAR(instances, PropertyFlags::NoEdit, PropertyFlags::NoCopy);
+		REFLECT_VAR(code, PropertyFlags::NoEdit, PropertyFlags::NoCopy);
 	}
 
-	PodHandle<ShaderStage> fragShader;
+	std::string code;
+	std::vector<uint32> binary;
+
+	std::vector<PodHandle<MaterialInstance>> instances;
+
 	MaterialParamsArchetype parameters;
 
-	void RegenerateClass()
-	{
-		classDescr = std::move(parameters.GenerateClass()); //
-	}
+	void OnShaderUpdated();
 
 	std::unique_ptr<RuntimeClass> classDescr{};
 };
 
 struct MaterialInstance : AssetPod {
+
 	REFLECTED_POD(MaterialInstance)
 	{
 		REFLECT_ICON(FA_JEDI);
@@ -223,13 +226,6 @@ struct MaterialInstance : AssetPod {
 	std::vector<PodHandle<Image>> samplers2d;
 	std::vector<byte> uboData;
 
-	void RegenerateUbo()
-	{
-		if (auto dynamicClass = archetype.Lock()->classDescr.get(); dynamicClass) {
-			uboData.resize(dynamicClass->GetSize());
-		}
-		else {
-			uboData.resize(0);
-		}
-	}
+	void RegenerateUbo(const RuntimeClass* oldClass, const RuntimeClass& newClass);
+	void RegenerateSamplers(std::vector<std::string>& oldSamplers, std::vector<std::string>& newSamplers);
 };

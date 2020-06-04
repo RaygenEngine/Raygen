@@ -271,6 +271,15 @@ ReflClassOperationResult CopyClassTo(SrcT* src, DestT* dst)
 	return visitor.operationResult;
 }
 
+// Copies values from 2 reflected objects all ReflClass properties from src dst, supports runtime typeless objects
+inline ReflClassOperationResult CopyClassToEx(
+	void* src, void* dst, const ReflClass& srcClass, const ReflClass& dstClass)
+{
+	detail::CopyIntoVisitor visitor(&dstClass, dst);
+	CallVisitorOnEveryPropertyEx(src, srcClass, visitor);
+	return visitor.operationResult;
+}
+
 
 struct JsonToPropVisitor {
 
