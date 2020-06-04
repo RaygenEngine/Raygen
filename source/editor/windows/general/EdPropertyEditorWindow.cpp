@@ -598,4 +598,12 @@ void GenericImguiDrawEntry(PodEntry* entry)
 		PodEditorBase::CommitUpdate(entry->uid, {});
 	}
 }
+
+bool GenericImguiDrawClass(void* object, const ReflClass& cl)
+{
+	ReflectionToImguiVisitor visitor;
+	visitor.fullDisplayMat4 = false;
+	refltools::CallVisitorOnEveryPropertyEx(object, cl, visitor);
+	return visitor.didEditFlag;
+}
 } // namespace ed
