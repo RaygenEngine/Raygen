@@ -29,6 +29,7 @@ protected:
 
 	NodeFlags::Type m_classFlags{ 0 };
 
+
 	static constexpr char8 c_defaultIcon[] = FA_DOT_CIRCLE;
 	// An "optional" icon for this class, as font character. Not the best place to be as it is "editor metadata" but not
 	// as big of a deal to seperate this (yet)

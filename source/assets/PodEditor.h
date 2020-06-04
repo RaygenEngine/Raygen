@@ -94,6 +94,9 @@ public:
 
 
 	~PodEditor() { optionalEditor.CommitForGpu(); }
+
+	PodType* operator*() const { return pod; }
+	PodType* operator->() const { return pod; }
 };
 
 /*

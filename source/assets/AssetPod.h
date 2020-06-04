@@ -17,14 +17,13 @@ struct PodEntry;
 // This allows pods to remain "pods" in memory without virtual functions while allowing the engine to safely type cast
 // them to generic pods and backwards.
 //
-// CHECKLIST: (Last updated at Raygen first pod reflection refactor 2020/2/10)
+// CHECKLIST:
 // 1. Create the struct in the header file (see an example pod eg: StringPod)
-// 2. struct MUST include Load function
-// 3. struct MUST be REFLECTED_POD (even if you reflect no members)
-// 4. Add your header in PodIncludes.h
-// 5. Add the new type in PodFwd.h ENGINE_POD_TYPES list
-// 6. Forward declare your pod in PodFwd.h
-// 7: Add the loader in PodLoaders.h
+// 2. struct MUST be REFLECTED_POD (even if you reflect no members)
+// 3. Add your header in PodIncludes.h
+// 4. Add the new type in PodFwd.h ENGINE_POD_TYPES list
+// 5. Forward declare your pod in PodFwd.h
+
 
 struct AssetPod {
 	TypeId type;
@@ -37,7 +36,7 @@ struct AssetPod {
 	};
 
 protected:
-	// Do not ever delete generic asset pod pointer
+	// Do not ever delete generic asset pod pointer (slicing will occur)
 	AssetPod() = default;
 	~AssetPod() = default;
 	AssetPod(const AssetPod&) = delete;
@@ -50,7 +49,7 @@ struct BasePodHandle {
 	size_t uid{ 0 };
 
 	// CHECK: Remove this
-	[[nodiscard]] bool HasBeenAssigned() const { return uid != 0; }
+	[[deprecated, nodiscard]] bool HasBeenAssigned() const { return uid != 0; }
 
 	[[nodiscard]] bool operator==(const BasePodHandle& other) const { return other.uid == this->uid && uid != 0; }
 };
