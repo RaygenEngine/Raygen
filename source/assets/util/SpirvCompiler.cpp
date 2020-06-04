@@ -5,12 +5,14 @@
 #include "engine/Timer.h"
 #include "core/StringConversions.h"
 #include "assets/util/SpirvReflector.h"
+#include "assets/AssetRegistry.h"
 
 #include <glslang/OSDependent/osinclude.h>
 #include <glslang/Public/ShaderLang.h>
 #include <SPIRV/GlslangToSpv.h>
 #include <StandAlone/DirStackFileIncluder.h>
 #include <StandAlone/ResourceLimits.h>
+
 
 #include <thread>
 #include <mutex>
@@ -168,6 +170,11 @@ std::vector<uint32> ShaderCompiler::Compile(
 	const std::string& code, ShaderStageType type, const std::string& shadername, TextCompilerErrors* outError)
 {
 	return CompileImpl(code, shadername, outError, LangFromStage(type));
+}
+
+std::vector<uint32> ShaderCompiler::Compile(const std::string& code, ShaderStageType type, TextCompilerErrors* outError)
+{
+	return CompileImpl(code, "custom", outError, LangFromStage(type));
 }
 
 

@@ -93,6 +93,42 @@ void CallVisitorOnProperty(Visitor& v, const Property& p, void* obj)
 							   || detail::MaybeVisit_WrapVectorPodHandle<Visitor, ENGINE_POD_TYPES>(v, p, obj);
 }
 
+
+// Extended version of CallVisitorOnEveryProperty that Accepts RuntimeClass types.
+template<typename Visitor>
+void CallVisitorOnEveryPropertyEx(void* obj, const ReflClass& cl, Visitor& v)
+{
+	// CHECK: Duplicate code, (calling the normal function would cause type safety loss)
+	using namespace detail;
+
+	if constexpr (HasBegin<Visitor>::value) {
+		v.Begin(obj, cl);
+	}
+
+	for (auto& p : cl.GetProperties()) {
+		if constexpr (HasPreProperty<Visitor>::value) {
+			if constexpr (std::is_same_v<return_type_t<decltype(&Visitor::PreProperty)>, bool>) {
+				if (!v.PreProperty(p)) {
+					continue;
+				}
+			}
+			else {
+				v.PreProperty(p);
+			}
+		}
+
+		CallVisitorOnProperty(v, p, obj);
+
+		if constexpr (HasPostProperty<Visitor>::value) {
+			v.PostProperty(p);
+		}
+	}
+
+	if constexpr (HasEnd<Visitor>::value) {
+		v.End(cl);
+	}
+}
+
 // Visitor must implement "template<VarType> void operator()(VarType& value, const Property& property)"
 template<typename ReflectedObj, typename Visitor>
 void CallVisitorOnEveryProperty(ReflectedObj* obj, Visitor& v)
@@ -128,6 +164,7 @@ void CallVisitorOnEveryProperty(ReflectedObj* obj, Visitor& v)
 		v.End(cl);
 	}
 }
+
 
 struct ReflClassOperationResult {
 	// Properties with same name but different types are included here:
