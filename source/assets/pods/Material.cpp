@@ -33,6 +33,13 @@ void MaterialInstance::RegenerateUbo(const RuntimeClass* oldClass, const Runtime
 		uboData.resize(newClass.GetSize());
 		return;
 	}
+
+	if (uboData.size() < oldClass->GetSize()) {
+		uboData.clear();
+		uboData.resize(newClass.GetSize());
+		return;
+	}
+
 	std::vector<byte> newData(newClass.GetSize());
 	// Attempt to match as many properties as possible, but don't really care about errors.
 	// CHECK: Note that data here is zeroed out if not overwritten.
