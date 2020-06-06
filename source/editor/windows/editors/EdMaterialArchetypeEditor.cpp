@@ -2,6 +2,7 @@
 #include "EdMaterialArchetypeEditor.h"
 #include "assets/PodEditor.h"
 #include "editor/imgui/ImEd.h"
+#include "editor/imgui/ImAssetSlot.h"
 #include "assets/pods/Material.h"
 #include "assets/AssetRegistry.h"
 #include "assets/util/SpirvReflector.h"
@@ -25,17 +26,24 @@ void MaterialArchetypeEditorWindow::ImguiDraw()
 	auto& uboMembers = podHandle.Lock()->parameters.uboMembers;
 	auto& samplers = podHandle.Lock()->parameters.samplers2d;
 
-	if (ImGui::CollapsingHeader("Textures")) {
+
+	ImGui::Text(U8(FA_DATABASE u8" Descr Data (%d,%d) | "), samplers.size(), uboMembers.size());
+	if (ImGui::IsItemHovered()) {
+		ImGui::BeginTooltip();
+		ImGui::SetWindowFontScale(1);
+		ImGui::Text("Detected samplers and ubo Members:");
+
 		for (auto& sampler : samplers) {
 			ImGui::TextUnformatted(sampler.c_str());
 		}
-	}
 
-	for (auto& mem : uboMembers) {
-		ImGui::Text(
-			"%d\t%s\t%s", mem.SizeOf(), std::string(GenMetaEnum(mem.type).GetValueStr()).c_str(), mem.name.c_str());
+		for (auto& mem : uboMembers) {
+			ImGui::Text(
+				"%d\t%s\t%s", mem.SizeOf(), std::string(GenMetaEnum(mem.type).GetValueStr()).c_str(), mem.name.c_str());
+		}
+		ImGui::EndTooltip();
 	}
-
+	ImGui::SameLine();
 	editor->ImguiDraw();
 }
 
@@ -70,24 +78,16 @@ void MaterialInstanceEditorWindow::ImguiDraw()
 
 	auto archetype = material->archetype.Lock();
 	auto archetypeEntry = AssetHandlerManager::GetEntry(material->archetype);
-	ImEd::Button(archetypeEntry->name.c_str());
 
-	if (auto entry = ImEd::AcceptTypedPodDrop<MaterialArchetype>(); entry) {
-		{
-			PodEditor arch(material->archetype);
-			auto it = std::remove(arch->instances.begin(), arch->instances.end(), podHandle);
-			if (it != arch->instances.end()) {
-				arch->instances.erase(it);
-			}
-		}
-		material->archetype = entry->GetHandleAs<MaterialArchetype>();
+	if (ImEd::AssetSlot("Archetype", material->archetype)) {
+		ed.MarkEdit();
 
 		PodEditor arch(material->archetype);
 		arch->instances.push_back(podHandle);
 		arch->OnShaderUpdated();
-		ed.MarkEdit();
 	}
 
+	ImGui::Separator();
 
 	RuntimeClass* classDescription = material->archetype.Lock()->classDescr.get();
 	if (!classDescription) {
@@ -102,16 +102,9 @@ void MaterialInstanceEditorWindow::ImguiDraw()
 
 	int32 i = 0;
 	for (auto& img : archetype->parameters.samplers2d) {
-		ImGui::Button(img.c_str());
-		ImGui::SameLine();
-		ImGui::Button(AssetHandlerManager::GetEntry(material->samplers2d[i])->path.c_str());
-
-		if (auto entry = ImEd::AcceptTypedPodDrop<Image>(); entry) {
-			auto handle = entry->GetHandleAs<Image>();
+		if (ImEd::AssetSlot(img.c_str(), material->samplers2d[i])) {
 			ed.MarkEdit();
-			material->samplers2d[i] = handle;
 		}
-
 		++i;
 	}
 
