@@ -31,7 +31,10 @@ inline class Renderer_ : public Listener {
 	// The actual game viewport rectangle in m_swapchain coords
 	vk::Rect2D m_viewportRect{};
 
+public: // WIP:
 	GBufferPass m_gBufferPass;
+
+private:
 	ShadowmapPass m_shadowmapPass;
 	AmbientPass m_ambientPass;
 	EditorPass m_editorPass;
