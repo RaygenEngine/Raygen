@@ -10,6 +10,8 @@ namespace vl {
 class GBufferPass {
 	friend class GBuffer;
 
+
+public:
 	vk::UniqueRenderPass m_renderPass;
 	vk::UniquePipelineLayout m_pipelineLayout;
 

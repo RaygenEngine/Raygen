@@ -2,10 +2,13 @@
 #include "GpuMaterial.h"
 
 #include "assets/pods/Material.h"
+#include "rendering/assets/GpuShader.h"
+#include "rendering/assets/GpuShaderStage.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Renderer.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
+
 
 using namespace vl;
 
@@ -111,4 +114,124 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 	UpdateImageSamplerInDescriptorSet(occlusionSampler, occlusionImage, 3u);
 	UpdateImageSamplerInDescriptorSet(normalSampler, normalImage, 4u);
 	UpdateImageSamplerInDescriptorSet(emissiveSampler, emissiveImage, 5u);
+
+	// WIP: MATERIAL INSTANCE PART
+	if (!data->wip_InstanceOverride.IsDefault()) {
+		wip_UpdateMat();
+	}
+}
+
+struct PC {
+	glm::mat4 modelMat;
+	glm::mat4 normalMat;
+};
+
+void Material::Gpu::wip_UpdateMat()
+{
+	auto data = podHandle.Lock();
+
+	ClearDependencies();
+	AddDependency(data->wip_InstanceOverride);
+	auto matInst = data->wip_InstanceOverride.Lock();
+	auto matArch = matInst->archetype.Lock();
+
+	if (matArch->binary.empty() || !matArch->classDescr) {
+		wip_CustomOverride = false;
+		return;
+	}
+
+	vk::ShaderModuleCreateInfo createInfo{};
+	createInfo.setCodeSize(matArch->binary.size() * 4).setPCode(matArch->binary.data());
+	vk::ShaderModule frag = vl::Device->createShaderModule(createInfo);
+
+
+	auto podPtr = podHandle.Lock();
+
+	GpuAsset<Shader>& gbufferShader = GpuAssetManager->CompileShader("engine-data/spv/gbuffer.shader");
+
+	vk::ShaderModule vert = gbufferShader.vert.Lock().module.get();
+
+	std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
+
+	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
+	vertShaderStageInfo
+		.setStage(vk::ShaderStageFlagBits::eVertex) //
+		.setModule(vert)
+		.setPName("main");
+
+	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
+	fragShaderStageInfo
+		.setStage(vk::ShaderStageFlagBits::eFragment) //
+		.setModule(frag)
+		.setPName("main");
+
+	shaderStages.push_back(vertShaderStageInfo);
+	shaderStages.push_back(fragShaderStageInfo);
+
+
+	{
+		if (!wip_New.dscLayout.hasBeenGenerated) {
+			wip_New.dscLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
+			// for (uint32 i = 0; i < 5u; ++i) {
+			//	wip_New.dscLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
+			// vk::ShaderStageFlagBits::eFragment);
+			//}
+			wip_New.dscLayout.Generate();
+		}
+	}
+
+	{
+		// pipeline layout
+		vk::PushConstantRange pushConstantRange{};
+		pushConstantRange
+			.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
+			.setSize(sizeof(PC))
+			.setOffset(0u);
+
+		std::array layouts = { wip_New.dscLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() };
+
+		vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+		pipelineLayoutInfo
+			.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
+			.setPSetLayouts(layouts.data())
+			.setPushConstantRangeCount(1u)
+			.setPPushConstantRanges(&pushConstantRange);
+
+		wip_New.plLayout = Device->createPipelineLayout(pipelineLayoutInfo);
+	}
+
+	{
+		wip_New.pipeline = Renderer->GetGBuffer()->wip_CreatePipeline(
+			wip_New.plLayout, Renderer->m_gBufferPass.m_renderPass.get(), shaderStages);
+	}
+
+	{
+		wip_New.descSet = wip_New.dscLayout.GetDescriptorSet();
+		if (!wip_New.uboBuf) {
+			wip_New.uboBuf
+				= std::make_unique<vl::RBuffer>(sizeof(UBO_Material) * 4, vk::BufferUsageFlagBits::eUniformBuffer,
+					vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+		}
+		wip_New.uboBuf->UploadData(matInst->uboData);
+
+		vk::DescriptorBufferInfo bufferInfo{};
+		bufferInfo
+			.setBuffer(*wip_New.uboBuf) //
+			.setOffset(0u)
+			.setRange(matArch->classDescr->GetSize());
+		vk::WriteDescriptorSet descriptorWrite{};
+
+		descriptorWrite
+			.setDstSet(wip_New.descSet) //
+			.setDstBinding(0u)
+			.setDstArrayElement(0u)
+			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+			.setDescriptorCount(1u)
+			.setPBufferInfo(&bufferInfo)
+			.setPImageInfo(nullptr)
+			.setPTexelBufferView(nullptr);
+
+		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+	}
+	wip_CustomOverride = true;
 }

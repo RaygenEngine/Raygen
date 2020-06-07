@@ -138,6 +138,7 @@ void GBufferPass::RecordCmd(
 		.setClearValueCount(static_cast<uint32>(clearValues.size())) //
 		.setPClearValues(clearValues.data());
 
+
 	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	{
 		// TODO: remove camera refs
@@ -147,29 +148,57 @@ void GBufferPass::RecordCmd(
 			return;
 		}
 
-		cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, gBuffer->GetPipeline());
-
-		cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
-			&Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
 		for (auto geom : geometries) {
-
 			PushConstant pc{ //
 				geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
 			};
 
-			cmdBuffer->pushConstants(
-				m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
 			for (auto& gg : geom->model.Lock().geometryGroups) {
+				auto& mat = gg.material.Lock();
 
-				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
-				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+				if (!mat.wip_CustomOverride) {
+					// Old regular material.
+					cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, gBuffer->GetPipeline());
 
-				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-					&gg.material.Lock().descriptorSet, 0u, nullptr);
+					cmdBuffer->pushConstants(
+						m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
-				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+
+					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
+						&Scene->GetActiveCameraDescSet(), 0u, nullptr);
+
+					cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
+					cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+
+					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
+						&gg.material.Lock().descriptorSet, 0u, nullptr);
+
+					cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+				}
+				else {
+
+					auto& matNew = mat.wip_New;
+
+
+					cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, matNew.pipeline);
+
+
+					cmdBuffer->pushConstants(
+						matNew.plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+
+					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, matNew.plLayout, 1u, 1u,
+						&Scene->GetActiveCameraDescSet(), 0u, nullptr);
+
+					cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
+					cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+
+					cmdBuffer->bindDescriptorSets(
+						vk::PipelineBindPoint::eGraphics, matNew.plLayout, 0u, 1u, &matNew.descSet, 0u, nullptr);
+
+					cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+				}
 			}
 		}
 	}

@@ -123,6 +123,30 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 
 	cmdBuffer->begin(beginInfo);
 	{
+		vk::Rect2D scissor{};
+		scissor
+			.setOffset({ 0, 0 }) //
+			.setExtent(m_gBuffer->GetExtent());
+
+		vk::Viewport viewport{};
+		viewport
+			.setX(0) //
+			.setY(0)
+			.setWidth(static_cast<float>(m_gBuffer->GetExtent().width))
+			.setHeight(static_cast<float>(m_gBuffer->GetExtent().height))
+			.setMinDepth(0.f)
+			.setMaxDepth(1.f);
+
+		vk::PipelineViewportStateCreateInfo viewportState{};
+		viewportState
+			.setViewportCount(1u) //
+			.setPViewports(&viewport)
+			.setScissorCount(1u)
+			.setPScissors(&scissor);
+
+		cmdBuffer->setViewport(0, { viewport });
+		cmdBuffer->setScissor(0, { scissor });
+
 		m_gBufferPass.RecordCmd(cmdBuffer, m_gBuffer.get(), Scene->geometries.elements);
 
 		for (auto sl : Scene->spotlights.elements) {
