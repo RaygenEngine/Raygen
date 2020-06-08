@@ -235,7 +235,7 @@ void GBuffer::MakePipeline(GBufferPass* passInfo)
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-vk::Pipeline GBuffer::wip_CreatePipeline(vk::PipelineLayout pipelineLayout, vk::RenderPass renderPass,
+vk::UniquePipeline GBuffer::wip_CreatePipeline(vk::PipelineLayout pipelineLayout, vk::RenderPass renderPass,
 	std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
 {
 	vk::VertexInputBindingDescription bindingDescription{};
@@ -380,7 +380,7 @@ vk::Pipeline GBuffer::wip_CreatePipeline(vk::PipelineLayout pipelineLayout, vk::
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 
-	return Device->createGraphicsPipeline(nullptr, pipelineInfo);
+	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
 void GBuffer::TransitionForWrite(vk::CommandBuffer* cmdBuffer)

@@ -35,6 +35,7 @@ struct AssetPod {
 		return type == refl::GetId<T>();
 	};
 
+
 protected:
 	// Do not ever delete generic asset pod pointer (slicing will occur)
 	AssetPod() = default;

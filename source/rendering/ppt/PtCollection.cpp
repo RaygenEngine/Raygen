@@ -38,7 +38,8 @@ void PtCollection::Draw(vk::CommandBuffer buffer, uint32 frameIndex)
 	}
 
 	for (auto& entry : m_postprocTechs) {
-		[[unlikely]] if (!entry.isEnabled) { continue; }
+		if (!entry.isEnabled)
+			[[unlikely]] { continue; }
 
 		entry.instance->Draw(buffer, frameIndex);
 	}

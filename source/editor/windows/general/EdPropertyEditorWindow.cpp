@@ -107,7 +107,9 @@ namespace {
 		bool Inner(glm::vec3& t, const Property& p)
 		{
 			if (p.HasFlags(PropertyFlags::Color)) {
-				return ImGui::ColorEdit3(name, glm::value_ptr(t), ImGuiColorEditFlags_DisplayHSV);
+				return ImGui::ColorEdit3(name, glm::value_ptr(t),
+					ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_HDR
+						| ImGuiColorEditFlags_Float);
 			}
 
 			return ImGui::DragFloat3(name, glm::value_ptr(t), 0.01f);
@@ -116,7 +118,9 @@ namespace {
 		bool Inner(glm::vec4& t, const Property& p)
 		{
 			if (p.HasFlags(PropertyFlags::Color)) {
-				return ImGui::ColorEdit4(name, glm::value_ptr(t), ImGuiColorEditFlags_DisplayHSV);
+				return ImGui::ColorEdit4(name, glm::value_ptr(t),
+					ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_HDR
+						| ImGuiColorEditFlags_Float | ImGuiColorEditFlags_AlphaBar);
 			}
 
 			return ImGui::DragFloat4(name, glm::value_ptr(t), 0.01f);

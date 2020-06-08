@@ -148,7 +148,6 @@ void GBufferPass::RecordCmd(
 			return;
 		}
 
-
 		for (auto geom : geometries) {
 			PushConstant pc{ //
 				geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
@@ -181,21 +180,21 @@ void GBufferPass::RecordCmd(
 					auto& matNew = mat.wip_New;
 
 
-					cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, matNew.pipeline);
+					cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *matNew.pipeline);
 
 
 					cmdBuffer->pushConstants(
-						matNew.plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+						*matNew.plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 
-					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, matNew.plLayout, 1u, 1u,
+					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *matNew.plLayout, 1u, 1u,
 						&Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
 					cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
 					cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
 
 					cmdBuffer->bindDescriptorSets(
-						vk::PipelineBindPoint::eGraphics, matNew.plLayout, 0u, 1u, &matNew.descSet, 0u, nullptr);
+						vk::PipelineBindPoint::eGraphics, *matNew.plLayout, 0u, 1u, &matNew.descSet, 0u, nullptr);
 
 					cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 				}
