@@ -46,6 +46,51 @@ Renderer_::Renderer_()
 	Event::OnWindowResize.BindFlag(this, m_didWindowResize);
 	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimzed) { m_isMinimzed = newIsMinimzed; });
 
+	// post process render pass
+
+	vk::AttachmentDescription colorAttachmentDesc{};
+	vk::AttachmentReference colorAttachmentRef{};
+
+	colorAttachmentDesc.setFormat(vk::Format::eR32G32B32A32Sfloat)
+		.setSamples(vk::SampleCountFlagBits::e1)
+		.setLoadOp(vk::AttachmentLoadOp::eClear)
+		.setStoreOp(vk::AttachmentStoreOp::eStore)
+		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+		.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal)
+		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+
+	colorAttachmentRef
+		.setAttachment(0u) //
+		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+	vk::SubpassDescription subpass{};
+	subpass
+		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
+		.setColorAttachmentCount(1u)
+		.setPColorAttachments(&colorAttachmentRef)
+		.setPDepthStencilAttachment(nullptr);
+
+	vk::SubpassDependency dependency{};
+	dependency
+		.setSrcSubpass(VK_SUBPASS_EXTERNAL) //
+		.setDstSubpass(0u)
+		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+		.setSrcAccessMask(vk::AccessFlags(0)) // 0
+		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
+
+	vk::RenderPassCreateInfo renderPassInfo{};
+	renderPassInfo
+		.setAttachmentCount(1u) //
+		.setPAttachments(&colorAttachmentDesc)
+		.setSubpassCount(1u)
+		.setPSubpasses(&subpass)
+		.setDependencyCount(1u)
+		.setPDependencies(&dependency);
+
+	m_ptRenderpass = Device->createRenderPassUnique(renderPassInfo);
+
 	// descsets
 	for (uint32 i = 0; i < 3; ++i) {
 		m_ppDescSets[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
