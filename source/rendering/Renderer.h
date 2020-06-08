@@ -60,7 +60,11 @@ protected:
 	bool m_isMinimzed{ false };
 
 public:
+	// post process for hdr WIP: move those
+	std::array<vk::UniqueFramebuffer, 3> m_framebuffers;
+	std::array<UniquePtr<ImageAttachment>, 3> m_attachments;
 	std::array<vk::DescriptorSet, 3> m_ppDescSets;
+	vk::UniqueRenderPass m_ptRenderpass;
 
 	Renderer_();
 	~Renderer_();
