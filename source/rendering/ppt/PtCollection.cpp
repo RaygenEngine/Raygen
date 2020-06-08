@@ -4,6 +4,8 @@
 #include "engine/console/ConsoleVariable.h"
 #include "rendering/ppt/lightpass/PtSpotlight.h"
 #include "rendering/ppt/lightpass/PtReflProb.h"
+#include "rendering/ppt/techniques/PtDebug.h"
+
 
 namespace vl {
 
@@ -17,6 +19,12 @@ void PtCollection::RegisterTechniques()
 	// LIGHT PASS
 	NextTechnique<PtSpotlight>();
 	NextTechnique<PtReflProb>();
+
+
+	// COLOR
+
+	NextTechnique<PtDebug>();
+
 
 	//
 	RunPrepares();

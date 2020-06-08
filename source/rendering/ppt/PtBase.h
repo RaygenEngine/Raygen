@@ -70,7 +70,8 @@ protected:
 	~PtBase_SinglePipeline() override = default;
 
 
-	void Utl_CreatePipeline(GpuAsset<Shader>& shader, vk::PipelineColorBlendStateCreateInfo colorBlending);
+	void Utl_CreatePipeline(
+		GpuAsset<Shader>& shader, vk::PipelineColorBlendStateCreateInfo colorBlending, uint32 subpassIndex = 0);
 
 	// TODO: Reflected settings struct
 };
