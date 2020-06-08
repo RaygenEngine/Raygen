@@ -142,7 +142,7 @@ void Material::Gpu::wip_UpdateMat()
 
 	vk::ShaderModuleCreateInfo createInfo{};
 	createInfo.setCodeSize(matArch->binary.size() * 4).setPCode(matArch->binary.data());
-	vk::ShaderModule frag = vl::Device->createShaderModule(createInfo);
+	wip_New.fragModule = vl::Device->createShaderModuleUnique(createInfo);
 
 
 	auto podPtr = podHandle.Lock();
@@ -162,7 +162,7 @@ void Material::Gpu::wip_UpdateMat()
 	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
 	fragShaderStageInfo
 		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(frag)
+		.setModule(*wip_New.fragModule)
 		.setPName("main");
 
 	shaderStages.push_back(vertShaderStageInfo);
@@ -170,13 +170,21 @@ void Material::Gpu::wip_UpdateMat()
 
 
 	{
-		if (!wip_New.dscLayout.hasBeenGenerated) {
-			wip_New.dscLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
-			// for (uint32 i = 0; i < 5u; ++i) {
-			//	wip_New.dscLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
-			// vk::ShaderStageFlagBits::eFragment);
-			//}
-			wip_New.dscLayout.Generate();
+		auto createDescLayout = [&]() {
+			wip_New.descLayout = std::make_unique<RDescriptorLayout>();
+			wip_New.descLayout->AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
+			for (uint32 i = 0; i < matArch->parameters.samplers2d.size(); ++i) {
+				wip_New.descLayout->AddBinding(
+					vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+			}
+			wip_New.descLayout->Generate();
+		};
+
+		if (!wip_New.descLayout) {
+			createDescLayout();
+		}
+		else if (wip_New.descLayout->bindings.size() != matArch->parameters.samplers2d.size() + 1) {
+			createDescLayout();
 		}
 	}
 
@@ -188,7 +196,7 @@ void Material::Gpu::wip_UpdateMat()
 			.setSize(sizeof(PC))
 			.setOffset(0u);
 
-		std::array layouts = { wip_New.dscLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() };
+		std::array layouts = { wip_New.descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() };
 
 		vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo
@@ -197,16 +205,16 @@ void Material::Gpu::wip_UpdateMat()
 			.setPushConstantRangeCount(1u)
 			.setPPushConstantRanges(&pushConstantRange);
 
-		wip_New.plLayout = Device->createPipelineLayout(pipelineLayoutInfo);
+		wip_New.plLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 	}
 
 	{
 		wip_New.pipeline = Renderer->GetGBuffer()->wip_CreatePipeline(
-			wip_New.plLayout, Renderer->m_gBufferPass.m_renderPass.get(), shaderStages);
+			*wip_New.plLayout, Renderer->m_gBufferPass.m_renderPass.get(), shaderStages);
 	}
 
 	{
-		wip_New.descSet = wip_New.dscLayout.GetDescriptorSet();
+		wip_New.descSet = wip_New.descLayout->GetDescriptorSet();
 		if (!wip_New.uboBuf) {
 			wip_New.uboBuf
 				= std::make_unique<vl::RBuffer>(sizeof(UBO_Material) * 4, vk::BufferUsageFlagBits::eUniformBuffer,
@@ -232,6 +240,36 @@ void Material::Gpu::wip_UpdateMat()
 			.setPTexelBufferView(nullptr);
 
 		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+
+		auto UpdateImageSamplerInDescriptorSet = [&](vk::Sampler sampler, GpuHandle<::Image> image, uint32 dstBinding) {
+			auto& img = image.Lock();
+
+			vk::DescriptorImageInfo imageInfo{};
+			imageInfo
+				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+				.setImageView(img.image->GetView())
+				.setSampler(sampler);
+
+			vk::WriteDescriptorSet descriptorWrite{};
+			descriptorWrite
+				.setDstSet(wip_New.descSet) //
+				.setDstBinding(dstBinding)
+				.setDstArrayElement(0u)
+				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+				.setDescriptorCount(1u)
+				.setPBufferInfo(nullptr)
+				.setPImageInfo(&imageInfo)
+				.setPTexelBufferView(nullptr);
+
+			// PERF: Use a single descriptor update
+			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+		};
+
+
+		for (uint32 i = 0; i < matInst->samplers2d.size(); ++i) {
+			UpdateImageSamplerInDescriptorSet(
+				GpuAssetManager->GetDefaultSampler(), GpuAssetManager->GetGpuHandle(matInst->samplers2d[i]), i + 1);
+		}
 	}
 	wip_CustomOverride = true;
 }

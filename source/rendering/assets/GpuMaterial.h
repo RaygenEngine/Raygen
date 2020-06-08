@@ -25,12 +25,12 @@ struct Material::Gpu : public vl::GpuAssetTemplate<Material> {
 	bool wip_CustomOverride{ false };
 
 	struct wip_NewMaterialInstance {
-		vk::PipelineLayout plLayout; // Should actually be in Archetype (later)
-		vk::Pipeline pipeline;
+		vk::UniquePipelineLayout plLayout; // Should actually be in Archetype (later)
+		vk::UniquePipeline pipeline;
 
 		vk::DescriptorSet descSet;
 
-		vl::RDescriptorLayout dscLayout;
+		UniquePtr<vl::RDescriptorLayout> descLayout;
 
 		UniquePtr<vl::RBuffer> uboBuf;
 
@@ -39,6 +39,9 @@ struct Material::Gpu : public vl::GpuAssetTemplate<Material> {
 		//	vk::UniqueBuffer m_handle;
 		//	vk::UniqueDeviceMemory m_memory;
 		//} uboBuf;
+
+		vk::UniqueShaderModule fragModule;
+
 	} wip_New;
 
 	void wip_UpdateMat();

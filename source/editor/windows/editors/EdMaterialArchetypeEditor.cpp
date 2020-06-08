@@ -83,7 +83,10 @@ void MaterialInstanceEditorWindow::ImguiDraw()
 		ed.MarkEdit();
 
 		PodEditor arch(material->archetype);
-		arch->instances.push_back(podHandle);
+		if (auto it = std::find(arch->instances.begin(), arch->instances.end(), podHandle);
+			it == arch->instances.end()) {
+			arch->instances.push_back(podHandle);
+		}
 		arch->OnShaderUpdated();
 	}
 
@@ -92,13 +95,13 @@ void MaterialInstanceEditorWindow::ImguiDraw()
 	RuntimeClass* classDescription = material->archetype.Lock()->classDescr.get();
 	if (!classDescription) {
 		ImGui::Text("Generate the class of the archetype first.");
-		if (ImEd::Button("GENERATE")) {
-			PodEditor archetypeEditor(material->archetype);
-			archetypeEditor.pod->OnShaderUpdated();
-		}
 		return;
 	}
 
+	if (material->uboData.size() != classDescription->GetSize()) {
+		ImGui::Text("Incorrect uboData size!");
+		return;
+	}
 
 	int32 i = 0;
 	for (auto& img : archetype->parameters.samplers2d) {
