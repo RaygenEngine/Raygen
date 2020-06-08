@@ -1,16 +1,12 @@
 #include "pch.h"
-#include "PtDirectLight.h"
+#include "PtSpotlight.h"
 
-#include "rendering/Layouts.h"
-#include "rendering/Device.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuShader.h"
-#include "rendering/Swapchain.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 
 namespace vl {
-void PtDirectLight::MakeLayout()
+void PtSpotlight::MakeLayout()
 {
 	std::array layouts = { Layouts->gBufferDescLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
 		Layouts->singleUboDescLayout.setLayout.get(), Layouts->singleSamplerDescLayout.setLayout.get() };
@@ -26,7 +22,7 @@ void PtDirectLight::MakeLayout()
 	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
 
-void PtDirectLight::MakePipeline()
+void PtSpotlight::MakePipeline()
 {
 	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/spotlight.shader");
 	gpuShader.onCompile = [&]() {
@@ -57,16 +53,14 @@ void PtDirectLight::MakePipeline()
 	Utl_CreatePipeline(gpuShader, colorBlending);
 }
 
-void PtDirectLight::Draw(vk::CommandBuffer cmdBuffer, uint32 frameIndex)
+void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, uint32 frameIndex)
 {
 	if (!Scene->GetActiveCamera()) {
 		return;
 	}
 
-	// bind the graphics pipeline
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
-	// descriptor sets
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
 		&Renderer->GetGBuffer()->GetDescSet(), 0u, nullptr);
 

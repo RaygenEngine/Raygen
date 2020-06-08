@@ -24,6 +24,35 @@ using char16 = char16_t;
 	return reinterpret_cast<const char*>(txt);
 }
 
+// TODO: move those
 
 template<typename T, typename D = std::default_delete<T>>
 using UniquePtr = std::unique_ptr<T, D>;
+
+enum class TextureFiltering
+{
+	Nearest,
+	Linear,
+};
+
+enum class MipmapFiltering
+{
+	Nearest,
+	Linear,
+	NoMipmap
+};
+
+// CHECK: (mirrored clamping etc)
+enum class TextureWrapping
+{
+	ClampToEdge,
+	MirroredRepeat,
+	Repeat
+};
+
+enum class ImageFormat
+{
+	Unorm,
+	Srgb,
+	Hdr
+};

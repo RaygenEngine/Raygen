@@ -2,19 +2,14 @@
 #include "Renderer.h"
 
 #include "editor/imgui/ImguiImpl.h"
-#include "engine/Engine.h"
 #include "engine/Events.h"
-#include "engine/Input.h"
-#include "engine/Logger.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/Device.h"
 #include "rendering/Instance.h"
-#include "universe/nodes/camera/CameraNode.h"
-#include "universe/nodes/geometry/GeometryNode.h"
+#include "rendering/Swapchain.h"
 #include "rendering/VulkanUtl.h"
+#include "universe/nodes/camera/CameraNode.h"
 
-#include <array>
 
 constexpr int32 c_framesInFlight = 2;
 namespace {
@@ -50,7 +45,6 @@ Renderer_::Renderer_()
 	Event::OnViewportUpdated.BindFlag(this, m_didViewportResize);
 	Event::OnWindowResize.BindFlag(this, m_didWindowResize);
 	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimzed) { m_isMinimzed = newIsMinimzed; });
-
 
 	// post process render pass
 
@@ -96,6 +90,7 @@ Renderer_::Renderer_()
 		.setPDependencies(&dependency);
 
 	m_ptRenderpass = Device->createRenderPassUnique(renderPassInfo);
+
 	// descsets
 	for (uint32 i = 0; i < 3; ++i) {
 		m_ppDescSets[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
@@ -105,8 +100,7 @@ Renderer_::Renderer_()
 void Renderer_::InitPipelines()
 {
 	m_shadowmapPass.MakePipeline();
-	m_ambientPass.MakePipeline(m_ptRenderpass.get());
-	m_copyPPTexture.MakePipeline();
+	m_copyHdrTexture.MakePipeline();
 	m_postprocCollection.RegisterTechniques();
 }
 
@@ -203,9 +197,6 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 			cmdBuffer->setScissor(0, { scissor });
 
 			m_postprocCollection.Draw(*cmdBuffer, currentFrame);
-
-			m_ambientPass.RecordCmd(cmdBuffer, viewport, scissor);
-			// rest ppt
 		}
 		cmdBuffer->endRenderPass();
 
@@ -247,22 +238,14 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer)
 
 		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{
-			vk::Rect2D scissor{};
-			scissor
-				.setOffset(m_viewportRect.offset) //
-				.setExtent(m_viewportRect.extent);
+			auto scissor = GetGameScissor();
+			auto viewport = GetGameViewport();
 
-			vk::Viewport viewport{};
-			viewport
-				.setX(static_cast<float>(m_viewportRect.offset.x)) //
-				.setY(static_cast<float>(m_viewportRect.offset.y))
-				.setWidth(static_cast<float>(m_viewportRect.extent.width))
-				.setHeight(static_cast<float>(m_viewportRect.extent.height))
-				.setMinDepth(0.f)
-				.setMaxDepth(1.f);
+			cmdBuffer->setViewport(0, { viewport });
+			cmdBuffer->setScissor(0, { scissor });
 
-			m_copyPPTexture.RecordCmd(cmdBuffer, viewport, scissor);
-			m_editorPass.RecordCmd(cmdBuffer);
+			m_copyHdrTexture.RecordCmd(cmdBuffer);
+			m_writeEditor.RecordCmd(cmdBuffer);
 		}
 		cmdBuffer->endRenderPass();
 
@@ -442,7 +425,7 @@ vk::Viewport Renderer_::GetSceneViewport() const
 	return viewport;
 }
 
-vk::Viewport Renderer_::GetViewport() const
+vk::Viewport Renderer_::GetGameViewport() const
 {
 	auto& rect = m_viewportRect;
 	const float x = static_cast<float>(rect.offset.x);
@@ -473,7 +456,7 @@ vk::Rect2D Renderer_::GetSceneScissor() const
 	return scissor;
 }
 
-vk::Rect2D Renderer_::GetScissor() const
+vk::Rect2D Renderer_::GetGameScissor() const
 {
 	return m_viewportRect;
 }

@@ -2,7 +2,8 @@
 #include "PtCollection.h"
 
 #include "engine/console/ConsoleVariable.h"
-#include "rendering/ppt/lightpass/PtDirectLight.h"
+#include "rendering/ppt/lightpass/PtSpotlight.h"
+#include "rendering/ppt/lightpass/PtReflProb.h"
 
 namespace vl {
 
@@ -14,7 +15,8 @@ void PtCollection::RegisterTechniques()
 	//
 
 	// LIGHT PASS
-	NextTechnique<PtDirectLight>();
+	NextTechnique<PtSpotlight>();
+	NextTechnique<PtReflProb>();
 
 	//
 	RunPrepares();

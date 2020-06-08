@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "Layouts.h"
 
-#include <glfw/glfw3.h>
-
 namespace vl {
 Layouts_::Layouts_()
 {

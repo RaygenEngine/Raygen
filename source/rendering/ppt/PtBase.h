@@ -9,6 +9,7 @@ namespace vl {
 
 
 class PtBase {
+
 public:
 	PtBase() = default;
 
@@ -39,6 +40,8 @@ concept CPostTech = requires
 // Base class for a the most common use case of PPT setup.
 // TODO: Automated descriptor sets & binding without virtual call
 class PtBase_SinglePipeline : public PtBase {
+
+
 public:
 	// Initialize the pipline layout on constructor
 	PtBase_SinglePipeline() = default;

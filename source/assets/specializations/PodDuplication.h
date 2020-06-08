@@ -21,6 +21,7 @@ template<>
 inline void DuplicateData(Image* src, Image* dst)
 {
 	dst->data = src->data;
+	dst->mipData = src->mipData;
 }
 
 template<>
