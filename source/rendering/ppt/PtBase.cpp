@@ -10,7 +10,7 @@ namespace vl {
 void PtBase_SinglePipeline::Utl_CreatePipeline(
 	GpuAsset<Shader>& shader, vk::PipelineColorBlendStateCreateInfo colorBlending)
 {
-	std::vector shaderStages = shader.shaderStages; /// AUTO
+	std::vector shaderStages = shader.shaderStages;
 
 
 	// fixed-function stage
@@ -25,14 +25,14 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 	vk::Viewport viewport{};
 	vk::Rect2D scissor{};
 
-	vk::PipelineViewportStateCreateInfo viewportState{}; /// STATIC
+	vk::PipelineViewportStateCreateInfo viewportState{};
 	viewportState
 		.setViewportCount(1u) //
 		.setPViewports(&viewport)
 		.setScissorCount(1u)
 		.setPScissors(&scissor);
 
-	vk::PipelineRasterizationStateCreateInfo rasterizer{}; /// STATIC
+	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer
 		.setDepthClampEnable(VK_FALSE) //
 		.setRasterizerDiscardEnable(VK_FALSE)
@@ -45,7 +45,7 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 		.setDepthBiasClamp(0.f)
 		.setDepthBiasSlopeFactor(0.f);
 
-	vk::PipelineMultisampleStateCreateInfo multisampling{}; /// STATIC
+	vk::PipelineMultisampleStateCreateInfo multisampling{};
 	multisampling
 		.setSampleShadingEnable(VK_FALSE) //
 		.setRasterizationSamples(vk::SampleCountFlagBits::e1)
@@ -54,29 +54,8 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 		.setAlphaToCoverageEnable(VK_FALSE)
 		.setAlphaToOneEnable(VK_FALSE);
 
-	// vk::PipelineColorBlendAttachmentState colorBlendAttachment{}; /// CUSTOM
-	// colorBlendAttachment
-	//	.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
-	//					   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
-	//	.setBlendEnable(VK_TRUE)
-	//	.setSrcColorBlendFactor(vk::BlendFactor::eOne)
-	//	.setDstColorBlendFactor(vk::BlendFactor::eOne)
-	//	.setColorBlendOp(vk::BlendOp::eAdd)
-	//	.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
-	//	.setDstAlphaBlendFactor(vk::BlendFactor::eOne)
-	//	.setAlphaBlendOp(vk::BlendOp::eAdd);
-
-	// vk::PipelineColorBlendStateCreateInfo colorBlending{};
-	// colorBlending
-	//	.setLogicOpEnable(VK_FALSE) //
-	//	.setLogicOp(vk::LogicOp::eCopy)
-	//	.setAttachmentCount(1u)
-	//	.setPAttachments(&colorBlendAttachment)
-	//	.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
-
-
 	// dynamic states
-	vk::DynamicState dynamicStates[] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor }; /// STATIC
+	vk::DynamicState dynamicStates[] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
 	dynamicStateInfo
 		.setDynamicStateCount(2u) //
@@ -95,7 +74,7 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 		.setFront({}) // Optional
 		.setBack({}); // Optional
 
-	vk::GraphicsPipelineCreateInfo pipelineInfo{}; /// AUTO
+	vk::GraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo
 		.setStageCount(static_cast<uint32>(shaderStages.size())) //
 		.setPStages(shaderStages.data())
