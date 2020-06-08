@@ -148,8 +148,8 @@ void Image::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Imag
 	// image formats for one that does support linear blitting, or you could implement the mipmap generation in
 	// software with a library like stb_image_resize. Each mip level can then be loaded into the image in the same
 	// way that you loaded the original image. It should be noted that it is uncommon in practice to generate the
-	// mipmap levels at runtime anyway. Usually they are pregenerated and stored in the texture file alongside the base
-	// level to improve loading speed.
+	// mipmap levels at runtime anyway. Usually they are pregenerated and stored in the texture file alongside the
+	// base level to improve loading speed.
 	CLOG_ABORT(!(formatProperties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear),
 		"Image format does not support linear blitting!");
 
@@ -158,88 +158,92 @@ void Image::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Imag
 
 	Device->graphicsCmdBuffer.begin(beginInfo);
 
-	vk::ImageMemoryBarrier barrier{};
-	barrier
-		.setImage(m_handle.get()) //
-		.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-		.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
-	barrier.subresourceRange
-		.setAspectMask(GetAspectMask(m_imageInfo)) //
-		.setBaseArrayLayer(0u)
-		.setLayerCount(1u)
-		.setLevelCount(1u);
+	for (uint32 layer = 0u; layer < m_imageInfo.arrayLayers; ++layer) {
 
-	int32 mipWidth = m_imageInfo.extent.width;
-	int32 mipHeight = m_imageInfo.extent.height;
+		vk::ImageMemoryBarrier barrier{};
+		barrier
+			.setImage(m_handle.get()) //
+			.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+			.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+		barrier.subresourceRange
+			.setAspectMask(GetAspectMask(m_imageInfo)) //
+			.setBaseArrayLayer(layer)
+			.setLayerCount(1u)
+			.setLevelCount(1u);
 
-	auto intermediateLayout = vk::ImageLayout::eTransferSrcOptimal;
+		int32 mipWidth = m_imageInfo.extent.width;
+		int32 mipHeight = m_imageInfo.extent.height;
 
-	vk::PipelineStageFlags oldStage = GetPipelineStage(oldLayout);
-	vk::PipelineStageFlags intermediateStage = GetPipelineStage(intermediateLayout);
-	vk::PipelineStageFlags finalStage = GetPipelineStage(finalLayout);
+		auto intermediateLayout = vk::ImageLayout::eTransferSrcOptimal;
 
-	for (uint32 i = 1; i < m_imageInfo.mipLevels; i++) {
-		barrier.subresourceRange.setBaseMipLevel(i - 1);
+		vk::PipelineStageFlags oldStage = GetPipelineStage(oldLayout);
+		vk::PipelineStageFlags intermediateStage = GetPipelineStage(intermediateLayout);
+		vk::PipelineStageFlags finalStage = GetPipelineStage(finalLayout);
+
+		for (uint32 i = 1; i < m_imageInfo.mipLevels; i++) {
+			barrier.subresourceRange.setBaseMipLevel(i - 1);
+
+			barrier
+				.setOldLayout(oldLayout) //
+				.setNewLayout(intermediateLayout)
+				.setSrcAccessMask(GetAccessMask(oldLayout))
+				.setDstAccessMask(GetAccessMask(intermediateLayout));
+
+			// old to intermediate
+			Device->graphicsCmdBuffer.pipelineBarrier(
+				oldStage, intermediateStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+
+			vk::ImageBlit blit{};
+			blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
+			blit.srcOffsets[1] = vk::Offset3D{ mipWidth, mipHeight, 1 };
+			blit.srcSubresource
+				.setAspectMask(GetAspectMask(m_imageInfo)) //
+				.setMipLevel(i - 1)
+				.setBaseArrayLayer(layer)
+				.setLayerCount(1u);
+			blit.dstOffsets[0] = vk::Offset3D{ 0, 0, 0 };
+			blit.dstOffsets[1] = vk::Offset3D{ mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
+			blit.dstSubresource
+				.setAspectMask(GetAspectMask(m_imageInfo)) //
+				.setMipLevel(i)
+				.setBaseArrayLayer(layer)
+				.setLayerCount(1u);
+
+			Device->graphicsCmdBuffer.blitImage(
+				m_handle.get(), intermediateLayout, m_handle.get(), oldLayout, 1, &blit, vk::Filter::eLinear);
+
+			barrier
+				.setOldLayout(intermediateLayout) //
+				.setNewLayout(finalLayout)
+				.setSrcAccessMask(GetAccessMask(intermediateLayout))
+				.setDstAccessMask(GetAccessMask(finalLayout));
+
+
+			// intermediate to final
+			Device->graphicsCmdBuffer.pipelineBarrier(
+				intermediateStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+
+			if (mipWidth > 1)
+				mipWidth /= 2;
+			if (mipHeight > 1)
+				mipHeight /= 2;
+		}
+
+		// barier for final mip
+		barrier.subresourceRange.setBaseMipLevel(m_imageInfo.mipLevels - 1);
 
 		barrier
 			.setOldLayout(oldLayout) //
-			.setNewLayout(intermediateLayout)
-			.setSrcAccessMask(GetAccessMask(oldLayout))
-			.setDstAccessMask(GetAccessMask(intermediateLayout));
-
-		// old to intermediate
-		Device->graphicsCmdBuffer.pipelineBarrier(
-			oldStage, intermediateStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
-
-		vk::ImageBlit blit{};
-		blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
-		blit.srcOffsets[1] = vk::Offset3D{ mipWidth, mipHeight, 1 };
-		blit.srcSubresource
-			.setAspectMask(GetAspectMask(m_imageInfo)) //
-			.setMipLevel(i - 1)
-			.setBaseArrayLayer(0u)
-			.setLayerCount(1u);
-		blit.dstOffsets[0] = vk::Offset3D{ 0, 0, 0 };
-		blit.dstOffsets[1] = vk::Offset3D{ mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
-		blit.dstSubresource
-			.setAspectMask(GetAspectMask(m_imageInfo)) //
-			.setMipLevel(i)
-			.setBaseArrayLayer(0u)
-			.setLayerCount(1u);
-
-		Device->graphicsCmdBuffer.blitImage(
-			m_handle.get(), intermediateLayout, m_handle.get(), oldLayout, 1, &blit, vk::Filter::eLinear);
-
-		barrier
-			.setOldLayout(intermediateLayout) //
 			.setNewLayout(finalLayout)
-			.setSrcAccessMask(GetAccessMask(intermediateLayout))
+			.setSrcAccessMask(GetAccessMask(oldLayout))
 			.setDstAccessMask(GetAccessMask(finalLayout));
 
-
-		// intermediate to final
 		Device->graphicsCmdBuffer.pipelineBarrier(
-			intermediateStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
-
-		if (mipWidth > 1)
-			mipWidth /= 2;
-		if (mipHeight > 1)
-			mipHeight /= 2;
+			oldStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 	}
 
-	// barier for final mip
-	barrier.subresourceRange.setBaseMipLevel(m_imageInfo.mipLevels - 1);
-
-	barrier
-		.setOldLayout(oldLayout) //
-		.setNewLayout(finalLayout)
-		.setSrcAccessMask(GetAccessMask(oldLayout))
-		.setDstAccessMask(GetAccessMask(finalLayout));
-
-	Device->graphicsCmdBuffer.pipelineBarrier(
-		oldStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
-
 	Device->graphicsCmdBuffer.end();
+
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo.setCommandBufferCount(1u);

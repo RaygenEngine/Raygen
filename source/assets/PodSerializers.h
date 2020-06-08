@@ -30,7 +30,7 @@ void AdditionalSerializeSave(Archive& ar, PodType* pod)
 template<typename Archive>
 void AdditionalSerializeBoth(Archive& ar, Image* pod)
 {
-	ar(pod->data);
+	ar(pod->data, pod->mipData);
 }
 
 //

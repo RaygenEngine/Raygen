@@ -1,9 +1,6 @@
 #include "pch.h"
 #include "Device.h"
 
-#include "assets/util/SpirvCompiler.h"
-#include "engine/Logger.h"
-
 #include <set>
 
 namespace vl {

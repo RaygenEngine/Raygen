@@ -11,7 +11,8 @@ struct EnvironmentMap::Gpu : public vl::GpuAssetTemplate<EnvironmentMap> {
 	vl::GpuHandle<::Cubemap> skybox;
 	vl::GpuHandle<::Cubemap> irradiance;
 	vl::GpuHandle<::Cubemap> prefiltered;
-	vl::GpuHandle<::Cubemap> brdfLut;
+	// TODO: this should only be loaded once and shared across all environment maps
+	vl::GpuHandle<::Image> brdfLut;
 
 	vk::DescriptorSet descriptorSet;
 

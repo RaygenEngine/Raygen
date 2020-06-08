@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "Swapchain.h"
 
-#include "engine/Engine.h"
-#include "engine/Logger.h"
 #include "platform/Platform.h"
 #include "rendering/Device.h"
 
@@ -45,7 +43,7 @@ vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
 		int32 width;
 		glfwGetWindowSize(Platform::GetMainHandle(), &width, &height);
 
-		VkExtent2D actualExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
+		vk::Extent2D actualExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
 
 		actualExtent.width = std::max(
 			capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
@@ -60,17 +58,16 @@ vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
 namespace vl {
 Swapchain_::Swapchain_(vk::SurfaceKHR surface)
 {
-	auto pd = Device->pd;
-
-	auto details = pd->GetSwapchainSupportDetails();
+	auto details = Device->pd->GetSwapchainSupportDetails();
 
 	vk::SurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(details.formats);
 	vk::PresentModeKHR presentMode = ChooseSwapPresentMode(details.presentModes);
 	m_extent = ChooseSwapExtent(details.capabilities);
+	m_imageFormat = surfaceFormat.format;
 
 	uint32 imageCount = details.capabilities.minImageCount;
 
-	if (details.capabilities.maxImageCount > 0 && imageCount > details.capabilities.maxImageCount) {
+	if (details.capabilities.maxImageCount > 0u && imageCount > details.capabilities.maxImageCount) {
 		imageCount = details.capabilities.maxImageCount;
 	}
 
@@ -78,7 +75,6 @@ Swapchain_::Swapchain_(vk::SurfaceKHR surface)
 	createInfo
 		.setSurface(surface) //
 		.setMinImageCount(imageCount)
-
 		.setImageFormat(surfaceFormat.format)
 		.setImageColorSpace(surfaceFormat.colorSpace)
 		.setImageExtent(m_extent)
@@ -109,33 +105,11 @@ Swapchain_::Swapchain_(vk::SurfaceKHR surface)
 		.setClipped(VK_TRUE)
 		.setOldSwapchain(nullptr);
 
-
 	m_handle = Device->createSwapchainKHRUnique(createInfo);
 	m_images = Device->getSwapchainImagesKHR(m_handle.get());
 
-	// Store swap chain image format and extent
-	m_imageFormat = surfaceFormat.format;
-
-
-	// views
-	for (const auto& img : m_images) {
-
-		vk::ImageViewCreateInfo viewInfo{};
-		viewInfo
-			.setImage(img) //
-			.setViewType(vk::ImageViewType::e2D)
-			.setFormat(m_imageFormat);
-		viewInfo.subresourceRange
-			.setAspectMask(vk::ImageAspectFlagBits::eColor) //
-			.setBaseMipLevel(0u)
-			.setLevelCount(1u)
-			.setBaseArrayLayer(0u)
-			.setLayerCount(1u);
-
-		m_imageViews.emplace_back(Device->createImageViewUnique(viewInfo));
-	}
-
 	InitRenderPass();
+	InitImageViews();
 	InitFrameBuffers();
 }
 
@@ -152,7 +126,6 @@ void Swapchain_::InitRenderPass()
 		.setInitialLayout(vk::ImageLayout::eUndefined)
 		.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
 
-
 	vk::AttachmentReference colorAttachmentRef{};
 	colorAttachmentRef
 		.setAttachment(0u) //
@@ -161,7 +134,7 @@ void Swapchain_::InitRenderPass()
 	vk::SubpassDescription subpass{};
 	subpass
 		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachmentCount(1)
+		.setColorAttachmentCount(1u)
 		.setPColorAttachments(&colorAttachmentRef);
 
 	vk::SubpassDependency dependency{};
@@ -173,11 +146,10 @@ void Swapchain_::InitRenderPass()
 		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
 		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
 
-	std::array attachments{ colorAttachment };
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
-		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
-		.setPAttachments(attachments.data())
+		.setAttachmentCount(1u) //
+		.setPAttachments(&colorAttachment)
 		.setSubpassCount(1u)
 		.setPSubpasses(&subpass)
 		.setDependencyCount(1u)
@@ -186,18 +158,38 @@ void Swapchain_::InitRenderPass()
 	m_renderPass = Device->createRenderPassUnique(renderPassInfo);
 }
 
+void Swapchain_::InitImageViews()
+{
+	for (const auto& img : m_images) {
+
+		vk::ImageViewCreateInfo viewInfo{};
+		viewInfo
+			.setImage(img) //
+			.setViewType(vk::ImageViewType::e2D)
+			.setFormat(m_imageFormat);
+		viewInfo.subresourceRange
+			.setAspectMask(vk::ImageAspectFlagBits::eColor) //
+			.setBaseMipLevel(0u)
+			.setLevelCount(1u)
+			.setBaseArrayLayer(0u)
+			.setLayerCount(1u);
+
+		m_imageViews.emplace_back(Device->createImageViewUnique(viewInfo));
+	}
+}
+
 void Swapchain_::InitFrameBuffers()
 {
 	m_framebuffers.clear();
 	m_framebuffers.resize(m_images.size());
-	// framebuffers
+
 	for (auto i = 0; i < m_images.size(); ++i) {
-		std::array attachments{ m_imageViews[i].get() };
+
 		vk::FramebufferCreateInfo createInfo{};
 		createInfo
 			.setRenderPass(m_renderPass.get()) //
-			.setAttachmentCount(static_cast<uint32>(attachments.size()))
-			.setPAttachments(attachments.data())
+			.setAttachmentCount(1u)
+			.setPAttachments(&m_imageViews[i].get())
 			.setWidth(m_extent.width)
 			.setHeight(m_extent.height)
 			.setLayers(1u);

@@ -160,7 +160,7 @@ Instance_::Instance_(std::vector<const char*> requiredExtensions, GLFWwindow* wi
 	for (const auto dH : deviceHandles) {
 		auto pd = std::make_unique<RPhysicalDevice>(dH, surface);
 		// if capable
-		if (pd->rating > 0) {
+		if (pd->rating > 0.f) {
 			capablePhysicalDevices.push_back(std::move(pd));
 		}
 	}
