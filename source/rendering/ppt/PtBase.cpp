@@ -8,7 +8,7 @@
 namespace vl {
 
 void PtBase_SinglePipeline::Utl_CreatePipeline(
-	GpuAsset<Shader>& shader, vk::PipelineColorBlendStateCreateInfo colorBlending)
+	GpuAsset<Shader>& shader, vk::PipelineColorBlendStateCreateInfo colorBlending, uint32 subpassIndex)
 {
 	std::vector shaderStages = shader.shaderStages;
 
@@ -89,7 +89,7 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 		.setLayout(m_pipelineLayout.get())
 		// WIP:
 		.setRenderPass(Renderer->m_ptRenderpass.get())
-		.setSubpass(0u)
+		.setSubpass(subpassIndex)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 

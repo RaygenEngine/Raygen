@@ -8,6 +8,7 @@
 #include "rendering/Instance.h"
 #include "rendering/Swapchain.h"
 #include "rendering/VulkanUtl.h"
+#include "rendering/ppt/techniques/PtDebug.h"
 #include "universe/nodes/camera/CameraNode.h"
 
 
@@ -64,30 +65,75 @@ Renderer_::Renderer_()
 		.setAttachment(0u) //
 		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
 
-	vk::SubpassDescription subpass{};
-	subpass
+
+	vk::AttachmentDescription colorAttachmentDesc2{};
+	vk::AttachmentReference colorAttachmentRef2{};
+
+	colorAttachmentDesc2.setFormat(vk::Format::eR32G32B32A32Sfloat)
+		.setSamples(vk::SampleCountFlagBits::e1)
+		.setLoadOp(vk::AttachmentLoadOp::eClear)
+		.setStoreOp(vk::AttachmentStoreOp::eStore)
+		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+		.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal)
+		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+
+	colorAttachmentRef2
+		.setAttachment(1u) //
+		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+
+	vk::SubpassDescription lightSubpass{};
+	lightSubpass
 		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
 		.setColorAttachmentCount(1u)
 		.setPColorAttachments(&colorAttachmentRef)
 		.setPDepthStencilAttachment(nullptr);
 
-	vk::SubpassDependency dependency{};
-	dependency
+	vk::SubpassDependency lightDep{};
+	lightDep
 		.setSrcSubpass(VK_SUBPASS_EXTERNAL) //
 		.setDstSubpass(0u)
 		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setSrcAccessMask(vk::AccessFlags(0)) // 0
 		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
+		.setSrcAccessMask(vk::AccessFlagBits::eMemoryRead)
+		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
+		.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
+
+
+	vk::SubpassDescription debugSupass{};
+	debugSupass
+		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
+		.setColorAttachmentCount(1u)
+		.setInputAttachmentCount(1u)
+		.setPInputAttachments(&colorAttachmentRef)
+		.setPColorAttachments(&colorAttachmentRef2)
+		.setPDepthStencilAttachment(nullptr);
+
+
+	vk::SubpassDependency debugDep{};
+	debugDep
+		.setSrcSubpass(0u) //
+		.setDstSubpass(1u)
+		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+		.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
+		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
+		.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
+
+	std::array subpasses{ lightSubpass, debugSupass };
+	std::array dependcies{ lightDep, debugDep };
+	std::array attachments{ colorAttachmentDesc, colorAttachmentDesc2 };
+
 
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
-		.setAttachmentCount(1u) //
-		.setPAttachments(&colorAttachmentDesc)
-		.setSubpassCount(1u)
-		.setPSubpasses(&subpass)
-		.setDependencyCount(1u)
-		.setPDependencies(&dependency);
+		.setAttachmentCount(attachments.size()) //
+		.setPAttachments(attachments.data())
+		.setSubpassCount(subpasses.size())
+		.setPSubpasses(subpasses.data())
+		.setDependencyCount(dependcies.size())
+		.setPDependencies(dependcies.data());
 
 	m_ptRenderpass = Device->createRenderPassUnique(renderPassInfo);
 
@@ -186,9 +232,15 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 
 		vk::ClearValue clearValue{};
 		clearValue.setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+
+		vk::ClearValue clearValue2{};
+		clearValue2.setColor(std::array{ 0.2f, 0.2f, 0.0f, 1.0f });
+
+		std::array cv{ clearValue, clearValue2 };
+
 		renderPassInfo
-			.setClearValueCount(1u) //
-			.setPClearValues(&clearValue);
+			.setClearValueCount(cv.size()) //
+			.setPClearValues(cv.data());
 
 		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{
@@ -256,6 +308,13 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer)
 		vk::PipelineStageFlags destinationStage = GetPipelineStage(vk::ImageLayout::eColorAttachmentOptimal);
 		cmdBuffer->pipelineBarrier(
 			sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+
+		auto barrier2 = m_attachments2[currentFrame]->CreateTransitionBarrier(
+			vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
+		vk::PipelineStageFlags sourceStage2 = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);
+		vk::PipelineStageFlags destinationStage2 = GetPipelineStage(vk::ImageLayout::eColorAttachmentOptimal);
+		cmdBuffer->pipelineBarrier(
+			sourceStage2, destinationStage2, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier2 });
 	}
 	cmdBuffer->end();
 }
@@ -279,10 +338,19 @@ void Renderer_::OnViewportResize()
 		for (uint32 i = 0; i < 3; ++i) {
 			m_attachments[i] = std::make_unique<ImageAttachment>("rgba32", fbSize.width, fbSize.height,
 				vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
-				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
+				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled
+					| vk::ImageUsageFlagBits::eInputAttachment,
 				vk::MemoryPropertyFlagBits::eDeviceLocal, true);
 
 			m_attachments[i]->BlockingTransitionToLayout(
+				vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+
+			m_attachments2[i] = std::make_unique<ImageAttachment>("rgba32", fbSize.width, fbSize.height,
+				vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
+				vk::MemoryPropertyFlagBits::eDeviceLocal, true);
+
+			m_attachments2[i]->BlockingTransitionToLayout(
 				vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
 			// descSets
@@ -291,7 +359,7 @@ void Renderer_::OnViewportResize()
 			vk::DescriptorImageInfo imageInfo{};
 			imageInfo
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(m_attachments[i]->GetView())
+				.setImageView(m_attachments2[i]->GetView())
 				.setSampler(quadSampler);
 
 			vk::WriteDescriptorSet descriptorWrite{};
@@ -307,12 +375,37 @@ void Renderer_::OnViewportResize()
 
 			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 
+
+			PtDebug::descSet[i] = PtDebug::descLayout.GetDescriptorSet();
+
+
+			vk::DescriptorImageInfo imageInfo2{};
+			imageInfo2
+				.setImageLayout(vk::ImageLayout::eColorAttachmentOptimal) //
+				.setImageView(Renderer->m_attachments[i]->GetView());
+			//	.setSampler(VK_NULL_HANDLE);
+
+			vk::WriteDescriptorSet descriptorWrite2{};
+			descriptorWrite2
+				.setDstSet(PtDebug::descSet[i]) //
+				.setDstBinding(0)
+				.setDstArrayElement(0u)
+				.setDescriptorType(vk::DescriptorType::eInputAttachment)
+				.setDescriptorCount(1u)
+				.setPBufferInfo(nullptr)
+				.setPImageInfo(&imageInfo2)
+				.setPTexelBufferView(nullptr);
+
+			Device->updateDescriptorSets(1u, &descriptorWrite2, 0u, nullptr);
+
+
+			std::array attch{ m_attachments[i]->GetView(), m_attachments2[i]->GetView() };
 			// framebuffer
 			vk::FramebufferCreateInfo createInfo{};
 			createInfo
 				.setRenderPass(m_ptRenderpass.get()) //
-				.setAttachmentCount(1u)
-				.setPAttachments(&m_attachments[i]->GetView())
+				.setAttachmentCount(attch.size())
+				.setPAttachments(attch.data())
 				.setWidth(fbSize.width)
 				.setHeight(fbSize.height)
 				.setLayers(1u);
