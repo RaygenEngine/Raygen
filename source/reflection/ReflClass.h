@@ -215,28 +215,34 @@ public:
 
 class RuntimeClass : public ReflClass {
 public:
-	RuntimeClass(size_t size)
-		: m_sizeInBytes(size)
-	{
-	}
-
 	// UnqiuePtr avoids small string optimisation string that gets mov'ed when resizing.
 	// CHECK:
 	std::vector<UniquePtr<std::string>> m_varnameBank;
 
 protected:
-	size_t m_sizeInBytes;
+	size_t m_sizeInBytes{};
 
 public:
 	// Returns the sizei nbytes of this dynamic class
 	size_t GetSize() const { return m_sizeInBytes; }
 
-
+	// Add a property to a runtime class.
+	// CHECK: Ignores padding for offsets
 	template<typename T>
-	Property& AddProperty(size_t offset_of, const std::string& varname, PropertyFlags::Type flags)
+	Property& AddProperty(const std::string& varname, PropertyFlags::Type flags = {})
 	{
 		// Owningly store the const char* data to avoid hard to find bugs later. Better safe than sorry
 		auto& ref = m_varnameBank.emplace_back(std::make_unique<std::string>(varname));
-		return ReflClass::AddProperty<T>(offset_of, ref->c_str(), flags);
+		size_t offset = m_sizeInBytes;
+		m_sizeInBytes += sizeof(T);
+		return ReflClass::AddProperty<T>(offset, ref->c_str(), flags);
+	}
+
+	// Clears all properties (to allow regeneration)
+	void ResetProperties()
+	{
+		m_varnameBank.clear();
+		m_properties.clear();
+		m_hashTable.clear();
 	}
 };

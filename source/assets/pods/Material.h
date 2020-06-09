@@ -2,83 +2,32 @@
 #include "assets/pods/Sampler.h"
 #include "reflection/GenMacros.h"
 #include "assets/pods/ShaderStage.h"
+#include "assets/util/SpirvCompiler.h"
 
 
-struct UboMember {
-	std::string name;
+// Holds the representantion for a runtime generated descriptor set.
+// This is ONLY the representation (layout) (ie the variables/samplers info) and not an actual descriptor set.
+// Redesigned to be usable everywhere.
+// Currently supports samplers2D and a single UBO struct with vec4, float, ints
+// The struct includes a RuntimeClass object for the ubo  which uses the engine's underlying reflection system. This
+// allows us to use refltools and other utilities that act on "ReflClass" on the ubo data.
+struct DynamicDescriptorSetLayout {
+	std::vector<std::string> samplers2d; // names of the samplers from binding = 1 to N
+	RuntimeClass uboClass;
+	std::string uboName{ "ubo" };
 
-	// The type of the Ubo Member
-	enum class Type // Can be extended for matrices later
+	[[nodiscard]] size_t SizeOfUbo() const // TODO: Test padding
 	{
-		Int,
-		Float,
-		Vec3,
-		Vec4,
-	} type;
-
-	size_t SizeOf() const
-	{
-		switch (type) {
-			case Type::Int: return sizeof(int32);
-			case Type::Float: return sizeof(float);
-			case Type::Vec3: return sizeof(glm::vec3);
-			case Type::Vec4: return sizeof(glm::vec4);
-		};
-		return 0;
+		return uboClass.GetSize();
 	}
 };
 
-struct MaterialParamsArchetype {
-	// Archetype assumes the following shader format:
-	// set is a predefined set for all generated materials (depends on global ubos etc, probably we want to use set=1)
-	// bindings inside the set are: 0 the singular UBO we will use for this material
-	//		(single ubo keeps this simple, can be extended later)
-	// bindings [1, samplers.count()] for each sampler2D. (nothing else currently supported for custom materials)
+struct DynamicDescriptorSet {
+	std::vector<PodHandle<Image>> samplers2d;
+	std::vector<byte> uboData;
 
-	// This struct stores the ubo struct archetype and all the samplers
-
-	// Currently uboData does NO automatic editing. We should later expose an automated UBO data with specific stuff
-	// (eg: ObjectPosition) that procedurally autofills.
-
-	std::vector<std::string> samplers2d; // names of the samplers from binding = 1 to N
-	std::vector<UboMember> uboMembers;
-
-	size_t SizeOfUbo() // TODO: Test padding
-	{
-		size_t size = 0;
-		for (auto& member : uboMembers) {
-			size += member.SizeOf();
-		}
-		return size;
-	}
-
-	std::unique_ptr<RuntimeClass> GenerateClass()
-	{
-		std::unique_ptr<RuntimeClass> cl = std::make_unique<RuntimeClass>(SizeOfUbo());
-
-		// As with this whole dynamic system, we assume everything will align properly between gpu-cpu memory.
-		// This is what the vulkan api does on its own anyway.
-		// The behavior is probably platform dependant.
-		size_t currentOffset = 0;
-		for (auto& member : uboMembers) {
-			switch (member.type) {
-				case UboMember::Type::Int: cl->AddProperty<int32>(currentOffset, member.name, {}); break;
-				case UboMember::Type::Float: cl->AddProperty<float>(currentOffset, member.name, {}); break;
-				case UboMember::Type::Vec3:
-					cl->AddProperty<glm ::vec3>(currentOffset, member.name, PropertyFlags::Color);
-					break;
-				case UboMember::Type::Vec4:
-					cl->AddProperty<glm ::vec4>(currentOffset, member.name, PropertyFlags::Color);
-					break;
-			}
-			currentOffset += member.SizeOf();
-		}
-		CLOG_WARN(cl->GetSize() != currentOffset,
-			"Generate Class did not match assumed written size: Initial: {} / Written: {}", cl->GetSize(),
-			currentOffset);
-
-		return std::move(cl);
-	}
+	// Attempts to "preserve" as much data as possible
+	void SwapLayout(const DynamicDescriptorSetLayout& oldLayout, const DynamicDescriptorSetLayout& newLayout);
 };
 
 
@@ -88,19 +37,22 @@ struct MaterialArchetype : AssetPod {
 	{
 		REFLECT_ICON(FA_ALIGN_CENTER);
 		REFLECT_VAR(instances, PropertyFlags::NoEdit, PropertyFlags::NoCopy);
-		REFLECT_VAR(code, PropertyFlags::NoEdit, PropertyFlags::NoCopy);
 	}
 
-	std::string code;
-	std::vector<uint32> binary;
+	std::string gbufferFragMain;
+	std::vector<uint32> gbufferFragBinary;
+
 
 	std::vector<PodHandle<MaterialInstance>> instances;
 
-	MaterialParamsArchetype parameters;
+	// Active is the one used in gpu assets
+	DynamicDescriptorSetLayout descriptorSetLayout;
 
-	void OnShaderUpdated();
+	// Propagates the editable Descriptor Set Layout to active Layout
+	void ChangeLayout(DynamicDescriptorSetLayout&& newLayout);
 
-	std::unique_ptr<RuntimeClass> classDescr{};
+	// Returns whether the compilation was successful. Uses the editable descriptor set layout
+	bool GenerateGBufferFrag(const DynamicDescriptorSetLayout& forLayout, TextCompilerErrors* outErrors = nullptr);
 };
 
 struct MaterialInstance : AssetPod {
@@ -109,16 +61,11 @@ struct MaterialInstance : AssetPod {
 	{
 		REFLECT_ICON(FA_JEDI);
 		REFLECT_VAR(archetype);
-		REFLECT_VAR(samplers2d);
 	}
 
 	PodHandle<MaterialArchetype> archetype;
 
-	std::vector<PodHandle<Image>> samplers2d;
-	std::vector<byte> uboData;
-
-	void RegenerateUbo(const RuntimeClass* oldClass, const RuntimeClass& newClass);
-	void RegenerateSamplers(std::vector<std::string>& oldSamplers, std::vector<std::string>& newSamplers);
+	DynamicDescriptorSet descriptorSet;
 };
 
 
