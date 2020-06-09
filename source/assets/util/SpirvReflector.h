@@ -6,6 +6,4 @@
 
 struct SpirvReflector {
 	static SpirvReflection Reflect(const std::vector<uint32>& code);
-
-	static MaterialParamsArchetype ReflectArchetype(const std::vector<uint32>& code);
 };

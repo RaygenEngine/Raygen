@@ -13,37 +13,149 @@
 #include <imguicolortextedit/TextEditor.h>
 
 namespace ed {
+
+namespace {
+	std::stringstream GetUniformText(const DynamicDescriptorSetLayout& layout)
+	{
+		std::stringstream uboText;
+
+		for (auto& prop : layout.uboClass.GetProperties()) {
+			if (prop.IsA<glm::vec4>()) {
+				if (prop.HasFlags(PropertyFlags::Color)) {
+					uboText << "col4 ";
+				}
+				else {
+					uboText << "vec4 ";
+				}
+			}
+			else {
+				uboText << prop.GetType().name() << " ";
+			}
+			uboText << prop.GetName() << ";\n";
+		}
+		uboText << "\n";
+
+		uboText << "ubo " << layout.uboName << ";\n\n";
+
+		for (auto& sampler : layout.samplers2d) {
+			uboText << "sampler2D " << sampler << ";\n";
+		}
+		return uboText;
+	}
+
+	// Returns true if the "compilation" was successful
+	bool ValidateUniforms(TextEditor& uniformEditor, DynamicDescriptorSetLayout& layout)
+	{
+		TextEditor::ErrorMarkers errors;
+
+		std::unordered_set<std::string, str::Hash> identifiers;
+		layout.samplers2d.clear();
+		layout.uboClass.ResetProperties();
+
+		for (uint32 lineNum = 0; auto& line : uniformEditor.GetTextLines()) {
+			lineNum++;
+			if (line.starts_with("//") || line.size() < 1) {
+				continue;
+			}
+
+			auto parts = str::split(line, " ;");
+			if (parts.size() < 2) {
+				errors.emplace(lineNum, "Expected format for each line is: 'type name;'");
+				continue;
+			}
+
+
+			if (*(parts[1].data() + parts[1].size()) != ';') {
+				errors.emplace(lineNum, "Expected a ';'");
+				continue;
+			}
+
+			// PERF: Do hashing on strview
+			std::string id = std::string(parts[1]);
+			if (identifiers.contains(id)) {
+				errors.emplace(lineNum, fmt::format("Duplicate identifier: {}.", id));
+				continue;
+			}
+
+			identifiers.insert(id);
+
+			if (str::equal(parts[0], "vec4")) {
+				layout.uboClass.AddProperty<glm::vec4>(id);
+			}
+			else if (str::equal(parts[0], "col4")) {
+				layout.uboClass.AddProperty<glm::vec4>(id, PropertyFlags::Color);
+			}
+			else if (str::equal(parts[0], "int")) {
+				layout.uboClass.AddProperty<int>(id);
+			}
+			else if (str::equal(parts[0], "float")) {
+				layout.uboClass.AddProperty<float>(id);
+			}
+			else if (str::equal(parts[0], "ubo")) {
+				layout.uboName = id;
+			}
+			else if (str::equal(parts[0], "sampler2d")) {
+				layout.samplers2d.push_back(id);
+			}
+			else {
+				errors.emplace(lineNum, "Unknown variable type.");
+				continue;
+			}
+		}
+		uniformEditor.SetErrorMarkers(errors);
+		return errors.size() == 0;
+	}
+} // namespace
+
+
 MaterialArchetypeEditorWindow::MaterialArchetypeEditorWindow(PodEntry* inEntry)
 	: AssetEditorWindowTemplate(inEntry)
 {
 
 	editor.reset(new GenericShaderEditor(
-		podHandle.Lock()->code, inEntry->path, [&]() { OnSave(); }, [&]() { OnCompile(); }));
+		podHandle.Lock()->gbufferFragMain, inEntry->path, [&]() { OnSave(); }, [&]() { OnCompile(); }));
+
+	uniformEditor.reset(new TextEditor());
+
+	uniformEditor->SetText(GetUniformText(podHandle.Lock()->descriptorSetLayout).str());
+	uniformEditor->SetColorizerEnable(true);
+	uniformEditor->SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
+	uniformEditor->SetShowWhitespaces(false);
 }
 
 void MaterialArchetypeEditorWindow::ImguiDraw()
 {
-	auto& uboMembers = podHandle.Lock()->parameters.uboMembers;
-	auto& samplers = podHandle.Lock()->parameters.samplers2d;
-
-
-	ImGui::Text(U8(FA_DATABASE u8" Descr Data (%d,%d) | "), samplers.size(), uboMembers.size());
-	if (ImGui::IsItemHovered()) {
-		ImGui::BeginTooltip();
-		ImGui::SetWindowFontScale(1);
-		ImGui::Text("Detected samplers and ubo Members:");
-
-		for (auto& sampler : samplers) {
-			ImGui::TextUnformatted(sampler.c_str());
+	if (ImGui::CollapsingHeader("Uniform Variables")) {
+		ImEd::BeginCodeFont();
+		uniformEditor->Render("UniformVariables", ImVec2(0, uniformEditor->GetTotalLines() * 18.f + 22.f));
+		ImEd::EndCodeFont();
+		if (uniformEditor->IsTextChanged()) {
+			ValidateUniforms(*uniformEditor, editingDescSet);
 		}
-
-		for (auto& mem : uboMembers) {
-			ImGui::Text(
-				"%d\t%s\t%s", mem.SizeOf(), std::string(GenMetaEnum(mem.type).GetValueStr()).c_str(), mem.name.c_str());
-		}
-		ImGui::EndTooltip();
 	}
-	ImGui::SameLine();
+
+
+	// auto& uboMembers = podHandle.Lock()->parameters.uboMembers;
+	// auto& samplers = podHandle.Lock()->parameters.samplers2d;
+
+
+	// ImGui::Text(U8(FA_DATABASE u8" Descr Data (%d,%d) | "), samplers.size(), uboMembers.size());
+	// if (ImGui::IsItemHovered()) {
+	//	ImGui::BeginTooltip();
+	//	ImGui::SetWindowFontScale(1);
+	//	ImGui::Text("Detected samplers and ubo Members:");
+
+	//	for (auto& sampler : samplers) {
+	//		ImGui::TextUnformatted(sampler.c_str());
+	//	}
+
+	//	for (auto& mem : uboMembers) {
+	//		ImGui::Text(
+	//			"%d\t%s\t%s", mem.SizeOf(), std::string(GenMetaEnum(mem.type).GetValueStr()).c_str(), mem.name.c_str());
+	//	}
+	//	ImGui::EndTooltip();
+	//}
+	// ImGui::SameLine();
 	editor->ImguiDraw();
 }
 
@@ -57,17 +169,36 @@ void MaterialArchetypeEditorWindow::OnCompile()
 {
 	PodEditor ed(podHandle);
 
-	ed.GetUpdateInfoRef().AddFlag("editor");
+	ed->gbufferFragMain = editor->editor->GetText();
 
-	ed->code = editor->editor->GetText();
+	if (!ValidateUniforms(*uniformEditor, editingDescSet)) {
+		editor->editor->SetErrorMarkers({ { 1, "Uniform Compilation Error." } });
+		return;
+	}
 
 	TextCompilerErrors errors;
-	auto result = ShaderCompiler::Compile(ed->code, ShaderStageType::Fragment, &errors);
-	if (result.size() > 0) {
-		ed->binary.swap(result);
-		ed->OnShaderUpdated();
+	bool result = ed->GenerateGBufferFrag(editingDescSet, &errors);
+
+	if (result) {
+		ed->ChangeLayout(std::move(editingDescSet));
+		editingDescSet = {};
+		editor->editor->SetErrorMarkers({});
+		return;
 	}
-	editor->editor->SetErrorMarkers(errors.errors);
+
+	std::map<int, std::string> additionalErrors;
+	for (auto& err : errors.errors) {
+		if (err.first >= 100000) {
+			additionalErrors.insert({ additionalErrors.size() + 1, err.second });
+		}
+	}
+
+	if (additionalErrors.size() > 0) {
+		editor->editor->SetErrorMarkers(additionalErrors);
+	}
+	else {
+		editor->editor->SetErrorMarkers(errors.errors);
+	}
 }
 
 
@@ -87,31 +218,28 @@ void MaterialInstanceEditorWindow::ImguiDraw()
 			it == arch->instances.end()) {
 			arch->instances.push_back(podHandle);
 		}
-		arch->OnShaderUpdated();
 	}
 
 	ImGui::Separator();
+	ImGui::Separator();
+	ImGui::Separator();
 
-	RuntimeClass* classDescription = material->archetype.Lock()->classDescr.get();
-	if (!classDescription) {
-		ImGui::Text("Generate the class of the archetype first.");
-		return;
-	}
+	const RuntimeClass& classDescription = material->archetype.Lock()->descriptorSetLayout.uboClass;
 
-	if (material->uboData.size() != classDescription->GetSize()) {
+	if (material->descriptorSet.uboData.size() != classDescription.GetSize()) {
 		ImGui::Text("Incorrect uboData size!");
 		return;
 	}
 
 	int32 i = 0;
-	for (auto& img : archetype->parameters.samplers2d) {
-		if (ImEd::AssetSlot(img.c_str(), material->samplers2d[i])) {
+	for (auto& img : archetype->descriptorSetLayout.samplers2d) {
+		if (ImEd::AssetSlot(img.c_str(), material->descriptorSet.samplers2d[i])) {
 			ed.MarkEdit();
 		}
 		++i;
 	}
 
-	if (GenericImguiDrawClass(material->uboData.data(), *classDescription)) {
+	if (GenericImguiDrawClass(material->descriptorSet.uboData.data(), classDescription)) {
 		ed.MarkEdit();
 	}
 }

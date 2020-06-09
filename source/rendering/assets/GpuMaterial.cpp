@@ -135,13 +135,13 @@ void Material::Gpu::wip_UpdateMat()
 	auto matInst = data->wip_InstanceOverride.Lock();
 	auto matArch = matInst->archetype.Lock();
 
-	if (matArch->binary.empty() || !matArch->classDescr) {
+	if (matArch->gbufferFragBinary.size() == 0) {
 		wip_CustomOverride = false;
 		return;
 	}
 
 	vk::ShaderModuleCreateInfo createInfo{};
-	createInfo.setCodeSize(matArch->binary.size() * 4).setPCode(matArch->binary.data());
+	createInfo.setCodeSize(matArch->gbufferFragBinary.size() * 4).setPCode(matArch->gbufferFragBinary.data());
 	wip_New.fragModule = vl::Device->createShaderModuleUnique(createInfo);
 
 
@@ -173,7 +173,7 @@ void Material::Gpu::wip_UpdateMat()
 		auto createDescLayout = [&]() {
 			wip_New.descLayout = std::make_unique<RDescriptorLayout>();
 			wip_New.descLayout->AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
-			for (uint32 i = 0; i < matArch->parameters.samplers2d.size(); ++i) {
+			for (uint32 i = 0; i < matArch->descriptorSetLayout.samplers2d.size(); ++i) {
 				wip_New.descLayout->AddBinding(
 					vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 			}
@@ -183,7 +183,7 @@ void Material::Gpu::wip_UpdateMat()
 		if (!wip_New.descLayout) {
 			createDescLayout();
 		}
-		else if (wip_New.descLayout->bindings.size() != matArch->parameters.samplers2d.size() + 1) {
+		else if (wip_New.descLayout->bindings.size() != matArch->descriptorSetLayout.samplers2d.size() + 1) {
 			createDescLayout();
 		}
 	}
@@ -220,13 +220,13 @@ void Material::Gpu::wip_UpdateMat()
 				= std::make_unique<vl::RBuffer>(sizeof(UBO_Material) * 4, vk::BufferUsageFlagBits::eUniformBuffer,
 					vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 		}
-		wip_New.uboBuf->UploadData(matInst->uboData);
+		wip_New.uboBuf->UploadData(matInst->descriptorSet.uboData);
 
 		vk::DescriptorBufferInfo bufferInfo{};
 		bufferInfo
 			.setBuffer(*wip_New.uboBuf) //
 			.setOffset(0u)
-			.setRange(matArch->classDescr->GetSize());
+			.setRange(matArch->descriptorSetLayout.SizeOfUbo());
 		vk::WriteDescriptorSet descriptorWrite{};
 
 		descriptorWrite
@@ -266,9 +266,9 @@ void Material::Gpu::wip_UpdateMat()
 		};
 
 
-		for (uint32 i = 0; i < matInst->samplers2d.size(); ++i) {
-			UpdateImageSamplerInDescriptorSet(
-				GpuAssetManager->GetDefaultSampler(), GpuAssetManager->GetGpuHandle(matInst->samplers2d[i]), i + 1);
+		for (uint32 i = 0; i < matInst->descriptorSet.samplers2d.size(); ++i) {
+			UpdateImageSamplerInDescriptorSet(GpuAssetManager->GetDefaultSampler(),
+				GpuAssetManager->GetGpuHandle(matInst->descriptorSet.samplers2d[i]), i + 1);
 		}
 	}
 	wip_CustomOverride = true;

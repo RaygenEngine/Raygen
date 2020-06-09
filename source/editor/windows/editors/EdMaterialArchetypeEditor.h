@@ -10,6 +10,9 @@ namespace ed {
 class MaterialArchetypeEditorWindow : public AssetEditorWindowTemplate<MaterialArchetype> {
 	UniquePtr<GenericShaderEditor> editor;
 
+	UniquePtr<TextEditor> uniformEditor;
+	DynamicDescriptorSetLayout editingDescSet;
+
 public:
 	MaterialArchetypeEditorWindow(PodEntry* inEntry);
 
