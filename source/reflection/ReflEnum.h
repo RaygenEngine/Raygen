@@ -151,16 +151,18 @@ public:
 	[[nodiscard]] const ReflEnum& GetEnum() const { return meta; }
 
 	// The value will only go through if it is a valid value for this enum.
-	void SetValue(under_t value)
+	bool SetValue(under_t value)
 	{
 		if (meta.valueToStr.find(value) != meta.valueToStr.end()) {
 			meta.setter(obj, value);
+			return true;
 		}
+		return false;
 	}
 
 	[[nodiscard]] under_t GetValue() const { return meta.getter(obj); }
 
-	// Gets the string of the enum value. Expects that
+	// Gets the string of the enum value. Expects that enum has a valid bit value.
 	[[nodiscard]] std::string_view GetValueStr() const
 	{
 		under_t value = meta.getter(obj);
@@ -168,13 +170,15 @@ public:
 	}
 
 	// Attempts to set the value by the string that matches the enum.
-	void SetValueByStr(const std::string& str) const
+	// Str must exactly match. Returns true if successfully changed.
+	bool SetValueByStr(const std::string& str) const
 	{
 		auto it = meta.strToValue.find(str);
 		if (it == meta.strToValue.end()) {
-			return;
+			return false;
 		}
 		meta.setter(obj, it->second);
+		return true;
 	}
 
 	// Safely gets a pointer to the enum object. (or nullptr if types don't match)

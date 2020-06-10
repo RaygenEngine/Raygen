@@ -37,4 +37,13 @@ inline bool fromStrView<bool>(std::string_view view)
 	std::istringstream(std::string(view)) >> std::boolalpha >> value;
 	return value;
 }
+
+// True when the view starts with ^[0-9]
+inline bool startsWithNum(std::string_view view)
+{
+	if (view.size() == 0) {
+		return false;
+	}
+	return (view[0] >= '0' && view[0] <= '9');
+}
 } // namespace str

@@ -4,6 +4,7 @@
 #include "engine/console/Console.h"
 #include "engine/Logger.h"
 #include "reflection/TypeId.h"
+#include "reflection/ReflEnum.h"
 
 #include <functional>
 #include <string>
@@ -48,6 +49,10 @@ struct ConsoleVariable : public ConsoleEntry {
 	[[nodiscard]] std::string GetDescriptionLine() const override
 	{
 		auto str = fmt::format("{}: [{}]", name, value);
+		if constexpr (std::is_enum_v<T>) {
+			MetaEnumInst enumInst = GenMetaEnum(value);
+			str = fmt::format("{}: [{} ({})]", name, enumInst.GetValueStr(), value);
+		}
 		if (tooltip[0] == '\0') {
 			return str;
 		}
@@ -65,13 +70,44 @@ struct ConsoleVariable : public ConsoleEntry {
 protected:
 	bool TryUpdateValue(std::string_view command)
 	{
-		auto vec = str::split(command);
-		if (vec.size() <= 1) {
-			LOG_REPORT("{}: {}", name, value);
-			return false;
+		if constexpr (std::is_enum_v<T>) {
+			MetaEnumInst enumInst = GenMetaEnum(value);
+
+			auto vec = str::split(command);
+			if (vec.size() <= 1) {
+				std::stringstream possibleValues;
+				for (auto& val : enumInst.GetEnum().GetValues()) {
+					possibleValues << "\t" << val.first << ": " << val.second << "\n";
+				}
+
+				LOG_REPORT("{}: {} ({})\n{}", name, enumInst.GetValueStr(), value, possibleValues.str());
+				return false;
+			}
+			if (str::startsWithNum(vec[1])) {
+				if (!enumInst.SetValue(str::fromStrView<std::underlying_type_t<T>>(vec[1]))) {
+					LOG_REPORT("Out of bounds value for enum {}.", mti::GetName<T>());
+					return false;
+				}
+			}
+			else {
+				if (!enumInst.SetValueByStr(std::string(vec[1]))) {
+					LOG_REPORT("Unknown string value for enum {}.", mti::GetName<T>());
+					return false;
+				}
+			}
+
+			LOG_REPORT("Console set {}: {} ({})", name, enumInst.GetValueStr(), value);
 		}
-		value = str::fromStrView<T>(vec[1]);
-		LOG_REPORT("Console set {}: {}", name, value);
+		else {
+			auto vec = str::split(command);
+			if (vec.size() <= 1) {
+				LOG_REPORT("{}: {}", name, value);
+				return false;
+			}
+			value = str::fromStrView<T>(vec[1]);
+			LOG_REPORT("Console set {}: {}", name, value);
+		}
+
 		return true;
 	}
 };
