@@ -124,13 +124,13 @@ void BrdfLutCalculation::MakePipeline()
 		.setScissorCount(1u)
 		.setPScissors(&scissor);
 
-	static ConsoleVariable<uint> fillmode{ "fillmode", 0 };
+	static ConsoleVariable<vk::PolygonMode> fillmode{ "brdfPolygonmode", vk::PolygonMode::eFill };
 
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer
 		.setDepthClampEnable(VK_FALSE) //
 		.setRasterizerDiscardEnable(VK_FALSE)
-		.setPolygonMode(static_cast<vk::PolygonMode>(fillmode.Get()))
+		.setPolygonMode(fillmode)
 		.setLineWidth(1.f)
 		.setCullMode(vk::CullModeFlagBits::eNone)
 		.setFrontFace(vk::FrontFace::eClockwise)
