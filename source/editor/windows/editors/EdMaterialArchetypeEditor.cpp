@@ -38,7 +38,7 @@ namespace {
 		uboText << "ubo " << layout.uboName << ";\n\n";
 
 		for (auto& sampler : layout.samplers2d) {
-			uboText << "sampler2D " << sampler << ";\n";
+			uboText << "sampler2d " << sampler << ";\n";
 		}
 		return uboText;
 	}
@@ -230,6 +230,12 @@ void MaterialInstanceEditorWindow::ImguiDraw()
 		ImGui::Text("Incorrect uboData size!");
 		return;
 	}
+
+	if (archetype->descriptorSetLayout.samplers2d.size() != material->descriptorSet.samplers2d.size()) {
+		ImGui::Text("Incorrect samplers count!");
+		return;
+	}
+
 
 	int32 i = 0;
 	for (auto& img : archetype->descriptorSetLayout.samplers2d) {

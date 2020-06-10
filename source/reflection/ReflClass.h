@@ -217,7 +217,7 @@ class RuntimeClass : public ReflClass {
 public:
 	// UnqiuePtr avoids small string optimisation string that gets mov'ed when resizing.
 	// CHECK:
-	std::vector<UniquePtr<std::string>> m_varnameBank;
+	std::vector<UniquePtr<std::string>> m_stringviewBank;
 
 protected:
 	size_t m_sizeInBytes{};
@@ -232,7 +232,7 @@ public:
 	Property& AddProperty(const std::string& varname, PropertyFlags::Type flags = {})
 	{
 		// Owningly store the const char* data to avoid hard to find bugs later. Better safe than sorry
-		auto& ref = m_varnameBank.emplace_back(std::make_unique<std::string>(varname));
+		auto& ref = m_stringviewBank.emplace_back(std::make_unique<std::string>(varname));
 		size_t offset = m_sizeInBytes;
 		m_sizeInBytes += sizeof(T);
 		return ReflClass::AddProperty<T>(offset, ref->c_str(), flags);
@@ -241,8 +241,47 @@ public:
 	// Clears all properties (to allow regeneration)
 	void ResetProperties()
 	{
-		m_varnameBank.clear();
+		m_stringviewBank.clear();
 		m_properties.clear();
 		m_hashTable.clear();
+	}
+
+	template<typename Archive>
+	void save(Archive& ar) const
+	{
+		std::vector<SerializedProperty> serializedProperties;
+		serializedProperties.reserve(m_properties.size());
+
+		for (auto& prop : m_properties) {
+			serializedProperties.emplace_back(prop.GenerateSerializedProperty());
+		}
+
+		ar(m_sizeInBytes, serializedProperties);
+	}
+
+	template<typename Archive>
+	void load(Archive& ar)
+	{
+		std::vector<SerializedProperty> serializedProperties;
+		ar(m_sizeInBytes, serializedProperties);
+
+		for (auto& prop : serializedProperties) {
+			DeserializeProperty(prop);
+		}
+	}
+
+
+protected:
+	//
+	void DeserializeProperty(const SerializedProperty& property)
+	{
+		auto& nameref = *m_stringviewBank.emplace_back(std::make_unique<std::string>(property.name));
+		auto& typenameRef = *m_stringviewBank.emplace_back(std::make_unique<std::string>(property.type));
+		size_t offset = property.offset_of;
+
+		size_t index = m_properties.size();
+
+		m_properties.push_back(Property(mti::TypeId(typenameRef), offset, nameref, property.flags));
+		m_hashTable[std::string(property.name)] = index;
 	}
 };

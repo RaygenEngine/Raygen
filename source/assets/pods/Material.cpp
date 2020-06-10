@@ -35,6 +35,7 @@ void DynamicDescriptorSet::SwapLayout(
 	if (uboData.size() < oldLayout.SizeOfUbo()) {
 		uboData.clear();
 		uboData.resize(newLayout.SizeOfUbo());
+		samplers2d.resize(newLayout.samplers2d.size());
 		return;
 	}
 
