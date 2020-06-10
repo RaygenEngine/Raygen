@@ -34,6 +34,22 @@ void AdditionalSerializeBoth(Archive& ar, Image* pod)
 }
 
 //
+// NewMaterials
+//
+template<typename Archive>
+void AdditionalSerializeBoth(Archive& ar, MaterialArchetype* pod)
+{
+	ar(pod->descriptorSetLayout, pod->gbufferFragBinary);
+}
+
+template<typename Archive>
+void AdditionalSerializeBoth(Archive& ar, MaterialInstance* pod)
+{
+	ar(pod->descriptorSet);
+}
+
+
+//
 // Mesh
 // Mesh pod requires a few additional struct serialization specializations
 // (Mesh, GeometryGroup, Vertex)

@@ -20,6 +20,12 @@ struct DynamicDescriptorSetLayout {
 	{
 		return uboClass.GetSize();
 	}
+
+	template<typename Archive>
+	void serialize(Archive& ar)
+	{
+		ar(samplers2d, uboName, uboClass);
+	}
 };
 
 struct DynamicDescriptorSet {
@@ -28,6 +34,12 @@ struct DynamicDescriptorSet {
 
 	// Attempts to "preserve" as much data as possible
 	void SwapLayout(const DynamicDescriptorSetLayout& oldLayout, const DynamicDescriptorSetLayout& newLayout);
+
+	template<typename Archive>
+	void serialize(Archive& ar)
+	{
+		ar(samplers2d, uboData);
+	}
 };
 
 
@@ -37,6 +49,7 @@ struct MaterialArchetype : AssetPod {
 	{
 		REFLECT_ICON(FA_ALIGN_CENTER);
 		REFLECT_VAR(instances, PropertyFlags::NoEdit, PropertyFlags::NoCopy);
+		REFLECT_VAR(gbufferFragMain, PropertyFlags::NoEdit, PropertyFlags::Multiline);
 	}
 
 	std::string gbufferFragMain;
@@ -59,7 +72,7 @@ struct MaterialInstance : AssetPod {
 
 	REFLECTED_POD(MaterialInstance)
 	{
-		REFLECT_ICON(FA_JEDI);
+		REFLECT_ICON(FA_BORDER_NONE);
 		REFLECT_VAR(archetype);
 	}
 

@@ -215,7 +215,6 @@ template<typename T>
 {
 	static const ReflEnum& meta = ReflEnum::GetMeta<std::remove_const_t<T>>();
 	if constexpr (std::is_const_v<T>) {
-		// static_assert(std::is_same_v<std::remove_const_t<T>, ShaderStageType>);
 		return meta.TieEnum(const_cast<std::remove_const_t<T>&>(obj));
 	}
 	else {
