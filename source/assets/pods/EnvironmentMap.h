@@ -19,6 +19,7 @@ struct EnvironmentMap : AssetPod {
 		REFLECT_VAR(brdfLut);
 	}
 
+
 	// TODO: TEMP: skybox - this will be part of the skymesh
 	PodHandle<::Cubemap> skybox;
 	// diffuse irradiance

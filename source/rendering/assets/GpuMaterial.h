@@ -47,19 +47,19 @@ struct Material::Gpu : public vl::GpuAssetTemplate<Material> {
 	void wip_UpdateMat();
 
 	vl::GpuHandle<Sampler> baseColorSampler;
-	vl::GpuHandle<Image> baseColorImage;
+	vl::GpuHandle<::Image> baseColorImage;
 
 	vl::GpuHandle<Sampler> metallicRoughnessSampler;
-	vl::GpuHandle<Image> metallicRoughnessImage;
+	vl::GpuHandle<::Image> metallicRoughnessImage;
 
 	vl::GpuHandle<Sampler> occlusionSampler;
-	vl::GpuHandle<Image> occlusionImage;
+	vl::GpuHandle<::Image> occlusionImage;
 
 	vl::GpuHandle<Sampler> normalSampler;
-	vl::GpuHandle<Image> normalImage;
+	vl::GpuHandle<::Image> normalImage;
 
 	vl::GpuHandle<Sampler> emissiveSampler;
-	vl::GpuHandle<Image> emissiveImage;
+	vl::GpuHandle<::Image> emissiveImage;
 
 	UBO_Material matData;
 

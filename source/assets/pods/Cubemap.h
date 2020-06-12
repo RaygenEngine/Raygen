@@ -1,11 +1,8 @@
 #pragma once
 #include "assets/AssetPod.h"
-#include "assets/PodHandle.h"
-#include "assets/pods/Image.h"
 #include "reflection/GenMacros.h"
 
-#include <array>
-
+#include "assets/pods/Image.h"
 
 // DOC: resolution = width = height of each face, same goes for format
 struct Cubemap : AssetPod {
@@ -27,20 +24,42 @@ struct Cubemap : AssetPod {
 
 		REFLECT_VAR(resolution, NoEdit);
 
+		REFLECT_VAR(mipCount, NoEdit);
+
 		REFLECT_VAR(format);
-		REFLECT_VAR(faces);
 	}
 
-	int32 resolution{ 1 };
+	// default cubemappod is 1x1/1mip/srgb-byte/white
+	int32 resolution{ 1 }; // width = height = resolution
 
-	ImageFormat format{ ImageFormat::Unorm };
+	int32 mipCount{ 1 };
 
-	std::vector<PodHandle<::Image>> faces{
-		PodHandle<::Image>(),
-		PodHandle<::Image>(),
-		PodHandle<::Image>(),
-		PodHandle<::Image>(),
-		PodHandle<::Image>(),
-		PodHandle<::Image>(),
+	ImageFormat format{ ImageFormat::Srgb };
+
+	std::vector<byte> data{
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
+		0xFF,
 	};
 };
