@@ -6,14 +6,29 @@
 class TextEditor;
 namespace ed {
 
+struct GenericShaderEditor {
 
-class ShaderStageEditorWindow : public AssetEditorWindowTemplate<ShaderStage> {
 	UniquePtr<TextEditor> editor;
-
-	std::string filepathCache;
 	bool needsSave{ false };
 	bool liveUpdates{ true };
 
+	GenericShaderEditor(const std::string& initialCode, const std::string& filepath, std::function<void()>&& onSaveCb,
+		std::function<void()> onUpdateCb);
+
+	std::function<void()> onSave;
+	std::function<void()> onUpdate;
+
+	std::string filepathTitle;
+
+	void ImguiDraw();
+};
+
+
+class ShaderStageEditorWindow : public AssetEditorWindowTemplate<ShaderStage> {
+
+	UniquePtr<GenericShaderEditor> editor;
+
+	std::string filepathCache;
 	void SaveInternal();
 
 	void UpdateForGpu();

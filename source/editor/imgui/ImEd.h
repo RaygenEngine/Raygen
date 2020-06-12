@@ -4,6 +4,7 @@
 #include "editor/imgui/ImguiUtil.h"
 #include "reflection/ReflClass.h"
 #include "reflection/ReflEnum.h"
+#include "assets/AssetRegistry.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -156,5 +157,6 @@ bool EnumDropDown(const char* label, T& enumval)
 
 	return edited;
 }
+
 
 } // namespace ImEd

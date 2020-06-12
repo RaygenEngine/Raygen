@@ -25,7 +25,10 @@ inline class Renderer_ : public Listener {
 	// The actual game viewport rectangle in m_swapchain coords
 	vk::Rect2D m_viewportRect{};
 
+public: // WIP:
 	GBufferPass m_gBufferPass;
+
+private:
 	ShadowmapPass m_shadowmapPass;
 	CopyHdrTexture m_copyHdrTexture;
 	WriteEditor m_writeEditor;
@@ -63,6 +66,7 @@ public:
 	// post process for hdr WIP: move those
 	std::array<vk::UniqueFramebuffer, 3> m_framebuffers;
 	std::array<UniquePtr<ImageAttachment>, 3> m_attachments;
+	std::array<UniquePtr<ImageAttachment>, 3> m_attachments2;
 	std::array<vk::DescriptorSet, 3> m_ppDescSets;
 	vk::UniqueRenderPass m_ptRenderpass;
 

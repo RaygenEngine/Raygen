@@ -1,6 +1,86 @@
 #pragma once
 #include "assets/pods/Sampler.h"
 #include "reflection/GenMacros.h"
+#include "assets/pods/ShaderStage.h"
+#include "assets/util/SpirvCompiler.h"
+
+
+// Holds the representantion for a runtime generated descriptor set.
+// This is ONLY the representation (layout) (ie the variables/samplers info) and not an actual descriptor set.
+// Redesigned to be usable everywhere.
+// Currently supports samplers2D and a single UBO struct with vec4, float, ints
+// The struct includes a RuntimeClass object for the ubo  which uses the engine's underlying reflection system. This
+// allows us to use refltools and other utilities that act on "ReflClass" on the ubo data.
+struct DynamicDescriptorSetLayout {
+	std::vector<std::string> samplers2d; // names of the samplers from binding = 1 to N
+	RuntimeClass uboClass;
+	std::string uboName{ "ubo" };
+
+	[[nodiscard]] size_t SizeOfUbo() const // TODO: Test padding
+	{
+		return uboClass.GetSize();
+	}
+
+	template<typename Archive>
+	void serialize(Archive& ar)
+	{
+		ar(samplers2d, uboName, uboClass);
+	}
+};
+
+struct DynamicDescriptorSet {
+	std::vector<PodHandle<Image>> samplers2d;
+	std::vector<byte> uboData;
+
+	// Attempts to "preserve" as much data as possible
+	void SwapLayout(const DynamicDescriptorSetLayout& oldLayout, const DynamicDescriptorSetLayout& newLayout);
+
+	template<typename Archive>
+	void serialize(Archive& ar)
+	{
+		ar(samplers2d, uboData);
+	}
+};
+
+
+// Generates a dynamic archetype for a material from a shader
+struct MaterialArchetype : AssetPod {
+	REFLECTED_POD(MaterialArchetype)
+	{
+		REFLECT_ICON(FA_ALIGN_CENTER);
+		REFLECT_VAR(instances, PropertyFlags::NoEdit, PropertyFlags::NoCopy);
+		REFLECT_VAR(gbufferFragMain, PropertyFlags::NoEdit, PropertyFlags::Multiline);
+	}
+
+	std::string gbufferFragMain;
+	std::vector<uint32> gbufferFragBinary;
+
+
+	std::vector<PodHandle<MaterialInstance>> instances;
+
+	// Active is the one used in gpu assets
+	DynamicDescriptorSetLayout descriptorSetLayout;
+
+	// Propagates the editable Descriptor Set Layout to active Layout
+	void ChangeLayout(DynamicDescriptorSetLayout&& newLayout);
+
+	// Returns whether the compilation was successful. Uses the editable descriptor set layout
+	bool GenerateGBufferFrag(const DynamicDescriptorSetLayout& forLayout, TextCompilerErrors* outErrors = nullptr);
+};
+
+struct MaterialInstance : AssetPod {
+
+	REFLECTED_POD(MaterialInstance)
+	{
+		REFLECT_ICON(FA_BORDER_NONE);
+		REFLECT_VAR(archetype);
+	}
+
+	PodHandle<MaterialArchetype> archetype;
+
+	DynamicDescriptorSet descriptorSet;
+};
+
 
 // This material is based on the glTF standard for materials (not all extensions included)
 // see -> https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#materials)
@@ -21,6 +101,8 @@ struct Material : AssetPod {
 	REFLECTED_POD(Material)
 	{
 		REFLECT_ICON(FA_SWATCHBOOK);
+
+		REFLECT_VAR(wip_InstanceOverride);
 
 		REFLECT_VAR(baseColorFactor, PropertyFlags::Color);
 		REFLECT_VAR(emissiveFactor, PropertyFlags::Color);
@@ -46,6 +128,9 @@ struct Material : AssetPod {
 		REFLECT_VAR(normalSampler, PropertyFlags::Advanced);
 		REFLECT_VAR(emissiveSampler, PropertyFlags::Advanced);
 	}
+
+	PodHandle<MaterialInstance> wip_InstanceOverride;
+
 
 	// The value for each property(baseColor, metallic, roughness) can be defined using factors or textures.
 

@@ -25,14 +25,18 @@ namespace detail {
 		static constexpr bool compareChar(char c1, char c2) noexcept
 		{
 			if constexpr (isInsensitive) {
-				return c1 == c2 || std::tolower(c1) == std::tolower(c2);
+				return c1 == c2
+					   || std::tolower(c1)
+							  == std::tolower(c2); // CHECK: Not constexpr. Use char 'math' to make this constexpr
 			}
 			return c1 == c2;
 		}
 
 		constexpr bool compare(std::string_view str1, std::string_view str2) const noexcept
 		{
-			return ((str1.size() == str2.size()) && std::equal(str1.begin(), str1.end(), str2.begin(), &compareChar));
+			return ((str1.size() == str2.size())
+					&& std::equal(str1.begin(), str1.end(), str2.begin(),
+						&compareChar)); // CHECK: needs c++20 for constexpr (no compiler support yet)
 		}
 	};
 

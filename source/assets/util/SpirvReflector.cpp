@@ -3,6 +3,7 @@
 
 #include "engine/Logger.h"
 #include "reflection/ReflEnum.h"
+#include "assets/AssetRegistry.h"
 
 #include <spirv-cross/spirv_cross.hpp>
 

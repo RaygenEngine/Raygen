@@ -40,6 +40,10 @@ private:
 	void MakePipeline(GBufferPass* passInfo);
 
 public:
+	vk::UniquePipeline wip_CreatePipeline(vk::PipelineLayout pipelineLayout, vk::RenderPass renderPass,
+		std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
+
+public:
 	GBuffer(GBufferPass* passInfo, uint32 width, uint32 height);
 
 	void TransitionForWrite(vk::CommandBuffer* cmdBuffer);
