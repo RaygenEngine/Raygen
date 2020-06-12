@@ -11,8 +11,11 @@ struct ShaderCompiler {
 	static std::vector<uint32> Compile(
 		const std::string& code, const std::string& shadername, TextCompilerErrors* outError = nullptr);
 
+	static std::vector<uint32> Compile(const std::string& code, ShaderStageType type, const std::string& shadername,
+		TextCompilerErrors* outError = nullptr);
+
 	static std::vector<uint32> Compile(
-		const std::string& code, ShaderStageType type, const std::string& shadername, TextCompilerErrors* outError);
+		const std::string& code, ShaderStageType type, TextCompilerErrors* outError = nullptr);
 };
 
 namespace shd {

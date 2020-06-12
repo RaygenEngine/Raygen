@@ -61,7 +61,7 @@ void RBuffer::UploadData(const void* data, size_t size)
 	Device->unmapMemory(m_memory.get());
 }
 
-void RBuffer::UploadData(const std::vector<byte> data)
+void RBuffer::UploadData(const std::vector<byte>& data)
 {
 	UploadData(data.data(), data.size());
 }

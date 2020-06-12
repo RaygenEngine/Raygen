@@ -277,6 +277,7 @@ void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const RDepthmap& dep
 			for (auto& gg : geom->model.Lock().geometryGroups) {
 				vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
 				vk::DeviceSize offsets[] = { 0 };
+
 				// geom
 				cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
 

@@ -3,6 +3,7 @@
 #include "rendering/assets/GpuAssetHandle.h"
 #include "rendering/assets/GpuImage.h"
 #include "rendering/assets/GpuSampler.h"
+#include "rendering/objects/RBuffer.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -21,6 +22,29 @@ struct UBO_Material {
 };
 
 struct Material::Gpu : public vl::GpuAssetTemplate<Material> {
+	bool wip_CustomOverride{ false };
+
+	struct wip_NewMaterialInstance {
+		vk::UniquePipelineLayout plLayout; // Should actually be in Archetype (later)
+		vk::UniquePipeline pipeline;
+
+		vk::DescriptorSet descSet;
+
+		UniquePtr<vl::RDescriptorLayout> descLayout;
+
+		UniquePtr<vl::RBuffer> uboBuf;
+
+		// struct uboBuf {
+		//	vk::DeviceSize m_size;
+		//	vk::UniqueBuffer m_handle;
+		//	vk::UniqueDeviceMemory m_memory;
+		//} uboBuf;
+
+		vk::UniqueShaderModule fragModule;
+
+	} wip_New;
+
+	void wip_UpdateMat();
 
 	vl::GpuHandle<Sampler> baseColorSampler;
 	vl::GpuHandle<Image> baseColorImage;

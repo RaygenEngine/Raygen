@@ -7,6 +7,9 @@
 class Node;
 
 namespace ed {
+
+bool GenericImguiDrawClass(void* object, const ReflClass& cl);
+
 struct ManipOperationMode {
 	enum class Operation
 	{

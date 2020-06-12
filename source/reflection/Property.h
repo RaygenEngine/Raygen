@@ -7,10 +7,24 @@
 
 #include <string_view>
 
+struct SerializedProperty {
+	std::string type;
+	std::string name;
+	PropertyFlags::Type flags;
+	size_t offset_of;
+
+	template<typename Archive>
+	void serialize(Archive& ar)
+	{
+		ar(type, name, flags, offset_of);
+	}
+};
+
 // a generic property that can be of any type.
 class Property {
 	// Only class that is allowed to "construct" properties.
 	friend class ReflClass;
+	friend class RuntimeClass;
 
 protected:
 	TypeId m_type;
@@ -48,6 +62,19 @@ protected:
 	{
 		static_assert(std::is_enum_v<Enum>, "Make enum expects an enum type");
 		m_enum = &ReflEnum::GetMeta<Enum>();
+	}
+
+public:
+	SerializedProperty GenerateSerializedProperty() const
+	{
+		SerializedProperty serial;
+		serial.type = m_type.name();
+		serial.name = m_name;
+		serial.flags = m_flags;
+		serial.offset_of = m_offset;
+		CLOG_ABORT(m_enum != nullptr, "Attempting to serialize enum property, unsupported yet.");
+		CLOG_ABORT(m_dirtyFlagIndex != -1, "Attempting to serialize property with dirty flags, unsupported yet.");
+		return serial;
 	}
 
 public:
