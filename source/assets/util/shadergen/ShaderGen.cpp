@@ -11,15 +11,35 @@ enum class Type // Can be extended for matrices later
 	Vec4,
 } type;
 
-std::string shd::GenerateGBufferFrag(const DynamicDescriptorSetLayout& layout, const std::string& gbufferFragMain)
+std::string shd::GenerateShaderGeneric(const std::string& inOutCode, const std::string& descSetCode,
+	const std::string& sharedFunctions, const std::string& mainCode)
 {
 	std::stringstream ss;
-	ss <<
-		R"(/// Raygen: Auto Generated Shader Code
+
+	ss << "// Raygen: Auto Generated Shader Code";
+	ss << R"(
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
+)";
 
+	ss << "\n#line 100001\n";
+	ss << inOutCode;
+	ss << "\n#line 200001\n";
+	ss << descSetCode;
+	ss << "\n#line 300001\n";
+	ss << sharedFunctions;
+	ss << "\n#line 1\n";
+	ss << mainCode;
+
+	return ss.str();
+}
+
+std::string shd::GenerateGBufferFrag(
+	const std::string& descSetCode, const std::string& sharedFunctions, const std::string& mainCode)
+{
+	return GenerateShaderGeneric(
+		R"(
 // out
 layout(location = 0) out vec4 gPosition;
 layout(location = 1) out vec4 gNormal;
@@ -36,13 +56,17 @@ layout(location = 0) in Data
 	vec2 uv;
 	mat3 TBN;
 };
-)";
-	ss << GenerateDescriptorSetCode(layout, layout.uboName, 0u);
+)",
+		descSetCode, sharedFunctions, mainCode);
+}
 
-	ss << "\n#line 1\n";
-	ss << gbufferFragMain;
-
-	return ss.str();
+std::string shd::GenerateDepthShader(
+	const std::string& descSetCode, const std::string& sharedFunctions, const std::string& mainCode)
+{
+	return GenerateShaderGeneric(R"(
+layout(location=0) in vec2 uv;
+)",
+		descSetCode, sharedFunctions, mainCode);
 }
 
 std::string shd::GenerateDescriptorSetCode(
@@ -52,7 +76,6 @@ std::string shd::GenerateDescriptorSetCode(
 	std::stringstream ss;
 
 	int32 binding = 0;
-	ss << "\n#line 100001\n";
 	if (descriptorSetLayout.uboClass.GetProperties().size()) {
 		ss << "layout(set = " << setIndex << ", binding = " << binding << ") uniform UBO_Dynamic" << setIndex << " {\n";
 		binding++;

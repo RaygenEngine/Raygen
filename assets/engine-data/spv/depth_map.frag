@@ -38,18 +38,4 @@ void main() {
 	if(material.mask == 1 && opacity < material.alphaCutoff)
 		discard;
 }                                                                                        
-                                                                                         
-                                                                                          
-                                                                                           
-                                                                                            
-                                                                                             
-                                                                                              
-                                                                                               
-                                                                                           
-                                                                                            
-                                                                                             
-                                                                                              
-                                                                                               
-                                                                                                
-                                                                                                 
-                                                                                                  
+

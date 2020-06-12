@@ -149,6 +149,9 @@ void GBufferPass::RecordCmd(
 		}
 
 		for (auto geom : geometries) {
+			if (!geom) {
+				continue;
+			}
 			PushConstant pc{ //
 				geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
 			};

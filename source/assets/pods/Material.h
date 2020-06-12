@@ -3,6 +3,14 @@
 #include "reflection/GenMacros.h"
 #include "assets/pods/ShaderStage.h"
 #include "assets/util/SpirvCompiler.h"
+#include "assets/util/shadergen/ShaderGen.h"
+
+
+namespace shd {
+struct GeneratedShaderErrors {
+	std::unordered_map<std::string, TextCompilerErrors> editorErrors;
+};
+} // namespace shd
 
 
 // Holds the representantion for a runtime generated descriptor set.
@@ -49,11 +57,18 @@ struct MaterialArchetype : AssetPod {
 	{
 		REFLECT_ICON(FA_ALIGN_CENTER);
 		REFLECT_VAR(instances, PropertyFlags::NoEdit, PropertyFlags::NoCopy);
+		REFLECT_VAR(sharedFunctions, PropertyFlags::NoEdit, PropertyFlags::Multiline);
 		REFLECT_VAR(gbufferFragMain, PropertyFlags::NoEdit, PropertyFlags::Multiline);
+		REFLECT_VAR(depthShader, PropertyFlags::NoEdit, PropertyFlags::Multiline);
 	}
 
-	std::string gbufferFragMain;
+	std::string sharedFunctions{};
+	std::string gbufferFragMain{};
+	std::string depthShader{};
+
+
 	std::vector<uint32> gbufferFragBinary;
+	std::vector<uint32> depthBinary;
 
 
 	std::vector<PodHandle<MaterialInstance>> instances;
@@ -61,11 +76,13 @@ struct MaterialArchetype : AssetPod {
 	// Active is the one used in gpu assets
 	DynamicDescriptorSetLayout descriptorSetLayout;
 
+protected:
 	// Propagates the editable Descriptor Set Layout to active Layout
 	void ChangeLayout(DynamicDescriptorSetLayout&& newLayout);
 
-	// Returns whether the compilation was successful. Uses the editable descriptor set layout
-	bool GenerateGBufferFrag(const DynamicDescriptorSetLayout& forLayout, TextCompilerErrors* outErrors = nullptr);
+public:
+	bool CompileAll(
+		DynamicDescriptorSetLayout&& newLayout, shd::GeneratedShaderErrors& outErrors, bool outputToConsole = false);
 };
 
 struct MaterialInstance : AssetPod {

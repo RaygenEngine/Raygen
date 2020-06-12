@@ -39,7 +39,7 @@ void AdditionalSerializeBoth(Archive& ar, Image* pod)
 template<typename Archive>
 void AdditionalSerializeBoth(Archive& ar, MaterialArchetype* pod)
 {
-	ar(pod->descriptorSetLayout, pod->gbufferFragBinary);
+	ar(pod->descriptorSetLayout, pod->gbufferFragBinary, pod->depthBinary);
 }
 
 template<typename Archive>

@@ -34,13 +34,12 @@ struct Material::Gpu : public vl::GpuAssetTemplate<Material> {
 
 		UniquePtr<vl::RBuffer> uboBuf;
 
-		// struct uboBuf {
-		//	vk::DeviceSize m_size;
-		//	vk::UniqueBuffer m_handle;
-		//	vk::UniqueDeviceMemory m_memory;
-		//} uboBuf;
-
 		vk::UniqueShaderModule fragModule;
+
+		vk::UniquePipelineLayout depthPlLayout;
+		vk::UniquePipeline depthPipeline;
+
+		vk::UniqueShaderModule depthFragModule;
 
 	} wip_New;
 

@@ -49,8 +49,7 @@ namespace {
 		TextEditor::ErrorMarkers errors;
 
 		std::unordered_set<std::string, str::Hash> identifiers;
-		layout.samplers2d.clear();
-		layout.uboClass.ResetProperties();
+		layout = {};
 
 		for (uint32 lineNum = 0; auto& line : uniformEditor.GetTextLines()) {
 			lineNum++;
@@ -108,15 +107,35 @@ namespace {
 } // namespace
 
 
+MaterialArchetypeEditorWindow::ShaderEditorTab::ShaderEditorTab(
+	const std::string& inTitle, PodHandle<MaterialArchetype> inHandle, MemberStringT inTextField)
+	: title(inTitle)
+	, textField(inTextField)
+	, handle(inHandle)
+{
+	editor.reset(new TextEditor());
+
+	if ((handle.Lock()->*inTextField).size() > 0) {
+		editor->SetText((handle.Lock()->*inTextField));
+	}
+	editor->SetColorizerEnable(true);
+	editor->SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
+	editor->SetShowWhitespaces(false);
+}
+
 MaterialArchetypeEditorWindow::MaterialArchetypeEditorWindow(PodEntry* inEntry)
 	: AssetEditorWindowTemplate(inEntry)
 {
+	auto addEditor = [&](const std::string& tabName, ShaderEditorTab::MemberStringT field) {
+		editors.emplace_back(ShaderEditorTab(tabName, podHandle, field));
+	};
 
-	editor.reset(new GenericShaderEditor(
-		podHandle.Lock()->gbufferFragMain, inEntry->path, [&]() { OnSave(); }, [&]() { OnCompile(); }));
+	addEditor("Shared", &MaterialArchetype::sharedFunctions);
+	addEditor("Fragment", &MaterialArchetype::gbufferFragMain);
+	addEditor("Depth", &MaterialArchetype::depthShader);
+
 
 	uniformEditor.reset(new TextEditor());
-
 	uniformEditor->SetText(GetUniformText(podHandle.Lock()->descriptorSetLayout).str());
 	uniformEditor->SetColorizerEnable(true);
 	uniformEditor->SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
@@ -134,33 +153,51 @@ void MaterialArchetypeEditorWindow::ImguiDraw()
 		}
 	}
 
+	ImGui::Checkbox("Live Updates", &liveUpdates);
+	ImGui::SameLine();
+	ImGui::Checkbox("Output To Console", &outputToConsole);
+	if (needsSave) {
+		ImGui::SameLine();
+		if (ImEd::Button(ETXT(FA_SAVE, "Save"))) {
+			OnSave();
+		}
+	}
 
-	// auto& uboMembers = podHandle.Lock()->parameters.uboMembers;
-	// auto& samplers = podHandle.Lock()->parameters.samplers2d;
+	if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(83)) {
+		OnSave();
+	}
 
+	if (ImGui::BeginTabBar("ShaderEditorTabs")) {
+		for (int i = 0; auto& tab : editors) {
+			if (tab.hasError) {
+				ImGui::PushStyleColor(ImGuiCol_Border, ImGui::ColorConvertU32ToFloat4(0xA02040ff));
+				ImGui::PushStyleColor(ImGuiCol_Text, ImGui::ColorConvertU32ToFloat4(0xA02040ff));
+			}
 
-	// ImGui::Text(U8(FA_DATABASE u8" Descr Data (%d,%d) | "), samplers.size(), uboMembers.size());
-	// if (ImGui::IsItemHovered()) {
-	//	ImGui::BeginTooltip();
-	//	ImGui::SetWindowFontScale(1);
-	//	ImGui::Text("Detected samplers and ubo Members:");
+			if (ImGui::BeginTabItem(tab.title.c_str())) {
+				ImGui::PushID(i++);
+				ImEd::BeginCodeFont();
+				tab.editor->Render(tab.title.c_str());
+				ImEd::EndCodeFont();
+				ImGui::PopID();
+				ImGui::EndTabItem();
+				if (tab.editor->IsTextChanged()) {
+					needsSave = true;
+				}
+			}
 
-	//	for (auto& sampler : samplers) {
-	//		ImGui::TextUnformatted(sampler.c_str());
-	//	}
+			if (tab.hasError) {
+				ImGui::PopStyleColor(2);
+			}
+		}
 
-	//	for (auto& mem : uboMembers) {
-	//		ImGui::Text(
-	//			"%d\t%s\t%s", mem.SizeOf(), std::string(GenMetaEnum(mem.type).GetValueStr()).c_str(), mem.name.c_str());
-	//	}
-	//	ImGui::EndTooltip();
-	//}
-	// ImGui::SameLine();
-	editor->ImguiDraw();
+		ImGui::EndTabBar();
+	}
 }
 
 void MaterialArchetypeEditorWindow::OnSave()
 {
+	needsSave = false;
 	OnCompile();
 	SaveToDisk();
 }
@@ -169,35 +206,29 @@ void MaterialArchetypeEditorWindow::OnCompile()
 {
 	PodEditor ed(podHandle);
 
-	ed->gbufferFragMain = editor->editor->GetText();
+	for (auto& tab : editors) {
+		*(ed.pod).*tab.textField = tab.editor->GetText();
+	}
 
 	if (!ValidateUniforms(*uniformEditor, editingDescSet)) {
-		editor->editor->SetErrorMarkers({ { 1, "Uniform Compilation Error." } });
 		return;
 	}
+	shd::GeneratedShaderErrors errors;
 
-	TextCompilerErrors errors;
-	bool result = ed->GenerateGBufferFrag(editingDescSet, &errors);
 
-	if (result) {
-		ed->ChangeLayout(std::move(editingDescSet));
-		editingDescSet = {};
-		editor->editor->SetErrorMarkers({});
-		return;
-	}
-
-	std::map<int, std::string> additionalErrors;
-	for (auto& err : errors.errors) {
-		if (err.first >= 100000) {
-			additionalErrors.insert({ additionalErrors.size() + 1, err.second });
+	if (ed->CompileAll(std::move(editingDescSet), errors, outputToConsole)) {
+		for (auto& tab : editors) {
+			tab.hasError = false;
+			tab.editor->SetErrorMarkers({});
 		}
+		return;
 	}
 
-	if (additionalErrors.size() > 0) {
-		editor->editor->SetErrorMarkers(additionalErrors);
-	}
-	else {
-		editor->editor->SetErrorMarkers(errors.errors);
+	for (auto& tab : editors) {
+		if (auto r = errors.editorErrors.find(tab.title); r != errors.editorErrors.end()) {
+			tab.editor->SetErrorMarkers(r->second.errors);
+			tab.hasError = true;
+		}
 	}
 }
 
@@ -249,5 +280,6 @@ void MaterialInstanceEditorWindow::ImguiDraw()
 		ed.MarkEdit();
 	}
 }
+
 
 } // namespace ed
