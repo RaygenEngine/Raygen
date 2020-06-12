@@ -5,7 +5,6 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuCubemap.h"
 #include "rendering/assets/GpuImage.h"
-#include "rendering/objects/Image.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/objects/RBuffer.h"

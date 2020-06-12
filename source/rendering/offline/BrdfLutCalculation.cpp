@@ -222,10 +222,10 @@ void BrdfLutCalculation::MakePipeline()
 
 void BrdfLutCalculation::PrepareFaceInfo()
 {
-	m_attachment = std::make_unique<ImageAttachment>("face", m_resolution, m_resolution,
+	m_attachment = std::make_unique<RImageAttachment>("face", m_resolution, m_resolution,
 		vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, false);
+		vk::MemoryPropertyFlagBits::eDeviceLocal);
 	m_attachment->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
 	vk::FramebufferCreateInfo createInfo{};

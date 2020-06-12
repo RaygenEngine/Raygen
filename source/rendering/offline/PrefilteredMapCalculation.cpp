@@ -369,13 +369,13 @@ void PrefilteredMapCalculation::PrepareFaceInfo()
 		for (uint32 i = 0; i < 6; ++i) {
 
 			// reisze framebuffer according to mip-level size.
-			uint32 mipResolution = m_resolution * std::pow(0.5, mip);
+			uint32 mipResolution = m_resolution / std::pow(2, mip);
 
-			m_cubemapMips[mip].faceAttachments[i] = std::make_unique<ImageAttachment>("face" + i, mipResolution,
+			m_cubemapMips[mip].faceAttachments[i] = std::make_unique<RImageAttachment>("face" + i, mipResolution,
 				mipResolution, m_envmapAsset->skybox.Lock().cubemap->GetFormat(), vk::ImageTiling::eOptimal,
 				vk::ImageLayout::eUndefined,
 				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc,
-				vk::MemoryPropertyFlagBits::eDeviceLocal, false);
+				vk::MemoryPropertyFlagBits::eDeviceLocal);
 			m_cubemapMips[mip].faceAttachments[i]->BlockingTransitionToLayout(
 				vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
@@ -516,17 +516,17 @@ void PrefilteredMapCalculation::EditPods()
 
 
 	//.. prefiltered and rest here (or other class)
-	PodHandle<::Cubemap> pref = envMap.Lock()->prefiltered;
+	PodHandle<Cubemap> pref = envMap.Lock()->prefiltered;
 
 	if (pref.IsDefault()) {
 		PodEditor e(envMap);
-		auto& [entry, irr] = AssetHandlerManager::CreateEntry<::Cubemap>("generated/cubemap");
+		auto& [entry, irr] = AssetHandlerManager::CreateEntry<Cubemap>("generated/cubemap");
 
-		e.pod->prefiltered = entry->GetHandleAs<::Cubemap>();
-		pref = entry->GetHandleAs<::Cubemap>();
+		e.pod->prefiltered = entry->GetHandleAs<Cubemap>();
+		pref = entry->GetHandleAs<Cubemap>();
 	}
 
-	PodHandle<::Cubemap> cubemapHandle{ pref.uid };
+	PodHandle<Cubemap> cubemapHandle{ pref.uid };
 
 	PodEditor cubemapEditor(cubemapHandle);
 

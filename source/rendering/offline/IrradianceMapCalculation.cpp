@@ -367,10 +367,10 @@ void IrradianceMapCalculation::PrepareFaceInfo()
 	// create framebuffers for each face
 	for (uint32 i = 0; i < 6; ++i) {
 
-		m_faceAttachments[i] = std::make_unique<ImageAttachment>("face" + i, m_resolution, m_resolution,
+		m_faceAttachments[i] = std::make_unique<RImageAttachment>("face" + i, m_resolution, m_resolution,
 			m_envmapAsset->skybox.Lock().cubemap->GetFormat(), vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 			vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc,
-			vk::MemoryPropertyFlagBits::eDeviceLocal, false);
+			vk::MemoryPropertyFlagBits::eDeviceLocal);
 		m_faceAttachments[i]->BlockingTransitionToLayout(
 			vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
@@ -501,14 +501,14 @@ void IrradianceMapCalculation::EditPods()
 
 
 	//.. prefiltered and rest here (or other class)
-	PodHandle<::Cubemap> irradiance = envMap.Lock()->irradiance;
+	PodHandle<Cubemap> irradiance = envMap.Lock()->irradiance;
 
 	if (irradiance.IsDefault()) {
 		PodEditor e(envMap);
-		auto& [entry, irr] = AssetHandlerManager::CreateEntry<::Cubemap>("generated/cubemap");
+		auto& [entry, irr] = AssetHandlerManager::CreateEntry<Cubemap>("generated/cubemap");
 
-		e.pod->irradiance = entry->GetHandleAs<::Cubemap>();
-		irradiance = entry->GetHandleAs<::Cubemap>();
+		e.pod->irradiance = entry->GetHandleAs<Cubemap>();
+		irradiance = entry->GetHandleAs<Cubemap>();
 	}
 
 

@@ -10,20 +10,20 @@
 
 using namespace vl;
 
-::Cubemap::Gpu::Gpu(PodHandle<::Cubemap> podHandle)
+Cubemap::Gpu::Gpu(PodHandle<Cubemap> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	Update({});
 }
 
-void ::Cubemap::Gpu::Update(const AssetUpdateInfo&)
+void Cubemap::Gpu::Update(const AssetUpdateInfo&)
 {
 	auto cubemapPod = podHandle.Lock();
 	ClearDependencies();
 
 	vk::Format format = GetFormat(cubemapPod->format);
 
-	cubemap = std::make_unique<vl::Cubemap>(cubemapPod->resolution, cubemapPod->mipCount, format, //
+	cubemap = std::make_unique<vl::RCubemap>(cubemapPod->resolution, cubemapPod->mipCount, format, //
 		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
 		vk::MemoryPropertyFlagBits::eDeviceLocal);

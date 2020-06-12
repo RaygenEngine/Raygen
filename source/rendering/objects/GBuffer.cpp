@@ -17,24 +17,24 @@ GBuffer::GBuffer(GBufferPass* passInfo, uint32 width, uint32 height)
 {
 	m_descSet = Layouts->gBufferDescLayout.GetDescriptorSet();
 
-	auto initAttachment = [&](const std::string& name, vk::Format format, vk::ImageUsageFlags usage,
-							  vk::ImageLayout finalLayout, bool isDepth) {
-		auto att = std::make_unique<ImageAttachment>(name, width, height, format, vk::ImageTiling::eOptimal,
-			vk::ImageLayout::eUndefined, usage | vk::ImageUsageFlagBits::eSampled,
-			vk::MemoryPropertyFlagBits::eDeviceLocal, isDepth);
-		att->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, finalLayout);
-		return att;
-	};
+	auto initAttachment
+		= [&](const std::string& name, vk::Format format, vk::ImageUsageFlags usage, vk::ImageLayout finalLayout) {
+			  auto att = std::make_unique<RImageAttachment>(name, width, height, format, vk::ImageTiling::eOptimal,
+				  vk::ImageLayout::eUndefined, usage | vk::ImageUsageFlagBits::eSampled,
+				  vk::MemoryPropertyFlagBits::eDeviceLocal);
+			  att->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, finalLayout);
+			  return att;
+		  };
 
 	for (size_t i = 0; i < 5; ++i) {
 		m_attachments[i] = initAttachment(attachmentNames[i], colorAttachmentFormats[i],
-			vk::ImageUsageFlagBits::eColorAttachment, vk::ImageLayout::eColorAttachmentOptimal, false);
+			vk::ImageUsageFlagBits::eColorAttachment, vk::ImageLayout::eColorAttachmentOptimal);
 	}
 
 	vk::Format depthFormat = Device->pd->FindDepthFormat();
 
 	m_attachments[GDepth] = initAttachment(attachmentNames[GDepth], depthFormat,
-		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal, true);
+		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
 	std::array views = { m_attachments[GPosition]->GetView(), m_attachments[GNormal]->GetView(),
 		m_attachments[GAlbedo]->GetView(), m_attachments[GSpecular]->GetView(), m_attachments[GEmissive]->GetView(),

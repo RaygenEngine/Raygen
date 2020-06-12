@@ -2,14 +2,14 @@
 #include "assets/pods/EnvironmentMap.h"
 #include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/objects/RBuffer.h"
-#include "rendering/objects/ImageAttachment.h"
+#include "rendering/objects/RImageAttachment.h"
 
 #include <vulkan/vulkan.hpp>
 namespace vl {
 
 struct CubemapMipFrames {
 	std::array<vk::UniqueFramebuffer, 6> framebuffers;
-	std::array<UniquePtr<ImageAttachment>, 6> faceAttachments;
+	std::array<UniquePtr<RImageAttachment>, 6> faceAttachments;
 };
 
 class PrefilteredMapCalculation {
