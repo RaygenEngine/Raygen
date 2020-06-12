@@ -508,31 +508,49 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 
 void PrefilteredMapCalculation::EditPods()
 {
-	auto& prefiltered = m_envmapAsset->prefiltered.Lock();
-	//.. prefiltered and rest here (or other class)
+	PodHandle<EnvironmentMap> envMap = m_envmapAsset->podHandle;
 
-	PodHandle<::Cubemap> cubemapHandle{ prefiltered.podUid };
-
-	PodEditor cubemapEditor(cubemapHandle);
-	auto cubemapPod = cubemapEditor.GetEditablePtr();
-
-	cubemapPod->resolution = m_resolution;
-	cubemapPod->format = m_envmapAsset->skybox.Lock().podHandle.Lock()->format;
-
-	for (uint32 i = 0; i < 6; ++i) {
-		PodHandle face = cubemapPod->faces[i];
-		PodEditor faceEditor(face);
-
-		faceEditor.pod->mipData.resize(5);
+	if (envMap.IsDefault()) {
+		return;
 	}
 
+
+	//.. prefiltered and rest here (or other class)
+	PodHandle<::Cubemap> pref = envMap.Lock()->prefiltered;
+
+	if (pref.IsDefault()) {
+		PodEditor e(envMap);
+		auto& [entry, irr] = AssetHandlerManager::CreateEntry<::Cubemap>("generated/cubemap");
+
+		e.pod->prefiltered = entry->GetHandleAs<::Cubemap>();
+		pref = entry->GetHandleAs<::Cubemap>();
+	}
+
+	PodHandle<::Cubemap> cubemapHandle{ pref.uid };
+
+	PodEditor cubemapEditor(cubemapHandle);
+
+	cubemapEditor->resolution = m_resolution;
+	cubemapEditor->format = m_envmapAsset->skybox.Lock().podHandle.Lock()->format;
+
+
+	size_t bufferSize{ 0llu };
+	auto bytesPerPixel = cubemapEditor->format == ImageFormat::Hdr ? 4u * 4u : 4u;
+	for (uint32 mip = 0; mip < 6; ++mip) {
+
+		auto res = m_resolution / std::pow(2, mip);
+		bufferSize += res * res * bytesPerPixel * 6;
+	}
+
+	cubemapEditor->data.resize(bufferSize);
+	cubemapEditor->mipCount = 6u;
+
+	size_t offset{ 0llu };
 	for (uint32 mip = 0; mip < 6; ++mip) {
 		for (uint32 i = 0; i < 6; ++i) {
 
-
-			auto bytesPerPixel = cubemapPod->format == ImageFormat::Hdr ? 4u * 4u : 4u;
-			auto res = m_resolution * std::pow(0.5, mip);
-			auto size = res * res * bytesPerPixel;
+			size_t res = m_resolution / std::pow(2, mip);
+			size_t size = res * res * bytesPerPixel;
 
 			auto& img = m_cubemapMips[mip].faceAttachments[i];
 
@@ -546,19 +564,11 @@ void PrefilteredMapCalculation::EditPods()
 
 			void* data = Device->mapMemory(stagingBuffer.GetMemory(), 0, VK_WHOLE_SIZE, {});
 
-			PodHandle face = cubemapPod->faces[i];
-			PodEditor faceEditor(face);
-
-			auto facePod = faceEditor.GetEditablePtr();
-
-			auto& tdata = mip == 0 ? facePod->data : facePod->mipData[mip - 1];
-
-			tdata.resize(size);
-			facePod->width = m_resolution;
-			facePod->height = m_resolution;
-			memcpy(tdata.data(), data, size);
+			memcpy(cubemapEditor->data.data() + offset, data, size);
 
 			Device->unmapMemory(stagingBuffer.GetMemory());
+
+			offset += size;
 		}
 	}
 }

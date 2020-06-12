@@ -308,13 +308,28 @@ void BrdfLutCalculation::RecordAndSubmitCmdBuffers()
 
 void BrdfLutCalculation::EditPods()
 {
-	auto& brdfLut = m_envmapAsset->brdfLut.Lock();
-	//.. prefiltered and rest here (or other class)
+	PodHandle<EnvironmentMap> envMap = m_envmapAsset->podHandle;
 
-	PodHandle<::Image> imgHandle{ brdfLut.podUid };
+	if (envMap.IsDefault()) {
+		return;
+	}
+
+
+	//.. prefiltered and rest here (or other class)
+	PodHandle<::Image> brdflut = envMap.Lock()->brdfLut;
+
+	if (brdflut.IsDefault()) {
+		PodEditor e(envMap);
+		auto& [entry, irr] = AssetHandlerManager::CreateEntry<::Image>("generated/image");
+
+		e.pod->brdfLut = entry->GetHandleAs<::Image>();
+		brdflut = entry->GetHandleAs<::Image>();
+	}
+
+
+	PodHandle<::Image> imgHandle{ brdflut.uid };
 
 	PodEditor imageEditor(imgHandle);
-	auto imagePod = imageEditor.GetEditablePtr();
 
 	auto& img = m_attachment;
 
@@ -327,11 +342,11 @@ void BrdfLutCalculation::EditPods()
 
 	void* data = Device->mapMemory(stagingBuffer.GetMemory(), 0, VK_WHOLE_SIZE, {});
 
-	imagePod->data.resize(m_resolution * m_resolution * 16u);
-	imagePod->width = m_resolution;
-	imagePod->height = m_resolution;
-	imagePod->format = ImageFormat::Hdr;
-	memcpy(imagePod->data.data(), data, m_resolution * m_resolution * 16u);
+	imageEditor->data.resize(m_resolution * m_resolution * 16u);
+	imageEditor->width = m_resolution;
+	imageEditor->height = m_resolution;
+	imageEditor->format = ImageFormat::Hdr;
+	memcpy(imageEditor->data.data(), data, m_resolution * m_resolution * 16u);
 
 	Device->unmapMemory(stagingBuffer.GetMemory());
 }

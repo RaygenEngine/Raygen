@@ -86,7 +86,7 @@ void main( ) {
 		outColor = vec4(texture(skyboxSampler, V).rgb, 1.0);
 		
 		//outColor = texture(brdfLutSampler, uv).rgba;
-		//outColor = textureLod(prefilteredSampler, V,  0.5 * 5);
+		//outColor = textureLod(prefilteredSampler, V,  0);
 		return;
 	}
 	
@@ -151,5 +151,9 @@ void main( ) {
                                                                                                                                                    
                                                                                                                                                     
                                                                                                                                                      
+
+
+
+
 
 

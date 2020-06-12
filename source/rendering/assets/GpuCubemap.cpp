@@ -18,36 +18,28 @@ using namespace vl;
 
 void ::Cubemap::Gpu::Update(const AssetUpdateInfo&)
 {
-	auto cubemapData = podHandle.Lock();
+	auto cubemapPod = podHandle.Lock();
 	ClearDependencies();
-	AddDependencies(cubemapData->faces);
 
-	auto mipCount = cubemapData->faces[0].Lock()->mipData.size() + 1;
+	vk::Format format = GetFormat(cubemapPod->format);
 
-	vk::Format format = GetFormat(cubemapData->format);
-
-	cubemap = std::make_unique<vl::Cubemap>(cubemapData->resolution, mipCount, format, vk::ImageTiling::eOptimal,
-		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+	cubemap = std::make_unique<vl::Cubemap>(cubemapPod->resolution, cubemapPod->mipCount, format, //
+		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+		vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
 		vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 	// transiton all mips to transfer optimal
 	cubemap->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
 
-	for (uint32 mip = 0; mip < mipCount; ++mip) {
-		for (uint32 i = 0; i < 6u; ++i) {
-			auto face = cubemapData->faces[i].Lock();
+	vk::DeviceSize bufferSize = cubemapPod->data.size();
 
-			vk::DeviceSize imageSize = mip == 0 ? face->data.size() : face->mipData[mip - 1].size();
+	vl::RBuffer stagingBuffer{ bufferSize, vk::BufferUsageFlagBits::eTransferSrc,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
-			vl::RBuffer stagingBuffer{ imageSize, vk::BufferUsageFlagBits::eTransferSrc,
-				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+	// copy data to buffer
+	stagingBuffer.UploadData(cubemapPod->data);
 
-			// copy data to buffer
-			stagingBuffer.UploadData(mip == 0 ? face->data : face->mipData[mip - 1]);
-
-			cubemap->CopyBufferToFace(stagingBuffer, i, mip);
-		}
-	}
+	cubemap->CopyBuffer(stagingBuffer, cubemapPod->format == ImageFormat::Hdr ? 16llu : 4llu, cubemapPod->mipCount);
 
 	cubemap->BlockingTransitionToLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 

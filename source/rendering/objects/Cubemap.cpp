@@ -73,4 +73,55 @@ void Cubemap::CopyBufferToFace(const RBuffer& buffer, uint32 face, uint32 mip)
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.
 	Device->transferQueue.waitIdle();
 }
+
+void Cubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCount)
+{
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+	Device->transferCmdBuffer.begin(beginInfo);
+
+	std::vector<vk::BufferImageCopy> regions;
+	size_t offset{ 0llu };
+	for (uint32 mip = 0u; mip < mipCount; ++mip) {
+
+		uint32 res = m_imageInfo.extent.width / std::pow(2, mip);
+
+
+		vk::BufferImageCopy region{};
+		region
+			.setBufferOffset(offset) //
+			.setBufferRowLength(0u)
+			.setBufferImageHeight(0u)
+			.setImageOffset({ 0, 0, 0 })
+			.setImageExtent({ res, res, 1u });
+
+		region.imageSubresource
+			.setAspectMask(GetAspectMask(m_imageInfo)) //
+			.setMipLevel(mip)
+			.setBaseArrayLayer(0u)
+			.setLayerCount(6u);
+
+		regions.push_back(region);
+
+		offset += res * res * pixelSize * 6llu;
+	}
+
+	Device->transferCmdBuffer.copyBufferToImage(buffer, m_handle.get(), vk::ImageLayout::eTransferDstOptimal, regions);
+
+	Device->transferCmdBuffer.end();
+
+	vk::SubmitInfo submitInfo{};
+	submitInfo
+		.setCommandBufferCount(1u) //
+		.setPCommandBuffers(&Device->transferCmdBuffer);
+
+	Device->transferQueue.submit(1u, &submitInfo, {});
+	// PERF:
+	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
+	// instead of executing one at a time. That may give the driver more opportunities to optimize.
+	Device->transferQueue.waitIdle();
+}
+
+
 } // namespace vl

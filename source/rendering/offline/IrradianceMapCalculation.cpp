@@ -509,19 +509,19 @@ void IrradianceMapCalculation::EditPods()
 
 		e.pod->irradiance = entry->GetHandleAs<::Cubemap>();
 		irradiance = entry->GetHandleAs<::Cubemap>();
-
-		for (size_t i = 0; i < 6; i++) {
-			auto& [entry, image] = AssetHandlerManager::CreateEntry<::Image>("generated/cubemap/image");
-			irr->faces[i] = entry->GetHandleAs<::Image>();
-		}
 	}
 
 
 	PodEditor cubemapEditor(irradiance);
-	auto cubemapPod = cubemapEditor.GetEditablePtr();
 
-	cubemapPod->resolution = m_resolution;
-	cubemapPod->format = m_envmapAsset->skybox.Lock().podHandle.Lock()->format;
+	cubemapEditor->resolution = m_resolution;
+	cubemapEditor->format = m_envmapAsset->skybox.Lock().podHandle.Lock()->format;
+
+	auto bytesPerPixel = cubemapEditor->format == ImageFormat::Hdr ? 4u * 4u : 4u;
+	auto size = m_resolution * m_resolution * bytesPerPixel * 6;
+
+	cubemapEditor->data.resize(size);
+
 
 	for (uint32 i = 0; i < 6; ++i) {
 
@@ -529,7 +529,7 @@ void IrradianceMapCalculation::EditPods()
 
 		img->BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
 
-		auto bytesPerPixel = cubemapPod->format == ImageFormat::Hdr ? 4u * 4u : 4u;
+
 		vl::RBuffer stagingBuffer{ m_resolution * m_resolution * bytesPerPixel, vk::BufferUsageFlagBits::eTransferDst,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
@@ -537,15 +537,7 @@ void IrradianceMapCalculation::EditPods()
 
 		void* data = Device->mapMemory(stagingBuffer.GetMemory(), 0, VK_WHOLE_SIZE, {});
 
-		PodHandle face = cubemapPod->faces[i];
-		PodEditor faceEditor(face);
-
-		auto facePod = faceEditor.GetEditablePtr();
-
-		facePod->data.resize(m_resolution * m_resolution * bytesPerPixel);
-		facePod->width = m_resolution;
-		facePod->height = m_resolution;
-		memcpy(facePod->data.data(), data, m_resolution * m_resolution * bytesPerPixel);
+		memcpy(cubemapEditor->data.data() + size * i / 6, data, m_resolution * m_resolution * bytesPerPixel);
 
 		Device->unmapMemory(stagingBuffer.GetMemory());
 	}

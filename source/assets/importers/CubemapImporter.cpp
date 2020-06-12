@@ -2,6 +2,7 @@
 #include "CubemapImporter.h"
 
 #include "assets/AssetImporterManager.h"
+#include "assets/util/ImageUtl.h"
 
 #include <fstream>
 
@@ -11,7 +12,7 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 
 	std::ifstream inStream(uri::ToSystemPath(finalPath));
 
-	CLOG_ABORT(!inStream.is_open(), "Unable to open string file, path: {}", uri::ToSystemPath(finalPath));
+	CLOG_ABORT(!inStream.is_open(), "Unable to open cubemap file, path: {}", uri::ToSystemPath(finalPath));
 	int32 firstChar = inStream.peek();
 
 	CLOG_ABORT(firstChar == EOF, "Found empty cubemap file: {} No images loaded", uri::ToSystemPath(finalPath));
@@ -34,8 +35,6 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 	auto& [handle, pod]
 		= ImporterManager->CreateEntry<Cubemap>(path.generic_string(), path.filename().replace_extension().string());
 
-	pod->faces.resize(imageNames.size());
-
 	ImporterManager->PushPath(path.filename().replace_extension());
 
 	bool firstLoaded = true;
@@ -44,29 +43,36 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 
 		CLOG_ABORT(imagePath.empty(), "Missing face path in cubemap: {}", uri::ToSystemPath(finalPath));
 
-		auto finalImagePath = path.parent_path() / imagePath;
-		pod->faces[value] = ImporterManager->ImportRequest<Image>(finalImagePath);
+		auto finalImagePath = (path.parent_path() / imagePath).string();
 
-		auto face = pod->faces[value].Lock();
+		int32 width, height;
+		stbaux::GetImageResolution(finalImagePath.c_str(), width, height);
+		bool isHdr = stbaux::IsHdr(finalImagePath.c_str());
 
-		CLOG_ABORT(
-			face->width != face->height, "Cubemap face width/height missmatch: {}", uri::ToSystemPath(finalPath));
+		CLOG_ABORT(width != height, "Cubemap face width/height missmatch: {}", uri::ToSystemPath(finalImagePath));
 
-		if (face->format == ImageFormat::Unorm) {
-			// WIP: force srgb for cubemaps
-			const_cast<Image*>(face)->format = ImageFormat::Srgb;
-		}
-
+		ImageFormat format = isHdr ? ImageFormat::Hdr : ImageFormat::Srgb;
 		if (firstLoaded) {
-			pod->resolution = face->width;
-			pod->format = face->format;
+			pod->resolution = width;
+			pod->format = format;
 			firstLoaded = false;
+
+			auto bytesPerPixel = pod->format == ImageFormat::Hdr ? 4u * 4u : 4u;
+			auto size = pod->resolution * pod->resolution * bytesPerPixel * 6;
+
+			pod->data.resize(size);
 		}
 		else {
 			CLOG_ABORT(
-				pod->resolution != face->width, "Cubemap faces resolution missmatch: {}", uri::ToSystemPath(finalPath));
-			CLOG_ABORT(pod->format != face->format, "Cubemap faces format missmatch: {}", uri::ToSystemPath(finalPath));
+				pod->resolution != width, "Cubemap faces resolution missmatch: {}", uri::ToSystemPath(finalPath));
+			CLOG_ABORT(pod->format != format, "Cubemap faces format missmatch: {}", uri::ToSystemPath(finalPath));
 		}
+
+
+		size_t offset = value * width * height * 4llu * (isHdr ? sizeof(float) : sizeof(byte));
+
+
+		stbaux::LoadImage(finalImagePath.c_str(), isHdr, pod->data.data() + offset);
 	}
 
 	ImporterManager->PopPath();
