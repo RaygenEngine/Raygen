@@ -8,6 +8,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
+#include "rendering/passes/ShadowmapPass.h"
 
 
 using namespace vl;
@@ -126,6 +127,10 @@ struct PC {
 	glm::mat4 normalMat;
 };
 
+struct PushConstantShadow {
+	glm::mat4 mvp;
+};
+
 void Material::Gpu::wip_UpdateMat()
 {
 	auto data = podHandle.Lock();
@@ -143,6 +148,11 @@ void Material::Gpu::wip_UpdateMat()
 	vk::ShaderModuleCreateInfo createInfo{};
 	createInfo.setCodeSize(matArch->gbufferFragBinary.size() * 4).setPCode(matArch->gbufferFragBinary.data());
 	wip_New.fragModule = vl::Device->createShaderModuleUnique(createInfo);
+
+
+	vk::ShaderModuleCreateInfo createInfo3{};
+	createInfo3.setCodeSize(matArch->depthBinary.size() * 4).setPCode(matArch->depthBinary.data());
+	wip_New.depthFragModule = vl::Device->createShaderModuleUnique(createInfo3);
 
 
 	auto podPtr = podHandle.Lock();
@@ -167,6 +177,25 @@ void Material::Gpu::wip_UpdateMat()
 
 	shaderStages.push_back(vertShaderStageInfo);
 	shaderStages.push_back(fragShaderStageInfo);
+
+	GpuAsset<Shader>& depthShader = GpuAssetManager->CompileShader("engine-data/spv/depth_map.shader");
+
+	std::vector<vk::PipelineShaderStageCreateInfo> depthShaderStages;
+
+	vk::PipelineShaderStageCreateInfo dvertShaderStageInfo{};
+	dvertShaderStageInfo
+		.setStage(vk::ShaderStageFlagBits::eVertex) //
+		.setModule(depthShader.vert.Lock().module.get())
+		.setPName("main");
+
+	vk::PipelineShaderStageCreateInfo dfragShaderStageInfo{};
+	dfragShaderStageInfo
+		.setStage(vk::ShaderStageFlagBits::eFragment) //
+		.setModule(*wip_New.depthFragModule)
+		.setPName("main");
+
+	depthShaderStages.push_back(dvertShaderStageInfo);
+	depthShaderStages.push_back(dfragShaderStageInfo);
 
 
 	{
@@ -209,8 +238,30 @@ void Material::Gpu::wip_UpdateMat()
 	}
 
 	{
+		// depth pipeline layout
+		vk::PushConstantRange pushConstantRange{};
+		pushConstantRange
+			.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
+			.setSize(sizeof(PushConstantShadow))
+			.setOffset(0u);
+
+		std::array layouts = { wip_New.descLayout->setLayout.get() };
+
+		vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+		pipelineLayoutInfo
+			.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
+			.setPSetLayouts(layouts.data())
+			.setPushConstantRangeCount(1u)
+			.setPPushConstantRanges(&pushConstantRange);
+
+		wip_New.depthPlLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+	}
+
+	{
 		wip_New.pipeline = Renderer->GetGBuffer()->wip_CreatePipeline(
 			*wip_New.plLayout, Renderer->m_gBufferPass.m_renderPass.get(), shaderStages);
+
+		wip_New.depthPipeline = Renderer->m_shadowmapPass.wip_CreatePipeline(*wip_New.depthPlLayout, depthShaderStages);
 	}
 
 	{

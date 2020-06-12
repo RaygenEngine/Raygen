@@ -27,9 +27,9 @@ inline class Renderer_ : public Listener {
 
 public: // WIP:
 	GBufferPass m_gBufferPass;
+	ShadowmapPass m_shadowmapPass;
 
 private:
-	ShadowmapPass m_shadowmapPass;
 	CopyHdrTexture m_copyHdrTexture;
 	WriteEditor m_writeEditor;
 

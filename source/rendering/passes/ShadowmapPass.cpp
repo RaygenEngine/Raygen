@@ -213,6 +213,137 @@ void ShadowmapPass::MakePipeline()
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
+
+vk::UniquePipeline ShadowmapPass::wip_CreatePipeline(
+	vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
+{
+
+	// fixed-function stage
+	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
+
+	vk::VertexInputBindingDescription bindingDescription{};
+	bindingDescription
+		.setBinding(0u) //
+		.setStride(sizeof(Vertex))
+		.setInputRate(vk::VertexInputRate::eVertex);
+
+	std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptions{};
+
+	attributeDescriptions[0].binding = 0u;
+	attributeDescriptions[0].location = 0u;
+	attributeDescriptions[0].format = vk::Format::eR32G32B32Sfloat;
+	attributeDescriptions[0].offset = offsetof(Vertex, position);
+
+	attributeDescriptions[1].binding = 0u;
+	attributeDescriptions[1].location = 1u;
+	attributeDescriptions[1].format = vk::Format::eR32G32Sfloat;
+	attributeDescriptions[1].offset = offsetof(Vertex, uv);
+
+	vertexInputInfo
+		.setVertexBindingDescriptionCount(1u) //
+		.setVertexAttributeDescriptionCount(static_cast<uint32_t>(attributeDescriptions.size()))
+		.setPVertexBindingDescriptions(&bindingDescription)
+		.setPVertexAttributeDescriptions(attributeDescriptions.data());
+
+
+	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
+	inputAssembly
+		.setTopology(vk::PrimitiveTopology::eTriangleList) //
+		.setPrimitiveRestartEnable(VK_FALSE);
+
+	// those are dynamic so they will be updated when needed
+	vk::Viewport viewport{};
+	vk::Rect2D scissor{};
+
+	vk::PipelineViewportStateCreateInfo viewportState{};
+	viewportState
+		.setViewportCount(1u) //
+		.setPViewports(&viewport)
+		.setScissorCount(1u)
+		.setPScissors(&scissor);
+
+	vk::PipelineRasterizationStateCreateInfo rasterizer{};
+	rasterizer
+		.setDepthClampEnable(VK_FALSE) //
+		.setRasterizerDiscardEnable(VK_FALSE)
+		.setPolygonMode(vk::PolygonMode::eFill)
+		.setLineWidth(1.f)
+		.setCullMode(vk::CullModeFlagBits::eBack)
+		.setFrontFace(vk::FrontFace::eClockwise)
+		.setDepthBiasEnable(VK_FALSE)
+		.setDepthBiasConstantFactor(0.f)
+		.setDepthBiasClamp(0.f)
+		.setDepthBiasSlopeFactor(0.f);
+
+	vk::PipelineMultisampleStateCreateInfo multisampling{};
+	multisampling
+		.setSampleShadingEnable(VK_FALSE) //
+		.setRasterizationSamples(vk::SampleCountFlagBits::e1)
+		.setMinSampleShading(1.f)
+		.setPSampleMask(nullptr)
+		.setAlphaToCoverageEnable(VK_FALSE)
+		.setAlphaToOneEnable(VK_FALSE);
+
+	// Dynamic vieport
+	vk::DynamicState dynamicStates[2] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
+	dynamicStateInfo
+		.setDynamicStateCount(2u) //
+		.setPDynamicStates(&dynamicStates[0]);
+
+	//// pipeline layout
+	// vk::PushConstantRange pushConstantRange{};
+	// pushConstantRange
+	//	.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
+	//	.setSize(sizeof(PushConstant))
+	//	.setOffset(0u);
+
+
+	// std::array layouts = { Layouts->regularMaterialDescLayout.setLayout.get() };
+
+	// vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+	// pipelineLayoutInfo
+	//	.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
+	//	.setPSetLayouts(layouts.data())
+	//	.setPushConstantRangeCount(1u)
+	//	.setPPushConstantRanges(&pushConstantRange);
+
+	// m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+
+	// depth and stencil state
+	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
+	depthStencil
+		.setDepthTestEnable(VK_TRUE) //
+		.setDepthWriteEnable(VK_TRUE)
+		.setDepthCompareOp(vk::CompareOp::eLess)
+		.setDepthBoundsTestEnable(VK_FALSE)
+		.setMinDepthBounds(0.0f) // Optional
+		.setMaxDepthBounds(1.0f) // Optional
+		.setStencilTestEnable(VK_FALSE)
+		.setFront({}) // Optional
+		.setBack({}); // Optional
+
+	vk::GraphicsPipelineCreateInfo pipelineInfo{};
+	pipelineInfo
+		.setStageCount(static_cast<uint32>(shaderStages.size())) //
+		.setPStages(shaderStages.data())
+		.setPVertexInputState(&vertexInputInfo)
+		.setPInputAssemblyState(&inputAssembly)
+		.setPViewportState(&viewportState)
+		.setPRasterizationState(&rasterizer)
+		.setPMultisampleState(&multisampling)
+		.setPDepthStencilState(&depthStencil)
+		.setPColorBlendState(nullptr)
+		.setPDynamicState(&dynamicStateInfo)
+		.setLayout(pipelineLayout)
+		.setRenderPass(m_renderPass.get())
+		.setSubpass(0u)
+		.setBasePipelineHandle({})
+		.setBasePipelineIndex(-1);
+
+	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+}
+
 void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const RDepthmap& depthmap, const glm::mat4& viewProj,
 	const std::vector<SceneGeometry*>& geometries)
 {
@@ -254,9 +385,8 @@ void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const RDepthmap& dep
 	// begin render pass
 	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	{
-		// bind the graphics pipeline
-		cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
+		cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 		// Dynamic viewport & scissor
 		cmdBuffer->setViewport(0, { viewport });
 		cmdBuffer->setScissor(0, { scissor });
@@ -270,26 +400,57 @@ void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const RDepthmap& dep
 				viewProj * geom->transform
 			};
 
-			// Submit via push constant (rather than a UBO)
-			cmdBuffer->pushConstants(
-				m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 			for (auto& gg : geom->model.Lock().geometryGroups) {
-				vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
-				vk::DeviceSize offsets[] = { 0 };
+				auto& mat = gg.material.Lock();
 
-				// geom
-				cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
+				if (!mat.wip_CustomOverride) {
 
-				// indices
-				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+					vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
+					vk::DeviceSize offsets[] = { 0 };
+					// bind the graphics pipeline
+					cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
-				// descriptor sets
-				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-					&gg.material.Lock().descriptorSet, 0u, nullptr);
+					// Submit via push constant (rather than a UBO)
+					cmdBuffer->pushConstants(
+						m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
-				// draw call (triangle)
-				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+					// geom
+					cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
+
+					// indices
+					cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+
+					// descriptor sets
+					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
+						&gg.material.Lock().descriptorSet, 0u, nullptr);
+
+					// draw call (triangle)
+					cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+				}
+				else {
+					vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
+					vk::DeviceSize offsets[] = { 0 };
+					// bind the graphics pipeline
+					cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, mat.wip_New.depthPipeline.get());
+
+					// Submit via push constant (rather than a UBO)
+					cmdBuffer->pushConstants(mat.wip_New.depthPlLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u,
+						sizeof(PushConstant), &pc);
+
+					// geom
+					cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
+
+					// indices
+					cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+
+					// descriptor sets
+					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, mat.wip_New.depthPlLayout.get(), 0u,
+						1u, &mat.wip_New.descSet, 0u, nullptr);
+
+					// draw call (triangle)
+					cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+				}
 			}
 		}
 	}

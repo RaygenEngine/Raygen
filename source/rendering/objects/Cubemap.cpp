@@ -57,6 +57,7 @@ void Cubemap::CopyBufferToFace(const RBuffer& buffer, uint32 face, uint32 mip)
 		.setBaseArrayLayer(face)
 		.setLayerCount(1u);
 
+
 	Device->transferCmdBuffer.copyBufferToImage(
 		buffer, m_handle.get(), vk::ImageLayout::eTransferDstOptimal, { region });
 

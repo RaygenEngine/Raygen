@@ -22,6 +22,10 @@ public:
 	void RecordCmd(vk::CommandBuffer* cmdBuffer, const RDepthmap& depthmap, const glm::mat4& viewProj,
 		const std::vector<SceneGeometry*>& geometries);
 
+	vk::UniquePipeline wip_CreatePipeline(
+		vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
+
+
 	[[nodiscard]] vk::RenderPass GetRenderPass() const { return m_renderPass.get(); }
 };
 
