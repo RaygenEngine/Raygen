@@ -2,8 +2,6 @@
 #include "assets/AssetPod.h"
 #include "reflection/GenMacros.h"
 
-#include "assets/pods/Image.h"
-
 // DOC: resolution = width = height of each face, same goes for format
 struct Cubemap : AssetPod {
 

@@ -84,7 +84,7 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 	// images (material)
 
 	auto UpdateImageSamplerInDescriptorSet
-		= [&](GpuHandle<Sampler> sampler, GpuHandle<::Image> image, uint32 dstBinding) {
+		= [&](GpuHandle<Sampler> sampler, GpuHandle<Image> image, uint32 dstBinding) {
 			  auto& sam = sampler.Lock();
 			  auto& img = image.Lock();
 
@@ -241,7 +241,7 @@ void Material::Gpu::wip_UpdateMat()
 
 		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 
-		auto UpdateImageSamplerInDescriptorSet = [&](vk::Sampler sampler, GpuHandle<::Image> image, uint32 dstBinding) {
+		auto UpdateImageSamplerInDescriptorSet = [&](vk::Sampler sampler, GpuHandle<Image> image, uint32 dstBinding) {
 			auto& img = image.Lock();
 
 			vk::DescriptorImageInfo imageInfo{};

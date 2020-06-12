@@ -8,14 +8,14 @@
 
 using namespace vl;
 
-::Image::Gpu::Gpu(PodHandle<::Image> podHandle)
+Image::Gpu::Gpu(PodHandle<::Image> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	Update({});
 }
 
 // NEXT: Check usage, probably wrong because we remake "image" member variable.
-void ::Image::Gpu::Update(const AssetUpdateInfo& info)
+void Image::Gpu::Update(const AssetUpdateInfo& info)
 {
 	auto imgData = podHandle.Lock();
 
@@ -31,7 +31,7 @@ void ::Image::Gpu::Update(const AssetUpdateInfo& info)
 
 	uint32 mipLevels = static_cast<uint32>(std::floor(std::log2(glm::max(imgData->width, imgData->height)))) + 1;
 
-	image = std::make_unique<Image2D>(imgData->width, imgData->height, mipLevels, format, vk::ImageTiling::eOptimal,
+	image = std::make_unique<RImage2D>(imgData->width, imgData->height, mipLevels, format, vk::ImageTiling::eOptimal,
 		vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
 		vk::MemoryPropertyFlagBits::eDeviceLocal);

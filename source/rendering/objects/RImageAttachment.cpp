@@ -1,18 +1,16 @@
 #include "pch.h"
-#include "ImageAttachment.h"
+#include "RImageAttachment.h"
 
 #include "rendering/Device.h"
 #include "rendering/VulkanUtl.h"
 
 namespace vl {
-
-ImageAttachment::ImageAttachment(const std::string& name, uint32 width, uint32 height, vk::Format format,
-	vk::ImageTiling tiling, vk::ImageLayout initalLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties,
-	bool isDepth)
-	: Image(vk::ImageType::e2D, { width, height, 1u }, 1u, 1u, format, tiling, initalLayout, usage,
+RImageAttachment::RImageAttachment(const std::string& name, uint32 width, uint32 height, vk::Format format,
+	vk::ImageTiling tiling, vk::ImageLayout initalLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
+	: RImage(vk::ImageType::e2D, { width, height, 1u }, 1u, 1u, format, tiling, initalLayout, usage,
 		vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, {}, properties)
 	, m_name(name)
-	, m_isDepth(isDepth)
+	, m_isDepth(IsDepthFormat(format))
 {
 	auto testComp = m_imageInfo.extent.width >= 1 && m_imageInfo.extent.height >= 1 && m_imageInfo.extent.depth == 1
 					&& m_imageInfo.arrayLayers >= 1 && m_imageInfo.samples == vk::SampleCountFlagBits::e1;

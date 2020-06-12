@@ -1,7 +1,6 @@
 #pragma once
 #include "assets/pods/Sampler.h"
 #include "rendering/assets/GpuAssetHandle.h"
-#include "rendering/objects/Image.h"
 
 #include <vulkan/vulkan.hpp>
 

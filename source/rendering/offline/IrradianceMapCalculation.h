@@ -2,7 +2,7 @@
 #include "assets/pods/EnvironmentMap.h"
 #include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/objects/RBuffer.h"
-#include "rendering/objects/ImageAttachment.h"
+#include "rendering/objects/RImageAttachment.h"
 
 #include <vulkan/vulkan.hpp>
 namespace vl {
@@ -19,7 +19,7 @@ class IrradianceMapCalculation {
 	vk::UniquePipelineLayout m_pipelineLayout;
 
 	std::array<vk::UniqueFramebuffer, 6> m_framebuffers;
-	std::array<UniquePtr<ImageAttachment>, 6> m_faceAttachments;
+	std::array<UniquePtr<RImageAttachment>, 6> m_faceAttachments;
 
 	glm::mat4 m_captureProjection;
 	std::array<glm::mat4, 6> m_captureViews;

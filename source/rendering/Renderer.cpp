@@ -336,19 +336,19 @@ void Renderer_::OnViewportResize()
 		m_gBuffer = m_gBufferPass.CreateCompatibleGBuffer(fbSize.width, fbSize.height);
 
 		for (uint32 i = 0; i < 3; ++i) {
-			m_attachments[i] = std::make_unique<ImageAttachment>("rgba32", fbSize.width, fbSize.height,
+			m_attachments[i] = std::make_unique<RImageAttachment>("rgba32", fbSize.width, fbSize.height,
 				vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled
 					| vk::ImageUsageFlagBits::eInputAttachment,
-				vk::MemoryPropertyFlagBits::eDeviceLocal, true);
+				vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 			m_attachments[i]->BlockingTransitionToLayout(
 				vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
-			m_attachments2[i] = std::make_unique<ImageAttachment>("rgba32", fbSize.width, fbSize.height,
+			m_attachments2[i] = std::make_unique<RImageAttachment>("rgba32", fbSize.width, fbSize.height,
 				vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
-				vk::MemoryPropertyFlagBits::eDeviceLocal, true);
+				vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 			m_attachments2[i]->BlockingTransitionToLayout(
 				vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
