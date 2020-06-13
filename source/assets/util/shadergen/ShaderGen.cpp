@@ -56,6 +56,17 @@ layout(location = 0) in Data
 	vec2 uv;
 	mat3 TBN;
 };
+
+layout(set = 1, binding = 0) uniform UBO_Camera {
+	vec3 position;
+	float pad0;
+	mat4 view;
+	mat4 proj;
+	mat4 viewProj;
+	mat4 viewInv;
+	mat4 projInv;
+	mat4 viewProjInv;
+} camera;
 )",
 		descSetCode, sharedFunctions, mainCode);
 }
