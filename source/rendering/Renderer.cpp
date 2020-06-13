@@ -190,7 +190,7 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 		m_gBufferPass.RecordCmd(cmdBuffer, m_gBuffer.get(), Scene->geometries.elements);
 
 		for (auto sl : Scene->spotlights.elements) {
-			m_shadowmapPass.RecordCmd(cmdBuffer, sl->shadowmap.get(), sl->ubo.viewProj, Scene->geometries.elements);
+			m_shadowmapPass.RecordCmd(cmdBuffer, *sl->shadowmap, sl->ubo.viewProj, Scene->geometries.elements);
 		}
 	}
 	cmdBuffer->end();

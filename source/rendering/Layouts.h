@@ -2,6 +2,7 @@
 #include "rendering/objects/RDescriptorLayout.h"
 
 #include <vulkan/vulkan.hpp>
+#include <functional>
 
 namespace vl {
 struct RCompatibleRenderPass {
