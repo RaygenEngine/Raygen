@@ -203,8 +203,19 @@ AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& default
 {
 	AssetHandlerManager::Get().m_pods.push_back(std::make_unique<PodEntry>());
 
+	fs::current_path(fs::current_path() / workingDir);
+
+	if (!fs::is_directory(defaultBinPath)) {
+		fs::create_directory(defaultBinPath);
+	}
+
 	podtools::ForEachPodType([]<typename PodType>() {
-		ImporterManager->CreateTransientEntry<PodType>(fmt::format("~{}", mti::GetName<PodType>()));
+		auto& [handle, pod]
+			= ImporterManager->CreateTransientEntry<PodType>(fmt::format("~{}", mti::GetName<PodType>()));
+
+		if constexpr (std::is_same_v<PodType, MaterialArchetype>) {
+			MaterialArchetype::MakeDefaultInto(static_cast<MaterialArchetype*>(pod));
+		}
 	});
 
 	// Default normal image
@@ -214,11 +225,6 @@ AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& default
 	pod->data[2] = 0xFF;
 	pod->data[3] = 0xFF;
 
-	fs::current_path(fs::current_path() / workingDir);
-
-	if (!fs::is_directory(defaultBinPath)) {
-		fs::create_directory(defaultBinPath);
-	}
 
 	LOG_INFO("Current working dir: {}", fs::current_path());
 

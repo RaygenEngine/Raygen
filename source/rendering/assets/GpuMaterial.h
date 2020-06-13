@@ -43,32 +43,6 @@ struct Material::Gpu : public vl::GpuAssetTemplate<Material> {
 
 	} wip_New;
 
-	void wip_UpdateMat();
-
-	vl::GpuHandle<Sampler> baseColorSampler;
-	vl::GpuHandle<Image> baseColorImage;
-
-	vl::GpuHandle<Sampler> metallicRoughnessSampler;
-	vl::GpuHandle<Image> metallicRoughnessImage;
-
-	vl::GpuHandle<Sampler> occlusionSampler;
-	vl::GpuHandle<Image> occlusionImage;
-
-	vl::GpuHandle<Sampler> normalSampler;
-	vl::GpuHandle<Image> normalImage;
-
-	vl::GpuHandle<Sampler> emissiveSampler;
-	vl::GpuHandle<Image> emissiveImage;
-
-	UBO_Material matData;
-
-	UniquePtr<vl::RUboBuffer<UBO_Material>> materialUBO;
-
-	// one for each m_swapchain image
-	// TODO: check
-	// https://stackoverflow.com/questions/36772607/vulkan-texture-rendering-on-multiple-meshes this
-	vk::DescriptorSet descriptorSet;
-
 	Material::Gpu(PodHandle<Material> podHandle);
 
 	void Update(const AssetUpdateInfo& info) override final;

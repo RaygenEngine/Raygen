@@ -77,8 +77,9 @@ struct MaterialArchetype : AssetPod {
 	DynamicDescriptorSetLayout descriptorSetLayout;
 
 
-	//
+	// WIP:
 	static void MakeGltfArchetypeInto(MaterialArchetype* mat);
+	static void MakeDefaultInto(MaterialArchetype* mat);
 
 protected:
 	// Propagates the editable Descriptor Set Layout to active Layout
