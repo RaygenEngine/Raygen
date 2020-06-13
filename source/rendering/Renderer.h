@@ -4,7 +4,7 @@
 #include "rendering/out/CopyHdrTexture.h"
 #include "rendering/out/WriteEditor.h"
 #include "rendering/passes/GBufferPass.h"
-#include "rendering/passes/ShadowmapPass.h"
+#include "rendering/passes/DepthmapPass.h"
 #include "rendering/ppt/PtCollection.h"
 
 #include <vulkan/vulkan.hpp>
@@ -24,10 +24,6 @@ inline class Renderer_ : public Listener {
 
 	// The actual game viewport rectangle in m_swapchain coords
 	vk::Rect2D m_viewportRect{};
-
-public: // WIP:
-	GBufferPass m_gBufferPass;
-	ShadowmapPass m_shadowmapPass;
 
 private:
 	CopyHdrTexture m_copyHdrTexture;
@@ -49,8 +45,6 @@ private:
 	void RecordOutPass(vk::CommandBuffer* cmdBuffer);
 
 	PtCollection m_postprocCollection;
-
-	// Render passes
 
 protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)
@@ -87,9 +81,5 @@ public:
 	[[nodiscard]] vk::Rect2D GetGameScissor() const;
 
 	[[nodiscard]] GBuffer* GetGBuffer() const { return m_gBuffer.get(); }
-
-	// TODO: remove
-	vk::RenderPass GetShadowmapRenderPass() const { return m_shadowmapPass.GetRenderPass(); }
-
 } * Renderer{};
 } // namespace vl

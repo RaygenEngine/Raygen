@@ -31,8 +31,7 @@ public:
 		ImGui::Text(entry->path.c_str());
 		if (ImEd::Button("FLIP")) {
 			PodEditor<Image> ed(podHandle);
-			Image* img = ed.GetEditablePtr();
-			std::reverse(img->data.begin(), img->data.end());
+			std::reverse(ed->data.begin(), ed->data.end());
 		}
 	}
 };
