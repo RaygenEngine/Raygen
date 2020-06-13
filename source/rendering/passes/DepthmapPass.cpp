@@ -227,13 +227,15 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 				viewProj * geom->transform
 			};
 
-
 			for (auto& gg : geom->model.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 
 				if (!mat.wip_CustomOverride) {
 				}
 				else {
+					cmdBuffer->setViewport(0, { viewport });
+					cmdBuffer->setScissor(0, { scissor });
+
 					vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
 					vk::DeviceSize offsets[] = { 0 };
 					// bind the graphics pipeline
