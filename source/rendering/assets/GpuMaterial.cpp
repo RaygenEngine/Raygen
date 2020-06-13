@@ -34,6 +34,7 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 	auto data = podHandle.Lock();
 
 	ClearDependencies();
+	AddDependency(data->wip_InstanceOverride);
 	auto matInst = data->wip_InstanceOverride.Lock();
 	auto matArch = matInst->archetype.Lock();
 
