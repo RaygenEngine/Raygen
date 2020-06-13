@@ -12,10 +12,9 @@ namespace vl {
 class ShadowmapPass {
 	vk::UniqueRenderPass m_renderPass;
 
-	vk::UniquePipeline m_pipeline;
-	vk::UniquePipelineLayout m_pipelineLayout;
-
 public:
+	static vk::UniqueRenderPass CreateCompatibleRenderPass() {}
+
 	ShadowmapPass();
 	void MakePipeline();
 

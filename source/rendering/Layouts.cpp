@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Layouts.h"
+#include "rendering/passes/ShadowmapPass.h"
 
 namespace vl {
 Layouts_::Layouts_()
@@ -38,5 +39,8 @@ Layouts_::Layouts_()
 	envmapLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	envmapLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	envmapLayout.Generate();
+
+
+	depthCompatibleRenderPass.Initialize(&ShadowmapPass::CreateCompatibleRenderPass);
 }
 } // namespace vl

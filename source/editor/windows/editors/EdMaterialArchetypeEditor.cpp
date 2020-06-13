@@ -226,8 +226,10 @@ void MaterialArchetypeEditorWindow::OnCompile()
 
 	for (auto& tab : editors) {
 		if (auto r = errors.editorErrors.find(tab.title); r != errors.editorErrors.end()) {
-			tab.editor->SetErrorMarkers(r->second.errors);
-			tab.hasError = true;
+			if (r->second.errors.size() > 0) {
+				tab.editor->SetErrorMarkers(r->second.errors);
+				tab.hasError = true;
+			}
 		}
 	}
 }

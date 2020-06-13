@@ -26,6 +26,11 @@ static_assert(sizeof(PushConstant) <= 128);
 namespace vl {
 ShadowmapPass::ShadowmapPass()
 {
+	m_renderPass = CreateCompatibleRenderPass();
+}
+
+vk::UniqueRenderPass ShadowmapPass::CreateCompatibleRenderPass()
+{
 	vk::AttachmentDescription depthAttachmentDesc{};
 	depthAttachmentDesc
 		.setFormat(Device->pd->FindDepthFormat()) // CHECK:
@@ -69,7 +74,7 @@ ShadowmapPass::ShadowmapPass()
 		.setDependencyCount(1u)
 		.setPDependencies(&dependency);
 
-	m_renderPass = Device->createRenderPassUnique(renderPassInfo);
+	return Device->createRenderPassUnique(renderPassInfo);
 }
 
 void ShadowmapPass::MakePipeline()

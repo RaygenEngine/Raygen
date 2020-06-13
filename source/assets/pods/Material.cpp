@@ -76,7 +76,7 @@ bool MaterialArchetype::CompileAll(
 	auto fragErrors = &outErrors.editorErrors.insert({ "Fragment", {} }).first->second;
 	auto fragBin = ShaderCompiler::Compile(fragCode, ShaderStageType::Fragment, fragErrors);
 
-	if (!fragCode.size()) {
+	if (!fragBin.size()) {
 		RerouteShaderErrors(outErrors);
 		return false;
 	}
