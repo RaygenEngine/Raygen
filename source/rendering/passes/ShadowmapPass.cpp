@@ -213,12 +213,12 @@ void ShadowmapPass::MakePipeline()
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const RDepthmap& depthmap, const glm::mat4& viewProj,
+void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap* depthmap, const glm::mat4& viewProj,
 	const std::vector<SceneGeometry*>& geometries)
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto extent = depthmap.attachment->GetExtent2D();
+	auto extent = depthmap->attachment->GetExtent2D();
 
 	vk::Rect2D scissor{};
 
@@ -240,7 +240,7 @@ void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const RDepthmap& dep
 	vk::RenderPassBeginInfo renderPassInfo{};
 	renderPassInfo
 		.setRenderPass(m_renderPass.get()) //
-		.setFramebuffer(depthmap.framebuffer.get());
+		.setFramebuffer(depthmap->framebuffer.get());
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //
 		.setExtent(extent);
