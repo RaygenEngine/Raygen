@@ -1,7 +1,7 @@
 #pragma once
 #include "assets/pods/EnvironmentMap.h"
 #include "rendering/assets/GpuAssetHandle.h"
-#include "rendering/objects/RCubemap.h"
+#include "rendering/wrappers/RCubemap.h"
 
 #include <vulkan/vulkan.hpp>
 

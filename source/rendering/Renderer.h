@@ -1,9 +1,8 @@
 #pragma once
-
-#include "rendering/objects/GBuffer.h"
+#include "rendering/wrappers/RGbuffer.h"
 #include "rendering/out/CopyHdrTexture.h"
 #include "rendering/out/WriteEditor.h"
-#include "rendering/passes/GBufferPass.h"
+#include "rendering/passes/GbufferPass.h"
 #include "rendering/passes/DepthmapPass.h"
 #include "rendering/ppt/PtCollection.h"
 
@@ -29,7 +28,7 @@ private:
 	CopyHdrTexture m_copyHdrTexture;
 	WriteEditor m_writeEditor;
 
-	UniquePtr<GBuffer> m_gBuffer;
+	UniquePtr<RGbuffer> m_gbuffer;
 
 	std::vector<vk::CommandBuffer> m_geometryCmdBuffer;
 	std::vector<vk::CommandBuffer> m_pptCmdBuffer;
@@ -80,6 +79,6 @@ public:
 	[[nodiscard]] vk::Rect2D GetSceneScissor() const;
 	[[nodiscard]] vk::Rect2D GetGameScissor() const;
 
-	[[nodiscard]] GBuffer* GetGBuffer() const { return m_gBuffer.get(); }
+	[[nodiscard]] RGbuffer* GetGbuffer() const { return m_gbuffer.get(); }
 } * Renderer{};
 } // namespace vl

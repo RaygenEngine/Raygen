@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/objects/RImageAttachment.h"
+#include "rendering/wrappers/RImageAttachment.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -17,7 +17,7 @@ enum GColorAttachment : uint32
 	GCount = 6
 };
 
-struct GBuffer {
+struct RGbuffer {
 
 	inline constexpr static std::array<vk::Format, 5> colorAttachmentFormats
 		= { vk::Format::eR32G32B32A32Sfloat, vk::Format::eR32G32B32A32Sfloat, vk::Format::eR8G8B8A8Srgb,
@@ -31,7 +31,7 @@ struct GBuffer {
 
 	vk::DescriptorSet descSet;
 
-	GBuffer(uint32 width, uint32 height);
+	RGbuffer(uint32 width, uint32 height);
 
 	void TransitionForWrite(vk::CommandBuffer* cmdBuffer);
 };

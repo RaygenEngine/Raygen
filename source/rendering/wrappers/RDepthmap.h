@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/objects/RImageAttachment.h"
+#include "rendering/wrappers/RImageAttachment.h"
 
 #include <vulkan/vulkan.hpp>
 

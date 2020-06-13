@@ -3,7 +3,7 @@
 
 #include "rendering/VulkanUtl.h"
 #include "rendering/Renderer.h"
-#include "rendering/objects/RBuffer.h"
+#include "rendering/wrappers/RBuffer.h"
 #include "rendering/Device.h"
 
 using namespace vl;

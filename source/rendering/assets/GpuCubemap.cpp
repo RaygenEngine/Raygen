@@ -4,7 +4,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
-#include "rendering/objects/RBuffer.h"
+#include "rendering/wrappers/RBuffer.h"
 #include "rendering/Renderer.h"
 #include "rendering/VulkanUtl.h"
 
@@ -33,13 +33,13 @@ void Cubemap::Gpu::Update(const AssetUpdateInfo&)
 
 	vk::DeviceSize bufferSize = cubemapPod->data.size();
 
-	vl::RBuffer stagingBuffer{ bufferSize, vk::BufferUsageFlagBits::eTransferSrc,
+	vl::RBuffer stagingbuffer{ bufferSize, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 	// copy data to buffer
-	stagingBuffer.UploadData(cubemapPod->data);
+	stagingbuffer.UploadData(cubemapPod->data);
 
-	cubemap->CopyBuffer(stagingBuffer, cubemapPod->format == ImageFormat::Hdr ? 16llu : 4llu, cubemapPod->mipCount);
+	cubemap->CopyBuffer(stagingbuffer, cubemapPod->format == ImageFormat::Hdr ? 16llu : 4llu, cubemapPod->mipCount);
 
 	cubemap->BlockingTransitionToLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 

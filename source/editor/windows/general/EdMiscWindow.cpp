@@ -40,15 +40,15 @@ void ImGuiDemoWindow::OnDraw(const char* title, bool* open)
 }
 
 
-GBufferDebugWindow::GBufferDebugWindow(std::string_view name)
+GbufferDebugWindow::GbufferDebugWindow(std::string_view name)
 	: ed::UniqueWindow(name)
 {
 	Event::OnViewportUpdated.BindFlag(this, m_willInvalidateDescriptors);
 }
 
-void GBufferDebugWindow::ImguiDraw()
+void GbufferDebugWindow::ImguiDraw()
 {
-	auto gbuff = vl::Renderer->GetGBuffer();
+	auto gbuff = vl::Renderer->GetGbuffer();
 	if (!gbuff) {
 		return;
 	}

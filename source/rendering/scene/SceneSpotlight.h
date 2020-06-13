@@ -1,6 +1,6 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
-#include "rendering/objects/RDepthmap.h"
+#include "rendering/wrappers/RDepthmap.h"
 
 struct Spotlight_Ubo {
 	glm::vec4 position{};

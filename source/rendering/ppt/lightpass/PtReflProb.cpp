@@ -8,7 +8,7 @@
 namespace vl {
 void PtReflProb::MakeLayout()
 {
-	std::array layouts = { Layouts->gBufferDescLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
+	std::array layouts = { Layouts->gbufferDescLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
 		Layouts->envmapLayout.setLayout.get() };
 
 	// pipeline layout
@@ -62,7 +62,7 @@ void PtReflProb::Draw(vk::CommandBuffer cmdBuffer, uint32 frameIndex)
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-		&Renderer->GetGBuffer()->descSet, 0u, nullptr);
+		&Renderer->GetGbuffer()->descSet, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
 		&Scene->GetActiveCameraDescSet(), 0u, nullptr);

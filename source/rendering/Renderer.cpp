@@ -155,9 +155,6 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 {
 	PROFILE_SCOPE(Renderer);
 
-	// TODO: pass viewports / scissors in passes
-	auto extent = m_gBuffer->attachments[GPosition]->GetExtent2D();
-
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo
 		.setFlags(vk::CommandBufferUsageFlags(0)) //
@@ -165,24 +162,7 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 
 	cmdBuffer->begin(beginInfo);
 	{
-		vk::Rect2D scissor{};
-		scissor
-			.setOffset({ 0, 0 }) //
-			.setExtent(extent);
-
-		vk::Viewport viewport{};
-		viewport
-			.setX(0) //
-			.setY(0)
-			.setWidth(static_cast<float>(extent.width))
-			.setHeight(static_cast<float>(extent.height))
-			.setMinDepth(0.f)
-			.setMaxDepth(1.f);
-
-		cmdBuffer->setViewport(0, { viewport });
-		cmdBuffer->setScissor(0, { scissor });
-
-		GBufferPass::RecordCmd(cmdBuffer, m_gBuffer.get(), Scene->geometries.elements);
+		GbufferPass::RecordCmd(cmdBuffer, m_gbuffer.get(), Scene->geometries.elements);
 
 		for (auto sl : Scene->spotlights.elements) {
 			DepthmapPass::RecordCmd(cmdBuffer, *sl->shadowmap, sl->ubo.viewProj, Scene->geometries.elements);
@@ -195,8 +175,8 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 {
 	PROFILE_SCOPE(Renderer);
 
-	// TODO: remove
-	auto extent = m_gBuffer->attachments[GPosition]->GetExtent2D();
+	// TODO: each effect except the maybe the lightpasses should use its own render/buffer scale
+	auto extent = m_gbuffer->attachments[GPosition]->GetExtent2D();
 
 	vk::Rect2D scissor{};
 	scissor
@@ -250,7 +230,8 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 		}
 		cmdBuffer->endRenderPass();
 
-		m_gBuffer->TransitionForWrite(cmdBuffer);
+		// TODO: preparation of data for next frame should not be performed here?
+		m_gbuffer->TransitionForWrite(cmdBuffer);
 
 		for (auto sl : Scene->spotlights.elements) {
 			if (sl && sl->shadowmap) {
@@ -329,7 +310,7 @@ void Renderer_::OnViewportResize()
 	if (fbSize != m_viewportFramebufferSize) {
 		m_viewportFramebufferSize = fbSize;
 
-		m_gBuffer = std::make_unique<GBuffer>(fbSize.width, fbSize.height);
+		m_gbuffer = std::make_unique<RGbuffer>(fbSize.width, fbSize.height);
 
 		for (uint32 i = 0; i < 3; ++i) {
 			m_attachments[i] = std::make_unique<RImageAttachment>("rgba32", fbSize.width, fbSize.height,

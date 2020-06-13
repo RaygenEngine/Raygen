@@ -35,7 +35,7 @@ std::string shd::GenerateShaderGeneric(const std::string& inOutCode, const std::
 	return ss.str();
 }
 
-std::string shd::GenerateGBufferFrag(
+std::string shd::GenerateGbufferFrag(
 	const std::string& descSetCode, const std::string& sharedFunctions, const std::string& mainCode)
 {
 	return GenerateShaderGeneric(

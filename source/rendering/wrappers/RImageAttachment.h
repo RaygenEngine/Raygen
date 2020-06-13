@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/objects/RImage.h"
+#include "rendering/wrappers/RImage.h"
 
 #include <vulkan/vulkan.hpp>
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/objects/RDepthmap.h"
+#include "rendering/wrappers/RDepthmap.h"
 #include "rendering/scene/SceneGeometry.h"
 
 #include <vulkan/vulkan.hpp>
