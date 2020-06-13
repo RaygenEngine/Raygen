@@ -7,5 +7,5 @@
 
 void SceneSpotlight::ResizeShadowmap(uint32 width, uint32 height)
 {
-	shadowmap = std::make_unique<vl::RDepthmap>(vl::Renderer->GetShadowmapRenderPass(), width, height);
+	shadowmap = std::make_unique<vl::RDepthmap>(width, height);
 }

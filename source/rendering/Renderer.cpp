@@ -145,7 +145,6 @@ Renderer_::Renderer_()
 
 void Renderer_::InitPipelines()
 {
-	m_shadowmapPass.MakePipeline();
 	m_copyHdrTexture.MakePipeline();
 	m_postprocCollection.RegisterTechniques();
 }
@@ -155,6 +154,9 @@ Renderer_::~Renderer_() {}
 void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 {
 	PROFILE_SCOPE(Renderer);
+
+	// TODO: pass viewports / scissors in passes
+	auto extent = m_gBuffer->attachments[GPosition]->GetExtent2D();
 
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo
@@ -166,14 +168,14 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 		vk::Rect2D scissor{};
 		scissor
 			.setOffset({ 0, 0 }) //
-			.setExtent(m_gBuffer->GetExtent());
+			.setExtent(extent);
 
 		vk::Viewport viewport{};
 		viewport
 			.setX(0) //
 			.setY(0)
-			.setWidth(static_cast<float>(m_gBuffer->GetExtent().width))
-			.setHeight(static_cast<float>(m_gBuffer->GetExtent().height))
+			.setWidth(static_cast<float>(extent.width))
+			.setHeight(static_cast<float>(extent.height))
 			.setMinDepth(0.f)
 			.setMaxDepth(1.f);
 
@@ -187,10 +189,10 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 		cmdBuffer->setViewport(0, { viewport });
 		cmdBuffer->setScissor(0, { scissor });
 
-		m_gBufferPass.RecordCmd(cmdBuffer, m_gBuffer.get(), Scene->geometries.elements);
+		GBufferPass::RecordCmd(cmdBuffer, m_gBuffer.get(), Scene->geometries.elements);
 
 		for (auto sl : Scene->spotlights.elements) {
-			m_shadowmapPass.RecordCmd(cmdBuffer, *sl->shadowmap, sl->ubo.viewProj, Scene->geometries.elements);
+			DepthmapPass::RecordCmd(cmdBuffer, *sl->shadowmap, sl->ubo.viewProj, Scene->geometries.elements);
 		}
 	}
 	cmdBuffer->end();
@@ -200,17 +202,20 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 {
 	PROFILE_SCOPE(Renderer);
 
+	// TODO: remove
+	auto extent = m_gBuffer->attachments[GPosition]->GetExtent2D();
+
 	vk::Rect2D scissor{};
 	scissor
 		.setOffset({ 0, 0 }) //
-		.setExtent(m_gBuffer->GetExtent());
+		.setExtent(extent);
 
 	vk::Viewport viewport{};
 	viewport
 		.setX(0) //
 		.setY(0)
-		.setWidth(static_cast<float>(m_gBuffer->GetExtent().width))
-		.setHeight(static_cast<float>(m_gBuffer->GetExtent().height))
+		.setWidth(static_cast<float>(extent.width))
+		.setHeight(static_cast<float>(extent.height))
 		.setMinDepth(0.f)
 		.setMaxDepth(1.f);
 
@@ -227,8 +232,8 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 			.setRenderPass(m_ptRenderpass.get()) //
 			.setFramebuffer(m_framebuffers[currentFrame].get());
 		renderPassInfo.renderArea
-			.setOffset({ 0, 0 })                //
-			.setExtent(m_gBuffer->GetExtent()); // CHECK:
+			.setOffset({ 0, 0 }) //
+			.setExtent(extent);  // CHECK:
 
 		vk::ClearValue clearValue{};
 		clearValue.setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
@@ -331,9 +336,7 @@ void Renderer_::OnViewportResize()
 	if (fbSize != m_viewportFramebufferSize) {
 		m_viewportFramebufferSize = fbSize;
 
-		// fbSize.width *= 0.5;
-		// fbSize.height *= 0.5;
-		m_gBuffer = m_gBufferPass.CreateCompatibleGBuffer(fbSize.width, fbSize.height);
+		m_gBuffer = std::make_unique<GBuffer>(fbSize.width, fbSize.height);
 
 		for (uint32 i = 0; i < 3; ++i) {
 			m_attachments[i] = std::make_unique<RImageAttachment>("rgba32", fbSize.width, fbSize.height,
