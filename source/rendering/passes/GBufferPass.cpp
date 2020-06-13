@@ -160,23 +160,6 @@ void GBufferPass::RecordCmd(
 				auto& mat = gg.material.Lock();
 
 				if (!mat.wip_CustomOverride) {
-					// Old regular material.
-					cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, gBuffer->GetPipeline());
-
-					cmdBuffer->pushConstants(
-						m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-
-					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
-						&Scene->GetActiveCameraDescSet(), 0u, nullptr);
-
-					cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
-					cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
-
-					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-						&gg.material.Lock().descriptorSet, 0u, nullptr);
-
-					cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 				}
 				else {
 

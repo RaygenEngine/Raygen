@@ -36,6 +36,14 @@ void RerouteShaderErrors(shd::GeneratedShaderErrors& errors)
 } // namespace
 
 
+void MaterialArchetype::MakeDefaultInto(MaterialArchetype* mat)
+{
+	mat->gbufferFragBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/gbuffer-default.frag");
+	mat->depthBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/depthmap-default.frag");
+	CLOG_ABORT(mat->gbufferFragBinary.size() == 0 || mat->depthBinary.size() == 0,
+		"Failed to compile defualt shader code. (engine-data/spv/shader-defaults/)");
+}
+
 void MaterialArchetype::ChangeLayout(DynamicDescriptorSetLayout&& newLayout)
 {
 	for (auto& instance : instances) {

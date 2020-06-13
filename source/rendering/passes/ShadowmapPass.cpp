@@ -410,28 +410,6 @@ void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap,
 				auto& mat = gg.material.Lock();
 
 				if (!mat.wip_CustomOverride) {
-
-					vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
-					vk::DeviceSize offsets[] = { 0 };
-					// bind the graphics pipeline
-					cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
-
-					// Submit via push constant (rather than a UBO)
-					cmdBuffer->pushConstants(
-						m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-					// geom
-					cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
-
-					// indices
-					cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
-
-					// descriptor sets
-					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-						&gg.material.Lock().descriptorSet, 0u, nullptr);
-
-					// draw call (triangle)
-					cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 				}
 				else {
 					vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };

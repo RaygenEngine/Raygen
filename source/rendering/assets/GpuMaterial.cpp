@@ -16,110 +16,8 @@ using namespace vl;
 Material::Gpu::Gpu(PodHandle<Material> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
-	// CHECK: upload once for now (not dynamic changes)
-	materialUBO = std::make_unique<RUboBuffer<UBO_Material>>(vk::BufferUsageFlagBits::eUniformBuffer,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
-
 	Update({}); // NOTE: Virtual function call in constructor will not call subclasses overrides, thats why we
 				// explicitly mark this function as final in the header
-}
-
-void Material::Gpu::Update(const AssetUpdateInfo& info)
-{
-	auto data = podHandle.Lock();
-
-	matData.baseColorFactor = data->baseColorFactor;
-	matData.emissiveFactor = glm::vec4(data->emissiveFactor, 1.0);
-	matData.metallicFactor = data->metallicFactor;
-	matData.roughnessFactor = data->roughnessFactor;
-	matData.normalScale = data->normalScale;
-	matData.occlusionStrength = data->occlusionStrength;
-
-	// alpha mask
-	matData.alphaCutoff = data->alphaCutoff;
-	matData.mask = data->alphaMode == Material::AlphaMode::Mask;
-
-	baseColorSampler = GpuAssetManager->GetGpuHandle(data->baseColorSampler);
-	baseColorImage = GpuAssetManager->GetGpuHandle(data->baseColorImage);
-
-	metallicRoughnessSampler = GpuAssetManager->GetGpuHandle(data->metallicRoughnessSampler);
-	metallicRoughnessImage = GpuAssetManager->GetGpuHandle(data->metallicRoughnessImage);
-
-	occlusionSampler = GpuAssetManager->GetGpuHandle(data->occlusionSampler);
-	occlusionImage = GpuAssetManager->GetGpuHandle(data->occlusionImage);
-
-	normalSampler = GpuAssetManager->GetGpuHandle(data->normalSampler);
-	normalImage = GpuAssetManager->GetGpuHandle(data->normalImage);
-
-	emissiveSampler = GpuAssetManager->GetGpuHandle(data->emissiveSampler);
-	emissiveImage = GpuAssetManager->GetGpuHandle(data->emissiveImage);
-
-
-	materialUBO->UploadData(matData);
-
-	// TODO: descriptors
-	descriptorSet = Layouts->regularMaterialDescLayout.GetDescriptorSet();
-
-	// material uniform sets CHECK: (those buffers should be set again when material changes)
-	vk::DescriptorBufferInfo bufferInfo{};
-
-	bufferInfo
-		.setBuffer(*materialUBO) //
-		.setOffset(0u)
-		.setRange(sizeof(UBO_Material));
-	vk::WriteDescriptorSet descriptorWrite{};
-
-	descriptorWrite
-		.setDstSet(descriptorSet) //
-		.setDstBinding(0u)
-		.setDstArrayElement(0u)
-		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-		.setDescriptorCount(1u)
-		.setPBufferInfo(&bufferInfo)
-		.setPImageInfo(nullptr)
-		.setPTexelBufferView(nullptr);
-
-	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
-
-
-	// images (material)
-
-	auto UpdateImageSamplerInDescriptorSet
-		= [&](GpuHandle<Sampler> sampler, GpuHandle<Image> image, uint32 dstBinding) {
-			  auto& sam = sampler.Lock();
-			  auto& img = image.Lock();
-
-			  vk::DescriptorImageInfo imageInfo{};
-			  imageInfo
-				  .setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				  .setImageView(img.image->GetView())
-				  .setSampler(sam.sampler.get());
-
-			  vk::WriteDescriptorSet descriptorWrite{};
-			  descriptorWrite
-				  .setDstSet(descriptorSet) //
-				  .setDstBinding(dstBinding)
-				  .setDstArrayElement(0u)
-				  .setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-				  .setDescriptorCount(1u)
-				  .setPBufferInfo(nullptr)
-				  .setPImageInfo(&imageInfo)
-				  .setPTexelBufferView(nullptr);
-
-			  // PERF: Use a single descriptor update
-			  Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
-		  };
-
-	UpdateImageSamplerInDescriptorSet(baseColorSampler, baseColorImage, 1u);
-	UpdateImageSamplerInDescriptorSet(metallicRoughnessSampler, metallicRoughnessImage, 2u);
-	UpdateImageSamplerInDescriptorSet(occlusionSampler, occlusionImage, 3u);
-	UpdateImageSamplerInDescriptorSet(normalSampler, normalImage, 4u);
-	UpdateImageSamplerInDescriptorSet(emissiveSampler, emissiveImage, 5u);
-
-	// WIP: MATERIAL INSTANCE PART
-	if (!data->wip_InstanceOverride.IsDefault()) {
-		wip_UpdateMat();
-	}
 }
 
 struct PC {
@@ -131,19 +29,15 @@ struct PushConstantShadow {
 	glm::mat4 mvp;
 };
 
-void Material::Gpu::wip_UpdateMat()
+void Material::Gpu::Update(const AssetUpdateInfo& info)
 {
 	auto data = podHandle.Lock();
 
 	ClearDependencies();
-	AddDependency(data->wip_InstanceOverride);
 	auto matInst = data->wip_InstanceOverride.Lock();
 	auto matArch = matInst->archetype.Lock();
 
-	if (matArch->gbufferFragBinary.size() == 0) {
-		wip_CustomOverride = false;
-		return;
-	}
+	wip_CustomOverride = false;
 
 	vk::ShaderModuleCreateInfo createInfo{};
 	createInfo.setCodeSize(matArch->gbufferFragBinary.size() * 4).setPCode(matArch->gbufferFragBinary.data());
@@ -154,9 +48,7 @@ void Material::Gpu::wip_UpdateMat()
 	createInfo3.setCodeSize(matArch->depthBinary.size() * 4).setPCode(matArch->depthBinary.data());
 	wip_New.depthFragModule = vl::Device->createShaderModuleUnique(createInfo3);
 
-
 	auto podPtr = podHandle.Lock();
-
 	GpuAsset<Shader>& gbufferShader = GpuAssetManager->CompileShader("engine-data/spv/gbuffer.shader");
 
 	vk::ShaderModule vert = gbufferShader.vert.Lock().module.get();

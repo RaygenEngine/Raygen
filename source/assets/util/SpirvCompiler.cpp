@@ -177,6 +177,22 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& code, ShaderStage
 	return CompileImpl(code, "custom", outError, LangFromStage(type));
 }
 
+std::string StringFromFile(const std::string& path)
+{
+	std::ifstream t(path);
+	t.seekg(0, std::ios::end);
+	size_t size = t.tellg();
+	std::string buffer(size, ' ');
+	t.seekg(0);
+	t.read(&buffer[0], size);
+	return buffer;
+}
+
+std::vector<uint32> ShaderCompiler::Compile(const std::string& filepath, TextCompilerErrors* outError)
+{
+	return Compile(StringFromFile(filepath), filepath, outError);
+}
+
 
 EShLanguage FindLanguage(const std::string& filename)
 {
