@@ -1,6 +1,5 @@
 #pragma once
 #include "rendering/objects/RImageAttachment.h"
-#include "rendering/Device.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -12,8 +11,7 @@ struct RDepthmap {
 
 	vk::DescriptorSet descSet;
 
-public:
-	RDepthmap(vk::RenderPass renderPass, uint32 width, uint32 height, const char* name = "depthmap");
+	RDepthmap(uint32 width, uint32 height, const char* name = "depthmap");
 
 	// DOC: transitioning for read is generally done automatically from the render pass
 	// if need be create a transition for read method

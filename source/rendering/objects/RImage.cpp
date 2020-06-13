@@ -4,6 +4,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
 #include "rendering/Renderer.h"
+#include "rendering/resource/GpuResources.h"
 #include "rendering/VulkanUtl.h"
 
 namespace vl {

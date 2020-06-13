@@ -2,11 +2,12 @@
 #include "RDepthmap.h"
 
 #include "rendering/assets/GpuAssetManager.h"
+#include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/VulkanUtl.h"
 
 namespace vl {
-RDepthmap::RDepthmap(vk::RenderPass renderPass, uint32 width, uint32 height, const char* name)
+RDepthmap::RDepthmap(uint32 width, uint32 height, const char* name)
 {
 	// attachment
 	vk::Format depthFormat = Device->pd->FindDepthFormat();
@@ -21,7 +22,7 @@ RDepthmap::RDepthmap(vk::RenderPass renderPass, uint32 width, uint32 height, con
 	// framebuffer
 	vk::FramebufferCreateInfo createInfo{};
 	createInfo
-		.setRenderPass(renderPass) //
+		.setRenderPass(Layouts->depthRenderPass.get()) //
 		.setAttachmentCount(1u)
 		.setPAttachments(&attachment->GetView())
 		.setWidth(width)

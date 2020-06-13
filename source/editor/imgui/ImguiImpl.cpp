@@ -11,6 +11,7 @@
 #include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/Renderer.h"
+#include "rendering/resource/GpuResources.h"
 #include "rendering/Swapchain.h"
 
 #include <imgui/imgui.h>

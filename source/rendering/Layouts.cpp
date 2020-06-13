@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Layouts.h"
-#include "rendering/passes/ShadowmapPass.h"
+
+#include "rendering/passes/DepthmapPass.h"
+#include "rendering/passes/GBufferPass.h"
 
 namespace vl {
 Layouts_::Layouts_()
@@ -40,7 +42,8 @@ Layouts_::Layouts_()
 	envmapLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	envmapLayout.Generate();
 
+	depthRenderPass = DepthmapPass::CreateCompatibleRenderPass();
 
-	depthCompatibleRenderPass.Initialize(&ShadowmapPass::CreateCompatibleRenderPass);
+	gbufferPass = GBufferPass::CreateCompatibleRenderPass();
 }
 } // namespace vl
