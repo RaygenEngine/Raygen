@@ -2,24 +2,8 @@
 #include "rendering/objects/RDescriptorLayout.h"
 
 #include <vulkan/vulkan.hpp>
-#include <functional>
 
 namespace vl {
-struct RCompatibleRenderPass {
-	vk::UniqueRenderPass immutableRenderPass;
-	std::function<vk::UniqueRenderPass()> constructor;
-
-public:
-	void Initialize(std::function<vk::UniqueRenderPass()> constr)
-	{
-		constructor = constr;
-		immutableRenderPass = constr();
-	}
-
-	const vk::RenderPass GetCompatiblePass() const { return *immutableRenderPass; }
-	vk::UniqueRenderPass CreateNew() { return constructor(); }
-};
-
 inline struct Layouts_ {
 
 	RDescriptorLayout regularMaterialDescLayout;
@@ -29,7 +13,8 @@ inline struct Layouts_ {
 	RDescriptorLayout cubemapLayout;
 	RDescriptorLayout envmapLayout;
 
-	RCompatibleRenderPass depthCompatibleRenderPass;
+	vk::UniqueRenderPass depthRenderPass;
+	vk::UniqueRenderPass gbufferPass;
 
 	Layouts_();
 

@@ -7,6 +7,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/Swapchain.h"
+#include "rendering/resource/GpuResources.h"
 
 namespace vl {
 Layer_::Layer_()

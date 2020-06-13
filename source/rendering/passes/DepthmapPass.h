@@ -1,11 +1,11 @@
 #pragma once
-#include "rendering/objects/GBuffer.h"
+#include "rendering/objects/RDepthmap.h"
 #include "rendering/scene/SceneGeometry.h"
 
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
-class GBufferPass {
+class DepthmapPass {
 
 public:
 	static vk::UniqueRenderPass CreateCompatibleRenderPass();
@@ -13,7 +13,8 @@ public:
 	static vk::UniquePipeline CreatePipeline(vk::PipelineLayout pipelineLayout, //
 		std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
 
-	static void RecordCmd(vk::CommandBuffer* cmdBuffer, GBuffer* gBuffer, //
+
+	static void RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, const glm::mat4& viewProj,
 		const std::vector<SceneGeometry*>& geometries);
 };
 

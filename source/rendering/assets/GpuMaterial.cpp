@@ -8,7 +8,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
-#include "rendering/passes/ShadowmapPass.h"
+#include "rendering/passes/DepthmapPass.h"
 
 
 using namespace vl;
@@ -258,10 +258,9 @@ void Material::Gpu::wip_UpdateMat()
 	}
 
 	{
-		wip_New.pipeline = Renderer->GetGBuffer()->wip_CreatePipeline(
-			*wip_New.plLayout, Renderer->m_gBufferPass.m_renderPass.get(), shaderStages);
+		wip_New.pipeline = GBufferPass::CreatePipeline(*wip_New.plLayout, shaderStages);
 
-		wip_New.depthPipeline = Renderer->m_shadowmapPass.wip_CreatePipeline(*wip_New.depthPlLayout, depthShaderStages);
+		wip_New.depthPipeline = DepthmapPass::CreatePipeline(*wip_New.depthPlLayout, depthShaderStages);
 	}
 
 	{
