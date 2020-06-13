@@ -2,7 +2,7 @@
 #include "GpuImage.h"
 
 #include "rendering/Device.h"
-#include "rendering/objects/RBuffer.h"
+#include "rendering/wrappers/RBuffer.h"
 #include "rendering/Renderer.h"
 #include "rendering/VulkanUtl.h"
 
@@ -21,11 +21,11 @@ void Image::Gpu::Update(const AssetUpdateInfo& info)
 
 	vk::DeviceSize imageSize = imgData->data.size();
 
-	RBuffer stagingBuffer{ imageSize, vk::BufferUsageFlagBits::eTransferSrc,
+	RBuffer stagingbuffer{ imageSize, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 	// copy data to buffer
-	stagingBuffer.UploadData(imgData->data);
+	stagingbuffer.UploadData(imgData->data);
 
 	vk::Format format = GetFormat(imgData->format);
 
@@ -40,7 +40,7 @@ void Image::Gpu::Update(const AssetUpdateInfo& info)
 	image->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
 
 	// copy (internally transitions to transfer optimal)
-	image->CopyBufferToImage(stagingBuffer);
+	image->CopyBufferToImage(stagingbuffer);
 
 	image->GenerateMipmapsAndTransitionEach(
 		vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);

@@ -7,7 +7,7 @@
 #include "rendering/assets/GpuImage.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
-#include "rendering/objects/RBuffer.h"
+#include "rendering/wrappers/RBuffer.h"
 #include "rendering/Renderer.h"
 #include "rendering/VulkanUtl.h"
 

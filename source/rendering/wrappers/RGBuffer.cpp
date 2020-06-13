@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "GBuffer.h"
+#include "RGbuffer.h"
 
 #include "engine/console/ConsoleVariable.h"
 #include "engine/profiler/ProfileScope.h"
@@ -11,9 +11,9 @@
 ConsoleVariable<int32> console_rCullMode("r.culling", static_cast<int32>(vk::CullModeFlagBits::eBack));
 
 namespace vl {
-GBuffer::GBuffer(uint32 width, uint32 height)
+RGbuffer::RGbuffer(uint32 width, uint32 height)
 {
-	descSet = Layouts->gBufferDescLayout.GetDescriptorSet();
+	descSet = Layouts->gbufferDescLayout.GetDescriptorSet();
 
 	auto initAttachment
 		= [&](const std::string& name, vk::Format format, vk::ImageUsageFlags usage, vk::ImageLayout finalLayout) {
@@ -75,7 +75,7 @@ GBuffer::GBuffer(uint32 width, uint32 height)
 	}
 }
 
-void GBuffer::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
+void RGbuffer::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
 {
 	PROFILE_SCOPE(Renderer);
 

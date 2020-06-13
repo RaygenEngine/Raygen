@@ -153,7 +153,7 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 	}
 
 	{
-		pipeline = GBufferPass::CreatePipeline(*plLayout, shaderStages);
+		pipeline = GbufferPass::CreatePipeline(*plLayout, shaderStages);
 
 		depthPipeline = DepthmapPass::CreatePipeline(*depthPlLayout, depthShaderStages);
 	}

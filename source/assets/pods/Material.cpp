@@ -74,10 +74,10 @@ bool MaterialArchetype::CompileAll(
 		return false;
 	}
 
-	std::string fragCode = shd::GenerateGBufferFrag(descSetCode, sharedFunctions, gbufferFragMain);
+	std::string fragCode = shd::GenerateGbufferFrag(descSetCode, sharedFunctions, gbufferFragMain);
 
 	if (outputToConsole) {
-		LOG_REPORT("GBUFFER FRAG SHADER: === \n{}", fragCode);
+		LOG_REPORT("gbuffer FRAG SHADER: === \n{}", fragCode);
 	}
 
 

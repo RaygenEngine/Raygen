@@ -1,11 +1,11 @@
 #pragma once
-#include "rendering/objects/GBuffer.h"
+#include "rendering/wrappers/RGbuffer.h"
 #include "rendering/scene/SceneGeometry.h"
 
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
-class GBufferPass {
+class GbufferPass {
 
 public:
 	static vk::UniqueRenderPass CreateCompatibleRenderPass();
@@ -13,7 +13,7 @@ public:
 	static vk::UniquePipeline CreatePipeline(vk::PipelineLayout pipelineLayout, //
 		std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
 
-	static void RecordCmd(vk::CommandBuffer* cmdBuffer, GBuffer* gBuffer, //
+	static void RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 		const std::vector<SceneGeometry*>& geometries);
 };
 

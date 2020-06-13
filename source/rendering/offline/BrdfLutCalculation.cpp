@@ -335,12 +335,12 @@ void BrdfLutCalculation::EditPods()
 
 	img->BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
 
-	vl::RBuffer stagingBuffer{ m_resolution * m_resolution * 16u, vk::BufferUsageFlagBits::eTransferDst,
+	vl::RBuffer stagingbuffer{ m_resolution * m_resolution * 16u, vk::BufferUsageFlagBits::eTransferDst,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
-	img->CopyImageToBuffer(stagingBuffer);
+	img->CopyImageToBuffer(stagingbuffer);
 
-	void* data = Device->mapMemory(stagingBuffer.GetMemory(), 0, VK_WHOLE_SIZE, {});
+	void* data = Device->mapMemory(stagingbuffer.GetMemory(), 0, VK_WHOLE_SIZE, {});
 
 	imageEditor->data.resize(m_resolution * m_resolution * 16u);
 	imageEditor->width = m_resolution;
@@ -348,7 +348,7 @@ void BrdfLutCalculation::EditPods()
 	imageEditor->format = ImageFormat::Hdr;
 	memcpy(imageEditor->data.data(), data, m_resolution * m_resolution * 16u);
 
-	Device->unmapMemory(stagingBuffer.GetMemory());
+	Device->unmapMemory(stagingbuffer.GetMemory());
 }
 
 } // namespace vl

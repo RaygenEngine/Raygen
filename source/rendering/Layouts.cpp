@@ -2,16 +2,16 @@
 #include "Layouts.h"
 
 #include "rendering/passes/DepthmapPass.h"
-#include "rendering/passes/GBufferPass.h"
+#include "rendering/passes/GbufferPass.h"
 
 namespace vl {
 Layouts_::Layouts_()
 {
 	// gbuffer
 	for (uint32 i = 0u; i < 6u; ++i) {
-		gBufferDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+		gbufferDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	}
-	gBufferDescLayout.Generate();
+	gbufferDescLayout.Generate();
 
 	// reg mat
 	regularMaterialDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
@@ -44,6 +44,6 @@ Layouts_::Layouts_()
 
 	depthRenderPass = DepthmapPass::CreateCompatibleRenderPass();
 
-	gbufferPass = GBufferPass::CreateCompatibleRenderPass();
+	gbufferPass = GbufferPass::CreateCompatibleRenderPass();
 }
 } // namespace vl

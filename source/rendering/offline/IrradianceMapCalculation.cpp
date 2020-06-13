@@ -186,11 +186,11 @@ void IrradianceMapCalculation::AllocateCubeVertexBuffer()
 {
 	vk::DeviceSize vertexBufferSize = sizeof(vertices[0]) * vertices.size();
 
-	RBuffer vertexStagingBuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
+	RBuffer vertexStagingbuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 	// copy data to buffer
-	vertexStagingBuffer.UploadData(vertices.data(), vertexBufferSize);
+	vertexStagingbuffer.UploadData(vertices.data(), vertexBufferSize);
 
 
 	// device local
@@ -200,7 +200,7 @@ void IrradianceMapCalculation::AllocateCubeVertexBuffer()
 
 
 	// copy from host to device local
-	m_cubeVertexBuffer->CopyBuffer(vertexStagingBuffer);
+	m_cubeVertexBuffer->CopyBuffer(vertexStagingbuffer);
 }
 
 void IrradianceMapCalculation::MakePipeline()
@@ -530,16 +530,16 @@ void IrradianceMapCalculation::EditPods()
 		img->BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
 
 
-		vl::RBuffer stagingBuffer{ m_resolution * m_resolution * bytesPerPixel, vk::BufferUsageFlagBits::eTransferDst,
+		vl::RBuffer stagingbuffer{ m_resolution * m_resolution * bytesPerPixel, vk::BufferUsageFlagBits::eTransferDst,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
-		img->CopyImageToBuffer(stagingBuffer);
+		img->CopyImageToBuffer(stagingbuffer);
 
-		void* data = Device->mapMemory(stagingBuffer.GetMemory(), 0, VK_WHOLE_SIZE, {});
+		void* data = Device->mapMemory(stagingbuffer.GetMemory(), 0, VK_WHOLE_SIZE, {});
 
 		memcpy(cubemapEditor->data.data() + size * i / 6, data, m_resolution * m_resolution * bytesPerPixel);
 
-		Device->unmapMemory(stagingBuffer.GetMemory());
+		Device->unmapMemory(stagingbuffer.GetMemory());
 	}
 }
 

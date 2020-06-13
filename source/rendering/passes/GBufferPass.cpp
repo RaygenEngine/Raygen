@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "GBufferPass.h"
+#include "GbufferPass.h"
 
 #include "engine/Engine.h"
 #include "engine/Input.h"
@@ -11,7 +11,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/Layouts.h"
-#include "rendering/objects/GBuffer.h"
+#include "rendering/wrappers/RGbuffer.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
 
@@ -25,7 +25,7 @@ static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
-vk::UniqueRenderPass GBufferPass::CreateCompatibleRenderPass()
+vk::UniqueRenderPass GbufferPass::CreateCompatibleRenderPass()
 {
 	// renderpass
 	std::array<vk::AttachmentDescription, 5> colorAttachmentDescs{};
@@ -33,7 +33,7 @@ vk::UniqueRenderPass GBufferPass::CreateCompatibleRenderPass()
 
 	for (size_t i = 0; i < 5; ++i) {
 		colorAttachmentDescs[i]
-			.setFormat(GBuffer::colorAttachmentFormats[i]) // CHECK:
+			.setFormat(RGbuffer::colorAttachmentFormats[i]) // CHECK:
 			.setSamples(vk::SampleCountFlagBits::e1)
 			.setLoadOp(vk::AttachmentLoadOp::eClear)
 			.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -95,7 +95,7 @@ vk::UniqueRenderPass GBufferPass::CreateCompatibleRenderPass()
 	return Device->createRenderPassUnique(renderPassInfo);
 }
 
-vk::UniquePipeline GBufferPass::CreatePipeline(
+vk::UniquePipeline GbufferPass::CreatePipeline(
 	vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
 {
 	vk::VertexInputBindingDescription bindingDescription{};
@@ -243,18 +243,37 @@ vk::UniquePipeline GBufferPass::CreatePipeline(
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void GBufferPass::RecordCmd(
-	vk::CommandBuffer* cmdBuffer, GBuffer* gBuffer, const std::vector<SceneGeometry*>& geometries)
+void GbufferPass::RecordCmd(
+	vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, const std::vector<SceneGeometry*>& geometries)
 {
 	PROFILE_SCOPE(Renderer);
+
+	auto extent = gbuffer->attachments[GPosition]->GetExtent2D();
+
+	vk::Rect2D scissor{};
+	scissor
+		.setOffset({ 0, 0 }) //
+		.setExtent(extent);
+
+	vk::Viewport viewport{};
+	viewport
+		.setX(0) //
+		.setY(0)
+		.setWidth(static_cast<float>(extent.width))
+		.setHeight(static_cast<float>(extent.height))
+		.setMinDepth(0.f)
+		.setMaxDepth(1.f);
+
+	cmdBuffer->setViewport(0, { viewport });
+	cmdBuffer->setScissor(0, { scissor });
 
 	vk::RenderPassBeginInfo renderPassInfo{};
 	renderPassInfo
 		.setRenderPass(Layouts->gbufferPass.get()) //
-		.setFramebuffer(gBuffer->framebuffer.get());
+		.setFramebuffer(gbuffer->framebuffer.get());
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //
-		.setExtent(gBuffer->attachments[GPosition]->GetExtent2D());
+		.setExtent(gbuffer->attachments[GPosition]->GetExtent2D());
 
 	std::array<vk::ClearValue, 6> clearValues = {};
 	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });

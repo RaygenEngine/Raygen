@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/objects/RBuffer.h"
+#include "rendering/wrappers/RBuffer.h"
 #include "rendering/Layouts.h"
 #include "rendering/Device.h"
 

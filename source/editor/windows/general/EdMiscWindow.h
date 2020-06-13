@@ -38,20 +38,20 @@ public:
 	virtual ~ImGuiDemoWindow() = default;
 };
 
-class GBufferDebugWindow : public ed::UniqueWindow {
+class GbufferDebugWindow : public ed::UniqueWindow {
 	BoolFlag m_willInvalidateDescriptors;
 
 	glm::ivec2 m_imgSize{ 256, 256 };
 
 
 public:
-	GBufferDebugWindow(std::string_view name);
+	GbufferDebugWindow(std::string_view name);
 
 
 	virtual void ImguiDraw();
 
 
-	virtual ~GBufferDebugWindow() = default;
+	virtual ~GbufferDebugWindow() = default;
 };
 
 class PodEntryEditorWindow : public UniqueWindow {
