@@ -3,7 +3,7 @@
 
 namespace vl {
 struct RDescriptorLayout {
-	
+
 	std::vector<vk::DescriptorSetLayoutBinding> bindings;
 	std::vector<vk::DescriptorPoolSize> perSetPoolSizes;
 
@@ -15,7 +15,11 @@ struct RDescriptorLayout {
 
 	void Generate();
 
+
+	bool hasUbo{ false };
+
 	[[nodiscard]] vk::DescriptorSet GetDescriptorSet() const;
+	[[nodiscard]] bool IsEmpty() const;
 
 private:
 	size_t poolSizeHash;
