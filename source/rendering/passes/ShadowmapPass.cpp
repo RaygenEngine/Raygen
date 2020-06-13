@@ -354,7 +354,7 @@ void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const RDepthmap& dep
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto extent = depthmap.attachment->GetExtent2D();
+	auto extent = depthmap->attachment->GetExtent2D();
 
 	vk::Rect2D scissor{};
 
@@ -376,7 +376,7 @@ void ShadowmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const RDepthmap& dep
 	vk::RenderPassBeginInfo renderPassInfo{};
 	renderPassInfo
 		.setRenderPass(m_renderPass.get()) //
-		.setFramebuffer(depthmap.framebuffer.get());
+		.setFramebuffer(depthmap->framebuffer.get());
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //
 		.setExtent(extent);

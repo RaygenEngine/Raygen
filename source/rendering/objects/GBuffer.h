@@ -1,6 +1,6 @@
 #pragma once
 #include "rendering/Device.h"
-#include "rendering/objects/ImageAttachment.h"
+#include "rendering/objects/RImageAttachment.h"
 #include "rendering/passes/GBufferPass.h"
 
 #include <vulkan/vulkan.hpp>
@@ -29,7 +29,7 @@ public:
 
 private:
 	vk::UniqueFramebuffer m_framebuffer;
-	std::array<UniquePtr<ImageAttachment>, 6> m_attachments;
+	std::array<UniquePtr<RImageAttachment>, 6> m_attachments;
 
 	vk::DescriptorSet m_descSet;
 
@@ -53,6 +53,6 @@ public:
 	[[nodiscard]] vk::Extent2D GetExtent() const { return m_extent; }
 	[[nodiscard]] vk::Pipeline GetPipeline() const { return m_pipeline.get(); }
 
-	[[nodiscard]] ImageAttachment* operator[](uint32 i) const { return m_attachments[i].get(); }
+	[[nodiscard]] RImageAttachment* operator[](uint32 i) const { return m_attachments[i].get(); }
 };
 } // namespace vl

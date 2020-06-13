@@ -18,7 +18,7 @@ public:
 	ShadowmapPass();
 	void MakePipeline();
 
-	void RecordCmd(vk::CommandBuffer* cmdBuffer, const RDepthmap& depthmap, const glm::mat4& viewProj,
+	void RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap* depthmap, const glm::mat4& viewProj,
 		const std::vector<SceneGeometry*>& geometries);
 
 	vk::UniquePipeline wip_CreatePipeline(

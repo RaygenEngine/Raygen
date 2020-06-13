@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/objects/ImageAttachment.h"
+#include "rendering/objects/RImageAttachment.h"
 #include "rendering/Device.h"
 
 #include <vulkan/vulkan.hpp>
@@ -8,7 +8,7 @@ namespace vl {
 struct RDepthmap {
 
 	vk::UniqueFramebuffer framebuffer;
-	UniquePtr<ImageAttachment> attachment;
+	UniquePtr<RImageAttachment> attachment;
 
 	vk::DescriptorSet descSet;
 
