@@ -100,4 +100,15 @@ inline vk::Format GetFormat(ImageFormat format)
 		default: LOG_ABORT("Unsupported");
 	}
 }
+
+inline bool IsDepthFormat(vk::Format format)
+{
+
+	switch (format) {
+		case vk::Format::eD32Sfloat:
+		case vk::Format::eD32SfloatS8Uint:
+		case vk::Format::eD24UnormS8Uint: return true;
+		default: return false;
+	}
+}
 } // namespace vl

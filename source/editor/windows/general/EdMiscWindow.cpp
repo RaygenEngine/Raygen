@@ -58,7 +58,7 @@ void GBufferDebugWindow::ImguiDraw()
 	ImGui::DragInt2("Preview Size", &m_imgSize.x, 1.f, 0, 4096);
 
 
-	auto showAttachment = [&, shouldShowDescriptors](vl::ImageAttachment* att) {
+	auto showAttachment = [&, shouldShowDescriptors](vl::RImageAttachment* att) {
 		ImGui::PushID(att);
 		if (ImGui::CollapsingHeader(att->GetName().c_str())) {
 			auto descrSet = att->GetDebugDescriptor();

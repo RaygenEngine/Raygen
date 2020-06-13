@@ -11,9 +11,9 @@ RDepthmap::RDepthmap(vk::RenderPass renderPass, uint32 width, uint32 height, con
 	// attachment
 	vk::Format depthFormat = Device->pd->FindDepthFormat();
 
-	attachment = std::make_unique<ImageAttachment>(name, width, height, depthFormat, vk::ImageTiling::eOptimal,
+	attachment = std::make_unique<RImageAttachment>(name, width, height, depthFormat, vk::ImageTiling::eOptimal,
 		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, true);
+		vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 	attachment->BlockingTransitionToLayout(
 		vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);

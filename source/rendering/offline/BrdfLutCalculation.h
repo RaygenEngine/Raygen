@@ -2,7 +2,7 @@
 #include "assets/pods/EnvironmentMap.h"
 #include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/objects/RBuffer.h"
-#include "rendering/objects/ImageAttachment.h"
+#include "rendering/objects/RImageAttachment.h"
 
 #include <vulkan/vulkan.hpp>
 namespace vl {
@@ -17,7 +17,7 @@ class BrdfLutCalculation {
 	vk::UniquePipelineLayout m_pipelineLayout;
 
 	vk::UniqueFramebuffer m_framebuffer;
-	UniquePtr<ImageAttachment> m_attachment;
+	UniquePtr<RImageAttachment> m_attachment;
 
 	EnvironmentMap::Gpu* m_envmapAsset;
 

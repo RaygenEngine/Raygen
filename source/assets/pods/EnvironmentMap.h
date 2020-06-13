@@ -2,6 +2,7 @@
 #include "assets/AssetPod.h"
 #include "assets/PodHandle.h"
 #include "assets/pods/Cubemap.h"
+#include "assets/pods/Image.h"
 #include "reflection/GenMacros.h"
 
 #include <array>
@@ -19,12 +20,13 @@ struct EnvironmentMap : AssetPod {
 		REFLECT_VAR(brdfLut);
 	}
 
+
 	// TODO: TEMP: skybox - this will be part of the skymesh
-	PodHandle<::Cubemap> skybox;
+	PodHandle<Cubemap> skybox;
 	// diffuse irradiance
-	PodHandle<::Cubemap> irradiance;
+	PodHandle<Cubemap> irradiance;
 	// specular lobe
-	PodHandle<::Cubemap> prefiltered;
+	PodHandle<Cubemap> prefiltered;
 	// brdf look up texture
-	PodHandle<::Image> brdfLut;
+	PodHandle<Image> brdfLut;
 };

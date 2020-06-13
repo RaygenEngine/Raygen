@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "Image.h"
+#include "RImage.h"
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
@@ -7,7 +7,7 @@
 #include "rendering/VulkanUtl.h"
 
 namespace vl {
-Image::Image(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
+RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
 	vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage, vk::SampleCountFlagBits samples,
 	vk::SharingMode sharingMode, vk::ImageCreateFlags flags, vk::MemoryPropertyFlags properties)
 {
@@ -37,7 +37,7 @@ Image::Image(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uin
 	Device->bindImageMemory(m_handle.get(), m_memory.get(), 0);
 }
 
-void Image::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
+void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
 	vk::ImageMemoryBarrier barrier = CreateTransitionBarrier(oldLayout, newLayout);
 
@@ -62,7 +62,7 @@ void Image::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayou
 	Device->graphicsQueue.waitIdle();
 }
 
-void Image::CopyBufferToImage(const RBuffer& buffer)
+void RImage::CopyBufferToImage(const RBuffer& buffer)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -100,7 +100,7 @@ void Image::CopyBufferToImage(const RBuffer& buffer)
 	Device->transferQueue.waitIdle();
 }
 
-void Image::CopyImageToBuffer(const RBuffer& buffer)
+void RImage::CopyImageToBuffer(const RBuffer& buffer)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -138,7 +138,7 @@ void Image::CopyImageToBuffer(const RBuffer& buffer)
 	Device->transferQueue.waitIdle();
 }
 
-void Image::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout)
+void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout)
 {
 	// Check if image format supports linear blitting
 	vk::FormatProperties formatProperties = Device->pd->getFormatProperties(m_imageInfo.format);
@@ -253,7 +253,7 @@ void Image::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Imag
 	Device->graphicsQueue.waitIdle();
 }
 
-vk::ImageMemoryBarrier Image::CreateTransitionBarrier(
+vk::ImageMemoryBarrier RImage::CreateTransitionBarrier(
 	vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32 baseMipLevel, uint32 baseArrayLevel)
 {
 	vk::ImageMemoryBarrier barrier{};
@@ -277,7 +277,7 @@ vk::ImageMemoryBarrier Image::CreateTransitionBarrier(
 	return barrier;
 }
 
-vk::DescriptorSet Image::GetDebugDescriptor()
+vk::DescriptorSet RImage::GetDebugDescriptor()
 {
 	if (m_debugDescriptorSet) {
 		return *m_debugDescriptorSet;

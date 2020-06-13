@@ -8,7 +8,7 @@
 // DOC: child classes should create the appropriate view
 // TODO: find a way to avoid the device wait idles in this class
 namespace vl {
-class Image {
+class RImage {
 	std::optional<vk::DescriptorSet> m_debugDescriptorSet;
 
 protected:
@@ -20,7 +20,7 @@ protected:
 	vk::UniqueImageView m_view;
 
 public:
-	Image(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
+	RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
 		vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage,
 		vk::SampleCountFlagBits samples, vk::SharingMode sharingMode, vk::ImageCreateFlags flags,
 		vk::MemoryPropertyFlags properties);
@@ -48,6 +48,6 @@ public:
 
 	[[nodiscard]] vk::DescriptorSet GetDebugDescriptor();
 
-	virtual ~Image() = default;
+	virtual ~RImage() = default;
 };
 } // namespace vl

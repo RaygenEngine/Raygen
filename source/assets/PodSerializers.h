@@ -30,7 +30,16 @@ void AdditionalSerializeSave(Archive& ar, PodType* pod)
 template<typename Archive>
 void AdditionalSerializeBoth(Archive& ar, Image* pod)
 {
-	ar(pod->data, pod->mipData);
+	ar(pod->data);
+}
+
+//
+// Cubemap
+//
+template<typename Archive>
+void AdditionalSerializeBoth(Archive& ar, Cubemap* pod)
+{
+	ar(pod->data);
 }
 
 //
@@ -72,15 +81,4 @@ template<typename Archive>
 void AdditionalSerializeBoth(Archive& ar, Mesh* pod)
 {
 	ar(pod->geometrySlots);
-}
-
-
-//
-// Cubemap
-//
-
-template<typename Archive>
-void serialize(Archive& ar, Cubemap* pod)
-{
-	ar(pod);
 }
