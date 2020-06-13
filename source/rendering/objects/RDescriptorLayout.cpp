@@ -41,6 +41,10 @@ void RDescriptorLayout::AddBinding(vk::DescriptorType type, vk::ShaderStageFlags
 
 	bindings.push_back(binding);
 
+	if (type == vk::DescriptorType::eUniformBuffer || type == vk::DescriptorType::eUniformBufferDynamic) {
+		hasUbo = true;
+	}
+
 	auto it
 		= std::find_if(perSetPoolSizes.begin(), perSetPoolSizes.end(), [&](auto& size) { return size.type == type; });
 	if (it != perSetPoolSizes.end()) {
@@ -73,5 +77,10 @@ vk::DescriptorSet RDescriptorLayout::GetDescriptorSet() const
 {
 	CLOG_ABORT(!hasBeenGenerated, "Attempting to get a descriptor set from a non generated DescriptorLayout ");
 	return GpuResources->descPools.AllocateDescriptorSet(poolSizeHash, *this);
+}
+
+bool RDescriptorLayout::IsEmpty() const
+{
+	return bindings.empty();
 }
 } // namespace vl

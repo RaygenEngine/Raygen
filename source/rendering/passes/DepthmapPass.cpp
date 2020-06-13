@@ -217,6 +217,8 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	{
 
+		cmdBuffer->setViewport(0, { viewport });
+		cmdBuffer->setScissor(0, { scissor });
 
 		for (auto geom : geometries) {
 			if (!geom) {
@@ -230,34 +232,29 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 			for (auto& gg : geom->model.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 
-				if (!mat.wip_CustomOverride) {
-				}
-				else {
-					cmdBuffer->setViewport(0, { viewport });
-					cmdBuffer->setScissor(0, { scissor });
+				vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
+				vk::DeviceSize offsets[] = { 0 };
+				// bind the graphics pipeline
+				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, mat.depthPipeline.get());
 
-					vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
-					vk::DeviceSize offsets[] = { 0 };
-					// bind the graphics pipeline
-					cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, mat.wip_New.depthPipeline.get());
+				// Submit via push constant (rather than a UBO)
+				cmdBuffer->pushConstants(
+					mat.depthPlLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
-					// Submit via push constant (rather than a UBO)
-					cmdBuffer->pushConstants(mat.wip_New.depthPlLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u,
-						sizeof(PushConstant), &pc);
+				// geom
+				cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
 
-					// geom
-					cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
+				// indices
+				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
 
-					// indices
-					cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
 
+				if (mat.hasDescriptorSet) {
 					// descriptor sets
-					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, mat.wip_New.depthPlLayout.get(), 0u,
-						1u, &mat.wip_New.descSet, 0u, nullptr);
-
-					// draw call (triangle)
-					cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+					cmdBuffer->bindDescriptorSets(
+						vk::PipelineBindPoint::eGraphics, mat.depthPlLayout.get(), 0u, 1u, &mat.descSet, 0u, nullptr);
 				}
+
+				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 			}
 		}
 	}

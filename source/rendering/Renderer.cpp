@@ -179,13 +179,6 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 			.setMinDepth(0.f)
 			.setMaxDepth(1.f);
 
-		vk::PipelineViewportStateCreateInfo viewportState{};
-		viewportState
-			.setViewportCount(1u) //
-			.setPViewports(&viewport)
-			.setScissorCount(1u)
-			.setPScissors(&scissor);
-
 		cmdBuffer->setViewport(0, { viewport });
 		cmdBuffer->setScissor(0, { scissor });
 

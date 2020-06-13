@@ -38,16 +38,15 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 	auto matInst = data->wip_InstanceOverride.Lock();
 	auto matArch = matInst->archetype.Lock();
 
-	wip_CustomOverride = false;
 
 	vk::ShaderModuleCreateInfo createInfo{};
 	createInfo.setCodeSize(matArch->gbufferFragBinary.size() * 4).setPCode(matArch->gbufferFragBinary.data());
-	wip_New.fragModule = vl::Device->createShaderModuleUnique(createInfo);
+	fragModule = vl::Device->createShaderModuleUnique(createInfo);
 
 
 	vk::ShaderModuleCreateInfo createInfo3{};
 	createInfo3.setCodeSize(matArch->depthBinary.size() * 4).setPCode(matArch->depthBinary.data());
-	wip_New.depthFragModule = vl::Device->createShaderModuleUnique(createInfo3);
+	depthFragModule = vl::Device->createShaderModuleUnique(createInfo3);
 
 	auto podPtr = podHandle.Lock();
 	GpuAsset<Shader>& gbufferShader = GpuAssetManager->CompileShader("engine-data/spv/gbuffer.shader");
@@ -65,7 +64,7 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
 	fragShaderStageInfo
 		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(*wip_New.fragModule)
+		.setModule(*fragModule)
 		.setPName("main");
 
 	shaderStages.push_back(vertShaderStageInfo);
@@ -84,7 +83,7 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 	vk::PipelineShaderStageCreateInfo dfragShaderStageInfo{};
 	dfragShaderStageInfo
 		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(*wip_New.depthFragModule)
+		.setModule(*depthFragModule)
 		.setPName("main");
 
 	depthShaderStages.push_back(dvertShaderStageInfo);
@@ -93,19 +92,22 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 
 	{
 		auto createDescLayout = [&]() {
-			wip_New.descLayout = std::make_unique<RDescriptorLayout>();
-			wip_New.descLayout->AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
-			for (uint32 i = 0; i < matArch->descriptorSetLayout.samplers2d.size(); ++i) {
-				wip_New.descLayout->AddBinding(
-					vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+			descLayout = std::make_unique<RDescriptorLayout>();
+			if (matArch->descriptorSetLayout.SizeOfUbo() != 0) {
+				descLayout->AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
 			}
-			wip_New.descLayout->Generate();
+
+			for (uint32 i = 0; i < matArch->descriptorSetLayout.samplers2d.size(); ++i) {
+				descLayout->AddBinding(
+					vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment, i);
+			}
+			descLayout->Generate();
 		};
 
-		if (!wip_New.descLayout) {
+		if (!descLayout) {
 			createDescLayout();
 		}
-		else if (wip_New.descLayout->bindings.size() != matArch->descriptorSetLayout.samplers2d.size() + 1) {
+		else if (descLayout->bindings.size() != matArch->descriptorSetLayout.samplers2d.size() + 1) {
 			createDescLayout();
 		}
 	}
@@ -118,7 +120,7 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 			.setSize(sizeof(PC))
 			.setOffset(0u);
 
-		std::array layouts = { wip_New.descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() };
+		std::array layouts = { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() };
 
 		vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo
@@ -127,7 +129,7 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 			.setPushConstantRangeCount(1u)
 			.setPPushConstantRanges(&pushConstantRange);
 
-		wip_New.plLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+		plLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 	}
 
 	{
@@ -138,7 +140,7 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 			.setSize(sizeof(PushConstantShadow))
 			.setOffset(0u);
 
-		std::array layouts = { wip_New.descLayout->setLayout.get() };
+		std::array layouts = { descLayout->setLayout.get() };
 
 		vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo
@@ -147,42 +149,52 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 			.setPushConstantRangeCount(1u)
 			.setPPushConstantRanges(&pushConstantRange);
 
-		wip_New.depthPlLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+		depthPlLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 	}
 
 	{
-		wip_New.pipeline = GBufferPass::CreatePipeline(*wip_New.plLayout, shaderStages);
+		pipeline = GBufferPass::CreatePipeline(*plLayout, shaderStages);
 
-		wip_New.depthPipeline = DepthmapPass::CreatePipeline(*wip_New.depthPlLayout, depthShaderStages);
+		depthPipeline = DepthmapPass::CreatePipeline(*depthPlLayout, depthShaderStages);
 	}
 
 	{
-		wip_New.descSet = wip_New.descLayout->GetDescriptorSet();
-		if (!wip_New.uboBuf) {
-			wip_New.uboBuf
-				= std::make_unique<vl::RBuffer>(sizeof(UBO_Material) * 4, vk::BufferUsageFlagBits::eUniformBuffer,
-					vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+		if (descLayout->IsEmpty()) {
+			hasDescriptorSet = false;
+			return;
 		}
-		wip_New.uboBuf->UploadData(matInst->descriptorSet.uboData);
+		hasDescriptorSet = true;
+		descSet = descLayout->GetDescriptorSet();
 
-		vk::DescriptorBufferInfo bufferInfo{};
-		bufferInfo
-			.setBuffer(*wip_New.uboBuf) //
-			.setOffset(0u)
-			.setRange(matArch->descriptorSetLayout.SizeOfUbo());
-		vk::WriteDescriptorSet descriptorWrite{};
 
-		descriptorWrite
-			.setDstSet(wip_New.descSet) //
-			.setDstBinding(0u)
-			.setDstArrayElement(0u)
-			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-			.setDescriptorCount(1u)
-			.setPBufferInfo(&bufferInfo)
-			.setPImageInfo(nullptr)
-			.setPTexelBufferView(nullptr);
+		if (descLayout->hasUbo) {
+			if (!uboBuf) {
+				// WIP:
+				uboBuf
+					= std::make_unique<vl::RBuffer>(sizeof(UBO_Material) * 4, vk::BufferUsageFlagBits::eUniformBuffer,
+						vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+			}
+			uboBuf->UploadData(matInst->descriptorSet.uboData);
 
-		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+			vk::DescriptorBufferInfo bufferInfo{};
+			bufferInfo
+				.setBuffer(*uboBuf) //
+				.setOffset(0u)
+				.setRange(matArch->descriptorSetLayout.SizeOfUbo());
+			vk::WriteDescriptorSet descriptorWrite{};
+
+			descriptorWrite
+				.setDstSet(descSet) //
+				.setDstBinding(0u)
+				.setDstArrayElement(0u)
+				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+				.setDescriptorCount(1u)
+				.setPBufferInfo(&bufferInfo)
+				.setPImageInfo(nullptr)
+				.setPTexelBufferView(nullptr);
+
+			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+		}
 
 		auto UpdateImageSamplerInDescriptorSet = [&](vk::Sampler sampler, GpuHandle<Image> image, uint32 dstBinding) {
 			auto& img = image.Lock();
@@ -195,7 +207,7 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 
 			vk::WriteDescriptorSet descriptorWrite{};
 			descriptorWrite
-				.setDstSet(wip_New.descSet) //
+				.setDstSet(descSet) //
 				.setDstBinding(dstBinding)
 				.setDstArrayElement(0u)
 				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
@@ -214,5 +226,4 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 				GpuAssetManager->GetGpuHandle(matInst->descriptorSet.samplers2d[i]), i + 1);
 		}
 	}
-	wip_CustomOverride = true;
 }

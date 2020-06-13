@@ -288,31 +288,23 @@ void GBufferPass::RecordCmd(
 			for (auto& gg : geom->model.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 
-				if (!mat.wip_CustomOverride) {
-				}
-				else {
+				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *mat.pipeline);
+				cmdBuffer->pushConstants(
+					*mat.plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
-					auto& matNew = mat.wip_New;
-
-
-					cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *matNew.pipeline);
-
-
-					cmdBuffer->pushConstants(
-						*matNew.plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-
-					cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *matNew.plLayout, 1u, 1u,
-						&Scene->GetActiveCameraDescSet(), 0u, nullptr);
-
-					cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
-					cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
-
+				if (mat.hasDescriptorSet) {
 					cmdBuffer->bindDescriptorSets(
-						vk::PipelineBindPoint::eGraphics, *matNew.plLayout, 0u, 1u, &matNew.descSet, 0u, nullptr);
-
-					cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+						vk::PipelineBindPoint::eGraphics, *mat.plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
 				}
+
+				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *mat.plLayout, 1u, 1u,
+					&Scene->GetActiveCameraDescSet(), 0u, nullptr);
+
+				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
+				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+
+
+				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 			}
 		}
 	}

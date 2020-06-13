@@ -22,27 +22,23 @@ struct UBO_Material {
 };
 
 struct Material::Gpu : public vl::GpuAssetTemplate<Material> {
-	bool wip_CustomOverride{ false };
+	vk::UniquePipelineLayout plLayout; // Should actually be in Archetype (later)
+	vk::UniquePipeline pipeline;
 
-	struct wip_NewMaterialInstance {
-		vk::UniquePipelineLayout plLayout; // Should actually be in Archetype (later)
-		vk::UniquePipeline pipeline;
+	// bool hasDescriptor{ false };
+	UniquePtr<vl::RDescriptorLayout> descLayout;
+	vk::DescriptorSet descSet;
 
-		vk::DescriptorSet descSet;
+	UniquePtr<vl::RBuffer> uboBuf;
 
-		UniquePtr<vl::RDescriptorLayout> descLayout;
+	vk::UniqueShaderModule fragModule;
 
-		UniquePtr<vl::RBuffer> uboBuf;
+	vk::UniquePipelineLayout depthPlLayout;
+	vk::UniquePipeline depthPipeline;
 
-		vk::UniqueShaderModule fragModule;
+	vk::UniqueShaderModule depthFragModule;
 
-		vk::UniquePipelineLayout depthPlLayout;
-		vk::UniquePipeline depthPipeline;
-
-		vk::UniqueShaderModule depthFragModule;
-
-	} wip_New;
-
+	bool hasDescriptorSet{ false };
 	Material::Gpu(PodHandle<Material> podHandle);
 
 	void Update(const AssetUpdateInfo& info) override final;
