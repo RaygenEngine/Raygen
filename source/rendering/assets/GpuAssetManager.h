@@ -23,7 +23,8 @@ public:
 	template<typename T>
 	void Load(PodHandle<T> handle)
 	{
-		gpuAssets[handle.uid].reset(new GpuAsset<T>(handle));
+		auto ptr = new GpuAsset<T>(handle);
+		gpuAssets[handle.uid].reset(ptr);
 	}
 
 	template<CONC(CAssetPod) T>

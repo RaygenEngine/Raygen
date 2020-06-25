@@ -59,5 +59,5 @@ bool ImporterRegistry::ImportFile(const fs::path& path)
 {
 	mti::TypeId typeId;
 	auto handle = ImportImpl(path, typeId);
-	return handle.HasBeenAssigned();
+	return !handle.IsDefault();
 }

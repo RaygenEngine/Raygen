@@ -49,8 +49,9 @@ protected:
 struct BasePodHandle {
 	size_t uid{ 0 };
 
-	// CHECK: Remove this
-	[[deprecated, nodiscard]] bool HasBeenAssigned() const { return uid != 0; }
+	[[nodiscard]] bool HasBeenAssigned() const { return uid != 0; }
+
+	[[nodiscard]] constexpr bool IsDefault() const;
 
 	[[nodiscard]] bool operator==(const BasePodHandle& other) const { return other.uid == this->uid && uid != 0; }
 };
