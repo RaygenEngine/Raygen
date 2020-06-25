@@ -48,3 +48,9 @@ constexpr size_t GetPodTypesCount()
 {
 	return detail::GetMaxDefaultUid<ENGINE_POD_TYPES>();
 }
+
+
+inline constexpr bool BasePodHandle::IsDefault() const
+{
+	return uid <= GetPodTypesCount();
+}
