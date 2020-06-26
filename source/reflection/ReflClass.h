@@ -191,6 +191,14 @@ public:
 		return &m_properties[it->second];
 	}
 
+
+	// Returns nullptr if property was not found.
+	[[nodiscard]] const Property* GetPropertyByName(std::string_view name) const
+	{
+		// CHECK: Fix hashmap to work with string_view hashing
+		return GetPropertyByName(std::string(name));
+	}
+
 	void SetIcon(const char8* icon) { m_icon = icon; }
 
 	void ReplaceIfDefaultIcon(const char8* icon)
@@ -268,6 +276,30 @@ public:
 		for (auto& prop : serializedProperties) {
 			DeserializeProperty(prop);
 		}
+	}
+
+
+	// Returns false if nothing was edited (property name not found, or property type not matching, object not matching
+	// class size)
+	template<typename T>
+	bool SetPropertyValueByName(std::vector<byte>& object, std::string_view name, const T& value) const
+	{
+		if (object.size() != m_sizeInBytes) {
+			return false;
+		}
+
+		const Property* prop = GetPropertyByName(name);
+		if (!prop) {
+			return false;
+		}
+
+		if (prop->GetType() != mti::GetTypeId<T>()) {
+			return false;
+		}
+
+		T* dataPtr = reinterpret_cast<T*>(object.data() + prop->m_offset);
+		*dataPtr = value;
+		return true;
 	}
 
 

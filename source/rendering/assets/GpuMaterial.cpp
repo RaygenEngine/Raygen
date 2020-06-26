@@ -98,8 +98,7 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 			}
 
 			for (uint32 i = 0; i < matArch->descriptorSetLayout.samplers2d.size(); ++i) {
-				descLayout->AddBinding(
-					vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment, i);
+				descLayout->AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 			}
 			descLayout->Generate();
 		};

@@ -225,6 +225,10 @@ AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& default
 	pod->data[2] = 0xFF;
 	pod->data[3] = 0xFF;
 
+	// Default normal image
+	auto& [gltfArchHandle, gltfArchPod] = ImporterManager->CreateTransientEntry<MaterialArchetype>("~GltfMaterial");
+	MaterialArchetype::MakeGltfArchetypeInto(gltfArchPod);
+
 
 	LOG_INFO("Current working dir: {}", fs::current_path());
 
