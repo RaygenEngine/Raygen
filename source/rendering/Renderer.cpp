@@ -165,7 +165,9 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 		GbufferPass::RecordCmd(cmdBuffer, m_gbuffer.get(), Scene->geometries.elements);
 
 		for (auto sl : Scene->spotlights.elements) {
-			DepthmapPass::RecordCmd(cmdBuffer, *sl->shadowmap, sl->ubo.viewProj, Scene->geometries.elements);
+			if (sl) {
+				DepthmapPass::RecordCmd(cmdBuffer, *sl->shadowmap, sl->ubo.viewProj, Scene->geometries.elements);
+			}
 		}
 	}
 	cmdBuffer->end();
