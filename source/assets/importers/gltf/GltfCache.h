@@ -18,7 +18,7 @@ struct GltfCache {
 	GltfCache(const fs::path& path);
 
 private:
-	void LoadMaterial(Material* pod, size_t index);
+	void LoadMaterial(Material* pod, MaterialInstance* inst, size_t index);
 
 	void LoadImages();
 	void LoadSamplers();

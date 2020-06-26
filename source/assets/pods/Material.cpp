@@ -36,12 +36,42 @@ void RerouteShaderErrors(shd::GeneratedShaderErrors& errors)
 } // namespace
 
 
+void MaterialArchetype::MakeGltfArchetypeInto(MaterialArchetype* mat)
+{
+	mat->gbufferFragBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/gbuffer-gltf.frag");
+	mat->depthBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/depthmap-gltf.frag");
+
+	CLOG_ABORT(mat->gbufferFragBinary.size() == 0 || mat->depthBinary.size() == 0,
+		"Failed to compile gltf archetype shader code. (engine-data/spv/shader-defaults/)");
+
+	mat->descriptorSetLayout.samplers2d
+		= { "baseColorSampler", "metallicRoughnessSampler", "occlusionSampler", "normalSampler", "emissiveSampler" };
+	mat->descriptorSetLayout.uboName = "material";
+
+
+	auto& cl = mat->descriptorSetLayout.uboClass;
+
+	cl.AddProperty<glm::vec4>("baseColorFactor", PropertyFlags::Color);
+	cl.AddProperty<glm::vec4>("emissiveFactor", PropertyFlags::Color);
+	cl.AddProperty<float>("metallicFactor");
+	cl.AddProperty<float>("roughnessFactor");
+	cl.AddProperty<float>("normalScale");
+	cl.AddProperty<float>("occlusionStrength");
+	cl.AddProperty<float>("alphaCutoff");
+	cl.AddProperty<int>("mask");
+}
+
 void MaterialArchetype::MakeDefaultInto(MaterialArchetype* mat)
 {
 	mat->gbufferFragBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/gbuffer-default.frag");
 	mat->depthBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/depthmap-default.frag");
 	CLOG_ABORT(mat->gbufferFragBinary.size() == 0 || mat->depthBinary.size() == 0,
 		"Failed to compile defualt shader code. (engine-data/spv/shader-defaults/)");
+}
+
+PodHandle<MaterialArchetype> MaterialArchetype::GetGltfArchetype()
+{
+	return { GetDefaultGtlfArchetypeUid() };
 }
 
 void MaterialArchetype::ChangeLayout(DynamicDescriptorSetLayout&& newLayout)

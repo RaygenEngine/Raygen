@@ -76,10 +76,11 @@ struct MaterialArchetype : AssetPod {
 	// Active is the one used in gpu assets
 	DynamicDescriptorSetLayout descriptorSetLayout;
 
-
-	// WIP:
 	static void MakeGltfArchetypeInto(MaterialArchetype* mat);
 	static void MakeDefaultInto(MaterialArchetype* mat);
+
+
+	static PodHandle<MaterialArchetype> GetGltfArchetype();
 
 protected:
 	// Propagates the editable Descriptor Set Layout to active Layout
