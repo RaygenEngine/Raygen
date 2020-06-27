@@ -14,31 +14,11 @@ struct MaterialArchetype::Gpu : public vl::GpuAssetTemplate<MaterialArchetype> {
 		std::vector<vk::UniqueShaderModule> shaderModules;
 	};
 
-	//// bool hasDescriptor{ false };
-
-	// vk::UniquePipeline pipeline;
-	// vk::DescriptorSet descSet;
-
-	// UniquePtr<vl::RBuffer> uboBuf;
-	// vk::UniquePipeline depthPipeline;
-
 	UniquePtr<vl::RDescriptorLayout> descLayout;
 
-	vk::UniquePipelineLayout gbufferPipelineLayout;
-	vk::UniquePipelineLayout depthPipelineLayout;
+	PassInfo gbuffer;
+	PassInfo depth;
 
-	vk::UniqueShaderModule gbufferFragModule;
-	vk::UniqueShaderModule depthFragModule;
-
-	bool hasDescriptorSet{ false };
 	MaterialArchetype::Gpu(PodHandle<MaterialArchetype> podHandle);
-
-	std::vector<vk::PipelineShaderStageCreateInfo> gbufferShaderStages;
-	std::vector<vk::PipelineShaderStageCreateInfo> depthShaderStages;
-
-	// WIP:
-	// PassInfo gbuffer;
-	// PassInfo depth;
-
 	void Update(const AssetUpdateInfo& info) override final;
 };

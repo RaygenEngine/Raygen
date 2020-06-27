@@ -18,6 +18,8 @@ public:
 
 	operator vk::Buffer() const noexcept { return m_handle.get(); }
 	vk::DeviceMemory GetMemory() const { return m_memory.get(); }
+
+	[[nodiscard]] vk::DeviceSize GetSize() const noexcept { return m_size; }
 };
 
 template<typename T>
