@@ -1,28 +1,20 @@
 #pragma once
 #include "assets/pods/MaterialInstance.h"
 #include "rendering/assets/GpuAssetHandle.h"
-#include "rendering/assets/GpuImage.h"
-#include "rendering/assets/GpuSampler.h"
+#include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/wrappers/RBuffer.h"
 
 #include <vulkan/vulkan.hpp>
 
 
 struct MaterialInstance::Gpu : public vl::GpuAssetTemplate<MaterialInstance> {
-	vk::UniquePipelineLayout plLayout;
-	vk::UniquePipeline pipeline;
+	vl::GpuHandle<MaterialArchetype> archetype;
 
-	UniquePtr<vl::RDescriptorLayout> descLayout;
-	vk::DescriptorSet descSet;
-
-	UniquePtr<vl::RBuffer> uboBuf;
-
-	vk::UniqueShaderModule fragModule;
-
-	vk::UniquePipelineLayout depthPlLayout;
+	vk::UniquePipeline gbufferPipeline;
 	vk::UniquePipeline depthPipeline;
 
-	vk::UniqueShaderModule depthFragModule;
+	UniquePtr<vl::RBuffer> uboBuf;
+	vk::DescriptorSet descSet;
 
 	bool hasDescriptorSet{ false };
 	MaterialInstance::Gpu(PodHandle<MaterialInstance> podHandle);

@@ -10,6 +10,8 @@ class GbufferPass {
 public:
 	static vk::UniqueRenderPass CreateCompatibleRenderPass();
 
+	static size_t GetPushConstantSize();
+
 	static vk::UniquePipeline CreatePipeline(vk::PipelineLayout pipelineLayout, //
 		std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
 

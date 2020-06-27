@@ -2,6 +2,7 @@
 #include "GpuMaterialInstance.h"
 
 #include "assets/pods/MaterialInstance.h"
+#include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
 #include "rendering/assets/GpuAssetManager.h"
@@ -32,140 +33,28 @@ struct PushConstantShadow {
 void MaterialInstance::Gpu::Update(const AssetUpdateInfo& info)
 {
 	auto data = podHandle.Lock();
-
 	ClearDependencies();
+	AddDependency(data->archetype);
+
+	archetype = GpuAssetManager->GetGpuHandle(data->archetype);
+
 	auto matInst = podHandle.Lock();
 	auto matArch = matInst->archetype.Lock();
+	auto& gpuArch = GpuAssetManager->GetGpuHandle(matInst->archetype).Lock();
 
-
-	vk::ShaderModuleCreateInfo createInfo{};
-	createInfo.setCodeSize(matArch->gbufferFragBinary.size() * 4).setPCode(matArch->gbufferFragBinary.data());
-	fragModule = vl::Device->createShaderModuleUnique(createInfo);
-
-
-	vk::ShaderModuleCreateInfo createInfo3{};
-	createInfo3.setCodeSize(matArch->depthBinary.size() * 4).setPCode(matArch->depthBinary.data());
-	depthFragModule = vl::Device->createShaderModuleUnique(createInfo3);
-
-	auto podPtr = podHandle.Lock();
-	GpuAsset<Shader>& gbufferShader = GpuAssetManager->CompileShader("engine-data/spv/gbuffer.shader");
-
-	vk::ShaderModule vert = gbufferShader.vert.Lock().module.get();
-
-	std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
-
-	vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
-	vertShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eVertex) //
-		.setModule(vert)
-		.setPName("main");
-
-	vk::PipelineShaderStageCreateInfo fragShaderStageInfo{};
-	fragShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(*fragModule)
-		.setPName("main");
-
-	shaderStages.push_back(vertShaderStageInfo);
-	shaderStages.push_back(fragShaderStageInfo);
-
-	GpuAsset<Shader>& depthShader = GpuAssetManager->CompileShader("engine-data/spv/depth_map.shader");
-
-	std::vector<vk::PipelineShaderStageCreateInfo> depthShaderStages;
-
-	vk::PipelineShaderStageCreateInfo dvertShaderStageInfo{};
-	dvertShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eVertex) //
-		.setModule(depthShader.vert.Lock().module.get())
-		.setPName("main");
-
-	vk::PipelineShaderStageCreateInfo dfragShaderStageInfo{};
-	dfragShaderStageInfo
-		.setStage(vk::ShaderStageFlagBits::eFragment) //
-		.setModule(*depthFragModule)
-		.setPName("main");
-
-	depthShaderStages.push_back(dvertShaderStageInfo);
-	depthShaderStages.push_back(dfragShaderStageInfo);
-
+	gbufferPipeline = GbufferPass::CreatePipeline(*gpuArch.gbufferPipelineLayout, gpuArch.gbufferShaderStages);
+	depthPipeline = DepthmapPass::CreatePipeline(*gpuArch.depthPipelineLayout, gpuArch.depthShaderStages);
 
 	{
-		auto createDescLayout = [&]() {
-			descLayout = std::make_unique<RDescriptorLayout>();
-			if (matArch->descriptorSetLayout.SizeOfUbo() != 0) {
-				descLayout->AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
-			}
-
-			for (uint32 i = 0; i < matArch->descriptorSetLayout.samplers2d.size(); ++i) {
-				descLayout->AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
-			}
-			descLayout->Generate();
-		};
-
-		if (!descLayout) {
-			createDescLayout();
-		}
-		else if (descLayout->bindings.size() != matArch->descriptorSetLayout.samplers2d.size() + 1) {
-			createDescLayout();
-		}
-	}
-
-	{
-		// pipeline layout
-		vk::PushConstantRange pushConstantRange{};
-		pushConstantRange
-			.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
-			.setSize(sizeof(PC))
-			.setOffset(0u);
-
-		std::array layouts = { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() };
-
-		vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-		pipelineLayoutInfo
-			.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
-			.setPSetLayouts(layouts.data())
-			.setPushConstantRangeCount(1u)
-			.setPPushConstantRanges(&pushConstantRange);
-
-		plLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
-	}
-
-	{
-		// depth pipeline layout
-		vk::PushConstantRange pushConstantRange{};
-		pushConstantRange
-			.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
-			.setSize(sizeof(PushConstantShadow))
-			.setOffset(0u);
-
-		std::array layouts = { descLayout->setLayout.get() };
-
-		vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-		pipelineLayoutInfo
-			.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
-			.setPSetLayouts(layouts.data())
-			.setPushConstantRangeCount(1u)
-			.setPPushConstantRanges(&pushConstantRange);
-
-		depthPlLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
-	}
-
-	{
-		pipeline = GbufferPass::CreatePipeline(*plLayout, shaderStages);
-
-		depthPipeline = DepthmapPass::CreatePipeline(*depthPlLayout, depthShaderStages);
-	}
-
-	{
-		if (descLayout->IsEmpty()) {
+		if (gpuArch.descLayout->IsEmpty()) {
 			hasDescriptorSet = false;
 			return;
 		}
 		hasDescriptorSet = true;
-		descSet = descLayout->GetDescriptorSet();
+		descSet = gpuArch.descLayout->GetDescriptorSet();
 
 
-		if (descLayout->hasUbo) {
+		if (gpuArch.descLayout->hasUbo) {
 			if (!uboBuf) {
 				// WIP: UBO SIZE
 				// PERF: NEXT:

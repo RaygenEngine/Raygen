@@ -65,6 +65,11 @@ vk::UniqueRenderPass DepthmapPass::CreateCompatibleRenderPass()
 	return Device->createRenderPassUnique(renderPassInfo);
 }
 
+size_t DepthmapPass::GetPushConstantSize()
+{
+	return sizeof(PushConstant);
+}
+
 
 vk::UniquePipeline DepthmapPass::CreatePipeline(
 	vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
@@ -232,15 +237,16 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 
 			for (auto& gg : geom->model.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
+				auto& arch = mat.archetype.Lock();
+				auto& plLayout = *arch.depthPipelineLayout;
 
 				vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
 				vk::DeviceSize offsets[] = { 0 };
 				// bind the graphics pipeline
-				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, mat.depthPipeline.get());
+				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *mat.depthPipeline);
 
 				// Submit via push constant (rather than a UBO)
-				cmdBuffer->pushConstants(
-					mat.depthPlLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 				// geom
 				cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
@@ -250,9 +256,8 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 
 
 				if (mat.hasDescriptorSet) {
-					// descriptor sets
 					cmdBuffer->bindDescriptorSets(
-						vk::PipelineBindPoint::eGraphics, mat.depthPlLayout.get(), 0u, 1u, &mat.descSet, 0u, nullptr);
+						vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
 				}
 
 				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
