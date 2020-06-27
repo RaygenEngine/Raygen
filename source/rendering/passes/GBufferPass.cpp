@@ -8,6 +8,7 @@
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuMaterialInstance.h"
+
 #include "rendering/Device.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
@@ -94,6 +95,11 @@ vk::UniqueRenderPass GbufferPass::CreateCompatibleRenderPass()
 		.setPDependencies(&dependency);
 
 	return Device->createRenderPassUnique(renderPassInfo);
+}
+
+size_t GbufferPass::GetPushConstantSize()
+{
+	return sizeof(PushConstant);
 }
 
 vk::UniquePipeline GbufferPass::CreatePipeline(
@@ -307,18 +313,19 @@ void GbufferPass::RecordCmd(
 
 			for (auto& gg : geom->model.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
+				auto& arch = mat.archetype.Lock();
+				auto& plLayout = *arch.gbufferPipelineLayout;
 
-				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *mat.pipeline);
-				cmdBuffer->pushConstants(
-					*mat.plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *mat.gbufferPipeline);
+				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 				if (mat.hasDescriptorSet) {
 					cmdBuffer->bindDescriptorSets(
-						vk::PipelineBindPoint::eGraphics, *mat.plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
+						vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
 				}
 
-				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *mat.plLayout, 1u, 1u,
-					&Scene->GetActiveCameraDescSet(), 0u, nullptr);
+				cmdBuffer->bindDescriptorSets(
+					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
 				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
 				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
