@@ -66,7 +66,7 @@ void GltfCache::LoadSamplers()
 	}
 }
 
-void GltfCache::LoadMaterial(Material* pod, MaterialInstance* inst, size_t index)
+void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 {
 	static PodHandle<MaterialArchetype> gltfArchetypeHandle = MaterialArchetype::GetGltfArchetype();
 	auto gltfArchetype = gltfArchetypeHandle.Lock();
@@ -86,47 +86,30 @@ void GltfCache::LoadMaterial(Material* pod, MaterialInstance* inst, size_t index
 
 	// factors
 	auto bFactor = data.pbrMetallicRoughness.baseColorFactor;
-	pod->baseColorFactor = { bFactor[0], bFactor[1], bFactor[2], bFactor[3] };
 	setData("baseColorFactor", glm::vec4{ bFactor[0], bFactor[1], bFactor[2], bFactor[3] });
-
-	pod->metallicFactor = static_cast<float>(data.pbrMetallicRoughness.metallicFactor);
 	setData("metallicFactor", static_cast<float>(data.pbrMetallicRoughness.metallicFactor));
-
-	pod->roughnessFactor = static_cast<float>(data.pbrMetallicRoughness.roughnessFactor);
 	setData("roughnessFactor", static_cast<float>(data.pbrMetallicRoughness.roughnessFactor));
 
 	auto eFactor = data.emissiveFactor;
-	pod->emissiveFactor = { eFactor[0], eFactor[1], eFactor[2] };
 	setData("emissiveFactor", glm::vec4{ eFactor[0], eFactor[1], eFactor[2], 1.f });
 
-
 	// scales/strenghts
-	pod->normalScale = static_cast<float>(data.normalTexture.scale);
 	setData("normalScale", static_cast<float>(data.normalTexture.scale));
-
-
-	pod->occlusionStrength = static_cast<float>(data.occlusionTexture.strength);
 	setData("occlusionStrength", static_cast<float>(data.occlusionTexture.strength));
 
 	// alpha
-	pod->alphaMode = GetAlphaMode(data.alphaMode);
 	setData("mask", int{ GetAlphaMode(data.alphaMode) });
-
-
-	pod->alphaCutoff = static_cast<float>(data.alphaCutoff);
 	setData("alphaCutoff", static_cast<float>(data.alphaCutoff));
 
-	// doublesided-ness
-	pod->doubleSided = data.doubleSided;
-	// CHECK: This could be a material archetype boolean value in the future, currently unsupported
+	// CHECK: double-sidedness This could be a material archetype boolean value in the future, currently unsupported
 
-
+	// Load Textures into the material
 	{
 		int32 samplerIndex = 0;
 
 		inst->descriptorSet.samplers2d[3] = { GetDefaultNormalImagePodUid() };
 
-		auto fillNextTexture = [&](auto textureInfo) {
+		auto fillNextTexture = [&](auto textureInfo, bool srgb = false) {
 			if (textureInfo.index != -1) {
 				auto texture = gltfData.textures.at(textureInfo.index);
 
@@ -134,21 +117,23 @@ void GltfCache::LoadMaterial(Material* pod, MaterialInstance* inst, size_t index
 				CLOG_ABORT(imageIndex == -1, "This model is unsafe to use");
 
 				inst->descriptorSet.samplers2d[samplerIndex] = imagePods.at(imageIndex);
+				if (srgb) {
+					auto im = imagePods.at(imageIndex).Lock();
+					const_cast<Image*>(im)->format = ImageFormat::Srgb;
+				}
 			}
 
 			samplerIndex++;
 		};
 
 		// samplers
+		// NOTE: Code order matters here, each time we fill the next slot. Textures should be loaded in the same order
+		// as the samplers in the shader.
 		auto& baseColorTextureInfo = data.pbrMetallicRoughness.baseColorTexture;
-		fillNextTexture(baseColorTextureInfo);
-		auto im = pod->baseColorImage.Lock();
-		const_cast<Image*>(im)->format = ImageFormat::Srgb;
-
+		fillNextTexture(baseColorTextureInfo, true);
 
 		auto& metallicRougnessTextureInfo = data.pbrMetallicRoughness.metallicRoughnessTexture;
 		fillNextTexture(metallicRougnessTextureInfo);
-
 
 		auto& occlusionTextureInfo = data.occlusionTexture;
 		fillNextTexture(occlusionTextureInfo);
@@ -157,48 +142,7 @@ void GltfCache::LoadMaterial(Material* pod, MaterialInstance* inst, size_t index
 		fillNextTexture(normalTextureInfo);
 
 		auto& emissiveTextureInfo = data.emissiveTexture;
-		fillNextTexture(emissiveTextureInfo);
-		im = pod->emissiveImage.Lock();
-		const_cast<Image*>(im)->format = ImageFormat::Srgb;
-	}
-
-	{ // OLD
-		auto fillMatTexture = [&](auto textureInfo, PodHandle<Sampler>& sampler, PodHandle<Image>& image) {
-			if (textureInfo.index != -1) {
-
-				auto texture = gltfData.textures.at(textureInfo.index);
-
-				const auto imageIndex = texture.source;
-				CLOG_ABORT(imageIndex == -1, "This model is unsafe to use");
-
-				image = imagePods.at(imageIndex);
-
-				const auto samplerIndex = texture.sampler;
-				if (samplerIndex != -1) {
-					sampler = samplerPods.at(samplerIndex);
-				} // else default
-			}
-		};
-
-		// samplers
-		auto& baseColorTextureInfo = data.pbrMetallicRoughness.baseColorTexture;
-		fillMatTexture(baseColorTextureInfo, pod->baseColorSampler, pod->baseColorImage);
-		auto im = pod->baseColorImage.Lock();
-		const_cast<Image*>(im)->format = ImageFormat::Srgb;
-
-		auto& emissiveTextureInfo = data.emissiveTexture;
-		fillMatTexture(emissiveTextureInfo, pod->emissiveSampler, pod->emissiveImage);
-		im = pod->emissiveImage.Lock();
-		const_cast<Image*>(im)->format = ImageFormat::Srgb;
-
-		auto& normalTextureInfo = data.normalTexture;
-		fillMatTexture(normalTextureInfo, pod->normalSampler, pod->normalImage);
-
-		auto& metallicRougnessTextureInfo = data.pbrMetallicRoughness.metallicRoughnessTexture;
-		fillMatTexture(metallicRougnessTextureInfo, pod->metallicRoughnessSampler, pod->metallicRoughnessImage);
-
-		auto& occlusionTextureInfo = data.occlusionTexture;
-		fillMatTexture(occlusionTextureInfo, pod->occlusionSampler, pod->occlusionImage);
+		fillNextTexture(emissiveTextureInfo, true);
 	}
 }
 
@@ -212,16 +156,11 @@ void GltfCache::LoadMaterials()
 		auto matPath = uri::MakeChildJson(gltfFilePath, data);
 
 		std::string name = mat.name.empty() ? filename + "_Mat_" + std::to_string(matIndex) : mat.name;
+		auto& [handleInst, podInst] = ImporterManager->CreateEntry<MaterialInstance>(matPath, name);
 
-		auto& [handle, pod] = ImporterManager->CreateEntry<Material>(matPath, name);
+		LoadMaterial(podInst, matIndex);
 
-		std::string nameInst = mat.name.empty() ? filename + "_MatInst_" + std::to_string(matIndex) : mat.name;
-		auto& [handleInst, podInst] = ImporterManager->CreateEntry<MaterialInstance>(matPath, nameInst);
-
-		LoadMaterial(pod, podInst, matIndex);
-		pod->wip_InstanceOverride = handleInst;
-
-		materialPods.emplace_back(handle);
+		materialPods.emplace_back(handleInst);
 		matIndex++;
 	}
 

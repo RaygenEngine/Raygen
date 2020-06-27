@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "GpuMaterial.h"
+#include "GpuMaterialInstance.h"
 
-#include "assets/pods/Material.h"
+#include "assets/pods/MaterialInstance.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
 #include "rendering/assets/GpuAssetManager.h"
@@ -13,7 +13,7 @@
 
 using namespace vl;
 
-Material::Gpu::Gpu(PodHandle<Material> podHandle)
+MaterialInstance::Gpu::Gpu(PodHandle<MaterialInstance> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	Update({}); // NOTE: Virtual function call in constructor will not call subclasses overrides, thats why we
@@ -29,13 +29,12 @@ struct PushConstantShadow {
 	glm::mat4 mvp;
 };
 
-void Material::Gpu::Update(const AssetUpdateInfo& info)
+void MaterialInstance::Gpu::Update(const AssetUpdateInfo& info)
 {
 	auto data = podHandle.Lock();
 
 	ClearDependencies();
-	AddDependency(data->wip_InstanceOverride);
-	auto matInst = data->wip_InstanceOverride.Lock();
+	auto matInst = podHandle.Lock();
 	auto matArch = matInst->archetype.Lock();
 
 
@@ -168,10 +167,10 @@ void Material::Gpu::Update(const AssetUpdateInfo& info)
 
 		if (descLayout->hasUbo) {
 			if (!uboBuf) {
-				// WIP:
-				uboBuf
-					= std::make_unique<vl::RBuffer>(sizeof(UBO_Material) * 4, vk::BufferUsageFlagBits::eUniformBuffer,
-						vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+				// WIP: UBO SIZE
+				// PERF: NEXT:
+				uboBuf = std::make_unique<vl::RBuffer>(2048, vk::BufferUsageFlagBits::eUniformBuffer,
+					vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 			}
 			uboBuf->UploadData(matInst->descriptorSet.uboData);
 

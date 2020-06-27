@@ -1,7 +1,7 @@
 #pragma once
 #include "assets/pods/Mesh.h"
 #include "rendering/assets/GpuAssetHandle.h"
-#include "rendering/assets/GpuMaterial.h"
+#include "rendering/wrappers/RBuffer.h"
 #include "universe/nodes/geometry/GeometryNode.h"
 
 #include <vulkan/vulkan.hpp>
@@ -16,7 +16,7 @@
 // PERF: batching
 struct GpuGeometryGroup {
 	uint32 indexCount{ 0u };
-	vl::GpuHandle<Material> material;
+	vl::GpuHandle<MaterialInstance> material;
 
 	UniquePtr<vl::RBuffer> vertexBuffer;
 	UniquePtr<vl::RBuffer> indexBuffer;

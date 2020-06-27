@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "ShaderGen.h"
 
+#include "assets/pods/MaterialInstance.h"
+
+#include <sstream>
 
 // The type of the Ubo Member
 enum class Type // Can be extended for matrices later

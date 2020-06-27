@@ -1,5 +1,5 @@
 #pragma once
-#include "assets/pods/Material.h"
+#include "assets/pods/MaterialInstance.h"
 #include "rendering/assets/GpuAssetHandle.h"
 #include "rendering/assets/GpuImage.h"
 #include "rendering/assets/GpuSampler.h"
@@ -7,25 +7,11 @@
 
 #include <vulkan/vulkan.hpp>
 
-struct UBO_Material {
-	// factors
-	glm::vec4 baseColorFactor;
-	glm::vec4 emissiveFactor;
-	float metallicFactor;
-	float roughnessFactor;
-	float normalScale;
-	float occlusionStrength;
 
-	// alpha mask
-	float alphaCutoff;
-	int mask;
-};
-
-struct Material::Gpu : public vl::GpuAssetTemplate<Material> {
-	vk::UniquePipelineLayout plLayout; // Should actually be in Archetype (later)
+struct MaterialInstance::Gpu : public vl::GpuAssetTemplate<MaterialInstance> {
+	vk::UniquePipelineLayout plLayout;
 	vk::UniquePipeline pipeline;
 
-	// bool hasDescriptor{ false };
 	UniquePtr<vl::RDescriptorLayout> descLayout;
 	vk::DescriptorSet descSet;
 
@@ -39,7 +25,7 @@ struct Material::Gpu : public vl::GpuAssetTemplate<Material> {
 	vk::UniqueShaderModule depthFragModule;
 
 	bool hasDescriptorSet{ false };
-	Material::Gpu(PodHandle<Material> podHandle);
+	MaterialInstance::Gpu(PodHandle<MaterialInstance> podHandle);
 
 	void Update(const AssetUpdateInfo& info) override final;
 };

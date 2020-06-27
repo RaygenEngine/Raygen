@@ -3,7 +3,7 @@
 
 #include "editor/windows/editors/EdShaderStageEditorWindow.h"
 #include "engine/profiler/ProfilerSetup.h"
-#include "assets/pods/Material.h"
+#include "assets/pods/MaterialInstance.h"
 
 namespace ed {
 class MaterialArchetypeEditorWindow : public AssetEditorWindowTemplate<MaterialArchetype> {

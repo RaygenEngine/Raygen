@@ -273,28 +273,6 @@ namespace {
 			return result;
 		}
 
-		template<>
-		bool Inner(std::vector<PodHandle<Material>>& t, const Property& p)
-		{
-			bool result = false;
-			if (ImGui::CollapsingHeader(name)) {
-				ImGui::Indent();
-				int32 index = 0;
-
-				for (auto& handle : t) {
-					ImGui::PushID(index);
-					++index;
-
-					result |= InjectPodCode(handle, p, true, index * 1024);
-
-					ImGui::PopID();
-				}
-
-				ImGui::Unindent();
-			}
-			return result;
-		}
-
 		// Enum
 		bool Inner(MetaEnumInst& t, const Property& p)
 		{

@@ -13,12 +13,12 @@ struct GltfCache {
 
 	std::vector<PodHandle<Image>> imagePods;
 	std::vector<PodHandle<Sampler>> samplerPods;
-	std::vector<PodHandle<Material>> materialPods;
+	std::vector<PodHandle<MaterialInstance>> materialPods;
 
 	GltfCache(const fs::path& path);
 
 private:
-	void LoadMaterial(Material* pod, MaterialInstance* inst, size_t index);
+	void LoadMaterial(MaterialInstance* inst, size_t index);
 
 	void LoadImages();
 	void LoadSamplers();

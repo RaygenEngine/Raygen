@@ -3,6 +3,7 @@
 
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"

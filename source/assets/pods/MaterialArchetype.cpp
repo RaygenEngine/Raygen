@@ -1,11 +1,12 @@
 #include "pch.h"
-#include "Material.h"
+#include "MaterialArchetype.h"
 
 #include "assets/util/SpirvCompiler.h"
 #include "assets/util/SpirvReflector.h"
 #include "assets/util/shadergen/ShaderGen.h"
 #include "assets/PodEditor.h"
 #include "reflection/ReflectionTools.h"
+
 
 namespace {
 void RerouteShaderErrors(shd::GeneratedShaderErrors& errors)

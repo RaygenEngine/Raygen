@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "EdMaterialArchetypeEditor.h"
+
 #include "assets/PodEditor.h"
 #include "editor/imgui/ImEd.h"
 #include "editor/imgui/ImAssetSlot.h"
-#include "assets/pods/Material.h"
 #include "assets/AssetRegistry.h"
 #include "assets/util/SpirvReflector.h"
 #include "assets/util/SpirvCompiler.h"
