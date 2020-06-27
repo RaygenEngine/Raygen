@@ -369,7 +369,7 @@ void PrefilteredMapCalculation::PrepareFaceInfo()
 		for (uint32 i = 0; i < 6; ++i) {
 
 			// reisze framebuffer according to mip-level size.
-			uint32 mipResolution = m_resolution / std::pow(2, mip);
+			uint32 mipResolution = m_resolution / static_cast<uint32>(std::round((std::pow(2, mip))));
 
 			m_cubemapMips[mip].faceAttachments[i] = std::make_unique<RImageAttachment>("face" + i, mipResolution,
 				mipResolution, m_envmapAsset->skybox.Lock().cubemap->GetFormat(), vk::ImageTiling::eOptimal,

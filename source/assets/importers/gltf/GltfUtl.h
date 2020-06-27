@@ -1,6 +1,6 @@
 #pragma once
 #include "assets/pods/Sampler.h"
-#include "assets/pods/Material.h"
+#include "assets/pods/MaterialInstance.h"
 #include "assets/pods/Mesh.h"
 #include "core/StringUtl.h"
 
@@ -53,19 +53,26 @@ inline TextureWrapping GetTextureWrapping(int32 gltfWrapping)
 	}
 };
 
-inline Material::AlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
+enum class MaterialAlphaMode
+{
+	Opaque,
+	Mask,
+	Blend
+};
+
+inline MaterialAlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
 {
 	if (str::equalInsensitive(gltfAlphaMode, "OPAQUE")) {
-		return Material::Opaque;
+		return MaterialAlphaMode::Opaque;
 	}
 	if (str::equalInsensitive(gltfAlphaMode, "MASK")) {
-		return Material::Mask;
+		return MaterialAlphaMode::Mask;
 	}
 	if (str::equalInsensitive(gltfAlphaMode, "BLEND")) {
-		return Material::Blend;
+		return MaterialAlphaMode::Blend;
 	}
 	// not defined -> opaque
-	return Material::Opaque;
+	return MaterialAlphaMode::Opaque;
 }
 
 struct AccessorDescription {

@@ -1,6 +1,6 @@
 #pragma once
 #include "assets/AssetPod.h"
-#include "assets/pods/Material.h"
+#include "assets/pods/MaterialInstance.h"
 
 struct Vertex {
 	glm::vec3 position{};
@@ -28,5 +28,5 @@ struct Mesh : AssetPod {
 
 	std::vector<GeometrySlot> geometrySlots{};
 
-	std::vector<PodHandle<Material>> materials{};
+	std::vector<PodHandle<MaterialInstance>> materials{};
 };

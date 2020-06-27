@@ -1,6 +1,6 @@
 #pragma once
 #include "assets/AssetPod.h"
-#include "assets/pods/Material.h"
+#include "assets/pods/MaterialInstance.h"
 
 struct SkinnedVertex {
 	glm::vec3 position{};
@@ -32,5 +32,5 @@ struct SkinnedMesh : public AssetPod {
 
 	std::vector<SkinnedGeometryGroup> geometryGroups{};
 
-	std::vector<PodHandle<Material>> materials{};
+	std::vector<PodHandle<MaterialInstance>> materials{};
 };

@@ -5,12 +5,11 @@
 // When adding a pod, add it to both of these
 
 #define ENGINE_POD_TYPES                                                                                               \
-	Image, Material, Mesh, Shader, Sampler, SkinnedMesh, Animation, Cubemap, EnvironmentMap, ShaderStage,              \
-		MaterialArchetype, MaterialInstance
+	Image, Mesh, Shader, Sampler, SkinnedMesh, Animation, Cubemap, EnvironmentMap, ShaderStage, MaterialArchetype,     \
+		MaterialInstance
 
 // Can be macroed
 struct Image;
-struct Material;
 struct Mesh;
 struct Shader;
 struct ShaderStage;

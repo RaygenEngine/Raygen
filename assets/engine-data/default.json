@@ -122,7 +122,7 @@
         "~children": []
     },
     {
-        "+name": "MetalRoughSpheresNoTextures",
+        "+name": "MetalRoughSpheres",
         "+trs": {
             "pos": {
                 "x": -18.83384895324707,
@@ -135,14 +135,14 @@
                 "z": 179.99818420410156
             },
             "scale": {
-                "x": 411.9726867675781,
-                "y": 411.9728698730469,
-                "z": 411.9710388183594
+                "x": 0.8,
+                "y": 0.8,
+                "z": 0.8
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/MetalRoughSpheresNoTextures",
-        "model_importHint_": "gltf-samples/2.0/MetalRoughSpheresNoTextures/glTF/MetalRoughSpheresNoTextures.gltf",
+        "model": "gen-data/MetalRoughSpheres",
+        "model_importHint_": "gltf-samples/2.0/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf",
         "~children": []
     }
 ]
