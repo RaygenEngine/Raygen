@@ -73,15 +73,6 @@ void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& info)
 	auto arch = podHandle.Lock();
 	ClearDependencies();
 
-	gbufferFragModule = CreateShaderModule(arch->gbufferFragBinary);
-	depthFragModule = CreateShaderModule(arch->depthBinary);
-
-	auto podPtr = podHandle.Lock();
-
-	gbufferShaderStages = CreateShaderStages("engine-data/spv/gbuffer.shader", *gbufferFragModule);
-	depthShaderStages = CreateShaderStages("engine-data/spv/depth_map.shader", *depthFragModule);
-
-
 	{
 		auto createDescLayout = [&]() {
 			descLayout = std::make_unique<RDescriptorLayout>();
@@ -103,9 +94,36 @@ void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& info)
 		}
 	}
 
-
 	std::vector descLayouts = { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() };
 
-	gbufferPipelineLayout = CreatePipelineLayout(GbufferPass::GetPushConstantSize(), descLayouts);
-	depthPipelineLayout = CreatePipelineLayout(DepthmapPass::GetPushConstantSize(), { descLayout->setLayout.get() });
+	auto createPassInfoFrag
+		= [&](const char* originalShader, size_t pushConstantSize, const std::vector<uint32_t>& fragBinary) {
+			  PassInfo info;
+			  info.shaderModules.emplace_back(CreateShaderModule(fragBinary));
+
+			  info.shaderStages = CreateShaderStages(originalShader, *info.shaderModules[0]);
+
+			  info.pipelineLayout = CreatePipelineLayout(pushConstantSize, descLayouts);
+			  return std::move(info);
+		  };
+
+
+	gbuffer = createPassInfoFrag(
+		"engine-data/spv/gbuffer.shader", GbufferPass::GetPushConstantSize(), arch->gbufferFragBinary);
+
+	depth = createPassInfoFrag(
+		"engine-data/spv/depth_map.shader", DepthmapPass::GetPushConstantSize(), arch->depthBinary);
+
+
+	// gbufferFragModule = CreateShaderModule(arch->gbufferFragBinary);
+	// depthFragModule = CreateShaderModule(arch->depthBinary);
+
+	// auto podPtr = podHandle.Lock();
+
+	// gbufferShaderStages = CreateShaderStages("engine-data/spv/gbuffer.shader", *gbufferFragModule);
+	// depthShaderStages = CreateShaderStages("engine-data/spv/depth_map.shader", *depthFragModule);
+
+
+	// gbufferPipelineLayout = CreatePipelineLayout(GbufferPass::GetPushConstantSize(), descLayouts);
+	// depthPipelineLayout = CreatePipelineLayout(DepthmapPass::GetPushConstantSize(), { descLayout->setLayout.get() });
 }

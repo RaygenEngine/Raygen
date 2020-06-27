@@ -238,7 +238,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 			for (auto& gg : geom->model.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
-				auto& plLayout = *arch.depthPipelineLayout;
+				auto& plLayout = *arch.depth.pipelineLayout;
 
 				vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
 				vk::DeviceSize offsets[] = { 0 };

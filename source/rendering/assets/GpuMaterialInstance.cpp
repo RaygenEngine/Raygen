@@ -42,8 +42,8 @@ void MaterialInstance::Gpu::Update(const AssetUpdateInfo& info)
 	auto matArch = matInst->archetype.Lock();
 	auto& gpuArch = GpuAssetManager->GetGpuHandle(matInst->archetype).Lock();
 
-	gbufferPipeline = GbufferPass::CreatePipeline(*gpuArch.gbufferPipelineLayout, gpuArch.gbufferShaderStages);
-	depthPipeline = DepthmapPass::CreatePipeline(*gpuArch.depthPipelineLayout, gpuArch.depthShaderStages);
+	gbufferPipeline = GbufferPass::CreatePipeline(*gpuArch.gbuffer.pipelineLayout, gpuArch.gbuffer.shaderStages);
+	depthPipeline = DepthmapPass::CreatePipeline(*gpuArch.depth.pipelineLayout, gpuArch.depth.shaderStages);
 
 	{
 		if (gpuArch.descLayout->IsEmpty()) {
@@ -55,6 +55,8 @@ void MaterialInstance::Gpu::Update(const AssetUpdateInfo& info)
 
 
 		if (gpuArch.descLayout->hasUbo) {
+
+			size_t uboSize = matInst->descriptorSet.uboData.size();
 			if (!uboBuf) {
 				// WIP: UBO SIZE
 				// PERF: NEXT:

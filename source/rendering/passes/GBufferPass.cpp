@@ -314,7 +314,7 @@ void GbufferPass::RecordCmd(
 			for (auto& gg : geom->model.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
-				auto& plLayout = *arch.gbufferPipelineLayout;
+				auto& plLayout = *arch.gbuffer.pipelineLayout;
 
 				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *mat.gbufferPipeline);
 				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
