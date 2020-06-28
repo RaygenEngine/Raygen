@@ -86,7 +86,8 @@ void main( ) {
 		outColor = vec4(texture(skyboxSampler, V).rgb, 1.0);
 		
 		//outColor = texture(brdfLutSampler, uv).rgba;
-		//outColor = textureLod(prefilteredSampler, V,  0);
+		outColor = mix(outColor, textureLod(prefilteredSampler, V,  0), 0); 
+		outColor = vec4(ReconstructWorldPosition(currentDepth),1.f);
 		return;
 	}
 	
@@ -151,6 +152,11 @@ void main( ) {
                                                                                                                                                    
                                                                                                                                                     
                                                                                                                                                      
+
+
+
+
+
 
 
 
