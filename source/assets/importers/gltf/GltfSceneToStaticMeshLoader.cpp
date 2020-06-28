@@ -144,28 +144,14 @@ void GltfSceneToStaticMeshLoader::LoadGeometryGroup(
 				tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
 				tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
 
-				// tangent = glm::normalize(tangent);
-
 				geom.vertices[geom.indices[i]].tangent += tangent;
 				geom.vertices[geom.indices[i + 1]].tangent += tangent;
 				geom.vertices[geom.indices[i + 2]].tangent += tangent;
-
-				glm::vec3 bitangent;
-
-				bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
-				bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
-				bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
-
-				// bitangent = glm::normalize(bitangent);
-
-				geom.vertices[geom.indices[i]].bitangent += bitangent;
-				geom.vertices[geom.indices[i + 1]].bitangent += bitangent;
-				geom.vertices[geom.indices[i + 2]].bitangent += bitangent;
 			}
 
+			// CHECK: handness
 			for (auto& v : geom.vertices) {
 				v.tangent = glm::normalize(v.tangent);
-				v.bitangent = glm::normalize(v.bitangent);
 			}
 		}
 		else {
@@ -175,8 +161,7 @@ void GltfSceneToStaticMeshLoader::LoadGeometryGroup(
 				const auto c1 = glm::cross(v.normal, glm::vec3(0.0, 0.0, 1.0));
 				const auto c2 = glm::cross(v.normal, glm::vec3(0.0, 1.0, 0.0));
 
-				v.tangent = glm::length2(c1) > glm::length2(c2) ? glm::normalize(c1) : glm::normalize(c2);
-				v.bitangent = glm::normalize(glm::cross(v.normal, glm::vec3(v.tangent)));
+				v.tangent = glm::normalize(glm::length2(c1) > glm::length2(c2) ? c1 : c2);
 			}
 		}
 	}
@@ -189,7 +174,6 @@ void GltfSceneToStaticMeshLoader::LoadGeometryGroup(
 
 		v.normal = glm::normalize(invTransMat * v.normal);
 		v.tangent = glm::normalize(invTransMat * v.tangent);
-		v.bitangent = glm::normalize(invTransMat * v.bitangent);
 	}
 }
 

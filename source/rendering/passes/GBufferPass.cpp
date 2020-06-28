@@ -111,7 +111,7 @@ vk::UniquePipeline GbufferPass::CreatePipeline(
 		.setStride(sizeof(Vertex))
 		.setInputRate(vk::VertexInputRate::eVertex);
 
-	std::array<vk::VertexInputAttributeDescription, 5> attributeDescriptions{};
+	std::array<vk::VertexInputAttributeDescription, 4> attributeDescriptions{};
 
 	attributeDescriptions[0].binding = 0u;
 	attributeDescriptions[0].location = 0u;
@@ -130,13 +130,8 @@ vk::UniquePipeline GbufferPass::CreatePipeline(
 
 	attributeDescriptions[3].binding = 0u;
 	attributeDescriptions[3].location = 3u;
-	attributeDescriptions[3].format = vk::Format::eR32G32B32Sfloat;
-	attributeDescriptions[3].offset = offsetof(Vertex, bitangent);
-
-	attributeDescriptions[4].binding = 0u;
-	attributeDescriptions[4].location = 4u;
-	attributeDescriptions[4].format = vk::Format::eR32G32Sfloat;
-	attributeDescriptions[4].offset = offsetof(Vertex, uv);
+	attributeDescriptions[3].format = vk::Format::eR32G32Sfloat;
+	attributeDescriptions[3].offset = offsetof(Vertex, uv);
 
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};

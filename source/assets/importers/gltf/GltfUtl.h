@@ -254,10 +254,7 @@ void CopyToVertexData_Tangent(
 			handness = data[3];
 		}
 
-		// normal is ensured to be here
-		// if it was calculated, i.e. missing whilst tangents are defined
-		// this is an issue with this particular model
-		result[i].bitangent = glm::normalize(glm::cross(result[i].normal, result[i].tangent) * handness);
+		result[i].tangent *= handness;
 	}
 }
 

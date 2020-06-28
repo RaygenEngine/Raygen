@@ -68,7 +68,7 @@ void AdditionalSerializeBoth(Archive& ar, MaterialInstance* pod)
 template<typename Archive>
 void serialize(Archive& ar, Vertex& vtx)
 {
-	ar(vtx.position, vtx.normal, vtx.tangent, vtx.bitangent, vtx.uv);
+	ar(vtx.position, vtx.normal, vtx.tangent, vtx.uv);
 }
 
 template<typename Archive>
