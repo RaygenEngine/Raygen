@@ -71,8 +71,9 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 
 		size_t offset = value * width * height * 4llu * (isHdr ? sizeof(float) : sizeof(byte));
 
-
+		stbi_set_flip_vertically_on_load(1);
 		stbaux::LoadImage(finalImagePath.c_str(), isHdr, pod->data.data() + offset);
+		stbi_set_flip_vertically_on_load(0);
 	}
 
 	ImporterManager->PopPath();

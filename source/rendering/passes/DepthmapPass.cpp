@@ -125,7 +125,7 @@ vk::UniquePipeline DepthmapPass::CreatePipeline(
 		.setPolygonMode(vk::PolygonMode::eFill)
 		.setLineWidth(1.f)
 		.setCullMode(vk::CullModeFlagBits::eBack)
-		.setFrontFace(vk::FrontFace::eClockwise)
+		.setFrontFace(vk::FrontFace::eCounterClockwise)
 		.setDepthBiasEnable(VK_FALSE)
 		.setDepthBiasConstantFactor(0.f)
 		.setDepthBiasClamp(0.f)

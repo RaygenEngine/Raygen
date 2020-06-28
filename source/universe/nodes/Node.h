@@ -124,7 +124,7 @@ public:
 
 	[[nodiscard]] glm::vec3 GetNodeUpLCS() const { return GetNodeOrientationLCS() * glm::vec3(0.f, 1.f, 0.f); }
 	[[nodiscard]] glm::vec3 GetNodeRightLCS() const { return GetNodeOrientationLCS() * glm::vec3(1.f, 0.f, 0.f); }
-	[[nodiscard]] glm::vec3 GetNodeForwardLCS() const { return GetNodeOrientationLCS() * glm::vec3(0.f, 0.f, 1.f); }
+	[[nodiscard]] glm::vec3 GetNodeForwardLCS() const { return GetNodeOrientationLCS() * glm::vec3(0.f, 0.f, -1.f); }
 
 	[[nodiscard]] glm::vec3 GetNodePositionWCS() const { return m_position; }
 	[[nodiscard]] glm::quat GetNodeOrientationWCS() const { return m_orientation; }
@@ -135,7 +135,7 @@ public:
 
 	[[nodiscard]] glm::vec3 GetNodeUpWCS() const { return GetNodeOrientationWCS() * glm::vec3(0.f, 1.f, 0.f); }
 	[[nodiscard]] glm::vec3 GetNodeRightWCS() const { return GetNodeOrientationWCS() * glm::vec3(1.f, 0.f, 0.f); }
-	[[nodiscard]] glm::vec3 GetNodeForwardWCS() const { return GetNodeOrientationWCS() * glm::vec3(0.f, 0.f, 1.f); }
+	[[nodiscard]] glm::vec3 GetNodeForwardWCS() const { return GetNodeOrientationWCS() * glm::vec3(0.f, 0.f, -1.f); }
 
 	[[nodiscard]] bool IsLeaf() const { return m_children.empty(); }
 	[[nodiscard]] const std::string& GetName() const { return m_name; };

@@ -24,50 +24,22 @@ struct PushConstant {
 
 static_assert(sizeof(PushConstant) <= 128);
 
-
 std::array vertices = {
-	// back face
-	-1.0f, -1.0f, -1.0f, // bottom-left
-	1.0f, 1.0f, -1.0f,   // top-right
-	1.0f, -1.0f, -1.0f,  // bottom-right
-	1.0f, 1.0f, -1.0f,   // top-right
-	-1.0f, -1.0f, -1.0f, // bottom-left
-	-1.0f, 1.0f, -1.0f,  // top-left
-	// front face
-	-1.0f, -1.0f, 1.0f, // bottom-left
-	1.0f, -1.0f, 1.0f,  // bottom-right
-	1.0f, 1.0f, 1.0f,   // top-right
-	1.0f, 1.0f, 1.0f,   // top-right
-	-1.0f, 1.0f, 1.0f,  // top-left
-	-1.0f, -1.0f, 1.0f, // bottom-left
-	// left face
-	-1.0f, 1.0f, 1.0f,   // top-right
-	-1.0f, 1.0f, -1.0f,  // top-left
-	-1.0f, -1.0f, -1.0f, // bottom-left
-	-1.0f, -1.0f, -1.0f, // bottom-left
-	-1.0f, -1.0f, 1.0f,  // bottom-right
-	-1.0f, 1.0f, 1.0f,   // top-right
-	// right face
-	1.0f, 1.0f, 1.0f,   // top-left
-	1.0f, -1.0f, -1.0f, // bottom-right
-	1.0f, 1.0f, -1.0f,  // top-right
-	1.0f, -1.0f, -1.0f, // bottom-right
-	1.0f, 1.0f, 1.0f,   // top-left
-	1.0f, -1.0f, 1.0f,  // bottom-left
-	// bottom face
-	-1.0f, -1.0f, -1.0f, // top-right
-	1.0f, -1.0f, -1.0f,  // top-left
-	1.0f, -1.0f, 1.0f,   // bottom-left
-	1.0f, -1.0f, 1.0f,   // bottom-left
-	-1.0f, -1.0f, 1.0f,  // bottom-right
-	-1.0f, -1.0f, -1.0f, // top-right
-	// top face
-	-1.0f, 1.0f, -1.0f, // top-left
-	1.0f, 1.0f, 1.0f,   // bottom-right
-	1.0f, 1.0f, -1.0f,  // top-right
-	1.0f, 1.0f, 1.0f,   // bottom-right
-	-1.0f, 1.0f, -1.0f, // top-left
-	-1.0f, 1.0f, 1.0f,  // bottom-left
+	// positions
+	-1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f,
+	-1.0f,
+
+	-1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f,
+	1.0f,
+
+	1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
+
+	-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f,
+
+	-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f,
+
+	-1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f,
+	1.0f
 };
 } // namespace
 
@@ -263,8 +235,8 @@ void PrefilteredMapCalculation::MakePipeline()
 		.setRasterizerDiscardEnable(VK_FALSE)
 		.setPolygonMode(static_cast<vk::PolygonMode>(fillmode.Get()))
 		.setLineWidth(1.f)
-		.setCullMode(vk::CullModeFlagBits::eNone)
-		.setFrontFace(vk::FrontFace::eClockwise)
+		.setCullMode(vk::CullModeFlagBits::eBack)
+		.setFrontFace(vk::FrontFace::eCounterClockwise)
 		.setDepthBiasEnable(VK_FALSE)
 		.setDepthBiasConstantFactor(0.f)
 		.setDepthBiasClamp(0.f)
@@ -400,12 +372,18 @@ void PrefilteredMapCalculation::PrepareFaceInfo()
 	m_captureViews
 
 		= {
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)),  //+x
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)), //-x
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)), //+y
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)), // -y
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f)),  // +z
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f)), // -z
+			  // right
+			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
+			  // left
+			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
+			  // up
+			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+			  // down
+			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+			  // front
+			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
+			  // back
+			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
 		  };
 }
 
