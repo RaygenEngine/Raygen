@@ -42,8 +42,6 @@ void MaterialInstance::Gpu::Update(const AssetUpdateInfo& info)
 	auto matArch = matInst->archetype.Lock();
 	auto& gpuArch = GpuAssetManager->GetGpuHandle(matInst->archetype).Lock();
 
-	gbufferPipeline = GbufferPass::CreatePipeline(*gpuArch.gbuffer.pipelineLayout, gpuArch.gbuffer.shaderStages);
-	depthPipeline = DepthmapPass::CreatePipeline(*gpuArch.depth.pipelineLayout, gpuArch.depth.shaderStages);
 
 	{
 		if (gpuArch.descLayout->IsEmpty()) {

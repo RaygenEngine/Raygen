@@ -243,7 +243,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 				vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
 				vk::DeviceSize offsets[] = { 0 };
 				// bind the graphics pipeline
-				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *mat.depthPipeline);
+				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.depth.pipeline);
 
 				// Submit via push constant (rather than a UBO)
 				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);

@@ -10,6 +10,7 @@
 struct MaterialArchetype::Gpu : public vl::GpuAssetTemplate<MaterialArchetype> {
 	struct PassInfo {
 		vk::UniquePipelineLayout pipelineLayout;
+		vk::UniquePipeline pipeline;
 		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
 		std::vector<vk::UniqueShaderModule> shaderModules;
 	};

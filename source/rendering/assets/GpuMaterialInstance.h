@@ -10,9 +10,6 @@
 struct MaterialInstance::Gpu : public vl::GpuAssetTemplate<MaterialInstance> {
 	vl::GpuHandle<MaterialArchetype> archetype;
 
-	vk::UniquePipeline gbufferPipeline;
-	vk::UniquePipeline depthPipeline;
-
 	UniquePtr<vl::RBuffer> uboBuf;
 	vk::DescriptorSet descSet;
 
