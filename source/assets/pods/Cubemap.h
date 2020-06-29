@@ -11,8 +11,8 @@ struct Cubemap : AssetPod {
 		Left = 1,
 		Up = 2,
 		Down = 3,
-		Back = 4,
-		Front = 5
+		Front = 4,
+		Back = 5
 	};
 
 	REFLECTED_POD(Cubemap)

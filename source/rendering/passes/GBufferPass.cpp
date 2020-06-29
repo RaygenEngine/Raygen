@@ -311,7 +311,7 @@ void GbufferPass::RecordCmd(
 				auto& arch = mat.archetype.Lock();
 				auto& plLayout = *arch.gbuffer.pipelineLayout;
 
-				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *mat.gbufferPipeline);
+				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
 				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 				if (mat.hasDescriptorSet) {
