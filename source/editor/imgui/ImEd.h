@@ -12,6 +12,23 @@
 
 #define ETXT(Icon, Text) U8(Icon u8"  " u8##Text)
 
+namespace EdColor {
+inline const ImVec4 Success = ImVec4(0.3f, 0.9f, 0.3f, 1.0f);
+inline const ImVec4& Green = Success;
+
+inline const ImVec4 LightSuccess = ImVec4(0.3f, 0.6f, 0.3f, 1.0f);
+inline const ImVec4& LightGreen = LightSuccess;
+
+
+inline const ImVec4 Failure = ImGui::ColorConvertU32ToFloat4(0xA02040ff);
+inline const ImVec4& Red = Failure;
+
+inline const ImVec4 LightFailure = ImGui::ColorConvertU32ToFloat4(0x702030ff);
+inline const ImVec4& LightRed = LightFailure;
+
+inline const ImVec4 LightText = ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
+} // namespace EdColor
+
 class Node;
 // ImGui wrapper for calls that use different styles. (bigger buttons etc)
 namespace ImEd {

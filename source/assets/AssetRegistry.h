@@ -196,6 +196,7 @@ public:
 	[[nodiscard]] static std::vector<UniquePtr<PodEntry>>& Z_GetPods() { return Get().m_pods; }
 
 
+	// Note that uri for desired path must include "gen-data/" for the pods to be loaded at runtime.
 	template<CONC(CAssetPod) PodType>
 	static std::pair<PodEntry*, PodType*> CreateEntry(const uri::Uri& desiredPath, bool transient = false,
 		const uri::Uri& originalImportLoc = "", bool reimportOnLoad = false, bool exportOnSave = false)

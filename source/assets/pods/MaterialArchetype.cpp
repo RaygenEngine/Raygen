@@ -150,3 +150,31 @@ void DynamicDescriptorSet::SwapLayout(
 
 	samplers2d.resize(newLayout.samplers2d.size());
 }
+
+std::stringstream DynamicDescriptorSetLayout::GetUniformText() const
+{
+	std::stringstream uboText;
+
+	for (auto& prop : uboClass.GetProperties()) {
+		if (prop.IsA<glm::vec4>()) {
+			if (prop.HasFlags(PropertyFlags::Color)) {
+				uboText << "col4 ";
+			}
+			else {
+				uboText << "vec4 ";
+			}
+		}
+		else {
+			uboText << prop.GetType().name() << " ";
+		}
+		uboText << prop.GetName() << ";\n";
+	}
+	uboText << "\n";
+
+	uboText << "ubo " << uboName << ";\n\n";
+
+	for (auto& sampler : samplers2d) {
+		uboText << "sampler2d " << sampler << ";\n";
+	}
+	return uboText;
+}

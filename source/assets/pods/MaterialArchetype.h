@@ -34,6 +34,8 @@ struct DynamicDescriptorSetLayout {
 	{
 		ar(samplers2d, uboName, uboClass);
 	}
+
+	std::stringstream GetUniformText() const;
 };
 
 struct DynamicDescriptorSet {

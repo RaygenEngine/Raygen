@@ -17,6 +17,22 @@ inline void ExportPod(ShaderStage* src, const fs::path& path)
 }
 
 
+template<>
+inline void ExportPod(MaterialArchetype* src, const fs::path& path)
+{
+	std::ofstream f(path);
+	f << "// Raygen exported generated shader backup\n";
+	f << "// UBO Section:\n";
+	f << src->descriptorSetLayout.GetUniformText().str();
+	f << "\n// Shared Section:\n";
+	f << src->sharedFunctions;
+	f << "\n// Gbuffer Frag Section:\n";
+	f << src->gbufferFragMain;
+	f << "\n// Depthmap Pass Section:\n";
+	f << src->depthShader;
+}
+
+
 void ExportToDisk(PodEntry* entry, const fs::path& inPath)
 {
 	fs::path path = inPath;

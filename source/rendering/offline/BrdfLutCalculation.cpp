@@ -320,7 +320,7 @@ void BrdfLutCalculation::EditPods()
 
 	if (brdflut.IsDefault()) {
 		PodEditor e(envMap);
-		auto& [entry, irr] = AssetHandlerManager::CreateEntry<::Image>("generated/image");
+		auto& [entry, irr] = AssetHandlerManager::CreateEntry<::Image>("gen-data/generated/image");
 
 		e.pod->brdfLut = entry->GetHandleAs<::Image>();
 		brdflut = entry->GetHandleAs<::Image>();

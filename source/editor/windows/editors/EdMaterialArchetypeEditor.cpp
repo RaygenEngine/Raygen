@@ -2,11 +2,12 @@
 #include "EdMaterialArchetypeEditor.h"
 
 #include "assets/PodEditor.h"
-#include "editor/imgui/ImEd.h"
-#include "editor/imgui/ImAssetSlot.h"
 #include "assets/AssetRegistry.h"
 #include "assets/util/SpirvReflector.h"
 #include "assets/util/SpirvCompiler.h"
+#include "editor/imgui/ImEd.h"
+#include "editor/imgui/ImAssetSlot.h"
+#include "editor/misc/NativeFileBrowser.h"
 
 #include "editor/windows/general/EdPropertyEditorWindow.h"
 
@@ -15,33 +16,6 @@
 namespace ed {
 
 namespace {
-	std::stringstream GetUniformText(const DynamicDescriptorSetLayout& layout)
-	{
-		std::stringstream uboText;
-
-		for (auto& prop : layout.uboClass.GetProperties()) {
-			if (prop.IsA<glm::vec4>()) {
-				if (prop.HasFlags(PropertyFlags::Color)) {
-					uboText << "col4 ";
-				}
-				else {
-					uboText << "vec4 ";
-				}
-			}
-			else {
-				uboText << prop.GetType().name() << " ";
-			}
-			uboText << prop.GetName() << ";\n";
-		}
-		uboText << "\n";
-
-		uboText << "ubo " << layout.uboName << ";\n\n";
-
-		for (auto& sampler : layout.samplers2d) {
-			uboText << "sampler2d " << sampler << ";\n";
-		}
-		return uboText;
-	}
 
 	// Returns true if the "compilation" was successful
 	bool ValidateUniforms(TextEditor& uniformEditor, DynamicDescriptorSetLayout& layout)
@@ -136,7 +110,7 @@ MaterialArchetypeEditorWindow::MaterialArchetypeEditorWindow(PodEntry* inEntry)
 
 
 	uniformEditor.reset(new TextEditor());
-	uniformEditor->SetText(GetUniformText(podHandle.Lock()->descriptorSetLayout).str());
+	uniformEditor->SetText(podHandle.Lock()->descriptorSetLayout.GetUniformText().str());
 	uniformEditor->SetColorizerEnable(true);
 	uniformEditor->SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
 	uniformEditor->SetShowWhitespaces(false);
@@ -158,10 +132,42 @@ void MaterialArchetypeEditorWindow::ImguiDraw()
 	ImGui::Checkbox("Output To Console", &outputToConsole);
 	if (needsSave) {
 		ImGui::SameLine();
-		if (ImEd::Button(ETXT(FA_SAVE, "Save"))) {
+		if (ImGui::Button(ETXT(FA_SAVE, "Save"))) {
 			OnSave();
 		}
 	}
+
+	if (entry->metadata.exportOnSave) {
+		ImGui::SameLine();
+		ImGui::PushStyleColor(ImGuiCol_Text, EdColor::LightSuccess);
+		if (ImGui::Button(ETXT(FA_FILE_EXPORT, "Backup Location"))) {
+			auto opt = NativeFileBrowser::SaveFile({}, fs::relative(fs::path(entry->metadata.originalImportLocation)));
+			if (opt) {
+				entry->metadata.originalImportLocation = opt.value().generic_string();
+			}
+		}
+		ImGui::PopStyleColor();
+		if (ImGui::BeginPopupContextItem()) {
+			if (ImGui::MenuItem("Disable Exporting", nullptr, nullptr)) {
+				entry->metadata.exportOnSave = false;
+			}
+			ImGui::EndPopup();
+		}
+		TEXT_TOOLTIP("Saving at: {}", entry->metadata.originalImportLocation);
+	}
+	else {
+		ImGui::SameLine();
+		ImGui::PushStyleColor(ImGuiCol_Text, EdColor::LightText);
+		if (ImGui::Button(ETXT(FA_FILE_EXPORT, "Set Backup Location"))) {
+			if (auto opt = NativeFileBrowser::SaveFile({}); opt) {
+				entry->metadata.originalImportLocation = opt.value().generic_string();
+				entry->metadata.exportOnSave = true;
+			}
+		}
+		ImGui::PopStyleColor();
+		TEXT_TOOLTIP("Disabled, click to select a disk location.");
+	}
+
 
 	if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(83)) {
 		OnSave();
@@ -170,8 +176,8 @@ void MaterialArchetypeEditorWindow::ImguiDraw()
 	if (ImGui::BeginTabBar("ShaderEditorTabs")) {
 		for (int i = 0; auto& tab : editors) {
 			if (tab.hasError) {
-				ImGui::PushStyleColor(ImGuiCol_Border, ImGui::ColorConvertU32ToFloat4(0xA02040ff));
-				ImGui::PushStyleColor(ImGuiCol_Text, ImGui::ColorConvertU32ToFloat4(0xA02040ff));
+				ImGui::PushStyleColor(ImGuiCol_Border, EdColor::Failure);
+				ImGui::PushStyleColor(ImGuiCol_Text, EdColor::Failure);
 			}
 
 			if (ImGui::BeginTabItem(tab.title.c_str())) {
