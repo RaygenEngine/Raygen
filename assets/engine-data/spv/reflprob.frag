@@ -71,6 +71,10 @@ vec3 ReconstructWorldPosForSky(float depth)
 	return worldPos.xyz / worldPos.w; // return world space pos xyz
 }
 
+vec4 SampleCubemapLH(samplerCube cubemap, vec3 RHdirection) {
+	return texture(cubemap, vec3(RHdirection.x, RHdirection.y, -RHdirection.z));
+}
+
 void main( ) {
 
 	float currentDepth = texture(depthSampler, uv).r;
@@ -83,11 +87,11 @@ void main( ) {
 	{
 		// ART:
 		V = normalize(ReconstructWorldPosForSky(currentDepth) - camera.position);
-		outColor = vec4(texture(skyboxSampler, V).rgb, 1.0);
+		outColor = SampleCubemapLH(skyboxSampler, V);
 		
 		//outColor = texture(brdfLutSampler, uv).rgba;
-		outColor = mix(outColor, textureLod(prefilteredSampler, V,  0), 0); 
-		outColor = vec4(ReconstructWorldPosition(currentDepth),1.f);
+		//outColor = mix(outColor, textureLod(prefilteredSampler, V,  0), 0); 
+		//outColor = vec4(ReconstructWorldPosition(currentDepth),1.f);
 		return;
 	}
 	
@@ -152,6 +156,7 @@ void main( ) {
                                                                                                                                                    
                                                                                                                                                     
                                                                                                                                                      
+
 
 
 
