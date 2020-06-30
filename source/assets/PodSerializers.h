@@ -33,14 +33,13 @@ void AdditionalSerializeBoth(Archive& ar, Image* pod)
 	ar(pod->data);
 }
 
-//
-// Cubemap
-//
+
 template<typename Archive>
 void AdditionalSerializeBoth(Archive& ar, Cubemap* pod)
 {
 	ar(pod->data);
 }
+
 
 //
 // NewMaterials
