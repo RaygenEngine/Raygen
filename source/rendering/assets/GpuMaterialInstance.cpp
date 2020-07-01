@@ -21,15 +21,6 @@ MaterialInstance::Gpu::Gpu(PodHandle<MaterialInstance> podHandle)
 				// explicitly mark this function as final in the header
 }
 
-struct PC {
-	glm::mat4 modelMat;
-	glm::mat4 normalMat;
-};
-
-struct PushConstantShadow {
-	glm::mat4 mvp;
-};
-
 void MaterialInstance::Gpu::Update(const AssetUpdateInfo& info)
 {
 	auto data = podHandle.Lock();
@@ -52,13 +43,11 @@ void MaterialInstance::Gpu::Update(const AssetUpdateInfo& info)
 		descSet = gpuArch.descLayout->GetDescriptorSet();
 
 
-		if (gpuArch.descLayout->hasUbo) {
+		size_t uboSize = matInst->descriptorSet.uboData.size();
+		if (gpuArch.descLayout->hasUbo && uboSize > 0) {
 
-			size_t uboSize = matInst->descriptorSet.uboData.size();
-			if (!uboBuf) {
-				// WIP: UBO SIZE
-				// PERF: NEXT:
-				uboBuf = std::make_unique<vl::RBuffer>(2048, vk::BufferUsageFlagBits::eUniformBuffer,
+			if (!uboBuf || uboSize != uboBuf->GetSize()) {
+				uboBuf = std::make_unique<vl::RBuffer>(uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
 					vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 			}
 			uboBuf->UploadData(matInst->descriptorSet.uboData);
