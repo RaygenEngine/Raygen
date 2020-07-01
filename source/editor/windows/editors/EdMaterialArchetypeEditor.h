@@ -39,6 +39,8 @@ class MaterialArchetypeEditorWindow : public AssetEditorWindowTemplate<MaterialA
 public:
 	MaterialArchetypeEditorWindow(PodEntry* inEntry);
 
+	void FillDefaultsIfNew();
+
 	void ImguiDraw() override;
 
 	void OnSave();

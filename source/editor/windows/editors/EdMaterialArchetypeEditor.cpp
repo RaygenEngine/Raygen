@@ -100,6 +100,8 @@ MaterialArchetypeEditorWindow::ShaderEditorTab::ShaderEditorTab(
 MaterialArchetypeEditorWindow::MaterialArchetypeEditorWindow(PodEntry* inEntry)
 	: AssetEditorWindowTemplate(inEntry)
 {
+	FillDefaultsIfNew();
+
 	auto addEditor = [&](const std::string& tabName, ShaderEditorTab::MemberStringT field) {
 		editors.emplace_back(ShaderEditorTab(tabName, podHandle, field));
 	};
@@ -114,6 +116,38 @@ MaterialArchetypeEditorWindow::MaterialArchetypeEditorWindow(PodEntry* inEntry)
 	uniformEditor->SetColorizerEnable(true);
 	uniformEditor->SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
 	uniformEditor->SetShowWhitespaces(false);
+}
+
+void MaterialArchetypeEditorWindow::FillDefaultsIfNew()
+{
+
+	if (podHandle.Lock()->depthShader.size() == 0) {
+		PodEditor ed(podHandle);
+		ed->depthShader =
+			R"(
+void main() {}
+)";
+		needsSave = true;
+	}
+
+	if (podHandle.Lock()->gbufferFragMain.size() == 0) {
+		PodEditor ed(podHandle);
+		ed->gbufferFragMain =
+			R"(
+void main() {
+	vec3 normal = normalize(vec3(0.5, 0.5, 1.0) * 2.0 - 1.0);
+
+    gPosition = vec4(fragPos, 1.f);
+    gNormal = vec4(normalize(TBN * normal.rgb), 1.f);
+    gAlbedoOpacity = vec4(0.3f, 0.3f, 0.3f, 1.f);
+	
+	// r: metallic, g: roughness, b: occlusion, a: occlusion strength
+	gSpecular = vec4(0.f, 0.5f, 0.f, 0.f);
+	gEmissive = vec4(0.f, 0.f, 0.f, 1.f);
+}                                                                                        
+)";
+		needsSave = true;
+	}
 }
 
 void MaterialArchetypeEditorWindow::ImguiDraw()
@@ -248,15 +282,18 @@ void MaterialInstanceEditorWindow::ImguiDraw()
 
 	auto archetype = material->archetype.Lock();
 	auto archetypeEntry = AssetHandlerManager::GetEntry(material->archetype);
+	auto prevArchetype = archetype;
 
 	if (ImEd::AssetSlot("Archetype", material->archetype)) {
 		ed.MarkEdit();
+		archetype = material->archetype.Lock();
 
 		PodEditor arch(material->archetype);
 		if (auto it = std::find(arch->instances.begin(), arch->instances.end(), podHandle);
 			it == arch->instances.end()) {
 			arch->instances.push_back(podHandle);
 		}
+		material->descriptorSet.SwapLayout(prevArchetype->descriptorSetLayout, arch->descriptorSetLayout);
 	}
 
 	ImGui::Separator();
@@ -265,16 +302,14 @@ void MaterialInstanceEditorWindow::ImguiDraw()
 
 	const RuntimeClass& classDescription = material->archetype.Lock()->descriptorSetLayout.uboClass;
 
-	if (material->descriptorSet.uboData.size() != classDescription.GetSize()) {
-		ImGui::Text("Incorrect uboData size!");
+	if (material->descriptorSet.uboData.size() != classDescription.GetSize()
+		|| archetype->descriptorSetLayout.samplers2d.size() != material->descriptorSet.samplers2d.size()) {
+
+		ed.MarkEdit();
+
+		material->descriptorSet.SwapLayout({}, material->archetype.Lock()->descriptorSetLayout);
 		return;
 	}
-
-	if (archetype->descriptorSetLayout.samplers2d.size() != material->descriptorSet.samplers2d.size()) {
-		ImGui::Text("Incorrect samplers count!");
-		return;
-	}
-
 
 	int32 i = 0;
 	for (auto& img : archetype->descriptorSetLayout.samplers2d) {
