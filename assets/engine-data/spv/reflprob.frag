@@ -81,12 +81,11 @@ void main( ) {
 
 	outColor = vec4(0.0, 0.0, 0.0, 1.0);
 	
-	vec3 V = normalize(ReconstructWorldPosition(currentDepth) - camera.position);
 
 	if(currentDepth == 1.0)
 	{
 		// ART:
-		V = normalize(ReconstructWorldPosForSky(currentDepth) - camera.position);
+		vec3 V = normalize(ReconstructWorldPosForSky(currentDepth) - camera.position);
 		outColor = SampleCubemapLH(skyboxSampler, V);
 		
 		//outColor = texture(brdfLutSampler, uv).rgba;
@@ -98,19 +97,53 @@ void main( ) {
 	vec3 N = normalize(texture(normalsSampler, uv).rgb);
 
 	vec3 emissive = texture(emissiveSampler, uv).rgb;
-	vec4 specular = texture(specularSampler, uv);
-	vec3 albedo = texture(albedoOpacitySampler, uv).rgb;
+	vec4 specularMat = texture(specularSampler, uv);
+	vec3 baseColor = texture(albedoOpacitySampler, uv).rgb;
 	
-	float metallic = specular.r;
-	float roughness = specular.g;
+	float metallic = specularMat.r;
+	float roughness = specularMat.g;
 	
+	vec3 f0 = vec3(0.04);
+	vec3 diffuseColor = baseColor.rgb * (vec3(1.0) - f0);
+	diffuseColor *= 1.0 - metallic;
+	
+	vec3 specularColor = mix(f0, baseColor.rgb, metallic);
+	
+	vec3 V = normalize(ReconstructWorldPosition(currentDepth) - camera.position);
+	vec3 reflection = normalize(reflect(V, N));
+	
+	float NdotV = clamp(abs(dot(N, V)), 0.001, 1.0);
+	
+	// Actual IBL Contribution
+	const float MAX_REFLECTION_LOD = 4.0;
+	float lod = (roughness * MAX_REFLECTION_LOD); 
+	
+	vec3 brdf = (texture(brdfLutSampler, vec2(NdotV, roughness))).rgb;
+	vec3 diffuseLight = texture(irradianceSampler, N).rgb;
+
+	vec3 specularLight = textureLod(prefilteredSampler, reflection, lod).rgb;
+
+	vec3 diffuse = diffuseLight * diffuseColor;
+	vec3 specular = specularLight * (specularColor * brdf.x + brdf.y);
+
+
+	vec3 iblContribution = diffuse + specular;
+
+	outColor = vec4(iblContribution, 1.0f);
+	//outColor = vec4(brdf.y);
+}
+
+/*
+
+void old() {
 	vec3 F0 = vec3(0.04); 
     F0 = mix(F0, albedo, metallic);
-	/*vec3 kS = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness); 
-	vec3 kD = 1.0 - kS;
-	vec3 irradiance = texture(irradianceSampler, N).rgb;
-	vec3 diffuse    = irradiance * albedo;
-	vec3 ambient    = (kD * diffuse);*/
+	
+	//vec3 kS = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness); 
+	//vec3 kD = 1.0 - kS;
+	//vec3 irradiance = texture(irradianceSampler, N).rgb;
+	//vec3 diffuse    = irradiance * albedo;
+	//vec3 ambient    = (kD * diffuse);
 
 	// actual ibl
 	vec3 R = reflect(V, N); 
@@ -140,31 +173,6 @@ void main( ) {
 	outColor = vec4(color, 1.0);
 }                                                                                                                          
                                                                                                                                        
-                                                                                                                                                                 
-                                                                                                                       
-                                                                                                                     
-                                                                                                                      
-                                                                                                                        
-                                                                                                                         
-                                                                                                                                       
-                                                                                                                            
-                                                                                                                             
-                                                                                                                              
-                                                                                                                               
-                                                                                                                                                
-                                                                                                                                                  
-                                                                                                                                                   
-                                                                                                                                                    
-                                                                                                                                                     
 
-
-
-
-
-
-
-
-
-
-
+*/
 
