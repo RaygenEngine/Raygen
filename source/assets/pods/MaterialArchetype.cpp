@@ -119,6 +119,18 @@ bool MaterialArchetype::CompileAll(
 		RerouteShaderErrors(outErrors);
 		return false;
 	}
+
+
+	std::string vertCode = shd::GenerateGbufferVert(descSetCode, sharedFunctions, gbufferVertMain);
+
+	if (outputToConsole) {
+		LOG_REPORT("gbuffer VERT SHADER: === \n{}", fragCode);
+	}
+
+
+	auto vertErrors = &outErrors.editorErrors.insert({ "Vertex", {} }).first->second;
+	auto vertBin = ShaderCompiler::Compile(vertCode, ShaderStageType::Vertex, vertErrors);
+
 	// All stages compiled, swap layout and store the new binaries
 	RerouteShaderErrors(outErrors);
 
@@ -127,6 +139,8 @@ bool MaterialArchetype::CompileAll(
 
 	gbufferFragBinary.swap(fragBin);
 	depthBinary.swap(depthBin);
+	gbufferVertBinary.swap(vertBin);
+
 
 	return true;
 }

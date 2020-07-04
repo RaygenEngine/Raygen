@@ -94,11 +94,13 @@ void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& info)
 		auto createDescLayout = [&]() {
 			descLayout = std::make_unique<RDescriptorLayout>();
 			if (arch->descriptorSetLayout.SizeOfUbo() != 0) {
-				descLayout->AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
+				descLayout->AddBinding(vk::DescriptorType::eUniformBuffer,
+					vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex);
 			}
 
 			for (uint32 i = 0; i < arch->descriptorSetLayout.samplers2d.size(); ++i) {
-				descLayout->AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+				descLayout->AddBinding(vk::DescriptorType::eCombinedImageSampler,
+					vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex);
 			}
 			descLayout->Generate();
 		};
@@ -113,8 +115,39 @@ void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& info)
 
 	std::vector descLayouts = { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() };
 
+	if (arch->gbufferVertBinary.size() > 0) {
+		size_t pushConstantSize = GbufferPass::GetPushConstantSize();
 
-	gbuffer = CreatePassInfoFrag<GbufferPass>("engine-data/spv/gbuffer.shader", arch->gbufferFragBinary, descLayouts);
+		MaterialArchetype::Gpu::PassInfo info;
+		info.shaderModules.emplace_back(CreateShaderModule(arch->gbufferVertBinary));
+		auto& frag = info.shaderModules.emplace_back(CreateShaderModule(arch->gbufferFragBinary));
+
+
+		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages(2);
+
+		shaderStages[0]
+			.setStage(vk::ShaderStageFlagBits::eVertex) //
+			.setModule(*info.shaderModules[0])
+			.setPName("main");
+
+		shaderStages[1]
+			.setStage(vk::ShaderStageFlagBits::eFragment) //
+			.setModule(*frag)
+			.setPName("main");
+
+
+		info.shaderStages = std::move(shaderStages);
+
+		info.pipelineLayout = CreatePipelineLayout(pushConstantSize, descLayouts);
+
+		info.pipeline = GbufferPass::CreatePipeline(*info.pipelineLayout, info.shaderStages);
+		gbuffer = std::move(info);
+	}
+	else {
+		gbuffer
+			= CreatePassInfoFrag<GbufferPass>("engine-data/spv/gbuffer.shader", arch->gbufferFragBinary, descLayouts);
+	}
+
 
 	depth = CreatePassInfoFrag<DepthmapPass>("engine-data/spv/depth_map.shader", arch->depthBinary, descLayouts);
 }

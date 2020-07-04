@@ -27,6 +27,11 @@ std::string GenerateShaderGeneric(const std::string& inOutCode, const std::strin
 std::string GenerateGbufferFrag(
 	const std::string& descSetCode, const std::string& sharedFunctions, const std::string& mainCode);
 
+
+std::string GenerateGbufferVert(
+	const std::string& descSetCode, const std::string& sharedFunctions, const std::string& mainCode);
+
+
 std::string GenerateDepthShader(
 	const std::string& descSetCode, const std::string& sharedFunctions, const std::string& mainCode);
 
