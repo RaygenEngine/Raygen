@@ -18,6 +18,7 @@ struct MaterialArchetype::Gpu : public vl::GpuAssetTemplate<MaterialArchetype> {
 	UniquePtr<vl::RDescriptorLayout> descLayout;
 
 	PassInfo gbuffer;
+	PassInfo gbufferAnimated;
 	PassInfo depth;
 
 	MaterialArchetype::Gpu(PodHandle<MaterialArchetype> podHandle);

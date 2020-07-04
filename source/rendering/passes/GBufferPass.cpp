@@ -245,8 +245,8 @@ vk::UniquePipeline GbufferPass::CreatePipeline(
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void GbufferPass::RecordCmd(
-	vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, const std::vector<SceneGeometry*>& geometries)
+void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer,
+	const std::vector<SceneGeometry*>& geometries, const std::vector<SceneAnimatedGeometry*>& animGeom)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -312,6 +312,38 @@ void GbufferPass::RecordCmd(
 				auto& plLayout = *arch.gbuffer.pipelineLayout;
 
 				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
+				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+				if (mat.hasDescriptorSet) {
+					cmdBuffer->bindDescriptorSets(
+						vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
+				}
+
+				cmdBuffer->bindDescriptorSets(
+					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
+
+				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
+				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+
+
+				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+			}
+		}
+
+		for (auto geom : animGeom) {
+			if (!geom) {
+				continue;
+			}
+			PushConstant pc{ //
+				geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
+			};
+
+			for (auto& gg : vl::GpuAssetManager->GetGpuHandle(geom->model).Lock().geometryGroups) {
+				auto& mat = gg.material.Lock();
+				auto& arch = mat.archetype.Lock();
+				auto& plLayout = *arch.gbufferAnim.pipelineLayout;
+
+				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbufferAnim.pipeline);
 				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 				if (mat.hasDescriptorSet) {

@@ -162,7 +162,8 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 
 	cmdBuffer->begin(beginInfo);
 	{
-		GbufferPass::RecordCmd(cmdBuffer, m_gbuffer.get(), Scene->geometries.elements);
+		GbufferPass::RecordCmd(
+			cmdBuffer, m_gbuffer.get(), Scene->geometries.elements, Scene->animatedGeometries.elements);
 
 		for (auto sl : Scene->spotlights.elements) {
 			if (sl) {

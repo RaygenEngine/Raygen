@@ -116,5 +116,8 @@ void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& info)
 
 	gbuffer = CreatePassInfoFrag<GbufferPass>("engine-data/spv/gbuffer.shader", arch->gbufferFragBinary, descLayouts);
 
+	gbufferAnimated
+		= CreatePassInfoFrag<GbufferPass>("engine-data/spv/gbuffer-anim.shader", arch->gbufferFragBinary, descLayouts);
+
 	depth = CreatePassInfoFrag<DepthmapPass>("engine-data/spv/depth_map.shader", arch->depthBinary, descLayouts);
 }
