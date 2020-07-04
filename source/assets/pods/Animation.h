@@ -18,19 +18,22 @@ enum class InterpolationMethod
 };
 
 struct AnimationSampler {
-	float input;
-	float output;
-	InterpolationMethod im{};
+	std::vector<float> inputs{};
+	// WIP: handle those depending on the animation path of the channel targeting this sampler
+	// translation -> vec3, rotation -> vec4, scale -> vec3, weights -> float
+	std::vector<byte> outputs{};
+	InterpolationMethod interpolation{};
 };
 
-struct Channel {
-	AnimationSampler sampler{};
+struct AnimationChannel {
+	int32 samplerIndex{ -1 };
 	AnimationPath path{};
+	int32 targetNode{ -1 };
 };
-
 
 struct Animation : public AssetPod {
 	REFLECTED_POD(Animation) { REFLECT_ICON(FA_PLAY); }
 
-	std::vector<Channel> channels;
+	std::vector<AnimationChannel> channels{};
+	std::vector<AnimationSampler> samplers{};
 };

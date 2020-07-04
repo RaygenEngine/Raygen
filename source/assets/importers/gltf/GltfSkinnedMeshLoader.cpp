@@ -187,19 +187,11 @@ void GltfSkinnedMeshLoader::LoadGeometryGroup(SkinnedGeometryGroup& geom, const 
 		}
 	}
 
-	// TODO: ANIMATIONS Check if missing
 	// JOINTS
-	LoadIntoVertexData<SkinnedVertex, 5>(m_cache.gltfData, joints0Index, geom.vertices);
-	// AccessorDescription desc(m_cache.gltfData, joints0Index);
-	// CopyToVertexData_Joint<SkinnedVertex, uint16>(
-	//	geom.vertices, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
-
+	LoadIntoVertexData<SkinnedVertex, 4>(m_cache.gltfData, joints0Index, geom.vertices);
 
 	// WEIGHTS
-	LoadIntoVertexData<SkinnedVertex, 6>(m_cache.gltfData, weights0Index, geom.vertices);
-	// AccessorDescription desc2(m_cache.gltfData, weights0Index);
-	// CopyToVertexData_Weights<SkinnedVertex, uint16>(
-	//	geom.vertices, desc2.beginPtr, desc2.strideByteOffset, desc2.elementCount);
+	LoadIntoVertexData<SkinnedVertex, 5>(m_cache.gltfData, weights0Index, geom.vertices);
 }
 
 GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& cache, uint32 skinIndex, tg::Skin& skin)

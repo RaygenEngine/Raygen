@@ -26,7 +26,6 @@ struct SkinnedMesh : public AssetPod {
 		REFLECT_VAR(materials);
 	}
 
-
 	std::vector<glm::mat4> jointMatrices{};
 	std::vector<uint32> parentJoint{};
 
