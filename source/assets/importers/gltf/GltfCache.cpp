@@ -2,6 +2,7 @@
 #include "GltfCache.h"
 
 #include "assets/AssetImporterManager.h"
+#include "assets/pods/Animation.h"
 
 namespace gltfutl {
 GltfCache::GltfCache(const fs::path& path)
@@ -25,6 +26,7 @@ GltfCache::GltfCache(const fs::path& path)
 	LoadImages();
 	LoadSamplers();
 	LoadMaterials();
+	LoadAnimations();
 	ImporterManager->PopPath();
 }
 
@@ -164,6 +166,65 @@ void GltfCache::LoadMaterials()
 		matIndex++;
 	}
 
-	materialPods.push_back({}); // bleh
+	materialPods.push_back({}); // CHECK: bleh
+}
+
+void GltfCache::LoadAnimations()
+{
+	for (int32 animationIndex = 0; auto& anim : gltfData.animations) {
+
+		nlohmann::json data;
+		data["animation"] = animationIndex;
+		auto animPath = uri::MakeChildJson(gltfFilePath, data);
+
+		std::string name = anim.name.empty() ? filename + "_Anim_" + std::to_string(animationIndex) : anim.name;
+		auto& [handle, pod] = ImporterManager->CreateEntry<Animation>(animPath, name);
+
+		// load samplers
+		for (auto& animSampler : anim.samplers) {
+			AnimationSampler as{};
+
+			as.interpolation = GetInterpolationMethod(animSampler.interpolation);
+
+			// inputs
+			AccessorDescription desc0(gltfData, animSampler.input);
+			as.inputs.resize(desc0.elementCount);
+			CopyToFloatVector(as.inputs, desc0.beginPtr, desc0.strideByteOffset, desc0.elementCount);
+
+			// outputs
+			AccessorDescription desc1(gltfData, animSampler.output);
+
+
+			CLOG_ABORT(desc1.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT,
+				"Normalized integer animation outputs are not yet handled. See GltfUtl TODO function for conversion "
+				"and implement in the future");
+
+			size_t byteChunkSize = tinygltf::GetComponentSizeInBytes(desc1.componentType) * desc1.componentCount;
+
+			for (uint32 i = 0; i < desc1.elementCount; ++i) {
+				byte* elementPtr = &desc1.beginPtr[desc1.strideByteOffset * i];
+				for (uint32 j = 0; j < byteChunkSize; ++j) {
+					as.outputs.push_back(elementPtr[j]);
+				}
+			}
+
+			pod->samplers.emplace_back(as);
+		}
+
+		// load channels
+		for (auto& animCh : anim.channels) {
+			AnimationChannel ch{};
+
+			ch.path = GetAnimationPath(animCh.target_path);
+			ch.samplerIndex = animCh.sampler;
+			ch.targetNode = animCh.target_node;
+
+			pod->channels.emplace_back(ch);
+		}
+
+		// pod
+		animationPods.emplace_back(handle);
+		animationIndex++;
+	}
 }
 } // namespace gltfutl

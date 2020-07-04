@@ -1,7 +1,8 @@
 #pragma once
-#include "assets/pods/Sampler.h"
+#include "assets/pods/Animation.h"
 #include "assets/pods/MaterialInstance.h"
 #include "assets/pods/Mesh.h"
+#include "assets/pods/Sampler.h"
 #include "core/StringUtl.h"
 
 #include <tinygltf/tiny_gltf.h>
@@ -52,6 +53,46 @@ inline TextureWrapping GetTextureWrapping(int32 gltfWrapping)
 		default: return TextureWrapping::Repeat;
 	}
 };
+
+inline AnimationPath GetAnimationPath(const std::string& gltfAnimationPath)
+{
+	if (str::equalInsensitive(gltfAnimationPath, "translation")) {
+		return AnimationPath::Translation;
+	}
+	if (str::equalInsensitive(gltfAnimationPath, "rotation")) {
+		return AnimationPath::Rotation;
+	}
+	if (str::equalInsensitive(gltfAnimationPath, "scale")) {
+		return AnimationPath::Scale;
+	}
+	if (str::equalInsensitive(gltfAnimationPath, "weights")) {
+		return AnimationPath::Weights;
+	}
+	// not defined -> translation, CHECK: or should abort?
+	return AnimationPath::Translation;
+}
+
+inline InterpolationMethod GetInterpolationMethod(const std::string& gltfInterpolationMethod)
+{
+	if (str::equalInsensitive(gltfInterpolationMethod, "LINEAR")) {
+		return InterpolationMethod::Linear;
+	}
+	if (str::equalInsensitive(gltfInterpolationMethod, "STEP")) {
+		return InterpolationMethod::Step;
+	}
+	if (str::equalInsensitive(gltfInterpolationMethod, "CUBICSPLINE")) {
+		return InterpolationMethod::Cubicspline;
+	}
+	// not defined -> linear
+	return InterpolationMethod::Linear;
+}
+
+// TODO: inline float GetNormalizedIntToFloat()
+// accessor.normalized = true
+// 5120 (BYTE)				f = max(c / 127.0, -1.0)
+// 5121 (UNSIGNED_BYTE)		f = c / 255.0
+// 5122 (SHORT)				f = max(c / 32767.0, -1.0)
+// 5123 (UNSIGNED_SHORT)	f = c / 65535.0
 
 enum class MaterialAlphaMode
 {
@@ -126,6 +167,16 @@ void CopyToVector(std::vector<uint32>& result, byte* beginPtr, size_t perElement
 	}
 }
 
+// Expects float type, componentCount == 1
+inline void CopyToFloatVector(std::vector<float>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+{
+	for (uint32 i = 0; i < elementCount; ++i) {
+		byte* elementPtr = &beginPtr[perElementOffset * i];
+		float* data = reinterpret_cast<float*>(elementPtr);
+		result[i] = *data;
+	}
+}
+
 inline void ExtractMatrices4Into(const tg::Model& modelData, int32 accessorIndex, std::vector<glm::mat4>& out)
 {
 	AccessorDescription desc(modelData, accessorIndex);
@@ -154,7 +205,7 @@ inline void ExtractIndicesInto(const tg::Model& modelData, int32 accessorIndex, 
 {
 	AccessorDescription desc(modelData, accessorIndex);
 
-	CLOG_ABORT(desc.componentCount != 1, "Found indicies of 2 components in gltf file.");
+	CLOG_ABORT(desc.componentCount != 1, "Found indices of 2 components in gltf file.");
 	out.resize(desc.elementCount);
 
 	switch (desc.componentType) {
