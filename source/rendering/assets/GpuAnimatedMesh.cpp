@@ -15,7 +15,7 @@ SkinnedMesh::Gpu::Gpu(PodHandle<SkinnedMesh> podHandle)
 	auto data = podHandle.Lock();
 
 	// PERF:
-	for (int32 i = 0; const auto& gg : data->geometryGroups) {
+	for (int32 i = 0; const auto& gg : data->skinnedGeometrySlots) {
 		GpuGeometryGroup vgg;
 		vgg.material = GpuAssetManager->GetGpuHandle(data->materials[i]);
 

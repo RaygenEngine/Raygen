@@ -2,7 +2,7 @@
 #include "assets/pods/Mesh.h"
 #include "rendering/assets/GpuAssetHandle.h"
 #include "universe/nodes/geometry/GeometryNode.h"
-#include "universe/nodes/geometry/AnimatedNode.h"
+#include "universe/nodes/geometry/AnimatedGeometryNode.h"
 #include "rendering/scene/SceneStructs.h"
 
 struct SceneGeometry {
@@ -24,6 +24,6 @@ struct SceneAnimatedGeometry : SceneStruct<AnimatedGeometry_Ubo> {
 
 	// std::vector<glm::mat4> jointMatrices;
 
-	AnimatedNode* node;
+	AnimatedGeometryNode* node;
 	std::vector<bool> isDirty;
 };

@@ -1,9 +1,12 @@
 #pragma once
-#include "assets/importers/gltf/GltfUtl.h"
+#include "assets/PodHandle.h"
+#include "assets/UriLibrary.h"
+
+#include <tinygltf/tiny_gltf.h>
+
+namespace tg = tinygltf;
 
 namespace gltfutl {
-
-
 struct GltfCache {
 	uri::Uri gltfFilePath;
 	uri::Uri filename;
@@ -26,5 +29,4 @@ private:
 	void LoadMaterials();
 	void LoadAnimations();
 };
-
 } // namespace gltfutl

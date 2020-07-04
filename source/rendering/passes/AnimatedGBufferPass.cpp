@@ -1,18 +1,18 @@
 #include "pch.h"
-#include "GbufferPass.h"
+#include "AnimatedGbufferPass.h"
 
+#include "assets/pods/SkinnedMesh.h"
 #include "engine/Engine.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/assets/GpuMaterialInstance.h"
-
 #include "rendering/Device.h"
+#include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/Layouts.h"
 #include "rendering/wrappers/RGbuffer.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
@@ -27,7 +27,7 @@ static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
-vk::UniqueRenderPass GbufferPass::CreateCompatibleRenderPass()
+vk::UniqueRenderPass AnimatedGbufferPass::CreateCompatibleRenderPass()
 {
 	// renderpass
 	std::array<vk::AttachmentDescription, 5> colorAttachmentDescs{};
@@ -97,12 +97,12 @@ vk::UniqueRenderPass GbufferPass::CreateCompatibleRenderPass()
 	return Device->createRenderPassUnique(renderPassInfo);
 }
 
-size_t GbufferPass::GetPushConstantSize()
+size_t AnimatedGbufferPass::GetPushConstantSize()
 {
 	return sizeof(PushConstant);
 }
 
-vk::UniquePipeline GbufferPass::CreatePipeline(
+vk::UniquePipeline AnimatedGbufferPass::CreatePipeline(
 	vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
 {
 	vk::VertexInputBindingDescription bindingDescription{};
@@ -116,22 +116,32 @@ vk::UniquePipeline GbufferPass::CreatePipeline(
 	attributeDescriptions[0].binding = 0u;
 	attributeDescriptions[0].location = 0u;
 	attributeDescriptions[0].format = vk::Format::eR32G32B32Sfloat;
-	attributeDescriptions[0].offset = offsetof(Vertex, position);
+	attributeDescriptions[0].offset = offsetof(SkinnedVertex, position);
 
 	attributeDescriptions[1].binding = 0u;
 	attributeDescriptions[1].location = 1u;
 	attributeDescriptions[1].format = vk::Format::eR32G32B32Sfloat;
-	attributeDescriptions[1].offset = offsetof(Vertex, normal);
+	attributeDescriptions[1].offset = offsetof(SkinnedVertex, normal);
 
 	attributeDescriptions[2].binding = 0u;
 	attributeDescriptions[2].location = 2u;
 	attributeDescriptions[2].format = vk::Format::eR32G32B32Sfloat;
-	attributeDescriptions[2].offset = offsetof(Vertex, tangent);
+	attributeDescriptions[2].offset = offsetof(SkinnedVertex, tangent);
 
 	attributeDescriptions[3].binding = 0u;
 	attributeDescriptions[3].location = 3u;
 	attributeDescriptions[3].format = vk::Format::eR32G32Sfloat;
-	attributeDescriptions[3].offset = offsetof(Vertex, uv);
+	attributeDescriptions[3].offset = offsetof(SkinnedVertex, uv);
+
+	attributeDescriptions[4].binding = 0u;
+	attributeDescriptions[4].location = 4u;
+	attributeDescriptions[4].format = vk::Format::eR16G16B16A16Uint;
+	attributeDescriptions[4].offset = offsetof(SkinnedVertex, uv);
+
+	attributeDescriptions[5].binding = 0u;
+	attributeDescriptions[5].location = 5u;
+	attributeDescriptions[5].format = vk::Format::eR32G32B32A32Sfloat;
+	attributeDescriptions[5].offset = offsetof(SkinnedVertex, uv);
 
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
@@ -245,92 +255,92 @@ vk::UniquePipeline GbufferPass::CreatePipeline(
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
-	const std::vector<SceneGeometry*>& geometries)
+void AnimatedGbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
+	const std::vector<SceneAnimatedGeometry*>& geometries)
 {
-	PROFILE_SCOPE(Renderer);
+	// PROFILE_SCOPE(Renderer);
 
-	auto extent = gbuffer->attachments[GPosition]->GetExtent2D();
+	// auto extent = gbuffer->attachments[GPosition]->GetExtent2D();
 
-	vk::Rect2D scissor{};
-	scissor
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
+	// vk::Rect2D scissor{};
+	// scissor
+	//	.setOffset({ 0, 0 }) //
+	//	.setExtent(extent);
 
-	vk::Viewport viewport{};
-	viewport
-		.setX(0) //
-		.setY(0)
-		.setWidth(static_cast<float>(extent.width))
-		.setHeight(static_cast<float>(extent.height))
-		.setMinDepth(0.f)
-		.setMaxDepth(1.f);
+	// vk::Viewport viewport{};
+	// viewport
+	//	.setX(0) //
+	//	.setY(0)
+	//	.setWidth(static_cast<float>(extent.width))
+	//	.setHeight(static_cast<float>(extent.height))
+	//	.setMinDepth(0.f)
+	//	.setMaxDepth(1.f);
 
-	cmdBuffer->setViewport(0, { viewport });
-	cmdBuffer->setScissor(0, { scissor });
+	// cmdBuffer->setViewport(0, { viewport });
+	// cmdBuffer->setScissor(0, { scissor });
 
-	vk::RenderPassBeginInfo renderPassInfo{};
-	renderPassInfo
-		.setRenderPass(Layouts->gbufferPass.get()) //
-		.setFramebuffer(gbuffer->framebuffer.get());
-	renderPassInfo.renderArea
-		.setOffset({ 0, 0 }) //
-		.setExtent(gbuffer->attachments[GPosition]->GetExtent2D());
+	// vk::RenderPassBeginInfo renderPassInfo{};
+	// renderPassInfo
+	//	.setRenderPass(Layouts->gbufferPass.get()) //
+	//	.setFramebuffer(gbuffer->framebuffer.get());
+	// renderPassInfo.renderArea
+	//	.setOffset({ 0, 0 }) //
+	//	.setExtent(gbuffer->attachments[GPosition]->GetExtent2D());
 
-	std::array<vk::ClearValue, 6> clearValues = {};
-	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[1].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[2].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[3].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[4].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[5].setDepthStencil({ 1.0f, 0 });
-	renderPassInfo
-		.setClearValueCount(static_cast<uint32>(clearValues.size())) //
-		.setPClearValues(clearValues.data());
-
-
-	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-	{
-		// TODO: remove camera refs
-		auto camera = Scene->GetActiveCamera();
-		if (!camera) {
-			cmdBuffer->endRenderPass();
-			return;
-		}
-
-		for (auto geom : geometries) {
-			if (!geom) {
-				continue;
-			}
-			PushConstant pc{ //
-				geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
-			};
-
-			for (auto& gg : geom->model.Lock().geometryGroups) {
-				auto& mat = gg.material.Lock();
-				auto& arch = mat.archetype.Lock();
-				auto& plLayout = *arch.gbuffer.pipelineLayout;
-
-				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
-				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-				if (mat.hasDescriptorSet) {
-					cmdBuffer->bindDescriptorSets(
-						vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
-				}
-
-				cmdBuffer->bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
-
-				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
-				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+	// std::array<vk::ClearValue, 6> clearValues = {};
+	// clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	// clearValues[1].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	// clearValues[2].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	// clearValues[3].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	// clearValues[4].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	// clearValues[5].setDepthStencil({ 1.0f, 0 });
+	// renderPassInfo
+	//	.setClearValueCount(static_cast<uint32>(clearValues.size())) //
+	//	.setPClearValues(clearValues.data());
 
 
-				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
-			}
-		}
-	}
-	cmdBuffer->endRenderPass();
+	// cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+	//{
+	//	// TODO: remove camera refs
+	//	auto camera = Scene->GetActiveCamera();
+	//	if (!camera) {
+	//		cmdBuffer->endRenderPass();
+	//		return;
+	//	}
+
+	//	for (auto geom : geometries) {
+	//		if (!geom) {
+	//			continue;
+	//		}
+	//		PushConstant pc{ //
+	//			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
+	//		};
+
+	//		for (auto& gg : geom->model.Lock().geometryGroups) {
+	//			auto& mat = gg.material.Lock();
+	//			auto& arch = mat.archetype.Lock();
+	//			auto& plLayout = *arch.gbuffer.pipelineLayout;
+
+	//			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
+	//			cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+	//			if (mat.hasDescriptorSet) {
+	//				cmdBuffer->bindDescriptorSets(
+	//					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
+	//			}
+
+	//			cmdBuffer->bindDescriptorSets(
+	//				vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
+
+	//			cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
+	//			cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+
+
+	//			cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+	//		}
+	//	}
+	//}
+	// cmdBuffer->endRenderPass();
 }
 
 } // namespace vl

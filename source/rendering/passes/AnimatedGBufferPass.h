@@ -5,7 +5,7 @@
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
-class GbufferPass {
+class AnimatedGbufferPass {
 
 public:
 	static vk::UniqueRenderPass CreateCompatibleRenderPass();
@@ -16,7 +16,7 @@ public:
 		std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
 
 	static void RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
-		const std::vector<SceneGeometry*>& geometries);
+		const std::vector<SceneAnimatedGeometry*>& geometries);
 };
 
 } // namespace vl

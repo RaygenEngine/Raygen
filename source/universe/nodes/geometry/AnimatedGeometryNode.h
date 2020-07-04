@@ -1,22 +1,21 @@
 #pragma once
-#include "assets/pods/Mesh.h"
+#include "assets/pods/SkinnedMesh.h"
 #include "universe/nodes/Node.h"
 
-class AnimatedNode : public Node {
-	REFLECTED_NODE(AnimatedNode, Node, DF_FLAGS(ModelChange))
+class AnimatedGeometryNode : public Node {
+	REFLECTED_NODE(AnimatedGeometryNode, Node, DF_FLAGS(ModelChange))
 	{
 		REFLECT_ICON(FA_CUBE);
 		REFLECT_VAR(m_skinnedMesh).OnDirty(DF::ModelChange);
 		REFLECT_VAR(m_animation).OnDirty(DF::ModelChange);
 	}
 
-public:
 	PodHandle<SkinnedMesh> m_skinnedMesh;
 	PodHandle<Animation> m_animation;
 
-
-	AnimatedNode();
-	~AnimatedNode() override;
+public:
+	AnimatedGeometryNode();
+	~AnimatedGeometryNode() override;
 
 
 	void DirtyUpdate(DirtyFlagset dirtyFlags) override;

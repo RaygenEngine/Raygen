@@ -6,17 +6,14 @@ struct SkinnedVertex {
 	glm::vec3 position{};
 	glm::vec3 normal{};
 	glm::vec3 tangent{};
-	glm::vec3 bitangent{};
 	glm::vec2 uv{};
 	glm::u16vec4 joint{};
 	glm::vec4 weight{};
 };
 
-struct SkinnedGeometryGroup {
+struct SkinnedGeometrySlot {
 	std::vector<uint32> indices{};
 	std::vector<SkinnedVertex> vertices{};
-
-	uint32 materialIndex{ 0u };
 };
 
 struct SkinnedMesh : public AssetPod {
@@ -29,7 +26,7 @@ struct SkinnedMesh : public AssetPod {
 	std::vector<glm::mat4> jointMatrices{};
 	std::vector<uint32> parentJoint{};
 
-	std::vector<SkinnedGeometryGroup> geometryGroups{};
+	std::vector<SkinnedGeometrySlot> skinnedGeometrySlots{};
 
 	std::vector<PodHandle<MaterialInstance>> materials{};
 };

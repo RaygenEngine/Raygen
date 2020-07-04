@@ -1,11 +1,9 @@
 #include "pch.h"
 #include "GltfImporter.h"
 
-#include "assets/AssetImporterManager.h"
 #include "assets/importers/gltf/GltfCache.h"
 #include "assets/importers/gltf/GltfSceneToStaticMeshLoader.h"
 #include "assets/importers/gltf/GltfSkinnedMeshLoader.h"
-#include "assets/pods/SkinnedMesh.h"
 
 #include <tinygltf/tiny_gltf.h>
 
