@@ -52,6 +52,13 @@ void Scene_::UploadDirty()
 		}
 	}
 
+	for (auto an : animatedGeometries.elements) {
+		if (an && an->isDirty[vl::Renderer_::currentFrame]) {
+			an->UploadUbo(vl::Renderer_::currentFrame);
+			an->isDirty[vl::Renderer_::currentFrame] = false;
+		}
+	}
+
 	// for (auto rp : reflProbs.elements) {
 	//	if (rp && rp->isDirty[vl::Renderer_::currentFrame]) {
 	//		rp->UploadUbo(vl::Renderer_::currentFrame);

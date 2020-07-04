@@ -87,12 +87,30 @@ inline InterpolationMethod GetInterpolationMethod(const std::string& gltfInterpo
 	return InterpolationMethod::Linear;
 }
 
-// TODO: inline float GetNormalizedIntToFloat()
-// accessor.normalized = true
-// 5120 (BYTE)				f = max(c / 127.0, -1.0)
-// 5121 (UNSIGNED_BYTE)		f = c / 255.0
-// 5122 (SHORT)				f = max(c / 32767.0, -1.0)
-// 5123 (UNSIGNED_SHORT)	f = c / 65535.0
+inline float NormalizedIntToFloat(int8 c)
+{
+	return glm::max(c / 127.f, -1.f);
+}
+
+inline float NormalizedIntToFloat(uint8 c)
+{
+	return c / 255.f;
+}
+
+inline float NormalizedIntToFloat(int16 c)
+{
+	return glm::max(c / 32767.f, -1.f);
+}
+
+inline float NormalizedIntToFloat(uint16 c)
+{
+	return c / 65535.f;
+}
+
+inline float NormalizedIntToFloat(float c)
+{
+	return c;
+}
 
 enum class MaterialAlphaMode
 {
@@ -136,6 +154,8 @@ struct AccessorDescription {
 
 	uint32 componentType; // this particular model's underlying buffer type to read as.
 
+	bool normalized;
+
 	AccessorDescription(const tg::Model& modelData, int32 accessorIndex)
 	{
 		size_t beginByteOffset;
@@ -150,6 +170,8 @@ struct AccessorDescription {
 		strideByteOffset = accessor.ByteStride(bufferView);
 		componentCount = tg::GetNumComponentsInType(accessor.type);
 		beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
+
+		normalized = accessor.normalized;
 	}
 };
 
@@ -209,103 +231,83 @@ inline void ExtractIndicesInto(const tg::Model& modelData, int32 accessorIndex, 
 	out.resize(desc.elementCount);
 
 	switch (desc.componentType) {
+		case TINYGLTF_COMPONENT_TYPE_FLOAT:
+		case TINYGLTF_COMPONENT_TYPE_DOUBLE:
+			LOG_ABORT("Incorrect buffers, debug model...");
+
 			// Conversions from signed to unsigned types are "implementation defined".
 			// This code assumes the implementation will not do any bit arethmitic from signed x to unsigned x.
 
-		case TINYGLTF_COMPONENT_TYPE_BYTE:
+		case TINYGLTF_COMPONENT_TYPE_BYTE: {
+			CopyToVector<int8>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			return;
+		}
+
 		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: {
-			CopyToVector<unsigned char>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			CopyToVector<uint8>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 			return;
 		}
 		case TINYGLTF_COMPONENT_TYPE_SHORT: {
-			CopyToVector<short>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			CopyToVector<int16>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 			return;
 		}
 		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: {
-			CopyToVector<unsigned short>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			CopyToVector<uint16>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 			return;
 		}
 		case TINYGLTF_COMPONENT_TYPE_INT: {
-			CopyToVector<int>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			CopyToVector<int32>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 			return;
 		}
 		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: {
 			CopyToVector<uint32>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 			return;
 		}
-		case TINYGLTF_COMPONENT_TYPE_FLOAT:
-		case TINYGLTF_COMPONENT_TYPE_DOUBLE: return;
 	}
 }
 
-template<typename VertexT, typename ComponentType>
+template<typename VertexT>
 void CopyToVertexData_Position(
 	std::vector<VertexT>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 {
 	for (int32 i = 0; i < elementCount; ++i) {
 		byte* elementPtr = &beginPtr[perElementOffset * i];
-		ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
+		float* data = reinterpret_cast<float*>(elementPtr);
 
-		if constexpr (std::is_same_v<double, ComponentType>) {
-			result[i].position[0] = static_cast<float>(data[0]);
-			result[i].position[1] = static_cast<float>(data[1]);
-			result[i].position[2] = static_cast<float>(data[2]);
-		}
-		else {
-			static_assert(std::is_same_v<float, ComponentType>);
-			result[i].position[0] = data[0];
-			result[i].position[1] = data[1];
-			result[i].position[2] = data[2];
-		}
+		result[i].position[0] = data[0];
+		result[i].position[1] = data[1];
+		result[i].position[2] = data[2];
 	}
 }
 
-template<typename VertexT, typename ComponentType>
+template<typename VertexT>
 void CopyToVertexData_Normal(std::vector<VertexT>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 {
 	for (int32 i = 0; i < elementCount; ++i) {
 		byte* elementPtr = &beginPtr[perElementOffset * i];
-		ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
+		float* data = reinterpret_cast<float*>(elementPtr);
 
-		if constexpr (std::is_same_v<double, ComponentType>) {
-			result[i].normal[0] = static_cast<float>(data[0]);
-			result[i].normal[1] = static_cast<float>(data[1]);
-			result[i].normal[2] = static_cast<float>(data[2]);
-		}
-		else {
-			static_assert(std::is_same_v<float, ComponentType>);
-			result[i].normal[0] = data[0];
-			result[i].normal[1] = data[1];
-			result[i].normal[2] = data[2];
-		}
+		result[i].normal[0] = data[0];
+		result[i].normal[1] = data[1];
+		result[i].normal[2] = data[2];
 	}
 }
 
-template<typename VertexT, typename ComponentType>
+template<typename VertexT>
 void CopyToVertexData_Tangent(
 	std::vector<VertexT>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 {
 	for (int32 i = 0; i < elementCount; ++i) {
 		byte* elementPtr = &beginPtr[perElementOffset * i];
-		ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-		float handness = 1.f;
+		float* data = reinterpret_cast<float*>(elementPtr);
 
-		if constexpr (std::is_same_v<double, ComponentType>) {
-			result[i].tangent[0] = static_cast<float>(data[0]);
-			result[i].tangent[1] = static_cast<float>(data[1]);
-			result[i].tangent[2] = static_cast<float>(data[2]);
-			handness = static_cast<float>(data[3]);
-		}
-		else {
-			static_assert(std::is_same_v<float, ComponentType>);
-			result[i].tangent[0] = data[0];
-			result[i].tangent[1] = data[1];
-			result[i].tangent[2] = data[2];
-			handness = data[3];
-		}
+		result[i].tangent[0] = data[0];
+		result[i].tangent[1] = data[1];
+		result[i].tangent[2] = data[2];
 
-		result[i].tangent *= handness;
+		// data[3] == handness
+		result[i].tangent *= data[3];
 	}
 }
 
@@ -317,15 +319,8 @@ void CopyToVertexData_TexCoord0(
 		byte* elementPtr = &beginPtr[perElementOffset * i];
 		ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-		if constexpr (std::is_same_v<double, ComponentType>) {
-			result[i].uv[0] = static_cast<float>(data[0]);
-			result[i].uv[1] = static_cast<float>(data[1]);
-		}
-		else {
-			static_assert(std::is_same_v<float, ComponentType>);
-			result[i].uv[0] = data[0];
-			result[i].uv[1] = data[1];
-		}
+		result[i].uv[0] = NormalizedIntToFloat(data[0]);
+		result[i].uv[1] = NormalizedIntToFloat(data[1]);
 	}
 }
 
@@ -336,12 +331,10 @@ void CopyToVertexData_Joint(std::vector<VertexT>& result, byte* beginPtr, size_t
 		byte* elementPtr = &beginPtr[perElementOffset * i];
 		ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-		if constexpr (std::is_same_v<uint16, ComponentType>) {
-			result[i].joint[0] = static_cast<uint16>(data[0]);
-			result[i].joint[1] = static_cast<uint16>(data[1]);
-			result[i].joint[2] = static_cast<uint16>(data[2]);
-			result[i].joint[3] = static_cast<uint16>(data[3]);
-		}
+		result[i].joint[0] = static_cast<uint16>(data[0]);
+		result[i].joint[1] = static_cast<uint16>(data[1]);
+		result[i].joint[2] = static_cast<uint16>(data[2]);
+		result[i].joint[3] = static_cast<uint16>(data[3]);
 	}
 }
 
@@ -352,12 +345,10 @@ void CopyToVertexData_Weight(std::vector<VertexT>& result, byte* beginPtr, size_
 		byte* elementPtr = &beginPtr[perElementOffset * i];
 		ComponentType* data = reinterpret_cast<ComponentType*>(elementPtr);
 
-		if constexpr (std::is_same_v<float, ComponentType>) {
-			result[i].weight[0] = static_cast<float>(data[0]);
-			result[i].weight[1] = static_cast<float>(data[1]);
-			result[i].weight[2] = static_cast<float>(data[2]);
-			result[i].weight[3] = static_cast<float>(data[3]);
-		}
+		result[i].weight[0] = NormalizedIntToFloat(data[0]);
+		result[i].weight[1] = NormalizedIntToFloat(data[1]);
+		result[i].weight[2] = NormalizedIntToFloat(data[2]);
+		result[i].weight[3] = NormalizedIntToFloat(data[3]);
 	}
 }
 
@@ -366,13 +357,13 @@ void LoadIntoVertexData_Selector(
 	std::vector<VertexT>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 {
 	if constexpr (VertexElementIndex == 0) {
-		CopyToVertexData_Position<VertexT, ComponentType>(result, beginPtr, perElementOffset, elementCount);
+		CopyToVertexData_Position<VertexT>(result, beginPtr, perElementOffset, elementCount);
 	}
 	else if constexpr (VertexElementIndex == 1) {
-		CopyToVertexData_Normal<VertexT, ComponentType>(result, beginPtr, perElementOffset, elementCount);
+		CopyToVertexData_Normal<VertexT>(result, beginPtr, perElementOffset, elementCount);
 	}
 	else if constexpr (VertexElementIndex == 2) {
-		CopyToVertexData_Tangent<VertexT, ComponentType>(result, beginPtr, perElementOffset, elementCount);
+		CopyToVertexData_Tangent<VertexT>(result, beginPtr, perElementOffset, elementCount);
 	}
 	else if constexpr (VertexElementIndex == 3) {
 		CopyToVertexData_TexCoord0<VertexT, ComponentType>(result, beginPtr, perElementOffset, elementCount);
@@ -391,19 +382,33 @@ void LoadIntoVertexData(const tg::Model& modelData, int32 accessorIndex, std::ve
 	AccessorDescription desc(modelData, accessorIndex);
 
 	switch (desc.componentType) {
-		case TINYGLTF_COMPONENT_TYPE_BYTE:
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
-		case TINYGLTF_COMPONENT_TYPE_SHORT:
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+
 		case TINYGLTF_COMPONENT_TYPE_INT:
-		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: LOG_ABORT("Incorrect buffers, debug model...");
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
+		case TINYGLTF_COMPONENT_TYPE_DOUBLE: LOG_ABORT("Incorrect buffers, debug model...");
+
+		case TINYGLTF_COMPONENT_TYPE_BYTE:
+			LoadIntoVertexData_Selector<VertexT, VertexElementIndex, int8>(
+				out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			return;
+
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+			LoadIntoVertexData_Selector<VertexT, VertexElementIndex, uint8>(
+				out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			return;
+
+		case TINYGLTF_COMPONENT_TYPE_SHORT:
+			LoadIntoVertexData_Selector<VertexT, VertexElementIndex, int16>(
+				out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			return;
+
+		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+			LoadIntoVertexData_Selector<VertexT, VertexElementIndex, uint16>(
+				out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			return;
 
 		case TINYGLTF_COMPONENT_TYPE_FLOAT:
 			LoadIntoVertexData_Selector<VertexT, VertexElementIndex, float>(
-				out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
-			return;
-		case TINYGLTF_COMPONENT_TYPE_DOUBLE:
-			LoadIntoVertexData_Selector<VertexT, VertexElementIndex, double>(
 				out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
 			return;
 	}

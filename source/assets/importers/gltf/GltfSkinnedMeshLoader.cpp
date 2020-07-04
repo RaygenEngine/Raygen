@@ -204,10 +204,9 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& cache, uint32 skinIndex,
 
 	AccessorDescription desc(m_cache.gltfData, skin.inverseBindMatrices);
 
-	std::vector<glm::mat4> inverseBindMatrices;
-	ExtractMatrices4Into(m_cache.gltfData, skin.inverseBindMatrices, inverseBindMatrices);
+	ExtractMatrices4Into(m_cache.gltfData, skin.inverseBindMatrices, pod->jointMatrices);
 
-	pod->parentJoint.resize(inverseBindMatrices.size());
+	pod->parentJoint.resize(pod->jointMatrices.size());
 
 	// TODO: premultiply transforms that affect skeleton and the rest of the hierarchy
 
@@ -247,6 +246,8 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& cache, uint32 skinIndex,
 		return true;
 	};
 
-	RecurseChildren(skin.skeleton, UINT32_MAX);
+	RecurseChildren(skin.joints[0], UINT32_MAX);
+
+	LOG_REPORT("VS SUCKS");
 }
 } // namespace gltfutl

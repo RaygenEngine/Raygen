@@ -9,7 +9,7 @@
 template<typename T>
 concept CSceneElem
 	= std::is_same_v<SceneGeometry,
-		  T> || std::is_same_v<SceneCamera, T> || std::is_same_v<SceneSpotlight, T> || std::is_same_v<SceneReflectionProbe, T>;
+		  T> || std::is_same_v<SceneCamera, T> || std::is_same_v<SceneSpotlight, T> || std::is_same_v<SceneReflectionProbe, T> || std::is_same_v<SceneAnimatedGeometry, T>;
 
 template<CONC(CSceneElem) T>
 struct SceneVector {
@@ -26,6 +26,7 @@ struct SceneVector {
 
 inline struct Scene_ {
 	SceneVector<SceneGeometry> geometries;
+	SceneVector<SceneAnimatedGeometry> animatedGeometries;
 	SceneVector<SceneCamera> cameras;
 	SceneVector<SceneSpotlight> spotlights;
 	SceneVector<SceneReflectionProbe> reflProbs;
@@ -53,6 +54,9 @@ inline struct Scene_ {
 		}
 		else if constexpr (std::is_same_v<SceneReflectionProbe, T>) {
 			return reflProbs.elements.at(uid);
+		}
+		else if constexpr (std::is_same_v<SceneAnimatedGeometry, T>) {
+			return animatedGeometries.elements.at(uid);
 		}
 		LOG_ABORT("Incorrect type");
 	}
@@ -89,6 +93,11 @@ inline struct Scene_ {
 		else if constexpr (std::is_same_v<SceneReflectionProbe, T>) {
 			uid = reflProbs.elements.size() + reflProbs.pendingElements++;
 			currentCmdBuffer->emplace_back([=]() { Scene->reflProbs.elements[uid] = new SceneReflectionProbe(); });
+		}
+		else if constexpr (std::is_same_v<SceneAnimatedGeometry, T>) {
+			uid = animatedGeometries.elements.size() + animatedGeometries.pendingElements++;
+			currentCmdBuffer->emplace_back(
+				[=]() { Scene->animatedGeometries.elements[uid] = new SceneAnimatedGeometry(); });
 		}
 
 		return uid;
@@ -131,6 +140,7 @@ inline struct Scene_ {
 				delete elem;
 			});
 		}
+		// TODO : delete animated geometries
 	}
 
 	void EnqueueEndFrame()
@@ -152,6 +162,7 @@ private:
 		cameras.AppendPendingElements();
 		spotlights.AppendPendingElements();
 		reflProbs.AppendPendingElements();
+		animatedGeometries.AppendPendingElements();
 	}
 
 public:
