@@ -1,17 +1,16 @@
 #include "pch.h"
-#include "AnimatedNode.h"
+#include "AnimatedGeometryNode.h"
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/assets/GpuMesh.h"
-#include "assets/pods/SkinnedMesh.h"
 
-AnimatedNode::AnimatedNode()
+AnimatedGeometryNode::AnimatedGeometryNode()
 {
 	sceneUid = Scene->EnqueueCreateCmd<SceneAnimatedGeometry>();
 }
 
-void AnimatedNode::DirtyUpdate(DirtyFlagset dirtyFlags)
+void AnimatedGeometryNode::DirtyUpdate(DirtyFlagset dirtyFlags)
 {
 	Node::DirtyUpdate(dirtyFlags);
 
@@ -31,7 +30,7 @@ void AnimatedNode::DirtyUpdate(DirtyFlagset dirtyFlags)
 	}
 }
 
-AnimatedNode::~AnimatedNode()
+AnimatedGeometryNode::~AnimatedGeometryNode()
 {
 	Scene->EnqueueDestroyCmd<SceneAnimatedGeometry>(sceneUid);
 }

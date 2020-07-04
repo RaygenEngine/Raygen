@@ -12,7 +12,7 @@ GeometryNode::GeometryNode()
 
 void GeometryNode::SetModel(PodHandle<Mesh> newModel)
 {
-	m_model = newModel;
+	m_mesh = newModel;
 	SetDirty(DF::ModelChange);
 }
 

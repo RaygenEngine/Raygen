@@ -2,6 +2,7 @@
 #include "GltfCache.h"
 
 #include "assets/AssetImporterManager.h"
+#include "assets/importers/gltf/GltfUtl.h"
 #include "assets/pods/Animation.h"
 
 namespace gltfutl {
@@ -82,7 +83,6 @@ void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 			LOG_ERROR("Failed to import Gltf Material Instance Property: {}. Class type mismatch.", prop);
 		}
 	};
-
 
 	auto& data = gltfData.materials.at(index);
 
