@@ -129,50 +129,9 @@ void main( ) {
 
 	vec3 iblContribution = diffuse + specular;
 
-	outColor = vec4(iblContribution, 1.0f);
-	//outColor = vec4(brdf.y);
+	// TODO: Temporary emissive hack
+	vec3 color = iblContribution + emissive;
+
+	outColor = vec4(color, 1.0f);
 }
-
-/*
-
-void old() {
-	vec3 F0 = vec3(0.04); 
-    F0 = mix(F0, albedo, metallic);
-	
-	//vec3 kS = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness); 
-	//vec3 kD = 1.0 - kS;
-	//vec3 irradiance = texture(irradianceSampler, N).rgb;
-	//vec3 diffuse    = irradiance * albedo;
-	//vec3 ambient    = (kD * diffuse);
-
-	// actual ibl
-	vec3 R = reflect(V, N); 
-
-    const float MAX_REFLECTION_LOD = 4.0;
-	vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
-
-	vec3 kS = F;
-	vec3 kD = 1.0 - kS;
-	kD *= 1.0 - metallic;	  
-	
-	vec3 irradiance = texture(irradianceSampler, N).rgb;
-	vec3 diffuse    = irradiance * albedo;
-	
-	vec3 prefilteredColor = textureLod(prefilteredSampler, R,  roughness * MAX_REFLECTION_LOD).rgb;   
-	vec2 envBRDF  = texture(brdfLutSampler, vec2(max(dot(N, V), 0.0), roughness)).rg;
-	vec3 specularC = prefilteredColor * (F * envBRDF.x + envBRDF.y);
-	
-	//We don't multiply specular by kS as we already have a Fresnel multiplication in there.
-	vec3 ambient = (kD * diffuse + specularC); 
-
-	// AO & emissive
-	// TODO: seperate pass, as this will be interpolated for many reflection probes
-	vec3 color = emissive + ambient;
-	color = mix(color, color * specular.b, specular.a);
-
-	outColor = vec4(color, 1.0);
-}                                                                                                                          
-                                                                                                                                       
-
-*/
 
