@@ -1,6 +1,7 @@
 #pragma once
 #include "editor/windows/EdWindow.h"
 
+// TODO: Remove class
 struct PodEntry;
 namespace ed {
 class ShaderEditorWindow : public UniqueWindow {

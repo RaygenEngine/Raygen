@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "EdShaderEditorWindow.h"
 
+// TODO: Remove this, its useless
 
 #include "assets/AssetRegistry.h"
 #include "assets/pods/Shader.h"
