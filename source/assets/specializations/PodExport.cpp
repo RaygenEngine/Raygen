@@ -22,14 +22,16 @@ inline void ExportPod(MaterialArchetype* src, const fs::path& path)
 {
 	std::ofstream f(path);
 	f << "// Raygen exported generated shader backup\n";
-	f << "// UBO Section:\n";
+	f << "//@ UBO Section:\n";
 	f << src->descriptorSetLayout.GetUniformText().str();
-	f << "\n// Shared Section:\n";
+	f << "\n//@ Shared Section:\n";
 	f << src->sharedFunctions;
-	f << "\n// Gbuffer Frag Section:\n";
+	f << "\n//@ Gbuffer Frag Section:\n";
 	f << src->gbufferFragMain;
-	f << "\n// Depthmap Pass Section:\n";
+	f << "\n//@ Depthmap Pass Section:\n";
 	f << src->depthShader;
+	f << "\n//@ Gbuffer Vert Section:\n";
+	f << src->gbufferVertMain;
 }
 
 

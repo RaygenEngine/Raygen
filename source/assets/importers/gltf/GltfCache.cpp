@@ -23,7 +23,7 @@ GltfCache::GltfCache(const fs::path& path)
 
 	ImporterManager->PushPath(std::string_view(filename));
 	LoadImages();
-	LoadSamplers();
+	// LoadSamplers(); // CHECK: Maybe do some check to report irregular samplers in the future
 	LoadMaterials();
 	ImporterManager->PopPath();
 }
@@ -40,6 +40,7 @@ void GltfCache::LoadImages()
 
 void GltfCache::LoadSamplers()
 {
+
 	int32 samplerIndex = 0;
 	for (auto& sampler : gltfData.samplers) {
 
