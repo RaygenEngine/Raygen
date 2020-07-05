@@ -170,14 +170,14 @@ struct AccessorDescription {
 
 // Uint16 specialization. Expects componentCount == 1.
 template<typename T>
-void CopyToVector(uint32* result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+void CopyIndicesVector(uint32* result, byte* beginPtr, size_t perElementOffset, size_t elementCount, uint32 offset)
 {
 	static_assert(std::is_integral_v<T>, "This is not an integer type");
 
 	for (uint32 i = 0; i < elementCount; ++i) {
 		byte* elementPtr = &beginPtr[perElementOffset * i];
 		T* data = reinterpret_cast<T*>(elementPtr);
-		result[i] = *data;
+		result[i] = static_cast<uint32>(*data) + offset;
 	}
 }
 
@@ -215,7 +215,7 @@ inline void ExtractMatrices4Into(const tg::Model& modelData, int32 accessorIndex
 	}
 }
 
-inline void ExtractIndicesInto(const tg::Model& modelData, AccessorDescription& inDesc, uint32* out)
+inline void ExtractIndicesInto(const tg::Model& modelData, AccessorDescription& inDesc, uint32* out, uint32 indexOffset)
 {
 	switch (inDesc.componentType) {
 		case TINYGLTF_COMPONENT_TYPE_FLOAT:
@@ -226,28 +226,28 @@ inline void ExtractIndicesInto(const tg::Model& modelData, AccessorDescription& 
 			// This code assumes the implementation will not do any bit arethmitic from signed x to unsigned x.
 
 		case TINYGLTF_COMPONENT_TYPE_BYTE: {
-			CopyToVector<int8>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount);
+			CopyIndicesVector<int8>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount, indexOffset);
 			return;
 		}
 
 		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: {
-			CopyToVector<uint8>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount);
+			CopyIndicesVector<uint8>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount, indexOffset);
 			return;
 		}
 		case TINYGLTF_COMPONENT_TYPE_SHORT: {
-			CopyToVector<int16>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount);
+			CopyIndicesVector<int16>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount, indexOffset);
 			return;
 		}
 		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: {
-			CopyToVector<uint16>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount);
+			CopyIndicesVector<uint16>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount, indexOffset);
 			return;
 		}
 		case TINYGLTF_COMPONENT_TYPE_INT: {
-			CopyToVector<int32>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount);
+			CopyIndicesVector<int32>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount, indexOffset);
 			return;
 		}
 		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: {
-			CopyToVector<uint32>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount);
+			CopyIndicesVector<uint32>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount, indexOffset);
 			return;
 		}
 	}
@@ -407,30 +407,38 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 		[](auto& pair) { return str::equalInsensitive(pair.first, "POSITION"); });
 
 	size_t prevEnd = geom.vertices.size();
-	size_t newEnd = cache.gltfData.accessors.at(it->second).count;
-	size_t totalSize = prevEnd + newEnd;
+	size_t newCount = cache.gltfData.accessors.at(it->second).count;
+	size_t totalSize = prevEnd + newCount;
 
 	geom.vertices.resize(totalSize);
 
 	// indexing
 	const auto indicesIndex = primitiveData.indices;
 
-	AccessorDescription desc(cache.gltfData, indicesIndex);
+	size_t prevIndicesEnd;
+	size_t newIndicesCount;
+	size_t totalIndicesSize;
 
-	CLOG_ABORT(desc.componentCount != 1, "Found indices of 2 components in gltf file.");
-	size_t prevIndicesEnd = geom.indices.size();
-	size_t newIndicesEnd = desc.elementCount;
-	size_t totalIndicesSize = prevIndicesEnd + newIndicesEnd;
-	geom.indices.resize(totalIndicesSize);
-
-	if (indicesIndex != -1) {
-		ExtractIndicesInto(cache.gltfData, desc, geom.indices.data() + prevIndicesEnd);
-	}
-	else {
-		geom.indices.resize(totalSize);
+	if (indicesIndex == -1) {
+		prevIndicesEnd = geom.indices.size();
+		newIndicesCount = newCount;
+		totalIndicesSize = prevIndicesEnd + newIndicesCount;
+		geom.indices.resize(totalIndicesSize);
 		for (size_t i = prevEnd; i < totalSize; ++i) {
 			geom.indices[i] = static_cast<uint32>(i);
 		}
+	}
+	else {
+
+		AccessorDescription desc(cache.gltfData, indicesIndex);
+
+		CLOG_ABORT(desc.componentCount != 1, "Found indices of 2 components in gltf file.");
+		prevIndicesEnd = geom.indices.size();
+		newIndicesCount = desc.elementCount;
+		totalIndicesSize = prevIndicesEnd + newIndicesCount;
+		geom.indices.resize(totalIndicesSize);
+
+		ExtractIndicesInto(cache.gltfData, desc, geom.indices.data() + prevIndicesEnd, prevEnd);
 	}
 
 	int32 positionsIndex = -1;
