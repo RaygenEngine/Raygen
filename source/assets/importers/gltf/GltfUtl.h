@@ -415,7 +415,7 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 	// indexing
 	const auto indicesIndex = primitiveData.indices;
 
-	AccessorDescription desc(modelData, accessorIndex);
+	AccessorDescription desc(cache.gltfData, indicesIndex);
 
 	CLOG_ABORT(desc.componentCount != 1, "Found indices of 2 components in gltf file.");
 	size_t prevIndicesEnd = geom.indices.size();
@@ -428,8 +428,8 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 	}
 	else {
 		geom.indices.resize(totalSize);
-		for (int32 i = prevEnd; i < totalSize; ++i) {
-			geom.indices[i] = i;
+		for (size_t i = prevEnd; i < totalSize; ++i) {
+			geom.indices[i] = static_cast<uint32>(i);
 		}
 	}
 
@@ -488,7 +488,7 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 			geom.vertices[geom.indices[i + 2llu]].normal += n;
 		}
 
-		for (int32 i = prevEnd; i < totalSize; ++i) {
+		for (size_t i = prevEnd; i < totalSize; ++i) {
 			geom.vertices[i].normal = glm::normalize(geom.vertices[i].normal);
 		}
 	}
@@ -509,7 +509,7 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 		if (texcoords0Index != -1) {
 			LOG_DEBUG("Model missing tangents, calculating using available uv map");
 
-			for (size_t i = prevIndicesEnd; i < totalIndicesSize;; i += 3) {
+			for (size_t i = prevIndicesEnd; i < totalIndicesSize; i += 3) {
 				// triangle
 				auto p0 = geom.vertices[geom.indices[i]].position;
 				auto p1 = geom.vertices[geom.indices[i + 1llu]].position;
@@ -538,14 +538,14 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 			}
 
 			// CHECK: handness
-			for (int32 i = prevEnd; i < totalSize; ++i) {
+			for (size_t i = prevEnd; i < totalSize; ++i) {
 				geom.vertices[i].tangent = glm::normalize(geom.vertices[i].tangent);
 			}
 		}
 		else {
 			LOG_DEBUG("Model missing tangents (and uv maps), calculating using hack");
 
-			for (int32 i = prevEnd; i < totalSize; ++i) {
+			for (size_t i = prevEnd; i < totalSize; ++i) {
 				const auto c1 = glm::cross(geom.vertices[i].normal, glm::vec3(0.0, 0.0, 1.0));
 				const auto c2 = glm::cross(geom.vertices[i].normal, glm::vec3(0.0, 1.0, 0.0));
 
