@@ -10,7 +10,7 @@
 #include "rendering/VulkanUtl.h"
 #include "rendering/ppt/techniques/PtDebug.h"
 #include "universe/nodes/camera/CameraNode.h"
-
+#include "rendering/passes/AnimatedGBufferPass.h"
 
 constexpr int32 c_framesInFlight = 2;
 namespace {
@@ -164,6 +164,8 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 	{
 		GbufferPass::RecordCmd(
 			cmdBuffer, m_gbuffer.get(), Scene->geometries.elements, Scene->animatedGeometries.elements);
+
+		// AnimatedGbufferPass::RecordCmd(cmdBuffer, m_gbuffer.get(), Scene->animatedGeometries.elements);
 
 		for (auto sl : Scene->spotlights.elements) {
 			if (sl) {

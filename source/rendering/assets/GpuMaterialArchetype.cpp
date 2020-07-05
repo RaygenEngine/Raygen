@@ -8,7 +8,7 @@
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/passes/DepthmapPass.h"
-
+#include "rendering/passes/AnimatedGBufferPass.h"
 
 using namespace vl;
 
@@ -85,7 +85,7 @@ MaterialArchetype::Gpu::Gpu(PodHandle<MaterialArchetype> podHandle)
 				// explicitly mark this function as final in the header
 }
 
-void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& info)
+void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& updateInfo)
 {
 	auto arch = podHandle.Lock();
 	ClearDependencies();
@@ -115,9 +115,16 @@ void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& info)
 
 
 	gbuffer = CreatePassInfoFrag<GbufferPass>("engine-data/spv/gbuffer.shader", arch->gbufferFragBinary, descLayouts);
-
-	gbufferAnimated
-		= CreatePassInfoFrag<GbufferPass>("engine-data/spv/gbuffer-anim.shader", arch->gbufferFragBinary, descLayouts);
-
 	depth = CreatePassInfoFrag<DepthmapPass>("engine-data/spv/depth_map.shader", arch->depthBinary, descLayouts);
+
+
+	size_t pushConstantSize = GbufferPass::GetPushConstantSize();
+
+	MaterialArchetype::Gpu::PassInfo info;
+	info.shaderModules.emplace_back(CreateShaderModule(arch->gbufferFragBinary));
+	info.shaderStages = CreateShaderStages("engine-data/spv/gbuffer-anim.shader", *info.shaderModules[0]);
+	info.pipelineLayout = CreatePipelineLayout(pushConstantSize, descLayouts);
+	info.pipeline = GbufferPass::CreateAnimPipeline(*info.pipelineLayout, info.shaderStages);
+
+	gbufferAnimated = std::move(info);
 }
