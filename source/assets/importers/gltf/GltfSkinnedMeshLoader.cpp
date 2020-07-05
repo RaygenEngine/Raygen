@@ -52,7 +52,8 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& cache, uint32 skinIndex,
 						"the total materials included.");
 
 					SkinnedGeometrySlot& slot = pod->skinnedGeometrySlots[materialIndex];
-					LoadGeometrySlotBasicData<SkinnedGeometrySlot, SkinnedVertex>(slot, m_cache, prim);
+					auto& [lastBegin, lastSize]
+						= LoadBasicDataIntoGeometrySlot<SkinnedGeometrySlot, SkinnedVertex>(slot, m_cache, prim);
 
 					// Also load extra stuff
 					int32 joints0Index = -1;
@@ -72,10 +73,12 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& cache, uint32 skinIndex,
 					}
 
 					// JOINTS
-					LoadIntoVertexData<SkinnedVertex, 4>(m_cache.gltfData, joints0Index, slot.vertices);
+					LoadIntoVertexData<SkinnedVertex, 4>(
+						m_cache.gltfData, joints0Index, slot.vertices.data() + lastBegin);
 
 					// WEIGHTS
-					LoadIntoVertexData<SkinnedVertex, 5>(m_cache.gltfData, weights0Index, slot.vertices);
+					LoadIntoVertexData<SkinnedVertex, 5>(
+						m_cache.gltfData, weights0Index, slot.vertices.data() + lastBegin);
 				}
 				break;
 			}

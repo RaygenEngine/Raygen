@@ -80,16 +80,17 @@ GltfSceneToStaticMeshLoader::GltfSceneToStaticMeshLoader(GltfCache& cache, tg::S
 						"the total materials included.");
 
 					GeometrySlot& slot = pod->geometrySlots[materialIndex];
-					LoadGeometrySlotBasicData<GeometrySlot, Vertex>(slot, m_cache, prim);
+					auto& [lastBegin, lastSize]
+						= LoadBasicDataIntoGeometrySlot<GeometrySlot, Vertex>(slot, m_cache, prim);
 
 					// Bake transform
 					const auto invTransMat = glm::transpose(glm::inverse(glm::mat3(localTransformMat)));
-					for (auto& v : slot.vertices) {
+					for (int32 i = lastBegin; i < lastSize; ++i) {
 
-						v.position = localTransformMat * glm::vec4(v.position, 1.f);
+						slot.vertices[i].position = localTransformMat * glm::vec4(slot.vertices[i].position, 1.f);
 
-						v.normal = glm::normalize(invTransMat * v.normal);
-						v.tangent = glm::normalize(invTransMat * v.tangent);
+						slot.vertices[i].normal = glm::normalize(invTransMat * slot.vertices[i].normal);
+						slot.vertices[i].tangent = glm::normalize(invTransMat * slot.vertices[i].tangent);
 					}
 				}
 			}

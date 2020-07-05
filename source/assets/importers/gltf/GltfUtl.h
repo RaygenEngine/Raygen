@@ -170,7 +170,7 @@ struct AccessorDescription {
 
 // Uint16 specialization. Expects componentCount == 1.
 template<typename T>
-void CopyToVector(std::vector<uint32>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+void CopyToVector(uint32* result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 {
 	static_assert(std::is_integral_v<T>, "This is not an integer type");
 
@@ -215,14 +215,9 @@ inline void ExtractMatrices4Into(const tg::Model& modelData, int32 accessorIndex
 	}
 }
 
-inline void ExtractIndicesInto(const tg::Model& modelData, int32 accessorIndex, std::vector<uint32>& out)
+inline void ExtractIndicesInto(const tg::Model& modelData, AccessorDescription& inDesc, uint32* out)
 {
-	AccessorDescription desc(modelData, accessorIndex);
-
-	CLOG_ABORT(desc.componentCount != 1, "Found indices of 2 components in gltf file.");
-	out.resize(desc.elementCount);
-
-	switch (desc.componentType) {
+	switch (inDesc.componentType) {
 		case TINYGLTF_COMPONENT_TYPE_FLOAT:
 		case TINYGLTF_COMPONENT_TYPE_DOUBLE:
 			LOG_ABORT("Incorrect buffers, debug model...");
@@ -231,36 +226,35 @@ inline void ExtractIndicesInto(const tg::Model& modelData, int32 accessorIndex, 
 			// This code assumes the implementation will not do any bit arethmitic from signed x to unsigned x.
 
 		case TINYGLTF_COMPONENT_TYPE_BYTE: {
-			CopyToVector<int8>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			CopyToVector<int8>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount);
 			return;
 		}
 
 		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: {
-			CopyToVector<uint8>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			CopyToVector<uint8>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount);
 			return;
 		}
 		case TINYGLTF_COMPONENT_TYPE_SHORT: {
-			CopyToVector<int16>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			CopyToVector<int16>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount);
 			return;
 		}
 		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: {
-			CopyToVector<uint16>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			CopyToVector<uint16>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount);
 			return;
 		}
 		case TINYGLTF_COMPONENT_TYPE_INT: {
-			CopyToVector<int32>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			CopyToVector<int32>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount);
 			return;
 		}
 		case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: {
-			CopyToVector<uint32>(out, desc.beginPtr, desc.strideByteOffset, desc.elementCount);
+			CopyToVector<uint32>(out, inDesc.beginPtr, inDesc.strideByteOffset, inDesc.elementCount);
 			return;
 		}
 	}
 }
 
 template<typename VertexT>
-void CopyToVertexData_Position(
-	std::vector<VertexT>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+void CopyToVertexData_Position(VertexT* result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 {
 	for (int32 i = 0; i < elementCount; ++i) {
 		byte* elementPtr = &beginPtr[perElementOffset * i];
@@ -273,7 +267,7 @@ void CopyToVertexData_Position(
 }
 
 template<typename VertexT>
-void CopyToVertexData_Normal(std::vector<VertexT>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+void CopyToVertexData_Normal(VertexT* result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 {
 	for (int32 i = 0; i < elementCount; ++i) {
 		byte* elementPtr = &beginPtr[perElementOffset * i];
@@ -286,8 +280,7 @@ void CopyToVertexData_Normal(std::vector<VertexT>& result, byte* beginPtr, size_
 }
 
 template<typename VertexT>
-void CopyToVertexData_Tangent(
-	std::vector<VertexT>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+void CopyToVertexData_Tangent(VertexT* result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 {
 	for (int32 i = 0; i < elementCount; ++i) {
 		byte* elementPtr = &beginPtr[perElementOffset * i];
@@ -304,8 +297,7 @@ void CopyToVertexData_Tangent(
 }
 
 template<typename VertexT, typename ComponentType>
-void CopyToVertexData_TexCoord0(
-	std::vector<VertexT>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+void CopyToVertexData_TexCoord0(VertexT* result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 {
 	for (int32 i = 0; i < elementCount; ++i) {
 		byte* elementPtr = &beginPtr[perElementOffset * i];
@@ -317,7 +309,7 @@ void CopyToVertexData_TexCoord0(
 }
 
 template<typename VertexT, typename ComponentType>
-void CopyToVertexData_Joint(std::vector<VertexT>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+void CopyToVertexData_Joint(VertexT* result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 {
 	for (int32 i = 0; i < elementCount; ++i) {
 		byte* elementPtr = &beginPtr[perElementOffset * i];
@@ -331,7 +323,7 @@ void CopyToVertexData_Joint(std::vector<VertexT>& result, byte* beginPtr, size_t
 }
 
 template<typename VertexT, typename ComponentType>
-void CopyToVertexData_Weight(std::vector<VertexT>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+void CopyToVertexData_Weight(VertexT* result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
 {
 	for (int32 i = 0; i < elementCount; ++i) {
 		byte* elementPtr = &beginPtr[perElementOffset * i];
@@ -345,8 +337,8 @@ void CopyToVertexData_Weight(std::vector<VertexT>& result, byte* beginPtr, size_
 }
 
 template<typename VertexT, size_t VertexElementIndex, typename ComponentType>
-void LoadIntoVertexData_Selector(
-	std::vector<VertexT>& result, byte* beginPtr, size_t perElementOffset, size_t elementCount)
+void LoadIntoVertexData_Selector(VertexT* result, byte* beginPtr, size_t perElementOffset, //
+	size_t elementCount)
 {
 	if constexpr (VertexElementIndex == 0) {
 		CopyToVertexData_Position<VertexT>(result, beginPtr, perElementOffset, elementCount);
@@ -369,7 +361,7 @@ void LoadIntoVertexData_Selector(
 }
 
 template<typename VertexT, size_t VertexElementIndex>
-void LoadIntoVertexData(const tg::Model& modelData, int32 accessorIndex, std::vector<VertexT>& out)
+void LoadIntoVertexData(const tg::Model& modelData, int32 accessorIndex, VertexT* out)
 {
 	AccessorDescription desc(modelData, accessorIndex);
 
@@ -406,24 +398,37 @@ void LoadIntoVertexData(const tg::Model& modelData, int32 accessorIndex, std::ve
 	}
 }
 
+// returns latest begin and size of slot
 template<typename GeometrySlotT, typename VertexT>
-inline void LoadGeometrySlotBasicData(GeometrySlotT& geom, GltfCache& cache, const tinygltf::Primitive& primitiveData)
+inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& geom, GltfCache& cache, //
+	const tinygltf::Primitive& primitiveData)
 {
 	auto it = std::find_if(begin(primitiveData.attributes), end(primitiveData.attributes),
 		[](auto& pair) { return str::equalInsensitive(pair.first, "POSITION"); });
 
-	size_t vertexCount = cache.gltfData.accessors.at(it->second).count;
-	geom.vertices.resize(vertexCount);
+	size_t prevEnd = geom.vertices.size();
+	size_t newEnd = cache.gltfData.accessors.at(it->second).count;
+	size_t totalSize = prevEnd + newEnd;
+
+	geom.vertices.resize(totalSize);
 
 	// indexing
 	const auto indicesIndex = primitiveData.indices;
 
+	AccessorDescription desc(modelData, accessorIndex);
+
+	CLOG_ABORT(desc.componentCount != 1, "Found indices of 2 components in gltf file.");
+	size_t prevIndicesEnd = geom.indices.size();
+	size_t newIndicesEnd = desc.elementCount;
+	size_t totalIndicesSize = prevIndicesEnd + newIndicesEnd;
+	geom.indices.resize(totalIndicesSize);
+
 	if (indicesIndex != -1) {
-		ExtractIndicesInto(cache.gltfData, indicesIndex, geom.indices);
+		ExtractIndicesInto(cache.gltfData, desc, geom.indices.data() + prevIndicesEnd);
 	}
 	else {
-		geom.indices.resize(vertexCount);
-		for (int32 i = 0; i < vertexCount; ++i) {
+		geom.indices.resize(totalSize);
+		for (int32 i = prevEnd; i < totalSize; ++i) {
 			geom.indices[i] = i;
 		}
 	}
@@ -456,7 +461,7 @@ inline void LoadGeometrySlotBasicData(GeometrySlotT& geom, GltfCache& cache, con
 
 	// POSITIONS
 	if (positionsIndex != -1) {
-		LoadIntoVertexData<VertexT, 0>(cache.gltfData, positionsIndex, geom.vertices);
+		LoadIntoVertexData<VertexT, 0>(cache.gltfData, positionsIndex, geom.vertices.data() + prevEnd);
 	}
 	else {
 		LOG_ABORT("Model does not have any positions...");
@@ -464,33 +469,33 @@ inline void LoadGeometrySlotBasicData(GeometrySlotT& geom, GltfCache& cache, con
 
 	// NORMALS
 	if (normalsIndex != -1) {
-		LoadIntoVertexData<VertexT, 1>(cache.gltfData, normalsIndex, geom.vertices);
+		LoadIntoVertexData<VertexT, 1>(cache.gltfData, normalsIndex, geom.vertices.data() + prevEnd);
 	}
 	else {
 		LOG_DEBUG("Model missing normals, calculating flat normals");
 
 		// calculate missing normals (flat)
-		for (int32 i = 0; i < geom.indices.size(); i += 3) {
+		for (size_t i = prevIndicesEnd; i < totalIndicesSize; i += 3) {
 			// triangle
 			auto p0 = geom.vertices[geom.indices[i]].position;
-			auto p1 = geom.vertices[geom.indices[i + 1]].position;
-			auto p2 = geom.vertices[geom.indices[i + 2]].position;
+			auto p1 = geom.vertices[geom.indices[i + 1llu]].position;
+			auto p2 = geom.vertices[geom.indices[i + 2llu]].position;
 
 			glm::vec3 n = glm::cross(p1 - p0, p2 - p0);
 
 			geom.vertices[geom.indices[i]].normal += n;
-			geom.vertices[geom.indices[i + 1]].normal += n;
-			geom.vertices[geom.indices[i + 2]].normal += n;
+			geom.vertices[geom.indices[i + 1llu]].normal += n;
+			geom.vertices[geom.indices[i + 2llu]].normal += n;
 		}
 
-		for (auto& v : geom.vertices) {
-			v.normal = glm::normalize(v.normal);
+		for (int32 i = prevEnd; i < totalSize; ++i) {
+			geom.vertices[i].normal = glm::normalize(geom.vertices[i].normal);
 		}
 	}
 
 	// UV 0
 	if (texcoords0Index != -1) {
-		LoadIntoVertexData<VertexT, 3>(cache.gltfData, texcoords0Index, geom.vertices);
+		LoadIntoVertexData<VertexT, 3>(cache.gltfData, texcoords0Index, geom.vertices.data() + prevEnd);
 	}
 	else {
 		LOG_DEBUG("Model missing first uv map, not handled");
@@ -498,21 +503,21 @@ inline void LoadGeometrySlotBasicData(GeometrySlotT& geom, GltfCache& cache, con
 
 	// TANGENTS, BITANGENTS
 	if (tangentsIndex != -1) {
-		LoadIntoVertexData<VertexT, 2>(cache.gltfData, tangentsIndex, geom.vertices);
+		LoadIntoVertexData<VertexT, 2>(cache.gltfData, tangentsIndex, geom.vertices.data() + prevEnd);
 	}
 	else {
 		if (texcoords0Index != -1) {
 			LOG_DEBUG("Model missing tangents, calculating using available uv map");
 
-			for (int32 i = 0; i < geom.indices.size(); i += 3) {
+			for (size_t i = prevIndicesEnd; i < totalIndicesSize;; i += 3) {
 				// triangle
 				auto p0 = geom.vertices[geom.indices[i]].position;
-				auto p1 = geom.vertices[geom.indices[i + 1]].position;
-				auto p2 = geom.vertices[geom.indices[i + 2]].position;
+				auto p1 = geom.vertices[geom.indices[i + 1llu]].position;
+				auto p2 = geom.vertices[geom.indices[i + 2llu]].position;
 
 				auto uv0 = geom.vertices[geom.indices[i]].uv;
-				auto uv1 = geom.vertices[geom.indices[i + 1]].uv;
-				auto uv2 = geom.vertices[geom.indices[i + 2]].uv;
+				auto uv1 = geom.vertices[geom.indices[i + 1llu]].uv;
+				auto uv2 = geom.vertices[geom.indices[i + 2llu]].uv;
 
 				glm::vec3 edge1 = p1 - p0;
 				glm::vec3 edge2 = p2 - p0;
@@ -528,25 +533,27 @@ inline void LoadGeometrySlotBasicData(GeometrySlotT& geom, GltfCache& cache, con
 				tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
 
 				geom.vertices[geom.indices[i]].tangent += tangent;
-				geom.vertices[geom.indices[i + 1]].tangent += tangent;
-				geom.vertices[geom.indices[i + 2]].tangent += tangent;
+				geom.vertices[geom.indices[i + 1llu]].tangent += tangent;
+				geom.vertices[geom.indices[i + 2llu]].tangent += tangent;
 			}
 
 			// CHECK: handness
-			for (auto& v : geom.vertices) {
-				v.tangent = glm::normalize(v.tangent);
+			for (int32 i = prevEnd; i < totalSize; ++i) {
+				geom.vertices[i].tangent = glm::normalize(geom.vertices[i].tangent);
 			}
 		}
 		else {
 			LOG_DEBUG("Model missing tangents (and uv maps), calculating using hack");
 
-			for (auto& v : geom.vertices) {
-				const auto c1 = glm::cross(v.normal, glm::vec3(0.0, 0.0, 1.0));
-				const auto c2 = glm::cross(v.normal, glm::vec3(0.0, 1.0, 0.0));
+			for (int32 i = prevEnd; i < totalSize; ++i) {
+				const auto c1 = glm::cross(geom.vertices[i].normal, glm::vec3(0.0, 0.0, 1.0));
+				const auto c2 = glm::cross(geom.vertices[i].normal, glm::vec3(0.0, 1.0, 0.0));
 
-				v.tangent = glm::normalize(glm::length2(c1) > glm::length2(c2) ? c1 : c2);
+				geom.vertices[i].tangent = glm::normalize(glm::length2(c1) > glm::length2(c2) ? c1 : c2);
 			}
 		}
 	}
+
+	return { prevEnd, totalSize };
 }
 } // namespace gltfutl
