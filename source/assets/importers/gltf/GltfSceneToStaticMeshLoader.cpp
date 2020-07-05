@@ -85,7 +85,7 @@ GltfSceneToStaticMeshLoader::GltfSceneToStaticMeshLoader(GltfCache& cache, tg::S
 
 					// Bake transform
 					const auto invTransMat = glm::transpose(glm::inverse(glm::mat3(localTransformMat)));
-					for (int32 i = lastBegin; i < lastSize; ++i) {
+					for (size_t i = lastBegin; i < lastSize; ++i) {
 
 						slot.vertices[i].position = localTransformMat * glm::vec4(slot.vertices[i].position, 1.f);
 
