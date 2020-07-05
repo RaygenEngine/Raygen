@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "GpuAnimatedMesh.h"
+#include "GpuSkinnedMesh.h"
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMaterialInstance.h"

@@ -6,6 +6,7 @@
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMesh.h"
+#include "rendering/assets/GpuSkinnedMesh.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuMaterialInstance.h"
 
@@ -259,7 +260,7 @@ vk::UniquePipeline GbufferPass::CreateAnimPipeline(
 	vk::VertexInputBindingDescription bindingDescription{};
 	bindingDescription
 		.setBinding(0u) //
-		.setStride(sizeof(Vertex))
+		.setStride(sizeof(SkinnedVertex))
 		.setInputRate(vk::VertexInputRate::eVertex);
 
 	std::array<vk::VertexInputAttributeDescription, 6> attributeDescriptions{};
@@ -391,7 +392,7 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 		}
 
 
-		/*for (auto geom : animGeometries) {
+		for (auto geom : animGeometries) {
 			if (!geom) {
 				continue;
 			}
@@ -399,12 +400,12 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 				geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
 			};
 
-			for (auto& gg : geom->model.Lock()->skinnedGeometrySlots) {
+			for (auto& gg : geom->model.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
-				auto& plLayout = *arch.gbuffer.pipelineLayout;
+				auto& plLayout = *arch.gbufferAnimated.pipelineLayout;
 
-				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
+				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbufferAnimated.pipeline);
 				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 				if (mat.hasDescriptorSet) {
@@ -415,13 +416,16 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 				cmdBuffer->bindDescriptorSets(
 					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
+				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
+					&geom->descSets[vl::Renderer_::currentFrame], 0u, nullptr);
+
 				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
 				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
 
 
 				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 			}
-		}*/
+		}
 	}
 	cmdBuffer->endRenderPass();
 }

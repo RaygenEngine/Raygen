@@ -14,16 +14,16 @@ struct SceneGeometry {
 };
 
 struct AnimatedGeometry_Ubo {
-	glm::mat4 jointMatrices[2];
+	std::array<glm::mat4, 2> jointMatrices;
 };
 
 struct SceneAnimatedGeometry : SceneStruct<AnimatedGeometry_Ubo> {
 	glm::mat4 transform;
-	PodHandle<SkinnedMesh> model;
+	vl::GpuHandle<SkinnedMesh> model;
+	PodHandle<SkinnedMesh> modelPod;
 	// PodHandle<Animation> animation;
 
 	// std::vector<glm::mat4> jointMatrices;
 
-	AnimatedGeometryNode* node;
-	std::vector<bool> isDirty;
+	std::array<bool, 3> isDirty;
 };

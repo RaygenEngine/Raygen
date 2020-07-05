@@ -37,10 +37,22 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 	mat4 viewProjInv;
 } camera;
 
-void main() {
-	gl_Position = camera.viewProj * push.modelMat * vec4(position, 1.0);
+layout(set = 2, binding = 0) uniform UBO_Joints {
+	mat4 invBindMatrix[2];
+} jm;
 
-	fragPos = vec3(push.modelMat * vec4(position, 1.0));
+
+void main() {
+	mat4 skinMat = 
+		weight.x * jm.invBindMatrix[joint.x] +
+		weight.y * jm.invBindMatrix[joint.y] +
+		weight.z * jm.invBindMatrix[joint.z] +
+		weight.w * jm.invBindMatrix[joint.w];
+
+
+	gl_Position = camera.viewProj * push.modelMat * skinMat * vec4(position, 1.0);
+
+	fragPos = vec3(push.modelMat * skinMat * vec4(position, 1.0));
 	uv = textCoord;
 
 
@@ -55,19 +67,5 @@ void main() {
 
 	TBN = mat3(T, B, N); 
 }                                       
-                                        
-                                         
-                                            
-                                             
-                                              
-                                               
-                                                 
-                                                  
-                                                    
-                                                     
-                                                     
-                                                         
-                                                          
-                                                            
-                                                            
-                                                                  
+                                      
+
