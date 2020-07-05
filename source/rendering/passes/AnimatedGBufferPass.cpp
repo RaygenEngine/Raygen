@@ -111,7 +111,7 @@ vk::UniquePipeline AnimatedGbufferPass::CreatePipeline(
 		.setStride(sizeof(Vertex))
 		.setInputRate(vk::VertexInputRate::eVertex);
 
-	std::array<vk::VertexInputAttributeDescription, 4> attributeDescriptions{};
+	std::array<vk::VertexInputAttributeDescription, 6> attributeDescriptions{};
 
 	attributeDescriptions[0].binding = 0u;
 	attributeDescriptions[0].location = 0u;

@@ -20,7 +20,7 @@ struct AnimatedGeometry_Ubo {
 struct SceneAnimatedGeometry : SceneStruct<AnimatedGeometry_Ubo> {
 	glm::mat4 transform;
 	PodHandle<SkinnedMesh> model;
-	PodHandle<Animation> animation;
+	// PodHandle<Animation> animation;
 
 	// std::vector<glm::mat4> jointMatrices;
 

@@ -18,8 +18,8 @@ void AnimatedGeometryNode::DirtyUpdate(DirtyFlagset dirtyFlags)
 		CalculateWorldAABB();
 
 		Enqueue([model = m_skinnedMesh, anim = m_animation](SceneAnimatedGeometry& geom) {
-			geom.model = vl::GpuAssetManager->GetGpuHandle(model);
-			geom.animation = vl::GpuAssetManager->GetGpuHandle(anim);
+			geom.model = model; // vl::GpuAssetManager->GetGpuHandle(model);
+			// geom.animation = vl::GpuAssetManager->GetGpuHandle(anim);
 			geom.ubo.jointMatrices[0] = model.Lock()->jointMatrices[0];
 			geom.ubo.jointMatrices[1] = model.Lock()->jointMatrices[1];
 		});

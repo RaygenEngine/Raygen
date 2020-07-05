@@ -20,6 +20,14 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& cache, uint32 skinIndex,
 
 	pod->parentJoint.resize(pod->jointMatrices.size());
 
+	// Create a slot for each material (+ missing material)
+	// We will then iterate gltf geometry groups and append to slot[gg.materialIndex] vertex and index data.
+	// When finished we will cleanup any slotgroups that have index == 0; Deleting will be fast because we will just
+	// move the underlying vertex buffer vectors
+	pod->skinnedGeometrySlots.resize(m_cache.materialPods.size());
+	pod->materials = m_cache.materialPods;
+
+
 	// TODO: premultiply transforms that affect skeleton and the rest of the hierarchy
 
 	for (auto node : m_cache.gltfData.nodes) {
@@ -95,12 +103,6 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& cache, uint32 skinIndex,
 		return true;
 	};
 
-	// Create a slot for each material (+ missing material)
-	// We will then iterate gltf geometry groups and append to slot[gg.materialIndex] vertex and index data.
-	// When finished we will cleanup any slotgroups that have index == 0; Deleting will be fast because we will just
-	// move the underlying vertex buffer vectors
-	pod->skinnedGeometrySlots.resize(m_cache.materialPods.size());
-	pod->materials = m_cache.materialPods;
 
 	// NEXT: skeleton node
 	RecurseChildren(skin.joints[0], UINT32_MAX);

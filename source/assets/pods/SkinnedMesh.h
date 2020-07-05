@@ -7,7 +7,7 @@ struct SkinnedVertex {
 	glm::vec3 normal{};
 	glm::vec3 tangent{};
 	glm::vec2 uv{};
-	glm::u16vec4 joint{};
+	glm::ivec4 joint{};
 	glm::vec4 weight{};
 };
 
