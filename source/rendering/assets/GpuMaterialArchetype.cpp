@@ -123,7 +123,9 @@ void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& updateInfo)
 	MaterialArchetype::Gpu::PassInfo info;
 	info.shaderModules.emplace_back(CreateShaderModule(arch->gbufferFragBinary));
 	info.shaderStages = CreateShaderStages("engine-data/spv/gbuffer-anim.shader", *info.shaderModules[0]);
-	info.pipelineLayout = CreatePipelineLayout(pushConstantSize, descLayouts);
+	info.pipelineLayout = CreatePipelineLayout(
+		pushConstantSize, { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
+							  Layouts->singleUboDescLayout.setLayout.get() });
 	info.pipeline = GbufferPass::CreateAnimPipeline(*info.pipelineLayout, info.shaderStages);
 
 	gbufferAnimated = std::move(info);

@@ -3,6 +3,7 @@
 #include "assets/pods/MaterialInstance.h"
 #include "rendering/assets/GpuAssetHandle.h"
 #include "rendering/wrappers/RBuffer.h"
+#include "rendering/assets/GpuMesh.h"
 #include "universe/nodes/geometry/GeometryNode.h"
 
 #include <vulkan/vulkan.hpp>
@@ -15,13 +16,13 @@
 // and some Vulkan functions have explicit flags to specify that you want to do this.
 
 // PERF: batching
-struct GpuGeometryGroup {
-	uint32 indexCount{ 0u };
-	vl::GpuHandle<MaterialInstance> material;
-
-	UniquePtr<vl::RBuffer> vertexBuffer;
-	UniquePtr<vl::RBuffer> indexBuffer;
-};
+// struct GpuGeometryGroup {
+//	uint32 indexCount{ 0u };
+//	vl::GpuHandle<MaterialInstance> material;
+//
+//	UniquePtr<vl::RBuffer> vertexBuffer;
+//	UniquePtr<vl::RBuffer> indexBuffer;
+//};
 
 struct SkinnedMesh::Gpu : public vl::GpuAssetTemplate<SkinnedMesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;

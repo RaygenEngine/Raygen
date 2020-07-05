@@ -88,8 +88,8 @@
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/Sponza",
-        "model_importHint_": "gltf-samples/2.0/Sponza/glTF/Sponza.gltf",
+        "mesh": "~Mesh",
+        "mesh_importHint_": "",
         "~children": []
     },
     {
@@ -114,7 +114,7 @@
         "+type": "WindowCamera",
         "far": 1000.0,
         "focalLength": 1.0,
-        "hFov": 1.8598486185073853,
+        "hFov": 1.790273666381836,
         "hFovOffset": 0.0,
         "near": 0.10000000149011612,
         "vFov": 1.2566370964050293,
@@ -141,8 +141,35 @@
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/MetalRoughSpheres",
-        "model_importHint_": "gltf-samples/2.0/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf",
+        "mesh": "~Mesh",
+        "mesh_importHint_": "",
+        "~children": []
+    },
+    {
+        "+name": "AnimatedGeometry_new",
+        "+trs": {
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            }
+        },
+        "+type": "AnimatedGeometry",
+        "animation": "~Animation",
+        "animation_importHint_": "",
+        "pushJoints": true,
+        "skinnedMesh": "gen-data/SimpleSkin_skinned_",
+        "skinnedMesh_importHint_": "SimpleSkin/SimpleSkin.gltf",
         "~children": []
     }
 ]
