@@ -5,7 +5,6 @@
 
 layout(location=0) out Data
 { 
-	vec3 fragPos; 
 	vec2 uv;
 	mat3 TBN;
 };
@@ -38,9 +37,7 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 void main() {
 	gl_Position = camera.viewProj * push.modelMat * vec4(position, 1.0);
 
-	fragPos = vec3(push.modelMat * vec4(position, 1.0));
 	uv = textCoord;
-
 
 	vec3 T = normalize(mat3(push.normalMat) * tangent);
    	vec3 N = normalize(mat3(push.normalMat) * normal);

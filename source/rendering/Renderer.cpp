@@ -178,7 +178,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 	PROFILE_SCOPE(Renderer);
 
 	// TODO: each effect except the maybe the lightpasses should use its own render/buffer scale
-	auto extent = m_gbuffer->attachments[GPosition]->GetExtent2D();
+	auto extent = m_gbuffer->attachments[GNormal]->GetExtent2D();
 
 	vk::Rect2D scissor{};
 	scissor

@@ -5,35 +5,50 @@ struct Fragment
 {
     vec3 position;
     vec3 normal;
-    vec3 albedo;
+    vec3 baseColor;
     float opacity;
     vec3 emissive;
     float metallic;
     float roughness;
+    float reflectance;
     float depth;
 };
 
+vec3 ReconstructWorldPosition(float depth, vec2 uv, in mat4 viewProjInv)
+{
+	// clip space reconstruction
+	vec4 clipPos; 
+	clipPos.xy = uv.xy * 2.0 - 1;
+	clipPos.z = depth;
+	clipPos.w = 1.0;
+	
+	vec4 worldPos = viewProjInv * clipPos;
+
+	return worldPos.xyz / worldPos.w; // return world space pos xyz
+}
+
 Fragment GetFragmentFromGBuffer(
-    in sampler2D positionsSampler, 
+    float depth, 
+    in mat4 viewProjInv,
     in sampler2D normalsSampler, 
     in sampler2D albedoOpacitySampler,
-    in sampler2D specularSampler,
+    in sampler2D surfaceSampler,
     in sampler2D emissiveSampler,
-    in sampler2D depthSampler,
     vec2 uv)
 {
     Fragment fragment;
 
-    fragment.position = texture(positionsSampler, uv).rgb;
+    fragment.position = ReconstructWorldPosition(depth, uv, viewProjInv);
     fragment.normal = texture(normalsSampler, uv).rgb;
     vec4 albedoOpacity = texture(albedoOpacitySampler, uv);
-    fragment.albedo = albedoOpacity.rgb;
+    fragment.baseColor = albedoOpacity.rgb;
     fragment.opacity = albedoOpacity.a;
     fragment.emissive = texture(emissiveSampler, uv).rgb;
-    vec4 metallicRoughnessOcclusionOcclusionStrength = texture(specularSampler, uv);
-    fragment.metallic = metallicRoughnessOcclusionOcclusionStrength.r;
-    fragment.roughness = metallicRoughnessOcclusionOcclusionStrength.g;
-    fragment.depth = texture(depthSampler, uv).r;
+    vec4 metallicRoughnessReflectanceOcclusion = texture(surfaceSampler, uv);
+    fragment.metallic = metallicRoughnessReflectanceOcclusion.r;
+    fragment.roughness = metallicRoughnessReflectanceOcclusion.g;
+    fragment.reflectance = metallicRoughnessReflectanceOcclusion.b;
+    fragment.depth = depth;
 
     return fragment;
 }

@@ -45,7 +45,6 @@ void main( ) {
 	irradiance = PI * irradiance * (1.0 / float(nrSamples));
   
 	outColor = vec4(irradiance, 1.f);
-	//outColor = texture(skyboxSampler, normal);
 }                                                                                                                          
                                                                                                                                                                                     
                                                  

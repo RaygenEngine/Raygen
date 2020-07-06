@@ -3,106 +3,126 @@
 
 #define PI 3.14159265358979323846f
 
-vec3 FresnelSchlick(float cosTheta, vec3 F0)
+float saturate(float v)
 {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}  
-
-vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
-{
-    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
-} 
-
-float DistributionGGX(vec3 N, vec3 H, float roughness)
-{
-    float a      = roughness*roughness;
-    float a2     = a*a;
-    float NdotH  = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH*NdotH;
-	
-    float num   = a2;
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
-	
-    return num / denom;
+    return clamp(v, 0.0, 1.0);
 }
 
-float GeometrySchlickGGX(float NdotV, float roughness)
+vec3 saturate(vec3 v)
 {
-    float r = (roughness + 1.0);
-    float k = (r*r) / 8.0;
-
-    float num   = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
-	
-    return num / denom;
+    return clamp(v, vec3(0.0), vec3(1.0));
 }
 
-float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
-{
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-    float ggx2  = GeometrySchlickGGX(NdotV, roughness);
-    float ggx1  = GeometrySchlickGGX(NdotL, roughness);
-	
-    return ggx1 * ggx2;
+float D_GGX(float NoH, float roughness) {
+    float a = NoH * roughness;
+    float k = roughness / (1.0 - NoH * NoH + a * a);
+    return k * k * (1.0 / PI);
 }
 
-vec3 LambertBRDF(vec3 p)
-{
-	return p / PI;
+// PERF:
+float V_SmithGGXCorrelated(float NoV, float NoL, float roughness) {
+    float a2 = roughness * roughness;
+    float GGXV = NoL * sqrt(NoV * NoV * (1.0 - a2) + a2);
+    float GGXL = NoV * sqrt(NoL * NoL * (1.0 - a2) + a2);
+    return 0.5 / (GGXV + GGXL);
 }
 
-vec3 CookTorranceMicrofacetBRDF_GGX 
-(vec3 L, // light dir (wi)
- vec3 V, // view dir (wo)
- vec3 N, // normal dir
- vec3 albedo,
- float metallic,
- float roughness)
-{
-	vec3 H = normalize(V + L);
-
-	vec3 F0 = vec3(0.04); 
-	F0 = mix(F0, albedo, metallic);
-	vec3 F = FresnelSchlick(max(dot(H, V), 0.0), F0);
-	
-	float NDF = DistributionGGX(N, H, roughness);       
-	float G = GeometrySmith(N, V, L, roughness); 
-	
-	vec3 numerator = NDF * G * F;
-	float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
-	vec3 specular = numerator / max(denominator, 0.001); 
-
-	vec3 kS = F;
-	vec3 kD = vec3(1.0) - kS;
-
-	kD *= 1.0 - metallic;
-
-	return (kD * LambertBRDF(albedo) + specular);
+vec3 F_Schlick(float NoV, vec3 f0) {
+    float f = pow(1.0 - NoV, 5.0);
+    return f + f0 * (1.0 - f);
 }
 
-vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
+vec3 F_Schlick(float NoV, vec3 f0, vec3 f90) {
+    return f0 + (f90 - f0) * pow(1.0 - NoV, 5.0);
+}
+
+float F_Schlick(float NoV, float f0, float f90) {
+    return f0 + (f90 - f0) * pow(1.0 - NoV, 5.0);
+}
+
+float Fd_Burley(float NoV, float NoL, float LoH, float roughness) {
+    float f90 = 0.5 + 2.0 * roughness * LoH * LoH;
+    float lightScatter = F_Schlick(NoL, 1.0, f90);
+    float viewScatter = F_Schlick(NoV, 1.0, f90);
+    return lightScatter * viewScatter * (1.0 / PI);
+}
+
+vec3 BRDF(vec3 v, vec3 l, vec3 n, vec3 diffuseColor, vec3 f0, float a) {
+    vec3 h = normalize(v + l);
+
+    float NoV = abs(dot(n, v)) + 1e-5;
+    float NoL = saturate(dot(n, l));
+    float NoH = saturate(dot(n, h));
+    float LoH = saturate(dot(l, h));
+
+    float D = D_GGX(NoH, a);
+
+    // CHECK:
+    vec3 f90 = vec3(0.5 + 2.0 * a * LoH * LoH);
+
+    vec3  F = F_Schlick(LoH, f0, f90);
+    float V = V_SmithGGXCorrelated(NoV, NoL, a);
+
+    // specular BRDF
+    vec3 Fr = (D * V) * F ;
+
+    // diffuse BRDF
+    vec3 Fd = diffuseColor * Fd_Burley(NoV, NoL, LoH, a);
+
+    // apply lighting...
+
+    return Fr + Fd;
+}
+
+// Geometric Shadowing function
+float G_SchlicksmithGGX(float dotNL, float dotNV, float roughness)
 {
-    float a = roughness*roughness;
-	
-    float phi = 2.0 * PI * Xi.x;
-    float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a*a - 1.0) * Xi.y));
-    float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
-	
-    // from spherical coordinates to cartesian coordinates
-    vec3 H;
-    H.x = cos(phi) * sinTheta;
-    H.y = sin(phi) * sinTheta;
-    H.z = cosTheta;
-	
-    // from tangent-space vector to world-space sample vector
-    vec3 up        = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
-    vec3 tangent   = normalize(cross(up, N));
-    vec3 bitangent = cross(N, tangent);
-	
-    vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
-    return normalize(sampleVec);
-}  
+	float k = (roughness * roughness) / 2.0;
+	float GL = dotNL / (dotNL * (1.0 - k) + k);
+	float GV = dotNV / (dotNV * (1.0 - k) + k);
+	return GL * GV;
+}
+
+// Based omn http://byteblacksmith.com/improvements-to-the-canonical-one-liner-glsl-rand-for-opengl-es-2-0/
+float random(vec2 co)
+{
+	float a = 12.9898;
+	float b = 78.233;
+	float c = 43758.5453;
+	float dt= dot(co.xy ,vec2(a,b));
+	float sn= mod(dt,3.14);
+	return fract(sin(sn) * c);
+}
+
+vec2 hammersley2d(uint i, uint N) 
+{
+	// Radical inverse based on http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
+	uint bits = (i << 16u) | (i >> 16u);
+	bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+	bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+	bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+	bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+	float rdi = float(bits) * 2.3283064365386963e-10;
+	return vec2(float(i) /float(N), rdi);
+}
+
+// Based on http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_slides.pdf
+vec3 importanceSample_GGX(vec2 Xi, float roughness, vec3 normal) 
+{
+	// Maps a 2D point to a hemisphere with spread based on roughness
+	float alpha = roughness * roughness;
+	float phi = 2.0 * PI * Xi.x + random(normal.xz) * 0.1;
+	float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (alpha*alpha - 1.0) * Xi.y));
+	float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+	vec3 H = vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
+
+	// Tangent space
+	vec3 up = abs(normal.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+	vec3 tangentX = normalize(cross(up, normal));
+	vec3 tangentY = normalize(cross(normal, tangentX));
+
+	// Convert to world Space
+	return normalize(tangentX * H.x + tangentY * H.y + normal * H.z);
+}
 	
 #endif
