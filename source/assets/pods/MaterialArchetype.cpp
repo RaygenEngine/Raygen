@@ -40,9 +40,9 @@ void RerouteShaderErrors(shd::GeneratedShaderErrors& errors)
 void MaterialArchetype::MakeGltfArchetypeInto(MaterialArchetype* mat)
 {
 	mat->gbufferFragBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/gbuffer-gltf.frag");
-	mat->depthBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/depthmap-gltf.frag");
+	mat->depthFragBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/depthmap-gltf.frag");
 
-	CLOG_ABORT(mat->gbufferFragBinary.size() == 0 || mat->depthBinary.size() == 0,
+	CLOG_ABORT(mat->gbufferFragBinary.size() == 0 || mat->depthFragBinary.size() == 0,
 		"Failed to compile gltf archetype shader code. (engine-data/spv/shader-defaults/)");
 
 	mat->descriptorSetLayout.samplers2d
@@ -65,8 +65,8 @@ void MaterialArchetype::MakeGltfArchetypeInto(MaterialArchetype* mat)
 void MaterialArchetype::MakeDefaultInto(MaterialArchetype* mat)
 {
 	mat->gbufferFragBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/gbuffer-default.frag");
-	mat->depthBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/depthmap-default.frag");
-	CLOG_ABORT(mat->gbufferFragBinary.size() == 0 || mat->depthBinary.size() == 0,
+	mat->depthFragBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/depthmap-default.frag");
+	CLOG_ABORT(mat->gbufferFragBinary.size() == 0 || mat->depthFragBinary.size() == 0,
 		"Failed to compile defualt shader code. (engine-data/spv/shader-defaults/)");
 }
 
@@ -89,58 +89,50 @@ bool MaterialArchetype::CompileAll(
 	DynamicDescriptorSetLayout&& newLayout, shd::GeneratedShaderErrors& outErrors, bool outputToConsole)
 {
 	std::string descSetCode = shd::GenerateDescriptorSetCode(newLayout, newLayout.uboName);
-
-	std::string depth = shd::GenerateDepthShader(descSetCode, sharedFunctions, depthShader);
-
-	if (outputToConsole) {
-		LOG_REPORT("DEPTH SHADER: === \n{}", depth);
-	}
-
 	outErrors.editorErrors.clear();
-	auto depthErrors = &outErrors.editorErrors.insert({ "Depth", {} }).first->second;
-	auto depthBin = ShaderCompiler::Compile(depth, ShaderStageType::Fragment, depthErrors);
 
-	if (!depthBin.size()) {
-		RerouteShaderErrors(outErrors);
+
+	auto generateShader = [&](const std::string& mainCode, decltype(&shd::GenerateDepthFrag) generatorFunction,
+							  const std::string& editorName, ShaderStageType stage) {
+		std::string code = (*generatorFunction)(descSetCode, sharedFunctions, mainCode);
+
+		if (outputToConsole) {
+			LOG_REPORT("{} SHADER: === \n{}", editorName, code);
+		}
+
+		auto errors = &outErrors.editorErrors.insert({ editorName, {} }).first->second;
+		auto shaderBinary = ShaderCompiler::Compile(code, stage, errors);
+
+		if (!shaderBinary.size()) {
+			RerouteShaderErrors(outErrors);
+			return shaderBinary;
+		}
+		return shaderBinary;
+	};
+
+
+	auto depthFragBin = generateShader(depthShader, &shd::GenerateDepthFrag, "Depth", ShaderStageType::Fragment);
+	auto gbufferFragBin
+		= generateShader(gbufferFragMain, &shd::GenerateGbufferFrag, "Fragment", ShaderStageType::Fragment);
+
+	if (depthFragBin.size() == 0 || gbufferFragBin.size() == 0) {
 		return false;
 	}
 
-	std::string fragCode = shd::GenerateGbufferFrag(descSetCode, sharedFunctions, gbufferFragMain);
 
-	if (outputToConsole) {
-		LOG_REPORT("gbuffer FRAG SHADER: === \n{}", fragCode);
-	}
+	auto gbufferVertBin = generateShader(gbufferVertMain, &shd::GenerateGbufferVert, "Vertex", ShaderStageType::Vertex);
+	auto depthVertBin = generateShader(gbufferVertMain, &shd::GenerateDepthVert, "Vertex", ShaderStageType::Vertex);
 
-
-	auto fragErrors = &outErrors.editorErrors.insert({ "Fragment", {} }).first->second;
-	auto fragBin = ShaderCompiler::Compile(fragCode, ShaderStageType::Fragment, fragErrors);
-
-	if (!fragBin.size()) {
-		RerouteShaderErrors(outErrors);
-		return false;
-	}
-
-
-	std::string vertCode = shd::GenerateGbufferVert(descSetCode, sharedFunctions, gbufferVertMain);
-
-	if (outputToConsole) {
-		LOG_REPORT("gbuffer VERT SHADER: === \n{}", fragCode);
-	}
-
-
-	auto vertErrors = &outErrors.editorErrors.insert({ "Vertex", {} }).first->second;
-	auto vertBin = ShaderCompiler::Compile(vertCode, ShaderStageType::Vertex, vertErrors);
-
-	// All stages compiled, swap layout and store the new binaries
 	RerouteShaderErrors(outErrors);
 
 
 	ChangeLayout(std::move(newLayout));
 
-	gbufferFragBinary.swap(fragBin);
-	depthBinary.swap(depthBin);
-	gbufferVertBinary.swap(vertBin);
+	gbufferFragBinary.swap(gbufferFragBin);
+	depthFragBinary.swap(depthFragBin);
 
+	gbufferVertBinary.swap(gbufferVertBin);
+	depthVertBinary.swap(depthVertBin);
 
 	return true;
 }

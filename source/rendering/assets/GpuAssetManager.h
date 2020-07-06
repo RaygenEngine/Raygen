@@ -68,7 +68,10 @@ private:
 	// This does device->waitIdle. For now this synchronization is enough, when doing multithreading we should handle
 	// interject this in vulkan layer, synchronize there and call this just for gpu updates or even run the updates in
 	// parallel.
-	void PerformAssetUpdates(const std::vector<std::pair<size_t /*assetUid*/, AssetUpdateInfo>>& updates);
+	void PerformAssetUpdates(std::vector<std::pair<size_t /*assetUid*/, AssetUpdateInfo>>& updates);
+
+
+	void SortAssetUpdates(std::vector<std::pair<size_t /*assetUid*/, AssetUpdateInfo>>& updates);
 
 public:
 	void ConsumeAssetUpdates();

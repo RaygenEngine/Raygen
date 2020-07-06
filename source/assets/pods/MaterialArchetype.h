@@ -74,7 +74,8 @@ struct MaterialArchetype : AssetPod {
 
 	std::vector<uint32> gbufferFragBinary;
 	std::vector<uint32> gbufferVertBinary;
-	std::vector<uint32> depthBinary;
+	std::vector<uint32> depthFragBinary;
+	std::vector<uint32> depthVertBinary;
 
 
 	std::vector<PodHandle<MaterialInstance>> instances;
