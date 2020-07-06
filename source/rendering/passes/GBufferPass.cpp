@@ -30,10 +30,10 @@ namespace vl {
 vk::UniqueRenderPass GbufferPass::CreateCompatibleRenderPass()
 {
 	// renderpass
-	std::array<vk::AttachmentDescription, 5> colorAttachmentDescs{};
-	std::array<vk::AttachmentReference, 5> colorAttachmentRefs{};
+	std::array<vk::AttachmentDescription, RGbuffer::ColorAttachmentCount> colorAttachmentDescs{};
+	std::array<vk::AttachmentReference, RGbuffer::ColorAttachmentCount> colorAttachmentRefs{};
 
-	for (size_t i = 0; i < 5; ++i) {
+	for (size_t i = 0; i < RGbuffer::ColorAttachmentCount; ++i) {
 		colorAttachmentDescs[i]
 			.setFormat(RGbuffer::colorAttachmentFormats[i]) // CHECK:
 			.setSamples(vk::SampleCountFlagBits::e1)
@@ -64,7 +64,7 @@ vk::UniqueRenderPass GbufferPass::CreateCompatibleRenderPass()
 
 	vk::AttachmentReference depthAttachmentRef{};
 	depthAttachmentRef
-		.setAttachment(5u) //
+		.setAttachment(4u) //
 		.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
 	vk::SubpassDescription subpass{};
@@ -83,8 +83,9 @@ vk::UniqueRenderPass GbufferPass::CreateCompatibleRenderPass()
 		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
 		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
 
-	std::array attachments{ colorAttachmentDescs[0], colorAttachmentDescs[1], colorAttachmentDescs[2],
-		colorAttachmentDescs[3], colorAttachmentDescs[4], depthAttachmentDesc };
+	std::vector<vk::AttachmentDescription> attachments{ colorAttachmentDescs.begin(), colorAttachmentDescs.end() };
+	attachments.push_back(depthAttachmentDesc);
+
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
 		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
@@ -188,8 +189,8 @@ vk::UniquePipeline GbufferPass::CreatePipeline(
 		.setAlphaToCoverageEnable(VK_FALSE)
 		.setAlphaToOneEnable(VK_FALSE);
 
-	std::array<vk::PipelineColorBlendAttachmentState, 5> colorBlendAttachment{};
-	for (uint32 i = 0u; i < 5; ++i) {
+	std::array<vk::PipelineColorBlendAttachmentState, RGbuffer::ColorAttachmentCount> colorBlendAttachment{};
+	for (uint32 i = 0u; i < RGbuffer::ColorAttachmentCount; ++i) {
 		colorBlendAttachment[i]
 			.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
 							   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
@@ -250,7 +251,7 @@ void GbufferPass::RecordCmd(
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto extent = gbuffer->attachments[GPosition]->GetExtent2D();
+	auto extent = gbuffer->attachments[GNormal]->GetExtent2D();
 
 	vk::Rect2D scissor{};
 	scissor
@@ -275,15 +276,14 @@ void GbufferPass::RecordCmd(
 		.setFramebuffer(gbuffer->framebuffer.get());
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //
-		.setExtent(gbuffer->attachments[GPosition]->GetExtent2D());
+		.setExtent(extent);
 
 	std::array<vk::ClearValue, 6> clearValues = {};
 	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
 	clearValues[1].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
 	clearValues[2].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
 	clearValues[3].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[4].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[5].setDepthStencil({ 1.0f, 0 });
+	clearValues[4].setDepthStencil({ 1.0f, 0 });
 	renderPassInfo
 		.setClearValueCount(static_cast<uint32>(clearValues.size())) //
 		.setPClearValues(clearValues.data());

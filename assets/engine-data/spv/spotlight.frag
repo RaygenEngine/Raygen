@@ -15,12 +15,11 @@ layout(location = 0) in vec2 uv;
 
 // uniform
 
-layout(set = 0, binding = 0) uniform sampler2D positionsSampler;
-layout(set = 0, binding = 1) uniform sampler2D normalsSampler;
-layout(set = 0, binding = 2) uniform sampler2D albedoOpacitySampler;
-layout(set = 0, binding = 3) uniform sampler2D specularSampler;
-layout(set = 0, binding = 4) uniform sampler2D emissiveSampler;
-layout(set = 0, binding = 5) uniform sampler2D depthSampler;
+layout(set = 0, binding = 0) uniform sampler2D normalsSampler;
+layout(set = 0, binding = 1) uniform sampler2D baseColorSampler;
+layout(set = 0, binding = 2) uniform sampler2D surfaceSampler;
+layout(set = 0, binding = 3) uniform sampler2D emissiveSampler;
+layout(set = 0, binding = 4) uniform sampler2D depthSampler;
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
 	vec3 position;
@@ -78,22 +77,23 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 
 void main() {
 
-	// PERF:
-	Fragment fragment = GetFragmentFromGBuffer(
-		positionsSampler,
-		normalsSampler,
-		albedoOpacitySampler,
-		specularSampler,
-		emissiveSampler,
-		depthSampler,
-		uv);
+	float depth = texture(depthSampler, uv).r;
 
-	if(fragment.depth == 1.0)
+	if(depth == 1.0)
 	{
-		outColor = vec4(0.0, 0.0, 0.0, 1.0);
-		return;
+		discard;
 	}
 
+	// PERF:
+	Fragment fragment = GetFragmentFromGBuffer(
+		depth,
+		camera.viewProjInv,
+		normalsSampler,
+		baseColorSampler,
+		surfaceSampler,
+		emissiveSampler,
+		uv);
+		
 	// spot light
 	vec3 N = fragment.normal;
 	vec3 V = normalize(camera.position - fragment.position);
@@ -114,7 +114,11 @@ void main() {
 		//return; 
 	vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
 
-	vec3 Lo = CookTorranceMicrofacetBRDF_GGX(L, V, N, fragment.albedo, fragment.metallic, fragment.roughness) * Li * max(dot(N, L), 0.0);
+	vec3 diffuseColor = (1.0 - fragment.metallic) * fragment.baseColor;
+	vec3 f0 = 0.16 * fragment.reflectance * fragment.reflectance * (1.0 - fragment.metallic) + fragment.baseColor * fragment.metallic;
+	float a = fragment.roughness * fragment.roughness;
+
+	vec3 Lo = BRDF(V, L, N, diffuseColor, f0, a) * Li * saturate(dot(N, L));
 
     outColor = vec4(Lo, 1);
 }                               

@@ -24,7 +24,7 @@ RGbuffer::RGbuffer(uint32 width, uint32 height)
 			  return att;
 		  };
 
-	for (size_t i = 0; i < 5; ++i) {
+	for (size_t i = 0; i < ColorAttachmentCount; ++i) {
 		attachments[i] = initAttachment(attachmentNames[i], colorAttachmentFormats[i],
 			vk::ImageUsageFlagBits::eColorAttachment, vk::ImageLayout::eColorAttachmentOptimal);
 	}
@@ -34,9 +34,13 @@ RGbuffer::RGbuffer(uint32 width, uint32 height)
 	attachments[GDepth] = initAttachment(attachmentNames[GDepth], depthFormat,
 		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
-	std::array views = { attachments[GPosition]->GetView(), attachments[GNormal]->GetView(), //
-		attachments[GAlbedo]->GetView(), attachments[GSpecular]->GetView(), attachments[GEmissive]->GetView(),
-		attachments[GDepth]->GetView() };
+	std::array views = {
+		attachments[GNormal]->GetView(),
+		attachments[GBaseColor]->GetView(),
+		attachments[GSurface]->GetView(),
+		attachments[GEmissive]->GetView(),
+		attachments[GDepth]->GetView(),
+	};
 
 	vk::FramebufferCreateInfo createInfo{};
 	createInfo

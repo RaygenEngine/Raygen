@@ -1,7 +1,10 @@
 #version 450 
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive: enable
+
 #include "microfacet_bsdf.h"
+#include "fragment.h"
+
 // out
 
 layout(location = 0) out vec4 outColor;
@@ -11,12 +14,12 @@ layout(location = 0) out vec4 outColor;
 layout(location = 0) in vec2 uv;
 
 // uniform
-layout(set = 0, binding = 0) uniform sampler2D positionsSampler;
-layout(set = 0, binding = 1) uniform sampler2D normalsSampler;
-layout(set = 0, binding = 2) uniform sampler2D albedoOpacitySampler;
-layout(set = 0, binding = 3) uniform sampler2D specularSampler;
-layout(set = 0, binding = 4) uniform sampler2D emissiveSampler;
-layout(set = 0, binding = 5) uniform sampler2D depthSampler;
+
+layout(set = 0, binding = 0) uniform sampler2D normalsSampler;
+layout(set = 0, binding = 1) uniform sampler2D baseColorSampler;
+layout(set = 0, binding = 2) uniform sampler2D surfaceSampler;
+layout(set = 0, binding = 3) uniform sampler2D emissiveSampler;
+layout(set = 0, binding = 4) uniform sampler2D depthSampler;
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
 	vec3 position;
@@ -35,7 +38,7 @@ layout(set = 2, binding = 1) uniform samplerCube irradianceSampler;
 layout(set = 2, binding = 2) uniform samplerCube prefilteredSampler;
 layout(set = 2, binding = 3) uniform sampler2D brdfLutSampler;
 
-vec3 ReconstructWorldPosition(float depth)
+vec3 ReconstructWorldPositionTEMP(float depth)
 {
 	// clip space reconstruction
 	vec4 clipPos; 
@@ -45,29 +48,6 @@ vec3 ReconstructWorldPosition(float depth)
 	
 	vec4 worldPos = camera.viewProjInv * clipPos;
 
-	return worldPos.xyz / worldPos.w; // return world space pos xyz
-}
-
-// Attempts to emulate the movement of the camera while reconstructing the world position for the sky.
-vec3 ReconstructWorldPosForSky(float depth)
-{
-	// clip space reconstruction
-	vec4 clipPos; 
-	clipPos.xy = uv.xy * 2.0 - 1;
-	clipPos.z = depth;
-	clipPos.w = 1.0;
-	
-	vec4 worldPos = camera.viewProjInv * clipPos;
-
-	// Probably should include fov for some of these calculations
-	const float maxMovementPercentage = 0.6;
-	vec3 movementEffect = camera.position / 500.0; // Units in world space. Max Movement occurs in 500*maxMovePerc to avoid extreme fish eye effect.
-	movementEffect.x = clamp(movementEffect.x, -maxMovementPercentage, maxMovementPercentage);
-	movementEffect.y = clamp(movementEffect.y, -maxMovementPercentage, maxMovementPercentage);
-	movementEffect.z = clamp(movementEffect.z, -maxMovementPercentage, maxMovementPercentage);
-	
-	worldPos += vec4(movementEffect, 0);
-	
 	return worldPos.xyz / worldPos.w; // return world space pos xyz
 }
 
@@ -77,102 +57,54 @@ vec4 SampleCubemapLH(samplerCube cubemap, vec3 RHdirection) {
 
 void main( ) {
 
-	float currentDepth = texture(depthSampler, uv).r;
+	float depth = texture(depthSampler, uv).r;
 
-	outColor = vec4(0.0, 0.0, 0.0, 1.0);
-	
-
-	if(currentDepth == 1.0)
+	if(depth == 1.0)
 	{
-		// ART:
-		vec3 V = normalize(ReconstructWorldPosForSky(currentDepth) - camera.position);
+		// TODO: discard here like in spotlights
+		vec3 V = normalize(ReconstructWorldPositionTEMP(depth) - camera.position);
 		outColor = SampleCubemapLH(skyboxSampler, V);
 		
-		//outColor = texture(brdfLutSampler, uv).rgba;
-		//outColor = mix(outColor, textureLod(prefilteredSampler, V,  0), 0); 
-		//outColor = vec4(ReconstructWorldPosition(currentDepth),1.f);
 		return;
 	}
-	
-	vec3 N = normalize(texture(normalsSampler, uv).rgb);
 
-	vec3 emissive = texture(emissiveSampler, uv).rgb;
-	vec4 specularMat = texture(specularSampler, uv);
-	vec3 baseColor = texture(albedoOpacitySampler, uv).rgb;
+	// PERF:
+	Fragment fragment = GetFragmentFromGBuffer(
+		depth,
+		camera.viewProjInv,
+		normalsSampler,
+		baseColorSampler,
+		surfaceSampler,
+		emissiveSampler,
+		uv);
 	
-	float metallic = specularMat.r;
-	float roughness = specularMat.g;
 	
-	vec3 f0 = vec3(0.04);
-	vec3 diffuseColor = baseColor.rgb * (vec3(1.0) - f0);
-	diffuseColor *= 1.0 - metallic;
+	vec3 N = fragment.normal;
 	
-	vec3 specularColor = mix(f0, baseColor.rgb, metallic);
+	vec3 diffuseColor = (1.0 - fragment.metallic) * fragment.baseColor;
+	vec3 f0 = 0.16 * fragment.reflectance * fragment.reflectance * (1.0 - fragment.metallic) + fragment.baseColor * fragment.metallic;
+	float a = fragment.roughness * fragment.roughness;
 	
-	vec3 V = normalize(ReconstructWorldPosition(currentDepth) - camera.position);
+	vec3 V = normalize(fragment.position - camera.position);
 	vec3 reflection = normalize(reflect(V, N));
 	
-	float NdotV = clamp(abs(dot(N, V)), 0.001, 1.0);
+	float NdotV = abs(dot(N, V)) + 1e-5;
 	
 	// Actual IBL Contribution
 	const float MAX_REFLECTION_LOD = 4.0;
-	float lod = (roughness * MAX_REFLECTION_LOD); 
+	float lod = (a * MAX_REFLECTION_LOD); 
 	
-	vec3 brdf = (texture(brdfLutSampler, vec2(NdotV, roughness))).rgb;
+	vec3 brdf = (texture(brdfLutSampler, vec2(NdotV, a))).rgb;
 	vec3 diffuseLight = texture(irradianceSampler, N).rgb;
 
 	vec3 specularLight = textureLod(prefilteredSampler, reflection, lod).rgb;
 
 	vec3 diffuse = diffuseLight * diffuseColor;
-	vec3 specular = specularLight * (specularColor * brdf.x + brdf.y);
+	vec3 specular = specularLight * (f0 * brdf.x + brdf.y);
 
 
 	vec3 iblContribution = diffuse + specular;
 
-	outColor = vec4(iblContribution, 1.0f);
-	//outColor = vec4(brdf.y);
+	outColor =  vec4(iblContribution, 1.0f);
 }
-
-/*
-
-void old() {
-	vec3 F0 = vec3(0.04); 
-    F0 = mix(F0, albedo, metallic);
-	
-	//vec3 kS = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness); 
-	//vec3 kD = 1.0 - kS;
-	//vec3 irradiance = texture(irradianceSampler, N).rgb;
-	//vec3 diffuse    = irradiance * albedo;
-	//vec3 ambient    = (kD * diffuse);
-
-	// actual ibl
-	vec3 R = reflect(V, N); 
-
-    const float MAX_REFLECTION_LOD = 4.0;
-	vec3 F = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
-
-	vec3 kS = F;
-	vec3 kD = 1.0 - kS;
-	kD *= 1.0 - metallic;	  
-	
-	vec3 irradiance = texture(irradianceSampler, N).rgb;
-	vec3 diffuse    = irradiance * albedo;
-	
-	vec3 prefilteredColor = textureLod(prefilteredSampler, R,  roughness * MAX_REFLECTION_LOD).rgb;   
-	vec2 envBRDF  = texture(brdfLutSampler, vec2(max(dot(N, V), 0.0), roughness)).rg;
-	vec3 specularC = prefilteredColor * (F * envBRDF.x + envBRDF.y);
-	
-	//We don't multiply specular by kS as we already have a Fresnel multiplication in there.
-	vec3 ambient = (kD * diffuse + specularC); 
-
-	// AO & emissive
-	// TODO: seperate pass, as this will be interpolated for many reflection probes
-	vec3 color = emissive + ambient;
-	color = mix(color, color * specular.b, specular.a);
-
-	outColor = vec4(color, 1.0);
-}                                                                                                                          
-                                                                                                                                       
-
-*/
 
