@@ -5,12 +5,14 @@
 #include "assets/importers/ImageImporter.h"
 #include "assets/importers/ShaderImporter.h"
 #include "assets/importers/CubemapImporter.h"
+#include "assets/importers/EnvironmentMapImporter.h"
 #include "assets/AssetImporterManager.h"
 #include <fstream>
 
 ImporterRegistry::ImporterRegistry()
 {
-	RegisterImporters<ImageImporter, GltfImporter, ShaderStageImporter, ShaderImporter, CubemapImporter>();
+	RegisterImporters<ImageImporter, GltfImporter, ShaderStageImporter, ShaderImporter, CubemapImporter,
+		EnvironmentMapImporter>();
 }
 
 void ImporterRegistry::ReimportEntry(PodEntry* entry)

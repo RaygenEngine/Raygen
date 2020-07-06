@@ -24,8 +24,8 @@
             "y": 0.0,
             "z": 0.30000001192092896
         },
-        "environmentMap": "gen-data/EnvironmentMap",
-        "environmentMap_importHint_": "",
+        "environmentMap": "gen-data/skyb",
+        "environmentMap_importHint_": "engine-data/default-skybox/skyb.env",
         "~children": []
     },
     {
