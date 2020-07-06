@@ -32,7 +32,10 @@ std::string GenerateGbufferVert(
 	const std::string& descSetCode, const std::string& sharedFunctions, const std::string& mainCode);
 
 
-std::string GenerateDepthShader(
+std::string GenerateDepthFrag(
+	const std::string& descSetCode, const std::string& sharedFunctions, const std::string& mainCode);
+
+std::string GenerateDepthVert(
 	const std::string& descSetCode, const std::string& sharedFunctions, const std::string& mainCode);
 
 std::string GenerateDescriptorSetCode(
