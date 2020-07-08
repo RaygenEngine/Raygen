@@ -130,9 +130,11 @@ void main( ) {
 	vec3 iblContribution = diffuse + specular;
 
 	// TODO: Temporary emissive hack
-	vec3 color = iblContribution + emissive;
+	vec3 color = iblContribution * 0.2+ emissive;
 
 	outColor = vec4(color, 1.0f);
 }
+
+
 
 
