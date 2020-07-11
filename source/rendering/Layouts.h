@@ -9,6 +9,7 @@ inline struct Layouts_ {
 	RDescriptorLayout regularMaterialDescLayout;
 	RDescriptorLayout gbufferDescLayout;
 	RDescriptorLayout singleUboDescLayout;
+	RDescriptorLayout jointsDescLayout;
 	RDescriptorLayout singleSamplerDescLayout;
 	RDescriptorLayout cubemapLayout;
 	RDescriptorLayout envmapLayout;

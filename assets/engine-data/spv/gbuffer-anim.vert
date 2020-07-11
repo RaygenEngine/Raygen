@@ -37,10 +37,9 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 	mat4 viewProjInv;
 } camera;
 
-layout(set = 2, binding = 0) uniform UBO_Joints {
-	mat4 invBindMatrix[2];
+layout(std430, set = 2, binding = 0) readonly buffer SSBO_Joints {
+	mat4 invBindMatrix[];
 } jm;
-
 
 void main() {
 	mat4 skinMat = 

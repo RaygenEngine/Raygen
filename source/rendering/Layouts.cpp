@@ -27,6 +27,10 @@ Layouts_::Layouts_()
 		vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 	singleUboDescLayout.Generate();
 
+	// joints
+	jointsDescLayout.AddBinding(vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eVertex);
+	jointsDescLayout.Generate();
+
 	// spotlights
 	singleSamplerDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	singleSamplerDescLayout.Generate();

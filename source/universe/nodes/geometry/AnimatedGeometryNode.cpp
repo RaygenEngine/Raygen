@@ -22,11 +22,11 @@ void AnimatedGeometryNode::DirtyUpdate(DirtyFlagset dirtyFlags)
 		Enqueue([model = m_skinnedMesh, anim = m_animation](SceneAnimatedGeometry& geom) {
 			geom.modelPod = model;
 			geom.model = vl::GpuAssetManager->GetGpuHandle(model);
-			// geom.animation = vl::GpuAssetManager->GetGpuHandle(anim);
+			geom.isDirtyResize = { true, true, true };
+			geom.jointMatrices.resize(model.Lock()->jointMatrices.size());
 		});
 
 		m_joints = m_skinnedMesh.Lock()->jointMatrices;
-		m_joints.resize(2);
 	}
 
 	if (dirtyFlags[DF::SRT]) {
@@ -34,10 +34,7 @@ void AnimatedGeometryNode::DirtyUpdate(DirtyFlagset dirtyFlags)
 	}
 
 	if (dirtyFlags[DF::Joints] && !dirtyFlags[DF::ModelChange]) {
-		Enqueue([joints = m_joints](SceneAnimatedGeometry& geom) {
-			geom.ubo.jointMatrices[0] = joints[0];
-			geom.ubo.jointMatrices[1] = joints[1];
-		});
+		Enqueue([joints = m_joints](SceneAnimatedGeometry& geom) { geom.jointMatrices = joints; });
 		UpdateAnimation();
 	}
 }
@@ -53,11 +50,13 @@ void AnimatedGeometryNode::UpdateAnimation()
 		AnimationPath path = channel.path;
 
 		auto& sampler = samplers[channel.samplerIndex];
-		const glm::quat* data = reinterpret_cast<const glm::quat*>(sampler.outputs.data());
 
-		const auto r = glm::toMat4(data[currentFrame]);
-		m_joints[1] = r * m_skinnedMesh.Lock()->jointMatrices[1];
-		currentFrame = (currentFrame + 1) % (sampler.outputs.size() / sizeof(glm::quat));
+
+		// const glm::quat* data = reinterpret_cast<const glm::quat*>(sampler.outputs.data());
+
+		// const auto r = glm::toMat4(data[currentFrame]);
+		// m_joints[1] = r * m_skinnedMesh.Lock()->jointMatrices[1];
+		// currentFrame = (currentFrame + 1) % (sampler.outputs.size() / sizeof(glm::quat));
 	}
 }
 
