@@ -18,15 +18,20 @@ class AnimatedGeometryNode : public Node {
 	bool m_pushJoints;
 
 	std::vector<glm::mat4> m_joints;
+	float m_animationTime{ 0 };
 
 public:
 	AnimatedGeometryNode();
 	~AnimatedGeometryNode() override;
 
+	void Update(float deltaSeconds) override;
+
 
 	void DirtyUpdate(DirtyFlagset dirtyFlags) override;
 
-	void UpdateAnimation();
+	void UpdateAnimation(float deltaSeconds);
+
+	std::vector<glm::mat4> TickSamplers(float deltaTime);
 
 private:
 	size_t sceneUid;
