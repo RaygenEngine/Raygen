@@ -148,6 +148,8 @@ struct AccessorDescription {
 
 	bool normalized;
 
+	int32 accessorType; // TinyGLTF accessor.type
+
 	AccessorDescription(const tg::Model& modelData, int32 accessorIndex)
 	{
 		size_t beginByteOffset;
@@ -161,6 +163,7 @@ struct AccessorDescription {
 		beginByteOffset = accessor.byteOffset + bufferView.byteOffset;
 		strideByteOffset = accessor.ByteStride(bufferView);
 		componentCount = tg::GetNumComponentsInType(accessor.type);
+		accessorType = accessor.type;
 		beginPtr = const_cast<byte*>(&gltfBuffer.data[beginByteOffset]);
 
 		normalized = accessor.normalized;

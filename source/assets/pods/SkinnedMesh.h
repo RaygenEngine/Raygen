@@ -16,15 +16,27 @@ struct SkinnedGeometrySlot {
 	std::vector<SkinnedVertex> vertices{};
 };
 
+
 struct SkinnedMesh : public AssetPod {
+	struct Joint {
+		glm::mat4 inverseBindMatrix;
+		glm::mat4 localTransform;
+		uint32 parentJoint;
+		uint32 index;
+
+		std::string name;
+
+		[[nodiscard]] Joint& GetParent(SkinnedMesh* pod) const { return pod->joints[parentJoint]; };
+	};
+
 	REFLECTED_POD(SkinnedMesh)
 	{
 		REFLECT_ICON(FA_SKULL);
 		REFLECT_VAR(materials);
 	}
 
-	std::vector<glm::mat4> jointMatrices{};
-	std::vector<uint32> parentJoint{};
+	std::vector<Joint> joints;
+
 
 	std::vector<SkinnedGeometrySlot> skinnedGeometrySlots{};
 

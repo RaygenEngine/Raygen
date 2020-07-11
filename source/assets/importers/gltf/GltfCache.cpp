@@ -200,11 +200,22 @@ void GltfCache::LoadAnimations()
 				"and implement in the future");
 
 			size_t byteChunkSize = tinygltf::GetComponentSizeInBytes(desc1.componentType) * desc1.componentCount;
+			as.outputs.resize(desc1.elementCount);
 
 			for (uint32 i = 0; i < desc1.elementCount; ++i) {
-				byte* elementPtr = &desc1.beginPtr[desc1.strideByteOffset * i];
-				for (uint32 j = 0; j < byteChunkSize; ++j) {
-					as.outputs.push_back(elementPtr[j]);
+				const void* elementPtr = &desc1.beginPtr[desc1.strideByteOffset * i];
+				switch (desc1.accessorType) {
+					case TINYGLTF_TYPE_VEC3: {
+						const glm::vec3* elem = static_cast<const glm::vec3*>(elementPtr);
+						as.outputs[i] = glm::vec4(*elem, 0.0f);
+						break;
+					}
+					case TINYGLTF_TYPE_VEC4: {
+						const glm::vec4* elem = static_cast<const glm::vec4*>(elementPtr);
+						as.outputs[i] = *elem;
+						break;
+					}
+					default: LOG_ERROR("Incorrect tinygltf type found in AnimationOutput");
 				}
 			}
 
