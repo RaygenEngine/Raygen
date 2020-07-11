@@ -53,8 +53,13 @@ void Scene_::UploadDirty()
 	}
 
 	for (auto an : animatedGeometries.elements) {
+		if (an && an->isDirtyResize[vl::Renderer_::currentFrame]) {
+			an->ResizeJoints(vl::Renderer_::currentFrame);
+			an->isDirtyResize[vl::Renderer_::currentFrame] = false;
+		}
+
 		if (an && an->isDirty[vl::Renderer_::currentFrame]) {
-			an->UploadUbo(vl::Renderer_::currentFrame);
+			an->UploadSsbo(vl::Renderer_::currentFrame);
 			an->isDirty[vl::Renderer_::currentFrame] = false;
 		}
 	}

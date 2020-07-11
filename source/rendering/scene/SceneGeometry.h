@@ -13,17 +13,30 @@ struct SceneGeometry {
 	std::vector<bool> isDirty;
 };
 
-struct AnimatedGeometry_Ubo {
-	std::array<glm::mat4, 2> jointMatrices;
-};
-
-struct SceneAnimatedGeometry : SceneStruct<AnimatedGeometry_Ubo> {
+struct SceneAnimatedGeometry {
 	glm::mat4 transform;
 	vl::GpuHandle<SkinnedMesh> model;
 	PodHandle<SkinnedMesh> modelPod;
-	// PodHandle<Animation> animation;
 
-	// std::vector<glm::mat4> jointMatrices;
+	std::vector<glm::mat4> jointMatrices;
 
-	std::array<bool, 3> isDirty;
+	std::array<vk::DescriptorSet, 3> descSets;
+	std::array<UniquePtr<vl::RBuffer>, 3> buffers;
+
+	void UploadSsbo(uint32 curFrame);
+
+	SceneAnimatedGeometry()
+	{
+		for (size_t i = 0; i < 3; ++i) {
+			descSets[i] = vl::Layouts->jointsDescLayout.GetDescriptorSet();
+		}
+	}
+
+	void ResizeJoints(uint32 curFrame);
+
+	std::array<bool, 3> isDirty{ true, true, true };
+	std::array<bool, 3> isDirtyResize{ true, true, true };
+
+private:
+	size_t GetBufferSize() const;
 };
