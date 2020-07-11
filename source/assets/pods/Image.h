@@ -28,4 +28,7 @@ struct Image : AssetPod {
 
 	// all mip data
 	std::vector<byte> data{ 0xFF, 0xFF, 0xFF, 0xFF };
+
+	// 2x2 Bilinear Sample of a non Hdr image (with uv clamping to edge).
+	[[nodiscard]] glm::vec4 BilinearSample(float u, float v, glm::vec2 pixelOffset = { 0.0f, 0.0f }) const;
 };
