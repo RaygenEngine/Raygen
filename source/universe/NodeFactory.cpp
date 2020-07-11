@@ -13,6 +13,7 @@
 #include "universe/nodes/TransformNode.h"
 #include "universe/nodes/user/FlyingUserNode.h"
 #include "universe/nodes/user/FreeformUserNode.h"
+#include "universe/nodes/user/TerrainWalkerUserNode.h"
 #include "universe/Universe.h"
 
 #include <nlohmann/json.hpp>
