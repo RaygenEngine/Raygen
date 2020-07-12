@@ -64,29 +64,23 @@ void main( ) {
 	
 	
 	vec3 N = frag.normal;
-	
-	vec3 diffuseColor = (1.0 - frag.metallic) * frag.baseColor;
-	vec3 f0 = 0.16 * frag.reflectance * frag.reflectance * (1.0 - frag.metallic) + frag.baseColor * frag.metallic;
-	float a = frag.roughness * frag.roughness;
-	
 	vec3 V = normalize(frag.position - cam.position);
-	vec3 reflection = normalize(reflect(V, N));
+	vec3 R = normalize(reflect(V, N));
+
+    float NoV = abs(dot(N, V)) + 1e-5;
 	
-	float NdotV = abs(dot(N, V)) + 1e-5;
-	
-	// Actual IBL Contribution
-	// WIP:
 	const float MAX_REFLECTION_LOD = 4.0;
-	float lod = (a * MAX_REFLECTION_LOD); 
+	// CHECK: which roughness should go here
+	float lod = (frag.a * MAX_REFLECTION_LOD); 
 	
-	vec3 brdf = (texture(brdfLutSampler, vec2(NdotV, a))).rgb;
+	vec3 brdf = (texture(brdfLutSampler, vec2(NoV, frag.a))).rgb;
+
+	// CHECK: math of those
 	vec3 diffuseLight = texture(irradianceSampler, N).rgb;
+	vec3 specularLight = textureLod(prefilteredSampler, R, lod).rgb;
 
-	vec3 specularLight = textureLod(prefilteredSampler, reflection, lod).rgb;
-
-	vec3 diffuse = diffuseLight * diffuseColor;
-	vec3 specular = specularLight * (f0 * brdf.x + brdf.y);
-
+	vec3 diffuse = diffuseLight * frag.diffuseColor;
+	vec3 specular = specularLight * (frag.f0 * brdf.x + brdf.y);
 
 	vec3 iblContribution = diffuse + specular;
 

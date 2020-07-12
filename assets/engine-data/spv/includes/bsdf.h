@@ -34,21 +34,15 @@ float F_Schlick(float NoV, float f0, float f90) {
     return f0 + (f90 - f0) * pow(1.0 - NoV, 5.0);
 }
 
-float Fd_Burley(float NoV, float NoL, float LoH, float a) {
+vec3 Fd_Burley(float NoV, float NoL, float LoH, vec3 diffuseColor, float a) {
     float f90 = 0.5 + 2.0 * a * LoH * LoH;
     float lightScatter = F_Schlick(NoL, 1.0, f90);
     float viewScatter = F_Schlick(NoV, 1.0, f90);
-    return lightScatter * viewScatter * (1.0 / PI);
+    return diffuseColor * (lightScatter * viewScatter * (1.0 / PI));
 }
 
-vec3 BRDF(vec3 v, vec3 l, vec3 n, vec3 diffuseColor, vec3 f0, float a) {
-    vec3 h = normalize(v + l);
-
-    float NoV = abs(dot(n, v)) + 1e-5;
-    float NoL = saturate(dot(n, l));
-    float NoH = saturate(dot(n, h));
-    float LoH = saturate(dot(l, h));
-
+vec3 Fr_CookTorranceGGX(float NoV, float NoL, float NoH, float LoH, vec3 f0, float a)
+{
     float D = D_GGX(NoH, a);
 
     // CHECK:
@@ -57,13 +51,7 @@ vec3 BRDF(vec3 v, vec3 l, vec3 n, vec3 diffuseColor, vec3 f0, float a) {
     vec3  F = F_Schlick(LoH, f0, f90);
     float V = V_SmithGGXCorrelated(NoV, NoL, a);
 
-    // specular BRDF
-    vec3 Fr = (D * V) * F ; // denominator simplified with G
-
-    // diffuse BRDF
-    vec3 Fd = diffuseColor * Fd_Burley(NoV, NoL, LoH, a);
-
-    return Fr + Fd;
+    return (D * V) * F; // denominator simplified with G
 }
 
 // Geometric Shadowing function
@@ -78,7 +66,7 @@ float G_SchlicksmithGGX(float dotNL, float dotNV, float a)
 vec3 importanceSampleGGX(vec2 Xi, float a, vec3 normal) 
 {
     const float phi = 2.0f * PI * Xi.x;
-    // NOTE: (aa-1) == (a-1)(a+1) produces better fp accuracy
+    // (aa-1) == (a-1)(a+1) produces better fp accuracy
     const float cosTheta2 = (1 - Xi.y) / (1 + (a + 1) * ((a - 1) * Xi.y));
     const float cosTheta = sqrt(cosTheta2);
     const float sinTheta = sqrt(1 - cosTheta2);

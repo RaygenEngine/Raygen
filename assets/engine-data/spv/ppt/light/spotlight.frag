@@ -111,16 +111,24 @@ void main() {
 	
 	vec4 lightSpacePos = light.viewProj * vec4(frag.position,1.0);
 	float shadow = ShadowCalculation(lightSpacePos);
-		//return; 
+
 	vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
 
-	vec3 diffuseColor = (1.0 - frag.metallic) * frag.baseColor;
-	vec3 f0 = 0.16 * frag.reflectance * frag.reflectance * (1.0 - frag.metallic) + frag.baseColor * frag.metallic;
-	float a = frag.roughness * frag.roughness;
+	vec3 H = normalize(V + L);
 
-	vec3 Lo = BRDF(V, L, N, diffuseColor, f0, a) * Li * saturate(dot(N, L));
+    float NoV = abs(dot(N, V)) + 1e-5;
+    float NoL = saturate(dot(N, L));
+    float NoH = saturate(dot(N, H));
+    float LoH = saturate(dot(L, H));
 
-    outColor = vec4(Lo, 1);
+	// to get final diffuse and specular both those terms are multiplied by Li * NoL
+	vec3 brdf_d = Fd_Burley(NoV, NoL, LoH, frag.diffuseColor, frag.a);
+	vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, frag.f0, frag.a);
+
+	// so to simplify (faster math)
+	vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
+
+    outColor = vec4(finalContribution, 1);
 }                               
                                 
                                  

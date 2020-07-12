@@ -19,7 +19,7 @@ layout(set = 0, binding = 0) uniform samplerCube skyboxSampler;
 
 layout(push_constant) uniform PC {
 	mat4 rotVp;
-    float a; // a = roughness * roughness
+    float a; // CHECK: should a = roughness * roughness?
     float skyboxRes;
 } push;
 
@@ -37,23 +37,23 @@ void main( ) {
         vec3 H  = importanceSampleGGX(Xi, push.a, N);
         vec3 L  = normalize(2.0 * dot(V, H) * H - V);
 
-        float NdotL = max(dot(N, L), 0.0);
+        float NoL = max(dot(N, L), 0.0);
 
-        if(NdotL > 0.0)
+        if(NoL > 0.0)
         {
-            float NdotH =  max(dot(N, H), 0.0);        
-            float HdotV = max(dot(H, V), 0.0); 
+            float NoH =  max(dot(N, H), 0.0);        
+            float HoV = max(dot(H, V), 0.0); 
 
-            float D = D_GGX(NdotH, push.a); 
-            float pdf = (D * NdotH / (4 * HdotV)) + 0.0001;
+            float D = D_GGX(NoH, push.a); 
+            float pdf = (D * NoH / (4 * HoV)) + 0.0001;
              
             float saTexel = 4.0 * PI / (6.0f * push.a);
             float saSample = 1.0 / float(SAMPLE_COUNT * pdf + 0.00001);
              
             float mipLevel = push.a == 0.0 ? 0.0 :  0.5 * log2(saSample / saTexel);
                                  
-            prefilteredColor += textureLod(skyboxSampler, L, mipLevel).rgb * NdotL;     
-            totalWeight += NdotL;
+            prefilteredColor += textureLod(skyboxSampler, L, mipLevel).rgb * NoL;     
+            totalWeight += NoL;
         }
     }
     prefilteredColor = prefilteredColor / totalWeight;

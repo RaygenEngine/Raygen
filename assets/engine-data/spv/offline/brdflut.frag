@@ -31,15 +31,15 @@ void main() {
 		vec3 H = importanceSampleGGX(Xi, roughness, N);
 		vec3 L = 2.0 * dot(V, H) * H - V;
 
-		float dotNL = max(dot(N, L), 0.0);
-		float dotNV = max(dot(N, V), 0.0);
-		float dotVH = max(dot(V, H), 0.0); 
-		float dotNH = max(dot(H, N), 0.0);
+		float NoL = saturate(dot(N, L));
+		float NoV = saturate(dot(N, V));
+		float VoH = saturate(dot(V, H)); 
+		float NoH = saturate(dot(H, N));
 
-		if (dotNL > 0.0) {
-			float G = G_SchlicksmithGGX(dotNL, dotNV, roughness);
-			float G_Vis = (G * dotVH) / (dotNH * dotNV);
-			float Fc = pow(1.0 - dotVH, 5.0);
+		if (NoL > 0.0) {
+			float G = G_SchlicksmithGGX(NoL, NoV, roughness);
+			float G_Vis = (G * VoH) / ((NoH * NoV) + 1e-5);
+			float Fc = pow(1.0 - VoH, 5.0);
 			LUT += vec2((1.0 - Fc) * G_Vis, Fc * G_Vis);
 		}
 	}
