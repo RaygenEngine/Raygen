@@ -6,28 +6,25 @@
 namespace vl {
 enum GColorAttachment : uint32
 {
-	GPosition = 0,
-	GNormal = 1,
-	// rgb: albedo, a: opacity
-	GAlbedo = 2,
-	// r: metallic, g: roughness, b: occlusion, a: occlusion strength
-	GSpecular = 3,
-	GEmissive = 4,
-	GDepth = 5,
-	GCount = 6
+	GNormal = 0,
+	// rgb: color, a: opacity
+	GBaseColor = 1,
+	// r: metallic, g: roughness, b: reflectance, a: occlusion
+	GSurface = 2,
+	GEmissive = 3,
+	GDepth = 4,
+	GCount
 };
 
 struct RGbuffer {
 
-	inline constexpr static std::array<vk::Format, 5> colorAttachmentFormats
-		= { vk::Format::eR32G32B32A32Sfloat, vk::Format::eR32G32B32A32Sfloat, vk::Format::eR8G8B8A8Srgb,
-			  vk::Format::eR8G8B8A8Unorm, vk::Format::eR8G8B8A8Srgb };
-	inline constexpr static std::array<const char*, 6> attachmentNames
-		= { "position", "normal", "albedo", "specular", "emissive", "depth" };
-
+	inline constexpr static std::array colorAttachmentFormats = { vk::Format::eR16G16B16A16Snorm,
+		vk::Format::eR8G8B8A8Srgb, vk::Format::eR8G8B8A8Unorm, vk::Format::eR8G8B8A8Srgb };
+	inline constexpr static std::array attachmentNames = { "Normal", "BaseColor", "Surface", "Emissive", "Depth" };
+	inline constexpr static size_t ColorAttachmentCount = colorAttachmentFormats.size();
 
 	vk::UniqueFramebuffer framebuffer;
-	std::array<UniquePtr<RImageAttachment>, 6> attachments;
+	std::array<UniquePtr<RImageAttachment>, GCount> attachments;
 
 	vk::DescriptorSet descSet;
 

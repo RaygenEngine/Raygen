@@ -16,6 +16,8 @@ struct EnvironmentMap::Gpu : public vl::GpuAssetTemplate<EnvironmentMap> {
 
 	vk::DescriptorSet descriptorSet;
 
+	vk::UniqueSampler brdfSampler;
+
 	EnvironmentMap::Gpu(PodHandle<EnvironmentMap> podHandle);
 
 	void Update(const AssetUpdateInfo&) override final;

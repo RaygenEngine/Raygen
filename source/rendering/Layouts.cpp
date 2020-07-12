@@ -8,7 +8,7 @@ namespace vl {
 Layouts_::Layouts_()
 {
 	// gbuffer
-	for (uint32 i = 0u; i < 6u; ++i) {
+	for (uint32 i = 0u; i < GCount; ++i) {
 		gbufferDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	}
 	gbufferDescLayout.Generate();

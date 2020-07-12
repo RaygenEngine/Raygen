@@ -88,8 +88,37 @@
             }
         },
         "+type": "Geometry",
-        "mesh": "~Mesh",
-        "mesh_importHint_": "",
+        "model": "gen-data/Sponza",
+        "model_importHint_": "gltf-samples/2.0/Sponza/glTF/Sponza.gltf",
+        "~children": []
+    },
+    {
+        "+name": "DefaultCamLocation",
+        "+trs": {
+            "pos": {
+                "x": 24.60333824157715,
+                "y": 19.86359977722168,
+                "z": -0.11548353731632233
+            },
+            "rot": {
+                "x": -160.30859375,
+                "y": -87.23997497558594,
+                "z": -179.89358520507813
+            },
+            "scale": {
+                "x": 0.9999743103981018,
+                "y": 0.9999843239784241,
+                "z": 0.9999993443489075
+            }
+        },
+        "+type": "WindowCamera",
+        "far": 1000.0,
+        "focalLength": 1.0,
+        "hFov": 1.50724458694458,
+        "hFovOffset": 0.0,
+        "near": 0.10000000149011612,
+        "vFov": 1.2566370964050293,
+        "vFovOffset": 0.0,
         "~children": []
     },
     {
@@ -101,100 +130,19 @@
                 "z": 5.980527877807617
             },
             "rot": {
-                "x": -172.24755859375,
-                "y": 8.03920841217041,
-                "z": 179.99818420410156
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
             },
             "scale": {
-                "x": 0.800000011920929,
+                "x": 0.7999998331069946,
                 "y": 0.800000011920929,
-                "z": 0.800000011920929
+                "z": 0.7999995946884155
             }
         },
         "+type": "Geometry",
-        "mesh": "~Mesh",
-        "mesh_importHint_": "",
+        "model": "gen-data/MetalRoughSpheres",
+        "model_importHint_": "gltf-samples/2.0/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf",
         "~children": []
-    },
-    {
-        "+name": "AnimatedGeometry_new",
-        "+trs": {
-            "pos": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "rot": {
-                "x": 0.0,
-                "y": -0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            }
-        },
-        "+type": "AnimatedGeometry",
-        "animation": "gen-data/Fox/Run",
-        "animation_importHint_": "Fox.gltf{\"animation\":2}",
-        "pushJoints": true,
-        "skinnedMesh": "gen-data/Fox_skinned_",
-        "skinnedMesh_importHint_": "Fox.gltf",
-        "~children": []
-    },
-    {
-        "+name": "FreeformUser_new",
-        "+trs": {
-            "pos": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "rot": {
-                "x": 0.0,
-                "y": -0.0,
-                "z": 0.0
-            },
-            "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-            }
-        },
-        "+type": "FreeformUser",
-        "movementSpeed": 10.0,
-        "turningSpeed": 0.699999988079071,
-        "~children": [
-            {
-                "+name": "DefaultCamLocation",
-                "+trs": {
-                    "pos": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "rot": {
-                        "x": 0.0,
-                        "y": -0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 0.999974250793457,
-                        "y": 0.9999843835830688,
-                        "z": 0.9999994039535522
-                    }
-                },
-                "+type": "WindowCamera",
-                "far": 1000.0,
-                "focalLength": 1.0,
-                "hFov": 1.8769371509552002,
-                "hFovOffset": 0.0,
-                "near": 0.10000000149011612,
-                "vFov": 1.2566370964050293,
-                "vFovOffset": 0.0,
-                "~children": []
-            }
-        ]
     }
 ]
