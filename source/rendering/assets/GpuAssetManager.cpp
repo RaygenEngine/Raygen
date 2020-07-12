@@ -59,21 +59,57 @@ std::vector<size_t>& GpuAssetManager_::GetUsersRef(size_t uid)
 	return assetUsers[uid];
 }
 
-void GpuAssetManager_::PerformAssetUpdates(const std::vector<std::pair<size_t, AssetUpdateInfo>>& updates)
+
+void GpuAssetManager_::SortAssetUpdates(std::vector<std::pair<size_t, AssetUpdateInfo>>& updates)
 {
+	// Sort asset updates based on dependencies to avoid double updates & ensure proper updating order
+
+	// NOTE: When impelementing this one should consider that gpu assets may have new dependecies. This requres a whole
+	// system that would allow early exits in the update function of gpu assets. ie evaluate new dependicies, check if
+	// they are 'dirty' and update later (when they will not be dirty)
+	// TODO:
+}
+
+void GpuAssetManager_::PerformAssetUpdates(std::vector<std::pair<size_t, AssetUpdateInfo>>& updates)
+{
+	SortAssetUpdates(updates);
 	Device->waitIdle();
 
 	// PERF: Unordered Set to avoid multiple updates of the same asset and remove the ugly erase unique below
 	IterableSafeVector<size_t> dependentUpdates;
 
 
-	for (auto& [uid, info] : updates) {
+	decltype(updates.begin()) currentIt;
+
+	for (currentIt = updates.begin(); currentIt != updates.end(); currentIt++) {
+		auto& [uid, info] = *currentIt;
+
 		if (uid < gpuAssets.size() && gpuAssets[uid]) {
-			gpuAssets[uid]->Update(info);
-		}
-		if (uid < assetUsers.size()) {
-			auto& usersVec = assetUsers[uid];
-			dependentUpdates.vec.insert(dependentUpdates.vec.begin(), usersVec.begin(), usersVec.end());
+
+			auto shouldUpdateNow = [&]() {
+				auto& deps = gpuAssets[uid]->GetDependencies();
+
+				// For each "parent" asset, check if it is in the remaining updates.
+				for (size_t parentUid : deps) {
+					auto it = std::find_if(
+						currentIt + 1, updates.end(), [&](auto& pair) { return parentUid == pair.first; });
+					if (it != updates.end()) {
+						return false;
+					}
+				}
+				return true;
+			};
+
+
+			if (shouldUpdateNow()) {
+				gpuAssets[uid]->Update(info);
+				if (uid < assetUsers.size()) {
+					auto& usersVec = assetUsers[uid];
+					dependentUpdates.vec.insert(dependentUpdates.vec.end(), usersVec.begin(), usersVec.end());
+				}
+			}
+			// No need to add anything, it will get added to dependentUpdates when the update for the "parent" will
+			// occur
 		}
 	}
 

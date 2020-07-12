@@ -178,7 +178,7 @@ public:
 	}
 
 	// TODO: Forward these two functions through Assets.h
-	static const auto& GetGpuUpdateRequests() { return Get().m_gpuPodUpdateRequests; }
+	static auto& GetGpuUpdateRequests() { return Get().m_gpuPodUpdateRequests; }
 	static void ClearGpuUpdateRequests() { Get().m_gpuPodUpdateRequests.clear(); }
 
 

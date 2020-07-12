@@ -14,6 +14,19 @@ Mesh::Gpu::Gpu(PodHandle<Mesh> podHandle)
 {
 	auto data = podHandle.Lock();
 
+	Update({});
+}
+
+void Mesh::Gpu::Update(const AssetUpdateInfo& info)
+{
+	auto data = podHandle.Lock();
+
+	// for (int32 i = 0; auto& gg : geometryGroups) {
+	//	gg.material = GpuAssetManager->GetGpuHandle(data->materials[i]);
+	//	++i;
+	//}
+
+	geometryGroups.clear();
 	// PERF:
 	for (int32 i = 0; const auto& gg : data->geometrySlots) {
 		GpuGeometryGroup vgg;
@@ -50,16 +63,6 @@ Mesh::Gpu::Gpu(PodHandle<Mesh> podHandle)
 		vgg.indexCount = static_cast<uint32>(gg.indices.size());
 
 		geometryGroups.emplace_back(std::move(vgg));
-		++i;
-	}
-}
-
-void Mesh::Gpu::Update(const AssetUpdateInfo& info)
-{
-	auto data = podHandle.Lock();
-
-	for (int32 i = 0; auto& gg : geometryGroups) {
-		gg.material = GpuAssetManager->GetGpuHandle(data->materials[i]);
 		++i;
 	}
 }

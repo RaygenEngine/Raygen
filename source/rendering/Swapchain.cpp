@@ -65,7 +65,7 @@ Swapchain_::Swapchain_(vk::SurfaceKHR surface)
 	m_extent = ChooseSwapExtent(details.capabilities);
 	m_imageFormat = surfaceFormat.format;
 
-	uint32 imageCount = details.capabilities.minImageCount;
+	uint32 imageCount = std::max(details.capabilities.minImageCount, 2u);
 
 	if (details.capabilities.maxImageCount > 0u && imageCount > details.capabilities.maxImageCount) {
 		imageCount = details.capabilities.maxImageCount;

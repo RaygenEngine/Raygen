@@ -14,6 +14,7 @@
 #include "editor/windows/editors/EdGenericAssetEditorWindow.h"
 #include "editor/windows/editors/EdShaderStageEditorWindow.h"
 #include "editor/windows/editors/EdMaterialArchetypeEditor.h"
+#include "editor/windows/EdMeshGenerator.h"
 #include "engine/Events.h"
 #include "assets/pods/Image.h"
 #include "assets/PodEditor.h"
@@ -57,9 +58,9 @@ void RegisterWindows(ed::ComponentWindows& windowsComponent)
 	windowsComponent.AddWindowEntry<ImGuiDemoWindow>("ImGui Demo");
 
 
-	windowsComponent.AddWindowEntry<ShaderEditorWindow>("Shader Editor");
-
 	windowsComponent.AddWindowEntry<PodEntryEditorWindow>("Entry Editor");
+	windowsComponent.AddWindowEntry<MeshGenerator>("Mesh Generator");
+
 
 	windowsComponent.RegisterAssetWindowEditor<ImageEditorTest>();
 	windowsComponent.RegisterAssetWindowEditor<ShaderStageEditorWindow>();

@@ -72,6 +72,8 @@ void MaterialInstance::Gpu::Update(const AssetUpdateInfo& info)
 			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 		}
 
+		int32 samplersBeginOffset = gpuArch.descLayout->hasUbo && uboSize > 0 ? 1 : 0;
+
 		auto UpdateImageSamplerInDescriptorSet = [&](vk::Sampler sampler, GpuHandle<Image> image, uint32 dstBinding) {
 			auto& img = image.Lock();
 
@@ -99,7 +101,7 @@ void MaterialInstance::Gpu::Update(const AssetUpdateInfo& info)
 
 		for (uint32 i = 0; i < matInst->descriptorSet.samplers2d.size(); ++i) {
 			UpdateImageSamplerInDescriptorSet(GpuAssetManager->GetDefaultSampler(),
-				GpuAssetManager->GetGpuHandle(matInst->descriptorSet.samplers2d[i]), i + 1);
+				GpuAssetManager->GetGpuHandle(matInst->descriptorSet.samplers2d[i]), i + samplersBeginOffset);
 		}
 	}
 }
