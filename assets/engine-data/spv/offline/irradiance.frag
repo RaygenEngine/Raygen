@@ -2,8 +2,6 @@
 #extension GL_GOOGLE_include_directive: enable
 #include "global.h"
 
-#include "global.h"
-
 // out
 
 layout(location = 0) out vec4 outColor;
