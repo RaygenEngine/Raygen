@@ -1,7 +1,9 @@
 #version 450
-#extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive: enable
-#include "microfacet_bsdf.h"
+#include "global.h"
+
+#include "bsdf.h"
+#include "hammersley.h"
 
 // out
 
@@ -17,7 +19,7 @@ layout(set = 0, binding = 0) uniform samplerCube skyboxSampler;
 
 layout(push_constant) uniform PC {
 	mat4 rotVp;
-    float roughness;
+    float a; // a = roughness * roughness
     float skyboxRes;
 } push;
 
@@ -31,8 +33,8 @@ void main( ) {
     vec3 prefilteredColor = vec3(0.0);     
     for(uint i = 0u; i < SAMPLE_COUNT; ++i)
     {
-        vec2 Xi = hammersley2d(i, SAMPLE_COUNT);
-        vec3 H  = importanceSample_GGX(Xi, push.roughness, N);
+        vec2 Xi = hammersley(i, SAMPLE_COUNT);
+        vec3 H  = importanceSampleGGX(Xi, push.a, N);
         vec3 L  = normalize(2.0 * dot(V, H) * H - V);
 
         float NdotL = max(dot(N, L), 0.0);
@@ -42,13 +44,13 @@ void main( ) {
             float NdotH =  max(dot(N, H), 0.0);        
             float HdotV = max(dot(H, V), 0.0); 
 
-            float D = D_GGX(NdotH, push.roughness * push.roughness); 
+            float D = D_GGX(NdotH, push.a); 
             float pdf = (D * NdotH / (4 * HdotV)) + 0.0001;
              
-            float saTexel = 4.0 * PI / (6.0f * push.skyboxRes * push.skyboxRes);
+            float saTexel = 4.0 * PI / (6.0f * push.a);
             float saSample = 1.0 / float(SAMPLE_COUNT * pdf + 0.00001);
              
-            float mipLevel = push.roughness == 0.0 ? 0.0 :  0.5 * log2(saSample / saTexel);
+            float mipLevel = push.a == 0.0 ? 0.0 :  0.5 * log2(saSample / saTexel);
                                  
             prefilteredColor += textureLod(skyboxSampler, L, mipLevel).rgb * NdotL;     
             totalWeight += NdotL;

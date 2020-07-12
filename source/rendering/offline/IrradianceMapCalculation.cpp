@@ -17,8 +17,7 @@
 
 namespace {
 struct PushConstant {
-	glm::mat4 v;
-	glm::mat4 p;
+	glm::mat4 rotVp;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -178,7 +177,7 @@ void IrradianceMapCalculation::AllocateCubeVertexBuffer()
 
 void IrradianceMapCalculation::MakePipeline()
 {
-	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/irradiance.shader");
+	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/offline/irradiance.shader");
 
 	if (!gpuShader.HasValidModule()) {
 		LOG_ERROR("Geometry Pipeline skipped due to shader compilation errors.");
@@ -436,7 +435,7 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 
 
 				PushConstant pc{ //
-					m_captureViews[i], m_captureProjection
+					m_captureProjection * glm::mat4(glm::mat3(m_captureViews[i]))
 				};
 
 				// Submit via push constant (rather than a UBO)

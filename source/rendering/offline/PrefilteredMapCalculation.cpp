@@ -18,7 +18,7 @@
 namespace {
 struct PushConstant {
 	glm::mat4 rotVp;
-	float roughness;
+	float a;
 	float skyboxRes;
 };
 
@@ -178,7 +178,7 @@ void PrefilteredMapCalculation::AllocateCubeVertexBuffer()
 
 void PrefilteredMapCalculation::MakePipeline()
 {
-	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/prefiltered.shader");
+	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/offline/prefiltered.shader");
 
 	if (!gpuShader.HasValidModule()) {
 		LOG_ERROR("Geometry Pipeline skipped due to shader compilation errors.");
@@ -445,10 +445,12 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 
 
 					float roughness = (float)mip / (float)(5 - 1);
+					float a = roughness * roughness;
+					LOG_INFO("Prefiltered mip a = roughness * roughness = {}", a);
 
 					// WIP:
 					PushConstant pc{ //
-						m_captureProjection * glm::mat4(glm::mat3(m_captureViews[i])), roughness,
+						m_captureProjection * glm::mat4(glm::mat3(m_captureViews[i])), a,
 						static_cast<float>(m_envmapAsset->skybox.Lock().cubemap->GetExtent2D().width)
 					};
 

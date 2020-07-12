@@ -1,6 +1,8 @@
 #version 450
-#extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive: enable
+#include "global.h"
+
+#include "global.h"
 
 // out
 
@@ -13,8 +15,6 @@ layout(location = 0) in vec3 localPos;
 // uniforms
 
 layout(set = 0, binding = 0) uniform samplerCube skyboxSampler;
-
-const float PI = 3.14159265359;
 
 void main( ) {
     // the sample direction equals the hemisphere's orientation 

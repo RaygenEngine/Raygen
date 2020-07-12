@@ -95,7 +95,7 @@ void BrdfLutCalculation::AllocateCommandBuffers()
 
 void BrdfLutCalculation::MakePipeline()
 {
-	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/brdflut.shader");
+	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/offline/brdflut.shader");
 
 	if (!gpuShader.HasValidModule()) {
 		LOG_ERROR("Geometry Pipeline skipped due to shader compilation errors.");

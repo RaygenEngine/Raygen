@@ -1,5 +1,6 @@
 #version 450
-#extension GL_ARB_separate_shader_objects : enable
+#extension GL_GOOGLE_include_directive: enable
+#include "global.h"
 
 // out
 
@@ -32,7 +33,7 @@ layout(set = 0, binding = 0) uniform UBO_Material {
 	// alpha mask
 	float alphaCutoff;
 	int mask;
-} material;
+} mat;
 
 layout(set = 0, binding = 1) uniform sampler2D baseColorSampler;
 layout(set = 0, binding = 2) uniform sampler2D metallicRoughnessSampler;
@@ -44,9 +45,9 @@ void main() {
 	// sample material textures
 	vec4 sampledBaseColor = texture(baseColorSampler, uv);
 	
-	float opacity = sampledBaseColor.a * material.baseColorFactor.a;
+	float opacity = sampledBaseColor.a * mat.baseColorFactor.a;
 	// mask mode and cutoff
-	if(material.mask == 1 && opacity < material.alphaCutoff)
+	if(mat.mask == 1 && opacity < mat.alphaCutoff)
 		discard;
 	
 	vec4 sampledMetallicRoughness = texture(metallicRoughnessSampler, uv); 
@@ -55,12 +56,12 @@ void main() {
 	vec4 sampledOcclusion = texture(occlusionSampler, uv);
 	
 	// final material values
-	vec3 albedo = sampledBaseColor.rgb * material.baseColorFactor.rgb;
-	float metallic = sampledMetallicRoughness.b * material.metallicFactor;
-	float roughness = sampledMetallicRoughness.g * material.roughnessFactor;
-	vec3 emissive = sampledEmissive.rgb * material.emissiveFactor.rgb;
-	float occlusion =  1 - material.occlusionStrength * (1 - sampledOcclusion.r);
-	vec3 normal = normalize((sampledNormal.rgb* 2.0 - 1.0) * vec3(material.normalScale, material.normalScale, 1.0));
+	vec3 albedo = sampledBaseColor.rgb * mat.baseColorFactor.rgb;
+	float metallic = sampledMetallicRoughness.b * mat.metallicFactor;
+	float roughness = sampledMetallicRoughness.g * mat.roughnessFactor;
+	vec3 emissive = sampledEmissive.rgb * mat.emissiveFactor.rgb;
+	float occlusion =  1 - mat.occlusionStrength * (1 - sampledOcclusion.r);
+	vec3 normal = normalize((sampledNormal.rgb* 2.0 - 1.0) * vec3(mat.normalScale, mat.normalScale, 1.0));
 	// opacity set from above
 
     // normal (with normal mapping)
