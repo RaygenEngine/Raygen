@@ -49,7 +49,6 @@ void main() {
 
 	gl_Position = camera.viewProj * push.modelMat * skinMat * vec4(position, 1.0);
 
-	fragPos = vec3(push.modelMat * skinMat * vec4(position, 1.0));
 	uv = textCoord;
 
 
