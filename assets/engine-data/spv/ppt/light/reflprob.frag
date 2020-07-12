@@ -1,8 +1,8 @@
 #version 450 
-#extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive: enable
+#include "global.h"
 
-#include "microfacet_bsdf.h"
+#include "bsdf.h"
 #include "fragment.h"
 
 // out
@@ -30,7 +30,7 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 	mat4 viewInv;
 	mat4 projInv;
 	mat4 viewProjInv;
-} camera;
+} cam;
 
 
 layout(set = 2, binding = 0) uniform samplerCube skyboxSampler;
@@ -38,40 +38,24 @@ layout(set = 2, binding = 1) uniform samplerCube irradianceSampler;
 layout(set = 2, binding = 2) uniform samplerCube prefilteredSampler;
 layout(set = 2, binding = 3) uniform sampler2D brdfLutSampler;
 
-vec3 ReconstructWorldPositionTEMP(float depth)
-{
-	// clip space reconstruction
-	vec4 clipPos; 
-	clipPos.xy = uv.xy * 2.0 - 1;
-	clipPos.z = depth;
-	clipPos.w = 1.0;
-	
-	vec4 worldPos = camera.viewProjInv * clipPos;
-
-	return worldPos.xyz / worldPos.w; // return world space pos xyz
-}
-
-vec4 SampleCubemapLH(samplerCube cubemap, vec3 RHdirection) {
-	return texture(cubemap, vec3(RHdirection.x, RHdirection.y, -RHdirection.z));
-}
-
 void main( ) {
 
 	float depth = texture(depthSampler, uv).r;
 
+	// TODO: discard when skymesh is implemented
 	if(depth == 1.0)
 	{
 		// TODO: discard here like in spotlights
-		vec3 V = normalize(ReconstructWorldPositionTEMP(depth) - camera.position);
+		vec3 V = normalize(reconstructWorldPosition(depth, uv, cam.viewProjInv) - cam.position);
 		outColor = SampleCubemapLH(skyboxSampler, V);
 		
 		return;
 	}
 
 	// PERF:
-	Fragment fragment = GetFragmentFromGBuffer(
+	Fragment frag = getFragmentFromGBuffer(
 		depth,
-		camera.viewProjInv,
+		cam.viewProjInv,
 		normalsSampler,
 		baseColorSampler,
 		surfaceSampler,
@@ -79,18 +63,19 @@ void main( ) {
 		uv);
 	
 	
-	vec3 N = fragment.normal;
+	vec3 N = frag.normal;
 	
-	vec3 diffuseColor = (1.0 - fragment.metallic) * fragment.baseColor;
-	vec3 f0 = 0.16 * fragment.reflectance * fragment.reflectance * (1.0 - fragment.metallic) + fragment.baseColor * fragment.metallic;
-	float a = fragment.roughness * fragment.roughness;
+	vec3 diffuseColor = (1.0 - frag.metallic) * frag.baseColor;
+	vec3 f0 = 0.16 * frag.reflectance * frag.reflectance * (1.0 - frag.metallic) + frag.baseColor * frag.metallic;
+	float a = frag.roughness * frag.roughness;
 	
-	vec3 V = normalize(fragment.position - camera.position);
+	vec3 V = normalize(frag.position - cam.position);
 	vec3 reflection = normalize(reflect(V, N));
 	
 	float NdotV = abs(dot(N, V)) + 1e-5;
 	
 	// Actual IBL Contribution
+	// WIP:
 	const float MAX_REFLECTION_LOD = 4.0;
 	float lod = (a * MAX_REFLECTION_LOD); 
 	

@@ -113,6 +113,8 @@ void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& info)
 
 	std::vector descLayouts = { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() };
 
-	gbuffer = CreatePassInfoFrag<GbufferPass>("engine-data/spv/gbuffer.shader", arch->gbufferFragBinary, descLayouts);
-	depth = CreatePassInfoFrag<DepthmapPass>("engine-data/spv/depth_map.shader", arch->depthBinary, descLayouts);
+	gbuffer = CreatePassInfoFrag<GbufferPass>(
+		"engine-data/spv/geometry/gbuffer.shader", arch->gbufferFragBinary, descLayouts);
+	depth
+		= CreatePassInfoFrag<DepthmapPass>("engine-data/spv/geometry/depth_map.shader", arch->depthBinary, descLayouts);
 }

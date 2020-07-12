@@ -24,7 +24,7 @@ void PtReflProb::MakeLayout()
 
 void PtReflProb::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/reflprob.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/ppt/light/reflprob.shader");
 	gpuShader.onCompile = [&]() {
 		MakePipeline();
 	};

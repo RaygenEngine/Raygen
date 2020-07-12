@@ -1,5 +1,4 @@
 #version 450
-#extension GL_ARB_separate_shader_objects : enable
 
 // out
 
@@ -13,7 +12,7 @@ layout (location = 0) in vec3 pos;
 
 layout(push_constant) uniform PC {
 	mat4 rotVp;
-    float roughness;
+    float a;
     float skyboxRes;
 } push;
 

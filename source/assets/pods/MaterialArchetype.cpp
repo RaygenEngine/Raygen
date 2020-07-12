@@ -39,11 +39,11 @@ void RerouteShaderErrors(shd::GeneratedShaderErrors& errors)
 
 void MaterialArchetype::MakeGltfArchetypeInto(MaterialArchetype* mat)
 {
-	mat->gbufferFragBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/gbuffer-gltf.frag");
-	mat->depthBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/depthmap-gltf.frag");
+	mat->gbufferFragBinary = ShaderCompiler::Compile("engine-data/spv/geometry/gbuffer-gltf.frag");
+	mat->depthBinary = ShaderCompiler::Compile("engine-data/spv/geometry/depthmap-gltf.frag");
 
 	CLOG_ABORT(mat->gbufferFragBinary.size() == 0 || mat->depthBinary.size() == 0,
-		"Failed to compile gltf archetype shader code. (engine-data/spv/shader-defaults/)");
+		"Failed to compile gltf archetype shader code. (engine-data/spv/geometry/)");
 
 	mat->descriptorSetLayout.samplers2d
 		= { "baseColorSampler", "metallicRoughnessSampler", "occlusionSampler", "normalSampler", "emissiveSampler" };
@@ -64,10 +64,10 @@ void MaterialArchetype::MakeGltfArchetypeInto(MaterialArchetype* mat)
 
 void MaterialArchetype::MakeDefaultInto(MaterialArchetype* mat)
 {
-	mat->gbufferFragBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/gbuffer-default.frag");
-	mat->depthBinary = ShaderCompiler::Compile("engine-data/spv/shader-defaults/depthmap-default.frag");
+	mat->gbufferFragBinary = ShaderCompiler::Compile("engine-data/spv/geometry/gbuffer-default.frag");
+	mat->depthBinary = ShaderCompiler::Compile("engine-data/spv/geometry/depthmap-default.frag");
 	CLOG_ABORT(mat->gbufferFragBinary.size() == 0 || mat->depthBinary.size() == 0,
-		"Failed to compile defualt shader code. (engine-data/spv/shader-defaults/)");
+		"Failed to compile defualt shader code. (engine-data/spv/geometry/)");
 }
 
 PodHandle<MaterialArchetype> MaterialArchetype::GetGltfArchetype()

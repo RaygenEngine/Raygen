@@ -1,5 +1,4 @@
 #version 450
-#extension GL_ARB_separate_shader_objects : enable
 
 // out
 
@@ -18,7 +17,7 @@ layout(location = 3) in vec2 textCoord;
 
 // uniforms
 
-layout(push_constant) uniform ModelData {
+layout(push_constant) uniform PC {
 	mat4 modelMat;
 	mat4 normalMat;
 } push;
@@ -32,10 +31,10 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 	mat4 viewInv;
 	mat4 projInv;
 	mat4 viewProjInv;
-} camera;
+} cam;
 
 void main() {
-	gl_Position = camera.viewProj * push.modelMat * vec4(position, 1.0);
+	gl_Position = cam.viewProj * push.modelMat * vec4(position, 1.0);
 
 	uv = textCoord;
 

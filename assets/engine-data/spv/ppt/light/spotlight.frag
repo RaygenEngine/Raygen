@@ -1,8 +1,8 @@
 #version 450
-#extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive: enable
+#include "global.h"
 
-#include "microfacet_bsdf.h"
+#include "bsdf.h"
 #include "fragment.h"
 
 // out
@@ -30,7 +30,7 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 	mat4 viewInv;
 	mat4 projInv;
 	mat4 viewProjInv;
-} camera;
+} cam;
 
 layout(set = 2, binding = 0) uniform UBO_Spotlight {
 		vec3 position;
@@ -67,7 +67,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     projCoords = projCoords ;
     // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
     float closestDepth = texture(shadowmap, projCoords.xy * 0.5 + 0.5).r; 
-    // get depth of current fragment from light's perspective
+    // get depth of current frag from light's perspective
     float currentDepth = projCoords.z;
     // check whether current frag pos is in shadow
     float shadow = currentDepth - closestDepth > 0.005  ? 1.0 : 0.0;
@@ -85,9 +85,9 @@ void main() {
 	}
 
 	// PERF:
-	Fragment fragment = GetFragmentFromGBuffer(
+	Fragment frag = getFragmentFromGBuffer(
 		depth,
-		camera.viewProjInv,
+		cam.viewProjInv,
 		normalsSampler,
 		baseColorSampler,
 		surfaceSampler,
@@ -95,12 +95,12 @@ void main() {
 		uv);
 		
 	// spot light
-	vec3 N = fragment.normal;
-	vec3 V = normalize(camera.position - fragment.position);
-	vec3 L = normalize(light.position - fragment.position); 
+	vec3 N = frag.normal;
+	vec3 V = normalize(cam.position - frag.position);
+	vec3 L = normalize(light.position - frag.position); 
 	
 	// attenuation
-	float dist = length(light.position - fragment.position);
+	float dist = length(light.position - frag.position);
 	float attenuation = 1.0 / (light.constantTerm + light.linearTerm * dist + 
   			     light.quadraticTerm * (dist * dist));
 	
@@ -109,14 +109,14 @@ void main() {
     float epsilon = (light.innerCutOff - light.outerCutOff);
     float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 	
-	vec4 lightSpacePos = light.viewProj * vec4(fragment.position,1.0);
+	vec4 lightSpacePos = light.viewProj * vec4(frag.position,1.0);
 	float shadow = ShadowCalculation(lightSpacePos);
 		//return; 
 	vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
 
-	vec3 diffuseColor = (1.0 - fragment.metallic) * fragment.baseColor;
-	vec3 f0 = 0.16 * fragment.reflectance * fragment.reflectance * (1.0 - fragment.metallic) + fragment.baseColor * fragment.metallic;
-	float a = fragment.roughness * fragment.roughness;
+	vec3 diffuseColor = (1.0 - frag.metallic) * frag.baseColor;
+	vec3 f0 = 0.16 * frag.reflectance * frag.reflectance * (1.0 - frag.metallic) + frag.baseColor * frag.metallic;
+	float a = frag.roughness * frag.roughness;
 
 	vec3 Lo = BRDF(V, L, N, diffuseColor, f0, a) * Li * saturate(dot(N, L));
 

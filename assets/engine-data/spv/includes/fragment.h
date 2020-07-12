@@ -14,7 +14,7 @@ struct Fragment
     float depth;
 };
 
-vec3 ReconstructWorldPosition(float depth, vec2 uv, in mat4 viewProjInv)
+vec3 reconstructWorldPosition(float depth, vec2 uv, in mat4 viewProjInv)
 {
 	// clip space reconstruction
 	vec4 clipPos; 
@@ -27,7 +27,7 @@ vec3 ReconstructWorldPosition(float depth, vec2 uv, in mat4 viewProjInv)
 	return worldPos.xyz / worldPos.w; // return world space pos xyz
 }
 
-Fragment GetFragmentFromGBuffer(
+Fragment getFragmentFromGBuffer(
     float depth, 
     in mat4 viewProjInv,
     in sampler2D normalsSampler, 
@@ -38,7 +38,7 @@ Fragment GetFragmentFromGBuffer(
 {
     Fragment fragment;
 
-    fragment.position = ReconstructWorldPosition(depth, uv, viewProjInv);
+    fragment.position = reconstructWorldPosition(depth, uv, viewProjInv);
     fragment.normal = texture(normalsSampler, uv).rgb;
     vec4 albedoOpacity = texture(albedoOpacitySampler, uv);
     fragment.baseColor = albedoOpacity.rgb;

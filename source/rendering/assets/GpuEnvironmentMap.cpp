@@ -67,10 +67,32 @@ void EnvironmentMap::Gpu::Update(const AssetUpdateInfo&)
 			.setPTexelBufferView(nullptr);
 	}
 
+	// sampler
+	vk::SamplerCreateInfo samplerInfo{};
+	samplerInfo
+		.setMagFilter(vk::Filter::eLinear) //
+		.setMinFilter(vk::Filter::eLinear)
+		.setAddressModeU(vk::SamplerAddressMode::eClampToEdge)
+		.setAddressModeV(vk::SamplerAddressMode::eClampToEdge)
+		.setAddressModeW(vk::SamplerAddressMode::eClampToEdge)
+		.setAnisotropyEnable(VK_TRUE)
+		.setMaxAnisotropy(1u)
+		.setBorderColor(vk::BorderColor::eIntOpaqueBlack)
+		.setUnnormalizedCoordinates(VK_FALSE)
+		.setCompareEnable(VK_FALSE)
+		.setCompareOp(vk::CompareOp::eAlways)
+		.setMipmapMode(vk::SamplerMipmapMode::eLinear)
+		.setMipLodBias(0.f) // CHECK:
+		.setMinLod(0.f)
+		.setMaxLod(32.f); // CHECK:
+
+
+	brdfSampler = vl::Device->createSamplerUnique(samplerInfo);
+
 	imageInfos[3]
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
 		.setImageView(brdfLut.Lock().image->GetView())
-		.setSampler(quadSampler);
+		.setSampler(brdfSampler.get());
 
 	descriptorWrites[3]
 		.setDstSet(descriptorSet) //
