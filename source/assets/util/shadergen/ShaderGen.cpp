@@ -43,12 +43,12 @@ std::string shd::GenerateGbufferFrag(
 	return GenerateShaderGeneric(
 		R"(
 // out
-layout(location = 1) out vec4 gNormal;
+layout(location = 0) out vec4 gNormal;
 // rgb: albedo, a: opacity
-layout(location = 2) out vec4 gAlbedoOpacity;
+layout(location = 1) out vec4 gAlbedoOpacity;
 // r: metallic, g: roughness, b: reflectance, a: occlusion strength
-layout(location = 3) out vec4 gSurface;
-layout(location = 4) out vec4 gEmissive;
+layout(location = 2) out vec4 gSurface;
+layout(location = 3) out vec4 gEmissive;
 
 // in
 layout(location = 0) in Data
@@ -83,7 +83,6 @@ void main() {
 
 	gl_Position = camera.viewProj * push.modelMat * vec4(vertPos, 1.0);
 
-	fragPos = vec3(push.modelMat * vec4(vertPos, 1.0));
 	uv = textCoord;
 
 	vec3 newNormal = EditNormal(normal);
@@ -109,7 +108,6 @@ void main() {
 
 layout(location=0) out Data
 { 
-	vec3 fragPos; 
 	vec2 uv;
 	mat3 TBN;
 };
