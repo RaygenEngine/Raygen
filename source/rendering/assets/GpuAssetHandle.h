@@ -20,7 +20,8 @@ struct GpuAssetBase {
 
 	virtual void Update(const AssetUpdateInfo& info) {}
 
-	std::vector<size_t> GetUsers();
+	[[nodiscard]] std::vector<size_t> GetUsers();
+	[[nodiscard]] const std::vector<size_t>& GetDependencies() const { return dependencies; }
 
 protected:
 	// Adds "this" asset as a user of the "paramAsset".

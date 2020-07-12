@@ -47,7 +47,8 @@ void AdditionalSerializeBoth(Archive& ar, Cubemap* pod)
 template<typename Archive>
 void AdditionalSerializeBoth(Archive& ar, MaterialArchetype* pod)
 {
-	ar(pod->descriptorSetLayout, pod->gbufferFragBinary, pod->depthBinary);
+	ar(pod->descriptorSetLayout, pod->gbufferFragBinary, pod->gbufferVertBinary, pod->depthFragBinary,
+		pod->depthVertBinary);
 }
 
 template<typename Archive>

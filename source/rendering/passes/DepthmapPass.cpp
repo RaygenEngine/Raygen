@@ -77,13 +77,14 @@ vk::UniquePipeline DepthmapPass::CreatePipeline(
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 
+
 	vk::VertexInputBindingDescription bindingDescription{};
 	bindingDescription
 		.setBinding(0u) //
 		.setStride(sizeof(Vertex))
 		.setInputRate(vk::VertexInputRate::eVertex);
 
-	std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptions{};
+	std::array<vk::VertexInputAttributeDescription, 4> attributeDescriptions{};
 
 	attributeDescriptions[0].binding = 0u;
 	attributeDescriptions[0].location = 0u;
@@ -92,8 +93,18 @@ vk::UniquePipeline DepthmapPass::CreatePipeline(
 
 	attributeDescriptions[1].binding = 0u;
 	attributeDescriptions[1].location = 1u;
-	attributeDescriptions[1].format = vk::Format::eR32G32Sfloat;
-	attributeDescriptions[1].offset = offsetof(Vertex, uv);
+	attributeDescriptions[1].format = vk::Format::eR32G32B32Sfloat;
+	attributeDescriptions[1].offset = offsetof(Vertex, normal);
+
+	attributeDescriptions[2].binding = 0u;
+	attributeDescriptions[2].location = 2u;
+	attributeDescriptions[2].format = vk::Format::eR32G32B32Sfloat;
+	attributeDescriptions[2].offset = offsetof(Vertex, tangent);
+
+	attributeDescriptions[3].binding = 0u;
+	attributeDescriptions[3].location = 3u;
+	attributeDescriptions[3].format = vk::Format::eR32G32Sfloat;
+	attributeDescriptions[3].offset = offsetof(Vertex, uv);
 
 	vertexInputInfo
 		.setVertexBindingDescriptionCount(1u) //

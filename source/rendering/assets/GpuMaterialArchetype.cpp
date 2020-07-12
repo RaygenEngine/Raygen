@@ -76,6 +76,45 @@ MaterialArchetype::Gpu::PassInfo CreatePassInfoFrag(const char* originalShader, 
 	return std::move(info);
 };
 
+
+template<typename Pass>
+MaterialArchetype::Gpu::PassInfo CreatePassInfoOptional(const char* originalShader,
+	const std::vector<uint32_t>& vertBinary, const std::vector<uint32_t>& fragBinary,
+	const std::vector<vk::DescriptorSetLayout>& descLayouts)
+{
+	if (vertBinary.size() > 0) {
+		size_t pushConstantSize = Pass::GetPushConstantSize();
+
+		MaterialArchetype::Gpu::PassInfo info;
+		info.shaderModules.emplace_back(CreateShaderModule(vertBinary));
+		auto& frag = info.shaderModules.emplace_back(CreateShaderModule(fragBinary));
+
+
+		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages(2);
+
+		shaderStages[0]
+			.setStage(vk::ShaderStageFlagBits::eVertex) //
+			.setModule(*info.shaderModules[0])
+			.setPName("main");
+
+		shaderStages[1]
+			.setStage(vk::ShaderStageFlagBits::eFragment) //
+			.setModule(*frag)
+			.setPName("main");
+
+
+		info.shaderStages = std::move(shaderStages);
+
+		info.pipelineLayout = CreatePipelineLayout(pushConstantSize, descLayouts);
+
+		info.pipeline = Pass::CreatePipeline(*info.pipelineLayout, info.shaderStages);
+		return info;
+	}
+	else {
+		return CreatePassInfoFrag<Pass>(originalShader, fragBinary, descLayouts);
+	}
+};
+
 } // namespace
 
 MaterialArchetype::Gpu::Gpu(PodHandle<MaterialArchetype> podHandle)
@@ -94,11 +133,13 @@ void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& updateInfo)
 		auto createDescLayout = [&]() {
 			descLayout = std::make_unique<RDescriptorLayout>();
 			if (arch->descriptorSetLayout.SizeOfUbo() != 0) {
-				descLayout->AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
+				descLayout->AddBinding(vk::DescriptorType::eUniformBuffer,
+					vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex);
 			}
 
 			for (uint32 i = 0; i < arch->descriptorSetLayout.samplers2d.size(); ++i) {
-				descLayout->AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+				descLayout->AddBinding(vk::DescriptorType::eCombinedImageSampler,
+					vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex);
 			}
 			descLayout->Generate();
 		};
@@ -113,12 +154,11 @@ void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& updateInfo)
 
 	std::vector descLayouts = { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() };
 
+	depth = CreatePassInfoOptional<DepthmapPass>(
+		"engine-data/spv/geometry/depth_map.shader", arch->depthVertBinary, arch->depthFragBinary, descLayouts);
 
-	gbuffer = CreatePassInfoFrag<GbufferPass>(
-		"engine-data/spv/geometry/gbuffer.shader", arch->gbufferFragBinary, descLayouts);
-	depth
-		= CreatePassInfoFrag<DepthmapPass>("engine-data/spv/geometry/depth_map.shader", arch->depthBinary, descLayouts);
-
+	gbuffer = CreatePassInfoOptional<GbufferPass>(
+		"engine-data/spv/geometry/gbuffer.shader", arch->gbufferVertBinary, arch->gbufferFragBinary, descLayouts);
 
 	size_t pushConstantSize = GbufferPass::GetPushConstantSize();
 

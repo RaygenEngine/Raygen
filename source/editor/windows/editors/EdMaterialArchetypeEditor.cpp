@@ -109,7 +109,7 @@ MaterialArchetypeEditorWindow::MaterialArchetypeEditorWindow(PodEntry* inEntry)
 	addEditor("Shared", &MaterialArchetype::sharedFunctions);
 	addEditor("Fragment", &MaterialArchetype::gbufferFragMain);
 	addEditor("Depth", &MaterialArchetype::depthShader);
-
+	addEditor("Vertex", &MaterialArchetype::gbufferVertMain);
 
 	uniformEditor.reset(new TextEditor());
 	uniformEditor->SetText(podHandle.Lock()->descriptorSetLayout.GetUniformText().str());
@@ -260,7 +260,6 @@ void MaterialArchetypeEditorWindow::OnCompile()
 			tab.hasError = false;
 			tab.editor->SetErrorMarkers({});
 		}
-		return;
 	}
 
 	for (auto& tab : editors) {

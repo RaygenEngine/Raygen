@@ -62,15 +62,20 @@ struct MaterialArchetype : AssetPod {
 		REFLECT_VAR(sharedFunctions, PropertyFlags::NoEdit, PropertyFlags::Multiline);
 		REFLECT_VAR(gbufferFragMain, PropertyFlags::NoEdit, PropertyFlags::Multiline);
 		REFLECT_VAR(depthShader, PropertyFlags::NoEdit, PropertyFlags::Multiline);
+
+		REFLECT_VAR(gbufferVertMain, PropertyFlags::NoEdit, PropertyFlags::Multiline);
 	}
 
 	std::string sharedFunctions{};
 	std::string gbufferFragMain{};
+	std::string gbufferVertMain{};
 	std::string depthShader{};
 
 
 	std::vector<uint32> gbufferFragBinary;
-	std::vector<uint32> depthBinary;
+	std::vector<uint32> gbufferVertBinary;
+	std::vector<uint32> depthFragBinary;
+	std::vector<uint32> depthVertBinary;
 
 
 	std::vector<PodHandle<MaterialInstance>> instances;
