@@ -1,5 +1,4 @@
 #version 450
-#extension GL_ARB_separate_shader_objects : enable
 
 // out
 
@@ -12,7 +11,7 @@ layout(location = 1) in vec2 textCoord;
 
 // uniforms
 
-layout(push_constant) uniform ModelData {
+layout(push_constant) uniform PC {
 	mat4 mvp;
 } push;
 

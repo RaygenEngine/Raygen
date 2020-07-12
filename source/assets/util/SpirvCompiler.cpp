@@ -111,6 +111,7 @@ std::vector<uint32> CompileImpl(
 	// use std::filesystem
 	Includer.pushExternalLocalDirectory("");
 	Includer.pushExternalLocalDirectory("./engine-data/spv/");
+	Includer.pushExternalLocalDirectory("./engine-data/spv/includes");
 
 
 	std::string PreprocessedGLSL;
@@ -192,7 +193,6 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& filepath, TextCom
 {
 	return Compile(StringFromFile(filepath), filepath, outError);
 }
-
 
 EShLanguage FindLanguage(const std::string& filename)
 {

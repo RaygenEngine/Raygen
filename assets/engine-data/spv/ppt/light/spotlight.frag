@@ -1,8 +1,8 @@
 #version 450
-#extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive: enable
+#include "global.h"
 
-#include "microfacet_bsdf.h"
+#include "bsdf.h"
 #include "fragment.h"
 
 // out
@@ -15,12 +15,11 @@ layout(location = 0) in vec2 uv;
 
 // uniform
 
-layout(set = 0, binding = 0) uniform sampler2D positionsSampler;
-layout(set = 0, binding = 1) uniform sampler2D normalsSampler;
-layout(set = 0, binding = 2) uniform sampler2D albedoOpacitySampler;
-layout(set = 0, binding = 3) uniform sampler2D specularSampler;
-layout(set = 0, binding = 4) uniform sampler2D emissiveSampler;
-layout(set = 0, binding = 5) uniform sampler2D depthSampler;
+layout(set = 0, binding = 0) uniform sampler2D normalsSampler;
+layout(set = 0, binding = 1) uniform sampler2D baseColorSampler;
+layout(set = 0, binding = 2) uniform sampler2D surfaceSampler;
+layout(set = 0, binding = 3) uniform sampler2D emissiveSampler;
+layout(set = 0, binding = 4) uniform sampler2D depthSampler;
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
 	vec3 position;
@@ -31,7 +30,7 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 	mat4 viewInv;
 	mat4 projInv;
 	mat4 viewProjInv;
-} camera;
+} cam;
 
 layout(set = 2, binding = 0) uniform UBO_Spotlight {
 		vec3 position;
@@ -68,7 +67,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     projCoords = projCoords ;
     // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
     float closestDepth = texture(shadowmap, projCoords.xy * 0.5 + 0.5).r; 
-    // get depth of current fragment from light's perspective
+    // get depth of current frag from light's perspective
     float currentDepth = projCoords.z;
     // check whether current frag pos is in shadow
     float shadow = currentDepth - closestDepth > 0.005  ? 1.0 : 0.0;
@@ -78,29 +77,30 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 
 void main() {
 
-	// PERF:
-	Fragment fragment = GetFragmentFromGBuffer(
-		positionsSampler,
-		normalsSampler,
-		albedoOpacitySampler,
-		specularSampler,
-		emissiveSampler,
-		depthSampler,
-		uv);
+	float depth = texture(depthSampler, uv).r;
 
-	if(fragment.depth == 1.0)
+	if(depth == 1.0)
 	{
-		outColor = vec4(0.0, 0.0, 0.0, 1.0);
-		return;
+		discard;
 	}
 
+	// PERF:
+	Fragment frag = getFragmentFromGBuffer(
+		depth,
+		cam.viewProjInv,
+		normalsSampler,
+		baseColorSampler,
+		surfaceSampler,
+		emissiveSampler,
+		uv);
+		
 	// spot light
-	vec3 N = fragment.normal;
-	vec3 V = normalize(camera.position - fragment.position);
-	vec3 L = normalize(light.position - fragment.position); 
+	vec3 N = frag.normal;
+	vec3 V = normalize(cam.position - frag.position);
+	vec3 L = normalize(light.position - frag.position); 
 	
 	// attenuation
-	float dist = length(light.position - fragment.position);
+	float dist = length(light.position - frag.position);
 	float attenuation = 1.0 / (light.constantTerm + light.linearTerm * dist + 
   			     light.quadraticTerm * (dist * dist));
 	
@@ -109,14 +109,26 @@ void main() {
     float epsilon = (light.innerCutOff - light.outerCutOff);
     float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 	
-	vec4 lightSpacePos = light.viewProj * vec4(fragment.position,1.0);
+	vec4 lightSpacePos = light.viewProj * vec4(frag.position,1.0);
 	float shadow = ShadowCalculation(lightSpacePos);
-		//return; 
+
 	vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
 
-	vec3 Lo = CookTorranceMicrofacetBRDF_GGX(L, V, N, fragment.albedo, fragment.metallic, fragment.roughness) * Li * max(dot(N, L), 0.0);
+	vec3 H = normalize(V + L);
 
-    outColor = vec4(Lo, 1);
+    float NoV = abs(dot(N, V)) + 1e-5;
+    float NoL = saturate(dot(N, L));
+    float NoH = saturate(dot(N, H));
+    float LoH = saturate(dot(L, H));
+
+	// to get final diffuse and specular both those terms are multiplied by Li * NoL
+	vec3 brdf_d = Fd_Burley(NoV, NoL, LoH, frag.diffuseColor, frag.a);
+	vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, frag.f0, frag.a);
+
+	// so to simplify (faster math)
+	vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
+
+    outColor = vec4(finalContribution, 1);
 }                               
                                 
                                  

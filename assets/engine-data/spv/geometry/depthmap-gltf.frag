@@ -1,5 +1,6 @@
 #version 450
-#extension GL_ARB_separate_shader_objects : enable
+#extension GL_GOOGLE_include_directive: enable
+#include "global.h"
 
 // out
 
@@ -21,21 +22,17 @@ layout(set = 0, binding = 0) uniform UBO_Material {
 	// alpha mask
 	float alphaCutoff;
 	int mask;
-} material;
+} mat;
 
 layout(set = 0, binding = 1) uniform sampler2D baseColorSampler;
-layout(set = 0, binding = 2) uniform sampler2D metallicRoughnessSampler;
-layout(set = 0, binding = 3) uniform sampler2D occlusionSampler;
-layout(set = 0, binding = 4) uniform sampler2D normalSampler;
-layout(set = 0, binding = 5) uniform sampler2D emissiveSampler;
 
 void main() {
 	vec4 sampledBaseColor = texture(baseColorSampler, uv);
 
-	float opacity = sampledBaseColor.a * material.baseColorFactor.a;
+	float opacity = sampledBaseColor.a * mat.baseColorFactor.a;
 
 	// mask mode and cutoff
-	if(material.mask == 1 && opacity < material.alphaCutoff)
+	if(mat.mask == 1 && opacity < mat.alphaCutoff)
 		discard;
 }                                                                                        
 

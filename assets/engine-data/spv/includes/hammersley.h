@@ -1,7 +1,7 @@
 #ifndef hammersley_h
 #define hammersley_h
 
-float RadicalInverse_VdC(uint bits) 
+float radicalInverseVdC(uint bits) 
 {
     bits = (bits << 16u) | (bits >> 16u);
     bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
@@ -11,9 +11,9 @@ float RadicalInverse_VdC(uint bits)
     return float(bits) * 2.3283064365386963e-10; // / 0x100000000
 }
 
-vec2 Hammersley(uint i, uint N)
+vec2 hammersley(uint i, uint N)
 {
-    return vec2(float(i)/float(N), RadicalInverse_VdC(i));
+    return vec2(float(i)/float(N), radicalInverseVdC(i));
 }
-	
+
 #endif
