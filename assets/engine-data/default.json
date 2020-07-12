@@ -24,7 +24,7 @@
             "y": 0.0,
             "z": 0.30000001192092896
         },
-        "environmentMap": "gen-data/EnvironmentMap",
+        "environmentMap": "gen-data/skyb",
         "environmentMap_importHint_": "engine-data/default-skybox/skyb.env",
         "~children": []
     },
@@ -32,9 +32,9 @@
         "+name": "Light 1",
         "+trs": {
             "pos": {
-                "x": -4.375227928161621,
-                "y": 3.3012423515319824,
-                "z": -0.3749958574771881
+                "x": -11.211283683776855,
+                "y": 3.9351210594177246,
+                "z": 0.43028295040130615
             },
             "rot": {
                 "x": -171.6620330810547,
@@ -72,9 +72,9 @@
         "+name": "Sponza",
         "+trs": {
             "pos": {
-                "x": 0.0,
-                "y": -0.31493809819221497,
-                "z": 0.0
+                "x": -16.767637252807617,
+                "y": -2.30088472366333,
+                "z": 0.8857319355010986
             },
             "rot": {
                 "x": 0.0,
@@ -88,33 +88,33 @@
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/Sponza",
-        "model_importHint_": "gltf-samples/2.0/Sponza/glTF/Sponza.gltf",
+        "mesh": "gen-data/Sponza",
+        "mesh_importHint_": "gltf-samples/2.0/Sponza/glTF/Sponza.gltf",
         "~children": []
     },
     {
         "+name": "DefaultCamLocation",
         "+trs": {
             "pos": {
-                "x": 24.60333824157715,
-                "y": 19.86359977722168,
-                "z": -0.11548353731632233
+                "x": -20.00259017944336,
+                "y": 20.48714256286621,
+                "z": 12.737427711486816
             },
             "rot": {
-                "x": -160.30859375,
-                "y": -87.23997497558594,
-                "z": -179.89358520507813
+                "x": -20.938282012939453,
+                "y": -15.602839469909668,
+                "z": 0.00025839716545306146
             },
             "scale": {
-                "x": 0.9999743103981018,
-                "y": 0.9999843239784241,
-                "z": 0.9999993443489075
+                "x": 0.9999745488166809,
+                "y": 0.999984085559845,
+                "z": 0.999998927116394
             }
         },
         "+type": "WindowCamera",
         "far": 1000.0,
         "focalLength": 1.0,
-        "hFov": 1.50724458694458,
+        "hFov": 1.8973547220230103,
         "hFovOffset": 0.0,
         "near": 0.10000000149011612,
         "vFov": 1.2566370964050293,
@@ -141,8 +141,8 @@
             }
         },
         "+type": "Geometry",
-        "model": "gen-data/MetalRoughSpheres",
-        "model_importHint_": "gltf-samples/2.0/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf",
+        "mesh": "gen-data/MetalRoughSpheres",
+        "mesh_importHint_": "gltf-samples/2.0/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf",
         "~children": []
     }
 ]
