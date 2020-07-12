@@ -137,12 +137,11 @@ void main() {}
 void main() {
 	vec3 normal = normalize(vec3(0.5, 0.5, 1.0) * 2.0 - 1.0);
 
-    gPosition = vec4(fragPos, 1.f);
     gNormal = vec4(normalize(TBN * normal.rgb), 1.f);
     gAlbedoOpacity = vec4(0.3f, 0.3f, 0.3f, 1.f);
 	
-	// r: metallic, g: roughness, b: occlusion, a: occlusion strength
-	gSpecular = vec4(0.f, 0.5f, 0.f, 0.f);
+	// r: metallic, g: roughness, b: reflectance, a: occlusion strength
+	gSurface = vec4(0.f, 0.5f, 0.5f, 0.f);
 	gEmissive = vec4(0.f, 0.f, 0.f, 1.f);
 }                                                                                        
 )";

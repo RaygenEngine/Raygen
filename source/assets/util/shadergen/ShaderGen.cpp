@@ -22,7 +22,6 @@ std::string shd::GenerateShaderGeneric(const std::string& inOutCode, const std::
 	ss << "// Raygen: Auto Generated Shader Code";
 	ss << R"(
 #version 450
-#extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
 )";
 
@@ -44,18 +43,16 @@ std::string shd::GenerateGbufferFrag(
 	return GenerateShaderGeneric(
 		R"(
 // out
-layout(location = 0) out vec4 gPosition;
 layout(location = 1) out vec4 gNormal;
 // rgb: albedo, a: opacity
 layout(location = 2) out vec4 gAlbedoOpacity;
-// r: metallic, g: roughness, b: occlusion, a: occlusion strength
-layout(location = 3) out vec4 gSpecular;
+// r: metallic, g: roughness, b: reflectance, a: occlusion strength
+layout(location = 3) out vec4 gSurface;
 layout(location = 4) out vec4 gEmissive;
 
 // in
 layout(location = 0) in Data
 {
-	vec3 fragPos;
 	vec2 uv;
 	mat3 TBN;
 };

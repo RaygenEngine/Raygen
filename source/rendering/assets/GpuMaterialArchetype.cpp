@@ -114,15 +114,17 @@ void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& updateInfo)
 	std::vector descLayouts = { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() };
 
 
-	gbuffer = CreatePassInfoFrag<GbufferPass>("engine-data/spv/geometry/gbuffer.shader", arch->gbufferFragBinary, descLayouts);
-	depth = CreatePassInfoFrag<DepthmapPass>("engine-data/spv/geometry/depth_map.shader", arch->depthBinary, descLayouts);
+	gbuffer = CreatePassInfoFrag<GbufferPass>(
+		"engine-data/spv/geometry/gbuffer.shader", arch->gbufferFragBinary, descLayouts);
+	depth
+		= CreatePassInfoFrag<DepthmapPass>("engine-data/spv/geometry/depth_map.shader", arch->depthBinary, descLayouts);
 
 
 	size_t pushConstantSize = GbufferPass::GetPushConstantSize();
 
 	MaterialArchetype::Gpu::PassInfo info;
 	info.shaderModules.emplace_back(CreateShaderModule(arch->gbufferFragBinary));
-	info.shaderStages = CreateShaderStages("engine-data/spv/gbuffer-anim.shader", *info.shaderModules[0]);
+	info.shaderStages = CreateShaderStages("engine-data/spv/geometry/gbuffer-anim.shader", *info.shaderModules[0]);
 	info.pipelineLayout = CreatePipelineLayout(
 		pushConstantSize, { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
 							  Layouts->jointsDescLayout.setLayout.get() });
