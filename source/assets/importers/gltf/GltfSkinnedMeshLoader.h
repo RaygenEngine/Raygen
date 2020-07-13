@@ -7,14 +7,26 @@ struct GltfCache;
 
 class GltfSkinnedMeshLoader {
 
-	GltfCache& m_cache;
-	BasePodHandle m_loadedPod{};
+	GltfCache& cache;
 
-	bool m_tempModelRequiresDefaultMat{ false };
+	PodHandle<SkinnedMesh> skinHandle;
+	SkinnedMesh* skinPod;
+	uint32 skinIndex;
+	tg::Skin& gltfSkin;
+
+	void LoadAnimations();
+
+	void LoadSkinMesh();
+
+	void SortJoints();
+
+	int32 NodeToJoint(int32 nodeIndex);
+
+	std::vector<int32> jointRemap;
 
 public:
-	GltfSkinnedMeshLoader(GltfCache& cache, uint32 skinIndex, tg::Skin& skin);
+	GltfSkinnedMeshLoader(GltfCache& inCache, uint32 inSkinIndex, tg::Skin& skin);
 
-	[[nodiscard]] BasePodHandle GetLoadedPod() { return m_loadedPod; }
+	[[nodiscard]] BasePodHandle GetLoadedPod() { return skinHandle; }
 };
 } // namespace gltfutl

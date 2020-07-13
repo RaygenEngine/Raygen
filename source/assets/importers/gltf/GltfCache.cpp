@@ -27,7 +27,6 @@ GltfCache::GltfCache(const fs::path& path)
 	LoadImages();
 	// LoadSamplers(); // CHECK: Maybe do some check to report irregular samplers in the future
 	LoadMaterials();
-	LoadAnimations();
 	ImporterManager->PopPath();
 }
 
@@ -167,76 +166,8 @@ void GltfCache::LoadMaterials()
 		matIndex++;
 	}
 
-	materialPods.push_back({}); // CHECK: bleh
+	materialPods.push_back({});
 }
 
-void GltfCache::LoadAnimations()
-{
-	for (int32 animationIndex = 0; auto& anim : gltfData.animations) {
 
-		nlohmann::json data;
-		data["animation"] = animationIndex;
-		auto animPath = uri::MakeChildJson(gltfFilePath, data);
-
-		std::string name = anim.name.empty() ? filename + "_Anim_" + std::to_string(animationIndex) : anim.name;
-		auto& [handle, pod] = ImporterManager->CreateEntry<Animation>(animPath, name);
-
-		// load samplers
-		for (auto& animSampler : anim.samplers) {
-			AnimationSampler as{};
-
-			as.interpolation = GetInterpolationMethod(animSampler.interpolation);
-
-			// inputs
-			AccessorDescription desc0(gltfData, animSampler.input);
-			as.inputs.resize(desc0.elementCount);
-			CopyToFloatVector(as.inputs, desc0.beginPtr, desc0.strideByteOffset, desc0.elementCount);
-
-			// outputs
-			AccessorDescription desc1(gltfData, animSampler.output);
-
-
-			CLOG_ABORT(desc1.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT,
-				"Normalized integer animation outputs are not yet handled. See GltfUtl TODO function for conversion "
-				"and implement in the future");
-
-			size_t byteChunkSize = tinygltf::GetComponentSizeInBytes(desc1.componentType) * desc1.componentCount;
-			as.outputs.resize(desc1.elementCount);
-
-			for (uint32 i = 0; i < desc1.elementCount; ++i) {
-				const void* elementPtr = &desc1.beginPtr[desc1.strideByteOffset * i];
-				switch (desc1.accessorType) {
-					case TINYGLTF_TYPE_VEC3: {
-						const glm::vec3* elem = static_cast<const glm::vec3*>(elementPtr);
-						as.outputs[i] = glm::vec4(*elem, 0.0f);
-						break;
-					}
-					case TINYGLTF_TYPE_VEC4: {
-						const glm::vec4* elem = static_cast<const glm::vec4*>(elementPtr);
-						as.outputs[i] = *elem;
-						break;
-					}
-					default: LOG_ERROR("Incorrect tinygltf type found in AnimationOutput");
-				}
-			}
-
-			pod->samplers.emplace_back(as);
-		}
-
-		// load channels
-		for (auto& animCh : anim.channels) {
-			AnimationChannel ch{};
-
-			ch.path = GetAnimationPath(animCh.target_path);
-			ch.samplerIndex = animCh.sampler;
-			ch.targetNode = animCh.target_node;
-
-			pod->channels.emplace_back(ch);
-		}
-
-		// pod
-		animationPods.emplace_back(handle);
-		animationIndex++;
-	}
-}
 } // namespace gltfutl

@@ -1,6 +1,7 @@
 #pragma once
 #include "assets/AssetPod.h"
 #include "reflection/GenMacros.h"
+#include "assets/pods/SkinnedMesh.h"
 
 enum class AnimationPath
 {
@@ -40,7 +41,7 @@ struct AnimationSampler {
 struct AnimationChannel {
 	int32 samplerIndex{ -1 };
 	AnimationPath path{};
-	int32 targetNode{ -1 };
+	int32 targetJoint{ -1 };
 };
 
 struct Animation : public AssetPod {
@@ -48,4 +49,9 @@ struct Animation : public AssetPod {
 
 	std::vector<AnimationChannel> channels{};
 	std::vector<AnimationSampler> samplers{};
+
+	float time;
+
+	PodHandle<SkinnedMesh> targetMesh;
+	int32 jointCount;
 };

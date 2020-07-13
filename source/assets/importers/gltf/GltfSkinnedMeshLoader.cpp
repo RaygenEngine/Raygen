@@ -4,6 +4,7 @@
 #include "assets/AssetImporterManager.h"
 #include "assets/importers/gltf/GltfCache.h"
 #include "assets/importers/gltf/GltfUtl.h"
+#include <queue>
 namespace {
 
 glm::mat4 GetLocalTransformFromGltfNode(tinygltf::Node& node)
@@ -53,56 +54,44 @@ glm::mat4 GetLocalTransformFromGltfNode(tinygltf::Node& node)
 
 namespace gltfutl {
 
-
-GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& cache, uint32 skinIndex, tg::Skin& skin)
-	: m_cache(cache)
+void GltfSkinnedMeshLoader::LoadSkinMesh()
 {
-	auto& [handle, pod] = ImporterManager->CreateEntry<SkinnedMesh>( // WIP:
-		m_cache.gltfFilePath, std::string(uri::GetFilenameNoExt(m_cache.gltfFilePath)) + "_skinned_" + skin.name);
-
-	m_loadedPod = handle;
-
-	AccessorDescription desc(m_cache.gltfData, skin.inverseBindMatrices);
-
-	std::vector<glm::mat4> invBindMatrix;
-
-	ExtractMatrices4Into(m_cache.gltfData, skin.inverseBindMatrices, invBindMatrix);
 
 
-	// Create a slot for each material (+ missing material)
+	// Create a slot for each material (+ defualt material)
 	// We will then iterate gltf geometry groups and append to slot[gg.materialIndex] vertex and index data.
 	// When finished we will cleanup any slotgroups that have index == 0; Deleting will be fast because we will just
 	// move the underlying vertex buffer vectors
-	pod->skinnedGeometrySlots.resize(m_cache.materialPods.size());
-	pod->materials = m_cache.materialPods;
 
+	// Default material is located at the last index of cache.materialPods (will get removed at a later stage if no
+	// vertices found)
+	skinPod->skinnedGeometrySlots.resize(cache.materialPods.size());
+	skinPod->materials = cache.materialPods;
 
-	// TODO: premultiply transforms that affect skeleton and the rest of the hierarchy
-
-	for (auto node : m_cache.gltfData.nodes) {
+	for (auto node : cache.gltfData.nodes) {
 		if (node.skin == skinIndex) {
 			// load mesh if exists
 			if (node.mesh != -1) {
-				auto& gltfMesh = m_cache.gltfData.meshes.at(node.mesh);
+				auto& gltfMesh = cache.gltfData.meshes.at(node.mesh);
 
 				for (auto& prim : gltfMesh.primitives) {
 
 					CLOG_ABORT(prim.mode != TINYGLTF_MODE_TRIANGLES, "Unsupported primitive data mode {}", //
-						m_cache.filename);
+						cache.filename);
 
 					// material
 					// If material is -1, we use default material.
 					int32 materialIndex = prim.material != -1 ? prim.material //
 															  : static_cast<int32>(cache.materialPods.size() - 1);
 
-					CLOG_ABORT(materialIndex >= pod->skinnedGeometrySlots.size(),
+					CLOG_ABORT(materialIndex >= skinPod->skinnedGeometrySlots.size(),
 						"Material index higher than slot count. Gltf file contains a geometry group with material "
 						"index higher than "
 						"the total materials included.");
 
-					SkinnedGeometrySlot& slot = pod->skinnedGeometrySlots[materialIndex];
+					SkinnedGeometrySlot& slot = skinPod->skinnedGeometrySlots[materialIndex];
 					auto& [lastBegin, lastSize]
-						= LoadBasicDataIntoGeometrySlot<SkinnedGeometrySlot, SkinnedVertex>(slot, m_cache, prim);
+						= LoadBasicDataIntoGeometrySlot<SkinnedGeometrySlot, SkinnedVertex>(slot, cache, prim);
 
 					// Also load extra stuff
 					int32 joints0Index = -1;
@@ -123,32 +112,146 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& cache, uint32 skinIndex,
 
 					// JOINTS
 					LoadIntoVertexData<SkinnedVertex, 4>(
-						m_cache.gltfData, joints0Index, slot.vertices.data() + lastBegin);
+						cache.gltfData, joints0Index, slot.vertices.data() + lastBegin);
 
 					// WEIGHTS
 					LoadIntoVertexData<SkinnedVertex, 5>(
-						m_cache.gltfData, weights0Index, slot.vertices.data() + lastBegin);
+						cache.gltfData, weights0Index, slot.vertices.data() + lastBegin);
 				}
 				break;
 			}
 		}
 	}
 
-	std::function<bool(uint32, uint32)> RecurseChildren;
-	RecurseChildren = [&](uint32 nodeIndex, uint32 parentJointIndex) {
-		auto& node = m_cache.gltfData.nodes.at(nodeIndex);
+	// Cleanup empty geometry slots
+	for (int32 i = static_cast<int32>(skinPod->skinnedGeometrySlots.size()) - 1; i >= 0; i--) {
+		if (skinPod->skinnedGeometrySlots[i].vertices.empty()) {
+			skinPod->skinnedGeometrySlots.erase(skinPod->skinnedGeometrySlots.begin() + i);
+			skinPod->materials.erase(skinPod->materials.begin() + i);
+		}
+	}
+}
 
-		if (auto it = std::find(skin.joints.begin(), skin.joints.end(), nodeIndex); it != skin.joints.end()) {
+void GltfSkinnedMeshLoader::SortJoints()
+{
+	size_t jointCount = skinPod->joints.size();
+
+	// Store the children for each node.
+	std::vector<std::vector<int32>> children(jointCount);
+	for (auto& j : skinPod->joints) {
+		if (!j.IsRoot()) {
+			children[j.parentJoint].push_back(j.index);
+		}
+	}
+
+	// Remap[i] contains the index in the original joints array that should be moved to i position
+	std::vector<int32> jointRemapInverse;
+	std::vector<SkinnedMesh::Joint> newJoints;
+
+
+	// Tree bfs (PERF: dfs may increase animator performance due to caching ?)
+	std::queue<int32> placeQueue;
+	placeQueue.push(0);
+	while (!placeQueue.empty()) {
+		int32 current = placeQueue.front();
+		placeQueue.pop();
+
+		for (auto child : children[current]) {
+			placeQueue.push(child);
+		}
+
+		jointRemapInverse.push_back(current);
+
+		if (!skinPod->joints[current].IsRoot()) {
+			auto it = std::find_if(newJoints.begin(), newJoints.end(),
+				[&](auto& joint) { return joint.index == skinPod->joints[current].parentJoint; });
+
+			CLOG_ABORT(it == newJoints.end(), "Joint not found, programmer error in sorting algorithm");
+			skinPod->joints[current].parentJoint = std::distance(newJoints.begin(), it);
+		}
+
+		newJoints.emplace_back(std::move(skinPod->joints[current]));
+	}
+
+	skinPod->joints.swap(newJoints);
+
+	// "Flip" the remapping so that remap[oldJointIndex] = newJointIndex
+	jointRemap.resize(jointCount);
+
+	for (int32 i = 0; i < jointCount; ++i) {
+		jointRemap[jointRemapInverse[i]] = i;
+		skinPod->joints[i].index = i;
+	}
+
+
+	// Adjust all vertex weights to new joints
+	for (auto& slot : skinPod->skinnedGeometrySlots) {
+		for (auto& vert : slot.vertices) {
+			vert.joint.x = jointRemap[vert.joint.x];
+			vert.joint.y = jointRemap[vert.joint.y];
+			vert.joint.z = jointRemap[vert.joint.z];
+			vert.joint.w = jointRemap[vert.joint.w];
+		}
+	}
+}
+
+int32 GltfSkinnedMeshLoader::NodeToJoint(int32 nodeIndex)
+{
+	if (auto it = std::find(gltfSkin.joints.begin(), gltfSkin.joints.end(), nodeIndex); it != gltfSkin.joints.end()) {
+		int32 jointIndex = std::distance(gltfSkin.joints.begin(), it);
+		if (jointRemap.empty()) {
+			return jointIndex;
+		}
+		return jointRemap[jointIndex];
+	}
+	return -1; // Not a joint
+}
+
+GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& inCache, uint32 inSkinIndex, tg::Skin& skin)
+	: cache(inCache)
+	, gltfSkin(skin)
+	, skinIndex(inSkinIndex)
+{
+	auto& [handle, pod] = ImporterManager->CreateEntry<SkinnedMesh>(
+		cache.gltfFilePath, std::string(uri::GetFilenameNoExt(cache.gltfFilePath)) + "_skinned_" + skin.name);
+
+	skinHandle = handle;
+	skinPod = pod;
+
+
+	AccessorDescription desc(cache.gltfData, skin.inverseBindMatrices);
+
+	std::vector<glm::mat4> invBindMatrix;
+
+	ExtractMatrices4Into(cache.gltfData, skin.inverseBindMatrices, invBindMatrix);
+
+
+	size_t jointCount = invBindMatrix.size();
+
+	LoadSkinMesh();
+
+	bool jointsNeedSorting = true;
+
+	std::function<bool(int32, int32)> RecurseChildren;
+	RecurseChildren = [&](int32 nodeIndex, int32 parentJointIndex) {
+		auto& node = cache.gltfData.nodes.at(nodeIndex);
+		int32 jointIndex = NodeToJoint(nodeIndex);
+
+		if (jointIndex >= 0) {
 			// this is a joint node
-			auto dist = std::distance(skin.joints.begin(), it);
-			auto& joint = pod->joints[dist];
+
+			auto& joint = pod->joints[jointIndex];
 			joint.parentJoint = parentJointIndex;
-			joint.index = dist;
-			joint.inverseBindMatrix = invBindMatrix[dist];
+			joint.index = jointIndex;
+			if (joint.index < joint.parentJoint && joint.index > 0) {
+				jointsNeedSorting = true;
+			}
+
+			joint.inverseBindMatrix = invBindMatrix[jointIndex];
 			joint.localTransform = GetLocalTransformFromGltfNode(node);
 			joint.name = node.name;
 
-			parentJointIndex = static_cast<uint32>(dist);
+			parentJointIndex = jointIndex;
 		}
 		else {
 			LOG_ERROR("Gltf Importer: Found non joint in hierarchy.");
@@ -156,7 +259,7 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& cache, uint32 skinIndex,
 
 
 		for (auto& childIndex : node.children) {
-			auto& childNode = m_cache.gltfData.nodes.at(childIndex);
+			auto& childNode = cache.gltfData.nodes.at(childIndex);
 			RecurseChildren(childIndex, parentJointIndex);
 		}
 		return true;
@@ -167,17 +270,98 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& cache, uint32 skinIndex,
 		skin.joints[0]);
 
 	int32 skeletonRoot = skin.skeleton == -1 ? skin.joints[0] : skin.skeleton;
-	pod->joints.resize(skin.joints.size());
+	pod->joints.resize(jointCount);
 
-	RecurseChildren(skeletonRoot, UINT32_MAX);
+	RecurseChildren(skeletonRoot, SkinnedMesh::c_rootParentJointIndex);
+	CLOG_WARN(jointsNeedSorting, "Gltf Importer: Joints need sorting for: {}", cache.filename);
+
+	if (jointsNeedSorting) {
+		SortJoints();
+	}
+
+	LoadAnimations();
+}
 
 
-	// Cleanup empty geometry slots
-	for (int32 i = static_cast<int32>(pod->skinnedGeometrySlots.size()) - 1; i >= 0; i--) {
-		if (pod->skinnedGeometrySlots[i].vertices.empty()) {
-			pod->skinnedGeometrySlots.erase(pod->skinnedGeometrySlots.begin() + i);
-			pod->materials.erase(pod->materials.begin() + i);
+void GltfSkinnedMeshLoader::LoadAnimations()
+{
+	for (int32 animationIndex = 0; auto& anim : cache.gltfData.animations) {
+
+		nlohmann::json data;
+		data["animation"] = animationIndex;
+		auto animPath = uri::MakeChildJson(cache.gltfFilePath, data);
+
+		std::string name = anim.name.empty() ? cache.filename + "_Anim_" + std::to_string(animationIndex) : anim.name;
+		auto& [handle, pod] = ImporterManager->CreateEntry<Animation>(animPath, name);
+
+
+		float maxInputTime = 0.f;
+
+		// load samplers
+		for (auto& animSampler : anim.samplers) {
+			AnimationSampler as{};
+
+			as.interpolation = GetInterpolationMethod(animSampler.interpolation);
+
+			// inputs
+			AccessorDescription desc0(cache.gltfData, animSampler.input);
+			as.inputs.resize(desc0.elementCount);
+			CopyToFloatVector(as.inputs, desc0.beginPtr, desc0.strideByteOffset, desc0.elementCount);
+
+			maxInputTime = std::max(maxInputTime, as.inputs.back());
+
+			// outputs
+			AccessorDescription desc1(cache.gltfData, animSampler.output);
+
+
+			CLOG_ABORT(desc1.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT,
+				"Normalized integer animation outputs are not yet handled. See GltfUtl TODO function for conversion "
+				"and implement in the future");
+
+			size_t byteChunkSize = tinygltf::GetComponentSizeInBytes(desc1.componentType) * desc1.componentCount;
+			as.outputs.resize(desc1.elementCount);
+
+			for (uint32 i = 0; i < desc1.elementCount; ++i) {
+				const void* elementPtr = &desc1.beginPtr[desc1.strideByteOffset * i];
+				switch (desc1.accessorType) {
+					case TINYGLTF_TYPE_VEC3: {
+						const glm::vec3* elem = static_cast<const glm::vec3*>(elementPtr);
+						as.outputs[i] = glm::vec4(*elem, 0.0f);
+						break;
+					}
+					case TINYGLTF_TYPE_VEC4: {
+						const glm::vec4* elem = static_cast<const glm::vec4*>(elementPtr);
+						as.outputs[i] = *elem;
+						break;
+					}
+					default: LOG_ERROR("Incorrect tinygltf type found in AnimationOutput");
+				}
+			}
+
+			pod->samplers.emplace_back(as);
 		}
+
+		// load channels
+		for (auto& animCh : anim.channels) {
+			AnimationChannel ch{};
+
+			ch.path = GetAnimationPath(animCh.target_path);
+			ch.samplerIndex = animCh.sampler;
+			ch.targetJoint = NodeToJoint(animCh.target_node);
+
+			CLOG_ERROR(cache.gltfData.nodes[animCh.target_node].name != cache.gltfData.nodes[animCh.target_node].name,
+				"Gltf Importer: missmatched remap joint to node names: node: {} joint: {}",
+				cache.gltfData.nodes[animCh.target_node].name, skinPod->joints[ch.targetJoint].name);
+
+			CLOG_ERROR(ch.targetJoint == -1, "Gltf Importer: Found channel that moves a non joint.");
+			pod->channels.emplace_back(ch);
+		}
+
+		pod->time = maxInputTime;
+		pod->jointCount = skinPod->joints.size();
+		animationIndex++;
 	}
 }
+
+
 } // namespace gltfutl

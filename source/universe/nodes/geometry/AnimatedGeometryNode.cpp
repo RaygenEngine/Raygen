@@ -5,6 +5,7 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuSkinnedMesh.h"
+#include "editor/Editor.h"
 
 #include "engine/Input.h"
 #include <glm/gtx/matrix_decompose.hpp>
@@ -16,20 +17,8 @@ AnimatedGeometryNode::AnimatedGeometryNode()
 
 void AnimatedGeometryNode::Update(float deltaSeconds)
 {
-	if (!m_animation.IsDefault() && !m_skinnedMesh.IsDefault(), Input.IsJustPressed(Key::P)) {
-		UpdateAnimation(0.1f);
-		SetDirty(DF::Joints);
-	}
-
-	if (!m_animation.IsDefault() && !m_skinnedMesh.IsDefault(), Input.IsDown(Key::L)) {
-		UpdateAnimation(deltaSeconds);
-		SetDirty(DF::Joints);
-	}
-
-
-	if (Input.IsDown(Key::O)) {
-		m_animationTime = 0;
-	}
+	UpdateAnimation(deltaSeconds);
+	SetDirty(DF::Joints);
 }
 
 void AnimatedGeometryNode::DirtyUpdate(DirtyFlagset dirtyFlags)
@@ -48,20 +37,46 @@ void AnimatedGeometryNode::DirtyUpdate(DirtyFlagset dirtyFlags)
 		});
 
 		m_joints.resize(m_skinnedMesh.Lock()->joints.size());
+		m_animation = PodHandle<Animation>{};
+	}
+
+	if (dirtyFlags[DF::AnimationChange]) {
+		if (!m_animation.IsDefault()) {
+			if (m_joints.size() != m_animation.Lock()->jointCount) {
+				LOG_WARN("Incompatible skin with animation.");
+				m_animation = PodHandle<Animation>{};
+			}
+			else {
+				m_animationTime = 0;
+			}
+			UpdateAnimation(0);
+			Enqueue([joints = m_joints](SceneAnimatedGeometry& geom) { geom.jointMatrices = joints; });
+		}
 	}
 
 	if (dirtyFlags[DF::SRT]) {
 		Enqueue([trans = GetNodeTransformWCS()](SceneAnimatedGeometry& geom) { geom.transform = trans; });
 	}
 
+	// HACK: use dirty srt (node is currently selected always updates srt due to a bug)
+	if (!Editor::ShouldUpdateWorld() && dirtyFlags[DF::SRT] && m_playInEditor) {
+		UpdateAnimation(MainWorld->GetDeltaTime());
+		Enqueue([joints = m_joints](SceneAnimatedGeometry& geom) { geom.jointMatrices = joints; });
+	}
+
 	if (dirtyFlags[DF::Joints] && !dirtyFlags[DF::ModelChange]) {
+		UpdateAnimation(0);
 		Enqueue([joints = m_joints](SceneAnimatedGeometry& geom) { geom.jointMatrices = joints; });
 	}
 }
 
 void AnimatedGeometryNode::UpdateAnimation(float deltaTime)
 {
+	if (m_animation.IsDefault() || m_skinnedMesh.IsDefault()) {
+		return;
+	}
 	auto pod = m_skinnedMesh.Lock();
+
 
 	auto animationTransform = TickSamplers(deltaTime);
 
@@ -69,18 +84,9 @@ void AnimatedGeometryNode::UpdateAnimation(float deltaTime)
 	globalJointMatrix.resize(pod->joints.size(), glm::identity<glm::mat4>());
 
 
-	for (int32 i = 0; auto& joint : pod->joints) {
-		if (joint.parentJoint == UINT32_MAX)
-			[[unlikely]]
-			{
-				globalJointMatrix[i] = animationTransform[i];
-				++i;
-				continue;
-			}
-
-
-		globalJointMatrix[i] = globalJointMatrix[joint.parentJoint] * animationTransform[i];
-		++i;
+	globalJointMatrix[0] = animationTransform[0];
+	for (size_t i = 1; i < pod->joints.size(); ++i) {
+		globalJointMatrix[i] = globalJointMatrix[pod->joints[i].parentJoint] * animationTransform[i];
 	}
 
 
@@ -94,8 +100,14 @@ void AnimatedGeometryNode::UpdateAnimation(float deltaTime)
 
 std::vector<glm::mat4> AnimatedGeometryNode::TickSamplers(float deltaTime)
 {
-	m_animationTime += deltaTime;
-
+	m_animationTime += deltaTime * m_playbackSpeed;
+	auto totalAnimTime = m_animation.Lock()->time;
+	if (m_animationTime > totalAnimTime) {
+		m_animationTime -= totalAnimTime;
+	}
+	else if (m_animationTime < 0) {
+		m_animationTime += totalAnimTime;
+	}
 
 	auto mesh = m_skinnedMesh.Lock();
 
@@ -121,10 +133,15 @@ std::vector<glm::mat4> AnimatedGeometryNode::TickSamplers(float deltaTime)
 		scales[i] = s;
 	}
 
+	// TODO: BUG:
+	// This logic is incorrect when there is no inputs for a timestrip in a particular sampler. (can happen at the
+	// ending of the animation) When this happens what should be sampled is the last keyframe (instead of the initial
+	// position)
+
 
 	for (auto& channel : anim->channels) {
 		const AnimationSampler& sampler = anim->samplers[channel.samplerIndex];
-		int32 jointIndex = channel.targetNode - 2; // WIP:
+		int32 jointIndex = channel.targetJoint; // WIP:
 
 
 		for (size_t i = 0; i < sampler.inputs.size() - 1; i++) {

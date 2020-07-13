@@ -4,21 +4,26 @@
 #include "universe/nodes/Node.h"
 
 class AnimatedGeometryNode : public Node {
-	REFLECTED_NODE(AnimatedGeometryNode, Node, DF_FLAGS(ModelChange, Joints))
+	REFLECTED_NODE(AnimatedGeometryNode, Node, DF_FLAGS(ModelChange, AnimationChange, Joints))
 	{
 		REFLECT_ICON(FA_CUBE);
 		REFLECT_VAR(m_skinnedMesh).OnDirty(DF::ModelChange);
-		REFLECT_VAR(m_animation).OnDirty(DF::ModelChange);
-		REFLECT_VAR(m_pushJoints).OnDirty(DF::Joints);
+		REFLECT_VAR(m_animation).OnDirty(DF::AnimationChange);
+
+		REFLECT_VAR(m_playbackSpeed);
+		REFLECT_VAR(m_animationTime, PropertyFlags::Transient).OnDirty(DF::Joints);
+		REFLECT_VAR(m_playInEditor, PropertyFlags::Transient);
 	}
 
 	PodHandle<SkinnedMesh> m_skinnedMesh;
 	PodHandle<Animation> m_animation;
 
-	bool m_pushJoints;
 
 	std::vector<glm::mat4> m_joints;
 	float m_animationTime{ 0 };
+
+	bool m_playInEditor{ true };
+	float m_playbackSpeed{ 1.0f };
 
 public:
 	AnimatedGeometryNode();
