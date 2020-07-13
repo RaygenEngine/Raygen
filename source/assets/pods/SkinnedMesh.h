@@ -18,15 +18,25 @@ struct SkinnedGeometrySlot {
 
 
 struct SkinnedMesh : public AssetPod {
+	static constexpr int32 c_rootParentJointIndex = -1;
+
+	[[nodiscard]] static bool IsRootParent(int32 jointIndex) noexcept { return jointIndex == c_rootParentJointIndex; }
+
+	[[nodiscard]] bool IsRootJoint(int32 jointIndex) const noexcept
+	{
+		return IsRootParent(joints[jointIndex].parentJoint);
+	}
+
 	struct Joint {
 		glm::mat4 inverseBindMatrix;
 		glm::mat4 localTransform;
-		uint32 parentJoint;
-		uint32 index;
+		int32 parentJoint;
+		int32 index;
 
 		std::string name;
 
 		[[nodiscard]] Joint& GetParent(SkinnedMesh* pod) const { return pod->joints[parentJoint]; };
+		[[nodiscard]] bool IsRoot() const { return parentJoint == c_rootParentJointIndex; }
 	};
 
 	REFLECTED_POD(SkinnedMesh)

@@ -16,8 +16,9 @@ struct GltfCache {
 
 	std::vector<PodHandle<Image>> imagePods;
 	std::vector<PodHandle<Sampler>> samplerPods;
+
+	// Contains the default material at the last slot.
 	std::vector<PodHandle<MaterialInstance>> materialPods;
-	std::vector<PodHandle<Animation>> animationPods;
 
 	GltfCache(const fs::path& path);
 
@@ -27,6 +28,5 @@ private:
 	void LoadImages();
 	void LoadSamplers();
 	void LoadMaterials();
-	void LoadAnimations();
 };
 } // namespace gltfutl
