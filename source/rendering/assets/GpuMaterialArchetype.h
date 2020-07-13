@@ -20,6 +20,7 @@ struct MaterialArchetype::Gpu : public vl::GpuAssetTemplate<MaterialArchetype> {
 	PassInfo gbuffer;
 	PassInfo gbufferAnimated;
 	PassInfo depth;
+	PassInfo depthAnimated;
 
 	MaterialArchetype::Gpu(PodHandle<MaterialArchetype> podHandle);
 	void Update(const AssetUpdateInfo& info) override final;

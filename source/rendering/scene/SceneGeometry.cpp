@@ -3,7 +3,9 @@
 
 void SceneAnimatedGeometry::UploadSsbo(uint32 curFrame)
 {
-	buffers[curFrame]->UploadData(jointMatrices.data(), jointMatrices.size() * sizeof(glm::mat4));
+	if (jointMatrices.size() > 0) {
+		buffers[curFrame]->UploadData(jointMatrices.data(), jointMatrices.size() * sizeof(glm::mat4));
+	}
 }
 
 void SceneAnimatedGeometry::ResizeJoints(uint32 curFrame)
