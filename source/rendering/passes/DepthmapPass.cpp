@@ -5,8 +5,13 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/assets/GpuMesh.h"
+#include "rendering/assets/GpuSkinnedMesh.h"
 #include "rendering/Device.h"
+#include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneGeometry.h"
 #include "rendering/Layouts.h"
+#include "rendering/Renderer.h"
+
 
 namespace {
 struct PushConstant {
@@ -70,7 +75,90 @@ size_t DepthmapPass::GetPushConstantSize()
 	return sizeof(PushConstant);
 }
 
+namespace {
+	vk::UniquePipeline CreatePipelineFromVtxInfo(vk::PipelineLayout pipelineLayout,
+		std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages,
+		vk::PipelineVertexInputStateCreateInfo vertexInputInfo)
+	{
+		vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
+		inputAssembly
+			.setTopology(vk::PrimitiveTopology::eTriangleList) //
+			.setPrimitiveRestartEnable(VK_FALSE);
 
+		// those are dynamic so they will be updated when needed
+		vk::Viewport viewport{};
+		vk::Rect2D scissor{};
+
+		vk::PipelineViewportStateCreateInfo viewportState{};
+		viewportState
+			.setViewportCount(1u) //
+			.setPViewports(&viewport)
+			.setScissorCount(1u)
+			.setPScissors(&scissor);
+
+		vk::PipelineRasterizationStateCreateInfo rasterizer{};
+		rasterizer
+			.setDepthClampEnable(VK_FALSE) //
+			.setRasterizerDiscardEnable(VK_FALSE)
+			.setPolygonMode(vk::PolygonMode::eFill)
+			.setLineWidth(1.f)
+			.setCullMode(vk::CullModeFlagBits::eBack)
+			.setFrontFace(vk::FrontFace::eCounterClockwise)
+			.setDepthBiasEnable(VK_FALSE)
+			.setDepthBiasConstantFactor(0.f)
+			.setDepthBiasClamp(0.f)
+			.setDepthBiasSlopeFactor(0.f);
+
+		vk::PipelineMultisampleStateCreateInfo multisampling{};
+		multisampling
+			.setSampleShadingEnable(VK_FALSE) //
+			.setRasterizationSamples(vk::SampleCountFlagBits::e1)
+			.setMinSampleShading(1.f)
+			.setPSampleMask(nullptr)
+			.setAlphaToCoverageEnable(VK_FALSE)
+			.setAlphaToOneEnable(VK_FALSE);
+
+		// Dynamic vieport
+		vk::DynamicState dynamicStates[2] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+		vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
+		dynamicStateInfo
+			.setDynamicStateCount(2u) //
+			.setPDynamicStates(&dynamicStates[0]);
+
+		// depth and stencil state
+		vk::PipelineDepthStencilStateCreateInfo depthStencil{};
+		depthStencil
+			.setDepthTestEnable(VK_TRUE) //
+			.setDepthWriteEnable(VK_TRUE)
+			.setDepthCompareOp(vk::CompareOp::eLess)
+			.setDepthBoundsTestEnable(VK_FALSE)
+			.setMinDepthBounds(0.0f) // Optional
+			.setMaxDepthBounds(1.0f) // Optional
+			.setStencilTestEnable(VK_FALSE)
+			.setFront({}) // Optional
+			.setBack({}); // Optional
+
+		vk::GraphicsPipelineCreateInfo pipelineInfo{};
+		pipelineInfo
+			.setStageCount(static_cast<uint32>(shaderStages.size())) //
+			.setPStages(shaderStages.data())
+			.setPVertexInputState(&vertexInputInfo)
+			.setPInputAssemblyState(&inputAssembly)
+			.setPViewportState(&viewportState)
+			.setPRasterizationState(&rasterizer)
+			.setPMultisampleState(&multisampling)
+			.setPDepthStencilState(&depthStencil)
+			.setPColorBlendState(nullptr)
+			.setPDynamicState(&dynamicStateInfo)
+			.setLayout(pipelineLayout)
+			.setRenderPass(Layouts->depthRenderPass.get())
+			.setSubpass(0u)
+			.setBasePipelineHandle({})
+			.setBasePipelineIndex(-1);
+
+		return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+	}
+} // namespace
 vk::UniquePipeline DepthmapPass::CreatePipeline(
 	vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
 {
@@ -112,88 +200,63 @@ vk::UniquePipeline DepthmapPass::CreatePipeline(
 		.setPVertexBindingDescriptions(&bindingDescription)
 		.setPVertexAttributeDescriptions(attributeDescriptions.data());
 
+	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
+}
 
-	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
-	inputAssembly
-		.setTopology(vk::PrimitiveTopology::eTriangleList) //
-		.setPrimitiveRestartEnable(VK_FALSE);
+vk::UniquePipeline DepthmapPass::CreateAnimPipeline(
+	vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
+{
+	vk::VertexInputBindingDescription bindingDescription{};
+	bindingDescription
+		.setBinding(0u) //
+		.setStride(sizeof(SkinnedVertex))
+		.setInputRate(vk::VertexInputRate::eVertex);
 
-	// those are dynamic so they will be updated when needed
-	vk::Viewport viewport{};
-	vk::Rect2D scissor{};
+	std::array<vk::VertexInputAttributeDescription, 6> attributeDescriptions{};
 
-	vk::PipelineViewportStateCreateInfo viewportState{};
-	viewportState
-		.setViewportCount(1u) //
-		.setPViewports(&viewport)
-		.setScissorCount(1u)
-		.setPScissors(&scissor);
+	attributeDescriptions[0].binding = 0u;
+	attributeDescriptions[0].location = 0u;
+	attributeDescriptions[0].format = vk::Format::eR32G32B32Sfloat;
+	attributeDescriptions[0].offset = offsetof(SkinnedVertex, position);
 
-	vk::PipelineRasterizationStateCreateInfo rasterizer{};
-	rasterizer
-		.setDepthClampEnable(VK_FALSE) //
-		.setRasterizerDiscardEnable(VK_FALSE)
-		.setPolygonMode(vk::PolygonMode::eFill)
-		.setLineWidth(1.f)
-		.setCullMode(vk::CullModeFlagBits::eBack)
-		.setFrontFace(vk::FrontFace::eCounterClockwise)
-		.setDepthBiasEnable(VK_FALSE)
-		.setDepthBiasConstantFactor(0.f)
-		.setDepthBiasClamp(0.f)
-		.setDepthBiasSlopeFactor(0.f);
+	attributeDescriptions[1].binding = 0u;
+	attributeDescriptions[1].location = 1u;
+	attributeDescriptions[1].format = vk::Format::eR32G32B32Sfloat;
+	attributeDescriptions[1].offset = offsetof(SkinnedVertex, normal);
 
-	vk::PipelineMultisampleStateCreateInfo multisampling{};
-	multisampling
-		.setSampleShadingEnable(VK_FALSE) //
-		.setRasterizationSamples(vk::SampleCountFlagBits::e1)
-		.setMinSampleShading(1.f)
-		.setPSampleMask(nullptr)
-		.setAlphaToCoverageEnable(VK_FALSE)
-		.setAlphaToOneEnable(VK_FALSE);
+	attributeDescriptions[2].binding = 0u;
+	attributeDescriptions[2].location = 2u;
+	attributeDescriptions[2].format = vk::Format::eR32G32B32Sfloat;
+	attributeDescriptions[2].offset = offsetof(SkinnedVertex, tangent);
 
-	// Dynamic vieport
-	vk::DynamicState dynamicStates[2] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
-	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo
-		.setDynamicStateCount(2u) //
-		.setPDynamicStates(&dynamicStates[0]);
+	attributeDescriptions[3].binding = 0u;
+	attributeDescriptions[3].location = 3u;
+	attributeDescriptions[3].format = vk::Format::eR32G32Sfloat;
+	attributeDescriptions[3].offset = offsetof(SkinnedVertex, uv);
 
-	// depth and stencil state
-	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
-	depthStencil
-		.setDepthTestEnable(VK_TRUE) //
-		.setDepthWriteEnable(VK_TRUE)
-		.setDepthCompareOp(vk::CompareOp::eLess)
-		.setDepthBoundsTestEnable(VK_FALSE)
-		.setMinDepthBounds(0.0f) // Optional
-		.setMaxDepthBounds(1.0f) // Optional
-		.setStencilTestEnable(VK_FALSE)
-		.setFront({}) // Optional
-		.setBack({}); // Optional
+	attributeDescriptions[4].binding = 0u;
+	attributeDescriptions[4].location = 4u;
+	attributeDescriptions[4].format = vk::Format::eR32G32B32A32Sint;
+	attributeDescriptions[4].offset = offsetof(SkinnedVertex, joint);
 
-	vk::GraphicsPipelineCreateInfo pipelineInfo{};
-	pipelineInfo
-		.setStageCount(static_cast<uint32>(shaderStages.size())) //
-		.setPStages(shaderStages.data())
-		.setPVertexInputState(&vertexInputInfo)
-		.setPInputAssemblyState(&inputAssembly)
-		.setPViewportState(&viewportState)
-		.setPRasterizationState(&rasterizer)
-		.setPMultisampleState(&multisampling)
-		.setPDepthStencilState(&depthStencil)
-		.setPColorBlendState(nullptr)
-		.setPDynamicState(&dynamicStateInfo)
-		.setLayout(pipelineLayout)
-		.setRenderPass(Layouts->depthRenderPass.get())
-		.setSubpass(0u)
-		.setBasePipelineHandle({})
-		.setBasePipelineIndex(-1);
+	attributeDescriptions[5].binding = 0u;
+	attributeDescriptions[5].location = 5u;
+	attributeDescriptions[5].format = vk::Format::eR32G32B32A32Sfloat;
+	attributeDescriptions[5].offset = offsetof(SkinnedVertex, weight);
 
-	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+	// fixed-function stage
+	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
+	vertexInputInfo
+		.setVertexBindingDescriptionCount(1u) //
+		.setVertexAttributeDescriptionCount(static_cast<uint32_t>(attributeDescriptions.size()))
+		.setPVertexBindingDescriptions(&bindingDescription)
+		.setPVertexAttributeDescriptions(attributeDescriptions.data());
+
+	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
 
 void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, const glm::mat4& viewProj,
-	const std::vector<SceneGeometry*>& geometries)
+	const std::vector<SceneGeometry*>& geometries, const std::vector<SceneAnimatedGeometry*>& animGeometries)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -270,6 +333,41 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 					cmdBuffer->bindDescriptorSets(
 						vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
 				}
+
+				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+			}
+		}
+
+		for (auto geom : animGeometries) {
+			if (!geom) {
+				continue;
+			}
+			PushConstant pc{ //
+				viewProj * geom->transform
+			};
+
+			for (auto& gg : geom->model.Lock().geometryGroups) {
+				auto& mat = gg.material.Lock();
+				auto& arch = mat.archetype.Lock();
+				auto& plLayout = *arch.depthAnimated.pipelineLayout;
+
+				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.depthAnimated.pipeline);
+				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+				if (mat.hasDescriptorSet) {
+					cmdBuffer->bindDescriptorSets(
+						vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
+				}
+
+				cmdBuffer->bindDescriptorSets(
+					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
+
+				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
+					&geom->descSets[vl::Renderer_::currentFrame], 0u, nullptr);
+
+				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
+				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+
 
 				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 			}

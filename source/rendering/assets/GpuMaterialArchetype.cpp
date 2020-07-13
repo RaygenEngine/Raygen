@@ -160,15 +160,33 @@ void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& updateInfo)
 	gbuffer = CreatePassInfoOptional<GbufferPass>(
 		"engine-data/spv/geometry/gbuffer.shader", arch->gbufferVertBinary, arch->gbufferFragBinary, descLayouts);
 
-	size_t pushConstantSize = GbufferPass::GetPushConstantSize();
 
-	MaterialArchetype::Gpu::PassInfo info;
-	info.shaderModules.emplace_back(CreateShaderModule(arch->gbufferFragBinary));
-	info.shaderStages = CreateShaderStages("engine-data/spv/geometry/gbuffer-anim.shader", *info.shaderModules[0]);
-	info.pipelineLayout = CreatePipelineLayout(
-		pushConstantSize, { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
-							  Layouts->jointsDescLayout.setLayout.get() });
-	info.pipeline = GbufferPass::CreateAnimPipeline(*info.pipelineLayout, info.shaderStages);
+	// GBufferAnim Pass
+	{
+		size_t pushConstantSize = GbufferPass::GetPushConstantSize();
+		MaterialArchetype::Gpu::PassInfo info;
+		info.shaderModules.emplace_back(CreateShaderModule(arch->gbufferFragBinary));
+		info.shaderStages = CreateShaderStages("engine-data/spv/geometry/gbuffer-anim.shader", *info.shaderModules[0]);
+		info.pipelineLayout = CreatePipelineLayout(
+			pushConstantSize, { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
+								  Layouts->jointsDescLayout.setLayout.get() });
+		info.pipeline = GbufferPass::CreateAnimPipeline(*info.pipelineLayout, info.shaderStages);
 
-	gbufferAnimated = std::move(info);
+		gbufferAnimated = std::move(info);
+	}
+
+	// DepthAnim Pass
+	{
+		size_t pushConstantSize = DepthmapPass::GetPushConstantSize();
+
+		MaterialArchetype::Gpu::PassInfo info;
+		info.shaderModules.emplace_back(CreateShaderModule(arch->depthFragBinary));
+		info.shaderStages = CreateShaderStages("engine-data/spv/geometry/depthmap-anim.shader", *info.shaderModules[0]);
+		info.pipelineLayout = CreatePipelineLayout(
+			pushConstantSize, { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
+								  Layouts->jointsDescLayout.setLayout.get() });
+		info.pipeline = DepthmapPass::CreateAnimPipeline(*info.pipelineLayout, info.shaderStages);
+
+		depthAnimated = std::move(info);
+	}
 }

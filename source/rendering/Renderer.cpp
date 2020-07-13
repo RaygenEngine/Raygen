@@ -169,7 +169,8 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 
 		for (auto sl : Scene->spotlights.elements) {
 			if (sl) {
-				DepthmapPass::RecordCmd(cmdBuffer, *sl->shadowmap, sl->ubo.viewProj, Scene->geometries.elements);
+				DepthmapPass::RecordCmd(cmdBuffer, *sl->shadowmap, sl->ubo.viewProj, Scene->geometries.elements,
+					Scene->animatedGeometries.elements);
 			}
 		}
 	}

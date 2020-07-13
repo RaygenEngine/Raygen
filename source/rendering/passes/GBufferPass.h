@@ -19,7 +19,7 @@ public:
 		vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
 
 	static void RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
-		const std::vector<SceneGeometry*>& geometries, const std::vector<SceneAnimatedGeometry*>& animGeometry);
+		const std::vector<SceneGeometry*>& geometries, const std::vector<SceneAnimatedGeometry*>& animGeometries);
 };
 
 } // namespace vl
