@@ -82,3 +82,53 @@ void AdditionalSerializeBoth(Archive& ar, Mesh* pod)
 {
 	ar(pod->geometrySlots);
 }
+
+//
+// SkinnedMesh
+//
+
+template<typename Archive>
+void serialize(Archive& ar, SkinnedVertex& vtx)
+{
+	ar(vtx.position, vtx.normal, vtx.tangent, vtx.uv, vtx.joint, vtx.weight);
+}
+
+template<typename Archive>
+void serialize(Archive& ar, SkinnedGeometrySlot& gs)
+{
+	ar(gs.indices, gs.vertices);
+}
+
+template<typename Archive>
+void serialize(Archive& ar, SkinnedMesh::Joint& j)
+{
+	ar(j.parentJoint, j.inverseBindMatrix, j.translation, j.rotation, j.scale, j.name, j.index);
+}
+
+template<typename Archive>
+void AdditionalSerializeBoth(Archive& ar, SkinnedMesh* pod)
+{
+	ar(pod->joints, pod->skinnedGeometrySlots);
+}
+
+//
+// Animation
+//
+
+template<typename Archive>
+void serialize(Archive& ar, AnimationSampler& s)
+{
+	ar(s.inputs, s.outputs, s.interpolation);
+}
+
+template<typename Archive>
+void serialize(Archive& ar, AnimationChannel& c)
+{
+	ar(c.samplerIndex, c.path, c.targetJoint);
+}
+
+template<typename Archive>
+void AdditionalSerializeBoth(Archive& ar, Animation* pod)
+{
+	ar(pod->time, pod->jointCount, pod->channels, pod->samplers);
+}

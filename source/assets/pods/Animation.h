@@ -51,7 +51,5 @@ struct Animation : public AssetPod {
 	std::vector<AnimationSampler> samplers{};
 
 	float time;
-
-	PodHandle<SkinnedMesh> targetMesh;
 	int32 jointCount;
 };

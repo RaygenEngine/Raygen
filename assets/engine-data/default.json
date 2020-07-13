@@ -103,7 +103,7 @@
             "rot": {
                 "x": -20.938282012939453,
                 "y": -15.602839469909668,
-                "z": 0.00025839716545306146
+                "z": 0.00025795394321903586
             },
             "scale": {
                 "x": 0.9999745488166809,
@@ -143,6 +143,33 @@
         "+type": "Geometry",
         "mesh": "gen-data/MetalRoughSpheres",
         "mesh_importHint_": "gltf-samples/2.0/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf",
+        "~children": []
+    },
+    {
+        "+name": "Fox",
+        "+trs": {
+            "pos": {
+                "x": -8.659806251525879,
+                "y": 8.808928489685059,
+                "z": -4.723565578460693
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -71.5887451171875,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 0.09999974071979523,
+                "y": 0.10000000149011612,
+                "z": 0.09999974071979523
+            }
+        },
+        "+type": "AnimatedGeometry",
+        "animation": "gen-data/Survey",
+        "animation_importHint_": "Fox.gltf{\"animation\":0}",
+        "playbackSpeed": 1.0,
+        "skinnedMesh": "gen-data/Fox_skinned_",
+        "skinnedMesh_importHint_": "Fox.gltf",
         "~children": []
     }
 ]

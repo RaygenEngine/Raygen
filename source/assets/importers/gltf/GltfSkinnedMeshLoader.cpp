@@ -4,51 +4,60 @@
 #include "assets/AssetImporterManager.h"
 #include "assets/importers/gltf/GltfCache.h"
 #include "assets/importers/gltf/GltfUtl.h"
+
+#include <glm/gtx/matrix_decompose.hpp>
 #include <queue>
+
 namespace {
 
-glm::mat4 GetLocalTransformFromGltfNode(tinygltf::Node& node)
+void ExtractJointTRSFromNode(tinygltf::Node& node, SkinnedMesh::Joint& joint)
 {
-	glm::mat4 localTransformMat = glm::mat4(1.f);
-
 	// When matrix is defined, it must be decomposable to TRS.
 	if (!node.matrix.empty()) {
+		glm::mat4 localTransformMat = glm::mat4(1.f);
 		for (int32 row = 0; row < 4; ++row) {
 			for (int32 column = 0; column < 4; ++column) {
 				localTransformMat[row][column] = static_cast<float>(node.matrix[column + 4llu * row]);
 			}
 		}
+
+		glm::vec3 skew;
+		glm::vec4 persp;
+
+		glm::decompose(localTransformMat, joint.scale, joint.rotation, joint.translation, skew, persp);
+		return;
+	}
+
+
+	if (!node.translation.empty()) {
+		joint.translation[0] = static_cast<float>(node.translation[0]);
+		joint.translation[1] = static_cast<float>(node.translation[1]);
+		joint.translation[2] = static_cast<float>(node.translation[2]);
 	}
 	else {
-		glm::vec3 translation = glm::vec3(0.f);
-		glm::quat orientation = { 1.f, 0.f, 0.f, 0.f };
-		glm::vec3 scale = glm::vec3(1.f);
-
-		if (!node.translation.empty()) {
-			translation[0] = static_cast<float>(node.translation[0]);
-			translation[1] = static_cast<float>(node.translation[1]);
-			translation[2] = static_cast<float>(node.translation[2]);
-		}
-
-		if (!node.rotation.empty()) {
-			orientation[0] = static_cast<float>(node.rotation[0]);
-			orientation[1] = static_cast<float>(node.rotation[1]);
-			orientation[2] = static_cast<float>(node.rotation[2]);
-			orientation[3] = static_cast<float>(node.rotation[3]);
-		}
-
-		if (!node.scale.empty()) {
-			scale[0] = static_cast<float>(node.scale[0]);
-			scale[1] = static_cast<float>(node.scale[1]);
-			scale[2] = static_cast<float>(node.scale[2]);
-		}
-
-		localTransformMat = math::transformMat(scale, orientation, translation);
+		joint.translation = glm::vec3(0.f);
 	}
 
-	return localTransformMat;
-}
 
+	if (!node.rotation.empty()) {
+		joint.rotation[0] = static_cast<float>(node.rotation[0]);
+		joint.rotation[1] = static_cast<float>(node.rotation[1]);
+		joint.rotation[2] = static_cast<float>(node.rotation[2]);
+		joint.rotation[3] = static_cast<float>(node.rotation[3]);
+	}
+	else {
+		joint.rotation = { 1.f, 0.f, 0.f, 0.f };
+	}
+
+	if (!node.scale.empty()) {
+		joint.scale[0] = static_cast<float>(node.scale[0]);
+		joint.scale[1] = static_cast<float>(node.scale[1]);
+		joint.scale[2] = static_cast<float>(node.scale[2]);
+	}
+	else {
+		joint.scale = glm::vec3(1.f);
+	}
+}
 
 } // namespace
 
@@ -56,8 +65,6 @@ namespace gltfutl {
 
 void GltfSkinnedMeshLoader::LoadSkinMesh()
 {
-
-
 	// Create a slot for each material (+ defualt material)
 	// We will then iterate gltf geometry groups and append to slot[gg.materialIndex] vertex and index data.
 	// When finished we will cleanup any slotgroups that have index == 0; Deleting will be fast because we will just
@@ -230,7 +237,7 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& inCache, uint32 inSkinIn
 
 	LoadSkinMesh();
 
-	bool jointsNeedSorting = true;
+	bool jointsNeedSorting = false;
 
 	std::function<bool(int32, int32)> RecurseChildren;
 	RecurseChildren = [&](int32 nodeIndex, int32 parentJointIndex) {
@@ -248,7 +255,7 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& inCache, uint32 inSkinIn
 			}
 
 			joint.inverseBindMatrix = invBindMatrix[jointIndex];
-			joint.localTransform = GetLocalTransformFromGltfNode(node);
+			ExtractJointTRSFromNode(node, joint);
 			joint.name = node.name;
 
 			parentJointIndex = jointIndex;

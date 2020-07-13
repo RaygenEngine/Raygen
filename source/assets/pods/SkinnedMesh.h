@@ -28,9 +28,14 @@ struct SkinnedMesh : public AssetPod {
 	}
 
 	struct Joint {
-		glm::mat4 inverseBindMatrix;
-		glm::mat4 localTransform;
 		int32 parentJoint;
+		glm::mat4 inverseBindMatrix;
+
+		glm::vec3 translation;
+		glm::quat rotation;
+		glm::vec3 scale;
+
+
 		int32 index;
 
 		std::string name;
@@ -39,6 +44,7 @@ struct SkinnedMesh : public AssetPod {
 		[[nodiscard]] bool IsRoot() const { return parentJoint == c_rootParentJointIndex; }
 	};
 
+
 	REFLECTED_POD(SkinnedMesh)
 	{
 		REFLECT_ICON(FA_SKULL);
@@ -46,9 +52,6 @@ struct SkinnedMesh : public AssetPod {
 	}
 
 	std::vector<Joint> joints;
-
-
 	std::vector<SkinnedGeometrySlot> skinnedGeometrySlots{};
-
 	std::vector<PodHandle<MaterialInstance>> materials{};
 };
