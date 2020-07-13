@@ -6,6 +6,7 @@
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuSkinnedMesh.h"
 #include "editor/Editor.h"
+#include "engine/profiler/ProfileScope.h"
 
 #include "engine/Input.h"
 #include <glm/gtx/matrix_decompose.hpp>
@@ -37,7 +38,11 @@ void AnimatedGeometryNode::DirtyUpdate(DirtyFlagset dirtyFlags)
 		});
 
 		m_joints.resize(m_skinnedMesh.Lock()->joints.size());
-		m_animation = PodHandle<Animation>{};
+
+		// If animation changed, dont reset it, animation handling will check if it is compatible
+		if (!dirtyFlags[DF::AnimationChange]) {
+			m_animation = PodHandle<Animation>{};
+		}
 	}
 
 	if (dirtyFlags[DF::AnimationChange]) {
@@ -75,27 +80,23 @@ void AnimatedGeometryNode::UpdateAnimation(float deltaTime)
 	if (m_animation.IsDefault() || m_skinnedMesh.IsDefault()) {
 		return;
 	}
+	PROFILE_SCOPE(World);
 	auto pod = m_skinnedMesh.Lock();
 
 
 	auto animationTransform = TickSamplers(deltaTime);
 
-	std::vector<glm::mat4> globalJointMatrix;
-	globalJointMatrix.resize(pod->joints.size(), glm::identity<glm::mat4>());
-
-
-	globalJointMatrix[0] = animationTransform[0];
+	m_joints[0] = animationTransform[0];
 	for (size_t i = 1; i < pod->joints.size(); ++i) {
-		globalJointMatrix[i] = globalJointMatrix[pod->joints[i].parentJoint] * animationTransform[i];
+		// Parent here is guaranteed to be evaluated because the joints array is sorted properly in top down tree form
+		// during importing
+		m_joints[i] = m_joints[pod->joints[i].parentJoint] * animationTransform[i];
 	}
 
-
-	for (size_t i = 0; i < globalJointMatrix.size(); i++) {
-		globalJointMatrix[i] = globalJointMatrix[i] * pod->joints[i].inverseBindMatrix;
+	// Seperate loop required here because the above loop has dependency on itself
+	for (size_t i = 0; i < m_joints.size(); i++) {
+		m_joints[i] = m_joints[i] * pod->joints[i].inverseBindMatrix;
 	}
-
-	// PERF: Use joints everywhere
-	m_joints = globalJointMatrix;
 }
 
 std::vector<glm::mat4> AnimatedGeometryNode::TickSamplers(float deltaTime)
@@ -113,24 +114,15 @@ std::vector<glm::mat4> AnimatedGeometryNode::TickSamplers(float deltaTime)
 
 	auto anim = m_animation.Lock();
 
-	std::vector<glm::vec3> transforms(mesh->joints.size());
+	std::vector<glm::vec3> translations(mesh->joints.size());
 	std::vector<glm::quat> rotations(mesh->joints.size(), glm::identity<glm::quat>());
 	std::vector<glm::vec3> scales(mesh->joints.size(), glm::vec3(1.f, 1.f, 1.f));
 
 
 	for (int32 i = 0; i < mesh->joints.size(); ++i) {
-		glm::vec3 skew;
-		glm::vec4 persp;
-		glm::vec3 t;
-		glm::quat r;
-		glm::vec3 s;
-
-		glm::decompose(mesh->joints[i].localTransform, s, r, t, skew, persp);
-
-
-		transforms[i] = t;
-		rotations[i] = r;
-		scales[i] = s;
+		translations[i] = mesh->joints[i].translation;
+		rotations[i] = mesh->joints[i].rotation;
+		scales[i] = mesh->joints[i].scale;
 	}
 
 	// TODO: BUG:
@@ -151,7 +143,7 @@ std::vector<glm::mat4> AnimatedGeometryNode::TickSamplers(float deltaTime)
 				float a = (m_animationTime - sampler.inputs[i]) / (sampler.inputs[i + 1] - sampler.inputs[i]);
 				switch (channel.path) {
 					case AnimationPath::Translation:
-						transforms[jointIndex]
+						translations[jointIndex]
 							= glm::mix(sampler.GetOutputAsVec3(i), sampler.GetOutputAsVec3(i + 1), a);
 
 						break;
@@ -173,7 +165,7 @@ std::vector<glm::mat4> AnimatedGeometryNode::TickSamplers(float deltaTime)
 
 
 	for (size_t i = 0; i < localMatrix.size(); i++) {
-		localMatrix[i] = math::transformMat(scales[i], rotations[i], transforms[i]);
+		localMatrix[i] = math::transformMat(scales[i], rotations[i], translations[i]);
 	}
 
 	return localMatrix;
