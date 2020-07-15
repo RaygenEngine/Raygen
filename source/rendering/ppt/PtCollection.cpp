@@ -4,6 +4,7 @@
 #include "engine/console/ConsoleVariable.h"
 #include "rendering/ppt/lightpass/PtSpotlight.h"
 #include "rendering/ppt/lightpass/PtReflProb.h"
+#include "rendering/ppt/lightpass/PtDirectionalLight.h"
 #include "rendering/ppt/techniques/PtDebug.h"
 
 
@@ -17,6 +18,7 @@ void PtCollection::RegisterTechniques()
 	//
 
 	// LIGHT PASS
+	NextTechnique<PtDirectionalLight>();
 	NextTechnique<PtSpotlight>();
 	NextTechnique<PtReflProb>();
 

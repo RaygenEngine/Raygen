@@ -38,6 +38,8 @@ vk::DescriptorSet Scene_::GetActiveCameraDescSet()
 // TODO: we should have a dirty per frace
 void Scene_::UploadDirty()
 {
+	const bool primaryDirty = activeCamera > 0 && cameras.elements[activeCamera]->isDirty[vl::Renderer_::currentFrame];
+
 	for (auto cam : cameras.elements) {
 		if (cam && cam->isDirty[vl::Renderer_::currentFrame]) {
 			cam->UploadUbo(vl::Renderer_::currentFrame);
@@ -49,6 +51,19 @@ void Scene_::UploadDirty()
 		if (sl && sl->isDirty[vl::Renderer_::currentFrame]) {
 			sl->UploadUbo(vl::Renderer_::currentFrame);
 			sl->isDirty[vl::Renderer_::currentFrame] = false;
+		}
+	}
+
+	for (auto dl : directionalLights.elements) {
+
+		if (primaryDirty) {
+			dl->UpdateBox(cameras.elements[activeCamera]->frustum, cameras.elements[activeCamera]->ubo.position);
+		}
+
+		if (dl && dl->isDirty[vl::Renderer_::currentFrame]) {
+
+			dl->UploadUbo(vl::Renderer_::currentFrame);
+			dl->isDirty[vl::Renderer_::currentFrame] = false;
 		}
 	}
 

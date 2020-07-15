@@ -74,7 +74,7 @@ public:
 	[[nodiscard]] glm::mat4 GetViewMatrix() const { return m_viewMatrix; }
 	[[nodiscard]] glm::mat4 GetViewProjectionMatrix() const { return m_viewProjectionMatrix; }
 
-	//[[nodiscard]] math::Frustum GetFrustum() const { return m_frustum; }
+	[[nodiscard]] math::Frustum GetFrustum() const { return m_frustum; }
 
 	bool IsNodeInsideFrustum(Node* node) { return m_frustum.Intersects(node->GetAABB()); }
 

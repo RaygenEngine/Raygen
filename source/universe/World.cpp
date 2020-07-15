@@ -11,6 +11,7 @@
 #include "universe/nodes/geometry/GeometryNode.h"
 #include "universe/nodes/light/SpotLightNode.h"
 #include "universe/nodes/light/ReflectionProbeNode.h"
+#include "universe/nodes/light/DirectionalLightNode.h"
 #include "universe/nodes/RootNode.h"
 
 World::World(NodeFactory* factory)

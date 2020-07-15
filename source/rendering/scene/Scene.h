@@ -3,13 +3,14 @@
 #include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/SceneReflectionProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
+#include "rendering/scene/SceneDirectionalLight.h"
 
 #include <functional>
 
 template<typename T>
 concept CSceneElem
 	= std::is_same_v<SceneGeometry,
-		  T> || std::is_same_v<SceneCamera, T> || std::is_same_v<SceneSpotlight, T> || std::is_same_v<SceneReflectionProbe, T> || std::is_same_v<SceneAnimatedGeometry, T>;
+		  T> || std::is_same_v<SceneCamera, T> || std::is_same_v<SceneSpotlight, T> || std::is_same_v<SceneDirectionalLight, T> || std::is_same_v<SceneReflectionProbe, T> || std::is_same_v<SceneAnimatedGeometry, T>;
 
 template<CONC(CSceneElem) T>
 struct SceneVector {
@@ -29,6 +30,7 @@ inline struct Scene_ {
 	SceneVector<SceneAnimatedGeometry> animatedGeometries;
 	SceneVector<SceneCamera> cameras;
 	SceneVector<SceneSpotlight> spotlights;
+	SceneVector<SceneDirectionalLight> directionalLights;
 	SceneVector<SceneReflectionProbe> reflProbs;
 
 	std::vector<UniquePtr<std::vector<std::function<void()>>>> cmds;
@@ -51,6 +53,9 @@ inline struct Scene_ {
 		}
 		else if constexpr (std::is_same_v<SceneSpotlight, T>) {
 			return spotlights.elements.at(uid);
+		}
+		else if constexpr (std::is_same_v<SceneDirectionalLight, T>) {
+			return directionalLights.elements.at(uid);
 		}
 		else if constexpr (std::is_same_v<SceneReflectionProbe, T>) {
 			return reflProbs.elements.at(uid);
@@ -89,6 +94,11 @@ inline struct Scene_ {
 		else if constexpr (std::is_same_v<SceneSpotlight, T>) {
 			uid = spotlights.elements.size() + spotlights.pendingElements++;
 			currentCmdBuffer->emplace_back([=]() { Scene->spotlights.elements[uid] = new SceneSpotlight(); });
+		}
+		else if constexpr (std::is_same_v<SceneDirectionalLight, T>) {
+			uid = directionalLights.elements.size() + directionalLights.pendingElements++;
+			currentCmdBuffer->emplace_back(
+				[=]() { Scene->directionalLights.elements[uid] = new SceneDirectionalLight(); });
 		}
 		else if constexpr (std::is_same_v<SceneReflectionProbe, T>) {
 			uid = reflProbs.elements.size() + reflProbs.pendingElements++;
@@ -132,6 +142,14 @@ inline struct Scene_ {
 				delete elem;
 			});
 		}
+		else if constexpr (std::is_same_v<SceneDirectionalLight, T>) {
+			currentCmdBuffer->emplace_back([uid]() {
+				auto elem = static_cast<T*>(Scene->directionalLights.elements[uid]);
+				Scene->directionalLights.elements[uid] = nullptr;
+				vl::Device->waitIdle();
+				delete elem;
+			});
+		}
 		else if constexpr (std::is_same_v<SceneReflectionProbe, T>) {
 			currentCmdBuffer->emplace_back([uid]() {
 				auto elem = static_cast<T*>(Scene->reflProbs.elements[uid]);
@@ -161,6 +179,7 @@ private:
 		geometries.AppendPendingElements();
 		cameras.AppendPendingElements();
 		spotlights.AppendPendingElements();
+		directionalLights.AppendPendingElements();
 		reflProbs.AppendPendingElements();
 		animatedGeometries.AppendPendingElements();
 	}

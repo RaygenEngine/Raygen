@@ -165,11 +165,16 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 		GbufferPass::RecordCmd(
 			cmdBuffer, m_gbuffer.get(), Scene->geometries.elements, Scene->animatedGeometries.elements);
 
-		// AnimatedGbufferPass::RecordCmd(cmdBuffer, m_gbuffer.get(), Scene->animatedGeometries.elements);
-
 		for (auto sl : Scene->spotlights.elements) {
 			if (sl) {
 				DepthmapPass::RecordCmd(cmdBuffer, *sl->shadowmap, sl->ubo.viewProj, Scene->geometries.elements,
+					Scene->animatedGeometries.elements);
+			}
+		}
+
+		for (auto dl : Scene->directionalLights.elements) {
+			if (dl) {
+				DepthmapPass::RecordCmd(cmdBuffer, *dl->shadowmap, dl->ubo.viewProj, Scene->geometries.elements,
 					Scene->animatedGeometries.elements);
 			}
 		}
@@ -242,6 +247,12 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 		for (auto sl : Scene->spotlights.elements) {
 			if (sl && sl->shadowmap) {
 				sl->shadowmap->TransitionForWrite(cmdBuffer);
+			}
+		}
+
+		for (auto dl : Scene->directionalLights.elements) {
+			if (dl && dl->shadowmap) {
+				dl->shadowmap->TransitionForWrite(cmdBuffer);
 			}
 		}
 	}
