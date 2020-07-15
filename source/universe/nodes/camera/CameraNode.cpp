@@ -70,6 +70,7 @@ void CameraNode::DirtyUpdate(DirtyFlagset flags)
 			cam.ubo.viewInv = glm::inverse(m_viewMatrix);
 			cam.ubo.projInv = glm::inverse(m_projectionMatrix);
 			cam.ubo.viewProjInv = glm::inverse(m_viewProjectionMatrix);
+			cam.frustum = m_frustum;
 		});
 	}
 
@@ -84,6 +85,8 @@ void CameraNode::DirtyUpdate(DirtyFlagset flags)
 			cam.ubo.viewInv = glm::inverse(m_viewMatrix);
 			cam.ubo.projInv = glm::inverse(m_projectionMatrix);
 			cam.ubo.viewProjInv = glm::inverse(m_viewProjectionMatrix);
+
+			cam.frustum = m_frustum;
 		});
 	}
 }

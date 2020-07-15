@@ -1,14 +1,14 @@
 #include "pch.h"
-#include "SpotLightNode.h"
+#include "SpotlightNode.h"
 
 #include "rendering/scene/Scene.h"
 
-void SpotLightNode::CalculateWorldAABB()
+void SpotlightNode::CalculateWorldAABB()
 {
 	m_aabb = m_frustum.FrustumPyramidAABB(GetNodePositionWCS());
 }
 
-void SpotLightNode::RecalculateProjectionMatrix()
+void SpotlightNode::RecalculateProjectionMatrix()
 {
 	const auto ar = static_cast<float>(m_shadowMapWidth) / static_cast<float>(m_shadowMapHeight);
 	m_projectionMatrix = glm::perspective(m_outerAperture, ar, m_near, m_far);
@@ -17,7 +17,7 @@ void SpotLightNode::RecalculateProjectionMatrix()
 	RecalculateViewProjectionMatrix();
 }
 
-void SpotLightNode::RecalculateViewMatrix()
+void SpotlightNode::RecalculateViewMatrix()
 {
 	const auto lookAt = GetNodePositionWCS() + GetNodeForwardWCS();
 	// CHECK: Remove pragma when fixed in glm
@@ -27,34 +27,32 @@ void SpotLightNode::RecalculateViewMatrix()
 	RecalculateViewProjectionMatrix();
 }
 
-void SpotLightNode::RecalculateViewProjectionMatrix()
+void SpotlightNode::RecalculateViewProjectionMatrix()
 {
 	m_viewProjectionMatrix = m_projectionMatrix * m_viewMatrix;
 
 	RecalculateFrustum();
 }
 
-void SpotLightNode::RecalculateFrustum()
+void SpotlightNode::RecalculateFrustum()
 {
 	// viewProj to get frustum plane equations in world space
 	m_frustum.ExtractFromMatrix(m_viewProjectionMatrix);
 	CalculateWorldAABB();
 }
 
-SpotLightNode::SpotLightNode()
+SpotlightNode::SpotlightNode()
 {
 	sceneUid = Scene->EnqueueCreateCmd<SceneSpotlight>();
 }
 
-SpotLightNode::~SpotLightNode()
+SpotlightNode::~SpotlightNode()
 {
 	Scene->EnqueueDestroyCmd<SceneSpotlight>(sceneUid);
 }
 
-void SpotLightNode::DirtyUpdate(DirtyFlagset flags)
+void SpotlightNode::DirtyUpdate(DirtyFlagset flags)
 {
-	// constexpr glm::mat4 biasMatrix(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
-
 	if (flags[DF::ShadowsTextSize]) {
 		Enqueue([width = m_shadowMapWidth, height = m_shadowMapHeight](
 					SceneSpotlight& sl) { sl.ResizeShadowmap(width, height); });

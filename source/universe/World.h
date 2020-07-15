@@ -18,7 +18,7 @@ class RootNode;
 class CameraNode;
 class PunctualLightNode;
 class GeometryNode;
-class SpotLightNode;
+class SpotlightNode;
 class DirectionalLightNode;
 class ReflectionProbeNode;
 

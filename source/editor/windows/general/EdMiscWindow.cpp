@@ -89,6 +89,12 @@ void GbufferDebugWindow::ImguiDraw()
 			showAttachment(sl->shadowmap->attachment.get());
 		}
 	}
+
+	for (auto dl : Scene->directionalLights.elements) {
+		if (dl && dl->shadowmap) {
+			showAttachment(dl->shadowmap->attachment.get());
+		}
+	}
 }
 void PodEntryEditorWindow::ImguiDraw()
 {
