@@ -12,29 +12,28 @@ void SceneDirectionalLight::ResizeShadowmap(uint32 width, uint32 height)
 
 void SceneDirectionalLight::UpdateBox(math::Frustum frustum, glm::vec3 apex)
 {
-	// TODO: use OBB
-
+	// TODO:
+	glm::mat4 view = glm::lookAt(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f) + ubo.forward.xyz, up);
 	auto aabb = frustum.FrustumPyramidAABB(apex);
+	aabb.Transform(view);
 
-	// view cuboid
-	auto center = aabb.GetCenter();
+	glm::mat4 proj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, aabb.min.z, aabb.max.z);
 
-	auto view = glm::lookAt(center, center + ubo.forward.xyz, up);
+	const float scaleX = 2.0f / (aabb.max.x - aabb.min.x);
+	const float scaleY = 2.0f / (aabb.max.y - aabb.min.y);
+	const float offsetX = -0.5f * (aabb.min.x + aabb.max.x) * scaleX;
+	const float offsetY = -0.5f * (aabb.min.y + aabb.max.y) * scaleY;
 
-	auto width = aabb.max.x - aabb.min.x;
-	auto height = aabb.max.y - aabb.min.y;
-	auto length = aabb.max.z - aabb.min.z;
+	glm::mat4 cropMatrix(1.0f);
+	cropMatrix[0][0] = scaleX;
+	cropMatrix[1][1] = scaleY;
+	cropMatrix[3][0] = offsetX;
+	cropMatrix[3][1] = offsetY;
 
-	auto right = width / 2.f;
-	auto left = width / 2.f;
-
-	auto top = height / 2.f;
-	auto bottom = height / 2.f;
-
-	float near_{ 0.05f };
-	float far_{ 20.0f };
-
-	auto proj = glm::ortho(left, right, bottom, top, near_, far_);
-
-	ubo.viewProj = proj * view;
+	// TODO: use scene top level AABB
+	// Four of the planes of the orthographic light frustum were calculated using the minimum and maximum of the X and Y
+	// coordinates of the view frustum in light space. The last two planes of the orthogonal view frustum are the near
+	// and the far planes. To find these planes, the scene's bounds are clipped against the four known light frustum
+	// planes. The smallest and largest Z-values from the newly clipped boundary represent the near plane and far plane,
+	// respectively. ubo.viewProj = cropMatrix * proj * view;
 }
