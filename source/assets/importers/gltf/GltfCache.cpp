@@ -23,11 +23,11 @@ GltfCache::GltfCache(const fs::path& path)
 	CLOG_ABORT(!err.empty(), "Gltf Load error for {}: {}", path, err.c_str());
 
 
-	ImporterManager->PushPath(std::string_view(filename));
+	AssetImporterManager->PushPath(std::string_view(filename));
 	LoadImages();
 	// LoadSamplers(); // CHECK: Maybe do some check to report irregular samplers in the future
 	LoadMaterials();
-	ImporterManager->PopPath();
+	AssetImporterManager->PopPath();
 }
 
 
@@ -36,7 +36,7 @@ void GltfCache::LoadImages()
 	// CHECK: embedded images not supported currently
 	for (auto& img : gltfData.images) {
 		fs::path imgPath = systemPath.remove_filename() / img.uri;
-		imagePods.push_back(ImporterManager->ImportRequest<Image>(imgPath));
+		imagePods.push_back(AssetImporterManager->ImportRequest<Image>(imgPath));
 	}
 }
 
@@ -52,7 +52,7 @@ void GltfCache::LoadSamplers()
 
 		std::string name = sampler.name.empty() ? filename + "_Sampler_" + std::to_string(samplerIndex) : sampler.name;
 
-		auto& [handle, pod] = ImporterManager->CreateEntry<Sampler>(samplerPath, name);
+		auto& [handle, pod] = AssetImporterManager->CreateEntry<Sampler>(samplerPath, name);
 
 		pod->minFilter = GetTextureFiltering(sampler.minFilter);
 		pod->magFilter = GetTextureFiltering(sampler.magFilter);
@@ -158,7 +158,7 @@ void GltfCache::LoadMaterials()
 		auto matPath = uri::MakeChildJson(gltfFilePath, data);
 
 		std::string name = mat.name.empty() ? filename + "_Mat_" + std::to_string(matIndex) : mat.name;
-		auto& [handleInst, podInst] = ImporterManager->CreateEntry<MaterialInstance>(matPath, name);
+		auto& [handleInst, podInst] = AssetImporterManager->CreateEntry<MaterialInstance>(matPath, name);
 
 		LoadMaterial(podInst, matIndex);
 

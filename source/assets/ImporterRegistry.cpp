@@ -1,13 +1,12 @@
 #include "pch.h"
 #include "ImporterRegistry.h"
 
+#include "assets/AssetImporterManager.h"
+#include "assets/importers/CubemapImporter.h"
+#include "assets/importers/EnvironmentMapImporter.h"
 #include "assets/importers/GltfImporter.h"
 #include "assets/importers/ImageImporter.h"
 #include "assets/importers/ShaderImporter.h"
-#include "assets/importers/CubemapImporter.h"
-#include "assets/importers/EnvironmentMapImporter.h"
-#include "assets/AssetImporterManager.h"
-#include <fstream>
 
 ImporterRegistry::ImporterRegistry()
 {

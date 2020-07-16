@@ -1,21 +1,17 @@
 #include "pch.h"
 #include "App.h"
 
-#include "editor/Editor.h"
 #include "engine/Engine.h"
 #include "engine/Input.h"
-#include "engine/Logger.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
 #include "rendering/Rendering.h"
-#include "universe/NodeFactory.h"
 #include "universe/Universe.h"
 
 #include <glfw/glfw3.h>
 
 App::App()
 {
-
 	m_name = "Raygen Engine";
 	m_initialScene = "engine-data/default.json";
 	m_assetPath = "assets";

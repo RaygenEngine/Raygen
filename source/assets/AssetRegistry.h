@@ -6,7 +6,6 @@
 #include "assets/UriLibrary.h"
 #include "core/StringUtl.h"
 
-
 struct Image;
 struct Sampler;
 struct Shader;

@@ -35,9 +35,9 @@ GpuAsset<Shader>& GpuAssetManager_::CompileShader(const char* path)
 
 	PodHandle<Shader> shaderHandle = AssetHandlerManager::SearchForAssetFromImportPathSlow<Shader>(path);
 	if (shaderHandle.IsDefault()) {
-		ImporterManager->PushPath("shaders/");
+		AssetImporterManager->PushPath("shaders/");
 		shaderHandle = Assets::ImportAs<Shader>(fs::path(path));
-		ImporterManager->PopPath();
+		AssetImporterManager->PopPath();
 	}
 	shaderPathCache.emplace(path, shaderHandle);
 	return GetGpuHandle(shaderHandle).Lock();

@@ -1,16 +1,5 @@
 #pragma once
 #include "assets/AssetImporterManager.h"
-#include "assets/AssetPod.h"
-#include "assets/AssetRegistry.h"
-#include "assets/PodEntry.h"
-#include "assets/PodHandle.h"
-#include "assets/UriLibrary.h"
-#include "engine/console/ConsoleVariable.h"
-#include "engine/Engine.h"
-#include "engine/Logger.h"
-#include "reflection/PodReflection.h"
-
-#include <future>
 
 // DOC: OUTDATED, Please update.
 // ASSET URI:
@@ -37,15 +26,15 @@ inline class AssetManager_ {
 public:
 	AssetManager_(const fs::path& workingDir = "assets/", const fs::path& defaultBinPath = "gen-data/");
 
-	void Import(const fs::path& path) { ImporterManager->m_importerRegistry.ImportFile(path); }
+	void Import(const fs::path& path) { AssetImporterManager->m_importerRegistry.ImportFile(path); }
 
 	template<CONC(CAssetPod) T>
 	[[nodiscard]] PodHandle<T> ImportAs(const fs::path& path, bool useCache = false)
 	{
 		if (useCache) {
-			return ImporterManager->ImportRequest<T>(path);
+			return AssetImporterManager->ImportRequest<T>(path);
 		}
-		return ImporterManager->m_importerRegistry.ImportFile<T>(path);
+		return AssetImporterManager->m_importerRegistry.ImportFile<T>(path);
 	}
 
 

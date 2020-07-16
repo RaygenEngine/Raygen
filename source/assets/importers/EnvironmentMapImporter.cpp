@@ -11,12 +11,12 @@ BasePodHandle EnvironmentMapImporter::Import(const fs::path& path)
 	const auto finalPath = path.generic_string();
 	auto p = path;
 
-	auto& [handle, pod] = ImporterManager->CreateEntry<EnvironmentMap>(
+	auto& [handle, pod] = AssetImporterManager->CreateEntry<EnvironmentMap>(
 		path.generic_string(), path.filename().replace_extension().string());
 
-	ImporterManager->PushPath(path.filename().replace_extension());
-	auto skybox = ImporterManager->ImportRequest<Cubemap>(p.replace_extension(".cmp"));
-	ImporterManager->PopPath();
+	AssetImporterManager->PushPath(path.filename().replace_extension());
+	auto skybox = AssetImporterManager->ImportRequest<Cubemap>(p.replace_extension(".cmp"));
+	AssetImporterManager->PopPath();
 
 	pod->skybox = skybox;
 

@@ -6,6 +6,7 @@
 // values are stored in rads (use (constexpr) glm::radians to convert)
 
 #include "engine/Listener.h"
+#include "engine/Timer.h"
 #include "reflection/ReflClass.h"
 #include "universe/NodeFactory.h" // Not required directly, used in templates
 #include "universe/nodes/NodeIterator.h"

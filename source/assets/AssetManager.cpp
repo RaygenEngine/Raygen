@@ -3,14 +3,16 @@
 
 #include "assets/PodIncludes.h"
 #include "assets/Serialization.h"
-#include "reflection/PodTools.h"
-#include "rendering/assets/GpuAssetManager.h"
-#include "assets/util/FindPodUsers.h"
 #include "assets/specializations/PodDuplication.h"
 #include "assets/specializations/PodExport.h"
+#include "assets/util/FindPodUsers.h"
+#include "engine/console/ConsoleVariable.h"
+#include "engine/Timer.h"
+#include "reflection/PodTools.h"
 
-#include <vulkan/vulkan.hpp>
-#include <iostream>
+#include <thread>
+#include <vector>
+
 
 ConsoleFunction<> console_SaveAll{ "a.saveAll", []() { AssetHandlerManager::SaveAll(); },
 	"Saves all currently unsaved assets" };
@@ -134,7 +136,7 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 
 void AssetHandlerManager::ReimportFromOriginalInternal(PodEntry* entry)
 {
-	ImporterManager->m_importerRegistry.ReimportEntry(entry);
+	AssetImporterManager->m_importerRegistry.ReimportEntry(entry);
 }
 
 void AssetHandlerManager::LoadFromDiskTypelessInternal(PodEntry* entry)
@@ -211,7 +213,7 @@ AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& default
 
 	podtools::ForEachPodType([]<typename PodType>() {
 		auto& [handle, pod]
-			= ImporterManager->CreateTransientEntry<PodType>(fmt::format("~{}", mti::GetName<PodType>()));
+			= AssetImporterManager->CreateTransientEntry<PodType>(fmt::format("~{}", mti::GetName<PodType>()));
 
 		if constexpr (std::is_same_v<PodType, MaterialArchetype>) {
 			MaterialArchetype::MakeDefaultInto(static_cast<MaterialArchetype*>(pod));
@@ -219,14 +221,15 @@ AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& default
 	});
 
 	// Default normal image
-	auto& [handle, pod] = ImporterManager->CreateTransientEntry<Image>("~NormalImagePod");
+	auto& [handle, pod] = AssetImporterManager->CreateTransientEntry<Image>("~NormalImagePod");
 	pod->data[0] = 0x80;
 	pod->data[1] = 0x80;
 	pod->data[2] = 0xFF;
 	pod->data[3] = 0xFF;
 
 	// Default normal image
-	auto& [gltfArchHandle, gltfArchPod] = ImporterManager->CreateTransientEntry<MaterialArchetype>("~GltfMaterial");
+	auto& [gltfArchHandle, gltfArchPod]
+		= AssetImporterManager->CreateTransientEntry<MaterialArchetype>("~GltfMaterial");
 	MaterialArchetype::MakeGltfArchetypeInto(gltfArchPod);
 
 

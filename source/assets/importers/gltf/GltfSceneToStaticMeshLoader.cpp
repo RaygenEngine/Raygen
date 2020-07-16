@@ -11,7 +11,7 @@ namespace gltfutl {
 GltfSceneToStaticMeshLoader::GltfSceneToStaticMeshLoader(GltfCache& cache, tg::Scene& scene)
 	: m_cache(cache)
 {
-	auto& [handle, pod] = ImporterManager->CreateEntry<Mesh>(
+	auto& [handle, pod] = AssetImporterManager->CreateEntry<Mesh>(
 		m_cache.gltfFilePath, std::string(uri::GetFilenameNoExt(m_cache.gltfFilePath)));
 
 	m_loadedPod = handle;

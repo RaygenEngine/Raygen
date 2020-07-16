@@ -6,6 +6,8 @@
 #include "rendering/scene/SceneDirectionalLight.h"
 
 #include <functional>
+#include <mutex>
+#include <vector>
 
 template<typename T>
 concept CSceneElem
