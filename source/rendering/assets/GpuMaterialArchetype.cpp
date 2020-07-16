@@ -8,7 +8,6 @@
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/passes/DepthmapPass.h"
-#include "rendering/passes/AnimatedGBufferPass.h"
 
 using namespace vl;
 

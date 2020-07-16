@@ -156,6 +156,25 @@ struct Frustum {
 
 		return box;
 	}
+
+	// PERF: general perf frustum this is expensive
+	[[nodiscard]] std::array<glm::vec3, 8> GetPoints()
+	{
+
+		std::array<glm::vec3, 8> points{};
+
+		points[0] = threePlaneIntersection(planes[_top_], planes[_right_], planes[_far_]);
+		points[1] = threePlaneIntersection(planes[_top_], planes[_left_], planes[_far_]);
+		points[2] = threePlaneIntersection(planes[_bottom_], planes[_right_], planes[_far_]);
+		points[3] = threePlaneIntersection(planes[_bottom_], planes[_left_], planes[_far_]);
+
+		points[4] = threePlaneIntersection(planes[_bottom_], planes[_left_], planes[_near_]);
+		points[5] = threePlaneIntersection(planes[_bottom_], planes[_left_], planes[_near_]);
+		points[6] = threePlaneIntersection(planes[_bottom_], planes[_left_], planes[_near_]);
+		points[7] = threePlaneIntersection(planes[_bottom_], planes[_left_], planes[_near_]);
+
+		return points;
+	}
 };
 
 } // namespace math

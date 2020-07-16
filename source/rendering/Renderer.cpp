@@ -10,7 +10,6 @@
 #include "rendering/VulkanUtl.h"
 #include "rendering/ppt/techniques/PtDebug.h"
 #include "universe/nodes/camera/CameraNode.h"
-#include "rendering/passes/AnimatedGBufferPass.h"
 
 constexpr int32 c_framesInFlight = 2;
 namespace {
