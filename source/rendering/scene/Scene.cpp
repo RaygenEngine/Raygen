@@ -2,6 +2,7 @@
 #include "Scene.h"
 
 #include "rendering/Renderer.h"
+#include "engine/console/ConsoleVariable.h"
 
 void Scene_::DrainQueueForDestruction()
 {

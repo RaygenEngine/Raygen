@@ -13,6 +13,7 @@
 #include "rendering/Rendering.h"
 #include "universe/NodeFactory.h"
 #include "universe/Universe.h"
+#include "engine/console/ConsoleVariable.h"
 
 
 #include <glfw/glfw3.h>

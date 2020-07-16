@@ -6,6 +6,7 @@
 #include "engine/Events.h"
 #include "engine/Input.h"
 #include "engine/Logger.h"
+#include "engine/Engine.h"
 
 #include <imgui/imgui.h>
 #include <glfw/glfw3.h>

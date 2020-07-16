@@ -333,11 +333,11 @@ void AssetsWindow::ImguiDraw()
 		if (auto files = ed::NativeFileBrowser::OpenFileMultiple({ "gltf;png,jpg,jpeg,tiff;vert,frag" })) {
 
 			auto importDirectory = m_currentPath; // Store by copy, currentpath gets changed on reloadentries
-			ImporterManager->SetPushPath(m_currentPath);
+			AssetImporterManager->SetPushPath(m_currentPath);
 			for (auto& path : *files) {
 				Assets::Import(path);
 			}
-			ImporterManager->PopPath();
+			AssetImporterManager->PopPath();
 			ReloadEntries();
 			ChangeDirPath(importDirectory);
 		}

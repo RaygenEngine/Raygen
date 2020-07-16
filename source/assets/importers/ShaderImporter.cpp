@@ -28,7 +28,7 @@ std::string rtrim(const std::string& s)
 
 BasePodHandle ShaderStageImporter::Import(const fs::path& path)
 {
-	auto& [handle, pod] = ImporterManager->CreateEntry<ShaderStage>(path.generic_string(),
+	auto& [handle, pod] = AssetImporterManager->CreateEntry<ShaderStage>(path.generic_string(),
 		path.filename().replace_extension().generic_string() + "_" + path.extension().string().substr(1), true, true);
 
 	CompilePod(pod, path.generic_string());
@@ -74,8 +74,8 @@ void ShaderStageImporter::CompilePod(ShaderStage* pod, const uri::Uri& uri)
 
 BasePodHandle ShaderImporter::Import(const fs::path& path)
 {
-	auto& [handle, pod]
-		= ImporterManager->CreateEntry<Shader>(path.generic_string(), path.filename().replace_extension().string());
+	auto& [handle, pod] = AssetImporterManager->CreateEntry<Shader>(
+		path.generic_string(), path.filename().replace_extension().string());
 
 	fs::path tmpPath = path;
 
@@ -84,7 +84,7 @@ BasePodHandle ShaderImporter::Import(const fs::path& path)
 	auto loadStage = [&](PodHandle<ShaderStage>& stageRef, const char* ext) {
 		tmpPath.replace_extension(ext);
 		if (fs::exists(tmpPath)) {
-			stageRef = ImporterManager->ImportRequest<ShaderStage>(tmpPath);
+			stageRef = AssetImporterManager->ImportRequest<ShaderStage>(tmpPath);
 		}
 	};
 

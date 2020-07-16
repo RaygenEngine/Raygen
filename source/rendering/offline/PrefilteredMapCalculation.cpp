@@ -13,7 +13,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/assets/GpuCubemap.h"
-
+#include "engine/console/ConsoleVariable.h"
 
 namespace {
 struct PushConstant {

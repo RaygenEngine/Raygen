@@ -1,5 +1,6 @@
 #pragma once
 #include "core/StringUtl.h"
+
 #include <unordered_set>
 
 // Dummy struct which can be used in the future to pass generic update info from cpu to gpu asset updating

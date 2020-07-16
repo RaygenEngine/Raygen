@@ -32,10 +32,10 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 
 	};
 
-	auto& [handle, pod]
-		= ImporterManager->CreateEntry<Cubemap>(path.generic_string(), path.filename().replace_extension().string());
+	auto& [handle, pod] = AssetImporterManager->CreateEntry<Cubemap>(
+		path.generic_string(), path.filename().replace_extension().string());
 
-	ImporterManager->PushPath(path.filename().replace_extension());
+	AssetImporterManager->PushPath(path.filename().replace_extension());
 
 	bool firstLoaded = true;
 	for (auto& [key, value] : imageNames) {
@@ -73,7 +73,7 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 		stbaux::LoadImage(finalImagePath.c_str(), isHdr, pod->data.data() + offset);
 	}
 
-	ImporterManager->PopPath();
+	AssetImporterManager->PopPath();
 
 	return handle;
 }

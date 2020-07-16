@@ -14,6 +14,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/assets/GpuCubemap.h"
+#include "engine/console/ConsoleVariable.h"
 
 namespace vl {
 BrdfLutCalculation::BrdfLutCalculation(EnvironmentMap::Gpu* envmapAsset, uint32 calculationResolution)

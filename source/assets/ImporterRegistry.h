@@ -1,8 +1,10 @@
 #pragma once
 #include "assets/importers/PodImporter.h"
+#include "assets/PodHandle.h"
 #include "core/StringUtl.h"
 
 #include <unordered_map>
+#include <vector>
 
 class ImporterRegistry {
 	std::vector<UniquePtr<PodImporterBase>> m_importers;
