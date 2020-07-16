@@ -18,3 +18,6 @@ inline struct Instance_ : public vk::Instance {
 	~Instance_();
 } * Instance{};
 } // namespace vl
+
+
+void InitVulkanLoader();
