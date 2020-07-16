@@ -1,7 +1,11 @@
 #include "pch.h"
 #include "Device.h"
 
+#include "rendering/VulkanLoader.h"
+
+
 #include <set>
+
 
 namespace vl {
 QueueFamily GetQueueFamilyWithBestRating(const std::vector<QueueFamily>& queueFamilies)
@@ -50,6 +54,7 @@ Device_::Device_(RPhysicalDevice* pd, std::vector<const char*> deviceExtensions)
 		.setEnabledLayerCount(0);
 
 	vk::Device::operator=(pd->createDevice(deviceCreateInfo));
+	VulkanLoader::InitLoaderWithDevice(*this);
 
 	// Device queues
 	graphicsQueue.familyIndex = graphicsQueueFamily.index;

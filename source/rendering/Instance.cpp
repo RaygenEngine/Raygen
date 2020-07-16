@@ -6,6 +6,9 @@
 
 #include <glfw/glfw3.h>
 
+#include "rendering/VulkanLoader.h"
+
+
 PFN_vkCreateDebugUtilsMessengerEXT pfnVkCreateDebugUtilsMessengerEXT;
 PFN_vkDestroyDebugUtilsMessengerEXT pfnVkDestroyDebugUtilsMessengerEXT;
 
@@ -125,6 +128,8 @@ Instance_::Instance_(std::vector<const char*> requiredExtensions, GLFWwindow* wi
 	}
 
 	vk::Instance::operator=(vk::createInstance(createInfo));
+
+	VulkanLoader::InitLoaderWithInstance(*this);
 
 	if (foundLayers) {
 		pfnVkCreateDebugUtilsMessengerEXT

@@ -9,12 +9,16 @@
 #include "rendering/Swapchain.h"
 #include "rendering/resource/GpuResources.h"
 
+#include "rendering/VulkanLoader.h"
+
 namespace vl {
 Layer_::Layer_()
 {
 	auto requiredExtensions = Platform::GetVulkanExtensions();
 	requiredExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
 	requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
+	VulkanLoader::InitLoaderBase();
 
 	Instance = new Instance_(requiredExtensions, Platform::GetMainHandle());
 
