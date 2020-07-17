@@ -14,6 +14,8 @@
 #include "universe/nodes/light/DirectionalLightNode.h"
 #include "universe/nodes/RootNode.h"
 
+#include <nlohmann/json.hpp>
+
 World::World(NodeFactory* factory)
 	: m_nodeFactory(factory)
 	, m_loadedTimepoint(FrameClock::now())
@@ -69,12 +71,14 @@ void World::LoadAndPrepareWorld(const fs::path& scene)
 	LOG_INFO("Loading World file: \'{}\'", scene);
 
 	std::ifstream f(scene);
-	f >> m_loadedFrom;
+
+	m_loadedFrom = std::make_unique<nlohmann::json>();
+	f >> *m_loadedFrom;
 	m_loadedFromPath = scene;
 
 	m_root = std::make_unique<RootNode>();
 
-	m_nodeFactory->LoadChildren(m_loadedFrom, m_root.get());
+	m_nodeFactory->LoadChildren(*m_loadedFrom, m_root.get());
 	m_root->m_dirty.set();
 
 	auto mat = glm::identity<glm::mat4>();

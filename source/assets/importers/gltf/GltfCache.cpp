@@ -4,6 +4,7 @@
 #include "assets/AssetImporterManager.h"
 #include "assets/importers/gltf/GltfUtl.h"
 #include "assets/pods/Animation.h"
+#include <nlohmann/json.hpp>
 
 namespace gltfutl {
 GltfCache::GltfCache(const fs::path& path)

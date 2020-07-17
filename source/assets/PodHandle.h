@@ -18,8 +18,8 @@ public:
 	[[nodiscard]] constexpr bool IsDefault() const { return uid == s_defaultUid; }
 
 
-	[[nodiscard]] const PodEntry* _Debug() const { return AssetHandlerManager::GetEntry(*this); }
-	[[nodiscard]] const PodType* Lock() const { return AssetHandlerManager::Z_Handle_AccessPod<PodType>(uid); }
+	//[[nodiscard]] const PodEntry* _Debug() const { return AssetHandlerManager::GetEntry(*this); }
+	[[nodiscard]] const PodType* Lock() const { return static_cast<PodType*>(assetdetail::podAccessor[uid]); }
 
 	friend class AssetImporterManager;
 };

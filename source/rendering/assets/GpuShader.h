@@ -1,6 +1,5 @@
 #pragma once
 
-#include "assets/AssetManager.h"
 #include "assets/pods/Shader.h"
 #include "rendering/assets/GpuAssetHandle.h"
 #include "rendering/resource/DescPoolAllocator.h"

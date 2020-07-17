@@ -14,6 +14,7 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/assets/GpuCubemap.h"
 #include "engine/console/ConsoleVariable.h"
+#include "assets/AssetRegistry.h"
 
 namespace {
 struct PushConstant {
@@ -24,8 +25,7 @@ struct PushConstant {
 
 static_assert(sizeof(PushConstant) <= 128);
 
-std::array vertices = {
-	// positions
+std::array vertices = { // positions
 	-1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f,
 	-1.0f,
 

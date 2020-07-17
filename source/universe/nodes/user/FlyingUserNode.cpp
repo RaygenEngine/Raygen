@@ -1,7 +1,6 @@
 ﻿#include "pch.h"
 #include "FlyingUserNode.h"
 
-#include "assets/util/ParsingUtl.h"
 #include "engine/Engine.h"
 #include "engine/Input.h"
 #include "universe/NodeFactory.h"

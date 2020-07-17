@@ -28,15 +28,15 @@ void PodDeleter::operator()(AssetPod* p)
 	podtools::VisitPod(p, l);
 }
 
-// Dummy to avoid _Debug getting optimzed out
-void Code()
-{
-	auto l = []<typename PodType>() {
-		PodHandle<PodType> a;
-		[[maybe_unused]] auto debug = a._Debug();
-	};
-	podtools::ForEachPodType(l);
-}
+//// Dummy to avoid _Debug getting optimzed out
+// void Code()
+//{
+//	auto l = []<typename PodType>() {
+//		PodHandle<PodType> a;
+//		[[maybe_unused]] auto debug = a._Debug();
+//	};
+//	podtools::ForEachPodType(l);
+//}
 
 void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 {
@@ -80,6 +80,7 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 				e.path = std::move(key);
 				e.requiresSave = false;
 				m_pods.emplace_back(std::make_unique<PodEntry>(std::move(e)));
+				assetdetail::podAccessor.emplace_back(nullptr);
 			}
 		}
 	}

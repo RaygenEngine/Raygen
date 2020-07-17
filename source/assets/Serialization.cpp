@@ -164,4 +164,5 @@ void DeserializePodFromBinary(PodEntry* entry)
 	entry->transient = false;
 	entry->name = uri::GetFilenameNoExt(entry->path);
 	archive(*entry->ptr.get());
+	assetdetail::podAccessor[entry->uid] = entry->ptr.get();
 }

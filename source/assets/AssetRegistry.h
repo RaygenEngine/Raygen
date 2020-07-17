@@ -6,6 +6,8 @@
 #include "assets/UriLibrary.h"
 #include "core/StringUtl.h"
 
+#include <unordered_map>
+
 struct Image;
 struct Sampler;
 struct Shader;
@@ -242,6 +244,7 @@ private:
 
 		e->uid = AssetHandlerManager::Get().m_pods.size();
 		AssetHandlerManager::Get().m_pods.emplace_back(e);
+		assetdetail::podAccessor.emplace_back(ptr);
 		AssetHandlerManager::RegisterPathCache(e);
 
 		return std::make_pair(e, ptr);

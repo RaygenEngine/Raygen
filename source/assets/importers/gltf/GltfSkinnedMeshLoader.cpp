@@ -5,8 +5,11 @@
 #include "assets/importers/gltf/GltfCache.h"
 #include "assets/importers/gltf/GltfUtl.h"
 
+
 #include <glm/gtx/matrix_decompose.hpp>
+#include <nlohmann/json.hpp>
 #include <queue>
+
 
 namespace {
 
