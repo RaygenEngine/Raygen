@@ -1,6 +1,9 @@
 #pragma once
-#include "assets/importers/gltf/GltfUtl.h"
 #include "assets/pods/SkinnedMesh.h"
+
+namespace tinygltf {
+struct Skin;
+}
 
 namespace gltfutl {
 struct GltfCache;
@@ -12,7 +15,7 @@ class GltfSkinnedMeshLoader {
 	PodHandle<SkinnedMesh> skinHandle;
 	SkinnedMesh* skinPod;
 	uint32 skinIndex;
-	tg::Skin& gltfSkin;
+	tinygltf::Skin& gltfSkin;
 
 	void LoadAnimations();
 
@@ -25,7 +28,7 @@ class GltfSkinnedMeshLoader {
 	std::vector<int32> jointRemap;
 
 public:
-	GltfSkinnedMeshLoader(GltfCache& inCache, uint32 inSkinIndex, tg::Skin& skin);
+	GltfSkinnedMeshLoader(GltfCache& inCache, uint32 inSkinIndex, tinygltf::Skin& skin);
 
 	[[nodiscard]] BasePodHandle GetLoadedPod() { return skinHandle; }
 };

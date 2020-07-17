@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "SceneGeometry.h"
 
+#include "rendering/wrappers/RBuffer.h"
+
 void SceneAnimatedGeometry::UploadSsbo(uint32 curFrame)
 {
 	if (jointMatrices.size() > 0) {

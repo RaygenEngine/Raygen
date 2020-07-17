@@ -6,7 +6,11 @@ struct Ambient_Ubo {
 	glm::vec4 color{};
 };
 
-struct SceneReflectionProbe : SceneStruct<Ambient_Ubo> {
+struct SceneReflectionProbe : SceneStruct {
+	SCENE_STRUCT(SceneReflectionProbe);
+
+	Ambient_Ubo ubo;
+
 	// WIP: add width, height (from world) -> Build prefiltered maps using width and height
 	vl::GpuHandle<EnvironmentMap> envmap;
 

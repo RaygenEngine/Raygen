@@ -1,8 +1,13 @@
 #pragma once
-#include "assets/importers/gltf/GltfUtl.h"
-#include "assets/pods/Mesh.h"
+#include "assets/PodHandle.h"
+
+namespace tinygltf {
+struct Scene;
+}
 
 namespace gltfutl {
+struct GltfCache;
+
 class GltfSceneToStaticMeshLoader {
 
 	GltfCache& m_cache;
@@ -11,7 +16,7 @@ class GltfSceneToStaticMeshLoader {
 	bool m_tempModelRequiresDefaultMat{ false };
 
 public:
-	GltfSceneToStaticMeshLoader(GltfCache& cache, tg::Scene& scene);
+	GltfSceneToStaticMeshLoader(GltfCache& cache, tinygltf::Scene& scene);
 
 	[[nodiscard]] BasePodHandle GetLoadedPod() { return m_loadedPod; }
 };

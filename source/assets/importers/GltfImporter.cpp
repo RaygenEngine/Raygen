@@ -15,7 +15,7 @@ BasePodHandle GltfImporter::Import(const fs::path& path)
 
 	BasePodHandle first;
 
-	for (auto scene : cache.gltfData.scenes) {
+	for (auto scene : cache.gltfData->scenes) {
 		gltfutl::GltfSceneToStaticMeshLoader loader{ cache, scene };
 		// return first assigned static
 		if (!first.HasBeenAssigned()) {
@@ -23,7 +23,7 @@ BasePodHandle GltfImporter::Import(const fs::path& path)
 		}
 	}
 
-	for (uint32 i = 0; auto skin : cache.gltfData.skins) {
+	for (uint32 i = 0; auto skin : cache.gltfData->skins) {
 		gltfutl::GltfSkinnedMeshLoader loader{ cache, i++, skin };
 	}
 

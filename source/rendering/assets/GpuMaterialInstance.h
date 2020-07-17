@@ -2,7 +2,6 @@
 #include "assets/pods/MaterialInstance.h"
 #include "rendering/assets/GpuAssetHandle.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
-#include "rendering/wrappers/RBuffer.h"
 
 #include <vulkan/vulkan.hpp>
 

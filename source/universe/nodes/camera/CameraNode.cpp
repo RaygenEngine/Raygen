@@ -3,6 +3,8 @@
 
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
+#include "rendering/wrappers/RBuffer.h"
+
 
 void CameraNode::EnqueueActiveCamera()
 {

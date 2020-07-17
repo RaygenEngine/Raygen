@@ -6,6 +6,9 @@
 #include "assets/importers/gltf/GltfUtl.h"
 #include "assets/UriLibrary.h"
 #include "core/StringUtl.h"
+#include "assets/pods/Mesh.h"
+
+#include <tinygltf/tiny_gltf.h>
 
 namespace gltfutl {
 GltfSceneToStaticMeshLoader::GltfSceneToStaticMeshLoader(GltfCache& cache, tg::Scene& scene)
@@ -19,7 +22,7 @@ GltfSceneToStaticMeshLoader::GltfSceneToStaticMeshLoader(GltfCache& cache, tg::S
 	std::function<bool(const std::vector<int>&, glm::mat4)> RecurseChildren;
 	RecurseChildren = [&](const std::vector<int>& childrenIndices, glm::mat4 parentTransformMat) {
 		for (auto& nodeIndex : childrenIndices) {
-			auto& childNode = m_cache.gltfData.nodes.at(nodeIndex);
+			auto& childNode = m_cache.gltfData->nodes.at(nodeIndex);
 
 			glm::mat4 localTransformMat = glm::mat4(1.f);
 
@@ -62,7 +65,7 @@ GltfSceneToStaticMeshLoader::GltfSceneToStaticMeshLoader(GltfCache& cache, tg::S
 
 			// load mesh if exists
 			if (childNode.mesh != -1) {
-				auto& gltfMesh = m_cache.gltfData.meshes.at(childNode.mesh);
+				auto& gltfMesh = m_cache.gltfData->meshes.at(childNode.mesh);
 
 				for (auto& prim : gltfMesh.primitives) {
 
@@ -81,7 +84,7 @@ GltfSceneToStaticMeshLoader::GltfSceneToStaticMeshLoader(GltfCache& cache, tg::S
 
 					GeometrySlot& slot = pod->geometrySlots[materialIndex];
 					auto& [lastBegin, lastSize]
-						= LoadBasicDataIntoGeometrySlot<GeometrySlot, Vertex>(slot, m_cache, prim);
+						= LoadBasicDataIntoGeometrySlot<GeometrySlot, Vertex>(slot, *m_cache.gltfData, prim);
 
 					// Bake transform
 					const auto invTransMat = glm::transpose(glm::inverse(glm::mat3(localTransformMat)));

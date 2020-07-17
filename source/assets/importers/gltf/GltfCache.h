@@ -2,9 +2,10 @@
 #include "assets/PodHandle.h"
 #include "assets/UriLibrary.h"
 
-#include <tinygltf/tiny_gltf.h>
 
-namespace tg = tinygltf;
+namespace tinygltf {
+class Model;
+}
 
 namespace gltfutl {
 struct GltfCache {
@@ -12,7 +13,7 @@ struct GltfCache {
 	uri::Uri filename;
 	fs::path systemPath;
 
-	tg::Model gltfData;
+	UniquePtr<tinygltf::Model> gltfData;
 
 	std::vector<PodHandle<Image>> imagePods;
 	std::vector<PodHandle<Sampler>> samplerPods;

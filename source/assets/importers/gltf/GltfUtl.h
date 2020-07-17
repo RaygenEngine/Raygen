@@ -1,11 +1,8 @@
 #pragma once
-#include "assets/importers/gltf/GltfCache.h"
 #include "assets/pods/Animation.h"
-#include "assets/pods/MaterialInstance.h"
-#include "assets/pods/Mesh.h"
-#include "assets/pods/Sampler.h"
+
 #include "core/StringUtl.h"
-#include "engine/Logger.h"
+#include <tiny_gltf.h>
 
 namespace tg = tinygltf;
 
@@ -403,14 +400,14 @@ void LoadIntoVertexData(const tg::Model& modelData, int32 accessorIndex, VertexT
 
 // returns latest begin and size of slot
 template<typename GeometrySlotT, typename VertexT>
-inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& geom, GltfCache& cache, //
+inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& geom, tinygltf::Model& gltfData, //
 	const tinygltf::Primitive& primitiveData)
 {
 	auto it = std::find_if(begin(primitiveData.attributes), end(primitiveData.attributes),
 		[](auto& pair) { return str::equalInsensitive(pair.first, "POSITION"); });
 
 	size_t prevEnd = geom.vertices.size();
-	size_t newCount = cache.gltfData.accessors.at(it->second).count;
+	size_t newCount = gltfData.accessors.at(it->second).count;
 	size_t totalSize = prevEnd + newCount;
 
 	geom.vertices.resize(totalSize);
@@ -433,7 +430,7 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 	}
 	else {
 
-		AccessorDescription desc(cache.gltfData, indicesIndex);
+		AccessorDescription desc(gltfData, indicesIndex);
 
 		CLOG_ABORT(desc.componentCount != 1, "Found indices of 2 components in gltf file.");
 		prevIndicesEnd = geom.indices.size();
@@ -441,7 +438,7 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 		totalIndicesSize = prevIndicesEnd + newIndicesCount;
 		geom.indices.resize(totalIndicesSize);
 
-		ExtractIndicesInto(cache.gltfData, desc, geom.indices.data() + prevIndicesEnd, prevEnd);
+		ExtractIndicesInto(gltfData, desc, geom.indices.data() + prevIndicesEnd, prevEnd);
 	}
 
 	int32 positionsIndex = -1;
@@ -472,7 +469,7 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 
 	// POSITIONS
 	if (positionsIndex != -1) {
-		LoadIntoVertexData<VertexT, 0>(cache.gltfData, positionsIndex, geom.vertices.data() + prevEnd);
+		LoadIntoVertexData<VertexT, 0>(gltfData, positionsIndex, geom.vertices.data() + prevEnd);
 	}
 	else {
 		LOG_ABORT("Model does not have any positions...");
@@ -480,7 +477,7 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 
 	// NORMALS
 	if (normalsIndex != -1) {
-		LoadIntoVertexData<VertexT, 1>(cache.gltfData, normalsIndex, geom.vertices.data() + prevEnd);
+		LoadIntoVertexData<VertexT, 1>(gltfData, normalsIndex, geom.vertices.data() + prevEnd);
 	}
 	else {
 		LOG_DEBUG("Model missing normals, calculating flat normals");
@@ -506,7 +503,7 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 
 	// UV 0
 	if (texcoords0Index != -1) {
-		LoadIntoVertexData<VertexT, 3>(cache.gltfData, texcoords0Index, geom.vertices.data() + prevEnd);
+		LoadIntoVertexData<VertexT, 3>(gltfData, texcoords0Index, geom.vertices.data() + prevEnd);
 	}
 	else {
 		LOG_DEBUG("Model missing first uv map, not handled");
@@ -514,7 +511,7 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 
 	// TANGENTS, BITANGENTS
 	if (tangentsIndex != -1) {
-		LoadIntoVertexData<VertexT, 2>(cache.gltfData, tangentsIndex, geom.vertices.data() + prevEnd);
+		LoadIntoVertexData<VertexT, 2>(gltfData, tangentsIndex, geom.vertices.data() + prevEnd);
 	}
 	else {
 		if (texcoords0Index != -1) {

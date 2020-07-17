@@ -3,7 +3,7 @@
 
 #include "assets/AssetImporterManager.h"
 #include "assets/importers/gltf/GltfUtl.h"
-#include "assets/pods/Animation.h"
+#include <tinygltf/tiny_gltf.h>
 #include <nlohmann/json.hpp>
 
 namespace gltfutl {
@@ -17,8 +17,9 @@ GltfCache::GltfCache(const fs::path& path)
 	std::string warn;
 
 	filename = path.filename().replace_extension().generic_string();
+	gltfData = std::make_unique<tinygltf::Model>();
 
-	const bool ret = loader.LoadASCIIFromFile(&gltfData, &err, &warn, gltfFilePath.c_str());
+	const bool ret = loader.LoadASCIIFromFile(gltfData.get(), &err, &warn, gltfFilePath.c_str());
 
 	CLOG_WARN(!warn.empty(), "Gltf Load warning for {}: {}", path, warn.c_str());
 	CLOG_ABORT(!err.empty(), "Gltf Load error for {}: {}", path, err.c_str());
@@ -35,7 +36,7 @@ GltfCache::GltfCache(const fs::path& path)
 void GltfCache::LoadImages()
 {
 	// CHECK: embedded images not supported currently
-	for (auto& img : gltfData.images) {
+	for (auto& img : gltfData->images) {
 		fs::path imgPath = systemPath.remove_filename() / img.uri;
 		imagePods.push_back(AssetImporterManager->ImportRequest<Image>(imgPath));
 	}
@@ -45,7 +46,7 @@ void GltfCache::LoadSamplers()
 {
 
 	int32 samplerIndex = 0;
-	for (auto& sampler : gltfData.samplers) {
+	for (auto& sampler : gltfData->samplers) {
 
 		nlohmann::json data;
 		data["sampler"] = samplerIndex;
@@ -85,7 +86,7 @@ void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 		}
 	};
 
-	auto& data = gltfData.materials.at(index);
+	auto& data = gltfData->materials.at(index);
 
 	// factors
 	auto bFactor = data.pbrMetallicRoughness.baseColorFactor;
@@ -114,7 +115,7 @@ void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 
 		auto fillNextTexture = [&](auto textureInfo, bool srgb = false) {
 			if (textureInfo.index != -1) {
-				auto texture = gltfData.textures.at(textureInfo.index);
+				auto texture = gltfData->textures.at(textureInfo.index);
 
 				const auto imageIndex = texture.source;
 				CLOG_ABORT(imageIndex == -1, "This model is unsafe to use");
@@ -152,7 +153,7 @@ void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 void GltfCache::LoadMaterials()
 {
 	int32 matIndex = 0;
-	for (auto& mat : gltfData.materials) {
+	for (auto& mat : gltfData->materials) {
 
 		nlohmann::json data;
 		data["material"] = matIndex;

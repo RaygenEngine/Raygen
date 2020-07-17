@@ -2,7 +2,6 @@
 #include "assets/pods/SkinnedMesh.h"
 #include "assets/pods/MaterialInstance.h"
 #include "rendering/assets/GpuAssetHandle.h"
-#include "rendering/wrappers/RBuffer.h"
 #include "rendering/assets/GpuMesh.h"
 #include "universe/nodes/geometry/GeometryNode.h"
 
