@@ -1,9 +1,8 @@
 #pragma once
-#include "editor/windows/EdWindow.h"
-
-#include "editor/windows/editors/EdShaderStageEditorWindow.h"
-#include "engine/profiler/ProfilerSetup.h"
+#include "assets/pods/MaterialArchetype.h"
 #include "assets/pods/MaterialInstance.h"
+#include "editor/windows/editors/EdShaderStageEditorWindow.h"
+#include "editor/windows/EdWindow.h"
 
 namespace ed {
 class MaterialArchetypeEditorWindow : public AssetEditorWindowTemplate<MaterialArchetype> {

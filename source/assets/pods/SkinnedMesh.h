@@ -1,6 +1,8 @@
 #pragma once
+#include "reflection/GenMacros.h"
 #include "assets/AssetPod.h"
-#include "assets/pods/MaterialInstance.h"
+#include "assets/PodHandle.h"
+
 
 struct SkinnedVertex {
 	glm::vec3 position{};

@@ -1,15 +1,15 @@
 #include "pch.h"
 #include "AnimatedGeometryNode.h"
 
+#include "assets/pods/Animation.h"
+#include "assets/pods/SkinnedMesh.h"
+#include "editor/Editor.h"
+#include "engine/Input.h"
+#include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuSkinnedMesh.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneGeometry.h"
-#include "editor/Editor.h"
-#include "engine/profiler/ProfileScope.h"
-#include "rendering/assets/GpuSkinnedMesh.h"
-
-#include "engine/Input.h"
-#include <glm/gtx/matrix_decompose.hpp>
 
 AnimatedGeometryNode::AnimatedGeometryNode()
 {

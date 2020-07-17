@@ -6,12 +6,12 @@
 #include "editor/imgui/ImEd.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "rendering/Renderer.h"
-
-#include "rendering/scene/SceneSpotlight.h"
-#include "rendering/scene/SceneDirectionalLight.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneDirectionalLight.h"
+#include "rendering/scene/SceneSpotlight.h"
 
 #include <imgui/imgui.h>
+
 namespace ed {
 void HelpWindow::OnDraw(const char* title, bool* open)
 {

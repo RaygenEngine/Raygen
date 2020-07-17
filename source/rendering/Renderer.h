@@ -2,7 +2,6 @@
 #include "rendering/wrappers/RGbuffer.h"
 #include "rendering/out/CopyHdrTexture.h"
 #include "rendering/out/WriteEditor.h"
-#include "rendering/passes/GbufferPass.h"
 #include "rendering/passes/DepthmapPass.h"
 #include "rendering/ppt/PtCollection.h"
 
