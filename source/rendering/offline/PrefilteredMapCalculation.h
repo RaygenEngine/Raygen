@@ -1,5 +1,4 @@
 #pragma once
-#include "assets/pods/EnvironmentMap.h"
 #include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/wrappers/RImageAttachment.h"
 

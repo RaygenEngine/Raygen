@@ -1,5 +1,4 @@
 #pragma once
-#include "assets/pods/Shader.h"
 #include "rendering/assets/GpuAssetHandle.h"
 #include "core/StringUtl.h"
 

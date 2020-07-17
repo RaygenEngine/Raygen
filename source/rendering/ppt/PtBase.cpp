@@ -4,7 +4,8 @@
 #include "rendering/Swapchain.h"
 #include "rendering/Device.h"
 #include "rendering/Renderer.h"
-
+#include "assets/pods/Shader.h"
+#include "rendering/assets/GpuShader.h"
 namespace vl {
 
 void PtBase_SinglePipeline::Utl_CreatePipeline(

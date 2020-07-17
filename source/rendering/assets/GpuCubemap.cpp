@@ -7,6 +7,7 @@
 #include "rendering/wrappers/RBuffer.h"
 #include "rendering/Renderer.h"
 #include "rendering/VulkanUtl.h"
+#include "assets/pods/Cubemap.h"
 
 using namespace vl;
 

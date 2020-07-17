@@ -2,6 +2,8 @@
 #include "IrradianceMapCalculation.h"
 
 #include "assets/PodEditor.h"
+#include "assets/pods/Cubemap.h"
+#include "assets/pods/EnvironmentMap.h"
 #include "engine/Engine.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"

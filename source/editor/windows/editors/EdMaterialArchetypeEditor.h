@@ -1,6 +1,6 @@
 #pragma once
+
 #include "assets/pods/MaterialArchetype.h"
-#include "assets/pods/MaterialInstance.h"
 #include "editor/windows/editors/EdShaderStageEditorWindow.h"
 #include "editor/windows/EdWindow.h"
 

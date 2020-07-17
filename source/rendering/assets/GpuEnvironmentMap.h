@@ -1,5 +1,4 @@
 #pragma once
-#include "assets/pods/EnvironmentMap.h"
 #include "rendering/assets/GpuAssetHandle.h"
 #include "rendering/wrappers/RCubemap.h"
 

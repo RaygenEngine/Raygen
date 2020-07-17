@@ -2,6 +2,7 @@
 #include "GpuMaterialInstance.h"
 
 #include "assets/pods/MaterialInstance.h"
+#include "assets/pods/MaterialArchetype.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"

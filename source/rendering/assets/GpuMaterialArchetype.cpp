@@ -8,6 +8,7 @@
 #include "rendering/Layouts.h"
 #include "rendering/passes/DepthmapPass.h"
 #include "rendering/passes/GBufferPass.h"
+#include "assets/pods/MaterialArchetype.h"
 
 using namespace vl;
 

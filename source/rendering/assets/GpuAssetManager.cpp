@@ -14,6 +14,7 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuCubemap.h"
 #include "rendering/Device.h"
+#include "assets/pods/Mesh.h"
 
 namespace vl {
 

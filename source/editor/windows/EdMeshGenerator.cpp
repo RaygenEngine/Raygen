@@ -8,6 +8,7 @@
 #include "engine/console/ConsoleVariable.h"
 #include "assets/PodEditor.h"
 #include "assets/pods/MaterialInstance.h"
+#include "assets/pods/Mesh.h"
 
 
 #include <imgui/imgui.h>

@@ -5,6 +5,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneReflectionProbe.h"
+#include "rendering/assets/GpuShader.h"
 
 namespace vl {
 void PtReflProb::MakeLayout()

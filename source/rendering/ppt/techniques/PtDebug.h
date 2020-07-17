@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rendering/ppt/PtBase.h"
+#include "rendering/wrappers/RDescriptorLayout.h"
 
 namespace vl {
 class PtDebug : public PtBase_SinglePipeline {

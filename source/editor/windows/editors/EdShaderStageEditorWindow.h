@@ -1,7 +1,6 @@
 #pragma once
 #include "editor/windows/EdWindow.h"
 
-#include "assets/pods/ShaderStage.h"
 
 class TextEditor;
 namespace ed {
