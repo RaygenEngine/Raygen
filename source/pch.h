@@ -8,6 +8,10 @@
 #include <filesystem>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
+#include <map>
+#include <xtree>
+#include <functional>
 
 
 #include "core/BoolFlag.h"
@@ -19,4 +23,9 @@
 #include "engine/Logger.h"
 
 #include <vulkan/vulkan.hpp>
+
+#define MAGIC_ENUM_RANGE_MIN -1
+#define MAGIC_ENUM_RANGE_MAX 24
+#include <magic_enum.hpp>
+
 namespace fs = std::filesystem;

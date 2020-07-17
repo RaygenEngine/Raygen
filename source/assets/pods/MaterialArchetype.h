@@ -1,9 +1,8 @@
 #pragma once
 #include "assets/pods/Sampler.h"
 #include "reflection/GenMacros.h"
-#include "assets/pods/ShaderStage.h"
 #include "assets/util/SpirvCompiler.h"
-#include "assets/util/shadergen/ShaderGen.h"
+#include "assets/PodHandle.h"
 
 
 namespace shd {

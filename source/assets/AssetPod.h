@@ -58,8 +58,6 @@ namespace assetdetail {
 inline std::vector<AssetPod*> podAccessor{ nullptr }; // One space for uninitialized pod
 }
 
-template<typename T>
-concept CAssetPod = std::derived_from<T, AssetPod>;
 
 // This metadata is saved on disk as a header for the disk asset
 struct PodMetaData {

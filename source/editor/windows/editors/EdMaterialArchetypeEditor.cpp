@@ -9,6 +9,7 @@
 #include "editor/imgui/ImAssetSlot.h"
 #include "editor/misc/NativeFileBrowser.h"
 
+#include "assets/pods/MaterialArchetype.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
 
 #include <imguicolortextedit/TextEditor.h>

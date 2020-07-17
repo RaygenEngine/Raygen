@@ -3,8 +3,7 @@
 #include "rendering/assets/GpuAssetHandle.h"
 #include "rendering/wrappers/RBuffer.h"
 #include "universe/nodes/geometry/GeometryNode.h"
-
-#include <vulkan/vulkan.hpp>
+#include "rendering/assets/GpuMaterialInstance.h"
 
 namespace vl {
 class RBuffer;

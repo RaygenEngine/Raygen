@@ -1,9 +1,8 @@
 #pragma once
-#include "assets/pods/Sampler.h"
+#include "assets/pods/Image.h"
 #include "rendering/assets/GpuAssetHandle.h"
 #include "rendering/wrappers/RImage2D.h"
 
-#include <vulkan/vulkan.hpp>
 
 struct Image::Gpu : public vl::GpuAssetTemplate<::Image> {
 	UniquePtr<vl::RImage2D> image;

@@ -3,8 +3,7 @@
 #include "reflection/TypeId.h"
 #include "engine/Logger.h"
 
-#define MAGIC_ENUM_RANGE_MIN -1
-#define MAGIC_ENUM_RANGE_MAX 24
+
 #include <functional>
 #include <magic_enum.hpp>
 #include <map>
