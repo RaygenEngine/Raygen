@@ -1,9 +1,6 @@
 #pragma once
 #include "assets/AssetPod.h"
-#include "assets/pods/ShaderStage.h"
-#include "assets/PodHandle.h"
-#include "reflection/GenMacros.h"
-
+#include "assets/util/ShaderStageEnums.h"
 
 struct Shader : public AssetPod {
 	REFLECTED_POD(Shader)

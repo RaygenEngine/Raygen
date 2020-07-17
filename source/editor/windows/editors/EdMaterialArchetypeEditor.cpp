@@ -2,6 +2,7 @@
 #include "EdMaterialArchetypeEditor.h"
 
 #include "assets/PodEditor.h"
+#include "assets/pods/MaterialInstance.h"
 #include "assets/AssetRegistry.h"
 #include "assets/util/SpirvReflector.h"
 #include "assets/util/SpirvCompiler.h"

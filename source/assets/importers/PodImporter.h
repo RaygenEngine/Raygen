@@ -1,7 +1,4 @@
 #pragma once
-#include "assets/PodHandle.h"
-#include "reflection/TypeId.h"
-#include "reflection/ReflClass.h"
 
 struct PodEntry;
 

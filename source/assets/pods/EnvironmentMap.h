@@ -1,11 +1,6 @@
 #pragma once
 #include "assets/AssetPod.h"
-#include "assets/PodHandle.h"
-#include "assets/pods/Cubemap.h"
-#include "assets/pods/Image.h"
-#include "reflection/GenMacros.h"
 
-#include <array>
 
 struct EnvironmentMap : AssetPod {
 

@@ -1,5 +1,4 @@
 #pragma once
-#include "assets/pods/MaterialArchetype.h"
 
 struct DynamicDescriptorSetLayout;
 namespace shd {

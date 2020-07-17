@@ -5,6 +5,7 @@
 #include "rendering/wrappers/RBuffer.h"
 #include "rendering/Renderer.h"
 #include "rendering/VulkanUtl.h"
+#include "assets/pods/Image.h"
 
 using namespace vl;
 

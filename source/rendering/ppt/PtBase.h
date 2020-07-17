@@ -1,9 +1,5 @@
 #pragma once
-
-#include <vulkan/vulkan.hpp>
-
-#include "reflection/GenMacros.h"
-#include "rendering/assets/GpuShader.h"
+#include "rendering/assets/GpuAssetHandle.h"
 
 namespace vl {
 

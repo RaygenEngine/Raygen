@@ -1,5 +1,4 @@
 #pragma once
-#include "assets/pods/MaterialArchetype.h"
 #include "rendering/assets/GpuAssetHandle.h"
 #include "rendering/assets/GpuImage.h"
 #include "rendering/assets/GpuSampler.h"

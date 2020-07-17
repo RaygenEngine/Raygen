@@ -1,6 +1,5 @@
 #pragma once
 #include "editor/windows/EdWindow.h"
-#include "assets/pods/Mesh.h"
 
 namespace ed {
 class MeshGenerator : public UniqueWindow {

@@ -12,6 +12,7 @@
 #include <map>
 #include <xtree>
 #include <functional>
+#include <array>
 
 
 #include "core/BoolFlag.h"
