@@ -4,6 +4,8 @@
 #include "rendering/Device.h"
 #include "reflection/ReflEnum.h"
 
+#include "assets/AssetRegistry.h"
+
 ShaderStage::Gpu::Gpu(PodHandle<ShaderStage> podHandle)
 	: GpuAssetTemplate(podHandle)
 {

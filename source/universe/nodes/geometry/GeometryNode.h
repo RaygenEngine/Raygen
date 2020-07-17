@@ -1,6 +1,9 @@
 #pragma once
 #include "universe/nodes/Node.h"
 
+#include "assets/PodHandle.h"
+struct Mesh;
+
 class GeometryNode : public Node {
 	REFLECTED_NODE(GeometryNode, Node, DF_FLAGS(ModelChange))
 	{

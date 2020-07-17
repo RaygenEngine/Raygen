@@ -4,7 +4,7 @@
 #include "engine/Logger.h"
 
 // The central library for the engines Uri convention.
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 // TEST: lib
 // DOC: lib
@@ -125,25 +125,21 @@ inline bool IsUri(const std::string& path)
 	return path[0] != '/';
 }
 
+
 // Expects json object, values or arrays are not allowed.
-inline Uri MakeChildJson(const Uri& parent, const nlohmann::json& json)
-{
-	CLOG_ABORT(!json.is_object(), "Make child json expects a json object.");
-	std::string v{ GetDiskPathStrView(parent) };
-	v += json.dump();
-	return v;
-}
+Uri MakeChildJson(const Uri& parent, const nlohmann::json& json);
 
-inline nlohmann::json GetJson(const Uri& path)
-{
-	CLOG_ABORT(!IsCpu(path), "Attempted to get json from a disk path: {}", path);
 
-	size_t startOffset = path.find_first_of(detail::JsonBegin);
-	size_t length = path.size() - startOffset;
-	std::string_view str{ path.data() + startOffset, length };
-
-	return nlohmann::json::parse(str);
-}
+// inline nlohmann::json GetJson(const Uri& path)
+//{
+//	CLOG_ABORT(!IsCpu(path), "Attempted to get json from a disk path: {}", path);
+//
+//	size_t startOffset = path.find_first_of(detail::JsonBegin);
+//	size_t length = path.size() - startOffset;
+//	std::string_view str{ path.data() + startOffset, length };
+//
+//	return nlohmann::json::parse(str);
+//}
 
 // Convert a uri to a path relative the current working directory.
 inline const char* ToSystemPath(const Uri& path)

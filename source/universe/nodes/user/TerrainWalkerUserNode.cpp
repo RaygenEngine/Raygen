@@ -1,12 +1,12 @@
 ﻿#include "pch.h"
 #include "TerrainWalkerUserNode.h"
 
-#include "assets/util/ParsingUtl.h"
 #include "engine/Engine.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "universe/nodes/RootNode.h"
 #include "assets/pods/Image.h"
+
 
 float TerrainWalkerUserNode::CaclulateHeight(glm::vec3 worldPos, float deltaTime)
 {
@@ -24,7 +24,7 @@ float TerrainWalkerUserNode::CaclulateHeight(glm::vec3 worldPos, float deltaTime
 	}
 
 
-	auto img = m_heightmap.Lock();
+	const Image* img = m_heightmap.Lock();
 	auto sampleImg = [&](int w, int h) {
 		int sampleW = glm::clamp(w, 0, img->width - 1);
 		int sampleH = glm::clamp(h, 0, img->height - 1);

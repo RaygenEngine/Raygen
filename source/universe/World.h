@@ -11,7 +11,7 @@
 #include "universe/NodeFactory.h" // Not required directly, used in templates
 #include "universe/nodes/NodeIterator.h"
 
-#include <nlohmann/json.hpp>
+
 #include <unordered_set>
 
 class Node;
@@ -38,7 +38,7 @@ inline class World {
 
 	NodeFactory* m_nodeFactory;
 
-	nlohmann::json m_loadedFrom;
+	UniquePtr<nlohmann::json> m_loadedFrom;
 	fs::path m_loadedFromPath;
 
 	CameraNode* m_activeCamera{ nullptr };
@@ -123,7 +123,7 @@ public:
 
 	[[nodiscard]] NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
 
-	[[nodiscard]] nlohmann::json& GetLoadedFromJson() { return m_loadedFrom; }
+	[[nodiscard]] nlohmann::json& GetLoadedFromJson() { return *m_loadedFrom; }
 	[[nodiscard]] fs::path& GetLoadedFromPath() { return m_loadedFromPath; }
 
 private:

@@ -1,6 +1,10 @@
 #pragma once
 #include "universe/nodes/user/UserNode.h"
-#include "assets/pods/Image.h"
+
+#include "assets/PodHandle.h"
+
+struct Image;
+
 
 class TerrainWalkerUserNode : public UserNode {
 	REFLECTED_NODE(TerrainWalkerUserNode, UserNode)

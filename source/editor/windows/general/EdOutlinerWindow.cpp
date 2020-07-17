@@ -9,10 +9,11 @@
 #include "universe/nodes/RootNode.h"
 #include "universe/Universe.h"
 #include "universe/WorldOperationsUtl.h"
-
+#include "assets/util/ParsingUtl.h"
 #include "assets/pods/Mesh.h"
 
 #include <imgui/imgui.h>
+
 namespace ed {
 void OutlinerWindow::ImguiDraw()
 {

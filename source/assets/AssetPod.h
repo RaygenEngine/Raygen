@@ -54,6 +54,9 @@ struct BasePodHandle {
 	[[nodiscard]] bool operator==(const BasePodHandle& other) const { return other.uid == this->uid && uid != 0; }
 };
 
+namespace assetdetail {
+inline std::vector<AssetPod*> podAccessor{ nullptr }; // One space for uninitialized pod
+}
 
 template<typename T>
 concept CAssetPod = std::derived_from<T, AssetPod>;

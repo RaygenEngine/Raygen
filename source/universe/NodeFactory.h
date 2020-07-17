@@ -1,6 +1,4 @@
 #pragma once
-#include "assets/util/ParsingUtl.h"
-#include "core/StringUtl.h"
 #include "engine/Listener.h"
 
 #include <nlohmann/json_fwd.hpp>
@@ -13,7 +11,7 @@ class NodeFactory : public Listener {
 
 
 	// PERF: use unordered map here. Ordered map enables the the editor to show the list alphabetically.
-	std::map<std::string, const ReflClass*> m_nodeEntries;
+	std::map<std::string, const class ReflClass*> m_nodeEntries;
 
 	friend class World;
 	friend class EditorObject_;

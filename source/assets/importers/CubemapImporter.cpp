@@ -3,6 +3,7 @@
 
 #include "assets/AssetImporterManager.h"
 #include "assets/util/ImageUtl.h"
+#include <nlohmann/json.hpp>
 
 #include <fstream>
 
