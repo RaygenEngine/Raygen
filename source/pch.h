@@ -11,5 +11,6 @@
 #include "core/MathUtl.h"
 #include "core/MetaTemplates.h"
 
+#include "engine/Logger.h"
 #include <filesystem>
 namespace fs = std::filesystem;

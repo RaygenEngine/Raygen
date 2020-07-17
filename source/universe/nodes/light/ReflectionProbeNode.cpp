@@ -2,7 +2,7 @@
 #include "ReflectionProbeNode.h"
 
 #include "rendering/assets/GpuAssetManager.h"
-
+#include "rendering/scene/SceneReflectionProbe.h"
 
 ReflectionProbeNode::ReflectionProbeNode()
 {

@@ -2,6 +2,7 @@
 #include "DirectionalLightNode.h"
 
 #include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneDirectionalLight.h"
 
 void DirectionalLightNode::CalculateWorldAABB()
 {

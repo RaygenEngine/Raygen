@@ -4,6 +4,8 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneDirectionalLight.h"
+
 
 namespace vl {
 void PtDirectionalLight::MakeLayout()
