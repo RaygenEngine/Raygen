@@ -1,6 +1,8 @@
 #pragma once
 #include "assets/AssetPod.h"
-#include "assets/pods/MaterialInstance.h"
+#include "assets/PodHandle.h"
+#include "reflection/GenMacros.h"
+
 
 struct Vertex {
 	glm::vec3 position{};

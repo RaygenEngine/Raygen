@@ -2,7 +2,6 @@
 #include "Node.h"
 
 #include "assets/util/ParsingUtl.h"
-#include "reflection/ReflectionTools.h"
 #include "universe/Universe.h"
 
 #include <glm/gtx/matrix_decompose.hpp>

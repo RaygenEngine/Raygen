@@ -1,6 +1,7 @@
 #pragma once
-#include "assets/PodHandle.h"
-#include "assets/pods/Image.h"
+#include "assets/AssetPod.h"
+#include "reflection/GenMacros.h"
+
 
 struct Sampler : AssetPod {
 	REFLECTED_POD(Sampler)

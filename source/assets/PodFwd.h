@@ -66,3 +66,6 @@ enum class StdAssets
 	GltfMaterialArchetype,
 	_COUNT
 };
+
+template<typename T>
+concept CAssetPod = true; // TODO:

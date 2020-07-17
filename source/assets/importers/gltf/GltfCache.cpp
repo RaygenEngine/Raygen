@@ -3,6 +3,9 @@
 
 #include "assets/AssetImporterManager.h"
 #include "assets/importers/gltf/GltfUtl.h"
+#include "assets/pods/Sampler.h"
+#include "assets/pods/Image.h"
+
 #include <tinygltf/tiny_gltf.h>
 #include <nlohmann/json.hpp>
 
