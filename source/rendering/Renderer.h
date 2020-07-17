@@ -5,13 +5,6 @@
 #include "rendering/passes/DepthmapPass.h"
 #include "rendering/ppt/PtCollection.h"
 
-// TODO:
-#include "rendering/passes/GBufferPass.h"
-
-
-#include <vulkan/vulkan.hpp>
-
-
 namespace vl {
 using SemVec = std::vector<vk::Semaphore>;
 
