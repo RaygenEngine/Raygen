@@ -5,6 +5,8 @@
 #include "assets/importers/gltf/GltfUtl.h"
 #include "assets/pods/Sampler.h"
 #include "assets/pods/Image.h"
+#include "assets/pods/MaterialArchetype.h"
+#include "assets/pods/MaterialInstance.h"
 
 #include <tinygltf/tiny_gltf.h>
 #include <nlohmann/json.hpp>

@@ -1,21 +1,19 @@
 #include "pch.h"
 #include "Renderer.h"
 
-#include "editor/imgui/ImguiImpl.h"
+#include "engine/Engine.h"
 #include "engine/Events.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
+#include "rendering/Device.h"
 #include "rendering/Instance.h"
+#include "rendering/passes/GBufferPass.h"
+#include "rendering/ppt/techniques/PtDebug.h"
+#include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneDirectionalLight.h"
+#include "rendering/scene/SceneSpotlight.h"
 #include "rendering/Swapchain.h"
 #include "rendering/VulkanUtl.h"
-#include "rendering/ppt/techniques/PtDebug.h"
-#include "universe/nodes/camera/CameraNode.h"
-#include "engine/Engine.h"
-
-#include "rendering/scene/Scene.h"
-#include "rendering/scene/SceneSpotlight.h"
-#include "rendering/scene/SceneDirectionalLight.h"
-#include "rendering/Device.h"
 
 constexpr int32 c_framesInFlight = 2;
 namespace {

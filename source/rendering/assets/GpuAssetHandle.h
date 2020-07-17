@@ -78,7 +78,7 @@ struct GpuHandle : public BasePodHandle {
 	GpuHandle<T>() { uid = GetDefaultPodUid<T>(); }
 	GpuHandle<T>(size_t inUid) { uid = inUid; }
 
-	[[nodiscard]] GpuAsset<T>& Lock() const { return vl::GpuAssetManager->LockHandle<T>(uid); }
+	[[nodiscard]] typename T::Gpu& Lock() const { return vl::GpuAssetManager->LockHandle<T>(uid); }
 };
 
 } // namespace vl

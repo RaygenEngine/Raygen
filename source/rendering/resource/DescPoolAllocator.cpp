@@ -2,9 +2,7 @@
 #include "DescPoolAllocator.h"
 
 #include "engine/console/ConsoleVariable.h"
-#include "engine/Logger.h"
 #include "rendering/Device.h"
-#include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
 
 ConsoleFunction<> g_showPoolAllocations{ "r.mem.showDescriptorPools",

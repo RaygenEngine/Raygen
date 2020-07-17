@@ -1,4 +1,7 @@
 #pragma once
+#include "core/Types.h"
+
+#include <string>
 
 // Base class for the custom and default "Game" class.
 // Game class provides overrides for the most important classes, functions and settings of the base engine.

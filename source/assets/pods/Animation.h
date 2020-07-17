@@ -1,7 +1,6 @@
 #pragma once
 #include "assets/AssetPod.h"
 #include "reflection/GenMacros.h"
-#include "assets/pods/SkinnedMesh.h"
 
 enum class AnimationPath
 {

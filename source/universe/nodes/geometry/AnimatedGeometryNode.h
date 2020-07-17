@@ -1,6 +1,5 @@
 #pragma once
-#include "assets/pods/SkinnedMesh.h"
-#include "assets/pods/Animation.h"
+#include "assets/PodHandle.h"
 #include "universe/nodes/Node.h"
 
 class AnimatedGeometryNode : public Node {

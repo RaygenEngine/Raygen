@@ -1,13 +1,13 @@
 #include "pch.h"
 #include "GpuMaterialArchetype.h"
 
+#include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
-#include "rendering/assets/GpuAssetManager.h"
-#include "rendering/Renderer.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/passes/DepthmapPass.h"
+#include "rendering/passes/GBufferPass.h"
 
 using namespace vl;
 
