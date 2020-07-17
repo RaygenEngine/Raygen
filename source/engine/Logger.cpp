@@ -1,12 +1,24 @@
 #include "pch.h"
 #include "Logger.h"
 
+#include "engine/console/ConsoleVariable.h"
+
 #include <spdlog/sinks/ostream_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
 
 std::shared_ptr<spdlog::logger> g_logger;
+
+
+void ConsoleLogLevel();
+
+ConsoleVarFunc<LogLevel> g_logLevel("loglevel", ConsoleLogLevel, LogLevel::Info, "Change logging level.");
+
+void ConsoleLogLevel()
+{
+	Log.Init(g_logLevel);
+}
 
 void Log_::Init(LogLevel level)
 {

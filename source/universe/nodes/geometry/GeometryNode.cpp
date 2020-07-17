@@ -3,7 +3,10 @@
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/scene/Scene.h"
+
+#include "rendering/scene/SceneGeometry.h"
 #include "rendering/assets/GpuMesh.h"
+
 
 GeometryNode::GeometryNode()
 {

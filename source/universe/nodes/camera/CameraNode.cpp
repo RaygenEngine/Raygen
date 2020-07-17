@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "CameraNode.h"
 
+#include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneCamera.h"
 
 void CameraNode::EnqueueActiveCamera()
 {

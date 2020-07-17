@@ -1,13 +1,18 @@
 #pragma once
-#include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneGeometry.h"
-#include "rendering/scene/SceneReflectionProbe.h"
-#include "rendering/scene/SceneSpotlight.h"
-#include "rendering/scene/SceneDirectionalLight.h"
+// MAINT: Remove
+#include <vulkan/vulkan.hpp>
 
 #include <functional>
 #include <mutex>
 #include <vector>
+
+struct SceneGeometry;
+struct SceneCamera;
+struct SceneSpotlight;
+struct SceneDirectionalLight;
+struct SceneReflectionProbe;
+struct SceneAnimatedGeometry;
+
 
 template<typename T>
 concept CSceneElem
@@ -187,12 +192,7 @@ private:
 	}
 
 public:
-	void BuildAll()
-	{
-		for (auto reflProb : reflProbs.elements) {
-			reflProb->Build();
-		}
-	}
+	void BuildAll();
 
 	void ConsumeCmdQueue()
 	{

@@ -18,8 +18,6 @@ public:
 	[[nodiscard]] constexpr bool IsDefault() const { return uid == s_defaultUid; }
 
 
-	static_assert(std::is_base_of_v<AssetPod, PodType>, "Pod type should be a pod");
-
 	[[nodiscard]] const PodEntry* _Debug() const { return AssetHandlerManager::GetEntry(*this); }
 	[[nodiscard]] const PodType* Lock() const { return AssetHandlerManager::Z_Handle_AccessPod<PodType>(uid); }
 

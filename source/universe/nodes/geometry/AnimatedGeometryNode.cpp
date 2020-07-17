@@ -3,10 +3,10 @@
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/assets/GpuMesh.h"
-#include "rendering/assets/GpuSkinnedMesh.h"
+#include "rendering/scene/SceneGeometry.h"
 #include "editor/Editor.h"
 #include "engine/profiler/ProfileScope.h"
+#include "rendering/assets/GpuSkinnedMesh.h"
 
 #include "engine/Input.h"
 #include <glm/gtx/matrix_decompose.hpp>

@@ -16,6 +16,8 @@
 #include "rendering/Device.h"
 
 namespace vl {
+
+
 vk::Sampler GpuAssetManager_::GetDefaultSampler()
 {
 	// TODO: auto load the defaults of each asset type

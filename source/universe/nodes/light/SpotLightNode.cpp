@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "SpotlightNode.h"
 
+#include "rendering/scene/SceneSpotlight.h"
 #include "rendering/scene/Scene.h"
 
 void SpotlightNode::CalculateWorldAABB()

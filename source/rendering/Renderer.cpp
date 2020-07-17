@@ -12,6 +12,10 @@
 #include "universe/nodes/camera/CameraNode.h"
 #include "engine/Engine.h"
 
+#include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneSpotlight.h"
+#include "rendering/scene/SceneDirectionalLight.h"
+
 constexpr int32 c_framesInFlight = 2;
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)

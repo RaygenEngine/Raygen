@@ -3,6 +3,18 @@
 
 #include "rendering/Renderer.h"
 #include "engine/console/ConsoleVariable.h"
+#include "rendering/scene/SceneReflectionProbe.h"
+#include "rendering/scene/SceneCamera.h"
+#include "rendering/scene/SceneSpotlight.h"
+#include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/SceneDirectionalLight.h"
+
+void Scene_::BuildAll()
+{
+	for (auto reflProb : reflProbs.elements) {
+		reflProb->Build();
+	}
+}
 
 void Scene_::DrainQueueForDestruction()
 {

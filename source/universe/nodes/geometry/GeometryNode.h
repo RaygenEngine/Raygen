@@ -1,5 +1,4 @@
 #pragma once
-#include "assets/pods/Mesh.h"
 #include "universe/nodes/Node.h"
 
 class GeometryNode : public Node {
