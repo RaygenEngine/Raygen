@@ -81,3 +81,5 @@ struct PodMetaData {
 	// general switch for updating asset versions or fixing corrupt assets.
 	bool reimportOnLoad{ false };
 };
+
+#include "assets/PodFwd.h"

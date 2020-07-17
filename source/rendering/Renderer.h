@@ -5,6 +5,10 @@
 #include "rendering/passes/DepthmapPass.h"
 #include "rendering/ppt/PtCollection.h"
 
+// TODO:
+#include "rendering/passes/GBufferPass.h"
+
+
 #include <vulkan/vulkan.hpp>
 
 

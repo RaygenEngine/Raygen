@@ -20,6 +20,7 @@ public:                                                                         
 		return cl;                                                                                                     \
 	}                                                                                                                  \
 	struct Gpu;                                                                                                        \
+	using GpuAssetType = Gpu##Class;                                                                                   \
                                                                                                                        \
 public:                                                                                                                \
 	static void GenerateReflection(ReflClass& refl)

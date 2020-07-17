@@ -1,6 +1,8 @@
 #pragma once
-//#include "assets/pods/Mesh.h"
-//#include "assets/pods/SkinnedMesh.h"
+// TODO:
+#include "assets/pods/Mesh.h"
+// TODO:
+#include "assets/pods/SkinnedMesh.h"
 #include "rendering/assets/GpuAssetHandle.h"
 #include "universe/nodes/geometry/GeometryNode.h"
 #include "universe/nodes/geometry/AnimatedGeometryNode.h"

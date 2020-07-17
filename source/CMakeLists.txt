@@ -110,8 +110,11 @@ add_compile_definitions(NOMINMAX NODRAWTEXT NOOPENFILE) # TODO:
 # multi-core compilation
 if(MSVC)
 	target_compile_options(Raygen PRIVATE "/MP")
+	# target_compile_options(Raygen PRIVATE "/experimental:preprocessor")
+
 	# unsafe strcpy used by some dependencies
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS) # CHECK:
+	
 endif()
 
 
