@@ -9,7 +9,7 @@
 using namespace vl;
 
 // PERF:
-SkinnedMesh::Gpu::Gpu(PodHandle<SkinnedMesh> podHandle)
+GpuSkinnedMesh::GpuSkinnedMesh(PodHandle<SkinnedMesh> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	auto data = podHandle.Lock();
@@ -54,7 +54,7 @@ SkinnedMesh::Gpu::Gpu(PodHandle<SkinnedMesh> podHandle)
 	}
 }
 
-void SkinnedMesh::Gpu::Update(const AssetUpdateInfo& info)
+void GpuSkinnedMesh::Update(const AssetUpdateInfo& info)
 {
 	auto data = podHandle.Lock();
 

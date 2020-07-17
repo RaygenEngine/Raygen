@@ -8,14 +8,14 @@
 
 using namespace vl;
 
-Sampler::Gpu::Gpu(PodHandle<Sampler> podHandle)
+GpuSampler::GpuSampler(PodHandle<Sampler> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	Update({});
 }
 
 
-void Sampler::Gpu::Update(const AssetUpdateInfo& info)
+void GpuSampler::Update(const AssetUpdateInfo& info)
 {
 	auto textureData = podHandle.Lock();
 

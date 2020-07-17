@@ -10,13 +10,13 @@
 
 using namespace vl;
 
-Cubemap::Gpu::Gpu(PodHandle<Cubemap> podHandle)
+GpuCubemap::GpuCubemap(PodHandle<Cubemap> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	Update({});
 }
 
-void Cubemap::Gpu::Update(const AssetUpdateInfo&)
+void GpuCubemap::Update(const AssetUpdateInfo&)
 {
 	auto cubemapPod = podHandle.Lock();
 	ClearDependencies();

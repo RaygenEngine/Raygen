@@ -19,7 +19,6 @@ public:                                                                         
 		static ReflClass cl = ReflClass::Generate<Class>(FA_MAIL_BULK);                                                \
 		return cl;                                                                                                     \
 	}                                                                                                                  \
-	struct Gpu;                                                                                                        \
 	using GpuAssetType = Gpu##Class;                                                                                   \
                                                                                                                        \
 public:                                                                                                                \

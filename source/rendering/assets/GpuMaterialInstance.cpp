@@ -14,14 +14,14 @@
 
 using namespace vl;
 
-MaterialInstance::Gpu::Gpu(PodHandle<MaterialInstance> podHandle)
+GpuMaterialInstance::GpuMaterialInstance(PodHandle<MaterialInstance> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	Update({}); // NOTE: Virtual function call in constructor will not call subclasses overrides, thats why we
 				// explicitly mark this function as final in the header
 }
 
-void MaterialInstance::Gpu::Update(const AssetUpdateInfo& info)
+void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 {
 	auto data = podHandle.Lock();
 	ClearDependencies();

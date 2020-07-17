@@ -59,12 +59,12 @@ vk::UniquePipelineLayout CreatePipelineLayout(size_t pcSize, const std::vector<v
 }
 
 template<typename Pass>
-MaterialArchetype::Gpu::PassInfo CreatePassInfoFrag(const char* originalShader, const std::vector<uint32_t>& fragBinary,
+GpuMaterialArchetype::PassInfo CreatePassInfoFrag(const char* originalShader, const std::vector<uint32_t>& fragBinary,
 	const std::vector<vk::DescriptorSetLayout>& descLayouts)
 {
 	size_t pushConstantSize = Pass::GetPushConstantSize();
 
-	MaterialArchetype::Gpu::PassInfo info;
+	GpuMaterialArchetype::PassInfo info;
 	info.shaderModules.emplace_back(CreateShaderModule(fragBinary));
 
 	info.shaderStages = CreateShaderStages(originalShader, *info.shaderModules[0]);
@@ -77,14 +77,14 @@ MaterialArchetype::Gpu::PassInfo CreatePassInfoFrag(const char* originalShader, 
 
 
 template<typename Pass>
-MaterialArchetype::Gpu::PassInfo CreatePassInfoOptional(const char* originalShader,
+GpuMaterialArchetype::PassInfo CreatePassInfoOptional(const char* originalShader,
 	const std::vector<uint32_t>& vertBinary, const std::vector<uint32_t>& fragBinary,
 	const std::vector<vk::DescriptorSetLayout>& descLayouts)
 {
 	if (vertBinary.size() > 0) {
 		size_t pushConstantSize = Pass::GetPushConstantSize();
 
-		MaterialArchetype::Gpu::PassInfo info;
+		GpuMaterialArchetype::PassInfo info;
 		info.shaderModules.emplace_back(CreateShaderModule(vertBinary));
 		auto& frag = info.shaderModules.emplace_back(CreateShaderModule(fragBinary));
 
@@ -116,14 +116,14 @@ MaterialArchetype::Gpu::PassInfo CreatePassInfoOptional(const char* originalShad
 
 } // namespace
 
-MaterialArchetype::Gpu::Gpu(PodHandle<MaterialArchetype> podHandle)
+GpuMaterialArchetype::GpuMaterialArchetype(PodHandle<MaterialArchetype> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	Update({}); // NOTE: Virtual function call in constructor will not call subclasses overrides, thats why we
 				// explicitly mark this function as final in the header
 }
 
-void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& updateInfo)
+void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 {
 	auto arch = podHandle.Lock();
 	ClearDependencies();
@@ -163,7 +163,7 @@ void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& updateInfo)
 	// GBufferAnim Pass
 	{
 		size_t pushConstantSize = GbufferPass::GetPushConstantSize();
-		MaterialArchetype::Gpu::PassInfo info;
+		GpuMaterialArchetype::PassInfo info;
 		info.shaderModules.emplace_back(CreateShaderModule(arch->gbufferFragBinary));
 		info.shaderStages = CreateShaderStages("engine-data/spv/geometry/gbuffer-anim.shader", *info.shaderModules[0]);
 		info.pipelineLayout = CreatePipelineLayout(
@@ -178,7 +178,7 @@ void MaterialArchetype::Gpu::Update(const AssetUpdateInfo& updateInfo)
 	{
 		size_t pushConstantSize = DepthmapPass::GetPushConstantSize();
 
-		MaterialArchetype::Gpu::PassInfo info;
+		GpuMaterialArchetype::PassInfo info;
 		info.shaderModules.emplace_back(CreateShaderModule(arch->depthFragBinary));
 		info.shaderStages = CreateShaderStages("engine-data/spv/geometry/depthmap-anim.shader", *info.shaderModules[0]);
 		info.pipelineLayout = CreatePipelineLayout(

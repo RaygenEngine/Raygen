@@ -6,14 +6,14 @@
 #include <vulkan/vulkan.hpp>
 
 
-struct MaterialInstance::Gpu : public vl::GpuAssetTemplate<MaterialInstance> {
+struct GpuMaterialInstance : public vl::GpuAssetTemplate<MaterialInstance> {
 	vl::GpuHandle<MaterialArchetype> archetype;
 
 	UniquePtr<vl::RBuffer> uboBuf;
 	vk::DescriptorSet descSet;
 
 	bool hasDescriptorSet{ false };
-	MaterialInstance::Gpu(PodHandle<MaterialInstance> podHandle);
+	GpuMaterialInstance(PodHandle<MaterialInstance> podHandle);
 
 	void Update(const AssetUpdateInfo& info) override final;
 };

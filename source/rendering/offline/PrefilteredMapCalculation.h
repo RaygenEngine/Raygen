@@ -30,7 +30,7 @@ class PrefilteredMapCalculation {
 	RDescriptorLayout m_skyboxDescLayout;
 	vk::DescriptorSet m_descSet;
 
-	EnvironmentMap::Gpu* m_envmapAsset;
+	GpuEnvironmentMap* m_envmapAsset;
 
 	uint32 m_resolution;
 
@@ -44,7 +44,7 @@ class PrefilteredMapCalculation {
 	void EditPods();
 
 public:
-	PrefilteredMapCalculation(EnvironmentMap::Gpu* envmapAsset, uint32 calculationResolution);
+	PrefilteredMapCalculation(GpuEnvironmentMap* envmapAsset, uint32 calculationResolution);
 
 	void Calculate();
 };

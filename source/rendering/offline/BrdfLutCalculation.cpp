@@ -18,7 +18,7 @@
 #include "assets/AssetRegistry.h"
 
 namespace vl {
-BrdfLutCalculation::BrdfLutCalculation(EnvironmentMap::Gpu* envmapAsset, uint32 calculationResolution)
+BrdfLutCalculation::BrdfLutCalculation(GpuEnvironmentMap* envmapAsset, uint32 calculationResolution)
 	: m_envmapAsset(envmapAsset)
 	, m_resolution(calculationResolution)
 {

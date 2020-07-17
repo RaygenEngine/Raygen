@@ -44,7 +44,7 @@ std::array vertices = {
 
 
 namespace vl {
-IrradianceMapCalculation::IrradianceMapCalculation(EnvironmentMap::Gpu* envmapAsset, uint32 calculationResolution)
+IrradianceMapCalculation::IrradianceMapCalculation(GpuEnvironmentMap* envmapAsset, uint32 calculationResolution)
 	: m_envmapAsset(envmapAsset)
 	, m_resolution(calculationResolution)
 {

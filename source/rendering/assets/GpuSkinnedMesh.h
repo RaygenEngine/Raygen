@@ -23,11 +23,11 @@
 //	UniquePtr<vl::RBuffer> indexBuffer;
 //};
 
-struct SkinnedMesh::Gpu : public vl::GpuAssetTemplate<SkinnedMesh> {
+struct GpuSkinnedMesh : public vl::GpuAssetTemplate<SkinnedMesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;
 
 
-	SkinnedMesh::Gpu(PodHandle<SkinnedMesh> podHandle);
+	GpuSkinnedMesh(PodHandle<SkinnedMesh> podHandle);
 
 	void Update(const AssetUpdateInfo& info) override final;
 };

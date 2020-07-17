@@ -18,7 +18,7 @@ class BrdfLutCalculation {
 	vk::UniqueFramebuffer m_framebuffer;
 	UniquePtr<RImageAttachment> m_attachment;
 
-	EnvironmentMap::Gpu* m_envmapAsset;
+	GpuEnvironmentMap* m_envmapAsset;
 
 	uint32 m_resolution;
 
@@ -30,7 +30,7 @@ class BrdfLutCalculation {
 	void EditPods();
 
 public:
-	BrdfLutCalculation(EnvironmentMap::Gpu* envmapAsset, uint32 calculationResolution);
+	BrdfLutCalculation(GpuEnvironmentMap* envmapAsset, uint32 calculationResolution);
 
 	void Calculate();
 };

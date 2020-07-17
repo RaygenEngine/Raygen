@@ -5,18 +5,18 @@
 #include "rendering/assets/GpuShaderStage.h"
 #include "rendering/assets/GpuAssetManager.h"
 
-Shader::Gpu::Gpu(PodHandle<Shader> podHandle)
+GpuShader::GpuShader(PodHandle<Shader> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	Update({});
 }
 
-bool Shader::Gpu::HasValidModule() const
+bool GpuShader::HasValidModule() const
 {
 	return frag.Lock().HasValidModule() && vert.Lock().HasValidModule();
 }
 
-void Shader::Gpu::Update(const AssetUpdateInfo& info)
+void GpuShader::Update(const AssetUpdateInfo& info)
 {
 	auto podPtr = podHandle.Lock();
 	ClearDependencies();
@@ -33,10 +33,10 @@ void Shader::Gpu::Update(const AssetUpdateInfo& info)
 	}
 }
 
-void Shader::Gpu::BuildShaderStages()
+void GpuShader::BuildShaderStages()
 {
 	shaderStages.clear();
-	
+
 	// shaders
 	auto& vertShaderModule = *vert.Lock().module;
 	auto& fragShaderModule = *frag.Lock().module;
