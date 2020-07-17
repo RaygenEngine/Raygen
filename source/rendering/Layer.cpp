@@ -10,6 +10,7 @@
 #include "rendering/resource/GpuResources.h"
 
 #include "rendering/VulkanLoader.h"
+#include "rendering/Device.h"
 
 namespace vl {
 Layer_::Layer_()

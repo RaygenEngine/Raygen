@@ -2,6 +2,7 @@
 #include "SceneGeometry.h"
 
 #include "rendering/wrappers/RBuffer.h"
+#include "rendering/Device.h"
 
 void SceneAnimatedGeometry::UploadSsbo(uint32 curFrame)
 {

@@ -5,6 +5,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneSpotlight.h"
+#include "rendering/Device.h"
 
 namespace vl {
 void PtSpotlight::MakeLayout()

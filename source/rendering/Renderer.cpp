@@ -15,6 +15,7 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/scene/SceneDirectionalLight.h"
+#include "rendering/Device.h"
 
 constexpr int32 c_framesInFlight = 2;
 namespace {
