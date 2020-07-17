@@ -1,7 +1,6 @@
 #pragma once
 #include "assets/pods/EnvironmentMap.h"
 #include "rendering/assets/GpuEnvironmentMap.h"
-#include "rendering/wrappers/RBuffer.h"
 #include "rendering/wrappers/RImageAttachment.h"
 
 #include <vulkan/vulkan.hpp>

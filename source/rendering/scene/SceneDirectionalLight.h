@@ -13,7 +13,10 @@ struct DirectionalLight_Ubo {
 	float intensity{};
 };
 
-struct SceneDirectionalLight : SceneStruct<DirectionalLight_Ubo> {
+struct SceneDirectionalLight : SceneStruct {
+	SCENE_STRUCT(SceneDirectionalLight);
+
+	DirectionalLight_Ubo ubo;
 
 	UniquePtr<vl::RDepthmap> shadowmap;
 

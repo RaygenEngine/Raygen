@@ -6,6 +6,10 @@
 
 #include <vulkan/vulkan.hpp>
 
+namespace vl {
+class RBuffer;
+}
+
 // TODO: GPU ASSETS From https://vulkan-tutorial.com/en/Vertex_buffers/Index_buffer
 // store multiple buffers, like the vertex and index buffer, into a single VkBuffer and use offsets in cmds like
 // vkCmdBindVertexBuffers. The advantage is that your data is more m_cache friendly in that case, because it's closer

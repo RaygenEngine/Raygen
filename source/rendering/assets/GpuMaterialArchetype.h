@@ -3,7 +3,6 @@
 #include "rendering/assets/GpuAssetHandle.h"
 #include "rendering/assets/GpuImage.h"
 #include "rendering/assets/GpuSampler.h"
-#include "rendering/wrappers/RBuffer.h"
 
 #include <vulkan/vulkan.hpp>
 

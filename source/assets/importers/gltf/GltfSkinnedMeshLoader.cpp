@@ -78,11 +78,11 @@ void GltfSkinnedMeshLoader::LoadSkinMesh()
 	skinPod->skinnedGeometrySlots.resize(cache.materialPods.size());
 	skinPod->materials = cache.materialPods;
 
-	for (auto node : cache.gltfData.nodes) {
+	for (auto node : cache.gltfData->nodes) {
 		if (node.skin == skinIndex) {
 			// load mesh if exists
 			if (node.mesh != -1) {
-				auto& gltfMesh = cache.gltfData.meshes.at(node.mesh);
+				auto& gltfMesh = cache.gltfData->meshes.at(node.mesh);
 
 				for (auto& prim : gltfMesh.primitives) {
 
@@ -100,8 +100,8 @@ void GltfSkinnedMeshLoader::LoadSkinMesh()
 						"the total materials included.");
 
 					SkinnedGeometrySlot& slot = skinPod->skinnedGeometrySlots[materialIndex];
-					auto& [lastBegin, lastSize]
-						= LoadBasicDataIntoGeometrySlot<SkinnedGeometrySlot, SkinnedVertex>(slot, cache, prim);
+					auto& [lastBegin, lastSize] = LoadBasicDataIntoGeometrySlot<SkinnedGeometrySlot, SkinnedVertex>(
+						slot, *cache.gltfData, prim);
 
 					// Also load extra stuff
 					int32 joints0Index = -1;
@@ -122,11 +122,11 @@ void GltfSkinnedMeshLoader::LoadSkinMesh()
 
 					// JOINTS
 					LoadIntoVertexData<SkinnedVertex, 4>(
-						cache.gltfData, joints0Index, slot.vertices.data() + lastBegin);
+						*cache.gltfData, joints0Index, slot.vertices.data() + lastBegin);
 
 					// WEIGHTS
 					LoadIntoVertexData<SkinnedVertex, 5>(
-						cache.gltfData, weights0Index, slot.vertices.data() + lastBegin);
+						*cache.gltfData, weights0Index, slot.vertices.data() + lastBegin);
 				}
 				break;
 			}
@@ -229,11 +229,11 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& inCache, uint32 inSkinIn
 	skinPod = pod;
 
 
-	AccessorDescription desc(cache.gltfData, skin.inverseBindMatrices);
+	AccessorDescription desc(*cache.gltfData, skin.inverseBindMatrices);
 
 	std::vector<glm::mat4> invBindMatrix;
 
-	ExtractMatrices4Into(cache.gltfData, skin.inverseBindMatrices, invBindMatrix);
+	ExtractMatrices4Into(*cache.gltfData, skin.inverseBindMatrices, invBindMatrix);
 
 
 	size_t jointCount = invBindMatrix.size();
@@ -244,7 +244,7 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& inCache, uint32 inSkinIn
 
 	std::function<bool(int32, int32)> RecurseChildren;
 	RecurseChildren = [&](int32 nodeIndex, int32 parentJointIndex) {
-		auto& node = cache.gltfData.nodes.at(nodeIndex);
+		auto& node = cache.gltfData->nodes.at(nodeIndex);
 		int32 jointIndex = NodeToJoint(nodeIndex);
 
 		if (jointIndex >= 0) {
@@ -269,7 +269,7 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& inCache, uint32 inSkinIn
 
 
 		for (auto& childIndex : node.children) {
-			auto& childNode = cache.gltfData.nodes.at(childIndex);
+			auto& childNode = cache.gltfData->nodes.at(childIndex);
 			RecurseChildren(childIndex, parentJointIndex);
 		}
 		return true;
@@ -295,7 +295,7 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& inCache, uint32 inSkinIn
 
 void GltfSkinnedMeshLoader::LoadAnimations()
 {
-	for (int32 animationIndex = 0; auto& anim : cache.gltfData.animations) {
+	for (int32 animationIndex = 0; auto& anim : cache.gltfData->animations) {
 
 		nlohmann::json data;
 		data["animation"] = animationIndex;
@@ -314,14 +314,14 @@ void GltfSkinnedMeshLoader::LoadAnimations()
 			as.interpolation = GetInterpolationMethod(animSampler.interpolation);
 
 			// inputs
-			AccessorDescription desc0(cache.gltfData, animSampler.input);
+			AccessorDescription desc0(*cache.gltfData, animSampler.input);
 			as.inputs.resize(desc0.elementCount);
 			CopyToFloatVector(as.inputs, desc0.beginPtr, desc0.strideByteOffset, desc0.elementCount);
 
 			maxInputTime = std::max(maxInputTime, as.inputs.back());
 
 			// outputs
-			AccessorDescription desc1(cache.gltfData, animSampler.output);
+			AccessorDescription desc1(*cache.gltfData, animSampler.output);
 
 
 			CLOG_ABORT(desc1.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT,
@@ -359,9 +359,9 @@ void GltfSkinnedMeshLoader::LoadAnimations()
 			ch.samplerIndex = animCh.sampler;
 			ch.targetJoint = NodeToJoint(animCh.target_node);
 
-			CLOG_ERROR(cache.gltfData.nodes[animCh.target_node].name != cache.gltfData.nodes[animCh.target_node].name,
+			CLOG_ERROR(cache.gltfData->nodes[animCh.target_node].name != cache.gltfData->nodes[animCh.target_node].name,
 				"Gltf Importer: missmatched remap joint to node names: node: {} joint: {}",
-				cache.gltfData.nodes[animCh.target_node].name, skinPod->joints[ch.targetJoint].name);
+				cache.gltfData->nodes[animCh.target_node].name, skinPod->joints[ch.targetJoint].name);
 
 			CLOG_ERROR(ch.targetJoint == -1, "Gltf Importer: Found channel that moves a non joint.");
 			pod->channels.emplace_back(ch);

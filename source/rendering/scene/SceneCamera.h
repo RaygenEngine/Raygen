@@ -1,6 +1,7 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
 #include "core/math-ext/Frustum.h"
+#include "rendering/wrappers/RBuffer.h"
 
 struct Camera_Ubo {
 	glm::vec4 position;
@@ -12,7 +13,9 @@ struct Camera_Ubo {
 	glm::mat4 viewProjInv;
 };
 
-struct SceneCamera : SceneStruct<Camera_Ubo> {
+struct SceneCamera : SceneStruct {
+	SCENE_STRUCT(SceneCamera);
+	Camera_Ubo ubo;
 
 	math::Frustum frustum;
 };

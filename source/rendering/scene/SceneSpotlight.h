@@ -23,7 +23,9 @@ struct Spotlight_Ubo {
 	float quadraticTerm{};
 };
 
-struct SceneSpotlight : SceneStruct<Spotlight_Ubo> {
+struct SceneSpotlight : SceneStruct {
+	SCENE_STRUCT(SceneSpotlight);
+	Spotlight_Ubo ubo;
 
 	UniquePtr<vl::RDepthmap> shadowmap;
 
