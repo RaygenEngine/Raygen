@@ -1,5 +1,7 @@
 #pragma once
 #include "core/MetaTemplates.h"
+#include "assets/PodFwdUtl.h"
+
 
 #include <algorithm>
 // When adding a pod, add it to both of these
@@ -8,18 +10,22 @@
 	Image, Mesh, Shader, Sampler, SkinnedMesh, Animation, Cubemap, EnvironmentMap, ShaderStage, MaterialArchetype,     \
 		MaterialInstance
 
+
+ENGINE_PODS_FWD(ENGINE_POD_TYPES);
+
+
 // Can be macroed
-struct Image;
-struct Mesh;
-struct Shader;
-struct ShaderStage;
-struct Sampler;
-struct SkinnedMesh;
-struct Animation;
-struct Cubemap;
-struct EnvironmentMap;
-struct MaterialArchetype;
-struct MaterialInstance;
+// struct Image;
+// struct Mesh;
+// struct Shader;
+// struct ShaderStage;
+// struct Sampler;
+// struct SkinnedMesh;
+// struct Animation;
+// struct Cubemap;
+// struct EnvironmentMap;
+// struct MaterialArchetype;
+// struct MaterialInstance;
 
 
 // Returns the default uid for this pod in the asset manager, all pod handles are initialized with the the valid
@@ -60,12 +66,6 @@ inline constexpr bool BasePodHandle::IsDefault() const
 	return uid <= GetPodTypesCount();
 }
 
-enum class StdAssets
-{
-	NormalImage,
-	GltfMaterialArchetype,
-	_COUNT
-};
 
 template<typename T>
 concept CAssetPod = true; // TODO:

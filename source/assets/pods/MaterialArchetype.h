@@ -24,6 +24,7 @@ struct MaterialArchetype : AssetPod {
 		REFLECT_VAR(gbufferVertMain, PropertyFlags::NoEdit, PropertyFlags::Multiline);
 	}
 
+
 	std::string sharedFunctions{};
 	std::string gbufferFragMain{};
 	std::string gbufferVertMain{};
