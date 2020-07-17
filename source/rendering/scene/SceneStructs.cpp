@@ -2,6 +2,7 @@
 #include "SceneStructs.h"
 
 #include "rendering/wrappers/RBuffer.h"
+#include "rendering/Device.h"
 
 SceneStruct::SceneStruct(size_t uboSize)
 {

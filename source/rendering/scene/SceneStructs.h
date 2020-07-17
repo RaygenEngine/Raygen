@@ -1,6 +1,5 @@
 #pragma once
 #include "rendering/Layouts.h"
-#include "rendering/Device.h"
 
 namespace vl {
 class RBuffer;

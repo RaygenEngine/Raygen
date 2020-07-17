@@ -1,6 +1,6 @@
 #pragma once
 // MAINT: Remove
-#include <vulkan/vulkan.hpp>
+#include "rendering/Device.h"
 
 #include <functional>
 #include <mutex>
