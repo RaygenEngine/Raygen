@@ -29,3 +29,8 @@
 #include <magic_enum.hpp>
 
 namespace fs = std::filesystem;
+
+// Engine stuff
+
+#include "assets/PodHandle.h"
+#include "reflection/GenMacros.h"
