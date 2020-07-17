@@ -70,7 +70,7 @@ struct GpuAssetTemplate : public GpuAssetBase {
 
 
 template<CONC(CAssetPod) T>
-using GpuAsset = typename T::Gpu;
+using GpuAsset = Gpu<T>;
 
 
 template<CONC(CAssetPod) T>
@@ -78,7 +78,7 @@ struct GpuHandle : public BasePodHandle {
 	GpuHandle<T>() { uid = GetDefaultPodUid<T>(); }
 	GpuHandle<T>(size_t inUid) { uid = inUid; }
 
-	[[nodiscard]] typename T::Gpu& Lock() const { return vl::GpuAssetManager->LockHandle<T>(uid); }
+	[[nodiscard]] GpuAsset<T>& Lock() const { return vl::GpuAssetManager->LockHandle<T>(uid); }
 };
 
 } // namespace vl

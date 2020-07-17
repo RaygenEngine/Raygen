@@ -45,7 +45,7 @@ std::array vertices = { // positions
 
 
 namespace vl {
-PrefilteredMapCalculation::PrefilteredMapCalculation(EnvironmentMap::Gpu* envmapAsset, uint32 calculationResolution)
+PrefilteredMapCalculation::PrefilteredMapCalculation(GpuEnvironmentMap* envmapAsset, uint32 calculationResolution)
 	: m_envmapAsset(envmapAsset)
 	, m_resolution(calculationResolution)
 {

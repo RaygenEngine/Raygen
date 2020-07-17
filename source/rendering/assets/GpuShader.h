@@ -6,8 +6,8 @@
 
 #include <vulkan/vulkan.hpp>
 
-struct Shader::Gpu : public vl::GpuAssetTemplate<Shader> {
-	Shader::Gpu(PodHandle<Shader> podHandle);
+struct GpuShader : public vl::GpuAssetTemplate<Shader> {
+	GpuShader(PodHandle<Shader> podHandle);
 
 	vl::GpuHandle<ShaderStage> vert;
 	vl::GpuHandle<ShaderStage> frag;

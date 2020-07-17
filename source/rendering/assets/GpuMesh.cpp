@@ -12,7 +12,7 @@
 using namespace vl;
 
 // PERF:
-Mesh::Gpu::Gpu(PodHandle<Mesh> podHandle)
+GpuMesh::GpuMesh(PodHandle<Mesh> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	auto data = podHandle.Lock();
@@ -20,7 +20,7 @@ Mesh::Gpu::Gpu(PodHandle<Mesh> podHandle)
 	Update({});
 }
 
-void Mesh::Gpu::Update(const AssetUpdateInfo& info)
+void GpuMesh::Update(const AssetUpdateInfo& info)
 {
 	auto data = podHandle.Lock();
 

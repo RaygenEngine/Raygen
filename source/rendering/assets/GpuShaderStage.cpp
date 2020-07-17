@@ -6,23 +6,23 @@
 
 #include "assets/AssetRegistry.h"
 
-ShaderStage::Gpu::Gpu(PodHandle<ShaderStage> podHandle)
+GpuShaderStage::GpuShaderStage(PodHandle<ShaderStage> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	Update({});
 }
 
-bool ShaderStage::Gpu::HasValidModule() const
+bool GpuShaderStage::HasValidModule() const
 {
 	return !(!module);
 }
 
-bool ShaderStage::Gpu::WasLastCompileSuccessful() const
+bool GpuShaderStage::WasLastCompileSuccessful() const
 {
 	return lastCompileSuccess;
 }
 
-void ShaderStage::Gpu::Update(const AssetUpdateInfo& info)
+void GpuShaderStage::Update(const AssetUpdateInfo& info)
 {
 	auto podPtr = podHandle.Lock();
 	auto& binary = podPtr->binary;

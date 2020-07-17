@@ -6,7 +6,7 @@
 
 #include <vulkan/vulkan.hpp>
 
-struct MaterialArchetype::Gpu : public vl::GpuAssetTemplate<MaterialArchetype> {
+struct GpuMaterialArchetype : public vl::GpuAssetTemplate<MaterialArchetype> {
 	struct PassInfo {
 		vk::UniquePipelineLayout pipelineLayout;
 		vk::UniquePipeline pipeline;
@@ -21,6 +21,6 @@ struct MaterialArchetype::Gpu : public vl::GpuAssetTemplate<MaterialArchetype> {
 	PassInfo depth;
 	PassInfo depthAnimated;
 
-	MaterialArchetype::Gpu(PodHandle<MaterialArchetype> podHandle);
+	GpuMaterialArchetype(PodHandle<MaterialArchetype> podHandle);
 	void Update(const AssetUpdateInfo& info) override final;
 };

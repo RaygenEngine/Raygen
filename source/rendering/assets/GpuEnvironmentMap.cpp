@@ -13,13 +13,13 @@
 
 using namespace vl;
 
-EnvironmentMap::Gpu::Gpu(PodHandle<EnvironmentMap> podHandle)
+GpuEnvironmentMap::GpuEnvironmentMap(PodHandle<EnvironmentMap> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	Update({});
 }
 
-void EnvironmentMap::Gpu::Update(const AssetUpdateInfo&)
+void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 {
 	auto envmapPod = podHandle.Lock();
 	ClearDependencies();

@@ -25,11 +25,11 @@ struct GpuGeometryGroup {
 	UniquePtr<vl::RBuffer> indexBuffer;
 };
 
-struct Mesh::Gpu : public vl::GpuAssetTemplate<Mesh> {
+struct GpuMesh : public vl::GpuAssetTemplate<Mesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;
 
 
-	Mesh::Gpu(PodHandle<Mesh> podHandle);
+	GpuMesh(PodHandle<Mesh> podHandle);
 
 	void Update(const AssetUpdateInfo& info) override final;
 };
