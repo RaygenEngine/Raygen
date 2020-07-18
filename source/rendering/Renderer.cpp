@@ -61,12 +61,18 @@ Renderer_::Renderer_()
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal)
+		.setInitialLayout(vk::ImageLayout::eUndefined)
 		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	colorAttachmentRef
 		.setAttachment(0u) //
 		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+	vk::AttachmentReference colorAttachmentRef15{};
+
+	colorAttachmentRef15
+		.setAttachment(0u) //
+		.setLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
 
 	vk::AttachmentDescription colorAttachmentDesc2{};
@@ -78,7 +84,7 @@ Renderer_::Renderer_()
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal)
+		.setInitialLayout(vk::ImageLayout::eUndefined)
 		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	colorAttachmentRef2
@@ -97,7 +103,7 @@ Renderer_::Renderer_()
 	lightDep
 		.setSrcSubpass(VK_SUBPASS_EXTERNAL) //
 		.setDstSubpass(0u)
-		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+		.setSrcStageMask(vk::PipelineStageFlagBits::eBottomOfPipe)
 		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
 		.setSrcAccessMask(vk::AccessFlagBits::eMemoryRead)
 		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
@@ -109,7 +115,7 @@ Renderer_::Renderer_()
 		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
 		.setColorAttachmentCount(1u)
 		.setInputAttachmentCount(1u)
-		.setPInputAttachments(&colorAttachmentRef)
+		.setPInputAttachments(&colorAttachmentRef15)
 		.setPColorAttachments(&colorAttachmentRef2)
 		.setPDepthStencilAttachment(nullptr);
 
@@ -119,9 +125,9 @@ Renderer_::Renderer_()
 		.setSrcSubpass(0u) //
 		.setDstSubpass(1u)
 		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+		.setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader)
 		.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
-		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
+		.setDstAccessMask(vk::AccessFlagBits::eShaderRead)
 		.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
 
 	std::array subpasses{ lightSubpass, debugSupass };
@@ -261,7 +267,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 	cmdBuffer->end();
 }
 
-void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer)
+void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, uint32 swapchainImageIndex)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -275,7 +281,7 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer)
 		vk::RenderPassBeginInfo renderPassInfo{};
 		renderPassInfo
 			.setRenderPass(Swapchain->GetRenderPass()) //
-			.setFramebuffer(Swapchain->GetFramebuffer(Renderer->currentFrame));
+			.setFramebuffer(Swapchain->GetFramebuffer(swapchainImageIndex));
 		renderPassInfo.renderArea
 			.setOffset({ 0, 0 }) //
 			.setExtent(Swapchain->GetExtent());
@@ -377,7 +383,7 @@ void Renderer_::OnViewportResize()
 
 			vk::DescriptorImageInfo imageInfo2{};
 			imageInfo2
-				.setImageLayout(vk::ImageLayout::eColorAttachmentOptimal) //
+				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
 				.setImageView(Renderer->m_attachments[i]->GetView());
 			//	.setSampler(VK_NULL_HANDLE);
 
@@ -456,7 +462,7 @@ void Renderer_::DrawFrame()
 	// passes
 	RecordGeometryPasses(&m_geometryCmdBuffer[currentFrame]);
 	RecordPostProcessPass(&m_pptCmdBuffer[currentFrame]);
-	RecordOutPass(&m_outCmdBuffer[currentFrame]);
+	RecordOutPass(&m_outCmdBuffer[currentFrame], imageIndex);
 
 	std::array bufs = { m_geometryCmdBuffer[currentFrame], m_pptCmdBuffer[currentFrame], m_outCmdBuffer[currentFrame] };
 

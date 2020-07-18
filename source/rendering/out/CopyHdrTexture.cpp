@@ -141,9 +141,7 @@ void CopyHdrTexture::MakePipeline()
 
 void CopyHdrTexture::RecordCmd(vk::CommandBuffer* cmdBuffer)
 {
-	if (!Scene->GetActiveCamera()) {
-		return;
-	}
+
 
 	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
