@@ -5,6 +5,7 @@
 #include "reflection/ReflEnum.h"
 
 #include "assets/AssetRegistry.h"
+using namespace vl;
 
 GpuShaderStage::GpuShaderStage(PodHandle<ShaderStage> podHandle)
 	: GpuAssetTemplate(podHandle)

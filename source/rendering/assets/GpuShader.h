@@ -1,16 +1,17 @@
 #pragma once
 
 #include "assets/pods/Shader.h"
-#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetBase.h"
 #include "rendering/resource/DescPoolAllocator.h"
 
 #include <vulkan/vulkan.hpp>
 
-struct GpuShader : public vl::GpuAssetTemplate<Shader> {
+namespace vl {
+struct GpuShader : public GpuAssetTemplate<Shader> {
 	GpuShader(PodHandle<Shader> podHandle);
 
-	vl::GpuHandle<ShaderStage> vert;
-	vl::GpuHandle<ShaderStage> frag;
+	GpuHandle<ShaderStage> vert;
+	GpuHandle<ShaderStage> frag;
 
 	std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
 
@@ -22,3 +23,4 @@ struct GpuShader : public vl::GpuAssetTemplate<Shader> {
 private:
 	void BuildShaderStages();
 };
+} // namespace vl

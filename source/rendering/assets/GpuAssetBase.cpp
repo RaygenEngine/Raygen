@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "GpuAssetHandle.h"
+#include "GpuAssetBase.h"
 
 #include "rendering/assets/GpuAssetManager.h"
 

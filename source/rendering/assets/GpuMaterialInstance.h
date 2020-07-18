@@ -1,12 +1,15 @@
 #pragma once
 #include "assets/pods/MaterialInstance.h"
-#include "rendering/assets/GpuAssetHandle.h"
-#include "rendering/assets/GpuMaterialArchetype.h"
+#include "rendering/assets/GpuAssetBase.h"
 
-struct GpuMaterialInstance : public vl::GpuAssetTemplate<MaterialInstance> {
-	vl::GpuHandle<MaterialArchetype> archetype;
 
-	UniquePtr<vl::RBuffer> uboBuf;
+namespace vl {
+class RBuffer;
+
+struct GpuMaterialInstance : public GpuAssetTemplate<MaterialInstance> {
+	GpuHandle<MaterialArchetype> archetype;
+
+	UniquePtr<RBuffer> uboBuf;
 	vk::DescriptorSet descSet;
 
 	bool hasDescriptorSet{ false };
@@ -14,3 +17,4 @@ struct GpuMaterialInstance : public vl::GpuAssetTemplate<MaterialInstance> {
 
 	void Update(const AssetUpdateInfo& info) override final;
 };
+} // namespace vl
