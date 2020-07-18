@@ -3,7 +3,6 @@
 
 #include "assets/PodIncludes.h"
 #include "assets/PodSerializers.h"
-#include "engine/Logger.h"
 #include "reflection/PodTools.h"
 #include "reflection/ReflectionTools.h"
 

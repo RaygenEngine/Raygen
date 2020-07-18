@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "GpuMaterialArchetype.h"
 
+#include "assets/pods/MaterialArchetype.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
@@ -8,7 +9,6 @@
 #include "rendering/Layouts.h"
 #include "rendering/passes/DepthmapPass.h"
 #include "rendering/passes/GBufferPass.h"
-#include "assets/pods/MaterialArchetype.h"
 
 using namespace vl;
 

@@ -1,5 +1,4 @@
 #pragma once
-
 #include "assets/AssetPod.h"
 #include "assets/pods/Image.h"
 #include "assets/pods/Mesh.h"

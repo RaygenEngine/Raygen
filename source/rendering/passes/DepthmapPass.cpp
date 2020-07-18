@@ -4,6 +4,7 @@
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMaterialInstance.h"
+#include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuSkinnedMesh.h"
 #include "rendering/Device.h"
@@ -26,15 +27,14 @@ vk::UniqueRenderPass DepthmapPass::CreateCompatibleRenderPass()
 {
 	vk::AttachmentDescription depthAttachmentDesc{};
 	depthAttachmentDesc
-		.setFormat(Device->pd->FindDepthFormat()) // CHECK:
+		.setFormat(Device->pd->FindDepthFormat()) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
-		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare) // CHECK: if use stencil dont forget those two
+		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(
-			vk::ImageLayout::eDepthStencilAttachmentOptimal)      // CHECK: vk::ImageLayout::eShaderReadOnlyOptimal?
-		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal); // CHECK:
+		.setInitialLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
+		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	vk::AttachmentReference depthAttachmentRef{};
 	depthAttachmentRef

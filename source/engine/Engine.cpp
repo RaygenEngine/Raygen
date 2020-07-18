@@ -69,7 +69,6 @@ void Engine_::ReportFrameDrawn()
 		}
 	}
 
-	// CHECK:
 	static bool hasFrameReport = false;
 
 	if (!hasFrameReport) {

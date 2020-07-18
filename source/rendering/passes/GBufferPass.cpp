@@ -7,6 +7,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuSkinnedMesh.h"
+#include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuMaterialInstance.h"
 
@@ -36,15 +37,14 @@ vk::UniqueRenderPass GbufferPass::CreateCompatibleRenderPass()
 
 	for (size_t i = 0; i < RGbuffer::ColorAttachmentCount; ++i) {
 		colorAttachmentDescs[i]
-			.setFormat(RGbuffer::colorAttachmentFormats[i]) // CHECK:
+			.setFormat(RGbuffer::colorAttachmentFormats[i]) //
 			.setSamples(vk::SampleCountFlagBits::e1)
 			.setLoadOp(vk::AttachmentLoadOp::eClear)
 			.setStoreOp(vk::AttachmentStoreOp::eStore)
 			.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 			.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-			.setInitialLayout(
-				vk::ImageLayout::eColorAttachmentOptimal)             // CHECK: vk::ImageLayout::eShaderReadOnlyOptimal?
-			.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal); // CHECK:
+			.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal)
+			.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		colorAttachmentRefs[i]
 			.setAttachment(static_cast<uint32>(i)) //
@@ -53,15 +53,14 @@ vk::UniqueRenderPass GbufferPass::CreateCompatibleRenderPass()
 
 	vk::AttachmentDescription depthAttachmentDesc{};
 	depthAttachmentDesc
-		.setFormat(Device->pd->FindDepthFormat()) // CHECK:
+		.setFormat(Device->pd->FindDepthFormat()) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
-		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare) // CHECK: if use stencil dont forget those two
+		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(
-			vk::ImageLayout::eDepthStencilAttachmentOptimal)      // CHECK: vk::ImageLayout::eShaderReadOnlyOptimal?
-		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal); // CHECK:
+		.setInitialLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
+		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	vk::AttachmentReference depthAttachmentRef{};
 	depthAttachmentRef
@@ -352,7 +351,6 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 
 	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	{
-		// TODO: remove camera refs
 		auto camera = Scene->GetActiveCamera();
 		if (!camera) {
 			cmdBuffer->endRenderPass();

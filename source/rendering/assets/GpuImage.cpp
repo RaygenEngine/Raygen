@@ -1,11 +1,11 @@
 #include "pch.h"
 #include "GpuImage.h"
 
+#include "assets/pods/Image.h"
 #include "rendering/Device.h"
-#include "rendering/wrappers/RBuffer.h"
 #include "rendering/Renderer.h"
 #include "rendering/VulkanUtl.h"
-#include "assets/pods/Image.h"
+#include "rendering/wrappers/RBuffer.h"
 
 using namespace vl;
 
@@ -15,7 +15,7 @@ GpuImage::GpuImage(PodHandle<::Image> podHandle)
 	Update({});
 }
 
-// NEXT: Check usage, probably wrong because we remake "image" member variable.
+// CHECK: Check usage, probably wrong because we remake "image" member variable.
 void GpuImage::Update(const AssetUpdateInfo& info)
 {
 	auto imgData = podHandle.Lock();

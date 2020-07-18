@@ -104,14 +104,14 @@ void IrradianceMapCalculation::MakeRenderPass()
 {
 	vk::AttachmentDescription colorAttachmentDesc{};
 	colorAttachmentDesc
-		.setFormat(m_envmapAsset->skybox.Lock().cubemap->GetFormat()) // CHECK:
+		.setFormat(m_envmapAsset->skybox.Lock().cubemap->GetFormat()) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal) // CHECK: vk::ImageLayout::eShaderReadOnlyOptimal?
-		.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);  // CHECK:
+		.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal)
+		.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
 
 	vk::AttachmentReference colorAttachmentRef{};
 	colorAttachmentRef
@@ -353,7 +353,7 @@ void IrradianceMapCalculation::PrepareFaceInfo()
 			.setRenderPass(m_renderPass.get()) //
 			.setAttachmentCount(1u)
 			.setPAttachments(&m_faceAttachments[i]->GetView())
-			.setWidth(m_resolution) // CHECK: parameter
+			.setWidth(m_resolution)
 			.setHeight(m_resolution)
 			.setLayers(1);
 
@@ -424,7 +424,6 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 		m_cmdBuffers[i].begin(beginInfo);
 		{
 
-			// PERF: needs render pass?
 			// begin render pass
 			m_cmdBuffers[i].beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 			{

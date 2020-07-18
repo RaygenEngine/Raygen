@@ -1,10 +1,12 @@
 #include "pch.h"
 #include "ShaderImporter.h"
 
-#include "assets/pods/Shader.h"
 #include "assets/AssetImporterManager.h"
+#include "assets/pods/Shader.h"
+#include "assets/pods/ShaderStage.h"
 #include "assets/util/SpirvCompiler.h"
 #include "assets/util/SpirvReflector.h"
+
 #include <fstream>
 
 namespace {
@@ -33,9 +35,6 @@ BasePodHandle ShaderStageImporter::Import(const fs::path& path)
 		path.filename().replace_extension().generic_string() + "_" + path.extension().string().substr(1), true, true);
 
 	CompilePod(pod, path.generic_string());
-
-
-	// TODO: Stage (?)
 
 	return handle;
 }
@@ -80,7 +79,6 @@ BasePodHandle ShaderImporter::Import(const fs::path& path)
 
 	fs::path tmpPath = path;
 
-	// TODO: What push path here?
 
 	auto loadStage = [&](PodHandle<ShaderStage>& stageRef, const char* ext) {
 		tmpPath.replace_extension(ext);
@@ -89,7 +87,6 @@ BasePodHandle ShaderImporter::Import(const fs::path& path)
 		}
 	};
 
-	// WIP: add the rest
 	loadStage(pod->vertex, ".vert");
 	loadStage(pod->fragment, ".frag");
 

@@ -21,11 +21,11 @@ void RerouteShaderErrors(shd::GeneratedShaderErrors& errors)
 			switch (div) {
 				case 1:
 					inOutErrors.errors.insert({ mod, error.second });
-					LOG_ERROR("InOut Shader compilation Error: {}", error.second); // CHECK: Temp hack:
+					LOG_ERROR("InOut Shader compilation Error: {}", error.second);
 					break;
 				case 2:
 					descSetErrors.errors.insert({ mod, error.second });
-					LOG_ERROR("Descriptor Set Shader compilation Error: {}", error.second); // CHECK: Temp hack:
+					LOG_ERROR("Descriptor Set Shader compilation Error: {}", error.second);
 					break;
 				case 3: sharedErrors.errors.insert({ mod, error.second }); break;
 			}

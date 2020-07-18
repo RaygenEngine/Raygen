@@ -44,9 +44,6 @@ public:
 	// behavior)
 	bool Z_Draw();
 
-	// TODO: Not called (unused) Implement these to finish the interface
-	virtual void OnOpen() {}
-	virtual void OnClose() {}
 
 	// Overwrite this and write your imgui drawing here. Given parameters are defaults to be passed to ImGui::Begin.
 	// Prefer ImguiDraw.

@@ -82,8 +82,6 @@ SpirvReflection SpirvReflector::Reflect(const std::vector<uint32>& code)
 {
 	SpirvReflection refl{};
 
-
-	// TODO: avoid copy
 	Compiler comp(code);
 	ShaderResources resources = comp.get_shader_resources();
 

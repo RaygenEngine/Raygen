@@ -14,10 +14,12 @@ struct PtEntry {
 
 	std::function<PtBase*()> constructor;
 
-	// const ReflClass* settingsClass;
-	// void* settingsInstance; // WIP: Probably grab from instance
 
-	// TODO: Pt Entry sets (x | y | z)
-	// TODO: Requires set
+	// TODO: POSTPROC Probably grab from instance
+	// const ReflClass* settingsClass;
+	// void* settingsInstance;
+
+	// Pt Entry sets (x | y | z)
+	// Requires set
 };
 } // namespace vl

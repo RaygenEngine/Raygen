@@ -6,7 +6,6 @@
 
 namespace vl {
 struct GpuSampler : public GpuAssetTemplate<Sampler> {
-	// PERF: one to many views
 	vk::UniqueSampler sampler;
 
 	GpuSampler(PodHandle<Sampler> podHandle);

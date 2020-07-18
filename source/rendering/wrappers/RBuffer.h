@@ -1,5 +1,4 @@
 #pragma once
-#include <vulkan/vulkan.hpp>
 
 namespace vl {
 
@@ -28,16 +27,4 @@ public:
 
 	[[nodiscard]] vk::DeviceSize GetSize() const noexcept { return m_size; }
 };
-
-// template<typename T>
-// class RUboBuffer : public RBuffer {
-//
-// public:
-//	RUboBuffer(vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties)
-//		: RBuffer(sizeof(T), usage, properties)
-//	{
-//	}
-//
-//	void UploadData(const T& data) { RBuffer::UploadData(&data, sizeof(T)); }
-//};
 } // namespace vl

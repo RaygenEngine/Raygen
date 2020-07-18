@@ -1,8 +1,5 @@
 #pragma once
-
 #include "assets/AssetPod.h"
-#include "assets/pods/Image.h"
-#include "assets/pods/Shader.h"
 
 namespace podspec {
 

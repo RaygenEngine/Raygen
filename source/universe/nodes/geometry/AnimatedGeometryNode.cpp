@@ -130,10 +130,16 @@ std::vector<glm::mat4> AnimatedGeometryNode::TickSamplers(float deltaTime)
 	// ending of the animation) When this happens what should be sampled is the last keyframe (instead of the initial
 	// position)
 
+	// Gltf Spec:
+	//	The inputs of each sampler are relative to t=0, defined as the beginning of the parent animations entry. Before
+	// and after the provided input range, output should be "clamped" to the nearest end of the input range. For
+	// example, if the earliest sampler input for an animation is t=10, a client implementation should begin playback of
+	// that animation at t=0 with output clamped to the first output value. Samplers within a given animation are not
+	// required to have the same inputs.
 
 	for (auto& channel : anim->channels) {
 		const AnimationSampler& sampler = anim->samplers[channel.samplerIndex];
-		int32 jointIndex = channel.targetJoint; // WIP:
+		int32 jointIndex = channel.targetJoint;
 
 
 		for (size_t i = 0; i < sampler.inputs.size() - 1; i++) {

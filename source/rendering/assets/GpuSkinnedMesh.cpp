@@ -8,7 +8,6 @@
 
 using namespace vl;
 
-// PERF:
 GpuSkinnedMesh::GpuSkinnedMesh(PodHandle<SkinnedMesh> podHandle)
 	: GpuAssetTemplate(podHandle)
 {

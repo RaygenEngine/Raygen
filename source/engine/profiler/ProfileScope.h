@@ -125,7 +125,6 @@ struct ProfileScope<M, true> : ProfileScopeBase {
 
 #ifndef __INTELLISENSE__
 
-// TODO: use a single macro and forward arguments
 // For parameter use one of ProfilerSetup.h (System, Core, Editor, Renderer_, World etc)
 #	define PROFILE_SCOPE(EngineModule)                                                                                \
 		static ProfileScope<::ProfilerSetup::##EngineModule> MACRO_PASTE(z_prof_, __LINE__)(                           \

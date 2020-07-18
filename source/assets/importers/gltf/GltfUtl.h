@@ -1,8 +1,9 @@
 #pragma once
-#include "assets/pods/Animation.h"
+#include "assets/shared/AnimationShared.h"
+#include "assets/shared/MaterialShared.h"
+#include "assets/shared/TextureShared.h"
 
-#include "core/StringUtl.h"
-#include <tiny_gltf.h>
+#include <tinygltf/tiny_gltf.h>
 
 namespace tg = tinygltf;
 
@@ -57,7 +58,7 @@ inline AnimationPath GetAnimationPath(const std::string& gltfAnimationPath)
 	if (str::equalInsensitive(gltfAnimationPath, "weights")) {
 		return AnimationPath::Weights;
 	}
-	// not defined -> translation, CHECK: or should abort?
+	LOG_WARN("Incorrect animation path name");
 	return AnimationPath::Translation;
 }
 
@@ -100,13 +101,6 @@ inline float NormalizedIntToFloat(float c)
 {
 	return c;
 }
-
-enum class MaterialAlphaMode
-{
-	Opaque,
-	Mask,
-	Blend
-};
 
 inline MaterialAlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
 {
@@ -545,7 +539,6 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 				geom.vertices[geom.indices[i + 2llu]].tangent += tangent;
 			}
 
-			// CHECK: handness
 			for (size_t i = prevEnd; i < totalSize; ++i) {
 				geom.vertices[i].tangent = glm::normalize(geom.vertices[i].tangent);
 			}

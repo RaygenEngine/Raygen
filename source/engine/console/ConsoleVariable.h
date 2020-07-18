@@ -2,14 +2,8 @@
 #include "core/StringConversions.h"
 #include "core/StringUtl.h"
 #include "engine/console/Console.h"
-#include "engine/Logger.h"
-#include "reflection/TypeId.h"
-#include "reflection/ReflEnum.h"
 
-#include <functional>
-#include <string>
-
-// TODO: Genericly support strings in quotes as parameters
+// NEXT: Genericly support strings in quotes as parameters
 
 struct ConsoleEntry {
 	const char* name;

@@ -22,7 +22,7 @@ Layouts_::Layouts_()
 	regularMaterialDescLayout.Generate();
 
 	// camera
-	// WIP/PERF: could have two seperate for each stage
+	// PERF: could have two seperate for each stage
 	singleUboDescLayout.AddBinding(
 		vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 	singleUboDescLayout.Generate();
