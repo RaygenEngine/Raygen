@@ -1,15 +1,10 @@
 #pragma once
-
-#include "rendering/assets/GpuAssetBase.h"
-#include "universe/nodes/geometry/GeometryNode.h"
-#include "universe/nodes/geometry/AnimatedGeometryNode.h"
 #include "rendering/scene/SceneStructs.h"
 
 struct SceneGeometry {
 	glm::mat4 transform;
 	vl::GpuHandle<Mesh> model;
 
-	GeometryNode* node;
 	std::vector<bool> isDirty;
 };
 

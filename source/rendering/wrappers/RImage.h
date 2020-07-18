@@ -1,8 +1,6 @@
 #pragma once
 #include "rendering/wrappers/RBuffer.h"
-#include "rendering/wrappers/RDescriptorLayout.h"
 
-#include <vulkan/vulkan.hpp>
 #include <optional>
 
 // DOC: child classes should create the appropriate view

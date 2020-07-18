@@ -99,7 +99,7 @@ void serialize(Archive& ar, SkinnedGeometrySlot& gs)
 }
 
 template<typename Archive>
-void serialize(Archive& ar, SkinnedMesh::Joint& j)
+void serialize(Archive& ar, Joint& j)
 {
 	ar(j.parentJoint, j.inverseBindMatrix, j.translation, j.rotation, j.scale, j.name, j.index);
 }

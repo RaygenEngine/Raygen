@@ -1,17 +1,15 @@
 #include "pch.h"
 #include "GpuMaterialInstance.h"
 
-#include "assets/pods/MaterialInstance.h"
 #include "assets/pods/MaterialArchetype.h"
+#include "assets/pods/MaterialInstance.h"
+#include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuImage.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/assets/GpuShaderStage.h"
-#include "rendering/assets/GpuAssetManager.h"
-#include "rendering/Renderer.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/passes/DepthmapPass.h"
-
 
 using namespace vl;
 

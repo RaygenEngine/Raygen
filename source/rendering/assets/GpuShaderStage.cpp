@@ -1,10 +1,11 @@
 #include "pch.h"
 #include "GpuShaderStage.h"
 
-#include "rendering/Device.h"
-#include "reflection/ReflEnum.h"
-
 #include "assets/AssetRegistry.h"
+#include "assets/pods/ShaderStage.h"
+#include "reflection/ReflEnum.h"
+#include "rendering/Device.h"
+
 using namespace vl;
 
 GpuShaderStage::GpuShaderStage(PodHandle<ShaderStage> podHandle)

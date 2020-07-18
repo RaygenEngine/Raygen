@@ -3,14 +3,14 @@
 
 #include "platform/Platform.h"
 #include "rendering/assets/GpuAssetManager.h"
+#include "rendering/Device.h"
 #include "rendering/Instance.h"
+#include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
+#include "rendering/resource/GpuResources.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/Swapchain.h"
-#include "rendering/resource/GpuResources.h"
-
 #include "rendering/VulkanLoader.h"
-#include "rendering/Device.h"
 
 namespace vl {
 Layer_::Layer_()

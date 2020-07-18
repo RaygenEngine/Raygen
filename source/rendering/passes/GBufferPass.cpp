@@ -4,20 +4,19 @@
 #include "engine/Engine.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
-#include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuMaterialArchetype.h"
+#include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuSkinnedMesh.h"
-#include "rendering/assets/GpuMaterialArchetype.h"
-#include "rendering/assets/GpuShader.h"
-#include "rendering/assets/GpuMaterialInstance.h"
-
 #include "rendering/Device.h"
+#include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/Layouts.h"
 #include "rendering/wrappers/RGbuffer.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
+
+#include "assets/shared/GeometryShared.h"
 
 namespace {
 struct PushConstant {

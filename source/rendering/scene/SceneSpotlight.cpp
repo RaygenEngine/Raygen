@@ -1,9 +1,7 @@
 #include "pch.h"
 #include "SceneSpotlight.h"
 
-#include "rendering/assets/GpuAssetManager.h"
-#include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
+#include "rendering/wrappers/RDepthmap.h"
 
 void SceneSpotlight::ResizeShadowmap(uint32 width, uint32 height)
 {

@@ -1,11 +1,10 @@
 #pragma once
 #include "rendering/assets/GpuAssetBase.h"
-#include "rendering/assets/GpuImage.h"
-#include "rendering/assets/GpuSampler.h"
 
-#include <vulkan/vulkan.hpp>
 
 namespace vl {
+struct RDescriptorLayout;
+
 struct GpuMaterialArchetype : public GpuAssetTemplate<MaterialArchetype> {
 	struct PassInfo {
 		vk::UniquePipelineLayout pipelineLayout;

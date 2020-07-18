@@ -2,11 +2,12 @@
 #include "PtSpotlight.h"
 
 #include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuShader.h"
+#include "rendering/Device.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneSpotlight.h"
-#include "rendering/Device.h"
-#include "rendering/assets/GpuShader.h"
+#include "rendering/wrappers/RDepthmap.h"
 
 namespace vl {
 void PtSpotlight::MakeLayout()
