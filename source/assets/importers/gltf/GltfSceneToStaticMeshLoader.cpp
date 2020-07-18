@@ -4,9 +4,8 @@
 #include "assets/AssetImporterManager.h"
 #include "assets/importers/gltf/GltfCache.h"
 #include "assets/importers/gltf/GltfUtl.h"
-#include "assets/UriLibrary.h"
-#include "core/StringUtl.h"
 #include "assets/pods/Mesh.h"
+#include "assets/UriLibrary.h"
 
 #include <tinygltf/tiny_gltf.h>
 

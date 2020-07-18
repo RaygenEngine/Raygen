@@ -1,18 +1,14 @@
 #include "pch.h"
 #include "EdMeshGenerator.h"
 
-#include "editor/imgui/ImEd.h"
-#include "editor/imgui/ImguiImpl.h"
-#include "editor/imgui/ImAssetSlot.h"
-#include "engine/console/Console.h"
-#include "engine/console/ConsoleVariable.h"
 #include "assets/PodEditor.h"
 #include "assets/pods/MaterialInstance.h"
 #include "assets/pods/Mesh.h"
-
+#include "editor/imgui/ImAssetSlot.h"
+#include "editor/imgui/ImEd.h"
+#include "engine/console/Console.h"
 
 #include <imgui/imgui.h>
-#include <imgui/misc/cpp/imgui_stdlib.h>
 
 namespace {
 

@@ -1,17 +1,13 @@
 #include "pch.h"
 #include "GpuEnvironmentMap.h"
 
-#include "assets/pods/Cubemap.h"
 #include "assets/pods/EnvironmentMap.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuCubemap.h"
 #include "rendering/assets/GpuImage.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
-#include "rendering/wrappers/RBuffer.h"
 #include "rendering/Renderer.h"
-#include "rendering/VulkanUtl.h"
-
 
 using namespace vl;
 

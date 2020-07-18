@@ -1,5 +1,4 @@
 #pragma once
-#include "assets/pods/SkinnedMesh.h"
 
 namespace tinygltf {
 struct Skin;

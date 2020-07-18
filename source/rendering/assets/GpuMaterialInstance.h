@@ -3,9 +3,6 @@
 #include "rendering/assets/GpuAssetHandle.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 
-#include <vulkan/vulkan.hpp>
-
-
 struct GpuMaterialInstance : public vl::GpuAssetTemplate<MaterialInstance> {
 	vl::GpuHandle<MaterialArchetype> archetype;
 

@@ -2,10 +2,6 @@
 #include "assets/AssetRegistry.h"
 #include "assets/ImporterRegistry.h"
 #include "assets/UriLibrary.h"
-#include "engine/Logger.h"
-
-#include <unordered_map>
-#include <vector>
 
 inline class AssetImporterManager_ {
 	friend class AssetManager_;

@@ -2,6 +2,7 @@
 #include "ImageImporter.h"
 
 #include "assets/AssetImporterManager.h"
+#include "assets/pods/Image.h"
 #include "assets/util/ImageUtl.h"
 
 BasePodHandle ImageImporter::Import(const fs::path& path)

@@ -1,10 +1,12 @@
 #include "pch.h"
 #include "ShaderImporter.h"
 
-#include "assets/pods/Shader.h"
 #include "assets/AssetImporterManager.h"
+#include "assets/pods/Shader.h"
+#include "assets/pods/ShaderStage.h"
 #include "assets/util/SpirvCompiler.h"
 #include "assets/util/SpirvReflector.h"
+
 #include <fstream>
 
 namespace {

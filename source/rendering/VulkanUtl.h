@@ -1,7 +1,6 @@
 #pragma once
-#include "engine/Logger.h"
-
-#include <vulkan/vulkan.hpp>
+#include "assets/shared/ImageShared.h"
+#include "assets/shared/TextureShared.h"
 
 namespace vl {
 inline vk::Filter GetTextureFilter(TextureFiltering f)

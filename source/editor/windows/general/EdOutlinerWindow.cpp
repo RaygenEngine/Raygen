@@ -1,16 +1,15 @@
 #include "pch.h"
 #include "EdOutlinerWindow.h"
 
+#include "assets/pods/Mesh.h"
+#include "assets/util/ParsingUtl.h"
 #include "editor/DataStrings.h"
 #include "editor/EditorObject.h"
 #include "universe/NodeFactory.h"
-#include "universe/nodes/camera/CameraNode.h"
 #include "universe/nodes/geometry/GeometryNode.h"
 #include "universe/nodes/RootNode.h"
 #include "universe/Universe.h"
 #include "universe/WorldOperationsUtl.h"
-#include "assets/util/ParsingUtl.h"
-#include "assets/pods/Mesh.h"
 
 #include <imgui/imgui.h>
 

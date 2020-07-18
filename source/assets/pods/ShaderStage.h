@@ -1,7 +1,6 @@
 #pragma once
 #include "assets/AssetPod.h"
-#include "assets/util/ShaderStageEnums.h"
-
+#include "assets/shared/ShaderStageShared.h"
 
 struct ShaderStage : public AssetPod {
 	REFLECTED_POD(ShaderStage)
