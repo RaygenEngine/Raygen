@@ -373,7 +373,7 @@ void Renderer_::OnViewportResize()
 			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 
 
-			PtDebug::descSet[i] = PtDebug::descLayout.GetDescriptorSet();
+			ptDebugObj->descSet[i] = ptDebugObj->descLayout.GetDescriptorSet();
 
 
 			vk::DescriptorImageInfo imageInfo2{};
@@ -384,7 +384,7 @@ void Renderer_::OnViewportResize()
 
 			vk::WriteDescriptorSet descriptorWrite2{};
 			descriptorWrite2
-				.setDstSet(PtDebug::descSet[i]) //
+				.setDstSet(ptDebugObj->descSet[i]) //
 				.setDstBinding(0)
 				.setDstArrayElement(0u)
 				.setDescriptorType(vk::DescriptorType::eInputAttachment)

@@ -165,7 +165,14 @@ inline struct Scene_ {
 				delete elem;
 			});
 		}
-		// TODO : delete animated geometries
+		else if constexpr (std::is_same_v<SceneAnimatedGeometry, T>) {
+			currentCmdBuffer->emplace_back([uid]() {
+				auto elem = static_cast<T*>(Scene->animatedGeometries.elements[uid]);
+				Scene->animatedGeometries.elements[uid] = nullptr;
+				vl::Device->waitIdle();
+				delete elem;
+			});
+		}
 	}
 
 	void EnqueueEndFrame()

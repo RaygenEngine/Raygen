@@ -18,6 +18,12 @@
 
 namespace vl {
 
+GpuAssetManager_::~GpuAssetManager_()
+{
+	for (auto asset : gpuAssets) {
+		delete asset;
+	}
+}
 
 vk::Sampler GpuAssetManager_::GetDefaultSampler()
 {

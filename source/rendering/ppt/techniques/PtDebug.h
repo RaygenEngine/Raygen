@@ -6,11 +6,15 @@
 namespace vl {
 class PtDebug : public PtBase_SinglePipeline {
 public:
-	static inline RDescriptorLayout descLayout;
-	static inline vk::DescriptorSet descSet[3];
+	PtDebug();
+
+	RDescriptorLayout descLayout;
+	std::array<vk::DescriptorSet, 3> descSet;
 
 	void MakeLayout() override;
 	void MakePipeline() override;
 	void Draw(vk::CommandBuffer cmdBuffer, uint32 frameIndex) override;
 };
+
+inline PtDebug* ptDebugObj{ nullptr };
 } // namespace vl
