@@ -1,7 +1,6 @@
 #pragma once
 #include "universe/nodes/Node.h"
 
-// TODO:
 struct worldop {
 
 	static void MoveChildUp(Node* node);

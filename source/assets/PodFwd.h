@@ -53,4 +53,4 @@ inline constexpr bool BasePodHandle::IsDefault() const
 
 
 template<typename T>
-concept CAssetPod = true; // TODO:
+concept CAssetPod = true; // NEXT:

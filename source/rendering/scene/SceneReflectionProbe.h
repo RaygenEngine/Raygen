@@ -11,7 +11,6 @@ struct SceneReflectionProbe : SceneStruct {
 
 	Ambient_Ubo ubo;
 
-	// WIP: add width, height (from world) -> Build prefiltered maps using width and height
 	vl::GpuHandle<EnvironmentMap> envmap;
 
 	void Build();

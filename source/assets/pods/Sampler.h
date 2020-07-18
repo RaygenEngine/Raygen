@@ -25,6 +25,4 @@ struct Sampler : AssetPod {
 	TextureWrapping wrapU{ TextureWrapping::Repeat };
 	TextureWrapping wrapV{ TextureWrapping::Repeat };
 	TextureWrapping wrapW{ TextureWrapping::Repeat };
-
-	// CHECK: anisotropy, mip lod stuff
 };

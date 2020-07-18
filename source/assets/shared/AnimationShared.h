@@ -17,13 +17,11 @@ enum class InterpolationMethod
 
 struct AnimationSampler {
 	std::vector<float> inputs{};
-	// WIP: handle those depending on the animation path of the channel targeting this sampler
-	// translation -> vec3, rotation -> vec4, scale -> vec3, weights -> float
 	std::vector<glm::vec4> outputs{};
 	InterpolationMethod interpolation{};
 
 
-	glm::vec3 GetOutputAsVec3(size_t i) const { return outputs[i].xyz; }
+	glm::vec3 GetOutputAsVec3(size_t i) const { return glm::vec3(outputs[i]); }
 	glm::quat GetOutputAsQuat(size_t i) const
 	{
 		glm::quat q;

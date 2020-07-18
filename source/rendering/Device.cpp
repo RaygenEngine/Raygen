@@ -41,7 +41,6 @@ Device_::Device_(RPhysicalDevice* pd, std::vector<const char*> deviceExtensions)
 	}
 
 
-	// NEXT: check if supported by the pd..
 	vk::PhysicalDeviceFeatures deviceFeatures{};
 	deviceFeatures.setSamplerAnisotropy(VK_TRUE);
 

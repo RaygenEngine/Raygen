@@ -36,9 +36,6 @@ BasePodHandle ShaderStageImporter::Import(const fs::path& path)
 
 	CompilePod(pod, path.generic_string());
 
-
-	// TODO: Stage (?)
-
 	return handle;
 }
 
@@ -82,7 +79,6 @@ BasePodHandle ShaderImporter::Import(const fs::path& path)
 
 	fs::path tmpPath = path;
 
-	// TODO: What push path here?
 
 	auto loadStage = [&](PodHandle<ShaderStage>& stageRef, const char* ext) {
 		tmpPath.replace_extension(ext);
@@ -91,7 +87,6 @@ BasePodHandle ShaderImporter::Import(const fs::path& path)
 		}
 	};
 
-	// WIP: add the rest
 	loadStage(pod->vertex, ".vert");
 	loadStage(pod->fragment, ".frag");
 

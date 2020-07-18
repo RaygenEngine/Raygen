@@ -9,6 +9,9 @@
 #include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/SceneDirectionalLight.h"
 
+
+ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { Scene->BuildAll(); }, "Builds all build-able scene nodes" };
+
 void Scene_::BuildAll()
 {
 	for (auto reflProb : reflProbs.elements) {
@@ -48,7 +51,6 @@ vk::DescriptorSet Scene_::GetActiveCameraDescSet()
 	return GetActiveCamera()->descSets[vl::Renderer_::currentFrame];
 }
 
-// TODO: we should have a dirty per frace
 void Scene_::UploadDirty()
 {
 	const bool primaryDirty = activeCamera > 0 && cameras.elements[activeCamera]->isDirty[vl::Renderer_::currentFrame];
@@ -99,6 +101,3 @@ void Scene_::UploadDirty()
 	//	}
 	//}
 }
-
-// WIP:
-ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { Scene->BuildAll(); }, "Builds all build-able scene nodes" };

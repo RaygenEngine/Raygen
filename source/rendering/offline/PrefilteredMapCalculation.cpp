@@ -105,14 +105,14 @@ void PrefilteredMapCalculation::MakeRenderPass()
 {
 	vk::AttachmentDescription colorAttachmentDesc{};
 	colorAttachmentDesc
-		.setFormat(m_envmapAsset->skybox.Lock().cubemap->GetFormat()) // CHECK:
+		.setFormat(m_envmapAsset->skybox.Lock().cubemap->GetFormat()) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal) // CHECK: vk::ImageLayout::eShaderReadOnlyOptimal?
-		.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);  // CHECK:
+		.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal)
+		.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
 
 	vk::AttachmentReference colorAttachmentRef{};
 	colorAttachmentRef
@@ -358,7 +358,7 @@ void PrefilteredMapCalculation::PrepareFaceInfo()
 				.setRenderPass(m_renderPass.get()) //
 				.setAttachmentCount(1u)
 				.setPAttachments(&m_cubemapMips[mip].faceAttachments[i]->GetView())
-				.setWidth(mipResolution) // CHECK: parameter
+				.setWidth(mipResolution)
 				.setHeight(mipResolution)
 				.setLayers(1);
 
@@ -433,8 +433,6 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 			beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
 			m_cmdBuffers[i].begin(beginInfo);
 			{
-
-				// PERF: needs render pass?
 				// begin render pass
 				m_cmdBuffers[i].beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 				{
@@ -448,9 +446,8 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 
 					float roughness = (float)mip / (float)(5 - 1);
 					float a = roughness * roughness;
-					LOG_INFO("Prefiltered mip a = roughness * roughness = {}", a);
+					LOG_DEBUG("Prefiltered mip a = roughness * roughness = {}", a);
 
-					// WIP:
 					PushConstant pc{ //
 						m_captureProjection * glm::mat4(glm::mat3(m_captureViews[i])), a,
 						static_cast<float>(m_envmapAsset->skybox.Lock().cubemap->GetExtent2D().width)

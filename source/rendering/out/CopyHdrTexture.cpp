@@ -64,7 +64,6 @@ void CopyHdrTexture::MakePipeline()
 		.setAlphaToCoverageEnable(VK_FALSE)
 		.setAlphaToOneEnable(VK_FALSE);
 
-	// CHECK: be sure you use the correct blending operations (also check logic ops)
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
 	colorBlendAttachment
 		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG

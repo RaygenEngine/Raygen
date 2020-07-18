@@ -84,7 +84,6 @@ void WindowMouseButtonCb(GLFWwindow* window, int32 button, int32 action, int32 m
 		}
 	}
 
-	// PERF: Use different callbacks when no editor
 	if (EditorObject_::EditorHandleKeyEvent(button, action, -1, modifiers)) {
 		return;
 	}
@@ -121,7 +120,6 @@ void WindowKeyCb(GLFWwindow* window, int32 key, int32 scancode, int32 action, in
 		}
 	}
 
-	// PERF: Use different callbacks when no editor
 	if (EditorObject_::EditorHandleKeyEvent(key, scancode, action, modifiers)) {
 		return;
 	}

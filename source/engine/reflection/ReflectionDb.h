@@ -3,12 +3,9 @@
 #include <unordered_map>
 class ReflClass;
 
-// CHECK:
 class ReflectionDb {
-
 	ReflectionDb() {}
 
-	// TODO: this should become a tree
 	std::unordered_map<std::string, ReflClass*> classes;
 	static ReflectionDb& Get()
 	{

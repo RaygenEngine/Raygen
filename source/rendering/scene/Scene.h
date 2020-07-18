@@ -165,7 +165,14 @@ inline struct Scene_ {
 				delete elem;
 			});
 		}
-		// TODO : delete animated geometries
+		else if constexpr (std::is_same_v<SceneAnimatedGeometry, T>) {
+			currentCmdBuffer->emplace_back([uid]() {
+				auto elem = static_cast<T*>(Scene->animatedGeometries.elements[uid]);
+				Scene->animatedGeometries.elements[uid] = nullptr;
+				vl::Device->waitIdle();
+				delete elem;
+			});
+		}
 	}
 
 	void EnqueueEndFrame()
@@ -220,7 +227,7 @@ public:
 
 	SceneCamera* GetActiveCamera()
 	{
-		if (cameras.elements.size() > activeCamera) { // PERF:
+		if (cameras.elements.size() > activeCamera) {
 			auto cam = cameras.elements[activeCamera];
 			if (cam) {
 				return cam;
@@ -232,7 +239,6 @@ public:
 	// CHECK: runs 2 frames behind
 	Scene_(size_t size);
 
-	// TODO: remove
 	vk::DescriptorSet GetActiveCameraDescSet();
 
 	void UploadDirty();

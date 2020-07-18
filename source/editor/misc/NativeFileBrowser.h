@@ -4,7 +4,7 @@
 namespace ed {
 class NativeFileBrowser {
 public:
-	// TODO:
+	// CHECK:
 	struct ExtensionFilter {
 		std::string filter{};
 
