@@ -92,7 +92,7 @@ SpirvReflection SpirvReflector::Reflect(const std::vector<uint32>& code)
 
 		auto type = comp.get_type(res.base_type_id);
 		if (type.basetype == SPIRType::Struct) {
-			for (size_t i = 0; i < type.member_types.size(); i++) {
+			for (uint32 i = 0; i < type.member_types.size(); i++) {
 				Variable memvar;
 				AnalyzeVariable(comp, memvar, comp.get_member_name(res.base_type_id, i), type.member_types[i]);
 				var.bytesWithPadding += memvar.bytesWithPadding;

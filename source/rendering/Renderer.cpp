@@ -131,11 +131,11 @@ Renderer_::Renderer_()
 
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
-		.setAttachmentCount(attachments.size()) //
+		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
 		.setPAttachments(attachments.data())
-		.setSubpassCount(subpasses.size())
+		.setSubpassCount(static_cast<uint32>(subpasses.size()))
 		.setPSubpasses(subpasses.data())
-		.setDependencyCount(dependcies.size())
+		.setDependencyCount(static_cast<uint32>(dependcies.size()))
 		.setPDependencies(dependcies.data());
 
 	m_ptRenderpass = Device->createRenderPassUnique(renderPassInfo);
@@ -231,7 +231,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 		std::array cv{ clearValue, clearValue2 };
 
 		renderPassInfo
-			.setClearValueCount(cv.size()) //
+			.setClearValueCount(static_cast<uint32>(cv.size())) //
 			.setPClearValues(cv.data());
 
 		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
@@ -401,7 +401,7 @@ void Renderer_::OnViewportResize()
 			vk::FramebufferCreateInfo createInfo{};
 			createInfo
 				.setRenderPass(m_ptRenderpass.get()) //
-				.setAttachmentCount(attch.size())
+				.setAttachmentCount(static_cast<uint32>(attch.size()))
 				.setPAttachments(attch.data())
 				.setWidth(fbSize.width)
 				.setHeight(fbSize.height)

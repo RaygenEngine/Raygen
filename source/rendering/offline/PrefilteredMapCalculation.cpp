@@ -400,7 +400,7 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 	for (uint32 mip = 0; mip < 6; ++mip) {
 		for (uint32 i = 0; i < 6; ++i) {
 
-			uint32 mipResolution = m_resolution * std::pow(0.5, mip);
+			uint32 mipResolution = static_cast<uint32>(m_resolution * std::pow(0.5, mip));
 
 			vk::Rect2D scissor{};
 
@@ -520,7 +520,7 @@ void PrefilteredMapCalculation::EditPods()
 	auto bytesPerPixel = cubemapEditor->format == ImageFormat::Hdr ? 4u * 4u : 4u;
 	for (uint32 mip = 0; mip < 6; ++mip) {
 
-		auto res = m_resolution / std::pow(2, mip);
+		uint32 res = m_resolution / static_cast<uint32>(std::pow(2, mip));
 		bufferSize += res * res * bytesPerPixel * 6;
 	}
 
@@ -531,7 +531,7 @@ void PrefilteredMapCalculation::EditPods()
 	for (uint32 mip = 0; mip < 6; ++mip) {
 		for (uint32 i = 0; i < 6; ++i) {
 
-			size_t res = m_resolution / std::pow(2, mip);
+			size_t res = m_resolution / static_cast<uint32>(std::pow(2, mip));
 			size_t size = res * res * bytesPerPixel;
 
 			auto& img = m_cubemapMips[mip].faceAttachments[i];

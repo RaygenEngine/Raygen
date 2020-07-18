@@ -46,7 +46,7 @@ vk::UniquePipelineLayout CreatePipelineLayout(size_t pcSize, const std::vector<v
 	vk::PushConstantRange pushConstantRange{};
 	pushConstantRange
 		.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
-		.setSize(pcSize)
+		.setSize(static_cast<uint32>(pcSize))
 		.setOffset(0u);
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};

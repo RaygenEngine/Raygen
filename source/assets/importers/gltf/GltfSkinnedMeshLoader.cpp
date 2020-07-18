@@ -177,7 +177,7 @@ void GltfSkinnedMeshLoader::SortJoints()
 				[&](auto& joint) { return joint.index == skinPod->joints[current].parentJoint; });
 
 			CLOG_ABORT(it == newJoints.end(), "Joint not found, programmer error in sorting algorithm");
-			skinPod->joints[current].parentJoint = std::distance(newJoints.begin(), it);
+			skinPod->joints[current].parentJoint = static_cast<int32>(std::distance(newJoints.begin(), it));
 		}
 
 		newJoints.emplace_back(std::move(skinPod->joints[current]));
@@ -208,7 +208,7 @@ void GltfSkinnedMeshLoader::SortJoints()
 int32 GltfSkinnedMeshLoader::NodeToJoint(int32 nodeIndex)
 {
 	if (auto it = std::find(gltfSkin.joints.begin(), gltfSkin.joints.end(), nodeIndex); it != gltfSkin.joints.end()) {
-		int32 jointIndex = std::distance(gltfSkin.joints.begin(), it);
+		int32 jointIndex = static_cast<int32>(std::distance(gltfSkin.joints.begin(), it));
 		if (jointRemap.empty()) {
 			return jointIndex;
 		}
@@ -368,7 +368,7 @@ void GltfSkinnedMeshLoader::LoadAnimations()
 		}
 
 		pod->time = maxInputTime;
-		pod->jointCount = skinPod->joints.size();
+		pod->jointCount = static_cast<int32>(skinPod->joints.size());
 		animationIndex++;
 	}
 }
