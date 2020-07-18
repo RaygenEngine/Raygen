@@ -438,7 +438,7 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 		totalIndicesSize = prevIndicesEnd + newIndicesCount;
 		geom.indices.resize(totalIndicesSize);
 
-		ExtractIndicesInto(gltfData, desc, geom.indices.data() + prevIndicesEnd, prevEnd);
+		ExtractIndicesInto(gltfData, desc, geom.indices.data() + prevIndicesEnd, static_cast<uint32>(prevEnd));
 	}
 
 	int32 positionsIndex = -1;

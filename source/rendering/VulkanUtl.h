@@ -60,20 +60,6 @@ inline vk::PipelineStageFlags GetPipelineStage(vk::ImageLayout imL)
 	}
 }
 
-[[deprecated]] inline vk::ImageAspectFlags GetAspectMask(const vk::ImageCreateInfo& ici)
-{
-	auto aspectMask = vk::ImageAspectFlagBits::eColor;
-
-	if (ici.usage & vk::ImageUsageFlagBits::eDepthStencilAttachment) {
-		aspectMask = vk::ImageAspectFlagBits::eDepth;
-
-		// if has stencil component
-		if (ici.format == vk::Format::eD32SfloatS8Uint || ici.format == vk::Format::eD24UnormS8Uint) {
-			return aspectMask | vk::ImageAspectFlagBits::eStencil;
-		}
-	}
-	return aspectMask;
-}
 
 inline vk::ImageAspectFlags GetAspectMask(vk::ImageUsageFlags usage, vk::Format format)
 {
@@ -89,6 +75,11 @@ inline vk::ImageAspectFlags GetAspectMask(vk::ImageUsageFlags usage, vk::Format 
 	}
 
 	return aspectMask;
+}
+
+inline vk::ImageAspectFlags GetAspectMask(const vk::ImageCreateInfo& ici)
+{
+	return GetAspectMask(ici.usage, ici.format);
 }
 
 inline vk::Format GetFormat(ImageFormat format)

@@ -43,7 +43,7 @@ void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCou
 	size_t offset{ 0llu };
 	for (uint32 mip = 0u; mip < mipCount; ++mip) {
 
-		uint32 res = m_imageInfo.extent.width / std::pow(2, mip);
+		uint32 res = m_imageInfo.extent.width / static_cast<uint32>(std::pow(2, mip));
 
 
 		vk::BufferImageCopy region{};
