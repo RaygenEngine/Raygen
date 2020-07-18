@@ -1,9 +1,10 @@
 #pragma once
 #include "assets/pods/Sampler.h"
-#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetBase.h"
 
 #include <vulkan/vulkan.hpp>
 
+namespace vl {
 struct GpuSampler : public vl::GpuAssetTemplate<Sampler> {
 	// PERF: one to many views
 	vk::UniqueSampler sampler;
@@ -12,3 +13,4 @@ struct GpuSampler : public vl::GpuAssetTemplate<Sampler> {
 
 	void Update(const AssetUpdateInfo& info) override final;
 };
+} // namespace vl

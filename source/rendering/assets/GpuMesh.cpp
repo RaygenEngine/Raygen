@@ -2,7 +2,7 @@
 #include "GpuMesh.h"
 
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetBase.h"
 #include "rendering/Renderer.h"
 #include "rendering/Device.h"
 #include "rendering/assets/GpuMaterialInstance.h"

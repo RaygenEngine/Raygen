@@ -1,11 +1,11 @@
 #pragma once
 #include "assets/pods/MaterialInstance.h"
-#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetBase.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 
 #include <vulkan/vulkan.hpp>
 
-
+namespace vl {
 struct GpuMaterialInstance : public vl::GpuAssetTemplate<MaterialInstance> {
 	vl::GpuHandle<MaterialArchetype> archetype;
 
@@ -17,3 +17,4 @@ struct GpuMaterialInstance : public vl::GpuAssetTemplate<MaterialInstance> {
 
 	void Update(const AssetUpdateInfo& info) override final;
 };
+} // namespace vl

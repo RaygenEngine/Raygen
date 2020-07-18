@@ -1,9 +1,10 @@
 #pragma once
-#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetBase.h"
 #include "rendering/wrappers/RCubemap.h"
 
 #include <vulkan/vulkan.hpp>
 
+namespace vl {
 // WIP: this asset is a bundle of assets and a descriptor set (it may be useless)
 struct GpuEnvironmentMap : public vl::GpuAssetTemplate<EnvironmentMap> {
 	// TODO: skybox is temp (part of skymesh)
@@ -21,3 +22,5 @@ struct GpuEnvironmentMap : public vl::GpuAssetTemplate<EnvironmentMap> {
 
 	void Update(const AssetUpdateInfo&) override final;
 };
+
+} // namespace vl
