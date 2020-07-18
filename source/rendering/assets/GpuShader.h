@@ -1,11 +1,12 @@
 #pragma once
 
 #include "assets/pods/Shader.h"
-#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetBase.h"
 #include "rendering/resource/DescPoolAllocator.h"
 
 #include <vulkan/vulkan.hpp>
 
+namespace vl {
 struct GpuShader : public vl::GpuAssetTemplate<Shader> {
 	GpuShader(PodHandle<Shader> podHandle);
 
@@ -22,3 +23,4 @@ struct GpuShader : public vl::GpuAssetTemplate<Shader> {
 private:
 	void BuildShaderStages();
 };
+} // namespace vl

@@ -1,8 +1,9 @@
 #pragma once
-#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetBase.h"
 #include "rendering/wrappers/RImage2D.h"
 
 
+namespace vl {
 struct GpuImage : public vl::GpuAssetTemplate<::Image> {
 	UniquePtr<vl::RImage2D> image;
 
@@ -10,3 +11,4 @@ struct GpuImage : public vl::GpuAssetTemplate<::Image> {
 
 	void Update(const AssetUpdateInfo& info) override final;
 };
+} // namespace vl

@@ -19,7 +19,7 @@ public:                                                                         
 		static ReflClass cl = ReflClass::Generate<Class>(FA_MAIL_BULK);                                                \
 		return cl;                                                                                                     \
 	}                                                                                                                  \
-	using GpuAssetType = Gpu##Class;                                                                                   \
+	using GpuAssetType = vl::Gpu##Class;                                                                               \
                                                                                                                        \
 public:                                                                                                                \
 	static void GenerateReflection(ReflClass& refl)

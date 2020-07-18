@@ -1,7 +1,7 @@
 #pragma once
 #include "assets/pods/SkinnedMesh.h"
 #include "assets/pods/MaterialInstance.h"
-#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetBase.h"
 #include "rendering/assets/GpuMesh.h"
 #include "universe/nodes/geometry/GeometryNode.h"
 
@@ -23,6 +23,7 @@
 //	UniquePtr<vl::RBuffer> indexBuffer;
 //};
 
+namespace vl {
 struct GpuSkinnedMesh : public vl::GpuAssetTemplate<SkinnedMesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;
 
@@ -31,3 +32,4 @@ struct GpuSkinnedMesh : public vl::GpuAssetTemplate<SkinnedMesh> {
 
 	void Update(const AssetUpdateInfo& info) override final;
 };
+} // namespace vl

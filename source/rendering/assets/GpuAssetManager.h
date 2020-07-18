@@ -1,12 +1,13 @@
 #pragma once
-#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetBase.h"
 #include "core/StringUtl.h"
 
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
 inline class GpuAssetManager_ {
-	std::vector<UniquePtr<GpuAssetBase>> gpuAssets;
+	// NOTE: whenever any operation on this may move the vector, vl::gpuassetdetail ::gpuAssetListData should be updated
+	std::vector<GpuAssetBase*> gpuAssets;
 
 	// We should use GpuAssetEntries if we need more than just a single array for metadata info
 	//
@@ -15,14 +16,21 @@ inline class GpuAssetManager_ {
 
 	std::unordered_map<std::string, PodHandle<Shader>, str::HashInsensitive> shaderPathCache;
 
+
+	template<CONC(CAssetPod) T>
+	GpuAsset<T>& LockHandle(GpuHandle<T> handle)
+	{
+		return static_cast<GpuAsset<T>&>(*gpuAssets[handle.uid]);
+	}
+
 public:
 	GpuAssetManager_() { AllocForAll(); }
 
 	template<typename T>
 	void Load(PodHandle<T> handle)
 	{
-		auto ptr = new GpuAsset<T>(handle);
-		gpuAssets[handle.uid].reset(ptr);
+		delete gpuAssets[handle.uid];
+		gpuAssets[handle.uid] = new GpuAsset<T>(handle);
 	}
 
 	template<CONC(CAssetPod) T>
@@ -38,17 +46,18 @@ public:
 		return GpuHandle<T>{ id };
 	}
 
-	template<CONC(CAssetPod) T>
-	GpuAsset<T>& LockHandle(GpuHandle<T> handle)
-	{
-		return static_cast<GpuAsset<T>&>(*gpuAssets[handle.uid]);
-	}
-
 
 	vk::Sampler GetDefaultSampler();
 
 	void AllocForAll();
-	void UnloadAll() { gpuAssets.clear(); }
+	void UnloadAll()
+	{
+		for (auto ptr : gpuAssets) {
+			delete ptr;
+		}
+		gpuAssets.clear();
+		gpuassetdetail::gpuAssetListData = nullptr;
+	}
 
 
 	// Now will also cache hit so its safe to call on a non static context (ie every recompile)

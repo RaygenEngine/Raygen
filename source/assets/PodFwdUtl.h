@@ -14,18 +14,20 @@ struct GpuTypeExtractor {
 // Also declares a specialization for the GpuTypeExtractor on forward declarations. (A type table from Pod -> GpuPod)
 #define ZZZ_PER_POD_EXPANSION(Pod)                                                                                     \
 	struct Pod;                                                                                                        \
-	struct Gpu##Pod;                                                                                                   \
+	namespace vl {                                                                                                     \
+		struct Gpu##Pod;                                                                                               \
+	}                                                                                                                  \
 	namespace detail {                                                                                                 \
 		template<>                                                                                                     \
 		struct GpuTypeExtractor<Pod> {                                                                                 \
-			using type = Gpu##Pod;                                                                                     \
+			using type = ::vl::Gpu##Pod;                                                                               \
 		};                                                                                                             \
 	}
 
 
 // Pretty access to the GpuTypeExtractor table. Converts the forward declared structs like so: Gpu<Image> == GpuImage
 template<typename Pod>
-using Gpu = typename detail::GpuTypeExtractor<Pod>::type;
+using GpuAsset = typename detail::GpuTypeExtractor<Pod>::type;
 
 
 // Macro argument overloading based on: https://stackoverflow.com/a/26408195
@@ -248,8 +250,8 @@ using Gpu = typename detail::GpuTypeExtractor<Pod>::type;
 	ZZZ_PER_POD_EXPANSION(a13)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a14)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a15)                                                                                         \
-	ZZZ_PER_POD_EXPANSION(a16) ZZZ_PER_POD_EXPANSION(a17) ZZZ_PER_POD_EXPANSION(a18) ZZZ_PER_POD_EXPANSION(a19)        \
-		ZZZ_PER_POD_EXPANSION(a20)
+	ZZZ_PER_POD_EXPANSION(a16)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a17) ZZZ_PER_POD_EXPANSION(a18) ZZZ_PER_POD_EXPANSION(a19) ZZZ_PER_POD_EXPANSION(a20)
 #define ZZZ_POD_EXP21(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21)  \
 	ZZZ_PER_POD_EXPANSION(a1)                                                                                          \
 	ZZZ_PER_POD_EXPANSION(a2)                                                                                          \
@@ -266,8 +268,9 @@ using Gpu = typename detail::GpuTypeExtractor<Pod>::type;
 	ZZZ_PER_POD_EXPANSION(a13)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a14)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a15)                                                                                         \
-	ZZZ_PER_POD_EXPANSION(a16) ZZZ_PER_POD_EXPANSION(a17) ZZZ_PER_POD_EXPANSION(a18) ZZZ_PER_POD_EXPANSION(a19)        \
-		ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21)
+	ZZZ_PER_POD_EXPANSION(a16)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a17)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a18) ZZZ_PER_POD_EXPANSION(a19) ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21)
 #define ZZZ_POD_EXP22(                                                                                                 \
 	a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22)               \
 	ZZZ_PER_POD_EXPANSION(a1)                                                                                          \
@@ -285,8 +288,10 @@ using Gpu = typename detail::GpuTypeExtractor<Pod>::type;
 	ZZZ_PER_POD_EXPANSION(a13)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a14)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a15)                                                                                         \
-	ZZZ_PER_POD_EXPANSION(a16) ZZZ_PER_POD_EXPANSION(a17) ZZZ_PER_POD_EXPANSION(a18) ZZZ_PER_POD_EXPANSION(a19)        \
-		ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22)
+	ZZZ_PER_POD_EXPANSION(a16)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a17)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a18)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a19) ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22)
 #define ZZZ_POD_EXP23(                                                                                                 \
 	a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23)          \
 	ZZZ_PER_POD_EXPANSION(a1)                                                                                          \
@@ -304,8 +309,11 @@ using Gpu = typename detail::GpuTypeExtractor<Pod>::type;
 	ZZZ_PER_POD_EXPANSION(a13)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a14)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a15)                                                                                         \
-	ZZZ_PER_POD_EXPANSION(a16) ZZZ_PER_POD_EXPANSION(a17) ZZZ_PER_POD_EXPANSION(a18) ZZZ_PER_POD_EXPANSION(a19)        \
-		ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22) ZZZ_PER_POD_EXPANSION(a23)
+	ZZZ_PER_POD_EXPANSION(a16)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a17)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a18)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a19) ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22)        \
+		ZZZ_PER_POD_EXPANSION(a23)
 #define ZZZ_POD_EXP24(                                                                                                 \
 	a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24)     \
 	ZZZ_PER_POD_EXPANSION(a1)                                                                                          \
@@ -323,9 +331,11 @@ using Gpu = typename detail::GpuTypeExtractor<Pod>::type;
 	ZZZ_PER_POD_EXPANSION(a13)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a14)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a15)                                                                                         \
-	ZZZ_PER_POD_EXPANSION(a16) ZZZ_PER_POD_EXPANSION(a17) ZZZ_PER_POD_EXPANSION(a18) ZZZ_PER_POD_EXPANSION(a19)        \
-		ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22) ZZZ_PER_POD_EXPANSION(a23)    \
-			ZZZ_PER_POD_EXPANSION(a24)
+	ZZZ_PER_POD_EXPANSION(a16)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a17)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a18)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a19) ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22)        \
+		ZZZ_PER_POD_EXPANSION(a23) ZZZ_PER_POD_EXPANSION(a24)
 #define ZZZ_POD_EXP25(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21,  \
 	a22, a23, a24, a25)                                                                                                \
 	ZZZ_PER_POD_EXPANSION(a1)                                                                                          \
@@ -343,9 +353,11 @@ using Gpu = typename detail::GpuTypeExtractor<Pod>::type;
 	ZZZ_PER_POD_EXPANSION(a13)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a14)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a15)                                                                                         \
-	ZZZ_PER_POD_EXPANSION(a16) ZZZ_PER_POD_EXPANSION(a17) ZZZ_PER_POD_EXPANSION(a18) ZZZ_PER_POD_EXPANSION(a19)        \
-		ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22) ZZZ_PER_POD_EXPANSION(a23)    \
-			ZZZ_PER_POD_EXPANSION(a24) ZZZ_PER_POD_EXPANSION(a25)
+	ZZZ_PER_POD_EXPANSION(a16)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a17)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a18)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a19) ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22)        \
+		ZZZ_PER_POD_EXPANSION(a23) ZZZ_PER_POD_EXPANSION(a24) ZZZ_PER_POD_EXPANSION(a25)
 #define ZZZ_POD_EXP26(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21,  \
 	a22, a23, a24, a25, a26)                                                                                           \
 	ZZZ_PER_POD_EXPANSION(a1)                                                                                          \
@@ -363,9 +375,11 @@ using Gpu = typename detail::GpuTypeExtractor<Pod>::type;
 	ZZZ_PER_POD_EXPANSION(a13)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a14)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a15)                                                                                         \
-	ZZZ_PER_POD_EXPANSION(a16) ZZZ_PER_POD_EXPANSION(a17) ZZZ_PER_POD_EXPANSION(a18) ZZZ_PER_POD_EXPANSION(a19)        \
-		ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22) ZZZ_PER_POD_EXPANSION(a23)    \
-			ZZZ_PER_POD_EXPANSION(a24) ZZZ_PER_POD_EXPANSION(a25) ZZZ_PER_POD_EXPANSION(a26)
+	ZZZ_PER_POD_EXPANSION(a16)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a17)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a18)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a19) ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22)        \
+		ZZZ_PER_POD_EXPANSION(a23) ZZZ_PER_POD_EXPANSION(a24) ZZZ_PER_POD_EXPANSION(a25) ZZZ_PER_POD_EXPANSION(a26)
 #define ZZZ_POD_EXP27(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21,  \
 	a22, a23, a24, a25, a26, a27)                                                                                      \
 	ZZZ_PER_POD_EXPANSION(a1)                                                                                          \
@@ -383,10 +397,12 @@ using Gpu = typename detail::GpuTypeExtractor<Pod>::type;
 	ZZZ_PER_POD_EXPANSION(a13)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a14)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a15)                                                                                         \
-	ZZZ_PER_POD_EXPANSION(a16) ZZZ_PER_POD_EXPANSION(a17) ZZZ_PER_POD_EXPANSION(a18) ZZZ_PER_POD_EXPANSION(a19)        \
-		ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22) ZZZ_PER_POD_EXPANSION(a23)    \
-			ZZZ_PER_POD_EXPANSION(a24) ZZZ_PER_POD_EXPANSION(a25) ZZZ_PER_POD_EXPANSION(a26)                           \
-				ZZZ_PER_POD_EXPANSION(a27)
+	ZZZ_PER_POD_EXPANSION(a16)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a17)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a18)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a19) ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22)        \
+		ZZZ_PER_POD_EXPANSION(a23) ZZZ_PER_POD_EXPANSION(a24) ZZZ_PER_POD_EXPANSION(a25) ZZZ_PER_POD_EXPANSION(a26)    \
+			ZZZ_PER_POD_EXPANSION(a27)
 #define ZZZ_POD_EXP28(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21,  \
 	a22, a23, a24, a25, a26, a27, a28)                                                                                 \
 	ZZZ_PER_POD_EXPANSION(a1)                                                                                          \
@@ -404,10 +420,12 @@ using Gpu = typename detail::GpuTypeExtractor<Pod>::type;
 	ZZZ_PER_POD_EXPANSION(a13)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a14)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a15)                                                                                         \
-	ZZZ_PER_POD_EXPANSION(a16) ZZZ_PER_POD_EXPANSION(a17) ZZZ_PER_POD_EXPANSION(a18) ZZZ_PER_POD_EXPANSION(a19)        \
-		ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22) ZZZ_PER_POD_EXPANSION(a23)    \
-			ZZZ_PER_POD_EXPANSION(a24) ZZZ_PER_POD_EXPANSION(a25) ZZZ_PER_POD_EXPANSION(a26)                           \
-				ZZZ_PER_POD_EXPANSION(a27) ZZZ_PER_POD_EXPANSION(a28)
+	ZZZ_PER_POD_EXPANSION(a16)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a17)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a18)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a19) ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22)        \
+		ZZZ_PER_POD_EXPANSION(a23) ZZZ_PER_POD_EXPANSION(a24) ZZZ_PER_POD_EXPANSION(a25) ZZZ_PER_POD_EXPANSION(a26)    \
+			ZZZ_PER_POD_EXPANSION(a27) ZZZ_PER_POD_EXPANSION(a28)
 #define ZZZ_POD_EXP29(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21,  \
 	a22, a23, a24, a25, a26, a27, a28, a29)                                                                            \
 	ZZZ_PER_POD_EXPANSION(a1)                                                                                          \
@@ -425,10 +443,12 @@ using Gpu = typename detail::GpuTypeExtractor<Pod>::type;
 	ZZZ_PER_POD_EXPANSION(a13)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a14)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a15)                                                                                         \
-	ZZZ_PER_POD_EXPANSION(a16) ZZZ_PER_POD_EXPANSION(a17) ZZZ_PER_POD_EXPANSION(a18) ZZZ_PER_POD_EXPANSION(a19)        \
-		ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22) ZZZ_PER_POD_EXPANSION(a23)    \
-			ZZZ_PER_POD_EXPANSION(a24) ZZZ_PER_POD_EXPANSION(a25) ZZZ_PER_POD_EXPANSION(a26)                           \
-				ZZZ_PER_POD_EXPANSION(a27) ZZZ_PER_POD_EXPANSION(a28) ZZZ_PER_POD_EXPANSION(a29)
+	ZZZ_PER_POD_EXPANSION(a16)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a17)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a18)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a19) ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22)        \
+		ZZZ_PER_POD_EXPANSION(a23) ZZZ_PER_POD_EXPANSION(a24) ZZZ_PER_POD_EXPANSION(a25) ZZZ_PER_POD_EXPANSION(a26)    \
+			ZZZ_PER_POD_EXPANSION(a27) ZZZ_PER_POD_EXPANSION(a28) ZZZ_PER_POD_EXPANSION(a29)
 #define ZZZ_POD_EXP30(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21,  \
 	a22, a23, a24, a25, a26, a27, a28, a29, a30)                                                                       \
 	ZZZ_PER_POD_EXPANSION(a1)                                                                                          \
@@ -446,11 +466,13 @@ using Gpu = typename detail::GpuTypeExtractor<Pod>::type;
 	ZZZ_PER_POD_EXPANSION(a13)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a14)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a15)                                                                                         \
-	ZZZ_PER_POD_EXPANSION(a16) ZZZ_PER_POD_EXPANSION(a17) ZZZ_PER_POD_EXPANSION(a18) ZZZ_PER_POD_EXPANSION(a19)        \
-		ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22) ZZZ_PER_POD_EXPANSION(a23)    \
-			ZZZ_PER_POD_EXPANSION(a24) ZZZ_PER_POD_EXPANSION(a25) ZZZ_PER_POD_EXPANSION(a26)                           \
-				ZZZ_PER_POD_EXPANSION(a27) ZZZ_PER_POD_EXPANSION(a28) ZZZ_PER_POD_EXPANSION(a29)                       \
-					ZZZ_PER_POD_EXPANSION(a30)
+	ZZZ_PER_POD_EXPANSION(a16)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a17)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a18)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a19) ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22)        \
+		ZZZ_PER_POD_EXPANSION(a23) ZZZ_PER_POD_EXPANSION(a24) ZZZ_PER_POD_EXPANSION(a25) ZZZ_PER_POD_EXPANSION(a26)    \
+			ZZZ_PER_POD_EXPANSION(a27) ZZZ_PER_POD_EXPANSION(a28) ZZZ_PER_POD_EXPANSION(a29)                           \
+				ZZZ_PER_POD_EXPANSION(a30)
 #define ZZZ_POD_EXP31(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21,  \
 	a22, a23, a24, a25, a26, a27, a28, a29, a30, a31)                                                                  \
 	ZZZ_PER_POD_EXPANSION(a1)                                                                                          \
@@ -468,8 +490,10 @@ using Gpu = typename detail::GpuTypeExtractor<Pod>::type;
 	ZZZ_PER_POD_EXPANSION(a13)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a14)                                                                                         \
 	ZZZ_PER_POD_EXPANSION(a15)                                                                                         \
-	ZZZ_PER_POD_EXPANSION(a16) ZZZ_PER_POD_EXPANSION(a17) ZZZ_PER_POD_EXPANSION(a18) ZZZ_PER_POD_EXPANSION(a19)        \
-		ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22) ZZZ_PER_POD_EXPANSION(a23)    \
-			ZZZ_PER_POD_EXPANSION(a24) ZZZ_PER_POD_EXPANSION(a25) ZZZ_PER_POD_EXPANSION(a26)                           \
-				ZZZ_PER_POD_EXPANSION(a27) ZZZ_PER_POD_EXPANSION(a28) ZZZ_PER_POD_EXPANSION(a29)                       \
-					ZZZ_PER_POD_EXPANSION(a30) ZZZ_PER_POD_EXPANSION(a31)
+	ZZZ_PER_POD_EXPANSION(a16)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a17)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a18)                                                                                         \
+	ZZZ_PER_POD_EXPANSION(a19) ZZZ_PER_POD_EXPANSION(a20) ZZZ_PER_POD_EXPANSION(a21) ZZZ_PER_POD_EXPANSION(a22)        \
+		ZZZ_PER_POD_EXPANSION(a23) ZZZ_PER_POD_EXPANSION(a24) ZZZ_PER_POD_EXPANSION(a25) ZZZ_PER_POD_EXPANSION(a26)    \
+			ZZZ_PER_POD_EXPANSION(a27) ZZZ_PER_POD_EXPANSION(a28) ZZZ_PER_POD_EXPANSION(a29)                           \
+				ZZZ_PER_POD_EXPANSION(a30) ZZZ_PER_POD_EXPANSION(a31)

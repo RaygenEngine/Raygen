@@ -14,20 +14,6 @@
 ENGINE_PODS_FWD(ENGINE_POD_TYPES);
 
 
-// Can be macroed
-// struct Image;
-// struct Mesh;
-// struct Shader;
-// struct ShaderStage;
-// struct Sampler;
-// struct SkinnedMesh;
-// struct Animation;
-// struct Cubemap;
-// struct EnvironmentMap;
-// struct MaterialArchetype;
-// struct MaterialInstance;
-
-
 // Returns the default uid for this pod in the asset manager, all pod handles are initialized with the the valid
 // "default"
 template<typename PodType>

@@ -1,11 +1,12 @@
 #pragma once
 
 #include "assets/pods/ShaderStage.h"
-#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetBase.h"
 #include "rendering/resource/DescPoolAllocator.h"
 
 #include <vulkan/vulkan.hpp>
 
+namespace vl {
 struct GpuShaderStage : public vl::GpuAssetTemplate<ShaderStage> {
 	vk::UniqueShaderModule module;
 
@@ -22,3 +23,4 @@ struct GpuShaderStage : public vl::GpuAssetTemplate<ShaderStage> {
 
 	virtual void Update(const AssetUpdateInfo& info) override;
 };
+} // namespace vl

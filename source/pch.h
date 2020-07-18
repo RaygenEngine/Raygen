@@ -35,3 +35,5 @@ namespace fs = std::filesystem;
 
 #include "assets/PodHandle.h"
 #include "reflection/GenMacros.h"
+
+#include "rendering/assets/GpuAssetHandle.h"

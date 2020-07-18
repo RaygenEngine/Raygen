@@ -1,9 +1,10 @@
 #pragma once
-#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetBase.h"
 #include "rendering/wrappers/RCubemap.h"
 
 
-struct GpuCubemap : public vl::GpuAssetTemplate<Cubemap> {
+namespace vl {
+struct GpuCubemap : public GpuAssetTemplate<Cubemap> {
 	UniquePtr<vl::RCubemap> cubemap;
 
 	vk::DescriptorSet descriptorSet;
@@ -12,3 +13,4 @@ struct GpuCubemap : public vl::GpuAssetTemplate<Cubemap> {
 
 	void Update(const AssetUpdateInfo&) override final;
 };
+} // namespace vl
