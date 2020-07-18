@@ -1,9 +1,7 @@
 #pragma once
-#include "assets/PodHandle.h"
 #include "assets/util/DynamicDescriptorSet.h"
-#include "assets/util/SpirvCompiler.h"
-#include "reflection/GenMacros.h"
 
+struct TextCompilerErrors;
 
 namespace shd {
 struct GeneratedShaderErrors {

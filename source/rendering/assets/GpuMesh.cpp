@@ -1,13 +1,13 @@
 #include "pch.h"
 #include "GpuMesh.h"
 
-#include "rendering/assets/GpuAssetManager.h"
+#include "assets/pods/Mesh.h"
 #include "rendering/assets/GpuAssetBase.h"
-#include "rendering/Renderer.h"
-#include "rendering/Device.h"
+#include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMaterialInstance.h"
-#include "rendering/assets/GpuMaterialArchetype.h"
-
+#include "rendering/Device.h"
+#include "rendering/Renderer.h"
+#include "rendering/wrappers/RBuffer.h"
 
 using namespace vl;
 

@@ -1,7 +1,6 @@
 #pragma once
 #include "assets/AssetPod.h"
 #include "assets/shared/ImageShared.h"
-#include "reflection/GenMacros.h"
 
 // DOC: resolution = width = height of each face, same goes for format
 struct Cubemap : AssetPod {

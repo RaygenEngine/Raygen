@@ -1,51 +1,17 @@
 #pragma once
-#include "reflection/GenMacros.h"
 #include "assets/AssetPod.h"
-#include "assets/PodHandle.h"
-
-
-struct SkinnedVertex {
-	glm::vec3 position{};
-	glm::vec3 normal{};
-	glm::vec3 tangent{};
-	glm::vec2 uv{};
-	glm::ivec4 joint{};
-	glm::vec4 weight{};
-};
-
-struct SkinnedGeometrySlot {
-	std::vector<uint32> indices{};
-	std::vector<SkinnedVertex> vertices{};
-};
-
+#include "assets/shared/GeometryShared.h"
 
 struct SkinnedMesh : public AssetPod {
-	static constexpr int32 c_rootParentJointIndex = -1;
-
-	[[nodiscard]] static bool IsRootParent(int32 jointIndex) noexcept { return jointIndex == c_rootParentJointIndex; }
+	[[nodiscard]] static bool IsRootParent(int32 jointIndex) noexcept
+	{
+		return jointIndex == Joint::c_rootParentJointIndex;
+	}
 
 	[[nodiscard]] bool IsRootJoint(int32 jointIndex) const noexcept
 	{
 		return IsRootParent(joints[jointIndex].parentJoint);
 	}
-
-	struct Joint {
-		int32 parentJoint;
-		glm::mat4 inverseBindMatrix;
-
-		glm::vec3 translation;
-		glm::quat rotation;
-		glm::vec3 scale;
-
-
-		int32 index;
-
-		std::string name;
-
-		[[nodiscard]] Joint& GetParent(SkinnedMesh* pod) const { return pod->joints[parentJoint]; };
-		[[nodiscard]] bool IsRoot() const { return parentJoint == c_rootParentJointIndex; }
-	};
-
 
 	REFLECTED_POD(SkinnedMesh)
 	{

@@ -1,7 +1,6 @@
 ﻿#include "pch.h"
 #include "TerrainWalkerUserNode.h"
 
-#include "engine/Engine.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "universe/nodes/RootNode.h"

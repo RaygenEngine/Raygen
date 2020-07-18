@@ -1,16 +1,14 @@
 #include "pch.h"
 #include "SceneDirectionalLight.h"
 
-#include "rendering/assets/GpuAssetManager.h"
-#include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
+#include "core/math-ext/Frustum.h"
 
 void SceneDirectionalLight::ResizeShadowmap(uint32 width, uint32 height)
 {
 	shadowmap = std::make_unique<vl::RDepthmap>(width, height);
 }
 
-void SceneDirectionalLight::UpdateBox(math::Frustum frustum, glm::vec3 apex)
+void SceneDirectionalLight::UpdateBox(const math::Frustum& frustum, glm::vec3 apex)
 {
 	glm::mat4 view = glm::lookAt(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f) + glm::vec3(ubo.forward), up);
 	auto aabb = frustum.FrustumPyramidAABB(apex);

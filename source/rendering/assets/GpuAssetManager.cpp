@@ -10,6 +10,7 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
 
+
 namespace vl {
 GpuAssetManager_::~GpuAssetManager_()
 {

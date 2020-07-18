@@ -1,10 +1,5 @@
 #pragma once
-
-#include "assets/pods/Shader.h"
 #include "rendering/assets/GpuAssetBase.h"
-#include "rendering/resource/DescPoolAllocator.h"
-
-#include <vulkan/vulkan.hpp>
 
 namespace vl {
 struct GpuShader : public GpuAssetTemplate<Shader> {

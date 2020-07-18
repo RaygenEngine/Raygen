@@ -1,8 +1,5 @@
 #pragma once
-#include "assets/pods/Sampler.h"
 #include "rendering/assets/GpuAssetBase.h"
-
-#include <vulkan/vulkan.hpp>
 
 namespace vl {
 struct GpuSampler : public GpuAssetTemplate<Sampler> {

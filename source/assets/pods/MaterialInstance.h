@@ -1,8 +1,6 @@
 #pragma once
 #include "assets/AssetPod.h"
-#include "assets/PodHandle.h"
 #include "assets/util/DynamicDescriptorSet.h"
-#include "reflection/GenMacros.h"
 
 struct MaterialInstance : AssetPod {
 

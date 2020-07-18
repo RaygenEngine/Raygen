@@ -1,21 +1,19 @@
 #include "pch.h"
 #include "IrradianceMapCalculation.h"
 
+#include "assets/AssetRegistry.h"
 #include "assets/PodEditor.h"
 #include "assets/pods/Cubemap.h"
 #include "assets/pods/EnvironmentMap.h"
-#include "engine/Engine.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuMesh.h"
+#include "rendering/assets/GpuCubemap.h"
+#include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
-#include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/assets/GpuCubemap.h"
-#include "assets/AssetRegistry.h"
 
 namespace {
 struct PushConstant {
