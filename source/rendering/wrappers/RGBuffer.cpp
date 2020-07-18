@@ -55,7 +55,7 @@ RGbuffer::RGbuffer(uint32 width, uint32 height)
 
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
-	// CHECK: update descriptor set (is this once?)
+	// PERF: Use single update
 	for (uint32 i = 0; i < GCount; ++i) {
 
 		vk::DescriptorImageInfo imageInfo{};

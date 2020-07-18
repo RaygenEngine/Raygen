@@ -1,9 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
-
 namespace vl {
-// TODO:
 class PostprocessPass {
 	vk::UniqueRenderPass m_renderPass;
 

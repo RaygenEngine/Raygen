@@ -5,8 +5,6 @@
 #define GLM_FORCE_CXX2A
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-// CHECK: test build times?
-#define GLM_FORCE_SWIZZLE
 
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>

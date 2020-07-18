@@ -12,8 +12,7 @@ void SceneDirectionalLight::ResizeShadowmap(uint32 width, uint32 height)
 
 void SceneDirectionalLight::UpdateBox(math::Frustum frustum, glm::vec3 apex)
 {
-	// TODO:
-	glm::mat4 view = glm::lookAt(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f) + ubo.forward.xyz, up);
+	glm::mat4 view = glm::lookAt(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f) + glm::vec3(ubo.forward), up);
 	auto aabb = frustum.FrustumPyramidAABB(apex);
 	aabb.Transform(view);
 
@@ -30,7 +29,7 @@ void SceneDirectionalLight::UpdateBox(math::Frustum frustum, glm::vec3 apex)
 	cropMatrix[3][0] = offsetX;
 	cropMatrix[3][1] = offsetY;
 
-	// TODO: use scene top level AABB
+	// NOTE: use scene top level AABB
 	// Four of the planes of the orthographic light frustum were calculated using the minimum and maximum of the X and Y
 	// coordinates of the view frustum in light space. The last two planes of the orthogonal view frustum are the near
 	// and the far planes. To find these planes, the scene's bounds are clipped against the four known light frustum

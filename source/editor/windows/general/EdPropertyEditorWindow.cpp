@@ -553,7 +553,6 @@ void PropertyEditorWindow::Run_ImGuizmo(Node* node)
 	auto cameraView = camera->GetViewMatrix();
 	auto cameraProj = camera->GetProjectionMatrix();
 
-	// TODO:
 	cameraProj[1][1] *= -1.0;
 
 	auto nodeMatrix = node->GetNodeTransformWCS();
@@ -568,7 +567,6 @@ void PropertyEditorWindow::Run_ImGuizmo(Node* node)
 	node->SetNodeTransformWCS(nodeMatrix);
 }
 
-// TODO:
 // HACK:
 // Declared in EdGenericAssetEditorWindow.h but used here to avoid duplicating the imgui visitor.
 void GenericImguiDrawEntry(PodEntry* entry)

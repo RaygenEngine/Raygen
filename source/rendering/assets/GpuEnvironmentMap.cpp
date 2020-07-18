@@ -80,9 +80,9 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 		.setCompareEnable(VK_FALSE)
 		.setCompareOp(vk::CompareOp::eAlways)
 		.setMipmapMode(vk::SamplerMipmapMode::eLinear)
-		.setMipLodBias(0.f) // CHECK:
+		.setMipLodBias(0.f)
 		.setMinLod(0.f)
-		.setMaxLod(32.f); // CHECK:
+		.setMaxLod(32.f);
 
 
 	brdfSampler = vl::Device->createSamplerUnique(samplerInfo);

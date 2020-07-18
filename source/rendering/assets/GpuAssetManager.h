@@ -25,6 +25,8 @@ inline class GpuAssetManager_ {
 
 public:
 	GpuAssetManager_() { AllocForAll(); }
+	~GpuAssetManager_();
+
 
 	template<typename T>
 	void Load(PodHandle<T> handle)

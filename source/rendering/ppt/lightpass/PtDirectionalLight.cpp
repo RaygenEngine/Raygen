@@ -32,7 +32,6 @@ void PtDirectionalLight::MakePipeline()
 		MakePipeline();
 	};
 
-	// CHECK: be sure you use the correct blending operations (also check logic ops)
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
 	colorBlendAttachment
 		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG

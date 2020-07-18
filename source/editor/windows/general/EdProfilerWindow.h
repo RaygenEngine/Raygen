@@ -9,7 +9,7 @@ public:
 	ProfilerWindow(std::string_view name);
 
 protected:
-	// CHECK: not needed as static, but we want compiletime size, (can be done with template)
+	// CHECK: not needed as static, but we want compile time size, (can be done with template)
 	static inline std::array<bool, 32> visibleCategories{};
 
 	void DrawCategoryContents(ProfilerSetup::Module category);

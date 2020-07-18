@@ -11,11 +11,15 @@
 #include "rendering/Device.h"
 
 namespace vl {
-
+GpuAssetManager_::~GpuAssetManager_()
+{
+	for (auto& asset : gpuAssets) {
+		delete asset;
+	}
+}
 
 vk::Sampler GpuAssetManager_::GetDefaultSampler()
 {
-	// TODO: auto load the defaults of each asset type
 	return LockHandle(GetGpuHandle<Sampler>({})).sampler.get();
 }
 

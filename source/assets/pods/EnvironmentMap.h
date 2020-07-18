@@ -16,7 +16,6 @@ struct EnvironmentMap : AssetPod {
 	}
 
 
-	// TODO: TEMP: skybox - this will be part of the skymesh
 	PodHandle<Cubemap> skybox;
 	// diffuse irradiance
 	PodHandle<Cubemap> irradiance;

@@ -58,7 +58,7 @@ inline AnimationPath GetAnimationPath(const std::string& gltfAnimationPath)
 	if (str::equalInsensitive(gltfAnimationPath, "weights")) {
 		return AnimationPath::Weights;
 	}
-	// not defined -> translation, CHECK: or should abort?
+	LOG_WARN("Incorrect animation path name");
 	return AnimationPath::Translation;
 }
 
@@ -539,7 +539,6 @@ inline std::pair<size_t, size_t> LoadBasicDataIntoGeometrySlot(GeometrySlotT& ge
 				geom.vertices[geom.indices[i + 2llu]].tangent += tangent;
 			}
 
-			// CHECK: handness
 			for (size_t i = prevEnd; i < totalSize; ++i) {
 				geom.vertices[i].tangent = glm::normalize(geom.vertices[i].tangent);
 			}
