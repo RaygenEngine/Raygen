@@ -1,13 +1,9 @@
 #pragma once
-#include "assets/pods/Mesh.h"
 #include "rendering/assets/GpuAssetBase.h"
-#include "rendering/wrappers/RBuffer.h"
-#include "universe/nodes/geometry/GeometryNode.h"
-#include "rendering/assets/GpuMaterialInstance.h"
 
 namespace vl {
 class RBuffer;
-}
+
 
 // PERF: GPU ASSETS From https://vulkan-tutorial.com/en/Vertex_buffers/Index_buffer
 // store multiple buffers, like the vertex and index buffer, into a single VkBuffer and use offsets in cmds like
@@ -18,13 +14,13 @@ class RBuffer;
 
 struct GpuGeometryGroup {
 	uint32 indexCount{ 0u };
-	vl::GpuHandle<MaterialInstance> material;
+	GpuHandle<MaterialInstance> material;
 
-	UniquePtr<vl::RBuffer> vertexBuffer;
-	UniquePtr<vl::RBuffer> indexBuffer;
+	UniquePtr<RBuffer> vertexBuffer;
+	UniquePtr<RBuffer> indexBuffer;
 };
 
-namespace vl {
+
 struct GpuMesh : public GpuAssetTemplate<Mesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;
 

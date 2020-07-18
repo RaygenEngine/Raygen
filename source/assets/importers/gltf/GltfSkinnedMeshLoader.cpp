@@ -13,7 +13,7 @@
 
 namespace {
 
-void ExtractJointTRSFromNode(tinygltf::Node& node, SkinnedMesh::Joint& joint)
+void ExtractJointTRSFromNode(tinygltf::Node& node, Joint& joint)
 {
 	// When matrix is defined, it must be decomposable to TRS.
 	if (!node.matrix.empty()) {
@@ -156,7 +156,7 @@ void GltfSkinnedMeshLoader::SortJoints()
 
 	// Remap[i] contains the index in the original joints array that should be moved to i position
 	std::vector<int32> jointRemapInverse;
-	std::vector<SkinnedMesh::Joint> newJoints;
+	std::vector<Joint> newJoints;
 
 
 	// Tree bfs (PERF: dfs may increase animator performance due to caching ?)
@@ -282,7 +282,7 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& inCache, uint32 inSkinIn
 	int32 skeletonRoot = skin.skeleton == -1 ? skin.joints[0] : skin.skeleton;
 	pod->joints.resize(jointCount);
 
-	RecurseChildren(skeletonRoot, SkinnedMesh::c_rootParentJointIndex);
+	RecurseChildren(skeletonRoot, Joint::c_rootParentJointIndex);
 	CLOG_WARN(jointsNeedSorting, "Gltf Importer: Joints need sorting for: {}", cache.filename);
 
 	if (jointsNeedSorting) {

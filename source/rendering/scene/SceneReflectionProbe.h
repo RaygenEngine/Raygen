@@ -1,6 +1,5 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
-#include "rendering/assets/GpuEnvironmentMap.h"
 
 struct Ambient_Ubo {
 	glm::vec4 color{};

@@ -127,7 +127,7 @@ struct Frustum {
 
 	// TEST:
 	// CHECK: for better precision create using all points of the frustum
-	[[nodiscard]] AABB FrustumPyramidAABB(glm::vec3 apex)
+	[[nodiscard]] AABB FrustumPyramidAABB(glm::vec3 apex) const
 	{
 		AABB box{};
 

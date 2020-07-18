@@ -1,21 +1,20 @@
 #include "pch.h"
 #include "BrdfLutCalculation.h"
 
+#include "assets/AssetRegistry.h"
 #include "assets/PodEditor.h"
+#include "assets/pods/EnvironmentMap.h"
+#include "assets/pods/Image.h"
+#include "engine/console/ConsoleVariable.h"
 #include "engine/Engine.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuMesh.h"
-#include "rendering/assets/GpuShader.h"
-#include "assets/pods/Image.h"
-#include "rendering/Device.h"
-#include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
-#include "rendering/scene/Scene.h"
 #include "rendering/assets/GpuCubemap.h"
-#include "engine/console/ConsoleVariable.h"
-#include "assets/AssetRegistry.h"
+#include "rendering/assets/GpuEnvironmentMap.h"
+#include "rendering/assets/GpuShader.h"
+#include "rendering/Device.h"
+#include "rendering/scene/Scene.h"
 
 namespace vl {
 BrdfLutCalculation::BrdfLutCalculation(GpuEnvironmentMap* envmapAsset, uint32 calculationResolution)
@@ -316,7 +315,7 @@ void BrdfLutCalculation::EditPods()
 
 
 	//.. prefiltered and rest here (or other class)
-	PodHandle<::Image> brdflut = envMap.Lock()->brdfLut;
+	PodHandle<Image> brdflut = envMap.Lock()->brdfLut;
 
 	if (brdflut.IsDefault()) {
 		PodEditor e(envMap);

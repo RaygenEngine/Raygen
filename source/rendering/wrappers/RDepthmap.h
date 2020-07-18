@@ -1,8 +1,6 @@
 #pragma once
 #include "rendering/wrappers/RImageAttachment.h"
 
-#include <vulkan/vulkan.hpp>
-
 namespace vl {
 struct RDepthmap {
 

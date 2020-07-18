@@ -1,8 +1,6 @@
 #pragma once
 #include "rendering/wrappers/RImage.h"
 
-#include <vulkan/vulkan.hpp>
-
 namespace vl {
 class RImageAttachment : public RImage {
 

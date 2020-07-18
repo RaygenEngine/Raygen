@@ -1,5 +1,4 @@
 #pragma once
-#include "assets/pods/EnvironmentMap.h"
 #include "universe/nodes/Node.h"
 #include "rendering/scene/Scene.h"
 

@@ -7,7 +7,6 @@
 #include "assets/PodEditor.h"
 #include "reflection/ReflectionTools.h"
 
-
 namespace {
 void RerouteShaderErrors(shd::GeneratedShaderErrors& errors)
 {

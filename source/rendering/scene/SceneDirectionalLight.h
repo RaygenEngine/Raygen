@@ -1,7 +1,11 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
 #include "rendering/wrappers/RDepthmap.h"
-#include "core/math-ext/Frustum.h"
+
+namespace math {
+// awful
+struct Frustum;
+} // namespace math
 
 struct DirectionalLight_Ubo {
 	glm::vec4 forward{};
@@ -23,5 +27,5 @@ struct SceneDirectionalLight : SceneStruct {
 	glm::vec3 up;
 
 	void ResizeShadowmap(uint32 width, uint32 height);
-	void UpdateBox(math::Frustum frustum, glm::vec3 apex);
+	void UpdateBox(const math::Frustum& frustum, glm::vec3 apex);
 };
