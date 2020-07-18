@@ -76,7 +76,7 @@ void IrradianceMapCalculation::MakeDesciptors()
 
 	m_descSet = m_skyboxDescLayout.GetDescriptorSet();
 
-	auto quadSampler = vl::GpuAssetManager->GetDefaultSampler();
+	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
@@ -95,7 +95,7 @@ void IrradianceMapCalculation::MakeDesciptors()
 		.setPImageInfo(&imageInfo)
 		.setPTexelBufferView(nullptr);
 
-	vl::Device->updateDescriptorSets(descriptorWrite, {});
+	Device->updateDescriptorSets(descriptorWrite, {});
 }
 
 void IrradianceMapCalculation::MakeRenderPass()
@@ -507,7 +507,7 @@ void IrradianceMapCalculation::EditPods()
 		img->BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
 
 
-		vl::RBuffer stagingbuffer{ m_resolution * m_resolution * bytesPerPixel, vk::BufferUsageFlagBits::eTransferDst,
+		RBuffer stagingbuffer{ m_resolution * m_resolution * bytesPerPixel, vk::BufferUsageFlagBits::eTransferDst,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 		img->CopyImageToBuffer(stagingbuffer);

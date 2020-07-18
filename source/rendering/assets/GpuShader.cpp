@@ -26,8 +26,8 @@ void GpuShader::Update(const AssetUpdateInfo& info)
 	ClearDependencies();
 	AddDependencies(podPtr->fragment, podPtr->vertex);
 
-	frag = vl::GpuAssetManager->GetGpuHandle(podPtr->fragment);
-	vert = vl::GpuAssetManager->GetGpuHandle(podPtr->vertex);
+	frag = GpuAssetManager->GetGpuHandle(podPtr->fragment);
+	vert = GpuAssetManager->GetGpuHandle(podPtr->vertex);
 
 	if (frag.Lock().WasLastCompileSuccessful() && vert.Lock().WasLastCompileSuccessful()) {
 		BuildShaderStages();

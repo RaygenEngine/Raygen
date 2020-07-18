@@ -39,6 +39,6 @@ void GpuShaderStage::Update(const AssetUpdateInfo& info)
 	}
 	vk::ShaderModuleCreateInfo createInfo{};
 	createInfo.setCodeSize(binary.size() * 4).setPCode(binary.data());
-	module = vl::Device->createShaderModuleUnique(createInfo);
+	module = Device->createShaderModuleUnique(createInfo);
 	lastCompileSuccess = true;
 }

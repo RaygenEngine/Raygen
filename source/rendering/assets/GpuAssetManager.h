@@ -3,7 +3,7 @@
 
 namespace vl {
 inline class GpuAssetManager_ {
-	// NOTE: whenever any operation on this may move the vector, vl::gpuassetdetail ::gpuAssetListData should be updated
+	// NOTE: whenever any operation on this may move the vector, gpuassetdetail ::gpuAssetListData should be updated
 	std::vector<GpuAssetBase*> gpuAssets;
 
 	// We should use GpuAssetEntries if we need more than just a single array for metadata info

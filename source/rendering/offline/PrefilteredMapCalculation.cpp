@@ -76,7 +76,7 @@ void PrefilteredMapCalculation::MakeDesciptors()
 
 	m_descSet = m_skyboxDescLayout.GetDescriptorSet();
 
-	auto quadSampler = vl::GpuAssetManager->GetDefaultSampler();
+	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
@@ -95,7 +95,7 @@ void PrefilteredMapCalculation::MakeDesciptors()
 		.setPImageInfo(&imageInfo)
 		.setPTexelBufferView(nullptr);
 
-	vl::Device->updateDescriptorSets(descriptorWrite, {});
+	Device->updateDescriptorSets(descriptorWrite, {});
 }
 
 void PrefilteredMapCalculation::MakeRenderPass()
@@ -533,7 +533,7 @@ void PrefilteredMapCalculation::EditPods()
 			img->BlockingTransitionToLayout(
 				vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
 
-			vl::RBuffer stagingbuffer{ vk::DeviceSize(size), vk::BufferUsageFlagBits::eTransferDst,
+			RBuffer stagingbuffer{ vk::DeviceSize(size), vk::BufferUsageFlagBits::eTransferDst,
 				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 			img->CopyImageToBuffer(stagingbuffer);
