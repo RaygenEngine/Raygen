@@ -3,7 +3,6 @@
 #include "assets/PodFwdUtl.h"
 
 
-#include <algorithm>
 // When adding a pod, add it to both of these
 
 #define ENGINE_POD_TYPES                                                                                               \

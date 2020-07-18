@@ -1,7 +1,5 @@
 #pragma once
-
 #include "assets/AssetUpdateInfo.h"
-#include "assets/PodHandle.h"
 
 // Base of templated pod editor
 struct PodEditorBase {
@@ -98,50 +96,3 @@ public:
 	PodType* operator*() const { return pod; }
 	PodType* operator->() const { return pod; }
 };
-
-/*
-
-Multithreaded Proof of concept Example: (NOT IN USE, FOR FUTURE REFERENCE)
-#include "AssetManager.h"
-#include "PodIncludes.h"
-
-int example()
-{
-	PodHandle<Image> handle;
-
-
-	PodEditor<Image> editor(handle);
-
-
-	//
-	// Case Critical Lock
-	//
-	{
-		Image* image = editor.CriticalLock(); // (Maybe blocking) Inform the engine that this asset will be in
-											  // invalid state for the scope of this editor. (eg: Resizing an image
-											  // where there are race conditions even for simple observers)
-
-		image->width = 128;
-		// DO NOT READ here concurrently. Invalid Pod State
-		image->data = {}; //
-		editor.Unlock();
-	}
-
-
-	//
-	// Case Realtime Observer & Editor (eg property editor)
-	//
-	{
-		// Let others take editing priority,
-		if (editor.CheckRealtimeEdit()) {
-			Image* image = editor.RealtimeLock(); // Editing mode.
-		}
-		else if (editor.CheckRealtimeRead()) {
-			const Image* image = editor.RealtimeRead(); // Read Only mode.
-		}
-		else {
-			// Nothing. Asset could be in an invalid state due to a critical lock editor in another thread.
-		}
-	}
-}
-*/

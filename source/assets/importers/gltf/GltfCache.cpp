@@ -3,13 +3,13 @@
 
 #include "assets/AssetImporterManager.h"
 #include "assets/importers/gltf/GltfUtl.h"
-#include "assets/pods/Sampler.h"
 #include "assets/pods/Image.h"
 #include "assets/pods/MaterialArchetype.h"
 #include "assets/pods/MaterialInstance.h"
+#include "assets/pods/Sampler.h"
 
-#include <tinygltf/tiny_gltf.h>
 #include <nlohmann/json.hpp>
+#include <tinygltf/tiny_gltf.h>
 
 namespace gltfutl {
 GltfCache::GltfCache(const fs::path& path)

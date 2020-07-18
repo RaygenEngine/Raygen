@@ -1,8 +1,9 @@
 #pragma once
-#include "assets/pods/Animation.h"
+#include "assets/shared/AnimationShared.h"
+#include "assets/shared/MaterialShared.h"
+#include "assets/shared/TextureShared.h"
 
-#include "core/StringUtl.h"
-#include <tiny_gltf.h>
+#include <tinygltf/tiny_gltf.h>
 
 namespace tg = tinygltf;
 
@@ -100,13 +101,6 @@ inline float NormalizedIntToFloat(float c)
 {
 	return c;
 }
-
-enum class MaterialAlphaMode
-{
-	Opaque,
-	Mask,
-	Blend
-};
 
 inline MaterialAlphaMode GetAlphaMode(const std::string& gltfAlphaMode)
 {

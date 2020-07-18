@@ -1,7 +1,5 @@
 #pragma once
-
-#include "assets/pods/ShaderStage.h"
-#include <map>
+#include "assets/shared/ShaderStageShared.h"
 
 struct TextCompilerErrors {
 	std::map<int, std::string> errors;

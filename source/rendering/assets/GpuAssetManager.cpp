@@ -1,20 +1,14 @@
 #include "pch.h"
 #include "GpuAssetManager.h"
 
-#include "assets/Assets.h"
 #include "assets/AssetRegistry.h"
-#include "assets/PodIncludes.h"
+#include "assets/Assets.h"
 #include "core/iterable/IterableSafeVector.h"
-#include "reflection/PodTools.h"
 #include "rendering/assets/GpuImage.h"
-#include "rendering/assets/GpuMaterialInstance.h"
-#include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuSampler.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/assets/GpuCubemap.h"
 #include "rendering/Device.h"
-#include "assets/pods/Mesh.h"
 
 namespace vl {
 

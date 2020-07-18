@@ -1,16 +1,15 @@
 #include "pch.h"
 #include "EdMaterialArchetypeEditor.h"
 
-#include "assets/PodEditor.h"
-#include "assets/pods/MaterialInstance.h"
 #include "assets/AssetRegistry.h"
-#include "assets/util/SpirvReflector.h"
-#include "assets/util/SpirvCompiler.h"
-#include "editor/imgui/ImEd.h"
-#include "editor/imgui/ImAssetSlot.h"
-#include "editor/misc/NativeFileBrowser.h"
-
+#include "assets/PodEditor.h"
 #include "assets/pods/MaterialArchetype.h"
+#include "assets/pods/MaterialInstance.h"
+#include "assets/util/SpirvCompiler.h"
+#include "assets/util/SpirvReflector.h"
+#include "editor/imgui/ImAssetSlot.h"
+#include "editor/imgui/ImEd.h"
+#include "editor/misc/NativeFileBrowser.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
 
 #include <imguicolortextedit/TextEditor.h>

@@ -2,9 +2,7 @@
 #include "EnvironmentMapImporter.h"
 
 #include "assets/AssetImporterManager.h"
-#include "assets/util/ImageUtl.h"
-
-#include <fstream>
+#include "assets/pods/EnvironmentMap.h"
 
 BasePodHandle EnvironmentMapImporter::Import(const fs::path& path)
 {

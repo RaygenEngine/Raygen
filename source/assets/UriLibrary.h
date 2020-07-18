@@ -1,7 +1,5 @@
 #pragma once
 #include "core/StringConversions.h"
-#include "core/StringUtl.h"
-#include "engine/Logger.h"
 
 // The central library for the engines Uri convention.
 #include <nlohmann/json_fwd.hpp>
