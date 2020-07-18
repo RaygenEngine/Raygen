@@ -1,11 +1,11 @@
 #pragma once
 #include "assets/pods/MaterialInstance.h"
 #include "rendering/assets/GpuAssetBase.h"
-#include "rendering/assets/GpuMaterialArchetype.h"
 
-#include <vulkan/vulkan.hpp>
 
 namespace vl {
+class RBuffer;
+
 struct GpuMaterialInstance : public GpuAssetTemplate<MaterialInstance> {
 	GpuHandle<MaterialArchetype> archetype;
 

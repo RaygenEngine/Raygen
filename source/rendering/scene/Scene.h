@@ -227,7 +227,7 @@ public:
 
 	SceneCamera* GetActiveCamera()
 	{
-		if (cameras.elements.size() > activeCamera) { // PERF:
+		if (cameras.elements.size() > activeCamera) {
 			auto cam = cameras.elements[activeCamera];
 			if (cam) {
 				return cam;
@@ -239,7 +239,6 @@ public:
 	// CHECK: runs 2 frames behind
 	Scene_(size_t size);
 
-	// TODO: remove
 	vk::DescriptorSet GetActiveCameraDescSet();
 
 	void UploadDirty();

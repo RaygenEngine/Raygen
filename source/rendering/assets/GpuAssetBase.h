@@ -1,5 +1,4 @@
 #pragma once
-#include "assets/PodHandle.h"
 #include "assets/AssetUpdateInfo.h"
 
 namespace vl {

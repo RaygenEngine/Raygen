@@ -43,14 +43,14 @@ void BrdfLutCalculation::MakeRenderPass()
 {
 	vk::AttachmentDescription colorAttachmentDesc{};
 	colorAttachmentDesc
-		.setFormat(vk::Format::eR32G32B32A32Sfloat) // CHECK:
+		.setFormat(vk::Format::eR32G32B32A32Sfloat) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal) // CHECK: vk::ImageLayout::eShaderReadOnlyOptimal?
-		.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);  // CHECK:
+		.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal)
+		.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
 
 	vk::AttachmentReference colorAttachmentRef{};
 	colorAttachmentRef
@@ -235,7 +235,7 @@ void BrdfLutCalculation::PrepareFaceInfo()
 		.setRenderPass(m_renderPass.get()) //
 		.setAttachmentCount(1u)
 		.setPAttachments(&m_attachment->GetView())
-		.setWidth(m_resolution) // CHECK: parameter
+		.setWidth(m_resolution)
 		.setHeight(m_resolution)
 		.setLayers(1);
 
@@ -279,8 +279,6 @@ void BrdfLutCalculation::RecordAndSubmitCmdBuffers()
 	beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
 	m_cmdBuffer.begin(beginInfo);
 	{
-
-		// PERF: needs render pass?
 		// begin render pass
 		m_cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{

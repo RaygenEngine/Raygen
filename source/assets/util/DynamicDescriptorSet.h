@@ -12,7 +12,7 @@ struct DynamicDescriptorSetLayout {
 	RuntimeClass uboClass;
 	std::string uboName{ "ubo" };
 
-	[[nodiscard]] size_t SizeOfUbo() const // TODO: Test padding
+	[[nodiscard]] size_t SizeOfUbo() const // TODO: Fix custom ubo padding
 	{
 		return uboClass.GetSize();
 	}

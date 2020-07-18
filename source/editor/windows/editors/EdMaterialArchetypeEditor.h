@@ -1,5 +1,5 @@
 #pragma once
-
+#include "assets/util/DynamicDescriptorSet.h"
 #include "assets/pods/MaterialArchetype.h"
 #include "editor/windows/editors/EdShaderStageEditorWindow.h"
 #include "editor/windows/EdWindow.h"

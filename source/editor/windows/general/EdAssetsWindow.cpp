@@ -28,7 +28,7 @@ AssetsWindow::AssetsWindow(std::string_view name)
 namespace {
 	FolderEntry* FindOrCreatePath(FolderEntry* root, std::string_view path, bool skipCreation = false)
 	{
-		// TODO: Contains bugs because it assumes gen-data assets only.
+		// NOTE: May contain bugs because it assumes gen-data assets only.
 		auto parts = str::split(path, "/");
 		parts.erase(parts.begin());
 

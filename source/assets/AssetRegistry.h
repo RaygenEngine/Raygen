@@ -69,8 +69,7 @@ private:
 		return PodHandle<T>(it->second);
 	}
 
-	// TODO: Check for pathCache. Currently does not affect path cache, maybe it should but why?
-	// For name collision. Implement remove & write to path cache
+	// For name collision.
 	void RenameEntryImpl(PodEntry* entry, const std::string_view newFullPath);
 
 
@@ -178,7 +177,6 @@ public:
 		Get().m_gpuPodUpdateRequests.emplace_back(uid, std::move(info));
 	}
 
-	// TODO: Forward these two functions through Assets.h
 	static auto& GetGpuUpdateRequests() { return Get().m_gpuPodUpdateRequests; }
 	static void ClearGpuUpdateRequests() { Get().m_gpuPodUpdateRequests.clear(); }
 

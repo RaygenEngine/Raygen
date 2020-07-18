@@ -189,7 +189,6 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 {
 	PROFILE_SCOPE(Renderer);
 
-	// TODO: each effect except the maybe the lightpasses should use its own render/buffer scale
 	auto extent = m_gbuffer->attachments[GNormal]->GetExtent2D();
 
 	vk::Rect2D scissor{};
@@ -220,7 +219,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 			.setFramebuffer(m_framebuffers[currentFrame].get());
 		renderPassInfo.renderArea
 			.setOffset({ 0, 0 }) //
-			.setExtent(extent);  // CHECK:
+			.setExtent(extent);
 
 		vk::ClearValue clearValue{};
 		clearValue.setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });

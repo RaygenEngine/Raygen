@@ -14,7 +14,6 @@ WindowCameraNode::WindowCameraNode()
 
 
 	auto size = Platform::GetMainSize();
-	// TODO: use uvec2 for viewport
 	int32 width = size.x;
 	int32 height = size.y;
 

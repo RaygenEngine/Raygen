@@ -1,5 +1,6 @@
 #pragma once
 #include "assets/AssetPod.h"
+#include "assets/shared/ImageShared.h"
 #include "reflection/GenMacros.h"
 
 // DOC:

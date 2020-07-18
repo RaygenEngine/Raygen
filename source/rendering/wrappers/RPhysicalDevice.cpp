@@ -24,7 +24,7 @@ RPhysicalDevice::RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inS
 		auto supportsPresent = getSurfaceSupportKHR(i, surface);
 
 
-		// CHECK: the more functionality a queue supports the lesser the score
+		// NOTE: the more functionality a queue supports the lesser the score
 		queueFamily.rating /= float(((4 * bool(qFP.queueFlags & vk::QueueFlagBits::eGraphics))
 									 + (4 * bool(qFP.queueFlags & vk::QueueFlagBits::eCompute))
 									 + bool(qFP.queueFlags & vk::QueueFlagBits::eTransfer) + supportsPresent));
@@ -48,7 +48,7 @@ RPhysicalDevice::RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inS
 		i++;
 	}
 
-	// CHECK: score device based on eg. NV_raytracing, queues: eg. missing graphics queue, deticated transfer queue,
+	// NOTE: score device based on eg. NV_raytracing, queues: eg. missing graphics queue, deticated transfer queue,
 	// etc)
 	// If device isn't capable for the required rendering rating = 0;
 	// auto extensionProperties = device.enumerateDeviceExtensionProperties();
@@ -65,7 +65,7 @@ RPhysicalDevice::RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inS
 	// indices.IsComplete() && CheckNeededDeviceProperties(device) && CheckIfDeviceExtensionsAreAvailable(device)
 	//	&& CheckSwapChainSupport(device, surface);
 
-	// CHECK: this device must support presentation
+	// NOTE: this device must support presentation
 	if (presentFamilies.empty()) {
 		rating = 0.f;
 	}

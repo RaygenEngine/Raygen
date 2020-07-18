@@ -11,7 +11,6 @@
 
 using namespace vl;
 
-// PERF:
 GpuMesh::GpuMesh(PodHandle<Mesh> podHandle)
 	: GpuAssetTemplate(podHandle)
 {

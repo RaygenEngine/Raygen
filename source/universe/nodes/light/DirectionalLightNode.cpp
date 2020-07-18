@@ -20,7 +20,7 @@ void DirectionalLightNode::RecalculateProjectionMatrix()
 void DirectionalLightNode::RecalculateViewMatrix()
 {
 	const auto lookAt = GetNodePositionWCS() + GetNodeForwardWCS();
-	// CHECK: Remove pragma when fixed in glm
+	// NEXT: Remove pragma when fixed in glm
 #pragma warning(suppress : 4305)
 	m_viewMatrix = glm::lookAt(GetNodePositionWCS(), lookAt, GetNodeUpWCS());
 

@@ -3,7 +3,6 @@
 #include "assets/PodFwdUtl.h"
 
 
-#include <algorithm>
 // When adding a pod, add it to both of these
 
 #define ENGINE_POD_TYPES                                                                                               \
@@ -54,4 +53,4 @@ inline constexpr bool BasePodHandle::IsDefault() const
 
 
 template<typename T>
-concept CAssetPod = true; // TODO:
+concept CAssetPod = true; // NEXT:

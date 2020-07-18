@@ -27,6 +27,7 @@ public:
 	GpuAssetManager_() { AllocForAll(); }
 	~GpuAssetManager_();
 
+
 	template<typename T>
 	void Load(PodHandle<T> handle)
 	{

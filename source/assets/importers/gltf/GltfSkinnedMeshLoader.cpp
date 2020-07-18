@@ -4,12 +4,12 @@
 #include "assets/AssetImporterManager.h"
 #include "assets/importers/gltf/GltfCache.h"
 #include "assets/importers/gltf/GltfUtl.h"
-
+#include "assets/pods/Animation.h"
+#include "assets/pods/SkinnedMesh.h"
 
 #include <glm/gtx/matrix_decompose.hpp>
 #include <nlohmann/json.hpp>
 #include <queue>
-
 
 namespace {
 
@@ -68,9 +68,9 @@ namespace gltfutl {
 
 void GltfSkinnedMeshLoader::LoadSkinMesh()
 {
-	// Create a slot for each material (+ defualt material)
+	// Create a slot for each material (+ default material)
 	// We will then iterate gltf geometry groups and append to slot[gg.materialIndex] vertex and index data.
-	// When finished we will cleanup any slotgroups that have index == 0; Deleting will be fast because we will just
+	// When finished we will cleanup any slot-groups that have index == 0; Deleting will be fast because we will just
 	// move the underlying vertex buffer vectors
 
 	// Default material is located at the last index of cache.materialPods (will get removed at a later stage if no

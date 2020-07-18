@@ -88,7 +88,7 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
-		// WIP:
+		// TODO: POSTPROC
 		.setRenderPass(Renderer->m_ptRenderpass.get())
 		.setSubpass(subpassIndex)
 		.setBasePipelineHandle({})

@@ -5,21 +5,22 @@
 
 #include "core/Types.h"
 
+#include <algorithm>
+#include <array>
 #include <filesystem>
-#include <vector>
+#include <functional>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
-#include <map>
+#include <vector>
 #include <xtree>
-#include <functional>
-#include <array>
-
 
 #include "core/BoolFlag.h"
 #include "core/Icons.h"
 #include "core/MacroUtl.h"
 #include "core/MathUtl.h"
 #include "core/MetaTemplates.h"
+#include "core/StringUtl.h"
 
 #include "engine/Logger.h"
 

@@ -114,7 +114,7 @@ namespace assetentry {
 				current = current->parent;
 			}
 
-			// TODO: assumes gen-data
+			// NOTE: assumes gen-data
 			std::string path = includeGenData ? "gen-data/" : "";
 
 			for (auto it = pathFolders.rbegin(); it != pathFolders.rend(); ++it) {
