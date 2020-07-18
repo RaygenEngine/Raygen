@@ -9,7 +9,6 @@
 WindowCameraNode::WindowCameraNode()
 	: CameraNode()
 {
-	Event::OnWindowResize.Bind(this, &WindowCameraNode::OnWindowResizeEvent);
 	Event::OnViewportUpdated.Bind(this, &WindowCameraNode::OnViewportUpdatedEvent);
 
 
