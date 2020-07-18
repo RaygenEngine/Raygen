@@ -26,7 +26,7 @@ struct GpuGeometryGroup {
 };
 
 namespace vl {
-struct GpuMesh : public vl::GpuAssetTemplate<Mesh> {
+struct GpuMesh : public GpuAssetTemplate<Mesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;
 
 

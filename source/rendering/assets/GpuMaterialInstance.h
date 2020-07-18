@@ -6,10 +6,10 @@
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
-struct GpuMaterialInstance : public vl::GpuAssetTemplate<MaterialInstance> {
-	vl::GpuHandle<MaterialArchetype> archetype;
+struct GpuMaterialInstance : public GpuAssetTemplate<MaterialInstance> {
+	GpuHandle<MaterialArchetype> archetype;
 
-	UniquePtr<vl::RBuffer> uboBuf;
+	UniquePtr<RBuffer> uboBuf;
 	vk::DescriptorSet descSet;
 
 	bool hasDescriptorSet{ false };

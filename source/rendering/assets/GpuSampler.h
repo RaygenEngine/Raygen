@@ -5,7 +5,7 @@
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
-struct GpuSampler : public vl::GpuAssetTemplate<Sampler> {
+struct GpuSampler : public GpuAssetTemplate<Sampler> {
 	// PERF: one to many views
 	vk::UniqueSampler sampler;
 

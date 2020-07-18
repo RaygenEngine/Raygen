@@ -7,11 +7,11 @@
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
-struct GpuShader : public vl::GpuAssetTemplate<Shader> {
+struct GpuShader : public GpuAssetTemplate<Shader> {
 	GpuShader(PodHandle<Shader> podHandle);
 
-	vl::GpuHandle<ShaderStage> vert;
-	vl::GpuHandle<ShaderStage> frag;
+	GpuHandle<ShaderStage> vert;
+	GpuHandle<ShaderStage> frag;
 
 	std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
 

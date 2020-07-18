@@ -4,8 +4,8 @@
 
 
 namespace vl {
-struct GpuImage : public vl::GpuAssetTemplate<::Image> {
-	UniquePtr<vl::RImage2D> image;
+struct GpuImage : public GpuAssetTemplate<::Image> {
+	UniquePtr<RImage2D> image;
 
 	GpuImage(PodHandle<Image> podHandle);
 
