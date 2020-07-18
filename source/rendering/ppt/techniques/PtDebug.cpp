@@ -7,6 +7,11 @@
 #include "rendering/Device.h"
 
 namespace vl {
+PtDebug::PtDebug()
+{
+	ptDebugObj = this;
+}
+
 void PtDebug::MakeLayout()
 {
 
