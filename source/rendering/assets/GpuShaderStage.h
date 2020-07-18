@@ -7,7 +7,7 @@
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
-struct GpuShaderStage : public vl::GpuAssetTemplate<ShaderStage> {
+struct GpuShaderStage : public GpuAssetTemplate<ShaderStage> {
 	vk::UniqueShaderModule module;
 
 	bool lastCompileSuccess{ false };

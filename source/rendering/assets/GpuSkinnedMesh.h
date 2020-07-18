@@ -24,7 +24,7 @@
 //};
 
 namespace vl {
-struct GpuSkinnedMesh : public vl::GpuAssetTemplate<SkinnedMesh> {
+struct GpuSkinnedMesh : public GpuAssetTemplate<SkinnedMesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;
 
 

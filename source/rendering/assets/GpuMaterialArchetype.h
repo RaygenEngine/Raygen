@@ -6,7 +6,7 @@
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
-struct GpuMaterialArchetype : public vl::GpuAssetTemplate<MaterialArchetype> {
+struct GpuMaterialArchetype : public GpuAssetTemplate<MaterialArchetype> {
 	struct PassInfo {
 		vk::UniquePipelineLayout pipelineLayout;
 		vk::UniquePipeline pipeline;
@@ -14,7 +14,7 @@ struct GpuMaterialArchetype : public vl::GpuAssetTemplate<MaterialArchetype> {
 		std::vector<vk::UniqueShaderModule> shaderModules;
 	};
 
-	UniquePtr<vl::RDescriptorLayout> descLayout;
+	UniquePtr<RDescriptorLayout> descLayout;
 
 	PassInfo gbuffer;
 	PassInfo gbufferAnimated;
