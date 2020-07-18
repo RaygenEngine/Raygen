@@ -3,18 +3,20 @@
 
 #include "rendering/assets/GpuAssetManager.h"
 
-std::vector<size_t> vl::GpuAssetBase::GetUsers()
+using namespace vl;
+
+std::vector<size_t> GpuAssetBase::GetUsers()
 {
-	return vl::GpuAssetManager->GetUsersFor(podUid);
+	return GpuAssetManager->GetUsersFor(podUid);
 }
 
-void vl::GpuAssetBase::AddDependency(BasePodHandle paramAsset)
+void GpuAssetBase::AddDependency(BasePodHandle paramAsset)
 {
 	dependencies.push_back(paramAsset.uid);
 	GpuAssetManager->GetUsersRef(paramAsset.uid).push_back(podUid);
 }
 
-void vl::GpuAssetBase::ClearDependencies()
+void GpuAssetBase::ClearDependencies()
 {
 	// Structures in the dependency system are optimised for small dependency counts therefore we prefer linear search
 	// in a cache line instead of heap hash maps

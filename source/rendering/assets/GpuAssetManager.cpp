@@ -27,7 +27,7 @@ vk::Sampler GpuAssetManager_::GetDefaultSampler()
 void GpuAssetManager_::AllocForAll()
 {
 	gpuAssets.resize(AssetHandlerManager::Z_GetPods().size());
-	vl::gpuassetdetail::gpuAssetListData = gpuAssets.data();
+	gpuassetdetail::gpuAssetListData = gpuAssets.data();
 }
 
 GpuAsset<Shader>& GpuAssetManager_::CompileShader(const char* path)

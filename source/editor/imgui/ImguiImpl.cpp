@@ -276,25 +276,27 @@ void SetStyle()
 
 void InitVulkan()
 {
-	auto physDev = vl::Device->pd;
-	auto& device = *vl::Device;
+	using namespace vl;
+
+	auto physDev = Device->pd;
+	auto& device = *Device;
 
 	ImGui_ImplVulkan_InitInfo init = {};
-	init.Instance = *vl::Instance;
+	init.Instance = *Instance;
 	init.PhysicalDevice = *physDev;
 	init.Device = device;
-	init.QueueFamily = vl::Device->graphicsQueue.familyIndex;
-	init.Queue = vl::Device->graphicsQueue;
+	init.QueueFamily = Device->graphicsQueue.familyIndex;
+	init.Queue = Device->graphicsQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
-	init.DescriptorPool = vl::GpuResources->descPools.GetImguiPool();
-	init.ImageCount = vl::Swapchain->GetImageCount();
-	init.MinImageCount = vl::Swapchain->GetImageCount();
+	init.DescriptorPool = GpuResources->descPools.GetImguiPool();
+	init.ImageCount = Swapchain->GetImageCount();
+	init.MinImageCount = Swapchain->GetImageCount();
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init, vl::Swapchain->GetRenderPass());
+	ImGui_ImplVulkan_Init(&init, Swapchain->GetRenderPass());
 
 	// CHECK: which buffer
-	auto cmdBuffer = vl::Device->graphicsCmdBuffer;
+	auto cmdBuffer = Device->graphicsCmdBuffer;
 
 	//	vkCall(vkResetCommandPool(m_device, m_commandPool, 0));
 
@@ -312,8 +314,8 @@ void InitVulkan()
 
 	cmdBuffer.end();
 
-	vl::Device->graphicsQueue.submit(1, &end_info, {});
-	vl::Device->graphicsQueue.waitIdle();
+	Device->graphicsQueue.submit(1, &end_info, {});
+	Device->graphicsQueue.waitIdle();
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
