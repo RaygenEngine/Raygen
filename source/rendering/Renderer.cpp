@@ -7,6 +7,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
 #include "rendering/Instance.h"
+#include "rendering/passes/DepthmapPass.h"
 #include "rendering/passes/GBufferPass.h"
 #include "rendering/ppt/techniques/PtDebug.h"
 #include "rendering/scene/Scene.h"

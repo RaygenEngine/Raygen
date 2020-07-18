@@ -1,8 +1,5 @@
 #pragma once
 #include "rendering/assets/GpuAssetBase.h"
-#include "core/StringUtl.h"
-
-#include <vulkan/vulkan.hpp>
 
 namespace vl {
 inline class GpuAssetManager_ {

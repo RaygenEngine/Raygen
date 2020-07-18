@@ -1,9 +1,6 @@
 #pragma once
 #include "rendering/Layouts.h"
-
-namespace vl {
-class RBuffer;
-}
+#include "rendering/wrappers/RBuffer.h"
 
 // SceneStructs that upload a Ubo when dirty
 struct SceneStruct {
@@ -13,7 +10,6 @@ struct SceneStruct {
 	std::array<UniquePtr<vl::RBuffer>, 3> buffers;
 
 	std::array<bool, 3> isDirty{ true, true, true };
-
 
 	SceneStruct(size_t uboSize);
 

@@ -1,9 +1,10 @@
 #pragma once
-#include "rendering/assets/GpuEnvironmentMap.h"
+#include "rendering/wrappers/RDescriptorLayout.h"
 #include "rendering/wrappers/RImageAttachment.h"
 
-#include <vulkan/vulkan.hpp>
 namespace vl {
+class RBuffer;
+
 // CHECK: there sure is a better way but since this is an offline calculation we don't care for now
 class IrradianceMapCalculation {
 
@@ -11,7 +12,7 @@ class IrradianceMapCalculation {
 
 	std::vector<vk::CommandBuffer> m_cmdBuffers;
 
-	UniquePtr<vl::RBuffer> m_cubeVertexBuffer;
+	UniquePtr<RBuffer> m_cubeVertexBuffer;
 
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;

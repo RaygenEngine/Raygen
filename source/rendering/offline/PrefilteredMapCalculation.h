@@ -1,9 +1,9 @@
 #pragma once
-#include "rendering/assets/GpuEnvironmentMap.h"
+#include "rendering/wrappers/RDescriptorLayout.h"
 #include "rendering/wrappers/RImageAttachment.h"
 
-#include <vulkan/vulkan.hpp>
 namespace vl {
+class RBuffer;
 
 struct CubemapMipFrames {
 	std::array<vk::UniqueFramebuffer, 6> framebuffers;
@@ -16,7 +16,7 @@ class PrefilteredMapCalculation {
 
 	std::vector<vk::CommandBuffer> m_cmdBuffers;
 
-	UniquePtr<vl::RBuffer> m_cubeVertexBuffer;
+	UniquePtr<RBuffer> m_cubeVertexBuffer;
 
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;
