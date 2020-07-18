@@ -37,7 +37,7 @@ private:
 
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer);
 	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer);
-	void RecordOutPass(vk::CommandBuffer* cmdBuffer);
+	void RecordOutPass(vk::CommandBuffer* cmdBuffer, uint32 swapchainImageIndex);
 
 	PtCollection m_postprocCollection;
 
