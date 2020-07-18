@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetBase.h"
 #include "universe/nodes/geometry/GeometryNode.h"
 #include "universe/nodes/geometry/AnimatedGeometryNode.h"
 #include "rendering/scene/SceneStructs.h"

@@ -1,6 +1,6 @@
 #pragma once
 #include "assets/pods/Mesh.h"
-#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetBase.h"
 #include "rendering/wrappers/RBuffer.h"
 #include "universe/nodes/geometry/GeometryNode.h"
 #include "rendering/assets/GpuMaterialInstance.h"
@@ -25,7 +25,8 @@ struct GpuGeometryGroup {
 	UniquePtr<vl::RBuffer> indexBuffer;
 };
 
-struct GpuMesh : public vl::GpuAssetTemplate<Mesh> {
+namespace vl {
+struct GpuMesh : public GpuAssetTemplate<Mesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;
 
 
@@ -33,3 +34,4 @@ struct GpuMesh : public vl::GpuAssetTemplate<Mesh> {
 
 	void Update(const AssetUpdateInfo& info) override final;
 };
+} // namespace vl

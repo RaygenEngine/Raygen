@@ -5,6 +5,9 @@
 #include "rendering/assets/GpuShaderStage.h"
 #include "rendering/assets/GpuAssetManager.h"
 
+
+using namespace vl;
+
 GpuShader::GpuShader(PodHandle<Shader> podHandle)
 	: GpuAssetTemplate(podHandle)
 {

@@ -7,6 +7,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuSkinnedMesh.h"
+#include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuMaterialInstance.h"
 

@@ -1,11 +1,12 @@
 #pragma once
-#include "rendering/assets/GpuAssetHandle.h"
+#include "rendering/assets/GpuAssetBase.h"
 #include "rendering/assets/GpuImage.h"
 #include "rendering/assets/GpuSampler.h"
 
 #include <vulkan/vulkan.hpp>
 
-struct GpuMaterialArchetype : public vl::GpuAssetTemplate<MaterialArchetype> {
+namespace vl {
+struct GpuMaterialArchetype : public GpuAssetTemplate<MaterialArchetype> {
 	struct PassInfo {
 		vk::UniquePipelineLayout pipelineLayout;
 		vk::UniquePipeline pipeline;
@@ -13,7 +14,7 @@ struct GpuMaterialArchetype : public vl::GpuAssetTemplate<MaterialArchetype> {
 		std::vector<vk::UniqueShaderModule> shaderModules;
 	};
 
-	UniquePtr<vl::RDescriptorLayout> descLayout;
+	UniquePtr<RDescriptorLayout> descLayout;
 
 	PassInfo gbuffer;
 	PassInfo gbufferAnimated;
@@ -23,3 +24,4 @@ struct GpuMaterialArchetype : public vl::GpuAssetTemplate<MaterialArchetype> {
 	GpuMaterialArchetype(PodHandle<MaterialArchetype> podHandle);
 	void Update(const AssetUpdateInfo& info) override final;
 };
+} // namespace vl
