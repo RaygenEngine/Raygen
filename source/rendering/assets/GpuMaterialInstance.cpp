@@ -46,7 +46,7 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 		if (gpuArch.descLayout->hasUbo && uboSize > 0) {
 
 			if (!uboBuf || uboSize != uboBuf->GetSize()) {
-				uboBuf = std::make_unique<vl::RBuffer>(uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
+				uboBuf = std::make_unique<RBuffer>(uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
 					vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
 			}
 			uboBuf->UploadData(matInst->descriptorSet.uboData);

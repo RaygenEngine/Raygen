@@ -24,7 +24,7 @@ void GpuCubemap::Update(const AssetUpdateInfo&)
 
 	vk::Format format = GetFormat(cubemapPod->format);
 
-	cubemap = std::make_unique<vl::RCubemap>(cubemapPod->resolution, cubemapPod->mipCount, format, //
+	cubemap = std::make_unique<RCubemap>(cubemapPod->resolution, cubemapPod->mipCount, format, //
 		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
 		vk::MemoryPropertyFlagBits::eDeviceLocal);
@@ -34,7 +34,7 @@ void GpuCubemap::Update(const AssetUpdateInfo&)
 
 	vk::DeviceSize bufferSize = cubemapPod->data.size();
 
-	vl::RBuffer stagingbuffer{ bufferSize, vk::BufferUsageFlagBits::eTransferSrc,
+	RBuffer stagingbuffer{ bufferSize, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 	// copy data to buffer
@@ -66,5 +66,5 @@ void GpuCubemap::Update(const AssetUpdateInfo&)
 		.setPTexelBufferView(nullptr);
 
 	// single call to update all descriptor sets with the new depth image
-	vl::Device->updateDescriptorSets({ descriptorWrite }, {});
+	Device->updateDescriptorSets({ descriptorWrite }, {});
 }

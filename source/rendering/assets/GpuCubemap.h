@@ -5,7 +5,7 @@
 
 namespace vl {
 struct GpuCubemap : public GpuAssetTemplate<Cubemap> {
-	UniquePtr<vl::RCubemap> cubemap;
+	UniquePtr<RCubemap> cubemap;
 
 	vk::DescriptorSet descriptorSet;
 

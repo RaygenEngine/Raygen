@@ -17,7 +17,7 @@ vk::UniqueShaderModule CreateShaderModule(const std::vector<uint32_t>& code)
 {
 	vk::ShaderModuleCreateInfo createInfo{};
 	createInfo.setCodeSize(code.size() * 4).setPCode(code.data());
-	return vl::Device->createShaderModuleUnique(createInfo);
+	return Device->createShaderModuleUnique(createInfo);
 }
 
 std::vector<vk::PipelineShaderStageCreateInfo> CreateShaderStages(
