@@ -9,7 +9,7 @@ class Listener {
 
 protected:
 	Listener() = default;
-	~Listener();
+	virtual ~Listener();
 
 	template<typename... Args>
 	friend struct MulticastEvent;
