@@ -4,6 +4,7 @@
 
 #include "bsdf.h"
 #include "fragment.h"
+#include "shadow-sampling.h"
 
 // out
 
@@ -44,27 +45,12 @@ layout(set = 2, binding = 0) uniform UBO_Directionallight {
 
 		float intensity;
 
-		float near;
-		float far;
+		float maxShadowBias;
+		int samples;
+		float sampleSpread;
 } light;
 
-layout(set = 3, binding = 0) uniform sampler2D shadowmap;
-
-float ShadowCalculation(vec4 fragPosLightSpace)
-{
-   // perform perspective divide
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    // transform to [0,1] range
-    projCoords = projCoords ;
-    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-    float closestDepth = texture(shadowmap, projCoords.xy * 0.5 + 0.5).r; 
-    // get depth of current frag from light's perspective
-    float currentDepth = projCoords.z;
-    // check whether current frag pos is in shadow
-    float shadow = currentDepth - closestDepth > 0.005  ? 1.0 : 0.0;
-
-    return shadow;
-}  
+layout(set = 3, binding = 0) uniform sampler2DShadow shadowmap;
 
 void main() {
 
@@ -89,16 +75,16 @@ void main() {
 	vec3 N = frag.normal;
 	vec3 V = normalize(cam.position - frag.position);
 	vec3 L = normalize(-light.direction); 
-		
-	vec4 lightSpacePos = light.viewProj * vec4(frag.position,1.0);
-	float shadow = ShadowCalculation(lightSpacePos);
 
+	float NoL = saturate(dot(N, L));
+		
+	float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, 1.f/light.sampleSpread);
+	//float shadow = ShadowCalculationFast(shadowmap, light.viewProj, frag.position, light.maxShadowBias);
 	vec3 Li = (1.0 - shadow) * light.color * light.intensity; 
 
 	vec3 H = normalize(V + L);
 
     float NoV = abs(dot(N, V)) + 1e-5;
-    float NoL = saturate(dot(N, L));
     float NoH = saturate(dot(N, H));
     float LoH = saturate(dot(L, H));
 
@@ -142,3 +128,13 @@ void main() {
                                                                                                                                                         
                                                                                                                                                              
                                                                                                                                                               
+
+
+
+
+
+
+
+
+
+

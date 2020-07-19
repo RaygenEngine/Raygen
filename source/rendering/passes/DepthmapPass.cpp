@@ -48,15 +48,6 @@ vk::UniqueRenderPass DepthmapPass::CreateCompatibleRenderPass()
 		.setPColorAttachments(nullptr)
 		.setPDepthStencilAttachment(&depthAttachmentRef);
 
-	vk::SubpassDependency dependency{};
-	dependency
-		.setSrcSubpass(VK_SUBPASS_EXTERNAL) //
-		.setDstSubpass(0u)
-		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setSrcAccessMask(vk::AccessFlags(0)) // 0
-		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
-
 	std::array attachments{ depthAttachmentDesc };
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
@@ -64,8 +55,8 @@ vk::UniqueRenderPass DepthmapPass::CreateCompatibleRenderPass()
 		.setPAttachments(attachments.data())
 		.setSubpassCount(1u)
 		.setPSubpasses(&subpass)
-		.setDependencyCount(1u)
-		.setPDependencies(&dependency);
+		.setDependencyCount(0u)
+		.setPDependencies(nullptr);
 
 	return Device->createRenderPassUnique(renderPassInfo);
 }
