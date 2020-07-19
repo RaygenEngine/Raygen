@@ -15,6 +15,10 @@ struct DirectionalLight_Ubo {
 	glm::vec4 color{};
 
 	float intensity{};
+
+	float maxShadowBias{};
+	int32 samples{};
+	float sampleSpread{};
 };
 
 struct SceneDirectionalLight : SceneStruct {

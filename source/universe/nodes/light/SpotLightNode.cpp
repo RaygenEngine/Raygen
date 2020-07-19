@@ -74,6 +74,9 @@ void SpotlightNode::DirtyUpdate(DirtyFlagset flags)
 			sl.ubo.constantTerm = m_contantTerm;
 			sl.ubo.linearTerm = m_linearTerm;
 			sl.ubo.quadraticTerm = m_quadraticTerm;
+			sl.ubo.maxShadowBias = m_maxShadowBias;
+			sl.ubo.samples = m_samples;
+			sl.ubo.sampleSpread = m_sampleSpread;
 		});
 	}
 
@@ -92,6 +95,30 @@ void SpotlightNode::DirtyUpdate(DirtyFlagset flags)
 			sl.ubo.constantTerm = m_contantTerm;
 			sl.ubo.linearTerm = m_linearTerm;
 			sl.ubo.quadraticTerm = m_quadraticTerm;
+			sl.ubo.maxShadowBias = m_maxShadowBias;
+			sl.ubo.samples = m_samples;
+			sl.ubo.sampleSpread = m_sampleSpread;
+		});
+	}
+
+	// PERF: update what is needed and pass by copy? (check all nodes/scene-nodes)
+	if (flags[DF::ShadowSampling]) {
+		Enqueue([&](SceneSpotlight& sl) {
+			sl.ubo.position = glm::vec4(GetNodePositionWCS(), 1.f);
+			sl.ubo.forward = glm::vec4(GetNodeForwardWCS(), 1.f);
+			sl.ubo.viewProj = m_viewProjectionMatrix;
+			sl.ubo.color = glm::vec4(m_color, 1.f);
+			sl.ubo.intensity = m_intensity;
+			sl.ubo.near_ = m_near;
+			sl.ubo.far_ = m_far;
+			sl.ubo.outerCutOff = glm::cos(m_outerAperture / 2.f);
+			sl.ubo.innerCutOff = glm::cos(m_innerAperture / 2.f);
+			sl.ubo.constantTerm = m_contantTerm;
+			sl.ubo.linearTerm = m_linearTerm;
+			sl.ubo.quadraticTerm = m_quadraticTerm;
+			sl.ubo.maxShadowBias = m_maxShadowBias;
+			sl.ubo.samples = m_samples;
+			sl.ubo.sampleSpread = m_sampleSpread;
 		});
 	}
 }
