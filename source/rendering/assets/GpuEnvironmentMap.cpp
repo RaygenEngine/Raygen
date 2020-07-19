@@ -85,7 +85,7 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 		.setMaxLod(32.f);
 
 
-	brdfSampler = vl::Device->createSamplerUnique(samplerInfo);
+	brdfSampler = Device->createSamplerUnique(samplerInfo);
 
 	imageInfos[3]
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
@@ -103,5 +103,5 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 		.setPTexelBufferView(nullptr);
 
 	// single call to update all descriptor sets with the new depth image
-	vl::Device->updateDescriptorSets(descriptorWrites, {});
+	Device->updateDescriptorSets(descriptorWrites, {});
 }

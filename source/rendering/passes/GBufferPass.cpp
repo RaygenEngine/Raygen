@@ -414,7 +414,7 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
 				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
-					&geom->descSets[vl::Renderer_::currentFrame], 0u, nullptr);
+					&geom->descSets[Renderer_::currentFrame], 0u, nullptr);
 
 				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
 				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
