@@ -312,6 +312,8 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 			for (auto& gg : geom->model.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
+				if (arch.isUnlit)
+					[[unlikely]] { continue; }
 				auto& plLayout = *arch.depth.pipelineLayout;
 
 				vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
@@ -349,6 +351,8 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 			for (auto& gg : geom->model.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
+				if (arch.isUnlit)
+					[[unlikely]] { continue; }
 				auto& plLayout = *arch.depthAnimated.pipelineLayout;
 
 				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.depthAnimated.pipeline);

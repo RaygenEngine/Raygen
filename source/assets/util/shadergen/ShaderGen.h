@@ -37,6 +37,10 @@ std::string GenerateDepthFrag(
 std::string GenerateDepthVert(
 	const std::string& descSetCode, const std::string& sharedFunctions, const std::string& mainCode);
 
+std::string GenerateUnlitFrag(
+	const std::string& descSetCode, const std::string& sharedFunctions, const std::string& mainCode);
+
+
 std::string GenerateDescriptorSetCode(
 	const DynamicDescriptorSetLayout& descriptorSetLayout, std::string_view uboName, uint32 setIndex = 0);
 

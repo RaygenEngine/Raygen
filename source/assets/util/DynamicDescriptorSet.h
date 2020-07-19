@@ -39,3 +39,9 @@ struct DynamicDescriptorSet {
 		ar(samplers2d, uboData);
 	}
 };
+
+enum class ArchetypeType
+{
+	Lit,
+	Unlit,
+};

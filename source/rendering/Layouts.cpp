@@ -3,6 +3,7 @@
 
 #include "rendering/passes/DepthmapPass.h"
 #include "rendering/passes/GbufferPass.h"
+#include "rendering/passes/UnlitPass.h"
 
 namespace vl {
 Layouts_::Layouts_()

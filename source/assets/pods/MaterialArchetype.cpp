@@ -122,6 +122,12 @@ bool MaterialArchetype::CompileAll(
 	auto gbufferVertBin = generateShader(gbufferVertMain, &shd::GenerateGbufferVert, "Vertex", ShaderStageType::Vertex);
 	auto depthVertBin = generateShader(gbufferVertMain, &shd::GenerateDepthVert, "Vertex", ShaderStageType::Vertex);
 
+	if (unlitFragMain.size() > 2) {
+		auto unlitFragBin = generateShader(unlitFragMain, &shd::GenerateUnlitFrag, "Unlit", ShaderStageType::Fragment);
+		unlitFragBinary.swap(unlitFragBin);
+	}
+
+
 	RerouteShaderErrors(outErrors);
 
 
@@ -132,6 +138,7 @@ bool MaterialArchetype::CompileAll(
 
 	gbufferVertBinary.swap(gbufferVertBin);
 	depthVertBinary.swap(depthVertBin);
+
 
 	return true;
 }

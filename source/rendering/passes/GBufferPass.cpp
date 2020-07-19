@@ -367,6 +367,9 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 			for (auto& gg : geom->model.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
+
+				if (arch.isUnlit)
+					[[unlikely]] { continue; }
 				auto& plLayout = *arch.gbuffer.pipelineLayout;
 
 				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
@@ -400,6 +403,9 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 			for (auto& gg : geom->model.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
+				if (arch.isUnlit)
+					[[unlikely]] { continue; }
+
 				auto& plLayout = *arch.gbufferAnimated.pipelineLayout;
 
 				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbufferAnimated.pipeline);
