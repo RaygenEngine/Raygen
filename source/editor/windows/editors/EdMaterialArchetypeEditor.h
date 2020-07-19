@@ -26,6 +26,7 @@ class MaterialArchetypeEditorWindow : public AssetEditorWindowTemplate<MaterialA
 		ShaderEditorTab& operator=(ShaderEditorTab&&) = default;
 	};
 
+
 	UniquePtr<TextEditor> uniformEditor;
 	DynamicDescriptorSetLayout editingDescSet;
 
@@ -42,6 +43,8 @@ public:
 
 	void ImguiDraw() override;
 
+
+	void OnPassTypeChanged();
 	void OnSave();
 	void OnCompile();
 };

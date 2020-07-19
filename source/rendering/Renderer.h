@@ -56,6 +56,9 @@ public:
 	std::array<vk::UniqueFramebuffer, 3> m_framebuffers;
 	std::array<UniquePtr<RImageAttachment>, 3> m_attachments;
 	std::array<UniquePtr<RImageAttachment>, 3> m_attachments2;
+
+	// std::array<UniquePtr<RImageAttachment>, 3> m_attachmentsDepthToUnlit;
+
 	std::array<vk::DescriptorSet, 3> m_ppDescSets;
 	vk::UniqueRenderPass m_ptRenderpass;
 
