@@ -63,23 +63,51 @@ void GbufferDebugWindow::ImguiDraw()
 
 
 	auto showAttachment = [&, shouldShowDescriptors](vl::RImageAttachment* att) {
+		bool& isOpen = isAttachmentOpen[att->GetName()]; // find or insert
+
 		ImGui::PushID(att);
-		if (ImGui::CollapsingHeader(att->GetName().c_str())) {
-			auto descrSet = att->GetDebugDescriptor();
+		ImGui::Checkbox(att->GetName().c_str(), &isOpen);
+		if (isOpen) {
+			std::string name = fmt::format("{}", att->GetName());
+			ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
+			if (ImGui::Begin(name.c_str(), &isOpen)) {
+				auto descrSet = att->GetDebugDescriptor();
 
-			if (!descrSet) {
-				ImGui::Text("Null handle");
-				return;
-			}
+				if (!descrSet) {
+					ImGui::Text("Null handle");
+					return;
+				}
+				auto ext = att->GetExtent2D();
 
-			ImVec2 size = { static_cast<float>(m_imgSize.x), static_cast<float>(m_imgSize.y) };
+				ImVec2 size = { static_cast<float>(ext.width), static_cast<float>(ext.height) };
 
-			if (shouldShowDescriptors) {
-				ImGui::Image(descrSet, size);
+				auto windowSize = ImGui::GetCurrentWindow()->Size;
+				windowSize.x -= 4;  // CHECK: Proper calculation for padding (to avoid scrollbar)
+				windowSize.y -= 35; //
+
+				if (size.x > windowSize.x) {
+					float scaleFactor = windowSize.x / std::max(size.x, 1.f);
+
+					size.x *= scaleFactor;
+					size.y *= scaleFactor;
+				}
+
+				if (size.y > windowSize.y) {
+					float scaleFactor = windowSize.y / std::max(size.y, 1.f);
+
+					size.x *= scaleFactor;
+					size.y *= scaleFactor;
+				}
+
+
+				if (shouldShowDescriptors) {
+					ImGui::Image(descrSet, size);
+				}
+				else {
+					ImGui::Image(ImGui::GetIO().Fonts->TexID, size, ImVec2(0, 0), ImVec2(0, 0));
+				}
 			}
-			else {
-				ImGui::Image(ImGui::GetIO().Fonts->TexID, size, ImVec2(0, 0), ImVec2(0, 0));
-			}
+			ImGui::End();
 		}
 		ImGui::PopID();
 	};

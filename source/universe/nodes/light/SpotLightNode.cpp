@@ -21,8 +21,6 @@ void SpotlightNode::RecalculateProjectionMatrix()
 void SpotlightNode::RecalculateViewMatrix()
 {
 	const auto lookAt = GetNodePositionWCS() + GetNodeForwardWCS();
-	// CHECK: Remove pragma when fixed in glm
-#pragma warning(suppress : 4305)
 	m_viewMatrix = glm::lookAt(GetNodePositionWCS(), lookAt, GetNodeUpWCS());
 
 	RecalculateViewProjectionMatrix();
@@ -54,6 +52,10 @@ SpotlightNode::~SpotlightNode()
 
 void SpotlightNode::DirtyUpdate(DirtyFlagset flags)
 {
+	if (flags[DF::Created]) {
+		Enqueue([name = m_name](SceneSpotlight& dl) { dl.name = "depth: " + name; });
+	}
+
 	if (flags[DF::ShadowsTextSize]) {
 		Enqueue([width = m_shadowMapWidth, height = m_shadowMapHeight](
 					SceneSpotlight& sl) { sl.ResizeShadowmap(width, height); });

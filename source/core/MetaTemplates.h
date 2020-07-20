@@ -249,3 +249,7 @@ struct index_of_type<T, F, R...> : std::integral_constant<size_t, 1 + index_of_t
 
 template<typename Search, typename... Variadics>
 constexpr size_t index_of_type_v = detail::index_of_type<Search, Variadics...>::value;
+
+
+template<typename T, typename... Types>
+constexpr bool is_any_of_v = (std::is_same_v<T, Types> || ...);

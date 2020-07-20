@@ -129,6 +129,11 @@ private:
 		, meta(inMeta)
 		, type(inId)
 	{
+		CLOG_ABORT(!meta.valueToStr.contains(meta.getter(obj)),
+			"Enum instance generated with invalid underlying enum value. This can either be an Uninitialized Enum "
+			"(most likely) or some Reflected Enum Value is out of enum reflection range: [{}, {}]. Actual Value for "
+			"type: {} was: {}.",
+			MAGIC_ENUM_RANGE_MIN, MAGIC_ENUM_RANGE_MAX, inMeta.GetType().name(), meta.getter(obj));
 	}
 
 	static MetaEnumInst Make(void* obj, const ReflEnum& inMeta, TypeId objType)

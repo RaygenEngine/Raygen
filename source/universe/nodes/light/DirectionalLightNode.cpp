@@ -20,8 +20,6 @@ void DirectionalLightNode::RecalculateProjectionMatrix()
 void DirectionalLightNode::RecalculateViewMatrix()
 {
 	const auto lookAt = GetNodePositionWCS() + GetNodeForwardWCS();
-	// NEXT: Remove pragma when fixed in glm
-#pragma warning(suppress : 4305)
 	m_viewMatrix = glm::lookAt(GetNodePositionWCS(), lookAt, GetNodeUpWCS());
 
 	RecalculateViewProjectionMatrix();
@@ -53,10 +51,15 @@ DirectionalLightNode::~DirectionalLightNode()
 
 void DirectionalLightNode::DirtyUpdate(DirtyFlagset flags)
 {
+	if (flags[DF::Created]) {
+		Enqueue([name = m_name](SceneDirectionalLight& dl) { dl.name = "depth: " + name; });
+	}
+
 	if (flags[DF::ShadowsTextSize]) {
 		Enqueue([width = m_shadowMapWidth, height = m_shadowMapHeight](
 					SceneDirectionalLight& dl) { dl.ResizeShadowmap(width, height); });
 	}
+
 
 	if (flags[DF::OrthoSides] || flags[DF::NearFar] || flags[DF::ShadowsTextSize]) {
 		RecalculateProjectionMatrix();
@@ -65,18 +68,6 @@ void DirectionalLightNode::DirtyUpdate(DirtyFlagset flags)
 			dl.ubo.viewProj = m_viewProjectionMatrix;
 			dl.ubo.color = glm::vec4(m_color, 1.f);
 			dl.ubo.intensity = m_intensity;
-			dl.up = GetNodeUpWCS();
-		});
-	}
-
-	if (flags[DF::SRT]) {
-		RecalculateViewMatrix();
-		Enqueue([&](SceneDirectionalLight& dl) {
-			dl.ubo.forward = glm::vec4(GetNodeForwardWCS(), 1.f);
-			dl.ubo.viewProj = m_viewProjectionMatrix;
-			dl.ubo.color = glm::vec4(m_color, 1.f);
-			dl.ubo.intensity = m_intensity;
-
 			dl.up = GetNodeUpWCS();
 		});
 	}
