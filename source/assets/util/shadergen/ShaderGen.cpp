@@ -185,6 +185,35 @@ layout(push_constant) uniform ModelData {
 		descSetCode, sharedFunctions, main);
 }
 
+std::string shd::GenerateUnlitFrag(
+	const std::string& descSetCode, const std::string& sharedFunctions, const std::string& mainCode)
+{
+	return GenerateShaderGeneric(
+		R"(
+// out
+layout(location = 0) out vec4 outColor;
+
+// in
+layout(location = 0) in Data
+{
+	vec2 uv;
+	mat3 TBN;
+};
+
+layout(set = 1, binding = 0) uniform UBO_Camera {
+	vec3 position;
+	float pad0;
+	mat4 view;
+	mat4 proj;
+	mat4 viewProj;
+	mat4 viewInv;
+	mat4 projInv;
+	mat4 viewProjInv;
+} camera;
+)",
+		descSetCode, sharedFunctions, mainCode);
+}
+
 
 std::string shd::GenerateDescriptorSetCode(
 	const DynamicDescriptorSetLayout& descriptorSetLayout, std::string_view uboName, uint32 setIndex)

@@ -80,4 +80,19 @@ void DirectionalLightNode::DirtyUpdate(DirtyFlagset flags)
 			dl.up = GetNodeUpWCS();
 		});
 	}
+
+	if (flags[DF::SRT]) {
+		RecalculateViewMatrix();
+		Enqueue([&](SceneDirectionalLight& dl) {
+			dl.ubo.forward = glm::vec4(GetNodeForwardWCS(), 1.f);
+			dl.ubo.viewProj = m_viewProjectionMatrix;
+			dl.ubo.color = glm::vec4(m_color, 1.f);
+			dl.ubo.intensity = m_intensity;
+
+			dl.up = GetNodeUpWCS();
+			dl.ubo.maxShadowBias = m_maxShadowBias;
+			dl.ubo.samples = m_samples;
+			dl.ubo.sampleInvSpread = m_sampleInvSpread;
+		});
+	}
 }

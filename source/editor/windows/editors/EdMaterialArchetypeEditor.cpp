@@ -111,6 +111,8 @@ MaterialArchetypeEditorWindow::MaterialArchetypeEditorWindow(PodEntry* inEntry)
 	addEditor("Fragment", &MaterialArchetype::gbufferFragMain);
 	addEditor("Depth", &MaterialArchetype::depthShader);
 	addEditor("Vertex", &MaterialArchetype::gbufferVertMain);
+	addEditor("Unlit", &MaterialArchetype::unlitFragMain);
+
 
 	uniformEditor.reset(new TextEditor());
 	uniformEditor->SetText(podHandle.Lock()->descriptorSetLayout.GetUniformText().str());
@@ -152,6 +154,17 @@ void main() {
 
 void MaterialArchetypeEditorWindow::ImguiDraw()
 {
+
+	{
+		OptionalPodEditor podEditor(podHandle);
+
+		auto pod = podEditor.BeginOptionalEditRegion();
+		if (ImEd::EnumDropDown("Pass Type", pod->passType)) {
+			podEditor.MarkEdit();
+			OnPassTypeChanged();
+		}
+	}
+
 	if (ImGui::CollapsingHeader("Uniform Variables")) {
 		ImEd::BeginCodeFont();
 		uniformEditor->Render("UniformVariables", ImVec2(0, uniformEditor->GetTotalLines() * 18.f + 22.f));
@@ -234,6 +247,8 @@ void MaterialArchetypeEditorWindow::ImguiDraw()
 		ImGui::EndTabBar();
 	}
 }
+
+void MaterialArchetypeEditorWindow::OnPassTypeChanged() {}
 
 void MaterialArchetypeEditorWindow::OnSave()
 {
