@@ -33,5 +33,7 @@ struct SceneSpotlight : SceneStruct {
 
 	UniquePtr<vl::RDepthmap> shadowmap;
 
+
+	std::string name;
 	void ResizeShadowmap(uint32 width, uint32 height);
 };

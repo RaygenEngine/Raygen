@@ -45,8 +45,7 @@ void CameraNode::RecalculateProjectionFov()
 
 void CameraNode::RecalculateViewMatrix()
 {
-	// NEXT: Remove when fixed by glm (int to bool warning)
-#pragma warning(suppress : 4305)
+
 	m_viewMatrix = glm::lookAt(GetNodePositionWCS(), GetLookAt(), GetNodeUpWCS());
 	RecalculateViewProjectionMatrix();
 }

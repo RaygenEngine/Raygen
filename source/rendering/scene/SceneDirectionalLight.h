@@ -30,6 +30,8 @@ struct SceneDirectionalLight : SceneStruct {
 
 	glm::vec3 up;
 
+	std::string name;
+
 	void ResizeShadowmap(uint32 width, uint32 height);
 	void UpdateBox(const math::Frustum& frustum, glm::vec3 apex);
 };

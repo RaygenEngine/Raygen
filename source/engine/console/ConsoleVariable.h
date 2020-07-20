@@ -3,7 +3,7 @@
 #include "core/StringUtl.h"
 #include "engine/console/Console.h"
 
-// NEXT: Genericly support strings in quotes as parameters
+// TODO: Genericly support strings in quotes as parameters
 
 struct ConsoleEntry {
 	const char* name;

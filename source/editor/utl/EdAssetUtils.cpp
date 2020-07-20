@@ -43,14 +43,13 @@ void MaybeHoverTooltip(PodEntry* entry)
 
 		ImUtil::TextTooltipUtil(text, scale);
 
-		// NEXT:
-		// if (entry->type == mti::GetTypeId<Sampler>()) {
-		//	ImGui::BeginTooltip();
-
-		//	auto handle = GpuAssetManager->GetGpuHandle<Sampler>(entry->GetHandleAs<Sampler>());
-		//	ImGui::Image(GpuAssetManager->LockHandle(handle).GetDebugDescriptor(), ImVec2(256, 256));
-		//	ImGui::EndTooltip();
-		//}
+		if (entry->type == mti::GetTypeId<Image>()) {
+			ImGui::BeginTooltip();
+			ImGui::SetWindowFontScale(1.0);
+			auto handle = vl::GpuAssetManager->GetGpuHandle<Image>(entry->GetHandleAs<Image>());
+			ImGui::Image(handle.Lock().image->GetDebugDescriptor(), ImVec2(256, 256));
+			ImGui::EndTooltip();
+		}
 
 		ImEd::EndCodeFont();
 	}

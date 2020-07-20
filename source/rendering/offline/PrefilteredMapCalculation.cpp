@@ -367,7 +367,6 @@ void PrefilteredMapCalculation::PrepareFaceInfo()
 	m_captureProjection[1][1] *= -1;
 
 
-#pragma warning(disable : 4305)
 	m_captureViews
 
 		= {

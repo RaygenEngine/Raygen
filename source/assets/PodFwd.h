@@ -53,4 +53,4 @@ inline constexpr bool BasePodHandle::IsDefault() const
 
 
 template<typename T>
-concept CAssetPod = true; // NEXT:
+concept CAssetPod = is_any_of_v<T, ENGINE_POD_TYPES>;

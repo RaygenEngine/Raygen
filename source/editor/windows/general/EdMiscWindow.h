@@ -43,6 +43,7 @@ class GbufferDebugWindow : public ed::UniqueWindow {
 
 	glm::ivec2 m_imgSize{ 256, 256 };
 
+	std::unordered_map<std::string, bool> isAttachmentOpen;
 
 public:
 	GbufferDebugWindow(std::string_view name);
