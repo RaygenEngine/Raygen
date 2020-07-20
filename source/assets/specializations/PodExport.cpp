@@ -32,6 +32,8 @@ inline void ExportPod(MaterialArchetype* src, const fs::path& path)
 	f << src->depthShader;
 	f << "\n//@ Gbuffer Vert Section:\n";
 	f << src->gbufferVertMain;
+	f << "\n//@ Unlit Frag Section:\n";
+	f << src->unlitFragMain;
 }
 
 

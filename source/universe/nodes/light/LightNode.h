@@ -4,7 +4,7 @@
 
 class LightNode : public Node {
 
-	REFLECTED_NODE(LightNode, Node, DF_FLAGS(Flux, NearFar, ShadowsTextSize))
+	REFLECTED_NODE(LightNode, Node, DF_FLAGS(Flux, NearFar, ShadowsTextSize, ShadowSampling))
 	{
 		REFLECT_ICON(FA_LIGHTBULB);
 
@@ -17,8 +17,9 @@ class LightNode : public Node {
 		REFLECT_VAR(m_shadowMapWidth).OnDirty(DF::ShadowsTextSize);
 		REFLECT_VAR(m_shadowMapHeight).OnDirty(DF::ShadowsTextSize);
 
-		REFLECT_VAR(m_maxShadowBias);
-		REFLECT_VAR(m_samples);
+		REFLECT_VAR(m_maxShadowBias).OnDirty(DF::ShadowSampling);
+		REFLECT_VAR(m_samples).OnDirty(DF::ShadowSampling);
+		REFLECT_VAR(m_sampleInvSpread).OnDirty(DF::ShadowSampling);
 
 		REFLECT_VAR(m_hasShadow);
 	}
@@ -37,6 +38,7 @@ protected:
 
 	float m_maxShadowBias{ 0.005f };
 	int32 m_samples{ 4 };
+	float m_sampleInvSpread{ 1000.f };
 
 public:
 	[[nodiscard]] glm::vec3 GetColor() const { return m_color; }

@@ -19,6 +19,9 @@ struct GpuMaterialArchetype : public GpuAssetTemplate<MaterialArchetype> {
 	PassInfo gbufferAnimated;
 	PassInfo depth;
 	PassInfo depthAnimated;
+	PassInfo unlit;
+
+	bool isUnlit{ false };
 
 	GpuMaterialArchetype(PodHandle<MaterialArchetype> podHandle);
 	void Update(const AssetUpdateInfo& info) override final;

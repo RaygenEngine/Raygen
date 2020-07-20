@@ -21,6 +21,10 @@ struct Spotlight_Ubo {
 	float constantTerm{};
 	float linearTerm{};
 	float quadraticTerm{};
+
+	float maxShadowBias{};
+	int32 samples{};
+	float sampleInvSpread{};
 };
 
 struct SceneSpotlight : SceneStruct {

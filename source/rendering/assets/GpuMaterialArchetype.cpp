@@ -9,6 +9,7 @@
 #include "rendering/Layouts.h"
 #include "rendering/passes/DepthmapPass.h"
 #include "rendering/passes/GBufferPass.h"
+#include "rendering/passes/UnlitPass.h"
 
 using namespace vl;
 
@@ -188,5 +189,25 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 		info.pipeline = DepthmapPass::CreateAnimPipeline(*info.pipelineLayout, info.shaderStages);
 
 		depthAnimated = std::move(info);
+	}
+
+
+	// Unlit Pass
+	{
+		isUnlit = arch->unlitFragBinary.size() > 0;
+
+		if (isUnlit) {
+			size_t pushConstantSize = UnlitPass::GetPushConstantSize();
+
+			GpuMaterialArchetype::PassInfo info;
+			info.shaderModules.emplace_back(CreateShaderModule(arch->unlitFragBinary));
+			info.shaderStages = CreateShaderStages("engine-data/spv/geometry/gbuffer.shader", *info.shaderModules[0]);
+			info.pipelineLayout = CreatePipelineLayout(
+				pushConstantSize, { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() });
+
+			info.pipeline = UnlitPass::CreatePipeline(*info.pipelineLayout, info.shaderStages);
+
+			unlit = std::move(info);
+		}
 	}
 }

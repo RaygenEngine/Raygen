@@ -15,6 +15,8 @@
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/Swapchain.h"
 #include "rendering/VulkanUtl.h"
+#include "rendering/passes/UnlitPass.h"
+
 
 constexpr int32 c_framesInFlight = 2;
 namespace {
@@ -50,6 +52,22 @@ Renderer_::Renderer_()
 	Event::OnViewportUpdated.BindFlag(this, m_didViewportResize);
 	Event::OnWindowResize.BindFlag(this, m_didWindowResize);
 	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimzed) { m_isMinimzed = newIsMinimzed; });
+
+	vk::AttachmentDescription depthAttachmentDesc{};
+	depthAttachmentDesc
+		.setFormat(Device->pd->FindDepthFormat()) //
+		.setSamples(vk::SampleCountFlagBits::e1)
+		.setLoadOp(vk::AttachmentLoadOp::eLoad)
+		.setStoreOp(vk::AttachmentStoreOp::eStore)
+		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+		.setInitialLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+		.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+
+	vk::AttachmentReference depthAttachmentRef{};
+	depthAttachmentRef
+		.setAttachment(2u) //
+		.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
 	// post process render pass
 
@@ -116,10 +134,9 @@ Renderer_::Renderer_()
 		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
 		.setColorAttachmentCount(1u)
 		.setInputAttachmentCount(1u)
+		.setPDepthStencilAttachment(&depthAttachmentRef)
 		.setPInputAttachments(&colorAttachmentRef15)
-		.setPColorAttachments(&colorAttachmentRef2)
-		.setPDepthStencilAttachment(nullptr);
-
+		.setPColorAttachments(&colorAttachmentRef2);
 
 	vk::SubpassDependency debugDep{};
 	debugDep
@@ -133,7 +150,7 @@ Renderer_::Renderer_()
 
 	std::array subpasses{ lightSubpass, debugSupass };
 	std::array dependcies{ lightDep, debugDep };
-	std::array attachments{ colorAttachmentDesc, colorAttachmentDesc2 };
+	std::array attachments{ colorAttachmentDesc, colorAttachmentDesc2, depthAttachmentDesc };
 
 
 	vk::RenderPassCreateInfo renderPassInfo{};
@@ -248,6 +265,8 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 
 			m_postprocCollection.Draw(*cmdBuffer, currentFrame);
 		}
+
+		UnlitPass::RecordCmd(cmdBuffer, extent, Scene->geometries.elements, Scene->animatedGeometries.elements);
 		cmdBuffer->endRenderPass();
 
 		// TODO: preparation of data for next frame should not be performed here?
@@ -402,7 +421,9 @@ void Renderer_::OnViewportResize()
 			Device->updateDescriptorSets(1u, &descriptorWrite2, 0u, nullptr);
 
 
-			std::array attch{ m_attachments[i]->GetView(), m_attachments2[i]->GetView() };
+			std::array attch{ m_attachments[i]->GetView(), m_attachments2[i]->GetView(),
+				m_gbuffer->attachments[GDepth]->GetView() };
+
 			// framebuffer
 			vk::FramebufferCreateInfo createInfo{};
 			createInfo

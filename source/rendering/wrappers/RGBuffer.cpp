@@ -84,6 +84,9 @@ void RGbuffer::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
 	PROFILE_SCOPE(Renderer);
 
 	auto recordTransition = [&](auto& attachment) {
+		if (attachment->IsDepth()) {
+			return;
+		}
 		auto target = !attachment->IsDepth() ? vk::ImageLayout::eColorAttachmentOptimal
 											 : vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
