@@ -92,7 +92,7 @@ void DirectionalLightNode::DirtyUpdate(DirtyFlagset flags)
 			dl.up = GetNodeUpWCS();
 			dl.ubo.maxShadowBias = m_maxShadowBias;
 			dl.ubo.samples = m_samples;
-			dl.ubo.sampleSpread = m_sampleSpread;
+			dl.ubo.sampleInvSpread = m_sampleInvSpread;
 		});
 	}
 }

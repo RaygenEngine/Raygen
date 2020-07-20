@@ -5,6 +5,10 @@
 #define PI 3.14159265358979323846f
 #endif
 
+#ifndef PHI
+#define PHI 1.61803398874989484820459f;
+#endif
+
 float saturate(float v)
 {
     return clamp(v, 0.0, 1.0);

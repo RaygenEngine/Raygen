@@ -16,13 +16,13 @@ layout(location = 0) in vec2 uv;
 
 // uniform
 
-layout(set = 0, binding = 0) uniform sampler2D normalsSampler;
-layout(set = 0, binding = 1) uniform sampler2D baseColorSampler;
-layout(set = 0, binding = 2) uniform sampler2D surfaceSampler;
-layout(set = 0, binding = 3) uniform sampler2D emissiveSampler;
-layout(set = 0, binding = 4) uniform sampler2D depthSampler;
+layout(set = 0, binding = 0) uniform sampler2D normalsSampler;  
+layout(set = 0, binding = 1) uniform sampler2D baseColorSampler;  
+layout(set = 0, binding = 2) uniform sampler2D surfaceSampler;  
+layout(set = 0, binding = 3) uniform sampler2D emissiveSampler;  
+layout(set = 0, binding = 4) uniform sampler2D depthSampler;    
 
-layout(set = 1, binding = 0) uniform UBO_Camera {
+layout(set = 1, binding = 0) uniform UBO_Camera {   
 	vec3 position;
 	float pad0;
 	mat4 view;
@@ -30,7 +30,7 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 	mat4 viewProj;
 	mat4 viewInv;
 	mat4 projInv;
-	mat4 viewProjInv;
+	mat4 viewProjInv; 
 } cam;
 
 layout(set = 2, binding = 0) uniform UBO_Directionallight {
@@ -47,7 +47,7 @@ layout(set = 2, binding = 0) uniform UBO_Directionallight {
 
 		float maxShadowBias;
 		int samples;
-		float sampleSpread;
+		float sampleInvSpread; 
 } light;
 
 layout(set = 3, binding = 0) uniform sampler2DShadow shadowmap;
@@ -62,29 +62,29 @@ void main() {
 	}
 
 	// PERF:
-	Fragment frag = getFragmentFromGBuffer(
+	Fragment frag = getFragmentFromGBuffer(  
 		depth,
 		cam.viewProjInv,
 		normalsSampler,
 		baseColorSampler,
 		surfaceSampler,
-		emissiveSampler,
+		emissiveSampler, 
 		uv);
 		
 	// spot light
-	vec3 N = frag.normal;
+	vec3 N = frag.normal; 
 	vec3 V = normalize(cam.position - frag.position);
 	vec3 L = normalize(-light.direction); 
 
 	float NoL = saturate(dot(N, L));
 		
-	float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, 1.f/light.sampleSpread);
+	float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
 	//float shadow = ShadowCalculationFast(shadowmap, light.viewProj, frag.position, light.maxShadowBias);
-	vec3 Li = (1.0 - shadow) * light.color * light.intensity; 
+	vec3 Li = (1.0 - shadow) * light.color * light.intensity;       
 
-	vec3 H = normalize(V + L);
+	vec3 H = normalize(V + L);   
 
-    float NoV = abs(dot(N, V)) + 1e-5;
+    float NoV = abs(dot(N, V)) + 1e-5; 
     float NoH = saturate(dot(N, H));
     float LoH = saturate(dot(L, H));
 
@@ -95,7 +95,7 @@ void main() {
 	// so to simplify (faster math)
 	vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
 
-    outColor = vec4(finalContribution, 1);
+    outColor = vec4(finalContribution, 1); 
 }                               
                                 
                                  
@@ -128,6 +128,11 @@ void main() {
                                                                                                                                                         
                                                                                                                                                              
                                                                                                                                                               
+
+
+
+
+
 
 
 

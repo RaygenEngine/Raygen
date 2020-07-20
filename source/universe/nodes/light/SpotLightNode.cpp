@@ -76,7 +76,7 @@ void SpotlightNode::DirtyUpdate(DirtyFlagset flags)
 			sl.ubo.quadraticTerm = m_quadraticTerm;
 			sl.ubo.maxShadowBias = m_maxShadowBias;
 			sl.ubo.samples = m_samples;
-			sl.ubo.sampleSpread = m_sampleSpread;
+			sl.ubo.sampleInvSpread = m_sampleInvSpread;
 		});
 	}
 
@@ -97,7 +97,7 @@ void SpotlightNode::DirtyUpdate(DirtyFlagset flags)
 			sl.ubo.quadraticTerm = m_quadraticTerm;
 			sl.ubo.maxShadowBias = m_maxShadowBias;
 			sl.ubo.samples = m_samples;
-			sl.ubo.sampleSpread = m_sampleSpread;
+			sl.ubo.sampleInvSpread = m_sampleInvSpread;
 		});
 	}
 
@@ -118,7 +118,7 @@ void SpotlightNode::DirtyUpdate(DirtyFlagset flags)
 			sl.ubo.quadraticTerm = m_quadraticTerm;
 			sl.ubo.maxShadowBias = m_maxShadowBias;
 			sl.ubo.samples = m_samples;
-			sl.ubo.sampleSpread = m_sampleSpread;
+			sl.ubo.sampleInvSpread = m_sampleInvSpread;
 		});
 	}
 }

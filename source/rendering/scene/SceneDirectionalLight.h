@@ -18,7 +18,7 @@ struct DirectionalLight_Ubo {
 
 	float maxShadowBias{};
 	int32 samples{};
-	float sampleSpread{};
+	float sampleInvSpread{};
 };
 
 struct SceneDirectionalLight : SceneStruct {
