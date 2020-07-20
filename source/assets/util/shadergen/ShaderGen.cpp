@@ -55,6 +55,7 @@ layout(location = 0) in Data
 {
 	vec2 uv;
 	mat3 TBN;
+    vec3 fragPos;
 };
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
@@ -81,8 +82,10 @@ std::string shd::GenerateGbufferVert(
 void main() {
 	vec3 vertPos = position + OffsetPosition(textCoord);
 
-	gl_Position = camera.viewProj * push.modelMat * vec4(vertPos, 1.0);
-
+	vec4 posWCS = push.modelMat * vec4(vertPos, 1.0);
+	gl_Position = camera.viewProj * posWCS;
+	fragPos = posWCS.xyz;
+	
 	uv = textCoord;
 
 	vec3 newNormal = EditNormal(normal);
@@ -110,6 +113,7 @@ layout(location=0) out Data
 { 
 	vec2 uv;
 	mat3 TBN;
+    vec3 fragPos;
 };
 
 // in
@@ -198,6 +202,7 @@ layout(location = 0) in Data
 {
 	vec2 uv;
 	mat3 TBN;
+    vec3 fragPos;
 };
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
