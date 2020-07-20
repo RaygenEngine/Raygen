@@ -12,16 +12,16 @@ float ShadowCalculation(in sampler2DShadow shadowmap, mat4 lightMatrix, vec3 fra
 	float bias = maxBias * tan(acos(NoL));
 	bias = clamp(bias, 0.0, maxBias);
 	
-	projCoords = vec3(projCoords.xy * 0.5 + 0.5, projCoords.z - bias);
+	projCoords = vec3(projCoords.xy, projCoords.z - bias);
 
 	float shadow = 0;
-		
 	// Stratified Poisson Sampling
+	// PERF: samples here probably prevent loop unrolling
 	for (int i = 0; i < samples; ++i)
 	{
-		int index = int(16.0*random(vec4(fragPos.xyz,i)))%16;
+		int index = int(16.0*random(vec4(fragPos, i)))%16;
 		
-		vec3 jitteredProjCoords = vec3(projCoords.xy + poissonDisk[index] / invSpread, projCoords.z);
+		vec3 jitteredProjCoords = vec3((projCoords.xy + poissonDisk[index] / invSpread) * 0.5 + 0.5, projCoords.z);
 	
 		// Hardware implemented PCF on sample
 		shadow += 1.0 - texture(shadowmap, jitteredProjCoords, 0.f);

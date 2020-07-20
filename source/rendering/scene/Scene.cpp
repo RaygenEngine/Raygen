@@ -71,7 +71,7 @@ void Scene_::UploadDirty()
 
 	for (auto dl : directionalLights.elements) {
 
-		if (primaryDirty) {
+		if (dl && primaryDirty) {
 			dl->UpdateBox(cameras.elements[activeCamera]->frustum, cameras.elements[activeCamera]->ubo.position);
 		}
 

@@ -59,7 +59,7 @@ layout(set = 2, binding = 0) uniform UBO_Spotlight {
 
 		float maxShadowBias;
 		int samples;
-		float sampleSpread;
+		float sampleInvSpread;
 } light;
 
 layout(set = 3, binding = 0) uniform sampler2DShadow shadowmap;
@@ -100,7 +100,7 @@ void main() {
 	
 	float NoL = saturate(dot(N, L));
 
-	float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, 1.f/light.sampleSpread);
+	float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
 	//float shadow = ShadowCalculationFast(shadowmap, light.viewProj, frag.position, light.maxShadowBias);
 	vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
 
