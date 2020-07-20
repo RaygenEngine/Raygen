@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "DirectionalLightNode.h"
 
+#include "assets/PodEditor.h"
+#include "assets/pods/MaterialArchetype.h"
+#include "assets/pods/MaterialInstance.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneDirectionalLight.h"
 
@@ -94,5 +97,12 @@ void DirectionalLightNode::DirtyUpdate(DirtyFlagset flags)
 			dl.ubo.samples = m_samples;
 			dl.ubo.sampleInvSpread = m_sampleInvSpread;
 		});
+	}
+
+	if (flags[DF::SRT] || flags[DF::MaterialTargetChanged] || flags[DF::Flux]) {
+		PodEditor editor(m_skyInstance);
+		editor->SetUboParameter("sunDirection", glm::vec4(GetNodeForwardWCS(), 0.f));
+		editor->SetUboParameter("sunColor", glm::vec4(m_color, 1.f));
+		editor->SetUboParameter("sunIntensity", m_intensity);
 	}
 }

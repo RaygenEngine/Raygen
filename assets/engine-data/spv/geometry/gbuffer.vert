@@ -6,6 +6,7 @@ layout(location=0) out Data
 { 
 	vec2 uv;
 	mat3 TBN;
+	vec3 fragPos;
 };
 
 // in
@@ -34,7 +35,9 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 } cam;
 
 void main() {
-	gl_Position = cam.viewProj * push.modelMat * vec4(position, 1.0);
+	vec4 posWCS = push.modelMat * vec4(position, 1.0);
+	gl_Position = cam.viewProj * posWCS;
+	fragPos = posWCS.xyz;
 
 	uv = textCoord;
 
