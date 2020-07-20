@@ -5,7 +5,7 @@
 class App;
 
 inline struct ViewportCoordinates {
-	glm::uvec2 position{};
+	glm::ivec2 position{};
 	glm::uvec2 size{ 128, 128 };
 	bool operator==(const ViewportCoordinates&) const = default;
 } g_ViewportCoordinates;
