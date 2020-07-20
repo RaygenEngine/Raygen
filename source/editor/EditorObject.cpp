@@ -145,9 +145,11 @@ void EditorObject_::UpdateViewportCoordsFromDockspace()
 		auto copy = g_ViewportCoordinates;
 		auto rect = centralNode->Rect();
 
+		auto rectMin = rect.Min;
+
 
 		g_ViewportCoordinates.position
-			= { rect.Min.x - ImGui::GetWindowViewport()->Pos.x, rect.Min.y - ImGui::GetWindowViewport()->Pos.y };
+			= { rect.Min.x - ImGui::GetMainViewport()->Pos.x, rect.Min.y - ImGui::GetMainViewport()->Pos.y };
 		g_ViewportCoordinates.size = { rect.GetWidth(), rect.GetHeight() };
 		if (copy != g_ViewportCoordinates) {
 			Event::OnViewportUpdated.Broadcast();
