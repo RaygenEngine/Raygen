@@ -21,4 +21,6 @@ struct MaterialInstance : AssetPod {
 		return archetype.Lock()->descriptorSetLayout.uboClass.SetPropertyValueByName(
 			descriptorSet.uboData, name, value);
 	}
+
+	void Export(const fs::path& path);
 };

@@ -330,7 +330,7 @@ void AssetsWindow::ImguiDraw()
 
 	ImGui::SameLine();
 	if (ImEd::Button(ETXT(FA_FILE_IMPORT, "Import Files"))) {
-		if (auto files = ed::NativeFileBrowser::OpenFileMultiple({ "gltf;png,jpg,jpeg,tiff;vert,frag" })) {
+		if (auto files = ed::NativeFileBrowser::OpenFileMultiple({ "*;gltf;png,jpg,jpeg,tiff;vert,frag" })) {
 
 			auto importDirectory = m_currentPath; // Store by copy, currentpath gets changed on reloadentries
 			AssetImporterManager->SetPushPath(m_currentPath);
