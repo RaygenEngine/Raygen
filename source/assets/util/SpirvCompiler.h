@@ -1,8 +1,10 @@
 #pragma once
 #include "assets/shared/ShaderStageShared.h"
+#include "assets/util/DynamicDescriptorSet.h"
 
 struct TextCompilerErrors {
 	std::map<int, std::string> errors;
+	bool wasSuccessful{ false };
 };
 
 struct ShaderCompiler {
@@ -16,6 +18,13 @@ struct ShaderCompiler {
 		const std::string& code, ShaderStageType type, TextCompilerErrors* outError = nullptr);
 
 	static std::vector<uint32> Compile(const std::string& filepath, TextCompilerErrors* outError = nullptr);
+
+
+	static DynamicDescriptorSetLayout GenerateUboClass(
+		const std::vector<std::string>& lines, TextCompilerErrors* outErrors = nullptr);
+
+	static DynamicDescriptorSetLayout GenerateUboClass(
+		const std::vector<std::string_view>& lines, TextCompilerErrors* outErrors = nullptr);
 };
 
 namespace shd {

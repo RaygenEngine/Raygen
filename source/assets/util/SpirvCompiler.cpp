@@ -157,6 +157,10 @@ std::vector<uint32> CompileImpl(
 
 	// CHECK: FIX glslang::FinalizeProcess
 
+	if (outError && outCode.size() > 0) {
+		outError->wasSuccessful = true;
+	}
+
 	return outCode;
 }
 
@@ -193,6 +197,7 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& filepath, TextCom
 {
 	return Compile(StringFromFile(filepath), filepath, outError);
 }
+
 
 EShLanguage FindLanguage(const std::string& filename)
 {
@@ -276,4 +281,97 @@ EShLanguage LangFromStage(ShaderStageType type)
 		case ShaderStageType::Callable: return EShLangCallableNV;
 	}
 	return EShLangVertex;
+}
+
+
+namespace {
+
+template<typename StringLike>
+DynamicDescriptorSetLayout GenerateUboClassStr(const std::vector<StringLike>& lines, TextCompilerErrors* outErrors)
+{
+	DynamicDescriptorSetLayout layout;
+
+	std::map<int, std::string> errors;
+
+	std::unordered_set<std::string, str::Hash> identifiers;
+	layout = {};
+
+	for (uint32 lineNum = 0; auto& line : lines) {
+		lineNum++;
+		if (line.starts_with("//") || line.size() < 1) {
+			continue;
+		}
+
+		auto parts = str::split(line, " ;");
+		if (parts.size() < 2) {
+			errors.emplace(lineNum, "Expected format for each line is: 'type name;'");
+			continue;
+		}
+
+
+		if (*(parts[1].data() + parts[1].size()) != ';') {
+			errors.emplace(lineNum, "Expected a ';'");
+			continue;
+		}
+
+		// PERF: Do hashing on strview
+		std::string id = std::string(parts[1]);
+		if (identifiers.contains(id)) {
+			errors.emplace(lineNum, fmt::format("Duplicate identifier: {}.", id));
+			continue;
+		}
+
+		identifiers.insert(id);
+
+		if (str::equal(parts[0], "vec4")) {
+			layout.uboClass.AddProperty<glm::vec4>(id);
+		}
+		else if (str::equal(parts[0], "col4")) {
+			layout.uboClass.AddProperty<glm::vec4>(id, PropertyFlags::Color);
+		}
+		else if (str::equal(parts[0], "int")) {
+			layout.uboClass.AddProperty<int>(id);
+		}
+		else if (str::equal(parts[0], "float")) {
+			layout.uboClass.AddProperty<float>(id);
+		}
+		else if (str::equal(parts[0], "ubo")) {
+			layout.uboName = id;
+		}
+		else if (str::equal(parts[0], "sampler2d")) {
+			layout.samplers2d.push_back(id);
+		}
+		else {
+			errors.emplace(lineNum, "Unknown variable type.");
+			continue;
+		}
+	}
+
+	if (outErrors) {
+		outErrors->errors = std::move(errors);
+		outErrors->wasSuccessful = outErrors->errors.size() == 0;
+	}
+	else {
+		if (outErrors->errors.size() > 0) {
+			LOG_ERROR("Errors while compiling UBO code: ");
+			for (auto& [line, error] : errors) {
+				LOG_ERROR("Line {}: {} ({})", line, error, lines[line]);
+			}
+		}
+	}
+
+	return layout;
+}
+} // namespace
+
+DynamicDescriptorSetLayout ShaderCompiler::GenerateUboClass(
+	const std::vector<std::string>& lines, TextCompilerErrors* outErrors)
+{
+	return GenerateUboClassStr(lines, outErrors);
+}
+
+DynamicDescriptorSetLayout ShaderCompiler::GenerateUboClass(
+	const std::vector<std::string_view>& lines, TextCompilerErrors* outErrors)
+{
+	return GenerateUboClassStr(lines, outErrors);
 }

@@ -19,6 +19,7 @@ namespace ed {
 namespace {
 
 	// Returns true if the "compilation" was successful
+	// NEXT: Use shadercompiler::compileubo
 	bool ValidateUniforms(TextEditor& uniformEditor, DynamicDescriptorSetLayout& layout)
 	{
 		TextEditor::ErrorMarkers errors;

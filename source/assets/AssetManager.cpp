@@ -10,6 +10,7 @@
 #include "engine/Timer.h"
 #include "reflection/PodTools.h"
 
+#include <nlohmann/json.hpp>
 #include <thread>
 #include <vector>
 
@@ -103,11 +104,12 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 			for (size_t i = start; i < stop; ++i) {
 				LoadFromDiskTypelessInternal(m_pods[i].get());
 
-				[[unlikely]] if (m_pods[i].get()->metadata.reimportOnLoad)
-				{
-					// reimportEntries[threadIndex].push_back(m_pods[i].get());
-					AssetHandlerManager::ReimportFromOriginal(m_pods[i].get());
-				}
+				if (m_pods[i].get()->metadata.reimportOnLoad)
+					[[unlikely]]
+					{
+						// reimportEntries[threadIndex].push_back(m_pods[i].get());
+						AssetHandlerManager::ReimportFromOriginal(m_pods[i].get());
+					}
 			}
 			return true;
 		};
@@ -200,6 +202,46 @@ PodEntry* AssetHandlerManager::DuplicateImpl(PodEntry* entry)
 	});
 
 	return result;
+}
+
+std::string AssetHandlerManager::GenerateRelativeExportPath(
+	const fs::path& exporteePath, BasePodHandle dependantAsset, bool* isActualSourcePath)
+{
+	fs::path depPath = AssetHandlerManager::GetPodImportPath(dependantAsset);
+
+	if (depPath.empty()) {
+		LOG_ERROR("Exporting at: {}. Relative asset: {} not have an export location.", GetPodUri(dependantAsset));
+
+		if (isActualSourcePath != nullptr) {
+			*isActualSourcePath = false;
+		}
+		return AssetHandlerManager::GetPodUri(dependantAsset);
+	}
+
+	if (isActualSourcePath != nullptr) {
+		*isActualSourcePath = true;
+	}
+
+	if (fs::relative(exporteePath.parent_path(), depPath.parent_path()).empty()) {
+		// Exporting to the same folder, just write the filename
+		return depPath.filename().generic_string();
+	}
+
+	return fs::relative(depPath).generic_string();
+}
+
+void AssetHandlerManager::GenerateRelativeExportJsonObject(
+	nlohmann::json& json, const fs::path& exporteePath, BasePodHandle dependantAsset)
+{
+	bool isPathToActualFile = false;
+	std::string path = GenerateRelativeExportPath(exporteePath, dependantAsset, &isPathToActualFile);
+
+	if (isPathToActualFile) {
+		json["path"] = path;
+	}
+	else {
+		json["binary_asset"] = path;
+	}
 }
 
 AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& defaultBinPath)

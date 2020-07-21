@@ -92,6 +92,48 @@ public:
 		return handle;
 	}
 
+	// CHECK: Requires json include (non standard cpp)
+	template<CONC(CAssetPod) T>
+	PodHandle<T> ImportOrFindFromJson(const nlohmann::json& json, const fs::path& relativeFilePath = "")
+	{
+		std::string strpath;
+
+		if (json.is_object()) {
+			if (auto childIt = json.find("binary_asset"); childIt != json.end()) {
+				auto handle = AssetHandlerManager::GetAsyncHandle<T>(json.get<std::string>());
+				if (!handle.IsDefault()) {
+					return handle;
+				}
+			}
+
+			if (auto childIt = json.find("path"); childIt != json.end()) {
+				childIt->get_to(strpath);
+			}
+			else {
+				return PodHandle<T>{};
+			}
+		}
+		else {
+			json.get_to(strpath);
+		}
+
+		return ImportFromMaybeRelative<T>(strpath, relativeFilePath);
+	}
+
+	template<CONC(CAssetPod) T>
+	PodHandle<T> ImportFromMaybeRelative(const fs::path& path, const fs::path& relativeFilePath = "")
+	{
+		if (path.has_parent_path() || relativeFilePath.empty()) {
+			return AssetImporterManager->ImportRequest<T>(path);
+		}
+
+		auto copy = relativeFilePath;
+		copy.replace_filename(path.filename());
+
+		return AssetImporterManager->ImportRequest<T>(copy);
+	}
+
+
 private:
 	template<CONC(CAssetPod) PodType>
 	[[nodiscard]] std::pair<PodHandle<PodType>, PodType*> CreateEntryFromImportImpl(

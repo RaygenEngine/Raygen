@@ -24,16 +24,22 @@ inline void ExportPod(MaterialArchetype* src, const fs::path& path)
 	f << "// Raygen exported generated shader backup\n";
 	f << "//@ UBO Section:\n";
 	f << src->descriptorSetLayout.GetUniformText().str();
-	f << "\n//@ Shared Section:\n";
+	f << "//@ Shared Section:\n";
 	f << src->sharedFunctions;
-	f << "\n//@ Gbuffer Frag Section:\n";
+	f << "//@ Gbuffer Frag Section:\n";
 	f << src->gbufferFragMain;
-	f << "\n//@ Depthmap Pass Section:\n";
+	f << "//@ Depthmap Pass Section:\n";
 	f << src->depthShader;
-	f << "\n//@ Gbuffer Vert Section:\n";
+	f << "//@ Gbuffer Vert Section:\n";
 	f << src->gbufferVertMain;
-	f << "\n//@ Unlit Frag Section:\n";
+	f << "//@ Unlit Frag Section:\n";
 	f << src->unlitFragMain;
+}
+
+template<>
+inline void ExportPod(MaterialInstance* src, const fs::path& path)
+{
+	src->Export(path);
 }
 
 

@@ -203,6 +203,15 @@ public:
 		return Get().CreateEntryImpl<PodType>(desiredPath, transient, originalImportLoc, reimportOnLoad, exportOnSave);
 	}
 
+	// isActualSourcePath optional parameter returns whether the path returned is a binary gen-data path or an actual
+	// original source file path (that can be imported)
+	static std::string GenerateRelativeExportPath(
+		const fs::path& exporteePath, BasePodHandle dependantAsset, bool* isActualSourcePath = nullptr);
+
+	static void GenerateRelativeExportJsonObject(
+		nlohmann::json& json, const fs::path& exporteePath, BasePodHandle dependantAsset);
+
+
 private:
 	// This probably should reside in AssetHandlerManager.
 	template<CONC(CAssetPod) PodType>
