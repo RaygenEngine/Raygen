@@ -6,6 +6,7 @@ layout(location=0) out Data
 { 
 	vec2 uv;
 	mat3 TBN;
+	vec3 fragPos;
 };
 
 // in
@@ -47,10 +48,11 @@ void main() {
 		weight.w * jm.invBindMatrix[joint.w];
 
 
-	gl_Position = camera.viewProj * push.modelMat * skinMat * vec4(position, 1.0);
+	vec4 posWCS = push.modelMat * skinMat * vec4(position, 1.0);
+	gl_Position = camera.viewProj * posWCS;
+	fragPos = posWCS.xyz;
 
 	uv = textCoord;
-
 
 	vec3 T = normalize(mat3(push.normalMat) * tangent);
    	vec3 N = normalize(mat3(push.normalMat) * normal);

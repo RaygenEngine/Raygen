@@ -61,9 +61,9 @@
                 "z": 12.737427711486816
             },
             "rot": {
-                "x": -20.938282012939453,
+                "x": -20.93828010559082,
                 "y": -15.602839469909668,
-                "z": 0.00025706749875098467
+                "z": 0.00025485141668468714
             },
             "scale": {
                 "x": 0.9999745488166809,
@@ -74,7 +74,7 @@
         "+type": "WindowCamera",
         "far": 1000.0,
         "focalLength": 1.0,
-        "hFov": 2.0388283729553223,
+        "hFov": 1.6052006483078003,
         "hFovOffset": 0.0,
         "near": 0.10000000149011612,
         "vFov": 1.2566370964050293,
@@ -125,9 +125,9 @@
             }
         },
         "+type": "AnimatedGeometry",
-        "animation": "gen-data/Survey",
-        "animation_importHint_": "gltf-samples/2.0/Fox/glTF/Fox.gltf{\"animation\":0}",
-        "playbackSpeed": 1.0,
+        "animation": "gen-data/Run",
+        "animation_importHint_": "gltf-samples/2.0/Fox/glTF/Fox.gltf{\"animation\":2}",
+        "playbackSpeed": 1.7799999713897705,
         "skinnedMesh": "gen-data/Fox_skinned_",
         "skinnedMesh_importHint_": "gltf-samples/2.0/Fox/glTF/Fox.gltf",
         "~children": []
@@ -136,38 +136,41 @@
         "+name": "Sun",
         "+trs": {
             "pos": {
-                "x": -15.984999656677246,
+                "x": -13.925000190734863,
                 "y": 26.099000930786133,
                 "z": 8.399999618530273
             },
             "rot": {
-                "x": -83.70103454589844,
-                "y": 0.0,
-                "z": 0.0
+                "x": -3.905154228210449,
+                "y": -9.486981391906738,
+                "z": -0.41825759410858154
             },
             "scale": {
-                "x": 1.0000700950622559,
-                "y": 1.0001063346862793,
-                "z": 1.0001063346862793
+                "x": 1.0000369548797607,
+                "y": 0.999921977519989,
+                "z": 0.9999492168426514
             }
         },
         "+type": "DirectionalLight",
         "bottom": -20.0,
         "color": {
             "x": 1.0,
-            "y": 0.9790283441543579,
-            "z": 0.6476868391036987
+            "y": 0.9999899864196777,
+            "z": 0.9999899864196777
         },
         "far": 46.810001373291016,
         "hasShadow": true,
-        "intensity": 11.300000190734863,
+        "intensity": 20.239999771118164,
         "left": -20.0,
-        "maxShadowBias": 0.004999999888241291,
+        "maxShadowBias": 0.0020000000949949026,
         "near": 0.05000000074505806,
         "right": 20.0,
-        "samples": 4,
+        "sampleInvSpread": 984.9299926757813,
+        "samples": 15,
         "shadowMapHeight": 2048,
         "shadowMapWidth": 2048,
+        "skyInstance": "gen-data/_SKY/_skymat",
+        "skyInstance_importHint_": "",
         "top": 20.0,
         "~children": []
     },
@@ -198,18 +201,18 @@
                 "+name": "Phos",
                 "+trs": {
                     "pos": {
-                        "x": 9.588959693908691,
+                        "x": 9.592743873596191,
                         "y": 15.4669771194458,
                         "z": -1.3483086824417114
                     },
                     "rot": {
-                        "x": -77.894287109375,
-                        "y": 72.79200744628906,
-                        "z": 18.438316345214844
+                        "x": -77.8943099975586,
+                        "y": 72.7920150756836,
+                        "z": 18.438289642333984
                     },
                     "scale": {
-                        "x": 14.084493637084961,
-                        "y": 14.085094451904297,
+                        "x": 14.084492683410645,
+                        "y": 14.08509349822998,
                         "z": 14.084546089172363
                     }
                 },
@@ -229,11 +232,36 @@
                 "near": 0.05000000074505806,
                 "outerAperture": 2.8255136013031006,
                 "quadraticTerm": 0.20000000298023224,
+                "sampleInvSpread": 1000.0,
                 "samples": 4,
                 "shadowMapHeight": 2048,
                 "shadowMapWidth": 2048,
                 "~children": []
             }
         ]
+    },
+    {
+        "+name": "Sky",
+        "+trs": {
+            "pos": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "rot": {
+                "x": 0.0,
+                "y": -0.0,
+                "z": 0.0
+            },
+            "scale": {
+                "x": 265.55865478515625,
+                "y": 265.55865478515625,
+                "z": 265.55865478515625
+            }
+        },
+        "+type": "Geometry",
+        "mesh": "gen-data/_SKY/UVsphereSmoothShadingInvNormals",
+        "mesh_importHint_": "engine-data/default-skybox/skymesh/UVsphereSmoothShadingInvNormals.gltf",
+        "~children": []
     }
 ]
