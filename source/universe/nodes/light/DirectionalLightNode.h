@@ -3,13 +3,14 @@
 #include "universe/nodes/light/LightNode.h"
 
 class DirectionalLightNode : public LightNode {
-	REFLECTED_NODE(DirectionalLightNode, LightNode, DF_FLAGS(OrthoSides))
+	REFLECTED_NODE(DirectionalLightNode, LightNode, DF_FLAGS(OrthoSides, MaterialTargetChanged))
 	{
 
 		REFLECT_VAR(m_left).OnDirty(DF::OrthoSides);
 		REFLECT_VAR(m_right).OnDirty(DF::OrthoSides);
 		REFLECT_VAR(m_bottom).OnDirty(DF::OrthoSides);
 		REFLECT_VAR(m_top).OnDirty(DF::OrthoSides);
+		REFLECT_VAR(m_skyInstance).OnDirty(DF::MaterialTargetChanged);
 	}
 
 	glm::mat4 m_projectionMatrix{};
@@ -30,6 +31,8 @@ class DirectionalLightNode : public LightNode {
 	void RecalculateViewMatrix();
 	void RecalculateViewProjectionMatrix();
 	void RecalculateFrustum();
+
+	PodHandle<MaterialInstance> m_skyInstance;
 
 public:
 	DirectionalLightNode();

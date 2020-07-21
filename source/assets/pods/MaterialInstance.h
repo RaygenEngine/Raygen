@@ -14,10 +14,9 @@ struct MaterialInstance : AssetPod {
 
 	DynamicDescriptorSet descriptorSet;
 
-
 	// Returns true if something was edited. (property found & type matched)
 	template<typename T>
-	bool SetUboParameter(std::vector<byte>& object, std::string_view name, const T& value)
+	bool SetUboParameter(std::string_view name, const T& value)
 	{
 		return archetype.Lock()->descriptorSetLayout.uboClass.SetPropertyValueByName(
 			descriptorSet.uboData, name, value);
