@@ -7,6 +7,7 @@
 #include "assets/pods/MaterialArchetype.h"
 #include "assets/pods/MaterialInstance.h"
 #include "assets/pods/Sampler.h"
+#include "assets/StdAssets.h"
 
 #include <nlohmann/json.hpp>
 #include <tinygltf/tiny_gltf.h>
@@ -78,7 +79,7 @@ void GltfCache::LoadSamplers()
 
 void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 {
-	static PodHandle<MaterialArchetype> gltfArchetypeHandle = MaterialArchetype::GetGltfArchetype();
+	static PodHandle<MaterialArchetype> gltfArchetypeHandle = StdAssets::GltfArchetype();
 	auto gltfArchetype = gltfArchetypeHandle.Lock();
 
 	inst->archetype = gltfArchetypeHandle;

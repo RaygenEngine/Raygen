@@ -6,9 +6,11 @@
 #include "assets/specializations/PodDuplication.h"
 #include "assets/specializations/PodExport.h"
 #include "assets/util/FindPodUsers.h"
+#include "assets/StdAssets.h"
 #include "engine/console/ConsoleVariable.h"
 #include "engine/Timer.h"
 #include "reflection/PodTools.h"
+
 
 #include <nlohmann/json.hpp>
 #include <thread>
@@ -41,21 +43,21 @@ void PodDeleter::operator()(AssetPod* p)
 
 void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 {
-	if (entry->path.size() <= 1 || entry->path.starts_with('~') || !entry->requiresSave) {
+	auto& meta = entry->metadata;
+	if (meta.exportOnSave) {
+		podspec::ExportToDisk(entry, entry->metadata.originalImportLocation);
+	}
+
+	// CHECK: starts_with('~') is probably an old hack, entry->transient should be enough. (debug it)
+	if (entry->path.size() <= 1 || entry->path.starts_with('~') || !entry->requiresSave || entry->transient) {
 		return;
 	}
 	CLOG_ABORT(!entry, "Attempting to save null entry");
 	CLOG_ABORT(!entry->ptr, "Attempting to save unloaded asset");
 
-	auto& meta = entry->metadata;
 
 	fs::path path = entry->path;
 	SerializePodToBinary(entry->metadata, entry->ptr.get(), path.replace_extension(".bin"));
-
-
-	if (meta.exportOnSave) {
-		podspec::ExportToDisk(entry, entry->metadata.originalImportLocation);
-	}
 
 
 	entry->requiresSave = false;
@@ -270,13 +272,10 @@ AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& default
 	pod->data[2] = 0xFF;
 	pod->data[3] = 0xFF;
 
-	// Default normal image
-	auto& [gltfArchHandle, gltfArchPod]
-		= AssetImporterManager->CreateTransientEntry<MaterialArchetype>("~GltfMaterial");
-	MaterialArchetype::MakeGltfArchetypeInto(gltfArchPod);
-
 
 	LOG_INFO("Current working dir: {}", fs::current_path());
+	StdAssets::LoadAssets();
+
 
 	AssetHandlerManager::Get().LoadAllPodsInDirectory(defaultBinPath);
 }

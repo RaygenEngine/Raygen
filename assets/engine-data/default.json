@@ -169,8 +169,8 @@
         "samples": 15,
         "shadowMapHeight": 2048,
         "shadowMapWidth": 2048,
-        "skyInstance": "gen-data/_SKY/_skymat",
-        "skyInstance_importHint_": "",
+        "skyInstance": "gen-data/INST skymesh",
+        "skyInstance_importHint_": "engine-data/skymesh.matinst",
         "top": 20.0,
         "~children": []
     },
@@ -260,7 +260,7 @@
             }
         },
         "+type": "Geometry",
-        "mesh": "gen-data/_SKY/UVsphereSmoothShadingInvNormals",
+        "mesh": "gen-data/UVsphereSmoothShadingInvNormals",
         "mesh_importHint_": "engine-data/default-skybox/skymesh/UVsphereSmoothShadingInvNormals.gltf",
         "~children": []
     }
