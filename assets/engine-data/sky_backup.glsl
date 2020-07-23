@@ -2,12 +2,18 @@
 //@ UBO Section:
 col4 sunColor;
 vec4 sunDirection;
+col4 betaR;
+col4 betaM;
 float sunIntensity;
+float Hr;
+float Hm;
 
 ubo ubo;
 
-
 //@ Shared Section:
+
+
+
 
 
 
@@ -34,9 +40,15 @@ void main() {
 
 
 
+
+
+
 //@ Depthmap Pass Section:
 
 void main() {}
+
+
+
 
 
 
@@ -52,8 +64,13 @@ void main() {}
 
 
 
+
+
+
 //@ Unlit Frag Section:
 #include "global.h"
+
+#define USE_INSTANCE_FOR_ATMOSPHERE 1
 
 void main() {
 	vec3 sunColor = ubo.sunColor.rgb;
@@ -66,9 +83,17 @@ void main() {
      // Same as above but for Mie scattering (Hm) 
     float Hm = 1200;              
   
+
+
+#if USE_INSTANCE_FOR_ATMOSPHERE == 1
+	Hr = ubo.Hr;
+	Hm = ubo.Hm;
+	const vec3 betaR = ubo.betaR.xyz * 1e-4f;
+    const vec3 betaM = ubo.betaM.xyz * 1e-4f; 
+#elif
     const vec3 betaR = vec3(3.8e-6f, 13.5e-6f, 33.1e-6f); 
     const vec3 betaM = vec3(21e-6f); 
-
+#endif
 	uint numSamples = 16; 
     uint numSamplesLight = 8; 
     
@@ -163,4 +188,7 @@ void main() {
 
 
 
+
+                                                                                                                                                                      
+                                                                                                                                                                          
 
