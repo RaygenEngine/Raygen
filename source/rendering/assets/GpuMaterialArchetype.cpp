@@ -130,6 +130,11 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 	auto arch = podHandle.Lock();
 	ClearDependencies();
 
+	if (arch->gbufferFragBinary.empty()) {
+		arch = PodHandle<MaterialArchetype>().Lock();
+		LOG_WARN("GBufferFragBinary is empty on Gpu Update Archetype. Using default archetype.");
+	}
+
 	{
 		auto createDescLayout = [&]() {
 			descLayout = std::make_unique<RDescriptorLayout>();

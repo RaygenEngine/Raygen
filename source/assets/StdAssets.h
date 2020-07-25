@@ -37,10 +37,7 @@ struct StdAssets {
 	};
 
 
-	inline static StdAsset<Image> ImageSkyBack;
-	inline static StdAsset<Image> ImageWhite;
-
-
+	inline static StdAsset<Image> NormalImage;
 	inline static StdAsset<MaterialArchetype> GltfArchetype;
 
 	static void LoadAssets();

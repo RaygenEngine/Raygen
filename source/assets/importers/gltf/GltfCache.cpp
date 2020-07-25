@@ -117,7 +117,7 @@ void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 	{
 		int32 samplerIndex = 0;
 
-		inst->descriptorSet.samplers2d[3] = { GetDefaultNormalImagePodUid() };
+		inst->descriptorSet.samplers2d[3] = StdAssets::NormalImage();
 
 		auto fillNextTexture = [&](auto textureInfo, bool srgb = false) {
 			if (textureInfo.index != -1) {
