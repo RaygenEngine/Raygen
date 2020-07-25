@@ -69,11 +69,6 @@ void MaterialArchetype::MakeDefaultInto(MaterialArchetype* mat)
 		"Failed to compile defualt shader code. (engine-data/spv/geometry/)");
 }
 
-PodHandle<MaterialArchetype> MaterialArchetype::GetGltfArchetype()
-{
-	return { GetDefaultGtlfArchetypeUid() };
-}
-
 void MaterialArchetype::ChangeLayout(DynamicDescriptorSetLayout&& newLayout)
 {
 	for (auto& instance : instances) {

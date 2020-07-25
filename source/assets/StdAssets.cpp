@@ -27,21 +27,21 @@ void StdAssets::LoadAssets()
 {
 	AssetImporterManager->SetPushPath("gen-data/engine-assets");
 
-	ImageSkyBack = Load<Image>("engine-data/default-skybox/back.jpg");
+	// ImageSkyBack = Load<Image>("engine-data/default-skybox/back.jpg");
 
 
 	//
 	//
 	//
 
-	ImageWhite = Generate<Image>(
-		[](Image& img) {
-			img.data[0] = 0xFF;
-			img.data[1] = 0xFF;
-			img.data[2] = 0xFF;
-			img.data[3] = 0xFF;
+	NormalImage = Generate<Image>(
+		[](Image& pod) {
+			pod.data[0] = 0x80;
+			pod.data[1] = 0x80;
+			pod.data[2] = 0xFF;
+			pod.data[3] = 0xFF;
 		},
-		"^ImageWhite");
+		"^NormalImage");
 
 
 	GltfArchetype = Generate<MaterialArchetype>(

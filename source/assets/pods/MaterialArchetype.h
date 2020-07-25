@@ -49,9 +49,6 @@ struct MaterialArchetype : AssetPod {
 	static void MakeGltfArchetypeInto(MaterialArchetype* mat);
 	static void MakeDefaultInto(MaterialArchetype* mat);
 
-
-	static PodHandle<MaterialArchetype> GetGltfArchetype();
-
 protected:
 	// Propagates the editable Descriptor Set Layout to active Layout
 	void ChangeLayout(DynamicDescriptorSetLayout&& newLayout);

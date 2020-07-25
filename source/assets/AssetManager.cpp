@@ -199,7 +199,7 @@ PodEntry* AssetHandlerManager::DuplicateImpl(PodEntry* entry)
 	podtools::VisitPodHash(entry->GetClass()->GetTypeId().hash(), [&]<typename PodType> {
 		auto& [newEntry, newPod]
 			= CreateEntry<PodType>(entry->path, false, entry->metadata.originalImportLocation, false, false);
-		podspec::Duplicate(entry->ptr.get(), newPod);
+		podspec::Duplicate(entry->ptr.get(), newPod, entry, newEntry);
 		result = newEntry;
 	});
 
@@ -265,17 +265,8 @@ AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& default
 		}
 	});
 
-	// Default normal image
-	auto& [handle, pod] = AssetImporterManager->CreateTransientEntry<Image>("~NormalImagePod");
-	pod->data[0] = 0x80;
-	pod->data[1] = 0x80;
-	pod->data[2] = 0xFF;
-	pod->data[3] = 0xFF;
-
-
 	LOG_INFO("Current working dir: {}", fs::current_path());
 	StdAssets::LoadAssets();
-
 
 	AssetHandlerManager::Get().LoadAllPodsInDirectory(defaultBinPath);
 }

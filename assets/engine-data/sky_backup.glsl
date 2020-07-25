@@ -21,6 +21,8 @@ ubo ubo;
 
 
 
+
+
 //@ Gbuffer Frag Section:
 
 void main() {
@@ -33,6 +35,8 @@ void main() {
 	gSurface = vec4(0.f, 0.5f, 0.5f, 0.f);
 	gEmissive = vec4(0.f, 0.f, 0.f, 1.f);
 }                                                                                        
+
+
 
 
 
@@ -56,7 +60,11 @@ void main() {}
 
 
 
+
+
 //@ Gbuffer Vert Section:
+
+
 
 
 
@@ -90,7 +98,7 @@ void main() {
 	Hm = ubo.Hm;
 	const vec3 betaR = ubo.betaR.xyz * 1e-4f;
     const vec3 betaM = ubo.betaM.xyz * 1e-4f; 
-#elif
+#else
     const vec3 betaR = vec3(3.8e-6f, 13.5e-6f, 33.1e-6f); 
     const vec3 betaM = vec3(21e-6f); 
 #endif
@@ -191,4 +199,6 @@ void main() {
 
                                                                                                                                                                       
                                                                                                                                                                           
+
+
 
