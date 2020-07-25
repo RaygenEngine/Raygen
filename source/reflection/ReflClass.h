@@ -241,9 +241,24 @@ public:
 	{
 		// Owningly store the const char* data to avoid hard to find bugs later. Better safe than sorry
 		auto& ref = m_stringviewBank.emplace_back(std::make_unique<std::string>(varname));
-		size_t offset = m_sizeInBytes;
-		m_sizeInBytes += sizeof(T);
-		return ReflClass::AddProperty<T>(offset, ref->c_str(), flags);
+
+		// Padded directly for memcpy to UBO buffers (Only when working with ubo supported types). As such the memory
+		// layout here must comply to glsl's std140 spec:
+		// https://www.khronos.org/registry/OpenGL/specs/gl/glspec45.core.pdf#page=159
+		size_t curOffset = m_sizeInBytes;
+
+		if constexpr (is_any_of_v<T, glm::vec4, float>) {
+			const size_t propSize = sizeof(T);
+			size_t padding = (propSize - (curOffset % propSize)) % propSize;
+			m_sizeInBytes += padding + propSize;
+			curOffset += padding;
+		}
+		else {
+			m_sizeInBytes += sizeof(T);
+		}
+
+
+		return ReflClass::AddProperty<T>(curOffset, ref->c_str(), flags);
 	}
 
 	// Clears all properties (to allow regeneration)
