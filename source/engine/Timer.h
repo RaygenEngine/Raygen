@@ -76,7 +76,7 @@ struct MultiTimer : Timer {
 		Scope& operator=(Scope&&) = default;
 	};
 
-	Scope StartScope(const std::string& reportString) { return std::move(Scope(*this, reportString)); }
+	Scope StartScope(const std::string& reportString) { return Scope(*this, reportString); }
 };
 
 
@@ -117,3 +117,6 @@ public:
 } // namespace timer
 
 #define TIMER_SCOPE(Name) timer::ScopedTimer MACRO_PASTE(z_scope_t, __LINE__)(Name);
+#define TIMER_STATIC_SCOPE(Name)                                                                                       \
+	static timer::MultiTimer MACRO_PASTE(z_scoped_t, __LINE__)(Name);                                                  \
+	auto s = MACRO_PASTE(z_scoped_t, __LINE__).StartScope(Name)
