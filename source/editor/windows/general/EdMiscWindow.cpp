@@ -136,6 +136,7 @@ void PodEntryEditorWindow::ImguiDraw()
 	if (entry) {
 		ImGui::Checkbox("Reimport On Load", &entry->metadata.reimportOnLoad);
 		ImGui::Checkbox("Export On Save", &entry->metadata.exportOnSave);
+		ImGui::Checkbox("Transient", &entry->transient);
 		ImGui::InputText("Import Path", &entry->metadata.originalImportLocation);
 		ImGui::Text("Hash: %d", &entry->metadata.podTypeHash);
 		ImGui::Text("===", &entry->metadata.podTypeHash);

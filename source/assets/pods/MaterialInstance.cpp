@@ -21,7 +21,7 @@ void MaterialInstance::Export(const fs::path& path)
 
 
 	// Fill archetype_path
-	j["archetype_path"] = AssetHandlerManager::GenerateRelativeExportPath(path, archetype);
+	AssetHandlerManager::GenerateRelativeExportJsonObject(j["archetype_path"], path, archetype);
 
 	// Fill ubo_object
 	j["ubo_object"] = json::object();

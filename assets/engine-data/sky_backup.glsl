@@ -5,12 +5,16 @@ vec4 sunDirection;
 col4 betaR;
 col4 betaM;
 float sunIntensity;
+float planetRadius;
+float atmosphereRadius;
 float Hr;
 float Hm;
 
 ubo ubo;
 
 //@ Shared Section:
+
+
 
 
 
@@ -47,9 +51,13 @@ void main() {
 
 
 
+
+
 //@ Depthmap Pass Section:
 
 void main() {}
+
+
 
 
 
@@ -75,12 +83,16 @@ void main() {}
 
 
 
+
+
 //@ Unlit Frag Section:
 #include "global.h"
 
-#define USE_INSTANCE_FOR_ATMOSPHERE 1
+#define USE_INSTANCE_FOR_ATMOSPHERE 0
+
 
 void main() {
+
 	vec3 sunColor = ubo.sunColor.rgb;
 	float sunIntensity = ubo.sunIntensity;
 	vec3 sunDirection = normalize(-ubo.sunDirection.xyz);     
@@ -98,8 +110,11 @@ void main() {
 	Hm = ubo.Hm;
 	const vec3 betaR = ubo.betaR.xyz * 1e-4f;
     const vec3 betaM = ubo.betaM.xyz * 1e-4f; 
+    earthRadius = ubo.planetRadius;
+    atmosphereRadius = ubo.atmosphereRadius;
 #else
-    const vec3 betaR = vec3(3.8e-6f, 13.5e-6f, 33.1e-6f); 
+	// Paper: https://hal.inria.fr/file/index/docid/288758/filename/article.pdf
+    const vec3 betaR = vec3(5.8e-6f, 13.5e-6f, 33.1e-6f); 
     const vec3 betaM = vec3(21e-6f); 
 #endif
 	uint numSamples = 16; 
@@ -118,7 +133,7 @@ void main() {
     float g = 0.76f; 
     float phaseM = 3.f / (8.f * PI) * ((1.f - g * g) * (1.f + mu * mu)) / 
     ((2.f + g * g) * pow(1.f + g * g - 2.f * g * mu, 1.5f)); 
-    
+
 	// DANGER BIG FLOATS:
     float seabedToAtmoDst = atmosphereRadius - earthRadius;
     
@@ -176,19 +191,10 @@ void main() {
     } 
  
     outColor = vec4((sumR * betaR * phaseR + sumM * betaM * phaseM) * sunIntensity * sunColor, 1);
+//    outColor = vec4(fragPos, 1) / 10000;
+//    outColor = vec4(-normal, 1) / 50;
  } 
-
-
-
-
-
-
-
-
-
-
-
-
+ 
 
 
 
@@ -201,4 +207,6 @@ void main() {
                                                                                                                                                                           
 
 
+
+                                                                                                                                                                                                            
 
