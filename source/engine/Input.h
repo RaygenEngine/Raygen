@@ -10,6 +10,7 @@ using KeyStates = std::bitset<static_cast<int32>(Key::_NUM)>;
 // TODO:
 // * Gamepad Support
 // CHECK: Workaround mouse reporting outside of window
+// CHECK: On window focus loss, KeyUp all the keys to avoid sticky keys
 // * Implement reflection for Input Enum keys to support editor and Key Properties
 // * Modifier support for key presses, useful for the editor - circumvented by event calls
 // * Drop mouse move event for glfwGetMousePosition()

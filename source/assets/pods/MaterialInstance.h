@@ -7,7 +7,7 @@ struct MaterialInstance : AssetPod {
 	REFLECTED_POD(MaterialInstance)
 	{
 		REFLECT_ICON(FA_SWATCHBOOK);
-		REFLECT_VAR(archetype);
+		REFLECT_VAR(archetype, PropertyFlags::Hidden);
 	}
 
 	PodHandle<MaterialArchetype> archetype;

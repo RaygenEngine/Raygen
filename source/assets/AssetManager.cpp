@@ -212,7 +212,8 @@ std::string AssetHandlerManager::GenerateRelativeExportPath(
 	fs::path depPath = AssetHandlerManager::GetPodImportPath(dependantAsset);
 
 	if (depPath.empty()) {
-		LOG_ERROR("Exporting at: {}. Relative asset: {} not have an export location.", GetPodUri(dependantAsset));
+		LOG_ERROR("Exporting at: {}. Relative asset: {} not have an export location.", exporteePath,
+			GetPodUri(dependantAsset));
 
 		if (isActualSourcePath != nullptr) {
 			*isActualSourcePath = false;

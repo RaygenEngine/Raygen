@@ -21,20 +21,12 @@ BasePodHandle MaterialInstanceImporter::Import(const fs::path& path)
 	json j;
 	f >> j;
 
-	std::string archPath;
-	auto it = j.find("archetype_path");
-	if (it != j.end()) {
-		it->get_to<std::string>(archPath);
-	}
-	else {
-		LOG_ERROR("MaterialInstanceImporter: archetype attribute not found {}. Skipped importing.", path);
-		return {};
-	}
 
-	auto archetype = AssetImporterManager->ImportFromMaybeRelative<MaterialArchetype>(archPath, path);
+	auto archetype = AssetImporterManager->ImportOrFindFromJson<MaterialArchetype>(j["archetype_path"], path);
 
 	if (archetype.IsDefault() || !archetype.HasBeenAssigned()) {
-		LOG_ERROR("MaterialInstanceImporter: Archetype not found at path: {}. Skipped importing.", archPath);
+		LOG_ERROR("MaterialInstanceImporter: Archetype not found when importing mat instance at {}. Skipped importing.",
+			path);
 		return {};
 	}
 
@@ -52,7 +44,7 @@ BasePodHandle MaterialInstanceImporter::Import(const fs::path& path)
 	pod->descriptorSet.SwapLayout({}, archPod->descriptorSetLayout);
 
 
-	if (it = j.find("ubo_object"); it != j.end()) {
+	if (auto it = j.find("ubo_object"); it != j.end()) {
 		refltools::JsonToPropVisitor visitor(*it);
 
 		refltools::CallVisitorOnEveryPropertyEx(
@@ -63,7 +55,7 @@ BasePodHandle MaterialInstanceImporter::Import(const fs::path& path)
 	}
 
 
-	if (it = j.find("samplers2d"); it != j.end()) {
+	if (auto it = j.find("samplers2d"); it != j.end()) {
 		if (!it->is_object()) {
 			LOG_ERROR("MaterialInstanceImporter: Samplers2d not an object in json: {}");
 		}

@@ -13,7 +13,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/wrappers/RGbuffer.h"
-
+#include "engine/console/ConsoleVariable.h"
 #include <glm/gtc/matrix_inverse.hpp>
 
 #include "assets/shared/GeometryShared.h"
@@ -39,6 +39,9 @@ namespace {
 		std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages,
 		vk::PipelineVertexInputStateCreateInfo vertexInputInfo)
 	{
+		static ConsoleVariable<vk::PolygonMode> unlitFillModeConsole{ "r.unlitFillMode", vk::PolygonMode::eFill,
+			"Fill mode for unlit custom shaders. Recompile the archetype to apply." };
+
 		vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly
 			.setTopology(vk::PrimitiveTopology::eTriangleList) //
@@ -67,7 +70,7 @@ namespace {
 		rasterizer
 			.setDepthClampEnable(VK_FALSE) //
 			.setRasterizerDiscardEnable(VK_FALSE)
-			.setPolygonMode(vk::PolygonMode::eFill)
+			.setPolygonMode(unlitFillModeConsole)
 			.setLineWidth(1.f)
 			.setCullMode(vk::CullModeFlagBits::eBack)
 			.setFrontFace(vk::FrontFace::eCounterClockwise)
