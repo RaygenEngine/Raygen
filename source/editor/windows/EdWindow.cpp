@@ -3,6 +3,8 @@
 
 #include "engine/Logger.h"
 #include "assets/AssetManager.h"
+#include "editor/imgui/ImEd.h"
+
 #include "reflection/ReflClass.h"
 
 #include <imgui/imgui.h>
@@ -71,6 +73,15 @@ void AssetEditorWindow::ImguiDraw()
 	std::string txt = fmt::format(
 		"No editor found for this pod type: {}\nPod for edit: {}", entry->GetClass()->GetName(), entry->path);
 	ImGui::Text(txt.c_str());
+}
+
+void AssetEditorWindow::DrawSaveButton()
+{
+	ImEd::DisabledSection(!entry->requiresSave, [&]() {
+		if (ImGui::Button(ETXT(FA_SAVE, "Save")) || (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(83))) {
+			SaveToDisk();
+		}
+	});
 }
 
 void AssetEditorWindow::SaveToDisk()

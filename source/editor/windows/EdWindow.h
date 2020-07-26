@@ -92,6 +92,8 @@ public:
 
 	virtual void ImguiDraw() override;
 
+	// Also enables ctrl + s shortcut in the window drawn
+	void DrawSaveButton();
 
 	void SaveToDisk();
 };
