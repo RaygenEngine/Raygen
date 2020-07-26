@@ -13,6 +13,7 @@
 #include "reflection/ReflEnum.h"
 #include "reflection/PodTools.h"
 #include "editor/EditorObject.h"
+#include "engine/Input.h"
 
 #include <imgui/imgui_internal.h>
 #include <spdlog/fmt/fmt.h>
@@ -156,19 +157,26 @@ void AssetsWindow::CreateFolder(const std::string& name, assetentry::FolderEntry
 	where->FindOrAddFolder(name);
 }
 
-static bool selected = false;
 
 struct NoFunc {
 	void operator()() {}
 };
 
-template<bool IsFolder, typename OnOpen = NoFunc, typename OnEndGroup = NoFunc, typename OnDrag = NoFunc>
-void Draw(const char* iconTxt, const char* nameTxt, OnOpen onOpen = {}, OnEndGroup onEndGroup = {}, OnDrag onDrag = {})
+template<bool IsFolder, typename OnOpen = NoFunc, typename OnEndGroup = NoFunc, typename OnDrag = NoFunc,
+	typename OnSelect = NoFunc>
+void Draw(const char* iconTxt, const char* nameTxt, OnOpen onOpen = {}, OnEndGroup onEndGroup = {}, OnDrag onDrag = {},
+	bool selectedVisual = false, OnSelect onSelect = {}, bool needsSave = false)
 {
 	constexpr float padding = 6.f;
-	constexpr float c_itemWidth = 110.f;
-	constexpr float c_itemHeight = 100.f;
-	constexpr float c_maxLabelWidth = 100.f;
+	constexpr float c_itemWidth = 90.f;
+	constexpr float c_itemHeight = 86.f;
+	constexpr float c_maxLabelWidth = 90.f;
+
+	std::string nameBuffer;
+	if (needsSave) {
+		nameBuffer = "*" + std::string(nameTxt);
+		nameTxt = nameBuffer.c_str();
+	}
 
 
 	const float scaledLabelWidth = c_maxLabelWidth * ImGui::GetCurrentWindow()->FontWindowScale;
@@ -176,8 +184,9 @@ void Draw(const char* iconTxt, const char* nameTxt, OnOpen onOpen = {}, OnEndGro
 
 	ImVec2 cursBegin = ImGui::GetCursorPos();
 
-	ImGui::Selectable("##AssetEntrySelectableGroup", &selected, 0, scaledSize);
-	selected = false;
+	ImGui::Selectable("##AssetEntrySelectableGroup", &selectedVisual, 0, scaledSize);
+
+
 	onEndGroup();
 	onDrag();
 	if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
@@ -185,7 +194,7 @@ void Draw(const char* iconTxt, const char* nameTxt, OnOpen onOpen = {}, OnEndGro
 			onOpen();
 		}
 		else { // Select
-			   // TODO: ASSETS:
+			onSelect();
 		}
 	}
 
@@ -225,9 +234,10 @@ void Draw(const char* iconTxt, const char* nameTxt, OnOpen onOpen = {}, OnEndGro
 		{
 			ImVec4 clip_rect(pos.x, pos.y, pos.x + labelSize.x, pos.y + labelSize.y);
 
-			ImGui::GetWindowDrawList()->AddText(ImGui::GetFont(), ImGui::GetFontSize(),
-				ImVec2(pos.x + centerOffset, pos.y), ImGui::GetColorU32(ImGuiCol_Text), nameTxt, nullptr,
-				scaledLabelWidth, &clip_rect);
+			ImGui::GetWindowDrawList()->AddText(ImGui::GetFont(), ImGui::GetFontSize() * 0.91f,
+				ImVec2(pos.x + centerOffset, pos.y),
+				needsSave ? ImGui::ColorConvertFloat4ToU32(EdColor::Red) : ImGui::GetColorU32(ImGuiCol_Text), nameTxt,
+				nullptr, scaledLabelWidth, &clip_rect);
 		}
 	}
 	ImGui::EndGroup();
@@ -281,7 +291,10 @@ void AssetsWindow::DrawAsset(PodEntry* assetEntry)
 			//
 			ed::asset::MaybeHoverTooltip(assetEntry);
 		},
-		[&]() { ImEd::CreateTypedPodDrag(assetEntry); });
+		[&]() { ImEd::CreateTypedPodDrag(assetEntry); },                        //
+																				// Selection Parameters
+		m_selectedEntry == assetEntry, [&]() { m_selectedEntry = assetEntry; }, //
+		assetEntry->requiresSave);
 	ImGui::PopID();
 }
 
@@ -407,26 +420,69 @@ void AssetsWindow::ImguiDraw()
 		}
 	}
 	ImGui::Unindent(8.f);
-	ImGui::EndChild();
+	RunKeyboard();
 	RunEmptySpaceContext();
+	ImGui::EndChild();
 	ImGui::Columns(1);
 }
 
 void AssetsWindow::RunEmptySpaceContext()
 {
-	if (!m_hasOpenedAssetContextInMainView && ImGui::BeginPopupContextItem("AssetsGenericContextRightClickWindow")) {
+	if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered() && ImGui::IsWindowHovered()) {
+		m_selectedEntry = nullptr;
+	}
+
+	if (ImGui::BeginPopupContextWindow("AssetsGenericContextRightClickWindow", ImGuiMouseButton_Right, false)) {
+		mti::TypeId newPodType;
+
+		if (ImGui::IsWindowAppearing()) {
+			m_selectedEntry = nullptr;
+		}
+
 		podtools::ForEachPodType([&]<typename PodType>() {
 			//
 			auto itemName = PodType::StaticClass().GetNameStr();
-			if (ImGui::MenuItem(itemName.c_str())) {
-				AssetHandlerManager::CreateEntry<PodType>(m_currentPath + itemName);
-				ReloadEntries();
+
+			float sizeX = ImMax(ImGui::CalcTextSize(itemName.c_str(), NULL, true).x, 150.f); // Pad width for better ux
+
+			if (ImGui::Selectable(itemName.c_str(), false,
+					ImGuiSelectableFlags_DontClosePopups | ImGuiSelectableFlags_DrawFillAvailWidth
+						| ImGuiSelectableFlags_PressedOnRelease,
+					ImVec2(sizeX, 0.0f))) {
+				ImGui::OpenPopup("NewAssetNamePopup");
+				m_newAssetNameString = itemName;
+				m_newAssetTypeId = mti::GetTypeId<PodType>();
 			}
 		});
 
+
+		if (ImGui::BeginPopup("NewAssetNamePopup")) {
+			if (ImGui::IsWindowAppearing()) {
+				ImGui::SetKeyboardFocusHere();
+			}
+
+			bool make = false;
+
+			ImGui::SetNextItemWidth(150.f);
+			make |= ImGui::InputText("###NewAssetNameTxt", &m_newAssetNameString, ImGuiInputTextFlags_EnterReturnsTrue);
+			ImGui::SameLine();
+			make |= ImGui::Button("OK");
+
+			if (make) {
+				podtools::VisitPodHash(m_newAssetTypeId.hash(), [&]<typename PodType>() {
+					auto& [entry, _] = AssetHandlerManager::CreateEntry<PodType>(m_currentPath + m_newAssetNameString);
+					m_selectedEntry = entry;
+				});
+				ReloadEntries();
+				ImGui::ClosePopupToLevel(0, true);
+			}
+
+
+			ImGui::EndPopup();
+		}
+
 		ImGui::EndPopup();
 	}
-	m_hasOpenedAssetContextInMainView = false;
 }
 
 void AssetsWindow::ImportFiles(std::vector<fs::path>&& files)
@@ -441,8 +497,7 @@ void AssetsWindow::RunFileEntryContext(PodEntry* entry)
 {
 	bool isContextOpen = ImGui::BeginPopupContextItem("AssetsContextRightClickWindow");
 	if (isContextOpen) {
-		m_hasOpenedAssetContextInMainView = true;
-
+		m_selectedEntry = entry;
 		if (!m_wasRenamingPrevFrame) {
 			m_wasRenamingPrevFrame = true;
 			m_renameString = entry->name;
@@ -465,6 +520,17 @@ void AssetsWindow::RunFileEntryContext(PodEntry* entry)
 		if (ImGui::Button("Edit")) {
 			EditorObject->m_windowsComponent.OpenAsset(entry);
 			ImGui::CloseCurrentPopup();
+		}
+
+		if (ImGui::MenuItem("Save")) {
+			AssetHandlerManager::SaveToDisk(entry);
+		}
+
+
+		if (ImGui::MenuItem("Export")) {
+			if (auto file = NativeFileBrowser::SaveFile(); file) {
+				AssetHandlerManager::ExportToLocation(entry, *file);
+			}
 		}
 
 		ImGui::EndPopup();
@@ -500,8 +566,6 @@ void AssetsWindow::RunFolderEntryContext(assetentry::FolderEntry* folder)
 {
 	bool isRenaming = ImGui::BeginPopupContextItem("AssetsContextRightClickWindow");
 	if (isRenaming) {
-		m_hasOpenedAssetContextInMainView = true;
-
 		if (!m_wasRenamingPrevFrame) {
 			m_wasRenamingPrevFrame = true;
 			m_renameString = folder->name;
@@ -539,6 +603,31 @@ void AssetsWindow::RunPostFolder(FolderEntry* folder)
 		ImGui::TextUnformatted(std::string(folder->name).c_str());
 
 		ImEd::EndDragDropSourceObject(folder, "ASSET_WINDOW_FOLDER");
+	}
+}
+
+void ed::AssetsWindow::RunKeyboard()
+{
+	if (!ImGui::IsWindowFocused()) {
+		return;
+	}
+
+	PodEntry* entry = m_selectedEntry;
+	if (!entry) {
+		return;
+	}
+
+	if (ImGui::IsKeyPressedMap(ImGuiKey_Enter) || ImGui::IsKeyPressedMap(ImGuiKey_KeyPadEnter)) {
+		// Open
+		ed::asset::OpenForEdit(entry);
+	}
+
+	if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(83)) {
+		AssetHandlerManager::SaveToDisk(entry);
+	}
+
+	if (Input.IsJustPressed(Key::F2)) {
+		// Inline Rename
 	}
 }
 } // namespace ed

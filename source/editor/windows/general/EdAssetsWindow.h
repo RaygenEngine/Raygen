@@ -146,12 +146,15 @@ private:
 
 	bool m_wasRenamingPrevFrame{ false };
 	std::string m_renameString;
+	std::string m_newAssetNameString;
+	TypeId m_newAssetTypeId;
+
+	PodEntry* m_selectedEntry{ nullptr };
+
 
 	BoolFlag m_resizeColumn{ true };
 	BoolFlag m_reloadEntries{ true };
 	bool m_reopenPath{ true };
-
-	bool m_hasOpenedAssetContextInMainView{ false };
 
 	void ReloadEntries();
 	void ReloadEntriesImpl();
@@ -171,6 +174,7 @@ private:
 	void RunFolderEntryContext(assetentry::FolderEntry* folder);
 
 	void RunPostFolder(assetentry::FolderEntry* folder);
+	void RunKeyboard();
 };
 
 } // namespace ed

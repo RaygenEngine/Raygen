@@ -35,7 +35,7 @@ void AddLargeAssetIconsFont(ImFontAtlas* atlas)
 
 
 	ImguiImpl::s_AssetIconFont
-		= atlas->AddFontFromFileTTF("engine-data/fonts/Font-Awesome-5-Free-Solid-900.ttf", 60.f, nullptr, ranges.Data);
+		= atlas->AddFontFromFileTTF("engine-data/fonts/Font-Awesome-5-Free-Solid-900.ttf", 52.f, nullptr, ranges.Data);
 }
 
 

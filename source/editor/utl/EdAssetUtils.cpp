@@ -78,6 +78,18 @@ void MaybeHoverTooltipForced(bool showTooltip, PodEntry* entry)
 			ImGui::Image(handle.Lock().image->GetDebugDescriptor(), ImVec2(256, 256));
 			ImGui::EndTooltip();
 		}
+		else if (entry->type == mti::GetTypeId<MaterialInstance>()) {
+			ImGui::BeginTooltip();
+			ImGui::SetWindowFontScale(1.0);
+			auto inst = entry->GetHandleAs<MaterialInstance>().Lock();
+
+			if (inst->descriptorSet.samplers2d.size() > 0) {
+				auto& previewImg = vl::GpuAssetManager->GetGpuHandle(inst->descriptorSet.samplers2d[0]);
+				ImGui::Image(previewImg.Lock().image->GetDebugDescriptor(), ImVec2(256, 256));
+			}
+
+			ImGui::EndTooltip();
+		}
 
 		ImEd::EndCodeFont();
 	}

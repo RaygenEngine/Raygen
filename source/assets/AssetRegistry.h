@@ -57,6 +57,7 @@ private:
 	void LoadAllPodsInDirectory(const fs::path& path);
 	void LoadFromDiskTypelessInternal(PodEntry* entry);
 	void ReimportFromOriginalInternal(PodEntry* entry);
+	void ExportToLocationImpl(PodEntry* entry, const fs::path& path);
 
 	template<CONC(CAssetPod) T>
 	PodHandle<T> GetAsyncHandleInternal(const uri::Uri& str)
@@ -80,6 +81,14 @@ private:
 public:
 	static void RegisterPathCache(PodEntry* entry) { Get().m_pathCache.emplace(entry->path, entry->uid); }
 	static void RemoveFromPathCache(PodEntry* entry) { Get().m_pathCache.erase(entry->path); }
+
+	// Exports the asset directly to the specified location without taking into account ANY metadata / asset flags.
+	template<CONC(CUidConvertible) T>
+	static void ExportToLocation(T asset, const fs::path& diskLocation)
+	{
+		size_t uid = ToAssetUid(asset);
+		return Get().ExportToLocationImpl(Get().m_pods[uid].get(), diskLocation);
+	}
 
 	// There is no fast version of this function, it is just O(N) for loaded assets doing string comparisons
 	template<CONC(CAssetPod) T>

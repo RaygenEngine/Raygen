@@ -80,8 +80,10 @@ bool AssetSlot(const std::string& name, PodHandle<T>& handle)
 	ImEd::CreateTypedPodDrag(handle);
 	bool dblcl = ImEd::IsItemDoubleClicked();
 	if (ImEd::IsItemDoubleClicked()) {
-
 		ed::asset::OpenForEdit(handle);
+	}
+	if (ImGui::IsItemHovered()) {
+		ed::asset::MaybeHoverTooltipForced(true, handle);
 	}
 
 	return wasChanged;

@@ -41,6 +41,12 @@ void PodDeleter::operator()(AssetPod* p)
 //	podtools::ForEachPodType(l);
 //}
 
+void AssetHandlerManager::ExportToLocationImpl(PodEntry* entry, const fs::path& path)
+{
+	podspec::ExportToDisk(entry, path);
+	LOG_REPORT("Exported: {} to {}", entry->path, path);
+}
+
 void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 {
 	auto& meta = entry->metadata;
@@ -143,6 +149,7 @@ void AssetHandlerManager::ReimportFromOriginalInternal(PodEntry* entry)
 {
 	AssetImporterManager->m_importerRegistry.ReimportEntry(entry);
 }
+
 
 void AssetHandlerManager::LoadFromDiskTypelessInternal(PodEntry* entry)
 {
