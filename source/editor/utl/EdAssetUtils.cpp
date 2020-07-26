@@ -2,17 +2,45 @@
 #include "EdAssetUtils.h"
 
 #include "editor/imgui/ImEd.h"
+#include "editor/EditorObject.h"
 #include "reflection/ReflectionTools.h"
 #include "reflection/ReflEnum.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuImage.h"
+
 
 namespace ed::asset {
 
 void MaybeHoverTooltip(PodEntry* entry)
 {
 	if (ImGui::IsItemHovered()) {
+		MaybeHoverTooltipForced(true, entry);
+	}
+}
 
+void MaybeHoverTooltip(BasePodHandle handle)
+{
+	MaybeHoverTooltip(AssetHandlerManager::GetEntry(handle));
+}
+
+void MaybeHoverTooltipForced(bool showTooltip, BasePodHandle handle)
+{
+	MaybeHoverTooltipForced(showTooltip, AssetHandlerManager::GetEntry(handle));
+}
+
+void OpenForEdit(BasePodHandle handle)
+{
+	OpenForEdit(AssetHandlerManager::GetEntry(handle));
+}
+
+void OpenForEdit(PodEntry* entry)
+{
+	EditorObject->m_windowsComponent.OpenAsset(entry);
+}
+
+void MaybeHoverTooltipForced(bool showTooltip, PodEntry* entry)
+{
+	if (showTooltip) {
 		std::string text = fmt::format(
 			" Path: {}\n"
 			" Name: {}\n"
@@ -54,5 +82,4 @@ void MaybeHoverTooltip(PodEntry* entry)
 		ImEd::EndCodeFont();
 	}
 }
-
 } // namespace ed::asset

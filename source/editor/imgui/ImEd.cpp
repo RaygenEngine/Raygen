@@ -114,6 +114,11 @@ bool InputTextSized(const char* label, std::string* str, ImVec2 size, ImGuiInput
 		flags, InputTextCallback, &cb_user_data);
 }
 
+bool IsItemDoubleClicked(ImGuiMouseButton button)
+{
+	return ImGui::IsItemClicked(button) && ImGui::IsMouseDoubleClicked(button);
+}
+
 void CreateTypedPodDrag(PodEntry* entry, ImGuiDragDropFlags flags)
 {
 	if (ImGui::BeginDragDropSource(flags)) {

@@ -11,7 +11,6 @@ struct UserSettings {
 	// User Settings variables
 	std::vector<std::string> openWindows;
 
-
 	//
 	fs::path loadedFrom{};
 	UserSettings() = default;

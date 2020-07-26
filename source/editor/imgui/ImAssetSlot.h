@@ -4,6 +4,8 @@
 #include "assets/AssetRegistry.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "editor/imgui/ImEd.h"
+#include "editor/EdUserSettings.h"
+#include "editor/utl/EdAssetUtils.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -30,7 +32,7 @@ struct AssetSlotPopup {
 		UpdateSearch();
 	}
 
-	bool Draw(BasePodHandle& handle);
+	bool Draw(BasePodHandle& handle, bool stealFocus = false);
 
 protected:
 	void UpdateSearch();
@@ -53,10 +55,12 @@ bool AssetSlot(const std::string& name, PodHandle<T>& handle)
 
 	bool wasChanged = false;
 	if (ImGui::BeginCombo(name.c_str(), entry->path.c_str(), ImGuiComboFlags_HeightLarge)) {
+		bool stealFocus = false;
 		if (ImGui::IsWindowAppearing()) {
 			searchPopup.Open<T>();
+			stealFocus = true;
 		}
-		if (searchPopup.Draw(handle)) {
+		if (searchPopup.Draw(handle, stealFocus)) {
 			searchPopup.Clear();
 			ImGui::CloseCurrentPopup();
 			wasChanged = true;
@@ -67,6 +71,13 @@ bool AssetSlot(const std::string& name, PodHandle<T>& handle)
 	if (auto entry = ImEd::AcceptTypedPodDrop<T>(); entry) {
 		handle = entry->GetHandleAs<T>();
 		wasChanged = true;
+	}
+
+	ImEd::CreateTypedPodDrag(handle);
+	bool dblcl = ImEd::IsItemDoubleClicked();
+	if (ImEd::IsItemDoubleClicked()) {
+
+		ed::asset::OpenForEdit(handle);
 	}
 
 	return wasChanged;
