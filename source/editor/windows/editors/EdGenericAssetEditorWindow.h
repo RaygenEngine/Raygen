@@ -15,7 +15,7 @@ public:
 	{
 	}
 
-	void ImguiDraw() override { GenericImguiDrawEntry(entry); }
+	void ImguiDraw() override;
 };
 
 

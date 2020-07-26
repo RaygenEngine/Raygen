@@ -20,6 +20,9 @@ struct AssetSlotPopup {
 	std::vector<PodEntry*> results;
 	mti::TypeId searchType;
 
+	// "Scary" duplicate data for performance. (Avoid searching every time)
+	PodEntry* hoveredEntry{ nullptr };
+	int32 hoveredIndex{ 0 };
 
 	void Clear();
 
@@ -35,6 +38,7 @@ struct AssetSlotPopup {
 	bool Draw(BasePodHandle& handle, bool stealFocus = false);
 
 protected:
+	void HoverIndex(int32 newIndex);
 	void UpdateSearch();
 };
 
