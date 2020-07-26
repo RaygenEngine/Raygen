@@ -12,6 +12,7 @@
 #include "universe/nodes/Node.h"
 #include "universe/Universe.h"
 #include "assets/PodEditor.h"
+#include "editor/imgui/ImAssetSlot.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -192,59 +193,9 @@ namespace {
 		template<typename PodType>
 		bool InjectPodCode(PodHandle<PodType>& pod, const Property& p, bool isInVector = false, uint64 extraId = 1)
 		{
-			if (!pod.HasBeenAssigned()) {
-				std::string s = "Unitialised handle: " + p.GetNameStr();
-				ImGui::Text(s.c_str());
-				return false;
-			}
-
 			auto entry = AssetHandlerManager::GetEntry(pod);
-
-			bool open = false;
-			if (!isInVector) {
-				open = ImGui::CollapsingHeader(name);
-			}
-			else {
-
-				open = ImGui::CollapsingHeader(entry->name.c_str());
-			}
-
-			size_t id = ImGui::GetItemID();
-
-			bool result = PodDropTarget(pod);
-			if (depth == 0) {
-				TEXT_TOOLTIP("Pod Internal Path:\n{}\n", AssetHandlerManager::GetPodUri(pod));
-			}
-			else {
-				TEXT_TOOLTIP("{}", AssetHandlerManager::GetPodUri(pod));
-			}
-
-			if (open) {
-				ImGui::PushID(static_cast<int>(static_cast<uint64>(entry->uid) * 1024 * extraId));
-
-				depth++;
-				ImGui::Indent();
-
-
-				bool outerDidEdit = didEditFlag; // Stack store the current didEditFlag.
-				didEditFlag = false;
-
-				OptionalPodEditor<PodType> editor(pod);
-				auto ptr = editor.BeginOptionalEditRegion();
-				refltools::CallVisitorOnEveryProperty(ptr, *this);
-				if (didEditFlag) {
-					editor.MarkEdit();
-				}
-				editor.CommitForGpu();
-
-				didEditFlag = outerDidEdit; // Revert did Edit Flag to the stored state now that we are done iterating
-											// the inner object.
-
-				ImGui::Unindent();
-				depth--;
-				ImGui::PopID();
-			}
-			return result;
+			const char* thisName = isInVector ? entry->name.c_str() : name;
+			return ImEd::AssetSlot(thisName, pod);
 		}
 
 		template<typename PodType>

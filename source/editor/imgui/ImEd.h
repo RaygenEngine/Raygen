@@ -52,6 +52,7 @@ void HSpace(float space = 6.f);
 bool InputTextSized(const char* label, std::string* str, ImVec2 size, ImGuiInputTextFlags flags = 0,
 	ImGuiInputTextCallback callback = NULL, void* user_data = NULL);
 
+bool IsItemDoubleClicked(ImGuiMouseButton button = ImGuiMouseButton_Left);
 
 inline void BeginCodeFont()
 {

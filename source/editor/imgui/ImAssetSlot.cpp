@@ -30,8 +30,11 @@ void AssetSlotPopup::UpdateSearch()
 }
 
 
-bool AssetSlotPopup::Draw(BasePodHandle& handle)
+bool AssetSlotPopup::Draw(BasePodHandle& handle, bool stealFocus)
 {
+	if (stealFocus) {
+		ImGui::SetKeyboardFocusHere();
+	}
 	if (searchFilter.Draw(U8(FA_SEARCH u8"##AssetSlotSearch"))) {
 		UpdateSearch();
 	}
