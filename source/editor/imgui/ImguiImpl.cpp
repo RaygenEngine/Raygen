@@ -249,7 +249,7 @@ void SetStyle()
 	fontConfig.RasterizerMultiply = 1.1f;
 	fontConfig.GlyphOffset = ImVec2(0.f, -1.f);
 	ImguiImpl::s_EditorFont
-		= io.Fonts->AddFontFromFileTTF("engine-data/fonts/OpenSans-SemiBold.ttf", 18.f, &fontConfig, ranges);
+		= io.Fonts->AddFontFromFileTTF("engine-data/fonts/ClearSans-Regular.ttf", 18.f, &fontConfig, ranges);
 
 
 	static const ImWchar faRange[] = { 0xf000, 0xF941, 0 };
