@@ -93,44 +93,80 @@ public:
 	}
 
 	// CHECK: Requires json include (non standard cpp)
+	// Matches the json object generated from AssetHandlerManager::GenerateRelativeExportJsonObject
 	template<CONC(CAssetPod) T>
-	PodHandle<T> ImportOrFindFromJson(const nlohmann::json& json, const fs::path& relativeFilePath = "")
+	PodHandle<T> ImportOrFindFromJson(
+		const nlohmann::json& json, const fs::path& relativeFilePath = "", bool useBinaries = true)
 	{
 		std::string strpath;
 
-		if (json.is_object()) {
-			if (auto childIt = json.find("binary_asset"); childIt != json.end()) {
-				auto handle = AssetHandlerManager::GetAsyncHandle<T>(json.get<std::string>());
-				if (!handle.IsDefault()) {
-					return handle;
-				}
-			}
-
-			if (auto childIt = json.find("path"); childIt != json.end()) {
-				childIt->get_to(strpath);
-			}
-			else {
-				return PodHandle<T>{};
-			}
-		}
-		else {
-			json.get_to(strpath);
+		if (!json.is_object()) {
+			LOG_ERROR("Import or find from json expects json object: {}", relativeFilePath.generic_string());
+			return {};
 		}
 
-		return ImportFromMaybeRelative<T>(strpath, relativeFilePath);
+		PathReferenceType pathType{};
+		auto tie = GenMetaEnum(pathType);
+
+
+		auto type = json.begin().key();
+		if (!tie.SetValueByStr(type)) {
+			LOG_ERROR("Incorrect enum value for ImportOrFindFromJson, {}. Value was: {}", relativeFilePath,
+				json.begin()->get<std::string>());
+			return PodHandle<T>{};
+		}
+
+		auto path = json.begin().value().get<std::string>();
+
+		return ImportFromMaybeRelative<T>(pathType, path, relativeFilePath, useBinaries);
 	}
 
+	// TODO: Implement useBinaries
+	// When use binaries is true, the system will check the import path of binary files and avoid reimporting if a
+	// matching binary file is found.
 	template<CONC(CAssetPod) T>
-	PodHandle<T> ImportFromMaybeRelative(const fs::path& path, const fs::path& relativeFilePath = "")
+	PodHandle<T> ImportFromMaybeRelative(PathReferenceType pathType, const fs::path& path,
+		const fs::path& relativeFilePath = "", bool useBinaries = true)
 	{
-		if (path.has_parent_path() || relativeFilePath.empty()) {
+		if (pathType == PathReferenceType::FullPath) {
+			return AssetImporterManager->ImportRequest<T>(fs::absolute(path));
+		}
+
+		if (pathType == PathReferenceType::WorkingDir) {
+			// NOTE: pass just the path because whatever passed here is written as the original import location (and
+			// we want that to be as relative as possible)
 			return AssetImporterManager->ImportRequest<T>(path);
 		}
 
-		auto copy = relativeFilePath;
-		copy.replace_filename(path.filename());
 
-		return AssetImporterManager->ImportRequest<T>(copy);
+		if (pathType == PathReferenceType::FileRelative) {
+			// TODO: If file not found, search as if pathType was WorkingDir
+			if (relativeFilePath.empty()) {
+				LOG_ERROR("File relative import had relative File Path empty! {}", path);
+				return {};
+			}
+			fs::path searchPath;
+			auto cwd = fs::current_path();
+
+			if (relativeFilePath.is_absolute() && !std::equal(cwd.begin(), cwd.end(), relativeFilePath.begin())) {
+				searchPath = relativeFilePath / path;
+			}
+			else {
+				searchPath = fs::relative(relativeFilePath) / path;
+			}
+			return AssetImporterManager->ImportRequest<T>(searchPath);
+		}
+
+		if (pathType == PathReferenceType::BinaryAsset) {
+			auto handle = AssetHandlerManager::GetAsyncHandle<T>(path.generic_string());
+			if (!handle.IsDefault()) {
+				return handle;
+			}
+			return {};
+		}
+
+		LOG_ABORT("Unhandled enum case");
+		return {};
 	}
 
 
@@ -150,6 +186,4 @@ private:
 
 		return std::make_pair(handle, ptr);
 	}
-
-
 } * AssetImporterManager{};

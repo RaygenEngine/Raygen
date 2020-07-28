@@ -213,46 +213,74 @@ PodEntry* AssetHandlerManager::DuplicateImpl(PodEntry* entry)
 	return result;
 }
 
-std::string AssetHandlerManager::GenerateRelativeExportPath(
-	const fs::path& exporteePath, BasePodHandle dependantAsset, bool* isActualSourcePath)
+PathReferenceType AssetHandlerManager::GenerateRelativeExportPath(
+	const fs::path& exporteePath, BasePodHandle dependantAsset, fs::path& outPath)
 {
 	fs::path depPath = AssetHandlerManager::GetPodImportPath(dependantAsset);
 
 	if (depPath.empty()) {
-		LOG_ERROR("Exporting at: {}. Relative asset: {} not have an export location.", exporteePath,
+		LOG_ERROR("Exporting at: {}. Relative asset: {} does not have an export location.", exporteePath,
 			GetPodUri(dependantAsset));
 
-		if (isActualSourcePath != nullptr) {
-			*isActualSourcePath = false;
-		}
-		return AssetHandlerManager::GetPodUri(dependantAsset);
+		outPath = AssetHandlerManager::GetPodUri(dependantAsset);
+		return PathReferenceType::BinaryAsset;
 	}
-
-	if (isActualSourcePath != nullptr) {
-		*isActualSourcePath = true;
-	}
-
-	if (fs::relative(exporteePath.parent_path(), depPath.parent_path()).empty()) {
-		// Exporting to the same folder, just write the filename
-		return depPath.filename().generic_string();
-	}
-
-	return fs::relative(depPath).generic_string();
+	return detail::GenerateExportDependencyPath(exporteePath, fs::absolute(depPath), outPath);
 }
 
 void AssetHandlerManager::GenerateRelativeExportJsonObject(
 	nlohmann::json& json, const fs::path& exporteePath, BasePodHandle dependantAsset)
 {
-	bool isPathToActualFile = false;
-	std::string path = GenerateRelativeExportPath(exporteePath, dependantAsset, &isPathToActualFile);
+	fs::path path;
+	auto result = GenerateRelativeExportPath(exporteePath, dependantAsset, path);
 
-	if (isPathToActualFile) {
-		json["path"] = path;
-	}
-	else {
-		json["binary_asset"] = path;
-	}
+	auto enumTie = GenMetaEnum(result);
+	auto str = std::string(enumTie.GetValueStr());
+	json[str] = path.generic_string();
 }
+
+namespace detail {
+namespace {
+	bool IsSubDirectoryOf(const fs::path& of, const fs::path& who)
+	{
+		return std::equal(of.begin(), of.end(), who.begin());
+	}
+} // namespace
+PathReferenceType GenerateExportDependencyPath(
+	const fs::path& exporteePath, const fs::path& dependencyPath, fs::path& outPath)
+{
+	auto exporteeDir = fs::absolute(exporteePath).parent_path();
+	auto dependencyDir = fs::absolute(dependencyPath).parent_path();
+
+	// Spec case 1:
+	if (exporteeDir == dependencyDir) {
+		outPath = dependencyPath.filename();
+		return PathReferenceType::FileRelative;
+	}
+	auto cwd = fs::current_path();
+	auto cwdStr = fs::current_path();
+	const bool isExporteeInCwd = IsSubDirectoryOf(cwd, exporteeDir);
+	const bool isDependencyInCwd = IsSubDirectoryOf(cwd, dependencyDir);
+
+
+	// Case 2:
+	if (isExporteeInCwd == isDependencyInCwd && IsSubDirectoryOf(exporteeDir, dependencyDir)) {
+		outPath = fs::relative(dependencyPath, exporteeDir);
+		return PathReferenceType::FileRelative;
+	}
+
+	// Case 3 & 4: (can be merged as: Dependency in Cwd)
+	if (isDependencyInCwd) {
+		outPath = fs::relative(dependencyPath);
+		return PathReferenceType::WorkingDir;
+	}
+
+	// Case 5: (dependency not in cwd)
+
+	outPath = fs::absolute(dependencyPath);
+	return PathReferenceType::FullPath;
+}
+} // namespace detail
 
 AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& defaultBinPath)
 {

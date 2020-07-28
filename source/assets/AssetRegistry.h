@@ -14,6 +14,59 @@ struct Shader;
 struct StringPod;
 class ReflClass;
 
+
+//
+// Export path specification (Applied when exporting an asset):
+//
+// In General: Use the shortest reference point.
+// The cases: (A: Directory of file currently exported, B: Directory of dependant file reference)
+//
+// In the examples all paths are full paths.
+//
+// 1. A == B: Exporting to the same directory, Written: FileRelative, "reference.exp"
+//
+// 2. current_path == "C:/notxy/"
+//    A: "C:/xy/export.exp"
+//    B: "C:/xy/subfolder1/subfolder2/reference.exp"
+//
+//    (Note: B not under current path, otherwise see case 4)
+//	  Exporting to parent folder, Written: FileRelative, "subfolder1/subfolder2/reference.exp"
+//
+// 3. current_path == "C:/raygen/assets/"
+//	  A: "C:/raygen/assets/folder/sub1/export.exp"
+//    B: "C:/raygen/assets/folder/sub2/reference.exp"
+//
+//    Both under current working directory, incompatible parent_path's,
+//    Written: WorkingDir, "folder/sub2/reference.exp"
+//
+// 4. current_path == "C:/xy/raygen/assets/"
+//	  A: "C:/xy/somewhere/export.exp"
+//	  B: "C:/xy/raygen/assets/folder/reference.exp"
+//
+//    (Note: B IS under current path, otherwise see case 2)
+//	  Exporting with dependency to engine asset, Written: WorkingDir, "folder/reference.exp"
+//
+// 5. A: "C:/dir/xy/export.exp"
+//	  B: "C:/dir/zw/folder/reference.exp"
+//
+//    Completely unknown / irrelevant paths, export full path as last resort.
+//    Written: FullPath, "C:/dir/zw/folder/reference.exp"
+//
+
+
+enum class PathReferenceType
+{
+	FullPath,
+	WorkingDir,
+	FileRelative,
+	BinaryAsset
+};
+
+namespace detail {
+PathReferenceType GenerateExportDependencyPath(
+	const fs::path& exporteePath, const fs::path& dependencyPath, fs::path& outPath);
+}
+
 class AssetHandlerManager {
 
 private:
@@ -212,11 +265,13 @@ public:
 		return Get().CreateEntryImpl<PodType>(desiredPath, transient, originalImportLoc, reimportOnLoad, exportOnSave);
 	}
 
-	// isActualSourcePath optional parameter returns whether the path returned is a binary gen-data path or an actual
-	// original source file path (that can be imported)
-	static std::string GenerateRelativeExportPath(
-		const fs::path& exporteePath, BasePodHandle dependantAsset, bool* isActualSourcePath = nullptr);
+	// returns whether the path returned is a binary gen-data path or an actual original source file path (that can be
+	// imported)
+	static PathReferenceType GenerateRelativeExportPath(
+		const fs::path& exporteePath, BasePodHandle dependantAsset, fs::path& outPath);
 
+	// See export path specification on what this exports.
+	// Expected to be used with AssetImporterManager::ImportOrFindFromJson
 	static void GenerateRelativeExportJsonObject(
 		nlohmann::json& json, const fs::path& exporteePath, BasePodHandle dependantAsset);
 
