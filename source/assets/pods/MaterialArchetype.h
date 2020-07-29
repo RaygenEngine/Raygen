@@ -56,4 +56,7 @@ protected:
 public:
 	bool CompileAll(
 		DynamicDescriptorSetLayout&& newLayout, shd::GeneratedShaderErrors& outErrors, bool outputToConsole = false);
+
+
+	static PodEntry* MakeInstancePod(PodHandle<MaterialArchetype> archetype, const uri::Uri& path = "");
 };

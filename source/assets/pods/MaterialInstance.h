@@ -23,4 +23,8 @@ struct MaterialInstance : AssetPod {
 	}
 
 	void Export(const fs::path& path);
+
+	// CHECK: bad interface, unusable in EdMaterialInstance
+	static void SetArchetype(
+		PodHandle<MaterialInstance> instanceHandle, PodHandle<MaterialArchetype> newArchetypeHandle);
 };

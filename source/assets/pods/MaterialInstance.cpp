@@ -4,9 +4,11 @@
 
 #include "assets/pods/MaterialArchetype.h"
 #include "reflection/ReflectionTools.h"
+#include "assets/PodEditor.h"
 
 #include <nlohmann/json.hpp>
 #include <fstream>
+
 
 void MaterialInstance::Export(const fs::path& path)
 {
@@ -40,4 +42,33 @@ void MaterialInstance::Export(const fs::path& path)
 
 	std::ofstream file(path);
 	file << std::setw(4) << j;
+}
+
+void MaterialInstance::SetArchetype(
+	PodHandle<MaterialInstance> instanceHandle, PodHandle<MaterialArchetype> newArchetypeHandle)
+{
+	PodEditor instance(instanceHandle);
+
+	auto newArch = newArchetypeHandle.Lock();
+	auto prevArch = instance->archetype.Lock();
+
+	// Remove from previous arhcetype list
+	if (auto it = std::find(prevArch->instances.begin(), prevArch->instances.end(), instanceHandle);
+		it != prevArch->instances.end()) {
+
+		PodEditor prevArchEditor(instance->archetype);
+		prevArchEditor->instances.erase(it);
+	}
+
+
+	// Add to new arhcetype list
+	if (auto it = std::find(newArch->instances.begin(), newArch->instances.end(), instanceHandle);
+		it == newArch->instances.end()) {
+
+		PodEditor newArchEd(newArchetypeHandle);
+		newArchEd->instances.push_back(instanceHandle);
+	}
+
+	instance->descriptorSet.SwapLayout(prevArch->descriptorSetLayout, newArch->descriptorSetLayout);
+	instance->archetype = newArchetypeHandle;
 }

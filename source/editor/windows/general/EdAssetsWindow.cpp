@@ -503,6 +503,14 @@ void AssetsWindow::RunFileEntryContext(PodEntry* entry)
 			m_renameString = entry->name;
 		}
 
+		if (entry->IsA<MaterialArchetype>()) {
+			if (ImGui::MenuItem("Make Instance")) {
+				MaterialArchetype::MakeInstancePod(entry->GetHandleAs<MaterialArchetype>());
+				ReloadEntries();
+			}
+			ImGui::Separator();
+		}
+
 		if (ImGui::InputText("Rename", &m_renameString, ImGuiInputTextFlags_EnterReturnsTrue)) {
 			AssetHandlerManager::RenameEntry(entry, std::string(uri::GetDir(entry->path)) + m_renameString);
 			AssetHandlerManager::SaveAll();
