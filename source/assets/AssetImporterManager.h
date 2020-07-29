@@ -102,7 +102,7 @@ public:
 
 		if (!json.is_object()) {
 			LOG_ERROR("Import or find from json expects json object: {}", relativeFilePath.generic_string());
-			return {};
+			return PodHandle<T>{};
 		}
 
 		PathReferenceType pathType{};

@@ -30,6 +30,8 @@
 #define MAGIC_ENUM_RANGE_MAX 24
 #include <magic_enum.hpp>
 
+#include <entt/src/entt/entity/registry.hpp>
+
 namespace fs = std::filesystem;
 
 // Engine stuff

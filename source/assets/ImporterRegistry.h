@@ -24,9 +24,12 @@ public:
 		mti::TypeId type{};
 		BasePodHandle baseHandle = ImportImpl(path, type);
 		if (type == mti::GetTypeId<T>()) {
+			if (baseHandle.IsDefault()) {
+				return PodHandle<T>{};
+			}
 			return PodHandle<T>{ baseHandle.uid };
 		}
-		return {};
+		return PodHandle<T>{};
 	}
 
 	void ReimportEntry(PodEntry* entry);
