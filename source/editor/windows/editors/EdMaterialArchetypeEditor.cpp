@@ -299,6 +299,8 @@ void MaterialInstanceEditorWindow::ImguiDraw()
 	auto archetypeEntry = AssetHandlerManager::GetEntry(material->archetype);
 	auto prevArchetype = archetype;
 
+
+	// TODO: Hidden bug? Does not get removed from previous archetype
 	if (ImEd::AssetSlot("Archetype", material->archetype)) {
 		ed.MarkEdit();
 		archetype = material->archetype.Lock();

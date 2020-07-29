@@ -138,6 +138,15 @@ bool MaterialArchetype::CompileAll(
 	return true;
 }
 
+PodEntry* MaterialArchetype::MakeInstancePod(PodHandle<MaterialArchetype> archetype, const uri::Uri& path)
+{
+	auto actualPath = path.empty() ? AssetHandlerManager::GetPodUri(archetype) + " Inst" : path;
+
+	auto [entry, pod] = AssetHandlerManager::CreateEntry<MaterialInstance>(actualPath);
+	MaterialInstance::SetArchetype(entry->GetHandleAs<MaterialInstance>(), archetype);
+	return entry;
+}
+
 void DynamicDescriptorSet::SwapLayout(
 	const DynamicDescriptorSetLayout& oldLayout, const DynamicDescriptorSetLayout& newLayout)
 {
