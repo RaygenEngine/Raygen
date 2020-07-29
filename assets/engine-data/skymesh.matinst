@@ -1,6 +1,6 @@
 {
     "archetype_path": {
-        "path": "engine-data/sky_backup.glsl"
+        "FileRelative": "sky_backup.glsl"
     },
     "samplers2d": {},
     "ubo_object": {
@@ -32,6 +32,6 @@
             "y": -0.06930361688137054,
             "z": -0.9840329885482788
         },
-        "sunIntensity": 13.989999771118164
+        "sunIntensity": 20.239999771118164
     }
 }
