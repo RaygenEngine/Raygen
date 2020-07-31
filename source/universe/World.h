@@ -10,9 +10,164 @@
 #include "reflection/ReflClass.h"
 #include "universe/NodeFactory.h" // Not required directly, used in templates
 #include "universe/nodes/NodeIterator.h"
-
+#include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/Scene.h"
 
 #include <unordered_set>
+#include <entt/src/entt/entity/observer.hpp>
+
+#include <entt/src/entt/entity/handle.hpp>
+#include <entt/src/entt/entity/registry.hpp>
+
+
+#include "universe/Entity.h"
+
+
+class ComponentClassRegistry {
+	using hasht = entt::id_type;
+
+	std::unordered_map<hasht, const ReflClass*> m_types;
+
+	std::vector<std::function<void(entt::registry&)>> m_hookSceneFunctions;
+
+
+	template<typename Component>
+	static void InitScene(entt::registry& reg, entt::entity ent)
+	{
+		reg.get<Component>(ent).Z_RegisterToScene<typename Component::RenderSceneType>();
+		reg.emplace<typename Component::Dirty>(ent);
+	}
+
+	template<typename Component>
+	static void DestoryScene(entt::registry& reg, entt::entity ent)
+	{
+		reg.get<Component>(ent).Z_DeregisterFromScene<typename Component::RenderSceneType>();
+	}
+
+
+public:
+	template<typename Component>
+	void Register()
+	{
+		const ReflClass* cl = &Component::StaticClass();
+
+		m_types[entt::type_info<Component>::id()] = cl;
+
+		if constexpr (std::is_base_of_v<SceneCompBase, Component>) {
+			m_hookSceneFunctions.emplace_back([](entt::registry& reg) {
+				reg.on_construct<Component>().template connect<&ComponentClassRegistry::InitScene<Component>>();
+				reg.on_destroy<Component>().template connect<&ComponentClassRegistry::DestoryScene<Component>>();
+			});
+		}
+	}
+
+
+	bool HasClass(entt::id_type type) const { return m_types.contains(type); }
+
+	const ReflClass* GetClass(entt::id_type type)
+	{
+		CLOG_ERROR(!m_types.contains(type), "Asking for component class of an unregistered component.");
+		return m_types[type];
+	}
+
+
+	void HookRegistry(entt::registry& reg)
+	{
+		for (auto& func : m_hookSceneFunctions) {
+			func(reg);
+		}
+	}
+
+	static ComponentClassRegistry& Get()
+	{
+		static ComponentClassRegistry instance;
+		return instance;
+	}
+
+	template<typename T>
+	static void RegisterClass()
+	{
+		Get().Register<T>();
+	}
+};
+
+template<typename K>
+struct ComponentReflectionRegistar {
+	ComponentReflectionRegistar() { ComponentClassRegistry::RegisterClass<K>(); }
+};
+
+
+struct SceneCompBase {
+	size_t sceneUid;
+
+
+	template<typename T>
+	void Z_RegisterToScene()
+	{
+		sceneUid = Scene->EnqueueCreateCmd<T>();
+		LOG_REPORT("Registered");
+	}
+
+	template<typename T>
+	void Z_DeregisterFromScene()
+	{
+		Scene->EnqueueDestroyCmd<T>(sceneUid);
+		LOG_REPORT("De registered");
+	}
+};
+
+struct StaticMeshComp : SceneCompBase {
+	// DECL_DIRTY(MeshChange);
+
+	REFLECTED_SCENE_COMP(StaticMeshComp, SceneGeometry)
+	{
+		//
+		REFLECT_ICON(FA_CUBE);
+		REFLECT_VAR(mesh);
+	}
+
+
+	PodHandle<Mesh> mesh;
+};
+
+struct ScriptComp {
+
+	REFLECTED_COMP(ScriptComp)
+	{
+		//
+		REFLECT_VAR(code);
+	}
+
+	std::string code;
+};
+
+struct FreeformMovementComp {
+	float movespeed{ 15.f };
+};
+
+
+class ECS_World {
+public:
+	entt::registry reg;
+	UniquePtr<entt::observer> obs;
+	ComponentClassRegistry& classRegsitry = ComponentClassRegistry::Get();
+	ECS_World() { classRegsitry.HookRegistry(reg); }
+
+	Entity CreateEntity(const std::string& name = "")
+	{
+		Entity ent{ reg.create(), &reg };
+		auto& basic = ent.Add<BasicComponent>(name);
+		basic.self = ent;
+		return ent;
+	}
+
+	void DestroyEntity(Entity entity) { reg.destroy(entity.m_entity); }
+
+	void CreateWorld();
+
+	void UpdateWorld();
+};
+
 
 class Node;
 class RootNode;
@@ -78,41 +233,11 @@ public:
 	World(NodeFactory* factory);
 	~World();
 
-	// available node may differ later in runtime.
-	// returns nodes of subclasses ONLY IF no exact type was found.
-	// returns nullptr if no node of this class or subclasses where found
-	template<typename NodeType>
-	NodeType* GetAnyAvailableNode() const
-	{
-		Node* node = GetAnyAvailableNodeFromClass(&NodeType::StaticClass());
-		if (!node) {
-			return nullptr;
-		}
-		return NodeCast<NodeType>(node);
-	}
-
-	[[nodiscard]] const std::unordered_set<Node*>& GetNodes() const { return m_nodes; }
-
 
 	// Push a command to be executed before dirty update.
 	// Helps with adding/deleting nodes that would otherwise invalidate the iterating set.
 	void PushDelayedCommand(std::function<void()>&& func);
 
-	// Returns an iterable that can be used to access every node of this type or subtypes.
-	// Best used in a for each loop:
-	//
-	// for(CameraNode* camera : world->GetNodeIterator<CameraNode>()) {
-	//   ... // Runs for every CameraNode in the world
-	// }
-	//
-	template<typename T>
-	NodeIterable<T> GetNodeIterator()
-	{
-		return NodeIterable<T>(m_typeHashToNodes);
-	}
-
-	std::vector<Node*> GetNodesByName(const std::string& name) const;
-	Node* GetNodeByName(const std::string& name) const;
 
 	[[nodiscard]] CameraNode* GetActiveCamera() const { return m_activeCamera; }
 	void SetActiveCamera(CameraNode* cam);
@@ -121,67 +246,9 @@ public:
 
 	void LoadAndPrepareWorld(const fs::path& scenePath);
 
-	[[nodiscard]] NodeFactory* GetNodeFactory() const { return m_nodeFactory; }
-
-	[[nodiscard]] nlohmann::json& GetLoadedFromJson() { return *m_loadedFrom; }
-	[[nodiscard]] fs::path& GetLoadedFromPath() { return m_loadedFromPath; }
-
 private:
 	void DirtyUpdateWorld();
 	void ClearDirtyFlags();
 
 public:
-	// Default nullptr parent means this will be registered to root.
-	// DOC: No documentation as to when it is safe to call this. Usually it is not.
-	template<typename T>
-	T* CreateNode(const std::string& name, Node* parent = nullptr)
-	{
-		auto node = m_nodeFactory->NewNode<T>();
-		node->SetName(name);
-		Z_RegisterNode(node, parent);
-		return node;
-	}
-
-private:
-	// Only reflected properties get copied.
-	// Transient properties do not get copied.
-	// Children are ignored. Use DeepDuplicateNode to properly instanciate children.
-	// Does not properly call the correct events / functions
-	Node* DuplicateNode_Utl(Node* src, Node* newParent = nullptr);
-
-
-public:
-	// Only reflected properties get copied.
-	// Transient properties do not get copied.
-	// Children are iteratively duplicated and attached at their new respective parents.
-	// Uses the factory for each node to generate the new ones.
-	// Unsafe to call during update / dirtyupdates, invalidates iterators
-	Node* DeepDuplicateNode(Node* src, Node* newParent = nullptr);
-
-
-	// TODO: make async safe to be called from updates / dirtyupdates
-	// This will also remove the children.
-	// Do not delete nodes in any Node::Update() or Node::DirtyUpdate() this will invalidate the loop iterators
-	void DeleteNode(Node* src);
-
-private:
-	// Will give priority to exact class first, then if not found may return any subclass in no particular order.
-	Node* GetAnyAvailableNodeFromClass(const ReflClass* cl) const
-	{
-		// Check for exact
-		if (auto it = m_typeHashToNodes.find(cl->GetTypeId().hash());
-			it != end(m_typeHashToNodes) && it->second.size() > 0) {
-			return *it->second.begin();
-		}
-
-		// Exact not found, check for subclasses
-
-		for (auto& childClass : cl->GetChildClasses()) {
-			Node* node = GetAnyAvailableNodeFromClass(childClass);
-			if (node) {
-				return node;
-			}
-		}
-		return nullptr;
-	}
 } * MainWorld{};

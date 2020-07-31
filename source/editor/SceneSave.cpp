@@ -30,9 +30,10 @@ void GenerateJsonForNode(json& j, Node* node)
 
 	json childrenArray = json::array();
 	for (auto& childNode : node->GetChildren()) {
-		if (childNode->IsA<EditorCameraNode>()) {
-			continue;
-		}
+		// WIP: ECS
+		// if (childNode->IsA<EditorCameraNode>()) {
+		//	continue;
+		//}
 		json jsonChild = json::object();
 		GenerateJsonForNode(jsonChild, childNode.get());
 		childrenArray.emplace_back(jsonChild);
@@ -53,9 +54,10 @@ void SceneSave::SaveAs(World* world, const uri::Uri& p)
 	json scene = json::array();
 
 	for (auto& child : world->GetRoot()->GetChildren()) {
-		if (child->IsA<EditorCameraNode>()) {
-			continue;
-		}
+		// WIP: ECS
+		// if (child->IsA<EditorCameraNode>()) {
+		//	continue;
+		//}
 		json jsonChild = json::object();
 		GenerateJsonForNode(jsonChild, child.get());
 		scene.emplace_back(jsonChild);

@@ -189,42 +189,20 @@ public:
 	void SetDirty(uint32 flagIndex) { m_dirty.set(flagIndex); }
 	void SetDirtyMultiple(DirtyFlagset other) { m_dirty |= other; };
 
-	template<typename T>
-	bool IsA()
-	{
-		if constexpr (std::is_same_v<T, Node>) {
-			return true;
-		}
+	// template<typename T>
+	// bool IsA()
+	//{
+	//	if constexpr (std::is_same_v<T, Node>) {
+	//		return true;
+	//	}
 
-		auto nodeClass = &GetClass();
-		while (nodeClass != &Node::StaticClass()) {
-			if (nodeClass == &T::StaticClass()) {
-				return true;
-			}
-			nodeClass = nodeClass->GetParentClass();
-		}
-		return false;
-	}
-
-protected:
-	// Can accept node types that are not registered to the factory
-	// This will not fetch subclasses but will only match exact classes, name is case sensitive
-	// The expected use of this function is to be used on Dirty DF::Children to grab actual node pointers that you can
-	// safely store as members. You can be sure that the pointers will always be valid during Update()
-	//
-	// Any other use may cause iterator invalidation or other undefined behavior.
-	//
-	// NOTE: requires includes: World.h
-	template<typename T>
-	T* GetOrCreateChild(const std::string& name)
-	{
-		for (auto& childUnq : m_children) {
-			Node* child = childUnq.get();
-			if (child->GetClass() == T::StaticClass() && child->GetName() == name) {
-				return static_cast<T*>(child);
-			}
-		}
-
-		return Universe::GetMainWorld()->CreateNode<T>(name, this);
-	}
+	//	auto nodeClass = &GetClass();
+	//	while (nodeClass != &Node::StaticClass()) {
+	//		if (nodeClass == &T::StaticClass()) {
+	//			return true;
+	//		}
+	//		nodeClass = nodeClass->GetParentClass();
+	//	}
+	//	return false;
+	//}
 };
