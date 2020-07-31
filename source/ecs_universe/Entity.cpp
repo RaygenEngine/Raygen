@@ -3,6 +3,8 @@
 
 #include "universe/World.h"
 
+#include <glm/gtx/matrix_decompose.hpp>
+
 void BasicComponent::SetParent(Entity newParent, int32 index)
 {
 	// Stuff to be done when changing parent:
@@ -92,18 +94,48 @@ void BasicComponent::DetachFromParent()
 	parent = {};
 }
 
+void BasicComponent::SetNodeTransformWCS(const glm::mat4& newWorldMatrix)
+{
+	auto parentMatrix = parent ? parent->GetNodeTransformWCS() : glm::identity<glm::mat4>();
+	world.transform = newWorldMatrix;
+
+	SetNodeTransformLCS(glm::inverse(parentMatrix) * newWorldMatrix);
+}
+
+void BasicComponent::SetNodeTransformLCS(const glm::mat4& lm)
+{
+	local.transform = lm;
+	local.Decompose();
+
+	MarkDirtyMoved();
+}
+
 
 void BasicComponent::UpdateWorldTransforms()
 {
-	transform = math::transformMat(scale, orientation, position);
 	MarkDirtySrt();
+	local.Compose();
 
 	auto current = firstChild;
-	worldTransform = parent ? parent->worldTransform * transform : transform;
+	world.transform = parent ? parent->world.transform * local.transform : local.transform;
 
+	world.Decompose();
 
 	while (current) {
 		current->UpdateWorldTransforms();
 		current = current->next;
 	}
+}
+
+void BasicComponent::TransformCache::Compose()
+{
+	transform = math::transformMat(scale, orientation, position);
+}
+
+void BasicComponent::TransformCache::Decompose()
+{
+	glm::vec4 persp{};
+	glm::vec3 skew{};
+
+	glm::decompose(transform, scale, orientation, position, skew, persp);
 }

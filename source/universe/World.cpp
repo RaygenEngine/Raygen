@@ -180,10 +180,10 @@ void World::Update()
 
 	// WIP: ECS
 	ImguiImpl::NewFrame();
+	Editor::Update();
 
 	Universe::ecsWorld.UpdateWorld();
 
-	Editor::Update();
 
 	do {
 		for (auto& cmd : m_postIterateCommandList) {
@@ -224,89 +224,3 @@ glm::mat4 CameraViewProj()
 	return projectionMatrix;
 }
 } // namespace
-
-
-Entity globalEnt;
-
-void ECS_World::CreateWorld()
-{
-	auto mesh = CreateEntity("Global");
-
-	auto& mc = mesh.Add<StaticMeshComp>().mesh
-		= AssetManager->ImportAs<Mesh>("_skymesh/UVsphereSmoothShadingInvNormals.gltf", true);
-
-	mesh.Add<ScriptComp>("My script");
-
-
-	globalEnt = mesh;
-
-
-	mesh = CreateEntity("Second");
-	mesh.Add<StaticMeshComp>().mesh = AssetManager->ImportAs<Mesh>("gltf-samples/2.0/Avocado/glTF/Avocado.gltf", true);
-
-	mesh->SetParent(globalEnt);
-}
-
-void ECS_World::UpdateWorld()
-{
-	//
-	// Game Systems
-	//
-	if (Input.IsJustPressed(Key::R)) {
-		globalEnt->position += glm::vec3(0.f, 1.f, 0.f);
-		globalEnt->MarkDirtyMoved();
-	}
-
-
-	//
-	// Update Transforms
-	//
-	{
-		auto view = reg.view<BasicComponent, DirtyMovedComp>();
-
-		for (auto& [ent, bs] : view.each()) {
-			bs.UpdateWorldTransforms();
-		}
-	}
-
-
-	//
-	// Render
-	//
-
-	{
-		auto view = reg.view<BasicComponent, StaticMeshComp, StaticMeshComp::Dirty>();
-
-		for (auto& [ent, bs, mesh] : view.each()) {
-			Scene->EnqueueCmd<SceneGeometry>(mesh.sceneUid, [&](SceneGeometry& geom) {
-				geom.model = vl::GpuAssetManager->GetGpuHandle(mesh.mesh);
-				geom.transform = bs.worldTransform;
-			});
-		}
-	}
-
-	{
-		auto view = reg.view<BasicComponent, StaticMeshComp, DirtySrtComp>(entt::exclude<StaticMeshComp::Dirty>);
-		for (auto& [ent, bs, mesh] : view.each()) {
-			Scene->EnqueueCmd<SceneGeometry>(
-				mesh.sceneUid, [&](SceneGeometry& geom) { geom.transform = bs.worldTransform; });
-		}
-	}
-
-
-	if (Input.IsJustPressed(Key::C)) {
-		reg.visit(globalEnt.m_entity, [&](const entt::id_type type) -> void {
-			// entt::type_info<BasicComponent>::name();
-			if (classRegsitry.HasClass(type)) {
-
-				auto cl = classRegsitry.GetClass(type);
-				for (auto& prop : cl->GetProperties()) {
-					LOG_REPORT("Prop: {}", prop.GetNameStr());
-				}
-			}
-		});
-	}
-
-
-	reg.clear<DirtyMovedComp, DirtySrtComp, StaticMeshComp::Dirty>();
-}
