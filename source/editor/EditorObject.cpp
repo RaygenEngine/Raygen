@@ -177,7 +177,6 @@ void EditorObject_::UpdateEditor()
 	}
 	HandleInput();
 
-	ImguiImpl::NewFrame();
 	Dockspace();
 	UpdateViewportCoordsFromDockspace();
 
@@ -272,7 +271,8 @@ void EditorObject_::OpenLoadDialog()
 
 void EditorObject_::ReloadScene()
 {
-	Universe::LoadMainWorld(Universe::GetMainWorld()->GetLoadedFromPath());
+	// WIP: ECS
+	// Universe::LoadMainWorld(Universe::GetMainWorld()->GetLoadedFromPath());
 }
 
 void EditorObject_::OnDisableEditor()
@@ -287,16 +287,17 @@ void EditorObject_::OnEnableEditor()
 
 void EditorObject_::OnPlay()
 {
-	if (m_editorCamera) {
-		m_editorCameraCachedMatrix = m_editorCamera->GetNodeTransformWCS();
-		m_hasEditorCameraCachedMatrix = true;
-		Universe::GetMainWorld()->DeleteNode(m_editorCamera);
-	}
-	m_hasRestoreSave = false;
-	if (m_autoRestoreWorld) {
-		SceneSave::SaveAs(Universe::GetMainWorld(), "__scene.tmp");
-		m_hasRestoreSave = true;
-	}
+	// WIP: ECS
+	// if (m_editorCamera) {
+	//	m_editorCameraCachedMatrix = m_editorCamera->GetNodeTransformWCS();
+	//	m_hasEditorCameraCachedMatrix = true;
+	//	Universe::GetMainWorld()->DeleteNode(m_editorCamera);
+	//}
+	// m_hasRestoreSave = false;
+	// if (m_autoRestoreWorld) {
+	//	SceneSave::SaveAs(Universe::GetMainWorld(), "__scene.tmp");
+	//	m_hasRestoreSave = true;
+	//}
 }
 
 void EditorObject_::OnStopPlay()
@@ -381,12 +382,14 @@ void EditorObject_::MoveSelectedUnder(Node* node)
 
 void EditorObject_::Duplicate(Node* node)
 {
-	PushCommand([node]() { Universe::GetMainWorld()->DeepDuplicateNode(node); });
+	// WIP: ECS
+	// PushCommand([node]() { Universe::GetMainWorld()->DeepDuplicateNode(node); });
 }
 
 void EditorObject_::Delete(Node* node)
 {
-	PushCommand([node]() { Universe::GetMainWorld()->DeleteNode(node); });
+	// WIP: ECS
+	// PushCommand([node]() { Universe::GetMainWorld()->DeleteNode(node); });
 }
 
 void EditorObject_::PilotThis(Node* node)
@@ -428,14 +431,15 @@ void EditorObject_::FocusNode(Node* node)
 	cam->SetNodePositionWCS(trans);
 
 	float dist = 1.f;
-	if (node->IsA<GeometryNode>()) {
-		auto geom = static_cast<GeometryNode*>(node);
-		auto min = geom->GetAABB().min;
-		auto max = geom->GetAABB().max;
-		dist = glm::abs(min.x - max.x) + glm::abs(min.y - max.y);
+	// WIP: ECS
+	// if (node->IsA<GeometryNode>()) {
+	//	auto geom = static_cast<GeometryNode*>(node);
+	//	auto min = geom->GetAABB().min;
+	//	auto max = geom->GetAABB().max;
+	//	dist = glm::abs(min.x - max.x) + glm::abs(min.y - max.y);
 
-		cam->SetNodePositionWCS(geom->GetAABB().GetCenter());
-	}
+	//	cam->SetNodePositionWCS(geom->GetAABB().GetCenter());
+	//}
 	cam->AddNodePositionOffsetWCS(glm::vec3(-1.f, 0.25f, 0.f) * dist);
 	cam->SetNodeLookAtWCS(node->GetNodePositionWCS());
 }

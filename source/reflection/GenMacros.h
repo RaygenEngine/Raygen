@@ -30,6 +30,48 @@ public:                                                                         
 	struct Class;                                                                                                      \
 	}
 
+//
+//
+//
+//
+//
+
+#define REFLECTED_SCENE_COMP(CompClass, SceneStructType)                                                               \
+	using RenderSceneType = SceneStructType;                                                                           \
+	struct Dirty {                                                                                                     \
+	};                                                                                                                 \
+                                                                                                                       \
+	REFLECTED_COMP(CompClass)
+
+
+#define REFLECTED_COMP(ComponentClass)                                                                                 \
+	[[nodiscard]] static const ReflClass& StaticClass() { return ComponentClass::Z_MutableClass(); }                   \
+                                                                                                                       \
+private:                                                                                                               \
+	/* Init of static class, also updates parents' child set. With this we ensure all ReflClasses are unique for each  \
+	 * class and therefore we can check if the class is the same by comparing pointers */                              \
+	static ReflClass& Z_MutableClass()                                                                                 \
+	{                                                                                                                  \
+		static ReflClass cl = ReflClass::Generate<ComponentClass>();                                                   \
+		return cl;                                                                                                     \
+	}                                                                                                                  \
+	using Z_ThisType = ComponentClass;                                                                                 \
+	friend class ReflClass;                                                                                            \
+	friend class NodeFactory;                                                                                          \
+	friend class ReflectionDb;                                                                                         \
+	static inline ComponentReflectionRegistar<ComponentClass> Z_InternalRegistar                                       \
+		= ComponentReflectionRegistar<ComponentClass>();                                                               \
+	/* Called from inside the ReflClass::Generate to generate members, only supposed to be used with the macros        \
+	 * below. The user must provide the body. */                                                                       \
+public:                                                                                                                \
+	static void GenerateReflection(ReflClass& refl)
+
+
+//
+//
+//
+//
+//
 
 #define REFLECTED_NODE(Class, ParentClass, /*optional DF_FLAGS()*/...)                                                 \
 public:                                                                                                                \

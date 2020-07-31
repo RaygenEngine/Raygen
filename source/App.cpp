@@ -42,6 +42,7 @@ int32 App::Main(int32 argc, char* argv[])
 
 	Universe::LoadMainWorld(m_initialScene);
 
+
 	MainLoop();
 
 	Engine.DeinitEngine();

@@ -136,27 +136,28 @@ bool OutlinerWindow::Run_ContextPopup(Node* node)
 
 void OutlinerWindow::Run_NewNodeMenu(Node* underNode)
 {
-	auto factory = Universe::GetMainWorld()->GetNodeFactory();
+	// WIP: ECS
+	// auto factory = Universe::GetMainWorld()->GetNodeFactory();
 
 
-	for (auto& entry : factory->Z_GetEntries()) {
-		if (ImGui::MenuItem(entry.first.c_str())) {
+	// for (auto& entry : factory->Z_GetEntries()) {
+	//	if (ImGui::MenuItem(entry.first.c_str())) {
 
-			auto cmd = [underNode, entry]() {
-				auto newNode = entry.second->CreateNodeInstance();
+	//		auto cmd = [underNode, entry]() {
+	//			auto newNode = entry.second->CreateNodeInstance();
 
-				newNode->SetName(entry.first + "_new");
-				Universe::GetMainWorld()->Z_RegisterNode(newNode, underNode);
+	//			newNode->SetName(entry.first + "_new");
+	//			Universe::GetMainWorld()->Z_RegisterNode(newNode, underNode);
 
-				DirtyFlagset temp;
-				temp.set();
+	//			DirtyFlagset temp;
+	//			temp.set();
 
-				newNode->SetDirtyMultiple(temp);
-			};
+	//			newNode->SetDirtyMultiple(temp);
+	//		};
 
-			EditorObject_::PushCommand(cmd);
-		}
-	}
+	//		EditorObject_::PushCommand(cmd);
+	//	}
+	//}
 }
 
 void OutlinerWindow::Run_OutlinerDropTarget(Node* node)
