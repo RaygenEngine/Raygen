@@ -15,6 +15,7 @@
 #include "editor/windows/general/EdOutlinerWindow.h"
 #include "editor/windows/general/EdProfilerWindow.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
+#include "editor/windows/general/EdEcsOutlinerWindow.h"
 
 namespace ed {
 class ImageEditorTest : public AssetEditorWindowTemplate<Image> {
@@ -38,6 +39,10 @@ public:
 void RegisterWindows(ed::ComponentWindows& windowsComponent)
 {
 	windowsComponent.AddWindowEntry<OutlinerWindow>("Outliner");
+
+	windowsComponent.AddWindowEntry<EcsOutlinerWindow>("ECS Outliner");
+
+
 	windowsComponent.AddWindowEntry<PropertyEditorWindow>("Property Editor");
 
 	windowsComponent.AddWindowEntry<AssetsWindow>("Asset Browser");

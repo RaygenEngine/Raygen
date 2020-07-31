@@ -57,10 +57,7 @@ private:                                                                        
 	}                                                                                                                  \
 	using Z_ThisType = ComponentClass;                                                                                 \
 	friend class ReflClass;                                                                                            \
-	friend class NodeFactory;                                                                                          \
-	friend class ReflectionDb;                                                                                         \
-	static inline ComponentReflectionRegistar<ComponentClass> Z_InternalRegistar                                       \
-		= ComponentReflectionRegistar<ComponentClass>();                                                               \
+	static inline ReflComponentRegistar<ComponentClass> Z_InternalRegistar = ReflComponentRegistar<ComponentClass>();  \
 	/* Called from inside the ReflClass::Generate to generate members, only supposed to be used with the macros        \
 	 * below. The user must provide the body. */                                                                       \
 public:                                                                                                                \

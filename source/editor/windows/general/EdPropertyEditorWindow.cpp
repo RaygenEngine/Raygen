@@ -13,6 +13,7 @@
 #include "universe/Universe.h"
 #include "assets/PodEditor.h"
 #include "editor/imgui/ImAssetSlot.h"
+#include "editor/windows/general/EdEcsOutlinerWindow.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -275,150 +276,145 @@ void PropertyEditorWindow::ImguiDraw()
 {
 	PROFILE_SCOPE(Editor);
 
-	Node* node = EditorObject_::GetSelectedNode();
-	if (!node) {
-		ImGui::Text("No node selected.");
+	Entity ent = EcsOutlinerWindow::selected;
+
+	if (!ent) {
+		ImGui::Text("No entity selected.");
 		return;
 	}
 
-	if (!node->IsRoot()) {
-		Run_BaseProperties(node);
 
-		ImGui::Separator();
+	Run_BaseProperties(ent);
+	ImGui::Separator();
+	Run_ImGuizmo(ent);
 
-		Run_ContextActions(node);
 
-		ImGui::Separator();
+	Run_Components(ent);
 
-		Run_ImGuizmo(node);
-	}
-
-	Run_ReflectedProperties(node);
-
-	m_prevNode = node;
+	// m_prevNode = node;
 }
 
 
-void PropertyEditorWindow::Run_BaseProperties(Node* node)
+void PropertyEditorWindow::Run_BaseProperties(Entity node)
 {
-	std::string name = node->GetName();
+	std::string name = node->name;
 
 	if (ImGui::InputText("Name", &name)) {
-		node->SetName(name);
+		node->name = name;
 	}
 
-	glm::vec3 location;
-	glm::vec3 eulerPyr;
-	glm::vec3 scale;
+	// glm::vec3 location;
+	// glm::vec3 eulerPyr;
+	// glm::vec3 scale;
 
-	if (m_localMode) {
-		location = node->GetNodePositionLCS();
-		eulerPyr = node->GetNodeEulerAnglesLCS();
-		scale = node->GetNodeScaleLCS();
-	}
-	else {
-		location = node->GetNodePositionWCS();
-		eulerPyr = node->GetNodeEulerAnglesWCS();
-		scale = node->GetNodeScaleWCS();
-	}
+	// if (m_localMode) {
+	//	location = node->GetNodePositionLCS();
+	//	eulerPyr = node->GetNodeEulerAnglesLCS();
+	//	scale = node->GetNodeScaleLCS();
+	//}
+	// else {
+	//	location = node->GetNodePositionWCS();
+	//	eulerPyr = node->GetNodeEulerAnglesWCS();
+	//	scale = node->GetNodeScaleWCS();
+	//}
 
-	const auto UpdateLookAtReference = [&]() {
-		auto fwd = m_localMode ? node->GetNodeForwardLCS() : node->GetNodeForwardWCS();
-		auto lookAt = location + fwd;
-		m_lookAtPos = lookAt;
-	};
+	// const auto UpdateLookAtReference = [&]() {
+	//	auto fwd = m_localMode ? node->GetNodeForwardLCS() : node->GetNodeForwardWCS();
+	//	auto lookAt = location + fwd;
+	//	m_lookAtPos = lookAt;
+	//};
 
-	if (m_prevNode != node) {
-		UpdateLookAtReference();
-	}
+	// if (m_prevNode != node) {
+	//	UpdateLookAtReference();
+	//}
 
-	if (ImGui::DragFloat3("Position", glm::value_ptr(location), 0.01f)) {
-		m_localMode ? node->SetNodePositionLCS(location) : node->SetNodePositionWCS(location);
-	}
-	if (ImGui::BeginPopupContextItem("PositionPopup")) {
-		if (ImGui::MenuItem("Reset##1")) {
-			m_localMode ? node->SetNodePositionLCS({}) : node->SetNodePositionWCS({});
-		}
-		ImGui::EndPopup();
-	}
-	if (!m_lookAtMode) {
-		if (ImGui::DragFloat3("Rotation", glm::value_ptr(eulerPyr), 0.1f)) {
-			auto deltaAxis = eulerPyr - (m_localMode ? node->GetNodeEulerAnglesLCS() : node->GetNodeEulerAnglesWCS());
-			if (ImGui::IsAnyMouseDown()) {
-				// On user drag use quat diff, prevents gimbal locks while dragging
-				m_localMode
-					? node->SetNodeOrientationLCS(glm::quat(glm::radians(deltaAxis)) * node->GetNodeOrientationLCS())
-					: node->SetNodeOrientationWCS(glm::quat(glm::radians(deltaAxis)) * node->GetNodeOrientationWCS());
-			}
-			else {
-				// On user type set pyr directly, prevents the axis from flickering
-				m_localMode ? node->SetNodeEulerAnglesLCS(eulerPyr) : node->SetNodeEulerAnglesWCS(eulerPyr);
-			}
-		}
-	}
-	else {
-		ImGui::DragFloat3("Look At", glm::value_ptr(m_lookAtPos), 0.1f);
-		ImEd::HelpTooltipInline(
-			"Look at will lock lookat position of the selected node for as long as it is active. This way you can "
-			"adjust the position of your node while keeping the lookat position fixed.");
-		m_localMode ? node->SetNodeLookAtLCS(m_lookAtPos) : node->SetNodeLookAtWCS(m_lookAtPos);
-	}
+	// if (ImGui::DragFloat3("Position", glm::value_ptr(location), 0.01f)) {
+	//	m_localMode ? node->SetNodePositionLCS(location) : node->SetNodePositionWCS(location);
+	//}
+	// if (ImGui::BeginPopupContextItem("PositionPopup")) {
+	//	if (ImGui::MenuItem("Reset##1")) {
+	//		m_localMode ? node->SetNodePositionLCS({}) : node->SetNodePositionWCS({});
+	//	}
+	//	ImGui::EndPopup();
+	//}
+	// if (!m_lookAtMode) {
+	//	if (ImGui::DragFloat3("Rotation", glm::value_ptr(eulerPyr), 0.1f)) {
+	//		auto deltaAxis = eulerPyr - (m_localMode ? node->GetNodeEulerAnglesLCS() : node->GetNodeEulerAnglesWCS());
+	//		if (ImGui::IsAnyMouseDown()) {
+	//			// On user drag use quat diff, prevents gimbal locks while dragging
+	//			m_localMode
+	//				? node->SetNodeOrientationLCS(glm::quat(glm::radians(deltaAxis)) * node->GetNodeOrientationLCS())
+	//				: node->SetNodeOrientationWCS(glm::quat(glm::radians(deltaAxis)) * node->GetNodeOrientationWCS());
+	//		}
+	//		else {
+	//			// On user type set pyr directly, prevents the axis from flickering
+	//			m_localMode ? node->SetNodeEulerAnglesLCS(eulerPyr) : node->SetNodeEulerAnglesWCS(eulerPyr);
+	//		}
+	//	}
+	//}
+	// else {
+	//	ImGui::DragFloat3("Look At", glm::value_ptr(m_lookAtPos), 0.1f);
+	//	ImEd::HelpTooltipInline(
+	//		"Look at will lock lookat position of the selected node for as long as it is active. This way you can "
+	//		"adjust the position of your node while keeping the lookat position fixed.");
+	//	m_localMode ? node->SetNodeLookAtLCS(m_lookAtPos) : node->SetNodeLookAtWCS(m_lookAtPos);
+	//}
 
-	if (ImGui::BeginPopupContextItem("RotatePopup")) {
-		if (ImGui::MenuItem("Reset##2")) {
-			m_localMode ? node->SetNodeOrientationLCS(glm::identity<glm::quat>())
-						: node->SetNodeOrientationWCS(glm::identity<glm::quat>());
-		}
-		if (ImGui::MenuItem("Look At", nullptr, m_lookAtMode)) {
-			m_lookAtMode = !m_lookAtMode;
-			if (m_lookAtMode) {
-				UpdateLookAtReference();
-			}
-		}
-		ImGui::EndPopup();
-	}
+	// if (ImGui::BeginPopupContextItem("RotatePopup")) {
+	//	if (ImGui::MenuItem("Reset##2")) {
+	//		m_localMode ? node->SetNodeOrientationLCS(glm::identity<glm::quat>())
+	//					: node->SetNodeOrientationWCS(glm::identity<glm::quat>());
+	//	}
+	//	if (ImGui::MenuItem("Look At", nullptr, m_lookAtMode)) {
+	//		m_lookAtMode = !m_lookAtMode;
+	//		if (m_lookAtMode) {
+	//			UpdateLookAtReference();
+	//		}
+	//	}
+	//	ImGui::EndPopup();
+	//}
 
-	if (!m_lockedScale) {
-		if (ImGui::DragFloat3("Scale", glm::value_ptr(scale), 0.01f)) {
-			m_localMode ? node->SetNodeScaleLCS(scale) : node->SetNodeScaleWCS(scale);
-		}
-	}
-	else {
-		glm::vec3 newScale = m_localMode ? node->GetNodeScaleLCS() : node->GetNodeScaleWCS();
-		if (ImGui::DragFloat3("Locked Scale", glm::value_ptr(newScale), 0.01f)) {
-			glm::vec3 initialScale = m_localMode ? node->GetNodeScaleLCS() : node->GetNodeScaleWCS();
+	// if (!m_lockedScale) {
+	//	if (ImGui::DragFloat3("Scale", glm::value_ptr(scale), 0.01f)) {
+	//		m_localMode ? node->SetNodeScaleLCS(scale) : node->SetNodeScaleWCS(scale);
+	//	}
+	//}
+	// else {
+	//	glm::vec3 newScale = m_localMode ? node->GetNodeScaleLCS() : node->GetNodeScaleWCS();
+	//	if (ImGui::DragFloat3("Locked Scale", glm::value_ptr(newScale), 0.01f)) {
+	//		glm::vec3 initialScale = m_localMode ? node->GetNodeScaleLCS() : node->GetNodeScaleWCS();
 
-			float ratio = 1.f;
-			if (!math::equals(newScale.x, initialScale.x)) {
-				ratio = newScale.x / initialScale.x;
-			}
-			else if (!math::equals(newScale.y, initialScale.y)) {
-				ratio = newScale.y / initialScale.y;
-			}
-			else if (!math::equals(newScale.z, initialScale.z)) {
-				ratio = newScale.z / initialScale.z;
-			}
+	//		float ratio = 1.f;
+	//		if (!math::equals(newScale.x, initialScale.x)) {
+	//			ratio = newScale.x / initialScale.x;
+	//		}
+	//		else if (!math::equals(newScale.y, initialScale.y)) {
+	//			ratio = newScale.y / initialScale.y;
+	//		}
+	//		else if (!math::equals(newScale.z, initialScale.z)) {
+	//			ratio = newScale.z / initialScale.z;
+	//		}
 
-			ratio += 0.00001f;
-			m_localMode ? node->SetNodeScaleLCS(initialScale * ratio) : node->SetNodeScaleWCS(initialScale * ratio);
-		}
-	}
+	//		ratio += 0.00001f;
+	//		m_localMode ? node->SetNodeScaleLCS(initialScale * ratio) : node->SetNodeScaleWCS(initialScale * ratio);
+	//	}
+	//}
 
-	if (ImGui::BeginPopupContextItem("ScalePopup")) {
-		if (ImGui::MenuItem("Reset##3")) {
-			m_localMode ? node->SetNodeScaleLCS(glm::vec3(1.f)) : node->SetNodeScaleWCS(glm::vec3(1.f));
-		}
-		if (ImGui::MenuItem("Lock", nullptr, m_lockedScale)) {
-			m_lockedScale = !m_lockedScale;
-		}
-		ImGui::EndPopup();
-	}
+	// if (ImGui::BeginPopupContextItem("ScalePopup")) {
+	//	if (ImGui::MenuItem("Reset##3")) {
+	//		m_localMode ? node->SetNodeScaleLCS(glm::vec3(1.f)) : node->SetNodeScaleWCS(glm::vec3(1.f));
+	//	}
+	//	if (ImGui::MenuItem("Lock", nullptr, m_lockedScale)) {
+	//		m_lockedScale = !m_lockedScale;
+	//	}
+	//	ImGui::EndPopup();
+	//}
 
-	if (ImGui::Checkbox("Local Mode", &m_localMode)) {
-		UpdateLookAtReference();
-	}
-	ImEd::HelpTooltipInline("Toggles local/global space for TRS and transform matrix editing.");
-	ImGui::SameLine(0.f, 16.f);
+	// if (ImGui::Checkbox("Local Mode", &m_localMode)) {
+	//	UpdateLookAtReference();
+	//}
+	// ImEd::HelpTooltipInline("Toggles local/global space for TRS and transform matrix editing.");
+	// ImGui::SameLine(0.f, 16.f);
 	ImGui::Checkbox("Display Matrix", &m_displayMatrix);
 	ImEd::HelpTooltipInline("Toggles visiblity and editing of matricies as a row major table.");
 
@@ -442,57 +438,63 @@ void PropertyEditorWindow::Run_BaseProperties(Node* node)
 	}
 }
 
-void PropertyEditorWindow::Run_ContextActions(Node* node)
+void PropertyEditorWindow::Run_Components(Entity ent)
 {
-	return;
-	auto v = EditorObject->m_nodeContextActions->GetActions(node, false);
+	auto& reg = ent.m_registry;
 
-	ImGui::Indent();
 
-	ImGuiStyle& style = ImGui::GetStyle();
-	float maxWidth = ImGui::GetWindowContentRegionWidth();
-
-	float indentWidth = ImGui::GetCursorPosX();
-	float totalWidth = 0.f;
-	float lastWidth = 0.f;
-
-	for (auto& action : v) {
-		if (action.IsSplitter()) {
-			ImGui::SameLine();
-			ImGui::Text(" ");
-			continue;
-		}
-
-		float predictedWidth = strlen(action.name) * 7.f + style.ItemInnerSpacing.x * 2 + style.ItemSpacing.x;
-
-		if (totalWidth + predictedWidth + indentWidth < maxWidth) {
-			ImGui::SameLine();
-		}
-		else {
-			totalWidth = 0.f;
-		}
-
-		if (ImGui::Button(action.name)) {
-			action.function(node);
-		}
-		lastWidth = ImGui::GetItemRectSize().x;
-		totalWidth += lastWidth;
-		indentWidth = ImGui::GetCursorPosX();
-	}
-
-	ImGui::Unindent();
-}
-
-void PropertyEditorWindow::Run_ReflectedProperties(Node* node)
-{
 	ReflectionToImguiVisitor visitor;
 	visitor.fullDisplayMat4 = m_displayMatrix;
-	refltools::CallVisitorOnEveryProperty(node, visitor);
 
-	node->SetDirtyMultiple(visitor.dirtyFlags);
+	auto map = ComponentsDb::GetComponentList();
+
+	reg->visit(ent.m_entity, [&](entt::id_type type) {
+		if (ComponentsDb::HasClass(type)) {
+			map.erase(type);
+			ImGui::PushID(type);
+			auto cl = ComponentsDb::GetClass(type);
+			auto data = ComponentsDb::GetClassData(cl, ent);
+			CLOG_ERROR(!data, "Visited with type that was not present in the entity.");
+
+			ImGui::Separator();
+			ImGui::Text(cl.GetNameStr().c_str());
+			ImGui::SameLine();
+
+			bool remove = false;
+			if (ImGui::Button(ETXT(FA_TIMES, "Remove"))) {
+				remove = true;
+			}
+
+			ImGui::Spacing();
+
+			refltools::CallVisitorOnEveryPropertyEx(data, cl, visitor);
+			if (remove) {
+				ComponentsDb::RemoveComponent(cl, ent);
+			}
+			else if (visitor.didEditFlag) {
+				ComponentsDb::SetComponentDirty(cl, ent);
+				visitor.didEditFlag = false;
+			}
+			ImGui::PopID();
+		}
+	});
+
+	if (ImGui::BeginPopupContextWindow()) {
+		for (auto& [id, str] : map) {
+			if (ImGui::MenuItem(str.c_str())) {
+				ComponentsDb::AddComponent(ComponentsDb::GetClass(id), ent);
+			}
+		}
+		ImGui::EndPopup();
+	}
+
+	// WIP: ECS
+	// refltools::CallVisitorOnEveryProperty(node, visitor);
+
+	// node->SetDirtyMultiple(visitor.dirtyFlags);
 }
 
-void PropertyEditorWindow::Run_ImGuizmo(Node* node)
+void PropertyEditorWindow::Run_ImGuizmo(Entity node)
 {
 	auto world = Universe::GetMainWorld();
 	auto camera = world->GetActiveCamera();

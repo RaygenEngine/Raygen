@@ -1,5 +1,6 @@
 #pragma once
 #include "universe/World.h"
+#include "ecs_universe/EcsWorld.h"
 
 class Universe {
 	friend class Engine_;
