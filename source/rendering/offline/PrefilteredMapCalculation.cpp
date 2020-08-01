@@ -147,7 +147,7 @@ void PrefilteredMapCalculation::MakeRenderPass()
 void PrefilteredMapCalculation::AllocateCommandBuffers()
 {
 	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
+	allocInfo.setCommandPool(Device->mainCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(6u);
 
@@ -474,7 +474,7 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 			vk::SubmitInfo submitInfo{};
 			submitInfo.setCommandBufferCount(1u).setPCommandBuffers(&m_cmdBuffers[i]);
 
-			Device->graphicsQueue.submit(1u, &submitInfo, {});
+			Device->mainQueue.submit(1u, &submitInfo, {});
 			// CHECK:
 			Device->waitIdle();
 		}

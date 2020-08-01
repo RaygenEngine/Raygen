@@ -24,6 +24,7 @@
 
 #include "engine/Logger.h"
 
+#define VK_ENABLE_BETA_EXTENSIONS
 #include <vulkan/vulkan.hpp>
 
 #define MAGIC_ENUM_RANGE_MIN -1
