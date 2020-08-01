@@ -62,6 +62,10 @@ public:
 	std::array<vk::DescriptorSet, 3> m_ppDescSets;
 	vk::UniqueRenderPass m_ptRenderpass;
 
+
+	// TODO: RT, move those
+	vk::UniqueAccelerationStructureKHR sceneAS;
+
 	Renderer_();
 	~Renderer_();
 

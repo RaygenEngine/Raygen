@@ -1,6 +1,7 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
 
+// TODO: rename model stuff
 struct SceneGeometry {
 	glm::mat4 transform;
 	vl::GpuHandle<Mesh> model;

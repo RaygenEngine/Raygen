@@ -81,7 +81,7 @@ Swapchain_::Swapchain_(vk::SurfaceKHR surface)
 		.setImageArrayLayers(1u)
 		.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
 
-	auto graphicsQueueFamily = Device->graphicsQueue.familyIndex;
+	auto graphicsQueueFamily = Device->mainQueue.familyIndex;
 	auto presentQueueFamily = Device->presentQueue.familyIndex;
 
 	uint32 queueFamilyIndices[] = { graphicsQueueFamily, presentQueueFamily };

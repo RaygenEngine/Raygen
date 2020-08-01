@@ -14,6 +14,7 @@ class RBuffer;
 
 struct GpuGeometryGroup {
 	uint32 indexCount{ 0u };
+	uint32 vertexCount{ 0u }; // PERF: remove
 	GpuHandle<MaterialInstance> material;
 
 	UniquePtr<RBuffer> vertexBuffer;
@@ -23,6 +24,7 @@ struct GpuGeometryGroup {
 
 struct GpuMesh : public GpuAssetTemplate<Mesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;
+	vk::UniqueAccelerationStructureKHR accelStruct;
 
 
 	GpuMesh(PodHandle<Mesh> podHandle);

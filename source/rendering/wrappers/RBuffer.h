@@ -9,7 +9,8 @@ class RBuffer {
 	vk::UniqueDeviceMemory m_memory;
 
 public:
-	RBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties);
+	RBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
+		vk::MemoryAllocateFlags allocFlags = {});
 
 
 	void CopyBuffer(const RBuffer& other);
@@ -26,5 +27,6 @@ public:
 	vk::DeviceMemory GetMemory() const { return m_memory.get(); }
 
 	[[nodiscard]] vk::DeviceSize GetSize() const noexcept { return m_size; }
+	[[nodiscard]] vk::DeviceAddress GetAddress() const noexcept;
 };
 } // namespace vl

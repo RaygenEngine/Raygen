@@ -285,8 +285,8 @@ void InitVulkan()
 	init.Instance = *Instance;
 	init.PhysicalDevice = *physDev;
 	init.Device = device;
-	init.QueueFamily = Device->graphicsQueue.familyIndex;
-	init.Queue = Device->graphicsQueue;
+	init.QueueFamily = Device->mainQueue.familyIndex;
+	init.Queue = Device->mainQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
 	init.DescriptorPool = GpuResources->descPools.GetImguiPool();
 	init.ImageCount = Swapchain->GetImageCount();
@@ -296,7 +296,7 @@ void InitVulkan()
 	ImGui_ImplVulkan_Init(&init, Swapchain->GetRenderPass());
 
 	// CHECK: which buffer
-	auto cmdBuffer = Device->graphicsCmdBuffer;
+	auto cmdBuffer = Device->mainCmdBuffer;
 
 	//	vkCall(vkResetCommandPool(m_device, m_commandPool, 0));
 
@@ -314,8 +314,8 @@ void InitVulkan()
 
 	cmdBuffer.end();
 
-	Device->graphicsQueue.submit(1, &end_info, {});
-	Device->graphicsQueue.waitIdle();
+	Device->mainQueue.submit(1, &end_info, {});
+	Device->mainQueue.waitIdle();
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }

@@ -87,7 +87,7 @@ void BrdfLutCalculation::MakeRenderPass()
 void BrdfLutCalculation::AllocateCommandBuffers()
 {
 	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
+	allocInfo.setCommandPool(Device->mainCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(1u);
 
@@ -299,7 +299,7 @@ void BrdfLutCalculation::RecordAndSubmitCmdBuffers()
 	vk::SubmitInfo submitInfo{};
 	submitInfo.setCommandBufferCount(1u).setPCommandBuffers(&m_cmdBuffer);
 
-	Device->graphicsQueue.submit(1u, &submitInfo, {});
+	Device->mainQueue.submit(1u, &submitInfo, {});
 
 	// CHECK:
 	Device->waitIdle();

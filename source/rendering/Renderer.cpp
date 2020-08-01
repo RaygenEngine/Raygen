@@ -31,7 +31,7 @@ namespace vl {
 Renderer_::Renderer_()
 {
 	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
+	allocInfo.setCommandPool(Device->mainCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(Swapchain->GetImageCount());
 
@@ -506,7 +506,7 @@ void Renderer_::DrawFrame()
 		.setPCommandBuffers(bufs.data());
 
 
-	Device->graphicsQueue.submit(1u, &submitInfo, *m_inFlightFence[currentFrame]);
+	Device->mainQueue.submit(1u, &submitInfo, *m_inFlightFence[currentFrame]);
 
 
 	vk::PresentInfoKHR presentInfo;

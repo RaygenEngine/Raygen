@@ -3,31 +3,23 @@
 
 #include "engine/Logger.h"
 
-#include <set>
-
 namespace vl {
 RPhysicalDevice::RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inSurface)
 	: vk::PhysicalDevice(vkHandle)
 	, surface(inSurface)
 {
-	std::vector<vk::QueueFamilyProperties> queueFamilyProperties = getQueueFamilyProperties();
+	auto queueFamilyProperties = getQueueFamilyProperties();
 
-	uint32 i = 0;
-	for (const auto& qFP : queueFamilyProperties) {
+	for (uint32 i = 0; const auto& qFP : queueFamilyProperties) {
 
 		QueueFamily queueFamily{};
 		queueFamily.index = i;
 		queueFamily.props = qFP;
-		queueFamily.rating += qFP.queueCount / 4.f;
+
 
 		// if queue supports presentation
 		auto supportsPresent = getSurfaceSupportKHR(i, surface);
 
-
-		// NOTE: the more functionality a queue supports the lesser the score
-		queueFamily.rating /= float(((4 * bool(qFP.queueFlags & vk::QueueFlagBits::eGraphics))
-									 + (4 * bool(qFP.queueFlags & vk::QueueFlagBits::eCompute))
-									 + bool(qFP.queueFlags & vk::QueueFlagBits::eTransfer) + supportsPresent));
 
 		if (qFP.queueFlags & vk::QueueFlagBits::eGraphics) {
 			graphicsFamilies.push_back(queueFamily);
@@ -48,37 +40,28 @@ RPhysicalDevice::RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inS
 		i++;
 	}
 
-	// NOTE: score device based on eg. NV_raytracing, queues: eg. missing graphics queue, deticated transfer queue,
-	// etc)
-	// If device isn't capable for the required rendering rating = 0;
-	// auto extensionProperties = device.enumerateDeviceExtensionProperties();
-	// auto layerProperties = device.enumerateDeviceLayerProperties();
 
-	// auto queueFamilyProps = device.getQueueFamilyProperties();
+	// Scoring based on features and properties (if missing required features by the engine the rating should be set to
+	// zero
+	auto propertiesChain = getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceRayTracingPropertiesKHR>();
+	auto properties = propertiesChain.get<vk::PhysicalDeviceProperties2>();
+	auto rayTracingProperties = propertiesChain.get<vk::PhysicalDeviceRayTracingPropertiesKHR>();
 
-	// for (auto qF : queueFamilyProps) {
-	//	if (qF.queueFlags & vk::QueueFlagBits::eGraphics) {
-	//	}
-	//}
+	auto featuresChain = getFeatures2<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceRayTracingFeaturesKHR>();
+	auto features = featuresChain.get<vk::PhysicalDeviceFeatures2>();
+	auto rayTracingFeatures = featuresChain.get<vk::PhysicalDeviceRayTracingFeaturesKHR>();
 
-	// Rate based on those functions
-	// indices.IsComplete() && CheckNeededDeviceProperties(device) && CheckIfDeviceExtensionsAreAvailable(device)
-	//	&& CheckSwapChainSupport(device, surface);
-
-	// NOTE: this device must support presentation
-	if (presentFamilies.empty()) {
-		rating = 0.f;
-	}
-
-
-	// auto raytracingFeatures = this->getproperties...
-
+	// TODO: calculate Gpu rating:
 	rating = 1.f;
 
-	// specific surface support details
+	// Requirements
+	if (presentFamilies.empty() || !rayTracingFeatures.rayTracing || !rayTracingFeatures.rayQuery
+		|| rayTracingProperties.shaderGroupHandleSize != 32u || rayTracingProperties.maxRecursionDepth < 1) {
+		rating = 0.f;
+	}
 }
 
-uint32 RPhysicalDevice::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties)
+uint32 RPhysicalDevice::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties) const
 {
 	vk::PhysicalDeviceMemoryProperties memProperties = getMemoryProperties();
 
@@ -92,7 +75,7 @@ uint32 RPhysicalDevice::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlag
 }
 
 vk::Format RPhysicalDevice::FindSupportedFormat(
-	const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features)
+	const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, const vk::FormatFeatureFlags features) const
 {
 	for (auto format : candidates) {
 		vk::FormatProperties props = getFormatProperties(format);
@@ -100,7 +83,7 @@ vk::Format RPhysicalDevice::FindSupportedFormat(
 		if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
 			return format;
 		}
-		else if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features) {
+		if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features) {
 			return format;
 		}
 	}
@@ -108,7 +91,7 @@ vk::Format RPhysicalDevice::FindSupportedFormat(
 	LOG_ABORT("Failed to find supported format!");
 }
 
-vk::Format RPhysicalDevice::FindDepthFormat()
+vk::Format RPhysicalDevice::FindDepthFormat() const
 {
 	return FindSupportedFormat({ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint },
 		vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);

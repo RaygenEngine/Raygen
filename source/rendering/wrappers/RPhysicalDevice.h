@@ -6,8 +6,6 @@ namespace vl {
 struct QueueFamily {
 	vk::QueueFamilyProperties props;
 	uint32 index;
-
-	float rating{ 0.0f };
 };
 
 struct SwapchainSupportDetails {
@@ -30,14 +28,14 @@ struct RPhysicalDevice : public vk::PhysicalDevice {
 
 	RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surface);
 
-	uint32 FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties);
+	uint32 FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties) const;
 
 	vk::Format FindSupportedFormat(
-		const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features);
+		const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features) const;
 
 	vk::SurfaceKHR surface;
 
-	vk::Format FindDepthFormat();
+	vk::Format FindDepthFormat() const;
 
 	[[nodiscard]] SwapchainSupportDetails GetSwapchainSupportDetails() const;
 };
