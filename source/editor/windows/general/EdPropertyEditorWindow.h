@@ -54,7 +54,7 @@ public:
 	void Run_BaseProperties(Entity ent);
 
 
-	void Run_Components(Entity ent);
+	void Run_Components(Entity entity);
 
 	void Run_ImGuizmo(Entity ent);
 };

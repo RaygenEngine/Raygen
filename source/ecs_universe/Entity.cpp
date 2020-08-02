@@ -70,6 +70,7 @@ void BasicComponent::MarkDirtySrt()
 void BasicComponent::MarkDirtyMoved()
 {
 	self.m_registry->get_or_emplace<DirtyMovedComp>(self.m_entity);
+	MarkDirtySrt();
 }
 
 void BasicComponent::DetachFromParent()

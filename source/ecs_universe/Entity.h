@@ -1,13 +1,17 @@
 #pragma once
 
+#include "ecs_universe/ComponentDetail.h"
 
-#define DIRTABLE                                                                                                       \
+#define COMP_DIRTABLE                                                                                                  \
 	struct Dirty {                                                                                                     \
-	};
+	}
 
+#define COMP_CREATEDESTROY                                                                                             \
+	struct Create {                                                                                                    \
+	};                                                                                                                 \
+	struct Destroy {                                                                                                   \
+	}
 
-template<typename T>
-concept CComponent = true;
 
 struct BasicComponent;
 
@@ -24,32 +28,69 @@ public:
 	{
 	}
 
-
+	// Adds a component to the entity.
+	// Forwards arguments to construct in-place (like emplace)
+	//
+	// UB if entity already has a component of the same type (use AddOrGet if unsure)
+	// Faster version from AddOrGet
+	// Automatically registers T::Create and T::Dirty if supported by the component
+	//
+	// Returns a reference to the created component
 	template<CONC(CComponent) T, typename... Args>
 	T& Add(Args&&... args)
 	{
+		using namespace componentdetail;
+
+		if constexpr (HasCreateDestorySubstructsV<T>) {
+			m_registry->emplace<typename T::Create>(m_entity);
+		}
+		if constexpr (HasDirtySubstructV<T>) {
+			m_registry->emplace<typename T::Dirty>(m_entity);
+		}
 		return m_registry->emplace<T>(m_entity, std::forward<Args>(args)...);
 	}
 
+	// Adds a component to the entity if it does not exist, returns the existing otherwise
+	// Forwards arguments to construct in-place (like emplace)
+	//
+	// Automatically registers T::Create and T::Dirty if supported by the component when adding
+	// Automatically registers T::Dirty if the component already existed
+	//
+	// Returns a reference to the created / existing component
 	template<CONC(CComponent) T, typename... Args>
 	T& AddOrGet(Args&&... args)
 	{
-		return m_registry->get_or_emplace<T>(m_entity, std::forward<Args>(args)...);
+		if (Has<T>()) {
+			return GetDirty<T>();
+		}
+		return Add<T>(std::forward(args)...);
 	}
 
 	template<CONC(CComponent) T>
-	bool Has()
+	[[nodiscard]] bool Has() const
 	{
 		m_registry->has<T>(m_entity);
 	}
 
-	// TODO: Const when dirty exists
-	template<CONC(CComponent) T>
-	T& Get()
+	template<CONC(CComponent) T, typename... Args>
+	void AddOrGet(Args&&... args)
 	{
+		if (Has<T>()) {
+			return GetDirty<T>();
+		}
+		return Add<T>(std::forward(args)...);
+	}
+
+	// Returns T& or const T& based on if the substruct supports dirty.
+	// Always prefer this if you will not write to the component to save performance.
+	template<CONC(CComponent) T>
+	auto Get() const -> std::conditional_t<componentdetail::HasDirtySubstructV<T>, const T&, T&>
+	{
+		static_assert(!std::is_empty_v<T>, "Attempting to get an empty structure. This is not allowed by entt.");
 		return m_registry->get<T>(m_entity);
 	}
 
+	// Always returns T& and marks the component as dirty. Use this when you intend to write to the component.
 	template<CONC(CComponent) T>
 	T& GetDirty()
 	{
@@ -57,13 +98,32 @@ public:
 		return m_registry->get<T>(m_entity);
 	}
 
-
+	// TODO: Probably private
+	// Just use GetDirty if you intend to write instead of forgetting to manually call this
 	template<CONC(CComponent) T>
 	void MarkDirty()
 	{
-		return m_registry->emplace_or_replace<typename T::Dirty>(m_entity);
+		if constexpr (componentdetail::HasDirtySubstruct<T>) {
+			m_registry->get_or_emplace<typename T::Dirty>(m_entity);
+		}
 	}
 
+	// Safely removes a component if it exists.
+	// If T::Destroy exists, the actual deletion of the component is deferred and the T::Destroy component flag is added
+	template<CONC(CComponent) T>
+	void SafeRemove()
+	{
+		if (!Has<T>()) {
+			return;
+		}
+
+		if constexpr (componentdetail::HasCreateDestorySubstructsV<T>) {
+			m_registry->get_or_emplace<typename T::Destory>();
+		}
+		else {
+			m_registry->remove<T>(m_entity);
+		}
+	}
 
 	[[nodiscard]] constexpr operator bool() const noexcept { return m_entity != entt::null; }
 	[[nodiscard]] constexpr bool operator==(const Entity& rhs) const noexcept
@@ -71,7 +131,7 @@ public:
 		return m_entity == rhs.m_entity && m_registry == rhs.m_registry;
 	}
 
-
+	// Provide a "nice" interface to the common component
 	BasicComponent* operator->() { return &Get<BasicComponent>(); }
 };
 
