@@ -1,0 +1,137 @@
+#include "pch.h"
+#include "RBlas.h"
+
+#include "assets/shared/GeometryShared.h"
+#include "rendering/Device.h"
+#include "rendering/wrappers/RBuffer.h"
+
+namespace vl {
+
+RBlas::RBlas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
+	vk::BuildAccelerationStructureFlagsKHR buildFlags)
+{
+	std::vector<vk::AccelerationStructureCreateGeometryTypeInfoKHR> asCreateGeomInfos{};
+	std::vector<vk::AccelerationStructureGeometryKHR> asGeoms{};
+	std::vector<vk::AccelerationStructureBuildOffsetInfoKHR> asBuildOffsetInfos{};
+
+	/// for (const auto& ggg = gggs[0];;) {
+	const auto& ggg = gggs[0];
+		// Setting up the creation info of acceleration structure
+		vk::AccelerationStructureCreateGeometryTypeInfoKHR asCreate{};
+	asCreate
+		.setGeometryType(vk::GeometryTypeKHR::eTriangles) //
+		.setIndexType(vk::IndexType::eUint32)
+		.setVertexFormat(vk::Format::eR32G32B32Sfloat)
+		.setMaxPrimitiveCount(ggg.indexCount / 3)
+		.setMaxVertexCount(ggg.vertexCount)
+		.setAllowsTransforms(VK_FALSE); // No adding transformation matrices
+
+	// Building part
+	auto vertexAddress = ggg.vertexBuffer->GetAddress();
+	auto indexAddress = ggg.indexBuffer->GetAddress();
+
+	vk::AccelerationStructureGeometryTrianglesDataKHR triangles{};
+	triangles
+		.setVertexFormat(asCreate.vertexFormat) //
+		.setVertexData(vertexAddress)
+		.setVertexStride(vertexStride)
+		.setIndexType(asCreate.indexType)
+		.setIndexData(indexAddress)
+		.setTransformData({});
+
+	// Setting up the build info of the acceleration
+	vk::AccelerationStructureGeometryKHR asGeom{};
+	asGeom
+		.setGeometryType(asCreate.geometryType) //
+		.setFlags(vk::GeometryFlagBitsKHR::eOpaque)
+		.geometry.setTriangles(triangles);
+
+	// The primitive itself
+	vk::AccelerationStructureBuildOffsetInfoKHR offset{};
+	offset
+		.setFirstVertex(0) //
+		.setPrimitiveCount(asCreate.maxPrimitiveCount)
+		.setPrimitiveOffset(0)
+		.setTransformOffset(0);
+
+	asGeoms.emplace_back(asGeom);
+	asCreateGeomInfos.emplace_back(asCreate);
+	asBuildOffsetInfos.emplace_back(offset);
+	//}
+
+
+	vk::AccelerationStructureCreateInfoKHR asCreateInfo{};
+	asCreateInfo
+		.setFlags(buildFlags) //
+		.setMaxGeometryCount(static_cast<uint32>(asCreateGeomInfos.size()))
+		.setPGeometryInfos(asCreateGeomInfos.data())
+		.setType(vk::AccelerationStructureTypeKHR::eBottomLevel);
+
+	m_handle = Device->createAccelerationStructureKHRUnique(asCreateInfo);
+
+	// Acceleration structure build requires some scratch space to store temporary information
+	vk::AccelerationStructureMemoryRequirementsInfoKHR asMemReqsInfo{};
+	asMemReqsInfo.setType(vk::AccelerationStructureMemoryRequirementsTypeKHR::eBuildScratch)
+		.setBuildType(vk::AccelerationStructureBuildTypeKHR::eDevice) //
+		.setAccelerationStructure(m_handle.get());
+
+	auto memReqs = Device->getAccelerationStructureMemoryRequirementsKHR(asMemReqsInfo);
+
+	const vk::DeviceSize scratchBufferSize = 16777216; // memReqs.memoryRequirements.size;
+	LOG_REPORT("Size reqs {}MB", scratchBufferSize / 1000000.0);
+
+	RBuffer scratchBuffer{ scratchBufferSize,
+		vk::BufferUsageFlagBits::eRayTracingKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
+
+	vk::AccelerationStructureGeometryKHR* pGeometry = asGeoms.data();
+
+	vk::AccelerationStructureBuildGeometryInfoKHR asBuildGeomInfo{};
+	asBuildGeomInfo
+		.setDstAccelerationStructure(m_handle.get()) //
+		.setSrcAccelerationStructure({})
+		.setUpdate(VK_FALSE)
+		.setType(vk::AccelerationStructureTypeKHR::eBottomLevel)
+		.setGeometryCount(static_cast<uint32>(asGeoms.size()))
+		.setGeometryArrayOfPointers(VK_FALSE)
+		.setPpGeometries(&pGeometry)
+		.setScratchData(scratchBuffer.GetAddress());
+
+	// Pointers of offset
+	std::vector<const vk::AccelerationStructureBuildOffsetInfoKHR*> pBuildOffset(asBuildOffsetInfos.size());
+	for (size_t i = 0; i < asBuildOffsetInfos.size(); ++i) {
+		pBuildOffset[i] = &asBuildOffsetInfos[i];
+	}
+
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+	Device->mainCmdBuffer.begin(beginInfo);
+
+	Device->mainCmdBuffer.buildAccelerationStructureKHR(1u, &asBuildGeomInfo, pBuildOffset.data());
+
+	// vk::MemoryBarrier memoryBarrier{};
+	// memoryBarrier
+	//	.setSrcAccessMask(vk::AccessFlagBits::eAccelerationStructureWriteKHR) //
+	//	.setDstAccessMask(vk::AccessFlagBits::eAccelerationStructureReadKHR);
+
+
+	// Device->computeCmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR,
+	//	vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::DependencyFlags{ 0 },
+	//	std::array{ memoryBarrier }, {}, {});
+
+	Device->mainCmdBuffer.end();
+
+	// WIP: compacting
+
+	vk::SubmitInfo submitInfo{};
+	submitInfo
+		.setCommandBufferCount(1u) //
+		.setPCommandBuffers(&Device->mainCmdBuffer);
+
+	Device->mainQueue.submit(1u, &submitInfo, {});
+	Device->mainQueue.waitIdle();
+}
+
+
+} // namespace vl
