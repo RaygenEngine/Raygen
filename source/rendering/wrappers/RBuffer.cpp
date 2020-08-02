@@ -77,7 +77,7 @@ void RBuffer::UploadData(const std::vector<byte>& data)
 
 vk::DeviceAddress RBuffer::GetAddress() const noexcept
 {
-	return Device->getBufferAddress({ m_handle.get() });
+	return Device->getBufferAddress(vk::BufferDeviceAddressInfo{ m_handle.get() });
 }
 
 } // namespace vl
