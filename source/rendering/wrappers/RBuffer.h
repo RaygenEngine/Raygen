@@ -5,10 +5,12 @@ namespace vl {
 class RBuffer {
 	vk::DeviceSize m_size;
 
-	vk::UniqueBuffer m_handle;
+
 	vk::UniqueDeviceMemory m_memory;
 
 public:
+	vk::UniqueBuffer m_handle;
+
 	RBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
 		vk::MemoryAllocateFlags allocFlags = {});
 
