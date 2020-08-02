@@ -14,50 +14,49 @@ RBlas::RBlas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
 	std::vector<vk::AccelerationStructureGeometryKHR> asGeoms{};
 	std::vector<vk::AccelerationStructureBuildOffsetInfoKHR> asBuildOffsetInfos{};
 
-	/// for (const auto& ggg = gggs[0];;) {
-	const auto& ggg = gggs[0];
+	for (const auto& ggg : gggs) {
 		// Setting up the creation info of acceleration structure
 		vk::AccelerationStructureCreateGeometryTypeInfoKHR asCreate{};
-	asCreate
-		.setGeometryType(vk::GeometryTypeKHR::eTriangles) //
-		.setIndexType(vk::IndexType::eUint32)
-		.setVertexFormat(vk::Format::eR32G32B32Sfloat)
-		.setMaxPrimitiveCount(ggg.indexCount / 3)
-		.setMaxVertexCount(ggg.vertexCount)
-		.setAllowsTransforms(VK_FALSE); // No adding transformation matrices
+		asCreate
+			.setGeometryType(vk::GeometryTypeKHR::eTriangles) //
+			.setIndexType(vk::IndexType::eUint32)
+			.setVertexFormat(vk::Format::eR32G32B32Sfloat)
+			.setMaxPrimitiveCount(ggg.indexCount / 3)
+			.setMaxVertexCount(ggg.vertexCount)
+			.setAllowsTransforms(VK_FALSE); // No adding transformation matrices
 
-	// Building part
-	auto vertexAddress = ggg.vertexBuffer->GetAddress();
-	auto indexAddress = ggg.indexBuffer->GetAddress();
+		// Building part
+		auto vertexAddress = ggg.vertexBuffer->GetAddress();
+		auto indexAddress = ggg.indexBuffer->GetAddress();
 
-	vk::AccelerationStructureGeometryTrianglesDataKHR triangles{};
-	triangles
-		.setVertexFormat(asCreate.vertexFormat) //
-		.setVertexData(vertexAddress)
-		.setVertexStride(vertexStride)
-		.setIndexType(asCreate.indexType)
-		.setIndexData(indexAddress)
-		.setTransformData({});
+		vk::AccelerationStructureGeometryTrianglesDataKHR triangles{};
+		triangles
+			.setVertexFormat(asCreate.vertexFormat) //
+			.setVertexData(vertexAddress)
+			.setVertexStride(vertexStride)
+			.setIndexType(asCreate.indexType)
+			.setIndexData(indexAddress)
+			.setTransformData({});
 
-	// Setting up the build info of the acceleration
-	vk::AccelerationStructureGeometryKHR asGeom{};
-	asGeom
-		.setGeometryType(asCreate.geometryType) //
-		.setFlags(vk::GeometryFlagBitsKHR::eOpaque)
-		.geometry.setTriangles(triangles);
+		// Setting up the build info of the acceleration
+		vk::AccelerationStructureGeometryKHR asGeom{};
+		asGeom
+			.setGeometryType(asCreate.geometryType) //
+			.setFlags(vk::GeometryFlagBitsKHR::eOpaque)
+			.geometry.setTriangles(triangles);
 
-	// The primitive itself
-	vk::AccelerationStructureBuildOffsetInfoKHR offset{};
-	offset
-		.setFirstVertex(0) //
-		.setPrimitiveCount(asCreate.maxPrimitiveCount)
-		.setPrimitiveOffset(0)
-		.setTransformOffset(0);
+		// The primitive itself
+		vk::AccelerationStructureBuildOffsetInfoKHR offset{};
+		offset
+			.setFirstVertex(0) //
+			.setPrimitiveCount(asCreate.maxPrimitiveCount)
+			.setPrimitiveOffset(0)
+			.setTransformOffset(0);
 
-	asGeoms.emplace_back(asGeom);
-	asCreateGeomInfos.emplace_back(asCreate);
-	asBuildOffsetInfos.emplace_back(offset);
-	//}
+		asGeoms.emplace_back(asGeom);
+		asCreateGeomInfos.emplace_back(asCreate);
+		asBuildOffsetInfos.emplace_back(offset);
+	}
 
 
 	vk::AccelerationStructureCreateInfoKHR asCreateInfo{};
@@ -69,7 +68,35 @@ RBlas::RBlas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
 
 	m_handle = Device->createAccelerationStructureKHRUnique(asCreateInfo);
 
-	// Acceleration structure build requires some scratch space to store temporary information
+	{
+		vk::AccelerationStructureMemoryRequirementsInfoKHR memInfo{};
+		memInfo.setAccelerationStructure(m_handle.get())
+			.setBuildType(vk::AccelerationStructureBuildTypeKHR::eDevice)
+			.setType(vk::AccelerationStructureMemoryRequirementsTypeKHR::eObject);
+
+		auto asMemReqs = Device->getAccelerationStructureMemoryRequirementsKHR(memInfo);
+
+		VkMemoryAllocateFlagsInfo memFlagInfo{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
+		memFlagInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+
+		// 3. Allocate memory
+		VkMemoryAllocateInfo memAlloc{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
+		memAlloc.allocationSize = asMemReqs.memoryRequirements.size;
+		memAlloc.memoryTypeIndex = Device->pd->FindMemoryType(
+			asMemReqs.memoryRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+		m_memory = Device->allocateMemoryUnique(memAlloc);
+
+		// 4. Bind memory with acceleration structure
+		VkBindAccelerationStructureMemoryInfoKHR bind{ VK_STRUCTURE_TYPE_BIND_ACCELERATION_STRUCTURE_MEMORY_INFO_KHR };
+		bind.accelerationStructure = m_handle.get();
+		bind.memory = m_memory.get();
+		bind.memoryOffset = 0;
+
+		Device->bindAccelerationStructureMemoryKHR({ bind });
+	}
+
+
 	vk::AccelerationStructureMemoryRequirementsInfoKHR asMemReqsInfo{};
 	asMemReqsInfo.setType(vk::AccelerationStructureMemoryRequirementsTypeKHR::eBuildScratch)
 		.setBuildType(vk::AccelerationStructureBuildTypeKHR::eDevice) //
@@ -77,7 +104,8 @@ RBlas::RBlas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
 
 	auto memReqs = Device->getAccelerationStructureMemoryRequirementsKHR(asMemReqsInfo);
 
-	const vk::DeviceSize scratchBufferSize = 16777216; // memReqs.memoryRequirements.size;
+	// Acceleration structure build requires some scratch space to store temporary information
+	const vk::DeviceSize scratchBufferSize = memReqs.memoryRequirements.size;
 	LOG_REPORT("Size reqs {}MB", scratchBufferSize / 1000000.0);
 
 	RBuffer scratchBuffer{ scratchBufferSize,
@@ -106,31 +134,33 @@ RBlas::RBlas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-	Device->mainCmdBuffer.begin(beginInfo);
+	Device->computeCmdBuffer.begin(beginInfo);
 
-	Device->mainCmdBuffer.buildAccelerationStructureKHR(1u, &asBuildGeomInfo, pBuildOffset.data());
+	Device->computeCmdBuffer.buildAccelerationStructureKHR(1u, &asBuildGeomInfo, pBuildOffset.data());
 
-	// vk::MemoryBarrier memoryBarrier{};
-	// memoryBarrier
-	//	.setSrcAccessMask(vk::AccessFlagBits::eAccelerationStructureWriteKHR) //
-	//	.setDstAccessMask(vk::AccessFlagBits::eAccelerationStructureReadKHR);
+	vk::MemoryBarrier memoryBarrier{};
+	memoryBarrier
+		.setSrcAccessMask(vk::AccessFlagBits::eAccelerationStructureWriteKHR) //
+		.setDstAccessMask(vk::AccessFlagBits::eAccelerationStructureReadKHR);
 
 
-	// Device->computeCmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR,
-	//	vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::DependencyFlags{ 0 },
-	//	std::array{ memoryBarrier }, {}, {});
+	Device->computeCmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR,
+		vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::DependencyFlags{ 0 },
+		std::array{ memoryBarrier }, {}, {});
 
-	Device->mainCmdBuffer.end();
+	Device->computeCmdBuffer.end();
 
 	// WIP: compacting
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo
 		.setCommandBufferCount(1u) //
-		.setPCommandBuffers(&Device->mainCmdBuffer);
+		.setPCommandBuffers(&Device->computeCmdBuffer);
 
-	Device->mainQueue.submit(1u, &submitInfo, {});
-	Device->mainQueue.waitIdle();
+	Device->computeQueue.submit(1u, &submitInfo, {});
+	Device->computeQueue.waitIdle();
+
+	Device->waitIdle();
 }
 
 
