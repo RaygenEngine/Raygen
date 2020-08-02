@@ -438,55 +438,61 @@ void PropertyEditorWindow::Run_BaseProperties(Entity node)
 	}
 }
 
-void PropertyEditorWindow::Run_Components(Entity ent)
+void PropertyEditorWindow::Run_Components(Entity entity)
 {
-	auto& reg = ent.m_registry;
-
+	auto& reg = *entity.m_registry;
+	auto ent = entity.m_entity;
 
 	ReflectionToImguiVisitor visitor;
 	visitor.fullDisplayMat4 = m_displayMatrix;
 
-	auto map = ComponentsDb::GetComponentList();
+	auto map = ComponentsDb::Z_GetTypes();
 
-	reg->visit(ent.m_entity, [&](entt::id_type type) {
-		if (ComponentsDb::HasClass(type)) {
-			map.erase(type);
-			ImGui::PushID(type);
-			auto cl = ComponentsDb::GetClass(type);
-			auto data = ComponentsDb::GetClassData(cl, ent);
+	reg.visit(ent, [&](entt::id_type idtype) {
+		if (auto compPtr = ComponentsDb::GetType(idtype); compPtr) {
+			auto& comp = *compPtr;
+			map.erase(idtype);
+
+			ImGui::PushID(idtype);
+			auto& cl = *comp.clPtr;
+			auto data = comp.get(reg, ent);
+
 			CLOG_ERROR(!data, "Visited with type that was not present in the entity.");
 
-			ImGui::Separator();
-			ImGui::Text(cl.GetNameStr().c_str());
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
+			ImGui::NewLine();
+			bool remove = ImGui::Button(ETXT(FA_TIMES, ""));
 			ImGui::SameLine();
+			ImGui::Text(cl.GetNameStr().c_str());
 
-			bool remove = false;
-			if (ImGui::Button(ETXT(FA_TIMES, "Remove"))) {
-				remove = true;
+			if (remove) {
+				comp.safeRemove(reg, ent);
+				ImGui::PopID();
+				return;
 			}
-
-			ImGui::Spacing();
 
 			refltools::CallVisitorOnEveryPropertyEx(data, cl, visitor);
-			if (remove) {
-				ComponentsDb::RemoveComponent(cl, ent);
-			}
-			else if (visitor.didEditFlag) {
-				ComponentsDb::SetComponentDirty(cl, ent);
+
+			if (visitor.didEditFlag) {
+				comp.markDirty(reg, ent);
 				visitor.didEditFlag = false;
 			}
 			ImGui::PopID();
 		}
 	});
 
-	if (ImGui::BeginPopupContextWindow()) {
-		for (auto& [id, str] : map) {
-			if (ImGui::MenuItem(str.c_str())) {
-				ComponentsDb::AddComponent(ComponentsDb::GetClass(id), ent);
+
+	if (map.size()) {
+		if (ImGui::BeginPopupContextWindow()) {
+			for (auto& [id, entry] : map) {
+				if (ImGui::MenuItem(entry.clPtr->GetNameStr().c_str())) {
+					entry.emplace(reg, ent);
+				}
 			}
+			ImGui::EndPopup();
 		}
-		ImGui::EndPopup();
 	}
+
 
 	// WIP: ECS
 	// refltools::CallVisitorOnEveryProperty(node, visitor);

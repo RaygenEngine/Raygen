@@ -40,7 +40,7 @@ struct StaticMeshComp : SceneCompBase {
 };
 
 struct ScriptComp {
-	DIRTABLE;
+	COMP_DIRTABLE;
 	REFLECTED_COMP(ScriptComp)
 	{
 		//
@@ -58,7 +58,7 @@ struct FreeformMovementComp {
 class ECS_World {
 public:
 	entt::registry reg;
-	ECS_World() { ComponentsDb::HookRegistry(reg); }
+	ECS_World() {}
 
 	Entity CreateEntity(const std::string& name = "")
 	{

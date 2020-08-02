@@ -29,6 +29,40 @@ void ECS_World::CreateWorld()
 	mesh->SetParent(globalEnt);
 }
 
+template<typename T>
+void EnqueueCreateCmdsSingle(Scene_* scene, entt::registry& reg)
+{
+	auto view = reg.view<T, typename T::Create>(entt::exclude<typename T::Destroy>);
+	for (auto& [ent, sc] : view.each()) {
+		sc.sceneUid = scene->EnqueueCreateCmd<typename T::RenderSceneType>();
+	}
+}
+
+template<typename T>
+void EnqueueDestoryCmdsSingle(Scene_* scene, entt::registry& reg)
+{
+	auto view = reg.view<T, typename T::Destroy>();
+	for (auto& [ent, sc] : view.each()) {
+		scene->EnqueueDestroyCmd<typename T::RenderSceneType>(sc.sceneUid);
+
+		// DO LAST: references may become invalidated.
+		reg.remove<T>(ent);
+	}
+}
+
+// TODO: These 2 systems can be replaced by auto registering ones in scene structs in ComponentsDb
+template<typename... Args>
+void EnqueueCreateCmds(Scene_* scene, entt::registry& reg)
+{
+	(EnqueueCreateCmdsSingle<Args>(scene, reg), ...);
+}
+
+template<typename... Args>
+void EnqueueDestoryCmds(Scene_* scene, entt::registry& reg)
+{
+	(EnqueueDestoryCmdsSingle<Args>(scene, reg), ...);
+}
+
 void ECS_World::UpdateWorld()
 {
 	//
@@ -43,18 +77,23 @@ void ECS_World::UpdateWorld()
 	//
 	// Update Transforms
 	//
-	{
-		auto view = reg.view<BasicComponent, DirtyMovedComp>();
 
-		for (auto& [ent, bs] : view.each()) {
-			bs.UpdateWorldTransforms();
-		}
-	}
+	//{
+	//	auto view = reg.view<BasicComponent, DirtyMovedComp>();
+
+	//	for (auto& [ent, bs] : view.each()) {
+	//		bs.UpdateWorldTransforms();
+	//	}
+	//}
 
 
 	//
 	// Render
 	//
+
+	EnqueueCreateCmds<StaticMeshComp>(Scene, reg);
+
+	EnqueueDestoryCmds<StaticMeshComp>(Scene, reg);
 
 	{
 		auto view = reg.view<BasicComponent, StaticMeshComp, StaticMeshComp::Dirty>();
@@ -67,6 +106,7 @@ void ECS_World::UpdateWorld()
 		}
 	}
 
+
 	{
 		auto view = reg.view<BasicComponent, StaticMeshComp, DirtySrtComp>(entt::exclude<StaticMeshComp::Dirty>);
 		for (auto& [ent, bs, mesh] : view.each()) {
@@ -75,26 +115,7 @@ void ECS_World::UpdateWorld()
 		}
 	}
 
-
-	if (Input.IsJustPressed(Key::C)) {
-		reg.visit(globalEnt.m_entity, [&](const entt::id_type type) -> void {
-			if (ComponentsDb::HasClass(type)) {
-				auto cl = ComponentsDb::GetClass(type);
-				for (auto& prop : cl.GetProperties()) {
-					LOG_REPORT("Prop: {}", prop.GetNameStr());
-				}
-			}
-		});
-	}
-
-	{
-		auto view = reg.view<BasicComponent, ScriptComp::Dirty>(entt::exclude<StaticMeshComp::Dirty>);
-		for (auto& [ent, bs] : view.each()) {
-			LOG_REPORT("{} had dirty script.", bs.name);
-		}
-	}
-
-
+	// TODO: Auto delete all T::Destroy's
 	reg.clear<DirtyMovedComp, DirtySrtComp>();
 	ComponentsDb::ClearDirties(reg);
 }

@@ -40,7 +40,10 @@ public:                                                                         
 	using RenderSceneType = SceneStructType;                                                                           \
 	struct Dirty {                                                                                                     \
 	};                                                                                                                 \
-                                                                                                                       \
+	struct Create {                                                                                                    \
+	};                                                                                                                 \
+	struct Destroy {                                                                                                   \
+	};                                                                                                                 \
 	REFLECTED_COMP(CompClass)
 
 
