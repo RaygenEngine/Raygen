@@ -50,8 +50,9 @@ public:                                                                         
 	};                                                                                                                 \
 	struct Destroy {                                                                                                   \
 	};                                                                                                                 \
+	template<bool FullDirty>                                                                                           \
 	std::function<void(SceneStructType&)> DirtyCmd(BasicComponent&);                                                   \
-	std::function<void(SceneStructType&)> TransformCmd(BasicComponent&);                                               \
+                                                                                                                       \
 	REFLECTED_COMP(CompClass)
 
 

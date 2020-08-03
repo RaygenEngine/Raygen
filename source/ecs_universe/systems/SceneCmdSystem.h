@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ecs_universe/ComponentDetail.h"
-#include "ecs_universe/Entity.h" // Basic component
+#include "ecs_universe/Entity.h" // WIP: Basic component
 
 struct Scene_;
 
@@ -32,7 +32,7 @@ void EnqueueDirtyCmds(Scene_* scene, entt::registry& reg)
 {
 	auto view = reg.view<BasicComponent, T, typename T::Dirty>();
 	for (auto& [ent, basic, sc] : view.each()) {
-		scene->EnqueueCmd<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd(basic));
+		scene->EnqueueCmd<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<true>(basic));
 	}
 }
 
@@ -42,7 +42,7 @@ void EnqueueTransformCmds(Scene_* scene, entt::registry& reg)
 {
 	auto view = reg.view<BasicComponent, T, DirtySrtComp>(entt::exclude<typename T::Dirty>);
 	for (auto& [ent, basic, sc] : view.each()) {
-		scene->EnqueueCmd<typename T::RenderSceneType>(sc.sceneUid, sc.TransformCmd(basic));
+		scene->EnqueueCmd<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<false>(basic));
 	}
 }
 } // namespace scenecmds

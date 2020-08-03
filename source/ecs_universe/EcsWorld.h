@@ -6,23 +6,6 @@
 
 struct SceneCompBase {
 	size_t sceneUid;
-
-private:
-	friend class ComponentsDb;
-
-	template<typename T>
-	void Z_RegisterToScene()
-	{
-		sceneUid = Scene->EnqueueCreateCmd<T>();
-		LOG_REPORT("Registered");
-	}
-
-	template<typename T>
-	void Z_DeregisterFromScene()
-	{
-		Scene->EnqueueDestroyCmd<T>(sceneUid);
-		LOG_REPORT("De registered");
-	}
 };
 
 struct SceneGeometry;
@@ -35,12 +18,12 @@ struct StaticMeshComp : SceneCompBase {
 		REFLECT_VAR(mesh);
 	}
 
-
 	PodHandle<Mesh> mesh;
 };
 
 struct ScriptComp {
 	COMP_DIRTABLE;
+	COMP_CREATEDESTROY;
 	REFLECTED_COMP(ScriptComp)
 	{
 		//
@@ -68,7 +51,11 @@ public:
 		return ent;
 	}
 
-	void DestroyEntity(Entity entity) { reg.destroy(entity.m_entity); }
+	void DestroyEntity(Entity entity)
+	{
+		// WIP: ECS use flag for deletion, instead of directly
+		reg.destroy(entity.m_entity);
+	}
 
 	void CreateWorld();
 

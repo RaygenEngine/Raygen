@@ -1,3 +1,4 @@
+
 #include "pch.h"
 #include "Entity.h"
 
@@ -22,6 +23,7 @@ void BasicComponent::SetParent(Entity newParent, int32 index)
 	// index == -1 means at the ending of the list
 
 	if (!newParent) {
+		UpdateWorldTransforms();
 		return;
 	}
 
@@ -47,6 +49,7 @@ void BasicComponent::SetParent(Entity newParent, int32 index)
 	if (!insertAfter) {
 		newParent->firstChild = self;
 		parent = newParent;
+		UpdateWorldTransforms();
 
 		return;
 	}
@@ -60,6 +63,8 @@ void BasicComponent::SetParent(Entity newParent, int32 index)
 	next = insertBefore;
 	prev = insertAfter;
 	parent = newParent;
+
+	UpdateWorldTransforms();
 }
 
 void BasicComponent::MarkDirtySrt()
