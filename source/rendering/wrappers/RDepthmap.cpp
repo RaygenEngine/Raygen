@@ -10,7 +10,7 @@ namespace vl {
 RDepthmap::RDepthmap(uint32 width, uint32 height, const char* name)
 {
 	// attachment
-	vk::Format depthFormat = Device->pd->FindDepthFormat();
+	vk::Format depthFormat = Device->FindDepthFormat();
 
 	attachment = std::make_unique<RImageAttachment>(name, width, height, depthFormat, vk::ImageTiling::eOptimal,
 		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,

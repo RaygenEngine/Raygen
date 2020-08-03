@@ -52,7 +52,7 @@ vk::UniqueRenderPass GbufferPass::CreateCompatibleRenderPass()
 
 	vk::AttachmentDescription depthAttachmentDesc{};
 	depthAttachmentDesc
-		.setFormat(Device->pd->FindDepthFormat()) //
+		.setFormat(Device->FindDepthFormat()) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)

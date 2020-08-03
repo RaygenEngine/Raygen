@@ -82,7 +82,7 @@ RBlas::RBlas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
 		// 3. Allocate memory
 		VkMemoryAllocateInfo memAlloc{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
 		memAlloc.allocationSize = asMemReqs.memoryRequirements.size;
-		memAlloc.memoryTypeIndex = Device->pd->FindMemoryType(
+		memAlloc.memoryTypeIndex = Device->FindMemoryType(
 			asMemReqs.memoryRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 		m_memory = Device->allocateMemoryUnique(memAlloc);

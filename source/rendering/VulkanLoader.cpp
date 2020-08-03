@@ -1,10 +1,11 @@
 #include "pch.h"
+#include "VulkanLoader.h"
+
 #include <vulkan/vulkan.hpp>
 
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
 
 #include <Windows.h>
-#include "VulkanLoader.h"
 
 namespace vk {
 class DynamicLoader {

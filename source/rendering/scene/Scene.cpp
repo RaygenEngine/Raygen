@@ -15,9 +15,6 @@
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { Scene->BuildAll(); }, "Builds all build-able scene nodes" };
 ConsoleFunction<> console_BuildAS{ "s.buildTestAccelerationStructure",
 	[]() {
-		// WIP: (note) If geometryType is VK_GEOMETRY_TYPE_TRIANGLES_KHR, vertexFormat must support the
-		// VK_FORMAT_FEATURE_ACCELERATION_STRUCTURE_VERTEX_BUFFER_BIT_KHR in VkFormatProperties::bufferFeatures as
-		// returned by vkGetPhysicalDeviceFormatProperties2
 	},
 	"Builds a top level acceleration structure, for debugging purposes, todo: remove" };
 

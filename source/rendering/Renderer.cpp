@@ -33,7 +33,7 @@ Renderer_::Renderer_()
 	vk::CommandBufferAllocateInfo allocInfo{};
 	allocInfo.setCommandPool(Device->mainCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(Swapchain->GetImageCount());
+		.setCommandBufferCount(Swapchain->imageCount);
 
 	m_geometryCmdBuffer = Device->allocateCommandBuffers(allocInfo);
 	m_pptCmdBuffer = Device->allocateCommandBuffers(allocInfo);
@@ -55,7 +55,7 @@ Renderer_::Renderer_()
 
 	vk::AttachmentDescription depthAttachmentDesc{};
 	depthAttachmentDesc
-		.setFormat(Device->pd->FindDepthFormat()) //
+		.setFormat(Device->FindDepthFormat()) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eLoad)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -300,11 +300,11 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, uint32 swapchainImag
 	{
 		vk::RenderPassBeginInfo renderPassInfo{};
 		renderPassInfo
-			.setRenderPass(Swapchain->GetRenderPass()) //
-			.setFramebuffer(Swapchain->GetFramebuffer(swapchainImageIndex));
+			.setRenderPass(Swapchain->renderPass.get()) //
+			.setFramebuffer(Swapchain->framebuffers[swapchainImageIndex].get());
 		renderPassInfo.renderArea
 			.setOffset({ 0, 0 }) //
-			.setExtent(Swapchain->GetExtent());
+			.setExtent(Swapchain->extent);
 
 		vk::ClearValue clearValue{};
 		clearValue.setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
