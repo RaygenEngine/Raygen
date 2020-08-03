@@ -2,6 +2,7 @@
 
 #include "ecs_universe/ComponentDetail.h"
 #include "ecs_universe/Entity.h"
+#include "ecs_universe/systems/SceneCmdSystem.h"
 
 
 // Holds type erased function pointers for a component of generic type
@@ -13,6 +14,7 @@ struct ComponentMetaEntry {
 	using FnPtr = ReturnType (*)(entt::registry&, entt::entity);
 
 	using VoidFnPtr = FnPtr<void>;
+
 
 	// Create the component on an entry
 	// Will also mark dirty & create flags if supported by the actual component class
@@ -107,6 +109,9 @@ public:
 
 			clearFunctions.emplace_back([](entt::registry& r) {
 				if constexpr (HasCreateDestorySubstructsV<T>) {
+					for (auto& [ent, comp] : r.view<T, typename T::Destroy>().each()) {
+						r.remove<T>(ent);
+					}
 					r.clear<typename T::Create, typename T::Destroy>();
 				}
 				if constexpr (HasDirtySubstructV<T>) {
@@ -145,6 +150,10 @@ private:
 	{
 		m_types.emplace(entt::type_info<T>().id(), ComponentMetaEntry::Make<T>());
 		ComponentMetaEntry::RegisterToClearDirties<T>(m_clearFuncs);
+
+		if constexpr (componentdetail::IsSceneComponent<T>) {
+			SceneCmdSystem::Z_Register<T>();
+		}
 	}
 
 public:

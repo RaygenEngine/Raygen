@@ -10,6 +10,21 @@
 
 Entity globalEnt;
 
+std::function<void(SceneGeometry&)> StaticMeshComp::DirtyCmd(BasicComponent& bs)
+{
+	return [=](SceneGeometry& geom) {
+		geom.transform = bs.world.transform;
+		geom.model = vl::GpuAssetManager->GetGpuHandle(mesh);
+	};
+}
+
+std::function<void(SceneGeometry&)> StaticMeshComp::TransformCmd(BasicComponent& bs)
+{
+	return [=](SceneGeometry& geom) {
+		geom.transform = bs.world.transform;
+	};
+}
+
 void ECS_World::CreateWorld()
 {
 	auto mesh = CreateEntity("Global");
@@ -29,39 +44,6 @@ void ECS_World::CreateWorld()
 	mesh->SetParent(globalEnt);
 }
 
-template<typename T>
-void EnqueueCreateCmdsSingle(Scene_* scene, entt::registry& reg)
-{
-	auto view = reg.view<T, typename T::Create>(entt::exclude<typename T::Destroy>);
-	for (auto& [ent, sc] : view.each()) {
-		sc.sceneUid = scene->EnqueueCreateCmd<typename T::RenderSceneType>();
-	}
-}
-
-template<typename T>
-void EnqueueDestoryCmdsSingle(Scene_* scene, entt::registry& reg)
-{
-	auto view = reg.view<T, typename T::Destroy>();
-	for (auto& [ent, sc] : view.each()) {
-		scene->EnqueueDestroyCmd<typename T::RenderSceneType>(sc.sceneUid);
-
-		// DO LAST: references may become invalidated.
-		reg.remove<T>(ent);
-	}
-}
-
-// TODO: These 2 systems can be replaced by auto registering ones in scene structs in ComponentsDb
-template<typename... Args>
-void EnqueueCreateCmds(Scene_* scene, entt::registry& reg)
-{
-	(EnqueueCreateCmdsSingle<Args>(scene, reg), ...);
-}
-
-template<typename... Args>
-void EnqueueDestoryCmds(Scene_* scene, entt::registry& reg)
-{
-	(EnqueueDestoryCmdsSingle<Args>(scene, reg), ...);
-}
 
 void ECS_World::UpdateWorld()
 {
@@ -88,34 +70,12 @@ void ECS_World::UpdateWorld()
 
 
 	//
-	// Render
+	// Scene Commands
 	//
-
-	EnqueueCreateCmds<StaticMeshComp>(Scene, reg);
-
-	EnqueueDestoryCmds<StaticMeshComp>(Scene, reg);
-
-	{
-		auto view = reg.view<BasicComponent, StaticMeshComp, StaticMeshComp::Dirty>();
-
-		for (auto& [ent, bs, mesh] : view.each()) {
-			Scene->EnqueueCmd<SceneGeometry>(mesh.sceneUid, [&](SceneGeometry& geom) {
-				geom.model = vl::GpuAssetManager->GetGpuHandle(mesh.mesh);
-				geom.transform = bs.world.transform;
-			});
-		}
-	}
+	SceneCmdSystem::WriteSceneCmds(Scene, reg);
 
 
-	{
-		auto view = reg.view<BasicComponent, StaticMeshComp, DirtySrtComp>(entt::exclude<StaticMeshComp::Dirty>);
-		for (auto& [ent, bs, mesh] : view.each()) {
-			Scene->EnqueueCmd<SceneGeometry>(
-				mesh.sceneUid, [&](SceneGeometry& geom) { geom.transform = bs.world.transform; });
-		}
-	}
-
-	// TODO: Auto delete all T::Destroy's
 	reg.clear<DirtyMovedComp, DirtySrtComp>();
-	ComponentsDb::ClearDirties(reg);
+
+	ComponentsDb::ClearDirties(reg); // Also destroyes all pairs T, T::Destroy
 }

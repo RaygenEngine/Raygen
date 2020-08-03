@@ -36,6 +36,12 @@ public:                                                                         
 //
 //
 
+// Functions required for scene commands:
+//
+// std::function<void(SceneStructType&)> DirtyCmd(BasicComponent&);
+// std::function<void(SceneStructType&)> TransformCmd(BasicComponent&);
+
+
 #define REFLECTED_SCENE_COMP(CompClass, SceneStructType)                                                               \
 	using RenderSceneType = SceneStructType;                                                                           \
 	struct Dirty {                                                                                                     \
@@ -44,6 +50,8 @@ public:                                                                         
 	};                                                                                                                 \
 	struct Destroy {                                                                                                   \
 	};                                                                                                                 \
+	std::function<void(SceneStructType&)> DirtyCmd(BasicComponent&);                                                   \
+	std::function<void(SceneStructType&)> TransformCmd(BasicComponent&);                                               \
 	REFLECTED_COMP(CompClass)
 
 
