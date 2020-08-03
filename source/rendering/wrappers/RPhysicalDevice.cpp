@@ -55,7 +55,7 @@ RPhysicalDevice::RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inS
 	rating = 1.f;
 
 	// TODO: Requirements
-	//if (presentFamilies.empty() || !rayTracingFeatures.rayTracing || !rayTracingFeatures.rayQuery
+	// if (presentFamilies.empty() || !rayTracingFeatures.rayTracing || !rayTracingFeatures.rayQuery
 	//	|| rayTracingProperties.shaderGroupHandleSize != 32u || rayTracingProperties.maxRecursionDepth < 1) {
 	//	rating = 0.f;
 	//}

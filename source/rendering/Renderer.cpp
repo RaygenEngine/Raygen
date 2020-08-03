@@ -18,7 +18,6 @@
 #include "rendering/passes/UnlitPass.h"
 
 
-constexpr int32 c_framesInFlight = 2;
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 {
@@ -33,20 +32,29 @@ Renderer_::Renderer_()
 	vk::CommandBufferAllocateInfo allocInfo{};
 	allocInfo.setCommandPool(Device->mainCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(Swapchain->imageCount);
+		.setCommandBufferCount(3u * c_framesInFlight);
 
-	m_geometryCmdBuffer = Device->allocateCommandBuffers(allocInfo);
-	m_pptCmdBuffer = Device->allocateCommandBuffers(allocInfo);
-	m_outCmdBuffer = Device->allocateCommandBuffers(allocInfo);
+	// allocate all buffers needed
+	{
+		auto buffers = Device->allocateCommandBuffers(allocInfo);
+
+		auto moveBuffersToArray = [&buffers](auto& target, size_t index) {
+			auto begin = buffers.begin() + (index * c_framesInFlight);
+			std::move(begin, begin + c_framesInFlight, target.begin());
+		};
+
+		moveBuffersToArray(m_geometryCmdBuffer, 0);
+		moveBuffersToArray(m_pptCmdBuffer, 1);
+		moveBuffersToArray(m_outCmdBuffer, 2);
+	}
 
 	vk::FenceCreateInfo fci{};
 	fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
 
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
-		m_renderFinishedSem.push_back(Device->createSemaphoreUnique({}));
-		m_imageAvailSem.push_back(Device->createSemaphoreUnique({}));
-
-		m_inFlightFence.push_back(Device->createFenceUnique(fci));
+		m_renderFinishedSem[i] = Device->createSemaphoreUnique({});
+		m_imageAvailSem[i] = Device->createSemaphoreUnique({});
+		m_inFlightFence[i] = Device->createFenceUnique(fci);
 	}
 
 	Event::OnViewportUpdated.BindFlag(this, m_didViewportResize);
@@ -165,7 +173,7 @@ Renderer_::Renderer_()
 	m_ptRenderpass = Device->createRenderPassUnique(renderPassInfo);
 
 	// descsets
-	for (uint32 i = 0; i < 3; ++i) {
+	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_ppDescSets[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
 	}
 }
@@ -357,7 +365,7 @@ void Renderer_::OnViewportResize()
 
 		m_gbuffer = std::make_unique<RGbuffer>(fbSize.width, fbSize.height);
 
-		for (uint32 i = 0; i < 3; ++i) {
+		for (uint32 i = 0; i < c_framesInFlight; ++i) {
 			m_attachments[i] = std::make_unique<RImageAttachment>("rgba32", fbSize.width, fbSize.height,
 				vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled
