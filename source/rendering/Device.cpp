@@ -131,8 +131,8 @@ uint32 Device_::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags proper
 	LOG_ABORT("Failed to find suitable memory type!");
 }
 
-vk::Format Device_::FindSupportedFormat(
-	const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, const vk::FormatFeatureFlags features) const
+vk::Format Device_::FindSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, //
+	const vk::FormatFeatureFlags features) const
 {
 	for (auto format : candidates) {
 		vk::FormatProperties props = pd->getFormatProperties(format);

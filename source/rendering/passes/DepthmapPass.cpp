@@ -150,8 +150,8 @@ namespace {
 		return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 	}
 } // namespace
-vk::UniquePipeline DepthmapPass::CreatePipeline(
-	vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
+vk::UniquePipeline DepthmapPass::CreatePipeline(vk::PipelineLayout pipelineLayout, //
+	std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
 {
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};

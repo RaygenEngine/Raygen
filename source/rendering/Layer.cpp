@@ -39,6 +39,7 @@ Layer_::Layer_()
 
 	Layouts = new Layouts_();
 
+	// TODO: swapchain is not a global
 	Swapchain = new Swapchain_(Instance->surface);
 	// TODO: scene is not a global
 	Scene = new Scene_(Swapchain->imageCount);
