@@ -41,7 +41,7 @@ public:
 	{
 		using namespace componentdetail;
 
-		if constexpr (HasCreateDestorySubstructsV<T>) {
+		if constexpr (HasCreateDestroySubstructsV<T>) {
 			m_registry->emplace<typename T::Create>(m_entity);
 		}
 		if constexpr (HasDirtySubstructV<T>) {
@@ -69,7 +69,7 @@ public:
 	template<CONC(CComponent) T>
 	[[nodiscard]] bool Has() const
 	{
-		m_registry->has<T>(m_entity);
+		return m_registry->has<T>(m_entity);
 	}
 
 	template<CONC(CComponent) T, typename... Args>
@@ -117,8 +117,8 @@ public:
 			return;
 		}
 
-		if constexpr (componentdetail::HasCreateDestorySubstructsV<T>) {
-			m_registry->get_or_emplace<typename T::Destory>();
+		if constexpr (componentdetail::HasCreateDestroySubstructsV<T>) {
+			m_registry->get_or_emplace<typename T::Destroy>(m_entity);
 		}
 		else {
 			m_registry->remove<T>(m_entity);
@@ -154,8 +154,7 @@ struct BasicComponent {
 
 		glm::mat4 transform{ glm::identity<glm::mat4>() };
 
-	private:
-		friend struct BasicComponent;
+
 		// Updates transform from TRS
 		void Compose();
 		// Updates TRS from transform

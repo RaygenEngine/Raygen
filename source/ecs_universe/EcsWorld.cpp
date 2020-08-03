@@ -5,25 +5,35 @@
 #include "assets/AssetManager.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/SceneCamera.h"
+
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMesh.h"
+#include <nlohmann/json.hpp> // WIP: ECS
+#include "engine/console/ConsoleVariable.h"
 
 Entity globalEnt;
 
-std::function<void(SceneGeometry&)> StaticMeshComp::DirtyCmd(BasicComponent& bs)
+#define DECLARE_DIRTY_FUNC(ComponentStruct)                                                                            \
+	template std::function<void(ComponentStruct::RenderSceneType&)> ComponentStruct::DirtyCmd<true>(BasicComponent&);  \
+	template std::function<void(ComponentStruct::RenderSceneType&)> ComponentStruct::DirtyCmd<false>(BasicComponent&); \
+	template<bool FullDirty>                                                                                           \
+	std::function<void(SceneGeometry&)> StaticMeshComp::DirtyCmd
+//
+//
+//
+
+
+DECLARE_DIRTY_FUNC(StaticMeshComp)(BasicComponent& bc)
 {
 	return [=](SceneGeometry& geom) {
-		geom.transform = bs.world.transform;
-		geom.model = vl::GpuAssetManager->GetGpuHandle(mesh);
+		geom.transform = bc.world.transform;
+		if constexpr (FullDirty) {
+			geom.model = vl::GpuAssetManager->GetGpuHandle(mesh);
+		}
 	};
 }
 
-std::function<void(SceneGeometry&)> StaticMeshComp::TransformCmd(BasicComponent& bs)
-{
-	return [=](SceneGeometry& geom) {
-		geom.transform = bs.world.transform;
-	};
-}
 
 void ECS_World::CreateWorld()
 {
@@ -44,6 +54,7 @@ void ECS_World::CreateWorld()
 	mesh->SetParent(globalEnt);
 }
 
+std::stringstream st;
 
 void ECS_World::UpdateWorld()
 {
@@ -55,6 +66,28 @@ void ECS_World::UpdateWorld()
 		globalEnt->MarkDirtyMoved();
 	}
 
+	if (Input.IsJustPressed(Key::C)) {
+		nlohmann::json j;
+		ComponentsDb::RegistryToJson(reg, j);
+		st.clear();
+		st << j;
+		delete Scene;
+		Scene = new Scene_(2);
+		Scene->EnqueueCreateCmd<SceneCamera>();
+		reg.clear();
+	}
+
+	if (Input.IsJustPressed(Key::V)) {
+		delete Scene;
+		Scene = new Scene_(2);
+		Scene->EnqueueCreateCmd<SceneCamera>();
+		reg.clear();
+
+		nlohmann::json j;
+		st >> j;
+
+		ComponentsDb::JsonToRegistry(j, reg);
+	}
 
 	//
 	// Update Transforms
@@ -72,8 +105,8 @@ void ECS_World::UpdateWorld()
 	//
 	// Scene Commands
 	//
-	SceneCmdSystem::WriteSceneCmds(Scene, reg);
 
+	SceneCmdSystem::WriteSceneCmds(Scene, reg);
 
 	reg.clear<DirtyMovedComp, DirtySrtComp>();
 

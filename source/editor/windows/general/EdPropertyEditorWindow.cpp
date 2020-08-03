@@ -278,7 +278,7 @@ void PropertyEditorWindow::ImguiDraw()
 
 	Entity ent = EcsOutlinerWindow::selected;
 
-	if (!ent) {
+	if (!ent || !ent.m_registry->valid(ent.m_entity)) {
 		ImGui::Text("No entity selected.");
 		return;
 	}

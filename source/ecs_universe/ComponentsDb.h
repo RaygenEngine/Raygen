@@ -4,6 +4,7 @@
 #include "ecs_universe/Entity.h"
 #include "ecs_universe/systems/SceneCmdSystem.h"
 
+#include <nlohmann/json_fwd.hpp>
 
 // Holds type erased function pointers for a component of generic type
 struct ComponentMetaEntry {
@@ -56,7 +57,7 @@ public:
 
 		entry.emplace = [](registry& r, entity e) {
 			r.emplace<T>(e);
-			if constexpr (HasCreateDestorySubstructsV<T>) {
+			if constexpr (HasCreateDestroySubstructsV<T>) {
 				r.emplace<typename T::Create>(e);
 			}
 			if constexpr (HasDirtySubstructV<T>) {
@@ -69,13 +70,13 @@ public:
 		};
 
 		entry.markDestroy = [](registry& r, entity e) {
-			if constexpr (HasCreateDestorySubstructsV<T>) {
+			if constexpr (HasCreateDestroySubstructsV<T>) {
 				r.emplace<typename T::Destroy>(e);
 			}
 		};
 
 		entry.safeRemove = [](registry& r, entity e) {
-			if constexpr (HasCreateDestorySubstructsV<T>) {
+			if constexpr (HasCreateDestroySubstructsV<T>) {
 				r.emplace<typename T::Destroy>(e);
 			}
 			else {
@@ -105,10 +106,10 @@ public:
 	static void RegisterToClearDirties(std::vector<void (*)(entt::registry&)>& clearFunctions)
 	{
 		using namespace componentdetail;
-		if constexpr (HasDirtySubstructV<T> || HasCreateDestorySubstructsV<T>) {
+		if constexpr (HasDirtySubstructV<T> || HasCreateDestroySubstructsV<T>) {
 
 			clearFunctions.emplace_back([](entt::registry& r) {
-				if constexpr (HasCreateDestorySubstructsV<T>) {
+				if constexpr (HasCreateDestroySubstructsV<T>) {
 					for (auto& [ent, comp] : r.view<T, typename T::Destroy>().each()) {
 						r.remove<T>(ent);
 					}
@@ -142,19 +143,26 @@ public:
 private:
 	// Maps entt types to Component Meta Entries types.
 	std::unordered_map<entt::id_type, ComponentMetaEntry> m_types;
+	std::unordered_map<std::string, entt::id_type> m_nameToType;
 
 	std::vector<void (*)(entt::registry&)> m_clearFuncs;
 
 	template<typename T>
 	void Register()
 	{
-		m_types.emplace(entt::type_info<T>().id(), ComponentMetaEntry::Make<T>());
+		ComponentMetaEntry comp = ComponentMetaEntry::Make<T>();
+
+		auto entId = entt::type_info<T>().id();
+		m_nameToType.emplace(comp.clPtr->GetNameStr(), entId);
+		m_types.emplace(entt::type_info<T>().id(), std::move(comp));
 		ComponentMetaEntry::RegisterToClearDirties<T>(m_clearFuncs);
 
 		if constexpr (componentdetail::IsSceneComponent<T>) {
 			SceneCmdSystem::Z_Register<T>();
 		}
 	}
+
+	void LoadComponentInto(Entity ent, const std::string& componentName, const nlohmann::json& json);
 
 public:
 	// Returns null if type is not found,
@@ -166,6 +174,15 @@ public:
 		return it != inst.m_types.end() ? &it->second : nullptr;
 	}
 
+	static const ComponentMetaEntry* GetTypeByName(const std::string& componentClassName)
+	{
+		auto& inst = Get();
+		auto it = inst.m_nameToType.find(componentClassName);
+		if (it != inst.m_nameToType.end()) {
+			return GetType(it->second);
+		}
+		return nullptr;
+	}
 
 	static void ClearDirties(entt::registry& reg)
 	{
@@ -182,6 +199,15 @@ public:
 
 	// If you use this don't edit the ComponentMetaEntry structs
 	static const std::unordered_map<entt::id_type, ComponentMetaEntry>& Z_GetTypes() { return Get().m_types; }
+
+	static void RegistryToJson(entt::registry& reg, nlohmann::json& json);
+	static void JsonToRegistry(const nlohmann::json& json, entt::registry& reg);
+
+	// Exports an entity and all its children entities to a json object.
+	static void EntityHierarchyToJson(entt::registry& reg, entt::entity ent, nlohmann::json& json);
+
+	// Imports an entity hierarchy from json
+	static Entity JsonToEntityHierarchy(entt::registry& reg, const nlohmann::json& json);
 };
 
 template<typename K>

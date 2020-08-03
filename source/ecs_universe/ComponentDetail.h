@@ -40,7 +40,7 @@ constexpr bool HasDirtySubstructV = impl::HasDirtySubstruct<T>::value;
 
 // Detect if the struct T contains the inner empty structs Create and Destroy
 template<typename T>
-constexpr bool HasCreateDestorySubstructsV = impl::HasCreateDestroySubstructs<T>::value;
+constexpr bool HasCreateDestroySubstructsV = impl::HasCreateDestroySubstructs<T>::value;
 
 // Detect if the struct T contains RenderSceneType as type definition. (Detect if the component is declared as a scene
 // comp)
@@ -50,7 +50,7 @@ constexpr bool HasSceneTypeV = impl::HasSceneType<T>::value;
 
 //
 template<typename T>
-constexpr bool IsSceneComponent = HasSceneTypeV<T>&& HasDirtySubstructV<T>&& HasCreateDestorySubstructsV<T>;
+constexpr bool IsSceneComponent = HasSceneTypeV<T>&& HasDirtySubstructV<T>&& HasCreateDestroySubstructsV<T>;
 
 
 } // namespace componentdetail
