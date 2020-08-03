@@ -8,13 +8,6 @@ struct QueueFamily {
 	uint32 index;
 };
 
-struct SwapchainSupportDetails {
-	std::vector<vk::SurfaceFormatKHR> formats;
-	std::vector<vk::PresentModeKHR> presentModes;
-	vk::SurfaceCapabilitiesKHR capabilities;
-};
-
-
 // Info about a physical device and a given surface (support details)
 struct RPhysicalDevice : public vk::PhysicalDevice {
 
@@ -28,15 +21,6 @@ struct RPhysicalDevice : public vk::PhysicalDevice {
 
 	RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surface);
 
-	uint32 FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties) const;
-
-	vk::Format FindSupportedFormat(
-		const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features) const;
-
 	vk::SurfaceKHR surface;
-
-	vk::Format FindDepthFormat() const;
-
-	[[nodiscard]] SwapchainSupportDetails GetSwapchainSupportDetails() const;
 };
 } // namespace vl

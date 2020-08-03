@@ -289,11 +289,11 @@ void InitVulkan()
 	init.Queue = Device->mainQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
 	init.DescriptorPool = GpuResources->descPools.GetImguiPool();
-	init.ImageCount = Swapchain->GetImageCount();
-	init.MinImageCount = Swapchain->GetImageCount();
+	init.ImageCount = Swapchain->imageCount;
+	init.MinImageCount = Swapchain->imageCount;
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init, Swapchain->GetRenderPass());
+	ImGui_ImplVulkan_Init(&init, Swapchain->renderPass.get());
 
 	// CHECK: which buffer
 	auto cmdBuffer = Device->mainCmdBuffer;

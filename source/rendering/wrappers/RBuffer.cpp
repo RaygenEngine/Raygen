@@ -23,7 +23,7 @@ RBuffer::RBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryProp
 
 	allocInfo
 		.setAllocationSize(memRequirements.size) //
-		.setMemoryTypeIndex(Device->pd->FindMemoryType(memRequirements.memoryTypeBits, properties));
+		.setMemoryTypeIndex(Device->FindMemoryType(memRequirements.memoryTypeBits, properties));
 	allocFlagInfo.setFlags(allocFlags);
 
 	// From https://vulkan-tutorial.com/Vertex_buffers/Staging_buffer

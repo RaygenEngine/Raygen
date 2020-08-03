@@ -40,7 +40,8 @@ Layer_::Layer_()
 	Layouts = new Layouts_();
 
 	Swapchain = new Swapchain_(Instance->surface);
-	Scene = new Scene_(Swapchain->GetImageCount());
+	// TODO: scene is not a global
+	Scene = new Scene_(Swapchain->imageCount);
 
 	Renderer = new Renderer_();
 	Renderer->InitPipelines();

@@ -54,56 +54,10 @@ RPhysicalDevice::RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inS
 	// TODO: calculate Gpu rating:
 	rating = 1.f;
 
-	// Requirements
-	if (presentFamilies.empty() || !rayTracingFeatures.rayTracing || !rayTracingFeatures.rayQuery
-		|| rayTracingProperties.shaderGroupHandleSize != 32u || rayTracingProperties.maxRecursionDepth < 1) {
-		rating = 0.f;
-	}
-}
-
-uint32 RPhysicalDevice::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties) const
-{
-	vk::PhysicalDeviceMemoryProperties memProperties = getMemoryProperties();
-
-	for (uint32 i = 0; i < memProperties.memoryTypeCount; ++i) {
-		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
-			return i;
-		}
-	}
-
-	LOG_ABORT("Failed to find suitable memory type!");
-}
-
-vk::Format RPhysicalDevice::FindSupportedFormat(
-	const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, const vk::FormatFeatureFlags features) const
-{
-	for (auto format : candidates) {
-		vk::FormatProperties props = getFormatProperties(format);
-
-		if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
-			return format;
-		}
-		if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features) {
-			return format;
-		}
-	}
-
-	LOG_ABORT("Failed to find supported format!");
-}
-
-vk::Format RPhysicalDevice::FindDepthFormat() const
-{
-	return FindSupportedFormat({ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint },
-		vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
-}
-
-SwapchainSupportDetails RPhysicalDevice::GetSwapchainSupportDetails() const
-{
-	SwapchainSupportDetails ssDetails;
-
-	ssDetails.capabilities = getSurfaceCapabilitiesKHR(surface);
-	ssDetails.formats = getSurfaceFormatsKHR(surface);
-	ssDetails.presentModes = getSurfacePresentModesKHR(surface);
-	return ssDetails;
+	// TODO: Requirements
+	//if (presentFamilies.empty() || !rayTracingFeatures.rayTracing || !rayTracingFeatures.rayQuery
+	//	|| rayTracingProperties.shaderGroupHandleSize != 32u || rayTracingProperties.maxRecursionDepth < 1) {
+	//	rating = 0.f;
+	//}
 }
 } // namespace vl
