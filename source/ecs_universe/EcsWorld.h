@@ -3,7 +3,6 @@
 #include "ecs_universe/Entity.h"
 #include "ecs_universe/ComponentsDb.h"
 
-
 struct SceneCompBase {
 	size_t sceneUid;
 };
@@ -39,9 +38,18 @@ struct FreeformMovementComp {
 
 
 class ECS_World {
+private:
+	void LoadFromSrcPath();
+
 public:
 	entt::registry reg;
-	ECS_World() {}
+
+	fs::path srcPath;
+	ECS_World(const fs::path& path = {});
+
+	// If path is empty uses the original srcPath as path
+	void SaveToDisk(const fs::path& path = {}, bool updateSrcPath = false);
+
 
 	Entity CreateEntity(const std::string& name = "")
 	{

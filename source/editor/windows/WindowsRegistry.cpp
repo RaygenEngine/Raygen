@@ -55,8 +55,6 @@ void RegisterWindows(ed::ComponentWindows& windowsComponent)
 
 	windowsComponent.AddWindowEntry<ProfilerWindow>("Profiler");
 
-	windowsComponent.AddWindowEntry<AboutWindow>("About");
-	windowsComponent.AddWindowEntry<HelpWindow>("Help");
 	windowsComponent.AddWindowEntry<ImGuiDemoWindow>("ImGui Demo");
 
 
