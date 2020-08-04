@@ -18,6 +18,9 @@ public:
 	// Loads a world. Call is deferred until its safe to load the new world. (aka the beginning of the frame)
 	static void LoadMainWorld(const fs::path& path);
 
-	inline static ECS_World ecsWorld;
 
-}; // namespace Universe
+	static void ECS_LoadMainWorld(const fs::path& path);
+
+
+	inline static ECS_World* ecsWorld;
+};

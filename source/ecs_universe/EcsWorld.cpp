@@ -9,8 +9,10 @@
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMesh.h"
-#include <nlohmann/json.hpp> // WIP: ECS
 #include "engine/console/ConsoleVariable.h"
+
+#include <nlohmann/json.hpp> // WIP: ECS
+#include <fstream>           // WIP: ECS
 
 Entity globalEnt;
 
@@ -34,6 +36,55 @@ DECLARE_DIRTY_FUNC(StaticMeshComp)(BasicComponent& bc)
 	};
 }
 
+ECS_World::ECS_World(const fs::path& path)
+	: srcPath(path)
+{
+	if (!path.empty()) {
+		LoadFromSrcPath();
+	}
+	else {
+		CreateWorld(); // WIP: ECS
+	}
+}
+
+void ECS_World::LoadFromSrcPath()
+{
+	std::ifstream file(srcPath);
+	CLOG_ERROR(!file.is_open(), "Failed to open file: {} when loading world", srcPath);
+	if (!file.is_open()) {
+		return;
+	}
+	nlohmann::json j;
+	file >> j;
+
+	ComponentsDb::JsonToRegistry(j, reg);
+}
+
+void ECS_World::SaveToDisk(const fs::path& path, bool updateSrcPath)
+{
+	if (path.empty()) {
+		if (srcPath.empty()) {
+			LOG_ERROR("Attempting to save world without path, but world was not loaded from a file");
+			return;
+		}
+		SaveToDisk(srcPath);
+		return;
+	}
+
+	if (updateSrcPath) {
+		srcPath = path;
+	}
+
+	nlohmann::json j;
+	ComponentsDb::RegistryToJson(reg, j);
+
+	std::ofstream file(srcPath);
+	CLOG_ERROR(!file.is_open(), "Failed to open file: {} when saving world", srcPath);
+	if (!file.is_open()) {
+		return;
+	}
+	file << std::setw(2) << j;
+}
 
 void ECS_World::CreateWorld()
 {
@@ -54,8 +105,6 @@ void ECS_World::CreateWorld()
 	mesh->SetParent(globalEnt);
 }
 
-std::stringstream st;
-
 void ECS_World::UpdateWorld()
 {
 	//
@@ -66,28 +115,6 @@ void ECS_World::UpdateWorld()
 		globalEnt->MarkDirtyMoved();
 	}
 
-	if (Input.IsJustPressed(Key::C)) {
-		nlohmann::json j;
-		ComponentsDb::RegistryToJson(reg, j);
-		st.clear();
-		st << j;
-		delete Scene;
-		Scene = new Scene_(2);
-		Scene->EnqueueCreateCmd<SceneCamera>();
-		reg.clear();
-	}
-
-	if (Input.IsJustPressed(Key::V)) {
-		delete Scene;
-		Scene = new Scene_(2);
-		Scene->EnqueueCreateCmd<SceneCamera>();
-		reg.clear();
-
-		nlohmann::json j;
-		st >> j;
-
-		ComponentsDb::JsonToRegistry(j, reg);
-	}
 
 	//
 	// Update Transforms

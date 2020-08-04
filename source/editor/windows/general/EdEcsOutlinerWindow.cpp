@@ -36,7 +36,7 @@ namespace {
 
 void EcsOutlinerWindow::ImguiDraw()
 {
-	auto& world = Universe::ecsWorld;
+	auto& world = *Universe::ecsWorld;
 	if (ImEd::Button("Create")) {
 		world.CreateEntity("New Entity");
 	}

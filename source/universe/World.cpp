@@ -55,8 +55,6 @@ void World::LoadAndPrepareWorld(const fs::path& scene)
 {
 	LOG_INFO("Loading World file: \'{}\'", scene);
 
-	Universe::ecsWorld.CreateWorld();
-
 	std::ifstream f(scene);
 
 	m_loadedFrom = std::make_unique<nlohmann::json>();
@@ -182,7 +180,7 @@ void World::Update()
 	ImguiImpl::NewFrame();
 	Editor::Update();
 
-	Universe::ecsWorld.UpdateWorld();
+	Universe::ecsWorld->UpdateWorld();
 
 
 	do {

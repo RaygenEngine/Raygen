@@ -16,9 +16,14 @@
 #include "universe/nodes/RootNode.h"
 #include "universe/Universe.h"
 #include "universe/WorldOperationsUtl.h"
+#include "editor/windows/general/EdEcsOutlinerWindow.h"
 #include <imguicolortextedit/TextEditor.h>
 
+
+#include <nlohmann/json.hpp>
 #include <glfw/glfw3.h>
+
+#include <fstream>
 
 EditorObject_::EditorObject_()
 {
@@ -61,25 +66,33 @@ void EditorObject_::MakeMainMenu()
 {
 	RegisterWindows(m_windowsComponent);
 
-
-	m_menus.clear();
-	auto sceneMenu = std::make_unique<ImMenu>("Scene");
-	sceneMenu->AddEntry(U8(FA_SAVE u8"  Save As"), [&]() { m_sceneSave.OpenBrowser(); });
-	sceneMenu->AddEntry(U8(FA_FOLDER_OPEN u8"  Load"), [&]() { OpenLoadDialog(); });
-	sceneMenu->AddEntry(U8(FA_REDO_ALT u8"  Revert"), [&]() { ReloadScene(); });
-	sceneMenu->AddSeperator();
-	sceneMenu->AddEntry(U8(FA_DOOR_OPEN u8"  Exit"), []() { glfwSetWindowShouldClose(Platform::GetMainHandle(), 1); });
-	m_menus.emplace_back(std::move(sceneMenu));
+	m_mainMenu.Clear();
 
 
-	auto windowsMenu = std::make_unique<ImMenu>("Windows");
+	auto& sceneMenu = m_mainMenu.AddSubMenu("Scene");
+
+	sceneMenu.AddEntry(U8(FA_FILE u8"  New"), [&]() { NewLevel(); });
+	sceneMenu.AddEntry(U8(FA_SAVE u8"  Save"), [&]() { SaveLevel(); });
+	sceneMenu.AddEntry(U8(FA_SAVE u8"  Save As"), [&]() { SaveLevelAs(); });
+	sceneMenu.AddEntry(U8(FA_SAVE u8"  Save All"), [&]() { SaveAll(); });
+	sceneMenu.AddEntry(U8(FA_FOLDER_OPEN u8"  Load"), [&]() { OpenLoadDialog(); });
+	sceneMenu.AddSeperator();
+	sceneMenu.AddEntry(U8(FA_REDO_ALT u8"  Revert"), [&]() { ReloadScene(); });
+	sceneMenu.AddSeperator();
+	sceneMenu.AddEntry(U8(FA_DOOR_OPEN u8"  Exit"), []() { glfwSetWindowShouldClose(Platform::GetMainHandle(), 1); });
+
+
+	auto& windowsMenu = m_mainMenu.AddSubMenu("Windows");
+	for (auto& catEntry : m_windowsComponent.m_categories) {
+		windowsMenu.AddSubMenu(catEntry);
+	}
+	windowsMenu.AddSeperator();
+
 	for (auto& winEntry : m_windowsComponent.m_entries) {
-		windowsMenu->AddEntry(
-			winEntry.name.c_str(), [&]() { m_windowsComponent.ToggleUnique(winEntry.hash); },
+		windowsMenu.AddOptionalCategory(
+			winEntry.category, winEntry.name.c_str(), [&]() { m_windowsComponent.ToggleUnique(winEntry.hash); },
 			[&]() { return m_windowsComponent.IsUniqueOpen(winEntry.hash); });
 	}
-
-	m_menus.emplace_back(std::move(windowsMenu));
 }
 
 EditorObject_::~EditorObject_()
@@ -167,6 +180,8 @@ void EditorObject_::UpdateEditor()
 {
 	PROFILE_SCOPE(Editor);
 
+	m_currentWorld = Universe::ecsWorld;
+
 	for (auto& cmd : m_deferredCommands) {
 		cmd();
 	}
@@ -206,11 +221,11 @@ void EditorObject_::UpdateEditor()
 	}
 
 
-	if (ImEd::Button(U8(FA_SAVE u8"  Save As"))) {
-		m_sceneSave.OpenBrowser();
+	if (ImEd::Button(ETXT(FA_SAVE, "Save"))) {
+		SaveLevel();
 	}
 	ImGui::SameLine();
-	if (ImEd::Button(U8(FA_FOLDER_OPEN u8"  Load"))) {
+	if (ImEd::Button(ETXT(FA_FOLDER_OPEN, "Load"))) {
 		OpenLoadDialog();
 	}
 
@@ -264,15 +279,15 @@ void EditorObject_::OpenLoadDialog()
 	if (auto file = ed::NativeFileBrowser::OpenFile({ "json" })) {
 		m_updateWorld = false;
 		m_selectedNode = nullptr;
+		ed::EcsOutlinerWindow::selected = {};
 
-		Universe::LoadMainWorld(*file);
+		Universe::ECS_LoadMainWorld(*file);
 	}
 }
 
 void EditorObject_::ReloadScene()
 {
-	// WIP: ECS
-	// Universe::LoadMainWorld(Universe::GetMainWorld()->GetLoadedFromPath());
+	Universe::ECS_LoadMainWorld(Universe::ecsWorld->srcPath);
 }
 
 void EditorObject_::OnDisableEditor()
@@ -302,23 +317,23 @@ void EditorObject_::OnPlay()
 
 void EditorObject_::OnStopPlay()
 {
-	if (!m_updateWorld) {
-		if (!m_editorCamera) {
-			SpawnEditorCamera();
-			m_editorCamera->SetNodeTransformWCS(m_editorCameraCachedMatrix);
-		}
-	}
-	if (m_autoRestoreWorld && m_hasRestoreSave) {
-		Universe::LoadMainWorld("__scene.tmp");
-	}
+	// WIP: ECS
+
+	// if (!m_updateWorld) {
+	//	if (!m_editorCamera) {
+	//		SpawnEditorCamera();
+	//		m_editorCamera->SetNodeTransformWCS(m_editorCameraCachedMatrix);
+	//	}
+	//}
+	// if (m_autoRestoreWorld && m_hasRestoreSave) {
+	//	Universe::LoadMainWorld("__scene.tmp");
+	//}
 }
 
 void EditorObject_::Run_MenuBar()
 {
 	if (ImEd::BeginMenuBar()) {
-		for (auto& entry : m_menus) {
-			entry->Draw(this);
-		}
+		m_mainMenu.DrawOptions();
 		ImEd::EndMenuBar();
 	}
 }
@@ -365,6 +380,39 @@ void EditorObject_::PushCommand(std::function<void()>&& func)
 void EditorObject_::PushDeferredCommand(std::function<void()>&& func)
 {
 	EditorObject->m_deferredCommands.push_back(std::move(func));
+}
+
+void EditorObject_::SaveLevel()
+{
+	if (m_currentWorld && !m_currentWorld->srcPath.empty()) {
+		m_currentWorld->SaveToDisk();
+	}
+	else if (m_currentWorld) {
+		SaveLevelAs();
+	}
+}
+
+void EditorObject_::SaveLevelAs()
+{
+	if (m_currentWorld) {
+		if (auto f = ed::NativeFileBrowser::SaveFile({ "json" }); f) {
+			if (!f->has_extension()) {
+				f->replace_extension(".json");
+			}
+			m_currentWorld->SaveToDisk(*f, true);
+		}
+	}
+}
+
+void EditorObject_::SaveAll()
+{
+	SaveLevel();
+	AssetHandlerManager::SaveAll();
+}
+
+void EditorObject_::NewLevel()
+{
+	Universe::ECS_LoadMainWorld("");
 }
 
 
