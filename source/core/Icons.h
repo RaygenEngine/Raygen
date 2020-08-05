@@ -31,6 +31,7 @@
 #define FA_BEGIN 0xf000
 #define FA_END   0xf941
 
+#define FA_EMPTY                               u8"\uf942" // Custom empty icon (works for our font because we do fixed width)
 #define FA_AD                                  u8"\uf641"
 #define FA_ADDRESS_BOOK                        u8"\uf2b9"
 #define FA_ADDRESS_CARD                        u8"\uf2bb"

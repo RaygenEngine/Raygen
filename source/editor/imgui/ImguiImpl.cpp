@@ -252,13 +252,14 @@ void SetStyle()
 		= io.Fonts->AddFontFromFileTTF("engine-data/fonts/ClearSans-Regular.ttf", 18.f, &fontConfig, ranges);
 
 
-	static const ImWchar faRange[] = { 0xf000, 0xF941, 0 };
+	static const ImWchar faRange[] = { 0xF000, 0xF942, 0 };
 	ImFontConfig faConfig{};
 	faConfig.MergeMode = true;
 	faConfig.PixelSnapH = true;
 	faConfig.GlyphMinAdvanceX = 12.f;
 	faConfig.GlyphMaxAdvanceX = 12.f;
-	io.Fonts->AddFontFromFileTTF("engine-data/fonts/Font-Awesome-5-Free-Solid-900.ttf", 15.0f, &faConfig, faRange);
+	auto f = io.Fonts->AddFontFromFileTTF(
+		"engine-data/fonts/Font-Awesome-5-Free-Solid-900.ttf", 15.0f, &faConfig, faRange);
 
 
 	ImguiImpl::s_CodeFont

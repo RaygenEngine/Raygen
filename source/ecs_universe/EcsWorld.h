@@ -54,8 +54,11 @@ public:
 	Entity CreateEntity(const std::string& name = "")
 	{
 		Entity ent{ reg.create(), &reg };
-		auto& basic = ent.Add<BasicComponent>(name);
+
+		auto& basic = ent.Add<BasicComponent>(!name.empty() ? name : "New Entity");
 		basic.self = ent;
+
+
 		return ent;
 	}
 
