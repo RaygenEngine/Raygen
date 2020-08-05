@@ -36,6 +36,9 @@ protected:
 	// The icon is supposed to be supported by the editor font.
 	const char8* m_icon = c_defaultIcon;
 
+	// Optional category for this class
+	const char* m_category = { nullptr };
+
 	void AppendProperties(const ReflClass& other)
 	{
 		size_t index = m_properties.size();
@@ -200,6 +203,7 @@ public:
 	}
 
 	void SetIcon(const char8* icon) { m_icon = icon; }
+	void SetCategory(const char* category) { m_category = category; }
 
 	void ReplaceIfDefaultIcon(const char8* icon)
 	{
@@ -208,6 +212,7 @@ public:
 		}
 	}
 
+	[[nodiscard]] constexpr const char* GetCategory() const noexcept { return m_category; }
 
 	[[nodiscard]] const ReflClass* GetParentClass() const { return m_parentClass; }
 

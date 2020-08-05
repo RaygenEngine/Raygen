@@ -20,7 +20,7 @@ Entity globalEnt;
 	template std::function<void(ComponentStruct::RenderSceneType&)> ComponentStruct::DirtyCmd<true>(BasicComponent&);  \
 	template std::function<void(ComponentStruct::RenderSceneType&)> ComponentStruct::DirtyCmd<false>(BasicComponent&); \
 	template<bool FullDirty>                                                                                           \
-	std::function<void(SceneGeometry&)> StaticMeshComp::DirtyCmd
+	std::function<void(ComponentStruct::RenderSceneType&)> ComponentStruct::DirtyCmd
 //
 //
 //
@@ -35,6 +35,28 @@ DECLARE_DIRTY_FUNC(StaticMeshComp)(BasicComponent& bc)
 		}
 	};
 }
+
+DECLARE_DIRTY_FUNC(CameraComp)(BasicComponent& bc)
+{
+	return [=](SceneGeometry& geom) {
+		geom.transform = bc.world.transform;
+		if constexpr (FullDirty) {
+			geom.model = vl::GpuAssetManager->GetGpuHandle(mesh);
+		}
+	};
+}
+
+
+DECLARE_DIRTY_FUNC(PointLightComp)(BasicComponent& bc)
+{
+	return [=](SceneGeometry& geom) {
+		geom.transform = bc.world.transform;
+		if constexpr (FullDirty) {
+			geom.model = vl::GpuAssetManager->GetGpuHandle(mesh);
+		}
+	};
+}
+
 
 ECS_World::ECS_World(const fs::path& path)
 	: srcPath(path)

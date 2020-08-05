@@ -97,7 +97,6 @@ Entity ComponentsDb::JsonToEntityHierarchy(entt::registry& reg, const nlohmann::
 		}
 	}
 
-	// glm::quat(glm::radians(pyr));
 	for (auto& [key, value] : json.items()) {
 		if (key == "+") {
 			continue;

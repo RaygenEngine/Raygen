@@ -12,13 +12,58 @@ struct SceneGeometry;
 struct StaticMeshComp : SceneCompBase {
 	REFLECTED_SCENE_COMP(StaticMeshComp, SceneGeometry)
 	{
-		//
 		REFLECT_ICON(FA_CUBE);
+		REFLECT_CATEGORY("Render Components");
+
 		REFLECT_VAR(mesh);
 	}
 
 	PodHandle<Mesh> mesh;
 };
+
+struct PointLightComp : SceneCompBase {
+	REFLECTED_SCENE_COMP(PointLightComp, SceneGeometry)
+	{
+		//
+		REFLECT_ICON(FA_LIGHTBULB);
+		REFLECT_CATEGORY("Render Components");
+
+
+		REFLECT_VAR(mesh);
+	}
+
+	PodHandle<Mesh> mesh;
+};
+
+struct CameraComp : SceneCompBase {
+	REFLECTED_SCENE_COMP(CameraComp, SceneGeometry)
+	{
+		//
+		REFLECT_ICON(FA_CAMERA_RETRO);
+		REFLECT_CATEGORY("Render Components");
+
+
+		REFLECT_VAR(mesh);
+	}
+
+	PodHandle<Mesh> mesh;
+};
+
+
+struct MovementComp {
+	REFLECTED_COMP(MovementComp)
+	{
+		//
+		REFLECT_ICON(FA_CAMERA_RETRO);
+		REFLECT_CATEGORY("Gameplay Components");
+
+
+		REFLECT_VAR(mesh);
+	}
+
+	PodHandle<Mesh> mesh;
+};
+
 
 struct ScriptComp {
 	COMP_DIRTABLE;

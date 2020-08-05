@@ -12,6 +12,7 @@
 
 #define ETXT(Icon, Text) U8(Icon u8"  " u8##Text)
 
+
 namespace EdColor {
 inline const ImVec4 Success = ImVec4(0.3f, 0.9f, 0.3f, 1.0f);
 inline const ImVec4& Green = Success;
@@ -30,6 +31,8 @@ inline const ImVec4 LightText = ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
 } // namespace EdColor
 
 class Node;
+struct ComponentMetaEntry;
+
 // ImGui wrapper for calls that use different styles. (bigger buttons etc)
 namespace ImEd {
 
@@ -176,5 +179,7 @@ bool EnumDropDown(const char* label, T& enumval)
 	return edited;
 }
 
+
+const ComponentMetaEntry* ComponentClassMenu();
 
 } // namespace ImEd

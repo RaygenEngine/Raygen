@@ -22,19 +22,19 @@ namespace {
 	{
 		Entity ent;
 		if (ImGui::BeginMenu(menuName)) {
-			for (auto& [name, type] : ComponentsDb::Z_GetNameToTypes()) {
-				if (ImGui::Selectable(name.c_str())) {
-					std::string entityName = name.substr(0, name.length() - 4) + " Entity";
+			if (auto entityType = ImEd::ComponentClassMenu(); entityType) {
+				std::string name = entityType->clPtr->GetNameStr();
+				name = name.substr(0, name.length() - 4) + " Entity";
 
-					ent = world.CreateEntity(entityName);
-					ComponentsDb::GetType(type)->emplace(*ent.m_registry, ent.m_entity);
-				}
+				ent = world.CreateEntity(name);
+				entityType->emplace(*ent.m_registry, ent.m_entity);
 			}
 			ImGui::EndMenu();
 		}
 
 		if (ImGui::IsItemClicked()) {
 			ent = world.CreateEntity();
+			ImGui::CloseCurrentPopup();
 		}
 		return ent;
 	}
@@ -82,7 +82,7 @@ void EcsOutlinerWindow::ImguiDraw()
 	}
 
 	if (ImGui::BeginPopupContextWindow(nullptr, ImGuiMouseButton_Right, false)) {
-		if (AddEntityMenu(world, "Add Entity")) {
+		if (Entity ent = AddEntityMenu(world, "Add Entity"); ent) {
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();
@@ -93,8 +93,17 @@ void EcsOutlinerWindow::ImguiDraw()
 
 void EcsOutlinerWindow::Run_ContextPopup(ECS_World& world, Entity entity)
 {
-	if (AddEntityMenu(world, ETXT(FA_PLUS, " Add Child"))) {
+	// WIP: ECS
+	if (Entity ent = AddEntityMenu(world, ETXT(FA_USER_PLUS, " Add Child Entity")); ent) {
+		ent->SetParent(entity);
 		ImGui::CloseCurrentPopup();
+	}
+	if (ImGui::BeginMenu(ETXT(FA_PLUS, " Add Component"))) {
+		if (auto compType = ImEd::ComponentClassMenu(); compType) {
+			compType->emplace(*entity.m_registry, entity.m_entity);
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndMenu();
 	}
 	ImGui::Separator();
 	if (ImGui::MenuItem(ETXT(FA_CUT, " Cut"))) {
