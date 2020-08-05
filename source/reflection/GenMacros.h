@@ -56,6 +56,10 @@ public:                                                                         
 	REFLECTED_COMP(CompClass)
 
 
+#define REFLECT_ICON(u8_icon) refl.SetIcon(u8_icon)
+
+#define REFLECT_CATEGORY(ConstCharCategory) refl.SetCategory(ConstCharCategory)
+
 #define REFLECTED_COMP(ComponentClass)                                                                                 \
 	[[nodiscard]] static const ReflClass& StaticClass() { return ComponentClass::Z_MutableClass(); }                   \
                                                                                                                        \
@@ -162,7 +166,5 @@ public:                                                                         
 		};                                                                                                             \
 	}
 
-
-#define REFLECT_ICON(u8_icon) refl.SetIcon(u8_icon)
 
 #define REFLECT_FLAGS(...) refl.AddFlags(NodeFlags::Pack(__VA_ARGS__));

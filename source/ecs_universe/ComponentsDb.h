@@ -147,6 +147,8 @@ private:
 
 	std::vector<void (*)(entt::registry&)> m_clearFuncs;
 
+	std::map<std::string, std::vector<entt::id_type>> m_categoryToTypes;
+
 	template<typename T>
 	void Register()
 	{
@@ -155,6 +157,14 @@ private:
 		auto entId = entt::type_info<T>().id();
 		m_nameToType.emplace(comp.clPtr->GetNameStr(), entId);
 		m_types.emplace(entt::type_info<T>().id(), std::move(comp));
+
+		if (auto category = comp.clPtr->GetCategory(); category) {
+			m_categoryToTypes[std::string(category)].emplace_back(entId);
+		}
+		else {
+			m_categoryToTypes[""].emplace_back(entId);
+		}
+
 		ComponentMetaEntry::RegisterToClearDirties<T>(m_clearFuncs);
 
 		if constexpr (componentdetail::IsSceneComponent<T>) {
@@ -200,6 +210,11 @@ public:
 	// If you use this don't edit the ComponentMetaEntry structs
 	static const std::unordered_map<entt::id_type, ComponentMetaEntry>& Z_GetTypes() { return Get().m_types; }
 	static const std::unordered_map<std::string, entt::id_type>& Z_GetNameToTypes() { return Get().m_nameToType; }
+	static const std::map<std::string, std::vector<entt::id_type>>& Z_GetCategories()
+	{
+		return Get().m_categoryToTypes;
+	}
+
 
 	static void RegistryToJson(entt::registry& reg, nlohmann::json& json);
 	static void JsonToRegistry(const nlohmann::json& json, entt::registry& reg);

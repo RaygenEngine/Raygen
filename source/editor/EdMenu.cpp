@@ -36,7 +36,7 @@ ed::Menu::MenuOption& ed::Menu::AddUnderCategory(const std::string& category, co
 ed::Menu::MenuOption& Menu::AddOptionalCategory(const char* category, const char* optionName,
 	std::function<void()>&& funcPtr, std::function<bool()>&& isSelectedBind)
 {
-	if (!category) {
+	if (!category || category[0] == '\0') {
 		return AddEntry(optionName, std::move(funcPtr), std::move(isSelectedBind));
 	}
 	return AddUnderCategory(category, optionName, std::move(funcPtr), std::move(isSelectedBind));
