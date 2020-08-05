@@ -199,6 +199,7 @@ public:
 
 	// If you use this don't edit the ComponentMetaEntry structs
 	static const std::unordered_map<entt::id_type, ComponentMetaEntry>& Z_GetTypes() { return Get().m_types; }
+	static const std::unordered_map<std::string, entt::id_type>& Z_GetNameToTypes() { return Get().m_nameToType; }
 
 	static void RegistryToJson(entt::registry& reg, nlohmann::json& json);
 	static void JsonToRegistry(const nlohmann::json& json, entt::registry& reg);

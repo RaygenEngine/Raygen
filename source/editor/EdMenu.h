@@ -2,7 +2,6 @@
 
 
 namespace ed {
-struct Menu;
 
 
 struct Menu {

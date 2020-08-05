@@ -2,8 +2,8 @@
 #include "editor/windows/EdWindow.h"
 #include "ecs_universe/Entity.h"
 
-class Node;
 
+class ECS_World;
 namespace ed {
 class EcsOutlinerWindow : public UniqueWindow {
 public:
@@ -13,10 +13,12 @@ public:
 	}
 
 	virtual void ImguiDraw();
-	// bool Run_ContextPopup(Node* node);
+	void Run_ContextPopup(ECS_World& world, Entity entity);
 	// void Run_NewNodeMenu(Node* underNode);
 	// void Run_OutlinerDropTarget(Node* node);
 	virtual ~EcsOutlinerWindow() = default;
+
+	void DrawRecurseEntity(ECS_World& world, Entity ent, int32 depth = 0);
 
 	static inline Entity selected;
 };
