@@ -1,82 +1,6 @@
 #pragma once
-
+#include "ecs_universe/BasicComponent.h"
 #include "ecs_universe/Entity.h"
-#include "ecs_universe/ComponentsDb.h"
-
-struct SceneCompBase {
-	size_t sceneUid;
-};
-
-struct SceneGeometry;
-
-struct StaticMeshComp : SceneCompBase {
-	REFLECTED_SCENE_COMP(StaticMeshComp, SceneGeometry)
-	{
-		REFLECT_ICON(FA_CUBE);
-		REFLECT_CATEGORY("Render Components");
-
-		REFLECT_VAR(mesh);
-	}
-
-	PodHandle<Mesh> mesh;
-};
-
-struct PointLightComp : SceneCompBase {
-	REFLECTED_SCENE_COMP(PointLightComp, SceneGeometry)
-	{
-		REFLECT_ICON(FA_LIGHTBULB);
-		REFLECT_CATEGORY("Render Components");
-
-
-		REFLECT_VAR(mesh);
-	}
-
-	PodHandle<Mesh> mesh;
-};
-
-struct CameraComp : SceneCompBase {
-	REFLECTED_SCENE_COMP(CameraComp, SceneGeometry)
-	{
-		REFLECT_ICON(FA_CAMERA_RETRO);
-		REFLECT_CATEGORY("Render Components");
-
-		REFLECT_VAR(mesh);
-	}
-
-	PodHandle<Mesh> mesh;
-};
-
-
-struct MovementComp {
-	REFLECTED_COMP(MovementComp)
-	{
-		//
-		REFLECT_ICON(FA_CAMERA_RETRO);
-		REFLECT_CATEGORY("Gameplay Components");
-
-
-		REFLECT_VAR(mesh);
-	}
-
-	PodHandle<Mesh> mesh;
-};
-
-
-struct ScriptComp {
-	COMP_DIRTABLE;
-	COMP_CREATEDESTROY;
-	REFLECTED_COMP(ScriptComp)
-	{
-		//
-		REFLECT_VAR(code);
-	}
-
-	std::string code;
-};
-
-struct FreeformMovementComp {
-	float movespeed{ 15.f };
-};
 
 struct HiddenFlagComp {
 };
@@ -102,8 +26,9 @@ public:
 	{
 		Entity ent{ reg.create(), &reg };
 
-		auto& basic = ent.Add<BasicComponent>(!name.empty() ? name : "New Entity");
+		auto& basic = ent.Add<BasicComponent>();
 		basic.self = ent;
+		basic.name = !name.empty() ? name : "New Entity";
 
 
 		return ent;

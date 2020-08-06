@@ -1,7 +1,7 @@
 #pragma once
-
 #include "ecs_universe/ComponentDetail.h"
 #include "ecs_universe/Entity.h" // WIP: Basic component
+#include "rendering/scene/Scene.h"
 
 struct Scene_;
 

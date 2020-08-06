@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "ComponentsDb.h"
 
-
+#include "ecs_universe/BasicComponent.h"
 #include "reflection/ReflectionTools.h"
 
 #include <nlohmann/json.hpp>
@@ -17,8 +17,8 @@ void ComponentsDb::EntityHierarchyToJson(entt::registry& reg, entt::entity ent, 
 	{
 		auto& jbasic = json["+"];
 		jbasic["name"] = bs.name;
-		jbasic["trs"] = { { "pos", bs.GetNodePositionLCS() }, { "euler_rot", bs.GetNodeEulerAnglesLCS() },
-			{ "scl", bs.GetNodeScaleLCS() } };
+		jbasic["trs"]
+			= { { "pos", bs.local().position }, { "euler_rot", bs.local().pyr() }, { "scl", bs.local().scale } };
 	}
 
 	// Children
@@ -88,12 +88,12 @@ Entity ComponentsDb::JsonToEntityHierarchy(entt::registry& reg, const nlohmann::
 	{
 		if (auto trsIt = jbasic.find("trs"); trsIt != jbasic.end()) {
 			auto& j = *trsIt;
-			basic.local.position = j.value<glm::vec3>("pos", {});
-			basic.local.scale = j.value<glm::vec3>("scl", { 1.f, 1.f, 1.f });
+			basic.local_.position = j.value<glm::vec3>("pos", {});
+			basic.local_.scale = j.value<glm::vec3>("scl", { 1.f, 1.f, 1.f });
 
 			auto eulerPyr = j.value<glm::vec3>("euler_rot", {});
-			basic.local.orientation = glm::quat(glm::radians(eulerPyr));
-			basic.local.Compose();
+			basic.local_.orientation = glm::quat(glm::radians(eulerPyr));
+			basic.local_.Compose();
 		}
 	}
 

@@ -1,19 +1,20 @@
 #include "pch.h"
 #include "EdPropertyEditorWindow.h"
 
+#include "assets/PodEditor.h"
+#include "ecs_universe/ComponentsDb.h"
 #include "editor/DataStrings.h"
 #include "editor/Editor.h"
+#include "editor/imgui/ImAssetSlot.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "editor/imgui/ImGuizmo.h"
+#include "editor/windows/general/EdEcsOutlinerWindow.h"
 #include "engine/profiler/ProfileScope.h"
 #include "reflection/PodTools.h"
 #include "reflection/ReflectionTools.h"
 #include "universe/nodes/camera/CameraNode.h"
 #include "universe/nodes/Node.h"
 #include "universe/Universe.h"
-#include "assets/PodEditor.h"
-#include "editor/imgui/ImAssetSlot.h"
-#include "editor/windows/general/EdEcsOutlinerWindow.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -420,7 +421,7 @@ void PropertyEditorWindow::Run_BaseProperties(Entity node)
 
 	if (m_displayMatrix) {
 
-		glm::mat4 matrix = m_localMode ? node->GetNodeTransformLCS() : node->GetNodeTransformWCS();
+		glm::mat4 matrix = m_localMode ? node->local().transform : node->world().transform;
 
 		// to row major
 		auto rowMajor = glm::transpose(matrix);
@@ -514,7 +515,7 @@ void PropertyEditorWindow::Run_ImGuizmo(Entity node)
 
 	cameraProj[1][1] *= -1.0;
 
-	auto nodeMatrix = node->GetNodeTransformWCS();
+	auto nodeMatrix = node->world().transform;
 
 	// auto i = glm::identity<glm::mat4>();
 	// ImGuizmo::DrawGrid(glm::value_ptr(cameraView), glm::value_ptr(cameraProj), glm::value_ptr(i), 10.f);

@@ -168,3 +168,13 @@ public:                                                                         
 
 
 #define REFLECT_FLAGS(...) refl.AddFlags(NodeFlags::Pack(__VA_ARGS__));
+
+
+#define DECLARE_DIRTY_FUNC(ComponentStruct)                                                                            \
+	template std::function<void(ComponentStruct::RenderSceneType&)> ComponentStruct::DirtyCmd<true>(BasicComponent&);  \
+	template std::function<void(ComponentStruct::RenderSceneType&)> ComponentStruct::DirtyCmd<false>(BasicComponent&); \
+	template<bool FullDirty>                                                                                           \
+	std::function<void(ComponentStruct::RenderSceneType&)> ComponentStruct::DirtyCmd
+//
+//
+//
