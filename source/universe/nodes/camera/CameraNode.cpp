@@ -45,7 +45,6 @@ void CameraNode::RecalculateProjectionFov()
 
 void CameraNode::RecalculateViewMatrix()
 {
-
 	m_viewMatrix = glm::lookAt(GetNodePositionWCS(), GetLookAt(), GetNodeUpWCS());
 	RecalculateViewProjectionMatrix();
 }

@@ -35,5 +35,5 @@ struct SceneSpotlight : SceneStruct {
 
 
 	std::string name;
-	void ResizeShadowmap(uint32 width, uint32 height);
+	void MaybeResizeShadowmap(uint32 width, uint32 height);
 };

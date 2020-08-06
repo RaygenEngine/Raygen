@@ -3,6 +3,7 @@
 
 #include "assets/pods/Mesh.h"
 #include "assets/util/ParsingUtl.h"
+#include "ecs_universe/ComponentsDb.h"
 #include "editor/DataStrings.h"
 #include "editor/EditorObject.h"
 #include "universe/NodeFactory.h"
