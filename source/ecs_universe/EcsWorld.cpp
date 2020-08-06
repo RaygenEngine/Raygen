@@ -86,8 +86,21 @@ void ECS_World::CreateWorld()
 	mesh->SetParent(globalEnt);
 }
 
-void ECS_World::DestroyEntity(Entity entity) {}
+void ECS_World::DestroyEntity(Entity entity)
+{
+	entity->SetParent();
 
+	ComponentsDb::VisitWithType(
+		entity, [&](const ComponentMetaEntry& ent) { ent.markDestroy(*entity.registry, entity.entity); });
+
+	auto current = entity->firstChild;
+	while (current) {
+		DestroyEntity(current);
+		current = current->next;
+	}
+
+	entity.registry->get_or_emplace<CDestroyFlag>(entity.entity);
+}
 
 void ECS_World::UpdateWorld()
 {
@@ -114,7 +127,13 @@ void ECS_World::UpdateWorld()
 
 	SceneCmdSystem::WriteSceneCmds(Scene, reg);
 
+	// Clean Up
 	reg.clear<DirtyMovedComp, DirtySrtComp>();
-
 	ComponentsDb::ClearDirties(reg); // Also destroyes all pairs T, T::Destroy
+
+
+	for (const auto ent : reg.view<CDestroyFlag>()) {
+		reg.destroy(ent);
+	}
+	CLOG_ERROR(reg.view<CDestroyFlag>().size(), "Error deleting");
 }

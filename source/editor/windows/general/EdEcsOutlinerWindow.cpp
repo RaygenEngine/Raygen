@@ -129,9 +129,7 @@ void EcsOutlinerWindow::ImguiDraw()
 	}
 
 	if (ImGui::BeginPopupContextWindow(nullptr, ImGuiMouseButton_Right, false)) {
-		if (Entity ent = AddEntityMenu(world, "Add Entity"); ent) {
-			ImGui::CloseCurrentPopup();
-		}
+		Run_SpaceContextPopup(world);
 		ImGui::EndPopup();
 	}
 
@@ -187,6 +185,16 @@ void EcsOutlinerWindow::Run_ContextPopup(ECS_World& world, Entity entity)
 	if (ImGui::MenuItem(ETXT(FA_EMPTY, " Teleport To Camera"))) {
 	}
 	if (ImGui::MenuItem(ETXT(FA_PLANE, " Pilot"), "Shift+F")) {
+	}
+}
+
+void EcsOutlinerWindow::Run_SpaceContextPopup(ECS_World& world)
+{
+	if (Entity ent = AddEntityMenu(world, "Add Entity"); ent) {
+		ImGui::CloseCurrentPopup();
+	}
+	if (ImGui::MenuItem(ETXT(FA_PASTE, " Paste"), "Ctrl+V")) {
+		ed::ClipboardOp::LoadEntity(world.reg);
 	}
 }
 
