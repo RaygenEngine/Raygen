@@ -278,7 +278,7 @@ void PropertyEditorWindow::ImguiDraw()
 
 	Entity ent = EcsOutlinerWindow::selected;
 
-	if (!ent || !ent.m_registry->valid(ent.m_entity)) {
+	if (!ent || !ent.registry->valid(ent.entity)) {
 		ImGui::Text("No entity selected.");
 		return;
 	}
@@ -440,8 +440,8 @@ void PropertyEditorWindow::Run_BaseProperties(Entity node)
 
 void PropertyEditorWindow::Run_Components(Entity entity)
 {
-	auto& reg = *entity.m_registry;
-	auto ent = entity.m_entity;
+	auto& reg = *entity.registry;
+	auto ent = entity.entity;
 
 	ReflectionToImguiVisitor visitor;
 	visitor.fullDisplayMat4 = m_displayMatrix;

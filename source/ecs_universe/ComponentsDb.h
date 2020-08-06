@@ -223,6 +223,7 @@ public:
 	static void EntityHierarchyToJson(entt::registry& reg, entt::entity ent, nlohmann::json& json);
 
 	// Imports an entity hierarchy from json
+	// TODO: ECS: Robustness. This is now used from clipboard and should NEVER ever crash with any json data.
 	static Entity JsonToEntityHierarchy(entt::registry& reg, const nlohmann::json& json);
 };
 

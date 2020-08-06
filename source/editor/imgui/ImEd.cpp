@@ -276,7 +276,7 @@ const ComponentMetaEntry* ComponentClassMenu()
 //				std::string entityName = name.substr(0, name.length() - 4) + " Entity";
 //
 //				ent = world.CreateEntity(entityName);
-//				ComponentsDb::GetType(type)->emplace(*ent.m_registry, ent.m_entity);
+//				ComponentsDb::GetType(type)->emplace(*ent.registry, ent.entity);
 //			}
 //		}
 //		ImGui::EndMenu();

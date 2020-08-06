@@ -29,7 +29,7 @@ void ComponentsDb::EntityHierarchyToJson(entt::registry& reg, entt::entity ent, 
 		auto current = bs.firstChild;
 
 		while (current) {
-			EntityHierarchyToJson(reg, current.m_entity, jchildren.emplace_back(json::object()));
+			EntityHierarchyToJson(reg, current.entity, jchildren.emplace_back(json::object()));
 			current = current->next;
 		}
 	}
@@ -49,9 +49,9 @@ void ComponentsDb::EntityHierarchyToJson(entt::registry& reg, entt::entity ent, 
 void ComponentsDb::LoadComponentInto(Entity ent, const std::string& componentName, const nlohmann::json& json)
 {
 	if (auto comp = GetTypeByName(componentName); comp) {
-		comp->emplace(*ent.m_registry, ent.m_entity);
+		comp->emplace(*ent.registry, ent.entity);
 		refltools::JsonToPropVisitor_WorldLoad visitor(json);
-		refltools::CallVisitorOnEveryPropertyEx(comp->get(*ent.m_registry, ent.m_entity), *comp->clPtr, visitor);
+		refltools::CallVisitorOnEveryPropertyEx(comp->get(*ent.registry, ent.entity), *comp->clPtr, visitor);
 		return;
 	}
 

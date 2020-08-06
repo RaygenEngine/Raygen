@@ -6,6 +6,16 @@
 class ECS_World;
 namespace ed {
 class EcsOutlinerWindow : public UniqueWindow {
+
+	enum class RenameStatus
+	{
+		Inactive,
+		FirstFrame,
+		OtherFrames
+	} m_renameStatus{ RenameStatus::Inactive };
+	int32 m_renameFrame{ -1 };
+	std::string m_renameString{};
+
 public:
 	EcsOutlinerWindow(std::string_view name)
 		: ed::UniqueWindow(name)

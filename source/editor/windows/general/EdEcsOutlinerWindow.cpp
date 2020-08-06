@@ -12,6 +12,7 @@
 #include "universe/WorldOperationsUtl.h"
 
 #include "editor/EdMenu.h"
+#include "editor/EdClipboardOp.h"
 
 #include <imgui/imgui.h>
 
@@ -27,7 +28,7 @@ namespace {
 				name = name.substr(0, name.length() - 4) + " Entity";
 
 				ent = world.CreateEntity(name);
-				entityType->emplace(*ent.m_registry, ent.m_entity);
+				entityType->emplace(*ent.registry, ent.entity);
 			}
 			ImGui::EndMenu();
 		}
@@ -39,17 +40,63 @@ namespace {
 		return ent;
 	}
 } // namespace
-
 void EcsOutlinerWindow::DrawRecurseEntity(ECS_World& world, Entity ent, int32 depth)
 {
-	ImGui::PushID(static_cast<uint32>(ent.m_entity));
-
-	auto str = std::string(depth * 6, ' ') + ent->name.c_str();
+	ImGui::PushID(static_cast<uint32>(ent.entity));
 
 
-	if (ImGui::Selectable(str.c_str(), ent == EcsOutlinerWindow::selected)) {
-		EcsOutlinerWindow::selected = ent;
+	// if (m_renameStatus != RenameStatus::Inactive && ent == EcsOutlinerWindow::selected) {
+	//	if (m_renameStatus == RenameStatus::FirstFrame) {
+	//		ImGui::SetKeyboardFocusHere();
+	//		m_renameString = ent->name;
+	//	}
+
+	//	ImGui::SetNextItemWidth(-1.f);
+
+	//	if (ImGui::InputText("###RenameString", &m_renameString, ImGuiInputTextFlags_EnterReturnsTrue)
+	//		|| (!ImGui::IsItemFocused() && m_renameStatus == RenameStatus::OtherFrames)) {
+	//		ent->name = m_renameString;
+	//		m_renameStatus = RenameStatus::Inactive;
+	//	}
+	//	else {
+	//		m_renameStatus = RenameStatus::OtherFrames;
+	//	}
+	//}
+	// else {
+	//	if (ImGui::Selectable(str.c_str(), ent == EcsOutlinerWindow::selected)) {
+	//		EcsOutlinerWindow::selected = ent;
+	//	}
+	//}
+
+
+	ImGui::Selectable(U8(u8" " FA_EYE u8" "), false, 0, ImVec2(18.f, 0));
+	ImGui::SameLine();
+	ImGui::Indent(16.f * depth + 30.0f);
+	if (m_renameFrame >= 0 && ent == EcsOutlinerWindow::selected) {
+
+		if (m_renameFrame == 0) {
+			ImGui::SetKeyboardFocusHere();
+			m_renameString = ent->name;
+		}
+
+
+		ImGui::SetNextItemWidth(-1.f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.f, 0.f));
+		if (ImGui::InputText("###RenameString", &m_renameString)) {
+			ent->name = m_renameString;
+		}
+		ImGui::PopStyleVar();
+		m_renameFrame++;
+		if (!ImGui::IsItemActive() && m_renameFrame > 5) {
+			m_renameFrame = -1;
+		}
 	}
+	else {
+		if (ImGui::Selectable(ent->name.c_str(), ent == EcsOutlinerWindow::selected)) {
+			EcsOutlinerWindow::selected = ent;
+		}
+	}
+	ImGui::Unindent(16.f * depth + 30.0f);
 
 	if (ImGui::BeginPopupContextItem()) {
 		EcsOutlinerWindow::selected = ent;
@@ -63,13 +110,12 @@ void EcsOutlinerWindow::DrawRecurseEntity(ECS_World& world, Entity ent, int32 de
 	}
 
 	ImGui::PopID();
-}
+} // namespace ed
 
 
 void EcsOutlinerWindow::ImguiDraw()
 {
 	auto& world = *Universe::ecsWorld;
-
 
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3.f, 6.f));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.f, 6.f));
@@ -100,34 +146,46 @@ void EcsOutlinerWindow::Run_ContextPopup(ECS_World& world, Entity entity)
 	}
 	if (ImGui::BeginMenu(ETXT(FA_PLUS, " Add Component"))) {
 		if (auto compType = ImEd::ComponentClassMenu(); compType) {
-			compType->emplace(*entity.m_registry, entity.m_entity);
+			compType->emplace(*entity.registry, entity.entity);
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndMenu();
 	}
 	ImGui::Separator();
-	if (ImGui::MenuItem(ETXT(FA_CUT, " Cut"))) {
+	if (ImGui::MenuItem(ETXT(FA_EDIT, " Rename"), "F2")) {
+		m_renameStatus = RenameStatus::FirstFrame;
+		m_renameFrame = 0;
 	}
-	if (ImGui::MenuItem(ETXT(FA_COPY, " Copy"))) {
+	if (ImGui::MenuItem(ETXT(FA_CUT, " Cut"), "Ctrl+X")) {
+		ed::ClipboardOp::StoreEntity(entity);
+		world.DestroyEntity(entity);
 	}
-	if (ImGui::MenuItem(ETXT(FA_PASTE, " Paste"))) {
+	if (ImGui::MenuItem(ETXT(FA_COPY, " Copy"), "Ctrl+C")) {
+		ed::ClipboardOp::StoreEntity(entity);
+	}
+	if (ImGui::MenuItem(ETXT(FA_PASTE, " Paste"), "Ctrl+V")) {
+		ed::ClipboardOp::LoadEntity(world.reg)->SetParent(entity);
 	}
 	ImGui::Separator();
-	if (ImGui::MenuItem(ETXT(FA_COPY, " Duplicate"))) {
+	if (ImGui::MenuItem(ETXT(FA_COPY, " Duplicate"), "Ctrl+W")) {
+		// TODO: ECS: Actual duplicate instead of copy paste
+		ed::ClipboardOp::StoreEntity(entity);
+		auto loaded = ed::ClipboardOp::LoadEntity(world.reg);
+		loaded->SetParent(entity->parent);
 	}
-	if (ImGui::MenuItem(ETXT(FA_TRASH, " Delete"))) {
+	if (ImGui::MenuItem(ETXT(FA_TRASH, " Delete"), "Del")) {
+		world.DestroyEntity(entity);
 	}
-	if (ImGui::MenuItem(ETXT(FA_EDIT, " Rename"))) {
-	}
+
 	ImGui::Separator();
 	if (ImGui::MenuItem(ETXT(FA_CERTIFICATE, " Make Prefab"))) {
 	}
 	ImGui::Separator();
-	if (ImGui::MenuItem(ETXT(FA_EMPTY, " Focus"))) {
+	if (ImGui::MenuItem(ETXT(FA_EMPTY, " Focus"), "F")) {
 	}
 	if (ImGui::MenuItem(ETXT(FA_EMPTY, " Teleport To Camera"))) {
 	}
-	if (ImGui::MenuItem(ETXT(FA_PLANE, " Pilot"))) {
+	if (ImGui::MenuItem(ETXT(FA_PLANE, " Pilot"), "Shift+F")) {
 	}
 }
 

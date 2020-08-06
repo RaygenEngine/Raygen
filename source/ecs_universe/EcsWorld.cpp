@@ -28,6 +28,7 @@ Entity globalEnt;
 
 DECLARE_DIRTY_FUNC(StaticMeshComp)(BasicComponent& bc)
 {
+
 	return [=](SceneGeometry& geom) {
 		geom.transform = bc.world.transform;
 		if constexpr (FullDirty) {
@@ -108,6 +109,7 @@ void ECS_World::SaveToDisk(const fs::path& path, bool updateSrcPath)
 	file << std::setw(2) << j;
 }
 
+
 void ECS_World::CreateWorld()
 {
 	auto mesh = CreateEntity("Global");
@@ -127,6 +129,9 @@ void ECS_World::CreateWorld()
 	mesh->SetParent(globalEnt);
 }
 
+void ECS_World::DestroyEntity(Entity entity) {}
+
+
 void ECS_World::UpdateWorld()
 {
 	//
@@ -137,6 +142,20 @@ void ECS_World::UpdateWorld()
 		globalEnt->MarkDirtyMoved();
 	}
 
+	if (Input.IsJustPressed(Key::C)) {
+		delete Scene;
+		Scene = new Scene_(2);
+		Scene->EnqueueCreateCmd<SceneCamera>();
+	}
+
+
+	if (Input.IsJustPressed(Key::V)) {
+		delete Scene;
+		Scene = new Scene_(2);
+		Scene->EnqueueCreateCmd<SceneCamera>();
+
+		reg.each([&](entt::entity ent) { reg.emplace<StaticMeshComp::Create>(ent); });
+	}
 
 	//
 	// Update Transforms

@@ -24,7 +24,6 @@ struct StaticMeshComp : SceneCompBase {
 struct PointLightComp : SceneCompBase {
 	REFLECTED_SCENE_COMP(PointLightComp, SceneGeometry)
 	{
-		//
 		REFLECT_ICON(FA_LIGHTBULB);
 		REFLECT_CATEGORY("Render Components");
 
@@ -38,10 +37,8 @@ struct PointLightComp : SceneCompBase {
 struct CameraComp : SceneCompBase {
 	REFLECTED_SCENE_COMP(CameraComp, SceneGeometry)
 	{
-		//
 		REFLECT_ICON(FA_CAMERA_RETRO);
 		REFLECT_CATEGORY("Render Components");
-
 
 		REFLECT_VAR(mesh);
 	}
@@ -81,6 +78,11 @@ struct FreeformMovementComp {
 	float movespeed{ 15.f };
 };
 
+struct HiddenFlagComp {
+};
+
+struct DestroyFlagComp {
+};
 
 class ECS_World {
 private:
@@ -107,11 +109,7 @@ public:
 		return ent;
 	}
 
-	void DestroyEntity(Entity entity)
-	{
-		// WIP: ECS use flag for deletion, instead of directly
-		reg.destroy(entity.m_entity);
-	}
+	void DestroyEntity(Entity entity);
 
 	void CreateWorld();
 

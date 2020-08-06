@@ -69,12 +69,12 @@ void BasicComponent::SetParent(Entity newParent, int32 index)
 
 void BasicComponent::MarkDirtySrt()
 {
-	self.m_registry->get_or_emplace<DirtySrtComp>(self.m_entity);
+	self.registry->get_or_emplace<DirtySrtComp>(self.entity);
 }
 
 void BasicComponent::MarkDirtyMoved()
 {
-	self.m_registry->get_or_emplace<DirtyMovedComp>(self.m_entity);
+	self.registry->get_or_emplace<DirtyMovedComp>(self.entity);
 	MarkDirtySrt();
 }
 
