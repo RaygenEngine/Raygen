@@ -233,8 +233,8 @@ ed::Menu MakeMenu(const ComponentMetaEntry** outEntryPtr)
 		for (auto type : types) {
 			if (auto entry = ComponentsDb::GetType(type); entry) {
 				auto& cl = *entry->clPtr;
-				auto& str = *stringBank.emplace_back(std::make_unique<std::string>(
-					fmt::format("{}   {}", U8(cl.GetIcon()), cl.GetName().substr(0, cl.GetName().length() - 4))));
+				auto& str = *stringBank.emplace_back(
+					std::make_unique<std::string>(fmt::format("{}   {}", U8(cl.GetIcon()), cl.GetName().substr(1))));
 				menu.AddOptionalCategory(cat.c_str(), str.c_str(), [=]() {
 					//
 					(*outEntryPtr) = entry;

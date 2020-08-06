@@ -5,7 +5,7 @@
 struct HiddenFlagComp {
 };
 
-struct DestroyFlagComp {
+struct CDestroyFlag {
 };
 
 class ECS_World {
@@ -34,6 +34,7 @@ public:
 		return ent;
 	}
 
+	// WIP: Not a world function
 	void DestroyEntity(Entity entity);
 
 	void CreateWorld();

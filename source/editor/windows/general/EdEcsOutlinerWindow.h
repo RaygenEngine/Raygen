@@ -24,6 +24,7 @@ public:
 
 	virtual void ImguiDraw();
 	void Run_ContextPopup(ECS_World& world, Entity entity);
+	void Run_SpaceContextPopup(ECS_World& world);
 	// void Run_NewNodeMenu(Node* underNode);
 	// void Run_OutlinerDropTarget(Node* node);
 	virtual ~EcsOutlinerWindow() = default;

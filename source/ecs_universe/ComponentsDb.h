@@ -225,6 +225,24 @@ public:
 	// Imports an entity hierarchy from json
 	// TODO: ECS: Robustness. This is now used from clipboard and should NEVER ever crash with any json data.
 	static Entity JsonToEntityHierarchy(entt::registry& reg, const nlohmann::json& json);
+
+
+	// Function signature is: void(const ComponentMetaEntry&, entt::registry&, entt::entity)
+	template<typename T>
+	static void VisitWithType(entt::registry& reg, entt::entity ent, T function)
+	{
+		reg.visit(ent, [&](entt::id_type idtype) {
+			if (const ComponentMetaEntry* type = GetType(idtype); type) {
+				function(*type);
+			}
+		});
+	}
+
+	template<typename T>
+	static void VisitWithType(Entity ent, T function)
+	{
+		VisitWithType(*ent.registry, ent.entity, function);
+	}
 };
 
 template<typename K>

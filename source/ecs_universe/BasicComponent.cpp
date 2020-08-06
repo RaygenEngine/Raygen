@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "BasicComponent.h"
 
+
 #include <glm/gtx/matrix_decompose.hpp>
 
 void BasicComponent::SetParent(Entity newParent, int32 index)
@@ -91,7 +92,7 @@ void BasicComponent::DetachFromParent()
 	}
 
 	// Update parent first if required
-	if (parent) {
+	if (parent && parent->firstChild == self) {
 		parent->firstChild = next;
 	}
 	parent = {};
