@@ -347,7 +347,7 @@ struct JsonToPropVisitor_WorldLoad {
 		}
 		else {
 			LOG_WARN(
-				"Failed to find pod property: {} (Scene saved with older engine version?) Using default pod or "
+				"Failed to find pod property: {} (Saved with older engine version?) Using default pod or "
 				"\"{}\".",
 				prop.GetName(), detail::c_importHintSuffix);
 		}
@@ -357,7 +357,7 @@ struct JsonToPropVisitor_WorldLoad {
 			if (it != parentVisitor.j.end()) {
 				p = AssetManager->ImportAs<T>(fs::path(it->get<std::string>()), true);
 				if (!p.IsDefault()) {
-					LOG_INFO("Imported {} during scene loading through the import hint.", it->get<std::string>());
+					LOG_INFO("Imported {} through the import hint.", it->get<std::string>());
 				}
 			}
 		}

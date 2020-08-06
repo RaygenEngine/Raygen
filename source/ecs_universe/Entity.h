@@ -18,13 +18,13 @@ struct BasicComponent;
 class Entity {
 
 public:
-	entt::entity m_entity{ entt::null };
-	entt::registry* m_registry{ nullptr };
+	entt::entity entity{ entt::null };
+	entt::registry* registry{ nullptr };
 
 	Entity() = default;
 	Entity(entt::entity ent, entt::registry* reg)
-		: m_entity(ent)
-		, m_registry(reg)
+		: entity(ent)
+		, registry(reg)
 	{
 	}
 
@@ -42,12 +42,12 @@ public:
 		using namespace componentdetail;
 
 		if constexpr (HasCreateDestroySubstructsV<T>) {
-			m_registry->emplace<typename T::Create>(m_entity);
+			registry->emplace<typename T::Create>(entity);
 		}
 		if constexpr (HasDirtySubstructV<T>) {
-			m_registry->emplace<typename T::Dirty>(m_entity);
+			registry->emplace<typename T::Dirty>(entity);
 		}
-		return m_registry->emplace<T>(m_entity, std::forward<Args>(args)...);
+		return registry->emplace<T>(entity, std::forward<Args>(args)...);
 	}
 
 	// Adds a component to the entity if it does not exist, returns the existing otherwise
@@ -69,7 +69,7 @@ public:
 	template<CONC(CComponent) T>
 	[[nodiscard]] bool Has() const
 	{
-		return m_registry->has<T>(m_entity);
+		return registry->has<T>(entity);
 	}
 
 	template<CONC(CComponent) T, typename... Args>
@@ -87,7 +87,7 @@ public:
 	auto Get() const -> std::conditional_t<componentdetail::HasDirtySubstructV<T>, const T&, T&>
 	{
 		static_assert(!std::is_empty_v<T>, "Attempting to get an empty structure. This is not allowed by entt.");
-		return m_registry->get<T>(m_entity);
+		return registry->get<T>(entity);
 	}
 
 	// Always returns T& and marks the component as dirty. Use this when you intend to write to the component.
@@ -95,7 +95,7 @@ public:
 	T& GetDirty()
 	{
 		MarkDirty<T>();
-		return m_registry->get<T>(m_entity);
+		return registry->get<T>(entity);
 	}
 
 	// TODO: Probably private
@@ -104,7 +104,7 @@ public:
 	void MarkDirty()
 	{
 		if constexpr (componentdetail::HasDirtySubstruct<T>) {
-			m_registry->get_or_emplace<typename T::Dirty>(m_entity);
+			registry->get_or_emplace<typename T::Dirty>(entity);
 		}
 	}
 
@@ -118,17 +118,17 @@ public:
 		}
 
 		if constexpr (componentdetail::HasCreateDestroySubstructsV<T>) {
-			m_registry->get_or_emplace<typename T::Destroy>(m_entity);
+			registry->get_or_emplace<typename T::Destroy>(entity);
 		}
 		else {
-			m_registry->remove<T>(m_entity);
+			registry->remove<T>(entity);
 		}
 	}
 
-	[[nodiscard]] constexpr operator bool() const noexcept { return m_entity != entt::null; }
+	[[nodiscard]] constexpr operator bool() const noexcept { return entity != entt::null; }
 	[[nodiscard]] constexpr bool operator==(const Entity& rhs) const noexcept
 	{
-		return m_entity == rhs.m_entity && m_registry == rhs.m_registry;
+		return entity == rhs.entity && registry == rhs.registry;
 	}
 
 	// Provide a "nice" interface to the common component
