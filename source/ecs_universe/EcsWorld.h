@@ -40,4 +40,6 @@ public:
 	void CreateWorld();
 
 	void UpdateWorld();
+
+	~ECS_World();
 };

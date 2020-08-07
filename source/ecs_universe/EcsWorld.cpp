@@ -6,9 +6,11 @@
 #include "ecs_universe/components/StaticMeshComponent.h"
 #include "ecs_universe/components/SpotlightComponent.h"
 #include "ecs_universe/components/CameraComponent.h"
+#include "ecs_universe/components/ReflectionProbeComponent.h"
 #include "ecs_universe/ComponentsDb.h"
 #include "engine/Input.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneCamera.h"
 
 #include <nlohmann/json.hpp> // WIP: ECS
 #include <fstream>           // WIP: ECS
@@ -22,9 +24,13 @@ ECS_World::ECS_World(const fs::path& path)
 	if (!path.empty()) {
 		LoadFromSrcPath();
 	}
-	else {
-		CreateWorld(); // WIP: ECS
-	}
+}
+
+ECS_World::~ECS_World()
+{
+	delete Scene;
+	Scene = new Scene_(2);
+	Scene->EnqueueCreateCmd<SceneCamera>();
 }
 
 void ECS_World::LoadFromSrcPath()

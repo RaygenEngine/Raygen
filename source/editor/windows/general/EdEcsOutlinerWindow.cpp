@@ -26,7 +26,7 @@ namespace {
 		if (ImGui::BeginMenu(menuName)) {
 			if (auto entityType = ImEd::ComponentClassMenu(); entityType) {
 				std::string name = entityType->clPtr->GetNameStr();
-				name = name.substr(0, name.length() - 4) + " Entity";
+				name = name.substr(1) + " Entity";
 
 				ent = world.CreateEntity(name);
 				entityType->emplace(*ent.registry, ent.entity);

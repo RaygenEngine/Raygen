@@ -34,7 +34,7 @@ struct BasicComponent {
 
 		glm::mat4 transform{ glm::identity<glm::mat4>() };
 
-		[[nodiscard]] glm::vec3 up() const { return orientation * glm::vec3(0.f, 1.f, 0.f); }
+		[[nodiscard]] glm::vec3 up() const { return orientation * glm::vec3(0.f, -1.f, 0.f); }
 		[[nodiscard]] glm::vec3 forward() const { return orientation * glm::vec3(0.f, 0.f, -1.f); };
 		[[nodiscard]] glm::vec3 right() const { return orientation * glm::vec3(1.f, 0.f, 0.f); };
 		// pitch, yaw, roll, in degrees

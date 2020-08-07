@@ -449,41 +449,43 @@ void PropertyEditorWindow::Run_Components(Entity entity)
 
 	auto map = ComponentsDb::Z_GetTypes();
 
-	reg.visit(ent, [&](entt::id_type idtype) {
-		if (auto compPtr = ComponentsDb::GetType(idtype); compPtr) {
-			auto& comp = *compPtr;
-			map.erase(idtype);
+	ComponentsDb::VisitWithType(entity, [&](const ComponentMetaEntry& comp) {
+		map.erase(comp.entType);
 
-			ImGui::PushID(idtype);
-			auto& cl = *comp.clPtr;
-			auto data = comp.get(reg, ent);
+		ImGui::PushID(comp.entType);
+		auto& cl = *comp.clPtr;
+		auto data = comp.get(reg, ent);
+		CLOG_ERROR(!data, "Visited with type that was not present in the entity.");
 
-			CLOG_ERROR(!data, "Visited with type that was not present in the entity.");
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
-			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-			ImGui::NewLine();
-			bool remove = ImGui::Button(ETXT(FA_TIMES, ""));
-			ImGui::SameLine();
-			ImGui::Text(cl.GetNameStr().c_str());
 
-			if (remove) {
-				comp.safeRemove(reg, ent);
-				ImGui::PopID();
-				return;
-			}
+		bool remove = ImGui::Button(U8(FA_TIMES));
+		if (remove) {
+			comp.safeRemove(reg, ent);
+			ImGui::PopID();
+			return;
+		}
 
+
+		ImGui::SameLine();
+		if (ImGui::CollapsingHeader(cl.GetNameStr().c_str())) {
+			ImGui::Indent(44.f);
 			refltools::CallVisitorOnEveryPropertyEx(data, cl, visitor);
+			ImGui::Unindent(44.f);
 
 			if (visitor.didEditFlag) {
 				comp.markDirty(reg, ent);
 				visitor.didEditFlag = false;
 			}
-			ImGui::PopID();
 		}
+
+		ImGui::PopID();
 	});
 
 
 	if (map.size()) {
+
 		if (ImGui::BeginPopupContextWindow()) {
 			for (auto& [id, entry] : map) {
 				if (ImGui::MenuItem(entry.clPtr->GetNameStr().c_str())) {
@@ -524,7 +526,9 @@ void PropertyEditorWindow::Run_ImGuizmo(Entity node)
 		static_cast<ImGuizmo::OPERATION>(m_manipMode.op), static_cast<ImGuizmo::MODE>(m_manipMode.mode),
 		glm::value_ptr(nodeMatrix));
 
-	node->SetNodeTransformWCS(nodeMatrix);
+	if (ImGuizmo::IsUsing()) {
+		node->SetNodeTransformWCS(nodeMatrix);
+	}
 }
 
 // HACK:

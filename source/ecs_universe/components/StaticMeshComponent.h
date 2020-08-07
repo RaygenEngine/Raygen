@@ -9,7 +9,7 @@ struct CStaticMesh : CSceneBase {
 	REFLECTED_SCENE_COMP(CStaticMesh, SceneGeometry)
 	{
 		REFLECT_ICON(FA_CUBE);
-		REFLECT_CATEGORY("Rendering");
+		// REFLECT_CATEGORY("Rendering");
 
 		REFLECT_VAR(mesh);
 	}
