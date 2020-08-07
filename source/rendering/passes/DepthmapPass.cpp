@@ -27,7 +27,7 @@ vk::UniqueRenderPass DepthmapPass::CreateCompatibleRenderPass()
 {
 	vk::AttachmentDescription depthAttachmentDesc{};
 	depthAttachmentDesc
-		.setFormat(Device->pd->FindDepthFormat()) //
+		.setFormat(Device->FindDepthFormat()) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -150,8 +150,8 @@ namespace {
 		return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 	}
 } // namespace
-vk::UniquePipeline DepthmapPass::CreatePipeline(
-	vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
+vk::UniquePipeline DepthmapPass::CreatePipeline(vk::PipelineLayout pipelineLayout, //
+	std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
 {
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};

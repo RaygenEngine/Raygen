@@ -6,7 +6,11 @@
 #include "rendering/scene/Scene.h"
 
 namespace vl {
-using SemVec = std::vector<vk::Semaphore>;
+constexpr size_t c_framesInFlight = 2;
+
+template<typename T>
+using FrameArray = std::array<T, c_framesInFlight>;
+
 
 inline class Renderer_ : public Listener {
 
@@ -25,14 +29,14 @@ private:
 
 	UniquePtr<RGbuffer> m_gbuffer;
 
-	std::vector<vk::CommandBuffer> m_geometryCmdBuffer;
-	std::vector<vk::CommandBuffer> m_pptCmdBuffer;
-	std::vector<vk::CommandBuffer> m_outCmdBuffer;
+	FrameArray<vk::CommandBuffer> m_geometryCmdBuffer;
+	FrameArray<vk::CommandBuffer> m_pptCmdBuffer;
+	FrameArray<vk::CommandBuffer> m_outCmdBuffer;
 
-	std::vector<vk::UniqueFence> m_inFlightFence;
+	FrameArray<vk::UniqueFence> m_inFlightFence;
 
-	std::vector<vk::UniqueSemaphore> m_renderFinishedSem;
-	std::vector<vk::UniqueSemaphore> m_imageAvailSem;
+	FrameArray<vk::UniqueSemaphore> m_renderFinishedSem;
+	FrameArray<vk::UniqueSemaphore> m_imageAvailSem;
 
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc);
 	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc);
@@ -51,14 +55,18 @@ protected:
 
 public:
 	// TODO: POSTPROC post process for hdr, move those
-	std::array<vk::UniqueFramebuffer, 3> m_framebuffers;
-	std::array<UniquePtr<RImageAttachment>, 3> m_attachments;
-	std::array<UniquePtr<RImageAttachment>, 3> m_attachments2;
+	FrameArray<vk::UniqueFramebuffer> m_framebuffers;
+	FrameArray<UniquePtr<RImageAttachment>> m_attachments;
+	FrameArray<UniquePtr<RImageAttachment>> m_attachments2;
 
 	// std::array<UniquePtr<RImageAttachment>, 3> m_attachmentsDepthToUnlit;
 
-	std::array<vk::DescriptorSet, 3> m_ppDescSets;
+	FrameArray<vk::DescriptorSet> m_ppDescSets;
 	vk::UniqueRenderPass m_ptRenderpass;
+
+
+	// TODO: RT, move those
+	vk::UniqueAccelerationStructureKHR sceneAS;
 
 	Renderer_();
 	~Renderer_();

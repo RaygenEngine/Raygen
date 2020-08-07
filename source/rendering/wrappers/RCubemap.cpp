@@ -37,7 +37,7 @@ void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCou
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-	Device->transferCmdBuffer.begin(beginInfo);
+	Device->dmaCmdBuffer.begin(beginInfo);
 
 	std::vector<vk::BufferImageCopy> regions;
 	size_t offset{ 0llu };
@@ -65,19 +65,19 @@ void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCou
 		offset += res * res * pixelSize * 6llu;
 	}
 
-	Device->transferCmdBuffer.copyBufferToImage(buffer, m_handle.get(), vk::ImageLayout::eTransferDstOptimal, regions);
+	Device->dmaCmdBuffer.copyBufferToImage(buffer, m_handle.get(), vk::ImageLayout::eTransferDstOptimal, regions);
 
-	Device->transferCmdBuffer.end();
+	Device->dmaCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo
 		.setCommandBufferCount(1u) //
-		.setPCommandBuffers(&Device->transferCmdBuffer);
+		.setPCommandBuffers(&Device->dmaCmdBuffer);
 
-	Device->transferQueue.submit(1u, &submitInfo, {});
+	Device->dmaQueue.submit(1u, &submitInfo, {});
 	// PERF:
 	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.
-	Device->transferQueue.waitIdle();
+	Device->dmaQueue.waitIdle();
 }
 } // namespace vl

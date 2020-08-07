@@ -58,14 +58,14 @@ vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
 namespace vl {
 Swapchain_::Swapchain_(vk::SurfaceKHR surface)
 {
-	auto details = Device->pd->GetSwapchainSupportDetails();
+	auto details = Device->GetSwapchainSupportDetails();
 
 	vk::SurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(details.formats);
 	vk::PresentModeKHR presentMode = ChooseSwapPresentMode(details.presentModes);
-	m_extent = ChooseSwapExtent(details.capabilities);
-	m_imageFormat = surfaceFormat.format;
+	extent = ChooseSwapExtent(details.capabilities);
+	imageFormat = surfaceFormat.format;
 
-	uint32 imageCount = std::max(details.capabilities.minImageCount, 2u);
+	imageCount = std::max(details.capabilities.minImageCount, 3u);
 
 	if (details.capabilities.maxImageCount > 0u && imageCount > details.capabilities.maxImageCount) {
 		imageCount = details.capabilities.maxImageCount;
@@ -77,15 +77,16 @@ Swapchain_::Swapchain_(vk::SurfaceKHR surface)
 		.setMinImageCount(imageCount)
 		.setImageFormat(surfaceFormat.format)
 		.setImageColorSpace(surfaceFormat.colorSpace)
-		.setImageExtent(m_extent)
+		.setImageExtent(extent)
 		.setImageArrayLayers(1u)
 		.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
 
-	auto graphicsQueueFamily = Device->graphicsQueue.familyIndex;
+	// graphics and present families for swapchain image concurrency
+	auto mainQueueFamily = Device->mainQueue.familyIndex;
 	auto presentQueueFamily = Device->presentQueue.familyIndex;
 
-	uint32 queueFamilyIndices[] = { graphicsQueueFamily, presentQueueFamily };
-	if (graphicsQueueFamily != presentQueueFamily) {
+	uint32 queueFamilyIndices[] = { mainQueueFamily, presentQueueFamily };
+	if (mainQueueFamily != presentQueueFamily) {
 		createInfo
 			.setImageSharingMode(vk::SharingMode::eConcurrent) //
 			.setQueueFamilyIndexCount(2u)
@@ -105,19 +106,25 @@ Swapchain_::Swapchain_(vk::SurfaceKHR surface)
 		.setClipped(VK_TRUE)
 		.setOldSwapchain(nullptr);
 
-	m_handle = Device->createSwapchainKHRUnique(createInfo);
-	m_images = Device->getSwapchainImagesKHR(m_handle.get());
+	vk::SwapchainKHR::operator=(Device->createSwapchainKHR(createInfo));
+
+	images = Device->getSwapchainImagesKHR(*this);
 
 	InitRenderPass();
 	InitImageViews();
 	InitFrameBuffers();
 }
 
+Swapchain_::~Swapchain_()
+{
+	Device->destroySwapchainKHR(*this);
+}
+
 void Swapchain_::InitRenderPass()
 {
 	vk::AttachmentDescription colorAttachment{};
 	colorAttachment
-		.setFormat(m_imageFormat) //
+		.setFormat(imageFormat) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -155,18 +162,18 @@ void Swapchain_::InitRenderPass()
 		.setDependencyCount(1u)
 		.setPDependencies(&dependency);
 
-	m_renderPass = Device->createRenderPassUnique(renderPassInfo);
+	renderPass = Device->createRenderPassUnique(renderPassInfo);
 }
 
 void Swapchain_::InitImageViews()
 {
-	for (const auto& img : m_images) {
+	for (const auto& img : images) {
 
 		vk::ImageViewCreateInfo viewInfo{};
 		viewInfo
 			.setImage(img) //
 			.setViewType(vk::ImageViewType::e2D)
-			.setFormat(m_imageFormat);
+			.setFormat(imageFormat);
 		viewInfo.subresourceRange
 			.setAspectMask(vk::ImageAspectFlagBits::eColor) //
 			.setBaseMipLevel(0u)
@@ -174,27 +181,27 @@ void Swapchain_::InitImageViews()
 			.setBaseArrayLayer(0u)
 			.setLayerCount(1u);
 
-		m_imageViews.emplace_back(Device->createImageViewUnique(viewInfo));
+		imageViews.emplace_back(Device->createImageViewUnique(viewInfo));
 	}
 }
 
 void Swapchain_::InitFrameBuffers()
 {
-	m_framebuffers.clear();
-	m_framebuffers.resize(m_images.size());
+	framebuffers.clear();
+	framebuffers.resize(images.size());
 
-	for (auto i = 0; i < m_images.size(); ++i) {
+	for (auto i = 0; i < images.size(); ++i) {
 
 		vk::FramebufferCreateInfo createInfo{};
 		createInfo
-			.setRenderPass(m_renderPass.get()) //
+			.setRenderPass(renderPass.get()) //
 			.setAttachmentCount(1u)
-			.setPAttachments(&m_imageViews[i].get())
-			.setWidth(m_extent.width)
-			.setHeight(m_extent.height)
+			.setPAttachments(&imageViews[i].get())
+			.setWidth(extent.width)
+			.setHeight(extent.height)
 			.setLayers(1u);
 
-		m_framebuffers[i] = Device->createFramebufferUnique(createInfo);
+		framebuffers[i] = Device->createFramebufferUnique(createInfo);
 	}
 }
 } // namespace vl

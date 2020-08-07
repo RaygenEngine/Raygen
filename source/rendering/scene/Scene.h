@@ -53,6 +53,8 @@ inline struct Scene_ {
 	size_t activeCamera{ 0 };
 	size_t size{ 0 };
 
+	vk::UniqueAccelerationStructureKHR sceneAS;
+
 	template<CONC(CSceneElem) T>
 	T* GetElement(size_t uid)
 	{

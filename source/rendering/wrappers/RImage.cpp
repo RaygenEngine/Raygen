@@ -31,7 +31,7 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 
 	vk::MemoryAllocateInfo allocInfo{};
 	allocInfo.setAllocationSize(memRequirements.size);
-	allocInfo.setMemoryTypeIndex(Device->pd->FindMemoryType(memRequirements.memoryTypeBits, properties));
+	allocInfo.setMemoryTypeIndex(Device->FindMemoryType(memRequirements.memoryTypeBits, properties));
 
 	m_memory = Device->allocateMemoryUnique(allocInfo);
 
@@ -48,19 +48,19 @@ void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayo
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-	Device->graphicsCmdBuffer.begin(beginInfo);
+	Device->mainCmdBuffer.begin(beginInfo);
 
-	Device->graphicsCmdBuffer.pipelineBarrier(
+	Device->mainCmdBuffer.pipelineBarrier(
 		sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 
-	Device->graphicsCmdBuffer.end();
+	Device->mainCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo.setCommandBufferCount(1u);
-	submitInfo.setPCommandBuffers(&Device->graphicsCmdBuffer);
+	submitInfo.setPCommandBuffers(&Device->mainCmdBuffer);
 
-	Device->graphicsQueue.submit(1u, &submitInfo, {});
-	Device->graphicsQueue.waitIdle();
+	Device->mainQueue.submit(1u, &submitInfo, {});
+	Device->mainQueue.waitIdle();
 }
 
 void RImage::CopyBufferToImage(const RBuffer& buffer)
@@ -68,7 +68,7 @@ void RImage::CopyBufferToImage(const RBuffer& buffer)
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-	Device->transferCmdBuffer.begin(beginInfo);
+	Device->dmaCmdBuffer.begin(beginInfo);
 
 	vk::BufferImageCopy region{};
 	region
@@ -84,21 +84,20 @@ void RImage::CopyBufferToImage(const RBuffer& buffer)
 		.setBaseArrayLayer(0u)
 		.setLayerCount(m_imageInfo.arrayLayers);
 
-	Device->transferCmdBuffer.copyBufferToImage(
-		buffer, m_handle.get(), vk::ImageLayout::eTransferDstOptimal, { region });
+	Device->dmaCmdBuffer.copyBufferToImage(buffer, m_handle.get(), vk::ImageLayout::eTransferDstOptimal, { region });
 
-	Device->transferCmdBuffer.end();
+	Device->dmaCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo
 		.setCommandBufferCount(1u) //
-		.setPCommandBuffers(&Device->transferCmdBuffer);
+		.setPCommandBuffers(&Device->dmaCmdBuffer);
 
-	Device->transferQueue.submit(1u, &submitInfo, {});
+	Device->dmaQueue.submit(1u, &submitInfo, {});
 	// PERF:
 	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.
-	Device->transferQueue.waitIdle();
+	Device->dmaQueue.waitIdle();
 }
 
 void RImage::CopyImageToBuffer(const RBuffer& buffer)
@@ -106,7 +105,7 @@ void RImage::CopyImageToBuffer(const RBuffer& buffer)
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-	Device->transferCmdBuffer.begin(beginInfo);
+	Device->dmaCmdBuffer.begin(beginInfo);
 
 	vk::BufferImageCopy region{};
 	region
@@ -122,21 +121,20 @@ void RImage::CopyImageToBuffer(const RBuffer& buffer)
 		.setBaseArrayLayer(0u)
 		.setLayerCount(m_imageInfo.arrayLayers);
 
-	Device->transferCmdBuffer.copyImageToBuffer(
-		m_handle.get(), vk::ImageLayout::eTransferSrcOptimal, buffer, { region });
+	Device->dmaCmdBuffer.copyImageToBuffer(m_handle.get(), vk::ImageLayout::eTransferSrcOptimal, buffer, { region });
 
-	Device->transferCmdBuffer.end();
+	Device->dmaCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo
 		.setCommandBufferCount(1u) //
-		.setPCommandBuffers(&Device->transferCmdBuffer);
+		.setPCommandBuffers(&Device->dmaCmdBuffer);
 
-	Device->transferQueue.submit(1u, &submitInfo, {});
+	Device->dmaQueue.submit(1u, &submitInfo, {});
 	// PERF:
 	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.
-	Device->transferQueue.waitIdle();
+	Device->dmaQueue.waitIdle();
 }
 
 void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout)
@@ -157,7 +155,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-	Device->graphicsCmdBuffer.begin(beginInfo);
+	Device->mainCmdBuffer.begin(beginInfo);
 
 	for (uint32 layer = 0u; layer < m_imageInfo.arrayLayers; ++layer) {
 
@@ -191,7 +189,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 				.setDstAccessMask(GetAccessMask(intermediateLayout));
 
 			// old to intermediate
-			Device->graphicsCmdBuffer.pipelineBarrier(
+			Device->mainCmdBuffer.pipelineBarrier(
 				oldStage, intermediateStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 
 			vk::ImageBlit blit{};
@@ -210,7 +208,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 				.setBaseArrayLayer(layer)
 				.setLayerCount(1u);
 
-			Device->graphicsCmdBuffer.blitImage(
+			Device->mainCmdBuffer.blitImage(
 				m_handle.get(), intermediateLayout, m_handle.get(), oldLayout, 1, &blit, vk::Filter::eLinear);
 
 			barrier
@@ -221,7 +219,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 
 
 			// intermediate to final
-			Device->graphicsCmdBuffer.pipelineBarrier(
+			Device->mainCmdBuffer.pipelineBarrier(
 				intermediateStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 
 			if (mipWidth > 1)
@@ -239,19 +237,19 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 			.setSrcAccessMask(GetAccessMask(oldLayout))
 			.setDstAccessMask(GetAccessMask(finalLayout));
 
-		Device->graphicsCmdBuffer.pipelineBarrier(
+		Device->mainCmdBuffer.pipelineBarrier(
 			oldStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 	}
 
-	Device->graphicsCmdBuffer.end();
+	Device->mainCmdBuffer.end();
 
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo.setCommandBufferCount(1u);
-	submitInfo.setPCommandBuffers(&Device->graphicsCmdBuffer);
+	submitInfo.setPCommandBuffers(&Device->mainCmdBuffer);
 
-	Device->graphicsQueue.submit(1u, &submitInfo, {});
-	Device->graphicsQueue.waitIdle();
+	Device->mainQueue.submit(1u, &submitInfo, {});
+	Device->mainQueue.waitIdle();
 }
 
 vk::ImageMemoryBarrier RImage::CreateTransitionBarrier(
