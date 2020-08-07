@@ -13,9 +13,10 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneDirectionalLight.h"
 #include "rendering/scene/SceneSpotlight.h"
-#include "rendering/Swapchain.h"
 #include "rendering/VulkanUtl.h"
 #include "rendering/passes/UnlitPass.h"
+
+#include <editor/imgui/ImguiImpl.h>
 
 
 constexpr int32 c_framesInFlight = 2;
@@ -33,7 +34,7 @@ Renderer_::Renderer_()
 	vk::CommandBufferAllocateInfo allocInfo{};
 	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(Swapchain->GetImageCount());
+		.setCommandBufferCount(c_framesInFlight);
 
 	m_geometryCmdBuffer = Device->allocateCommandBuffers(allocInfo);
 	m_pptCmdBuffer = Device->allocateCommandBuffers(allocInfo);
@@ -178,7 +179,7 @@ void Renderer_::InitPipelines()
 
 Renderer_::~Renderer_() {}
 
-void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
+void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -189,27 +190,26 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
 
 	cmdBuffer->begin(beginInfo);
 	{
-		GbufferPass::RecordCmd(
-			cmdBuffer, m_gbuffer.get(), Scene->geometries.elements, Scene->animatedGeometries.elements);
+		GbufferPass::RecordCmd(cmdBuffer, m_gbuffer.get(), sceneDesc);
 
-		for (auto sl : Scene->spotlights.elements) {
+		for (auto sl : sceneDesc->spotlights.elements) {
 			if (sl) {
-				DepthmapPass::RecordCmd(cmdBuffer, *sl->shadowmap, sl->ubo.viewProj, Scene->geometries.elements,
-					Scene->animatedGeometries.elements);
+				DepthmapPass::RecordCmd(cmdBuffer, *sl->shadowmap, sl->ubo.viewProj, sceneDesc->geometries.elements,
+					sceneDesc->animatedGeometries.elements);
 			}
 		}
 
-		for (auto dl : Scene->directionalLights.elements) {
+		for (auto dl : sceneDesc->directionalLights.elements) {
 			if (dl) {
-				DepthmapPass::RecordCmd(cmdBuffer, *dl->shadowmap, dl->ubo.viewProj, Scene->geometries.elements,
-					Scene->animatedGeometries.elements);
+				DepthmapPass::RecordCmd(cmdBuffer, *dl->shadowmap, dl->ubo.viewProj, sceneDesc->geometries.elements,
+					sceneDesc->animatedGeometries.elements);
 			}
 		}
 	}
 	cmdBuffer->end();
 }
 
-void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
+void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -263,22 +263,22 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 			cmdBuffer->setViewport(0, { viewport });
 			cmdBuffer->setScissor(0, { scissor });
 
-			m_postprocCollection.Draw(*cmdBuffer, currentFrame);
+			m_postprocCollection.Draw(*cmdBuffer, sceneDesc, currentFrame);
 		}
 
-		UnlitPass::RecordCmd(cmdBuffer, extent, Scene->geometries.elements, Scene->animatedGeometries.elements);
+		UnlitPass::RecordCmd(cmdBuffer, extent, sceneDesc);
 		cmdBuffer->endRenderPass();
 
 		// TODO: preparation of data for next frame should not be performed here?
 		m_gbuffer->TransitionForWrite(cmdBuffer);
 
-		for (auto sl : Scene->spotlights.elements) {
+		for (auto sl : sceneDesc->spotlights.elements) {
 			if (sl && sl->shadowmap) {
 				sl->shadowmap->TransitionForWrite(cmdBuffer);
 			}
 		}
 
-		for (auto dl : Scene->directionalLights.elements) {
+		for (auto dl : sceneDesc->directionalLights.elements) {
 			if (dl && dl->shadowmap) {
 				dl->shadowmap->TransitionForWrite(cmdBuffer);
 			}
@@ -287,7 +287,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 	cmdBuffer->end();
 }
 
-void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, uint32 swapchainImageIndex)
+void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc, vk::RenderPass outRp, vk::Framebuffer outFb, vk::Extent2D outExtent)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -300,11 +300,11 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, uint32 swapchainImag
 	{
 		vk::RenderPassBeginInfo renderPassInfo{};
 		renderPassInfo
-			.setRenderPass(Swapchain->GetRenderPass()) //
-			.setFramebuffer(Swapchain->GetFramebuffer(swapchainImageIndex));
+			.setRenderPass(outRp) //
+			.setFramebuffer(outFb);
 		renderPassInfo.renderArea
 			.setOffset({ 0, 0 }) //
-			.setExtent(Swapchain->GetExtent());
+			.setExtent(outExtent);
 
 		vk::ClearValue clearValue{};
 		clearValue.setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
@@ -320,8 +320,9 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, uint32 swapchainImag
 			cmdBuffer->setViewport(0, { viewport });
 			cmdBuffer->setScissor(0, { scissor });
 
+			// WIP: contains stuff that should be in other classes
 			m_copyHdrTexture.RecordCmd(cmdBuffer);
-			m_writeEditor.RecordCmd(cmdBuffer);
+			ImguiImpl::RenderVulkan(cmdBuffer);
 		}
 		cmdBuffer->endRenderPass();
 
@@ -439,52 +440,31 @@ void Renderer_::OnViewportResize()
 	}
 } // namespace vl
 
-void Renderer_::OnWindowResize()
-{
-	Device->waitIdle();
-
-	delete Swapchain;
-	Swapchain = new Swapchain_(Instance->surface);
-}
-
 void Renderer_::UpdateForFrame()
 {
-	if (*m_didWindowResize) {
-		OnWindowResize();
-	}
-
 	if (*m_didViewportResize) {
 		OnViewportResize();
 	}
-
-	GpuAssetManager->ConsumeAssetUpdates();
-	Scene->ConsumeCmdQueue();
 }
 
-void Renderer_::DrawFrame()
+vk::Semaphore Renderer_::PrepareForDraw()
 {
-	if (m_isMinimzed) {
-		return;
-	}
-
-	UpdateForFrame();
-
-	PROFILE_SCOPE(Renderer);
-	uint32 imageIndex;
-
 	currentFrame = (currentFrame + 1) % c_framesInFlight;
 
 	Device->waitForFences({ *m_inFlightFence[currentFrame] }, true, UINT64_MAX);
 	Device->resetFences({ *m_inFlightFence[currentFrame] });
 
-	Scene->UploadDirty();
+	return *m_imageAvailSem[currentFrame];
+}
 
-	Device->acquireNextImageKHR(*Swapchain, UINT64_MAX, { *m_imageAvailSem[currentFrame] }, {}, &imageIndex);
+vk::Semaphore Renderer_::DrawFrame(SceneRenderDesc<SceneCamera>& sceneDesc, vk::RenderPass outRp, vk::Framebuffer outFb, vk::Extent2D outExtent)
+{
+	PROFILE_SCOPE(Renderer);
 
 	// passes
-	RecordGeometryPasses(&m_geometryCmdBuffer[currentFrame]);
-	RecordPostProcessPass(&m_pptCmdBuffer[currentFrame]);
-	RecordOutPass(&m_outCmdBuffer[currentFrame], imageIndex);
+	RecordGeometryPasses(&m_geometryCmdBuffer[currentFrame], sceneDesc);
+	RecordPostProcessPass(&m_pptCmdBuffer[currentFrame], sceneDesc);
+	RecordOutPass(&m_outCmdBuffer[currentFrame], sceneDesc, outRp, outFb, outExtent);
 
 	std::array bufs = { m_geometryCmdBuffer[currentFrame], m_pptCmdBuffer[currentFrame], m_outCmdBuffer[currentFrame] };
 
@@ -505,26 +485,9 @@ void Renderer_::DrawFrame()
 		.setCommandBufferCount(static_cast<uint32>(bufs.size()))
 		.setPCommandBuffers(bufs.data());
 
-
 	Device->graphicsQueue.submit(1u, &submitInfo, *m_inFlightFence[currentFrame]);
 
-
-	vk::PresentInfoKHR presentInfo;
-	presentInfo //
-		.setWaitSemaphoreCount(1u)
-		.setPWaitSemaphores(&*m_renderFinishedSem[currentFrame]);
-
-
-	vk::SwapchainKHR swapChains[] = { *Swapchain };
-	presentInfo //
-		.setSwapchainCount(1u)
-		.setPSwapchains(swapChains)
-		.setPImageIndices(&imageIndex)
-		.setPResults(nullptr);
-
-
-	PROFILE_SCOPE(Renderer);
-	Device->presentQueue.presentKHR(presentInfo);
+	return *m_renderFinishedSem[currentFrame];
 }
 
 vk::Viewport Renderer_::GetSceneViewport() const

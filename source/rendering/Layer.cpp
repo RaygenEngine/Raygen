@@ -56,6 +56,47 @@ Layer_::~Layer_()
 
 void Layer_::DrawFrame()
 {
-	Renderer->DrawFrame();
+	// this should be the general approach
+	// even for more than one renderers/scenes/swapchains
+
+	// if window resize
+	//Device->waitIdle();
+	//delete Swapchain;
+	//Swapchain = new Swapchain_(Instance->surface);
+
+	// if(window not minimized)
+
+	Renderer->UpdateForFrame();
+	GpuAssetManager->ConsumeAssetUpdates();
+	Scene->ConsumeCmdQueue();
+
+	auto imageAvailSem = Renderer->PrepareForDraw();
+
+	Scene->UploadDirty();
+
+	uint32 imageIndex;
+	Device->acquireNextImageKHR(*Swapchain, UINT64_MAX, { imageAvailSem }, {}, &imageIndex);
+	
+	auto outRp = Swapchain->GetRenderPass();
+	auto outFb = Swapchain->GetFramebuffer(imageIndex);
+	auto outExtent = Swapchain->GetExtent();
+
+	// WIP: 1 = editor camera (lets hope for now)
+	SceneRenderDesc<SceneCamera> sceneDesc{ Scene, 1 };
+
+	auto renderFinishedSem = Renderer->DrawFrame(sceneDesc, outRp, outFb, outExtent);
+
+	vk::SwapchainKHR swapChains[] = { *Swapchain };
+
+	vk::PresentInfoKHR presentInfo;
+	presentInfo //
+		.setWaitSemaphoreCount(1u)
+		.setPWaitSemaphores(&renderFinishedSem)
+		.setSwapchainCount(1u)
+		.setPSwapchains(swapChains)
+		.setPImageIndices(&imageIndex)
+		.setPResults(nullptr);
+
+	Device->presentQueue.presentKHR(presentInfo);
 }
 } // namespace vl

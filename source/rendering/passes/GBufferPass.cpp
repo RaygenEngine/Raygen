@@ -13,6 +13,8 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/wrappers/RGbuffer.h"
+#include "rendering/scene/SceneCamera.h"
+#include "rendering/scene/SceneGeometry.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
 
@@ -305,8 +307,7 @@ vk::UniquePipeline GbufferPass::CreateAnimPipeline(
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
 
-void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
-	const std::vector<SceneGeometry*>& geometries, const std::vector<SceneAnimatedGeometry*>& animGeometries)
+void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, SceneRenderDesc<SceneCamera>& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -350,13 +351,16 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 
 	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	{
-		auto camera = Scene->GetActiveCamera();
+		auto camera = sceneDesc.viewer;
 		if (!camera) {
 			cmdBuffer->endRenderPass();
 			return;
 		}
 
-		for (auto geom : geometries) {
+		// WIP: decouple
+		auto descSet = camera->descSets[vl::Renderer_::currentFrame];
+
+		for (auto geom : sceneDesc->geometries.elements) {
 			if (!geom) {
 				continue;
 			}
@@ -381,7 +385,7 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 				}
 
 				cmdBuffer->bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
+					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
 
 				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
 				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
@@ -392,7 +396,7 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 		}
 
 
-		for (auto geom : animGeometries) {
+		for (auto geom : sceneDesc->animatedGeometries.elements) {
 			if (!geom) {
 				continue;
 			}
@@ -417,7 +421,7 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 				}
 
 				cmdBuffer->bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
+					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
 
 				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
 					&geom->descSets[Renderer_::currentFrame], 0u, nullptr);

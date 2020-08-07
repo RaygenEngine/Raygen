@@ -1,6 +1,6 @@
 #pragma once
 #include "rendering/wrappers/RGbuffer.h"
-#include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/Scene.h"
 
 #include <vulkan/vulkan.hpp>
 
@@ -18,8 +18,7 @@ public:
 	static vk::UniquePipeline CreateAnimPipeline(
 		vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
 
-	static void RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
-		const std::vector<SceneGeometry*>& geometries, const std::vector<SceneAnimatedGeometry*>& animGeometries);
+	static void RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, SceneRenderDesc<SceneCamera>& sceneDesc);
 };
 
 } // namespace vl
