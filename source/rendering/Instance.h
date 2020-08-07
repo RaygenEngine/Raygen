@@ -14,7 +14,7 @@ inline struct Instance_ : public vk::Instance {
 
 	std::vector<UniquePtr<RPhysicalDevice>> capablePhysicalDevices;
 
-	Instance_(std::vector<const char*> requiredExtensions, GLFWwindow* window);
+	Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwindow* window);
 	~Instance_();
 } * Instance{};
 } // namespace vl

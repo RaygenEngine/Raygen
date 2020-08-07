@@ -29,7 +29,7 @@ RGbuffer::RGbuffer(uint32 width, uint32 height)
 			vk::ImageUsageFlagBits::eColorAttachment, vk::ImageLayout::eColorAttachmentOptimal);
 	}
 
-	vk::Format depthFormat = Device->pd->FindDepthFormat();
+	vk::Format depthFormat = Device->FindDepthFormat();
 
 	attachments[GDepth] = initAttachment(attachmentNames[GDepth], depthFormat,
 		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal);

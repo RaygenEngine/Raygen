@@ -1,16 +1,22 @@
 #include "pch.h"
 #include "Scene.h"
 
-#include "rendering/Renderer.h"
+#include "assets/shared/GeometryShared.h"
 #include "engine/console/ConsoleVariable.h"
-#include "rendering/scene/SceneReflectionProbe.h"
+#include "rendering/assets/GpuMesh.h"
+#include "rendering/Device.h"
+#include "rendering/Renderer.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneSpotlight.h"
-#include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/SceneDirectionalLight.h"
-
+#include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/SceneReflectionProbe.h"
+#include "rendering/scene/SceneSpotlight.h"
 
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { Scene->BuildAll(); }, "Builds all build-able scene nodes" };
+ConsoleFunction<> console_BuildAS{ "s.buildTestAccelerationStructure",
+	[]() {
+	},
+	"Builds a top level acceleration structure, for debugging purposes, todo: remove" };
 
 void Scene_::BuildAll()
 {

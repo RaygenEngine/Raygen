@@ -15,15 +15,23 @@
 namespace vl {
 Layer_::Layer_()
 {
-	auto requiredExtensions = Platform::GetVulkanExtensions();
-	requiredExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-	requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-
 	VulkanLoader::InitLoaderBase();
 
-	Instance = new Instance_(requiredExtensions, Platform::GetMainHandle());
+	Instance = new Instance_(Platform::GetVulkanExtensions(), Platform::GetMainHandle());
 
-	auto deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_MAINTENANCE1_EXTENSION_NAME };
+	const auto deviceExtensions = {
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		VK_KHR_MAINTENANCE1_EXTENSION_NAME,
+		// ray tracing device extensions
+		VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
+		VK_KHR_MAINTENANCE3_EXTENSION_NAME,
+		VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+		VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+		VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
+		VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
+		VK_KHR_RAY_TRACING_EXTENSION_NAME,
+	};
+
 	Device = new Device_(Instance->capablePhysicalDevices[0].get(), deviceExtensions);
 
 	GpuResources = new GpuResources_();
@@ -31,12 +39,14 @@ Layer_::Layer_()
 
 	Layouts = new Layouts_();
 
+	// TODO: swapchain is not a global
 	Swapchain = new Swapchain_(Instance->surface);
-	Scene = new Scene_(Swapchain->GetImageCount());
+	// TODO: scene is not a global
+	Scene = new Scene_(Swapchain->imageCount);
 
 	Renderer = new Renderer_();
 	Renderer->InitPipelines();
-}
+} // namespace vl
 
 Layer_::~Layer_()
 {

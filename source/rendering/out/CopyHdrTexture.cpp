@@ -131,7 +131,7 @@ void CopyHdrTexture::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(Swapchain->GetRenderPass())
+		.setRenderPass(Swapchain->renderPass.get())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
