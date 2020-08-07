@@ -25,7 +25,7 @@ void SceneCmdSystem::WriteSceneCmds(Scene* scene, entt::registry& registry)
 	}
 }
 
-void SceneCmdSystem::WriteRecreateCmds(Scene_* scene, entt::registry& registry)
+void SceneCmdSystem::WriteRecreateCmds(Scene* scene, entt::registry& registry)
 {
 	for (auto fn : Get().m_recreateCmds) {
 		fn(scene, registry);

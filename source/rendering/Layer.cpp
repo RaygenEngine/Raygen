@@ -16,6 +16,8 @@
 #include "universe/Universe.h"
 #include "engine/Input.h"
 #include "ecs_universe/systems/SceneCmdSystem.h"
+#include <editor\EditorObject.h>
+#include "rendering/scene/SceneSpotlight.h"
 
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
 	"Builds all build-able scene nodes" };
@@ -24,7 +26,6 @@ ConsoleFunction<> console_BuildAS{ "s.buildTestAccelerationStructure", []() {},
 
 namespace vl {
 
-Scene* currentScene{ nullptr };
 
 Layer_::Layer_()
 {
@@ -55,6 +56,7 @@ Layer_::Layer_()
 
 	mainSwapchain = std::make_unique<RSwapchain>(Instance->surface);
 
+
 	// TODO: scene is not a global
 	mainScene = std::make_unique<Scene>(mainSwapchain->imageCount);
 	secondScene = std::make_unique<Scene>(mainSwapchain->imageCount);
@@ -84,10 +86,11 @@ Layer_::~Layer_()
 
 void Layer_::DrawFrame()
 {
-	if (Input.IsJustPressed(Key::Tab)) {
-		currentScene = currentScene == mainScene.get() ? secondScene.get() : mainScene.get();
-		Universe::ecsWorld->attachedScene = currentScene;
-		SceneCmdSystem::WriteSceneCmds;
+	if (Input.IsDown(Key::Tab)) {
+		currentScene = secondScene.get();
+	}
+	else {
+		currentScene = mainScene.get();
 	}
 
 	// this should be the general approach
@@ -112,13 +115,14 @@ void Layer_::DrawFrame()
 	Device->acquireNextImageKHR(*mainSwapchain, UINT64_MAX, { imageAvailSem }, {}, &imageIndex);
 
 	auto outRp = mainSwapchain->renderPass.get();
-	auto outFb = mainSwapchain->framebuffers[imageIndex].get();
+	auto outFb = mainSwapchain->framebuffers[imageIndex % 2].get();
 	auto outExtent = mainSwapchain->extent;
 
 	// WIP: 1 = editor camera (lets hope for now)
 	SceneRenderDesc sceneDesc{ currentScene, 0 };
 
 	auto renderFinishedSem = Renderer->DrawFrame(sceneDesc, outRp, outFb, outExtent);
+
 
 	vk::SwapchainKHR swapChains[] = { *mainSwapchain };
 

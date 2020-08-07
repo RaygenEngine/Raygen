@@ -2,6 +2,7 @@
 #include "core/math-ext/Frustum.h"
 #include "universe/nodes/Node.h"
 
+#include "rendering/Layer.h"
 // Note: to make a automatic camera that resizes to window size see WindowCameraNode
 class CameraNode : public Node {
 
@@ -90,7 +91,7 @@ private:
 	template<typename Lambda>
 	void Enqueue(Lambda&& l)
 	{
-		if (Universe::ecsWorld->attachedScene)
-			Universe::ecsWorld->attachedScene->EnqueueCmd<SceneCamera>(sceneUid, l);
+		vl::Layer->mainScene.get()->EnqueueCmd<SceneCamera>(0, l);
+		vl::Layer->secondScene.get()->EnqueueCmd<SceneCamera>(0, l);
 	}
 };

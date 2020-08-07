@@ -23,4 +23,5 @@ public:
 
 
 	inline static ECS_World* ecsWorld{ nullptr };
+	inline static ECS_World* ecsWorld2{ nullptr };
 };

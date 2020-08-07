@@ -18,7 +18,10 @@ public:
 	void DrawFrame();
 
 	UniquePtr<RSwapchain> mainSwapchain;
+	UniquePtr<RSwapchain> secondSwapchain;
 	UniquePtr<Scene> mainScene;
 	UniquePtr<Scene> secondScene;
+
+	Scene* currentScene{ nullptr };
 } * Layer{};
 } // namespace vl

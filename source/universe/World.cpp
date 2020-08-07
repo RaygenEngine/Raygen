@@ -21,6 +21,8 @@
 #include "editor/imgui/ImEd.h"        // WIP: ECS
 #include "editor/imgui/ImAssetSlot.h" // WIP: ECS
 
+#include "rendering/Layer.h"
+
 #include <nlohmann/json.hpp>
 #include <engine\Input.h>
 
@@ -180,7 +182,8 @@ void World::Update()
 	ImguiImpl::NewFrame();
 	Editor::Update();
 
-	Universe::ecsWorld->UpdateWorld();
+	Universe::ecsWorld->UpdateWorld(vl::Layer->mainScene.get());
+	Universe::ecsWorld2->UpdateWorld(vl::Layer->secondScene.get());
 
 
 	do {
@@ -193,7 +196,8 @@ void World::Update()
 	} while (!m_postIterateCommandList.empty());
 
 
-	Universe::ecsWorld->attachedScene->EnqueueEndFrame();
+	vl::Layer->mainScene.get()->EnqueueEndFrame();
+	vl::Layer->secondScene.get()->EnqueueEndFrame();
 	ClearDirtyFlags();
 }
 
