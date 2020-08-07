@@ -12,7 +12,10 @@
 #include "rendering/Instance.h"
 #include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
-#include "rendering/Swapchain.h"
+#include "rendering/wrappers/RSwapchain.h"
+
+// WIP:
+#include "rendering/Layer.h"
 
 #include <imgui/imgui.h>
 #include <imgui/examples/imgui_impl_glfw.h>
@@ -280,6 +283,7 @@ void InitVulkan()
 
 	auto physDev = Device->pd;
 	auto& device = *Device;
+	auto& swapchain = Layer->mainSwapchain;
 
 	ImGui_ImplVulkan_InitInfo init = {};
 	init.Instance = *Instance;
@@ -289,11 +293,11 @@ void InitVulkan()
 	init.Queue = Device->mainQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
 	init.DescriptorPool = GpuResources->descPools.GetImguiPool();
-	init.ImageCount = Swapchain->imageCount;
-	init.MinImageCount = Swapchain->imageCount;
+	init.ImageCount = swapchain->imageCount;
+	init.MinImageCount = swapchain->imageCount;
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init, Swapchain->renderPass.get());
+	ImGui_ImplVulkan_Init(&init, swapchain->renderPass.get());
 
 	// CHECK: which buffer
 	auto cmdBuffer = Device->mainCmdBuffer;

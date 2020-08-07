@@ -354,15 +354,14 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 						vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
 				}
 
-				cmdBuffer->bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
+				// cmdBuffer->bindDescriptorSets(
+				//	vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
 				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
 					&geom->descSets[Renderer_::currentFrame], 0u, nullptr);
 
 				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
 				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
-
 
 				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 			}

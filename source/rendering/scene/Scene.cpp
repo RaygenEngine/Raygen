@@ -12,20 +12,15 @@
 #include "rendering/scene/SceneReflectionProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
 
-ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { Scene->BuildAll(); }, "Builds all build-able scene nodes" };
-ConsoleFunction<> console_BuildAS{ "s.buildTestAccelerationStructure",
-	[]() {
-	},
-	"Builds a top level acceleration structure, for debugging purposes, todo: remove" };
 
-void Scene_::BuildAll()
+void Scene::BuildAll()
 {
 	for (auto reflProb : reflProbs.elements) {
 		reflProb->Build();
 	}
 }
 
-void Scene_::DrainQueueForDestruction()
+void Scene::DrainQueueForDestruction()
 {
 	ExecuteCreations();
 
@@ -46,18 +41,18 @@ void Scene_::DrainQueueForDestruction()
 	cmds.erase(cmds.begin(), cmds.begin() + end);
 }
 
-Scene_::Scene_(size_t size)
+Scene::Scene(size_t size)
 	: size(size)
 {
 	EnqueueEndFrame();
 }
 
-vk::DescriptorSet Scene_::GetActiveCameraDescSet()
+vk::DescriptorSet Scene::GetActiveCameraDescSet()
 {
 	return GetActiveCamera()->descSets[vl::Renderer_::currentFrame];
 }
 
-void Scene_::UploadDirty()
+void Scene::UploadDirty()
 {
 	const bool primaryDirty = activeCamera > 0 && cameras.elements[activeCamera]->isDirty[vl::Renderer_::currentFrame];
 

@@ -56,7 +56,7 @@ void PtDirectionalLight::MakePipeline()
 	Utl_CreatePipeline(gpuShader, colorBlending);
 }
 
-void PtDirectionalLight::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc, uint32 frameIndex)
+void PtDirectionalLight::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, uint32 frameIndex)
 {
 	auto camera = sceneDesc.viewer;
 
@@ -64,7 +64,7 @@ void PtDirectionalLight::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc<Scene
 		return;
 	}
 
-	// WIP: 
+	// WIP:
 	auto descSet = camera->descSets[Renderer_::currentFrame];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
@@ -72,8 +72,8 @@ void PtDirectionalLight::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc<Scene
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
 		&Renderer->GetGbuffer()->descSet, 0u, nullptr);
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
-		&descSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u, &descSet, 0u, nullptr);
 
 	for (auto dl : sceneDesc->directionalLights.elements) {
 		if (!dl) {
