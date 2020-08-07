@@ -148,6 +148,36 @@ inline T* AcceptDropObject(const char* payloadTag)
 	return data;
 }
 
+
+// Call inside an if(ImGui::BeginDragDrop ...)
+template<typename T>
+inline void EndDragDropSourceByCopy(T& payload, const char* payloadTag)
+{
+	ImGui::SetDragDropPayload(payloadTag, &payload, sizeof(T));
+	ImGui::EndDragDropSource();
+}
+
+
+template<typename T>
+inline std::optional<T> AcceptDropByCopy(const char* payloadTag)
+{
+	if (!ImGui::BeginDragDropTarget()) {
+		return {};
+	}
+
+	const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(payloadTag);
+	if (!payload) {
+		ImGui::EndDragDropTarget();
+		return {};
+	}
+
+	assert(payload->DataSize == sizeof(T));
+	T data = *reinterpret_cast<T*>(payload->Data);
+	ImGui::EndDragDropTarget();
+	return data;
+}
+
+
 template<typename T>
 bool EnumDropDown(const char* label, T& enumval)
 {
