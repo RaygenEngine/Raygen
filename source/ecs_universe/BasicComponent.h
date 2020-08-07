@@ -57,7 +57,8 @@ struct BasicComponent {
 	Entity next;
 	Entity prev;
 
-	// Also moves children
+	// Also moves children, handles moving ourselves under a child (by promoting all children).
+	// NOTE: Be careful when you call this from loops
 	void SetParent(Entity newParent = {}, int32 index = -1);
 
 	void MarkDirtySrt();
@@ -71,6 +72,9 @@ private:
 	TransformCache world_;
 
 	void DetachFromParent();
+
+	// Returns false if possibleChild == self
+	bool IsDistantChild(Entity possibleChild);
 
 public:
 	void SetNodeTransformWCS(const glm::mat4& newWorldMatrix);

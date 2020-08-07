@@ -24,3 +24,10 @@ void SceneCmdSystem::WriteSceneCmds(Scene_* scene, entt::registry& registry)
 		fn(scene, registry);
 	}
 }
+
+void SceneCmdSystem::WriteRecreateCmds(Scene_* scene, entt::registry& registry)
+{
+	for (auto fn : Get().m_recreateCmds) {
+		fn(scene, registry);
+	}
+}
