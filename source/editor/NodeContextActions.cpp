@@ -28,10 +28,11 @@ std::vector<NodeContextActions::Entry> NodeContextActions::GetActions(Node* node
 		return std::move(actions);
 	}
 
-	if (node->IsA<EditorCameraNode>()) {
-		std::vector<Entry> actions;
-		return std::move(actions);
-	}
+	// WIP: ECS
+	// if (node->IsA<EditorCameraNode>()) {
+	//	std::vector<Entry> actions;
+	//	return std::move(actions);
+	//}
 
 	std::vector<Entry> actions = baseActions;
 
@@ -50,10 +51,11 @@ std::vector<NodeContextActions::Entry> NodeContextActions::GetActions(Node* node
 			actions.emplace_back("Pilot", &EditorObject_::PilotThis);
 		}
 
-		if (node->IsA<CameraNode>()) {
-			actions.emplace_back();
-			actions.emplace_back("Set As Active", &worldop::MakeActiveCamera);
-		}
+		// WIP: ECS
+		// if (node->IsA<CameraNode>()) {
+		//	actions.emplace_back();
+		//	actions.emplace_back("Set As Active", &worldop::MakeActiveCamera);
+		//}
 	}
 
 	return actions;

@@ -11,7 +11,6 @@
 #include "universe/nodes/light/ReflectionProbeNode.h"
 #include "universe/nodes/light/SpotLightNode.h"
 #include "universe/nodes/TransformNode.h"
-#include "universe/nodes/user/FlyingUserNode.h"
 #include "universe/nodes/user/FreeformUserNode.h"
 #include "universe/nodes/user/TerrainWalkerUserNode.h"
 #include "universe/Universe.h"

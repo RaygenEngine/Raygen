@@ -36,7 +36,6 @@
 #	define CONC(...)     __VA_ARGS__
 #endif
 
-// HAS to be used to always link some not automatically exported functions. (usually template specializations)
 #ifdef _MSC_VER
 #	define NOINLINE __declspec(noinline)
 #else

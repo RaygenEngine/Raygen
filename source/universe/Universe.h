@@ -1,5 +1,6 @@
 #pragma once
 #include "universe/World.h"
+#include "ecs_universe/EcsWorld.h"
 
 class Universe {
 	friend class Engine_;
@@ -17,4 +18,9 @@ public:
 	// Loads a world. Call is deferred until its safe to load the new world. (aka the beginning of the frame)
 	static void LoadMainWorld(const fs::path& path);
 
-}; // namespace Universe
+
+	static void ECS_LoadMainWorld(const fs::path& path);
+
+
+	inline static ECS_World* ecsWorld;
+};

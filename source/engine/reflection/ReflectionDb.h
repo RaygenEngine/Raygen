@@ -32,6 +32,6 @@ public:
 
 
 template<typename K>
-struct ReflectionRegistar {
-	ReflectionRegistar() { ReflectionDb::RegisterReflClass<K>(); }
+struct ReflectionRegistrar {
+	ReflectionRegistrar() { ReflectionDb::RegisterReflClass<K>(); }
 };

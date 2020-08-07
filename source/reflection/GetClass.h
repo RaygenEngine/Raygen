@@ -73,4 +73,6 @@ const ReflClass& GetClass(const T* obj)
 		return T::StaticClass();
 	}
 }
+
+
 } // namespace refl
