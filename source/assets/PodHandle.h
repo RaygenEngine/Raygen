@@ -21,5 +21,5 @@ public:
 	//[[nodiscard]] const PodEntry* _Debug() const { return AssetHandlerManager::GetEntry(*this); }
 	[[nodiscard]] const PodType* Lock() const { return static_cast<PodType*>(assetdetail::podAccessor[uid]); }
 
-	friend class AssetImporterManager;
+	friend class AssetImporterManager_;
 };

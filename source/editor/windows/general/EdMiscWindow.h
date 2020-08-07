@@ -27,6 +27,8 @@ public:
 };
 class ImGuiDemoWindow : public ed::UniqueWindow {
 public:
+	inline static const char* Category = "Debug";
+
 	ImGuiDemoWindow(std::string_view name)
 		: ed::UniqueWindow(name)
 	{
@@ -46,6 +48,8 @@ class GbufferDebugWindow : public ed::UniqueWindow {
 	std::unordered_map<std::string, bool> isAttachmentOpen;
 
 public:
+	inline static const char* Category = "Debug";
+
 	GbufferDebugWindow(std::string_view name);
 
 

@@ -58,7 +58,7 @@ void SpotlightNode::DirtyUpdate(DirtyFlagset flags)
 
 	if (flags[DF::ShadowsTextSize]) {
 		Enqueue([width = m_shadowMapWidth, height = m_shadowMapHeight](
-					SceneSpotlight& sl) { sl.ResizeShadowmap(width, height); });
+					SceneSpotlight& sl) { sl.MaybeResizeShadowmap(width, height); });
 	}
 
 	if (flags[DF::Aperture] || flags[DF::NearFar] || flags[DF::ShadowsTextSize]) {

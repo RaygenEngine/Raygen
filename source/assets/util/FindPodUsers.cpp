@@ -75,15 +75,16 @@ std::vector<Node*> FindNodeUsersOfPod(PodEntry* pod, World* world)
 {
 	std::vector<Node*> users;
 
-	for (Node* node : world->GetNodes()) {
-		IsUserOfPodVisitor v(pod);
+	// WIP: ECS
+	// for (Node* node : world->GetNodes()) {
+	//	IsUserOfPodVisitor v(pod);
 
-		refltools::CallVisitorOnEveryProperty(node, v);
+	//	refltools::CallVisitorOnEveryProperty(node, v);
 
-		if (v.result) {
-			users.push_back(node);
-		}
-	}
+	//	if (v.result) {
+	//		users.push_back(node);
+	//	}
+	//}
 
 	return users;
 }

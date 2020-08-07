@@ -71,7 +71,7 @@ void GbufferDebugWindow::ImguiDraw()
 		ImGui::PushID(att);
 		ImGui::Checkbox(att->GetName().c_str(), &isOpen);
 		if (isOpen) {
-			std::string name = fmt::format("{}", att->GetName());
+			std::string name = fmt::format("Att {}", att->GetName());
 			ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
 			if (ImGui::Begin(name.c_str(), &isOpen)) {
 				auto descrSet = att->GetDebugDescriptor();

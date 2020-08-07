@@ -10,7 +10,17 @@
 #include <vector>
 #include <array>
 
+
 namespace ed {
+namespace detail {
+	template<typename T, typename = void>
+	struct HasCategory : std::false_type {
+	};
+
+	template<typename T>
+	struct HasCategory<T, std::enable_if_t<std::is_same_v<decltype(T::Category), const char*>>> : std::true_type {
+	};
+} // namespace detail
 // Responsible for handling and aggregating editor windows.
 // There are 2 "types" of windows, 'singleton-like' windows where only one can be open at a time and multi windows (eg
 // asset editors)
@@ -23,10 +33,12 @@ public:
 		std::function<UniqueWindow*(const std::string&)> constructor;
 		size_t hash;
 		std::string name;
+		const char* category{ nullptr };
 	};
 
 public:
 	std::vector<UniqueWindowEntry> m_entries;
+	std::set<const char*> m_categories;
 	std::unordered_map<mti::Hash, size_t> m_entriesHash;
 
 	IterableSafeHashMap<mti::Hash, UniqueWindow*> m_openUniqueWindows;
@@ -40,8 +52,15 @@ public:
 	{
 		auto hash = mti::GetHash<T>();
 		if (m_entriesHash.insert({ hash, m_entries.size() }).second) {
-			m_entries.emplace_back(
-				UniqueWindowEntry{ [](const std::string& name) { return new T(name); }, hash, name });
+
+			UniqueWindowEntry entry{ [](const std::string& name) { return new T(name); }, hash, name };
+
+			if constexpr (detail::HasCategory<T>::value) {
+				entry.category = T::Category;
+				m_categories.insert(T::Category);
+			}
+
+			m_entries.emplace_back(entry);
 		}
 
 		LoadWindowFromSettings(name, hash);

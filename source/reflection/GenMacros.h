@@ -30,6 +30,70 @@ public:                                                                         
 	struct Class;                                                                                                      \
 	}
 
+//
+//
+//
+//
+//
+
+// Functions required for scene commands:
+//
+// std::function<void(SceneStructType&)> DirtyCmd(BasicComponent&);
+
+
+#define REFLECTED_SCENE_COMP(CompClass, SceneStructType)                                                               \
+	using RenderSceneType = SceneStructType;                                                                           \
+	struct Dirty {                                                                                                     \
+	};                                                                                                                 \
+	struct Create {                                                                                                    \
+	};                                                                                                                 \
+	struct Destroy {                                                                                                   \
+	};                                                                                                                 \
+	template<bool FullDirty>                                                                                           \
+	std::function<void(SceneStructType&)> DirtyCmd(BasicComponent&);                                                   \
+                                                                                                                       \
+	REFLECTED_COMP(CompClass)
+
+
+#define REFLECT_ICON(u8_icon) refl.SetIcon(u8_icon)
+
+#define REFLECT_CATEGORY(ConstCharCategory) refl.SetCategory(ConstCharCategory)
+
+#define REFLECTED_COMP(ComponentClass)                                                                                 \
+	[[nodiscard]] static const ReflClass& StaticClass() { return ComponentClass::Z_MutableClass(); }                   \
+                                                                                                                       \
+private:                                                                                                               \
+	/* Init of static class, also updates parents' child set. With this we ensure all ReflClasses are unique for each  \
+	 * class and therefore we can check if the class is the same by comparing pointers */                              \
+	static ReflClass& Z_MutableClass()                                                                                 \
+	{                                                                                                                  \
+		static ReflClass cl = ReflClass::Generate<ComponentClass>();                                                   \
+		return cl;                                                                                                     \
+	}                                                                                                                  \
+	using Z_ThisType = ComponentClass;                                                                                 \
+	friend class ReflClass;                                                                                            \
+	static bool RegisterT();                                                                                           \
+	static bool RegistrarSelect()                                                                                      \
+	{                                                                                                                  \
+		if constexpr (componentdetail::HasSceneTypeV<ComponentClass>) {                                                \
+			return RegisterT();                                                                                        \
+		}                                                                                                              \
+		else {                                                                                                         \
+			return ReflComponentRegistrar<ComponentClass>().b;                                                         \
+		}                                                                                                              \
+	}                                                                                                                  \
+	static inline bool Z_InternalRegistrar = RegistrarSelect();                                                        \
+	/* Called from inside the ReflClass::Generate to generate members, only supposed to be used with the macros        \
+	 * below. The user must provide the body. */                                                                       \
+public:                                                                                                                \
+	static void GenerateReflection(ReflClass& refl)
+
+
+//
+//
+//
+//
+//
 
 #define REFLECTED_NODE(Class, ParentClass, /*optional DF_FLAGS()*/...)                                                 \
 public:                                                                                                                \
@@ -57,7 +121,7 @@ private:                                                                        
 	friend class ReflClass;                                                                                            \
 	friend class NodeFactory;                                                                                          \
 	friend class ReflectionDb;                                                                                         \
-	static inline ReflectionRegistar<Class> Z_InternalRegistar = ReflectionRegistar<Class>();                          \
+	static inline ReflectionRegistrar<Class> Z_InternalRegistrar = ReflectionRegistrar<Class>();                       \
 	/* Instanciates a class of this type. Should really be in ReflClass but not required because its only used by      \
 	 * NodeFactory. */                                                                                                 \
 	[[nodiscard]] static Node* NewInstance()                                                                           \
@@ -112,6 +176,16 @@ public:                                                                         
 	}
 
 
-#define REFLECT_ICON(u8_icon) refl.SetIcon(u8_icon)
-
 #define REFLECT_FLAGS(...) refl.AddFlags(NodeFlags::Pack(__VA_ARGS__));
+
+
+#define DECLARE_DIRTY_FUNC(ComponentStruct)                                                                            \
+	template std::function<void(ComponentStruct::RenderSceneType&)> ComponentStruct::DirtyCmd<true>(BasicComponent&);  \
+	template std::function<void(ComponentStruct::RenderSceneType&)> ComponentStruct::DirtyCmd<false>(BasicComponent&); \
+	bool ComponentStruct::RegisterT() { return ReflComponentRegistrar<ComponentStruct>{}.b; }                          \
+                                                                                                                       \
+	template<bool FullDirty>                                                                                           \
+	std::function<void(ComponentStruct::RenderSceneType&)> ComponentStruct::DirtyCmd
+//
+//
+//

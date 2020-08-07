@@ -105,7 +105,8 @@ void worldop::MakeChildOf(Node* newParent, Node* node)
 
 void worldop::MakeActiveCamera(Node* node)
 {
-	if (node->IsA<CameraNode>()) {
-		Universe::GetMainWorld()->SetActiveCamera(NodeCast<CameraNode>(node));
-	}
+	// WIP: ECS
+	// if (node->IsA<CameraNode>()) {
+	//	Universe::GetMainWorld()->SetActiveCamera(NodeCast<CameraNode>(node));
+	//}
 }

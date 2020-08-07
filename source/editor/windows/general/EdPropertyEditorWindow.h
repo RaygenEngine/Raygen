@@ -51,12 +51,11 @@ public:
 
 	// Injects the imgui code of a prope
 
-	void Run_BaseProperties(Node* node);
+	void Run_BaseProperties(Entity ent);
 
-	void Run_ContextActions(Node* node);
 
-	void Run_ReflectedProperties(Node* node);
+	void Run_Components(Entity entity);
 
-	void Run_ImGuizmo(Node* node);
+	void Run_ImGuizmo(Entity ent);
 };
 } // namespace ed

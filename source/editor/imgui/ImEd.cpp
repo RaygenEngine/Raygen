@@ -3,8 +3,10 @@
 
 #include "assets/PodEntry.h"
 #include "assets/AssetRegistry.h"
+#include "editor/EdMenu.h"
 #include "reflection/PodTools.h"
 #include "assets/PodIncludes.h"
+#include "ecs_universe/ComponentsDb.h"
 
 namespace ImEd {
 int InputTextCallback(ImGuiInputTextCallbackData* data);
@@ -207,6 +209,7 @@ PodEntry* AcceptGenericPodDrop(std::function<void(BasePodHandle, PodEntry*)> onD
 		if (result) {
 			return;
 		}
+
 		if (onDropped) {
 			result = AcceptTypedPodDrop<PodType>(onDropped);
 		}
@@ -216,6 +219,74 @@ PodEntry* AcceptGenericPodDrop(std::function<void(BasePodHandle, PodEntry*)> onD
 	});
 	return result;
 }
+
+
+ed::Menu MakeMenu(const ComponentMetaEntry** outEntryPtr)
+{
+	using namespace ed;
+	Menu menu;
+	static std::vector<UniquePtr<std::string>> stringBank;
+
+	auto& categories = ComponentsDb::Z_GetCategories();
+
+	auto add = [&, outEntryPtr](const std::string& cat, auto& types) {
+		for (auto type : types) {
+			if (auto entry = ComponentsDb::GetType(type); entry) {
+				auto& cl = *entry->clPtr;
+				auto& str = *stringBank.emplace_back(
+					std::make_unique<std::string>(fmt::format("{}   {}", U8(cl.GetIcon()), cl.GetName().substr(1))));
+				menu.AddOptionalCategory(cat.c_str(), str.c_str(), [=]() {
+					//
+					(*outEntryPtr) = entry;
+				});
+			}
+		}
+	};
+
+	for (auto& [cat, types] : categories) {
+		if (!cat.empty()) {
+			add(cat, types);
+		}
+	}
+
+	if (auto it = categories.find(""); it != categories.end()) {
+		add(it->first, it->second);
+	}
+
+	return menu;
+}
+
+const ComponentMetaEntry* ComponentClassMenu()
+{
+	static const ComponentMetaEntry* entry;
+	static ed::Menu menu = MakeMenu(&entry);
+
+	entry = nullptr;
+	menu.DrawOptions();
+	return entry;
+}
+//
+// class ECS_World;
+// Entity AddEntityMenu(ECS_World& world, const char* menuName)
+//{
+//	Entity ent;
+//	if (ImGui::BeginMenu(menuName)) {
+//		for (auto& [name, type] : ComponentsDb::Z_GetNameToTypes()) {
+//			if (ImGui::Selectable(name.c_str())) {
+//				std::string entityName = name.substr(0, name.length() - 4) + " Entity";
+//
+//				ent = world.CreateEntity(entityName);
+//				ComponentsDb::GetType(type)->emplace(*ent.registry, ent.entity);
+//			}
+//		}
+//		ImGui::EndMenu();
+//	}
+//
+//	if (ImGui::IsItemClicked()) {
+//		ent = world.CreateEntity();
+//	}
+//	return ent;
+//}
 
 
 } // namespace ImEd

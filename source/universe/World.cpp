@@ -13,8 +13,16 @@
 #include "universe/nodes/light/ReflectionProbeNode.h"
 #include "universe/nodes/light/DirectionalLightNode.h"
 #include "universe/nodes/RootNode.h"
+#include "rendering/scene/SceneCamera.h"
+#include "rendering/scene/SceneGeometry.h"
+#include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuMesh.h"
+#include "editor/imgui/ImguiImpl.h"   // WIP: ECS
+#include "editor/imgui/ImEd.h"        // WIP: ECS
+#include "editor/imgui/ImAssetSlot.h" // WIP: ECS
 
 #include <nlohmann/json.hpp>
+#include <engine\Input.h>
 
 World::World(NodeFactory* factory)
 	: m_nodeFactory(factory)
@@ -33,29 +41,6 @@ World::~World()
 void World::PushDelayedCommand(std::function<void()>&& func)
 {
 	m_postIterateCommandList.emplace_back(func);
-}
-
-std::vector<Node*> World::GetNodesByName(const std::string& name) const
-{
-	std::vector<Node*> nodes;
-
-	for (auto* node : m_nodes) {
-		if (node->GetName() == name) {
-			nodes.push_back(node);
-		}
-	}
-
-	return nodes;
-}
-
-Node* World::GetNodeByName(const std::string& name) const
-{
-	for (auto* node : m_nodes) {
-		if (node->GetName() == name) {
-			return node;
-		}
-	}
-	return nullptr;
 }
 
 void World::SetActiveCamera(CameraNode* cam)
@@ -121,46 +106,6 @@ void World::UpdateFrameTimers()
 	m_lastFrameTimepoint = now;
 }
 
-Node* World::DuplicateNode_Utl(Node* src, Node* newParent)
-{
-	if (!newParent) {
-		newParent = src->GetParent();
-	}
-
-	Node* created = GetNodeFactory()->NewNodeFromType(src->GetClass().GetNameStr());
-
-	created->m_name = src->m_name + "_Copy";
-
-	Z_RegisterNode(created, newParent);
-
-	created->SetNodeTransformLCS(src->GetNodeTransformLCS());
-
-	auto result = refltools::CopyClassTo(src, created);
-
-	CLOG_ERROR(!result.IsExactlyCorrect(), "Duplicate node did not exactly match properties!");
-	return created;
-}
-
-Node* World::DeepDuplicateNode(Node* src, Node* newParent)
-{
-	Node* result = DuplicateNode_Utl(src, newParent);
-
-	for (auto& child : src->GetChildren()) {
-		DeepDuplicateNode(child.get(), result);
-	}
-
-	return result;
-}
-
-void World::DeleteNode(Node* src)
-{
-	if (!src->GetParent()) {
-		return;
-	}
-	src->GetParent()->DeleteChild(src);
-}
-
-
 void World::Z_RegisterNode(Node* node, Node* parent)
 {
 	CLOG_ABORT(node->m_parent, "Attempting to register a node that already has a parent.");
@@ -196,9 +141,10 @@ void World::Z_RegisterNode(Node* node, Node* parent)
 	Event::OnWorldNodeAdded.Broadcast(node);
 
 
-	if (!m_activeCamera && node->IsA<CameraNode>()) {
-		SetActiveCamera(NodeCast<CameraNode>(node));
-	}
+	// WIP: ECS
+	// if (!m_activeCamera && node->IsA<CameraNode>()) {
+	//	SetActiveCamera(NodeCast<CameraNode>(node));
+	//}
 }
 
 void World::CleanupNodeReferences(Node* node)
@@ -208,9 +154,10 @@ void World::CleanupNodeReferences(Node* node)
 
 	Event::OnWorldNodeRemoved.Broadcast(node);
 
-	if (node == m_activeCamera) {
-		SetActiveCamera(GetAnyAvailableNode<CameraNode>());
-	}
+	// WIP: ECS
+	// if (node == m_activeCamera) {
+	//	SetActiveCamera(GetAnyAvailableNode<CameraNode>());
+	//}
 }
 
 void World::Update()
@@ -229,7 +176,12 @@ void World::Update()
 		}
 	}
 
+	// WIP: ECS
+	ImguiImpl::NewFrame();
 	Editor::Update();
+
+	Universe::ecsWorld->UpdateWorld();
+
 
 	do {
 		for (auto& cmd : m_postIterateCommandList) {
@@ -244,3 +196,29 @@ void World::Update()
 	Scene->EnqueueEndFrame();
 	ClearDirtyFlags();
 }
+
+namespace {
+glm::mat4 CameraViewProj()
+{
+	const auto ar = static_cast<float>(500) / static_cast<float>(400);
+
+	float vFov = 75.f;
+
+	auto hFov = 2 * atan(ar * tan(vFov * 0.5f));
+
+	auto near = 0.1f;
+	auto far = 1000.f;
+
+	const auto top = tan(vFov / 2.f) * near;
+	const auto bottom = tan(-vFov / 2.f) * near;
+
+	const auto right = tan(hFov / 2.f) * near;
+	const auto left = tan(-hFov / 2.f) * near;
+
+	auto projectionMatrix = glm::frustum(left, right, bottom, top, near, far);
+	// Vulkan's inverted y
+	projectionMatrix[1][1] *= -1.f;
+
+	return projectionMatrix;
+}
+} // namespace
