@@ -56,5 +56,5 @@ struct CSpotlight : CSceneBase {
 	float innerAperture{ glm::radians(22.5f) };
 
 private:
-	glm::mat4 projection;
+	glm::mat4 proj;
 };

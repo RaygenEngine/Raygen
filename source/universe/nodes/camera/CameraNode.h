@@ -86,10 +86,11 @@ public:
 	~CameraNode() override;
 
 private:
-	size_t sceneUid;
+	size_t sceneUid{ 0 };
 	template<typename Lambda>
 	void Enqueue(Lambda&& l)
 	{
-		Scene->EnqueueCmd<SceneCamera>(sceneUid, l);
+		if (Universe::ecsWorld->attachedScene)
+			Universe::ecsWorld->attachedScene->EnqueueCmd<SceneCamera>(sceneUid, l);
 	}
 };

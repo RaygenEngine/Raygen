@@ -13,12 +13,18 @@
 #include "rendering/VulkanLoader.h"
 #include "rendering/wrappers/RSwapchain.h"
 
+#include "universe/Universe.h"
+#include "engine/Input.h"
+#include "ecs_universe/systems/SceneCmdSystem.h"
+
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
 	"Builds all build-able scene nodes" };
 ConsoleFunction<> console_BuildAS{ "s.buildTestAccelerationStructure", []() {},
 	"Builds a top level acceleration structure, for debugging purposes, todo: remove" };
 
 namespace vl {
+
+Scene* currentScene{ nullptr };
 
 Layer_::Layer_()
 {
@@ -48,11 +54,14 @@ Layer_::Layer_()
 
 
 	mainSwapchain = std::make_unique<RSwapchain>(Instance->surface);
+
 	// TODO: scene is not a global
 	mainScene = std::make_unique<Scene>(mainSwapchain->imageCount);
+	secondScene = std::make_unique<Scene>(mainSwapchain->imageCount);
+	currentScene = mainScene.get();
 
 	Renderer = new Renderer_();
-	Renderer->InitPipelines();
+	Renderer->InitPipelines(mainSwapchain->renderPass.get());
 } // namespace vl
 
 Layer_::~Layer_()
@@ -62,6 +71,7 @@ Layer_::~Layer_()
 	// WIP:
 	mainSwapchain.reset();
 	mainScene.reset();
+	secondScene.reset();
 
 	delete Layouts;
 
@@ -74,6 +84,12 @@ Layer_::~Layer_()
 
 void Layer_::DrawFrame()
 {
+	if (Input.IsJustPressed(Key::Tab)) {
+		currentScene = currentScene == mainScene.get() ? secondScene.get() : mainScene.get();
+		Universe::ecsWorld->attachedScene = currentScene;
+		SceneCmdSystem::WriteSceneCmds;
+	}
+
 	// this should be the general approach
 	// even for more than one renderers/scenes/swapchains
 
@@ -86,11 +102,11 @@ void Layer_::DrawFrame()
 
 	Renderer->UpdateForFrame();
 	GpuAssetManager->ConsumeAssetUpdates();
-	mainScene->ConsumeCmdQueue();
+	currentScene->ConsumeCmdQueue();
 
 	auto imageAvailSem = Renderer->PrepareForDraw();
 
-	mainScene->UploadDirty();
+	currentScene->UploadDirty();
 
 	uint32 imageIndex;
 	Device->acquireNextImageKHR(*mainSwapchain, UINT64_MAX, { imageAvailSem }, {}, &imageIndex);
@@ -100,7 +116,7 @@ void Layer_::DrawFrame()
 	auto outExtent = mainSwapchain->extent;
 
 	// WIP: 1 = editor camera (lets hope for now)
-	SceneRenderDesc sceneDesc{ mainScene.get(), 1 };
+	SceneRenderDesc sceneDesc{ currentScene, 0 };
 
 	auto renderFinishedSem = Renderer->DrawFrame(sceneDesc, outRp, outFb, outExtent);
 

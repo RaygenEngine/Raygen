@@ -8,17 +8,17 @@
 
 void CameraNode::EnqueueActiveCamera()
 {
-	Scene->EnqueueActiveCameraCmd(sceneUid);
+	// Scene->EnqueueActiveCameraCmd(sceneUid);
 }
 
 CameraNode::CameraNode()
 {
-	sceneUid = Scene->EnqueueCreateCmd<SceneCamera>();
+	// sceneUid = Scene->EnqueueCreateCmd<SceneCamera>();
 }
 
 CameraNode::~CameraNode()
 {
-	Scene->EnqueueDestroyCmd<SceneCamera>(sceneUid);
+	// Scene->EnqueueDestroyCmd<SceneCamera>(sceneUid);
 }
 
 void CameraNode::CalculateWorldAABB()

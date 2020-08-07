@@ -44,12 +44,12 @@ void DirectionalLightNode::RecalculateFrustum()
 
 DirectionalLightNode::DirectionalLightNode()
 {
-	sceneUid = Scene->EnqueueCreateCmd<SceneDirectionalLight>();
+	// sceneUid = Scene->EnqueueCreateCmd<SceneDirectionalLight>();
 }
 
 DirectionalLightNode::~DirectionalLightNode()
 {
-	Scene->EnqueueDestroyCmd<SceneDirectionalLight>(sceneUid);
+	// Scene->EnqueueDestroyCmd<SceneDirectionalLight>(sceneUid);
 }
 
 void DirectionalLightNode::DirtyUpdate(DirtyFlagset flags)

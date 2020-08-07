@@ -7,12 +7,12 @@
 
 ReflectionProbeNode::ReflectionProbeNode()
 {
-	sceneUid = Scene->EnqueueCreateCmd<SceneReflectionProbe>();
+	// sceneUid = Scene->EnqueueCreateCmd<SceneReflectionProbe>();
 }
 
 ReflectionProbeNode::~ReflectionProbeNode()
 {
-	Scene->EnqueueDestroyCmd<SceneReflectionProbe>(sceneUid);
+	// Scene->EnqueueDestroyCmd<SceneReflectionProbe>(sceneUid);
 }
 
 

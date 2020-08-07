@@ -8,7 +8,7 @@ class CopyHdrTexture {
 	vk::UniquePipelineLayout m_pipelineLayout;
 
 public:
-	void MakePipeline();
+	void MakePipeline(vk::RenderPass outRp);
 	void RecordCmd(vk::CommandBuffer* cmdBuffer);
 };
 } // namespace vl

@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Universe.h"
 
+// WIP:
+#include "rendering/Layer.h"
+
 namespace {
 std::optional<fs::path> worldToLoad{};
 std::optional<fs::path> ecsWorldToLoad{};
@@ -44,5 +47,7 @@ void Universe::LoadPendingWorlds()
 
 		ecsWorld = new ECS_World(*ecsWorldToLoad);
 		ecsWorldToLoad.reset();
+
+		ecsWorld->attachedScene = vl::Layer->mainScene.get();
 	}
 }

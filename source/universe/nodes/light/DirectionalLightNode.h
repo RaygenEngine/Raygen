@@ -57,6 +57,6 @@ private:
 	template<typename Lambda>
 	void Enqueue(Lambda&& l)
 	{
-		Scene->EnqueueCmd<typename SceneDirectionalLight>(sceneUid, l);
+		//		Scene->EnqueueCmd<typename SceneDirectionalLight>(sceneUid, l);
 	}
 };
