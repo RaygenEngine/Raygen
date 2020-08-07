@@ -9,7 +9,7 @@ struct CSpotlight : CSceneBase {
 	REFLECTED_SCENE_COMP(CSpotlight, SceneSpotlight)
 	{
 		REFLECT_ICON(FA_LIGHTBULB);
-		REFLECT_CATEGORY("Rendering");
+		// REFLECT_CATEGORY("Rendering");
 
 		REFLECT_VAR(color, PropertyFlags::Color);
 		REFLECT_VAR(intensity);
@@ -24,7 +24,7 @@ struct CSpotlight : CSceneBase {
 		REFLECT_VAR(outerAperture, PropertyFlags::Rads);
 		REFLECT_VAR(innerAperture, PropertyFlags::Rads);
 
-		REFLECT_VAR(contantTerm);
+		REFLECT_VAR(constantTerm);
 		REFLECT_VAR(linearTerm);
 		REFLECT_VAR(quadraticTerm);
 
@@ -46,7 +46,7 @@ struct CSpotlight : CSceneBase {
 	int32 samples{ 4 };
 	float sampleInvSpread{ 1000.f };
 
-	float contantTerm{ 1.f };
+	float constantTerm{ 1.f };
 	float linearTerm{ 1.f };
 	float quadraticTerm{ 1.f };
 
@@ -54,4 +54,7 @@ struct CSpotlight : CSceneBase {
 	float outerAperture{ glm::radians(45.f) };
 	// inner
 	float innerAperture{ glm::radians(22.5f) };
+
+private:
+	glm::mat4 projection;
 };

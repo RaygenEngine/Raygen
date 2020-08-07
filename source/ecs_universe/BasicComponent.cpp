@@ -112,6 +112,7 @@ void BasicComponent::SetNodeTransformLCS(const glm::mat4& lm)
 	local_.Decompose();
 
 	MarkDirtyMoved();
+	UpdateWorldTransforms();
 }
 
 

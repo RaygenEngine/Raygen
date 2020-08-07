@@ -9,7 +9,7 @@ struct CCamera : CSceneBase {
 	REFLECTED_SCENE_COMP(CCamera, SceneCamera)
 	{
 		REFLECT_ICON(FA_CAMERA_RETRO);
-		REFLECT_CATEGORY("Rendering");
+		// REFLECT_CATEGORY("Rendering");
 
 		REFLECT_VAR(near);
 		REFLECT_VAR(far);

@@ -94,6 +94,7 @@ Entity ComponentsDb::JsonToEntityHierarchy(entt::registry& reg, const nlohmann::
 			auto eulerPyr = j.value<glm::vec3>("euler_rot", {});
 			basic.local_.orientation = glm::quat(glm::radians(eulerPyr));
 			basic.local_.Compose();
+			basic.UpdateWorldTransforms();
 		}
 	}
 
