@@ -115,7 +115,7 @@ void Layer_::DrawFrame()
 	Device->acquireNextImageKHR(*mainSwapchain, UINT64_MAX, { imageAvailSem }, {}, &imageIndex);
 
 	auto outRp = mainSwapchain->renderPass.get();
-	auto outFb = mainSwapchain->framebuffers[imageIndex % 2].get();
+	auto outFb = mainSwapchain->framebuffers[imageIndex].get();
 	auto outExtent = mainSwapchain->extent;
 
 	// WIP: 1 = editor camera (lets hope for now)
