@@ -14,6 +14,7 @@
 
 #include <nlohmann/json.hpp> // WIP: ECS
 #include <fstream>           // WIP: ECS
+#include <rendering\Layer.h>
 
 
 Entity globalEnt;
@@ -118,11 +119,12 @@ void ECS_World::DestroyEntity(Entity entity)
 	entity.registry->get_or_emplace<CDestroyFlag>(entity.entity);
 }
 
-void ECS_World::UpdateWorld()
+void ECS_World::UpdateWorld(Scene* scene)
 {
 	//
 	// Game Systems
 	//
+
 
 	//
 	// Update Transforms
@@ -141,7 +143,7 @@ void ECS_World::UpdateWorld()
 	// Scene Commands
 	//
 
-	SceneCmdSystem::WriteSceneCmds(attachedScene, reg);
+	SceneCmdSystem::WriteSceneCmds(scene, reg);
 
 	// Clean Up
 	reg.clear<DirtyMovedComp, DirtySrtComp>();

@@ -15,8 +15,6 @@ private:
 	void LoadFromSrcPath();
 
 public:
-	Scene* attachedScene{ nullptr };
-
 	entt::registry reg;
 
 	fs::path srcPath;
@@ -32,7 +30,7 @@ public:
 
 	void CreateWorld();
 
-	void UpdateWorld();
+	void UpdateWorld(Scene* scene);
 
 	~ECS_World();
 };

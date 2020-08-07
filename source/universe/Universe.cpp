@@ -13,6 +13,7 @@ void Universe::Init()
 {
 	MainWorld = new World(new NodeFactory());
 	ecsWorld = new ECS_World();
+	ecsWorld2 = new ECS_World("abc.json");
 }
 
 void Universe::Destroy()
@@ -47,7 +48,5 @@ void Universe::LoadPendingWorlds()
 
 		ecsWorld = new ECS_World(*ecsWorldToLoad);
 		ecsWorldToLoad.reset();
-
-		ecsWorld->attachedScene = vl::Layer->mainScene.get();
 	}
 }
