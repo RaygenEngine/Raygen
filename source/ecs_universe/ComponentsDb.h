@@ -246,7 +246,8 @@ public:
 };
 
 template<typename K>
-struct ReflComponentRegistar {
+struct ReflComponentRegistrar {
 	// Auto registration pattern, (generated through the reflection macros)
-	ReflComponentRegistar() { ComponentsDb::Z_RegisterComponentClass<K>(); }
+	ReflComponentRegistrar() { ComponentsDb::Z_RegisterComponentClass<K>(); }
+	bool b = true;
 };

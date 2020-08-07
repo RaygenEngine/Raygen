@@ -4,11 +4,11 @@
 #include "assets/AssetManager.h"
 #include "ecs_universe/components/ScriptComponent.h"
 #include "ecs_universe/components/StaticMeshComponent.h"
+#include "ecs_universe/components/SpotlightComponent.h"
+#include "ecs_universe/components/CameraComponent.h"
 #include "ecs_universe/ComponentsDb.h"
 #include "engine/Input.h"
 #include "rendering/scene/Scene.h"
-// WIP: ECS
-#include "rendering/scene/SceneGeometry.h"
 
 #include <nlohmann/json.hpp> // WIP: ECS
 #include <fstream>           // WIP: ECS
@@ -74,11 +74,10 @@ void ECS_World::CreateWorld()
 	auto& mc = mesh.Add<CStaticMesh>().mesh
 		= AssetManager->ImportAs<Mesh>("_skymesh/UVsphereSmoothShadingInvNormals.gltf", true);
 
-	mesh.Add<CScript>("My script");
+	mesh.Add<CScript>();
 
 
 	globalEnt = mesh;
-
 
 	mesh = CreateEntity("Second");
 	mesh.Add<CStaticMesh>().mesh = AssetManager->ImportAs<Mesh>("gltf-samples/2.0/Avocado/glTF/Avocado.gltf", true);
