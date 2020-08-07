@@ -1,9 +1,9 @@
 #pragma once
 #include "engine/Listener.h"
 #include "rendering/out/CopyHdrTexture.h"
-#include "rendering/out/WriteEditor.h"
 #include "rendering/ppt/PtCollection.h"
 #include "rendering/wrappers/RGbuffer.h"
+#include "rendering/scene/Scene.h"
 
 namespace vl {
 using SemVec = std::vector<vk::Semaphore>;
@@ -22,7 +22,6 @@ inline class Renderer_ : public Listener {
 
 private:
 	CopyHdrTexture m_copyHdrTexture;
-	WriteEditor m_writeEditor;
 
 	UniquePtr<RGbuffer> m_gbuffer;
 
@@ -35,9 +34,9 @@ private:
 	std::vector<vk::UniqueSemaphore> m_renderFinishedSem;
 	std::vector<vk::UniqueSemaphore> m_imageAvailSem;
 
-	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer);
-	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer);
-	void RecordOutPass(vk::CommandBuffer* cmdBuffer, uint32 swapchainImageIndex);
+	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc);
+	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc);
+	void RecordOutPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc, vk::RenderPass outRp, vk::Framebuffer outFb, vk::Extent2D outExtent);
 
 	PtCollection m_postprocCollection;
 
@@ -47,7 +46,6 @@ protected:
 	BoolFlag m_didWindowResize;
 
 	void OnViewportResize();
-	void OnWindowResize();
 
 	bool m_isMinimzed{ false };
 
@@ -67,7 +65,9 @@ public:
 
 	void UpdateForFrame();
 
-	void DrawFrame();
+	vk::Semaphore PrepareForDraw();
+	vk::Semaphore DrawFrame(SceneRenderDesc<SceneCamera>& sceneDesc, vk::RenderPass outRp, vk::Framebuffer outFb, vk::Extent2D outExtent);
+
 	void InitPipelines();
 
 	inline static uint32 currentFrame{ 0 };

@@ -14,9 +14,11 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/wrappers/RGbuffer.h"
 #include "engine/console/ConsoleVariable.h"
-#include <glm/gtc/matrix_inverse.hpp>
-
+#include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/SceneCamera.h"
 #include "assets/shared/GeometryShared.h"
+
+#include <glm/gtc/matrix_inverse.hpp>
 
 namespace {
 struct PushConstant {
@@ -189,8 +191,7 @@ vk::UniquePipeline UnlitPass::CreatePipeline(
 }
 
 
-void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Extent2D extent, //
-	const std::vector<SceneGeometry*>& geometries, const std::vector<SceneAnimatedGeometry*>& animGeometries)
+void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Extent2D extent, SceneRenderDesc<SceneCamera>& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -213,13 +214,13 @@ void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Extent2D extent, //
 
 
 	{
-		auto camera = Scene->GetActiveCamera();
+		auto camera = sceneDesc.viewer;
 		if (!camera) {
 			cmdBuffer->endRenderPass();
 			return;
 		}
 
-		for (auto geom : geometries) {
+		for (auto geom : sceneDesc->geometries.elements) {
 			if (!geom) {
 				continue;
 			}

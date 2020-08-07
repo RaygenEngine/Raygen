@@ -8,6 +8,7 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/wrappers/RDepthmap.h"
+#include "rendering/scene/SceneCamera.h"
 
 namespace vl {
 void PtSpotlight::MakeLayout()
@@ -56,11 +57,16 @@ void PtSpotlight::MakePipeline()
 	Utl_CreatePipeline(gpuShader, colorBlending);
 }
 
-void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, uint32 frameIndex)
+void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc, uint32 frameIndex)
 {
-	if (!Scene->GetActiveCamera()) {
+	auto camera = sceneDesc.viewer;
+
+	if (!camera) {
 		return;
 	}
+
+	// WIP: 
+	auto descSet = camera->descSets[Renderer_::currentFrame];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
@@ -68,7 +74,7 @@ void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, uint32 frameIndex)
 		&Renderer->GetGbuffer()->descSet, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
-		&Scene->GetActiveCameraDescSet(), 0u, nullptr);
+		&descSet, 0u, nullptr);
 
 	for (auto sl : Scene->spotlights.elements) {
 		if (!sl) {

@@ -141,8 +141,6 @@ void CopyHdrTexture::MakePipeline()
 
 void CopyHdrTexture::RecordCmd(vk::CommandBuffer* cmdBuffer)
 {
-
-
 	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,

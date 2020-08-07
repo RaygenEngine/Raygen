@@ -19,6 +19,10 @@ concept CSceneElem
 	= std::is_same_v<SceneGeometry,
 		  T> || std::is_same_v<SceneCamera, T> || std::is_same_v<SceneSpotlight, T> || std::is_same_v<SceneDirectionalLight, T> || std::is_same_v<SceneReflectionProbe, T> || std::is_same_v<SceneAnimatedGeometry, T>;
 
+template<typename T>
+concept CSceneViewerElem
+= std::is_same_v<SceneCamera, T> || std::is_same_v<SceneSpotlight, T> || std::is_same_v<SceneDirectionalLight, T> || std::is_same_v<SceneReflectionProbe, T>;
+
 template<CONC(CSceneElem) T>
 struct SceneVector {
 	std::vector<T*> elements;
@@ -247,3 +251,22 @@ public:
 	~Scene_() { DrainQueueForDestruction(); }
 
 } * Scene{};
+
+template<CONC(CSceneViewerElem) T>
+struct SceneRenderDesc {
+	Scene_* scene{ nullptr };
+	T* viewer{ nullptr };
+
+	SceneRenderDesc(Scene_* scene, size_t viewerIndex) :
+		scene(scene), viewer(scene->GetElement<T>(viewerIndex))
+	{
+	}
+
+	template<CONC(CSceneViewerElem) V>
+	SceneRenderDesc<V> SwitchViewer(size_t viewerIndex)
+	{
+		return SceneRenderDesc<V> { scene, viewerIndex }
+	}
+
+	Scene_* operator->() { return scene; }
+};
