@@ -22,5 +22,5 @@ public:
 	static void ECS_LoadMainWorld(const fs::path& path);
 
 
-	inline static ECS_World* ecsWorld;
+	inline static ECS_World* ecsWorld{ nullptr };
 };

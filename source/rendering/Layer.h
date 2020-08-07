@@ -19,5 +19,6 @@ public:
 
 	UniquePtr<RSwapchain> mainSwapchain;
 	UniquePtr<Scene> mainScene;
+	UniquePtr<Scene> secondScene;
 } * Layer{};
 } // namespace vl

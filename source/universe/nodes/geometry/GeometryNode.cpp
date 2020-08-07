@@ -10,7 +10,7 @@
 
 GeometryNode::GeometryNode()
 {
-	sceneUid = Scene->EnqueueCreateCmd<SceneGeometry>();
+	// sceneUid = Scene->EnqueueCreateCmd<SceneGeometry>();
 }
 
 void GeometryNode::SetModel(PodHandle<Mesh> newModel)
@@ -36,5 +36,5 @@ void GeometryNode::DirtyUpdate(DirtyFlagset dirtyFlags)
 
 GeometryNode::~GeometryNode()
 {
-	Scene->EnqueueDestroyCmd<SceneGeometry>(sceneUid);
+	// Scene->EnqueueDestroyCmd<SceneGeometry>(sceneUid);
 }

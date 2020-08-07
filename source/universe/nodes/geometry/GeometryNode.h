@@ -28,6 +28,6 @@ private:
 	template<typename Lambda>
 	void Enqueue(Lambda&& l)
 	{
-		Scene->EnqueueCmd<typename SceneGeometry>(sceneUid, l);
+		//	Scene->EnqueueCmd<typename SceneGeometry>(sceneUid, l);
 	}
 };

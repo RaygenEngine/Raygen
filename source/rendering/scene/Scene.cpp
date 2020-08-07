@@ -45,6 +45,7 @@ Scene::Scene(size_t size)
 	: size(size)
 {
 	EnqueueEndFrame();
+	EnqueueCreateCmd<SceneCamera>();
 }
 
 vk::DescriptorSet Scene::GetActiveCameraDescSet()

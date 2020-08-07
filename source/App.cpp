@@ -13,7 +13,7 @@
 App::App()
 {
 	m_name = "Raygen Engine";
-	m_initialScene = "engine-data/default.json";
+	m_initialScene = "abc.json";
 	m_assetPath = "assets";
 
 	m_windowTitle = "Raygen";
@@ -41,7 +41,7 @@ int32 App::Main(int32 argc, char* argv[])
 	Engine.InitEngine(this);
 
 	Universe::LoadMainWorld(m_initialScene);
-
+	Universe::ECS_LoadMainWorld(m_initialScene);
 
 	MainLoop();
 

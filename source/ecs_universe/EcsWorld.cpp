@@ -28,9 +28,9 @@ ECS_World::ECS_World(const fs::path& path)
 
 ECS_World::~ECS_World()
 {
-	delete Scene;
-	Scene = new Scene_(2);
-	Scene->EnqueueCreateCmd<SceneCamera>();
+	// delete Scene;
+	// Scene = new Scene_(2);
+	// Scene->EnqueueCreateCmd<SceneCamera>();
 }
 
 void ECS_World::LoadFromSrcPath()
@@ -72,6 +72,17 @@ void ECS_World::SaveToDisk(const fs::path& path, bool updateSrcPath)
 	file << std::setw(2) << j;
 }
 
+Entity ECS_World::CreateEntity(const std::string& name)
+{
+	Entity ent{ reg.create(), &reg };
+
+	auto& basic = ent.Add<BasicComponent>();
+	basic.self = ent;
+	basic.name = !name.empty() ? name : "New Entity";
+
+
+	return ent;
+}
 
 void ECS_World::CreateWorld()
 {
@@ -130,7 +141,7 @@ void ECS_World::UpdateWorld()
 	// Scene Commands
 	//
 
-	SceneCmdSystem::WriteSceneCmds(Scene, reg);
+	SceneCmdSystem::WriteSceneCmds(attachedScene, reg);
 
 	// Clean Up
 	reg.clear<DirtyMovedComp, DirtySrtComp>();

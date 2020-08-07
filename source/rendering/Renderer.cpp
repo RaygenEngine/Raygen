@@ -180,9 +180,9 @@ Renderer_::Renderer_()
 	}
 }
 
-void Renderer_::InitPipelines()
+void Renderer_::InitPipelines(vk::RenderPass outRp)
 {
-	m_copyHdrTexture.MakePipeline();
+	m_copyHdrTexture.MakePipeline(outRp);
 	m_postprocCollection.RegisterTechniques();
 }
 

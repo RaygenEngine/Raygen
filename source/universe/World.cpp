@@ -193,7 +193,7 @@ void World::Update()
 	} while (!m_postIterateCommandList.empty());
 
 
-	Scene->EnqueueEndFrame();
+	Universe::ecsWorld->attachedScene->EnqueueEndFrame();
 	ClearDirtyFlags();
 }
 

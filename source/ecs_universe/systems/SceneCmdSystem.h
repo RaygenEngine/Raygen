@@ -7,7 +7,7 @@ struct Scene_;
 
 namespace scenecmds {
 template<typename T>
-void EnqueueCreateCmds(Scene_* scene, entt::registry& reg)
+void EnqueueCreateCmds(Scene* scene, entt::registry& reg)
 {
 	auto view = reg.view<T, typename T::Create>(entt::exclude<typename T::Destroy>);
 	for (auto& [ent, sc] : view.each()) {
@@ -16,7 +16,7 @@ void EnqueueCreateCmds(Scene_* scene, entt::registry& reg)
 }
 
 template<typename T>
-void EnqueueDestoryCmds(Scene_* scene, entt::registry& reg)
+void EnqueueDestoryCmds(Scene* scene, entt::registry& reg)
 {
 	auto view = reg.view<T, typename T::Destroy>();
 	for (auto& [ent, sc] : view.each()) {
@@ -28,7 +28,7 @@ void EnqueueDestoryCmds(Scene_* scene, entt::registry& reg)
 }
 
 template<typename T>
-void EnqueueDirtyCmds(Scene_* scene, entt::registry& reg)
+void EnqueueDirtyCmds(Scene* scene, entt::registry& reg)
 {
 	auto view = reg.view<BasicComponent, T, typename T::Dirty>();
 	for (auto& [ent, basic, sc] : view.each()) {
@@ -38,7 +38,7 @@ void EnqueueDirtyCmds(Scene_* scene, entt::registry& reg)
 
 
 template<typename T>
-void EnqueueTransformCmds(Scene_* scene, entt::registry& reg)
+void EnqueueTransformCmds(Scene* scene, entt::registry& reg)
 {
 	auto view = reg.view<BasicComponent, T, DirtySrtComp>(entt::exclude<typename T::Dirty>);
 	for (auto& [ent, basic, sc] : view.each()) {
@@ -58,11 +58,11 @@ class SceneCmdSystem {
 	using FnPtr = ReturnType (*)(Args...);
 
 
-	std::vector<FnPtr<void, Scene_*, entt::registry&>> m_createCmds;
-	std::vector<FnPtr<void, Scene_*, entt::registry&>> m_destroyCmds;
+	std::vector<FnPtr<void, Scene*, entt::registry&>> m_createCmds;
+	std::vector<FnPtr<void, Scene*, entt::registry&>> m_destroyCmds;
 
-	std::vector<FnPtr<void, Scene_*, entt::registry&>> m_dirtyCmds;
-	std::vector<FnPtr<void, Scene_*, entt::registry&>> m_transformCmds;
+	std::vector<FnPtr<void, Scene*, entt::registry&>> m_dirtyCmds;
+	std::vector<FnPtr<void, Scene*, entt::registry&>> m_transformCmds;
 
 	SceneCmdSystem() = default;
 
@@ -96,5 +96,5 @@ class SceneCmdSystem {
 	}
 
 public:
-	static void WriteSceneCmds(Scene_* scene, entt::registry& registry);
+	static void WriteSceneCmds(Scene* scene, entt::registry& registry);
 };

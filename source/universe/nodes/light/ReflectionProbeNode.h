@@ -26,6 +26,6 @@ private:
 	template<typename Lambda>
 	void Enqueue(Lambda&& l)
 	{
-		Scene->EnqueueCmd<SceneReflectionProbe>(sceneUid, l);
+		//		Scene->EnqueueCmd<SceneReflectionProbe>(sceneUid, l);
 	}
 };

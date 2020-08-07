@@ -17,11 +17,11 @@
 #include "rendering/Layer.h"
 
 namespace vl {
-void CopyHdrTexture::MakePipeline()
+void CopyHdrTexture::MakePipeline(vk::RenderPass outRp)
 {
 	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/cpyhdr.shader");
-	gpuShader.onCompile = [&]() {
-		MakePipeline();
+	gpuShader.onCompile = [=]() {
+		MakePipeline(outRp);
 	};
 
 	std::vector shaderStages = gpuShader.shaderStages;
@@ -135,7 +135,7 @@ void CopyHdrTexture::MakePipeline()
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
 		// WIP: decouple
-		.setRenderPass(Layer->mainSwapchain->renderPass.get())
+		.setRenderPass(outRp)
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);

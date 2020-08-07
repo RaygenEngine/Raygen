@@ -13,7 +13,7 @@
 
 AnimatedGeometryNode::AnimatedGeometryNode()
 {
-	sceneUid = Scene->EnqueueCreateCmd<SceneAnimatedGeometry>();
+	// sceneUid = Scene->EnqueueCreateCmd<SceneAnimatedGeometry>();
 }
 
 void AnimatedGeometryNode::Update(float deltaSeconds)
@@ -179,5 +179,5 @@ std::vector<glm::mat4> AnimatedGeometryNode::TickSamplers(float deltaTime)
 
 AnimatedGeometryNode::~AnimatedGeometryNode()
 {
-	Scene->EnqueueDestroyCmd<SceneAnimatedGeometry>(sceneUid);
+	// Scene->EnqueueDestroyCmd<SceneAnimatedGeometry>(sceneUid);
 }

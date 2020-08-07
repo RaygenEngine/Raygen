@@ -5,7 +5,6 @@
 
 DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 {
-
 	auto lookAt = bc.world().position + bc.world().forward();
 	auto view = glm::lookAt(bc.world().position, lookAt, bc.world().up());
 
@@ -17,12 +16,12 @@ DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 		innerCutOff = glm::cos(innerAperture / 2.f);
 
 		const auto ar = static_cast<float>(shadowMapWidth) / static_cast<float>(shadowMapHeight);
-		projection = glm::perspective(outerAperture, ar, near_, far_);
+		proj = glm::perspective(outerAperture, ar, near_, far_);
 		// Vulkan's inverted y
-		projection[1][1] *= -1.f;
+		proj[1][1] *= -1.f;
 	}
 
-	glm::mat4 viewProj = projection * view;
+	glm::mat4 viewProj = proj * view;
 
 	return [=](SceneSpotlight& sl) {
 		sl.name = "depth: " + bc.name;

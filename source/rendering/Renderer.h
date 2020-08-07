@@ -78,7 +78,7 @@ public:
 	vk::Semaphore DrawFrame(
 		SceneRenderDesc& sceneDesc, vk::RenderPass outRp, vk::Framebuffer outFb, vk::Extent2D outExtent);
 
-	void InitPipelines();
+	void InitPipelines(vk::RenderPass outRp);
 
 	inline static uint32 currentFrame{ 0 };
 

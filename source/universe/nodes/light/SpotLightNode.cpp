@@ -42,12 +42,12 @@ void SpotlightNode::RecalculateFrustum()
 
 SpotlightNode::SpotlightNode()
 {
-	sceneUid = Scene->EnqueueCreateCmd<SceneSpotlight>();
+	// sceneUid = Scene->EnqueueCreateCmd<SceneSpotlight>();
 }
 
 SpotlightNode::~SpotlightNode()
 {
-	Scene->EnqueueDestroyCmd<SceneSpotlight>(sceneUid);
+	// Scene->EnqueueDestroyCmd<SceneSpotlight>(sceneUid);
 }
 
 void SpotlightNode::DirtyUpdate(DirtyFlagset flags)
