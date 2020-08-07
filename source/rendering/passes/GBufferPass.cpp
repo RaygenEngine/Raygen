@@ -307,7 +307,7 @@ vk::UniquePipeline GbufferPass::CreateAnimPipeline(
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
 
-void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, SceneRenderDesc<SceneCamera>& sceneDesc)
+void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 

@@ -2,7 +2,7 @@
 #include <vulkan/vulkan.hpp>
 
 namespace vl {
-inline struct Swapchain_ : public vk::SwapchainKHR {
+struct RSwapchain : public vk::SwapchainKHR {
 
 	uint32 imageCount;
 
@@ -13,16 +13,15 @@ inline struct Swapchain_ : public vk::SwapchainKHR {
 	std::vector<vk::UniqueImageView> imageViews;
 
 	std::vector<vk::UniqueFramebuffer> framebuffers;
-	
+
 	vk::UniqueRenderPass renderPass;
 
-	Swapchain_(vk::SurfaceKHR surface);
-	~Swapchain_();
+	RSwapchain(vk::SurfaceKHR surface);
+	~RSwapchain();
 
 private:
 	void InitRenderPass();
 	void InitImageViews();
 	void InitFrameBuffers();
-
-} * Swapchain{};
+};
 } // namespace vl

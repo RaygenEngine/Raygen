@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "Swapchain.h"
+#include "RSwapchain.h"
 
 #include "platform/Platform.h"
 #include "rendering/Device.h"
@@ -56,7 +56,7 @@ vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
 } // namespace
 
 namespace vl {
-Swapchain_::Swapchain_(vk::SurfaceKHR surface)
+RSwapchain::RSwapchain(vk::SurfaceKHR surface)
 {
 	auto details = Device->GetSwapchainSupportDetails();
 
@@ -115,12 +115,12 @@ Swapchain_::Swapchain_(vk::SurfaceKHR surface)
 	InitFrameBuffers();
 }
 
-Swapchain_::~Swapchain_()
+RSwapchain::~RSwapchain()
 {
 	Device->destroySwapchainKHR(*this);
 }
 
-void Swapchain_::InitRenderPass()
+void RSwapchain::InitRenderPass()
 {
 	vk::AttachmentDescription colorAttachment{};
 	colorAttachment
@@ -165,7 +165,7 @@ void Swapchain_::InitRenderPass()
 	renderPass = Device->createRenderPassUnique(renderPassInfo);
 }
 
-void Swapchain_::InitImageViews()
+void RSwapchain::InitImageViews()
 {
 	for (const auto& img : images) {
 
@@ -185,7 +185,7 @@ void Swapchain_::InitImageViews()
 	}
 }
 
-void Swapchain_::InitFrameBuffers()
+void RSwapchain::InitFrameBuffers()
 {
 	framebuffers.clear();
 	framebuffers.resize(images.size());

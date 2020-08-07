@@ -10,6 +10,9 @@
 #include "rendering/scene/SceneDirectionalLight.h"
 #include "rendering/scene/SceneSpotlight.h"
 
+// WIP:
+#include "rendering/Layer.h"
+
 #include <imgui/imgui.h>
 
 namespace ed {
@@ -116,13 +119,13 @@ void GbufferDebugWindow::ImguiDraw()
 		showAttachment(gbuff->attachments[i].get());
 	}
 
-	for (auto sl : Scene->spotlights.elements) {
+	for (auto sl : vl::Layer->mainScene->spotlights.elements) {
 		if (sl && sl->shadowmap) {
 			showAttachment(sl->shadowmap->attachment.get());
 		}
 	}
 
-	for (auto dl : Scene->directionalLights.elements) {
+	for (auto dl : vl::Layer->mainScene->directionalLights.elements) {
 		if (dl && dl->shadowmap) {
 			showAttachment(dl->shadowmap->attachment.get());
 		}

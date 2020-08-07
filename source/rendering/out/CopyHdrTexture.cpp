@@ -8,10 +8,13 @@
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
+#include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/Layouts.h"
-#include "rendering/Swapchain.h"
+#include "rendering/wrappers/RSwapchain.h"
+
+// WIP:
+#include "rendering/Layer.h"
 
 namespace vl {
 void CopyHdrTexture::MakePipeline()
@@ -131,7 +134,8 @@ void CopyHdrTexture::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(Swapchain->renderPass.get())
+		// WIP: decouple
+		.setRenderPass(Layer->mainSwapchain->renderPass.get())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);

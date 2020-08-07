@@ -2,8 +2,8 @@
 #include "engine/Listener.h"
 #include "rendering/out/CopyHdrTexture.h"
 #include "rendering/ppt/PtCollection.h"
-#include "rendering/wrappers/RGbuffer.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/wrappers/RGbuffer.h"
 
 namespace vl {
 constexpr size_t c_framesInFlight = 2;
@@ -38,9 +38,10 @@ private:
 	FrameArray<vk::UniqueSemaphore> m_renderFinishedSem;
 	FrameArray<vk::UniqueSemaphore> m_imageAvailSem;
 
-	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc);
-	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc);
-	void RecordOutPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc, vk::RenderPass outRp, vk::Framebuffer outFb, vk::Extent2D outExtent);
+	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, SceneRenderDesc& sceneDesc);
+	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc& sceneDesc);
+	void RecordOutPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
+		vk::Framebuffer outFb, vk::Extent2D outExtent);
 
 	PtCollection m_postprocCollection;
 
@@ -74,7 +75,8 @@ public:
 	void UpdateForFrame();
 
 	vk::Semaphore PrepareForDraw();
-	vk::Semaphore DrawFrame(SceneRenderDesc<SceneCamera>& sceneDesc, vk::RenderPass outRp, vk::Framebuffer outFb, vk::Extent2D outExtent);
+	vk::Semaphore DrawFrame(
+		SceneRenderDesc& sceneDesc, vk::RenderPass outRp, vk::Framebuffer outFb, vk::Extent2D outExtent);
 
 	void InitPipelines();
 

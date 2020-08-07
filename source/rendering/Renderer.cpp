@@ -188,7 +188,7 @@ void Renderer_::InitPipelines()
 
 Renderer_::~Renderer_() {}
 
-void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc)
+void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -218,7 +218,7 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, SceneRenderDe
 	cmdBuffer->end();
 }
 
-void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc)
+void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -296,7 +296,8 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, SceneRenderD
 	cmdBuffer->end();
 }
 
-void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc, vk::RenderPass outRp, vk::Framebuffer outFb, vk::Extent2D outExtent)
+void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
+	vk::Framebuffer outFb, vk::Extent2D outExtent)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -466,7 +467,8 @@ vk::Semaphore Renderer_::PrepareForDraw()
 	return *m_imageAvailSem[currentFrame];
 }
 
-vk::Semaphore Renderer_::DrawFrame(SceneRenderDesc<SceneCamera>& sceneDesc, vk::RenderPass outRp, vk::Framebuffer outFb, vk::Extent2D outExtent)
+vk::Semaphore Renderer_::DrawFrame(
+	SceneRenderDesc& sceneDesc, vk::RenderPass outRp, vk::Framebuffer outFb, vk::Extent2D outExtent)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -494,7 +496,7 @@ vk::Semaphore Renderer_::DrawFrame(SceneRenderDesc<SceneCamera>& sceneDesc, vk::
 		.setCommandBufferCount(static_cast<uint32>(bufs.size()))
 		.setPCommandBuffers(bufs.data());
 
-	Device->graphicsQueue.submit(1u, &submitInfo, *m_inFlightFence[currentFrame]);
+	Device->mainQueue.submit(1u, &submitInfo, *m_inFlightFence[currentFrame]);
 
 	return *m_renderFinishedSem[currentFrame];
 }

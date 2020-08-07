@@ -57,7 +57,7 @@ void PtSpotlight::MakePipeline()
 	Utl_CreatePipeline(gpuShader, colorBlending);
 }
 
-void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc, uint32 frameIndex)
+void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, uint32 frameIndex)
 {
 	auto camera = sceneDesc.viewer;
 
@@ -65,7 +65,7 @@ void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc<SceneCamera>
 		return;
 	}
 
-	// WIP: 
+	// WIP:
 	auto descSet = camera->descSets[Renderer_::currentFrame];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
@@ -73,10 +73,10 @@ void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc<SceneCamera>
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
 		&Renderer->GetGbuffer()->descSet, 0u, nullptr);
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
-		&descSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u, &descSet, 0u, nullptr);
 
-	for (auto sl : Scene->spotlights.elements) {
+	for (auto sl : sceneDesc->spotlights.elements) {
 		if (!sl) {
 			continue;
 		}

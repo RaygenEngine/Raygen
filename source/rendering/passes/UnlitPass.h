@@ -19,7 +19,7 @@ public:
 	//	vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
 
 	// WIP: extent
-	static void RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Extent2D extent, SceneRenderDesc<SceneCamera>& sceneDesc);
+	static void RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Extent2D extent, SceneRenderDesc& sceneDesc);
 };
 
 } // namespace vl

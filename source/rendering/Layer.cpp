@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Layer.h"
 
+#include "engine/console/ConsoleVariable.h"
 #include "platform/Platform.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
@@ -9,10 +10,16 @@
 #include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/Swapchain.h"
 #include "rendering/VulkanLoader.h"
+#include "rendering/wrappers/RSwapchain.h"
+
+ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
+	"Builds all build-able scene nodes" };
+ConsoleFunction<> console_BuildAS{ "s.buildTestAccelerationStructure", []() {},
+	"Builds a top level acceleration structure, for debugging purposes, todo: remove" };
 
 namespace vl {
+
 Layer_::Layer_()
 {
 	VulkanLoader::InitLoaderBase();
@@ -39,10 +46,10 @@ Layer_::Layer_()
 
 	Layouts = new Layouts_();
 
-	// TODO: swapchain is not a global
-	Swapchain = new Swapchain_(Instance->surface);
+
+	mainSwapchain = std::make_unique<RSwapchain>(Instance->surface);
 	// TODO: scene is not a global
-	Scene = new Scene_(Swapchain->imageCount);
+	mainScene = std::make_unique<Scene>(mainSwapchain->imageCount);
 
 	Renderer = new Renderer_();
 	Renderer->InitPipelines();
@@ -52,8 +59,9 @@ Layer_::~Layer_()
 {
 	delete Renderer;
 
-	delete Swapchain;
-	delete Scene;
+	// WIP:
+	mainSwapchain.reset();
+	mainScene.reset();
 
 	delete Layouts;
 
@@ -70,33 +78,33 @@ void Layer_::DrawFrame()
 	// even for more than one renderers/scenes/swapchains
 
 	// if window resize
-	//Device->waitIdle();
-	//delete Swapchain;
-	//Swapchain = new Swapchain_(Instance->surface);
+	// Device->waitIdle();
+	// delete Swapchain;
+	// Swapchain = new Swapchain_(Instance->surface);
 
 	// if(window not minimized)
 
 	Renderer->UpdateForFrame();
 	GpuAssetManager->ConsumeAssetUpdates();
-	Scene->ConsumeCmdQueue();
+	mainScene->ConsumeCmdQueue();
 
 	auto imageAvailSem = Renderer->PrepareForDraw();
 
-	Scene->UploadDirty();
+	mainScene->UploadDirty();
 
 	uint32 imageIndex;
-	Device->acquireNextImageKHR(*Swapchain, UINT64_MAX, { imageAvailSem }, {}, &imageIndex);
-	
-	auto outRp = Swapchain->GetRenderPass();
-	auto outFb = Swapchain->GetFramebuffer(imageIndex);
-	auto outExtent = Swapchain->GetExtent();
+	Device->acquireNextImageKHR(*mainSwapchain, UINT64_MAX, { imageAvailSem }, {}, &imageIndex);
+
+	auto outRp = mainSwapchain->renderPass.get();
+	auto outFb = mainSwapchain->framebuffers[imageIndex].get();
+	auto outExtent = mainSwapchain->extent;
 
 	// WIP: 1 = editor camera (lets hope for now)
-	SceneRenderDesc<SceneCamera> sceneDesc{ Scene, 1 };
+	SceneRenderDesc sceneDesc{ mainScene.get(), 1 };
 
 	auto renderFinishedSem = Renderer->DrawFrame(sceneDesc, outRp, outFb, outExtent);
 
-	vk::SwapchainKHR swapChains[] = { *Swapchain };
+	vk::SwapchainKHR swapChains[] = { *mainSwapchain };
 
 	vk::PresentInfoKHR presentInfo;
 	presentInfo //

@@ -61,7 +61,7 @@ void PtDebug::MakePipeline()
 	Utl_CreatePipeline(gpuShader, colorBlending, 1u);
 }
 
-void PtDebug::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc<SceneCamera>& sceneDesc, uint32 frameIndex)
+void PtDebug::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, uint32 frameIndex)
 {
 
 	cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
