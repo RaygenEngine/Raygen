@@ -45,6 +45,24 @@ void EnqueueTransformCmds(Scene* scene, entt::registry& reg)
 		scene->EnqueueCmd<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<false>(basic));
 	}
 }
+
+template<typename T>
+void EnqueueRecreateCmds(Scene* scene, entt::registry& reg)
+{
+	{
+		auto view = reg.view<T>(entt::exclude<typename T::Destroy>);
+		for (auto& [ent, sc] : view.each()) {
+			sc.sceneUid = scene->EnqueueCreateCmd<typename T::RenderSceneType>();
+		}
+	}
+
+	{
+		auto view = reg.view<BasicComponent, T>();
+		for (auto& [ent, basic, sc] : view.each()) {
+			scene->EnqueueCmd<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<true>(basic));
+		}
+	}
+}
 } // namespace scenecmds
 
 
@@ -57,6 +75,10 @@ class SceneCmdSystem {
 	template<typename ReturnType, typename... Args>
 	using FnPtr = ReturnType (*)(Args...);
 
+
+	// Commands to repopoulate a scene, (useful when transfering to a new scene).
+	// The equivelant destory is not required (yet) as you can just delete the whole scene
+	std::vector<FnPtr<void, Scene*, entt::registry&>> m_recreateCmds;
 
 	std::vector<FnPtr<void, Scene*, entt::registry&>> m_createCmds;
 	std::vector<FnPtr<void, Scene*, entt::registry&>> m_destroyCmds;
@@ -80,6 +102,7 @@ class SceneCmdSystem {
 
 		using SceneT = typename T::RenderSceneType;
 
+		m_recreateCmds.emplace_back(&scenecmds::EnqueueRecreateCmds<T>);
 		m_createCmds.emplace_back(&scenecmds::EnqueueCreateCmds<T>);
 		m_destroyCmds.emplace_back(&scenecmds::EnqueueDestoryCmds<T>);
 
@@ -97,4 +120,5 @@ class SceneCmdSystem {
 
 public:
 	static void WriteSceneCmds(Scene* scene, entt::registry& registry);
+	static void WriteRecreateCmds(Scene* scene, entt::registry& registry);
 };

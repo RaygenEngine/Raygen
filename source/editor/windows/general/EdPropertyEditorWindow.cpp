@@ -483,9 +483,7 @@ void PropertyEditorWindow::Run_Components(Entity entity)
 		ImGui::PopID();
 	});
 
-
 	if (map.size()) {
-
 		if (ImGui::BeginPopupContextWindow()) {
 			for (auto& [id, entry] : map) {
 				if (ImGui::MenuItem(entry.clPtr->GetNameStr().c_str())) {
@@ -495,12 +493,6 @@ void PropertyEditorWindow::Run_Components(Entity entity)
 			ImGui::EndPopup();
 		}
 	}
-
-
-	// WIP: ECS
-	// refltools::CallVisitorOnEveryProperty(node, visitor);
-
-	// node->SetDirtyMultiple(visitor.dirtyFlags);
 }
 
 void PropertyEditorWindow::Run_ImGuizmo(Entity node)

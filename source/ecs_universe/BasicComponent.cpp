@@ -4,8 +4,30 @@
 
 #include <glm/gtx/matrix_decompose.hpp>
 
+
 void BasicComponent::SetParent(Entity newParent, int32 index)
 {
+	if (newParent == self) {
+		return;
+	}
+
+	if (IsDistantChild(newParent)) {
+		// If new parent is distant child, we cannot directly move under it because we will detach from the tree
+		// We will first promote our children to the parent node, then move ourselves under them
+		auto ourOriginalParent = parent;
+
+		DetachFromParent();
+
+		auto child = firstChild;
+		while (child) {
+			auto nextChild = child->next;
+			child->SetParent(ourOriginalParent);
+			child = nextChild;
+		}
+
+		// Continue into SetParent normally...
+	}
+
 	// Stuff to be done when changing parent:
 
 	// REMOVE:
@@ -97,6 +119,23 @@ void BasicComponent::DetachFromParent()
 	}
 	parent = {};
 }
+
+bool BasicComponent::IsDistantChild(Entity possibleChild)
+{
+	if (possibleChild == self) {
+		return false;
+	}
+	// Go up the tree until you reach root or find self
+	auto current = possibleChild;
+	while (current) {
+		if (current == self) {
+			return true;
+		}
+		current = current->parent;
+	}
+	return false;
+}
+
 
 void BasicComponent::SetNodeTransformWCS(const glm::mat4& newWorldMatrix)
 {

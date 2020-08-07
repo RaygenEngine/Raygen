@@ -104,6 +104,8 @@ void EcsOutlinerWindow::DrawRecurseEntity(ECS_World& world, Entity ent, int32 de
 		Run_ContextPopup(world, ent);
 		ImGui::EndPopup();
 	}
+	Run_OutlinerDropEntity(ent);
+
 	auto child = ent->firstChild;
 	while (child) {
 		DrawRecurseEntity(world, child, depth + 1);
@@ -134,6 +136,11 @@ void EcsOutlinerWindow::ImguiDraw()
 	}
 
 	ImGui::PopStyleVar(2);
+
+	if (postIterCommand) {
+		postIterCommand();
+		postIterCommand = {};
+	}
 }
 
 void EcsOutlinerWindow::Run_ContextPopup(ECS_World& world, Entity entity)
@@ -195,6 +202,22 @@ void EcsOutlinerWindow::Run_SpaceContextPopup(ECS_World& world)
 	}
 	if (ImGui::MenuItem(ETXT(FA_PASTE, " Paste"), "Ctrl+V")) {
 		ed::ClipboardOp::LoadEntity(world.reg);
+	}
+}
+
+void EcsOutlinerWindow::Run_OutlinerDropEntity(Entity entity)
+{
+	if (ImGui::BeginDragDropSource()) {
+		ImEd::EndDragDropSourceByCopy(entity, "WORLD_ENTITY");
+	}
+
+	if (auto opt = ImEd::AcceptDropByCopy<Entity>("WORLD_ENTITY"); opt) {
+		Entity dropEntity = *opt;
+		if (dropEntity != entity) {
+			postIterCommand = [=]() mutable {
+				dropEntity->SetParent(entity);
+			};
+		}
 	}
 }
 
