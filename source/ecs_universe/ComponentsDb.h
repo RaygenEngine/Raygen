@@ -98,7 +98,6 @@ public:
 			}
 		};
 
-
 		return entry;
 	}
 
