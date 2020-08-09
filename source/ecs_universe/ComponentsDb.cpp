@@ -45,7 +45,6 @@ void ComponentsDb::EntityHierarchyToJson(entt::registry& reg, entt::entity ent, 
 	});
 }
 
-
 void ComponentsDb::LoadComponentInto(Entity ent, const std::string& componentName, const nlohmann::json& json)
 {
 	if (auto comp = GetTypeByName(componentName); comp) {
@@ -114,7 +113,6 @@ Entity ComponentsDb::JsonToEntityHierarchy(entt::registry& reg, const nlohmann::
 	return ent;
 }
 
-
 void ComponentsDb::RegistryToJson(entt::registry& reg, nlohmann::json& json)
 {
 	reg.each([&](entt::entity entity) {
@@ -125,8 +123,6 @@ void ComponentsDb::RegistryToJson(entt::registry& reg, nlohmann::json& json)
 			EntityHierarchyToJson(reg, entity, json.emplace_back(nlohmann::json::object()));
 		}
 	});
-
-	std::cout << std::setw(4) << json;
 }
 
 void ComponentsDb::JsonToRegistry(const nlohmann::json& json, entt::registry& reg)

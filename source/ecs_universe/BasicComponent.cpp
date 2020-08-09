@@ -5,8 +5,17 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 
-void BasicComponent::SetParent(Entity newParent, int32 index)
+void BasicComponent::SetParent(Entity newParent, bool preserveWorldTransform, int32 index)
 {
+	auto maybePreserveWT = [&, originalWt = world_.transform]() {
+		if (preserveWorldTransform) {
+			SetNodeTransformWCS(originalWt);
+		}
+		else {
+			UpdateWorldTransforms();
+		}
+	};
+
 	if (newParent == self) {
 		return;
 	}
@@ -27,14 +36,9 @@ void BasicComponent::SetParent(Entity newParent, int32 index)
 
 		// Continue into SetParent normally...
 	}
-
-	// Stuff to be done when changing parent:
-
-	// REMOVE:
-	//	Remove from siblings list
-	//	Update firstChild of parent if required
-	//
-	DetachFromParent();
+	else {
+		DetachFromParent();
+	}
 
 
 	// ADD:
@@ -43,7 +47,8 @@ void BasicComponent::SetParent(Entity newParent, int32 index)
 	// index == -1 means at the ending of the list
 
 	if (!newParent) {
-		UpdateWorldTransforms();
+		maybePreserveWT();
+		// UpdateWorldTransforms();
 		return;
 	}
 
@@ -69,7 +74,8 @@ void BasicComponent::SetParent(Entity newParent, int32 index)
 	if (!insertAfter) {
 		newParent->firstChild = self;
 		parent = newParent;
-		UpdateWorldTransforms();
+		maybePreserveWT();
+		// UpdateWorldTransforms();
 
 		return;
 	}
@@ -84,7 +90,8 @@ void BasicComponent::SetParent(Entity newParent, int32 index)
 	prev = insertAfter;
 	parent = newParent;
 
-	UpdateWorldTransforms();
+	maybePreserveWT();
+	// UpdateWorldTransforms();
 }
 
 void BasicComponent::MarkDirtySrt()
@@ -100,22 +107,37 @@ void BasicComponent::MarkDirtyMoved()
 
 void BasicComponent::DetachFromParent()
 {
+	// REMOVE:
+	//	Remove from siblings list
+	//	Update firstChild of parent if required
+	//  Clear our prev + next
+	//
+
 	if (!parent) {
+		if (next) {
+			LOG_ERROR("Found next: {} at {}", next->name, name);
+		}
+		if (prev) {
+			LOG_ERROR("Found prev: {} at {}", prev->name, name);
+		}
 		CLOG_ERROR(next || prev, "Corrupt entity relationship found");
 		return;
 	}
 
+	Entity originalSibling = next;
 	// Remove from siblings list
 	if (next) {
 		next->prev = prev;
+		next = {};
 	}
 	if (prev) {
-		prev->next = next;
+		prev->next = originalSibling;
+		prev = {};
 	}
 
 	// Update parent first if required
 	if (parent && parent->firstChild == self) {
-		parent->firstChild = next;
+		parent->firstChild = originalSibling;
 	}
 	parent = {};
 }

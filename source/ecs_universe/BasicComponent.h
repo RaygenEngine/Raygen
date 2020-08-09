@@ -59,7 +59,7 @@ struct BasicComponent {
 
 	// Also moves children, handles moving ourselves under a child (by promoting all children).
 	// NOTE: Be careful when you call this from loops
-	void SetParent(Entity newParent = {}, int32 index = -1);
+	void SetParent(Entity newParent = {}, bool preserveWorldTransform = true, int32 index = -1);
 
 	void MarkDirtySrt();
 	void MarkDirtyMoved();

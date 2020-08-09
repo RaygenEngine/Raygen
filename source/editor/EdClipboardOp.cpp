@@ -10,10 +10,29 @@
 
 namespace ed {
 namespace {
-	void SetClipboard(const char* clp) { glfwSetClipboardString(nullptr, clp); }
-	void SetClipboard(const std::string& clp) { SetClipboard(clp.c_str()); }
+	void SetClipboard(const char* clp) {}
+	void SetClipboard(const std::string& clp)
+	{
+		std::string clipboard = "```" + clp + "```";
+		glfwSetClipboardString(nullptr, clipboard.c_str());
+	}
 
-	const char* GetClipboard() { return glfwGetClipboardString(nullptr); }
+	const char* GetClipboard()
+	{
+		const char* clipboard = glfwGetClipboardString(nullptr);
+		if (!clipboard) {
+			return nullptr;
+		}
+		std::string_view sv = clipboard;
+
+		if (sv.starts_with("```")) {
+			clipboard += 3;
+		}
+		if (sv.ends_with("```")) {
+			const_cast<char*>(clipboard)[sv.size() - 6] = '\0';
+		}
+		return clipboard;
+	}
 } // namespace
 
 
@@ -26,7 +45,11 @@ void ClipboardOp::StoreEntity(Entity ent)
 
 Entity ClipboardOp::LoadEntity(entt::registry& reg)
 {
-	nlohmann::json j = nlohmann::json::parse(GetClipboard(), nullptr, false);
+	auto clipboard = GetClipboard();
+	if (!clipboard) {
+		return {};
+	}
+	nlohmann::json j = nlohmann::json::parse(clipboard, nullptr, false);
 	if (j.is_discarded()) {
 		return {};
 	}
@@ -48,7 +71,12 @@ void ClipboardOp::LoadStructure(void* data, const ReflClass& cl)
 {
 	using namespace refltools;
 
-	nlohmann::json j = nlohmann::json::parse(GetClipboard(), nullptr, false);
+	auto clipboard = GetClipboard();
+	if (!clipboard) {
+		return;
+	}
+
+	nlohmann::json j = nlohmann::json::parse(clipboard, nullptr, false);
 
 	if (j.is_discarded()) {
 		return;
