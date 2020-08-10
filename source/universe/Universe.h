@@ -5,7 +5,7 @@
 class Universe {
 	friend class Engine_;
 
-	static void Init();
+	static void Init(const fs::path& defaultWorldPath, const fs::path& localPath);
 	static void Destroy();
 
 public:

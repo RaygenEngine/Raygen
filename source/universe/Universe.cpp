@@ -6,10 +6,22 @@ std::optional<fs::path> worldToLoad{};
 std::optional<fs::path> ecsWorldToLoad{};
 } // namespace
 
-void Universe::Init()
+
+namespace {
+} // namespace
+
+void Universe::Init(const fs::path& defaultWorldPath, const fs::path& localPath)
 {
 	MainWorld = new World(new NodeFactory());
-	ecsWorld = new ECS_World();
+
+	if (!fs::exists(localPath)) {
+		if (!fs::copy_file(defaultWorldPath, localPath)) {
+			LOG_ERROR("Failed to copy default world file to local.");
+			ecsWorld = new ECS_World();
+			return;
+		}
+	}
+	ecsWorld = new ECS_World(localPath);
 }
 
 void Universe::Destroy()
@@ -34,7 +46,6 @@ void Universe::LoadPendingWorlds()
 
 		MainWorld = new World(new NodeFactory());
 		MainWorld->LoadAndPrepareWorld(*worldToLoad);
-
 
 		worldToLoad.reset();
 	}

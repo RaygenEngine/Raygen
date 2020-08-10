@@ -26,6 +26,9 @@ protected:
 	bool m_autoRestoreWorld{ false };
 	bool m_hasRestoreSave{ false };
 
+
+	bool m_openPopupDeleteLocal{ false };
+
 	void MakeMainMenu();
 
 	ImGuiID m_dockspaceId;

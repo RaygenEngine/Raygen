@@ -7,8 +7,8 @@
 namespace ed {
 
 
-ed::Menu::MenuOption& ed::Menu::AddEntry(
-	const char* inName, std::function<void()>&& funcPtr, std::function<bool()>&& isSelectedBind)
+ed::Menu::MenuOption& ed::Menu::AddEntry(const char* inName, std::function<void()>&& funcPtr,
+	std::function<bool()>&& isSelectedBind, std::function<bool()>&& isVisibleBind)
 {
 
 	MenuOption& option = *options.emplace_back(std::make_unique<MenuOption>());
@@ -17,6 +17,10 @@ ed::Menu::MenuOption& ed::Menu::AddEntry(
 
 	if (isSelectedBind) {
 		option.isSelectedFunc = std::move(isSelectedBind);
+	}
+
+	if (isVisibleBind) {
+		option.isVisibleFunc = std::move(isVisibleBind);
 	}
 
 	return option;
@@ -65,6 +69,12 @@ void ed::Menu::DrawOptions()
 		if (!entry) {
 			ImGui::Separator();
 			continue;
+		}
+
+		if (entry->isVisibleFunc) {
+			if (!entry->isVisibleFunc()) {
+				continue;
+			}
 		}
 
 		if (entry->menu) {
