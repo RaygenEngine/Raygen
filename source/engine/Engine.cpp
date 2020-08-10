@@ -46,7 +46,8 @@ void Engine_::InitEngine(App* app)
 
 	Editor::Init();
 
-	Universe::Init();
+
+	Universe::Init(m_app->m_initialScene, "local.json");
 }
 
 float Engine_::GetFPS()

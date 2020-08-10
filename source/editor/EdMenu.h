@@ -11,6 +11,7 @@ struct Menu {
 		std::string name;
 		std::function<void()> func;
 		std::function<bool()> isSelectedFunc;
+		std::function<bool()> isVisibleFunc;
 		UniquePtr<Menu> menu;
 	};
 
@@ -22,8 +23,8 @@ struct Menu {
 
 	void AddSeperator() { options.emplace_back(); }
 
-	MenuOption& AddEntry(
-		const char* inName, std::function<void()>&& funcPtr, std::function<bool()>&& isSelectedBind = {});
+	MenuOption& AddEntry(const char* inName, std::function<void()>&& funcPtr,
+		std::function<bool()>&& isSelectedBind = {}, std::function<bool()>&& isVisibleBind = {});
 
 
 	MenuOption& AddEntry(MenuOption&& option);

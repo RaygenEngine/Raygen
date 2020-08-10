@@ -17,6 +17,7 @@
 #include "universe/Universe.h"
 #include "universe/WorldOperationsUtl.h"
 #include "editor/windows/general/EdEcsOutlinerWindow.h"
+#include "ecs_universe/EcsWorld.h"
 #include <imguicolortextedit/TextEditor.h>
 
 
@@ -78,6 +79,9 @@ void EditorObject_::MakeMainMenu()
 	sceneMenu.AddEntry(U8(FA_FOLDER_OPEN u8"  Load"), [&]() { OpenLoadDialog(); });
 	sceneMenu.AddSeperator();
 	sceneMenu.AddEntry(U8(FA_REDO_ALT u8"  Revert"), [&]() { ReloadScene(); });
+	sceneMenu.AddEntry(
+		U8(FA_REDO_ALT u8"  Delete Local"), [&]() { m_openPopupDeleteLocal = true; }, {},
+		[&]() { return fs::relative(Universe::ecsWorld->srcPath) == "local.json"; });
 	sceneMenu.AddSeperator();
 	sceneMenu.AddEntry(U8(FA_DOOR_OPEN u8"  Exit"), []() { glfwSetWindowShouldClose(Platform::GetMainHandle(), 1); });
 
@@ -335,6 +339,33 @@ void EditorObject_::Run_MenuBar()
 	if (ImEd::BeginMenuBar()) {
 		m_mainMenu.DrawOptions();
 		ImEd::EndMenuBar();
+	}
+
+	if (m_openPopupDeleteLocal) {
+		ImGui::OpenPopup("Delete Local");
+		m_openPopupDeleteLocal = false;
+	}
+
+	if (ImGui::BeginPopupModal("Delete Local", 0, ImGuiWindowFlags_AlwaysAutoResize)) {
+		ImGui::Text("Local scene will be lost. Are you sure?\n");
+		ImGui::Separator();
+
+		if (ImGui::Button("OK", ImVec2(120, 40))) {
+			fs::remove("local.json");
+			if (!fs::copy_file("engine-data/default.json", "local.json")) {
+				LOG_ERROR("Failed to copy default world file to local.");
+			}
+			else {
+				Universe::ECS_LoadMainWorld("local.json");
+			}
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::SetItemDefaultFocus();
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(120, 40))) {
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
 	}
 }
 
