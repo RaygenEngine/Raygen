@@ -39,6 +39,14 @@ void SceneAnimatedGeometry::ResizeJoints(uint32 curFrame)
 	vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 }
 
+void SceneAnimatedGeometry::MaybeResizeJoints(size_t newSize)
+{
+	if (newSize != jointMatrices.size()) {
+		isDirtyResize = { true, true, true };
+		jointMatrices.resize(newSize);
+	}
+}
+
 size_t SceneAnimatedGeometry::GetBufferSize() const
 {
 	return glm::max(jointMatrices.size() * sizeof(glm::mat4), 8llu);

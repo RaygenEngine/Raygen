@@ -5,7 +5,15 @@
 
 void SceneDirectionalLight::ResizeShadowmap(uint32 width, uint32 height)
 {
-	shadowmap = std::make_unique<vl::RDepthmap>(width, height, name.c_str());
+	bool shouldResize = true;
+	if (shadowmap) {
+		auto extent = shadowmap->attachment->GetExtent2D();
+		shouldResize = width != extent.width || height != extent.height;
+	}
+
+	if (shouldResize) {
+		shadowmap = std::make_unique<vl::RDepthmap>(width, height, name.c_str());
+	}
 }
 
 void SceneDirectionalLight::UpdateBox(const math::Frustum& frustum, glm::vec3 apex)

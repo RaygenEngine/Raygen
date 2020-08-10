@@ -103,7 +103,7 @@ Entity ComponentsDb::JsonToEntityHierarchy(entt::registry& reg, const nlohmann::
 		}
 		if (key == "~") {
 			for (auto& jchild : value.get<json::array_t>()) {
-				JsonToEntityHierarchy(reg, jchild)->SetParent(ent);
+				JsonToEntityHierarchy(reg, jchild)->SetParent(ent, false);
 			}
 			continue;
 		}

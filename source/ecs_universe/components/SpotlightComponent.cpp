@@ -25,7 +25,7 @@ DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 	glm::mat4 viewProj = projection * view;
 
 	return [=](SceneSpotlight& sl) {
-		sl.name = "depth: " + bc.name;
+		sl.name = "spot depth: " + bc.name;
 		sl.ubo.position = glm::vec4(bc.world().position, 1.f);
 		sl.ubo.forward = glm::vec4(bc.world().forward(), 0.f);
 		sl.ubo.viewProj = viewProj;
