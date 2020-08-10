@@ -223,6 +223,7 @@ public:
 
 	// Imports an entity hierarchy from json
 	// TODO: ECS: Robustness. This is now used from clipboard and should NEVER ever crash with any json data.
+	// param: parent must be present to get proper world positions
 	static Entity JsonToEntityHierarchy(entt::registry& reg, const nlohmann::json& json);
 
 

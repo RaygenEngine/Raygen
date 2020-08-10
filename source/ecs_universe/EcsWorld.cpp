@@ -7,7 +7,10 @@
 #include "ecs_universe/components/SpotlightComponent.h"
 #include "ecs_universe/components/CameraComponent.h"
 #include "ecs_universe/components/ReflectionProbeComponent.h"
+#include "ecs_universe/components/DirectionalLightComponent.h"
 #include "ecs_universe/ComponentsDb.h"
+#include "ecs_universe/systems/AnimatorSystem.h"
+#include "engine/Engine.h"
 #include "engine/Input.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
@@ -130,7 +133,11 @@ void ECS_World::UpdateWorld()
 	// Scene Commands
 	//
 
+	AnimatorSystem::UpdateAnimations(reg, 1.f / std::max(Engine.GetFPS(), 1.f));
+
 	SceneCmdSystem::WriteSceneCmds(Scene, reg);
+
+	AnimatorSystem::UploadAnimationsToScene(reg, Scene);
 
 	// Clean Up
 	reg.clear<DirtyMovedComp, DirtySrtComp>();

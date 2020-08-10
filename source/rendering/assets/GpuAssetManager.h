@@ -36,12 +36,12 @@ public:
 	GpuHandle<T> GetGpuHandle(PodHandle<T> handle)
 	{
 		size_t id = handle.uid;
-		if (id >= gpuAssets.size()) {
-			AllocForAll();
-		}
-		if (!gpuAssets[id]) {
-			Load(handle);
-		}
+		if (id >= gpuAssets.size())
+			[[unlikely]] { AllocForAll(); }
+
+		if (!gpuAssets[id])
+			[[unlikely]] { Load(handle); }
+
 		return GpuHandle<T>{ id };
 	}
 

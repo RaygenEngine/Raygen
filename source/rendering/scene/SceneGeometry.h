@@ -29,7 +29,12 @@ struct SceneAnimatedGeometry {
 
 	void ResizeJoints(uint32 curFrame);
 
+
+	void MaybeResizeJoints(size_t newSize);
+
 	std::array<bool, 3> isDirty{ true, true, true };
+
+
 	std::array<bool, 3> isDirtyResize{ true, true, true };
 
 private:
