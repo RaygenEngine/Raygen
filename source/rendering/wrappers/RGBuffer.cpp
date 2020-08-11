@@ -83,25 +83,8 @@ void RGbuffer::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto recordTransition = [&](auto& attachment) {
-		if (attachment->IsDepth()) {
-			return;
-		}
-		auto target = !attachment->IsDepth() ? vk::ImageLayout::eColorAttachmentOptimal
-											 : vk::ImageLayout::eDepthStencilAttachmentOptimal;
-
-		auto barrier = attachment->CreateTransitionBarrier(vk::ImageLayout::eShaderReadOnlyOptimal, target);
-
-		vk::PipelineStageFlags sourceStage = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-		vk::PipelineStageFlags destinationStage = GetPipelineStage(target);
-
-		cmdBuffer->pipelineBarrier(
-			sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
-	};
-
 	for (auto& att : attachments) {
-		recordTransition(att);
+		att->TransitionForWrite(cmdBuffer);
 	}
 }
 

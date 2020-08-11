@@ -307,50 +307,27 @@ vk::UniquePipeline GbufferPass::CreateAnimPipeline(
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
 
-void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, SceneRenderDesc& sceneDesc)
+void GbufferPass::RecordCmd(
+	vk::CommandBuffer* cmdBuffer, vk::Viewport viewport, vk::Rect2D scissor, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto extent = gbuffer->attachments[GNormal]->GetExtent2D();
+	vk::CommandBufferInheritanceInfo ii{};
+	ii.setRenderPass(Layouts->gbufferPass.get()) //
+		.setFramebuffer({})                      // VK_NULL_HANDLE
+		.setSubpass(0u);
 
-	vk::Rect2D scissor{};
-	scissor
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo
+		.setFlags(vk::CommandBufferUsageFlagBits::eRenderPassContinue) //
+		.setPInheritanceInfo(&ii);
 
-	vk::Viewport viewport{};
-	viewport
-		.setX(0) //
-		.setY(0)
-		.setWidth(static_cast<float>(extent.width))
-		.setHeight(static_cast<float>(extent.height))
-		.setMinDepth(0.f)
-		.setMaxDepth(1.f);
-
-	cmdBuffer->setViewport(0, { viewport });
-	cmdBuffer->setScissor(0, { scissor });
-
-	vk::RenderPassBeginInfo renderPassInfo{};
-	renderPassInfo
-		.setRenderPass(Layouts->gbufferPass.get()) //
-		.setFramebuffer(gbuffer->framebuffer.get());
-	renderPassInfo.renderArea
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
-
-	std::array<vk::ClearValue, 6> clearValues = {};
-	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[1].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[2].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[3].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[4].setDepthStencil({ 1.0f, 0 });
-	renderPassInfo
-		.setClearValueCount(static_cast<uint32>(clearValues.size())) //
-		.setPClearValues(clearValues.data());
-
-
-	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+	cmdBuffer->begin(beginInfo);
 	{
+
+		cmdBuffer->setViewport(0, { viewport });
+		cmdBuffer->setScissor(0, { scissor });
+
 		auto camera = sceneDesc.viewer;
 		if (!camera) {
 			cmdBuffer->endRenderPass();
@@ -434,7 +411,7 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, Sce
 			}
 		}
 	}
-	cmdBuffer->endRenderPass();
+	cmdBuffer->end();
 }
 
 } // namespace vl

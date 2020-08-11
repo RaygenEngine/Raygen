@@ -246,45 +246,22 @@ vk::UniquePipeline DepthmapPass::CreateAnimPipeline(
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
 
-void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, const glm::mat4& viewProj, SceneRenderDesc& sceneDesc)
+void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport, vk::Rect2D scissor,
+	const glm::mat4& viewProj, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto extent = depthmap.attachment->GetExtent2D();
+	vk::CommandBufferInheritanceInfo ii{};
+	ii.setRenderPass(Layouts->depthRenderPass.get()) //
+		.setFramebuffer({})                          // VK_NULL_HANDLE
+		.setSubpass(0u);
 
-	vk::Rect2D scissor{};
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo
+		.setFlags(vk::CommandBufferUsageFlagBits::eRenderPassContinue) //
+		.setPInheritanceInfo(&ii);
 
-	scissor
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
-
-	auto vpSize = extent;
-
-	vk::Viewport viewport{};
-	viewport
-		.setX(0) //
-		.setY(0)
-		.setWidth(static_cast<float>(vpSize.width))
-		.setHeight(static_cast<float>(vpSize.height))
-		.setMinDepth(0.f)
-		.setMaxDepth(1.f);
-
-	vk::RenderPassBeginInfo renderPassInfo{};
-	renderPassInfo
-		.setRenderPass(Layouts->depthRenderPass.get()) //
-		.setFramebuffer(depthmap.framebuffer.get());
-	renderPassInfo.renderArea
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
-
-	vk::ClearValue clearValues = {};
-	clearValues.setDepthStencil({ 1.0f, 0 });
-	renderPassInfo
-		.setClearValueCount(1u) //
-		.setPClearValues(&clearValues);
-
-	// begin render pass
-	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+	cmdBuffer->begin(beginInfo);
 	{
 
 		cmdBuffer->setViewport(0, { viewport });
@@ -366,7 +343,6 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 			}
 		}
 	}
-	// end render pass
-	cmdBuffer->endRenderPass();
+	cmdBuffer->end();
 }
 } // namespace vl

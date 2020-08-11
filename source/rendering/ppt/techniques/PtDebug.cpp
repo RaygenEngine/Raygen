@@ -61,9 +61,8 @@ void PtDebug::MakePipeline()
 	Utl_CreatePipeline(gpuShader, colorBlending, 1u);
 }
 
-void PtDebug::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc)
+void PtDebug::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-
 	cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 

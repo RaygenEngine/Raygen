@@ -252,6 +252,19 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 	Device->mainQueue.waitIdle();
 }
 
+void RImage::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
+{
+	auto toLayout = IsDepthFormat(m_imageInfo.format) ? vk::ImageLayout::eDepthStencilAttachmentOptimal
+													  : vk::ImageLayout::eColorAttachmentOptimal;
+
+	auto barrier = CreateTransitionBarrier(vk::ImageLayout::eShaderReadOnlyOptimal, toLayout);
+
+	vk::PipelineStageFlags sourceStage = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);
+	vk::PipelineStageFlags destinationStage = GetPipelineStage(toLayout);
+
+	cmdBuffer->pipelineBarrier(sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+}
+
 vk::ImageMemoryBarrier RImage::CreateTransitionBarrier(
 	vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32 baseMipLevel, uint32 baseArrayLevel)
 {

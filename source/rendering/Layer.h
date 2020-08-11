@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/Listener.h"
 
 struct Scene;
 
@@ -6,7 +7,7 @@ namespace vl {
 
 struct RSwapchain;
 
-inline class Layer_ {
+inline class Layer_ : public Listener {
 
 	BoolFlag m_didViewportResize;
 
@@ -18,8 +19,11 @@ inline class Layer_ {
 	FrameArray<vk::CommandBuffer> m_cmdBuffer;
 
 
-	inline static uint32 currentFrame{ 0 };
+	uint32 currentFrame{ 0 };
 
+
+	BoolFlag m_didWindowResize;
+	bool m_isMinimized{ false };
 
 
 public:

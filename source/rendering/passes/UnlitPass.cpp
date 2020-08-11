@@ -191,68 +191,48 @@ vk::UniquePipeline UnlitPass::CreatePipeline(
 }
 
 
-void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Extent2D extent, SceneRenderDesc& sceneDesc)
+void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
-	vk::Rect2D scissor{};
-	scissor
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
+	auto camera = sceneDesc.viewer;
+	if (!camera) {
+		cmdBuffer->endRenderPass();
+		return;
+	}
 
-	vk::Viewport viewport{};
-	viewport
-		.setX(0) //
-		.setY(0)
-		.setWidth(static_cast<float>(extent.width))
-		.setHeight(static_cast<float>(extent.height))
-		.setMinDepth(0.f)
-		.setMaxDepth(1.f);
-
-	cmdBuffer->setViewport(0, { viewport });
-	cmdBuffer->setScissor(0, { scissor });
-
-
-	{
-		auto camera = sceneDesc.viewer;
-		if (!camera) {
-			cmdBuffer->endRenderPass();
-			return;
+	for (auto geom : sceneDesc->geometries.elements) {
+		if (!geom) {
+			continue;
 		}
+		PushConstant pc{ //
+			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
+		};
 
-		for (auto geom : sceneDesc->geometries.elements) {
-			if (!geom) {
-				continue;
+		for (auto& gg : geom->model.Lock().geometryGroups) {
+			auto& mat = gg.material.Lock();
+			auto& arch = mat.archetype.Lock();
+			if (!arch.isUnlit)
+				[[likely]] { continue; }
+
+			auto& plLayout = *arch.unlit.pipelineLayout;
+
+			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.unlit.pipeline);
+			cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+			if (mat.hasDescriptorSet) {
+				cmdBuffer->bindDescriptorSets(
+					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
 			}
-			PushConstant pc{ //
-				geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
-			};
 
-			for (auto& gg : geom->model.Lock().geometryGroups) {
-				auto& mat = gg.material.Lock();
-				auto& arch = mat.archetype.Lock();
-				if (!arch.isUnlit)
-					[[likely]] { continue; }
+			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u,
+				&camera->descSets[sceneDesc.frameIndex], 0u, nullptr);
 
-				auto& plLayout = *arch.unlit.pipelineLayout;
-
-				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.unlit.pipeline);
-				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-				if (mat.hasDescriptorSet) {
-					cmdBuffer->bindDescriptorSets(
-						vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
-				}
-
-				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u,
-					&camera->descSets[sceneDesc.frameIndex], 0u, nullptr);
-
-				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
-				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+			cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
+			cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
 
 
-				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
-			}
+			cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 		}
 	}
 }

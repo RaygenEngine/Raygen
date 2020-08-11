@@ -25,7 +25,7 @@ class PtCollection {
 	void RunPrepares();
 
 public:
-	void Draw(vk::CommandBuffer buffer, SceneRenderDesc& sceneDesc);
+	void Draw(vk::CommandBuffer buffer, const SceneRenderDesc& sceneDesc);
 	void RegisterTechniques();
 };
 } // namespace vl

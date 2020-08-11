@@ -13,7 +13,7 @@ public:
 	// Runs once after all technique registrations are finished
 	virtual void Prepare(){};
 
-	virtual void Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc) = 0;
+	virtual void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) = 0;
 
 
 	PtBase(const PtBase&) = delete;
@@ -63,7 +63,7 @@ protected:
 	virtual void MakePipeline() = 0;
 
 	// TODO: remove one of the Draws
-	virtual void Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc) = 0;
+	virtual void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) = 0;
 
 	~PtBase_SinglePipeline() override = default;
 
