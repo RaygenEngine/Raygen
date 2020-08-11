@@ -74,15 +74,4 @@ RDepthmap::RDepthmap(uint32 width, uint32 height, const char* name)
 
 	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 }
-
-void RDepthmap::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
-{
-	auto barrier = attachment->CreateTransitionBarrier(
-		vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-	vk::PipelineStageFlags sourceStage = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);
-	vk::PipelineStageFlags destinationStage = GetPipelineStage(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-	cmdBuffer->pipelineBarrier(sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
-}
 } // namespace vl

@@ -252,10 +252,10 @@ struct SceneRenderDesc {
 	// apart from occlusion etc
 	SceneRenderDesc(Scene* scene_, size_t viewerIndex, uint32 frameIndex)
 		: scene(scene_)
-		, viewer(scene_->GetElement<SceneCamera>(viewerIndex)),
-		frameIndex(frameIndex)
+		, viewer(scene_->GetElement<SceneCamera>(viewerIndex))
+		, frameIndex(frameIndex)
 	{
 	}
 
-	Scene* operator->() { return scene; }
+	Scene* operator->() const { return scene; }
 };

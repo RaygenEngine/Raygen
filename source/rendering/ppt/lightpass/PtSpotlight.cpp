@@ -57,7 +57,7 @@ void PtSpotlight::MakePipeline()
 	Utl_CreatePipeline(gpuShader, colorBlending);
 }
 
-void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc)
+void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	auto camera = sceneDesc.viewer;
 
@@ -81,8 +81,8 @@ void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc)
 			continue;
 		}
 
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u, &sl->descSets[sceneDesc.frameIndex], 0u, nullptr);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
+			&sl->descSets[sceneDesc.frameIndex], 0u, nullptr);
 
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 3u, 1u, &sl->shadowmap->descSet, 0u, nullptr);

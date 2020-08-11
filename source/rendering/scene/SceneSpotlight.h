@@ -31,6 +31,7 @@ struct SceneSpotlight : SceneStruct {
 	SCENE_STRUCT(SceneSpotlight);
 	Spotlight_Ubo ubo;
 
+	// TODO: this should be a FrameArray
 	UniquePtr<vl::RDepthmap> shadowmap;
 
 

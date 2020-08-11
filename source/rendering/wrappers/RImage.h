@@ -31,6 +31,9 @@ public:
 
 	virtual void GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout);
 
+	// CHECK: read transitions are typically performed by renderpasses, if need be create one
+	void TransitionForWrite(vk::CommandBuffer* cmdBuffer);
+
 	// Affects all mips and array elements
 	vk::ImageMemoryBarrier CreateTransitionBarrier(
 		vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32 baseMipLevel = 0u, uint32 baseArrayLevel = 0u);

@@ -33,6 +33,7 @@ Layer_::Layer_()
 
 	Instance = new Instance_(Platform::GetVulkanExtensions(), Platform::GetMainHandle());
 
+	// TODO: extension loading from pd structs in pNext*
 	const auto deviceExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 		VK_KHR_MAINTENANCE1_EXTENSION_NAME,
@@ -75,11 +76,10 @@ Layer_::Layer_()
 	}
 
 
-
 	vk::CommandBufferAllocateInfo allocInfo{};
 	allocInfo.setCommandPool(Device->mainCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(3u * c_framesInFlight);
+		.setCommandBufferCount(c_framesInFlight);
 
 	// allocate all buffers needed
 	{
@@ -92,6 +92,12 @@ Layer_::Layer_()
 
 		moveBuffersToArray(m_cmdBuffer, 0);
 	}
+
+
+	Event::OnWindowResize.BindFlag(this, m_didWindowResize);
+	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimized) { m_isMinimized = newIsMinimized; });
+
+
 } // namespace vl
 
 Layer_::~Layer_()
@@ -121,20 +127,21 @@ void Layer_::DrawFrame()
 		currentScene = mainScene.get();
 	}
 
-	// this should be the general approach
-	// even for more than one renderers/scenes/swapchains
+	if (*m_didWindowResize) {
+		Device->waitIdle();
 
-	// if window resize
-	// Device->waitIdle();
-	// delete Swapchain;
-	// Swapchain = new Swapchain_(Instance->surface);
+		mainSwapchain.reset();
+		mainSwapchain = std::make_unique<RSwapchain>(Instance->surface);
+	}
 
-	// if(window not minimized)
+	if (m_isMinimized)
+		[[unlikely]] { return; }
 
 	Renderer->UpdateForFrame();
-	GpuAssetManager->ConsumeAssetUpdates();
-	currentScene->ConsumeCmdQueue();
 
+	GpuAssetManager->ConsumeAssetUpdates();
+
+	currentScene->ConsumeCmdQueue();
 
 	currentFrame = (currentFrame + 1) % c_framesInFlight;
 	auto currentCmdBuffer = &m_cmdBuffer[currentFrame];
@@ -142,7 +149,7 @@ void Layer_::DrawFrame()
 	Device->waitForFences({ *m_inFlightFence[currentFrame] }, true, UINT64_MAX);
 	Device->resetFences({ *m_inFlightFence[currentFrame] });
 
-	currentScene->UploadDirty();
+	currentScene->UploadDirty(currentFrame);
 
 	uint32 imageIndex;
 	Device->acquireNextImageKHR(*mainSwapchain, UINT64_MAX, { m_imageAvailSem[currentFrame].get() }, {}, &imageIndex);
@@ -151,10 +158,20 @@ void Layer_::DrawFrame()
 	auto outFb = mainSwapchain->framebuffers[imageIndex].get();
 	auto outExtent = mainSwapchain->extent;
 
-	// WIP: 1 = editor camera (lets hope for now)
+	// WIP: 0 = editor camera
 	SceneRenderDesc sceneDesc{ currentScene, 0, currentFrame };
 
-	Renderer->DrawFrame(currentCmdBuffer, sceneDesc, outRp, outFb, outExtent);
+
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo
+		.setFlags(vk::CommandBufferUsageFlags(0)) //
+		.setPInheritanceInfo(nullptr);
+
+	currentCmdBuffer->begin(beginInfo);
+	{
+		Renderer->DrawFrame(currentCmdBuffer, sceneDesc, outRp, outFb, outExtent);
+	}
+	currentCmdBuffer->end();
 
 
 	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput }; //

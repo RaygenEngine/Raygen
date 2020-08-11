@@ -39,7 +39,7 @@ void PtCollection::RunPrepares()
 	}
 }
 
-void PtCollection::Draw(vk::CommandBuffer buffer, SceneRenderDesc& sceneDesc)
+void PtCollection::Draw(vk::CommandBuffer buffer, const SceneRenderDesc& sceneDesc)
 {
 	// Probably pointless to not draw anything, remove when in editor settings are available
 	static ConsoleVariable<bool> console_drawPostProc{ "r.drawPostProc", true,

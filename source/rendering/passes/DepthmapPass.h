@@ -1,5 +1,4 @@
 #pragma once
-#include "rendering/wrappers/RDepthmap.h"
 #include "rendering/scene/Scene.h"
 
 #include <vulkan/vulkan.hpp>
@@ -18,7 +17,8 @@ public:
 	static vk::UniquePipeline CreateAnimPipeline(
 		vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
 
-	static void RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, const glm::mat4& viewProj, SceneRenderDesc& sceneDesc);
+	static void RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport, vk::Rect2D scissor,
+		const glm::mat4& viewProj, const SceneRenderDesc& sceneDesc);
 };
 
 } // namespace vl
