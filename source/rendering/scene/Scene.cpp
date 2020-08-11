@@ -48,26 +48,21 @@ Scene::Scene(size_t size)
 	EnqueueCreateCmd<SceneCamera>();
 }
 
-vk::DescriptorSet Scene::GetActiveCameraDescSet()
+void Scene::UploadDirty(uint32 frameIndex)
 {
-	return GetActiveCamera()->descSets[vl::Renderer_::currentFrame];
-}
-
-void Scene::UploadDirty()
-{
-	const bool primaryDirty = activeCamera > 0 && cameras.elements[activeCamera]->isDirty[vl::Renderer_::currentFrame];
+	const bool primaryDirty = activeCamera > 0 && cameras.elements[activeCamera]->isDirty[frameIndex];
 
 	for (auto cam : cameras.elements) {
-		if (cam && cam->isDirty[vl::Renderer_::currentFrame]) {
-			cam->UploadUbo(vl::Renderer_::currentFrame);
-			cam->isDirty[vl::Renderer_::currentFrame] = false;
+		if (cam && cam->isDirty[frameIndex]) {
+			cam->UploadUbo(frameIndex);
+			cam->isDirty[frameIndex] = false;
 		}
 	}
 
 	for (auto sl : spotlights.elements) {
-		if (sl && sl->isDirty[vl::Renderer_::currentFrame]) {
-			sl->UploadUbo(vl::Renderer_::currentFrame);
-			sl->isDirty[vl::Renderer_::currentFrame] = false;
+		if (sl && sl->isDirty[frameIndex]) {
+			sl->UploadUbo(frameIndex);
+			sl->isDirty[frameIndex] = false;
 		}
 	}
 
@@ -77,29 +72,29 @@ void Scene::UploadDirty()
 			dl->UpdateBox(cameras.elements[activeCamera]->frustum, cameras.elements[activeCamera]->ubo.position);
 		}
 
-		if (dl && dl->isDirty[vl::Renderer_::currentFrame]) {
+		if (dl && dl->isDirty[frameIndex]) {
 
-			dl->UploadUbo(vl::Renderer_::currentFrame);
-			dl->isDirty[vl::Renderer_::currentFrame] = false;
+			dl->UploadUbo(frameIndex);
+			dl->isDirty[frameIndex] = false;
 		}
 	}
 
 	for (auto an : animatedGeometries.elements) {
-		if (an && an->isDirtyResize[vl::Renderer_::currentFrame]) {
-			an->ResizeJoints(vl::Renderer_::currentFrame);
-			an->isDirtyResize[vl::Renderer_::currentFrame] = false;
+		if (an && an->isDirtyResize[frameIndex]) {
+			an->ResizeJoints(frameIndex);
+			an->isDirtyResize[frameIndex] = false;
 		}
 
-		if (an && an->isDirty[vl::Renderer_::currentFrame]) {
-			an->UploadSsbo(vl::Renderer_::currentFrame);
-			an->isDirty[vl::Renderer_::currentFrame] = false;
+		if (an && an->isDirty[frameIndex]) {
+			an->UploadSsbo(frameIndex);
+			an->isDirty[frameIndex] = false;
 		}
 	}
 
 	// for (auto rp : reflProbs.elements) {
-	//	if (rp && rp->isDirty[vl::Renderer_::currentFrame]) {
-	//		rp->UploadUbo(vl::Renderer_::currentFrame);
-	//		rp->isDirty[vl::Renderer_::currentFrame] = false;
+	//	if (rp && rp->isDirty[frameIndex]) {
+	//		rp->UploadUbo(frameIndex);
+	//		rp->isDirty[frameIndex] = false;
 	//	}
 	//}
 }

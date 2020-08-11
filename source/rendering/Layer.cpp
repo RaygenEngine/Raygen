@@ -64,6 +64,34 @@ Layer_::Layer_()
 
 	Renderer = new Renderer_();
 	Renderer->InitPipelines(mainSwapchain->renderPass.get());
+
+	vk::FenceCreateInfo fci{};
+	fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+		m_renderFinishedSem[i] = Device->createSemaphoreUnique({});
+		m_imageAvailSem[i] = Device->createSemaphoreUnique({});
+		m_inFlightFence[i] = Device->createFenceUnique(fci);
+	}
+
+
+
+	vk::CommandBufferAllocateInfo allocInfo{};
+	allocInfo.setCommandPool(Device->mainCmdPool.get())
+		.setLevel(vk::CommandBufferLevel::ePrimary)
+		.setCommandBufferCount(3u * c_framesInFlight);
+
+	// allocate all buffers needed
+	{
+		auto buffers = Device->allocateCommandBuffers(allocInfo);
+
+		auto moveBuffersToArray = [&buffers](auto& target, size_t index) {
+			auto begin = buffers.begin() + (index * c_framesInFlight);
+			std::move(begin, begin + c_framesInFlight, target.begin());
+		};
+
+		moveBuffersToArray(m_cmdBuffer, 0);
+	}
 } // namespace vl
 
 Layer_::~Layer_()
@@ -107,29 +135,54 @@ void Layer_::DrawFrame()
 	GpuAssetManager->ConsumeAssetUpdates();
 	currentScene->ConsumeCmdQueue();
 
-	auto imageAvailSem = Renderer->PrepareForDraw();
+
+	currentFrame = (currentFrame + 1) % c_framesInFlight;
+	auto currentCmdBuffer = &m_cmdBuffer[currentFrame];
+
+	Device->waitForFences({ *m_inFlightFence[currentFrame] }, true, UINT64_MAX);
+	Device->resetFences({ *m_inFlightFence[currentFrame] });
 
 	currentScene->UploadDirty();
 
 	uint32 imageIndex;
-	Device->acquireNextImageKHR(*mainSwapchain, UINT64_MAX, { imageAvailSem }, {}, &imageIndex);
+	Device->acquireNextImageKHR(*mainSwapchain, UINT64_MAX, { m_imageAvailSem[currentFrame].get() }, {}, &imageIndex);
 
 	auto outRp = mainSwapchain->renderPass.get();
 	auto outFb = mainSwapchain->framebuffers[imageIndex].get();
 	auto outExtent = mainSwapchain->extent;
 
 	// WIP: 1 = editor camera (lets hope for now)
-	SceneRenderDesc sceneDesc{ currentScene, 0 };
+	SceneRenderDesc sceneDesc{ currentScene, 0, currentFrame };
 
-	auto renderFinishedSem = Renderer->DrawFrame(sceneDesc, outRp, outFb, outExtent);
+	Renderer->DrawFrame(currentCmdBuffer, sceneDesc, outRp, outFb, outExtent);
 
+
+	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput }; //
+	std::array waitSems = { *m_imageAvailSem[currentFrame] };                                                //
+	std::array signalSems = { *m_renderFinishedSem[currentFrame] };
+
+	std::array bufs = { m_cmdBuffer[currentFrame] };
+
+	vk::SubmitInfo submitInfo{};
+	submitInfo
+		.setWaitSemaphoreCount(static_cast<uint32>(waitSems.size())) //
+		.setPWaitSemaphores(waitSems.data())
+		.setPWaitDstStageMask(waitStage.data())
+
+		.setSignalSemaphoreCount(static_cast<uint32>(signalSems.size()))
+		.setPSignalSemaphores(signalSems.data())
+
+		.setCommandBufferCount(static_cast<uint32>(bufs.size()))
+		.setPCommandBuffers(bufs.data());
+
+	Device->mainQueue.submit(1u, &submitInfo, *m_inFlightFence[currentFrame]);
 
 	vk::SwapchainKHR swapChains[] = { *mainSwapchain };
 
 	vk::PresentInfoKHR presentInfo;
 	presentInfo //
 		.setWaitSemaphoreCount(1u)
-		.setPWaitSemaphores(&renderFinishedSem)
+		.setPWaitSemaphores(&m_renderFinishedSem[currentFrame].get())
 		.setSwapchainCount(1u)
 		.setPSwapchains(swapChains)
 		.setPImageIndices(&imageIndex)

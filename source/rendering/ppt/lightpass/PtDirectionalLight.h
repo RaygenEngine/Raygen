@@ -7,6 +7,6 @@ class PtDirectionalLight : public PtBase_SinglePipeline {
 public:
 	void MakeLayout() override;
 	void MakePipeline() override;
-	void Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, uint32 frameIndex) override;
+	void Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc) override;
 };
 } // namespace vl

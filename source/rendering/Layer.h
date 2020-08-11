@@ -10,6 +10,17 @@ inline class Layer_ {
 
 	BoolFlag m_didViewportResize;
 
+	FrameArray<vk::UniqueFence> m_inFlightFence;
+	FrameArray<vk::UniqueSemaphore> m_renderFinishedSem;
+	FrameArray<vk::UniqueSemaphore> m_imageAvailSem;
+
+
+	FrameArray<vk::CommandBuffer> m_cmdBuffer;
+
+
+	inline static uint32 currentFrame{ 0 };
+
+
 
 public:
 	Layer_();

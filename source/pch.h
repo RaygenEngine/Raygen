@@ -41,3 +41,8 @@ namespace fs = std::filesystem;
 #include "reflection/GenMacros.h"
 
 #include "rendering/assets/GpuAssetHandle.h"
+
+constexpr size_t c_framesInFlight = 2;
+
+template<typename T>
+using FrameArray = std::array<T, c_framesInFlight>;
