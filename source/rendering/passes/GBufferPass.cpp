@@ -358,7 +358,7 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, Sce
 		}
 
 		// WIP: decouple
-		auto descSet = camera->descSets[vl::Renderer_::currentFrame];
+		auto descSet = camera->descSets[sceneDesc.frameIndex];
 
 		for (auto geom : sceneDesc->geometries.elements) {
 			if (!geom) {
@@ -424,7 +424,7 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, Sce
 					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
 
 				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
-					&geom->descSets[Renderer_::currentFrame], 0u, nullptr);
+					&geom->descSets[sceneDesc.frameIndex], 0u, nullptr);
 
 				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
 				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);

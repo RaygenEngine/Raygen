@@ -18,8 +18,7 @@ public:
 	static vk::UniquePipeline CreateAnimPipeline(
 		vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
 
-	static void RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, const glm::mat4& viewProj,
-		const std::vector<SceneGeometry*>& geometries, const std::vector<SceneAnimatedGeometry*>& animGeometries);
+	static void RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, const glm::mat4& viewProj, SceneRenderDesc& sceneDesc);
 };
 
 } // namespace vl

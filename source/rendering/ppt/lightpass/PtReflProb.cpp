@@ -57,7 +57,7 @@ void PtReflProb::MakePipeline()
 	Utl_CreatePipeline(gpuShader, colorBlending);
 }
 
-void PtReflProb::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, uint32 frameIndex)
+void PtReflProb::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc)
 {
 	auto camera = sceneDesc.viewer;
 
@@ -66,7 +66,7 @@ void PtReflProb::Draw(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, u
 	}
 
 	// WIP:
-	auto descSet = camera->descSets[Renderer_::currentFrame];
+	auto descSet = camera->descSets[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 

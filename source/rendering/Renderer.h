@@ -6,10 +6,7 @@
 #include "rendering/wrappers/RGbuffer.h"
 
 namespace vl {
-constexpr size_t c_framesInFlight = 2;
 
-template<typename T>
-using FrameArray = std::array<T, c_framesInFlight>;
 
 
 inline class Renderer_ : public Listener {
@@ -29,15 +26,7 @@ private:
 
 	UniquePtr<RGbuffer> m_gbuffer;
 
-	FrameArray<vk::CommandBuffer> m_geometryCmdBuffer;
-	FrameArray<vk::CommandBuffer> m_pptCmdBuffer;
-	FrameArray<vk::CommandBuffer> m_outCmdBuffer;
-
-	FrameArray<vk::UniqueFence> m_inFlightFence;
-
-	FrameArray<vk::UniqueSemaphore> m_renderFinishedSem;
-	FrameArray<vk::UniqueSemaphore> m_imageAvailSem;
-
+	
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, SceneRenderDesc& sceneDesc);
 	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc& sceneDesc);
 	void RecordOutPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
@@ -74,13 +63,12 @@ public:
 
 	void UpdateForFrame();
 
-	vk::Semaphore PrepareForDraw();
-	vk::Semaphore DrawFrame(
-		SceneRenderDesc& sceneDesc, vk::RenderPass outRp, vk::Framebuffer outFb, vk::Extent2D outExtent);
+	void DrawFrame(vk::CommandBuffer* cmdBuffer, SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
+		vk::Framebuffer outFb, vk::Extent2D outExtent);
 
 	void InitPipelines(vk::RenderPass outRp);
 
-	inline static uint32 currentFrame{ 0 };
+
 
 	[[nodiscard]] vk::Viewport GetSceneViewport() const;
 	[[nodiscard]] vk::Viewport GetGameViewport() const;

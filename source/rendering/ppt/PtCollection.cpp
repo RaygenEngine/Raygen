@@ -39,7 +39,7 @@ void PtCollection::RunPrepares()
 	}
 }
 
-void PtCollection::Draw(vk::CommandBuffer buffer, SceneRenderDesc& sceneDesc, uint32 frameIndex)
+void PtCollection::Draw(vk::CommandBuffer buffer, SceneRenderDesc& sceneDesc)
 {
 	// Probably pointless to not draw anything, remove when in editor settings are available
 	static ConsoleVariable<bool> console_drawPostProc{ "r.drawPostProc", true,
@@ -53,7 +53,7 @@ void PtCollection::Draw(vk::CommandBuffer buffer, SceneRenderDesc& sceneDesc, ui
 		if (!entry.isEnabled)
 			[[unlikely]] { continue; }
 
-		entry.instance->Draw(buffer, sceneDesc, frameIndex);
+		entry.instance->Draw(buffer, sceneDesc);
 	}
 }
 } // namespace vl

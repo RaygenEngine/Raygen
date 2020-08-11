@@ -246,8 +246,7 @@ vk::UniquePipeline DepthmapPass::CreateAnimPipeline(
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
 
-void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, const glm::mat4& viewProj,
-	const std::vector<SceneGeometry*>& geometries, const std::vector<SceneAnimatedGeometry*>& animGeometries)
+void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, const glm::mat4& viewProj, SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -291,7 +290,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 		cmdBuffer->setViewport(0, { viewport });
 		cmdBuffer->setScissor(0, { scissor });
 
-		for (auto geom : geometries) {
+		for (auto geom : sceneDesc->geometries.elements) {
 			if (!geom) {
 				continue;
 			}
@@ -331,7 +330,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 			}
 		}
 
-		for (auto geom : animGeometries) {
+		for (auto geom : sceneDesc->animatedGeometries.elements) {
 			if (!geom) {
 				continue;
 			}
@@ -358,7 +357,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 				//	vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
 				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
-					&geom->descSets[Renderer_::currentFrame], 0u, nullptr);
+					&geom->descSets[sceneDesc.frameIndex], 0u, nullptr);
 
 				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
 				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);

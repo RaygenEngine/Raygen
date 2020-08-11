@@ -18,8 +18,6 @@
 
 #include <editor/imgui/ImguiImpl.h>
 
-
-constexpr int32 c_framesInFlight = 2;
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 {
@@ -31,34 +29,6 @@ namespace vl {
 
 Renderer_::Renderer_()
 {
-	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->mainCmdPool.get())
-		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(3u * c_framesInFlight);
-
-	// allocate all buffers needed
-	{
-		auto buffers = Device->allocateCommandBuffers(allocInfo);
-
-		auto moveBuffersToArray = [&buffers](auto& target, size_t index) {
-			auto begin = buffers.begin() + (index * c_framesInFlight);
-			std::move(begin, begin + c_framesInFlight, target.begin());
-		};
-
-		moveBuffersToArray(m_geometryCmdBuffer, 0);
-		moveBuffersToArray(m_pptCmdBuffer, 1);
-		moveBuffersToArray(m_outCmdBuffer, 2);
-	}
-
-	vk::FenceCreateInfo fci{};
-	fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
-
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
-		m_renderFinishedSem[i] = Device->createSemaphoreUnique({});
-		m_imageAvailSem[i] = Device->createSemaphoreUnique({});
-		m_inFlightFence[i] = Device->createFenceUnique(fci);
-	}
-
 	Event::OnViewportUpdated.BindFlag(this, m_didViewportResize);
 	Event::OnWindowResize.BindFlag(this, m_didWindowResize);
 	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimzed) { m_isMinimzed = newIsMinimzed; });
@@ -249,7 +219,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, SceneRenderD
 		vk::RenderPassBeginInfo renderPassInfo{};
 		renderPassInfo
 			.setRenderPass(m_ptRenderpass.get()) //
-			.setFramebuffer(m_framebuffers[currentFrame].get());
+			.setFramebuffer(m_framebuffers[sceneDesc.frameIndex].get());
 		renderPassInfo.renderArea
 			.setOffset({ 0, 0 }) //
 			.setExtent(extent);
@@ -272,7 +242,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, SceneRenderD
 			cmdBuffer->setViewport(0, { viewport });
 			cmdBuffer->setScissor(0, { scissor });
 
-			m_postprocCollection.Draw(*cmdBuffer, sceneDesc, currentFrame);
+			m_postprocCollection.Draw(*cmdBuffer, sceneDesc, sceneDesc.frameIndex);
 		}
 
 		UnlitPass::RecordCmd(cmdBuffer, extent, sceneDesc);
@@ -337,14 +307,14 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, SceneRenderDesc& sce
 		cmdBuffer->endRenderPass();
 
 		// transition for write again (TODO: image function)
-		auto barrier = m_attachments[currentFrame]->CreateTransitionBarrier(
+		auto barrier = m_attachments[sceneDesc.frameIndex]->CreateTransitionBarrier(
 			vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
 		vk::PipelineStageFlags sourceStage = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);
 		vk::PipelineStageFlags destinationStage = GetPipelineStage(vk::ImageLayout::eColorAttachmentOptimal);
 		cmdBuffer->pipelineBarrier(
 			sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 
-		auto barrier2 = m_attachments2[currentFrame]->CreateTransitionBarrier(
+		auto barrier2 = m_attachments2[sceneDesc.frameIndex]->CreateTransitionBarrier(
 			vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
 		vk::PipelineStageFlags sourceStage2 = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);
 		vk::PipelineStageFlags destinationStage2 = GetPipelineStage(vk::ImageLayout::eColorAttachmentOptimal);
@@ -457,48 +427,15 @@ void Renderer_::UpdateForFrame()
 	}
 }
 
-vk::Semaphore Renderer_::PrepareForDraw()
-{
-	currentFrame = (currentFrame + 1) % c_framesInFlight;
-
-	Device->waitForFences({ *m_inFlightFence[currentFrame] }, true, UINT64_MAX);
-	Device->resetFences({ *m_inFlightFence[currentFrame] });
-
-	return *m_imageAvailSem[currentFrame];
-}
-
-vk::Semaphore Renderer_::DrawFrame(
-	SceneRenderDesc& sceneDesc, vk::RenderPass outRp, vk::Framebuffer outFb, vk::Extent2D outExtent)
+void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
+	vk::Framebuffer outFb, vk::Extent2D outExtent)
 {
 	PROFILE_SCOPE(Renderer);
 
 	// passes
-	RecordGeometryPasses(&m_geometryCmdBuffer[currentFrame], sceneDesc);
-	RecordPostProcessPass(&m_pptCmdBuffer[currentFrame], sceneDesc);
-	RecordOutPass(&m_outCmdBuffer[currentFrame], sceneDesc, outRp, outFb, outExtent);
-
-	std::array bufs = { m_geometryCmdBuffer[currentFrame], m_pptCmdBuffer[currentFrame], m_outCmdBuffer[currentFrame] };
-
-	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput }; //
-	std::array waitSems = { *m_imageAvailSem[currentFrame] };                                                //
-	std::array signalSems = { *m_renderFinishedSem[currentFrame] };
-
-
-	vk::SubmitInfo submitInfo{};
-	submitInfo
-		.setWaitSemaphoreCount(static_cast<uint32>(waitSems.size())) //
-		.setPWaitSemaphores(waitSems.data())
-		.setPWaitDstStageMask(waitStage.data())
-
-		.setSignalSemaphoreCount(static_cast<uint32>(signalSems.size()))
-		.setPSignalSemaphores(signalSems.data())
-
-		.setCommandBufferCount(static_cast<uint32>(bufs.size()))
-		.setPCommandBuffers(bufs.data());
-
-	Device->mainQueue.submit(1u, &submitInfo, *m_inFlightFence[currentFrame]);
-
-	return *m_renderFinishedSem[currentFrame];
+	RecordGeometryPasses(cmdBuffer, sceneDesc);
+	RecordPostProcessPass(cmdBuffer, sceneDesc);
+	RecordOutPass(cmdBuffer, sceneDesc, outRp, outFb, outExtent);
 }
 
 vk::Viewport Renderer_::GetSceneViewport() const

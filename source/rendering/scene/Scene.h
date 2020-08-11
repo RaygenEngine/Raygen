@@ -232,23 +232,11 @@ public:
 
 	void DrainQueueForDestruction();
 
-	SceneCamera* GetActiveCamera()
-	{
-		if (cameras.elements.size() > activeCamera) {
-			auto cam = cameras.elements[activeCamera];
-			if (cam) {
-				return cam;
-			}
-		}
-		return nullptr;
-	}
 
 	// CHECK: runs 2 frames behind
 	Scene(size_t size);
 
-	vk::DescriptorSet GetActiveCameraDescSet();
-
-	void UploadDirty();
+	void UploadDirty(uint32 frameIndex);
 
 
 	~Scene() { DrainQueueForDestruction(); }
@@ -258,9 +246,14 @@ struct SceneRenderDesc {
 	Scene* scene{ nullptr };
 	SceneCamera* viewer{ nullptr };
 
-	SceneRenderDesc(Scene* scene_, size_t viewerIndex)
+	uint32 frameIndex{ 0 };
+
+	// TODO: Scene description should only contain the required scene structs for current frame rendering
+	// apart from occlusion etc
+	SceneRenderDesc(Scene* scene_, size_t viewerIndex, uint32 frameIndex)
 		: scene(scene_)
-		, viewer(scene_->GetElement<SceneCamera>(viewerIndex))
+		, viewer(scene_->GetElement<SceneCamera>(viewerIndex)),
+		frameIndex(frameIndex)
 	{
 	}
 
