@@ -57,14 +57,13 @@ struct EditorCamera {
 	void Update(float deltaSeconds);
 
 	//
-	void ResizeViewport(int32 newWidth, int32 newHeight);
+	void ResizeViewport(glm::uvec2 newSize);
 	void ResetRotation();
 
 
 	size_t sceneUid{ 0 };
-	Scene_* scene;
 	void InjectToScene(Scene_* worldScene);
-	void EnqueueUpdateCmds();
+	void EnqueueUpdateCmds(Scene_* worldScene);
 
 private:
 	void UpdateOrbital(float speed, float deltaSeconds);

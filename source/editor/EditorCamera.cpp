@@ -53,7 +53,14 @@ void EditorCamera::Update(float deltaSeconds)
 	}
 }
 
-void EditorCamera::ResizeViewport(int32 newWidth, int32 newHeight) {}
+void EditorCamera::ResizeViewport(glm::uvec2 newSize)
+{
+	newSize.x = std::max(newSize.x, 1u);
+	newSize.y = std::max(newSize.y, 1u);
+
+	viewportWidth = newSize.x;
+	viewportHeight = newSize.y;
+}
 
 void EditorCamera::ResetRotation()
 {
@@ -64,11 +71,10 @@ void EditorCamera::ResetRotation()
 
 void EditorCamera::InjectToScene(Scene_* worldScene)
 {
-	scene = worldScene;
-	sceneUid = scene->EnqueueCreateCmd<SceneCamera>();
+	sceneUid = worldScene->EnqueueCreateCmd<SceneCamera>();
 }
 
-void EditorCamera::EnqueueUpdateCmds()
+void EditorCamera::EnqueueUpdateCmds(Scene_* worldScene)
 {
 	auto lookAt = transform.position + transform.forward() * focalLength;
 	view = glm::lookAt(transform.position, lookAt, transform.up());
@@ -97,7 +103,7 @@ void EditorCamera::EnqueueUpdateCmds()
 	viewProj = proj * view;
 	viewProjInv = glm::inverse(viewProj);
 
-	scene->EnqueueCmd<SceneCamera>(sceneUid, [=, pos = transform.position](SceneCamera& cam) {
+	worldScene->EnqueueCmd<SceneCamera>(sceneUid, [=, pos = transform.position](SceneCamera& cam) {
 		cam.ubo.position = glm::vec4(pos, 1.f);
 		cam.ubo.view = view;
 		cam.ubo.viewInv = viewInv;

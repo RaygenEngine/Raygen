@@ -26,15 +26,7 @@ inline float* FromVec4(glm::vec4& vec4)
 namespace ed {
 
 namespace {
-
 	using namespace PropertyFlags;
-
-	template<typename T>
-	constexpr bool CanOpenFromFile = refl::IsValidPod<T>;
-
-	template<typename T>
-	constexpr bool IsJsonLoadable
-		= std::is_same_v<Material, T> || std::is_same_v<Shader, T> || std::is_same_v<Sampler, T>;
 
 	struct ReflectionToImguiVisitor {
 		int32 depth{ 0 };
@@ -256,18 +248,6 @@ namespace {
 			return edited;
 		}
 	};
-
-	template<typename T>
-	void SaveAs(PodHandle<T>& handle, fs::path& path)
-	{
-		using json = nlohmann::json;
-		path.replace_extension(".json");
-
-		json j;
-		refltools::PropertiesToJson(const_cast<T*>(handle.Lock()), j);
-		std::ofstream file(path);
-		file << std::setw(4) << j;
-	}
 
 
 } // namespace
