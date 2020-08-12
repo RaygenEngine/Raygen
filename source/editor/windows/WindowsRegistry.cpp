@@ -12,7 +12,6 @@
 #include "editor/windows/general/EdAssetsWindow.h"
 #include "editor/windows/general/EdConsoleWindow.h"
 #include "editor/windows/general/EdMiscWindow.h"
-#include "editor/windows/general/EdOutlinerWindow.h"
 #include "editor/windows/general/EdProfilerWindow.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
 #include "editor/windows/general/EdEcsOutlinerWindow.h"

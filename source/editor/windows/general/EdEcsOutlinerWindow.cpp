@@ -137,7 +137,7 @@ void EcsOutlinerWindow::Run_ContextPopup(EcsWorld& world, Entity entity)
 	}
 	if (ImGui::MenuItem(ETXT(FA_CUT, " Cut"), "Ctrl+X")) {
 		ed::ClipboardOp::StoreEntity(entity);
-		world.DestroyEntity(entity);
+		entity.Destroy();
 	}
 	if (ImGui::MenuItem(ETXT(FA_COPY, " Copy"), "Ctrl+C")) {
 		ed::ClipboardOp::StoreEntity(entity);
@@ -153,7 +153,7 @@ void EcsOutlinerWindow::Run_ContextPopup(EcsWorld& world, Entity entity)
 		loaded->SetParent(entity->parent);
 	}
 	if (ImGui::MenuItem(ETXT(FA_TRASH, " Delete"), "Del")) {
-		world.DestroyEntity(entity);
+		entity.Destroy();
 	}
 
 	ImGui::Separator();

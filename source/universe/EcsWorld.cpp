@@ -73,20 +73,15 @@ void EcsWorld::SaveToDisk(const fs::path& path, bool updateSrcPath)
 	file << std::setw(2) << j;
 }
 
-void EcsWorld::DestroyEntity(Entity entity)
+Entity EcsWorld::CreateEntity(const std::string& name)
 {
-	entity->SetParent();
+	Entity ent{ reg.create(), &reg };
 
-	ComponentsDb::VisitWithType(
-		entity, [&](const ComponentMetaEntry& ent) { ent.markDestroy(*entity.registry, entity.entity); });
+	auto& basic = ent.Add<BasicComponent>();
+	basic.self = ent;
+	basic.name = !name.empty() ? name : "New Entity";
 
-	auto current = entity->firstChild;
-	while (current) {
-		DestroyEntity(current);
-		current = current->next;
-	}
-
-	entity.registry->get_or_emplace<CDestroyFlag>(entity.entity);
+	return ent;
 }
 
 void EcsWorld::UpdateWorld()
