@@ -12,6 +12,8 @@
 	struct Destroy {                                                                                                   \
 	}
 
+struct CDestroyFlag {
+};
 
 struct BasicComponent;
 
@@ -135,4 +137,8 @@ public:
 
 	// Provide a "nice" interface to the common component
 	BasicComponent* operator->();
+
+	// Mark the entity for destruction. (It will be deleted at the end of the frame)
+	// Also destroys all attached children
+	void Destroy();
 };

@@ -7,8 +7,6 @@
 struct HiddenFlagComp {
 };
 
-struct CDestroyFlag {
-};
 
 class EcsWorld {
 private:
@@ -27,20 +25,7 @@ public:
 
 	[[nodiscard]] const FrameClock& GetClock() const noexcept { return clock; }
 
-	Entity CreateEntity(const std::string& name = "")
-	{
-		Entity ent{ reg.create(), &reg };
-
-		auto& basic = ent.Add<BasicComponent>();
-		basic.self = ent;
-		basic.name = !name.empty() ? name : "New Entity";
-
-
-		return ent;
-	}
-
-	// WIP: Not a world function
-	void DestroyEntity(Entity entity);
+	Entity CreateEntity(const std::string& name = "");
 
 	void UpdateWorld();
 
