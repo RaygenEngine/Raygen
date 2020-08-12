@@ -164,10 +164,10 @@ Instance_::Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwi
 	auto deviceHandles = enumeratePhysicalDevices();
 
 	for (const auto dH : deviceHandles) {
-		auto pd = std::make_unique<RPhysicalDevice>(dH, surface);
+		auto pd = RPhysicalDevice{ dH, surface };
 		// if capable
-		if (pd->rating > 0.f) {
-			capablePhysicalDevices.push_back(std::move(pd));
+		if (pd.rating > 0.f) {
+			capablePhysicalDevices.emplace_back(std::move(pd));
 		}
 	}
 }

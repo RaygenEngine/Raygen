@@ -335,7 +335,7 @@ void GbufferPass::RecordCmd(
 		}
 
 		// WIP: decouple
-		auto descSet = camera->descSets[sceneDesc.frameIndex];
+		auto descSet = camera->descSet[sceneDesc.frameIndex];
 
 		for (auto geom : sceneDesc->geometries.elements) {
 			if (!geom) {
@@ -364,8 +364,8 @@ void GbufferPass::RecordCmd(
 				cmdBuffer->bindDescriptorSets(
 					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
 
-				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
-				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+				cmdBuffer->bindVertexBuffers(0u, { gg.vertexBuffer }, { 0 });
+				cmdBuffer->bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);
 
 
 				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
@@ -401,10 +401,10 @@ void GbufferPass::RecordCmd(
 					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
 
 				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
-					&geom->descSets[sceneDesc.frameIndex], 0u, nullptr);
+					&geom->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
-				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
-				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+				cmdBuffer->bindVertexBuffers(0u, { gg.vertexBuffer }, { 0 });
+				cmdBuffer->bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);
 
 
 				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);

@@ -33,7 +33,7 @@ void AnimatedGeometryNode::DirtyUpdate(DirtyFlagset dirtyFlags)
 					SceneAnimatedGeometry& geom) {
 			geom.modelPod = model;
 			geom.model = vl::GpuAssetManager->GetGpuHandle(model);
-			geom.isDirtyResize = { true, true, true };
+			geom.isDirtyResize = true;
 			geom.jointMatrices.resize(size);
 		});
 

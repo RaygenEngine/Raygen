@@ -18,7 +18,7 @@ inline class Renderer_ : public Listener {
 private:
 	CopyHdrTexture m_copyHdrTexture;
 
-	UniquePtr<RGbuffer> m_gbuffer;
+	FrameArray<RGbuffer> m_gbuffer;
 
 
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
@@ -73,13 +73,13 @@ protected:
 
 public:
 	// TODO: POSTPROC post process for hdr, move those
-	FrameArray<vk::UniqueFramebuffer> m_framebuffers;
-	FrameArray<UniquePtr<RImageAttachment>> m_attachments;
-	FrameArray<UniquePtr<RImageAttachment>> m_attachments2;
+	FrameArray<vk::UniqueFramebuffer> m_framebuffer;
+	FrameArray<RImageAttachment> m_attachment;
+	FrameArray<RImageAttachment> m_attachment2;
 
 	// std::array<UniquePtr<RImageAttachment>, 3> m_attachmentsDepthToUnlit;
 
-	FrameArray<vk::DescriptorSet> m_ppDescSets;
+	FrameArray<vk::DescriptorSet> m_ppDescSet;
 	vk::UniqueRenderPass m_ptRenderpass;
 
 
@@ -88,13 +88,13 @@ public:
 
 	Renderer_();
 
-	void UpdateForFrame();
+	void PrepareForFrame();
 
 	void DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
 		vk::Framebuffer outFb, vk::Extent2D outExtent);
 
 	void InitPipelines(vk::RenderPass outRp);
 
-	[[nodiscard]] RGbuffer* GetGbuffer() const { return m_gbuffer.get(); }
+	[[nodiscard]] RGbuffer& GetGbuffer() { return m_gbuffer.at(0); }
 } * Renderer{};
 } // namespace vl

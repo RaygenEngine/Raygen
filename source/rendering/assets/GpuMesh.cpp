@@ -50,19 +50,19 @@ void GpuMesh::Update(const AssetUpdateInfo& info)
 		indexStagingbuffer.UploadData(gg.indices.data(), indexBufferSize);
 
 		// device local
-		vgg.vertexBuffer.reset(new RBuffer(vertexBufferSize,
+		vgg.vertexBuffer = RBuffer{ vertexBufferSize,
 			vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer
 				| vk::BufferUsageFlagBits::eShaderDeviceAddress,
-			vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress));
+			vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
-		vgg.indexBuffer.reset(new RBuffer(indexBufferSize,
+		vgg.indexBuffer = RBuffer{ indexBufferSize,
 			vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer
 				| vk::BufferUsageFlagBits::eShaderDeviceAddress,
-			vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress));
+			vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
 
-		vgg.vertexBuffer->CopyBuffer(vertexStagingbuffer);
-		vgg.indexBuffer->CopyBuffer(indexStagingbuffer);
+		vgg.vertexBuffer.CopyBuffer(vertexStagingbuffer);
+		vgg.indexBuffer.CopyBuffer(indexStagingbuffer);
 
 		vgg.indexCount = static_cast<uint32>(gg.indices.size());
 		vgg.vertexCount = static_cast<uint32>(gg.vertices.size());

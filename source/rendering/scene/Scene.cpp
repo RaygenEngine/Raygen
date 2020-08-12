@@ -41,8 +41,7 @@ void Scene::DrainQueueForDestruction()
 	cmds.erase(cmds.begin(), cmds.begin() + end);
 }
 
-Scene::Scene(size_t size)
-	: size(size)
+Scene::Scene()
 {
 	EnqueueEndFrame();
 	EnqueueCreateCmd<SceneCamera>();

@@ -42,7 +42,9 @@ namespace fs = std::filesystem;
 
 #include "rendering/assets/GpuAssetHandle.h"
 
-constexpr size_t c_framesInFlight = 2;
-
+constexpr size_t c_framesInFlight = 5;
 template<typename T>
-using FrameArray = std::array<T, c_framesInFlight>;
+struct FrameArray : std::array<T, c_framesInFlight> {
+	FrameArray(T val) { std::memset(this, val, sizeof(T) * c_framesInFlight); }
+	FrameArray() = default;
+};

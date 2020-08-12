@@ -30,7 +30,7 @@ inline struct Device_ : public vk::Device {
 	// present queue
 	DeviceQueue presentQueue;
 
-	RPhysicalDevice* pd;
+	RPhysicalDevice& pd;
 
 	vk::UniqueCommandPool mainCmdPool;
 	vk::UniqueCommandPool dmaCmdPool;
@@ -40,7 +40,7 @@ inline struct Device_ : public vk::Device {
 	vk::CommandBuffer dmaCmdBuffer;
 	vk::CommandBuffer computeCmdBuffer;
 
-	Device_(RPhysicalDevice* pd, std::vector<const char*> deviceExtensions);
+	Device_(RPhysicalDevice& pd, std::vector<const char*> deviceExtensions);
 	~Device_();
 
 

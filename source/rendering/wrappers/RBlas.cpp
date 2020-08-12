@@ -26,8 +26,8 @@ RBlas::RBlas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
 			.setAllowsTransforms(VK_FALSE); // No adding transformation matrices
 
 		// Building part
-		auto vertexAddress = ggg.vertexBuffer->GetAddress();
-		auto indexAddress = ggg.indexBuffer->GetAddress();
+		auto vertexAddress = ggg.vertexBuffer.GetAddress();
+		auto indexAddress = ggg.indexBuffer.GetAddress();
 
 		vk::AccelerationStructureGeometryTrianglesDataKHR triangles{};
 		triangles

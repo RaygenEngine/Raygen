@@ -282,13 +282,13 @@ void InitVulkan()
 {
 	using namespace vl;
 
-	auto physDev = Device->pd;
+	auto& physDev = Device->pd;
 	auto& device = *Device;
 	auto& swapchain = Layer->mainSwapchain;
 
 	ImGui_ImplVulkan_InitInfo init = {};
 	init.Instance = *Instance;
-	init.PhysicalDevice = *physDev;
+	init.PhysicalDevice = physDev;
 	init.Device = device;
 	init.QueueFamily = Device->mainQueue.familyIndex;
 	init.Queue = Device->mainQueue;

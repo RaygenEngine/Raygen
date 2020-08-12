@@ -52,7 +52,7 @@ struct Scene {
 	std::mutex cmdAddPendingElementsMutex;
 
 	size_t activeCamera{ 0 };
-	size_t size{ 0 };
+	// size_t size{ 0 };
 
 	vk::UniqueAccelerationStructureKHR sceneAS;
 
@@ -234,7 +234,7 @@ public:
 
 
 	// CHECK: runs 2 frames behind
-	Scene(size_t size);
+	Scene();
 
 	void UploadDirty(uint32 frameIndex);
 

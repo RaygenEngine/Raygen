@@ -3,9 +3,18 @@
 
 #include "core/math-ext/Frustum.h"
 
-void SceneDirectionalLight::ResizeShadowmap(uint32 width, uint32 height)
+void SceneDirectionalLight::MaybeResizeShadowmap(uint32 width, uint32 height)
 {
-	shadowmap = std::make_unique<vl::RDepthmap>(width, height, name.c_str());
+	bool shouldResize = true;
+
+	auto extent = shadowmap.at(0).attachment.extent;
+	shouldResize = width != extent.width || height != extent.height;
+
+	for (auto& sm : shadowmap) {
+		if (shouldResize) {
+			sm = vl::RDepthmap{ width, height, name.c_str() };
+		}
+	}
 }
 
 void SceneDirectionalLight::UpdateBox(const math::Frustum& frustum, glm::vec3 apex)

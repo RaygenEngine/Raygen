@@ -12,7 +12,7 @@ inline struct Instance_ : public vk::Instance {
 
 	vk::UniqueDebugUtilsMessengerEXT debugUtilsMessenger;
 
-	std::vector<UniquePtr<RPhysicalDevice>> capablePhysicalDevices;
+	std::vector<RPhysicalDevice> capablePhysicalDevices;
 
 	Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwindow* window);
 	~Instance_();

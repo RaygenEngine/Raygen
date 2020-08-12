@@ -12,19 +12,18 @@ RDepthmap::RDepthmap(uint32 width, uint32 height, const char* name)
 	// attachment
 	vk::Format depthFormat = Device->FindDepthFormat();
 
-	attachment = std::make_unique<RImageAttachment>(name, width, height, depthFormat, vk::ImageTiling::eOptimal,
-		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal);
+	attachment = RImageAttachment{ width, height, depthFormat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+		vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, name };
 
-	attachment->BlockingTransitionToLayout(
-		vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+	attachment.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
 	// framebuffer
 	vk::FramebufferCreateInfo createInfo{};
 	createInfo
 		.setRenderPass(Layouts->depthRenderPass.get()) //
 		.setAttachmentCount(1u)
-		.setPAttachments(&attachment->GetView())
+		.setPAttachments(&vk::ImageView(attachment))
 		.setWidth(width)
 		.setHeight(height)
 		.setLayers(1);
@@ -58,7 +57,7 @@ RDepthmap::RDepthmap(uint32 width, uint32 height, const char* name)
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(attachment->GetView())
+		.setImageView(attachment)
 		.setSampler(depthSampler.get());
 
 	vk::WriteDescriptorSet descriptorWrite{};

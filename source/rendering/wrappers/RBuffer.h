@@ -2,15 +2,11 @@
 
 namespace vl {
 
-class RBuffer {
-	vk::DeviceSize m_size;
+struct RBuffer {
 
+	vk::DeviceSize size{};
 
-	vk::UniqueDeviceMemory m_memory;
-
-public:
-	vk::UniqueBuffer m_handle;
-
+	RBuffer() = default;
 	RBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
 		vk::MemoryAllocateFlags allocFlags = {});
 
@@ -28,7 +24,10 @@ public:
 	operator vk::Buffer() const noexcept { return m_handle.get(); }
 	vk::DeviceMemory GetMemory() const { return m_memory.get(); }
 
-	[[nodiscard]] vk::DeviceSize GetSize() const noexcept { return m_size; }
 	[[nodiscard]] vk::DeviceAddress GetAddress() const noexcept;
+
+private:
+	vk::UniqueBuffer m_handle;
+	vk::UniqueDeviceMemory m_memory;
 };
 } // namespace vl

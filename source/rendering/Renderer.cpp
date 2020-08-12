@@ -32,7 +32,6 @@ Renderer_::Renderer_()
 {
 	Event::OnViewportUpdated.BindFlag(this, m_didViewportResize);
 
-
 	vk::AttachmentDescription depthAttachmentDesc{};
 	depthAttachmentDesc
 		.setFormat(Device->FindDepthFormat()) //
@@ -48,8 +47,6 @@ Renderer_::Renderer_()
 	depthAttachmentRef
 		.setAttachment(2u) //
 		.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-	// post process render pass
 
 	vk::AttachmentDescription colorAttachmentDesc{};
 	vk::AttachmentReference colorAttachmentRef{};
@@ -146,7 +143,7 @@ Renderer_::Renderer_()
 
 	// descsets
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_ppDescSets[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
+		m_ppDescSet[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
 	}
 }
 
@@ -160,12 +157,13 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto extent = m_gbuffer->attachments[GNormal]->GetExtent2D();
+	auto& att = m_gbuffer[sceneDesc.frameIndex].attachments[GNormal];
+	vk::Extent2D extent = { att.extent.width, att.extent.height };
 
 	vk::Rect2D scissor{};
 	scissor
 		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
+		.setExtent(vk::Extent2D{ extent.width, extent.height });
 
 	vk::Viewport viewport{};
 	viewport
@@ -180,7 +178,7 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 	vk::RenderPassBeginInfo renderPassInfo{};
 	renderPassInfo
 		.setRenderPass(Layouts->gbufferPass.get()) //
-		.setFramebuffer(m_gbuffer->framebuffer.get());
+		.setFramebuffer(m_gbuffer[sceneDesc.frameIndex].framebuffer.get());
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //
 		.setExtent(extent);
@@ -208,7 +206,9 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 
 	auto shadowmapRenderpass = [&](auto light) {
 		if (light) {
-			auto extent = light->shadowmap->attachment->GetExtent2D();
+
+			auto& att = light->shadowmap[sceneDesc.frameIndex].attachment;
+			vk::Extent2D extent = { att.extent.width, att.extent.height };
 
 			vk::Rect2D scissor{};
 
@@ -230,7 +230,7 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 			vk::RenderPassBeginInfo renderPassInfo{};
 			renderPassInfo
 				.setRenderPass(Layouts->depthRenderPass.get()) //
-				.setFramebuffer(light->shadowmap->framebuffer.get());
+				.setFramebuffer(light->shadowmap[sceneDesc.frameIndex].framebuffer.get());
 			renderPassInfo.renderArea
 				.setOffset({ 0, 0 }) //
 				.setExtent(extent);
@@ -267,7 +267,8 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto extent = m_gbuffer->attachments[GNormal]->GetExtent2D();
+	auto& att = m_gbuffer[sceneDesc.frameIndex].attachments[GNormal];
+	vk::Extent2D extent = { att.extent.width, att.extent.height };
 
 	vk::Rect2D scissor{};
 	scissor
@@ -287,7 +288,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 	vk::RenderPassBeginInfo renderPassInfo{};
 	renderPassInfo
 		.setRenderPass(m_ptRenderpass.get()) //
-		.setFramebuffer(m_framebuffers[sceneDesc.frameIndex].get());
+		.setFramebuffer(m_framebuffer[sceneDesc.frameIndex].get());
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //
 		.setExtent(extent);
@@ -314,21 +315,6 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
 	}
 	cmdBuffer->endRenderPass();
-
-	// TODO: preparation of data for next frame should not be performed here?
-	m_gbuffer->TransitionForWrite(cmdBuffer);
-
-	for (auto sl : sceneDesc->spotlights.elements) {
-		if (sl && sl->shadowmap) {
-			sl->shadowmap->attachment->TransitionForWrite(cmdBuffer);
-		}
-	}
-
-	for (auto dl : sceneDesc->directionalLights.elements) {
-		if (dl && dl->shadowmap) {
-			dl->shadowmap->attachment->TransitionForWrite(cmdBuffer);
-		}
-	}
 }
 
 void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
@@ -375,10 +361,6 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDes
 		ImguiImpl::RenderVulkan(cmdBuffer);
 	}
 	cmdBuffer->endRenderPass();
-
-	// transition for write again
-	m_attachments[sceneDesc.frameIndex]->TransitionForWrite(cmdBuffer);
-	m_attachments2[sceneDesc.frameIndex]->TransitionForWrite(cmdBuffer);
 }
 
 void Renderer_::OnViewportResize()
@@ -393,25 +375,20 @@ void Renderer_::OnViewportResize()
 	if (fbSize != m_viewportFramebufferSize) {
 		m_viewportFramebufferSize = fbSize;
 
-		m_gbuffer = std::make_unique<RGbuffer>(fbSize.width, fbSize.height);
-
 		for (uint32 i = 0; i < c_framesInFlight; ++i) {
-			m_attachments[i] = std::make_unique<RImageAttachment>("rgba32", fbSize.width, fbSize.height,
-				vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+
+			m_gbuffer[i] = RGbuffer{ fbSize.width, fbSize.height };
+
+			m_attachment[i] = RImageAttachment{ fbSize.width, fbSize.height, vk::Format::eR32G32B32A32Sfloat,
+				vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled
 					| vk::ImageUsageFlagBits::eInputAttachment,
-				vk::MemoryPropertyFlagBits::eDeviceLocal);
+				vk::MemoryPropertyFlagBits::eDeviceLocal, "rgba32" };
 
-			m_attachments[i]->BlockingTransitionToLayout(
-				vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-
-			m_attachments2[i] = std::make_unique<RImageAttachment>("rgba32", fbSize.width, fbSize.height,
-				vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+			m_attachment2[i] = RImageAttachment{ fbSize.width, fbSize.height, vk::Format::eR32G32B32A32Sfloat,
+				vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
-				vk::MemoryPropertyFlagBits::eDeviceLocal);
-
-			m_attachments2[i]->BlockingTransitionToLayout(
-				vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+				vk::MemoryPropertyFlagBits::eDeviceLocal, "rgba32" };
 
 			// descSets
 			auto quadSampler = GpuAssetManager->GetDefaultSampler();
@@ -419,12 +396,12 @@ void Renderer_::OnViewportResize()
 			vk::DescriptorImageInfo imageInfo{};
 			imageInfo
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(m_attachments2[i]->GetView())
+				.setImageView(m_attachment2[i])
 				.setSampler(quadSampler);
 
 			vk::WriteDescriptorSet descriptorWrite{};
 			descriptorWrite
-				.setDstSet(m_ppDescSets[i]) //
+				.setDstSet(m_ppDescSet[i]) //
 				.setDstBinding(0u)
 				.setDstArrayElement(0u)
 				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
@@ -442,7 +419,7 @@ void Renderer_::OnViewportResize()
 			vk::DescriptorImageInfo imageInfo2{};
 			imageInfo2
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(Renderer->m_attachments[i]->GetView());
+				.setImageView(Renderer->m_attachment[i]);
 			//	.setSampler(VK_NULL_HANDLE);
 
 			vk::WriteDescriptorSet descriptorWrite2{};
@@ -459,8 +436,7 @@ void Renderer_::OnViewportResize()
 			Device->updateDescriptorSets(1u, &descriptorWrite2, 0u, nullptr);
 
 
-			std::array attch{ m_attachments[i]->GetView(), m_attachments2[i]->GetView(),
-				m_gbuffer->attachments[GDepth]->GetView() };
+			std::array<vk::ImageView, 3> attch{ m_attachment[i], m_attachment2[i], m_gbuffer[i].attachments[GDepth] };
 
 			// framebuffer
 			vk::FramebufferCreateInfo createInfo{};
@@ -472,12 +448,12 @@ void Renderer_::OnViewportResize()
 				.setHeight(fbSize.height)
 				.setLayers(1u);
 
-			m_framebuffers[i] = Device->createFramebufferUnique(createInfo);
+			m_framebuffer[i] = Device->createFramebufferUnique(createInfo);
 		}
 	}
 } // namespace vl
 
-void Renderer_::UpdateForFrame()
+void Renderer_::PrepareForFrame()
 {
 	if (*m_didViewportResize) {
 		OnViewportResize();
@@ -494,7 +470,27 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 	// passes
 	RecordGeometryPasses(cmdBuffer, sceneDesc);
 	RecordPostProcessPass(cmdBuffer, sceneDesc);
+
+	for (auto& att : m_gbuffer[sceneDesc.frameIndex].attachments) {
+		att.TransitionForWrite(cmdBuffer);
+	}
+
+	for (auto sl : sceneDesc->spotlights.elements) {
+		if (sl) {
+			sl->shadowmap[sceneDesc.frameIndex].attachment.TransitionForWrite(cmdBuffer);
+		}
+	}
+
+	for (auto dl : sceneDesc->directionalLights.elements) {
+		if (dl) {
+			dl->shadowmap[sceneDesc.frameIndex].attachment.TransitionForWrite(cmdBuffer);
+		}
+	}
+
 	RecordOutPass(cmdBuffer, sceneDesc, outRp, outFb, outExtent);
+
+	m_attachment[sceneDesc.frameIndex].TransitionForWrite(cmdBuffer);
+	m_attachment2[sceneDesc.frameIndex].TransitionForWrite(cmdBuffer);
 }
 
 } // namespace vl

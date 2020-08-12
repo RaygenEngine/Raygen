@@ -60,7 +60,7 @@ void DirectionalLightNode::DirtyUpdate(DirtyFlagset flags)
 
 	if (flags[DF::ShadowsTextSize]) {
 		Enqueue([width = m_shadowMapWidth, height = m_shadowMapHeight](
-					SceneDirectionalLight& dl) { dl.ResizeShadowmap(width, height); });
+					SceneDirectionalLight& dl) { dl.MaybeResizeShadowmap(width, height); });
 	}
 
 

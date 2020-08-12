@@ -25,7 +25,7 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 
 	skybox = GpuAssetManager->GetGpuHandle(envmapPod->skybox);
 
-	skybox.Lock().cubemap->GenerateMipmapsAndTransitionEach(
+	skybox.Lock().cubemap.GenerateMipmapsAndTransitionEach(
 		vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	irradiance = GpuAssetManager->GetGpuHandle(envmapPod->irradiance);
@@ -51,7 +51,7 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 
 		imageInfos[i]
 			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-			.setImageView(cubemapPod.cubemap->GetView())
+			.setImageView(cubemapPod.cubemap)
 			.setSampler(quadSampler);
 
 		descriptorWrites[i]
@@ -89,7 +89,7 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 
 	imageInfos[3]
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(brdfLut.Lock().image->GetView())
+		.setImageView(brdfLut.Lock().image)
 		.setSampler(brdfSampler.get());
 
 	descriptorWrites[3]

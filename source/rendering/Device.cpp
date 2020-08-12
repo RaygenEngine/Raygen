@@ -6,7 +6,7 @@
 #include <set>
 
 namespace vl {
-Device_::Device_(RPhysicalDevice* pd, std::vector<const char*> deviceExtensions)
+Device_::Device_(RPhysicalDevice& pd, std::vector<const char*> deviceExtensions)
 	: pd(pd)
 {
 	auto getPreferredFamily = [](auto families, auto queueCount) -> QueueFamily {
@@ -20,10 +20,10 @@ Device_::Device_(RPhysicalDevice* pd, std::vector<const char*> deviceExtensions)
 		LOG_ABORT("Adjust queue count to match your GPU queue families");
 	};
 
-	QueueFamily mainQueueFamily = getPreferredFamily(pd->graphicsFamilies, 16);
-	QueueFamily dmaQueueFamily = getPreferredFamily(pd->transferFamilies, 2);
-	QueueFamily computeQueueFamily = getPreferredFamily(pd->computeFamilies, 8);
-	QueueFamily presentQueueFamily = getPreferredFamily(pd->presentFamilies, 16);
+	QueueFamily mainQueueFamily = getPreferredFamily(pd.graphicsFamilies, 16);
+	QueueFamily dmaQueueFamily = getPreferredFamily(pd.transferFamilies, 2);
+	QueueFamily computeQueueFamily = getPreferredFamily(pd.computeFamilies, 8);
+	QueueFamily presentQueueFamily = getPreferredFamily(pd.presentFamilies, 16);
 
 	// Get device's presentation queue
 	std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
@@ -71,7 +71,7 @@ Device_::Device_(RPhysicalDevice* pd, std::vector<const char*> deviceExtensions)
 		.setEnabledLayerCount(0)
 		.setPNext(&deviceFeatures);
 
-	vk::Device::operator=(pd->createDevice(deviceCreateInfo));
+	vk::Device::operator=(pd.createDevice(deviceCreateInfo));
 	VulkanLoader::InitLoaderWithDevice(*this);
 
 	// Device queues
@@ -120,7 +120,7 @@ Device_::Device_(RPhysicalDevice* pd, std::vector<const char*> deviceExtensions)
 
 uint32 Device_::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties) const
 {
-	vk::PhysicalDeviceMemoryProperties memProperties = pd->getMemoryProperties();
+	vk::PhysicalDeviceMemoryProperties memProperties = pd.getMemoryProperties();
 
 	for (uint32 i = 0; i < memProperties.memoryTypeCount; ++i) {
 		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
@@ -135,7 +135,7 @@ vk::Format Device_::FindSupportedFormat(const std::vector<vk::Format>& candidate
 	const vk::FormatFeatureFlags features) const
 {
 	for (auto format : candidates) {
-		vk::FormatProperties props = pd->getFormatProperties(format);
+		vk::FormatProperties props = pd.getFormatProperties(format);
 
 		if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
 			return format;
@@ -158,9 +158,9 @@ SwapchainSupportDetails Device_::GetSwapchainSupportDetails() const
 {
 	SwapchainSupportDetails ssDetails;
 
-	ssDetails.capabilities = pd->getSurfaceCapabilitiesKHR(pd->surface);
-	ssDetails.formats = pd->getSurfaceFormatsKHR(pd->surface);
-	ssDetails.presentModes = pd->getSurfacePresentModesKHR(pd->surface);
+	ssDetails.capabilities = pd.getSurfaceCapabilitiesKHR(pd.surface);
+	ssDetails.formats = pd.getSurfaceFormatsKHR(pd.surface);
+	ssDetails.presentModes = pd.getSurfacePresentModesKHR(pd.surface);
 	return ssDetails;
 }
 
@@ -168,6 +168,7 @@ Device_::~Device_()
 {
 	dmaCmdPool.reset();
 	mainCmdPool.reset();
+	computeCmdPool.reset();
 
 	destroy();
 }
