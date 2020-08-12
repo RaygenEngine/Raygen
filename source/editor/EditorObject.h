@@ -7,6 +7,7 @@
 #include "universe/nodes/camera/EditorCameraNode.h"
 #include "editor/EdMenu.h"
 #include "editor/EdOperation.h"
+#include "editor/EditorCamera.h"
 
 #include <memory>
 #include <functional>
@@ -56,6 +57,7 @@ public:
 	EditorObject_& operator=(const EditorObject_&) = delete;
 	EditorObject_& operator=(EditorObject_&&) = delete;
 
+	ed::EditorCamera edCamera;
 
 	void UpdateEditor();
 

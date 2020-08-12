@@ -51,6 +51,8 @@ EditorObject_::EditorObject_()
 		m_selectedNode = nullptr;
 	});
 
+	edCamera.InjectToScene(Scene); // WIP: EDCAM
+
 	MakeMainMenu();
 }
 
@@ -192,8 +194,11 @@ void EditorObject_::UpdateEditor()
 	m_deferredCommands.clear();
 
 	if (m_editorCamera) {
-		m_editorCamera->UpdateFromEditor(Universe::GetMainWorld()->GetDeltaTime());
+		// m_editorCamera->UpdateFromEditor(Universe::GetMainWorld()->GetDeltaTime());
 	}
+
+	edCamera.Update(1.f / std::max(Engine.GetFPS(), 1.f));
+	edCamera.EnqueueUpdateCmds();
 	HandleInput();
 
 	Dockspace();
@@ -263,19 +268,20 @@ void EditorObject_::OnFileDrop(std::vector<fs::path>&& files)
 
 void EditorObject_::SpawnEditorCamera()
 {
-	auto world = Universe::GetMainWorld();
-	m_editorCamera = NodeFactory::NewNode<EditorCameraNode>();
-	m_editorCamera->SetName("Editor Camera");
-	world->Z_RegisterNode(m_editorCamera, world->GetRoot());
+	//
+	// auto world = Universe::GetMainWorld();
+	// m_editorCamera = NodeFactory::NewNode<EditorCameraNode>();
+	// m_editorCamera->SetName("Editor Camera");
+	// world->Z_RegisterNode(m_editorCamera, world->GetRoot());
 
-	auto prevActive = world->GetActiveCamera();
-	if (m_hasEditorCameraCachedMatrix) {
-		m_editorCamera->SetNodeTransformWCS(m_editorCameraCachedMatrix);
-	}
-	else if (prevActive) {
-		m_editorCamera->SetNodeTransformWCS(prevActive->GetNodeTransformWCS());
-	}
-	world->SetActiveCamera(m_editorCamera);
+	// auto prevActive = world->GetActiveCamera();
+	// if (m_hasEditorCameraCachedMatrix) {
+	//	m_editorCamera->SetNodeTransformWCS(m_editorCameraCachedMatrix);
+	//}
+	// else if (prevActive) {
+	//	m_editorCamera->SetNodeTransformWCS(prevActive->GetNodeTransformWCS());
+	//}
+	// world->SetActiveCamera(m_editorCamera);
 }
 
 void EditorObject_::OpenLoadDialog()

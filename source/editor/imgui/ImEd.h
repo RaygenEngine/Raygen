@@ -75,6 +75,12 @@ void HelpTooltip(const char* tooltip);
 void HelpTooltipInline(const char* tooltip);
 void CollapsingHeaderHelpTooltip(const char* tooltip);
 
+// This will compose/decompose after editing as needed (depending on how the user edited the transform).
+// lookAt and lookAtPos should be both valid or nullptr.
+// NOTE: semi tested only, it is possible some combinations have never been tested and may contain bugs
+bool TransformRun(TransformCache& tr, bool showScale = true, bool* lockedScale = nullptr, bool* localMode = nullptr,
+	bool* displayMatrix = nullptr, bool* lookAt = nullptr, glm::vec3* lookAtPos = nullptr);
+
 template<typename T>
 inline void DisabledSection(bool disabled, const T& codeSection)
 {
