@@ -95,6 +95,5 @@ public:
 
 	void InitPipelines(vk::RenderPass outRp);
 
-	[[nodiscard]] RGbuffer& GetGbuffer() { return m_gbuffer.at(0); }
 } * Renderer{};
 } // namespace vl

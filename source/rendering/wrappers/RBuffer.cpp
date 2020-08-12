@@ -4,6 +4,8 @@
 #include "rendering/Device.h"
 
 namespace vl {
+
+
 RBuffer::RBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
 	vk::MemoryAllocateFlags allocFlags)
 	: size(size)
@@ -15,6 +17,7 @@ RBuffer::RBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryProp
 		.setSharingMode(vk::SharingMode::eExclusive);
 
 	m_handle = Device->createBufferUnique(bufferInfo);
+
 	vk::MemoryRequirements memRequirements = Device->getBufferMemoryRequirements(m_handle.get());
 
 	vk::StructureChain<vk::MemoryAllocateInfo, vk::MemoryAllocateFlagsInfo> allocInfoChain{};

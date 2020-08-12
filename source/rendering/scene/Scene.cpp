@@ -47,6 +47,24 @@ Scene::Scene()
 	EnqueueCreateCmd<SceneCamera>();
 }
 
+Scene::~Scene()
+{
+	DrainQueueForDestruction();
+	auto destroyVec = [](auto& vec) {
+		for (auto el : vec) {
+			delete el;
+		}
+	};
+
+	destroyVec(geometries.elements);
+	destroyVec(animatedGeometries.elements);
+	destroyVec(cameras.elements);
+	destroyVec(spotlights.elements);
+	destroyVec(directionalLights.elements);
+	destroyVec(reflProbs.elements);
+}
+
+
 void Scene::UploadDirty(uint32 frameIndex)
 {
 	const bool primaryDirty = activeCamera > 0 && cameras.elements[activeCamera]->isDirty[frameIndex];

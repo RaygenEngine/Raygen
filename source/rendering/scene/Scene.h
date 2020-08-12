@@ -35,6 +35,8 @@ struct SceneVector {
 		elements.resize(elements.size() + pendingElements);
 		pendingElements = 0;
 	}
+
+	// WIP: Correct destructor
 };
 
 struct Scene {
@@ -239,7 +241,7 @@ public:
 	void UploadDirty(uint32 frameIndex);
 
 
-	~Scene() { DrainQueueForDestruction(); }
+	~Scene();
 };
 
 struct SceneRenderDesc {
