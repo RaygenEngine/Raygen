@@ -42,7 +42,7 @@ void SceneAnimatedGeometry::ResizeJoints(uint32 curFrame)
 void SceneAnimatedGeometry::MaybeResizeJoints(size_t newSize)
 {
 	if (newSize != jointMatrices.size()) {
-		isDirtyResize = { true, true, true };
+		isDirtyResize = true;
 		jointMatrices.resize(newSize);
 	}
 }

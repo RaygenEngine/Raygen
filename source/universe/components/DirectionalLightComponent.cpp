@@ -43,7 +43,7 @@ DECLARE_DIRTY_FUNC(CDirectionalLight)(BasicComponent& bc)
 			dl.ubo.samples = samples;
 			dl.ubo.sampleInvSpread = sampleInvSpread;
 
-			dl.ResizeShadowmap(shadowMapWidth, shadowMapHeight);
+			dl.MaybeResizeShadowmap(shadowMapWidth, shadowMapHeight);
 		}
 	};
 }

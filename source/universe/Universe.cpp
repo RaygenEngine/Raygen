@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "Universe.h"
 
-// WIP:
 #include "rendering/Layer.h"
+#include "rendering/scene/Scene.h"
 
 namespace {
 std::optional<fs::path> worldToLoad{};
@@ -37,9 +37,9 @@ void Universe::ECS_LoadMainWorld(const fs::path& path)
 
 void Universe::LoadPendingWorlds()
 {
-
 	if (ecsWorldToLoad.has_value()) {
 		delete ecsWorld;
+		vl::Layer->mainScene = std::make_unique<Scene>();
 
 		ecsWorld = new EcsWorld(*ecsWorldToLoad);
 		ecsWorldToLoad.reset();
