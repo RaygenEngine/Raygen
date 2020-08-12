@@ -1,6 +1,6 @@
 #pragma once
-#include "ecs_universe/BasicComponent.h"
-#include "ecs_universe/Entity.h"
+#include "universe/BasicComponent.h"
+#include "universe/Entity.h"
 
 #include "core/FrameClock.h"
 
@@ -10,7 +10,7 @@ struct HiddenFlagComp {
 struct CDestroyFlag {
 };
 
-class ECS_World {
+class EcsWorld {
 private:
 	void LoadFromSrcPath();
 	FrameClock clock;
@@ -20,7 +20,7 @@ public:
 
 
 	fs::path srcPath;
-	ECS_World(const fs::path& path = {});
+	EcsWorld(const fs::path& path = {});
 
 	// If path is empty uses the original srcPath as path
 	void SaveToDisk(const fs::path& path = {}, bool updateSrcPath = false);
@@ -42,9 +42,7 @@ public:
 	// WIP: Not a world function
 	void DestroyEntity(Entity entity);
 
-	void CreateWorld();
-
 	void UpdateWorld();
 
-	~ECS_World();
+	~EcsWorld();
 };

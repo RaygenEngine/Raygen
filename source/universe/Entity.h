@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ecs_universe/ComponentDetail.h"
+#include "universe/ComponentDetail.h"
 
 #define COMP_DIRTABLE                                                                                                  \
 	struct Dirty {                                                                                                     \

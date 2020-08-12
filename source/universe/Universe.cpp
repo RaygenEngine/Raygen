@@ -15,11 +15,11 @@ void Universe::Init(const fs::path& defaultWorldPath, const fs::path& localPath)
 	if (!fs::exists(localPath)) {
 		if (!fs::copy_file(defaultWorldPath, localPath)) {
 			LOG_ERROR("Failed to copy default world file to local.");
-			ecsWorld = new ECS_World();
+			ecsWorld = new EcsWorld();
 			return;
 		}
 	}
-	ecsWorld = new ECS_World(localPath);
+	ecsWorld = new EcsWorld(localPath);
 }
 
 void Universe::Destroy()
@@ -38,7 +38,7 @@ void Universe::LoadPendingWorlds()
 	if (ecsWorldToLoad.has_value()) {
 		delete ecsWorld;
 
-		ecsWorld = new ECS_World(*ecsWorldToLoad);
+		ecsWorld = new EcsWorld(*ecsWorldToLoad);
 		ecsWorldToLoad.reset();
 	}
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ecs_universe/Entity.h"
+#include "universe/Entity.h"
 #include "reflection/GetClass.h"
 
 namespace ed {

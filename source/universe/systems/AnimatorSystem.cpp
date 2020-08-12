@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "AnimatorSystem.h"
 
-#include "ecs_universe/components/SkinnedMeshComponent.h"
+#include "universe/components/SkinnedMeshComponent.h"
 #include "engine/profiler/ProfileScope.h"
 #include "assets/pods/Animation.h"
 #include "assets/pods/SkinnedMesh.h"

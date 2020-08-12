@@ -2,7 +2,7 @@
 #include "EdPropertyEditorWindow.h"
 
 #include "assets/PodEditor.h"
-#include "ecs_universe/ComponentsDb.h"
+#include "universe/ComponentsDb.h"
 #include "editor/DataStrings.h"
 #include "editor/Editor.h"
 #include "editor/imgui/ImAssetSlot.h"

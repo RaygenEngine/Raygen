@@ -6,7 +6,7 @@
 #include "editor/EdMenu.h"
 #include "reflection/PodTools.h"
 #include "assets/PodIncludes.h"
-#include "ecs_universe/ComponentsDb.h"
+#include "universe/ComponentsDb.h"
 
 namespace ImEd {
 int InputTextCallback(ImGuiInputTextCallbackData* data);
@@ -419,8 +419,8 @@ const ComponentMetaEntry* ComponentClassMenu()
 	return entry;
 }
 //
-// class ECS_World;
-// Entity AddEntityMenu(ECS_World& world, const char* menuName)
+// class EcsWorld;
+// Entity AddEntityMenu(EcsWorld& world, const char* menuName)
 //{
 //	Entity ent;
 //	if (ImGui::BeginMenu(menuName)) {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ecs_universe/ComponentsDb.h"
-#include "ecs_universe/components/LightComponentBase.h"
+#include "universe/ComponentsDb.h"
+#include "universe/components/LightComponentBase.h"
 
 struct SceneDirectionalLight;
 

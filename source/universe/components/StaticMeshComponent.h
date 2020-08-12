@@ -1,7 +1,7 @@
 #pragma once
-#include "ecs_universe/BasicComponent.h"
-#include "ecs_universe/ComponentsDb.h"
-#include "ecs_universe/SceneComponentBase.h"
+#include "universe/BasicComponent.h"
+#include "universe/ComponentsDb.h"
+#include "universe/SceneComponentBase.h"
 
 struct SceneGeometry;
 

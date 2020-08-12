@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ecs_universe/ComponentDetail.h"
-#include "ecs_universe/BasicComponent.h"
-#include "ecs_universe/systems/SceneCmdSystem.h"
+#include "universe/ComponentDetail.h"
+#include "universe/BasicComponent.h"
+#include "universe/systems/SceneCmdSystem.h"
 
 #include <nlohmann/json_fwd.hpp>
 

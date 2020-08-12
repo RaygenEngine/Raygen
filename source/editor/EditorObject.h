@@ -13,7 +13,7 @@
 #include <functional>
 
 
-class ECS_World;
+class EcsWorld;
 
 inline class EditorObject_ : public Listener {
 public:
@@ -39,7 +39,7 @@ public:
 
 	ed::Menu m_mainMenu{ "MainMenu" };
 
-	ECS_World* m_currentWorld{ nullptr };
+	EcsWorld* m_currentWorld{ nullptr };
 
 	ed::ComponentWindows m_windowsComponent;
 

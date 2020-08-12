@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ecs_universe/BasicComponent.h"
+#include "universe/BasicComponent.h"
 struct Scene_;
 
 namespace ed {
