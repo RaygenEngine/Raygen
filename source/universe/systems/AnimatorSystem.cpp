@@ -133,12 +133,12 @@ void AnimatorSystem::UpdateAnimations(entt::registry& reg, float deltaSeconds)
 	}
 }
 
-void AnimatorSystem::UploadAnimationsToScene(entt::registry& reg, Scene_* scene)
+void AnimatorSystem::UploadAnimationsToScene(entt::registry& reg, Scene& scene)
 {
 	auto view = reg.view<CSkinnedMesh>();
 	for (auto& [ent, sm] : view.each()) {
 
-		scene->EnqueueCmd<CSkinnedMesh::RenderSceneType>(
+		scene.EnqueueCmd<CSkinnedMesh::RenderSceneType>(
 			sm.sceneUid, [joints = sm.joints](SceneAnimatedGeometry& geom) { geom.jointMatrices = joints; });
 	}
 }

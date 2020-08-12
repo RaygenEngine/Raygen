@@ -12,10 +12,11 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/VulkanLoader.h"
 #include "rendering/wrappers/RSwapchain.h"
+#include "engine/Events.h"
 
 #include "universe/Universe.h"
 #include "engine/Input.h"
-#include "ecs_universe/systems/SceneCmdSystem.h"
+#include "universe/systems/SceneCmdSystem.h"
 #include <editor\EditorObject.h>
 #include "rendering/scene/SceneSpotlight.h"
 
@@ -60,7 +61,6 @@ Layer_::Layer_()
 
 	// TODO: scene is not a global
 	mainScene = std::make_unique<Scene>();
-	secondScene = std::make_unique<Scene>();
 	currentScene = mainScene.get();
 
 	Renderer = new Renderer_();
@@ -108,7 +108,6 @@ Layer_::~Layer_()
 	mainSwapchain.reset();
 	secondSwapchain.reset();
 	mainScene.reset();
-	secondScene.reset();
 
 	delete Layouts;
 
@@ -125,12 +124,10 @@ Layer_::~Layer_()
 
 void Layer_::DrawFrame()
 {
-	if (Input.IsDown(Key::Tab)) {
-		currentScene = secondScene.get();
-	}
-	else {
-		currentScene = mainScene.get();
-	}
+
+
+	currentScene = mainScene.get();
+
 
 	if (*m_didWindowResize) {
 		Device->waitIdle();

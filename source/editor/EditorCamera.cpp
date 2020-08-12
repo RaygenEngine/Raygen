@@ -69,12 +69,12 @@ void EditorCamera::ResetRotation()
 	transform.Compose();
 }
 
-void EditorCamera::InjectToScene(Scene_* worldScene)
+void EditorCamera::InjectToScene(Scene* worldScene)
 {
 	sceneUid = worldScene->EnqueueCreateCmd<SceneCamera>();
 }
 
-void EditorCamera::EnqueueUpdateCmds(Scene_* worldScene)
+void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 {
 	auto lookAt = transform.position + transform.forward() * focalLength;
 	view = glm::lookAt(transform.position, lookAt, transform.up());

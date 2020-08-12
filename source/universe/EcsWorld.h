@@ -7,6 +7,7 @@
 struct HiddenFlagComp {
 };
 
+struct Scene;
 
 class EcsWorld {
 private:
@@ -27,7 +28,5 @@ public:
 
 	Entity CreateEntity(const std::string& name = "");
 
-	void UpdateWorld();
-
-	~EcsWorld();
+	void UpdateWorld(Scene& scene);
 };

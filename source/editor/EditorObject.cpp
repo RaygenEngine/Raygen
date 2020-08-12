@@ -17,6 +17,7 @@
 #include "universe/EcsWorld.h"
 #include "engine/Events.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/Layer.h"
 
 #include <imguicolortextedit/TextEditor.h>
 
@@ -29,10 +30,6 @@
 EditorObject_::EditorObject_()
 {
 	ImguiImpl::InitContext();
-
-
-	edCamera.InjectToScene(Scene); // WIP: EDCAM
-
 	MakeMainMenu();
 }
 
@@ -170,7 +167,7 @@ void EditorObject_::UpdateEditor()
 	//}
 
 	edCamera.Update(1.f / std::max(Engine.GetFPS(), 1.f));
-	edCamera.EnqueueUpdateCmds(Scene);
+	edCamera.EnqueueUpdateCmds(vl::Layer->mainScene.get());
 	HandleInput();
 
 	ImguiImpl::NewFrame();

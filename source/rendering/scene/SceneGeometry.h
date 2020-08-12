@@ -23,7 +23,7 @@ struct SceneAnimatedGeometry {
 
 	SceneAnimatedGeometry()
 	{
-		for (size_t i = 0; i < 3; ++i) {
+		for (size_t i = 0; i < c_framesInFlight; ++i) {
 			descSet[i] = vl::Layouts->jointsDescLayout.GetDescriptorSet();
 		}
 	}

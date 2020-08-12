@@ -27,12 +27,6 @@ EcsWorld::EcsWorld(const fs::path& path)
 	}
 }
 
-EcsWorld::~EcsWorld()
-{
-	delete Scene;
-	Scene = new Scene_(2);
-	Scene->EnqueueCreateCmd<SceneCamera>();
-}
 
 void EcsWorld::LoadFromSrcPath()
 {
@@ -84,7 +78,7 @@ Entity EcsWorld::CreateEntity(const std::string& name)
 	return ent;
 }
 
-void EcsWorld::UpdateWorld()
+void EcsWorld::UpdateWorld(Scene& scene)
 {
 	clock.UpdateFrame();
 
@@ -105,9 +99,9 @@ void EcsWorld::UpdateWorld()
 
 	AnimatorSystem::UpdateAnimations(reg, clock.deltaSeconds);
 
-	SceneCmdSystem::WriteSceneCmds(Scene, reg);
+	SceneCmdSystem::WriteSceneCmds(&scene, reg);
 
-	AnimatorSystem::UploadAnimationsToScene(reg, Scene);
+	AnimatorSystem::UploadAnimationsToScene(reg, scene);
 
 	// Clean Up
 	reg.clear<DirtyMovedComp, DirtySrtComp>();
@@ -120,5 +114,5 @@ void EcsWorld::UpdateWorld()
 	CLOG_ERROR(reg.view<CDestroyFlag>().size(), "Error deleting");
 
 
-	Scene->EnqueueEndFrame();
+	scene.EnqueueEndFrame();
 }

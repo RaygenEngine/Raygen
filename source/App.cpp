@@ -8,6 +8,7 @@
 #include "rendering/Rendering.h"
 #include "universe/Universe.h"
 #include "editor/Editor.h"
+#include "rendering/Layer.h"
 
 #include <glfw/glfw3.h>
 
@@ -59,7 +60,7 @@ void App::MainLoop()
 		Input.Z_ClearFrameState();
 		Platform::PollEvents();
 
-		Universe::ecsWorld->UpdateWorld();
+		Universe::ecsWorld->UpdateWorld(*vl::Layer->mainScene);
 
 		Rendering::DrawFrame();
 
@@ -70,7 +71,7 @@ void App::MainLoop()
 void App::WhileResizing()
 {
 	Universe::LoadPendingWorlds();
-	Universe::ecsWorld->UpdateWorld();
+	Universe::ecsWorld->UpdateWorld(*vl::Layer->mainScene);
 
 	Rendering::DrawFrame();
 	Engine.ReportFrameDrawn();

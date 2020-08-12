@@ -1,7 +1,7 @@
 #pragma once
 
 #include "universe/BasicComponent.h"
-struct Scene_;
+struct Scene;
 
 namespace ed {
 struct EditorCamera {
@@ -62,8 +62,8 @@ struct EditorCamera {
 
 
 	size_t sceneUid{ 0 };
-	void InjectToScene(Scene_* worldScene);
-	void EnqueueUpdateCmds(Scene_* worldScene);
+	void InjectToScene(Scene* worldScene);
+	void EnqueueUpdateCmds(Scene* worldScene);
 
 private:
 	void UpdateOrbital(float speed, float deltaSeconds);

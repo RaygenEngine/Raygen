@@ -12,7 +12,6 @@
 #include "rendering/scene/SceneReflectionProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
 
-
 void Scene::BuildAll()
 {
 	for (auto reflProb : reflProbs.elements) {
@@ -44,11 +43,12 @@ void Scene::DrainQueueForDestruction()
 Scene::Scene()
 {
 	EnqueueEndFrame();
-	EnqueueCreateCmd<SceneCamera>();
+	EnqueueCreateCmd<SceneCamera>(); // TODO: editor camera
 }
 
 Scene::~Scene()
 {
+	vl::Device->waitIdle();
 	DrainQueueForDestruction();
 	auto destroyVec = [](auto& vec) {
 		for (auto el : vec) {
