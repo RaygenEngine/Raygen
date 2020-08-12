@@ -172,6 +172,7 @@ void EditorObject_::UpdateViewportCoordsFromDockspace()
 		g_ViewportCoordinates.size = { rect.GetWidth(), rect.GetHeight() };
 		if (copy != g_ViewportCoordinates) {
 			Event::OnViewportUpdated.Broadcast();
+			edCamera.ResizeViewport(g_ViewportCoordinates.size);
 		}
 	}
 
@@ -198,7 +199,7 @@ void EditorObject_::UpdateEditor()
 	}
 
 	edCamera.Update(1.f / std::max(Engine.GetFPS(), 1.f));
-	edCamera.EnqueueUpdateCmds();
+	edCamera.EnqueueUpdateCmds(Scene);
 	HandleInput();
 
 	Dockspace();
