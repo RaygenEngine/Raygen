@@ -1,6 +1,6 @@
 #pragma once
 #include "rendering/assets/GpuAssetBase.h"
-#include "rendering/wrappers/RDescriptorLayout.h"
+#include "rendering/wrappers/DescriptorLayout.h"
 
 
 namespace vl {

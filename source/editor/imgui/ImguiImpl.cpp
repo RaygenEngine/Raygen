@@ -12,7 +12,7 @@
 #include "rendering/Instance.h"
 #include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
-#include "rendering/wrappers/RSwapchain.h"
+#include "rendering/wrappers/Swapchain.h"
 
 // WIP:
 #include "rendering/Layer.h"

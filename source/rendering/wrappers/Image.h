@@ -39,21 +39,21 @@ struct RImage {
 	void CopyImageToBuffer(const RBuffer& buffer);
 
 	// Affects all mips and array elements
-	vk::ImageMemoryBarrier CreateTransitionBarrier(
-		vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32 baseMipLevel = 0u, uint32 baseArrayLevel = 0u);
+	vk::ImageMemoryBarrier CreateTransitionBarrier(vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
+		uint32 baseMipLevel = 0u, uint32 baseArrayLevel = 0u) const;
 
 	// Blocking transition to layout
 	void BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 	void TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 	// Current layout must be read optimal
-	void TransitionForWrite(vk::CommandBuffer* cmdBuffer);
+	void TransitionForWrite(vk::CommandBuffer* cmdBuffer) const;
 	// Current layout must be write optimal
-	void TransitionForRead(vk::CommandBuffer* cmdBuffer);
+	void TransitionForRead(vk::CommandBuffer* cmdBuffer) const;
 
 	void GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout);
 
-	[[nodiscard]] operator vk::Image() const noexcept { return image.get(); }
-	[[nodiscard]] operator vk::ImageView() const noexcept { return view.get(); }
+	[[nodiscard]] operator vk::Image() const { return image.get(); }
+	vk::ImageView operator()() const { return view.get(); }
 
 	virtual ~RImage() = default;
 
@@ -65,7 +65,7 @@ protected:
 
 	vk::UniqueImageView view;
 
-	std::optional<vk::DescriptorSet> m_debugDescriptorSet;
+	std::optional<vk::DescriptorSet> debugDescriptorSet;
 };
 
 struct RImage2D : RImage {
@@ -95,6 +95,11 @@ struct RImageAttachment : RImage {
 		const std::string& name = "unnamed_attachment")
 		: RImage(vk::ImageType::e2D, { width, height, 1u }, 1u, 1u, format, tiling, initalLayout, usage,
 			vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, {}, properties, vk::ImageViewType::e2D, name){};
+
+	RImageAttachment(RImageAttachment const&) = delete;
+	RImageAttachment(RImageAttachment&&) = default;
+	RImageAttachment& operator=(RImageAttachment const&) = delete;
+	RImageAttachment& operator=(RImageAttachment&&) = default;
 };
 
 } // namespace vl

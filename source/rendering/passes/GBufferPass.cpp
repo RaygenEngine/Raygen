@@ -12,7 +12,7 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/wrappers/RGbuffer.h"
+#include "rendering/structures/GBuffer.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneGeometry.h"
 
@@ -33,12 +33,12 @@ namespace vl {
 vk::UniqueRenderPass GbufferPass::CreateCompatibleRenderPass()
 {
 	// renderpass
-	std::array<vk::AttachmentDescription, RGbuffer::ColorAttachmentCount> colorAttachmentDescs{};
-	std::array<vk::AttachmentReference, RGbuffer::ColorAttachmentCount> colorAttachmentRefs{};
+	std::array<vk::AttachmentDescription, GBuffer::ColorAttachmentCount> colorAttachmentDescs{};
+	std::array<vk::AttachmentReference, GBuffer::ColorAttachmentCount> colorAttachmentRefs{};
 
-	for (size_t i = 0; i < RGbuffer::ColorAttachmentCount; ++i) {
+	for (size_t i = 0; i < GBuffer::ColorAttachmentCount; ++i) {
 		colorAttachmentDescs[i]
-			.setFormat(RGbuffer::colorAttachmentFormats[i]) //
+			.setFormat(GBuffer::colorAttachmentFormats[i]) //
 			.setSamples(vk::SampleCountFlagBits::e1)
 			.setLoadOp(vk::AttachmentLoadOp::eClear)
 			.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -155,8 +155,8 @@ namespace {
 			.setAlphaToCoverageEnable(VK_FALSE)
 			.setAlphaToOneEnable(VK_FALSE);
 
-		std::array<vk::PipelineColorBlendAttachmentState, RGbuffer::ColorAttachmentCount> colorBlendAttachment{};
-		for (uint32 i = 0u; i < RGbuffer::ColorAttachmentCount; ++i) {
+		std::array<vk::PipelineColorBlendAttachmentState, GBuffer::ColorAttachmentCount> colorBlendAttachment{};
+		for (uint32 i = 0u; i < GBuffer::ColorAttachmentCount; ++i) {
 			colorBlendAttachment[i]
 				.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
 								   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //

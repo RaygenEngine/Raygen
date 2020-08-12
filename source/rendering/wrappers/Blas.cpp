@@ -1,13 +1,13 @@
 #include "pch.h"
-#include "RBlas.h"
+#include "Blas.h"
 
 #include "assets/shared/GeometryShared.h"
 #include "rendering/Device.h"
-#include "rendering/wrappers/RBuffer.h"
+#include "rendering/wrappers/Buffer.h"
 
 namespace vl {
 
-RBlas::RBlas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
+Blas::Blas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
 	vk::BuildAccelerationStructureFlagsKHR buildFlags)
 {
 	std::vector<vk::AccelerationStructureCreateGeometryTypeInfoKHR> asCreateGeomInfos{};

@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/wrappers/RDescriptorLayout.h"
+#include "rendering/wrappers/DescriptorLayout.h"
 
 #include <vulkan/vulkan.hpp>
 #include <unordered_map>

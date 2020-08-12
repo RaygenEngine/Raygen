@@ -10,7 +10,7 @@ struct AsInstance {
 	vk::GeometryInstanceFlagsKHR flags{};
 };
 
-struct RTlas {
+struct Tlas {
 	std::vector<AsInstance> instance;
 };
 } // namespace vl

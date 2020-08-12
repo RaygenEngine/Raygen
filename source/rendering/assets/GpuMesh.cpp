@@ -7,8 +7,8 @@
 #include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/Device.h"
 #include "rendering/Renderer.h"
-#include "rendering/wrappers/RBlas.h"
-#include "rendering/wrappers/RBuffer.h"
+#include "rendering/wrappers/Blas.h"
+#include "rendering/wrappers/Buffer.h"
 #include "assets/AssetRegistry.h"
 #include "rendering/Instance.h"
 
@@ -72,6 +72,6 @@ void GpuMesh::Update(const AssetUpdateInfo& info)
 	}
 
 	// LOG_REPORT("{}", AssetHandlerManager::GetPodUri(podHandle));
-	blas = std::make_unique<RBlas>(sizeof(Vertex), geometryGroups, //
+	blas = std::make_unique<Blas>(sizeof(Vertex), geometryGroups, //
 		vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace);
 }

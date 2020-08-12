@@ -12,7 +12,7 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/wrappers/RGbuffer.h"
+#include "rendering/structures/GBuffer.h"
 #include "engine/console/ConsoleVariable.h"
 #include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/SceneCamera.h"

@@ -3,9 +3,9 @@
 
 namespace vl {
 
-struct RBlas {
+struct Blas {
 
-	RBlas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs,
+	Blas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs,
 		vk::BuildAccelerationStructureFlagsKHR buildFlags = {});
 
 private:
