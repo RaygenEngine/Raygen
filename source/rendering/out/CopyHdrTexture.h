@@ -1,6 +1,8 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 
+struct SceneRenderDesc;
+
 namespace vl {
 class CopyHdrTexture {
 
@@ -8,7 +10,7 @@ class CopyHdrTexture {
 	vk::UniquePipelineLayout m_pipelineLayout;
 
 public:
-	void MakePipeline();
-	void RecordCmd(vk::CommandBuffer* cmdBuffer);
+	void MakePipeline(vk::RenderPass outRp);
+	void RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
 };
 } // namespace vl

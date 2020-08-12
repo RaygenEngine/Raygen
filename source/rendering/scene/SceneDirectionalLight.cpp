@@ -3,16 +3,17 @@
 
 #include "core/math-ext/Frustum.h"
 
-void SceneDirectionalLight::ResizeShadowmap(uint32 width, uint32 height)
+void SceneDirectionalLight::MaybeResizeShadowmap(uint32 width, uint32 height)
 {
 	bool shouldResize = true;
-	if (shadowmap) {
-		auto extent = shadowmap->attachment->GetExtent2D();
-		shouldResize = width != extent.width || height != extent.height;
-	}
+	// WIP:
+	auto extent = shadowmap.at(0).attachment.extent;
+	shouldResize = width != extent.width || height != extent.height;
 
-	if (shouldResize) {
-		shadowmap = std::make_unique<vl::RDepthmap>(width, height, name.c_str());
+	for (auto& sm : shadowmap) {
+		if (shouldResize) {
+			sm = vl::RDepthmap{ width, height, name.c_str() };
+		}
 	}
 }
 

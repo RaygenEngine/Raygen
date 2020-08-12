@@ -3,11 +3,9 @@
 
 #include "engine/console/ConsoleVariable.h"
 #include "engine/Logger.h"
-
-#include <glfw/glfw3.h>
-
 #include "rendering/VulkanLoader.h"
 
+#include <glfw/glfw3.h>
 
 PFN_vkCreateDebugUtilsMessengerEXT pfnVkCreateDebugUtilsMessengerEXT;
 PFN_vkDestroyDebugUtilsMessengerEXT pfnVkDestroyDebugUtilsMessengerEXT;
@@ -90,13 +88,16 @@ bool CheckLayers(std::vector<char const*> const& layers, std::vector<vk::LayerPr
 } // namespace
 
 namespace vl {
-Instance_::Instance_(std::vector<const char*> requiredExtensions, GLFWwindow* window)
+Instance_::Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwindow* window)
 {
 	auto allExtensions = requiredExtensions;
 	allExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
 	allExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
-	std::vector<vk::LayerProperties> instanceLayerProperties = vk::enumerateInstanceLayerProperties();
+	// ray tracing required extensions
+	allExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+
+	const auto instanceLayerProperties = vk::enumerateInstanceLayerProperties();
 
 	/* VULKAN_KEY_START */
 
@@ -163,10 +164,10 @@ Instance_::Instance_(std::vector<const char*> requiredExtensions, GLFWwindow* wi
 	auto deviceHandles = enumeratePhysicalDevices();
 
 	for (const auto dH : deviceHandles) {
-		auto pd = std::make_unique<RPhysicalDevice>(dH, surface);
+		auto pd = RPhysicalDevice{ dH, surface };
 		// if capable
-		if (pd->rating > 0.f) {
-			capablePhysicalDevices.push_back(std::move(pd));
+		if (pd.rating > 0.f) {
+			capablePhysicalDevices.emplace_back(std::move(pd));
 		}
 	}
 }

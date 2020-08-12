@@ -7,6 +7,6 @@ class PtReflProb : public PtBase_SinglePipeline {
 public:
 	void MakeLayout() override;
 	void MakePipeline() override;
-	void Draw(vk::CommandBuffer cmdBuffer, uint32 frameIndex) override;
+	void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet gbufferDescSet) override;
 };
 } // namespace vl

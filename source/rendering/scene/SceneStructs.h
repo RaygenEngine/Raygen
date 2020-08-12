@@ -6,10 +6,10 @@
 struct SceneStruct {
 	size_t uboSize;
 
-	std::array<vk::DescriptorSet, 3> descSets;
-	std::array<UniquePtr<vl::RBuffer>, 3> buffers;
+	FrameArray<vk::DescriptorSet> descSet;
+	FrameArray<vl::RBuffer> buffer;
 
-	std::array<bool, 3> isDirty{ true, true, true };
+	FrameArray<bool> isDirty{ true };
 
 	SceneStruct(size_t uboSize);
 

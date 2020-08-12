@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "GpuResources.h"
+#include "RTlas.h"
 
 namespace vl {
 } // namespace vl

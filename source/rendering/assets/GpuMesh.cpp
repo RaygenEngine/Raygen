@@ -7,7 +7,10 @@
 #include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/Device.h"
 #include "rendering/Renderer.h"
+#include "rendering/wrappers/RBlas.h"
 #include "rendering/wrappers/RBuffer.h"
+#include "assets/AssetRegistry.h"
+#include "rendering/Instance.h"
 
 using namespace vl;
 
@@ -19,17 +22,14 @@ GpuMesh::GpuMesh(PodHandle<Mesh> podHandle)
 	Update({});
 }
 
+
+// PERF: based on asset update info should update only mats, accel struct, etc
 void GpuMesh::Update(const AssetUpdateInfo& info)
 {
 	auto data = podHandle.Lock();
 
-	// for (int32 i = 0; auto& gg : geometryGroups) {
-	//	gg.material = GpuAssetManager->GetGpuHandle(data->materials[i]);
-	//	++i;
-	//}
-
 	geometryGroups.clear();
-	// PERF:
+
 	for (int32 i = 0; const auto& gg : data->geometrySlots) {
 		GpuGeometryGroup vgg;
 		vgg.material = GpuAssetManager->GetGpuHandle(data->materials[i]);
@@ -50,21 +50,28 @@ void GpuMesh::Update(const AssetUpdateInfo& info)
 		indexStagingbuffer.UploadData(gg.indices.data(), indexBufferSize);
 
 		// device local
-		vgg.vertexBuffer.reset(new RBuffer(vertexBufferSize,
-			vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-			vk::MemoryPropertyFlagBits::eDeviceLocal));
+		vgg.vertexBuffer = RBuffer{ vertexBufferSize,
+			vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer
+				| vk::BufferUsageFlagBits::eShaderDeviceAddress,
+			vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
-		vgg.indexBuffer.reset(
-			new RBuffer(indexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
-				vk::MemoryPropertyFlagBits::eDeviceLocal));
+		vgg.indexBuffer = RBuffer{ indexBufferSize,
+			vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer
+				| vk::BufferUsageFlagBits::eShaderDeviceAddress,
+			vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
-		// copy from host to device local
-		vgg.vertexBuffer->CopyBuffer(vertexStagingbuffer);
-		vgg.indexBuffer->CopyBuffer(indexStagingbuffer);
+
+		vgg.vertexBuffer.CopyBuffer(vertexStagingbuffer);
+		vgg.indexBuffer.CopyBuffer(indexStagingbuffer);
 
 		vgg.indexCount = static_cast<uint32>(gg.indices.size());
+		vgg.vertexCount = static_cast<uint32>(gg.vertices.size());
 
 		geometryGroups.emplace_back(std::move(vgg));
 		++i;
 	}
+
+	// LOG_REPORT("{}", AssetHandlerManager::GetPodUri(podHandle));
+	blas = std::make_unique<RBlas>(sizeof(Vertex), geometryGroups, //
+		vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace);
 }

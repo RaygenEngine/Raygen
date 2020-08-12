@@ -9,16 +9,16 @@
 #include "rendering/Instance.h"
 #include "rendering/passes/DepthmapPass.h"
 #include "rendering/passes/GBufferPass.h"
+#include "rendering/passes/UnlitPass.h"
 #include "rendering/ppt/techniques/PtDebug.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneDirectionalLight.h"
 #include "rendering/scene/SceneSpotlight.h"
-#include "rendering/Swapchain.h"
 #include "rendering/VulkanUtl.h"
-#include "rendering/passes/UnlitPass.h"
+#include "rendering/wrappers/RDepthmap.h"
 
+#include <editor/imgui/ImguiImpl.h>
 
-constexpr int32 c_framesInFlight = 2;
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 {
@@ -30,32 +30,11 @@ namespace vl {
 
 Renderer_::Renderer_()
 {
-	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
-		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(Swapchain->GetImageCount());
-
-	m_geometryCmdBuffer = Device->allocateCommandBuffers(allocInfo);
-	m_pptCmdBuffer = Device->allocateCommandBuffers(allocInfo);
-	m_outCmdBuffer = Device->allocateCommandBuffers(allocInfo);
-
-	vk::FenceCreateInfo fci{};
-	fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
-
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
-		m_renderFinishedSem.push_back(Device->createSemaphoreUnique({}));
-		m_imageAvailSem.push_back(Device->createSemaphoreUnique({}));
-
-		m_inFlightFence.push_back(Device->createFenceUnique(fci));
-	}
-
 	Event::OnViewportUpdated.BindFlag(this, m_didViewportResize);
-	Event::OnWindowResize.BindFlag(this, m_didWindowResize);
-	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimzed) { m_isMinimzed = newIsMinimzed; });
 
 	vk::AttachmentDescription depthAttachmentDesc{};
 	depthAttachmentDesc
-		.setFormat(Device->pd->FindDepthFormat()) //
+		.setFormat(Device->FindDepthFormat()) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eLoad)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -68,8 +47,6 @@ Renderer_::Renderer_()
 	depthAttachmentRef
 		.setAttachment(2u) //
 		.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-	// post process render pass
 
 	vk::AttachmentDescription colorAttachmentDesc{};
 	vk::AttachmentReference colorAttachmentRef{};
@@ -165,55 +142,133 @@ Renderer_::Renderer_()
 	m_ptRenderpass = Device->createRenderPassUnique(renderPassInfo);
 
 	// descsets
-	for (uint32 i = 0; i < 3; ++i) {
-		m_ppDescSets[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
+	for (uint32 i = 0; i < c_framesInFlight; ++i) {
+		m_ppDescSet[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
 	}
 }
 
-void Renderer_::InitPipelines()
+void Renderer_::InitPipelines(vk::RenderPass outRp)
 {
-	m_copyHdrTexture.MakePipeline();
+	m_copyHdrTexture.MakePipeline(outRp);
 	m_postprocCollection.RegisterTechniques();
 }
 
-Renderer_::~Renderer_() {}
-
-void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer)
+void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo
-		.setFlags(vk::CommandBufferUsageFlags(0)) //
-		.setPInheritanceInfo(nullptr);
+	auto& att = m_gbuffer[sceneDesc.frameIndex].attachments[GNormal];
+	vk::Extent2D extent = { att.extent.width, att.extent.height };
 
-	cmdBuffer->begin(beginInfo);
+	vk::Rect2D scissor{};
+	scissor
+		.setOffset({ 0, 0 }) //
+		.setExtent(vk::Extent2D{ extent.width, extent.height });
+
+	vk::Viewport viewport{};
+	viewport
+		.setX(0) //
+		.setY(0)
+		.setWidth(static_cast<float>(extent.width))
+		.setHeight(static_cast<float>(extent.height))
+		.setMinDepth(0.f)
+		.setMaxDepth(1.f);
+
+
+	vk::RenderPassBeginInfo renderPassInfo{};
+	renderPassInfo
+		.setRenderPass(Layouts->gbufferPass.get()) //
+		.setFramebuffer(m_gbuffer[sceneDesc.frameIndex].framebuffer.get());
+	renderPassInfo.renderArea
+		.setOffset({ 0, 0 }) //
+		.setExtent(extent);
+
+	std::array<vk::ClearValue, 6> clearValues = {};
+	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	clearValues[1].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	clearValues[2].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	clearValues[3].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	clearValues[4].setDepthStencil({ 1.0f, 0 });
+	renderPassInfo
+		.setClearValueCount(static_cast<uint32>(clearValues.size())) //
+		.setPClearValues(clearValues.data());
+
+
+	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
 	{
-		GbufferPass::RecordCmd(
-			cmdBuffer, m_gbuffer.get(), Scene->geometries.elements, Scene->animatedGeometries.elements);
+		auto buffer = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
 
-		for (auto sl : Scene->spotlights.elements) {
-			if (sl) {
-				DepthmapPass::RecordCmd(cmdBuffer, *sl->shadowmap, sl->ubo.viewProj, Scene->geometries.elements,
-					Scene->animatedGeometries.elements);
-			}
-		}
+		GbufferPass::RecordCmd(&buffer, viewport, scissor, sceneDesc);
 
-		for (auto dl : Scene->directionalLights.elements) {
-			if (dl) {
-				DepthmapPass::RecordCmd(cmdBuffer, *dl->shadowmap, dl->ubo.viewProj, Scene->geometries.elements,
-					Scene->animatedGeometries.elements);
-			}
-		}
+		cmdBuffer->executeCommands({ buffer });
 	}
-	cmdBuffer->end();
+	cmdBuffer->endRenderPass();
+
+	auto shadowmapRenderpass = [&](auto light) {
+		if (light) {
+
+			auto& att = light->shadowmap[sceneDesc.frameIndex].attachment;
+			vk::Extent2D extent = { att.extent.width, att.extent.height };
+
+			vk::Rect2D scissor{};
+
+			scissor
+				.setOffset({ 0, 0 }) //
+				.setExtent(extent);
+
+			auto vpSize = extent;
+
+			vk::Viewport viewport{};
+			viewport
+				.setX(0) //
+				.setY(0)
+				.setWidth(static_cast<float>(vpSize.width))
+				.setHeight(static_cast<float>(vpSize.height))
+				.setMinDepth(0.f)
+				.setMaxDepth(1.f);
+
+			vk::RenderPassBeginInfo renderPassInfo{};
+			renderPassInfo
+				.setRenderPass(Layouts->depthRenderPass.get()) //
+				.setFramebuffer(light->shadowmap[sceneDesc.frameIndex].framebuffer.get());
+			renderPassInfo.renderArea
+				.setOffset({ 0, 0 }) //
+				.setExtent(extent);
+
+			vk::ClearValue clearValues = {};
+			clearValues.setDepthStencil({ 1.0f, 0 });
+			renderPassInfo
+				.setClearValueCount(1u) //
+				.setPClearValues(&clearValues);
+
+			cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
+			{
+				auto buffer = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
+
+				DepthmapPass::RecordCmd(&buffer, viewport, scissor, light->ubo.viewProj, sceneDesc);
+
+				cmdBuffer->executeCommands({ buffer });
+			}
+			cmdBuffer->endRenderPass();
+		}
+	};
+
+
+	for (auto sl : sceneDesc->spotlights.elements) {
+		shadowmapRenderpass(sl);
+	}
+
+	for (auto dl : sceneDesc->directionalLights.elements) {
+		shadowmapRenderpass(dl);
+	}
 }
 
-void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
+void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto extent = m_gbuffer->attachments[GNormal]->GetExtent2D();
+	auto& att = m_gbuffer[sceneDesc.frameIndex].attachments[GNormal];
+	vk::Extent2D extent = { att.extent.width, att.extent.height };
 
 	vk::Rect2D scissor{};
 	scissor
@@ -230,117 +285,82 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer)
 		.setMaxDepth(1.f);
 
 
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo
-		.setFlags(vk::CommandBufferUsageFlags(0)) //
-		.setPInheritanceInfo(nullptr);
+	vk::RenderPassBeginInfo renderPassInfo{};
+	renderPassInfo
+		.setRenderPass(m_ptRenderpass.get()) //
+		.setFramebuffer(m_framebuffer[sceneDesc.frameIndex].get());
+	renderPassInfo.renderArea
+		.setOffset({ 0, 0 }) //
+		.setExtent(extent);
 
-	cmdBuffer->begin(beginInfo);
+	vk::ClearValue clearValue{};
+	clearValue.setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+
+	vk::ClearValue clearValue2{};
+	clearValue2.setColor(std::array{ 0.2f, 0.2f, 0.0f, 1.0f });
+
+	std::array cv{ clearValue, clearValue2 };
+
+	renderPassInfo
+		.setClearValueCount(static_cast<uint32>(cv.size())) //
+		.setPClearValues(cv.data());
+
+	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	{
-		vk::RenderPassBeginInfo renderPassInfo{};
-		renderPassInfo
-			.setRenderPass(m_ptRenderpass.get()) //
-			.setFramebuffer(m_framebuffers[currentFrame].get());
-		renderPassInfo.renderArea
-			.setOffset({ 0, 0 }) //
-			.setExtent(extent);
+		cmdBuffer->setViewport(0, { viewport });
+		cmdBuffer->setScissor(0, { scissor });
 
-		vk::ClearValue clearValue{};
-		clearValue.setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+		m_postprocCollection.Draw(*cmdBuffer, sceneDesc, m_gbuffer[sceneDesc.frameIndex].descSet); // WIP:
 
-		vk::ClearValue clearValue2{};
-		clearValue2.setColor(std::array{ 0.2f, 0.2f, 0.0f, 1.0f });
-
-		std::array cv{ clearValue, clearValue2 };
-
-		renderPassInfo
-			.setClearValueCount(static_cast<uint32>(cv.size())) //
-			.setPClearValues(cv.data());
-
-		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-		{
-			// Dynamic viewport & scissor
-			cmdBuffer->setViewport(0, { viewport });
-			cmdBuffer->setScissor(0, { scissor });
-
-			m_postprocCollection.Draw(*cmdBuffer, currentFrame);
-		}
-
-		UnlitPass::RecordCmd(cmdBuffer, extent, Scene->geometries.elements, Scene->animatedGeometries.elements);
-		cmdBuffer->endRenderPass();
-
-		// TODO: preparation of data for next frame should not be performed here?
-		m_gbuffer->TransitionForWrite(cmdBuffer);
-
-		for (auto sl : Scene->spotlights.elements) {
-			if (sl && sl->shadowmap) {
-				sl->shadowmap->TransitionForWrite(cmdBuffer);
-			}
-		}
-
-		for (auto dl : Scene->directionalLights.elements) {
-			if (dl && dl->shadowmap) {
-				dl->shadowmap->TransitionForWrite(cmdBuffer);
-			}
-		}
+		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
 	}
-	cmdBuffer->end();
+	cmdBuffer->endRenderPass();
 }
 
-void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, uint32 swapchainImageIndex)
+void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
+	vk::Framebuffer outFb, vk::Extent2D outExtent)
 {
 	PROFILE_SCOPE(Renderer);
 
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo
-		.setFlags(vk::CommandBufferUsageFlags(0)) //
-		.setPInheritanceInfo(nullptr);
+	vk::RenderPassBeginInfo renderPassInfo{};
+	renderPassInfo
+		.setRenderPass(outRp) //
+		.setFramebuffer(outFb);
+	renderPassInfo.renderArea
+		.setOffset({ 0, 0 }) //
+		.setExtent(outExtent);
 
-	cmdBuffer->begin(beginInfo);
+	vk::ClearValue clearValue{};
+	clearValue.setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	renderPassInfo
+		.setClearValueCount(1u) //
+		.setPClearValues(&clearValue);
+
+	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	{
-		vk::RenderPassBeginInfo renderPassInfo{};
-		renderPassInfo
-			.setRenderPass(Swapchain->GetRenderPass()) //
-			.setFramebuffer(Swapchain->GetFramebuffer(swapchainImageIndex));
-		renderPassInfo.renderArea
-			.setOffset({ 0, 0 }) //
-			.setExtent(Swapchain->GetExtent());
+		auto& scissor = m_viewportRect;
+		const float x = static_cast<float>(scissor.offset.x);
+		const float y = static_cast<float>(scissor.offset.y);
+		const float width = static_cast<float>(scissor.extent.width);
+		const float height = static_cast<float>(scissor.extent.height);
 
-		vk::ClearValue clearValue{};
-		clearValue.setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-		renderPassInfo
-			.setClearValueCount(1u) //
-			.setPClearValues(&clearValue);
+		vk::Viewport viewport{};
+		viewport
+			.setX(x) //
+			.setY(y)
+			.setWidth(width)
+			.setHeight(height)
+			.setMinDepth(0.f)
+			.setMaxDepth(1.f);
 
-		cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-		{
-			auto scissor = GetGameScissor();
-			auto viewport = GetGameViewport();
+		cmdBuffer->setViewport(0, { viewport });
+		cmdBuffer->setScissor(0, { scissor });
 
-			cmdBuffer->setViewport(0, { viewport });
-			cmdBuffer->setScissor(0, { scissor });
+		m_copyHdrTexture.RecordCmd(cmdBuffer, sceneDesc);
 
-			m_copyHdrTexture.RecordCmd(cmdBuffer);
-			m_writeEditor.RecordCmd(cmdBuffer);
-		}
-		cmdBuffer->endRenderPass();
-
-		// transition for write again (TODO: image function)
-		auto barrier = m_attachments[currentFrame]->CreateTransitionBarrier(
-			vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
-		vk::PipelineStageFlags sourceStage = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);
-		vk::PipelineStageFlags destinationStage = GetPipelineStage(vk::ImageLayout::eColorAttachmentOptimal);
-		cmdBuffer->pipelineBarrier(
-			sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
-
-		auto barrier2 = m_attachments2[currentFrame]->CreateTransitionBarrier(
-			vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
-		vk::PipelineStageFlags sourceStage2 = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);
-		vk::PipelineStageFlags destinationStage2 = GetPipelineStage(vk::ImageLayout::eColorAttachmentOptimal);
-		cmdBuffer->pipelineBarrier(
-			sourceStage2, destinationStage2, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier2 });
+		ImguiImpl::RenderVulkan(cmdBuffer);
 	}
-	cmdBuffer->end();
+	cmdBuffer->endRenderPass();
 }
 
 void Renderer_::OnViewportResize()
@@ -355,25 +375,20 @@ void Renderer_::OnViewportResize()
 	if (fbSize != m_viewportFramebufferSize) {
 		m_viewportFramebufferSize = fbSize;
 
-		m_gbuffer = std::make_unique<RGbuffer>(fbSize.width, fbSize.height);
+		for (uint32 i = 0; i < c_framesInFlight; ++i) {
 
-		for (uint32 i = 0; i < 3; ++i) {
-			m_attachments[i] = std::make_unique<RImageAttachment>("rgba32", fbSize.width, fbSize.height,
-				vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+			m_gbuffer[i] = RGbuffer{ fbSize.width, fbSize.height };
+
+			m_attachment[i] = RImageAttachment{ fbSize.width, fbSize.height, vk::Format::eR32G32B32A32Sfloat,
+				vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled
 					| vk::ImageUsageFlagBits::eInputAttachment,
-				vk::MemoryPropertyFlagBits::eDeviceLocal);
+				vk::MemoryPropertyFlagBits::eDeviceLocal, "rgba32" };
 
-			m_attachments[i]->BlockingTransitionToLayout(
-				vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-
-			m_attachments2[i] = std::make_unique<RImageAttachment>("rgba32", fbSize.width, fbSize.height,
-				vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+			m_attachment2[i] = RImageAttachment{ fbSize.width, fbSize.height, vk::Format::eR32G32B32A32Sfloat,
+				vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
-				vk::MemoryPropertyFlagBits::eDeviceLocal);
-
-			m_attachments2[i]->BlockingTransitionToLayout(
-				vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+				vk::MemoryPropertyFlagBits::eDeviceLocal, "rgba32" };
 
 			// descSets
 			auto quadSampler = GpuAssetManager->GetDefaultSampler();
@@ -381,12 +396,12 @@ void Renderer_::OnViewportResize()
 			vk::DescriptorImageInfo imageInfo{};
 			imageInfo
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(m_attachments2[i]->GetView())
+				.setImageView(m_attachment2[i])
 				.setSampler(quadSampler);
 
 			vk::WriteDescriptorSet descriptorWrite{};
 			descriptorWrite
-				.setDstSet(m_ppDescSets[i]) //
+				.setDstSet(m_ppDescSet[i]) //
 				.setDstBinding(0u)
 				.setDstArrayElement(0u)
 				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
@@ -404,7 +419,7 @@ void Renderer_::OnViewportResize()
 			vk::DescriptorImageInfo imageInfo2{};
 			imageInfo2
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(Renderer->m_attachments[i]->GetView());
+				.setImageView(Renderer->m_attachment[i]);
 			//	.setSampler(VK_NULL_HANDLE);
 
 			vk::WriteDescriptorSet descriptorWrite2{};
@@ -421,8 +436,7 @@ void Renderer_::OnViewportResize()
 			Device->updateDescriptorSets(1u, &descriptorWrite2, 0u, nullptr);
 
 
-			std::array attch{ m_attachments[i]->GetView(), m_attachments2[i]->GetView(),
-				m_gbuffer->attachments[GDepth]->GetView() };
+			std::array<vk::ImageView, 3> attch{ m_attachment[i], m_attachment2[i], m_gbuffer[i].attachments[GDepth] };
 
 			// framebuffer
 			vk::FramebufferCreateInfo createInfo{};
@@ -434,147 +448,52 @@ void Renderer_::OnViewportResize()
 				.setHeight(fbSize.height)
 				.setLayers(1u);
 
-			m_framebuffers[i] = Device->createFramebufferUnique(createInfo);
+			m_framebuffer[i] = Device->createFramebufferUnique(createInfo);
 		}
 	}
 } // namespace vl
 
-void Renderer_::OnWindowResize()
+void Renderer_::PrepareForFrame()
 {
-	Device->waitIdle();
-
-	delete Swapchain;
-	Swapchain = new Swapchain_(Instance->surface);
-}
-
-void Renderer_::UpdateForFrame()
-{
-	if (*m_didWindowResize) {
-		OnWindowResize();
-	}
-
 	if (*m_didViewportResize) {
 		OnViewportResize();
 	}
-
-	GpuAssetManager->ConsumeAssetUpdates();
-	Scene->ConsumeCmdQueue();
 }
 
-void Renderer_::DrawFrame()
+void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
+	vk::Framebuffer outFb, vk::Extent2D outExtent)
 {
-	if (m_isMinimzed) {
-		return;
-	}
-
-	UpdateForFrame();
-
 	PROFILE_SCOPE(Renderer);
-	uint32 imageIndex;
 
-	currentFrame = (currentFrame + 1) % c_framesInFlight;
-
-	Device->waitForFences({ *m_inFlightFence[currentFrame] }, true, UINT64_MAX);
-	Device->resetFences({ *m_inFlightFence[currentFrame] });
-
-	Scene->UploadDirty();
-
-	Device->acquireNextImageKHR(*Swapchain, UINT64_MAX, { *m_imageAvailSem[currentFrame] }, {}, &imageIndex);
+	m_secondaryBuffersPool.Top();
 
 	// passes
-	RecordGeometryPasses(&m_geometryCmdBuffer[currentFrame]);
-	RecordPostProcessPass(&m_pptCmdBuffer[currentFrame]);
-	RecordOutPass(&m_outCmdBuffer[currentFrame], imageIndex);
+	RecordGeometryPasses(cmdBuffer, sceneDesc);
+	RecordPostProcessPass(cmdBuffer, sceneDesc);
 
-	std::array bufs = { m_geometryCmdBuffer[currentFrame], m_pptCmdBuffer[currentFrame], m_outCmdBuffer[currentFrame] };
+	for (auto& att : m_gbuffer[sceneDesc.frameIndex].attachments) {
+		if (att.isDepth) {
+			continue;
+		}
+		att.TransitionForWrite(cmdBuffer);
+	}
 
-	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput }; //
-	std::array waitSems = { *m_imageAvailSem[currentFrame] };                                                //
-	std::array signalSems = { *m_renderFinishedSem[currentFrame] };
+	for (auto sl : sceneDesc->spotlights.elements) {
+		if (sl) {
+			sl->shadowmap[sceneDesc.frameIndex].attachment.TransitionForWrite(cmdBuffer);
+		}
+	}
 
+	for (auto dl : sceneDesc->directionalLights.elements) {
+		if (dl) {
+			dl->shadowmap[sceneDesc.frameIndex].attachment.TransitionForWrite(cmdBuffer);
+		}
+	}
 
-	vk::SubmitInfo submitInfo{};
-	submitInfo
-		.setWaitSemaphoreCount(static_cast<uint32>(waitSems.size())) //
-		.setPWaitSemaphores(waitSems.data())
-		.setPWaitDstStageMask(waitStage.data())
+	RecordOutPass(cmdBuffer, sceneDesc, outRp, outFb, outExtent);
 
-		.setSignalSemaphoreCount(static_cast<uint32>(signalSems.size()))
-		.setPSignalSemaphores(signalSems.data())
-
-		.setCommandBufferCount(static_cast<uint32>(bufs.size()))
-		.setPCommandBuffers(bufs.data());
-
-
-	Device->graphicsQueue.submit(1u, &submitInfo, *m_inFlightFence[currentFrame]);
-
-
-	vk::PresentInfoKHR presentInfo;
-	presentInfo //
-		.setWaitSemaphoreCount(1u)
-		.setPWaitSemaphores(&*m_renderFinishedSem[currentFrame]);
-
-
-	vk::SwapchainKHR swapChains[] = { *Swapchain };
-	presentInfo //
-		.setSwapchainCount(1u)
-		.setPSwapchains(swapChains)
-		.setPImageIndices(&imageIndex)
-		.setPResults(nullptr);
-
-
-	PROFILE_SCOPE(Renderer);
-	Device->presentQueue.presentKHR(presentInfo);
+	m_attachment[sceneDesc.frameIndex].TransitionForWrite(cmdBuffer);
+	m_attachment2[sceneDesc.frameIndex].TransitionForWrite(cmdBuffer);
 }
 
-vk::Viewport Renderer_::GetSceneViewport() const
-{
-	auto vpSize = m_viewportRect.extent;
-
-	vk::Viewport viewport{};
-	viewport
-		.setX(0) //
-		.setY(0)
-		.setWidth(static_cast<float>(vpSize.width))
-		.setHeight(static_cast<float>(vpSize.height))
-		.setMinDepth(0.f)
-		.setMaxDepth(1.f);
-	return viewport;
-}
-
-vk::Viewport Renderer_::GetGameViewport() const
-{
-	auto& rect = m_viewportRect;
-	const float x = static_cast<float>(rect.offset.x);
-	const float y = static_cast<float>(rect.offset.y);
-	const float width = static_cast<float>(rect.extent.width);
-	const float height = static_cast<float>(rect.extent.height);
-
-	vk::Viewport viewport{};
-	viewport
-		.setX(x) //
-		.setY(y)
-		.setWidth(width)
-		.setHeight(height)
-		.setMinDepth(0.f)
-		.setMaxDepth(1.f);
-
-	return viewport;
-}
-
-vk::Rect2D Renderer_::GetSceneScissor() const
-{
-	vk::Rect2D scissor{};
-
-	scissor
-		.setOffset({ 0, 0 }) //
-		.setExtent(m_viewportRect.extent);
-
-	return scissor;
-}
-
-vk::Rect2D Renderer_::GetGameScissor() const
-{
-	return m_viewportRect;
-}
 } // namespace vl

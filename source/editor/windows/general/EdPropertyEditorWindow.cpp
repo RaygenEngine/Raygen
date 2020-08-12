@@ -149,17 +149,17 @@ namespace {
 			auto rowMajor = glm::transpose(t);
 			bool edited = false;
 
-			std::array<std::string, 4> buffers;
-			buffers[0] = p.GetNameStr() + "[0]";
-			buffers[1] = p.GetNameStr() + "[1]";
-			buffers[2] = p.GetNameStr() + "[2]";
-			buffers[3] = p.GetNameStr() + "[3]";
+			std::array<std::string, 4> buffer;
+			buffer[0] = p.GetNameStr() + "[0]";
+			buffer[1] = p.GetNameStr() + "[1]";
+			buffer[2] = p.GetNameStr() + "[2]";
+			buffer[3] = p.GetNameStr() + "[3]";
 
 
-			edited |= ImGui::DragFloat4(buffers[0].c_str(), FromVec4(rowMajor[0]), 0.01f);
-			edited |= ImGui::DragFloat4(buffers[1].c_str(), FromVec4(rowMajor[1]), 0.01f);
-			edited |= ImGui::DragFloat4(buffers[2].c_str(), FromVec4(rowMajor[2]), 0.01f);
-			edited |= ImGui::DragFloat4(buffers[3].c_str(), FromVec4(rowMajor[3]), 0.01f);
+			edited |= ImGui::DragFloat4(buffer[0].c_str(), FromVec4(rowMajor[0]), 0.01f);
+			edited |= ImGui::DragFloat4(buffer[1].c_str(), FromVec4(rowMajor[1]), 0.01f);
+			edited |= ImGui::DragFloat4(buffer[2].c_str(), FromVec4(rowMajor[2]), 0.01f);
+			edited |= ImGui::DragFloat4(buffer[3].c_str(), FromVec4(rowMajor[3]), 0.01f);
 			ImGui::Separator();
 			if (edited) {
 				t = glm::transpose(rowMajor);

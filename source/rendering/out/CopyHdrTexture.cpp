@@ -8,17 +8,20 @@
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
+#include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/Layouts.h"
-#include "rendering/Swapchain.h"
+#include "rendering/wrappers/RSwapchain.h"
+
+// WIP:
+#include "rendering/Layer.h"
 
 namespace vl {
-void CopyHdrTexture::MakePipeline()
+void CopyHdrTexture::MakePipeline(vk::RenderPass outRp)
 {
 	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/cpyhdr.shader");
-	gpuShader.onCompile = [&]() {
-		MakePipeline();
+	gpuShader.onCompile = [=]() {
+		MakePipeline(outRp);
 	};
 
 	std::vector shaderStages = gpuShader.shaderStages;
@@ -131,7 +134,8 @@ void CopyHdrTexture::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(Swapchain->GetRenderPass())
+		// WIP: decouple
+		.setRenderPass(outRp)
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
@@ -139,14 +143,13 @@ void CopyHdrTexture::MakePipeline()
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void CopyHdrTexture::RecordCmd(vk::CommandBuffer* cmdBuffer)
+void CopyHdrTexture::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-
-
 	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
+	// TODO: this pass should be elsewhere
 	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-		&Renderer->m_ppDescSets[Renderer->currentFrame], 0u, nullptr);
+		&Renderer->m_ppDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 	// big triangle
 	cmdBuffer->draw(3u, 1u, 0u, 0u);

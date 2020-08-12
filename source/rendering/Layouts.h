@@ -14,6 +14,9 @@ inline struct Layouts_ {
 	RDescriptorLayout cubemapLayout;
 	RDescriptorLayout envmapLayout;
 
+
+	RDescriptorLayout imageDebugDescLayout;
+
 	vk::UniqueRenderPass depthRenderPass;
 	vk::UniqueRenderPass gbufferPass;
 

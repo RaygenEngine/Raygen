@@ -1,13 +1,11 @@
 #pragma once
-#include "rendering/wrappers/RImageAttachment.h"
-
-#include <vulkan/vulkan.hpp>
+#include "rendering/wrappers/RImage.h"
 
 namespace vl {
 class PtRenderTarget {
 
 	vk::UniqueFramebuffer m_framebuffer;
-	UniquePtr<RImageAttachment> m_attachment;
+	RImageAttachment m_attachment;
 
 public:
 	PtRenderTarget();

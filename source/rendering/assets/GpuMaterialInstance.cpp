@@ -34,26 +34,26 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 
 
 	{
-		if (gpuArch.descLayout->IsEmpty()) {
+		if (gpuArch.descLayout.IsEmpty()) {
 			hasDescriptorSet = false;
 			return;
 		}
 		hasDescriptorSet = true;
-		descSet = gpuArch.descLayout->GetDescriptorSet();
+		descSet = gpuArch.descLayout.GetDescriptorSet();
 
 
 		size_t uboSize = matInst->descriptorSet.uboData.size();
-		if (gpuArch.descLayout->hasUbo && uboSize > 0) {
+		if (gpuArch.descLayout.hasUbo && uboSize > 0) {
 
-			if (!uboBuf || uboSize != uboBuf->GetSize()) {
-				uboBuf = std::make_unique<RBuffer>(uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
-					vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+			if (uboSize != uboBuf.size) {
+				uboBuf = RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
+					vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 			}
-			uboBuf->UploadData(matInst->descriptorSet.uboData);
+			uboBuf.UploadData(matInst->descriptorSet.uboData);
 
 			vk::DescriptorBufferInfo bufferInfo{};
 			bufferInfo
-				.setBuffer(*uboBuf) //
+				.setBuffer(uboBuf) //
 				.setOffset(0u)
 				.setRange(matArch->descriptorSetLayout.SizeOfUbo());
 			vk::WriteDescriptorSet descriptorWrite{};
@@ -71,7 +71,7 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 		}
 
-		int32 samplersBeginOffset = gpuArch.descLayout->hasUbo && uboSize > 0 ? 1 : 0;
+		int32 samplersBeginOffset = gpuArch.descLayout.hasUbo && uboSize > 0 ? 1 : 0;
 
 		auto UpdateImageSamplerInDescriptorSet = [&](vk::Sampler sampler, GpuHandle<Image> image, uint32 dstBinding) {
 			auto& img = image.Lock();
@@ -79,7 +79,7 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 			vk::DescriptorImageInfo imageInfo{};
 			imageInfo
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(img.image->GetView())
+				.setImageView(img.image)
 				.setSampler(sampler);
 
 			vk::WriteDescriptorSet descriptorWrite{};

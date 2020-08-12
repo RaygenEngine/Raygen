@@ -1,5 +1,6 @@
 #pragma once
 #include "rendering/assets/GpuAssetBase.h"
+#include "rendering/wrappers/RDescriptorLayout.h"
 
 
 namespace vl {
@@ -13,7 +14,7 @@ struct GpuMaterialArchetype : public GpuAssetTemplate<MaterialArchetype> {
 		std::vector<vk::UniqueShaderModule> shaderModules;
 	};
 
-	UniquePtr<RDescriptorLayout> descLayout;
+	RDescriptorLayout descLayout;
 
 	PassInfo gbuffer;
 	PassInfo gbufferAnimated;

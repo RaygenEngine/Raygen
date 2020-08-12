@@ -13,6 +13,8 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/wrappers/RGbuffer.h"
+#include "rendering/scene/SceneCamera.h"
+#include "rendering/scene/SceneGeometry.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
 
@@ -52,7 +54,7 @@ vk::UniqueRenderPass GbufferPass::CreateCompatibleRenderPass()
 
 	vk::AttachmentDescription depthAttachmentDesc{};
 	depthAttachmentDesc
-		.setFormat(Device->pd->FindDepthFormat()) //
+		.setFormat(Device->FindDepthFormat()) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -305,58 +307,37 @@ vk::UniquePipeline GbufferPass::CreateAnimPipeline(
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
 
-void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
-	const std::vector<SceneGeometry*>& geometries, const std::vector<SceneAnimatedGeometry*>& animGeometries)
+void GbufferPass::RecordCmd(
+	vk::CommandBuffer* cmdBuffer, vk::Viewport viewport, vk::Rect2D scissor, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto extent = gbuffer->attachments[GNormal]->GetExtent2D();
+	vk::CommandBufferInheritanceInfo ii{};
+	ii.setRenderPass(Layouts->gbufferPass.get()) //
+		.setFramebuffer({})                      // VK_NULL_HANDLE
+		.setSubpass(0u);
 
-	vk::Rect2D scissor{};
-	scissor
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo
+		.setFlags(vk::CommandBufferUsageFlagBits::eRenderPassContinue) //
+		.setPInheritanceInfo(&ii);
 
-	vk::Viewport viewport{};
-	viewport
-		.setX(0) //
-		.setY(0)
-		.setWidth(static_cast<float>(extent.width))
-		.setHeight(static_cast<float>(extent.height))
-		.setMinDepth(0.f)
-		.setMaxDepth(1.f);
-
-	cmdBuffer->setViewport(0, { viewport });
-	cmdBuffer->setScissor(0, { scissor });
-
-	vk::RenderPassBeginInfo renderPassInfo{};
-	renderPassInfo
-		.setRenderPass(Layouts->gbufferPass.get()) //
-		.setFramebuffer(gbuffer->framebuffer.get());
-	renderPassInfo.renderArea
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
-
-	std::array<vk::ClearValue, 6> clearValues = {};
-	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[1].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[2].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[3].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[4].setDepthStencil({ 1.0f, 0 });
-	renderPassInfo
-		.setClearValueCount(static_cast<uint32>(clearValues.size())) //
-		.setPClearValues(clearValues.data());
-
-
-	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+	cmdBuffer->begin(beginInfo);
 	{
-		auto camera = Scene->GetActiveCamera();
+
+		cmdBuffer->setViewport(0, { viewport });
+		cmdBuffer->setScissor(0, { scissor });
+
+		auto camera = sceneDesc.viewer;
 		if (!camera) {
 			cmdBuffer->endRenderPass();
 			return;
 		}
 
-		for (auto geom : geometries) {
+		// WIP: decouple
+		auto descSet = camera->descSet[sceneDesc.frameIndex];
+
+		for (auto geom : sceneDesc->geometries.elements) {
 			if (!geom) {
 				continue;
 			}
@@ -381,10 +362,10 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 				}
 
 				cmdBuffer->bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
+					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
 
-				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
-				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+				cmdBuffer->bindVertexBuffers(0u, { gg.vertexBuffer }, { 0 });
+				cmdBuffer->bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);
 
 
 				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
@@ -392,7 +373,7 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 		}
 
 
-		for (auto geom : animGeometries) {
+		for (auto geom : sceneDesc->animatedGeometries.elements) {
 			if (!geom) {
 				continue;
 			}
@@ -417,20 +398,20 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RGbuffer* gbuffer, //
 				}
 
 				cmdBuffer->bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
+					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
 
 				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
-					&geom->descSets[Renderer_::currentFrame], 0u, nullptr);
+					&geom->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
-				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
-				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+				cmdBuffer->bindVertexBuffers(0u, { gg.vertexBuffer }, { 0 });
+				cmdBuffer->bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);
 
 
 				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 			}
 		}
 	}
-	cmdBuffer->endRenderPass();
+	cmdBuffer->end();
 }
 
 } // namespace vl
