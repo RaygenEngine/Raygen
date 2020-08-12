@@ -13,7 +13,7 @@ public:
 
 	void MakeLayout() override;
 	void MakePipeline() override;
-	void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) override;
+	void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet gbufferDescSet) override;
 };
 
 inline PtDebug* ptDebugObj{ nullptr };

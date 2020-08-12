@@ -294,8 +294,8 @@ void InitVulkan()
 	init.Queue = Device->mainQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
 	init.DescriptorPool = GpuResources->descPools.GetImguiPool();
-	init.ImageCount = swapchain->imageCount;
-	init.MinImageCount = swapchain->imageCount;
+	init.ImageCount = c_framesInFlight;
+	init.MinImageCount = c_framesInFlight;
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
 	ImGui_ImplVulkan_Init(&init, swapchain->renderPass.get());

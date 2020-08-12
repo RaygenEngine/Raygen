@@ -310,7 +310,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 		cmdBuffer->setViewport(0, { viewport });
 		cmdBuffer->setScissor(0, { scissor });
 
-		m_postprocCollection.Draw(*cmdBuffer, sceneDesc);
+		m_postprocCollection.Draw(*cmdBuffer, sceneDesc, m_gbuffer[sceneDesc.frameIndex].descSet); // WIP:
 
 		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
 	}
@@ -356,7 +356,7 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDes
 		cmdBuffer->setViewport(0, { viewport });
 		cmdBuffer->setScissor(0, { scissor });
 
-		m_copyHdrTexture.RecordCmd(cmdBuffer);
+		m_copyHdrTexture.RecordCmd(cmdBuffer, sceneDesc);
 
 		ImguiImpl::RenderVulkan(cmdBuffer);
 	}

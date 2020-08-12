@@ -30,9 +30,9 @@ struct RImage {
 		vk::SampleCountFlagBits samples, vk::SharingMode sharingMode, vk::ImageCreateFlags flags,
 		vk::MemoryPropertyFlags properties, vk::ImageViewType viewType, const std::string& name = "unnamed");
 
-	RImage(RImage const&) = default;
+	RImage(RImage const&) = delete;
 	RImage(RImage&&) = default;
-	RImage& operator=(RImage const&) = default;
+	RImage& operator=(RImage const&) = delete;
 	RImage& operator=(RImage&&) = default;
 
 	void CopyBufferToImage(const RBuffer& buffer);

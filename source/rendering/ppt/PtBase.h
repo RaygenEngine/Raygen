@@ -13,7 +13,8 @@ public:
 	// Runs once after all technique registrations are finished
 	virtual void Prepare(){};
 
-	virtual void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) = 0;
+	virtual void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet gbufferDescSet)
+		= 0;
 
 
 	PtBase(const PtBase&) = delete;
@@ -61,9 +62,6 @@ protected:
 	// Make the pipeline here, will be called on shader recompiles (WIP)
 	// MakeLayout will get called at least once before this.
 	virtual void MakePipeline() = 0;
-
-	// TODO: remove one of the Draws
-	virtual void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) = 0;
 
 	~PtBase_SinglePipeline() override = default;
 
