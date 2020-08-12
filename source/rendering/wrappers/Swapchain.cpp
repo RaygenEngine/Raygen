@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "RSwapchain.h"
+#include "Swapchain.h"
 
 #include "platform/Platform.h"
 #include "rendering/Device.h"
@@ -196,7 +196,7 @@ void RSwapchain::InitFrameBuffers()
 		createInfo
 			.setRenderPass(renderPass.get()) //
 			.setAttachmentCount(1u)
-			.setPAttachments(&imageViews[i].get())
+			.setPAttachments(&imageViews[i].get()) // CHECK: temp
 			.setWidth(extent.width)
 			.setHeight(extent.height)
 			.setLayers(1u);

@@ -7,7 +7,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneSpotlight.h"
-#include "rendering/wrappers/RDepthmap.h"
+#include "rendering/structures/Depthmap.h"
 #include "rendering/scene/SceneCamera.h"
 
 namespace vl {

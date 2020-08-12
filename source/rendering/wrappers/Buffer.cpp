@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "RBuffer.h"
+#include "Buffer.h"
 
 #include "rendering/Device.h"
 
@@ -16,9 +16,9 @@ RBuffer::RBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryProp
 		.setUsage(usage)
 		.setSharingMode(vk::SharingMode::eExclusive);
 
-	m_handle = Device->createBufferUnique(bufferInfo);
+	handle = Device->createBufferUnique(bufferInfo);
 
-	vk::MemoryRequirements memRequirements = Device->getBufferMemoryRequirements(m_handle.get());
+	vk::MemoryRequirements memRequirements = Device->getBufferMemoryRequirements(handle.get());
 
 	vk::StructureChain<vk::MemoryAllocateInfo, vk::MemoryAllocateFlagsInfo> allocInfoChain{};
 	auto& allocInfo = allocInfoChain.get<vk::MemoryAllocateInfo>();
@@ -36,9 +36,9 @@ RBuffer::RBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryProp
 	// NVIDIA GTX 1080. The right way to allocate memory for a large number of objects at the same time is to create
 	// a custom allocator that splits up a single allocation among many different objects by using the offset
 	// parameters that we've seen in many functions.
-	m_memory = Device->allocateMemoryUnique(allocInfo);
+	memory = Device->allocateMemoryUnique(allocInfo);
 
-	Device->bindBufferMemory(m_handle.get(), m_memory.get(), 0);
+	Device->bindBufferMemory(handle.get(), memory.get(), 0);
 }
 
 void RBuffer::CopyBuffer(const RBuffer& other)
@@ -51,7 +51,7 @@ void RBuffer::CopyBuffer(const RBuffer& other)
 	vk::BufferCopy copyRegion{};
 	copyRegion.setSize(other.size);
 
-	Device->dmaCmdBuffer.copyBuffer(other, m_handle.get(), 1, &copyRegion);
+	Device->dmaCmdBuffer.copyBuffer(other, handle.get(), 1, &copyRegion);
 
 	Device->dmaCmdBuffer.end();
 
@@ -68,9 +68,9 @@ void RBuffer::CopyBuffer(const RBuffer& other)
 
 void RBuffer::UploadData(const void* data, size_t size)
 {
-	void* dptr = Device->mapMemory(m_memory.get(), 0, size);
+	void* dptr = Device->mapMemory(memory.get(), 0, size);
 	memcpy(dptr, data, size);
-	Device->unmapMemory(m_memory.get());
+	Device->unmapMemory(memory.get());
 }
 
 void RBuffer::UploadData(const std::vector<byte>& data)
@@ -80,7 +80,7 @@ void RBuffer::UploadData(const std::vector<byte>& data)
 
 vk::DeviceAddress RBuffer::GetAddress() const noexcept
 {
-	return Device->getBufferAddress(vk::BufferDeviceAddressInfo{ m_handle.get() });
+	return Device->getBufferAddress(vk::BufferDeviceAddressInfo{ handle.get() });
 }
 
 } // namespace vl

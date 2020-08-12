@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/wrappers/RImage.h"
+#include "rendering/wrappers/Image.h"
 
 
 namespace vl {

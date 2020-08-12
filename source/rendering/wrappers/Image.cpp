@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "RImage.h"
+#include "Image.h"
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
@@ -7,7 +7,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/VulkanUtl.h"
-#include "rendering/wrappers/RBuffer.h"
+#include "rendering/wrappers/Buffer.h"
 
 namespace vl {
 RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
@@ -140,7 +140,7 @@ void RImage::CopyImageToBuffer(const RBuffer& buffer)
 }
 
 vk::ImageMemoryBarrier RImage::CreateTransitionBarrier(
-	vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32 baseMipLevel, uint32 baseArrayLevel)
+	vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32 baseMipLevel, uint32 baseArrayLevel) const
 {
 	vk::ImageMemoryBarrier barrier{};
 	barrier
@@ -199,7 +199,7 @@ void RImage::TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout ol
 	cmdBuffer->pipelineBarrier(sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 }
 
-void RImage::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
+void RImage::TransitionForWrite(vk::CommandBuffer* cmdBuffer) const
 {
 	auto toLayout
 		= isDepth ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal;
@@ -213,7 +213,7 @@ void RImage::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
 	cmdBuffer->pipelineBarrier(sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 }
 
-void RImage::TransitionForRead(vk::CommandBuffer* cmdBuffer)
+void RImage::TransitionForRead(vk::CommandBuffer* cmdBuffer) const
 {
 	auto fromLayout
 		= isDepth ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal;
@@ -343,11 +343,11 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 
 vk::DescriptorSet RImage::GetDebugDescriptor()
 {
-	if (m_debugDescriptorSet) {
-		return *m_debugDescriptorSet;
+	if (debugDescriptorSet) {
+		return *debugDescriptorSet;
 	}
 
-	m_debugDescriptorSet = Layouts->imageDebugDescLayout.GetDescriptorSet();
+	debugDescriptorSet = Layouts->imageDebugDescLayout.GetDescriptorSet();
 
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
@@ -357,7 +357,7 @@ vk::DescriptorSet RImage::GetDebugDescriptor()
 
 	vk::WriteDescriptorSet descriptorWrite{};
 	descriptorWrite
-		.setDstSet(*m_debugDescriptorSet) //
+		.setDstSet(*debugDescriptorSet) //
 		.setDstBinding(0u)
 		.setDstArrayElement(0u)
 		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
@@ -368,7 +368,7 @@ vk::DescriptorSet RImage::GetDebugDescriptor()
 
 	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 
-	return *m_debugDescriptorSet;
+	return *debugDescriptorSet;
 }
 
 void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCount)

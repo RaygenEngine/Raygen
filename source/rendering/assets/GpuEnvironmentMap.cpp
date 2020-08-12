@@ -51,7 +51,7 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 
 		imageInfos[i]
 			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-			.setImageView(cubemapPod.cubemap)
+			.setImageView(cubemapPod.cubemap())
 			.setSampler(quadSampler);
 
 		descriptorWrites[i]
@@ -89,7 +89,7 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 
 	imageInfos[3]
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(brdfLut.Lock().image)
+		.setImageView(brdfLut.Lock().image())
 		.setSampler(brdfSampler.get());
 
 	descriptorWrites[3]

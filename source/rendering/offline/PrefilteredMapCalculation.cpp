@@ -81,7 +81,7 @@ void PrefilteredMapCalculation::MakeDesciptors()
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(m_envmapAsset->skybox.Lock().cubemap)
+		.setImageView(m_envmapAsset->skybox.Lock().cubemap())
 		.setSampler(quadSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -353,7 +353,7 @@ void PrefilteredMapCalculation::PrepareFaceInfo()
 			createInfo
 				.setRenderPass(m_renderPass.get()) //
 				.setAttachmentCount(1u)
-				.setPAttachments(&vk::ImageView(m_cubemapMips[mip].faceAttachments[i]))
+				.setPAttachments(&m_cubemapMips[mip].faceAttachments[i]())
 				.setWidth(mipResolution)
 				.setHeight(mipResolution)
 				.setLayers(1);

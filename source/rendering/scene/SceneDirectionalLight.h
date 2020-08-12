@@ -1,6 +1,6 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
-#include "rendering/wrappers/RDepthmap.h"
+#include "rendering/structures/Depthmap.h"
 
 namespace math {
 // awful
@@ -26,7 +26,7 @@ struct SceneDirectionalLight : SceneStruct {
 
 	DirectionalLight_Ubo ubo;
 
-	FrameArray<vl::RDepthmap> shadowmap;
+	FrameArray<vl::Depthmap> shadowmap;
 
 	glm::vec3 up;
 

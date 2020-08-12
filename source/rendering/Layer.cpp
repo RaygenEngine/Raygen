@@ -11,7 +11,7 @@
 #include "rendering/resource/GpuResources.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/VulkanLoader.h"
-#include "rendering/wrappers/RSwapchain.h"
+#include "rendering/wrappers/Swapchain.h"
 #include "engine/Events.h"
 
 #include "universe/Universe.h"

@@ -15,7 +15,7 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/wrappers/RBuffer.h"
+#include "rendering/wrappers/Buffer.h"
 
 namespace vl {
 BrdfLutCalculation::BrdfLutCalculation(GpuEnvironmentMap* envmapAsset, uint32 calculationResolution)
@@ -234,7 +234,7 @@ void BrdfLutCalculation::PrepareFaceInfo()
 	createInfo
 		.setRenderPass(m_renderPass.get()) //
 		.setAttachmentCount(1u)
-		.setPAttachments(&vk::ImageView(m_attachment))
+		.setPAttachments(&m_attachment())
 		.setWidth(m_resolution)
 		.setHeight(m_resolution)
 		.setLayers(1);

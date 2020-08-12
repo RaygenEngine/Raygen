@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/wrappers/RPhysicalDevice.h"
+#include "rendering/wrappers/PhysicalDevice.h"
 
 #include <vulkan/vulkan.hpp>
 

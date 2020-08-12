@@ -1,6 +1,6 @@
 #pragma once
 #include "rendering/Layouts.h"
-#include "rendering/wrappers/RBuffer.h"
+#include "rendering/wrappers/Buffer.h"
 
 // SceneStructs that upload a Ubo when dirty
 struct SceneStruct {

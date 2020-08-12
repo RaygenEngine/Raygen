@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "RDepthmap.h"
+#include "Depthmap.h"
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
@@ -7,28 +7,13 @@
 #include "rendering/VulkanUtl.h"
 
 namespace vl {
-RDepthmap::RDepthmap(uint32 width, uint32 height, const char* name)
+Depthmap::Depthmap(uint32 width, uint32 height, const char* name)
 {
-	// attachment
-	vk::Format depthFormat = Device->FindDepthFormat();
+	framebuffer.AddAttachment(width, height, Device->FindDepthFormat(), vk::ImageTiling::eOptimal,
+		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, name, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
-	attachment = RImageAttachment{ width, height, depthFormat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
-		vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, name };
-
-	attachment.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-	// framebuffer
-	vk::FramebufferCreateInfo createInfo{};
-	createInfo
-		.setRenderPass(Layouts->depthRenderPass.get()) //
-		.setAttachmentCount(1u)
-		.setPAttachments(&vk::ImageView(attachment))
-		.setWidth(width)
-		.setHeight(height)
-		.setLayers(1);
-
-	framebuffer = Device->createFramebufferUnique(createInfo);
+	framebuffer.Generate(Layouts->depthRenderPass.get());
 
 	// description set
 	descSet = Layouts->singleSamplerDescLayout.GetDescriptorSet();
@@ -57,7 +42,7 @@ RDepthmap::RDepthmap(uint32 width, uint32 height, const char* name)
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(attachment)
+		.setImageView(framebuffer[0]())
 		.setSampler(depthSampler.get());
 
 	vk::WriteDescriptorSet descriptorWrite{};

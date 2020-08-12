@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "RDescriptorLayout.h"
+#include "DescriptorLayout.h"
 
 #include "engine/Logger.h"
 #include "rendering/Device.h"
@@ -61,7 +61,7 @@ void RDescriptorLayout::AddBinding(vk::DescriptorType type, vk::ShaderStageFlags
 
 void RDescriptorLayout::Generate()
 {
-	CLOG_ABORT(hasBeenGenerated, "Attempting to generate an DescriptorLayout that is already generated");
+	CLOG_ABORT(hasBeenGenerated, "Attempting to generate a DescriptorLayout that is already generated");
 
 	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
 	layoutInfo

@@ -1,7 +1,7 @@
 #pragma once
-#include "rendering/wrappers/RBuffer.h"
-#include "rendering/wrappers/RDescriptorLayout.h"
-#include "rendering/wrappers/RImage.h"
+#include "rendering/wrappers/Buffer.h"
+#include "rendering/wrappers/DescriptorLayout.h"
+#include "rendering/wrappers/Image.h"
 
 namespace vl {
 

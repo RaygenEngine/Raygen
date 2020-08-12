@@ -1,6 +1,6 @@
 #pragma once
 #include "rendering/assets/GpuAssetBase.h"
-#include "rendering/wrappers/RBuffer.h"
+#include "rendering/wrappers/Buffer.h"
 
 struct AssetUpdateInfo;
 struct Mesh;
@@ -9,7 +9,7 @@ struct PodHandle;
 
 
 namespace vl {
-struct RBlas;
+struct Blas;
 
 // PERF: GPU ASSETS From https://vulkan-tutorial.com/en/Vertex_buffers/Index_buffer
 // store multiple buffers, like the vertex and index buffer, into a single VkBuffer and use offsets in cmds like
@@ -30,7 +30,7 @@ struct GpuGeometryGroup {
 
 struct GpuMesh : public GpuAssetTemplate<Mesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;
-	UniquePtr<RBlas> blas;
+	UniquePtr<Blas> blas;
 
 
 	GpuMesh(PodHandle<Mesh> podHandle);

@@ -5,7 +5,7 @@
 #include "rendering/Device.h"
 #include "rendering/Renderer.h"
 #include "rendering/VulkanUtl.h"
-#include "rendering/wrappers/RBuffer.h"
+#include "rendering/wrappers/Buffer.h"
 
 using namespace vl;
 

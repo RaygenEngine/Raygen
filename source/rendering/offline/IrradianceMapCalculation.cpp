@@ -81,7 +81,7 @@ void IrradianceMapCalculation::MakeDesciptors()
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(m_envmapAsset->skybox.Lock().cubemap)
+		.setImageView(m_envmapAsset->skybox.Lock().cubemap())
 		.setSampler(quadSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -350,7 +350,7 @@ void IrradianceMapCalculation::PrepareFaceInfo()
 		createInfo
 			.setRenderPass(m_renderPass.get()) //
 			.setAttachmentCount(1u)
-			.setPAttachments(&vk::ImageView(m_faceAttachments[i]))
+			.setPAttachments(&m_faceAttachments[i]())
 			.setWidth(m_resolution)
 			.setHeight(m_resolution)
 			.setLayers(1);
