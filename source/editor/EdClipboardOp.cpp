@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "EdClipboardOp.h"
 
-#include "ecs_universe/ComponentsDb.h"
+#include "universe/ComponentsDb.h"
 
 #include "reflection/ReflectionTools.h"
 

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "ComponentsDb.h"
 
-#include "ecs_universe/BasicComponent.h"
+#include "universe/BasicComponent.h"
 #include "reflection/ReflectionTools.h"
 
 #include <nlohmann/json.hpp>

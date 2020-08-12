@@ -1,9 +1,9 @@
 #pragma once
-#include "ecs_universe/BasicComponent.h"
-#include "ecs_universe/ComponentsDb.h"
-#include "ecs_universe/SceneComponentBase.h"
+#include "universe/BasicComponent.h"
+#include "universe/ComponentsDb.h"
+#include "universe/SceneComponentBase.h"
 
-#include "ecs_universe/components/LightComponentBase.h"
+#include "universe/components/LightComponentBase.h"
 
 struct SceneSpotlight;
 

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "ecs_universe/components/CameraComponent.h"
+#include "universe/components/CameraComponent.h"
 
 #include "rendering/scene/SceneCamera.h"
 

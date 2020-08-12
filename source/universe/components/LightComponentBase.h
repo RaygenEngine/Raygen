@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ecs_universe/SceneComponentBase.h"
+#include "universe/SceneComponentBase.h"
 
 struct CLightBase : CSceneBase {
 	glm::vec3 color{ 1.f };

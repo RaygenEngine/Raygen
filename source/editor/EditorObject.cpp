@@ -14,7 +14,7 @@
 #include "platform/Platform.h"
 #include "universe/Universe.h"
 #include "editor/windows/general/EdEcsOutlinerWindow.h"
-#include "ecs_universe/EcsWorld.h"
+#include "universe/EcsWorld.h"
 #include "engine/Events.h"
 #include "rendering/scene/Scene.h"
 

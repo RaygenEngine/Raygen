@@ -3,7 +3,7 @@
 
 #include "assets/pods/Mesh.h"
 #include "assets/util/ParsingUtl.h"
-#include "ecs_universe/ComponentsDb.h"
+#include "universe/ComponentsDb.h"
 #include "editor/DataStrings.h"
 #include "editor/EditorObject.h"
 #include "universe/Universe.h"
@@ -16,7 +16,7 @@
 
 namespace ed {
 namespace {
-	Entity AddEntityMenu(ECS_World& world, const char* menuName)
+	Entity AddEntityMenu(EcsWorld& world, const char* menuName)
 	{
 		Entity ent;
 		if (ImGui::BeginMenu(menuName)) {
@@ -38,7 +38,7 @@ namespace {
 	}
 } // namespace
 
-void EcsOutlinerWindow::DrawRecurseEntity(ECS_World& world, Entity ent, int32 depth)
+void EcsOutlinerWindow::DrawRecurseEntity(EcsWorld& world, Entity ent, int32 depth)
 {
 	ImGui::PushID(static_cast<uint32>(ent.entity));
 
@@ -115,7 +115,7 @@ void EcsOutlinerWindow::ImguiDraw()
 	}
 }
 
-void EcsOutlinerWindow::Run_ContextPopup(ECS_World& world, Entity entity)
+void EcsOutlinerWindow::Run_ContextPopup(EcsWorld& world, Entity entity)
 {
 	if (Entity ent = AddEntityMenu(world, ETXT(FA_USER_PLUS, " Add Child Entity")); ent) {
 		ent->SetParent(entity);
@@ -168,7 +168,7 @@ void EcsOutlinerWindow::Run_ContextPopup(ECS_World& world, Entity entity)
 	}
 }
 
-void EcsOutlinerWindow::Run_SpaceContextPopup(ECS_World& world)
+void EcsOutlinerWindow::Run_SpaceContextPopup(EcsWorld& world)
 {
 	if (Entity ent = AddEntityMenu(world, "Add Entity"); ent) {
 		ImGui::CloseCurrentPopup();

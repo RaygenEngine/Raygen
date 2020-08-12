@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ecs_universe/ComponentDetail.h"
-#include "ecs_universe/Entity.h"
+#include "universe/ComponentDetail.h"
+#include "universe/Entity.h"
 
 #define COMP_DIRTABLE                                                                                                  \
 	struct Dirty {                                                                                                     \

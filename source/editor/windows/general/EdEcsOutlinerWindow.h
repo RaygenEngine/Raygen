@@ -1,9 +1,9 @@
 #pragma once
 #include "editor/windows/EdWindow.h"
-#include "ecs_universe/Entity.h"
+#include "universe/Entity.h"
 
 
-class ECS_World;
+class EcsWorld;
 namespace ed {
 class EcsOutlinerWindow : public UniqueWindow {
 
@@ -26,13 +26,13 @@ public:
 	}
 
 	virtual void ImguiDraw();
-	void Run_ContextPopup(ECS_World& world, Entity entity);
-	void Run_SpaceContextPopup(ECS_World& world);
+	void Run_ContextPopup(EcsWorld& world, Entity entity);
+	void Run_SpaceContextPopup(EcsWorld& world);
 	// void Run_NewNodeMenu(Node* underNode);
 	void Run_OutlinerDropEntity(Entity entity);
 	virtual ~EcsOutlinerWindow() = default;
 
-	void DrawRecurseEntity(ECS_World& world, Entity ent, int32 depth = 0);
+	void DrawRecurseEntity(EcsWorld& world, Entity ent, int32 depth = 0);
 
 	static inline Entity selected;
 };
