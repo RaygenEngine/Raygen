@@ -1,15 +1,14 @@
 #pragma once
 #include "assets/pods/MaterialInstance.h"
 #include "rendering/assets/GpuAssetBase.h"
+#include "rendering/wrappers/RBuffer.h"
 
 
 namespace vl {
-class RBuffer;
-
 struct GpuMaterialInstance : public GpuAssetTemplate<MaterialInstance> {
 	GpuHandle<MaterialArchetype> archetype;
 
-	UniquePtr<RBuffer> uboBuf;
+	RBuffer uboBuf;
 	vk::DescriptorSet descSet;
 
 	bool hasDescriptorSet{ false };

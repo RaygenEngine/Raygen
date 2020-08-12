@@ -1,8 +1,7 @@
 #pragma once
-#include <vulkan/vulkan.hpp>
 
 namespace vl {
-struct RSwapchain : public vk::SwapchainKHR {
+struct RSwapchain : vk::SwapchainKHR {
 
 	uint32 imageCount;
 

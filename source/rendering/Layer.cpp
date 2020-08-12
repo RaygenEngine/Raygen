@@ -47,7 +47,7 @@ Layer_::Layer_()
 		VK_KHR_RAY_TRACING_EXTENSION_NAME,
 	};
 
-	Device = new Device_(Instance->capablePhysicalDevices[0].get(), deviceExtensions);
+	Device = new Device_(Instance->capablePhysicalDevices[0], deviceExtensions);
 
 	GpuResources = new GpuResources_();
 	GpuAssetManager = new GpuAssetManager_();
@@ -59,8 +59,8 @@ Layer_::Layer_()
 
 
 	// TODO: scene is not a global
-	mainScene = std::make_unique<Scene>(mainSwapchain->imageCount);
-	secondScene = std::make_unique<Scene>(mainSwapchain->imageCount);
+	mainScene = std::make_unique<Scene>();
+	secondScene = std::make_unique<Scene>();
 	currentScene = mainScene.get();
 
 	Renderer = new Renderer_();
@@ -106,6 +106,7 @@ Layer_::~Layer_()
 
 	// WIP:
 	mainSwapchain.reset();
+	secondSwapchain.reset();
 	mainScene.reset();
 	secondScene.reset();
 
@@ -113,6 +114,10 @@ Layer_::~Layer_()
 
 	delete GpuAssetManager;
 	delete GpuResources;
+
+	m_inFlightFence = {};
+	m_renderFinishedSem = {};
+	m_imageAvailSem = {};
 
 	delete Device;
 	delete Instance;
@@ -137,7 +142,7 @@ void Layer_::DrawFrame()
 	if (m_isMinimized)
 		[[unlikely]] { return; }
 
-	Renderer->UpdateForFrame();
+	Renderer->PrepareForFrame();
 
 	GpuAssetManager->ConsumeAssetUpdates();
 

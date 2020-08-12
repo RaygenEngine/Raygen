@@ -3,17 +3,30 @@
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
+#include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/VulkanUtl.h"
+#include "rendering/wrappers/RBuffer.h"
 
 namespace vl {
 RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
 	vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage, vk::SampleCountFlagBits samples,
-	vk::SharingMode sharingMode, vk::ImageCreateFlags flags, vk::MemoryPropertyFlags properties)
+	vk::SharingMode sharingMode, vk::ImageCreateFlags flags, vk::MemoryPropertyFlags properties,
+	vk::ImageViewType viewType, const std::string& name)
+	: format(format)
+	, extent(extent)
+	, aspectMask(GetAspectMask(usage, format))
+	, samples(samples)
+	, flags(flags)
+	, arrayLayers(arrayLayers)
+	, mipLevels(mipLevels)
+	, isDepth(IsDepthFormat(format))
+	, name(name)
 {
-	m_imageInfo //
-		.setImageType(imageType)
+	vk::ImageCreateInfo imageInfo{};
+	imageInfo
+		.setImageType(imageType) //
 		.setExtent(extent)
 		.setMipLevels(mipLevels)
 		.setArrayLayers(arrayLayers)
@@ -25,42 +38,31 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 		.setSharingMode(sharingMode)
 		.setFlags(flags);
 
-	m_handle = Device->createImageUnique(m_imageInfo);
+	image = Device->createImageUnique(imageInfo);
 
-	vk::MemoryRequirements memRequirements = Device->getImageMemoryRequirements(m_handle.get());
+	vk::MemoryRequirements memRequirements = Device->getImageMemoryRequirements(image.get());
 
 	vk::MemoryAllocateInfo allocInfo{};
 	allocInfo.setAllocationSize(memRequirements.size);
 	allocInfo.setMemoryTypeIndex(Device->FindMemoryType(memRequirements.memoryTypeBits, properties));
 
-	m_memory = Device->allocateMemoryUnique(allocInfo);
+	memory = Device->allocateMemoryUnique(allocInfo);
 
-	Device->bindImageMemory(m_handle.get(), m_memory.get(), 0);
-}
+	Device->bindImageMemory(image.get(), memory.get(), 0);
 
-void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
-{
-	vk::ImageMemoryBarrier barrier = CreateTransitionBarrier(oldLayout, newLayout);
+	vk::ImageViewCreateInfo viewInfo{};
+	viewInfo
+		.setImage(image.get()) //
+		.setViewType(viewType)
+		.setFormat(format);
+	viewInfo.subresourceRange
+		.setAspectMask(aspectMask) //
+		.setBaseMipLevel(0u)
+		.setLevelCount(mipLevels)
+		.setBaseArrayLayer(0u)
+		.setLayerCount(arrayLayers);
 
-	vk::PipelineStageFlags sourceStage = GetPipelineStage(oldLayout);
-	vk::PipelineStageFlags destinationStage = GetPipelineStage(newLayout);
-
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-
-	Device->mainCmdBuffer.begin(beginInfo);
-
-	Device->mainCmdBuffer.pipelineBarrier(
-		sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
-
-	Device->mainCmdBuffer.end();
-
-	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBufferCount(1u);
-	submitInfo.setPCommandBuffers(&Device->mainCmdBuffer);
-
-	Device->mainQueue.submit(1u, &submitInfo, {});
-	Device->mainQueue.waitIdle();
+	view = Device->createImageViewUnique(viewInfo);
 }
 
 void RImage::CopyBufferToImage(const RBuffer& buffer)
@@ -76,15 +78,15 @@ void RImage::CopyBufferToImage(const RBuffer& buffer)
 		.setBufferRowLength(0u)
 		.setBufferImageHeight(0u)
 		.setImageOffset({ 0, 0, 0 })
-		.setImageExtent(m_imageInfo.extent);
+		.setImageExtent(extent);
 
 	region.imageSubresource
-		.setAspectMask(GetAspectMask(m_imageInfo)) //
+		.setAspectMask(aspectMask) //
 		.setMipLevel(0u)
 		.setBaseArrayLayer(0u)
-		.setLayerCount(m_imageInfo.arrayLayers);
+		.setLayerCount(arrayLayers);
 
-	Device->dmaCmdBuffer.copyBufferToImage(buffer, m_handle.get(), vk::ImageLayout::eTransferDstOptimal, { region });
+	Device->dmaCmdBuffer.copyBufferToImage(buffer, image.get(), vk::ImageLayout::eTransferDstOptimal, { region });
 
 	Device->dmaCmdBuffer.end();
 
@@ -113,15 +115,15 @@ void RImage::CopyImageToBuffer(const RBuffer& buffer)
 		.setBufferRowLength(0u)
 		.setBufferImageHeight(0u)
 		.setImageOffset({ 0, 0, 0 })
-		.setImageExtent(m_imageInfo.extent);
+		.setImageExtent(extent);
 
 	region.imageSubresource
-		.setAspectMask(GetAspectMask(m_imageInfo)) //
+		.setAspectMask(aspectMask) //
 		.setMipLevel(0u)
 		.setBaseArrayLayer(0u)
-		.setLayerCount(m_imageInfo.arrayLayers);
+		.setLayerCount(arrayLayers);
 
-	Device->dmaCmdBuffer.copyImageToBuffer(m_handle.get(), vk::ImageLayout::eTransferSrcOptimal, buffer, { region });
+	Device->dmaCmdBuffer.copyImageToBuffer(image.get(), vk::ImageLayout::eTransferSrcOptimal, buffer, { region });
 
 	Device->dmaCmdBuffer.end();
 
@@ -137,10 +139,98 @@ void RImage::CopyImageToBuffer(const RBuffer& buffer)
 	Device->dmaQueue.waitIdle();
 }
 
+vk::ImageMemoryBarrier RImage::CreateTransitionBarrier(
+	vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32 baseMipLevel, uint32 baseArrayLevel)
+{
+	vk::ImageMemoryBarrier barrier{};
+	barrier
+		.setOldLayout(oldLayout) //
+		.setNewLayout(newLayout)
+		.setImage(image.get())
+		.setSrcAccessMask(GetAccessMask(oldLayout))
+		.setDstAccessMask(GetAccessMask(newLayout))
+		// CHECK: family indices
+		.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+		.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+
+	barrier.subresourceRange
+		.setAspectMask(aspectMask) //
+		.setBaseMipLevel(baseMipLevel)
+		.setLevelCount(mipLevels)
+		.setBaseArrayLayer(baseArrayLevel)
+		.setLayerCount(arrayLayers);
+
+	return barrier;
+}
+
+void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
+{
+	vk::ImageMemoryBarrier barrier = CreateTransitionBarrier(oldLayout, newLayout);
+
+	vk::PipelineStageFlags sourceStage = GetPipelineStage(oldLayout);
+	vk::PipelineStageFlags destinationStage = GetPipelineStage(newLayout);
+
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+	Device->mainCmdBuffer.begin(beginInfo);
+
+	Device->mainCmdBuffer.pipelineBarrier(
+		sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+
+	Device->mainCmdBuffer.end();
+
+	vk::SubmitInfo submitInfo{};
+	submitInfo.setCommandBufferCount(1u);
+	submitInfo.setPCommandBuffers(&Device->mainCmdBuffer);
+
+	Device->mainQueue.submit(1u, &submitInfo, {});
+	Device->mainQueue.waitIdle();
+}
+
+void RImage::TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
+{
+	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
+
+	vk::PipelineStageFlags sourceStage = vk::PipelineStageFlagBits::eFragmentShader;
+	vk::PipelineStageFlags destinationStage
+		= isDepth ? vk::PipelineStageFlagBits::eEarlyFragmentTests : vk::PipelineStageFlagBits::eColorAttachmentOutput;
+
+	cmdBuffer->pipelineBarrier(sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+}
+
+void RImage::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
+{
+	auto toLayout
+		= isDepth ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal;
+
+	auto barrier = CreateTransitionBarrier(vk::ImageLayout::eShaderReadOnlyOptimal, toLayout);
+
+	vk::PipelineStageFlags sourceStage = vk::PipelineStageFlagBits::eFragmentShader;
+	vk::PipelineStageFlags destinationStage
+		= isDepth ? vk::PipelineStageFlagBits::eEarlyFragmentTests : vk::PipelineStageFlagBits::eColorAttachmentOutput;
+
+	cmdBuffer->pipelineBarrier(sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+}
+
+void RImage::TransitionForRead(vk::CommandBuffer* cmdBuffer)
+{
+	auto fromLayout
+		= isDepth ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal;
+
+	auto barrier = CreateTransitionBarrier(fromLayout, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+	vk::PipelineStageFlags sourceStage
+		= isDepth ? vk::PipelineStageFlagBits::eEarlyFragmentTests : vk::PipelineStageFlagBits::eColorAttachmentOutput;
+	vk::PipelineStageFlags destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
+
+	cmdBuffer->pipelineBarrier(sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+}
+
 void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout)
 {
 	// Check if image format supports linear blitting
-	vk::FormatProperties formatProperties = Device->pd->getFormatProperties(m_imageInfo.format);
+	vk::FormatProperties formatProperties = Device->pd.getFormatProperties(format);
 
 	// CHECK: from https://vulkan-tutorial.com/Generating_Mipmaps
 	// There are two alternatives in this case. You could implement a function that searches common texture
@@ -157,21 +247,21 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 
 	Device->mainCmdBuffer.begin(beginInfo);
 
-	for (uint32 layer = 0u; layer < m_imageInfo.arrayLayers; ++layer) {
+	for (uint32 layer = 0u; layer < arrayLayers; ++layer) {
 
 		vk::ImageMemoryBarrier barrier{};
 		barrier
-			.setImage(m_handle.get()) //
+			.setImage(image.get()) //
 			.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
 			.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
 		barrier.subresourceRange
-			.setAspectMask(GetAspectMask(m_imageInfo)) //
+			.setAspectMask(aspectMask) //
 			.setBaseArrayLayer(layer)
 			.setLayerCount(1u)
 			.setLevelCount(1u);
 
-		int32 mipWidth = m_imageInfo.extent.width;
-		int32 mipHeight = m_imageInfo.extent.height;
+		int32 mipWidth = extent.width;
+		int32 mipHeight = extent.height;
 
 		auto intermediateLayout = vk::ImageLayout::eTransferSrcOptimal;
 
@@ -179,7 +269,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 		vk::PipelineStageFlags intermediateStage = GetPipelineStage(intermediateLayout);
 		vk::PipelineStageFlags finalStage = GetPipelineStage(finalLayout);
 
-		for (uint32 i = 1; i < m_imageInfo.mipLevels; i++) {
+		for (uint32 i = 1; i < mipLevels; i++) {
 			barrier.subresourceRange.setBaseMipLevel(i - 1);
 
 			barrier
@@ -196,20 +286,20 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 			blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
 			blit.srcOffsets[1] = vk::Offset3D{ mipWidth, mipHeight, 1 };
 			blit.srcSubresource
-				.setAspectMask(GetAspectMask(m_imageInfo)) //
+				.setAspectMask(aspectMask) //
 				.setMipLevel(i - 1)
 				.setBaseArrayLayer(layer)
 				.setLayerCount(1u);
 			blit.dstOffsets[0] = vk::Offset3D{ 0, 0, 0 };
 			blit.dstOffsets[1] = vk::Offset3D{ mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
 			blit.dstSubresource
-				.setAspectMask(GetAspectMask(m_imageInfo)) //
+				.setAspectMask(aspectMask) //
 				.setMipLevel(i)
 				.setBaseArrayLayer(layer)
 				.setLayerCount(1u);
 
 			Device->mainCmdBuffer.blitImage(
-				m_handle.get(), intermediateLayout, m_handle.get(), oldLayout, 1, &blit, vk::Filter::eLinear);
+				image.get(), intermediateLayout, image.get(), oldLayout, 1, &blit, vk::Filter::eLinear);
 
 			barrier
 				.setOldLayout(intermediateLayout) //
@@ -229,7 +319,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 		}
 
 		// barier for final mip
-		barrier.subresourceRange.setBaseMipLevel(m_imageInfo.mipLevels - 1);
+		barrier.subresourceRange.setBaseMipLevel(mipLevels - 1);
 
 		barrier
 			.setOldLayout(oldLayout) //
@@ -243,7 +333,6 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 
 	Device->mainCmdBuffer.end();
 
-
 	vk::SubmitInfo submitInfo{};
 	submitInfo.setCommandBufferCount(1u);
 	submitInfo.setPCommandBuffers(&Device->mainCmdBuffer);
@@ -252,55 +341,18 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 	Device->mainQueue.waitIdle();
 }
 
-void RImage::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
-{
-	auto toLayout = IsDepthFormat(m_imageInfo.format) ? vk::ImageLayout::eDepthStencilAttachmentOptimal
-													  : vk::ImageLayout::eColorAttachmentOptimal;
-
-	auto barrier = CreateTransitionBarrier(vk::ImageLayout::eShaderReadOnlyOptimal, toLayout);
-
-	vk::PipelineStageFlags sourceStage = GetPipelineStage(vk::ImageLayout::eShaderReadOnlyOptimal);
-	vk::PipelineStageFlags destinationStage = GetPipelineStage(toLayout);
-
-	cmdBuffer->pipelineBarrier(sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
-}
-
-vk::ImageMemoryBarrier RImage::CreateTransitionBarrier(
-	vk::ImageLayout oldLayout, vk::ImageLayout newLayout, uint32 baseMipLevel, uint32 baseArrayLevel)
-{
-	vk::ImageMemoryBarrier barrier{};
-	barrier
-		.setOldLayout(oldLayout) //
-		.setNewLayout(newLayout)
-		.setImage(m_handle.get())
-		.setSrcAccessMask(GetAccessMask(oldLayout))
-		.setDstAccessMask(GetAccessMask(newLayout))
-		// CHECK: family indices
-		.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-		.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
-
-	barrier.subresourceRange
-		.setAspectMask(GetAspectMask(m_imageInfo)) //
-		.setBaseMipLevel(baseMipLevel)
-		.setLevelCount(m_imageInfo.mipLevels)
-		.setBaseArrayLayer(baseArrayLevel)
-		.setLayerCount(m_imageInfo.arrayLayers);
-
-	return barrier;
-}
-
 vk::DescriptorSet RImage::GetDebugDescriptor()
 {
 	if (m_debugDescriptorSet) {
 		return *m_debugDescriptorSet;
 	}
 
-	m_debugDescriptorSet = GpuResources->imageDebugDescLayout.GetDescriptorSet();
+	m_debugDescriptorSet = Layouts->imageDebugDescLayout.GetDescriptorSet();
 
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(m_view.get())
+		.setImageView(view.get())
 		.setSampler(GpuAssetManager->GetDefaultSampler());
 
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -319,4 +371,52 @@ vk::DescriptorSet RImage::GetDebugDescriptor()
 	return *m_debugDescriptorSet;
 }
 
+void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCount)
+{
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+	Device->dmaCmdBuffer.begin(beginInfo);
+
+	std::vector<vk::BufferImageCopy> regions;
+	size_t offset{ 0llu };
+	for (uint32 mip = 0u; mip < mipCount; ++mip) {
+
+		uint32 res = extent.width / static_cast<uint32>(std::pow(2, mip));
+
+
+		vk::BufferImageCopy region{};
+		region
+			.setBufferOffset(offset) //
+			.setBufferRowLength(0u)
+			.setBufferImageHeight(0u)
+			.setImageOffset({ 0, 0, 0 })
+			.setImageExtent({ res, res, 1u });
+
+		region.imageSubresource
+			.setAspectMask(aspectMask) //
+			.setMipLevel(mip)
+			.setBaseArrayLayer(0u)
+			.setLayerCount(6u);
+
+		regions.push_back(region);
+
+		offset += res * res * pixelSize * 6llu;
+	}
+
+	Device->dmaCmdBuffer.copyBufferToImage(buffer, image.get(), vk::ImageLayout::eTransferDstOptimal, regions);
+
+	Device->dmaCmdBuffer.end();
+
+	vk::SubmitInfo submitInfo{};
+	submitInfo
+		.setCommandBufferCount(1u) //
+		.setPCommandBuffers(&Device->dmaCmdBuffer);
+
+	Device->dmaQueue.submit(1u, &submitInfo, {});
+	// PERF:
+	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
+	// instead of executing one at a time. That may give the driver more opportunities to optimize.
+	Device->dmaQueue.waitIdle();
+}
 } // namespace vl

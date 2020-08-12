@@ -9,7 +9,7 @@ public:
 	PtDebug();
 
 	RDescriptorLayout descLayout;
-	std::array<vk::DescriptorSet, 3> descSet;
+	FrameArray<vk::DescriptorSet> descSet;
 
 	void MakeLayout() override;
 	void MakePipeline() override;

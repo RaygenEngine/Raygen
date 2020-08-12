@@ -1,13 +1,13 @@
 #pragma once
+#include "rendering/wrappers/RBuffer.h"
 #include "rendering/wrappers/RDescriptorLayout.h"
-#include "rendering/wrappers/RImageAttachment.h"
+#include "rendering/wrappers/RImage.h"
 
 namespace vl {
-class RBuffer;
 
 struct CubemapMipFrames {
 	std::array<vk::UniqueFramebuffer, 6> framebuffers;
-	std::array<UniquePtr<RImageAttachment>, 6> faceAttachments;
+	std::array<RImageAttachment, 6> faceAttachments;
 };
 
 class PrefilteredMapCalculation {
@@ -16,7 +16,7 @@ class PrefilteredMapCalculation {
 
 	std::vector<vk::CommandBuffer> m_cmdBuffers;
 
-	UniquePtr<RBuffer> m_cubeVertexBuffer;
+	RBuffer m_cubeVertexBuffer;
 
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;

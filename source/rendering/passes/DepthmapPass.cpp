@@ -283,7 +283,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 					[[unlikely]] { continue; }
 				auto& plLayout = *arch.depth.pipelineLayout;
 
-				vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
+				vk::Buffer vertexBuffers[] = { gg.vertexBuffer };
 				vk::DeviceSize offsets[] = { 0 };
 				// bind the graphics pipeline
 				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.depth.pipeline);
@@ -295,7 +295,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 				cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
 
 				// indices
-				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+				cmdBuffer->bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);
 
 
 				if (mat.hasDescriptorSet) {
@@ -334,10 +334,10 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 				//	vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
 				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
-					&geom->descSets[sceneDesc.frameIndex], 0u, nullptr);
+					&geom->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
-				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
-				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+				cmdBuffer->bindVertexBuffers(0u, { gg.vertexBuffer }, { 0 });
+				cmdBuffer->bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);
 
 				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 			}

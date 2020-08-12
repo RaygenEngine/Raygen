@@ -16,22 +16,22 @@ struct SceneAnimatedGeometry {
 
 	std::vector<glm::mat4> jointMatrices;
 
-	std::array<vk::DescriptorSet, 3> descSets;
-	std::array<UniquePtr<vl::RBuffer>, 3> buffers;
+	FrameArray<vk::DescriptorSet> descSet;
+	FrameArray<vl::RBuffer> buffer;
 
 	void UploadSsbo(uint32 curFrame);
 
 	SceneAnimatedGeometry()
 	{
 		for (size_t i = 0; i < 3; ++i) {
-			descSets[i] = vl::Layouts->jointsDescLayout.GetDescriptorSet();
+			descSet[i] = vl::Layouts->jointsDescLayout.GetDescriptorSet();
 		}
 	}
 
 	void ResizeJoints(uint32 curFrame);
 
-	std::array<bool, 3> isDirty{ true, true, true };
-	std::array<bool, 3> isDirtyResize{ true, true, true };
+	FrameArray<bool> isDirty{ true };
+	FrameArray<bool> isDirtyResize{ true };
 
 private:
 	size_t GetBufferSize() const;

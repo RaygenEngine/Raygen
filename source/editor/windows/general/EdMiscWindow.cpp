@@ -55,32 +55,29 @@ GbufferDebugWindow::GbufferDebugWindow(std::string_view name)
 
 void GbufferDebugWindow::ImguiDraw()
 {
-	auto gbuff = vl::Renderer->GetGbuffer();
-	if (!gbuff) {
-		return;
-	}
+	auto& gbuff = vl::Renderer->GetGbuffer();
 
 	bool shouldShowDescriptors = !m_willInvalidateDescriptors.Access();
 
 	ImGui::DragInt2("Preview Size", &m_imgSize.x, 1.f, 0, 4096);
 
 
-	auto showAttachment = [&, shouldShowDescriptors](vl::RImageAttachment* att) {
-		bool& isOpen = isAttachmentOpen[att->GetName()]; // find or insert
+	auto showAttachment = [&, shouldShowDescriptors](vl::RImageAttachment& att) {
+		bool& isOpen = isAttachmentOpen[att.name]; // find or insert
 
-		ImGui::PushID(att);
-		ImGui::Checkbox(att->GetName().c_str(), &isOpen);
+		ImGui::PushID(&att);
+		ImGui::Checkbox(att.name.c_str(), &isOpen);
 		if (isOpen) {
-			std::string name = fmt::format("Att {}", att->GetName());
+			std::string name = fmt::format("Att {}", att.name);
 			ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
 			if (ImGui::Begin(name.c_str(), &isOpen)) {
-				auto descrSet = att->GetDebugDescriptor();
+				auto descrSet = att.GetDebugDescriptor();
 
 				if (!descrSet) {
 					ImGui::Text("Null handle");
 					return;
 				}
-				auto ext = att->GetExtent2D();
+				auto ext = att.extent;
 
 				ImVec2 size = { static_cast<float>(ext.width), static_cast<float>(ext.height) };
 
@@ -116,18 +113,18 @@ void GbufferDebugWindow::ImguiDraw()
 	};
 
 	for (uint32 i = 0; i < vl::GCount; ++i) {
-		showAttachment(gbuff->attachments[i].get());
+		showAttachment(gbuff.attachments[i]);
 	}
 
 	for (auto sl : vl::Layer->mainScene->spotlights.elements) {
-		if (sl && sl->shadowmap) {
-			showAttachment(sl->shadowmap->attachment.get());
+		if (sl) {
+			showAttachment(sl->shadowmap.at(0).attachment);
 		}
 	}
 
 	for (auto dl : vl::Layer->mainScene->directionalLights.elements) {
-		if (dl && dl->shadowmap) {
-			showAttachment(dl->shadowmap->attachment.get());
+		if (dl) {
+			showAttachment(dl->shadowmap.at(0).attachment);
 		}
 	}
 }

@@ -148,7 +148,7 @@ void CopyHdrTexture::RecordCmd(vk::CommandBuffer* cmdBuffer)
 	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-		&Renderer->m_ppDescSets[/*TODO: this pass should be elsewhere*/ 0], 0u, nullptr);
+		&Renderer->m_ppDescSet[/*TODO: this pass should be elsewhere*/ 0], 0u, nullptr);
 
 	// big triangle
 	cmdBuffer->draw(3u, 1u, 0u, 0u);

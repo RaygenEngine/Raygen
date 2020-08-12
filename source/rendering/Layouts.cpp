@@ -47,6 +47,10 @@ Layouts_::Layouts_()
 	envmapLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	envmapLayout.Generate();
 
+	// image debug
+	imageDebugDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+	imageDebugDescLayout.Generate();
+
 	depthRenderPass = DepthmapPass::CreateCompatibleRenderPass();
 
 	gbufferPass = GbufferPass::CreateCompatibleRenderPass();

@@ -1,5 +1,6 @@
 #pragma once
-#include "rendering/wrappers/RImageAttachment.h"
+#include "rendering/wrappers/RImage.h"
+
 
 namespace vl {
 
@@ -13,7 +14,7 @@ class BrdfLutCalculation {
 	vk::UniquePipelineLayout m_pipelineLayout;
 
 	vk::UniqueFramebuffer m_framebuffer;
-	UniquePtr<RImageAttachment> m_attachment;
+	RImageAttachment m_attachment;
 
 	GpuEnvironmentMap* m_envmapAsset;
 

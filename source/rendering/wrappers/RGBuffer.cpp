@@ -15,14 +15,13 @@ RGbuffer::RGbuffer(uint32 width, uint32 height)
 {
 	descSet = Layouts->gbufferDescLayout.GetDescriptorSet();
 
-	auto initAttachment
-		= [&](const std::string& name, vk::Format format, vk::ImageUsageFlags usage, vk::ImageLayout finalLayout) {
-			  auto att = std::make_unique<RImageAttachment>(name, width, height, format, vk::ImageTiling::eOptimal,
-				  vk::ImageLayout::eUndefined, usage | vk::ImageUsageFlagBits::eSampled,
-				  vk::MemoryPropertyFlagBits::eDeviceLocal);
-			  att->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, finalLayout);
-			  return att;
-		  };
+	auto initAttachment = [&](const std::string& name, vk::Format format, vk::ImageUsageFlags usage,
+							  vk::ImageLayout finalLayout) {
+		auto att = RImageAttachment{ width, height, format, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+			usage | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal, name };
+		att.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, finalLayout);
+		return att;
+	};
 
 	for (size_t i = 0; i < ColorAttachmentCount; ++i) {
 		attachments[i] = initAttachment(attachmentNames[i], colorAttachmentFormats[i],
@@ -34,12 +33,12 @@ RGbuffer::RGbuffer(uint32 width, uint32 height)
 	attachments[GDepth] = initAttachment(attachmentNames[GDepth], depthFormat,
 		vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
-	std::array views = {
-		attachments[GNormal]->GetView(),
-		attachments[GBaseColor]->GetView(),
-		attachments[GSurface]->GetView(),
-		attachments[GEmissive]->GetView(),
-		attachments[GDepth]->GetView(),
+	std::array<vk::ImageView, GCount> views = {
+		attachments[GNormal],
+		attachments[GBaseColor],
+		attachments[GSurface],
+		attachments[GEmissive],
+		attachments[GDepth],
 	};
 
 	vk::FramebufferCreateInfo createInfo{};
@@ -61,7 +60,7 @@ RGbuffer::RGbuffer(uint32 width, uint32 height)
 		vk::DescriptorImageInfo imageInfo{};
 		imageInfo
 			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-			.setImageView(attachments[i]->GetView())
+			.setImageView(attachments[i])
 			.setSampler(quadSampler);
 
 		vk::WriteDescriptorSet descriptorWrite{};
@@ -78,14 +77,4 @@ RGbuffer::RGbuffer(uint32 width, uint32 height)
 		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 	}
 }
-
-void RGbuffer::TransitionForWrite(vk::CommandBuffer* cmdBuffer)
-{
-	PROFILE_SCOPE(Renderer);
-
-	for (auto& att : attachments) {
-		att->TransitionForWrite(cmdBuffer);
-	}
-}
-
 } // namespace vl

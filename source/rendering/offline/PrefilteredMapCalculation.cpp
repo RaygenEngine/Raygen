@@ -81,7 +81,7 @@ void PrefilteredMapCalculation::MakeDesciptors()
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(m_envmapAsset->skybox.Lock().cubemap->GetView())
+		.setImageView(m_envmapAsset->skybox.Lock().cubemap)
 		.setSampler(quadSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -102,7 +102,7 @@ void PrefilteredMapCalculation::MakeRenderPass()
 {
 	vk::AttachmentDescription colorAttachmentDesc{};
 	colorAttachmentDesc
-		.setFormat(m_envmapAsset->skybox.Lock().cubemap->GetFormat()) //
+		.setFormat(m_envmapAsset->skybox.Lock().cubemap.format) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -166,13 +166,13 @@ void PrefilteredMapCalculation::AllocateCubeVertexBuffer()
 
 
 	// device local
-	m_cubeVertexBuffer = std::make_unique<RBuffer>(vertexBufferSize,
-		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-		vk::MemoryPropertyFlagBits::eDeviceLocal);
+	m_cubeVertexBuffer
+		= RBuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+			  vk::MemoryPropertyFlagBits::eDeviceLocal };
 
 
 	// copy from host to device local
-	m_cubeVertexBuffer->CopyBuffer(vertexStagingbuffer);
+	m_cubeVertexBuffer.CopyBuffer(vertexStagingbuffer);
 }
 
 void PrefilteredMapCalculation::MakePipeline()
@@ -342,19 +342,18 @@ void PrefilteredMapCalculation::PrepareFaceInfo()
 			// reisze framebuffer according to mip-level size.
 			uint32 mipResolution = m_resolution / static_cast<uint32>(std::round((std::pow(2, mip))));
 
-			m_cubemapMips[mip].faceAttachments[i] = std::make_unique<RImageAttachment>("face" + i, mipResolution,
-				mipResolution, m_envmapAsset->skybox.Lock().cubemap->GetFormat(), vk::ImageTiling::eOptimal,
-				vk::ImageLayout::eUndefined,
+			m_cubemapMips[mip].faceAttachments[i] = RImageAttachment{ mipResolution, mipResolution,
+				m_envmapAsset->skybox.Lock().cubemap.format, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc,
-				vk::MemoryPropertyFlagBits::eDeviceLocal);
-			m_cubemapMips[mip].faceAttachments[i]->BlockingTransitionToLayout(
+				vk::MemoryPropertyFlagBits::eDeviceLocal, "face" + i };
+			m_cubemapMips[mip].faceAttachments[i].BlockingTransitionToLayout(
 				vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
 			vk::FramebufferCreateInfo createInfo{};
 			createInfo
 				.setRenderPass(m_renderPass.get()) //
 				.setAttachmentCount(1u)
-				.setPAttachments(&m_cubemapMips[mip].faceAttachments[i]->GetView())
+				.setPAttachments(&vk::ImageView(m_cubemapMips[mip].faceAttachments[i]))
 				.setWidth(mipResolution)
 				.setHeight(mipResolution)
 				.setLayers(1);
@@ -446,7 +445,7 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 
 					PushConstant pc{ //
 						m_captureProjection * glm::mat4(glm::mat3(m_captureViews[i])), a,
-						static_cast<float>(m_envmapAsset->skybox.Lock().cubemap->GetExtent2D().width)
+						static_cast<float>(m_envmapAsset->skybox.Lock().cubemap.extent.width)
 					};
 
 					// Submit via push constant (rather than a UBO)
@@ -454,7 +453,7 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 						vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant),
 						&pc);
 
-					vk::Buffer vertexBuffers[] = { *m_cubeVertexBuffer };
+					vk::Buffer vertexBuffers[] = { m_cubeVertexBuffer };
 					vk::DeviceSize offsets[] = { 0 };
 					// geom
 					m_cmdBuffers[i].bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
@@ -529,13 +528,13 @@ void PrefilteredMapCalculation::EditPods()
 
 			auto& img = m_cubemapMips[mip].faceAttachments[i];
 
-			img->BlockingTransitionToLayout(
+			img.BlockingTransitionToLayout(
 				vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
 
 			RBuffer stagingbuffer{ vk::DeviceSize(size), vk::BufferUsageFlagBits::eTransferDst,
 				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
-			img->CopyImageToBuffer(stagingbuffer);
+			img.CopyImageToBuffer(stagingbuffer);
 
 			void* data = Device->mapMemory(stagingbuffer.GetMemory(), 0, VK_WHOLE_SIZE, {});
 

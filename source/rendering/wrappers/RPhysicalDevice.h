@@ -1,6 +1,4 @@
 #pragma once
-//#define VK_ENABLE_BETA_EXTENSIONS
-#include <vulkan/vulkan.hpp>
 
 namespace vl {
 struct QueueFamily {
@@ -9,7 +7,7 @@ struct QueueFamily {
 };
 
 // Info about a physical device and a given surface (support details)
-struct RPhysicalDevice : public vk::PhysicalDevice {
+struct RPhysicalDevice : vk::PhysicalDevice {
 
 	float rating{ 0.0f };
 
@@ -17,7 +15,6 @@ struct RPhysicalDevice : public vk::PhysicalDevice {
 	std::vector<QueueFamily> transferFamilies;
 	std::vector<QueueFamily> computeFamilies;
 	std::vector<QueueFamily> presentFamilies;
-
 
 	RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surface);
 

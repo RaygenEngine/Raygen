@@ -6,7 +6,7 @@
 namespace vl {
 RBuffer::RBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
 	vk::MemoryAllocateFlags allocFlags)
-	: m_size(size)
+	: size(size)
 {
 	vk::BufferCreateInfo bufferInfo{};
 	bufferInfo
@@ -46,7 +46,7 @@ void RBuffer::CopyBuffer(const RBuffer& other)
 	Device->dmaCmdBuffer.begin(beginInfo);
 
 	vk::BufferCopy copyRegion{};
-	copyRegion.setSize(other.m_size);
+	copyRegion.setSize(other.size);
 
 	Device->dmaCmdBuffer.copyBuffer(other, m_handle.get(), 1, &copyRegion);
 
