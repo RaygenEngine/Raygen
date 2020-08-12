@@ -33,7 +33,7 @@
 #include <entt/src/entt/entity/registry.hpp>
 
 namespace fs = std::filesystem;
-
+namespace ch = std::chrono;
 // Engine stuff
 
 #include "assets/PodHandle.h"

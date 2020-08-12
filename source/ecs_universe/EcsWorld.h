@@ -2,6 +2,8 @@
 #include "ecs_universe/BasicComponent.h"
 #include "ecs_universe/Entity.h"
 
+#include "core/FrameClock.h"
+
 struct HiddenFlagComp {
 };
 
@@ -11,9 +13,11 @@ struct CDestroyFlag {
 class ECS_World {
 private:
 	void LoadFromSrcPath();
+	FrameClock clock;
 
 public:
 	entt::registry reg;
+
 
 	fs::path srcPath;
 	ECS_World(const fs::path& path = {});
@@ -21,6 +25,7 @@ public:
 	// If path is empty uses the original srcPath as path
 	void SaveToDisk(const fs::path& path = {}, bool updateSrcPath = false);
 
+	[[nodiscard]] const FrameClock& GetClock() const noexcept { return clock; }
 
 	Entity CreateEntity(const std::string& name = "")
 	{

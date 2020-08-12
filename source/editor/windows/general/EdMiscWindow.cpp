@@ -9,6 +9,7 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneDirectionalLight.h"
 #include "rendering/scene/SceneSpotlight.h"
+#include "engine/Events.h"
 
 #include <imgui/imgui.h>
 

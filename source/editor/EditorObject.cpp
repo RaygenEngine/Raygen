@@ -12,12 +12,12 @@
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
-#include "universe/nodes/geometry/GeometryNode.h"
-#include "universe/nodes/RootNode.h"
 #include "universe/Universe.h"
-#include "universe/WorldOperationsUtl.h"
 #include "editor/windows/general/EdEcsOutlinerWindow.h"
 #include "ecs_universe/EcsWorld.h"
+#include "engine/Events.h"
+#include "rendering/scene/Scene.h"
+
 #include <imguicolortextedit/TextEditor.h>
 
 
@@ -30,39 +30,10 @@ EditorObject_::EditorObject_()
 {
 	ImguiImpl::InitContext();
 
-	m_nodeContextActions = std::make_unique<NodeContextActions>();
-
-	Event::OnWorldNodeRemoved.Bind(this, [&](Node* node) {
-		if (node == m_selectedNode) {
-			if (node->GetParent()) {
-				m_selectedNode = node->GetParent();
-			}
-			else {
-				m_selectedNode = nullptr;
-			}
-		}
-		if (node == m_editorCamera) {
-			m_editorCamera = nullptr;
-		}
-	});
-
-	Event::OnWorldLoaded.Bind(this, [&] {
-		SpawnEditorCamera();
-		m_selectedNode = nullptr;
-	});
 
 	edCamera.InjectToScene(Scene); // WIP: EDCAM
 
 	MakeMainMenu();
-}
-
-Node* EditorObject_::GetSelectedNode()
-{
-	auto editor = EditorObject;
-	//	if (editor && Engine.IsEditorActive()) {
-	return editor->m_selectedNode;
-	//}
-	return nullptr;
 }
 
 void EditorObject_::MakeMainMenu()
@@ -194,14 +165,15 @@ void EditorObject_::UpdateEditor()
 	}
 	m_deferredCommands.clear();
 
-	if (m_editorCamera) {
-		// m_editorCamera->UpdateFromEditor(Universe::GetMainWorld()->GetDeltaTime());
-	}
+	// if (m_editorCamera) {
+	// m_editorCamera->UpdateFromEditor(Universe::GetMainWorld()->GetDeltaTime());
+	//}
 
 	edCamera.Update(1.f / std::max(Engine.GetFPS(), 1.f));
 	edCamera.EnqueueUpdateCmds(Scene);
 	HandleInput();
 
+	ImguiImpl::NewFrame();
 	Dockspace();
 	UpdateViewportCoordsFromDockspace();
 
@@ -289,7 +261,7 @@ void EditorObject_::OpenLoadDialog()
 {
 	if (auto file = ed::NativeFileBrowser::OpenFile({ "json" })) {
 		m_updateWorld = false;
-		m_selectedNode = nullptr;
+		// m_selectedNode = nullptr;
 		ed::EcsOutlinerWindow::selected = {};
 
 		Universe::ECS_LoadMainWorld(*file);
@@ -313,32 +285,12 @@ void EditorObject_::OnEnableEditor()
 
 void EditorObject_::OnPlay()
 {
-	// WIP: ECS
-	// if (m_editorCamera) {
-	//	m_editorCameraCachedMatrix = m_editorCamera->GetNodeTransformWCS();
-	//	m_hasEditorCameraCachedMatrix = true;
-	//	Universe::GetMainWorld()->DeleteNode(m_editorCamera);
-	//}
-	// m_hasRestoreSave = false;
-	// if (m_autoRestoreWorld) {
-	//	SceneSave::SaveAs(Universe::GetMainWorld(), "__scene.tmp");
-	//	m_hasRestoreSave = true;
-	//}
+	// TODO: ECS
 }
 
 void EditorObject_::OnStopPlay()
 {
 	// WIP: ECS
-
-	// if (!m_updateWorld) {
-	//	if (!m_editorCamera) {
-	//		SpawnEditorCamera();
-	//		m_editorCamera->SetNodeTransformWCS(m_editorCameraCachedMatrix);
-	//	}
-	//}
-	// if (m_autoRestoreWorld && m_hasRestoreSave) {
-	//	Universe::LoadMainWorld("__scene.tmp");
-	//}
 }
 
 void EditorObject_::Run_MenuBar()
@@ -379,12 +331,12 @@ void EditorObject_::Run_MenuBar()
 void EditorObject_::HandleInput()
 {
 	if (Input.IsDown(Key::LeftShift) && Input.IsJustPressed(Key::F)) {
-		PilotThis(m_selectedNode);
+		// PilotThis(m_selectedNode);
 	}
 	else if (Input.IsDown(Key::F)) {
-		if (m_selectedNode) {
-			FocusNode(m_selectedNode);
-		}
+		// if (m_selectedNode) {
+		// FocusNode(m_selectedNode);
+		//}
 	}
 
 	if (!Input.IsDown(Key::Mouse_RightClick)) {
@@ -453,89 +405,65 @@ void EditorObject_::NewLevel()
 	Universe::ECS_LoadMainWorld("");
 }
 
-
-void EditorObject_::SelectNode(Node* node)
-{
-	EditorObject->m_selectedNode = node;
-}
-
-void EditorObject_::MoveSelectedUnder(Node* node)
-{
-	if (EditorObject->m_selectedNode != EditorObject->m_editorCamera) {
-		worldop::MakeChildOf(node, EditorObject->m_selectedNode);
-	}
-}
-
-void EditorObject_::Duplicate(Node* node)
-{
-	// WIP: ECS
-	// PushCommand([node]() { Universe::GetMainWorld()->DeepDuplicateNode(node); });
-}
-
-void EditorObject_::Delete(Node* node)
-{
-	// WIP: ECS
-	// PushCommand([node]() { Universe::GetMainWorld()->DeleteNode(node); });
-}
-
-void EditorObject_::PilotThis(Node* node)
-{
-	auto camera = EditorObject->m_editorCamera;
-	if (!camera) {
-		LOG_WARN("Only possible to pilot nodes if there is an editor camera");
-		return;
-	}
-
-	bool wasPiloting = EditorObject->IsCameraPiloting();
-
-	if (camera->GetParent() == node || node == nullptr) {
-		if (!wasPiloting) {
-			return;
-		}
-		worldop::MakeChildOf(Universe::GetMainWorld()->GetRoot(), camera);
-		camera->SetNodeTransformWCS(EditorObject->m_editorCameraPrePilotPos);
-		return;
-	}
-
-	if (!wasPiloting) {
-		EditorObject->m_editorCameraPrePilotPos = camera->GetNodeTransformWCS();
-	}
-	worldop::MakeChildOf(node, camera);
-	camera->SetNodeTransformWCS(node->GetNodeTransformWCS());
-}
-
-void EditorObject_::FocusNode(Node* node)
-{
-	if (!node) {
-		return;
-	}
-	auto cam = EditorObject->m_editorCamera;
-	if (!cam) {
-		return;
-	}
-	auto trans = node->GetNodePositionWCS();
-	cam->SetNodePositionWCS(trans);
-
-	float dist = 1.f;
-	// WIP: ECS
-	// if (node->IsA<GeometryNode>()) {
-	//	auto geom = static_cast<GeometryNode*>(node);
-	//	auto min = geom->GetAABB().min;
-	//	auto max = geom->GetAABB().max;
-	//	dist = glm::abs(min.x - max.x) + glm::abs(min.y - max.y);
-
-	//	cam->SetNodePositionWCS(geom->GetAABB().GetCenter());
-	//}
-	cam->AddNodePositionOffsetWCS(glm::vec3(-1.f, 0.25f, 0.f) * dist);
-	cam->SetNodeLookAtWCS(node->GetNodePositionWCS());
-}
-
-void EditorObject_::TeleportToCamera(Node* node)
-{
-	auto camera = Universe::GetMainWorld()->GetActiveCamera();
-	if (camera) {
-		auto newMat = math::transformMat(
-			node->GetNodeScaleWCS(), camera->GetNodeOrientationWCS(), camera->GetNodePositionWCS());
-		node->SetNodeTransformWCS(newMat);
-	}
-}
+// WIP: ECS
+// void EditorObject_::PilotThis(Node* node)
+//{
+//	auto camera = EditorObject->m_editorCamera;
+//	if (!camera) {
+//		LOG_WARN("Only possible to pilot nodes if there is an editor camera");
+//		return;
+//	}
+//
+//	bool wasPiloting = EditorObject->IsCameraPiloting();
+//
+//	if (camera->GetParent() == node || node == nullptr) {
+//		if (!wasPiloting) {
+//			return;
+//		}
+//		worldop::MakeChildOf(Universe::GetMainWorld()->GetRoot(), camera);
+//		camera->SetNodeTransformWCS(EditorObject->m_editorCameraPrePilotPos);
+//		return;
+//	}
+//
+//	if (!wasPiloting) {
+//		EditorObject->m_editorCameraPrePilotPos = camera->GetNodeTransformWCS();
+//	}
+//	worldop::MakeChildOf(node, camera);
+//	camera->SetNodeTransformWCS(node->GetNodeTransformWCS());
+//}
+//
+// void EditorObject_::FocusNode(Node* node)
+//{
+//	if (!node) {
+//		return;
+//	}
+//	auto cam = EditorObject->m_editorCamera;
+//	if (!cam) {
+//		return;
+//	}
+//	auto trans = node->GetNodePositionWCS();
+//	cam->SetNodePositionWCS(trans);
+//
+//	float dist = 1.f;
+//
+//	// if (node->IsA<GeometryNode>()) {
+//	//	auto geom = static_cast<GeometryNode*>(node);
+//	//	auto min = geom->GetAABB().min;
+//	//	auto max = geom->GetAABB().max;
+//	//	dist = glm::abs(min.x - max.x) + glm::abs(min.y - max.y);
+//
+//	//	cam->SetNodePositionWCS(geom->GetAABB().GetCenter());
+//	//}
+//	cam->AddNodePositionOffsetWCS(glm::vec3(-1.f, 0.25f, 0.f) * dist);
+//	cam->SetNodeLookAtWCS(node->GetNodePositionWCS());
+//}
+//
+// void EditorObject_::TeleportToCamera(Node* node)
+//{
+//	auto camera = Universe::GetMainWorld()->GetActiveCamera();
+//	if (camera) {
+//		auto newMat = math::transformMat(
+//			node->GetNodeScaleWCS(), camera->GetNodeOrientationWCS(), camera->GetNodePositionWCS());
+//		node->SetNodeTransformWCS(newMat);
+//	}
+//}

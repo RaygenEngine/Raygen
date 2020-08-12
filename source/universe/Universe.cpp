@@ -12,8 +12,6 @@ namespace {
 
 void Universe::Init(const fs::path& defaultWorldPath, const fs::path& localPath)
 {
-	MainWorld = new World(new NodeFactory());
-
 	if (!fs::exists(localPath)) {
 		if (!fs::copy_file(defaultWorldPath, localPath)) {
 			LOG_ERROR("Failed to copy default world file to local.");
@@ -26,12 +24,7 @@ void Universe::Init(const fs::path& defaultWorldPath, const fs::path& localPath)
 
 void Universe::Destroy()
 {
-	delete MainWorld;
-}
-
-void Universe::LoadMainWorld(const fs::path& path)
-{
-	worldToLoad = path;
+	delete ecsWorld;
 }
 
 void Universe::ECS_LoadMainWorld(const fs::path& path)
@@ -41,14 +34,6 @@ void Universe::ECS_LoadMainWorld(const fs::path& path)
 
 void Universe::LoadPendingWorlds()
 {
-	if (worldToLoad.has_value()) {
-		delete MainWorld;
-
-		MainWorld = new World(new NodeFactory());
-		MainWorld->LoadAndPrepareWorld(*worldToLoad);
-
-		worldToLoad.reset();
-	}
 
 	if (ecsWorldToLoad.has_value()) {
 		delete ecsWorld;

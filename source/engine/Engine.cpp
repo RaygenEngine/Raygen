@@ -11,7 +11,6 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Renderer.h"
 #include "rendering/Rendering.h"
-#include "universe/NodeFactory.h"
 #include "universe/Universe.h"
 #include "engine/console/ConsoleVariable.h"
 

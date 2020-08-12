@@ -12,8 +12,6 @@
 #include "engine/profiler/ProfileScope.h"
 #include "reflection/PodTools.h"
 #include "reflection/ReflectionTools.h"
-#include "universe/nodes/camera/CameraNode.h"
-#include "universe/nodes/Node.h"
 #include "universe/Universe.h"
 
 #include <glm/gtc/type_ptr.hpp>
@@ -34,8 +32,6 @@ namespace {
 		std::string nameBuf;
 		const char* name;
 		bool fullDisplayMat4{ false };
-
-		DirtyFlagset dirtyFlags{};
 
 		int32 id{ 1 };
 
@@ -67,9 +63,9 @@ namespace {
 				if (Inner(t, p)) {
 					didEditFlag = true;
 					if (p.GetDirtyFlagIndex() >= 0) {
-						dirtyFlags.set(p.GetDirtyFlagIndex());
+						// dirtyFlags.set(p.GetDirtyFlagIndex());
 					}
-					dirtyFlags.set(Node::DF::Properties);
+					// dirtyFlags.set(Node::DF::Properties);
 				}
 			}
 			else { // No edit version, just copy twice
