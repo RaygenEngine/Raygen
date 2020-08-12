@@ -12,9 +12,9 @@ inline struct Instance_ : public vk::Instance {
 
 	vk::UniqueDebugUtilsMessengerEXT debugUtilsMessenger;
 
-	std::vector<UniquePtr<RPhysicalDevice>> capablePhysicalDevices;
+	std::vector<RPhysicalDevice> capablePhysicalDevices;
 
-	Instance_(std::vector<const char*> requiredExtensions, GLFWwindow* window);
+	Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwindow* window);
 	~Instance_();
 } * Instance{};
 } // namespace vl

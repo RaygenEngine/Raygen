@@ -27,7 +27,7 @@ vk::UniqueRenderPass DepthmapPass::CreateCompatibleRenderPass()
 {
 	vk::AttachmentDescription depthAttachmentDesc{};
 	depthAttachmentDesc
-		.setFormat(Device->pd->FindDepthFormat()) //
+		.setFormat(Device->FindDepthFormat()) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -150,8 +150,8 @@ namespace {
 		return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 	}
 } // namespace
-vk::UniquePipeline DepthmapPass::CreatePipeline(
-	vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
+vk::UniquePipeline DepthmapPass::CreatePipeline(vk::PipelineLayout pipelineLayout, //
+	std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
 {
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
@@ -246,52 +246,28 @@ vk::UniquePipeline DepthmapPass::CreateAnimPipeline(
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
 
-void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, const glm::mat4& viewProj,
-	const std::vector<SceneGeometry*>& geometries, const std::vector<SceneAnimatedGeometry*>& animGeometries)
+void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport, vk::Rect2D scissor,
+	const glm::mat4& viewProj, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto extent = depthmap.attachment->GetExtent2D();
+	vk::CommandBufferInheritanceInfo ii{};
+	ii.setRenderPass(Layouts->depthRenderPass.get()) //
+		.setFramebuffer({})                          // VK_NULL_HANDLE
+		.setSubpass(0u);
 
-	vk::Rect2D scissor{};
+	vk::CommandBufferBeginInfo beginInfo{};
+	beginInfo
+		.setFlags(vk::CommandBufferUsageFlagBits::eRenderPassContinue) //
+		.setPInheritanceInfo(&ii);
 
-	scissor
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
-
-	auto vpSize = extent;
-
-	vk::Viewport viewport{};
-	viewport
-		.setX(0) //
-		.setY(0)
-		.setWidth(static_cast<float>(vpSize.width))
-		.setHeight(static_cast<float>(vpSize.height))
-		.setMinDepth(0.f)
-		.setMaxDepth(1.f);
-
-	vk::RenderPassBeginInfo renderPassInfo{};
-	renderPassInfo
-		.setRenderPass(Layouts->depthRenderPass.get()) //
-		.setFramebuffer(depthmap.framebuffer.get());
-	renderPassInfo.renderArea
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
-
-	vk::ClearValue clearValues = {};
-	clearValues.setDepthStencil({ 1.0f, 0 });
-	renderPassInfo
-		.setClearValueCount(1u) //
-		.setPClearValues(&clearValues);
-
-	// begin render pass
-	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+	cmdBuffer->begin(beginInfo);
 	{
 
 		cmdBuffer->setViewport(0, { viewport });
 		cmdBuffer->setScissor(0, { scissor });
 
-		for (auto geom : geometries) {
+		for (auto geom : sceneDesc->geometries.elements) {
 			if (!geom) {
 				continue;
 			}
@@ -307,7 +283,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 					[[unlikely]] { continue; }
 				auto& plLayout = *arch.depth.pipelineLayout;
 
-				vk::Buffer vertexBuffers[] = { *gg.vertexBuffer };
+				vk::Buffer vertexBuffers[] = { gg.vertexBuffer };
 				vk::DeviceSize offsets[] = { 0 };
 				// bind the graphics pipeline
 				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.depth.pipeline);
@@ -319,7 +295,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 				cmdBuffer->bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
 
 				// indices
-				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
+				cmdBuffer->bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);
 
 
 				if (mat.hasDescriptorSet) {
@@ -331,7 +307,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 			}
 		}
 
-		for (auto geom : animGeometries) {
+		for (auto geom : sceneDesc->animatedGeometries.elements) {
 			if (!geom) {
 				continue;
 			}
@@ -354,21 +330,19 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, RDepthmap& depthmap, 
 						vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
 				}
 
-				cmdBuffer->bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
+				// cmdBuffer->bindDescriptorSets(
+				//	vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
 				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
-					&geom->descSets[Renderer_::currentFrame], 0u, nullptr);
+					&geom->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
-				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
-				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
-
+				cmdBuffer->bindVertexBuffers(0u, { gg.vertexBuffer }, { 0 });
+				cmdBuffer->bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);
 
 				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 			}
 		}
 	}
-	// end render pass
-	cmdBuffer->endRenderPass();
+	cmdBuffer->end();
 }
 } // namespace vl

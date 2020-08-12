@@ -35,17 +35,17 @@ GpuSkinnedMesh::GpuSkinnedMesh(PodHandle<SkinnedMesh> podHandle)
 		indexStagingbuffer.UploadData(gg.indices.data(), indexBufferSize);
 
 		// device local
-		vgg.vertexBuffer.reset(new RBuffer(vertexBufferSize,
-			vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-			vk::MemoryPropertyFlagBits::eDeviceLocal));
+		vgg.vertexBuffer
+			= RBuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+				  vk::MemoryPropertyFlagBits::eDeviceLocal };
 
-		vgg.indexBuffer.reset(
-			new RBuffer(indexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
-				vk::MemoryPropertyFlagBits::eDeviceLocal));
+		vgg.indexBuffer
+			= RBuffer{ indexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
+				  vk::MemoryPropertyFlagBits::eDeviceLocal };
 
 		// copy from host to device local
-		vgg.vertexBuffer->CopyBuffer(vertexStagingbuffer);
-		vgg.indexBuffer->CopyBuffer(indexStagingbuffer);
+		vgg.vertexBuffer.CopyBuffer(vertexStagingbuffer);
+		vgg.indexBuffer.CopyBuffer(indexStagingbuffer);
 
 		vgg.indexCount = static_cast<uint32>(gg.indices.size());
 

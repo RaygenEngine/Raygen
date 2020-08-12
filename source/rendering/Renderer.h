@@ -1,19 +1,14 @@
 #pragma once
 #include "engine/Listener.h"
 #include "rendering/out/CopyHdrTexture.h"
-#include "rendering/out/WriteEditor.h"
 #include "rendering/ppt/PtCollection.h"
+#include "rendering/scene/Scene.h"
 #include "rendering/wrappers/RGbuffer.h"
 
 namespace vl {
-using SemVec = std::vector<vk::Semaphore>;
+
 
 inline class Renderer_ : public Listener {
-
-	//
-	// Framebuffer size, Window size, recommended framebuffer size and more
-	//
-
 	// The recommended framebuffer allocation size for the viewport.
 	vk::Extent2D m_viewportFramebufferSize{};
 
@@ -22,62 +17,83 @@ inline class Renderer_ : public Listener {
 
 private:
 	CopyHdrTexture m_copyHdrTexture;
-	WriteEditor m_writeEditor;
 
-	UniquePtr<RGbuffer> m_gbuffer;
+	FrameArray<RGbuffer> m_gbuffer;
 
-	std::vector<vk::CommandBuffer> m_geometryCmdBuffer;
-	std::vector<vk::CommandBuffer> m_pptCmdBuffer;
-	std::vector<vk::CommandBuffer> m_outCmdBuffer;
 
-	std::vector<vk::UniqueFence> m_inFlightFence;
-
-	std::vector<vk::UniqueSemaphore> m_renderFinishedSem;
-	std::vector<vk::UniqueSemaphore> m_imageAvailSem;
-
-	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer);
-	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer);
-	void RecordOutPass(vk::CommandBuffer* cmdBuffer, uint32 swapchainImageIndex);
+	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordOutPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
+		vk::Framebuffer outFb, vk::Extent2D outExtent);
 
 	PtCollection m_postprocCollection;
+
+
+	struct SecondaryBufferPool {
+
+		std::vector<FrameArray<vk::CommandBuffer>> sBuffers;
+
+		vk::CommandBuffer Get(uint32 frameIndex)
+		{
+			if (currBuffer > (int32(sBuffers.size()) - 1)) {
+
+				vk::CommandBufferAllocateInfo allocInfo{};
+				allocInfo.setCommandPool(Device->mainCmdPool.get())
+					.setLevel(vk::CommandBufferLevel::eSecondary)
+					.setCommandBufferCount(c_framesInFlight);
+
+				// allocate all buffers needed
+				{
+					auto buffers = Device->allocateCommandBuffers(allocInfo);
+
+					auto moveBuffersToArray = [&buffers](auto& target, size_t index) {
+						auto begin = buffers.begin() + (index * c_framesInFlight);
+						std::move(begin, begin + c_framesInFlight, target.begin());
+					};
+
+					sBuffers.push_back({});
+					moveBuffersToArray(sBuffers[currBuffer], 0);
+				}
+			}
+
+			return sBuffers[currBuffer++][frameIndex];
+		}
+
+		void Top() { currBuffer = 0; }
+
+		int32 currBuffer{ 0 };
+
+	} m_secondaryBuffersPool;
 
 protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)
 	BoolFlag m_didViewportResize;
-	BoolFlag m_didWindowResize;
 
 	void OnViewportResize();
-	void OnWindowResize();
-
-	bool m_isMinimzed{ false };
 
 public:
 	// TODO: POSTPROC post process for hdr, move those
-	std::array<vk::UniqueFramebuffer, 3> m_framebuffers;
-	std::array<UniquePtr<RImageAttachment>, 3> m_attachments;
-	std::array<UniquePtr<RImageAttachment>, 3> m_attachments2;
+	FrameArray<vk::UniqueFramebuffer> m_framebuffer;
+	FrameArray<RImageAttachment> m_attachment;
+	FrameArray<RImageAttachment> m_attachment2;
 
 	// std::array<UniquePtr<RImageAttachment>, 3> m_attachmentsDepthToUnlit;
 
-	std::array<vk::DescriptorSet, 3> m_ppDescSets;
+	FrameArray<vk::DescriptorSet> m_ppDescSet;
 	vk::UniqueRenderPass m_ptRenderpass;
 
+
+	// TODO: RT, move those
+	vk::UniqueAccelerationStructureKHR sceneAS;
+
 	Renderer_();
-	~Renderer_();
 
-	void UpdateForFrame();
+	void PrepareForFrame();
 
-	void DrawFrame();
-	void InitPipelines();
+	void DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
+		vk::Framebuffer outFb, vk::Extent2D outExtent);
 
-	inline static uint32 currentFrame{ 0 };
+	void InitPipelines(vk::RenderPass outRp);
 
-	[[nodiscard]] vk::Viewport GetSceneViewport() const;
-	[[nodiscard]] vk::Viewport GetGameViewport() const;
-
-	[[nodiscard]] vk::Rect2D GetSceneScissor() const;
-	[[nodiscard]] vk::Rect2D GetGameScissor() const;
-
-	[[nodiscard]] RGbuffer* GetGbuffer() const { return m_gbuffer.get(); }
 } * Renderer{};
 } // namespace vl

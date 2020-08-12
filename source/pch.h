@@ -24,6 +24,7 @@
 
 #include "engine/Logger.h"
 
+#define VK_ENABLE_BETA_EXTENSIONS
 #include <vulkan/vulkan.hpp>
 
 #define MAGIC_ENUM_RANGE_MIN -1
@@ -40,3 +41,10 @@ namespace ch = std::chrono;
 #include "reflection/GenMacros.h"
 
 #include "rendering/assets/GpuAssetHandle.h"
+
+constexpr size_t c_framesInFlight = 2;
+template<typename T>
+struct FrameArray : std::array<T, c_framesInFlight> {
+	FrameArray(T val) { std::memset(this, val, sizeof(T) * c_framesInFlight); }
+	FrameArray() = default;
+};

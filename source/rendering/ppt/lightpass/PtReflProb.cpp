@@ -8,6 +8,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneReflectionProbe.h"
+#include "rendering/scene/SceneCamera.h"
 
 namespace vl {
 void PtReflProb::MakeLayout()
@@ -56,21 +57,26 @@ void PtReflProb::MakePipeline()
 	Utl_CreatePipeline(gpuShader, colorBlending);
 }
 
-void PtReflProb::Draw(vk::CommandBuffer cmdBuffer, uint32 frameIndex)
+void PtReflProb::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet gbufferDescSet)
 {
-	if (!Scene->GetActiveCamera()) {
+	auto camera = sceneDesc.viewer;
+
+	if (!camera) {
 		return;
 	}
 
+	// WIP:
+	auto descSet = camera->descSet[sceneDesc.frameIndex];
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-		&Renderer->GetGbuffer()->descSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &gbufferDescSet, 0u, nullptr);
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
-		&Scene->GetActiveCameraDescSet(), 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u, &descSet, 0u, nullptr);
 
-	for (auto rp : Scene->reflProbs.elements) {
+	for (auto rp : sceneDesc->reflProbs.elements) {
 
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
 			&rp->envmap.Lock().descriptorSet, 0u, nullptr);

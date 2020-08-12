@@ -12,6 +12,7 @@ public:
 	// deconstruct them. To load a world use Universe::LoadMainWorld();
 	static void LoadPendingWorlds();
 
+	// WIP: ECS
 	static void ECS_LoadMainWorld(const fs::path& path);
 
 	inline static EcsWorld* ecsWorld;

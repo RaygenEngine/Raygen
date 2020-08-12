@@ -1,11 +1,11 @@
 #pragma once
 #include "rendering/assets/GpuAssetBase.h"
-#include "rendering/wrappers/RCubemap.h"
+#include "rendering/wrappers/RImage.h"
 
 
 namespace vl {
 struct GpuCubemap : public GpuAssetTemplate<Cubemap> {
-	UniquePtr<RCubemap> cubemap;
+	RCubemap cubemap{};
 
 	vk::DescriptorSet descriptorSet;
 

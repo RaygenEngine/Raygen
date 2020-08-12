@@ -12,7 +12,10 @@
 #include "rendering/Instance.h"
 #include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
-#include "rendering/Swapchain.h"
+#include "rendering/wrappers/RSwapchain.h"
+
+// WIP:
+#include "rendering/Layer.h"
 
 #include <imgui/imgui.h>
 #include <imgui/examples/imgui_impl_glfw.h>
@@ -279,25 +282,26 @@ void InitVulkan()
 {
 	using namespace vl;
 
-	auto physDev = Device->pd;
+	auto& physDev = Device->pd;
 	auto& device = *Device;
+	auto& swapchain = Layer->mainSwapchain;
 
 	ImGui_ImplVulkan_InitInfo init = {};
 	init.Instance = *Instance;
-	init.PhysicalDevice = *physDev;
+	init.PhysicalDevice = physDev;
 	init.Device = device;
-	init.QueueFamily = Device->graphicsQueue.familyIndex;
-	init.Queue = Device->graphicsQueue;
+	init.QueueFamily = Device->mainQueue.familyIndex;
+	init.Queue = Device->mainQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
 	init.DescriptorPool = GpuResources->descPools.GetImguiPool();
-	init.ImageCount = Swapchain->GetImageCount();
-	init.MinImageCount = Swapchain->GetImageCount();
+	init.ImageCount = c_framesInFlight;
+	init.MinImageCount = c_framesInFlight;
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init, Swapchain->GetRenderPass());
+	ImGui_ImplVulkan_Init(&init, swapchain->renderPass.get());
 
 	// CHECK: which buffer
-	auto cmdBuffer = Device->graphicsCmdBuffer;
+	auto cmdBuffer = Device->mainCmdBuffer;
 
 	//	vkCall(vkResetCommandPool(m_device, m_commandPool, 0));
 
@@ -315,8 +319,8 @@ void InitVulkan()
 
 	cmdBuffer.end();
 
-	Device->graphicsQueue.submit(1, &end_info, {});
-	Device->graphicsQueue.waitIdle();
+	Device->mainQueue.submit(1, &end_info, {});
+	Device->mainQueue.waitIdle();
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }

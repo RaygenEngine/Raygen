@@ -1,9 +1,9 @@
 #pragma once
+#include "rendering/wrappers/RBuffer.h"
 #include "rendering/wrappers/RDescriptorLayout.h"
-#include "rendering/wrappers/RImageAttachment.h"
+#include "rendering/wrappers/RImage.h"
 
 namespace vl {
-class RBuffer;
 
 // CHECK: there sure is a better way but since this is an offline calculation we don't care for now
 class IrradianceMapCalculation {
@@ -12,13 +12,13 @@ class IrradianceMapCalculation {
 
 	std::vector<vk::CommandBuffer> m_cmdBuffers;
 
-	UniquePtr<RBuffer> m_cubeVertexBuffer;
+	RBuffer m_cubeVertexBuffer;
 
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;
 
-	std::array<vk::UniqueFramebuffer, 6> m_framebuffers;
-	std::array<UniquePtr<RImageAttachment>, 6> m_faceAttachments;
+	std::array<vk::UniqueFramebuffer, 6> m_framebuffer;
+	std::array<RImageAttachment, 6> m_faceAttachments;
 
 	glm::mat4 m_captureProjection;
 	std::array<glm::mat4, 6> m_captureViews;

@@ -14,9 +14,11 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/wrappers/RGbuffer.h"
 #include "engine/console/ConsoleVariable.h"
-#include <glm/gtc/matrix_inverse.hpp>
-
+#include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/SceneCamera.h"
 #include "assets/shared/GeometryShared.h"
+
+#include <glm/gtc/matrix_inverse.hpp>
 
 namespace {
 struct PushConstant {
@@ -189,69 +191,48 @@ vk::UniquePipeline UnlitPass::CreatePipeline(
 }
 
 
-void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Extent2D extent, //
-	const std::vector<SceneGeometry*>& geometries, const std::vector<SceneAnimatedGeometry*>& animGeometries)
+void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
-	vk::Rect2D scissor{};
-	scissor
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
+	auto camera = sceneDesc.viewer;
+	if (!camera) {
+		cmdBuffer->endRenderPass();
+		return;
+	}
 
-	vk::Viewport viewport{};
-	viewport
-		.setX(0) //
-		.setY(0)
-		.setWidth(static_cast<float>(extent.width))
-		.setHeight(static_cast<float>(extent.height))
-		.setMinDepth(0.f)
-		.setMaxDepth(1.f);
-
-	cmdBuffer->setViewport(0, { viewport });
-	cmdBuffer->setScissor(0, { scissor });
-
-
-	{
-		auto camera = Scene->GetActiveCamera();
-		if (!camera) {
-			cmdBuffer->endRenderPass();
-			return;
+	for (auto geom : sceneDesc->geometries.elements) {
+		if (!geom) {
+			continue;
 		}
+		PushConstant pc{ //
+			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
+		};
 
-		for (auto geom : geometries) {
-			if (!geom) {
-				continue;
-			}
-			PushConstant pc{ //
-				geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
-			};
+		for (auto& gg : geom->model.Lock().geometryGroups) {
+			auto& mat = gg.material.Lock();
+			auto& arch = mat.archetype.Lock();
+			if (!arch.isUnlit)
+				[[likely]] { continue; }
 
-			for (auto& gg : geom->model.Lock().geometryGroups) {
-				auto& mat = gg.material.Lock();
-				auto& arch = mat.archetype.Lock();
-				if (!arch.isUnlit)
-					[[likely]] { continue; }
+			auto& plLayout = *arch.unlit.pipelineLayout;
 
-				auto& plLayout = *arch.unlit.pipelineLayout;
+			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.unlit.pipeline);
+			cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
-				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.unlit.pipeline);
-				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-				if (mat.hasDescriptorSet) {
-					cmdBuffer->bindDescriptorSets(
-						vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
-				}
-
+			if (mat.hasDescriptorSet) {
 				cmdBuffer->bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
-
-				cmdBuffer->bindVertexBuffers(0u, { *gg.vertexBuffer }, { 0 });
-				cmdBuffer->bindIndexBuffer(*gg.indexBuffer, 0, vk::IndexType::eUint32);
-
-
-				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
 			}
+
+			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u,
+				&camera->descSet[sceneDesc.frameIndex], 0u, nullptr);
+
+			cmdBuffer->bindVertexBuffers(0u, { gg.vertexBuffer }, { 0 });
+			cmdBuffer->bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);
+
+
+			cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 		}
 	}
 }

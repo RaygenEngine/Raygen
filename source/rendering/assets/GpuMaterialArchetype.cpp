@@ -137,28 +137,28 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 
 	{
 		auto createDescLayout = [&]() {
-			descLayout = std::make_unique<RDescriptorLayout>();
+			descLayout = {};
 			if (arch->descriptorSetLayout.SizeOfUbo() != 0) {
-				descLayout->AddBinding(vk::DescriptorType::eUniformBuffer,
+				descLayout.AddBinding(vk::DescriptorType::eUniformBuffer,
 					vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex);
 			}
 
 			for (uint32 i = 0; i < arch->descriptorSetLayout.samplers2d.size(); ++i) {
-				descLayout->AddBinding(vk::DescriptorType::eCombinedImageSampler,
+				descLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
 					vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex);
 			}
-			descLayout->Generate();
+			descLayout.Generate();
 		};
 
-		if (!descLayout) {
+		if (!descLayout.hasBeenGenerated) {
 			createDescLayout();
 		}
-		else if (descLayout->bindings.size() != arch->descriptorSetLayout.samplers2d.size() + 1) {
+		else if (descLayout.bindings.size() != arch->descriptorSetLayout.samplers2d.size() + 1) {
 			createDescLayout();
 		}
 	}
 
-	std::vector descLayouts = { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() };
+	std::vector descLayouts = { descLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() };
 
 	depth = CreatePassInfoOptional<DepthmapPass>(
 		"engine-data/spv/geometry/depth_map.shader", arch->depthVertBinary, arch->depthFragBinary, descLayouts);
@@ -174,7 +174,7 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 		info.shaderModules.emplace_back(CreateShaderModule(arch->gbufferFragBinary));
 		info.shaderStages = CreateShaderStages("engine-data/spv/geometry/gbuffer-anim.shader", *info.shaderModules[0]);
 		info.pipelineLayout = CreatePipelineLayout(
-			pushConstantSize, { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
+			pushConstantSize, { descLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
 								  Layouts->jointsDescLayout.setLayout.get() });
 		info.pipeline = GbufferPass::CreateAnimPipeline(*info.pipelineLayout, info.shaderStages);
 
@@ -189,7 +189,7 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 		info.shaderModules.emplace_back(CreateShaderModule(arch->depthFragBinary));
 		info.shaderStages = CreateShaderStages("engine-data/spv/geometry/depthmap-anim.shader", *info.shaderModules[0]);
 		info.pipelineLayout = CreatePipelineLayout(
-			pushConstantSize, { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
+			pushConstantSize, { descLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
 								  Layouts->jointsDescLayout.setLayout.get() });
 		info.pipeline = DepthmapPass::CreateAnimPipeline(*info.pipelineLayout, info.shaderStages);
 
@@ -208,7 +208,7 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 			info.shaderModules.emplace_back(CreateShaderModule(arch->unlitFragBinary));
 			info.shaderStages = CreateShaderStages("engine-data/spv/geometry/gbuffer.shader", *info.shaderModules[0]);
 			info.pipelineLayout = CreatePipelineLayout(
-				pushConstantSize, { descLayout->setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() });
+				pushConstantSize, { descLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get() });
 
 			info.pipeline = UnlitPass::CreatePipeline(*info.pipelineLayout, info.shaderStages);
 

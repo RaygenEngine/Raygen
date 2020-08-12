@@ -26,12 +26,12 @@ struct SceneDirectionalLight : SceneStruct {
 
 	DirectionalLight_Ubo ubo;
 
-	UniquePtr<vl::RDepthmap> shadowmap;
+	FrameArray<vl::RDepthmap> shadowmap;
 
 	glm::vec3 up;
 
 	std::string name;
 
-	void ResizeShadowmap(uint32 width, uint32 height);
+	void MaybeResizeShadowmap(uint32 width, uint32 height);
 	void UpdateBox(const math::Frustum& frustum, glm::vec3 apex);
 };

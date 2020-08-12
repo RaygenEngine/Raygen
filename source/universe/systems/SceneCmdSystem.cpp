@@ -2,7 +2,7 @@
 #include "SceneCmdSystem.h"
 
 
-void SceneCmdSystem::WriteSceneCmds(Scene_* scene, entt::registry& registry)
+void SceneCmdSystem::WriteSceneCmds(Scene* scene, entt::registry& registry)
 {
 	// Write scene creations
 	for (auto fn : Get().m_createCmds) {
@@ -25,7 +25,7 @@ void SceneCmdSystem::WriteSceneCmds(Scene_* scene, entt::registry& registry)
 	}
 }
 
-void SceneCmdSystem::WriteRecreateCmds(Scene_* scene, entt::registry& registry)
+void SceneCmdSystem::WriteRecreateCmds(Scene* scene, entt::registry& registry)
 {
 	for (auto fn : Get().m_recreateCmds) {
 		fn(scene, registry);

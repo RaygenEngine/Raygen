@@ -1,25 +1,26 @@
 #include "pch.h"
 #include "Scene.h"
 
-#include "rendering/Renderer.h"
+#include "assets/shared/GeometryShared.h"
 #include "engine/console/ConsoleVariable.h"
-#include "rendering/scene/SceneReflectionProbe.h"
+#include "rendering/assets/GpuMesh.h"
+#include "rendering/Device.h"
+#include "rendering/Renderer.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneSpotlight.h"
-#include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/SceneDirectionalLight.h"
+#include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/SceneReflectionProbe.h"
+#include "rendering/scene/SceneSpotlight.h"
 
 
-ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { Scene->BuildAll(); }, "Builds all build-able scene nodes" };
-
-void Scene_::BuildAll()
+void Scene::BuildAll()
 {
 	for (auto reflProb : reflProbs.elements) {
 		reflProb->Build();
 	}
 }
 
-void Scene_::DrainQueueForDestruction()
+void Scene::DrainQueueForDestruction()
 {
 	ExecuteCreations();
 
@@ -40,32 +41,45 @@ void Scene_::DrainQueueForDestruction()
 	cmds.erase(cmds.begin(), cmds.begin() + end);
 }
 
-Scene_::Scene_(size_t size)
-	: size(size)
+Scene::Scene()
 {
 	EnqueueEndFrame();
+	EnqueueCreateCmd<SceneCamera>();
 }
 
-vk::DescriptorSet Scene_::GetActiveCameraDescSet()
+Scene::~Scene()
 {
-	return GetActiveCamera()->descSets[vl::Renderer_::currentFrame];
+	DrainQueueForDestruction();
+	auto destroyVec = [](auto& vec) {
+		for (auto el : vec) {
+			delete el;
+		}
+	};
+
+	destroyVec(geometries.elements);
+	destroyVec(animatedGeometries.elements);
+	destroyVec(cameras.elements);
+	destroyVec(spotlights.elements);
+	destroyVec(directionalLights.elements);
+	destroyVec(reflProbs.elements);
 }
 
-void Scene_::UploadDirty()
+
+void Scene::UploadDirty(uint32 frameIndex)
 {
-	const bool primaryDirty = activeCamera > 0 && cameras.elements[activeCamera]->isDirty[vl::Renderer_::currentFrame];
+	const bool primaryDirty = activeCamera > 0 && cameras.elements[activeCamera]->isDirty[frameIndex];
 
 	for (auto cam : cameras.elements) {
-		if (cam && cam->isDirty[vl::Renderer_::currentFrame]) {
-			cam->UploadUbo(vl::Renderer_::currentFrame);
-			cam->isDirty[vl::Renderer_::currentFrame] = false;
+		if (cam && cam->isDirty[frameIndex]) {
+			cam->UploadUbo(frameIndex);
+			cam->isDirty[frameIndex] = false;
 		}
 	}
 
 	for (auto sl : spotlights.elements) {
-		if (sl && sl->isDirty[vl::Renderer_::currentFrame]) {
-			sl->UploadUbo(vl::Renderer_::currentFrame);
-			sl->isDirty[vl::Renderer_::currentFrame] = false;
+		if (sl && sl->isDirty[frameIndex]) {
+			sl->UploadUbo(frameIndex);
+			sl->isDirty[frameIndex] = false;
 		}
 	}
 
@@ -75,29 +89,29 @@ void Scene_::UploadDirty()
 			dl->UpdateBox(cameras.elements[activeCamera]->frustum, cameras.elements[activeCamera]->ubo.position);
 		}
 
-		if (dl && dl->isDirty[vl::Renderer_::currentFrame]) {
+		if (dl && dl->isDirty[frameIndex]) {
 
-			dl->UploadUbo(vl::Renderer_::currentFrame);
-			dl->isDirty[vl::Renderer_::currentFrame] = false;
+			dl->UploadUbo(frameIndex);
+			dl->isDirty[frameIndex] = false;
 		}
 	}
 
 	for (auto an : animatedGeometries.elements) {
-		if (an && an->isDirtyResize[vl::Renderer_::currentFrame]) {
-			an->ResizeJoints(vl::Renderer_::currentFrame);
-			an->isDirtyResize[vl::Renderer_::currentFrame] = false;
+		if (an && an->isDirtyResize[frameIndex]) {
+			an->ResizeJoints(frameIndex);
+			an->isDirtyResize[frameIndex] = false;
 		}
 
-		if (an && an->isDirty[vl::Renderer_::currentFrame]) {
-			an->UploadSsbo(vl::Renderer_::currentFrame);
-			an->isDirty[vl::Renderer_::currentFrame] = false;
+		if (an && an->isDirty[frameIndex]) {
+			an->UploadSsbo(frameIndex);
+			an->isDirty[frameIndex] = false;
 		}
 	}
 
 	// for (auto rp : reflProbs.elements) {
-	//	if (rp && rp->isDirty[vl::Renderer_::currentFrame]) {
-	//		rp->UploadUbo(vl::Renderer_::currentFrame);
-	//		rp->isDirty[vl::Renderer_::currentFrame] = false;
+	//	if (rp && rp->isDirty[frameIndex]) {
+	//		rp->UploadUbo(frameIndex);
+	//		rp->isDirty[frameIndex] = false;
 	//	}
 	//}
 }

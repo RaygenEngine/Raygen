@@ -1,10 +1,10 @@
 #pragma once
-
 #include "rendering/ppt/PtEntry.h"
+#include "rendering/scene/Scene.h"
+
 namespace vl {
 class PtCollection {
 	std::vector<PtEntry> m_postprocTechs;
-
 
 	template<CONC(CPostTech) T>
 	void NextTechnique()
@@ -25,7 +25,7 @@ class PtCollection {
 	void RunPrepares();
 
 public:
-	void Draw(vk::CommandBuffer buffer, uint32 frameIndex);
+	void Draw(vk::CommandBuffer buffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet gbufferDescSet);
 	void RegisterTechniques();
 };
 } // namespace vl

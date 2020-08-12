@@ -7,6 +7,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneDirectionalLight.h"
+#include "rendering/scene/SceneCamera.h"
 
 namespace vl {
 void PtDirectionalLight::MakeLayout()
@@ -55,30 +56,36 @@ void PtDirectionalLight::MakePipeline()
 	Utl_CreatePipeline(gpuShader, colorBlending);
 }
 
-void PtDirectionalLight::Draw(vk::CommandBuffer cmdBuffer, uint32 frameIndex)
+void PtDirectionalLight::Draw(
+	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet gbufferDescSet)
 {
-	if (!Scene->GetActiveCamera()) {
+	auto camera = sceneDesc.viewer;
+
+	if (!camera) {
 		return;
 	}
 
+	// WIP:
+	auto descSet = camera->descSet[sceneDesc.frameIndex];
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-		&Renderer->GetGbuffer()->descSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &gbufferDescSet, 0u, nullptr);
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
-		&Scene->GetActiveCameraDescSet(), 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u, &descSet, 0u, nullptr);
 
-	for (auto dl : Scene->directionalLights.elements) {
+	for (auto dl : sceneDesc->directionalLights.elements) {
 		if (!dl) {
 			continue;
 		}
 
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u, &dl->descSets[frameIndex], 0u, nullptr);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
+			&dl->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 3u, 1u, &dl->shadowmap->descSet, 0u, nullptr);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 3u, 1u,
+			&dl->shadowmap[sceneDesc.frameIndex].descSet, 0u, nullptr);
 
 		// draw call (triangle)
 		cmdBuffer.draw(3u, 1u, 0u, 0u);

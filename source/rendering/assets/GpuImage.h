@@ -1,11 +1,11 @@
 #pragma once
 #include "rendering/assets/GpuAssetBase.h"
-#include "rendering/wrappers/RImage2D.h"
+#include "rendering/wrappers/RImage.h"
 
 
 namespace vl {
 struct GpuImage : public GpuAssetTemplate<::Image> {
-	UniquePtr<RImage2D> image;
+	RImage2D image;
 
 	GpuImage(PodHandle<Image> podHandle);
 

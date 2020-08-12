@@ -15,6 +15,7 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/wrappers/RBuffer.h"
 
 namespace vl {
 BrdfLutCalculation::BrdfLutCalculation(GpuEnvironmentMap* envmapAsset, uint32 calculationResolution)
@@ -87,7 +88,7 @@ void BrdfLutCalculation::MakeRenderPass()
 void BrdfLutCalculation::AllocateCommandBuffers()
 {
 	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
+	allocInfo.setCommandPool(Device->mainCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(1u);
 
@@ -223,17 +224,17 @@ void BrdfLutCalculation::MakePipeline()
 
 void BrdfLutCalculation::PrepareFaceInfo()
 {
-	m_attachment = std::make_unique<RImageAttachment>("face", m_resolution, m_resolution,
-		vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+	m_attachment = RImageAttachment{ m_resolution, m_resolution, vk::Format::eR32G32B32A32Sfloat,
+		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc,
-		vk::MemoryPropertyFlagBits::eDeviceLocal);
-	m_attachment->BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+		vk::MemoryPropertyFlagBits::eDeviceLocal, "face" };
+	m_attachment.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
 	vk::FramebufferCreateInfo createInfo{};
 	createInfo
 		.setRenderPass(m_renderPass.get()) //
 		.setAttachmentCount(1u)
-		.setPAttachments(&m_attachment->GetView())
+		.setPAttachments(&vk::ImageView(m_attachment))
 		.setWidth(m_resolution)
 		.setHeight(m_resolution)
 		.setLayers(1);
@@ -299,7 +300,7 @@ void BrdfLutCalculation::RecordAndSubmitCmdBuffers()
 	vk::SubmitInfo submitInfo{};
 	submitInfo.setCommandBufferCount(1u).setPCommandBuffers(&m_cmdBuffer);
 
-	Device->graphicsQueue.submit(1u, &submitInfo, {});
+	Device->mainQueue.submit(1u, &submitInfo, {});
 
 	// CHECK:
 	Device->waitIdle();
@@ -332,12 +333,12 @@ void BrdfLutCalculation::EditPods()
 
 	auto& img = m_attachment;
 
-	img->BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
+	img.BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
 
 	RBuffer stagingbuffer{ m_resolution * m_resolution * 16u, vk::BufferUsageFlagBits::eTransferDst,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
-	img->CopyImageToBuffer(stagingbuffer);
+	img.CopyImageToBuffer(stagingbuffer);
 
 	void* data = Device->mapMemory(stagingbuffer.GetMemory(), 0, VK_WHOLE_SIZE, {});
 

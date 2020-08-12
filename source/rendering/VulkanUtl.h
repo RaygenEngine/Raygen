@@ -3,6 +3,7 @@
 #include "assets/shared/TextureShared.h"
 
 namespace vl {
+
 inline vk::Filter GetTextureFilter(TextureFiltering f)
 {
 	switch (f) {
@@ -27,8 +28,46 @@ inline vk::SamplerMipmapMode GetMipmapFilter(MipmapFiltering f)
 	switch (f) {
 		case MipmapFiltering::Nearest: return vk::SamplerMipmapMode::eNearest;
 		case MipmapFiltering::Linear: return vk::SamplerMipmapMode::eLinear;
-		case MipmapFiltering::NoMipmap: LOG_ABORT("programmer error");
+		case MipmapFiltering::NoMipmap: LOG_ABORT("Programmer error");
 		default: LOG_ABORT("Unsupported");
+	}
+}
+
+
+inline vk::Format GetFormat(ImageFormat format)
+{
+	switch (format) {
+		case ImageFormat::Hdr: return vk::Format::eR32G32B32A32Sfloat; break;
+		case ImageFormat::Srgb: return vk::Format::eR8G8B8A8Srgb; break;
+		case ImageFormat::Unorm: return vk::Format::eR8G8B8A8Unorm; break;
+		default: LOG_ABORT("Unsupported");
+	}
+}
+
+inline vk::ImageAspectFlags GetAspectMask(vk::ImageUsageFlags usage, vk::Format format)
+{
+	auto aspectMask = vk::ImageAspectFlagBits::eColor;
+
+	if (usage & vk::ImageUsageFlagBits::eDepthStencilAttachment) {
+		aspectMask = vk::ImageAspectFlagBits::eDepth;
+
+		// if has stencil component
+		if (format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint) {
+			return aspectMask | vk::ImageAspectFlagBits::eStencil;
+		}
+	}
+
+	return aspectMask;
+}
+
+inline bool IsDepthFormat(vk::Format format)
+{
+
+	switch (format) {
+		case vk::Format::eD32Sfloat:
+		case vk::Format::eD32SfloatS8Uint:
+		case vk::Format::eD24UnormS8Uint: return true;
+		default: return false;
 	}
 }
 
@@ -56,49 +95,6 @@ inline vk::PipelineStageFlags GetPipelineStage(vk::ImageLayout imL)
 		case vk::ImageLayout::eTransferDstOptimal: return vk::PipelineStageFlagBits::eTransfer;
 		case vk::ImageLayout::eDepthStencilAttachmentOptimal: return vk::PipelineStageFlagBits::eEarlyFragmentTests;
 		default: LOG_ABORT("Unsupported");
-	}
-}
-
-
-inline vk::ImageAspectFlags GetAspectMask(vk::ImageUsageFlags usage, vk::Format format)
-{
-	auto aspectMask = vk::ImageAspectFlagBits::eColor;
-
-	if (usage & vk::ImageUsageFlagBits::eDepthStencilAttachment) {
-		aspectMask = vk::ImageAspectFlagBits::eDepth;
-
-		// if has stencil component
-		if (format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint) {
-			return aspectMask | vk::ImageAspectFlagBits::eStencil;
-		}
-	}
-
-	return aspectMask;
-}
-
-inline vk::ImageAspectFlags GetAspectMask(const vk::ImageCreateInfo& ici)
-{
-	return GetAspectMask(ici.usage, ici.format);
-}
-
-inline vk::Format GetFormat(ImageFormat format)
-{
-	switch (format) {
-		case ImageFormat::Hdr: return vk::Format::eR32G32B32A32Sfloat; break;
-		case ImageFormat::Srgb: return vk::Format::eR8G8B8A8Srgb; break;
-		case ImageFormat::Unorm: return vk::Format::eR8G8B8A8Unorm; break;
-		default: LOG_ABORT("Unsupported");
-	}
-}
-
-inline bool IsDepthFormat(vk::Format format)
-{
-
-	switch (format) {
-		case vk::Format::eD32Sfloat:
-		case vk::Format::eD32SfloatS8Uint:
-		case vk::Format::eD24UnormS8Uint: return true;
-		default: return false;
 	}
 }
 } // namespace vl
