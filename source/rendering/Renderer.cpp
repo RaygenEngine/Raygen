@@ -472,6 +472,9 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 	RecordPostProcessPass(cmdBuffer, sceneDesc);
 
 	for (auto& att : m_gbuffer[sceneDesc.frameIndex].attachments) {
+		if (att.isDepth) {
+			continue;
+		}
 		att.TransitionForWrite(cmdBuffer);
 	}
 
