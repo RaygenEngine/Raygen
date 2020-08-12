@@ -6,11 +6,7 @@
 #include "ecs_universe/ComponentsDb.h"
 #include "editor/DataStrings.h"
 #include "editor/EditorObject.h"
-#include "universe/NodeFactory.h"
-#include "universe/nodes/geometry/GeometryNode.h"
-#include "universe/nodes/RootNode.h"
 #include "universe/Universe.h"
-#include "universe/WorldOperationsUtl.h"
 
 #include "editor/EdMenu.h"
 #include "editor/EdClipboardOp.h"
@@ -41,34 +37,10 @@ namespace {
 		return ent;
 	}
 } // namespace
+
 void EcsOutlinerWindow::DrawRecurseEntity(ECS_World& world, Entity ent, int32 depth)
 {
 	ImGui::PushID(static_cast<uint32>(ent.entity));
-
-
-	// if (m_renameStatus != RenameStatus::Inactive && ent == EcsOutlinerWindow::selected) {
-	//	if (m_renameStatus == RenameStatus::FirstFrame) {
-	//		ImGui::SetKeyboardFocusHere();
-	//		m_renameString = ent->name;
-	//	}
-
-	//	ImGui::SetNextItemWidth(-1.f);
-
-	//	if (ImGui::InputText("###RenameString", &m_renameString, ImGuiInputTextFlags_EnterReturnsTrue)
-	//		|| (!ImGui::IsItemFocused() && m_renameStatus == RenameStatus::OtherFrames)) {
-	//		ent->name = m_renameString;
-	//		m_renameStatus = RenameStatus::Inactive;
-	//	}
-	//	else {
-	//		m_renameStatus = RenameStatus::OtherFrames;
-	//	}
-	//}
-	// else {
-	//	if (ImGui::Selectable(str.c_str(), ent == EcsOutlinerWindow::selected)) {
-	//		EcsOutlinerWindow::selected = ent;
-	//	}
-	//}
-
 
 	ImGui::Selectable(U8(u8" " FA_EYE u8" "), false, 0, ImVec2(18.f, 0));
 	ImGui::SameLine();
@@ -145,11 +117,12 @@ void EcsOutlinerWindow::ImguiDraw()
 
 void EcsOutlinerWindow::Run_ContextPopup(ECS_World& world, Entity entity)
 {
-	// WIP: ECS
 	if (Entity ent = AddEntityMenu(world, ETXT(FA_USER_PLUS, " Add Child Entity")); ent) {
 		ent->SetParent(entity);
 		ImGui::CloseCurrentPopup();
 	}
+
+	// TODO: ECS hide components already in entity
 	if (ImGui::BeginMenu(ETXT(FA_PLUS, " Add Component"))) {
 		if (auto compType = ImEd::ComponentClassMenu(); compType) {
 			compType->emplace(*entity.registry, entity.entity);
@@ -220,49 +193,5 @@ void EcsOutlinerWindow::Run_OutlinerDropEntity(Entity entity)
 		}
 	}
 }
-
-
-// bool OutlinerWindow::Run_ContextPopup(Node* node)
-//{
-//	if (ImGui::BeginPopupContextItem("OutlinerElemContext")) {
-//		for (auto& action : EditorObject->m_nodeContextActions->GetActions(node, true)) {
-//			if (!action.IsSplitter()) {
-//				if (ImGui::MenuItem(action.name)) {
-//					action.function(node);
-//				}
-//			}
-//			else {
-//				ImGui::Separator();
-//			}
-//		}
-//		ImGui::Separator();
-//
-//		if (ImGui::BeginMenu("Add Child")) {
-//			Run_NewNodeMenu(node);
-//			ImGui::EndMenu();
-//		}
-//
-//		ImGui::EndPopup();
-//		return true;
-//	}
-//	return false;
-//}
-//
-// void OutlinerWindow::Run_OutlinerDropTarget(Node* node)
-//{
-//	// Drag Source
-//	if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-//		ImGui::SetDragDropPayload("WORLD_REORDER", &node, sizeof(Node**));
-//		ImGui::EndDragDropSource();
-//	}
-//	if (ImGui::BeginDragDropTarget()) {
-//		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("WORLD_REORDER")) {
-//			CLOG_ABORT(payload->DataSize != sizeof(Node**), "Incorrect drop operation.");
-//			Node** dropSource = reinterpret_cast<Node**>(payload->Data);
-//			worldop::MakeChildOf(node, *dropSource);
-//		}
-//		ImGui::EndDragDropTarget();
-//	}
-//}
 
 } // namespace ed

@@ -6,7 +6,6 @@
 // Base class for the custom and default "Game" class.
 // Game class provides overrides for the most important classes, functions and settings of the base engine.
 
-class NodeFactory;
 
 class App {
 protected:
@@ -38,9 +37,6 @@ public:
 	virtual void MainLoop();
 
 	virtual void WhileResizing();
-
-	// Return a 'new NodeFactory()' subtype of node factory with your own factory
-	virtual NodeFactory* MakeNodeFactory();
 
 	friend class Engine_;
 };

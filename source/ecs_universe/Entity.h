@@ -134,6 +134,5 @@ public:
 	[[nodiscard]] constexpr bool operator!=(const Entity& rhs) const noexcept { return !(operator==(rhs)); }
 
 	// Provide a "nice" interface to the common component
-	// WIP: ECS
 	BasicComponent* operator->();
 };

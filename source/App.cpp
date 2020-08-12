@@ -7,6 +7,7 @@
 #include "platform/Platform.h"
 #include "rendering/Rendering.h"
 #include "universe/Universe.h"
+#include "editor/Editor.h"
 
 #include <glfw/glfw3.h>
 
@@ -40,9 +41,6 @@ int32 App::Main(int32 argc, char* argv[])
 {
 	Engine.InitEngine(this);
 
-	Universe::LoadMainWorld(m_initialScene);
-
-
 	MainLoop();
 
 	Engine.DeinitEngine();
@@ -61,7 +59,8 @@ void App::MainLoop()
 		Input.Z_ClearFrameState();
 		Platform::PollEvents();
 
-		Universe::GetMainWorld()->Update();
+		Universe::ecsWorld->UpdateWorld();
+
 		Rendering::DrawFrame();
 
 		Engine.ReportFrameDrawn();
@@ -71,13 +70,8 @@ void App::MainLoop()
 void App::WhileResizing()
 {
 	Universe::LoadPendingWorlds();
-	Universe::GetMainWorld()->Update();
+	Universe::ecsWorld->UpdateWorld();
 
 	Rendering::DrawFrame();
 	Engine.ReportFrameDrawn();
-}
-
-NodeFactory* App::MakeNodeFactory()
-{
-	return new NodeFactory();
 }

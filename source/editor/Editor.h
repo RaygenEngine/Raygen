@@ -8,5 +8,4 @@ class Editor {
 
 public:
 	static void Update();
-	[[nodiscard]] static bool ShouldUpdateWorld();
 };

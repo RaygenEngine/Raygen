@@ -12,11 +12,12 @@
 #include "ecs_universe/systems/AnimatorSystem.h"
 #include "engine/Engine.h"
 #include "engine/Input.h"
+#include "editor/Editor.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 
-#include <nlohmann/json.hpp> // WIP: ECS
-#include <fstream>           // WIP: ECS
+#include <nlohmann/json.hpp>
+#include <fstream>
 
 
 Entity globalEnt;
@@ -112,28 +113,24 @@ void ECS_World::DestroyEntity(Entity entity)
 
 void ECS_World::UpdateWorld()
 {
+	clock.UpdateFrame();
+
 	//
 	// Game Systems
 	//
 
+	Editor::Update();
+
 	//
 	// Update Transforms
 	//
-
-	//{
-	//	auto view = reg.view<BasicComponent, DirtyMovedComp>();
-
-	//	for (auto& [ent, bs] : view.each()) {
-	//		bs.UpdateWorldTransforms();
-	//	}
-	//}
 
 
 	//
 	// Scene Commands
 	//
 
-	AnimatorSystem::UpdateAnimations(reg, 1.f / std::max(Engine.GetFPS(), 1.f));
+	AnimatorSystem::UpdateAnimations(reg, clock.deltaSeconds);
 
 	SceneCmdSystem::WriteSceneCmds(Scene, reg);
 
@@ -148,4 +145,7 @@ void ECS_World::UpdateWorld()
 		reg.destroy(ent);
 	}
 	CLOG_ERROR(reg.view<CDestroyFlag>().size(), "Error deleting");
+
+
+	Scene->EnqueueEndFrame();
 }

@@ -38,8 +38,6 @@ public:
 
 void RegisterWindows(ed::ComponentWindows& windowsComponent)
 {
-	windowsComponent.AddWindowEntry<OutlinerWindow>("Outliner");
-
 	windowsComponent.AddWindowEntry<EcsOutlinerWindow>("ECS Outliner");
 
 

@@ -3,8 +3,6 @@
 
 #include "assets/AssetRegistry.h"
 #include "reflection/ReflectionTools.h"
-#include "universe/World.h"
-#include "universe/nodes/Node.h"
 
 struct IsUserOfPodVisitor {
 	size_t uid;
@@ -70,21 +68,22 @@ std::vector<PodEntry*> FindAssetUsersOfPod(PodEntry* pod)
 
 	return results;
 }
-
-std::vector<Node*> FindNodeUsersOfPod(PodEntry* pod, World* world)
-{
-	std::vector<Node*> users;
-
-	// WIP: ECS
-	// for (Node* node : world->GetNodes()) {
-	//	IsUserOfPodVisitor v(pod);
-
-	//	refltools::CallVisitorOnEveryProperty(node, v);
-
-	//	if (v.result) {
-	//		users.push_back(node);
-	//	}
-	//}
-
-	return users;
-}
+// WIP: ECS
+//
+// std::vector<Node*> FindComponentUsersOfPod(PodEntry* pod, ECS_World& world)
+//{
+//	std::vector<Node*> users;
+//
+//
+//	// for (Node* node : world->GetNodes()) {
+//	//	IsUserOfPodVisitor v(pod);
+//
+//	//	refltools::CallVisitorOnEveryProperty(node, v);
+//
+//	//	if (v.result) {
+//	//		users.push_back(node);
+//	//	}
+//	//}
+//
+//	return users;
+//}

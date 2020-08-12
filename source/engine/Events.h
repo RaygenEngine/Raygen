@@ -11,7 +11,4 @@ inline MulticastEvent<> OnViewportUpdated;          //
 inline MulticastEvent<bool> OnWindowFocus;          // @1: newIsFocused
 inline MulticastEvent<bool> OnWindowMinimize;       // @1: newIsMinimized
 
-inline MulticastEvent<> OnWorldLoaded;
-inline MulticastEvent<Node*> OnWorldNodeAdded;
-inline MulticastEvent<Node*> OnWorldNodeRemoved;
 } // namespace Event

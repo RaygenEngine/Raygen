@@ -17,8 +17,3 @@ void Editor::Update()
 {
 	EditorObject->UpdateEditor();
 }
-
-bool Editor::ShouldUpdateWorld()
-{
-	return EditorObject->ShouldUpdateWorld();
-}
