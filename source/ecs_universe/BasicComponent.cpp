@@ -193,12 +193,12 @@ void BasicComponent::UpdateWorldTransforms()
 	}
 }
 
-void BasicComponent::TransformCache::Compose()
+void TransformCache::Compose()
 {
 	transform = math::transformMat(scale, orientation, position);
 }
 
-void BasicComponent::TransformCache::Decompose()
+void TransformCache::Decompose()
 {
 	glm::vec4 persp{};
 	glm::vec3 skew{};

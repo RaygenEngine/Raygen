@@ -36,7 +36,6 @@ namespace {
 	constexpr bool IsJsonLoadable
 		= std::is_same_v<Material, T> || std::is_same_v<Shader, T> || std::is_same_v<Sampler, T>;
 
-
 	struct ReflectionToImguiVisitor {
 		int32 depth{ 0 };
 
@@ -296,145 +295,23 @@ void PropertyEditorWindow::ImguiDraw()
 }
 
 
-void PropertyEditorWindow::Run_BaseProperties(Entity node)
+void PropertyEditorWindow::Run_BaseProperties(Entity ent)
 {
-	std::string name = node->name;
+	std::string name = ent->name;
 
 	if (ImGui::InputText("Name", &name)) {
-		node->name = name;
+		ent->name = name;
 	}
 
-	// glm::vec3 location;
-	// glm::vec3 eulerPyr;
-	// glm::vec3 scale;
+	bool changed = false;
+	auto tr = m_localMode ? ent->local() : ent->world();
 
-	// if (m_localMode) {
-	//	location = node->GetNodePositionLCS();
-	//	eulerPyr = node->GetNodeEulerAnglesLCS();
-	//	scale = node->GetNodeScaleLCS();
-	//}
-	// else {
-	//	location = node->GetNodePositionWCS();
-	//	eulerPyr = node->GetNodeEulerAnglesWCS();
-	//	scale = node->GetNodeScaleWCS();
-	//}
-
-	// const auto UpdateLookAtReference = [&]() {
-	//	auto fwd = m_localMode ? node->GetNodeForwardLCS() : node->GetNodeForwardWCS();
-	//	auto lookAt = location + fwd;
-	//	m_lookAtPos = lookAt;
-	//};
-
-	// if (m_prevNode != node) {
-	//	UpdateLookAtReference();
-	//}
-
-	// if (ImGui::DragFloat3("Position", glm::value_ptr(location), 0.01f)) {
-	//	m_localMode ? node->SetNodePositionLCS(location) : node->SetNodePositionWCS(location);
-	//}
-	// if (ImGui::BeginPopupContextItem("PositionPopup")) {
-	//	if (ImGui::MenuItem("Reset##1")) {
-	//		m_localMode ? node->SetNodePositionLCS({}) : node->SetNodePositionWCS({});
-	//	}
-	//	ImGui::EndPopup();
-	//}
-	// if (!m_lookAtMode) {
-	//	if (ImGui::DragFloat3("Rotation", glm::value_ptr(eulerPyr), 0.1f)) {
-	//		auto deltaAxis = eulerPyr - (m_localMode ? node->GetNodeEulerAnglesLCS() : node->GetNodeEulerAnglesWCS());
-	//		if (ImGui::IsAnyMouseDown()) {
-	//			// On user drag use quat diff, prevents gimbal locks while dragging
-	//			m_localMode
-	//				? node->SetNodeOrientationLCS(glm::quat(glm::radians(deltaAxis)) * node->GetNodeOrientationLCS())
-	//				: node->SetNodeOrientationWCS(glm::quat(glm::radians(deltaAxis)) * node->GetNodeOrientationWCS());
-	//		}
-	//		else {
-	//			// On user type set pyr directly, prevents the axis from flickering
-	//			m_localMode ? node->SetNodeEulerAnglesLCS(eulerPyr) : node->SetNodeEulerAnglesWCS(eulerPyr);
-	//		}
-	//	}
-	//}
-	// else {
-	//	ImGui::DragFloat3("Look At", glm::value_ptr(m_lookAtPos), 0.1f);
-	//	ImEd::HelpTooltipInline(
-	//		"Look at will lock lookat position of the selected node for as long as it is active. This way you can "
-	//		"adjust the position of your node while keeping the lookat position fixed.");
-	//	m_localMode ? node->SetNodeLookAtLCS(m_lookAtPos) : node->SetNodeLookAtWCS(m_lookAtPos);
-	//}
-
-	// if (ImGui::BeginPopupContextItem("RotatePopup")) {
-	//	if (ImGui::MenuItem("Reset##2")) {
-	//		m_localMode ? node->SetNodeOrientationLCS(glm::identity<glm::quat>())
-	//					: node->SetNodeOrientationWCS(glm::identity<glm::quat>());
-	//	}
-	//	if (ImGui::MenuItem("Look At", nullptr, m_lookAtMode)) {
-	//		m_lookAtMode = !m_lookAtMode;
-	//		if (m_lookAtMode) {
-	//			UpdateLookAtReference();
-	//		}
-	//	}
-	//	ImGui::EndPopup();
-	//}
-
-	// if (!m_lockedScale) {
-	//	if (ImGui::DragFloat3("Scale", glm::value_ptr(scale), 0.01f)) {
-	//		m_localMode ? node->SetNodeScaleLCS(scale) : node->SetNodeScaleWCS(scale);
-	//	}
-	//}
-	// else {
-	//	glm::vec3 newScale = m_localMode ? node->GetNodeScaleLCS() : node->GetNodeScaleWCS();
-	//	if (ImGui::DragFloat3("Locked Scale", glm::value_ptr(newScale), 0.01f)) {
-	//		glm::vec3 initialScale = m_localMode ? node->GetNodeScaleLCS() : node->GetNodeScaleWCS();
-
-	//		float ratio = 1.f;
-	//		if (!math::equals(newScale.x, initialScale.x)) {
-	//			ratio = newScale.x / initialScale.x;
-	//		}
-	//		else if (!math::equals(newScale.y, initialScale.y)) {
-	//			ratio = newScale.y / initialScale.y;
-	//		}
-	//		else if (!math::equals(newScale.z, initialScale.z)) {
-	//			ratio = newScale.z / initialScale.z;
-	//		}
-
-	//		ratio += 0.00001f;
-	//		m_localMode ? node->SetNodeScaleLCS(initialScale * ratio) : node->SetNodeScaleWCS(initialScale * ratio);
-	//	}
-	//}
-
-	// if (ImGui::BeginPopupContextItem("ScalePopup")) {
-	//	if (ImGui::MenuItem("Reset##3")) {
-	//		m_localMode ? node->SetNodeScaleLCS(glm::vec3(1.f)) : node->SetNodeScaleWCS(glm::vec3(1.f));
-	//	}
-	//	if (ImGui::MenuItem("Lock", nullptr, m_lockedScale)) {
-	//		m_lockedScale = !m_lockedScale;
-	//	}
-	//	ImGui::EndPopup();
-	//}
-
-	// if (ImGui::Checkbox("Local Mode", &m_localMode)) {
-	//	UpdateLookAtReference();
-	//}
-	// ImEd::HelpTooltipInline("Toggles local/global space for TRS and transform matrix editing.");
-	// ImGui::SameLine(0.f, 16.f);
-	ImGui::Checkbox("Display Matrix", &m_displayMatrix);
-	ImEd::HelpTooltipInline("Toggles visiblity and editing of matricies as a row major table.");
-
-	if (m_displayMatrix) {
-
-		glm::mat4 matrix = m_localMode ? node->local().transform : node->world().transform;
-
-		// to row major
-		auto rowMajor = glm::transpose(matrix);
-
-		bool edited = false;
-
-		edited |= ImGui::DragFloat4("mat.row[0]", glm::value_ptr(rowMajor[0]), 0.01f);
-		edited |= ImGui::DragFloat4("mat.row[1]", glm::value_ptr(rowMajor[1]), 0.01f);
-		edited |= ImGui::DragFloat4("mat.row[2]", glm::value_ptr(rowMajor[2]), 0.01f);
-		edited |= ImGui::DragFloat4("mat.row[3]", glm::value_ptr(rowMajor[3]), 0.01f);
-		if (edited) {
-			m_localMode ? node->SetNodeTransformLCS(glm::transpose(rowMajor))
-						: node->SetNodeTransformWCS(glm::transpose(rowMajor));
+	if (ImEd::TransformRun(tr, true, &m_lockedScale, &m_localMode, &m_displayMatrix, &m_lookAtMode, &m_lookAtPos)) {
+		if (m_localMode) {
+			ent->SetNodeTransformLCS(tr.transform);
+		}
+		else {
+			ent->SetNodeTransformWCS(tr.transform);
 		}
 	}
 }
@@ -444,70 +321,67 @@ void PropertyEditorWindow::Run_Components(Entity entity)
 	auto& reg = *entity.registry;
 	auto ent = entity.entity;
 
-	ReflectionToImguiVisitor visitor;
-	visitor.fullDisplayMat4 = m_displayMatrix;
+	if (ImGui::BeginChild("PropEditor_ComponentsChildWindow")) {
+		ReflectionToImguiVisitor visitor;
+		visitor.fullDisplayMat4 = m_displayMatrix;
 
-	auto map = ComponentsDb::Z_GetTypes();
+		auto map = ComponentsDb::Z_GetTypes();
 
-	ComponentsDb::VisitWithType(entity, [&](const ComponentMetaEntry& comp) {
-		map.erase(comp.entType);
+		ComponentsDb::VisitWithType(entity, [&](const ComponentMetaEntry& comp) {
+			map.erase(comp.entType);
 
-		ImGui::PushID(comp.entType);
-		auto& cl = *comp.clPtr;
-		auto data = comp.get(reg, ent);
-		CLOG_ERROR(!data, "Visited with type that was not present in the entity.");
+			ImGui::PushID(comp.entType);
+			auto& cl = *comp.clPtr;
+			auto data = comp.get(reg, ent);
+			CLOG_ERROR(!data, "Visited with type that was not present in the entity.");
 
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
-
-
-		bool remove = ImGui::Button(U8(FA_TIMES));
-		if (remove) {
-			comp.safeRemove(reg, ent);
-			ImGui::PopID();
-			return;
-		}
+			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
 
 
-		ImGui::SameLine();
-		if (ImGui::CollapsingHeader(cl.GetNameStr().c_str())) {
-			ImGui::Indent(44.f);
-			refltools::CallVisitorOnEveryPropertyEx(data, cl, visitor);
-			ImGui::Unindent(44.f);
-
-			if (visitor.didEditFlag) {
-				comp.markDirty(reg, ent);
-				visitor.didEditFlag = false;
+			bool remove = ImGui::Button(U8(FA_TIMES));
+			if (remove) {
+				comp.safeRemove(reg, ent);
+				ImGui::PopID();
+				return;
 			}
-		}
 
-		ImGui::PopID();
-	});
 
-	if (map.size()) {
-		if (ImGui::BeginPopupContextWindow()) {
-			for (auto& [id, entry] : map) {
-				if (ImGui::MenuItem(entry.clPtr->GetNameStr().c_str())) {
-					entry.emplace(reg, ent);
+			ImGui::SameLine();
+			if (ImGui::CollapsingHeader(cl.GetNameStr().c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+				ImGui::Indent(44.f);
+				refltools::CallVisitorOnEveryPropertyEx(data, cl, visitor);
+				ImGui::Unindent(44.f);
+
+				if (visitor.didEditFlag) {
+					comp.markDirty(reg, ent);
+					visitor.didEditFlag = false;
 				}
 			}
-			ImGui::EndPopup();
+
+			ImGui::PopID();
+		});
+
+		if (map.size()) {
+			if (ImGui::BeginPopupContextWindow(nullptr, ImGuiMouseButton_Right, false)) {
+				for (auto& [id, entry] : map) {
+					if (ImGui::MenuItem(entry.clPtr->GetNameStr().c_str())) {
+						entry.emplace(reg, ent);
+					}
+				}
+				ImGui::EndPopup();
+			}
 		}
+		ImGui::EndChild();
 	}
 }
 
 void PropertyEditorWindow::Run_ImGuizmo(Entity node)
 {
-	auto world = Universe::GetMainWorld();
-	auto camera = world->GetActiveCamera();
+	auto& camera = EditorObject->edCamera;
 
-	if (!camera) {
-		return;
-	}
 
-	auto cameraView = camera->GetViewMatrix();
-	auto cameraProj = camera->GetProjectionMatrix();
-
-	cameraProj[1][1] *= -1.0;
+	auto cameraView = camera.view;
+	auto cameraProj = camera.proj;
 
 	auto nodeMatrix = node->world().transform;
 

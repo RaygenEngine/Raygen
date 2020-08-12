@@ -19,33 +19,11 @@ struct DirtyMovedComp {
 struct DirtySrtComp {
 };
 
-
 struct BasicComponent {
 	friend class ComponentsDb;
 
 	std::string name;
 	Entity self;
-
-
-	struct TransformCache {
-		glm::vec3 position{};
-		glm::vec3 scale{ 1.0f, 1.0f, 1.0f };
-		glm::quat orientation{ glm::identity<glm::quat>() };
-
-		glm::mat4 transform{ glm::identity<glm::mat4>() };
-
-		[[nodiscard]] glm::vec3 up() const { return orientation * glm::vec3(0.f, -1.f, 0.f); }
-		[[nodiscard]] glm::vec3 forward() const { return orientation * glm::vec3(0.f, 0.f, -1.f); };
-		[[nodiscard]] glm::vec3 right() const { return orientation * glm::vec3(1.f, 0.f, 0.f); };
-		// pitch, yaw, roll, in degrees
-		[[nodiscard]] glm::vec3 pyr() const { return glm::degrees(glm::eulerAngles(orientation)); }
-
-
-		// Updates transform from TRS
-		void Compose();
-		// Updates TRS from transform
-		void Decompose();
-	};
 
 
 	void UpdateWorldTransforms();
