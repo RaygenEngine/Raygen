@@ -1,9 +1,6 @@
 #pragma once
 #include "rendering/wrappers/DescriptorLayout.h"
 
-#include <vulkan/vulkan.hpp>
-#include <unordered_map>
-
 namespace vl {
 class DescPoolAllocator {
 	static constexpr size_t c_setsPerPool = 100;

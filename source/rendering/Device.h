@@ -1,8 +1,6 @@
 #pragma once
 #include "rendering/wrappers/PhysicalDevice.h"
 
-#include <vulkan/vulkan.hpp>
-
 namespace vl {
 struct DeviceQueue : public vk::Queue {
 	uint32 familyIndex;
@@ -21,26 +19,26 @@ struct SwapchainSupportDetails {
 inline struct Device_ : public vk::Device {
 
 	// graphics / transfer / compute / present
-	DeviceQueue mainQueue;
+	DeviceQueue graphicsQueue;
 	// async dma between host and device, PERF: should be used only for host to device transfers, device to device
-	// transfers may be faster using the mainQueue
+	// transfers may be faster using the graphicsQueue
 	DeviceQueue dmaQueue;
-	// compute dedicated (TODO: compare)
+	// compute dedicated
 	DeviceQueue computeQueue;
 	// present queue
 	DeviceQueue presentQueue;
 
 	RPhysicalDevice& pd;
 
-	vk::UniqueCommandPool mainCmdPool;
+	vk::UniqueCommandPool graphicsCmdPool;
 	vk::UniqueCommandPool dmaCmdPool;
 	vk::UniqueCommandPool computeCmdPool;
 
-	vk::CommandBuffer mainCmdBuffer;
+	vk::CommandBuffer graphicsCmdBuffer;
 	vk::CommandBuffer dmaCmdBuffer;
 	vk::CommandBuffer computeCmdBuffer;
 
-	Device_(RPhysicalDevice& pd, std::vector<const char*> deviceExtensions);
+	Device_(RPhysicalDevice& pd);
 	~Device_();
 
 

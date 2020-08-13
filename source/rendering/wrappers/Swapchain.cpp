@@ -82,7 +82,7 @@ RSwapchain::RSwapchain(vk::SurfaceKHR surface)
 		.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
 
 	// graphics and present families for swapchain image concurrency
-	auto mainQueueFamily = Device->mainQueue.familyIndex;
+	auto mainQueueFamily = Device->graphicsQueue.familyIndex;
 	auto presentQueueFamily = Device->presentQueue.familyIndex;
 
 	uint32 queueFamilyIndices[] = { mainQueueFamily, presentQueueFamily };
