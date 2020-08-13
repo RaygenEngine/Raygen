@@ -63,6 +63,10 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 		.setLayerCount(arrayLayers);
 
 	view = Device->createImageViewUnique(viewInfo);
+
+	DEBUG_NAME(image, name);
+	DEBUG_NAME(view, name + ".view");
+	DEBUG_NAME(memory, name + ".mem");
 }
 
 void RImage::CopyBufferToImage(const RBuffer& buffer)
