@@ -76,36 +76,47 @@ VkBool32 DebugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity
 	return false;
 }
 
-bool CheckLayers(std::vector<char const*> const& layers, std::vector<vk::LayerProperties> const& properties)
+bool CheckLayersRemove(std::vector<char const*>& layers, std::vector<vk::LayerProperties> const& properties)
 {
-	// return true if all layers are listed in the properties
-	return std::all_of(layers.begin(), layers.end(), [&properties](char const* name) {
-		return std::find_if(properties.begin(), properties.end(), [&name](vk::LayerProperties const& property) {
+	std::erase_if(layers, [&properties](char const* name) {
+		auto found = std::find_if(properties.begin(), properties.end(), [&name](vk::LayerProperties const& property) {
 			return strcmp(property.layerName, name) == 0;
 		}) != properties.end();
+		CLOG_WARN(!found, "Requested Vulkan Validation layer not found: {}", name);
+		return !found; // erase if not found
+	});
+
+	return layers.size() != 0;
+}
+
+void CheckExtensions(const std::vector<char const*>& extensions, std::vector<vk::ExtensionProperties> const& properties)
+{
+	std::for_each(extensions.begin(), extensions.end(), [&properties](char const* name) {
+		auto found = std::find_if(properties.begin(), properties.end(),
+						 [&name](vk::ExtensionProperties const& property) {
+							 return strcmp(property.extensionName, name) == 0;
+						 })
+					 != properties.end();
+		CLOG_ABORT(!found, "Requested Vulkan instance extension not found: {}", name);
+		return found;
 	});
 }
+
 } // namespace
 
 namespace vl {
 Instance_::Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwindow* window)
 {
-	auto allExtensions = requiredExtensions;
-	allExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-	allExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-
-	// ray tracing required extensions
-	allExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-
-	const auto instanceLayerProperties = vk::enumerateInstanceLayerProperties();
-
-	/* VULKAN_KEY_START */
-
 	std::vector<char const*> instanceLayerNames = { "VK_LAYER_KHRONOS_validation" };
+	const bool foundAnyLayers = CheckLayersRemove(instanceLayerNames, vk::enumerateInstanceLayerProperties());
 
-	const bool foundLayers = CheckLayers(instanceLayerNames, instanceLayerProperties);
-	CLOG_WARN(!foundLayers, "Vulkan Validation layers not found.");
-
+	auto allExtensions = requiredExtensions;
+	if (foundAnyLayers) {
+		allExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+	}
+	// ray tracing required extension
+	allExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+	CheckExtensions(allExtensions, vk::enumerateInstanceExtensionProperties());
 
 	// create instance
 	vk::ApplicationInfo appInfo{};
@@ -122,7 +133,7 @@ Instance_::Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwi
 		.setEnabledExtensionCount(static_cast<uint32>(allExtensions.size()))
 		.setPpEnabledExtensionNames(allExtensions.data());
 
-	if (foundLayers) {
+	if (foundAnyLayers) {
 		createInfo
 			.setEnabledLayerCount(static_cast<uint32>(instanceLayerNames.size())) //
 			.setPpEnabledLayerNames(instanceLayerNames.data());
@@ -132,7 +143,7 @@ Instance_::Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwi
 
 	VulkanLoader::InitLoaderWithInstance(*this);
 
-	if (foundLayers) {
+	if (foundAnyLayers) {
 		pfnVkCreateDebugUtilsMessengerEXT
 			= reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(getProcAddr("vkCreateDebugUtilsMessengerEXT"));
 		if (!pfnVkCreateDebugUtilsMessengerEXT) {
@@ -150,7 +161,7 @@ Instance_::Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwi
 		vk::DebugUtilsMessageTypeFlagsEXT messageTypeFlags(vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral
 														   | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance
 														   | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation);
-		debugUtilsMessenger = createDebugUtilsMessengerEXTUnique(
+		debugUtilsMessenger = createDebugUtilsMessengerEXT(
 			vk::DebugUtilsMessengerCreateInfoEXT({}, severityFlags, messageTypeFlags, &DebugMessageFunc));
 	}
 
@@ -164,18 +175,14 @@ Instance_::Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwi
 	auto deviceHandles = enumeratePhysicalDevices();
 
 	for (const auto dH : deviceHandles) {
-		auto pd = RPhysicalDevice{ dH, surface };
-		// if capable
-		if (pd.rating > 0.f) {
-			capablePhysicalDevices.emplace_back(std::move(pd));
-		}
+		physicalDevices.emplace_back(dH, surface);
 	}
 }
 
 Instance_::~Instance_()
 {
 	destroySurfaceKHR(surface);
-	debugUtilsMessenger.reset();
+	destroyDebugUtilsMessengerEXT(debugUtilsMessenger);
 	destroy();
 }
 } // namespace vl

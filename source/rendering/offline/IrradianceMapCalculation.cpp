@@ -147,7 +147,7 @@ void IrradianceMapCalculation::MakeRenderPass()
 void IrradianceMapCalculation::AllocateCommandBuffers()
 {
 	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->mainCmdPool.get())
+	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(6u);
 
@@ -460,7 +460,7 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 		vk::SubmitInfo submitInfo{};
 		submitInfo.setCommandBufferCount(1u).setPCommandBuffers(&m_cmdBuffers[i]);
 
-		Device->mainQueue.submit(1u, &submitInfo, {});
+		Device->graphicsQueue.submit(1u, &submitInfo, {});
 	}
 
 	// CHECK:

@@ -34,34 +34,17 @@ Layer_::Layer_()
 
 	Instance = new Instance_(Platform::GetVulkanExtensions(), Platform::GetMainHandle());
 
-	// TODO: extension loading from pd structs in pNext*
-	const auto deviceExtensions = {
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-		VK_KHR_MAINTENANCE1_EXTENSION_NAME,
-		// ray tracing device extensions
-		VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
-		VK_KHR_MAINTENANCE3_EXTENSION_NAME,
-		VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
-		VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
-		VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
-		VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
-		VK_KHR_RAY_TRACING_EXTENSION_NAME,
-	};
-
-	Device = new Device_(Instance->capablePhysicalDevices[0], deviceExtensions);
+	Device = new Device_(Instance->physicalDevices[0]);
 
 	GpuResources = new GpuResources_();
 	GpuAssetManager = new GpuAssetManager_();
 
 	Layouts = new Layouts_();
 
+	mainSwapchain = new RSwapchain(Instance->surface);
 
-	mainSwapchain = std::make_unique<RSwapchain>(Instance->surface);
-
-
-	// TODO: scene is not a global
-	mainScene = std::make_unique<Scene>();
-	currentScene = mainScene.get();
+	mainScene = new Scene();
+	currentScene = mainScene;
 
 	Renderer = new Renderer_();
 	Renderer->InitPipelines(mainSwapchain->renderPass.get());
@@ -77,22 +60,11 @@ Layer_::Layer_()
 
 
 	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->mainCmdPool.get())
+	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(c_framesInFlight);
 
-	// allocate all buffers needed
-	{
-		auto buffers = Device->allocateCommandBuffers(allocInfo);
-
-		auto moveBuffersToArray = [&buffers](auto& target, size_t index) {
-			auto begin = buffers.begin() + (index * c_framesInFlight);
-			std::move(begin, begin + c_framesInFlight, target.begin());
-		};
-
-		moveBuffersToArray(m_cmdBuffer, 0);
-	}
-
+	m_cmdBuffer = Device->allocateCommandBuffers(allocInfo);
 
 	Event::OnWindowResize.BindFlag(this, m_didWindowResize);
 	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimized) { m_isMinimized = newIsMinimized; });
@@ -105,9 +77,8 @@ Layer_::~Layer_()
 	delete Renderer;
 
 	// WIP:
-	mainSwapchain.reset();
-	secondSwapchain.reset();
-	mainScene.reset();
+	delete mainSwapchain;
+	delete mainScene;
 
 	delete Layouts;
 
@@ -124,16 +95,14 @@ Layer_::~Layer_()
 
 void Layer_::DrawFrame()
 {
-
-
-	currentScene = mainScene.get();
+	currentScene = mainScene;
 
 
 	if (*m_didWindowResize) {
 		Device->waitIdle();
 
-		mainSwapchain.reset();
-		mainSwapchain = std::make_unique<RSwapchain>(Instance->surface);
+		delete mainSwapchain;
+		mainSwapchain = new RSwapchain(Instance->surface);
 	}
 
 	if (m_isMinimized)
@@ -194,7 +163,7 @@ void Layer_::DrawFrame()
 		.setCommandBufferCount(static_cast<uint32>(bufs.size()))
 		.setPCommandBuffers(bufs.data());
 
-	Device->mainQueue.submit(1u, &submitInfo, *m_inFlightFence[currentFrame]);
+	Device->graphicsQueue.submit(1u, &submitInfo, *m_inFlightFence[currentFrame]);
 
 	vk::SwapchainKHR swapChains[] = { *mainSwapchain };
 

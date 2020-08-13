@@ -97,4 +97,16 @@ inline vk::PipelineStageFlags GetPipelineStage(vk::ImageLayout imL)
 		default: LOG_ABORT("Unsupported");
 	}
 }
+
+template<typename T>
+inline bool Contains(const std::vector<char const*>& data, std::vector<T> const& searchData)
+{
+	// return true if all T are listed in the properties
+	return std::all_of(data.begin(), data.end(), [&properties](char const* name) {
+		return std::find_if(properties.begin(), properties.end(), [&name](vk::LayerProperties const& property) {
+			return strcmp(property.layerName, name) == 0;
+		}) != properties.end();
+	});
+}
+
 } // namespace vl

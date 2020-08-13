@@ -173,19 +173,19 @@ void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayo
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-	Device->mainCmdBuffer.begin(beginInfo);
+	Device->graphicsCmdBuffer.begin(beginInfo);
 
-	Device->mainCmdBuffer.pipelineBarrier(
+	Device->graphicsCmdBuffer.pipelineBarrier(
 		sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 
-	Device->mainCmdBuffer.end();
+	Device->graphicsCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo.setCommandBufferCount(1u);
-	submitInfo.setPCommandBuffers(&Device->mainCmdBuffer);
+	submitInfo.setPCommandBuffers(&Device->graphicsCmdBuffer);
 
-	Device->mainQueue.submit(1u, &submitInfo, {});
-	Device->mainQueue.waitIdle();
+	Device->graphicsQueue.submit(1u, &submitInfo, {});
+	Device->graphicsQueue.waitIdle();
 }
 
 void RImage::TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
@@ -245,7 +245,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-	Device->mainCmdBuffer.begin(beginInfo);
+	Device->graphicsCmdBuffer.begin(beginInfo);
 
 	for (uint32 layer = 0u; layer < arrayLayers; ++layer) {
 
@@ -279,7 +279,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 				.setDstAccessMask(GetAccessMask(intermediateLayout));
 
 			// old to intermediate
-			Device->mainCmdBuffer.pipelineBarrier(
+			Device->graphicsCmdBuffer.pipelineBarrier(
 				oldStage, intermediateStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 
 			vk::ImageBlit blit{};
@@ -298,7 +298,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 				.setBaseArrayLayer(layer)
 				.setLayerCount(1u);
 
-			Device->mainCmdBuffer.blitImage(
+			Device->graphicsCmdBuffer.blitImage(
 				image.get(), intermediateLayout, image.get(), oldLayout, 1, &blit, vk::Filter::eLinear);
 
 			barrier
@@ -309,7 +309,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 
 
 			// intermediate to final
-			Device->mainCmdBuffer.pipelineBarrier(
+			Device->graphicsCmdBuffer.pipelineBarrier(
 				intermediateStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 
 			if (mipWidth > 1)
@@ -327,18 +327,18 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 			.setSrcAccessMask(GetAccessMask(oldLayout))
 			.setDstAccessMask(GetAccessMask(finalLayout));
 
-		Device->mainCmdBuffer.pipelineBarrier(
+		Device->graphicsCmdBuffer.pipelineBarrier(
 			oldStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 	}
 
-	Device->mainCmdBuffer.end();
+	Device->graphicsCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo.setCommandBufferCount(1u);
-	submitInfo.setPCommandBuffers(&Device->mainCmdBuffer);
+	submitInfo.setPCommandBuffers(&Device->graphicsCmdBuffer);
 
-	Device->mainQueue.submit(1u, &submitInfo, {});
-	Device->mainQueue.waitIdle();
+	Device->graphicsQueue.submit(1u, &submitInfo, {});
+	Device->graphicsQueue.waitIdle();
 }
 
 vk::DescriptorSet RImage::GetDebugDescriptor()

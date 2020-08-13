@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/Listener.h"
+#include "rendering/Device.h"
 #include "rendering/ppt/PtCollection.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/structures/GBuffer.h"
@@ -39,22 +40,11 @@ private:
 			if (currBuffer > (int32(sBuffers.size()) - 1)) {
 
 				vk::CommandBufferAllocateInfo allocInfo{};
-				allocInfo.setCommandPool(Device->mainCmdPool.get())
+				allocInfo.setCommandPool(Device->graphicsCmdPool.get())
 					.setLevel(vk::CommandBufferLevel::eSecondary)
 					.setCommandBufferCount(c_framesInFlight);
 
-				// allocate all buffers needed
-				{
-					auto buffers = Device->allocateCommandBuffers(allocInfo);
-
-					auto moveBuffersToArray = [&buffers](auto& target, size_t index) {
-						auto begin = buffers.begin() + (index * c_framesInFlight);
-						std::move(begin, begin + c_framesInFlight, target.begin());
-					};
-
-					sBuffers.push_back({});
-					moveBuffersToArray(sBuffers[currBuffer], 0);
-				}
+				sBuffers.emplace_back(Device->allocateCommandBuffers(allocInfo));
 			}
 
 			return sBuffers[currBuffer++][frameIndex];
