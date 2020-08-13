@@ -1,7 +1,6 @@
 #pragma once
 
 #include "reflection/ReflClass.h"
-#include "engine/reflection/ReflectionDb.h"
 
 #define REFLECTED_POD(Class, ...)                                                                                      \
 private:                                                                                                               \
