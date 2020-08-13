@@ -1,6 +1,38 @@
 #pragma once
 #include "rendering/wrappers/PhysicalDevice.h"
 
+#define DEBUG_NAME(handle, name) detail::RegisterDebugName(handle, name);
+
+namespace detail {
+template<typename T, typename = void>
+struct HasCType : std::false_type {
+};
+
+template<typename T>
+struct HasCType<T, std::void_t<typename T::CType>> : std::true_type {
+};
+
+template<typename T>
+constexpr void RegisterDebugName(const T& handle, const std::string& name)
+{
+	vk::DebugUtilsObjectNameInfoEXT debugNameInfo{};
+
+	if constexpr (HasCType<T>::value) {
+		debugNameInfo
+			.setObjectType(handle.objectType) //
+			.setObjectHandle(reinterpret_cast<uint64>(T::CType(handle)));
+	}
+	else {
+		debugNameInfo
+			.setObjectType(handle->objectType) //
+			.setObjectHandle(reinterpret_cast<uint64>(T::element_type::CType(handle.get())));
+	}
+
+	debugNameInfo.setPObjectName(name.c_str());
+	vl::Device->setDebugUtilsObjectNameEXT(debugNameInfo);
+}
+} // namespace detail
+
 namespace vl {
 struct DeviceQueue : public vk::Queue {
 	uint32 familyIndex;
