@@ -11,6 +11,7 @@ inline struct Layouts_ {
 	RDescriptorLayout singleSamplerDescLayout;
 	RDescriptorLayout cubemapLayout;
 	RDescriptorLayout envmapLayout;
+	RDescriptorLayout accelLayout;
 
 
 	RDescriptorLayout imageDebugDescLayout;

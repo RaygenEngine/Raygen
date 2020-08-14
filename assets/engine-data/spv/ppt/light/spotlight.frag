@@ -1,5 +1,7 @@
-#version 450
+#version 460
 #extension GL_GOOGLE_include_directive: enable
+#extension GL_EXT_ray_tracing : require
+#extension GL_EXT_ray_query: enable
 #include "global.h"
 
 #include "bsdf.h"
@@ -27,7 +29,7 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 	float pad0;
 	mat4 view;
 	mat4 proj;
-	mat4 viewProj;
+	mat4 viewProj; 
 	mat4 viewInv;
 	mat4 projInv;
 	mat4 viewProjInv;
@@ -63,6 +65,7 @@ layout(set = 2, binding = 0) uniform UBO_Spotlight {
 } light;
 
 layout(set = 3, binding = 0) uniform sampler2DShadow shadowmap;
+layout(set = 4, binding = 0) uniform accelerationStructureEXT topLevelAS;
 
 void main() {
 
@@ -103,7 +106,7 @@ void main() {
 	float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
 	//float shadow = ShadowCalculationFast(shadowmap, light.viewProj, frag.position, light.maxShadowBias);
 	vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
-
+	
 	vec3 H = normalize(V + L);
 
     float NoV = abs(dot(N, V)) + 1e-5;
@@ -118,6 +121,34 @@ void main() {
 	vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
 
     outColor = vec4(finalContribution, 1);
+    
+   
+    vec3  origin    = frag.position;
+	vec3  direction = L;  // vector to light
+	float tMin      = 0.01f;
+	float tMax      = distance(frag.position, light.position);
+
+	// Initializes a ray query object but does not start traversal
+	rayQueryEXT rayQuery;
+	rayQueryInitializeEXT(rayQuery, topLevelAS, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, origin, tMin,
+                      direction, tMax);
+
+
+
+		// Start traversal: return false if traversal is complete
+	while(rayQueryProceedEXT(rayQuery))
+	{
+		outColor = vec4(1,0,1,0); 
+		return;
+	}
+      
+    		// Returns type of committed (true) intersection
+	if(rayQueryGetIntersectionTypeEXT(rayQuery, false) != gl_RayQueryCommittedIntersectionNoneEXT)
+	{
+	  // Got an intersection == Shadow
+	  outColor = vec4(0);
+	}
+	else outColor = vec4(1,0,0,0);
 }                               
                                 
                                  
@@ -150,5 +181,8 @@ void main() {
                                                                                                                                                         
                                                                                                                                                              
                                                                                                                                                               
+
+
+
 
 
