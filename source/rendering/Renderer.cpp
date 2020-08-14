@@ -1,12 +1,18 @@
 #include "pch.h"
 #include "Renderer.h"
 
+#include "rendering/Renderer.h"
+
 #include "engine/Engine.h"
 #include "engine/Events.h"
+#include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuMesh.h"
+#include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
 #include "rendering/Instance.h"
+#include "rendering/Layouts.h"
 #include "rendering/passes/DepthmapPass.h"
 #include "rendering/passes/GBufferPass.h"
 #include "rendering/passes/UnlitPass.h"
@@ -14,8 +20,9 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneDirectionalLight.h"
 #include "rendering/scene/SceneSpotlight.h"
+#include "rendering/structures/Depthmap.h"
 #include "rendering/VulkanUtl.h"
-#include "rendering/wrappers/RDepthmap.h"
+#include "rendering/wrappers/Swapchain.h"
 
 #include <editor/imgui/ImguiImpl.h>
 
@@ -149,16 +156,141 @@ Renderer_::Renderer_()
 
 void Renderer_::InitPipelines(vk::RenderPass outRp)
 {
-	m_copyHdrTexture.MakePipeline(outRp);
+	MakeCopyHdrPipeline(outRp);
 	m_postprocCollection.RegisterTechniques();
+}
+
+void Renderer_::MakeCopyHdrPipeline(vk::RenderPass outRp)
+{
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/cpyhdr.shader");
+	gpuShader.onCompile = [=]() {
+		MakeCopyHdrPipeline(outRp);
+	};
+
+	std::vector shaderStages = gpuShader.shaderStages;
+
+	// fixed-function stage
+	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
+
+	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
+	inputAssembly
+		.setTopology(vk::PrimitiveTopology::eTriangleList) //
+		.setPrimitiveRestartEnable(VK_FALSE);
+
+	// those are dynamic so they will be updated when needed
+	vk::Viewport viewport{};
+	vk::Rect2D scissor{};
+
+	vk::PipelineViewportStateCreateInfo viewportState{};
+	viewportState
+		.setViewportCount(1u) //
+		.setPViewports(&viewport)
+		.setScissorCount(1u)
+		.setPScissors(&scissor);
+
+	vk::PipelineRasterizationStateCreateInfo rasterizer{};
+	rasterizer
+		.setDepthClampEnable(VK_FALSE) //
+		.setRasterizerDiscardEnable(VK_FALSE)
+		.setPolygonMode(vk::PolygonMode::eFill)
+		.setLineWidth(1.f)
+		.setCullMode(vk::CullModeFlagBits::eBack)
+		.setFrontFace(vk::FrontFace::eClockwise)
+		.setDepthBiasEnable(VK_FALSE)
+		.setDepthBiasConstantFactor(0.f)
+		.setDepthBiasClamp(0.f)
+		.setDepthBiasSlopeFactor(0.f);
+
+	vk::PipelineMultisampleStateCreateInfo multisampling{};
+	multisampling
+		.setSampleShadingEnable(VK_FALSE) //
+		.setRasterizationSamples(vk::SampleCountFlagBits::e1)
+		.setMinSampleShading(1.f)
+		.setPSampleMask(nullptr)
+		.setAlphaToCoverageEnable(VK_FALSE)
+		.setAlphaToOneEnable(VK_FALSE);
+
+	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
+	colorBlendAttachment
+		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
+						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
+		.setBlendEnable(VK_TRUE)
+		.setSrcColorBlendFactor(vk::BlendFactor::eOne)
+		.setDstColorBlendFactor(vk::BlendFactor::eOne)
+		.setColorBlendOp(vk::BlendOp::eAdd)
+		.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
+		.setDstAlphaBlendFactor(vk::BlendFactor::eOne)
+		.setAlphaBlendOp(vk::BlendOp::eAdd);
+
+	vk::PipelineColorBlendStateCreateInfo colorBlending{};
+	colorBlending
+		.setLogicOpEnable(VK_FALSE) //
+		.setLogicOp(vk::LogicOp::eCopy)
+		.setAttachmentCount(1u)
+		.setPAttachments(&colorBlendAttachment)
+		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
+
+
+	// dynamic states
+	vk::DynamicState dynamicStates[] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+
+	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
+	dynamicStateInfo
+		.setDynamicStateCount(2u) //
+		.setPDynamicStates(dynamicStates);
+
+	std::array layouts = { Layouts->singleSamplerDescLayout.setLayout.get() };
+
+	// pipeline layout
+	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo
+		.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
+		.setPSetLayouts(layouts.data())
+		.setPushConstantRangeCount(0u)
+		.setPPushConstantRanges(nullptr);
+
+	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+
+	// depth and stencil state
+	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
+	depthStencil
+		.setDepthTestEnable(VK_FALSE) //
+		.setDepthWriteEnable(VK_FALSE)
+		.setDepthCompareOp(vk::CompareOp::eLess)
+		.setDepthBoundsTestEnable(VK_FALSE)
+		.setMinDepthBounds(0.0f) // Optional
+		.setMaxDepthBounds(1.0f) // Optional
+		.setStencilTestEnable(VK_FALSE)
+		.setFront({}) // Optional
+		.setBack({}); // Optional
+
+	vk::GraphicsPipelineCreateInfo pipelineInfo{};
+	pipelineInfo
+		.setStageCount(static_cast<uint32>(shaderStages.size())) //
+		.setPStages(shaderStages.data())
+		.setPVertexInputState(&vertexInputInfo)
+		.setPInputAssemblyState(&inputAssembly)
+		.setPViewportState(&viewportState)
+		.setPRasterizationState(&rasterizer)
+		.setPMultisampleState(&multisampling)
+		.setPDepthStencilState(&depthStencil)
+		.setPColorBlendState(&colorBlending)
+		.setPDynamicState(&dynamicStateInfo)
+		.setLayout(m_pipelineLayout.get())
+		// WIP: decouple
+		.setRenderPass(outRp)
+		.setSubpass(0u)
+		.setBasePipelineHandle({})
+		.setBasePipelineIndex(-1);
+
+	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
 void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto& att = m_gbuffer[sceneDesc.frameIndex].attachments[GNormal];
-	vk::Extent2D extent = { att.extent.width, att.extent.height };
+	auto& extent = m_gbuffer[sceneDesc.frameIndex].framebuffer.extent;
 
 	vk::Rect2D scissor{};
 	scissor
@@ -178,7 +310,7 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 	vk::RenderPassBeginInfo renderPassInfo{};
 	renderPassInfo
 		.setRenderPass(Layouts->gbufferPass.get()) //
-		.setFramebuffer(m_gbuffer[sceneDesc.frameIndex].framebuffer.get());
+		.setFramebuffer(m_gbuffer[sceneDesc.frameIndex].framebuffer);
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //
 		.setExtent(extent);
@@ -207,8 +339,7 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 	auto shadowmapRenderpass = [&](auto light) {
 		if (light) {
 
-			auto& att = light->shadowmap[sceneDesc.frameIndex].attachment;
-			vk::Extent2D extent = { att.extent.width, att.extent.height };
+			auto& extent = light->shadowmap[sceneDesc.frameIndex].framebuffer.extent;
 
 			vk::Rect2D scissor{};
 
@@ -230,7 +361,7 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 			vk::RenderPassBeginInfo renderPassInfo{};
 			renderPassInfo
 				.setRenderPass(Layouts->depthRenderPass.get()) //
-				.setFramebuffer(light->shadowmap[sceneDesc.frameIndex].framebuffer.get());
+				.setFramebuffer(light->shadowmap[sceneDesc.frameIndex].framebuffer);
 			renderPassInfo.renderArea
 				.setOffset({ 0, 0 }) //
 				.setExtent(extent);
@@ -267,8 +398,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto& att = m_gbuffer[sceneDesc.frameIndex].attachments[GNormal];
-	vk::Extent2D extent = { att.extent.width, att.extent.height };
+	auto& extent = m_gbuffer[sceneDesc.frameIndex].framebuffer.extent;
 
 	vk::Rect2D scissor{};
 	scissor
@@ -356,7 +486,14 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDes
 		cmdBuffer->setViewport(0, { viewport });
 		cmdBuffer->setScissor(0, { scissor });
 
-		m_copyHdrTexture.RecordCmd(cmdBuffer, sceneDesc);
+		// Copy hdr texture
+		{
+			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
+				&Renderer->m_ppDescSet[sceneDesc.frameIndex], 0u, nullptr);
+			// big triangle
+			cmdBuffer->draw(3u, 1u, 0u, 0u);
+		}
 
 		ImguiImpl::RenderVulkan(cmdBuffer);
 	}
@@ -377,7 +514,7 @@ void Renderer_::OnViewportResize()
 
 		for (uint32 i = 0; i < c_framesInFlight; ++i) {
 
-			m_gbuffer[i] = RGbuffer{ fbSize.width, fbSize.height };
+			m_gbuffer[i] = GBuffer{ fbSize.width, fbSize.height };
 
 			m_attachment[i] = RImageAttachment{ fbSize.width, fbSize.height, vk::Format::eR32G32B32A32Sfloat,
 				vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
@@ -396,7 +533,7 @@ void Renderer_::OnViewportResize()
 			vk::DescriptorImageInfo imageInfo{};
 			imageInfo
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(m_attachment2[i])
+				.setImageView(m_attachment2[i]())
 				.setSampler(quadSampler);
 
 			vk::WriteDescriptorSet descriptorWrite{};
@@ -419,7 +556,7 @@ void Renderer_::OnViewportResize()
 			vk::DescriptorImageInfo imageInfo2{};
 			imageInfo2
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(Renderer->m_attachment[i]);
+				.setImageView(Renderer->m_attachment[i]());
 			//	.setSampler(VK_NULL_HANDLE);
 
 			vk::WriteDescriptorSet descriptorWrite2{};
@@ -436,7 +573,11 @@ void Renderer_::OnViewportResize()
 			Device->updateDescriptorSets(1u, &descriptorWrite2, 0u, nullptr);
 
 
-			std::array<vk::ImageView, 3> attch{ m_attachment[i], m_attachment2[i], m_gbuffer[i].attachments[GDepth] };
+			std::array<vk::ImageView, 3> attch{
+				m_attachment[i](),
+				m_attachment2[i](),
+				m_gbuffer[i].framebuffer[GDepth](),
+			};
 
 			// framebuffer
 			vk::FramebufferCreateInfo createInfo{};
@@ -471,7 +612,7 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 	RecordGeometryPasses(cmdBuffer, sceneDesc);
 	RecordPostProcessPass(cmdBuffer, sceneDesc);
 
-	for (auto& att : m_gbuffer[sceneDesc.frameIndex].attachments) {
+	for (auto& att : m_gbuffer[sceneDesc.frameIndex].framebuffer.attachments) {
 		if (att.isDepth) {
 			continue;
 		}
@@ -480,13 +621,13 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 
 	for (auto sl : sceneDesc->spotlights.elements) {
 		if (sl) {
-			sl->shadowmap[sceneDesc.frameIndex].attachment.TransitionForWrite(cmdBuffer);
+			sl->shadowmap[sceneDesc.frameIndex].framebuffer[0].TransitionForWrite(cmdBuffer);
 		}
 	}
 
 	for (auto dl : sceneDesc->directionalLights.elements) {
 		if (dl) {
-			dl->shadowmap[sceneDesc.frameIndex].attachment.TransitionForWrite(cmdBuffer);
+			dl->shadowmap[sceneDesc.frameIndex].framebuffer[0].TransitionForWrite(cmdBuffer);
 		}
 	}
 

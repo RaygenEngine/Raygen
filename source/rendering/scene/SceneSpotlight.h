@@ -1,6 +1,6 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
-#include "rendering/wrappers/RDepthmap.h"
+#include "rendering/structures/Depthmap.h"
 
 struct Spotlight_Ubo {
 	glm::vec4 position{};
@@ -31,7 +31,7 @@ struct SceneSpotlight : SceneStruct {
 	SCENE_STRUCT(SceneSpotlight);
 	Spotlight_Ubo ubo;
 
-	FrameArray<vl::RDepthmap> shadowmap;
+	FrameArray<vl::Depthmap> shadowmap;
 
 
 	std::string name;

@@ -7,14 +7,16 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneSpotlight.h"
-#include "rendering/wrappers/RDepthmap.h"
+#include "rendering/structures/Depthmap.h"
 #include "rendering/scene/SceneCamera.h"
 
 namespace vl {
 void PtSpotlight::MakeLayout()
 {
 	std::array layouts = { Layouts->gbufferDescLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
-		Layouts->singleUboDescLayout.setLayout.get(), Layouts->singleSamplerDescLayout.setLayout.get() };
+		Layouts->singleUboDescLayout.setLayout.get(), Layouts->singleSamplerDescLayout.setLayout.get(),
+		Layouts->accelLayout.setLayout.get() };
+
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -76,6 +78,9 @@ void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scene
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u, &descSet, 0u, nullptr);
 
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 4u, 1u,
+		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
+
 	for (auto sl : sceneDesc->spotlights.elements) {
 		if (!sl) {
 			continue;
@@ -86,6 +91,7 @@ void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scene
 
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 3u, 1u,
 			&sl->shadowmap[sceneDesc.frameIndex].descSet, 0u, nullptr);
+
 
 		// draw call (triangle)
 		cmdBuffer.draw(3u, 1u, 0u, 0u);

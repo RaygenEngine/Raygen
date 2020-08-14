@@ -10,7 +10,7 @@ DECLARE_DIRTY_FUNC(CStaticMesh)(BasicComponent& bc)
 	return [=](SceneGeometry& geom) {
 		geom.transform = bc.world().transform;
 		if constexpr (FullDirty) {
-			geom.model = vl::GpuAssetManager->GetGpuHandle(mesh);
+			geom.mesh = vl::GpuAssetManager->GetGpuHandle(mesh);
 		}
 	};
 }

@@ -5,47 +5,75 @@
 
 #include <set>
 
+namespace {
+void CheckExtensions(std::vector<char const*> const& extensions, std::vector<vk::ExtensionProperties> const& properties)
+{
+	std::for_each(extensions.begin(), extensions.end(), [&properties](char const* name) {
+		auto found = std::find_if(properties.begin(), properties.end(),
+						 [&name](vk::ExtensionProperties const& property) {
+							 return strcmp(property.extensionName, name) == 0;
+						 })
+					 != properties.end();
+		CLOG_ABORT(!found, "Requested Vulkan device extension not found: {}", name);
+		return found;
+	});
+}
+} // namespace
+
 namespace vl {
-Device_::Device_(RPhysicalDevice& pd, std::vector<const char*> deviceExtensions)
+Device_::Device_(RPhysicalDevice& pd)
 	: pd(pd)
 {
-	auto getPreferredFamily = [](auto families, auto queueCount) -> QueueFamily {
-		for (auto& fam : families) {
-			if (fam.props.queueCount == queueCount) {
-				return fam;
-			}
+	QueueFamily graphicsQueueFamily;
+	QueueFamily dmaQueueFamily;
+	QueueFamily computeQueueFamily;
+	QueueFamily presentQueueFamily;
+
+	for (auto& fam : pd.queueFamilies) {
+
+		auto supportsGraphics = bool(fam.props.queueFlags & vk::QueueFlagBits::eGraphics);
+		auto supportsTransfer = bool(fam.props.queueFlags & vk::QueueFlagBits::eTransfer);
+		auto supportsCompute = bool(fam.props.queueFlags & vk::QueueFlagBits::eCompute);
+
+		// graphics queue, must support graphics
+		if (supportsGraphics) {
+			graphicsQueueFamily = fam;
 		}
 
-		// TODO:
-		LOG_ABORT("Adjust queue count to match your GPU queue families");
-	};
+		// dma queue, must support transfer and not graphics/compute/present
+		if (supportsTransfer && !supportsGraphics && !supportsCompute && !fam.supportsPresent) {
+			dmaQueueFamily = fam;
+		}
 
-	QueueFamily mainQueueFamily = getPreferredFamily(pd.graphicsFamilies, 16);
-	QueueFamily dmaQueueFamily = getPreferredFamily(pd.transferFamilies, 2);
-	QueueFamily computeQueueFamily = getPreferredFamily(pd.computeFamilies, 8);
-	QueueFamily presentQueueFamily = getPreferredFamily(pd.presentFamilies, 16);
+		// compute queue, deticated compute (no graphics)
+		if (supportsCompute && !supportsGraphics) {
+			computeQueueFamily = fam;
+		}
 
-	// Get device's presentation queue
+		// present queue, TODO: benchmark (queue count, graphics vs compute, etc)
+		if (fam.supportsPresent && supportsGraphics) {
+			presentQueueFamily = fam;
+		}
+	}
+
 	std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
 	std::set<uint32> uniqueQueueFamilies = {
-		mainQueueFamily.index,
+		graphicsQueueFamily.index,
 		dmaQueueFamily.index,
 		computeQueueFamily.index,
 		presentQueueFamily.index,
 	};
 
 	float qp1 = 1.0f;
-
 	vk::DeviceQueueCreateInfo createInfo{};
-
 	for (uint32 queueFamily : uniqueQueueFamilies) {
 		vk::DeviceQueueCreateInfo createInfo{};
-		createInfo.setQueueFamilyIndex(queueFamily)
-			.setQueueCount(1u) //
+		createInfo
+			.setQueueFamilyIndex(queueFamily) //
+			.setQueueCount(1u)
 			.setPQueuePriorities(&qp1);
 		queueCreateInfos.push_back(createInfo);
 	}
-
 
 	vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceBufferDeviceAddressFeatures,
 		vk::PhysicalDeviceRayTracingFeaturesKHR>
@@ -56,27 +84,32 @@ Device_::Device_(RPhysicalDevice& pd, std::vector<const char*> deviceExtensions)
 
 	deviceFeatures.features.setSamplerAnisotropy(VK_TRUE);
 	deviceBufferAddressFeatures.setBufferDeviceAddress(VK_TRUE);
-	deviceRayTracingFeatures
-		.setRayTracing(VK_TRUE) //
-		.setRayQuery(VK_TRUE)
-		.setRayTracingPrimitiveCulling(VK_TRUE)
-		.setRayTracingIndirectTraceRays(VK_TRUE); // .setRayTracingHostAccelerationStructureCommands(VK_TRUE);
+	// get all available rt extensions from gpu
+	// careful pNext here is lost
+	deviceRayTracingFeatures = pd.rtFeats;
+
+	const std::vector<const char*> deviceExtensions = {
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
+		VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
+		VK_KHR_RAY_TRACING_EXTENSION_NAME,
+	};
+	CheckExtensions(deviceExtensions, pd.enumerateDeviceExtensionProperties());
 
 	vk::DeviceCreateInfo deviceCreateInfo{};
-	deviceCreateInfo.setPQueueCreateInfos(queueCreateInfos.data())
+	deviceCreateInfo
+		.setPQueueCreateInfos(queueCreateInfos.data()) //
 		.setQueueCreateInfoCount(static_cast<uint32_t>(queueCreateInfos.size()))
-		//.setPEnabledFeatures(&deviceFeatures)
 		.setPpEnabledExtensionNames(deviceExtensions.data())
 		.setEnabledExtensionCount(static_cast<uint32>(deviceExtensions.size()))
-		.setEnabledLayerCount(0)
 		.setPNext(&deviceFeatures);
 
 	vk::Device::operator=(pd.createDevice(deviceCreateInfo));
 	VulkanLoader::InitLoaderWithDevice(*this);
 
 	// Device queues
-	mainQueue.familyIndex = mainQueueFamily.index;
-	mainQueue.SetHandle(getQueue(mainQueueFamily.index, 0));
+	graphicsQueue.familyIndex = graphicsQueueFamily.index;
+	graphicsQueue.SetHandle(getQueue(graphicsQueueFamily.index, 0));
 
 	dmaQueue.familyIndex = dmaQueueFamily.index;
 	dmaQueue.SetHandle(getQueue(dmaQueueFamily.index, 0));
@@ -87,12 +120,11 @@ Device_::Device_(RPhysicalDevice& pd, std::vector<const char*> deviceExtensions)
 	presentQueue.familyIndex = presentQueueFamily.index;
 	presentQueue.SetHandle(getQueue(presentQueueFamily.index, 0));
 
-
 	vk::CommandPoolCreateInfo poolInfo{};
-	poolInfo.setQueueFamilyIndex(mainQueue.familyIndex);
+	poolInfo.setQueueFamilyIndex(graphicsQueue.familyIndex);
 	poolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
 
-	mainCmdPool = createCommandPoolUnique(poolInfo);
+	graphicsCmdPool = createCommandPoolUnique(poolInfo);
 
 	poolInfo.setQueueFamilyIndex(dmaQueue.familyIndex);
 	poolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
@@ -109,9 +141,9 @@ Device_::Device_(RPhysicalDevice& pd, std::vector<const char*> deviceExtensions)
 
 	dmaCmdBuffer = allocateCommandBuffers(allocInfo)[0];
 
-	allocInfo.setCommandPool(mainCmdPool.get());
+	allocInfo.setCommandPool(graphicsCmdPool.get());
 
-	mainCmdBuffer = allocateCommandBuffers(allocInfo)[0];
+	graphicsCmdBuffer = allocateCommandBuffers(allocInfo)[0];
 
 	allocInfo.setCommandPool(computeCmdPool.get());
 
@@ -167,7 +199,7 @@ SwapchainSupportDetails Device_::GetSwapchainSupportDetails() const
 Device_::~Device_()
 {
 	dmaCmdPool.reset();
-	mainCmdPool.reset();
+	graphicsCmdPool.reset();
 	computeCmdPool.reset();
 
 	destroy();

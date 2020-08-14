@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "RSwapchain.h"
+#include "Swapchain.h"
 
 #include "platform/Platform.h"
 #include "rendering/Device.h"
@@ -82,7 +82,7 @@ RSwapchain::RSwapchain(vk::SurfaceKHR surface)
 		.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
 
 	// graphics and present families for swapchain image concurrency
-	auto mainQueueFamily = Device->mainQueue.familyIndex;
+	auto mainQueueFamily = Device->graphicsQueue.familyIndex;
 	auto presentQueueFamily = Device->presentQueue.familyIndex;
 
 	uint32 queueFamilyIndices[] = { mainQueueFamily, presentQueueFamily };
@@ -196,7 +196,7 @@ void RSwapchain::InitFrameBuffers()
 		createInfo
 			.setRenderPass(renderPass.get()) //
 			.setAttachmentCount(1u)
-			.setPAttachments(&imageViews[i].get())
+			.setPAttachments(&imageViews[i].get()) // CHECK: temp
 			.setWidth(extent.width)
 			.setHeight(extent.height)
 			.setLayers(1u);

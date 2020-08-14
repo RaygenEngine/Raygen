@@ -15,7 +15,7 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/wrappers/RBuffer.h"
+#include "rendering/wrappers/Buffer.h"
 
 namespace vl {
 BrdfLutCalculation::BrdfLutCalculation(GpuEnvironmentMap* envmapAsset, uint32 calculationResolution)
@@ -88,7 +88,7 @@ void BrdfLutCalculation::MakeRenderPass()
 void BrdfLutCalculation::AllocateCommandBuffers()
 {
 	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->mainCmdPool.get())
+	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(1u);
 
@@ -234,7 +234,7 @@ void BrdfLutCalculation::PrepareFaceInfo()
 	createInfo
 		.setRenderPass(m_renderPass.get()) //
 		.setAttachmentCount(1u)
-		.setPAttachments(&vk::ImageView(m_attachment))
+		.setPAttachments(&m_attachment())
 		.setWidth(m_resolution)
 		.setHeight(m_resolution)
 		.setLayers(1);
@@ -300,7 +300,7 @@ void BrdfLutCalculation::RecordAndSubmitCmdBuffers()
 	vk::SubmitInfo submitInfo{};
 	submitInfo.setCommandBufferCount(1u).setPCommandBuffers(&m_cmdBuffer);
 
-	Device->mainQueue.submit(1u, &submitInfo, {});
+	Device->graphicsQueue.submit(1u, &submitInfo, {});
 
 	// CHECK:
 	Device->waitIdle();

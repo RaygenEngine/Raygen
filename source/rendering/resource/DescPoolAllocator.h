@@ -1,8 +1,5 @@
 #pragma once
-#include "rendering/wrappers/RDescriptorLayout.h"
-
-#include <vulkan/vulkan.hpp>
-#include <unordered_map>
+#include "rendering/wrappers/DescriptorLayout.h"
 
 namespace vl {
 class DescPoolAllocator {

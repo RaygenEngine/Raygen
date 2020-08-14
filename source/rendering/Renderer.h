@@ -1,13 +1,13 @@
 #pragma once
 #include "engine/Listener.h"
-#include "rendering/out/CopyHdrTexture.h"
+#include "rendering/Device.h"
 #include "rendering/ppt/PtCollection.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/wrappers/RGbuffer.h"
+#include "rendering/structures/GBuffer.h"
 
 namespace vl {
 
-
+// TODO: tidy
 inline class Renderer_ : public Listener {
 	// The recommended framebuffer allocation size for the viewport.
 	vk::Extent2D m_viewportFramebufferSize{};
@@ -16,9 +16,11 @@ inline class Renderer_ : public Listener {
 	vk::Rect2D m_viewportRect{};
 
 private:
-	CopyHdrTexture m_copyHdrTexture;
+	// cpyhdrtexture TODO: tidy
+	vk::UniquePipeline m_pipeline;
+	vk::UniquePipelineLayout m_pipelineLayout;
 
-	FrameArray<RGbuffer> m_gbuffer;
+	FrameArray<GBuffer> m_gbuffer;
 
 
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
@@ -38,22 +40,11 @@ private:
 			if (currBuffer > (int32(sBuffers.size()) - 1)) {
 
 				vk::CommandBufferAllocateInfo allocInfo{};
-				allocInfo.setCommandPool(Device->mainCmdPool.get())
+				allocInfo.setCommandPool(Device->graphicsCmdPool.get())
 					.setLevel(vk::CommandBufferLevel::eSecondary)
 					.setCommandBufferCount(c_framesInFlight);
 
-				// allocate all buffers needed
-				{
-					auto buffers = Device->allocateCommandBuffers(allocInfo);
-
-					auto moveBuffersToArray = [&buffers](auto& target, size_t index) {
-						auto begin = buffers.begin() + (index * c_framesInFlight);
-						std::move(begin, begin + c_framesInFlight, target.begin());
-					};
-
-					sBuffers.push_back({});
-					moveBuffersToArray(sBuffers[currBuffer], 0);
-				}
+				sBuffers.emplace_back(Device->allocateCommandBuffers(allocInfo));
 			}
 
 			return sBuffers[currBuffer++][frameIndex];
@@ -73,6 +64,7 @@ protected:
 
 public:
 	// TODO: POSTPROC post process for hdr, move those
+	// TODO: when you move this use RFramebuffer instead
 	FrameArray<vk::UniqueFramebuffer> m_framebuffer;
 	FrameArray<RImageAttachment> m_attachment;
 	FrameArray<RImageAttachment> m_attachment2;
@@ -94,6 +86,7 @@ public:
 		vk::Framebuffer outFb, vk::Extent2D outExtent);
 
 	void InitPipelines(vk::RenderPass outRp);
+	void MakeCopyHdrPipeline(vk::RenderPass outRp);
 
 } * Renderer{};
 } // namespace vl

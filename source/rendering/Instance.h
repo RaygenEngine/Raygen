@@ -1,7 +1,5 @@
 #pragma once
-#include "rendering/wrappers/RPhysicalDevice.h"
-
-#include <vulkan/vulkan.hpp>
+#include "rendering/wrappers/PhysicalDevice.h"
 
 struct GLFWwindow;
 
@@ -10,9 +8,9 @@ inline struct Instance_ : public vk::Instance {
 
 	vk::SurfaceKHR surface;
 
-	vk::UniqueDebugUtilsMessengerEXT debugUtilsMessenger;
+	vk::DebugUtilsMessengerEXT debugUtilsMessenger;
 
-	std::vector<RPhysicalDevice> capablePhysicalDevices;
+	std::vector<RPhysicalDevice> physicalDevices;
 
 	Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwindow* window);
 	~Instance_();

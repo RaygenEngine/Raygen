@@ -7,12 +7,12 @@ void SceneDirectionalLight::MaybeResizeShadowmap(uint32 width, uint32 height)
 {
 	bool shouldResize = true;
 	// WIP:
-	auto extent = shadowmap.at(0).attachment.extent;
+	auto& extent = shadowmap.at(0).framebuffer.extent;
 	shouldResize = width != extent.width || height != extent.height;
 
 	for (auto& sm : shadowmap) {
 		if (shouldResize) {
-			sm = vl::RDepthmap{ width, height, name.c_str() };
+			sm = vl::Depthmap{ width, height, name.c_str() };
 		}
 	}
 }

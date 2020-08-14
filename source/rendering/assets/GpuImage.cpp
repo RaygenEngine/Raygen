@@ -1,11 +1,12 @@
 #include "pch.h"
 #include "GpuImage.h"
 
+#include "assets/AssetRegistry.h"
 #include "assets/pods/Image.h"
 #include "rendering/Device.h"
 #include "rendering/Renderer.h"
 #include "rendering/VulkanUtl.h"
-#include "rendering/wrappers/RBuffer.h"
+#include "rendering/wrappers/Buffer.h"
 
 using namespace vl;
 
@@ -35,7 +36,7 @@ void GpuImage::Update(const AssetUpdateInfo& info)
 	image = RImage2D{ static_cast<uint32>(imgData->width), static_cast<uint32>(imgData->height), mipLevels, format,
 		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal };
+		vk::MemoryPropertyFlagBits::eDeviceLocal, AssetHandlerManager::GetPodUri(podHandle) };
 
 	// transiton all mips to transfer optimal
 	image.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);

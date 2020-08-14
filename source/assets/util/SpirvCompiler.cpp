@@ -26,6 +26,22 @@ std::vector<uint32> CompileImpl(
 {
 	using namespace glslang;
 
+
+	if (shadername == "spotlight.frag") {
+		std::ifstream file("engine-data/spv/ppt/light/frag.spv", std::ios_base::binary | std::ios_base::ate);
+
+		size_t fileSize = (size_t)file.tellg();
+		std::vector<uint32> buffer(fileSize / 4);
+
+		file.seekg(0);
+		file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
+
+		file.close();
+
+
+		return buffer;
+	}
+
 	auto reportError = [&](TShader& shader) {
 		if (!outError) {
 			auto er = fmt::format("\nGLSL Compiler Error: {}.\n===\n{}\n====", shadername, shader.getInfoLog());
@@ -97,13 +113,14 @@ std::vector<uint32> CompileImpl(
 	Shader.setStringsWithLengthsAndNames(&InputCString, nullptr, &fname, 1);
 
 
-	const int ShaderLanguageVersion = 450;
-	const EShTargetClientVersion VulkanVersion = glslang::EShTargetVulkan_1_1; // CHECK: Update for KHR RT
-	const EShTargetLanguageVersion SPIRVVersion = glslang::EShTargetSpv_1_3;
+	const int ShaderLanguageVersion = 460;
+	const EShTargetClientVersion VulkanVersion = glslang::EShTargetVulkan_1_2;
+	const EShTargetLanguageVersion SPIRVVersion = glslang::EShTargetSpv_1_4;
 
 	Shader.setEnvInput(EShSourceGlsl, ShaderType, EShClientVulkan, VulkanVersion);
 	Shader.setEnvClient(EShClientVulkan, VulkanVersion);
 	Shader.setEnvTarget(EShTargetSpv, SPIRVVersion);
+
 
 	DirStackFileIncluder Includer;
 
@@ -115,7 +132,6 @@ std::vector<uint32> CompileImpl(
 
 
 	std::string PreprocessedGLSL;
-
 	if (!Shader.preprocess(&DefaultTBuiltInResource, ShaderLanguageVersion, ENoProfile, false, false,
 			(EShMessages)(EShMsgSpvRules | EShMsgVulkanRules), &PreprocessedGLSL, Includer)) {
 		reportError(Shader);

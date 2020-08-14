@@ -1,7 +1,5 @@
 #pragma once
-#include "rendering/wrappers/RDescriptorLayout.h"
-
-#include <vulkan/vulkan.hpp>
+#include "rendering/wrappers/DescriptorLayout.h"
 
 namespace vl {
 inline struct Layouts_ {
@@ -13,6 +11,7 @@ inline struct Layouts_ {
 	RDescriptorLayout singleSamplerDescLayout;
 	RDescriptorLayout cubemapLayout;
 	RDescriptorLayout envmapLayout;
+	RDescriptorLayout accelLayout;
 
 
 	RDescriptorLayout imageDebugDescLayout;

@@ -1,7 +1,37 @@
 #pragma once
-#include "rendering/wrappers/RPhysicalDevice.h"
+#include "rendering/wrappers/PhysicalDevice.h"
 
-#include <vulkan/vulkan.hpp>
+#define DEBUG_NAME(handle, name) detail::RegisterDebugName(handle, name);
+
+namespace detail {
+template<typename T, typename = void>
+struct HasCType : std::false_type {
+};
+
+template<typename T>
+struct HasCType<T, std::void_t<typename T::CType>> : std::true_type {
+};
+
+template<typename T>
+constexpr void RegisterDebugName(const T& handle, const std::string& name)
+{
+	vk::DebugUtilsObjectNameInfoEXT debugNameInfo{};
+
+	if constexpr (HasCType<T>::value) {
+		debugNameInfo
+			.setObjectType(handle.objectType) //
+			.setObjectHandle(reinterpret_cast<uint64>(T::CType(handle)));
+	}
+	else {
+		debugNameInfo
+			.setObjectType(handle->objectType) //
+			.setObjectHandle(reinterpret_cast<uint64>(T::element_type::CType(handle.get())));
+	}
+
+	debugNameInfo.setPObjectName(name.c_str());
+	vl::Device->setDebugUtilsObjectNameEXT(debugNameInfo);
+}
+} // namespace detail
 
 namespace vl {
 struct DeviceQueue : public vk::Queue {
@@ -21,26 +51,26 @@ struct SwapchainSupportDetails {
 inline struct Device_ : public vk::Device {
 
 	// graphics / transfer / compute / present
-	DeviceQueue mainQueue;
+	DeviceQueue graphicsQueue;
 	// async dma between host and device, PERF: should be used only for host to device transfers, device to device
-	// transfers may be faster using the mainQueue
+	// transfers may be faster using the graphicsQueue
 	DeviceQueue dmaQueue;
-	// compute dedicated (TODO: compare)
+	// compute dedicated
 	DeviceQueue computeQueue;
 	// present queue
 	DeviceQueue presentQueue;
 
 	RPhysicalDevice& pd;
 
-	vk::UniqueCommandPool mainCmdPool;
+	vk::UniqueCommandPool graphicsCmdPool;
 	vk::UniqueCommandPool dmaCmdPool;
 	vk::UniqueCommandPool computeCmdPool;
 
-	vk::CommandBuffer mainCmdBuffer;
+	vk::CommandBuffer graphicsCmdBuffer;
 	vk::CommandBuffer dmaCmdBuffer;
 	vk::CommandBuffer computeCmdBuffer;
 
-	Device_(RPhysicalDevice& pd, std::vector<const char*> deviceExtensions);
+	Device_(RPhysicalDevice& pd);
 	~Device_();
 
 

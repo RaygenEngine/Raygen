@@ -57,7 +57,7 @@ void ShaderStageImporter::CompilePod(ShaderStage* pod, const uri::Uri& uri)
 
 	if (bincode.size() > 0) {
 		pod->binary.swap(bincode);
-		pod->reflection = SpirvReflector::Reflect(pod->binary);
+		//	pod->reflection = SpirvReflector::Reflect(pod->binary);
 	}
 
 	if (!errors.errors.empty()) {
