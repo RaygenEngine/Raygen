@@ -138,7 +138,7 @@ void main() {
 		// Start traversal: return false if traversal is complete
 	while(rayQueryProceedEXT(rayQuery))
 	{
-		outColor = vec4(1,0,1,0); 
+		outColor = vec4(0,0,1,0); 
 		return;
 	}
       

@@ -193,7 +193,12 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 		.scratchData.setDeviceAddress(scratchBuffer.GetAddress());
 
 	// Build Offsets info: n instances
-	vk::AccelerationStructureBuildOffsetInfoKHR buildOffsetInfo{ static_cast<uint32_t>(instances.size()), 0, 0, 0 };
+	vk::AccelerationStructureBuildOffsetInfoKHR buildOffsetInfo{};
+	buildOffsetInfo
+		.setFirstVertex(0) //
+		.setPrimitiveCount(static_cast<uint32_t>(instances.size()))
+		.setPrimitiveOffset(0)
+		.setTransformOffset(0);
 	std::vector<const vk::AccelerationStructureBuildOffsetInfoKHR*> pBuildOffset;
 	pBuildOffset.push_back(&buildOffsetInfo);
 
