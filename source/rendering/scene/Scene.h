@@ -244,6 +244,7 @@ public:
 
 
 	~Scene();
+	void UpdateTopLevelAs();
 };
 
 struct SceneRenderDesc {

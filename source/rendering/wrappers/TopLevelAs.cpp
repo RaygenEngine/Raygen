@@ -4,12 +4,11 @@
 #include "rendering/Device.h"
 #include "rendering/scene/SceneGeometry.h"
 #include "rendering/assets/GpuMesh.h"
+#include <glm/gtc/type_ptr.hpp>
 
 namespace {
 vk::AccelerationStructureInstanceKHR AsInstanceToVkGeometryInstanceKHR(const vl::AsInstance& instance)
 {
-
-
 	vk::AccelerationStructureInstanceKHR gInst{};
 	// The matrices for the instance transforms are row-major, instead of
 	// column-major in the rest of the application
@@ -18,13 +17,15 @@ vk::AccelerationStructureInstanceKHR AsInstanceToVkGeometryInstanceKHR(const vl:
 	// matrix, hence saving the last row that is anyway always (0,0,0,1). Since
 	// the matrix is row-major, we simply copy the first 12 values of the
 	// original 4x4 matrix
-	memcpy(&gInst.transform, &transp, sizeof(gInst.transform));
+	memcpy(&gInst.transform, glm::value_ptr(transp), sizeof(gInst.transform));
 	gInst
 		.setInstanceCustomIndex(instance.id) //
 		.setInstanceShaderBindingTableRecordOffset(instance.hitGroupId)
 		.setFlags(instance.flags)
-		.setAccelerationStructureReference(instance.blasAddress);
-	// gInst.mask = instance.mask; WIP: what is this?
+		.setAccelerationStructureReference(instance.blasAddress)
+		.setMask(1); // Use a single mask for all objects for now. Mask must match the cullMask parameter of
+					 // rayQueryInitializeEXT in the shader.
+	// https://github.com/KhronosGroup/GLSL/blob/master/extensions/ext/GLSL_EXT_ray_query.txt#L252
 
 	return gInst;
 }
@@ -116,7 +117,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 	std::vector<vk::AccelerationStructureInstanceKHR> geometryInstances;
 	geometryInstances.reserve(instances.size());
 	for (const auto& inst : instances) {
-		geometryInstances.push_back(AsInstanceToVkGeometryInstanceKHR(inst));
+		geometryInstances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
 	}
 
 
