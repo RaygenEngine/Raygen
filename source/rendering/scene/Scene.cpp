@@ -79,6 +79,8 @@ void Scene::UploadDirty(uint32 frameIndex)
 
 			auto pTlas = &tlas.handle.get();
 
+			// auto p1Blas = &gm->mesh.Lock().blas.handle.get();
+
 			vk::WriteDescriptorSetAccelerationStructureKHR descASInfo{};
 			descASInfo
 				.setAccelerationStructureCount(1) //

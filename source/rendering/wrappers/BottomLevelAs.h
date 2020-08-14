@@ -10,9 +10,9 @@ struct BottomLevelAs {
 		vk::BuildAccelerationStructureFlagsKHR buildFlags = {});
 
 	[[nodiscard]] vk::DeviceAddress GetAddress() const noexcept;
+	vk::UniqueAccelerationStructureKHR handle;
 
 private:
-	vk::UniqueAccelerationStructureKHR handle;
 	vk::UniqueDeviceMemory memory;
 };
 } // namespace vl
