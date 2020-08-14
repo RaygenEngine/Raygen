@@ -167,7 +167,7 @@ void EditorObject_::UpdateEditor()
 	//}
 
 	edCamera.Update(1.f / std::max(Engine.GetFPS(), 1.f));
-	edCamera.EnqueueUpdateCmds(vl::Layer->mainScene.get());
+	edCamera.EnqueueUpdateCmds(vl::Layer->mainScene);
 	HandleInput();
 
 	ImguiImpl::NewFrame();

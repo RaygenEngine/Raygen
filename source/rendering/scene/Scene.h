@@ -1,10 +1,9 @@
 #pragma once
 // MAINT: Remove
 #include "rendering/Device.h"
+#include "rendering/wrappers/TopLevelAs.h"
 
-#include <functional>
 #include <mutex>
-#include <vector>
 
 struct SceneGeometry;
 struct SceneCamera;
@@ -47,6 +46,8 @@ struct Scene {
 	SceneVector<SceneDirectionalLight> directionalLights;
 	SceneVector<SceneReflectionProbe> reflProbs;
 
+	vl::TopLevelAs tlas;
+
 	std::vector<UniquePtr<std::vector<std::function<void()>>>> cmds;
 	std::vector<std::function<void()>>* currentCmdBuffer;
 
@@ -57,6 +58,7 @@ struct Scene {
 	// size_t size{ 0 };
 
 	vk::UniqueAccelerationStructureKHR sceneAS;
+	vk::DescriptorSet sceneAsDescSet;
 
 	template<CONC(CSceneElem) T>
 	T* GetElement(size_t uid)

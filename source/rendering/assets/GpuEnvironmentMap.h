@@ -1,6 +1,6 @@
 #pragma once
 #include "rendering/assets/GpuAssetBase.h"
-#include "rendering/wrappers/RImage.h"
+#include "rendering/wrappers/Image.h"
 
 namespace vl {
 struct GpuEnvironmentMap : public GpuAssetTemplate<EnvironmentMap> {

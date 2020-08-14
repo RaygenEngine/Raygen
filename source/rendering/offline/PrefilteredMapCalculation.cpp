@@ -81,7 +81,7 @@ void PrefilteredMapCalculation::MakeDesciptors()
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(m_envmapAsset->skybox.Lock().cubemap)
+		.setImageView(m_envmapAsset->skybox.Lock().cubemap())
 		.setSampler(quadSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -147,7 +147,7 @@ void PrefilteredMapCalculation::MakeRenderPass()
 void PrefilteredMapCalculation::AllocateCommandBuffers()
 {
 	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->mainCmdPool.get())
+	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(6u);
 
@@ -353,7 +353,7 @@ void PrefilteredMapCalculation::PrepareFaceInfo()
 			createInfo
 				.setRenderPass(m_renderPass.get()) //
 				.setAttachmentCount(1u)
-				.setPAttachments(&vk::ImageView(m_cubemapMips[mip].faceAttachments[i]))
+				.setPAttachments(&m_cubemapMips[mip].faceAttachments[i]())
 				.setWidth(mipResolution)
 				.setHeight(mipResolution)
 				.setLayers(1);
@@ -473,7 +473,7 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 			vk::SubmitInfo submitInfo{};
 			submitInfo.setCommandBufferCount(1u).setPCommandBuffers(&m_cmdBuffers[i]);
 
-			Device->mainQueue.submit(1u, &submitInfo, {});
+			Device->graphicsQueue.submit(1u, &submitInfo, {});
 			// CHECK:
 			Device->waitIdle();
 		}

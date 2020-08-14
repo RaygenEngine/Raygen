@@ -378,7 +378,7 @@ public:
 	matrix_t() {}
 
 	operator float*() { return m16; }
-	operator const float *() const { return m16; }
+	operator const float*() const { return m16; }
 	void Translation(float _x, float _y, float _z) { this->Translation(makeVect(_x, _y, _z)); }
 
 	void Translation(const vec_t& vt)
@@ -2065,7 +2065,7 @@ void DrawCube(const float* view, const float* projection, const float* matrix)
 {
 	matrix_t viewInverse;
 	viewInverse.Inverse(*(matrix_t*)view);
-	const matrix_t& model = *(matrix_t*)matrix;
+	const matrix_t& mesh = *(matrix_t*)matrix;
 	matrix_t res = *(matrix_t*)matrix * *(matrix_t*)view * *(matrix_t*)projection;
 	matrix_t modelView = *(matrix_t*)matrix * *(matrix_t*)view;
 

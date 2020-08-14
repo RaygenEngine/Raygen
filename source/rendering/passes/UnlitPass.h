@@ -1,8 +1,6 @@
 #pragma once
-#include "rendering/wrappers/RGbuffer.h"
+#include "rendering/structures/GBuffer.h"
 #include "rendering/scene/Scene.h"
-
-#include <vulkan/vulkan.hpp>
 
 namespace vl {
 class UnlitPass {

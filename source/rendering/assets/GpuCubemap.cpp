@@ -7,7 +7,7 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/VulkanUtl.h"
-#include "rendering/wrappers/RBuffer.h"
+#include "rendering/wrappers/Buffer.h"
 
 using namespace vl;
 
@@ -51,7 +51,7 @@ void GpuCubemap::Update(const AssetUpdateInfo&)
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(cubemap)
+		.setImageView(cubemap())
 		.setSampler(quadSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};

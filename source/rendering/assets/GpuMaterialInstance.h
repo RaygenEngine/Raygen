@@ -1,7 +1,7 @@
 #pragma once
 #include "assets/pods/MaterialInstance.h"
 #include "rendering/assets/GpuAssetBase.h"
-#include "rendering/wrappers/RBuffer.h"
+#include "rendering/wrappers/Buffer.h"
 
 
 namespace vl {

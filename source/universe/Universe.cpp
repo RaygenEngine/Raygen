@@ -39,7 +39,7 @@ void Universe::LoadPendingWorlds()
 {
 	if (ecsWorldToLoad.has_value()) {
 		delete ecsWorld;
-		vl::Layer->mainScene = std::make_unique<Scene>();
+		vl::Layer->mainScene = new Scene();
 
 		ecsWorld = new EcsWorld(*ecsWorldToLoad);
 		ecsWorldToLoad.reset();

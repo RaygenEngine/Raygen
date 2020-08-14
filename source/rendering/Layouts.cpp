@@ -47,6 +47,10 @@ Layouts_::Layouts_()
 	envmapLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	envmapLayout.Generate();
 
+	// accel
+	accelLayout.AddBinding(vk::DescriptorType::eAccelerationStructureKHR, vk::ShaderStageFlagBits::eFragment);
+	accelLayout.Generate();
+
 	// image debug
 	imageDebugDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	imageDebugDescLayout.Generate();

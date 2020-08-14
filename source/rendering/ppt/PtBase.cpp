@@ -5,7 +5,7 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
 #include "rendering/Renderer.h"
-#include "rendering/wrappers/RSwapchain.h"
+#include "rendering/wrappers/Swapchain.h"
 
 namespace vl {
 

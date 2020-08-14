@@ -81,7 +81,7 @@ void IrradianceMapCalculation::MakeDesciptors()
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(m_envmapAsset->skybox.Lock().cubemap)
+		.setImageView(m_envmapAsset->skybox.Lock().cubemap())
 		.setSampler(quadSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -147,7 +147,7 @@ void IrradianceMapCalculation::MakeRenderPass()
 void IrradianceMapCalculation::AllocateCommandBuffers()
 {
 	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->mainCmdPool.get())
+	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
 		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(6u);
 
@@ -350,7 +350,7 @@ void IrradianceMapCalculation::PrepareFaceInfo()
 		createInfo
 			.setRenderPass(m_renderPass.get()) //
 			.setAttachmentCount(1u)
-			.setPAttachments(&vk::ImageView(m_faceAttachments[i]))
+			.setPAttachments(&m_faceAttachments[i]())
 			.setWidth(m_resolution)
 			.setHeight(m_resolution)
 			.setLayers(1);
@@ -460,7 +460,7 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 		vk::SubmitInfo submitInfo{};
 		submitInfo.setCommandBufferCount(1u).setPCommandBuffers(&m_cmdBuffers[i]);
 
-		Device->mainQueue.submit(1u, &submitInfo, {});
+		Device->graphicsQueue.submit(1u, &submitInfo, {});
 	}
 
 	// CHECK:

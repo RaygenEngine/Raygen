@@ -1,13 +1,15 @@
 #include "pch.h"
-#include "RBlas.h"
+#include "BottomLevelAs.h"
 
 #include "assets/shared/GeometryShared.h"
+#include "rendering/assets/GpuMesh.h"
 #include "rendering/Device.h"
-#include "rendering/wrappers/RBuffer.h"
+#include "rendering/wrappers/Buffer.h"
+
 
 namespace vl {
 
-RBlas::RBlas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
+BottomLevelAs::BottomLevelAs(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
 	vk::BuildAccelerationStructureFlagsKHR buildFlags)
 {
 	std::vector<vk::AccelerationStructureCreateGeometryTypeInfoKHR> asCreateGeomInfos{};
@@ -66,47 +68,53 @@ RBlas::RBlas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
 		.setPGeometryInfos(asCreateGeomInfos.data())
 		.setType(vk::AccelerationStructureTypeKHR::eBottomLevel);
 
-	m_handle = Device->createAccelerationStructureKHRUnique(asCreateInfo);
+	handle = Device->createAccelerationStructureKHRUnique(asCreateInfo);
+
+	// TODO: name of geometry of blas
+	DEBUG_NAME(handle, "Blas");
 
 	{
 		vk::AccelerationStructureMemoryRequirementsInfoKHR memInfo{};
-		memInfo.setAccelerationStructure(m_handle.get())
+		memInfo
+			.setAccelerationStructure(handle.get()) //
 			.setBuildType(vk::AccelerationStructureBuildTypeKHR::eDevice)
 			.setType(vk::AccelerationStructureMemoryRequirementsTypeKHR::eObject);
 
 		auto asMemReqs = Device->getAccelerationStructureMemoryRequirementsKHR(memInfo);
 
-		VkMemoryAllocateFlagsInfo memFlagInfo{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
-		memFlagInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+		vk::MemoryAllocateFlagsInfo memFlagInfo{};
+		memFlagInfo.setFlags(vk::MemoryAllocateFlagBits::eDeviceAddress);
 
 		// 3. Allocate memory
-		VkMemoryAllocateInfo memAlloc{ VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
-		memAlloc.allocationSize = asMemReqs.memoryRequirements.size;
-		memAlloc.memoryTypeIndex = Device->FindMemoryType(
-			asMemReqs.memoryRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+		vk::MemoryAllocateInfo memAlloc{};
+		memAlloc
+			.setAllocationSize(asMemReqs.memoryRequirements.size) //
+			.setMemoryTypeIndex(Device->FindMemoryType(
+				asMemReqs.memoryRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal));
 
-		m_memory = Device->allocateMemoryUnique(memAlloc);
+		memory = Device->allocateMemoryUnique(memAlloc);
 
 		// 4. Bind memory with acceleration structure
-		VkBindAccelerationStructureMemoryInfoKHR bind{ VK_STRUCTURE_TYPE_BIND_ACCELERATION_STRUCTURE_MEMORY_INFO_KHR };
-		bind.accelerationStructure = m_handle.get();
-		bind.memory = m_memory.get();
-		bind.memoryOffset = 0;
+		vk::BindAccelerationStructureMemoryInfoKHR bind{};
+		bind.setAccelerationStructure(handle.get()) //
+			.setMemory(memory.get())
+			.setMemoryOffset(0);
 
 		Device->bindAccelerationStructureMemoryKHR({ bind });
 	}
 
 
 	vk::AccelerationStructureMemoryRequirementsInfoKHR asMemReqsInfo{};
-	asMemReqsInfo.setType(vk::AccelerationStructureMemoryRequirementsTypeKHR::eBuildScratch)
-		.setBuildType(vk::AccelerationStructureBuildTypeKHR::eDevice) //
-		.setAccelerationStructure(m_handle.get());
+	asMemReqsInfo
+		.setType(vk::AccelerationStructureMemoryRequirementsTypeKHR::eBuildScratch) //
+		.setBuildType(vk::AccelerationStructureBuildTypeKHR::eDevice)
+		.setAccelerationStructure(handle.get());
 
 	auto memReqs = Device->getAccelerationStructureMemoryRequirementsKHR(asMemReqsInfo);
 
 	// Acceleration structure build requires some scratch space to store temporary information
-	const vk::DeviceSize scratchBufferSize = memReqs.memoryRequirements.size;
-	LOG_REPORT("Size reqs {}MB", scratchBufferSize / 1000000.0);
+	const auto scratchBufferSize = memReqs.memoryRequirements.size;
+	LOG_REPORT("Bottom level accel size reqs {}KB", scratchBufferSize / 1000.0);
 
 	RBuffer scratchBuffer{ scratchBufferSize,
 		vk::BufferUsageFlagBits::eRayTracingKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress,
@@ -116,7 +124,7 @@ RBlas::RBlas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
 
 	vk::AccelerationStructureBuildGeometryInfoKHR asBuildGeomInfo{};
 	asBuildGeomInfo
-		.setDstAccelerationStructure(m_handle.get()) //
+		.setDstAccelerationStructure(handle.get()) //
 		.setSrcAccelerationStructure({})
 		.setUpdate(VK_FALSE)
 		.setType(vk::AccelerationStructureTypeKHR::eBottomLevel)
@@ -161,6 +169,11 @@ RBlas::RBlas(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
 	Device->computeQueue.waitIdle();
 
 	Device->waitIdle();
+}
+
+vk::DeviceAddress BottomLevelAs::GetAddress() const noexcept
+{
+	return Device->getAccelerationStructureAddressKHR(vk::AccelerationStructureDeviceAddressInfoKHR{ handle.get() });
 }
 
 

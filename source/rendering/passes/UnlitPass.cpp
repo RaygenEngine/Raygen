@@ -12,7 +12,7 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/wrappers/RGbuffer.h"
+#include "rendering/structures/GBuffer.h"
 #include "engine/console/ConsoleVariable.h"
 #include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/SceneCamera.h"
@@ -209,7 +209,7 @@ void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
 		};
 
-		for (auto& gg : geom->model.Lock().geometryGroups) {
+		for (auto& gg : geom->mesh.Lock().geometryGroups) {
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
 			if (!arch.isUnlit)

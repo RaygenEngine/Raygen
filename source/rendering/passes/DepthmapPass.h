@@ -1,8 +1,6 @@
 #pragma once
 #include "rendering/scene/Scene.h"
 
-#include <vulkan/vulkan.hpp>
-
 namespace vl {
 class DepthmapPass {
 

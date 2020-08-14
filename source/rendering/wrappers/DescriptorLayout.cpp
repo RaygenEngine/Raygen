@@ -1,11 +1,11 @@
 #include "pch.h"
-#include "RDescriptorLayout.h"
+#include "DescriptorLayout.h"
 
 #include "engine/Logger.h"
 #include "rendering/Device.h"
 #include "rendering/resource/GpuResources.h"
 
-namespace detail {
+namespace {
 template<class T>
 inline void hash_combine(size_t& seed, const T& v)
 {
@@ -24,7 +24,7 @@ struct PoolHasher {
 		return hash;
 	}
 };
-} // namespace detail
+} // namespace
 
 namespace vl {
 void RDescriptorLayout::AddBinding(vk::DescriptorType type, vk::ShaderStageFlags stageFlags, uint32 descriptorCount)
@@ -61,7 +61,7 @@ void RDescriptorLayout::AddBinding(vk::DescriptorType type, vk::ShaderStageFlags
 
 void RDescriptorLayout::Generate()
 {
-	CLOG_ABORT(hasBeenGenerated, "Attempting to generate an DescriptorLayout that is already generated");
+	CLOG_ABORT(hasBeenGenerated, "Attempting to generate a DescriptorLayout that is already generated");
 
 	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
 	layoutInfo
@@ -70,7 +70,7 @@ void RDescriptorLayout::Generate()
 
 	hasBeenGenerated = true;
 	setLayout = Device->createDescriptorSetLayoutUnique(layoutInfo);
-	poolSizeHash = detail::PoolHasher{}(*this);
+	poolSizeHash = PoolHasher{}(*this);
 }
 
 vk::DescriptorSet RDescriptorLayout::GetDescriptorSet() const

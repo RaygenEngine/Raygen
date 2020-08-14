@@ -12,7 +12,7 @@
 #include "rendering/Instance.h"
 #include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
-#include "rendering/wrappers/RSwapchain.h"
+#include "rendering/wrappers/Swapchain.h"
 
 // WIP:
 #include "rendering/Layer.h"
@@ -290,8 +290,8 @@ void InitVulkan()
 	init.Instance = *Instance;
 	init.PhysicalDevice = physDev;
 	init.Device = device;
-	init.QueueFamily = Device->mainQueue.familyIndex;
-	init.Queue = Device->mainQueue;
+	init.QueueFamily = Device->graphicsQueue.familyIndex;
+	init.Queue = Device->graphicsQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
 	init.DescriptorPool = GpuResources->descPools.GetImguiPool();
 	init.ImageCount = c_framesInFlight;
@@ -301,7 +301,7 @@ void InitVulkan()
 	ImGui_ImplVulkan_Init(&init, swapchain->renderPass.get());
 
 	// CHECK: which buffer
-	auto cmdBuffer = Device->mainCmdBuffer;
+	auto cmdBuffer = Device->graphicsCmdBuffer;
 
 	//	vkCall(vkResetCommandPool(m_device, m_commandPool, 0));
 
@@ -319,8 +319,8 @@ void InitVulkan()
 
 	cmdBuffer.end();
 
-	Device->mainQueue.submit(1, &end_info, {});
-	Device->mainQueue.waitIdle();
+	Device->graphicsQueue.submit(1, &end_info, {});
+	Device->graphicsQueue.waitIdle();
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }

@@ -21,13 +21,13 @@ struct RBuffer {
 		UploadData(&data, sizeof(T));
 	}
 
-	operator vk::Buffer() const noexcept { return m_handle.get(); }
-	vk::DeviceMemory GetMemory() const { return m_memory.get(); }
+	operator vk::Buffer() const { return handle.get(); }
+	vk::DeviceMemory GetMemory() const { return memory.get(); }
 
 	[[nodiscard]] vk::DeviceAddress GetAddress() const noexcept;
 
 private:
-	vk::UniqueBuffer m_handle;
-	vk::UniqueDeviceMemory m_memory;
+	vk::UniqueBuffer handle;
+	vk::UniqueDeviceMemory memory;
 };
 } // namespace vl

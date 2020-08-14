@@ -79,7 +79,7 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 			vk::DescriptorImageInfo imageInfo{};
 			imageInfo
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(img.image)
+				.setImageView(img.image())
 				.setSampler(sampler);
 
 			vk::WriteDescriptorSet descriptorWrite{};
