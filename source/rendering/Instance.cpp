@@ -2,7 +2,7 @@
 #include "Instance.h"
 
 #include "engine/console/ConsoleVariable.h"
-#include "engine/Logger.h"
+#include "engine/Input.h"
 #include "rendering/VulkanLoader.h"
 
 #include <glfw/glfw3.h>
@@ -23,7 +23,9 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(
 	return pfnVkDestroyDebugUtilsMessengerEXT(instance, messenger, pAllocator);
 }
 
-ConsoleVariable<bool> showValidationErrors{ "r.showValidation", true, "Enables vulkan validation layer errors" };
+ConsoleVariable<bool> showValidationErrors{ "r.validation.show", true, "Enables vulkan validation layer errors" };
+ConsoleVariable<bool> validationBreakOnError{ "r.validation.breakOnError", false,
+	"Breaks to allow the debugger to get a call stack." };
 
 namespace {
 VkBool32 DebugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -70,7 +72,13 @@ VkBool32 DebugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: LOG_INFO("{}", message.c_str()); break;
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: LOG_WARN("{}", message.c_str()); break;
-		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: LOG_ERROR("{}", message.c_str()); break;
+		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: {
+			LOG_ERROR("{}", message.c_str());
+			if (validationBreakOnError) {
+				LOG_ABORT("");
+			}
+			break;
+		}
 	}
 
 	return false;
@@ -176,6 +184,11 @@ Instance_::Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwi
 
 	for (const auto dH : deviceHandles) {
 		physicalDevices.emplace_back(dH, surface);
+	}
+
+
+	if (Input.IsDown(Key::Shift)) {
+		*validationBreakOnError = true;
 	}
 }
 

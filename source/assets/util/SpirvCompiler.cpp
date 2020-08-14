@@ -26,22 +26,6 @@ std::vector<uint32> CompileImpl(
 {
 	using namespace glslang;
 
-
-	if (shadername == "spotlight.frag") {
-		std::ifstream file("engine-data/spv/ppt/light/frag.spv", std::ios_base::binary | std::ios_base::ate);
-
-		size_t fileSize = (size_t)file.tellg();
-		std::vector<uint32> buffer(fileSize / 4);
-
-		file.seekg(0);
-		file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
-
-		file.close();
-
-
-		return buffer;
-	}
-
 	auto reportError = [&](TShader& shader) {
 		if (!outError) {
 			auto er = fmt::format("\nGLSL Compiler Error: {}.\n===\n{}\n====", shadername, shader.getInfoLog());
@@ -92,7 +76,6 @@ std::vector<uint32> CompileImpl(
 		}
 	};
 
-
 	std::vector<uint32> outCode;
 
 	static bool HasInitGlslLang = false;
@@ -109,13 +92,12 @@ std::vector<uint32> CompileImpl(
 	const char* fname = shadername.c_str();
 	EShLanguage ShaderType = stage;
 	glslang::TShader Shader(ShaderType);
-	// Shader.setStrings(&InputCString, 1);
 	Shader.setStringsWithLengthsAndNames(&InputCString, nullptr, &fname, 1);
 
 
 	const int ShaderLanguageVersion = 460;
 	const EShTargetClientVersion VulkanVersion = glslang::EShTargetVulkan_1_2;
-	const EShTargetLanguageVersion SPIRVVersion = glslang::EShTargetSpv_1_4;
+	const EShTargetLanguageVersion SPIRVVersion = glslang::EShTargetSpv_1_5;
 
 	Shader.setEnvInput(EShSourceGlsl, ShaderType, EShClientVulkan, VulkanVersion);
 	Shader.setEnvClient(EShClientVulkan, VulkanVersion);
@@ -130,18 +112,8 @@ std::vector<uint32> CompileImpl(
 	Includer.pushExternalLocalDirectory("./engine-data/spv/");
 	Includer.pushExternalLocalDirectory("./engine-data/spv/includes");
 
-
-	std::string PreprocessedGLSL;
-	if (!Shader.preprocess(&DefaultTBuiltInResource, ShaderLanguageVersion, ENoProfile, false, false,
-			(EShMessages)(EShMsgSpvRules | EShMsgVulkanRules), &PreprocessedGLSL, Includer)) {
-		reportError(Shader);
-		return {};
-	}
-
-	const char* GLSLcharArray = PreprocessedGLSL.c_str();
-	Shader.setStrings(&GLSLcharArray, 1);
-	if (!Shader.parse(
-			&DefaultTBuiltInResource, ShaderLanguageVersion, true, (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules))) {
+	if (!Shader.parse(&DefaultTBuiltInResource, ShaderLanguageVersion, true,
+			(EShMessages)(EShMsgSpvRules | EShMsgVulkanRules), Includer)) {
 		reportError(Shader);
 		return {};
 	}

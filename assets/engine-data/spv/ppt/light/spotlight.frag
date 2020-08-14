@@ -133,8 +133,6 @@ void main() {
 	rayQueryInitializeEXT(rayQuery, topLevelAS, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, origin, tMin,
                       direction, tMax);
 
-
-
 		// Start traversal: return false if traversal is complete
 	while(rayQueryProceedEXT(rayQuery))
 	{
@@ -142,47 +140,12 @@ void main() {
 		return;
 	}
       
-    		// Returns type of committed (true) intersection
+	// Returns type of committed (true) intersection
 	if(rayQueryGetIntersectionTypeEXT(rayQuery, false) != gl_RayQueryCommittedIntersectionNoneEXT)
 	{
 	  // Got an intersection == Shadow
 	  outColor = vec4(0);
 	}
-	else outColor = vec4(1,0,0,0);
+	else outColor = vec4(0.08,0,0,0);
 }                               
-                                
-                                 
-                                  
-                                   
-                                    
-                                     
-                                            
-                                               
-                                                 
-                                                  
-                                                   
-                                                                                                                                    
-                                                                                                                                              
-                                                                                                                                               
-                                                                                                                                        
-                                                                                                                                         
-                                                                                                                                          
-                                                                                                                                           
-                                                                                                                                             
-                                                                                                                                             
-                                                                                                                                                
-                                                                                                                                                 
-                                                                                                                                                   
-                                                                                                                                                  
-                                                                                                                                                   
-                                                                                                                                                     
-                                                                                                                                                      
-                                                                                                                                                       
-                                                                                                                                                        
-                                                                                                                                                             
-                                                                                                                                                              
-
-
-
-
 

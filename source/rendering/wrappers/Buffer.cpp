@@ -6,10 +6,14 @@
 namespace vl {
 
 
-RBuffer::RBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
+RBuffer::RBuffer(vk::DeviceSize inSize, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
 	vk::MemoryAllocateFlags allocFlags)
-	: size(size)
+	: size(
+		std::max(inSize, 1llu)) // Fixes many allocation of 0 errors. Better if checks can usually workaround these
+								// calls but in general we just do something that will not crash and spit out a warning
 {
+	CLOG_WARN(inSize == 0, "RBuffer requested with size 0 bytes. A buffer of size 1 byte will be given instead.");
+
 	vk::BufferCreateInfo bufferInfo{};
 	bufferInfo
 		.setSize(size) //
@@ -66,11 +70,14 @@ void RBuffer::CopyBuffer(const RBuffer& other)
 	Device->dmaQueue.waitIdle();
 }
 
-void RBuffer::UploadData(const void* data, size_t size)
+void RBuffer::UploadData(const void* data, size_t uploadSize)
 {
-	void* dptr = Device->mapMemory(memory.get(), 0, size);
-	memcpy(dptr, data, size);
-	Device->unmapMemory(memory.get());
+	CLOG_ERROR(uploadSize > size, "Attempting to upload a bigger size to rbuffer of smaller size.");
+	if (uploadSize > 0 && uploadSize <= size) {
+		void* dptr = Device->mapMemory(memory.get(), 0, uploadSize);
+		memcpy(dptr, data, uploadSize);
+		Device->unmapMemory(memory.get());
+	}
 }
 
 void RBuffer::UploadData(const std::vector<byte>& data)

@@ -75,4 +75,7 @@ void GpuMesh::Update(const AssetUpdateInfo& info)
 		blas = BottomLevelAs(sizeof(Vertex), geometryGroups, //
 			vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace);
 	}
+	else {
+		blas.handle.reset();
+	}
 }
