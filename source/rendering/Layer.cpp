@@ -17,8 +17,9 @@
 #include "universe/Universe.h"
 #include "engine/Input.h"
 #include "universe/systems/SceneCmdSystem.h"
-#include <editor\EditorObject.h>
+#include "editor/EditorObject.h"
 #include "rendering/scene/SceneSpotlight.h"
+#include "engine/profiler/ProfileScope.h"
 
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
 	"Builds all build-able scene nodes" };
@@ -148,13 +149,18 @@ void Layer_::DrawFrame()
 	currentFrame = (currentFrame + 1) % c_framesInFlight;
 	auto currentCmdBuffer = &m_cmdBuffer[currentFrame];
 
-	Device->waitForFences({ *m_inFlightFence[currentFrame] }, true, UINT64_MAX);
-	Device->resetFences({ *m_inFlightFence[currentFrame] });
+	{
+		PROFILE_SCOPE(Renderer);
 
-	currentScene->UploadDirty(currentFrame);
+		Device->waitForFences({ *m_inFlightFence[currentFrame] }, true, UINT64_MAX);
+		Device->resetFences({ *m_inFlightFence[currentFrame] });
 
+		currentScene->UploadDirty(currentFrame);
+	}
 	uint32 imageIndex;
+
 	Device->acquireNextImageKHR(*mainSwapchain, UINT64_MAX, { m_imageAvailSem[currentFrame].get() }, {}, &imageIndex);
+
 
 	auto outRp = mainSwapchain->renderPass.get();
 	auto outFb = mainSwapchain->framebuffers[imageIndex].get();
@@ -206,6 +212,7 @@ void Layer_::DrawFrame()
 		.setPSwapchains(swapChains)
 		.setPImageIndices(&imageIndex)
 		.setPResults(nullptr);
+
 
 	Device->presentQueue.presentKHR(presentInfo);
 }

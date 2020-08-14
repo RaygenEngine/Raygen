@@ -310,7 +310,7 @@ vk::UniquePipeline GbufferPass::CreateAnimPipeline(
 void GbufferPass::RecordCmd(
 	vk::CommandBuffer* cmdBuffer, vk::Viewport viewport, vk::Rect2D scissor, const SceneRenderDesc& sceneDesc)
 {
-	PROFILE_SCOPE(Renderer);
+	// PROFILE_SCOPE(Renderer);
 
 	vk::CommandBufferInheritanceInfo ii{};
 	ii.setRenderPass(Layouts->gbufferPass.get()) //
@@ -338,6 +338,7 @@ void GbufferPass::RecordCmd(
 		auto descSet = camera->descSet[sceneDesc.frameIndex];
 
 		for (auto geom : sceneDesc->geometries.elements) {
+
 			if (!geom) {
 				continue;
 			}
@@ -346,6 +347,8 @@ void GbufferPass::RecordCmd(
 			};
 
 			for (auto& gg : geom->model.Lock().geometryGroups) {
+				PROFILE_SCOPE(Renderer);
+
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
 
