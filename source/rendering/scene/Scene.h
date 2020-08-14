@@ -58,6 +58,7 @@ struct Scene {
 	// size_t size{ 0 };
 
 	vk::UniqueAccelerationStructureKHR sceneAS;
+	vk::DescriptorSet sceneAsDescSet;
 
 	template<CONC(CSceneElem) T>
 	T* GetElement(size_t uid)
@@ -102,11 +103,7 @@ struct Scene {
 		size_t uid{};
 		if constexpr (std::is_same_v<SceneGeometry, T>) {
 			uid = geometries.elements.size() + geometries.pendingElements++;
-			currentCmdBuffer->emplace_back([&, uid]() {
-				geometries.elements[uid] = new SceneGeometry();
-				// WIP:
-				tlas = vl::TopLevelAs(geometries.elements);
-			});
+			currentCmdBuffer->emplace_back([&, uid]() { geometries.elements[uid] = new SceneGeometry(); });
 		}
 		else if constexpr (std::is_same_v<SceneCamera, T>) {
 			uid = cameras.elements.size() + cameras.pendingElements++;

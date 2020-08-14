@@ -5,6 +5,7 @@
 #include "engine/console/ConsoleVariable.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/Device.h"
+#include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneDirectionalLight.h"
@@ -44,6 +45,8 @@ Scene::Scene()
 {
 	EnqueueEndFrame();
 	EnqueueCreateCmd<SceneCamera>(); // TODO: editor camera
+
+	sceneAsDescSet = vl::Layouts->accelLayout.GetDescriptorSet();
 }
 
 Scene::~Scene()
@@ -69,6 +72,36 @@ void Scene::UploadDirty(uint32 frameIndex)
 {
 	const bool primaryDirty = activeCamera > 0 && cameras.elements[activeCamera]->isDirty[frameIndex];
 
+	for (auto gm : geometries.elements) {
+		if (gm && gm->isDirty[frameIndex]) {
+			// WIP:
+			tlas = vl::TopLevelAs(geometries.elements);
+
+			auto pTlas = &tlas.handle.get();
+
+			vk::WriteDescriptorSetAccelerationStructureKHR descASInfo{};
+			descASInfo
+				.setAccelerationStructureCount(1) //
+				.setPAccelerationStructures(pTlas);
+
+			vk::WriteDescriptorSet descriptorWrite{};
+			descriptorWrite
+				.setDstSet(sceneAsDescSet) //
+				.setDstBinding(0u)
+				.setDstArrayElement(0u)
+				.setDescriptorType(vk::DescriptorType::eAccelerationStructureKHR)
+				.setDescriptorCount(1u)
+				.setPBufferInfo(nullptr)
+				.setPImageInfo(nullptr)
+				.setPTexelBufferView(nullptr)
+				.setPNext(&descASInfo);
+
+			// single call to update all descriptor sets with the new depth image
+			vl::Device->updateDescriptorSets({ descriptorWrite }, {});
+
+			gm->isDirty[frameIndex] = false;
+		}
+	}
 
 	for (auto cam : cameras.elements) {
 		if (cam && cam->isDirty[frameIndex]) {

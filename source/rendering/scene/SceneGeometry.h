@@ -6,7 +6,7 @@ struct SceneGeometry {
 	glm::mat4 transform;
 	vl::GpuHandle<Mesh> mesh;
 
-	std::vector<bool> isDirty;
+	FrameArray<bool> isDirty{ true };
 };
 
 struct SceneAnimatedGeometry {

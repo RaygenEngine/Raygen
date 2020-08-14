@@ -102,7 +102,8 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 		.setBuildType(vk::AccelerationStructureBuildTypeKHR::eDevice);
 
 	auto reqMem = Device->getAccelerationStructureMemoryRequirementsKHR(asMemReqsInfo);
-	auto scratchBufferSize = reqMem.memoryRequirements.size;
+	const auto scratchBufferSize = reqMem.memoryRequirements.size;
+	LOG_REPORT("Top level accel size reqs {}KB", scratchBufferSize / 1000.0);
 
 	// Allocate the scratch memory
 	RBuffer scratchBuffer{ scratchBufferSize,
@@ -129,11 +130,21 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 
 	// Allocate the instance buffer and copy its contents from host to device
 	// memory
-	RBuffer instBuffer{ instanceDescsSizeInBytes,
-		vk::BufferUsageFlagBits::eRayTracingKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+
+	RBuffer stagingbuffer{ instanceDescsSizeInBytes, vk::BufferUsageFlagBits::eTransferSrc,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+
+	// copy data to buffer
+	stagingbuffer.UploadData(geometryInstances.data(), instanceDescsSizeInBytes);
+
+	instanceBuffer = { instanceDescsSizeInBytes,
+		vk::BufferUsageFlagBits::eRayTracingKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress
+			| vk::BufferUsageFlagBits::eTransferDst,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
-	instBuffer.UploadData(geometryInstances.data(), instanceDescsSizeInBytes);
-	DEBUG_NAME(vk::Buffer(instBuffer), "TLASInstances");
+
+	instanceBuffer.CopyBuffer(stagingbuffer);
+
+	DEBUG_NAME(vk::Buffer(instanceBuffer), "TLASInstances");
 
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -156,13 +167,12 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 		.setCommandBufferCount(1u) //
 		.setPCommandBuffers(&Device->computeCmdBuffer);
 
-	Device->computeQueue.submit(1u, &submitInfo, {});
 
 	// Build the TLAS
 	vk::AccelerationStructureGeometryDataKHR geometry{};
 	geometry.instances
 		.setArrayOfPointers(VK_FALSE) //
-		.data.setDeviceAddress(instBuffer.GetAddress());
+		.data.setDeviceAddress(instanceBuffer.GetAddress());
 
 	vk::AccelerationStructureGeometryKHR topASGeometry{};
 	topASGeometry
@@ -190,6 +200,9 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 	// Build the TLAS
 	Device->computeCmdBuffer.buildAccelerationStructureKHR(1u, &topASInfo, pBuildOffset.data());
 
+	Device->computeCmdBuffer.end();
+
+	Device->computeQueue.submit(1u, &submitInfo, {});
 
 	Device->computeQueue.waitIdle();
 

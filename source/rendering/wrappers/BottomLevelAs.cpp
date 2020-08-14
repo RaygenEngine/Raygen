@@ -113,8 +113,8 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const std::vector<GpuGeometryG
 	auto memReqs = Device->getAccelerationStructureMemoryRequirementsKHR(asMemReqsInfo);
 
 	// Acceleration structure build requires some scratch space to store temporary information
-	const vk::DeviceSize scratchBufferSize = memReqs.memoryRequirements.size;
-	LOG_REPORT("Size reqs {}MB", scratchBufferSize / 1000000.0);
+	const auto scratchBufferSize = memReqs.memoryRequirements.size;
+	LOG_REPORT("Bottom level accel size reqs {}KB", scratchBufferSize / 1000.0);
 
 	RBuffer scratchBuffer{ scratchBufferSize,
 		vk::BufferUsageFlagBits::eRayTracingKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress,
