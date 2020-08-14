@@ -18,12 +18,14 @@ RDepthmap::RDepthmap(uint32 width, uint32 height, const char* name)
 
 	attachment.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
+	vk::ImageView imv = attachment;
+
 	// framebuffer
 	vk::FramebufferCreateInfo createInfo{};
 	createInfo
 		.setRenderPass(Layouts->depthRenderPass.get()) //
 		.setAttachmentCount(1u)
-		.setPAttachments(&vk::ImageView(attachment))
+		.setPAttachments(&imv)
 		.setWidth(width)
 		.setHeight(height)
 		.setLayers(1);
