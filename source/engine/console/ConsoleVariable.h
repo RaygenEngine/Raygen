@@ -59,6 +59,8 @@ struct ConsoleVariable : public ConsoleEntry {
 
 	[[nodiscard]] operator T&() { return value; }
 
+	[[nodiscard]] T& operator*() { return value; }
+
 	virtual ~ConsoleVariable() = default;
 
 protected:

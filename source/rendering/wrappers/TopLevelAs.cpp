@@ -34,15 +34,14 @@ namespace vl {
 TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 {
 	for (int i = 0, j = 0; i < static_cast<int>(geoms.size()); i++) {
-		if (geoms[i] && !geoms[i]->mesh.IsDefault()) {
-
+		if (geoms[i] && geoms[i]->mesh.Lock().blas.handle) {
 			AsInstance inst{};
 			inst.transform = geoms[i]->transform; // Position of the instance
 			inst.id = j;                          // gl_InstanceID
 			inst.blasAddress = geoms[i]->mesh.Lock().blas.GetAddress();
 			inst.hitGroupId = 0; // We will use the same hit group for all objects
 			inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable; // WIP:
-			instances.emplace_back(inst);
+			instances.emplace_back(std::move(inst));
 			++j;
 		}
 	}
