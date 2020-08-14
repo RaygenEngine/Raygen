@@ -276,7 +276,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 				viewProj * geom->transform
 			};
 
-			for (auto& gg : geom->model.Lock().geometryGroups) {
+			for (auto& gg : geom->mesh.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
 				if (arch.isUnlit)
@@ -315,7 +315,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 				viewProj * geom->transform
 			};
 
-			for (auto& gg : geom->model.Lock().geometryGroups) {
+			for (auto& gg : geom->mesh.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
 				if (arch.isUnlit)

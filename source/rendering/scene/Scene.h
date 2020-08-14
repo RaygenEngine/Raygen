@@ -1,10 +1,9 @@
 #pragma once
 // MAINT: Remove
 #include "rendering/Device.h"
+#include "rendering/wrappers/TopLevelAs.h"
 
-#include <functional>
 #include <mutex>
-#include <vector>
 
 struct SceneGeometry;
 struct SceneCamera;
@@ -46,6 +45,8 @@ struct Scene {
 	SceneVector<SceneSpotlight> spotlights;
 	SceneVector<SceneDirectionalLight> directionalLights;
 	SceneVector<SceneReflectionProbe> reflProbs;
+
+	vl::TopLevelAs tlas;
 
 	std::vector<UniquePtr<std::vector<std::function<void()>>>> cmds;
 	std::vector<std::function<void()>>* currentCmdBuffer;
@@ -101,7 +102,11 @@ struct Scene {
 		size_t uid{};
 		if constexpr (std::is_same_v<SceneGeometry, T>) {
 			uid = geometries.elements.size() + geometries.pendingElements++;
-			currentCmdBuffer->emplace_back([&, uid]() { geometries.elements[uid] = new SceneGeometry(); });
+			currentCmdBuffer->emplace_back([&, uid]() {
+				geometries.elements[uid] = new SceneGeometry();
+				// WIP:
+				tlas = vl::TopLevelAs(geometries.elements);
+			});
 		}
 		else if constexpr (std::is_same_v<SceneCamera, T>) {
 			uid = cameras.elements.size() + cameras.pendingElements++;

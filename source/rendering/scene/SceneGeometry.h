@@ -4,14 +4,14 @@
 // TODO: rename model stuff
 struct SceneGeometry {
 	glm::mat4 transform;
-	vl::GpuHandle<Mesh> model;
+	vl::GpuHandle<Mesh> mesh;
 
 	std::vector<bool> isDirty;
 };
 
 struct SceneAnimatedGeometry {
 	glm::mat4 transform{};
-	vl::GpuHandle<SkinnedMesh> model;
+	vl::GpuHandle<SkinnedMesh> mesh;
 	PodHandle<SkinnedMesh> modelPod;
 
 	std::vector<glm::mat4> jointMatrices;

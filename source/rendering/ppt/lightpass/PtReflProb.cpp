@@ -77,12 +77,13 @@ void PtReflProb::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneD
 		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u, &descSet, 0u, nullptr);
 
 	for (auto rp : sceneDesc->reflProbs.elements) {
+		if (rp) {
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
+				&rp->envmap.Lock().descriptorSet, 0u, nullptr);
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
-			&rp->envmap.Lock().descriptorSet, 0u, nullptr);
-
-		// draw call (triangle)
-		cmdBuffer.draw(3u, 1u, 0u, 0u);
+			// draw call (triangle)
+			cmdBuffer.draw(3u, 1u, 0u, 0u);
+		}
 	}
 }
 } // namespace vl
