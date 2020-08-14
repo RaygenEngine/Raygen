@@ -69,6 +69,7 @@ void Scene::UploadDirty(uint32 frameIndex)
 {
 	const bool primaryDirty = activeCamera > 0 && cameras.elements[activeCamera]->isDirty[frameIndex];
 
+
 	for (auto cam : cameras.elements) {
 		if (cam && cam->isDirty[frameIndex]) {
 			cam->UploadUbo(frameIndex);
