@@ -90,5 +90,13 @@ BasePodHandle ShaderImporter::Import(const fs::path& path)
 	loadStage(pod->vertex, ".vert");
 	loadStage(pod->fragment, ".frag");
 
+	loadStage(pod->rayGen, ".rgen");
+	loadStage(pod->intersect, ".rint");
+	loadStage(pod->anyHit, ".rahit");
+	loadStage(pod->closestHit, ".rchit");
+	loadStage(pod->miss, ".rmiss");
+
+	loadStage(pod->callable, ".rcall");
+
 	return handle;
 }

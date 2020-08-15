@@ -8,12 +8,25 @@ struct GpuShader : public GpuAssetTemplate<Shader> {
 	GpuHandle<ShaderStage> vert;
 	GpuHandle<ShaderStage> frag;
 
+
+	GpuHandle<ShaderStage> rayGen;
+	GpuHandle<ShaderStage> intersect;
+	GpuHandle<ShaderStage> anyHit;
+	GpuHandle<ShaderStage> closestHit;
+	GpuHandle<ShaderStage> miss;
+
+	GpuHandle<ShaderStage> callable;
+
+	// ONLY includes vert & frag. DOES NOT include raytracing stages. Just use the handles directly for ray tracing.
 	std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
 
 
 	[[nodiscard]] bool HasValidModule() const;
 	virtual void Update(const AssetUpdateInfo& info) override;
 	std::function<void()> onCompile;
+
+
+	std::function<void()> onCompileRayTracing;
 
 private:
 	void BuildShaderStages();

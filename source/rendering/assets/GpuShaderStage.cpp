@@ -31,7 +31,7 @@ void GpuShaderStage::Update(const AssetUpdateInfo& info)
 
 	if (binary.empty()) {
 		if (!info.HasFlag("editor")) {
-			LOG_ERROR("Attempting to make shader stage {} : {} with no binary data",
+			LOG_WARN("Attempting to make shader stage {}: {} when compilation failed. keeping previous shader module.",
 				GenMetaEnum(podPtr->stage).GetValueStr(), AssetHandlerManager::GetEntry(podHandle)->path);
 		}
 		lastCompileSuccess = false;

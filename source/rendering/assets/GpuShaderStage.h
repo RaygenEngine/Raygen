@@ -13,6 +13,7 @@ struct GpuShaderStage : public GpuAssetTemplate<ShaderStage> {
 	// On failed compilations the shadermodule will not be reset and the previous one is preserved.
 	// Use WasLastCompileSuccessful to detect the last compilation status
 	[[nodiscard]] bool HasValidModule() const;
+
 	// Checks if the last compile was successful.
 	[[nodiscard]] bool WasLastCompileSuccessful() const;
 
