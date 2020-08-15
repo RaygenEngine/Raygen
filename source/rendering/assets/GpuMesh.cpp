@@ -52,12 +52,12 @@ void GpuMesh::Update(const AssetUpdateInfo& info)
 		// device local
 		vgg.vertexBuffer = RBuffer{ vertexBufferSize,
 			vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer
-				| vk::BufferUsageFlagBits::eShaderDeviceAddress,
+				| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
 			vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
 		vgg.indexBuffer = RBuffer{ indexBufferSize,
 			vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer
-				| vk::BufferUsageFlagBits::eShaderDeviceAddress,
+				| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
 			vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
 

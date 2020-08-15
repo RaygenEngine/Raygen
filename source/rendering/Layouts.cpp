@@ -10,20 +10,20 @@ Layouts_::Layouts_()
 {
 	// gbuffer
 	for (uint32 i = 0u; i < GCount; ++i) {
-		gbufferDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+		gbufferDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
+			vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR);
 	}
 	gbufferDescLayout.Generate();
 
-	// reg mat
-	regularMaterialDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
+	// gltf material
+	gltfMaterialDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
 	for (uint32 i = 0; i < 5u; ++i) {
-		regularMaterialDescLayout.AddBinding(
+		gltfMaterialDescLayout.AddBinding(
 			vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	}
-	regularMaterialDescLayout.Generate();
+	gltfMaterialDescLayout.Generate();
 
-	// camera
-	// PERF: could have two seperate for each stage
+	// single
 	singleUboDescLayout.AddBinding(
 		vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 	singleUboDescLayout.Generate();
@@ -32,7 +32,7 @@ Layouts_::Layouts_()
 	jointsDescLayout.AddBinding(vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eVertex);
 	jointsDescLayout.Generate();
 
-	// spotlights
+	// single sampler
 	singleSamplerDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	singleSamplerDescLayout.Generate();
 
@@ -48,8 +48,15 @@ Layouts_::Layouts_()
 	envmapLayout.Generate();
 
 	// accel
-	accelLayout.AddBinding(vk::DescriptorType::eAccelerationStructureKHR, vk::ShaderStageFlagBits::eFragment);
+	accelLayout.AddBinding(vk::DescriptorType::eAccelerationStructureKHR,
+		vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR
+			| vk::ShaderStageFlagBits::eClosestHitKHR);
 	accelLayout.Generate();
+
+	// rt
+	rtTriangleGeometry.AddBinding(vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR);
+	rtTriangleGeometry.AddBinding(vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR);
+	rtTriangleGeometry.Generate();
 
 	// image debug
 	imageDebugDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);

@@ -4,7 +4,7 @@
 namespace vl {
 inline struct Layouts_ {
 
-	RDescriptorLayout regularMaterialDescLayout;
+	RDescriptorLayout gltfMaterialDescLayout;
 	RDescriptorLayout gbufferDescLayout;
 	RDescriptorLayout singleUboDescLayout;
 	RDescriptorLayout jointsDescLayout;
@@ -12,6 +12,8 @@ inline struct Layouts_ {
 	RDescriptorLayout cubemapLayout;
 	RDescriptorLayout envmapLayout;
 	RDescriptorLayout accelLayout;
+
+	RDescriptorLayout rtTriangleGeometry;
 
 
 	RDescriptorLayout imageDebugDescLayout;

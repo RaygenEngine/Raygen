@@ -152,11 +152,16 @@ Renderer_::Renderer_()
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_ppDescSet[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
 	}
+
+	for (uint32 i = 0; i < c_framesInFlight; ++i) {
+		m_rtDescSet[i] = Layouts->rtTriangleGeometry.GetDescriptorSet();
+	}
 }
 
 void Renderer_::InitPipelines(vk::RenderPass outRp)
 {
 	MakeCopyHdrPipeline(outRp);
+	MakeRtPipeline();
 	m_postprocCollection.RegisterTechniques();
 }
 
@@ -286,6 +291,108 @@ void Renderer_::MakeCopyHdrPipeline(vk::RenderPass outRp)
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
+void Renderer_::MakeRtPipeline()
+{
+	// all rt shaders here
+	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/test.shader");
+	shader.onCompile = [&]() {
+		MakeRtPipeline();
+	};
+
+	// Indices within this vector will be used as unique identifiers for the shaders in the Shader Binding Table.
+	std::vector<vk::PipelineShaderStageCreateInfo> stages;
+
+	// Raygen
+	vk::RayTracingShaderGroupCreateInfoKHR rg{};
+	rg.setType(vk::RayTracingShaderGroupTypeKHR::eGeneral) //
+		.setGeneralShader(VK_SHADER_UNUSED_KHR)
+		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
+		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
+		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eRaygenKHR, raygenSM, "main" });
+	rg.setGeneralShader(static_cast<uint32>(stages.size() - 1));
+
+	// m_rtShaderGroups.push_back(rg);
+
+	// Miss
+	vk::RayTracingShaderGroupCreateInfoKHR mg{};
+	mg.setType(vk::RayTracingShaderGroupTypeKHR::eGeneral) //
+		.setGeneralShader(VK_SHADER_UNUSED_KHR)
+		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
+		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
+		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eMissKHR, missSM, "main" });
+	rg.setGeneralShader(static_cast<uint32>(stages.size() - 1));
+
+	// m_rtShaderGroups.push_back(mg);
+
+	vk::RayTracingShaderGroupCreateInfoKHR hg{};
+	hg.setType(vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup) //
+		.setGeneralShader(VK_SHADER_UNUSED_KHR)
+		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
+		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
+		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eClosestHitKHR, chitSM, "main" });
+	hg.setClosestHitShader(static_cast<uint32>(stages.size() - 1));
+
+	// m_rtShaderGroups.push_back(hg);
+
+	// Push constant: we want to be able to update constants used by the shaders
+	vk::PushConstantRange pushConstant{};
+	pushConstant
+		.setStageFlags(vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR
+					   | vk::ShaderStageFlagBits::eMissKHR) //
+		.setOffset(0u)
+		.setSize(sizeof(pushConstant));
+
+	std::array layouts = {....};
+
+	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo
+		.setPushConstantRangeCount(1u) //
+		.setPPushConstantRanges(&pushConstant)
+		.setSetLayoutCount(static_cast<uint32>(layouts.size()))
+		.setPSetLayouts(layouts.data());
+
+	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+
+	// Assemble the shader stages and recursion depth info into the ray tracing pipeline
+	vk::RayTracingPipelineCreateInfoKHR rayPipelineInfo{};
+	rayPipelineInfo
+		.setStageCount(static_cast<uint32>(stages.size())) // Stages are shaders
+		.setPStages(stages.data());
+
+	rayPipelineInfo
+		.setGroupCount(static_cast<uint32>(m_rtShaderGroups.size())) // 1-raygen, n-miss, n-(hit[+anyhit+intersect])
+		.setPGroups(m_rtShaderGroups.data())
+
+		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop formulation
+		// instead.
+
+		.setMaxRecursionDepth(1) // Ray depth
+		.setLayout(m_rtPipelineLayout.get());
+	m_rtPipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
+}
+
+void Renderer_::CreateRtShaderBindingTable()
+{
+	auto groupCount = static_cast<uint32>(m_rtShaderGroups.size());     // 3 shaders: raygen, miss, chit
+	uint32 groupHandleSize = Device->pd.rtProps.shaderGroupHandleSize;  // Size of a program identifier
+	uint32 baseAlignment = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of shader alignment
+
+	// Fetch all the shader handles used in the pipeline, so that they can be written in the SBT
+	uint32 sbtSize = groupCount * baseAlignment;
+
+	std::vector<byte> shaderHandleStorage(sbtSize);
+	Device->getRayTracingShaderGroupHandlesKHR(m_rtPipeline.get(), 0, groupCount, sbtSize, shaderHandleStorage.data());
+	// Write the handles in the SBT
+	RBuffer rtSBTBuffer = RBuffer{ sbtSize, vk::BufferUsageFlagBits::eTransferSrc,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+	// m_debug.setObjectName(m_rtSBTBuffer.buffer, std::string("SBT").c_str());
+
+	rtSBTBuffer.UploadData(shaderHandleStorage);
+}
+
 void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
@@ -384,7 +491,6 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 		}
 	};
 
-
 	for (auto sl : sceneDesc->spotlights.elements) {
 		shadowmapRenderpass(sl);
 	}
@@ -392,6 +498,72 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 	for (auto dl : sceneDesc->directionalLights.elements) {
 		shadowmapRenderpass(dl);
 	}
+}
+
+void Renderer_::RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
+{
+	// NEXT: temp
+	// write all geometry, indices to this desc set... how to combine them tho?
+	vk::DescriptorBufferInfo bufferInfo{};
+
+	bufferInfo
+		.setBuffer(buffer[i]) //
+		.setOffset(0u)
+		.setRange(GetBufferSize());
+	vk::WriteDescriptorSet descriptorWrite{};
+
+	descriptorWrite
+		.setDstSet(descSet[i]) //
+		.setDstBinding(0u)
+		.setDstArrayElement(0u)
+		.setDescriptorType(vk::DescriptorType::eStorageBuffer)
+		.setDescriptorCount(1u)
+		.setPBufferInfo(&bufferInfo)
+		.setPImageInfo(nullptr)
+		.setPTexelBufferView(nullptr);
+
+	vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+
+
+	// Initializing push constant values
+	// WIP: what about secondary buffers?
+	cmdBuffer->executeCommands({ buffer });
+
+
+	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipeline.get());
+	cmdBuffer->bindDescriptorSets(
+		vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout, 0, { m_rtDescSet, m_descSet }, {});
+	// cmdBuf.pushConstants<RtPushConstant>(m_rtPipelineLayout,
+	//	vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR
+	//		| vk::ShaderStageFlagBits::eMissKHR,
+	//	0, m_rtPushConstants);
+
+	vk::DeviceSize progSize = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of a program identifier
+	vk::DeviceSize rayGenOffset = 0u * progSize;                           // Start at the beginning of m_sbtBuffer
+	vk::DeviceSize missOffset = 1u * progSize;                             // Jump over raygen
+	vk::DeviceSize missStride = progSize;
+	vk::DeviceSize hitGroupOffset = 2u * progSize; // Jump over the previous shaders
+	vk::DeviceSize hitGroupStride = progSize;
+
+	// We can finally call traceRaysKHR that will add the ray tracing launch in the command buffer. Note that the SBT
+	// buffer is mentioned several times. This is due to the possibility of separating the SBT into several buffers, one
+	// for each type: ray generation, miss shaders, hit groups, and callable shaders (outside the scope of this
+	// tutorial). The last three parameters are equivalent to the grid size of a compute launch, and represent the total
+	// number of threads. Since we want to trace one ray per pixel, the grid size has the width and height of the output
+	// image, and a depth of 1.
+
+	vk::DeviceSize sbtSize = progSize * (vk::DeviceSize)m_rtShaderGroups.size();
+
+	const vk::StridedBufferRegionKHR raygenShaderBindingTable = { m_rtSBTBuffer, rayGenOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR missShaderBindingTable = { m_rtSBTBuffer, missOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR hitShaderBindingTable = { m_rtSBTBuffer, hitGroupOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR callableShaderBindingTable;
+
+
+	auto& extent = m_gbuffer[sceneDesc.frameIndex].framebuffer.extent;
+
+	cmdBuffer->traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
+		&callableShaderBindingTable, extent.width, extent.height, 1);
 }
 
 void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
@@ -636,5 +808,4 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 	m_attachment[sceneDesc.frameIndex].TransitionForWrite(cmdBuffer);
 	m_attachment2[sceneDesc.frameIndex].TransitionForWrite(cmdBuffer);
 }
-
 } // namespace vl
