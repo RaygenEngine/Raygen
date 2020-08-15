@@ -24,6 +24,7 @@ private:
 
 
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordOutPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
 		vk::Framebuffer outFb, vk::Extent2D outExtent);
@@ -75,8 +76,17 @@ public:
 	vk::UniqueRenderPass m_ptRenderpass;
 
 
-	// TODO: RT, move those
-	vk::UniqueAccelerationStructureKHR sceneAS;
+	// TODO: RT, move those, framearray
+	vk::UniqueAccelerationStructureKHR m_sceneAS;
+	FrameArray<vk::DescriptorSet> m_rtDescSet;
+	vk::UniquePipeline m_rtPipeline;
+	vk::UniquePipelineLayout m_rtPipelineLayout;
+	RBuffer m_rtSBTBuffer;
+	std::vector<vk::RayTracingShaderGroupCreateInfoKHR> m_rtShaderGroups;
+
+	void MakeRtPipeline();
+	void CreateRtShaderBindingTable();
+
 
 	Renderer_();
 
@@ -87,6 +97,7 @@ public:
 
 	void InitPipelines(vk::RenderPass outRp);
 	void MakeCopyHdrPipeline(vk::RenderPass outRp);
+
 
 } * Renderer{};
 } // namespace vl
