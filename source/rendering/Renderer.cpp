@@ -23,7 +23,7 @@
 #include "rendering/structures/Depthmap.h"
 #include "rendering/VulkanUtl.h"
 #include "rendering/wrappers/Swapchain.h"
-
+#include "rendering/assets/GpuShaderStage.h"
 #include <editor/imgui/ImguiImpl.h>
 
 namespace {
@@ -295,9 +295,11 @@ void Renderer_::MakeRtPipeline()
 {
 	// all rt shaders here
 	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/test.shader");
-	shader.onCompile = [&]() {
+
+	shader.onCompileRayTracing = [&]() {
 		MakeRtPipeline();
 	};
+
 
 	// Indices within this vector will be used as unique identifiers for the shaders in the Shader Binding Table.
 	std::vector<vk::PipelineShaderStageCreateInfo> stages;
@@ -309,7 +311,7 @@ void Renderer_::MakeRtPipeline()
 		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
 		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
 		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
-	stages.push_back({ {}, vk::ShaderStageFlagBits::eRaygenKHR, raygenSM, "main" });
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eRaygenKHR, *shader.rayGen.Lock().module, "main" });
 	rg.setGeneralShader(static_cast<uint32>(stages.size() - 1));
 
 	// m_rtShaderGroups.push_back(rg);
@@ -321,8 +323,8 @@ void Renderer_::MakeRtPipeline()
 		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
 		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
 		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
-	stages.push_back({ {}, vk::ShaderStageFlagBits::eMissKHR, missSM, "main" });
-	rg.setGeneralShader(static_cast<uint32>(stages.size() - 1));
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eMissKHR, *shader.miss.Lock().module, "main" });
+	mg.setGeneralShader(static_cast<uint32>(stages.size() - 1));
 
 	// m_rtShaderGroups.push_back(mg);
 
@@ -332,7 +334,7 @@ void Renderer_::MakeRtPipeline()
 		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
 		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
 		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
-	stages.push_back({ {}, vk::ShaderStageFlagBits::eClosestHitKHR, chitSM, "main" });
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eClosestHitKHR, *shader.closestHit.Lock().module, "main" });
 	hg.setClosestHitShader(static_cast<uint32>(stages.size() - 1));
 
 	// m_rtShaderGroups.push_back(hg);
@@ -345,7 +347,10 @@ void Renderer_::MakeRtPipeline()
 		.setOffset(0u)
 		.setSize(sizeof(pushConstant));
 
-	std::array layouts = {....};
+
+	// WIP: Temporary to test if code compiles
+	std::array<vk::DescriptorSetLayout, 1> layouts = {};
+	// std::array layouts = {};
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
@@ -354,7 +359,7 @@ void Renderer_::MakeRtPipeline()
 		.setSetLayoutCount(static_cast<uint32>(layouts.size()))
 		.setPSetLayouts(layouts.data());
 
-	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+	m_rtPipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
 	// Assemble the shader stages and recursion depth info into the ray tracing pipeline
 	vk::RayTracingPipelineCreateInfoKHR rayPipelineInfo{};
@@ -524,7 +529,6 @@ void Renderer_::RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRe
 
 	vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 
-
 	// Initializing push constant values
 	// WIP: what about secondary buffers?
 	cmdBuffer->executeCommands({ buffer });
@@ -533,6 +537,7 @@ void Renderer_::RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRe
 	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipeline.get());
 	cmdBuffer->bindDescriptorSets(
 		vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout, 0, { m_rtDescSet, m_descSet }, {});
+
 	// cmdBuf.pushConstants<RtPushConstant>(m_rtPipelineLayout,
 	//	vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR
 	//		| vk::ShaderStageFlagBits::eMissKHR,
