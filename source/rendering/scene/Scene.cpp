@@ -73,15 +73,8 @@ void Scene::UpdateTopLevelAs()
 	// WIP:
 	tlas = vl::TopLevelAs(geometries.elements);
 
-	auto pTlas = &tlas.handle.get();
-
-	// auto p1Blas = &gm->mesh.Lock().blas.handle.get();
-
 	vk::WriteDescriptorSetAccelerationStructureKHR descASInfo{};
-	descASInfo
-		.setAccelerationStructureCount(1) //
-		.setPAccelerationStructures(pTlas)
-		.setAccelerationStructures(tlas.handle.get());
+	descASInfo.setAccelerationStructures(std::array<vk::AccelerationStructureKHR, 1u>{ tlas });
 
 	vk::WriteDescriptorSet descriptorWrite{};
 	descriptorWrite

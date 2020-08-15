@@ -4,7 +4,6 @@
 #include "assets/shared/GeometryShared.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/Device.h"
-#include "rendering/wrappers/Buffer.h"
 
 
 namespace vl {
@@ -70,40 +69,11 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const std::vector<GpuGeometryG
 
 	handle = Device->createAccelerationStructureKHRUnique(asCreateInfo);
 
-	// TODO: name of geometry of blas
 	DEBUG_NAME(handle, "Blas");
 
-	{
-		vk::AccelerationStructureMemoryRequirementsInfoKHR memInfo{};
-		memInfo
-			.setAccelerationStructure(handle.get()) //
-			.setBuildType(vk::AccelerationStructureBuildTypeKHR::eDevice)
-			.setType(vk::AccelerationStructureMemoryRequirementsTypeKHR::eObject);
+	AllocateMemory();
 
-		auto asMemReqs = Device->getAccelerationStructureMemoryRequirementsKHR(memInfo);
-
-		vk::MemoryAllocateFlagsInfo memFlagInfo{};
-		memFlagInfo.setFlags(vk::MemoryAllocateFlagBits::eDeviceAddress);
-
-		// 3. Allocate memory
-		vk::MemoryAllocateInfo memAlloc{};
-		memAlloc
-			.setAllocationSize(asMemReqs.memoryRequirements.size) //
-			.setMemoryTypeIndex(Device->FindMemoryType(
-				asMemReqs.memoryRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal));
-
-		memory = Device->allocateMemoryUnique(memAlloc);
-
-		// 4. Bind memory with acceleration structure
-		vk::BindAccelerationStructureMemoryInfoKHR bind{};
-		bind.setAccelerationStructure(handle.get()) //
-			.setMemory(memory.get())
-			.setMemoryOffset(0);
-
-		Device->bindAccelerationStructureMemoryKHR({ bind });
-	}
-
-
+	// Compute the amount of scratch memory required by the acceleration structure builder
 	vk::AccelerationStructureMemoryRequirementsInfoKHR asMemReqsInfo{};
 	asMemReqsInfo
 		.setType(vk::AccelerationStructureMemoryRequirementsTypeKHR::eBuildScratch) //
@@ -114,22 +84,25 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const std::vector<GpuGeometryG
 
 	// Acceleration structure build requires some scratch space to store temporary information
 	const auto scratchBufferSize = memReqs.memoryRequirements.size;
-	LOG_REPORT("Bottom level accel size reqs {}KB", scratchBufferSize / 1000.0);
 
-	RBuffer scratchBuffer{ scratchBufferSize,
-		vk::BufferUsageFlagBits::eRayTracingKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
+	// TODO: use a single scratch buffer based on the maximum requirements of the scene BVH\
+	// approach: create a decent sized one (in Device probably)
+	// access it from within AS construction
+	// if memReqs.size > Device->scratchBufferAs.capab.size then we need to update it (rebuild it)
+	scratchBuffer
+		= { scratchBufferSize, vk::BufferUsageFlagBits::eRayTracingKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+			  vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
 	vk::AccelerationStructureGeometryKHR* pGeometry = asGeoms.data();
-
 	vk::AccelerationStructureBuildGeometryInfoKHR asBuildGeomInfo{};
 	asBuildGeomInfo
-		.setDstAccelerationStructure(handle.get()) //
-		.setSrcAccelerationStructure({})
+		.setFlags(vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace) //
 		.setUpdate(VK_FALSE)
-		.setType(vk::AccelerationStructureTypeKHR::eBottomLevel)
+		.setSrcAccelerationStructure({})
+		.setDstAccelerationStructure(handle.get())
 		.setGeometryCount(static_cast<uint32>(asGeoms.size()))
 		.setGeometryArrayOfPointers(VK_FALSE)
+		.setType(vk::AccelerationStructureTypeKHR::eBottomLevel)
 		.setPpGeometries(&pGeometry)
 		.setScratchData(scratchBuffer.GetAddress());
 
@@ -151,7 +124,6 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const std::vector<GpuGeometryG
 		.setSrcAccessMask(vk::AccessFlagBits::eAccelerationStructureWriteKHR) //
 		.setDstAccessMask(vk::AccessFlagBits::eAccelerationStructureReadKHR);
 
-
 	Device->computeCmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR,
 		vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::DependencyFlags{ 0 },
 		std::array{ memoryBarrier }, {}, {});
@@ -166,15 +138,7 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const std::vector<GpuGeometryG
 		.setPCommandBuffers(&Device->computeCmdBuffer);
 
 	Device->computeQueue.submit(1u, &submitInfo, {});
-	Device->computeQueue.waitIdle();
-
-	Device->waitIdle();
+	Device->computeQueue.waitIdle(); // NEXT:
 }
-
-vk::DeviceAddress BottomLevelAs::GetAddress() const noexcept
-{
-	return Device->getAccelerationStructureAddressKHR(vk::AccelerationStructureDeviceAddressInfoKHR{ handle.get() });
-}
-
 
 } // namespace vl

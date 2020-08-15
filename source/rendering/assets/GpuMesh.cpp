@@ -76,6 +76,7 @@ void GpuMesh::Update(const AssetUpdateInfo& info)
 			vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace);
 	}
 	else {
-		blas.handle.reset();
+		// NEXT: not needed?
+		// blas.handle.reset();
 	}
 }

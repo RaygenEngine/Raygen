@@ -1,5 +1,6 @@
 #pragma once
 #include "rendering/wrappers/Buffer.h"
+#include "rendering/wrappers/AccelerationStructure.h"
 
 struct SceneGeometry;
 
@@ -14,16 +15,11 @@ struct AsInstance {
 	vk::GeometryInstanceFlagsKHR flags{};
 };
 
-struct TopLevelAs {
+struct TopLevelAs : RAccelerationStructure {
 	TopLevelAs() = default;
 	TopLevelAs(const std::vector<SceneGeometry*>& geoms);
 
-	// WIP:
-	vk::UniqueAccelerationStructureKHR handle;
-
 private:
-	vk::UniqueDeviceMemory memory;
-
 	RBuffer instanceBuffer;
 
 	std::vector<AsInstance> instances;
