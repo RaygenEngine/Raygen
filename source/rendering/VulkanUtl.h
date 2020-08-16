@@ -75,6 +75,7 @@ inline vk::AccessFlags GetAccessMask(vk::ImageLayout imL)
 {
 	switch (imL) {
 		case vk::ImageLayout::eUndefined: return vk::AccessFlags{ 0u };
+		case vk::ImageLayout::eGeneral: return vk::AccessFlags{ 0u };
 		case vk::ImageLayout::eColorAttachmentOptimal: return vk::AccessFlagBits::eColorAttachmentWrite;
 		case vk::ImageLayout::eShaderReadOnlyOptimal: return vk::AccessFlagBits::eShaderRead;
 		case vk::ImageLayout::eTransferDstOptimal: return vk::AccessFlagBits::eTransferWrite;

@@ -57,6 +57,9 @@ Layer_::Layer_()
 		m_renderFinishedSem[i] = Device->createSemaphoreUnique({});
 		m_imageAvailSem[i] = Device->createSemaphoreUnique({});
 		m_inFlightFence[i] = Device->createFenceUnique(fci);
+
+		DEBUG_NAME(m_renderFinishedSem[i], "Renderer Finished" + std::to_string(i));
+		DEBUG_NAME(m_imageAvailSem[i], "Image Available" + std::to_string(i));
 	}
 
 
@@ -170,6 +173,7 @@ void Layer_::DrawFrame()
 		.setPCommandBuffers(bufs.data());
 
 	Device->graphicsQueue.submit(1u, &submitInfo, *m_inFlightFence[currentFrame]);
+
 
 	vk::SwapchainKHR swapChains[] = { *mainSwapchain };
 
