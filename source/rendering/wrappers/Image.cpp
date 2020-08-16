@@ -203,6 +203,15 @@ void RImage::TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout ol
 	cmdBuffer->pipelineBarrier(sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 }
 
+void RImage::TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
+	vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage)
+{
+	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
+
+	cmdBuffer->pipelineBarrier(sourceStage, destStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+}
+
+
 void RImage::TransitionForWrite(vk::CommandBuffer* cmdBuffer) const
 {
 	auto toLayout

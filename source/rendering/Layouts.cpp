@@ -24,8 +24,7 @@ Layouts_::Layouts_()
 	gltfMaterialDescLayout.Generate();
 
 	// single
-	singleUboDescLayout.AddBinding(
-		vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
+	singleUboDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eAll); // WIP:
 	singleUboDescLayout.Generate();
 
 	// joints
@@ -57,6 +56,12 @@ Layouts_::Layouts_()
 	rtTriangleGeometry.AddBinding(vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR);
 	rtTriangleGeometry.AddBinding(vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR);
 	rtTriangleGeometry.Generate();
+
+
+	// rt base
+	singleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll); // WIP: Fix all
+	singleStorageImage.Generate();
+
 
 	// image debug
 	imageDebugDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);

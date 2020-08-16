@@ -79,12 +79,14 @@ public:
 	// TODO: RT, move those, framearray
 	vk::UniqueAccelerationStructureKHR m_sceneAS;
 	FrameArray<vk::DescriptorSet> m_rtDescSet;
+
 	vk::UniquePipeline m_rtPipeline;
 	vk::UniquePipelineLayout m_rtPipelineLayout;
 	RBuffer m_rtSBTBuffer;
 	std::vector<vk::RayTracingShaderGroupCreateInfoKHR> m_rtShaderGroups;
 
 	void MakeRtPipeline();
+	void SetRtImage();
 	void CreateRtShaderBindingTable();
 
 

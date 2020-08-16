@@ -45,6 +45,9 @@ struct RImage {
 	// Blocking transition to layout
 	void BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 	void TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
+	void TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
+		vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage);
+
 	// Current layout must be read optimal
 	void TransitionForWrite(vk::CommandBuffer* cmdBuffer) const;
 	// Current layout must be write optimal
@@ -58,12 +61,12 @@ struct RImage {
 	virtual ~RImage() = default;
 
 	[[nodiscard]] vk::DescriptorSet GetDebugDescriptor();
+	vk::UniqueImageView view;
 
 protected:
 	vk::UniqueImage image;
 	vk::UniqueDeviceMemory memory;
 
-	vk::UniqueImageView view;
 
 	std::optional<vk::DescriptorSet> debugDescriptorSet;
 };
