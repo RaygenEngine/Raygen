@@ -37,7 +37,7 @@ Layer_::Layer_()
 
 	Device = new Device_(Instance->physicalDevices[0]);
 
-	GpuResources = new GpuResources_();
+	GpuResources::Init();
 	GpuAssetManager = new GpuAssetManager_();
 
 	Layouts = new Layouts_();
@@ -87,7 +87,7 @@ Layer_::~Layer_()
 	delete Layouts;
 
 	delete GpuAssetManager;
-	delete GpuResources;
+	GpuResources::Destroy();
 
 	m_inFlightFence = {};
 	m_renderFinishedSem = {};

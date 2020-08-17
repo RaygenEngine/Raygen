@@ -21,7 +21,7 @@ GpuAssetManager_::~GpuAssetManager_()
 
 vk::Sampler GpuAssetManager_::GetDefaultSampler()
 {
-	return LockHandle(GetGpuHandle<Sampler>({})).sampler.get();
+	return LockHandle(GetGpuHandle<Sampler>({})).sampler;
 }
 
 void GpuAssetManager_::AllocForAll()
