@@ -8,7 +8,6 @@
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
-#include "rendering/resource/GpuResources.h"
 
 using namespace vl;
 
@@ -16,11 +15,6 @@ GpuEnvironmentMap::GpuEnvironmentMap(PodHandle<EnvironmentMap> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	Update({});
-}
-
-vl::GpuEnvironmentMap::~GpuEnvironmentMap()
-{
-	GpuResources::ReleaseSampler(brdfSampler);
 }
 
 void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
@@ -91,12 +85,12 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 		.setMaxLod(32.f);
 
 
-	brdfSampler = GpuResources::AcquireSampler(samplerInfo);
+	brdfSampler = Device->createSamplerUnique(samplerInfo);
 
 	imageInfos[3]
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
 		.setImageView(brdfLut.Lock().image())
-		.setSampler(brdfSampler);
+		.setSampler(brdfSampler.get());
 
 	descriptorWrites[3]
 		.setDstSet(descriptorSet) //

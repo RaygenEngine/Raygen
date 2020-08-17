@@ -3,10 +3,9 @@
 
 namespace vl {
 struct GpuSampler : public GpuAssetTemplate<Sampler> {
-	vk::Sampler sampler;
+	vk::UniqueSampler sampler;
 
 	GpuSampler(PodHandle<Sampler> podHandle);
-	~GpuSampler();
 
 	void Update(const AssetUpdateInfo& info) override final;
 };

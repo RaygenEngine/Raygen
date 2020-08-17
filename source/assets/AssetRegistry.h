@@ -6,6 +6,7 @@
 #include "assets/UriLibrary.h"
 #include "core/StringUtl.h"
 
+#include <unordered_map>
 
 struct Image;
 struct Sampler;
@@ -77,6 +78,8 @@ private:
 		static AssetHandlerManager inst = AssetHandlerManager();
 		return inst;
 	}
+
+	AssetHandlerManager() {}
 
 	std::vector<UniquePtr<PodEntry>> m_pods;
 	std::unordered_map<uri::Uri, size_t, str::HashInsensitive> m_pathCache;
