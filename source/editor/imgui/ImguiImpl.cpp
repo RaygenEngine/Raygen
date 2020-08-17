@@ -293,7 +293,7 @@ void InitVulkan()
 	init.QueueFamily = Device->graphicsQueue.familyIndex;
 	init.Queue = Device->graphicsQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
-	init.DescriptorPool = GpuResources->descPools.GetImguiPool();
+	init.DescriptorPool = GpuResources::GetImguiPool();
 	init.ImageCount = c_framesInFlight;
 	init.MinImageCount = c_framesInFlight;
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
