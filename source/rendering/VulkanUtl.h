@@ -110,4 +110,82 @@ inline bool Contains(const std::vector<char const*>& data, std::vector<T> const&
 	});
 }
 
+inline vk::PipelineStageFlags AccessMassPipelineStageFlags(vk::AccessFlags accessMask, vk::PipelineStageFlags supportedShaderBits =
+	vk::PipelineStageFlagBits::eVertexShader |
+	vk::PipelineStageFlagBits::eTessellationControlShader |
+	vk::PipelineStageFlagBits::eTessellationEvaluationShader |
+	vk::PipelineStageFlagBits::eFragmentShader |
+	vk::PipelineStageFlagBits::eGeometryShader |
+	vk::PipelineStageFlagBits::eComputeShader |
+	vk::PipelineStageFlagBits::eRayTracingShaderKHR // WIP: which shaders default
+)
+{
+	if (!accessMask)
+	{
+		return vk::PipelineStageFlagBits::eTopOfPipe;
+	}
+
+
+	static constexpr std::array accessMasks = {
+		vk::AccessFlags{vk::AccessFlagBits::eIndirectCommandRead},
+		vk::AccessFlagBits::eIndexRead,
+		vk::AccessFlagBits::eVertexAttributeRead,
+		vk::AccessFlagBits::eUniformRead,
+		vk::AccessFlagBits::eInputAttachmentRead,
+		vk::AccessFlagBits::eShaderRead,
+		vk::AccessFlagBits::eShaderWrite,
+		vk::AccessFlagBits::eColorAttachmentRead,
+		vk::AccessFlagBits::eColorAttachmentReadNoncoherentEXT,
+		vk::AccessFlagBits::eColorAttachmentWrite,
+		vk::AccessFlagBits::eDepthStencilAttachmentRead,
+		vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+		vk::AccessFlagBits::eTransferRead,
+		vk::AccessFlagBits::eTransferWrite,
+		vk::AccessFlagBits::eHostRead,
+		vk::AccessFlagBits::eHostWrite,
+		vk::AccessFlagBits::eMemoryRead,
+		vk::AccessFlagBits::eMemoryWrite,
+		vk::AccessFlagBits::eAccelerationStructureReadKHR,
+		vk::AccessFlagBits::eAccelerationStructureWriteKHR
+	};
+
+	static const std::array pipeStages = {
+	
+		vk::PipelineStageFlags{vk::PipelineStageFlagBits::eDrawIndirect},
+		vk::PipelineStageFlagBits::eVertexInput,
+		vk::PipelineStageFlagBits::eVertexInput,
+		supportedShaderBits,
+		vk::PipelineStageFlagBits::eFragmentShader,
+		supportedShaderBits,
+		supportedShaderBits,
+		vk::PipelineStageFlagBits::eColorAttachmentOutput,
+		vk::PipelineStageFlagBits::eColorAttachmentOutput,
+		vk::PipelineStageFlagBits::eColorAttachmentOutput,
+		vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests, // CHECK: maybe not optimized
+		vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests,
+		vk::PipelineStageFlagBits::eTransfer,
+		vk::PipelineStageFlagBits::eTransfer,
+		vk::PipelineStageFlagBits::eHost,
+		vk::PipelineStageFlagBits::eHost,
+		vk::PipelineStageFlags{0},
+		vk::PipelineStageFlags{0},
+		vk::PipelineStageFlagBits::eRayTracingShaderKHR | supportedShaderBits | vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR,
+		vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR
+	};
+
+
+	vk::PipelineStageFlags pipelineStages{};
+	for (uint32_t i = 0; i < accessMasks.size(); ++i)
+	{
+		if (accessMasks[i] & accessMask)
+		{
+			pipelineStages |= pipeStages[i];
+		}
+	}
+
+	CLOG_ABORT(!pipelineStages, "Programmer error");
+
+	return pipelineStages;
+}
+
 } // namespace vl
