@@ -3,29 +3,26 @@
 namespace vl {
 class SamplerPool {
 
-    struct SamplerState
+    struct SamplerParams
     {
-        VkSamplerCreateInfo                createInfo{};
-
-        SamplerState() { memset(this, 0, sizeof(SamplerState)); }
-
-        bool operator==(const SamplerState& other) const { return memcmp(this, &other, sizeof(SamplerState)) == 0; }
+        VkSamplerCreateInfo createInfo{};
+        bool operator==(const SamplerParams& other) const { return memcmp(this, &other, sizeof(SamplerParams)) == 0; }
     };
 
 
     struct Entry
     {
-        vk::Sampler    sampler{};
-        uint32     nextFreeIndex = ~0;
-        uint32     refCount = 0;
-        SamplerState state;
+        vk::Sampler sampler{};
+        size_t nextFreeIndex{ UINT64_MAX };
+        size_t refCount{ 0 };
+        SamplerParams state;
     };
 
-    uint32           m_freeIndex = ~0;
+    size_t m_freeIndex{ UINT64_MAX };
     std::vector<Entry> m_entries;
 
-    std::unordered_map<SamplerState, uint32, Hash_fn<SamplerState>> m_stateMap;
-    std::unordered_map<vk::Sampler, uint32>             m_samplerMap;
+    std::unordered_map<SamplerParams, size_t, Hash_fn<SamplerParams>> m_stateMap;
+    std::unordered_map<vk::Sampler, size_t> m_samplerMap;
 
 public:
 
