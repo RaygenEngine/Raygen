@@ -54,3 +54,4 @@ struct FrameArray : std::array<T, c_framesInFlight> {
 	void operator=(const std::vector<T>& data) { std::move(data.begin(), data.begin() + c_framesInFlight, begin()); }
 };
 
+#include "rendering/core/img.h"

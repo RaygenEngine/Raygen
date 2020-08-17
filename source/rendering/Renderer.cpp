@@ -10,6 +10,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuShader.h"
+#include "rendering/assets/GpuShaderStage.h"
 #include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/Layouts.h"
@@ -18,14 +19,11 @@
 #include "rendering/passes/UnlitPass.h"
 #include "rendering/ppt/techniques/PtDebug.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneDirectionalLight.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/structures/Depthmap.h"
-#include "rendering/VulkanUtl.h"
 #include "rendering/wrappers/Swapchain.h"
-#include "rendering/assets/GpuShaderStage.h"
-#include "rendering/scene/Scene.h"
-#include "rendering/scene/SceneCamera.h"
 
 #include <editor/imgui/ImguiImpl.h>
 
@@ -843,25 +841,30 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 		if (att.isDepth) {
 			continue;
 		}
-		att.TransitionForWrite(cmdBuffer);
+		att.TransitionToLayout(
+			cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
 	}
 
 	for (auto sl : sceneDesc->spotlights.elements) {
 		if (sl) {
-			sl->shadowmap[sceneDesc.frameIndex].framebuffer[0].TransitionForWrite(cmdBuffer);
+			sl->shadowmap[sceneDesc.frameIndex].framebuffer[0].TransitionToLayout(
+				cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 		}
 	}
 
 	for (auto dl : sceneDesc->directionalLights.elements) {
 		if (dl) {
-			dl->shadowmap[sceneDesc.frameIndex].framebuffer[0].TransitionForWrite(cmdBuffer);
+			dl->shadowmap[sceneDesc.frameIndex].framebuffer[0].TransitionToLayout(
+				cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 		}
 	}
 
 	RecordOutPass(cmdBuffer, sceneDesc, outRp, outFb, outExtent);
 
 
-	m_attachment[sceneDesc.frameIndex].TransitionForWrite(cmdBuffer);
-	m_attachment2[sceneDesc.frameIndex].TransitionForWrite(cmdBuffer);
+	m_attachment[sceneDesc.frameIndex].TransitionToLayout(
+		cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
+	m_attachment2[sceneDesc.frameIndex].TransitionToLayout(
+		cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
 }
 } // namespace vl

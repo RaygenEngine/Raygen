@@ -6,7 +6,6 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
-#include "rendering/VulkanUtl.h"
 #include "rendering/wrappers/Buffer.h"
 
 namespace vl {
@@ -16,12 +15,12 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 	vk::ImageViewType viewType, const std::string& name)
 	: format(format)
 	, extent(extent)
-	, aspectMask(GetAspectMask(usage, format))
+	, aspectMask(rvk::getAspectMask(usage, format))
 	, samples(samples)
 	, flags(flags)
 	, arrayLayers(arrayLayers)
 	, mipLevels(mipLevels)
-	, isDepth(IsDepthFormat(format))
+	, isDepth(rvk::isDepthFormat(format))
 	, name(name)
 {
 	vk::ImageCreateInfo imageInfo{};
@@ -151,18 +150,17 @@ vk::ImageMemoryBarrier RImage::CreateTransitionBarrier(
 		.setOldLayout(oldLayout) //
 		.setNewLayout(newLayout)
 		.setImage(image.get())
-		.setSrcAccessMask(GetAccessMask(oldLayout))
-		.setDstAccessMask(GetAccessMask(newLayout))
-		// CHECK: family indices
+		.setSrcAccessMask(rvk::accessFlagsForImageLayout(oldLayout))
+		.setDstAccessMask(rvk::accessFlagsForImageLayout(newLayout))
 		.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-		.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+		.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
 
-	barrier.subresourceRange
+		.subresourceRange
 		.setAspectMask(aspectMask) //
 		.setBaseMipLevel(baseMipLevel)
-		.setLevelCount(mipLevels)
+		.setLevelCount(VK_REMAINING_MIP_LEVELS)
 		.setBaseArrayLayer(baseArrayLevel)
-		.setLayerCount(arrayLayers);
+		.setLayerCount(VK_REMAINING_ARRAY_LAYERS);
 
 	return barrier;
 }
@@ -171,8 +169,8 @@ void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayo
 {
 	vk::ImageMemoryBarrier barrier = CreateTransitionBarrier(oldLayout, newLayout);
 
-	vk::PipelineStageFlags sourceStage = GetPipelineStage(oldLayout);
-	vk::PipelineStageFlags destinationStage = GetPipelineStage(newLayout);
+	vk::PipelineStageFlags sourceStage = rvk::pipelineStageForLayout(oldLayout);
+	vk::PipelineStageFlags destinationStage = rvk::pipelineStageForLayout(newLayout);
 
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -192,15 +190,13 @@ void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayo
 	Device->graphicsQueue.waitIdle();
 }
 
-void RImage::TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
+void RImage::TransitionToLayout(
+	vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const
 {
 	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
 
-	vk::PipelineStageFlags sourceStage = vk::PipelineStageFlagBits::eFragmentShader;
-	vk::PipelineStageFlags destinationStage
-		= isDepth ? vk::PipelineStageFlagBits::eEarlyFragmentTests : vk::PipelineStageFlagBits::eColorAttachmentOutput;
-
-	cmdBuffer->pipelineBarrier(sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+	cmdBuffer->pipelineBarrier(rvk::pipelineStageForLayout(oldLayout), rvk::pipelineStageForLayout(newLayout),
+		vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 }
 
 void RImage::TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
@@ -211,36 +207,7 @@ void RImage::TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout ol
 	cmdBuffer->pipelineBarrier(sourceStage, destStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
 }
 
-
-void RImage::TransitionForWrite(vk::CommandBuffer* cmdBuffer) const
-{
-	auto toLayout
-		= isDepth ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal;
-
-	auto barrier = CreateTransitionBarrier(vk::ImageLayout::eShaderReadOnlyOptimal, toLayout);
-
-	vk::PipelineStageFlags sourceStage = vk::PipelineStageFlagBits::eFragmentShader;
-	vk::PipelineStageFlags destinationStage
-		= isDepth ? vk::PipelineStageFlagBits::eEarlyFragmentTests : vk::PipelineStageFlagBits::eColorAttachmentOutput;
-
-	cmdBuffer->pipelineBarrier(sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
-}
-
-void RImage::TransitionForRead(vk::CommandBuffer* cmdBuffer) const
-{
-	auto fromLayout
-		= isDepth ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal;
-
-	auto barrier = CreateTransitionBarrier(fromLayout, vk::ImageLayout::eShaderReadOnlyOptimal);
-
-	vk::PipelineStageFlags sourceStage
-		= isDepth ? vk::PipelineStageFlagBits::eEarlyFragmentTests : vk::PipelineStageFlagBits::eColorAttachmentOutput;
-	vk::PipelineStageFlags destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
-
-	cmdBuffer->pipelineBarrier(sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
-}
-
-void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout)
+void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
 	// Check if image format supports linear blitting
 	vk::FormatProperties formatProperties = Device->pd.getFormatProperties(format);
@@ -278,9 +245,9 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 
 		auto intermediateLayout = vk::ImageLayout::eTransferSrcOptimal;
 
-		vk::PipelineStageFlags oldStage = GetPipelineStage(oldLayout);
-		vk::PipelineStageFlags intermediateStage = GetPipelineStage(intermediateLayout);
-		vk::PipelineStageFlags finalStage = GetPipelineStage(finalLayout);
+		vk::PipelineStageFlags oldStage = rvk::pipelineStageForLayout(oldLayout);
+		vk::PipelineStageFlags intermediateStage = rvk::pipelineStageForLayout(intermediateLayout);
+		vk::PipelineStageFlags finalStage = rvk::pipelineStageForLayout(newLayout);
 
 		for (uint32 i = 1; i < mipLevels; i++) {
 			barrier.subresourceRange.setBaseMipLevel(i - 1);
@@ -288,8 +255,8 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 			barrier
 				.setOldLayout(oldLayout) //
 				.setNewLayout(intermediateLayout)
-				.setSrcAccessMask(GetAccessMask(oldLayout))
-				.setDstAccessMask(GetAccessMask(intermediateLayout));
+				.setSrcAccessMask(rvk::accessFlagsForImageLayout(oldLayout))
+				.setDstAccessMask(rvk::accessFlagsForImageLayout(intermediateLayout));
 
 			// old to intermediate
 			Device->graphicsCmdBuffer.pipelineBarrier(
@@ -316,9 +283,9 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 
 			barrier
 				.setOldLayout(intermediateLayout) //
-				.setNewLayout(finalLayout)
-				.setSrcAccessMask(GetAccessMask(intermediateLayout))
-				.setDstAccessMask(GetAccessMask(finalLayout));
+				.setNewLayout(newLayout)
+				.setSrcAccessMask(rvk::accessFlagsForImageLayout(intermediateLayout))
+				.setDstAccessMask(rvk::accessFlagsForImageLayout(newLayout));
 
 
 			// intermediate to final
@@ -336,9 +303,9 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 
 		barrier
 			.setOldLayout(oldLayout) //
-			.setNewLayout(finalLayout)
-			.setSrcAccessMask(GetAccessMask(oldLayout))
-			.setDstAccessMask(GetAccessMask(finalLayout));
+			.setNewLayout(newLayout)
+			.setSrcAccessMask(rvk::accessFlagsForImageLayout(oldLayout))
+			.setDstAccessMask(rvk::accessFlagsForImageLayout(newLayout));
 
 		Device->graphicsCmdBuffer.pipelineBarrier(
 			oldStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });

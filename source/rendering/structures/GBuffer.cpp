@@ -6,7 +6,6 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
-#include "rendering/VulkanUtl.h"
 
 ConsoleVariable<int32> console_rCullMode("r.culling", static_cast<int32>(vk::CullModeFlagBits::eBack));
 

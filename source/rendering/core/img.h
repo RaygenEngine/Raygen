@@ -2,9 +2,11 @@
 #include "assets/shared/ImageShared.h"
 #include "assets/shared/TextureShared.h"
 
-namespace vl {
+// WIP: rename header
 
-inline vk::Filter GetTextureFilter(TextureFiltering f)
+namespace rvk {
+
+inline vk::Filter getTextureFilter(TextureFiltering f)
 {
 	switch (f) {
 		case TextureFiltering::Nearest: return vk::Filter::eNearest;
@@ -13,7 +15,7 @@ inline vk::Filter GetTextureFilter(TextureFiltering f)
 	}
 }
 
-inline vk::SamplerAddressMode GetWrapping(TextureWrapping w)
+inline vk::SamplerAddressMode getWrapping(TextureWrapping w)
 {
 	switch (w) {
 		case TextureWrapping::ClampToEdge: return vk::SamplerAddressMode::eClampToEdge;
@@ -23,7 +25,7 @@ inline vk::SamplerAddressMode GetWrapping(TextureWrapping w)
 	}
 }
 
-inline vk::SamplerMipmapMode GetMipmapFilter(MipmapFiltering f)
+inline vk::SamplerMipmapMode getMipmapFilter(MipmapFiltering f)
 {
 	switch (f) {
 		case MipmapFiltering::Nearest: return vk::SamplerMipmapMode::eNearest;
@@ -34,7 +36,7 @@ inline vk::SamplerMipmapMode GetMipmapFilter(MipmapFiltering f)
 }
 
 
-inline vk::Format GetFormat(ImageFormat format)
+inline vk::Format getFormat(ImageFormat format)
 {
 	switch (format) {
 		case ImageFormat::Hdr: return vk::Format::eR32G32B32A32Sfloat; break;
@@ -44,7 +46,7 @@ inline vk::Format GetFormat(ImageFormat format)
 	}
 }
 
-inline vk::ImageAspectFlags GetAspectMask(vk::ImageUsageFlags usage, vk::Format format)
+inline vk::ImageAspectFlags getAspectMask(vk::ImageUsageFlags usage, vk::Format format)
 {
 	auto aspectMask = vk::ImageAspectFlagBits::eColor;
 
@@ -60,74 +62,63 @@ inline vk::ImageAspectFlags GetAspectMask(vk::ImageUsageFlags usage, vk::Format 
 	return aspectMask;
 }
 
-inline bool IsDepthFormat(vk::Format format)
+inline bool isDepthFormat(vk::Format format)
 {
-
 	switch (format) {
+		case vk::Format::eX8D24UnormPack32:
+		case vk::Format::eD24UnormS8Uint:
 		case vk::Format::eD32Sfloat:
 		case vk::Format::eD32SfloatS8Uint:
-		case vk::Format::eD24UnormS8Uint: return true;
+		case vk::Format::eD16Unorm:
+		case vk::Format::eD16UnormS8Uint: return true;
 		default: return false;
 	}
 }
 
-inline vk::AccessFlags GetAccessMask(vk::ImageLayout imL)
+
+inline vk::AccessFlags accessFlagsForImageLayout(vk::ImageLayout layout)
 {
-	switch (imL) {
-		case vk::ImageLayout::eUndefined: return vk::AccessFlags{ 0u };
-		case vk::ImageLayout::eGeneral: return vk::AccessFlags{ 0u };
-		case vk::ImageLayout::eColorAttachmentOptimal: return vk::AccessFlagBits::eColorAttachmentWrite;
-		case vk::ImageLayout::eShaderReadOnlyOptimal: return vk::AccessFlagBits::eShaderRead;
+	switch (layout) {
+		case vk::ImageLayout::ePreinitialized: return vk::AccessFlagBits::eHostWrite;
 		case vk::ImageLayout::eTransferDstOptimal: return vk::AccessFlagBits::eTransferWrite;
 		case vk::ImageLayout::eTransferSrcOptimal: return vk::AccessFlagBits::eTransferRead;
-		case vk::ImageLayout::eDepthStencilAttachmentOptimal:
-			return vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
-		default: LOG_ABORT("Unsupported");
+		case vk::ImageLayout::eColorAttachmentOptimal: return vk::AccessFlagBits::eColorAttachmentWrite;
+		case vk::ImageLayout::eDepthStencilAttachmentOptimal: return vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+		case vk::ImageLayout::eShaderReadOnlyOptimal: return vk::AccessFlagBits::eShaderRead;
+		default: return {};
 	}
 }
 
-inline vk::PipelineStageFlags GetPipelineStage(vk::ImageLayout imL)
+inline vk::PipelineStageFlags pipelineStageForLayout(vk::ImageLayout layout)
 {
-	switch (imL) {
-		case vk::ImageLayout::eUndefined: return vk::PipelineStageFlagBits::eTopOfPipe;
+	switch (layout) {
+		case vk::ImageLayout::eTransferDstOptimal:
+		case vk::ImageLayout::eTransferSrcOptimal: return vk::PipelineStageFlagBits::eTransfer;
 		case vk::ImageLayout::eColorAttachmentOptimal: return vk::PipelineStageFlagBits::eColorAttachmentOutput;
-		case vk::ImageLayout::eShaderReadOnlyOptimal: return vk::PipelineStageFlagBits::eFragmentShader;
-		case vk::ImageLayout::eTransferSrcOptimal:
-		case vk::ImageLayout::eTransferDstOptimal: return vk::PipelineStageFlagBits::eTransfer;
 		case vk::ImageLayout::eDepthStencilAttachmentOptimal: return vk::PipelineStageFlagBits::eEarlyFragmentTests;
-		default: LOG_ABORT("Unsupported");
+		case vk::ImageLayout::eShaderReadOnlyOptimal: return vk::PipelineStageFlagBits::eFragmentShader;
+		case vk::ImageLayout::ePreinitialized: return vk::PipelineStageFlagBits::eHost;
+		case vk::ImageLayout::eUndefined: return vk::PipelineStageFlagBits::eTopOfPipe;
+		default: return vk::PipelineStageFlagBits::eBottomOfPipe;
 	}
 }
 
-template<typename T>
-inline bool Contains(const std::vector<char const*>& data, std::vector<T> const& searchData)
-{
-	// return true if all T are listed in the properties
-	return std::all_of(data.begin(), data.end(), [&properties](char const* name) {
-		return std::find_if(properties.begin(), properties.end(), [&name](vk::LayerProperties const& property) {
-			return strcmp(property.layerName, name) == 0;
-		}) != properties.end();
-	});
-}
-
-inline vk::PipelineStageFlags AccessMassPipelineStageFlags(vk::AccessFlags accessMask, vk::PipelineStageFlags supportedShaderBits =
-	vk::PipelineStageFlagBits::eVertexShader |
-	vk::PipelineStageFlagBits::eTessellationControlShader |
-	vk::PipelineStageFlagBits::eTessellationEvaluationShader |
-	vk::PipelineStageFlagBits::eFragmentShader |
-	vk::PipelineStageFlagBits::eGeometryShader |
-	vk::PipelineStageFlagBits::eComputeShader |
-	vk::PipelineStageFlagBits::eRayTracingShaderKHR // WIP: which shaders default
+// WIP: move function
+inline vk::PipelineStageFlags accessMaskPipelineStageFlags(vk::AccessFlags accessMask,
+	vk::PipelineStageFlags supportedShaderBits
+	= vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eTessellationControlShader
+	  | vk::PipelineStageFlagBits::eTessellationEvaluationShader | vk::PipelineStageFlagBits::eFragmentShader
+	  | vk::PipelineStageFlagBits::eGeometryShader | vk::PipelineStageFlagBits::eComputeShader
+	  | vk::PipelineStageFlagBits::eRayTracingShaderKHR // WIP: which shaders default
 )
 {
-	if (!accessMask)
-	{
+	if (!accessMask) {
 		return vk::PipelineStageFlagBits::eTopOfPipe;
 	}
 
 
 	static constexpr std::array accessMasks = {
-		vk::AccessFlags{vk::AccessFlagBits::eIndirectCommandRead},
+		vk::AccessFlagBits::eIndirectCommandRead,
 		vk::AccessFlagBits::eIndexRead,
 		vk::AccessFlagBits::eVertexAttributeRead,
 		vk::AccessFlagBits::eUniformRead,
@@ -146,12 +137,12 @@ inline vk::PipelineStageFlags AccessMassPipelineStageFlags(vk::AccessFlags acces
 		vk::AccessFlagBits::eMemoryRead,
 		vk::AccessFlagBits::eMemoryWrite,
 		vk::AccessFlagBits::eAccelerationStructureReadKHR,
-		vk::AccessFlagBits::eAccelerationStructureWriteKHR
+		vk::AccessFlagBits::eAccelerationStructureWriteKHR,
 	};
 
-	static const std::array pipeStages = {
-	
-		vk::PipelineStageFlags{vk::PipelineStageFlagBits::eDrawIndirect},
+	static const std::array<vk::PipelineStageFlags, 20> pipeStages = {
+
+		vk::PipelineStageFlagBits::eDrawIndirect,
 		vk::PipelineStageFlagBits::eVertexInput,
 		vk::PipelineStageFlagBits::eVertexInput,
 		supportedShaderBits,
@@ -161,24 +152,24 @@ inline vk::PipelineStageFlags AccessMassPipelineStageFlags(vk::AccessFlags acces
 		vk::PipelineStageFlagBits::eColorAttachmentOutput,
 		vk::PipelineStageFlagBits::eColorAttachmentOutput,
 		vk::PipelineStageFlagBits::eColorAttachmentOutput,
-		vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests, // CHECK: maybe not optimized
+		vk::PipelineStageFlagBits::eEarlyFragmentTests
+			| vk::PipelineStageFlagBits::eLateFragmentTests, // CHECK: maybe not optimized
 		vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests,
 		vk::PipelineStageFlagBits::eTransfer,
 		vk::PipelineStageFlagBits::eTransfer,
 		vk::PipelineStageFlagBits::eHost,
 		vk::PipelineStageFlagBits::eHost,
-		vk::PipelineStageFlags{0},
-		vk::PipelineStageFlags{0},
-		vk::PipelineStageFlagBits::eRayTracingShaderKHR | supportedShaderBits | vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR,
-		vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR
+		vk::PipelineStageFlags{ 0 },
+		vk::PipelineStageFlags{ 0 },
+		vk::PipelineStageFlagBits::eRayTracingShaderKHR | supportedShaderBits
+			| vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR,
+		vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR,
 	};
 
 
 	vk::PipelineStageFlags pipelineStages{};
-	for (uint32_t i = 0; i < accessMasks.size(); ++i)
-	{
-		if (accessMasks[i] & accessMask)
-		{
+	for (uint32_t i = 0; i < accessMasks.size(); ++i) {
+		if (accessMasks[i] & accessMask) {
 			pipelineStages |= pipeStages[i];
 		}
 	}
@@ -188,4 +179,4 @@ inline vk::PipelineStageFlags AccessMassPipelineStageFlags(vk::AccessFlags acces
 	return pipelineStages;
 }
 
-} // namespace vl
+} // namespace rvk
