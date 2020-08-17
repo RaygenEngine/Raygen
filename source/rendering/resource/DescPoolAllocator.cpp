@@ -6,7 +6,7 @@
 #include "rendering/resource/GpuResources.h"
 
 ConsoleFunction<> g_showPoolAllocations{ "r.mem.showDescriptorPools",
-	[]() { LOG_REPORT("Pools: {}", vl::GpuResources->descPools.GetAllocations()); },
+	[]() { LOG_REPORT("Pools: {}", vl::GpuResources::GetAllocations()); },
 	"Shows number of allocated descriptor pools." };
 
 namespace vl {
