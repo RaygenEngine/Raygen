@@ -44,16 +44,11 @@ struct RImage {
 
 	// Blocking transition to layout
 	void BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
-	void TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
+	void TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const;
 	void TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
 		vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage);
 
-	// Current layout must be read optimal
-	void TransitionForWrite(vk::CommandBuffer* cmdBuffer) const;
-	// Current layout must be write optimal
-	void TransitionForRead(vk::CommandBuffer* cmdBuffer) const;
-
-	void GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout finalLayout);
+	void GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
 	[[nodiscard]] operator vk::Image() const { return image.get(); }
 	vk::ImageView operator()() const { return view.get(); }

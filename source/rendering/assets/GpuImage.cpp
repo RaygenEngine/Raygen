@@ -5,7 +5,6 @@
 #include "assets/pods/Image.h"
 #include "rendering/Device.h"
 #include "rendering/Renderer.h"
-#include "rendering/VulkanUtl.h"
 #include "rendering/wrappers/Buffer.h"
 
 using namespace vl;
@@ -29,7 +28,7 @@ void GpuImage::Update(const AssetUpdateInfo& info)
 	// copy data to buffer
 	stagingbuffer.UploadData(imgData->data);
 
-	vk::Format format = GetFormat(imgData->format);
+	vk::Format format = rvk::getFormat(imgData->format);
 
 	uint32 mipLevels = static_cast<uint32>(std::floor(std::log2(glm::max(imgData->width, imgData->height)))) + 1;
 

@@ -4,7 +4,6 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
-#include "rendering/VulkanUtl.h"
 #include "rendering/resource/GpuResources.h"
 
 namespace vl {
@@ -19,7 +18,7 @@ Depthmap::Depthmap(uint32 width, uint32 height, const char* name)
 	// description set
 	descSet = Layouts->singleSamplerDescLayout.GetDescriptorSet();
 
-	// sampler2DShadow 
+	// sampler2DShadow
 	vk::SamplerCreateInfo samplerInfo{};
 	samplerInfo
 		.setMagFilter(vk::Filter::eLinear) //
@@ -60,7 +59,7 @@ Depthmap::Depthmap(uint32 width, uint32 height, const char* name)
 	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 }
 
-//Depthmap::~Depthmap()
+// Depthmap::~Depthmap()
 //{
 //	 GpuResources::ReleaseSampler(depthSampler);
 //}

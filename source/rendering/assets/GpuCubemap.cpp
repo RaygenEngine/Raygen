@@ -6,7 +6,6 @@
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
-#include "rendering/VulkanUtl.h"
 #include "rendering/wrappers/Buffer.h"
 
 using namespace vl;
@@ -22,7 +21,7 @@ void GpuCubemap::Update(const AssetUpdateInfo&)
 	auto cubemapPod = podHandle.Lock();
 	ClearDependencies();
 
-	vk::Format format = GetFormat(cubemapPod->format);
+	vk::Format format = rvk::getFormat(cubemapPod->format);
 
 	cubemap = RCubemap(cubemapPod->resolution, cubemapPod->mipCount, format, //
 		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
