@@ -13,7 +13,7 @@ struct HasCType<T, std::void_t<typename T::CType>> : std::true_type {
 };
 
 template<typename T>
-constexpr void RegisterDebugName(const T& handle, const std::string& name)
+void RegisterDebugName(const T& handle, const std::string& name)
 {
 	vk::DebugUtilsObjectNameInfoEXT debugNameInfo{};
 
