@@ -73,13 +73,14 @@ inline struct Device_ : public vk::Device {
 	Device_(RPhysicalDevice& pd);
 	~Device_();
 
-
-	[[nodiscard]] vk::Format FindDepthFormat() const;
-
 	[[nodiscard]] uint32 FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties) const;
 
 	[[nodiscard]] vk::Format FindSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, //
 		vk::FormatFeatureFlags features) const;
+
+	[[nodiscard]] vk::Format FindDepthFormat() const;
+
+	[[nodiscard]] vk::Format FindDepthStencilFormat() const;
 
 	[[nodiscard]] SwapchainSupportDetails GetSwapchainSupportDetails() const;
 } * Device{};

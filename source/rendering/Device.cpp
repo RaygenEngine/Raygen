@@ -182,9 +182,17 @@ vk::Format Device_::FindSupportedFormat(const std::vector<vk::Format>& candidate
 
 vk::Format Device_::FindDepthFormat() const
 {
-	return FindSupportedFormat({ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint },
+	return FindSupportedFormat({ vk::Format::eX8D24UnormPack32, vk::Format::eD24UnormS8Uint, vk::Format::eD32Sfloat,
+		vk::Format::eD32SfloatS8Uint, vk::Format::eD16Unorm, vk::Format::eD16UnormS8Uint },
 		vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 }
+
+vk::Format Device_::FindDepthStencilFormat() const
+{
+	return FindSupportedFormat({ vk::Format::eD24UnormS8Uint, vk::Format::eD32SfloatS8Uint, vk::Format::eD16UnormS8Uint }, vk::ImageTiling::eOptimal
+		, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+}
+
 
 SwapchainSupportDetails Device_::GetSwapchainSupportDetails() const
 {
