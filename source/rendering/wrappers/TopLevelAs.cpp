@@ -20,12 +20,13 @@ vk::AccelerationStructureInstanceKHR AsInstanceToVkGeometryInstanceKHR(const vl:
 	// original 4x4 matrix
 	memcpy(&gInst.transform, glm::value_ptr(transp), sizeof(gInst.transform));
 	gInst
-		.setInstanceCustomIndex(instance.id) //
-		.setInstanceShaderBindingTableRecordOffset(instance.hitGroupId)
+		.setInstanceCustomIndex(instance.instanceId) //
+		.setInstanceShaderBindingTableRecordOffset(instance.materialId)
 		.setFlags(instance.flags)
-		.setAccelerationStructureReference(instance.blasAddress)
+		.setAccelerationStructureReference(instance.blas)
 		.setMask(1); // Use a single mask for all objects for now. Mask must match the cullMask parameter of
 					 // rayQueryInitializeEXT in the shader.
+
 	// https://github.com/KhronosGroup/GLSL/blob/master/extensions/ext/GLSL_EXT_ray_query.txt#L252
 
 	return gInst;
@@ -36,32 +37,42 @@ namespace vl {
 TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 {
 	for (int i = 0, j = 0; i < static_cast<int>(geoms.size()); i++) {
-		if (geoms[i] && geoms[i]->mesh.Lock().blas) {
-			AsInstance inst{};
-			inst.transform = geoms[i]->transform; // Position of the instance
-			inst.id = j;                          // gl_InstanceID
-			inst.blasAddress = geoms[i]->mesh.Lock().blas.GetAddress();
-			inst.hitGroupId = 0; // We will use the same hit group for all
-			inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable; // WIP:
-			instances.emplace_back(std::move(inst));
-			++j;
+		if (geoms[i] && geoms[i]->mesh.Lock().geometryGroups.size()) {
+			for (auto& gg : geoms[i]->mesh.Lock().geometryGroups) {
+				AsInstance inst{};
+				inst.transform = geoms[i]->transform; // Position of the instance
+				inst.instanceId = j;                  // gl_InstanceID
+				inst.blas = gg.blas.GetAddress();
+				inst.materialId = 0; // We will use the same hit group for all
+				inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable; // WIP:
+				instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
+				++j;
+			}
 		}
 	}
 
-	// For each instance, build the corresponding instance descriptor
-	std::vector<vk::AccelerationStructureInstanceKHR> geometryInstances;
-	geometryInstances.reserve(instances.size());
-	for (const auto& inst : instances) {
-		geometryInstances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
-	}
+	Build();
+}
 
+void TopLevelAs::AddAsInstance(AsInstance&& instance)
+{
+	instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(instance));
+}
+
+void TopLevelAs::Clear()
+{
+	instances.clear();
+}
+
+void TopLevelAs::Build()
+{
 	vk::DeviceSize instanceDescsSizeInBytes = instances.size() * sizeof(VkAccelerationStructureInstanceKHR);
 
 	RBuffer stagingbuffer{ instanceDescsSizeInBytes, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 	// copy data to buffer
-	stagingbuffer.UploadData(geometryInstances.data(), instanceDescsSizeInBytes);
+	stagingbuffer.UploadData(instances.data(), instanceDescsSizeInBytes);
 
 	instanceBuffer = { instanceDescsSizeInBytes,
 		vk::BufferUsageFlagBits::eRayTracingKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress
