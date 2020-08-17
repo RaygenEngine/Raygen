@@ -21,7 +21,6 @@
 #include "core/MathUtl.h"
 #include "core/MetaTemplates.h"
 #include "core/StringUtl.h"
-#include "core/Hash.h"
 
 #include "engine/Logger.h"
 
@@ -53,4 +52,3 @@ struct FrameArray : std::array<T, c_framesInFlight> {
 
 	void operator=(const std::vector<T>& data) { std::move(data.begin(), data.begin() + c_framesInFlight, begin()); }
 };
-

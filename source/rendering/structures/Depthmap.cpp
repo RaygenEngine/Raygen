@@ -5,7 +5,6 @@
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/VulkanUtl.h"
-#include "rendering/resource/GpuResources.h"
 
 namespace vl {
 Depthmap::Depthmap(uint32 width, uint32 height, const char* name)
@@ -19,7 +18,7 @@ Depthmap::Depthmap(uint32 width, uint32 height, const char* name)
 	// description set
 	descSet = Layouts->singleSamplerDescLayout.GetDescriptorSet();
 
-	// sampler2DShadow 
+	// sampler
 	vk::SamplerCreateInfo samplerInfo{};
 	samplerInfo
 		.setMagFilter(vk::Filter::eLinear) //
@@ -38,13 +37,13 @@ Depthmap::Depthmap(uint32 width, uint32 height, const char* name)
 		.setMinLod(0.f)
 		.setMaxLod(32.f);
 
-	depthSampler = GpuResources::AcquireSampler(samplerInfo);
+	depthSampler = Device->createSamplerUnique(samplerInfo);
 
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
 		.setImageView(framebuffer[0]())
-		.setSampler(depthSampler);
+		.setSampler(depthSampler.get());
 
 	vk::WriteDescriptorSet descriptorWrite{};
 	descriptorWrite
@@ -59,9 +58,4 @@ Depthmap::Depthmap(uint32 width, uint32 height, const char* name)
 
 	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 }
-
-//Depthmap::~Depthmap()
-//{
-//	 GpuResources::ReleaseSampler(depthSampler);
-//}
 } // namespace vl

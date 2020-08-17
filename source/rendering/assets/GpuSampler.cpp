@@ -5,7 +5,6 @@
 #include "rendering/Device.h"
 #include "rendering/Renderer.h"
 #include "rendering/VulkanUtl.h"
-#include "rendering/resource/GpuResources.h"
 
 using namespace vl;
 
@@ -13,11 +12,6 @@ GpuSampler::GpuSampler(PodHandle<Sampler> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	Update({});
-}
-
-vl::GpuSampler::~GpuSampler()
-{
-	GpuResources::ReleaseSampler(sampler);
 }
 
 void GpuSampler::Update(const AssetUpdateInfo& info)
@@ -44,5 +38,5 @@ void GpuSampler::Update(const AssetUpdateInfo& info)
 		.setMaxLod(32.f);
 
 
-	sampler = GpuResources::AcquireSampler(samplerInfo);
+	sampler = Device->createSamplerUnique(samplerInfo);
 }

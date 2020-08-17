@@ -12,10 +12,9 @@ struct GpuEnvironmentMap : public GpuAssetTemplate<EnvironmentMap> {
 
 	vk::DescriptorSet descriptorSet;
 
-	vk::Sampler brdfSampler;
+	vk::UniqueSampler brdfSampler;
 
 	GpuEnvironmentMap(PodHandle<EnvironmentMap> podHandle);
-	~GpuEnvironmentMap();
 
 	void Update(const AssetUpdateInfo&) override final;
 };
