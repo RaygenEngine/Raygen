@@ -75,8 +75,8 @@ void RDescriptorLayout::Generate()
 
 vk::DescriptorSet RDescriptorLayout::GetDescriptorSet() const
 {
-	CLOG_ABORT(!hasBeenGenerated, "Attempting to get a descriptor set from a non generated DescriptorLayout ");
-	return GpuResources->descPools.AllocateDescriptorSet(poolSizeHash, *this);
+	CLOG_ABORT(!hasBeenGenerated, "Attempting to get a descriptor set from a non generated DescriptorLayout");
+	return GpuResources::AllocateDescriptorSet(poolSizeHash, *this);
 }
 
 bool RDescriptorLayout::IsEmpty() const
