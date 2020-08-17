@@ -69,7 +69,6 @@ Scene::~Scene()
 
 void Scene::UpdateTopLevelAs()
 {
-
 	// WIP:
 	tlas = vl::TopLevelAs(geometries.elements);
 
