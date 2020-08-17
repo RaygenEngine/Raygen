@@ -45,6 +45,8 @@ namespace vl {
 	void GpuResources::Destroy()
 	{
 		delete descPools;
+		descPools = nullptr;
 		delete samplerPool;
+		samplerPool = nullptr;
 	}
 } // namespace vl
