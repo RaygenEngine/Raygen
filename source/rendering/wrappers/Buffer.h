@@ -1,5 +1,8 @@
 #pragma once
 
+// WIP: Specialize register debug name without this?
+#include "rendering/Device.h"
+
 namespace vl {
 
 struct RBuffer {
@@ -12,8 +15,12 @@ struct RBuffer {
 
 
 	void CopyBuffer(const RBuffer& other);
-	void UploadData(const void* data, size_t uploadSize);
+	void CopyBufferWithRegion(const RBuffer& other, vk::BufferCopy copyRegion);
+	size_t CopyBufferAt(const RBuffer& other, size_t offset, size_t copySize = 0);
+
+	void UploadData(const void* data, size_t uploadSize, size_t offset = 0);
 	void UploadData(const std::vector<byte>& data);
+
 
 	template<typename T>
 	void UploadDataTemplate(const T& data)
@@ -26,9 +33,21 @@ struct RBuffer {
 
 	[[nodiscard]] vk::DeviceAddress GetAddress() const noexcept;
 
-private:
 	vk::UniqueBuffer handle;
 	vk::UniqueDeviceMemory memory;
 };
 
+
 } // namespace vl
+
+
+namespace detail {
+template<>
+inline void RegisterDebugName<vl::RBuffer>(const vl::RBuffer& buffer, const std::string& name)
+{
+	vk::DebugUtilsObjectNameInfoEXT debugNameInfo{};
+
+	detail::RegisterDebugName(buffer.handle.get(), name + " [buffer]");
+	detail::RegisterDebugName(buffer.memory.get(), name + " [memory]");
+}
+} // namespace detail

@@ -47,16 +47,18 @@ RBuffer::RBuffer(vk::DeviceSize inSize, vk::BufferUsageFlags usage, vk::MemoryPr
 
 void RBuffer::CopyBuffer(const RBuffer& other)
 {
+	vk::BufferCopy copyRegion{};
+	copyRegion.setSize(other.size);
+	CopyBufferWithRegion(other, copyRegion);
+}
+
+void RBuffer::CopyBufferWithRegion(const RBuffer& other, vk::BufferCopy copyRegion)
+{
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
 	Device->dmaCmdBuffer.begin(beginInfo);
-
-	vk::BufferCopy copyRegion{};
-	copyRegion.setSize(other.size);
-
 	Device->dmaCmdBuffer.copyBuffer(other, handle.get(), 1, &copyRegion);
-
 	Device->dmaCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
@@ -70,11 +72,24 @@ void RBuffer::CopyBuffer(const RBuffer& other)
 	Device->dmaQueue.waitIdle();
 }
 
-void RBuffer::UploadData(const void* data, size_t uploadSize)
+size_t RBuffer::CopyBufferAt(const RBuffer& other, size_t offset, size_t copySize)
 {
-	CLOG_ERROR(uploadSize > size, "Attempting to upload a bigger size to rbuffer of smaller size.");
-	if (uploadSize > 0 && uploadSize <= size) {
-		void* dptr = Device->mapMemory(memory.get(), 0, uploadSize);
+	copySize = copySize == 0 ? other.size : copySize;
+	vk::BufferCopy copyRegion{};
+	copyRegion
+		.setSize(copySize) //
+		.setDstOffset(offset);
+	CopyBufferWithRegion(other, copyRegion);
+
+	return offset + copySize;
+}
+
+void RBuffer::UploadData(const void* data, size_t uploadSize, size_t offset)
+{
+	CLOG_ERROR(uploadSize + offset > size, "Attempting to upload a bigger size to rbuffer of smaller size.");
+
+	if (uploadSize > 0 && uploadSize + offset <= size) {
+		void* dptr = Device->mapMemory(memory.get(), offset, uploadSize);
 		memcpy(dptr, data, uploadSize);
 		Device->unmapMemory(memory.get());
 	}
@@ -89,5 +104,6 @@ vk::DeviceAddress RBuffer::GetAddress() const noexcept
 {
 	return Device->getBufferAddress(vk::BufferDeviceAddressInfo{ handle.get() });
 }
+
 
 } // namespace vl

@@ -8,13 +8,8 @@ struct BottomLevelAs : RAccelerationStructure {
 
 	BottomLevelAs() = default;
 
-	// Multi Geometry Groups version
-	BottomLevelAs(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs,
-		vk::BuildAccelerationStructureFlagsKHR buildFlags = {});
-
-	// Single Geometry group version
-	BottomLevelAs::BottomLevelAs(
-		size_t vertexStride, GpuGeometryGroup& ggg, vk::BuildAccelerationStructureFlagsKHR buildFlags);
+	BottomLevelAs(size_t vertexStride, const RBuffer& combinedVertexBuffer, const RBuffer& combinedIndexBuffer,
+		GpuGeometryGroup& ggg, vk::BuildAccelerationStructureFlagsKHR buildFlags);
 
 private:
 	void Build(vk::BuildAccelerationStructureFlagsKHR buildFlags,
