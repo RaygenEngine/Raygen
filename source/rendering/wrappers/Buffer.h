@@ -30,4 +30,5 @@ private:
 	vk::UniqueBuffer handle;
 	vk::UniqueDeviceMemory memory;
 };
+
 } // namespace vl

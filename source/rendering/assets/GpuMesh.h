@@ -1,6 +1,8 @@
 #pragma once
 #include "rendering/assets/GpuAssetBase.h"
 #include "rendering/wrappers/BottomLevelAs.h"
+#include "rendering/wrappers/TopLevelAs.h"
+
 #include "rendering/wrappers/Buffer.h"
 
 struct AssetUpdateInfo;
@@ -25,12 +27,15 @@ struct GpuGeometryGroup {
 
 	RBuffer vertexBuffer;
 	RBuffer indexBuffer;
+
+	BottomLevelAs blas;
 };
 
 
 struct GpuMesh : public GpuAssetTemplate<Mesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;
-	BottomLevelAs blas;
+
+	TopLevelAs meshAs;
 
 
 	GpuMesh(PodHandle<Mesh> podHandle);

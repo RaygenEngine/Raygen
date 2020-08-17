@@ -59,6 +59,69 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const std::vector<GpuGeometryG
 		asBuildOffsetInfos.emplace_back(offset);
 	}
 
+	Build(buildFlags, asCreateGeomInfos, asGeoms, asBuildOffsetInfos);
+}
+
+
+BottomLevelAs::BottomLevelAs(size_t vertexStride, GpuGeometryGroup& ggg, //
+	vk::BuildAccelerationStructureFlagsKHR buildFlags)
+{
+	std::vector<vk::AccelerationStructureCreateGeometryTypeInfoKHR> asCreateGeomInfos{};
+	std::vector<vk::AccelerationStructureGeometryKHR> asGeoms{};
+	std::vector<vk::AccelerationStructureBuildOffsetInfoKHR> asBuildOffsetInfos{};
+
+
+	// Setting up the creation info of acceleration structure
+	vk::AccelerationStructureCreateGeometryTypeInfoKHR asCreate{};
+	asCreate
+		.setGeometryType(vk::GeometryTypeKHR::eTriangles) //
+		.setIndexType(vk::IndexType::eUint32)
+		.setVertexFormat(vk::Format::eR32G32B32Sfloat)
+		.setMaxPrimitiveCount(ggg.indexCount / 3)
+		.setMaxVertexCount(ggg.vertexCount)
+		.setAllowsTransforms(VK_FALSE); // No adding transformation matrices
+
+	// Building part
+	auto vertexAddress = ggg.vertexBuffer.GetAddress();
+	auto indexAddress = ggg.indexBuffer.GetAddress();
+
+	vk::AccelerationStructureGeometryTrianglesDataKHR triangles{};
+	triangles
+		.setVertexFormat(asCreate.vertexFormat) //
+		.setVertexData(vertexAddress)
+		.setVertexStride(vertexStride)
+		.setIndexType(asCreate.indexType)
+		.setIndexData(indexAddress)
+		.setTransformData({});
+
+	// Setting up the build info of the acceleration
+	vk::AccelerationStructureGeometryKHR asGeom{};
+	asGeom
+		.setGeometryType(asCreate.geometryType) //
+		.setFlags(vk::GeometryFlagBitsKHR::eOpaque)
+		.geometry.setTriangles(triangles);
+
+	// The primitive itself
+	vk::AccelerationStructureBuildOffsetInfoKHR offset{};
+	offset
+		.setFirstVertex(0) //
+		.setPrimitiveCount(asCreate.maxPrimitiveCount)
+		.setPrimitiveOffset(0)
+		.setTransformOffset(0);
+
+	asGeoms.emplace_back(asGeom);
+	asCreateGeomInfos.emplace_back(asCreate);
+	asBuildOffsetInfos.emplace_back(offset);
+
+	Build(buildFlags, asCreateGeomInfos, asGeoms, asBuildOffsetInfos);
+}
+
+void BottomLevelAs::Build(vk::BuildAccelerationStructureFlagsKHR buildFlags,
+	const std::vector<vk::AccelerationStructureCreateGeometryTypeInfoKHR>& asCreateGeomInfos,
+	const std::vector<vk::AccelerationStructureGeometryKHR>& asGeoms,
+	const std::vector<vk::AccelerationStructureBuildOffsetInfoKHR>& asBuildOffsetInfos)
+{
+
 
 	vk::AccelerationStructureCreateInfoKHR asCreateInfo{};
 	asCreateInfo
@@ -93,7 +156,7 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const std::vector<GpuGeometryG
 		= { scratchBufferSize, vk::BufferUsageFlagBits::eRayTracingKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress,
 			  vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
-	vk::AccelerationStructureGeometryKHR* pGeometry = asGeoms.data();
+	const vk::AccelerationStructureGeometryKHR* pGeometry = asGeoms.data();
 	vk::AccelerationStructureBuildGeometryInfoKHR asBuildGeomInfo{};
 	asBuildGeomInfo
 		.setFlags(vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace) //
@@ -140,5 +203,4 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const std::vector<GpuGeometryG
 	Device->computeQueue.submit(1u, &submitInfo, {});
 	Device->computeQueue.waitIdle(); // NEXT:
 }
-
 } // namespace vl

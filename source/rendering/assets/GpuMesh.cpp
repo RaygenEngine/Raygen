@@ -30,6 +30,8 @@ void GpuMesh::Update(const AssetUpdateInfo& info)
 
 	geometryGroups.clear();
 
+	meshAs.Clear();
+
 	for (int32 i = 0; const auto& gg : data->geometrySlots) {
 		GpuGeometryGroup vgg;
 		vgg.material = GpuAssetManager->GetGpuHandle(data->materials[i]);
@@ -67,16 +69,15 @@ void GpuMesh::Update(const AssetUpdateInfo& info)
 		vgg.indexCount = static_cast<uint32>(gg.indices.size());
 		vgg.vertexCount = static_cast<uint32>(gg.vertices.size());
 
+		vgg.blas = BottomLevelAs(sizeof(Vertex), vgg, vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace);
+
+		meshAs.AddAsInstance(AsInstance{ vgg.blas.GetAddress(), /*InstanceID*/ i });
+
 		geometryGroups.emplace_back(std::move(vgg));
 		++i;
 	}
 
 	if (geometryGroups.size() > 0) {
-		blas = BottomLevelAs(sizeof(Vertex), geometryGroups, //
-			vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace);
-	}
-	else {
-		// NEXT: not needed?
-		// blas.handle.reset();
+		meshAs.Build();
 	}
 }

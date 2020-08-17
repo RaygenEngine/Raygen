@@ -15,11 +15,21 @@ layout(location = 0) rayPayloadInEXT hitPayload prd;
 
 void main() {
 
-	if (gl_InstanceID == 0){
+	int matId = gl_InstanceID % 4;
+
+	if (matId == 0){
 		prd.hitValue = vec4(0.1,0,0,1);
 	}
-	else if (gl_InstanceID == 1){
+	else if (matId == 1){
 		prd.hitValue = vec4(0.0,0.1,0,1);
 	}
-	
+	else if (matId == 2){
+		prd.hitValue = vec4(0.1,0.1,0,1);
+	}
+	else if (matId == 3){
+		prd.hitValue = vec4(0.1,0.1,0,1);
+	}
 }
+
+
+
