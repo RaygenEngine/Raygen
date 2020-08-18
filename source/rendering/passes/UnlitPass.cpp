@@ -226,7 +226,7 @@ void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 			}
 
 			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u,
-				&camera->descSets[sceneDesc.frameIndex], 0u, nullptr);
+				&camera->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 			cmdBuffer->bindVertexBuffers(0u, { gg.vertexBuffer }, { 0 });
 			cmdBuffer->bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);

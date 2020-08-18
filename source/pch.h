@@ -45,12 +45,15 @@ namespace ch = std::chrono;
 
 constexpr size_t c_framesInFlight = 2;
 template<typename T>
-struct InFlightResource : std::array<T, c_framesInFlight> {
-	// NEXT:
-	InFlightResource(std::vector<T>&& data) { std::move(data.begin(), data.begin() + c_framesInFlight, begin()); }
-	InFlightResource(T val) { for (auto& v : *this) {v = val} }
-	InFlightResource() = default;
-
+struct InFlightResources : std::array<T, c_framesInFlight> {
+	InFlightResources(std::vector<T>&& data) { std::move(data.begin(), data.begin() + c_framesInFlight, begin()); }
+	InFlightResources(T val)
+	{
+		for (auto& v : *this) {
+			v = val;
+		}
+	}
+	InFlightResources() = default;
 
 
 	void operator=(const std::vector<T>& data) { std::move(data.begin(), data.begin() + c_framesInFlight, begin()); }

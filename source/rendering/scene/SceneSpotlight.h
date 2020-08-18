@@ -31,7 +31,7 @@ struct SceneSpotlight : SceneStruct {
 	SCENE_STRUCT(SceneSpotlight);
 	Spotlight_Ubo ubo;
 
-	InFlightResource<vl::Depthmap> shadowmaps;
+	InFlightResources<vl::Depthmap> shadowmap;
 
 
 	std::string name;

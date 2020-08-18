@@ -11,11 +11,11 @@ inline class Layer_ : public Listener {
 
 	BoolFlag m_didViewportResize;
 
-	InFlightResource<vk::UniqueFence> m_fences;
-	InFlightResource<vk::UniqueSemaphore> m_renderFinishedSems;
-	InFlightResource<vk::UniqueSemaphore> m_imageAvailSems;
+	InFlightResources<vk::UniqueFence> m_frameFence;
+	InFlightResources<vk::UniqueSemaphore> m_renderFinishedSem;
+	InFlightResources<vk::UniqueSemaphore> m_imageAvailSem;
 
-	InFlightResource<vk::CommandBuffer> m_cmdBuffers;
+	InFlightResources<vk::CommandBuffer> m_cmdBuffer;
 
 	uint32 currentFrame{ 0 };
 

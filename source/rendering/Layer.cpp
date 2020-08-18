@@ -50,12 +50,12 @@ Layer_::Layer_()
 	Renderer->InitPipelines(mainSwapchain->renderPass.get());
 
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
-		m_renderFinishedSems[i] = Device->createSemaphoreUnique({});
-		m_imageAvailSems[i] = Device->createSemaphoreUnique({});
-		m_fences[i] = Device->createFenceUnique({ vk::FenceCreateFlagBits::eSignaled });
+		m_renderFinishedSem[i] = Device->createSemaphoreUnique({});
+		m_imageAvailSem[i] = Device->createSemaphoreUnique({});
+		m_frameFence[i] = Device->createFenceUnique({ vk::FenceCreateFlagBits::eSignaled });
 
-		DEBUG_NAME(m_renderFinishedSems[i], "Renderer Finished" + std::to_string(i));
-		DEBUG_NAME(m_imageAvailSems[i], "Image Available" + std::to_string(i));
+		DEBUG_NAME(m_renderFinishedSem[i], "Renderer Finished" + std::to_string(i));
+		DEBUG_NAME(m_imageAvailSem[i], "Image Available" + std::to_string(i));
 	}
 
 	vk::CommandBufferAllocateInfo allocInfo{};
@@ -63,7 +63,7 @@ Layer_::Layer_()
 		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(c_framesInFlight);
 
-	m_cmdBuffers = Device->allocateCommandBuffers(allocInfo);
+	m_cmdBuffer = Device->allocateCommandBuffers(allocInfo);
 
 	Event::OnWindowResize.BindFlag(this, m_didWindowResize);
 	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimized) { m_isMinimized = newIsMinimized; });
@@ -84,9 +84,9 @@ Layer_::~Layer_()
 	delete GpuAssetManager;
 	GpuResources::Destroy();
 
-	m_fences = {};
-	m_renderFinishedSems = {};
-	m_imageAvailSems = {};
+	m_frameFence = {};
+	m_renderFinishedSem = {};
+	m_imageAvailSem = {};
 
 	delete Device;
 	delete Instance;
@@ -114,19 +114,19 @@ void Layer_::DrawFrame()
 	currentScene->ConsumeCmdQueue();
 
 	currentFrame = (currentFrame + 1) % c_framesInFlight;
-	auto currentCmdBuffer = &m_cmdBuffers[currentFrame];
+	auto currentCmdBuffer = &m_cmdBuffer[currentFrame];
 
 	{
 		PROFILE_SCOPE(Renderer);
 
-		Device->waitForFences({ *m_fences[currentFrame] }, true, UINT64_MAX);
-		Device->resetFences({ *m_fences[currentFrame] });
+		Device->waitForFences({ *m_frameFence[currentFrame] }, true, UINT64_MAX);
+		Device->resetFences({ *m_frameFence[currentFrame] });
 
 		currentScene->UploadDirty(currentFrame);
 	}
 	uint32 imageIndex;
 
-	Device->acquireNextImageKHR(*mainSwapchain, UINT64_MAX, { m_imageAvailSems[currentFrame].get() }, {}, &imageIndex);
+	Device->acquireNextImageKHR(*mainSwapchain, UINT64_MAX, { m_imageAvailSem[currentFrame].get() }, {}, &imageIndex);
 
 
 	auto outRp = mainSwapchain->renderPass.get();
@@ -150,10 +150,10 @@ void Layer_::DrawFrame()
 
 
 	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput }; //
-	std::array waitSems = { *m_imageAvailSems[currentFrame] };                                                //
-	std::array signalSems = { *m_renderFinishedSems[currentFrame] };
+	std::array waitSems = { *m_imageAvailSem[currentFrame] };                                                //
+	std::array signalSems = { *m_renderFinishedSem[currentFrame] };
 
-	std::array bufs = { m_cmdBuffers[currentFrame] };
+	std::array bufs = { m_cmdBuffer[currentFrame] };
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo
@@ -167,7 +167,7 @@ void Layer_::DrawFrame()
 		.setCommandBufferCount(static_cast<uint32>(bufs.size()))
 		.setPCommandBuffers(bufs.data());
 
-	Device->graphicsQueue.submit(1u, &submitInfo, *m_fences[currentFrame]);
+	Device->graphicsQueue.submit(1u, &submitInfo, *m_frameFence[currentFrame]);
 
 
 	vk::SwapchainKHR swapChains[] = { *mainSwapchain };
@@ -175,7 +175,7 @@ void Layer_::DrawFrame()
 	vk::PresentInfoKHR presentInfo;
 	presentInfo //
 		.setWaitSemaphoreCount(1u)
-		.setPWaitSemaphores(&m_renderFinishedSems[currentFrame].get())
+		.setPWaitSemaphores(&m_renderFinishedSem[currentFrame].get())
 		.setSwapchainCount(1u)
 		.setPSwapchains(swapChains)
 		.setPImageIndices(&imageIndex)
