@@ -151,7 +151,7 @@ Renderer_::Renderer_()
 
 	// descsets
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_ppDescSet[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
+		m_ppDescSets[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
 	}
 
 	// for (uint32 i = 0; i < c_framesInFlight; ++i) {
@@ -381,14 +381,14 @@ void Renderer_::MakeRtPipeline()
 
 void Renderer_::SetRtImage()
 {
-	m_rtDescSet = { Layouts->singleStorageImage.GetDescriptorSet(), Layouts->singleStorageImage.GetDescriptorSet(),
+	m_rtDescSets = { Layouts->singleStorageImage.GetDescriptorSet(), Layouts->singleStorageImage.GetDescriptorSet(),
 		Layouts->singleStorageImage.GetDescriptorSet() };
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		vk::DescriptorImageInfo imageInfo{ {}, *m_attachment2[i].view, vk::ImageLayout::eGeneral };
+		vk::DescriptorImageInfo imageInfo{ {}, *m_attachments2[i].view, vk::ImageLayout::eGeneral };
 		vk::WriteDescriptorSet descriptorWrite{};
 
 		descriptorWrite
-			.setDstSet(m_rtDescSet[i]) //
+			.setDstSet(m_rtDescSets[i]) //
 			.setDstBinding(0u)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eStorageImage)
@@ -436,7 +436,7 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto& extent = m_gbuffer[sceneDesc.frameIndex].framebuffer.extent;
+	auto& extent = m_gbuffers[sceneDesc.frameIndex].framebuffer.extent;
 
 	vk::Rect2D scissor{};
 	scissor
@@ -456,7 +456,7 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 	vk::RenderPassBeginInfo renderPassInfo{};
 	renderPassInfo
 		.setRenderPass(Layouts->gbufferPass.get()) //
-		.setFramebuffer(m_gbuffer[sceneDesc.frameIndex].framebuffer);
+		.setFramebuffer(m_gbuffers[sceneDesc.frameIndex].framebuffer);
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //
 		.setExtent(extent);
@@ -474,18 +474,18 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 
 	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
 	{
-		auto buffer = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
+		auto buffers = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
 
-		GbufferPass::RecordCmd(&buffer, viewport, scissor, sceneDesc);
+		GbufferPass::RecordCmd(&buffers, viewport, scissor, sceneDesc);
 
-		cmdBuffer->executeCommands({ buffer });
+		cmdBuffer->executeCommands({ buffers });
 	}
 	cmdBuffer->endRenderPass();
 
 	auto shadowmapRenderpass = [&](auto light) {
 		if (light) {
 
-			auto& extent = light->shadowmap[sceneDesc.frameIndex].framebuffer.extent;
+			auto& extent = light->shadowmaps[sceneDesc.frameIndex].framebuffer.extent;
 
 			vk::Rect2D scissor{};
 
@@ -507,7 +507,7 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 			vk::RenderPassBeginInfo renderPassInfo{};
 			renderPassInfo
 				.setRenderPass(Layouts->depthRenderPass.get()) //
-				.setFramebuffer(light->shadowmap[sceneDesc.frameIndex].framebuffer);
+				.setFramebuffer(light->shadowmaps[sceneDesc.frameIndex].framebuffer);
 			renderPassInfo.renderArea
 				.setOffset({ 0, 0 }) //
 				.setExtent(extent);
@@ -520,11 +520,11 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 
 			cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
 			{
-				auto buffer = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
+				auto buffers = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
 
-				DepthmapPass::RecordCmd(&buffer, viewport, scissor, light->ubo.viewProj, sceneDesc);
+				DepthmapPass::RecordCmd(&buffers, viewport, scissor, light->ubo.viewProj, sceneDesc);
 
-				cmdBuffer->executeCommands({ buffer });
+				cmdBuffer->executeCommands({ buffers });
 			}
 			cmdBuffer->endRenderPass();
 		}
@@ -552,13 +552,13 @@ void Renderer_::RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRe
 
 
 	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 0u, 1u,
-		&m_rtDescSet[sceneDesc.frameIndex], 0u, nullptr);
+		&m_rtDescSets[sceneDesc.frameIndex], 0u, nullptr);
 
 	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 1u, 1u,
 		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
 
 	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 2u, 1u,
-		&sceneDesc.viewer->descSet[sceneDesc.frameIndex], 0u, nullptr);
+		&sceneDesc.viewer->descSets[sceneDesc.frameIndex], 0u, nullptr);
 
 
 	// cmdBuf.pushConstants<RtPushConstant>(m_rtPipelineLayout,
@@ -595,7 +595,7 @@ void Renderer_::RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRe
 	const vk::StridedBufferRegionKHR callableShaderBindingTable;
 
 
-	auto& extent = m_gbuffer[sceneDesc.frameIndex].framebuffer.extent;
+	auto& extent = m_gbuffers[sceneDesc.frameIndex].framebuffer.extent;
 
 	cmdBuffer->traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
 		&callableShaderBindingTable, extent.width, extent.height, 1);
@@ -605,7 +605,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto& extent = m_gbuffer[sceneDesc.frameIndex].framebuffer.extent;
+	auto& extent = m_gbuffers[sceneDesc.frameIndex].framebuffer.extent;
 
 	vk::Rect2D scissor{};
 	scissor
@@ -625,7 +625,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 	vk::RenderPassBeginInfo renderPassInfo{};
 	renderPassInfo
 		.setRenderPass(m_ptRenderpass.get()) //
-		.setFramebuffer(m_framebuffer[sceneDesc.frameIndex].get());
+		.setFramebuffer(m_framebuffers[sceneDesc.frameIndex].get());
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //
 		.setExtent(extent);
@@ -647,7 +647,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 		cmdBuffer->setViewport(0, { viewport });
 		cmdBuffer->setScissor(0, { scissor });
 
-		m_postprocCollection.Draw(*cmdBuffer, sceneDesc, m_gbuffer[sceneDesc.frameIndex].descSet); // WIP:
+		m_postprocCollection.Draw(*cmdBuffer, sceneDesc, m_gbuffers[sceneDesc.frameIndex].descSet); // WIP:
 
 		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
 	}
@@ -697,7 +697,7 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDes
 		{
 			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-				&Renderer->m_ppDescSet[sceneDesc.frameIndex], 0u, nullptr);
+				&Renderer->m_ppDescSets[sceneDesc.frameIndex], 0u, nullptr);
 			// big triangle
 			cmdBuffer->draw(3u, 1u, 0u, 0u);
 		}
@@ -721,15 +721,15 @@ void Renderer_::OnViewportResize()
 
 		for (uint32 i = 0; i < c_framesInFlight; ++i) {
 
-			m_gbuffer[i] = GBuffer{ fbSize.width, fbSize.height };
+			m_gbuffers[i] = GBuffer{ fbSize.width, fbSize.height };
 
-			m_attachment[i] = RImageAttachment{ fbSize.width, fbSize.height, vk::Format::eR32G32B32A32Sfloat,
+			m_attachments[i] = RImageAttachment{ fbSize.width, fbSize.height, vk::Format::eR32G32B32A32Sfloat,
 				vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled
 					| vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eInputAttachment,
 				vk::MemoryPropertyFlagBits::eDeviceLocal, "rgba32" };
 
-			m_attachment2[i] = RImageAttachment{ fbSize.width, fbSize.height, vk::Format::eR32G32B32A32Sfloat,
+			m_attachments2[i] = RImageAttachment{ fbSize.width, fbSize.height, vk::Format::eR32G32B32A32Sfloat,
 				vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eStorage
 					| vk::ImageUsageFlagBits::eSampled,
@@ -741,12 +741,12 @@ void Renderer_::OnViewportResize()
 			vk::DescriptorImageInfo imageInfo{};
 			imageInfo
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(m_attachment2[i]())
+				.setImageView(m_attachments2[i]())
 				.setSampler(quadSampler);
 
 			vk::WriteDescriptorSet descriptorWrite{};
 			descriptorWrite
-				.setDstSet(m_ppDescSet[i]) //
+				.setDstSet(m_ppDescSets[i]) //
 				.setDstBinding(0u)
 				.setDstArrayElement(0u)
 				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
@@ -758,18 +758,18 @@ void Renderer_::OnViewportResize()
 			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 
 
-			ptDebugObj->descSet[i] = ptDebugObj->descLayout.GetDescriptorSet();
+			ptDebugObj->descSets[i] = ptDebugObj->descLayout.GetDescriptorSet();
 
 
 			vk::DescriptorImageInfo imageInfo2{};
 			imageInfo2
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(Renderer->m_attachment[i]());
+				.setImageView(Renderer->m_attachments[i]());
 			//	.setSampler(VK_NULL_HANDLE);
 
 			vk::WriteDescriptorSet descriptorWrite2{};
 			descriptorWrite2
-				.setDstSet(ptDebugObj->descSet[i]) //
+				.setDstSet(ptDebugObj->descSets[i]) //
 				.setDstBinding(0)
 				.setDstArrayElement(0u)
 				.setDescriptorType(vk::DescriptorType::eInputAttachment)
@@ -782,13 +782,13 @@ void Renderer_::OnViewportResize()
 
 
 			std::array<vk::ImageView, 3> attch{
-				m_attachment[i](),
-				m_attachment2[i](),
-				m_gbuffer[i].framebuffer[GDepth](),
+				m_attachments[i](),
+				m_attachments2[i](),
+				m_gbuffers[i].framebuffer[GDepth](),
 			};
 
-			DEBUG_NAME(m_attachment[i].operator vk::Image(), "attachment 1: " + std::to_string(i));
-			DEBUG_NAME(m_attachment2[i].operator vk::Image(), "attachment 2: " + std::to_string(i));
+			DEBUG_NAME(m_attachments[i].operator vk::Image(), "attachment 1: " + std::to_string(i));
+			DEBUG_NAME(m_attachments2[i].operator vk::Image(), "attachment 2: " + std::to_string(i));
 
 			// framebuffer
 			vk::FramebufferCreateInfo createInfo{};
@@ -800,7 +800,7 @@ void Renderer_::OnViewportResize()
 				.setHeight(fbSize.height)
 				.setLayers(1u);
 
-			m_framebuffer[i] = Device->createFramebufferUnique(createInfo);
+			m_framebuffers[i] = Device->createFramebufferUnique(createInfo);
 		}
 		SetRtImage();
 	}
@@ -825,19 +825,19 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 	RecordPostProcessPass(cmdBuffer, sceneDesc);
 
 
-	m_attachment2[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
+	m_attachments2[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
 		vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eFragmentShader,
 		vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
 
 	RecordRayTracingPass(cmdBuffer, sceneDesc);
 
-	m_attachment2[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+	m_attachments2[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 		vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
 		vk::PipelineStageFlagBits::eFragmentShader);
 
 
-	for (auto& att : m_gbuffer[sceneDesc.frameIndex].framebuffer.attachments) {
+	for (auto& att : m_gbuffers[sceneDesc.frameIndex].framebuffer.attachments) {
 		if (att.isDepth) {
 			continue;
 		}
@@ -847,14 +847,14 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 
 	for (auto sl : sceneDesc->spotlights.elements) {
 		if (sl) {
-			sl->shadowmap[sceneDesc.frameIndex].framebuffer[0].TransitionToLayout(
+			sl->shadowmaps[sceneDesc.frameIndex].framebuffer[0].TransitionToLayout(
 				cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 		}
 	}
 
 	for (auto dl : sceneDesc->directionalLights.elements) {
 		if (dl) {
-			dl->shadowmap[sceneDesc.frameIndex].framebuffer[0].TransitionToLayout(
+			dl->shadowmaps[sceneDesc.frameIndex].framebuffer[0].TransitionToLayout(
 				cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 		}
 	}
@@ -862,9 +862,9 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 	RecordOutPass(cmdBuffer, sceneDesc, outRp, outFb, outExtent);
 
 
-	m_attachment[sceneDesc.frameIndex].TransitionToLayout(
+	m_attachments[sceneDesc.frameIndex].TransitionToLayout(
 		cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
-	m_attachment2[sceneDesc.frameIndex].TransitionToLayout(
+	m_attachments2[sceneDesc.frameIndex].TransitionToLayout(
 		cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
 }
 } // namespace vl

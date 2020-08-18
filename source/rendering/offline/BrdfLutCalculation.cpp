@@ -92,7 +92,7 @@ void BrdfLutCalculation::AllocateCommandBuffers()
 		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(1u);
 
-	m_cmdBuffer = Device->allocateCommandBuffers(allocInfo)[0];
+	m_cmdBuffers = Device->allocateCommandBuffers(allocInfo)[0];
 }
 
 void BrdfLutCalculation::MakePipeline()
@@ -277,28 +277,28 @@ void BrdfLutCalculation::RecordAndSubmitCmdBuffers()
 
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
-	m_cmdBuffer.begin(beginInfo);
+	m_cmdBuffers.begin(beginInfo);
 	{
 		// begin render pass
-		m_cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+		m_cmdBuffers.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{
 			// Dynamic viewport & scissor
-			m_cmdBuffer.setViewport(0, { viewport });
-			m_cmdBuffer.setScissor(0, { scissor });
+			m_cmdBuffers.setViewport(0, { viewport });
+			m_cmdBuffers.setScissor(0, { scissor });
 
 			// bind the graphics pipeline
-			m_cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+			m_cmdBuffers.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 			// draw call (triangle)
-			m_cmdBuffer.draw(3u, 1u, 0u, 0u);
+			m_cmdBuffers.draw(3u, 1u, 0u, 0u);
 		}
 		// end render pass
-		m_cmdBuffer.endRenderPass();
+		m_cmdBuffers.endRenderPass();
 	}
-	m_cmdBuffer.end();
-
+	m_cmdBuffers.end();
+	
 	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBufferCount(1u).setPCommandBuffers(&m_cmdBuffer);
+	submitInfo.setCommandBufferCount(1u).setPCommandBuffers(&m_cmdBuffers);
 
 	Device->graphicsQueue.submit(1u, &submitInfo, {});
 
