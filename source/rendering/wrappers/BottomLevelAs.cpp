@@ -8,62 +8,10 @@
 
 namespace vl {
 
-BottomLevelAs::BottomLevelAs(size_t vertexStride, const std::vector<GpuGeometryGroup>& gggs, //
-	vk::BuildAccelerationStructureFlagsKHR buildFlags)
-{
-	std::vector<vk::AccelerationStructureCreateGeometryTypeInfoKHR> asCreateGeomInfos{};
-	std::vector<vk::AccelerationStructureGeometryKHR> asGeoms{};
-	std::vector<vk::AccelerationStructureBuildOffsetInfoKHR> asBuildOffsetInfos{};
 
-	for (const auto& ggg : gggs) {
-		// Setting up the creation info of acceleration structure
-		vk::AccelerationStructureCreateGeometryTypeInfoKHR asCreate{};
-		asCreate
-			.setGeometryType(vk::GeometryTypeKHR::eTriangles) //
-			.setIndexType(vk::IndexType::eUint32)
-			.setVertexFormat(vk::Format::eR32G32B32Sfloat)
-			.setMaxPrimitiveCount(ggg.indexCount / 3)
-			.setMaxVertexCount(ggg.vertexCount)
-			.setAllowsTransforms(VK_FALSE); // No adding transformation matrices
-
-		// Building part
-		auto vertexAddress = ggg.vertexBuffer.GetAddress();
-		auto indexAddress = ggg.indexBuffer.GetAddress();
-
-		vk::AccelerationStructureGeometryTrianglesDataKHR triangles{};
-		triangles
-			.setVertexFormat(asCreate.vertexFormat) //
-			.setVertexData(vertexAddress)
-			.setVertexStride(vertexStride)
-			.setIndexType(asCreate.indexType)
-			.setIndexData(indexAddress)
-			.setTransformData({});
-
-		// Setting up the build info of the acceleration
-		vk::AccelerationStructureGeometryKHR asGeom{};
-		asGeom
-			.setGeometryType(asCreate.geometryType) //
-			.setFlags(vk::GeometryFlagBitsKHR::eOpaque)
-			.geometry.setTriangles(triangles);
-
-		// The primitive itself
-		vk::AccelerationStructureBuildOffsetInfoKHR offset{};
-		offset
-			.setFirstVertex(0) //
-			.setPrimitiveCount(asCreate.maxPrimitiveCount)
-			.setPrimitiveOffset(0)
-			.setTransformOffset(0);
-
-		asGeoms.emplace_back(asGeom);
-		asCreateGeomInfos.emplace_back(asCreate);
-		asBuildOffsetInfos.emplace_back(offset);
-	}
-
-	Build(buildFlags, asCreateGeomInfos, asGeoms, asBuildOffsetInfos);
-}
-
-
-BottomLevelAs::BottomLevelAs(size_t vertexStride, GpuGeometryGroup& ggg, //
+BottomLevelAs::BottomLevelAs(size_t vertexStride, const RBuffer& combinedVertexBuffer,
+	const RBuffer& combinedIndexBuffer,
+	GpuGeometryGroup& gg, //
 	vk::BuildAccelerationStructureFlagsKHR buildFlags)
 {
 	std::vector<vk::AccelerationStructureCreateGeometryTypeInfoKHR> asCreateGeomInfos{};
@@ -77,13 +25,13 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, GpuGeometryGroup& ggg, //
 		.setGeometryType(vk::GeometryTypeKHR::eTriangles) //
 		.setIndexType(vk::IndexType::eUint32)
 		.setVertexFormat(vk::Format::eR32G32B32Sfloat)
-		.setMaxPrimitiveCount(ggg.indexCount / 3)
-		.setMaxVertexCount(ggg.vertexCount)
+		.setMaxPrimitiveCount(gg.indexCount / 3)
+		.setMaxVertexCount(gg.vertexCount)
 		.setAllowsTransforms(VK_FALSE); // No adding transformation matrices
 
 	// Building part
-	auto vertexAddress = ggg.vertexBuffer.GetAddress();
-	auto indexAddress = ggg.indexBuffer.GetAddress();
+	auto vertexAddress = combinedVertexBuffer.GetAddress();
+	auto indexAddress = combinedIndexBuffer.GetAddress();
 
 	vk::AccelerationStructureGeometryTrianglesDataKHR triangles{};
 	triangles
@@ -103,10 +51,10 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, GpuGeometryGroup& ggg, //
 
 	// The primitive itself
 	vk::AccelerationStructureBuildOffsetInfoKHR offset{};
-	offset
-		.setFirstVertex(0) //
-		.setPrimitiveCount(asCreate.maxPrimitiveCount)
-		.setPrimitiveOffset(0)
+	offset.setPrimitiveCount(asCreate.maxPrimitiveCount)
+		.setPrimitiveOffset(gg.indexBufferOffset)
+
+		.setFirstVertex(gg.indexOffset) //
 		.setTransformOffset(0);
 
 	asGeoms.emplace_back(asGeom);

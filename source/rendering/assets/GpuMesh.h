@@ -25,8 +25,16 @@ struct GpuGeometryGroup {
 	uint32 vertexCount{ 0u }; // PERF: remove
 	GpuHandle<MaterialInstance> material;
 
-	RBuffer vertexBuffer;
-	RBuffer indexBuffer;
+	// RBuffer vertexBuffer;
+	// RBuffer indexBuffer;
+
+	uint32 vertexBufferOffset{ 0u };
+	uint32 indexBufferOffset{ 0u };
+
+
+	// Value added to index buffer value to find the proper vertex for this geometry group
+	// (aka the additive vertexCount of all the previous geometry groups)
+	uint32 indexOffset{ 0u };
 
 	BottomLevelAs blas;
 };
@@ -35,11 +43,18 @@ struct GpuGeometryGroup {
 struct GpuMesh : public GpuAssetTemplate<Mesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;
 
-	TopLevelAs meshAs;
-
 
 	GpuMesh(PodHandle<Mesh> podHandle);
 
+	RBuffer combinedVertexBuffer;
+	RBuffer combinedIndexBuffer;
+
+	RBuffer indexOffsetBuffer;
+	RBuffer primitiveOffsetBuffer;
+
+
 	void Update(const AssetUpdateInfo& info) override final;
+
+	void UpdateGeometry(const AssetUpdateInfo& info);
 };
 } // namespace vl

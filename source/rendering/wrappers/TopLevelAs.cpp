@@ -4,6 +4,10 @@
 #include "rendering/Device.h"
 #include "rendering/scene/SceneGeometry.h"
 #include "rendering/assets/GpuMesh.h"
+#include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuMaterialInstance.h"
+#include "rendering/assets/GpuImage.h"
+#include "assets/StdAssets.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -36,6 +40,16 @@ vk::AccelerationStructureInstanceKHR AsInstanceToVkGeometryInstanceKHR(const vl:
 namespace vl {
 TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 {
+	sceneDesc.descSet = Layouts->rtSceneDescLayout.GetDescriptorSet();
+
+	std::vector<vk::DescriptorImageInfo> descImages;
+	vk::DescriptorImageInfo viewInfoDefault;
+
+	viewInfoDefault
+		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+		.setSampler(GpuAssetManager->GetDefaultSampler());
+
+
 	for (int i = 0, j = 0; i < static_cast<int>(geoms.size()); i++) {
 		if (geoms[i] && geoms[i]->mesh.Lock().geometryGroups.size()) {
 			for (auto& gg : geoms[i]->mesh.Lock().geometryGroups) {
@@ -47,12 +61,122 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 				inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable; // WIP:
 				instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
 				++j;
+
+
+				if (j <= 25 && gg.material.Lock().archetype == StdAssets::GltfArchetype.handle) {
+					auto h = gg.material.Lock().podHandle;
+					auto& colorView
+						= *GpuAssetManager->GetGpuHandle(h.Lock()->descriptorSet.samplers2d[0]).Lock().image.view;
+					auto& normalView
+						= *GpuAssetManager->GetGpuHandle(h.Lock()->descriptorSet.samplers2d[3]).Lock().image.view;
+					auto& metalRoughView
+						= *GpuAssetManager->GetGpuHandle(h.Lock()->descriptorSet.samplers2d[1]).Lock().image.view;
+
+
+					viewInfoDefault.setImageView(colorView);
+					descImages.emplace_back(viewInfoDefault);
+
+					viewInfoDefault.setImageView(normalView);
+					descImages.emplace_back(viewInfoDefault);
+
+					viewInfoDefault.setImageView(metalRoughView);
+					descImages.emplace_back(viewInfoDefault);
+				}
 			}
 		}
 	}
 
+
+	vk::WriteDescriptorSet imgWriteSet{};
+	imgWriteSet
+		.setDescriptorCount(std::min(descImages.size(), 75llu)) //
+		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+		.setPImageInfo(descImages.data())
+		.setDstBinding(0)
+		.setDstSet(sceneDesc.descSet)
+		.setDstArrayElement(0u)
+		.setPBufferInfo(nullptr)
+		.setPTexelBufferView(nullptr);
+
+	vk::DescriptorBufferInfo vtxBufInfo{};
+	vtxBufInfo
+		.setOffset(0) //
+		.setRange(VK_WHOLE_SIZE)
+		.setBuffer(geoms[0]->mesh.Lock().combinedVertexBuffer);
+
+	vk::DescriptorBufferInfo indBufInfo{};
+	indBufInfo
+		.setOffset(0) //
+		.setRange(VK_WHOLE_SIZE)
+		.setBuffer(geoms[0]->mesh.Lock().combinedIndexBuffer);
+
+
+	vk::DescriptorBufferInfo indOffsetBufInfo{};
+	indOffsetBufInfo
+		.setOffset(0) //
+		.setRange(VK_WHOLE_SIZE)
+		.setBuffer(geoms[0]->mesh.Lock().indexOffsetBuffer);
+
+	vk::DescriptorBufferInfo primOffsetBufInfo{};
+	primOffsetBufInfo
+		.setOffset(0) //
+		.setRange(VK_WHOLE_SIZE)
+		.setBuffer(geoms[0]->mesh.Lock().primitiveOffsetBuffer);
+
+	vk::WriteDescriptorSet bufWriteSet{};
+	bufWriteSet
+		.setDescriptorCount(1) //
+		.setDescriptorType(vk::DescriptorType::eStorageBuffer)
+		.setPImageInfo(nullptr)
+		.setDstBinding(1)
+		.setDstSet(sceneDesc.descSet)
+		.setDstArrayElement(0u)
+		.setPBufferInfo(&vtxBufInfo)
+		.setPTexelBufferView(nullptr);
+
+
+	vk::WriteDescriptorSet bufWriteSet2{};
+	bufWriteSet2
+		.setDescriptorCount(1) //
+		.setDescriptorType(vk::DescriptorType::eStorageBuffer)
+		.setPImageInfo(nullptr)
+		.setDstBinding(2)
+		.setDstSet(sceneDesc.descSet)
+		.setDstArrayElement(0u)
+		.setPBufferInfo(&indBufInfo)
+		.setPTexelBufferView(nullptr);
+
+	vk::WriteDescriptorSet bufWriteSet3{};
+	bufWriteSet3
+		.setDescriptorCount(1) //
+		.setDescriptorType(vk::DescriptorType::eStorageBuffer)
+		.setPImageInfo(nullptr)
+		.setDstBinding(3)
+		.setDstSet(sceneDesc.descSet)
+		.setDstArrayElement(0u)
+		.setPBufferInfo(&indOffsetBufInfo)
+		.setPTexelBufferView(nullptr);
+
+	vk::WriteDescriptorSet bufWriteSet4{};
+	bufWriteSet4
+		.setDescriptorCount(1) //
+		.setDescriptorType(vk::DescriptorType::eStorageBuffer)
+		.setPImageInfo(nullptr)
+		.setDstBinding(4)
+		.setDstSet(sceneDesc.descSet)
+		.setDstArrayElement(0u)
+		.setPBufferInfo(&primOffsetBufInfo)
+		.setPTexelBufferView(nullptr);
+
+
+	Device->updateDescriptorSets({ imgWriteSet, bufWriteSet, bufWriteSet2, bufWriteSet3, bufWriteSet4 }, {});
+
 	Build();
+	Device->waitIdle();
 }
+
+void HelperRtSceneDescriptor::AddMaterial(GpuGeometryGroup& gg) {}
+
 
 void TopLevelAs::AddAsInstance(AsInstance&& instance)
 {

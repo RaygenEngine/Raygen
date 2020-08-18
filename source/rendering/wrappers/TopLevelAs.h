@@ -17,6 +17,12 @@ struct AsInstance {
 	glm::mat4 transform{ glm::identity<glm::mat4>() };
 };
 
+struct HelperRtSceneDescriptor {
+	vk::DescriptorSet descSet;
+
+	void AddMaterial(GpuGeometryGroup& gg);
+};
+
 struct TopLevelAs : RAccelerationStructure {
 	TopLevelAs() = default;
 	TopLevelAs(const std::vector<SceneGeometry*>& geoms);
@@ -27,6 +33,8 @@ struct TopLevelAs : RAccelerationStructure {
 	void Clear();
 	void Build();
 
+
+	HelperRtSceneDescriptor sceneDesc; // WIP:
 
 private:
 	RBuffer instanceBuffer;

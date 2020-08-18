@@ -3,14 +3,7 @@
 #extension GL_EXT_ray_tracing : require
 
 #include "global.h"
-
-struct hitPayload
-{
-  vec4 hitValue;
-};
-
-//layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAs;
-
+#include "rtshared.h"
 
 layout(location = 0) rayPayloadInEXT hitPayload prd;
 

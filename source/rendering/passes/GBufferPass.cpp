@@ -352,6 +352,7 @@ void GbufferPass::RecordCmd(
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
 
+
 				if (arch.isUnlit)
 					[[unlikely]] { continue; }
 				auto& plLayout = *arch.gbuffer.pipelineLayout;
@@ -367,8 +368,9 @@ void GbufferPass::RecordCmd(
 				cmdBuffer->bindDescriptorSets(
 					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
 
-				cmdBuffer->bindVertexBuffers(0u, { gg.vertexBuffer }, { 0 });
-				cmdBuffer->bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);
+				auto& gpuMesh = geom->mesh.Lock();
+				cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer }, { gg.vertexBufferOffset });
+				cmdBuffer->bindIndexBuffer(gpuMesh.combinedIndexBuffer, gg.indexBufferOffset, vk::IndexType::eUint32);
 
 
 				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
@@ -406,9 +408,9 @@ void GbufferPass::RecordCmd(
 				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
 					&geom->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
-				cmdBuffer->bindVertexBuffers(0u, { gg.vertexBuffer }, { 0 });
-				cmdBuffer->bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);
-
+				auto& gpuMesh = geom->mesh.Lock();
+				cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer }, { gg.vertexBufferOffset });
+				cmdBuffer->bindIndexBuffer(gpuMesh.combinedIndexBuffer, gg.indexBufferOffset, vk::IndexType::eUint32);
 
 				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 			}
