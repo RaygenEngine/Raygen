@@ -35,8 +35,8 @@ struct RImage {
 	RImage& operator=(RImage const&) = delete;
 	RImage& operator=(RImage&&) = default;
 
-	void CopyBufferToImage(const RBuffer& buffer);
-	void CopyImageToBuffer(const RBuffer& buffer);
+	void CopyBufferToImage(const RBuffer& buffers);
+	void CopyImageToBuffer(const RBuffer& buffers);
 
 	// Affects all mips and array elements
 	vk::ImageMemoryBarrier CreateTransitionBarrier(vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
@@ -83,7 +83,7 @@ struct RCubemap : RImage {
 			vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, vk::ImageCreateFlagBits::eCubeCompatible,
 			properties, vk::ImageViewType::eCube, name){};
 
-	void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCount);
+	void RCubemap::CopyBuffer(const RBuffer& buffers, size_t pixelSize, uint32 mipCount);
 };
 
 struct RImageAttachment : RImage {
