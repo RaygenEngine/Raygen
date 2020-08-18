@@ -78,12 +78,29 @@ void vl::GpuMesh::UpdateGeometry(const AssetUpdateInfo& info)
 			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
+	indexOffsetBuffer = { sizeof(uint32) * data->geometrySlots.size(),
+		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer
+			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
+
+	primitiveOffsetBuffer = { sizeof(uint32) * data->geometrySlots.size(),
+		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer
+			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
+
 	DEBUG_NAME(combinedVertexBuffer, "Vertex Buffer " + AssetHandlerManager::GetPodUri(podHandle));
 	DEBUG_NAME(combinedIndexBuffer, "Index Buffer " + AssetHandlerManager::GetPodUri(podHandle));
 
 	RBuffer vertexStagingbuffer{ stagingVertexSize, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 	RBuffer indexStagingbuffer{ stagingIndexSize, vk::BufferUsageFlagBits::eTransferSrc,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+	RBuffer indexOffsetStagingbuffer{ sizeof(uint32) * data->geometrySlots.size(),
+		vk::BufferUsageFlagBits::eTransferSrc,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+
+	RBuffer primitiveOffsetStagingbuffer{ sizeof(uint32) * data->geometrySlots.size(),
+		vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 	DEBUG_NAME(vertexStagingbuffer, "Staging Vertex Buffer " + AssetHandlerManager::GetPodUri(podHandle));
@@ -92,6 +109,9 @@ void vl::GpuMesh::UpdateGeometry(const AssetUpdateInfo& info)
 	uint32 indexBufferOffset = 0;
 	uint32 vertexBufferOffset = 0;
 	uint32 indexOffset = 0;
+
+	std::vector<uint32> indexOffsets;
+	std::vector<uint32> primitiveOffsets;
 
 	for (int32 i = 0; const auto& gg : data->geometrySlots) {
 		GpuGeometryGroup vgg;
@@ -113,6 +133,8 @@ void vl::GpuMesh::UpdateGeometry(const AssetUpdateInfo& info)
 		vgg.indexBufferOffset = indexBufferOffset;
 
 		vgg.indexOffset = indexOffset;
+		indexOffsets.emplace_back(indexOffset);
+		primitiveOffsets.emplace_back(indexBufferOffset / 12);
 		indexOffset += vgg.vertexCount;
 
 		vertexBufferOffset = static_cast<uint32>(
@@ -128,4 +150,11 @@ void vl::GpuMesh::UpdateGeometry(const AssetUpdateInfo& info)
 		vgg.blas = BottomLevelAs(sizeof(Vertex), combinedVertexBuffer, combinedIndexBuffer, vgg,
 			vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace);
 	}
+
+	indexOffsetStagingbuffer.UploadData(indexOffsets.data(), indexOffsets.size() * sizeof(uint32));
+	indexOffsetBuffer.CopyBuffer(indexOffsetStagingbuffer);
+
+
+	primitiveOffsetStagingbuffer.UploadData(primitiveOffsets.data(), primitiveOffsets.size() * sizeof(uint32));
+	primitiveOffsetBuffer.CopyBuffer(primitiveOffsetStagingbuffer);
 }
