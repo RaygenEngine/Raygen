@@ -68,7 +68,7 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 	DEBUG_NAME(memory, name + ".mem");
 }
 
-void RImage::CopyBufferToImage(const RBuffer& buffer)
+void RImage::CopyBufferToImage(const RBuffer& buffers)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -89,7 +89,7 @@ void RImage::CopyBufferToImage(const RBuffer& buffer)
 		.setBaseArrayLayer(0u)
 		.setLayerCount(arrayLayers);
 
-	Device->dmaCmdBuffer.copyBufferToImage(buffer, image.get(), vk::ImageLayout::eTransferDstOptimal, { region });
+	Device->dmaCmdBuffer.copyBufferToImage(buffers, image.get(), vk::ImageLayout::eTransferDstOptimal, { region });
 
 	Device->dmaCmdBuffer.end();
 
@@ -105,7 +105,7 @@ void RImage::CopyBufferToImage(const RBuffer& buffer)
 	Device->dmaQueue.waitIdle();
 }
 
-void RImage::CopyImageToBuffer(const RBuffer& buffer)
+void RImage::CopyImageToBuffer(const RBuffer& buffers)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -126,7 +126,7 @@ void RImage::CopyImageToBuffer(const RBuffer& buffer)
 		.setBaseArrayLayer(0u)
 		.setLayerCount(arrayLayers);
 
-	Device->dmaCmdBuffer.copyImageToBuffer(image.get(), vk::ImageLayout::eTransferSrcOptimal, buffer, { region });
+	Device->dmaCmdBuffer.copyImageToBuffer(image.get(), vk::ImageLayout::eTransferSrcOptimal, buffers, { region });
 
 	Device->dmaCmdBuffer.end();
 
@@ -351,7 +351,7 @@ vk::DescriptorSet RImage::GetDebugDescriptor()
 	return *debugDescriptorSet;
 }
 
-void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCount)
+void RCubemap::CopyBuffer(const RBuffer& buffers, size_t pixelSize, uint32 mipCount)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -384,7 +384,7 @@ void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCou
 		offset += res * res * pixelSize * 6llu;
 	}
 
-	Device->dmaCmdBuffer.copyBufferToImage(buffer, image.get(), vk::ImageLayout::eTransferDstOptimal, regions);
+	Device->dmaCmdBuffer.copyBufferToImage(buffers, image.get(), vk::ImageLayout::eTransferDstOptimal, regions);
 
 	Device->dmaCmdBuffer.end();
 

@@ -7,7 +7,7 @@
 void SceneAnimatedGeometry::UploadSsbo(uint32 curFrame)
 {
 	if (jointMatrices.size() > 0) {
-		buffer[curFrame].UploadData(jointMatrices.data(), jointMatrices.size() * sizeof(glm::mat4));
+		buffers[curFrame].UploadData(jointMatrices.data(), jointMatrices.size() * sizeof(glm::mat4));
 	}
 }
 
@@ -15,19 +15,19 @@ void SceneAnimatedGeometry::ResizeJoints(uint32 curFrame)
 {
 	auto i = curFrame;
 
-	buffer[i] = vl::RBuffer{ GetBufferSize(), vk::BufferUsageFlagBits::eStorageBuffer,
+	buffers[i] = vl::RBuffer{ GetBufferSize(), vk::BufferUsageFlagBits::eStorageBuffer,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
 	vk::DescriptorBufferInfo bufferInfo{};
 
 	bufferInfo
-		.setBuffer(buffer[i]) //
+		.setBuffer(buffers[i]) //
 		.setOffset(0u)
 		.setRange(GetBufferSize());
 	vk::WriteDescriptorSet descriptorWrite{};
 
 	descriptorWrite
-		.setDstSet(descSet[i]) //
+		.setDstSet(descSets[i]) //
 		.setDstBinding(0u)
 		.setDstArrayElement(0u)
 		.setDescriptorType(vk::DescriptorType::eStorageBuffer)

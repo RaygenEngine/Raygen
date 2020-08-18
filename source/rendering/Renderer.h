@@ -20,7 +20,7 @@ private:
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;
 
-	FrameArray<GBuffer> m_gbuffer;
+	InFlightResource<GBuffer> m_gbuffers;
 
 
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
@@ -34,7 +34,7 @@ private:
 
 	struct SecondaryBufferPool {
 
-		std::vector<FrameArray<vk::CommandBuffer>> sBuffers;
+		std::vector<InFlightResource<vk::CommandBuffer>> sBuffers;
 
 		vk::CommandBuffer Get(uint32 frameIndex)
 		{
@@ -66,19 +66,19 @@ protected:
 public:
 	// TODO: POSTPROC post process for hdr, move those
 	// TODO: when you move this use RFramebuffer instead
-	FrameArray<vk::UniqueFramebuffer> m_framebuffer;
-	FrameArray<RImageAttachment> m_attachment;
-	FrameArray<RImageAttachment> m_attachment2;
+	InFlightResource<vk::UniqueFramebuffer> m_framebuffers;
+	InFlightResource<RImageAttachment> m_attachments;
+	InFlightResource<RImageAttachment> m_attachments2;
 
 	// std::array<UniquePtr<RImageAttachment>, 3> m_attachmentsDepthToUnlit;
 
-	FrameArray<vk::DescriptorSet> m_ppDescSet;
+	InFlightResource<vk::DescriptorSet> m_ppDescSets;
 	vk::UniqueRenderPass m_ptRenderpass;
 
 
 	// TODO: RT, move those, framearray
 	vk::UniqueAccelerationStructureKHR m_sceneAS;
-	FrameArray<vk::DescriptorSet> m_rtDescSet;
+	InFlightResource<vk::DescriptorSet> m_rtDescSets;
 
 	vk::UniquePipeline m_rtPipeline;
 	vk::UniquePipelineLayout m_rtPipelineLayout;

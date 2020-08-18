@@ -9,7 +9,7 @@ public:
 	PtDebug();
 
 	RDescriptorLayout descLayout;
-	FrameArray<vk::DescriptorSet> descSet;
+	InFlightResource<vk::DescriptorSet> descSets;
 
 	void MakeLayout() override;
 	void MakePipeline() override;

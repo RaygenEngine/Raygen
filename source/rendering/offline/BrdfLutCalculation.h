@@ -8,7 +8,7 @@ class BrdfLutCalculation {
 
 	vk::UniqueRenderPass m_renderPass;
 
-	vk::CommandBuffer m_cmdBuffer;
+	vk::CommandBuffer m_cmdBuffers;
 
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;

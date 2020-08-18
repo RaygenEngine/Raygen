@@ -334,7 +334,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 				//	vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
 				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
-					&geom->descSet[sceneDesc.frameIndex], 0u, nullptr);
+					&geom->descSets[sceneDesc.frameIndex], 0u, nullptr);
 
 				cmdBuffer->bindVertexBuffers(0u, { gg.vertexBuffer }, { 0 });
 				cmdBuffer->bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);
