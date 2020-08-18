@@ -22,7 +22,7 @@ class SamplerPool {
     std::vector<Entry> m_entries;
 
     std::unordered_map<SamplerParams, size_t, Hash_fn<SamplerParams>> m_stateMap;
-    std::unordered_map<vk::Sampler, size_t> m_samplerMap;
+	std::unordered_map<vk::Sampler, size_t> m_samplerMap;
 
 public:
 

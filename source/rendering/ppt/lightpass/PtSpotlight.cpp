@@ -68,7 +68,7 @@ void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scene
 	}
 
 	// WIP:
-	auto descSet = camera->descSets[sceneDesc.frameIndex];
+	auto descSet = camera->descSet[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
@@ -87,10 +87,10 @@ void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scene
 		}
 
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
-			&sl->descSets[sceneDesc.frameIndex], 0u, nullptr);
+			&sl->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 3u, 1u,
-			&sl->shadowmaps[sceneDesc.frameIndex].descSet, 0u, nullptr);
+			&sl->shadowmap[sceneDesc.frameIndex].descSet, 0u, nullptr);
 
 
 		// draw call (triangle)

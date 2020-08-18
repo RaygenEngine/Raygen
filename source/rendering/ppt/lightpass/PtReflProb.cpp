@@ -66,7 +66,7 @@ void PtReflProb::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneD
 	}
 
 	// WIP:
-	auto descSet = camera->descSets[sceneDesc.frameIndex];
+	auto descSet = camera->descSet[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 

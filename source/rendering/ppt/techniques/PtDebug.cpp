@@ -67,7 +67,7 @@ void PtDebug::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &descSets[sceneDesc.frameIndex], 0u, nullptr);
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 	// draw call (triangle)
 	cmdBuffer.draw(3u, 1u, 0u, 0u);

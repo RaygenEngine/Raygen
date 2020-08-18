@@ -66,7 +66,7 @@ void PtDirectionalLight::Draw(
 	}
 
 	// WIP:
-	auto descSet = camera->descSets[sceneDesc.frameIndex];
+	auto descSet = camera->descSet[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
@@ -82,10 +82,10 @@ void PtDirectionalLight::Draw(
 		}
 
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
-			&dl->descSets[sceneDesc.frameIndex], 0u, nullptr);
+			&dl->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 3u, 1u,
-			&dl->shadowmaps[sceneDesc.frameIndex].descSet, 0u, nullptr);
+			&dl->shadowmap[sceneDesc.frameIndex].descSet, 0u, nullptr);
 
 		// draw call (triangle)
 		cmdBuffer.draw(3u, 1u, 0u, 0u);

@@ -6,7 +6,7 @@ struct SceneGeometry {
 	glm::mat4 transform;
 	vl::GpuHandle<Mesh> mesh;
 
-	InFlightResource<bool> isDirty{ true };
+	InFlightResources<bool> isDirty{ true };
 };
 
 struct SceneAnimatedGeometry {
@@ -16,15 +16,15 @@ struct SceneAnimatedGeometry {
 
 	std::vector<glm::mat4> jointMatrices;
 
-	InFlightResource<vk::DescriptorSet> descSets;
-	InFlightResource<vl::RBuffer> buffers;
+	InFlightResources<vk::DescriptorSet> descSet;
+	InFlightResources<vl::RBuffer> buffer;
 
 	void UploadSsbo(uint32 curFrame);
 
 	SceneAnimatedGeometry()
 	{
 		for (size_t i = 0; i < c_framesInFlight; ++i) {
-			descSets[i] = vl::Layouts->jointsDescLayout.GetDescriptorSet();
+			descSet[i] = vl::Layouts->jointsDescLayout.GetDescriptorSet();
 		}
 	}
 
@@ -33,8 +33,8 @@ struct SceneAnimatedGeometry {
 
 	void MaybeResizeJoints(size_t newSize);
 
-	InFlightResource<bool> isDirty{ true };
-	InFlightResource<bool> isDirtyResize{ true };
+	InFlightResources<bool> isDirty{ true };
+	InFlightResources<bool> isDirtyResize{ true };
 
 private:
 	size_t GetBufferSize() const;
