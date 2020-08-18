@@ -343,7 +343,7 @@ void Renderer_::MakeRtPipeline()
 
 
 	std::array layouts = { Layouts->singleStorageImage.setLayout.get(), Layouts->accelLayout.setLayout.get(),
-		Layouts->singleUboDescLayout.setLayout.get() };
+		Layouts->singleUboDescLayout.setLayout.get(), Layouts->rtSceneDescLayout.setLayout.get() };
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
@@ -363,7 +363,6 @@ void Renderer_::MakeRtPipeline()
 	rayPipelineInfo
 		.setGroupCount(static_cast<uint32>(m_rtShaderGroups.size())) // 1-raygen, n-miss, n-(hit[+anyhit+intersect])
 		.setPGroups(m_rtShaderGroups.data())
-
 		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop formulation
 		// instead.
 
@@ -560,6 +559,8 @@ void Renderer_::RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRe
 	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 2u, 1u,
 		&sceneDesc.viewer->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
+	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 3u, 1u,
+		&sceneDesc.scene->tlas.sceneDesc.descSet, 0u, nullptr);
 
 	// cmdBuf.pushConstants<RtPushConstant>(m_rtPipelineLayout,
 	//	vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR
@@ -825,16 +826,24 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 	RecordPostProcessPass(cmdBuffer, sceneDesc);
 
 
-	m_attachment2[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
-		vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eFragmentShader,
-		vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+	static bool raytrace = true;
+
+	if (Input.IsJustPressed(Key::V)) {
+		raytrace = !raytrace;
+	}
+
+	if (raytrace) {
+		m_attachment2[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
+			vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eFragmentShader,
+			vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
 
-	RecordRayTracingPass(cmdBuffer, sceneDesc);
+		RecordRayTracingPass(cmdBuffer, sceneDesc);
 
-	m_attachment2[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
-		vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
-		vk::PipelineStageFlagBits::eFragmentShader);
+		m_attachment2[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+			vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
+			vk::PipelineStageFlagBits::eFragmentShader);
+	}
 
 
 	for (auto& att : m_gbuffer[sceneDesc.frameIndex].framebuffer.attachments) {
