@@ -17,6 +17,8 @@ inline struct Layouts_ {
 
 	RDescriptorLayout singleStorageImage;
 
+	RDescriptorLayout rtSceneDescLayout;
+
 
 	RDescriptorLayout imageDebugDescLayout;
 

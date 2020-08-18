@@ -49,6 +49,9 @@ struct GpuMesh : public GpuAssetTemplate<Mesh> {
 	RBuffer combinedVertexBuffer;
 	RBuffer combinedIndexBuffer;
 
+	RBuffer indexOffsetBuffer;
+	RBuffer primitiveOffsetBuffer;
+
 
 	void Update(const AssetUpdateInfo& info) override final;
 

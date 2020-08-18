@@ -67,6 +67,21 @@ Layouts_::Layouts_()
 	imageDebugDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	imageDebugDescLayout.Generate();
 
+
+	// WIP: Hardcoded size
+	rtSceneDescLayout.AddBinding(
+		vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eClosestHitKHR, 25 * 3);
+	rtSceneDescLayout.AddBinding(
+		vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR); // Vertex buffer
+	rtSceneDescLayout.AddBinding(
+		vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR); // Index buffer
+	rtSceneDescLayout.AddBinding(
+		vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR); // Index Offsets buffer
+	rtSceneDescLayout.AddBinding(
+		vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR); // Primitive Offsets buffer
+	rtSceneDescLayout.Generate();
+
+
 	depthRenderPass = DepthmapPass::CreateCompatibleRenderPass();
 
 	gbufferPass = GbufferPass::CreateCompatibleRenderPass();
