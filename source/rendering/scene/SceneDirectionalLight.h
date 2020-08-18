@@ -26,7 +26,7 @@ struct SceneDirectionalLight : SceneStruct {
 
 	DirectionalLight_Ubo ubo;
 
-	FrameArray<vl::Depthmap> shadowmap;
+	InFlightResource<vl::Depthmap> shadowmaps;
 
 	glm::vec3 up;
 

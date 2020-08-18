@@ -6,10 +6,10 @@
 struct SceneStruct {
 	size_t uboSize;
 
-	FrameArray<vk::DescriptorSet> descSet;
-	FrameArray<vl::RBuffer> buffer;
+	InFlightResource<vk::DescriptorSet> descSets;
+	InFlightResource<vl::RBuffer> buffers;
 
-	FrameArray<bool> isDirty{ true };
+	InFlightResource<bool> isDirty{ true };
 
 	SceneStruct(size_t uboSize);
 
