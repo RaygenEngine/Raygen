@@ -4,6 +4,7 @@
 
 #include "global.h"
 #include "rtshared.h"
+#include "random.h"
 
 
 layout(set = 0, binding = 0, rgba32f) uniform image2D image;
@@ -22,6 +23,9 @@ layout(set = 2, binding = 0) uniform UBO_Camera {
 	mat4 viewProjInv; 
 } cam;
 
+#define SPP 3
+#define BOUNCES 3
+
 void main() {
     const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5);
     const vec2 inUV        = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
@@ -35,19 +39,47 @@ void main() {
     float tMin     = 0.001;
     float tMax     = 10000.0;
 
-    traceRayEXT(topLevelAs,     // acceleration structure
-                rayFlags,       // rayFlags
-                0xFF,           // cullMask
-                0,              // sbtRecordOffset
-                0,              // sbtRecordStride
-                0,              // missIndex
-                origin.xyz,     // ray origin
-                tMin,           // ray min range
-                direction.xyz,  // ray direction
-                tMax,           // ray max range
-                0               // payload (location = 0)
-    );
+    vec3 result = vec3(0);
 
-    imageStore(image, ivec2(gl_LaunchIDEXT.xy), prd.hitValue);
+    for(int i = 0; i < SPP; ++i){
+        for (int j = 0; j < BOUNCES; ++j){
+
+    
+            // trace ray
+            traceRayEXT(topLevelAs,     // acceleration structure
+                        rayFlags,       // rayFlags
+                        0xFF,           // cullMask
+                        0,              // sbtRecordOffset
+                        0,              // sbtRecordStride
+                        0,              // missIndex
+                        origin.xyz,     // ray origin
+                        tMin,           // ray min range
+                        direction.xyz,  // ray direction
+                        tMax,           // ray max range
+                        0               // payload (location = 0)
+            );
+
+            if(prd.done){
+                break; // early termination due to ray miss
+            }
+
+            if(prd.depth >= 5){
+
+                float p_spawn = max(prd.throughput.x, max(prd.throughput.y, prd.throughput.z));
+
+                if(random.. >= p){
+                    break // RR termination
+                }
+
+                prd.throughput /= p_spawn; // check if this is needed here
+            }
+            ++prd.depth;
+        }
+        result += prd.radiance
+        // ray origin and direction will be updated from the .rchit shaders
+    }
+
+
+    imageStore(image, ivec2(gl_LaunchIDEXT.xy), result / SPP);
 }
 
