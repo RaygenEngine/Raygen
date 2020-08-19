@@ -23,15 +23,14 @@ vec4 SampleCubemapLH(samplerCube cubemap, vec3 RHdirection) {
 	return texture(cubemap, vec3(RHdirection.x, RHdirection.y, -RHdirection.z));
 }
 
-/*void create_onb(const vec3 n, float3& U, float3& V,
-                                                      float3& W)
+void createOnb(const vec3 normal, inout vec3 T, inout vec3 B, inout vec3 N)
 {
-	W = normalize(n);
-	U = cross(W, make_float3(0.0f, 1.0f, 0.0f));
-	if(fabs(U.x) < 0.001f && fabs(U.y) < 0.001f && fabs(U.z) < 0.001f)
-		U = cross(W, make_float3(1.0f, 0.0f, 0.0f));
-	U = normalize(U);
-	V = cross(W, U);
-}*/
+	N = normalize(normal);
+	T = cross(N, vec3(0.0f, 1.0f, 0.0f));
+	if(abs(T.x) < 0.001f && abs(T.y) < 0.001f && abs(T.z) < 0.001f)
+		T = cross(N, vec3(1.0f, 0.0f, 0.0f));
+	T = normalize(T);
+	B = cross(N, T);
+}
 
 #endif
