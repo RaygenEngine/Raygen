@@ -23,8 +23,8 @@ layout(set = 2, binding = 0) uniform UBO_Camera {
 	mat4 viewProjInv; 
 } cam;
 
-#define SPP 3
-#define BOUNCES 3
+#define SPP 1
+#define BOUNCES 2
 
 void main() {
     const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5);
@@ -39,12 +39,23 @@ void main() {
     float tMin     = 0.001;
     float tMax     = 10000.0;
 
+    uint seed = tea8(gl_LaunchSizeEXT.x*gl_LaunchIDEXT.y + gl_LaunchIDEXT.x, 124144);
+
     vec3 result = vec3(0);
 
     for(int i = 0; i < SPP; ++i){
+
+        prd.origin = origin.rgb;
+        prd.direction = direction.rgb;
+        prd.throughput = vec3(1.f);
+        prd.radiance = vec3(0.f);
+        prd.depth = 0;
+        prd.debugDone = false;
+        prd.done = false;
+        prd.seed = seed; // WIP:
+
         for (int j = 0; j < BOUNCES; ++j){
 
-    
             // trace ray
             traceRayEXT(topLevelAs,     // acceleration structure
                         rayFlags,       // rayFlags
@@ -52,12 +63,18 @@ void main() {
                         0,              // sbtRecordOffset
                         0,              // sbtRecordStride
                         0,              // missIndex
-                        origin.xyz,     // ray origin
+                        prd.origin.xyz,     // ray origin
                         tMin,           // ray min range
-                        direction.xyz,  // ray direction
+                        prd.direction.xyz,  // ray direction
                         tMax,           // ray max range
                         0               // payload (location = 0)
             );
+
+            if(prd.debugDone)
+            {
+                imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(prd.debug, 1));
+                return;
+            }
 
             if(prd.done){
                 break; // early termination due to ray miss
@@ -67,19 +84,22 @@ void main() {
 
                 float p_spawn = max(prd.throughput.x, max(prd.throughput.y, prd.throughput.z));
 
-                if(random.. >= p){
-                    break // RR termination
+                if(rnd(prd.seed) >= p_spawn){
+                    break; // RR termination
                 }
 
                 prd.throughput /= p_spawn; // check if this is needed here
             }
             ++prd.depth;
         }
-        result += prd.radiance
+        result += prd.radiance;
         // ray origin and direction will be updated from the .rchit shaders
     }
 
+    vec4 outColor = vec4(result / SPP, 1);
 
-    imageStore(image, ivec2(gl_LaunchIDEXT.xy), result / SPP);
+
+    imageStore(image, ivec2(gl_LaunchIDEXT.xy), outColor);
 }
+
 

@@ -25,7 +25,18 @@ struct OldVertex
   vec2 uv;
 };
 
+// CHECK: alignment
 struct hitPayload
 {
-  vec4 hitValue;
+  vec3 origin;
+  vec3 direction;
+  vec3 radiance;
+  vec3 throughput;
+  int depth;
+  bool done;
+
+  vec3 debug;
+  bool debugDone;
+
+  uint seed;
 };

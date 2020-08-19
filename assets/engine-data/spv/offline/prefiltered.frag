@@ -1,7 +1,6 @@
 #version 450
 #extension GL_GOOGLE_include_directive: enable
 #include "global.h"
-
 #include "bsdf.h"
 #include "hammersley.h"
 
@@ -37,12 +36,12 @@ void main( ) {
         vec3 H  = importanceSampleGGX(Xi, push.a, N);
         vec3 L  = normalize(2.0 * dot(V, H) * H - V);
 
-        float NoL = max(dot(N, L), 0.0);
+        float NoL = saturate(dot(N, L));
 
         if(NoL > 0.0)
         {
-            float NoH =  max(dot(N, H), 0.0);        
-            float HoV = max(dot(H, V), 0.0); 
+            float NoH = saturate(dot(N, H));        
+            float HoV = saturate(dot(H, V)); 
 
             float D = D_GGX(NoH, push.a); 
             float pdf = (D * NoH / (4 * HoV)) + 0.0001;

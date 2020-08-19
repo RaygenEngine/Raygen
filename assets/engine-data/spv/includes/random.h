@@ -37,17 +37,56 @@ float random( vec2  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
 float random( vec3  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
 float random( vec4  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
 
+
+uint tea8(uint val0, uint val1)
+{
+  uint v0 = val0;
+  uint v1 = val1;
+  uint s0 = 0;
+
+  for(int n = 0; n < 8; ++n)
+  {
+    s0 += 0x9e3779b9;
+    v0 += ((v1<<4)+0xa341316c)^(v1+s0)^((v1>>5)+0xc8013ea4);
+    v1 += ((v0<<4)+0xad90777d)^(v0+s0)^((v0>>5)+0x7e95761e);
+  }
+
+  return v0;
+}
+
+// Generate random unsigned int in [0, 2^24)
+uint lcg(inout uint prev)
+{
+  uint LCG_A = 1664525u;
+  uint LCG_C = 1013904223u;
+  prev = (LCG_A * prev + LCG_C);
+  return prev & 0x00FFFFFF;
+}
+
+uint lcg2(inout uint prev)
+{
+  prev = (prev * 8121 + 28411)  % 134456;
+  return prev;
+}
+
+// Generate random float in [0, 1), recursive random
+float rnd(inout uint prev)
+{
+  return float(lcg(prev)) / float(0x01000000);
+}
+
+
 vec2 GetGradient(vec2 intPos, float t) {
     
-    // Uncomment for calculated rand
-    //float rand = fract(sin(dot(intPos, vec2(12.9898, 78.233))) * 43758.5453);;
-    
-    // Texture-based rand (a bit faster on my GPU)
-    float rand = random(intPos / 64.0).r;
-    
-    // Rotate gradient: random starting rotation, random rotation rate
-    float angle = 6.283185 * rand + 4.0 * t * rand;
-    return vec2(cos(angle), sin(angle));
+  // Uncomment for calculated rand
+  //float rand = fract(sin(dot(intPos, vec2(12.9898, 78.233))) * 43758.5453);;
+
+  // Texture-based rand (a bit faster on my GPU)
+  float rand = random(intPos / 64.0).r;
+
+  // Rotate gradient: random starting rotation, random rotation rate
+  float angle = 6.283185 * rand + 4.0 * t * rand;
+  return vec2(cos(angle), sin(angle));
 }
 
 
