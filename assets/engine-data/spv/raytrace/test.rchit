@@ -5,6 +5,8 @@
 
 #include "global.h"
 #include "rtshared.h"
+#include "bsdf.h"
+#include "hammersley.h"
 
 struct Attr{
 	vec2 x;
@@ -44,6 +46,26 @@ OldVertex fromVertex(Vertex p) {
 	return vtx;
 }
 
+vec3 randomCosineWeightedHemispherePoint(vec2 rand, vec3 n, vec3 t, vec3 b) {
+  float r = rand.x * 0.5 + 0.5; // [-1..1) -> [0..1)
+  float angle = (rand.y + 1.0) * PI; // [-1..1] -> [0..2*PI)
+  float sr = sqrt(r);
+  vec2 p = vec2(sr * cos(angle), sr * sin(angle));
+  /*
+   * Unproject disk point up onto hemisphere:
+   * 1.0 == sqrt(x*x + y*y + z*z) -> z = sqrt(1.0 - x*x - y*y)
+   */
+  vec3 ph = vec3(p.xy, sqrt(1.0 - p*p));
+  /*
+   * Compute some arbitrary tangent space for orienting
+   * our hemisphere 'ph' around the normal. We use the camera's up vector
+   * to have some fix reference vector over the whole screen.
+   */
+
+  /* Make our hemisphere orient around the normal. */
+  return t * ph.x + b * ph.y + n * ph.z;
+}
+
 void main() {
 
 	int matId = gl_InstanceID % 25;
@@ -71,6 +93,19 @@ void main() {
 		
 	// Computing the normal at hit position
 	vec3 normal = v0.normal * barycentrics.x + v1.normal * barycentrics.y + v2.normal * barycentrics.z;
+	vec3 tangent = v0.tangent * barycentrics.x + v1.tangent * barycentrics.y + v2.tangent * barycentrics.z;
+
+	vec3 Tg = normalize(tangent);
+   	vec3 Ng = normalize(normal);
+
+	// Gram-Schmidt process + cross product
+	// re-orthogonalize T with respect to N
+	Tg = normalize(Tg - dot(Tg, Ng) * Ng);
+	// then retrieve perpendicular vector B with the cross product of T and N
+	vec3 Bg = cross(Ng, Tg);
+
+	mat3 TBN = mat3(Tg, Bg, Ng); 
+
 	// TODO: Transforming the normal to world space
 	// normal = normalize(vec3(scnDesc.i[gl_InstanceID].transfoIT * vec4(normal, 0.0)));
 
@@ -79,64 +114,94 @@ void main() {
 	vec3 worldPos = v0.position * barycentrics.x + v1.position * barycentrics.y + v2.position * barycentrics.z;
 	// TODO: Transforming the position to world space
 
+	// sample material textures
+	vec4 sampledBaseColor = texture(textureSamplers[matId * 3], uv);
+	vec4 sampledNormal = texture(textureSamplers[matId * 3 + 1], uv);
+	vec4 sampledMetallicRoughness = texture(textureSamplers[matId * 3 + 2], uv); 
 
-	vec3 color = texture(textureSamplers[matId * 3], uv).xyz;
-	vec3 normalTxt = texture(textureSamplers[matId * 3 + 1], uv).xyz;
-	float metallic = texture(textureSamplers[matId * 3 + 2], uv).y;
-	float roughness = texture(textureSamplers[matId * 3 + 2], uv).z;
+	
+	// final material values
+	vec3 albedo = sampledBaseColor.rgb;
+	float metallic = sampledMetallicRoughness.b;
+	float roughness = sampledMetallicRoughness.g;
+	float reflectance = 0.5;
 
 
-	prd.hitValue = vec4(vec3(color), 1);	
+    // remapping
 
-	vec3 hitPoint = prd.origin + thit * prd.direction
+	// diffuseColor = (1.0 - metallic) * albedo;
+    vec3 diffuseColor = (1.0 - metallic) * albedo;
+    // f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + albedo * metallic;
+	vec3 f0 = vec3(0.16 * reflectance * reflectance * (1.0 - metallic)) + albedo * metallic;
+    // a = roughness roughness;
+	float a = roughness * roughness;
+
+	vec3 hitPoint = prd.origin + gl_HitTEXT * prd.direction;
+
+	vec3 N = normalize(TBN * (sampledNormal.rgb* 2.0 - 1.0));
+	vec3 V = normalize(prd.origin - hitPoint);
+
+	float NoV = abs(dot(N, V)) + 1e-5; 
+
+	//if(prd.depth == 0)
+	//{
+	//	prd.debug = N;
+	//	prd.debugDone = true;
+	//	return;
+	//}
 
 	// Direct Light
 
 	// for each light
+	{
+		vec3 lightPos = vec3(0,35,0);
+		vec3 lightColor = vec3(1,1,1);
+		float lightIntensity = 3;
 
-		vec3 N = frag.normal;
-		vec3 V = normalize(prd.position - hitPoint);
-		vec3 L = normalize(light.position - hitPoint); 
+		//vec3 N = normal;
+		//vec3 V = normalize(prd.origin - hitPoint);
+		vec3 L = normalize(lightPos - hitPoint); 
 		
 		// attenuation
-		float dist = length(light.position - hitPoint);
-		float attenuation = 1.0 / (light.constantTerm + light.linearTerm * dist + 
-					light.quadraticTerm * (dist * dist));
+		float dist = length(lightPos - hitPoint);
+		float attenuation = 1.0; // TODO: fix with coefs
 		
 		float NoL = saturate(dot(N, L));
 
 		// if you are gonna trace this ray 
 		// check dot(N,L) > 0 
-		float shadow; //...
+		float shadow = 0.f; //...
 
 		// sample shadowmap for shadow
-		vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation; 
+		vec3 Li = (1.0 - shadow) * lightColor * lightIntensity * attenuation; 
 	
 		vec3 H = normalize(V + L);
 
-		float NoV = abs(dot(N, V)) + 1e-5; 
+
 		float NoH = saturate(dot(N, H));
 		float LoH = saturate(dot(L, H));
 
 		// to get final diffuse and specular both those terms are multiplied by Li * NoL
-		vec3 brdf_d = Fd_Burley(NoV, NoL, LoH, frag.diffuseColor, frag.a);
-		vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, frag.f0, frag.a);
+		vec3 brdf_d = Fd_Burley(NoV, NoL, LoH, diffuseColor, a);
+		vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, f0, a);
 
 		// so to simplify (faster math)
 		vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
 
-		prd.radiance *= prd.throughput * finalContribution;
-
+		prd.radiance += prd.throughput * finalContribution;
+	}
 	// Indirect Light
 
-		vec3 F = fresnel..
+	// NEXT: something is wrong here
+		vec3 F = F_Schlick(NoV, f0);
 
-		vec3 wi = vec3(0);
+		// incoming light (wi)
+		vec3 L = vec3(0);
 
 		
 
 		// TRANSMISSION
-		if(random > F)
+		if(rnd(prd.seed) > ((F.x + F.y + F.z) / 3))
 		{
 			// SCATTERING Depends on albedo and transparency
 
@@ -144,9 +209,19 @@ void main() {
 
 					//Sample a cosine weighted hemisphere for a new direction wi with pdfd
 
-					// actual througput is
-					// 1 / (psawn * pr) = BRDFdif * cosTheta / (cosTheta / pi)
-					// this is based on Lambert BRDFdif 
+					vec2 Xi = hammersley(prd.seed, 1024);
+					vec3 p = randomCosineWeightedHemispherePoint(Xi, Ng, Tg, Bg); // uses geometric surface
+					L = p - hitPoint;
+
+					vec3 H = normalize(V + L);
+
+					float LoH = saturate(dot(L, H));
+					float NoL = saturate(dot(N, L));
+
+					vec3 brdf_d = Fd_Burley(NoV, NoL, LoH, diffuseColor, a);
+
+					float pdf_d = NoL / PI;
+
 					prd.throughput *= brdf_d * NoL / pdf_d; // try to simplify based on brdf
 					
 				// TODO: SUBSURFACE SCATTERING else if
@@ -162,17 +237,34 @@ void main() {
 		{
 			// sample new direction wi and its pdfs based on distribution of the GGX BRDF
 
-			vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, frag.f0, frag.a);
+			vec2 Xi = hammersley(prd.seed, 1024);
+       	 	vec3 H  = importanceSampleGGX(Xi, a, N);
 
+			// TODO: use reflect
+			L  = normalize(2.0 * dot(V, H) * H - V);
+      
+			float NoL = saturate(dot(N, L));
 
-			prd.throuhput = brdf_r * NoL / pdf_s
+			//if(NoL > 0.0) PERF
+			//{
+			float NoH = saturate(dot(N, H));        
+			float HoV = saturate(dot(H, V)); 
+			float LoH = saturate(dot(L, H));        
+
+			float D = D_GGX(NoH, a); 
+			float pdf = (D * NoH / (4 * HoV)) + 0.0001;
+			
+			//}
+			vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, f0, a);
+
+			prd.throughput = brdf_r * NoL / pdf;
 		}
 
-
 		prd.origin = hitPoint;
-		prd.direction = wi;
+		prd.direction = L;
 	
 }
+
 
 
 
