@@ -5,6 +5,7 @@
 #include "global.h"
 #include "rtshared.h"
 #include "random.h"
+#include "sampling.glsl"
 
 
 layout(set = 0, binding = 0, rgba32f) uniform image2D image;
@@ -23,38 +24,46 @@ layout(set = 2, binding = 0) uniform UBO_Camera {
 	mat4 viewProjInv; 
 } cam;
 
-#define SPP 1
-#define BOUNCES 2
+#define SPP 3
+#define BOUNCES 8
 
 void main() {
-    const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5);
-    const vec2 inUV        = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
-    vec2       d           = inUV * 2.0 - 1.0;
-
-    vec4 origin    = cam.viewInv * vec4(0, 0, 0, 1);
-    vec4 target    = cam.projInv * vec4(d.x, d.y, 1, 1);
-    vec4 direction = cam.viewInv * vec4(normalize(target.xyz), 0);
 
     uint  rayFlags = gl_RayFlagsOpaqueEXT;
     float tMin     = 0.001;
     float tMax     = 10000.0;
 
-    uint seed = tea8(gl_LaunchSizeEXT.x*gl_LaunchIDEXT.y + gl_LaunchIDEXT.x, 124144);
-
-    vec3 result = vec3(0);
-
+    prd.result = vec3(0);
     for(int i = 0; i < SPP; ++i){
 
+        uint seed = tea(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, SPP + i);
+
+        float r1   = rnd(seed);
+        float r2   = rnd(seed);
+
+        // Subpixel jitter: send the ray through a different position inside the pixel each time,
+        // to provide antialiasing.
+        vec2 subpixel_jitter = (SPP + i) == 0 ? vec2(0.0f, 0.0f) : vec2(r1 - 0.5f, r2 - 0.5f);
+
+        const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5) + subpixel_jitter;
+        const vec2 inUV        = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
+        vec2       d           = inUV * 2.0 - 1.0;
+
+
+        vec4 origin    = cam.viewInv * vec4(0, 0, 0, 1);
+        vec4 target    = cam.projInv * vec4(d.x, d.y, 1, 1);
+        vec4 direction = cam.viewInv * vec4(normalize(target.xyz), 0);
+
+        
         prd.origin = origin.rgb;
         prd.direction = direction.rgb;
         prd.throughput = vec3(1.f);
-        prd.radiance = vec3(0.f);
         prd.depth = 0;
         prd.debugDone = false;
         prd.done = false;
-        prd.seed = seed; // WIP:
+        prd.seed = seed;
 
-        for (int j = 0; j < BOUNCES; ++j){
+        for (;;){
 
             // trace ray
             traceRayEXT(topLevelAs,     // acceleration structure
@@ -63,41 +72,35 @@ void main() {
                         0,              // sbtRecordOffset
                         0,              // sbtRecordStride
                         0,              // missIndex
-                        prd.origin.xyz,     // ray origin
+                        origin.xyz,     // ray origin
                         tMin,           // ray min range
-                        prd.direction.xyz,  // ray direction
+                        direction.xyz,  // ray direction
                         tMax,           // ray max range
                         0               // payload (location = 0)
             );
 
-            if(prd.debugDone)
-            {
-                imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(prd.debug, 1));
-                return;
-            }
-
-            if(prd.done){
-                break; // early termination due to ray miss
-            }
-
-            if(prd.depth >= 5){
+            // RR termination
+            if(prd.depth >= 1){
 
                 float p_spawn = max(prd.throughput.x, max(prd.throughput.y, prd.throughput.z));
 
                 if(rnd(prd.seed) >= p_spawn){
-                    break; // RR termination
+                    break; 
                 }
 
-                prd.throughput /= p_spawn; // check if this is needed here
+                prd.throughput /= p_spawn; 
             }
-            ++prd.depth;
+            
+            if(prd.done || ++prd.depth >= BOUNCES){
+                break;
+            }
+
+            origin.xyz    = prd.origin;
+            direction.xyz = prd.direction;
         }
-        result += prd.radiance;
-        // ray origin and direction will be updated from the .rchit shaders
     }
 
-    vec4 outColor = vec4(result / SPP, 1);
-
+    vec4 outColor = vec4(prd.result / SPP, 1);
 
     imageStore(image, ivec2(gl_LaunchIDEXT.xy), outColor);
 }

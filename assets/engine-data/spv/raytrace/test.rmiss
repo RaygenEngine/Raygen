@@ -8,6 +8,6 @@
 layout(location = 0) rayPayloadInEXT hitPayload prd;
 
 void main() {
-	prd.radiance += prd.throughput * vec3(0,0,0.3);
+	prd.result += prd.throughput * vec3(0,0,0.3);
 	prd.done = true;
 }

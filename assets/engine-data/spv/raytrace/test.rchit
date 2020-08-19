@@ -7,6 +7,7 @@
 #include "rtshared.h"
 #include "bsdf.h"
 #include "hammersley.h"
+#include "sampling.glsl"
 
 struct Attr{
 	vec2 x;
@@ -44,26 +45,6 @@ OldVertex fromVertex(Vertex p) {
 	vtx.uv = vec2(p.u, p.v);
 	
 	return vtx;
-}
-
-vec3 randomCosineWeightedHemispherePoint(vec2 rand, vec3 n, vec3 t, vec3 b) {
-  float r = rand.x * 0.5 + 0.5; // [-1..1) -> [0..1)
-  float angle = (rand.y + 1.0) * PI; // [-1..1] -> [0..2*PI)
-  float sr = sqrt(r);
-  vec2 p = vec2(sr * cos(angle), sr * sin(angle));
-  /*
-   * Unproject disk point up onto hemisphere:
-   * 1.0 == sqrt(x*x + y*y + z*z) -> z = sqrt(1.0 - x*x - y*y)
-   */
-  vec3 ph = vec3(p.xy, sqrt(1.0 - p*p));
-  /*
-   * Compute some arbitrary tangent space for orienting
-   * our hemisphere 'ph' around the normal. We use the camera's up vector
-   * to have some fix reference vector over the whole screen.
-   */
-
-  /* Make our hemisphere orient around the normal. */
-  return t * ph.x + b * ph.y + n * ph.z;
 }
 
 void main() {
@@ -143,20 +124,13 @@ void main() {
 
 	float NoV = abs(dot(N, V)) + 1e-5; 
 
-	//if(prd.depth == 0)
-	//{
-	//	prd.debug = N;
-	//	prd.debugDone = true;
-	//	return;
-	//}
-
-	// Direct Light
+	// DIRECT
 
 	// for each light
 	{
-		vec3 lightPos = vec3(0,35,0);
+		vec3 lightPos = vec3(0,5,0);
 		vec3 lightColor = vec3(1,1,1);
-		float lightIntensity = 3;
+		float lightIntensity = 30;
 
 		//vec3 N = normal;
 		//vec3 V = normalize(prd.origin - hitPoint);
@@ -164,7 +138,7 @@ void main() {
 		
 		// attenuation
 		float dist = length(lightPos - hitPoint);
-		float attenuation = 1.0; // TODO: fix with coefs
+		float attenuation = 1.0 / (dist * dist); // TODO: fix with coefs
 		
 		float NoL = saturate(dot(N, L));
 
@@ -188,80 +162,85 @@ void main() {
 		// so to simplify (faster math)
 		vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
 
-		prd.radiance += prd.throughput * finalContribution;
+		prd.result += prd.throughput * finalContribution;
 	}
-	// Indirect Light
+
+
+	// INDIRECT
 
 	// NEXT: something is wrong here
-		vec3 F = F_Schlick(NoV, f0);
+	vec3 F = F_Schlick(NoV, f0);
 
-		// incoming light (wi)
-		vec3 L = vec3(0);
+	// incoming light (wi)
+	vec3 L = vec3(0);
 
+	// TRANSMISSION
+	//if(rnd(prd.seed) >= ((F.x + F.y + F.z) / 3))
+	{
+		// SCATTERING Depends on albedo and transparency
+
+			// DIFFUSE "REFLECTION"
+
+				//Sample a cosine weighted hemisphere for a new direction wi with pdf
+				vec3 tangent, binormal;
+				const float z1 = rnd(prd.seed);
+				const float z2 = rnd(prd.seed);
+				computeOrthonormalBasis(N, tangent, binormal);
+				vec3 p;
+				cosine_sample_hemisphere(z1, z2, p);
+				inverse_transform(p, N, tangent, binormal);
+				L = normalize(p);
+
+				vec3 H = normalize(V + L);
+
+				float LoH = saturate(dot(L, H));
+				float NoL = saturate(dot(N, L));
+
+				vec3 brdf_d = Fd_Burley(NoV, NoL, LoH, diffuseColor, a);
+
+				float pdf = NoL / PI;
+
+				prd.throughput *= brdf_d * NoL / pdf; // try to simplify based on brdf
+				
+			// TODO: SUBSURFACE SCATTERING else if
+
+			// TODO: SPECULAR TRANSMISSION (i.e refraction) else if
+
+		// TODO: ABSORPTION
+			// prd.done = true;
+	} 
+	
+	// REFLECTION
+	//else
+	{
+		// sample new direction wi and its pdfs based on distribution of the GGX BRDF
+
+		// TODO: this sampling is wrong
+		vec2 Xi = vec2(rnd(prd.seed), rnd(prd.seed));
+		vec3 H  = importanceSampleGGX(Xi, a, N);
+
+		// TODO: use reflect
+		L  = normalize(2.0 * dot(V, H) * H - V);
+	
+		float NoL = saturate(dot(N, L));
+
+		//if(NoL > 0.0) PERF
+		//{
+		float NoH = saturate(dot(N, H));        
+		float HoV = saturate(dot(H, V)); 
+		float LoH = saturate(dot(L, H));        
+
+		float D = D_GGX(NoH, a); 
+		float pdf = (D * NoH / (4 * HoV)) + 0.0001;
 		
+		//}
+		vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, f0, a);
 
-		// TRANSMISSION
-		if(rnd(prd.seed) > ((F.x + F.y + F.z) / 3))
-		{
-			// SCATTERING Depends on albedo and transparency
+		prd.throughput *= brdf_r * NoL / pdf;
+	}
 
-				// DIFFUSE "REFLECTION"
-
-					//Sample a cosine weighted hemisphere for a new direction wi with pdfd
-
-					vec2 Xi = hammersley(prd.seed, 1024);
-					vec3 p = randomCosineWeightedHemispherePoint(Xi, Ng, Tg, Bg); // uses geometric surface
-					L = p - hitPoint;
-
-					vec3 H = normalize(V + L);
-
-					float LoH = saturate(dot(L, H));
-					float NoL = saturate(dot(N, L));
-
-					vec3 brdf_d = Fd_Burley(NoV, NoL, LoH, diffuseColor, a);
-
-					float pdf_d = NoL / PI;
-
-					prd.throughput *= brdf_d * NoL / pdf_d; // try to simplify based on brdf
-					
-				// TODO: SUBSURFACE SCATTERING else if
-
-				// TODO: SPECULAR TRANSMISSION (i.e refraction) else if
-
-			// TODO: ABSORPTION
-				// prd.done = true;
-		}
-		
-		// REFLECTION
-		else
-		{
-			// sample new direction wi and its pdfs based on distribution of the GGX BRDF
-
-			vec2 Xi = hammersley(prd.seed, 1024);
-       	 	vec3 H  = importanceSampleGGX(Xi, a, N);
-
-			// TODO: use reflect
-			L  = normalize(2.0 * dot(V, H) * H - V);
-      
-			float NoL = saturate(dot(N, L));
-
-			//if(NoL > 0.0) PERF
-			//{
-			float NoH = saturate(dot(N, H));        
-			float HoV = saturate(dot(H, V)); 
-			float LoH = saturate(dot(L, H));        
-
-			float D = D_GGX(NoH, a); 
-			float pdf = (D * NoH / (4 * HoV)) + 0.0001;
-			
-			//}
-			vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, f0, a);
-
-			prd.throughput = brdf_r * NoL / pdf;
-		}
-
-		prd.origin = hitPoint;
-		prd.direction = L;
+	prd.origin = hitPoint;
+	prd.direction = L;
 	
 }
 

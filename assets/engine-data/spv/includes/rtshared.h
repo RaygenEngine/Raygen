@@ -30,7 +30,7 @@ struct hitPayload
 {
   vec3 origin;
   vec3 direction;
-  vec3 radiance;
+  vec3 result;
   vec3 throughput;
   int depth;
   bool done;
