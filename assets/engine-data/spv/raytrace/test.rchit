@@ -87,6 +87,91 @@ void main() {
 
 
 	prd.hitValue = vec4(vec3(color), 1);	
+
+	vec3 hitPoint = prd.origin + thit * prd.direction
+
+	// Direct Light
+
+	// for each light
+
+		vec3 N = frag.normal;
+		vec3 V = normalize(prd.position - hitPoint);
+		vec3 L = normalize(light.position - hitPoint); 
+		
+		// attenuation
+		float dist = length(light.position - hitPoint);
+		float attenuation = 1.0 / (light.constantTerm + light.linearTerm * dist + 
+					light.quadraticTerm * (dist * dist));
+		
+		float NoL = saturate(dot(N, L));
+
+		// if you are gonna trace this ray 
+		// check dot(N,L) > 0 
+		float shadow; //...
+
+		// sample shadowmap for shadow
+		vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation; 
+	
+		vec3 H = normalize(V + L);
+
+		float NoV = abs(dot(N, V)) + 1e-5; 
+		float NoH = saturate(dot(N, H));
+		float LoH = saturate(dot(L, H));
+
+		// to get final diffuse and specular both those terms are multiplied by Li * NoL
+		vec3 brdf_d = Fd_Burley(NoV, NoL, LoH, frag.diffuseColor, frag.a);
+		vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, frag.f0, frag.a);
+
+		// so to simplify (faster math)
+		vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
+
+		prd.radiance *= prd.throughput * finalContribution;
+
+	// Indirect Light
+
+		vec3 F = fresnel..
+
+		vec3 wi = vec3(0);
+
+		
+
+		// TRANSMISSION
+		if(random > F)
+		{
+			// SCATTERING Depends on albedo and transparency
+
+				// DIFFUSE "REFLECTION"
+
+					//Sample a cosine weighted hemisphere for a new direction wi with pdfd
+
+					// actual througput is
+					// 1 / (psawn * pr) = BRDFdif * cosTheta / (cosTheta / pi)
+					// this is based on Lambert BRDFdif 
+					prd.throughput *= brdf_d * NoL / pdf_d; // try to simplify based on brdf
+					
+				// TODO: SUBSURFACE SCATTERING else if
+
+				// TODO: SPECULAR TRANSMISSION (i.e refraction) else if
+
+			// TODO: ABSORPTION
+				// prd.done = true;
+		}
+		
+		// REFLECTION
+		else
+		{
+			// sample new direction wi and its pdfs based on distribution of the GGX BRDF
+
+			vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, frag.f0, frag.a);
+
+
+			prd.throuhput = brdf_r * NoL / pdf_s
+		}
+
+
+		prd.origin = hitPoint;
+		prd.direction = wi;
+	
 }
 
 
