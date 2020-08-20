@@ -96,7 +96,7 @@ Renderer_::Renderer_()
 
 	colorAttachmentDesc.setFormat(vk::Format::eR32G32B32A32Sfloat)
 		.setSamples(vk::SampleCountFlagBits::e1)
-		.setLoadOp(vk::AttachmentLoadOp::eLoad)
+		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)

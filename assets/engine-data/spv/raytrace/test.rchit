@@ -138,7 +138,7 @@ void main() {
 	// DIRECT
 
 	// for each light
-	//if(false)
+	if(prd.depth != 0)
 	{
 		vec3 lightPos = vec3(7,2,0);
 		vec3 lightColor = vec3(0.98823529411764705882352941176471, 0.83137254901960784313725490196078, 0.25098039215686274509803921568627);
@@ -158,23 +158,23 @@ void main() {
 		// check dot(N,L) > 0 
 		float shadow = 0.f; //...
 		{ // PERF : dont use query here of course
-			float tMin      = 0.01f;
-			float tMax      = distance(lightPos, hitPoint);
+			// float tMin      = 0.01f;
+			// float tMax      = distance(lightPos, hitPoint);
 		
-			// Initializes a ray query object but does not start traversal
-			rayQueryEXT rayQuery;
-			rayQueryInitializeEXT(rayQuery, topLevelAs, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, hitPoint, tMin,
-							L, tMax);
+			// // Initializes a ray query object but does not start traversal
+			// rayQueryEXT rayQuery;
+			// rayQueryInitializeEXT(rayQuery, topLevelAs, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, hitPoint, tMin,
+			// 				L, tMax);
 		
-			// Start traversal: return false if traversal is complete
-			while(rayQueryProceedEXT(rayQuery)) {
-			}
+			// // Start traversal: return false if traversal is complete
+			// while(rayQueryProceedEXT(rayQuery)) {
+			// }
 			
-			// Returns type of committed (true) intersection
-			if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
-			// Got an intersection == Shadow
-			shadow = 1.0;
-			}
+			// // Returns type of committed (true) intersection
+			// if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
+			// // Got an intersection == Shadow
+			// shadow = 1.0;
+			// }
 		}
 
 		// sample shadowmap for shadow

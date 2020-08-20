@@ -48,7 +48,7 @@ void main() {
     prd.result = vec3(0);
     for(uint smpl = 0; smpl < samples; ++smpl){
 
-        uint seed = tea(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl);
+        uint seed = tea(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, /*frame */ samples + smpl);
 
         float r1   = rnd(seed);
         float r2   = rnd(seed);
@@ -110,20 +110,22 @@ void main() {
         }while (prd.depth++ < depth && !prd.done);
     }
 
-    //vec4 rasterColor = texture(rasterDirect, (vec2(gl_LaunchIDEXT.xy) + vec2(0.5))/ vec2(gl_LaunchSizeEXT.xy));
+    vec3 rasterColor = texture(rasterDirect, (vec2(gl_LaunchIDEXT.xy) + vec2(0.5))/ vec2(gl_LaunchSizeEXT.xy)).rgb;
  
-    vec3 curColor = prd.result / samples;
+    vec3 curColor = (prd.result / samples) + rasterColor;
 
     // TODO: fix 
     // Do accumulation
-    if(frame > 0){
-        float a = 1.f / float(frame);
-        vec3  prevColor = imageLoad(image, ivec2(gl_LaunchIDEXT.xy)).xyz;
-        imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(mix(prevColor, curColor, a), 1.f));
-    }
-    else{
-        imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
-    }
+    // if(frame > 0){
+    //     float a = 1.f / float(frame);
+    //     vec3  prevColor = imageLoad(image, ivec2(gl_LaunchIDEXT.xy)).xyz;
+    //     imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(mix(prevColor, curColor, a), 1.f));
+    // }
+    // else{
+    //     imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
+    // }
+
+    imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
 }
 
 
