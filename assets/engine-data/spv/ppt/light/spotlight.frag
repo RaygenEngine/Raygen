@@ -130,7 +130,7 @@ void main() {
 	float shadow;
 	//float shadow = ShadowCalculationFast(shadowmap, light.viewProj, frag.position, light.maxShadowBias);
 
- #define RTX_ON
+ //#define RTX_ON
 	
 #ifndef RTX_ON
 		shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);

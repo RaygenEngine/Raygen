@@ -32,7 +32,8 @@ Layouts_::Layouts_()
 	jointsDescLayout.Generate();
 
 	// single sampler
-	singleSamplerDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+	singleSamplerDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
+		vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR);
 	singleSamplerDescLayout.Generate();
 
 	// cubemap

@@ -3,6 +3,7 @@
 
 #include "rendering/Renderer.h"
 
+#include "engine/console/ConsoleVariable.h"
 #include "engine/Engine.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
@@ -32,6 +33,40 @@ vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 {
 	return viewportSize;
 }
+
+struct PushConstant {
+	int32 frame;
+	int32 depth;
+	int32 samples;
+};
+static_assert(sizeof(PushConstant) <= 128);
+
+ConsoleFunction<int32> console_setRtDepth{ "rt.depth",
+	[](int32 depth) {
+		if (depth > 0) {
+			vl::Renderer->m_rtDepth = depth;
+		}
+		else {
+			vl::Renderer->m_rtDepth = 0;
+		}
+		LOG_WARN("Rt depth set to: {}", vl::Renderer->m_rtDepth);
+	},
+	"Set rt depth" };
+
+ConsoleFunction<int32> console_setRtSamples{ "rt.samples",
+	[](int32 smpls) {
+		if (smpls > 0) {
+			vl::Renderer->m_rtSamples = smpls;
+		}
+		else {
+			vl::Renderer->m_rtSamples = 0;
+		}
+		LOG_WARN("Rt samples set to: {}", vl::Renderer->m_rtSamples);
+	},
+	"Set rt samples" };
+
+ConsoleFunction<> console_resetRtFrame{ "rt.reset", []() { vl::Renderer->m_rtFrame = 0; }, "Reset rt frame" };
+
 } // namespace
 
 namespace vl {
@@ -61,7 +96,7 @@ Renderer_::Renderer_()
 
 	colorAttachmentDesc.setFormat(vk::Format::eR32G32B32A32Sfloat)
 		.setSamples(vk::SampleCountFlagBits::e1)
-		.setLoadOp(vk::AttachmentLoadOp::eClear)
+		.setLoadOp(vk::AttachmentLoadOp::eLoad)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
@@ -153,18 +188,14 @@ Renderer_::Renderer_()
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_ppDescSet[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
 	}
-
-	// for (uint32 i = 0; i < c_framesInFlight; ++i) {
-	//	m_rtDescSet[i] = Layouts->rtTriangleGeometry.GetDescriptorSet();
-	//}
 }
 
 void Renderer_::InitPipelines(vk::RenderPass outRp)
 {
 	MakeCopyHdrPipeline(outRp);
-	MakeRtPipeline();
 
 	m_postprocCollection.RegisterTechniques();
+	MakeRtPipeline();
 }
 
 void Renderer_::MakeCopyHdrPipeline(vk::RenderPass outRp)
@@ -343,12 +374,20 @@ void Renderer_::MakeRtPipeline()
 
 
 	std::array layouts = { Layouts->singleStorageImage.setLayout.get(), Layouts->accelLayout.setLayout.get(),
-		Layouts->singleUboDescLayout.setLayout.get(), Layouts->rtSceneDescLayout.setLayout.get() };
+		Layouts->singleUboDescLayout.setLayout.get(), Layouts->rtSceneDescLayout.setLayout.get(),
+		Layouts->gbufferDescLayout.setLayout.get(), Layouts->singleSamplerDescLayout.setLayout.get() };
+
+	// pipeline layout
+	vk::PushConstantRange pushConstantRange{};
+	pushConstantRange
+		.setStageFlags(vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR) //
+		.setSize(sizeof(PushConstant))
+		.setOffset(0u);
+
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo
-		.setPushConstantRangeCount(0u) //
-		.setPPushConstantRanges(nullptr)
+	pipelineLayoutInfo.setPushConstantRangeCount(1u)
+		.setPPushConstantRanges(&pushConstantRange)
 		.setSetLayoutCount(static_cast<uint32>(layouts.size()))
 		.setPSetLayouts(layouts.data());
 
@@ -391,6 +430,26 @@ void Renderer_::SetRtImage()
 			.setDstBinding(0u)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eStorageImage)
+			.setDescriptorCount(1u)
+			.setPBufferInfo(nullptr)
+			.setPImageInfo(&imageInfo)
+			.setPTexelBufferView(nullptr);
+
+		vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+	}
+
+
+	m_wipDescSet = { Layouts->singleSamplerDescLayout.GetDescriptorSet(),
+		Layouts->singleSamplerDescLayout.GetDescriptorSet(), Layouts->singleSamplerDescLayout.GetDescriptorSet() };
+	for (size_t i = 0; i < c_framesInFlight; i++) {
+		vk::DescriptorImageInfo imageInfo{ {}, *m_attachment[i].view, vk::ImageLayout::eShaderReadOnlyOptimal };
+		vk::WriteDescriptorSet descriptorWrite{};
+
+		descriptorWrite
+			.setDstSet(m_wipDescSet[i]) //
+			.setDstBinding(0u)
+			.setDstArrayElement(0u)
+			.setDescriptorType(vk::DescriptorType::eSampledImage)
 			.setDescriptorCount(1u)
 			.setPBufferInfo(nullptr)
 			.setPImageInfo(&imageInfo)
@@ -562,10 +621,23 @@ void Renderer_::RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRe
 	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 3u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSet, 0u, nullptr);
 
-	// cmdBuf.pushConstants<RtPushConstant>(m_rtPipelineLayout,
-	//	vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR
-	//		| vk::ShaderStageFlagBits::eMissKHR,
-	//	0, m_rtPushConstants);
+
+	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 4u, 1u,
+		&m_gbuffer[sceneDesc.frameIndex].descSet, 0u, nullptr);
+
+	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 5u, 1u,
+		&m_wipDescSet[sceneDesc.frameIndex], 0u, nullptr);
+
+	PushConstant pc{ //
+		m_rtFrame, m_rtDepth, m_rtSamples
+	};
+
+	++m_rtFrame;
+
+	// Submit via push constant (rather than a UBO)
+	cmdBuffer->pushConstants(m_rtPipelineLayout.get(),
+		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant), &pc);
+
 
 	vk::DeviceSize progSize = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of a program identifier
 
@@ -833,12 +905,21 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 	}
 
 	if (raytrace) {
+
+		m_attachment[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
+			vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eFragmentShader,
+			vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+
 		m_attachment2[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
 			vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eFragmentShader,
 			vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
 
 		RecordRayTracingPass(cmdBuffer, sceneDesc);
+
+		m_attachment[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
+			vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
+			vk::PipelineStageFlagBits::eFragmentShader);
 
 		m_attachment2[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 			vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,

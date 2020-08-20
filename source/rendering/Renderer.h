@@ -75,6 +75,7 @@ public:
 	InFlightResources<vk::DescriptorSet> m_ppDescSet;
 	vk::UniqueRenderPass m_ptRenderpass;
 
+	InFlightResources<vk::DescriptorSet> m_wipDescSet;
 
 	// TODO: RT, move those, framearray
 	vk::UniqueAccelerationStructureKHR m_sceneAS;
@@ -84,6 +85,10 @@ public:
 	vk::UniquePipelineLayout m_rtPipelineLayout;
 	RBuffer m_rtSBTBuffer;
 	std::vector<vk::RayTracingShaderGroupCreateInfoKHR> m_rtShaderGroups;
+
+	int32 m_rtFrame{ 0 };
+	int32 m_rtDepth{ 3 };
+	int32 m_rtSamples{ 2 };
 
 	void MakeRtPipeline();
 	void SetRtImage();
