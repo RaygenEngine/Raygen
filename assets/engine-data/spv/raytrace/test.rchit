@@ -2,6 +2,7 @@
 #extension GL_GOOGLE_include_directive : enable
 #extension GL_EXT_ray_tracing : require
 #extension GL_EXT_scalar_block_layout : enable
+#extension GL_EXT_ray_query: enable
 
 #include "global.h"
 #include "rtshared.h"
@@ -22,6 +23,8 @@ hitAttributeEXT vec2 baryCoord;
 
 #define GEOM_GROUPS 25
 
+layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAs;
+
 layout(set = 3, binding = 0) uniform sampler2D textureSamplers[GEOM_GROUPS * 3];
 layout(std430, set = 3, binding = 1) readonly buffer Vertices{ Vertex v[]; } vertices;
 layout(std430, set = 3, binding = 2) readonly buffer Indicies{ uint i[]; } indices;
@@ -33,6 +36,13 @@ layout(std430, set = 3, binding = 4) readonly buffer PrimitveOffsets { uint offs
 //HitAttributeKHR vec2 attribs;
 
 layout(location = 0) rayPayloadInEXT hitPayload prd;
+
+layout(push_constant) uniform Constants
+{
+    int frame;
+    int depth;
+    int samples;
+};
 
 
 OldVertex fromVertex(Vertex p) {
@@ -119,7 +129,8 @@ void main() {
 
 	vec3 hitPoint = prd.origin + gl_HitTEXT * prd.direction;
 
-	vec3 N = normalize(TBN * (sampledNormal.rgb* 2.0 - 1.0));
+	// TODO: use shading normal
+	vec3 N = Ng;//normalize(TBN * (sampledNormal.rgb* 2.0 - 1.0));
 	vec3 V = normalize(prd.origin - hitPoint);
 
 	float NoV = abs(dot(N, V)) + 1e-5; 
@@ -127,9 +138,10 @@ void main() {
 	// DIRECT
 
 	// for each light
+	//if(false)
 	{
-		vec3 lightPos = vec3(0,5,0);
-		vec3 lightColor = vec3(1,1,1);
+		vec3 lightPos = vec3(7,2,0);
+		vec3 lightColor = vec3(0.98823529411764705882352941176471, 0.83137254901960784313725490196078, 0.25098039215686274509803921568627);
 		float lightIntensity = 30;
 
 		//vec3 N = normal;
@@ -145,6 +157,25 @@ void main() {
 		// if you are gonna trace this ray 
 		// check dot(N,L) > 0 
 		float shadow = 0.f; //...
+		{ // PERF : dont use query here of course
+			float tMin      = 0.01f;
+			float tMax      = distance(lightPos, hitPoint);
+		
+			// Initializes a ray query object but does not start traversal
+			rayQueryEXT rayQuery;
+			rayQueryInitializeEXT(rayQuery, topLevelAs, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, hitPoint, tMin,
+							L, tMax);
+		
+			// Start traversal: return false if traversal is complete
+			while(rayQueryProceedEXT(rayQuery)) {
+			}
+			
+			// Returns type of committed (true) intersection
+			if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
+			// Got an intersection == Shadow
+			shadow = 1.0;
+			}
+		}
 
 		// sample shadowmap for shadow
 		vec3 Li = (1.0 - shadow) * lightColor * lightIntensity * attenuation; 
@@ -167,15 +198,14 @@ void main() {
 
 
 	// INDIRECT
-
-	// NEXT: something is wrong here
+	// NEXT: something is wrong here, this should be L
 	vec3 F = F_Schlick(NoV, f0);
-
-	// incoming light (wi)
+	
 	vec3 L = vec3(0);
 
+
 	// TRANSMISSION
-	//if(rnd(prd.seed) >= ((F.x + F.y + F.z) / 3))
+	if(rnd(prd.seed) >= ((F.x + F.y + F.z) / 3))
 	{
 		// SCATTERING Depends on albedo and transparency
 
@@ -183,12 +213,14 @@ void main() {
 
 				//Sample a cosine weighted hemisphere for a new direction wi with pdf
 				vec3 tangent, binormal;
+				computeOrthonormalBasis(Ng, tangent, binormal);
+				
 				const float z1 = rnd(prd.seed);
 				const float z2 = rnd(prd.seed);
-				computeOrthonormalBasis(N, tangent, binormal);
+	
 				vec3 p;
 				cosine_sample_hemisphere(z1, z2, p);
-				inverse_transform(p, N, tangent, binormal);
+				inverse_transform(p, Ng, tangent, binormal);
 				L = normalize(p);
 
 				vec3 H = normalize(V + L);
@@ -201,7 +233,6 @@ void main() {
 				float pdf = NoL / PI;
 
 				prd.throughput *= brdf_d * NoL / pdf; // try to simplify based on brdf
-				
 			// TODO: SUBSURFACE SCATTERING else if
 
 			// TODO: SPECULAR TRANSMISSION (i.e refraction) else if
@@ -211,12 +242,11 @@ void main() {
 	} 
 	
 	// REFLECTION
-	//else
+	else
 	{
 		// sample new direction wi and its pdfs based on distribution of the GGX BRDF
 
-		// TODO: this sampling is wrong
-		vec2 Xi = vec2(rnd(prd.seed), rnd(prd.seed));
+		vec2 Xi = hammersley(prd.smpl, samples); 
 		vec3 H  = importanceSampleGGX(Xi, a, N);
 
 		// TODO: use reflect
@@ -239,10 +269,16 @@ void main() {
 		prd.throughput *= brdf_r * NoL / pdf;
 	}
 
+
 	prd.origin = hitPoint;
 	prd.direction = L;
 	
 }
+
+
+
+
+
 
 
 

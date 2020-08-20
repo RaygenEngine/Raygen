@@ -39,4 +39,5 @@ struct hitPayload
   bool debugDone;
 
   uint seed;
+  uint smpl;
 };
