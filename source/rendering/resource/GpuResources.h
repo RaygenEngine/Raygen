@@ -1,13 +1,13 @@
 #pragma once
-#include "rendering/wrappers/DescriptorLayout.h"
+#include "rendering/wrappers/DescriptorSetLayout.h"
 
 namespace vl {
 struct GpuResources {
 
-	static vk::DescriptorSet AllocateDescriptorSet(size_t hash, const RDescriptorLayout& layout);
+	static vk::DescriptorSet AllocateDescriptorSet(size_t hash, const RDescriptorSetLayout& layout);
 	static vk::DescriptorPool GetImguiPool();
 
-	static vk::Sampler AcquireSampler(const vk::SamplerCreateInfo & createInfo);
+	static vk::Sampler AcquireSampler(const vk::SamplerCreateInfo& createInfo);
 
 	// decrements ref-count and destroys sampler if possible
 	static void ReleaseSampler(vk::Sampler sampler);

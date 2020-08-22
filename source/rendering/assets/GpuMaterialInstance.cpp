@@ -39,11 +39,11 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 			return;
 		}
 		hasDescriptorSet = true;
-		descSet = gpuArch.descLayout.GetDescriptorSet();
+		descSet = gpuArch.descLayout.AllocDescriptorSet();
 
 
 		size_t uboSize = matInst->descriptorSet.uboData.size();
-		if (gpuArch.descLayout.hasUbo && uboSize > 0) {
+		if (gpuArch.descLayout.HasUbo() && uboSize > 0) {
 
 			if (uboSize != uboBuf.size) {
 				uboBuf = RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
@@ -53,7 +53,7 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 
 			vk::DescriptorBufferInfo bufferInfo{};
 			bufferInfo
-				.setBuffer(uboBuf) //
+				.setBuffer(uboBuf.handle()) //
 				.setOffset(0u)
 				.setRange(matArch->descriptorSetLayout.SizeOfUbo());
 			vk::WriteDescriptorSet descriptorWrite{};
@@ -63,15 +63,12 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 				.setDstBinding(0u)
 				.setDstArrayElement(0u)
 				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-				.setDescriptorCount(1u)
-				.setPBufferInfo(&bufferInfo)
-				.setPImageInfo(nullptr)
-				.setPTexelBufferView(nullptr);
+				.setBufferInfo(bufferInfo);
 
 			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 		}
 
-		int32 samplersBeginOffset = gpuArch.descLayout.hasUbo && uboSize > 0 ? 1 : 0;
+		int32 samplersBeginOffset = gpuArch.descLayout.HasUbo() && uboSize > 0 ? 1 : 0;
 
 		auto UpdateImageSamplerInDescriptorSet = [&](vk::Sampler sampler, GpuHandle<Image> image, uint32 dstBinding) {
 			auto& img = image.Lock();
@@ -79,7 +76,7 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 			vk::DescriptorImageInfo imageInfo{};
 			imageInfo
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(img.image())
+				.setImageView(img.image.view())
 				.setSampler(sampler);
 
 			vk::WriteDescriptorSet descriptorWrite{};
@@ -88,10 +85,7 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 				.setDstBinding(dstBinding)
 				.setDstArrayElement(0u)
 				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-				.setDescriptorCount(1u)
-				.setPBufferInfo(nullptr)
-				.setPImageInfo(&imageInfo)
-				.setPTexelBufferView(nullptr);
+				.setImageInfo(imageInfo);
 
 			// PERF: Use a single descriptor update
 			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);

@@ -1,10 +1,10 @@
 #pragma once
 #include "rendering/assets/GpuAssetBase.h"
-#include "rendering/wrappers/DescriptorLayout.h"
+#include "rendering/wrappers/DescriptorSetLayout.h"
 
 
 namespace vl {
-struct RDescriptorLayout;
+struct RDescriptorSetLayout;
 
 struct GpuMaterialArchetype : public GpuAssetTemplate<MaterialArchetype> {
 	struct PassInfo {
@@ -14,7 +14,7 @@ struct GpuMaterialArchetype : public GpuAssetTemplate<MaterialArchetype> {
 		std::vector<vk::UniqueShaderModule> shaderModules;
 	};
 
-	RDescriptorLayout descLayout;
+	RDescriptorSetLayout descLayout;
 
 	PassInfo gbuffer;
 	PassInfo gbufferAnimated;

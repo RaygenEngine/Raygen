@@ -229,8 +229,9 @@ void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 				&camera->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 			auto& gpuMesh = geom->mesh.Lock();
-			cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer }, { gg.vertexBufferOffset });
-			cmdBuffer->bindIndexBuffer(gpuMesh.combinedIndexBuffer, gg.indexBufferOffset, vk::IndexType::eUint32);
+			cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
+			cmdBuffer->bindIndexBuffer(
+				gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
 
 
 			cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);

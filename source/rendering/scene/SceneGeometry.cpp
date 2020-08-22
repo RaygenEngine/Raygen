@@ -21,7 +21,7 @@ void SceneAnimatedGeometry::ResizeJoints(uint32 curFrame)
 	vk::DescriptorBufferInfo bufferInfo{};
 
 	bufferInfo
-		.setBuffer(buffer[i]) //
+		.setBuffer(buffer[i].handle()) //
 		.setOffset(0u)
 		.setRange(GetBufferSize());
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -31,10 +31,7 @@ void SceneAnimatedGeometry::ResizeJoints(uint32 curFrame)
 		.setDstBinding(0u)
 		.setDstArrayElement(0u)
 		.setDescriptorType(vk::DescriptorType::eStorageBuffer)
-		.setDescriptorCount(1u)
-		.setPBufferInfo(&bufferInfo)
-		.setPImageInfo(nullptr)
-		.setPTexelBufferView(nullptr);
+		.setBufferInfo(bufferInfo);
 
 	vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 }

@@ -186,7 +186,7 @@ Renderer_::Renderer_()
 
 	// descsets
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_ppDescSet[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
+		m_ppDescSet[i] = Layouts->singleSamplerDescLayout.AllocDescriptorSet();
 	}
 }
 
@@ -277,15 +277,9 @@ void Renderer_::MakeCopyHdrPipeline(vk::RenderPass outRp)
 		.setDynamicStateCount(2u) //
 		.setPDynamicStates(dynamicStates);
 
-	std::array layouts = { Layouts->singleSamplerDescLayout.setLayout.get() };
-
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo
-		.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
-		.setPSetLayouts(layouts.data())
-		.setPushConstantRangeCount(0u)
-		.setPPushConstantRanges(nullptr);
+	pipelineLayoutInfo.setSetLayouts(Layouts->singleSamplerDescLayout.handle());
 
 	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
@@ -373,9 +367,14 @@ void Renderer_::MakeRtPipeline()
 	m_rtShaderGroups.push_back(hg);
 
 
-	std::array layouts = { Layouts->singleStorageImage.setLayout.get(), Layouts->accelLayout.setLayout.get(),
-		Layouts->singleUboDescLayout.setLayout.get(), Layouts->rtSceneDescLayout.setLayout.get(),
-		Layouts->gbufferDescLayout.setLayout.get(), Layouts->singleSamplerDescLayout.setLayout.get() };
+	std::array layouts = {
+		Layouts->singleStorageImage.handle(),
+		Layouts->accelLayout.handle(),
+		Layouts->singleUboDescLayout.handle(),
+		Layouts->rtSceneDescLayout.handle(),
+		Layouts->gbufferDescLayout.handle(),
+		Layouts->singleSamplerDescLayout.handle(),
+	};
 
 	// pipeline layout
 	vk::PushConstantRange pushConstantRange{};
@@ -386,10 +385,9 @@ void Renderer_::MakeRtPipeline()
 
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.setPushConstantRangeCount(1u)
-		.setPPushConstantRanges(&pushConstantRange)
-		.setSetLayoutCount(static_cast<uint32>(layouts.size()))
-		.setPSetLayouts(layouts.data());
+	pipelineLayoutInfo
+		.setPushConstantRanges(pushConstantRange) //
+		.setSetLayouts(layouts);
 
 	m_rtPipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
@@ -419,10 +417,10 @@ void Renderer_::MakeRtPipeline()
 
 void Renderer_::SetRtImage()
 {
-	m_rtDescSet = { Layouts->singleStorageImage.GetDescriptorSet(), Layouts->singleStorageImage.GetDescriptorSet(),
-		Layouts->singleStorageImage.GetDescriptorSet() };
+	m_rtDescSet = { Layouts->singleStorageImage.AllocDescriptorSet(), Layouts->singleStorageImage.AllocDescriptorSet(),
+		Layouts->singleStorageImage.AllocDescriptorSet() };
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		vk::DescriptorImageInfo imageInfo{ {}, *m_attachment2[i].view, vk::ImageLayout::eGeneral };
+		vk::DescriptorImageInfo imageInfo{ {}, m_attachment2[i].view(), vk::ImageLayout::eGeneral };
 		vk::WriteDescriptorSet descriptorWrite{};
 
 		descriptorWrite
@@ -430,19 +428,16 @@ void Renderer_::SetRtImage()
 			.setDstBinding(0u)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eStorageImage)
-			.setDescriptorCount(1u)
-			.setPBufferInfo(nullptr)
-			.setPImageInfo(&imageInfo)
-			.setPTexelBufferView(nullptr);
+			.setImageInfo(imageInfo);
 
 		vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 	}
 
 
-	m_wipDescSet = { Layouts->singleSamplerDescLayout.GetDescriptorSet(),
-		Layouts->singleSamplerDescLayout.GetDescriptorSet(), Layouts->singleSamplerDescLayout.GetDescriptorSet() };
+	m_wipDescSet = { Layouts->singleSamplerDescLayout.AllocDescriptorSet(),
+		Layouts->singleSamplerDescLayout.AllocDescriptorSet(), Layouts->singleSamplerDescLayout.AllocDescriptorSet() };
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		vk::DescriptorImageInfo imageInfo{ {}, *m_attachment[i].view, vk::ImageLayout::eShaderReadOnlyOptimal };
+		vk::DescriptorImageInfo imageInfo{ {}, m_attachment[i].view(), vk::ImageLayout::eShaderReadOnlyOptimal };
 		vk::WriteDescriptorSet descriptorWrite{};
 
 		descriptorWrite
@@ -450,10 +445,7 @@ void Renderer_::SetRtImage()
 			.setDstBinding(0u)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eSampledImage)
-			.setDescriptorCount(1u)
-			.setPBufferInfo(nullptr)
-			.setPImageInfo(&imageInfo)
-			.setPTexelBufferView(nullptr);
+			.setImageInfo(imageInfo);
 
 		vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 	}
@@ -474,11 +466,11 @@ void Renderer_::CreateRtShaderBindingTable()
 	m_rtSBTBuffer = RBuffer{ sbtSize, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
-	DEBUG_NAME(vk::Buffer(m_rtSBTBuffer), "Shader Binding Table");
+	DEBUG_NAME(m_rtSBTBuffer.handle(), "Shader Binding Table");
 
 
 	// TODO: Tidy
-	auto mem = m_rtSBTBuffer.GetMemory();
+	auto mem = m_rtSBTBuffer.memory();
 
 	void* dptr = Device->mapMemory(mem, 0, sbtSize);
 
@@ -514,7 +506,7 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 	vk::RenderPassBeginInfo renderPassInfo{};
 	renderPassInfo
 		.setRenderPass(Layouts->gbufferPass.get()) //
-		.setFramebuffer(m_gbuffer[sceneDesc.frameIndex].framebuffer);
+		.setFramebuffer(m_gbuffer[sceneDesc.frameIndex].framebuffer.handle());
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //
 		.setExtent(extent);
@@ -565,7 +557,7 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 			vk::RenderPassBeginInfo renderPassInfo{};
 			renderPassInfo
 				.setRenderPass(Layouts->depthRenderPass.get()) //
-				.setFramebuffer(light->shadowmap[sceneDesc.frameIndex].framebuffer);
+				.setFramebuffer(light->shadowmap[sceneDesc.frameIndex].framebuffer.handle());
 			renderPassInfo.renderArea
 				.setOffset({ 0, 0 }) //
 				.setExtent(extent);
@@ -662,9 +654,11 @@ void Renderer_::RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRe
 
 	vk::DeviceSize sbtSize = progSize * (vk::DeviceSize)m_rtShaderGroups.size();
 
-	const vk::StridedBufferRegionKHR raygenShaderBindingTable = { m_rtSBTBuffer, rayGenOffset, progSize, sbtSize };
-	const vk::StridedBufferRegionKHR missShaderBindingTable = { m_rtSBTBuffer, missOffset, progSize, sbtSize };
-	const vk::StridedBufferRegionKHR hitShaderBindingTable = { m_rtSBTBuffer, hitGroupOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR raygenShaderBindingTable
+		= { m_rtSBTBuffer.handle(), rayGenOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR missShaderBindingTable = { m_rtSBTBuffer.handle(), missOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR hitShaderBindingTable
+		= { m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
 	const vk::StridedBufferRegionKHR callableShaderBindingTable;
 
 
@@ -814,7 +808,7 @@ void Renderer_::OnViewportResize()
 			vk::DescriptorImageInfo imageInfo{};
 			imageInfo
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(m_attachment2[i]())
+				.setImageView(m_attachment2[i].view())
 				.setSampler(quadSampler);
 
 			vk::WriteDescriptorSet descriptorWrite{};
@@ -823,21 +817,18 @@ void Renderer_::OnViewportResize()
 				.setDstBinding(0u)
 				.setDstArrayElement(0u)
 				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-				.setDescriptorCount(1u)
-				.setPBufferInfo(nullptr)
-				.setPImageInfo(&imageInfo)
-				.setPTexelBufferView(nullptr);
+				.setImageInfo(imageInfo);
 
 			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 
 
-			ptDebugObj->descSet[i] = ptDebugObj->descLayout.GetDescriptorSet();
+			ptDebugObj->descSet[i] = ptDebugObj->descLayout.AllocDescriptorSet();
 
 
 			vk::DescriptorImageInfo imageInfo2{};
 			imageInfo2
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(Renderer->m_attachment[i]());
+				.setImageView(Renderer->m_attachment[i].view());
 			//	.setSampler(VK_NULL_HANDLE);
 
 			vk::WriteDescriptorSet descriptorWrite2{};
@@ -846,22 +837,19 @@ void Renderer_::OnViewportResize()
 				.setDstBinding(0)
 				.setDstArrayElement(0u)
 				.setDescriptorType(vk::DescriptorType::eInputAttachment)
-				.setDescriptorCount(1u)
-				.setPBufferInfo(nullptr)
-				.setPImageInfo(&imageInfo2)
-				.setPTexelBufferView(nullptr);
+				.setImageInfo(imageInfo2);
 
 			Device->updateDescriptorSets(1u, &descriptorWrite2, 0u, nullptr);
 
 
 			std::array<vk::ImageView, 3> attch{
-				m_attachment[i](),
-				m_attachment2[i](),
-				m_gbuffer[i].framebuffer[GDepth](),
+				m_attachment[i].view(),
+				m_attachment2[i].view(),
+				m_gbuffer[i].framebuffer[GDepth].view(),
 			};
 
-			DEBUG_NAME(m_attachment[i].operator vk::Image(), "attachment 1: " + std::to_string(i));
-			DEBUG_NAME(m_attachment2[i].operator vk::Image(), "attachment 2: " + std::to_string(i));
+			DEBUG_NAME(m_attachment[i].handle(), "attachment 1: " + std::to_string(i));
+			DEBUG_NAME(m_attachment2[i].handle(), "attachment 2: " + std::to_string(i));
 
 			// framebuffer
 			vk::FramebufferCreateInfo createInfo{};
@@ -927,7 +915,7 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 	}
 
 
-	for (auto& att : m_gbuffer[sceneDesc.frameIndex].framebuffer.attachments) {
+	for (auto& att : m_gbuffer[sceneDesc.frameIndex].framebuffer) {
 		if (att.isDepth) {
 			continue;
 		}

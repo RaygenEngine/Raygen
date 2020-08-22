@@ -8,13 +8,10 @@ struct RBuffer;
 struct RImage {
 
 	vk::Format format{};
-
 	vk::Extent3D extent{};
 
 	vk::ImageAspectFlags aspectMask{};
-
 	vk::SampleCountFlags samples{};
-
 	vk::ImageCreateFlags flags{};
 
 	uint32 arrayLayers{ 0u };
@@ -34,36 +31,36 @@ struct RImage {
 	RImage(RImage&&) = default;
 	RImage& operator=(RImage const&) = delete;
 	RImage& operator=(RImage&&) = default;
+	virtual ~RImage() = default;
 
 	void CopyBufferToImage(const RBuffer& buffers);
 	void CopyImageToBuffer(const RBuffer& buffers);
 
-	// Affects all mips and array elements
-	vk::ImageMemoryBarrier CreateTransitionBarrier(vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
-		uint32 baseMipLevel = 0u, uint32 baseArrayLevel = 0u) const;
-
 	// Blocking transition to layout
 	void BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
+	// Pipeline stages are chosen based on image layouts
 	void TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const;
+	// Pipeline stages are explicit
 	void TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
-		vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage);
+		vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage) const;
 
 	void GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
-	[[nodiscard]] operator vk::Image() const { return image.get(); }
-	vk::ImageView operator()() const { return view.get(); }
-
-	virtual ~RImage() = default;
+	[[nodiscard]] vk::Image handle() const { return uHandle.get(); }
+	[[nodiscard]] vk::ImageView view() const { return uView.get(); }
+	[[nodiscard]] vk::DeviceMemory memory() const { return uMemory.get(); }
 
 	[[nodiscard]] vk::DescriptorSet GetDebugDescriptor();
-	vk::UniqueImageView view;
 
 protected:
-	vk::UniqueImage image;
-	vk::UniqueDeviceMemory memory;
-
+	vk::UniqueImage uHandle;
+	vk::UniqueImageView uView;
+	vk::UniqueDeviceMemory uMemory;
 
 	std::optional<vk::DescriptorSet> debugDescriptorSet;
+
+	[[nodiscard]] vk::ImageMemoryBarrier CreateTransitionBarrier(vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
+		uint32 baseMipLevel = 0u, uint32 baseArrayLevel = 0u) const;
 };
 
 struct RImage2D : RImage {
