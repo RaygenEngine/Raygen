@@ -13,7 +13,6 @@ struct RBuffer {
 	RBuffer(vk::DeviceSize inSize, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
 		vk::MemoryAllocateFlags allocFlags = {});
 
-
 	void CopyBuffer(const RBuffer& other);
 	void CopyBufferWithRegion(const RBuffer& other, vk::BufferCopy copyRegion);
 	size_t CopyBufferAt(const RBuffer& other, size_t offset, size_t copySize = 0);
@@ -21,23 +20,19 @@ struct RBuffer {
 	void UploadData(const void* data, size_t uploadSize, size_t offset = 0);
 	void UploadData(const std::vector<byte>& data);
 
-
 	template<typename T>
 	void UploadDataTemplate(const T& data)
 	{
 		UploadData(&data, sizeof(T));
 	}
 
-	operator vk::Buffer() const { return handle.get(); }
-	vk::DeviceMemory GetMemory() const { return memory.get(); }
+	[[nodiscard]] vk::Buffer handle() const { return uHandle.get(); }
+	[[nodiscard]] vk::DeviceMemory memory() const { return uMemory.get(); }
 
-	[[nodiscard]] vk::DeviceAddress GetAddress() const noexcept;
-
-	vk::UniqueBuffer handle;
-	vk::UniqueDeviceMemory memory;
+private:
+	vk::UniqueBuffer uHandle;
+	vk::UniqueDeviceMemory uMemory;
 };
-
-
 } // namespace vl
 
 
@@ -47,7 +42,7 @@ inline void RegisterDebugName<vl::RBuffer>(const vl::RBuffer& buffer, const std:
 {
 	vk::DebugUtilsObjectNameInfoEXT debugNameInfo{};
 
-	detail::RegisterDebugName(buffer.handle.get(), name + " [buffer]");
-	detail::RegisterDebugName(buffer.memory.get(), name + " [memory]");
+	detail::RegisterDebugName(buffer.handle(), name + " [buffer]");
+	detail::RegisterDebugName(buffer.memory(), name + " [memory]");
 }
 } // namespace detail

@@ -43,14 +43,14 @@ void GpuCubemap::Update(const AssetUpdateInfo&)
 
 	cubemap.BlockingTransitionToLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-	descriptorSet = Layouts->cubemapLayout.GetDescriptorSet();
+	descriptorSet = Layouts->cubemapLayout.AllocDescriptorSet();
 
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(cubemap())
+		.setImageView(cubemap.view())
 		.setSampler(quadSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -59,10 +59,7 @@ void GpuCubemap::Update(const AssetUpdateInfo&)
 		.setDstBinding(0u)
 		.setDstArrayElement(0u)
 		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setDescriptorCount(1u)
-		.setPBufferInfo(nullptr)
-		.setPImageInfo(&imageInfo)
-		.setPTexelBufferView(nullptr);
+		.setImageInfo(imageInfo);
 
 	// single call to update all descriptor sets with the new depth image
 	Device->updateDescriptorSets({ descriptorWrite }, {});

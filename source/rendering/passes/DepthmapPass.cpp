@@ -289,8 +289,9 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 				// Submit via push constant (rather than a UBO)
 				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 				auto& gpuMesh = geom->mesh.Lock();
-				cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer }, { gg.vertexBufferOffset });
-				cmdBuffer->bindIndexBuffer(gpuMesh.combinedIndexBuffer, gg.indexBufferOffset, vk::IndexType::eUint32);
+				cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
+				cmdBuffer->bindIndexBuffer(
+					gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
 
 
 				if (mat.hasDescriptorSet) {
@@ -332,8 +333,9 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 					&geom->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 				auto& gpuMesh = geom->mesh.Lock();
-				cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer }, { gg.vertexBufferOffset });
-				cmdBuffer->bindIndexBuffer(gpuMesh.combinedIndexBuffer, gg.indexBufferOffset, vk::IndexType::eUint32);
+				cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
+				cmdBuffer->bindIndexBuffer(
+					gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
 
 
 				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);

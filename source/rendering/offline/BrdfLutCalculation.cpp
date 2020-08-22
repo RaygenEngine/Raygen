@@ -234,7 +234,7 @@ void BrdfLutCalculation::PrepareFaceInfo()
 	createInfo
 		.setRenderPass(m_renderPass.get()) //
 		.setAttachmentCount(1u)
-		.setPAttachments(&m_attachment())
+		.setPAttachments(&m_attachment.view())
 		.setWidth(m_resolution)
 		.setHeight(m_resolution)
 		.setLayers(1);
@@ -296,7 +296,7 @@ void BrdfLutCalculation::RecordAndSubmitCmdBuffers()
 		m_cmdBuffers.endRenderPass();
 	}
 	m_cmdBuffers.end();
-	
+
 	vk::SubmitInfo submitInfo{};
 	submitInfo.setCommandBufferCount(1u).setPCommandBuffers(&m_cmdBuffers);
 
@@ -340,7 +340,7 @@ void BrdfLutCalculation::EditPods()
 
 	img.CopyImageToBuffer(stagingbuffer);
 
-	void* data = Device->mapMemory(stagingbuffer.GetMemory(), 0, VK_WHOLE_SIZE, {});
+	void* data = Device->mapMemory(stagingbuffer.memory(), 0, VK_WHOLE_SIZE, {});
 
 	imageEditor->data.resize(m_resolution * m_resolution * 16u);
 	imageEditor->width = m_resolution;
@@ -348,7 +348,7 @@ void BrdfLutCalculation::EditPods()
 	imageEditor->format = ImageFormat::Hdr;
 	memcpy(imageEditor->data.data(), data, m_resolution * m_resolution * 16u);
 
-	Device->unmapMemory(stagingbuffer.GetMemory());
+	Device->unmapMemory(stagingbuffer.memory());
 }
 
 } // namespace vl

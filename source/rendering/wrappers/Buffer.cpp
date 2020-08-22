@@ -20,9 +20,9 @@ RBuffer::RBuffer(vk::DeviceSize inSize, vk::BufferUsageFlags usage, vk::MemoryPr
 		.setUsage(usage)
 		.setSharingMode(vk::SharingMode::eExclusive);
 
-	handle = Device->createBufferUnique(bufferInfo);
+	uHandle = Device->createBufferUnique(bufferInfo);
 
-	vk::MemoryRequirements memRequirements = Device->getBufferMemoryRequirements(handle.get());
+	vk::MemoryRequirements memRequirements = Device->getBufferMemoryRequirements(handle());
 
 	vk::StructureChain<vk::MemoryAllocateInfo, vk::MemoryAllocateFlagsInfo> allocInfoChain{};
 	auto& allocInfo = allocInfoChain.get<vk::MemoryAllocateInfo>();
@@ -40,9 +40,9 @@ RBuffer::RBuffer(vk::DeviceSize inSize, vk::BufferUsageFlags usage, vk::MemoryPr
 	// NVIDIA GTX 1080. The right way to allocate memory for a large number of objects at the same time is to create
 	// a custom allocator that splits up a single allocation among many different objects by using the offset
 	// parameters that we've seen in many functions.
-	memory = Device->allocateMemoryUnique(allocInfo);
+	uMemory = Device->allocateMemoryUnique(allocInfo);
 
-	Device->bindBufferMemory(handle.get(), memory.get(), 0);
+	Device->bindBufferMemory(uHandle.get(), uMemory.get(), 0);
 }
 
 void RBuffer::CopyBuffer(const RBuffer& other)
@@ -58,14 +58,13 @@ void RBuffer::CopyBufferWithRegion(const RBuffer& other, vk::BufferCopy copyRegi
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
 	Device->dmaCmdBuffer.begin(beginInfo);
-	Device->dmaCmdBuffer.copyBuffer(other, handle.get(), 1, &copyRegion);
+	Device->dmaCmdBuffer.copyBuffer(other.handle(), uHandle.get(), copyRegion);
 	Device->dmaCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBufferCount(1u);
-	submitInfo.setPCommandBuffers(&Device->dmaCmdBuffer);
+	submitInfo.setCommandBuffers(Device->dmaCmdBuffer);
 
-	Device->dmaQueue.submit(1u, &submitInfo, {});
+	Device->dmaQueue.submit(submitInfo, {});
 	// PERF:
 	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.
@@ -89,9 +88,9 @@ void RBuffer::UploadData(const void* data, size_t uploadSize, size_t offset)
 	CLOG_ERROR(uploadSize + offset > size, "Attempting to upload a bigger size to rbuffer of smaller size.");
 
 	if (uploadSize > 0 && uploadSize + offset <= size) {
-		void* dptr = Device->mapMemory(memory.get(), offset, uploadSize);
+		void* dptr = Device->mapMemory(uMemory.get(), offset, uploadSize);
 		memcpy(dptr, data, uploadSize);
-		Device->unmapMemory(memory.get());
+		Device->unmapMemory(uMemory.get());
 	}
 }
 
@@ -99,11 +98,5 @@ void RBuffer::UploadData(const std::vector<byte>& data)
 {
 	UploadData(data.data(), data.size());
 }
-
-vk::DeviceAddress RBuffer::GetAddress() const noexcept
-{
-	return Device->getBufferAddress(vk::BufferDeviceAddressInfo{ handle.get() });
-}
-
 
 } // namespace vl

@@ -298,7 +298,7 @@ void InitVulkan()
 	init.MinImageCount = c_framesInFlight;
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init, swapchain->renderPass.get());
+	ImGui_ImplVulkan_Init(&init, swapchain->renderPass());
 
 	// CHECK: which buffer
 	auto cmdBuffer = Device->graphicsCmdBuffer;

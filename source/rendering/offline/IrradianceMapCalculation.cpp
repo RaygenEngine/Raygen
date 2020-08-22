@@ -74,14 +74,14 @@ void IrradianceMapCalculation::MakeDesciptors()
 	m_skyboxDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	m_skyboxDescLayout.Generate();
 
-	m_descSet = m_skyboxDescLayout.GetDescriptorSet();
+	m_descSet = m_skyboxDescLayout.AllocDescriptorSet();
 
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(m_envmapAsset->skybox.Lock().cubemap())
+		.setImageView(m_envmapAsset->skybox.Lock().cubemap.view())
 		.setSampler(quadSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -90,10 +90,7 @@ void IrradianceMapCalculation::MakeDesciptors()
 		.setDstBinding(0u)    // 0 is for the Ubo
 		.setDstArrayElement(0u)
 		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setDescriptorCount(1u)
-		.setPBufferInfo(nullptr)
-		.setPImageInfo(&imageInfo)
-		.setPTexelBufferView(nullptr);
+		.setImageInfo(imageInfo);
 
 	Device->updateDescriptorSets(descriptorWrite, {});
 }
@@ -288,15 +285,10 @@ void IrradianceMapCalculation::MakePipeline()
 		.setSize(sizeof(PushConstant))
 		.setOffset(0u);
 
-
-	std::array layouts = { m_skyboxDescLayout.setLayout.get() };
-
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
-		.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
-		.setPSetLayouts(layouts.data())
-		.setPushConstantRangeCount(1u)
-		.setPPushConstantRanges(&pushConstantRange);
+		.setSetLayouts(m_skyboxDescLayout.handle()) //
+		.setPushConstantRanges(pushConstantRange);
 
 	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
@@ -350,7 +342,7 @@ void IrradianceMapCalculation::PrepareFaceInfo()
 		createInfo
 			.setRenderPass(m_renderPass.get()) //
 			.setAttachmentCount(1u)
-			.setPAttachments(&m_faceAttachments[i]())
+			.setPAttachments(&m_faceAttachments[i].view())
 			.setWidth(m_resolution)
 			.setHeight(m_resolution)
 			.setLayers(1);
@@ -440,7 +432,7 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 				m_cmdBuffers[i].pushConstants(
 					m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
-				vk::Buffer vertexBuffers[] = { m_cubeVertexBuffer };
+				vk::Buffer vertexBuffers[] = { m_cubeVertexBuffer.handle() };
 				vk::DeviceSize offsets[] = { 0 };
 				// geom
 				m_cmdBuffers[i].bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
@@ -511,11 +503,11 @@ void IrradianceMapCalculation::EditPods()
 
 		img.CopyImageToBuffer(stagingbuffer);
 
-		void* data = Device->mapMemory(stagingbuffer.GetMemory(), 0, VK_WHOLE_SIZE, {});
+		void* data = Device->mapMemory(stagingbuffer.memory(), 0, VK_WHOLE_SIZE, {});
 
 		memcpy(cubemapEditor->data.data() + size * i / 6, data, m_resolution * m_resolution * bytesPerPixel);
 
-		Device->unmapMemory(stagingbuffer.GetMemory());
+		Device->unmapMemory(stagingbuffer.memory());
 	}
 }
 

@@ -37,23 +37,24 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 		.setSharingMode(sharingMode)
 		.setFlags(flags);
 
-	image = Device->createImageUnique(imageInfo);
+	uHandle = Device->createImageUnique(imageInfo);
 
-	vk::MemoryRequirements memRequirements = Device->getImageMemoryRequirements(image.get());
+	auto memRequirements = Device->getImageMemoryRequirements(uHandle.get());
 
 	vk::MemoryAllocateInfo allocInfo{};
 	allocInfo.setAllocationSize(memRequirements.size);
 	allocInfo.setMemoryTypeIndex(Device->FindMemoryType(memRequirements.memoryTypeBits, properties));
 
-	memory = Device->allocateMemoryUnique(allocInfo);
+	uMemory = Device->allocateMemoryUnique(allocInfo);
 
-	Device->bindImageMemory(image.get(), memory.get(), 0);
+	Device->bindImageMemory(uHandle.get(), uMemory.get(), 0);
 
 	vk::ImageViewCreateInfo viewInfo{};
 	viewInfo
-		.setImage(image.get()) //
+		.setImage(uHandle.get()) //
 		.setViewType(viewType)
 		.setFormat(format);
+
 	viewInfo.subresourceRange
 		.setAspectMask(aspectMask) //
 		.setBaseMipLevel(0u)
@@ -61,14 +62,14 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 		.setBaseArrayLayer(0u)
 		.setLayerCount(arrayLayers);
 
-	view = Device->createImageViewUnique(viewInfo);
+	uView = Device->createImageViewUnique(viewInfo);
 
-	DEBUG_NAME(image, name);
-	DEBUG_NAME(view, name + ".view");
-	DEBUG_NAME(memory, name + ".mem");
+	DEBUG_NAME(uHandle, name);
+	DEBUG_NAME(uView, name + ".view");
+	DEBUG_NAME(uMemory, name + ".mem");
 }
 
-void RImage::CopyBufferToImage(const RBuffer& buffers)
+void RImage::CopyBufferToImage(const RBuffer& buffer)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -89,23 +90,22 @@ void RImage::CopyBufferToImage(const RBuffer& buffers)
 		.setBaseArrayLayer(0u)
 		.setLayerCount(arrayLayers);
 
-	Device->dmaCmdBuffer.copyBufferToImage(buffers, image.get(), vk::ImageLayout::eTransferDstOptimal, { region });
+	Device->dmaCmdBuffer.copyBufferToImage(
+		buffer.handle(), uHandle.get(), vk::ImageLayout::eTransferDstOptimal, region);
 
 	Device->dmaCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
-	submitInfo
-		.setCommandBufferCount(1u) //
-		.setPCommandBuffers(&Device->dmaCmdBuffer);
+	submitInfo.setCommandBuffers(Device->dmaCmdBuffer);
 
-	Device->dmaQueue.submit(1u, &submitInfo, {});
+	Device->dmaQueue.submit(submitInfo, {});
 	// PERF:
 	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.
 	Device->dmaQueue.waitIdle();
 }
 
-void RImage::CopyImageToBuffer(const RBuffer& buffers)
+void RImage::CopyImageToBuffer(const RBuffer& buffer)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -126,16 +126,15 @@ void RImage::CopyImageToBuffer(const RBuffer& buffers)
 		.setBaseArrayLayer(0u)
 		.setLayerCount(arrayLayers);
 
-	Device->dmaCmdBuffer.copyImageToBuffer(image.get(), vk::ImageLayout::eTransferSrcOptimal, buffers, { region });
+	Device->dmaCmdBuffer.copyImageToBuffer(
+		uHandle.get(), vk::ImageLayout::eTransferSrcOptimal, buffer.handle(), region);
 
 	Device->dmaCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
-	submitInfo
-		.setCommandBufferCount(1u) //
-		.setPCommandBuffers(&Device->dmaCmdBuffer);
+	submitInfo.setCommandBuffers(Device->dmaCmdBuffer);
 
-	Device->dmaQueue.submit(1u, &submitInfo, {});
+	Device->dmaQueue.submit(submitInfo, {});
 	// PERF:
 	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.
@@ -149,13 +148,13 @@ vk::ImageMemoryBarrier RImage::CreateTransitionBarrier(
 	barrier
 		.setOldLayout(oldLayout) //
 		.setNewLayout(newLayout)
-		.setImage(image.get())
+		.setImage(uHandle.get())
 		.setSrcAccessMask(rvk::accessFlagsForImageLayout(oldLayout))
 		.setDstAccessMask(rvk::accessFlagsForImageLayout(newLayout))
 		.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-		.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+		.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
 
-		.subresourceRange
+	barrier.subresourceRange
 		.setAspectMask(aspectMask) //
 		.setBaseMipLevel(baseMipLevel)
 		.setLevelCount(VK_REMAINING_MIP_LEVELS)
@@ -167,26 +166,25 @@ vk::ImageMemoryBarrier RImage::CreateTransitionBarrier(
 
 void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
-	vk::ImageMemoryBarrier barrier = CreateTransitionBarrier(oldLayout, newLayout);
+	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
 
-	vk::PipelineStageFlags sourceStage = rvk::pipelineStageForLayout(oldLayout);
-	vk::PipelineStageFlags destinationStage = rvk::pipelineStageForLayout(newLayout);
+	auto sourceStage = rvk::pipelineStageForLayout(oldLayout);
+	auto destinationStage = rvk::pipelineStageForLayout(newLayout);
 
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
 	Device->graphicsCmdBuffer.begin(beginInfo);
 
-	Device->graphicsCmdBuffer.pipelineBarrier(
-		sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+	Device->graphicsCmdBuffer.pipelineBarrier(sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
 
 	Device->graphicsCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBufferCount(1u);
-	submitInfo.setPCommandBuffers(&Device->graphicsCmdBuffer);
+	submitInfo.setCommandBuffers(Device->graphicsCmdBuffer);
 
-	Device->graphicsQueue.submit(1u, &submitInfo, {});
+	Device->graphicsQueue.submit(submitInfo, {});
+
 	Device->graphicsQueue.waitIdle();
 }
 
@@ -196,15 +194,15 @@ void RImage::TransitionToLayout(
 	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
 
 	cmdBuffer->pipelineBarrier(rvk::pipelineStageForLayout(oldLayout), rvk::pipelineStageForLayout(newLayout),
-		vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+		vk::DependencyFlags{ 0 }, {}, {}, barrier);
 }
 
 void RImage::TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
-	vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage)
+	vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage) const
 {
 	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
 
-	cmdBuffer->pipelineBarrier(sourceStage, destStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+	cmdBuffer->pipelineBarrier(sourceStage, destStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
 }
 
 void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
@@ -231,9 +229,10 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 
 		vk::ImageMemoryBarrier barrier{};
 		barrier
-			.setImage(image.get()) //
+			.setImage(uHandle.get()) //
 			.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
 			.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED);
+
 		barrier.subresourceRange
 			.setAspectMask(aspectMask) //
 			.setBaseArrayLayer(layer)
@@ -245,9 +244,9 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 
 		auto intermediateLayout = vk::ImageLayout::eTransferSrcOptimal;
 
-		vk::PipelineStageFlags oldStage = rvk::pipelineStageForLayout(oldLayout);
-		vk::PipelineStageFlags intermediateStage = rvk::pipelineStageForLayout(intermediateLayout);
-		vk::PipelineStageFlags finalStage = rvk::pipelineStageForLayout(newLayout);
+		auto oldStage = rvk::pipelineStageForLayout(oldLayout);
+		auto intermediateStage = rvk::pipelineStageForLayout(intermediateLayout);
+		auto finalStage = rvk::pipelineStageForLayout(newLayout);
 
 		for (uint32 i = 1; i < mipLevels; i++) {
 			barrier.subresourceRange.setBaseMipLevel(i - 1);
@@ -260,7 +259,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 
 			// old to intermediate
 			Device->graphicsCmdBuffer.pipelineBarrier(
-				oldStage, intermediateStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+				oldStage, intermediateStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
 
 			vk::ImageBlit blit{};
 			blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
@@ -279,7 +278,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 				.setLayerCount(1u);
 
 			Device->graphicsCmdBuffer.blitImage(
-				image.get(), intermediateLayout, image.get(), oldLayout, 1, &blit, vk::Filter::eLinear);
+				uHandle.get(), intermediateLayout, uHandle.get(), oldLayout, blit, vk::Filter::eLinear);
 
 			barrier
 				.setOldLayout(intermediateLayout) //
@@ -290,7 +289,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 
 			// intermediate to final
 			Device->graphicsCmdBuffer.pipelineBarrier(
-				intermediateStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+				intermediateStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
 
 			if (mipWidth > 1)
 				mipWidth /= 2;
@@ -307,17 +306,16 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 			.setSrcAccessMask(rvk::accessFlagsForImageLayout(oldLayout))
 			.setDstAccessMask(rvk::accessFlagsForImageLayout(newLayout));
 
-		Device->graphicsCmdBuffer.pipelineBarrier(
-			oldStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, std::array{ barrier });
+		Device->graphicsCmdBuffer.pipelineBarrier(oldStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
 	}
 
 	Device->graphicsCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBufferCount(1u);
-	submitInfo.setPCommandBuffers(&Device->graphicsCmdBuffer);
+	submitInfo.setCommandBuffers(Device->graphicsCmdBuffer);
 
-	Device->graphicsQueue.submit(1u, &submitInfo, {});
+	Device->graphicsQueue.submit(submitInfo, {});
+
 	Device->graphicsQueue.waitIdle();
 }
 
@@ -327,12 +325,12 @@ vk::DescriptorSet RImage::GetDebugDescriptor()
 		return *debugDescriptorSet;
 	}
 
-	debugDescriptorSet = Layouts->imageDebugDescLayout.GetDescriptorSet();
+	debugDescriptorSet = Layouts->imageDebugDescLayout.AllocDescriptorSet();
 
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(view.get())
+		.setImageView(uView.get())
 		.setSampler(GpuAssetManager->GetDefaultSampler());
 
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -341,17 +339,14 @@ vk::DescriptorSet RImage::GetDebugDescriptor()
 		.setDstBinding(0u)
 		.setDstArrayElement(0u)
 		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setDescriptorCount(1u)
-		.setPBufferInfo(nullptr)
-		.setPImageInfo(&imageInfo)
-		.setPTexelBufferView(nullptr);
+		.setImageInfo(imageInfo);
 
-	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+	Device->updateDescriptorSets(descriptorWrite, nullptr);
 
 	return *debugDescriptorSet;
 }
 
-void RCubemap::CopyBuffer(const RBuffer& buffers, size_t pixelSize, uint32 mipCount)
+void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCount)
 {
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -384,16 +379,15 @@ void RCubemap::CopyBuffer(const RBuffer& buffers, size_t pixelSize, uint32 mipCo
 		offset += res * res * pixelSize * 6llu;
 	}
 
-	Device->dmaCmdBuffer.copyBufferToImage(buffers, image.get(), vk::ImageLayout::eTransferDstOptimal, regions);
+	Device->dmaCmdBuffer.copyBufferToImage(
+		buffer.handle(), uHandle.get(), vk::ImageLayout::eTransferDstOptimal, regions);
 
 	Device->dmaCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
-	submitInfo
-		.setCommandBufferCount(1u) //
-		.setPCommandBuffers(&Device->dmaCmdBuffer);
+	submitInfo.setCommandBuffers(Device->dmaCmdBuffer);
 
-	Device->dmaQueue.submit(1u, &submitInfo, {});
+	Device->dmaQueue.submit(submitInfo, {});
 	// PERF:
 	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.

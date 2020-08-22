@@ -10,13 +10,7 @@ struct QueueFamily {
 // Info about a physical device and a given surface (support details)
 struct RPhysicalDevice : vk::PhysicalDevice {
 
-#define PHYSDEV_PROPS vk::PhysicalDeviceProperties2, vk::PhysicalDeviceRayTracingPropertiesKHR
-
 	std::vector<QueueFamily> queueFamilies;
-
-	RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surface);
-
-	vk::StructureChain<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceRayTracingPropertiesKHR> propertiesChain;
 
 	vk::PhysicalDeviceProperties2 genProps;
 	vk::PhysicalDeviceRayTracingPropertiesKHR rtProps;
@@ -26,5 +20,7 @@ struct RPhysicalDevice : vk::PhysicalDevice {
 	vk::PhysicalDeviceRayTracingFeaturesKHR rtFeats;
 
 	vk::SurfaceKHR surface;
+
+	RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR surface);
 };
 } // namespace vl

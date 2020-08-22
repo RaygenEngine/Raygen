@@ -1,6 +1,6 @@
 #pragma once
 #include "rendering/wrappers/Buffer.h"
-#include "rendering/wrappers/DescriptorLayout.h"
+#include "rendering/wrappers/DescriptorSetLayout.h"
 #include "rendering/wrappers/Image.h"
 
 namespace vl {
@@ -23,7 +23,7 @@ class IrradianceMapCalculation {
 	glm::mat4 m_captureProjection;
 	std::array<glm::mat4, 6> m_captureViews;
 
-	RDescriptorLayout m_skyboxDescLayout;
+	RDescriptorSetLayout m_skyboxDescLayout;
 	vk::DescriptorSet m_descSet;
 
 	GpuEnvironmentMap* m_envmapAsset;

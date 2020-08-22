@@ -38,7 +38,7 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 	prefiltered = GpuAssetManager->GetGpuHandle(envmapPod->prefiltered);
 	brdfLut = GpuAssetManager->GetGpuHandle(envmapPod->brdfLut);
 
-	descriptorSet = Layouts->envmapLayout.GetDescriptorSet();
+	descriptorSet = Layouts->envmapLayout.AllocDescriptorSet();
 
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
@@ -57,7 +57,7 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 
 		imageInfos[i]
 			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-			.setImageView(cubemapPod.cubemap())
+			.setImageView(cubemapPod.cubemap.view())
 			.setSampler(quadSampler);
 
 		descriptorWrites[i]
@@ -65,10 +65,7 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 			.setDstBinding(i)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-			.setDescriptorCount(1u)
-			.setPBufferInfo(nullptr)
-			.setPImageInfo(&imageInfos[i])
-			.setPTexelBufferView(nullptr);
+			.setImageInfo(imageInfos[i]);
 	}
 
 	// sampler
@@ -95,7 +92,7 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 
 	imageInfos[3]
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(brdfLut.Lock().image())
+		.setImageView(brdfLut.Lock().image.view())
 		.setSampler(brdfSampler);
 
 	descriptorWrites[3]
@@ -103,10 +100,7 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 		.setDstBinding(3u)
 		.setDstArrayElement(0u)
 		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setDescriptorCount(1u)
-		.setPBufferInfo(nullptr)
-		.setPImageInfo(&imageInfos[3u])
-		.setPTexelBufferView(nullptr);
+		.setImageInfo(imageInfos[3u]);
 
 	// single call to update all descriptor sets with the new depth image
 	Device->updateDescriptorSets(descriptorWrites, {});
