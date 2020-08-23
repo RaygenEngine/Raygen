@@ -195,7 +195,9 @@ Instance_::Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwi
 Instance_::~Instance_()
 {
 	destroySurfaceKHR(surface);
-	destroyDebugUtilsMessengerEXT(debugUtilsMessenger);
+	if (debugUtilsMessenger) {
+		destroyDebugUtilsMessengerEXT(debugUtilsMessenger);
+	}
 	destroy();
 }
 } // namespace vl
