@@ -8,6 +8,9 @@
 #include "fragment.h"
 #include "shadow-sampling.h"
 
+
+//#define RTX_ON
+
 // out
 
 layout(location = 0) out vec4 outColor;
@@ -65,31 +68,10 @@ layout(set = 2, binding = 0) uniform UBO_Spotlight {
 } light;
 
 layout(set = 3, binding = 0) uniform sampler2DShadow shadowmap;
+
+#ifdef RTX_ON
 layout(set = 4, binding = 0) uniform accelerationStructureEXT topLevelAS;
-
-float getShadowRayQuery(Fragment frag){ 
-	vec3 L = normalize(light.position - frag.position); 
-	vec3  origin    = frag.position;
-	vec3  direction = L;  // vector to light
-	float tMin      = 0.01f;
-	float tMax      = distance(frag.position, light.position);
-
-	// Initializes a ray query object but does not start traversal
-	rayQueryEXT rayQuery;
-	rayQueryInitializeEXT(rayQuery, topLevelAS, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, origin, tMin,
-                      direction, tMax);
-
-	// Start traversal: return false if traversal is complete
-	while(rayQueryProceedEXT(rayQuery)) {
-	}
-      
-	// Returns type of committed (true) intersection
-	if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
-	  // Got an intersection == Shadow
-	  return 1.0;
-	}
-	return 0.0;
-}
+#endif
 
 void main() {
 
@@ -130,12 +112,34 @@ void main() {
 	float shadow;
 	//float shadow = ShadowCalculationFast(shadowmap, light.viewProj, frag.position, light.maxShadowBias);
 
- //#define RTX_ON
+
 	
 #ifndef RTX_ON
-		shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
+	shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
 #else
-		shadow = getShadowRayQuery(frag);
+	vec3 L = normalize(light.position - frag.position); 
+	vec3  origin    = frag.position;
+	vec3  direction = L;  // vector to light
+	float tMin      = 0.01f;
+	float tMax      = distance(frag.position, light.position);
+
+	// Initializes a ray query object but does not start traversal
+	rayQueryEXT rayQuery;
+	rayQueryInitializeEXT(rayQuery, topLevelAS, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, origin, tMin,
+                      direction, tMax);
+
+	// Start traversal: return false if traversal is complete
+	while(rayQueryProceedEXT(rayQuery)) {
+	}
+      
+	// Returns type of committed (true) intersection
+	if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
+	  // Got an intersection == Shadow
+	  shadow = 1.0;
+	}
+	else{
+		shadow = 0.0;
+	}
 #endif
 	
 	vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
