@@ -443,13 +443,15 @@ void Renderer_::SetRtImage()
 		Layouts->singleSamplerDescLayout.GetDescriptorSet(), Layouts->singleSamplerDescLayout.GetDescriptorSet() };
 	for (size_t i = 0; i < c_framesInFlight; i++) {
 		vk::DescriptorImageInfo imageInfo{ {}, *m_attachment[i].view, vk::ImageLayout::eShaderReadOnlyOptimal };
+		imageInfo.setSampler(GpuAssetManager->GetDefaultSampler());
+
 		vk::WriteDescriptorSet descriptorWrite{};
 
 		descriptorWrite
 			.setDstSet(m_wipDescSet[i]) //
 			.setDstBinding(0u)
 			.setDstArrayElement(0u)
-			.setDescriptorType(vk::DescriptorType::eSampledImage)
+			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
 			.setDescriptorCount(1u)
 			.setPBufferInfo(nullptr)
 			.setPImageInfo(&imageInfo)
