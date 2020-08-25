@@ -24,6 +24,7 @@ inline struct Layouts_ {
 
 	vk::UniqueRenderPass depthRenderPass;
 	vk::UniqueRenderPass gbufferPass;
+	vk::UniqueRenderPass lightblendPass;
 
 	Layouts_();
 

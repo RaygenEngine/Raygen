@@ -4,6 +4,7 @@
 #include "rendering/passes/DepthmapPass.h"
 #include "rendering/passes/GbufferPass.h"
 #include "rendering/passes/UnlitPass.h"
+#include "rendering/passes/LightblendPass.h"
 
 namespace vl {
 Layouts_::Layouts_()
@@ -86,5 +87,7 @@ Layouts_::Layouts_()
 	depthRenderPass = DepthmapPass::CreateCompatibleRenderPass();
 
 	gbufferPass = GbufferPass::CreateCompatibleRenderPass();
+
+	lightblendPass = LightblendPass::CreateCompatibleRenderPass();
 }
 } // namespace vl

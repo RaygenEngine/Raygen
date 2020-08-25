@@ -14,7 +14,7 @@ void RFramebuffer::AddAttachment(uint32 width, uint32 height, vk::Format format,
 		extent.height = height;
 	}
 
-	CLOG_ABORT(extent.width != width || extent.height != height,
+	CLOG_ERROR(extent.width != width || extent.height != height,
 		"Attempting to add attachment with different dimensions to a Framebuffer");
 
 	attachments.emplace_back(width, height, format, tiling, initialLayout, usage, properties, name);

@@ -5,6 +5,7 @@
 #include "assets/pods/ShaderStage.h"
 #include "reflection/ReflEnum.h"
 #include "rendering/Device.h"
+#include "assets/util/SpirvCompiler.h"
 
 using namespace vl;
 
@@ -40,6 +41,7 @@ void GpuShaderStage::Update(const AssetUpdateInfo& info)
 	vk::ShaderModuleCreateInfo createInfo{};
 	createInfo.setCodeSize(binary.size() * 4).setPCode(binary.data());
 	module = Device->createShaderModuleUnique(createInfo);
+	shaderStageCreateInfo.setStage(shd::StageToVulkan(podPtr->stage)).setModule(*module).setPName("main");
 
 	DEBUG_NAME(module, AssetHandlerManager::GetPodUri(podHandle));
 

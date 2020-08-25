@@ -25,4 +25,5 @@ struct RFramebuffer {
 private:
 	vk::UniqueFramebuffer handle;
 };
+
 } // namespace vl

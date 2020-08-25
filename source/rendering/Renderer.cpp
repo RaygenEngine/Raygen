@@ -840,7 +840,6 @@ void Renderer_::OnViewportResize()
 			imageInfo2
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
 				.setImageView(Renderer->m_attachment[i]());
-			//	.setSampler(VK_NULL_HANDLE);
 
 			vk::WriteDescriptorSet descriptorWrite2{};
 			descriptorWrite2
@@ -848,12 +847,9 @@ void Renderer_::OnViewportResize()
 				.setDstBinding(0)
 				.setDstArrayElement(0u)
 				.setDescriptorType(vk::DescriptorType::eInputAttachment)
-				.setDescriptorCount(1u)
-				.setPBufferInfo(nullptr)
-				.setPImageInfo(&imageInfo2)
-				.setPTexelBufferView(nullptr);
+				.setImageInfo(imageInfo2);
 
-			Device->updateDescriptorSets(1u, &descriptorWrite2, 0u, nullptr);
+			Device->updateDescriptorSets(descriptorWrite2, nullptr);
 
 
 			std::array<vk::ImageView, 3> attch{
@@ -908,9 +904,9 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 
 	if (raytrace) {
 
-		m_attachment[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
-			vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eFragmentShader,
-			vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+		// m_attachment[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
+		//	vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eFragmentShader,
+		//	vk::PipelineStageFlagBits::eRayTracingShaderKHR | vk::PipelineStageFlagBits::efar);
 
 		m_attachment2[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
 			vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eFragmentShader,
@@ -919,9 +915,9 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 
 		RecordRayTracingPass(cmdBuffer, sceneDesc);
 
-		m_attachment[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
-			vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
-			vk::PipelineStageFlagBits::eFragmentShader);
+		// m_attachment[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
+		//	vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
+		//	vk::PipelineStageFlagBits::eFragmentShader);
 
 		m_attachment2[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 			vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,

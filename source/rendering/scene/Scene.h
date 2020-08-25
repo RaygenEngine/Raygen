@@ -251,7 +251,11 @@ struct SceneRenderDesc {
 	Scene* scene{ nullptr };
 	SceneCamera* viewer{ nullptr };
 
+
 	uint32 frameIndex{ 0 };
+
+	vk::DescriptorSet gbufferDescSet;
+
 
 	// TODO: Scene description should only contain the required scene structs for current frame rendering
 	// apart from occlusion etc
