@@ -42,7 +42,7 @@ Layer_::Layer_()
 
 	Layouts = new Layouts_();
 
-	StaticPipes::InitRegistered();
+	// StaticPipes::InitRegistered();
 
 	mainSwapchain = new RSwapchain(Instance->surface);
 

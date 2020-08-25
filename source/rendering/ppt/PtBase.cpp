@@ -4,8 +4,8 @@
 #include "assets/pods/Shader.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
-#include "rendering/Renderer.h"
 #include "rendering/wrappers/Swapchain.h"
+#include "rendering/Layouts.h"
 
 namespace vl {
 
@@ -90,7 +90,7 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
 		// TODO: POSTPROC
-		.setRenderPass(Renderer->m_ptRenderpass.get())
+		.setRenderPass(*Layouts->ptPassLayout.compatibleRenderPass)
 		.setSubpass(subpassIndex)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);

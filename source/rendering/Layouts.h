@@ -1,5 +1,6 @@
 #pragma once
 #include "rendering/wrappers/DescriptorLayout.h"
+#include "rendering/wrappers/passlayout/RenderPassLayout.h"
 
 namespace vl {
 inline struct Layouts_ {
@@ -26,8 +27,8 @@ inline struct Layouts_ {
 	vk::UniqueRenderPass gbufferPass;
 	vk::UniqueRenderPass lightblendPass;
 
+	RRenderPassLayout ptPassLayout;
+
 	Layouts_();
-
-
 } * Layouts{};
 } // namespace vl

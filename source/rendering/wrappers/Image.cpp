@@ -200,7 +200,7 @@ void RImage::TransitionToLayout(
 }
 
 void RImage::TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
-	vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage)
+	vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage) const
 {
 	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
 

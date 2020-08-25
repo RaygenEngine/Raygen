@@ -17,7 +17,7 @@ GpuShaderStage::GpuShaderStage(PodHandle<ShaderStage> podHandle)
 
 bool GpuShaderStage::HasValidModule() const
 {
-	return !(!module);
+	return bool(module);
 }
 
 bool GpuShaderStage::WasLastCompileSuccessful() const

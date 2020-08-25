@@ -75,115 +75,6 @@ Renderer_::Renderer_()
 {
 	Event::OnViewportUpdated.BindFlag(this, m_didViewportResize);
 
-	vk::AttachmentDescription depthAttachmentDesc{};
-	depthAttachmentDesc
-		.setFormat(Device->FindDepthFormat()) //
-		.setSamples(vk::SampleCountFlagBits::e1)
-		.setLoadOp(vk::AttachmentLoadOp::eLoad)
-		.setStoreOp(vk::AttachmentStoreOp::eStore)
-		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
-		.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-	vk::AttachmentReference depthAttachmentRef{};
-	depthAttachmentRef
-		.setAttachment(2u) //
-		.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-	vk::AttachmentDescription colorAttachmentDesc{};
-	vk::AttachmentReference colorAttachmentRef{};
-
-	colorAttachmentDesc.setFormat(vk::Format::eR32G32B32A32Sfloat)
-		.setSamples(vk::SampleCountFlagBits::e1)
-		.setLoadOp(vk::AttachmentLoadOp::eClear)
-		.setStoreOp(vk::AttachmentStoreOp::eStore)
-		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eUndefined)
-		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-	colorAttachmentRef
-		.setAttachment(0u) //
-		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-	vk::AttachmentReference colorAttachmentRef15{};
-
-	colorAttachmentRef15
-		.setAttachment(0u) //
-		.setLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-
-	vk::AttachmentDescription colorAttachmentDesc2{};
-	vk::AttachmentReference colorAttachmentRef2{};
-
-	colorAttachmentDesc2.setFormat(vk::Format::eR32G32B32A32Sfloat)
-		.setSamples(vk::SampleCountFlagBits::e1)
-		.setLoadOp(vk::AttachmentLoadOp::eClear)
-		.setStoreOp(vk::AttachmentStoreOp::eStore)
-		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eUndefined)
-		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-	colorAttachmentRef2
-		.setAttachment(1u) //
-		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-
-	vk::SubpassDescription lightSubpass{};
-	lightSubpass
-		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachmentCount(1u)
-		.setPColorAttachments(&colorAttachmentRef)
-		.setPDepthStencilAttachment(nullptr);
-
-	vk::SubpassDependency lightDep{};
-	lightDep
-		.setSrcSubpass(VK_SUBPASS_EXTERNAL) //
-		.setDstSubpass(0u)
-		.setSrcStageMask(vk::PipelineStageFlagBits::eBottomOfPipe)
-		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setSrcAccessMask(vk::AccessFlagBits::eMemoryRead)
-		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
-		.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
-
-
-	vk::SubpassDescription debugSupass{};
-	debugSupass
-		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachmentCount(1u)
-		.setInputAttachmentCount(1u)
-		.setPDepthStencilAttachment(&depthAttachmentRef)
-		.setPInputAttachments(&colorAttachmentRef15)
-		.setPColorAttachments(&colorAttachmentRef2);
-
-	vk::SubpassDependency debugDep{};
-	debugDep
-		.setSrcSubpass(0u) //
-		.setDstSubpass(1u)
-		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader)
-		.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
-		.setDstAccessMask(vk::AccessFlagBits::eShaderRead)
-		.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
-
-	std::array subpasses{ lightSubpass, debugSupass };
-	std::array dependcies{ lightDep, debugDep };
-	std::array attachments{ colorAttachmentDesc, colorAttachmentDesc2, depthAttachmentDesc };
-
-
-	vk::RenderPassCreateInfo renderPassInfo{};
-	renderPassInfo
-		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
-		.setPAttachments(attachments.data())
-		.setSubpassCount(static_cast<uint32>(subpasses.size()))
-		.setPSubpasses(subpasses.data())
-		.setDependencyCount(static_cast<uint32>(dependcies.size()))
-		.setPDependencies(dependcies.data());
-
-	m_ptRenderpass = Device->createRenderPassUnique(renderPassInfo);
-
 	// descsets
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_ppDescSet[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
@@ -416,13 +307,12 @@ void Renderer_::MakeRtPipeline()
 	// NEXT: temp
 	// write all geometry, indices to this desc set... how to combine them tho?
 }
-
 void Renderer_::SetRtImage()
 {
 	m_rtDescSet = { Layouts->singleStorageImage.GetDescriptorSet(), Layouts->singleStorageImage.GetDescriptorSet(),
 		Layouts->singleStorageImage.GetDescriptorSet() };
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		vk::DescriptorImageInfo imageInfo{ {}, *m_attachment2[i].view, vk::ImageLayout::eGeneral };
+		vk::DescriptorImageInfo imageInfo{ {}, *m_ptPassFramebuffer[i][1].view, vk::ImageLayout::eGeneral };
 		vk::WriteDescriptorSet descriptorWrite{};
 
 		descriptorWrite
@@ -442,7 +332,8 @@ void Renderer_::SetRtImage()
 	m_wipDescSet = { Layouts->singleSamplerDescLayout.GetDescriptorSet(),
 		Layouts->singleSamplerDescLayout.GetDescriptorSet(), Layouts->singleSamplerDescLayout.GetDescriptorSet() };
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		vk::DescriptorImageInfo imageInfo{ {}, *m_attachment[i].view, vk::ImageLayout::eShaderReadOnlyOptimal };
+		vk::DescriptorImageInfo imageInfo{ {}, *m_ptPassFramebuffer[i][0].view,
+			vk::ImageLayout::eShaderReadOnlyOptimal };
 		imageInfo.setSampler(GpuAssetManager->GetDefaultSampler());
 
 		vk::WriteDescriptorSet descriptorWrite{};
@@ -699,8 +590,8 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 
 	vk::RenderPassBeginInfo renderPassInfo{};
 	renderPassInfo
-		.setRenderPass(m_ptRenderpass.get()) //
-		.setFramebuffer(m_framebuffer[sceneDesc.frameIndex].get());
+		.setRenderPass(*Layouts->ptPassLayout.compatibleRenderPass) //
+		.setFramebuffer(m_ptPassFramebuffer[sceneDesc.frameIndex]);
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //
 		.setExtent(extent);
@@ -724,7 +615,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 
 		m_postprocCollection.Draw(*cmdBuffer, sceneDesc, m_gbuffer[sceneDesc.frameIndex].descSet); // WIP:
 
-		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
+		// UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
 	}
 	cmdBuffer->endRenderPass();
 }
@@ -794,29 +685,18 @@ void Renderer_::OnViewportResize()
 	if (fbSize != m_viewportFramebufferSize) {
 		m_viewportFramebufferSize = fbSize;
 
-		for (uint32 i = 0; i < c_framesInFlight; ++i) {
 
+		for (uint32 i = 0; i < c_framesInFlight; ++i) {
 			m_gbuffer[i] = GBuffer{ fbSize.width, fbSize.height };
 
-			m_attachment[i] = RImageAttachment{ fbSize.width, fbSize.height, vk::Format::eR32G32B32A32Sfloat,
-				vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
-				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled
-					| vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eInputAttachment,
-				vk::MemoryPropertyFlagBits::eDeviceLocal, "rgba32" };
+			m_ptPassFramebuffer[i] = Layouts->ptPassLayout.CreateFramebuffer(fbSize.width, fbSize.height);
 
-			m_attachment2[i] = RImageAttachment{ fbSize.width, fbSize.height, vk::Format::eR32G32B32A32Sfloat,
-				vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
-				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eStorage
-					| vk::ImageUsageFlagBits::eSampled,
-				vk::MemoryPropertyFlagBits::eDeviceLocal, "rgba32" };
-
-			// descSets
 			auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
 			vk::DescriptorImageInfo imageInfo{};
 			imageInfo
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(m_attachment2[i]())
+				.setImageView(m_ptPassFramebuffer[i][1]())
 				.setSampler(quadSampler);
 
 			vk::WriteDescriptorSet descriptorWrite{};
@@ -826,9 +706,7 @@ void Renderer_::OnViewportResize()
 				.setDstArrayElement(0u)
 				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
 				.setDescriptorCount(1u)
-				.setPBufferInfo(nullptr)
-				.setPImageInfo(&imageInfo)
-				.setPTexelBufferView(nullptr);
+				.setPImageInfo(&imageInfo);
 
 			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 
@@ -839,7 +717,7 @@ void Renderer_::OnViewportResize()
 			vk::DescriptorImageInfo imageInfo2{};
 			imageInfo2
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(Renderer->m_attachment[i]());
+				.setImageView(m_ptPassFramebuffer[i][0]());
 
 			vk::WriteDescriptorSet descriptorWrite2{};
 			descriptorWrite2
@@ -850,28 +728,6 @@ void Renderer_::OnViewportResize()
 				.setImageInfo(imageInfo2);
 
 			Device->updateDescriptorSets(descriptorWrite2, nullptr);
-
-
-			std::array<vk::ImageView, 3> attch{
-				m_attachment[i](),
-				m_attachment2[i](),
-				m_gbuffer[i].framebuffer[GDepth](),
-			};
-
-			DEBUG_NAME(m_attachment[i].operator vk::Image(), "attachment 1: " + std::to_string(i));
-			DEBUG_NAME(m_attachment2[i].operator vk::Image(), "attachment 2: " + std::to_string(i));
-
-			// framebuffer
-			vk::FramebufferCreateInfo createInfo{};
-			createInfo
-				.setRenderPass(m_ptRenderpass.get()) //
-				.setAttachmentCount(static_cast<uint32>(attch.size()))
-				.setPAttachments(attch.data())
-				.setWidth(fbSize.width)
-				.setHeight(fbSize.height)
-				.setLayers(1u);
-
-			m_framebuffer[i] = Device->createFramebufferUnique(createInfo);
 		}
 		SetRtImage();
 	}
@@ -908,9 +764,9 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 		//	vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eFragmentShader,
 		//	vk::PipelineStageFlagBits::eRayTracingShaderKHR | vk::PipelineStageFlagBits::efar);
 
-		m_attachment2[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
-			vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eFragmentShader,
-			vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+		m_ptPassFramebuffer[sceneDesc.frameIndex][1].TransitionToLayout(cmdBuffer,
+			vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
+			vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
 
 		RecordRayTracingPass(cmdBuffer, sceneDesc);
@@ -919,7 +775,7 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 		//	vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
 		//	vk::PipelineStageFlagBits::eFragmentShader);
 
-		m_attachment2[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+		m_ptPassFramebuffer[sceneDesc.frameIndex][1].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 			vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
 			vk::PipelineStageFlagBits::eFragmentShader);
 	}
@@ -927,6 +783,8 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 
 	for (auto& att : m_gbuffer[sceneDesc.frameIndex].framebuffer.attachments) {
 		if (att.isDepth) {
+			att.TransitionToLayout(
+				cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 			continue;
 		}
 		att.TransitionToLayout(
@@ -949,10 +807,12 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 
 	RecordOutPass(cmdBuffer, sceneDesc, outRp, outFb, outExtent);
 
+	m_ptPassFramebuffer[sceneDesc.frameIndex][1].TransitionToLayout(
+		cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
 
-	m_attachment[sceneDesc.frameIndex].TransitionToLayout(
-		cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
-	m_attachment2[sceneDesc.frameIndex].TransitionToLayout(
-		cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
+	// m_attachment[sceneDesc.frameIndex].TransitionToLayout(
+	//	cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
+	// m_attachment2[sceneDesc.frameIndex].TransitionToLayout(
+	//	cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
 }
 } // namespace vl
