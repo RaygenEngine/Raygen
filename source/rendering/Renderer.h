@@ -65,11 +65,7 @@ protected:
 	void OnViewportResize();
 
 public:
-	// TODO: POSTPROC post process for hdr, move those
-	// TODO: when you move this use RFramebuffer instead
-	InFlightResources<vk::UniqueFramebuffer> m_framebuffer;
-	InFlightResources<RImageAttachment> m_attachment;
-	InFlightResources<RImageAttachment> m_attachment2;
+	InFlightResources<RFramebuffer> m_ptPassFramebuffer;
 
 	// std::array<UniquePtr<RImageAttachment>, 3> m_attachmentsDepthToUnlit;
 

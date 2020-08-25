@@ -7,6 +7,32 @@
 #include "rendering/passes/LightblendPass.h"
 
 namespace vl {
+
+namespace {
+	RRenderPassLayout MakePtPassLayout()
+	{
+		RRenderPassLayout layout;
+
+
+		auto lights = layout.AddInternalAttachment(vk::Format::eR32G32B32A32Sfloat);
+		auto postprocOut
+			= layout.AddInternalAttachment(vk::Format::eR32G32B32A32Sfloat, vk::ImageUsageFlagBits::eStorage);
+
+		layout.AddSubpass({}, { lights });
+		layout.AddSubpass({ lights }, { postprocOut });
+
+
+		lights.SetFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
+		postprocOut.SetFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		// layout.ResultDescriptorSet({ lights, postprocOut, depthBuffer });
+
+		layout.Generate();
+
+		return layout;
+	}
+} // namespace
+
 Layouts_::Layouts_()
 {
 	// gbuffer
@@ -89,5 +115,7 @@ Layouts_::Layouts_()
 	gbufferPass = GbufferPass::CreateCompatibleRenderPass();
 
 	lightblendPass = LightblendPass::CreateCompatibleRenderPass();
+
+	ptPassLayout = MakePtPassLayout();
 }
 } // namespace vl

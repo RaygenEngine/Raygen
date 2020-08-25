@@ -54,8 +54,7 @@ vk::UniqueRenderPass DepthmapPass::CreateCompatibleRenderPass()
 	renderPassInfo
 		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
 		.setPAttachments(attachments.data())
-		.setSubpassCount(1u)
-		.setSubpasses(&subpass);
+		.setSubpasses(subpass);
 
 	return Device->createRenderPassUnique(renderPassInfo);
 }

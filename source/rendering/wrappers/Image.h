@@ -46,7 +46,7 @@ struct RImage {
 	void BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 	void TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const;
 	void TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
-		vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage);
+		vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage) const;
 
 	void GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
