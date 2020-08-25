@@ -7,6 +7,9 @@ struct GpuShaderStage : public GpuAssetTemplate<ShaderStage> {
 
 	bool lastCompileSuccess{ false };
 
+	vk::PipelineShaderStageCreateInfo shaderStageCreateInfo{};
+
+
 	GpuShaderStage(PodHandle<ShaderStage> podHandle);
 
 	// Checks if the underlying VkShaderModule is set.

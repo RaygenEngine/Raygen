@@ -56,6 +56,7 @@ void PtSpotlight::MakePipeline()
 		.setPAttachments(&colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
+
 	Utl_CreatePipeline(gpuShader, colorBlending);
 }
 
@@ -78,8 +79,10 @@ void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scene
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u, &descSet, 0u, nullptr);
 
+
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 4u, 1u,
 		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
+
 
 	for (auto sl : sceneDesc->spotlights.elements) {
 		if (!sl) {
@@ -97,4 +100,5 @@ void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scene
 		cmdBuffer.draw(3u, 1u, 0u, 0u);
 	}
 }
+
 } // namespace vl

@@ -80,4 +80,24 @@ inline ShaderStageType ExtToStage(std::string_view extName)
 }
 
 
+inline vk::ShaderStageFlagBits StageToVulkan(ShaderStageType stage)
+{
+	switch (stage) {
+		case ShaderStageType::Vertex: return vk::ShaderStageFlagBits::eVertex;
+		case ShaderStageType::Fragment: return vk::ShaderStageFlagBits::eFragment;
+		case ShaderStageType::RayGen: return vk::ShaderStageFlagBits::eRaygenKHR;
+		case ShaderStageType::Intersect: return vk::ShaderStageFlagBits::eIntersectionKHR;
+		case ShaderStageType::AnyHit: return vk::ShaderStageFlagBits::eAnyHitKHR;
+		case ShaderStageType::ClosestHit: return vk::ShaderStageFlagBits::eClosestHitKHR;
+		case ShaderStageType::Miss: return vk::ShaderStageFlagBits::eMissKHR;
+		case ShaderStageType::Geometry: return vk::ShaderStageFlagBits::eGeometry;
+		case ShaderStageType::TessControl: return vk::ShaderStageFlagBits::eTessellationControl;
+		case ShaderStageType::TessEvaluation: return vk::ShaderStageFlagBits::eTessellationEvaluation;
+		case ShaderStageType::Callable: return vk::ShaderStageFlagBits::eCallableKHR;
+		case ShaderStageType::Compute: return vk::ShaderStageFlagBits::eCompute;
+	}
+
+	LOG_ABORT("StageToVulkan failed to find stage.");
+}
+
 } // namespace shd

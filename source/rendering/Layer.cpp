@@ -19,6 +19,7 @@
 #include "universe/systems/SceneCmdSystem.h"
 #include "universe/Universe.h"
 #include "wrappers/Swapchain.h"
+#include "rendering/StaticPipes.h"
 
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
 	"Builds all build-able scene nodes" };
@@ -41,10 +42,13 @@ Layer_::Layer_()
 
 	Layouts = new Layouts_();
 
+	StaticPipes::InitRegistered();
+
 	mainSwapchain = new RSwapchain(Instance->surface);
 
 	mainScene = new Scene();
 	currentScene = mainScene;
+
 
 	Renderer = new Renderer_();
 	Renderer->InitPipelines(mainSwapchain->renderPass.get());
@@ -78,6 +82,8 @@ Layer_::~Layer_()
 	// WIP:
 	delete mainSwapchain;
 	delete mainScene;
+
+	StaticPipes::DestroyAll();
 
 	delete Layouts;
 

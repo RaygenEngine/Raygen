@@ -15,6 +15,7 @@ inline class Renderer_ : public Listener {
 	// The actual game viewport rectangle in m_swapchain coords
 	vk::Rect2D m_viewportRect{};
 
+
 private:
 	// cpyhdrtexture TODO: tidy
 	vk::UniquePipeline m_pipeline;

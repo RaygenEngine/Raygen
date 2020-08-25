@@ -48,15 +48,14 @@ vk::UniqueRenderPass DepthmapPass::CreateCompatibleRenderPass()
 		.setPColorAttachments(nullptr)
 		.setPDepthStencilAttachment(&depthAttachmentRef);
 
+
 	std::array attachments{ depthAttachmentDesc };
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
 		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
 		.setPAttachments(attachments.data())
 		.setSubpassCount(1u)
-		.setPSubpasses(&subpass)
-		.setDependencyCount(0u)
-		.setPDependencies(nullptr);
+		.setSubpasses(&subpass);
 
 	return Device->createRenderPassUnique(renderPassInfo);
 }
