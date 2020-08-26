@@ -405,7 +405,7 @@ void Renderer_::MakeRtPipeline()
 		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop formulation
 		// instead.
 
-		.setMaxRecursionDepth(1) // Ray depth
+		.setMaxRecursionDepth(10) // Ray depth
 		.setLayout(m_rtPipelineLayout.get());
 	m_rtPipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
 
@@ -442,14 +442,15 @@ void Renderer_::SetRtImage()
 	m_wipDescSet = { Layouts->singleSamplerDescLayout.GetDescriptorSet(),
 		Layouts->singleSamplerDescLayout.GetDescriptorSet(), Layouts->singleSamplerDescLayout.GetDescriptorSet() };
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		vk::DescriptorImageInfo imageInfo{ {}, *m_attachment[i].view, vk::ImageLayout::eShaderReadOnlyOptimal };
+		vk::DescriptorImageInfo imageInfo{ GpuAssetManager->GetDefaultSampler(), *m_attachment[i].view,
+			vk::ImageLayout::eShaderReadOnlyOptimal };
 		vk::WriteDescriptorSet descriptorWrite{};
 
 		descriptorWrite
 			.setDstSet(m_wipDescSet[i]) //
 			.setDstBinding(0u)
 			.setDstArrayElement(0u)
-			.setDescriptorType(vk::DescriptorType::eSampledImage)
+			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
 			.setDescriptorCount(1u)
 			.setPBufferInfo(nullptr)
 			.setPImageInfo(&imageInfo)

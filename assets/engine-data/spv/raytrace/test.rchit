@@ -31,11 +31,10 @@ layout(std430, set = 3, binding = 2) readonly buffer Indicies{ uint i[]; } indic
 layout(std430, set = 3, binding = 3) readonly buffer IndexOffsets { uint offset[]; } indexOffsets;
 layout(std430, set = 3, binding = 4) readonly buffer PrimitveOffsets { uint offset[]; } primOffsets;
 
-//layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAs;
-
 //HitAttributeKHR vec2 attribs;
 
-layout(location = 0) rayPayloadInEXT hitPayload prd;
+layout(location = 0) rayPayloadInEXT hitPayload inPrd;
+layout(location = 1) rayPayloadEXT hitPayload prd;
 
 layout(push_constant) uniform Constants
 {
@@ -55,6 +54,50 @@ OldVertex fromVertex(Vertex p) {
 	vtx.uv = vec2(p.u, p.v);
 	
 	return vtx;
+}
+
+void RRTerminateOrTraceRay(vec3 nextOrigin, vec3 nextDirection, vec3 throughput)
+{
+	// RR termination
+	if(inPrd.depth >= 1){
+
+		float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
+
+		if(rnd(prd.seed) >= p_spawn){
+			return; 
+		}
+
+		throughput /= p_spawn;
+	}
+
+	prd.radiance = vec3(0);
+	prd.depth = inPrd.depth + 1;
+    prd.seed = inPrd.seed;
+
+	if(prd.depth > depth)
+	{
+		return;
+	}
+
+    uint  rayFlags = gl_RayFlagsOpaqueEXT;
+    float tMin     = 0.001;
+    float tMax     = 10000.0;
+
+	// trace ray
+	traceRayEXT(topLevelAs,     // acceleration structure
+				rayFlags,       // rayFlags
+				0xFF,           // cullMask
+				0,              // sbtRecordOffset
+				0,              // sbtRecordStride
+				0,              // missIndex
+				nextOrigin,     // ray origin
+				tMin,           // ray min range
+				nextDirection,  // ray direction
+				tMax,           // ray max range
+				1               // payload (location = 0)
+	);
+
+	inPrd.radiance += throughput * prd.radiance;
 }
 
 void main() {
@@ -115,7 +158,7 @@ void main() {
 	vec3 albedo = sampledBaseColor.rgb;
 	float metallic = sampledMetallicRoughness.b;
 	float roughness = sampledMetallicRoughness.g;
-	float reflectance = 0.5;
+	float reflectance = 0.f;
 
 
     // remapping
@@ -127,18 +170,20 @@ void main() {
     // a = roughness roughness;
 	float a = roughness * roughness;
 
-	vec3 hitPoint = prd.origin + gl_HitTEXT * prd.direction;
+	vec3 hitPoint = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 
 	// TODO: use shading normal
 	vec3 N = Ng;//normalize(TBN * (sampledNormal.rgb* 2.0 - 1.0));
-	vec3 V = normalize(prd.origin - hitPoint);
+	vec3 V = normalize(gl_WorldRayOriginEXT - hitPoint);
 
 	float NoV = abs(dot(N, V)) + 1e-5; 
 
 	// DIRECT
 
+	inPrd.radiance = vec3(0);
+
 	// for each light
-	if(prd.depth != 0)
+	if(inPrd.depth != 0)
 	{
 		vec3 lightPos = vec3(7,2,0);
 		vec3 lightColor = vec3(0.98823529411764705882352941176471, 0.83137254901960784313725490196078, 0.25098039215686274509803921568627);
@@ -191,66 +236,53 @@ void main() {
 		vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, f0, a);
 
 		// so to simplify (faster math)
-		vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
+		// throughput = (brdf_d + brdf_r) * NoL
+		// incoming radiance = Li;
+		vec3 finalContribution = (brdf_d + brdf_r) * NoL * Li;
 
-		prd.result += prd.throughput * finalContribution;
+		inPrd.radiance += finalContribution;
 	}
 
-
 	// INDIRECT
-	// NEXT: something is wrong here, this should be L
-	vec3 F = F_Schlick(NoV, f0);
-	
-	vec3 L = vec3(0);
-
 
 	// TRANSMISSION
-	if(rnd(prd.seed) >= ((F.x + F.y + F.z) / 3))
 	{
-		// SCATTERING Depends on albedo and transparency
+		//Sample a cosine weighted hemisphere for a new direction wi with pdf
+		vec3 tangent, binormal;
+		computeOrthonormalBasis(Ng, tangent, binormal);
+		
+		const float z1 = rnd(inPrd.seed);
+		const float z2 = rnd(inPrd.seed);
 
-			// DIFFUSE "REFLECTION"
+		vec3 p;
+		cosine_sample_hemisphere(z1, z2, p);
+		inverse_transform(p, Ng, tangent, binormal);
+		vec3 L = normalize(p);
 
-				//Sample a cosine weighted hemisphere for a new direction wi with pdf
-				vec3 tangent, binormal;
-				computeOrthonormalBasis(Ng, tangent, binormal);
-				
-				const float z1 = rnd(prd.seed);
-				const float z2 = rnd(prd.seed);
-	
-				vec3 p;
-				cosine_sample_hemisphere(z1, z2, p);
-				inverse_transform(p, Ng, tangent, binormal);
-				L = normalize(p);
+		vec3 H = normalize(V + L);
 
-				vec3 H = normalize(V + L);
+		float LoH = saturate(dot(L, H));
+		float NoL = saturate(dot(N, L));
 
-				float LoH = saturate(dot(L, H));
-				float NoL = saturate(dot(N, L));
+		vec3 brdf_d = Fd_Burley(NoV, NoL, LoH, diffuseColor, a);
 
-				vec3 brdf_d = Fd_Burley(NoV, NoL, LoH, diffuseColor, a);
+		float pdf = NoL / PI;
 
-				float pdf = NoL / PI;
+		vec3 throughput = brdf_d * NoL / pdf; // try to simplify based on brdf
 
-				prd.throughput *= brdf_d * NoL / pdf; // try to simplify based on brdf
-			// TODO: SUBSURFACE SCATTERING else if
-
-			// TODO: SPECULAR TRANSMISSION (i.e refraction) else if
-
-		// TODO: ABSORPTION
-			// prd.done = true;
-	} 
+		// RR termination
+    	RRTerminateOrTraceRay(hitPoint, L, throughput);
+	}
 	
 	// REFLECTION
-	else
 	{
 		// sample new direction wi and its pdfs based on distribution of the GGX BRDF
 
-		vec2 Xi = hammersley(prd.smpl, samples); 
+		vec2 Xi = vec2(rnd(inPrd.seed), rnd(inPrd.seed)); 
 		vec3 H  = importanceSampleGGX(Xi, a, N);
 
 		// TODO: use reflect
-		L  = normalize(2.0 * dot(V, H) * H - V);
+		vec3 L  = normalize(2.0 * dot(V, H) * H - V);
 	
 		float NoL = saturate(dot(N, L));
 
@@ -266,12 +298,10 @@ void main() {
 		//}
 		vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, f0, a);
 
-		prd.throughput *= brdf_r * NoL / pdf;
+		vec3 throughput = brdf_r * NoL / pdf;
+
+		RRTerminateOrTraceRay(hitPoint, L, throughput);
 	}
-
-
-	prd.origin = hitPoint;
-	prd.direction = L;
 	
 }
 
