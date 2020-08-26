@@ -9,6 +9,7 @@ struct RFramebuffer {
 	vk::Extent2D extent{};
 
 	std::vector<RImageAttachment> attachments{};
+	std::vector<vk::ImageView> attachmentViews{};
 
 	vk::UniqueDescriptorSetLayout setLayout;
 
@@ -17,7 +18,12 @@ struct RFramebuffer {
 	void AddAttachment(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling,
 		vk::ImageLayout initialLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties,
 		const std::string& name, vk::ImageLayout finalLayout);
+
+	// void AddExistingAttachment(vk::ImageView imageView);
+	void AddExistingAttachment(const RImageAttachment& attachment);
+
 	void Generate(vk::RenderPass compatibleRenderPass);
+
 
 	operator vk::Framebuffer() const { return handle.get(); }
 	const RImageAttachment& operator[](size_t i) const { return attachments[i]; }

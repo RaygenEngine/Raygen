@@ -11,19 +11,27 @@ namespace vl {
 namespace {
 	RRenderPassLayout MakePtPassLayout()
 	{
+		RRenderPassLayout gbufferPass;
+
+		auto gbufferDepth = gbufferPass.CreateAttachment(Device->FindDepthFormat());
+
+		gbufferDepth.UpdateState(RRenderPassLayout::Attachment::State::ShaderRead);
+
 		RRenderPassLayout layout;
 
+		// auto depth = layout.AddExternalAttachment(vk::ImageLayout::eDepthAttachmentOptimal);
 
-		auto lights = layout.AddInternalAttachment(vk::Format::eR32G32B32A32Sfloat);
-		auto postprocOut
-			= layout.AddInternalAttachment(vk::Format::eR32G32B32A32Sfloat, vk::ImageUsageFlagBits::eStorage);
+		auto lights = layout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat);
+		auto postprocOut = layout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat, vk::ImageUsageFlagBits::eStorage);
 
 		layout.AddSubpass({}, { lights });
-		layout.AddSubpass({ lights }, { postprocOut });
+		layout.AddSubpass({ gbufferDepth, lights }, { postprocOut });
 
 
-		lights.SetFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
-		postprocOut.SetFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+		layout.TransitionAttachment(lights, vk::ImageLayout::eColorAttachmentOptimal);
+		layout.TransitionAttachment(postprocOut, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		layout.TransitionAttachment(gbufferDepth, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
 		// layout.ResultDescriptorSet({ lights, postprocOut, depthBuffer });
 

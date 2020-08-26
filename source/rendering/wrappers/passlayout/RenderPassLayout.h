@@ -4,18 +4,10 @@
 
 namespace vl {
 
-enum class FormatUtl
-{
-	Depth,
-	RGBA32_sFloat,
-	RGBA32_uNorm,
-};
-
 
 struct RRenderPassLayout {
 
 	struct Attachment {
-		vk::AttachmentDescription descr;
 		enum class State
 		{
 			ShaderRead,
@@ -23,22 +15,61 @@ struct RRenderPassLayout {
 			Color,
 		} state; // current subpass state.
 
-		State finalState;
-
 		vk::ImageUsageFlags additionalFlags{};
 
 		bool isDepth{ false };
 		bool isInputAttachment{ false };
+		vk::Format format{ vk::Format::eUndefined };
 	};
 
 	struct AttachmentRef {
-		RRenderPassLayout* parent{ nullptr };
-		int32 index{ -1 };
-		Attachment& Get() { return parent->internalAttachments[index]; }
-		void SetFinalLayout(vk::ImageLayout layout) { Get().descr.setFinalLayout(layout); }
+		RRenderPassLayout* originalOwner{ nullptr };
+		int32 originalIndex{ -1 };
+
+		RRenderPassLayout* thisOwner{ nullptr };
+		int32 thisIndex{ -1 };
+		int32 firstUseIndex{ -1 };
+
+		[[nodiscard]] Attachment& Get() const { return originalOwner->internalAttachments[originalIndex]; }
+
+		[[nodiscard]] vk::AttachmentDescription& GetDescr() const
+		{
+			if (IsInternal()) {
+				return originalOwner->internalAttachmentsDescr[originalIndex];
+			}
+			return thisOwner->externalAttachmentsDescr[thisIndex];
+		}
+
+
+		void UpdateState(Attachment::State state) { Get().state = state; }
+		[[nodiscard]] bool IsDepth() const { return Get().isDepth; }
+		[[nodiscard]] vk::Format GetFormat() const { return Get().format; }
+
+	private:
+		[[nodiscard]] bool IsInternal() const { return thisOwner == originalOwner && thisOwner != nullptr; }
+
+	public:
+		[[nodiscard]] bool IsSame(AttachmentRef other) const
+		{
+			return originalOwner == other.originalOwner && originalIndex == other.originalIndex;
+		}
+
+		[[nodiscard]] int32 GetAttachmentIndex() const
+		{
+			if (IsInternal()) {
+				return originalIndex;
+			}
+			return int32(thisOwner->internalAttachments.size() + thisIndex);
+		}
 	};
 
+private:
+	// Create or get a reference for an external attachment as used in this render pass.
+	// Returns the argument if attachment is already owned by this render pass.
+	AttachmentRef UseExternal(AttachmentRef attachment, int32 firstUseIndex);
+	bool IsExternal(AttachmentRef att) { return att.originalOwner != this; }
 
+public:
 	struct Subpass {
 		AttachmentRef depth;
 		std::vector<AttachmentRef> inputs;
@@ -61,127 +92,55 @@ struct RRenderPassLayout {
 	std::vector<vk::SubpassDependency> subpassDependencies;
 
 	std::vector<Attachment> internalAttachments;
+	std::vector<vk::AttachmentDescription> internalAttachmentsDescr;
+	std::vector<AttachmentRef> externalAttachments;
+	std::vector<vk::AttachmentDescription> externalAttachmentsDescr;
+
 	std::vector<Subpass> subpasses;
 
 
-	AttachmentRef AddExternalAttachment() {}
-
-
-	AttachmentRef AddInternalAttachment(vk::Format format, vk::ImageUsageFlags additionalUsageFlags = {})
+	[[nodiscard]] AttachmentRef CreateAttachment(vk::Format format, vk::ImageUsageFlags additionalUsageFlags = {})
 	{
 		auto& att = internalAttachments.emplace_back();
+		auto& attDescr = internalAttachmentsDescr.emplace_back();
 
+		AttachmentRef attRef = AttachmentRef{ this, int32(internalAttachments.size() - 1) };
+		attRef.thisOwner = this;
+		attRef.thisIndex = int32(internalAttachments.size() - 1);
+
+		att.format = format;
 		att.isDepth = rvk::isDepthFormat(format);
-		att.descr
+		att.additionalFlags = additionalUsageFlags;
+
+		attDescr
 			.setFormat(format) //
 			.setLoadOp(vk::AttachmentLoadOp::eClear)
 			.setStoreOp(vk::AttachmentStoreOp::eStore)
 			.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 			.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-			// PERF: Could be usefull to have undefined here to avoid an expensive transition at the
-			// end of the frame
 			.setInitialLayout(
 				att.isDepth ? vk::ImageLayout::eDepthAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal)
 			.setFinalLayout(vk::ImageLayout::eUndefined);
 
+
 		att.state = att.isDepth ? Attachment::State::Depth : Attachment::State::Color;
-		att.additionalFlags = additionalUsageFlags;
 
-		return { this, int32(internalAttachments.size() - 1) };
+		return attRef;
 	}
 
 
-	void AddSubpass(std::vector<AttachmentRef>&& inputs, std::vector<AttachmentRef>&& outputs)
-	{
-		CLOG_ABORT(subpasses.empty() && !inputs.empty(), "Found inputs at first subpass");
-		int32 subpassIndex = int32(subpasses.size());
-
-		auto& subpass = subpasses.emplace_back();
-
-		uint32 srcSubpass = subpassIndex == 0 ? VK_SUBPASS_EXTERNAL : subpassIndex - 1;
-
-		for (auto& att : outputs) {
-			if (att.Get().isDepth) {
-				if (att.Get().state != Attachment::State::Depth) {
-					LOG_ERROR(
-						"Attempting to read from an unwritten depth attachment. Otherwise the attachment was not in "
-						"depth state.");
-					continue;
-				}
-
-				subpass.depth = att;
-				subpass.vkDepth
-					.setAttachment(att.index) //
-					.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-			}
-			else {
-				if (att.Get().state != Attachment::State::Color) {
-					LOG_WARN("Reading and writting at the same attachment in the same render pass");
-
-					auto& dep = subpassDependencies.emplace_back();
-					dep.setSrcSubpass(srcSubpass)
-						.setDstSubpass(subpassIndex)
-						.setSrcStageMask(vk::PipelineStageFlagBits::eFragmentShader)
-						.setSrcAccessMask(vk::AccessFlagBits::eShaderRead)
-						.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-						.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
-						.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
-				}
-
-				subpass.colors.emplace_back(att);
-
-
-				auto& attRef = subpass.vkColors.emplace_back();
-				attRef
-					.setAttachment(att.index) //
-					.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-			}
-		}
-
-
-		for (auto& att : inputs) {
-			subpass.inputs.emplace_back(att);
-
-			att.Get().isInputAttachment = true;
-
-			if (att.Get().state != Attachment::State::ShaderRead) {
-				auto& dep = subpassDependencies.emplace_back();
-				dep.setSrcSubpass(srcSubpass)
-					.setDstSubpass(subpassIndex)
-					// WIP: CHECK: for gbuffer depth in light pass
-					.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-					.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
-					//
-					.setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader)
-					.setDstAccessMask(vk::AccessFlagBits::eShaderRead)
-					.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
-			}
-			auto& attRef = subpass.vkInputs.emplace_back();
-			attRef
-				.setAttachment(att.index) //
-				.setLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-			att.Get().state = Attachment::State::ShaderRead;
-		}
-
-		subpass.descr
-			.setInputAttachments(subpass.vkInputs) //
-			.setColorAttachments(subpass.vkColors);
-
-		if (subpass.depth.parent != nullptr) {
-			subpass.descr.setPDepthStencilAttachment(&subpass.vkDepth);
-		}
-	}
-
-
+	void AddSubpass(std::vector<AttachmentRef>&& inputs, std::vector<AttachmentRef>&& outputs);
 	void Generate();
 
+	void TransitionAttachment(AttachmentRef att, vk::ImageLayout postRenderPassLayout);
 
+public:
 	//
 	//
 	//
 	//
-	RFramebuffer CreateFramebuffer(uint32 width, uint32 height)
+	[[nodiscard]] RFramebuffer CreateFramebuffer(
+		uint32 width, uint32 height, std::vector<const RImageAttachment*> externalAttachmentInstances = {})
 	{
 		RFramebuffer framebuffer;
 
@@ -199,11 +158,17 @@ struct RRenderPassLayout {
 
 			usageBits |= att.additionalFlags;
 
-			framebuffer.AddAttachment(width, height, att.descr.format, vk::ImageTiling::eOptimal,
-				vk::ImageLayout::eUndefined, usageBits, vk::MemoryPropertyFlagBits::eDeviceLocal,
-				"FramebufferAttchment: " + std::to_string(i), initialLayout);
+			framebuffer.AddAttachment(width, height, att.format, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+				usageBits, vk::MemoryPropertyFlagBits::eDeviceLocal, "FramebufferAttchment: " + std::to_string(i),
+				initialLayout);
 		}
-		// WIP: add external attachments
+
+		CLOG_ABORT(externalAttachmentInstances.size() != externalAttachments.size(),
+			"Incorrect number of attachments when generating framebuffer for render pass.");
+
+		for (auto& att : externalAttachmentInstances) {
+			framebuffer.AddExistingAttachment(*att);
+		}
 
 		framebuffer.Generate(*compatibleRenderPass);
 		return framebuffer;

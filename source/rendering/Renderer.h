@@ -70,7 +70,7 @@ public:
 	// std::array<UniquePtr<RImageAttachment>, 3> m_attachmentsDepthToUnlit;
 
 	InFlightResources<vk::DescriptorSet> m_ppDescSet;
-	vk::UniqueRenderPass m_ptRenderpass;
+
 
 	InFlightResources<vk::DescriptorSet> m_wipDescSet;
 

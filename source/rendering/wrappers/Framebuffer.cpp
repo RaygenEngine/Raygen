@@ -3,6 +3,13 @@
 
 #include "rendering/Device.h"
 
+namespace {
+bool IsEqual(const vk::Extent3D lhs, const vk::Extent2D rhs)
+{
+	return lhs.height == rhs.height && lhs.width == rhs.width;
+}
+} // namespace
+
 namespace vl {
 
 void RFramebuffer::AddAttachment(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling,
@@ -19,22 +26,27 @@ void RFramebuffer::AddAttachment(uint32 width, uint32 height, vk::Format format,
 
 	attachments.emplace_back(width, height, format, tiling, initialLayout, usage, properties, name);
 	attachments.back().BlockingTransitionToLayout(initialLayout, finalLayout);
+
+	attachmentViews.emplace_back(attachments.back()());
+}
+
+void RFramebuffer::AddExistingAttachment(const RImageAttachment& attachment)
+{
+	CLOG_ERROR(!IsEqual(attachment.extent, extent),
+		"Incompatible sizes for attachment to framebuffer: Attachment name: {}", attachment.name);
+	attachmentViews.emplace_back(attachment());
 }
 
 void RFramebuffer::Generate(vk::RenderPass compatibleRenderPass)
 {
 	CLOG_ABORT(hasBeenGenerated, "Attempting to generate a Framebuffer that is already generated");
 
-	std::vector<vk::ImageView> views;
-	std::for_each(attachments.begin(), attachments.end(), [&views](RImageAttachment& att) { views.push_back(att()); });
-
-	auto extent = attachments[0].extent;
 
 	vk::FramebufferCreateInfo createInfo{};
 	createInfo
 		.setRenderPass(compatibleRenderPass) //
-		.setAttachmentCount(static_cast<uint32>(views.size()))
-		.setPAttachments(views.data())
+		.setAttachmentCount(static_cast<uint32>(attachmentViews.size()))
+		.setPAttachments(attachmentViews.data())
 		.setWidth(extent.width)
 		.setHeight(extent.height)
 		.setLayers(1);
