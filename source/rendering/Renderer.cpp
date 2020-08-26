@@ -615,7 +615,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 
 		m_postprocCollection.Draw(*cmdBuffer, sceneDesc, m_gbuffer[sceneDesc.frameIndex].descSet); // WIP:
 
-		// UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
+		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
 	}
 	cmdBuffer->endRenderPass();
 }
@@ -689,7 +689,10 @@ void Renderer_::OnViewportResize()
 		for (uint32 i = 0; i < c_framesInFlight; ++i) {
 			m_gbuffer[i] = GBuffer{ fbSize.width, fbSize.height };
 
-			m_ptPassFramebuffer[i] = Layouts->ptPassLayout.CreateFramebuffer(fbSize.width, fbSize.height);
+			auto& depthAtt = m_gbuffer[i].framebuffer[GColorAttachment::GDepth];
+
+			m_ptPassFramebuffer[i]
+				= Layouts->ptPassLayout.CreateFramebuffer(fbSize.width, fbSize.height, { &depthAtt });
 
 			auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
@@ -764,27 +767,27 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 		//	vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eFragmentShader,
 		//	vk::PipelineStageFlagBits::eRayTracingShaderKHR | vk::PipelineStageFlagBits::efar);
 
-		m_ptPassFramebuffer[sceneDesc.frameIndex][1].TransitionToLayout(cmdBuffer,
-			vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
-			vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+		// m_ptPassFramebuffer[sceneDesc.frameIndex][1].TransitionToLayout(cmdBuffer,
+		//	vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
+		//	vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
 
-		RecordRayTracingPass(cmdBuffer, sceneDesc);
+		// RecordRayTracingPass(cmdBuffer, sceneDesc);
 
-		// m_attachment[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
+		//// m_attachment[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
+		////	vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
+		////	vk::PipelineStageFlagBits::eFragmentShader);
+
+		// m_ptPassFramebuffer[sceneDesc.frameIndex][1].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 		//	vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
 		//	vk::PipelineStageFlagBits::eFragmentShader);
-
-		m_ptPassFramebuffer[sceneDesc.frameIndex][1].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
-			vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
-			vk::PipelineStageFlagBits::eFragmentShader);
 	}
 
 
 	for (auto& att : m_gbuffer[sceneDesc.frameIndex].framebuffer.attachments) {
 		if (att.isDepth) {
-			att.TransitionToLayout(
-				cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+			// att.TransitionToLayout(
+			//	cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 			continue;
 		}
 		att.TransitionToLayout(

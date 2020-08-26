@@ -139,7 +139,7 @@ namespace {
 			.setPColorBlendState(&colorBlending)
 			.setPDynamicState(&dynamicStateInfo)
 			.setLayout(pipelineLayout)
-			.setRenderPass(Renderer->m_ptRenderpass.get())
+			.setRenderPass(Layouts->ptPassLayout.compatibleRenderPass.get())
 			.setSubpass(1u)
 			.setBasePipelineHandle({})
 			.setBasePipelineIndex(-1);
