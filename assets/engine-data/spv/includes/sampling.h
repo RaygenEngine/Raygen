@@ -71,23 +71,26 @@ void computeOrthonormalBasis(in vec3 normal, out vec3 tangent, out vec3 binormal
 	tangent  = cross(binormal, normal);
 }
 
-void cosineSampleHemisphere(const float u1, const float u2, out vec3 p)
+vec3 cosineSampleHemisphere2(vec2 u)
 {
 	// Uniformly sample disk.
-	const float r   = sqrt(u1);
-	const float phi = 2.0f * PI * u2;
+	const float r   = sqrt(u.x);
+	const float phi = 2.0f * PI * u.y;
+	vec3 p;
 	p.x             = r * cos(phi);
 	p.y             = r * sin(phi);
 
 	// Project up to hemisphere.
 	p.z = sqrt(max(0.0f, 1.0f - p.x * p.x - p.y * p.y));
+
+	return p;
 }
 
-
-void inverseTransform(inout vec3 p, in vec3 normal, in vec3 tangent, in vec3 binormal)
+vec3 inverseTransform(vec3 p, vec3 normal, vec3 tangent, vec3 binormal)
 {
-	p = p.x * tangent + p.y * binormal + p.z * normal;
+	return p.x * tangent + p.y * binormal + p.z * normal;
 }
+
 
 
 vec3 offsetRay(in vec3 p, in vec3 n)

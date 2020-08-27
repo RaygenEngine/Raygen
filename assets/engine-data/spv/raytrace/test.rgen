@@ -5,7 +5,7 @@
 #include "global.h"
 #include "rtshared.h"
 #include "random.h"
-#include "sampling.glsl"
+#include "sampling.h"
 
 layout(set = 0, binding = 0, rgba32f) uniform image2D image;
 layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAs;
@@ -69,6 +69,7 @@ void main() {
         prd.radiance = vec3(0);
         prd.depth = 0;
         prd.seed = seed;
+        prd.throughput = 1.f;
 
         // trace ray
         traceRayEXT(topLevelAs,     // acceleration structure

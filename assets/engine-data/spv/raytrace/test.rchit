@@ -8,7 +8,8 @@
 #include "rtshared.h"
 #include "bsdf.h"
 #include "hammersley.h"
-#include "sampling.glsl"
+#include "sampling.h"
+#include "shading-space.h"
 
 struct Attr{
 	vec2 x;
@@ -58,9 +59,11 @@ OldVertex fromVertex(Vertex p) {
 
 void RRTerminateOrTraceRay(vec3 nextOrigin, vec3 nextDirection, vec3 throughput)
 {
+	
 	// RR termination
 	if(inPrd.depth >= 1){
 
+		// TODO: check cumulative throughput
 		float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
 
 		if(rnd(prd.seed) >= p_spawn){
@@ -176,7 +179,7 @@ void main() {
 	vec3 N = Ng;//normalize(TBN * (sampledNormal.rgb* 2.0 - 1.0));
 	vec3 V = normalize(gl_WorldRayOriginEXT - hitPoint);
 
-	float NoV = abs(dot(N, V)) + 1e-5; 
+	vec3 wo = normalize(toSurface(Ng, Tg, Bg, V));
 
 	// DIRECT
 
@@ -188,16 +191,14 @@ void main() {
 		vec3 lightPos = vec3(7,2,0);
 		vec3 lightColor = vec3(0.98823529411764705882352941176471, 0.83137254901960784313725490196078, 0.25098039215686274509803921568627);
 		float lightIntensity = 30;
-
-		//vec3 N = normal;
-		//vec3 V = normalize(prd.origin - hitPoint);
-		vec3 L = normalize(lightPos - hitPoint); 
+		
+		vec3 wi = normalize(toSurface(Ng, Tg, Bg, lightPos - hitPoint));
 		
 		// attenuation
 		float dist = length(lightPos - hitPoint);
 		float attenuation = 1.0 / (dist * dist); // TODO: fix with coefs
 		
-		float NoL = saturate(dot(N, L));
+		float cosTheta_ = cosTheta(wi);
 
 		// if you are gonna trace this ray 
 		// check dot(N,L) > 0 
@@ -225,20 +226,15 @@ void main() {
 		// sample shadowmap for shadow
 		vec3 Li = (1.0 - shadow) * lightColor * lightIntensity * attenuation; 
 	
-		vec3 H = normalize(V + L);
-
-
-		float NoH = saturate(dot(N, H));
-		float LoH = saturate(dot(L, H));
 
 		// to get final diffuse and specular both those terms are multiplied by Li * NoL
-		vec3 brdf_d = Fd_Burley(NoV, NoL, LoH, diffuseColor, a);
-		vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, f0, a);
+		vec3 brdf_d = LambertianReflection(wo, wi, diffuseColor);
+		vec3 brdf_r = MicrofacetReflection(wo, wi, a, f0);
 
 		// so to simplify (faster math)
 		// throughput = (brdf_d + brdf_r) * NoL
 		// incoming radiance = Li;
-		vec3 finalContribution = (brdf_d + brdf_r) * NoL * Li;
+		vec3 finalContribution = (brdf_d + brdf_r) * Li * cosTheta_;
 
 		inPrd.radiance += finalContribution;
 	}
@@ -247,60 +243,51 @@ void main() {
 
 	// TRANSMISSION
 	{
-		//Sample a cosine weighted hemisphere for a new direction wi with pdf
-		vec3 tangent, binormal;
-		computeOrthonormalBasis(Ng, tangent, binormal);
+		vec2 u = vec2(rnd(inPrd.seed), rnd(inPrd.seed));
+		vec3 wi = cosineSampleHemisphere2(u);
+
+		// If wo is in the opposite hemisphere, then wi must be flipped to lie in the same hemisphere as wo.
+		if (wo.z < 0) 
+			wi.z *= -1;
+
+		float cosTheta_ = cosTheta(wi);
+
+		if(cosTheta_ > 0)
+		{
+			float pdf = cosineHemispherePdf(cosTheta_);
 		
-		const float z1 = rnd(inPrd.seed);
-		const float z2 = rnd(inPrd.seed);
+			vec3 throughput = LambertianReflection(wo, wi, diffuseColor) * cosTheta_ / pdf;
 
-		vec3 p;
-		cosine_sample_hemisphere(z1, z2, p);
-		inverse_transform(p, Ng, tangent, binormal);
-		vec3 L = normalize(p);
-
-		vec3 H = normalize(V + L);
-
-		float LoH = saturate(dot(L, H));
-		float NoL = saturate(dot(N, L));
-
-		vec3 brdf_d = Fd_Burley(NoV, NoL, LoH, diffuseColor, a);
-
-		float pdf = NoL / PI;
-
-		vec3 throughput = brdf_d * NoL / pdf; // try to simplify based on brdf
-
-		// RR termination
-    	RRTerminateOrTraceRay(hitPoint, L, throughput);
+			// RR termination
+			RRTerminateOrTraceRay(hitPoint, toWorld(Ng, Tg, Bg, wi), throughput);
+		}
 	}
 	
 	// REFLECTION
 	{
 		// sample new direction wi and its pdfs based on distribution of the GGX BRDF
-
 		vec2 Xi = vec2(rnd(inPrd.seed), rnd(inPrd.seed)); 
-		vec3 H  = importanceSampleGGX(Xi, a, N);
+		vec3 wh  = importanceSampleGGX2(Xi, a);
 
 		// TODO: use reflect
-		vec3 L  = normalize(2.0 * dot(V, H) * H - V);
+		vec3 wi  = normalize(2.0 * dot(wo, wh) * wh - wo);
+
+		// If wo is in the opposite hemisphere, then wi must be flipped to lie in the same hemisphere as wo.
+		if (wo.z < 0) 
+			wi.z *= -1;
 	
-		float NoL = saturate(dot(N, L));
+		float cosTheta_ = cosTheta(wi);
 
-		//if(NoL > 0.0) PERF
-		//{
-		float NoH = saturate(dot(N, H));        
-		float HoV = saturate(dot(H, V)); 
-		float LoH = saturate(dot(L, H));        
+		if(cosTheta_ > 0)
+		{
+			vec3 brdf_r = MicrofacetReflection(wo, wi, a, f0);
 
-		float D = D_GGX(NoH, a); 
-		float pdf = (D * NoH / (4 * HoV)) + 0.0001;
-		
-		//}
-		vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, f0, a);
+			float pdf = (D_TrowbridgeReitzDistribution(wh, a) * cosTheta(wh) / (4 * dot(wh, wo))) + 0.0001;
 
-		vec3 throughput = brdf_r * NoL / pdf;
+			vec3 throughput = brdf_r * cosTheta_ / pdf;
 
-		RRTerminateOrTraceRay(hitPoint, L, throughput);
+			RRTerminateOrTraceRay(hitPoint, toWorld(Ng, Tg, Bg, wi), throughput);
+		}
 	}
 	
 }
