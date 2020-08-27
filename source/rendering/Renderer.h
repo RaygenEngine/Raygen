@@ -4,6 +4,7 @@
 #include "rendering/ppt/PtCollection.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/structures/GBuffer.h"
+#include "rendering/wrappers/passlayout/RenderPassLayout.h"
 
 namespace vl {
 
@@ -62,12 +63,11 @@ protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)
 	BoolFlag m_didViewportResize;
 
-	void OnViewportResize();
+	void ResizeBuffers(uint32 width, uint32 height);
+
 
 public:
-	InFlightResources<RFramebuffer> m_ptPassFramebuffer;
-
-	// std::array<UniquePtr<RImageAttachment>, 3> m_attachmentsDepthToUnlit;
+	InFlightResources<RenderingPassInstance> m_ptPass;
 
 	InFlightResources<vk::DescriptorSet> m_ppDescSet;
 

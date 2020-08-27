@@ -4,13 +4,31 @@
 #include "rendering/wrappers/DescriptorLayout.h"
 
 namespace vl {
+struct RRenderPassLayout;
 
 struct RenderingPassInstance {
-	uint32 parentPassIndex{ UINT_MAX };
 	RFramebuffer framebuffer;
+	vk::DescriptorSet internalDescSet{ nullptr };
+
+
+	RRenderPassLayout* parent{ nullptr };
+
+	void TransitionFramebufferForWrite(vk::CommandBuffer cmdBuffer);
+	vk::RenderPass GetRenderPass() const;
+
+private:
+	friend struct RRenderPassLayout;
+	uint32 parentPassIndex{ UINT_MAX };
 };
 
+// NOTE: this object is assumed to never move by the generated subobjects (aka RenderingPassInstance).
 struct RRenderPassLayout {
+
+	RRenderPassLayout(RRenderPassLayout const&) = delete;
+	RRenderPassLayout(RRenderPassLayout&&) = delete;
+	RRenderPassLayout& operator=(RRenderPassLayout const&) = delete;
+	RRenderPassLayout& operator=(RRenderPassLayout&&) = delete;
+
 
 	struct Attachment {
 		enum class State
@@ -97,7 +115,7 @@ public:
 
 	RRenderPassLayout(const std::string& inName = {});
 	std::string name{};
-	uint32 index{ UINT_MAX };
+	uint32 uidIndex{ UINT_MAX };
 
 	vk::UniqueRenderPass compatibleRenderPass;
 
@@ -110,19 +128,21 @@ public:
 
 	std::vector<Subpass> subpasses;
 
-	RDescriptorLayout outputDescLayout;
+	// Contains input attachments for next subpasses
+	RDescriptorLayout internalDescLayout;
+	std::vector<AttachmentRef> internalInputAttachmentOrder;
+
 
 	// Preperation Interface
 	[[nodiscard]] AttachmentRef CreateAttachment(vk::Format format, vk::ImageUsageFlags additionalUsageFlags = {});
-	void TransitionAttachment(AttachmentRef att, vk::ImageLayout postRenderPassLayout);
+	void AttachmentFinalLayout(AttachmentRef att, vk::ImageLayout postRenderPassLayout);
+
 
 	void AddSubpass(std::vector<AttachmentRef>&& inputs, std::vector<AttachmentRef>&& outputs);
 	void Generate();
 
-	[[nodiscard]] RFramebuffer CreateFramebuffer(
+	[[nodiscard]] RenderingPassInstance CreatePassInstance(
 		uint32 width, uint32 height, std::vector<const RImageAttachment*> externalAttachmentInstances = {});
-
-	void TransitionFramebufferForWrite(vk::CommandBuffer cmdBuffer, RFramebuffer& framebuffer);
 };
 
 
