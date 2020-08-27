@@ -5,9 +5,29 @@
 
 namespace rvk {
 vk::UniquePipeline makePostProcPipeline(const std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages,
-	vk::PipelineColorBlendStateCreateInfo colorBlending, vk::PipelineLayout pipeLayout, vk::RenderPass renderPass,
-	uint32 subpassIndex)
+	vk::PipelineLayout pipeLayout, vk::RenderPass renderPass,
+	std::optional<vk::PipelineColorBlendStateCreateInfo> colorBlending, uint32 subpassIndex)
 {
+
+	// Keep this outside the if below. Pointer required until the final device call.
+	vk::PipelineColorBlendAttachmentState defaultBlendAttachment{};
+	defaultBlendAttachment
+		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
+						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
+		.setBlendEnable(VK_FALSE);
+
+
+	if (!colorBlending.has_value()) {
+		vk::PipelineColorBlendStateCreateInfo defColorBlend{};
+		defColorBlend
+			.setLogicOpEnable(VK_FALSE) //
+			.setLogicOp(vk::LogicOp::eCopy)
+			.setAttachments(defaultBlendAttachment)
+			.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
+
+		colorBlending = defColorBlend;
+	}
+
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 
@@ -79,7 +99,7 @@ vk::UniquePipeline makePostProcPipeline(const std::vector<vk::PipelineShaderStag
 		.setPRasterizationState(&rasterizer)
 		.setPMultisampleState(&multisampling)
 		.setPDepthStencilState(&depthStencil)
-		.setPColorBlendState(&colorBlending)
+		.setPColorBlendState(&colorBlending.value())
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(pipeLayout)
 		.setRenderPass(renderPass)
