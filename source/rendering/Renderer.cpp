@@ -711,7 +711,7 @@ void Renderer_::OnViewportResize()
 				.setDescriptorCount(1u)
 				.setPImageInfo(&imageInfo);
 
-			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+			Device->updateDescriptorSets(descriptorWrite, nullptr);
 
 
 			ptDebugObj->descSet[i] = ptDebugObj->descLayout.GetDescriptorSet();
@@ -729,6 +729,7 @@ void Renderer_::OnViewportResize()
 				.setDstArrayElement(0u)
 				.setDescriptorType(vk::DescriptorType::eInputAttachment)
 				.setImageInfo(imageInfo2);
+
 
 			Device->updateDescriptorSets(descriptorWrite2, nullptr);
 		}
@@ -784,7 +785,7 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 	}
 
 
-	for (auto& att : m_gbuffer[sceneDesc.frameIndex].framebuffer.attachments) {
+	for (auto& att : m_gbuffer[sceneDesc.frameIndex].framebuffer.ownedAttachments) {
 		if (att.isDepth) {
 			// att.TransitionToLayout(
 			//	cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
@@ -810,8 +811,7 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 
 	RecordOutPass(cmdBuffer, sceneDesc, outRp, outFb, outExtent);
 
-	m_ptPassFramebuffer[sceneDesc.frameIndex][1].TransitionToLayout(
-		cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
+	Layouts->ptPassLayout.TransitionFramebufferForWrite(*cmdBuffer, m_ptPassFramebuffer[sceneDesc.frameIndex]);
 
 	// m_attachment[sceneDesc.frameIndex].TransitionToLayout(
 	//	cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
