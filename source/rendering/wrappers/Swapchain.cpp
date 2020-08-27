@@ -144,23 +144,10 @@ void RSwapchain::InitRenderPass()
 		.setColorAttachmentCount(1u)
 		.setPColorAttachments(&colorAttachmentRef);
 
-	vk::SubpassDependency dependency{};
-	dependency
-		.setSrcSubpass(VK_SUBPASS_EXTERNAL) //
-		.setDstSubpass(0u)
-		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setSrcAccessMask(vk::AccessFlags(0)) // 0
-		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
-
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
-		.setAttachmentCount(1u) //
-		.setPAttachments(&colorAttachment)
-		.setSubpassCount(1u)
-		.setPSubpasses(&subpass)
-		.setDependencyCount(1u)
-		.setPDependencies(&dependency);
+		.setAttachments(colorAttachment) //
+		.setSubpasses(subpass);
 
 	renderPass = Device->createRenderPassUnique(renderPassInfo);
 }

@@ -8,7 +8,8 @@ struct RFramebuffer {
 
 	vk::Extent2D extent{};
 
-	std::vector<RImageAttachment> attachments{};
+	// Owned attachments
+	std::vector<RImageAttachment> ownedAttachments{};
 	std::vector<vk::ImageView> attachmentViews{};
 
 	vk::UniqueDescriptorSetLayout setLayout;
@@ -26,7 +27,7 @@ struct RFramebuffer {
 
 
 	operator vk::Framebuffer() const { return handle.get(); }
-	const RImageAttachment& operator[](size_t i) const { return attachments[i]; }
+	const RImageAttachment& operator[](size_t i) const { return ownedAttachments[i]; }
 
 private:
 	vk::UniqueFramebuffer handle;

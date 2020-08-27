@@ -1,9 +1,14 @@
 #pragma once
 
 #include "rendering/wrappers/Framebuffer.h"
+#include "rendering/wrappers/DescriptorLayout.h"
 
 namespace vl {
 
+struct RenderingPassInstance {
+	uint32 parentPassIndex{ UINT_MAX };
+	RFramebuffer framebuffer;
+};
 
 struct RRenderPassLayout {
 
@@ -67,7 +72,10 @@ private:
 	// Create or get a reference for an external attachment as used in this render pass.
 	// Returns the argument if attachment is already owned by this render pass.
 	AttachmentRef UseExternal(AttachmentRef attachment, int32 firstUseIndex);
-	bool IsExternal(AttachmentRef att) { return att.originalOwner != this; }
+
+	[[nodiscard]] bool IsExternal(AttachmentRef att) { return att.originalOwner != this; }
+
+	[[nodiscard]] std::optional<AttachmentRef> GetInternalRefOf(AttachmentRef attachment);
 
 public:
 	struct Subpass {
@@ -87,6 +95,10 @@ public:
 	//
 	//
 
+	RRenderPassLayout(const std::string& inName = {});
+	std::string name{};
+	uint32 index{ UINT_MAX };
+
 	vk::UniqueRenderPass compatibleRenderPass;
 
 	std::vector<vk::SubpassDependency> subpassDependencies;
@@ -98,81 +110,19 @@ public:
 
 	std::vector<Subpass> subpasses;
 
+	RDescriptorLayout outputDescLayout;
 
-	[[nodiscard]] AttachmentRef CreateAttachment(vk::Format format, vk::ImageUsageFlags additionalUsageFlags = {})
-	{
-		auto& att = internalAttachments.emplace_back();
-		auto& attDescr = internalAttachmentsDescr.emplace_back();
-
-		AttachmentRef attRef = AttachmentRef{ this, int32(internalAttachments.size() - 1) };
-		attRef.thisOwner = this;
-		attRef.thisIndex = int32(internalAttachments.size() - 1);
-
-		att.format = format;
-		att.isDepth = rvk::isDepthFormat(format);
-		att.additionalFlags = additionalUsageFlags;
-
-		attDescr
-			.setFormat(format) //
-			.setLoadOp(vk::AttachmentLoadOp::eClear)
-			.setStoreOp(vk::AttachmentStoreOp::eStore)
-			.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-			.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-			.setInitialLayout(
-				att.isDepth ? vk::ImageLayout::eDepthAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal)
-			.setFinalLayout(vk::ImageLayout::eUndefined);
-
-
-		att.state = att.isDepth ? Attachment::State::Depth : Attachment::State::Color;
-
-		return attRef;
-	}
-
+	// Preperation Interface
+	[[nodiscard]] AttachmentRef CreateAttachment(vk::Format format, vk::ImageUsageFlags additionalUsageFlags = {});
+	void TransitionAttachment(AttachmentRef att, vk::ImageLayout postRenderPassLayout);
 
 	void AddSubpass(std::vector<AttachmentRef>&& inputs, std::vector<AttachmentRef>&& outputs);
 	void Generate();
 
-	void TransitionAttachment(AttachmentRef att, vk::ImageLayout postRenderPassLayout);
-
-public:
-	//
-	//
-	//
-	//
 	[[nodiscard]] RFramebuffer CreateFramebuffer(
-		uint32 width, uint32 height, std::vector<const RImageAttachment*> externalAttachmentInstances = {})
-	{
-		RFramebuffer framebuffer;
+		uint32 width, uint32 height, std::vector<const RImageAttachment*> externalAttachmentInstances = {});
 
-		for (int32 i = 0; auto& att : internalAttachments) {
-			vk::ImageUsageFlags usageBits = att.isDepth ? vk::ImageUsageFlagBits::eDepthStencilAttachment
-														: vk::ImageUsageFlagBits::eColorAttachment;
-			usageBits |= vk::ImageUsageFlagBits::eSampled;
-
-			if (att.isInputAttachment) {
-				usageBits |= vk::ImageUsageFlagBits::eInputAttachment;
-			}
-
-			vk::ImageLayout initialLayout = att.isDepth ? vk::ImageLayout::eDepthStencilAttachmentOptimal
-														: vk::ImageLayout::eColorAttachmentOptimal;
-
-			usageBits |= att.additionalFlags;
-
-			framebuffer.AddAttachment(width, height, att.format, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
-				usageBits, vk::MemoryPropertyFlagBits::eDeviceLocal, "FramebufferAttchment: " + std::to_string(i),
-				initialLayout);
-		}
-
-		CLOG_ABORT(externalAttachmentInstances.size() != externalAttachments.size(),
-			"Incorrect number of attachments when generating framebuffer for render pass.");
-
-		for (auto& att : externalAttachmentInstances) {
-			framebuffer.AddExistingAttachment(*att);
-		}
-
-		framebuffer.Generate(*compatibleRenderPass);
-		return framebuffer;
-	}
+	void TransitionFramebufferForWrite(vk::CommandBuffer cmdBuffer, RFramebuffer& framebuffer);
 };
 
 

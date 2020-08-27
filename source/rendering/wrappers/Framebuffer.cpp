@@ -24,10 +24,10 @@ void RFramebuffer::AddAttachment(uint32 width, uint32 height, vk::Format format,
 	CLOG_ABORT(extent.width != width || extent.height != height,
 		"Attempting to add attachment with different dimensions to a Framebuffer");
 
-	attachments.emplace_back(width, height, format, tiling, initialLayout, usage, properties, name);
-	attachments.back().BlockingTransitionToLayout(initialLayout, finalLayout);
+	ownedAttachments.emplace_back(width, height, format, tiling, initialLayout, usage, properties, name);
+	ownedAttachments.back().BlockingTransitionToLayout(initialLayout, finalLayout);
 
-	attachmentViews.emplace_back(attachments.back()());
+	attachmentViews.emplace_back(ownedAttachments.back()());
 }
 
 void RFramebuffer::AddExistingAttachment(const RImageAttachment& attachment)
