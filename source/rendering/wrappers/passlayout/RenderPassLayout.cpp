@@ -3,6 +3,7 @@
 #include "RenderPassLayout.h"
 
 #include "rendering/Device.h"
+#include "rendering/util/WriteDescriptorSets.h"
 
 namespace vl {
 
@@ -37,12 +38,11 @@ std::optional<RRenderPassLayout::AttachmentRef> RRenderPassLayout::GetInternalRe
 	return {};
 }
 
-
 RRenderPassLayout::RRenderPassLayout(const std::string& inName)
 	: name(inName)
 {
 	static uint32 passLayoutIndex = 0;
-	index = passLayoutIndex++;
+	uidIndex = passLayoutIndex++;
 }
 
 RRenderPassLayout::AttachmentRef RRenderPassLayout::CreateAttachment(
@@ -88,7 +88,7 @@ void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vec
 			LOG_ABORT("External non depth inputs are not supported");
 		}
 
-		if (IsExternal(attParam) && attParam.IsDepth()) {
+		if (IsExternal(attParam)) {
 			auto extDepthAtt = UseExternal(attParam, subpassIndex);
 			if (extDepthAtt.firstUseIndex != subpassIndex) {
 				LOG_ABORT("External depth as input for multiple subpasses is not supported");
@@ -121,6 +121,11 @@ void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vec
 		CLOG_ABORT(attParam.IsDepth(), "Depth as input from the same renderpass not supported.");
 
 		subpass.inputs.emplace_back(attParam);
+
+		if (!attParam.Get().isInputAttachment) {
+			internalDescLayout.AddBinding(vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment);
+			internalInputAttachmentOrder.emplace_back(attParam);
+		}
 		attParam.Get().isInputAttachment = true;
 
 		if (attParam.Get().state != Attachment::State::ShaderRead) {
@@ -179,7 +184,7 @@ void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vec
 	}
 }
 
-void RRenderPassLayout::TransitionAttachment(AttachmentRef att, vk::ImageLayout postRenderPassLayout)
+void RRenderPassLayout::AttachmentFinalLayout(AttachmentRef att, vk::ImageLayout postRenderPassLayout)
 {
 	if (IsExternal(att)) {
 		auto ownedAtt = UseExternal(att, -1);
@@ -195,10 +200,43 @@ void RRenderPassLayout::TransitionAttachment(AttachmentRef att, vk::ImageLayout 
 	}
 }
 
-RFramebuffer RRenderPassLayout::CreateFramebuffer(
+void RRenderPassLayout::Generate()
+{
+	std::vector<vk::AttachmentDescription> attachmentDescrs;
+	std::vector<vk::SubpassDescription> subpassDescrs;
+
+	for (auto& att : internalAttachmentsDescr) {
+		attachmentDescrs.emplace_back(att);
+	}
+
+	for (auto& att : externalAttachmentsDescr) {
+		attachmentDescrs.emplace_back(att);
+	}
+
+	for (auto& subp : subpasses) {
+		subpassDescrs.emplace_back(subp.descr);
+	}
+
+	vk::RenderPassCreateInfo renderPassInfo{};
+	renderPassInfo
+		.setAttachments(attachmentDescrs) //
+		.setSubpasses(subpassDescrs)
+		.setDependencies(subpassDependencies);
+
+	compatibleRenderPass = Device->createRenderPassUnique(renderPassInfo);
+
+	if (!internalDescLayout.bindings.empty()) {
+		internalDescLayout.Generate();
+	}
+}
+
+RenderingPassInstance RRenderPassLayout::CreatePassInstance(
 	uint32 width, uint32 height, std::vector<const RImageAttachment*> externalAttachmentInstances)
 {
-	RFramebuffer framebuffer;
+	RenderingPassInstance rpInstance;
+	rpInstance.parentPassIndex = uidIndex;
+	rpInstance.parent = this;
+	auto& framebuffer = rpInstance.framebuffer;
 
 	for (int32 i = 0; auto& att : internalAttachments) {
 		vk::ImageUsageFlags usageBits
@@ -225,52 +263,49 @@ RFramebuffer RRenderPassLayout::CreateFramebuffer(
 	for (auto& att : externalAttachmentInstances) {
 		framebuffer.AddExistingAttachment(*att);
 	}
-
 	framebuffer.Generate(*compatibleRenderPass);
-	return framebuffer;
-}
-void RRenderPassLayout::Generate()
-{
 
-	std::vector<vk::AttachmentDescription> attachmentDescrs;
-	std::vector<vk::SubpassDescription> subpassDescrs;
+	if (internalDescLayout.hasBeenGenerated) {
+		rpInstance.internalDescSet = internalDescLayout.GetDescriptorSet();
 
-	for (auto& att : internalAttachmentsDescr) {
-		attachmentDescrs.emplace_back(att);
+		if (!internalInputAttachmentOrder.empty()) {
+			std::vector<vk::ImageView> views;
+
+			for (auto& att : internalInputAttachmentOrder) {
+				CLOG_ABORT(IsExternal(att),
+					"RenderPassLayout internal error, using an external attachment as input attachment.");
+				views.emplace_back(framebuffer[att.GetAttachmentIndex()]());
+			}
+
+			rvk::writeDescriptorImages(
+				rpInstance.internalDescSet, 0, std::move(views), vk::DescriptorType::eInputAttachment);
+		}
 	}
 
-	for (auto& att : externalAttachmentsDescr) {
-		attachmentDescrs.emplace_back(att);
-	}
 
-	for (auto& subp : subpasses) {
-		subpassDescrs.emplace_back(subp.descr);
-	}
-
-	vk::RenderPassCreateInfo renderPassInfo{};
-	renderPassInfo
-		.setAttachments(attachmentDescrs) //
-		.setSubpasses(subpassDescrs)
-		.setDependencies(subpassDependencies);
-
-	compatibleRenderPass = Device->createRenderPassUnique(renderPassInfo);
+	return rpInstance;
 }
 
-
-void RRenderPassLayout::TransitionFramebufferForWrite(vk::CommandBuffer cmdBuffer, RFramebuffer& framebuffer)
+void RenderingPassInstance::TransitionFramebufferForWrite(vk::CommandBuffer cmdBuffer)
 {
-	CLOG_ABORT(framebuffer.ownedAttachments.size() != internalAttachments.size(),
-		"TransitionFramebufferForWrite: Given framebuffer was not generated by this render pass layout.");
+	CLOG_ABORT(parent->uidIndex != parentPassIndex,
+		"Parent pass index was incorrect. Did parent RenderPassLayout of this instance move?");
 
 	for (uint32 index = 0; auto& att : framebuffer.ownedAttachments) {
-		if (internalAttachmentsDescr[index].finalLayout != internalAttachmentsDescr[index].initialLayout) {
+		auto finalLayout = parent->internalAttachmentsDescr[index].finalLayout;
+		auto initialLayout = parent->internalAttachmentsDescr[index].initialLayout;
 
+		if (finalLayout != initialLayout) {
 			// PERF: create all transition barriers and use a single one
-			att.TransitionToLayout(
-				&cmdBuffer, internalAttachmentsDescr[index].finalLayout, internalAttachmentsDescr[index].initialLayout);
+			att.TransitionToLayout(&cmdBuffer, finalLayout, initialLayout);
 		}
 		index++;
 	}
+}
+
+vk::RenderPass RenderingPassInstance::GetRenderPass() const
+{
+	return *parent->compatibleRenderPass;
 }
 
 } // namespace vl

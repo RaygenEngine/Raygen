@@ -5,6 +5,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
+#include "rendering/Layouts.h"
 
 namespace vl {
 PtDebug::PtDebug()
@@ -14,11 +15,7 @@ PtDebug::PtDebug()
 
 void PtDebug::MakeLayout()
 {
-
-	descLayout.AddBinding(vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment);
-	descLayout.Generate();
-
-	std::array layouts = { descLayout.setLayout.get() };
+	std::array layouts = { *Layouts->ptPassLayout.internalDescLayout.setLayout };
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -66,8 +63,8 @@ void PtDebug::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc
 	cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &descSet[sceneDesc.frameIndex], 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
+		&Renderer->m_ptPass[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
 
 	// draw call (triangle)
 	cmdBuffer.draw(3u, 1u, 0u, 0u);

@@ -43,24 +43,14 @@ static_assert(sizeof(PushConstant) <= 128);
 
 ConsoleFunction<int32> console_setRtDepth{ "rt.depth",
 	[](int32 depth) {
-		if (depth > 0) {
-			vl::Renderer->m_rtDepth = depth;
-		}
-		else {
-			vl::Renderer->m_rtDepth = 0;
-		}
+		vl::Renderer->m_rtDepth = std::max(0, depth);
 		LOG_WARN("Rt depth set to: {}", vl::Renderer->m_rtDepth);
 	},
 	"Set rt depth" };
 
 ConsoleFunction<int32> console_setRtSamples{ "rt.samples",
 	[](int32 smpls) {
-		if (smpls > 0) {
-			vl::Renderer->m_rtSamples = smpls;
-		}
-		else {
-			vl::Renderer->m_rtSamples = 0;
-		}
+		vl::Renderer->m_rtSamples = std::max(0, smpls);
 		LOG_WARN("Rt samples set to: {}", vl::Renderer->m_rtSamples);
 	},
 	"Set rt samples" };
@@ -307,12 +297,13 @@ void Renderer_::MakeRtPipeline()
 	// NEXT: temp
 	// write all geometry, indices to this desc set... how to combine them tho?
 }
+
 void Renderer_::SetRtImage()
 {
 	m_rtDescSet = { Layouts->singleStorageImage.GetDescriptorSet(), Layouts->singleStorageImage.GetDescriptorSet(),
 		Layouts->singleStorageImage.GetDescriptorSet() };
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		vk::DescriptorImageInfo imageInfo{ {}, *m_ptPassFramebuffer[i][1].view, vk::ImageLayout::eGeneral };
+		vk::DescriptorImageInfo imageInfo{ {}, *m_ptPass[i].framebuffer[1].view, vk::ImageLayout::eGeneral };
 		vk::WriteDescriptorSet descriptorWrite{};
 
 		descriptorWrite
@@ -332,7 +323,7 @@ void Renderer_::SetRtImage()
 	m_wipDescSet = { Layouts->singleSamplerDescLayout.GetDescriptorSet(),
 		Layouts->singleSamplerDescLayout.GetDescriptorSet(), Layouts->singleSamplerDescLayout.GetDescriptorSet() };
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		vk::DescriptorImageInfo imageInfo{ {}, *m_ptPassFramebuffer[i][0].view,
+		vk::DescriptorImageInfo imageInfo{ {}, *m_ptPass[i].framebuffer[0].view,
 			vk::ImageLayout::eShaderReadOnlyOptimal };
 		imageInfo.setSampler(GpuAssetManager->GetDefaultSampler());
 
@@ -590,8 +581,8 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 
 	vk::RenderPassBeginInfo renderPassInfo{};
 	renderPassInfo
-		.setRenderPass(*Layouts->ptPassLayout.compatibleRenderPass) //
-		.setFramebuffer(m_ptPassFramebuffer[sceneDesc.frameIndex]);
+		.setRenderPass(m_ptPass[sceneDesc.frameIndex].GetRenderPass()) //
+		.setFramebuffer(m_ptPass[sceneDesc.frameIndex].framebuffer);
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //
 		.setExtent(extent);
@@ -673,74 +664,54 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDes
 	cmdBuffer->endRenderPass();
 }
 
-void Renderer_::OnViewportResize()
+void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 {
-	vk::Extent2D viewportSize{ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y };
+	vk::Extent2D fbSize = SuggestFramebufferSize(vk::Extent2D{ width, height });
 
-	m_viewportRect.extent = viewportSize;
-	m_viewportRect.offset = vk::Offset2D(g_ViewportCoordinates.position.x, g_ViewportCoordinates.position.y);
-
-	vk::Extent2D fbSize = SuggestFramebufferSize(viewportSize);
-
-	if (fbSize != m_viewportFramebufferSize) {
-		m_viewportFramebufferSize = fbSize;
-
-
-		for (uint32 i = 0; i < c_framesInFlight; ++i) {
-			m_gbuffer[i] = GBuffer{ fbSize.width, fbSize.height };
-
-			auto& depthAtt = m_gbuffer[i].framebuffer[GColorAttachment::GDepth];
-
-			m_ptPassFramebuffer[i]
-				= Layouts->ptPassLayout.CreateFramebuffer(fbSize.width, fbSize.height, { &depthAtt });
-
-			auto quadSampler = GpuAssetManager->GetDefaultSampler();
-
-			vk::DescriptorImageInfo imageInfo{};
-			imageInfo
-				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(m_ptPassFramebuffer[i][1]())
-				.setSampler(quadSampler);
-
-			vk::WriteDescriptorSet descriptorWrite{};
-			descriptorWrite
-				.setDstSet(m_ppDescSet[i]) //
-				.setDstBinding(0u)
-				.setDstArrayElement(0u)
-				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-				.setDescriptorCount(1u)
-				.setPImageInfo(&imageInfo);
-
-			Device->updateDescriptorSets(descriptorWrite, nullptr);
-
-
-			ptDebugObj->descSet[i] = ptDebugObj->descLayout.GetDescriptorSet();
-
-
-			vk::DescriptorImageInfo imageInfo2{};
-			imageInfo2
-				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(m_ptPassFramebuffer[i][0]());
-
-			vk::WriteDescriptorSet descriptorWrite2{};
-			descriptorWrite2
-				.setDstSet(ptDebugObj->descSet[i]) //
-				.setDstBinding(0)
-				.setDstArrayElement(0u)
-				.setDescriptorType(vk::DescriptorType::eInputAttachment)
-				.setImageInfo(imageInfo2);
-
-
-			Device->updateDescriptorSets(descriptorWrite2, nullptr);
-		}
-		SetRtImage();
+	if (fbSize == m_viewportFramebufferSize) {
+		return;
 	}
-} // namespace vl
+	m_viewportFramebufferSize = fbSize;
+
+
+	for (uint32 i = 0; i < c_framesInFlight; ++i) {
+		m_gbuffer[i] = GBuffer{ fbSize.width, fbSize.height };
+
+		auto& depthAtt = m_gbuffer[i].framebuffer[GColorAttachment::GDepth];
+
+		m_ptPass[i] = Layouts->ptPassLayout.CreatePassInstance(fbSize.width, fbSize.height, { &depthAtt });
+
+		auto quadSampler = GpuAssetManager->GetDefaultSampler();
+
+		vk::DescriptorImageInfo imageInfo{};
+		imageInfo
+			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+			.setImageView(m_ptPass[i].framebuffer[1]())
+			.setSampler(quadSampler);
+
+		vk::WriteDescriptorSet descriptorWrite{};
+		descriptorWrite
+			.setDstSet(m_ppDescSet[i]) //
+			.setDstBinding(0u)
+			.setDstArrayElement(0u)
+			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+			.setDescriptorCount(1u)
+			.setPImageInfo(&imageInfo);
+
+		Device->updateDescriptorSets(descriptorWrite, nullptr);
+	}
+	SetRtImage();
+}
 
 void Renderer_::PrepareForFrame()
 {
 	if (*m_didViewportResize) {
-		OnViewportResize();
+		vk::Extent2D viewportSize{ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y };
+
+		m_viewportRect.extent = viewportSize;
+		m_viewportRect.offset = vk::Offset2D(g_ViewportCoordinates.position.x, g_ViewportCoordinates.position.y);
+
+		ResizeBuffers(viewportSize.width, viewportSize.height);
 	}
 }
 
@@ -811,11 +782,6 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 
 	RecordOutPass(cmdBuffer, sceneDesc, outRp, outFb, outExtent);
 
-	Layouts->ptPassLayout.TransitionFramebufferForWrite(*cmdBuffer, m_ptPassFramebuffer[sceneDesc.frameIndex]);
-
-	// m_attachment[sceneDesc.frameIndex].TransitionToLayout(
-	//	cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
-	// m_attachment2[sceneDesc.frameIndex].TransitionToLayout(
-	//	cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
+	m_ptPass[sceneDesc.frameIndex].TransitionFramebufferForWrite(*cmdBuffer);
 }
 } // namespace vl

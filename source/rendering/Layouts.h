@@ -29,6 +29,8 @@ inline struct Layouts_ {
 
 	RRenderPassLayout ptPassLayout;
 
+	void MakePtPassLayout();
+
 	Layouts_();
 } * Layouts{};
 } // namespace vl

@@ -8,9 +8,6 @@ class PtDebug : public PtBase_SinglePipeline {
 public:
 	PtDebug();
 
-	RDescriptorLayout descLayout;
-	InFlightResources<vk::DescriptorSet> descSet;
-
 	void MakeLayout() override;
 	void MakePipeline() override;
 	void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet gbufferDescSet) override;

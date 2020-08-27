@@ -8,38 +8,36 @@
 
 namespace vl {
 
-namespace {
-	RRenderPassLayout MakePtPassLayout()
-	{
-		RRenderPassLayout gbufferPass;
 
-		auto gbufferDepth = gbufferPass.CreateAttachment(Device->FindDepthFormat());
+void Layouts_::MakePtPassLayout()
+{
+	RRenderPassLayout gbufferPass;
 
-		gbufferDepth.UpdateState(RRenderPassLayout::Attachment::State::ShaderRead);
+	auto gbufferDepth = gbufferPass.CreateAttachment(Device->FindDepthFormat());
 
-		RRenderPassLayout layout;
+	gbufferDepth.UpdateState(RRenderPassLayout::Attachment::State::ShaderRead);
 
-		// auto depth = layout.AddExternalAttachment(vk::ImageLayout::eDepthAttachmentOptimal);
+	RRenderPassLayout& layout = ptPassLayout;
 
-		auto lights = layout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat);
-		auto postprocOut = layout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat, vk::ImageUsageFlagBits::eStorage);
+	// auto depth = layout.AddExternalAttachment(vk::ImageLayout::eDepthAttachmentOptimal);
 
-		layout.AddSubpass({}, { lights });
-		layout.AddSubpass({ gbufferDepth, lights }, { postprocOut });
+	auto lights = layout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat);
+	auto postprocOut = layout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat, vk::ImageUsageFlagBits::eStorage);
+
+	layout.AddSubpass({}, { lights });
+	layout.AddSubpass({ gbufferDepth, lights }, { postprocOut });
 
 
-		layout.TransitionAttachment(lights, vk::ImageLayout::eColorAttachmentOptimal);
-		layout.TransitionAttachment(postprocOut, vk::ImageLayout::eShaderReadOnlyOptimal);
+	layout.AttachmentFinalLayout(lights, vk::ImageLayout::eColorAttachmentOptimal);
+	layout.AttachmentFinalLayout(postprocOut, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		layout.TransitionAttachment(gbufferDepth, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+	layout.AttachmentFinalLayout(gbufferDepth, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
-		// layout.ResultDescriptorSet({ lights, postprocOut, depthBuffer });
+	// layout.ResultDescriptorSet({ lights, postprocOut, depthBuffer });
 
-		layout.Generate();
+	layout.Generate();
+}
 
-		return layout;
-	}
-} // namespace
 
 Layouts_::Layouts_()
 {
@@ -124,6 +122,6 @@ Layouts_::Layouts_()
 
 	lightblendPass = LightblendPass::CreateCompatibleRenderPass();
 
-	ptPassLayout = MakePtPassLayout();
+	MakePtPassLayout();
 }
 } // namespace vl
