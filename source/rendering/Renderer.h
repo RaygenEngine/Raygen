@@ -5,6 +5,7 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/structures/GBuffer.h"
 #include "rendering/wrappers/passlayout/RenderPassLayout.h"
+#include "rendering/output\OutputPassBase.h"
 
 namespace vl {
 
@@ -18,21 +19,14 @@ inline class Renderer_ : public Listener {
 
 
 private:
-	// cpyhdrtexture TODO: tidy
-	vk::UniquePipeline m_pipeline;
-	vk::UniquePipelineLayout m_pipelineLayout;
-
 	InFlightResources<GBuffer> m_gbuffer;
 
 
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordOutPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
-		vk::Framebuffer outFb, vk::Extent2D outExtent);
 
 	PtCollection m_postprocCollection;
-
 
 	struct SecondaryBufferPool {
 
@@ -59,22 +53,20 @@ private:
 
 	} m_secondaryBuffersPool;
 
+
 protected:
 	// CHECK: boolflag event, (impossible to use here current because of init order)
-	BoolFlag m_didViewportResize;
-
-	void ResizeBuffers(uint32 width, uint32 height);
 
 
 public:
+	void ResizeBuffers(uint32 width, uint32 height);
+	InFlightResources<vk::ImageView> GetOutputViews() const;
+
 	InFlightResources<RenderingPassInstance> m_ptPass;
 
-	InFlightResources<vk::DescriptorSet> m_ppDescSet;
-
-
+	// TODO: RT, move those, framearray
 	InFlightResources<vk::DescriptorSet> m_wipDescSet;
 
-	// TODO: RT, move those, framearray
 	vk::UniqueAccelerationStructureKHR m_sceneAS;
 	InFlightResources<vk::DescriptorSet> m_rtDescSet;
 
@@ -90,17 +82,12 @@ public:
 	void MakeRtPipeline();
 	void SetRtImage();
 	void CreateRtShaderBindingTable();
+	//
 
 
-	Renderer_();
+	void DrawFrame(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, OutputPassBase& outputPass);
 
-	void PrepareForFrame();
-
-	void DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
-		vk::Framebuffer outFb, vk::Extent2D outExtent);
-
-	void InitPipelines(vk::RenderPass outRp);
-	void MakeCopyHdrPipeline(vk::RenderPass outRp);
+	void InitPipelines();
 
 
 } * Renderer{};

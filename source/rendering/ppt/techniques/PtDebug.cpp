@@ -8,11 +8,6 @@
 #include "rendering/Layouts.h"
 
 namespace vl {
-PtDebug::PtDebug()
-{
-	ptDebugObj = this;
-}
-
 void PtDebug::MakeLayout()
 {
 	std::array layouts = { *Layouts->ptPassLayout.internalDescLayout.setLayout };

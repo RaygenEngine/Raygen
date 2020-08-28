@@ -27,7 +27,6 @@
 #include "rendering/wrappers/Swapchain.h"
 #include "rendering/core/PipeUtl.h"
 
-#include <editor/imgui/ImguiImpl.h>
 
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
@@ -62,33 +61,10 @@ ConsoleFunction<> console_resetRtFrame{ "rt.reset", []() { vl::Renderer->m_rtFra
 
 namespace vl {
 
-Renderer_::Renderer_()
+void Renderer_::InitPipelines()
 {
-	Event::OnViewportUpdated.BindFlag(this, m_didViewportResize);
-
-	// descsets
-	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_ppDescSet[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
-	}
-}
-
-void Renderer_::InitPipelines(vk::RenderPass outRp)
-{
-	MakeCopyHdrPipeline(outRp);
-
 	m_postprocCollection.RegisterTechniques();
 	MakeRtPipeline();
-}
-
-void Renderer_::MakeCopyHdrPipeline(vk::RenderPass outRp)
-{
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/cpyhdr.shader");
-	gpuShader.onCompile = [=]() {
-		MakeCopyHdrPipeline(outRp);
-	};
-
-	m_pipelineLayout = rvk::makeLayoutNoPC({ Layouts->singleSamplerDescLayout.setLayout.get() });
-	m_pipeline = rvk::makePostProcPipeline(gpuShader.shaderStages, *m_pipelineLayout, outRp);
 }
 
 void Renderer_::MakeRtPipeline()
@@ -260,6 +236,83 @@ void Renderer_::CreateRtShaderBindingTable()
 	Device->unmapMemory(mem);
 }
 
+void Renderer_::RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
+{
+
+
+	// Initializing push constant values
+	// WIP: what about secondary buffers?
+	// cmdBuffer->executeCommands({ buffer });
+
+
+	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipeline.get());
+
+
+	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 0u, 1u,
+		&m_rtDescSet[sceneDesc.frameIndex], 0u, nullptr);
+
+	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 1u, 1u,
+		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
+
+	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 2u, 1u,
+		&sceneDesc.viewer->descSet[sceneDesc.frameIndex], 0u, nullptr);
+
+	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 3u, 1u,
+		&sceneDesc.scene->tlas.sceneDesc.descSet, 0u, nullptr);
+
+
+	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 4u, 1u,
+		&m_gbuffer[sceneDesc.frameIndex].descSet, 0u, nullptr);
+
+	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 5u, 1u,
+		&m_wipDescSet[sceneDesc.frameIndex], 0u, nullptr);
+
+	PushConstant pc{ //
+		m_rtFrame, m_rtDepth, m_rtSamples
+	};
+
+	++m_rtFrame;
+
+	// Submit via push constant (rather than a UBO)
+	cmdBuffer->pushConstants(m_rtPipelineLayout.get(),
+		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant), &pc);
+
+
+	vk::DeviceSize progSize = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of a program identifier
+
+	// RayGen index
+	vk::DeviceSize rayGenOffset = 0u * progSize; // Start at the beginning of m_sbtBuffer
+
+	// Miss index
+	vk::DeviceSize missOffset = 1u * progSize; // Jump over raygen
+	vk::DeviceSize missStride = progSize;
+
+	// Hit index
+	vk::DeviceSize hitGroupOffset = 2u * progSize; // Jump over the previous shaders
+	vk::DeviceSize hitGroupStride = progSize;
+
+
+	// We can finally call traceRaysKHR that will add the ray tracing launch in the command buffer. Note that the
+	// SBT buffer is mentioned several times. This is due to the possibility of separating the SBT into several
+	// buffers, one for each type: ray generation, miss shaders, hit groups, and callable shaders (outside the scope
+	// of this tutorial). The last three parameters are equivalent to the grid size of a compute launch, and
+	// represent the total number of threads. Since we want to trace one ray per pixel, the grid size has the width
+	// and height of the output image, and a depth of 1.
+
+	vk::DeviceSize sbtSize = progSize * (vk::DeviceSize)m_rtShaderGroups.size();
+
+	const vk::StridedBufferRegionKHR raygenShaderBindingTable = { m_rtSBTBuffer, rayGenOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR missShaderBindingTable = { m_rtSBTBuffer, missOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR hitShaderBindingTable = { m_rtSBTBuffer, hitGroupOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR callableShaderBindingTable;
+
+
+	auto& extent = m_gbuffer[sceneDesc.frameIndex].framebuffer.extent;
+
+	cmdBuffer->traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
+		&callableShaderBindingTable, extent.width, extent.height, 1);
+}
+
 void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
@@ -367,83 +420,6 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 	}
 }
 
-void Renderer_::RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
-{
-
-
-	// Initializing push constant values
-	// WIP: what about secondary buffers?
-	// cmdBuffer->executeCommands({ buffer });
-
-
-	cmdBuffer->bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipeline.get());
-
-
-	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 0u, 1u,
-		&m_rtDescSet[sceneDesc.frameIndex], 0u, nullptr);
-
-	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 1u, 1u,
-		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
-
-	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 2u, 1u,
-		&sceneDesc.viewer->descSet[sceneDesc.frameIndex], 0u, nullptr);
-
-	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 3u, 1u,
-		&sceneDesc.scene->tlas.sceneDesc.descSet, 0u, nullptr);
-
-
-	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 4u, 1u,
-		&m_gbuffer[sceneDesc.frameIndex].descSet, 0u, nullptr);
-
-	cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 5u, 1u,
-		&m_wipDescSet[sceneDesc.frameIndex], 0u, nullptr);
-
-	PushConstant pc{ //
-		m_rtFrame, m_rtDepth, m_rtSamples
-	};
-
-	++m_rtFrame;
-
-	// Submit via push constant (rather than a UBO)
-	cmdBuffer->pushConstants(m_rtPipelineLayout.get(),
-		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant), &pc);
-
-
-	vk::DeviceSize progSize = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of a program identifier
-
-	// RayGen index
-	vk::DeviceSize rayGenOffset = 0u * progSize; // Start at the beginning of m_sbtBuffer
-
-	// Miss index
-	vk::DeviceSize missOffset = 1u * progSize; // Jump over raygen
-	vk::DeviceSize missStride = progSize;
-
-	// Hit index
-	vk::DeviceSize hitGroupOffset = 2u * progSize; // Jump over the previous shaders
-	vk::DeviceSize hitGroupStride = progSize;
-
-
-	// We can finally call traceRaysKHR that will add the ray tracing launch in the command buffer. Note that the
-	// SBT buffer is mentioned several times. This is due to the possibility of separating the SBT into several
-	// buffers, one for each type: ray generation, miss shaders, hit groups, and callable shaders (outside the scope
-	// of this tutorial). The last three parameters are equivalent to the grid size of a compute launch, and
-	// represent the total number of threads. Since we want to trace one ray per pixel, the grid size has the width
-	// and height of the output image, and a depth of 1.
-
-	vk::DeviceSize sbtSize = progSize * (vk::DeviceSize)m_rtShaderGroups.size();
-
-	const vk::StridedBufferRegionKHR raygenShaderBindingTable = { m_rtSBTBuffer, rayGenOffset, progSize, sbtSize };
-	const vk::StridedBufferRegionKHR missShaderBindingTable = { m_rtSBTBuffer, missOffset, progSize, sbtSize };
-	const vk::StridedBufferRegionKHR hitShaderBindingTable = { m_rtSBTBuffer, hitGroupOffset, progSize, sbtSize };
-	const vk::StridedBufferRegionKHR callableShaderBindingTable;
-
-
-	auto& extent = m_gbuffer[sceneDesc.frameIndex].framebuffer.extent;
-
-	cmdBuffer->traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
-		&callableShaderBindingTable, extent.width, extent.height, 1);
-}
-
 void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
@@ -497,59 +473,6 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 	cmdBuffer->endRenderPass();
 }
 
-void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
-	vk::Framebuffer outFb, vk::Extent2D outExtent)
-{
-	PROFILE_SCOPE(Renderer);
-
-	vk::RenderPassBeginInfo renderPassInfo{};
-	renderPassInfo
-		.setRenderPass(outRp) //
-		.setFramebuffer(outFb);
-	renderPassInfo.renderArea
-		.setOffset({ 0, 0 }) //
-		.setExtent(outExtent);
-
-	vk::ClearValue clearValue{};
-	clearValue.setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	renderPassInfo
-		.setClearValueCount(1u) //
-		.setPClearValues(&clearValue);
-
-	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-	{
-		auto& scissor = m_viewportRect;
-		const float x = static_cast<float>(scissor.offset.x);
-		const float y = static_cast<float>(scissor.offset.y);
-		const float width = static_cast<float>(scissor.extent.width);
-		const float height = static_cast<float>(scissor.extent.height);
-
-		vk::Viewport viewport{};
-		viewport
-			.setX(x) //
-			.setY(y)
-			.setWidth(width)
-			.setHeight(height)
-			.setMinDepth(0.f)
-			.setMaxDepth(1.f);
-
-		cmdBuffer->setViewport(0, { viewport });
-		cmdBuffer->setScissor(0, { scissor });
-
-		// Copy hdr texture
-		{
-			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
-			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
-				&Renderer->m_ppDescSet[sceneDesc.frameIndex], 0u, nullptr);
-			// big triangle
-			cmdBuffer->draw(3u, 1u, 0u, 0u);
-		}
-
-		ImguiImpl::RenderVulkan(cmdBuffer);
-	}
-	cmdBuffer->endRenderPass();
-}
-
 void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 {
 	vk::Extent2D fbSize = SuggestFramebufferSize(vk::Extent2D{ width, height });
@@ -568,49 +491,28 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		m_ptPass[i] = Layouts->ptPassLayout.CreatePassInstance(fbSize.width, fbSize.height, { &depthAtt });
 
 		auto quadSampler = GpuAssetManager->GetDefaultSampler();
-
-		vk::DescriptorImageInfo imageInfo{};
-		imageInfo
-			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-			.setImageView(m_ptPass[i].framebuffer[1]())
-			.setSampler(quadSampler);
-
-		vk::WriteDescriptorSet descriptorWrite{};
-		descriptorWrite
-			.setDstSet(m_ppDescSet[i]) //
-			.setDstBinding(0u)
-			.setDstArrayElement(0u)
-			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-			.setDescriptorCount(1u)
-			.setPImageInfo(&imageInfo);
-
-		Device->updateDescriptorSets(descriptorWrite, nullptr);
 	}
 	SetRtImage();
 }
 
-void Renderer_::PrepareForFrame()
+InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
 {
-	if (*m_didViewportResize) {
-		vk::Extent2D viewportSize{ g_ViewportCoordinates.size.x, g_ViewportCoordinates.size.y };
-
-		m_viewportRect.extent = viewportSize;
-		m_viewportRect.offset = vk::Offset2D(g_ViewportCoordinates.position.x, g_ViewportCoordinates.position.y);
-
-		ResizeBuffers(viewportSize.width, viewportSize.height);
+	InFlightResources<vk::ImageView> views;
+	for (uint32 i = 0; i < c_framesInFlight; ++i) {
+		views[i] = m_ptPass[i].framebuffer[1]();
 	}
+	return views;
 }
 
-void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc, vk::RenderPass outRp,
-	vk::Framebuffer outFb, vk::Extent2D outExtent)
+void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, OutputPassBase& outputPass)
 {
 	PROFILE_SCOPE(Renderer);
 
 	m_secondaryBuffersPool.Top();
 
 	// passes
-	RecordGeometryPasses(cmdBuffer, sceneDesc);
-	RecordPostProcessPass(cmdBuffer, sceneDesc);
+	RecordGeometryPasses(&cmdBuffer, sceneDesc);
+	RecordPostProcessPass(&cmdBuffer, sceneDesc);
 
 
 	static bool raytrace = true;
@@ -620,7 +522,6 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 	}
 
 	if (raytrace) {
-
 		// m_attachment[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
 		//	vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eFragmentShader,
 		//	vk::PipelineStageFlagBits::eRayTracingShaderKHR | vk::PipelineStageFlagBits::efar);
@@ -649,25 +550,25 @@ void Renderer_::DrawFrame(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 			continue;
 		}
 		att.TransitionToLayout(
-			cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
+			&cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
 	}
 
 	for (auto sl : sceneDesc->spotlights.elements) {
 		if (sl) {
 			sl->shadowmap[sceneDesc.frameIndex].framebuffer[0].TransitionToLayout(
-				cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+				&cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 		}
 	}
 
 	for (auto dl : sceneDesc->directionalLights.elements) {
 		if (dl) {
 			dl->shadowmap[sceneDesc.frameIndex].framebuffer[0].TransitionToLayout(
-				cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+				&cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 		}
 	}
 
-	RecordOutPass(cmdBuffer, sceneDesc, outRp, outFb, outExtent);
+	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 
-	m_ptPass[sceneDesc.frameIndex].TransitionFramebufferForWrite(*cmdBuffer);
+	m_ptPass[sceneDesc.frameIndex].TransitionFramebufferForWrite(cmdBuffer);
 }
 } // namespace vl

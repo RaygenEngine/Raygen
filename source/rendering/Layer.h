@@ -5,11 +5,9 @@ struct Scene;
 
 namespace vl {
 
-struct RSwapchain;
+class SwapchainOutputPass;
 
 inline class Layer_ : public Listener {
-
-	BoolFlag m_didViewportResize;
 
 	InFlightResources<vk::UniqueFence> m_frameFence;
 	InFlightResources<vk::UniqueSemaphore> m_renderFinishedSem;
@@ -19,17 +17,16 @@ inline class Layer_ : public Listener {
 
 	uint32 currentFrame{ 0 };
 
-	BoolFlag m_didWindowResize;
-	bool m_isMinimized{ false };
-
-
 public:
 	Layer_();
 	~Layer_();
 
 	void DrawFrame();
 
-	RSwapchain* mainSwapchain;
+
+	SwapchainOutputPass* swapOutput;
+
+	// RSwapchain* mainSwapchain;
 	Scene* mainScene;
 
 	Scene* currentScene{ nullptr };
