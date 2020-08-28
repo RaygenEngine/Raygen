@@ -60,8 +60,7 @@ void BrdfLutCalculation::MakeRenderPass()
 	vk::SubpassDescription subpass{};
 	subpass
 		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachmentCount(1u)
-		.setPColorAttachments(&colorAttachmentRef);
+		.setColorAttachments(colorAttachmentRef);
 
 	vk::SubpassDependency dependency{};
 	dependency
@@ -75,12 +74,9 @@ void BrdfLutCalculation::MakeRenderPass()
 	std::array attachments{ colorAttachmentDesc };
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
-		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
-		.setPAttachments(attachments.data())
-		.setSubpassCount(1u)
-		.setPSubpasses(&subpass)
-		.setDependencyCount(1u)
-		.setPDependencies(&dependency);
+		.setAttachments(attachments) //
+		.setSubpasses(subpass)
+		.setDependencies(dependency);
 
 	m_renderPass = Device->createRenderPassUnique(renderPassInfo);
 }
@@ -92,7 +88,7 @@ void BrdfLutCalculation::AllocateCommandBuffers()
 		.setLevel(vk::CommandBufferLevel::ePrimary)
 		.setCommandBufferCount(1u);
 
-	m_cmdBuffers = Device->allocateCommandBuffers(allocInfo)[0];
+	m_cmdBuffer = Device->allocateCommandBuffers(allocInfo)[0];
 }
 
 void BrdfLutCalculation::MakePipeline()
@@ -121,10 +117,8 @@ void BrdfLutCalculation::MakePipeline()
 
 	vk::PipelineViewportStateCreateInfo viewportState{};
 	viewportState
-		.setViewportCount(1u) //
-		.setPViewports(&viewport)
-		.setScissorCount(1u)
-		.setPScissors(&scissor);
+		.setViewports(viewport) //
+		.setScissors(scissor);
 
 	static ConsoleVariable<vk::PolygonMode> fillmode{ "brdfPolygonmode", vk::PolygonMode::eFill };
 
@@ -168,23 +162,15 @@ void BrdfLutCalculation::MakePipeline()
 	colorBlending
 		.setLogicOpEnable(VK_FALSE) //
 		.setLogicOp(vk::LogicOp::eCopy)
-		.setAttachmentCount(1u)
-		.setPAttachments(&colorBlendAttachment)
+		.setAttachments(colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	// Dynamic vieport
-	vk::DynamicState dynamicStates[2] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	std::array dynamicStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo
-		.setDynamicStateCount(2u) //
-		.setPDynamicStates(&dynamicStates[0]);
+	dynamicStateInfo.setDynamicStates(dynamicStates);
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo
-		.setSetLayoutCount(0u) //
-		.setPSetLayouts(nullptr)
-		.setPushConstantRangeCount(0u)
-		.setPPushConstantRanges(nullptr);
 
 	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
@@ -203,8 +189,7 @@ void BrdfLutCalculation::MakePipeline()
 
 	vk::GraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo
-		.setStageCount(static_cast<uint32>(shaderStages.size())) //
-		.setPStages(shaderStages.data())
+		.setStages(shaderStages) //
 		.setPVertexInputState(&vertexInputInfo)
 		.setPInputAssemblyState(&inputAssembly)
 		.setPViewportState(&viewportState)
@@ -230,11 +215,12 @@ void BrdfLutCalculation::PrepareFaceInfo()
 		vk::MemoryPropertyFlagBits::eDeviceLocal, "face" };
 	m_attachment.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
+	std::array attachments{ m_attachment.view() };
+
 	vk::FramebufferCreateInfo createInfo{};
 	createInfo
 		.setRenderPass(m_renderPass.get()) //
-		.setAttachmentCount(1u)
-		.setPAttachments(&m_attachment.view())
+		.setAttachments(attachments)
 		.setWidth(m_resolution)
 		.setHeight(m_resolution)
 		.setLayers(1);
@@ -271,34 +257,31 @@ void BrdfLutCalculation::RecordAndSubmitCmdBuffers()
 
 	std::array<vk::ClearValue, 1> clearValues = {};
 	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	renderPassInfo
-		.setClearValueCount(static_cast<uint32>(clearValues.size())) //
-		.setPClearValues(clearValues.data());
+	renderPassInfo.setClearValues(clearValues);
 
 	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
-	m_cmdBuffers.begin(beginInfo);
+	m_cmdBuffer.begin(beginInfo);
 	{
 		// begin render pass
-		m_cmdBuffers.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+		m_cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{
 			// Dynamic viewport & scissor
-			m_cmdBuffers.setViewport(0, { viewport });
-			m_cmdBuffers.setScissor(0, { scissor });
+			m_cmdBuffer.setViewport(0, { viewport });
+			m_cmdBuffer.setScissor(0, { scissor });
 
 			// bind the graphics pipeline
-			m_cmdBuffers.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+			m_cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 			// draw call (triangle)
-			m_cmdBuffers.draw(3u, 1u, 0u, 0u);
+			m_cmdBuffer.draw(3u, 1u, 0u, 0u);
 		}
 		// end render pass
-		m_cmdBuffers.endRenderPass();
+		m_cmdBuffer.endRenderPass();
 	}
-	m_cmdBuffers.end();
+	m_cmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBufferCount(1u).setPCommandBuffers(&m_cmdBuffers);
+	submitInfo.setCommandBuffers(m_cmdBuffer);
 
 	Device->graphicsQueue.submit(1u, &submitInfo, {});
 

@@ -14,7 +14,6 @@ struct RFramebuffer {
 	void Generate(vk::RenderPass compatibleRenderPass);
 
 	[[nodiscard]] vk::Framebuffer handle() const { return uHandle.get(); }
-	[[nodiscard]] vk::DescriptorSetLayout setLayout() { return uSetLayout.get(); }
 
 	[[nodiscard]] const RImageAttachment& operator[](size_t i) const { return attachments[i]; }
 
@@ -25,7 +24,6 @@ struct RFramebuffer {
 
 private:
 	vk::UniqueFramebuffer uHandle;
-	vk::UniqueDescriptorSetLayout uSetLayout;
 
 	std::vector<RImageAttachment> attachments{};
 

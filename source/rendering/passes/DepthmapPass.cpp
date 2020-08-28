@@ -44,19 +44,13 @@ vk::UniqueRenderPass DepthmapPass::CreateCompatibleRenderPass()
 	vk::SubpassDescription subpass{};
 	subpass
 		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachmentCount(0u)
-		.setPColorAttachments(nullptr)
 		.setPDepthStencilAttachment(&depthAttachmentRef);
 
 	std::array attachments{ depthAttachmentDesc };
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
-		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
-		.setPAttachments(attachments.data())
-		.setSubpassCount(1u)
-		.setPSubpasses(&subpass)
-		.setDependencyCount(0u)
-		.setPDependencies(nullptr);
+		.setAttachments(attachments) //
+		.setSubpasses(subpass);
 
 	return Device->createRenderPassUnique(renderPassInfo);
 }
@@ -82,10 +76,8 @@ namespace {
 
 		vk::PipelineViewportStateCreateInfo viewportState{};
 		viewportState
-			.setViewportCount(1u) //
-			.setPViewports(&viewport)
-			.setScissorCount(1u)
-			.setPScissors(&scissor);
+			.setViewports(viewport) //
+			.setScissors(scissor);
 
 		vk::PipelineRasterizationStateCreateInfo rasterizer{};
 		rasterizer
@@ -186,10 +178,8 @@ vk::UniquePipeline DepthmapPass::CreatePipeline(vk::PipelineLayout pipelineLayou
 	attributeDescriptions[3].offset = offsetof(Vertex, uv);
 
 	vertexInputInfo
-		.setVertexBindingDescriptionCount(1u) //
-		.setVertexAttributeDescriptionCount(static_cast<uint32_t>(attributeDescriptions.size()))
-		.setPVertexBindingDescriptions(&bindingDescription)
-		.setPVertexAttributeDescriptions(attributeDescriptions.data());
+		.setVertexBindingDescriptions(bindingDescription) //
+		.setVertexAttributeDescriptions(attributeDescriptions);
 
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
@@ -238,10 +228,8 @@ vk::UniquePipeline DepthmapPass::CreateAnimPipeline(
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo
-		.setVertexBindingDescriptionCount(1u) //
-		.setVertexAttributeDescriptionCount(static_cast<uint32_t>(attributeDescriptions.size()))
-		.setPVertexBindingDescriptions(&bindingDescription)
-		.setPVertexAttributeDescriptions(attributeDescriptions.data());
+		.setVertexBindingDescriptions(bindingDescription) //
+		.setVertexAttributeDescriptions(attributeDescriptions);
 
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }

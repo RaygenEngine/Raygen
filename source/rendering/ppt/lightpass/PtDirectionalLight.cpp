@@ -12,7 +12,7 @@
 namespace vl {
 void PtDirectionalLight::MakeLayout()
 {
-	std::array layouts = { Layouts->gbufferDescLayout.handle(), Layouts->singleUboDescLayout.handle(),
+	std::array layouts{ Layouts->gbufferDescLayout.handle(), Layouts->singleUboDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(), Layouts->singleSamplerDescLayout.handle() };
 
 	// pipeline layout
@@ -45,8 +45,7 @@ void PtDirectionalLight::MakePipeline()
 	colorBlending
 		.setLogicOpEnable(VK_FALSE) //
 		.setLogicOp(vk::LogicOp::eCopy)
-		.setAttachmentCount(1u)
-		.setPAttachments(&colorBlendAttachment)
+		.setAttachments(colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	Utl_CreatePipeline(gpuShader, colorBlending);

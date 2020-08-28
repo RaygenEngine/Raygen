@@ -17,7 +17,9 @@ namespace {
 vk::UniqueShaderModule CreateShaderModule(const std::vector<uint32_t>& code)
 {
 	vk::ShaderModuleCreateInfo createInfo{};
-	createInfo.setCodeSize(code.size() * 4).setPCode(code.data());
+	createInfo
+		.setCodeSize(code.size() * 4) //
+		.setPCode(code.data());
 	return Device->createShaderModuleUnique(createInfo);
 }
 
@@ -52,10 +54,8 @@ vk::UniquePipelineLayout CreatePipelineLayout(size_t pcSize, const std::vector<v
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
-		.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
-		.setPSetLayouts(layouts.data())
-		.setPushConstantRangeCount(1u)
-		.setPPushConstantRanges(&pushConstantRange);
+		.setSetLayouts(layouts) //
+		.setPushConstantRanges(pushConstantRange);
 
 	return Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
@@ -158,7 +158,7 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 		}
 	}
 
-	std::vector descLayouts = {
+	std::vector descLayouts{
 		descLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 	};
@@ -170,17 +170,19 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 		"engine-data/spv/geometry/gbuffer.shader", arch->gbufferVertBinary, arch->gbufferFragBinary, descLayouts);
 
 
+	std::vector descLayoutsAnim{
+		descLayout.handle(),
+		Layouts->singleUboDescLayout.handle(),
+		Layouts->jointsDescLayout.handle(),
+	};
+
 	// GBufferAnim Pass
 	{
 		size_t pushConstantSize = GbufferPass::GetPushConstantSize();
 		GpuMaterialArchetype::PassInfo info;
 		info.shaderModules.emplace_back(CreateShaderModule(arch->gbufferFragBinary));
 		info.shaderStages = CreateShaderStages("engine-data/spv/geometry/gbuffer-anim.shader", *info.shaderModules[0]);
-		info.pipelineLayout = CreatePipelineLayout(pushConstantSize, {
-																		 descLayout.handle(),
-																		 Layouts->singleUboDescLayout.handle(),
-																		 Layouts->jointsDescLayout.handle(),
-																	 });
+		info.pipelineLayout = CreatePipelineLayout(pushConstantSize, descLayoutsAnim);
 		info.pipeline = GbufferPass::CreateAnimPipeline(*info.pipelineLayout, info.shaderStages);
 
 		gbufferAnimated = std::move(info);
@@ -193,11 +195,7 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 		GpuMaterialArchetype::PassInfo info;
 		info.shaderModules.emplace_back(CreateShaderModule(arch->depthFragBinary));
 		info.shaderStages = CreateShaderStages("engine-data/spv/geometry/depthmap-anim.shader", *info.shaderModules[0]);
-		info.pipelineLayout = CreatePipelineLayout(pushConstantSize, {
-																		 descLayout.handle(),
-																		 Layouts->singleUboDescLayout.handle(),
-																		 Layouts->jointsDescLayout.handle(),
-																	 });
+		info.pipelineLayout = CreatePipelineLayout(pushConstantSize, descLayoutsAnim);
 		info.pipeline = DepthmapPass::CreateAnimPipeline(*info.pipelineLayout, info.shaderStages);
 
 		depthAnimated = std::move(info);
@@ -214,10 +212,7 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 			GpuMaterialArchetype::PassInfo info;
 			info.shaderModules.emplace_back(CreateShaderModule(arch->unlitFragBinary));
 			info.shaderStages = CreateShaderStages("engine-data/spv/geometry/gbuffer.shader", *info.shaderModules[0]);
-			info.pipelineLayout = CreatePipelineLayout(pushConstantSize, {
-																			 descLayout.handle(),
-																			 Layouts->singleUboDescLayout.handle(),
-																		 });
+			info.pipelineLayout = CreatePipelineLayout(pushConstantSize, descLayouts);
 
 			info.pipeline = UnlitPass::CreatePipeline(*info.pipelineLayout, info.shaderStages);
 

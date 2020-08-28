@@ -163,10 +163,12 @@ void Layer_::DrawFrame()
 
 	Device->graphicsQueue.submit(1u, &submitInfo, *m_frameFence[m_currentFrame]);
 
+	std::array swaps{ mainSwapchain->handle() };
+
 	vk::PresentInfoKHR presentInfo{};
 	presentInfo //
 		.setWaitSemaphores(m_renderFinishedSem[m_currentFrame].get())
-		.setSwapchains(mainSwapchain->handle())
+		.setSwapchains(swaps)
 		.setImageIndices(imageIndex);
 
 	Device->presentQueue.presentKHR(presentInfo);

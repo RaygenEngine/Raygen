@@ -134,8 +134,7 @@ Renderer_::Renderer_()
 	vk::SubpassDescription lightSubpass{};
 	lightSubpass
 		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachmentCount(1u)
-		.setPColorAttachments(&colorAttachmentRef)
+		.setColorAttachments(colorAttachmentRef)
 		.setPDepthStencilAttachment(nullptr);
 
 	vk::SubpassDependency lightDep{};
@@ -148,15 +147,12 @@ Renderer_::Renderer_()
 		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
 		.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
 
-
 	vk::SubpassDescription debugSupass{};
 	debugSupass
 		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachmentCount(1u)
-		.setInputAttachmentCount(1u)
-		.setPDepthStencilAttachment(&depthAttachmentRef)
-		.setPInputAttachments(&colorAttachmentRef15)
-		.setPColorAttachments(&colorAttachmentRef2);
+		.setInputAttachments(colorAttachmentRef15)
+		.setColorAttachments(colorAttachmentRef2)
+		.setPDepthStencilAttachment(&depthAttachmentRef);
 
 	vk::SubpassDependency debugDep{};
 	debugDep
@@ -169,18 +165,14 @@ Renderer_::Renderer_()
 		.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
 
 	std::array subpasses{ lightSubpass, debugSupass };
-	std::array dependcies{ lightDep, debugDep };
+	std::array dependencies{ lightDep, debugDep };
 	std::array attachments{ colorAttachmentDesc, colorAttachmentDesc2, depthAttachmentDesc };
-
 
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
-		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
-		.setPAttachments(attachments.data())
-		.setSubpassCount(static_cast<uint32>(subpasses.size()))
-		.setPSubpasses(subpasses.data())
-		.setDependencyCount(static_cast<uint32>(dependcies.size()))
-		.setPDependencies(dependcies.data());
+		.setAttachments(attachments) //
+		.setSubpasses(subpasses)
+		.setDependencies(dependencies);
 
 	m_ptRenderpass = Device->createRenderPassUnique(renderPassInfo);
 
@@ -221,10 +213,8 @@ void Renderer_::MakeCopyHdrPipeline(vk::RenderPass outRp)
 
 	vk::PipelineViewportStateCreateInfo viewportState{};
 	viewportState
-		.setViewportCount(1u) //
-		.setPViewports(&viewport)
-		.setScissorCount(1u)
-		.setPScissors(&scissor);
+		.setViewports(viewport) //
+		.setScissors(scissor);
 
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer
@@ -264,18 +254,15 @@ void Renderer_::MakeCopyHdrPipeline(vk::RenderPass outRp)
 	colorBlending
 		.setLogicOpEnable(VK_FALSE) //
 		.setLogicOp(vk::LogicOp::eCopy)
-		.setAttachmentCount(1u)
-		.setPAttachments(&colorBlendAttachment)
+		.setAttachments(colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 
 	// dynamic states
-	vk::DynamicState dynamicStates[] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	std::array dynamicStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
 
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo
-		.setDynamicStateCount(2u) //
-		.setPDynamicStates(dynamicStates);
+	dynamicStateInfo.setDynamicStates(dynamicStates);
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -298,8 +285,7 @@ void Renderer_::MakeCopyHdrPipeline(vk::RenderPass outRp)
 
 	vk::GraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo
-		.setStageCount(static_cast<uint32>(shaderStages.size())) //
-		.setPStages(shaderStages.data())
+		.setStages(shaderStages) //
 		.setPVertexInputState(&vertexInputInfo)
 		.setPInputAssemblyState(&inputAssembly)
 		.setPViewportState(&viewportState)
@@ -367,7 +353,7 @@ void Renderer_::MakeRtPipeline()
 	m_rtShaderGroups.push_back(hg);
 
 
-	std::array layouts = {
+	std::array layouts{
 		Layouts->singleStorageImage.handle(),
 		Layouts->accelLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
@@ -394,16 +380,16 @@ void Renderer_::MakeRtPipeline()
 	// Assemble the shader stages and recursion depth info into the ray tracing pipeline
 	vk::RayTracingPipelineCreateInfoKHR rayPipelineInfo{};
 	rayPipelineInfo
-		.setStageCount(static_cast<uint32>(stages.size())) // Stages are shaders
-		.setPStages(stages.data());
+		// Stages are shaders
+		.setStages(stages);
 
 	rayPipelineInfo
-		.setGroupCount(static_cast<uint32>(m_rtShaderGroups.size())) // 1-raygen, n-miss, n-(hit[+anyhit+intersect])
-		.setPGroups(m_rtShaderGroups.data())
+		// 1-raygen, n-miss, n-(hit[+anyhit+intersect])
+		.setGroups(m_rtShaderGroups)
 		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop formulation
 		// instead.
 
-		.setMaxRecursionDepth(10) // Ray depth
+		.setMaxRecursionDepth(10) // Ray depth TODO:
 		.setLayout(m_rtPipelineLayout.get());
 	m_rtPipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
 
@@ -437,7 +423,7 @@ void Renderer_::SetRtImage()
 	m_wipDescSet = { Layouts->singleSamplerDescLayout.AllocDescriptorSet(),
 		Layouts->singleSamplerDescLayout.AllocDescriptorSet(), Layouts->singleSamplerDescLayout.AllocDescriptorSet() };
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		vk::DescriptorImageInfo imageInfo{ GpuAssetManager->GetDefaultSampler(), *m_attachment[i].view,
+		vk::DescriptorImageInfo imageInfo{ GpuAssetManager->GetDefaultSampler(), m_attachment[i].view(),
 			vk::ImageLayout::eShaderReadOnlyOptimal };
 		vk::WriteDescriptorSet descriptorWrite{};
 
@@ -518,9 +504,7 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 	clearValues[2].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
 	clearValues[3].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
 	clearValues[4].setDepthStencil({ 1.0f, 0 });
-	renderPassInfo
-		.setClearValueCount(static_cast<uint32>(clearValues.size())) //
-		.setPClearValues(clearValues.data());
+	renderPassInfo.setClearValues(clearValues);
 
 
 	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
@@ -563,11 +547,9 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 				.setOffset({ 0, 0 }) //
 				.setExtent(extent);
 
-			vk::ClearValue clearValues = {};
+			vk::ClearValue clearValues{};
 			clearValues.setDepthStencil({ 1.0f, 0 });
-			renderPassInfo
-				.setClearValueCount(1u) //
-				.setPClearValues(&clearValues);
+			renderPassInfo.setClearValues(clearValues);
 
 			cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
 			{
@@ -705,10 +687,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 	clearValue2.setColor(std::array{ 0.2f, 0.2f, 0.0f, 1.0f });
 
 	std::array cv{ clearValue, clearValue2 };
-
-	renderPassInfo
-		.setClearValueCount(static_cast<uint32>(cv.size())) //
-		.setPClearValues(cv.data());
+	renderPassInfo.setClearValues(cv);
 
 	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	{
@@ -737,9 +716,7 @@ void Renderer_::RecordOutPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDes
 
 	vk::ClearValue clearValue{};
 	clearValue.setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	renderPassInfo
-		.setClearValueCount(1u) //
-		.setPClearValues(&clearValue);
+	renderPassInfo.setClearValues(clearValue);
 
 	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	{
@@ -856,8 +833,7 @@ void Renderer_::OnViewportResize()
 			vk::FramebufferCreateInfo createInfo{};
 			createInfo
 				.setRenderPass(m_ptRenderpass.get()) //
-				.setAttachmentCount(static_cast<uint32>(attch.size()))
-				.setPAttachments(attch.data())
+				.setAttachments(attch)
 				.setWidth(fbSize.width)
 				.setHeight(fbSize.height)
 				.setLayers(1u);
