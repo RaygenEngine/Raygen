@@ -50,23 +50,17 @@ namespace {
 			.setPrimitiveRestartEnable(VK_FALSE);
 
 		// Dynamic vieport
-		vk::DynamicState dynamicStates[2] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+		std::array dynamicStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
 		vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-		dynamicStateInfo
-			.setDynamicStateCount(2u) //
-			.setPDynamicStates(&dynamicStates[0]);
-
+		dynamicStateInfo.setDynamicStates(dynamicStates);
 
 		// those are dynamic so they will be updated when needed
 		vk::Viewport viewport{};
 		vk::Rect2D scissor{};
 		vk::PipelineViewportStateCreateInfo viewportState{};
 		viewportState
-			.setViewportCount(1u) //
-			.setPViewports(&viewport)
-			.setScissorCount(1u)
-			.setPScissors(&scissor);
-
+			.setViewports(viewport) //
+			.setScissors(scissor);
 
 		vk::PipelineRasterizationStateCreateInfo rasterizer{};
 		rasterizer
@@ -108,10 +102,8 @@ namespace {
 		colorBlending
 			.setLogicOpEnable(VK_FALSE) //
 			.setLogicOp(vk::LogicOp::eCopy)
-			.setAttachmentCount(static_cast<uint32>(colorBlendAttachment.size()))
-			.setPAttachments(colorBlendAttachment.data())
+			.setAttachments(colorBlendAttachment)
 			.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
-
 
 		// depth and stencil state
 		vk::PipelineDepthStencilStateCreateInfo depthStencil{};
@@ -128,8 +120,7 @@ namespace {
 
 		vk::GraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo
-			.setStageCount(static_cast<uint32>(shaderStages.size())) //
-			.setPStages(shaderStages.data())
+			.setStages(shaderStages) //
 			.setPVertexInputState(&vertexInputInfo)
 			.setPInputAssemblyState(&inputAssembly)
 			.setPViewportState(&viewportState)
@@ -182,10 +173,8 @@ vk::UniquePipeline UnlitPass::CreatePipeline(
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo
-		.setVertexBindingDescriptionCount(1u) //
-		.setVertexAttributeDescriptionCount(static_cast<uint32_t>(attributeDescriptions.size()))
-		.setPVertexBindingDescriptions(&bindingDescription)
-		.setPVertexAttributeDescriptions(attributeDescriptions.data());
+		.setVertexBindingDescriptions(bindingDescription) //
+		.setVertexAttributeDescriptions(attributeDescriptions);
 
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
@@ -229,8 +218,9 @@ void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 				&camera->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 			auto& gpuMesh = geom->mesh.Lock();
-			cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer }, { gg.vertexBufferOffset });
-			cmdBuffer->bindIndexBuffer(gpuMesh.combinedIndexBuffer, gg.indexBufferOffset, vk::IndexType::eUint32);
+			cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
+			cmdBuffer->bindIndexBuffer(
+				gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
 
 
 			cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);

@@ -45,13 +45,12 @@ void RFramebuffer::Generate(vk::RenderPass compatibleRenderPass)
 	vk::FramebufferCreateInfo createInfo{};
 	createInfo
 		.setRenderPass(compatibleRenderPass) //
-		.setAttachmentCount(static_cast<uint32>(attachmentViews.size()))
-		.setPAttachments(attachmentViews.data())
+		.setAttachments(attachmentViews)
 		.setWidth(extent.width)
 		.setHeight(extent.height)
 		.setLayers(1);
 
-	handle = Device->createFramebufferUnique(createInfo);
+	uHandle = Device->createFramebufferUnique(createInfo);
 
 	hasBeenGenerated = true;
 }

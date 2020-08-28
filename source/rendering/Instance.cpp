@@ -138,13 +138,10 @@ Instance_::Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwi
 	vk::InstanceCreateInfo createInfo{};
 	createInfo
 		.setPApplicationInfo(&appInfo) //
-		.setEnabledExtensionCount(static_cast<uint32>(allExtensions.size()))
-		.setPpEnabledExtensionNames(allExtensions.data());
+		.setPEnabledExtensionNames(allExtensions);
 
 	if (foundAnyLayers) {
-		createInfo
-			.setEnabledLayerCount(static_cast<uint32>(instanceLayerNames.size())) //
-			.setPpEnabledLayerNames(instanceLayerNames.data());
+		createInfo.setPEnabledLayerNames(instanceLayerNames);
 	}
 
 	vk::Instance::operator=(vk::createInstance(createInfo));

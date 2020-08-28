@@ -2,13 +2,13 @@
 #include "Layer.h"
 
 #include "assets/GpuAssetManager.h"
-#include "Device.h"
 #include "editor/EditorObject.h"
 #include "engine/console/ConsoleVariable.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
+#include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
@@ -28,7 +28,6 @@ ConsoleFunction<> console_BuildAS{ "s.buildTestAccelerationStructure", []() {},
 	"Builds a top level acceleration structure, for debugging purposes, todo: remove" };
 
 namespace vl {
-
 
 Layer_::Layer_()
 {
@@ -109,18 +108,21 @@ void Layer_::DrawFrame()
 
 	swapOutput->OnPreRender();
 
-	currentFrame = (currentFrame + 1) % c_framesInFlight;
-	auto currentCmdBuffer = m_cmdBuffer[currentFrame];
+	m_currentFrame = (m_currentFrame + 1) % c_framesInFlight;
+	auto currentCmdBuffer = m_cmdBuffer[m_currentFrame];
 
 	{
 		PROFILE_SCOPE(Renderer);
 
-		Device->waitForFences({ *m_frameFence[currentFrame] }, true, UINT64_MAX);
-		Device->resetFences({ *m_frameFence[currentFrame] });
+		Device->waitForFences({ *m_frameFence[m_currentFrame] }, true, UINT64_MAX);
+		Device->resetFences({ *m_frameFence[m_currentFrame] });
 
-		currentScene->UploadDirty(currentFrame);
+		currentScene->UploadDirty(m_currentFrame);
 	}
+
 	uint32 imageIndex;
+	Device->acquireNextImageKHR(
+		mainSwapchain->handle(), UINT64_MAX, { m_imageAvailSem[m_currentFrame].get() }, {}, &imageIndex);
 
 	Device->acquireNextImageKHR(
 		swapOutput->GetSwapchain(), UINT64_MAX, { m_imageAvailSem[currentFrame].get() }, {}, &imageIndex);
@@ -128,8 +130,7 @@ void Layer_::DrawFrame()
 	swapOutput->SetOutputImageIndex(imageIndex);
 
 	// WIP: 0 = editor camera
-	SceneRenderDesc sceneDesc{ currentScene, 0, currentFrame };
-
+	SceneRenderDesc sceneDesc{ currentScene, 0, m_currentFrame };
 
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo
@@ -143,38 +144,28 @@ void Layer_::DrawFrame()
 	currentCmdBuffer.end();
 
 
-	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput }; //
-	std::array waitSems = { *m_imageAvailSem[currentFrame] };                                                //
-	std::array signalSems = { *m_renderFinishedSem[currentFrame] };
+	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+	std::array waitSems = { *m_imageAvailSem[m_currentFrame] };
+	std::array signalSems = { *m_renderFinishedSem[m_currentFrame] };
 
-	std::array bufs = { m_cmdBuffer[currentFrame] };
+	std::array bufs = { m_cmdBuffer[m_currentFrame] };
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo
-		.setWaitSemaphoreCount(static_cast<uint32>(waitSems.size())) //
-		.setPWaitSemaphores(waitSems.data())
-		.setPWaitDstStageMask(waitStage.data())
+		.setWaitSemaphores(waitSems) //
+		.setWaitDstStageMask(waitStage)
+		.setSignalSemaphores(signalSems)
+		.setCommandBuffers(bufs);
 
-		.setSignalSemaphoreCount(static_cast<uint32>(signalSems.size()))
-		.setPSignalSemaphores(signalSems.data())
-
-		.setCommandBufferCount(static_cast<uint32>(bufs.size()))
-		.setPCommandBuffers(bufs.data());
-
-	Device->graphicsQueue.submit(1u, &submitInfo, *m_frameFence[currentFrame]);
-
+	Device->graphicsQueue.submit(1u, &submitInfo, *m_frameFence[m_currentFrame]);
 
 	vk::SwapchainKHR swapChains[] = { swapOutput->GetSwapchain() };
 
-	vk::PresentInfoKHR presentInfo;
+	vk::PresentInfoKHR presentInfo{};
 	presentInfo //
-		.setWaitSemaphoreCount(1u)
-		.setPWaitSemaphores(&m_renderFinishedSem[currentFrame].get())
-		.setSwapchainCount(1u)
-		.setPSwapchains(swapChains)
-		.setPImageIndices(&imageIndex)
-		.setPResults(nullptr);
-
+		.setWaitSemaphores(m_renderFinishedSem[m_currentFrame].get())
+		.setSwapchains(swaps)
+		.setImageIndices(imageIndex);
 
 	Device->presentQueue.presentKHR(presentInfo);
 }

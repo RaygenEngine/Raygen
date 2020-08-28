@@ -16,7 +16,7 @@ Depthmap::Depthmap(uint32 width, uint32 height, const char* name)
 	framebuffer.Generate(Layouts->depthRenderPass.get());
 
 	// description set
-	descSet = Layouts->singleSamplerDescLayout.GetDescriptorSet();
+	descSet = Layouts->singleSamplerDescLayout.AllocDescriptorSet();
 
 	// sampler2DShadow
 	vk::SamplerCreateInfo samplerInfo{};
@@ -42,7 +42,7 @@ Depthmap::Depthmap(uint32 width, uint32 height, const char* name)
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(framebuffer[0]())
+		.setImageView(framebuffer[0].view())
 		.setSampler(depthSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -51,10 +51,7 @@ Depthmap::Depthmap(uint32 width, uint32 height, const char* name)
 		.setDstBinding(0u)
 		.setDstArrayElement(0u)
 		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setDescriptorCount(1u)
-		.setPBufferInfo(nullptr)
-		.setPImageInfo(&imageInfo)
-		.setPTexelBufferView(nullptr);
+		.setImageInfo(imageInfo);
 
 	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 }

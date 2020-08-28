@@ -74,14 +74,14 @@ void PrefilteredMapCalculation::MakeDesciptors()
 	m_skyboxDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	m_skyboxDescLayout.Generate();
 
-	m_descSet = m_skyboxDescLayout.GetDescriptorSet();
+	m_descSet = m_skyboxDescLayout.AllocDescriptorSet();
 
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
 	vk::DescriptorImageInfo imageInfo{};
 	imageInfo
 		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(m_envmapAsset->skybox.Lock().cubemap())
+		.setImageView(m_envmapAsset->skybox.Lock().cubemap.view())
 		.setSampler(quadSampler);
 
 	vk::WriteDescriptorSet descriptorWrite{};
@@ -90,10 +90,7 @@ void PrefilteredMapCalculation::MakeDesciptors()
 		.setDstBinding(0u)    // 0 is for the Ubo
 		.setDstArrayElement(0u)
 		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setDescriptorCount(1u)
-		.setPBufferInfo(nullptr)
-		.setPImageInfo(&imageInfo)
-		.setPTexelBufferView(nullptr);
+		.setImageInfo(imageInfo);
 
 	Device->updateDescriptorSets(descriptorWrite, {});
 }
@@ -119,8 +116,7 @@ void PrefilteredMapCalculation::MakeRenderPass()
 	vk::SubpassDescription subpass{};
 	subpass
 		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachmentCount(1u)
-		.setPColorAttachments(&colorAttachmentRef);
+		.setColorAttachments(colorAttachmentRef);
 
 	vk::SubpassDependency dependency{};
 	dependency
@@ -134,12 +130,9 @@ void PrefilteredMapCalculation::MakeRenderPass()
 	std::array attachments{ colorAttachmentDesc };
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
-		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
-		.setPAttachments(attachments.data())
-		.setSubpassCount(1u)
-		.setPSubpasses(&subpass)
-		.setDependencyCount(1u)
-		.setPDependencies(&dependency);
+		.setAttachments(attachments) //
+		.setSubpasses(subpass)
+		.setDependencies(dependency);
 
 	m_renderPass = Device->createRenderPassUnique(renderPassInfo);
 }
@@ -205,10 +198,8 @@ void PrefilteredMapCalculation::MakePipeline()
 		.setOffset(0u);
 
 	vertexInputInfo
-		.setVertexBindingDescriptionCount(1u) //
-		.setVertexAttributeDescriptionCount(1u)
-		.setPVertexBindingDescriptions(&bindingDescription)
-		.setPVertexAttributeDescriptions(&attributeDescription);
+		.setVertexBindingDescriptions(bindingDescription) //
+		.setVertexAttributeDescriptions(attributeDescription);
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly
@@ -221,10 +212,8 @@ void PrefilteredMapCalculation::MakePipeline()
 
 	vk::PipelineViewportStateCreateInfo viewportState{};
 	viewportState
-		.setViewportCount(1u) //
-		.setPViewports(&viewport)
-		.setScissorCount(1u)
-		.setPScissors(&scissor);
+		.setViewports(viewport) //
+		.setScissors(scissor);
 
 	static ConsoleVariable<uint> fillmode{ "fillmode", 0 };
 
@@ -268,17 +257,13 @@ void PrefilteredMapCalculation::MakePipeline()
 	colorBlending
 		.setLogicOpEnable(VK_FALSE) //
 		.setLogicOp(vk::LogicOp::eCopy)
-		.setAttachmentCount(1u)
-		.setPAttachments(&colorBlendAttachment)
+		.setAttachments(colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	// Dynamic vieport
-	vk::DynamicState dynamicStates[2] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	std::array dynamicStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo
-		.setDynamicStateCount(2u) //
-		.setPDynamicStates(&dynamicStates[0]);
-
+	dynamicStateInfo.setDynamicStates(dynamicStates);
 
 	// pipeline layout
 	vk::PushConstantRange pushConstantRange{};
@@ -287,15 +272,11 @@ void PrefilteredMapCalculation::MakePipeline()
 		.setSize(sizeof(PushConstant))
 		.setOffset(0u);
 
-
-	std::array layouts = { m_skyboxDescLayout.setLayout.get() };
-
+	std::array layouts{ m_skyboxDescLayout.handle() };
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
-		.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
-		.setPSetLayouts(layouts.data())
-		.setPushConstantRangeCount(1u)
-		.setPPushConstantRanges(&pushConstantRange);
+		.setSetLayouts(layouts) //
+		.setPushConstantRanges(pushConstantRange);
 
 	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
@@ -314,8 +295,7 @@ void PrefilteredMapCalculation::MakePipeline()
 
 	vk::GraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo
-		.setStageCount(static_cast<uint32>(shaderStages.size())) //
-		.setPStages(shaderStages.data())
+		.setStages(shaderStages) //
 		.setPVertexInputState(&vertexInputInfo)
 		.setPInputAssemblyState(&inputAssembly)
 		.setPViewportState(&viewportState)
@@ -349,11 +329,12 @@ void PrefilteredMapCalculation::PrepareFaceInfo()
 			m_cubemapMips[mip].faceAttachments[i].BlockingTransitionToLayout(
 				vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
+			std::array attachments{ m_cubemapMips[mip].faceAttachments[i].view() };
+
 			vk::FramebufferCreateInfo createInfo{};
 			createInfo
 				.setRenderPass(m_renderPass.get()) //
-				.setAttachmentCount(1u)
-				.setPAttachments(&m_cubemapMips[mip].faceAttachments[i]())
+				.setAttachments(attachments)
 				.setWidth(mipResolution)
 				.setHeight(mipResolution)
 				.setLayers(1);
@@ -418,11 +399,9 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 				.setOffset({ 0, 0 }) //
 				.setExtent(scissor.extent);
 
-			std::array<vk::ClearValue, 1> clearValues = {};
+			std::array<vk::ClearValue, 1> clearValues{};
 			clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-			renderPassInfo
-				.setClearValueCount(static_cast<uint32>(clearValues.size())) //
-				.setPClearValues(clearValues.data());
+			renderPassInfo.setClearValues(clearValues);
 
 			vk::CommandBufferBeginInfo beginInfo{};
 			beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
@@ -453,14 +432,12 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 						vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant),
 						&pc);
 
-					vk::Buffer vertexBuffers[] = { m_cubeVertexBuffer };
-					vk::DeviceSize offsets[] = { 0 };
 					// geom
-					m_cmdBuffers[i].bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
+					m_cmdBuffers[i].bindVertexBuffers(0u, { m_cubeVertexBuffer.handle() }, { vk::DeviceSize(0) });
 
 					// descriptor sets
 					m_cmdBuffers[i].bindDescriptorSets(
-						vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &m_descSet, 0u, nullptr);
+						vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, { m_descSet }, nullptr);
 
 					// draw call (cube)
 					m_cmdBuffers[i].draw(static_cast<uint32>(vertices.size() / 3), 1u, 0u, 0u);
@@ -471,9 +448,9 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 			m_cmdBuffers[i].end();
 
 			vk::SubmitInfo submitInfo{};
-			submitInfo.setCommandBufferCount(1u).setPCommandBuffers(&m_cmdBuffers[i]);
+			submitInfo.setCommandBuffers(m_cmdBuffers[i]);
 
-			Device->graphicsQueue.submit(1u, &submitInfo, {});
+			Device->graphicsQueue.submit(submitInfo, {});
 			// CHECK:
 			Device->waitIdle();
 		}
@@ -536,11 +513,11 @@ void PrefilteredMapCalculation::EditPods()
 
 			img.CopyImageToBuffer(stagingbuffer);
 
-			void* data = Device->mapMemory(stagingbuffer.GetMemory(), 0, VK_WHOLE_SIZE, {});
+			void* data = Device->mapMemory(stagingbuffer.memory(), 0, VK_WHOLE_SIZE, {});
 
 			memcpy(cubemapEditor->data.data() + offset, data, size);
 
-			Device->unmapMemory(stagingbuffer.GetMemory());
+			Device->unmapMemory(stagingbuffer.memory());
 
 			offset += size;
 		}

@@ -25,12 +25,21 @@ struct RFramebuffer {
 
 	void Generate(vk::RenderPass compatibleRenderPass);
 
+	[[nodiscard]] vk::Framebuffer handle() const { return uHandle.get(); }
 
-	operator vk::Framebuffer() const { return handle.get(); }
-	const RImageAttachment& operator[](size_t i) const { return ownedAttachments[i]; }
+	[[nodiscard]] const RImageAttachment& operator[](size_t i) const { return attachments[i]; }
+
+	//auto begin() { return std::begin(attachments); }
+	//auto begin() const { return std::begin(attachments); }
+	//auto end() { return std::end(attachments); }
+	//auto end() const { return std::end(attachments); }
 
 private:
-	vk::UniqueFramebuffer handle;
+	vk::UniqueFramebuffer uHandle;
+
+	std::vector<RImageAttachment> attachments{};
+
+	bool hasBeenGenerated{ false };
 };
 
 } // namespace vl

@@ -116,9 +116,14 @@ void Renderer_::MakeRtPipeline()
 	m_rtShaderGroups.push_back(hg);
 
 
-	std::array layouts = { Layouts->singleStorageImage.setLayout.get(), Layouts->accelLayout.setLayout.get(),
-		Layouts->singleUboDescLayout.setLayout.get(), Layouts->rtSceneDescLayout.setLayout.get(),
-		Layouts->gbufferDescLayout.setLayout.get(), Layouts->singleSamplerDescLayout.setLayout.get() };
+	std::array layouts{
+		Layouts->singleStorageImage.handle(),
+		Layouts->accelLayout.handle(),
+		Layouts->singleUboDescLayout.handle(),
+		Layouts->rtSceneDescLayout.handle(),
+		Layouts->gbufferDescLayout.handle(),
+		Layouts->singleSamplerDescLayout.handle(),
+	};
 
 	// pipeline layout
 	vk::PushConstantRange pushConstantRange{};
@@ -129,26 +134,25 @@ void Renderer_::MakeRtPipeline()
 
 
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.setPushConstantRangeCount(1u)
-		.setPPushConstantRanges(&pushConstantRange)
-		.setSetLayoutCount(static_cast<uint32>(layouts.size()))
-		.setPSetLayouts(layouts.data());
+	pipelineLayoutInfo
+		.setPushConstantRanges(pushConstantRange) //
+		.setSetLayouts(layouts);
 
 	m_rtPipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
 	// Assemble the shader stages and recursion depth info into the ray tracing pipeline
 	vk::RayTracingPipelineCreateInfoKHR rayPipelineInfo{};
 	rayPipelineInfo
-		.setStageCount(static_cast<uint32>(stages.size())) // Stages are shaders
-		.setPStages(stages.data());
+		// Stages are shaders
+		.setStages(stages);
 
 	rayPipelineInfo
-		.setGroupCount(static_cast<uint32>(m_rtShaderGroups.size())) // 1-raygen, n-miss, n-(hit[+anyhit+intersect])
-		.setPGroups(m_rtShaderGroups.data())
+		// 1-raygen, n-miss, n-(hit[+anyhit+intersect])
+		.setGroups(m_rtShaderGroups)
 		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop formulation
 		// instead.
 
-		.setMaxRecursionDepth(1) // Ray depth
+		.setMaxRecursionDepth(10) // Ray depth TODO:
 		.setLayout(m_rtPipelineLayout.get());
 	m_rtPipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
 
@@ -162,10 +166,10 @@ void Renderer_::MakeRtPipeline()
 
 void Renderer_::SetRtImage()
 {
-	m_rtDescSet = { Layouts->singleStorageImage.GetDescriptorSet(), Layouts->singleStorageImage.GetDescriptorSet(),
-		Layouts->singleStorageImage.GetDescriptorSet() };
+	m_rtDescSet = { Layouts->singleStorageImage.AllocDescriptorSet(), Layouts->singleStorageImage.AllocDescriptorSet(),
+		Layouts->singleStorageImage.AllocDescriptorSet() };
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		vk::DescriptorImageInfo imageInfo{ {}, *m_ptPass[i].framebuffer[1].view, vk::ImageLayout::eGeneral };
+		vk::DescriptorImageInfo imageInfo{ {}, m_ptPass[i].framebuffer[1].view(), vk::ImageLayout::eGeneral };
 		vk::WriteDescriptorSet descriptorWrite{};
 
 		descriptorWrite
@@ -173,19 +177,16 @@ void Renderer_::SetRtImage()
 			.setDstBinding(0u)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eStorageImage)
-			.setDescriptorCount(1u)
-			.setPBufferInfo(nullptr)
-			.setPImageInfo(&imageInfo)
-			.setPTexelBufferView(nullptr);
+			.setImageInfo(imageInfo);
 
 		vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 	}
 
 
-	m_wipDescSet = { Layouts->singleSamplerDescLayout.GetDescriptorSet(),
-		Layouts->singleSamplerDescLayout.GetDescriptorSet(), Layouts->singleSamplerDescLayout.GetDescriptorSet() };
+	m_wipDescSet = { Layouts->singleSamplerDescLayout.AllocDescriptorSet(),
+		Layouts->singleSamplerDescLayout.AllocDescriptorSet(), Layouts->singleSamplerDescLayout.AllocDescriptorSet() };
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		vk::DescriptorImageInfo imageInfo{ {}, *m_ptPass[i].framebuffer[0].view,
+		vk::DescriptorImageInfo imageInfo{ {}, m_ptPass[i].framebuffer[0].view(),
 			vk::ImageLayout::eShaderReadOnlyOptimal };
 		imageInfo.setSampler(GpuAssetManager->GetDefaultSampler());
 
@@ -196,10 +197,7 @@ void Renderer_::SetRtImage()
 			.setDstBinding(0u)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-			.setDescriptorCount(1u)
-			.setPBufferInfo(nullptr)
-			.setPImageInfo(&imageInfo)
-			.setPTexelBufferView(nullptr);
+			.setImageInfo(imageInfo);
 
 		vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 	}
@@ -220,11 +218,11 @@ void Renderer_::CreateRtShaderBindingTable()
 	m_rtSBTBuffer = RBuffer{ sbtSize, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
-	DEBUG_NAME(vk::Buffer(m_rtSBTBuffer), "Shader Binding Table");
+	DEBUG_NAME(m_rtSBTBuffer.handle(), "Shader Binding Table");
 
 
 	// TODO: Tidy
-	auto mem = m_rtSBTBuffer.GetMemory();
+	auto mem = m_rtSBTBuffer.memory();
 
 	void* dptr = Device->mapMemory(mem, 0, sbtSize);
 
@@ -234,6 +232,109 @@ void Renderer_::CreateRtShaderBindingTable()
 		pData += baseAlignment;
 	}
 	Device->unmapMemory(mem);
+}
+
+void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
+{
+	PROFILE_SCOPE(Renderer);
+
+	auto& extent = m_gbuffer[sceneDesc.frameIndex].framebuffer.extent;
+
+	vk::Rect2D scissor{};
+	scissor
+		.setOffset({ 0, 0 }) //
+		.setExtent(vk::Extent2D{ extent.width, extent.height });
+
+	vk::Viewport viewport{};
+	viewport
+		.setX(0) //
+		.setY(0)
+		.setWidth(static_cast<float>(extent.width))
+		.setHeight(static_cast<float>(extent.height))
+		.setMinDepth(0.f)
+		.setMaxDepth(1.f);
+
+
+	vk::RenderPassBeginInfo renderPassInfo{};
+	renderPassInfo
+		.setRenderPass(Layouts->gbufferPass.get()) //
+		.setFramebuffer(m_gbuffer[sceneDesc.frameIndex].framebuffer.handle());
+	renderPassInfo.renderArea
+		.setOffset({ 0, 0 }) //
+		.setExtent(extent);
+
+	std::array<vk::ClearValue, 6> clearValues = {};
+	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	clearValues[1].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	clearValues[2].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	clearValues[3].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+	clearValues[4].setDepthStencil({ 1.0f, 0 });
+	renderPassInfo.setClearValues(clearValues);
+
+
+	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
+	{
+		auto buffers = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
+
+		GbufferPass::RecordCmd(&buffers, viewport, scissor, sceneDesc);
+
+		cmdBuffer->executeCommands({ buffers });
+	}
+	cmdBuffer->endRenderPass();
+
+	auto shadowmapRenderpass = [&](auto light) {
+		if (light) {
+
+			auto& extent = light->shadowmap[sceneDesc.frameIndex].framebuffer.extent;
+
+			vk::Rect2D scissor{};
+
+			scissor
+				.setOffset({ 0, 0 }) //
+				.setExtent(extent);
+
+			auto vpSize = extent;
+
+			vk::Viewport viewport{};
+			viewport
+				.setX(0) //
+				.setY(0)
+				.setWidth(static_cast<float>(vpSize.width))
+				.setHeight(static_cast<float>(vpSize.height))
+				.setMinDepth(0.f)
+				.setMaxDepth(1.f);
+
+			vk::RenderPassBeginInfo renderPassInfo{};
+			renderPassInfo
+				.setRenderPass(Layouts->depthRenderPass.get()) //
+				.setFramebuffer(light->shadowmap[sceneDesc.frameIndex].framebuffer.handle());
+			renderPassInfo.renderArea
+				.setOffset({ 0, 0 }) //
+				.setExtent(extent);
+
+			vk::ClearValue clearValues{};
+			clearValues.setDepthStencil({ 1.0f, 0 });
+			renderPassInfo.setClearValues(clearValues);
+
+			cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
+			{
+				auto buffers = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
+
+				DepthmapPass::RecordCmd(&buffers, viewport, scissor, light->ubo.viewProj, sceneDesc);
+
+				cmdBuffer->executeCommands({ buffers });
+			}
+			cmdBuffer->endRenderPass();
+		}
+	};
+
+	for (auto sl : sceneDesc->spotlights.elements) {
+		shadowmapRenderpass(sl);
+	}
+
+	for (auto dl : sceneDesc->directionalLights.elements) {
+		shadowmapRenderpass(dl);
+	}
 }
 
 void Renderer_::RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
@@ -301,9 +402,11 @@ void Renderer_::RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRe
 
 	vk::DeviceSize sbtSize = progSize * (vk::DeviceSize)m_rtShaderGroups.size();
 
-	const vk::StridedBufferRegionKHR raygenShaderBindingTable = { m_rtSBTBuffer, rayGenOffset, progSize, sbtSize };
-	const vk::StridedBufferRegionKHR missShaderBindingTable = { m_rtSBTBuffer, missOffset, progSize, sbtSize };
-	const vk::StridedBufferRegionKHR hitShaderBindingTable = { m_rtSBTBuffer, hitGroupOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR raygenShaderBindingTable
+		= { m_rtSBTBuffer.handle(), rayGenOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR missShaderBindingTable = { m_rtSBTBuffer.handle(), missOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR hitShaderBindingTable
+		= { m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
 	const vk::StridedBufferRegionKHR callableShaderBindingTable;
 
 
@@ -311,113 +414,6 @@ void Renderer_::RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRe
 
 	cmdBuffer->traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
 		&callableShaderBindingTable, extent.width, extent.height, 1);
-}
-
-void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
-{
-	PROFILE_SCOPE(Renderer);
-
-	auto& extent = m_gbuffer[sceneDesc.frameIndex].framebuffer.extent;
-
-	vk::Rect2D scissor{};
-	scissor
-		.setOffset({ 0, 0 }) //
-		.setExtent(vk::Extent2D{ extent.width, extent.height });
-
-	vk::Viewport viewport{};
-	viewport
-		.setX(0) //
-		.setY(0)
-		.setWidth(static_cast<float>(extent.width))
-		.setHeight(static_cast<float>(extent.height))
-		.setMinDepth(0.f)
-		.setMaxDepth(1.f);
-
-
-	vk::RenderPassBeginInfo renderPassInfo{};
-	renderPassInfo
-		.setRenderPass(Layouts->gbufferPass.get()) //
-		.setFramebuffer(m_gbuffer[sceneDesc.frameIndex].framebuffer);
-	renderPassInfo.renderArea
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
-
-	std::array<vk::ClearValue, 6> clearValues = {};
-	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[1].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[2].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[3].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[4].setDepthStencil({ 1.0f, 0 });
-	renderPassInfo
-		.setClearValueCount(static_cast<uint32>(clearValues.size())) //
-		.setPClearValues(clearValues.data());
-
-
-	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
-	{
-		auto buffers = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
-
-		GbufferPass::RecordCmd(&buffers, viewport, scissor, sceneDesc);
-
-		cmdBuffer->executeCommands({ buffers });
-	}
-	cmdBuffer->endRenderPass();
-
-	auto shadowmapRenderpass = [&](auto light) {
-		if (light) {
-
-			auto& extent = light->shadowmap[sceneDesc.frameIndex].framebuffer.extent;
-
-			vk::Rect2D scissor{};
-
-			scissor
-				.setOffset({ 0, 0 }) //
-				.setExtent(extent);
-
-			auto vpSize = extent;
-
-			vk::Viewport viewport{};
-			viewport
-				.setX(0) //
-				.setY(0)
-				.setWidth(static_cast<float>(vpSize.width))
-				.setHeight(static_cast<float>(vpSize.height))
-				.setMinDepth(0.f)
-				.setMaxDepth(1.f);
-
-			vk::RenderPassBeginInfo renderPassInfo{};
-			renderPassInfo
-				.setRenderPass(Layouts->depthRenderPass.get()) //
-				.setFramebuffer(light->shadowmap[sceneDesc.frameIndex].framebuffer);
-			renderPassInfo.renderArea
-				.setOffset({ 0, 0 }) //
-				.setExtent(extent);
-
-			vk::ClearValue clearValues = {};
-			clearValues.setDepthStencil({ 1.0f, 0 });
-			renderPassInfo
-				.setClearValueCount(1u) //
-				.setPClearValues(&clearValues);
-
-			cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
-			{
-				auto buffers = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
-
-				DepthmapPass::RecordCmd(&buffers, viewport, scissor, light->ubo.viewProj, sceneDesc);
-
-				cmdBuffer->executeCommands({ buffers });
-			}
-			cmdBuffer->endRenderPass();
-		}
-	};
-
-	for (auto sl : sceneDesc->spotlights.elements) {
-		shadowmapRenderpass(sl);
-	}
-
-	for (auto dl : sceneDesc->directionalLights.elements) {
-		shadowmapRenderpass(dl);
-	}
 }
 
 void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
@@ -456,10 +452,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 	clearValue2.setColor(std::array{ 0.2f, 0.2f, 0.0f, 1.0f });
 
 	std::array cv{ clearValue, clearValue2 };
-
-	renderPassInfo
-		.setClearValueCount(static_cast<uint32>(cv.size())) //
-		.setPClearValues(cv.data());
+	renderPassInfo.setClearValues(cv);
 
 	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	{
@@ -490,7 +483,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 		m_ptPass[i] = Layouts->ptPassLayout.CreatePassInstance(fbSize.width, fbSize.height, { &depthAtt });
 
-		auto quadSampler = GpuAssetManager->GetDefaultSampler();
+
 	}
 	SetRtImage();
 }

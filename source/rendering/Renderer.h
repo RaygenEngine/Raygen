@@ -76,8 +76,8 @@ public:
 	std::vector<vk::RayTracingShaderGroupCreateInfoKHR> m_rtShaderGroups;
 
 	int32 m_rtFrame{ 0 };
-	int32 m_rtDepth{ 3 };
-	int32 m_rtSamples{ 2 };
+	int32 m_rtDepth{ 2 };
+	int32 m_rtSamples{ 1 };
 
 	void MakeRtPipeline();
 	void SetRtImage();
