@@ -1,13 +1,13 @@
 #include "pch.h"
 #include "TopLevelAs.h"
 
+#include "assets/StdAssets.h"
+#include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuImage.h"
+#include "rendering/assets/GpuMaterialInstance.h"
+#include "rendering/assets/GpuMesh.h"
 #include "rendering/Device.h"
 #include "rendering/scene/SceneGeometry.h"
-#include "rendering/assets/GpuMesh.h"
-#include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuMaterialInstance.h"
-#include "rendering/assets/GpuImage.h"
-#include "assets/StdAssets.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -40,7 +40,7 @@ vk::AccelerationStructureInstanceKHR AsInstanceToVkGeometryInstanceKHR(const vl:
 namespace vl {
 TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 {
-	sceneDesc.descSet = Layouts->rtSceneDescLayout.GetDescriptorSet();
+	sceneDesc.descSet = Layouts->rtSceneDescLayout.AllocDescriptorSet();
 
 	std::vector<vk::DescriptorImageInfo> descImages;
 	vk::DescriptorImageInfo viewInfoDefault;
@@ -56,7 +56,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 				AsInstance inst{};
 				inst.transform = geoms[i]->transform; // Position of the instance
 				inst.instanceId = j;                  // gl_InstanceID
-				inst.blas = gg.blas.GetAddress();
+				inst.blas = Device->getAccelerationStructureAddressKHR(gg.blas.handle());
 				inst.materialId = 0; // We will use the same hit group for all
 				inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable; // WIP:
 				instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
@@ -65,12 +65,12 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 
 				if (j <= 25 && gg.material.Lock().archetype == StdAssets::GltfArchetype.handle) {
 					auto h = gg.material.Lock().podHandle;
-					auto& colorView
-						= *GpuAssetManager->GetGpuHandle(h.Lock()->descriptorSet.samplers2d[0]).Lock().image.view;
-					auto& normalView
-						= *GpuAssetManager->GetGpuHandle(h.Lock()->descriptorSet.samplers2d[3]).Lock().image.view;
-					auto& metalRoughView
-						= *GpuAssetManager->GetGpuHandle(h.Lock()->descriptorSet.samplers2d[1]).Lock().image.view;
+					auto colorView
+						= GpuAssetManager->GetGpuHandle(h.Lock()->descriptorSet.samplers2d[0]).Lock().image.view();
+					auto normalView
+						= GpuAssetManager->GetGpuHandle(h.Lock()->descriptorSet.samplers2d[3]).Lock().image.view();
+					auto metalRoughView
+						= GpuAssetManager->GetGpuHandle(h.Lock()->descriptorSet.samplers2d[1]).Lock().image.view();
 
 
 					viewInfoDefault.setImageView(colorView);
@@ -89,84 +89,68 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 
 	vk::WriteDescriptorSet imgWriteSet{};
 	imgWriteSet
-		.setDescriptorCount(std::min(descImages.size(), 75llu)) //
-		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setPImageInfo(descImages.data())
-		.setDstBinding(0)
+		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler) //
+		.setImageInfo(descImages)
+		.setDstBinding(0u)
 		.setDstSet(sceneDesc.descSet)
-		.setDstArrayElement(0u)
-		.setPBufferInfo(nullptr)
-		.setPTexelBufferView(nullptr);
+		.setDstArrayElement(0u);
 
 	vk::DescriptorBufferInfo vtxBufInfo{};
 	vtxBufInfo
 		.setOffset(0) //
 		.setRange(VK_WHOLE_SIZE)
-		.setBuffer(geoms[0]->mesh.Lock().combinedVertexBuffer);
+		.setBuffer(geoms[0]->mesh.Lock().combinedVertexBuffer.handle());
 
 	vk::DescriptorBufferInfo indBufInfo{};
 	indBufInfo
 		.setOffset(0) //
 		.setRange(VK_WHOLE_SIZE)
-		.setBuffer(geoms[0]->mesh.Lock().combinedIndexBuffer);
+		.setBuffer(geoms[0]->mesh.Lock().combinedIndexBuffer.handle());
 
 
 	vk::DescriptorBufferInfo indOffsetBufInfo{};
 	indOffsetBufInfo
 		.setOffset(0) //
 		.setRange(VK_WHOLE_SIZE)
-		.setBuffer(geoms[0]->mesh.Lock().indexOffsetBuffer);
+		.setBuffer(geoms[0]->mesh.Lock().indexOffsetBuffer.handle());
 
 	vk::DescriptorBufferInfo primOffsetBufInfo{};
 	primOffsetBufInfo
 		.setOffset(0) //
 		.setRange(VK_WHOLE_SIZE)
-		.setBuffer(geoms[0]->mesh.Lock().primitiveOffsetBuffer);
+		.setBuffer(geoms[0]->mesh.Lock().primitiveOffsetBuffer.handle());
 
 	vk::WriteDescriptorSet bufWriteSet{};
 	bufWriteSet
-		.setDescriptorCount(1) //
-		.setDescriptorType(vk::DescriptorType::eStorageBuffer)
-		.setPImageInfo(nullptr)
+		.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
 		.setDstBinding(1)
 		.setDstSet(sceneDesc.descSet)
 		.setDstArrayElement(0u)
-		.setPBufferInfo(&vtxBufInfo)
-		.setPTexelBufferView(nullptr);
-
+		.setBufferInfo(vtxBufInfo);
 
 	vk::WriteDescriptorSet bufWriteSet2{};
 	bufWriteSet2
-		.setDescriptorCount(1) //
-		.setDescriptorType(vk::DescriptorType::eStorageBuffer)
-		.setPImageInfo(nullptr)
+		.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
 		.setDstBinding(2)
 		.setDstSet(sceneDesc.descSet)
 		.setDstArrayElement(0u)
-		.setPBufferInfo(&indBufInfo)
-		.setPTexelBufferView(nullptr);
+		.setBufferInfo(indBufInfo);
 
 	vk::WriteDescriptorSet bufWriteSet3{};
 	bufWriteSet3
-		.setDescriptorCount(1) //
-		.setDescriptorType(vk::DescriptorType::eStorageBuffer)
-		.setPImageInfo(nullptr)
+		.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
 		.setDstBinding(3)
 		.setDstSet(sceneDesc.descSet)
 		.setDstArrayElement(0u)
-		.setPBufferInfo(&indOffsetBufInfo)
-		.setPTexelBufferView(nullptr);
+		.setBufferInfo(indOffsetBufInfo);
 
 	vk::WriteDescriptorSet bufWriteSet4{};
 	bufWriteSet4
-		.setDescriptorCount(1) //
-		.setDescriptorType(vk::DescriptorType::eStorageBuffer)
-		.setPImageInfo(nullptr)
+		.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
 		.setDstBinding(4)
 		.setDstSet(sceneDesc.descSet)
 		.setDstArrayElement(0u)
-		.setPBufferInfo(&primOffsetBufInfo)
-		.setPTexelBufferView(nullptr);
+		.setBufferInfo(primOffsetBufInfo);
 
 
 	Device->updateDescriptorSets({ imgWriteSet, bufWriteSet, bufWriteSet2, bufWriteSet3, bufWriteSet4 }, {});
@@ -205,12 +189,13 @@ void TopLevelAs::Build()
 
 	instanceBuffer.CopyBuffer(stagingbuffer);
 
-	DEBUG_NAME(vk::Buffer(instanceBuffer), "TLASInstances");
+	auto instanceAddress = Device->getBufferAddress(instanceBuffer.handle());
+
+	DEBUG_NAME(instanceBuffer, "TLASInstances");
 
 	vk::AccelerationStructureGeometryDataKHR geometry{};
-	geometry.instances
-		.setArrayOfPointers(VK_FALSE) //
-		.data.setDeviceAddress(instanceBuffer.GetAddress());
+	geometry.instances.setArrayOfPointers(VK_FALSE);
+	geometry.instances.data.setDeviceAddress(instanceAddress);
 
 	vk::AccelerationStructureGeometryKHR asGeoms{};
 	asGeoms
@@ -227,13 +212,12 @@ void TopLevelAs::Build()
 	asCreateInfo
 		.setType(vk::AccelerationStructureTypeKHR::eTopLevel) //
 		.setFlags(vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace)
-		.setMaxGeometryCount(1u)
-		.setPGeometryInfos(&geometryCreate);
+		.setGeometryInfos(geometryCreate);
 
 
-	handle = Device->createAccelerationStructureKHRUnique(asCreateInfo);
+	uHandle = Device->createAccelerationStructureKHRUnique(asCreateInfo);
 
-	DEBUG_NAME(handle, "Scene Tlas");
+	DEBUG_NAME(uHandle, "Scene Tlas");
 
 	AllocateMemory();
 
@@ -242,7 +226,7 @@ void TopLevelAs::Build()
 	asMemReqsInfo
 		.setType(vk::AccelerationStructureMemoryRequirementsTypeKHR::eBuildScratch) //
 		.setBuildType(vk::AccelerationStructureBuildTypeKHR::eDevice)
-		.setAccelerationStructure(handle.get());
+		.setAccelerationStructure(uHandle.get());
 
 	auto memReqs = Device->getAccelerationStructureMemoryRequirementsKHR(asMemReqsInfo);
 
@@ -254,18 +238,20 @@ void TopLevelAs::Build()
 		= { scratchBufferSize, vk::BufferUsageFlagBits::eRayTracingKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress,
 			  vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
+	auto scratchAddress = Device->getBufferAddress(scratchBuffer.handle());
+
 	vk::AccelerationStructureGeometryKHR* pGeometry = &asGeoms;
 	vk::AccelerationStructureBuildGeometryInfoKHR asBuildGeomInfo{};
 	asBuildGeomInfo
 		.setFlags(vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace) //
 		.setUpdate(VK_FALSE)
 		.setSrcAccelerationStructure({})
-		.setDstAccelerationStructure(handle.get())
+		.setDstAccelerationStructure(uHandle.get())
 		.setGeometryCount(1u)
 		.setGeometryArrayOfPointers(VK_FALSE)
 		.setType(vk::AccelerationStructureTypeKHR::eTopLevel)
 		.setPpGeometries(&pGeometry)
-		.setScratchData(scratchBuffer.GetAddress());
+		.setScratchData(scratchAddress);
 
 	// Build Offsets info: n instances
 	vk::AccelerationStructureBuildOffsetInfoKHR buildOffsetInfo{};
@@ -274,6 +260,7 @@ void TopLevelAs::Build()
 		.setPrimitiveCount(static_cast<uint32_t>(instances.size()))
 		.setPrimitiveOffset(0)
 		.setTransformOffset(0);
+
 	std::vector<const vk::AccelerationStructureBuildOffsetInfoKHR*> pBuildOffset;
 	pBuildOffset.push_back(&buildOffsetInfo);
 
@@ -290,19 +277,17 @@ void TopLevelAs::Build()
 		.setDstAccessMask(vk::AccessFlagBits::eAccelerationStructureWriteKHR);
 
 	Device->computeCmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
-		vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::DependencyFlags{ 0 }, std::array{ barrier }, {},
-		{});
+		vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::DependencyFlags{ 0 }, barrier, {}, {});
 
-	Device->computeCmdBuffer.buildAccelerationStructureKHR(1u, &asBuildGeomInfo, pBuildOffset.data());
+	Device->computeCmdBuffer.buildAccelerationStructureKHR(asBuildGeomInfo, pBuildOffset);
 
 	Device->computeCmdBuffer.end();
 
 	vk::SubmitInfo submitInfo{};
-	submitInfo
-		.setCommandBufferCount(1u) //
-		.setPCommandBuffers(&Device->computeCmdBuffer);
+	submitInfo.setCommandBuffers(Device->computeCmdBuffer);
 
-	Device->computeQueue.submit(1u, &submitInfo, {});
+	Device->computeQueue.submit(submitInfo, {});
+
 	Device->computeQueue.waitIdle(); // NEXT:
 }
 } // namespace vl

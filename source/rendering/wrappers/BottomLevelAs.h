@@ -7,7 +7,6 @@ struct GpuGeometryGroup;
 struct BottomLevelAs : RAccelerationStructure {
 
 	BottomLevelAs() = default;
-
 	BottomLevelAs(size_t vertexStride, const RBuffer& combinedVertexBuffer, const RBuffer& combinedIndexBuffer,
 		GpuGeometryGroup& ggg, vk::BuildAccelerationStructureFlagsKHR buildFlags);
 

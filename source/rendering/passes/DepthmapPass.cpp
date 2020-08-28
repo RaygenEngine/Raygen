@@ -44,16 +44,13 @@ vk::UniqueRenderPass DepthmapPass::CreateCompatibleRenderPass()
 	vk::SubpassDescription subpass{};
 	subpass
 		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachmentCount(0u)
-		.setPColorAttachments(nullptr)
 		.setPDepthStencilAttachment(&depthAttachmentRef);
 
 
 	std::array attachments{ depthAttachmentDesc };
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
-		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
-		.setPAttachments(attachments.data())
+		.setAttachments(attachments) //
 		.setSubpasses(subpass);
 
 	return Device->createRenderPassUnique(renderPassInfo);
@@ -80,10 +77,8 @@ namespace {
 
 		vk::PipelineViewportStateCreateInfo viewportState{};
 		viewportState
-			.setViewportCount(1u) //
-			.setPViewports(&viewport)
-			.setScissorCount(1u)
-			.setPScissors(&scissor);
+			.setViewports(viewport) //
+			.setScissors(scissor);
 
 		vk::PipelineRasterizationStateCreateInfo rasterizer{};
 		rasterizer
@@ -184,10 +179,8 @@ vk::UniquePipeline DepthmapPass::CreatePipeline(vk::PipelineLayout pipelineLayou
 	attributeDescriptions[3].offset = offsetof(Vertex, uv);
 
 	vertexInputInfo
-		.setVertexBindingDescriptionCount(1u) //
-		.setVertexAttributeDescriptionCount(static_cast<uint32_t>(attributeDescriptions.size()))
-		.setPVertexBindingDescriptions(&bindingDescription)
-		.setPVertexAttributeDescriptions(attributeDescriptions.data());
+		.setVertexBindingDescriptions(bindingDescription) //
+		.setVertexAttributeDescriptions(attributeDescriptions);
 
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
@@ -236,10 +229,8 @@ vk::UniquePipeline DepthmapPass::CreateAnimPipeline(
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo
-		.setVertexBindingDescriptionCount(1u) //
-		.setVertexAttributeDescriptionCount(static_cast<uint32_t>(attributeDescriptions.size()))
-		.setPVertexBindingDescriptions(&bindingDescription)
-		.setPVertexAttributeDescriptions(attributeDescriptions.data());
+		.setVertexBindingDescriptions(bindingDescription) //
+		.setVertexAttributeDescriptions(attributeDescriptions);
 
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
@@ -287,8 +278,9 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 				// Submit via push constant (rather than a UBO)
 				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 				auto& gpuMesh = geom->mesh.Lock();
-				cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer }, { gg.vertexBufferOffset });
-				cmdBuffer->bindIndexBuffer(gpuMesh.combinedIndexBuffer, gg.indexBufferOffset, vk::IndexType::eUint32);
+				cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
+				cmdBuffer->bindIndexBuffer(
+					gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
 
 
 				if (mat.hasDescriptorSet) {
@@ -330,8 +322,9 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 					&geom->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 				auto& gpuMesh = geom->mesh.Lock();
-				cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer }, { gg.vertexBufferOffset });
-				cmdBuffer->bindIndexBuffer(gpuMesh.combinedIndexBuffer, gg.indexBufferOffset, vk::IndexType::eUint32);
+				cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
+				cmdBuffer->bindIndexBuffer(
+					gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
 
 
 				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);

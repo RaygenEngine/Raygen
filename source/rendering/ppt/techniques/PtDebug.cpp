@@ -10,15 +10,15 @@
 namespace vl {
 void PtDebug::MakeLayout()
 {
-	std::array layouts = { *Layouts->ptPassLayout.internalDescLayout.setLayout };
+
+	descLayout.AddBinding(vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment);
+	descLayout.Generate();
+
+	std::array layouts{ descLayout.handle() } //; 	std::array layouts = { *Layouts->ptPassLayout.internalDescLayout.setLayout };
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo
-		.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
-		.setPSetLayouts(layouts.data())
-		.setPushConstantRangeCount(0u)
-		.setPPushConstantRanges(nullptr);
+	pipelineLayoutInfo.setSetLayouts(layouts);
 
 	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
@@ -46,8 +46,7 @@ void PtDebug::MakePipeline()
 	colorBlending
 		.setLogicOpEnable(VK_FALSE) //
 		.setLogicOp(vk::LogicOp::eCopy)
-		.setAttachmentCount(1u)
-		.setPAttachments(&colorBlendAttachment)
+		.setAttachments(colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	Utl_CreatePipeline(gpuShader, colorBlending, 1u);

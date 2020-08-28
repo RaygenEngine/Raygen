@@ -10,13 +10,12 @@ ConsoleFunction<> g_showPoolAllocations{ "r.mem.showDescriptorPools",
 	"Shows number of allocated descriptor pools." };
 
 namespace vl {
-vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const RDescriptorLayout& layout)
+vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const RDescriptorSetLayout& layout)
 {
 	auto addPool = [&](Entry& entry) {
 		vk::DescriptorPoolCreateInfo poolInfo{};
 		poolInfo
-			.setPoolSizeCount(static_cast<uint32>(entry.poolSizes.size())) //
-			.setPPoolSizes(entry.poolSizes.data())
+			.setPoolSizes(entry.poolSizes) //
 			.setMaxSets(c_setsPerPool);
 
 		entry.pools.emplace_back(std::move(Device->createDescriptorPoolUnique(poolInfo)));
@@ -28,7 +27,7 @@ vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const RD
 
 	if (it == m_entries.end()) {
 		Entry e{};
-		e.poolSizes = layout.perSetPoolSizes;
+		e.poolSizes = layout.GetPerSetPoolSizes();
 		for (auto& poolSize : e.poolSizes) {
 			poolSize.descriptorCount *= c_setsPerPool;
 		}
@@ -43,12 +42,12 @@ vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const RD
 		addPool(entry);
 	}
 
+	std::array layouts{ layout.handle() };
 
 	vk::DescriptorSetAllocateInfo allocInfo{};
 	allocInfo //
 		.setDescriptorPool(entry.pools.back().get())
-		.setDescriptorSetCount(1)
-		.setPSetLayouts(&layout.setLayout.get());
+		.setSetLayouts(layouts);
 
 	return Device->allocateDescriptorSets(allocInfo)[0];
 }
@@ -58,6 +57,7 @@ vk::DescriptorPool DescPoolAllocator::GetImguiPool()
 	if (!m_imguiPool) {
 		vk::DescriptorSetLayoutBinding binding{};
 		binding
+			// CHECK: is something missing here
 			.setBinding(1u) //
 			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
 			.setDescriptorCount(1u)
@@ -65,9 +65,7 @@ vk::DescriptorPool DescPoolAllocator::GetImguiPool()
 			.setPImmutableSamplers(nullptr);
 
 		vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-		layoutInfo
-			.setBindingCount(1u) //
-			.setPBindings(&binding);
+		layoutInfo.setBindings(binding);
 
 		vk::DescriptorPoolSize poolSize;
 		poolSize
@@ -76,8 +74,7 @@ vk::DescriptorPool DescPoolAllocator::GetImguiPool()
 
 		vk::DescriptorPoolCreateInfo poolInfo{};
 		poolInfo
-			.setPoolSizeCount(1u) //
-			.setPPoolSizes(&poolSize)
+			.setPoolSizes(poolSize) //
 			.setMaxSets(2u);
 
 		m_imguiPool = std::move(Device->createDescriptorPoolUnique(poolInfo));

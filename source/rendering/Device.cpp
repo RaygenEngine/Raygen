@@ -64,14 +64,13 @@ Device_::Device_(RPhysicalDevice& pd)
 		presentQueueFamily.index,
 	};
 
-	float qp1 = 1.0f;
+	std::array qps{ 1.0f };
 	vk::DeviceQueueCreateInfo createInfo{};
 	for (uint32 queueFamily : uniqueQueueFamilies) {
 		vk::DeviceQueueCreateInfo createInfo{};
 		createInfo
 			.setQueueFamilyIndex(queueFamily) //
-			.setQueueCount(1u)
-			.setPQueuePriorities(&qp1);
+			.setQueuePriorities(qps);
 		queueCreateInfos.push_back(createInfo);
 	}
 
@@ -98,10 +97,8 @@ Device_::Device_(RPhysicalDevice& pd)
 
 	vk::DeviceCreateInfo deviceCreateInfo{};
 	deviceCreateInfo
-		.setPQueueCreateInfos(queueCreateInfos.data()) //
-		.setQueueCreateInfoCount(static_cast<uint32_t>(queueCreateInfos.size()))
-		.setPpEnabledExtensionNames(deviceExtensions.data())
-		.setEnabledExtensionCount(static_cast<uint32>(deviceExtensions.size()))
+		.setQueueCreateInfos(queueCreateInfos) //
+		.setPEnabledExtensionNames(deviceExtensions)
 		.setPNext(&deviceFeatures);
 
 	vk::Device::operator=(pd.createDevice(deviceCreateInfo));

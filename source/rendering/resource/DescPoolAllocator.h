@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/wrappers/DescriptorLayout.h"
+#include "rendering/wrappers/DescriptorSetLayout.h"
 
 namespace vl {
 class DescPoolAllocator {
@@ -17,8 +17,7 @@ class DescPoolAllocator {
 	size_t m_allocCount{ 0 };
 
 public:
-
-	vk::DescriptorSet AllocateDescriptorSet(size_t hash, const RDescriptorLayout& layout);
+	vk::DescriptorSet AllocateDescriptorSet(size_t hash, const RDescriptorSetLayout& layout);
 
 	vk::DescriptorPool GetImguiPool();
 

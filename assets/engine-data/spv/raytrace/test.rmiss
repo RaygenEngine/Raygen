@@ -5,7 +5,7 @@
 #include "global.h"
 #include "rtshared.h"
 
-layout(location = 0) rayPayloadInEXT hitPayload prd;
+layout(location = 0) rayPayloadInEXT hitPayload inPrd;
 
 void main() {
 
@@ -28,9 +28,8 @@ void main() {
 	uint numSamples = 16; 
     uint numSamplesLight = 8; 
     
-    vec3 orig = prd.origin; 
-    // camera ray dir
-    vec3 dir = prd.direction; 
+    vec3 orig = gl_WorldRayOriginEXT; 
+    vec3 dir = gl_WorldRayDirectionEXT; 
     
     // mu is the cosine of the angle between
     // the sun direction and the ray direction
@@ -100,7 +99,6 @@ void main() {
  
     vec3 outColor = vec3(sumR * betaR * phaseR + sumM * betaM * phaseM) * sunIntensity * sunColor;
 
-	prd.result += prd.throughput * outColor;
-	prd.done = true;
+	inPrd.radiance = outColor;
 }
 

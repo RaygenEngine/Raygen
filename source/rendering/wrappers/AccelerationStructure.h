@@ -6,11 +6,8 @@ struct GpuGeometryGroup;
 
 struct RAccelerationStructure {
 
-	RAccelerationStructure() = default;
-
-	operator vk::AccelerationStructureKHR() const { return handle.get(); }
-	operator bool() const { return operator vk::AccelerationStructureKHR(); }
-	[[nodiscard]] vk::DeviceAddress GetAddress() const noexcept;
+	[[nodiscard]] vk::AccelerationStructureKHR handle() const { return uHandle.get(); }
+	[[nodiscard]] vk::DeviceMemory memory() const { return uMemory.get(); }
 
 	// Only required for vk::AccelerationStructureInstanceKHR
 	// WIP: Finish this instead of device addresses
@@ -19,7 +16,8 @@ struct RAccelerationStructure {
 	vk::UniqueAccelerationStructureKHR handle;
 
 protected:
-	vk::UniqueDeviceMemory memory;
+	vk::UniqueAccelerationStructureKHR uHandle;
+	vk::UniqueDeviceMemory uMemory;
 
 	RBuffer scratchBuffer;
 

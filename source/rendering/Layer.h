@@ -15,7 +15,7 @@ inline class Layer_ : public Listener {
 
 	InFlightResources<vk::CommandBuffer> m_cmdBuffer;
 
-	uint32 currentFrame{ 0 };
+	uint32 m_currentFrame{ 0 };
 
 public:
 	Layer_();

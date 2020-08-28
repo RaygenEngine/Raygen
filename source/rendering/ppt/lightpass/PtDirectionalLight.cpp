@@ -12,16 +12,12 @@
 namespace vl {
 void PtDirectionalLight::MakeLayout()
 {
-	std::array layouts = { Layouts->gbufferDescLayout.setLayout.get(), Layouts->singleUboDescLayout.setLayout.get(),
-		Layouts->singleUboDescLayout.setLayout.get(), Layouts->singleSamplerDescLayout.setLayout.get() };
+	std::array layouts{ Layouts->gbufferDescLayout.handle(), Layouts->singleUboDescLayout.handle(),
+		Layouts->singleUboDescLayout.handle(), Layouts->singleSamplerDescLayout.handle() };
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo
-		.setSetLayoutCount(static_cast<uint32>(layouts.size())) //
-		.setPSetLayouts(layouts.data())
-		.setPushConstantRangeCount(0u)
-		.setPPushConstantRanges(nullptr);
+	pipelineLayoutInfo.setSetLayouts(layouts);
 
 	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
@@ -49,8 +45,7 @@ void PtDirectionalLight::MakePipeline()
 	colorBlending
 		.setLogicOpEnable(VK_FALSE) //
 		.setLogicOp(vk::LogicOp::eCopy)
-		.setAttachmentCount(1u)
-		.setPAttachments(&colorBlendAttachment)
+		.setAttachments(colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	Utl_CreatePipeline(gpuShader, colorBlending);

@@ -28,16 +28,14 @@ struct OldVertex
 // CHECK: alignment
 struct hitPayload
 {
-  vec3 origin;
-  vec3 direction;
-  vec3 result;
-  vec3 throughput;
+// this is a union of Li and Lo
+  vec3 radiance;
+  float throughput;
+  
   int depth;
-  bool done;
 
-  vec3 debug;
-  bool debugDone;
+  //vec3 debug;
+  //bool debugDone;
 
   uint seed;
-  uint smpl;
 };

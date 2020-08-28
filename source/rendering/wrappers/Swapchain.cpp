@@ -65,6 +65,7 @@ RSwapchain::RSwapchain(vk::SurfaceKHR surface)
 	extent = ChooseSwapExtent(details.capabilities);
 	imageFormat = surfaceFormat.format;
 
+
 	imageCount = std::max(details.capabilities.minImageCount, 3u);
 
 	if (details.capabilities.maxImageCount > 0u && imageCount > details.capabilities.maxImageCount) {
@@ -79,45 +80,35 @@ RSwapchain::RSwapchain(vk::SurfaceKHR surface)
 		.setImageColorSpace(surfaceFormat.colorSpace)
 		.setImageExtent(extent)
 		.setImageArrayLayers(1u)
-		.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
+		.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment)
+		.setPreTransform(details.capabilities.currentTransform) //
+		.setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque)
+		.setPresentMode(presentMode)
+		.setClipped(VK_TRUE);
 
 	// graphics and present families for swapchain image concurrency
 	auto mainQueueFamily = Device->graphicsQueue.familyIndex;
 	auto presentQueueFamily = Device->presentQueue.familyIndex;
 
-	uint32 queueFamilyIndices[] = { mainQueueFamily, presentQueueFamily };
 	if (mainQueueFamily != presentQueueFamily) {
 		createInfo
 			.setImageSharingMode(vk::SharingMode::eConcurrent) //
-			.setQueueFamilyIndexCount(2u)
-			.setPQueueFamilyIndices(queueFamilyIndices);
+			.setQueueFamilyIndices(std::array{ mainQueueFamily, presentQueueFamily });
 	}
 	else {
-		createInfo
-			.setImageSharingMode(vk::SharingMode::eExclusive) //
-			.setQueueFamilyIndexCount(0u)
-			.setPQueueFamilyIndices(nullptr);
+		createInfo.setImageSharingMode(vk::SharingMode::eExclusive);
+		// CHECK
+		//.setQueueFamilyIndexCount(0u)
+		//.setPQueueFamilyIndices(nullptr);
 	}
 
-	createInfo
-		.setPreTransform(details.capabilities.currentTransform) //
-		.setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque)
-		.setPresentMode(presentMode)
-		.setClipped(VK_TRUE)
-		.setOldSwapchain(nullptr);
+	uHandle = Device->createSwapchainKHRUnique(createInfo);
 
-	vk::SwapchainKHR::operator=(Device->createSwapchainKHR(createInfo));
-
-	images = Device->getSwapchainImagesKHR(*this);
+	images = Device->getSwapchainImagesKHR(uHandle.get());
 
 	InitRenderPass();
 	InitImageViews();
 	InitFrameBuffers();
-}
-
-RSwapchain::~RSwapchain()
-{
-	Device->destroySwapchainKHR(*this);
 }
 
 void RSwapchain::InitRenderPass()
@@ -141,15 +132,14 @@ void RSwapchain::InitRenderPass()
 	vk::SubpassDescription subpass{};
 	subpass
 		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachmentCount(1u)
-		.setPColorAttachments(&colorAttachmentRef);
+		.setColorAttachments(colorAttachmentRef);
 
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
 		.setAttachments(colorAttachment) //
 		.setSubpasses(subpass);
 
-	renderPass = Device->createRenderPassUnique(renderPassInfo);
+	uRenderPass = Device->createRenderPassUnique(renderPassInfo);
 }
 
 void RSwapchain::InitImageViews()
@@ -168,27 +158,25 @@ void RSwapchain::InitImageViews()
 			.setBaseArrayLayer(0u)
 			.setLayerCount(1u);
 
-		imageViews.emplace_back(Device->createImageViewUnique(viewInfo));
+		uImageViews.emplace_back(Device->createImageViewUnique(viewInfo));
 	}
 }
 
 void RSwapchain::InitFrameBuffers()
 {
-	framebuffers.clear();
-	framebuffers.resize(images.size());
+	uFramebuffers.clear();
+	uFramebuffers.resize(imageCount);
 
-	for (auto i = 0; i < images.size(); ++i) {
-
+	for (uint32 i = 0; i < imageCount; ++i) {
 		vk::FramebufferCreateInfo createInfo{};
 		createInfo
-			.setRenderPass(renderPass.get()) //
-			.setAttachmentCount(1u)
-			.setPAttachments(&imageViews[i].get()) // CHECK: temp
+			.setRenderPass(uRenderPass.get()) //
+			.setAttachments(uImageViews[i].get())
 			.setWidth(extent.width)
 			.setHeight(extent.height)
 			.setLayers(1u);
 
-		framebuffers[i] = Device->createFramebufferUnique(createInfo);
+		uFramebuffers[i] = Device->createFramebufferUnique(createInfo);
 	}
 }
 } // namespace vl
