@@ -1,7 +1,9 @@
 #pragma once
 #include "rendering/wrappers/PhysicalDevice.h"
 
+
 #define DEBUG_NAME(handle, name) detail::RegisterDebugName(handle, name);
+#define DEBUG_NAME_AUTO(handle)  DEBUG_NAME(handle, #handle)
 
 namespace detail {
 template<typename T, typename = void>

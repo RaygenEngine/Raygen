@@ -11,10 +11,8 @@ namespace vl {
 void PtDebug::MakeLayout()
 {
 
-	descLayout.AddBinding(vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment);
-	descLayout.Generate();
 
-	std::array layouts{ descLayout.handle() } //; 	std::array layouts = { *Layouts->ptPassLayout.internalDescLayout.setLayout };
+	std::array layouts{ Layouts->ptPassLayout.internalDescLayout.handle() };
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};

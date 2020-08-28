@@ -28,7 +28,7 @@ void Layouts_::MakePtPassLayout()
 	layout.AddSubpass({ gbufferDepth, lights }, { postprocOut });
 
 
-	layout.AttachmentFinalLayout(lights, vk::ImageLayout::eColorAttachmentOptimal);
+	layout.AttachmentFinalLayout(lights, vk::ImageLayout::eShaderReadOnlyOptimal);
 	layout.AttachmentFinalLayout(postprocOut, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	layout.AttachmentFinalLayout(gbufferDepth, vk::ImageLayout::eDepthStencilAttachmentOptimal);

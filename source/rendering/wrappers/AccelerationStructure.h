@@ -13,7 +13,6 @@ struct RAccelerationStructure {
 	// WIP: Finish this instead of device addresses
 	// uint64 getVkUint() { return static_cast<uint64>(handle.get().operator VkAccelerationStructureKHR()); }
 
-	vk::UniqueAccelerationStructureKHR handle;
 
 protected:
 	vk::UniqueAccelerationStructureKHR uHandle;

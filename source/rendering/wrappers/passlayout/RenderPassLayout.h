@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rendering/wrappers/Framebuffer.h"
-#include "rendering/wrappers/DescriptorLayout.h"
+#include "rendering/wrappers/DescriptorSetLayout.h"
 
 namespace vl {
 struct RRenderPassLayout;
@@ -129,7 +129,7 @@ public:
 	std::vector<Subpass> subpasses;
 
 	// Contains input attachments for next subpasses
-	RDescriptorLayout internalDescLayout;
+	RDescriptorSetLayout internalDescLayout;
 	std::vector<AttachmentRef> internalInputAttachmentOrder;
 
 

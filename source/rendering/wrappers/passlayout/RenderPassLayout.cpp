@@ -225,7 +225,7 @@ void RRenderPassLayout::Generate()
 
 	compatibleRenderPass = Device->createRenderPassUnique(renderPassInfo);
 
-	if (!internalDescLayout.bindings.empty()) {
+	if (!internalDescLayout.IsEmpty()) {
 		internalDescLayout.Generate();
 	}
 }
@@ -265,8 +265,8 @@ RenderingPassInstance RRenderPassLayout::CreatePassInstance(
 	}
 	framebuffer.Generate(*compatibleRenderPass);
 
-	if (internalDescLayout.hasBeenGenerated) {
-		rpInstance.internalDescSet = internalDescLayout.GetDescriptorSet();
+	if (internalDescLayout.HasBeenGenerated()) {
+		rpInstance.internalDescSet = internalDescLayout.AllocDescriptorSet();
 
 		if (!internalInputAttachmentOrder.empty()) {
 			std::vector<vk::ImageView> views;
@@ -274,7 +274,7 @@ RenderingPassInstance RRenderPassLayout::CreatePassInstance(
 			for (auto& att : internalInputAttachmentOrder) {
 				CLOG_ABORT(IsExternal(att),
 					"RenderPassLayout internal error, using an external attachment as input attachment.");
-				views.emplace_back(framebuffer[att.GetAttachmentIndex()]());
+				views.emplace_back(framebuffer[att.GetAttachmentIndex()].view());
 			}
 
 			rvk::writeDescriptorImages(
@@ -297,7 +297,7 @@ void RenderingPassInstance::TransitionFramebufferForWrite(vk::CommandBuffer cmdB
 
 		if (finalLayout != initialLayout) {
 			// PERF: create all transition barriers and use a single one
-			att.TransitionToLayout(&cmdBuffer, finalLayout, initialLayout);
+			att.TransitionToLayout(cmdBuffer, finalLayout, initialLayout);
 		}
 		index++;
 	}

@@ -14,7 +14,6 @@ struct RFramebuffer {
 
 	vk::UniqueDescriptorSetLayout setLayout;
 
-	bool hasBeenGenerated{ false };
 
 	void AddAttachment(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling,
 		vk::ImageLayout initialLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties,
@@ -27,17 +26,16 @@ struct RFramebuffer {
 
 	[[nodiscard]] vk::Framebuffer handle() const { return uHandle.get(); }
 
-	[[nodiscard]] const RImageAttachment& operator[](size_t i) const { return attachments[i]; }
+	[[nodiscard]] const RImageAttachment& operator[](size_t i) const { return ownedAttachments[i]; }
 
-	//auto begin() { return std::begin(attachments); }
-	//auto begin() const { return std::begin(attachments); }
-	//auto end() { return std::end(attachments); }
-	//auto end() const { return std::end(attachments); }
+	// auto begin() { return std::begin(attachments); }
+	// auto begin() const { return std::begin(attachments); }
+	// auto end() { return std::end(attachments); }
+	// auto end() const { return std::end(attachments); }
 
 private:
 	vk::UniqueFramebuffer uHandle;
 
-	std::vector<RImageAttachment> attachments{};
 
 	bool hasBeenGenerated{ false };
 };

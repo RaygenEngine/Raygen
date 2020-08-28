@@ -20,7 +20,7 @@ namespace vl {
 SwapchainOutputPass::SwapchainOutputPass()
 {
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_descSet[i] = Layouts->singleSamplerDescLayout.GetDescriptorSet();
+		m_descSet[i] = Layouts->singleSamplerDescLayout.AllocDescriptorSet();
 	}
 
 	OnWindowResize();
@@ -45,8 +45,8 @@ void SwapchainOutputPass::RecompileCpyShader()
 		RecompileCpyShader();
 	};
 
-	m_pipelineLayout = rvk::makeLayoutNoPC({ Layouts->singleSamplerDescLayout.setLayout.get() });
-	m_pipeline = rvk::makePostProcPipeline(gpuShader.shaderStages, *m_pipelineLayout, *m_swapchain->renderPass);
+	m_pipelineLayout = rvk::makeLayoutNoPC({ Layouts->singleSamplerDescLayout.handle() });
+	m_pipeline = rvk::makePostProcPipeline(gpuShader.shaderStages, *m_pipelineLayout, m_swapchain->renderPass());
 }
 
 void SwapchainOutputPass::OnViewsUpdated(InFlightResources<vk::ImageView> renderResultViews)
@@ -60,8 +60,8 @@ void SwapchainOutputPass::RecordOutPass(vk::CommandBuffer cmdBuffer, uint32 fram
 {
 	vk::RenderPassBeginInfo renderPassInfo{};
 	renderPassInfo
-		.setRenderPass(*m_swapchain->renderPass) //
-		.setFramebuffer(*m_swapchain->framebuffers[m_swapchainImageIndex]);
+		.setRenderPass(m_swapchain->renderPass()) //
+		.setFramebuffer(m_swapchain->framebuffer(m_swapchainImageIndex));
 
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //

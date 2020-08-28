@@ -27,14 +27,14 @@ void RFramebuffer::AddAttachment(uint32 width, uint32 height, vk::Format format,
 	ownedAttachments.emplace_back(width, height, format, tiling, initialLayout, usage, properties, name);
 	ownedAttachments.back().BlockingTransitionToLayout(initialLayout, finalLayout);
 
-	attachmentViews.emplace_back(ownedAttachments.back()());
+	attachmentViews.emplace_back(ownedAttachments.back().view());
 }
 
 void RFramebuffer::AddExistingAttachment(const RImageAttachment& attachment)
 {
 	CLOG_ERROR(!IsEqual(attachment.extent, extent),
 		"Incompatible sizes for attachment to framebuffer: Attachment name: {}", attachment.name);
-	attachmentViews.emplace_back(attachment());
+	attachmentViews.emplace_back(attachment.view());
 }
 
 void RFramebuffer::Generate(vk::RenderPass compatibleRenderPass)

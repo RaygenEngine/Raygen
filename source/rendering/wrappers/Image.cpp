@@ -188,21 +188,20 @@ void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayo
 	Device->graphicsQueue.waitIdle();
 }
 
-void RImage::TransitionToLayout(
-	vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const
+void RImage::TransitionToLayout(vk::CommandBuffer cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const
 {
 	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
 
-	cmdBuffer->pipelineBarrier(rvk::pipelineStageForLayout(oldLayout), rvk::pipelineStageForLayout(newLayout),
+	cmdBuffer.pipelineBarrier(rvk::pipelineStageForLayout(oldLayout), rvk::pipelineStageForLayout(newLayout),
 		vk::DependencyFlags{ 0 }, {}, {}, barrier);
 }
 
-void RImage::TransitionToLayout(vk::CommandBuffer* cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
+void RImage::TransitionToLayout(vk::CommandBuffer cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
 	vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage) const
 {
 	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
 
-	cmdBuffer->pipelineBarrier(sourceStage, destStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
+	cmdBuffer.pipelineBarrier(sourceStage, destStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
 }
 
 void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
