@@ -153,7 +153,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms)
 		.setBufferInfo(primOffsetBufInfo);
 
 
-	Device->updateDescriptorSets({ imgWriteSet, bufWriteSet, bufWriteSet2, bufWriteSet3, bufWriteSet4 }, {});
+	Device->updateDescriptorSets({ imgWriteSet, bufWriteSet, bufWriteSet2, bufWriteSet3, bufWriteSet4 }, nullptr);
 
 	Build();
 	Device->waitIdle();

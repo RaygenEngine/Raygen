@@ -13,10 +13,10 @@ namespace vl {
 vk::UniquePipelineLayout DirlightBlend::MakePipelineLayout()
 {
 	return rvk::makeLayoutNoPC({
-		Layouts->gbufferDescLayout.setLayout.get(),
-		Layouts->singleUboDescLayout.setLayout.get(),
-		Layouts->singleUboDescLayout.setLayout.get(),
-		Layouts->singleSamplerDescLayout.setLayout.get(),
+		Layouts->gbufferDescLayout.handle(),
+		Layouts->singleUboDescLayout.handle(),
+		Layouts->singleUboDescLayout.handle(),
+		Layouts->singleSamplerDescLayout.handle(),
 	});
 }
 

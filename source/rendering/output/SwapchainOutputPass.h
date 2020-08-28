@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rendering/output/OutputPassBase.h"
-#include "rendering/wrappers/DescriptorLayout.h"
+#include "rendering/wrappers/DescriptorSetLayout.h"
 #include "rendering/wrappers/Swapchain.h"
 
 
@@ -22,8 +22,8 @@ public:
 
 	virtual void OnPreRender() override;
 
-	[[nodiscard]] vk::SwapchainKHR GetSwapchain() const { return *m_swapchain; }
-	[[nodiscard]] vk::RenderPass GetRenderPass() const { return *m_swapchain->renderPass; }
+	[[nodiscard]] vk::SwapchainKHR GetSwapchain() const { return m_swapchain->handle(); }
+	[[nodiscard]] vk::RenderPass GetRenderPass() const { return m_swapchain->renderPass(); }
 
 	// Sets the temporary  ImageIndex given by the swapchain aquire image call
 	void SetOutputImageIndex(uint32 swapchainImageIndex) { m_swapchainImageIndex = swapchainImageIndex; }

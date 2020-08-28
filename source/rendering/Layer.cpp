@@ -121,11 +121,9 @@ void Layer_::DrawFrame()
 	}
 
 	uint32 imageIndex;
-	Device->acquireNextImageKHR(
-		mainSwapchain->handle(), UINT64_MAX, { m_imageAvailSem[m_currentFrame].get() }, {}, &imageIndex);
 
 	Device->acquireNextImageKHR(
-		swapOutput->GetSwapchain(), UINT64_MAX, { m_imageAvailSem[currentFrame].get() }, {}, &imageIndex);
+		swapOutput->GetSwapchain(), UINT64_MAX, { m_imageAvailSem[m_currentFrame].get() }, {}, &imageIndex);
 
 	swapOutput->SetOutputImageIndex(imageIndex);
 
@@ -159,12 +157,12 @@ void Layer_::DrawFrame()
 
 	Device->graphicsQueue.submit(1u, &submitInfo, *m_frameFence[m_currentFrame]);
 
-	vk::SwapchainKHR swapChains[] = { swapOutput->GetSwapchain() };
+	vk::SwapchainKHR swapchain = swapOutput->GetSwapchain();
 
 	vk::PresentInfoKHR presentInfo{};
 	presentInfo //
 		.setWaitSemaphores(m_renderFinishedSem[m_currentFrame].get())
-		.setSwapchains(swaps)
+		.setSwapchains(swapchain)
 		.setImageIndices(imageIndex);
 
 	Device->presentQueue.presentKHR(presentInfo);
