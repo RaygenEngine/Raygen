@@ -26,20 +26,20 @@ void RFramebuffer::Generate(vk::RenderPass compatibleRenderPass)
 	CLOG_ABORT(hasBeenGenerated, "Attempting to generate a Framebuffer that is already generated");
 
 	std::vector<vk::ImageView> views;
-	std::for_each(attachments.begin(), attachments.end(), [&views](RImageAttachment& att) { views.push_back(att()); });
+	std::for_each(
+		attachments.begin(), attachments.end(), [&views](RImageAttachment& att) { views.push_back(att.view()); });
 
 	auto extent = attachments[0].extent;
 
 	vk::FramebufferCreateInfo createInfo{};
 	createInfo
 		.setRenderPass(compatibleRenderPass) //
-		.setAttachmentCount(static_cast<uint32>(views.size()))
-		.setPAttachments(views.data())
+		.setAttachments(views)
 		.setWidth(extent.width)
 		.setHeight(extent.height)
 		.setLayers(1);
 
-	handle = Device->createFramebufferUnique(createInfo);
+	uHandle = Device->createFramebufferUnique(createInfo);
 
 	hasBeenGenerated = true;
 }

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "DescriptorLayout.h"
+#include "DescriptorSetLayout.h"
 
 #include "engine/Logger.h"
 #include "rendering/Device.h"
@@ -14,10 +14,10 @@ inline void hash_combine(size_t& seed, const T& v)
 }
 
 struct PoolHasher {
-	size_t operator()(const vl::RDescriptorLayout& layoutSize)
+	size_t operator()(const std::vector<vk::DescriptorPoolSize>& perSetPoolSizes)
 	{
 		size_t hash = 0;
-		for (auto& size : layoutSize.perSetPoolSizes) {
+		for (auto& size : perSetPoolSizes) {
 			hash_combine(hash, size.descriptorCount);
 			hash_combine(hash, size.type);
 		}
@@ -27,7 +27,7 @@ struct PoolHasher {
 } // namespace
 
 namespace vl {
-void RDescriptorLayout::AddBinding(vk::DescriptorType type, vk::ShaderStageFlags stageFlags, uint32 descriptorCount)
+void RDescriptorSetLayout::AddBinding(vk::DescriptorType type, vk::ShaderStageFlags stageFlags, uint32 descriptorCount)
 {
 	CLOG_ABORT(hasBeenGenerated, "Attempting to add binding to an DescriptorLayout that is already generated");
 
@@ -59,28 +59,22 @@ void RDescriptorLayout::AddBinding(vk::DescriptorType type, vk::ShaderStageFlags
 	}
 }
 
-void RDescriptorLayout::Generate()
+void RDescriptorSetLayout::Generate()
 {
 	CLOG_ABORT(hasBeenGenerated, "Attempting to generate a DescriptorLayout that is already generated");
 
 	vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo
-		.setBindingCount(static_cast<uint32>(bindings.size())) //
-		.setPBindings(bindings.data());
+	layoutInfo.setBindings(bindings);
 
 	hasBeenGenerated = true;
-	setLayout = Device->createDescriptorSetLayoutUnique(layoutInfo);
-	poolSizeHash = PoolHasher{}(*this);
+	uHandle = Device->createDescriptorSetLayoutUnique(layoutInfo);
+	poolSizeHash = PoolHasher{}(perSetPoolSizes);
 }
 
-vk::DescriptorSet RDescriptorLayout::GetDescriptorSet() const
+vk::DescriptorSet RDescriptorSetLayout::AllocDescriptorSet() const
 {
 	CLOG_ABORT(!hasBeenGenerated, "Attempting to get a descriptor set from a non generated DescriptorLayout");
 	return GpuResources::AllocateDescriptorSet(poolSizeHash, *this);
 }
 
-bool RDescriptorLayout::IsEmpty() const
-{
-	return bindings.empty();
-}
 } // namespace vl

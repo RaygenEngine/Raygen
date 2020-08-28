@@ -46,7 +46,7 @@ Scene::Scene()
 	EnqueueEndFrame();
 	EnqueueCreateCmd<SceneCamera>(); // TODO: editor camera
 
-	sceneAsDescSet = vl::Layouts->accelLayout.GetDescriptorSet();
+	sceneAsDescSet = vl::Layouts->accelLayout.AllocDescriptorSet();
 }
 
 Scene::~Scene()
@@ -73,7 +73,7 @@ void Scene::UpdateTopLevelAs()
 	tlas = vl::TopLevelAs(geometries.elements);
 
 	vk::WriteDescriptorSetAccelerationStructureKHR descASInfo{};
-	descASInfo.setAccelerationStructures(vk::AccelerationStructureKHR{ tlas });
+	descASInfo.setAccelerationStructures(tlas.handle());
 
 	vk::WriteDescriptorSet descriptorWrite{};
 	descriptorWrite
@@ -82,13 +82,11 @@ void Scene::UpdateTopLevelAs()
 		.setDstArrayElement(0u)
 		.setDescriptorType(vk::DescriptorType::eAccelerationStructureKHR)
 		.setDescriptorCount(1u)
-		.setPBufferInfo(nullptr)
-		.setPImageInfo(nullptr)
-		.setPTexelBufferView(nullptr)
 		.setPNext(&descASInfo);
 
 	// single call to update all descriptor sets with the new depth image
-	vl::Device->updateDescriptorSets({ descriptorWrite }, {});
+	vl::Device->updateDescriptorSets(descriptorWrite, {});
+
 	vl::Device->waitIdle();
 }
 
