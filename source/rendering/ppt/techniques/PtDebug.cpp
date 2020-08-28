@@ -18,10 +18,10 @@ void PtDebug::MakeLayout()
 	descLayout.AddBinding(vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment);
 	descLayout.Generate();
 
-
+	std::array layouts{ descLayout.handle() };
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.setSetLayouts(descLayout.handle());
+	pipelineLayoutInfo.setSetLayouts(layouts);
 
 	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }

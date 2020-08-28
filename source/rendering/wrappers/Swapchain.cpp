@@ -177,7 +177,7 @@ void RSwapchain::InitFrameBuffers()
 	uFramebuffers.clear();
 	uFramebuffers.resize(imageCount);
 
-	for (auto i = 0; i < imageCount; ++i) {
+	for (uint32 i = 0; i < imageCount; ++i) {
 		vk::FramebufferCreateInfo createInfo{};
 		createInfo
 			.setRenderPass(uRenderPass.get()) //

@@ -272,9 +272,10 @@ void PrefilteredMapCalculation::MakePipeline()
 		.setSize(sizeof(PushConstant))
 		.setOffset(0u);
 
+	std::array layouts{ m_skyboxDescLayout.handle() };
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
-		.setSetLayouts(m_skyboxDescLayout.handle()) //
+		.setSetLayouts(layouts) //
 		.setPushConstantRanges(pushConstantRange);
 
 	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
