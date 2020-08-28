@@ -29,10 +29,8 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 
 	vk::PipelineViewportStateCreateInfo viewportState{};
 	viewportState
-		.setViewportCount(1u) //
-		.setPViewports(&viewport)
-		.setScissorCount(1u)
-		.setPScissors(&scissor);
+		.setViewports(viewport) //
+		.setScissors(scissor);
 
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer
@@ -57,11 +55,9 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 		.setAlphaToOneEnable(VK_FALSE);
 
 	// dynamic states
-	vk::DynamicState dynamicStates[] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	std::array dynamicStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo
-		.setDynamicStateCount(2u) //
-		.setPDynamicStates(dynamicStates);
+	dynamicStateInfo.setDynamicStates(dynamicStates);
 
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
@@ -78,8 +74,7 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 
 	vk::GraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo
-		.setStageCount(static_cast<uint32>(shaderStages.size())) //
-		.setPStages(shaderStages.data())
+		.setStages(shaderStages) //
 		.setPVertexInputState(&vertexInputInfo)
 		.setPInputAssemblyState(&inputAssembly)
 		.setPViewportState(&viewportState)

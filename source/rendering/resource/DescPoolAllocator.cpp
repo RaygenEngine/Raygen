@@ -15,8 +15,7 @@ vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const RD
 	auto addPool = [&](Entry& entry) {
 		vk::DescriptorPoolCreateInfo poolInfo{};
 		poolInfo
-			.setPoolSizeCount(static_cast<uint32>(entry.poolSizes.size())) //
-			.setPPoolSizes(entry.poolSizes.data())
+			.setPoolSizes(entry.poolSizes) //
 			.setMaxSets(c_setsPerPool);
 
 		entry.pools.emplace_back(std::move(Device->createDescriptorPoolUnique(poolInfo)));
@@ -46,7 +45,6 @@ vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const RD
 	vk::DescriptorSetAllocateInfo allocInfo{};
 	allocInfo //
 		.setDescriptorPool(entry.pools.back().get())
-		.setDescriptorSetCount(1)
 		.setSetLayouts(layout.handle());
 
 	return Device->allocateDescriptorSets(allocInfo)[0];

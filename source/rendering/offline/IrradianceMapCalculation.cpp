@@ -116,8 +116,7 @@ void IrradianceMapCalculation::MakeRenderPass()
 	vk::SubpassDescription subpass{};
 	subpass
 		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachmentCount(1u)
-		.setPColorAttachments(&colorAttachmentRef);
+		.setColorAttachments(colorAttachmentRef);
 
 	vk::SubpassDependency dependency{};
 	dependency
@@ -131,12 +130,9 @@ void IrradianceMapCalculation::MakeRenderPass()
 	std::array attachments{ colorAttachmentDesc };
 	vk::RenderPassCreateInfo renderPassInfo{};
 	renderPassInfo
-		.setAttachmentCount(static_cast<uint32>(attachments.size())) //
-		.setPAttachments(attachments.data())
-		.setSubpassCount(1u)
-		.setPSubpasses(&subpass)
-		.setDependencyCount(1u)
-		.setPDependencies(&dependency);
+		.setAttachments(attachments) //
+		.setSubpasses(subpass)
+		.setDependencies(dependency);
 
 	m_renderPass = Device->createRenderPassUnique(renderPassInfo);
 }
@@ -204,10 +200,8 @@ void IrradianceMapCalculation::MakePipeline()
 		.setOffset(0u);
 
 	vertexInputInfo
-		.setVertexBindingDescriptionCount(1u) //
-		.setVertexAttributeDescriptionCount(1u)
-		.setPVertexBindingDescriptions(&bindingDescription)
-		.setPVertexAttributeDescriptions(&attributeDescription);
+		.setVertexBindingDescriptions(bindingDescription) //
+		.setVertexAttributeDescriptions(attributeDescription);
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly
@@ -220,11 +214,8 @@ void IrradianceMapCalculation::MakePipeline()
 
 	vk::PipelineViewportStateCreateInfo viewportState{};
 	viewportState
-		.setViewportCount(1u) //
-		.setPViewports(&viewport)
-		.setScissorCount(1u)
-		.setPScissors(&scissor);
-
+		.setViewports(viewport) //
+		.setScissors(scissor);
 
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer
@@ -266,17 +257,13 @@ void IrradianceMapCalculation::MakePipeline()
 	colorBlending
 		.setLogicOpEnable(VK_FALSE) //
 		.setLogicOp(vk::LogicOp::eCopy)
-		.setAttachmentCount(1u)
-		.setPAttachments(&colorBlendAttachment)
+		.setAttachments(colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	// Dynamic vieport
-	vk::DynamicState dynamicStates[2] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	std::array dynamicStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo
-		.setDynamicStateCount(2u) //
-		.setPDynamicStates(&dynamicStates[0]);
-
+	dynamicStateInfo.setDynamicStates(dynamicStates);
 
 	// pipeline layout
 	vk::PushConstantRange pushConstantRange{};
@@ -338,11 +325,12 @@ void IrradianceMapCalculation::PrepareFaceInfo()
 		m_faceAttachments[i].BlockingTransitionToLayout(
 			vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
+		std::array attachments{ m_faceAttachments[i].view() };
+
 		vk::FramebufferCreateInfo createInfo{};
 		createInfo
 			.setRenderPass(m_renderPass.get()) //
-			.setAttachmentCount(1u)
-			.setPAttachments(&m_faceAttachments[i].view())
+			.setAttachments(attachments)
 			.setWidth(m_resolution)
 			.setHeight(m_resolution)
 			.setLayers(1);
@@ -404,12 +392,9 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 
 		std::array<vk::ClearValue, 1> clearValues = {};
 		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-		renderPassInfo
-			.setClearValueCount(static_cast<uint32>(clearValues.size())) //
-			.setPClearValues(clearValues.data());
+		renderPassInfo.setClearValues(clearValues);
 
 		vk::CommandBufferBeginInfo beginInfo{};
-		beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
 		m_cmdBuffers[i].begin(beginInfo);
 		{
 
@@ -432,14 +417,12 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 				m_cmdBuffers[i].pushConstants(
 					m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
-				vk::Buffer vertexBuffers[] = { m_cubeVertexBuffer.handle() };
-				vk::DeviceSize offsets[] = { 0 };
 				// geom
-				m_cmdBuffers[i].bindVertexBuffers(0u, 1u, vertexBuffers, offsets);
+				m_cmdBuffers[i].bindVertexBuffers(0u, { m_cubeVertexBuffer.handle() }, { vk::DeviceSize(0) });
 
 				// descriptor sets
 				m_cmdBuffers[i].bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &m_descSet, 0u, nullptr);
+					vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, { m_descSet }, nullptr);
 
 				// draw call (cube)
 				m_cmdBuffers[i].draw(static_cast<uint32>(vertices.size() / 3), 1u, 0u, 0u);
@@ -450,9 +433,9 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 		m_cmdBuffers[i].end();
 
 		vk::SubmitInfo submitInfo{};
-		submitInfo.setCommandBufferCount(1u).setPCommandBuffers(&m_cmdBuffers[i]);
+		submitInfo.setCommandBuffers(m_cmdBuffers[i]);
 
-		Device->graphicsQueue.submit(1u, &submitInfo, {});
+		Device->graphicsQueue.submit(submitInfo, {});
 	}
 
 	// CHECK:

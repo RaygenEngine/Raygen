@@ -72,8 +72,10 @@ void Scene::UpdateTopLevelAs()
 	// WIP:
 	tlas = vl::TopLevelAs(geometries.elements);
 
+	std::array accelStructs{ tlas.handle() };
+
 	vk::WriteDescriptorSetAccelerationStructureKHR descASInfo{};
-	descASInfo.setAccelerationStructures(tlas.handle());
+	descASInfo.setAccelerationStructures(accelStructs);
 
 	vk::WriteDescriptorSet descriptorWrite{};
 	descriptorWrite

@@ -38,7 +38,9 @@ void GpuShaderStage::Update(const AssetUpdateInfo& info)
 		return;
 	}
 	vk::ShaderModuleCreateInfo createInfo{};
-	createInfo.setCodeSize(binary.size() * 4).setPCode(binary.data());
+	createInfo
+		.setCodeSize(binary.size() * 4) //
+		.setPCode(binary.data());
 	module = Device->createShaderModuleUnique(createInfo);
 
 	DEBUG_NAME(module, AssetHandlerManager::GetPodUri(podHandle));
