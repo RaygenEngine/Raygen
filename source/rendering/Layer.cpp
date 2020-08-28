@@ -20,6 +20,7 @@
 #include "universe/Universe.h"
 #include "wrappers/Swapchain.h"
 #include "rendering/StaticPipes.h"
+#include "rendering/output/SwapchainOutputPass.h"
 
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
 	"Builds all build-able scene nodes" };
@@ -44,14 +45,15 @@ Layer_::Layer_()
 
 	// StaticPipes::InitRegistered();
 
-	mainSwapchain = new RSwapchain(Instance->surface);
+	swapOutput = new SwapchainOutputPass();
 
 	mainScene = new Scene();
 	currentScene = mainScene;
 
-
 	Renderer = new Renderer_();
-	Renderer->InitPipelines(mainSwapchain->renderPass.get());
+	swapOutput->SetAttachedRenderer(Renderer);
+
+	Renderer->InitPipelines();
 
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
 		m_renderFinishedSem[i] = Device->createSemaphoreUnique({});
@@ -69,9 +71,6 @@ Layer_::Layer_()
 
 	m_cmdBuffer = Device->allocateCommandBuffers(allocInfo);
 
-	Event::OnWindowResize.BindFlag(this, m_didWindowResize);
-	Event::OnWindowMinimize.Bind(this, [&](bool newIsMinimized) { m_isMinimized = newIsMinimized; });
-
 
 } // namespace vl
 
@@ -80,7 +79,7 @@ Layer_::~Layer_()
 	delete Renderer;
 
 	// WIP:
-	delete mainSwapchain;
+	delete swapOutput;
 	delete mainScene;
 
 	StaticPipes::DestroyAll();
@@ -102,25 +101,16 @@ void Layer_::DrawFrame()
 {
 	currentScene = mainScene;
 
-
-	if (*m_didWindowResize) {
-		Device->waitIdle();
-
-		delete mainSwapchain;
-		mainSwapchain = new RSwapchain(Instance->surface);
-	}
-
-	if (m_isMinimized)
-		[[unlikely]] { return; }
-
-	Renderer->PrepareForFrame();
-
 	GpuAssetManager->ConsumeAssetUpdates();
-
 	currentScene->ConsumeCmdQueue();
 
+	if (!swapOutput->ShouldRenderThisFrame())
+		[[unlikely]] { return; }
+
+	swapOutput->OnPreRender();
+
 	currentFrame = (currentFrame + 1) % c_framesInFlight;
-	auto currentCmdBuffer = &m_cmdBuffer[currentFrame];
+	auto currentCmdBuffer = m_cmdBuffer[currentFrame];
 
 	{
 		PROFILE_SCOPE(Renderer);
@@ -132,12 +122,10 @@ void Layer_::DrawFrame()
 	}
 	uint32 imageIndex;
 
-	Device->acquireNextImageKHR(*mainSwapchain, UINT64_MAX, { m_imageAvailSem[currentFrame].get() }, {}, &imageIndex);
+	Device->acquireNextImageKHR(
+		swapOutput->GetSwapchain(), UINT64_MAX, { m_imageAvailSem[currentFrame].get() }, {}, &imageIndex);
 
-
-	auto outRp = mainSwapchain->renderPass.get();
-	auto outFb = mainSwapchain->framebuffers[imageIndex].get();
-	auto outExtent = mainSwapchain->extent;
+	swapOutput->SetOutputImageIndex(imageIndex);
 
 	// WIP: 0 = editor camera
 	SceneRenderDesc sceneDesc{ currentScene, 0, currentFrame };
@@ -148,11 +136,11 @@ void Layer_::DrawFrame()
 		.setFlags(vk::CommandBufferUsageFlags(0)) //
 		.setPInheritanceInfo(nullptr);
 
-	currentCmdBuffer->begin(beginInfo);
+	currentCmdBuffer.begin(beginInfo);
 	{
-		Renderer->DrawFrame(currentCmdBuffer, sceneDesc, outRp, outFb, outExtent);
+		Renderer->DrawFrame(currentCmdBuffer, sceneDesc, *swapOutput);
 	}
-	currentCmdBuffer->end();
+	currentCmdBuffer.end();
 
 
 	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput }; //
@@ -176,7 +164,7 @@ void Layer_::DrawFrame()
 	Device->graphicsQueue.submit(1u, &submitInfo, *m_frameFence[currentFrame]);
 
 
-	vk::SwapchainKHR swapChains[] = { *mainSwapchain };
+	vk::SwapchainKHR swapChains[] = { swapOutput->GetSwapchain() };
 
 	vk::PresentInfoKHR presentInfo;
 	presentInfo //

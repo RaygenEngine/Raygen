@@ -14,7 +14,7 @@
 #include "rendering/resource/GpuResources.h"
 #include "rendering/wrappers/Swapchain.h"
 
-// WIP:
+#include "rendering/output/SwapchainOutputPass.h"
 #include "rendering/Layer.h"
 
 #include <imgui/imgui.h>
@@ -284,7 +284,6 @@ void InitVulkan()
 
 	auto& physDev = Device->pd;
 	auto& device = *Device;
-	auto& swapchain = Layer->mainSwapchain;
 
 	ImGui_ImplVulkan_InitInfo init = {};
 	init.Instance = *Instance;
@@ -298,7 +297,7 @@ void InitVulkan()
 	init.MinImageCount = c_framesInFlight;
 	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init, swapchain->renderPass.get());
+	ImGui_ImplVulkan_Init(&init, Layer->swapOutput->GetRenderPass());
 
 	// CHECK: which buffer
 	auto cmdBuffer = Device->graphicsCmdBuffer;
@@ -372,8 +371,8 @@ void ImguiImpl::EndFrame()
 	ImGui::RenderPlatformWindowsDefault();
 }
 
-void ImguiImpl::RenderVulkan(vk::CommandBuffer* drawCommandBuffer)
+void ImguiImpl::RenderVulkan(vk::CommandBuffer drawCommandBuffer)
 {
 	PROFILE_SCOPE(Editor);
-	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), *drawCommandBuffer);
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), drawCommandBuffer);
 }

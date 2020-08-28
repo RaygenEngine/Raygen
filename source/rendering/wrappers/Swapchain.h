@@ -15,6 +15,7 @@ struct RSwapchain : vk::SwapchainKHR {
 
 	vk::UniqueRenderPass renderPass;
 
+	// CHECK: Automatically makes a swapchain as big as the main window
 	RSwapchain(vk::SurfaceKHR surface);
 	~RSwapchain();
 
