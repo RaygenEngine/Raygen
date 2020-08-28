@@ -1,7 +1,7 @@
 #version 460
 #extension GL_GOOGLE_include_directive: enable
 #extension GL_EXT_ray_tracing : require
-#extension GL_EXT_ray_query: enable
+#extension GL_EXT_ray_query: require
 #include "global.h"
 
 #include "bsdf.h"
@@ -130,7 +130,8 @@ void main() {
 	float shadow;
 	//float shadow = ShadowCalculationFast(shadowmap, light.viewProj, frag.position, light.maxShadowBias);
 
- //#define RTX_ON
+
+#define RTX_ON
 	
 #ifndef RTX_ON
 		shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);

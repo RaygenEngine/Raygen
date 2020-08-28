@@ -27,7 +27,7 @@ GBuffer::GBuffer(uint32 width, uint32 height)
 	framebuffer.Generate(Layouts->gbufferPass.get());
 
 
-	descSet = Layouts->gbufferDescLayout.GetDescriptorSet();
+	descSet = Layouts->gbufferDescLayout.AllocDescriptorSet();
 
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
@@ -36,7 +36,7 @@ GBuffer::GBuffer(uint32 width, uint32 height)
 		vk::DescriptorImageInfo imageInfo{};
 		imageInfo
 			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-			.setImageView(framebuffer[i]())
+			.setImageView(framebuffer[i].view())
 			.setSampler(quadSampler);
 
 		vk::WriteDescriptorSet descriptorWrite{};
@@ -45,10 +45,7 @@ GBuffer::GBuffer(uint32 width, uint32 height)
 			.setDstBinding(i)
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-			.setDescriptorCount(1u)
-			.setPBufferInfo(nullptr)
-			.setPImageInfo(&imageInfo)
-			.setPTexelBufferView(nullptr);
+			.setImageInfo(imageInfo);
 
 		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 	}

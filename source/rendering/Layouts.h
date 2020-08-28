@@ -1,26 +1,26 @@
 #pragma once
-#include "rendering/wrappers/DescriptorLayout.h"
+#include "rendering/wrappers/DescriptorSetLayout.h"
 
 namespace vl {
 inline struct Layouts_ {
 
-	RDescriptorLayout gltfMaterialDescLayout;
-	RDescriptorLayout gbufferDescLayout;
-	RDescriptorLayout singleUboDescLayout;
-	RDescriptorLayout jointsDescLayout;
-	RDescriptorLayout singleSamplerDescLayout;
-	RDescriptorLayout cubemapLayout;
-	RDescriptorLayout envmapLayout;
-	RDescriptorLayout accelLayout;
+	RDescriptorSetLayout gltfMaterialDescLayout;
+	RDescriptorSetLayout gbufferDescLayout;
+	RDescriptorSetLayout singleUboDescLayout;
+	RDescriptorSetLayout jointsDescLayout;
+	RDescriptorSetLayout singleSamplerDescLayout;
+	RDescriptorSetLayout cubemapLayout;
+	RDescriptorSetLayout envmapLayout;
+	RDescriptorSetLayout accelLayout;
 
-	RDescriptorLayout rtTriangleGeometry;
+	RDescriptorSetLayout rtTriangleGeometry;
 
-	RDescriptorLayout singleStorageImage;
+	RDescriptorSetLayout singleStorageImage;
 
-	RDescriptorLayout rtSceneDescLayout;
+	RDescriptorSetLayout rtSceneDescLayout;
 
 
-	RDescriptorLayout imageDebugDescLayout;
+	RDescriptorSetLayout imageDebugDescLayout;
 
 	vk::UniqueRenderPass depthRenderPass;
 	vk::UniqueRenderPass gbufferPass;

@@ -1,14 +1,14 @@
 #pragma once
 
 #include "rendering/ppt/PtBase.h"
-#include "rendering/wrappers/DescriptorLayout.h"
+#include "rendering/wrappers/DescriptorSetLayout.h"
 
 namespace vl {
 class PtDebug : public PtBase_SinglePipeline {
 public:
 	PtDebug();
 
-	RDescriptorLayout descLayout;
+	RDescriptorSetLayout descLayout;
 	InFlightResources<vk::DescriptorSet> descSet;
 
 	void MakeLayout() override;
