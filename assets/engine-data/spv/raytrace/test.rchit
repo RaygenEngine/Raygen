@@ -161,7 +161,7 @@ void main() {
 	vec3 albedo = sampledBaseColor.rgb;
 	float metallic = sampledMetallicRoughness.b;
 	float roughness = sampledMetallicRoughness.g;
-	float reflectance = 0.f;
+	float reflectance = 0.5f;
 
 
     // remapping
@@ -291,6 +291,7 @@ void main() {
 	}
 	
 }
+
 
 
 

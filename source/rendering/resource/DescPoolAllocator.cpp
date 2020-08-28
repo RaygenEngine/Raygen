@@ -42,10 +42,12 @@ vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const RD
 		addPool(entry);
 	}
 
+	std::array layouts{ layout.handle() };
+
 	vk::DescriptorSetAllocateInfo allocInfo{};
 	allocInfo //
 		.setDescriptorPool(entry.pools.back().get())
-		.setSetLayouts(layout.handle());
+		.setSetLayouts(layouts);
 
 	return Device->allocateDescriptorSets(allocInfo)[0];
 }

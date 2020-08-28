@@ -264,9 +264,11 @@ void Renderer_::MakeCopyHdrPipeline(vk::RenderPass outRp)
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
 	dynamicStateInfo.setDynamicStates(dynamicStates);
 
+	std::array layouts{ Layouts->singleSamplerDescLayout.handle() };
+
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.setSetLayouts(Layouts->singleSamplerDescLayout.handle());
+	pipelineLayoutInfo.setSetLayouts(layouts);
 
 	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
@@ -431,7 +433,7 @@ void Renderer_::SetRtImage()
 			.setDstSet(m_wipDescSet[i]) //
 			.setDstBinding(0u)
 			.setDstArrayElement(0u)
-			.setDescriptorType(vk::DescriptorType::eSampledImage)
+			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
 			.setImageInfo(imageInfo);
 
 		vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
