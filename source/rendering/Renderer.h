@@ -5,7 +5,8 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/structures/GBuffer.h"
 #include "rendering/wrappers/passlayout/RenderPassLayout.h"
-#include "rendering/output\OutputPassBase.h"
+#include "rendering/output/OutputPassBase.h"
+#include "rendering/passes/RaytracingPass.h"
 
 namespace vl {
 
@@ -14,16 +15,8 @@ inline class Renderer_ : public Listener {
 	// The recommended framebuffer allocation size for the viewport.
 	vk::Extent2D m_viewportFramebufferSize{};
 
-	// The actual game viewport rectangle in m_swapchain coords
-	vk::Rect2D m_viewportRect{};
-
-
 private:
-	InFlightResources<GBuffer> m_gbuffer;
-
-
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
 
 	PtCollection m_postprocCollection;
@@ -61,28 +54,18 @@ protected:
 public:
 	void ResizeBuffers(uint32 width, uint32 height);
 	InFlightResources<vk::ImageView> GetOutputViews() const;
+	InFlightResources<GBuffer> m_gbuffer; // WIP: make this private when finished with the attachment descriptor set
+
 
 	InFlightResources<RenderingPassInstance> m_ptPass;
 
 	// TODO: RT, move those, framearray
-	InFlightResources<vk::DescriptorSet> m_wipDescSet;
-
-	vk::UniqueAccelerationStructureKHR m_sceneAS;
 	InFlightResources<vk::DescriptorSet> m_rtDescSet;
+	InFlightResources<vk::DescriptorSet> m_rasterLightDescSet;
 
-	vk::UniquePipeline m_rtPipeline;
-	vk::UniquePipelineLayout m_rtPipelineLayout;
-	RBuffer m_rtSBTBuffer;
-	std::vector<vk::RayTracingShaderGroupCreateInfoKHR> m_rtShaderGroups;
-
-	int32 m_rtFrame{ 0 };
-	int32 m_rtDepth{ 2 };
-	int32 m_rtSamples{ 1 };
-
-	void MakeRtPipeline();
-	void SetRtImage();
-	void CreateRtShaderBindingTable();
 	//
+
+	RaytracingPass m_raytracingPass;
 
 
 	void DrawFrame(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, OutputPassBase& outputPass);

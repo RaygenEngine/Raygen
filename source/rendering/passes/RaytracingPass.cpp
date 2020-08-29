@@ -1,240 +1,236 @@
 #include "pch.h"
-#include "UnlitPass.h"
+#include "RaytracingPass.h"
 
-#include "engine/Engine.h"
-#include "engine/Input.h"
-#include "engine/profiler/ProfileScope.h"
-#include "rendering/assets/GpuMaterialArchetype.h"
-#include "rendering/assets/GpuMaterialInstance.h"
-#include "rendering/assets/GpuMesh.h"
-#include "rendering/assets/GpuSkinnedMesh.h"
-#include "rendering/Device.h"
+#include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuShader.h"
+#include "rendering/assets/GpuShaderStage.h"
 #include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/structures/GBuffer.h"
-#include "engine/console/ConsoleVariable.h"
-#include "rendering/scene/SceneGeometry.h"
+#include "rendering/Renderer.h"
 #include "rendering/scene/SceneCamera.h"
-#include "assets/shared/GeometryShared.h"
+#include "engine/console/ConsoleVariable.h"
 
-#include <glm/gtc/matrix_inverse.hpp>
+
+ConsoleVariable<int32> console_rtDepth{ "rt.depth", 2, "Set rt depth" };
+ConsoleVariable<int32> console_rtSamples{ "rt.samples", 1, "Set rt samples" };
+
+ConsoleFunction<> console_resetRtFrame{ "rt.reset", []() { vl::Renderer->m_raytracingPass.m_rtFrame = 0; },
+	"Reset rt frame" };
 
 namespace {
 struct PushConstant {
-	glm::mat4 modelMat;
-	glm::mat4 normalMat;
+	int32 frame;
+	int32 depth;
+	int32 samples;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
-//
-// size_t UnlitPass::GetPushConstantSize()
-//{
-//	return sizeof(PushConstant);
-//}
-//
-// namespace {
-//	vk::UniquePipeline CreatePipelineFromVtxInfo(vk::PipelineLayout pipelineLayout,
-//		std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages,
-//		vk::PipelineVertexInputStateCreateInfo vertexInputInfo)
-//	{
-//		static ConsoleVariable<vk::PolygonMode> unlitFillModeConsole{ "r.unlitFillMode", vk::PolygonMode::eFill,
-//			"Fill mode for unlit custom shaders. Recompile the archetype to apply." };
-//
-//		vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
-//		inputAssembly
-//			.setTopology(vk::PrimitiveTopology::eTriangleList) //
-//			.setPrimitiveRestartEnable(VK_FALSE);
-//
-//		// Dynamic vieport
-//		vk::DynamicState dynamicStates[2] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
-//		vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-//		dynamicStateInfo
-//			.setDynamicStateCount(2u) //
-//			.setPDynamicStates(&dynamicStates[0]);
-//
-//
-//		// those are dynamic so they will be updated when needed
-//		vk::Viewport viewport{};
-//		vk::Rect2D scissor{};
-//		vk::PipelineViewportStateCreateInfo viewportState{};
-//		viewportState
-//			.setViewportCount(1u) //
-//			.setPViewports(&viewport)
-//			.setScissorCount(1u)
-//			.setPScissors(&scissor);
-//
-//
-//		vk::PipelineRasterizationStateCreateInfo rasterizer{};
-//		rasterizer
-//			.setDepthClampEnable(VK_FALSE) //
-//			.setRasterizerDiscardEnable(VK_FALSE)
-//			.setPolygonMode(unlitFillModeConsole)
-//			.setLineWidth(1.f)
-//			.setCullMode(vk::CullModeFlagBits::eBack)
-//			.setFrontFace(vk::FrontFace::eCounterClockwise)
-//			.setDepthBiasEnable(VK_FALSE)
-//			.setDepthBiasConstantFactor(0.f)
-//			.setDepthBiasClamp(0.f)
-//			.setDepthBiasSlopeFactor(0.f);
-//
-//		vk::PipelineMultisampleStateCreateInfo multisampling{};
-//		multisampling
-//			.setSampleShadingEnable(VK_FALSE) //
-//			.setRasterizationSamples(vk::SampleCountFlagBits::e1)
-//			.setMinSampleShading(1.f)
-//			.setPSampleMask(nullptr)
-//			.setAlphaToCoverageEnable(VK_FALSE)
-//			.setAlphaToOneEnable(VK_FALSE);
-//
-//		std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachment{};
-//		for (uint32 i = 0u; i < 1; ++i) {
-//			colorBlendAttachment[i]
-//				.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
-//								   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
-//				.setBlendEnable(VK_FALSE)
-//				.setSrcColorBlendFactor(vk::BlendFactor::eOne)
-//				.setDstColorBlendFactor(vk::BlendFactor::eZero)
-//				.setColorBlendOp(vk::BlendOp::eAdd)
-//				.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
-//				.setDstAlphaBlendFactor(vk::BlendFactor::eZero)
-//				.setAlphaBlendOp(vk::BlendOp::eAdd);
-//		}
-//
-//		vk::PipelineColorBlendStateCreateInfo colorBlending{};
-//		colorBlending
-//			.setLogicOpEnable(VK_FALSE) //
-//			.setLogicOp(vk::LogicOp::eCopy)
-//			.setAttachmentCount(static_cast<uint32>(colorBlendAttachment.size()))
-//			.setPAttachments(colorBlendAttachment.data())
-//			.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
-//
-//
-//		// depth and stencil state
-//		vk::PipelineDepthStencilStateCreateInfo depthStencil{};
-//		depthStencil
-//			.setDepthTestEnable(VK_TRUE) //
-//			.setDepthWriteEnable(VK_TRUE)
-//			.setDepthCompareOp(vk::CompareOp::eLess)
-//			.setDepthBoundsTestEnable(VK_FALSE)
-//			.setMinDepthBounds(0.0f) // Optional
-//			.setMaxDepthBounds(1.0f) // Optional
-//			.setStencilTestEnable(VK_FALSE)
-//			.setFront({}) // Optional
-//			.setBack({}); // Optional
-//
-//		vk::GraphicsPipelineCreateInfo pipelineInfo{};
-//		pipelineInfo
-//			.setStageCount(static_cast<uint32>(shaderStages.size())) //
-//			.setPStages(shaderStages.data())
-//			.setPVertexInputState(&vertexInputInfo)
-//			.setPInputAssemblyState(&inputAssembly)
-//			.setPViewportState(&viewportState)
-//			.setPRasterizationState(&rasterizer)
-//			.setPMultisampleState(&multisampling)
-//			.setPDepthStencilState(&depthStencil)
-//			.setPColorBlendState(&colorBlending)
-//			.setPDynamicState(&dynamicStateInfo)
-//			.setLayout(pipelineLayout)
-//			.setRenderPass(Renderer->m_ptRenderpass.get())
-//			.setSubpass(1u)
-//			.setBasePipelineHandle({})
-//			.setBasePipelineIndex(-1);
-//
-//		return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
-//	}
-//} // namespace
-//
-// vk::UniquePipeline UnlitPass::CreatePipeline(
-//	vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages)
-//{
-//	vk::VertexInputBindingDescription bindingDescription{};
-//	bindingDescription
-//		.setBinding(0u) //
-//		.setStride(sizeof(Vertex))
-//		.setInputRate(vk::VertexInputRate::eVertex);
-//
-//	std::array<vk::VertexInputAttributeDescription, 4> attributeDescriptions{};
-//
-//	attributeDescriptions[0].binding = 0u;
-//	attributeDescriptions[0].location = 0u;
-//	attributeDescriptions[0].format = vk::Format::eR32G32B32Sfloat;
-//	attributeDescriptions[0].offset = offsetof(Vertex, position);
-//
-//	attributeDescriptions[1].binding = 0u;
-//	attributeDescriptions[1].location = 1u;
-//	attributeDescriptions[1].format = vk::Format::eR32G32B32Sfloat;
-//	attributeDescriptions[1].offset = offsetof(Vertex, normal);
-//
-//	attributeDescriptions[2].binding = 0u;
-//	attributeDescriptions[2].location = 2u;
-//	attributeDescriptions[2].format = vk::Format::eR32G32B32Sfloat;
-//	attributeDescriptions[2].offset = offsetof(Vertex, tangent);
-//
-//	attributeDescriptions[3].binding = 0u;
-//	attributeDescriptions[3].location = 3u;
-//	attributeDescriptions[3].format = vk::Format::eR32G32Sfloat;
-//	attributeDescriptions[3].offset = offsetof(Vertex, uv);
-//
-//	// fixed-function stage
-//	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
-//	vertexInputInfo
-//		.setVertexBindingDescriptionCount(1u) //
-//		.setVertexAttributeDescriptionCount(static_cast<uint32_t>(attributeDescriptions.size()))
-//		.setPVertexBindingDescriptions(&bindingDescription)
-//		.setPVertexAttributeDescriptions(attributeDescriptions.data());
-//
-//	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
-//}
-//
-//
-// void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
-//{
-//	PROFILE_SCOPE(Renderer);
-//
-//	auto camera = sceneDesc.viewer;
-//	if (!camera) {
-//		cmdBuffer->endRenderPass();
-//		return;
-//	}
-//
-//	for (auto geom : sceneDesc->geometries.elements) {
-//		if (!geom) {
-//			continue;
-//		}
-//		PushConstant pc{ //
-//			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
-//		};
-//
-//		for (auto& gg : geom->mesh.Lock().geometryGroups) {
-//			auto& mat = gg.material.Lock();
-//			auto& arch = mat.archetype.Lock();
-//			if (!arch.isUnlit)
-//				[[likely]] { continue; }
-//
-//			auto& plLayout = *arch.unlit.pipelineLayout;
-//
-//			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.unlit.pipeline);
-//			cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-//
-//			if (mat.hasDescriptorSet) {
-//				cmdBuffer->bindDescriptorSets(
-//					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
-//			}
-//
-//			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u,
-//				&camera->descSet[sceneDesc.frameIndex], 0u, nullptr);
-//
-//			cmdBuffer->bindVertexBuffers(0u, { gg.vertexBuffer }, { 0 });
-//			cmdBuffer->bindIndexBuffer(gg.indexBuffer, 0, vk::IndexType::eUint32);
-//
-//
-//			cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
-//		}
-//	}
-//}
+void RaytracingPass::MakeRtPipeline()
+{
 
+	std::array layouts{
+		Layouts->singleStorageImage.handle(),
+		Layouts->accelLayout.handle(),
+		Layouts->singleUboDescLayout.handle(),
+		Layouts->rtSceneDescLayout.handle(),
+		Layouts->gbufferDescLayout.handle(),
+		Layouts->singleSamplerDescLayout.handle(),
+	};
+
+	// all rt shaders here
+	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/test.shader");
+	shader.onCompileRayTracing = [&]() {
+		MakeRtPipeline();
+	};
+
+	m_rtShaderGroups.clear();
+
+	// Indices within this vector will be used as unique identifiers for the shaders in the Shader Binding Table.
+	std::vector<vk::PipelineShaderStageCreateInfo> stages;
+
+	// Raygen
+	vk::RayTracingShaderGroupCreateInfoKHR rg{};
+	rg.setType(vk::RayTracingShaderGroupTypeKHR::eGeneral) //
+		.setGeneralShader(VK_SHADER_UNUSED_KHR)
+		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
+		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
+		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eRaygenKHR, *shader.rayGen.Lock().module, "main" });
+	rg.setGeneralShader(static_cast<uint32>(stages.size() - 1));
+
+	m_rtShaderGroups.push_back(rg);
+
+	// Miss
+	vk::RayTracingShaderGroupCreateInfoKHR mg{};
+	mg.setType(vk::RayTracingShaderGroupTypeKHR::eGeneral) //
+		.setGeneralShader(VK_SHADER_UNUSED_KHR)
+		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
+		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
+		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eMissKHR, *shader.miss.Lock().module, "main" });
+	mg.setGeneralShader(static_cast<uint32>(stages.size() - 1));
+
+	m_rtShaderGroups.push_back(mg);
+
+	vk::RayTracingShaderGroupCreateInfoKHR hg{};
+	hg.setType(vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup) //
+		.setGeneralShader(VK_SHADER_UNUSED_KHR)
+		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
+		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
+		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eClosestHitKHR, *shader.closestHit.Lock().module, "main" });
+	hg.setClosestHitShader(static_cast<uint32>(stages.size() - 1));
+
+	m_rtShaderGroups.push_back(hg);
+
+
+	// pipeline layout
+	vk::PushConstantRange pushConstantRange{};
+	pushConstantRange
+		.setStageFlags(vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR) //
+		.setSize(sizeof(PushConstant))
+		.setOffset(0u);
+
+
+	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo
+		.setPushConstantRanges(pushConstantRange) //
+		.setSetLayouts(layouts);
+
+	m_rtPipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+
+	// Assemble the shader stages and recursion depth info into the ray tracing pipeline
+	vk::RayTracingPipelineCreateInfoKHR rayPipelineInfo{};
+	rayPipelineInfo
+		// Stages are shaders
+		.setStages(stages);
+
+	rayPipelineInfo
+		// 1-raygen, n-miss, n-(hit[+anyhit+intersect])
+		.setGroups(m_rtShaderGroups)
+		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop formulation
+		// instead.
+
+		.setMaxRecursionDepth(10) // Ray depth TODO:
+		.setLayout(m_rtPipelineLayout.get());
+	m_rtPipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
+
+
+	CreateRtShaderBindingTable();
+}
+
+void RaytracingPass::CreateRtShaderBindingTable()
+{
+	auto groupCount = static_cast<uint32>(m_rtShaderGroups.size());     // 3 shaders: raygen, miss, chit
+	uint32 groupHandleSize = Device->pd.rtProps.shaderGroupHandleSize;  // Size of a program identifier
+	uint32 baseAlignment = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of shader alignment
+
+	// Fetch all the shader handles used in the pipeline, so that they can be written in the SBT
+	uint32 sbtSize = groupCount * baseAlignment;
+
+	std::vector<byte> shaderHandleStorage(sbtSize);
+	Device->getRayTracingShaderGroupHandlesKHR(m_rtPipeline.get(), 0, groupCount, sbtSize, shaderHandleStorage.data());
+	// Write the handles in the SBT
+	m_rtSBTBuffer = RBuffer{ sbtSize, vk::BufferUsageFlagBits::eTransferSrc,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+
+	DEBUG_NAME(m_rtSBTBuffer.handle(), "Shader Binding Table");
+
+
+	// TODO: Tidy
+	auto mem = m_rtSBTBuffer.memory();
+
+	void* dptr = Device->mapMemory(mem, 0, sbtSize);
+
+	auto* pData = reinterpret_cast<uint8_t*>(dptr);
+	for (uint32_t g = 0; g < groupCount; g++) {
+		memcpy(pData, shaderHandleStorage.data() + g * groupHandleSize, groupHandleSize);
+		pData += baseAlignment;
+	}
+	Device->unmapMemory(mem);
+}
+
+void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Renderer_* renderer)
+{
+	// WIP: what about secondary buffers?
+	// cmdBuffer.executeCommands({ buffer });
+
+
+	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipeline.get());
+
+	DEBUG_NAME_AUTO(renderer->m_rtDescSet[sceneDesc.frameIndex]);
+	DEBUG_NAME_AUTO(sceneDesc.scene->sceneAsDescSet);
+	DEBUG_NAME_AUTO(sceneDesc.viewer->descSet[sceneDesc.frameIndex]);
+	DEBUG_NAME_AUTO(sceneDesc.scene->tlas.sceneDesc.descSet);
+	DEBUG_NAME_AUTO(renderer->m_gbuffer[sceneDesc.frameIndex].descSet);
+	DEBUG_NAME_AUTO(renderer->m_rasterLightDescSet[sceneDesc.frameIndex]);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 0u, 1u,
+		&renderer->m_rtDescSet[sceneDesc.frameIndex], 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 1u, 1u,
+		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 2u, 1u,
+		&sceneDesc.viewer->descSet[sceneDesc.frameIndex], 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 3u, 1u,
+		&sceneDesc.scene->tlas.sceneDesc.descSet, 0u, nullptr);
+
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 4u, 1u,
+		&renderer->m_gbuffer[sceneDesc.frameIndex].descSet, 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 5u, 1u,
+		&renderer->m_rasterLightDescSet[sceneDesc.frameIndex], 0u, nullptr);
+
+	PushConstant pc{ //
+		m_rtFrame, std::max(0, *console_rtDepth), std::max(0, *console_rtSamples)
+	};
+
+	++m_rtFrame;
+
+	cmdBuffer.pushConstants(m_rtPipelineLayout.get(),
+		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant), &pc);
+
+
+	vk::DeviceSize progSize = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of a program identifier
+
+	// RayGen index
+	vk::DeviceSize rayGenOffset = 0u * progSize; // Start at the beginning of m_sbtBuffer
+
+	// Miss index
+	vk::DeviceSize missOffset = 1u * progSize; // Jump over raygen
+	vk::DeviceSize missStride = progSize;
+
+	// Hit index
+	vk::DeviceSize hitGroupOffset = 2u * progSize; // Jump over the previous shaders
+	vk::DeviceSize hitGroupStride = progSize;
+
+
+	// We can finally call traceRaysKHR that will add the ray tracing launch in the command buffer. Note that the
+	// SBT buffer is mentioned several times. This is due to the possibility of separating the SBT into several
+	// buffers, one for each type: ray generation, miss shaders, hit groups, and callable shaders (outside the scope
+	// of this tutorial). The last three parameters are equivalent to the grid size of a compute launch, and
+	// represent the total number of threads. Since we want to trace one ray per pixel, the grid size has the width
+	// and height of the output image, and a depth of 1.
+
+	vk::DeviceSize sbtSize = progSize * (vk::DeviceSize)m_rtShaderGroups.size();
+
+	const vk::StridedBufferRegionKHR raygenShaderBindingTable
+		= { m_rtSBTBuffer.handle(), rayGenOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR missShaderBindingTable = { m_rtSBTBuffer.handle(), missOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR hitShaderBindingTable
+		= { m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR callableShaderBindingTable;
+
+
+	auto& extent = renderer->m_gbuffer[sceneDesc.frameIndex].framebuffer.extent;
+
+	cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
+		&callableShaderBindingTable, extent.width, extent.height, 1);
+}
 } // namespace vl
