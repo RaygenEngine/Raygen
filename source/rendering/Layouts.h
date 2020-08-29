@@ -28,8 +28,9 @@ inline struct Layouts_ {
 	vk::UniqueRenderPass lightblendPass;
 
 	RRenderPassLayout ptPassLayout;
+	RRenderPassLayout gbufferPassLayout;
 
-	void MakePtPassLayout();
+	void MakeRenderPassLayouts();
 
 	Layouts_();
 } * Layouts{};

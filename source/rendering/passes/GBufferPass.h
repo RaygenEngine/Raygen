@@ -16,8 +16,7 @@ public:
 	static vk::UniquePipeline CreateAnimPipeline(
 		vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
 
-	static void RecordCmd(
-		vk::CommandBuffer* cmdBuffer, vk::Viewport viewport, vk::Rect2D scissor, const SceneRenderDesc& sceneDesc);
+	static void RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
 };
 
 } // namespace vl

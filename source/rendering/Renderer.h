@@ -13,7 +13,7 @@ namespace vl {
 // TODO: tidy
 inline class Renderer_ : public Listener {
 	// The recommended framebuffer allocation size for the viewport.
-	vk::Extent2D m_viewportFramebufferSize{};
+
 
 private:
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
@@ -52,12 +52,16 @@ protected:
 
 
 public:
+	vk::Extent2D m_extent{};
+
 	void ResizeBuffers(uint32 width, uint32 height);
 	InFlightResources<vk::ImageView> GetOutputViews() const;
-	InFlightResources<GBuffer> m_gbuffer; // WIP: make this private when finished with the attachment descriptor set
 
 
 	InFlightResources<RenderingPassInstance> m_ptPass;
+	InFlightResources<RenderingPassInstance> m_gbufferInst;
+
+	InFlightResources<vk::DescriptorSet> m_gbufferDesc;
 
 	// TODO: RT, move those, framearray
 	InFlightResources<vk::DescriptorSet> m_rtDescSet;

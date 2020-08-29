@@ -7,6 +7,20 @@
 
 namespace vl {
 
+RRenderPassLayout::Attachment::State StateFromLayout(vk::ImageLayout layout)
+{
+
+	using enum vk::ImageLayout;
+	using enum RRenderPassLayout::Attachment::State;
+
+	switch (layout) {
+		case vk::ImageLayout::eShaderReadOnlyOptimal: return ShaderRead;
+		case vk::ImageLayout::eColorAttachmentOptimal: return Color;
+		case vk::ImageLayout::eDepthStencilAttachmentOptimal: return Depth;
+	}
+	LOG_ABORT("Unfinished enum detector");
+}
+
 RRenderPassLayout::AttachmentRef RRenderPassLayout::UseExternal(
 	RRenderPassLayout::AttachmentRef attachment, int32 firstUseIndex)
 {
@@ -65,8 +79,7 @@ RRenderPassLayout::AttachmentRef RRenderPassLayout::CreateAttachment(
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(
-			att.isDepth ? vk::ImageLayout::eDepthAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal)
+		.setInitialLayout(att.isDepth ? vk::ImageLayout::eUndefined : vk::ImageLayout::eColorAttachmentOptimal)
 		.setFinalLayout(vk::ImageLayout::eUndefined);
 
 
@@ -164,25 +177,36 @@ void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vec
 			LOG_ABORT("External attachment as output is not supported");
 		}
 
-		if (att.Get().state != Attachment::State::Color) {
-			LOG_WARN("Reading and writting at the same attachment in the same render pass");
+		if (att.IsDepth()) {
+			CLOG_ABORT(att.Get().state != Attachment::State::Depth,
+				"Found depth as output attachemt but its state was not Depth Write");
 
-			auto& dep = subpassDependencies.emplace_back();
-			dep.setSrcSubpass(srcSubpass)
-				.setDstSubpass(subpassIndex)
-				.setSrcStageMask(vk::PipelineStageFlagBits::eFragmentShader)
-				.setSrcAccessMask(vk::AccessFlagBits::eShaderRead)
-				.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-				.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
-				.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
+			subpass.depth = att;
+			subpass.vkDepth
+				.setAttachment(att.GetAttachmentIndex()) //
+				.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 		}
+		else {
+			if (att.Get().state != Attachment::State::Color) {
+				LOG_WARN("Reading and writting at the same attachment in the same render pass");
 
-		subpass.colors.emplace_back(att);
+				auto& dep = subpassDependencies.emplace_back();
+				dep.setSrcSubpass(srcSubpass)
+					.setDstSubpass(subpassIndex)
+					.setSrcStageMask(vk::PipelineStageFlagBits::eFragmentShader)
+					.setSrcAccessMask(vk::AccessFlagBits::eShaderRead)
+					.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+					.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
+					.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
+			}
 
-		auto& attRef = subpass.vkColors.emplace_back();
-		attRef
-			.setAttachment(att.GetAttachmentIndex()) //
-			.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+			subpass.colors.emplace_back(att);
+
+			auto& attRef = subpass.vkColors.emplace_back();
+			attRef
+				.setAttachment(att.GetAttachmentIndex()) //
+				.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+		}
 	}
 
 
@@ -216,12 +240,16 @@ void RRenderPassLayout::Generate()
 	std::vector<vk::AttachmentDescription> attachmentDescrs;
 	std::vector<vk::SubpassDescription> subpassDescrs;
 
-	for (auto& att : internalAttachmentsDescr) {
+	for (int32 i = 0; auto& att : internalAttachmentsDescr) {
 		attachmentDescrs.emplace_back(att);
+		internalAttachments[i].state = StateFromLayout(att.finalLayout);
+		++i;
 	}
 
-	for (auto& att : externalAttachmentsDescr) {
+	for (int32 i = 0; auto& att : externalAttachmentsDescr) {
 		attachmentDescrs.emplace_back(att);
+		externalAttachments[i].Get().state = StateFromLayout(att.finalLayout);
+		++i;
 	}
 
 	for (auto& subp : subpasses) {
@@ -306,7 +334,7 @@ void RenderingPassInstance::TransitionFramebufferForWrite(vk::CommandBuffer cmdB
 		auto finalLayout = parent->internalAttachmentsDescr[index].finalLayout;
 		auto initialLayout = parent->internalAttachmentsDescr[index].initialLayout;
 
-		if (finalLayout != initialLayout) {
+		if (finalLayout != initialLayout && initialLayout != vk::ImageLayout::eUndefined) {
 			// PERF: create all transition barriers and use a single one
 			att.TransitionToLayout(cmdBuffer, finalLayout, initialLayout);
 		}

@@ -292,118 +292,90 @@ vk::UniquePipeline GbufferPass::CreateAnimPipeline(
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
 
-void GbufferPass::RecordCmd(
-	vk::CommandBuffer* cmdBuffer, vk::Viewport viewport, vk::Rect2D scissor, const SceneRenderDesc& sceneDesc)
+void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	// PROFILE_SCOPE(Renderer);
+	// WIP: decouple
+	auto descSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
 
-	vk::CommandBufferInheritanceInfo ii{};
-	ii.setRenderPass(Layouts->gbufferPass.get()) //
-		.setFramebuffer({})                      // VK_NULL_HANDLE
-		.setSubpass(0u);
+	for (auto geom : sceneDesc->geometries.elements) {
 
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo
-		.setFlags(vk::CommandBufferUsageFlagBits::eRenderPassContinue) //
-		.setPInheritanceInfo(&ii);
-
-	cmdBuffer->begin(beginInfo);
-	{
-
-		cmdBuffer->setViewport(0, { viewport });
-		cmdBuffer->setScissor(0, { scissor });
-
-		auto camera = sceneDesc.viewer;
-		if (!camera) {
-			cmdBuffer->endRenderPass();
-			return;
+		if (!geom) {
+			continue;
 		}
+		PushConstant pc{ //
+			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
+		};
 
-		// WIP: decouple
-		auto descSet = camera->descSet[sceneDesc.frameIndex];
+		for (auto& gg : geom->mesh.Lock().geometryGroups) {
+			PROFILE_SCOPE(Renderer);
 
-		for (auto geom : sceneDesc->geometries.elements) {
-
-			if (!geom) {
-				continue;
-			}
-			PushConstant pc{ //
-				geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
-			};
-
-			for (auto& gg : geom->mesh.Lock().geometryGroups) {
-				PROFILE_SCOPE(Renderer);
-
-				auto& mat = gg.material.Lock();
-				auto& arch = mat.archetype.Lock();
+			auto& mat = gg.material.Lock();
+			auto& arch = mat.archetype.Lock();
 
 
-				if (arch.isUnlit)
-					[[unlikely]] { continue; }
-				auto& plLayout = *arch.gbuffer.pipelineLayout;
+			if (arch.isUnlit)
+				[[unlikely]] { continue; }
+			auto& plLayout = *arch.gbuffer.pipelineLayout;
 
-				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
-				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
+			cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
-				if (mat.hasDescriptorSet) {
-					cmdBuffer->bindDescriptorSets(
-						vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
-				}
-
+			if (mat.hasDescriptorSet) {
 				cmdBuffer->bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
-
-				auto& gpuMesh = geom->mesh.Lock();
-				cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
-				cmdBuffer->bindIndexBuffer(
-					gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
-
-
-				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
 			}
-		}
+
+			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
+
+			auto& gpuMesh = geom->mesh.Lock();
+			cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
+			cmdBuffer->bindIndexBuffer(
+				gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
 
 
-		for (auto geom : sceneDesc->animatedGeometries.elements) {
-			if (!geom) {
-				continue;
-			}
-			PushConstant pc{ //
-				geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
-			};
-
-			for (auto& gg : geom->mesh.Lock().geometryGroups) {
-				auto& mat = gg.material.Lock();
-				auto& arch = mat.archetype.Lock();
-				if (arch.isUnlit)
-					[[unlikely]] { continue; }
-
-				auto& plLayout = *arch.gbufferAnimated.pipelineLayout;
-
-				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbufferAnimated.pipeline);
-				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-				if (mat.hasDescriptorSet) {
-					cmdBuffer->bindDescriptorSets(
-						vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
-				}
-
-				cmdBuffer->bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
-
-				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
-					&geom->descSet[sceneDesc.frameIndex], 0u, nullptr);
-
-				auto& gpuMesh = geom->mesh.Lock();
-				cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
-				cmdBuffer->bindIndexBuffer(
-					gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
-
-				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
-			}
+			cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 		}
 	}
-	cmdBuffer->end();
+
+
+	for (auto geom : sceneDesc->animatedGeometries.elements) {
+		if (!geom) {
+			continue;
+		}
+		PushConstant pc{ //
+			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
+		};
+
+		for (auto& gg : geom->mesh.Lock().geometryGroups) {
+			auto& mat = gg.material.Lock();
+			auto& arch = mat.archetype.Lock();
+			if (arch.isUnlit)
+				[[unlikely]] { continue; }
+
+			auto& plLayout = *arch.gbufferAnimated.pipelineLayout;
+
+			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbufferAnimated.pipeline);
+			cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+			if (mat.hasDescriptorSet) {
+				cmdBuffer->bindDescriptorSets(
+					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
+			}
+
+			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
+
+			cmdBuffer->bindDescriptorSets(
+				vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u, &geom->descSet[sceneDesc.frameIndex], 0u, nullptr);
+
+			auto& gpuMesh = geom->mesh.Lock();
+			cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
+			cmdBuffer->bindIndexBuffer(
+				gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
+
+			cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+		}
+	}
 }
 
 } // namespace vl
