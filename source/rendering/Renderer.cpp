@@ -339,8 +339,6 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 
 void Renderer_::RecordRayTracingPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-
-
 	// Initializing push constant values
 	// WIP: what about secondary buffers?
 	// cmdBuffer->executeCommands({ buffer });
@@ -426,51 +424,11 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto& extent = m_gbuffer[sceneDesc.frameIndex].framebuffer.extent;
-
-	vk::Rect2D scissor{};
-	scissor
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
-
-	vk::Viewport viewport{};
-	viewport
-		.setX(0) //
-		.setY(0)
-		.setWidth(static_cast<float>(extent.width))
-		.setHeight(static_cast<float>(extent.height))
-		.setMinDepth(0.f)
-		.setMaxDepth(1.f);
-
-
-	vk::RenderPassBeginInfo renderPassInfo{};
-	renderPassInfo
-		.setRenderPass(m_ptPass[sceneDesc.frameIndex].GetRenderPass()) //
-		.setFramebuffer(m_ptPass[sceneDesc.frameIndex].framebuffer.handle());
-	renderPassInfo.renderArea
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
-
-	vk::ClearValue clearValue{};
-	clearValue.setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-
-	vk::ClearValue clearValue2{};
-	clearValue2.setColor(std::array{ 0.2f, 0.2f, 0.0f, 1.0f });
-
-	std::array cv{ clearValue, clearValue2 };
-	renderPassInfo.setClearValues(cv);
-
-
-	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-	{
-		cmdBuffer->setViewport(0, { viewport });
-		cmdBuffer->setScissor(0, { scissor });
-
-		m_postprocCollection.Draw(*cmdBuffer, sceneDesc, m_gbuffer[sceneDesc.frameIndex].descSet); // WIP:
-
+	m_ptPass[sceneDesc.frameIndex].RecordPass(*cmdBuffer, vk::SubpassContents::eInline, [&] {
+		// Post proc pass
+		m_postprocCollection.Draw(*cmdBuffer, sceneDesc, m_gbuffer[sceneDesc.frameIndex].descSet);
 		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
-	}
-	cmdBuffer->endRenderPass();
+	});
 }
 
 void Renderer_::ResizeBuffers(uint32 width, uint32 height)
