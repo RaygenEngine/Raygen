@@ -1,23 +1,26 @@
 #pragma once
-#include "rendering/structures/GBuffer.h"
-#include "rendering/scene/Scene.h"
+
+#include "rendering/wrappers/Buffer.h"
+
+struct SceneRenderDesc;
 
 namespace vl {
-class UnlitPass {
+class Renderer_;
 
+class RaytracingPass {
 public:
-	// static vk::UniqueRenderPass CreateCompatibleRenderPass();
+	vk::UniquePipeline m_rtPipeline;
+	vk::UniquePipelineLayout m_rtPipelineLayout;
+	RBuffer m_rtSBTBuffer;
+	std::vector<vk::RayTracingShaderGroupCreateInfoKHR> m_rtShaderGroups;
 
-	static size_t GetPushConstantSize();
+	int32 m_rtFrame{ 0 };
 
-	static vk::UniquePipeline CreatePipeline(vk::PipelineLayout pipelineLayout, //
-		std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
+	void MakeRtPipeline();
 
-	// static vk::UniquePipeline CreateAnimPipeline(
-	//	vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
+	void CreateRtShaderBindingTable();
 
-	// WIP: extent
-	static void RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Renderer_* renderer);
 };
 
 } // namespace vl
