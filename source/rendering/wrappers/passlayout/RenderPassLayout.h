@@ -16,7 +16,18 @@ struct RenderingPassInstance {
 	void TransitionFramebufferForWrite(vk::CommandBuffer cmdBuffer);
 	vk::RenderPass GetRenderPass() const;
 
+	template<typename Func>
+	void RecordPass(vk::CommandBuffer cmdBuffer, vk::SubpassContents subpassContents, Func&& contents)
+	{
+		BeginRenderPassCmd(cmdBuffer, subpassContents);
+		contents();
+		EndRenderPassCmd(cmdBuffer);
+	}
+
 private:
+	void BeginRenderPassCmd(vk::CommandBuffer cmdBuffer, vk::SubpassContents subpassContents);
+	void EndRenderPassCmd(vk::CommandBuffer cmdBuffer);
+
 	friend struct RRenderPassLayout;
 	uint32 parentPassIndex{ UINT_MAX };
 };
@@ -117,8 +128,6 @@ public:
 	std::string name{};
 	uint32 uidIndex{ UINT_MAX };
 
-	vk::UniqueRenderPass compatibleRenderPass;
-
 	std::vector<vk::SubpassDependency> subpassDependencies;
 
 	std::vector<Attachment> internalAttachments;
@@ -133,13 +142,25 @@ public:
 	std::vector<AttachmentRef> internalInputAttachmentOrder;
 
 
+	// PERF: Cache miss in render loop probably (could copy in RenderingPassInstance)
+	vk::UniqueRenderPass compatibleRenderPass;
+	std::vector<vk::ClearValue> clearValues;
+
+
 	// Preperation Interface
+	// Registers a new attachment to be written by this render pass
 	[[nodiscard]] AttachmentRef CreateAttachment(vk::Format format, vk::ImageUsageFlags additionalUsageFlags = {});
+
+	// Requests the render pass to transition this attachment to the requested layout after ending
 	void AttachmentFinalLayout(AttachmentRef att, vk::ImageLayout postRenderPassLayout);
 
 
+	// TODO: Used to inform this system of manual transitions for image layouts.
+	// void RegisterManualTransition(AttachmentRef att, vk::ImageLayout newLayout);
+
 	void AddSubpass(std::vector<AttachmentRef>&& inputs, std::vector<AttachmentRef>&& outputs);
 	void Generate();
+
 
 	[[nodiscard]] RenderingPassInstance CreatePassInstance(
 		uint32 width, uint32 height, std::vector<const RImageAttachment*> externalAttachmentInstances = {});

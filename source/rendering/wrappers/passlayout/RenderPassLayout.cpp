@@ -72,8 +72,19 @@ RRenderPassLayout::AttachmentRef RRenderPassLayout::CreateAttachment(
 
 	att.state = att.isDepth ? Attachment::State::Depth : Attachment::State::Color;
 
+	auto& cv = clearValues.emplace_back();
+
+	if (att.isDepth) {
+		cv.setDepthStencil({ 1.f, 0 });
+	}
+	else {
+		cv.setColor(std::array{ 0.f, 0.f, 0.f, 1.f });
+	}
+
+
 	return attRef;
 }
+
 void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vector<AttachmentRef>&& outputs)
 {
 	int32 subpassIndex = int32(subpasses.size());
@@ -306,6 +317,45 @@ void RenderingPassInstance::TransitionFramebufferForWrite(vk::CommandBuffer cmdB
 vk::RenderPass RenderingPassInstance::GetRenderPass() const
 {
 	return *parent->compatibleRenderPass;
+}
+
+void RenderingPassInstance::BeginRenderPassCmd(vk::CommandBuffer cmdBuffer, vk::SubpassContents subpassContents)
+{
+	auto& extent = framebuffer.extent;
+
+	vk::Rect2D scissor{};
+	scissor
+		.setOffset({ 0, 0 }) //
+		.setExtent(extent);
+
+	vk::Viewport viewport{};
+	viewport
+		.setX(0) //
+		.setY(0)
+		.setWidth(static_cast<float>(extent.width))
+		.setHeight(static_cast<float>(extent.height))
+		.setMinDepth(0.f)
+		.setMaxDepth(1.f);
+
+	vk::RenderPassBeginInfo renderPassInfo{};
+	renderPassInfo
+		.setRenderPass(*parent->compatibleRenderPass) //
+		.setFramebuffer(framebuffer.handle());
+	renderPassInfo.renderArea
+		.setOffset({ 0, 0 }) //
+		.setExtent(extent);
+
+	renderPassInfo.setClearValues(parent->clearValues);
+
+	cmdBuffer.beginRenderPass(renderPassInfo, subpassContents);
+
+	cmdBuffer.setViewport(0, { viewport });
+	cmdBuffer.setScissor(0, { scissor });
+}
+
+void RenderingPassInstance::EndRenderPassCmd(vk::CommandBuffer cmdBuffer)
+{
+	cmdBuffer.endRenderPass();
 }
 
 } // namespace vl
