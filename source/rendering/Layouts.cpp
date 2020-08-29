@@ -5,37 +5,58 @@
 #include "rendering/passes/GbufferPass.h"
 #include "rendering/passes/UnlitPass.h"
 #include "rendering/passes/LightblendPass.h"
+#include "rendering/structures/GBuffer.h"
 
 namespace vl {
 
 
-void Layouts_::MakePtPassLayout()
+void Layouts_::MakeRenderPassLayouts()
 {
-	RRenderPassLayout gbufferPass;
+	using Att = RRenderPassLayout::Attachment;
+	using AttRef = RRenderPassLayout::AttachmentRef;
 
-	auto gbufferDepth = gbufferPass.CreateAttachment(Device->FindDepthFormat());
+	AttRef depthBuffer;
 
-	gbufferDepth.UpdateState(RRenderPassLayout::Attachment::State::ShaderRead);
+	// GBuffer Pass
+	{
+		std::vector<AttRef> gbufferAtts;
 
-	RRenderPassLayout& layout = ptPassLayout;
+		for (auto gbufferAttFormat : GBuffer::colorAttachmentFormats) {
+			auto att = gbufferPassLayout.CreateAttachment(gbufferAttFormat);
+			gbufferPassLayout.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
+			gbufferAtts.emplace_back(att);
+		}
 
-	// auto depth = layout.AddExternalAttachment(vk::ImageLayout::eDepthAttachmentOptimal);
+		depthBuffer = gbufferPassLayout.CreateAttachment(Device->FindDepthFormat());
+		gbufferAtts.emplace_back(depthBuffer);
 
-	auto lights = layout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat);
-	auto postprocOut = layout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat, vk::ImageUsageFlagBits::eStorage);
+		gbufferPassLayout.AddSubpass({}, std::move(gbufferAtts));
 
-	layout.AddSubpass({}, { lights });
-	layout.AddSubpass({ gbufferDepth, lights }, { postprocOut });
+		gbufferPassLayout.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		gbufferPassLayout.Generate();
+	}
 
 
-	layout.AttachmentFinalLayout(lights, vk::ImageLayout::eShaderReadOnlyOptimal);
-	layout.AttachmentFinalLayout(postprocOut, vk::ImageLayout::eShaderReadOnlyOptimal);
+	// Post Process Pass
+	{
+		RRenderPassLayout& layout = ptPassLayout;
 
-	layout.AttachmentFinalLayout(gbufferDepth, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
-	// layout.ResultDescriptorSet({ lights, postprocOut, depthBuffer });
+		auto lights = layout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat);
+		auto postprocOut = layout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat, vk::ImageUsageFlagBits::eStorage);
 
-	layout.Generate();
+		layout.AddSubpass({}, { lights });
+		layout.AddSubpass({ depthBuffer, lights }, { postprocOut });
+
+
+		layout.AttachmentFinalLayout(lights, vk::ImageLayout::eShaderReadOnlyOptimal);
+		layout.AttachmentFinalLayout(postprocOut, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		layout.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+
+		layout.Generate();
+	}
 }
 
 
@@ -122,6 +143,6 @@ Layouts_::Layouts_()
 
 	lightblendPass = LightblendPass::CreateCompatibleRenderPass();
 
-	MakePtPassLayout();
+	MakeRenderPassLayouts();
 }
 } // namespace vl

@@ -165,7 +165,7 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 	DEBUG_NAME_AUTO(sceneDesc.scene->sceneAsDescSet);
 	DEBUG_NAME_AUTO(sceneDesc.viewer->descSet[sceneDesc.frameIndex]);
 	DEBUG_NAME_AUTO(sceneDesc.scene->tlas.sceneDesc.descSet);
-	DEBUG_NAME_AUTO(renderer->m_gbuffer[sceneDesc.frameIndex].descSet);
+	DEBUG_NAME_AUTO(renderer->m_gbufferDesc[sceneDesc.frameIndex]);
 	DEBUG_NAME_AUTO(renderer->m_rasterLightDescSet[sceneDesc.frameIndex]);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 0u, 1u,
@@ -182,7 +182,7 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 4u, 1u,
-		&renderer->m_gbuffer[sceneDesc.frameIndex].descSet, 0u, nullptr);
+		&renderer->m_gbufferDesc[sceneDesc.frameIndex], 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 5u, 1u,
 		&renderer->m_rasterLightDescSet[sceneDesc.frameIndex], 0u, nullptr);
@@ -228,7 +228,7 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 	const vk::StridedBufferRegionKHR callableShaderBindingTable;
 
 
-	auto& extent = renderer->m_gbuffer[sceneDesc.frameIndex].framebuffer.extent;
+	auto& extent = renderer->m_extent;
 
 	cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
 		&callableShaderBindingTable, extent.width, extent.height, 1);

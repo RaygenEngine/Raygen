@@ -48,53 +48,14 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto& extent = m_gbuffer[sceneDesc.frameIndex].framebuffer.extent;
+	m_gbufferInst[sceneDesc.frameIndex].RecordPass(*cmdBuffer, vk::SubpassContents::eInline, [&]() {
+		//
+		GbufferPass::RecordCmd(cmdBuffer, sceneDesc);
+	});
 
-	vk::Rect2D scissor{};
-	scissor
-		.setOffset({ 0, 0 }) //
-		.setExtent(vk::Extent2D{ extent.width, extent.height });
-
-	vk::Viewport viewport{};
-	viewport
-		.setX(0) //
-		.setY(0)
-		.setWidth(static_cast<float>(extent.width))
-		.setHeight(static_cast<float>(extent.height))
-		.setMinDepth(0.f)
-		.setMaxDepth(1.f);
-
-
-	vk::RenderPassBeginInfo renderPassInfo{};
-	renderPassInfo
-		.setRenderPass(Layouts->gbufferPass.get()) //
-		.setFramebuffer(m_gbuffer[sceneDesc.frameIndex].framebuffer.handle());
-	renderPassInfo.renderArea
-		.setOffset({ 0, 0 }) //
-		.setExtent(extent);
-
-	std::array<vk::ClearValue, 6> clearValues = {};
-	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[1].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[2].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[3].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-	clearValues[4].setDepthStencil({ 1.0f, 0 });
-	renderPassInfo.setClearValues(clearValues);
-
-
-	cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
-	{
-		auto buffers = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
-
-		GbufferPass::RecordCmd(&buffers, viewport, scissor, sceneDesc);
-
-		cmdBuffer->executeCommands({ buffers });
-	}
-	cmdBuffer->endRenderPass();
 
 	auto shadowmapRenderpass = [&](auto light) {
 		if (light) {
-
 			auto& extent = light->shadowmap[sceneDesc.frameIndex].framebuffer.extent;
 
 			vk::Rect2D scissor{};
@@ -153,7 +114,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 
 	m_ptPass[sceneDesc.frameIndex].RecordPass(*cmdBuffer, vk::SubpassContents::eInline, [&] {
 		// Post proc pass
-		m_postprocCollection.Draw(*cmdBuffer, sceneDesc, m_gbuffer[sceneDesc.frameIndex].descSet);
+		m_postprocCollection.Draw(*cmdBuffer, sceneDesc, m_gbufferDesc[sceneDesc.frameIndex]);
 		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
 	});
 }
@@ -162,18 +123,30 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 {
 	vk::Extent2D fbSize = SuggestFramebufferSize(vk::Extent2D{ width, height });
 
-	if (fbSize == m_viewportFramebufferSize) {
+	if (fbSize == m_extent) {
 		return;
 	}
-	m_viewportFramebufferSize = fbSize;
+	m_extent = fbSize;
 
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_gbuffer[i] = GBuffer{ fbSize.width, fbSize.height };
+		m_gbufferInst[i] = Layouts->gbufferPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
 
-		auto& depthAtt = m_gbuffer[i].framebuffer[GColorAttachment::GDepth];
+		m_ptPass[i] = Layouts->ptPassLayout.CreatePassInstance(
+			fbSize.width, fbSize.height, { &m_gbufferInst[i].framebuffer[GDepth] });
+	}
 
-		m_ptPass[i] = Layouts->ptPassLayout.CreatePassInstance(fbSize.width, fbSize.height, { &depthAtt });
+	// GBuffer desc
+	for (size_t i = 0; i < c_framesInFlight; i++) {
+		std::vector<vk::ImageView> views;
+
+		m_gbufferDesc[i] = Layouts->gbufferDescLayout.AllocDescriptorSet();
+
+		for (auto& att : m_gbufferInst[i].framebuffer.ownedAttachments) {
+			views.emplace_back(att.view());
+		}
+
+		rvk::writeDescriptorImages(m_gbufferDesc[i], 0u, std::move(views));
 	}
 
 	// RT images
@@ -227,13 +200,15 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 	}
 
 
-	for (auto& att : m_gbuffer[sceneDesc.frameIndex].framebuffer.ownedAttachments) {
-		if (att.isDepth) {
-			continue;
-		}
-		att.TransitionToLayout(
-			cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
-	}
+	m_gbufferInst[sceneDesc.frameIndex].TransitionFramebufferForWrite(cmdBuffer);
+
+	// for (auto& att : m_gbuffer[sceneDesc.frameIndex].framebuffer.ownedAttachments) {
+	//	if (att.isDepth) {
+	//		continue;
+	//	}
+	//	att.TransitionToLayout(
+	//		cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
+	//}
 
 	for (auto sl : sceneDesc->spotlights.elements) {
 		if (sl) {
