@@ -186,17 +186,19 @@ void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 
 void EditorCamera::UpdateFly(float speed, float deltaSeconds)
 {
-
 	auto& input = Input;
 
-	// user rotation
+	// user rotation WIP: fix extreme rotation issues
 	if (input.IsMouseDragging()) {
-		const float yaw = -input.GetMouseDelta().x * sensitivity * 0.5f;
-		const float pitch = -input.GetMouseDelta().y * sensitivity * 0.5f;
+		auto yawPitch = -glm::clamp(
+			glm::radians(input.GetMouseDelta() * sensitivity * 20.5f), -glm::radians(90.f), glm::radians(90.f));
 
-		auto pitchRot = glm::angleAxis(pitch, transform.right());
-		auto yawRot = glm::angleAxis(yaw, engineSpaceUp);
-		transform.orientation = pitchRot * yawRot * transform.orientation;
+		// PERF: ?
+		auto yawRot = glm::angleAxis(yawPitch.x, engineSpaceUp);
+		transform.orientation = yawRot * transform.orientation;
+
+		auto pitchRot = glm::angleAxis(yawPitch.y, transform.right());
+		transform.orientation = pitchRot * transform.orientation;
 		transform.Compose();
 	}
 
