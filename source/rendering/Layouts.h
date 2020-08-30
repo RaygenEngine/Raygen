@@ -3,6 +3,19 @@
 #include "rendering/wrappers/passlayout/RenderPassLayout.h"
 
 namespace vl {
+
+enum GColorAttachment : uint32
+{
+	GNormal = 0,
+	// rgb: color, a: opacity
+	GBaseColor = 1,
+	// r: metallic, g: roughness, b: reflectance, a: occlusion
+	GSurface = 2,
+	GEmissive = 3,
+	GDepth = 4,
+	GCount
+};
+
 inline struct Layouts_ {
 
 	RDescriptorSetLayout gltfMaterialDescLayout;
@@ -17,6 +30,7 @@ inline struct Layouts_ {
 	RDescriptorSetLayout rtTriangleGeometry;
 
 	RDescriptorSetLayout singleStorageImage;
+	RDescriptorSetLayout doubleStorageImage;
 
 	RDescriptorSetLayout rtSceneDescLayout;
 
@@ -24,7 +38,6 @@ inline struct Layouts_ {
 	RDescriptorSetLayout imageDebugDescLayout;
 
 	vk::UniqueRenderPass depthRenderPass;
-	vk::UniqueRenderPass gbufferPass;
 	vk::UniqueRenderPass lightblendPass;
 
 	RRenderPassLayout ptPassLayout;

@@ -12,7 +12,6 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/structures/GBuffer.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneGeometry.h"
 
@@ -30,71 +29,6 @@ static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
-vk::UniqueRenderPass GbufferPass::CreateCompatibleRenderPass()
-{
-	// renderpass
-	std::array<vk::AttachmentDescription, GBuffer::ColorAttachmentCount> colorAttachmentDescs{};
-	std::array<vk::AttachmentReference, GBuffer::ColorAttachmentCount> colorAttachmentRefs{};
-
-	for (size_t i = 0; i < GBuffer::ColorAttachmentCount; ++i) {
-		colorAttachmentDescs[i]
-			.setFormat(GBuffer::colorAttachmentFormats[i]) //
-			.setSamples(vk::SampleCountFlagBits::e1)
-			.setLoadOp(vk::AttachmentLoadOp::eClear)
-			.setStoreOp(vk::AttachmentStoreOp::eStore)
-			.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-			.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-			.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal)
-			.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-		colorAttachmentRefs[i]
-			.setAttachment(static_cast<uint32>(i)) //
-			.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-	}
-
-	vk::AttachmentDescription depthAttachmentDesc{};
-	depthAttachmentDesc
-		.setFormat(Device->FindDepthFormat()) //
-		.setSamples(vk::SampleCountFlagBits::e1)
-		.setLoadOp(vk::AttachmentLoadOp::eClear)
-		.setStoreOp(vk::AttachmentStoreOp::eStore)
-		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
-		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-	vk::AttachmentReference depthAttachmentRef{};
-	depthAttachmentRef
-		.setAttachment(4u) //
-		.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-	vk::SubpassDescription subpass{};
-	subpass
-		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachments(colorAttachmentRefs)
-		.setPDepthStencilAttachment(&depthAttachmentRef);
-
-	vk::SubpassDependency dependency{};
-	dependency
-		.setSrcSubpass(VK_SUBPASS_EXTERNAL) //
-		.setDstSubpass(0u)
-		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setSrcAccessMask(vk::AccessFlags(0)) // 0
-		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
-
-	std::vector<vk::AttachmentDescription> attachments{ colorAttachmentDescs.begin(), colorAttachmentDescs.end() };
-	attachments.push_back(depthAttachmentDesc);
-
-	vk::RenderPassCreateInfo renderPassInfo{};
-	renderPassInfo
-		.setAttachments(attachments) //
-		.setSubpasses(subpass)
-		.setDependencies(dependency);
-
-	return Device->createRenderPassUnique(renderPassInfo);
-}
-
 size_t GbufferPass::GetPushConstantSize()
 {
 	return sizeof(PushConstant);
@@ -146,8 +80,9 @@ namespace {
 			.setAlphaToCoverageEnable(VK_FALSE)
 			.setAlphaToOneEnable(VK_FALSE);
 
-		std::array<vk::PipelineColorBlendAttachmentState, GBuffer::ColorAttachmentCount> colorBlendAttachment{};
-		for (uint32 i = 0u; i < GBuffer::ColorAttachmentCount; ++i) {
+		// WIP:
+		std::array<vk::PipelineColorBlendAttachmentState, GCount - 1> colorBlendAttachment{};
+		for (uint32 i = 0u; i < GCount - 1; ++i) {
 			colorBlendAttachment[i]
 				.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
 								   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
@@ -193,7 +128,7 @@ namespace {
 			.setPColorBlendState(&colorBlending)
 			.setPDynamicState(&dynamicStateInfo)
 			.setLayout(pipelineLayout)
-			.setRenderPass(Layouts->gbufferPass.get())
+			.setRenderPass(*Layouts->gbufferPassLayout.compatibleRenderPass)
 			.setSubpass(0u)
 			.setBasePipelineHandle({})
 			.setBasePipelineIndex(-1);

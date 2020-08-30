@@ -3,7 +3,6 @@
 #include "rendering/Device.h"
 #include "rendering/ppt/PtCollection.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/structures/GBuffer.h"
 #include "rendering/wrappers/passlayout/RenderPassLayout.h"
 #include "rendering/output/OutputPassBase.h"
 #include "rendering/passes/RaytracingPass.h"

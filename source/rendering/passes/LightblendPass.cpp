@@ -12,7 +12,6 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/structures/GBuffer.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneGeometry.h"
 #include "rendering/passes/lightblend/DirlightBlend.h"
