@@ -10,6 +10,7 @@
 #include "hammersley.h"
 #include "sampling.h"
 #include "shading-space.h"
+ 
 
 struct Attr{
 	vec2 x;
@@ -23,7 +24,7 @@ hitAttributeEXT vec2 baryCoord;
 //     (id * 3) + 1 = 10
 
 #define GEOM_GROUPS 25
-
+     
 layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 layout(set = 3, binding = 0) uniform sampler2D textureSamplers[GEOM_GROUPS * 3];
@@ -119,18 +120,20 @@ void main() {
 
 	const vec3 barycentrics = vec3(1.0 - baryCoord.x - baryCoord.y, baryCoord.x, baryCoord.y);
 	
-	
 	// Vertex of the triangle
 	OldVertex v0 = fromVertex(vertices.v[ind.x]);
 	OldVertex v1 = fromVertex(vertices.v[ind.y]);
 	OldVertex v2 = fromVertex(vertices.v[ind.z]);
-
 
 	vec2 uv = v0.uv * barycentrics.x + v1.uv * barycentrics.y + v2.uv * barycentrics.z;
 		
 	// Computing the normal at hit position
 	vec3 normal = v0.normal * barycentrics.x + v1.normal * barycentrics.y + v2.normal * barycentrics.z;
 	vec3 tangent = v0.tangent * barycentrics.x + v1.tangent * barycentrics.y + v2.tangent * barycentrics.z;
+	
+
+	vec3 facen = normalize(cross(v1.position - v0.position, v2.position - v0.position));
+
 
 	vec3 Tg = normalize(tangent);
    	vec3 Ng = normalize(normal);
@@ -141,156 +144,154 @@ void main() {
 	// then retrieve perpendicular vector B with the cross product of T and N
 	vec3 Bg = cross(Ng, Tg);
 
-	mat3 TBN = mat3(Tg, Bg, Ng); 
-
-	// TODO: Transforming the normal to world space
-	// normal = normalize(vec3(scnDesc.i[gl_InstanceID].transfoIT * vec4(normal, 0.0)));
-
-
-	// Computing the coordinates of the hit position
-	vec3 worldPos = v0.position * barycentrics.x + v1.position * barycentrics.y + v2.position * barycentrics.z;
-	// TODO: Transforming the position to world space
+	mat3 TBNg = mat3(Tg, Bg, Ng);
+	mat3 invTBNg = transpose(TBNg);
 
 	// sample material textures
 	vec4 sampledBaseColor = texture(textureSamplers[matId * 3], uv);
 	vec4 sampledNormal = texture(textureSamplers[matId * 3 + 1], uv);
 	vec4 sampledMetallicRoughness = texture(textureSamplers[matId * 3 + 2], uv); 
 
-	
+
+	vec3 Ns = normalize(TBNg * (sampledNormal.rgb * 2.0 - 1.0));
+	vec3 Ts, Bs;
+	computeOrthonormalBasis(Ns, Ts, Bs); 
+
+
+	mat3 TBNs = mat3(Ts, Bs, Ns);
+	mat3 invTBNs = transpose(TBNs);
+
 	// final material values
 	vec3 albedo = sampledBaseColor.rgb;
 	float metallic = sampledMetallicRoughness.b;
 	float roughness = sampledMetallicRoughness.g;
 	float reflectance = 0.5f;
 
-
     // remapping
 
 	// diffuseColor = (1.0 - metallic) * albedo;
     vec3 diffuseColor = (1.0 - metallic) * albedo;
     // f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + albedo * metallic;
-	vec3 f0 = vec3(0.16 * reflectance * reflectance * (1.0 - metallic)) + albedo * metallic;
+	vec3 f0 =  vec3(0.16 * reflectance * reflectance * (1.0 - metallic)) + albedo * metallic;
     // a = roughness roughness;
 	float a = roughness * roughness;
 
 	vec3 hitPoint = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 
-	// TODO: use shading normal
-	vec3 N = Ng;//normalize(TBN * (sampledNormal.rgb* 2.0 - 1.0));
 	vec3 V = normalize(gl_WorldRayOriginEXT - hitPoint);
 
-	vec3 wo = normalize(toSurface(Ng, Tg, Bg, V));
+	vec3 wo = normalize(invTBNs * V);
+
+	vec3 Ng_s = normalize(invTBNs * Ng);
+	if(wo.z < 0){
+		if(dot(V, facen) < 0) return; // backface culling
+		Ng_s = normalize(invTBNs * facen);
+	}
 
 	// DIRECT
 
 	inPrd.radiance = vec3(0);
-
 	// for each light
-	if(inPrd.depth != 0)
+	//if(inPrd.depth != 0)
 	{
-		vec3 lightPos = vec3(7,2,0);
+		vec3 lightPos = vec3(8,2,0);
 		vec3 lightColor = vec3(0.98823529411764705882352941176471, 0.83137254901960784313725490196078, 0.25098039215686274509803921568627);
 		float lightIntensity = 30;
 		
-		vec3 wi = normalize(toSurface(Ng, Tg, Bg, lightPos - hitPoint));
-		
-		// attenuation
-		float dist = length(lightPos - hitPoint);
-		float attenuation = 1.0 / (dist * dist); // TODO: fix with coefs
-		
-		float cosTheta_ = cosTheta(wi);
+		vec3 L = normalize(lightPos - hitPoint);
+		vec3 wi = normalize(invTBNs * L);
 
-		// if you are gonna trace this ray 
-		// check dot(N,L) > 0 
-		float shadow = 0.f; //...
-		{ // PERF : dont use query here of course
-			// float tMin      = 0.01f;
-			// float tMax      = distance(lightPos, hitPoint);
+		bool reflect = dot(Ng_s, wi) * dot(Ng_s, wo) > 0;
 		
-			// // Initializes a ray query object but does not start traversal
-			// rayQueryEXT rayQuery;
-			// rayQueryInitializeEXT(rayQuery, topLevelAs, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, hitPoint, tMin,
-			// 				L, tMax);
-		
-			// // Start traversal: return false if traversal is complete
-			// while(rayQueryProceedEXT(rayQuery)) {
-			// }
-			
-			// // Returns type of committed (true) intersection
-			// if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
-			// // Got an intersection == Shadow
-			// shadow = 1.0;
-			// }
-		}
+		float cosTheta = CosTheta(wi);
 
-		// sample shadowmap for shadow
-		vec3 Li = (1.0 - shadow) * lightColor * lightIntensity * attenuation; 
+		if(reflect && cosTheta > 0)
+		{
+			// attenuation
+			float dist = length(lightPos - hitPoint);
+			float attenuation = 1.0 / (dist * dist); // TODO: fix with coefs
+
+			float shadow = 0.f; //...
+
+			// sample shadowmap for shadow
+			vec3 Li = (1.0 - shadow) * lightColor * lightIntensity * attenuation; 
 	
+			// to get final diffuse and specular both those terms are multiplied by Li * NoL
+			vec3 brdf_d = LambertianReflection(wo, wi, diffuseColor);
+			vec3 brdf_r = MicrofacetReflection(wo, wi, a, a, f0);
 
-		// to get final diffuse and specular both those terms are multiplied by Li * NoL
-		vec3 brdf_d = LambertianReflection(wo, wi, diffuseColor);
-		vec3 brdf_r = MicrofacetReflection(wo, wi, a, f0);
+			// so to simplify (faster math)
+			// throughput = (brdf_d + brdf_r) * NoL
+			// incoming radiance = Li;
+			vec3 finalContribution = (brdf_d + brdf_r) * Li * cosTheta;
 
-		// so to simplify (faster math)
-		// throughput = (brdf_d + brdf_r) * NoL
-		// incoming radiance = Li;
-		vec3 finalContribution = (brdf_d + brdf_r) * Li * cosTheta_;
-
-		inPrd.radiance += finalContribution;
+			inPrd.radiance += finalContribution;
+		}
 	}
 
 	// INDIRECT
 
 	// TRANSMISSION
+
+	// Diffuse 'reflection'
 	{
 		vec2 u = vec2(rnd(inPrd.seed), rnd(inPrd.seed));
-		vec3 wi = cosineSampleHemisphere2(u);
+		vec3 wi = cosineSampleHemisphere(u);
 
-		// If wo is in the opposite hemisphere, then wi must be flipped to lie in the same hemisphere as wo.
-		if (wo.z < 0) 
-			wi.z *= -1;
+		bool reflect = dot(Ng_s, wi) * dot(Ng_s, wo) > 0;
 
-		float cosTheta_ = cosTheta(wi);
+		float cosTheta = CosTheta(wi);
 
-		if(cosTheta_ > 0)
+		if(reflect && cosTheta > 0)
 		{
-			float pdf = cosineHemispherePdf(cosTheta_);
+			float pdf = cosTheta * INV_PI;
 		
-			vec3 throughput = LambertianReflection(wo, wi, diffuseColor) * cosTheta_ / pdf;
+			vec3 throughput = LambertianReflection(wo, wi, diffuseColor) * cosTheta / pdf;
 
 			// RR termination
-			RRTerminateOrTraceRay(hitPoint, toWorld(Ng, Tg, Bg, wi), throughput);
+			RRTerminateOrTraceRay(hitPoint, TBNs * wi, throughput);
 		}
 	}
 	
 	// REFLECTION
 	{
 		// sample new direction wi and its pdfs based on distribution of the GGX BRDF
-		vec2 Xi = vec2(rnd(inPrd.seed), rnd(inPrd.seed)); 
-		vec3 wh  = importanceSampleGGX2(Xi, a);
+		vec2 u = vec2(rnd(inPrd.seed), rnd(inPrd.seed)); 
+		vec3 wh  = TrowbridgeReitzDistribution_Sample_wh(wo, u, a, a);
 
-		// TODO: use reflect
-		vec3 wi  = normalize(2.0 * dot(wo, wh) * wh - wo);
+		vec3 wi  = reflect(wo, wh);
 
-		// If wo is in the opposite hemisphere, then wi must be flipped to lie in the same hemisphere as wo.
-		if (wo.z < 0) 
-			wi.z *= -1;
+		bool reflect = dot(wi, Ng_s) * dot(wo, Ng_s) > 0;
 	
-		float cosTheta_ = cosTheta(wi);
+		float cosTheta = CosTheta(wi);
 
-		if(cosTheta_ > 0)
+		if(reflect && cosTheta > 0)
 		{
-			vec3 brdf_r = MicrofacetReflection(wo, wi, a, f0);
+			vec3 brdf_r = MicrofacetReflection(wo, wi, a, a, f0);
 
-			float pdf = (D_TrowbridgeReitzDistribution(wh, a) * cosTheta(wh) / (4 * dot(wh, wo))) + 0.0001;
+			float pdf = TrowbridgeReitzSamplePdf(wo, wh, a, a) / (4 * dot(wo, wh));
 
-			vec3 throughput = brdf_r * cosTheta_ / pdf;
+			vec3 throughput = brdf_r * cosTheta  / pdf;
 
-			RRTerminateOrTraceRay(hitPoint, toWorld(Ng, Tg, Bg, wi), throughput);
+			RRTerminateOrTraceRay(hitPoint, TBNs * wi, throughput);
 		}
 	}
+
+	
 	
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
