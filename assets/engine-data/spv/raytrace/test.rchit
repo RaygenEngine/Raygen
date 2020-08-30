@@ -101,7 +101,7 @@ void RRTerminateOrTraceRay(vec3 nextOrigin, vec3 nextDirection, vec3 throughput)
 				1               // payload (location = 0)
 	);
 
-	inPrd.radiance += throughput * prd.radiance;
+	inPrd.radiance += throughput * prd.radiance; 
 }
 
 void main() {
@@ -200,7 +200,7 @@ void main() {
 	{
 		vec3 lightPos = vec3(8,2,0);
 		vec3 lightColor = vec3(0.98823529411764705882352941176471, 0.83137254901960784313725490196078, 0.25098039215686274509803921568627);
-		float lightIntensity = 300;
+		float lightIntensity = 30;
 		
 		vec3 L = normalize(lightPos - hitPoint);
 		vec3 wi = normalize(invTBNs * L);
@@ -284,6 +284,7 @@ void main() {
 	
 	
 }
+
 
 
 
