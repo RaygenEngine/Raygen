@@ -10,42 +10,50 @@
 // sperical coordinates (theta, phi)
 
 // cosTheta = n o w = (0,0,1) o w = w.z
-float cosTheta(vec3 w) { return w.z; }
-float cos2Theta(vec3 w) { return w.z * w.z; }
+float CosTheta(vec3 w) { return w.z; }
+float Cos2Theta(vec3 w) { return w.z * w.z; }
+float AbsCosTheta(vec3 w) { return abs(w.z); }
 
 // sin2Theta = 1 - cos2Theta
-float sin2Theta(vec3 w) { return max(0.f, 1.f - w.z * w.z); }
-float sinTheta(vec3 w) { return sqrt(sin2Theta(w)); }
+float Sin2Theta(vec3 w) { return max(0.f, 1.f - w.z * w.z); }
+float SinTheta(vec3 w) { return sqrt(Sin2Theta(w)); }
 
 // tanTheta = sinTheta / cosTheta
-float tanTheta(vec3 w) { return sinTheta(w) / cosTheta(w); }
-float tan2Theta(vec3 w) { return sin2Theta(w) / cos2Theta(w); }
+float TanTheta(vec3 w) { return SinTheta(w) / CosTheta(w); }
+float Tan2Theta(vec3 w) { return Sin2Theta(w) / Cos2Theta(w); }
+float AbsTanTheta(vec3 w) { return abs(SinTheta(w) / CosTheta(w)); }
 
 // cosPhi = x / sinTheta
-float cosPhi(vec3 w) { 
-    float sinTheta_ = sinTheta(w);
-    return (sinTheta_ == 0) ? 1 : clamp(w.x / sinTheta_, -1, 1);
+float CosPhi(vec3 w) 
+{ 
+    float sinTheta = SinTheta(w);
+    return (sinTheta == 0) ? 1 : clamp(w.x / sinTheta, -1, 1);
 }
 
-float cos2Phi(vec3 w) { return cosPhi(w) * cosPhi(w); }
+float Cos2Phi(vec3 w) { return CosPhi(w) * CosPhi(w); }
 
 // sinPhi = y / sinTheta
-float sinPhi(vec3 w) 
+float SinPhi(vec3 w) 
 { 
-    float sinTheta_ = sinTheta(w);
-    return sinTheta_ == 0 ? 1 : clamp(w.y / sinTheta_, -1, 1);
+    float sinTheta = SinTheta(w);
+    return sinTheta == 0 ? 1 : clamp(w.y / sinTheta, -1, 1);
 }
 
-float sin2Phi(vec3 w) { return sinPhi(w) * sinPhi(w); }
+float Sin2Phi(vec3 w) { return SinPhi(w) * SinPhi(w); }
 
 // DPhi can be found by zeroing the z coordinate of the two vectors to get 2D vectors 
 // and then normalizing them. The dot product of these two vectors gives the cosine of the angle between them.
  
-float cosDPhi(vec3 wa, vec3 wb) 
+float CosDPhi(vec3 wa, vec3 wb) 
 {
     return clamp((wa.x * wb.x + wa.y * wb.y) / 
             sqrt((wa.x * wa.x + wa.y * wa.y) *      
                  (wb.x * wb.x + wb.y * wb.y)), -1, 1);
+}
+
+bool sameHemisphere(vec3 w, vec3 wp) 
+{
+    return w.z * wp.z > 0;
 }
 
 // specular reflection
@@ -56,41 +64,35 @@ vec3 reflect(vec3 wo)
     return vec3(-wo.x, -wo.y, wo.z);
 }
 
-float D_TrowbridgeReitzDistribution(vec3 wh, float a) 
+float D_TrowbridgeReitzDistribution(vec3 wh, float alpha_x, float alpha_y) 
 {
-    float alphax = a;
-    float alphay = a;
-
-    float tan2Theta_ = tan2Theta(wh);
-    if (isinf(tan2Theta_)) return 0.f;
-    float cos4Theta = cos2Theta(wh) * cos2Theta(wh);
-    float e = (cos2Phi(wh) / (alphax * alphax) +
-               sin2Phi(wh) / (alphay * alphay)) * tan2Theta_;
-    return 1 / (PI * alphax * alphay * cos4Theta * (1 + e) * (1 + e));
+    float tan2Theta = Tan2Theta(wh);
+    if (isinf(tan2Theta)) return 0.f;
+    float cos4Theta = Cos2Theta(wh) * Cos2Theta(wh);
+    float e = (Cos2Phi(wh) / (alpha_x * alpha_x) +
+               Sin2Phi(wh) / (alpha_y * alpha_y)) * tan2Theta;
+    return 1 / (PI * alpha_x * alpha_y * cos4Theta * (1 + e) * (1 + e));
 }
 
-float L_TrowbridgeReitzDistribution(vec3 w, float a) 
+float L_TrowbridgeReitzDistribution(vec3 w, float alpha_x, float alpha_y) 
 {
-    float alphax = a;
-    float alphay = a;
-
-    float absTanTheta = abs(tanTheta(w));
+    float absTanTheta = AbsTanTheta(w);
     if (isinf(absTanTheta)) return 0.f;
 
-    float alpha = sqrt(cos2Phi(w) * alphax * alphax +
-                       sin2Phi(w) * alphay * alphay);
+    float alpha = sqrt(Cos2Phi(w) * alpha_x * alpha_x +
+                       Sin2Phi(w) * alpha_y * alpha_y);
 
     float alpha2Tan2Theta = (alpha * absTanTheta) * (alpha * absTanTheta);
     return (-1 + sqrt(1.f + alpha2Tan2Theta)) / 2;
 }
 
-float G1_TrowbridgeReitzDistribution(vec3 w, float a) 
+float G1_TrowbridgeReitzDistribution(vec3 w, float alpha_x, float alpha_y) 
 { 
-    return 1 / (1 + L_TrowbridgeReitzDistribution(w, a)); 
+    return 1 / (1 + L_TrowbridgeReitzDistribution(w, alpha_x, alpha_y)); 
 }
 
-float G_TrowbridgeReitzDistribution(vec3 wo, vec3 wi, float a) {
-    return 1 / (1 + L_TrowbridgeReitzDistribution(wo, a) + L_TrowbridgeReitzDistribution(wi, a));
+float G_TrowbridgeReitzDistribution(vec3 wo, vec3 wi, float alpha_x, float alpha_y) {
+    return 1 / (1 + L_TrowbridgeReitzDistribution(wo, alpha_x, alpha_y) + L_TrowbridgeReitzDistribution(wi, alpha_x, alpha_y));
 }
 
 vec3 F_Schlick2(float NoV, vec3 f0) {
@@ -98,24 +100,29 @@ vec3 F_Schlick2(float NoV, vec3 f0) {
     return f + f0 * (1.0 - f);
 }
 
-vec3 MicrofacetReflection(vec3 wo, vec3 wi, float a, vec3 f0)
-{
-    float cosThetaO = abs(cosTheta(wo)); // NoV
-    float cosThetaI = abs(cosTheta(wi)); // NoL
+vec3 F_Schlick2(float NoV, vec3 f0, vec3 f90) {
+    return f0 + (f90 - f0) * pow(1.0 - NoV, 5.0);
+}
 
-    vec3 wh = wi + wo; // halfway vector
+vec3 MicrofacetReflection(vec3 wo, vec3 wi, float alpha_x, float alpha_y, vec3 f0)
+{
+    float cosThetaO = AbsCosTheta(wo); // NoV
+    float cosThetaI = AbsCosTheta(wi); // NoL
+
+    vec3 wh = normalize(wi + wo); // halfway vector
 
     // CHECK:
-    //float LoH = dot(wi, wh);
-    // vec3 f90 = vec3(0.5 + 2.0 * a * LoH * LoH);
+    float LoH = dot(wi, wh);
+    vec3 f90 = vec3(0.5 + 2.0 * alpha_x * alpha_y * LoH * LoH);
  
  
     if (cosThetaI == 0 || cosThetaO == 0) return vec3(0.f);
     if (wh.x == 0 && wh.y == 0 && wh.z == 0) return vec3(0.f);
 
-    wh = normalize(wh);
-    vec3 F = F_Schlick2(dot(wi, wh), f0);
-    return f0 * D_TrowbridgeReitzDistribution(wh, a) * G_TrowbridgeReitzDistribution(wo, wi, a) * F /
+    // CHECK
+    vec3 F = F_Schlick2(dot(wi, wh), f0, f90);
+
+    return f0 * D_TrowbridgeReitzDistribution(wh, alpha_x, alpha_y) * G_TrowbridgeReitzDistribution(wo, wi, alpha_x, alpha_y) * F /
            (4 * cosThetaI * cosThetaO);
 }
 
@@ -123,12 +130,6 @@ vec3 LambertianReflection(vec3 wo, vec3 wi, vec3 R)
 {
     return R * INV_PI;
 }
-
-
-bool sameHemisphere(vec3 w, vec3 wp) {
-    return w.z * wp.z > 0;
-}
-
 
 vec3 uniformSampleHemisphere(vec2 u) 
 {
@@ -187,18 +188,19 @@ vec3 cosineSampleHemisphere(vec2 u)
     return vec3(d.x, d.y, z);
 }
 
-float cosineHemispherePdf(float cosTheta_) 
-{ 
-    return cosTheta_ * INV_PI; 
+// TODO: not used
+float cosineHemispherePdf(vec3 wo, vec3 wi) 
+{
+     return sameHemisphere(wo, wi) ? AbsCosTheta(wi) * INV_PI : 0;
 }
 
 vec3 uniformSampleCone(vec2 u, float cosThetaMax) 
 {
-    float cosTheta_ = (1.f - u.x) + u.x * cosThetaMax;
-    float sinTheta_ = sqrt(1.f - cosTheta_ * cosTheta_);
+    float cosTheta = (1.f - u.x) + u.x * cosThetaMax;
+    float sinTheta = sqrt(1.f - cosTheta * cosTheta);
     float phi = u.y * 2 * PI;
-    return vec3(cos(phi) * sinTheta_, sin(phi) * sinTheta_,
-                    cosTheta_);
+    return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta,
+                    cosTheta);
 }
 
 float uniformConePdf(float cosThetaMax) {
@@ -215,7 +217,7 @@ vec2 uniformSampleTriangle(vec2 u)
 
 vec3 toSurface(vec3 normal, vec3 tangent, vec3 binormal, vec3 v)
 {
-	return vec3(dot(v, tangent), dot(v, binormal), dot(v, normal));
+	return vec3(dot(v, tangent), dot(v, binormal), dot(v, normal)); // CHECK: is this TBN
 }
 
 vec3 toWorld(vec3 normal, vec3 tangent, vec3 binormal, vec3 v)
@@ -225,15 +227,109 @@ vec3 toWorld(vec3 normal, vec3 tangent, vec3 binormal, vec3 v)
 		        tangent.z * v.x + binormal.z * v.y + normal.z * v.z);
 }
 
-vec3 importanceSampleGGX2(vec2 Xi, float a) 
+void TrowbridgeReitzSample11(float cosTheta, float U1, float U2,
+                                    inout float slope_x, inout float slope_y) 
 {
-    const float phi = 2.0f * PI * Xi.x;
-    // (aa-1) == (a-1)(a+1) produces better fp accuracy
-    const float cosTheta2 = (1 - Xi.y) / (1 + (a + 1) * ((a - 1) * Xi.y));
-    const float cosTheta = sqrt(cosTheta2);
-    const float sinTheta = sqrt(1 - cosTheta2);
+    // special case (normal incidence)
+    if (cosTheta > .9999) {
+         float r = sqrt(U1 / (1 - U1));
+         float phi = 6.28318530718 * U2;
+         slope_x = r * cos(phi);
+         slope_y = r * sin(phi);
+         return;
+    }
 
-    vec3 H = vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
+    float sinTheta = sqrt(max(0.f, 1.f - cosTheta * cosTheta));
+    float tanTheta = sinTheta / cosTheta;
+    float a = 1.f / tanTheta;
+    float G1 = 2.f / (1.f + sqrt(1.f + 1.f / (a * a)));
 
-	return normalize(H);
+    // sample slope_x
+    float A = 2.f * U1 / G1 - 1.f;
+    float tmp = 1.f / (A * A - 1.f);
+    if (tmp > 1e10) tmp = 1e10;
+    float B = tanTheta;
+    float D = sqrt(max((B * B * tmp * tmp - (A * A - B * B) * tmp), 0.f));
+    float slope_x_1 = B * tmp - D;
+    float slope_x_2 = B * tmp + D;
+    slope_x = (A < 0.f || slope_x_2 > 1.f / tanTheta) ? slope_x_1 : slope_x_2;
+
+    // sample slope_y
+    float S;
+    if (U2 > 0.5f) {
+        S = 1.f;
+        U2 = 2.f * (U2 - .5f);
+    } else {
+        S = -1.f;
+        U2 = 2.f * (.5f - U2);
+    }
+    float z =
+        (U2 * (U2 * (U2 * 0.27385f - 0.73369f) + 0.46341f)) /
+        (U2 * (U2 * (U2 * 0.093073f + 0.309420f) - 1.000000f) + 0.597999f);
+    slope_y = S * z * sqrt(1.f + slope_x * slope_x);
+
+    //CHECK(!std::isinf(*slope_y));
+    //CHECK(!std::isnan(*slope_y));
+}
+
+vec3 TrowbridgeReitzSample(vec3 wi, float alpha_x, float alpha_y, float U1, float U2) 
+{
+    // 1. stretch wi
+    vec3 wiStretched = normalize(vec3(alpha_x * wi.x, alpha_y * wi.y, wi.z));
+
+    // 2. simulate P22_{wi}(x_slope, y_slope, 1, 1)
+    float slope_x, slope_y;
+    TrowbridgeReitzSample11(CosTheta(wiStretched), U1, U2, slope_x, slope_y);
+
+    // 3. rotate
+    float tmp = CosPhi(wiStretched) * slope_x - SinPhi(wiStretched) * slope_y;
+    slope_y = SinPhi(wiStretched) * slope_x + CosPhi(wiStretched) * slope_y;
+    slope_x = tmp;
+
+    // 4. unstretch
+    slope_x = alpha_x * slope_x;
+    slope_y = alpha_y * slope_y;
+
+    // 5. compute normal
+    return normalize(vec3(-slope_x, -slope_y, 1.f));
+}
+
+vec3 TrowbridgeReitzDistribution_Sample_wh(vec3 wo, vec2 u, float alpha_x, float alpha_y) 
+{
+    // vec3 wh;
+    // if (!sampleVisibleArea) {
+        // Float cosTheta = 0, phi = (2 * Pi) * u[1];
+        // if (alphax == alphay) {
+            // Float tanTheta2 = alphax * alphax * u[0] / (1.0f - u[0]);
+            // cosTheta = 1 / std::sqrt(1 + tanTheta2);
+        // } else {
+            // phi =
+                // std::atan(alphay / alphax * std::tan(2 * Pi * u[1] + .5f * Pi));
+            // if (u[1] > .5f) phi += Pi;
+            // Float sinPhi = std::sin(phi), cosPhi = std::cos(phi);
+            // const Float alphax2 = alphax * alphax, alphay2 = alphay * alphay;
+            // const Float alpha2 =
+                // 1 / (cosPhi * cosPhi / alphax2 + sinPhi * sinPhi / alphay2);
+            // Float tanTheta2 = alpha2 * u[0] / (1 - u[0]);
+            // cosTheta = 1 / std::sqrt(1 + tanTheta2);
+        // }
+        // Float sinTheta =
+            // std::sqrt(std::max((Float)0., (Float)1. - cosTheta * cosTheta));
+        // wh = SphericalDirection(sinTheta, cosTheta, phi);
+        // if (!SameHemisphere(wo, wh)) wh = -wh;
+    // } else {
+        bool flip = wo.z < 0;
+        vec3 wh = TrowbridgeReitzSample(flip ? -wo : wo, alpha_x, alpha_y, u.x, u.y);
+        if (flip) wh = -wh;
+    //}
+    return wh;
+}
+
+
+float TrowbridgeReitzSamplePdf(vec3 wo, vec3 wh, float alpha_x, float alpha_y) 
+{
+    //if (sampleVisibleArea)
+        return D_TrowbridgeReitzDistribution(wh, alpha_x, alpha_y) * G1_TrowbridgeReitzDistribution(wo, alpha_x, alpha_y) * abs(dot(wo, wh)) / AbsCosTheta(wo);
+    //else
+    //return D_TrowbridgeReitzDistribution(wh, alpha_x, alpha_y) * AbsCosTheta(wh);
 }

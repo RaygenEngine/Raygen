@@ -53,7 +53,7 @@ void Layouts_::MakeRenderPassLayouts()
 		layout.AttachmentFinalLayout(lights, vk::ImageLayout::eShaderReadOnlyOptimal);
 		layout.AttachmentFinalLayout(postprocOut, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		layout.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+		layout.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		layout.Generate();
 	}
