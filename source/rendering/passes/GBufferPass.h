@@ -1,13 +1,10 @@
 #pragma once
-#include "rendering/structures/GBuffer.h"
 #include "rendering/scene/Scene.h"
 
 namespace vl {
 class GbufferPass {
 
 public:
-	static vk::UniqueRenderPass CreateCompatibleRenderPass();
-
 	static size_t GetPushConstantSize();
 
 	static vk::UniquePipeline CreatePipeline(vk::PipelineLayout pipelineLayout, //

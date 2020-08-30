@@ -6,6 +6,9 @@
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/Scene.h"
 
+// NEXT: !!!
+#include "rendering/Renderer.h"
+
 namespace ed {
 void EditorCamera::Update(float deltaSeconds)
 {
@@ -180,6 +183,7 @@ void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 	transform.Decompose();
 }
 
+
 void EditorCamera::UpdateFly(float speed, float deltaSeconds)
 {
 
@@ -236,6 +240,9 @@ void EditorCamera::UpdateFly(float speed, float deltaSeconds)
 			transform.position -= up * speed;
 		}
 		transform.Compose();
+
+		// NEXT: !!!
+		vl::Renderer->m_raytracingPass.m_rtFrame = 0;
 	}
 }
 } // namespace ed

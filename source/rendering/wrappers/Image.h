@@ -38,6 +38,10 @@ struct RImage {
 
 	// Blocking transition to layout
 	void BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
+	// Pipeline stages are explicit
+	void BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
+		vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage);
+
 	// Pipeline stages are chosen based on image layouts
 	void TransitionToLayout(vk::CommandBuffer cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const;
 	// Pipeline stages are explicit

@@ -1,5 +1,4 @@
 #pragma once
-#include "rendering/structures/GBuffer.h"
 #include "rendering/scene/Scene.h"
 
 namespace vl {

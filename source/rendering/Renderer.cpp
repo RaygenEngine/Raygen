@@ -149,13 +149,16 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		rvk::writeDescriptorImages(m_gbufferDesc[i], 0u, std::move(views));
 	}
 
+	m_raytracingPass.Resize(fbSize);
+
 	// RT images
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		m_rtDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
+		m_rtDescSet[i] = Layouts->doubleStorageImage.AllocDescriptorSet();
 		m_rasterLightDescSet[i] = Layouts->singleSamplerDescLayout.AllocDescriptorSet();
 
 
-		rvk::writeDescriptorImages(m_rtDescSet[i], 0u, { m_ptPass[i].framebuffer[1].view() },
+		rvk::writeDescriptorImages(m_rtDescSet[i], 0u,
+			{ m_ptPass[i].framebuffer[1].view(), m_raytracingPass.m_progressiveResult.view() },
 			vk::DescriptorType::eStorageImage, nullptr, vk::ImageLayout::eGeneral);
 
 		rvk::writeDescriptorImages(m_rasterLightDescSet[i], 0u, { m_ptPass[i].framebuffer[0].view() });
@@ -201,14 +204,6 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 
 
 	m_gbufferInst[sceneDesc.frameIndex].TransitionFramebufferForWrite(cmdBuffer);
-
-	// for (auto& att : m_gbuffer[sceneDesc.frameIndex].framebuffer.ownedAttachments) {
-	//	if (att.isDepth) {
-	//		continue;
-	//	}
-	//	att.TransitionToLayout(
-	//		cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eColorAttachmentOptimal);
-	//}
 
 	for (auto sl : sceneDesc->spotlights.elements) {
 		if (sl) {

@@ -166,17 +166,21 @@ vk::ImageMemoryBarrier RImage::CreateTransitionBarrier(
 
 void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
-	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
+	BlockingTransitionToLayout(
+		oldLayout, newLayout, rvk::pipelineStageForLayout(oldLayout), rvk::pipelineStageForLayout(newLayout));
+}
 
-	auto sourceStage = rvk::pipelineStageForLayout(oldLayout);
-	auto destinationStage = rvk::pipelineStageForLayout(newLayout);
+void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
+	vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage)
+{
+	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
 
 	vk::CommandBufferBeginInfo beginInfo{};
 	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
 	Device->graphicsCmdBuffer.begin(beginInfo);
 
-	Device->graphicsCmdBuffer.pipelineBarrier(sourceStage, destinationStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
+	Device->graphicsCmdBuffer.pipelineBarrier(sourceStage, destStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
 
 	Device->graphicsCmdBuffer.end();
 
@@ -190,10 +194,8 @@ void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayo
 
 void RImage::TransitionToLayout(vk::CommandBuffer cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const
 {
-	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
-
-	cmdBuffer.pipelineBarrier(rvk::pipelineStageForLayout(oldLayout), rvk::pipelineStageForLayout(newLayout),
-		vk::DependencyFlags{ 0 }, {}, {}, barrier);
+	TransitionToLayout(cmdBuffer, oldLayout, newLayout, rvk::pipelineStageForLayout(oldLayout),
+		rvk::pipelineStageForLayout(newLayout));
 }
 
 void RImage::TransitionToLayout(vk::CommandBuffer cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout,

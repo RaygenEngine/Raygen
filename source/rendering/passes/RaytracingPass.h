@@ -1,6 +1,6 @@
 #pragma once
-
 #include "rendering/wrappers/Buffer.h"
+#include "rendering/wrappers/Image.h"
 
 struct SceneRenderDesc;
 
@@ -14,6 +14,8 @@ public:
 	RBuffer m_rtSBTBuffer;
 	std::vector<vk::RayTracingShaderGroupCreateInfoKHR> m_rtShaderGroups;
 
+	RImage2D m_progressiveResult;
+
 	int32 m_rtFrame{ 0 };
 
 	void MakeRtPipeline();
@@ -21,6 +23,8 @@ public:
 	void CreateRtShaderBindingTable();
 
 	void RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Renderer_* renderer);
+
+	void Resize(vk::Extent2D extent);
 };
 
 } // namespace vl

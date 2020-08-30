@@ -1,14 +1,15 @@
 #include "pch.h"
 #include "RaytracingPass.h"
 
+#include "engine/console/ConsoleVariable.h"
+#include "engine/Input.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
 #include "rendering/Layouts.h"
-#include "rendering/scene/Scene.h"
 #include "rendering/Renderer.h"
+#include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
-#include "engine/console/ConsoleVariable.h"
 
 
 ConsoleVariable<int32> console_rtDepth{ "rt.depth", 2, "Set rt depth" };
@@ -22,6 +23,7 @@ struct PushConstant {
 	int32 frame;
 	int32 depth;
 	int32 samples;
+	int32 convergeUntilFrame;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -32,7 +34,7 @@ void RaytracingPass::MakeRtPipeline()
 {
 
 	std::array layouts{
-		Layouts->singleStorageImage.handle(),
+		Layouts->doubleStorageImage.handle(),
 		Layouts->accelLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->rtSceneDescLayout.handle(),
@@ -158,6 +160,8 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 	// WIP: what about secondary buffers?
 	// cmdBuffer.executeCommands({ buffer });
 
+	static ConsoleVarFunc<int32> console_convergeUntilFrame{ "rt.convUntilFrame",
+		[]() { vl::Renderer->m_raytracingPass.m_rtFrame = 0; }, 0 };
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipeline.get());
 
@@ -188,7 +192,7 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 		&renderer->m_rasterLightDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 	PushConstant pc{ //
-		m_rtFrame, std::max(0, *console_rtDepth), std::max(0, *console_rtSamples)
+		m_rtFrame, std::max(0, *console_rtDepth), std::max(0, *console_rtSamples), *console_convergeUntilFrame
 	};
 
 	++m_rtFrame;
@@ -232,5 +236,15 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 
 	cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
 		&callableShaderBindingTable, extent.width, extent.height, 1);
+} // namespace vl
+
+void RaytracingPass::Resize(vk::Extent2D extent)
+{
+	m_progressiveResult = RImage2D(extent.width, extent.height, 1u, vk::Format::eR32G32B32A32Sfloat,
+		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, "ProgressiveResult");
+
+	m_progressiveResult.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 }
 } // namespace vl

@@ -184,9 +184,13 @@ void main() {
 
 	vec3 Ng_s = normalize(invTBNs * Ng);
 	if(wo.z < 0){
-		if(dot(V, facen) < 0) return; // backface culling
+		if(dot(V, facen) < 0){	
+			//inPrd.radiance = vec3(1000.f,0,1000.f); TODO
+			return; // backface culling
+		}
 		Ng_s = normalize(invTBNs * facen);
 	}
+
 
 	// DIRECT
 
@@ -196,7 +200,7 @@ void main() {
 	{
 		vec3 lightPos = vec3(8,2,0);
 		vec3 lightColor = vec3(0.98823529411764705882352941176471, 0.83137254901960784313725490196078, 0.25098039215686274509803921568627);
-		float lightIntensity = 30;
+		float lightIntensity = 300;
 		
 		vec3 L = normalize(lightPos - hitPoint);
 		vec3 wi = normalize(invTBNs * L);
@@ -280,6 +284,9 @@ void main() {
 	
 	
 }
+
+
+
 
 
 

@@ -5,9 +5,14 @@
 #include "rendering/passes/GbufferPass.h"
 #include "rendering/passes/UnlitPass.h"
 #include "rendering/passes/LightblendPass.h"
-#include "rendering/structures/GBuffer.h"
 
 namespace vl {
+
+
+inline constexpr static std::array colorAttachmentFormats = { vk::Format::eR16G16B16A16Snorm, vk::Format::eR8G8B8A8Srgb,
+	vk::Format::eR8G8B8A8Unorm, vk::Format::eR8G8B8A8Srgb };
+inline constexpr static std::array attachmentNames = { "Normal", "BaseColor", "Surface", "Emissive", "Depth" };
+inline constexpr static size_t ColorAttachmentCount = colorAttachmentFormats.size();
 
 
 void Layouts_::MakeRenderPassLayouts()
@@ -21,7 +26,7 @@ void Layouts_::MakeRenderPassLayouts()
 	{
 		std::vector<AttRef> gbufferAtts;
 
-		for (auto gbufferAttFormat : GBuffer::colorAttachmentFormats) {
+		for (auto gbufferAttFormat : colorAttachmentFormats) {
 			auto att = gbufferPassLayout.CreateAttachment(gbufferAttFormat);
 			gbufferPassLayout.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
 			gbufferAtts.emplace_back(att);
@@ -117,6 +122,9 @@ Layouts_::Layouts_()
 	singleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll); // WIP: Fix all
 	singleStorageImage.Generate();
 
+	doubleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll); // WIP: Fix all
+	doubleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll); // WIP: Fix all
+	doubleStorageImage.Generate();
 
 	// image debug
 	imageDebugDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
@@ -139,7 +147,6 @@ Layouts_::Layouts_()
 
 	depthRenderPass = DepthmapPass::CreateCompatibleRenderPass();
 
-	gbufferPass = GbufferPass::CreateCompatibleRenderPass();
 
 	lightblendPass = LightblendPass::CreateCompatibleRenderPass();
 
