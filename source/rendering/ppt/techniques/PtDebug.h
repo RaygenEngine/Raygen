@@ -8,6 +8,6 @@ class PtDebug : public PtBase_SinglePipeline {
 public:
 	void MakeLayout() override;
 	void MakePipeline() override;
-	void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet gbufferDescSet) override;
+	void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) override;
 };
 } // namespace vl

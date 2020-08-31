@@ -16,6 +16,9 @@ public:
 
 	RImage2D m_progressiveResult;
 
+	InFlightResources<RImageAttachment> m_indirectResult;
+
+
 	int32 m_rtFrame{ 0 };
 
 	void MakeRtPipeline();

@@ -94,8 +94,7 @@ void main() {
 
     if(frame >= convergeUntilFrame && convergeUntilFrame != 0) {
         vec3 indirect = imageLoad(progressiveResult, ivec2(gl_LaunchIDEXT.xy)).xyz;
-        vec3 rasterColor = texture(rasterDirect, uv).rgb;
-        imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(indirect + rasterColor, 1.f));
+        imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(indirect, 1.f));
         return;
     }
 
@@ -189,8 +188,6 @@ void main() {
         }
     }
 
-    vec3 rasterColor = texture(rasterDirect, uv).rgb;
-
     vec3 curColor = (hitValue / samples);
 
     // TODO: fix 
@@ -201,11 +198,11 @@ void main() {
         vec3 finalIndirect = mix(prevColor, curColor, a);
 
         imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect, 1.f));
-        imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect + rasterColor, 1.f));
+        imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect, 1.f));
     }
     else{
         imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
-        imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor + rasterColor, 1.f));
+        imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
     }
 
 
@@ -250,7 +247,7 @@ vec3 GetSkyColor(vec3 orig, vec3 dir) {
     float segmentLength = length(orig - end) / numSamples;
     
     vec3 sumR = vec3(0); 
-    vec3 sumM = vec3(0); 
+    vec3 sumM = vec3(0);
     
     float tCurrent = 0; 
     float opticalDepthR = 0; // rayleigh contribution

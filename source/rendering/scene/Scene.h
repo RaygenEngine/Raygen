@@ -254,7 +254,7 @@ struct SceneRenderDesc {
 
 	uint32 frameIndex{ 0 };
 
-	vk::DescriptorSet gbufferDescSet;
+	vk::DescriptorSet attDesc;
 
 
 	// TODO: Scene description should only contain the required scene structs for current frame rendering

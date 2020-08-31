@@ -12,8 +12,12 @@
 namespace vl {
 void PtDirectionalLight::MakeLayout()
 {
-	std::array layouts{ Layouts->gbufferDescLayout.handle(), Layouts->singleUboDescLayout.handle(),
-		Layouts->singleUboDescLayout.handle(), Layouts->singleSamplerDescLayout.handle() };
+	std::array layouts{
+		Layouts->renderAttachmentsLayout.handle(),
+		Layouts->singleUboDescLayout.handle(),
+		Layouts->singleUboDescLayout.handle(),
+		Layouts->singleSamplerDescLayout.handle(),
+	};
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -48,11 +52,11 @@ void PtDirectionalLight::MakePipeline()
 		.setAttachments(colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
-	Utl_CreatePipeline(gpuShader, colorBlending);
+	Utl_CreatePipelineLightPass(gpuShader, colorBlending);
+	(gpuShader, colorBlending);
 }
 
-void PtDirectionalLight::Draw(
-	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet gbufferDescSet)
+void PtDirectionalLight::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	auto camera = sceneDesc.viewer;
 
@@ -66,7 +70,7 @@ void PtDirectionalLight::Draw(
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &gbufferDescSet, 0u, nullptr);
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u, &descSet, 0u, nullptr);

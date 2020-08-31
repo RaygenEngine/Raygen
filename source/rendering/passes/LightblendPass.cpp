@@ -24,47 +24,6 @@
 #include "assets/shared/GeometryShared.h"
 
 namespace vl {
-vk::UniqueRenderPass LightblendPass::CreateCompatibleRenderPass()
-{
-	vk::AttachmentDescription colorAttachment{};
-	colorAttachment
-		.setFormat(vk::Format::eR32G32B32A32Sfloat) //
-		.setSamples(vk::SampleCountFlagBits::e1)
-		.setLoadOp(vk::AttachmentLoadOp::eClear)
-		.setStoreOp(vk::AttachmentStoreOp::eStore)
-		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal)
-		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-	vk::AttachmentReference colorAttachmentRef{};
-	colorAttachmentRef
-		.setAttachment(0u) //
-		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-	vk::SubpassDescription subpass{};
-	subpass
-		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachments(colorAttachmentRef);
-
-	vk::SubpassDependency dependency{};
-	dependency
-		.setSrcSubpass(VK_SUBPASS_EXTERNAL) //
-		.setDstSubpass(0u)
-		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setSrcAccessMask(vk::AccessFlags(0)) // 0
-		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
-
-	vk::RenderPassCreateInfo renderPassInfo{};
-	renderPassInfo
-		.setAttachments(colorAttachment) //
-		.setSubpasses(subpass)
-		.setDependencies(dependency);
-
-	return Device->createRenderPassUnique(renderPassInfo);
-}
-
 
 void LightblendPass::RecordCmd(
 	vk::CommandBuffer* cmdBuffer, vk::Viewport viewport, vk::Rect2D scissor, const SceneRenderDesc& sceneDesc)

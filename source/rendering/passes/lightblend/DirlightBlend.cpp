@@ -13,7 +13,7 @@ namespace vl {
 vk::UniquePipelineLayout DirlightBlend::MakePipelineLayout()
 {
 	return rvk::makeLayoutNoPC({
-		Layouts->gbufferDescLayout.handle(),
+		Layouts->renderAttachmentsLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleSamplerDescLayout.handle(),
@@ -67,8 +67,7 @@ void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sce
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<DirlightBlend>());
 
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, pipeLayout, 0u, 1u, &sceneDesc.gbufferDescSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 1u, 1u, &descSet, 0u, nullptr);
 

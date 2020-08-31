@@ -6,6 +6,9 @@
 #include "rendering/wrappers/passlayout/RenderPassLayout.h"
 #include "rendering/output/OutputPassBase.h"
 #include "rendering/passes/RaytracingPass.h"
+#include "rendering/ppt/lightpass/PtSpotlight.h"
+#include "rendering/ppt/lightpass/PtDirectionalLight.h"
+#include "rendering/ppt/lightpass/PtLightBlend.h"
 
 namespace vl {
 
@@ -16,6 +19,7 @@ inline class Renderer_ : public Listener {
 
 private:
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
 
 	PtCollection m_postprocCollection;
@@ -57,21 +61,27 @@ public:
 	InFlightResources<vk::ImageView> GetOutputViews() const;
 
 
-	InFlightResources<RenderingPassInstance> m_ptPass;
 	InFlightResources<RenderingPassInstance> m_gbufferInst;
+	InFlightResources<RenderingPassInstance> m_rasterDirectPass;
+	InFlightResources<RenderingPassInstance> m_ptPass;
 
-	InFlightResources<vk::DescriptorSet> m_gbufferDesc;
+	InFlightResources<vk::DescriptorSet> m_attachmentsDesc;
+
 
 	// TODO: RT, move those, framearray
 	InFlightResources<vk::DescriptorSet> m_rtDescSet;
-	InFlightResources<vk::DescriptorSet> m_rasterLightDescSet;
+
+	PtSpotlight spotlightPass;
+	PtDirectionalLight dirlightPass;
+
+	PtLightBlend lightblendPass;
 
 	//
 
 	RaytracingPass m_raytracingPass;
 
 
-	void DrawFrame(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, OutputPassBase& outputPass);
+	void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, OutputPassBase& outputPass);
 
 	void InitPipelines();
 

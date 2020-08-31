@@ -1,9 +1,9 @@
 #pragma once
-
 #include "rendering/ppt/PtBase.h"
+#include "rendering/scene/Scene.h"
 
 namespace vl {
-class PtReflProb : public PtBase_SinglePipeline {
+class PtLightBlend : public PtBase_SinglePipeline {
 public:
 	void MakeLayout() override;
 	void MakePipeline() override;

@@ -40,7 +40,17 @@ namespace vl {
 
 void Renderer_::InitPipelines()
 {
-	m_postprocCollection.RegisterTechniques();
+	//	m_postprocCollection.RegisterTechniques();
+
+	spotlightPass.MakeLayout();
+	spotlightPass.MakePipeline();
+
+	dirlightPass.MakeLayout();
+	dirlightPass.MakePipeline();
+
+	lightblendPass.MakeLayout();
+	lightblendPass.MakePipeline();
+
 	m_raytracingPass.MakeRtPipeline();
 }
 
@@ -108,13 +118,24 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 	}
 }
 
+void Renderer_::RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+{
+
+	m_rasterDirectPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
+		spotlightPass.Draw(cmdBuffer, sceneDesc);
+		dirlightPass.Draw(cmdBuffer, sceneDesc);
+	});
+}
+
 void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
 	m_ptPass[sceneDesc.frameIndex].RecordPass(*cmdBuffer, vk::SubpassContents::eInline, [&] {
 		// Post proc pass
-		m_postprocCollection.Draw(*cmdBuffer, sceneDesc, m_gbufferDesc[sceneDesc.frameIndex]);
+		lightblendPass.Draw(*cmdBuffer, sceneDesc);
+
+		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc, m_gbufferDesc[sceneDesc.frameIndex]);
 		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
 	});
 }
@@ -130,38 +151,41 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
+		// Generate Passes
 		m_gbufferInst[i] = Layouts->gbufferPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
+
+		m_rasterDirectPass[i] = Layouts->rasterDirectPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
 
 		m_ptPass[i] = Layouts->ptPassLayout.CreatePassInstance(
 			fbSize.width, fbSize.height, { &m_gbufferInst[i].framebuffer[GDepth] });
 	}
 
-	// GBuffer desc
-	for (size_t i = 0; i < c_framesInFlight; i++) {
-		std::vector<vk::ImageView> views;
+	m_raytracingPass.Resize(fbSize);
 
-		m_gbufferDesc[i] = Layouts->gbufferDescLayout.AllocDescriptorSet();
+
+	for (uint32 i = 0; i < c_framesInFlight; ++i) {
+		m_attachmentsDesc[i] = Layouts->renderAttachmentsLayout.AllocDescriptorSet();
+
+		std::vector<vk::ImageView> views;
 
 		for (auto& att : m_gbufferInst[i].framebuffer.ownedAttachments) {
 			views.emplace_back(att.view());
 		}
 
-		rvk::writeDescriptorImages(m_gbufferDesc[i], 0u, std::move(views));
-	}
+		views.emplace_back(m_rasterDirectPass[i].framebuffer[0].view()); // rasterDirectSampler
+		views.emplace_back(m_raytracingPass.m_indirectResult[i].view()); // rtIndirectSampler
+		views.emplace_back(m_ptPass[i].framebuffer[0].view());           // sceneColorSampler
 
-	m_raytracingPass.Resize(fbSize);
+		rvk::writeDescriptorImages(m_attachmentsDesc[i], 0u, std::move(views));
+	}
 
 	// RT images
 	for (size_t i = 0; i < c_framesInFlight; i++) {
 		m_rtDescSet[i] = Layouts->doubleStorageImage.AllocDescriptorSet();
-		m_rasterLightDescSet[i] = Layouts->singleSamplerDescLayout.AllocDescriptorSet();
-
 
 		rvk::writeDescriptorImages(m_rtDescSet[i], 0u,
-			{ m_ptPass[i].framebuffer[1].view(), m_raytracingPass.m_progressiveResult.view() },
+			{ m_raytracingPass.m_indirectResult[i].view(), m_raytracingPass.m_progressiveResult.view() },
 			vk::DescriptorType::eStorageImage, nullptr, vk::ImageLayout::eGeneral);
-
-		rvk::writeDescriptorImages(m_rasterLightDescSet[i], 0u, { m_ptPass[i].framebuffer[0].view() });
 	}
 }
 
@@ -169,20 +193,24 @@ InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
 {
 	InFlightResources<vk::ImageView> views;
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		views[i] = m_ptPass[i].framebuffer[1].view();
+		views[i] = m_ptPass[i].framebuffer[0].view();
 	}
 	return views;
 }
 
-void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, OutputPassBase& outputPass)
+void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, OutputPassBase& outputPass)
 {
 	PROFILE_SCOPE(Renderer);
 
 	m_secondaryBuffersPool.Top();
 
+
+	sceneDesc.attDesc = m_attachmentsDesc[sceneDesc.frameIndex];
+
 	// passes
 	RecordGeometryPasses(&cmdBuffer, sceneDesc);
-	RecordPostProcessPass(&cmdBuffer, sceneDesc);
+	RecordRasterDirectPass(cmdBuffer, sceneDesc);
+
 
 	static bool raytrace = true;
 
@@ -191,19 +219,15 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 	}
 
 	if (raytrace) {
-		m_ptPass[sceneDesc.frameIndex].framebuffer[1].TransitionToLayout(cmdBuffer,
-			vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
-			vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
-
 		m_raytracingPass.RecordPass(cmdBuffer, sceneDesc, this);
-
-		m_ptPass[sceneDesc.frameIndex].framebuffer[1].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
-			vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
-			vk::PipelineStageFlagBits::eFragmentShader);
 	}
 
 
+	RecordPostProcessPass(&cmdBuffer, sceneDesc);
+
+
 	m_gbufferInst[sceneDesc.frameIndex].TransitionFramebufferForWrite(cmdBuffer);
+	m_rasterDirectPass[sceneDesc.frameIndex].TransitionFramebufferForWrite(cmdBuffer);
 
 	for (auto sl : sceneDesc->spotlights.elements) {
 		if (sl) {

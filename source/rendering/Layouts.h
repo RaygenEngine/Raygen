@@ -6,20 +6,19 @@ namespace vl {
 
 enum GColorAttachment : uint32
 {
-	GNormal = 0,
+	GDepth = 0,
+	GNormal = 1,
 	// rgb: color, a: opacity
-	GBaseColor = 1,
+	GBaseColor = 2,
 	// r: metallic, g: roughness, b: reflectance, a: occlusion
-	GSurface = 2,
-	GEmissive = 3,
-	GDepth = 4,
+	GSurface = 3,
+	GEmissive = 4,
 	GCount
 };
 
 inline struct Layouts_ {
 
 	RDescriptorSetLayout gltfMaterialDescLayout;
-	RDescriptorSetLayout gbufferDescLayout;
 	RDescriptorSetLayout singleUboDescLayout;
 	RDescriptorSetLayout jointsDescLayout;
 	RDescriptorSetLayout singleSamplerDescLayout;
@@ -38,10 +37,16 @@ inline struct Layouts_ {
 	RDescriptorSetLayout imageDebugDescLayout;
 
 	vk::UniqueRenderPass depthRenderPass;
-	vk::UniqueRenderPass lightblendPass;
 
-	RRenderPassLayout ptPassLayout;
+	RDescriptorSetLayout renderAttachmentsLayout;
+
+
 	RRenderPassLayout gbufferPassLayout;
+	RRenderPassLayout rasterDirectPassLayout; // TODO: subpass of gbuffer
+	// Ray Trace Here
+	RRenderPassLayout ptPassLayout;
+	// Output pass
+
 
 	void MakeRenderPassLayouts();
 
