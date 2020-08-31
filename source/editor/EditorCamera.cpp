@@ -12,7 +12,6 @@
 namespace ed {
 void EditorCamera::Update(float deltaSeconds)
 {
-
 	auto& input = Input;
 	auto& gamepad = input.GetGamepadState();
 
@@ -32,10 +31,11 @@ void EditorCamera::Update(float deltaSeconds)
 	if (Input.IsJustPressed(Key::Z)) {
 		useOrbitalMode = !useOrbitalMode;
 		if (useOrbitalMode && orbitalLength <= 0) {
-			orbitalLength = 20.f;
+			orbitalLength = 5.f;
 		}
+
 		if (useOrbitalMode) {
-			orbitalCenter = transform.forward() * orbitalLength;
+			orbitalCenter = transform.position + transform.forward() * orbitalLength;
 		}
 	}
 
@@ -63,6 +63,8 @@ void EditorCamera::ResizeViewport(glm::uvec2 newSize)
 
 	viewportWidth = newSize.x;
 	viewportHeight = newSize.y;
+
+	dirtyThisFrame = true;
 }
 
 void EditorCamera::ResetRotation()
@@ -70,6 +72,8 @@ void EditorCamera::ResetRotation()
 	float oldYaw = transform.pyr().y;
 	transform.orientation = glm::angleAxis(glm::radians(oldYaw), engineSpaceUp);
 	transform.Compose();
+
+	dirtyThisFrame = true;
 }
 
 void EditorCamera::InjectToScene(Scene* worldScene)
@@ -79,6 +83,9 @@ void EditorCamera::InjectToScene(Scene* worldScene)
 
 void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 {
+	if (!dirtyThisFrame) {
+		return;
+	}
 	auto lookAt = transform.position + transform.forward() * focalLength;
 	view = glm::lookAt(transform.position, lookAt, transform.up());
 
@@ -114,23 +121,37 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 		cam.ubo.projInv = projInv;
 		cam.ubo.viewProj = viewProj;
 		cam.ubo.viewProjInv = viewProjInv;
+		vl::Renderer->m_raytracingPass.m_rtFrame = 0;
 	});
 
 	proj[1][1] *= -1.f;
+	dirtyThisFrame = false;
 }
 
 void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 {
 	auto& input = Input;
 
-	orbitalLength -= static_cast<float>(input.GetScrollDelta());
+	if (input.GetScrollDelta() != 0) {
+		orbitalLength = std::max(orbitalLength - static_cast<float>(input.GetScrollDelta()), 1.0f);
+		dirtyThisFrame = true;
+	}
 
+	if (input.IsMouseDragging()) {
+		const auto yawPitch = glm::radians(-input.GetMouseDelta() * sensitivity);
+
+		auto yawRot = glm::angleAxis(yawPitch.x, engineSpaceUp);
+		auto pitchRot = glm::angleAxis(yawPitch.y, transform.right());
+
+		transform.orientation = yawRot * (pitchRot * transform.orientation);
+		transform.Compose();
+		dirtyThisFrame = true;
+	}
 
 	if (input.IsDown(Key::Mouse_RightClick)) {
 		glm::vec3 forward = transform.forward();
 		glm::vec3 right = transform.right();
 		glm::vec3 up = transform.up();
-
 
 		if (worldAlign) {
 			forward.y = 0.f;
@@ -143,44 +164,44 @@ void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 		}
 
 
+		auto oldOrbCenter = orbitalCenter;
+
 		if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
 			orbitalCenter += forward * speed;
+			dirtyThisFrame = true;
 		}
 
 		if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
 			orbitalCenter -= forward * speed;
+			dirtyThisFrame = true;
 		}
 
 		if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
 			orbitalCenter += right * speed;
+			dirtyThisFrame = true;
 		}
 
 		if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
 			orbitalCenter -= right * speed;
+			dirtyThisFrame = true;
 		}
 
 		if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
 			orbitalCenter += up * speed;
+			dirtyThisFrame = true;
 		}
 
 		if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
 			orbitalCenter -= up * speed;
+			dirtyThisFrame = true;
+		}
+
+
+		if (dirtyThisFrame) {
+			transform.position = orbitalCenter - (transform.forward() * orbitalLength);
+			transform.Compose();
 		}
 	}
-
-	glm::quat orientation = transform.orientation;
-
-	if (input.IsMouseDragging()) {
-		const float yaw = -input.GetMouseDelta().x * sensitivity * 0.5f;
-		const float pitch = -input.GetMouseDelta().y * sensitivity * 0.5f;
-
-		auto pitchRot = glm::angleAxis(pitch, orientation * engineSpaceRight);
-		auto yawRot = glm::angleAxis(yaw, engineSpaceUp);
-		orientation = pitchRot * yawRot * orientation;
-	}
-	glm::mat4 centerMatrix = math::transformMat2(orbitalCenter, orientation);
-	transform.transform = centerMatrix * math::transformMat2(-engineSpaceForward * orbitalLength);
-	transform.Decompose();
 }
 
 
@@ -188,18 +209,15 @@ void EditorCamera::UpdateFly(float speed, float deltaSeconds)
 {
 	auto& input = Input;
 
-	// user rotation WIP: fix extreme rotation issues
 	if (input.IsMouseDragging()) {
-		auto yawPitch = -glm::clamp(
-			glm::radians(input.GetMouseDelta() * sensitivity * 20.5f), -glm::radians(90.f), glm::radians(90.f));
+		const auto yawPitch = glm::radians(-input.GetMouseDelta() * sensitivity);
 
-		// PERF: ?
 		auto yawRot = glm::angleAxis(yawPitch.x, engineSpaceUp);
-		transform.orientation = yawRot * transform.orientation;
-
 		auto pitchRot = glm::angleAxis(yawPitch.y, transform.right());
-		transform.orientation = pitchRot * transform.orientation;
+
+		transform.orientation = yawRot * (pitchRot * transform.orientation);
 		transform.Compose();
+		dirtyThisFrame = true;
 	}
 
 
@@ -218,33 +236,41 @@ void EditorCamera::UpdateFly(float speed, float deltaSeconds)
 			up = engineSpaceUp;
 		}
 
+		const auto oldPos = transform.position;
+
 		if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
 			transform.position += forward * speed;
+			dirtyThisFrame = true;
 		}
 
 		if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
 			transform.position -= forward * speed;
+			dirtyThisFrame = true;
 		}
 
 		if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
 			transform.position += right * speed;
+			dirtyThisFrame = true;
 		}
 
 		if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
 			transform.position -= right * speed;
+			dirtyThisFrame = true;
 		}
 
 		if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
 			transform.position += up * speed;
+			dirtyThisFrame = true;
 		}
 
 		if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
 			transform.position -= up * speed;
+			dirtyThisFrame = true;
 		}
-		transform.Compose();
 
-		// NEXT: !!!
-		vl::Renderer->m_raytracingPass.m_rtFrame = 0;
+		if (dirtyThisFrame) {
+			transform.Compose();
+		}
 	}
 }
 } // namespace ed
