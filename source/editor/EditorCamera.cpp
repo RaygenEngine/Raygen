@@ -143,7 +143,7 @@ void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 		auto yawRot = glm::angleAxis(yawPitch.x, engineSpaceUp);
 		auto pitchRot = glm::angleAxis(yawPitch.y, transform.right());
 
-		transform.orientation = yawRot * (pitchRot * transform.orientation);
+		transform.orientation = glm::normalize(yawRot * (pitchRot * transform.orientation));
 		transform.Compose();
 		dirtyThisFrame = true;
 	}
@@ -210,12 +210,12 @@ void EditorCamera::UpdateFly(float speed, float deltaSeconds)
 	auto& input = Input;
 
 	if (input.IsMouseDragging()) {
-		const auto yawPitch = glm::radians(-input.GetMouseDelta() * sensitivity);
+		auto yawPitch = glm::radians(-input.GetMouseDelta() * sensitivity);
 
 		auto yawRot = glm::angleAxis(yawPitch.x, engineSpaceUp);
 		auto pitchRot = glm::angleAxis(yawPitch.y, transform.right());
 
-		transform.orientation = yawRot * (pitchRot * transform.orientation);
+		transform.orientation = glm::normalize(yawRot * (pitchRot * transform.orientation));
 		transform.Compose();
 		dirtyThisFrame = true;
 	}
