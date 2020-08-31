@@ -25,13 +25,13 @@ hitAttributeEXT vec2 baryCoord;
 
 #define GEOM_GROUPS 25
      
-layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAs;
+layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
-layout(set = 3, binding = 0) uniform sampler2D textureSamplers[GEOM_GROUPS * 3];
-layout(std430, set = 3, binding = 1) readonly buffer Vertices{ Vertex v[]; } vertices;
-layout(std430, set = 3, binding = 2) readonly buffer Indicies{ uint i[]; } indices;
-layout(std430, set = 3, binding = 3) readonly buffer IndexOffsets { uint offset[]; } indexOffsets;
-layout(std430, set = 3, binding = 4) readonly buffer PrimitveOffsets { uint offset[]; } primOffsets;
+layout(set = 4, binding = 0) uniform sampler2D textureSamplers[GEOM_GROUPS * 3];
+layout(std430, set = 4, binding = 1) readonly buffer Vertices{ Vertex v[]; } vertices;
+layout(std430, set = 4, binding = 2) readonly buffer Indicies{ uint i[]; } indices;
+layout(std430, set = 4, binding = 3) readonly buffer IndexOffsets { uint offset[]; } indexOffsets;
+layout(std430, set = 4, binding = 4) readonly buffer PrimitveOffsets { uint offset[]; } primOffsets;
 
 //HitAttributeKHR vec2 attribs;
 
