@@ -39,16 +39,20 @@ struct EditorCamera {
 	int32 viewportWidth{ 1280 };
 	int32 viewportHeight{ 720 };
 
-
 	//
-	float orbitalLength{ 20.f };
+	float orbitalLength{ 5.f };
 	glm::vec3 orbitalCenter{};
 	bool useOrbitalMode{ false };
 
 	bool worldAlign{ false };
 
+	bool dirtyThisFrame{ false };
+
 	float movementSpeed{ 5.f };
-	float sensitivity{ 0.007f };
+
+	// In Degrees per mouse pixel movement. (ie: sensitivity of 0.5 would mean 0.5 degrees rotation for 1 unit of mouse
+	// movement)
+	float sensitivity{ 0.15f };
 
 	glm::mat4 view;
 	glm::mat4 proj;
