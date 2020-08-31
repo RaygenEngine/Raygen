@@ -6,6 +6,7 @@
 #include "core/StringConversions.h"
 #include "assets/util/SpirvReflector.h"
 #include "assets/AssetRegistry.h"
+#include "engine/console/ConsoleVariable.h"
 
 #include <glslang/OSDependent/osinclude.h>
 #include <glslang/Public/ShaderLang.h>
@@ -19,7 +20,6 @@
 
 EShLanguage FindLanguage(const std::string& filename);
 EShLanguage LangFromStage(ShaderStageType type);
-
 
 std::vector<uint32> CompileImpl(
 	const std::string& code, const std::string& shadername, TextCompilerErrors* outError, EShLanguage stage)
@@ -133,7 +133,8 @@ std::vector<uint32> CompileImpl(
 	glslang::SpvOptions spvOptions;
 	spvOptions.disableOptimizer = true;
 	spvOptions.generateDebugInfo = false;
-	spvOptions.validate = true;
+	spvOptions.validate = false;
+	spvOptions.optimizeSize = false;
 
 	glslang::GlslangToSpv(*Program.getIntermediate(ShaderType), outCode, &spvLogger, &spvOptions);
 
