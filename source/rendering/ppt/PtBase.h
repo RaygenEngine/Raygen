@@ -13,8 +13,7 @@ public:
 	// Runs once after all technique registrations are finished
 	virtual void Prepare(){};
 
-	virtual void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet gbufferDescSet)
-		= 0;
+	virtual void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) = 0;
 
 
 	PtBase(const PtBase&) = delete;
@@ -67,6 +66,10 @@ protected:
 
 
 	void Utl_CreatePipeline(
+		GpuAsset<Shader>& shader, vk::PipelineColorBlendStateCreateInfo colorBlending, uint32 subpassIndex = 0);
+
+
+	void Utl_CreatePipelineLightPass(
 		GpuAsset<Shader>& shader, vk::PipelineColorBlendStateCreateInfo colorBlending, uint32 subpassIndex = 0);
 };
 

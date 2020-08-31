@@ -6,14 +6,41 @@
 #include "rendering/passes/UnlitPass.h"
 #include "rendering/passes/LightblendPass.h"
 
+
+struct AttachmentDeclaration {
+};
+
+AttachmentDeclaration rendererFinalAttachment = {};
+
 namespace vl {
 
 
-inline constexpr static std::array colorAttachmentFormats = { vk::Format::eR16G16B16A16Snorm, vk::Format::eR8G8B8A8Srgb,
-	vk::Format::eR8G8B8A8Unorm, vk::Format::eR8G8B8A8Srgb };
-inline constexpr static std::array attachmentNames = { "Normal", "BaseColor", "Surface", "Emissive", "Depth" };
+inline constexpr static std::array colorAttachmentFormats = { vk::Format::eR16G16B16A16Snorm,
+	/*vk::Format::eR16G16B16A16Snorm,*/ vk::Format::eR8G8B8A8Srgb, vk::Format::eR8G8B8A8Unorm,
+	vk::Format::eR8G8B8A8Srgb };
+inline constexpr static std::array attachmentNames
+	= { "Depth", "Normal", /*"GeomNormal", */ "BaseColor", "Surface", "Emissive" };
+
 inline constexpr static size_t ColorAttachmentCount = colorAttachmentFormats.size();
 
+
+/*
+// GBuffer
+layout(set = 0, binding = 0) uniform Sampler2d g_DepthSampler;
+layout(set = 0, binding = 1) uniform Sampler2d g_NormalSampler;
+layout(set = 0, binding = 2) uniform Sampler2d g_ColorSampler;
+layout(set = 0, binding = 3) uniform Sampler2d g_MRROSampler; // Metallic Roughness Reflectance Occlusion
+layout(set = 0, binding = 4) uniform Sampler2d g_EmissiveSampler;
+
+// Raster Direct
+layout(set = 0, binding = 5) uniform Sampler2d rasterDirectSampler;
+
+// RayTracing
+layout(set = 0, binding = 6) uniform Sampler2d rtIndirectSampler;
+
+// Blend Rast + Ray
+layout(set = 0, binding = 7) uniform Sampler2d sceneColorSampler;
+*/
 
 void Layouts_::MakeRenderPassLayouts()
 {
@@ -26,53 +53,58 @@ void Layouts_::MakeRenderPassLayouts()
 	{
 		std::vector<AttRef> gbufferAtts;
 
+		depthBuffer = gbufferPassLayout.CreateAttachment(Device->FindDepthFormat());
+		gbufferAtts.emplace_back(depthBuffer);
+
 		for (auto gbufferAttFormat : colorAttachmentFormats) {
 			auto att = gbufferPassLayout.CreateAttachment(gbufferAttFormat);
 			gbufferPassLayout.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
 			gbufferAtts.emplace_back(att);
 		}
 
-		depthBuffer = gbufferPassLayout.CreateAttachment(Device->FindDepthFormat());
-		gbufferAtts.emplace_back(depthBuffer);
 
-		gbufferPassLayout.AddSubpass({}, std::move(gbufferAtts));
+		gbufferPassLayout.AddSubpass({}, std::move(gbufferAtts)); // Write GBuffer
 
 		gbufferPassLayout.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		gbufferPassLayout.Generate();
 	}
 
-
-	// Post Process Pass
+	AttRef rasterDirectAtt;
+	// RasterDirect
 	{
-		RRenderPassLayout& layout = ptPassLayout;
+		rasterDirectAtt = rasterDirectPassLayout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat);
+		rasterDirectPassLayout.AddSubpass({}, { rasterDirectAtt }); // Write Direct Lighting
 
+		rasterDirectPassLayout.AttachmentFinalLayout(rasterDirectAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		auto lights = layout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat);
-		auto postprocOut = layout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat, vk::ImageUsageFlagBits::eStorage);
+		rasterDirectPassLayout.Generate();
+	}
 
-		layout.AddSubpass({}, { lights });
-		layout.AddSubpass({ depthBuffer, lights }, { postprocOut });
+	// Lightblend + PostProcess
+	{
+		auto renderOutAttachment = ptPassLayout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat);
 
+		ptPassLayout.AddSubpass({ depthBuffer }, { renderOutAttachment }); // LightBlend + Unlit Pass
 
-		layout.AttachmentFinalLayout(lights, vk::ImageLayout::eShaderReadOnlyOptimal);
-		layout.AttachmentFinalLayout(postprocOut, vk::ImageLayout::eShaderReadOnlyOptimal);
+		ptPassLayout.AttachmentFinalLayout(renderOutAttachment, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		layout.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
-
-		layout.Generate();
+		// Rest of post proc
+		ptPassLayout.Generate();
 	}
 }
 
 
 Layouts_::Layouts_()
 {
-	// gbuffer
-	for (uint32 i = 0u; i < GCount; ++i) {
-		gbufferDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
-			vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR);
+
+	for (uint32 i = 0u; i < 8; ++i) {
+		renderAttachmentsLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
+			vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR
+				| vk::ShaderStageFlagBits::eClosestHitKHR);
 	}
-	gbufferDescLayout.Generate();
+	renderAttachmentsLayout.Generate();
+
 
 	// gltf material
 	gltfMaterialDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
@@ -147,8 +179,6 @@ Layouts_::Layouts_()
 
 	depthRenderPass = DepthmapPass::CreateCompatibleRenderPass();
 
-
-	lightblendPass = LightblendPass::CreateCompatibleRenderPass();
 
 	MakeRenderPassLayouts();
 }
