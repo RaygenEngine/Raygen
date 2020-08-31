@@ -9,14 +9,7 @@
 #include "fragment.h"
 #include "shading-space.h"
 
-layout(set = 0, binding = 0, rgba32f) uniform image2D image;
-layout(set = 0, binding = 1, rgba32f) uniform image2D progressiveResult;
-
-layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAs;
-
-layout(location = 0) rayPayloadEXT hitPayload prd;
-
-layout(set = 2, binding = 0) uniform UBO_Camera {   
+layout(set = 1, binding = 0) uniform UBO_Camera {   
 	vec3 position;
 	float pad0;
 	mat4 view;
@@ -27,13 +20,13 @@ layout(set = 2, binding = 0) uniform UBO_Camera {
 	mat4 viewProjInv; 
 } cam;
 
-layout(set = 4, binding = 0) uniform sampler2D normalsSampler;
-layout(set = 4, binding = 1) uniform sampler2D baseColorSampler;
-layout(set = 4, binding = 2) uniform sampler2D surfaceSampler;
-layout(set = 4, binding = 3) uniform sampler2D emissiveSampler;
-layout(set = 4, binding = 4) uniform sampler2D depthSampler;
+layout(set = 2, binding = 0, rgba32f) uniform image2D image;
+layout(set = 2, binding = 1, rgba32f) uniform image2D progressiveResult;
 
-layout(set = 5, binding = 0) uniform sampler2D rasterDirect;
+layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
+
+layout(location = 0) rayPayloadEXT hitPayload prd;
+
 
 layout(push_constant) uniform Constants
 {
@@ -91,7 +84,7 @@ void WriteSky();
 void main() {
 
     vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
-    float depth = texture(depthSampler, uv).r;
+    float depth = texture(g_DepthSampler, uv).r;
     if(depth >= 1.f)
     {
         // sky
@@ -106,17 +99,14 @@ void main() {
         return;
     }
 
-
-
-
-    Fragment frag = getFragmentFromGBuffer(
-        depth,
-        cam.viewProjInv,
-        normalsSampler,
-        baseColorSampler,
-        surfaceSampler,
-        emissiveSampler,
-        uv);
+	Fragment frag = getFragmentFromGBuffer(
+		depth,
+		cam.viewProjInv,
+		g_NormalSampler,
+		g_ColorSampler,
+		g_MRROSampler,
+		g_EmissiveSampler,
+		uv);
 
 
 

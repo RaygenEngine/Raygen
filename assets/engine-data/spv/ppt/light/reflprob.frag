@@ -15,12 +15,6 @@ layout(location = 0) in vec2 uv;
 
 // uniform
 
-layout(set = 0, binding = 0) uniform sampler2D normalsSampler;
-layout(set = 0, binding = 1) uniform sampler2D baseColorSampler;
-layout(set = 0, binding = 2) uniform sampler2D surfaceSampler;
-layout(set = 0, binding = 3) uniform sampler2D emissiveSampler;
-layout(set = 0, binding = 4) uniform sampler2D depthSampler;
-
 layout(set = 1, binding = 0) uniform UBO_Camera {
 	vec3 position;
 	float pad0;
@@ -40,7 +34,7 @@ layout(set = 2, binding = 3) uniform sampler2D brdfLutSampler;
 
 void main( ) {
 
-	float depth = texture(depthSampler, uv).r;
+	float depth = texture(g_DepthSampler, uv).r;
 
 	// TODO: discard when skymesh is implemented
 	if(depth == 1.0)
@@ -56,10 +50,10 @@ void main( ) {
 	Fragment frag = getFragmentFromGBuffer(
 		depth,
 		cam.viewProjInv,
-		normalsSampler,
-		baseColorSampler,
-		surfaceSampler,
-		emissiveSampler,
+		g_NormalSampler,
+		g_ColorSampler,
+		g_MRROSampler,
+		g_EmissiveSampler,
 		uv);
 	
 	
