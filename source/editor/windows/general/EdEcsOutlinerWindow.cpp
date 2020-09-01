@@ -161,10 +161,13 @@ void EcsOutlinerWindow::Run_ContextPopup(EcsWorld& world, Entity entity)
 	}
 	ImGui::Separator();
 	if (ImGui::MenuItem(ETXT(FA_EMPTY, " Focus"), "F")) {
+		EditorObject->edCamera.Focus(entity);
 	}
 	if (ImGui::MenuItem(ETXT(FA_EMPTY, " Teleport To Camera"))) {
+		EditorObject->edCamera.TeleportToCamera(entity);
 	}
 	if (ImGui::MenuItem(ETXT(FA_PLANE, " Pilot"), "Shift+F")) {
+		EditorObject->edCamera.Pilot(entity);
 	}
 }
 
