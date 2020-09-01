@@ -10,6 +10,7 @@
 #include "hammersley.h"
 #include "sampling.h"
 #include "shading-space.h"
+#include "onb.h"
  
 
 struct Attr{
@@ -144,22 +145,17 @@ void main() {
 	// then retrieve perpendicular vector B with the cross product of T and N
 	vec3 Bg = cross(Ng, Tg);
 
-	mat3 TBNg = mat3(Tg, Bg, Ng);
-	mat3 invTBNg = transpose(TBNg);
+	mat3 TBN = mat3(Tg, Bg, Ng);
 
 	// sample material textures
 	vec4 sampledBaseColor = texture(textureSamplers[matId * 3], uv);
 	vec4 sampledNormal = texture(textureSamplers[matId * 3 + 1], uv);
 	vec4 sampledMetallicRoughness = texture(textureSamplers[matId * 3 + 2], uv); 
 
+	vec3 Ns = normalize(TBN * (sampledNormal.rgb * 2.0 - 1.0));
 
-	vec3 Ns = normalize(TBNg * (sampledNormal.rgb * 2.0 - 1.0));
-	vec3 Ts, Bs;
-	computeOrthonormalBasis(Ns, Ts, Bs); 
+	Onb shadingOrthoBasis = branchlessOnb(Ns);
 
-
-	mat3 TBNs = mat3(Ts, Bs, Ns);
-	mat3 invTBNs = transpose(TBNs);
 
 	// final material values
 	vec3 albedo = sampledBaseColor.rgb;
@@ -178,19 +174,20 @@ void main() {
 
 	vec3 hitPoint = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 
-	vec3 V = normalize(gl_WorldRayOriginEXT - hitPoint);
+	// LMATH: unit?
+	vec3 wo = -gl_WorldRayDirectionEXT;
 
-	vec3 wo = normalize(invTBNs * V);
-
-	vec3 Ng_s = normalize(invTBNs * Ng);
+	vec3 Ng_s = Ng;
 	if(wo.z < 0){
-		if(dot(V, facen) < 0){	
+		if(dot(wo, facen) < 0){	
 			//inPrd.radiance = vec3(1000.f,0,1000.f); TODO
 			return; // backface culling
 		}
-		Ng_s = normalize(invTBNs * facen);
+		Ng_s = facen;
 	}
 
+	toOnbSpace(shadingOrthoBasis, wo);
+	toOnbSpace(shadingOrthoBasis, Ng_s);
 
 	// DIRECT
 
@@ -199,11 +196,11 @@ void main() {
 	//if(inPrd.depth != 0)
 	{
 		vec3 lightPos = vec3(8,2,0);
-		vec3 lightColor = vec3(0.98823529411764705882352941176471, 0.83137254901960784313725490196078, 0.25098039215686274509803921568627);
+		vec3 lightColor = vec3(0.9882, 0.8313, 0.2509);
 		float lightIntensity = 30;
 		
-		vec3 L = normalize(lightPos - hitPoint);
-		vec3 wi = normalize(invTBNs * L);
+		vec3 wi = normalize(lightPos - hitPoint);
+		toOnbSpace(shadingOrthoBasis, wi);
 
 		bool reflect = dot(Ng_s, wi) * dot(Ng_s, wo) > 0;
 		
@@ -252,8 +249,8 @@ void main() {
 		
 			vec3 throughput = LambertianReflection(wo, wi, diffuseColor) * cosTheta / pdf;
 
-			// RR termination
-			RRTerminateOrTraceRay(hitPoint, TBNs * wi, throughput);
+			outOnbSpace(shadingOrthoBasis, wi);
+			RRTerminateOrTraceRay(hitPoint, wi, throughput);
 		}
 	}
 	
@@ -277,7 +274,8 @@ void main() {
 
 			vec3 throughput = brdf_r * cosTheta  / pdf;
 
-			RRTerminateOrTraceRay(hitPoint, TBNs * wi, throughput);
+			outOnbSpace(shadingOrthoBasis, wi);
+			RRTerminateOrTraceRay(hitPoint, wi, throughput);
 		}
 	}
 

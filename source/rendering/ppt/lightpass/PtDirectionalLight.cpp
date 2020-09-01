@@ -28,7 +28,7 @@ void PtDirectionalLight::MakeLayout()
 
 void PtDirectionalLight::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/ppt/light/dirlight.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/dirlight.shader");
 	gpuShader.onCompile = [&]() {
 		MakePipeline();
 	};

@@ -11,7 +11,7 @@
 #include <glm/gtx/transform.hpp>
 
 constexpr glm::vec3 engineSpaceUp{ 0.f, 1.f, 0.f };
-constexpr glm::vec3 engineSpaceForward{ 0.f, 0.f, -1.f };
+constexpr glm::vec3 engineSpaceFront{ 0.f, 0.f, -1.f };
 constexpr glm::vec3 engineSpaceRight{ 1.f, 0.f, 0.f };
 
 struct TransformCache {
@@ -22,7 +22,7 @@ struct TransformCache {
 	glm::mat4 transform{ glm::identity<glm::mat4>() };
 
 	[[nodiscard]] glm::vec3 up() const { return orientation * engineSpaceUp; }
-	[[nodiscard]] glm::vec3 forward() const { return orientation * engineSpaceForward; };
+	[[nodiscard]] glm::vec3 front() const { return orientation * engineSpaceFront; };
 	[[nodiscard]] glm::vec3 right() const { return orientation * engineSpaceRight; };
 	// pitch, yaw, roll, in degrees
 	[[nodiscard]] glm::vec3 pyr() const { return glm::degrees(glm::eulerAngles(orientation)); }

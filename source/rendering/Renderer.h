@@ -1,21 +1,19 @@
 #pragma once
 #include "engine/Listener.h"
 #include "rendering/Device.h"
+#include "rendering/output/OutputPassBase.h"
+#include "rendering/passes/RaytracingPass.h"
+#include "rendering/ppt/lightpass/PtDirectionalLight.h"
+#include "rendering/ppt/lightpass/PtLightBlend.h"
+#include "rendering/ppt/lightpass/PtSpotlight.h"
 #include "rendering/ppt/PtCollection.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/wrappers/passlayout/RenderPassLayout.h"
-#include "rendering/output/OutputPassBase.h"
-#include "rendering/passes/RaytracingPass.h"
-#include "rendering/ppt/lightpass/PtSpotlight.h"
-#include "rendering/ppt/lightpass/PtDirectionalLight.h"
-#include "rendering/ppt/lightpass/PtLightBlend.h"
 
 namespace vl {
 
 // TODO: tidy
 inline class Renderer_ : public Listener {
-	// The recommended framebuffer allocation size for the viewport.
-
 
 private:
 	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
@@ -59,7 +57,6 @@ public:
 
 	void ResizeBuffers(uint32 width, uint32 height);
 	InFlightResources<vk::ImageView> GetOutputViews() const;
-
 
 	InFlightResources<RenderingPassInstance> m_gbufferInst;
 	InFlightResources<RenderingPassInstance> m_rasterDirectPass;

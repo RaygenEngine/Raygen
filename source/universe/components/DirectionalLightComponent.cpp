@@ -11,12 +11,12 @@ DECLARE_DIRTY_FUNC(CDirectionalLight)(BasicComponent& bc)
 {
 	if (!skyInstance.IsDefault()) {
 		PodEditor editor(skyInstance);
-		editor->SetUboParameter("sunDirection", glm::vec4(bc.world().forward(), 0.f));
+		editor->SetUboParameter("sunDirection", glm::vec4(bc.world().front(), 0.f));
 		editor->SetUboParameter("sunColor", glm::vec4(color, 1.f));
 		editor->SetUboParameter("sunIntensity", intensity);
 	}
 
-	auto lookAt = bc.world().position + bc.world().forward();
+	auto lookAt = bc.world().position + bc.world().front();
 	auto view = glm::lookAt(bc.world().position, lookAt, bc.world().up());
 
 	if constexpr (FullDirty) {
@@ -32,7 +32,7 @@ DECLARE_DIRTY_FUNC(CDirectionalLight)(BasicComponent& bc)
 		dl.name = "direct depth: " + bc.name;
 
 		dl.up = bc.world().up();
-		dl.ubo.forward = glm::vec4(bc.world().forward(), 0.f);
+		dl.ubo.front = glm::vec4(bc.world().front(), 0.f);
 		dl.ubo.viewProj = viewProj;
 
 		if constexpr (FullDirty) {

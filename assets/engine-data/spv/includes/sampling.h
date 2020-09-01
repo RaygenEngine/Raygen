@@ -51,8 +51,10 @@ vec3 samplingHemisphere(inout uint seed, in vec3 x, in vec3 y, in vec3 z)
 	return direction;
 }
 
+
 // Return the tangent and binormal from the incoming normal
-void computeOrthonormalBasis(in vec3 normal, out vec3 tangent, out vec3 binormal)
+// @normal must be unit vector
+void computeOrthonormalBasis(vec3 normal, out vec3 tangent, out vec3 binormal)
 {
 	if(abs(normal.x) > abs(normal.z))
 	{
