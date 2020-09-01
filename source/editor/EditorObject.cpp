@@ -327,15 +327,6 @@ void EditorObject_::Run_MenuBar()
 
 void EditorObject_::HandleInput()
 {
-	if (Input.IsDown(Key::LeftShift) && Input.IsJustPressed(Key::F)) {
-		// PilotThis(m_selectedNode);
-	}
-	else if (Input.IsDown(Key::F)) {
-		// if (m_selectedNode) {
-		// FocusNode(m_selectedNode);
-		//}
-	}
-
 	if (!Input.IsDown(Key::Mouse_RightClick)) {
 		using op = ed::ManipOperationMode::Operation;
 
@@ -355,6 +346,12 @@ void EditorObject_::HandleInput()
 			manipMode.mode = manipMode.mode == ed::ManipOperationMode::Space::Local
 								 ? ed::ManipOperationMode::Space::World
 								 : ed::ManipOperationMode::Space::Local;
+		}
+	}
+
+	if (Input.IsJustPressed(Key::Delete)) {
+		if (auto ent = Editor::GetSelection(); ent) {
+			ent.Destroy();
 		}
 	}
 }

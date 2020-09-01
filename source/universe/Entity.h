@@ -127,7 +127,7 @@ public:
 		}
 	}
 
-	[[nodiscard]] constexpr operator bool() const noexcept { return entity != entt::null; }
+	[[nodiscard]] constexpr operator bool() const noexcept { return entity != entt::null && registry->valid(entity); }
 	[[nodiscard]] constexpr bool operator==(const Entity& rhs) const noexcept
 	{
 		return entity == rhs.entity && registry == rhs.registry;

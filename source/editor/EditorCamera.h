@@ -69,7 +69,18 @@ struct EditorCamera {
 	void InjectToScene(Scene* worldScene);
 	void EnqueueUpdateCmds(Scene* worldScene);
 
+public:
+	void Focus(Entity entity);
+	void TeleportToCamera(Entity entity);
+	void Pilot(Entity entity);
+
+
 private:
+	Entity pilotEntity{};
+
+	void OrbitalCenterChanged();
+	void UpdatePiloting();
+
 	void UpdateOrbital(float speed, float deltaSeconds);
 	void UpdateFly(float speed, float deltaSeconds);
 };

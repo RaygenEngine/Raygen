@@ -6,6 +6,8 @@
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/Scene.h"
 
+#include "editor/Editor.h"
+
 // NEXT: !!!
 #include "rendering/Renderer.h"
 
@@ -48,11 +50,25 @@ void EditorCamera::Update(float deltaSeconds)
 	}
 
 
+	if (Input.IsJustPressed(Key::F)) {
+		if (Input.IsDown(Key::Shift)) {
+			Pilot(Editor::GetSelection());
+		}
+		else {
+			Focus(Editor::GetSelection());
+		}
+	}
+
+
 	if (useOrbitalMode && orbitalLength > 0) {
 		UpdateOrbital(speed, deltaSeconds);
 	}
 	else {
 		UpdateFly(speed, deltaSeconds);
+	}
+
+	if (pilotEntity && dirtyThisFrame) {
+		UpdatePiloting();
 	}
 }
 
@@ -126,6 +142,64 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 
 	proj[1][1] *= -1.f;
 	dirtyThisFrame = false;
+}
+
+void EditorCamera::Focus(Entity entity)
+{
+	if (!entity) {
+		return;
+	}
+
+	auto pos = entity->world().position;
+
+	if (useOrbitalMode) {
+		orbitalCenter = pos;
+		OrbitalCenterChanged();
+		return;
+	}
+
+	transform.position = pos - (transform.forward() * orbitalLength);
+	transform.Compose();
+	dirtyThisFrame = true;
+}
+
+void EditorCamera::TeleportToCamera(Entity entity)
+{
+	if (!entity) {
+		return;
+	}
+	entity->SetNodeTransformWCS(transform.transform);
+}
+
+void EditorCamera::Pilot(Entity entity)
+{
+	if (entity == pilotEntity || !entity) {
+		pilotEntity = {};
+		return;
+	}
+
+	transform = entity->world();
+	if (useOrbitalMode) {
+		orbitalCenter = transform.position + transform.forward() * orbitalLength;
+		OrbitalCenterChanged();
+	}
+
+	dirtyThisFrame = true;
+
+	pilotEntity = entity;
+}
+
+
+void EditorCamera::OrbitalCenterChanged()
+{
+	transform.position = orbitalCenter - (transform.forward() * orbitalLength);
+	transform.Compose();
+	dirtyThisFrame = true;
+}
+
+void EditorCamera::UpdatePiloting()
+{
+	pilotEntity->SetNodeTransformWCS(transform.transform);
 }
 
 void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
