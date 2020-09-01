@@ -1,6 +1,8 @@
 #ifndef bsdf_h
 #define bsdf_h
 
+// TODO: remove this file
+
 #include "random.h"
 
 // DOC:

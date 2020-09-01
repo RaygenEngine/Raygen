@@ -19,7 +19,7 @@ void SceneDirectionalLight::MaybeResizeShadowmap(uint32 width, uint32 height)
 
 void SceneDirectionalLight::UpdateBox(const math::Frustum& frustum, glm::vec3 apex)
 {
-	glm::mat4 view = glm::lookAt(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f) + glm::vec3(ubo.forward), up);
+	glm::mat4 view = glm::lookAt(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f) + glm::vec3(ubo.front), up);
 	auto aabb = frustum.FrustumPyramidAABB(apex);
 	aabb.Transform(view);
 

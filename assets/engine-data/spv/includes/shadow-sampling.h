@@ -4,12 +4,14 @@
 #include "random.h"
 #include "poisson.h"
 
-float ShadowCalculation(in sampler2DShadow shadowmap, mat4 lightMatrix, vec3 fragPos, float maxBias, float NoL, int samples, float invSpread)
+// TODO: remove this file
+
+float ShadowCalculation(sampler2DShadow shadowmap, mat4 lightMatrix, vec3 fragPos, float maxBias, float cosTheta, int samples, float invSpread)
 {
 	vec4 fragPosLightSpace = lightMatrix * vec4(fragPos, 1.0);
  	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
  	
-	float bias = maxBias * tan(acos(NoL));
+	float bias = maxBias * tan(acos(cosTheta));
 	bias = clamp(bias, 0.0, maxBias);
 	
 	projCoords = vec3(projCoords.xy, projCoords.z - bias);
@@ -30,7 +32,7 @@ float ShadowCalculation(in sampler2DShadow shadowmap, mat4 lightMatrix, vec3 fra
     return shadow / samples;
 } 
 
-float ShadowCalculationFast(in sampler2DShadow shadowmap, mat4 lightMatrix, vec3 fragPos, float bias)
+float ShadowCalculationFast(sampler2DShadow shadowmap, mat4 lightMatrix, vec3 fragPos, float bias)
 {
 	vec4 fragPosLightSpace = lightMatrix * vec4(fragPos, 1.0);
  	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
@@ -39,5 +41,29 @@ float ShadowCalculationFast(in sampler2DShadow shadowmap, mat4 lightMatrix, vec3
 
     return 1.0 - texture(shadowmap, projCoords, 0.f);
 } 
+
+float ShadowRayQuery(vec3 lightPos, vec3 fragPos){ 
+	vec3  L = normalize(lightPos - fragPos); 
+	vec3  origin    = fragPos;
+	vec3  direction = L;  // vector to light
+	float tMin      = 0.01f;
+	float tMax      = distance(fragPos, lightPos);
+
+	// Initializes a ray query object but does not start traversal
+	rayQueryEXT rayQuery;
+	rayQueryInitializeEXT(rayQuery, topLevelAS, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, origin, tMin,
+                      direction, tMax);
+
+	// Start traversal: return false if traversal is complete
+	while(rayQueryProceedEXT(rayQuery)) {
+	}
+      
+	// Returns type of committed (true) intersection
+	if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
+	  // Got an intersection == Shadow
+	  return 1.0;
+	}
+	return 0.0;
+}
 
 #endif

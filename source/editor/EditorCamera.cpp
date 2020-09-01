@@ -37,7 +37,7 @@ void EditorCamera::Update(float deltaSeconds)
 		}
 
 		if (useOrbitalMode) {
-			orbitalCenter = transform.position + transform.forward() * orbitalLength;
+			orbitalCenter = transform.position + transform.front() * orbitalLength;
 		}
 	}
 
@@ -102,7 +102,7 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 	if (!dirtyThisFrame) {
 		return;
 	}
-	auto lookAt = transform.position + transform.forward() * focalLength;
+	auto lookAt = transform.position + transform.front() * focalLength;
 	view = glm::lookAt(transform.position, lookAt, transform.up());
 
 	auto viewInv = glm::inverse(view);
@@ -158,7 +158,7 @@ void EditorCamera::Focus(Entity entity)
 		return;
 	}
 
-	transform.position = pos - (transform.forward() * orbitalLength);
+	transform.position = pos - (transform.front() * orbitalLength);
 	transform.Compose();
 	dirtyThisFrame = true;
 }
@@ -180,7 +180,7 @@ void EditorCamera::Pilot(Entity entity)
 
 	transform = entity->world();
 	if (useOrbitalMode) {
-		orbitalCenter = transform.position + transform.forward() * orbitalLength;
+		orbitalCenter = transform.position + transform.front() * orbitalLength;
 		OrbitalCenterChanged();
 	}
 
@@ -192,7 +192,7 @@ void EditorCamera::Pilot(Entity entity)
 
 void EditorCamera::OrbitalCenterChanged()
 {
-	transform.position = orbitalCenter - (transform.forward() * orbitalLength);
+	transform.position = orbitalCenter - (transform.front() * orbitalLength);
 	transform.Compose();
 	dirtyThisFrame = true;
 }
@@ -223,13 +223,13 @@ void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 	}
 
 	if (input.IsDown(Key::Mouse_RightClick)) {
-		glm::vec3 forward = transform.forward();
+		glm::vec3 front = transform.front();
 		glm::vec3 right = transform.right();
 		glm::vec3 up = transform.up();
 
 		if (worldAlign) {
-			forward.y = 0.f;
-			forward = glm::normalize(forward);
+			front.y = 0.f;
+			front = glm::normalize(front);
 
 			right.y = 0.f;
 			right = glm::normalize(right);
@@ -241,12 +241,12 @@ void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 		auto oldOrbCenter = orbitalCenter;
 
 		if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
-			orbitalCenter += forward * speed;
+			orbitalCenter += front * speed;
 			dirtyThisFrame = true;
 		}
 
 		if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
-			orbitalCenter -= forward * speed;
+			orbitalCenter -= front * speed;
 			dirtyThisFrame = true;
 		}
 
@@ -272,7 +272,7 @@ void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 
 
 		if (dirtyThisFrame) {
-			transform.position = orbitalCenter - (transform.forward() * orbitalLength);
+			transform.position = orbitalCenter - (transform.front() * orbitalLength);
 			transform.Compose();
 		}
 	}
@@ -296,13 +296,13 @@ void EditorCamera::UpdateFly(float speed, float deltaSeconds)
 
 
 	if (input.IsDown(Key::Mouse_RightClick)) {
-		glm::vec3 forward = transform.forward();
+		glm::vec3 front = transform.front();
 		glm::vec3 right = transform.right();
 		glm::vec3 up = transform.up();
 
 		if (worldAlign) {
-			forward.y = 0.f;
-			forward = glm::normalize(forward);
+			front.y = 0.f;
+			front = glm::normalize(front);
 
 			right.y = 0.f;
 			right = glm::normalize(right);
@@ -313,12 +313,12 @@ void EditorCamera::UpdateFly(float speed, float deltaSeconds)
 		const auto oldPos = transform.position;
 
 		if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
-			transform.position += forward * speed;
+			transform.position += front * speed;
 			dirtyThisFrame = true;
 		}
 
 		if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
-			transform.position -= forward * speed;
+			transform.position -= front * speed;
 			dirtyThisFrame = true;
 		}
 
