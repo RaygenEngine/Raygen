@@ -28,14 +28,9 @@ struct OldVertex
 // CHECK: alignment
 struct hitPayload
 {
-// this is a union of Li and Lo
   vec3 radiance;
   float throughput;
   
   int depth;
-
-  //vec3 debug;
-  //bool debugDone;
-
   uint seed;
 };
