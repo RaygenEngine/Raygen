@@ -1,6 +1,9 @@
 // shading coordinate space
 // scs
 
+#ifndef shading_space_h
+#define shading_space_h
+
 // n is the normal in shading space and is equal to vec3(0,0,1)
 // w is the omega direction | must be normalized, otherwise math may break
 
@@ -56,7 +59,7 @@ bool sameHemisphere(vec3 w, vec3 wp)
     return w.z * wp.z > 0;
 }
 
-// specular reflection
+// reflection on normal
 // refl (wo, n) = -wo + 2 * Dot(wo, n) * n =
 //  = vec3(-wo.x, -wo.y, wo.z);
 vec3 reflect(vec3 wo) 
@@ -122,6 +125,8 @@ vec3 MicrofacetReflection(vec3 wo, vec3 wi, float alpha_x, float alpha_y, vec3 f
     // CHECK
     vec3 F = F_Schlick2(dot(wi, wh), f0, f90);
 
+
+    // SMATH:
     return f0 * D_TrowbridgeReitzDistribution(wh, alpha_x, alpha_y) * G_TrowbridgeReitzDistribution(wo, wi, alpha_x, alpha_y) * F /
            (4 * cosThetaI * cosThetaO);
 }
@@ -129,102 +134,6 @@ vec3 MicrofacetReflection(vec3 wo, vec3 wi, float alpha_x, float alpha_y, vec3 f
 vec3 LambertianReflection(vec3 wo, vec3 wi, vec3 R) 
 {
     return R * INV_PI;
-}
-
-vec3 uniformSampleHemisphere(vec2 u) 
-{
-    float z = u.x;
-    float r = sqrt(max(0.f, 1.f - z * z));
-    float phi = 2 * PI * u.y;
-    return vec3(r * cos(phi), r * sin(phi), z);
-}
-
-float uniformHemispherePdf() 
-{
-    return INV_2PI;
-}
-
-vec3 uniformSampleSphere(vec2 u) 
-{
-    float z = 1 - 2 * u.x;
-    float r = sqrt(max(0.f, 1.f - z * z));
-    float phi = 2 * PI * u.y;
-    return vec3(r * cos(phi), r * sin(phi), z);
-}
- 
-float uniformSpherePdf() 
-{
-    return INV_4PI;
-}
-
-vec2 uniformSampleDisk(vec2 u) 
-{
-    float r = sqrt(u.x);
-    float theta = 2 * PI * u.y;
-    return vec2(r * cos(theta), r * sin(theta));
-}
-
-vec2 concentricSampleDisk(vec2 u)  
-{
-    vec2 uOffset = 2.f * u - vec2(1.f, 1.f);
-
-    if (uOffset.x == 0 && uOffset.y == 0) return vec2(0, 0);
-
-    float theta, r;
-    if (abs(uOffset.x) > abs(uOffset.y)) {
-        r = uOffset.x;
-        theta = PI_OVER4 * (uOffset.y / uOffset.x);
-    } else {
-        r = uOffset.y;
-        theta = PI_OVER2 - PI_OVER4 * (uOffset.x / uOffset.y);
-    }
-    return r * vec2(cos(theta), sin(theta));
-}
-
-vec3 cosineSampleHemisphere(vec2 u)   
-{
-    vec2 d = concentricSampleDisk(u);
-    float z = sqrt(max(0.f, 1 - d.x * d.x - d.y * d.y));
-    return vec3(d.x, d.y, z);
-}
-
-// TODO: not used
-float cosineHemispherePdf(vec3 wo, vec3 wi) 
-{
-     return sameHemisphere(wo, wi) ? AbsCosTheta(wi) * INV_PI : 0;
-}
-
-vec3 uniformSampleCone(vec2 u, float cosThetaMax) 
-{
-    float cosTheta = (1.f - u.x) + u.x * cosThetaMax;
-    float sinTheta = sqrt(1.f - cosTheta * cosTheta);
-    float phi = u.y * 2 * PI;
-    return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta,
-                    cosTheta);
-}
-
-float uniformConePdf(float cosThetaMax) {
-    return 1 / (2 * PI * (1 - cosThetaMax));
-}
-
-vec2 uniformSampleTriangle(vec2 u) 
-{
-    float su0 = sqrt(u.x);
-    return vec2(1 - su0, u.y * su0);
-}
-
-// pdf = 1 / area of triangle
-
-vec3 toSurface(vec3 normal, vec3 tangent, vec3 binormal, vec3 v)
-{
-	return vec3(dot(v, tangent), dot(v, binormal), dot(v, normal)); // CHECK: is this TBN
-}
-
-vec3 toWorld(vec3 normal, vec3 tangent, vec3 binormal, vec3 v)
-{
-	return vec3(tangent.x * v.x + binormal.x * v.y + normal.x * v.z,
-		        tangent.y * v.x + binormal.y * v.y + normal.y * v.z,
-		        tangent.z * v.x + binormal.z * v.y + normal.z * v.z);
 }
 
 void TrowbridgeReitzSample11(float cosTheta, float U1, float U2,
@@ -333,3 +242,5 @@ float TrowbridgeReitzSamplePdf(vec3 wo, vec3 wh, float alpha_x, float alpha_y)
     //else
     //return D_TrowbridgeReitzDistribution(wh, alpha_x, alpha_y) * AbsCosTheta(wh);
 }
+
+#endif
