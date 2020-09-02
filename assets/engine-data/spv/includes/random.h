@@ -30,10 +30,10 @@ float floatConstruct( uint m ) {
 }
 
 // Pseudo-random value in half-open range [0:1].
-float random( float x ) { return floatConstruct(hash(floatBitsToUint(x))); }
-float random( vec2  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
-float random( vec3  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
-float random( vec4  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
+float rand( float x ) { return floatConstruct(hash(floatBitsToUint(x))); }
+float rand( vec2  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
+float rand( vec3  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
+float rand( vec4  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
 
 
 // Generate a random unsigned int from two unsigned int values, using 16 pairs
@@ -66,9 +66,14 @@ uint lcg(inout uint prev)
 }
 
 // Generate a random float in [0, 1) given the previous RNG state
-float random(inout uint prev)
+float rand(inout uint prev)
 {
 	return (float(lcg(prev)) / float(0x01000000));
+}
+
+vec2 rand2(inout uint prev)
+{
+	return vec2(rand(prev), rand(prev));
 }
 
 #endif

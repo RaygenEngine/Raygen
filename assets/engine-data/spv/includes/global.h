@@ -1,6 +1,8 @@
 #ifndef global_h
 #define global_h
 
+// TODO: auto include at every shader
+
 #ifndef PI
 #define PI 3.14159265358979323846f
 #endif
@@ -48,9 +50,9 @@ vec3 saturate(vec3 v)
     return clamp(v, vec3(0.0), vec3(1.0));
 }
 
-vec4 SampleCubemapLH(samplerCube cubemap, vec3 RHdirection) 
+vec4 sampleCubemapLH(samplerCube cubemap, vec3 directionRH) 
 {
-	return texture(cubemap, vec3(RHdirection.x, RHdirection.y, -RHdirection.z));
+	return texture(cubemap, vec3(directionRH.x, directionRH.y, -directionRH.z));
 }
 
 #endif

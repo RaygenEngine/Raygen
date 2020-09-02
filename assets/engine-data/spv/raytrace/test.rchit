@@ -3,16 +3,14 @@
 #extension GL_EXT_ray_tracing : require
 #extension GL_EXT_scalar_block_layout : enable
 #extension GL_EXT_ray_query: enable
-
 #include "global.h"
-#include "rtshared.h"
-#include "bsdf.h"
-#include "hammersley.h"
+#include "rt-global.h"
+
+#include "random.h"
 #include "sampling.h"
-#include "shading-space.h"
+#include "bsdf.h"
 #include "onb.h"
  
-
 struct Attr{
 	vec2 x;
 };
@@ -68,7 +66,7 @@ void RRTerminateOrTraceRay(vec3 nextOrigin, vec3 nextDirection, vec3 throughput)
 		// TODO: check cumulative throughput
 		float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
 
-		if(rnd(prd.seed) >= p_spawn){
+		if(rand(prd.seed) >= p_spawn){
 			return; 
 		}
 
@@ -218,7 +216,7 @@ void main() {
 			vec3 Li = (1.0 - shadow) * lightColor * lightIntensity * attenuation; 
 	
 			// to get final diffuse and specular both those terms are multiplied by Li * NoL
-			vec3 brdf_d = LambertianReflection(wo, wi, diffuseColor);
+			vec3 brdf_d = LambertianReflection(diffuseColor);
 			vec3 brdf_r = MicrofacetReflection(wo, wi, a, a, f0);
 
 			// so to simplify (faster math)
@@ -236,7 +234,7 @@ void main() {
 
 	// Diffuse 'reflection'
 	{
-		vec2 u = vec2(rnd(inPrd.seed), rnd(inPrd.seed));
+		vec2 u = rand2(inPrd.seed);
 		vec3 wi = cosineSampleHemisphere(u);
 
 		bool reflect = dot(Ng_s, wi) * dot(Ng_s, wo) > 0;
@@ -247,7 +245,7 @@ void main() {
 		{
 			float pdf = cosTheta * INV_PI;
 		
-			vec3 throughput = LambertianReflection(wo, wi, diffuseColor) * cosTheta / pdf;
+			vec3 throughput = LambertianReflection(diffuseColor) * cosTheta / pdf;
 
 			outOnbSpace(shadingOrthoBasis, wi);
 			RRTerminateOrTraceRay(hitPoint, wi, throughput);
@@ -257,7 +255,7 @@ void main() {
 	// REFLECTION
 	{
 		// sample new direction wi and its pdfs based on distribution of the GGX BRDF
-		vec2 u = vec2(rnd(inPrd.seed), rnd(inPrd.seed)); 
+		vec2 u = rand2(inPrd.seed);
 		vec3 wh  = TrowbridgeReitzDistribution_Sample_wh(wo, u, a, a);
 
 		vec3 wi  = reflect(wo, wh);
@@ -278,41 +276,4 @@ void main() {
 			RRTerminateOrTraceRay(hitPoint, wi, throughput);
 		}
 	}
-
-	
-	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

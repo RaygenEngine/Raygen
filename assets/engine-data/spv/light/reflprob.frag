@@ -4,6 +4,7 @@
 
 #include "bsdf.h"
 #include "fragment.h"
+#include "attachments.h"
 
 // out
 
@@ -41,7 +42,7 @@ void main( ) {
 	{
 		// TODO: discard here like in spotlights
 		vec3 V = normalize(reconstructWorldPosition(depth, uv, cam.viewProjInv) - cam.position);
-		outColor = SampleCubemapLH(skyboxSampler, V);
+		outColor = sampleCubemapLH(skyboxSampler, V);
 		
 		return;
 	}

@@ -1,5 +1,5 @@
-#ifndef sampling.h
-#define sampling.h
+#ifndef sampling_h
+#define sampling_h
 
 vec3 uniformSampleHemisphere(vec2 u) 
 {
@@ -59,18 +59,17 @@ vec3 cosineSampleHemisphere(vec2 u)
 }
 
 // TODO: not used fix
-float cosineHemispherePdf(vec3 wo, vec3 wi) 
-{
-     return sameHemisphere(wo, wi) ? AbsCosTheta(wi) * INV_PI : 0;
-}
+//float cosineHemispherePdf(vec3 wo, vec3 wi) 
+//{
+//     return sameHemisphere(wo, wi) ? AbsCosTheta(wi) * INV_PI : 0;
+//}
 
 vec3 uniformSampleCone(vec2 u, float cosThetaMax) 
 {
     float cosTheta = (1.f - u.x) + u.x * cosThetaMax;
     float sinTheta = sqrt(1.f - cosTheta * cosTheta);
     float phi = u.y * 2 * PI;
-    return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta,
-                    cosTheta);
+    return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
 }
 
 float uniformConePdf(float cosThetaMax) {
@@ -84,23 +83,5 @@ vec2 uniformSampleTriangle(vec2 u)
 }
 
 // pdf = 1 / area of triangle
-
-// SMATH:
-vec3 offsetRay(in vec3 p, in vec3 n)
-{
-	const float intScale   = 256.0f;
-	const float floatScale = 1.0f / 65536.0f;
-	const float origin     = 1.0f / 32.0f;
-
-	ivec3 of_i = ivec3(intScale * n.x, intScale * n.y, intScale * n.z);
-
-	vec3 p_i = vec3(intBitsToFloat(floatBitsToInt(p.x) + ((p.x < 0) ? -of_i.x : of_i.x)),
-					intBitsToFloat(floatBitsToInt(p.y) + ((p.y < 0) ? -of_i.y : of_i.y)),
-					intBitsToFloat(floatBitsToInt(p.z) + ((p.z < 0) ? -of_i.z : of_i.z)));
-
-	return vec3(abs(p.x) < origin ? p.x + floatScale * n.x : p_i.x,  
-				abs(p.y) < origin ? p.y + floatScale * n.y : p_i.y,  
-				abs(p.z) < origin ? p.z + floatScale * n.z : p_i.z);
-}
 
 #endif

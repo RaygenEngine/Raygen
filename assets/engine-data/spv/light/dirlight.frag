@@ -4,10 +4,10 @@
 
 #include "bsdf.h"
 #include "fragment.h"
-#include "shadow-sampling.h"
+#include "shadow.h"
 #include "sampling.h"
-#include "shading-space.h"
 #include "onb.h"
+#include "attachments.h"
 
 // out
 
@@ -87,7 +87,7 @@ void main() {
 		vec3 Li = (1.0 - shadow) * light.color * light.intensity;     
 
 		// to get final diffuse and specular both those terms are multiplied by Li * NoL
-		vec3 brdf_d = LambertianReflection(wo, wi, frag.diffuseColor);
+		vec3 brdf_d = LambertianReflection(frag.diffuseColor);
 		vec3 brdf_r = MicrofacetReflection(wo, wi, frag.a, frag.a, frag.f0);
 
 		// so to simplify (faster math)
