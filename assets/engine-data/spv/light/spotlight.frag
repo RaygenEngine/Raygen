@@ -4,12 +4,12 @@
 #extension GL_EXT_ray_query: require
 #include "global.h"
 
-#include "bsdf.h"
 #include "fragment.h"
-#include "shadow-sampling.h"
+#include "shadow.h"
 #include "sampling.h"
-#include "shading-space.h"
+#include "bsdf.h"
 #include "onb.h"
+#include "attachments.h"
 
 // out
 
@@ -62,7 +62,7 @@ layout(set = 2, binding = 0) uniform UBO_Spotlight {
 } light;
 
 layout(set = 3, binding = 0) uniform sampler2DShadow shadowmap;
-layout(set = 4, binding = 0) uniform accelerationStructureEXT topLevelAS;
+layout(set = 4, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 float getShadowRayQuery(Fragment frag){ 
 	vec3  L = normalize(light.position - frag.position); 
@@ -73,7 +73,7 @@ float getShadowRayQuery(Fragment frag){
 
 	// Initializes a ray query object but does not start traversal
 	rayQueryEXT rayQuery;
-	rayQueryInitializeEXT(rayQuery, topLevelAS, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, origin, tMin,
+	rayQueryInitializeEXT(rayQuery, topLevelAs, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, origin, tMin,
                       direction, tMax);
 
 	// Start traversal: return false if traversal is complete
@@ -147,7 +147,7 @@ void main() {
 		vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
 	
 		// to get final diffuse and specular both those terms are multiplied by Li * NoL
-		vec3 brdf_d = LambertianReflection(wo, wi, frag.diffuseColor);
+		vec3 brdf_d = LambertianReflection(frag.diffuseColor);
 		vec3 brdf_r = MicrofacetReflection(wo, wi, frag.a, frag.a, frag.f0);
 
 		// so to simplify (faster math)

@@ -1,13 +1,15 @@
 #version 460
 #extension GL_GOOGLE_include_directive : enable
 #extension GL_EXT_ray_tracing : require
-
 #include "global.h"
-#include "rtshared.h"
+#include "rt-global.h"
+
 #include "random.h"
 #include "sampling.h"
 #include "fragment.h"
-#include "shading-space.h"
+#include "bsdf.h"
+#include "attachments.h"
+#include "onb.h"
 
 layout(set = 1, binding = 0) uniform UBO_Camera {   
 	vec3 position;
@@ -43,7 +45,7 @@ vec3 RRTerminateOrTraceRay(vec3 nextOrigin, vec3 nextDirection, vec3 throughput,
 	// TODO: check cumulative throughput
 	float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
 
-	if(rnd(seed) >= p_spawn) {
+	if(rand(seed) >= p_spawn) {
 	
 		//return vec3(0); 
 	}
@@ -116,26 +118,27 @@ void main() {
     // a = roughness roughness;
     float a = frag.a;
 
+    Onb shadingOrthoBasis = branchlessOnb(frag.normal);
+
     vec3 hitPoint = frag.position;
+	vec3 wo = normalize(cam.position - hitPoint);
 
-    vec3 V = normalize(cam.position - hitPoint);
+	//vec3 Ng_s = //Ng; TODO: frag.ng
+	//if(wo.z < 0){
+	//	if(dot(wo, facen) < 0){	
+	//		//inPrd.radiance = vec3(1000.f,0,1000.f); TODO
+	//		return; // backface culling
+	//	}
+	////	Ng_s = facen;
+	//}
 
-    vec3 Ns = frag.normal;
-    vec3 Ts, Bs;
-    computeOrthonormalBasis(Ns, Ts, Bs); 
-
-    mat3 TBNs = mat3(Ts, Bs, Ns);
-    mat3 invTBNs = transpose(TBNs);
-
-    vec3 wo = normalize(invTBNs * V);
-
+	toOnbSpace(shadingOrthoBasis, wo);
+	//toOnbSpace(shadingOrthoBasis, Ng_s);
 
     vec3 hitValue = vec3(0);
-    
     for(uint smpl = 0; smpl < samples; ++smpl){
-		//hitValue += hitPoint;
         // PERF:
-        uint seed = tea(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl);
+        uint seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl);
 
         //vec3 Ng_s = normalize(invTBNs * Ng);
        // if(wo.z < 0){
@@ -145,10 +148,9 @@ void main() {
 
         // Diffuse 'reflection'
         {
-            vec2 u = vec2(rnd(seed), rnd(seed));
+            vec2 u = rand2(seed);
             vec3 wi = cosineSampleHemisphere(u);
-			      // hitValue += wi;
-           // bool reflect = dot(Ng_s, wi) * dot(Ng_s, wo) > 0;
+            // bool reflect = dot(Ng_s, wi) * dot(Ng_s, wo) > 0;
 
             float cosTheta = CosTheta(wi);
 			// PERF: reflect
@@ -156,17 +158,17 @@ void main() {
             {
                 float pdf = cosTheta * INV_PI;
             
-                vec3 throughput = LambertianReflection(wo, wi, diffuseColor) * cosTheta / pdf;
+                vec3 throughput = LambertianReflection(diffuseColor) * cosTheta / pdf;
 
-                // RR termination
-                hitValue += RRTerminateOrTraceRay(hitPoint, TBNs * wi, throughput, seed);
+			    outOnbSpace(shadingOrthoBasis, wi);
+                hitValue += RRTerminateOrTraceRay(hitPoint, wi, throughput, seed);
             }
         }
         
         // Glossy reflection
         {
             // sample new direction wi and its pdfs based on distribution of the GGX BRDF
-            vec2 u = vec2(rnd(seed), rnd(seed));
+            vec2 u = rand2(seed);
             vec3 wh  = TrowbridgeReitzDistribution_Sample_wh(wo, u, a, a);
 
             vec3 wi  = reflect(wo, wh);
@@ -183,7 +185,8 @@ void main() {
 
                 vec3 throughput = brdf_r * cosTheta  / pdf;
 
-                hitValue += RRTerminateOrTraceRay(hitPoint, TBNs * wi, throughput, seed);
+                outOnbSpace(shadingOrthoBasis, wi);
+                hitValue += RRTerminateOrTraceRay(hitPoint, wi, throughput, seed);
             }
         }
     }
@@ -211,7 +214,6 @@ void main() {
 vec3 GetSkyColor(vec3 orig, vec3 dir) {
 
 	// PERF: this should be baked into a cubemap?
-
 	vec3 sunColor = vec3(1,1,1);
 	float sunIntensity = 40;
 	vec3 sunDirection = normalize(-vec3(0,-1,0));     
