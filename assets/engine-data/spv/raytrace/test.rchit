@@ -6,12 +6,12 @@
 #extension GL_EXT_nonuniform_qualifier : enable
 
 #include "global.h"
-#include "rtshared.h"
-#include "bsdf.h"
-#include "hammersley.h"
+#include "rt-global.h"
+#include "random.h"
 #include "sampling.h"
 #include "shading-space.h"
-
+#include "bsdf.h"
+#include "onb.h"
 
 struct Attr{
 	vec2 x;
@@ -62,7 +62,7 @@ void RRTerminateOrTraceRay(vec3 nextOrigin, vec3 nextDirection, vec3 throughput)
 		// TODO: check cumulative throughput
 		float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
 
-		if(rnd(prd.seed) >= p_spawn){
+		if(rand(prd.seed) >= p_spawn){
 			return; 
 		}
 
@@ -141,22 +141,17 @@ void main() {
 	// then retrieve perpendicular vector B with the cross product of T and N
 	vec3 Bg = cross(Ng, Tg);
 
-	mat3 TBNg = mat3(Tg, Bg, Ng);
-	mat3 invTBNg = transpose(TBNg);
+	mat3 TBN = mat3(Tg, Bg, Ng);
 
 	// sample material textures
 	vec4 sampledBaseColor = texture(textureSamplers[matId * 3], uv);
 	vec4 sampledNormal = texture(textureSamplers[matId * 3 + 1], uv);
 	vec4 sampledMetallicRoughness = texture(textureSamplers[matId * 3 + 2], uv); 
 
+	vec3 Ns = normalize(TBN * (sampledNormal.rgb * 2.0 - 1.0));
 
-	vec3 Ns = normalize(TBNg * (sampledNormal.rgb * 2.0 - 1.0));
-	vec3 Ts, Bs;
-	computeOrthonormalBasis(Ns, Ts, Bs); 
+	Onb shadingOrthoBasis = branchlessOnb(Ns);
 
-
-	mat3 TBNs = mat3(Ts, Bs, Ns);
-	mat3 invTBNs = transpose(TBNs);
 
 	// final material values
 	vec3 albedo = sampledBaseColor.rgb;
@@ -175,19 +170,20 @@ void main() {
 
 	vec3 hitPoint = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 
-	vec3 V = normalize(gl_WorldRayOriginEXT - hitPoint);
+	// LMATH: unit?
+	vec3 wo = -gl_WorldRayDirectionEXT;
 
-	vec3 wo = normalize(invTBNs * V);
-
-	vec3 Ng_s = normalize(invTBNs * Ng);
+	vec3 Ng_s = Ng;
 	if(wo.z < 0){
-		if(dot(V, facen) < 0){	
+		if(dot(wo, facen) < 0){	
 			//inPrd.radiance = vec3(1000.f,0,1000.f); TODO
 			return; // backface culling
 		}
-		Ng_s = normalize(invTBNs * facen);
+		Ng_s = facen;
 	}
 
+	toOnbSpace(shadingOrthoBasis, wo);
+	toOnbSpace(shadingOrthoBasis, Ng_s);
 
 	// DIRECT
 
@@ -198,10 +194,9 @@ void main() {
 		Spotlight light = spotlights.light[i];
 		vec3 lightPos = light.position;
 
-
 		
-		vec3 L = normalize(lightPos - hitPoint);
-		vec3 wi = normalize(invTBNs * L);
+		vec3 wi = normalize(lightPos - hitPoint);
+		toOnbSpace(shadingOrthoBasis, wi);
 
 		bool reflect = dot(Ng_s, wi) * dot(Ng_s, wo) > 0;
 		
@@ -231,7 +226,6 @@ void main() {
 				vec4 fragPosLightSpace = light.viewProj * vec4(hitPoint, 1.0);
 			 	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
 
-
 				projCoords = vec3(projCoords.xy * 0.5 + 0.5, projCoords.z - light.maxShadowBias);
 				float bias = light.maxShadowBias;
 			
@@ -240,7 +234,7 @@ void main() {
 				vec3 Li = (1.0 - shadow) * lightFragColor; 
 		
 				// to get final diffuse and specular both those terms are multiplied by Li * NoL
-				vec3 brdf_d = LambertianReflection(wo, wi, diffuseColor);
+				vec3 brdf_d = LambertianReflection(diffuseColor);
 				vec3 brdf_r = MicrofacetReflection(wo, wi, a, a, f0);
 	
 				// so to simplify (faster math)
@@ -259,7 +253,7 @@ void main() {
 
 	// Diffuse 'reflection'
 	{
-		vec2 u = vec2(rnd(inPrd.seed), rnd(inPrd.seed));
+		vec2 u = rand2(inPrd.seed);
 		vec3 wi = cosineSampleHemisphere(u);
 
 		bool reflect = dot(Ng_s, wi) * dot(Ng_s, wo) > 0;
@@ -270,17 +264,17 @@ void main() {
 		{
 			float pdf = cosTheta * INV_PI;
 		
-			vec3 throughput = LambertianReflection(wo, wi, diffuseColor) * cosTheta / pdf;
+			vec3 throughput = LambertianReflection(diffuseColor) * cosTheta / pdf;
 
-			// RR termination
-			RRTerminateOrTraceRay(hitPoint, TBNs * wi, throughput);
+			outOnbSpace(shadingOrthoBasis, wi);
+			RRTerminateOrTraceRay(hitPoint, wi, throughput);
 		}
 	}
 	
 	// REFLECTION
 	{
 		// sample new direction wi and its pdfs based on distribution of the GGX BRDF
-		vec2 u = vec2(rnd(inPrd.seed), rnd(inPrd.seed)); 
+		vec2 u = rand2(inPrd.seed);
 		vec3 wh  = TrowbridgeReitzDistribution_Sample_wh(wo, u, a, a);
 
 		vec3 wi  = reflect(wo, wh);
@@ -297,53 +291,8 @@ void main() {
 
 			vec3 throughput = brdf_r * cosTheta  / pdf;
 
-			RRTerminateOrTraceRay(hitPoint, TBNs * wi, throughput);
+			outOnbSpace(shadingOrthoBasis, wi);
+			RRTerminateOrTraceRay(hitPoint, wi, throughput);
 		}
 	}
-
-	
-	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

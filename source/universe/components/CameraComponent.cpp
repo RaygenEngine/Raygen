@@ -5,7 +5,7 @@
 
 DECLARE_DIRTY_FUNC(CCamera)(BasicComponent& bc)
 {
-	auto lookAt = bc.world().position + bc.world().forward() * focalLength;
+	auto lookAt = bc.world().position + bc.world().front() * focalLength;
 	auto view = glm::lookAt(bc.world().position, lookAt, bc.world().up());
 
 	auto viewInv = glm::inverse(view);

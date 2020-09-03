@@ -4,7 +4,10 @@
 
 #include "bsdf.h"
 #include "fragment.h"
-#include "shadow-sampling.h"
+#include "shadow.h"
+#include "sampling.h"
+#include "onb.h"
+#include "attachments.h"
 
 // out
 
@@ -28,7 +31,7 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 } cam;
 
 layout(set = 2, binding = 0) uniform UBO_Directionallight {
-		vec3 direction;
+		vec3 front;
 		float pad0;
 
 		// CHECK: could pass this mat from push constants (is it better tho?)
@@ -64,32 +67,36 @@ void main() {
 		g_MRROSampler,
 		g_EmissiveSampler,
 		uv);
-		
-	// spot light
-	vec3 N = frag.normal; 
-	vec3 V = normalize(cam.position - frag.position);
-	vec3 L = normalize(-light.direction); 
 
-	float NoL = saturate(dot(N, L));
-		
-	float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
-	//float shadow = ShadowCalculationFast(shadowmap, light.viewProj, frag.position, light.maxShadowBias);
-	vec3 Li = (1.0 - shadow) * light.color * light.intensity;       
+	Onb shadingOrthoBasis = branchlessOnb(frag.normal);
 
-	vec3 H = normalize(V + L);   
+	vec3 wo = normalize(cam.position - frag.position);
+	vec3 wi = normalize(-light.front);
 
-    float NoV = abs(dot(N, V)) + 1e-5; 
-    float NoH = saturate(dot(N, H));
-    float LoH = saturate(dot(L, H));
+	toOnbSpace(shadingOrthoBasis, wo);
+	toOnbSpace(shadingOrthoBasis, wi);
 
-	// to get final diffuse and specular both those terms are multiplied by Li * NoL
-	vec3 brdf_d = Fd_Burley(NoV, NoL, LoH, frag.diffuseColor, frag.a);
-	vec3 brdf_r = Fr_CookTorranceGGX(NoV, NoL, NoH, LoH, frag.f0, frag.a);
+	float cosTheta = CosTheta(wi);
 
-	// so to simplify (faster math)
-	vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
+	// TODO: missing reflect
+	outColor = vec4(vec3(0), 1);
+	if(cosTheta > 0) // test abs, saturate on edge cases (remove branching)
+	{
+		float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, cosTheta, light.samples, light.sampleInvSpread);
 
-    outColor = vec4(finalContribution, 1); 
+		vec3 Li = (1.0 - shadow) * light.color * light.intensity;     
+
+		// to get final diffuse and specular both those terms are multiplied by Li * NoL
+		vec3 brdf_d = LambertianReflection(frag.diffuseColor);
+		vec3 brdf_r = MicrofacetReflection(wo, wi, frag.a, frag.a, frag.f0);
+
+		// so to simplify (faster math)
+		// throughput = (brdf_d + brdf_r) * NoL
+		// incoming radiance = Li;
+		vec3 finalContribution = (brdf_d + brdf_r) * Li * cosTheta;
+
+		outColor = vec4(finalContribution, 1);
+	}
 }                               
                                 
                                  
