@@ -26,9 +26,9 @@ void ImporterRegistry::ReimportEntry(PodEntry* entry)
 	std::string fileExt = std::string(uri::GetDiskExtension(importUri));
 
 	if (!fs::exists(uri::GetDiskPath(importUri))) {
-		LOG_WARN(
-			"Failed to find file: {} during reimport. Aborting reimport."); // Maybe handle in reimport of each importer
-																			// to allow non file uris reimporting
+		LOG_WARN("Failed to find file: {} during reimport. Aborting reimport.",
+			uri::GetDiskPath(importUri)); // Maybe handle in reimport of each importer
+										  // to allow non file uris reimporting
 		return;
 	}
 

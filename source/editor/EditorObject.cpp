@@ -18,6 +18,9 @@
 #include "engine/Events.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/Layer.h"
+#include "rendering/Renderer.h"
+#include "rendering/passes/RaytracingPass.h"
+
 
 #include <imguicolortextedit/TextEditor.h>
 
@@ -208,7 +211,7 @@ void EditorObject_::UpdateEditor()
 		OpenLoadDialog();
 	}
 
-	std::string s = fmt::format("{:.1f} FPS", Engine.GetFPS());
+	std::string s = fmt::format("{:.1f} FPS : Rt Index: {}", Engine.GetFPS(), vl::Renderer->m_raytracingPass.m_rtFrame);
 	ImGui::Text(s.c_str());
 	ImGui::End();
 

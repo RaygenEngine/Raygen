@@ -25,14 +25,14 @@ void main( ) {
 
 	// gamma correction / exposure
 	const float gamma = 2.2;
-	const float exposure = 2.5;
+	const float exposure = 1;
 	
 	// TONEMAP_DEFAULT
 	// TONEMAP_UNCHARTED
 	// TONEMAP_HEJLRICHARD
 	// TONEMAP_ACES
 
-	outColor = vec4(tonemap(hdrColor, TONEMAP_ACES, gamma, exposure), 1.0);
+	outColor = vec4(tonemap(hdrColor, TONEMAP_DEFAULT, gamma, exposure), 1.0);
 }                                                                                                                          
                                                                                                                                        
                                                                                                                                                                  
@@ -51,5 +51,7 @@ void main( ) {
                                                                                                                                                    
                                                                                                                                                     
                                                                                                                                                      
+
+
 
 

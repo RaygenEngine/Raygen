@@ -71,7 +71,7 @@ vec3 RRTerminateOrTraceRay(vec3 nextOrigin, vec3 nextDirection, vec3 throughput,
 
 	// WIP: should not need saturate here, but removes blackhole spots
 	// Find the underlying bug
-	return throughput * saturate(prd.radiance);
+	return throughput * max(prd.radiance, 0);
 }
 
 void WriteSky();
@@ -307,5 +307,6 @@ void WriteSky() {
     
     imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
 }
+
 
 
