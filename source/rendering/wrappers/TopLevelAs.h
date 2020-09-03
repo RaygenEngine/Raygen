@@ -3,6 +3,9 @@
 #include "rendering/wrappers/AccelerationStructure.h"
 
 struct SceneGeometry;
+struct SceneSpotlight;
+struct Scene;
+
 
 namespace vl {
 
@@ -17,15 +20,19 @@ struct AsInstance {
 	glm::mat4 transform{ glm::identity<glm::mat4>() };
 };
 
-struct HelperRtSceneDescriptor {
-	vk::DescriptorSet descSet;
+struct RtSceneDescriptor {
+	InFlightResources<vk::DescriptorSet> descSet;
 
-	void AddMaterial(GpuGeometryGroup& gg);
+	void WriteDescriptorMesh(const GpuMesh& mesh);
+	void WriteAlbedoImages(const std::vector<vk::DescriptorImageInfo>& images);
+	void WriteSpotlights(const std::vector<SceneSpotlight*>& spotlights);
+
+	RBuffer spotlightsBuffer;
 };
 
 struct TopLevelAs : RAccelerationStructure {
 	TopLevelAs() = default;
-	TopLevelAs(const std::vector<SceneGeometry*>& geoms);
+	TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene);
 
 
 	void AddAsInstance(AsInstance&& instance);
@@ -34,7 +41,8 @@ struct TopLevelAs : RAccelerationStructure {
 	void Build();
 
 
-	HelperRtSceneDescriptor sceneDesc; // WIP:
+	// WIP: Get this out of here
+	RtSceneDescriptor sceneDesc;
 
 private:
 	RBuffer instanceBuffer;

@@ -79,7 +79,7 @@ RRenderPassLayout::AttachmentRef RRenderPassLayout::CreateAttachment(
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(att.isDepth ? vk::ImageLayout::eUndefined : vk::ImageLayout::eColorAttachmentOptimal)
+		.setInitialLayout(vk::ImageLayout::eUndefined)
 		.setFinalLayout(vk::ImageLayout::eUndefined);
 
 
@@ -325,22 +325,23 @@ RenderingPassInstance RRenderPassLayout::CreatePassInstance(
 	return rpInstance;
 }
 
-void RenderingPassInstance::TransitionFramebufferForWrite(vk::CommandBuffer cmdBuffer)
-{
-	CLOG_ABORT(parent->uidIndex != parentPassIndex,
-		"Parent pass index was incorrect. Did parent RenderPassLayout of this instance move?");
-
-	for (uint32 index = 0; auto& att : framebuffer.ownedAttachments) {
-		auto finalLayout = parent->internalAttachmentsDescr[index].finalLayout;
-		auto initialLayout = parent->internalAttachmentsDescr[index].initialLayout;
-
-		if (finalLayout != initialLayout && initialLayout != vk::ImageLayout::eUndefined) {
-			// PERF: create all transition barriers and use a single one
-			att.TransitionToLayout(cmdBuffer, finalLayout, initialLayout);
-		}
-		index++;
-	}
-}
+// Might be usefull to keep this around, code works but we don't ever have non eUndefined initial image layout
+// void RenderingPassInstance::TransitionFramebufferForFrame(vk::CommandBuffer cmdBuffer)
+//{
+//	CLOG_ABORT(parent->uidIndex != parentPassIndex,
+//		"Parent pass index was incorrect. Did parent RenderPassLayout of this instance move?");
+//
+//	for (uint32 index = 0; auto& att : framebuffer.ownedAttachments) {
+//		auto finalLayout = parent->internalAttachmentsDescr[index].finalLayout;
+//		auto initialLayout = parent->internalAttachmentsDescr[index].initialLayout;
+//
+//		if (finalLayout != initialLayout && initialLayout != vk::ImageLayout::eUndefined) {
+//			// PERF: create all transition barriers and use a single one
+//			att.TransitionToLayout(cmdBuffer, finalLayout, initialLayout);
+//		}
+//		index++;
+//	}
+//}
 
 vk::RenderPass RenderingPassInstance::GetRenderPass() const
 {

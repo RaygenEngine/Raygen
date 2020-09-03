@@ -33,7 +33,7 @@ vk::UniqueRenderPass DepthmapPass::CreateCompatibleRenderPass()
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
 		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
+		.setInitialLayout(vk::ImageLayout::eUndefined)
 		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	vk::AttachmentReference depthAttachmentRef{};
@@ -268,8 +268,9 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 			for (auto& gg : geom->mesh.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
-				if (arch.isUnlit)
-					[[unlikely]] { continue; }
+				if (arch.isUnlit) [[unlikely]] {
+					continue;
+				}
 				auto& plLayout = *arch.depth.pipelineLayout;
 
 				// bind the graphics pipeline
@@ -303,8 +304,9 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 			for (auto& gg : geom->mesh.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
-				if (arch.isUnlit)
-					[[unlikely]] { continue; }
+				if (arch.isUnlit) [[unlikely]] {
+					continue;
+				}
 				auto& plLayout = *arch.depthAnimated.pipelineLayout;
 
 				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.depthAnimated.pipeline);

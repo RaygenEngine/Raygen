@@ -224,27 +224,6 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 
 
 	RecordPostProcessPass(&cmdBuffer, sceneDesc);
-
-
-	m_gbufferInst[sceneDesc.frameIndex].TransitionFramebufferForWrite(cmdBuffer);
-	m_rasterDirectPass[sceneDesc.frameIndex].TransitionFramebufferForWrite(cmdBuffer);
-
-	for (auto sl : sceneDesc->spotlights.elements) {
-		if (sl) {
-			sl->shadowmap[sceneDesc.frameIndex].framebuffer[0].TransitionToLayout(
-				cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
-		}
-	}
-
-	for (auto dl : sceneDesc->directionalLights.elements) {
-		if (dl) {
-			dl->shadowmap[sceneDesc.frameIndex].framebuffer[0].TransitionToLayout(
-				cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eDepthStencilAttachmentOptimal);
-		}
-	}
-
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 
-	m_ptPass[sceneDesc.frameIndex].TransitionFramebufferForWrite(cmdBuffer);
-}
 } // namespace vl

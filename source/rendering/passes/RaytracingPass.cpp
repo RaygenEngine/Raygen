@@ -174,7 +174,7 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 	DEBUG_NAME_AUTO(renderer->m_rtDescSet[sceneDesc.frameIndex]);
 	DEBUG_NAME_AUTO(sceneDesc.scene->sceneAsDescSet);
 	DEBUG_NAME_AUTO(sceneDesc.viewer->descSet[sceneDesc.frameIndex]);
-	DEBUG_NAME_AUTO(sceneDesc.scene->tlas.sceneDesc.descSet);
+	DEBUG_NAME_AUTO(sceneDesc.scene->tlas.sceneDesc.descSet[sceneDesc.frameIndex]);
 	/*
 		std::array layouts{
 		Layouts->renderAttachmentsLayout.handle(),
@@ -200,7 +200,7 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 4u, 1u,
-		&sceneDesc.scene->tlas.sceneDesc.descSet, 0u, nullptr);
+		&sceneDesc.scene->tlas.sceneDesc.descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 
 	PushConstant pc{ //
