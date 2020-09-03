@@ -71,3 +71,14 @@ vec3 position;
 		int samples;
 		float sampleInvSpread;
 };
+
+
+
+layout(push_constant) uniform Constants
+{
+    int frame;
+    int depth;
+    int samples;
+    int convergeUntilFrame;
+	int spotlightCount;
+};

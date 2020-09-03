@@ -27,6 +27,7 @@ struct RtSceneDescriptor {
 	void WriteAlbedoImages(const std::vector<vk::DescriptorImageInfo>& images);
 	void WriteSpotlights(const std::vector<SceneSpotlight*>& spotlights);
 
+	int32 spotlightCount{ 0 };
 	RBuffer spotlightsBuffer;
 };
 

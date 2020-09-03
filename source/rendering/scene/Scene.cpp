@@ -92,16 +92,20 @@ void Scene::UpdateTopLevelAs()
 	vl::Device->waitIdle();
 }
 
+ConsoleVariable<int32> cons_sceneUpdateRt{ "rt.minFrames", 10,
+	"Min frames to do progressive before reseting due to scene update" };
+
 void Scene::UploadDirty(uint32 frameIndex)
 {
 	const bool primaryDirty = activeCamera > 0 && cameras.elements[activeCamera]->isDirty[frameIndex];
-
+	bool anyDirty = false;
 
 	bool requireUpdateAccel = false;
 	for (auto gm : geometries.elements) {
 		if (gm && gm->isDirty[frameIndex]) {
 			requireUpdateAccel = true;
 			gm->isDirty = false;
+			anyDirty = true;
 		}
 	}
 
@@ -110,6 +114,7 @@ void Scene::UploadDirty(uint32 frameIndex)
 		if (cam && cam->isDirty[frameIndex]) {
 			cam->UploadUbo(frameIndex);
 			cam->isDirty[frameIndex] = false;
+			anyDirty = true;
 		}
 	}
 
@@ -118,6 +123,7 @@ void Scene::UploadDirty(uint32 frameIndex)
 			sl->UploadUbo(frameIndex);
 			sl->isDirty[frameIndex] = false;
 			requireUpdateAccel = true;
+			anyDirty = true;
 		}
 	}
 
@@ -135,6 +141,7 @@ void Scene::UploadDirty(uint32 frameIndex)
 
 			dl->UploadUbo(frameIndex);
 			dl->isDirty[frameIndex] = false;
+			anyDirty = true;
 		}
 	}
 
@@ -150,6 +157,9 @@ void Scene::UploadDirty(uint32 frameIndex)
 		}
 	}
 
+	if (anyDirty && vl::Renderer->m_raytracingPass.m_rtFrame >= *cons_sceneUpdateRt) {
+		vl::Renderer->m_raytracingPass.m_rtFrame = 0;
+	}
 
 	// for (auto rp : reflProbs.elements) {
 	//	if (rp && rp->isDirty[frameIndex]) {
