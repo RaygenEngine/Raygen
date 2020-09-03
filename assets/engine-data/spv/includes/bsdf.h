@@ -133,7 +133,7 @@ vec3 MicrofacetReflection(vec3 wo, vec3 wi, float alpha_x, float alpha_y, vec3 f
 
 
     // SMATH:
-    return f0 * D_TrowbridgeReitzDistribution(wh, alpha_x, alpha_y) * G_TrowbridgeReitzDistribution(wo, wi, alpha_x, alpha_y) * F /
+    return D_TrowbridgeReitzDistribution(wh, alpha_x, alpha_y) * G_TrowbridgeReitzDistribution(wo, wi, alpha_x, alpha_y) * F /
            (4 * cosThetaI * cosThetaO);
 }
 
