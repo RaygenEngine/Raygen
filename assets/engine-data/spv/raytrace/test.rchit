@@ -3,6 +3,7 @@
 #extension GL_EXT_ray_tracing : require
 #extension GL_EXT_scalar_block_layout : enable
 #extension GL_EXT_ray_query: enable
+#extension GL_EXT_nonuniform_qualifier : enable
 
 #include "global.h"
 #include "rtshared.h"
@@ -10,7 +11,7 @@
 #include "hammersley.h"
 #include "sampling.h"
 #include "shading-space.h"
- 
+
 
 struct Attr{
 	vec2 x;
@@ -32,7 +33,8 @@ layout(std430, set = 4, binding = 1) readonly buffer Vertices{ Vertex v[]; } ver
 layout(std430, set = 4, binding = 2) readonly buffer Indicies{ uint i[]; } indices;
 layout(std430, set = 4, binding = 3) readonly buffer IndexOffsets { uint offset[]; } indexOffsets;
 layout(std430, set = 4, binding = 4) readonly buffer PrimitveOffsets { uint offset[]; } primOffsets;
-
+layout(std430, set = 4, binding = 5) readonly buffer Spotlights{ Spotlight light[]; } spotlights;
+layout(set = 4, binding = 6) uniform sampler2D spotlightShadowmap[];
 //HitAttributeKHR vec2 attribs;
 
 layout(location = 0) rayPayloadInEXT hitPayload inPrd;
@@ -105,6 +107,15 @@ void RRTerminateOrTraceRay(vec3 nextOrigin, vec3 nextDirection, vec3 throughput)
 }
 
 void main() {
+
+
+	Spotlight light = spotlights.light[0];
+	vec3 hitPoint44 = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
+	
+	
+	inPrd.radiance = vec3(texture(spotlightShadowmap[0], vec2(0.f, 0.f)));
+	return;
+
 
 	int matId = gl_InstanceID % 25;
 
@@ -284,6 +295,11 @@ void main() {
 	
 	
 }
+
+
+
+
+
 
 
 

@@ -70,7 +70,7 @@ Scene::~Scene()
 void Scene::UpdateTopLevelAs()
 {
 	// WIP:
-	tlas = vl::TopLevelAs(geometries.elements);
+	tlas = vl::TopLevelAs(geometries.elements, this);
 
 	std::array accelStructs{ tlas.handle() };
 
@@ -105,10 +105,6 @@ void Scene::UploadDirty(uint32 frameIndex)
 		}
 	}
 
-	if (requireUpdateAccel) {
-		UpdateTopLevelAs();
-	}
-
 
 	for (auto cam : cameras.elements) {
 		if (cam && cam->isDirty[frameIndex]) {
@@ -121,7 +117,12 @@ void Scene::UploadDirty(uint32 frameIndex)
 		if (sl && sl->isDirty[frameIndex]) {
 			sl->UploadUbo(frameIndex);
 			sl->isDirty[frameIndex] = false;
+			requireUpdateAccel = true;
 		}
+	}
+
+	if (requireUpdateAccel) {
+		UpdateTopLevelAs();
 	}
 
 	for (auto dl : directionalLights.elements) {

@@ -174,6 +174,15 @@ Layouts_::Layouts_()
 		vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR); // Index Offsets buffer
 	rtSceneDescLayout.AddBinding(
 		vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR); // Primitive Offsets buffer
+
+	// Spotlights Buffer
+	rtSceneDescLayout.AddBinding(vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR);
+
+	// Shadowmaps
+	rtSceneDescLayout.AddBinding(
+		vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eClosestHitKHR, 16);
+
+
 	rtSceneDescLayout.Generate();
 
 

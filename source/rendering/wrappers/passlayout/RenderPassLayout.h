@@ -13,7 +13,7 @@ struct RenderingPassInstance {
 
 	RRenderPassLayout* parent{ nullptr };
 
-	void TransitionFramebufferForWrite(vk::CommandBuffer cmdBuffer);
+	// void TransitionFramebufferForFrame(vk::CommandBuffer cmdBuffer);
 	vk::RenderPass GetRenderPass() const;
 
 	template<typename Func>
