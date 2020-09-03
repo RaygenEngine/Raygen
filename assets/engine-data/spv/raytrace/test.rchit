@@ -9,7 +9,6 @@
 #include "rt-global.h"
 #include "random.h"
 #include "sampling.h"
-#include "shading-space.h"
 #include "bsdf.h"
 #include "onb.h"
 
@@ -210,8 +209,11 @@ void main() {
 		  			     light.quadraticTerm * (dist * dist));
 			float lightIntensity = light.intensity;
 			
+			vec3 ld = light.direction;
+			toOnbSpace(shadingOrthoBasis, ld);
+
 			// spot effect (soft edges)
-			float theta = dot(L, -light.direction);
+			float theta = dot(wi, -ld);
 		    float epsilon = (light.innerCutOff - light.outerCutOff);
 		    float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 			
