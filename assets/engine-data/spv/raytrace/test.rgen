@@ -28,13 +28,6 @@ layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 layout(location = 0) rayPayloadEXT hitPayload prd;
 
 
-layout(push_constant) uniform Constants
-{
-    int frame;
-    int depth;
-    int samples;
-    int convergeUntilFrame;
-};
 
 vec3 RRTerminateOrTraceRay(vec3 nextOrigin, vec3 nextDirection, vec3 throughput, uint seed)
 {

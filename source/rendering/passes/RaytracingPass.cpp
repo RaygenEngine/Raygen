@@ -24,6 +24,7 @@ struct PushConstant {
 	int32 depth;
 	int32 samples;
 	int32 convergeUntilFrame;
+	int32 spotlightCount;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -204,7 +205,8 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 
 
 	PushConstant pc{ //
-		m_rtFrame, std::max(0, *console_rtDepth), std::max(0, *console_rtSamples), *console_convergeUntilFrame
+		m_rtFrame, std::max(0, *console_rtDepth), std::max(0, *console_rtSamples), *console_convergeUntilFrame,
+		sceneDesc.scene->tlas.sceneDesc.spotlightCount
 	};
 
 	++m_rtFrame;

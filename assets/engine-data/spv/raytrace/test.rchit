@@ -34,18 +34,11 @@ layout(std430, set = 4, binding = 2) readonly buffer Indicies{ uint i[]; } indic
 layout(std430, set = 4, binding = 3) readonly buffer IndexOffsets { uint offset[]; } indexOffsets;
 layout(std430, set = 4, binding = 4) readonly buffer PrimitveOffsets { uint offset[]; } primOffsets;
 layout(std430, set = 4, binding = 5) readonly buffer Spotlights{ Spotlight light[]; } spotlights;
-layout(set = 4, binding = 6) uniform sampler2D spotlightShadowmap[];
+layout(set = 4, binding = 6) uniform sampler2DShadow spotlightShadowmap[16];
 //HitAttributeKHR vec2 attribs;
 
 layout(location = 0) rayPayloadInEXT hitPayload inPrd;
 layout(location = 1) rayPayloadEXT hitPayload prd;
-
-layout(push_constant) uniform Constants
-{
-    int frame;
-    int depth;
-    int samples;
-};
 
 
 OldVertex fromVertex(Vertex p) {
@@ -108,13 +101,6 @@ void RRTerminateOrTraceRay(vec3 nextOrigin, vec3 nextDirection, vec3 throughput)
 
 void main() {
 
-
-	Spotlight light = spotlights.light[0];
-	vec3 hitPoint44 = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
-	
-	
-	inPrd.radiance = vec3(texture(spotlightShadowmap[0], vec2(0.f, 0.f)));
-	return;
 
 
 	int matId = gl_InstanceID % 25;
@@ -207,11 +193,12 @@ void main() {
 
 	inPrd.radiance = vec3(0);
 	// for each light
-	//if(inPrd.depth != 0)
+	for(int i = 0; i < spotlightCount; ++i) 
 	{
-		vec3 lightPos = vec3(8,2,0);
-		vec3 lightColor = vec3(0.98823529411764705882352941176471, 0.83137254901960784313725490196078, 0.25098039215686274509803921568627);
-		float lightIntensity = 30;
+		Spotlight light = spotlights.light[i];
+		vec3 lightPos = light.position;
+
+
 		
 		vec3 L = normalize(lightPos - hitPoint);
 		vec3 wi = normalize(invTBNs * L);
@@ -220,27 +207,49 @@ void main() {
 		
 		float cosTheta = CosTheta(wi);
 
-		if(reflect && cosTheta > 0)
+		if (reflect && cosTheta > 0)
 		{
-			// attenuation
-			float dist = length(lightPos - hitPoint);
-			float attenuation = 1.0 / (dist * dist); // TODO: fix with coefs
+			vec3 lightColor = light.color;
+			float dist = length(light.position - hitPoint);
+			float attenuation = 1.0 / (light.constantTerm + light.linearTerm * dist + 
+		  			     light.quadraticTerm * (dist * dist));
+			float lightIntensity = light.intensity;
+			
+			// spot effect (soft edges)
+			float theta = dot(L, -light.direction);
+		    float epsilon = (light.innerCutOff - light.outerCutOff);
+		    float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+			
 
-			float shadow = 0.f; //...
+			
+			vec3 lightFragColor = lightColor * lightIntensity * attenuation * spotEffect;
 
-			// sample shadowmap for shadow
-			vec3 Li = (1.0 - shadow) * lightColor * lightIntensity * attenuation; 
+			// Only sample the shadowmap if this fragment is lit
+			if (lightFragColor.x + lightFragColor.y + lightFragColor.z > 0.001) {
+				float shadow = 0.f; //...
 	
-			// to get final diffuse and specular both those terms are multiplied by Li * NoL
-			vec3 brdf_d = LambertianReflection(wo, wi, diffuseColor);
-			vec3 brdf_r = MicrofacetReflection(wo, wi, a, a, f0);
+				vec4 fragPosLightSpace = light.viewProj * vec4(hitPoint, 1.0);
+			 	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
 
-			// so to simplify (faster math)
-			// throughput = (brdf_d + brdf_r) * NoL
-			// incoming radiance = Li;
-			vec3 finalContribution = (brdf_d + brdf_r) * Li * cosTheta;
 
-			inPrd.radiance += finalContribution;
+				projCoords = vec3(projCoords.xy * 0.5 + 0.5, projCoords.z - light.maxShadowBias);
+				float bias = light.maxShadowBias;
+			
+			    shadow = 1.0 - texture(spotlightShadowmap[i], projCoords);
+
+				vec3 Li = (1.0 - shadow) * lightFragColor; 
+		
+				// to get final diffuse and specular both those terms are multiplied by Li * NoL
+				vec3 brdf_d = LambertianReflection(wo, wi, diffuseColor);
+				vec3 brdf_r = MicrofacetReflection(wo, wi, a, a, f0);
+	
+				// so to simplify (faster math)
+				// throughput = (brdf_d + brdf_r) * NoL
+				// incoming radiance = Li;
+				vec3 finalContribution = (brdf_d + brdf_r) * Li * cosTheta;
+	
+				inPrd.radiance += finalContribution;
+			}
 		}
 	}
 
@@ -295,6 +304,10 @@ void main() {
 	
 	
 }
+
+
+
+
 
 
 

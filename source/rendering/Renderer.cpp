@@ -225,5 +225,5 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 
 	RecordPostProcessPass(&cmdBuffer, sceneDesc);
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
-
+}
 } // namespace vl

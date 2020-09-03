@@ -189,8 +189,11 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 			count++;
 		}
 	}
+	spotlightCount = count;
 
-	spotlightsBuffer = { (sizeof(Spotlight_Ubo) * count),
+	uint32 uboSize = sizeof(Spotlight_Ubo) + sizeof(Spotlight_Ubo) % 8;
+
+	spotlightsBuffer = { (uboSize * count),
 		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer
 			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
@@ -203,7 +206,7 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 			continue;
 		}
 		memcpy(mapCursor, &spotlight->ubo, sizeof(Spotlight_Ubo));
-		mapCursor += sizeof(Spotlight_Ubo);
+		mapCursor += uboSize;
 		++i;
 	}
 
@@ -228,6 +231,7 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 
 		Device->updateDescriptorSets({ bufWriteSet }, nullptr);
 	}
+
 
 	if (count == 0) {
 		return;
