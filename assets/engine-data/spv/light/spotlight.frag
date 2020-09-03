@@ -116,12 +116,12 @@ void main() {
 
 	Onb shadingOrthoBasis = branchlessOnb(frag.normal);
 
-	vec3 wo = normalize(cam.position - frag.position);
-	vec3 wi = normalize(light.position - frag.position);
+	vec3 V = normalize(cam.position - frag.position);
+	vec3 L = normalize(light.position - frag.position);
 	vec3 lDir = -light.front;
 
-	toOnbSpace(shadingOrthoBasis, wo);
-	toOnbSpace(shadingOrthoBasis, wi);
+	toOnbSpace(shadingOrthoBasis, V);
+	toOnbSpace(shadingOrthoBasis, L);
 	toOnbSpace(shadingOrthoBasis, lDir);  
 	
 	// attenuation
@@ -131,35 +131,38 @@ void main() {
 	float lightIntensity = light.intensity;
 	
     // spot effect (soft edges)
-	float theta = dot(wi, lDir);
+	float theta = dot(L, lDir);
     float epsilon = (light.innerCutOff - light.outerCutOff);
     float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 	
-	float cosTheta = CosTheta(wi);
+	float NoL = CosTheta(L);
 	// TODO: missing reflect
 	outColor = vec4(vec3(0), 1);
-	if(cosTheta > 0)
+	if(NoL > 0)
 	{
 
 		float shadow;
 
 		
 	#ifndef RTX_ON
-		shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, cosTheta, light.samples, light.sampleInvSpread);
+		shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
 	#else
 		shadow = getShadowRayQuery(frag);
 	#endif
 		
 		vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
-	
+
+		vec3 H = normalize(V + L);
+		float NoV = CosTheta(V);
+		float LoH = dot(L, H);
+		float NoH = CosTheta(H);
+
 		// to get final diffuse and specular both those terms are multiplied by Li * NoL
-		vec3 brdf_d = LambertianReflection(frag.diffuseColor);
-		vec3 brdf_r = MicrofacetReflection(wo, wi, frag.a, frag.a, frag.f0);
+		vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor);
+		vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, frag.a, frag.f0);
 
 		// so to simplify (faster math)
-		// throughput = (brdf_d + brdf_r) * NoL
-		// incoming radiance = Li;
-		vec3 finalContribution = (brdf_d + brdf_r) * Li * cosTheta;
+		vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
 
 		outColor = vec4(finalContribution, 1);
 	}
