@@ -125,9 +125,10 @@ void main() {
 	toOnbSpace(shadingOrthoBasis, lDir);  
 	
 	// attenuation
-	float dist2 = dot(wi, wi);
-	float attenuation = 1.0 / (light.constantTerm + light.linearTerm * sqrt(dist2) + 
-  			     light.quadraticTerm * dist2);
+	float dist = length(light.position - frag.position);
+	float attenuation = 1.0 / (light.constantTerm + light.linearTerm * dist + 
+  			     light.quadraticTerm * (dist * dist));
+	float lightIntensity = light.intensity;
 	
     // spot effect (soft edges)
 	float theta = dot(wi, lDir);
@@ -135,7 +136,6 @@ void main() {
     float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 	
 	float cosTheta = CosTheta(wi);
-
 	// TODO: missing reflect
 	outColor = vec4(vec3(0), 1);
 	if(cosTheta > 0)
@@ -164,6 +164,8 @@ void main() {
 		outColor = vec4(finalContribution, 1);
 	}
 }                               
+
+
 
 
 
