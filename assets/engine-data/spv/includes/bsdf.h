@@ -97,9 +97,9 @@ float G_TrowbridgeReitzDistribution(vec3 wo, vec3 wi, float alpha_x, float alpha
     return 1 / (1 + L_TrowbridgeReitzDistribution(wo, alpha_x, alpha_y) + L_TrowbridgeReitzDistribution(wi, alpha_x, alpha_y));
 }
 
-vec3 F_Schlick2(float NoV, vec3 f0) 
+vec3 F_Schlick(float cosTheta, vec3 f0) 
 {
-    float f = pow(1.0 - NoV, 5.0);
+    float f = pow(1.0 - cosTheta, 5.0);
     return f + f0 * (1.0 - f);
 }
 
@@ -111,6 +111,11 @@ vec3 F_Schlick2(float NoV, vec3 f0, vec3 f90)
 float F_Schlick(float NoV, float f0, float f90) 
 {
     return f0 + (f90 - f0) * pow(1.0 - NoV, 5.0);
+}
+
+float F_Schlick(float cosTheta, float f90) 
+{
+    return 1.0 + (f90 - 1) * pow(1.0 - cosTheta, 5.0);
 }
 
 vec3 MicrofacetReflection(vec3 wo, vec3 wi, float alpha_x, float alpha_y, vec3 f0)
@@ -137,30 +142,75 @@ vec3 MicrofacetReflection(vec3 wo, vec3 wi, float alpha_x, float alpha_y, vec3 f
            (4 * cosThetaI * cosThetaO);
 }
 
-vec3 MicrofacetReflection(float NoV, float NoL, float LoH, float alpha_x, float alpha_y, vec3 f0, vec3 f90)
-{
-    //if (NoL == 0 || NoV == 0) return vec3(0.f);
-    //if (wh.x == 0 && wh.y == 0 && wh.z == 0) return vec3(0.f);
-
-    // CHECK:
-   // vec3 F = F_Schlick2(LoH, f0, f90);
-
-    return vec3(0);
-    // SMATH:
-   //// return f0 * D_TrowbridgeReitzDistribution(wh, alpha_x, alpha_y) * G_TrowbridgeReitzDistribution(wo, wi, alpha_x, alpha_y) * F /
-   //        (4 * cosThetaI * cosThetaO);
+// CHECK: math
+float D_GGX(float NoH, float _a) {
+    float a = NoH * _a;
+    float k = a / (1.0 - NoH * NoH + a * a);
+    return k * k * (1.0 / PI);
 }
 
-vec3 BurleyReflection(float NoV, float NoL, float LoH, vec3 diffuseColor, float a, float f90) {
-    //float f90 = 0.5 + 2.0 * a * LoH * LoH;
-    float lightScatter = F_Schlick(NoL, 1.0, f90);
-    float viewScatter = F_Schlick(NoV, 1.0, f90);
-    return diffuseColor * (lightScatter * viewScatter * INV_PI);
+// PERF:
+float V_SmithGGXCorrelated(float NoV, float NoL, float a) {
+    float a2 = a * a;
+    float GGXV = NoL * sqrt(NoV * NoV * (1.0 - a2) + a2);
+    float GGXL = NoV * sqrt(NoL * NoL * (1.0 - a2) + a2);
+    return 0.5 / (GGXV + GGXL + 1e-5);
 }
 
-vec3 LambertianReflection(vec3 R) 
+// Geometric Shadowing function
+float G_SchlicksmithGGX(float NoL, float NoV, float a)
 {
-    return R * INV_PI;
+	float k = (a * a) / 2.0;
+	float GL = NoL / (NoL * (1.0 - k) + k);
+	float GV = NoV / (NoV * (1.0 - k) + k);
+	return GL * GV;
+}
+
+vec3 SpecularTerm(float NoL, float NoV, float NoH, float LoH, float a, vec3 f0)
+{
+    float D = D_GGX(NoH, a);
+    float G = G_SchlicksmithGGX(NoL, NoV, a);
+    vec3 F = F_Schlick(LoH, f0);
+
+    float denom = 4 * NoL * NoV;
+
+    return D * G * F / denom;
+}
+
+#define Fd_LAMBERT 0
+#define Fd_DISNEY 1
+
+#define Fd_FUNC Fd_LAMBERT
+
+vec3 LambertianDiffuse(vec3 diffuseColor);
+vec3 DisneyDiffuse(float NoL, float NoV, float LoH, float a, vec3 diffuseColor);
+
+vec3 DiffuseTerm(float NoL, float NoV, float LoH, float a, vec3 diffuseColor)
+{
+#if Fd_FUNC == Fd_LAMBERT
+    return LambertianDiffuse(diffuseColor);
+#elif Fd_FUNC == Fd_DISNEY
+    return DisneyDiffuse(NoL, NoV, LoH, a, diffuseColor);
+#else 
+#error "Uknown Fd_FUNC"
+#endif    
+}
+
+vec3 DisneyDiffuse(float NoL, float NoV, float LoH, float a, vec3 diffuseColor) 
+{
+    float f90 = 0.5 + LoH * LoH  * a;
+
+    return diffuseColor * INV_PI * F_Schlick(NoL, f90) * F_Schlick(NoV, f90);
+}
+
+vec3 LambertianDiffuse(vec3 diffuseColor) 
+{
+    return diffuseColor * INV_PI;
+}
+
+vec3 LambertianReflection(vec3 diffuseColor) 
+{
+    return diffuseColor * INV_PI;
 }
 
 void TrowbridgeReitzSample11(float cosTheta, float U1, float U2,
@@ -269,5 +319,19 @@ float TrowbridgeReitzSamplePdf(vec3 wo, vec3 wh, float alpha_x, float alpha_y)
     //else
     //return D_TrowbridgeReitzDistribution(wh, alpha_x, alpha_y) * AbsCosTheta(wh);
 }
+
+
+vec3 importanceSampleGGX(vec2 u, float a) 
+{
+    const float phi = 2.0f * PI * u.x;
+    // (aa-1) == (a-1)(a+1) produces better fp accuracy
+    const float cosTheta2 = (1 - u.y) / (1 + (a + 1) * ((a - 1) * u.y));
+    const float cosTheta = sqrt(cosTheta2);
+    const float sinTheta = sqrt(1 - cosTheta2);
+
+    return vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
+}
+	
+
 
 #endif
