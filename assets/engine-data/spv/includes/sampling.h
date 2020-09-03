@@ -1,111 +1,87 @@
-// Generate a random unsigned int from two unsigned int values, using 16 pairs
-// of rounds of the Tiny Encryption Algorithm. See Zafar, Olano, and Curtis,
-// "GPU Random Numbers via the Tiny Encryption Algorithm"
-uint tea(uint val0, uint val1)
+#ifndef sampling_h
+#define sampling_h
+
+vec3 uniformSampleHemisphere(vec2 u) 
 {
-	uint v0 = val0;
-	uint v1 = val1;
-	uint s0 = 0;
-
-	for(uint n = 0; n < 16; n++)
-	{
-		s0 += 0x9e3779b9;
-		v0 += ((v1 << 4) + 0xa341316c) ^ (v1 + s0) ^ ((v1 >> 5) + 0xc8013ea4);
-		v1 += ((v0 << 4) + 0xad90777d) ^ (v0 + s0) ^ ((v0 >> 5) + 0x7e95761e);
-	}
-
-	return v0;
+    float z = u.x;
+    float r = sqrt(max(0.f, 1.f - z * z));
+    float phi = 2 * PI * u.y;
+    return vec3(r * cos(phi), r * sin(phi), z);
 }
 
-// Generate a random unsigned int in [0, 2^24) given the previous RNG state
-// using the Numerical Recipes linear congruential generator
-uint lcg(inout uint prev)
+float uniformHemispherePdf() 
 {
-	uint LCG_A = 1664525u;
-	uint LCG_C = 1013904223u;
-	prev       = (LCG_A * prev + LCG_C);
-	return prev & 0x00FFFFFF;
+    return INV_2PI;
 }
 
-// Generate a random float in [0, 1) given the previous RNG state
-float rnd(inout uint prev)
+vec3 uniformSampleSphere(vec2 u) 
 {
-	return (float(lcg(prev)) / float(0x01000000));
+    float z = 1 - 2 * u.x;
+    float r = sqrt(max(0.f, 1.f - z * z));
+    float phi = 2 * PI * u.y;
+    return vec3(r * cos(phi), r * sin(phi), z);
+}
+ 
+float uniformSpherePdf() 
+{
+    return INV_4PI;
 }
 
-
-//-------------------------------------------------------------------------------------------------
-// Sampling
-//-------------------------------------------------------------------------------------------------
-
-// Randomly sampling around +Z
-vec3 samplingHemisphere(inout uint seed, in vec3 x, in vec3 y, in vec3 z)
+vec2 uniformSampleDisk(vec2 u) 
 {
-	float r1 = rnd(seed);
-	float r2 = rnd(seed);
-	float sq = sqrt(1.0 - r2);
-
-	vec3 direction = vec3(cos(2 * PI * r1) * sq, sin(2 * PI * r1) * sq, sqrt(r2));
-	direction      = direction.x * x + direction.y * y + direction.z * z;
-
-	return direction;
+    float r = sqrt(u.x);
+    float theta = 2 * PI * u.y;
+    return vec2(r * cos(theta), r * sin(theta));
 }
 
-// Return the tangent and binormal from the incoming normal
-void computeOrthonormalBasis(in vec3 normal, out vec3 tangent, out vec3 binormal)
+vec2 concentricSampleDisk(vec2 u)  
 {
-	if(abs(normal.x) > abs(normal.z))
-	{
-		binormal.x = -normal.y;
-		binormal.y = normal.x;
-		binormal.z = 0;
-	}
-	else
-	{
-		binormal.x = 0;
-		binormal.y = -normal.z;
-		binormal.z = normal.y;
-	}
+    vec2 uOffset = 2.f * u - vec2(1.f, 1.f);
 
-	binormal = normalize(binormal);
-	tangent  = cross(binormal, normal);
+    if (uOffset.x == 0 && uOffset.y == 0) return vec2(0, 0);
+
+    float theta, r;
+    if (abs(uOffset.x) > abs(uOffset.y)) {
+        r = uOffset.x;
+        theta = PI_OVER4 * (uOffset.y / uOffset.x);
+    } else {
+        r = uOffset.y;
+        theta = PI_OVER2 - PI_OVER4 * (uOffset.x / uOffset.y);
+    }
+    return r * vec2(cos(theta), sin(theta));
 }
 
-vec3 cosineSampleHemisphere2(vec2 u)
+vec3 cosineSampleHemisphere(vec2 u)   
 {
-	// Uniformly sample disk.
-	const float r   = sqrt(u.x);
-	const float phi = 2.0f * PI * u.y;
-	vec3 p;
-	p.x             = r * cos(phi);
-	p.y             = r * sin(phi);
-
-	// Project up to hemisphere.
-	p.z = sqrt(max(0.0f, 1.0f - p.x * p.x - p.y * p.y));
-
-	return p;
+    vec2 d = concentricSampleDisk(u);
+    float z = sqrt(max(0.f, 1 - d.x * d.x - d.y * d.y));
+    return vec3(d.x, d.y, z);
 }
 
-vec3 inverseTransform(vec3 p, vec3 normal, vec3 tangent, vec3 binormal)
+// TODO: not used fix
+//float cosineHemispherePdf(vec3 wo, vec3 wi) 
+//{
+//     return sameHemisphere(wo, wi) ? AbsCosTheta(wi) * INV_PI : 0;
+//}
+
+vec3 uniformSampleCone(vec2 u, float cosThetaMax) 
 {
-	return p.x * tangent + p.y * binormal + p.z * normal;
+    float cosTheta = (1.f - u.x) + u.x * cosThetaMax;
+    float sinTheta = sqrt(1.f - cosTheta * cosTheta);
+    float phi = u.y * 2 * PI;
+    return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
 }
 
-
-
-vec3 offsetRay(in vec3 p, in vec3 n)
-{
-	const float intScale   = 256.0f;
-	const float floatScale = 1.0f / 65536.0f;
-	const float origin     = 1.0f / 32.0f;
-
-	ivec3 of_i = ivec3(intScale * n.x, intScale * n.y, intScale * n.z);
-
-	vec3 p_i = vec3(intBitsToFloat(floatBitsToInt(p.x) + ((p.x < 0) ? -of_i.x : of_i.x)),
-					intBitsToFloat(floatBitsToInt(p.y) + ((p.y < 0) ? -of_i.y : of_i.y)),
-					intBitsToFloat(floatBitsToInt(p.z) + ((p.z < 0) ? -of_i.z : of_i.z)));
-
-	return vec3(abs(p.x) < origin ? p.x + floatScale * n.x : p_i.x,  
-				abs(p.y) < origin ? p.y + floatScale * n.y : p_i.y,  
-				abs(p.z) < origin ? p.z + floatScale * n.z : p_i.z);
+float uniformConePdf(float cosThetaMax) {
+    return 1 / (2 * PI * (1 - cosThetaMax));
 }
+
+vec2 uniformSampleTriangle(vec2 u) 
+{
+    float su0 = sqrt(u.x);
+    return vec2(1 - su0, u.y * su0);
+}
+
+// pdf = 1 / area of triangle
+
+#endif

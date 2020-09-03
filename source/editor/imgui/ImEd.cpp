@@ -216,7 +216,7 @@ bool TransformRun(TransformCache& tr, bool showScale, bool* lockedScale, bool* l
 
 	const auto UpdateLookAtReference = [&]() {
 		if (lookAtPos) {
-			(*lookAtPos) = tr.position + tr.forward();
+			(*lookAtPos) = tr.position + tr.front();
 		}
 	};
 

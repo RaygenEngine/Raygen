@@ -30,7 +30,7 @@ void PtSpotlight::MakeLayout()
 
 void PtSpotlight::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/ppt/light/spotlight.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/spotlight.shader");
 	gpuShader.onCompile = [&]() {
 		MakePipeline();
 	};

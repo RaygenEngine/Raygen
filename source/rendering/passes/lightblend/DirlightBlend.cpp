@@ -22,7 +22,7 @@ vk::UniquePipelineLayout DirlightBlend::MakePipelineLayout()
 
 vk::UniquePipeline DirlightBlend::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/ppt/light/dirlight.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/dirlight.shader");
 	gpuShader.onCompile = [&]() {
 		MakePipeline();
 	};

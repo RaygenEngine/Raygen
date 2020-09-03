@@ -5,7 +5,7 @@
 
 DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 {
-	auto lookAt = bc.world().position + bc.world().forward();
+	auto lookAt = bc.world().position + bc.world().front();
 	auto view = glm::lookAt(bc.world().position, lookAt, bc.world().up());
 
 	[[maybe_unused]] float outerCutOff;
@@ -26,7 +26,7 @@ DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 	return [=](SceneSpotlight& sl) {
 		sl.name = "spot depth: " + bc.name;
 		sl.ubo.position = glm::vec4(bc.world().position, 1.f);
-		sl.ubo.forward = glm::vec4(bc.world().forward(), 0.f);
+		sl.ubo.front = glm::vec4(bc.world().front(), 0.f);
 		sl.ubo.viewProj = viewProj;
 
 		if constexpr (FullDirty) {

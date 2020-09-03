@@ -8,7 +8,7 @@ struct Frustum;
 } // namespace math
 
 struct DirectionalLight_Ubo {
-	glm::vec4 forward{};
+	glm::vec4 front{};
 
 	// Lightmap
 	glm::mat4 viewProj{};
