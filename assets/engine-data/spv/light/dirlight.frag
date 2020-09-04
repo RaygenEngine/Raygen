@@ -70,30 +70,31 @@ void main() {
 
 	Onb shadingOrthoBasis = branchlessOnb(frag.normal);
 
-	vec3 wo = normalize(cam.position - frag.position);
-	vec3 wi = normalize(-light.front);
+	vec3 V = normalize(cam.position - frag.position);
+	vec3 L = normalize(-light.front); // explicit light dir
 
-	toOnbSpace(shadingOrthoBasis, wo);
-	toOnbSpace(shadingOrthoBasis, wi);
+	toOnbSpace(shadingOrthoBasis, V);
+	toOnbSpace(shadingOrthoBasis, L);
 
-	float cosTheta = CosTheta(wi);
-
-	// TODO: missing reflect
+	float NoL = Ndot(L);
+	// TODO: missing geometric / face normal tests
 	outColor = vec4(vec3(0), 1);
-	if(cosTheta > 0) // test abs, saturate on edge cases (remove branching)
+	if(NoL > 0) // test abs, saturate on edge cases (remove branching)
 	{
-		float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, cosTheta, light.samples, light.sampleInvSpread);
+		float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
 
 		vec3 Li = (1.0 - shadow) * light.color * light.intensity;     
 
-		// to get final diffuse and specular both those terms are multiplied by Li * NoL
-		vec3 brdf_d = LambertianReflection(frag.diffuseColor);
-		vec3 brdf_r = MicrofacetReflection(wo, wi, frag.a, frag.a, frag.f0);
+		vec3 H = normalize(V + L);
+		float NoV = Ndot(V);
+		float NoH = Ndot(H);
+		float LoH = dot(L, H);
 
-		// so to simplify (faster math)
-		// throughput = (brdf_d + brdf_r) * NoL
-		// incoming radiance = Li;
-		vec3 finalContribution = (brdf_d + brdf_r) * Li * cosTheta;
+		vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor);
+		vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, frag.a, frag.f0);
+
+		// Li comes from direct light path
+		vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
 
 		outColor = vec4(finalContribution, 1);
 	}
@@ -101,46 +102,3 @@ void main() {
                                 
                                  
                                   
-                                   
-                                    
-                                     
-                                            
-                                               
-                                                 
-                                                  
-                                                   
-                                                                                                                                    
-                                                                                                                                              
-                                                                                                                                               
-                                                                                                                                        
-                                                                                                                                         
-                                                                                                                                          
-                                                                                                                                           
-                                                                                                                                             
-                                                                                                                                             
-                                                                                                                                                
-                                                                                                                                                 
-                                                                                                                                                   
-                                                                                                                                                  
-                                                                                                                                                   
-                                                                                                                                                     
-                                                                                                                                                      
-                                                                                                                                                       
-                                                                                                                                                        
-                                                                                                                                                             
-                                                                                                                                                              
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
