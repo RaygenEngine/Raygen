@@ -113,6 +113,8 @@ void main() {
 		uv);
 
 	Onb shadingOrthoBasis = branchlessOnb(frag.normal);
+	
+	vec3 N = frag.normal;
 
 	vec3 V = normalize(cam.position - frag.position);
 	vec3 L = normalize(light.position - frag.position);
@@ -140,7 +142,7 @@ void main() {
 	{
 
 		float shadow
-
+ 
 #ifndef RTX_ON
 		= ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
 #else
@@ -149,9 +151,9 @@ void main() {
 		
 		vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
 
-		vec3 H = normalize(V + L);
+		vec3 H = normalize(V + L); 
 		float NoV = Ndot(V);
-		float NoH = Ndot(H);
+		float NoH = Ndot(H); 
 		float LoH = dot(L, H);
 
 		vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor);
@@ -163,6 +165,8 @@ void main() {
 		outColor = vec4(finalContribution, 1);
 	}
 }                               
+
+
 
 
 

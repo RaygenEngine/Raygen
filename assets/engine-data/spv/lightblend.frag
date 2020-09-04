@@ -19,7 +19,7 @@ void main() {
 	vec3 direct = texture(rasterDirectSampler, uv).rgb;
 	vec3 indirect = texture(rtIndirectSampler, uv).rgb;
 
-    outColor = vec4(direct + indirect, 1.f); 
+    outColor = vec4(indirect + direct, 1.f); 
 }                               
                                 
                                  
@@ -52,6 +52,8 @@ void main() {
                                                                                                                                                         
                                                                                                                                                              
                                                                                                                                                               
+
+
 
 
 
