@@ -68,8 +68,6 @@ layout(set = 3, binding = 0) uniform sampler2DShadow shadowmap;
 #ifdef RTX_ON
 layout(set = 4, binding = 0) uniform accelerationStructureEXT topLevelAS;
 
-
-
 float getShadowRayQuery(Fragment frag){ 
 	vec3  L = normalize(light.position - frag.position); 
 	vec3  origin    = frag.position;
@@ -135,33 +133,31 @@ void main() {
     float epsilon = (light.innerCutOff - light.outerCutOff);
     float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 	
-	float NoL = CosTheta(L);
-	// TODO: missing reflect
+	float NoL = Ndot(L);
+	// TODO: missing geometric / face normal tests
 	outColor = vec4(vec3(0), 1);
 	if(NoL > 0)
 	{
 
-		float shadow;
+		float shadow
 
-		
-	#ifndef RTX_ON
-		shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
-	#else
-		shadow = getShadowRayQuery(frag);
-	#endif
+#ifndef RTX_ON
+		= ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
+#else
+		= getShadowRayQuery(frag);
+#endif
 		
 		vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
 
 		vec3 H = normalize(V + L);
-		float NoV = CosTheta(V);
+		float NoV = Ndot(V);
+		float NoH = Ndot(H);
 		float LoH = dot(L, H);
-		float NoH = CosTheta(H);
 
-		// to get final diffuse and specular both those terms are multiplied by Li * NoL
 		vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor);
 		vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, frag.a, frag.f0);
 
-		// so to simplify (faster math)
+		// Li comes from direct light path
 		vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
 
 		outColor = vec4(finalContribution, 1);
