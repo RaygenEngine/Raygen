@@ -52,21 +52,21 @@ OldVertex fromVertex(Vertex p) {
 	return vtx;
 }
 
-void RRTerminateOrTraceRay(vec3 nextOrigin, vec3 nextDirection, vec3 throughput)
+vec3 Li(vec3 nextOrigin, vec3 nextDirection, uint seed)
 {
 	
 	// RR termination
-	if(inPrd.depth >= 1){
+	//if(inPrd.depth >= 1){
 
 		// TODO: check cumulative throughput
-		float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
+	//	float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
 
-		if(rand(prd.seed) >= p_spawn){
-			return; 
-		}
+	//	if(rand(prd.seed) >= p_spawn){
+	//		return; 
+	//	}
 
-		throughput /= p_spawn;
-	}
+	//	throughput /= p_spawn;
+	//}
 
 	prd.radiance = vec3(0);
 	prd.depth = inPrd.depth + 1;
@@ -74,7 +74,7 @@ void RRTerminateOrTraceRay(vec3 nextOrigin, vec3 nextDirection, vec3 throughput)
 
 	if(prd.depth > depth)
 	{
-		return;
+		return vec3(0);
 	}
 
     uint  rayFlags = gl_RayFlagsOpaqueEXT;
@@ -95,12 +95,11 @@ void RRTerminateOrTraceRay(vec3 nextOrigin, vec3 nextDirection, vec3 throughput)
 				1               // payload (location = 0)
 	);
 
-	inPrd.radiance += throughput * prd.radiance; 
+	return prd.radiance;
 }
 
-void main() {
-
-
+void main() 
+{
 
 	int matId = gl_InstanceID % 25;
 
@@ -170,19 +169,21 @@ void main() {
 	vec3 hitPoint = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 
 	// LMATH: unit?
-	vec3 wo = -gl_WorldRayDirectionEXT;
+	vec3 V = -gl_WorldRayDirectionEXT;
 
 	vec3 Ng_s = Ng;
-	if(wo.z < 0){
-		if(dot(wo, facen) < 0){	
+	if(V.z < 0){
+		if(dot(V, facen) < 0){	
 			//inPrd.radiance = vec3(1000.f,0,1000.f); TODO
 			return; // backface culling
 		}
 		Ng_s = facen;
 	}
 
-	toOnbSpace(shadingOrthoBasis, wo);
+	toOnbSpace(shadingOrthoBasis, V);
 	toOnbSpace(shadingOrthoBasis, Ng_s);
+
+	float NoV = abs(Ndot(V));
 
 	// DIRECT
 
@@ -194,14 +195,14 @@ void main() {
 		vec3 lightPos = light.position;
 
 		
-		vec3 wi = normalize(lightPos - hitPoint);
-		toOnbSpace(shadingOrthoBasis, wi);
+		vec3 L = normalize(lightPos - hitPoint);
+		toOnbSpace(shadingOrthoBasis, L);
 
-		bool reflect = dot(Ng_s, wi) * dot(Ng_s, wo) > 0;
+		bool reflect = dot(Ng_s, L) * dot(Ng_s, V) > 0;
 		
-		float cosTheta = CosTheta(wi);
+		float NoL = Ndot(L);
 
-		if (reflect && cosTheta > 0)
+		if (reflect && NoL > 0)
 		{
 			vec3 lightColor = light.color;
 			float dist = length(light.position - hitPoint);
@@ -213,7 +214,7 @@ void main() {
 			toOnbSpace(shadingOrthoBasis, ld);
 
 			// spot effect (soft edges)
-			float theta = dot(wi, -ld);
+			float theta = dot(L, -ld);
 		    float epsilon = (light.innerCutOff - light.outerCutOff);
 		    float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 			
@@ -235,14 +236,18 @@ void main() {
 
 				vec3 Li = (1.0 - shadow) * lightFragColor; 
 		
-				// to get final diffuse and specular both those terms are multiplied by Li * NoL
-				vec3 brdf_d = LambertianReflection(diffuseColor);
-				vec3 brdf_r = MicrofacetReflection(wo, wi, a, a, f0);
+				vec3 H = normalize(V + L);
+				float NoV = Ndot(V);
+				float NoH = Ndot(H);
+				float LoH = dot(L, H);
+
+				vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, a, diffuseColor);
+				vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, f0);
 	
 				// so to simplify (faster math)
 				// throughput = (brdf_d + brdf_r) * NoL
 				// incoming radiance = Li;
-				vec3 finalContribution = (brdf_d + brdf_r) * Li * cosTheta;
+				vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
 	
 				inPrd.radiance += finalContribution;
 			}
@@ -256,20 +261,23 @@ void main() {
 	// Diffuse 'reflection'
 	{
 		vec2 u = rand2(inPrd.seed);
-		vec3 wi = cosineSampleHemisphere(u);
+		vec3 L = cosineSampleHemisphere(u);
 
-		bool reflect = dot(Ng_s, wi) * dot(Ng_s, wo) > 0;
+		bool reflect = dot(Ng_s, L) * dot(Ng_s, V) > 0;
 
-		float cosTheta = CosTheta(wi);
+		float NoL = Ndot(L);
 
-		if(reflect && cosTheta > 0)
+		if(reflect && NoL > 0)
 		{
-			float pdf = cosTheta * INV_PI;
-		
-			vec3 throughput = LambertianReflection(diffuseColor) * cosTheta / pdf;
+			vec3 H = normalize(V + L);
+			float LoH = abs(dot(L, H));
 
-			outOnbSpace(shadingOrthoBasis, wi);
-			RRTerminateOrTraceRay(hitPoint, wi, throughput);
+			float pdf = NoL * INV_PI;
+		
+			vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, a, diffuseColor) ;
+
+			outOnbSpace(shadingOrthoBasis, L);
+			inPrd.radiance += brdf_d * Li(hitPoint, L, inPrd.seed) * NoL / pdf;
 		}
 	}
 	
@@ -277,24 +285,29 @@ void main() {
 	{
 		// sample new direction wi and its pdfs based on distribution of the GGX BRDF
 		vec2 u = rand2(inPrd.seed);
-		vec3 wh  = TrowbridgeReitzDistribution_Sample_wh(wo, u, a, a);
+		vec3 H = importanceSampleGGX(u, a);
 
-		vec3 wi  = reflect(wo, wh);
+		vec3 L = reflect(-V, H);
 
-		bool reflect = dot(wi, Ng_s) * dot(wo, Ng_s) > 0;
-	
-		float cosTheta = CosTheta(wi);
+		bool reflect = dot(L, Ng_s) * dot(V, Ng_s) > 0;
 
-		if(reflect && cosTheta > 0)
+		float NoL = Ndot(L);
+
+		if(reflect && NoL > 0)
 		{
-			vec3 brdf_r = MicrofacetReflection(wo, wi, a, a, f0);
+			float NoH = abs(Ndot(H));
+			float LoH = abs(dot(L, H));
 
-			float pdf = TrowbridgeReitzSamplePdf(wo, wh, a, a) / (4 * dot(wo, wh));
+			// SMATH:
+			float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
+			//pdf = max(EPSILON, pdf);
 
-			vec3 throughput = brdf_r * cosTheta  / pdf;
+			vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, f0);
 
-			outOnbSpace(shadingOrthoBasis, wi);
-			RRTerminateOrTraceRay(hitPoint, wi, throughput);
+			outOnbSpace(shadingOrthoBasis, L);
+			inPrd.radiance += brdf_r * Li(hitPoint, L, inPrd.seed) * NoL / pdf;
 		}
 	}
 }
+
+

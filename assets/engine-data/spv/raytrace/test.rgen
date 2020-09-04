@@ -87,7 +87,6 @@ void main() {
 		uv);
 
 
-
     // diffuseColor = (1.0 - metallic) * albedo;
     vec3 diffuseColor = frag.diffuseColor;
     // f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + albedo * metallic;
@@ -119,23 +118,23 @@ void main() {
             {
                 vec3 H = normalize(V + L);
                 float LoH = dot(L, H);
-
+ 
                 float pdf = NoL * INV_PI;
             
-                vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor) ;
+                vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor);
 
 			    outOnbSpace(shadingOrthoBasis, L);
-                hitValue += brdf_d * Li(hitPoint, L, seed) * NoL / pdf;
+                hitValue += brdf_d * Li(frag.position, L, seed) * NoL / pdf;
             }
         }
         
         // Glossy reflection
         {
             // sample new direction wi and its pdfs based on distribution of the GGX BRDF
-            vec2 u = rand2(seed);
+            vec2 u = rand2(seed); 
             vec3 H = importanceSampleGGX(u, a);
 
-            vec3 L = reflect(V, H);
+            vec3 L = reflect(-V, H);
 
             float NoL = Ndot(L);
 
@@ -143,17 +142,23 @@ void main() {
             {
                 float NoH = Ndot(H);
                 float LoH = dot(L, H);
+ 
+                // Cook torrance microfacet BRDF
+                // D(NoH, a) * G(NoL, NoV, a) * F(LoH, f0) / (4.0 * NoL * NoV)
 
-                D_TrowbridgeReitzDistribution(wh, alpha_x, alpha_y) * G1_TrowbridgeReitzDistribution(wo, alpha_x, alpha_y) * abs(dot(wo, wh)) / AbsCosTheta(wo);
-            // TODO:
-                float pdf = D_GGX(NoH, a) * G_SchlicksmithGGX(NoL, NoV, a);
-TrowbridgeReitzSamplePdf(wo, wh, a, a) / (4 * dot(wo, wh))
+                // impsampl pdf
+                // D(NoH, a) * NoH / 4.0 * LoH
+
+                // SMATH:
+                float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
+	            //pdf = max(EPSILON, pdf);
+       
                 vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, frag.a, frag.f0);
 
 			    outOnbSpace(shadingOrthoBasis, L);
-                hitValue += brdf_r * Li(hitPoint, L, seed) * cosTheta / pdf;
+                hitValue += brdf_r * Li(frag.position, L, seed) * NoL / pdf;
             }
-        }
+        } 
     }
 
     vec3 curColor = (hitValue / samples);
@@ -279,6 +284,9 @@ void WriteSky() {
     
     imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
 }
+
+
+
 
 
 

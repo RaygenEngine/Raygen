@@ -332,6 +332,26 @@ vec3 importanceSampleGGX(vec2 u, float a)
 
     return vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
 }
+
+vec3 importanceSampleGGX(vec2 Xi, float a, vec3 normal) 
+{
+    const float phi = 2.0f * PI * Xi.x;
+    // (aa-1) == (a-1)(a+1) produces better fp accuracy
+    const float cosTheta2 = (1 - Xi.y) / (1 + (a + 1) * ((a - 1) * Xi.y));
+    const float cosTheta = sqrt(cosTheta2);
+    const float sinTheta = sqrt(1 - cosTheta2);
+
+    vec3 H = vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
+
+	// Tangent space
+	vec3 up = abs(normal.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+	vec3 tangentX = normalize(cross(up, normal));
+	vec3 tangentY = normalize(cross(normal, tangentX));
+
+	// Convert to world Space
+	return normalize(tangentX * H.x + tangentY * H.y + normal * H.z);
+}
+	
 	
 
 
