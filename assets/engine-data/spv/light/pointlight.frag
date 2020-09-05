@@ -1,9 +1,11 @@
 #version 460
 #extension GL_GOOGLE_include_directive: enable
+#extension GL_EXT_ray_tracing : require
+#extension GL_EXT_ray_query: require
 #include "global.glsl"
 
 #include "fragment.glsl"
-#include "shadow.glsl"
+#include "sampling.glsl"
 #include "bsdf.glsl"
 #include "onb.glsl"
 #include "attachments.glsl"
@@ -29,35 +31,45 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 	mat4 viewProjInv;
 } cam;
 
-layout(set = 2, binding = 0) uniform UBO_Spotlight {
+layout(set = 2, binding = 0) uniform UBO_Pointlight {
 		vec3 position;
 		float pad0;
-		vec3 front;
-		float pad1;
 
-		// Lightmap
-		mat4 viewProj;
 		vec3 color;
 		float pad3;
 
 		float intensity;
 
-		float near;
-		float far;
-
-		float outerCutOff;
-		float innerCutOff;
-
 		float constantTerm;
 		float linearTerm;
 		float quadraticTerm;
-
-		float maxShadowBias;
-		int samples;
-		float sampleInvSpread;
 } light;
 
-layout(set = 3, binding = 0) uniform sampler2DShadow shadowmap;
+layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
+
+float ShadowRayQuery(Fragment frag){ 
+	vec3  L = normalize(light.position - frag.position); 
+	vec3  origin    = frag.position;
+	vec3  direction = L;  // vector to light
+	float tMin      = 0.01f;
+	float tMax      = distance(frag.position, light.position);
+
+	// Initializes a ray query object but does not start traversal
+	rayQueryEXT rayQuery;
+	rayQueryInitializeEXT(rayQuery, topLevelAs, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, origin, tMin,
+                      direction, tMax);
+
+	// Start traversal: return false if traversal is complete
+	while(rayQueryProceedEXT(rayQuery)) {
+	}
+      
+	// Returns type of committed (true) intersection
+	if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
+	  // Got an intersection == Shadow
+	  return 1.0;
+	}
+	return 0.0;
+}
 
 void main() {
 
@@ -82,21 +94,14 @@ void main() {
 	
 	vec3 V = normalize(cam.position - frag.position);
 	vec3 L = normalize(light.position - frag.position);
-	vec3 lDir = -light.front;
 
 	toOnbSpace(shadingOrthoBasis, V);
 	toOnbSpace(shadingOrthoBasis, L);
-	toOnbSpace(shadingOrthoBasis, lDir);  
 	
 	// attenuation
 	float dist = length(light.position - frag.position);
 	float attenuation = 1.0 / (light.constantTerm + light.linearTerm * dist + 
   			     light.quadraticTerm * (dist * dist));
-	
-    // spot effect (soft edges)
-	float theta = dot(L, lDir);
-    float epsilon = (light.innerCutOff - light.outerCutOff);
-    float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 	
 	vec3 H = normalize(V + L); 
 	float NoL = max(Ndot(L), BIAS);
@@ -104,10 +109,9 @@ void main() {
 	float NoH = max(Ndot(H), BIAS); 
 	float LoH = max(dot(L, H), BIAS);
 
-	float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, 
-	light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
+	float shadow = ShadowRayQuery(frag);
 
-	vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
+	vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation; 
 
 	vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor);
 	vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, frag.a, frag.f0);

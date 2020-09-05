@@ -4,8 +4,6 @@
 #include "random.glsl"
 #include "poisson.glsl"
 
-// TODO: remove this file
-
 float ShadowCalculation(sampler2DShadow shadowmap, mat4 lightMatrix, vec3 fragPos, float maxBias, float cosTheta, int samples, float invSpread)
 {
 	vec4 fragPosLightSpace = lightMatrix * vec4(fragPos, 1.0);
@@ -41,29 +39,5 @@ float ShadowCalculationFast(sampler2DShadow shadowmap, mat4 lightMatrix, vec3 fr
 
     return 1.0 - texture(shadowmap, projCoords, 0.f);
 } 
-
-// float ShadowRayQuery(vec3 lightPos, vec3 fragPos){ 
-// 	vec3  L = normalize(lightPos - fragPos); 
-// 	vec3  origin    = fragPos;
-// 	vec3  direction = L;  // vector to light
-// 	float tMin      = 0.01f;
-// 	float tMax      = distance(fragPos, lightPos);
-
-// 	// Initializes a ray query object but does not start traversal
-// 	rayQueryEXT rayQuery;
-// 	rayQueryInitializeEXT(rayQuery, topLevelAS, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, origin, tMin,
-//                       direction, tMax);
-
-// 	// Start traversal: return false if traversal is complete
-// 	while(rayQueryProceedEXT(rayQuery)) {
-// 	}
-      
-// 	// Returns type of committed (true) intersection
-// 	if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
-// 	  // Got an intersection == Shadow
-// 	  return 1.0;
-// 	}
-// 	return 0.0;
-// }
 
 #endif

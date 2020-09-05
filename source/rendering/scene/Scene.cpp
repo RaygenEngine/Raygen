@@ -12,6 +12,7 @@
 #include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/SceneReflectionProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
+#include "rendering/scene/ScenePointlight.h"
 
 void Scene::BuildAll()
 {
@@ -63,6 +64,7 @@ Scene::~Scene()
 	destroyVec(animatedGeometries.elements);
 	destroyVec(cameras.elements);
 	destroyVec(spotlights.elements);
+	destroyVec(pointlights.elements);
 	destroyVec(directionalLights.elements);
 	destroyVec(reflProbs.elements);
 }
@@ -122,6 +124,15 @@ void Scene::UploadDirty(uint32 frameIndex)
 		if (sl && sl->isDirty[frameIndex]) {
 			sl->UploadUbo(frameIndex);
 			sl->isDirty[frameIndex] = false;
+			requireUpdateAccel = true;
+			anyDirty = true;
+		}
+	}
+
+	for (auto pl : pointlights.elements) {
+		if (pl && pl->isDirty[frameIndex]) {
+			pl->UploadUbo(frameIndex);
+			pl->isDirty[frameIndex] = false;
 			requireUpdateAccel = true;
 			anyDirty = true;
 		}

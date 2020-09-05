@@ -105,12 +105,6 @@ vec3 F_Schlick(float cosTheta, vec3 f0)
     return f + f0 * (1.0 - f);
 }
 
-vec3 F_Schlick(float cosTheta, vec3 f0) 
-{
-    float f = pow(1.0 - cosTheta, 5.0);
-    return f + f0 * (1.0 - f);
-}
-
 vec3 F_Schlick2(float NoV, vec3 f0, vec3 f90) 
 {
     return f0 + (f90 - f0) * pow(1.0 - NoV, 5.0);
