@@ -1,10 +1,10 @@
 #version 450 
 #extension GL_GOOGLE_include_directive: enable
-#include "global.h"
+#include "global.glsl"
 
-#include "bsdf.h"
-#include "fragment.h"
-#include "attachments.h"
+#include "bsdf.glsl"
+#include "fragment.glsl"
+#include "attachments.glsl"
 
 // out
 

@@ -1,8 +1,8 @@
 #version 450
 #extension GL_GOOGLE_include_directive: enable
-#include "global.h"
-#include ".bsdf.h"
-#include "hammersley.h"
+#include "global.glsl"
+
+#include "hammersley.glsl"
 
 // out
 

@@ -1,5 +1,5 @@
-#ifndef global_h
-#define global_h
+#ifndef global_glsl
+#define global_glsl
 
 // TODO: auto include at every shader
 
@@ -33,6 +33,10 @@
 
 #ifndef PHI
 #define PHI 1.61803398874989484820459f;
+#endif
+
+#ifndef BIAS
+#define BIAS 1e-4
 #endif
 
 float saturate(float v)

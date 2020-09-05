@@ -1,5 +1,5 @@
-#ifndef poisson_h
-#define poisson_h
+#ifndef poisson_glsl
+#define poisson_glsl
 
 vec2 poissonDisk16[16] = vec2[](
 	vec2(-0.94201624, -0.39906216),

@@ -1,8 +1,8 @@
 #version 450 
 #extension GL_GOOGLE_include_directive: enable
-#include "global.h"
+#include "global.glsl"
 
-#include "tonemapping.h"
+#include "tonemapping.glsl"
 
 // out
 

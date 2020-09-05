@@ -1,5 +1,5 @@
-#ifndef rt_global_h
-#define rt_global_h
+#ifndef rt_global_glsl
+#define rt_global_glsl
 
 // TODO: auto include in rt shaders
 

@@ -1,5 +1,5 @@
-#ifndef noise_h
-#define noise_h
+#ifndef noise_glsl
+#define noise_glsl
 
 vec2 getGradient(vec2 intPos, float t) 
 {

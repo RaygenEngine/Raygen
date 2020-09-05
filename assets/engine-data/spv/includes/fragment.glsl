@@ -1,5 +1,5 @@
-#ifndef fragment_h
-#define fragment_h
+#ifndef fragment_glsl
+#define fragment_glsl
 
 struct Fragment
 {
