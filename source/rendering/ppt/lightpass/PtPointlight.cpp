@@ -1,23 +1,23 @@
 #include "pch.h"
-#include "PtSpotlight.h"
+#include "PtPointlight.h"
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneSpotlight.h"
+#include "rendering/scene/ScenePointlight.h"
 #include "rendering/structures/Depthmap.h"
+#include "rendering/scene/SceneCamera.h"
 
 namespace vl {
-void PtSpotlight::MakeLayout()
+void PtPointlight::MakeLayout()
 {
 	std::array layouts{
 		Layouts->renderAttachmentsLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
-		Layouts->singleSamplerDescLayout.handle(),
+		Layouts->accelLayout.handle(),
 	};
 
 	// pipeline layout
@@ -27,9 +27,9 @@ void PtSpotlight::MakeLayout()
 	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
 
-void PtSpotlight::MakePipeline()
+void PtPointlight::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/spotlight.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/pointlight.shader");
 	gpuShader.onCompile = [&]() {
 		MakePipeline();
 	};
@@ -53,11 +53,10 @@ void PtSpotlight::MakePipeline()
 		.setAttachments(colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
-
 	Utl_CreatePipelineLightPass(gpuShader, colorBlending);
 }
 
-void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void PtPointlight::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	auto camera = sceneDesc.viewer;
 
@@ -66,7 +65,7 @@ void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scene
 	}
 
 	// WIP:
-	auto descSet = camera->descSet[sceneDesc.frameIndex];
+	auto camDescSet = camera->descSet[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
@@ -74,19 +73,18 @@ void PtSpotlight::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scene
 		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u, &descSet, 0u, nullptr);
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u, &camDescSet, 0u, nullptr);
 
-	for (auto sl : sceneDesc->spotlights.elements) {
-		if (!sl) {
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 3u, 1u,
+		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
+
+	for (auto pl : sceneDesc->pointlights.elements) {
+		if (!pl) {
 			continue;
 		}
 
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
-			&sl->descSet[sceneDesc.frameIndex], 0u, nullptr);
-
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 3u, 1u,
-			&sl->shadowmap[sceneDesc.frameIndex].descSet, 0u, nullptr);
-
+			&pl->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 		// draw call (triangle)
 		cmdBuffer.draw(3u, 1u, 0u, 0u);

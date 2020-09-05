@@ -5,6 +5,7 @@
 #include "rendering/passes/RaytracingPass.h"
 #include "rendering/ppt/lightpass/PtDirectionalLight.h"
 #include "rendering/ppt/lightpass/PtLightBlend.h"
+#include "rendering/ppt/lightpass/PtPointlight.h"
 #include "rendering/ppt/lightpass/PtSpotlight.h"
 #include "rendering/ppt/PtCollection.h"
 #include "rendering/scene/Scene.h"
@@ -69,6 +70,7 @@ public:
 	InFlightResources<vk::DescriptorSet> m_rtDescSet;
 
 	PtSpotlight spotlightPass;
+	PtPointlight pointlightPass;
 	PtDirectionalLight dirlightPass;
 
 	PtLightBlend lightblendPass;

@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "Renderer.h"
 
-#include "rendering/Renderer.h"
-
 #include "engine/console/ConsoleVariable.h"
 #include "engine/Engine.h"
 #include "engine/Events.h"
@@ -12,6 +10,7 @@
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
+#include "rendering/core/PipeUtl.h"
 #include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/Layouts.h"
@@ -24,9 +23,8 @@
 #include "rendering/scene/SceneDirectionalLight.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/structures/Depthmap.h"
-#include "rendering/wrappers/Swapchain.h"
-#include "rendering/core/PipeUtl.h"
 #include "rendering/util/WriteDescriptorSets.h"
+#include "rendering/wrappers/Swapchain.h"
 
 
 namespace {
@@ -44,6 +42,9 @@ void Renderer_::InitPipelines()
 
 	spotlightPass.MakeLayout();
 	spotlightPass.MakePipeline();
+
+	pointlightPass.MakeLayout();
+	pointlightPass.MakePipeline();
 
 	dirlightPass.MakeLayout();
 	dirlightPass.MakePipeline();
@@ -120,9 +121,9 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 
 void Renderer_::RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-
 	m_rasterDirectPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 		spotlightPass.Draw(cmdBuffer, sceneDesc);
+		pointlightPass.Draw(cmdBuffer, sceneDesc);
 		dirlightPass.Draw(cmdBuffer, sceneDesc);
 	});
 }
