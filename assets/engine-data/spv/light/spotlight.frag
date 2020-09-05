@@ -2,14 +2,14 @@
 #extension GL_GOOGLE_include_directive: enable
 #extension GL_EXT_ray_tracing : require
 #extension GL_EXT_ray_query: require
-#include "global.h"
+#include "global.glsl"
 
-#include "fragment.h"
-#include "shadow.h"
-#include "sampling.h"
-#include "bsdf.h"
-#include "onb.h"
-#include "attachments.h"
+#include "fragment.glsl"
+#include "shadow.glsl"
+#include "sampling.glsl"
+#include "bsdf.glsl"
+#include "onb.glsl"
+#include "attachments.glsl"
 
 //#define RTX_ON
 	
@@ -114,8 +114,6 @@ void main() {
 
 	Onb shadingOrthoBasis = branchlessOnb(frag.normal);
 	
-	vec3 N = frag.normal;
-
 	vec3 V = normalize(cam.position - frag.position);
 	vec3 L = normalize(light.position - frag.position);
 	vec3 lDir = -light.front;
@@ -135,36 +133,31 @@ void main() {
     float epsilon = (light.innerCutOff - light.outerCutOff);
     float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 	
-	float NoL = Ndot(L);
-	// TODO: missing geometric / face normal tests
-	outColor = vec4(vec3(0), 1);
-	if(NoL > 0)
-	{
+	vec3 H = normalize(V + L); 
+	float NoL = max(Ndot(L), BIAS);
+	float NoV = max(Ndot(V), BIAS);
+	float NoH = max(Ndot(H), BIAS); 
+	float LoH = max(dot(L, H), BIAS);
 
-		float shadow
- 
-#ifndef RTX_ON
-		= ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
-#else
-		= getShadowRayQuery(frag);
-#endif
-		
-		vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
+	float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, 
+	light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
 
-		vec3 H = normalize(V + L); 
-		float NoV = Ndot(V);
-		float NoH = Ndot(H); 
-		float LoH = dot(L, H);
+	vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
 
-		vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor);
-		vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, frag.a, frag.f0);
+	vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor);
+	vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, frag.a, frag.f0);
 
-		// Li comes from direct light path
-		vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
+	// Li comes from direct light path
+	vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
 
-		outColor = vec4(finalContribution, 1);
-	}
+	outColor = vec4(finalContribution, 1);
 }                               
+
+
+
+
+
+
 
 
 

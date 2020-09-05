@@ -1,13 +1,13 @@
 #version 450
 #extension GL_GOOGLE_include_directive: enable
-#include "global.h"
+#include "global.glsl"
 
-#include "bsdf.h"
-#include "fragment.h"
-#include "shadow.h"
-#include "sampling.h"
-#include "onb.h"
-#include "attachments.h"
+#include "bsdf.glsl"
+#include "fragment.glsl"
+#include "shadow.glsl"
+#include "sampling.glsl"
+#include "onb.glsl"
+#include "attachments.glsl"
 
 // out
 
@@ -76,28 +76,25 @@ void main() {
 	toOnbSpace(shadingOrthoBasis, V);
 	toOnbSpace(shadingOrthoBasis, L);
 
-	float NoL = Ndot(L);
-	// TODO: missing geometric / face normal tests
-	outColor = vec4(vec3(0), 1);
-	if(NoL > 0) // test abs, saturate on edge cases (remove branching)
-	{
-		float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
+	vec3 H = normalize(V + L); 
+	float NoL = max(Ndot(L), BIAS);
+	float NoV = max(Ndot(V), BIAS);
+	float NoH = max(Ndot(H), BIAS); 
+	float LoH = max(dot(L, H), BIAS);
 
-		vec3 Li = (1.0 - shadow) * light.color * light.intensity;     
+	float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
 
-		vec3 H = normalize(V + L);
-		float NoV = Ndot(V);
-		float NoH = Ndot(H);
-		float LoH = dot(L, H);
+	vec3 Li = (1.0 - shadow) * light.color * light.intensity;     
 
-		vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor);
-		vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, frag.a, frag.f0);
+	vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor);
+	vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, frag.a, frag.f0);
 
-		// Li comes from direct light path
-		vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
+	// Li comes from direct light path
+	vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
 
-		outColor = vec4(finalContribution, 1);
-	}
+	outColor = vec4(finalContribution, 1);
 }                               
                                 
                                  
+
+

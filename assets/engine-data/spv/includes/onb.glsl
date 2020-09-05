@@ -1,5 +1,5 @@
-#ifndef onb_h
-#define onb_h
+#ifndef onb_glsl
+#define onb_glsl
 
 struct Onb
 {

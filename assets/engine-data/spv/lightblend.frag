@@ -1,8 +1,8 @@
 #version 450
 #extension GL_GOOGLE_include_directive: enable
-#include "global.h"
+#include "global.glsl"
 
-#include "attachments.h"
+#include "attachments.glsl"
 
 // out
 
@@ -52,6 +52,7 @@ void main() {
                                                                                                                                                         
                                                                                                                                                              
                                                                                                                                                               
+
 
 
 

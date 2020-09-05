@@ -1,5 +1,5 @@
-#ifndef bsdf_h
-#define bsdf_h
+#ifndef bsdf_glsl
+#define bsdf_glsl
 
 // math here are in bsdf space 
 // i.e. change basis of vectors using the normal of the surface
@@ -53,10 +53,10 @@ float CosDPhi(vec3 wa, vec3 wb)
                  (wb.x * wb.x + wb.y * wb.y)), -1, 1);
 }
 
-//bool sameHemisphere(vec3 w, vec3 wp) 
-//{
- //   return w.z * wp.z > 0;
-//}
+bool sameHemisphere(vec3 w, vec3 wp) 
+{
+    return w.z * wp.z > 0;
+}
 
 // reflection on normal
 // refl (wo, n) = -wo + 2 * dot(wo, n) * n =
@@ -98,6 +98,13 @@ float G_TrowbridgeReitzDistribution(vec3 wo, vec3 wi, float alpha_x, float alpha
     return 1 / (1 + L_TrowbridgeReitzDistribution(wo, alpha_x, alpha_y) + L_TrowbridgeReitzDistribution(wi, alpha_x, alpha_y));
 }
 
+// SMATH: schlick stuff (check epic's approximation)
+vec3 F_Schlick(float cosTheta, vec3 f0) 
+{
+    float f = pow(1.0 - cosTheta, 5.0);
+    return f + f0 * (1.0 - f);
+}
+
 vec3 F_Schlick(float cosTheta, vec3 f0) 
 {
     float f = pow(1.0 - cosTheta, 5.0);
@@ -118,6 +125,7 @@ float F_Schlick(float cosTheta, float f90)
 {
     return 1.0 + (f90 - 1) * pow(1.0 - cosTheta, 5.0);
 }
+
 
 vec3 MicrofacetReflection(vec3 wo, vec3 wi, float alpha_x, float alpha_y, vec3 f0)
 {
@@ -147,7 +155,7 @@ vec3 MicrofacetReflection(vec3 wo, vec3 wi, float alpha_x, float alpha_y, vec3 f
 float D_GGX(float NoH, float _a) {
     float a = NoH * _a;
     float k = a / (1.0 - NoH * NoH + a * a);
-    return k * k * (1.0 / PI);
+    return k * k * INV_PI;
 }
 
 // PERF:
@@ -177,6 +185,20 @@ vec3 SpecularTerm(float NoL, float NoV, float NoH, float LoH, float a, vec3 f0)
 
     return D * G * F / denom;
 }
+
+//vec3 Fr_CookTorranceGGX(float NoV, float NoL, float NoH, float LoH, vec3 f0, float a)
+//{
+//    //float D = D_GGX(NoH, a);
+//
+//    // CHECK:
+//    //vec3 f90 = vec3(0.5 + 2.0 * a * LoH * LoH);
+//
+//    //vec3  F = F_Schlick(LoH, f0, f90);
+//    //float V = V_SmithGGXCorrelated(NoV, NoL, a);
+//
+//    return (D * V) * F; // denominator simplified with G
+//}
+
 
 #define Fd_LAMBERT 0
 #define Fd_DISNEY 1

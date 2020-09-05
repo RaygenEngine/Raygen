@@ -1,5 +1,5 @@
-#ifndef hammersley_h
-#define hammersley_h
+#ifndef hammersley_glsl
+#define hammersley_glsl
 
 float radicalInverseVdC(uint bits) 
 {

@@ -1,8 +1,8 @@
 #version 460
 #extension GL_GOOGLE_include_directive : enable
 #extension GL_EXT_ray_tracing : require
-#include "global.h"
-#include "rt-global.h"
+#include "global.glsl"
+#include "rt-global.glsl"
 
 layout(location = 0) rayPayloadInEXT hitPayload inPrd;
 

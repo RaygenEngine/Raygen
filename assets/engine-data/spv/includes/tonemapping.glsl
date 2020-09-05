@@ -1,5 +1,5 @@
-#ifndef tonemapping_h
-#define tonemapping_h
+#ifndef tonemapping_glsl
+#define tonemapping_glsl
 
 // Gamma Correction in Computer Graphics
 // see https://www.teamten.com/lawrence/graphics/gamma/

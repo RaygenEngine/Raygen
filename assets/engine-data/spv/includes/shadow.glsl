@@ -1,8 +1,8 @@
-#ifndef shadow_h
-#define shadow_h
+#ifndef shadow_glsl
+#define shadow_glsl
 
-#include "random.h"
-#include "poisson.h"
+#include "random.glsl"
+#include "poisson.glsl"
 
 // TODO: remove this file
 

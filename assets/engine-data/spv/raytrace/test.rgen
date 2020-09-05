@@ -1,15 +1,15 @@
 #version 460
 #extension GL_GOOGLE_include_directive : enable
 #extension GL_EXT_ray_tracing : require
-#include "global.h"
-#include "rt-global.h"
+#include "global.glsl"
+#include "rt-global.glsl"
 
-#include "random.h"
-#include "sampling.h"
-#include "fragment.h"
-#include "bsdf.h"
-#include "attachments.h"
-#include "onb.h"
+#include "random.glsl"
+#include "sampling.glsl"
+#include "fragment.glsl"
+#include "bsdf.glsl"
+#include "attachments.glsl"
+#include "onb.glsl"
 
 layout(set = 1, binding = 0) uniform UBO_Camera {   
 	vec3 position;
@@ -29,8 +29,18 @@ layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 layout(location = 0) rayPayloadEXT hitPayload prd;
 
-vec3 Li(vec3 nextOrigin, vec3 nextDirection, uint seed)
+vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint seed)
 {
+	// RR termination
+	// TODO: check cumulative throughput
+	float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
+
+	if(rand(prd.seed) >= p_spawn){
+		return vec3(0); 
+	}
+	
+	throughput /= p_spawn;
+	
 	prd.radiance = vec3(0);
 	prd.depth = 1;
     prd.seed = seed;
@@ -55,7 +65,7 @@ vec3 Li(vec3 nextOrigin, vec3 nextDirection, uint seed)
 
 	// WIP: should not need max here, but removes blackhole spots
 	// Find the underlying bug
-	return max(prd.radiance, 0);
+	return throughput * max(vec3(0), prd.radiance);
 }
 
 void WriteSky();
@@ -63,8 +73,8 @@ void WriteSky();
 void main() {
 
     vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
-    float depth = texture(g_DepthSampler, uv).r;
-    if(depth >= 1.f)
+    float fragDepth = texture(g_DepthSampler, uv).r;
+    if(fragDepth >= 1.f)
     {
         // sky
 	    WriteSky();
@@ -78,7 +88,7 @@ void main() {
     }
 
 	Fragment frag = getFragmentFromGBuffer(
-		depth,
+		fragDepth,
 		cam.viewProjInv,
 		g_NormalSampler,
 		g_ColorSampler,
@@ -100,10 +110,10 @@ void main() {
 
 	toOnbSpace(shadingOrthoBasis, V);
 
-    float NoV = Ndot(V);
+	float NoV = max(Ndot(V), BIAS);
 
 	vec3 hitValue = vec3(0);
-    for(uint smpl = 0; smpl < samples; ++smpl){
+    for(uint smpl = 0; smpl < samples && depth > 0; ++smpl){
         // PERF:
         uint seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl);
 
@@ -112,52 +122,39 @@ void main() {
             vec2 u = rand2(seed);
             vec3 L = cosineSampleHemisphere(u);
 
-            float NoL = Ndot(L);
+			float NoL = max(Ndot(L), BIAS); 
 
-			if(NoL > 0)
-            {
-                vec3 H = normalize(V + L);
-                float LoH = dot(L, H);
- 
-                float pdf = NoL * INV_PI;
-            
-                vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor);
+            vec3 H = normalize(V + L);
+            float LoH = max(dot(L, H), BIAS);
 
-			    outOnbSpace(shadingOrthoBasis, L);
-                hitValue += brdf_d * Li(frag.position, L, seed) * NoL / pdf;
-            }
+            float pdf = NoL * INV_PI;
+        
+            vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor);
+
+		    outOnbSpace(shadingOrthoBasis, L);
+            hitValue += Contribution(brdf_d * NoL / pdf, frag.position, L, seed);
         }
         
         // Glossy reflection
         {
-            // sample new direction wi and its pdfs based on distribution of the GGX BRDF
             vec2 u = rand2(seed); 
             vec3 H = importanceSampleGGX(u, a);
 
             vec3 L = reflect(-V, H);
 
-            float NoL = Ndot(L);
+            float NoL = max(Ndot(L), BIAS); 
 
-            if(NoL > 0)
-            {
-                float NoH = Ndot(H);
-                float LoH = dot(L, H);
- 
-                // Cook torrance microfacet BRDF
-                // D(NoH, a) * G(NoL, NoV, a) * F(LoH, f0) / (4.0 * NoL * NoV)
+			float NoH = max(Ndot(H), BIAS); 
+			float LoH = max(dot(L, H), BIAS);
 
-                // impsampl pdf
-                // D(NoH, a) * NoH / 4.0 * LoH
+            // SMATH:
+            float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
+            pdf = max(Ndot(H), BIAS); 
+   
+            vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, frag.a, frag.f0);
 
-                // SMATH:
-                float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
-	            //pdf = max(EPSILON, pdf);
-       
-                vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, frag.a, frag.f0);
-
-			    outOnbSpace(shadingOrthoBasis, L);
-                hitValue += brdf_r * Li(frag.position, L, seed) * NoL / pdf;
-            }
+		    outOnbSpace(shadingOrthoBasis, L);
+            hitValue += Contribution(brdf_r * NoL / pdf, frag.position, L, seed);
         } 
     }
 
@@ -284,6 +281,10 @@ void WriteSky() {
     
     imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
 }
+
+
+
+
 
 
 

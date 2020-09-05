@@ -1,5 +1,5 @@
-#ifndef random_h
-#define random_h
+#ifndef random_glsl
+#define random_glsl
 
 // A single iteration of Bob Jenkins' One-At-A-Time hashing algorithm.
 uint hash( uint x ) {

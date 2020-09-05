@@ -1,5 +1,5 @@
-#ifndef attachments_h
-#define attachments_h
+#ifndef attachments_glsl
+#define attachments_glsl
 
 // GBuffer
 layout(set = 0, binding = 0) uniform sampler2D g_DepthSampler;

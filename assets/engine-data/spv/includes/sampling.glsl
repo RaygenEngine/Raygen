@@ -1,5 +1,5 @@
-#ifndef sampling_h
-#define sampling_h
+#ifndef sampling_glsl
+#define sampling_glsl
 
 vec3 uniformSampleHemisphere(vec2 u) 
 {
