@@ -5,11 +5,24 @@ project (Raygen)
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS "*.cpp")
 list(REMOVE_ITEM SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/AppMain.cpp")
 list(REMOVE_ITEM SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pch.cpp")
+list(REMOVE_ITEM SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/empty.cpp")
 file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS "*.h")
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Raygen" FILES ${HEADER_FILES} ${SOURCE_FILES})
 
 set(APP_SOURCES
 	AppMain.cpp
 )
+
+
+# Include shaders to a separate project
+project (Raygen-Shaders)
+set(SHADER_DIR "${CMAKE_SOURCE_DIR}/assets/engine-data/spv/")
+file(GLOB_RECURSE SHADER_SOURCES CONFIGURE_DEPENDS "${SHADER_DIR}/*.*")
+list(FILTER SHADER_SOURCES EXCLUDE REGEX ".spv$")
+source_group(TREE ${SHADER_DIR} PREFIX "Shaders" FILES ${SHADER_SOURCES})
+set (DUMMY_CPP "${CMAKE_CURRENT_SOURCE_DIR}/empty.cpp")
+add_library(Raygen-Shaders ${SHADER_SOURCES} ${DUMMY_CPP})
+
 
 # add pch for msvc 
 if(MSVC)
@@ -102,7 +115,6 @@ target_include_directories(Raygen PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 set_property(TARGET Raygen Raygen-App PROPERTY CXX_STANDARD 20)
 set_property(TARGET Raygen Raygen-App PROPERTY CXX_STANDARD_REQUIRED ON)
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX ${PROJECT_NAME} FILES ${HEADER_FILES} ${SOURCE_FILES})
 
 #definitions (WINDOWS)
 add_compile_definitions(NOMINMAX NODRAWTEXT NOOPENFILE) # TODO:
