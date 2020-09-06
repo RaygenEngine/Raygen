@@ -35,7 +35,7 @@ vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint see
 	// RR termination
 	float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
 
-	if(rand(prd.seed) > p_spawn){
+	if(rand(seed) > p_spawn){
 		return vec3(0); 
 	}
 	
@@ -288,6 +288,7 @@ void WriteSky() {
     
     imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
 }
+
 
 
 
