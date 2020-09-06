@@ -35,16 +35,19 @@ vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint see
 	// RR termination
 	float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
 
-	if(rand(prd.seed) > p_spawn){
-		return vec3(0); 
-	}
-	
+	float r = rand(prd.seed);
 	throughput /= p_spawn;
-	
+
+	if (r > p_spawn){
+		return vec3(0);
+	}
+
 	prd.radiance = vec3(0);
     prd.throughput = throughput;
 	prd.depth = 1;
     prd.seed = seed;
+    
+
 
     uint  rayFlags = gl_RayFlagsOpaqueEXT | gl_RayFlagsCullFrontFacingTrianglesEXT ;
     float tMin     = 0.001;
@@ -64,9 +67,14 @@ vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint see
 				0               // payload (location = 0)
 	);
 	
+
+	return throughput * prd.radiance;
+	
+
+
 	// WIP: should not need max here, but removes blackhole spots
 	// Find the underlying bug
-	return throughput * prd.radiance;
+
 }
 
 void WriteSky();
@@ -288,6 +296,8 @@ void WriteSky() {
     
     imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
 }
+
+
 
 
 
