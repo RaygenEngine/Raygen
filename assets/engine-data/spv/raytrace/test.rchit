@@ -56,12 +56,13 @@ vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint see
 	vec3 cumulThroughput = inPrd.throughput * throughput;
 
 	float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
-
-	if(rand(inPrd.seed) > p_spawn){
-		return vec3(0); 
-	}
 	
+	float r = rand(inPrd.seed);
 	throughput /= p_spawn;
+
+	if (r > p_spawn){
+		return vec3(0);
+	}
 
 	inPrd.radiance = vec3(0);
 	inPrd.throughput = cumulThroughput / p_spawn;
