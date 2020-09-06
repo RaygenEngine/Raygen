@@ -10,6 +10,7 @@
 #include "bsdf.glsl"
 #include "attachments.glsl"
 #include "onb.glsl"
+#include "hammersley.glsl"
 
 layout(set = 1, binding = 0) uniform UBO_Camera {   
 	vec3 position;
@@ -32,20 +33,20 @@ layout(location = 0) rayPayloadEXT hitPayload prd;
 vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint seed)
 {
 	// RR termination
-	// TODO: check cumulative throughput
 	float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
 
-	if(rand(prd.seed) >= p_spawn){
+	if(rand(prd.seed) > p_spawn){
 		return vec3(0); 
 	}
 	
 	throughput /= p_spawn;
 	
 	prd.radiance = vec3(0);
+    prd.throughput = throughput;
 	prd.depth = 1;
     prd.seed = seed;
 
-    uint  rayFlags = gl_RayFlagsOpaqueEXT;
+    uint  rayFlags = gl_RayFlagsOpaqueEXT | gl_RayFlagsCullFrontFacingTrianglesEXT ;
     float tMin     = 0.001;
     float tMax     = 10000.0;
 
@@ -62,10 +63,10 @@ vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint see
 				tMax,           // ray max range
 				0               // payload (location = 0)
 	);
-
+	
 	// WIP: should not need max here, but removes blackhole spots
 	// Find the underlying bug
-	return throughput * max(vec3(0), prd.radiance);
+	return throughput * prd.radiance;
 }
 
 void WriteSky();
@@ -102,7 +103,9 @@ void main() {
     // f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + albedo * metallic;
     vec3 f0 = frag.f0;
     // a = roughness roughness;
-    float a = frag.a;
+    float a = max(0.001, frag.a);
+
+    uint totalSamples = convergeUntilFrame != 0 ? convergeUntilFrame : 1024u;
 
     Onb shadingOrthoBasis = branchlessOnb(frag.normal);
 
@@ -116,10 +119,12 @@ void main() {
     for(uint smpl = 0; smpl < samples && depth > 0; ++smpl){
         // PERF:
         uint seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl);
-
+        
         // Diffuse 'reflection'
         {
-            vec2 u = rand2(seed);
+            vec2 u = rand2(seed); // Monte Carlo (random)
+            //uint randomSmpl = uint(rand(seed) * totalSamples);
+            //vec2 u = hammersley(randomSmpl, totalSamples); // Quasi Monte Carlo
             vec3 L = cosineSampleHemisphere(u);
 
 			float NoL = max(Ndot(L), BIAS); 
@@ -129,15 +134,17 @@ void main() {
 
             float pdf = NoL * INV_PI;
         
-            vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor);
+            vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, a, frag.diffuseColor);
 
 		    outOnbSpace(shadingOrthoBasis, L);
             hitValue += Contribution(brdf_d * NoL / pdf, frag.position, L, seed);
         }
-        
+
         // Glossy reflection
         {
-            vec2 u = rand2(seed); 
+            vec2 u = rand2(seed); // Monte Carlo (random)
+            //uint randomSmpl = uint(rand(seed) * totalSamples);
+            //vec2 u = hammersley(randomSmpl, totalSamples); // Quasi Monte Carlo
             vec3 H = importanceSampleGGX(u, a);
 
             vec3 L = reflect(-V, H);
@@ -151,7 +158,7 @@ void main() {
             float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
             pdf = max(Ndot(H), BIAS); 
    
-            vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, frag.a, frag.f0);
+            vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, frag.f0);
 
 		    outOnbSpace(shadingOrthoBasis, L);
             hitValue += Contribution(brdf_r * NoL / pdf, frag.position, L, seed);
@@ -281,6 +288,8 @@ void WriteSky() {
     
     imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
 }
+
+
 
 
 

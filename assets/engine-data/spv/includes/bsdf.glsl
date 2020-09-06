@@ -169,15 +169,33 @@ float G_SchlicksmithGGX(float NoL, float NoV, float a)
 	return GL * GV;
 }
 
+// Phong NDF Distibution
+float D_Phong(float NoH, float a)
+{
+	float smoothness = (1.0 - a) * 127.0;
+	return pow(NoH, smoothness) * (smoothness + 2.0) / (2.0 * PI);
+}
+
 vec3 SpecularTerm(float NoL, float NoV, float NoH, float LoH, float a, vec3 f0)
 {
-    float D = D_GGX(NoH, a);
-    float G = G_SchlicksmithGGX(NoL, NoV, a);
+    float D;
+    float G;
     vec3 F = F_Schlick(LoH, f0);
 
     float denom = 4 * NoL * NoV;
 
-    return D * G * F / denom;
+	if (a < 0.001)
+	{	
+		G = 1;
+		D = D_Phong(NoH, a);   
+	}
+    else
+    {
+        D = D_GGX(NoH, a);
+        G = G_SchlicksmithGGX(NoL, NoV, a);
+    }
+
+    return denom > 0 ? D * G * F / denom : vec3(0);
 }
 
 //vec3 Fr_CookTorranceGGX(float NoV, float NoL, float NoH, float LoH, vec3 f0, float a)

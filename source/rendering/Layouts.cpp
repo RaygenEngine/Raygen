@@ -65,6 +65,7 @@ void Layouts_::MakeRenderPassLayouts()
 
 		gbufferPassLayout.AddSubpass({}, std::move(gbufferAtts)); // Write GBuffer
 
+
 		gbufferPassLayout.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		gbufferPassLayout.Generate();

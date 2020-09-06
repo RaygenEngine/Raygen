@@ -30,7 +30,7 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 	mat4 viewProjInv; 
 } cam;
 
-layout(set = 2, binding = 0) uniform UBO_Directionallight {
+layout(set = 2, binding = 0) uniform UBO_Dirlight {
 		vec3 front;
 		float pad0;
 

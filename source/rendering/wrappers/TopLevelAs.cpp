@@ -60,7 +60,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 				inst.instanceId = j;                  // gl_InstanceID
 				inst.blas = Device->getAccelerationStructureAddressKHR(gg.blas.handle());
 				inst.materialId = 0; // We will use the same hit group for all
-				inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable; // WIP:
+				inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise; // WIP:
 				instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
 				++j;
 
