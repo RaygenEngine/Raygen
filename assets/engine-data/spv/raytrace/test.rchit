@@ -50,7 +50,7 @@ OldVertex fromVertex(Vertex p) {
 	return vtx;
 }
 
-vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint seed)
+vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection)
 {
 	// RR termination
 	vec3 cumulThroughput = inPrd.throughput * throughput;
@@ -60,8 +60,10 @@ vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint see
 	if(rand(inPrd.seed) > p_spawn){
 		return vec3(0); 
 	}
-	
 	throughput /= p_spawn;
+	
+	hitPayload prevRay = inPrd;
+
 
 	inPrd.radiance = vec3(0);
 	inPrd.throughput = cumulThroughput / p_spawn;
@@ -85,10 +87,12 @@ vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint see
 				tMax,           // ray max range
 				0               // payload (location = 0)
 	);
-
+	prevRay.seed = inPrd.seed;
+	vec3 result = throughput * inPrd.radiance;
+	inPrd = prevRay;
 	// WIP: should not need max here, but removes blackhole spots
 	// Find the underlying bug
-	return throughput * inPrd.radiance;
+	return result;
 }
 
 void main() 
@@ -162,16 +166,15 @@ void main()
 	toOnbSpace(shadingOrthoBasis, V);
 
 	// same hemisphere
-	if(Ndot(V) < 0)
-	{	inPrd.radiance = vec3(1);
-		return;
-	}
+
 	float NoV = max(Ndot(V), BIAS);
 	
 	
 
 	// DIRECT
 	inPrd.radiance = vec3(0);
+	vec3 radiance = vec3(0);
+
 	// for each light
 	for(int i = 0; i < spotlightCount; ++i) 
 	{
@@ -225,7 +228,7 @@ void main()
 			// incoming radiance = Li;
 			vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
 
-			inPrd.radiance += finalContribution;
+			radiance += finalContribution;
 		}
 	}
 	
@@ -235,6 +238,7 @@ void main()
 	if(inPrd.depth + 1 > depth){
 		return;
 	}
+
 	// INDIRECT
 
 	// TRANSMISSION
@@ -257,7 +261,7 @@ void main()
         vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, a, diffuseColor);
 
 	    outOnbSpace(shadingOrthoBasis, L);
-        inPrd.radiance += Contribution(brdf_d * NoL / pdf, hitPoint, L, inPrd.seed);
+        radiance += Contribution(brdf_d * NoL / pdf, hitPoint, L);
 	}
 
 	// REFLECTION
@@ -281,9 +285,13 @@ void main()
         vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, f0);
 
 	    outOnbSpace(shadingOrthoBasis, L);
-        inPrd.radiance += Contribution(brdf_r * NoL / pdf, hitPoint, L, inPrd.seed);
+        radiance += Contribution(brdf_r * NoL / pdf, hitPoint, L);
 	}
+	inPrd.radiance = radiance;
 }
+
+
+
 
 
 
