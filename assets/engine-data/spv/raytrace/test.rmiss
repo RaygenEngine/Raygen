@@ -7,9 +7,7 @@
 layout(location = 0) rayPayloadInEXT hitPayload inPrd;
 
 void main() {
-
 	// PERF: this should be baked into a cubemap?
-
 	vec3 sunColor = vec3(1,1,1);
 	float sunIntensity = 40;
 	vec3 sunDirection = normalize(-vec3(0,-1,0));     
@@ -100,4 +98,5 @@ void main() {
 
 	inPrd.radiance = outColor;
 }
+
 

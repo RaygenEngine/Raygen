@@ -10,6 +10,7 @@
 #include "sampling.glsl"
 #include "bsdf.glsl"
 #include "onb.glsl"
+#include "hammersley.glsl"
 
 struct Attr{
 	vec2 x;
@@ -36,8 +37,6 @@ layout(set = 4, binding = 6) uniform sampler2DShadow spotlightShadowmap[16];
 //HitAttributeKHR vec2 attribs;
 
 layout(location = 0) rayPayloadInEXT hitPayload inPrd;
-layout(location = 1) rayPayloadEXT hitPayload prd;
-
 
 OldVertex fromVertex(Vertex p) {
 	OldVertex vtx;
@@ -53,22 +52,23 @@ OldVertex fromVertex(Vertex p) {
 
 vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint seed)
 {
-	
 	// RR termination
-	// TODO: check cumulative throughput
+	vec3 cumulThroughput = inPrd.throughput * throughput;
+
 	float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
 
-	if(rand(prd.seed) >= p_spawn){
+	if(rand(inPrd.seed) > p_spawn){
 		return vec3(0); 
 	}
 	
 	throughput /= p_spawn;
 
-	prd.radiance = vec3(0);
-	prd.depth = inPrd.depth + 1;
-    prd.seed = inPrd.seed;
+	inPrd.radiance = vec3(0);
+	inPrd.throughput = cumulThroughput / p_spawn;
+	inPrd.depth = inPrd.depth + 1;
+    inPrd.seed = inPrd.seed;
 
-    uint  rayFlags = gl_RayFlagsOpaqueEXT;
+    uint  rayFlags = gl_RayFlagsOpaqueEXT | gl_RayFlagsCullFrontFacingTrianglesEXT  ;
     float tMin     = 0.001;
     float tMax     = 10000.0;
 
@@ -83,12 +83,12 @@ vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint see
 				tMin,           // ray min range
 				nextDirection,  // ray direction
 				tMax,           // ray max range
-				1               // payload (location = 0)
+				0               // payload (location = 0)
 	);
 
 	// WIP: should not need max here, but removes blackhole spots
 	// Find the underlying bug
-	return throughput * max(vec3(0), prd.radiance);
+	return throughput * inPrd.radiance;
 }
 
 void main() 
@@ -118,10 +118,6 @@ void main()
 	// Computing the normal at hit position
 	vec3 normal = v0.normal * barycentrics.x + v1.normal * barycentrics.y + v2.normal * barycentrics.z;
 	vec3 tangent = v0.tangent * barycentrics.x + v1.tangent * barycentrics.y + v2.tangent * barycentrics.z;
-	
-
-	vec3 facen = normalize(cross(v1.position - v0.position, v2.position - v0.position));
-
 
 	vec3 Tg = normalize(tangent);
    	vec3 Ng = normalize(normal);
@@ -143,7 +139,6 @@ void main()
 
 	Onb shadingOrthoBasis = branchlessOnb(Ns);
 
-
 	// final material values
 	vec3 albedo = sampledBaseColor.rgb;
 	float metallic = sampledMetallicRoughness.b;
@@ -157,7 +152,7 @@ void main()
     // f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + albedo * metallic;
 	vec3 f0 =  vec3(0.16 * reflectance * reflectance * (1.0 - metallic)) + albedo * metallic;
     // a = roughness roughness;
-	float a = roughness * roughness;
+	float a = max(0.001, roughness * roughness);
 
 	vec3 hitPoint = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 
@@ -166,7 +161,14 @@ void main()
 
 	toOnbSpace(shadingOrthoBasis, V);
 
+	// same hemisphere
+	if(Ndot(V) < 0)
+	{	inPrd.radiance = vec3(1);
+		return;
+	}
 	float NoV = max(Ndot(V), BIAS);
+	
+	
 
 	// DIRECT
 	inPrd.radiance = vec3(0);
@@ -226,7 +228,9 @@ void main()
 			inPrd.radiance += finalContribution;
 		}
 	}
-
+	
+	uint totalSamples = convergeUntilFrame != 0 ? convergeUntilFrame : 1024u;
+	
 
 	if(inPrd.depth + 1 > depth){
 		return;
@@ -236,8 +240,11 @@ void main()
 	// TRANSMISSION
 
 	// Diffuse 'reflection'
+
 	{
-        vec2 u = rand2(inPrd.seed);
+        vec2 u = rand2(inPrd.seed); // Monte Carlo (random)
+		//uint randomSmpl = uint(rand(inPrd.seed) * totalSamples);
+        //vec2 u = hammersley(randomSmpl, totalSamples); // Quasi Monte Carlo
         vec3 L = cosineSampleHemisphere(u);
 
 		float NoL = max(Ndot(L), BIAS); 
@@ -252,10 +259,12 @@ void main()
 	    outOnbSpace(shadingOrthoBasis, L);
         inPrd.radiance += Contribution(brdf_d * NoL / pdf, hitPoint, L, inPrd.seed);
 	}
-	
+
 	// REFLECTION
 	{
-        vec2 u = rand2(inPrd.seed); 
+        vec2 u = rand2(inPrd.seed); // Monte Carlo (random)
+		//uint randomSmpl = uint(rand(inPrd.seed) * totalSamples);
+        //vec2 u = hammersley(randomSmpl, totalSamples); // Quasi Monte Carlo
         vec3 H = importanceSampleGGX(u, a);
 
         vec3 L = reflect(-V, H);
@@ -275,6 +284,8 @@ void main()
         inPrd.radiance += Contribution(brdf_r * NoL / pdf, hitPoint, L, inPrd.seed);
 	}
 }
+
+
 
 
 

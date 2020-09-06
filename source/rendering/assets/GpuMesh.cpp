@@ -12,6 +12,7 @@
 #include "assets/AssetRegistry.h"
 #include "rendering/Instance.h"
 #include "rendering/Device.h"
+#include "assets/pods/MaterialArchetype.h"
 
 using namespace vl;
 

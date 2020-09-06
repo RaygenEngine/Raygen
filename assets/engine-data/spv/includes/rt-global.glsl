@@ -30,7 +30,7 @@ struct OldVertex
 struct hitPayload
 {
 	vec3 radiance;
-	float throughput;
+	vec3 throughput;
 
 	int depth;
 	uint seed;
