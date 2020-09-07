@@ -75,17 +75,25 @@ Device_::Device_(RPhysicalDevice& pd)
 	}
 
 	vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceBufferDeviceAddressFeatures,
-		vk::PhysicalDeviceRayTracingFeaturesKHR>
+		vk::PhysicalDeviceDescriptorIndexingFeatures, vk::PhysicalDeviceRayTracingFeaturesKHR>
 		pDeviceFeaturesChain;
+
 	auto& deviceFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceFeatures2>();
 	auto& deviceBufferAddressFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceBufferDeviceAddressFeatures>();
 	auto& deviceRayTracingFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceRayTracingFeaturesKHR>();
 
 	deviceFeatures.features.setSamplerAnisotropy(VK_TRUE);
 	deviceBufferAddressFeatures.setBufferDeviceAddress(VK_TRUE);
+
+	pDeviceFeaturesChain.get<vk::PhysicalDeviceDescriptorIndexingFeatures>()
+		.setRuntimeDescriptorArray(true) //
+		.setShaderSampledImageArrayNonUniformIndexing(true)
+		.setDescriptorBindingVariableDescriptorCount(true);
+
 	// get all available rt extensions from gpu
 	// careful pNext here is lost
 	deviceRayTracingFeatures = pd.rtFeats;
+
 
 	const std::vector<const char*> deviceExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -93,6 +101,7 @@ Device_::Device_(RPhysicalDevice& pd)
 		VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
 		VK_KHR_RAY_TRACING_EXTENSION_NAME,
 	};
+
 	CheckExtensions(deviceExtensions, pd.enumerateDeviceExtensionProperties());
 
 	vk::DeviceCreateInfo deviceCreateInfo{};

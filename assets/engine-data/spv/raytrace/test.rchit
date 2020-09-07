@@ -4,6 +4,7 @@
 #extension GL_EXT_scalar_block_layout : enable
 #extension GL_EXT_ray_query: enable
 #extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_EXT_buffer_reference2 : enable
 
 #include "global.h"
 #include "rt-global.h"
@@ -27,13 +28,13 @@ hitAttributeEXT vec2 baryCoord;
      
 layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
-layout(set = 4, binding = 0) uniform sampler2D textureSamplers[GEOM_GROUPS * 3];
-layout(std430, set = 4, binding = 1) readonly buffer Vertices{ Vertex v[]; } vertices;
-layout(std430, set = 4, binding = 2) readonly buffer Indicies{ uint i[]; } indices;
+layout(set = 4, binding = 0) uniform sampler2D textureSamplers[];
+layout(std430, set = 4, binding = 1) readonly buffer Vertices { Vertex v[]; } vertices;
+layout(std430, set = 4, binding = 2) readonly buffer Indicies { uint i[]; } indices;
 layout(std430, set = 4, binding = 3) readonly buffer IndexOffsets { uint offset[]; } indexOffsets;
 layout(std430, set = 4, binding = 4) readonly buffer PrimitveOffsets { uint offset[]; } primOffsets;
 layout(std430, set = 4, binding = 5) readonly buffer Spotlights{ Spotlight light[]; } spotlights;
-layout(set = 4, binding = 6) uniform sampler2DShadow spotlightShadowmap[16];
+layout(set = 4, binding = 6) uniform sampler2DShadow spotlightShadowmap[];
 //HitAttributeKHR vec2 attribs;
 
 layout(location = 0) rayPayloadInEXT hitPayload inPrd;
@@ -143,9 +144,9 @@ void main() {
 	mat3 TBN = mat3(Tg, Bg, Ng);
 
 	// sample material textures
-	vec4 sampledBaseColor = texture(textureSamplers[matId * 3], uv);
-	vec4 sampledNormal = texture(textureSamplers[matId * 3 + 1], uv);
-	vec4 sampledMetallicRoughness = texture(textureSamplers[matId * 3 + 2], uv); 
+	vec4 sampledBaseColor = texture(textureSamplers[nonuniformEXT(matId * 3)], uv);
+	vec4 sampledNormal = texture(textureSamplers[nonuniformEXT(matId * 3 + 1)], uv);
+	vec4 sampledMetallicRoughness = texture(textureSamplers[nonuniformEXT(matId * 3 + 2)], uv);
 
 	vec3 Ns = normalize(TBN * (sampledNormal.rgb * 2.0 - 1.0));
 
@@ -183,6 +184,7 @@ void main() {
 
 	toOnbSpace(shadingOrthoBasis, wo);
 	toOnbSpace(shadingOrthoBasis, Ng_s);
+	
 
 	// DIRECT
 
@@ -190,6 +192,7 @@ void main() {
 	// for each light
 	for(int i = 0; i < spotlightCount; ++i) 
 	{
+
 		Spotlight light = spotlights.light[i];
 		vec3 lightPos = light.position;
 
@@ -231,8 +234,8 @@ void main() {
 				projCoords = vec3(projCoords.xy * 0.5 + 0.5, projCoords.z - light.maxShadowBias);
 				float bias = light.maxShadowBias;
 			
-			    shadow = 1.0 - texture(spotlightShadowmap[i], projCoords);
-
+			    shadow = 1.0 - texture(spotlightShadowmap[nonuniformEXT(i)], projCoords);
+				
 				vec3 Li = (1.0 - shadow) * lightFragColor; 
 		
 				// to get final diffuse and specular both those terms are multiplied by Li * NoL
@@ -298,3 +301,5 @@ void main() {
 		}
 	}
 }
+
+

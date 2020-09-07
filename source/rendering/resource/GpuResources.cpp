@@ -17,9 +17,10 @@ void GpuResources::Init()
 	samplerPool = new SamplerPool();
 }
 
-vk::DescriptorSet GpuResources::AllocateDescriptorSet(size_t hash, const RDescriptorSetLayout& layout)
+vk::DescriptorSet GpuResources::AllocateDescriptorSet(
+	size_t hash, const RDescriptorSetLayout& layout, int32 variableBindingSize)
 {
-	return descPools->AllocateDescriptorSet(hash, layout);
+	return descPools->AllocateDescriptorSet(hash, layout, variableBindingSize);
 }
 
 vk::DescriptorPool GpuResources::GetImguiPool()
