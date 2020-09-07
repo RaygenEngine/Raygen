@@ -20,12 +20,6 @@ ConsoleVarFunc<int32> console_convergeUntilFrame{ "rt.convUntilFrame",
 ConsoleFunction<> console_resetRtFrame{ "rt.reset", []() { vl::Renderer->m_raytracingPass.m_rtFrame = 0; },
 	"Reset rt frame" };
 
-ConsoleFunction<> console_rtInfo{ "rt.info", []() {
-									 LOG_REPORT("samples: {}, depth: {}, frame:{} convergeUntilFrame: {}",
-										 *console_rtSamples, *console_rtDepth, vl::Renderer->m_raytracingPass.m_rtFrame,
-										 *console_convergeUntilFrame);
-								 } };
-
 namespace {
 struct PushConstant {
 	int32 frame;
