@@ -187,7 +187,8 @@ void main() {
 	vec4 sampledBaseColor = texture(mat.baseColor, uv) * mat.baseColorFactor;
 	vec4 sampledNormal = texture(mat.normal, uv) * mat.normalScale;
 	vec4 sampledMetallicRoughness = texture(mat.metallicRough, uv);
-
+	vec4 sampledEmissive = texture(mat.emissive, uv) * mat.emissiveFactor;
+	
 	vec3 Ns = normalize(TBN * (sampledNormal.rgb * 2.0 - 1.0));
 
 	Onb shadingOrthoBasis = branchlessOnb(Ns);
@@ -218,6 +219,11 @@ void main() {
 
 	float NoV = max(Ndot(V), BIAS);
 	
+	
+	if (sampledEmissive.x > 0) {
+		inPrd.radiance = sampledEmissive.xyz;
+		return;
+	}
 	
 
 	// DIRECT
