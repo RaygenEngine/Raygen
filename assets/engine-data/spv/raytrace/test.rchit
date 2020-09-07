@@ -73,7 +73,6 @@ struct GeometryGroup {
 
 	mat4 transform;
 	mat4 invTransform;
-	//normal = normalize(vec3(scnDesc.i[gl_InstanceID].transfoIT * vec4(normal, 0.0)));
 };
 
 layout(set = 4, binding = 0, std430) readonly buffer GeometryGroups { GeometryGroup g[]; } geomGroups;
@@ -172,6 +171,8 @@ void main() {
 	vec3 normal = v0.normal * barycentrics.x + v1.normal * barycentrics.y + v2.normal * barycentrics.z;
 	vec3 tangent = v0.tangent * barycentrics.x + v1.tangent * barycentrics.y + v2.tangent * barycentrics.z;
 	
+	normal =  normalize(vec3(gg.invTransform * vec4(normal , 0.0)));
+	tangent = normalize(vec3(gg.invTransform * vec4(tangent, 0.0)));
 
 	vec3 facen = normalize(cross(v1.position - v0.position, v2.position - v0.position));
 
@@ -190,19 +191,18 @@ void main() {
 	GltfMat mat = gg.materialUbo.m;
 
 	// sample material textures
-	vec4 sampledBaseColor = texture(mat.baseColor, uv);
-	vec4 sampledNormal = texture(mat.normal, uv);
+	vec4 sampledBaseColor = texture(mat.baseColor, uv) * mat.baseColorFactor;
+	vec4 sampledNormal = texture(mat.normal, uv) * mat.normalScale;
 	vec4 sampledMetallicRoughness = texture(mat.metallicRough, uv);
 
 	vec3 Ns = normalize(TBN * (sampledNormal.rgb * 2.0 - 1.0));
 
 	Onb shadingOrthoBasis = branchlessOnb(Ns);
-
-
+	
 	// final material values
 	vec3 albedo = sampledBaseColor.rgb;
-	float metallic = sampledMetallicRoughness.b;
-	float roughness = sampledMetallicRoughness.g;
+	float metallic = sampledMetallicRoughness.b * mat.metallicFactor;
+	float roughness = sampledMetallicRoughness.g * mat.roughnessFactor;
 	float reflectance = 0.5f;
 
     // remapping
