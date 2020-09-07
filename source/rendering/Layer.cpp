@@ -100,11 +100,17 @@ void Layer_::DrawFrame()
 {
 	currentScene = mainScene;
 
+	if (!AssetHandlerManager::GetGpuUpdateRequests().empty()) {
+		currentScene->forceUpdateAccel = true;
+		vl::Renderer->m_raytracingPass.m_rtFrame = 0;
+	}
+
 	GpuAssetManager->ConsumeAssetUpdates();
 	currentScene->ConsumeCmdQueue();
 
-	if (!swapOutput->ShouldRenderThisFrame())
-		[[unlikely]] { return; }
+	if (!swapOutput->ShouldRenderThisFrame()) [[unlikely]] {
+		return;
+	}
 
 	swapOutput->OnPreRender();
 
@@ -118,6 +124,7 @@ void Layer_::DrawFrame()
 		Device->resetFences({ *m_frameFence[m_currentFrame] });
 
 		currentScene->UploadDirty(m_currentFrame);
+		currentScene->forceUpdateAccel = false;
 	}
 
 	uint32 imageIndex;

@@ -102,7 +102,7 @@ void Scene::UploadDirty(uint32 frameIndex)
 	const bool primaryDirty = activeCamera > 0 && cameras.elements[activeCamera]->isDirty[frameIndex];
 	bool anyDirty = false;
 
-	bool requireUpdateAccel = false;
+	bool requireUpdateAccel = false || forceUpdateAccel;
 	for (auto gm : geometries.elements) {
 		if (gm && gm->isDirty[frameIndex]) {
 			requireUpdateAccel = true;

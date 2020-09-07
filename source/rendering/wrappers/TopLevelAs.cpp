@@ -108,6 +108,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 	sceneDesc.WriteGeomGroups();
 	Build();
 	Device->waitIdle();
+	g_tempGeometryGroups.clear();
 }
 
 

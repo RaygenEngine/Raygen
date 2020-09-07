@@ -48,8 +48,7 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 		if (gpuArch.descLayout.HasUbo() && uboSize > 0) {
 
 			if (uboSize != uboBuf.size) {
-				uboBuf = RBuffer{ uboSize,
-					vk::BufferUsageFlagBits::eUniformBuffer /*WIP: */ | vk::BufferUsageFlagBits::eTransferSrc,
+				uboBuf = RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
 					vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 			}
 			uboBuf.UploadData(matInst->descriptorSet.uboData);
@@ -130,14 +129,16 @@ void GpuMaterialInstance::UpdateRtMaterial(const AssetUpdateInfo& info)
 		uint32 normal;
 		uint32 emissive;
 	};
-
+	auto matInst = podHandle.Lock();
 
 	rtMaterialBuffer = RBuffer{ sizeof(RtGltfMat),
-		vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress
-			| vk::BufferUsageFlagBits::eTransferDst,
+		vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
 		vk::MemoryAllocateFlagBits::eDeviceAddress };
-	rtMaterialBuffer.CopyBuffer(uboBuf);
+
+
+	rtMaterialBuffer.UploadData(matInst->descriptorSet.uboData);
+	// rtMaterialBuffer.CopyBuffer(uboBuf);
 
 
 	size_t cursor = offsetof(RtGltfMat, baseColor);
