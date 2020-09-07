@@ -43,6 +43,13 @@ RBuffer::RBuffer(vk::DeviceSize inSize, vk::BufferUsageFlags usage, vk::MemoryPr
 	uMemory = Device->allocateMemoryUnique(allocInfo);
 
 	Device->bindBufferMemory(uHandle.get(), uMemory.get(), 0);
+
+
+	const bool needsDeviceAddr = (allocFlags & vk::MemoryAllocateFlagBits::eDeviceAddress).operator bool();
+
+	if (needsDeviceAddr) {
+		deviceAddress = Device->getBufferAddress(handle());
+	}
 }
 
 void RBuffer::CopyBuffer(const RBuffer& other)

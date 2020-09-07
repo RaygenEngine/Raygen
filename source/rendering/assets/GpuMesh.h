@@ -35,6 +35,7 @@ struct GpuGeometryGroup {
 	// Value added to index buffer value to find the proper vertex for this geometry group
 	// (aka the additive vertexCount of all the previous geometry groups)
 	uint32 indexOffset{ 0u };
+	uint32 primOffset{ 0u };
 
 	BottomLevelAs blas;
 };

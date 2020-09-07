@@ -36,11 +36,13 @@ public:
 	GpuHandle<T> GetGpuHandle(PodHandle<T> handle)
 	{
 		size_t id = handle.uid;
-		if (id >= gpuAssets.size())
-			[[unlikely]] { AllocForAll(); }
+		if (id >= gpuAssets.size()) [[unlikely]] {
+			AllocForAll();
+		}
 
-		if (!gpuAssets[id])
-			[[unlikely]] { Load(handle); }
+		if (!gpuAssets[id]) [[unlikely]] {
+			Load(handle);
+		}
 
 		return GpuHandle<T>{ id };
 	}
@@ -68,6 +70,9 @@ public:
 	// The return value invalidates after calling this again with a higher uid.
 	// The return value is editable (mutable).
 	std::vector<size_t>& GetUsersRef(size_t uid);
+
+	[[nodiscard]] size_t Z_GetSize() const { return gpuAssets.size(); }
+	[[nodiscard]] std::vector<GpuAssetBase*>& Z_GetAssets() { return gpuAssets; }
 
 private:
 	// Updates all gpu side assets that are in use from the list to their current cpu state.

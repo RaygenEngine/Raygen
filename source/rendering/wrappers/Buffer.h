@@ -29,9 +29,17 @@ struct RBuffer {
 	[[nodiscard]] vk::Buffer handle() const { return uHandle.get(); }
 	[[nodiscard]] vk::DeviceMemory memory() const { return uMemory.get(); }
 
+	[[nodiscard]] VkDeviceAddress address() const
+	{
+		CLOG_ERROR(
+			deviceAddress == 0, "Attempting to get device address from buffer without proper Device Address flag");
+		return deviceAddress;
+	};
+
 private:
 	vk::UniqueBuffer uHandle;
 	vk::UniqueDeviceMemory uMemory;
+	VkDeviceAddress deviceAddress{ 0 };
 };
 } // namespace vl
 

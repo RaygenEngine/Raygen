@@ -41,7 +41,8 @@ void RaytracingPass::MakeRtPipeline()
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->doubleStorageImage.handle(),
 		Layouts->accelLayout.handle(),
-		Layouts->rtSceneDescLayout.handle(),
+		Layouts->bufferAndSamplersDescLayout.handle(),
+		Layouts->bufferAndSamplersDescLayout.handle(),
 	};
 
 	// all rt shaders here
@@ -202,6 +203,8 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 4u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSet[sceneDesc.frameIndex], 0u, nullptr);
 
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 5u, 1u,
+		&sceneDesc.scene->tlas.sceneDesc.descSetSpotlights[sceneDesc.frameIndex], 0u, nullptr);
 
 	PushConstant pc{ //
 		m_rtFrame, std::max(0, *console_rtDepth), std::max(0, *console_rtSamples), *console_convergeUntilFrame,

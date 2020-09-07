@@ -22,13 +22,16 @@ struct AsInstance {
 
 struct RtSceneDescriptor {
 	InFlightResources<vk::DescriptorSet> descSet;
+	InFlightResources<vk::DescriptorSet> descSetSpotlights;
 
-	void WriteDescriptorMesh(const GpuMesh& mesh);
-	void WriteAlbedoImages(const std::vector<vk::DescriptorImageInfo>& images);
+	void AddGeomGroup(const GpuGeometryGroup& group, const GpuMesh& mesh, const glm::mat4& transform);
+	void WriteImages();
 	void WriteSpotlights(const std::vector<SceneSpotlight*>& spotlights);
+	void WriteGeomGroups();
 
 	int32 spotlightCount{ 0 };
 	RBuffer spotlightsBuffer;
+	RBuffer geomGroupsBuffer;
 };
 
 struct TopLevelAs : RAccelerationStructure {

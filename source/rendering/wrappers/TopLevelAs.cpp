@@ -39,140 +39,118 @@ vk::AccelerationStructureInstanceKHR AsInstanceToVkGeometryInstanceKHR(const vl:
 }
 } // namespace
 
+
+namespace {
+
+struct RtGeometryGroup {
+	VkDeviceAddress vtxBuffer;
+	VkDeviceAddress indBuffer;
+	VkDeviceAddress materialUbo;
+
+	int32 indexOffset;
+	int32 primOffset;
+
+	glm::mat4 transform;
+	glm::mat4 invTransform;
+};
+
+std::vector<RtGeometryGroup> g_tempGeometryGroups;
+
+} // namespace
+
 namespace vl {
 TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 {
-	sceneDesc.descSet = Layouts->rtSceneDescLayout.AllocDescriptorSet();
-
-	std::vector<vk::DescriptorImageInfo> descImages;
-	vk::DescriptorImageInfo viewInfoDefault;
-
-	viewInfoDefault
-		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setSampler(GpuAssetManager->GetDefaultSampler());
-
-
-	for (int i = 0, j = 0; i < static_cast<int>(geoms.size()); i++) {
-		if (geoms[i] && geoms[i]->mesh.Lock().geometryGroups.size()) {
-			for (auto& gg : geoms[i]->mesh.Lock().geometryGroups) {
-				AsInstance inst{};
-				inst.transform = geoms[i]->transform; // Position of the instance
-				inst.instanceId = j;                  // gl_InstanceID
-				inst.blas = Device->getAccelerationStructureAddressKHR(gg.blas.handle());
-				inst.materialId = 0; // We will use the same hit group for all
-				inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise; // WIP:
-				instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
-				++j;
+	uint32 spotlightCount = 0;
+	for (auto spotlight : scene->spotlights.elements) {
+		if (spotlight) {
+			spotlightCount++;
+		}
+	}
+	sceneDesc.descSetSpotlights = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(spotlightCount);
 
 
-				if (j <= 25 && gg.material.Lock().archetype == StdAssets::GltfArchetype.handle) {
-					auto h = gg.material.Lock().podHandle;
-					auto colorView
-						= GpuAssetManager->GetGpuHandle(h.Lock()->descriptorSet.samplers2d[0]).Lock().image.view();
-					auto normalView
-						= GpuAssetManager->GetGpuHandle(h.Lock()->descriptorSet.samplers2d[3]).Lock().image.view();
-					auto metalRoughView
-						= GpuAssetManager->GetGpuHandle(h.Lock()->descriptorSet.samplers2d[1]).Lock().image.view();
+	int32 totalGroups = 0;
 
 
-					viewInfoDefault.setImageView(colorView);
-					descImages.emplace_back(viewInfoDefault);
+	for (auto geom : geoms) {
+		if (!geom) [[unlikely]] {
+			continue;
+		}
+		auto transform = geom->transform;
 
-					viewInfoDefault.setImageView(normalView);
-					descImages.emplace_back(viewInfoDefault);
-
-					viewInfoDefault.setImageView(metalRoughView);
-					descImages.emplace_back(viewInfoDefault);
-				}
+		for (auto& gg : geom->mesh.Lock().geometryGroups) {
+			if (gg.material.Lock().archetype != StdAssets::GltfArchetype()) {
+				continue;
 			}
+
+			AsInstance inst{};
+			inst.transform = transform;    // Position of the instance
+			inst.instanceId = totalGroups; // gl_InstanceID
+			inst.blas = Device->getAccelerationStructureAddressKHR(gg.blas.handle());
+			inst.materialId = 0;
+			inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise;
+			instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
+
+			sceneDesc.AddGeomGroup(gg, geom->mesh.Lock(), transform);
+			totalGroups++;
 		}
 	}
 
-	sceneDesc.WriteDescriptorMesh(geoms[0]->mesh.Lock());
-	sceneDesc.WriteAlbedoImages(descImages);
+	auto imgSize = GpuAssetManager->Z_GetSize();
+	sceneDesc.descSet = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(imgSize);
+
+
+	sceneDesc.WriteImages();
 
 
 	sceneDesc.WriteSpotlights(scene->spotlights.elements);
-
-
+	sceneDesc.WriteGeomGroups();
 	Build();
 	Device->waitIdle();
 }
 
-void RtSceneDescriptor::WriteDescriptorMesh(const GpuMesh& mesh)
+
+void RtSceneDescriptor::AddGeomGroup(const GpuGeometryGroup& group, const GpuMesh& mesh, const glm::mat4& transform)
 {
-	vk::DescriptorBufferInfo vtxBufInfo{};
-	vtxBufInfo
-		.setOffset(0) //
-		.setRange(VK_WHOLE_SIZE)
-		.setBuffer(mesh.combinedVertexBuffer.handle());
+	auto& dstGeomGroup = g_tempGeometryGroups.emplace_back();
 
-	vk::DescriptorBufferInfo indBufInfo{};
-	indBufInfo
-		.setOffset(0) //
-		.setRange(VK_WHOLE_SIZE)
-		.setBuffer(mesh.combinedIndexBuffer.handle());
+	dstGeomGroup.indBuffer = mesh.combinedIndexBuffer.address();
+	dstGeomGroup.vtxBuffer = mesh.combinedVertexBuffer.address();
+	dstGeomGroup.materialUbo = group.material.Lock().rtMaterialBuffer.address();
 
+	dstGeomGroup.indexOffset = group.indexOffset;
+	dstGeomGroup.primOffset = group.primOffset;
 
-	vk::DescriptorBufferInfo indOffsetBufInfo{};
-	indOffsetBufInfo
-		.setOffset(0) //
-		.setRange(VK_WHOLE_SIZE)
-		.setBuffer(mesh.indexOffsetBuffer.handle());
-
-	vk::DescriptorBufferInfo primOffsetBufInfo{};
-	primOffsetBufInfo
-		.setOffset(0) //
-		.setRange(VK_WHOLE_SIZE)
-		.setBuffer(mesh.primitiveOffsetBuffer.handle());
-
-	for (int32 i = 0; i < c_framesInFlight; i++) {
-
-
-		vk::WriteDescriptorSet bufWriteSet{};
-		bufWriteSet
-			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
-			.setDstBinding(1)
-			.setDstSet(descSet[i])
-			.setDstArrayElement(0u)
-			.setBufferInfo(vtxBufInfo);
-
-		vk::WriteDescriptorSet bufWriteSet2{};
-		bufWriteSet2
-			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
-			.setDstBinding(2)
-			.setDstSet(descSet[i])
-			.setDstArrayElement(0u)
-			.setBufferInfo(indBufInfo);
-
-		vk::WriteDescriptorSet bufWriteSet3{};
-		bufWriteSet3
-			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
-			.setDstBinding(3)
-			.setDstSet(descSet[i])
-			.setDstArrayElement(0u)
-			.setBufferInfo(indOffsetBufInfo);
-
-		vk::WriteDescriptorSet bufWriteSet4{};
-		bufWriteSet4
-			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
-			.setDstBinding(4)
-			.setDstSet(descSet[i])
-			.setDstArrayElement(0u)
-			.setBufferInfo(primOffsetBufInfo);
-
-
-		Device->updateDescriptorSets({ bufWriteSet, bufWriteSet2, bufWriteSet3, bufWriteSet4 }, nullptr);
-	}
+	dstGeomGroup.transform = transform;
+	dstGeomGroup.invTransform = glm::inverse(transform);
 }
-void RtSceneDescriptor::WriteAlbedoImages(const std::vector<vk::DescriptorImageInfo>& images)
+
+void RtSceneDescriptor::WriteImages()
 {
+	std::vector<vk::DescriptorImageInfo> images;
+
+	vk::DescriptorImageInfo viewInfoDefault;
+	viewInfoDefault
+		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+		.setSampler(GpuAssetManager->GetDefaultSampler());
+
+	auto defaultView = GpuAssetManager->GetGpuHandle<Image>({}).Lock().image.view();
+	images.reserve(GpuAssetManager->Z_GetSize());
+
+	for (int32 i = 0; auto asset : GpuAssetManager->Z_GetAssets()) {
+		auto gpuImg = dynamic_cast<vl::GpuImage*>(asset);
+		viewInfoDefault.setImageView(gpuImg ? gpuImg->image.view() : defaultView);
+		images.emplace_back(viewInfoDefault);
+	}
+
+
 	for (int32 i = 0; i < c_framesInFlight; i++) {
 		vk::WriteDescriptorSet imgWriteSet{};
 		imgWriteSet
 			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler) //
 			.setImageInfo(images)
-			.setDstBinding(0u)
+			.setDstBinding(1u)
 			.setDstSet(descSet[i])
 			.setDstArrayElement(0u);
 
@@ -224,8 +202,8 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 		vk::WriteDescriptorSet bufWriteSet{};
 		bufWriteSet
 			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
-			.setDstBinding(5u)
-			.setDstSet(descSet[i])
+			.setDstBinding(0u)
+			.setDstSet(descSetSpotlights[i])
 			.setDstArrayElement(0u)
 			.setBufferInfo(bufInfo);
 
@@ -258,20 +236,39 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 		depthWrite
 			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler) //
 			.setImageInfo(depthImages)
-			.setDstBinding(6u)
-			.setDstSet(descSet[i])
+			.setDstBinding(1u)
+			.setDstSet(descSetSpotlights[i])
 			.setDstArrayElement(0u);
 		Device->updateDescriptorSets({ depthWrite }, nullptr);
+	}
+}
 
-		for (uint32 j = depthImages.size(); j < 16; ++j) {
-			depthWrite
-				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler) //
-				.setImageInfo(viewInfoDefault)
-				.setDstBinding(6u)
-				.setDstSet(descSet[i])
-				.setDstArrayElement(j);
-			Device->updateDescriptorSets({ depthWrite }, nullptr);
-		}
+void RtSceneDescriptor::WriteGeomGroups()
+{
+	auto& geomGroupsVec = g_tempGeometryGroups;
+
+	geomGroupsBuffer = RBuffer{ sizeof(RtGeometryGroup) * geomGroupsVec.size(), vk::BufferUsageFlagBits::eStorageBuffer,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+
+
+	geomGroupsBuffer.UploadData(geomGroupsVec.data(), geomGroupsBuffer.size);
+
+	vk::DescriptorBufferInfo sceneBufInfo{};
+	sceneBufInfo
+		.setOffset(0) //
+		.setRange(VK_WHOLE_SIZE)
+		.setBuffer(geomGroupsBuffer.handle());
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+		vk::WriteDescriptorSet bufWrite{};
+		bufWrite
+			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
+			.setDstBinding(0)
+			.setDstSet(descSet[i])
+			.setDstArrayElement(0u)
+			.setBufferInfo(sceneBufInfo);
+
+		Device->updateDescriptorSets({ bufWrite }, nullptr);
 	}
 }
 
