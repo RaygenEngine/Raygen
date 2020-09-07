@@ -28,18 +28,63 @@ hitAttributeEXT vec2 baryCoord;
      
 layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
-layout(set = 4, binding = 0) uniform sampler2D textureSamplers[];
-layout(std430, set = 4, binding = 1) readonly buffer Vertices { Vertex v[]; } vertices;
-layout(std430, set = 4, binding = 2) readonly buffer Indicies { uint i[]; } indices;
-layout(std430, set = 4, binding = 3) readonly buffer IndexOffsets { uint offset[]; } indexOffsets;
-layout(std430, set = 4, binding = 4) readonly buffer PrimitveOffsets { uint offset[]; } primOffsets;
-layout(std430, set = 4, binding = 5) readonly buffer Spotlights{ Spotlight light[]; } spotlights;
-layout(set = 4, binding = 6) uniform sampler2DShadow spotlightShadowmap[];
+
 //HitAttributeKHR vec2 attribs;
 
 layout(location = 0) rayPayloadInEXT hitPayload inPrd;
 layout(location = 1) rayPayloadEXT hitPayload prd;
 
+struct samplerRef {
+	int index;
+};
+
+struct GltfMat {
+	// factors
+	vec4 baseColorFactor;
+	vec4 emissiveFactor;
+	float metallicFactor;
+	float roughnessFactor;
+	float normalScale;
+	float occlusionStrength;
+
+	// alpha mask
+	float alphaCutoff;
+	int mask;
+
+	samplerRef baseColor;
+	samplerRef metallicRough;
+	samplerRef occlusion;
+	samplerRef normal;
+	samplerRef emissive;
+};
+
+layout(buffer_reference, std430) buffer Vertices { Vertex v[]; };
+layout(buffer_reference, std430) buffer Indicies { uint i[]; };
+layout(buffer_reference, std430) buffer Material { GltfMat m; };
+
+
+struct GeometryGroup {
+	Vertices vtxBuffer;
+	Indicies indBuffer;
+	Material materialUbo;
+
+	uint indexOffset;
+	uint primOffset;
+
+	mat4 transform;
+	mat4 invTransform;
+	//normal = normalize(vec3(scnDesc.i[gl_InstanceID].transfoIT * vec4(normal, 0.0)));
+};
+
+layout(set = 4, binding = 0, std430) readonly buffer GeometryGroups { GeometryGroup g[]; } geomGroups;
+layout(set = 4, binding = 1) uniform sampler2D textureSamplers[];
+
+layout(set = 5, binding = 0, std430) readonly buffer Spotlights { Spotlight light[]; } spotlights;
+layout(set = 5, binding = 1) uniform sampler2DShadow spotlightShadowmap[];
+
+vec4 texture(samplerRef s, vec2 uv) {
+	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
+}
 
 OldVertex fromVertex(Vertex p) {
 	OldVertex vtx;
@@ -100,27 +145,26 @@ void RRTerminateOrTraceRay(vec3 nextOrigin, vec3 nextDirection, vec3 throughput)
 }
 
 void main() {
+	
+	int matId = gl_InstanceID;
 
+	GeometryGroup gg = geomGroups.g[nonuniformEXT(matId)];
 
-
-	int matId = gl_InstanceID % 25;
-
- 
-	const uint indOffset = indexOffsets.offset[matId];
-	const uint primOffset = primOffsets.offset[matId];
+	const uint indOffset = gg.indexOffset;
+	const uint primOffset = gg.primOffset;
 	
 	// Indices of the triangle
-	ivec3 ind = ivec3(indices.i[3 * (gl_PrimitiveID + primOffset)],   //
-			indices.i[3 * (gl_PrimitiveID + primOffset) + 1],   //
-			indices.i[3 * (gl_PrimitiveID + primOffset) + 2]) + ivec3(indOffset);  //
+	ivec3 ind = ivec3(gg.indBuffer.i[3 * (gl_PrimitiveID + primOffset)],   //
+					  gg.indBuffer.i[3 * (gl_PrimitiveID + primOffset) + 1],   //
+					  gg.indBuffer.i[3 * (gl_PrimitiveID + primOffset) + 2]) + ivec3(indOffset);  //
 
 
 	const vec3 barycentrics = vec3(1.0 - baryCoord.x - baryCoord.y, baryCoord.x, baryCoord.y);
 	
 	// Vertex of the triangle
-	OldVertex v0 = fromVertex(vertices.v[ind.x]);
-	OldVertex v1 = fromVertex(vertices.v[ind.y]);
-	OldVertex v2 = fromVertex(vertices.v[ind.z]);
+	OldVertex v0 = fromVertex(gg.vtxBuffer.v[ind.x]);
+	OldVertex v1 = fromVertex(gg.vtxBuffer.v[ind.y]);
+	OldVertex v2 = fromVertex(gg.vtxBuffer.v[ind.z]);
 
 	vec2 uv = v0.uv * barycentrics.x + v1.uv * barycentrics.y + v2.uv * barycentrics.z;
 		
@@ -143,10 +187,12 @@ void main() {
 
 	mat3 TBN = mat3(Tg, Bg, Ng);
 
+	GltfMat mat = gg.materialUbo.m;
+
 	// sample material textures
-	vec4 sampledBaseColor = texture(textureSamplers[nonuniformEXT(matId * 3)], uv);
-	vec4 sampledNormal = texture(textureSamplers[nonuniformEXT(matId * 3 + 1)], uv);
-	vec4 sampledMetallicRoughness = texture(textureSamplers[nonuniformEXT(matId * 3 + 2)], uv);
+	vec4 sampledBaseColor = texture(mat.baseColor, uv);
+	vec4 sampledNormal = texture(mat.normal, uv);
+	vec4 sampledMetallicRoughness = texture(mat.metallicRough, uv);
 
 	vec3 Ns = normalize(TBN * (sampledNormal.rgb * 2.0 - 1.0));
 
