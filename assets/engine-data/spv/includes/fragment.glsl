@@ -50,6 +50,7 @@ Fragment getFragmentFromGBuffer(
     frag.diffuseColor = (1.0 - mrro.r) * albedoOpacity.rgb;
     // f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + albedo * metallic;
 	frag.f0 = vec3(0.16 * mrro.b * mrro.b * (1.0 - mrro.r)) + albedoOpacity.rgb * mrro.r;
+
     // a = roughness roughness;
 	frag.a = mrro.g * mrro.g;
 

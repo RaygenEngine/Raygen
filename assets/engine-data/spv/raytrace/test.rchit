@@ -10,7 +10,6 @@
 #include "sampling.glsl"
 #include "bsdf.glsl"
 #include "onb.glsl"
-#include "hammersley.glsl"
 
 struct Attr{
 	vec2 x;
@@ -34,7 +33,6 @@ layout(std430, set = 4, binding = 3) readonly buffer IndexOffsets { uint offset[
 layout(std430, set = 4, binding = 4) readonly buffer PrimitveOffsets { uint offset[]; } primOffsets;
 layout(std430, set = 4, binding = 5) readonly buffer Spotlights{ Spotlight light[]; } spotlights;
 layout(set = 4, binding = 6) uniform sampler2DShadow spotlightShadowmap[16];
-//HitAttributeKHR vec2 attribs;
 
 layout(location = 0) rayPayloadInEXT hitPayload inPrd;
 
@@ -64,7 +62,6 @@ vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection)
 	
 	hitPayload prevRay = inPrd;
 
-
 	inPrd.radiance = vec3(0);
 	inPrd.throughput = cumulThroughput / p_spawn;
 	inPrd.depth = inPrd.depth + 1;
@@ -90,8 +87,7 @@ vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection)
 	prevRay.seed = inPrd.seed;
 	vec3 result = throughput * inPrd.radiance;
 	inPrd = prevRay;
-	// WIP: should not need max here, but removes blackhole spots
-	// Find the underlying bug
+
 	return result;
 }
 
@@ -172,7 +168,6 @@ void main()
 	
 
 	// DIRECT
-	inPrd.radiance = vec3(0);
 	vec3 radiance = vec3(0);
 
 	// for each light
@@ -245,48 +240,46 @@ void main()
 
 	// Diffuse 'reflection'
 
-	{
-        vec2 u = rand2(inPrd.seed); // Monte Carlo (random)
-		//uint randomSmpl = uint(rand(inPrd.seed) * totalSamples);
-        //vec2 u = hammersley(randomSmpl, totalSamples); // Quasi Monte Carlo
-        vec3 L = cosineSampleHemisphere(u);
+//	{
+//        vec2 u = rand2(inPrd.seed); 
+//        vec3 L = cosineSampleHemisphere(u);
+//
+//		float NoL = max(Ndot(L), BIAS); 
+//
+//        vec3 H = normalize(V + L);
+//        float LoH = max(dot(L, H), BIAS);
+//
+//        float pdf = NoL * INV_PI;
+//    
+//        vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, a, diffuseColor);
+//
+//	    outOnbSpace(shadingOrthoBasis, L);
+//        radiance += Contribution(brdf_d * NoL / pdf, hitPoint, L);
+//	}
+//
+//	// REFLECTION
+//	{
+//        vec2 u = rand2(inPrd.seed); 
+//        vec3 H = importanceSampleGGX(u, a);
+//
+//        vec3 L = reflect(-V, H);
+//
+//        float NoL = max(Ndot(L), BIAS); 
+//
+//		float NoH = max(Ndot(H), BIAS); 
+//		float LoH = max(dot(L, H), BIAS);
+//
+//        // SMATH:
+//        float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
+//        pdf = max(Ndot(H), BIAS); 
+//
+//        vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, f0);
+//
+//	    outOnbSpace(shadingOrthoBasis, L);
+//        radiance += Contribution(brdf_r * NoL / pdf, hitPoint, L);
+//	}
+	
 
-		float NoL = max(Ndot(L), BIAS); 
-
-        vec3 H = normalize(V + L);
-        float LoH = max(dot(L, H), BIAS);
-
-        float pdf = NoL * INV_PI;
-    
-        vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, a, diffuseColor);
-
-	    outOnbSpace(shadingOrthoBasis, L);
-        radiance += Contribution(brdf_d * NoL / pdf, hitPoint, L);
-	}
-
-	// REFLECTION
-	{
-        vec2 u = rand2(inPrd.seed); // Monte Carlo (random)
-		//uint randomSmpl = uint(rand(inPrd.seed) * totalSamples);
-        //vec2 u = hammersley(randomSmpl, totalSamples); // Quasi Monte Carlo
-        vec3 H = importanceSampleGGX(u, a);
-
-        vec3 L = reflect(-V, H);
-
-        float NoL = max(Ndot(L), BIAS); 
-
-		float NoH = max(Ndot(H), BIAS); 
-		float LoH = max(dot(L, H), BIAS);
-
-        // SMATH:
-        float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
-        pdf = max(Ndot(H), BIAS); 
-
-        vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, f0);
-
-	    outOnbSpace(shadingOrthoBasis, L);
-        radiance += Contribution(brdf_r * NoL / pdf, hitPoint, L);
-	}
 	inPrd.radiance = radiance;
 }
 
