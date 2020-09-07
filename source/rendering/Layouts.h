@@ -31,14 +31,15 @@ inline struct Layouts_ {
 	RDescriptorSetLayout singleStorageImage;
 	RDescriptorSetLayout doubleStorageImage;
 
-	RDescriptorSetLayout rtSceneDescLayout;
+	RDescriptorSetLayout bufferAndSamplersDescLayout;
 
 
 	RDescriptorSetLayout imageDebugDescLayout;
 
-	vk::UniqueRenderPass depthRenderPass;
 
 	RDescriptorSetLayout renderAttachmentsLayout;
+
+	vk::UniqueRenderPass depthRenderPass;
 
 
 	RRenderPassLayout gbufferPassLayout;
