@@ -23,7 +23,6 @@ hitAttributeEXT vec2 baryCoord;
 // eg: normal sampler of instance id: 3 would be:
 //     (id * 3) + 1 = 10
 
-#define GEOM_GROUPS 25
      
 layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
@@ -337,6 +336,7 @@ void main() {
 
 	inPrd.radiance = radiance;
 }
+
 
 
 

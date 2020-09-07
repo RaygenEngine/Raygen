@@ -50,6 +50,8 @@ struct Scene {
 
 	vl::TopLevelAs tlas;
 
+	bool forceUpdateAccel; // WIP: Remove
+
 	std::vector<UniquePtr<std::vector<std::function<void()>>>> cmds;
 	std::vector<std::function<void()>>* currentCmdBuffer;
 
