@@ -179,8 +179,8 @@ Layouts_::Layouts_()
 	rtSceneDescLayout.AddBinding(vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR);
 
 	// Shadowmaps
-	rtSceneDescLayout.AddBinding(
-		vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eClosestHitKHR, 16);
+	rtSceneDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eClosestHitKHR,
+		16u, vk::DescriptorBindingFlagBits::eVariableDescriptorCount);
 
 
 	rtSceneDescLayout.Generate();

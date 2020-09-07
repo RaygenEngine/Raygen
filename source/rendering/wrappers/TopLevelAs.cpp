@@ -42,7 +42,14 @@ vk::AccelerationStructureInstanceKHR AsInstanceToVkGeometryInstanceKHR(const vl:
 namespace vl {
 TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 {
-	sceneDesc.descSet = Layouts->rtSceneDescLayout.AllocDescriptorSet();
+	uint32 spotlightCount = 0;
+	for (auto spotlight : scene->spotlights.elements) {
+		if (spotlight) {
+			spotlightCount++;
+		}
+	}
+	sceneDesc.descSet = Layouts->rtSceneDescLayout.AllocDescriptorSet(spotlightCount);
+
 
 	std::vector<vk::DescriptorImageInfo> descImages;
 	vk::DescriptorImageInfo viewInfoDefault;
@@ -262,16 +269,6 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 			.setDstSet(descSet[i])
 			.setDstArrayElement(0u);
 		Device->updateDescriptorSets({ depthWrite }, nullptr);
-
-		for (uint32 j = depthImages.size(); j < 16; ++j) {
-			depthWrite
-				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler) //
-				.setImageInfo(viewInfoDefault)
-				.setDstBinding(6u)
-				.setDstSet(descSet[i])
-				.setDstArrayElement(j);
-			Device->updateDescriptorSets({ depthWrite }, nullptr);
-		}
 	}
 }
 

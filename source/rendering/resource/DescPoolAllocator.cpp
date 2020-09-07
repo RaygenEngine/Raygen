@@ -10,7 +10,8 @@ ConsoleFunction<> g_showPoolAllocations{ "r.mem.showDescriptorPools",
 	"Shows number of allocated descriptor pools." };
 
 namespace vl {
-vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const RDescriptorSetLayout& layout)
+vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(
+	size_t hash, const RDescriptorSetLayout& layout, int32 bindingSize)
 {
 	auto addPool = [&](Entry& entry) {
 		vk::DescriptorPoolCreateInfo poolInfo{};
@@ -44,10 +45,20 @@ vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(size_t hash, const RD
 
 	std::array layouts{ layout.handle() };
 
+	vk::DescriptorSetVariableDescriptorCountAllocateInfo descCountInfo;
+
+	uint32 count = uint32(bindingSize);
+	descCountInfo.setDescriptorCounts(count);
+
 	vk::DescriptorSetAllocateInfo allocInfo{};
 	allocInfo //
 		.setDescriptorPool(entry.pools.back().get())
 		.setSetLayouts(layouts);
+
+
+	if (bindingSize >= 0) {
+		allocInfo.setPNext(&descCountInfo);
+	}
 
 	return Device->allocateDescriptorSets(allocInfo)[0];
 }
