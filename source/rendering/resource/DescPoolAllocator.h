@@ -17,7 +17,7 @@ class DescPoolAllocator {
 	size_t m_allocCount{ 0 };
 
 public:
-	vk::DescriptorSet AllocateDescriptorSet(size_t hash, const RDescriptorSetLayout& layout);
+	vk::DescriptorSet AllocateDescriptorSet(size_t hash, const RDescriptorSetLayout& layout, int32 bindingSize = -1);
 
 	vk::DescriptorPool GetImguiPool();
 

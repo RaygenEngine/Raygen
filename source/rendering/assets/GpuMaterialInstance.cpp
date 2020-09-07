@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "GpuMaterialInstance.h"
 
+#include "assets/StdAssets.h"
 #include "assets/pods/MaterialArchetype.h"
 #include "assets/pods/MaterialInstance.h"
 #include "rendering/assets/GpuAssetManager.h"
@@ -10,6 +11,7 @@
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/passes/DepthmapPass.h"
+
 
 using namespace vl;
 
@@ -46,7 +48,8 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 		if (gpuArch.descLayout.HasUbo() && uboSize > 0) {
 
 			if (uboSize != uboBuf.size) {
-				uboBuf = RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
+				uboBuf = RBuffer{ uboSize,
+					vk::BufferUsageFlagBits::eUniformBuffer /*WIP: */ | vk::BufferUsageFlagBits::eTransferSrc,
 					vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 			}
 			uboBuf.UploadData(matInst->descriptorSet.uboData);
@@ -97,4 +100,53 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 				GpuAssetManager->GetGpuHandle(matInst->descriptorSet.samplers2d[i]), i + samplersBeginOffset);
 		}
 	}
+
+	UpdateRtMaterial(info);
+}
+
+void GpuMaterialInstance::UpdateRtMaterial(const AssetUpdateInfo& info)
+{
+	if (archetype != StdAssets::GltfArchetype()) {
+		return; // NEXT:
+	}
+	auto& samplers = podHandle.Lock()->descriptorSet.samplers2d;
+
+	struct RtGltfMat {
+		// factors
+		glm::vec4 baseColorFactor;
+		glm::vec4 emissiveFactor;
+		float metallicFactor;
+		float roughnessFactor;
+		float normalScale;
+		float occlusionStrength;
+
+		// alpha mask
+		float alphaCutoff;
+		int mask;
+
+		uint32 baseColor;
+		uint32 metallicRough;
+		uint32 occlusion;
+		uint32 normal;
+		uint32 emissive;
+	};
+
+
+	rtMaterialBuffer = RBuffer{ sizeof(RtGltfMat),
+		vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress
+			| vk::BufferUsageFlagBits::eTransferDst,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+		vk::MemoryAllocateFlagBits::eDeviceAddress };
+	rtMaterialBuffer.CopyBuffer(uboBuf);
+
+
+	size_t cursor = offsetof(RtGltfMat, baseColor);
+	uint32 tempIndex = 0;
+	std::vector<uint32> imageIndexes;
+
+	for (auto& sampler : samplers) {
+		imageIndexes.emplace_back(static_cast<uint32>(sampler.uid));
+	}
+
+	rtMaterialBuffer.UploadData(imageIndexes.data(), sizeof(uint32) * 5, cursor);
 }

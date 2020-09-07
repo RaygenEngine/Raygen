@@ -134,6 +134,8 @@ void vl::GpuMesh::UpdateGeometry(const AssetUpdateInfo& info)
 		vgg.indexBufferOffset = indexBufferOffset;
 
 		vgg.indexOffset = indexOffset;
+		vgg.primOffset = indexBufferOffset / 12;
+
 		indexOffsets.emplace_back(indexOffset);
 		primitiveOffsets.emplace_back(indexBufferOffset / 12);
 		indexOffset += vgg.vertexCount;

@@ -14,6 +14,11 @@ struct GpuMaterialInstance : public GpuAssetTemplate<MaterialInstance> {
 	bool hasDescriptorSet{ false };
 	GpuMaterialInstance(PodHandle<MaterialInstance> podHandle);
 
+	RBuffer rtMaterialBuffer;
+
 	void Update(const AssetUpdateInfo& info) override final;
+
+private:
+	void UpdateRtMaterial(const AssetUpdateInfo& info);
 };
 } // namespace vl

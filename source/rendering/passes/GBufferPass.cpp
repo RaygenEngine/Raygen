@@ -63,6 +63,7 @@ namespace {
 			.setDepthClampEnable(VK_FALSE) //
 			.setRasterizerDiscardEnable(VK_FALSE)
 			.setPolygonMode(vk::PolygonMode::eFill)
+
 			.setLineWidth(1.f)
 			.setCullMode(vk::CullModeFlagBits::eBack)
 			.setFrontFace(vk::FrontFace::eCounterClockwise)
@@ -249,8 +250,9 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc&
 			auto& arch = mat.archetype.Lock();
 
 
-			if (arch.isUnlit)
-				[[unlikely]] { continue; }
+			if (arch.isUnlit) [[unlikely]] {
+				continue;
+			}
 			auto& plLayout = *arch.gbuffer.pipelineLayout;
 
 			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
@@ -285,8 +287,9 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc&
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
-			if (arch.isUnlit)
-				[[unlikely]] { continue; }
+			if (arch.isUnlit) [[unlikely]] {
+				continue;
+			}
 
 			auto& plLayout = *arch.gbufferAnimated.pipelineLayout;
 
