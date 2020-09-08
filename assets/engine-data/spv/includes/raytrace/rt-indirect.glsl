@@ -6,6 +6,8 @@
 
 layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
+// Handle just radiance here (no throughput). 
+// This function should be able to  be used without throughput (eg: a debug ray directly from the camera that invokes hit shaders)
 vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 	prd.radiance = vec3(0);
 	prd.depth += 1;
@@ -32,22 +34,32 @@ vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 	return prd.radiance;
 }
 
+// Handle Termination and throughput in this function, handle radiance in the above
 vec3 TraceNext(vec3 thisRayThroughput, vec3 L_shadingSpace, FsSpaceInfo fragSpace) {
     // TODO: Current bug: This seed needs to go back into the function
     // we currently take the same seed for p_spawn for both Indirect rays
 
+    vec3 prevCumulativeThroughput = prd.accumThroughput;
     // RR termination
-    // TODO: use cumulative here
     // TODO: Use perceved luminace of throughput for termination (instead of max)
 
-	float p_spawn = max(thisRayThroughput);
+	float p_spawn = max(thisRayThroughput * prevCumulativeThroughput);
 	if(rand(prd.seed) > p_spawn) {
 		return vec3(0); 
 	}
-	thisRayThroughput /= p_spawn;
+
+    // TODO: what do we boost with here? cumulative or local throughput?
+    thisRayThroughput /= p_spawn; 
     
+    // Update accum throughput for the remaining of the recursion
+    prd.accumThroughput = prevCumulativeThroughput * thisRayThroughput;
+
     outOnbSpace(fragSpace.orthoBasis, L_shadingSpace); // NOTE: not shading space after the function, make onb return values for better names
-    return thisRayThroughput * RadianceOfRay(fragSpace.worldPos, L_shadingSpace); 
+    vec3 result = thisRayThroughput * RadianceOfRay(fragSpace.worldPos, L_shadingSpace); 
+
+    // Restore accum throughput
+    prd.accumThroughput = prevCumulativeThroughput;
+    return result;
 }
 
 vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {

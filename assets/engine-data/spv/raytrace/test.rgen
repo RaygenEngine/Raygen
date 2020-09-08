@@ -71,9 +71,11 @@ void main() {
 
 	vec3 accumColor = vec3(0);
     for(uint smpl = 0; smpl < samples && depth > 0; ++smpl){
-        // PERF:
-        prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl);
+        
+        // NOTE: Don't forget to initialize the ray here. 
+        prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl); // PERF:
         prd.depth = 0;
+        prd.accumThroughput = vec3(1.f);
         accumColor += TraceIndirect(fragSpace, brdfInfo);
     }
 
