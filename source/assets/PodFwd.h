@@ -3,11 +3,12 @@
 #include "assets/PodFwdUtl.h"
 
 
-// When adding a pod, add it to both of these
+// When adding a pod, add it to engine pod types
+// Then add it to PodIncludes.h
 
 #define ENGINE_POD_TYPES                                                                                               \
 	Image, Mesh, Shader, Sampler, SkinnedMesh, Animation, Cubemap, EnvironmentMap, ShaderStage, MaterialArchetype,     \
-		MaterialInstance
+		MaterialInstance, ShaderHeader
 
 
 ENGINE_PODS_FWD(ENGINE_POD_TYPES);

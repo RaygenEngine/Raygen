@@ -14,3 +14,4 @@
 #include "assets/pods/Shader.h"
 #include "assets/pods/ShaderStage.h"
 #include "assets/pods/SkinnedMesh.h"
+#include "assets/pods/ShaderHeader.h"
