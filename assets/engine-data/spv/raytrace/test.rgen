@@ -30,8 +30,6 @@ layout(location = 0) rayPayloadEXT hitPayload prd;
 
 #include "raytrace/rt-indirect.glsl"
 
-
-
 void WriteSky(); 
 
  
@@ -61,10 +59,6 @@ void main() {
 		g_EmissiveSampler,
 		uv);
 
-
-    // WIP: Unused 
-    // uint totalSamples = convergeUntilFrame != 0 ? convergeUntilFrame : 1024u;
-
     // Extract BrdfInfo
     FragBrdfInfo brdfInfo;
     brdfInfo.diffuseColor = frag.diffuseColor;
@@ -72,21 +66,19 @@ void main() {
     brdfInfo.a = frag.a;
 
     // Extract SpaceInfo
-    FsSpaceInfo fragSpace = GetFragSpace(frag.normal, frag.position, cam.position);
+    FsSpaceInfo fragSpace = GetFragSpace_World(frag.normal, frag.position, cam.position);
    
 
 	vec3 accumColor = vec3(0);
     for(uint smpl = 0; smpl < samples && depth > 0; ++smpl){
         // PERF:
-        uint seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl);
-        
-        fragSpace.seed = seed;
+        prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl);
+        prd.depth = 0;
         accumColor += TraceIndirect(fragSpace, brdfInfo);
     }
 
     vec3 curColor = (accumColor / samples);
 
-    // TODO: fix 
     // Do accumulation
     if(frame > 0){
         float a = 1.f / float(frame);

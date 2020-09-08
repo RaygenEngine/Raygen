@@ -59,4 +59,13 @@ vec4 sampleCubemapLH(samplerCube cubemap, vec3 directionRH)
 	return texture(cubemap, vec3(directionRH.x, directionRH.y, -directionRH.z));
 }
 
+float max(vec3 v) {
+    return max(v.x, max(v.y, v.z));
+}
+
+float min(vec3 v) {
+    return min(v.x, min(v.y, v.z));
+}
+
+
 #endif
