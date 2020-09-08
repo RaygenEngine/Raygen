@@ -167,13 +167,9 @@ void main() {
 		Onb shadingOrthoBasis = branchlessOnb(Ns);
 		toOnbSpace(shadingOrthoBasis, V);
 
-		
-
 		// same hemisphere
-
 		float NoV = max(Ndot(V), BIAS);
-		
-		
+
 		if (sampledEmissive.x > 0) {
 			prd.radiance = sampledEmissive.xyz;
 			return;
@@ -211,7 +207,7 @@ void main() {
 			vec3 lightFragColor = lightColor * lightIntensity * attenuation * spotEffect;
 
 			// Only sample the shadowmap if this fragment is lit
-			if (lightFragColor.x + lightFragColor.y + lightFragColor.z > 0.001) {
+			if (sum(lightFragColor) > 0.001) {
 				float shadow = 0.f; //...
 
 				vec4 fragPosLightSpace = light.viewProj * vec4(hitPoint, 1.0);

@@ -88,6 +88,7 @@ layout(push_constant) uniform Constants
 struct hitPayload
 {
 	vec3 radiance;
+	vec3 accumThroughput;
 
 	int depth;
 	uint seed;
