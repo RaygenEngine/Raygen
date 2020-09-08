@@ -10,7 +10,9 @@
 #include "engine/console/ConsoleVariable.h"
 #include "engine/Timer.h"
 #include "reflection/PodTools.h"
-
+#include "assets/PodEditor.h"
+#include "engine/Events.h"
+#include "assets/pods/ShaderStage.h"
 
 #include <nlohmann/json.hpp>
 #include <thread>
@@ -19,6 +21,38 @@
 
 ConsoleFunction<> console_SaveAll{ "a.saveAll", []() { AssetHandlerManager::SaveAll(); },
 	"Saves all currently unsaved assets" };
+
+ConsoleFunction<> console_ReimportAllShaders{ "a.allShadersReimport",
+	[]() {
+		for (auto& entry : AssetHandlerManager::Z_GetPods()) {
+			if (entry->IsA<ShaderStage>()) {
+				AssetHandlerManager::ReimportFromOriginal(entry->GetHandleAs<ShaderStage>());
+				AssetHandlerManager::RequestGpuUpdateFor(entry->uid, {});
+			}
+		}
+	},
+	"Reimports and recompiles all currently loaded ShaderStages." };
+
+ConsoleFunction<> console_ReimportRtShaders{ "z.reimportRtShaders",
+	[]() {
+		for (auto& entry : AssetHandlerManager::Z_GetPods()) {
+			if (entry->IsA<ShaderStage>()) {
+				auto stage = entry->GetHandleAs<ShaderStage>().Lock()->stage;
+				if (stage == ShaderStageType::ClosestHit || stage == ShaderStageType::AnyHit
+					|| stage == ShaderStageType::RayGen || stage == ShaderStageType::Miss
+					|| stage == ShaderStageType::Callable) {
+					AssetHandlerManager::ReimportFromOriginal(entry->GetHandleAs<ShaderStage>());
+					AssetHandlerManager::RequestGpuUpdateFor(entry->uid, {});
+				}
+			}
+		}
+	},
+	"Reimports and recompiles all rgen, rchit, rmiss loaded ShaderStages." };
+
+// TODO: remove this when done with shader reimporting
+struct PublicListener : public Listener {
+};
+PublicListener* dummy = new PublicListener();
 
 
 void PodDeleter::operator()(AssetPod* p)
@@ -112,12 +146,10 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 			for (size_t i = start; i < stop; ++i) {
 				LoadFromDiskTypelessInternal(m_pods[i].get());
 
-				if (m_pods[i].get()->metadata.reimportOnLoad)
-					[[unlikely]]
-					{
-						// reimportEntries[threadIndex].push_back(m_pods[i].get());
-						AssetHandlerManager::ReimportFromOriginal(m_pods[i].get());
-					}
+				if (m_pods[i].get()->metadata.reimportOnLoad) [[unlikely]] {
+					// reimportEntries[threadIndex].push_back(m_pods[i].get());
+					AssetHandlerManager::ReimportFromOriginal(m_pods[i].get());
+				}
 			}
 			return true;
 		};
@@ -305,4 +337,10 @@ AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& default
 	StdAssets::LoadAssets();
 
 	AssetHandlerManager::Get().LoadAllPodsInDirectory(defaultBinPath);
+
+	Event::OnWindowFocus.Bind(dummy, [](bool isFocused) {
+		if (isFocused) {
+			console_ReimportRtShaders.Execute("");
+		}
+	});
 }
