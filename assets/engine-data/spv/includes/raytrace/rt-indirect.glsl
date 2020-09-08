@@ -1,16 +1,14 @@
 #ifndef rt_indirect_glsl
 #define rt_indirect_glsl
 
-// META
+// META:
 // Expects pre declared variable prd before the inclusion of the file
 
 layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
-vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint seed) {
+vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 	prd.radiance = vec3(0);
-    prd.throughput = throughput;
-	prd.depth = 1;
-    prd.seed = seed;
+	prd.depth += 1;
 
     uint  rayFlags = gl_RayFlagsOpaqueEXT | gl_RayFlagsCullFrontFacingTrianglesEXT;
     float tMin     = 0.001;
@@ -30,24 +28,26 @@ vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint see
 				0               // payload (location = 0)
 	);
 	
-	return throughput * prd.radiance;
+    prd.depth -= 1;
+	return prd.radiance;
 }
 
-vec3 TraceNext(vec3 throughput, vec3 L_shadingSpace, FsSpaceInfo fragSpace) {
+vec3 TraceNext(vec3 thisRayThroughput, vec3 L_shadingSpace, FsSpaceInfo fragSpace) {
     // TODO: Current bug: This seed needs to go back into the function
     // we currently take the same seed for p_spawn for both Indirect rays
 
     // RR termination
-	float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
+    // TODO: use cumulative here
+    // TODO: Use perceved luminace of throughput for termination (instead of max)
 
-	if(rand(fragSpace.seed) > p_spawn) {
+	float p_spawn = max(thisRayThroughput);
+	if(rand(prd.seed) > p_spawn) {
 		return vec3(0); 
 	}
-	
-	vec3 weightedThroughput = throughput / p_spawn;
+	thisRayThroughput /= p_spawn;
     
-    outOnbSpace(fragSpace.orthoBasis, L_shadingSpace);
-    return Contribution(weightedThroughput, fragSpace.worldPos, L_shadingSpace, fragSpace.seed); 
+    outOnbSpace(fragSpace.orthoBasis, L_shadingSpace); // NOTE: not shading space after the function, make onb return values for better names
+    return thisRayThroughput * RadianceOfRay(fragSpace.worldPos, L_shadingSpace); 
 }
 
 vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
@@ -61,7 +61,7 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
     float NoV = max(Ndot(V), BIAS);
 
     {
-        vec2 u = rand2(fragSpace.seed); 
+        vec2 u = rand2(prd.seed); 
         vec3 L = cosineSampleHemisphere(u);
 
         float NoL = max(Ndot(L), BIAS); 
@@ -78,29 +78,15 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
 
     // Glossy reflection
     {
-        // WIP: test much lower alpha values for brdf (this is roughness ~= 0.3)
-        if(a < 0.1) 
+        if(a < 0.01) 
         {
             vec3 L = reflect(V);
-            
-            vec3 H = normalize(V + L);
-
             float NoL = max(Ndot(L), BIAS); 
-
-            float NoH = max(Ndot(H), BIAS); 
-            float LoH = max(dot(L, H), BIAS);
-
-            float pdf = 1;
-
-
-            // WIP: Dont sample brdf? 
-            vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, f0);
-
             radiance += TraceNext(vec3(NoL), L, fragSpace);
         }
         else 
         {
-            vec2 u = rand2(fragSpace.seed);
+            vec2 u = rand2(prd.seed);
             vec3 H = importanceSampleGGX(u, a);
 
             vec3 L = reflect(-V, H);
@@ -112,7 +98,7 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
 
         
             float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
-            pdf = max(Ndot(H), BIAS); 
+            pdf = max(pdf, BIAS); // CHECK: pbr-book stops tracing if pdf == 0
 
             vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, f0);
 
@@ -124,5 +110,5 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
 }
 
 #else
-#error "RT Indirect glsl header should have no reason to be included twice (it declares descriptors). Check what you are trying to do"
+#error "RT Indirect glsl header should have no reason to be included twice (it declares descriptors). Check if what you are trying to do is correct."
 #endif

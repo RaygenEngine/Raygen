@@ -4,6 +4,7 @@
 #extension GL_EXT_scalar_block_layout : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 #extension GL_EXT_buffer_reference2 : enable
+
 #include "global.glsl"
 #include "rt-global.glsl"
 
@@ -12,24 +13,10 @@
 #include "bsdf.glsl"
 #include "onb.glsl"
 
-struct Attr{
-	vec2 x;
-};
-
 hitAttributeEXT vec2 baryCoord;
+layout(location = 0) rayPayloadInEXT hitPayload prd;
 
-// Texture samplers are 3 samplers per gl_InstanceID: 
-// colorSampler, normalSampler, metallicRoughnessSampler
-// eg: normal sampler of instance id: 3 would be:
-//     (id * 3) + 1 = 10
-
-     
-layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
-
-
-//HitAttributeKHR vec2 attribs;
-
-layout(location = 0) rayPayloadInEXT hitPayload inPrd;
+#include "raytrace/rt-indirect.glsl"
 
 struct samplerRef {
 	int index;
@@ -94,49 +81,6 @@ OldVertex fromVertex(Vertex p) {
 	return vtx;
 }
 
-vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection)
-{
-	// RR termination
-	vec3 cumulThroughput = inPrd.throughput * throughput;
-
-	float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
-
-	if(rand(inPrd.seed) > p_spawn){
-		return vec3(0); 
-	}
-	throughput /= p_spawn;
-	
-	hitPayload prevRay = inPrd;
-
-	inPrd.radiance = vec3(0);
-	inPrd.throughput = cumulThroughput / p_spawn;
-	inPrd.depth = inPrd.depth + 1;
-    inPrd.seed = inPrd.seed;
-
-    uint  rayFlags = gl_RayFlagsOpaqueEXT | gl_RayFlagsCullFrontFacingTrianglesEXT  ;
-    float tMin     = 0.001;
-    float tMax     = 10000.0;
-
-	// trace ray
-	traceRayEXT(topLevelAs,     // acceleration structure
-				rayFlags,       // rayFlags
-				0xFF,           // cullMask
-				0,              // sbtRecordOffset
-				0,              // sbtRecordStride
-				0,              // missIndex
-				nextOrigin,     // ray origin
-				tMin,           // ray min range
-				nextDirection,  // ray direction
-				tMax,           // ray max range
-				0               // payload (location = 0)
-	);
-	prevRay.seed = inPrd.seed;
-	vec3 result = throughput * inPrd.radiance;
-	inPrd = prevRay;
-
-	return result;
-}
-
 void main() {
 	
 	int matId = gl_InstanceID;
@@ -191,7 +135,7 @@ void main() {
 	
 	vec3 Ns = normalize(TBN * (sampledNormal.rgb * 2.0 - 1.0));
 
-	Onb shadingOrthoBasis = branchlessOnb(Ns);
+
 	
 	// final material values
 	vec3 albedo = sampledBaseColor.rgb;
@@ -201,146 +145,110 @@ void main() {
 
     // remapping
 
-	// diffuseColor = (1.0 - metallic) * albedo;
-    vec3 diffuseColor = (1.0 - metallic) * albedo;
-    // f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + albedo * metallic;
-	vec3 f0 =  vec3(0.16 * reflectance * reflectance * (1.0 - metallic)) + albedo * metallic;
-    // a = roughness roughness;
-	float a = max(0.001, roughness * roughness);
+
+	FragBrdfInfo brdfInfo;
+    brdfInfo.diffuseColor = (1.0 - metallic) * albedo;
+	brdfInfo.f0 =  vec3(0.16 * reflectance * reflectance * (1.0 - metallic)) + albedo * metallic;
+	brdfInfo.a = max(0.001, roughness * roughness);
 
 	vec3 hitPoint = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 
-	// LMATH: unit?
-	vec3 V = -gl_WorldRayDirectionEXT;
+	FsSpaceInfo fragSpace = GetFragSpace_World(Ns, hitPoint, gl_WorldRayOriginEXT);
 
-	toOnbSpace(shadingOrthoBasis, V);
 
-	// same hemisphere
-
-	float NoV = max(Ndot(V), BIAS);
-	
-	
-	if (sampledEmissive.x > 0) {
-		inPrd.radiance = sampledEmissive.xyz;
-		return;
-	}
-	
-
-	// DIRECT
 	vec3 radiance = vec3(0);
-
-	// for each light
-	for(int i = 0; i < spotlightCount; ++i) 
+	// OLD DIRECT
 	{
+		// TODO: Refactor
+		// LMATH: unit?
+		vec3 V = -gl_WorldRayDirectionEXT;
+		float a = brdfInfo.a;
 
-		Spotlight light = spotlights.light[i];
-		vec3 lightPos = light.position;
+		Onb shadingOrthoBasis = branchlessOnb(Ns);
+		toOnbSpace(shadingOrthoBasis, V);
 
-		vec3 L = normalize(lightPos - hitPoint);
-		toOnbSpace(shadingOrthoBasis, L);
-
-		float NoL = max(Ndot(L), BIAS);
-
-		vec3 lightColor = light.color;
-		float dist = length(light.position - hitPoint);
-		float attenuation = 1.0 / (light.constantTerm + light.linearTerm * dist + 
-	  			     light.quadraticTerm * (dist * dist));
-		float lightIntensity = light.intensity;
 		
-		vec3 ld = light.direction;
-		toOnbSpace(shadingOrthoBasis, ld);
 
-		// spot effect (soft edges)
-		float theta = dot(L, -ld);
-	    float epsilon = (light.innerCutOff - light.outerCutOff);
-	    float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+		// same hemisphere
+
+		float NoV = max(Ndot(V), BIAS);
 		
-		vec3 lightFragColor = lightColor * lightIntensity * attenuation * spotEffect;
-
-		// Only sample the shadowmap if this fragment is lit
-		if (lightFragColor.x + lightFragColor.y + lightFragColor.z > 0.001) {
-			float shadow = 0.f; //...
-
-			vec4 fragPosLightSpace = light.viewProj * vec4(hitPoint, 1.0);
-		 	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-
-			projCoords = vec3(projCoords.xy * 0.5 + 0.5, projCoords.z - light.maxShadowBias);
-			float bias = light.maxShadowBias;
 		
-		    shadow = 1.0 - texture(spotlightShadowmap[nonuniformEXT(i)], projCoords);
+		if (sampledEmissive.x > 0) {
+			prd.radiance = sampledEmissive.xyz;
+			return;
+		}
+		
 
-			vec3 Li = (1.0 - shadow) * lightFragColor; 
-	
-			vec3 H = normalize(V + L);
-			float NoH = max(Ndot(H), BIAS); 
-			float LoH = max(dot(L, H), BIAS);
+		// DIRECT
 
-			vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, a, diffuseColor);
-			vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, f0);
+		// for each light
+		for(int i = 0; i < spotlightCount; ++i) 
+		{
 
-			// so to simplify (faster math)
-			// throughput = (brdf_d + brdf_r) * NoL
-			// incoming radiance = Li;
-			vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
+			Spotlight light = spotlights.light[i];
+			vec3 lightPos = light.position;
 
-			radiance += finalContribution;
+			vec3 L = normalize(lightPos - hitPoint);
+			toOnbSpace(shadingOrthoBasis, L);
+
+			float NoL = max(Ndot(L), BIAS);
+
+			vec3 lightColor = light.color;
+			float dist = length(light.position - hitPoint);
+			float attenuation = 1.0 / (light.constantTerm + light.linearTerm * dist + 
+						light.quadraticTerm * (dist * dist));
+			float lightIntensity = light.intensity;
+			
+			vec3 ld = light.direction;
+			toOnbSpace(shadingOrthoBasis, ld);
+
+			// spot effect (soft edges)
+			float theta = dot(L, -ld);
+			float epsilon = (light.innerCutOff - light.outerCutOff);
+			float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+			
+			vec3 lightFragColor = lightColor * lightIntensity * attenuation * spotEffect;
+
+			// Only sample the shadowmap if this fragment is lit
+			if (lightFragColor.x + lightFragColor.y + lightFragColor.z > 0.001) {
+				float shadow = 0.f; //...
+
+				vec4 fragPosLightSpace = light.viewProj * vec4(hitPoint, 1.0);
+				vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+
+				projCoords = vec3(projCoords.xy * 0.5 + 0.5, projCoords.z - light.maxShadowBias);
+				float bias = light.maxShadowBias;
+			
+				shadow = 1.0 - texture(spotlightShadowmap[nonuniformEXT(i)], projCoords);
+
+				vec3 Li = (1.0 - shadow) * lightFragColor; 
+		
+				vec3 H = normalize(V + L);
+				float NoH = max(Ndot(H), BIAS); 
+				float LoH = max(dot(L, H), BIAS);
+
+				vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, brdfInfo.a, brdfInfo.diffuseColor);
+				vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, brdfInfo.a, brdfInfo.diffuseColor);
+
+				// so to simplify (faster math)
+				// throughput = (brdf_d + brdf_r) * NoL
+				// incoming radiance = Li;
+				vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
+
+				radiance += finalContribution;
+			}
 		}
 	}
-	
-	uint totalSamples = convergeUntilFrame != 0 ? convergeUntilFrame : 1024u;
-	
 
-	if(inPrd.depth + 1 > depth){
+	if(prd.depth + 1 > depth){
 		return;
 	}
 
-	// INDIRECT
 
-	// TRANSMISSION
+	radiance += TraceIndirect(fragSpace, brdfInfo);
 
-	// Diffuse 'reflection'
-
-//	{
-//        vec2 u = rand2(inPrd.seed); 
-//        vec3 L = cosineSampleHemisphere(u);
-//
-//		float NoL = max(Ndot(L), BIAS); 
-//
-//        vec3 H = normalize(V + L);
-//        float LoH = max(dot(L, H), BIAS);
-//
-//        float pdf = NoL * INV_PI;
-//    
-//        vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, a, diffuseColor);
-//
-//	    outOnbSpace(shadingOrthoBasis, L);
-//        radiance += Contribution(brdf_d * NoL / pdf, hitPoint, L);
-//	}
-//
-//	// REFLECTION
-//	{
-//        vec2 u = rand2(inPrd.seed); 
-//        vec3 H = importanceSampleGGX(u, a);
-//
-//        vec3 L = reflect(-V, H);
-//
-//        float NoL = max(Ndot(L), BIAS); 
-//
-//		float NoH = max(Ndot(H), BIAS); 
-//		float LoH = max(dot(L, H), BIAS);
-//
-//        // SMATH:
-//        float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
-//        pdf = max(Ndot(H), BIAS); 
-//
-//        vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, f0);
-//
-//	    outOnbSpace(shadingOrthoBasis, L);
-//        radiance += Contribution(brdf_r * NoL / pdf, hitPoint, L);
-//	}
-	
-
-	inPrd.radiance = radiance;
+	prd.radiance = radiance;
 }
 
 

@@ -1,6 +1,7 @@
 #ifndef bsdf_glsl
 #define bsdf_glsl
 
+#include "global-shading.glsl"
 #include "fresnel.glsl"
 
 // math here are in bsdf space 
@@ -162,5 +163,13 @@ vec3 importanceSampleGGX(vec2 u, float a)
 
     return vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
 }
+
+/*
+WIP: 
+ve3 StandardBRDF(IncidientSpaceInfo incidentSpace, FragBrdfInfo brdfInfo) 
+{
+    return DisneyDiffuse(.., brdfInfo.diffuseColor) + SpecularTerm(.., brdfInfo.f0, brdfInfo.a);
+}
+*/
 
 #endif
