@@ -56,6 +56,15 @@ void toOnbSpace(Onb orthoBasis, inout vec3 v)
 			 dot(v, orthoBasis.normal)); 
 }
 
+
+vec3 toOnbSpaceReturn(Onb orthoBasis, vec3 v)
+{
+	return vec3(dot(v, orthoBasis.tangent), 
+	         dot(v, orthoBasis.bitangent), 
+			 dot(v, orthoBasis.normal)); 
+}
+
+
 // CHECK: are those normalized
 void outOnbSpace(Onb orthoBasis, inout vec3 v)
 {

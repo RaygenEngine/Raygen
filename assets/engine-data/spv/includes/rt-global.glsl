@@ -1,6 +1,6 @@
 #ifndef rt_global_glsl
 #define rt_global_glsl
-
+#include "onb.glsl"
 // TODO: auto include in rt shaders
 
 struct Vertex
@@ -27,14 +27,6 @@ struct OldVertex
 	vec2 uv;
 };
 
-struct hitPayload
-{
-	vec3 radiance;
-	vec3 throughput;
-
-	int depth;
-	uint seed;
-};
 
 struct Spotlight
 {
@@ -92,5 +84,51 @@ layout(push_constant) uniform Constants
     int convergeUntilFrame;
 	int spotlightCount;
 };
+
+struct hitPayload
+{
+	vec3 radiance;
+	vec3 throughput;
+
+	int depth;
+	uint seed;
+};
+
+
+// Fragment Shading Space Info
+// Contains space and view data for a specific "fragment" in the world as well as a seed (for utility)
+// (Encapsulates all non material specific information about the "fragment")
+// This struct should be used for all lighting functions
+struct FsSpaceInfo {
+	Onb orthoBasis;
+	vec3 V; // In shading space
+	vec3 worldPos;
+
+	// Optional in some cases (eg: direct lighting) but usefull to have everywhere for simpler interfaces
+	uint seed;
+};
+
+
+// All surface information required to perform "standard" brdf.
+// (We could have more of these for: 1) btdf 2) different brdf implementations eg: cloth, clear-coating)
+struct FragBrdfInfo {
+	vec3 diffuseColor;
+
+	vec3 f0; // specularColor (?)
+	
+	float a; // roughness^2
+};
+
+// Does not properly initialize seed
+FsSpaceInfo GetFragSpace(vec3 worldNormal, vec3 worldPos, vec3 worldViewDir) {
+	FsSpaceInfo fragSpace;
+	
+	fragSpace.orthoBasis = branchlessOnb(worldNormal);
+	fragSpace.worldPos = worldPos;
+	fragSpace.V = toOnbSpaceReturn(fragSpace.orthoBasis, normalize(worldViewDir - worldPos));
+	fragSpace.seed = 0;
+	
+	return fragSpace;
+}
 
 #endif

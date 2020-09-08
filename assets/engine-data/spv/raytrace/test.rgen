@@ -25,49 +25,16 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 layout(set = 2, binding = 0, rgba32f) uniform image2D image;
 layout(set = 2, binding = 1, rgba32f) uniform image2D progressiveResult;
 
-layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
-
 layout(location = 0) rayPayloadEXT hitPayload prd;
 
-vec3 Contribution(vec3 throughput, vec3 nextOrigin, vec3 nextDirection, uint seed)
-{
-	// RR termination
-	float p_spawn = max(throughput.x, max(throughput.y, throughput.z));
 
-	if(rand(seed) > p_spawn){
-		return vec3(0); 
-	}
-	
-	throughput /= p_spawn;
-	
-	prd.radiance = vec3(0);
-    prd.throughput = throughput;
-	prd.depth = 1;
-    prd.seed = seed;
+#include "raytrace/rt-indirect.glsl"
 
-    uint  rayFlags = gl_RayFlagsOpaqueEXT | gl_RayFlagsCullFrontFacingTrianglesEXT ;
-    float tMin     = 0.001;
-    float tMax     = 10000.0;
 
-	// trace ray
-	traceRayEXT(topLevelAs,     // acceleration structure
-				rayFlags,       // rayFlags
-				0xFF,           // cullMask
-				0,              // sbtRecordOffset
-				0,              // sbtRecordStride
-				0,              // missIndex
-				nextOrigin,     // ray origin
-				tMin,           // ray min range
-				nextDirection,  // ray direction
-				tMax,           // ray max range
-				0               // payload (location = 0)
-	);
-	
-	return throughput * prd.radiance;
-}
 
-void WriteSky();
+void WriteSky(); 
 
+ 
 void main() {
 
     vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
@@ -76,7 +43,7 @@ void main() {
     {
         // sky
 	    WriteSky();
-        return;
+        return; 
     }
 
     if(frame >= convergeUntilFrame && convergeUntilFrame != 0) {
@@ -95,90 +62,29 @@ void main() {
 		uv);
 
 
-    // diffuseColor = (1.0 - metallic) * albedo;
-    vec3 diffuseColor = frag.diffuseColor;
-    // f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + albedo * metallic;
-    vec3 f0 = frag.f0;
-    // a = roughness roughness;
-    float a = frag.a;
+    // WIP: Unused 
+    // uint totalSamples = convergeUntilFrame != 0 ? convergeUntilFrame : 1024u;
 
-    uint totalSamples = convergeUntilFrame != 0 ? convergeUntilFrame : 1024u;
+    // Extract BrdfInfo
+    FragBrdfInfo brdfInfo;
+    brdfInfo.diffuseColor = frag.diffuseColor;
+    brdfInfo.f0 = frag.f0;
+    brdfInfo.a = frag.a;
 
-    Onb shadingOrthoBasis = branchlessOnb(frag.normal);
+    // Extract SpaceInfo
+    FsSpaceInfo fragSpace = GetFragSpace(frag.normal, frag.position, cam.position);
+   
 
-	vec3 V = normalize(cam.position - frag.position);
-
-	toOnbSpace(shadingOrthoBasis, V);
-
-	float NoV = max(Ndot(V), BIAS);
-
-	vec3 hitValue = vec3(0);
+	vec3 accumColor = vec3(0);
     for(uint smpl = 0; smpl < samples && depth > 0; ++smpl){
         // PERF:
         uint seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl);
         
-        // Diffuse 'reflection'
-        {
-            vec2 u = rand2(seed); 
-            vec3 L = cosineSampleHemisphere(u);
-
-			float NoL = max(Ndot(L), BIAS); 
-
-            vec3 H = normalize(V + L);
-            float LoH = max(dot(L, H), BIAS);
-
-            float pdf = NoL * INV_PI;
-        
-            vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, a, frag.diffuseColor);
-
-		    outOnbSpace(shadingOrthoBasis, L);
-            hitValue += Contribution(brdf_d * NoL / pdf, frag.position, L, seed);
-        }
-
-        // Glossy reflection
-        {
-            if(a < 0.1){
-                vec3 L = reflect(V);
-                
-                vec3 H = normalize(V + L);
-
-                float NoL = max(Ndot(L), BIAS); 
-
-			    float NoH = max(Ndot(H), BIAS); 
-			    float LoH = max(dot(L, H), BIAS);
-
-                float pdf = 1;
-   
-                vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, frag.f0);
-
-		        outOnbSpace(shadingOrthoBasis, L);
-                hitValue += Contribution(vec3(NoL), frag.position, L, seed);
-            }
-            else
-            {
-                vec2 u = rand2(seed);
-                vec3 H = importanceSampleGGX(u, a);
-
-                vec3 L = reflect(-V, H);
-
-                float NoL = max(Ndot(L), BIAS); 
-
-			    float NoH = max(Ndot(H), BIAS); 
-			    float LoH = max(dot(L, H), BIAS);
-
-            
-                float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
-                pdf = max(Ndot(H), BIAS); 
-   
-                vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, frag.f0);
-
-		        outOnbSpace(shadingOrthoBasis, L);
-                hitValue += Contribution(brdf_r * NoL / pdf, frag.position, L, seed);
-            }
-        } 
+        fragSpace.seed = seed;
+        accumColor += TraceIndirect(fragSpace, brdfInfo);
     }
 
-    vec3 curColor = (hitValue / samples);
+    vec3 curColor = (accumColor / samples);
 
     // TODO: fix 
     // Do accumulation
@@ -301,16 +207,4 @@ void WriteSky() {
     
     imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
