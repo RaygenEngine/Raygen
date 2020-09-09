@@ -11,7 +11,7 @@ struct Onb
 // https://graphics.pixar.com/library/OrthonormalB/paper.pdf
 Onb branchlessOnb(vec3 n)
 {
-	float sign = sign(n.z);
+	float sign = n.z >= 0.0 ? 1.0 : -1.0;
 	float a = -1.0f / (sign + n.z);
 	float b = n.x * n.y * a;
 

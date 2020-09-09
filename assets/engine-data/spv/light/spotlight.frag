@@ -77,6 +77,9 @@ void main() {
 		g_MRROSampler,
 		g_EmissiveSampler,
 		uv);
+		
+		
+	if(frag.a < 0.01) discard;
 
 	Onb shadingOrthoBasis = branchlessOnb(frag.normal);
 	
@@ -109,7 +112,7 @@ void main() {
 
 	vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
 
-	vec3 brdf_d = LambertianDiffuse(frag.diffuseColor);
+	vec3 brdf_d = DiffuseTerm(NoL, NoV, LoH, frag.a, frag.diffuseColor);
 	vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, frag.a, frag.f0);
 
 	//vec3 kd = vec3(1) - F_Schlick(LoH, frag.f0) ;
@@ -119,6 +122,7 @@ void main() {
 
 	outColor = vec4(finalContribution, 1);
 }                               
+
 
 
 
