@@ -238,12 +238,13 @@ void main() {
 	}
 
 	if(prd.depth + 1 > depth){
+		// TODO: radiance += sky;
+		prd.radiance = radiance;
 		return;
 	}
 
 
 	radiance += TraceIndirect(fragSpace, brdfInfo);
-
 	prd.radiance = radiance;
 }
 

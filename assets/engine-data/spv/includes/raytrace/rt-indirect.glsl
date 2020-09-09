@@ -11,6 +11,7 @@ layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 	prd.radiance = vec3(0);
 
+    // PERF: any ideas?
     if(any(isnan(nextDirection)) || any(isinf(nextDirection))){
        return vec3(0.0);
     }
@@ -74,14 +75,7 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
 
     float NoV = max(Ndot(V), BIAS);
 
-    if(a < 0.01) 
-    {
-        vec3 L = reflect(V);
-        float NoL = max(Ndot(L), BIAS); 
-        radiance += TraceNext(vec3(NoL), L, fragSpace);
-        return radiance;
-    }
-
+    // Diffuse reflection
     {
         vec2 u = rand2(prd.seed); 
         vec3 L = cosineSampleHemisphere(u);
@@ -98,8 +92,13 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
         radiance += TraceNext(brdf_d * NoL / pdf, L, fragSpace);
     }
 
+
+
+
+
     // Glossy reflection
     {
+        // Ideally specular
         vec2 u = rand2(prd.seed);
         vec3 H = importanceSampleGGX(u, a);
 
@@ -113,6 +112,15 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
         
         float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
         pdf = max(pdf, BIAS); // CHECK: pbr-book stops tracing if pdf == 0
+
+        if(a < 0.0001){
+            L = reflect(V);
+            NoL = max(Ndot(L), BIAS); 
+           
+            NoH = max(Ndot(H), BIAS); 
+            LoH = max(dot(L, H), BIAS);
+            pdf = 1.0;
+        }   
 
         vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, f0);
 
