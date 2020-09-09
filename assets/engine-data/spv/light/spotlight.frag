@@ -79,7 +79,6 @@ void main() {
 		uv);
 		
 		
-	if(frag.a < 0.01) discard;
 
 	Onb shadingOrthoBasis = branchlessOnb(frag.normal);
 	

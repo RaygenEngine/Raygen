@@ -102,18 +102,19 @@ float D_Phong(float NoH, float a)
 
 vec3 SpecularTerm(float NoL, float NoV, float NoH, float LoH, float a, vec3 f0)
 {
-    float D;
-    float G;
     vec3 F = F_Schlick(LoH, f0);
+
+    if(a < 0.0001){
+		float D = D_Phong(NoH, a);   
+		return D * F * 0.25;
+    }
+
+    float D = D_GGX(NoH, a);
+    float G = G_SchlicksmithGGX(NoL, NoV, a);
 
     float denom = 4 * NoL * NoV;
 
-
-    D = D_GGX(NoH, a);
-    G = G_SchlicksmithGGX(NoL, NoV, a);
-    
-
-    return denom > 0 ? D * G * F / denom : vec3(0);
+    return D * G * F / denom;
 }
 
 //vec3 Fr_CookTorranceGGX(float NoV, float NoL, float NoH, float LoH, vec3 f0, float a)
@@ -160,7 +161,7 @@ vec3 importanceSampleGGX(vec2 u, float a)
 
 /*
 WIP: 
-ve3 StandardBRDF(IncidientSpaceInfo incidentSpace, FragBrdfInfo brdfInfo) 
+ve3 StandardBRDF(IncidentSpaceInfo incidentSpace, FragBrdfInfo brdfInfo) 
 {
     return DisneyDiffuse(.., brdfInfo.diffuseColor) + SpecularTerm(.., brdfInfo.f0, brdfInfo.a);
 }
