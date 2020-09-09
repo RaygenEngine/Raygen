@@ -158,7 +158,7 @@ void main() {
 
 	vec3 radiance = vec3(0);
 	// OLD DIRECT
-	{
+	if(brdfInfo.a >= 0.01){
 		// TODO: Refactor
 		// LMATH: unit?
 		vec3 V = -gl_WorldRayDirectionEXT;
@@ -170,7 +170,7 @@ void main() {
 		// same hemisphere
 		float NoV = max(Ndot(V), BIAS);
 
-		if (sampledEmissive.x > 0) {
+		if (sum(sampledEmissive.xyz) > 0) {
 			prd.radiance = sampledEmissive.xyz;
 			return;
 		}
@@ -246,6 +246,7 @@ void main() {
 
 	prd.radiance = radiance;
 }
+
 
 
 

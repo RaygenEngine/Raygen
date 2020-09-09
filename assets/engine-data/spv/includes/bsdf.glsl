@@ -108,16 +108,10 @@ vec3 SpecularTerm(float NoL, float NoV, float NoH, float LoH, float a, vec3 f0)
 
     float denom = 4 * NoL * NoV;
 
-	if (a < 0.001)
-	{	
-		G = 1;
-		D = D_Phong(NoH, a);   
-	}
-    else
-    {
-        D = D_GGX(NoH, a);
-        G = G_SchlicksmithGGX(NoL, NoV, a);
-    }
+
+    D = D_GGX(NoH, a);
+    G = G_SchlicksmithGGX(NoL, NoV, a);
+    
 
     return denom > 0 ? D * G * F / denom : vec3(0);
 }

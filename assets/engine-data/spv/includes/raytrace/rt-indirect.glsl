@@ -10,6 +10,11 @@ layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 // This function should be able to  be used without throughput (eg: a debug ray directly from the camera that invokes hit shaders)
 vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 	prd.radiance = vec3(0);
+
+    if(any(isnan(nextDirection)) || any(isinf(nextDirection))){
+       return vec3(0.0);
+    }
+
 	prd.depth += 1;
 
     uint  rayFlags = gl_RayFlagsOpaqueEXT | gl_RayFlagsCullFrontFacingTrianglesEXT;
@@ -36,19 +41,16 @@ vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 
 // Handle Termination and throughput in this function, handle radiance in the above
 vec3 TraceNext(vec3 thisRayThroughput, vec3 L_shadingSpace, FsSpaceInfo fragSpace) {
-    // TODO: Current bug: This seed needs to go back into the function
-    // we currently take the same seed for p_spawn for both Indirect rays
 
     vec3 prevCumulativeThroughput = prd.accumThroughput;
     // RR termination
-    // TODO: Use perceved luminace of throughput for termination (instead of max)
+    // TODO: Use perceived luminace of throughput for termination (instead of max)
 
-	float p_spawn = max(thisRayThroughput * prevCumulativeThroughput);
+	float p_spawn = max(max(thisRayThroughput * prevCumulativeThroughput), 0.1);
 	if(rand(prd.seed) > p_spawn) {
 		return vec3(0); 
 	}
 
-    // TODO: what do we boost with here? cumulative or local throughput?
     thisRayThroughput /= p_spawn; 
     
     // Update accum throughput for the remaining of the recursion
@@ -72,6 +74,14 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
 
     float NoV = max(Ndot(V), BIAS);
 
+    if(a < 0.01) 
+    {
+        vec3 L = reflect(V);
+        float NoL = max(Ndot(L), BIAS); 
+        radiance += TraceNext(vec3(NoL), L, fragSpace);
+        return radiance;
+    }
+
     {
         vec2 u = rand2(prd.seed); 
         vec3 L = cosineSampleHemisphere(u);
@@ -90,32 +100,23 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
 
     // Glossy reflection
     {
-        if(a < 0.01) 
-        {
-            vec3 L = reflect(V);
-            float NoL = max(Ndot(L), BIAS); 
-            radiance += TraceNext(vec3(NoL), L, fragSpace);
-        }
-        else 
-        {
-            vec2 u = rand2(prd.seed);
-            vec3 H = importanceSampleGGX(u, a);
+        vec2 u = rand2(prd.seed);
+        vec3 H = importanceSampleGGX(u, a);
 
-            vec3 L = reflect(-V, H);
+        vec3 L = reflect(-V, H);
 
-            float NoL = max(Ndot(L), BIAS); 
+        float NoL = max(Ndot(L), BIAS); 
 
-            float NoH = max(Ndot(H), BIAS); 
-            float LoH = max(dot(L, H), BIAS);
+        float NoH = max(Ndot(H), BIAS); 
+        float LoH = max(dot(L, H), BIAS);
 
         
-            float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
-            pdf = max(pdf, BIAS); // CHECK: pbr-book stops tracing if pdf == 0
+        float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
+        pdf = max(pdf, BIAS); // CHECK: pbr-book stops tracing if pdf == 0
 
-            vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, f0);
+        vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, f0);
 
-            radiance += TraceNext(brdf_r * NoL / pdf, L, fragSpace);
-        }
+        radiance += TraceNext(brdf_r * NoL / pdf, L, fragSpace);
     }
 
     return radiance;
