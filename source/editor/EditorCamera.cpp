@@ -12,6 +12,12 @@
 #include "rendering/Renderer.h"
 
 namespace ed {
+
+EditorCamera::EditorCamera()
+{
+	orbitalCenter = transform.position + transform.front() * orbitalLength;
+}
+
 void EditorCamera::Update(float deltaSeconds)
 {
 	auto& input = Input;
@@ -208,7 +214,7 @@ void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 
 	if (input.GetScrollDelta() != 0) {
 		orbitalLength = std::max(orbitalLength - static_cast<float>(input.GetScrollDelta()), 1.0f);
-		dirtyThisFrame = true;
+		OrbitalCenterChanged();
 	}
 
 	if (input.IsMouseDragging()) {
@@ -218,11 +224,18 @@ void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 		auto pitchRot = glm::angleAxis(yawPitch.y, transform.right());
 
 		transform.orientation = glm::normalize(yawRot * (pitchRot * transform.orientation));
-		transform.Compose();
-		dirtyThisFrame = true;
+
+		if (!input.IsDown(Key::Mouse_LeftClick)) {
+			orbitalCenter = transform.position + transform.front() * orbitalLength;
+			OrbitalCenterChanged();
+		}
+		else {
+			transform.Compose();
+			dirtyThisFrame = true;
+		}
 	}
 
-	if (input.IsDown(Key::Mouse_RightClick)) {
+	if (input.IsDown(Key::Mouse_RightClick) || input.IsDown(Key::Mouse_LeftClick)) {
 		glm::vec3 front = transform.front();
 		glm::vec3 right = transform.right();
 		glm::vec3 up = transform.up();
@@ -236,9 +249,6 @@ void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 
 			up = engineSpaceUp;
 		}
-
-
-		auto oldOrbCenter = orbitalCenter;
 
 		if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
 			orbitalCenter += front * speed;
@@ -272,8 +282,7 @@ void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 
 
 		if (dirtyThisFrame) {
-			transform.position = orbitalCenter - (transform.front() * orbitalLength);
-			transform.Compose();
+			OrbitalCenterChanged();
 		}
 	}
 }

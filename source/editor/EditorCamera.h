@@ -23,7 +23,7 @@ struct EditorCamera {
 
 
 	TransformCache transform;
-
+	EditorCamera();
 
 	float focalLength{ 1.f };
 
@@ -42,7 +42,7 @@ struct EditorCamera {
 	//
 	float orbitalLength{ 5.f };
 	glm::vec3 orbitalCenter{};
-	bool useOrbitalMode{ false };
+	bool useOrbitalMode{ true };
 
 	bool worldAlign{ false };
 
