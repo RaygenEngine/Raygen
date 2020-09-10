@@ -64,7 +64,7 @@ void main() {
 		cam.viewProjInv,
 		g_NormalSampler,
 		g_ColorSampler,
-		g_MRROSampler,
+		g_SpecularSampler,
 		g_EmissiveSampler,
 		uv);
 
@@ -86,11 +86,8 @@ void main() {
 
 	vec3 Li = (1.0 - shadow) * light.color * light.intensity;     
 
-	vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, frag.a, frag.diffuseColor);
-	vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, frag.a, frag.f0);
-
 	// Li comes from direct light path
-	vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
+	vec3 finalContribution = DirectLightBRDF(NoL, NoV, NoH, LoH, frag.a, frag.diffuseColor, frag.f0) * Li * NoL;
 
 	outColor = vec4(finalContribution, 1);
 }                               

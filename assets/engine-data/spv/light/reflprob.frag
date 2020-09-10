@@ -53,7 +53,7 @@ void main( ) {
 		cam.viewProjInv,
 		g_NormalSampler,
 		g_ColorSampler,
-		g_MRROSampler,
+		g_SpecularSampler,
 		g_EmissiveSampler,
 		uv);
 	
