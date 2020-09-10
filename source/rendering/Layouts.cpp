@@ -16,10 +16,10 @@ namespace vl {
 
 
 inline constexpr static std::array colorAttachmentFormats = { vk::Format::eR16G16B16A16Snorm,
-	/*vk::Format::eR16G16B16A16Snorm,*/ vk::Format::eR8G8B8A8Srgb, vk::Format::eR8G8B8A8Unorm,
+	/*vk::Format::eR16G16B16A16Snorm,*/ vk::Format::eR32G32B32A32Sfloat, vk::Format::eR32G32B32A32Sfloat,
 	vk::Format::eR8G8B8A8Srgb };
 inline constexpr static std::array attachmentNames
-	= { "Depth", "Normal", /*"GeomNormal", */ "BaseColor", "Surface", "Emissive" };
+	= { "Depth", "Normal", /*"GeomNormal", */ "DiffuseColor", "SpecularColor", "Emissive" };
 
 inline constexpr static size_t ColorAttachmentCount = colorAttachmentFormats.size();
 

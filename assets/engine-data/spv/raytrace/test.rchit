@@ -135,8 +135,6 @@ void main() {
 	
 	vec3 Ns = normalize(TBN * (sampledNormal.rgb * 2.0 - 1.0));
 
-
-	
 	// final material values
 	vec3 albedo = sampledBaseColor.rgb;
 	float metallic = sampledMetallicRoughness.b * mat.metallicFactor;
@@ -144,23 +142,19 @@ void main() {
 	float reflectance = 0.5f;
 
     // remapping
-
-
 	FragBrdfInfo brdfInfo;
     brdfInfo.diffuseColor = (1.0 - metallic) * albedo;
 	brdfInfo.f0 =  vec3(0.16 * reflectance * reflectance * (1.0 - metallic)) + albedo * metallic;
-	brdfInfo.a = max(0.001, roughness * roughness);
+	brdfInfo.a = roughness * roughness;
 
 	vec3 hitPoint = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 
 	FsSpaceInfo fragSpace = GetFragSpace_World(Ns, hitPoint, gl_WorldRayOriginEXT);
 
-
 	vec3 radiance = vec3(0);
 	// OLD DIRECT
-	if(brdfInfo.a >= 0.01){
+	{
 		// TODO: Refactor
-		// LMATH: unit?
 		vec3 V = -gl_WorldRayDirectionEXT;
 		float a = brdfInfo.a;
 
@@ -175,13 +169,11 @@ void main() {
 			return;
 		}
 		
-
 		// DIRECT
 
 		// for each light
 		for(int i = 0; i < spotlightCount; ++i) 
 		{
-
 			Spotlight light = spotlights.light[i];
 			vec3 lightPos = light.position;
 
