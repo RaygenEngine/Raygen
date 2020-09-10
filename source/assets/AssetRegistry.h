@@ -279,6 +279,10 @@ private:
 	[[nodiscard]] std::pair<PodEntry*, PodType*> CreateEntryImpl(const uri::Uri& desiredPath, bool transient = false,
 		const uri::Uri& originalImportLoc = "", bool reimportOnLoad = false, bool exportOnSave = false)
 	{
+		CLOG_ERROR(!desiredPath.starts_with("gen-data") && !transient,
+			"Creating a pod entry that is not transient outside of the gen-data folder. Even after saving, this pod "
+			"will not load. Are you sure this is the correct path?");
+
 		PodEntry* e = new PodEntry();
 
 		if (originalImportLoc.empty()) {

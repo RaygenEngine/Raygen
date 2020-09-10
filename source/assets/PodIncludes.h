@@ -10,6 +10,7 @@
 #include "assets/pods/MaterialArchetype.h"
 #include "assets/pods/MaterialInstance.h"
 #include "assets/pods/Mesh.h"
+#include "assets/pods/Prefab.h"
 #include "assets/pods/Sampler.h"
 #include "assets/pods/Shader.h"
 #include "assets/pods/ShaderStage.h"
