@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "GbufferPass.h"
 
+#include "assets/shared/GeometryShared.h"
 #include "engine/Engine.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
@@ -16,8 +17,6 @@
 #include "rendering/scene/SceneGeometry.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
-
-#include "assets/shared/GeometryShared.h"
 
 namespace {
 struct PushConstant {
@@ -250,9 +249,8 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc&
 			auto& arch = mat.archetype.Lock();
 
 
-			if (arch.isUnlit) [[unlikely]] {
-				continue;
-			}
+			if (arch.isUnlit)
+				[[unlikely]] { continue; }
 			auto& plLayout = *arch.gbuffer.pipelineLayout;
 
 			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
@@ -287,9 +285,8 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc&
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
-			if (arch.isUnlit) [[unlikely]] {
-				continue;
-			}
+			if (arch.isUnlit)
+				[[unlikely]] { continue; }
 
 			auto& plLayout = *arch.gbufferAnimated.pipelineLayout;
 

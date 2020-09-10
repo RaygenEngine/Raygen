@@ -11,7 +11,9 @@
 #include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/Layouts.h"
+#include "rendering/output/SwapchainOutputPass.h"
 #include "rendering/Renderer.h"
+#include "rendering/StaticPipes.h"
 #include "rendering/VulkanLoader.h"
 #include "resource/GpuResources.h"
 #include "scene/Scene.h"
@@ -19,8 +21,6 @@
 #include "universe/systems/SceneCmdSystem.h"
 #include "universe/Universe.h"
 #include "wrappers/Swapchain.h"
-#include "rendering/StaticPipes.h"
-#include "rendering/output/SwapchainOutputPass.h"
 
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
 	"Builds all build-able scene nodes" };
@@ -108,9 +108,8 @@ void Layer_::DrawFrame()
 	GpuAssetManager->ConsumeAssetUpdates();
 	currentScene->ConsumeCmdQueue();
 
-	if (!swapOutput->ShouldRenderThisFrame()) [[unlikely]] {
-		return;
-	}
+	if (!swapOutput->ShouldRenderThisFrame())
+		[[unlikely]] { return; }
 
 	swapOutput->OnPreRender();
 
