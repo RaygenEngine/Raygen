@@ -137,6 +137,8 @@ public:
 
 	void ImportFiles(std::vector<fs::path>&& files);
 
+	static void RefreshEntries();
+
 private:
 	assetentry::FolderEntry m_root{ "gen-data", nullptr };
 	assetentry::FolderEntry* m_currentFolder{};

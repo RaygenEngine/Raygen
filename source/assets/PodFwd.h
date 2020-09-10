@@ -8,7 +8,7 @@
 
 #define ENGINE_POD_TYPES                                                                                               \
 	Image, Mesh, Shader, Sampler, SkinnedMesh, Animation, Cubemap, EnvironmentMap, ShaderStage, MaterialArchetype,     \
-		MaterialInstance, ShaderHeader
+		MaterialInstance, ShaderHeader, Prefab
 
 
 ENGINE_PODS_FWD(ENGINE_POD_TYPES);
