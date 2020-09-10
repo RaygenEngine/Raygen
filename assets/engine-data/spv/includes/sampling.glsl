@@ -58,11 +58,10 @@ vec3 cosineSampleHemisphere(vec2 u)
     return vec3(d.x, d.y, z);
 }
 
-// TODO: not used fix
-//float cosineHemispherePdf(vec3 wo, vec3 wi) 
-//{
-//     return sameHemisphere(wo, wi) ? AbsCosTheta(wi) * INV_PI : 0;
-//}
+float cosineHemispherePdf(float cosTheta) 
+{
+     return cosTheta * INV_PI;
+}
 
 vec3 uniformSampleCone(vec2 u, float cosThetaMax) 
 {

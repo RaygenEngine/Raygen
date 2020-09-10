@@ -216,13 +216,7 @@ void main() {
 				float NoH = max(Ndot(H), BIAS); 
 				float LoH = max(dot(L, H), BIAS);
 
-				vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, brdfInfo.a, brdfInfo.diffuseColor);
-				vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, brdfInfo.a, brdfInfo.diffuseColor);
-
-				// so to simplify (faster math)
-				// throughput = (brdf_d + brdf_r) * NoL
-				// incoming radiance = Li;
-				vec3 finalContribution = (brdf_d + brdf_r) * Li * NoL;
+				vec3 finalContribution = DirectLightBRDF(NoL, NoV, NoH, LoH, brdfInfo.a, brdfInfo.diffuseColor, brdfInfo.f0)  * Li * NoL;
 
 				radiance += finalContribution;
 			}

@@ -29,7 +29,7 @@ inline constexpr static size_t ColorAttachmentCount = colorAttachmentFormats.siz
 layout(set = 0, binding = 0) uniform Sampler2d g_DepthSampler;
 layout(set = 0, binding = 1) uniform Sampler2d g_NormalSampler;
 layout(set = 0, binding = 2) uniform Sampler2d g_ColorSampler;
-layout(set = 0, binding = 3) uniform Sampler2d g_MRROSampler; // Metallic Roughness Reflectance Occlusion
+layout(set = 0, binding = 3) uniform Sampler2d g_SpecularSampler;
 layout(set = 0, binding = 4) uniform Sampler2d g_EmissiveSampler;
 
 // Raster Direct
