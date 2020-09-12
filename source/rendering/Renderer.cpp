@@ -26,7 +26,6 @@
 #include "rendering/util/WriteDescriptorSets.h"
 #include "rendering/wrappers/Swapchain.h"
 
-
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 {
@@ -63,7 +62,6 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 		//
 		GbufferPass::RecordCmd(cmdBuffer, sceneDesc);
 	});
-
 
 	auto shadowmapRenderpass = [&](auto light) {
 		if (light) {

@@ -15,14 +15,12 @@ AttachmentDeclaration rendererFinalAttachment = {};
 namespace vl {
 
 
-inline constexpr static std::array colorAttachmentFormats = { vk::Format::eR16G16B16A16Snorm,
-	/*vk::Format::eR16G16B16A16Snorm,*/ vk::Format::eR32G32B32A32Sfloat, vk::Format::eR32G32B32A32Sfloat,
-	vk::Format::eR8G8B8A8Srgb };
-inline constexpr static std::array attachmentNames
-	= { "Depth", "Normal", /*"GeomNormal", */ "DiffuseColor", "SpecularColor", "Emissive" };
-
-inline constexpr static size_t ColorAttachmentCount = colorAttachmentFormats.size();
-
+inline constexpr static std::array colorAttachments = {
+	std::pair{ "GNormal", vk::Format::eR16G16B16A16Snorm },
+	std::pair{ "GDiffuseColor", vk::Format::eR32G32B32A32Sfloat },
+	std::pair{ "GSpecularColor", vk::Format::eR32G32B32A32Sfloat },
+	std::pair{ "GEmissive", vk::Format::eR8G8B8A8Srgb },
+};
 
 /*
 // GBuffer
@@ -53,18 +51,16 @@ void Layouts_::MakeRenderPassLayouts()
 	{
 		std::vector<AttRef> gbufferAtts;
 
-		depthBuffer = gbufferPassLayout.CreateAttachment(Device->FindDepthFormat());
+		depthBuffer = gbufferPassLayout.CreateAttachment("GDepth", Device->FindDepthFormat());
 		gbufferAtts.emplace_back(depthBuffer);
 
-		for (auto gbufferAttFormat : colorAttachmentFormats) {
-			auto att = gbufferPassLayout.CreateAttachment(gbufferAttFormat);
+		for (auto& [name, format] : colorAttachments) {
+			auto att = gbufferPassLayout.CreateAttachment(name, format);
 			gbufferPassLayout.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
 			gbufferAtts.emplace_back(att);
 		}
 
-
 		gbufferPassLayout.AddSubpass({}, std::move(gbufferAtts)); // Write GBuffer
-
 
 		gbufferPassLayout.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
 
@@ -74,7 +70,7 @@ void Layouts_::MakeRenderPassLayouts()
 	AttRef rasterDirectAtt;
 	// RasterDirect
 	{
-		rasterDirectAtt = rasterDirectPassLayout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat);
+		rasterDirectAtt = rasterDirectPassLayout.CreateAttachment("RasterDirect", vk::Format::eR32G32B32A32Sfloat);
 		rasterDirectPassLayout.AddSubpass({}, { rasterDirectAtt }); // Write Direct Lighting
 
 		rasterDirectPassLayout.AttachmentFinalLayout(rasterDirectAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
@@ -84,7 +80,8 @@ void Layouts_::MakeRenderPassLayouts()
 
 	// Lightblend + PostProcess
 	{
-		auto renderOutAttachment = ptPassLayout.CreateAttachment(vk::Format::eR32G32B32A32Sfloat);
+		auto renderOutAttachment
+			= ptPassLayout.CreateAttachment("LightBlend+PostProcess", vk::Format::eR32G32B32A32Sfloat);
 
 		ptPassLayout.AddSubpass({ depthBuffer }, { renderOutAttachment }); // LightBlend + Unlit Pass
 

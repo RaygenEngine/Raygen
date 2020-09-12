@@ -26,7 +26,7 @@ void GpuCubemap::Update(const AssetUpdateInfo&)
 	cubemap = RCubemap(cubemapPod->resolution, cubemapPod->mipCount, format, //
 		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal);
+		vk::MemoryPropertyFlagBits::eDeviceLocal, "WIPname");
 
 	// transiton all mips to transfer optimal
 	cubemap.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
