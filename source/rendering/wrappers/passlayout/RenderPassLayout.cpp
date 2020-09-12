@@ -14,9 +14,9 @@ RRenderPassLayout::Attachment::State StateFromLayout(vk::ImageLayout layout)
 	using enum RRenderPassLayout::Attachment::State;
 
 	switch (layout) {
-		case vk::ImageLayout::eShaderReadOnlyOptimal: return ShaderRead;
-		case vk::ImageLayout::eColorAttachmentOptimal: return Color;
-		case vk::ImageLayout::eDepthStencilAttachmentOptimal: return Depth;
+		case eShaderReadOnlyOptimal: return ShaderRead;
+		case eColorAttachmentOptimal: return Color;
+		case eDepthStencilAttachmentOptimal: return Depth;
 	}
 	LOG_ABORT("Unfinished enum detector");
 }
@@ -60,7 +60,7 @@ RRenderPassLayout::RRenderPassLayout(const std::string& inName)
 }
 
 RRenderPassLayout::AttachmentRef RRenderPassLayout::CreateAttachment(
-	vk::Format format, vk::ImageUsageFlags additionalUsageFlags)
+	const char* name, vk::Format format, vk::ImageUsageFlags additionalUsageFlags)
 {
 	auto& att = internalAttachments.emplace_back();
 	auto& attDescr = internalAttachmentsDescr.emplace_back();
@@ -72,6 +72,7 @@ RRenderPassLayout::AttachmentRef RRenderPassLayout::CreateAttachment(
 	att.format = format;
 	att.isDepth = rvk::isDepthFormat(format);
 	att.additionalFlags = additionalUsageFlags;
+	att.name = name;
 
 	attDescr
 		.setFormat(format) //
@@ -277,7 +278,7 @@ RenderingPassInstance RRenderPassLayout::CreatePassInstance(
 	rpInstance.parent = this;
 	auto& framebuffer = rpInstance.framebuffer;
 
-	for (int32 i = 0; auto& att : internalAttachments) {
+	for (auto& att : internalAttachments) {
 		vk::ImageUsageFlags usageBits
 			= att.isDepth ? vk::ImageUsageFlagBits::eDepthStencilAttachment : vk::ImageUsageFlagBits::eColorAttachment;
 		usageBits |= vk::ImageUsageFlagBits::eSampled;
@@ -292,8 +293,7 @@ RenderingPassInstance RRenderPassLayout::CreatePassInstance(
 		usageBits |= att.additionalFlags;
 
 		framebuffer.AddAttachment(width, height, att.format, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
-			usageBits, vk::MemoryPropertyFlagBits::eDeviceLocal, "FramebufferAttchment: " + std::to_string(i),
-			initialLayout);
+			usageBits, vk::MemoryPropertyFlagBits::eDeviceLocal, att.name, initialLayout);
 	}
 
 	CLOG_ABORT(externalAttachmentInstances.size() != externalAttachments.size(),

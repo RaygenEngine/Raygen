@@ -25,7 +25,7 @@ struct RImage {
 	RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
 		vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage,
 		vk::SampleCountFlagBits samples, vk::SharingMode sharingMode, vk::ImageCreateFlags flags,
-		vk::MemoryPropertyFlags properties, vk::ImageViewType viewType, const std::string& name = "unnamed");
+		vk::MemoryPropertyFlags properties, vk::ImageViewType viewType, const std::string& name);
 
 	RImage(RImage const&) = delete;
 	RImage(RImage&&) = default;
@@ -71,7 +71,7 @@ struct RImage2D : RImage {
 	RImage2D() = default;
 	RImage2D(uint32 width, uint32 height, uint32 mipLevels, vk::Format format, vk::ImageTiling tiling,
 		vk::ImageLayout initalLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties,
-		const std::string& name = "unnamed_image2d")
+		const std::string& name)
 		: RImage(vk::ImageType::e2D, { width, height, 1u }, mipLevels, 1u, format, tiling, initalLayout, usage,
 			vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, {}, properties, vk::ImageViewType::e2D, name){};
 };
@@ -79,7 +79,7 @@ struct RImage2D : RImage {
 struct RCubemap : RImage {
 	RCubemap() = default;
 	RCubemap(uint32 dims, uint32 mipCount, vk::Format format, vk::ImageTiling tiling, vk::ImageLayout initalLayout,
-		vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, const std::string& name = "unnamed_cubemap")
+		vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, const std::string& name)
 		: RImage(vk::ImageType::e2D, { dims, dims, 1u }, mipCount, 6u, format, tiling, initalLayout, usage,
 			vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, vk::ImageCreateFlagBits::eCubeCompatible,
 			properties, vk::ImageViewType::eCube, name){};
@@ -91,7 +91,7 @@ struct RImageAttachment : RImage {
 	RImageAttachment() = default;
 	RImageAttachment(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling,
 		vk::ImageLayout initalLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties,
-		const std::string& name = "unnamed_attachment")
+		const std::string& name)
 		: RImage(vk::ImageType::e2D, { width, height, 1u }, 1u, 1u, format, tiling, initalLayout, usage,
 			vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, {}, properties, vk::ImageViewType::e2D, name){};
 

@@ -8,10 +8,8 @@ enum GColorAttachment : uint32
 {
 	GDepth = 0,
 	GNormal = 1,
-	// rgb: color, a: opacity
-	GBaseColor = 2,
-	// r: metallic, g: roughness, b: reflectance, a: occlusion
-	GSurface = 3,
+	GDiffuseColor = 2,
+	GSpecularColor = 3,
 	GEmissive = 4,
 	GCount
 };

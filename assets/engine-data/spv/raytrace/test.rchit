@@ -164,7 +164,7 @@ void main() {
 		// same hemisphere
 		float NoV = max(Ndot(V), BIAS);
 
-		if (sum(sampledEmissive.xyz) > 0) {
+		if (sum(sampledEmissive.xyz) > BIAS) {
 			prd.radiance = sampledEmissive.xyz;
 			return;
 		}
