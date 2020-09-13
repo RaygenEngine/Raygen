@@ -76,6 +76,7 @@ void EditorCamera::Update(float deltaSeconds)
 	if (pilotEntity && dirtyThisFrame) {
 		UpdatePiloting();
 	}
+	dirtyThisFrame = true;
 }
 
 void EditorCamera::ResizeViewport(glm::uvec2 newSize)
@@ -136,6 +137,7 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 	viewProjInv = glm::inverse(viewProj);
 
 	worldScene->EnqueueCmd<SceneCamera>(sceneUid, [=, pos = transform.position](SceneCamera& cam) {
+		cam.prevViewProj = cam.ubo.viewProj;
 		cam.ubo.position = glm::vec4(pos, 1.f);
 		cam.ubo.view = view;
 		cam.ubo.viewInv = viewInv;
@@ -143,7 +145,7 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 		cam.ubo.projInv = projInv;
 		cam.ubo.viewProj = viewProj;
 		cam.ubo.viewProjInv = viewProjInv;
-		vl::Renderer->m_raytracingPass.m_rtFrame = 0;
+		// vl::Renderer->m_raytracingPass.m_rtFrame = 0;
 	});
 
 	proj[1][1] *= -1.f;

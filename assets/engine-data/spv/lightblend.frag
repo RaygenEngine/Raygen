@@ -20,6 +20,7 @@ void main() {
 	vec3 indirect = texture(rtIndirectSampler, uv).rgb;
 
     outColor = vec4(indirect + direct, 1.f); 
+
 }                               
                                 
                                  
@@ -52,6 +53,8 @@ void main() {
                                                                                                                                                         
                                                                                                                                                              
                                                                                                                                                               
+
+
 
 
 

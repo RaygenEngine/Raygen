@@ -4,6 +4,7 @@
 
 namespace vl {
 
+// NEXT:
 enum GColorAttachment : uint32
 {
 	GDepth = 0,
@@ -11,6 +12,7 @@ enum GColorAttachment : uint32
 	GDiffuseColor = 2,
 	GSpecularColor = 3,
 	GEmissive = 4,
+	GVelocity = 5,
 	GCount
 };
 
@@ -34,7 +36,7 @@ inline struct Layouts_ {
 
 	RDescriptorSetLayout imageDebugDescLayout;
 
-
+	// Global descriptor Set
 	RDescriptorSetLayout renderAttachmentsLayout;
 
 	vk::UniqueRenderPass depthRenderPass;

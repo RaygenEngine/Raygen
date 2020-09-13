@@ -83,9 +83,23 @@ void main() {
 
     // Do accumulation
     if(frame > 0){
-        float a = 1.f / float(frame);
-        vec3  prevColor = imageLoad(progressiveResult, ivec2(gl_LaunchIDEXT.xy)).xyz;
+        float a = 0.15;
+
+        bool progressive = false;     
+        if (progressive) {
+        	a = 1.f / float(frame);
+       	}
+
+        ivec2 nextPrevIndex = ivec2(texture(g_VelocitySampler, uv).xy * gl_LaunchSizeEXT.xy);
+        
+        vec3 prevColor = imageLoad(progressiveResult, nextPrevIndex).xyz;
+        
+
         vec3 finalIndirect = mix(prevColor, curColor, a);
+        
+        
+        //vec3 finalIndirect = mix(prevColor, curColor, a);
+		
 
         imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect, 1.f));
         imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect, 1.f));
@@ -201,4 +215,5 @@ void WriteSky() {
     
     imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
 }
+
 
