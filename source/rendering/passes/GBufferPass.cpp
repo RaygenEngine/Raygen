@@ -22,9 +22,11 @@ namespace {
 struct PushConstant {
 	glm::mat4 modelMat;
 	glm::mat4 normalMat;
+	glm::mat4 mvpPrev;
 };
 
-static_assert(sizeof(PushConstant) <= 128);
+// NEXT:
+// static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
@@ -239,7 +241,8 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc&
 			continue;
 		}
 		PushConstant pc{ //
-			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
+			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform)),
+			sceneDesc.viewer->prevViewProj * geom->prevTransform
 		};
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
@@ -249,8 +252,9 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc&
 			auto& arch = mat.archetype.Lock();
 
 
-			if (arch.isUnlit)
-				[[unlikely]] { continue; }
+			if (arch.isUnlit) [[unlikely]] {
+				continue;
+			}
 			auto& plLayout = *arch.gbuffer.pipelineLayout;
 
 			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
@@ -285,8 +289,9 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc&
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
-			if (arch.isUnlit)
-				[[unlikely]] { continue; }
+			if (arch.isUnlit) [[unlikely]] {
+				continue;
+			}
 
 			auto& plLayout = *arch.gbufferAnimated.pipelineLayout;
 

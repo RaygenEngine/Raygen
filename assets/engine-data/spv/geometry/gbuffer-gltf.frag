@@ -12,6 +12,8 @@ layout (location = 2) out vec4 gSpecularColor;
 // rgb: emissive, a: occlusion
 layout (location = 3) out vec4 gEmissive;
 
+layout (location = 4) out vec4 gVelocity;
+
 // in
 
 layout(location=0) in Data
@@ -19,6 +21,8 @@ layout(location=0) in Data
 	vec2 uv;
 	mat3 TBN;
 	vec3 fragPos;
+	vec4 clipPos;
+	vec4 prevClipPos;
 };
 
 // uniforms
@@ -77,5 +81,9 @@ void main() {
 	gSpecularColor = vec4(vec3(0.16 * 0.5 * 0.5 * (1.0 - metallic)) + albedo * metallic, roughness * roughness);
 	
 	gEmissive = vec4(emissive, occlusion);
+	
+    vec2 b = (prevClipPos.xy / prevClipPos.w) * 0.5 + 0.5;
+
+	gVelocity = vec4(b, 1.f, 1.f);
 }                                                                                        
 

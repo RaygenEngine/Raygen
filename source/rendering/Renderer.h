@@ -63,6 +63,7 @@ public:
 	InFlightResources<RenderingPassInstance> m_rasterDirectPass;
 	InFlightResources<RenderingPassInstance> m_ptPass;
 
+	// Global descriptor set
 	InFlightResources<vk::DescriptorSet> m_attachmentsDesc;
 
 

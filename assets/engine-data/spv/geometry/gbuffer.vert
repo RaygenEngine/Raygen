@@ -7,6 +7,8 @@ layout(location=0) out Data
 	vec2 uv;
 	mat3 TBN;
 	vec3 fragPos;
+	vec4 clipPos; 
+	vec4 prevClipPos;
 };
 
 // in
@@ -21,6 +23,7 @@ layout(location = 3) in vec2 textCoord;
 layout(push_constant) uniform PC {
 	mat4 modelMat;
 	mat4 normalMat;
+	mat4 mvpPrev;
 } push;
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
@@ -37,8 +40,14 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 void main() {
 	vec4 posWCS = push.modelMat * vec4(position, 1.0);
 	gl_Position = cam.viewProj * posWCS;
-	fragPos = posWCS.xyz;
+	clipPos = gl_Position;
+	prevClipPos = push.mvpPrev * vec4(position, 1.0);
+	
 
+
+	
+
+	fragPos = posWCS.xyz;
 	uv = textCoord;
 
 	vec3 T = normalize(mat3(push.normalMat) * tangent);

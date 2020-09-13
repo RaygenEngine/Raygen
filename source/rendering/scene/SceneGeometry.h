@@ -4,6 +4,8 @@
 // TODO: rename model stuff
 struct SceneGeometry {
 	glm::mat4 transform;
+	glm::mat4 prevTransform;
+
 	vl::GpuHandle<Mesh> mesh;
 
 	InFlightResources<bool> isDirty{ true };
