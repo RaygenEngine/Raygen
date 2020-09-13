@@ -15,6 +15,8 @@ public:
 	std::vector<vk::RayTracingShaderGroupCreateInfoKHR> m_rtShaderGroups;
 
 	RImage2D m_progressiveResult;
+	RImage2D m_momentsBuffer;
+
 
 	InFlightResources<RImageAttachment> m_indirectResult;
 

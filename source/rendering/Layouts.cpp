@@ -160,6 +160,13 @@ Layouts_::Layouts_()
 	doubleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll); // WIP: Fix all
 	doubleStorageImage.Generate();
 
+
+	tripleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
+	tripleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
+	tripleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
+	tripleStorageImage.Generate();
+
+
 	// image debug
 	imageDebugDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	imageDebugDescLayout.Generate();

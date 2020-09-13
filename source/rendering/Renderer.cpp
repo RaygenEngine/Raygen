@@ -180,10 +180,11 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 	// RT images
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		m_rtDescSet[i] = Layouts->doubleStorageImage.AllocDescriptorSet();
+		m_rtDescSet[i] = Layouts->tripleStorageImage.AllocDescriptorSet();
 
 		rvk::writeDescriptorImages(m_rtDescSet[i], 0u,
-			{ m_raytracingPass.m_indirectResult[i].view(), m_raytracingPass.m_progressiveResult.view() },
+			{ m_raytracingPass.m_indirectResult[i].view(), m_raytracingPass.m_progressiveResult.view(),
+				m_raytracingPass.m_momentsBuffer.view() },
 			vk::DescriptorType::eStorageImage, nullptr, vk::ImageLayout::eGeneral);
 	}
 }

@@ -30,6 +30,8 @@ inline struct Layouts_ {
 
 	RDescriptorSetLayout singleStorageImage;
 	RDescriptorSetLayout doubleStorageImage;
+	RDescriptorSetLayout tripleStorageImage;
+
 
 	RDescriptorSetLayout bufferAndSamplersDescLayout;
 
