@@ -39,7 +39,7 @@ void RaytracingPass::MakeRtPipeline()
 	std::array layouts{
 		Layouts->renderAttachmentsLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
-		Layouts->doubleStorageImage.handle(),
+		Layouts->tripleStorageImage.handle(),
 		Layouts->accelLayout.handle(),
 		Layouts->bufferAndSamplersDescLayout.handle(),
 		Layouts->bufferAndSamplersDescLayout.handle(),
@@ -271,6 +271,14 @@ void RaytracingPass::Resize(vk::Extent2D extent)
 
 	m_progressiveResult.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+
+	m_momentsBuffer = RImage2D(extent.width, extent.height, 1u, vk::Format::eR32Uint, vk::ImageTiling::eOptimal,
+		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage, vk::MemoryPropertyFlagBits::eDeviceLocal,
+		"Moments Buffer");
+
+	m_momentsBuffer.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+
 
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
 		m_indirectResult[i]
