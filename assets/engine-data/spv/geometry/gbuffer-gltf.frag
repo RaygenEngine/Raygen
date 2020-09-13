@@ -82,8 +82,9 @@ void main() {
 	
 	gEmissive = vec4(emissive, occlusion);
 	
+	vec2 a = (clipPos.xy / clipPos.w) * 0.5 + 0.5;
     vec2 b = (prevClipPos.xy / prevClipPos.w) * 0.5 + 0.5;
 
-	gVelocity = vec4(b, 1.f, 1.f);
+	gVelocity = vec4(a - b, 1.f, 1.f);
 }                                                                                        
 
