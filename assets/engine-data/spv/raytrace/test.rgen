@@ -33,6 +33,28 @@ layout(location = 0) rayPayloadEXT hitPayload prd;
 
 void WriteSky(); 
 
+
+vec4 BilinearSample(vec2 uv, uvec2 imageSize)
+{  
+    vec2 pixelOffset = vec2(0.5f);
+
+    float sw = uv.s * imageSize.x - pixelOffset.x;
+    float sh = uv.t * imageSize.y - pixelOffset.y;
+
+    vec4 TL = imageLoad(progressiveResult, ivec2(floor(sw), floor(sh)));
+    vec4 TR = imageLoad(progressiveResult, ivec2(ceil(sw), floor(sh)));
+    vec4 BL = imageLoad(progressiveResult, ivec2(floor(sw), ceil(sh)));
+    vec4 BR = imageLoad(progressiveResult, ivec2(ceil(sw), ceil(sh)));
+
+    float rightPercent = fract(sw);
+    float bottomPercent = fract(sh);
+
+    vec4 topInterpol = mix(TL, TR, rightPercent);
+    vec4 botInterpol = mix(BL, BR, rightPercent);
+
+    return mix(TL, BR, bottomPercent);
+}
+
  
 void main() {
 
@@ -51,10 +73,13 @@ void main() {
         return;
     }
 
-  ivec2 prevUvs = ivec2(texture(g_VelocitySampler, uv).xy * gl_LaunchSizeEXT.xy);
-	uint moments = imageLoad(momentsBuffer, prevUvs).x;
+              
+               
+    vec2 prevUv = uv - texture(g_VelocitySampler, uv).xy;
+    ivec2 prevIuv = ivec2(round(prevUv * gl_LaunchSizeEXT.xy));
+	uint moments = imageLoad(momentsBuffer, prevIuv).x;
 
-  	if (prevUvs.x < 0 || prevUvs.y < 0 || prevUvs.x > gl_LaunchSizeEXT.x || prevUvs.y > gl_LaunchSizeEXT.y) {
+  	if (prevIuv.x < 0 || prevIuv.y < 0 || prevIuv.x > gl_LaunchSizeEXT.x || prevIuv.y > gl_LaunchSizeEXT.y) {
   		moments = 0;
   	}
     
@@ -100,18 +125,14 @@ void main() {
 
     // Do accumulation
     if(frame > 0){
-
-
-      
         imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), uvec4(moments + 1));
-              
-               
-        vec3 prevColor = imageLoad(progressiveResult, prevUvs).xyz;
+
+        vec3 prevColor = BilinearSample(prevUv, gl_LaunchSizeEXT.xy).xyz;
                 
-        float a = 0.15;
+        float a = 0.2;
 	
 	
-		a = max(1.f / float(moments + 1), 0.05);
+		//a = max(1.f / float(moments + 1), 0.05);
 
 		
 		bool progressive = false;
@@ -126,7 +147,9 @@ void main() {
 		
 
         imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect, 1.f));
+
         imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect, 1.f));
+//		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(abs(prevUv - uv), 0.f, 1.f));
     }
     else{
         imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
@@ -239,6 +262,10 @@ void WriteSky() {
     
     imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
 }
+
+
+
+
 
 
 
