@@ -140,7 +140,7 @@ void main() {
         vec3 prevColor = BilinearSample(ivec2(floor(posPrev)), posPrev - motion).xyz;
 
         float a = 0.05;
-		a = max(1.f / float(moments + 1), 0.005);
+		a = max(1.f / float(moments + 1), 0.05);
 
 		
 		bool progressive = false;
