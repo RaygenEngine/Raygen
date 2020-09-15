@@ -24,7 +24,7 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 
 layout(set = 2, binding = 0, rgba32f) uniform image2D image;
 layout(set = 2, binding = 1, rgba32f) uniform image2D progressiveResult;
-layout(set = 2, binding = 2, r32ui) uniform uimage2D momentsBuffer;
+layout(set = 2, binding = 2, rgba32f) uniform image2D momentsBuffer;
 
 layout(location = 0) rayPayloadEXT hitPayload prd;
 
@@ -32,29 +32,6 @@ layout(location = 0) rayPayloadEXT hitPayload prd;
 #include "raytrace/rt-indirect.glsl"
 
 void WriteSky(); 
-
-
-vec4 BilinearSample2(vec2 uv, uvec2 imageSize)
-{  
-    vec2 pixelOffset = vec2(0.50);
-
-
-    float sw = uv.s * imageSize.x - pixelOffset.x;
-    float sh = uv.t * imageSize.y - pixelOffset.y;
-
-    vec4 TL = imageLoad(progressiveResult, ivec2(floor(sw), floor(sh)));
-    vec4 TR = imageLoad(progressiveResult, ivec2(ceil(sw), floor(sh)));
-    vec4 BL = imageLoad(progressiveResult, ivec2(floor(sw), ceil(sh)));
-    vec4 BR = imageLoad(progressiveResult, ivec2(ceil(sw), ceil(sh)));
-
-    float rightPercent = fract(sw);
-    float bottomPercent = fract(sh);
-
-    vec4 topInterpol = mix(TL, TR, rightPercent);
-    vec4 botInterpol = mix(BL, BR, rightPercent);
-
-    return mix(TL, BR, bottomPercent);
-}
 
 vec4 BilinearSample(ivec2 pixelPos, vec2 fracUvs)
 {  
@@ -97,17 +74,24 @@ void main() {
     }
              
             
-
-    vec2 prevUv = uv - texture(g_VelocitySampler, uv).xy;
+    const vec4 motionSample = texture(g_VelocitySampler, uv);
+    vec2 prevUv = uv - motionSample.xy;
     ivec2 prevIuv = ivec2((prevUv  * gl_LaunchSizeEXT.xy) - vec2(0.5));
-	uint moments = imageLoad(momentsBuffer, prevIuv).x;
+    const vec4 momentsSample = imageLoad(momentsBuffer, prevIuv);
+	int moments = int(round(momentsSample.x));
+
+
+    const float motionDepthDifference = motionSample.z;
+    float prevDepth = momentsSample.y;
+
+    if (abs(fragDepth - motionDepthDifference - prevDepth) > 5e-3) {
+      moments = 0;
+    }
 
 
   	if (prevIuv.x < 0 || prevIuv.y < 0 || prevIuv.x > gl_LaunchSizeEXT.x || prevIuv.y > gl_LaunchSizeEXT.y) {
 		moments = 0;
   	}
-
-
 
 	Fragment frag = getFragmentFromGBuffer(
 		fragDepth,
@@ -131,8 +115,8 @@ void main() {
 	vec3 accumColor = vec3(0);
 	uint actualSamples = 1;
 	
-    if (moments < 6) {
-       actualSamples = max(6u - moments, 1u);
+    if (moments == 0) {
+       actualSamples = 10; //max(3u - moments, 1u);
     }
 	
 	
@@ -151,14 +135,12 @@ void main() {
 
     // Do accumulation
     if(frame > 0){
-        imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), uvec4(moments + 1));
-
 		vec2 motion = texture(g_VelocitySampler, uv).xy;
 		vec2 posPrev = vec2(gl_LaunchIDEXT.xy) - vec2(motion * gl_LaunchSizeEXT.xy);
         vec3 prevColor = BilinearSample(ivec2(floor(posPrev)), posPrev - motion).xyz;
 
         float a = 0.05;
-		a = max(1.f / float(moments + 1), 0.05);
+		a = max(1.f / float(moments + 1), 0.005);
 
 		
 		bool progressive = false;
@@ -178,12 +160,10 @@ void main() {
 //		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(abs(prevUv - uv), 0.f, 1.f));
     }
     else{
-        imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), uvec4(0));
         imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
         imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
     }
-
-
+    imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(moments + 1., fragDepth, 0., 0.));
 }
 
 vec3 GetSkyColor(vec3 orig, vec3 dir) {
@@ -289,6 +269,7 @@ void WriteSky() {
     
     imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
 }
+
 
 
 
