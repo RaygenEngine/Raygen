@@ -34,9 +34,10 @@ layout(location = 0) rayPayloadEXT hitPayload prd;
 void WriteSky(); 
 
 
-vec4 BilinearSample(vec2 uv, uvec2 imageSize)
+vec4 BilinearSample2(vec2 uv, uvec2 imageSize)
 {  
-    vec2 pixelOffset = vec2(0.5f);
+    vec2 pixelOffset = vec2(0.50);
+
 
     float sw = uv.s * imageSize.x - pixelOffset.x;
     float sh = uv.t * imageSize.y - pixelOffset.y;
@@ -55,12 +56,34 @@ vec4 BilinearSample(vec2 uv, uvec2 imageSize)
     return mix(TL, BR, bottomPercent);
 }
 
+vec4 BilinearSample(ivec2 pixelPos, vec2 fracUvs)
+{  
+	ivec2 offset[4] = { ivec2(0, 0), ivec2(1, 0), ivec2(0, 1), ivec2(1, 1) };
+	
+	float sumw = 0;
+	float x = fract(fracUvs.x);
+	float y = fract(fracUvs.y);
+
+    float w[4] = { (1 - x) * (1 - y), 
+                        x  * (1 - y), 
+                   (1 - x) *      y,
+                        x  *      y };
+                        
+    vec4 result = vec4(0);
+    for (int sampleIdx = 0; sampleIdx < 4; sampleIdx++) {
+    	ivec2 loc = pixelPos + offset[sampleIdx];
+    	result += w[sampleIdx] * imageLoad(progressiveResult, loc);
+    }
+
+	return result;
+}
+ 
  
 void main() {
 
     vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
     float fragDepth = texture(g_DepthSampler, uv).r;
-    if(fragDepth >= 1.f)
+    if(fragDepth >= 1.)
     {
         // sky
 	    WriteSky();
@@ -69,20 +92,22 @@ void main() {
 
     if(frame >= convergeUntilFrame && convergeUntilFrame != 0) {
         vec3 indirect = imageLoad(progressiveResult, ivec2(gl_LaunchIDEXT.xy)).xyz;
-        imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(indirect, 1.f));
+        imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(indirect, 1.));
         return;
     }
+             
+            
 
-              
-               
     vec2 prevUv = uv - texture(g_VelocitySampler, uv).xy;
-    ivec2 prevIuv = ivec2(round(prevUv * gl_LaunchSizeEXT.xy));
+    ivec2 prevIuv = ivec2((prevUv  * gl_LaunchSizeEXT.xy) - vec2(0.5));
 	uint moments = imageLoad(momentsBuffer, prevIuv).x;
 
+
   	if (prevIuv.x < 0 || prevIuv.y < 0 || prevIuv.x > gl_LaunchSizeEXT.x || prevIuv.y > gl_LaunchSizeEXT.y) {
-  		moments = 0;
+		moments = 0;
   	}
-    
+
+
 
 	Fragment frag = getFragmentFromGBuffer(
 		fragDepth,
@@ -107,7 +132,7 @@ void main() {
 	uint actualSamples = 1;
 	
     if (moments < 6) {
-        actualSamples = max(6u - moments, 1u);
+       actualSamples = max(6u - moments, 1u);
     }
 	
 	
@@ -123,16 +148,17 @@ void main() {
 
     vec3 curColor = (accumColor / actualSamples);
 
+
     // Do accumulation
     if(frame > 0){
         imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), uvec4(moments + 1));
 
-        vec3 prevColor = BilinearSample(prevUv, gl_LaunchSizeEXT.xy).xyz;
-                
-        float a = 0.2;
-	
-	
-		//a = max(1.f / float(moments + 1), 0.05);
+		vec2 motion = texture(g_VelocitySampler, uv).xy;
+		vec2 posPrev = vec2(gl_LaunchIDEXT.xy) - vec2(motion * gl_LaunchSizeEXT.xy);
+        vec3 prevColor = BilinearSample(ivec2(floor(posPrev)), posPrev - motion).xyz;
+
+        float a = 0.05;
+		a = max(1.f / float(moments + 1), 0.05);
 
 		
 		bool progressive = false;
@@ -145,13 +171,14 @@ void main() {
         
         //vec3 finalIndirect = mix(prevColor, curColor, a);
 		
-
+ 
         imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect, 1.f));
 
         imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect, 1.f));
 //		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(abs(prevUv - uv), 0.f, 1.f));
     }
     else{
+        imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), uvec4(0));
         imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
         imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
     }
@@ -262,6 +289,7 @@ void WriteSky() {
     
     imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
 }
+
 
 
 
