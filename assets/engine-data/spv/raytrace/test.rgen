@@ -104,29 +104,15 @@ void main() {
 	}
 
 	vec3 curColor = (accumColor / actualSamples);
-
+	
 
 	// Do accumulation
 	if(frame > 0){
-		vec2 motion = texture(g_VelocitySampler, uv).xy;
-		vec2 posPrev = vec2(gl_LaunchIDEXT.xy) - vec2(motion * gl_LaunchSizeEXT.xy);
-		vec3 prevColor = reproj.color;
-
-		if (abssum(prevColor) <= 0) {
-			moments = 0;
-
-		}
-
 		float a = 0.05;
 		a = max(1.f / float(moments + 1), 0.05);
+	
 
-		
-		bool progressive = false;
-		if (progressive) {
-			a = 1.f / float(frame);
-		}
-
-		vec3 finalIndirect = mix(prevColor, curColor, a);
+		vec3 finalIndirect = mix(reproj.color, curColor, a);
 		
 		
 		//vec3 finalIndirect = mix(prevColor, curColor, a);
