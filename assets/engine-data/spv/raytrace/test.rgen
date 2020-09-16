@@ -40,7 +40,7 @@ struct ReprojectionData {
 	int historyLength; // 0 means reprojection was invalid
 };
 
-ReprojectionData GetReprojection(vec2 uv, float fragDepth);
+ReprojectionData GetReprojection(vec2 uv);
  
 void main() {
 
@@ -79,7 +79,7 @@ void main() {
 
 	
 	
-	ReprojectionData reproj = GetReprojection(uv, fragDepth);
+	ReprojectionData reproj = GetReprojection(uv);
 	int moments = reproj.historyLength;
 
 
@@ -175,13 +175,14 @@ bool IsReprojValid(ivec2 coord, float expectedPrevDepth)
 }
 
 
-vec4 BilinearSample(ivec2 pixelPos, vec2 fracUvs, float expectedPrevDepth)
+vec4 ReprojSample(vec2 sampleUv, float expectedPrevDepth)
 {
+	ivec2 pixelPos = ivec2(floor(sampleUv));
 	ivec2 offset[4] = { ivec2(0, 0), ivec2(1, 0), ivec2(0, 1), ivec2(1, 1) };
 
 	float sumw = 0;
-	float x = fract(fracUvs.x);
-	float y = fract(fracUvs.y);
+	float x = fract(sampleUv.x);
+	float y = fract(sampleUv.y);
 
 	float w[4] = { 
 		(1 - x) * (1 - y),
@@ -208,22 +209,18 @@ vec4 BilinearSample(ivec2 pixelPos, vec2 fracUvs, float expectedPrevDepth)
 	return result;
 }
 
-ReprojectionData GetReprojection(vec2 uv, float fragDepth) {
-	ReprojectionData reproj;
-	
+ReprojectionData GetReprojection(vec2 uv) {
 	// xy: ScreenSpace (uv) motion vector
 	// z: expected previous depth
 	const vec4 motionSample = texture(g_VelocitySampler, uv);
 
-	const vec2 motion = texture(g_VelocitySampler, uv).xy;
+	const vec2 motion = motionSample.xy;
+	const float expectedDepth = motionSample.z;
+
 	const vec2 posPrev = vec2(gl_LaunchIDEXT.xy) - vec2(motion * gl_LaunchSizeEXT.xy);
 
-	const float expectedDepth = fragDepth - motionSample.z;	 // WIP:
-
-
-	const vec3 prevColor = BilinearSample(ivec2(floor(posPrev)), posPrev - motion, expectedDepth).xyz;
-
-	reproj.color = prevColor;
+	ReprojectionData reproj;
+	reproj.color = ReprojSample(posPrev, expectedDepth).xyz;
 
     
     vec2 prevUv = uv - motionSample.xy;
@@ -235,3 +232,4 @@ ReprojectionData GetReprojection(vec2 uv, float fragDepth) {
 
 	return reproj;
 }
+

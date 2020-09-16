@@ -85,8 +85,8 @@ void main() {
 	vec2 a = (clipPos.xy / clipPos.w) * 0.5 + 0.5;
     vec2 b = (prevClipPos.xy / prevClipPos.w) * 0.5 + 0.5;
 
-	float depthDifference = (clipPos.z / clipPos.w) - (prevClipPos.z / prevClipPos.w);
+	float expectedDepth = (prevClipPos.z / prevClipPos.w);
 
-	gVelocity = vec4(a - b, depthDifference, 1.f);
+	gVelocity = vec4(a - b, expectedDepth, 1.f);
 }                                                                                        
 
