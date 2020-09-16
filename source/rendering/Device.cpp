@@ -83,7 +83,9 @@ Device_::Device_(RPhysicalDevice& pd)
 	auto& deviceRayTracingFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceRayTracingFeaturesKHR>();
 
 	deviceFeatures.features.setSamplerAnisotropy(VK_TRUE);
+	deviceFeatures.features.setFragmentStoresAndAtomics(VK_TRUE);
 	deviceBufferAddressFeatures.setBufferDeviceAddress(VK_TRUE);
+
 
 	pDeviceFeaturesChain.get<vk::PhysicalDeviceDescriptorIndexingFeatures>()
 		.setRuntimeDescriptorArray(true) //

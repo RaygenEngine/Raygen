@@ -191,6 +191,8 @@ ReprojectionData ReprojSample(vec2 sampleUv, float expectedPrevDepth)
 		}
 	}
 
+	// TODO: test history accumulation per sample in conjunction with adaptive sampling
+	// This "valid" check should probably have min bias
 	if (sumW > 0) {
 		color /= sumW;
 		moments /= sumW;
@@ -200,7 +202,6 @@ ReprojectionData ReprojSample(vec2 sampleUv, float expectedPrevDepth)
 	reproj.color = color.rgb;
 	reproj.moments = moments.rg;
 
-	// TODO: test history accumulation per sample in conjunction with adaptive sampling
 	reproj.historyLength = moments.a;
 	return reproj;
 }

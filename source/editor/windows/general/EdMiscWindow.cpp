@@ -123,6 +123,9 @@ void GbufferDebugWindow::ImguiDraw()
 	showFramebuffer(ptPassFramebuffer);
 	showImage(rtPassProgImage); // TODO: fix layout errors
 
+	showImage(vl::Renderer->m_raytracingPass.svgfPass.swappingImages[0]);
+	showImage(vl::Renderer->m_raytracingPass.svgfPass.swappingImages[1]);
+
 	for (auto sl : vl::Layer->mainScene->spotlights.elements) {
 		if (sl) {
 			showImage(sl->shadowmap.at(0).framebuffer.ownedAttachments.at(0));
