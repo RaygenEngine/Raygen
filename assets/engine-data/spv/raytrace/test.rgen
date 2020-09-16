@@ -37,7 +37,7 @@ void WriteSky();
 struct ReprojectionData {
 	vec3 color;
 	vec2 moments;
-	int historyLength; // 0 means reprojection was invalid
+	float historyLength; // 0 means reprojection was invalid
 };
 
 ReprojectionData GetReprojection(vec2 uv);
@@ -80,15 +80,17 @@ void main() {
 	
 	
 	ReprojectionData reproj = GetReprojection(uv);
-	int moments = reproj.historyLength;
+	float moments = reproj.historyLength;
 
 
 	vec3 accumColor = vec3(0);
 	uint actualSamples = 1;
 
 
-	if (moments == 0) {
-	   actualSamples = 10; //max(3u - moments, 1u);
+	float momentsCalcualted = 1.;
+	if (moments < 2) {
+	   actualSamples = 5;
+	   momentsCalcualted = 5.;
 	}
 	
 	
@@ -139,7 +141,7 @@ void main() {
 		imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
 		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
 	}
-	imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(moments + 1., fragDepth, 0., 0.));
+	imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(0., 0., fragDepth, moments + momentsCalcualted));
 }
 
 void WriteSky() {
@@ -160,27 +162,25 @@ void WriteSky() {
 //  PRE PROCESS (reproject)
 //
 
-bool IsReprojValid(ivec2 coord, float expectedPrevDepth)
+bool IsReprojValid(ivec2 coord, float expectedPrevDepth, out vec4 momentsSample)
 {
 	if (coord.x < 0 || coord.y < 0 || coord.x >= gl_LaunchSizeEXT.x || coord.y > gl_LaunchSizeEXT.y) {
 		return false;
 	}
 
-	// perf Avoid image load here
-	const float prevDepth = imageLoad(momentsBuffer, coord).y;
-	if (abs(expectedPrevDepth - prevDepth) > 5e-3) {
+	momentsSample = imageLoad(momentsBuffer, coord);
+	if (abs(expectedPrevDepth - momentsSample.z) > 5e-3) {
 		return false;
 	}
 	return true;
 }
 
 
-vec4 ReprojSample(vec2 sampleUv, float expectedPrevDepth)
+ReprojectionData ReprojSample(vec2 sampleUv, float expectedPrevDepth)
 {
 	ivec2 pixelPos = ivec2(floor(sampleUv));
 	ivec2 offset[4] = { ivec2(0, 0), ivec2(1, 0), ivec2(0, 1), ivec2(1, 1) };
 
-	float sumw = 0;
 	float x = fract(sampleUv.x);
 	float y = fract(sampleUv.y);
 
@@ -191,23 +191,40 @@ vec4 ReprojSample(vec2 sampleUv, float expectedPrevDepth)
 		      x * y 
 	};
 
-	vec4 result = vec4(0);
+	vec4 color = vec4(0);
+	vec4 moments = vec4(0);
 	float sumW = 0;
-
+	
 	for (int sampleIdx = 0; sampleIdx < 4; sampleIdx++) {
 		ivec2 loc = pixelPos + offset[sampleIdx];
-		if (IsReprojValid(loc, expectedPrevDepth)) {
-			result += w[sampleIdx] * imageLoad(progressiveResult, loc);
+		vec4 momentsSample;
+		if (IsReprojValid(loc, expectedPrevDepth, momentsSample)) {
+			color += w[sampleIdx] * imageLoad(progressiveResult, loc);
+			moments += w[sampleIdx] * momentsSample;
 			sumW += w[sampleIdx];
 		}
 	}
 
 	if (sumW > 0) {
-		result /= sumW;
+		color /= sumW;
+		moments /= sumW;
 	}
 
-	return result;
+	ReprojectionData reproj;
+	reproj.color = color.rgb;
+	reproj.moments = moments.rg;
+
+	// TODO: test history accumulation per sample in conjunction with adaptive sampling
+	reproj.historyLength = moments.a;
+	return reproj;
 }
+
+struct ReprojectionData2 {
+	vec3 color;
+	vec2 moments;
+	float historyLength; // 0 means reprojection was invalid
+};
+
 
 ReprojectionData GetReprojection(vec2 uv) {
 	// xy: ScreenSpace (uv) motion vector
@@ -219,17 +236,6 @@ ReprojectionData GetReprojection(vec2 uv) {
 
 	const vec2 posPrev = vec2(gl_LaunchIDEXT.xy) - vec2(motion * gl_LaunchSizeEXT.xy);
 
-	ReprojectionData reproj;
-	reproj.color = ReprojSample(posPrev, expectedDepth).xyz;
-
-    
-    vec2 prevUv = uv - motionSample.xy;
-    ivec2 prevIuv = ivec2((prevUv  * gl_LaunchSizeEXT.xy) - vec2(0.5));
-    const vec4 momentsSample = imageLoad(momentsBuffer, prevIuv);
-	int historyLength = int(round(momentsSample.x));
-
-	reproj.historyLength = historyLength;
-
-	return reproj;
+	return ReprojSample(posPrev, expectedDepth);
 }
 
