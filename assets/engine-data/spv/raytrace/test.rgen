@@ -80,17 +80,17 @@ void main() {
 	
 	
 	ReprojectionData reproj = GetReprojection(uv);
-	float moments = reproj.historyLength;
+	float historyLength = reproj.historyLength;
 
 
 	vec3 accumColor = vec3(0);
 	uint actualSamples = 1;
 
 
-	float momentsCalcualted = 1.;
-	if (moments < 2) {
+	float historyCalcualted = 1.;
+	if (historyLength < 2) {
 	   actualSamples = 5;
-	   momentsCalcualted = 5.;
+	   historyCalcualted = 5.;
 	}
 	
 	
@@ -102,32 +102,32 @@ void main() {
 		prd.accumThroughput = vec3(1.f);
 		accumColor += TraceIndirect(fragSpace, brdfInfo);
 	}
-
 	vec3 curColor = (accumColor / actualSamples);
-	
 
-	// Do accumulation
-	if(frame > 0){
-		float a = 0.05;
-		a = max(1.f / float(moments + 1), 0.05);
-	
+	vec2 moments;
+	moments.r = luminance(curColor);
+	moments.g = moments.r * moments.r;
 
-		vec3 finalIndirect = mix(reproj.color, curColor, a);
-		
-		
-		//vec3 finalIndirect = mix(prevColor, curColor, a);
-		
- 
-		imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect, 1.f));
+	// Mix reprojection
+	{
+		#define minColorAlpha 0.05
+		#define minMomentsAlpha 0.05
 
-		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect, 1.f));
-//		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(abs(prevUv - uv), 0.f, 1.f));
+		const float colorAlpha = max(1. / (historyLength + 1.), minColorAlpha);
+		const float momentsAlpha = max(1. / (historyLength + 1.), minMomentsAlpha);
+
+		moments = mix(reproj.moments, moments, momentsAlpha);
+		curColor = mix(reproj.color, curColor, colorAlpha);
 	}
-	else{
-		imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
-		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
-	}
-	imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(0., 0., fragDepth, moments + momentsCalcualted));
+
+	// from SVGF paper:
+	float variance = max(0., moments.g - moments.r * moments.r);
+
+
+	imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
+	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
+
+	imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(moments, fragDepth, historyLength + historyCalcualted));
 }
 
 void WriteSky() {
@@ -213,6 +213,15 @@ struct ReprojectionData2 {
 
 
 ReprojectionData GetReprojection(vec2 uv) {
+	// PERF:
+	if (frame < 1) {
+		ReprojectionData repr;
+		repr.color = vec3(0);
+		repr.moments = vec2(0);
+		repr.historyLength = 0;
+		return repr;
+	}
+
 	// xy: ScreenSpace (uv) motion vector
 	// z: expected previous depth
 	const vec4 motionSample = texture(g_VelocitySampler, uv);
