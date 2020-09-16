@@ -124,7 +124,7 @@ void main() {
 	float variance = max(0., moments.g - moments.r * moments.r);
 
 
-	imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
+	imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, variance));
 	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
 
 	imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(moments, fragDepth, historyLength + historyCalcualted));
