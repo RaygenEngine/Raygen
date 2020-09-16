@@ -10,6 +10,7 @@
 #include "bsdf.glsl"
 #include "attachments.glsl"
 #include "onb.glsl"
+#include "sky.glsl"
 
 layout(set = 1, binding = 0) uniform UBO_Camera {   
 	vec3 position;
@@ -33,65 +34,30 @@ layout(location = 0) rayPayloadEXT hitPayload prd;
 
 void WriteSky(); 
 
-vec4 BilinearSample(ivec2 pixelPos, vec2 fracUvs)
-{  
-	ivec2 offset[4] = { ivec2(0, 0), ivec2(1, 0), ivec2(0, 1), ivec2(1, 1) };
-	
-	float sumw = 0;
-	float x = fract(fracUvs.x);
-	float y = fract(fracUvs.y);
+struct ReprojectionData {
+	vec3 color;
+	vec2 moments;
+	int historyLength; // 0 means reprojection was invalid
+};
 
-    float w[4] = { (1 - x) * (1 - y), 
-                        x  * (1 - y), 
-                   (1 - x) *      y,
-                        x  *      y };
-                        
-    vec4 result = vec4(0);
-    for (int sampleIdx = 0; sampleIdx < 4; sampleIdx++) {
-    	ivec2 loc = pixelPos + offset[sampleIdx];
-    	result += w[sampleIdx] * imageLoad(progressiveResult, loc);
-    }
-
-	return result;
-}
- 
+ReprojectionData GetReprojection(vec2 uv, float fragDepth);
  
 void main() {
 
-    vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
-    float fragDepth = texture(g_DepthSampler, uv).r;
-    if(fragDepth >= 1.)
-    {
-        // sky
-	    WriteSky();
-        return; 
-    }
+	vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
+	float fragDepth = texture(g_DepthSampler, uv).r;
+	if(fragDepth >= 1.)
+	{
+		// sky
+		WriteSky();
+		return; 
+	}
 
-    if(frame >= convergeUntilFrame && convergeUntilFrame != 0) {
-        vec3 indirect = imageLoad(progressiveResult, ivec2(gl_LaunchIDEXT.xy)).xyz;
-        imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(indirect, 1.));
-        return;
-    }
-             
-            
-    const vec4 motionSample = texture(g_VelocitySampler, uv);
-    vec2 prevUv = uv - motionSample.xy;
-    ivec2 prevIuv = ivec2((prevUv  * gl_LaunchSizeEXT.xy) - vec2(0.5));
-    const vec4 momentsSample = imageLoad(momentsBuffer, prevIuv);
-	int moments = int(round(momentsSample.x));
-
-
-    const float motionDepthDifference = motionSample.z;
-    float prevDepth = momentsSample.y;
-
-    if (abs(fragDepth - motionDepthDifference - prevDepth) > 5e-3) {
-      moments = 0;
-    }
-
-
-  	if (prevIuv.x < 0 || prevIuv.y < 0 || prevIuv.x > gl_LaunchSizeEXT.x || prevIuv.y > gl_LaunchSizeEXT.y) {
-		moments = 0;
-  	}
+	if(frame >= convergeUntilFrame && convergeUntilFrame != 0) {
+		vec3 indirect = imageLoad(progressiveResult, ivec2(gl_LaunchIDEXT.xy)).xyz;
+		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(indirect, 1.));
+		return;
+	}
 
 	Fragment frag = getFragmentFromGBuffer(
 		fragDepth,
@@ -102,179 +68,170 @@ void main() {
 		g_EmissiveSampler,
 		uv);
 
-    // Extract BrdfInfo
-    FragBrdfInfo brdfInfo;
-    brdfInfo.diffuseColor = frag.diffuseColor;
-    brdfInfo.f0 = frag.f0;
-    brdfInfo.a = frag.a;
+	// Extract BrdfInfo
+	FragBrdfInfo brdfInfo;
+	brdfInfo.diffuseColor = frag.diffuseColor;
+	brdfInfo.f0 = frag.f0;
+	brdfInfo.a = frag.a;
 
-    // Extract SpaceInfo
-    FsSpaceInfo fragSpace = GetFragSpace_World(frag.normal, frag.position, cam.position);
-   
+	// Extract SpaceInfo
+	FsSpaceInfo fragSpace = GetFragSpace_World(frag.normal, frag.position, cam.position);
+
+	
+	
+	ReprojectionData reproj = GetReprojection(uv, fragDepth);
+	int moments = reproj.historyLength;
+
 
 	vec3 accumColor = vec3(0);
 	uint actualSamples = 1;
-	
-    if (moments == 0) {
-       actualSamples = 10; //max(3u - moments, 1u);
-    }
+
+
+	if (moments == 0) {
+	   actualSamples = 10; //max(3u - moments, 1u);
+	}
 	
 	
 	actualSamples *= samples;
-    for(uint smpl = 0; smpl < actualSamples && depth > 0; ++smpl){
-        
-        // NOTE: Don't forget to initialize the ray here. 
-        prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl); // PERF:
-        prd.depth = 0;
-        prd.accumThroughput = vec3(1.f);
-        accumColor += TraceIndirect(fragSpace, brdfInfo);
-    }
+	for(uint smpl = 0; smpl < actualSamples && depth > 0; ++smpl){
+		// NOTE: Don't forget to initialize the ray here. 
+		prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl); // PERF:
+		prd.depth = 0;
+		prd.accumThroughput = vec3(1.f);
+		accumColor += TraceIndirect(fragSpace, brdfInfo);
+	}
 
-    vec3 curColor = (accumColor / actualSamples);
+	vec3 curColor = (accumColor / actualSamples);
 
 
-    // Do accumulation
-    if(frame > 0){
+	// Do accumulation
+	if(frame > 0){
 		vec2 motion = texture(g_VelocitySampler, uv).xy;
 		vec2 posPrev = vec2(gl_LaunchIDEXT.xy) - vec2(motion * gl_LaunchSizeEXT.xy);
-        vec3 prevColor = BilinearSample(ivec2(floor(posPrev)), posPrev - motion).xyz;
+		vec3 prevColor = reproj.color;
 
-        float a = 0.05;
+		if (abssum(prevColor) <= 0) {
+			moments = 0;
+
+		}
+
+		float a = 0.05;
 		a = max(1.f / float(moments + 1), 0.05);
 
 		
 		bool progressive = false;
-        if (progressive) {
-        	a = 1.f / float(frame);
-       	}
+		if (progressive) {
+			a = 1.f / float(frame);
+		}
 
-        vec3 finalIndirect = mix(prevColor, curColor, a);
-        
-        
-        //vec3 finalIndirect = mix(prevColor, curColor, a);
+		vec3 finalIndirect = mix(prevColor, curColor, a);
+		
+		
+		//vec3 finalIndirect = mix(prevColor, curColor, a);
 		
  
-        imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect, 1.f));
+		imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect, 1.f));
 
-        imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect, 1.f));
+		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(finalIndirect, 1.f));
 //		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(abs(prevUv - uv), 0.f, 1.f));
-    }
-    else{
-        imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
-        imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
-    }
-    imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(moments + 1., fragDepth, 0., 0.));
+	}
+	else{
+		imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
+		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
+	}
+	imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(moments + 1., fragDepth, 0., 0.));
 }
-
-vec3 GetSkyColor(vec3 orig, vec3 dir) {
-
-	// PERF: this should be baked into a cubemap?
-	vec3 sunColor = vec3(1,1,1);
-	float sunIntensity = 40;
-	vec3 sunDirection = normalize(-vec3(0,-1,0));     
-    float earthRadius = 6360e3;       
-    float atmosphereRadius = 6420e3; 
-    // Thickness of the atmosphere if density was uniform (Hr)
-    float Hr = 7994;                
-     // Same as above but for Mie scattering (Hm) 
-    float Hm = 1200;              
-  
-	// Paper: https://hal.inria.fr/file/index/docid/288758/filename/article.pdf
-    const vec3 betaR = vec3(5.8e-6f, 13.5e-6f, 33.1e-6f); 
-    const vec3 betaM = vec3(21e-6f); 
-
-	uint numSamples = 16; 
-    uint numSamplesLight = 8; 
-    
-    // mu is the cosine of the angle between
-    // the sun direction and the ray direction
-    // CHECK: do we saturate here? 
-    float mu = saturate(dot(dir, sunDirection));  
-    float phaseR = 3.f / (16.f * PI) * (1 + mu * mu); 
-   
-    float g = 0.76f; 
-    float phaseM = 3.f / (8.f * PI) * ((1.f - g * g) * (1.f + mu * mu)) / 
-    ((2.f + g * g) * pow(1.f + g * g - 2.f * g * mu, 1.5f)); 
-
-	// DANGER BIG FLOATS:
-    float seabedToAtmoDst = atmosphereRadius - earthRadius;
-    
-    // real atmo intersection point
-    vec3 end = seabedToAtmoDst * dir;
-    float segmentLength = length(orig - end) / numSamples;
-    
-    vec3 sumR = vec3(0); 
-    vec3 sumM = vec3(0);
-    
-    float tCurrent = 0; 
-    float opticalDepthR = 0; // rayleigh contribution
-    float opticalDepthM = 0; // mie contribution
-    
-    // PERF: 
-    for (uint i = 0; i < numSamples; ++i) {
-     
-        vec3 samplePosition = orig + (tCurrent + segmentLength * 0.5f) * dir; 
-      
-        float height = samplePosition.y; 
-        
-        // compute optical depth for light
-        float hr = exp(-height / Hr) * segmentLength; 
-        float hm = exp(-height / Hm) * segmentLength; 
-        opticalDepthR += hr; 
-        opticalDepthM += hm; 
-        
-        // light optical depth
-        vec3 lightEnd = seabedToAtmoDst * sunDirection;
-    	float segmentLengthLight = length(samplePosition - lightEnd) / numSamplesLight;
-        
-        float tCurrentLight = 0; 
-        float opticalDepthLightR = 0;
-        float opticalDepthLightM = 0;
- 
-        for (int j = 0; j < numSamplesLight; ++j) { 
-            
-            vec3 samplePositionLight = samplePosition + (tCurrentLight + segmentLengthLight * 0.5f) * sunDirection;      
-            float heightLight = samplePositionLight.y; 
-           
-            opticalDepthLightR += exp(-heightLight / Hr) * segmentLengthLight; 
-            opticalDepthLightM += exp(-heightLight / Hm) * segmentLengthLight;
-             
-            tCurrentLight += segmentLengthLight; 
-        } 
-        
-        vec3 tau = betaR * (opticalDepthR + opticalDepthLightR) + betaM *
-                   1.1f * (opticalDepthM + opticalDepthLightM); 
-        vec3 attenuation = vec3(exp(-tau.x), exp(-tau.y), exp(-tau.z)); 
-        
-        sumR += attenuation * hr; 
-        sumM += attenuation * hm; 
-         
-        tCurrent += segmentLength; 
-    } 
- 
-    return vec3(sumR * betaR * phaseR + sumM * betaM * phaseM) * sunIntensity * sunColor;
-}
-
 
 void WriteSky() {
 	const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5);
-    const vec2 inUV        = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
-    vec2       d           = inUV * 2.0 - 1.0;
+	const vec2 inUV        = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
+	vec2       d           = inUV * 2.0 - 1.0;
 
-    vec4 origin    = cam.viewInv * vec4(0, 0, 0, 1);
-    vec4 target    = cam.projInv * vec4(d.x, d.y, 1, 1);
-    vec4 direction = cam.viewInv * vec4(normalize(target.xyz), 0);        
-    
-    vec3 color = GetSkyColor(origin.xyz, direction.xyz);
-    
-    imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
+	vec4 origin    = cam.viewInv * vec4(0, 0, 0, 1);
+	vec4 target    = cam.projInv * vec4(d.x, d.y, 1, 1);
+	vec4 direction = cam.viewInv * vec4(normalize(target.xyz), 0);        
+	
+	vec3 color = GetSkyColor(origin.xyz, direction.xyz);
+	
+	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
+}
+
+//
+//  PRE PROCESS (reproject)
+//
+
+bool IsReprojValid(ivec2 coord, float expectedPrevDepth)
+{
+	if (coord.x < 0 || coord.y < 0 || coord.x >= gl_LaunchSizeEXT.x || coord.y > gl_LaunchSizeEXT.y) {
+		return false;
+	}
+
+	// perf Avoid image load here
+	const float prevDepth = imageLoad(momentsBuffer, coord).y;
+	if (abs(expectedPrevDepth - prevDepth) > 5e-3) {
+		return false;
+	}
+	return true;
 }
 
 
+vec4 BilinearSample(ivec2 pixelPos, vec2 fracUvs, float expectedPrevDepth)
+{
+	ivec2 offset[4] = { ivec2(0, 0), ivec2(1, 0), ivec2(0, 1), ivec2(1, 1) };
+
+	float sumw = 0;
+	float x = fract(fracUvs.x);
+	float y = fract(fracUvs.y);
+
+	float w[4] = { 
+		(1 - x) * (1 - y),
+		      x * (1 - y),
+		(1 - x) * y,
+		      x * y 
+	};
+
+	vec4 result = vec4(0);
+	float sumW = 0;
+
+	for (int sampleIdx = 0; sampleIdx < 4; sampleIdx++) {
+		ivec2 loc = pixelPos + offset[sampleIdx];
+		if (IsReprojValid(loc, expectedPrevDepth)) {
+			result += w[sampleIdx] * imageLoad(progressiveResult, loc);
+			sumW += w[sampleIdx];
+		}
+	}
+
+	if (sumW > 0) {
+		result /= sumW;
+	}
+
+	return result;
+}
+
+ReprojectionData GetReprojection(vec2 uv, float fragDepth) {
+	ReprojectionData reproj;
+	
+	// xy: ScreenSpace (uv) motion vector
+	// z: expected previous depth
+	const vec4 motionSample = texture(g_VelocitySampler, uv);
+
+	const vec2 motion = texture(g_VelocitySampler, uv).xy;
+	const vec2 posPrev = vec2(gl_LaunchIDEXT.xy) - vec2(motion * gl_LaunchSizeEXT.xy);
+
+	const float expectedDepth = fragDepth - motionSample.z;	 // WIP:
 
 
+	const vec3 prevColor = BilinearSample(ivec2(floor(posPrev)), posPrev - motion, expectedDepth).xyz;
 
+	reproj.color = prevColor;
 
+    
+    vec2 prevUv = uv - motionSample.xy;
+    ivec2 prevIuv = ivec2((prevUv  * gl_LaunchSizeEXT.xy) - vec2(0.5));
+    const vec4 momentsSample = imageLoad(momentsBuffer, prevIuv);
+	int historyLength = int(round(momentsSample.x));
 
+	reproj.historyLength = historyLength;
 
-
+	return reproj;
+}
