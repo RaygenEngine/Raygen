@@ -394,4 +394,20 @@ void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCou
 	// instead of executing one at a time. That may give the driver more opportunities to optimize.
 	Device->dmaQueue.waitIdle();
 }
+
+
+vl::RImage2D vl::RImage2D::Create(const std::string& name, vk::Extent2D extent, vk::Format format,
+	vk::ImageLayout finalLayout, vk::ImageUsageFlags usageFlags, uint32 mipLevels, vk::MemoryPropertyFlags memoryFlags,
+	vk::ImageTiling tiling)
+{
+	auto img = RImage2D(extent.width, extent.height, mipLevels, format, tiling, vk::ImageLayout::eUndefined, usageFlags,
+		memoryFlags, name);
+
+	if (finalLayout != vk::ImageLayout::eUndefined) {
+		img.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, finalLayout, vk::PipelineStageFlagBits::eTopOfPipe,
+			vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+	}
+	return img;
+}
+
 } // namespace vl

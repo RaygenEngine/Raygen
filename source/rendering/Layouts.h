@@ -31,6 +31,7 @@ inline struct Layouts_ {
 	RDescriptorSetLayout singleStorageImage;
 	RDescriptorSetLayout doubleStorageImage;
 	RDescriptorSetLayout tripleStorageImage;
+	RDescriptorSetLayout quadStorageImage;
 
 
 	RDescriptorSetLayout bufferAndSamplersDescLayout;
@@ -46,6 +47,9 @@ inline struct Layouts_ {
 
 	RRenderPassLayout gbufferPassLayout;
 	RRenderPassLayout rasterDirectPassLayout; // TODO: subpass of gbuffer
+
+
+	RRenderPassLayout svgfPassLayout;
 	// Ray Trace Here
 	RRenderPassLayout ptPassLayout;
 	// Output pass

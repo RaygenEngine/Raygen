@@ -79,6 +79,16 @@ void Layouts_::MakeRenderPassLayouts()
 		rasterDirectPassLayout.Generate();
 	}
 
+
+	// Svgf Pass. Semi special case as we constantly swap 2 "framebuffers" internally.
+	{
+		auto att = svgfPassLayout.CreateAttachment("SVGF Result", vk::Format::eR32G32B32A32Sfloat);
+
+		svgfPassLayout.AddSubpass({}, { att });
+		svgfPassLayout.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
+		svgfPassLayout.Generate();
+	}
+
 	// Lightblend + PostProcess
 	{
 		auto renderOutAttachment
@@ -165,6 +175,12 @@ Layouts_::Layouts_()
 	tripleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
 	tripleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
 	tripleStorageImage.Generate();
+
+	quadStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
+	quadStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
+	quadStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
+	quadStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
+	quadStorageImage.Generate();
 
 
 	// image debug
