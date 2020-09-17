@@ -113,7 +113,7 @@ void main() {
 	ivec2 screenSize = imageSize(svgfInput);
 	vec4 color = imageLoad(svgfInput, iuv);
 
-	if (totalIter == 1) {
+	if (totalIter == 0) {
 		OutputColor(color);
 		return;
 	}
@@ -194,7 +194,7 @@ void main() {
 
 void OutputColor(vec4 color) {
 	ivec2 iuv = ivec2(gl_FragCoord.xy);
-	if (iteration == totalIter - 1) {
+	if (iteration >= totalIter - 1) {
 	    outColor = color;
 	}
 	else {
@@ -225,6 +225,8 @@ void DebugRenderPasses() {
 		imageStore(svgfOutput, iuv, vec4(color, 1.));
 	}
 }
+
+
 
 
 
