@@ -86,8 +86,8 @@ void main() {
 
 	float historyCalcualted = 1.;
 	if (historyLength < 2) {
-	   actualSamples = 8;
-	   historyCalcualted = 8.;
+	   actualSamples = 4;
+	   historyCalcualted = 4.;
 	}
 	
 	
@@ -97,7 +97,8 @@ void main() {
 		prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl); // PERF:
 		prd.depth = 0;
 		prd.accumThroughput = vec3(1.f);
-		accumColor += TraceIndirect(fragSpace, brdfInfo);
+		vec3 divs = max(brdfInfo.diffuseColor, vec3(1e-1f));
+		accumColor += TraceIndirect(fragSpace, brdfInfo) / divs;
 	}
 	vec3 curColor = (accumColor / actualSamples);
 
@@ -248,6 +249,7 @@ ReprojectionData GetReprojection(vec2 uv) {
 
 	return ReprojSample(posPrev, centerUvDrawIndex, expectedDepth);
 }
+
 
 
 
