@@ -81,6 +81,7 @@ bool IsReprojValid(ivec2 coord, float centerDrawId)
 void DebugRenderPasses();
 
 void OutputColor(vec4 color);
+void OutputColor(vec4 color, bool mixAlbedo);
 
 bool IsInside(ivec2 p, ivec2 screenSize) {
 	return p.x >= 0 && p.y >= 0 && p.x < screenSize.x && p.y < screenSize.y;
@@ -115,7 +116,7 @@ void main() {
 	ivec2 screenSize = imageSize(svgfInput);
 	vec4 color = imageLoad(svgfInput, iuv);
 
-	if (totalIter == 0) {
+	if (totalIter == 0 && iteration >= totalIter - 1) {
 		OutputColor(color);
 		return;
 	}
@@ -132,8 +133,8 @@ void main() {
 	const PixelData center = LoadPixelData(iuv, screenSize);
 
 	// Skybox
-    if (center.depth >=  1.f) {
-    	OutputColor(color);
+    if (center.depth >= 1.f) {
+    	OutputColor(color, false);
 		return;
     }
 
@@ -144,9 +145,7 @@ void main() {
     const float phiDepth     = max(center.depth, 1e-8) * stepSize;
 
 
-
-
-    // explicitly store/accumulate center pixel with weight 1 to prevent issues
+ 	// explicitly store/accumulate center pixel with weight 1 to prevent issues
     // with the edge-stopping functions
     const float centerMultiplier = 2.0f;
     float sumWIndirect = centerMultiplier;
@@ -192,10 +191,14 @@ void main() {
 // 
 //
 
-void OutputColor(vec4 color) {
+void OutputColor(vec4 color, bool mixAlbedo) {
 	ivec2 iuv = ivec2(gl_FragCoord.xy);
 	if (iteration >= totalIter - 1) {
-	    outColor = color;
+	    if (mixAlbedo) {
+	    	vec4 colorSample = texelFetch(g_ColorSampler, iuv, 0);
+	    	color *= max(vec4(1e-1), colorSample);
+	    }
+   	    outColor = color;
 	}
 	else {
 		imageStore(svgfOutput, iuv, color);
@@ -204,6 +207,10 @@ void OutputColor(vec4 color) {
 	if (iteration == progressiveFeedbackIndex) {
 		imageStore(progressiveResult, iuv, color);
 	}
+}
+
+void OutputColor(vec4 color) {
+	OutputColor(color, true);
 }
 
 void DebugRenderPasses() {
@@ -225,6 +232,7 @@ void DebugRenderPasses() {
 		imageStore(svgfOutput, iuv, vec4(color, 1.));
 	}
 }
+
 
 
 
