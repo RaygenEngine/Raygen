@@ -1,6 +1,8 @@
 #pragma once
 #include "rendering/wrappers/Buffer.h"
-#include "rendering/wrappers/Image.h"
+#include "rendering/wrappers/ImageView.h"
+#include "rendering/wrappers/passlayout/RenderPassLayout.h"
+#include "rendering/ppt/PtBase.h"
 
 struct SceneRenderDesc;
 
