@@ -107,8 +107,8 @@ void main() {
 
 	// Mix reprojection
 	{
-		#define minColorAlpha 0.01
-		#define minMomentsAlpha 0.01
+		#define minColorAlpha 0.05
+		#define minMomentsAlpha 0.05
 
 		const float colorAlpha = max(1. / (historyLength + 1.), minColorAlpha);
 		const float momentsAlpha = max(1. / (historyLength + 1.), minMomentsAlpha);
@@ -120,9 +120,15 @@ void main() {
 	// from SVGF paper:
 	float variance = max(0., moments.g - moments.r * moments.r);
 
+	variance *= 16.f / max(historyLength + historyCalcualted, 32.f);
+
+	if (historyLength < 10) {
+		variance += 0.2;
+
+	}
 
 	imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, variance));
-	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
+	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, variance));
 
 	imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(moments, fragDepth, historyLength + historyCalcualted));
 }
@@ -242,6 +248,8 @@ ReprojectionData GetReprojection(vec2 uv) {
 
 	return ReprojSample(posPrev, centerUvDrawIndex, expectedDepth);
 }
+
+
 
 
 
