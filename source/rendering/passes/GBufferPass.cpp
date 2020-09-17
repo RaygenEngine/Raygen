@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "GbufferPass.h"
 
+#include "assets/shared/GeometryShared.h"
 #include "engine/Engine.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
@@ -17,15 +18,15 @@
 
 #include <glm/gtc/matrix_inverse.hpp>
 
-#include "assets/shared/GeometryShared.h"
-
 namespace {
 struct PushConstant {
 	glm::mat4 modelMat;
 	glm::mat4 normalMat;
+	glm::mat4 mvpPrev;
 };
 
-static_assert(sizeof(PushConstant) <= 128);
+// NEXT:
+// static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
@@ -240,7 +241,8 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc&
 			continue;
 		}
 		PushConstant pc{ //
-			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
+			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform)),
+			sceneDesc.viewer->prevViewProj * geom->prevTransform
 		};
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {

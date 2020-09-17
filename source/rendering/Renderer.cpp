@@ -26,7 +26,6 @@
 #include "rendering/util/WriteDescriptorSets.h"
 #include "rendering/wrappers/Swapchain.h"
 
-
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 {
@@ -63,7 +62,6 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 		//
 		GbufferPass::RecordCmd(cmdBuffer, sceneDesc);
 	});
-
 
 	auto shadowmapRenderpass = [&](auto light) {
 		if (light) {
@@ -157,6 +155,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 		m_rasterDirectPass[i] = Layouts->rasterDirectPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
 
+
 		m_ptPass[i] = Layouts->ptPassLayout.CreatePassInstance(
 			fbSize.width, fbSize.height, { &m_gbufferInst[i].framebuffer[GDepth] });
 	}
@@ -173,19 +172,20 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 			views.emplace_back(att.view());
 		}
 
-		views.emplace_back(m_rasterDirectPass[i].framebuffer[0].view()); // rasterDirectSampler
-		views.emplace_back(m_raytracingPass.m_indirectResult[i].view()); // rtIndirectSampler
-		views.emplace_back(m_ptPass[i].framebuffer[0].view());           // sceneColorSampler
+		views.emplace_back(m_rasterDirectPass[i].framebuffer[0].view());                        // rasterDirectSampler
+		views.emplace_back(m_raytracingPass.m_svgfRenderPassInstance[i].framebuffer[0].view()); // rtIndirectSampler
+		views.emplace_back(m_ptPass[i].framebuffer[0].view());                                  // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_attachmentsDesc[i], 0u, std::move(views));
 	}
 
 	// RT images
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		m_rtDescSet[i] = Layouts->doubleStorageImage.AllocDescriptorSet();
+		m_rtDescSet[i] = Layouts->tripleStorageImage.AllocDescriptorSet();
 
 		rvk::writeDescriptorImages(m_rtDescSet[i], 0u,
-			{ m_raytracingPass.m_indirectResult[i].view(), m_raytracingPass.m_progressiveResult.view() },
+			{ m_raytracingPass.svgfPass.swappingImages[0].view(), m_raytracingPass.m_progressiveResult.view(),
+				m_raytracingPass.m_momentsBuffer.view() },
 			vk::DescriptorType::eStorageImage, nullptr, vk::ImageLayout::eGeneral);
 	}
 }

@@ -1,6 +1,6 @@
 #ifndef rt_global_glsl
 #define rt_global_glsl
-
+#include "onb.glsl"
 // TODO: auto include in rt shaders
 
 struct Vertex
@@ -27,14 +27,6 @@ struct OldVertex
 	vec2 uv;
 };
 
-struct hitPayload
-{
-	vec3 radiance;
-	vec3 throughput;
-
-	int depth;
-	uint seed;
-};
 
 struct Spotlight
 {
@@ -92,5 +84,16 @@ layout(push_constant) uniform Constants
     int convergeUntilFrame;
 	int spotlightCount;
 };
+
+struct hitPayload
+{
+	vec3 radiance;
+	vec3 accumThroughput;
+
+	int depth;
+	uint seed;
+};
+
+
 
 #endif

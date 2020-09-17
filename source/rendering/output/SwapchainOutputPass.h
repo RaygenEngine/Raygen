@@ -49,6 +49,7 @@ private:
 	uint32 m_swapchainImageIndex{};
 
 	bool m_isMinimized{ false };
+	bool m_isFocused{ true };
 };
 
 } // namespace vl

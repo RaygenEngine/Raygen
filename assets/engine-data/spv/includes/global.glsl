@@ -41,22 +41,45 @@
 
 float saturate(float v)
 {
-    return clamp(v, 0.0, 1.0);
+	return clamp(v, 0.0, 1.0);
 }
 
 vec2 saturate(vec2 v)
 {
-    return clamp(v, vec2(0.0), vec2(1.0));
+	return clamp(v, vec2(0.0), vec2(1.0));
 }
 
 vec3 saturate(vec3 v)
 {
-    return clamp(v, vec3(0.0), vec3(1.0));
+	return clamp(v, vec3(0.0), vec3(1.0));
 }
 
 vec4 sampleCubemapLH(samplerCube cubemap, vec3 directionRH) 
 {
 	return texture(cubemap, vec3(directionRH.x, directionRH.y, -directionRH.z));
+}
+
+float max(vec3 v) {
+	return max(v.x, max(v.y, v.z));
+}
+
+float min(vec3 v) {
+	return min(v.x, min(v.y, v.z));
+}
+
+
+float sum(vec3 v) {
+	return v.x + v.y + v.z;
+}
+
+
+float abssum(vec3 v) {
+	return abs(v.x) + abs(v.y) + abs(v.z);
+}
+
+float luminance(vec3 rgb) {
+	// Relative luminance, most commonly used but other definitions exist
+	return dot(rgb, vec3(0.2126f, 0.7152f, 0.0722f));
 }
 
 #endif

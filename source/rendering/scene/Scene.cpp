@@ -104,6 +104,9 @@ void Scene::UploadDirty(uint32 frameIndex)
 
 	bool requireUpdateAccel = false || forceUpdateAccel;
 	for (auto gm : geometries.elements) {
+		if (gm) {
+			gm->prevTransform = gm->transform;
+		}
 		if (gm && gm->isDirty[frameIndex]) {
 			requireUpdateAccel = true;
 			gm->isDirty = false;
@@ -116,7 +119,7 @@ void Scene::UploadDirty(uint32 frameIndex)
 		if (cam && cam->isDirty[frameIndex]) {
 			cam->UploadUbo(frameIndex);
 			cam->isDirty[frameIndex] = false;
-			anyDirty = true;
+			// anyDirty = true;
 		}
 	}
 

@@ -14,7 +14,6 @@
 #include "engine/Engine.h"
 #include "engine/Events.h"
 
-
 namespace vl {
 
 SwapchainOutputPass::SwapchainOutputPass()
@@ -30,6 +29,7 @@ SwapchainOutputPass::SwapchainOutputPass()
 	Event::OnViewportUpdated.BindFlag(this, m_didViewportResize);
 	Event::OnWindowResize.BindFlag(this, m_didWindowResize);
 	Event::OnWindowMinimize.Bind(this, [&](bool isMinimized) { m_isMinimized = isMinimized; });
+	Event::OnWindowFocus.Bind(this, [&](bool isFocused) { m_isFocused = isFocused; });
 }
 
 void SwapchainOutputPass::SetAttachedRenderer(Renderer_* renderer)
@@ -110,6 +110,11 @@ void SwapchainOutputPass::RecordOutPass(vk::CommandBuffer cmdBuffer, uint32 fram
 
 void SwapchainOutputPass::OnPreRender()
 {
+	using namespace std::literals;
+	if (!m_isFocused) {
+		std::this_thread::sleep_for(100ms);
+	}
+
 	if (*m_didWindowResize) {
 		OnWindowResize();
 	}

@@ -1,6 +1,7 @@
 #ifndef bsdf_glsl
 #define bsdf_glsl
 
+#include "global-shading.glsl"
 #include "fresnel.glsl"
 
 // math here are in bsdf space 
@@ -62,10 +63,10 @@ bool sameHemisphere(vec3 w, vec3 wp)
 
 // reflection on normal
 // refl (wo, n) = -wo + 2 * dot(wo, n) * n =
-//  = vec3(-wo.x, -wo.y, wo.z);
+//  = vec3(-wo.x, -wo.y, wo.z); note: opposite signs for consistency with glsl reflect
 vec3 reflect(vec3 wo) 
 {
-    return vec3(-wo.x, -wo.y, wo.z);
+    return vec3(wo.x, wo.y, -wo.z);
 }
 
 // CHECK: math
@@ -101,24 +102,19 @@ float D_Phong(float NoH, float a)
 
 vec3 SpecularTerm(float NoL, float NoV, float NoH, float LoH, float a, vec3 f0)
 {
-    float D;
-    float G;
     vec3 F = F_Schlick(LoH, f0);
+
+    if(a < 0.0001){
+		float D = D_Phong(NoH, a);   
+		return vec3(D * F * 0.25);
+    }
+
+    float D = D_GGX(NoH, a);
+    float G = G_SchlicksmithGGX(NoL, NoV, a);
 
     float denom = 4 * NoL * NoV;
 
-	if (a < 0.001)
-	{	
-		G = 1;
-		D = D_Phong(NoH, a);   
-	}
-    else
-    {
-        D = D_GGX(NoH, a);
-        G = G_SchlicksmithGGX(NoL, NoV, a);
-    }
-
-    return denom > 0 ? D * G * F / denom : vec3(0);
+    return D * G * F / denom;
 }
 
 //vec3 Fr_CookTorranceGGX(float NoV, float NoL, float NoH, float LoH, vec3 f0, float a)
@@ -154,13 +150,43 @@ vec3 DiffuseTerm(float NoL, float NoV, float LoH, float a, vec3 diffuseColor)
 
 vec3 importanceSampleGGX(vec2 u, float a) 
 {
-    const float phi = 2.0f * PI * u.x;
+    float phi = 2.0f * PI * u.x;
     // (aa-1) == (a-1)(a+1) produces better fp accuracy
-    const float cosTheta2 = (1 - u.y) / (1 + (a + 1) * ((a - 1) * u.y));
-    const float cosTheta = sqrt(cosTheta2);
-    const float sinTheta = sqrt(1 - cosTheta2);
+    float cosTheta2 = (1 - u.y) / (1 + (a + 1) * ((a - 1) * u.y));
+    float cosTheta = sqrt(cosTheta2);
+    float sinTheta = sqrt(1 - cosTheta2);
 
     return vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
+}
+
+/*
+WIP: 
+ve3 StandardBRDF(IncidentSpaceInfo incidentSpace, FragBrdfInfo brdfInfo) 
+{
+    return DisneyDiffuse(.., brdfInfo.diffuseColor) + SpecularTerm(.., brdfInfo.f0, brdfInfo.a);
+}
+*/
+
+vec3 DirectLightBRDF(float NoL, float NoV, float NoH, float LoH, float a, vec3 diffuseColor, vec3 f0)
+{
+    float f90 = 0.5 + LoH * LoH  * a;
+    vec3 brdf_d = diffuseColor * INV_PI * F_Schlick(NoL, f90) * F_Schlick(NoV, f90);
+
+    vec3 F = F_Schlick(LoH, f0);
+
+    if(a < 0.0001){
+		float D = D_Phong(NoH, a);   
+		return D * F * 0.25;
+    }
+
+    float D = D_GGX(NoH, a);
+    float G = G_SchlicksmithGGX(NoL, NoV, a);
+
+    float denom = 4 * NoL * NoV;
+
+    vec3 brdf_s = D * G * F / denom;
+
+    return (1 - F) * brdf_d + brdf_s;
 }
 
 #endif

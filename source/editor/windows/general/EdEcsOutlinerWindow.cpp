@@ -2,14 +2,19 @@
 #include "EdEcsOutlinerWindow.h"
 
 #include "assets/pods/Mesh.h"
+#include "assets/pods/Prefab.h"
+#include "assets/PodEditor.h"
 #include "assets/util/ParsingUtl.h"
 #include "universe/ComponentsDb.h"
 #include "editor/DataStrings.h"
 #include "editor/EditorObject.h"
 #include "universe/Universe.h"
 
+
 #include "editor/EdMenu.h"
 #include "editor/EdClipboardOp.h"
+#include "editor/imgui/ImAssetSlot.h"
+#include "editor/windows/general/EdAssetsWindow.h"
 
 #include <imgui/imgui.h>
 
@@ -158,6 +163,10 @@ void EcsOutlinerWindow::Run_ContextPopup(EcsWorld& world, Entity entity)
 
 	ImGui::Separator();
 	if (ImGui::MenuItem(ETXT(FA_CERTIFICATE, " Make Prefab"))) {
+		std::string name = "gen-data/Prefab " + entity->name;
+		auto [entry, ptr] = AssetHandlerManager::CreateEntry<Prefab>(name);
+		ptr->MakeFrom(world.reg, entity.entity);
+		ed::AssetsWindow::RefreshEntries();
 	}
 	ImGui::Separator();
 	if (ImGui::MenuItem(ETXT(FA_EMPTY, " Focus"), "F")) {
@@ -178,6 +187,16 @@ void EcsOutlinerWindow::Run_SpaceContextPopup(EcsWorld& world)
 	}
 	if (ImGui::MenuItem(ETXT(FA_PASTE, " Paste"), "Ctrl+V")) {
 		ed::ClipboardOp::LoadEntity(world.reg);
+	}
+
+
+	if (ImGui::BeginMenu(ETXT(FA_BOXES, " From Prefab"))) {
+		PodHandle<Prefab> prefab;
+		if (ImEd::AssetSlot("", prefab)) {
+			prefab.Lock()->InsertInto(world.reg);
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndMenu();
 	}
 }
 

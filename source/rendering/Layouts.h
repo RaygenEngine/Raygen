@@ -4,15 +4,15 @@
 
 namespace vl {
 
+// NEXT:
 enum GColorAttachment : uint32
 {
 	GDepth = 0,
 	GNormal = 1,
-	// rgb: color, a: opacity
-	GBaseColor = 2,
-	// r: metallic, g: roughness, b: reflectance, a: occlusion
-	GSurface = 3,
+	GDiffuseColor = 2,
+	GSpecularColor = 3,
 	GEmissive = 4,
+	GVelocity = 5,
 	GCount
 };
 
@@ -30,13 +30,16 @@ inline struct Layouts_ {
 
 	RDescriptorSetLayout singleStorageImage;
 	RDescriptorSetLayout doubleStorageImage;
+	RDescriptorSetLayout tripleStorageImage;
+	RDescriptorSetLayout quadStorageImage;
+
 
 	RDescriptorSetLayout bufferAndSamplersDescLayout;
 
 
 	RDescriptorSetLayout imageDebugDescLayout;
 
-
+	// Global descriptor Set
 	RDescriptorSetLayout renderAttachmentsLayout;
 
 	vk::UniqueRenderPass depthRenderPass;
@@ -44,6 +47,9 @@ inline struct Layouts_ {
 
 	RRenderPassLayout gbufferPassLayout;
 	RRenderPassLayout rasterDirectPassLayout; // TODO: subpass of gbuffer
+
+
+	RRenderPassLayout svgfPassLayout;
 	// Ray Trace Here
 	RRenderPassLayout ptPassLayout;
 	// Output pass

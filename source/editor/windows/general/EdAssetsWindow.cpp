@@ -493,6 +493,11 @@ void AssetsWindow::ImportFiles(std::vector<fs::path>&& files)
 	ReloadEntries();
 }
 
+void AssetsWindow::RefreshEntries()
+{
+	EditorObject->m_windowsComponent.GetUniqueWindow<AssetsWindow>()->m_reloadEntries.Set();
+}
+
 void AssetsWindow::RunFileEntryContext(PodEntry* entry)
 {
 	bool isContextOpen = ImGui::BeginPopupContextItem("AssetsContextRightClickWindow");
