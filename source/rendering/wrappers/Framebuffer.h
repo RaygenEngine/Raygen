@@ -1,5 +1,5 @@
 #pragma once
-#include "rendering/wrappers/Image.h"
+#include "rendering/wrappers/ImageView.h"
 
 namespace vl {
 struct RImageAttachment;
