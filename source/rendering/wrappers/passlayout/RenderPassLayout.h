@@ -54,6 +54,8 @@ struct RRenderPassLayout {
 		bool isDepth{ false };
 		bool isInputAttachment{ false };
 		vk::Format format{ vk::Format::eUndefined };
+
+		std::string name{};
 	};
 
 	struct AttachmentRef {
@@ -149,7 +151,8 @@ public:
 
 	// Preperation Interface
 	// Registers a new attachment to be written by this render pass
-	[[nodiscard]] AttachmentRef CreateAttachment(vk::Format format, vk::ImageUsageFlags additionalUsageFlags = {});
+	[[nodiscard]] AttachmentRef CreateAttachment(
+		const char* name, vk::Format format, vk::ImageUsageFlags additionalUsageFlags = {});
 
 	// Requests the render pass to transition this attachment to the requested layout after ending
 	void AttachmentFinalLayout(AttachmentRef att, vk::ImageLayout postRenderPassLayout);

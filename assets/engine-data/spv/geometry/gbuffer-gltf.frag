@@ -5,11 +5,14 @@
 // out
 
 layout (location = 0) out vec4 gNormal;
-// rgb: base color, a: opacity
-layout (location = 1) out vec4 gBaseColor;
-// r: metallic, g: roughness, b: reflectance, a: occlusion
-layout (location = 2) out vec4 gSurface;
+// rgb: diffuse color, a: opacity
+layout (location = 1) out vec4 gDiffuseColor;
+// r: f0, a: a (roughness^2)
+layout (location = 2) out vec4 gSpecularColor;
+// rgb: emissive, a: occlusion
 layout (location = 3) out vec4 gEmissive;
+
+layout (location = 4) out vec4 gVelocity;
 
 // in
 
@@ -18,6 +21,8 @@ layout(location=0) in Data
 	vec2 uv;
 	mat3 TBN;
 	vec3 fragPos;
+	vec4 clipPos;
+	vec4 prevClipPos;
 };
 
 // uniforms
@@ -61,17 +66,27 @@ void main() {
 	float metallic = sampledMetallicRoughness.b * mat.metallicFactor;
 	float roughness = sampledMetallicRoughness.g * mat.roughnessFactor;
 	vec3 emissive = sampledEmissive.rgb * mat.emissiveFactor.rgb;
-	float occlusion =  1 - mat.occlusionStrength * (1 - sampledOcclusion.r);
+	float occlusion =  1.0 - mat.occlusionStrength * (1.0 - sampledOcclusion.r);
 	vec3 normal = normalize((sampledNormal.rgb* 2.0 - 1.0) * vec3(mat.normalScale, mat.normalScale, 1.0));
 	// opacity set from above
 
     // normal (with normal mapping)
-    gNormal = vec4(normalize(TBN * normal.rgb), 1.f);
+    gNormal = vec4(normalize(TBN * normal), 1.0);
 	
-    gBaseColor = vec4(albedo, opacity);
+	// diffuseColor = (1.0 - metallic) * albedo;
+	gDiffuseColor = vec4((1.0 - metallic) * albedo, opacity);
+
+	// SMATH: reflectance
+	// f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + albedo * metallic;
+	gSpecularColor = vec4(vec3(0.16 * 0.5 * 0.5 * (1.0 - metallic)) + albedo * metallic, roughness * roughness);
 	
-	gSurface = vec4(metallic, roughness, 0.5, occlusion);
+	gEmissive = vec4(emissive, occlusion);
 	
-	gEmissive = vec4(emissive, 1.f);
+	vec2 a = (clipPos.xy / clipPos.w) * 0.5 + 0.5;
+    vec2 b = (prevClipPos.xy / prevClipPos.w) * 0.5 + 0.5;
+
+	float expectedDepth = (prevClipPos.z / prevClipPos.w);
+
+	gVelocity = vec4(a - b, expectedDepth, 1.f);
 }                                                                                        
 

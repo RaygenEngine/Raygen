@@ -71,6 +71,10 @@ protected:
 
 	void Utl_CreatePipelineLightPass(
 		GpuAsset<Shader>& shader, vk::PipelineColorBlendStateCreateInfo colorBlending, uint32 subpassIndex = 0);
+
+
+	void Utl_CreatePipelineCustomPass(GpuAsset<Shader>& shader, vk::PipelineColorBlendStateCreateInfo colorBlending,
+		vk::RenderPass renderPass, uint32 subpassIndex = 0);
 };
 
 

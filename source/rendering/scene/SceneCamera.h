@@ -16,5 +16,6 @@ struct SceneCamera : SceneStruct {
 	SCENE_STRUCT(SceneCamera);
 	Camera_Ubo ubo;
 
+	glm::mat4 prevViewProj{};
 	math::Frustum frustum;
 };

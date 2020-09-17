@@ -10,6 +10,7 @@ struct Fragment
     vec3 emissive;
     float a;
     float opacity;
+    float occlusion;
     float depth;
 };
 
@@ -30,9 +31,9 @@ Fragment getFragmentFromGBuffer(
     float depth, 
     mat4 viewProjInv,
     sampler2D normalsSampler, 
-    sampler2D albedoOpacitySampler,
-    sampler2D surfaceSampler,
-    sampler2D emissiveSampler,
+    sampler2D diffuseOpacitySampler,
+    sampler2D f0RoughnessSampler,
+    sampler2D emissiveOcclusionSampler,
     vec2 uv)
 {
     Fragment frag;
@@ -40,22 +41,22 @@ Fragment getFragmentFromGBuffer(
     frag.position = reconstructWorldPosition(depth, uv, viewProjInv);
     frag.normal = texture(normalsSampler, uv).rgb;
     // rgb: albedo a: opacity
-    vec4 albedoOpacity = texture(albedoOpacitySampler, uv);
-    // r: metallic g: roughness b: reflectance a: occlusion
-    vec4 mrro = texture(surfaceSampler, uv);
+    vec4 diffuseOpacity = texture(diffuseOpacitySampler, uv);
+    // rgb: f0, a: a: roughness^2
+    vec4 f0Roughness = texture(f0RoughnessSampler, uv);
+    // rgb: emissive, a: occlusion
+    vec4 emissiveOcclusion = texture(emissiveOcclusionSampler, uv);
 
     // remapping
+    frag.diffuseColor = diffuseOpacity.rgb;
+    frag.opacity = diffuseOpacity.a;
 
-	// diffuseColor = (1.0 - metallic) * albedo;
-    frag.diffuseColor = (1.0 - mrro.r) * albedoOpacity.rgb;
-    // f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + albedo * metallic;
-	frag.f0 = vec3(0.16 * mrro.b * mrro.b * (1.0 - mrro.r)) + albedoOpacity.rgb * mrro.r;
+	frag.f0 = f0Roughness.rgb;
+	frag.a = f0Roughness.a;
 
-    // a = roughness roughness;
-	frag.a = mrro.g * mrro.g;
+    frag.emissive = emissiveOcclusion.rgb;
+    frag.occlusion = emissiveOcclusion.a;
 
-    frag.opacity = albedoOpacity.a;
-    frag.emissive = texture(emissiveSampler, uv).rgb;
     frag.depth = depth;
 
     return frag;

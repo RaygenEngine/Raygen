@@ -61,12 +61,14 @@ public:
 
 	InFlightResources<RenderingPassInstance> m_gbufferInst;
 	InFlightResources<RenderingPassInstance> m_rasterDirectPass;
+
 	InFlightResources<RenderingPassInstance> m_ptPass;
 
+	// Global descriptor set
 	InFlightResources<vk::DescriptorSet> m_attachmentsDesc;
 
 
-	// TODO: RT, move those, framearray
+	// TODO: RT, move those
 	InFlightResources<vk::DescriptorSet> m_rtDescSet;
 
 	PtSpotlight spotlightPass;
