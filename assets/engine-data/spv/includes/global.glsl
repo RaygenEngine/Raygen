@@ -77,6 +77,10 @@ float abssum(vec3 v) {
 	return abs(v.x) + abs(v.y) + abs(v.z);
 }
 
+float abssum(vec2 v) {
+	return abs(v.x) + abs(v.y);
+}
+
 float luminance(vec3 rgb) {
 	// Relative luminance, most commonly used but other definitions exist
 	return dot(rgb, vec3(0.2126f, 0.7152f, 0.0722f));

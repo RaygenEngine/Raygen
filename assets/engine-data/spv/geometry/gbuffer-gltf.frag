@@ -13,6 +13,7 @@ layout (location = 2) out vec4 gSpecularColor;
 layout (location = 3) out vec4 gEmissive;
 
 layout (location = 4) out vec4 gVelocity;
+layout (location = 5) out vec4 gUVDrawIndex;
 
 // in
 
@@ -23,6 +24,7 @@ layout(location=0) in Data
 	vec3 fragPos;
 	vec4 clipPos;
 	vec4 prevClipPos;
+	float drawIndex;
 };
 
 // uniforms
@@ -88,5 +90,5 @@ void main() {
 	float expectedDepth = (prevClipPos.z / prevClipPos.w);
 
 	gVelocity = vec4(a - b, expectedDepth, 1.f);
+	gUVDrawIndex = vec4(uv, drawIndex, 1.f);
 }                                                                                        
-

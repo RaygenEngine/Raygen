@@ -9,6 +9,7 @@ layout(location=0) out Data
 	vec3 fragPos;
 	vec4 clipPos; 
 	vec4 prevClipPos;
+	float drawIndex;
 };
 
 // in
@@ -24,6 +25,7 @@ layout(push_constant) uniform PC {
 	mat4 modelMat;
 	mat4 normalMat;
 	mat4 mvpPrev;
+	float drawIndex;
 } push;
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
@@ -42,8 +44,7 @@ void main() {
 	gl_Position = cam.viewProj * posWCS;
 	clipPos = gl_Position;
 	prevClipPos = push.mvpPrev * vec4(position, 1.0);
-	
-
+	drawIndex = push.drawIndex;
 
 	
 
