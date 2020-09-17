@@ -42,7 +42,7 @@ Fragment getFragmentFromGBuffer(
     frag.normal = texture(normalsSampler, uv).rgb;
     // rgb: albedo a: opacity
     vec4 diffuseOpacity = texture(diffuseOpacitySampler, uv);
-    // rgb: f0, a: a: roughness^2
+    // rgb: f0, a: a: roughness^
     vec4 f0Roughness = texture(f0RoughnessSampler, uv);
     // rgb: emissive, a: occlusion
     vec4 emissiveOcclusion = texture(emissiveOcclusionSampler, uv);

@@ -67,6 +67,15 @@ float computeVarianceCenter(ivec2 iuv)
     return sum;
 }
 
+bool IsReprojValid(ivec2 coord, float centerDrawId)
+{
+	vec4 thisUvDrawIndex = texelFetch(g_UVDrawIndexSampler, coord, 0);
+	if (abs(thisUvDrawIndex.z - centerDrawId) >= 1) {
+		return false;
+	}
+
+	return true;
+}
 
 
 void DebugRenderPasses();
@@ -82,7 +91,11 @@ struct PixelData {
 	vec3 normal;
 	float depth;
 	float luminance;
+	vec2 meshuv;
+	int drawIndex;
 };
+
+
 
 PixelData LoadPixelData(ivec2 iuv, ivec2 screenSize) {
 	PixelData data;
@@ -100,6 +113,11 @@ void main() {
 	ivec2 screenSize = imageSize(svgfInput);
 	vec4 color = imageLoad(svgfInput, iuv);
 
+	if (totalIter == 1) {
+		OutputColor(color);
+		return;
+	}
+
 	int stepSize = 1 << iteration;
 
     const float epsVariance      = 1e-10;
@@ -108,7 +126,8 @@ void main() {
     const vec4  indirectCenter  = imageLoad(svgfInput, iuv);
     const float lIndirectCenter = luminance(indirectCenter.rgb);
 
-        const float var = computeVarianceCenter(iuv);
+	const float centerDrawId = 	texelFetch(g_UVDrawIndexSampler, iuv, 0).z;
+    const float var = computeVarianceCenter(iuv);
 
     // number of temporally integrated pixels
     const float historyLength = imageLoad(momentsBuffer, iuv).a;
@@ -145,19 +164,21 @@ void main() {
 
             if (inside && (xx != 0 || yy != 0)) // skip center pixel, it is already accumulated
             {
-            	const PixelData pixel = LoadPixelData(sampleIuv, screenSize);
-
-                // compute the edge-stopping functions
-                const float w = computeWeight(
-                    depth, pixel.depth, phiDepth * length(vec2(xx, yy)),
-					normalCenter, pixel.normal, phiNormal, 
-                    lIndirectCenter, pixel.luminance, phiLIndirect);
-
-                const float wIndirect = w * kernel;
-
-
-                sumWIndirect  += wIndirect;
-                sumIndirect   += vec4(wIndirect.xxx, wIndirect * wIndirect) * pixel.color;
+            	if (IsReprojValid(sampleIuv, centerDrawId)) {
+		        	const PixelData pixel = LoadPixelData(sampleIuv, screenSize);
+		
+		            // compute the edge-stopping functions
+		            const float w = computeWeight(
+		                depth, pixel.depth, phiDepth * length(vec2(xx, yy)),
+						normalCenter, pixel.normal, phiNormal, 
+		                lIndirectCenter, pixel.luminance, phiLIndirect);
+		
+		            const float wIndirect = w * kernel;
+		
+		
+		            sumWIndirect  += wIndirect;
+		            sumIndirect   += vec4(wIndirect.xxx, wIndirect * wIndirect) * pixel.color;
+                }
             }
         }
     }
@@ -204,6 +225,8 @@ void DebugRenderPasses() {
 		imageStore(svgfOutput, iuv, vec4(color, 1.));
 	}
 }
+
+
 
 
 

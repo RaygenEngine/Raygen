@@ -78,19 +78,16 @@ void main() {
 	FsSpaceInfo fragSpace = GetFragSpace_World(frag.normal, frag.position, cam.position);
 
 	
-	
 	ReprojectionData reproj = GetReprojection(uv);
 	float historyLength = reproj.historyLength;
-
 
 	vec3 accumColor = vec3(0);
 	uint actualSamples = 1;
 
-
 	float historyCalcualted = 1.;
 	if (historyLength < 2) {
-	   actualSamples = 5;
-	   historyCalcualted = 5.;
+	   actualSamples = 8;
+	   historyCalcualted = 8.;
 	}
 	
 	
@@ -110,8 +107,8 @@ void main() {
 
 	// Mix reprojection
 	{
-		#define minColorAlpha 0.05
-		#define minMomentsAlpha 0.05
+		#define minColorAlpha 0.01
+		#define minMomentsAlpha 0.01
 
 		const float colorAlpha = max(1. / (historyLength + 1.), minColorAlpha);
 		const float momentsAlpha = max(1. / (historyLength + 1.), minMomentsAlpha);
@@ -148,7 +145,7 @@ void WriteSky() {
 //  PRE PROCESS (reproject)
 //
 
-bool IsReprojValid(ivec2 coord, float expectedPrevDepth, out vec4 momentsSample)
+bool IsReprojValid(ivec2 coord, float expectedPrevDepth, vec4 centerUvDrawIndex, out vec4 momentsSample)
 {
 	if (coord.x < 0 || coord.y < 0 || coord.x >= gl_LaunchSizeEXT.x || coord.y > gl_LaunchSizeEXT.y) {
 		return false;
@@ -158,11 +155,19 @@ bool IsReprojValid(ivec2 coord, float expectedPrevDepth, out vec4 momentsSample)
 	if (abs(expectedPrevDepth - momentsSample.z) > 5e-3) {
 		return false;
 	}
+
+	
+
+	vec4 thisUvDrawIndex = texelFetch(g_UVDrawIndexSampler, coord, 0);
+	if (abs(thisUvDrawIndex.z - centerUvDrawIndex.z) > 0.5) {
+		return false;
+	}
+
 	return true;
 }
 
 
-ReprojectionData ReprojSample(vec2 sampleUv, float expectedPrevDepth)
+ReprojectionData ReprojSample(vec2 sampleUv, vec4 centerUvDrawIndex, float expectedPrevDepth)
 {
 	ivec2 pixelPos = ivec2(floor(sampleUv));
 	ivec2 offset[4] = { ivec2(0, 0), ivec2(1, 0), ivec2(0, 1), ivec2(1, 1) };
@@ -184,7 +189,7 @@ ReprojectionData ReprojSample(vec2 sampleUv, float expectedPrevDepth)
 	for (int sampleIdx = 0; sampleIdx < 4; sampleIdx++) {
 		ivec2 loc = pixelPos + offset[sampleIdx];
 		vec4 momentsSample;
-		if (IsReprojValid(loc, expectedPrevDepth, momentsSample)) {
+		if (IsReprojValid(loc, expectedPrevDepth, centerUvDrawIndex, momentsSample)) {
 			color += w[sampleIdx] * imageLoad(progressiveResult, loc);
 			moments += w[sampleIdx] * momentsSample;
 			sumW += w[sampleIdx];
@@ -232,6 +237,14 @@ ReprojectionData GetReprojection(vec2 uv) {
 
 	const vec2 posPrev = vec2(gl_LaunchIDEXT.xy) - vec2(motion * gl_LaunchSizeEXT.xy);
 
-	return ReprojSample(posPrev, expectedDepth);
+
+	const vec4 centerUvDrawIndex = texelFetch(g_UVDrawIndexSampler, ivec2(gl_LaunchIDEXT.xy), 0);
+
+	return ReprojSample(posPrev, centerUvDrawIndex, expectedDepth);
 }
+
+
+
+
+
 

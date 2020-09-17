@@ -13,6 +13,7 @@ enum GColorAttachment : uint32
 	GSpecularColor = 3,
 	GEmissive = 4,
 	GVelocity = 5,
+	GUVDrawIndex = 6,
 	GCount
 };
 
