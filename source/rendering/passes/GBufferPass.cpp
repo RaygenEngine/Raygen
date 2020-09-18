@@ -23,6 +23,7 @@ struct PushConstant {
 	glm::mat4 modelMat;
 	glm::mat4 normalMat;
 	glm::mat4 mvpPrev;
+	float drawIndex;
 };
 
 // NEXT:
@@ -235,14 +236,18 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc&
 	// WIP: decouple
 	auto descSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
 
+
 	for (auto geom : sceneDesc->geometries.elements) {
 
 		if (!geom) {
 			continue;
 		}
-		PushConstant pc{ //
-			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform)),
-			sceneDesc.viewer->prevViewProj * geom->prevTransform
+		PushConstant pc{
+			//
+			geom->transform,
+			glm::inverseTranspose(glm::mat3(geom->transform)),
+			sceneDesc.viewer->prevViewProj * geom->prevTransform,
+			0.f,
 		};
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
@@ -256,6 +261,8 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc&
 				continue;
 			}
 			auto& plLayout = *arch.gbuffer.pipelineLayout;
+
+			pc.drawIndex = float(gg.material.uid);
 
 			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
 			cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);

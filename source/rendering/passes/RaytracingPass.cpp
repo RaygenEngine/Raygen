@@ -312,17 +312,19 @@ struct SvgfPC {
 };
 static_assert(sizeof(SvgfPC) <= 128);
 
-ConsoleVariable<int32> console_SvgfIters{ "rt.svgf.iterations", 5,
+ConsoleVariable<int32> console_SvgfIters{ "rt.svgf.iterations", 1,
 	"Controls how many times to apply svgf atrous filter." };
 
 ConsoleVariable<int32> console_SvgfProgressiveFeedback{ "rt.svgf.feedbackIndex", -1,
 	"Selects the index of the iteration to write onto the accumulation result (or do -1 to skip feedback)" };
 
+ConsoleVariable<bool> console_SvgfEnable{ "rt.svgf.enable", true, "Enable or disable svgf pass." };
+
 void RaytracingPass::PtSvgf::SvgfDraw(
 	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, RenderingPassInstance& rpInstance)
 {
 	auto times = *console_SvgfIters;
-	for (int32 i = 0; i < times; ++i) {
+	for (int32 i = 0; i < std::max(times, 1); ++i) {
 		rpInstance.RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
@@ -335,7 +337,7 @@ void RaytracingPass::PtSvgf::SvgfDraw(
 
 			SvgfPC pc{
 				.iteration = i,
-				.totalIter = times,
+				.totalIter = (times < 1 || !console_SvgfEnable) ? 0 : times,
 				.progressiveFeedbackIndex = console_SvgfProgressiveFeedback,
 			};
 

@@ -67,11 +67,21 @@ float computeVarianceCenter(ivec2 iuv)
     return sum;
 }
 
+bool IsReprojValid(ivec2 coord, float centerDrawId)
+{
+	vec4 thisUvDrawIndex = texelFetch(g_UVDrawIndexSampler, coord, 0);
+	if (abs(thisUvDrawIndex.z - centerDrawId) >= 1) {
+		return false;
+	}
+
+	return true;
+}
 
 
 void DebugRenderPasses();
 
 void OutputColor(vec4 color);
+void OutputColor(vec4 color, bool mixAlbedo);
 
 bool IsInside(ivec2 p, ivec2 screenSize) {
 	return p.x >= 0 && p.y >= 0 && p.x < screenSize.x && p.y < screenSize.y;
@@ -84,14 +94,20 @@ struct PixelData {
 	float luminance;
 };
 
+
+
 PixelData LoadPixelData(ivec2 iuv, ivec2 screenSize) {
 	PixelData data;
+	data.depth = texture(g_DepthSampler, uv).r;
+	if (data.depth == 1) {
+		return data;
+	}
 	data.color = imageLoad(svgfInput, iuv);
 	data.luminance = luminance(data.color.rgb);
 	
 	vec2 uv = iuv / screenSize; // TODO: probably needs pixel offset
 	data.normal = texture(g_NormalSampler, uv).rgb;
-	data.depth = texture(g_DepthSampler, uv).r;
+
 	return data;
 }
 
@@ -100,39 +116,40 @@ void main() {
 	ivec2 screenSize = imageSize(svgfInput);
 	vec4 color = imageLoad(svgfInput, iuv);
 
+	if (totalIter == 0 && iteration >= totalIter - 1) {
+		OutputColor(color);
+		return;
+	}
+
 	int stepSize = 1 << iteration;
 
     const float epsVariance      = 1e-10;
-    const float kernelWeights[3] = { 1.0, 2.0 / 3.0, 1.0 / 6.0 };
+    const float kernelWeights[3] = { 1.0, 2.0 / (3.0), 1.0 / 6.0 };
+	const float centerDrawId = 	texelFetch(g_UVDrawIndexSampler, iuv, 0).z;
 
-    const vec4  indirectCenter  = imageLoad(svgfInput, iuv);
-    const float lIndirectCenter = luminance(indirectCenter.rgb);
 
-        const float var = computeVarianceCenter(iuv);
+    const float var = computeVarianceCenter(iuv);
 
-    // number of temporally integrated pixels
-    const float historyLength = imageLoad(momentsBuffer, iuv).a;
-
-    vec3 normalCenter = texture(g_NormalSampler, uv).rgb;
-    float depth = texture(g_DepthSampler, uv).r;
+	const PixelData center = LoadPixelData(iuv, screenSize);
 
 	// Skybox
-    if (depth.x >=  1.f) {
-    	OutputColor(color);
+    if (center.depth >= 1.f) {
+    	OutputColor(color, false);
 		return;
     }
 
 	// phiColor: 10.0 default value
 	const float phiColor            = 10.;
-	const float phiNormal           = 1.;
-    const float phiLIndirect = phiColor * sqrt(max(0.0, epsVariance + var.r));
-    const float phiDepth     = max(depth, 1e-8) * stepSize;
+	const float phiNormal           = 128.;
+    const float phiLIndirect = phiColor * sqrt(max(0.0, epsVariance + var));
+    const float phiDepth     = max(center.depth, 1e-8) * stepSize;
 
 
-    // explicitly store/accumulate center pixel with weight 1 to prevent issues
+ 	// explicitly store/accumulate center pixel with weight 1 to prevent issues
     // with the edge-stopping functions
-    float sumWIndirect = 1.0;
-    vec4  sumIndirect  = indirectCenter;
+    const float centerMultiplier = 2.0f;
+    float sumWIndirect = centerMultiplier;
+    vec4  sumIndirect  = centerMultiplier * vec4(saturate(center.color.xyz), center.color.w);
 
     for (int yy = -2; yy <= 2; yy++)
     {
@@ -145,19 +162,21 @@ void main() {
 
             if (inside && (xx != 0 || yy != 0)) // skip center pixel, it is already accumulated
             {
-            	const PixelData pixel = LoadPixelData(sampleIuv, screenSize);
-
-                // compute the edge-stopping functions
-                const float w = computeWeight(
-                    depth, pixel.depth, phiDepth * length(vec2(xx, yy)),
-					normalCenter, pixel.normal, phiNormal, 
-                    lIndirectCenter, pixel.luminance, phiLIndirect);
-
-                const float wIndirect = w * kernel;
-
-
-                sumWIndirect  += wIndirect;
-                sumIndirect   += vec4(wIndirect.xxx, wIndirect * wIndirect) * pixel.color;
+            	if (IsReprojValid(sampleIuv, centerDrawId)) {
+   		        	const PixelData pixel = LoadPixelData(sampleIuv, screenSize);
+	
+		            // compute the edge-stopping functions
+		            const float w = computeWeight(
+		                center.depth, pixel.depth, phiDepth * length(vec2(xx, yy)),
+						center.normal, pixel.normal, phiNormal, 
+		                center.luminance, pixel.luminance, phiLIndirect);
+		
+		            const float wIndirect = w * kernel;
+		
+		
+		            sumWIndirect  += wIndirect;
+		            sumIndirect   += vec4(wIndirect.xxx, wIndirect * wIndirect) * pixel.color;
+                }
             }
         }
     }
@@ -165,16 +184,21 @@ void main() {
 	sumIndirect = vec4(sumIndirect / vec4(sumWIndirect.xxx, sumWIndirect * sumWIndirect));
 
 	OutputColor(sumIndirect);
+	//outColor = vec4(vec3(phiLIndirect) / 100., 1.f);
 }                               
 
 //
 // 
 //
 
-void OutputColor(vec4 color) {
+void OutputColor(vec4 color, bool mixAlbedo) {
 	ivec2 iuv = ivec2(gl_FragCoord.xy);
-	if (iteration == totalIter - 1) {
-	    outColor = color;
+	if (iteration >= totalIter - 1) {
+	    if (mixAlbedo) {
+	    	vec4 colorSample = texelFetch(g_ColorSampler, iuv, 0);
+	    	color *= max(vec4(1e-1), colorSample);
+	    }
+   	    outColor = color;
 	}
 	else {
 		imageStore(svgfOutput, iuv, color);
@@ -183,6 +207,10 @@ void OutputColor(vec4 color) {
 	if (iteration == progressiveFeedbackIndex) {
 		imageStore(progressiveResult, iuv, color);
 	}
+}
+
+void OutputColor(vec4 color) {
+	OutputColor(color, true);
 }
 
 void DebugRenderPasses() {
@@ -204,6 +232,14 @@ void DebugRenderPasses() {
 		imageStore(svgfOutput, iuv, vec4(color, 1.));
 	}
 }
+
+
+
+
+
+
+
+
 
 
 
