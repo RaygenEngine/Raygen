@@ -136,15 +136,15 @@ void main() {
 	vec3 Ns = normalize(TBN * (sampledNormal.rgb * 2.0 - 1.0));
 
 	// final material values
-	vec3 albedo = sampledBaseColor.rgb;
+	vec3 baseColor = sampledBaseColor.rgb;
 	float metallic = sampledMetallicRoughness.b * mat.metallicFactor;
 	float roughness = sampledMetallicRoughness.g * mat.roughnessFactor;
-	float reflectance = 0.5f;
+	float reflectance = 0.5;
 
     // remapping
 	FragBrdfInfo brdfInfo;
-    brdfInfo.diffuseColor = (1.0 - metallic) * albedo;
-	brdfInfo.f0 =  vec3(0.16 * reflectance * reflectance * (1.0 - metallic)) + albedo * metallic;
+    brdfInfo.albedo = (1.0 - metallic) * baseColor;
+	brdfInfo.f0 =  vec3(0.16 * reflectance * reflectance * (1.0 - metallic)) + baseColor * metallic;
 	brdfInfo.a = roughness * roughness;
 
 	vec3 hitPoint = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
@@ -216,7 +216,7 @@ void main() {
 				float NoH = max(Ndot(H), BIAS); 
 				float LoH = max(dot(L, H), BIAS);
 
-				vec3 finalContribution = DirectLightBRDF(NoL, NoV, NoH, LoH, brdfInfo.a, brdfInfo.diffuseColor, brdfInfo.f0)  * Li * NoL;
+				vec3 finalContribution = DirectLightBRDF(NoL, NoV, NoH, LoH, brdfInfo.a, brdfInfo.albedo, brdfInfo.f0)  * Li * NoL;
 
 				radiance += finalContribution;
 			}

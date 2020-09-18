@@ -86,9 +86,10 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
         float LoH = max(dot(L, H), BIAS);
 
         float pdf = NoL * INV_PI;
-    
-        // SMATH: missing Kd
-        vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, a, diffuseColor);
+
+        vec3 kd = 1 - F_Schlick(LoH, f0);
+
+        vec3 brdf_d = DiffuseTerm(NoL, NoV, LoH, a, albedo, kd);
 
         radiance += TraceNext(brdf_d * NoL / pdf, L, fragSpace);
     }
@@ -119,7 +120,9 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
             pdf = 1.0;
         }   
 
-        vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, f0);
+        vec3 ks = F_Schlick(LoH, f0);
+
+        vec3 brdf_r = SpecularTerm(NoV, NoL, NoH, a, ks);
 
         radiance += TraceNext(brdf_r * NoL / pdf, L, fragSpace);
     }

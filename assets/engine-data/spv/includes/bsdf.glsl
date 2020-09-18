@@ -69,7 +69,7 @@ vec3 reflect(vec3 wo)
     return vec3(wo.x, wo.y, -wo.z);
 }
 
-// CHECK: math
+// SMATH:
 float D_GGX(float NoH, float _a) {
     float a = NoH * _a;
     float k = a / (1.0 - NoH * NoH + a * a);
@@ -100,63 +100,69 @@ float D_Phong(float NoH, float a)
 	return pow(NoH, smoothness) * (smoothness + 2.0) / (2.0 * PI);
 }
 
-vec3 SpecularTerm(float NoL, float NoV, float NoH, float LoH, float a, vec3 f0)
+//    vec3 F = F_Schlick(LoH, f0);
+//
+//    if(a < 0.0001){
+//		float D = D_Phong(NoH, a);   
+//		return vec3(D * F * 0.25);
+//    }
+//
+//    float D = D_GGX(NoH, a);
+//    float G = G_SchlicksmithGGX(NoL, NoV, a);
+//
+//    float denom = 4 * NoL * NoV;
+//    return D * G * F / denom;
+
+
+
+vec3 PhongSpecular(float NoH, float a)
 {
-    vec3 F = F_Schlick(LoH, f0);
-
-    if(a < 0.0001){
-		float D = D_Phong(NoH, a);   
-		return vec3(D * F * 0.25);
-    }
-
-    float D = D_GGX(NoH, a);
-    float G = G_SchlicksmithGGX(NoL, NoV, a);
-
-    float denom = 4 * NoL * NoV;
-
-    return D * G * F / denom;
+    float D = D_Phong(NoH, a);
+    return D * 0.25;
 }
 
-//vec3 Fr_CookTorranceGGX(float NoV, float NoL, float NoH, float LoH, vec3 f0, float a)
-//{
-//    //float D = D_GGX(NoH, a);
-//
-//    // CHECK:
-//    //vec3 f90 = vec3(0.5 + 2.0 * a * LoH * LoH);
-//
-//    //vec3  F = F_Schlick(LoH, f0, f90);
-//    //float V = V_SmithGGXCorrelated(NoV, NoL, a);
-//
-//    return (D * V) * F; // denominator simplified with G
-//}
-//
+vec3 CookTorranceGGXSpecular(float NoV, float NoL, float NoH, float a)
+{
+    float D = D_GGX(NoH, a);
+    float V = V_SmithGGXCorrelated(NoV, NoL, a);
 
-vec3 DisneyDiffuse(float NoL, float NoV, float LoH, float a, vec3 diffuseColor) 
+    return D * V; // denominator simplified with G
+}
+
+vec3 SpecularTerm(float NoV, float NoL, float NoH, float a, vec3 ks)
+{
+    // CHECK: ks = F should probably be inside the brdfs and ommited here
+    if(a < 0.0001){   
+		return ks *  PhongSpecular(NoH, a);
+    }
+
+    return ks * CookTorranceGGXSpecular(NoV, NoL, NoH, a);
+}
+
+vec3 DisneyDiffuse(float NoL, float NoV, float LoH, float a, vec3 albedo) 
 {
     float f90 = 0.5 + LoH * LoH  * a;
 
-    return diffuseColor * INV_PI * F_Schlick(NoL, f90) * F_Schlick(NoV, f90);
+    return albedo * INV_PI * F_Schlick(NoL, f90) * F_Schlick(NoV, f90);
 }
 
-vec3 LambertianDiffuse(vec3 diffuseColor) 
+vec3 LambertianDiffuse(vec3 albedo) 
 {
-    return diffuseColor * INV_PI;
+    return albedo * INV_PI;
 }
 
-vec3 DiffuseTerm(float NoL, float NoV, float LoH, float a, vec3 diffuseColor)
+vec3 DiffuseTerm(float NoL, float NoV, float LoH, float a, vec3 albedo, vec3 kd)
 {
-    return DisneyDiffuse(NoL, NoV, LoH, a, diffuseColor);
+    return kd * DisneyDiffuse(NoL, NoV, LoH, a, albedo);
 }
 
-vec3 importanceSampleGGX(vec2 u, float a) 
+// same Li and L for both brdfs
+vec3 DirectLightBRDF(float NoL, float NoV, float NoH, float LoH, float a, vec3 albedo, vec3 f0)
 {
-    float phi = 2.0f * PI * u.x;
-    // (aa-1) == (a-1)(a+1) produces better fp accuracy
-    float cosTheta2 = (1 - u.y) / (1 + (a + 1) * ((a - 1) * u.y));
-    float cosTheta = sqrt(cosTheta2);
-    float sinTheta = sqrt(1 - cosTheta2);
-
-    return vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
+    vec3 ks = F_Schlick(LoH, f0);
+    vec3 kd = 1 - ks;
+     
+    return DiffuseTerm(NoL, NoV, LoH, a, albedo, kd) + SpecularTerm(NoV, NoL, NoH, a,ks);
 }
 
 /*
@@ -167,26 +173,16 @@ ve3 StandardBRDF(IncidentSpaceInfo incidentSpace, FragBrdfInfo brdfInfo)
 }
 */
 
-vec3 DirectLightBRDF(float NoL, float NoV, float NoH, float LoH, float a, vec3 diffuseColor, vec3 f0)
+// SMATH: where is D?
+vec3 importanceSampleGGX(vec2 u, float a) 
 {
-    float f90 = 0.5 + LoH * LoH  * a;
-    vec3 brdf_d = diffuseColor * INV_PI * F_Schlick(NoL, f90) * F_Schlick(NoV, f90);
+    float phi = 2.0f * PI * u.x;
+    // (aa-1) == (a-1)(a+1) produces better fp accuracy
+    float cosTheta2 = (1 - u.y) / (1 + (a + 1) * ((a - 1) * u.y));
+    float cosTheta = sqrt(cosTheta2);
+    float sinTheta = sqrt(1 - cosTheta2);
 
-    vec3 F = F_Schlick(LoH, f0);
-
-    if(a < 0.0001){
-		float D = D_Phong(NoH, a);   
-		return D * F * 0.25;
-    }
-
-    float D = D_GGX(NoH, a);
-    float G = G_SchlicksmithGGX(NoL, NoV, a);
-
-    float denom = 4 * NoL * NoV;
-
-    vec3 brdf_s = D * G * F / denom;
-
-    return (1 - F) * brdf_d + brdf_s;
+    return vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
 }
 
 #endif
