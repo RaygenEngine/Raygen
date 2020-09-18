@@ -312,7 +312,7 @@ struct SvgfPC {
 };
 static_assert(sizeof(SvgfPC) <= 128);
 
-ConsoleVariable<int32> console_SvgfIters{ "rt.svgf.iterations", 1,
+ConsoleVariable<int32> console_SvgfIters{ "rt.svgf.iterations", 4,
 	"Controls how many times to apply svgf atrous filter." };
 
 ConsoleVariable<int32> console_SvgfProgressiveFeedback{ "rt.svgf.feedbackIndex", -1,
