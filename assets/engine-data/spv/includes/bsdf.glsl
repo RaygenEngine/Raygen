@@ -97,16 +97,15 @@ float G_SchlicksmithGGX(float NoL, float NoV, float a)
 	return GL * GV;
 }
 
-float D_Phong(float NoH, float a)
+// Converts a square of roughness to a Phong specular power
+float RoughnessSquareToSpecPower(float a) 
 {
-	float smoothness = (1.0 - a) * 127.0;
-	return pow(NoH, smoothness) * (smoothness + 2.0) / (2.0 * PI);
+    return max(0.01, 2.0 / (a + 1e-4) - 2.0);
 }
 
-vec3 PhongSpecular(float NoH, float a)
+float PhongSpecular(float NoH, float a)
 {
-    float D = D_Phong(NoH, a);
-    return vec3(D * 0.25);
+    return pow(NoH, RoughnessSquareToSpecPower(a));
 }
 
 vec3 CookTorranceGGXSmithSpecular(float NoV, float NoL, float NoH, float a)
@@ -128,7 +127,7 @@ vec3 CookTorranceGGXSmithCorrelatedSpecular(float NoV, float NoL, float NoH, flo
 
 vec3 SpecularTerm(float NoV, float NoL, float NoH, float a, vec3 ks)
 {
-    // CHECK: ks = F should probably be inside the brdfs and ommited here
+    // CHECK: ks = F should probably be inside the brdfs and omitted here
     if(a < 0.0001){   
 		return ks *  PhongSpecular(NoH, a);
     }
@@ -159,7 +158,7 @@ vec3 DirectLightBRDF(float NoL, float NoV, float NoH, float LoH, float a, vec3 a
     vec3 ks = F_Schlick(LoH, f0);
     vec3 kd = 1 - ks;
      
-    return DiffuseTerm(NoL, NoV, LoH, a, albedo, kd) + SpecularTerm(NoV, NoL, NoH, a,ks);
+    return DiffuseTerm(NoL, NoV, LoH, a, albedo, kd) + SpecularTerm(NoV, NoL, NoH, a, ks);
 }
 
 /*

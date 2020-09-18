@@ -11,7 +11,6 @@
 #include "attachments.glsl"
 #include "onb.glsl"
 #include "sky.glsl"
-
 layout(set = 1, binding = 0) uniform UBO_Camera {   
 	vec3 position;
 	float pad0;
@@ -41,13 +40,11 @@ struct ReprojectionData {
 };
 
 ReprojectionData GetReprojection(vec2 uv);
- 
-void main() {
 
+void main() {
 	vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
 	float fragDepth = texture(g_DepthSampler, uv).r;
-	if(fragDepth >= 1.)
-	{
+	if(fragDepth >= 1.) {
 		// sky
 		WriteSky();
 		return; 
@@ -90,16 +87,19 @@ void main() {
 	   historyCalcualted = 1.;
 	}
 	
-	
 	actualSamples *= samples;
 	for(uint smpl = 0; smpl < actualSamples && depth > 0; ++smpl){
 		// NOTE: Don't forget to initialize the ray here. 
 		prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl); // PERF:
 		prd.depth = 0;
 		prd.accumThroughput = vec3(1.f);
+
 		vec3 divs = max(brdfInfo.albedo, vec3(1e-1f));
+
 		accumColor += TraceIndirect(fragSpace, brdfInfo) / divs;
 	}
+
+
 	vec3 curColor = (accumColor / actualSamples);
 
 	vec2 moments;
@@ -127,6 +127,7 @@ void main() {
 		variance += 0.2;
 
 	}
+
 
 	imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, variance));
 	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, variance));
@@ -249,6 +250,7 @@ ReprojectionData GetReprojection(vec2 uv) {
 
 	return ReprojSample(posPrev, centerUvDrawIndex, expectedDepth);
 }
+
 
 
 
