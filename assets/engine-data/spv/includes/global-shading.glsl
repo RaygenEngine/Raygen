@@ -9,9 +9,9 @@
 // All surface information required to perform "standard" brdf.
 // (We could have more of these for: 1) btdf 2) different brdf implementations eg: cloth, clear-coating)
 struct FragBrdfInfo {
-	vec3 diffuseColor;
+	vec3 albedo; // albedo
 
-	vec3 f0; // specularColor (?)
+	vec3 f0; // specularColor 
 	
 	float a; // roughness^2
 };

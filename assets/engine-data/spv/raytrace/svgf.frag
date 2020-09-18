@@ -195,7 +195,7 @@ void OutputColor(vec4 color, bool mixAlbedo) {
 	ivec2 iuv = ivec2(gl_FragCoord.xy);
 	if (iteration >= totalIter - 1) {
 	    if (mixAlbedo) {
-	    	vec4 colorSample = texelFetch(g_ColorSampler, iuv, 0);
+	    	vec4 colorSample = texelFetch(g_AlbedoSampler, iuv, 0);
 	    	color *= max(vec4(1e-1), colorSample);
 	    }
    	    outColor = color;
