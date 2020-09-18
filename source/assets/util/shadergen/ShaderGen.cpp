@@ -125,7 +125,7 @@ layout(location = 3) in vec2 textCoord;
 
 // uniforms
 
-layout(push_constant) uniform ModelData {
+layout(push_constant) uniform PC {
 	mat4 modelMat;
 	mat4 normalMat;
 } push;
@@ -181,7 +181,7 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec3 tangent;
 layout(location = 3) in vec2 textCoord;
 
-layout(push_constant) uniform ModelData {
+layout(push_constant) uniform PC {
 	mat4 mvp;
 } push;
 

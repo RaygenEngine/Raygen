@@ -182,7 +182,7 @@ namespace {
 		template<typename PodType>
 		bool InjectPodCode(PodHandle<PodType>& pod, const Property& p, bool isInVector = false, uint64 extraId = 1)
 		{
-			auto entry = AssetHandlerManager::GetEntry(pod);
+			auto entry = AssetRegistry::GetEntry(pod);
 			const char* thisName = isInVector ? entry->name.c_str() : name;
 			return ImEd::AssetSlot(thisName, pod);
 		}

@@ -55,7 +55,7 @@ void StdAssets::LoadAssets()
 	// CHECK: Semi-temporary: Force transient to never save these. Another flag and specific handling of Standard Assets
 	// would be optimal
 
-	for (auto& entry : AssetHandlerManager::Z_GetPods()) {
+	for (auto& entry : AssetRegistry::Z_GetPods()) {
 		entry->transient = true;
 	}
 }

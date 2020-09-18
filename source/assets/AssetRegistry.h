@@ -66,15 +66,15 @@ PathReferenceType GenerateExportDependencyPath(
 	const fs::path& exporteePath, const fs::path& dependencyPath, fs::path& outPath);
 }
 
-class AssetHandlerManager {
+class AssetRegistry {
 
 private:
 	friend class AssetImporterManager_;
 	friend class AssetManager_;
 
-	static AssetHandlerManager& Get()
+	static AssetRegistry& Get()
 	{
-		static AssetHandlerManager inst = AssetHandlerManager();
+		static AssetRegistry inst = AssetRegistry();
 		return inst;
 	}
 
@@ -310,14 +310,14 @@ private:
 		e->type = mti::GetTypeId<PodType>();
 
 
-		e->path = AssetHandlerManager::SuggestPath(desiredPath);
+		e->path = AssetRegistry::SuggestPath(desiredPath);
 		e->name = uri::GetFilename(e->path);
 
 
-		e->uid = AssetHandlerManager::Get().m_pods.size();
-		AssetHandlerManager::Get().m_pods.emplace_back(e);
+		e->uid = AssetRegistry::Get().m_pods.size();
+		AssetRegistry::Get().m_pods.emplace_back(e);
 		assetdetail::podAccessor.emplace_back(ptr);
-		AssetHandlerManager::RegisterPathCache(e);
+		AssetRegistry::RegisterPathCache(e);
 
 		return std::make_pair(e, ptr);
 	}

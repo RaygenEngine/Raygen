@@ -1,7 +1,6 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
 
-// TODO: rename model stuff
 struct SceneGeometry {
 	glm::mat4 transform;
 	glm::mat4 prevTransform;
@@ -14,7 +13,7 @@ struct SceneGeometry {
 struct SceneAnimatedGeometry {
 	glm::mat4 transform{};
 	vl::GpuHandle<SkinnedMesh> mesh;
-	PodHandle<SkinnedMesh> modelPod;
+	PodHandle<SkinnedMesh> meshPod;
 
 	std::vector<glm::mat4> jointMatrices;
 

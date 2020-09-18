@@ -26,7 +26,7 @@ vk::Sampler GpuAssetManager_::GetDefaultSampler()
 
 void GpuAssetManager_::AllocForAll()
 {
-	gpuAssets.resize(AssetHandlerManager::Z_GetPods().size());
+	gpuAssets.resize(AssetRegistry::Z_GetPods().size());
 	gpuassetdetail::gpuAssetListData = gpuAssets.data();
 }
 
@@ -36,7 +36,7 @@ GpuAsset<Shader>& GpuAssetManager_::CompileShader(const char* path)
 		return GetGpuHandle(it->second).Lock();
 	}
 
-	PodHandle<Shader> shaderHandle = AssetHandlerManager::SearchForAssetFromImportPathSlow<Shader>(path);
+	PodHandle<Shader> shaderHandle = AssetRegistry::SearchForAssetFromImportPathSlow<Shader>(path);
 	if (shaderHandle.IsDefault()) {
 		AssetImporterManager->PushPath("shaders/");
 		shaderHandle = Assets::ImportAs<Shader>(fs::path(path));
@@ -138,10 +138,10 @@ void GpuAssetManager_::PerformAssetUpdates(std::vector<std::pair<size_t, AssetUp
 
 void GpuAssetManager_::ConsumeAssetUpdates()
 {
-	auto& updates = AssetHandlerManager::GetGpuUpdateRequests();
+	auto& updates = AssetRegistry::GetGpuUpdateRequests();
 	if (!updates.empty()) {
 		PerformAssetUpdates(updates);
-		AssetHandlerManager::ClearGpuUpdateRequests();
+		AssetRegistry::ClearGpuUpdateRequests();
 	}
 }
 

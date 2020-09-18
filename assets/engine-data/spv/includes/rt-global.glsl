@@ -58,7 +58,7 @@ struct Spotlight
 	float sampleInvSpread;
 };
 
-layout(push_constant) uniform Constants
+layout(push_constant) uniform PC
 {
     int frame;
     int depth;

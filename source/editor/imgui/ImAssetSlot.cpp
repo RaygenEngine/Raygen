@@ -24,7 +24,7 @@ void AssetSlotPopup::UpdateSearch()
 {
 	// PERF: filter and store by type
 	// PERF: can search subresults when a letter is added instead of a new search
-	auto& allPods = AssetHandlerManager::Z_GetPods();
+	auto& allPods = AssetRegistry::Z_GetPods();
 
 	const bool useType = searchType != mti::GetTypeId<void>();
 	results.clear();

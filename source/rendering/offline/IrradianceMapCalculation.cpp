@@ -457,7 +457,7 @@ void IrradianceMapCalculation::EditPods()
 
 	if (irradiance.IsDefault()) {
 		PodEditor e(envMap);
-		auto& [entry, irr] = AssetHandlerManager::CreateEntry<Cubemap>("gen-data/generated/cubemap");
+		auto& [entry, irr] = AssetRegistry::CreateEntry<Cubemap>("gen-data/generated/cubemap");
 
 		e.pod->irradiance = entry->GetHandleAs<Cubemap>();
 		irradiance = entry->GetHandleAs<Cubemap>();

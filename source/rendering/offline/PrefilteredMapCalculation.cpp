@@ -471,7 +471,7 @@ void PrefilteredMapCalculation::EditPods()
 
 	if (pref.IsDefault()) {
 		PodEditor e(envMap);
-		auto& [entry, irr] = AssetHandlerManager::CreateEntry<Cubemap>("gen-data/generated/cubemap");
+		auto& [entry, irr] = AssetRegistry::CreateEntry<Cubemap>("gen-data/generated/cubemap");
 
 		e.pod->prefiltered = entry->GetHandleAs<Cubemap>();
 		pref = entry->GetHandleAs<Cubemap>();
