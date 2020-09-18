@@ -4,6 +4,7 @@
 #include "editor/DataStrings.h"
 #include "editor/EdUserSettings.h"
 #include "editor/imgui/ImGuizmo.h"
+#include "editor/imgui/ImEd.h"
 #include "editor/misc/NativeFileBrowser.h"
 #include "editor/windows/general/EdAssetsWindow.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
@@ -34,6 +35,7 @@ EditorObject_::EditorObject_()
 {
 	ImguiImpl::InitContext();
 	MakeMainMenu();
+	Event::OnWindowMaximize.Bind(this, [&](bool newIsMaximized) { m_isMaximised = newIsMaximized; });
 }
 
 void EditorObject_::MakeMainMenu()
@@ -213,6 +215,7 @@ void EditorObject_::UpdateEditor()
 
 	std::string s = fmt::format("{:.1f} FPS : Rt Index: {}", Engine.GetFPS(), vl::Renderer->m_raytracingPass.m_rtFrame);
 	ImGui::Text(s.c_str());
+
 	ImGui::End();
 
 
@@ -230,6 +233,7 @@ void EditorObject_::UpdateEditor()
 			cmd();
 		}
 	}
+
 
 	ed::GetSettings().SaveIfDirty();
 }
@@ -293,12 +297,63 @@ void EditorObject_::OnStopPlay()
 	// WIP: ECS
 }
 
+namespace {
+void MenuBar(ed::Menu& m_mainMenu) {}
+} // namespace
+
+void EditorObject_::TopMostMenuBarDraw()
+{
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.f, 7.f)); // On edit update imextras.h c_MenuPaddingY
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.f, 7.f));
+	if (!ImGui::BeginMenuBar()) {
+		ImGui::PopStyleVar(2);
+		return;
+	}
+	auto initialCursorPos = ImGui::GetCursorPos();
+	ImVec2 scaledSize = ImGui::GetCurrentWindow()->MenuBarRect().GetSize();
+	m_mainMenu.DrawOptions();
+
+	constexpr float c_menuItemWidth = 30.f;
+	auto rightSideCursPos = initialCursorPos;
+	rightSideCursPos.x = initialCursorPos.x + scaledSize.x - (3.f * (c_menuItemWidth + 20.f));
+	rightSideCursPos.x -= 2.f;
+	ImGui::SetCursorPos(rightSideCursPos);
+
+
+	if (ImGui::MenuItem(U8(u8"  " FA_WINDOW_MINIMIZE), nullptr, nullptr, true, c_menuItemWidth)) {
+		glfwIconifyWindow(Platform::GetMainHandle());
+	}
+
+	auto middleText = m_isMaximised ? U8(u8"  " FA_WINDOW_RESTORE) : U8(u8"  " FA_WINDOW_MAXIMIZE);
+	if (ImGui::MenuItem(middleText, nullptr, nullptr, true, c_menuItemWidth)) {
+		m_isMaximised ? glfwRestoreWindow(Platform::GetMainHandle()) : glfwMaximizeWindow(Platform::GetMainHandle());
+	}
+
+	ImGui::PushStyleColor(ImGuiCol_HeaderHovered, EdColor::Red);
+	if (ImGui::MenuItem(U8(u8"  " FA_WINDOW_CLOSE), nullptr, nullptr, true, c_menuItemWidth)) {
+		glfwSetWindowShouldClose(Platform::GetMainHandle(), true);
+	}
+	ImGui::PopStyleColor();
+
+	ImGui::SetCursorPos(initialCursorPos);
+	if (ImGui::InvisibleButton("##MainMenuBarItemButton", scaledSize, ImGuiButtonFlags_PressedOnClick)) {
+		glfwDragWindow(Platform::GetMainHandle());
+		LOG_REPORT("Clicked");
+	}
+
+	ImGui::EndMenuBar();
+	ImGui::PopStyleVar(2);
+}
+
 void EditorObject_::Run_MenuBar()
 {
+	TopMostMenuBarDraw();
+	/*
 	if (ImEd::BeginMenuBar()) {
 		m_mainMenu.DrawOptions();
 		ImEd::EndMenuBar();
 	}
+	*/
 
 	if (m_openPopupDeleteLocal) {
 		ImGui::OpenPopup("Delete Local");

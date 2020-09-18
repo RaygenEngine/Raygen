@@ -40,6 +40,14 @@ bool BeginMenuBar()
 		ImGui::PopStyleVar(2);
 		return false;
 	}
+	ImVec2 scaledSize = ImVec2(800, 25);
+	auto cursorPos = ImGui::GetCursorPos();
+
+	if (ImGui::InvisibleButton("##MainMenuBarItemButton", scaledSize, ImGuiButtonFlags_PressedOnClick)) {
+		LOG_REPORT("Clicked");
+	}
+
+	ImGui::SetCursorPos(cursorPos);
 	return true;
 }
 

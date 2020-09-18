@@ -31,6 +31,7 @@ protected:
 	ImGuiID m_dockspaceId;
 
 	void UpdateViewportCoordsFromDockspace();
+	bool m_isMaximised{ false };
 
 public:
 	bool m_hasEditorCameraCachedMatrix{ false };
@@ -110,6 +111,8 @@ private:
 
 	void HandleInput();
 	void Dockspace();
+
+	void TopMostMenuBarDraw();
 
 	IterableSafeVector<std::function<void()>> m_postDrawCommands;
 	std::vector<std::function<void()>> m_deferredCommands;

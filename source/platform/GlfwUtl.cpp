@@ -61,7 +61,10 @@ void WindowIconifyCb(GLFWwindow* window, int32 isIconified)
 	Event::OnWindowMinimize.Broadcast(isIconified == GLFW_TRUE);
 }
 
-void WindowMaximizeCb(GLFWwindow* window, int32 isMaximised) {}
+void WindowMaximizeCb(GLFWwindow* window, int32 isMaximised)
+{
+	Event::OnWindowMaximize.Broadcast(isMaximised == GLFW_TRUE);
+}
 
 // This should probably preferred for "resize" over window size, check glfw docs.
 void WindowFramebufferSizeCb(GLFWwindow* window, int32 newWidth, int32 newHeight)
@@ -169,7 +172,7 @@ void glfwutl::SetupEventCallbacks(GLFWwindow* window)
 
 	glfwSetWindowFocusCallback(window, WindowFocusCb);
 	glfwSetWindowIconifyCallback(window, WindowIconifyCb);
-	// glfwSetWindowMaximizeCallback(window, WindowMaximizeCb);
+	glfwSetWindowMaximizeCallback(window, WindowMaximizeCb);
 	glfwSetFramebufferSizeCallback(window, WindowFramebufferSizeCb);
 	// glfwSetWindowContentScaleCallback(window, WindowContentScaleCb);
 	glfwSetMouseButtonCallback(window, WindowMouseButtonCb);
