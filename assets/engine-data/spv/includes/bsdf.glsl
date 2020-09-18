@@ -76,15 +76,19 @@ float D_GGX(float NoH, float _a) {
     return k * k * INV_PI;
 }
 
-// PERF:
 float V_SmithGGXCorrelated(float NoV, float NoL, float a) {
     float a2 = a * a;
     float GGXV = NoL * sqrt(NoV * NoV * (1.0 - a2) + a2);
     float GGXL = NoV * sqrt(NoL * NoL * (1.0 - a2) + a2);
-    return 0.5 / (GGXV + GGXL + 1e-5);
+    return 0.5 / (GGXV + GGXL); // full is 2.0 * NoL * NoV / (GGXV + GGXL); however we simplify with the brdf denom later
 }
 
-// Geometric Shadowing function
+float V_SmithGGXCorrelatedFast(float NoV, float NoL, float a) {
+    float GGXV = NoL * (NoV * (1.0 - a) + a);
+    float GGXL = NoV * (NoL * (1.0 - a) + a);
+    return 0.5 / (GGXV + GGXL); // full is 2.0 * NoL * NoV / (GGXV + GGXL); however we simplify with the brdf denom later
+}
+
 float G_SchlicksmithGGX(float NoL, float NoV, float a)
 {
 	float k = (a * a) / 2.0;
@@ -93,27 +97,11 @@ float G_SchlicksmithGGX(float NoL, float NoV, float a)
 	return GL * GV;
 }
 
-// Phong NDF Distibution
 float D_Phong(float NoH, float a)
 {
 	float smoothness = (1.0 - a) * 127.0;
 	return pow(NoH, smoothness) * (smoothness + 2.0) / (2.0 * PI);
 }
-
-//    vec3 F = F_Schlick(LoH, f0);
-//
-//    if(a < 0.0001){
-//		float D = D_Phong(NoH, a);   
-//		return vec3(D * F * 0.25);
-//    }
-//
-//    float D = D_GGX(NoH, a);
-//    float G = G_SchlicksmithGGX(NoL, NoV, a);
-//
-//    float denom = 4 * NoL * NoV;
-//    return D * G * F / denom;
-
-
 
 vec3 PhongSpecular(float NoH, float a)
 {
@@ -121,12 +109,21 @@ vec3 PhongSpecular(float NoH, float a)
     return D * 0.25;
 }
 
-vec3 CookTorranceGGXSpecular(float NoV, float NoL, float NoH, float a)
+vec3 CookTorranceGGXSmithSpecular(float NoV, float NoL, float NoH, float a)
+{
+    float D = D_GGX(NoH, a);
+    float G = G_SchlicksmithGGX(NoL, NoV, a);
+
+    float denom = 4 * NoL * NoV;
+    return D * G / denom;
+}
+
+vec3 CookTorranceGGXSmithCorrelatedSpecular(float NoV, float NoL, float NoH, float a)
 {
     float D = D_GGX(NoH, a);
     float V = V_SmithGGXCorrelated(NoV, NoL, a);
 
-    return D * V; // denominator simplified with G
+    return D * V; // denominator simplified with G (= V)
 }
 
 vec3 SpecularTerm(float NoV, float NoL, float NoH, float a, vec3 ks)
@@ -136,7 +133,7 @@ vec3 SpecularTerm(float NoV, float NoL, float NoH, float a, vec3 ks)
 		return ks *  PhongSpecular(NoH, a);
     }
 
-    return ks * CookTorranceGGXSpecular(NoV, NoL, NoH, a);
+    return ks * CookTorranceGGXSmithCorrelatedSpecular(NoV, NoL, NoH, a);
 }
 
 vec3 DisneyDiffuse(float NoL, float NoV, float LoH, float a, vec3 albedo) 
