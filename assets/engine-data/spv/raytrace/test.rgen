@@ -86,8 +86,8 @@ void main() {
 
 	float historyCalcualted = 1.;
 	if (historyLength < 2) {
-	   actualSamples = 4;
-	   historyCalcualted = 4.;
+	   actualSamples = 1;
+	   historyCalcualted = 1.;
 	}
 	
 	
@@ -249,6 +249,7 @@ ReprojectionData GetReprojection(vec2 uv) {
 
 	return ReprojSample(posPrev, centerUvDrawIndex, expectedDepth);
 }
+
 
 
 
