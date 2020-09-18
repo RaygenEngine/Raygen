@@ -35,7 +35,7 @@ void GpuImage::Update(const AssetUpdateInfo& info)
 	image = RImage2D{ static_cast<uint32>(imgData->width), static_cast<uint32>(imgData->height), mipLevels, format,
 		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, AssetHandlerManager::GetPodUri(podHandle) };
+		vk::MemoryPropertyFlagBits::eDeviceLocal, AssetRegistry::GetPodUri(podHandle) };
 
 	// transiton all mips to transfer optimal
 	image.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);

@@ -140,9 +140,9 @@ bool MaterialArchetype::CompileAll(
 
 PodEntry* MaterialArchetype::MakeInstancePod(PodHandle<MaterialArchetype> archetype, const uri::Uri& path)
 {
-	auto actualPath = path.empty() ? AssetHandlerManager::GetPodUri(archetype) + " Inst" : path;
+	auto actualPath = path.empty() ? AssetRegistry::GetPodUri(archetype) + " Inst" : path;
 
-	auto [entry, pod] = AssetHandlerManager::CreateEntry<MaterialInstance>(actualPath);
+	auto [entry, pod] = AssetRegistry::CreateEntry<MaterialInstance>(actualPath);
 	MaterialInstance::SetArchetype(entry->GetHandleAs<MaterialInstance>(), archetype);
 	return entry;
 }

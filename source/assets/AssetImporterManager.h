@@ -5,7 +5,7 @@
 
 inline class AssetImporterManager_ {
 	friend class AssetManager_;
-	friend class AssetHandlerManager;
+	friend class AssetRegistry;
 
 	ImporterRegistry m_importerRegistry;
 
@@ -20,7 +20,7 @@ inline class AssetImporterManager_ {
 	[[nodiscard]] uri::Uri GeneratePath(uri::Uri importPath, uri::Uri name)
 	{
 		auto& directory = m_pathsStack.back();
-		auto path = AssetHandlerManager::SuggestPath((m_pathsStack.back() / name).generic_string());
+		auto path = AssetRegistry::SuggestPath((m_pathsStack.back() / name).generic_string());
 		return path;
 	}
 
@@ -158,7 +158,7 @@ public:
 		}
 
 		if (pathType == PathReferenceType::BinaryAsset) {
-			auto handle = AssetHandlerManager::GetAsyncHandle<T>(path.generic_string());
+			auto handle = AssetRegistry::GetAsyncHandle<T>(path.generic_string());
 			if (!handle.IsDefault()) {
 				return handle;
 			}
@@ -175,8 +175,8 @@ private:
 	[[nodiscard]] std::pair<PodHandle<PodType>, PodType*> CreateEntryFromImportImpl(
 		const uri::Uri& importPath, const uri::Uri& name, bool transient, bool reimportOnLoad, bool exportOnSave)
 	{
-		auto& [entry, ptr] = AssetHandlerManager::CreateEntry<PodType>(
-			transient ? AssetHandlerManager::SuggestPath(name) : GeneratePath(importPath, name), transient, importPath,
+		auto& [entry, ptr] = AssetRegistry::CreateEntry<PodType>(
+			transient ? AssetRegistry::SuggestPath(name) : GeneratePath(importPath, name), transient, importPath,
 			reimportOnLoad, exportOnSave);
 
 

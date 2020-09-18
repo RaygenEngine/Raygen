@@ -151,7 +151,7 @@ void PodEntryEditorWindow::ImguiDraw()
 		}
 
 		if (ImGui::Button("Reload From Disk")) {
-			AssetHandlerManager::ReimportFromOriginal(entry);
+			AssetRegistry::ReimportFromOriginal(entry);
 		}
 	}
 }

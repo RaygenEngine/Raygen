@@ -5,6 +5,6 @@
 
 void PodEditorBase::CommitUpdate(size_t uid, AssetUpdateInfo&& info)
 {
-	AssetHandlerManager::GetEntry(uid)->MarkSave();
-	AssetHandlerManager::RequestGpuUpdateFor(uid, std::move(info));
+	AssetRegistry::GetEntry(uid)->MarkSave();
+	AssetRegistry::RequestGpuUpdateFor(uid, std::move(info));
 }

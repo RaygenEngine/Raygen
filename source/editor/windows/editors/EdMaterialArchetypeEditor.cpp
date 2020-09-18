@@ -296,7 +296,7 @@ void MaterialInstanceEditorWindow::ImguiDraw()
 	auto material = ed.BeginOptionalEditRegion();
 
 	auto archetype = material->archetype.Lock();
-	auto archetypeEntry = AssetHandlerManager::GetEntry(material->archetype);
+	auto archetypeEntry = AssetRegistry::GetEntry(material->archetype);
 	auto prevArchetype = archetype;
 
 

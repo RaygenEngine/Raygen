@@ -59,7 +59,7 @@ void AssetsWindow::ReloadEntries()
 
 void AssetsWindow::ReloadEntriesImpl()
 {
-	auto& pods = AssetHandlerManager::Z_GetPods();
+	auto& pods = AssetRegistry::Z_GetPods();
 
 	auto prevDirectory = m_currentPath; // Store by copy, currentpath gets changed on reloadentries
 
@@ -311,7 +311,7 @@ void AssetsWindow::ImguiDraw()
 
 	ImGui::SameLine();
 	if (ImEd::Button(ETXT(FA_SAVE, "Save All"))) {
-		AssetHandlerManager::SaveAll();
+		AssetRegistry::SaveAll();
 	}
 
 	ImGui::SameLine();
@@ -470,7 +470,7 @@ void AssetsWindow::RunEmptySpaceContext()
 
 			if (make) {
 				podtools::VisitPodHash(m_newAssetTypeId.hash(), [&]<typename PodType>() {
-					auto& [entry, _] = AssetHandlerManager::CreateEntry<PodType>(m_currentPath + m_newAssetNameString);
+					auto& [entry, _] = AssetRegistry::CreateEntry<PodType>(m_currentPath + m_newAssetNameString);
 					m_selectedEntry = entry;
 				});
 				ReloadEntries();
@@ -517,15 +517,15 @@ void AssetsWindow::RunFileEntryContext(PodEntry* entry)
 		}
 
 		if (ImGui::InputText("Rename", &m_renameString, ImGuiInputTextFlags_EnterReturnsTrue)) {
-			AssetHandlerManager::RenameEntry(entry, std::string(uri::GetDir(entry->path)) + m_renameString);
-			AssetHandlerManager::SaveAll();
+			AssetRegistry::RenameEntry(entry, std::string(uri::GetDir(entry->path)) + m_renameString);
+			AssetRegistry::SaveAll();
 			ImGui::CloseCurrentPopup();
 			ReloadEntries();
 		}
 
 		if (ImGui::Button("Duplicate")) {
-			auto newEntry = AssetHandlerManager::Duplicate(entry);
-			AssetHandlerManager::SaveToDisk(newEntry);
+			auto newEntry = AssetRegistry::Duplicate(entry);
+			AssetRegistry::SaveToDisk(newEntry);
 			ImGui::CloseCurrentPopup();
 			ReloadEntries();
 		}
@@ -536,13 +536,13 @@ void AssetsWindow::RunFileEntryContext(PodEntry* entry)
 		}
 
 		if (ImGui::MenuItem("Save")) {
-			AssetHandlerManager::SaveToDisk(entry);
+			AssetRegistry::SaveToDisk(entry);
 		}
 
 
 		if (ImGui::MenuItem("Export")) {
 			if (auto file = NativeFileBrowser::SaveFile(); file) {
-				AssetHandlerManager::ExportToLocation(entry, *file);
+				AssetRegistry::ExportToLocation(entry, *file);
 			}
 		}
 
@@ -568,10 +568,10 @@ namespace {
 		entry->ForEachFile([&](UniquePtr<FileEntry>& file) { //
 			const char* begin = file->entry->path.data() + initialString.size();
 			std::string newPath = fmt::format("{}{}", newString, begin);
-			AssetHandlerManager::RenameEntry(file->entry, newPath);
+			AssetRegistry::RenameEntry(file->entry, newPath);
 
 		});
-		AssetHandlerManager::SaveAll();
+		AssetRegistry::SaveAll();
 	}
 } // namespace
 
@@ -600,8 +600,8 @@ void AssetsWindow::RunPostFolder(FolderEntry* folder)
 {
 	RunFolderEntryContext(folder);
 	if (auto dropentry = ImEd::AcceptGenericPodDrop()) {
-		AssetHandlerManager::RenameEntry(dropentry, folder->CalculatePathFromRoot(true) + dropentry->name);
-		AssetHandlerManager::SaveAll();
+		AssetRegistry::RenameEntry(dropentry, folder->CalculatePathFromRoot(true) + dropentry->name);
+		AssetRegistry::SaveAll();
 		ReloadEntries();
 	}
 	if (auto dropFolder = ImEd::AcceptDropObject<FolderEntry>("ASSET_WINDOW_FOLDER")) {
@@ -636,7 +636,7 @@ void ed::AssetsWindow::RunKeyboard()
 	}
 
 	if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(83)) {
-		AssetHandlerManager::SaveToDisk(entry);
+		AssetRegistry::SaveToDisk(entry);
 	}
 
 	if (Input.IsJustPressed(Key::F2)) {

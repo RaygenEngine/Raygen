@@ -164,7 +164,7 @@ void EcsOutlinerWindow::Run_ContextPopup(EcsWorld& world, Entity entity)
 	ImGui::Separator();
 	if (ImGui::MenuItem(ETXT(FA_CERTIFICATE, " Make Prefab"))) {
 		std::string name = "gen-data/Prefab " + entity->name;
-		auto [entry, ptr] = AssetHandlerManager::CreateEntry<Prefab>(name);
+		auto [entry, ptr] = AssetRegistry::CreateEntry<Prefab>(name);
 		ptr->MakeFrom(world.reg, entity.entity);
 		ed::AssetsWindow::RefreshEntries();
 	}
