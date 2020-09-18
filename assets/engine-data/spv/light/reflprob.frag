@@ -38,8 +38,7 @@ void main( ) {
 	float depth = texture(g_DepthSampler, uv).r;
 
 	// TODO: discard when skymesh is implemented
-	if(depth == 1.0)
-	{
+	if(depth == 1.0) {
 		// TODO: discard here like in spotlights
 		vec3 V = normalize(reconstructWorldPosition(depth, uv, cam.viewProjInv) - cam.position);
 		outColor = sampleCubemapLH(skyboxSampler, V);

@@ -70,7 +70,7 @@ void main() {
 
 	// Extract BrdfInfo
 	FragBrdfInfo brdfInfo;
-	brdfInfo.diffuseColor = frag.diffuseColor;
+	brdfInfo.albedo = frag.albedo;
 	brdfInfo.f0 = frag.f0;
 	brdfInfo.a = frag.a;
 
@@ -97,7 +97,7 @@ void main() {
 		prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl); // PERF:
 		prd.depth = 0;
 		prd.accumThroughput = vec3(1.f);
-		vec3 divs = max(brdfInfo.diffuseColor, vec3(1e-1f));
+		vec3 divs = max(brdfInfo.albedo, vec3(1e-1f));
 		accumColor += TraceIndirect(fragSpace, brdfInfo) / divs;
 	}
 	vec3 curColor = (accumColor / actualSamples);
