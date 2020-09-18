@@ -446,8 +446,8 @@ void AssetsWindow::RunEmptySpaceContext()
 			float sizeX = ImMax(ImGui::CalcTextSize(itemName.c_str(), NULL, true).x, 150.f); // Pad width for better ux
 
 			if (ImGui::Selectable(itemName.c_str(), false,
-					ImGuiSelectableFlags_DontClosePopups | ImGuiSelectableFlags_DrawFillAvailWidth
-						| ImGuiSelectableFlags_PressedOnRelease,
+					ImGuiSelectableFlags_DontClosePopups | ImGuiSelectableFlags_SpanAvailWidth
+						| ImGuiSelectableFlags_SelectOnRelease,
 					ImVec2(sizeX, 0.0f))) {
 				ImGui::OpenPopup("NewAssetNamePopup");
 				m_newAssetNameString = itemName;
