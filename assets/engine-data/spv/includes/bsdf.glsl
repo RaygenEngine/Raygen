@@ -106,7 +106,7 @@ float D_Phong(float NoH, float a)
 vec3 PhongSpecular(float NoH, float a)
 {
     float D = D_Phong(NoH, a);
-    return D * 0.25;
+    return vec3(D * 0.25);
 }
 
 vec3 CookTorranceGGXSmithSpecular(float NoV, float NoL, float NoH, float a)
@@ -115,7 +115,7 @@ vec3 CookTorranceGGXSmithSpecular(float NoV, float NoL, float NoH, float a)
     float G = G_SchlicksmithGGX(NoL, NoV, a);
 
     float denom = 4 * NoL * NoV;
-    return D * G / denom;
+    return vec3(D * G / denom);
 }
 
 vec3 CookTorranceGGXSmithCorrelatedSpecular(float NoV, float NoL, float NoH, float a)
@@ -123,7 +123,7 @@ vec3 CookTorranceGGXSmithCorrelatedSpecular(float NoV, float NoL, float NoH, flo
     float D = D_GGX(NoH, a);
     float V = V_SmithGGXCorrelated(NoV, NoL, a);
 
-    return D * V; // denominator simplified with G (= V)
+    return vec3(D * V); // denominator simplified with G (= V)
 }
 
 vec3 SpecularTerm(float NoV, float NoL, float NoH, float a, vec3 ks)

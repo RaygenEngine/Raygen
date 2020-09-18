@@ -63,8 +63,7 @@ void main() {
 
 	float depth = texture(g_DepthSampler, uv).r;
 
-	if(depth == 1.0)
-	{
+	if(depth == 1.0) {
 		discard;
 	}
 
