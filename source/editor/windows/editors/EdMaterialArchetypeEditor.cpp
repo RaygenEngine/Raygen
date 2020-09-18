@@ -148,7 +148,7 @@ void main() {
 	gSurface = vec4(0.f, 0.5f, 0.5f, 0.f);
 	gEmissive = vec4(0.f, 0.f, 0.f, 1.f);
 }                                                                                        
-)";
+)"; // CHECK: fix
 		needsSave = true;
 	}
 }
