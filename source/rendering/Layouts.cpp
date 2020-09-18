@@ -15,7 +15,7 @@ AttachmentDeclaration rendererFinalAttachment = {};
 namespace vl {
 inline constexpr static std::array colorAttachments = {
 	std::pair{ "GNormal", vk::Format::eR16G16B16A16Snorm },
-	std::pair{ "GDiffuseColor", vk::Format::eR32G32B32A32Sfloat },
+	std::pair{ "GAlbedo", vk::Format::eR32G32B32A32Sfloat },
 	std::pair{ "GSpecularColor", vk::Format::eR32G32B32A32Sfloat },
 	std::pair{ "GEmissive", vk::Format::eR8G8B8A8Srgb },
 	std::pair{ "GVelocity", vk::Format::eR32G32B32A32Sfloat },
@@ -26,7 +26,7 @@ inline constexpr static std::array colorAttachments = {
 // GBuffer
 layout(set = 0, binding = 0) uniform Sampler2d g_DepthSampler;
 layout(set = 0, binding = 1) uniform Sampler2d g_NormalSampler;
-layout(set = 0, binding = 2) uniform Sampler2d g_ColorSampler;
+layout(set = 0, binding = 2) uniform Sampler2d g_AlbedoSampler;
 layout(set = 0, binding = 3) uniform Sampler2d g_SpecularSampler;
 layout(set = 0, binding = 4) uniform Sampler2d g_EmissiveSampler;
 layout(set = 0, binding = 5) uniform Sampler2d g_VelocitySampler;

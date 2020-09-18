@@ -69,7 +69,7 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
     vec3 radiance = vec3(0.f);
 
     vec3 V = fragSpace.V;
-    vec3 diffuseColor = brdfInfo.diffuseColor;
+    vec3 albedo = brdfInfo.albedo;
     vec3 f0 = brdfInfo.f0;
     float a = brdfInfo.a;
 

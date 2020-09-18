@@ -5,7 +5,7 @@ struct Fragment
 {
     vec3 position;
     vec3 normal;
-    vec3 diffuseColor;
+    vec3 albedo;
     vec3 f0;
     vec3 emissive;
     float a;
@@ -31,7 +31,7 @@ Fragment getFragmentFromGBuffer(
     float depth, 
     mat4 viewProjInv,
     sampler2D normalsSampler, 
-    sampler2D diffuseOpacitySampler,
+    sampler2D albedoOpacitySampler,
     sampler2D f0RoughnessSampler,
     sampler2D emissiveOcclusionSampler,
     vec2 uv)
@@ -41,15 +41,15 @@ Fragment getFragmentFromGBuffer(
     frag.position = reconstructWorldPosition(depth, uv, viewProjInv);
     frag.normal = texture(normalsSampler, uv).rgb;
     // rgb: albedo a: opacity
-    vec4 diffuseOpacity = texture(diffuseOpacitySampler, uv);
+    vec4 albedoOpacity = texture(albedoOpacitySampler, uv);
     // rgb: f0, a: a: roughness^
     vec4 f0Roughness = texture(f0RoughnessSampler, uv);
     // rgb: emissive, a: occlusion
     vec4 emissiveOcclusion = texture(emissiveOcclusionSampler, uv);
 
     // remapping
-    frag.diffuseColor = diffuseOpacity.rgb;
-    frag.opacity = diffuseOpacity.a;
+    frag.albedo = albedoOpacity.rgb;
+    frag.opacity = albedoOpacity.a;
 
 	frag.f0 = f0Roughness.rgb;
 	frag.a = f0Roughness.a;

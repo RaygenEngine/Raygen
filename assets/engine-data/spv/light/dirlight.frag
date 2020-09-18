@@ -63,7 +63,7 @@ void main() {
 		depth,
 		cam.viewProjInv,
 		g_NormalSampler,
-		g_ColorSampler,
+		g_AlbedoSampler,
 		g_SpecularSampler,
 		g_EmissiveSampler,
 		uv);

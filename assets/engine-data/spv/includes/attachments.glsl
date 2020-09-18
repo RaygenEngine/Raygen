@@ -4,7 +4,7 @@
 // GBuffer
 layout(set = 0, binding = 0) uniform sampler2D g_DepthSampler;
 layout(set = 0, binding = 1) uniform sampler2D g_NormalSampler;
-layout(set = 0, binding = 2) uniform sampler2D g_ColorSampler;
+layout(set = 0, binding = 2) uniform sampler2D g_AlbedoSampler;
 layout(set = 0, binding = 3) uniform sampler2D g_SpecularSampler;
 layout(set = 0, binding = 4) uniform sampler2D g_EmissiveSampler;
 layout(set = 0, binding = 5) uniform sampler2D g_VelocitySampler;
