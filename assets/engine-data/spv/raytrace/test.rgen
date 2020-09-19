@@ -94,7 +94,8 @@ void main() {
 		prd.depth = 0;
 		prd.accumThroughput = vec3(1.f);
 
-		vec3 divs = max(brdfInfo.albedo, vec3(1e-1f));
+		vec3 divs = max(mix(brdfInfo.albedo, brdfInfo.f0, texture(g_UVDrawIndexSampler, uv).a), vec3(0.1));
+
 
 		accumColor += TraceIndirect(fragSpace, brdfInfo) / divs;
 	}
@@ -250,6 +251,7 @@ ReprojectionData GetReprojection(vec2 uv) {
 
 	return ReprojSample(posPrev, centerUvDrawIndex, expectedDepth);
 }
+
 
 
 
