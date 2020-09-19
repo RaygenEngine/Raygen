@@ -70,6 +70,12 @@ float computeVarianceCenter(ivec2 iuv)
 bool IsReprojValid(ivec2 coord, float centerDrawId)
 {
 	vec4 thisUvDrawIndex = texelFetch(g_UVDrawIndexSampler, coord, 0);
+	ivec2 iuv = ivec2(gl_FragCoord.xy);
+	float a = texelFetch(g_SpecularSampler, coord, 0).a;
+	float a2 = texelFetch(g_SpecularSampler, iuv, 0).a;
+	
+	if(abs(sqrt(a) - sqrt(a2)) > 0.1) return false;
+	
 	if (abs(thisUvDrawIndex.z - centerDrawId) >= 1) {
 		return false;
 	}
@@ -195,8 +201,14 @@ void OutputColor(vec4 color, bool mixAlbedo) {
 	ivec2 iuv = ivec2(gl_FragCoord.xy);
 	if (iteration >= totalIter - 1) {
 	    if (mixAlbedo) {
-	    	vec4 colorSample = texelFetch(g_AlbedoSampler, iuv, 0);
-	    	color *= max(vec4(1e-1), colorSample);
+	    	vec4 colorSampleSpec = texelFetch(g_SpecularSampler, iuv, 0);
+			vec4 colorSampleAlbe = texelFetch(g_AlbedoSampler, iuv, 0);
+			float metallic = texelFetch(g_UVDrawIndexSampler, iuv, 0).a;
+
+			vec4 p = max(mix(colorSampleAlbe, colorSampleSpec, metallic), vec4(0.1));
+	    	
+			color *= p;    	
+	    	
 	    }
    	    outColor = color;
 	}
@@ -232,6 +244,8 @@ void DebugRenderPasses() {
 		imageStore(svgfOutput, iuv, vec4(color, 1.));
 	}
 }
+
+
 
 
 

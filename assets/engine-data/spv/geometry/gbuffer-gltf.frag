@@ -90,5 +90,5 @@ void main() {
 	float expectedDepth = (prevClipPos.z / prevClipPos.w);
 
 	gVelocity = vec4(a - b, expectedDepth, 1.f);
-	gUVDrawIndex = vec4(uv, drawIndex, 1.f);
+	gUVDrawIndex = vec4(uv, drawIndex, metallic);
 }                                                                                        
