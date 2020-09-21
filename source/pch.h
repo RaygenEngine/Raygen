@@ -60,3 +60,4 @@ struct InFlightResources : std::array<T, c_framesInFlight> {
 };
 
 #include "rendering/core/img.h"
+#define IMGUI_DEFINE_MATH_OPERATORS

@@ -61,18 +61,6 @@ public:
 
 	[[nodiscard]] bool ShouldUpdateWorld() const { return m_updateWorld; }
 
-	// static void SelectNode(Node* node);
-
-	// static void MoveSelectedUnder(Node* node);
-
-	// static void Duplicate(Node* node);
-	// static void Delete(Node* node);
-
-	// static void PilotThis(Node* node);
-	// static void FocusNode(Node* node);
-	// static void TeleportToCamera(Node* node);
-
-
 	void Run_MenuBar();
 
 	static void PushCommand(std::function<void()>&& func);
@@ -104,8 +92,6 @@ public:
 
 
 private:
-	void SpawnEditorCamera();
-
 	void OpenLoadDialog();
 	void ReloadScene();
 
