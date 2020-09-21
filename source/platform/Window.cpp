@@ -15,7 +15,15 @@ Window::Window(WindowCreationParams params)
 	}
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_AUTOBORDERLESS, GLFW_TRUE);
+
 	m_window = glfwCreateWindow(params.size.x, params.size.y, params.title, nullptr, nullptr);
+
+	// Restore state for ImGui windows. (ImGui glfw cannot explicitly store & reset the state before making their
+	// windows because it does not know about autoborderless extension of glfw)
+	// We might want to impelment auto borderless mode in imgui popups for aero snapping eventually, through
+	// imgui_impl_glfw
+	glfwWindowHint(GLFW_AUTOBORDERLESS, GLFW_FALSE);
 
 	glfwPollEvents(); // drop current events in the queue
 	glfwutl::SetupEventCallbacks(m_window);

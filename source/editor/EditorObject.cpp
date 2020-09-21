@@ -243,24 +243,6 @@ void EditorObject_::OnFileDrop(std::vector<fs::path>&& files)
 	m_windowsComponent.GetUniqueWindow<ed::AssetsWindow>()->ImportFiles(std::move(files));
 }
 
-void EditorObject_::SpawnEditorCamera()
-{
-	//
-	// auto world = Universe::GetMainWorld();
-	// m_editorCamera = NodeFactory::NewNode<EditorCameraNode>();
-	// m_editorCamera->SetName("Editor Camera");
-	// world->Z_RegisterNode(m_editorCamera, world->GetRoot());
-
-	// auto prevActive = world->GetActiveCamera();
-	// if (m_hasEditorCameraCachedMatrix) {
-	//	m_editorCamera->SetNodeTransformWCS(m_editorCameraCachedMatrix);
-	//}
-	// else if (prevActive) {
-	//	m_editorCamera->SetNodeTransformWCS(prevActive->GetNodeTransformWCS());
-	//}
-	// world->SetActiveCamera(m_editorCamera);
-}
-
 void EditorObject_::OpenLoadDialog()
 {
 	if (auto file = ed::NativeFileBrowser::OpenFile({ "json" })) {
@@ -294,7 +276,7 @@ void EditorObject_::OnPlay()
 
 void EditorObject_::OnStopPlay()
 {
-	// WIP: ECS
+	// TODO: ECS
 }
 
 namespace {
@@ -319,12 +301,13 @@ void EditorObject_::TopMostMenuBarDraw()
 	rightSideCursPos.x -= 2.f;
 	ImGui::SetCursorPos(rightSideCursPos);
 
-
 	if (ImGui::MenuItem(U8(u8"  " FA_WINDOW_MINIMIZE), nullptr, nullptr, true, c_menuItemWidth)) {
 		glfwIconifyWindow(Platform::GetMainHandle());
 	}
 
-	auto middleText = m_isMaximised ? U8(u8"  " FA_WINDOW_RESTORE) : U8(u8"  " FA_WINDOW_MAXIMIZE);
+	auto middleText = m_isMaximised ? U8(u8"  " FA_WINDOW_RESTORE) //
+									: U8(u8"  " FA_WINDOW_MAXIMIZE);
+
 	if (ImGui::MenuItem(middleText, nullptr, nullptr, true, c_menuItemWidth)) {
 		m_isMaximised ? glfwRestoreWindow(Platform::GetMainHandle()) : glfwMaximizeWindow(Platform::GetMainHandle());
 	}
@@ -456,66 +439,3 @@ void EditorObject_::NewLevel()
 {
 	Universe::ECS_LoadMainWorld("");
 }
-
-// WIP: ECS
-// void EditorObject_::PilotThis(Node* node)
-//{
-//	auto camera = EditorObject->m_editorCamera;
-//	if (!camera) {
-//		LOG_WARN("Only possible to pilot nodes if there is an editor camera");
-//		return;
-//	}
-//
-//	bool wasPiloting = EditorObject->IsCameraPiloting();
-//
-//	if (camera->GetParent() == node || node == nullptr) {
-//		if (!wasPiloting) {
-//			return;
-//		}
-//		worldop::MakeChildOf(Universe::GetMainWorld()->GetRoot(), camera);
-//		camera->SetNodeTransformWCS(EditorObject->m_editorCameraPrePilotPos);
-//		return;
-//	}
-//
-//	if (!wasPiloting) {
-//		EditorObject->m_editorCameraPrePilotPos = camera->GetNodeTransformWCS();
-//	}
-//	worldop::MakeChildOf(node, camera);
-//	camera->SetNodeTransformWCS(node->GetNodeTransformWCS());
-//}
-//
-// void EditorObject_::FocusNode(Node* node)
-//{
-//	if (!node) {
-//		return;
-//	}
-//	auto cam = EditorObject->m_editorCamera;
-//	if (!cam) {
-//		return;
-//	}
-//	auto trans = node->GetNodePositionWCS();
-//	cam->SetNodePositionWCS(trans);
-//
-//	float dist = 1.f;
-//
-//	// if (node->IsA<GeometryNode>()) {
-//	//	auto geom = static_cast<GeometryNode*>(node);
-//	//	auto min = geom->GetAABB().min;
-//	//	auto max = geom->GetAABB().max;
-//	//	dist = glm::abs(min.x - max.x) + glm::abs(min.y - max.y);
-//
-//	//	cam->SetNodePositionWCS(geom->GetAABB().GetCenter());
-//	//}
-//	cam->AddNodePositionOffsetWCS(glm::vec3(-1.f, 0.25f, 0.f) * dist);
-//	cam->SetNodeLookAtWCS(node->GetNodePositionWCS());
-//}
-//
-// void EditorObject_::TeleportToCamera(Node* node)
-//{
-//	auto camera = Universe::GetMainWorld()->GetActiveCamera();
-//	if (camera) {
-//		auto newMat = math::transformMat(
-//			node->GetNodeScaleWCS(), camera->GetNodeOrientationWCS(), camera->GetNodePositionWCS());
-//		node->SetNodeTransformWCS(newMat);
-//	}
-//}
