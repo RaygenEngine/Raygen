@@ -70,9 +70,9 @@ void App::MainLoop()
 
 void App::WhileResizing()
 {
-	// Universe::LoadPendingWorlds();
-	// Universe::ecsWorld->UpdateWorld(*vl::Layer->mainScene);
+	Universe::LoadPendingWorlds();
+	Universe::ecsWorld->UpdateWorld(*vl::Layer->mainScene);
 
-	// Rendering::DrawFrame();
-	// Engine.ReportFrameDrawn();
+	Rendering::DrawFrame();
+	Engine.ReportFrameDrawn();
 }

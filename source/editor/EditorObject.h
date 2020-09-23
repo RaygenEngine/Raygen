@@ -99,6 +99,7 @@ private:
 	void Dockspace();
 
 	void TopMostMenuBarDraw();
+	BoolFlag startedCaptionDrag{ false };
 
 	IterableSafeVector<std::function<void()>> m_postDrawCommands;
 	std::vector<std::function<void()>> m_deferredCommands;
