@@ -63,7 +63,7 @@ ed::Menu& ed::Menu::AddSubMenu(const std::string& menuName)
 	return *submenuOpt.menu;
 }
 
-void ed::Menu::DrawOptions()
+void ed::Menu::DrawOptions(std::optional<glm::vec2> subItemframePadding, std::optional<glm::vec2> subItemItemSpacing)
 {
 	for (auto& entry : options) {
 		if (!entry) {
@@ -79,7 +79,21 @@ void ed::Menu::DrawOptions()
 
 		if (entry->menu) {
 			if (ImGui::BeginMenu(entry->name.c_str())) {
+				int32 valuesToPop = 0;
+				if (subItemframePadding.has_value()) {
+					ImGui::PushStyleVar(
+						ImGuiStyleVar_FramePadding, ImVec2(subItemframePadding->x, subItemframePadding->y));
+					valuesToPop++;
+				}
+				if (subItemItemSpacing.has_value()) {
+					ImGui::PushStyleVar(
+						ImGuiStyleVar_ItemSpacing, ImVec2(subItemItemSpacing->x, subItemItemSpacing->y));
+					valuesToPop++;
+				}
 				entry->menu->DrawOptions();
+
+				ImGui::PopStyleVar(valuesToPop);
+
 				ImGui::EndMenu();
 			}
 			continue;

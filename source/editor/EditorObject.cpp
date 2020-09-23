@@ -221,6 +221,11 @@ void EditorObject_::UpdateEditor()
 
 	ImguiImpl::EndFrame();
 
+	if (startedCaptionDrag.Access()) {
+		// Has to be outside of ImGui::NewFrame() / EndFrame() because drag is blocking and we may draw while dragged
+		glfwDragWindow(Platform::GetMainHandle());
+	}
+
 	auto& g = *ImGui::GetCurrentContext();
 	if (g.HoveredWindow == NULL && ImGui::GetTopMostPopupModal() == NULL && g.NavWindow != NULL
 		&& g.IO.MouseClicked[1]) {
@@ -285,20 +290,22 @@ void MenuBar(ed::Menu& m_mainMenu) {}
 
 void EditorObject_::TopMostMenuBarDraw()
 {
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.f, 7.f)); // On edit update imextras.h c_MenuPaddingY
-	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.f, 7.f));
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.f, 6.f)); // On edit update imextras.h c_MenuPaddingY
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.f, 12.f));
 	if (!ImGui::BeginMenuBar()) {
 		ImGui::PopStyleVar(2);
 		return;
 	}
+	ImGui::SetCursorPosX(
+		ImGui::GetCursorPosX() - 1.f); // Offset to draw at left most pixel (allow clicking at 0,0 pixel when maximized)
+
 	auto initialCursorPos = ImGui::GetCursorPos();
 	ImVec2 scaledSize = ImGui::GetCurrentWindow()->MenuBarRect().GetSize();
-	m_mainMenu.DrawOptions();
+	m_mainMenu.DrawOptions(glm::vec2{ 1.f, 7.f }, glm::vec2{ 10.f, 7.f });
 
 	constexpr float c_menuItemWidth = 30.f;
 	auto rightSideCursPos = initialCursorPos;
 	rightSideCursPos.x = initialCursorPos.x + scaledSize.x - (3.f * (c_menuItemWidth + 20.f));
-	rightSideCursPos.x -= 2.f;
 	ImGui::SetCursorPos(rightSideCursPos);
 
 	if (ImGui::MenuItem(U8(u8"  " FA_WINDOW_MINIMIZE), nullptr, nullptr, true, c_menuItemWidth)) {
@@ -320,8 +327,13 @@ void EditorObject_::TopMostMenuBarDraw()
 
 	ImGui::SetCursorPos(initialCursorPos);
 	if (ImGui::InvisibleButton("##MainMenuBarItemButton", scaledSize, ImGuiButtonFlags_PressedOnClick)) {
-		glfwDragWindow(Platform::GetMainHandle());
-		LOG_REPORT("Clicked");
+		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+			m_isMaximised ? glfwRestoreWindow(Platform::GetMainHandle())
+						  : glfwMaximizeWindow(Platform::GetMainHandle());
+		}
+		else {
+			startedCaptionDrag.Set();
+		}
 	}
 
 	ImGui::EndMenuBar();

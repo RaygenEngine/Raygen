@@ -39,7 +39,8 @@ struct Menu {
 	Menu& AddSubMenu(const std::string& menuName);
 
 
-	void DrawOptions();
+	void DrawOptions(
+		std::optional<glm::vec2> subItemFramePadding = {}, std::optional<glm::vec2> subItemItemSpacing = {});
 
 	void Draw();
 
