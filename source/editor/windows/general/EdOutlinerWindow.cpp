@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "EdEcsOutlinerWindow.h"
+#include "EdOutlinerWindow.h"
 
 #include "assets/pods/Mesh.h"
 #include "assets/pods/Prefab.h"
@@ -43,14 +43,14 @@ namespace {
 	}
 } // namespace
 
-void EcsOutlinerWindow::DrawRecurseEntity(World& world, Entity ent, int32 depth)
+void OutlinerWindow::DrawRecurseEntity(World& world, Entity ent, int32 depth)
 {
 	ImGui::PushID(static_cast<uint32>(ent.entity));
 
 	ImGui::Selectable(U8(u8" " FA_EYE u8" "), false, 0, ImVec2(18.f, 0));
 	ImGui::SameLine();
 	ImGui::Indent(16.f * depth + 30.0f);
-	if (m_renameFrame >= 0 && ent == EcsOutlinerWindow::selected) {
+	if (m_renameFrame >= 0 && ent == OutlinerWindow::selected) {
 
 		if (m_renameFrame == 0) {
 			ImGui::SetKeyboardFocusHere();
@@ -70,14 +70,14 @@ void EcsOutlinerWindow::DrawRecurseEntity(World& world, Entity ent, int32 depth)
 		}
 	}
 	else {
-		if (ImGui::Selectable(ent->name.c_str(), ent == EcsOutlinerWindow::selected)) {
-			EcsOutlinerWindow::selected = ent;
+		if (ImGui::Selectable(ent->name.c_str(), ent == OutlinerWindow::selected)) {
+			OutlinerWindow::selected = ent;
 		}
 	}
 	ImGui::Unindent(16.f * depth + 30.0f);
 
 	if (ImGui::BeginPopupContextItem()) {
-		EcsOutlinerWindow::selected = ent;
+		OutlinerWindow::selected = ent;
 		Run_ContextPopup(world, ent);
 		ImGui::EndPopup();
 	}
@@ -93,7 +93,7 @@ void EcsOutlinerWindow::DrawRecurseEntity(World& world, Entity ent, int32 depth)
 } // namespace ed
 
 
-void EcsOutlinerWindow::ImguiDraw()
+void OutlinerWindow::ImguiDraw()
 {
 	auto& world = *Universe::MainWorld;
 
@@ -120,7 +120,7 @@ void EcsOutlinerWindow::ImguiDraw()
 	}
 }
 
-void EcsOutlinerWindow::Run_ContextPopup(World& world, Entity entity)
+void OutlinerWindow::Run_ContextPopup(World& world, Entity entity)
 {
 	if (Entity ent = AddEntityMenu(world, ETXT(FA_USER_PLUS, " Add Child Entity")); ent) {
 		ent->SetParent(entity);
@@ -180,7 +180,7 @@ void EcsOutlinerWindow::Run_ContextPopup(World& world, Entity entity)
 	}
 }
 
-void EcsOutlinerWindow::Run_SpaceContextPopup(World& world)
+void OutlinerWindow::Run_SpaceContextPopup(World& world)
 {
 	if (Entity ent = AddEntityMenu(world, "Add Entity"); ent) {
 		ImGui::CloseCurrentPopup();
@@ -200,7 +200,7 @@ void EcsOutlinerWindow::Run_SpaceContextPopup(World& world)
 	}
 }
 
-void EcsOutlinerWindow::Run_OutlinerDropEntity(Entity entity)
+void OutlinerWindow::Run_OutlinerDropEntity(Entity entity)
 {
 	if (ImGui::BeginDragDropSource()) {
 		ImEd::EndDragDropSourceByCopy(entity, "WORLD_ENTITY");

@@ -2,7 +2,7 @@
 #include "Editor.h"
 
 #include "editor/EditorObject.h"
-#include "editor/windows/general/EdEcsOutlinerWindow.h"
+#include "editor/windows/general/EdOutlinerWindow.h"
 
 void Editor::Init()
 {
@@ -17,7 +17,7 @@ void Editor::Destroy()
 Entity Editor::GetSelection()
 {
 
-	return ed::EcsOutlinerWindow::selected;
+	return ed::OutlinerWindow::selected;
 }
 
 void Editor::Update()

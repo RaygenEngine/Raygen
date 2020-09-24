@@ -8,7 +8,7 @@
 #include "editor/imgui/ImAssetSlot.h"
 #include "editor/imgui/ImguiUtil.h"
 #include "editor/imgui/ImGuizmo.h"
-#include "editor/windows/general/EdEcsOutlinerWindow.h"
+#include "editor/windows/general/EdOutlinerWindow.h"
 #include "engine/profiler/ProfileScope.h"
 #include "reflection/PodTools.h"
 #include "reflection/ReflectionTools.h"
@@ -252,7 +252,7 @@ void PropertyEditorWindow::ImguiDraw()
 {
 	PROFILE_SCOPE(Editor);
 
-	Entity ent = EcsOutlinerWindow::selected;
+	Entity ent = OutlinerWindow::selected;
 
 	if (!ent || !ent.registry->valid(ent.entity)) {
 		ImGui::Text("No entity selected.");
