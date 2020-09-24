@@ -14,7 +14,7 @@
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
 #include "universe/Universe.h"
-#include "editor/windows/general/EdEcsOutlinerWindow.h"
+#include "editor/windows/general/EdOutlinerWindow.h"
 #include "universe/World.h"
 #include "engine/Events.h"
 #include "rendering/scene/Scene.h"
@@ -253,7 +253,7 @@ void EditorObject_::OpenLoadDialog()
 	if (auto file = ed::NativeFileBrowser::OpenFile({ "json" })) {
 		m_updateWorld = false;
 		// m_selectedNode = nullptr;
-		ed::EcsOutlinerWindow::selected = {};
+		ed::OutlinerWindow::selected = {};
 
 		Universe::LoadMainWorld(*file);
 	}

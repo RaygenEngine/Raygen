@@ -14,7 +14,7 @@
 #include "editor/windows/general/EdMiscWindow.h"
 #include "editor/windows/general/EdProfilerWindow.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
-#include "editor/windows/general/EdEcsOutlinerWindow.h"
+#include "editor/windows/general/EdOutlinerWindow.h"
 #include "editor/windows/general/EdAttachmentDebuggerWindow.h"
 
 
@@ -39,7 +39,7 @@ public:
 
 void RegisterWindows(ed::ComponentWindows& windowsComponent)
 {
-	windowsComponent.AddWindowEntry<EcsOutlinerWindow>("ECS Outliner");
+	windowsComponent.AddWindowEntry<OutlinerWindow>("Outliner");
 
 
 	windowsComponent.AddWindowEntry<PropertyEditorWindow>("Property Editor");
