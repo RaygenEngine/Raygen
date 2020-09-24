@@ -14,5 +14,7 @@ public:
 
 	static void LoadMainWorld(const fs::path& path);
 
+	static void ReloadMainWorld();
+
 	inline static World* MainWorld{};
 };

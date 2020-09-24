@@ -7,6 +7,7 @@
 #include "editor/EdMenu.h"
 #include "editor/EdOperation.h"
 #include "editor/EditorCamera.h"
+#include "editor/CaptionMenuBar.h"
 
 
 #include <memory>
@@ -17,17 +18,14 @@ class World;
 
 inline class EditorObject_ : public Listener {
 public:
+	EditorObject_();
+	virtual ~EditorObject_();
+	EditorObject_(const EditorObject_&) = delete;
+	EditorObject_(EditorObject_&&) = delete;
+	EditorObject_& operator=(const EditorObject_&) = delete;
+	EditorObject_& operator=(EditorObject_&&) = delete;
+
 protected:
-	bool m_updateWorld{ false };
-
-	bool m_autoRestoreWorld{ false };
-	bool m_hasRestoreSave{ false };
-
-
-	bool m_openPopupDeleteLocal{ false };
-
-	void MakeMainMenu();
-
 	ImGuiID m_dockspaceId;
 
 	void UpdateViewportCoordsFromDockspace();
@@ -40,30 +38,15 @@ public:
 	glm::mat4 m_editorCameraCachedMatrix{ glm::identity<glm::mat4>() };
 	glm::mat4 m_editorCameraPrePilotPos{ glm::identity<glm::mat4>() };
 
-	ed::Menu m_mainMenu{ "MainMenu" };
-
 	World* m_currentWorld{ nullptr };
 
+	ed::CaptionMenuBar m_captionBar;
 	ed::ComponentWindows m_windowsComponent;
 
-	EditorObject_();
-	virtual ~EditorObject_();
-	EditorObject_(const EditorObject_&) = delete;
-	EditorObject_(EditorObject_&&) = delete;
-	EditorObject_& operator=(const EditorObject_&) = delete;
-	EditorObject_& operator=(EditorObject_&&) = delete;
 
 	ed::EditorCamera edCamera;
 
 	void UpdateEditor();
-
-	// On Toggle
-	void OnDisableEditor();
-	void OnEnableEditor();
-
-	[[nodiscard]] bool ShouldUpdateWorld() const { return m_updateWorld; }
-
-	void Run_MenuBar();
 
 	static void PushCommand(std::function<void()>&& func);
 	static void PushDeferredCommand(std::function<void()>&& func);
@@ -73,9 +56,6 @@ public:
 	void SaveAll();
 	void NewLevel();
 
-	void OnPlay();
-	void OnStopPlay();
-
 	static bool EditorHandleKeyEvent(int32 glfwKey, int32 glfwScancode, int32 glfwAction, int32 glfwModifiers)
 	{
 		return false;
@@ -83,16 +63,13 @@ public:
 
 	void OnFileDrop(std::vector<fs::path>&& files);
 
+	void OpenLoadDialog();
 
 private:
-	void OpenLoadDialog();
-	void ReloadScene();
+	friend struct ed::CaptionMenuBar;
 
 	void HandleInput();
 	void Dockspace();
-
-	void TopMostMenuBarDraw();
-	BoolFlag startedCaptionDrag{ false };
 
 	IterableSafeVector<std::function<void()>> m_postDrawCommands;
 	std::vector<std::function<void()>> m_deferredCommands;

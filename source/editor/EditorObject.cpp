@@ -32,9 +32,12 @@
 #include <fstream>
 
 EditorObject_::EditorObject_()
+	: m_captionBar(*this)
 {
 	ImguiImpl::InitContext();
-	MakeMainMenu();
+	RegisterWindows(m_windowsComponent);
+	m_captionBar.MakeMainMenu();
+
 	Event::OnWindowMaximize.Bind(this, [&](bool newIsMaximized) { m_isMaximised = newIsMaximized; });
 	Event::OnWindowResize.Bind(this, [&](int32 width, int32 height) {
 		if (!m_drawUi) {
@@ -45,47 +48,10 @@ EditorObject_::EditorObject_()
 	});
 }
 
-void EditorObject_::MakeMainMenu()
-{
-	RegisterWindows(m_windowsComponent);
-
-	m_mainMenu.Clear();
-
-
-	auto& sceneMenu = m_mainMenu.AddSubMenu("Scene");
-
-	sceneMenu.AddEntry(U8(FA_FILE u8"  New"), [&]() { NewLevel(); });
-	sceneMenu.AddEntry(U8(FA_SAVE u8"  Save"), [&]() { SaveLevel(); });
-	sceneMenu.AddEntry(U8(FA_SAVE u8"  Save As"), [&]() { SaveLevelAs(); });
-	sceneMenu.AddEntry(U8(FA_SAVE u8"  Save All"), [&]() { SaveAll(); });
-	sceneMenu.AddEntry(U8(FA_FOLDER_OPEN u8"  Load"), [&]() { OpenLoadDialog(); });
-	sceneMenu.AddSeperator();
-	sceneMenu.AddEntry(U8(FA_REDO_ALT u8"  Revert"), [&]() { ReloadScene(); });
-	sceneMenu.AddEntry(
-		U8(FA_REDO_ALT u8"  Delete Local"), [&]() { m_openPopupDeleteLocal = true; }, {},
-		[&]() { return fs::relative(Universe::MainWorld->srcPath) == "local.json"; });
-	sceneMenu.AddSeperator();
-	sceneMenu.AddEntry(U8(FA_DOOR_OPEN u8"  Exit"), []() { glfwSetWindowShouldClose(Platform::GetMainHandle(), 1); });
-
-
-	auto& windowsMenu = m_mainMenu.AddSubMenu("Windows");
-	for (auto& catEntry : m_windowsComponent.m_categories) {
-		windowsMenu.AddSubMenu(catEntry);
-	}
-	windowsMenu.AddSeperator();
-
-	for (auto& winEntry : m_windowsComponent.m_entries) {
-		windowsMenu.AddOptionalCategory(
-			winEntry.category, winEntry.name.c_str(), [&]() { m_windowsComponent.ToggleUnique(winEntry.hash); },
-			[&]() { return m_windowsComponent.IsUniqueOpen(winEntry.hash); });
-	}
-}
-
 EditorObject_::~EditorObject_()
 {
 	ImguiImpl::CleanupContext();
 }
-
 
 void EditorObject_::Dockspace()
 {
@@ -124,14 +90,14 @@ void EditorObject_::Dockspace()
 		ImGui::PopStyleVar(2);
 	}
 
-
 	// DockSpace
 	ImGuiIO& io = ImGui::GetIO();
 	m_dockspaceId = ImGui::GetID("MainDockspace");
 	ImGui::DockSpace(m_dockspaceId, ImVec2(0.0f, 0.0f), dockspace_flags);
 	ImGuizmo::SetDrawlist();
-	Run_MenuBar();
 
+
+	m_captionBar.Draw();
 
 	ImGui::End();
 }
@@ -145,7 +111,6 @@ void EditorObject_::UpdateViewportCoordsFromDockspace()
 		auto rect = centralNode->Rect();
 
 		auto rectMin = rect.Min;
-
 
 		g_ViewportCoordinates.position
 			= { rect.Min.x - ImGui::GetMainViewport()->Pos.x, rect.Min.y - ImGui::GetMainViewport()->Pos.y };
@@ -186,29 +151,9 @@ void EditorObject_::UpdateEditor()
 
 		m_windowsComponent.Draw();
 
-
 		// Attempt to predict the viewport size for the first run, might be a bit off.
 		ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
 		ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_NoScrollbar);
-
-
-		if (ImGui::Checkbox("Update World", &m_updateWorld)) {
-			if (m_updateWorld) {
-				OnPlay();
-			}
-			else {
-				OnStopPlay();
-			}
-		}
-		ImEd::HelpTooltip(help_UpdateWorld);
-
-		if (!(m_updateWorld && !m_hasRestoreSave)) {
-			ImEd::HSpace(4.f);
-			ImGui::SameLine();
-			ImGui::Checkbox("Restore update state", &m_autoRestoreWorld);
-			ImEd::HelpTooltip(help_RestoreWorld);
-		}
-
 
 		if (ImEd::Button(ETXT(FA_SAVE, "Save"))) {
 			SaveLevel();
@@ -224,13 +169,7 @@ void EditorObject_::UpdateEditor()
 
 		ImGui::End();
 	}
-
 	ImguiImpl::EndFrame();
-
-	if (startedCaptionDrag.Access()) {
-		// Has to be outside of ImGui::NewFrame() / EndFrame() because drag is blocking and we may draw while dragged
-		glfwDragWindow(Platform::GetMainHandle());
-	}
 
 	auto& g = *ImGui::GetCurrentContext();
 	if (g.HoveredWindow == NULL && ImGui::GetTopMostPopupModal() == NULL && g.NavWindow != NULL
@@ -257,130 +196,8 @@ void EditorObject_::OnFileDrop(std::vector<fs::path>&& files)
 void EditorObject_::OpenLoadDialog()
 {
 	if (auto file = ed::NativeFileBrowser::OpenFile({ "json" })) {
-		m_updateWorld = false;
-		// m_selectedNode = nullptr;
 		ed::OutlinerWindow::selected = {};
-
 		Universe::LoadMainWorld(*file);
-	}
-}
-
-void EditorObject_::ReloadScene()
-{
-	Universe::LoadMainWorld(Universe::MainWorld->srcPath);
-}
-
-void EditorObject_::OnDisableEditor()
-{
-	OnPlay();
-}
-
-void EditorObject_::OnEnableEditor()
-{
-	OnStopPlay();
-}
-
-void EditorObject_::OnPlay()
-{
-	// TODO: ECS
-}
-
-void EditorObject_::OnStopPlay()
-{
-	// TODO: ECS
-}
-
-namespace {
-void MenuBar(ed::Menu& m_mainMenu) {}
-} // namespace
-
-void EditorObject_::TopMostMenuBarDraw()
-{
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.f, 6.f)); // On edit update imextras.h c_MenuPaddingY
-	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.f, 12.f));
-	if (!ImGui::BeginMenuBar()) {
-		ImGui::PopStyleVar(2);
-		return;
-	}
-	ImGui::SetCursorPosX(
-		ImGui::GetCursorPosX() - 1.f); // Offset to draw at left most pixel (allow clicking at 0,0 pixel when maximized)
-
-	auto initialCursorPos = ImGui::GetCursorPos();
-	ImVec2 scaledSize = ImGui::GetCurrentWindow()->MenuBarRect().GetSize();
-	m_mainMenu.DrawOptions(glm::vec2{ 1.f, 7.f }, glm::vec2{ 10.f, 7.f });
-
-	constexpr float c_menuItemWidth = 30.f;
-	auto rightSideCursPos = initialCursorPos;
-	rightSideCursPos.x = initialCursorPos.x + scaledSize.x - (3.f * (c_menuItemWidth + 20.f));
-	ImGui::SetCursorPos(rightSideCursPos);
-
-	if (ImGui::MenuItem(U8(u8"  " FA_WINDOW_MINIMIZE), nullptr, nullptr, true, c_menuItemWidth)) {
-		glfwIconifyWindow(Platform::GetMainHandle());
-	}
-
-	auto middleText = m_isMaximised ? U8(u8"  " FA_WINDOW_RESTORE) //
-									: U8(u8"  " FA_WINDOW_MAXIMIZE);
-
-	if (ImGui::MenuItem(middleText, nullptr, nullptr, true, c_menuItemWidth)) {
-		m_isMaximised ? glfwRestoreWindow(Platform::GetMainHandle()) : glfwMaximizeWindow(Platform::GetMainHandle());
-	}
-
-	ImGui::PushStyleColor(ImGuiCol_HeaderHovered, EdColor::Red);
-	if (ImGui::MenuItem(U8(u8"  " FA_WINDOW_CLOSE), nullptr, nullptr, true, c_menuItemWidth)) {
-		glfwSetWindowShouldClose(Platform::GetMainHandle(), true);
-	}
-	ImGui::PopStyleColor();
-
-	ImGui::SetCursorPos(initialCursorPos);
-	if (ImGui::InvisibleButton("##MainMenuBarItemButton", scaledSize, ImGuiButtonFlags_PressedOnClick)) {
-		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-			m_isMaximised ? glfwRestoreWindow(Platform::GetMainHandle())
-						  : glfwMaximizeWindow(Platform::GetMainHandle());
-		}
-		else {
-			startedCaptionDrag.Set();
-		}
-	}
-
-	ImGui::EndMenuBar();
-	ImGui::PopStyleVar(2);
-}
-
-void EditorObject_::Run_MenuBar()
-{
-	TopMostMenuBarDraw();
-	/*
-	if (ImEd::BeginMenuBar()) {
-		m_mainMenu.DrawOptions();
-		ImEd::EndMenuBar();
-	}
-	*/
-
-	if (m_openPopupDeleteLocal) {
-		ImGui::OpenPopup("Delete Local");
-		m_openPopupDeleteLocal = false;
-	}
-
-	if (ImGui::BeginPopupModal("Delete Local", 0, ImGuiWindowFlags_AlwaysAutoResize)) {
-		ImGui::Text("Local scene will be lost. Are you sure?\n");
-		ImGui::Separator();
-
-		if (ImGui::Button("OK", ImVec2(120, 40))) {
-			fs::remove("local.json");
-			if (!fs::copy_file("engine-data/default.json", "local.json")) {
-				LOG_ERROR("Failed to copy default world file to local.");
-			}
-			else {
-				Universe::LoadMainWorld("local.json");
-			}
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::SetItemDefaultFocus();
-		ImGui::SameLine();
-		if (ImGui::Button("Cancel", ImVec2(120, 40))) {
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::EndPopup();
 	}
 }
 
