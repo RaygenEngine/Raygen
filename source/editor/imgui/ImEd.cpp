@@ -426,28 +426,5 @@ const ComponentMetaEntry* ComponentClassMenu()
 	menu.DrawOptions();
 	return entry;
 }
-//
-// class EcsWorld;
-// Entity AddEntityMenu(EcsWorld& world, const char* menuName)
-//{
-//	Entity ent;
-//	if (ImGui::BeginMenu(menuName)) {
-//		for (auto& [name, type] : ComponentsDb::Z_GetNameToTypes()) {
-//			if (ImGui::Selectable(name.c_str())) {
-//				std::string entityName = name.substr(0, name.length() - 4) + " Entity";
-//
-//				ent = world.CreateEntity(entityName);
-//				ComponentsDb::GetType(type)->emplace(*ent.registry, ent.entity);
-//			}
-//		}
-//		ImGui::EndMenu();
-//	}
-//
-//	if (ImGui::IsItemClicked()) {
-//		ent = world.CreateEntity();
-//	}
-//	return ent;
-//}
-
 
 } // namespace ImEd

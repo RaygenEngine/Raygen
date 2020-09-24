@@ -21,7 +21,7 @@
 
 namespace ed {
 namespace {
-	Entity AddEntityMenu(EcsWorld& world, const char* menuName)
+	Entity AddEntityMenu(World& world, const char* menuName)
 	{
 		Entity ent;
 		if (ImGui::BeginMenu(menuName)) {
@@ -43,7 +43,7 @@ namespace {
 	}
 } // namespace
 
-void EcsOutlinerWindow::DrawRecurseEntity(EcsWorld& world, Entity ent, int32 depth)
+void EcsOutlinerWindow::DrawRecurseEntity(World& world, Entity ent, int32 depth)
 {
 	ImGui::PushID(static_cast<uint32>(ent.entity));
 
@@ -95,7 +95,7 @@ void EcsOutlinerWindow::DrawRecurseEntity(EcsWorld& world, Entity ent, int32 dep
 
 void EcsOutlinerWindow::ImguiDraw()
 {
-	auto& world = *Universe::ecsWorld;
+	auto& world = *Universe::MainWorld;
 
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3.f, 6.f));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.f, 6.f));
@@ -120,7 +120,7 @@ void EcsOutlinerWindow::ImguiDraw()
 	}
 }
 
-void EcsOutlinerWindow::Run_ContextPopup(EcsWorld& world, Entity entity)
+void EcsOutlinerWindow::Run_ContextPopup(World& world, Entity entity)
 {
 	if (Entity ent = AddEntityMenu(world, ETXT(FA_USER_PLUS, " Add Child Entity")); ent) {
 		ent->SetParent(entity);
@@ -180,7 +180,7 @@ void EcsOutlinerWindow::Run_ContextPopup(EcsWorld& world, Entity entity)
 	}
 }
 
-void EcsOutlinerWindow::Run_SpaceContextPopup(EcsWorld& world)
+void EcsOutlinerWindow::Run_SpaceContextPopup(World& world)
 {
 	if (Entity ent = AddEntityMenu(world, "Add Entity"); ent) {
 		ImGui::CloseCurrentPopup();

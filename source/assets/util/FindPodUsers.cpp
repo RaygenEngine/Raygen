@@ -70,7 +70,7 @@ std::vector<PodEntry*> FindAssetUsersOfPod(PodEntry* pod)
 }
 // TODO: ECS
 //
-// std::vector<Node*> FindComponentUsersOfPod(PodEntry* pod, EcsWorld& world)
+// std::vector<Node*> FindComponentUsersOfPod(PodEntry* pod, World& world)
 //{
 //	std::vector<Node*> users;
 //

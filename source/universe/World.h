@@ -9,7 +9,7 @@ struct HiddenFlagComp {
 
 struct Scene;
 
-class EcsWorld {
+class World {
 private:
 	void LoadFromSrcPath();
 	FrameClock clock;
@@ -19,7 +19,7 @@ public:
 
 
 	fs::path srcPath;
-	EcsWorld(const fs::path& path = {});
+	World(const fs::path& path = {});
 
 	// If path is empty uses the original srcPath as path
 	void SaveToDisk(const fs::path& path = {}, bool updateSrcPath = false);

@@ -3,7 +3,7 @@
 #include "universe/Entity.h"
 
 
-class EcsWorld;
+class World;
 namespace ed {
 class EcsOutlinerWindow : public UniqueWindow {
 
@@ -26,13 +26,13 @@ public:
 	}
 
 	virtual void ImguiDraw();
-	void Run_ContextPopup(EcsWorld& world, Entity entity);
-	void Run_SpaceContextPopup(EcsWorld& world);
+	void Run_ContextPopup(World& world, Entity entity);
+	void Run_SpaceContextPopup(World& world);
 	// void Run_NewNodeMenu(Node* underNode);
 	void Run_OutlinerDropEntity(Entity entity);
 	virtual ~EcsOutlinerWindow() = default;
 
-	void DrawRecurseEntity(EcsWorld& world, Entity ent, int32 depth = 0);
+	void DrawRecurseEntity(World& world, Entity ent, int32 depth = 0);
 
 	static inline Entity selected;
 };

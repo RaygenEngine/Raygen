@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "EcsWorld.h"
+#include "World.h"
 
 #include "assets/AssetManager.h"
 #include "editor/Editor.h"
@@ -20,7 +20,7 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 
-EcsWorld::EcsWorld(const fs::path& path)
+World::World(const fs::path& path)
 	: srcPath(path)
 {
 	if (!path.empty()) {
@@ -29,7 +29,7 @@ EcsWorld::EcsWorld(const fs::path& path)
 }
 
 
-void EcsWorld::LoadFromSrcPath()
+void World::LoadFromSrcPath()
 {
 	std::ifstream file(srcPath);
 	CLOG_ERROR(!file.is_open(), "Failed to open file: {} when loading world", srcPath);
@@ -42,7 +42,7 @@ void EcsWorld::LoadFromSrcPath()
 	ComponentsDb::JsonToRegistry(j, reg);
 }
 
-void EcsWorld::SaveToDisk(const fs::path& path, bool updateSrcPath)
+void World::SaveToDisk(const fs::path& path, bool updateSrcPath)
 {
 	if (path.empty()) {
 		if (srcPath.empty()) {
@@ -68,7 +68,7 @@ void EcsWorld::SaveToDisk(const fs::path& path, bool updateSrcPath)
 	file << std::setw(2) << j;
 }
 
-Entity EcsWorld::CreateEntity(const std::string& name)
+Entity World::CreateEntity(const std::string& name)
 {
 	Entity ent{ reg.create(), &reg };
 
@@ -79,7 +79,7 @@ Entity EcsWorld::CreateEntity(const std::string& name)
 	return ent;
 }
 
-void EcsWorld::UpdateWorld(Scene& scene)
+void World::UpdateWorld(Scene& scene)
 {
 	clock.UpdateFrame();
 
