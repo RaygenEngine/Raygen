@@ -15,7 +15,7 @@
 #include "platform/Platform.h"
 #include "universe/Universe.h"
 #include "editor/windows/general/EdEcsOutlinerWindow.h"
-#include "universe/EcsWorld.h"
+#include "universe/World.h"
 #include "engine/Events.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/Layer.h"
@@ -56,7 +56,7 @@ void EditorObject_::MakeMainMenu()
 	sceneMenu.AddEntry(U8(FA_REDO_ALT u8"  Revert"), [&]() { ReloadScene(); });
 	sceneMenu.AddEntry(
 		U8(FA_REDO_ALT u8"  Delete Local"), [&]() { m_openPopupDeleteLocal = true; }, {},
-		[&]() { return fs::relative(Universe::ecsWorld->srcPath) == "local.json"; });
+		[&]() { return fs::relative(Universe::MainWorld->srcPath) == "local.json"; });
 	sceneMenu.AddSeperator();
 	sceneMenu.AddEntry(U8(FA_DOOR_OPEN u8"  Exit"), []() { glfwSetWindowShouldClose(Platform::GetMainHandle(), 1); });
 
@@ -160,7 +160,7 @@ void EditorObject_::UpdateEditor()
 {
 	PROFILE_SCOPE(Editor);
 
-	m_currentWorld = Universe::ecsWorld;
+	m_currentWorld = Universe::MainWorld;
 
 	for (auto& cmd : m_deferredCommands) {
 		cmd();
@@ -261,7 +261,7 @@ void EditorObject_::OpenLoadDialog()
 
 void EditorObject_::ReloadScene()
 {
-	Universe::LoadMainWorld(Universe::ecsWorld->srcPath);
+	Universe::LoadMainWorld(Universe::MainWorld->srcPath);
 }
 
 void EditorObject_::OnDisableEditor()

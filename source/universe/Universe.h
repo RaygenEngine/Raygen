@@ -1,5 +1,5 @@
 #pragma once
-#include "universe/EcsWorld.h"
+#include "universe/World.h"
 
 class Universe {
 	friend class Engine_;
@@ -14,5 +14,5 @@ public:
 
 	static void LoadMainWorld(const fs::path& path);
 
-	inline static EcsWorld* ecsWorld;
+	inline static World* MainWorld{};
 };
