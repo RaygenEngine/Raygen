@@ -34,6 +34,11 @@ void Universe::LoadMainWorld(const fs::path& path)
 	worldToLoad = path;
 }
 
+void Universe::ReloadMainWorld()
+{
+	Universe::LoadMainWorld(Universe::MainWorld->srcPath);
+}
+
 void Universe::LoadPendingWorlds()
 {
 	if (worldToLoad.has_value()) {
