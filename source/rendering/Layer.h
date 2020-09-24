@@ -26,9 +26,8 @@ public:
 
 	SwapchainOutputPass* swapOutput;
 
-	// RSwapchain* mainSwapchain;
-	Scene* mainScene;
-
+	Scene* mainScene{ nullptr };
 	Scene* currentScene{ nullptr };
+
 } * Layer{};
 } // namespace vl

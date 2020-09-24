@@ -17,6 +17,7 @@ enum GColorAttachment : uint32
 	GCount
 };
 
+
 inline struct Layouts_ {
 
 	RDescriptorSetLayout gltfMaterialDescLayout;
@@ -29,10 +30,11 @@ inline struct Layouts_ {
 
 	RDescriptorSetLayout rtTriangleGeometry;
 
-	RDescriptorSetLayout singleStorageImage;
-	RDescriptorSetLayout doubleStorageImage;
-	RDescriptorSetLayout tripleStorageImage;
-	RDescriptorSetLayout quadStorageImage;
+
+	RDescriptorSetLayout singleStorageImage = GenerateStorageImageDescSet(1);
+	RDescriptorSetLayout doubleStorageImage = GenerateStorageImageDescSet(2);
+	RDescriptorSetLayout tripleStorageImage = GenerateStorageImageDescSet(3);
+	RDescriptorSetLayout quadStorageImage = GenerateStorageImageDescSet(4);
 
 
 	RDescriptorSetLayout bufferAndSamplersDescLayout;
@@ -59,5 +61,8 @@ inline struct Layouts_ {
 	void MakeRenderPassLayouts();
 
 	Layouts_();
+
+private:
+	static RDescriptorSetLayout GenerateStorageImageDescSet(size_t Count);
 } * Layouts{};
 } // namespace vl

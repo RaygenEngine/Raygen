@@ -7,6 +7,7 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/wrappers/Buffer.h"
+#include "assets/AssetRegistry.h"
 
 using namespace vl;
 
@@ -23,10 +24,12 @@ void GpuCubemap::Update(const AssetUpdateInfo&)
 
 	vk::Format format = rvk::getFormat(cubemapPod->format);
 
+
 	cubemap = RCubemap(cubemapPod->resolution, cubemapPod->mipCount, format, //
 		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, "WIPname");
+		vk::MemoryPropertyFlagBits::eDeviceLocal,
+		fmt::format("Cubemap: {}", AssetHandlerManager::GetPodUri(podHandle)));
 
 	// transiton all mips to transfer optimal
 	cubemap.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);

@@ -83,7 +83,7 @@ namespace {
 			.setAlphaToCoverageEnable(VK_FALSE)
 			.setAlphaToOneEnable(VK_FALSE);
 
-		// WIP:
+		// NEXT:
 		std::array<vk::PipelineColorBlendAttachmentState, GCount - 1> colorBlendAttachment{};
 		for (uint32 i = 0u; i < GCount - 1; ++i) {
 			colorBlendAttachment[i]
@@ -233,7 +233,6 @@ vk::UniquePipeline GbufferPass::CreateAnimPipeline(
 void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	// PROFILE_SCOPE(Renderer);
-	// WIP: decouple
 	auto descSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
 
 

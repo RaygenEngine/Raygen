@@ -36,7 +36,7 @@ struct SceneVector {
 		pendingElements = 0;
 	}
 
-	// WIP: Correct destructor
+	// NEXT: Correct destructor
 };
 
 struct Scene {
@@ -50,7 +50,7 @@ struct Scene {
 
 	vl::TopLevelAs tlas;
 
-	bool forceUpdateAccel; // WIP: Remove
+	bool forceUpdateAccel; // NEXT: Remove
 
 	std::vector<UniquePtr<std::vector<std::function<void()>>>> cmds;
 	std::vector<std::function<void()>>* currentCmdBuffer;

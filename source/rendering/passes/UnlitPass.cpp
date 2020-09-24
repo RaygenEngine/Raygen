@@ -183,12 +183,6 @@ void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto camera = sceneDesc.viewer;
-	if (!camera) {
-		cmdBuffer->endRenderPass();
-		return;
-	}
-
 	for (auto geom : sceneDesc->geometries.elements) {
 		if (!geom) {
 			continue;
@@ -200,8 +194,9 @@ void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
-			if (!arch.isUnlit)
-				[[likely]] { continue; }
+			if (!arch.isUnlit) [[likely]] {
+				continue;
+			}
 
 			auto& plLayout = *arch.unlit.pipelineLayout;
 
@@ -214,7 +209,7 @@ void UnlitPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& s
 			}
 
 			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u,
-				&camera->descSet[sceneDesc.frameIndex], 0u, nullptr);
+				&sceneDesc.viewer->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 			auto& gpuMesh = geom->mesh.Lock();
 			cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });

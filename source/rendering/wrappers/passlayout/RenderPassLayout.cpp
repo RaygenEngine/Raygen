@@ -157,7 +157,7 @@ void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vec
 			auto& dep = subpassDependencies.emplace_back();
 			dep.setSrcSubpass(srcSubpass)
 				.setDstSubpass(subpassIndex)
-				// WIP: CHECK: for gbuffer depth in light pass
+				// NEXT: CHECK: for gbuffer depth in light pass
 				.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
 				.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
 				//

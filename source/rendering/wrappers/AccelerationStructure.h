@@ -10,7 +10,7 @@ struct RAccelerationStructure {
 	[[nodiscard]] vk::DeviceMemory memory() const { return uMemory.get(); }
 
 	// Only required for vk::AccelerationStructureInstanceKHR
-	// WIP: Finish this instead of device addresses
+	// TODO: Finish this instead of device addresses
 	// uint64 getVkUint() { return static_cast<uint64>(handle.get().operator VkAccelerationStructureKHR()); }
 
 

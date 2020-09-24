@@ -1,6 +1,6 @@
 #pragma once
 #include "universe/ComponentDetail.h"
-#include "universe/BasicComponent.h" // WIP: Basic component
+#include "universe/BasicComponent.h"
 #include "rendering/scene/Scene.h"
 
 struct Scene_;

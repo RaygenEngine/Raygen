@@ -15,6 +15,8 @@
 #include "editor/windows/general/EdProfilerWindow.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
 #include "editor/windows/general/EdEcsOutlinerWindow.h"
+#include "editor/windows/general/EdAttachmentDebuggerWindow.h"
+
 
 namespace ed {
 class ImageEditorTest : public AssetEditorWindowTemplate<Image> {
@@ -47,7 +49,7 @@ void RegisterWindows(ed::ComponentWindows& windowsComponent)
 
 	windowsComponent.AddWindowEntry<ConsoleWindow>("Console");
 
-	windowsComponent.AddWindowEntry<GbufferDebugWindow>("gbuffer Debugger");
+	windowsComponent.AddWindowEntry<AttachmentDebuggerWindow>("Attachment Debugger");
 
 
 	windowsComponent.AddWindowEntry<ProfilerWindow>("Profiler");

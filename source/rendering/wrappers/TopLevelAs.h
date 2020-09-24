@@ -16,7 +16,7 @@ struct AsInstance {
 	int32 instanceId{ 0xFF }; // gl_InstanceID
 	int32 materialId{ 0 };    // aka Shader Binding Table Offset
 
-	vk::GeometryInstanceFlagsKHR flags{ vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable }; // WIP:
+	vk::GeometryInstanceFlagsKHR flags{ vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise };
 	glm::mat4 transform{ glm::identity<glm::mat4>() };
 };
 
@@ -45,7 +45,7 @@ struct TopLevelAs : RAccelerationStructure {
 	void Build();
 
 
-	// WIP: Get this out of here
+	// TODO: Get this out of here
 	RtSceneDescriptor sceneDesc;
 
 private:

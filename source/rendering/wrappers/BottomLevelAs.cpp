@@ -140,7 +140,7 @@ void BottomLevelAs::Build(vk::BuildAccelerationStructureFlagsKHR buildFlags,
 
 	Device->computeCmdBuffer.end();
 
-	// WIP: compacting
+	// TODO: compacting
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo.setCommandBuffers(Device->computeCmdBuffer);

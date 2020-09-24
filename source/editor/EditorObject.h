@@ -74,15 +74,6 @@ public:
 	void OnPlay();
 	void OnStopPlay();
 
-	[[nodiscard]] bool IsCameraPiloting() const
-	{
-		// WIP: ECS
-		// if (m_editorCamera) {
-		//	return !m_editorCamera->GetParent()->IsRoot();
-		//}
-		return false;
-	}
-
 	static bool EditorHandleKeyEvent(int32 glfwKey, int32 glfwScancode, int32 glfwAction, int32 glfwModifiers)
 	{
 		return false;

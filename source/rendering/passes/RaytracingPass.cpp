@@ -167,9 +167,7 @@ ConsoleVariable<float> console_rtRenderScale = { "rt.scale", 1.f, "Set rt render
 
 void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Renderer_* renderer)
 {
-	// WIP: what about secondary buffers?
-	// cmdBuffer.executeCommands({ buffer });
-
+	// TODO: secondary command buffers?
 
 	m_indirectResult[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
 		vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
@@ -181,17 +179,6 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 	DEBUG_NAME_AUTO(sceneDesc.scene->sceneAsDescSet);
 	DEBUG_NAME_AUTO(sceneDesc.viewer->descSet[sceneDesc.frameIndex]);
 	DEBUG_NAME_AUTO(sceneDesc.scene->tlas.sceneDesc.descSet[sceneDesc.frameIndex]);
-	/*
-		std::array layouts{
-		Layouts->renderAttachmentsLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
-		Layouts->doubleStorageImage.handle(),
-		Layouts->accelLayout.handle(),
-		Layouts->rtSceneDescLayout.handle(),
-	};
-
-	*/
-
 
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
