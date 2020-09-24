@@ -1,10 +1,11 @@
 #pragma once
 
 #include "universe/BasicComponent.h"
+#include "engine/Listener.h"
 struct Scene;
 
 namespace ed {
-struct EditorCamera {
+struct EditorCamera : public Listener {
 
 	REFLECTED_GENERIC(EditorCamera)
 	{

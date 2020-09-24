@@ -36,6 +36,13 @@ EditorObject_::EditorObject_()
 	ImguiImpl::InitContext();
 	MakeMainMenu();
 	Event::OnWindowMaximize.Bind(this, [&](bool newIsMaximized) { m_isMaximised = newIsMaximized; });
+	Event::OnWindowResize.Bind(this, [&](int32 width, int32 height) {
+		if (!m_drawUi) {
+			g_ViewportCoordinates.position = { 0, 0 };
+			g_ViewportCoordinates.size = { width, height };
+			Event::OnViewportUpdated.Broadcast();
+		}
+	});
 }
 
 void EditorObject_::MakeMainMenu()
@@ -145,7 +152,6 @@ void EditorObject_::UpdateViewportCoordsFromDockspace()
 		g_ViewportCoordinates.size = { rect.GetWidth(), rect.GetHeight() };
 		if (copy != g_ViewportCoordinates) {
 			Event::OnViewportUpdated.Broadcast();
-			edCamera.ResizeViewport(g_ViewportCoordinates.size);
 		}
 	}
 
@@ -167,57 +173,57 @@ void EditorObject_::UpdateEditor()
 	}
 	m_deferredCommands.clear();
 
-	// if (m_editorCamera) {
-	// m_editorCamera->UpdateFromEditor(Universe::GetMainWorld()->GetDeltaTime());
-	//}
-
-	edCamera.Update(1.f / std::max(Engine.GetFPS(), 1.f));
+	edCamera.Update(1.f / std::max(Engine.GetFPS(), 1.f)); // NEXT: fix 1 / fps
 	edCamera.EnqueueUpdateCmds(vl::Layer->mainScene);
+
 	HandleInput();
 
+
 	ImguiImpl::NewFrame();
-	Dockspace();
-	UpdateViewportCoordsFromDockspace();
+	if (m_drawUi) {
+		Dockspace();
+		UpdateViewportCoordsFromDockspace();
 
-	m_windowsComponent.Draw();
-
-
-	// Attempt to predict the viewport size for the first run, might be a bit off.
-	ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
-	ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_NoScrollbar);
+		m_windowsComponent.Draw();
 
 
-	if (ImGui::Checkbox("Update World", &m_updateWorld)) {
-		if (m_updateWorld) {
-			OnPlay();
+		// Attempt to predict the viewport size for the first run, might be a bit off.
+		ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
+		ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_NoScrollbar);
+
+
+		if (ImGui::Checkbox("Update World", &m_updateWorld)) {
+			if (m_updateWorld) {
+				OnPlay();
+			}
+			else {
+				OnStopPlay();
+			}
 		}
-		else {
-			OnStopPlay();
-		}
-	}
-	ImEd::HelpTooltip(help_UpdateWorld);
+		ImEd::HelpTooltip(help_UpdateWorld);
 
-	if (!(m_updateWorld && !m_hasRestoreSave)) {
-		ImEd::HSpace(4.f);
+		if (!(m_updateWorld && !m_hasRestoreSave)) {
+			ImEd::HSpace(4.f);
+			ImGui::SameLine();
+			ImGui::Checkbox("Restore update state", &m_autoRestoreWorld);
+			ImEd::HelpTooltip(help_RestoreWorld);
+		}
+
+
+		if (ImEd::Button(ETXT(FA_SAVE, "Save"))) {
+			SaveLevel();
+		}
 		ImGui::SameLine();
-		ImGui::Checkbox("Restore update state", &m_autoRestoreWorld);
-		ImEd::HelpTooltip(help_RestoreWorld);
+		if (ImEd::Button(ETXT(FA_FOLDER_OPEN, "Load"))) {
+			OpenLoadDialog();
+		}
+
+		std::string s
+			= fmt::format("{:.1f} FPS : Rt Index: {}", Engine.GetFPS(), vl::Renderer->m_raytracingPass.m_rtFrame);
+		ImGui::Text(s.c_str());
+
+		ImGui::End();
 	}
-
-
-	if (ImEd::Button(ETXT(FA_SAVE, "Save"))) {
-		SaveLevel();
-	}
-	ImGui::SameLine();
-	if (ImEd::Button(ETXT(FA_FOLDER_OPEN, "Load"))) {
-		OpenLoadDialog();
-	}
-
-	std::string s = fmt::format("{:.1f} FPS : Rt Index: {}", Engine.GetFPS(), vl::Renderer->m_raytracingPass.m_rtFrame);
-	ImGui::Text(s.c_str());
-
-	ImGui::End();
-
 
 	ImguiImpl::EndFrame();
 
@@ -399,6 +405,17 @@ void EditorObject_::HandleInput()
 			manipMode.mode = manipMode.mode == ed::ManipOperationMode::Space::Local
 								 ? ed::ManipOperationMode::Space::World
 								 : ed::ManipOperationMode::Space::Local;
+		}
+	}
+
+	if (Input.IsJustPressed(Key::G)) {
+		m_drawUi = !m_drawUi;
+		if (!m_drawUi) {
+			int32 w, h;
+			glfwGetWindowSize(Platform::GetMainHandle(), &w, &h);
+			g_ViewportCoordinates.position = { 0, 0 };
+			g_ViewportCoordinates.size = { w, h };
+			Event::OnViewportUpdated.Broadcast();
 		}
 	}
 
