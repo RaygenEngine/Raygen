@@ -7,6 +7,8 @@
 #include "rendering/scene/Scene.h"
 
 #include "editor/Editor.h"
+#include "engine/Events.h"
+#include "engine/Engine.h"
 
 // NEXT: !!!
 #include "rendering/Renderer.h"
@@ -16,6 +18,7 @@ namespace ed {
 EditorCamera::EditorCamera()
 {
 	orbitalCenter = transform.position + transform.front() * orbitalLength;
+	Event::OnViewportUpdated.Bind(this, [&]() { ResizeViewport(g_ViewportCoordinates.size); });
 }
 
 void EditorCamera::Update(float deltaSeconds)

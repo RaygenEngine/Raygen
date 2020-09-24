@@ -33,6 +33,8 @@ protected:
 	void UpdateViewportCoordsFromDockspace();
 	bool m_isMaximised{ false };
 
+	bool m_drawUi{ true };
+
 public:
 	bool m_hasEditorCameraCachedMatrix{ false };
 	glm::mat4 m_editorCameraCachedMatrix{ glm::identity<glm::mat4>() };
