@@ -59,7 +59,7 @@ void AssetListWindow::ImguiDraw()
 		ImGui::EndChild();
 		return;
 	}
-	auto& entries = AssetHandlerManager::Z_GetPods();
+	auto& entries = AssetRegistry::Z_GetPods();
 	for (auto& entryPtr : entries) {
 		auto& entry = *entryPtr.get();
 

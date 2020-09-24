@@ -89,8 +89,8 @@ void vl::GpuMesh::UpdateGeometry(const AssetUpdateInfo& info)
 			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
-	DEBUG_NAME(combinedVertexBuffer, "Vertex Buffer " + AssetHandlerManager::GetPodUri(podHandle));
-	DEBUG_NAME(combinedIndexBuffer, "Index Buffer " + AssetHandlerManager::GetPodUri(podHandle));
+	DEBUG_NAME(combinedVertexBuffer, "Vertex Buffer " + AssetRegistry::GetPodUri(podHandle));
+	DEBUG_NAME(combinedIndexBuffer, "Index Buffer " + AssetRegistry::GetPodUri(podHandle));
 
 	RBuffer vertexStagingbuffer{ stagingVertexSize, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
@@ -104,8 +104,8 @@ void vl::GpuMesh::UpdateGeometry(const AssetUpdateInfo& info)
 		vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
-	DEBUG_NAME(vertexStagingbuffer, "Staging Vertex Buffer " + AssetHandlerManager::GetPodUri(podHandle));
-	DEBUG_NAME(indexStagingbuffer, "Staging Index Buffer " + AssetHandlerManager::GetPodUri(podHandle));
+	DEBUG_NAME(vertexStagingbuffer, "Staging Vertex Buffer " + AssetRegistry::GetPodUri(podHandle));
+	DEBUG_NAME(indexStagingbuffer, "Staging Index Buffer " + AssetRegistry::GetPodUri(podHandle));
 
 	uint32 indexBufferOffset = 0;
 	uint32 vertexBufferOffset = 0;

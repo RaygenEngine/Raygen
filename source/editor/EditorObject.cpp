@@ -461,7 +461,7 @@ void EditorObject_::SaveLevelAs()
 void EditorObject_::SaveAll()
 {
 	SaveLevel();
-	AssetHandlerManager::SaveAll();
+	AssetRegistry::SaveAll();
 }
 
 void EditorObject_::NewLevel()

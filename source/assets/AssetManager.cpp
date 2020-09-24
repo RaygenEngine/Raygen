@@ -19,15 +19,15 @@
 #include <vector>
 
 
-ConsoleFunction<> console_SaveAll{ "a.saveAll", []() { AssetHandlerManager::SaveAll(); },
+ConsoleFunction<> console_SaveAll{ "a.saveAll", []() { AssetRegistry::SaveAll(); },
 	"Saves all currently unsaved assets" };
 
 ConsoleFunction<> console_ReimportAllShaders{ "a.allShadersReimport",
 	[]() {
-		for (auto& entry : AssetHandlerManager::Z_GetPods()) {
+		for (auto& entry : AssetRegistry::Z_GetPods()) {
 			if (entry->IsA<ShaderStage>()) {
-				AssetHandlerManager::ReimportFromOriginal(entry->GetHandleAs<ShaderStage>());
-				AssetHandlerManager::RequestGpuUpdateFor(entry->uid, {});
+				AssetRegistry::ReimportFromOriginal(entry->GetHandleAs<ShaderStage>());
+				AssetRegistry::RequestGpuUpdateFor(entry->uid, {});
 			}
 		}
 	},
@@ -35,14 +35,14 @@ ConsoleFunction<> console_ReimportAllShaders{ "a.allShadersReimport",
 
 ConsoleFunction<> console_ReimportRtShaders{ "z.reimportRtShaders",
 	[]() {
-		for (auto& entry : AssetHandlerManager::Z_GetPods()) {
+		for (auto& entry : AssetRegistry::Z_GetPods()) {
 			if (entry->IsA<ShaderStage>()) {
 				auto stage = entry->GetHandleAs<ShaderStage>().Lock()->stage;
 				if (stage == ShaderStageType::ClosestHit || stage == ShaderStageType::AnyHit
 					|| stage == ShaderStageType::RayGen || stage == ShaderStageType::Miss
 					|| stage == ShaderStageType::Callable) {
-					AssetHandlerManager::ReimportFromOriginal(entry->GetHandleAs<ShaderStage>());
-					AssetHandlerManager::RequestGpuUpdateFor(entry->uid, {});
+					AssetRegistry::ReimportFromOriginal(entry->GetHandleAs<ShaderStage>());
+					AssetRegistry::RequestGpuUpdateFor(entry->uid, {});
 				}
 			}
 		}
@@ -75,13 +75,13 @@ void PodDeleter::operator()(AssetPod* p)
 //	podtools::ForEachPodType(l);
 //}
 
-void AssetHandlerManager::ExportToLocationImpl(PodEntry* entry, const fs::path& path)
+void AssetRegistry::ExportToLocationImpl(PodEntry* entry, const fs::path& path)
 {
 	podspec::ExportToDisk(entry, path);
 	LOG_REPORT("Exported: {} to {}", entry->path, path);
 }
 
-void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
+void AssetRegistry::SaveToDiskInternal(PodEntry* entry)
 {
 	auto& meta = entry->metadata;
 	if (meta.exportOnSave) {
@@ -104,7 +104,7 @@ void AssetHandlerManager::SaveToDiskInternal(PodEntry* entry)
 	LOG_INFO("Saved pod at: {}", entry->path);
 }
 
-void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
+void AssetRegistry::LoadAllPodsInDirectory(const fs::path& path)
 {
 	size_t beginUid = m_pods.size();
 	{
@@ -148,7 +148,7 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 
 				if (m_pods[i].get()->metadata.reimportOnLoad) [[unlikely]] {
 					// reimportEntries[threadIndex].push_back(m_pods[i].get());
-					AssetHandlerManager::ReimportFromOriginal(m_pods[i].get());
+					AssetRegistry::ReimportFromOriginal(m_pods[i].get());
 				}
 			}
 			return true;
@@ -177,18 +177,18 @@ void AssetHandlerManager::LoadAllPodsInDirectory(const fs::path& path)
 	}
 }
 
-void AssetHandlerManager::ReimportFromOriginalInternal(PodEntry* entry)
+void AssetRegistry::ReimportFromOriginalInternal(PodEntry* entry)
 {
 	AssetImporterManager->m_importerRegistry.ReimportEntry(entry);
 }
 
 
-void AssetHandlerManager::LoadFromDiskTypelessInternal(PodEntry* entry)
+void AssetRegistry::LoadFromDiskTypelessInternal(PodEntry* entry)
 {
 	DeserializePodFromBinary(entry);
 }
 
-void AssetHandlerManager::RenameEntryImpl(PodEntry* entry, const std::string_view newFullPath)
+void AssetRegistry::RenameEntryImpl(PodEntry* entry, const std::string_view newFullPath)
 {
 	if (entry->transient) {
 		LOG_ERROR("Renaming transient pod entry. Aborted rename.");
@@ -214,7 +214,7 @@ void AssetHandlerManager::RenameEntryImpl(PodEntry* entry, const std::string_vie
 	}
 }
 
-void AssetHandlerManager::DeleteFromDiskInternal(PodEntry* entry)
+void AssetRegistry::DeleteFromDiskInternal(PodEntry* entry)
 {
 	CLOG_WARN(entry->transient, "Attempting to delete transient pod entry: {} {}", entry->path, entry->uid);
 
@@ -228,7 +228,7 @@ void AssetHandlerManager::DeleteFromDiskInternal(PodEntry* entry)
 	}
 }
 
-PodEntry* AssetHandlerManager::DuplicateImpl(PodEntry* entry)
+PodEntry* AssetRegistry::DuplicateImpl(PodEntry* entry)
 {
 	// For transient pods we should require more params when duplicating (like a real name). Also all transient
 	// duplications should in theory only be called directly by code and not caused indirectly by the user.
@@ -245,22 +245,22 @@ PodEntry* AssetHandlerManager::DuplicateImpl(PodEntry* entry)
 	return result;
 }
 
-PathReferenceType AssetHandlerManager::GenerateRelativeExportPath(
+PathReferenceType AssetRegistry::GenerateRelativeExportPath(
 	const fs::path& exporteePath, BasePodHandle dependantAsset, fs::path& outPath)
 {
-	fs::path depPath = AssetHandlerManager::GetPodImportPath(dependantAsset);
+	fs::path depPath = AssetRegistry::GetPodImportPath(dependantAsset);
 
 	if (depPath.empty()) {
 		LOG_ERROR("Exporting at: {}. Relative asset: {} does not have an export location.", exporteePath,
 			GetPodUri(dependantAsset));
 
-		outPath = AssetHandlerManager::GetPodUri(dependantAsset);
+		outPath = AssetRegistry::GetPodUri(dependantAsset);
 		return PathReferenceType::BinaryAsset;
 	}
 	return detail::GenerateExportDependencyPath(exporteePath, fs::absolute(depPath), outPath);
 }
 
-void AssetHandlerManager::GenerateRelativeExportJsonObject(
+void AssetRegistry::GenerateRelativeExportJsonObject(
 	nlohmann::json& json, const fs::path& exporteePath, BasePodHandle dependantAsset)
 {
 	fs::path path;
@@ -316,7 +316,7 @@ PathReferenceType GenerateExportDependencyPath(
 
 AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& defaultBinPath)
 {
-	AssetHandlerManager::Get().m_pods.push_back(std::make_unique<PodEntry>());
+	AssetRegistry::Get().m_pods.push_back(std::make_unique<PodEntry>());
 
 	fs::current_path(fs::current_path() / workingDir);
 
@@ -336,7 +336,7 @@ AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& default
 	LOG_INFO("Current working dir: {}", fs::current_path());
 	StdAssets::LoadAssets();
 
-	AssetHandlerManager::Get().LoadAllPodsInDirectory(defaultBinPath);
+	AssetRegistry::Get().LoadAllPodsInDirectory(defaultBinPath);
 
 	Event::OnWindowFocus.Bind(dummy, [](bool isFocused) {
 		if (isFocused) {

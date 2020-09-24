@@ -63,8 +63,7 @@ void main() {
 
 	float depth = texture(g_DepthSampler, uv).r;
 
-	if(depth == 1.0)
-	{
+	if(depth == 1.0) {
 		discard;
 	}
 
@@ -73,7 +72,7 @@ void main() {
 		depth,
 		cam.viewProjInv,
 		g_NormalSampler,
-		g_ColorSampler,
+		g_AlbedoSampler,
 		g_SpecularSampler,
 		g_EmissiveSampler,
 		uv);
@@ -112,7 +111,7 @@ void main() {
 	vec3 Li = (1.0 - shadow) * light.color * light.intensity * attenuation * spotEffect; 
 
 	// Li comes from direct light path
-	vec3 finalContribution = DirectLightBRDF(NoL, NoV, NoH, LoH, frag.a, frag.diffuseColor, frag.f0)  * Li * NoL;
+	vec3 finalContribution = DirectLightBRDF(NoL, NoV, NoH, LoH, frag.a, frag.albedo, frag.f0)  * Li * NoL;
 
 	outColor = vec4(finalContribution, 1);
 }                               

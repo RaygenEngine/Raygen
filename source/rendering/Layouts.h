@@ -9,7 +9,7 @@ enum GColorAttachment : uint32
 {
 	GDepth = 0,
 	GNormal = 1,
-	GDiffuseColor = 2,
+	GAlbedo = 2,
 	GSpecularColor = 3,
 	GEmissive = 4,
 	GVelocity = 5,

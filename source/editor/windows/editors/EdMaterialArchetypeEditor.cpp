@@ -148,7 +148,7 @@ void main() {
 	gSurface = vec4(0.f, 0.5f, 0.5f, 0.f);
 	gEmissive = vec4(0.f, 0.f, 0.f, 1.f);
 }                                                                                        
-)";
+)"; // CHECK: fix
 		needsSave = true;
 	}
 }
@@ -296,7 +296,7 @@ void MaterialInstanceEditorWindow::ImguiDraw()
 	auto material = ed.BeginOptionalEditRegion();
 
 	auto archetype = material->archetype.Lock();
-	auto archetypeEntry = AssetHandlerManager::GetEntry(material->archetype);
+	auto archetypeEntry = AssetRegistry::GetEntry(material->archetype);
 	auto prevArchetype = archetype;
 
 

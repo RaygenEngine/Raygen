@@ -23,7 +23,7 @@ void MaterialInstance::Export(const fs::path& path)
 
 
 	// Fill archetype_path
-	AssetHandlerManager::GenerateRelativeExportJsonObject(j["archetype_path"], path, archetype);
+	AssetRegistry::GenerateRelativeExportJsonObject(j["archetype_path"], path, archetype);
 
 	// Fill ubo_object
 	j["ubo_object"] = json::object();
@@ -36,7 +36,7 @@ void MaterialInstance::Export(const fs::path& path)
 	jsonSamplers = json::object();
 
 	for (int32 samplerIndex = 0; auto& samplerName : archPod->descriptorSetLayout.samplers2d) {
-		AssetHandlerManager::GenerateRelativeExportJsonObject(
+		AssetRegistry::GenerateRelativeExportJsonObject(
 			jsonSamplers[samplerName], path, descriptorSet.samplers2d[samplerIndex]);
 	}
 

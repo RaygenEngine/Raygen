@@ -65,35 +65,38 @@ vec3 TraceNext(vec3 thisRayThroughput, vec3 L_shadingSpace, FsSpaceInfo fragSpac
     return result;
 }
 
+//#define RNG_BRDF_X(bounce)                (4 + 4 + 9 * bounce)
+//#define RNG_BRDF_Y(bounce)                (4 + 5 + 9 * bounce)
+//
+//float get_rng(uint idx, uint rng_seed)
+//{
+//	//uvec3 p = uvec3(rng_seed, rng_seed >> 10, rng_seed >> 20);
+//	//p.z = (p.z + idx);
+//	//p &= uvec3(BLUE_NOISE_RES - 1, BLUE_NOISE_RES - 1, NUM_BLUE_NOISE_TEX - 1); // array impl for temporal (z)
+//
+//	//return min(texelFetch(TEX_BLUE_NOISE, ivec3(p), 0).r, 0.9999999999999);
+//	//return fract(vec2(get_rng_uint(idx)) / vec2(0xffffffffu));
+//	uvec2 p = uvec2(rng_seed, rng_seed >> 10);
+//	p &= uvec2(470 - 1);
+//	
+//	return texture(blueNoiseSampler, vec2(p)).r;
+//}
+ 
+
 vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
     vec3 radiance = vec3(0.f);
 
     vec3 V = fragSpace.V;
-    vec3 diffuseColor = brdfInfo.diffuseColor;
+    vec3 albedo = brdfInfo.albedo;
     vec3 f0 = brdfInfo.f0;
     float a = brdfInfo.a;
 
     float NoV = max(Ndot(V), BIAS);
 
-    // Diffuse reflection
-    {
-        vec2 u = rand2(prd.seed); 
-        vec3 L = cosineSampleHemisphere(u);
-
-        float NoL = max(Ndot(L), BIAS); 
-
-        vec3 H = normalize(V + L);
-        float LoH = max(dot(L, H), BIAS);
-
-        float pdf = NoL * INV_PI;
-    
-        // SMATH: missing Kd
-        vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, a, diffuseColor);
-
-        radiance += TraceNext(brdf_d * NoL / pdf, L, fragSpace);
-    }
+    float p_specular = 0.5;
 
     // Glossy reflection
+    if(rand(prd.seed) > p_specular)
     {
         // Ideally specular
         vec2 u = rand2(prd.seed);
@@ -119,9 +122,31 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
             pdf = 1.0;
         }   
 
-        vec3 brdf_r = SpecularTerm(NoL, NoV, NoH, LoH, a, f0);
+        vec3 ks = F_Schlick(LoH, f0);
+
+        vec3 brdf_r = SpecularTerm(NoV, NoL, NoH, a, ks) / p_specular;
 
         radiance += TraceNext(brdf_r * NoL / pdf, L, fragSpace);
+    }
+
+    // Diffuse reflection
+    else
+    {
+        vec2 u = rand2(prd.seed); 
+        vec3 L = cosineSampleHemisphere(u);
+
+        float NoL = max(Ndot(L), BIAS); 
+
+        vec3 H = normalize(V + L);
+        float LoH = max(dot(L, H), BIAS);
+
+        float pdf = NoL * INV_PI;
+
+        vec3 kd = 1 - F_Schlick(LoH, f0);
+
+        vec3 brdf_d = DiffuseTerm(NoL, NoV, LoH, a, albedo, kd) / (1 - p_specular);
+
+        radiance += TraceNext(brdf_d * NoL / pdf, L, fragSpace);
     }
 
     return radiance;

@@ -335,7 +335,7 @@ struct JsonToPropVisitor_WorldLoad {
 	template<typename T>
 	PodHandle<T> LoadHandle(const std::string& str)
 	{
-		return AssetHandlerManager::GetAsyncHandle<T>(str);
+		return AssetRegistry::GetAsyncHandle<T>(str);
 	}
 
 	template<typename T>
@@ -396,7 +396,7 @@ struct ToJsonVisitor {
 	{
 		j[p.GetNameStr()] = ref;
 		j[p.GetNameStr() + detail::c_importHintSuffix]
-			= fs::relative(fs::path(AssetHandlerManager::GetPodImportPath(ref))).generic_string();
+			= fs::relative(fs::path(AssetRegistry::GetPodImportPath(ref))).generic_string();
 	}
 };
 
@@ -486,7 +486,7 @@ struct ToStringVisitor {
 	template<typename T>
 	void operator()(PodHandle<T>& ref, const Property& p)
 	{
-		os << p.GetName() << ": " << AssetHandlerManager::GetPodUri(ref) << '\n';
+		os << p.GetName() << ": " << AssetRegistry::GetPodUri(ref) << '\n';
 	}
 
 	template<typename T>
@@ -494,7 +494,7 @@ struct ToStringVisitor {
 	{
 		os << p.GetName() << ":\n";
 		for (auto& r : ref) {
-			os << "\t" << AssetHandlerManager::GetPodUri(r) << ",\n";
+			os << "\t" << AssetRegistry::GetPodUri(r) << ",\n";
 		}
 	}
 
