@@ -58,14 +58,7 @@ void PtPointlight::MakePipeline()
 
 void PtPointlight::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	auto camera = sceneDesc.viewer;
-
-	if (!camera) {
-		return;
-	}
-
-	// WIP:
-	auto camDescSet = camera->descSet[sceneDesc.frameIndex];
+	auto camDescSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 

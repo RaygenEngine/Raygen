@@ -57,14 +57,7 @@ void PtReflProb::MakePipeline()
 
 void PtReflProb::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	auto camera = sceneDesc.viewer;
-
-	if (!camera) {
-		return;
-	}
-
-	// WIP:
-	auto descSet = camera->descSet[sceneDesc.frameIndex];
+	auto descSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 

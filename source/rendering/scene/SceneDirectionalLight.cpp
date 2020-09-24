@@ -6,7 +6,6 @@
 void SceneDirectionalLight::MaybeResizeShadowmap(uint32 width, uint32 height)
 {
 	bool shouldResize = true;
-	// WIP:
 	auto& extent = shadowmap.at(0).framebuffer.extent;
 	shouldResize = width != extent.width || height != extent.height;
 

@@ -71,7 +71,7 @@ Scene::~Scene()
 
 void Scene::UpdateTopLevelAs()
 {
-	// WIP:
+	// TODO:
 	tlas = vl::TopLevelAs(geometries.elements, this);
 
 	std::array accelStructs{ tlas.handle() };

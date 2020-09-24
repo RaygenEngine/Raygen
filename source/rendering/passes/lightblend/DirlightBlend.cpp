@@ -54,14 +54,7 @@ vk::UniquePipeline DirlightBlend::MakePipeline()
 
 void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	auto camera = sceneDesc.viewer;
-
-	if (!camera) {
-		return;
-	}
-
-	// WIP:
-	auto descSet = camera->descSet[sceneDesc.frameIndex];
+	auto descSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
 
 	auto& pipeLayout = StaticPipes::GetLayout<DirlightBlend>();
 

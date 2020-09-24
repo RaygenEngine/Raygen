@@ -6,7 +6,6 @@
 
 namespace {
 std::optional<fs::path> worldToLoad{};
-std::optional<fs::path> ecsWorldToLoad{};
 } // namespace
 
 
@@ -30,18 +29,18 @@ void Universe::Destroy()
 	delete ecsWorld;
 }
 
-void Universe::ECS_LoadMainWorld(const fs::path& path)
+void Universe::LoadMainWorld(const fs::path& path)
 {
-	ecsWorldToLoad = path;
+	worldToLoad = path;
 }
 
 void Universe::LoadPendingWorlds()
 {
-	if (ecsWorldToLoad.has_value()) {
+	if (worldToLoad.has_value()) {
 		delete ecsWorld;
 		vl::Layer->mainScene = new Scene();
 
-		ecsWorld = new EcsWorld(*ecsWorldToLoad);
-		ecsWorldToLoad.reset();
+		ecsWorld = new EcsWorld(*worldToLoad);
+		worldToLoad.reset();
 	}
 }

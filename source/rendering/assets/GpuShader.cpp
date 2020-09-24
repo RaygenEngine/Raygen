@@ -37,12 +37,10 @@ void GpuShader::Update(const AssetUpdateInfo& info)
 	}
 
 	AddDependencies(podPtr->rayGen, podPtr->intersect, podPtr->anyHit, podPtr->closestHit, podPtr->miss);
-	// WIP: Fix this
+	// TODO: Fix this
 	// To Solve Shaders:
 	// Use an array for all shader stages, use the enum of the stage as index
 #define MAKE_SHADER(memVariable) memVariable = GpuAssetManager->GetGpuHandle(podPtr->##memVariable);
-
-
 	MAKE_SHADER(rayGen);
 	MAKE_SHADER(intersect);
 	MAKE_SHADER(anyHit);

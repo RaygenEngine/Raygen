@@ -13,7 +13,6 @@ public:
 	// static vk::UniquePipeline CreateAnimPipeline(
 	//	vk::PipelineLayout pipelineLayout, std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages);
 
-	// WIP: extent
 	static void RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
 };
 

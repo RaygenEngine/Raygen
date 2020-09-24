@@ -1,6 +1,6 @@
 #pragma once
 
-// WIP: Specialize register debug name without this?
+// NEXT: Specialize register debug name without this?
 #include "rendering/Device.h"
 
 namespace vl {

@@ -68,7 +68,7 @@ std::vector<PodEntry*> FindAssetUsersOfPod(PodEntry* pod)
 
 	return results;
 }
-// WIP: ECS
+// TODO: ECS
 //
 // std::vector<Node*> FindComponentUsersOfPod(PodEntry* pod, EcsWorld& world)
 //{

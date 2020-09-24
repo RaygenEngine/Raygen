@@ -129,7 +129,8 @@ Layouts_::Layouts_()
 	gltfMaterialDescLayout.Generate();
 
 	// single
-	singleUboDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eAll); // WIP:
+	singleUboDescLayout.AddBinding(
+		vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eAll); // TODO: fix shader stage flags
 	singleUboDescLayout.Generate();
 
 	// joints
@@ -164,27 +165,6 @@ Layouts_::Layouts_()
 	rtTriangleGeometry.Generate();
 
 
-	// rt base
-	singleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll); // WIP: Fix all
-	singleStorageImage.Generate();
-
-	doubleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll); // WIP: Fix all
-	doubleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll); // WIP: Fix all
-	doubleStorageImage.Generate();
-
-
-	tripleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
-	tripleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
-	tripleStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
-	tripleStorageImage.Generate();
-
-	quadStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
-	quadStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
-	quadStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
-	quadStorageImage.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
-	quadStorageImage.Generate();
-
-
 	// image debug
 	imageDebugDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	imageDebugDescLayout.Generate();
@@ -202,5 +182,15 @@ Layouts_::Layouts_()
 
 
 	MakeRenderPassLayouts();
+}
+
+RDescriptorSetLayout Layouts_::GenerateStorageImageDescSet(size_t Count)
+{
+	RDescriptorSetLayout descLayout;
+	for (size_t i = 0; i < Count; i++) {
+		descLayout.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
+	}
+	descLayout.Generate();
+	return descLayout;
 }
 } // namespace vl

@@ -255,13 +255,13 @@ void EditorObject_::OpenLoadDialog()
 		// m_selectedNode = nullptr;
 		ed::EcsOutlinerWindow::selected = {};
 
-		Universe::ECS_LoadMainWorld(*file);
+		Universe::LoadMainWorld(*file);
 	}
 }
 
 void EditorObject_::ReloadScene()
 {
-	Universe::ECS_LoadMainWorld(Universe::ecsWorld->srcPath);
+	Universe::LoadMainWorld(Universe::ecsWorld->srcPath);
 }
 
 void EditorObject_::OnDisableEditor()
@@ -365,7 +365,7 @@ void EditorObject_::Run_MenuBar()
 				LOG_ERROR("Failed to copy default world file to local.");
 			}
 			else {
-				Universe::ECS_LoadMainWorld("local.json");
+				Universe::LoadMainWorld("local.json");
 			}
 			ImGui::CloseCurrentPopup();
 		}
@@ -449,5 +449,5 @@ void EditorObject_::SaveAll()
 
 void EditorObject_::NewLevel()
 {
-	Universe::ECS_LoadMainWorld("");
+	Universe::LoadMainWorld("");
 }

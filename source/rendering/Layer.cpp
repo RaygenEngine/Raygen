@@ -77,7 +77,6 @@ Layer_::~Layer_()
 {
 	delete Renderer;
 
-	// WIP:
 	delete swapOutput;
 	delete mainScene;
 
@@ -108,8 +107,9 @@ void Layer_::DrawFrame()
 	GpuAssetManager->ConsumeAssetUpdates();
 	currentScene->ConsumeCmdQueue();
 
-	if (!swapOutput->ShouldRenderThisFrame())
-		[[unlikely]] { return; }
+	if (!swapOutput->ShouldRenderThisFrame()) [[unlikely]] {
+		return;
+	}
 
 	swapOutput->OnPreRender();
 
@@ -133,7 +133,7 @@ void Layer_::DrawFrame()
 
 	swapOutput->SetOutputImageIndex(imageIndex);
 
-	// WIP: 0 = editor camera
+	// TODO: 0 = editor camera
 	SceneRenderDesc sceneDesc{ currentScene, 0, m_currentFrame };
 
 	vk::CommandBufferBeginInfo beginInfo{};
