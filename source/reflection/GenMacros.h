@@ -9,7 +9,7 @@ private:                                                                        
 	using Z_ThisType = Class;                                                                                          \
 	friend class ReflClass;                                                                                            \
 	friend class AssetImporterManager_;                                                                                \
-	friend class AssetHandlerManager;                                                                                  \
+	friend class AssetRegistry;                                                                                  \
 	friend void DeserializePodFromBinary(PodEntry*);                                                                   \
                                                                                                                        \
 public:                                                                                                                \

@@ -5,8 +5,8 @@
 // out
 
 layout (location = 0) out vec4 gNormal;
-// rgb: diffuse color, a: opacity
-layout (location = 1) out vec4 gDiffuseColor;
+// rgb: albedo, a: opacity
+layout (location = 1) out vec4 gAlbedo;
 // r: f0, a: a (roughness^2)
 layout (location = 2) out vec4 gSpecularColor;
 // rgb: emissive, a: occlusion
@@ -64,7 +64,7 @@ void main() {
 	vec4 sampledOcclusion = texture(occlusionSampler, uv);
 	
 	// final material values
-	vec3 albedo = sampledBaseColor.rgb * mat.baseColorFactor.rgb;
+	vec3 baseColor = sampledBaseColor.rgb * mat.baseColorFactor.rgb;
 	float metallic = sampledMetallicRoughness.b * mat.metallicFactor;
 	float roughness = sampledMetallicRoughness.g * mat.roughnessFactor;
 	vec3 emissive = sampledEmissive.rgb * mat.emissiveFactor.rgb;
@@ -75,12 +75,12 @@ void main() {
     // normal (with normal mapping)
     gNormal = vec4(normalize(TBN * normal), 1.0);
 	
-	// diffuseColor = (1.0 - metallic) * albedo;
-	gDiffuseColor = vec4((1.0 - metallic) * albedo, opacity);
+	// albedo = (1.0 - metallic) * baseColor;
+	gAlbedo = vec4((1.0 - metallic) * baseColor, opacity);
 
 	// SMATH: reflectance
 	// f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + albedo * metallic;
-	gSpecularColor = vec4(vec3(0.16 * 0.5 * 0.5 * (1.0 - metallic)) + albedo * metallic, roughness * roughness);
+	gSpecularColor = vec4(vec3(0.16 * 0.5 * 0.5 * (1.0 - metallic)) + baseColor * metallic, roughness * roughness);
 	
 	gEmissive = vec4(emissive, occlusion);
 	
@@ -90,5 +90,5 @@ void main() {
 	float expectedDepth = (prevClipPos.z / prevClipPos.w);
 
 	gVelocity = vec4(a - b, expectedDepth, 1.f);
-	gUVDrawIndex = vec4(uv, drawIndex, 1.f);
+	gUVDrawIndex = vec4(uv, drawIndex, metallic);
 }                                                                                        

@@ -58,7 +58,7 @@ void serialize(Archive& ar, glm::quat& v)
 template<typename Archive, typename T>
 void save(Archive& ar, const PodHandle<T>& v)
 {
-	ar(AssetHandlerManager::GetPodUri(v));
+	ar(AssetRegistry::GetPodUri(v));
 }
 
 template<typename Archive, typename T>
@@ -66,7 +66,7 @@ void load(Archive& ar, PodHandle<T>& v)
 {
 	std::string path;
 	ar(path);
-	v = AssetHandlerManager::GetAsyncHandle<T>(path);
+	v = AssetRegistry::GetAsyncHandle<T>(path);
 }
 
 template<typename Archive>

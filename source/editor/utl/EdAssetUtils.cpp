@@ -20,17 +20,17 @@ void MaybeHoverTooltip(PodEntry* entry)
 
 void MaybeHoverTooltip(BasePodHandle handle)
 {
-	MaybeHoverTooltip(AssetHandlerManager::GetEntry(handle));
+	MaybeHoverTooltip(AssetRegistry::GetEntry(handle));
 }
 
 void MaybeHoverTooltipForced(bool showTooltip, BasePodHandle handle)
 {
-	MaybeHoverTooltipForced(showTooltip, AssetHandlerManager::GetEntry(handle));
+	MaybeHoverTooltipForced(showTooltip, AssetRegistry::GetEntry(handle));
 }
 
 void OpenForEdit(BasePodHandle handle)
 {
-	OpenForEdit(AssetHandlerManager::GetEntry(handle));
+	OpenForEdit(AssetRegistry::GetEntry(handle));
 }
 
 void OpenForEdit(PodEntry* entry)

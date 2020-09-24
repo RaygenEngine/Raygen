@@ -145,7 +145,7 @@ void CreateTypedPodDrag(PodEntry* entry, ImGuiDragDropFlags flags)
 
 void CreateTypedPodDrag(BasePodHandle handle, ImGuiDragDropFlags flags)
 {
-	auto entry = AssetHandlerManager::GetEntry(handle);
+	auto entry = AssetRegistry::GetEntry(handle);
 	CreateTypedPodDrag(entry, flags);
 }
 

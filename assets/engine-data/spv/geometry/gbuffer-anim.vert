@@ -20,7 +20,7 @@ layout(location = 5) in vec4 weight;
 
 // uniforms
 
-layout(push_constant) uniform ModelData {
+layout(push_constant) uniform PC {
 	mat4 modelMat;
 	mat4 normalMat;
 } push;

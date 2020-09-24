@@ -50,7 +50,7 @@ struct IsUserOfPodVisitor {
 
 std::vector<PodEntry*> FindAssetUsersOfPod(PodEntry* pod)
 {
-	auto& pods = AssetHandlerManager::Z_GetPods();
+	auto& pods = AssetRegistry::Z_GetPods();
 
 	std::vector<PodEntry*> results;
 

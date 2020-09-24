@@ -86,6 +86,6 @@ void AssetEditorWindow::DrawSaveButton()
 
 void AssetEditorWindow::SaveToDisk()
 {
-	AssetHandlerManager::SaveToDisk(entry);
+	AssetRegistry::SaveToDisk(entry);
 }
 } // namespace ed

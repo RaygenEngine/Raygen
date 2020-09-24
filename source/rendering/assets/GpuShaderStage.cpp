@@ -33,7 +33,7 @@ void GpuShaderStage::Update(const AssetUpdateInfo& info)
 	if (binary.empty()) {
 		if (!info.HasFlag("editor")) {
 			LOG_WARN("Attempting to make shader stage {}: {} when compilation failed. keeping previous shader module.",
-				GenMetaEnum(podPtr->stage).GetValueStr(), AssetHandlerManager::GetEntry(podHandle)->path);
+				GenMetaEnum(podPtr->stage).GetValueStr(), AssetRegistry::GetEntry(podHandle)->path);
 		}
 		lastCompileSuccess = false;
 		return;
@@ -45,7 +45,7 @@ void GpuShaderStage::Update(const AssetUpdateInfo& info)
 	module = Device->createShaderModuleUnique(createInfo);
 	shaderStageCreateInfo.setStage(shd::StageToVulkan(podPtr->stage)).setModule(*module).setPName("main");
 
-	DEBUG_NAME(module, AssetHandlerManager::GetPodUri(podHandle));
+	DEBUG_NAME(module, AssetRegistry::GetPodUri(podHandle));
 
 	lastCompileSuccess = true;
 }

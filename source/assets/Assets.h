@@ -23,6 +23,6 @@ public:
 		return AssetManager->GetAsyncHandle(str);
 	}
 
-	static uri::Uri GetPodUri(BasePodHandle handle) { return AssetHandlerManager::GetPodUri(handle); }
+	static uri::Uri GetPodUri(BasePodHandle handle) { return AssetRegistry::GetPodUri(handle); }
 
 }; // namespace Assets

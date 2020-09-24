@@ -49,7 +49,7 @@ bool AssetSlot(const std::string& name, PodHandle<T>& handle)
 {
 	static AssetSlotPopup searchPopup;
 
-	auto entry = AssetHandlerManager::GetEntry(handle);
+	auto entry = AssetRegistry::GetEntry(handle);
 
 	// ImGui::TextUnformatted(U8(T::StaticClass().GetIcon()));
 	// ImGui::SameLine();
