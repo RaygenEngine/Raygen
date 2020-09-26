@@ -332,6 +332,7 @@ void MaterialInstanceEditorWindow::ImguiDraw()
 	int32 i = 0;
 	for (auto& img : archetype->descriptorSetLayout.samplers2d) {
 		if (ImEd::AssetSlot(img.c_str(), material->descriptorSet.samplers2d[i])) {
+			material->descriptorSet.SetSamplerByIndex(i, material->descriptorSet.samplers2d[i]);
 			ed.MarkEdit();
 		}
 		++i;

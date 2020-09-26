@@ -38,16 +38,8 @@ struct DynamicDescriptorSet {
 	{
 		ar(samplers2d, uboData);
 
-		// NEXT: Extremelly bad way of deserializing back into image index
-		using HandleType = int32;
-		byte* revCurs = &uboData.back() + 1;
-		constexpr int32 samplerHandleStride = sizeof(HandleType);
-
-		revCurs -= samplerHandleStride;
-
-		for (int32 i = static_cast<int32>(samplers2d.size()) - 1; i >= 0; --i) {
-			*reinterpret_cast<HandleType*>(revCurs) = static_cast<HandleType>(samplers2d[i].uid);
-			revCurs -= samplerHandleStride;
+		for (int32 i = 0; i < samplers2d.size(); ++i) {
+			SetSamplerByIndex(i, samplers2d[i]);
 		}
 	}
 
@@ -55,6 +47,20 @@ struct DynamicDescriptorSet {
 	void save(Archive& ar) const
 	{
 		ar(samplers2d, uboData);
+	}
+
+	// No bounds check
+	void SetSamplerByIndex(int32 samplerIndex, PodHandle<Image> image)
+	{
+		samplers2d[samplerIndex] = image;
+
+		// NEXT: Extremelly bad way of deserializing into the pure data
+		using HandleType = int32;
+		byte* revCurs = &uboData.back() + 1;
+		constexpr int32 samplerHandleStride = sizeof(HandleType);
+
+		revCurs -= samplerHandleStride * (samplers2d.size() - samplerIndex);
+		*reinterpret_cast<HandleType*>(revCurs) = static_cast<HandleType>(image.uid);
 	}
 };
 

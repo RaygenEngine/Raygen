@@ -102,7 +102,7 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 		}
 	}
 
-	UpdateRtMaterial(info);
+	// UpdateRtMaterial(info);
 }
 
 void GpuMaterialInstance::UpdateRtMaterial(const AssetUpdateInfo& info)
