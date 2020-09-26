@@ -111,6 +111,7 @@ MaterialArchetypeEditorWindow::MaterialArchetypeEditorWindow(PodEntry* inEntry)
 
 	addEditor("Shared", &MaterialArchetype::sharedFunctions);
 	addEditor("Fragment", &MaterialArchetype::gbufferFragMain);
+	addEditor("Raytrace", &MaterialArchetype::raytracingMain);
 	addEditor("Depth", &MaterialArchetype::depthShader);
 	addEditor("Vertex", &MaterialArchetype::gbufferVertMain);
 	addEditor("Unlit", &MaterialArchetype::unlitFragMain);

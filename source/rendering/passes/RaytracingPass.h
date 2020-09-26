@@ -25,7 +25,7 @@ public:
 
 	int32 m_rtFrame{ 0 };
 
-	void MakeRtPipeline();
+	void PrepareAll();
 
 	void CreateRtShaderBindingTable();
 
@@ -64,6 +64,11 @@ public:
 	};
 
 	PtSvgf svgfPass;
+
+
+	void UpdateRtPipeline(std::vector<GpuHandle<MaterialArchetype>>&& materials = {});
+
+	std::vector<GpuHandle<MaterialArchetype>> m_callableMats = {};
 };
 
 } // namespace vl

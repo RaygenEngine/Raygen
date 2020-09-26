@@ -24,6 +24,8 @@ struct GpuMaterialArchetype : public GpuAssetTemplate<MaterialArchetype> {
 
 	bool isUnlit{ false };
 
+	vk::UniqueShaderModule rtCallable;
+
 	GpuMaterialArchetype(PodHandle<MaterialArchetype> podHandle);
 	void Update(const AssetUpdateInfo& info) override final;
 };

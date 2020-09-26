@@ -24,7 +24,8 @@ struct RtSceneDescriptor {
 	InFlightResources<vk::DescriptorSet> descSet;
 	InFlightResources<vk::DescriptorSet> descSetSpotlights;
 
-	void AddGeomGroup(const GpuGeometryGroup& group, const GpuMesh& mesh, const glm::mat4& transform);
+	void AddGeomGroup(
+		const GpuGeometryGroup& group, const GpuMesh& mesh, const glm::mat4& transform, int32 callableIndex);
 	void WriteImages();
 	void WriteSpotlights(const std::vector<SceneSpotlight*>& spotlights);
 	void WriteGeomGroups();
@@ -32,6 +33,8 @@ struct RtSceneDescriptor {
 	int32 spotlightCount{ 0 };
 	RBuffer spotlightsBuffer;
 	RBuffer geomGroupsBuffer;
+
+	RBuffer sbtMaterials;
 };
 
 struct TopLevelAs : RAccelerationStructure {

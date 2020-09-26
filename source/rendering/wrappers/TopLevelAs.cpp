@@ -10,8 +10,12 @@
 #include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/Renderer.h"
+#include "rendering/passes/RaytracingPass.h"
+#include "rendering/assets/GpuMaterialArchetype.h"
 
 #include <glm/gtc/type_ptr.hpp>
+
 
 namespace {
 vk::AccelerationStructureInstanceKHR AsInstanceToVkGeometryInstanceKHR(const vl::AsInstance& instance)
@@ -52,6 +56,9 @@ struct RtGeometryGroup {
 
 	glm::mat4 transform;
 	glm::mat4 invTransform;
+
+	int32 callableIndex;
+	int32 padding[3];
 };
 
 std::vector<RtGeometryGroup> g_tempGeometryGroups;
@@ -69,9 +76,8 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 	}
 	sceneDesc.descSetSpotlights = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(spotlightCount);
 
-
 	int32 totalGroups = 0;
-
+	std::vector<GpuHandle<MaterialArchetype>> archetypesFound;
 
 	for (auto geom : geoms) {
 		if (!geom) [[unlikely]] {
@@ -80,8 +86,23 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 		auto& transform = geom->transform;
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
+			int32 callableIndex = -1;
+
 			if (gg.material.Lock().archetype != StdAssets::GltfArchetype()) {
-				continue;
+				auto archetype = gg.material.Lock().archetype;
+				if (!archetype.Lock().rtCallable) {
+					continue;
+				}
+
+				auto it = std::find(archetypesFound.begin(), archetypesFound.end(), archetype);
+
+				if (it == archetypesFound.end()) {
+					archetypesFound.emplace_back(archetype);
+					callableIndex = archetypesFound.size() - 1;
+				}
+				else {
+					callableIndex = std::distance(archetypesFound.begin(), it);
+				}
 			}
 
 			AsInstance inst{};
@@ -92,7 +113,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 			inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise;
 			instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
 
-			sceneDesc.AddGeomGroup(gg, geom->mesh.Lock(), transform);
+			sceneDesc.AddGeomGroup(gg, geom->mesh.Lock(), transform, callableIndex);
 			totalGroups++;
 		}
 	}
@@ -103,6 +124,11 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 
 	sceneDesc.WriteImages();
 
+	RaytracingPass& rtPass = Renderer->m_raytracingPass;
+	if (!std::equal(archetypesFound.begin(), archetypesFound.end(), rtPass.m_callableMats.begin(),
+			rtPass.m_callableMats.end())) {
+	}
+	rtPass.UpdateRtPipeline(std::move(archetypesFound));
 
 	sceneDesc.WriteSpotlights(scene->spotlights.elements);
 	sceneDesc.WriteGeomGroups();
@@ -112,7 +138,8 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 }
 
 
-void RtSceneDescriptor::AddGeomGroup(const GpuGeometryGroup& group, const GpuMesh& mesh, const glm::mat4& transform)
+void RtSceneDescriptor::AddGeomGroup(
+	const GpuGeometryGroup& group, const GpuMesh& mesh, const glm::mat4& transform, int32 callableIndex)
 {
 	auto& dstGeomGroup = g_tempGeometryGroups.emplace_back();
 
@@ -122,6 +149,7 @@ void RtSceneDescriptor::AddGeomGroup(const GpuGeometryGroup& group, const GpuMes
 
 	dstGeomGroup.indexOffset = group.indexOffset;
 	dstGeomGroup.primOffset = group.primOffset;
+	dstGeomGroup.callableIndex = callableIndex;
 
 	dstGeomGroup.transform = transform;
 	dstGeomGroup.invTransform = glm::inverse(transform);
@@ -272,7 +300,6 @@ void RtSceneDescriptor::WriteGeomGroups()
 		Device->updateDescriptorSets({ bufWrite }, nullptr);
 	}
 }
-
 
 void TopLevelAs::AddAsInstance(AsInstance&& instance)
 {

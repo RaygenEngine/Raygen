@@ -21,7 +21,7 @@ std::string shd::GenerateShaderGeneric(const std::string& inOutCode, const std::
 
 	ss << "// Raygen: Auto Generated Shader Code";
 	ss << R"(
-#version 450
+#version 460
 #extension GL_GOOGLE_include_directive : enable
 )";
 
@@ -255,13 +255,13 @@ std::string shd::GenerateDescriptorSetCode(
 	return ss.str();
 }
 
-std::string shd::GenerateRtStructCode(const DynamicDescriptorSetLayout& descriptorSetLayout, std::string_view uboName)
+std::string shd::GenerateRtStructCode(const DynamicDescriptorSetLayout& descriptorSetLayout)
 {
 	// PERF: Probably slow
 	std::stringstream ss;
 
 	if (descriptorSetLayout.uboClass.GetProperties().size()) {
-		ss << "struct UBO_DynamicMat {\n";
+		ss << "struct Material {\n";
 		for (auto& member : descriptorSetLayout.uboClass.GetProperties()) {
 			if (member.HasFlags(PropertyFlags::Transient)) {
 				continue;
@@ -278,8 +278,55 @@ std::string shd::GenerateRtStructCode(const DynamicDescriptorSetLayout& descript
 		for (auto& sampler : descriptorSetLayout.samplers2d) {
 			ss << "sampler2DRef " << sampler << ";\n";
 		}
-		ss << "} " << uboName << ";\n\n";
+		ss << "};\n\n";
 	}
+
+	return ss.str();
+}
+
+std::string shd::GenerateRtCallable(
+	const std::string& uboCode, const std::string& sharedFunctions, const std::string& mainCode)
+{
+	std::stringstream ss;
+
+	ss << "// Raygen: Auto Generated Shader Code (Custom RT)";
+	ss << R"(
+#version 460
+#line 100001
+#extension GL_GOOGLE_include_directive : enable
+#extension GL_GOOGLE_include_directive : enable
+#extension GL_EXT_ray_tracing : require
+#extension GL_EXT_scalar_block_layout : enable
+#extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_EXT_buffer_reference2 : enable
+
+#include "global.glsl"
+#include "rt-global.glsl"
+
+#include "bsdf.glsl"
+#include "onb.glsl"
+layout(set = 4, binding = 1) uniform sampler2D textureSamplers[];
+
+vec4 texture(sampler2DRef s, vec2 uv) {
+	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
+}
+
+)";
+	ss << "\n#line 200001\n";
+
+	ss << uboCode;
+	ss << "\n#line 100001\n";
+	ss << R"(
+#include "raytrace/rt-callableMat.glsl"
+layout(location = 0) callableDataInEXT CallableMatInOut cmat;
+Material ubo = cmat.materialUbo.m;
+vec2 uv = cmat.uv;
+)"
+	   << "\n";
+	ss << "\n#line 300001\n";
+	ss << sharedFunctions;
+	ss << "\n#line 1\n";
+	ss << mainCode;
 
 	return ss.str();
 }

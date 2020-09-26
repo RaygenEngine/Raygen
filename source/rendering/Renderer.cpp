@@ -51,7 +51,7 @@ void Renderer_::InitPipelines()
 	lightblendPass.MakeLayout();
 	lightblendPass.MakePipeline();
 
-	m_raytracingPass.MakeRtPipeline();
+	m_raytracingPass.PrepareAll();
 }
 
 void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)

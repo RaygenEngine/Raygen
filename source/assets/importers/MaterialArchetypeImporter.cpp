@@ -65,8 +65,8 @@ BasePodHandle MaterialArchetypeImporter::Import(const fs::path& path)
 
 	auto segments = splitOnToken(content, "//@");
 
-	CLOG_WARN(segments.size() != 7,
-		"MaterialArchetypeImporter: Segments found in {} not 7. Due to the current (unstable) implementation of the "
+	CLOG_WARN(segments.size() != 8,
+		"MaterialArchetypeImporter: Segments found in {} not 8. Due to the current (unstable) implementation of the "
 		"importer it is recommended to always have all the segments in the correct order in the archetype file.",
 		path);
 
@@ -113,6 +113,7 @@ BasePodHandle MaterialArchetypeImporter::Import(const fs::path& path)
 	importNextSegmentInto(pod->depthShader, "Depthmap Frag");
 	importNextSegmentInto(pod->gbufferVertMain, "Displacement");
 	importNextSegmentInto(pod->unlitFragMain, "Unlit Frag");
+	importNextSegmentInto(pod->raytracingMain, "Raytrace");
 
 	shd::GeneratedShaderErrors genErrors;
 

@@ -16,13 +16,12 @@
 hitAttributeEXT vec2 baryCoord;
 layout(location = 0) rayPayloadInEXT hitPayload prd;
 
-#include "raytrace/rt-indirect.glsl"
 
 struct samplerRef {
 	int index;
 };
 
-struct GltfMat {
+struct Material {
 	// factors
 	vec4 baseColorFactor;
 	vec4 emissiveFactor;
@@ -44,19 +43,25 @@ struct GltfMat {
 
 layout(buffer_reference, std430) buffer Vertices { Vertex v[]; };
 layout(buffer_reference, std430) buffer Indicies { uint i[]; };
-layout(buffer_reference, std430) buffer Material { GltfMat m; };
+
+#include "raytrace/rt-indirect.glsl"
+#include "raytrace/rt-callableMat.glsl"
+
+layout(location = 0) callableDataEXT CallableMatInOut cmat;
 
 
 struct GeometryGroup {
 	Vertices vtxBuffer;
 	Indicies indBuffer;
-	Material materialUbo;
+	MaterialBufRef materialUbo;
 
 	uint indexOffset;
 	uint primOffset;
 
 	mat4 transform;
 	mat4 invTransform;
+	
+	int callableIndex; // callableIndex == -1 is used at the moment for gltf (mainly for debugging purposes | you can skip callable materials completely)
 };
 
 layout(set = 4, binding = 0, std430) readonly buffer GeometryGroups { GeometryGroup g[]; } geomGroups;
@@ -125,28 +130,42 @@ void main() {
 
 	mat3 TBN = mat3(Tg, Bg, Ng);
 
+
 	// CALLABLE SECTION BEGIN
-	GltfMat mat = gg.materialUbo.m;
+	cmat.uv = uv;
+	cmat.materialUbo = gg.materialUbo;
 
-	// sample material textures
-	vec4 sampledBaseColor = texture(mat.baseColor, uv) * mat.baseColorFactor;
-	vec4 sampledNormal = texture(mat.normal, uv) * mat.normalScale;
-	vec4 sampledMetallicRoughness = texture(mat.metallicRough, uv);
-	vec4 sampledEmissive = texture(mat.emissive, uv) * mat.emissiveFactor;
-	
-	vec3 Ns = normalize(TBN * (sampledNormal.rgb * 2.0 - 1.0));
+	if (gg.callableIndex < 0) {
+		Material mat = gg.materialUbo.m;
 
-	// final material values
-	vec3 baseColor = sampledBaseColor.rgb;
-	float metallic = sampledMetallicRoughness.b * mat.metallicFactor;
-	float roughness = sampledMetallicRoughness.g * mat.roughnessFactor;
-	float reflectance = 0.5;
+		// sample material textures
+		vec4 sampledBaseColor = texture(mat.baseColor, uv) * mat.baseColorFactor;
+		vec4 sampledNormal = texture(mat.normal, uv) * mat.normalScale;
+		vec4 sampledMetallicRoughness = texture(mat.metallicRough, uv);
+		vec4 sampledEmissive = texture(mat.emissive, uv) * mat.emissiveFactor;
 
-    // remapping
-	FragBrdfInfo brdfInfo;
-    brdfInfo.albedo = (1.0 - metallic) * baseColor;
-	brdfInfo.f0 =  vec3(0.16 * reflectance * reflectance * (1.0 - metallic)) + baseColor * metallic;
-	brdfInfo.a = roughness * roughness;
+
+		// final material values
+		vec3 baseColor = sampledBaseColor.rgb;
+		float metallic = sampledMetallicRoughness.b * mat.metallicFactor;
+		float roughness = sampledMetallicRoughness.g * mat.roughnessFactor;
+		float reflectance = 0.5;
+
+		// remapping
+		cmat.brdfInfo.albedo = (1.0 - metallic) * baseColor;
+		cmat.brdfInfo.f0 = vec3(0.16 * reflectance * reflectance * (1.0 - metallic)) + baseColor * metallic;
+		cmat.brdfInfo.a = roughness * roughness;
+		cmat.localNormal = sampledNormal.rgb;
+		cmat.emissive = sampledEmissive.rgb;
+	}
+	else {
+		executeCallableEXT(gg.callableIndex, 0);
+	}
+
+	vec3 Ns = normalize(TBN * (cmat.localNormal * 2.0 - 1.0));
+	FragBrdfInfo brdfInfo = cmat.brdfInfo;
+
+
 	// CALLABLE SECTION END
 
 	vec3 hitPoint = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
@@ -166,8 +185,8 @@ void main() {
 		// same hemisphere
 		float NoV = max(Ndot(V), BIAS);
 
-		if (sum(sampledEmissive.xyz) > BIAS) {
-			prd.radiance = sampledEmissive.xyz;
+		if (sum(cmat.emissive.xyz) > BIAS) {
+			prd.radiance = cmat.emissive.xyz;
 			return;
 		}
 		

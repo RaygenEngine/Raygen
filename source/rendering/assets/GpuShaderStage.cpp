@@ -29,6 +29,7 @@ void GpuShaderStage::Update(const AssetUpdateInfo& info)
 {
 	auto podPtr = podHandle.Lock();
 	auto& binary = podPtr->binary;
+	stage = shd::StageToVulkan(podPtr->stage);
 
 	if (binary.empty()) {
 		if (!info.HasFlag("editor")) {
@@ -43,7 +44,7 @@ void GpuShaderStage::Update(const AssetUpdateInfo& info)
 		.setCodeSize(binary.size() * 4) //
 		.setPCode(binary.data());
 	module = Device->createShaderModuleUnique(createInfo);
-	shaderStageCreateInfo.setStage(shd::StageToVulkan(podPtr->stage)).setModule(*module).setPName("main");
+	shaderStageCreateInfo.setStage(stage).setModule(*module).setPName("main");
 
 	DEBUG_NAME(module, AssetRegistry::GetPodUri(podHandle));
 

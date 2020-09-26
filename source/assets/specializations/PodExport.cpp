@@ -34,6 +34,8 @@ inline void ExportPod(MaterialArchetype* src, const fs::path& path)
 	f << src->gbufferVertMain;
 	f << "//@ Unlit Frag Section:\n";
 	f << src->unlitFragMain;
+	f << "//@ Raytrace Section:\n";
+	f << src->raytracingMain;
 }
 
 template<>

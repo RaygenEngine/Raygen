@@ -44,6 +44,10 @@ std::string GenerateUnlitFrag(
 std::string GenerateDescriptorSetCode(
 	const DynamicDescriptorSetLayout& descriptorSetLayout, std::string_view uboName, uint32 setIndex = 0);
 
-std::string GenerateRtStructCode(const DynamicDescriptorSetLayout& descriptorSetLayout, std::string_view uboName);
+std::string GenerateRtStructCode(const DynamicDescriptorSetLayout& descriptorSetLayout);
+
+std::string GenerateRtCallable(
+	const std::string& uboCode, const std::string& sharedFunctions, const std::string& mainCode);
+
 
 } // namespace shd

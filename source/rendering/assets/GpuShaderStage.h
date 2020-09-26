@@ -9,6 +9,7 @@ struct GpuShaderStage : public GpuAssetTemplate<ShaderStage> {
 
 	vk::PipelineShaderStageCreateInfo shaderStageCreateInfo{};
 
+	vk::ShaderStageFlagBits stage;
 
 	GpuShaderStage(PodHandle<ShaderStage> podHandle);
 

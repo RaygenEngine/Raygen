@@ -21,6 +21,9 @@
 EShLanguage FindLanguage(const std::string& filename);
 EShLanguage LangFromStage(ShaderStageType type);
 
+ConsoleVariable<bool> reportEverything{ "a.shaderCompiler.reportEverything", false,
+	"Enables printing errors for EVERY spv compilation." };
+
 std::vector<uint32> CompileImpl(
 	const std::string& code, const std::string& shadername, TextCompilerErrors* outError, EShLanguage stage)
 {
@@ -32,6 +35,10 @@ std::vector<uint32> CompileImpl(
 			LOG_ERROR("{}", er);
 		}
 		else {
+			if (*reportEverything) {
+				auto er = fmt::format("\nGLSL Compiler Error: {}.\n===\n{}\n====", shadername, shader.getInfoLog());
+				LOG_ERROR("{}", er);
+			}
 			// auto er = fmt::format("\nGLSL Compiler Error: {}.\n===\n{}\n====", shadername, shader.getInfoLog());
 
 			// PERF: can be done with just string_views

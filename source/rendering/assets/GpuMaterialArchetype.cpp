@@ -219,4 +219,11 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 			unlit = std::move(info);
 		}
 	}
+
+	// Raytracing Callable Shader
+	{
+		if (arch->raytracingBinary.size() > 0) {
+			rtCallable = CreateShaderModule(arch->raytracingBinary);
+		}
+	}
 }

@@ -11,6 +11,7 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/util/WriteDescriptorSets.h"
+#include "rendering/assets/GpuMaterialArchetype.h"
 
 ConsoleVariable<int32> console_rtDepth{ "rt.depth", 2, "Set rt depth" };
 ConsoleVariable<int32> console_rtSamples{ "rt.samples", 1, "Set rt samples" };
@@ -33,9 +34,9 @@ static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
-void RaytracingPass::MakeRtPipeline()
-{
 
+void RaytracingPass::PrepareAll()
+{
 	std::array layouts{
 		Layouts->renderAttachmentsLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
@@ -44,53 +45,6 @@ void RaytracingPass::MakeRtPipeline()
 		Layouts->bufferAndSamplersDescLayout.handle(),
 		Layouts->bufferAndSamplersDescLayout.handle(),
 	};
-
-	// all rt shaders here
-	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/test.shader");
-	shader.onCompileRayTracing = [&]() {
-		MakeRtPipeline();
-	};
-
-	m_rtShaderGroups.clear();
-
-	// Indices within this vector will be used as unique identifiers for the shaders in the Shader Binding Table.
-	std::vector<vk::PipelineShaderStageCreateInfo> stages;
-
-	// Raygen
-	vk::RayTracingShaderGroupCreateInfoKHR rg{};
-	rg.setType(vk::RayTracingShaderGroupTypeKHR::eGeneral) //
-		.setGeneralShader(VK_SHADER_UNUSED_KHR)
-		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
-		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
-		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
-	stages.push_back({ {}, vk::ShaderStageFlagBits::eRaygenKHR, *shader.rayGen.Lock().module, "main" });
-	rg.setGeneralShader(static_cast<uint32>(stages.size() - 1));
-
-	m_rtShaderGroups.push_back(rg);
-
-	// Miss
-	vk::RayTracingShaderGroupCreateInfoKHR mg{};
-	mg.setType(vk::RayTracingShaderGroupTypeKHR::eGeneral) //
-		.setGeneralShader(VK_SHADER_UNUSED_KHR)
-		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
-		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
-		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
-	stages.push_back({ {}, vk::ShaderStageFlagBits::eMissKHR, *shader.miss.Lock().module, "main" });
-	mg.setGeneralShader(static_cast<uint32>(stages.size() - 1));
-
-	m_rtShaderGroups.push_back(mg);
-
-	vk::RayTracingShaderGroupCreateInfoKHR hg{};
-	hg.setType(vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup) //
-		.setGeneralShader(VK_SHADER_UNUSED_KHR)
-		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
-		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
-		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
-	stages.push_back({ {}, vk::ShaderStageFlagBits::eClosestHitKHR, *shader.closestHit.Lock().module, "main" });
-	hg.setClosestHitShader(static_cast<uint32>(stages.size() - 1));
-
-	m_rtShaderGroups.push_back(hg);
-
 
 	// pipeline layout
 	vk::PushConstantRange pushConstantRange{};
@@ -107,29 +61,79 @@ void RaytracingPass::MakeRtPipeline()
 
 	m_rtPipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
-	// Assemble the shader stages and recursion depth info into the ray tracing pipeline
-	vk::RayTracingPipelineCreateInfoKHR rayPipelineInfo{};
-	rayPipelineInfo
-		// Stages are shaders
-		.setStages(stages);
-
-	rayPipelineInfo
-		// 1-raygen, n-miss, n-(hit[+anyhit+intersect])
-		.setGroups(m_rtShaderGroups)
-		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop formulation
-		// instead.
-
-		.setMaxRecursionDepth(10) // Ray depth TODO:
-		.setLayout(m_rtPipelineLayout.get());
-	m_rtPipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
-
-
-	CreateRtShaderBindingTable();
-
+	UpdateRtPipeline();
 
 	// NEXT:
 	svgfPass.MakeLayout();
 	svgfPass.MakePipeline();
+}
+
+void RaytracingPass::UpdateRtPipeline(std::vector<GpuHandle<MaterialArchetype>>&& materials)
+{
+	if (!materials.empty()) {
+		m_callableMats = std::move(materials);
+	}
+	if (m_callableMats.empty()) {
+		//	return;
+	}
+
+	// all rt shaders here
+	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/test.shader");
+	shader.onCompileRayTracing = [&]() {
+		UpdateRtPipeline();
+	};
+
+	m_rtShaderGroups.clear();
+
+	// Indices within this vector will be used as unique identifiers for the shaders in the Shader Binding Table.
+	std::vector<vk::PipelineShaderStageCreateInfo> stages;
+
+
+	auto addStage = [&](vk::ShaderStageFlagBits stage, vk::ShaderModule shMmodule,
+						vk::RayTracingShaderGroupTypeKHR type = vk::RayTracingShaderGroupTypeKHR::eGeneral) {
+		vk::RayTracingShaderGroupCreateInfoKHR groupInfo{};
+		groupInfo
+			.setType(type) //
+			.setGeneralShader(VK_SHADER_UNUSED_KHR)
+			.setClosestHitShader(VK_SHADER_UNUSED_KHR)
+			.setAnyHitShader(VK_SHADER_UNUSED_KHR)
+			.setIntersectionShader(VK_SHADER_UNUSED_KHR);
+
+		stages.push_back({ {}, stage, shMmodule, "main" });
+
+		if (stage == vk::ShaderStageFlagBits::eClosestHitKHR) {
+			groupInfo.setClosestHitShader(static_cast<uint32>(stages.size() - 1));
+		}
+		else {
+			groupInfo.setGeneralShader(static_cast<uint32>(stages.size() - 1));
+		}
+
+		m_rtShaderGroups.push_back(groupInfo);
+	};
+
+	auto addStageFromHandle = [&](GpuHandle<ShaderStage> shaderStageHandle,
+								  vk::RayTracingShaderGroupTypeKHR type = vk::RayTracingShaderGroupTypeKHR::eGeneral) {
+		addStage(shaderStageHandle.Lock().stage, *shaderStageHandle.Lock().module, type);
+	};
+
+	addStageFromHandle(shader.rayGen);
+	addStageFromHandle(shader.miss);
+	addStageFromHandle(shader.closestHit, vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup);
+
+	for (auto& mat : m_callableMats) {
+		addStage(vk::ShaderStageFlagBits::eCallableKHR, *mat.Lock().rtCallable);
+	}
+
+	vk::RayTracingPipelineCreateInfoKHR rayPipelineInfo{};
+	rayPipelineInfo
+		.setStages(stages)           // Stages are shaders
+		.setGroups(m_rtShaderGroups) // 1-raygen, n-miss, n-(hit[+anyhit+intersect])
+		.setMaxRecursionDepth(5)     // Ray depth TODO:
+		.setLayout(m_rtPipelineLayout.get());
+
+	m_rtPipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
+
+	CreateRtShaderBindingTable();
 }
 
 void RaytracingPass::CreateRtShaderBindingTable()
@@ -168,6 +172,8 @@ ConsoleVariable<float> console_rtRenderScale = { "rt.scale", 1.f, "Set rt render
 void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Renderer_* renderer)
 {
 	// TODO: secondary command buffers?
+
+	auto& rtSceneDesc = sceneDesc.scene->tlas.sceneDesc;
 
 	m_indirectResult[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
 		vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
@@ -222,6 +228,9 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 	vk::DeviceSize hitGroupOffset = 2u * progSize; // Jump over the previous shaders
 	vk::DeviceSize hitGroupStride = progSize;
 
+	// Call index
+	vk::DeviceSize callGroupOffset = 3u * progSize; // Jump over the previous shaders
+	vk::DeviceSize callGroupStride = progSize;
 
 	// We can finally call traceRaysKHR that will add the ray tracing launch in the command buffer. Note that the
 	// SBT buffer is mentioned several times. This is due to the possibility of separating the SBT into several
@@ -241,7 +250,9 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 	const vk::StridedBufferRegionKHR missShaderBindingTable = { m_rtSBTBuffer.handle(), missOffset, progSize, sbtSize };
 	const vk::StridedBufferRegionKHR hitShaderBindingTable
 		= { m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
-	const vk::StridedBufferRegionKHR callableShaderBindingTable;
+
+	const vk::StridedBufferRegionKHR callableShaderBindingTable
+		= { m_rtSBTBuffer.handle(), callGroupOffset, callGroupStride, sbtSize };
 
 	auto& extent = renderer->m_extent;
 

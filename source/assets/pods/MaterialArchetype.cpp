@@ -91,23 +91,31 @@ bool MaterialArchetype::CompileAll(
 	outErrors.editorErrors.clear();
 
 
-	auto generateShader = [&](const std::string& mainCode, decltype(&shd::GenerateDepthFrag) generatorFunction,
-							  const std::string& editorName, ShaderStageType stage) {
-		std::string code = (*generatorFunction)(descSetCode, sharedFunctions, mainCode);
+	auto generateShader
+		= [&](const std::string& mainCode, decltype(&shd::GenerateDepthFrag) generatorFunction,
+			  const std::string& editorName, ShaderStageType stage, std::string* descSetCodeOpt = nullptr) {
+			  std::string code;
+			  if (descSetCodeOpt) {
+				  code = (*generatorFunction)(*descSetCodeOpt, sharedFunctions, mainCode);
+			  }
+			  else {
+				  code = (*generatorFunction)(descSetCode, sharedFunctions, mainCode);
+			  }
 
-		if (outputToConsole) {
-			LOG_REPORT("{} SHADER: === \n{}", editorName, code);
-		}
 
-		auto errors = &outErrors.editorErrors.insert({ editorName, {} }).first->second;
-		auto shaderBinary = ShaderCompiler::Compile(code, stage, errors);
+			  if (outputToConsole) {
+				  LOG_REPORT("{} SHADER: === \n{}", editorName, code);
+			  }
 
-		if (!shaderBinary.size()) {
-			RerouteShaderErrors(outErrors);
-			return shaderBinary;
-		}
-		return shaderBinary;
-	};
+			  auto errors = &outErrors.editorErrors.insert({ editorName, {} }).first->second;
+			  auto shaderBinary = ShaderCompiler::Compile(code, stage, errors);
+
+			  if (!shaderBinary.size()) {
+				  RerouteShaderErrors(outErrors);
+				  return shaderBinary;
+			  }
+			  return shaderBinary;
+		  };
 
 
 	auto depthFragBin = generateShader(depthShader, &shd::GenerateDepthFrag, "Depth", ShaderStageType::Fragment);
@@ -128,8 +136,21 @@ bool MaterialArchetype::CompileAll(
 	}
 
 
-	RerouteShaderErrors(outErrors);
+	// WIP:
+	if (raytracingMain.size() > 2) {
+		std::string dscSet = shd::GenerateRtStructCode(newLayout);
+		auto rtBin
+			= generateShader(raytracingMain, &shd::GenerateRtCallable, "Raytrace", ShaderStageType::Callable, &dscSet);
+		if (!rtBin.empty()) {
+			raytracingBinary.swap(rtBin);
+		}
+	}
+	else {
+		raytracingBinary.clear();
+	}
 
+
+	RerouteShaderErrors(outErrors);
 
 	ChangeLayout(std::move(newLayout));
 
