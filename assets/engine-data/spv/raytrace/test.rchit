@@ -43,9 +43,22 @@ struct Material {
 
 layout(buffer_reference, std430) buffer Vertices { Vertex v[]; };
 layout(buffer_reference, std430) buffer Indicies { uint i[]; };
+layout(buffer_reference, std430) buffer MaterialBufRef { Material m; };
 
 #include "raytrace/rt-indirect.glsl"
 #include "raytrace/rt-callableMat.glsl"
+
+struct CallableMatInOut
+{
+	int matid;
+	vec2 uv; // Incoming UV
+	
+	FragBrdfInfo brdfInfo;
+	
+	vec3 emissive;
+	vec3 localNormal;
+};
+
 
 layout(location = 0) callableDataEXT CallableMatInOut cmat;
 
@@ -133,7 +146,7 @@ void main() {
 
 	// CALLABLE SECTION BEGIN
 	cmat.uv = uv;
-	cmat.materialUbo = gg.materialUbo;
+	cmat.matid = gl_InstanceID;
 
 	if (gg.callableIndex < 0) {
 		Material mat = gg.materialUbo.m;
@@ -159,7 +172,13 @@ void main() {
 		cmat.emissive = sampledEmissive.rgb;
 	}
 	else {
-		executeCallableEXT(gg.callableIndex, 0);
+		executeCallableEXT(0, 0);
+	}
+
+
+	if (sum(cmat.emissive.xyz) > BIAS) {
+		prd.radiance = cmat.emissive.xyz;
+		return;
 	}
 
 	vec3 Ns = normalize(TBN * (cmat.localNormal * 2.0 - 1.0));
@@ -185,10 +204,7 @@ void main() {
 		// same hemisphere
 		float NoV = max(Ndot(V), BIAS);
 
-		if (sum(cmat.emissive.xyz) > BIAS) {
-			prd.radiance = cmat.emissive.xyz;
-			return;
-		}
+
 		
 		// DIRECT
 
@@ -254,6 +270,8 @@ void main() {
 	radiance += TraceIndirect(fragSpace, brdfInfo);
 	prd.radiance = radiance;
 }
+
+
 
 
 

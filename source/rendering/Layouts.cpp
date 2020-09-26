@@ -160,8 +160,10 @@ Layouts_::Layouts_()
 	accelLayout.Generate();
 
 	// rt
-	rtTriangleGeometry.AddBinding(vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR);
-	rtTriangleGeometry.AddBinding(vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR);
+	rtTriangleGeometry.AddBinding(
+		vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR | eCallableKHR);
+	rtTriangleGeometry.AddBinding(
+		vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR | eCallableKHR);
 	rtTriangleGeometry.Generate();
 
 
@@ -170,10 +172,10 @@ Layouts_::Layouts_()
 	imageDebugDescLayout.Generate();
 
 
-	bufferAndSamplersDescLayout.AddBinding(eStorageBuffer, eRaygenKHR | eClosestHitKHR | eAnyHitKHR);
+	bufferAndSamplersDescLayout.AddBinding(eStorageBuffer, eRaygenKHR | eClosestHitKHR | eAnyHitKHR | eCallableKHR);
 
-	bufferAndSamplersDescLayout.AddBinding(
-		eCombinedImageSampler, eRaygenKHR | eClosestHitKHR | eAnyHitKHR, 1024u, eVariableDescriptorCount);
+	bufferAndSamplersDescLayout.AddBinding(eCombinedImageSampler,
+		eRaygenKHR | eClosestHitKHR | eAnyHitKHR | eCallableKHR, 1024u, eVariableDescriptorCount);
 
 	bufferAndSamplersDescLayout.Generate();
 

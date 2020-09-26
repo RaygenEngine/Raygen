@@ -36,7 +36,8 @@ void GpuShader::Update(const AssetUpdateInfo& info)
 		}
 	}
 
-	AddDependencies(podPtr->rayGen, podPtr->intersect, podPtr->anyHit, podPtr->closestHit, podPtr->miss);
+	AddDependencies(
+		podPtr->rayGen, podPtr->intersect, podPtr->anyHit, podPtr->closestHit, podPtr->miss, podPtr->callable);
 	// TODO: Fix this
 	// To Solve Shaders:
 	// Use an array for all shader stages, use the enum of the stage as index
@@ -46,6 +47,7 @@ void GpuShader::Update(const AssetUpdateInfo& info)
 	MAKE_SHADER(anyHit);
 	MAKE_SHADER(closestHit);
 	MAKE_SHADER(miss);
+	MAKE_SHADER(callable);
 #undef MAKE_SHADER
 
 	if (onCompileRayTracing) {

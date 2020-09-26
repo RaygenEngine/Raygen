@@ -119,6 +119,7 @@ void RaytracingPass::UpdateRtPipeline(std::vector<GpuHandle<MaterialArchetype>>&
 	addStageFromHandle(shader.rayGen);
 	addStageFromHandle(shader.miss);
 	addStageFromHandle(shader.closestHit, vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup);
+	addStageFromHandle(shader.callable);
 
 	for (auto& mat : m_callableMats) {
 		addStage(vk::ShaderStageFlagBits::eCallableKHR, *mat.Lock().rtCallable);
