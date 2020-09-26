@@ -71,6 +71,7 @@ namespace {
 			}
 			else if (str::equal(parts[0], "sampler2d")) {
 				layout.samplers2d.push_back(id);
+				layout.uboClass.AddProperty<int>(id, PropertyFlags::Transient);
 			}
 			else {
 				errors.emplace(lineNum, "Unknown variable type.");

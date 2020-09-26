@@ -230,7 +230,11 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 	// represent the total number of threads. Since we want to trace one ray per pixel, the grid size has the width
 	// and height of the output image, and a depth of 1.
 
-	vk::DeviceSize sbtSize = progSize * (vk::DeviceSize)m_rtShaderGroups.size();
+	vk::DeviceSize sbtSize
+		= progSize
+		  * (vk::DeviceSize)
+				m_rtShaderGroups.size(); // TODO: Size is used incorrectly here. the size of stridedBufferRegion is
+										 // calculated from the Offset position not from the start of the buffer.
 
 	const vk::StridedBufferRegionKHR raygenShaderBindingTable
 		= { m_rtSBTBuffer.handle(), rayGenOffset, progSize, sbtSize };
@@ -238,7 +242,6 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 	const vk::StridedBufferRegionKHR hitShaderBindingTable
 		= { m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
 	const vk::StridedBufferRegionKHR callableShaderBindingTable;
-
 
 	auto& extent = renderer->m_extent;
 

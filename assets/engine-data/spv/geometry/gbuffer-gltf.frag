@@ -41,6 +41,12 @@ layout(set = 0, binding = 0) uniform UBO_Material {
 	// alpha mask
 	float alphaCutoff;
 	int mask;
+
+	sampler2DRef baseColorSampler;
+	sampler2DRef metallicRoughnessSampler;
+	sampler2DRef occlusionSampler;
+	sampler2DRef normalSampler;
+	sampler2DRef emissiveSampler;
 } mat;
 
 layout(set = 0, binding = 1) uniform sampler2D baseColorSampler;

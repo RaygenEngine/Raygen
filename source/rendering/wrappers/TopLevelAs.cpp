@@ -77,7 +77,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 		if (!geom) [[unlikely]] {
 			continue;
 		}
-		auto transform = geom->transform;
+		auto& transform = geom->transform;
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
 			if (gg.material.Lock().archetype != StdAssets::GltfArchetype()) {
@@ -118,7 +118,7 @@ void RtSceneDescriptor::AddGeomGroup(const GpuGeometryGroup& group, const GpuMes
 
 	dstGeomGroup.indBuffer = mesh.combinedIndexBuffer.address();
 	dstGeomGroup.vtxBuffer = mesh.combinedVertexBuffer.address();
-	dstGeomGroup.materialUbo = group.material.Lock().rtMaterialBuffer.address();
+	dstGeomGroup.materialUbo = group.material.Lock().uboBuf.address();
 
 	dstGeomGroup.indexOffset = group.indexOffset;
 	dstGeomGroup.primOffset = group.primOffset;

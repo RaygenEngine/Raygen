@@ -231,6 +231,9 @@ std::string shd::GenerateDescriptorSetCode(
 		ss << "layout(set = " << setIndex << ", binding = " << binding << ") uniform UBO_Dynamic" << setIndex << " {\n";
 		binding++;
 		for (auto& member : descriptorSetLayout.uboClass.GetProperties()) {
+			if (member.HasFlags(PropertyFlags::Transient)) {
+				continue;
+			}
 			if (member.GetType() != mti::GetTypeId<glm::vec4>()) {
 				ss << "\t" << member.GetType().name() << " " << member.GetName() << ";\n";
 			}
@@ -238,11 +241,44 @@ std::string shd::GenerateDescriptorSetCode(
 				ss << "\tvec4 " << member.GetName() << ";\n";
 			}
 		}
+		ss << "\n";
+		for (auto& sampler : descriptorSetLayout.samplers2d) {
+			ss << "sampler2DRef " << sampler << ";\n";
+		}
 		ss << "} " << uboName << ";\n\n";
 	}
 
 	for (auto& sampler : descriptorSetLayout.samplers2d) {
 		ss << "layout(set = " << setIndex << ", binding = " << binding++ << ") uniform sampler2D " << sampler << ";\n";
+	}
+
+	return ss.str();
+}
+
+std::string shd::GenerateRtStructCode(const DynamicDescriptorSetLayout& descriptorSetLayout, std::string_view uboName)
+{
+	// PERF: Probably slow
+	std::stringstream ss;
+
+	if (descriptorSetLayout.uboClass.GetProperties().size()) {
+		ss << "struct UBO_DynamicMat {\n";
+		for (auto& member : descriptorSetLayout.uboClass.GetProperties()) {
+			if (member.HasFlags(PropertyFlags::Transient)) {
+				continue;
+			}
+			if (member.GetType() != mti::GetTypeId<glm::vec4>()) {
+				ss << "\t" << member.GetType().name() << " " << member.GetName() << ";\n";
+			}
+			else {
+				ss << "\tvec4 " << member.GetName() << ";\n";
+			}
+		}
+		ss << "\n";
+
+		for (auto& sampler : descriptorSetLayout.samplers2d) {
+			ss << "sampler2DRef " << sampler << ";\n";
+		}
+		ss << "} " << uboName << ";\n\n";
 	}
 
 	return ss.str();

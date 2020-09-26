@@ -125,6 +125,7 @@ void main() {
 
 	mat3 TBN = mat3(Tg, Bg, Ng);
 
+	// CALLABLE SECTION BEGIN
 	GltfMat mat = gg.materialUbo.m;
 
 	// sample material textures
@@ -146,6 +147,7 @@ void main() {
     brdfInfo.albedo = (1.0 - metallic) * baseColor;
 	brdfInfo.f0 =  vec3(0.16 * reflectance * reflectance * (1.0 - metallic)) + baseColor * metallic;
 	brdfInfo.a = roughness * roughness;
+	// CALLABLE SECTION END
 
 	vec3 hitPoint = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 

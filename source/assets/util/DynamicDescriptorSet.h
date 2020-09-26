@@ -34,7 +34,25 @@ struct DynamicDescriptorSet {
 	void SwapLayout(const DynamicDescriptorSetLayout& oldLayout, const DynamicDescriptorSetLayout& newLayout);
 
 	template<typename Archive>
-	void serialize(Archive& ar)
+	void load(Archive& ar)
+	{
+		ar(samplers2d, uboData);
+
+		// NEXT: Extremelly bad way of deserializing back into image index
+		using HandleType = int32;
+		byte* revCurs = &uboData.back() + 1;
+		constexpr int32 samplerHandleStride = sizeof(HandleType);
+
+		revCurs -= samplerHandleStride;
+
+		for (int32 i = static_cast<int32>(samplers2d.size()) - 1; i >= 0; --i) {
+			*reinterpret_cast<HandleType*>(revCurs) = static_cast<HandleType>(samplers2d[i].uid);
+			revCurs -= samplerHandleStride;
+		}
+	}
+
+	template<typename Archive>
+	void save(Archive& ar) const
 	{
 		ar(samplers2d, uboData);
 	}

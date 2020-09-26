@@ -35,7 +35,6 @@ void RerouteShaderErrors(shd::GeneratedShaderErrors& errors)
 }
 } // namespace
 
-
 void MaterialArchetype::MakeGltfArchetypeInto(MaterialArchetype* mat)
 {
 	mat->gbufferFragBinary = ShaderCompiler::Compile("engine-data/spv/geometry/gbuffer-gltf.frag");
@@ -59,6 +58,12 @@ void MaterialArchetype::MakeGltfArchetypeInto(MaterialArchetype* mat)
 	cl.AddProperty<float>("occlusionStrength");
 	cl.AddProperty<float>("alphaCutoff");
 	cl.AddProperty<int>("mask");
+
+	cl.AddProperty<int>("baseColorSampler", PropertyFlags::Transient);
+	cl.AddProperty<int>("metallicRoughnessSampler", PropertyFlags::Transient);
+	cl.AddProperty<int>("occlusionSampler", PropertyFlags::Transient);
+	cl.AddProperty<int>("normalSampler", PropertyFlags::Transient);
+	cl.AddProperty<int>("emissiveSampler", PropertyFlags::Transient);
 }
 
 void MaterialArchetype::MakeDefaultInto(MaterialArchetype* mat)
@@ -172,6 +177,9 @@ std::stringstream DynamicDescriptorSetLayout::GetUniformText() const
 	std::stringstream uboText;
 
 	for (auto& prop : uboClass.GetProperties()) {
+		if (prop.HasFlags(PropertyFlags::Transient)) {
+			continue;
+		}
 		if (prop.IsA<glm::vec4>()) {
 			if (prop.HasFlags(PropertyFlags::Color)) {
 				uboText << "col4 ";

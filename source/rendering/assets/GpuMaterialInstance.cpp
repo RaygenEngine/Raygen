@@ -48,8 +48,10 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 		if (gpuArch.descLayout.HasUbo() && uboSize > 0) {
 
 			if (uboSize != uboBuf.size) {
-				uboBuf = RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
-					vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+				uboBuf = RBuffer{ uboSize,
+					vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+					vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+					vk::MemoryAllocateFlagBits::eDeviceAddress };
 			}
 			uboBuf.UploadData(matInst->descriptorSet.uboData);
 
@@ -138,7 +140,6 @@ void GpuMaterialInstance::UpdateRtMaterial(const AssetUpdateInfo& info)
 
 
 	rtMaterialBuffer.UploadData(matInst->descriptorSet.uboData);
-	// rtMaterialBuffer.CopyBuffer(uboBuf);
 
 
 	size_t cursor = offsetof(RtGltfMat, baseColor);
