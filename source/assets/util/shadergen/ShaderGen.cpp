@@ -42,20 +42,29 @@ std::string shd::GenerateGbufferFrag(
 {
 	return GenerateShaderGeneric(
 		R"(
+#include "global.glsl"
 // out
-layout(location = 0) out vec4 gNormal;
+layout (location = 0) out vec4 gNormal;
 // rgb: albedo, a: opacity
-layout(location = 1) out vec4 gAlbedoOpacity;
-// r: metallic, g: roughness, b: reflectance, a: occlusion strength
-layout(location = 2) out vec4 gSurface;
-layout(location = 3) out vec4 gEmissive;
+layout (location = 1) out vec4 gAlbedo;
+// r: f0, a: a (roughness^2)
+layout (location = 2) out vec4 gSpecularColor;
+// rgb: emissive, a: occlusion
+layout (location = 3) out vec4 gEmissive;
+
+layout (location = 4) out vec4 gVelocity;
+layout (location = 5) out vec4 gUVDrawIndex;
+
 
 // in
-layout(location = 0) in Data
-{
+layout(location=0) in Data
+{ 
 	vec2 uv;
 	mat3 TBN;
-    vec3 fragPos;
+	vec3 fragPos;
+	vec4 clipPos;
+	vec4 prevClipPos;
+	float drawIndex;
 };
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
@@ -107,8 +116,8 @@ void main() {
 
 
 	return GenerateShaderGeneric(R"(
+#include "global.glsl"
 // out
-
 layout(location=0) out Data
 { 
 	vec2 uv;
@@ -149,6 +158,7 @@ std::string shd::GenerateDepthFrag(
 	const std::string& descSetCode, const std::string& sharedFunctions, const std::string& mainCode)
 {
 	return GenerateShaderGeneric(R"(
+#include "global.glsl"
 layout(location=0) in vec2 uv;
 )",
 		descSetCode, sharedFunctions, mainCode);
@@ -170,6 +180,7 @@ void main() {
 )";
 
 	return GenerateShaderGeneric(R"(
+#include "global.glsl"
 // out
 
 layout(location = 0) out vec2 uv;
@@ -194,6 +205,7 @@ std::string shd::GenerateUnlitFrag(
 {
 	return GenerateShaderGeneric(
 		R"(
+#include "global.glsl"
 // out
 layout(location = 0) out vec4 outColor;
 
@@ -302,24 +314,16 @@ std::string shd::GenerateRtCallable(
 
 #include "global.glsl"
 #include "rt-global.glsl"
-
-#include "bsdf.glsl"
-#include "onb.glsl"
-layout(set = 4, binding = 1) uniform sampler2D textureSamplers[];
-
-vec4 texture(sampler2DRef s, vec2 uv) {
-	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
-}
-
+#include "global-shading.glsl"
 )";
 	ss << "\n#line 200001\n";
-
 	ss << uboCode;
 	ss << "\n#line 100001\n";
 	ss << R"(
 #include "raytrace/rt-callableMat.glsl"
 layout(location = 0) callableDataInEXT CallableMatInOut cmat;
-Material ubo = cmat.materialUbo.m;
+
+Material mat = geomGroups.g[nonuniformEXT(cmat.matid)].materialUbo.m;
 vec2 uv = cmat.uv;
 )"
 	   << "\n";

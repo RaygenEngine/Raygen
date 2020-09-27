@@ -17,9 +17,6 @@ hitAttributeEXT vec2 baryCoord;
 layout(location = 0) rayPayloadInEXT hitPayload prd;
 
 
-struct samplerRef {
-	int index;
-};
 
 struct Material {
 	// factors
@@ -34,58 +31,20 @@ struct Material {
 	float alphaCutoff;
 	int mask;
 
-	samplerRef baseColor;
-	samplerRef metallicRough;
-	samplerRef occlusion;
-	samplerRef normal;
-	samplerRef emissive;
+	sampler2DRef baseColor;
+	sampler2DRef metallicRough;
+	sampler2DRef occlusion;
+	sampler2DRef normal;
+	sampler2DRef emissive;
 };
 
-layout(buffer_reference, std430) buffer Vertices { Vertex v[]; };
-layout(buffer_reference, std430) buffer Indicies { uint i[]; };
-layout(buffer_reference, std430) buffer MaterialBufRef { Material m; };
-
-#include "raytrace/rt-indirect.glsl"
-#include "raytrace/rt-callableMat.glsl"
-
-struct CallableMatInOut
-{
-	int matid;
-	vec2 uv; // Incoming UV
-	
-	FragBrdfInfo brdfInfo;
-	
-	vec3 emissive;
-	vec3 localNormal;
-};
-
+#include "raytrace/rt-indirect.glsl"    // DESC SET 3
+#include "raytrace/rt-callableMat.glsl" // DESC SET 4
 
 layout(location = 0) callableDataEXT CallableMatInOut cmat;
 
-
-struct GeometryGroup {
-	Vertices vtxBuffer;
-	Indicies indBuffer;
-	MaterialBufRef materialUbo;
-
-	uint indexOffset;
-	uint primOffset;
-
-	mat4 transform;
-	mat4 invTransform;
-	
-	int callableIndex; // callableIndex == -1 is used at the moment for gltf (mainly for debugging purposes | you can skip callable materials completely)
-};
-
-layout(set = 4, binding = 0, std430) readonly buffer GeometryGroups { GeometryGroup g[]; } geomGroups;
-layout(set = 4, binding = 1) uniform sampler2D textureSamplers[];
-
 layout(set = 5, binding = 0, std430) readonly buffer Spotlights { Spotlight light[]; } spotlights;
 layout(set = 5, binding = 1) uniform sampler2DShadow spotlightShadowmap[];
-
-vec4 texture(samplerRef s, vec2 uv) {
-	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
-}
 
 OldVertex fromVertex(Vertex p) {
 	OldVertex vtx;
@@ -148,7 +107,7 @@ void main() {
 	cmat.uv = uv;
 	cmat.matid = gl_InstanceID;
 
-	if (gg.callableIndex < 0) {
+	if (gg.callableIndex <= 0) {
 		Material mat = gg.materialUbo.m;
 
 		// sample material textures
@@ -172,7 +131,7 @@ void main() {
 		cmat.emissive = sampledEmissive.rgb;
 	}
 	else {
-		executeCallableEXT(0, 0);
+		executeCallableEXT(gg.callableIndex, 0);
 	}
 
 
@@ -270,6 +229,8 @@ void main() {
 	radiance += TraceIndirect(fragSpace, brdfInfo);
 	prd.radiance = radiance;
 }
+
+
 
 
 

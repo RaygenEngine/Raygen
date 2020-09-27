@@ -113,7 +113,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 			inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise;
 			instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
 
-			sceneDesc.AddGeomGroup(gg, geom->mesh.Lock(), transform, callableIndex);
+			sceneDesc.AddGeomGroup(gg, geom->mesh.Lock(), transform, callableIndex + 1);
 			totalGroups++;
 		}
 	}

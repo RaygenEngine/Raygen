@@ -8,10 +8,7 @@
 #include "global.glsl"
 #include "rt-global.glsl"
 
-#include "random.glsl"
-#include "sampling.glsl"
 #include "bsdf.glsl"
-#include "onb.glsl"
 
 
 //
@@ -35,58 +32,15 @@ struct Material {
 	sampler2DRef emissive;
 };
 
-
-layout(buffer_reference, std430) buffer Vertices { Vertex v[]; };
-layout(buffer_reference, std430) buffer Indicies { uint i[]; };
-layout(buffer_reference, std430) buffer MaterialBufRef { Material m; };
-
 //
 #include "raytrace/rt-callableMat.glsl"
-
-struct CallableMatInOut
-{
-	int matid; // Incoming Buffer reference
-	vec2 uv; // Incoming UV
-	
-	FragBrdfInfo brdfInfo;
-	
-	vec3 emissive;
-	vec3 localNormal;
-};
-
 layout(location = 0) callableDataInEXT CallableMatInOut cmat;
 
-
-
-struct GeometryGroup {
-	Vertices vtxBuffer;
-	Indicies indBuffer;
-	MaterialBufRef materialUbo;
-
-	uint indexOffset;
-	uint primOffset;
-
-	mat4 transform;
-	mat4 invTransform;
-	
-	int callableIndex; // callableIndex == -1 is used at the moment for gltf (mainly for debugging purposes | you can skip callable materials completely)
-};
-
-layout(set = 4, binding = 0, std430) readonly buffer GeometryGroups { GeometryGroup g[]; } geomGroups;
-layout(set = 4, binding = 1) uniform sampler2D textureSamplers[];//
-
-vec4 texture(sampler2DRef s, vec2 uv) {
-	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
-}
-
-Material GetMaterial(int matId) {
-	return geomGroups.g[nonuniformEXT(matId)].materialUbo.m;
-}
-
+Material mat = geomGroups.g[nonuniformEXT(cmat.matid)].materialUbo.m;
+vec2 uv = cmat.uv;
 
 void main() {
-	Material mat = GetMaterial(cmat.matid);
-	vec2 uv = cmat.uv;
+
 	vec4 sampledBaseColor = texture(mat.baseColor, uv) * mat.baseColorFactor;
 	vec4 sampledNormal = texture(mat.normal, uv) * mat.normalScale;
 	vec4 sampledMetallicRoughness = texture(mat.metallicRough, uv);
@@ -106,3 +60,5 @@ void main() {
 	cmat.localNormal = sampledNormal.rgb;
 	cmat.emissive = sampledEmissive.rgb;
 }
+
+

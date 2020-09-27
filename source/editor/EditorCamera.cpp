@@ -109,9 +109,15 @@ void EditorCamera::InjectToScene(Scene* worldScene)
 
 void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 {
-	if (!dirtyThisFrame) {
-		return;
+	static float time = 0.f;
+
+	time += 1.f / std::max(Engine.GetFPS(), 0.001f);
+	if (time > 600) {
+		time -= 600;
 	}
+	// if (!dirtyThisFrame) {
+	//	return;
+	//}
 	auto lookAt = transform.position + transform.front() * focalLength;
 	view = glm::lookAt(transform.position, lookAt, transform.up());
 
@@ -148,6 +154,7 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 		cam.ubo.projInv = projInv;
 		cam.ubo.viewProj = viewProj;
 		cam.ubo.viewProjInv = viewProjInv;
+		cam.ubo.time = time;
 		// vl::Renderer->m_raytracingPass.m_rtFrame = 0;
 	});
 

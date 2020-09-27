@@ -108,7 +108,7 @@ bool MaterialArchetype::CompileAll(
 			  }
 
 			  auto errors = &outErrors.editorErrors.insert({ editorName, {} }).first->second;
-			  auto shaderBinary = ShaderCompiler::Compile(code, stage, errors);
+			  auto shaderBinary = ShaderCompiler::Compile(code, stage, editorName, errors);
 
 			  if (!shaderBinary.size()) {
 				  RerouteShaderErrors(outErrors);
