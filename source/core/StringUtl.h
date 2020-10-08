@@ -105,7 +105,7 @@ template<typename T>
 concept CCharSeq = true; // CHECK: string concept
 
 // TEST:
-template<CONC(CCharSeq) T>
+template<CCharSeq T>
 std::vector<std::string_view> split(const T& str, std::string_view delims = " ")
 {
 	std::vector<std::string_view> output;

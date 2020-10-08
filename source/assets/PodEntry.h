@@ -40,14 +40,14 @@ struct PodEntry {
 		return static_cast<T*>(ptr.get());
 	}
 
-	template<CONC(CAssetPod) T>
+	template<CAssetPod T>
 	[[nodiscard]] PodHandle<T> GetHandleAs()
 	{
 		CLOG_ABORT(type != mti::GetTypeId<T>(), "Entry->GetAs() Cast failure");
 		return PodHandle<T>{ uid };
 	}
 
-	template<CONC(CAssetPod) T>
+	template<CAssetPod T>
 	[[nodiscard]] bool IsA()
 	{
 		return type == mti::GetTypeId<T>();

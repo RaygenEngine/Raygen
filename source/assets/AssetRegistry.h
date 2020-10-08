@@ -109,7 +109,7 @@ private:
 	void ReimportFromOriginalInternal(PodEntry* entry);
 	void ExportToLocationImpl(PodEntry* entry, const fs::path& path);
 
-	template<CONC(CAssetPod) T>
+	template<CAssetPod T>
 	PodHandle<T> GetAsyncHandleInternal(const uri::Uri& str)
 	{
 		auto it = m_pathCache.find(str);
@@ -133,7 +133,7 @@ public:
 	static void RemoveFromPathCache(PodEntry* entry) { Get().m_pathCache.erase(entry->path); }
 
 	// Exports the asset directly to the specified location without taking into account ANY metadata / asset flags.
-	template<CONC(CUidConvertible) T>
+	template<CUidConvertible T>
 	static void ExportToLocation(T asset, const fs::path& diskLocation)
 	{
 		size_t uid = ToAssetUid(asset);
@@ -141,7 +141,7 @@ public:
 	}
 
 	// There is no fast version of this function, it is just O(N) for loaded assets doing string comparisons
-	template<CONC(CAssetPod) T>
+	template<CAssetPod T>
 	static PodHandle<T> SearchForAssetFromImportPathSlow(std::string_view endsWith)
 	{
 		for (auto& entry : Get().m_pods) {
@@ -161,7 +161,7 @@ public:
 		}
 	}
 
-	template<CONC(CAssetPod) T>
+	template<CAssetPod T>
 	static PodHandle<T> GetAsyncHandle(const uri::Uri& str)
 	{
 		return Get().GetAsyncHandleInternal<T>(str);
@@ -173,7 +173,7 @@ public:
 	}
 
 
-	template<CONC(CUidConvertible) T>
+	template<CUidConvertible T>
 	static PodEntry* Duplicate(T asset)
 	{
 		size_t uid = ToAssetUid(asset);
@@ -187,7 +187,7 @@ public:
 	static uri::Uri GetPodUri(BasePodHandle handle) { return Get().m_pods[handle.uid]->path; }
 
 
-	template<CONC(CUidConvertible) T>
+	template<CUidConvertible T>
 	static PodEntry* GetEntry(T asset)
 	{
 		size_t uid = ToAssetUid(asset);
@@ -202,14 +202,14 @@ public:
 		Get().RenameEntryImpl(entry, newFullPath);
 	}
 
-	template<CONC(CUidConvertible) T>
+	template<CUidConvertible T>
 	static void SaveToDisk(T asset)
 	{
 		size_t uid = ToAssetUid(asset);
 		Get().SaveToDiskInternal(Get().m_pods[uid].get());
 	}
 
-	template<CONC(CUidConvertible) T>
+	template<CUidConvertible T>
 	static void ReimportFromOriginal(T asset)
 	{
 		size_t uid = ToAssetUid(asset);
@@ -217,14 +217,14 @@ public:
 	}
 
 
-	template<CONC(CUidConvertible) T>
+	template<CUidConvertible T>
 	static void LoadFromDiskTypeless(T asset)
 	{
 		size_t uid = ToAssetUid(asset);
 		Get().LoadFromDiskTypelessInternal(Get().m_pods[uid].get());
 	}
 
-	template<CONC(CUidConvertible) T>
+	template<CUidConvertible T>
 	static void DeleteFromDisk(T asset)
 	{
 		size_t uid = ToAssetUid(asset);
@@ -244,7 +244,7 @@ public:
 	// If the passed in path is corret it will be returned instead
 	static uri::Uri SuggestPath(const uri::Uri& desiredFullPath) { return Get().SuggestPathImpl(desiredFullPath); }
 
-	template<CONC(CAssetPod) PodType>
+	template<CAssetPod PodType>
 	static PodType* Z_Handle_AccessPod(size_t uid)
 	{
 		return static_cast<PodType*>(Get().m_pods[uid]->ptr.get());
@@ -255,7 +255,7 @@ public:
 
 
 	// Note that uri for desired path must include "gen-data/" for the pods to be loaded at runtime.
-	template<CONC(CAssetPod) PodType>
+	template<CAssetPod PodType>
 	static std::pair<PodEntry*, PodType*> CreateEntry(const uri::Uri& desiredPath, bool transient = false,
 		const uri::Uri& originalImportLoc = "", bool reimportOnLoad = false, bool exportOnSave = false)
 	{
@@ -275,7 +275,7 @@ public:
 
 private:
 	// This probably should reside in AssetHandlerManager.
-	template<CONC(CAssetPod) PodType>
+	template<CAssetPod PodType>
 	[[nodiscard]] std::pair<PodEntry*, PodType*> CreateEntryImpl(const uri::Uri& desiredPath, bool transient = false,
 		const uri::Uri& originalImportLoc = "", bool reimportOnLoad = false, bool exportOnSave = false)
 	{

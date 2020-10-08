@@ -90,7 +90,7 @@ void OutlinerWindow::DrawRecurseEntity(World& world, Entity ent, int32 depth)
 	}
 
 	ImGui::PopID();
-} // namespace ed
+}
 
 
 void OutlinerWindow::ImguiDraw()
@@ -106,6 +106,11 @@ void OutlinerWindow::ImguiDraw()
 			DrawRecurseEntity(world, { ent, &world.reg });
 		}
 	}
+
+	if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered()) {
+		OutlinerWindow::selected = {};
+	}
+
 
 	if (ImGui::BeginPopupContextWindow(nullptr, ImGuiMouseButton_Right, false)) {
 		Run_SpaceContextPopup(world);

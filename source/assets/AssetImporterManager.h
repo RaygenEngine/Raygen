@@ -47,13 +47,13 @@ public:
 	}
 	//
 
-	template<CONC(CAssetPod) PodType>
+	template<CAssetPod PodType>
 	std::pair<PodHandle<PodType>, PodType*> CreateTransientEntry(const uri::Uri& name)
 	{
 		return CreateEntryFromImportImpl<PodType>(name, name, true, false, false);
 	}
 
-	template<CONC(CAssetPod) PodType>
+	template<CAssetPod PodType>
 	std::pair<PodHandle<PodType>, PodType*> CreateTransientEntryFromFile(
 		const uri::Uri& name, const uri::Uri& importPath)
 	{
@@ -67,7 +67,7 @@ public:
 	//
 
 
-	template<CONC(CAssetPod) PodType>
+	template<CAssetPod PodType>
 	[[nodiscard]] std::pair<PodHandle<PodType>, PodType*> CreateEntry(
 		const uri::Uri& importPath, const uri::Uri& name, bool reimportOnLoad = false, bool exportOnSave = false)
 	{
@@ -75,7 +75,7 @@ public:
 	}
 
 
-	template<CONC(CAssetPod) T>
+	template<CAssetPod T>
 	[[nodiscard]] PodHandle<T> ImportRequest(const fs::path& path)
 	{
 		auto it = m_importedPathsCache.find(path.generic_string());
@@ -94,7 +94,7 @@ public:
 
 	// CHECK: Requires json include (non standard cpp)
 	// Matches the json object generated from AssetHandlerManager::GenerateRelativeExportJsonObject
-	template<CONC(CAssetPod) T>
+	template<CAssetPod T>
 	PodHandle<T> ImportOrFindFromJson(
 		const nlohmann::json& json, const fs::path& relativeFilePath = "", bool useBinaries = true)
 	{
@@ -124,7 +124,7 @@ public:
 	// TODO: Implement useBinaries
 	// When use binaries is true, the system will check the import path of binary files and avoid reimporting if a
 	// matching binary file is found.
-	template<CONC(CAssetPod) T>
+	template<CAssetPod T>
 	PodHandle<T> ImportFromMaybeRelative(PathReferenceType pathType, const fs::path& path,
 		const fs::path& relativeFilePath = "", bool useBinaries = true)
 	{
@@ -171,7 +171,7 @@ public:
 
 
 private:
-	template<CONC(CAssetPod) PodType>
+	template<CAssetPod PodType>
 	[[nodiscard]] std::pair<PodHandle<PodType>, PodType*> CreateEntryFromImportImpl(
 		const uri::Uri& importPath, const uri::Uri& name, bool transient, bool reimportOnLoad, bool exportOnSave)
 	{

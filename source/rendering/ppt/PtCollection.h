@@ -6,7 +6,7 @@ namespace vl {
 class PtCollection {
 	std::vector<PtEntry> m_postprocTechs;
 
-	template<CONC(CPostTech) T>
+	template<CPostTech T>
 	void NextTechnique()
 	{
 		PtEntry e{

@@ -55,7 +55,7 @@ protected:
 };
 
 // Templated base for a gpu asset
-template<CONC(CAssetPod) PodType>
+template<CAssetPod PodType>
 struct GpuAssetTemplate : public GpuAssetBase {
 	PodHandle<PodType> podHandle;
 

@@ -38,7 +38,7 @@ public:
 	// Automatically registers T::Create and T::Dirty if supported by the component
 	//
 	// Returns a reference to the created component
-	template<CONC(CComponent) T, typename... Args>
+	template<CComponent T, typename... Args>
 	T& Add(Args&&... args)
 	{
 		using namespace componentdetail;
@@ -59,7 +59,7 @@ public:
 	// Automatically registers T::Dirty if the component already existed
 	//
 	// Returns a reference to the created / existing component
-	template<CONC(CComponent) T, typename... Args>
+	template<CComponent T, typename... Args>
 	T& AddOrGet(Args&&... args)
 	{
 		if (Has<T>()) {
@@ -68,13 +68,13 @@ public:
 		return Add<T>(std::forward(args)...);
 	}
 
-	template<CONC(CComponent) T>
+	template<CComponent T>
 	[[nodiscard]] bool Has() const
 	{
 		return registry->has<T>(entity);
 	}
 
-	template<CONC(CComponent) T, typename... Args>
+	template<CComponent T, typename... Args>
 	void AddOrGet(Args&&... args)
 	{
 		if (Has<T>()) {
@@ -85,7 +85,7 @@ public:
 
 	// Returns T& or const T& based on if the substruct supports dirty.
 	// Always prefer this if you will not write to the component to save performance.
-	template<CONC(CComponent) T>
+	template<CComponent T>
 	auto Get() const -> std::conditional_t<componentdetail::HasDirtySubstructV<T>, const T&, T&>
 	{
 		static_assert(!std::is_empty_v<T>, "Attempting to get an empty structure. This is not allowed by entt.");
@@ -93,7 +93,7 @@ public:
 	}
 
 	// Always returns T& and marks the component as dirty. Use this when you intend to write to the component.
-	template<CONC(CComponent) T>
+	template<CComponent T>
 	T& GetDirty()
 	{
 		MarkDirty<T>();
@@ -102,7 +102,7 @@ public:
 
 	// TODO: Probably private
 	// Just use GetDirty if you intend to write instead of forgetting to manually call this
-	template<CONC(CComponent) T>
+	template<CComponent T>
 	void MarkDirty()
 	{
 		if constexpr (componentdetail::HasDirtySubstruct<T>) {
@@ -112,7 +112,7 @@ public:
 
 	// Safely removes a component if it exists.
 	// If T::Destroy exists, the actual deletion of the component is deferred and the T::Destroy component flag is added
-	template<CONC(CComponent) T>
+	template<CComponent T>
 	void SafeRemove()
 	{
 		if (!Has<T>()) {

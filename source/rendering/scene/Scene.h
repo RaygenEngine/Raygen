@@ -19,12 +19,7 @@ concept CSceneElem
 	= std::is_same_v<SceneGeometry,
 		  T> || std::is_same_v<SceneCamera, T> || std::is_same_v<ScenePointlight, T> || std::is_same_v<SceneSpotlight, T> || std::is_same_v<SceneDirectionalLight, T> || std::is_same_v<SceneReflectionProbe, T> || std::is_same_v<SceneAnimatedGeometry, T>;
 
-template<typename T>
-concept CSceneViewerElem
-	= std::is_same_v<SceneCamera,
-		  T> || std::is_same_v<SceneSpotlight, T> || std::is_same_v<SceneDirectionalLight, T> || std::is_same_v<SceneReflectionProbe, T>;
-
-template<CONC(CSceneElem) T>
+template<CSceneElem T>
 struct SceneVector {
 	std::vector<T*> elements;
 	size_t pendingElements{ 0 };
@@ -64,7 +59,7 @@ struct Scene {
 	vk::UniqueAccelerationStructureKHR sceneAS;
 	vk::DescriptorSet sceneAsDescSet;
 
-	template<CONC(CSceneElem) T>
+	template<CSceneElem T>
 	T* GetElement(size_t uid)
 	{
 		if constexpr (std::is_same_v<SceneGeometry, T>) {
@@ -91,7 +86,7 @@ struct Scene {
 		LOG_ABORT("Incorrect type");
 	}
 
-	template<CONC(CSceneElem) T>
+	template<CSceneElem T>
 	void EnqueueCmd(size_t uid, std::function<void(T&)>&& command)
 	{
 		currentCmdBuffer->emplace_back([&, cmd = std::move(command), uid]() {
@@ -102,7 +97,7 @@ struct Scene {
 		});
 	}
 
-	template<CONC(CSceneElem) T>
+	template<CSceneElem T>
 	size_t EnqueueCreateCmd()
 	{
 		// std::lock_guard<std::mutex> guard(cmdAddPendingElementsMutex);
@@ -143,7 +138,7 @@ struct Scene {
 	}
 
 
-	template<CONC(CSceneElem) T>
+	template<CSceneElem T>
 	void EnqueueDestroyCmd(size_t uid)
 	{
 		if constexpr (std::is_same_v<SceneGeometry, T>) {

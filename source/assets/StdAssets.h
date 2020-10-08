@@ -3,7 +3,7 @@
 
 struct StdAssets {
 
-	template<CONC(CAssetPod) T>
+	template<CAssetPod T>
 	struct StdAsset {
 		PodHandle<T> handle;
 

@@ -11,13 +11,13 @@ private:
 public:
 	static void Import(const fs::path& path) { AssetManager->Import(path); }
 
-	template<CONC(CAssetPod) T>
+	template<CAssetPod T>
 	static PodHandle<T> ImportAs(const fs::path& path)
 	{
 		return AssetManager->ImportAs<T>(path);
 	}
 
-	template<CONC(CAssetPod) T>
+	template<CAssetPod T>
 	static PodHandle<T> GetAsyncHandle(const uri::Uri& str)
 	{
 		return AssetManager->GetAsyncHandle(str);
