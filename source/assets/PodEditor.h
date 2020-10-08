@@ -13,7 +13,7 @@ struct PodEditorBase {
 
 
 // Advanced pod editor that may or may not actually edit the pod.
-template<CONC(CAssetPod) PodType>
+template<CAssetPod PodType>
 struct OptionalPodEditor : PodEditorBase {
 protected:
 	bool didEdit{ false };
@@ -71,7 +71,7 @@ public:
 
 // The simplest possible editor for spontaneous use in stack. (eg during a scene build operation)
 // Uses RAII for editing in its scope and always submits instantly when going out of scope.
-template<CONC(CAssetPod) PodType>
+template<CAssetPod PodType>
 struct PodEditor {
 private:
 	OptionalPodEditor<PodType> optionalEditor;

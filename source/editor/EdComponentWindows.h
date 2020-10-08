@@ -47,7 +47,7 @@ public:
 	IterableSafeHashMap<PodEntry*, UniquePtr<AssetEditorWindow>> m_assetWindows;
 
 
-	template<CONC(UniqueWindowClass) T>
+	template<UniqueWindowClass T>
 	void AddWindowEntry(const std::string& name)
 	{
 		auto hash = mti::GetHash<T>();
@@ -69,7 +69,7 @@ public:
 
 	[[nodiscard]] bool IsUniqueOpen(mti::Hash hash) const noexcept { return m_openUniqueWindows.map.count(hash); };
 
-	template<CONC(UniqueWindowClass) T>
+	template<UniqueWindowClass T>
 	[[nodiscard]] bool IsUniqueOpen() const noexcept
 	{
 		return IsUniqueOpen(mti::GetHash<T>());
@@ -78,7 +78,7 @@ public:
 
 	void OpenUnique(mti::Hash hash);
 
-	template<CONC(UniqueWindowClass) T>
+	template<UniqueWindowClass T>
 	void OpenUnique()
 	{
 		OpenUnique(mti::GetHash<T>());
@@ -87,7 +87,7 @@ public:
 
 	void CloseUnique(mti::Hash hash);
 
-	template<CONC(UniqueWindowClass) T>
+	template<UniqueWindowClass T>
 	void CloseUnique()
 	{
 		CloseUnique(mti::GetHash<T>());
@@ -96,7 +96,7 @@ public:
 
 	void ToggleUnique(mti::Hash hash);
 
-	template<CONC(UniqueWindowClass) T>
+	template<UniqueWindowClass T>
 	void ToggleUnique()
 	{
 		ToggleUnique(mti::GetHash<T>());
@@ -106,7 +106,7 @@ public:
 
 	~ComponentWindows();
 
-	template<CONC(UniqueWindowClass) T>
+	template<UniqueWindowClass T>
 	T* GetUniqueWindow()
 	{
 		if (IsUniqueOpen<T>()) {
@@ -124,7 +124,7 @@ public:
 	static constexpr size_t c_podWindowSize = GetPodTypesCount() + 1;
 	std::array<std::function<UniquePtr<AssetEditorWindow>(PodEntry*)>, c_podWindowSize> m_podWindowConstructors;
 
-	template<CONC(AssetEditorWindowClass) T>
+	template<AssetEditorWindowClass T>
 	void RegisterAssetWindowEditor()
 	{
 		using PodType = typename T::PodType;

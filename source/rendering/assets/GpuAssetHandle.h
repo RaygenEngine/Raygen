@@ -9,7 +9,7 @@ namespace gpuassetdetail {
 	inline GpuAssetBase** gpuAssetListData{ nullptr };
 } // namespace gpuassetdetail
 
-template<CONC(CAssetPod) T>
+template<CAssetPod T>
 struct GpuHandle : public BasePodHandle {
 	GpuHandle<T>() { uid = GetDefaultPodUid<T>(); }
 	GpuHandle<T>(size_t inUid) { uid = inUid; }

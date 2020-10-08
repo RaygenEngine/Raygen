@@ -94,7 +94,7 @@ class SceneCmdSystem {
 		return instance;
 	}
 
-	template<CONC(CSceneComp) T>
+	template<CSceneComp T>
 	void Register()
 	{
 		namespace cd = componentdetail;
@@ -112,7 +112,7 @@ class SceneCmdSystem {
 
 	friend class ComponentsDb;
 
-	template<CONC(CSceneComp) T>
+	template<CSceneComp T>
 	static void Z_Register()
 	{
 		Get().Register<T>();

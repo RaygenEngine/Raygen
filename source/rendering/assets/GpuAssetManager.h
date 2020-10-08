@@ -14,7 +14,7 @@ inline class GpuAssetManager_ {
 	std::unordered_map<std::string, PodHandle<Shader>, str::HashInsensitive> shaderPathCache;
 
 
-	template<CONC(CAssetPod) T>
+	template<CAssetPod T>
 	GpuAsset<T>& LockHandle(GpuHandle<T> handle)
 	{
 		return static_cast<GpuAsset<T>&>(*gpuAssets[handle.uid]);
@@ -32,7 +32,7 @@ public:
 		gpuAssets[handle.uid] = new GpuAsset<T>(handle);
 	}
 
-	template<CONC(CAssetPod) T>
+	template<CAssetPod T>
 	GpuHandle<T> GetGpuHandle(PodHandle<T> handle)
 	{
 		size_t id = handle.uid;

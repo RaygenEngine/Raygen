@@ -18,7 +18,7 @@
 namespace {
 
 // Used for duplication of non-reflected data.
-template<CONC(CAssetPod) PodType>
+template<CAssetPod PodType>
 void DuplicateData(PodType* src, PodType* dst, PodEntry* srcEntry, PodEntry* dstEntry)
 {
 }

@@ -99,7 +99,7 @@ inline void DisabledSection(bool disabled, const T& codeSection)
 struct NoFunc {
 	void operator()(BasePodHandle, PodEntry*) {}
 };
-template<CONC(CAssetPod) T, typename Callback = NoFunc>
+template<CAssetPod T, typename Callback = NoFunc>
 inline PodEntry* AcceptTypedPodDrop(Callback onDropped = {})
 {
 	if (!ImGui::BeginDragDropTarget()) {

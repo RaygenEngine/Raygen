@@ -27,7 +27,7 @@ struct AssetSlotPopup {
 	void Clear();
 
 
-	template<CONC(CAssetPod) T>
+	template<CAssetPod T>
 	void Open()
 	{
 		Clear();
@@ -44,7 +44,7 @@ protected:
 
 
 // Returns true when the handle is changed
-template<CONC(CAssetPod) T>
+template<CAssetPod T>
 bool AssetSlot(const std::string& name, PodHandle<T>& handle)
 {
 	static AssetSlotPopup searchPopup;

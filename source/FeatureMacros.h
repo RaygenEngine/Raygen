@@ -25,17 +25,6 @@
 #	define RGN_WITH_FEATURE_PRIVATE_DEF_FAST_RELEASE() 1
 #endif
 
-// CONCEPTS INTELLISENSE WORKAROUND
-// CHECK: when intellisense supports concepts replace ALL uses of the macro and deprecate
-// parentheses omited on purpose
-#ifdef __INTELLISENSE__
-#	define REQUIRES(...)
-#	define CONC(...) typename // Use when inlining concept types. Ugly :(
-#else
-#	define REQUIRES(...) requires __VA_ARGS__
-#	define CONC(...)     __VA_ARGS__
-#endif
-
 #ifdef _MSC_VER
 #	define NOINLINE __declspec(noinline)
 #else
