@@ -75,6 +75,13 @@ public:
 		return GetInstance().GetPipe(mti::GetHash<T>());
 	}
 
+	template<StaticPipeClass T>
+	static void Recompile()
+	{
+		GetInstance().m_pipes.at(mti::GetHash<T>()).pipeline = T::MakePipeline();
+	}
+
+
 	static void InitRegistered() { return GetInstance().InternalInitRegistered(); }
 
 

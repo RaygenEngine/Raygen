@@ -53,7 +53,6 @@ void PtDirectionalLight::MakePipeline()
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	Utl_CreatePipelineLightPass(gpuShader, colorBlending);
-	(gpuShader, colorBlending);
 }
 
 void PtDirectionalLight::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
