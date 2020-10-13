@@ -25,6 +25,8 @@
 #include "rendering/structures/Depthmap.h"
 #include "rendering/util/WriteDescriptorSets.h"
 #include "rendering/wrappers/Swapchain.h"
+#include "rendering/passes/lightblend/DirlightBlend.h"
+
 
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
@@ -44,9 +46,6 @@ void Renderer_::InitPipelines()
 
 	pointlightPass.MakeLayout();
 	pointlightPass.MakePipeline();
-
-	dirlightPass.MakeLayout();
-	dirlightPass.MakePipeline();
 
 	lightblendPass.MakeLayout();
 	lightblendPass.MakePipeline();
@@ -122,7 +121,8 @@ void Renderer_::RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneR
 	m_rasterDirectPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 		spotlightPass.Draw(cmdBuffer, sceneDesc);
 		pointlightPass.Draw(cmdBuffer, sceneDesc);
-		dirlightPass.Draw(cmdBuffer, sceneDesc);
+
+		DirlightBlend::Draw(cmdBuffer, sceneDesc);
 	});
 }
 

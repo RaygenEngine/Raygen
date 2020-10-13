@@ -73,7 +73,6 @@ public:
 
 	PtSpotlight spotlightPass;
 	PtPointlight pointlightPass;
-	PtDirectionalLight dirlightPass;
 
 	PtLightBlend lightblendPass;
 

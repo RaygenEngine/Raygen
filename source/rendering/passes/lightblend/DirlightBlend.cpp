@@ -24,7 +24,7 @@ vk::UniquePipeline DirlightBlend::MakePipeline()
 {
 	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/dirlight.shader");
 	gpuShader.onCompile = [&]() {
-		MakePipeline();
+		StaticPipes::Recompile<DirlightBlend>();
 	};
 
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
@@ -47,9 +47,8 @@ vk::UniquePipeline DirlightBlend::MakePipeline()
 		.setPAttachments(&colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
-	return vk::UniquePipeline();
-	// return rvk::makePostProcPipeline(
-	//	gpuShader.shaderStages, colorBlending, StaticPipes::GetLayout<DirlightBlend>(), /**/);
+	return rvk::makePostProcPipeline(gpuShader.shaderStages, StaticPipes::GetLayout<DirlightBlend>(),
+		*Layouts->rasterDirectPassLayout.compatibleRenderPass, colorBlending);
 }
 
 void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
