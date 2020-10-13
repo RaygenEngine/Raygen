@@ -3,6 +3,7 @@
 
 #include "assets/AssetManager.h"
 #include "assets/pods/Image.h"
+#include "assets/pods/Mesh.h"
 #include "assets/AssetManager.h"
 
 #include "assets/pods/MaterialArchetype.h"
@@ -46,6 +47,28 @@ void StdAssets::LoadAssets()
 
 	GltfArchetype = Generate<MaterialArchetype>(
 		[](MaterialArchetype& arch) { MaterialArchetype::MakeGltfArchetypeInto(&arch); }, "^GltfArchetype");
+
+
+	QuadMesh = Generate<Mesh>(
+		[](Mesh& mesh) {
+			GeometrySlot slot;
+			slot.indices = { 2, 1, 0, 1, 2, 3 };
+			for (int i = 0; i < 2; ++i) {
+				for (int j = 0; j < 2; ++j) {
+					Vertex v;
+					v.position = { float(i), 0.f, -float(j) };
+					v.normal = { 0.f, 1.f, 0.f };
+					v.tangent = { 1.f, 0.f, 0.f };
+					v.uv = { float(i), float(j) };
+					slot.vertices.emplace_back(std::move(v));
+				}
+			}
+			mesh.geometrySlots.emplace_back(std::move(slot));
+			mesh.materials.emplace_back(PodHandle<MaterialInstance>{});
+		},
+		"^QuadMesh");
+
+	UnitQube = Load<Mesh>("engine-data/mesh/unitcube.gltf");
 
 
 	//

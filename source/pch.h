@@ -59,5 +59,6 @@ struct InFlightResources : std::array<T, c_framesInFlight> {
 	void operator=(const std::vector<T>& data) { std::move(data.begin(), data.begin() + c_framesInFlight, begin()); }
 };
 
+#include "rendering/DebugName.h"
 #include "rendering/core/img.h"
 #define IMGUI_DEFINE_MATH_OPERATORS
