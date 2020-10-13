@@ -34,8 +34,8 @@ DECLARE_DIRTY_FUNC(CCamera)(BasicComponent& bc)
 		viewProjInv = glm::inverse(viewProj);
 	}
 
-	return [=](SceneCamera& cam) {
-		cam.ubo.position = glm::vec4(bc.world().position, 1.f);
+	return [=, position = bc.world().position](SceneCamera& cam) {
+		cam.ubo.position = glm::vec4(position, 1.f);
 		cam.ubo.view = view;
 		cam.ubo.viewInv = viewInv;
 

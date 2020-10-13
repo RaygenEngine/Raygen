@@ -1,40 +1,6 @@
 #pragma once
 #include "rendering/wrappers/PhysicalDevice.h"
 
-
-#define DEBUG_NAME(handle, name) detail::RegisterDebugName(handle, name);
-#define DEBUG_NAME_AUTO(handle)  DEBUG_NAME(handle, #handle)
-
-namespace detail {
-template<typename T, typename = void>
-struct HasCType : std::false_type {
-};
-
-template<typename T>
-struct HasCType<T, std::void_t<typename T::CType>> : std::true_type {
-};
-
-template<typename T>
-void RegisterDebugName(const T& handle, const std::string& name)
-{
-	vk::DebugUtilsObjectNameInfoEXT debugNameInfo{};
-
-	if constexpr (HasCType<T>::value) {
-		debugNameInfo
-			.setObjectType(handle.objectType) //
-			.setObjectHandle(reinterpret_cast<uint64>(T::CType(handle)));
-	}
-	else {
-		debugNameInfo
-			.setObjectType(handle->objectType) //
-			.setObjectHandle(reinterpret_cast<uint64>(T::element_type::CType(handle.get())));
-	}
-
-	debugNameInfo.setPObjectName(name.c_str());
-	vl::Device->setDebugUtilsObjectNameEXT(debugNameInfo);
-}
-} // namespace detail
-
 namespace vl {
 struct DeviceQueue : public vk::Queue {
 	uint32 familyIndex;
@@ -77,7 +43,8 @@ inline struct Device_ : public vk::Device {
 
 	[[nodiscard]] uint32 FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties) const;
 
-	[[nodiscard]] vk::Format FindSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, //
+	[[nodiscard]] vk::Format FindSupportedFormat(const std::vector<vk::Format>& candidates,
+		vk::ImageTiling tiling, //
 		vk::FormatFeatureFlags features) const;
 
 	[[nodiscard]] vk::Format FindDepthFormat() const;
