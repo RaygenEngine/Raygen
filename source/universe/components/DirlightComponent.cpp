@@ -1,13 +1,13 @@
 #include "pch.h"
-#include "DirectionalLightComponent.h"
+#include "DirlightComponent.h"
 
 #include "assets/PodEditor.h"
 #include "assets/pods/MaterialArchetype.h"
 #include "assets/pods/MaterialInstance.h"
-#include "rendering/scene/SceneDirectionalLight.h"
+#include "rendering/scene/SceneDirlight.h"
 
 
-DECLARE_DIRTY_FUNC(CDirectionalLight)(BasicComponent& bc)
+DECLARE_DIRTY_FUNC(CDirlight)(BasicComponent& bc)
 {
 	if (!skyInstance.IsDefault()) {
 		PodEditor editor(skyInstance);
@@ -28,7 +28,7 @@ DECLARE_DIRTY_FUNC(CDirectionalLight)(BasicComponent& bc)
 
 	glm::mat4 viewProj = proj * view;
 
-	return [=](SceneDirectionalLight& dl) {
+	return [=](SceneDirlight& dl) {
 		dl.name = "direct depth: " + bc.name;
 
 		dl.up = bc.world().up();

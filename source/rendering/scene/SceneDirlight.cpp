@@ -1,9 +1,9 @@
 #include "pch.h"
-#include "SceneDirectionalLight.h"
+#include "SceneDirlight.h"
 
 #include "core/math-ext/Frustum.h"
 
-void SceneDirectionalLight::MaybeResizeShadowmap(uint32 width, uint32 height)
+void SceneDirlight::MaybeResizeShadowmap(uint32 width, uint32 height)
 {
 	bool shouldResize = true;
 	auto& extent = shadowmap.at(0).framebuffer.extent;
@@ -16,7 +16,7 @@ void SceneDirectionalLight::MaybeResizeShadowmap(uint32 width, uint32 height)
 	}
 }
 
-void SceneDirectionalLight::UpdateBox(const math::Frustum& frustum, glm::vec3 apex)
+void SceneDirlight::UpdateBox(const math::Frustum& frustum, glm::vec3 apex)
 {
 	glm::mat4 view = glm::lookAt(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f) + glm::vec3(ubo.front), up);
 	auto aabb = frustum.FrustumPyramidAABB(apex);

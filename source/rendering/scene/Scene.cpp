@@ -8,9 +8,9 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneDirectionalLight.h"
+#include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneGeometry.h"
-#include "rendering/scene/SceneReflectionProbe.h"
+#include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/scene/ScenePointlight.h"
 

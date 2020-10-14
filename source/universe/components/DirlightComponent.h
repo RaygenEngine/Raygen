@@ -3,11 +3,11 @@
 #include "universe/ComponentsDb.h"
 #include "universe/components/LightComponentBase.h"
 
-struct SceneDirectionalLight;
+struct SceneDirlight;
 
-struct CDirectionalLight : CLightBase {
+struct CDirlight : CLightBase {
 
-	REFLECTED_SCENE_COMP(CDirectionalLight, SceneDirectionalLight)
+	REFLECTED_SCENE_COMP(CDirlight, SceneDirlight)
 	{
 		REFLECT_ICON(FA_LIGHTBULB);
 

@@ -73,7 +73,7 @@ void main( ) {
 	vec3 diffuseLight = texture(irradianceSampler, N).rgb;
 	vec3 specularLight = textureLod(prefilteredSampler, R, lod).rgb;
 
-	vec3 diffuse = diffuseLight * frag.diffuseColor;
+	vec3 diffuse = diffuseLight * frag.albedo;
 	vec3 specular = specularLight * (frag.f0 * brdf.x + brdf.y);
 
 	vec3 iblContribution = diffuse + specular;

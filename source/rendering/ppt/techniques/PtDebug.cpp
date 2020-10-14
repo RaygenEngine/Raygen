@@ -10,9 +10,9 @@
 namespace vl {
 void PtDebug::MakeLayout()
 {
-
-
-	std::array layouts{ Layouts->ptPassLayout.internalDescLayout.handle() };
+	std::array layouts{
+		Layouts->ptPassLayout.internalDescLayout.handle(),
+	};
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -58,7 +58,7 @@ void PtDebug::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
 		&Renderer->m_ptPass[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
 
-	// draw call (triangle)
+	// big triangle
 	cmdBuffer.draw(3u, 1u, 0u, 0u);
 }
 } // namespace vl

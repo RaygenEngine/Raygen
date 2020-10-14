@@ -3,11 +3,8 @@
 #include "rendering/Device.h"
 #include "rendering/output/OutputPassBase.h"
 #include "rendering/passes/RaytracingPass.h"
-#include "rendering/ppt/lightpass/PtDirectionalLight.h"
-#include "rendering/ppt/lightpass/PtLightBlend.h"
-#include "rendering/ppt/lightpass/PtPointlight.h"
-#include "rendering/ppt/lightpass/PtSpotlight.h"
 #include "rendering/ppt/PtCollection.h"
+#include "rendering/ppt/techniques/PtLightBlend.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/wrappers/passlayout/RenderPassLayout.h"
 
@@ -21,7 +18,7 @@ private:
 	void RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
 
-	PtCollection m_postprocCollection;
+	// PtCollection m_postprocCollection; WIP:
 
 	struct SecondaryBufferPool {
 
@@ -70,9 +67,6 @@ public:
 
 	// TODO: RT, move those
 	InFlightResources<vk::DescriptorSet> m_rtDescSet;
-
-	PtSpotlight spotlightPass;
-	PtPointlight pointlightPass;
 
 	PtLightBlend lightblendPass;
 

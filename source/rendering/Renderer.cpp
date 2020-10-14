@@ -16,16 +16,18 @@
 #include "rendering/Layouts.h"
 #include "rendering/passes/DepthmapPass.h"
 #include "rendering/passes/GBufferPass.h"
+#include "rendering/passes/lightblend/DirlightBlend.h"
+#include "rendering/passes/lightblend/PointlightBlend.h"
+#include "rendering/passes/lightblend/SpotlightBlend.h"
 #include "rendering/passes/UnlitPass.h"
 #include "rendering/ppt/techniques/PtDebug.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneDirectionalLight.h"
+#include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/structures/Depthmap.h"
 #include "rendering/util/WriteDescriptorSets.h"
 #include "rendering/wrappers/Swapchain.h"
-#include "rendering/passes/lightblend/DirlightBlend.h"
 
 
 namespace {
@@ -39,13 +41,7 @@ namespace vl {
 
 void Renderer_::InitPipelines()
 {
-	//	m_postprocCollection.RegisterTechniques();
-
-	spotlightPass.MakeLayout();
-	spotlightPass.MakePipeline();
-
-	pointlightPass.MakeLayout();
-	pointlightPass.MakePipeline();
+	// m_postprocCollection.RegisterTechniques();
 
 	lightblendPass.MakeLayout();
 	lightblendPass.MakePipeline();
@@ -119,9 +115,8 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 void Renderer_::RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	m_rasterDirectPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
-		spotlightPass.Draw(cmdBuffer, sceneDesc);
-		pointlightPass.Draw(cmdBuffer, sceneDesc);
-
+		SpotlightBlend::Draw(cmdBuffer, sceneDesc);
+		PointlightBlend::Draw(cmdBuffer, sceneDesc);
 		DirlightBlend::Draw(cmdBuffer, sceneDesc);
 	});
 }
@@ -132,9 +127,9 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneR
 
 	m_ptPass[sceneDesc.frameIndex].RecordPass(*cmdBuffer, vk::SubpassContents::eInline, [&] {
 		// Post proc pass
-		lightblendPass.Draw(*cmdBuffer, sceneDesc);
+		lightblendPass.Draw(*cmdBuffer, sceneDesc); // WIP: from post proc
 
-		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc, m_gbufferDesc[sceneDesc.frameIndex]);
+		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc);
 		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
 	});
 }
@@ -215,13 +210,13 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 
 	static bool raytrace = true;
 
-	if (Input.IsJustPressed(Key::V)) {
-		raytrace = !raytrace;
-	}
+	// if (Input.IsJustPressed(Key::V)) {
+	//	raytrace = !raytrace;
+	//}
 
-	if (raytrace) {
-		m_raytracingPass.RecordPass(cmdBuffer, sceneDesc, this);
-	}
+	// if (raytrace) {
+	//	m_raytracingPass.RecordPass(cmdBuffer, sceneDesc, this);
+	//}
 
 
 	RecordPostProcessPass(&cmdBuffer, sceneDesc);

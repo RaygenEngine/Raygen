@@ -1,12 +1,12 @@
 #include "pch.h"
-#include "SceneReflectionProbe.h"
+#include "SceneReflProbe.h"
 
 #include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/offline/BrdfLutCalculation.h"
 #include "rendering/offline/IrradianceMapCalculation.h"
 #include "rendering/offline/PrefilteredMapCalculation.h"
 
-void SceneReflectionProbe::Build()
+void SceneReflProbe::Build()
 {
 	vl::IrradianceMapCalculation calc(&envmap.Lock(), 32);
 	calc.Calculate();

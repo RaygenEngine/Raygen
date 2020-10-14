@@ -5,8 +5,8 @@ struct Ambient_Ubo {
 	glm::vec4 color{};
 };
 
-struct SceneReflectionProbe : SceneStruct {
-	SCENE_STRUCT(SceneReflectionProbe);
+struct SceneReflProbe : SceneStruct {
+	SCENE_STRUCT(SceneReflProbe);
 
 	Ambient_Ubo ubo;
 
