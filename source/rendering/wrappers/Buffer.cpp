@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Buffer.h"
 
 #include "rendering/Device.h"

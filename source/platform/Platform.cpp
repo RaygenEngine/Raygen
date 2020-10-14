@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Platform.h"
 
 #include "platform/GlfwUtl.h"

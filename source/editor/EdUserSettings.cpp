@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "EdUserSettings.h"
 
 #include "engine/Logger.h"

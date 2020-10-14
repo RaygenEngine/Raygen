@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "StaticMeshComponent.h"
 
 #include "rendering/assets/GpuAssetManager.h"

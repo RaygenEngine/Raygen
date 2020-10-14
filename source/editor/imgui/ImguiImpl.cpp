@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "ImguiImpl.h"
 
 #include "assets/PodIncludes.h"

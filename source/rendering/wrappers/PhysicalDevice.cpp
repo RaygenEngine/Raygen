@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "PhysicalDevice.h"
 
 #include "engine/Logger.h"

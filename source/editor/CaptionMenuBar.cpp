@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "CaptionMenuBar.h"
 
 #include "editor/imgui/ImEd.h"

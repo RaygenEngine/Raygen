@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "PointlightBlend.h"
 
 #include "rendering/core/PipeUtl.h"

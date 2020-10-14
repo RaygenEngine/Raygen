@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Entity.h"
 
 #include "universe/BasicComponent.h"

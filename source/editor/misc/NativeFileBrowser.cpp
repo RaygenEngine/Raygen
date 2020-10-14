@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "NativeFileBrowser.h"
 
 #include "engine/Logger.h"

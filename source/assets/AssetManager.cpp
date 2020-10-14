@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "AssetManager.h"
 
 #include "assets/PodIncludes.h"
@@ -146,10 +145,12 @@ void AssetRegistry::LoadAllPodsInDirectory(const fs::path& path)
 			for (size_t i = start; i < stop; ++i) {
 				LoadFromDiskTypelessInternal(m_pods[i].get());
 
-				if (m_pods[i].get()->metadata.reimportOnLoad) [[unlikely]] {
-					// reimportEntries[threadIndex].push_back(m_pods[i].get());
-					AssetRegistry::ReimportFromOriginal(m_pods[i].get());
-				}
+				if (m_pods[i].get()->metadata.reimportOnLoad)
+					[[unlikely]]
+					{
+						// reimportEntries[threadIndex].push_back(m_pods[i].get());
+						AssetRegistry::ReimportFromOriginal(m_pods[i].get());
+					}
 			}
 			return true;
 		};

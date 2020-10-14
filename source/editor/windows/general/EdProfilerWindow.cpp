@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "EdProfilerWindow.h"
 
 #include "editor/imgui/ImEd.h"

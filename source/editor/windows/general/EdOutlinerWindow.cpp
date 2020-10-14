@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "EdOutlinerWindow.h"
 
 #include "assets/pods/Mesh.h"

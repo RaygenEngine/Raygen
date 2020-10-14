@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "GpuSampler.h"
 
 #include "assets/pods/Sampler.h"

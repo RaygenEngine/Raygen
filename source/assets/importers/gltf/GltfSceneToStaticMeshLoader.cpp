@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "GltfSceneToStaticMeshLoader.h"
 
 #include "assets/AssetImporterManager.h"

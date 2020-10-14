@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "TopLevelAs.h"
 
 #include "assets/StdAssets.h"
@@ -74,9 +73,8 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 
 
 	for (auto geom : geoms) {
-		if (!geom) [[unlikely]] {
-			continue;
-		}
+		if (!geom)
+			[[unlikely]] { continue; }
 		auto transform = geom->transform;
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {

@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Image.h"
 
 glm::vec4 Image::BilinearSample(float u, float v, glm::vec2 pixelOffset) const

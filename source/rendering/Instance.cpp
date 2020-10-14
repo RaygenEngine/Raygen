@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Instance.h"
 
 #include "engine/console/ConsoleVariable.h"

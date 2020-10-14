@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "SkinnedMeshComponent.h"
 
 #include "rendering/assets/GpuAssetManager.h"

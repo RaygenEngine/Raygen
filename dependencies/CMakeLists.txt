@@ -46,11 +46,11 @@ set_target_properties(
 	spdlog
 	glslang
 	HLSL
-	core_tables
-	extinst_tables
-	enum_string_mapping
-	SPIRV-Tools-opt
-	SPIRV-Tools-static
+	#core_tables
+	#extinst_tables
+	#enum_string_mapping
+	#SPIRV-Tools-opt
+	#SPIRV-Tools-static
 	spirv-cross-core
 	spirv-cross-glsl
 	spirv-cross-reflect

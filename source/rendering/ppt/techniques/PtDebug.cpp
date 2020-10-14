@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "PtDebug.h"
 
 #include "rendering/assets/GpuAssetManager.h"

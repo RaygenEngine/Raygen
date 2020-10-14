@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "BrdfLutCalculation.h"
 
 #include "assets/AssetRegistry.h"

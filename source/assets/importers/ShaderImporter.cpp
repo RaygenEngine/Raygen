@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "ShaderImporter.h"
 
 #include "assets/AssetImporterManager.h"

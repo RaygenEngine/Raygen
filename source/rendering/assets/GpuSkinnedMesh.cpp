@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "GpuSkinnedMesh.h"
 
 #include "assets/pods/SkinnedMesh.h"

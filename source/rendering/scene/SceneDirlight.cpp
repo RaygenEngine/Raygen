@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "SceneDirlight.h"
 
 #include "core/math-ext/Frustum.h"

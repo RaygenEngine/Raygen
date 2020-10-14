@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Depthmap.h"
 
 #include "rendering/assets/GpuAssetManager.h"

@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "SceneStructs.h"
 
 #include "rendering/wrappers/Buffer.h"

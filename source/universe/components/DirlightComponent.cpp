@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "DirlightComponent.h"
 
 #include "assets/PodEditor.h"

@@ -1,17 +1,11 @@
-#include "pch.h"
 #include "EditorCamera.h"
 
-
-#include "engine/Input.h"
-#include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/Scene.h"
-
 #include "editor/Editor.h"
-#include "engine/Events.h"
 #include "engine/Engine.h"
-
-// NEXT: !!!
-#include "rendering/Renderer.h"
+#include "engine/Events.h"
+#include "engine/Input.h"
+#include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneCamera.h"
 
 namespace ed {
 
@@ -148,7 +142,6 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 		cam.ubo.projInv = projInv;
 		cam.ubo.viewProj = viewProj;
 		cam.ubo.viewProjInv = viewProjInv;
-		// vl::Renderer->m_raytracingPass.m_rtFrame = 0;
 	});
 
 	proj[1][1] *= -1.f;

@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "ShaderGen.h"
 
 #include "assets/pods/MaterialInstance.h"

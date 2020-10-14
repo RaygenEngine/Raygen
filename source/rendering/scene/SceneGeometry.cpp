@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "SceneGeometry.h"
 
 #include "rendering/Device.h"

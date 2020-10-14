@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Layouts.h"
 
 #include "rendering/passes/DepthmapPass.h"

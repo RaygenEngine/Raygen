@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "EdMeshGenerator.h"
 
 #include "assets/PodEditor.h"

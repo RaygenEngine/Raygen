@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "GpuAssetManager.h"
 
 #include "assets/AssetRegistry.h"

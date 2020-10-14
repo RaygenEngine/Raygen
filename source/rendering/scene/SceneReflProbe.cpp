@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "SceneReflProbe.h"
 
 #include "rendering/assets/GpuEnvironmentMap.h"

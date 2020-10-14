@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "PtLightBlend.h"
 
 #include "rendering/assets/GpuAssetManager.h"

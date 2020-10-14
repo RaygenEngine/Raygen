@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "RaytracingPass.h"
 
 #include "engine/console/ConsoleVariable.h"

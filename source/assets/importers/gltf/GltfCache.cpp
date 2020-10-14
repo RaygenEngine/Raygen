@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "GltfCache.h"
 
 #include "assets/AssetImporterManager.h"

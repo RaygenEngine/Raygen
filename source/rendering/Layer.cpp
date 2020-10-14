@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Layer.h"
 
 #include "assets/GpuAssetManager.h"
@@ -107,9 +106,8 @@ void Layer_::DrawFrame()
 	GpuAssetManager->ConsumeAssetUpdates();
 	currentScene->ConsumeCmdQueue();
 
-	if (!swapOutput->ShouldRenderThisFrame()) [[unlikely]] {
-		return;
-	}
+	if (!swapOutput->ShouldRenderThisFrame())
+		[[unlikely]] { return; }
 
 	swapOutput->OnPreRender();
 

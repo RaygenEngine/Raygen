@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "ImEd.h"
 
 #include "assets/PodEntry.h"

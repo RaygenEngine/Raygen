@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Renderer.h"
 
 #include "engine/console/ConsoleVariable.h"

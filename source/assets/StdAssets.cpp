@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "StdAssets.h"
 
 #include "assets/AssetManager.h"

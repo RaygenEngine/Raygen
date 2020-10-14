@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "universe/components/CameraComponent.h"
 
 #include "rendering/scene/SceneCamera.h"

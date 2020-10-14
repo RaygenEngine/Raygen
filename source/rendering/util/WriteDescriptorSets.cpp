@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "WriteDescriptorSets.h"
 
 #include "rendering/assets/GpuAssetManager.h"

@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "DescPoolAllocator.h"
 
 #include "engine/console/ConsoleVariable.h"

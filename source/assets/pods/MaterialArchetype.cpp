@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "MaterialArchetype.h"
 
 #include "assets/util/SpirvCompiler.h"

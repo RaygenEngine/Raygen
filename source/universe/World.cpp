@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "World.h"
 
 #include "assets/AssetManager.h"

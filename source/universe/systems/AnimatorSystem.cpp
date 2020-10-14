@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "AnimatorSystem.h"
 
 #include "universe/components/SkinnedMeshComponent.h"

@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "EdAssetListWindow.h"
 
 #include "core/StringUtl.h"

@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "EdGenericAssetEditorWindow.h"
 
 #include "editor/imgui/ImEd.h"

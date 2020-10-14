@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "EnvironmentMapImporter.h"
 
 #include "assets/AssetImporterManager.h"
