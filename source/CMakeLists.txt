@@ -26,24 +26,15 @@ add_library(Raygen-Shaders ${SHADER_SOURCES} ${DUMMY_CPP})
 
 # add pch for msvc 
 if(MSVC)
-	set(PrecompiledBinary "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIGURATION>_pch/pch.pch")
-
-	set_source_files_properties(pch.cpp
-								PROPERTIES 
-								COMPILE_FLAGS "/Yc\"pch.h\" /Fp\"${PrecompiledBinary}\""
-								OBJECT_OUTPUTS "${PrecompiledBinary}")
-	
-	set_source_files_properties(${SOURCE_FILES}
-								PROPERTIES 
-								COMPILE_FLAGS "/Yu\"pch.h\" /FI\"pch.h\" /Fp\"${PrecompiledBinary}\""
-							    OBJECT_DEPENDS "${PrecompiledBinary}")  
-										   
-	list(APPEND SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/pch.cpp")
 	list(APPEND APP_SOURCES platform/windows/resources/WinResource.rc)
 endif()
 
-add_library(Raygen ${SOURCE_FILES} ${HEADER_FILES})
+
+add_library(Raygen STATIC ${SOURCE_FILES} ${HEADER_FILES})
 add_executable(Raygen-App ${APP_SOURCES})
+
+# Must be used after add_library because CMake needs to know that pch.h is used in the particlar project
+target_precompile_headers(Raygen PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/pch.h") 
  
 if(MSVC)
 	set_property(TARGET Raygen-App PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
@@ -101,12 +92,8 @@ target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/cereal/includ
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/nativefiledialog/src/include)
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/spirv-cross/include)
 
-
 target_include_directories(Raygen PUBLIC ${Vulkan_INCLUDE_DIR}/../glslang)
-
-
 target_include_directories(Raygen PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
 target_include_directories(Raygen PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 #include_directories(RAYGEN_INCLUDE_DIRS_LOCAL)
