@@ -35,8 +35,6 @@ struct Spotlight
 	vec3 direction;
 	float pad1;
 
-	// CHECK: could pass this mat from push constants (is it better tho?)
-	// Lightmap
 	mat4 viewProj;
 	vec3 color;
 	float pad3;

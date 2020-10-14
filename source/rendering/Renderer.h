@@ -10,7 +10,6 @@
 
 namespace vl {
 
-// TODO: tidy
 inline class Renderer_ : public Listener {
 
 private:
@@ -46,10 +45,6 @@ private:
 	} m_secondaryBuffersPool;
 
 
-protected:
-	// CHECK: boolflag event, (impossible to use here current because of init order)
-
-
 public:
 	vk::Extent2D m_extent{};
 
@@ -65,12 +60,7 @@ public:
 	InFlightResources<vk::DescriptorSet> m_attachmentsDesc;
 
 
-	// TODO: RT, move those
-	InFlightResources<vk::DescriptorSet> m_rtDescSet;
-
 	PtLightBlend lightblendPass;
-
-	//
 
 	RaytracingPass m_raytracingPass;
 

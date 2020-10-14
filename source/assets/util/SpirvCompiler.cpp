@@ -253,7 +253,6 @@ EShLanguage FindLanguage(const std::string& filename)
 
 EShLanguage LangFromStage(ShaderStageType type)
 {
-	// TODO: Use non NV versions of the enum
 	switch (type) {
 		case ShaderStageType::Vertex: return EShLangVertex;
 		case ShaderStageType::TessControl: return EShLangTessControl;
@@ -261,12 +260,12 @@ EShLanguage LangFromStage(ShaderStageType type)
 		case ShaderStageType::Geometry: return EShLangGeometry;
 		case ShaderStageType::Fragment: return EShLangFragment;
 		case ShaderStageType::Compute: return EShLangCompute;
-		case ShaderStageType::RayGen: return EShLangRayGenNV;
-		case ShaderStageType::Intersect: return EShLangIntersectNV;
-		case ShaderStageType::AnyHit: return EShLangAnyHitNV;
-		case ShaderStageType::ClosestHit: return EShLangClosestHitNV;
-		case ShaderStageType::Miss: return EShLangMissNV;
-		case ShaderStageType::Callable: return EShLangCallableNV;
+		case ShaderStageType::RayGen: return EShLangRayGen;
+		case ShaderStageType::Intersect: return EShLangIntersect;
+		case ShaderStageType::AnyHit: return EShLangAnyHit;
+		case ShaderStageType::ClosestHit: return EShLangClosestHit;
+		case ShaderStageType::Miss: return EShLangMiss;
+		case ShaderStageType::Callable: return EShLangCallable;
 	}
 	return EShLangVertex;
 }

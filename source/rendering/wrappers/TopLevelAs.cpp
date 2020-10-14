@@ -96,7 +96,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 	}
 
 	auto imgSize = GpuAssetManager->Z_GetSize();
-	sceneDesc.descSet = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(imgSize);
+	sceneDesc.descSet = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(static_cast<int32>(imgSize));
 
 
 	sceneDesc.WriteImages();

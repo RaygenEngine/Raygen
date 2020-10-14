@@ -33,7 +33,6 @@ BasePodHandle MaterialInstanceImporter::Import(const fs::path& path)
 		path.generic_string(), "INST " + path.filename().replace_extension().generic_string(), false, true);
 
 	{
-		// CHECK: Editor in importer
 		PodEditor arch(archetype);
 		arch->instances.push_back(handle);
 	}

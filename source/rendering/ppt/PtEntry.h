@@ -13,13 +13,5 @@ struct PtEntry {
 	size_t entryIndex;
 
 	std::function<PtBase*()> constructor;
-
-
-	// TODO: POSTPROC Probably grab from instance
-	// const ReflClass* settingsClass;
-	// void* settingsInstance;
-
-	// Pt Entry sets (x | y | z)
-	// Requires set
 };
 } // namespace vl

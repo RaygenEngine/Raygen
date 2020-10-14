@@ -217,7 +217,7 @@ void UnlitPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 
 			cmdBuffer.drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 		}
-		// TODO: Unlit Animations
+		// CHECK: Unlit Animations
 	}
 }
 

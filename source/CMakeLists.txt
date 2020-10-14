@@ -103,7 +103,7 @@ set_property(TARGET Raygen Raygen-App PROPERTY CXX_STANDARD_REQUIRED ON)
 
 
 #definitions (WINDOWS)
-add_compile_definitions(NOMINMAX NODRAWTEXT NOOPENFILE) # TODO:
+add_compile_definitions(NOMINMAX NODRAWTEXT NOOPENFILE) # CHECK:
 
 # multi-core compilation
 if(MSVC)

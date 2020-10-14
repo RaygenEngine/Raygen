@@ -16,8 +16,6 @@ concept StaticPipeClass = requires
 		T::MakePipelineLayout()
 	}
 	->std::convertible_to<vk::UniquePipelineLayout>;
-
-	// TODO: Finish concept
 };
 
 class StaticPipes {

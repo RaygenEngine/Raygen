@@ -55,8 +55,20 @@ Depthmap::Depthmap(uint32 width, uint32 height, const char* name)
 	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 }
 
-// Depthmap::~Depthmap()
-//{
-//	 GpuResources::ReleaseSampler(depthSampler);
-//}
+Depthmap& Depthmap::operator=(Depthmap&& other)
+{
+	framebuffer = std::move(other.framebuffer);
+	depthSampler = other.depthSampler;
+	descSet = other.descSet;
+	other.depthSampler = nullptr;
+
+	return *this;
+}
+
+Depthmap::~Depthmap()
+{
+	if (depthSampler) {
+		GpuResources::ReleaseSampler(depthSampler);
+	}
+}
 } // namespace vl

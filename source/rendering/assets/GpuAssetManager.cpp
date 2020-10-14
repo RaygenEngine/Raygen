@@ -66,7 +66,7 @@ void GpuAssetManager_::SortAssetUpdates(std::vector<std::pair<size_t, AssetUpdat
 {
 	// Sort asset updates based on dependencies to avoid double updates & ensure proper updating order
 
-	// NOTE: When impelementing this one should consider that gpu assets may have new dependecies. This requres a whole
+	// NOTE: When impelementing this one should consider that gpu assets may have new dependecies. This requires a whole
 	// system that would allow early exits in the update function of gpu assets. ie evaluate new dependicies, check if
 	// they are 'dirty' and update later (when they will not be dirty)
 	// TODO:

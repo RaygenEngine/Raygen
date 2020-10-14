@@ -64,12 +64,12 @@ void main( ) {
     float NoV = abs(dot(N, V)) + 1e-5;
 	
 	const float MAX_REFLECTION_LOD = 4.0;
-	// CHECK: which roughness should go here
+	// SMATH: which roughness should go here
 	float lod = (frag.a * MAX_REFLECTION_LOD); 
 	
 	vec3 brdf = (texture(brdfLutSampler, vec2(NoV, frag.a))).rgb;
 
-	// CHECK: math of those
+	// SMATH: math of those
 	vec3 diffuseLight = texture(irradianceSampler, N).rgb;
 	vec3 specularLight = textureLod(prefilteredSampler, R, lod).rgb;
 

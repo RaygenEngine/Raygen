@@ -137,7 +137,7 @@ void EditorObject_::UpdateEditor()
 	}
 	m_deferredCommands.clear();
 
-	edCamera.Update(1.f / std::max(Engine.GetFPS(), 1.f)); // NEXT: fix 1 / fps
+	edCamera.Update(1.f / std::max(Engine.GetFPS(), 1.f)); // TODO: fix 1 / fps
 	edCamera.EnqueueUpdateCmds(vl::Layer->mainScene);
 
 	HandleInput();

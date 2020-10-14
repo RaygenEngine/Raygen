@@ -22,6 +22,8 @@ public:
 
 	InFlightResources<RImageAttachment> m_indirectResult;
 
+	InFlightResources<vk::DescriptorSet> m_rtDescSet;
+
 
 	int32 m_rtFrame{ 0 };
 

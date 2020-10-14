@@ -14,7 +14,7 @@ GpuImage::GpuImage(PodHandle<::Image> podHandle)
 	Update({});
 }
 
-// CHECK: Check usage, probably wrong because we remake "image" member variable.
+// PERF: Check usage, probably wrong because we remake "image" member variable.
 void GpuImage::Update(const AssetUpdateInfo& info)
 {
 	auto imgData = podHandle.Lock();

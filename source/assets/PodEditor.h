@@ -25,8 +25,7 @@ public:
 	OptionalPodEditor(PodHandle<PodType>& handle)
 		: pod(handle)
 	{
-		// TODO:
-		// CLOG_ABORT(handle.IsDefault(), "");
+		CLOG_ERROR(handle.IsDefault(), "Editing default pod: {}, {}", handle.uid, mti::GetName<PodType>());
 	}
 	~OptionalPodEditor() { CommitForGpu(); }
 
@@ -35,7 +34,7 @@ public:
 	PodType* BeginOptionalEditRegion()
 	{
 		inEditRegion = true;
-		return const_cast<PodType*>(pod.Lock()); // TODO: get through asset manager
+		return const_cast<PodType*>(pod.Lock()); // CHECK: get through asset manager
 	}
 	void MarkEdit()
 	{

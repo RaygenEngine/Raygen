@@ -34,7 +34,7 @@ std::vector<glm::mat4> TickSamplers(CSkinnedMesh& sm, float deltaSeconds)
 		scales[i] = mesh->joints[i].scale;
 	}
 
-	// TODO: BUG:
+	// CHECK: BUG:
 	// This logic is incorrect when there is no inputs for a timestrip in a particular sampler. (can happen at the
 	// ending of the animation) When this happens what should be sampled is the last keyframe (instead of the initial
 	// position)

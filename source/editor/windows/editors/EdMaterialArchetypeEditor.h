@@ -8,7 +8,6 @@ namespace ed {
 class MaterialArchetypeEditorWindow : public AssetEditorWindowTemplate<MaterialArchetype> {
 
 	struct ShaderEditorTab {
-		// CHECK: Is pointer to member actually the best way to implement this?
 		// Pointer to a MaterialArchetype str::string, used to store what field each editor is responsible for.
 		using MemberStringT = decltype(&MaterialArchetype::gbufferFragMain);
 

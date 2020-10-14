@@ -23,7 +23,7 @@ vec3 GetSkyColor(vec3 orig, vec3 dir) {
 	
 	// mu is the cosine of the angle between
 	// the sun direction and the ray direction
-	// CHECK: do we saturate here? 
+	// SMATH: do we saturate here? 
 	float mu = saturate(dot(dir, sunDirection));  
 	float phaseR = 3.f / (16.f * PI) * (1 + mu * mu); 
    

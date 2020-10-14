@@ -161,14 +161,6 @@ vec3 DirectLightBRDF(float NoL, float NoV, float NoH, float LoH, float a, vec3 a
     return DiffuseTerm(NoL, NoV, LoH, a, albedo, kd) + SpecularTerm(NoV, NoL, NoH, a, ks);
 }
 
-/*
-WIP: 
-ve3 StandardBRDF(IncidentSpaceInfo incidentSpace, FragBrdfInfo brdfInfo) 
-{
-    return DisneyDiffuse(.., brdfInfo.diffuseColor) + SpecularTerm(.., brdfInfo.f0, brdfInfo.a);
-}
-*/
-
 // SMATH: where is D?
 vec3 importanceSampleGGX(vec2 u, float a) 
 {

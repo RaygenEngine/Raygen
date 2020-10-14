@@ -7,6 +7,7 @@
 #include "rendering/StaticPipes.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/scene/SceneCamera.h"
+#include "rendering/scene/Scene.h"
 
 vk::UniquePipelineLayout vl::SpotlightBlend::MakePipelineLayout()
 {

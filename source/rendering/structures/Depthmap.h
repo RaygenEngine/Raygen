@@ -11,6 +11,14 @@ struct Depthmap {
 
 	Depthmap() = default;
 	Depthmap(uint32 width, uint32 height, const char* name = "depthmap");
-	//~Depthmap(); NEXT:
+
+	Depthmap(Depthmap const&) = delete;
+	// CHECK:
+	Depthmap(Depthmap&&) = delete;
+	Depthmap& operator=(Depthmap const&) = delete;
+	Depthmap& operator=(Depthmap&& other);
+
+
+	~Depthmap();
 };
 } // namespace vl

@@ -156,10 +156,8 @@ void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vec
 			auto& dep = subpassDependencies.emplace_back();
 			dep.setSrcSubpass(srcSubpass)
 				.setDstSubpass(subpassIndex)
-				// NEXT: CHECK: for gbuffer depth in light pass
 				.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
 				.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
-				//
 				.setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader)
 				.setDstAccessMask(vk::AccessFlagBits::eShaderRead)
 				.setDependencyFlags(vk::DependencyFlagBits::eByRegion);

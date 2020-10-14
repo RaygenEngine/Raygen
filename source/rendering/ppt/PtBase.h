@@ -22,12 +22,9 @@ public:
 	PtBase& operator=(PtBase&&) = default;
 
 	virtual ~PtBase() = default;
-
-	// TODO: Reflected settings struct
 };
 
 
-// TODO: Proper concept
 template<typename T>
 concept CPostTech = requires
 {
@@ -35,7 +32,6 @@ concept CPostTech = requires
 };
 
 // Base class for a the most common use case of PPT setup.
-// TODO: Automated descriptor sets & binding without virtual call
 class PtBase_SinglePipeline : public PtBase {
 
 
