@@ -164,17 +164,16 @@ void RaytracingPass::CreateRtShaderBindingTable()
 
 ConsoleVariable<float> console_rtRenderScale = { "rt.scale", 1.f, "Set rt render scale" };
 
-void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Renderer_* renderer)
+void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
+	Renderer_* renderer) // TODO: remove renderer parameter
 {
-	// TODO: secondary command buffers?
-
 	m_indirectResult[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
 		vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
 		vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipeline.get());
 
-	DEBUG_NAME_AUTO(renderer->m_rtDescSet[sceneDesc.frameIndex]);
+	DEBUG_NAME_AUTO(m_rtDescSet[sceneDesc.frameIndex]);
 	DEBUG_NAME_AUTO(sceneDesc.scene->sceneAsDescSet);
 	DEBUG_NAME_AUTO(sceneDesc.viewer->descSet[sceneDesc.frameIndex]);
 	DEBUG_NAME_AUTO(sceneDesc.scene->tlas.sceneDesc.descSet[sceneDesc.frameIndex]);
@@ -186,7 +185,7 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 		&sceneDesc.viewer->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 2u, 1u,
-		&renderer->m_rtDescSet[sceneDesc.frameIndex], 0u, nullptr);
+		&m_rtDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 3u, 1u,
 		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);

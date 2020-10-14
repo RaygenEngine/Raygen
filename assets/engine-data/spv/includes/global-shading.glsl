@@ -55,7 +55,7 @@ FsSpaceInfo GetFragSpace_World(vec3 worldNormal, vec3 worldPos, vec3 worldViewPo
 
 
 /*
-WIP: 
+TODO: 
 void PopulateIncidentCache(inout IncidentSpaceInfo incidenceSpace) {
     
 }

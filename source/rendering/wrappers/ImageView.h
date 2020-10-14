@@ -75,7 +75,7 @@ struct RImage2D : RImage {
 		: RImage(vk::ImageType::e2D, { width, height, 1u }, mipLevels, 1u, format, tiling, initalLayout, usage,
 			vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, {}, properties, vk::ImageViewType::e2D, name){};
 
-	// TODO: Refactor to constructor and cleanup old constructors
+	// WIP: Refactor to constructor and cleanup old constructors
 	// This will transition the image to final layout unless final layout is eUndefined
 	static RImage2D Create(const std::string& name, vk::Extent2D extent, vk::Format format,
 		vk::ImageLayout finalLayout = vk::ImageLayout::eUndefined,

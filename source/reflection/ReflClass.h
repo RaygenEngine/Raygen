@@ -198,7 +198,7 @@ public:
 	// Returns nullptr if property was not found.
 	[[nodiscard]] const Property* GetPropertyByName(std::string_view name) const
 	{
-		// CHECK: Fix hashmap to work with string_view hashing
+		// PERF: Fix hashmap to work with string_view hashing
 		return GetPropertyByName(std::string(name));
 	}
 
@@ -229,7 +229,7 @@ public:
 class RuntimeClass : public ReflClass {
 public:
 	// UnqiuePtr avoids small string optimisation string that gets mov'ed when resizing.
-	// CHECK:
+	// PERF:
 	std::vector<UniquePtr<std::string>> m_stringviewBank;
 
 protected:

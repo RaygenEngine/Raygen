@@ -34,8 +34,6 @@ layout(set = 2, binding = 0) uniform UBO_Dirlight {
 		vec3 front;
 		float pad0;
 
-		// CHECK: could pass this mat from push constants (is it better tho?)
-		// Lightmap
 		mat4 viewProj;
 		vec3 color;
 		float pad3;

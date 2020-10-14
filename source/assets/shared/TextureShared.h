@@ -13,7 +13,6 @@ enum class MipmapFiltering
 	NoMipmap
 };
 
-// CHECK: (mirrored clamping etc)
 enum class TextureWrapping
 {
 	ClampToEdge,

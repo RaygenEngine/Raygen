@@ -47,7 +47,6 @@ Onb computeOnb(vec3 n)
 	return res;
 }
 
-// TEST: return or by "ref"
 // CHECK: are those normalized
 void toOnbSpace(Onb orthoBasis, inout vec3 v)
 {

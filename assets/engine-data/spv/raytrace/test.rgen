@@ -205,7 +205,7 @@ ReprojectionData ReprojSample(vec2 sampleUv, vec4 centerUvDrawIndex, float expec
 		}
 	}
 
-	// TODO: test history accumulation per sample in conjunction with adaptive sampling
+
 	// This "valid" check should probably have min bias
 	if (sumW > 0) {
 		color /= sumW;

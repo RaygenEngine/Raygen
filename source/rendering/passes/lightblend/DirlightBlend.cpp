@@ -1,12 +1,13 @@
 #include "DirlightBlend.h"
 
-#include "rendering/core/PipeUtl.h"
-#include "rendering/Layouts.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/StaticPipes.h"
-#include "rendering/scene/SceneDirlight.h"
+#include "rendering/core/PipeUtl.h"
+#include "rendering/Layouts.h"
+#include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
+#include "rendering/scene/SceneDirlight.h"
+#include "rendering/StaticPipes.h"
 
 namespace vl {
 vk::UniquePipelineLayout DirlightBlend::MakePipelineLayout()

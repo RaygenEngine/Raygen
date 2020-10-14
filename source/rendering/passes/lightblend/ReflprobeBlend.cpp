@@ -8,6 +8,7 @@
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/assets/GpuEnvironmentMap.h"
+#include "rendering/scene/Scene.h"
 
 vk::UniquePipelineLayout vl::ReflprobeBlend::MakePipelineLayout()
 {

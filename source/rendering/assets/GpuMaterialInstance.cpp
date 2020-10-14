@@ -105,7 +105,7 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 void GpuMaterialInstance::UpdateRtMaterial(const AssetUpdateInfo& info)
 {
 	if (archetype != StdAssets::GltfArchetype()) {
-		return; // NEXT:
+		return;
 	}
 	auto& samplers = podHandle.Lock()->descriptorSet.samplers2d;
 

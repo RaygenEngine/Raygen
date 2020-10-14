@@ -33,9 +33,7 @@ namespace detail {
 
 		constexpr bool compare(std::string_view str1, std::string_view str2) const noexcept
 		{
-			return ((str1.size() == str2.size())
-					&& std::equal(str1.begin(), str1.end(), str2.begin(),
-						&compareChar)); // CHECK: needs c++20 for constexpr (no compiler support yet)
+			return ((str1.size() == str2.size()) && std::equal(str1.begin(), str1.end(), str2.begin(), &compareChar));
 		}
 	};
 

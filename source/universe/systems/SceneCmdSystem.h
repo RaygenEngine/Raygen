@@ -71,7 +71,6 @@ void EnqueueRecreateCmds(Scene* scene, entt::registry& reg)
 class SceneCmdSystem {
 
 	// std::function like declaration of function pointers
-	// CHECK: Function returning function & casting
 	template<typename ReturnType, typename... Args>
 	using FnPtr = ReturnType (*)(Args...);
 

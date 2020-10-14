@@ -7,6 +7,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
 #include <glm/glm.hpp>
+#include <glm/glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
 
@@ -14,26 +15,6 @@ constexpr glm::vec3 engineSpaceUp{ 0.f, 1.f, 0.f };
 constexpr glm::vec3 engineSpaceFront{ 0.f, 0.f, -1.f };
 constexpr glm::vec3 engineSpaceRight{ 1.f, 0.f, 0.f };
 
-struct TransformCache {
-	glm::vec3 position{};
-	glm::vec3 scale{ 1.0f, 1.0f, 1.0f };
-	glm::quat orientation{ glm::identity<glm::quat>() };
-
-	glm::mat4 transform{ glm::identity<glm::mat4>() };
-
-	[[nodiscard]] glm::vec3 up() const { return orientation * engineSpaceUp; }
-	[[nodiscard]] glm::vec3 front() const { return orientation * engineSpaceFront; };
-	[[nodiscard]] glm::vec3 right() const { return orientation * engineSpaceRight; };
-	// pitch, yaw, roll, in degrees
-	[[nodiscard]] glm::vec3 pyr() const { return glm::degrees(glm::eulerAngles(orientation)); }
-	[[nodiscard]] void setPyr(glm::vec3 pyr) { orientation = glm::quat(glm::radians(pyr)); }
-
-	// TODO: Move compose/decompose from BasicComponent.cpp
-	// Updates transform from TRS
-	void Compose();
-	// Updates TRS from transform
-	void Decompose();
-};
 
 namespace math {
 template<typename T>
@@ -120,3 +101,30 @@ int32 roundToInt(T number)
 	return static_cast<int32>(glm::round(number));
 }
 } // namespace math
+
+struct TransformCache {
+	glm::vec3 position{};
+	glm::vec3 scale{ 1.0f, 1.0f, 1.0f };
+	glm::quat orientation{ glm::identity<glm::quat>() };
+
+	glm::mat4 transform{ glm::identity<glm::mat4>() };
+
+	[[nodiscard]] glm::vec3 up() const { return orientation * engineSpaceUp; }
+	[[nodiscard]] glm::vec3 front() const { return orientation * engineSpaceFront; };
+	[[nodiscard]] glm::vec3 right() const { return orientation * engineSpaceRight; };
+	// pitch, yaw, roll, in degrees
+	[[nodiscard]] glm::vec3 pyr() const { return glm::degrees(glm::eulerAngles(orientation)); }
+	[[nodiscard]] void setPyr(glm::vec3 pyr) { orientation = glm::quat(glm::radians(pyr)); }
+
+	// TODO: Move compose/decompose from BasicComponent.cpp
+	// Updates transform from TRS
+	void Compose() { transform = math::transformMat(scale, orientation, position); }
+	// Updates TRS from transform
+	void Decompose()
+	{
+		glm::vec4 persp{};
+		glm::vec3 skew{};
+
+		glm::decompose(transform, scale, orientation, position, skew, persp);
+	}
+};

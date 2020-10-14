@@ -49,7 +49,7 @@ inline struct Layouts_ {
 
 
 	RRenderPassLayout gbufferPassLayout;
-	RRenderPassLayout rasterDirectPassLayout; // TODO: subpass of gbuffer
+	RRenderPassLayout rasterDirectPassLayout; // PERF: subpass of gbuffer
 
 
 	RRenderPassLayout svgfPassLayout;

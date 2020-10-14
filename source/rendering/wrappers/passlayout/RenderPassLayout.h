@@ -157,10 +157,6 @@ public:
 	// Requests the render pass to transition this attachment to the requested layout after ending
 	void AttachmentFinalLayout(AttachmentRef att, vk::ImageLayout postRenderPassLayout);
 
-
-	// TODO: Used to inform this system of manual transitions for image layouts.
-	// void RegisterManualTransition(AttachmentRef att, vk::ImageLayout newLayout);
-
 	void AddSubpass(std::vector<AttachmentRef>&& inputs, std::vector<AttachmentRef>&& outputs);
 	void Generate();
 

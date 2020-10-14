@@ -126,7 +126,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRe
 
 	m_ptPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&] {
 		// Post proc pass
-		lightblendPass.Draw(cmdBuffer, sceneDesc); // WIP: from post proc
+		lightblendPass.Draw(cmdBuffer, sceneDesc); // TODO: from post proc
 
 		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc);
 		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
@@ -175,9 +175,9 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 	// RT images
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		m_rtDescSet[i] = Layouts->tripleStorageImage.AllocDescriptorSet();
+		m_raytracingPass.m_rtDescSet[i] = Layouts->tripleStorageImage.AllocDescriptorSet();
 
-		rvk::writeDescriptorImages(m_rtDescSet[i], 0u,
+		rvk::writeDescriptorImages(m_raytracingPass.m_rtDescSet[i], 0u,
 			{ m_raytracingPass.svgfPass.swappingImages[0].view(), m_raytracingPass.m_progressiveResult.view(),
 				m_raytracingPass.m_momentsBuffer.view() },
 			vk::DescriptorType::eStorageImage, nullptr, vk::ImageLayout::eGeneral);

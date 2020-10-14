@@ -49,7 +49,7 @@ Device_::Device_(RPhysicalDevice& pd)
 			computeQueueFamily = fam;
 		}
 
-		// present queue, TODO: benchmark (queue count, graphics vs compute, etc)
+		// present queue, CHECK: benchmark (queue count, graphics vs compute, etc)
 		if (fam.supportsPresent && supportsGraphics) {
 			presentQueueFamily = fam;
 		}

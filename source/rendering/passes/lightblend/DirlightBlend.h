@@ -1,5 +1,6 @@
 #pragma once
-#include "rendering/scene/Scene.h" // TODO: fwd declare?
+
+struct SceneRenderDesc;
 
 namespace vl {
 struct DirlightBlend {

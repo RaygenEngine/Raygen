@@ -111,7 +111,7 @@ PixelData LoadPixelData(ivec2 iuv, ivec2 screenSize) {
 	data.color = imageLoad(svgfInput, iuv);
 	data.luminance = luminance(data.color.rgb);
 	
-	vec2 uv = iuv / screenSize; // TODO: probably needs pixel offset
+	vec2 uv = iuv / screenSize; 
 	data.normal = texture(g_NormalSampler, uv).rgb;
 
 	return data;

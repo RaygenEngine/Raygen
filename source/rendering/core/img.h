@@ -2,8 +2,6 @@
 #include "assets/shared/ImageShared.h"
 #include "assets/shared/TextureShared.h"
 
-// WIP: rename header
-
 namespace rvk {
 
 inline vk::Filter getTextureFilter(TextureFiltering f)
@@ -103,14 +101,13 @@ inline vk::PipelineStageFlags pipelineStageForLayout(vk::ImageLayout layout)
 	}
 }
 
-// WIP: move function
+// CHECK:
 inline vk::PipelineStageFlags accessMaskPipelineStageFlags(vk::AccessFlags accessMask,
 	vk::PipelineStageFlags supportedShaderBits
 	= vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eTessellationControlShader
 	  | vk::PipelineStageFlagBits::eTessellationEvaluationShader | vk::PipelineStageFlagBits::eFragmentShader
 	  | vk::PipelineStageFlagBits::eGeometryShader | vk::PipelineStageFlagBits::eComputeShader
-	  | vk::PipelineStageFlagBits::eRayTracingShaderKHR // WIP: which shaders default
-)
+	  | vk::PipelineStageFlagBits::eRayTracingShaderKHR)
 {
 	if (!accessMask) {
 		return vk::PipelineStageFlagBits::eTopOfPipe;

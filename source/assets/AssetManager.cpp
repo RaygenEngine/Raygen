@@ -48,12 +48,6 @@ ConsoleFunction<> console_ReimportRtShaders{ "z.reimportRtShaders",
 	},
 	"Reimports and recompiles all rgen, rchit, rmiss loaded ShaderStages." };
 
-// TODO: remove this when done with shader reimporting
-struct PublicListener : public Listener {
-};
-PublicListener* dummy = new PublicListener();
-
-
 void PodDeleter::operator()(AssetPod* p)
 {
 	auto l = [](auto* pod) {
@@ -63,16 +57,6 @@ void PodDeleter::operator()(AssetPod* p)
 	};
 	podtools::VisitPod(p, l);
 }
-
-//// Dummy to avoid _Debug getting optimzed out
-// void Code()
-//{
-//	auto l = []<typename PodType>() {
-//		PodHandle<PodType> a;
-//		[[maybe_unused]] auto debug = a._Debug();
-//	};
-//	podtools::ForEachPodType(l);
-//}
 
 void AssetRegistry::ExportToLocationImpl(PodEntry* entry, const fs::path& path)
 {
@@ -338,10 +322,4 @@ AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& default
 	StdAssets::LoadAssets();
 
 	AssetRegistry::Get().LoadAllPodsInDirectory(defaultBinPath);
-
-	Event::OnWindowFocus.Bind(dummy, [](bool isFocused) {
-		if (isFocused) {
-			console_ReimportRtShaders.Execute("");
-		}
-	});
 }

@@ -85,10 +85,10 @@ void AttachmentDebuggerWindow::ImguiDraw()
 	auto& ptPassFramebuffer = vl::Renderer->m_ptPass.at(0).framebuffer;
 	auto& rtPassProgImage = vl::Renderer->m_raytracingPass.m_progressiveResult;
 
-	showFramebuffer(gbufferFramebuffer); // TODO: fix depth val errors
+	showFramebuffer(gbufferFramebuffer);
 	showFramebuffer(rasterDirectPassFramebuffer);
 	showFramebuffer(ptPassFramebuffer);
-	showImage(rtPassProgImage); // TODO: fix layout errors
+	showImage(rtPassProgImage);
 
 	showImage(vl::Renderer->m_raytracingPass.svgfPass.swappingImages[0]);
 	showImage(vl::Renderer->m_raytracingPass.svgfPass.swappingImages[1]);

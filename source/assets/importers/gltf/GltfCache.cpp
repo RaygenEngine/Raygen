@@ -40,8 +40,15 @@ GltfCache::GltfCache(const fs::path& path)
 
 void GltfCache::LoadImages()
 {
-	// CHECK: embedded images not supported currently
 	for (auto& img : gltfData->images) {
+		if (img.bufferView != -1)
+			[[unlikely]]
+			{
+				LOG_ERROR("GltfImporter: Embedded images not supported");
+				imagePods.emplace_back();
+				continue;
+			}
+
 		fs::path imgPath = systemPath.remove_filename() / img.uri;
 		imagePods.push_back(AssetImporterManager->ImportRequest<Image>(imgPath));
 	}
