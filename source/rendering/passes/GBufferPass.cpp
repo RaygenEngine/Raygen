@@ -230,7 +230,7 @@ vk::UniquePipeline GbufferPass::CreateAnimPipeline(
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
 
-void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
+void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	// PROFILE_SCOPE(Renderer);
 	auto descSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
@@ -256,30 +256,29 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc&
 			auto& arch = mat.archetype.Lock();
 
 
-			if (arch.isUnlit) [[unlikely]] {
-				continue;
-			}
+			if (arch.isUnlit)
+				[[unlikely]] { continue; }
 			auto& plLayout = *arch.gbuffer.pipelineLayout;
 
 			pc.drawIndex = float(gg.material.uid);
 
-			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
-			cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
+			cmdBuffer.pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 			if (mat.hasDescriptorSet) {
-				cmdBuffer->bindDescriptorSets(
+				cmdBuffer.bindDescriptorSets(
 					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
 			}
 
-			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
 
 			auto& gpuMesh = geom->mesh.Lock();
-			cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
-			cmdBuffer->bindIndexBuffer(
+			cmdBuffer.bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
+			cmdBuffer.bindIndexBuffer(
 				gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
 
 
-			cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+			cmdBuffer.drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 		}
 	}
 
@@ -295,31 +294,30 @@ void GbufferPass::RecordCmd(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc&
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
-			if (arch.isUnlit) [[unlikely]] {
-				continue;
-			}
+			if (arch.isUnlit)
+				[[unlikely]] { continue; }
 
 			auto& plLayout = *arch.gbufferAnimated.pipelineLayout;
 
-			cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbufferAnimated.pipeline);
-			cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbufferAnimated.pipeline);
+			cmdBuffer.pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 			if (mat.hasDescriptorSet) {
-				cmdBuffer->bindDescriptorSets(
+				cmdBuffer.bindDescriptorSets(
 					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
 			}
 
-			cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
 
-			cmdBuffer->bindDescriptorSets(
+			cmdBuffer.bindDescriptorSets(
 				vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u, &geom->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 			auto& gpuMesh = geom->mesh.Lock();
-			cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
-			cmdBuffer->bindIndexBuffer(
+			cmdBuffer.bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
+			cmdBuffer.bindIndexBuffer(
 				gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
 
-			cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+			cmdBuffer.drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 		}
 	}
 }

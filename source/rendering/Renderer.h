@@ -14,11 +14,11 @@ namespace vl {
 inline class Renderer_ : public Listener {
 
 private:
-	void RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 
-	// PtCollection m_postprocCollection; WIP:
+	// PtCollection m_postprocCollection;
 
 	struct SecondaryBufferPool {
 
