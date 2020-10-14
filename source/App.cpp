@@ -15,7 +15,7 @@
 App::App()
 {
 	m_name = "Raygen Engine";
-	m_initialScene = "abc.json";
+	m_initialScene = "engine-data/default.json";
 	m_assetPath = "assets";
 
 	m_windowTitle = "Raygen";
