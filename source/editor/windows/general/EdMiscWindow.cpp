@@ -7,7 +7,7 @@
 #include "editor/imgui/ImguiUtil.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/scene/SceneDirectionalLight.h"
+#include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "engine/Events.h"
 

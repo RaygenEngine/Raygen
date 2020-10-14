@@ -6,7 +6,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/StaticPipes.h"
-#include "rendering/scene/SceneDirectionalLight.h"
+#include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneCamera.h"
 
 namespace vl {
@@ -53,7 +53,7 @@ vk::UniquePipeline DirlightBlend::MakePipeline()
 
 void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	auto descSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
+	auto camDescSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
 
 	auto& pipeLayout = StaticPipes::GetLayout<DirlightBlend>();
 
@@ -61,7 +61,7 @@ void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sce
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 1u, 1u, &descSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 1u, 1u, &camDescSet, 0u, nullptr);
 
 	for (auto dl : sceneDesc->directionalLights.elements) {
 		if (!dl) {
@@ -74,7 +74,7 @@ void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sce
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 3u, 1u,
 			&dl->shadowmap[sceneDesc.frameIndex].descSet, 0u, nullptr);
 
-		// draw call (triangle)
+		// big triangle
 		cmdBuffer.draw(3u, 1u, 0u, 0u);
 	}
 }

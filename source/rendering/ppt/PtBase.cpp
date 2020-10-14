@@ -92,6 +92,7 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
+
 void PtBase_SinglePipeline::Utl_CreatePipelineLightPass(
 	GpuAsset<Shader>& shader, vk::PipelineColorBlendStateCreateInfo colorBlending, uint32 subpassIndex)
 {

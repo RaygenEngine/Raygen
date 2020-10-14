@@ -1,13 +1,13 @@
 #include "pch.h"
-#include "ReflectionProbeComponent.h"
+#include "ReflProbeComponent.h"
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuEnvironmentMap.h"
-#include "rendering/scene/SceneReflectionProbe.h"
+#include "rendering/scene/SceneReflProbe.h"
 
-DECLARE_DIRTY_FUNC(CReflectionProbe)(BasicComponent& bc)
+DECLARE_DIRTY_FUNC(CReflProbe)(BasicComponent& bc)
 {
-	return [=](SceneReflectionProbe& rp) {
+	return [=](SceneReflProbe& rp) {
 		if (FullDirty) {
 			rp.envmap = vl::GpuAssetManager->GetGpuHandle(environmentMap);
 		}

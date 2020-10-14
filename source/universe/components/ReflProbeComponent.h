@@ -3,10 +3,10 @@
 #include "universe/ComponentsDb.h"
 #include "universe/SceneComponentBase.h"
 
-struct SceneReflectionProbe;
+struct SceneReflProbe;
 
-struct CReflectionProbe : CSceneBase {
-	REFLECTED_SCENE_COMP(CReflectionProbe, SceneReflectionProbe)
+struct CReflProbe : CSceneBase {
+	REFLECTED_SCENE_COMP(CReflProbe, SceneReflProbe)
 	{
 		// REFLECT_ICON(FA_CUBE);
 		// REFLECT_CATEGORY("Rendering");

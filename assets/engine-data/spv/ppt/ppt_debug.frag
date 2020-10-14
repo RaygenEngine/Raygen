@@ -16,7 +16,7 @@ layout (input_attachment_index = 0, set = 0, binding = 0) uniform subpassInput i
 
 void main( ) {
 	vec3 color = subpassLoad(inputColor).rgb;
-	// outColor = vec4(vec3(1.0)-color, 1.0);
+	outColor = vec4(vec3(1.0)-color, 1.0);
 	outColor = subpassLoad(inputColor);
 }                                                                                                                          
 

@@ -7,7 +7,7 @@ namespace math {
 struct Frustum;
 } // namespace math
 
-struct DirectionalLight_Ubo {
+struct Dirlight_Ubo {
 	glm::vec4 front{};
 
 	// Lightmap
@@ -21,10 +21,10 @@ struct DirectionalLight_Ubo {
 	float sampleInvSpread{};
 };
 
-struct SceneDirectionalLight : SceneStruct {
-	SCENE_STRUCT(SceneDirectionalLight);
+struct SceneDirlight : SceneStruct {
+	SCENE_STRUCT(SceneDirlight);
 
-	DirectionalLight_Ubo ubo;
+	Dirlight_Ubo ubo;
 
 	InFlightResources<vl::Depthmap> shadowmap;
 
