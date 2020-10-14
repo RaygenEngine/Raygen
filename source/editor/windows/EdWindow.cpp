@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "EdWindow.h"
 
 #include "engine/Logger.h"

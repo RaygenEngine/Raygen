@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "PtBase.h"
 
 #include "assets/pods/Shader.h"

@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "EdPropertyEditorWindow.h"
 
 #include "assets/PodEditor.h"

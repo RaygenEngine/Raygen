@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "GltfSkinnedMeshLoader.h"
 
 #include "assets/AssetImporterManager.h"

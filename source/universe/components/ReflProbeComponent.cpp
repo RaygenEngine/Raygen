@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "ReflProbeComponent.h"
 
 #include "rendering/assets/GpuAssetManager.h"

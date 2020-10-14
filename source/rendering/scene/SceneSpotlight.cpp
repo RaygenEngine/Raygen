@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "SceneSpotlight.h"
 
 #include "rendering/structures/Depthmap.h"

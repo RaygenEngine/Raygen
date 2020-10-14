@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "GpuMaterialArchetype.h"
 
 #include "assets/pods/MaterialArchetype.h"

@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "SwapchainOutputPass.h"
 
 #include "rendering/Instance.h"

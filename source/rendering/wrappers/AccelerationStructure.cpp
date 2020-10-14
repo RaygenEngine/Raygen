@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "AccelerationStructure.h"
 
 #include "rendering/Device.h"

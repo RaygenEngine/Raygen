@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "SamplerPool.h"
 
 #include "rendering/Device.h"

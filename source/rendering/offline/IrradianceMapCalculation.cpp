@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "IrradianceMapCalculation.h"
 
 #include "assets/AssetRegistry.h"

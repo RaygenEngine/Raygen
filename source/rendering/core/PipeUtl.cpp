@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "PipeUtl.h"
 
 #include "rendering/Device.h"

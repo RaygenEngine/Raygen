@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Editor.h"
 
 #include "editor/DataStrings.h"

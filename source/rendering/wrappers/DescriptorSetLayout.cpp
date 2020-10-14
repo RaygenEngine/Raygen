@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "DescriptorSetLayout.h"
 
 #include "engine/Logger.h"

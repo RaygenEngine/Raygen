@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Console.h"
 
 #include "core/StringUtl.h"

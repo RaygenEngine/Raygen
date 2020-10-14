@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "PrefilteredMapCalculation.h"
 
 #include "assets/AssetRegistry.h"

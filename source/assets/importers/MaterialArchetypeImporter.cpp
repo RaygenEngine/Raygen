@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "MaterialArchetypeImporter.h"
 
 #include "assets/AssetImporterManager.h"

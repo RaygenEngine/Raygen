@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "DirlightBlend.h"
 
 #include "rendering/core/PipeUtl.h"

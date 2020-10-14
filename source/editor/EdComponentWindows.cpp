@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "EdComponentWindows.h"
 
 #include "assets/AssetManager.h"

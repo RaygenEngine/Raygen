@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "BottomLevelAs.h"
 
 #include "assets/shared/GeometryShared.h"

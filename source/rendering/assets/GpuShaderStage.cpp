@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "GpuShaderStage.h"
 
 #include "assets/AssetRegistry.h"

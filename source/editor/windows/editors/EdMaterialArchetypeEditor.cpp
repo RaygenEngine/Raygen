@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "EdMaterialArchetypeEditor.h"
 
 #include "assets/AssetRegistry.h"

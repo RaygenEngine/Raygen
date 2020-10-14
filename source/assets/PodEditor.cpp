@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "PodEditor.h"
 
 #include "assets/AssetRegistry.h"

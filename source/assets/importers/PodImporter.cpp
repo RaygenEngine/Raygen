@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "PodImporter.h"
 
 #include "reflection/ReflClass.h"

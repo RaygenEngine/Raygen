@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "ImporterRegistry.h"
 
 #include "assets/AssetImporterManager.h"

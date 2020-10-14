@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "GpuEnvironmentMap.h"
 
 #include "assets/pods/EnvironmentMap.h"

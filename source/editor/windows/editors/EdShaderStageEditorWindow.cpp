@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "EdShaderStageEditorWindow.h"
 
 #include "assets/AssetRegistry.h"

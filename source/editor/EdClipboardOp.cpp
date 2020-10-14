@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "EdClipboardOp.h"
 
 #include "universe/ComponentsDb.h"

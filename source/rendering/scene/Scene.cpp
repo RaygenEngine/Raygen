@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Scene.h"
 
 #include "assets/shared/GeometryShared.h"

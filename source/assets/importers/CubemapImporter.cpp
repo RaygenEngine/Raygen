@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "CubemapImporter.h"
 
 #include "assets/AssetImporterManager.h"

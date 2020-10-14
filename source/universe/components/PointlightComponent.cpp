@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "PointlightComponent.h"
 
 #include "rendering/scene/ScenePointlight.h"

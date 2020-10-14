@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "GpuShader.h"
 
 #include "assets/pods/Shader.h"

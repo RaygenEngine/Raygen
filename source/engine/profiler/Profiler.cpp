@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Profiler.h"
 
 #include "engine/Logger.h"

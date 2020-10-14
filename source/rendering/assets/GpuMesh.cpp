@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "GpuMesh.h"
 
 #include "assets/pods/Mesh.h"

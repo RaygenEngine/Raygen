@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "SpirvCompiler.h"
 
 #include "engine/Logger.h"

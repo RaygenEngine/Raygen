@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "GbufferPass.h"
 
 #include "assets/shared/GeometryShared.h"

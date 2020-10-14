@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Prefab.h"
 
 #include "universe/ComponentsDb.h"

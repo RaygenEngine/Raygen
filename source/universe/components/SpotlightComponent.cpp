@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "SpotlightComponent.h"
 
 #include "rendering/scene/SceneSpotlight.h"
