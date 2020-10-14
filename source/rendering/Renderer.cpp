@@ -49,11 +49,11 @@ void Renderer_::InitPipelines()
 	m_raytracingPass.MakeRtPipeline();
 }
 
-void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
+void Renderer_::RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
-	m_gbufferInst[sceneDesc.frameIndex].RecordPass(*cmdBuffer, vk::SubpassContents::eInline, [&]() {
+	m_gbufferInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 		//
 		GbufferPass::RecordCmd(cmdBuffer, sceneDesc);
 	});
@@ -91,15 +91,15 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer* cmdBuffer, const SceneRe
 			clearValues.setDepthStencil({ 1.0f, 0 });
 			renderPassInfo.setClearValues(clearValues);
 
-			cmdBuffer->beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
+			cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
 			{
 				auto buffers = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
 
 				DepthmapPass::RecordCmd(&buffers, viewport, scissor, light->ubo.viewProj, sceneDesc);
 
-				cmdBuffer->executeCommands({ buffers });
+				cmdBuffer.executeCommands({ buffers });
 			}
-			cmdBuffer->endRenderPass();
+			cmdBuffer.endRenderPass();
 		}
 	};
 
@@ -121,13 +121,13 @@ void Renderer_::RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneR
 	});
 }
 
-void Renderer_::RecordPostProcessPass(vk::CommandBuffer* cmdBuffer, const SceneRenderDesc& sceneDesc)
+void Renderer_::RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
-	m_ptPass[sceneDesc.frameIndex].RecordPass(*cmdBuffer, vk::SubpassContents::eInline, [&] {
+	m_ptPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&] {
 		// Post proc pass
-		lightblendPass.Draw(*cmdBuffer, sceneDesc); // WIP: from post proc
+		lightblendPass.Draw(cmdBuffer, sceneDesc); // WIP: from post proc
 
 		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc);
 		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
@@ -204,22 +204,22 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 	sceneDesc.attDesc = m_attachmentsDesc[sceneDesc.frameIndex];
 
 	// passes
-	RecordGeometryPasses(&cmdBuffer, sceneDesc);
+	RecordGeometryPasses(cmdBuffer, sceneDesc);
 	RecordRasterDirectPass(cmdBuffer, sceneDesc);
 
 
 	static bool raytrace = true;
 
-	// if (Input.IsJustPressed(Key::V)) {
-	//	raytrace = !raytrace;
-	//}
+	if (Input.IsJustPressed(Key::V)) {
+		raytrace = !raytrace;
+	}
 
-	// if (raytrace) {
-	//	m_raytracingPass.RecordPass(cmdBuffer, sceneDesc, this);
-	//}
+	if (raytrace) {
+		m_raytracingPass.RecordPass(cmdBuffer, sceneDesc, this);
+	}
 
 
-	RecordPostProcessPass(&cmdBuffer, sceneDesc);
+	RecordPostProcessPass(cmdBuffer, sceneDesc);
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 }
 } // namespace vl

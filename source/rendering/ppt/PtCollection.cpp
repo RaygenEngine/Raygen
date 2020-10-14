@@ -15,10 +15,7 @@ void PtCollection::RegisterTechniques()
 	// All postproc techniques should be registered here with the proper rendering order.
 	//
 
-	// LIGHT PASS
-	// NextTechnique<PtLightBlend>();
-	// NextTechnique<PtReflProb>();
-
+	NextTechnique<PtLightBlend>();
 
 	// COLOR
 
