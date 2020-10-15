@@ -163,7 +163,7 @@ void EditorObject_::UpdateEditor()
 		}
 
 		std::string s
-			= fmt::format("{:.1f} FPS : Rt Index: {}", Engine.GetFPS(), vl::Renderer->m_raytracingPass.m_rtFrame);
+			= fmt::format("{:.1f} FPS : Rt Index: {}", Engine.GetFPS(), 0 /*vl::Renderer->m_raytracingPass.m_rtFrame*/);
 		ImGui::Text(s.c_str());
 
 		ImGui::End();

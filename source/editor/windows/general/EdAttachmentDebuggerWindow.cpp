@@ -83,15 +83,15 @@ void AttachmentDebuggerWindow::ImguiDraw()
 	auto& gbufferFramebuffer = vl::Renderer->m_gbufferInst.at(0).framebuffer;
 	auto& rasterDirectPassFramebuffer = vl::Renderer->m_rasterDirectPass.at(0).framebuffer;
 	auto& ptPassFramebuffer = vl::Renderer->m_ptPass.at(0).framebuffer;
-	auto& rtPassProgImage = vl::Renderer->m_raytracingPass.m_progressiveResult;
+	// auto& rtPassProgImage = vl::Renderer->m_raytracingPass.m_progressiveResult;
 
 	showFramebuffer(gbufferFramebuffer);
 	showFramebuffer(rasterDirectPassFramebuffer);
 	showFramebuffer(ptPassFramebuffer);
-	showImage(rtPassProgImage);
+	// showImage(rtPassProgImage);
 
-	showImage(vl::Renderer->m_raytracingPass.svgfPass.swappingImages[0]);
-	showImage(vl::Renderer->m_raytracingPass.svgfPass.swappingImages[1]);
+	// showImage(vl::Renderer->m_raytracingPass.svgfPass.swappingImages[0]);
+	// showImage(vl::Renderer->m_raytracingPass.svgfPass.swappingImages[1]);
 
 	for (auto sl : vl::Layer->mainScene->spotlights.elements) {
 		if (sl) {
