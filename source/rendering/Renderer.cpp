@@ -45,7 +45,7 @@ void Renderer_::InitPipelines()
 	lightblendPass.MakeLayout();
 	lightblendPass.MakePipeline();
 
-	m_raytracingPass.MakeRtPipeline();
+	// m_raytracingPass.MakeRtPipeline();
 }
 
 void Renderer_::RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
@@ -154,7 +154,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 			fbSize.width, fbSize.height, { &m_gbufferInst[i].framebuffer[GDepth] });
 	}
 
-	m_raytracingPass.Resize(fbSize);
+	// m_raytracingPass.Resize(fbSize);
 
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
@@ -166,22 +166,22 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 			views.emplace_back(att.view());
 		}
 
-		views.emplace_back(m_rasterDirectPass[i].framebuffer[0].view());                        // rasterDirectSampler
-		views.emplace_back(m_raytracingPass.m_svgfRenderPassInstance[i].framebuffer[0].view()); // rtIndirectSampler
-		views.emplace_back(m_ptPass[i].framebuffer[0].view());                                  // sceneColorSampler
+		views.emplace_back(m_rasterDirectPass[i].framebuffer[0].view()); // rasterDirectSampler
+		// views.emplace_back(m_raytracingPass.m_svgfRenderPassInstance[i].framebuffer[0].view()); // rtIndirectSampler
+		views.emplace_back(m_ptPass[i].framebuffer[0].view()); // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_attachmentsDesc[i], 0u, std::move(views));
 	}
 
 	// RT images
-	for (size_t i = 0; i < c_framesInFlight; i++) {
+	/*for (size_t i = 0; i < c_framesInFlight; i++) {
 		m_raytracingPass.m_rtDescSet[i] = Layouts->tripleStorageImage.AllocDescriptorSet();
 
 		rvk::writeDescriptorImages(m_raytracingPass.m_rtDescSet[i], 0u,
 			{ m_raytracingPass.svgfPass.swappingImages[0].view(), m_raytracingPass.m_progressiveResult.view(),
 				m_raytracingPass.m_momentsBuffer.view() },
 			vk::DescriptorType::eStorageImage, nullptr, vk::ImageLayout::eGeneral);
-	}
+	}*/
 }
 
 InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
@@ -207,7 +207,7 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 	RecordRasterDirectPass(cmdBuffer, sceneDesc);
 
 
-	static bool raytrace = true;
+	/*static bool raytrace = true;
 
 	if (Input.IsJustPressed(Key::V)) {
 		raytrace = !raytrace;
@@ -215,7 +215,7 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 
 	if (raytrace) {
 		m_raytracingPass.RecordPass(cmdBuffer, sceneDesc, this);
-	}
+	}*/
 
 
 	RecordPostProcessPass(cmdBuffer, sceneDesc);

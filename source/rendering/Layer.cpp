@@ -100,7 +100,7 @@ void Layer_::DrawFrame()
 
 	if (!AssetRegistry::GetGpuUpdateRequests().empty()) {
 		currentScene->forceUpdateAccel = true;
-		vl::Renderer->m_raytracingPass.m_rtFrame = 0;
+		// vl::Renderer->m_raytracingPass.m_rtFrame = 0;
 	}
 
 	GpuAssetManager->ConsumeAssetUpdates();
