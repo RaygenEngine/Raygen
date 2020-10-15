@@ -6,25 +6,28 @@
 struct Scene_;
 
 namespace scenecmds {
-template<typename T>
-void EnqueueCreateCmds(Scene* scene, entt::registry& reg)
-{
-	auto view = reg.view<T, typename T::Create>(entt::exclude<typename T::Destroy>);
-	for (auto& [ent, sc] : view.each()) {
-		sc.sceneUid = scene->EnqueueCreateCmd<typename T::RenderSceneType>();
-	}
-}
 
 template<typename T>
-void EnqueueDestoryCmds(Scene* scene, entt::registry& reg)
+void EnqueueCreateDestroyCmds(Scene* scene, entt::registry& reg)
 {
-	auto view = reg.view<T, typename T::Destroy>();
-	for (auto& [ent, sc] : view.each()) {
-		scene->EnqueueDestroyCmd<typename T::RenderSceneType>(sc.sceneUid);
+	std::vector<size_t> destructions;
+	auto destroyView = reg.view<T, typename T::Destroy>();
 
-		// DO LAST: references may become invalidated.
+
+	for (auto& [ent, sc] : destroyView.each()) {
+		destructions.emplace_back(sc.sceneUid);
 		reg.remove<T>(ent);
 	}
+
+
+	std::vector<size_t*> constructions;
+	auto createView = reg.view<T, typename T::Create>(entt::exclude<typename T::Destroy>);
+
+	for (auto& [ent, sc] : createView.each()) {
+		constructions.emplace_back(&sc.sceneUid);
+	}
+
+	scene->EnqueueCreateDestoryCmds<typename T::RenderSceneType>(std::move(destructions), std::move(constructions));
 }
 
 template<typename T>
@@ -50,10 +53,14 @@ template<typename T>
 void EnqueueRecreateCmds(Scene* scene, entt::registry& reg)
 {
 	{
-		auto view = reg.view<T>(entt::exclude<typename T::Destroy>);
-		for (auto& [ent, sc] : view.each()) {
-			sc.sceneUid = scene->EnqueueCreateCmd<typename T::RenderSceneType>();
+		std::vector<size_t*> constructions;
+		auto createView = reg.view<T>(entt::exclude<typename T::Destroy>);
+
+		for (auto& [ent, sc] : createView.each()) {
+			constructions.emplace_back(&sc.sceneUid);
 		}
+
+		scene->EnqueueCreateDestoryCmds<typename T::RenderSceneType>({}, std::move(constructions));
 	}
 
 	{
@@ -79,8 +86,7 @@ class SceneCmdSystem {
 	// The equivelant destory is not required (yet) as you can just delete the whole scene
 	std::vector<FnPtr<void, Scene*, entt::registry&>> m_recreateCmds;
 
-	std::vector<FnPtr<void, Scene*, entt::registry&>> m_createCmds;
-	std::vector<FnPtr<void, Scene*, entt::registry&>> m_destroyCmds;
+	std::vector<FnPtr<void, Scene*, entt::registry&>> m_createDestroyCmds;
 
 	std::vector<FnPtr<void, Scene*, entt::registry&>> m_dirtyCmds;
 	std::vector<FnPtr<void, Scene*, entt::registry&>> m_transformCmds;
@@ -102,8 +108,7 @@ class SceneCmdSystem {
 		using SceneT = typename T::RenderSceneType;
 
 		m_recreateCmds.emplace_back(&scenecmds::EnqueueRecreateCmds<T>);
-		m_createCmds.emplace_back(&scenecmds::EnqueueCreateCmds<T>);
-		m_destroyCmds.emplace_back(&scenecmds::EnqueueDestoryCmds<T>);
+		m_createDestroyCmds.emplace_back(&scenecmds::EnqueueCreateDestroyCmds<T>);
 
 		m_dirtyCmds.emplace_back(&scenecmds::EnqueueDirtyCmds<T>);
 		m_transformCmds.emplace_back(&scenecmds::EnqueueTransformCmds<T>);

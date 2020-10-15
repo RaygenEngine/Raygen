@@ -3,13 +3,8 @@
 
 void SceneCmdSystem::WriteSceneCmds(Scene* scene, entt::registry& registry)
 {
-	// Write scene creations
-	for (auto fn : Get().m_createCmds) {
-		fn(scene, registry);
-	}
-
-	// Write scene destructions
-	for (auto fn : Get().m_destroyCmds) {
+	// Write scene creations destructions
+	for (auto fn : Get().m_createDestroyCmds) {
 		fn(scene, registry);
 	}
 

@@ -43,9 +43,8 @@ void Scene::DrainQueueForDestruction()
 
 Scene::Scene()
 {
+	cameras.elements.emplace_back(new SceneCamera()); // TODO: Editor camera
 	EnqueueEndFrame();
-	EnqueueCreateCmd<SceneCamera>(); // TODO: editor camera
-
 	sceneAsDescSet = vl::Layouts->accelLayout.AllocDescriptorSet();
 }
 

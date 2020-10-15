@@ -98,7 +98,9 @@ void EditorCamera::ResetRotation()
 
 void EditorCamera::InjectToScene(Scene* worldScene)
 {
-	sceneUid = worldScene->EnqueueCreateCmd<SceneCamera>();
+	// CHECK: Questionable usage of Enqueu cmd. If scene changes later to allow only one createdestroy per type this
+	// will be an error
+	worldScene->EnqueueCreateDestoryCmds<SceneCamera>({}, { &sceneUid });
 }
 
 void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)

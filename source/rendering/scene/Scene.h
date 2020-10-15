@@ -43,6 +43,47 @@ struct Scene {
 	SceneVector<SceneDirlight> directionalLights;
 	SceneVector<SceneReflProbe> reflProbs;
 
+	template<CSceneElem T>
+	SceneVector<T>& GetType()
+	{
+		if constexpr (std::is_same_v<SceneGeometry, T>) {
+			return geometries;
+		}
+		else if constexpr (std::is_same_v<SceneCamera, T>) {
+			return cameras;
+		}
+		else if constexpr (std::is_same_v<SceneSpotlight, T>) {
+			return spotlights;
+		}
+		else if constexpr (std::is_same_v<ScenePointlight, T>) {
+			return pointlights;
+		}
+		else if constexpr (std::is_same_v<SceneDirlight, T>) {
+			return directionalLights;
+		}
+		else if constexpr (std::is_same_v<SceneReflProbe, T>) {
+			return reflProbs;
+		}
+		else if constexpr (std::is_same_v<SceneAnimatedGeometry, T>) {
+			return animatedGeometries;
+		}
+		LOG_ABORT("Incorrect type");
+	}
+
+private:
+	void ExecuteCreations()
+	{
+		// std::lock_guard<std::mutex> guard(cmdAddPendingElementsMutex);
+		geometries.AppendPendingElements();
+		cameras.AppendPendingElements();
+		spotlights.AppendPendingElements();
+		pointlights.AppendPendingElements();
+		directionalLights.AppendPendingElements();
+		reflProbs.AppendPendingElements();
+		animatedGeometries.AppendPendingElements();
+	}
+
+public:
 	vl::TopLevelAs tlas;
 
 	bool forceUpdateAccel; // NEXT: Remove
@@ -60,30 +101,9 @@ struct Scene {
 	vk::DescriptorSet sceneAsDescSet;
 
 	template<CSceneElem T>
-	T* GetElement(size_t uid)
+	T*& GetElement(size_t uid)
 	{
-		if constexpr (std::is_same_v<SceneGeometry, T>) {
-			return geometries.elements.at(uid);
-		}
-		else if constexpr (std::is_same_v<SceneCamera, T>) {
-			return cameras.elements.at(uid);
-		}
-		else if constexpr (std::is_same_v<SceneSpotlight, T>) {
-			return spotlights.elements.at(uid);
-		}
-		else if constexpr (std::is_same_v<ScenePointlight, T>) {
-			return pointlights.elements.at(uid);
-		}
-		else if constexpr (std::is_same_v<SceneDirlight, T>) {
-			return directionalLights.elements.at(uid);
-		}
-		else if constexpr (std::is_same_v<SceneReflProbe, T>) {
-			return reflProbs.elements.at(uid);
-		}
-		else if constexpr (std::is_same_v<SceneAnimatedGeometry, T>) {
-			return animatedGeometries.elements.at(uid);
-		}
-		LOG_ABORT("Incorrect type");
+		return GetType<T>().elements[uid];
 	}
 
 	template<CSceneElem T>
@@ -97,106 +117,37 @@ struct Scene {
 		});
 	}
 
+	// "Dumb" interface, will allow non linear allocation of uids later (for filling holes)
 	template<CSceneElem T>
-	size_t EnqueueCreateCmd()
+	void EnqueueCreateDestoryCmds(std::vector<size_t>&& destructions, std::vector<size_t*>&& outCreations)
 	{
+		if (destructions.empty() && outCreations.empty()) {
+			return;
+		}
+
 		// std::lock_guard<std::mutex> guard(cmdAddPendingElementsMutex);
+		std::vector<size_t> constructions;
+		size_t elementsSize = GetType<T>().elements.size();
 
-		size_t uid{};
-		if constexpr (std::is_same_v<SceneGeometry, T>) {
-			uid = geometries.elements.size() + geometries.pendingElements++;
-			currentCmdBuffer->emplace_back([&, uid]() { geometries.elements[uid] = new SceneGeometry(); });
-		}
-		else if constexpr (std::is_same_v<SceneCamera, T>) {
-			uid = cameras.elements.size() + cameras.pendingElements++;
-			currentCmdBuffer->emplace_back([&, uid]() { cameras.elements[uid] = new SceneCamera(); });
-		}
-		else if constexpr (std::is_same_v<SceneSpotlight, T>) {
-			uid = spotlights.elements.size() + spotlights.pendingElements++;
-			currentCmdBuffer->emplace_back([&, uid]() { spotlights.elements[uid] = new SceneSpotlight(); });
-		}
-		else if constexpr (std::is_same_v<ScenePointlight, T>) {
-			uid = pointlights.elements.size() + pointlights.pendingElements++;
-			currentCmdBuffer->emplace_back([&, uid]() { pointlights.elements[uid] = new ScenePointlight(); });
-		}
-		else if constexpr (std::is_same_v<SceneDirlight, T>) {
-			uid = directionalLights.elements.size() + directionalLights.pendingElements++;
-			currentCmdBuffer->emplace_back([&, uid]() { directionalLights.elements[uid] = new SceneDirlight(); });
-		}
-		else if constexpr (std::is_same_v<SceneReflProbe, T>) {
-			uid = reflProbs.elements.size() + reflProbs.pendingElements++;
-			currentCmdBuffer->emplace_back([&, uid]() { reflProbs.elements[uid] = new SceneReflProbe(); });
-		}
-		else if constexpr (std::is_same_v<SceneAnimatedGeometry, T>) {
-			uid = animatedGeometries.elements.size() + animatedGeometries.pendingElements++;
-			currentCmdBuffer->emplace_back(
-				[&, uid]() { animatedGeometries.elements[uid] = new SceneAnimatedGeometry(); });
+		for (auto& scUid : outCreations) {
+			size_t uid = elementsSize + GetType<T>().pendingElements++;
+			*scUid = uid;
+			constructions.emplace_back(uid);
 		}
 
-		return uid;
-	}
+		currentCmdBuffer->emplace_back([&, destr = std::move(destructions), constr = std::move(constructions)]() {
+			// TODO: deferred deleting of scene objects
+			vl::Device->waitIdle();
+			for (auto uid : destr) {
+				auto& ptr = GetElement<T>(uid);
+				delete ptr;
+				ptr = nullptr;
+			}
 
-
-	template<CSceneElem T>
-	void EnqueueDestroyCmd(size_t uid)
-	{
-		if constexpr (std::is_same_v<SceneGeometry, T>) {
-			currentCmdBuffer->emplace_back([&, uid]() {
-				auto elem = static_cast<T*>(geometries.elements[uid]);
-				geometries.elements[uid] = nullptr;
-				// TODO: deferred deleting of scene objects
-				vl::Device->waitIdle();
-				delete elem;
-			});
-		}
-		else if constexpr (std::is_same_v<SceneCamera, T>) {
-			currentCmdBuffer->emplace_back([&, uid]() {
-				auto elem = static_cast<T*>(cameras.elements[uid]);
-				cameras.elements[uid] = nullptr;
-				vl::Device->waitIdle();
-				delete elem;
-			});
-		}
-		else if constexpr (std::is_same_v<SceneSpotlight, T>) {
-			currentCmdBuffer->emplace_back([&, uid]() {
-				auto elem = static_cast<T*>(spotlights.elements[uid]);
-				spotlights.elements[uid] = nullptr;
-				vl::Device->waitIdle();
-				delete elem;
-			});
-		}
-		else if constexpr (std::is_same_v<ScenePointlight, T>) {
-			currentCmdBuffer->emplace_back([&, uid]() {
-				auto elem = static_cast<T*>(pointlights.elements[uid]);
-				pointlights.elements[uid] = nullptr;
-				vl::Device->waitIdle();
-				delete elem;
-			});
-		}
-		else if constexpr (std::is_same_v<SceneDirlight, T>) {
-			currentCmdBuffer->emplace_back([&, uid]() {
-				auto elem = static_cast<T*>(directionalLights.elements[uid]);
-				directionalLights.elements[uid] = nullptr;
-				vl::Device->waitIdle();
-				delete elem;
-			});
-		}
-		else if constexpr (std::is_same_v<SceneReflProbe, T>) {
-			currentCmdBuffer->emplace_back([&, uid]() {
-				auto elem = static_cast<T*>(reflProbs.elements[uid]);
-				reflProbs.elements[uid] = nullptr;
-				vl::Device->waitIdle();
-				delete elem;
-			});
-		}
-		else if constexpr (std::is_same_v<SceneAnimatedGeometry, T>) {
-			currentCmdBuffer->emplace_back([&, uid]() {
-				auto elem = static_cast<T*>(animatedGeometries.elements[uid]);
-				animatedGeometries.elements[uid] = nullptr;
-				vl::Device->waitIdle();
-				delete elem;
-			});
-		}
+			for (auto uid : constr) {
+				GetType<T>().elements[uid] = new T();
+			}
+		});
 	}
 
 	void EnqueueEndFrame()
@@ -210,18 +161,6 @@ struct Scene {
 		currentCmdBuffer->emplace_back([&, uid]() { activeCamera = uid; });
 	}
 
-private:
-	void ExecuteCreations()
-	{
-		// std::lock_guard<std::mutex> guard(cmdAddPendingElementsMutex);
-		geometries.AppendPendingElements();
-		cameras.AppendPendingElements();
-		spotlights.AppendPendingElements();
-		pointlights.AppendPendingElements();
-		directionalLights.AppendPendingElements();
-		reflProbs.AppendPendingElements();
-		animatedGeometries.AppendPendingElements();
-	}
 
 public:
 	void BuildAll();
