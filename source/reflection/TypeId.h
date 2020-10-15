@@ -6,11 +6,11 @@ namespace mti {
 #if defined(__clang__)
 #	define MTI_PRETTY_FUNC __PRETTY_FUNCTION__
 #	define MTI_LEFT_CHOP   25 // "auto mti::GetName() [T = "
-#	define MTI_RIGHT_CHOP  2  // "]\0"
+#	define MTI_RIGHT_CHOP  2 // "]\0"
 #elif defined(__GNUC__)
 #	define MTI_PRETTY_FUNC __PRETTY_FUNCTION__
 #	define MTI_LEFT_CHOP   40 // "constexpr auto mti::GetName() [with T = "
-#	define MTI_RIGHT_CHOP  2  // "]\0"
+#	define MTI_RIGHT_CHOP  2 // "]\0"
 #elif defined(_MSC_VER)
 #	define MTI_PRETTY_FUNC __FUNCSIG__
 #	define MTI_LEFT_CHOP   26 // "auto __cdecl mti::GetName<"
@@ -86,22 +86,23 @@ private:
 };
 
 template<typename T>
-constexpr auto GetName() noexcept
+[[nodiscard]] constexpr auto GetName() noexcept requires(!std::is_same_v<T, std::nullptr_t>)
 {
 	return detail::FilterView(MTI_GET_VIEW);
 }
 
 template<typename T>
-constexpr auto GetHash() noexcept
+[[nodiscard]] constexpr auto GetHash() noexcept
 {
 	return detail::StrHash(GetName<T>());
 }
 
 template<typename T>
-constexpr auto GetTypeId() noexcept
+[[nodiscard]] constexpr auto GetTypeId() noexcept
 {
 	return TypeId(GetName<T>());
 }
+
 using Hash = std::size_t;
 } // namespace mti
 
