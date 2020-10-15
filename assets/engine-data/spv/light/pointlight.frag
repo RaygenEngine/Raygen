@@ -16,6 +16,8 @@ layout(location = 0) out vec4 outColor;
 
 // in 
 
+layout(location = 0) in vec2 uv;
+
 // uniform
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
@@ -72,11 +74,6 @@ float ShadowRayQuery(Fragment frag){
 
 void main()
 {
-	vec2 iuv = gl_FragCoord.xy;
-	ivec2 screenSize = textureSize(g_AlbedoSampler, 0);
-
-	vec2 uv = iuv / screenSize; 
-
 	float depth = texture(g_DepthSampler, uv).r;
 
 	if(depth == 1.0) {
@@ -131,20 +128,4 @@ void main()
 	// WIP: remove after tests
 	outColor = vec4 (uv, 0, 1);
 }                               
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
