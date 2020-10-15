@@ -13,11 +13,11 @@
 
 ConsoleVariable<int32> console_rtDepth{ "rt.depth", 2, "Set rt depth" };
 ConsoleVariable<int32> console_rtSamples{ "rt.samples", 1, "Set rt samples" };
-ConsoleVarFunc<int32> console_convergeUntilFrame{ "rt.convUntilFrame",
-	[]() { vl::Renderer->m_raytracingPass.m_rtFrame = 0; }, 0 };
+// ConsoleVarFunc<int32> console_convergeUntilFrame{ "rt.convUntilFrame",
+//	[]() { vl::Renderer->m_raytracingPass.m_rtFrame = 0; }, 0 };
 
-ConsoleFunction<> console_resetRtFrame{ "rt.reset", []() { vl::Renderer->m_raytracingPass.m_rtFrame = 0; },
-	"Reset rt frame" };
+// ConsoleFunction<> console_resetRtFrame{ "rt.reset", []() { vl::Renderer->m_raytracingPass.m_rtFrame = 0; },
+//	"Reset rt frame" };
 
 namespace {
 struct PushConstant {
@@ -196,9 +196,10 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 5u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSetSpotlights[sceneDesc.frameIndex], 0u, nullptr);
 
-	PushConstant pc{ //
-		m_rtFrame, std::max(0, *console_rtDepth), std::max(0, *console_rtSamples), *console_convergeUntilFrame,
-		sceneDesc.scene->tlas.sceneDesc.spotlightCount
+	PushConstant pc{
+		//
+		// m_rtFrame, std::max(0, *console_rtDepth), std::max(0, *console_rtSamples), *console_convergeUntilFrame,
+		// sceneDesc.scene->tlas.sceneDesc.spotlightCount
 	};
 
 	++m_rtFrame;

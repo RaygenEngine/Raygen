@@ -4,11 +4,12 @@
 
 DECLARE_DIRTY_FUNC(CPointlight)(BasicComponent& bc)
 {
+	// WIP:
 	auto lightP = color * intensity;
 	float lightMax = std::fmaxf(std::fmaxf(lightP.x, lightP.y), lightP.z);
 	float radius
 		= (-linearTerm
-			  + std::sqrtf(linearTerm * linearTerm - 4.f * quadraticTerm * (constantTerm - (256.f / 5.f) * lightMax)))
+			  + std::sqrtf(linearTerm * linearTerm - 4.f * quadraticTerm * (constantTerm - (1024.f / 5.f) * lightMax)))
 		  / (2.f * quadraticTerm);
 
 	glm::mat4 volumeTransform = math::transformMat({ radius, radius, radius }, {}, bc.world().position);

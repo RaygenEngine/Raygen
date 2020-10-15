@@ -170,9 +170,9 @@ void Scene::UploadDirty(uint32 frameIndex)
 		}
 	}
 
-	if (anyDirty && vl::Renderer->m_raytracingPass.m_rtFrame >= *cons_sceneUpdateRt) {
-		vl::Renderer->m_raytracingPass.m_rtFrame = 0;
-	}
+	// if (anyDirty && vl::Renderer->m_raytracingPass.m_rtFrame >= *cons_sceneUpdateRt) {
+	//	vl::Renderer->m_raytracingPass.m_rtFrame = 0;
+	//}
 
 	// for (auto rp : reflProbs.elements) {
 	//	if (rp && rp->isDirty[frameIndex]) {

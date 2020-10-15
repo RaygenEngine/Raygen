@@ -17,8 +17,8 @@ layout(location = 0) in vec2 uv;
 void main() {
 
 	vec3 direct = texture(rasterDirectSampler, uv).rgb;
-	vec3 indirect = texture(rtIndirectSampler, uv).rgb;
+	//vec3 indirect = texture(rtIndirectSampler, uv).rgb;
 
-    outColor = vec4(indirect + direct, 1.f); 
+    outColor = vec4(direct, 1.f); 
 
 }                               
