@@ -62,7 +62,7 @@ public:
 
 	PtLightBlend lightblendPass;
 
-	RaytracingPass m_raytracingPass;
+	// RaytracingPass m_raytracingPass;
 
 
 	void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, OutputPassBase& outputPass);

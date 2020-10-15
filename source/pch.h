@@ -1,5 +1,6 @@
 #pragma once
 
+
 // ALWAYS, ALWAYS keep this before ANY of Raygen's header includes
 #include "FeatureMacros.h"
 

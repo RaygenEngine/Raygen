@@ -2,15 +2,19 @@
 
 // out
 
-layout (location = 0) out vec2 uv;
-
 // in
+
+layout(location = 0) in vec3 position;
 
 // uniforms
 
+layout(push_constant) uniform PC {
+	mat4 lightVolMatVP;
+} push;
+
+
 void main() 
 {
-    uv = vec2(((gl_VertexIndex) << 1) & 2, (gl_VertexIndex) & 2);
-    gl_Position = vec4(uv * 2.0f - 1.0f, 0.0f, 1.0f);
+    gl_Position = push.lightVolMatVP * vec4(position, 1.0);
 }                
                 

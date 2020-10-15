@@ -15,4 +15,6 @@ struct Pointlight_Ubo {
 struct ScenePointlight : SceneStruct {
 	SCENE_STRUCT(ScenePointlight);
 	Pointlight_Ubo ubo;
+
+	glm::mat4 volumeTransform;
 };
