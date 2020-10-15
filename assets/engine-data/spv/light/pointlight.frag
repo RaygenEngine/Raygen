@@ -16,8 +16,6 @@ layout(location = 0) out vec4 outColor;
 
 // in 
 
-layout(location = 0) in vec2 uv;
-
 // uniform
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
@@ -45,6 +43,7 @@ layout(set = 2, binding = 0) uniform UBO_Pointlight {
 		float quadraticTerm;
 } light;
 
+
 layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 float ShadowRayQuery(Fragment frag){ 
@@ -71,7 +70,12 @@ float ShadowRayQuery(Fragment frag){
 	return 0.0;
 }
 
-void main() {
+void main()
+{
+	vec2 iuv = gl_FragCoord.xy;
+	ivec2 screenSize = textureSize(g_AlbedoSampler, 0);
+
+	vec2 uv = iuv / screenSize; 
 
 	float depth = texture(g_DepthSampler, uv).r;
 
@@ -94,8 +98,15 @@ void main() {
 	vec3 V = normalize(cam.position - frag.position);
 	vec3 L = normalize(light.position - frag.position);
 
+	toOnbSpace(shadingOrthoBasis, L);	
+	
+	float NoL = Ndot(L);
+	if(NoL < BIAS) {
+		discard;
+	}
+
 	toOnbSpace(shadingOrthoBasis, V);
-	toOnbSpace(shadingOrthoBasis, L);
+
 	
 	// attenuation
 	float dist = length(light.position - frag.position);
@@ -103,7 +114,7 @@ void main() {
   			     light.quadraticTerm * (dist * dist));
 	
 	vec3 H = normalize(V + L); 
-	float NoL = max(Ndot(L), BIAS);
+
 	float NoV = max(Ndot(V), BIAS);
 	float NoH = max(Ndot(H), BIAS); 
 	float LoH = max(dot(L, H), BIAS);
@@ -116,7 +127,11 @@ void main() {
 	vec3 finalContribution = DirectLightBRDF(NoL, NoV, NoH, LoH, frag.a, frag.albedo, frag.f0)  * Li * NoL;
 
 	outColor = vec4(finalContribution, 1);
+
+	// WIP: remove after tests
+	outColor = vec4 (uv, 0, 1);
 }                               
+
 
 
 
