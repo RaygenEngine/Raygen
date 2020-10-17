@@ -18,21 +18,14 @@ struct PushConstant {
 
 static_assert(sizeof(PushConstant) <= 128);
 
+} // namespace
 
-// WIP: move those
-vl::RBuffer m_sphereVertexBuffer;
 
-struct indices {
-	vl::RBuffer buffer;
-	uint32 count;
-} m_sphereIndexBuffer;
-
+namespace vl {
 // WIP: standard assets generator?
-void calc_sphere(int32 sectorCount, int32 stackCount, float radius = 1.0f)
+void PointlightBlend::MakeSphere(int32 sectorCount, int32 stackCount, float radius)
 {
-	// clear memory of prev arrays
 	std::vector<float> vertices;
-	// generate CCW index list of sphere triangles
 	std::vector<int32> indices;
 
 	float x, y, z, xy; // vertex position
@@ -84,53 +77,20 @@ void calc_sphere(int32 sectorCount, int32 stackCount, float radius = 1.0f)
 	}
 
 
-	vk::DeviceSize vertexBufferSize = sizeof(vertices[0]) * vertices.size();
-
-	vl::RBuffer vertexStagingbuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
-
-	// copy data to buffer
-	vertexStagingbuffer.UploadData(vertices.data(), vertexBufferSize);
-
-
-	// device local
 	m_sphereVertexBuffer
-		= vl::RBuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-			  vk::MemoryPropertyFlagBits::eDeviceLocal };
-
-
-	// copy from host to device local
-	m_sphereVertexBuffer.CopyBuffer(vertexStagingbuffer);
-
-	{
-		vk::DeviceSize indexBufferSize = sizeof(indices[0]) * indices.size();
-
-		vl::RBuffer indexStagingbuffer{ indexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
-			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
-
-		// copy data to buffer
-		indexStagingbuffer.UploadData(indices.data(), indexBufferSize);
-
-
-		// device local
-		m_sphereIndexBuffer.buffer = vl::RBuffer{ indexBufferSize,
-			vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
-			vk::MemoryPropertyFlagBits::eDeviceLocal };
-
-
-		// copy from host to device local
-		m_sphereIndexBuffer.buffer.CopyBuffer(indexStagingbuffer);
-		m_sphereIndexBuffer.count = indices.size();
-	}
+		= vl::RBuffer::CreateTransfer("Pointlight Sphere Vertex", vertices, vk::BufferUsageFlagBits::eVertexBuffer);
+	m_sphereIndexBuffer.buffer
+		= vl::RBuffer::CreateTransfer("Pointlight Sphere Index", indices, vk::BufferUsageFlagBits::eIndexBuffer);
+	m_sphereIndexBuffer.count = static_cast<uint32>(indices.size());
 }
 
-} // namespace
+PointlightBlend::PointlightBlend()
+{
+	MakeSphere(18, 9);
+}
 
-namespace vl {
 vk::UniquePipelineLayout PointlightBlend::MakePipelineLayout()
 {
-	calc_sphere(18.f, 9.f);
-
 	auto layouts = {
 		Layouts->renderAttachmentsLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
@@ -269,7 +229,7 @@ vk::UniquePipeline PointlightBlend::MakePipeline()
 		.setPDepthStencilState(&depthStencil)
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
-		.setLayout(StaticPipes::GetLayout<PointlightBlend>())
+		.setLayout(layout())
 		.setRenderPass(*Layouts->rasterDirectPassLayout.compatibleRenderPass)
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
@@ -278,20 +238,16 @@ vk::UniquePipeline PointlightBlend::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void PointlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void PointlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
 	auto camDescSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
 
-	auto& pipeLayout = StaticPipes::GetLayout<PointlightBlend>();
+	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<PointlightBlend>());
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 1u, 1u, &camDescSet, 0u, nullptr);
-
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, pipeLayout, 3u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
+		vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
 
 	// bind unit sphere once
 	cmdBuffer.bindVertexBuffers(0u, m_sphereVertexBuffer.handle(), vk::DeviceSize(0));
@@ -304,10 +260,10 @@ void PointlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 
 		PushConstant pc{ sceneDesc.viewer->ubo.viewProj * pl->volumeTransform };
 
-		cmdBuffer.pushConstants(pipeLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, pipeLayout, 2u, 1u, &pl->descSet[sceneDesc.frameIndex], 0u, nullptr);
+			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &pl->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 		cmdBuffer.drawIndexed(m_sphereIndexBuffer.count, 1u, 0u, 0u, 0u);
 	}

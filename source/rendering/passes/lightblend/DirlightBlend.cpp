@@ -51,13 +51,13 @@ vk::UniquePipeline DirlightBlend::MakePipeline()
 		*Layouts->rasterDirectPassLayout.compatibleRenderPass, colorBlending);
 }
 
-void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
 	auto camDescSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
 
 	auto& pipeLayout = StaticPipes::GetLayout<DirlightBlend>();
 
-	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<DirlightBlend>());
+	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
 

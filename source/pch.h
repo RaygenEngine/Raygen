@@ -15,14 +15,17 @@
 #include <unordered_set>
 #include <vector>
 #include <xtree>
+#include <span>
 
 #include "core/BoolFlag.h"
 #include "core/Icons.h"
 #include "core/MacroUtl.h"
-#include "core/MathUtl.h"
 #include "core/MetaTemplates.h"
+#include "core/Concepts.h"
+#include "core/MathUtl.h"
 #include "core/StringUtl.h"
 #include "core/Hash.h"
+#include "core/MemorySpan.h"
 
 #include "engine/Logger.h"
 
@@ -62,4 +65,5 @@ struct InFlightResources : std::array<T, c_framesInFlight> {
 
 #include "rendering/DebugName.h"
 #include "rendering/core/img.h"
+
 #define IMGUI_DEFINE_MATH_OPERATORS

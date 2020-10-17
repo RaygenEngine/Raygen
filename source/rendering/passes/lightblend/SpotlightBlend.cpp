@@ -50,17 +50,14 @@ vk::UniquePipeline vl::SpotlightBlend::MakePipeline()
 		*Layouts->rasterDirectPassLayout.compatibleRenderPass, colorBlending);
 }
 
-void vl::SpotlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void vl::SpotlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
 	auto camDescSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
 
-	auto& pipeLayout = StaticPipes::GetLayout<SpotlightBlend>();
+	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<SpotlightBlend>());
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 1u, 1u, &camDescSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
 
 	for (auto sp : sceneDesc->spotlights.elements) {
 		if (!sp) {
@@ -68,9 +65,9 @@ void vl::SpotlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 		}
 
 		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, pipeLayout, 2u, 1u, &sp->descSet[sceneDesc.frameIndex], 0u, nullptr);
+			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &sp->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 3u, 1u,
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u,
 			&sp->shadowmap[sceneDesc.frameIndex].descSet, 0u, nullptr);
 
 		// big triangle
