@@ -50,22 +50,20 @@ vk::UniquePipeline vl::ReflprobeBlend::MakePipeline()
 		*Layouts->rasterDirectPassLayout.compatibleRenderPass, colorBlending);
 }
 
-void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
 	auto camDescSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
 
-	auto& pipeLayout = StaticPipes::GetLayout<ReflprobeBlend>();
+	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<ReflprobeBlend>());
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 1u, 1u, &camDescSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
 
 	for (auto rp : sceneDesc->reflProbs.elements) {
 		if (rp) {
 			cmdBuffer.bindDescriptorSets(
-				vk::PipelineBindPoint::eGraphics, pipeLayout, 2u, 1u, &rp->envmap.Lock().descriptorSet, 0u, nullptr);
+				vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &rp->envmap.Lock().descriptorSet, 0u, nullptr);
 
 			// big triangle
 			cmdBuffer.draw(3u, 1u, 0u, 0u);

@@ -105,4 +105,30 @@ void RBuffer::UploadData(const std::vector<byte>& data)
 	UploadData(data.data(), data.size());
 }
 
+RBuffer RBuffer::CreateTransfer(const char* name, MemorySpan memory, vk::BufferUsageFlags usageFlags)
+{
+	vk::DeviceSize bufferSize = memory.size();
+
+	vl::RBuffer stagingbuffer{ bufferSize, vk::BufferUsageFlagBits::eTransferSrc,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+
+	DEBUG_NAME(stagingbuffer, "[StagingBuffer]" + std::string(name));
+
+
+	// copy data to buffer
+	stagingbuffer.UploadData(memory.data(), memory.size());
+
+
+	// device local
+	auto buffer = vl::RBuffer{ memory.size(), vk::BufferUsageFlagBits::eTransferDst | usageFlags,
+		vk::MemoryPropertyFlagBits::eDeviceLocal };
+
+	DEBUG_NAME(buffer, name);
+
+	// copy from host to device local
+	buffer.CopyBuffer(stagingbuffer);
+
+	return buffer;
+}
+
 } // namespace vl

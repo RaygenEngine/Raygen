@@ -27,6 +27,7 @@
 #include "rendering/structures/Depthmap.h"
 #include "rendering/util/WriteDescriptorSets.h"
 #include "rendering/wrappers/Swapchain.h"
+#include "rendering/StaticPipes.h"
 
 
 namespace {
@@ -114,9 +115,9 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRen
 void Renderer_::RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	m_rasterDirectPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
-		SpotlightBlend::Draw(cmdBuffer, sceneDesc);
-		PointlightBlend::Draw(cmdBuffer, sceneDesc);
-		DirlightBlend::Draw(cmdBuffer, sceneDesc);
+		StaticPipes::Get<SpotlightBlend>().Draw(cmdBuffer, sceneDesc);
+		StaticPipes::Get<PointlightBlend>().Draw(cmdBuffer, sceneDesc);
+		StaticPipes::Get<DirlightBlend>().Draw(cmdBuffer, sceneDesc);
 	});
 }
 

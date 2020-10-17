@@ -1,13 +1,12 @@
 #pragma once
-
-struct SceneRenderDesc;
+#include "rendering/StaticPipeBase.h"
 
 namespace vl {
-struct SpotlightBlend {
-	static vk::UniquePipelineLayout MakePipelineLayout();
-	static vk::UniquePipeline MakePipeline();
+struct SpotlightBlend : public StaticPipeBase {
+	vk::UniquePipelineLayout MakePipelineLayout() override;
+	vk::UniquePipeline MakePipeline() override;
 
-	static void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const;
 };
 
 } // namespace vl

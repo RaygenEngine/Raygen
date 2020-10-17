@@ -1,14 +1,25 @@
 #pragma once
-
-struct SceneRenderDesc;
+#include "rendering/StaticPipeBase.h"
+#include "rendering/wrappers/Buffer.h"
 
 namespace vl {
 
-struct PointlightBlend {
-	static vk::UniquePipelineLayout MakePipelineLayout();
-	static vk::UniquePipeline MakePipeline();
+struct PointlightBlend : public StaticPipeBase {
+	vk::UniquePipelineLayout MakePipelineLayout() override;
+	vk::UniquePipeline MakePipeline() override;
 
-	static void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const;
+
+	PointlightBlend();
+
+private:
+	void MakeSphere(int32 sectorCount, int32 stackCount, float radius = 1.0f);
+	RBuffer m_sphereVertexBuffer;
+
+	struct indices {
+		vl::RBuffer buffer;
+		uint32 count;
+	} m_sphereIndexBuffer;
 };
 
 } // namespace vl

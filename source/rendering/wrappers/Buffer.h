@@ -33,6 +33,11 @@ struct RBuffer {
 		return deviceAddress;
 	};
 
+
+	// Creates a gpu buffer from given cpu memory using a staging buffer.
+	static RBuffer CreateTransfer(const char* name, MemorySpan memory, vk::BufferUsageFlags usageFlags);
+
+
 private:
 	vk::UniqueBuffer uHandle;
 	vk::UniqueDeviceMemory uMemory;

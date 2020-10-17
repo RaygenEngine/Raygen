@@ -1,14 +1,13 @@
 #pragma once
-
-struct SceneRenderDesc;
+#include "rendering/StaticPipeBase.h"
 
 namespace vl {
 
-struct ReflprobeBlend {
-	static vk::UniquePipelineLayout MakePipelineLayout();
-	static vk::UniquePipeline MakePipeline();
+struct ReflprobeBlend : public StaticPipeBase {
+	vk::UniquePipelineLayout MakePipelineLayout() override;
+	vk::UniquePipeline MakePipeline() override;
 
-	static void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const;
 };
 
 } // namespace vl
