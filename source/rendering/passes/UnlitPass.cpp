@@ -182,10 +182,7 @@ void UnlitPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 {
 	PROFILE_SCOPE(Renderer);
 
-	for (auto geom : sceneDesc->geometries.elements) {
-		if (!geom) {
-			continue;
-		}
+	for (auto geom : sceneDesc->geometries) {
 		PushConstant pc{ //
 			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
 		};
@@ -193,8 +190,9 @@ void UnlitPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
-			if (!arch.isUnlit)
-				[[likely]] { continue; }
+			if (!arch.isUnlit) [[likely]] {
+				continue;
+			}
 
 			auto& plLayout = *arch.unlit.pipelineLayout;
 

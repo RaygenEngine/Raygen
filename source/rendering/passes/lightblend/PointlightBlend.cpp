@@ -253,11 +253,7 @@ void PointlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 	cmdBuffer.bindVertexBuffers(0u, m_sphereVertexBuffer.handle(), vk::DeviceSize(0));
 	cmdBuffer.bindIndexBuffer(m_sphereIndexBuffer.buffer.handle(), vk::DeviceSize(0), vk::IndexType::eUint32);
 
-	for (auto pl : sceneDesc->pointlights.elements) {
-		if (!pl) {
-			continue;
-		}
-
+	for (auto pl : sceneDesc->pointlights) {
 		PushConstant pc{ sceneDesc.viewer->ubo.viewProj * pl->volumeTransform };
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);

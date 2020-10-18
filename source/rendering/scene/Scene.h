@@ -20,12 +20,31 @@ concept CSceneElem
 	= std::is_same_v<SceneGeometry,
 		  T> || std::is_same_v<SceneCamera, T> || std::is_same_v<ScenePointlight, T> || std::is_same_v<SceneSpotlight, T> || std::is_same_v<SceneDirlight, T> || std::is_same_v<SceneReflProbe, T> || std::is_same_v<SceneAnimatedGeometry, T>;
 
+
+//
 template<CSceneElem T>
 struct SceneVector {
+	// provides sequential access to the valid elements with unspecified order (non uid order)
+	auto begin() const { return condensed.cbegin(); }
+	auto end() const { return condensed.cend(); }
+
+private:
+	friend struct Scene;
+	friend struct vl::TopLevelAs; // TODO: remove this when toplevelas is refactored
+
 	std::vector<T*> elements;
 	size_t elementResize{ 0 };
 
-	void AppendPendingElements() { elements.resize(elementResize); }
+	void AppendPendingElements()
+	{
+		elements.resize(elementResize);
+		condensedLocation.resize(elementResize);
+	}
+
+	// condensed vector of pointers (ie no gaps. order is
+	std::vector<T*> condensed;
+	std::vector<size_t> condensedLocation;
+	std::vector<size_t> condensedToUid;
 
 
 	// UID manager section (game thread)
@@ -48,10 +67,25 @@ struct SceneVector {
 	// Game Thread
 	void RemoveUid(size_t uid) { gaps.push(uid); }
 
+	// Scene Thread
+	// Efficiently removes a uid from the condensed vector & updates the relevant condensedLocation information
+	void SwapPopFromCondensed(size_t Uid)
+	{
+		size_t cIndex = condensedLocation[Uid];
+		size_t backUid = condensedToUid.back();
 
-	// NEXT: Correct destructor
+		condensed[cIndex] = condensed.back();
+		condensed.pop_back();
+
+		condensedToUid[cIndex] = backUid;
+		condensedToUid.pop_back();
+
+		condensedLocation[backUid] = cIndex;
+	}
 };
 
+
+// NEXT: Correct destructor
 struct Scene {
 	SceneVector<SceneGeometry> geometries;
 	SceneVector<SceneAnimatedGeometry> animatedGeometries;
@@ -165,10 +199,18 @@ public:
 				auto& ptr = type.elements[uid];
 				delete ptr;
 				ptr = nullptr;
+
+				// Condensing
+				// Swap & Pop using condensedLocation to locate elements
+				type.SwapPopFromCondensed(uid);
 			}
 
 			for (auto uid : constr) {
 				type.elements[uid] = new T();
+				// Condensing
+				type.condensed.emplace_back(type.elements[uid]);
+				type.condensedToUid.emplace_back(uid);
+				type.condensedLocation[uid] = type.condensed.size() - 1;
 			}
 		});
 	}
