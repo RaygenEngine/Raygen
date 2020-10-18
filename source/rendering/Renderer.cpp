@@ -59,55 +59,53 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRen
 	});
 
 	auto shadowmapRenderpass = [&](auto light) {
-		if (light) {
-			auto& extent = light->shadowmap[sceneDesc.frameIndex].framebuffer.extent;
+		auto& extent = light->shadowmap[sceneDesc.frameIndex].framebuffer.extent;
 
-			vk::Rect2D scissor{};
+		vk::Rect2D scissor{};
 
-			scissor
-				.setOffset({ 0, 0 }) //
-				.setExtent(extent);
+		scissor
+			.setOffset({ 0, 0 }) //
+			.setExtent(extent);
 
-			auto vpSize = extent;
+		auto vpSize = extent;
 
-			vk::Viewport viewport{};
-			viewport
-				.setX(0) //
-				.setY(0)
-				.setWidth(static_cast<float>(vpSize.width))
-				.setHeight(static_cast<float>(vpSize.height))
-				.setMinDepth(0.f)
-				.setMaxDepth(1.f);
+		vk::Viewport viewport{};
+		viewport
+			.setX(0) //
+			.setY(0)
+			.setWidth(static_cast<float>(vpSize.width))
+			.setHeight(static_cast<float>(vpSize.height))
+			.setMinDepth(0.f)
+			.setMaxDepth(1.f);
 
-			vk::RenderPassBeginInfo renderPassInfo{};
-			renderPassInfo
-				.setRenderPass(Layouts->depthRenderPass.get()) //
-				.setFramebuffer(light->shadowmap[sceneDesc.frameIndex].framebuffer.handle());
-			renderPassInfo.renderArea
-				.setOffset({ 0, 0 }) //
-				.setExtent(extent);
+		vk::RenderPassBeginInfo renderPassInfo{};
+		renderPassInfo
+			.setRenderPass(Layouts->depthRenderPass.get()) //
+			.setFramebuffer(light->shadowmap[sceneDesc.frameIndex].framebuffer.handle());
+		renderPassInfo.renderArea
+			.setOffset({ 0, 0 }) //
+			.setExtent(extent);
 
-			vk::ClearValue clearValues{};
-			clearValues.setDepthStencil({ 1.0f, 0 });
-			renderPassInfo.setClearValues(clearValues);
+		vk::ClearValue clearValues{};
+		clearValues.setDepthStencil({ 1.0f, 0 });
+		renderPassInfo.setClearValues(clearValues);
 
-			cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
-			{
-				auto buffers = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
+		cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
+		{
+			auto buffers = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
 
-				DepthmapPass::RecordCmd(&buffers, viewport, scissor, light->ubo.viewProj, sceneDesc);
+			DepthmapPass::RecordCmd(&buffers, viewport, scissor, light->ubo.viewProj, sceneDesc);
 
-				cmdBuffer.executeCommands({ buffers });
-			}
-			cmdBuffer.endRenderPass();
+			cmdBuffer.executeCommands({ buffers });
 		}
+		cmdBuffer.endRenderPass();
 	};
 
-	for (auto sl : sceneDesc->spotlights.elements) {
+	for (auto sl : sceneDesc->spotlights) {
 		shadowmapRenderpass(sl);
 	}
 
-	for (auto dl : sceneDesc->directionalLights.elements) {
+	for (auto dl : sceneDesc->directionalLights) {
 		shadowmapRenderpass(dl);
 	}
 }
