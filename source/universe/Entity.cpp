@@ -17,8 +17,9 @@ void Entity::Destroy()
 
 	auto current = basic.firstChild;
 	while (current) {
+		Entity next = current->next;
 		current.Destroy();
-		current = current->next;
+		current = next;
 	}
 
 	registry->get_or_emplace<CDestroyFlag>(entity);
