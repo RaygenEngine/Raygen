@@ -182,7 +182,7 @@ void UnlitPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 {
 	PROFILE_SCOPE(Renderer);
 
-	for (auto geom : sceneDesc->geometries) {
+	for (auto geom : sceneDesc->Get<SceneGeometry>()) {
 		PushConstant pc{ //
 			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
 		};

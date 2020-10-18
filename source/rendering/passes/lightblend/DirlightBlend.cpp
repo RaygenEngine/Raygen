@@ -63,7 +63,7 @@ void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sce
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 1u, 1u, &camDescSet, 0u, nullptr);
 
-	for (auto dl : sceneDesc->directionalLights) {
+	for (auto dl : sceneDesc->Get<SceneDirlight>()) {
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics, pipeLayout, 2u, 1u, &dl->descSet[sceneDesc.frameIndex], 0u, nullptr);
 

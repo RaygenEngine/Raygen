@@ -90,10 +90,8 @@ void AttachmentDebuggerWindow::ImguiDraw()
 	showFramebuffer(ptPassFramebuffer);
 	// showImage(rtPassProgImage);
 
-	// showImage(vl::Renderer->m_raytracingPass.svgfPass.swappingImages[0]);
-	// showImage(vl::Renderer->m_raytracingPass.svgfPass.swappingImages[1]);
 
-	for (auto sl : vl::Layer->mainScene->spotlights) {
+	for (auto sl : vl::Layer->mainScene->Get<SceneSpotlight>()) {
 		showImage(sl->shadowmap.at(0).framebuffer.ownedAttachments.at(0));
 	}
 }

@@ -6,24 +6,33 @@
 #include <mutex>
 #include <stack>
 
-struct SceneGeometry;
 struct SceneCamera;
-struct SceneSpotlight;
-struct SceneDirlight;
-struct SceneReflProbe;
-struct SceneAnimatedGeometry;
-struct ScenePointlight;
-
 
 template<typename T>
-concept CSceneElem
-	= std::is_same_v<SceneGeometry,
-		  T> || std::is_same_v<SceneCamera, T> || std::is_same_v<ScenePointlight, T> || std::is_same_v<SceneSpotlight, T> || std::is_same_v<SceneDirlight, T> || std::is_same_v<SceneReflProbe, T> || std::is_same_v<SceneAnimatedGeometry, T>;
+concept CSceneElem = true;
 
+struct SceneCollectionBase {
+	virtual ~SceneCollectionBase() = default;
+
+protected:
+	friend struct Scene;
+
+	// Typeless pointers to elements.
+	std::vector<void*> elements;
+
+	size_t elementResize{ 0 };
+	std::vector<size_t> condensedLocation;
+
+	void UpdateElementSize()
+	{
+		elements.resize(elementResize);
+		condensedLocation.resize(elementResize);
+	}
+};
 
 //
 template<CSceneElem T>
-struct SceneVector {
+struct SceneCollection : public SceneCollectionBase {
 	// provides sequential access to the valid elements with unspecified order (non uid order)
 	auto begin() const { return condensed.cbegin(); }
 	auto end() const { return condensed.cend(); }
@@ -32,18 +41,13 @@ private:
 	friend struct Scene;
 	friend struct vl::TopLevelAs; // TODO: remove this when toplevelas is refactored
 
-	std::vector<T*> elements;
-	size_t elementResize{ 0 };
 
-	void AppendPendingElements()
-	{
-		elements.resize(elementResize);
-		condensedLocation.resize(elementResize);
-	}
+	T* Get(size_t uid) { return reinterpret_cast<T*>(elements[uid]); }
+	void Set(size_t uid, T* value) { elements[uid] = reinterpret_cast<void*>(value); }
+
 
 	// condensed vector of pointers (ie no gaps. order is unspecified but preserved internally to allow deletion)
 	std::vector<T*> condensed;
-	std::vector<size_t> condensedLocation;
 	std::vector<size_t> condensedToUid;
 
 
@@ -82,57 +86,28 @@ private:
 
 		condensedLocation[backUid] = cIndex;
 	}
+
+	// NEXT: Correct destructor
 };
 
 
-// NEXT: Correct destructor
 struct Scene {
-	SceneVector<SceneGeometry> geometries;
-	SceneVector<SceneAnimatedGeometry> animatedGeometries;
-	SceneVector<SceneCamera> cameras;
-	SceneVector<SceneSpotlight> spotlights;
-	SceneVector<ScenePointlight> pointlights;
-	SceneVector<SceneDirlight> directionalLights;
-	SceneVector<SceneReflProbe> reflProbs;
+	std::unordered_map<size_t, UniquePtr<SceneCollectionBase>> collections;
 
 	template<CSceneElem T>
-	SceneVector<T>& GetType()
+	SceneCollection<T>& Get()
 	{
-		if constexpr (std::is_same_v<SceneGeometry, T>) {
-			return geometries;
-		}
-		else if constexpr (std::is_same_v<SceneCamera, T>) {
-			return cameras;
-		}
-		else if constexpr (std::is_same_v<SceneSpotlight, T>) {
-			return spotlights;
-		}
-		else if constexpr (std::is_same_v<ScenePointlight, T>) {
-			return pointlights;
-		}
-		else if constexpr (std::is_same_v<SceneDirlight, T>) {
-			return directionalLights;
-		}
-		else if constexpr (std::is_same_v<SceneReflProbe, T>) {
-			return reflProbs;
-		}
-		else if constexpr (std::is_same_v<SceneAnimatedGeometry, T>) {
-			return animatedGeometries;
-		}
-		LOG_ABORT("Incorrect type");
+		return *static_cast<SceneCollection<T>*>(collections.at(mti::GetHash<T>()).get());
 	}
+
 
 private:
 	void ExecuteCreations()
 	{
 		// std::lock_guard<std::mutex> guard(cmdAddPendingElementsMutex);
-		geometries.AppendPendingElements();
-		cameras.AppendPendingElements();
-		spotlights.AppendPendingElements();
-		pointlights.AppendPendingElements();
-		directionalLights.AppendPendingElements();
-		reflProbs.AppendPendingElements();
-		animatedGeometries.AppendPendingElements();
+		for (auto& [hash, collection] : collections) {
+			collection->UpdateElementSize();
+		}
 	}
 
 public:
@@ -147,29 +122,57 @@ public:
 	std::mutex cmdAddPendingElementsMutex;
 
 	size_t activeCamera{ 0 };
-	// size_t size{ 0 };
 
 	vk::UniqueAccelerationStructureKHR sceneAS;
 	vk::DescriptorSet sceneAsDescSet;
 
 	template<CSceneElem T>
-	T*& GetElement(size_t uid)
+	T* GetElement(size_t uid)
 	{
-		return GetType<T>().elements[uid];
+		return Get<T>().Get(uid);
+	}
+
+	size_t ctxHash;
+	SceneCollectionBase* ctxCollection;
+
+
+	// Prepare the context (scene class type) for the following "InCtx" commands
+	template<CSceneElem T>
+	void SetCtx()
+	{
+		ctxHash = mti::GetHash<T>();
+		ctxCollection = collections[ctxHash].get();
+	}
+
+	template<CSceneElem T>
+	void EnqueueCmdInCtx(size_t uid, std::function<void(T&)>&& command)
+	{
+		CLOG_ABORT(ctxHash != mti::GetHash<T>(),
+			"EnqueueCmdInCtx was called with incorrect context. Use SetCtx before this call or EnqueueCmd if you only "
+			"want a single cmd (slower per call).");
+
+		currentCmdBuffer->emplace_back(
+			[&, cmd = std::move(command), collection = static_cast<SceneCollection<T>*>(ctxCollection), uid]() {
+				T& sceneElement = *collection->Get(uid);
+				cmd(sceneElement);
+				auto& dirtyVec = sceneElement.isDirty;
+				std::fill(dirtyVec.begin(), dirtyVec.end(), true);
+			});
 	}
 
 	template<CSceneElem T>
 	void EnqueueCmd(size_t uid, std::function<void(T&)>&& command)
 	{
 		currentCmdBuffer->emplace_back([&, cmd = std::move(command), uid]() {
-			//
-			cmd(*GetElement<T>(uid));
-			auto& dirtyVec = GetElement<T>(uid)->isDirty;
+			T& sceneElement = *Get<T>().Get(uid);
+			cmd(sceneElement);
+			auto& dirtyVec = sceneElement.isDirty;
 			std::fill(dirtyVec.begin(), dirtyVec.end(), true);
 		});
 	}
 
-	// "Dumb" interface, will allow non linear allocation of uids later (for filling holes)
+	// "Dumb" interface, allows non linear allocation of uids later (for filling holes)
+	// outCreations modifies the given uids given by the pointers
 	template<CSceneElem T>
 	void EnqueueCreateDestoryCmds(std::vector<size_t>&& destructions, std::vector<size_t*>&& outCreations)
 	{
@@ -178,13 +181,12 @@ public:
 		}
 
 		// std::lock_guard<std::mutex> guard(cmdAddPendingElementsMutex);
-		SceneVector<T>& type = GetType<T>();
+		SceneCollection<T>& type = Get<T>();
 		for (auto& uid : destructions) {
 			type.RemoveUid(uid);
 		}
 
 		std::vector<size_t> constructions;
-		size_t elementsSize = type.elements.size();
 
 		for (auto& scUid : outCreations) {
 			size_t uid = type.GetNextUid();
@@ -196,9 +198,8 @@ public:
 			// TODO: deferred deleting of scene objects
 			vl::Device->waitIdle();
 			for (auto uid : destr) {
-				auto& ptr = type.elements[uid];
-				delete ptr;
-				ptr = nullptr;
+				delete type.Get(uid);
+				type.Set(uid, nullptr);
 
 				// Condensing
 				// Swap & Pop using condensedLocation to locate elements
@@ -206,9 +207,9 @@ public:
 			}
 
 			for (auto uid : constr) {
-				type.elements[uid] = new T();
+				type.Set(uid, new T());
 				// Condensing
-				type.condensed.emplace_back(type.elements[uid]);
+				type.condensed.emplace_back(type.Get(uid));
 				type.condensedToUid.emplace_back(uid);
 				type.condensedLocation[uid] = type.condensed.size() - 1;
 			}
@@ -274,11 +275,9 @@ struct SceneRenderDesc {
 	Scene* scene{ nullptr };
 	SceneCamera* viewer{ nullptr };
 
-
 	uint32 frameIndex{ 0 };
 
 	vk::DescriptorSet attDesc;
-
 
 	// TODO: Scene description should only contain the required scene structs for current frame rendering
 	// apart from occlusion etc

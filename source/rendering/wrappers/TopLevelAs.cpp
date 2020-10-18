@@ -61,10 +61,8 @@ namespace vl {
 TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 {
 	uint32 spotlightCount = 0;
-	for (auto spotlight : scene->spotlights.elements) {
-		if (spotlight) {
-			spotlightCount++;
-		}
+	for (auto spotlight : scene->Get<SceneSpotlight>()) {
+		spotlightCount++;
 	}
 	sceneDesc.descSetSpotlights = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(spotlightCount);
 
@@ -73,8 +71,6 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 
 
 	for (auto geom : geoms) {
-		if (!geom)
-			[[unlikely]] { continue; }
 		auto transform = geom->transform;
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
@@ -102,7 +98,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 	sceneDesc.WriteImages();
 
 
-	sceneDesc.WriteSpotlights(scene->spotlights.elements);
+	sceneDesc.WriteSpotlights(scene->Get<SceneSpotlight>().condensed);
 	sceneDesc.WriteGeomGroups();
 	Build();
 	Device->waitIdle();
@@ -162,9 +158,7 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 {
 	uint32 count = 0;
 	for (auto spotlight : spotlights) {
-		if (spotlight) {
-			count++;
-		}
+		count++;
 	}
 	spotlightCount = count;
 
