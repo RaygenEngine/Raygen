@@ -4,6 +4,7 @@
 #include "rendering/wrappers/TopLevelAs.h"
 
 #include <mutex>
+#include <stack>
 
 struct SceneGeometry;
 struct SceneCamera;
@@ -22,14 +23,31 @@ concept CSceneElem
 template<CSceneElem T>
 struct SceneVector {
 	std::vector<T*> elements;
-	size_t pendingElements{ 0 };
+	size_t elementResize{ 0 };
+
+	void AppendPendingElements() { elements.resize(elementResize); }
 
 
-	void AppendPendingElements()
+	// UID manager section (game thread)
+	std::stack<size_t> gaps;
+	size_t nextUid{ 0 };
+
+	// Game Thread
+	size_t GetNextUid()
 	{
-		elements.resize(elements.size() + pendingElements);
-		pendingElements = 0;
+		if (gaps.empty()) {
+			auto uid = nextUid;
+			elementResize = ++nextUid;
+			return uid;
+		}
+		auto top = gaps.top();
+		gaps.pop();
+		return top;
 	}
+
+	// Game Thread
+	void RemoveUid(size_t uid) { gaps.push(uid); }
+
 
 	// NEXT: Correct destructor
 };
@@ -126,11 +144,16 @@ public:
 		}
 
 		// std::lock_guard<std::mutex> guard(cmdAddPendingElementsMutex);
+		SceneVector<T>& type = GetType<T>();
+		for (auto& uid : destructions) {
+			type.RemoveUid(uid);
+		}
+
 		std::vector<size_t> constructions;
-		size_t elementsSize = GetType<T>().elements.size();
+		size_t elementsSize = type.elements.size();
 
 		for (auto& scUid : outCreations) {
-			size_t uid = elementsSize + GetType<T>().pendingElements++;
+			size_t uid = type.GetNextUid();
 			*scUid = uid;
 			constructions.emplace_back(uid);
 		}
@@ -139,13 +162,13 @@ public:
 			// TODO: deferred deleting of scene objects
 			vl::Device->waitIdle();
 			for (auto uid : destr) {
-				auto& ptr = GetElement<T>(uid);
+				auto& ptr = type.elements[uid];
 				delete ptr;
 				ptr = nullptr;
 			}
 
 			for (auto uid : constr) {
-				GetType<T>().elements[uid] = new T();
+				type.elements[uid] = new T();
 			}
 		});
 	}
@@ -198,6 +221,11 @@ public:
 
 	~Scene();
 	void UpdateTopLevelAs();
+
+	Scene(Scene const&) = delete;
+	Scene(Scene&&) = delete;
+	Scene& operator=(Scene const&) = delete;
+	Scene& operator=(Scene&&) = delete;
 };
 
 struct SceneRenderDesc {
