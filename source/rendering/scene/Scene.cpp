@@ -44,6 +44,8 @@ void Scene::DrainQueueForDestruction()
 Scene::Scene()
 {
 	cameras.elements.emplace_back(new SceneCamera()); // TODO: Editor camera
+	cameras.nextUid++;
+	cameras.elementResize++;
 	EnqueueEndFrame();
 	sceneAsDescSet = vl::Layouts->accelLayout.AllocDescriptorSet();
 }
