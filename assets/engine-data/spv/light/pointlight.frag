@@ -129,8 +129,9 @@ void main()
 	outColor = vec4(finalContribution, 1);
 
 	// WIP: remove after tests
-	outColor = vec4 (uv, 0, 1);
+	//outColor = vec4 (uv, 0, 1);
 }                               
+
 
 
 

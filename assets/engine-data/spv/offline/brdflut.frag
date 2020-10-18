@@ -3,6 +3,7 @@
 #include "global.glsl"
 
 #include "hammersley.glsl"
+#include "bsdf.glsl"
 
 // out
 
@@ -20,14 +21,14 @@ void main() {
 	float NoV = uv.s;
 	float roughness = uv.t;
 
-	// Normal always points along z-axis for the 2D lookup 
+	// Normal always points along z-axis for the 2D lookup (shading space, no need for onb here)
 	const vec3 N = vec3(0.0, 0.0, 1.0);
 	vec3 V = vec3(sqrt(1.0 - NoV*NoV), 0.0, NoV);
 
 	vec2 LUT = vec2(0.0);
 	for(uint i = 0u; i < NUM_SAMPLES; i++) {
 		vec2 Xi = hammersley(i, NUM_SAMPLES);
-		vec3 H = importanceSampleGGX(Xi, roughness, N);
+		vec3 H = importanceSampleGGX(Xi, roughness);
 		vec3 L = 2.0 * dot(V, H) * H - V;
 
 		float NoL = saturate(dot(N, L));
