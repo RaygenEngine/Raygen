@@ -13,6 +13,18 @@
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/scene/ScenePointlight.h"
 
+
+void Scene::EnqueueEndFrame()
+{
+	// std::lock_guard<std::mutex> guard(cmdBuffersVectorMutex);
+	currentCmdBuffer = cmds.emplace_back(std::make_unique<std::vector<std::function<void()>>>()).get();
+}
+
+void Scene::EnqueueActiveCameraCmd(size_t uid)
+{
+	currentCmdBuffer->emplace_back([&, uid]() { activeCamera = uid; });
+}
+
 void Scene::BuildAll()
 {
 	for (auto reflProb : Get<SceneReflProbe>()) {
@@ -20,10 +32,42 @@ void Scene::BuildAll()
 	}
 }
 
+void Scene::ConsumeCmdQueue()
+{
+	// Resize elements, might move the vector so we need to use a mutex temporarily
+	{
+		// std::lock_guard<std::mutex> guard(cmdAddPendingElementsMutex);
+		for (auto& [hash, collection] : collections) {
+			collection->UpdateElementSize();
+		}
+	}
+
+	size_t begin = 0;
+	size_t end = cmds.size() - 1;
+
+	if (end <= 0) {
+		return;
+	}
+
+	for (size_t i = 0; i < end; ++i) {
+		for (auto& cmd : *cmds[i]) {
+			cmd();
+		}
+	}
+
+	// std::lock_guard<std::mutex> guard(cmdBuffersVectorMutex);
+	cmds.erase(cmds.begin(), cmds.begin() + end);
+}
+
 void Scene::DrainQueueForDestruction()
 {
-	ExecuteCreations();
-
+	// Resize elements, might move the vector so we need to use a mutex temporarily
+	{
+		// std::lock_guard<std::mutex> guard(cmdAddPendingElementsMutex);
+		for (auto& [hash, collection] : collections) {
+			collection->UpdateElementSize();
+		}
+	}
 	size_t begin = 0;
 	size_t end = cmds.size();
 
