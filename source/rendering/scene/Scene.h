@@ -41,7 +41,7 @@ private:
 		condensedLocation.resize(elementResize);
 	}
 
-	// condensed vector of pointers (ie no gaps. order is
+	// condensed vector of pointers (ie no gaps. order is unspecified but preserved internally to allow deletion)
 	std::vector<T*> condensed;
 	std::vector<size_t> condensedLocation;
 	std::vector<size_t> condensedToUid;
