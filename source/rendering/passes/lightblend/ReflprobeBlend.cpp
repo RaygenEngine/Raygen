@@ -60,7 +60,7 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
 
-	for (auto rp : sceneDesc->reflProbs) {
+	for (auto rp : sceneDesc->Get<SceneReflProbe>()) {
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &rp->envmap.Lock().descriptorSet, 0u, nullptr);
 

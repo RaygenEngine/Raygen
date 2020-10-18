@@ -255,7 +255,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 		cmdBuffer->setViewport(0, { viewport });
 		cmdBuffer->setScissor(0, { scissor });
 
-		for (auto geom : sceneDesc->geometries) {
+		for (auto geom : sceneDesc->Get<SceneGeometry>()) {
 			PushConstant pc{ //
 				viewProj * geom->transform
 			};
@@ -288,7 +288,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 			}
 		}
 
-		for (auto geom : sceneDesc->animatedGeometries) {
+		for (auto geom : sceneDesc->Get<SceneAnimatedGeometry>()) {
 			PushConstant pc{ //
 				viewProj * geom->transform
 			};

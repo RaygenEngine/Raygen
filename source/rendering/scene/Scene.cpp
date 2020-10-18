@@ -15,7 +15,7 @@
 
 void Scene::BuildAll()
 {
-	for (auto reflProb : reflProbs.elements) {
+	for (auto reflProb : Get<SceneReflProbe>()) {
 		reflProb->Build();
 	}
 }
@@ -41,12 +41,29 @@ void Scene::DrainQueueForDestruction()
 	cmds.erase(cmds.begin(), cmds.begin() + end);
 }
 
+namespace {
+template<CSceneElem T>
+void RegisterSingle(std::unordered_map<size_t, UniquePtr<SceneCollectionBase>>& collections)
+{
+	collections[mti::GetHash<T>()] = std::make_unique<SceneCollection<T>>();
+}
+
+template<CSceneElem... Rest>
+void Register(std::unordered_map<size_t, UniquePtr<SceneCollectionBase>>& collections)
+{
+	(RegisterSingle<Rest>(collections), ...);
+}
+} // namespace
+
 Scene::Scene()
 {
-	cameras.elements.emplace_back(new SceneCamera()); // TODO: Editor camera
-	cameras.nextUid++;
-	cameras.elementResize++;
+	Register<SceneGeometry, SceneAnimatedGeometry, SceneCamera, SceneSpotlight, ScenePointlight, SceneDirlight,
+		SceneReflProbe>(collections);
+
+
 	EnqueueEndFrame();
+	size_t uid;
+	EnqueueCreateDestoryCmds<SceneCamera>({}, { &uid }); // TODO: Editor camera
 	sceneAsDescSet = vl::Layouts->accelLayout.AllocDescriptorSet();
 }
 
@@ -60,19 +77,20 @@ Scene::~Scene()
 		}
 	};
 
-	destroyVec(geometries.elements);
-	destroyVec(animatedGeometries.elements);
-	destroyVec(cameras.elements);
-	destroyVec(spotlights.elements);
-	destroyVec(pointlights.elements);
-	destroyVec(directionalLights.elements);
-	destroyVec(reflProbs.elements);
+
+	destroyVec(Get<SceneGeometry>().condensed);
+	destroyVec(Get<SceneAnimatedGeometry>().condensed);
+	destroyVec(Get<SceneCamera>().condensed);
+	destroyVec(Get<SceneSpotlight>().condensed);
+	destroyVec(Get<ScenePointlight>().condensed);
+	destroyVec(Get<SceneDirlight>().condensed);
+	destroyVec(Get<SceneReflProbe>().condensed);
 }
 
 void Scene::UpdateTopLevelAs()
 {
 	// TODO:
-	tlas = vl::TopLevelAs(geometries.elements, this);
+	tlas = vl::TopLevelAs(Get<SceneGeometry>().condensed, this);
 
 	std::array accelStructs{ tlas.handle() };
 
@@ -99,15 +117,15 @@ ConsoleVariable<int32> cons_sceneUpdateRt{ "rt.minFrames", 10,
 
 void Scene::UploadDirty(uint32 frameIndex)
 {
-	const bool primaryDirty = activeCamera > 0 && cameras.elements[activeCamera]->isDirty[frameIndex];
+	auto primaryCamera = GetElement<SceneCamera>(activeCamera);
+
+	const bool primaryDirty = activeCamera > 0 && primaryCamera->isDirty[frameIndex];
 	bool anyDirty = false;
 
 	bool requireUpdateAccel = false || forceUpdateAccel;
-	for (auto gm : geometries.elements) {
-		if (gm) {
-			gm->prevTransform = gm->transform;
-		}
-		if (gm && gm->isDirty[frameIndex]) {
+	for (auto gm : Get<SceneGeometry>()) {
+		gm->prevTransform = gm->transform;
+		if (gm->isDirty[frameIndex]) {
 			requireUpdateAccel = true;
 			gm->isDirty = false;
 			anyDirty = true;
@@ -115,16 +133,16 @@ void Scene::UploadDirty(uint32 frameIndex)
 	}
 
 
-	for (auto cam : cameras.elements) {
-		if (cam && cam->isDirty[frameIndex]) {
+	for (auto cam : Get<SceneCamera>()) {
+		if (cam->isDirty[frameIndex]) {
 			cam->UploadUbo(frameIndex);
 			cam->isDirty[frameIndex] = false;
 			// anyDirty = true;
 		}
 	}
 
-	for (auto sl : spotlights.elements) {
-		if (sl && sl->isDirty[frameIndex]) {
+	for (auto sl : Get<SceneSpotlight>()) {
+		if (sl->isDirty[frameIndex]) {
 			sl->UploadUbo(frameIndex);
 			sl->isDirty[frameIndex] = false;
 			requireUpdateAccel = true;
@@ -132,8 +150,8 @@ void Scene::UploadDirty(uint32 frameIndex)
 		}
 	}
 
-	for (auto pl : pointlights.elements) {
-		if (pl && pl->isDirty[frameIndex]) {
+	for (auto pl : Get<ScenePointlight>()) {
+		if (pl->isDirty[frameIndex]) {
 			pl->UploadUbo(frameIndex);
 			pl->isDirty[frameIndex] = false;
 			requireUpdateAccel = true;
@@ -145,40 +163,28 @@ void Scene::UploadDirty(uint32 frameIndex)
 		UpdateTopLevelAs();
 	}
 
-	for (auto dl : directionalLights.elements) {
+	for (auto dl : Get<SceneDirlight>()) {
 
-		if (dl && primaryDirty) {
-			dl->UpdateBox(cameras.elements[activeCamera]->frustum, cameras.elements[activeCamera]->ubo.position);
+		if (primaryDirty) {
+			dl->UpdateBox(primaryCamera->frustum, primaryCamera->ubo.position);
 		}
 
-		if (dl && dl->isDirty[frameIndex]) {
-
+		if (dl->isDirty[frameIndex]) {
 			dl->UploadUbo(frameIndex);
 			dl->isDirty[frameIndex] = false;
 			anyDirty = true;
 		}
 	}
 
-	for (auto an : animatedGeometries.elements) {
-		if (an && an->isDirtyResize[frameIndex]) {
+	for (auto an : Get<SceneAnimatedGeometry>()) {
+		if (an->isDirtyResize[frameIndex]) {
 			an->ResizeJoints(frameIndex);
 			an->isDirtyResize[frameIndex] = false;
 		}
 
-		if (an && an->isDirty[frameIndex]) {
+		if (an->isDirty[frameIndex]) {
 			an->UploadSsbo(frameIndex);
 			an->isDirty[frameIndex] = false;
 		}
 	}
-
-	// if (anyDirty && vl::Renderer->m_raytracingPass.m_rtFrame >= *cons_sceneUpdateRt) {
-	//	vl::Renderer->m_raytracingPass.m_rtFrame = 0;
-	//}
-
-	// for (auto rp : reflProbs.elements) {
-	//	if (rp && rp->isDirty[frameIndex]) {
-	//		rp->UploadUbo(frameIndex);
-	//		rp->isDirty[frameIndex] = false;
-	//	}
-	//}
 }

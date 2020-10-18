@@ -101,11 +101,11 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRen
 		cmdBuffer.endRenderPass();
 	};
 
-	for (auto sl : sceneDesc->spotlights) {
+	for (auto sl : sceneDesc->Get<SceneSpotlight>()) {
 		shadowmapRenderpass(sl);
 	}
 
-	for (auto dl : sceneDesc->directionalLights) {
+	for (auto dl : sceneDesc->Get<SceneDirlight>()) {
 		shadowmapRenderpass(dl);
 	}
 }

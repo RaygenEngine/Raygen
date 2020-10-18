@@ -235,7 +235,7 @@ void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 	auto descSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
 
 
-	for (auto& geom : sceneDesc->geometries) {
+	for (auto& geom : sceneDesc->Get<SceneGeometry>()) {
 		PushConstant pc{
 			//
 			geom->transform,
@@ -278,7 +278,7 @@ void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 	}
 
 
-	for (auto geom : sceneDesc->animatedGeometries) {
+	for (auto geom : sceneDesc->Get<SceneAnimatedGeometry>()) {
 
 		PushConstant pc{ //
 			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))

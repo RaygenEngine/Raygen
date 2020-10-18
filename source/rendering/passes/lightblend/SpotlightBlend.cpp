@@ -59,7 +59,7 @@ void vl::SpotlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
 
-	for (auto sp : sceneDesc->spotlights) {
+	for (auto sp : sceneDesc->Get<SceneSpotlight>()) {
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &sp->descSet[sceneDesc.frameIndex], 0u, nullptr);
 
