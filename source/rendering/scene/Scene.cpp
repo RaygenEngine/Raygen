@@ -129,6 +129,8 @@ Scene::~Scene()
 	destroyVec(Get<ScenePointlight>().condensed);
 	destroyVec(Get<SceneDirlight>().condensed);
 	destroyVec(Get<SceneReflProbe>().condensed);
+
+	// NEXT: proper type erased cleanup here.
 }
 
 void Scene::UpdateTopLevelAs()

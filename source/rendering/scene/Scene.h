@@ -10,9 +10,6 @@ struct SceneCamera;
 
 struct Scene {
 
-	template<CSceneElem T>
-	SceneCollection<T>& Get();
-
 public:
 	vl::TopLevelAs tlas;
 
@@ -24,6 +21,10 @@ public:
 	vk::DescriptorSet sceneAsDescSet;
 
 public:
+	// Get a collection of the specific Scene Class type. Iterating [begin(), end()] will only return valid subobjects
+	template<CSceneElem T>
+	SceneCollection<T>& Get();
+
 	template<CSceneElem T>
 	T* GetElement(size_t uid);
 
@@ -31,7 +32,6 @@ public:
 	template<CSceneElem T>
 	void SetCtx();
 
-	// WIP: Use this in scene cmd system code
 	template<CSceneElem T>
 	void EnqueueCmdInCtx(size_t uid, std::function<void(T&)>&& command);
 
@@ -39,7 +39,7 @@ public:
 	void EnqueueCmd(size_t uid, std::function<void(T&)>&& command);
 
 
-	// "Dumb" interface, allows non linear allocation of uids later (for filling holes)
+	// "Dumb" interface, allows non linear allocation of uids (for filling holes)
 	// outCreations modifies the given uids given by the pointers
 	template<CSceneElem T>
 	void EnqueueCreateDestoryCmds(std::vector<size_t>&& destructions, std::vector<size_t*>&& outCreations);
