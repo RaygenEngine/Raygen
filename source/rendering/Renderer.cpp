@@ -17,6 +17,7 @@
 #include "rendering/passes/GBufferPass.h"
 #include "rendering/passes/lightblend/DirlightBlend.h"
 #include "rendering/passes/lightblend/PointlightBlend.h"
+#include "rendering/passes/lightblend/ReflprobeBlend.h"
 #include "rendering/passes/lightblend/SpotlightBlend.h"
 #include "rendering/passes/UnlitPass.h"
 #include "rendering/ppt/techniques/PtDebug.h"
@@ -24,10 +25,10 @@
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneSpotlight.h"
+#include "rendering/StaticPipes.h"
 #include "rendering/structures/Depthmap.h"
 #include "rendering/util/WriteDescriptorSets.h"
 #include "rendering/wrappers/Swapchain.h"
-#include "rendering/StaticPipes.h"
 
 
 namespace {
@@ -118,6 +119,7 @@ void Renderer_::RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneR
 		StaticPipes::Get<SpotlightBlend>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<PointlightBlend>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<DirlightBlend>().Draw(cmdBuffer, sceneDesc);
+		StaticPipes::Get<ReflprobeBlend>().Draw(cmdBuffer, sceneDesc);
 	});
 }
 

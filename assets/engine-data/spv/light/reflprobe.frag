@@ -1,4 +1,4 @@
-#version 450 
+#version 460 
 #extension GL_GOOGLE_include_directive: enable
 #include "global.glsl"
 
@@ -80,4 +80,5 @@ void main( ) {
 
 	outColor =  vec4(iblContribution, 1.0f);
 }
+
 
