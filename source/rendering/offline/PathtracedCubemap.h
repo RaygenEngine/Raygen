@@ -1,13 +1,8 @@
 #pragma once
 #include "rendering/wrappers/Buffer.h"
 #include "rendering/wrappers/ImageView.h"
-#include "rendering/wrappers/passlayout/RenderPassLayout.h"
-#include "rendering/ppt/PtBase.h"
-
-struct SceneRenderDesc;
 
 namespace vl {
-class Renderer_;
 
 class PathtracedCubemap {
 public:
@@ -18,6 +13,7 @@ public:
 
 private:
 	GpuEnvironmentMap* m_envmapAsset;
+	uint32 m_resolution;
 
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;
@@ -30,16 +26,10 @@ private:
 
 	std::array<glm::mat4, 6> m_viewMats;
 
-	uint32 m_resolution;
-
 	void MakeRtPipeline();
-
 	void CreateRtShaderBindingTable();
-
 	void CreateMatrices(const glm::vec3& reflprobePos);
-
 	void CreateFaceAttachments();
-
 	void EditPods();
 };
 } // namespace vl

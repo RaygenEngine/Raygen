@@ -23,8 +23,9 @@
 
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
 	"Builds all build-able scene nodes" };
-ConsoleFunction<> console_BuildAS{ "s.buildTestAccelerationStructure", []() {},
-	"Builds a top level acceleration structure, for debugging purposes, todo: remove" };
+// TODO: uncomment, change name
+// ConsoleFunction<> console_BuildAS{ "s.buildTestAccelerationStructure", []() {},
+//	"Builds a top level acceleration structure, for debugging purposes, todo: remove" };
 
 namespace vl {
 
