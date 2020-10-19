@@ -33,9 +33,11 @@ void EnqueueCreateDestroyCmds(Scene* scene, entt::registry& reg)
 template<typename T>
 void EnqueueDirtyCmds(Scene* scene, entt::registry& reg)
 {
+	scene->SetCtx<typename T::RenderSceneType>();
+
 	auto view = reg.view<BasicComponent, T, typename T::Dirty>();
 	for (auto& [ent, basic, sc] : view.each()) {
-		scene->EnqueueCmd<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<true>(basic));
+		scene->EnqueueCmdInCtx<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<true>(basic));
 	}
 }
 
@@ -43,9 +45,11 @@ void EnqueueDirtyCmds(Scene* scene, entt::registry& reg)
 template<typename T>
 void EnqueueTransformCmds(Scene* scene, entt::registry& reg)
 {
+	scene->SetCtx<typename T::RenderSceneType>();
 	auto view = reg.view<BasicComponent, T, DirtySrtComp>(entt::exclude<typename T::Dirty>);
+
 	for (auto& [ent, basic, sc] : view.each()) {
-		scene->EnqueueCmd<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<false>(basic));
+		scene->EnqueueCmdInCtx<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<false>(basic));
 	}
 }
 
@@ -63,10 +67,12 @@ void EnqueueRecreateCmds(Scene* scene, entt::registry& reg)
 		scene->EnqueueCreateDestoryCmds<typename T::RenderSceneType>({}, std::move(constructions));
 	}
 
+
 	{
+		scene->SetCtx<typename T::RenderSceneType>();
 		auto view = reg.view<BasicComponent, T>();
 		for (auto& [ent, basic, sc] : view.each()) {
-			scene->EnqueueCmd<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<true>(basic));
+			scene->EnqueueCmdInCtx<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<true>(basic));
 		}
 	}
 }

@@ -60,13 +60,11 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
 
-	for (auto rp : sceneDesc->reflProbs.elements) {
-		if (rp) {
-			cmdBuffer.bindDescriptorSets(
-				vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &rp->envmap.Lock().descriptorSet, 0u, nullptr);
+	for (auto rp : sceneDesc->Get<SceneReflProbe>()) {
+		cmdBuffer.bindDescriptorSets(
+			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &rp->envmap.Lock().descriptorSet, 0u, nullptr);
 
-			// big triangle
-			cmdBuffer.draw(3u, 1u, 0u, 0u);
-		}
+		// big triangle
+		cmdBuffer.draw(3u, 1u, 0u, 0u);
 	}
 }
