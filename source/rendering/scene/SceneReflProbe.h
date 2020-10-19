@@ -13,5 +13,6 @@ struct SceneReflProbe : SceneStruct {
 	vl::GpuHandle<EnvironmentMap> envmap;
 	glm::vec3 position;
 
+
 	void Build();
 };

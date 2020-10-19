@@ -12,8 +12,6 @@ layout(location = 0) out vec4 outColor;
 
 // in 
 
-layout(location = 0) in vec2 uv;
-
 // uniform
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
@@ -34,6 +32,11 @@ layout(set = 2, binding = 2) uniform samplerCube prefilteredSampler;
 layout(set = 2, binding = 3) uniform sampler2D brdfLutSampler;
 
 void main( ) {
+
+	vec2 iuv = gl_FragCoord.xy;
+	ivec2 screenSize = textureSize(g_AlbedoSampler, 0);
+
+	vec2 uv = iuv / screenSize; 
 
 	float depth = texture(g_DepthSampler, uv).r;
 
