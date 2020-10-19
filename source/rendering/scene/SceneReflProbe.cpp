@@ -3,16 +3,26 @@
 #include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/offline/BrdfLutCalculation.h"
 #include "rendering/offline/IrradianceMapCalculation.h"
+#include "rendering/offline/PathtracedCubemap.h"
 #include "rendering/offline/PrefilteredMapCalculation.h"
+
+// WIP:
+#include "rendering/Layer.h"
 
 void SceneReflProbe::Build()
 {
-	vl::IrradianceMapCalculation calc(&envmap.Lock(), 32);
-	calc.Calculate();
+	vl::PathtracedCubemap calcSourceSkybox(&envmap.Lock(), position, 2048);
 
-	vl::PrefilteredMapCalculation calc1(&envmap.Lock(), 128);
-	calc1.Calculate();
+	auto scene = vl::Layer->mainScene;
+	calcSourceSkybox.Calculate(vl::Layer->mainScene->sceneAsDescSet, scene->tlas.sceneDesc.descSet[0],
+		scene->tlas.sceneDesc.descSetSpotlights[0]);
 
-	vl::BrdfLutCalculation calc2(&envmap.Lock(), 512);
-	calc2.Calculate();
+	vl::IrradianceMapCalculation calcIrradiance(&envmap.Lock(), 32);
+	calcIrradiance.Calculate();
+
+	vl::PrefilteredMapCalculation calcPrefiltered(&envmap.Lock(), 128);
+	calcPrefiltered.Calculate();
+
+	vl::BrdfLutCalculation calcBrdfLut(&envmap.Lock(), 512);
+	calcBrdfLut.Calculate();
 }

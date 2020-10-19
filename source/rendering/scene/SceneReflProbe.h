@@ -11,6 +11,7 @@ struct SceneReflProbe : SceneStruct {
 	Ambient_Ubo ubo;
 
 	vl::GpuHandle<EnvironmentMap> envmap;
+	glm::vec3 position;
 
 	void Build();
 };
