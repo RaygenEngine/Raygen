@@ -308,7 +308,7 @@ void PathtracedCubemap::EditPods()
 		PodEditor e(envMap);
 		auto& [entry, irr] = AssetRegistry::CreateEntry<Cubemap>("gen-data/generated/cubemap");
 
-		e.pod->irradiance = entry->GetHandleAs<Cubemap>();
+		e.pod->skybox = entry->GetHandleAs<Cubemap>();
 		ptcube = entry->GetHandleAs<Cubemap>();
 	}
 

@@ -6,12 +6,14 @@
 #include "rendering/offline/PathtracedCubemap.h"
 #include "rendering/offline/PrefilteredMapCalculation.h"
 
+
 // WIP:
 #include "rendering/Layer.h"
+#include "rendering/scene/Scene.h"
 
 void SceneReflProbe::Build()
 {
-	vl::PathtracedCubemap calcSourceSkybox(&envmap.Lock(), position, 2048);
+	vl::PathtracedCubemap calcSourceSkybox(&envmap.Lock(), position, 512);
 
 	auto scene = vl::Layer->mainScene;
 	calcSourceSkybox.Calculate(vl::Layer->mainScene->sceneAsDescSet, scene->tlas.sceneDesc.descSet[0],
@@ -20,7 +22,7 @@ void SceneReflProbe::Build()
 	vl::IrradianceMapCalculation calcIrradiance(&envmap.Lock(), 32);
 	calcIrradiance.Calculate();
 
-	vl::PrefilteredMapCalculation calcPrefiltered(&envmap.Lock(), 128);
+	vl::PrefilteredMapCalculation calcPrefiltered(&envmap.Lock(), 512);
 	calcPrefiltered.Calculate();
 
 	vl::BrdfLutCalculation calcBrdfLut(&envmap.Lock(), 512);
