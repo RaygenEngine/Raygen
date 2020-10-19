@@ -13,6 +13,7 @@
 namespace {
 struct PushConstant {
 	glm::mat4 reflVolMatVP;
+	glm::vec3 reflPosition;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -98,7 +99,7 @@ vk::UniquePipelineLayout ReflprobeBlend::MakePipelineLayout()
 
 	vk::PushConstantRange pushConstantRange{};
 	pushConstantRange
-		.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
+		.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eVertex) //
 		.setSize(sizeof(PushConstant))
 		.setOffset(0u);
 
@@ -254,9 +255,11 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &rp->envmap.Lock().descriptorSet, 0u, nullptr);
 
-		PushConstant pc{ sceneDesc.viewer->ubo.viewProj * glm::scale(glm::vec3(5.f)) };
+		PushConstant pc{ sceneDesc.viewer->ubo.viewProj * glm::translate(rp->position) * glm::scale(glm::vec3(5.f)),
+			rp->position };
 
-		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,
+			sizeof(PushConstant), &pc);
 
 		cmdBuffer.drawIndexed(m_sphereIndexBuffer.count, 1u, 0u, 0u, 0u);
 	}

@@ -9,7 +9,9 @@
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/Scene.h"
 
-vk::UniquePipelineLayout vl::SpotlightBlend::MakePipelineLayout()
+namespace vl {
+
+vk::UniquePipelineLayout SpotlightBlend::MakePipelineLayout()
 {
 	return rvk::makeLayoutNoPC({
 		Layouts->renderAttachmentsLayout.handle(),
@@ -19,7 +21,7 @@ vk::UniquePipelineLayout vl::SpotlightBlend::MakePipelineLayout()
 	});
 }
 
-vk::UniquePipeline vl::SpotlightBlend::MakePipeline()
+vk::UniquePipeline SpotlightBlend::MakePipeline()
 {
 	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/spotlight.shader");
 	gpuShader.onCompile = [&]() {
@@ -50,7 +52,7 @@ vk::UniquePipeline vl::SpotlightBlend::MakePipeline()
 		*Layouts->rasterDirectPassLayout.compatibleRenderPass, colorBlending);
 }
 
-void vl::SpotlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void SpotlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
 	auto camDescSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
 
@@ -70,3 +72,4 @@ void vl::SpotlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 		cmdBuffer.draw(3u, 1u, 0u, 0u);
 	}
 }
+} // namespace vl

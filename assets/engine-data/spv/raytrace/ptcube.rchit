@@ -4,6 +4,7 @@
 #extension GL_EXT_scalar_block_layout : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 #extension GL_EXT_buffer_reference2 : enable
+#extension GL_EXT_ray_query: require
 
 #include "global.glsl"
 
@@ -64,8 +65,7 @@ struct GeometryGroup {
 layout(set = 2, binding = 0, std430) readonly buffer GeometryGroups { GeometryGroup g[]; } geomGroups;
 layout(set = 2, binding = 1) uniform sampler2D textureSamplers[];
 
-layout(set = 3, binding = 0, std430) readonly buffer Spotlights { Spotlight light[]; } spotlights;
-layout(set = 3, binding = 1) uniform sampler2DShadow spotlightShadowmap[];
+layout(set = 3, binding = 0, std430) readonly buffer Pointlights { Pointlight light[]; } pointlights;
 
 vec4 texture(samplerRef s, vec2 uv) {
 	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
@@ -81,6 +81,30 @@ OldVertex fromVertex(Vertex p) {
 	vtx.uv = vec2(p.u, p.v);
 	
 	return vtx;
+}
+
+float ShadowRayQuery(vec3 lightPos, vec3 fragPos){ 
+	vec3  L = normalize(lightPos - fragPos); 
+	vec3  origin    = fragPos;
+	vec3  direction = L;  // vector to light
+	float tMin      = 0.01f;
+	float tMax      = distance(fragPos, lightPos);
+
+	// Initializes a ray query object but does not start traversal
+	rayQueryEXT rayQuery;
+	rayQueryInitializeEXT(rayQuery, topLevelAs, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, origin, tMin,
+                      direction, tMax);
+
+	// Start traversal: return false if traversal is complete
+	while(rayQueryProceedEXT(rayQuery)) {
+	}
+      
+	// Returns type of committed (true) intersection
+	if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
+	  // Got an intersection == Shadow
+	  return 1.0;
+	}
+	return 0.0;
 }
 
 void main() {
@@ -155,7 +179,7 @@ void main() {
 
 	vec3 radiance = vec3(0);
 	// OLD DIRECT
-	/*{
+	{
 		// TODO: Refactor
 		vec3 V = -gl_WorldRayDirectionEXT;
 		float a = brdfInfo.a;
@@ -174,9 +198,9 @@ void main() {
 		// DIRECT
 
 		// for each light
-		for(int i = 0; i < spotlightCount; ++i) 
+		for(int i = 0; i < pointlightCount; ++i) 
 		{
-			Spotlight light = spotlights.light[i];
+			Pointlight light = pointlights.light[i];
 			vec3 lightPos = light.position;
 
 			vec3 L = normalize(lightPos - hitPoint);
@@ -190,27 +214,12 @@ void main() {
 						light.quadraticTerm * (dist * dist));
 			float lightIntensity = light.intensity;
 			
-			vec3 ld = light.direction;
-			toOnbSpace(shadingOrthoBasis, ld);
-
-			// spot effect (soft edges)
-			float theta = dot(L, -ld);
-			float epsilon = (light.innerCutOff - light.outerCutOff);
-			float spotEffect = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 			
-			vec3 lightFragColor = lightColor * lightIntensity * attenuation * spotEffect;
+			vec3 lightFragColor = lightColor * lightIntensity * attenuation;
 
 			// Only sample the shadowmap if this fragment is lit
 			if (sum(lightFragColor) > 0.001) {
-				float shadow = 0.f; //...
-
-				vec4 fragPosLightSpace = light.viewProj * vec4(hitPoint, 1.0);
-				vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-
-				projCoords = vec3(projCoords.xy * 0.5 + 0.5, projCoords.z - light.maxShadowBias);
-				float bias = light.maxShadowBias;
-			
-				shadow = 1.0 - texture(spotlightShadowmap[nonuniformEXT(i)], projCoords);
+				float shadow = ShadowRayQuery(lightPos, hitPoint);
 
 				vec3 Li = (1.0 - shadow) * lightFragColor; 
 		
@@ -223,7 +232,7 @@ void main() {
 				radiance += finalContribution;
 			}
 		}
-	}*/
+	}
 
 	if(prd.depth + 1 > 2){
 		// TODO: radiance += sky;

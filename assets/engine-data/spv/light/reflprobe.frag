@@ -14,6 +14,11 @@ layout(location = 0) out vec4 outColor;
 
 // uniform
 
+layout(push_constant) uniform PC {
+	mat4 reflVolMatVP;
+    vec3 reflPosition;
+} push;
+
 layout(set = 1, binding = 0) uniform UBO_Camera {
 	vec3 position;
 	float pad0;

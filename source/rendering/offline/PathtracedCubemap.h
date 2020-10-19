@@ -9,7 +9,7 @@ public:
 	PathtracedCubemap(GpuEnvironmentMap* envmapAsset, glm::vec3 position, uint32 res);
 
 	void Calculate(vk::DescriptorSet sceneAsDescSet, vk::DescriptorSet sceneGeomDataDescSet,
-		vk::DescriptorSet sceneSpotlightDescSet);
+		vk::DescriptorSet ScenePointlightDescSet, int32 pointlightCount);
 
 private:
 	GpuEnvironmentMap* m_envmapAsset;

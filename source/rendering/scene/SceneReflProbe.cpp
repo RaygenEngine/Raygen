@@ -6,6 +6,8 @@
 #include "rendering/offline/PathtracedCubemap.h"
 #include "rendering/offline/PrefilteredMapCalculation.h"
 
+#include "engine/Timer.h"
+
 
 // WIP:
 #include "rendering/Layer.h"
@@ -13,18 +15,30 @@
 
 void SceneReflProbe::Build()
 {
-	vl::PathtracedCubemap calcSourceSkybox(&envmap.Lock(), position, 512);
+	{
+		TIMER_SCOPE("source")
+		vl::PathtracedCubemap calcSourceSkybox(&envmap.Lock(), position, 1024);
 
-	auto scene = vl::Layer->mainScene;
-	calcSourceSkybox.Calculate(vl::Layer->mainScene->sceneAsDescSet, scene->tlas.sceneDesc.descSet[0],
-		scene->tlas.sceneDesc.descSetSpotlights[0]);
+		auto scene = vl::Layer->mainScene;
+		calcSourceSkybox.Calculate(vl::Layer->mainScene->sceneAsDescSet, scene->tlas.sceneDesc.descSet[0],
+			scene->tlas.sceneDesc.descSetPointlights[0], vl::Layer->mainScene->Get<ScenePointlight>().size());
+	}
 
-	vl::IrradianceMapCalculation calcIrradiance(&envmap.Lock(), 32);
-	calcIrradiance.Calculate();
+	{
+		TIMER_SCOPE("irr")
+		vl::IrradianceMapCalculation calcIrradiance(&envmap.Lock(), 32);
+		calcIrradiance.Calculate();
+	}
 
-	vl::PrefilteredMapCalculation calcPrefiltered(&envmap.Lock(), 512);
-	calcPrefiltered.Calculate();
+	{
+		TIMER_SCOPE("pref")
+		vl::PrefilteredMapCalculation calcPrefiltered(&envmap.Lock(), 128);
+		calcPrefiltered.Calculate();
+	}
 
-	vl::BrdfLutCalculation calcBrdfLut(&envmap.Lock(), 512);
-	calcBrdfLut.Calculate();
+	{
+		TIMER_SCOPE("lut")
+		vl::BrdfLutCalculation calcBrdfLut(&envmap.Lock(), 512);
+		calcBrdfLut.Calculate();
+	}
 }
