@@ -255,11 +255,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 		cmdBuffer->setViewport(0, { viewport });
 		cmdBuffer->setScissor(0, { scissor });
 
-		for (auto geom : sceneDesc->geometries.elements) {
-			if (!geom) {
-				continue;
-			}
-
+		for (auto geom : sceneDesc->Get<SceneGeometry>()) {
 			PushConstant pc{ //
 				viewProj * geom->transform
 			};
@@ -267,8 +263,9 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 			for (auto& gg : geom->mesh.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
-				if (arch.isUnlit)
-					[[unlikely]] { continue; }
+				if (arch.isUnlit) [[unlikely]] {
+					continue;
+				}
 				auto& plLayout = *arch.depth.pipelineLayout;
 
 				// bind the graphics pipeline
@@ -291,10 +288,7 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 			}
 		}
 
-		for (auto geom : sceneDesc->animatedGeometries.elements) {
-			if (!geom) {
-				continue;
-			}
+		for (auto geom : sceneDesc->Get<SceneAnimatedGeometry>()) {
 			PushConstant pc{ //
 				viewProj * geom->transform
 			};
@@ -302,8 +296,9 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 			for (auto& gg : geom->mesh.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
-				if (arch.isUnlit)
-					[[unlikely]] { continue; }
+				if (arch.isUnlit) [[unlikely]] {
+					continue;
+				}
 				auto& plLayout = *arch.depthAnimated.pipelineLayout;
 
 				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.depthAnimated.pipeline);

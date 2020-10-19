@@ -235,11 +235,7 @@ void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 	auto descSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
 
 
-	for (auto geom : sceneDesc->geometries.elements) {
-
-		if (!geom) {
-			continue;
-		}
+	for (auto& geom : sceneDesc->Get<SceneGeometry>()) {
 		PushConstant pc{
 			//
 			geom->transform,
@@ -254,9 +250,9 @@ void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
 
-
-			if (arch.isUnlit)
-				[[unlikely]] { continue; }
+			if (arch.isUnlit) [[unlikely]] {
+				continue;
+			}
 			auto& plLayout = *arch.gbuffer.pipelineLayout;
 
 			pc.drawIndex = float(gg.material.uid);
@@ -282,10 +278,8 @@ void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 	}
 
 
-	for (auto geom : sceneDesc->animatedGeometries.elements) {
-		if (!geom) {
-			continue;
-		}
+	for (auto geom : sceneDesc->Get<SceneAnimatedGeometry>()) {
+
 		PushConstant pc{ //
 			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
 		};
@@ -293,8 +287,9 @@ void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
-			if (arch.isUnlit)
-				[[unlikely]] { continue; }
+			if (arch.isUnlit) [[unlikely]] {
+				continue;
+			}
 
 			auto& plLayout = *arch.gbufferAnimated.pipelineLayout;
 
