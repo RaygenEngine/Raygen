@@ -17,7 +17,7 @@ private:
 	RBuffer m_sphereVertexBuffer;
 
 	struct indices {
-		vl::RBuffer buffer;
+		RBuffer buffer;
 		uint32 count;
 	} m_sphereIndexBuffer;
 };

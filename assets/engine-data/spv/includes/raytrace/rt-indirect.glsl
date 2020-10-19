@@ -3,8 +3,13 @@
 
 // META:
 // Expects pre declared variable prd before the inclusion of the file
-
-layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
+	
+#ifndef TEST_CUBE
+    layout(set = 3, binding = 0) 
+#else
+    layout(set = 1, binding = 0) 
+#endif
+    uniform accelerationStructureEXT topLevelAs;
 
 // Handle just radiance here (no throughput). 
 // This function should be able to  be used without throughput (eg: a debug ray directly from the camera that invokes hit shaders)

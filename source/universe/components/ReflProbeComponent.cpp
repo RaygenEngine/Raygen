@@ -6,7 +6,9 @@
 
 DECLARE_DIRTY_FUNC(CReflProbe)(BasicComponent& bc)
 {
-	return [=](SceneReflProbe& rp) {
+	return [=, position = bc.world().position](SceneReflProbe& rp) {
+		rp.position = position;
+
 		if (FullDirty) {
 			rp.envmap = vl::GpuAssetManager->GetGpuHandle(environmentMap);
 		}

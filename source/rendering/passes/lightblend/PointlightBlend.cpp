@@ -9,8 +9,6 @@
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/Scene.h"
 
-#include <glm/glm/gtc/type_ptr.hpp>
-
 namespace {
 struct PushConstant {
 	glm::mat4 lightVolMatVP;
@@ -78,9 +76,9 @@ void PointlightBlend::MakeSphere(int32 sectorCount, int32 stackCount, float radi
 
 
 	m_sphereVertexBuffer
-		= vl::RBuffer::CreateTransfer("Pointlight Sphere Vertex", vertices, vk::BufferUsageFlagBits::eVertexBuffer);
+		= RBuffer::CreateTransfer("Pointlight Sphere Vertex", vertices, vk::BufferUsageFlagBits::eVertexBuffer);
 	m_sphereIndexBuffer.buffer
-		= vl::RBuffer::CreateTransfer("Pointlight Sphere Index", indices, vk::BufferUsageFlagBits::eIndexBuffer);
+		= RBuffer::CreateTransfer("Pointlight Sphere Index", indices, vk::BufferUsageFlagBits::eIndexBuffer);
 	m_sphereIndexBuffer.count = static_cast<uint32>(indices.size());
 }
 

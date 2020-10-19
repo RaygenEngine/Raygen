@@ -56,13 +56,19 @@ struct Spotlight
 	float sampleInvSpread;
 };
 
+
 layout(push_constant) uniform PC
 {
-    int frame;
-    int depth;
-    int samples;
-    int convergeUntilFrame;
-	int spotlightCount;
+	#ifndef TEST_CUBE
+		int frame;
+		int depth;
+		int samples;
+		int convergeUntilFrame;
+		int spotlightCount;
+	#else
+		mat4 viewInverse;
+		mat4 projInverse;
+	#endif
 };
 
 struct hitPayload
@@ -73,7 +79,5 @@ struct hitPayload
 	int depth;
 	uint seed;
 };
-
-
 
 #endif
