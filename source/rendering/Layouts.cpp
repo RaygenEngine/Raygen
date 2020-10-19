@@ -169,6 +169,9 @@ Layouts_::Layouts_()
 	imageDebugDescLayout.Generate();
 
 
+	stbuffer.AddBinding(eStorageBuffer, eRaygenKHR | eClosestHitKHR | eAnyHitKHR, 1024u, eVariableDescriptorCount);
+	stbuffer.Generate();
+
 	bufferAndSamplersDescLayout.AddBinding(eStorageBuffer, eRaygenKHR | eClosestHitKHR | eAnyHitKHR);
 
 	bufferAndSamplersDescLayout.AddBinding(

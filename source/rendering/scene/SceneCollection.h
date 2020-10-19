@@ -31,6 +31,8 @@ struct SceneCollection : public SceneCollectionBase {
 	auto begin() const { return condensed.cbegin(); }
 	auto end() const { return condensed.cend(); }
 
+	size_t size() const { return condensed.size(); }
+
 private:
 	friend struct Scene;
 	friend struct vl::TopLevelAs; // TODO: remove this when toplevelas is refactored

@@ -56,6 +56,20 @@ struct Spotlight
 	float sampleInvSpread;
 };
 
+struct Pointlight {
+		vec3 position;
+		float pad0;
+
+		vec3 color;
+		float pad3;
+
+		float intensity;
+
+		float constantTerm;
+		float linearTerm;
+		float quadraticTerm;
+};
+
 
 layout(push_constant) uniform PC
 {
@@ -68,6 +82,7 @@ layout(push_constant) uniform PC
 	#else
 		mat4 viewInverse;
 		mat4 projInverse;
+		int pointlightCount;
 	#endif
 };
 

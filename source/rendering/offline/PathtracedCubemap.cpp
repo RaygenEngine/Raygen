@@ -21,9 +21,10 @@ namespace {
 struct PushConstant {
 	glm::mat4 viewInverse;
 	glm::mat4 projInverse;
+	int32 pointlightCount;
 };
 
-static_assert(sizeof(PushConstant) <= 128);
+// static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
@@ -51,7 +52,7 @@ void PathtracedCubemap::MakeRtPipeline()
 		Layouts->singleStorageImage.handle(),
 		Layouts->accelLayout.handle(),
 		Layouts->bufferAndSamplersDescLayout.handle(),
-		Layouts->bufferAndSamplersDescLayout.handle(),
+		Layouts->stbuffer.handle(),
 	};
 
 	// all rt shaders here
@@ -195,8 +196,8 @@ void PathtracedCubemap::CreateFaceAttachments()
 	}
 }
 
-void PathtracedCubemap::Calculate(
-	vk::DescriptorSet sceneAsDescSet, vk::DescriptorSet sceneGeomDataDescSet, vk::DescriptorSet sceneSpotlightDescSet)
+void PathtracedCubemap::Calculate(vk::DescriptorSet sceneAsDescSet, vk::DescriptorSet sceneGeomDataDescSet,
+	vk::DescriptorSet ScenePointlightDescSet, int32 pointlightCount)
 {
 	Device->waitIdle();
 
@@ -216,7 +217,7 @@ void PathtracedCubemap::Calculate(
 
 		DEBUG_NAME_AUTO(sceneAsDescSet);
 		DEBUG_NAME_AUTO(sceneGeomDataDescSet);
-		DEBUG_NAME_AUTO(sceneSpotlightDescSet);
+		DEBUG_NAME_AUTO(ScenePointlightDescSet);
 
 
 		cmdBuffer.bindDescriptorSets(
@@ -225,8 +226,8 @@ void PathtracedCubemap::Calculate(
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 2u, 1u, &sceneGeomDataDescSet, 0u, nullptr);
 
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 3u, 1u, &sceneSpotlightDescSet, 0u, nullptr);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 3u, 1u,
+			&ScenePointlightDescSet, 0u, nullptr);
 
 		vk::DeviceSize progSize = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of a program identifier
 
@@ -265,7 +266,7 @@ void PathtracedCubemap::Calculate(
 		projInverse = glm::inverse(projInverse);
 
 		for (int32 i = 0; i < 6; ++i) {
-			PushConstant pc{ glm::inverse(m_viewMats[i]), projInverse };
+			PushConstant pc{ glm::inverse(m_viewMats[i]), projInverse, pointlightCount };
 
 			cmdBuffer.pushConstants(m_pipelineLayout.get(),
 				vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant),

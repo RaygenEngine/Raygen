@@ -44,6 +44,7 @@ layout(set = 2, binding = 0) uniform UBO_Pointlight {
 } light;
 
 
+
 layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 float ShadowRayQuery(Fragment frag){ 

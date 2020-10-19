@@ -6,9 +6,10 @@
 #include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/Device.h"
-#include "rendering/scene/SceneGeometry.h"
-#include "rendering/scene/SceneSpotlight.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/ScenePointlight.h"
+#include "rendering/scene/SceneSpotlight.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -60,11 +61,10 @@ std::vector<RtGeometryGroup> g_tempGeometryGroups;
 namespace vl {
 TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 {
-	uint32 spotlightCount = 0;
-	for (auto spotlight : scene->Get<SceneSpotlight>()) {
-		spotlightCount++;
-	}
-	sceneDesc.descSetSpotlights = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(spotlightCount);
+	sceneDesc.descSetSpotlights
+		= Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(scene->Get<SceneSpotlight>().size());
+
+	sceneDesc.descSetPointlights = Layouts->stbuffer.AllocDescriptorSet(scene->Get<ScenePointlight>().size());
 
 
 	int32 totalGroups = 0;
@@ -98,7 +98,8 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 	sceneDesc.WriteImages();
 
 
-	sceneDesc.WriteSpotlights(scene->Get<SceneSpotlight>().condensed);
+	// sceneDesc.WriteSpotlights(scene->Get<SceneSpotlight>().condensed);
+	sceneDesc.WritePointlights(scene->Get<ScenePointlight>().condensed);
 	sceneDesc.WriteGeomGroups();
 	Build();
 	Device->waitIdle();
@@ -233,6 +234,48 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 			.setDstSet(descSetSpotlights[i])
 			.setDstArrayElement(0u);
 		Device->updateDescriptorSets({ depthWrite }, nullptr);
+	}
+}
+
+void RtSceneDescriptor::WritePointlights(const std::vector<ScenePointlight*>& pointlights)
+{
+	pointlightCount = pointlights.size();
+
+	uint32 uboSize = sizeof(Pointlight_Ubo) + sizeof(Pointlight_Ubo) % 8;
+
+	pointlightsBuffer = { (uboSize * pointlightCount),
+		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer
+			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+		vk::MemoryAllocateFlagBits::eDeviceAddress };
+
+	byte* mapCursor = reinterpret_cast<byte*>(Device->mapMemory(pointlightsBuffer.memory(), 0, pointlightsBuffer.size));
+
+	for (auto pointlight : pointlights) {
+		memcpy(mapCursor, &pointlight->ubo, sizeof(Pointlight_Ubo));
+		mapCursor += uboSize;
+	}
+
+	Device->unmapMemory(pointlightsBuffer.memory());
+
+
+	vk::DescriptorBufferInfo bufInfo{};
+	bufInfo
+		.setOffset(0) //
+		.setRange(VK_WHOLE_SIZE)
+		.setBuffer(pointlightsBuffer.handle());
+
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+		vk::WriteDescriptorSet bufWriteSet{};
+		bufWriteSet
+			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
+			.setDstBinding(0u)
+			.setDstSet(descSetPointlights[i])
+			.setDstArrayElement(0u)
+			.setBufferInfo(bufInfo);
+
+		Device->updateDescriptorSets({ bufWriteSet }, nullptr);
 	}
 }
 
