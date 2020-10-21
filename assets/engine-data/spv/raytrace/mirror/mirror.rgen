@@ -29,9 +29,6 @@ layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 layout(set = 4, binding = 1) uniform sampler2D textureSamplers[];
 
-layout(set = 6, binding = 0, std430) readonly buffer Reflprobes { Reflprobe reflprobe[]; } reflprobes;
-layout(set = 6, binding = 1) uniform samplerCube relfprobeTextures[];
-
 layout(location = 0) rayPayloadEXT hitPayload prd;
 
 vec3 RadianceOfRay2(vec3 nextOrigin, vec3 nextDirection) {
@@ -74,36 +71,21 @@ void main() {
 		g_EmissiveSampler,
 		uv);
 
-	// WIP:
-	if(frag.a >= 0.001)
-		return;
-
 	// Extract SpaceInfo
 	vec3 color = vec3(0);
 
-	vec3 V = normalize(cam.position - frag.position);
-	vec3 N = frag.normal;
-	float NoV = max(dot(N, V), BIAS);
-
-	vec3 brdfLUT = (texture(textureSamplers[nonuniformEXT(21)], vec2(NoV, frag.a))).rgb;
-
-	// diffuse
-	{
-		for(int i = 0; i < reflprobeCount; ++i){
-			Reflprobe reflprobe = reflprobes.reflprobe[i];
-
-			// SMATH: math of those
-			vec3 diffuseLight =  texture(relfprobeTextures[nonuniformEXT(i)], N).rgb; // irradiance
-
-			vec3 diffuse = diffuseLight * frag.albedo;
-
-			color += diffuse;
-		}
-	}
-
 	// specular
-	{
+	if(frag.a < SPECULAR_THRESH){
+		vec3 V = normalize(cam.position - frag.position);
+		vec3 N = frag.normal;
+		float NoV = max(dot(N, V), BIAS);
+
+		vec3 brdfLUT = (texture(textureSamplers[nonuniformEXT(21)], vec2(NoV, frag.a))).rgb;
+
 		vec3 L = normalize(reflect(-V, N));
+
+		prd.depth = 1; // start from depth = 1 due to gbuffer
+		prd.radiance = vec3(0);
 		vec3 specularLight = RadianceOfRay2(frag.position, L);
 
 		vec3 specular = specularLight * (frag.f0 * brdfLUT.x + brdfLUT.y);

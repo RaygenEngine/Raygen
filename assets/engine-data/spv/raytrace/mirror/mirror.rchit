@@ -234,12 +234,10 @@ void main() {
 		}
 	}
 
-	// WIP:
-	//if(prd.depth + 1 > mirrorDepth){
-		// TODO: radiance += sky;
-	//	prd.radiance = radiance;
-	//	return;
-	//}
+	if(prd.depth > mirrorDepth){
+		prd.radiance = radiance;
+		return;
+	}
 
 	vec3 V = -gl_WorldRayDirectionEXT;
 	vec3 N = Ns;
@@ -247,8 +245,29 @@ void main() {
 
 	vec3 brdfLUT = (texture(textureSamplers[nonuniformEXT(21)], vec2(NoV, brdfInfo.a))).rgb;
 
+	// next mirror event
+	if(brdfInfo.a < SPECULAR_THRESH){
+		// diffuse
+		for(int i = 0; i < reflprobeCount; ++i){
+			Reflprobe reflprobe = reflprobes.reflprobe[i];
+
+			vec3 diffuseLight =  texture(relfprobeTextures[nonuniformEXT(i)], N).rgb; // irradiance
+
+			vec3 diffuse = diffuseLight * brdfInfo.albedo;
+
+			radiance += diffuse;
+		}
+
+		// specular
+		vec3 L = normalize(reflect(-V, N));
+		vec3 specularLight = RadianceOfRay2(hitPoint, L);
+
+		vec3 specular = specularLight * (brdfInfo.f0 * brdfLUT.x + brdfLUT.y);
+
+		radiance += specular;
+	}
 	// sample appropriate reflprobe
-	if(brdfInfo.a >= 0.001){
+	else{
 		for(int i = 0; i < reflprobeCount; ++i){
 			Reflprobe reflprobe = reflprobes.reflprobe[i];
 
@@ -270,32 +289,6 @@ void main() {
 			vec3 iblContribution = diffuse + specular;
 
 			radiance += iblContribution;
-		}
-	}
-	// next mirror event
-	else{
-		// diffuse
-		{
-			for(int i = 0; i < reflprobeCount; ++i){
-				Reflprobe reflprobe = reflprobes.reflprobe[i];
-
-				// SMATH: math of those
-				vec3 diffuseLight =  texture(relfprobeTextures[nonuniformEXT(i)], N).rgb; // irradiance
-
-				vec3 diffuse = diffuseLight * brdfInfo.albedo;
-
-				radiance += diffuse;
-			}
-		}
-
-		// specular
-		{
-			vec3 L = normalize(reflect(-V, N));
-			vec3 specularLight = RadianceOfRay2(hitPoint, L);
-
-			vec3 specular = specularLight * (brdfInfo.f0 * brdfLUT.x + brdfLUT.y);
-
-			radiance += specular;
 		}
 	}
 
