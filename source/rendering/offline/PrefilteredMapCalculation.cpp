@@ -417,9 +417,9 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 					m_cmdBuffers[i].bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 
-					float roughness = (float)mip / (float)(5 - 1);
-					float a = roughness * roughness;
-					LOG_DEBUG("Prefiltered mip a = roughness * roughness = {}", a);
+					float roughness = (float)mip / (float)(6 - 1);
+					float a = roughness;
+					LOG_INFO("Prefiltered mip a = roughness = {}", a);
 
 					PushConstant pc{ //
 						m_captureProjection * glm::mat4(glm::mat3(m_captureViews[i])), a,

@@ -36,7 +36,7 @@ inline struct Layouts_ {
 	RDescriptorSetLayout tripleStorageImage = GenerateStorageImageDescSet(3);
 	RDescriptorSetLayout quadStorageImage = GenerateStorageImageDescSet(4);
 
-	RDescriptorSetLayout stbuffer;
+	RDescriptorSetLayout singleStorageBuffer;
 
 	RDescriptorSetLayout bufferAndSamplersDescLayout;
 

@@ -52,7 +52,7 @@ void PathtracedCubemap::MakeRtPipeline()
 		Layouts->singleStorageImage.handle(),
 		Layouts->accelLayout.handle(),
 		Layouts->bufferAndSamplersDescLayout.handle(),
-		Layouts->stbuffer.handle(),
+		Layouts->singleStorageBuffer.handle(),
 	};
 
 	// all rt shaders here

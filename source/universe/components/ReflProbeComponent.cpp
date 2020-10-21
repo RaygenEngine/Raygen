@@ -2,11 +2,11 @@
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuEnvironmentMap.h"
-#include "rendering/scene/SceneReflProbe.h"
+#include "rendering/scene/SceneReflprobe.h"
 
-DECLARE_DIRTY_FUNC(CReflProbe)(BasicComponent& bc)
+DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)
 {
-	return [=, position = bc.world().position](SceneReflProbe& rp) {
+	return [=, position = bc.world().position](SceneReflprobe& rp) {
 		rp.position = position;
 
 		if (FullDirty) {

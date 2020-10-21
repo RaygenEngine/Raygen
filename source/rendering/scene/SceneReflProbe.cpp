@@ -1,4 +1,4 @@
-#include "SceneReflProbe.h"
+#include "SceneReflprobe.h"
 
 #include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/offline/BrdfLutCalculation.h"
@@ -12,12 +12,15 @@
 // WIP:
 #include "rendering/Layer.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/Device.h"
 
-void SceneReflProbe::Build()
+void SceneReflprobe::Build()
 {
+	vl::Device->waitIdle();
+
 	{
 		TIMER_SCOPE("source")
-		vl::PathtracedCubemap calcSourceSkybox(&envmap.Lock(), position, 1024);
+		vl::PathtracedCubemap calcSourceSkybox(&envmap.Lock(), position, 128);
 
 		auto scene = vl::Layer->mainScene;
 		calcSourceSkybox.Calculate(vl::Layer->mainScene->sceneAsDescSet, scene->tlas.sceneDesc.descSet[0],

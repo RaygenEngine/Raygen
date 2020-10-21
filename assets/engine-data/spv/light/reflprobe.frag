@@ -66,6 +66,7 @@ void main( ) {
 		uv);
 	
 	
+	// SMATH: V sign
 	vec3 N = frag.normal;
 	vec3 V = normalize(frag.position - cam.position);
 	vec3 R = normalize(reflect(V, N));
@@ -89,5 +90,6 @@ void main( ) {
 
 	outColor =  vec4(iblContribution, 1.0f);
 }
+
 
 

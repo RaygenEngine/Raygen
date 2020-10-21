@@ -9,7 +9,7 @@
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneGeometry.h"
-#include "rendering/scene/SceneReflProbe.h"
+#include "rendering/scene/SceneReflprobe.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/scene/ScenePointlight.h"
 
@@ -27,7 +27,7 @@ void Scene::EnqueueActiveCameraCmd(size_t uid)
 
 void Scene::BuildAll()
 {
-	for (auto reflProb : Get<SceneReflProbe>()) {
+	for (auto reflProb : Get<SceneReflprobe>()) {
 		reflProb->Build();
 	}
 }
@@ -102,7 +102,7 @@ void Register(std::unordered_map<size_t, UniquePtr<SceneCollectionBase>>& collec
 Scene::Scene()
 {
 	Register<SceneGeometry, SceneAnimatedGeometry, SceneCamera, SceneSpotlight, ScenePointlight, SceneDirlight,
-		SceneReflProbe>(collections);
+		SceneReflprobe>(collections);
 
 
 	EnqueueEndFrame();
@@ -128,7 +128,7 @@ Scene::~Scene()
 	destroyVec(Get<SceneSpotlight>().condensed);
 	destroyVec(Get<ScenePointlight>().condensed);
 	destroyVec(Get<SceneDirlight>().condensed);
-	destroyVec(Get<SceneReflProbe>().condensed);
+	destroyVec(Get<SceneReflprobe>().condensed);
 
 	// NEXT: proper type erased cleanup here.
 }

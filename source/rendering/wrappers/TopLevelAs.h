@@ -5,6 +5,7 @@
 struct SceneGeometry;
 struct SceneSpotlight;
 struct ScenePointlight;
+struct SceneReflprobe;
 struct Scene;
 
 
@@ -25,17 +26,23 @@ struct RtSceneDescriptor {
 	InFlightResources<vk::DescriptorSet> descSet;
 	InFlightResources<vk::DescriptorSet> descSetSpotlights;
 	InFlightResources<vk::DescriptorSet> descSetPointlights;
+	InFlightResources<vk::DescriptorSet> descSetReflprobes;
 
 	void AddGeomGroup(const GpuGeometryGroup& group, const GpuMesh& mesh, const glm::mat4& transform);
 	void WriteImages();
 	void WriteSpotlights(const std::vector<SceneSpotlight*>& spotlights);
 	void WritePointlights(const std::vector<ScenePointlight*>& pointlights);
+	void WriteReflprobes(const std::vector<SceneReflprobe*>& reflprobes);
 	void WriteGeomGroups();
 
 	int32 spotlightCount{ 0 };
 	int32 pointlightCount{ 0 };
+	int32 reflprobeCount{ 0 };
+
 	RBuffer spotlightsBuffer;
 	RBuffer pointlightsBuffer;
+	RBuffer reflprobesBuffer;
+
 	RBuffer geomGroupsBuffer;
 };
 
