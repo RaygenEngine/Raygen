@@ -39,8 +39,8 @@
 #define BIAS 1e-4
 #endif
 
-#ifndef SPECULAR_THRESH
-#define SPECULAR_THRESH 1e-6
+#ifndef SPEC_THRESHOLD
+#define SPEC_THRESHOLD 1e-6
 #endif
 
 

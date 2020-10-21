@@ -75,12 +75,12 @@ void main() {
 	vec3 color = vec3(0);
 
 	// specular
-	if(frag.a < SPECULAR_THRESH){
+	if(frag.a < SPEC_THRESHOLD){
 		vec3 V = normalize(cam.position - frag.position);
 		vec3 N = frag.normal;
 		float NoV = max(dot(N, V), BIAS);
 
-		vec3 brdfLUT = (texture(textureSamplers[nonuniformEXT(21)], vec2(NoV, frag.a))).rgb;
+		vec3 brdfLUT = (texture(textureSamplers[nonuniformEXT(18)], vec2(NoV, frag.a))).rgb;
 
 		vec3 L = normalize(reflect(-V, N));
 

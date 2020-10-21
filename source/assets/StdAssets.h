@@ -38,9 +38,11 @@ struct StdAssets {
 
 
 	inline static StdAsset<Image> NormalImage;
+	inline static StdAsset<Image> BrdfLut;
 	inline static StdAsset<MaterialArchetype> GltfArchetype;
 	inline static StdAsset<Mesh> QuadMesh;
-	inline static StdAsset<Mesh> UnitQube;
+	inline static StdAsset<Mesh> UnitCube;
+
 
 	static void LoadAssets();
 };

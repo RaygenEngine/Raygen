@@ -2,6 +2,8 @@
 #include "rendering/wrappers/Buffer.h"
 #include "rendering/wrappers/ImageView.h"
 
+struct SceneReflprobe;
+
 namespace vl {
 
 class PathtracedCubemap {
@@ -9,7 +11,7 @@ public:
 	PathtracedCubemap(GpuEnvironmentMap* envmapAsset, glm::vec3 position, uint32 res);
 
 	void Calculate(vk::DescriptorSet sceneAsDescSet, vk::DescriptorSet sceneGeomDataDescSet,
-		vk::DescriptorSet ScenePointlightDescSet, int32 pointlightCount);
+		vk::DescriptorSet ScenePointlightDescSet, int32 pointlightCount, SceneReflprobe* rp);
 
 private:
 	GpuEnvironmentMap* m_envmapAsset;

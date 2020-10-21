@@ -10,9 +10,13 @@ struct CReflprobe : CSceneBase {
 	{
 		// REFLECT_ICON(FA_CUBE);
 		// REFLECT_CATEGORY("Rendering");
-
+		REFLECT_VAR(innerRadius);
+		REFLECT_VAR(outerRadius);
 		REFLECT_VAR(environmentMap);
 	}
 
 	PodHandle<EnvironmentMap> environmentMap;
+
+	float innerRadius;
+	float outerRadius;
 };

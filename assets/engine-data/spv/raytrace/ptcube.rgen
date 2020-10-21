@@ -50,8 +50,7 @@ void main() {
 	vec4 target    = projInverse * vec4(d.x, d.y, 1, 1);
 	vec4 direction = viewInverse * vec4(normalize(target.xyz), 0);
 
-	// WIP:
-	origin = origin + 1.5 * direction;
+	origin = origin + innerRadius * direction;
 
 	vec3 accumColor = vec3(0.f);
 	uint actualSamples = 1;
@@ -61,8 +60,6 @@ void main() {
 		prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, actualSamples + smpl);
 		prd.depth = 0;
 		prd.accumThroughput = vec3(1.f);
-
-		
 
 		accumColor += RadianceOfRay2(origin.xyz, direction.xyz);	 
 	}

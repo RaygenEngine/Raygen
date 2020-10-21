@@ -11,7 +11,7 @@ template<typename T>
 typename StdAssets::StdAsset<T>::ConstHandleAssigner Load(const char* path)
 {
 	auto handle = AssetManager->ImportAs<T>(fs::path(path), true);
-	return StdAssets::StdAsset<T>::ConstHandleAssigner{};
+	return StdAssets::StdAsset<T>::ConstHandleAssigner{ handle.uid };
 }
 
 
@@ -67,9 +67,9 @@ void StdAssets::LoadAssets()
 		},
 		"^QuadMesh");
 
-	UnitQube = Load<Mesh>("engine-data/mesh/unitcube.gltf");
+	UnitCube = Load<Mesh>("engine-data/mesh/unitcube.gltf");
 
-
+	BrdfLut = Load<Image>("engine-data/image/brdfLut.png");
 	//
 
 	AssetImporterManager->PopPath();

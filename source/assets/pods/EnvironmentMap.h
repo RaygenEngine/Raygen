@@ -12,7 +12,6 @@ struct EnvironmentMap : AssetPod {
 		REFLECT_VAR(skybox);
 		REFLECT_VAR(irradiance);
 		REFLECT_VAR(prefiltered);
-		REFLECT_VAR(brdfLut);
 	}
 
 
@@ -21,6 +20,4 @@ struct EnvironmentMap : AssetPod {
 	PodHandle<Cubemap> irradiance;
 	// specular lobe
 	PodHandle<Cubemap> prefiltered;
-	// brdf look up texture
-	PodHandle<Image> brdfLut;
 };

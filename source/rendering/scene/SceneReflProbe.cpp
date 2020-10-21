@@ -18,30 +18,18 @@ void SceneReflprobe::Build()
 {
 	vl::Device->waitIdle();
 
-	{
-		TIMER_SCOPE("source")
-		vl::PathtracedCubemap calcSourceSkybox(&envmap.Lock(), position, 128);
+	TIMER_SCOPE("pt + irr + pref")
 
-		auto scene = vl::Layer->mainScene;
-		calcSourceSkybox.Calculate(vl::Layer->mainScene->sceneAsDescSet, scene->tlas.sceneDesc.descSet[0],
-			scene->tlas.sceneDesc.descSetPointlights[0], vl::Layer->mainScene->Get<ScenePointlight>().size());
-	}
+	vl::PathtracedCubemap calcSourceSkybox(&envmap.Lock(), ubo.position, 256);
 
-	{
-		TIMER_SCOPE("irr")
-		vl::IrradianceMapCalculation calcIrradiance(&envmap.Lock(), 32);
-		calcIrradiance.Calculate();
-	}
+	auto scene = vl::Layer->mainScene;
+	calcSourceSkybox.Calculate(vl::Layer->mainScene->sceneAsDescSet, scene->tlas.sceneDesc.descSet[0],
+		scene->tlas.sceneDesc.descSetPointlights[0], vl::Layer->mainScene->Get<ScenePointlight>().size(), this);
 
-	{
-		TIMER_SCOPE("pref")
-		vl::PrefilteredMapCalculation calcPrefiltered(&envmap.Lock(), 128);
-		calcPrefiltered.Calculate();
-	}
+	vl::IrradianceMapCalculation calcIrradiance(&envmap.Lock(), 32);
+	calcIrradiance.Calculate();
 
-	{
-		TIMER_SCOPE("lut")
-		vl::BrdfLutCalculation calcBrdfLut(&envmap.Lock(), 512);
-		calcBrdfLut.Calculate();
-	}
+
+	vl::PrefilteredMapCalculation calcPrefiltered(&envmap.Lock(), 256);
+	calcPrefiltered.Calculate();
 }

@@ -23,9 +23,8 @@ void main( ) {
 	vec3 up    = vec3(0.0, 1.0, 0.0);
 	vec3 right = cross(up, normal);
 	up         = cross(normal, right);
-
-	// TODO: uniforms
-	float sampleDelta = 0.005;
+	
+	float sampleDelta = 0.025;
 	float nrSamples = 0.0; 
 	for(float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
 	{

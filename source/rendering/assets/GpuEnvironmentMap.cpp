@@ -8,6 +8,7 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
+#include "assets/StdAssets.h"
 
 using namespace vl;
 
@@ -26,7 +27,7 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 {
 	auto envmapPod = podHandle.Lock();
 	ClearDependencies();
-	AddDependencies(envmapPod->skybox, envmapPod->irradiance, envmapPod->prefiltered, envmapPod->brdfLut);
+	AddDependencies(envmapPod->skybox, envmapPod->irradiance, envmapPod->prefiltered);
 
 	skybox = GpuAssetManager->GetGpuHandle(envmapPod->skybox);
 
@@ -35,7 +36,8 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 
 	irradiance = GpuAssetManager->GetGpuHandle(envmapPod->irradiance);
 	prefiltered = GpuAssetManager->GetGpuHandle(envmapPod->prefiltered);
-	brdfLut = GpuAssetManager->GetGpuHandle(envmapPod->brdfLut);
+	// WIP: standard gpu asset?
+	brdfLut = GpuAssetManager->GetGpuHandle(StdAssets::BrdfLut());
 
 	descriptorSet = Layouts->envmapLayout.AllocDescriptorSet();
 

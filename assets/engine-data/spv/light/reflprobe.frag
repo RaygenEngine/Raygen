@@ -84,15 +84,13 @@ void main( ) {
 	vec3 specularLight = textureLod(prefilteredSampler, R, lod).rgb;
 
 	vec3 diffuse = diffuseLight * frag.albedo;
-	vec3 specular = specularLight * (frag.f0 * brdf.x + brdf.y);
-
-	if(frag.a < SPECULAR_THRESH)
-		specular = vec3(0);
+	vec3 specular = frag.a < SPEC_THRESHOLD ? vec3(0) : specularLight * (frag.f0 * brdf.x + brdf.y);
 
 	vec3 iblContribution = diffuse + specular;
 
 	outColor =  vec4(iblContribution, 1.0f);
 }
+
 
 
 
