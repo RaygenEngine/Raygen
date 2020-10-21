@@ -119,6 +119,7 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
         pdf = max(pdf, BIAS); // CHECK: pbr-book stops tracing if pdf == 0
 
         if(a < 0.0001){
+            // SMATH: H is wrong here
             L = reflect(-V);
             NoL = max(Ndot(L), BIAS); 
            

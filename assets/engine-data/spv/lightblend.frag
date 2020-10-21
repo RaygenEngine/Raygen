@@ -3,6 +3,7 @@
 #include "global.glsl"
 
 #include "attachments.glsl"
+#include "fragment.glsl"
 
 // out
 
@@ -16,9 +17,11 @@ layout(location = 0) in vec2 uv;
 
 void main() {
 
-	vec3 direct = texture(rasterDirectSampler, uv).rgb;
-	//vec3 indirect = texture(rtIndirectSampler, uv).rgb;
-
-    outColor = vec4(direct, 1.f); 
+	float a = texture(g_SpecularSampler, uv).a;
+	a = a * a;
+	if (a >= 0.001)
+		outColor =  texture(rasterDirectSampler, uv);
+	else
+	 	outColor = texture(rtIndirectSampler, uv); 
 
 }                               

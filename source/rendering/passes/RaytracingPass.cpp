@@ -11,21 +11,13 @@
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/util/WriteDescriptorSets.h"
 
-ConsoleVariable<int32> console_rtDepth{ "rt.depth", 2, "Set rt depth" };
-ConsoleVariable<int32> console_rtSamples{ "rt.samples", 1, "Set rt samples" };
-// ConsoleVarFunc<int32> console_convergeUntilFrame{ "rt.convUntilFrame",
-//	[]() { vl::Renderer->m_raytracingPass.m_rtFrame = 0; }, 0 };
-
-// ConsoleFunction<> console_resetRtFrame{ "rt.reset", []() { vl::Renderer->m_raytracingPass.m_rtFrame = 0; },
-//	"Reset rt frame" };
+ConsoleVariable<int32> console_rtDepth{ "rt.mirrorDepth", 2, "Set mirror depth" };
 
 namespace {
 struct PushConstant {
-	int32 frame;
-	int32 depth;
-	int32 samples;
-	int32 convergeUntilFrame;
-	int32 spotlightCount;
+	int32 mirrorDepth;
+	int32 pointlightCount;
+	int32 reflprobeCount;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -34,18 +26,18 @@ static_assert(sizeof(PushConstant) <= 128);
 namespace vl {
 void RaytracingPass::MakeRtPipeline()
 {
-
 	std::array layouts{
-		Layouts->renderAttachmentsLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
-		Layouts->tripleStorageImage.handle(),
-		Layouts->accelLayout.handle(),
-		Layouts->bufferAndSamplersDescLayout.handle(),
-		Layouts->bufferAndSamplersDescLayout.handle(),
+		Layouts->renderAttachmentsLayout.handle(),     // gbuffer and stuff
+		Layouts->singleUboDescLayout.handle(),         // camera
+		Layouts->singleStorageImage.handle(),          // image target
+		Layouts->accelLayout.handle(),                 // accel structure
+		Layouts->bufferAndSamplersDescLayout.handle(), // geometry groups
+		Layouts->singleStorageBuffer.handle(),         // point lights
+		Layouts->bufferAndSamplersDescLayout.handle(), // refl probes
 	};
 
 	// all rt shaders here
-	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/test.shader");
+	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/mirror/mirror.shader");
 	shader.onCompileRayTracing = [&]() {
 		MakeRtPipeline();
 	};
@@ -115,20 +107,14 @@ void RaytracingPass::MakeRtPipeline()
 	rayPipelineInfo
 		// 1-raygen, n-miss, n-(hit[+anyhit+intersect])
 		.setGroups(m_rtShaderGroups)
-		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop formulation
-		// instead.
+		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop
+		// formulation instead.
 
 		.setMaxRecursionDepth(10) // Ray depth TODO:
 		.setLayout(m_rtPipelineLayout.get());
 	m_rtPipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
 
-
 	CreateRtShaderBindingTable();
-
-
-	// NEXT:
-	svgfPass.MakeLayout();
-	svgfPass.MakePipeline();
 }
 
 void RaytracingPass::CreateRtShaderBindingTable()
@@ -162,8 +148,6 @@ void RaytracingPass::CreateRtShaderBindingTable()
 	Device->unmapMemory(mem);
 }
 
-ConsoleVariable<float> console_rtRenderScale = { "rt.scale", 1.f, "Set rt render scale" };
-
 void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
 	Renderer_* renderer) // TODO: remove renderer parameter
 {
@@ -178,31 +162,32 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 	DEBUG_NAME_AUTO(sceneDesc.viewer->descSet[sceneDesc.frameIndex]);
 	DEBUG_NAME_AUTO(sceneDesc.scene->tlas.sceneDesc.descSet[sceneDesc.frameIndex]);
 
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 0u, 1u,
+		&sceneDesc.attDesc, 0u, nullptr); // gbuffer and stuff
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 1u, 1u,
-		&sceneDesc.viewer->descSet[sceneDesc.frameIndex], 0u, nullptr);
+		&sceneDesc.viewer->descSet[sceneDesc.frameIndex], 0u, nullptr); // camera
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 2u, 1u,
-		&m_rtDescSet[sceneDesc.frameIndex], 0u, nullptr);
+		&m_rtDescSet[sceneDesc.frameIndex], 0u, nullptr); // image
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 3u, 1u,
-		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
+		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr); // as
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 4u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 5u, 1u,
-		&sceneDesc.scene->tlas.sceneDesc.descSetSpotlights[sceneDesc.frameIndex], 0u, nullptr);
+		&sceneDesc.scene->tlas.sceneDesc.descSetPointlights[sceneDesc.frameIndex], 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 6u, 1u,
+		&sceneDesc.scene->tlas.sceneDesc.descSetReflprobes[sceneDesc.frameIndex], 0u, nullptr);
 
 	PushConstant pc{
-		//
-		// m_rtFrame, std::max(0, *console_rtDepth), std::max(0, *console_rtSamples), *console_convergeUntilFrame,
-		// sceneDesc.scene->tlas.sceneDesc.spotlightCount
+		std::max(0, *console_rtDepth),
+		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
+		sceneDesc.scene->tlas.sceneDesc.reflprobeCount,
 	};
-
-	++m_rtFrame;
 
 	cmdBuffer.pushConstants(m_rtPipelineLayout.get(),
 		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant), &pc);
@@ -238,42 +223,19 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 		= { m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
 	const vk::StridedBufferRegionKHR callableShaderBindingTable;
 
-
 	auto& extent = renderer->m_extent;
 
 	cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
-		&callableShaderBindingTable, uint32(extent.width / console_rtRenderScale),
-		uint32(extent.height / console_rtRenderScale), 1);
+		&callableShaderBindingTable, extent.width, extent.height, 1);
 
 
 	m_indirectResult[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 		vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
 		vk::PipelineStageFlagBits::eFragmentShader);
-
-
-	svgfPass.SvgfDraw(cmdBuffer, sceneDesc, m_svgfRenderPassInstance[sceneDesc.frameIndex]);
 } // namespace vl
 
 void RaytracingPass::Resize(vk::Extent2D extent)
 {
-	extent.width = uint32(extent.width / console_rtRenderScale);
-	extent.height = uint32(extent.height / console_rtRenderScale);
-
-	m_progressiveResult = RImage2D(extent.width, extent.height, 1u, vk::Format::eR32G32B32A32Sfloat,
-		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, "ProgressiveResult");
-
-	m_progressiveResult.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
-		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
-
-	m_momentsBuffer = RImage2D(extent.width, extent.height, 1u, vk::Format::eR32G32B32A32Sfloat,
-		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, "Moments Buffer");
-
-	m_momentsBuffer.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
-		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
-
-
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
 		m_indirectResult[i]
 			= RImageAttachment(extent.width, extent.height, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
@@ -282,125 +244,6 @@ void RaytracingPass::Resize(vk::Extent2D extent)
 
 		m_indirectResult[i].BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 			vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
-
-
-		m_svgfRenderPassInstance[i] = Layouts->svgfPassLayout.CreatePassInstance(extent.width, extent.height);
-	}
-
-	// SVGF:
-	svgfPass.OnResize(extent, *this);
-}
-
-struct SvgfPC {
-	int32 iteration{ 0 };
-	int32 totalIter{ 0 };
-	int32 progressiveFeedbackIndex{ 0 };
-};
-static_assert(sizeof(SvgfPC) <= 128);
-
-ConsoleVariable<int32> console_SvgfIters{ "rt.svgf.iterations", 4,
-	"Controls how many times to apply svgf atrous filter." };
-
-ConsoleVariable<int32> console_SvgfProgressiveFeedback{ "rt.svgf.feedbackIndex", -1,
-	"Selects the index of the iteration to write onto the accumulation result (or do -1 to skip feedback)" };
-
-ConsoleVariable<bool> console_SvgfEnable{ "rt.svgf.enable", true, "Enable or disable svgf pass." };
-
-void RaytracingPass::PtSvgf::SvgfDraw(
-	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, RenderingPassInstance& rpInstance)
-{
-	auto times = *console_SvgfIters;
-	for (int32 i = 0; i < std::max(times, 1); ++i) {
-		rpInstance.RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
-			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
-
-			cmdBuffer.bindDescriptorSets(
-				vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
-
-
-			cmdBuffer.bindDescriptorSets(
-				vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u, &descriptorSets[i % 2], 0u, nullptr);
-
-			SvgfPC pc{
-				.iteration = i,
-				.totalIter = (times < 1 || !console_SvgfEnable) ? 0 : times,
-				.progressiveFeedbackIndex = console_SvgfProgressiveFeedback,
-			};
-
-			cmdBuffer.pushConstants(
-				m_pipelineLayout.get(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(SvgfPC), &pc);
-			cmdBuffer.draw(3u, 1u, 0u, 0u);
-		});
 	}
 }
-
-void RaytracingPass::PtSvgf::OnResize(vk::Extent2D extent, RaytracingPass& rtPass)
-{
-	swappingImages[0] = RImage2D::Create(
-		"SVGF 0", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral, vk::ImageUsageFlagBits::eStorage);
-
-	swappingImages[1] = RImage2D::Create(
-		"SVGF 1", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral, vk::ImageUsageFlagBits::eStorage);
-
-	for (size_t j = 0; j < 2; ++j) {
-		descriptorSets[j] = Layouts->quadStorageImage.AllocDescriptorSet();
-
-		rvk::writeDescriptorImages(descriptorSets[j], 0u,
-			{
-				rtPass.m_progressiveResult.view(),
-				rtPass.m_momentsBuffer.view(),
-				swappingImages[(j + 0) % 2].view(),
-				swappingImages[(j + 1) % 2].view(),
-			},
-			vk::DescriptorType::eStorageImage, nullptr, vk::ImageLayout::eGeneral);
-	}
-}
-
-
-void RaytracingPass::PtSvgf::MakeLayout()
-{
-	std::array layouts{
-		Layouts->renderAttachmentsLayout.handle(),
-		Layouts->quadStorageImage.handle(),
-	};
-
-	vk::PushConstantRange pcRange;
-	pcRange
-		.setSize(sizeof(SvgfPC)) //
-		.setStageFlags(vk::ShaderStageFlagBits::eFragment)
-		.setOffset(0);
-
-	// pipeline layout
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo
-		.setSetLayouts(layouts) //
-		.setPushConstantRanges(pcRange);
-
-	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
-}
-
-void RaytracingPass::PtSvgf::MakePipeline()
-{
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/svgf.shader");
-	gpuShader.onCompile = [&]() {
-		MakePipeline();
-	};
-
-	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
-	colorBlendAttachment
-		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
-						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
-		.setBlendEnable(VK_FALSE);
-
-	vk::PipelineColorBlendStateCreateInfo colorBlending{};
-	colorBlending
-		.setLogicOpEnable(VK_FALSE) //
-		.setLogicOp(vk::LogicOp::eCopy)
-		.setAttachments(colorBlendAttachment)
-		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
-
-
-	Utl_CreatePipelineCustomPass(gpuShader, colorBlending, *Layouts->svgfPassLayout.compatibleRenderPass);
-}
-
 } // namespace vl

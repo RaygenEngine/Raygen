@@ -5,7 +5,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/StaticPipes.h"
-#include "rendering/scene/SceneReflProbe.h"
+#include "rendering/scene/SceneReflprobe.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/scene/Scene.h"
@@ -251,7 +251,7 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 	cmdBuffer.bindVertexBuffers(0u, m_sphereVertexBuffer.handle(), vk::DeviceSize(0));
 	cmdBuffer.bindIndexBuffer(m_sphereIndexBuffer.buffer.handle(), vk::DeviceSize(0), vk::IndexType::eUint32);
 
-	for (auto rp : sceneDesc->Get<SceneReflProbe>()) {
+	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &rp->envmap.Lock().descriptorSet, 0u, nullptr);
 

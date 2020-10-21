@@ -10,6 +10,9 @@
 #include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/ScenePointlight.h"
 #include "rendering/scene/SceneSpotlight.h"
+#include "rendering/scene/SceneReflProbe.h"
+#include "rendering/assets/GpuEnvironmentMap.h"
+#include "rendering/assets/GpuCubemap.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -64,8 +67,10 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 	sceneDesc.descSetSpotlights
 		= Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(scene->Get<SceneSpotlight>().size());
 
-	sceneDesc.descSetPointlights = Layouts->stbuffer.AllocDescriptorSet(scene->Get<ScenePointlight>().size());
-
+	sceneDesc.descSetPointlights
+		= Layouts->singleStorageBuffer.AllocDescriptorSet(scene->Get<ScenePointlight>().size());
+	sceneDesc.descSetReflprobes
+		= Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(scene->Get<SceneReflprobe>().size());
 
 	int32 totalGroups = 0;
 
@@ -100,6 +105,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 
 	// sceneDesc.WriteSpotlights(scene->Get<SceneSpotlight>().condensed);
 	sceneDesc.WritePointlights(scene->Get<ScenePointlight>().condensed);
+	sceneDesc.WriteReflprobes(scene->Get<SceneReflprobe>().condensed);
 	sceneDesc.WriteGeomGroups();
 	Build();
 	Device->waitIdle();
@@ -157,15 +163,11 @@ void RtSceneDescriptor::WriteImages()
 
 void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spotlights)
 {
-	uint32 count = 0;
-	for (auto spotlight : spotlights) {
-		count++;
-	}
-	spotlightCount = count;
+	spotlightCount = spotlights.size();
 
 	uint32 uboSize = sizeof(Spotlight_Ubo) + sizeof(Spotlight_Ubo) % 8;
 
-	spotlightsBuffer = { (uboSize * count),
+	spotlightsBuffer = { (uboSize * spotlightCount),
 		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer
 			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
@@ -173,13 +175,9 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 
 	byte* mapCursor = reinterpret_cast<byte*>(Device->mapMemory(spotlightsBuffer.memory(), 0, spotlightsBuffer.size));
 
-	for (int32 i = 0; auto spotlight : spotlights) {
-		if (!spotlight) {
-			continue;
-		}
+	for (auto spotlight : spotlights) {
 		memcpy(mapCursor, &spotlight->ubo, sizeof(Spotlight_Ubo));
 		mapCursor += uboSize;
-		++i;
 	}
 
 	Device->unmapMemory(spotlightsBuffer.memory());
@@ -205,7 +203,7 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 	}
 
 
-	if (count == 0) {
+	if (spotlightCount == 0) {
 		return;
 	}
 
@@ -216,9 +214,6 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 		viewInfoDefault.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal); //
 
 		for (auto spotlight : spotlights) {
-			if (!spotlight) {
-				continue;
-			}
 			viewInfoDefault //
 				.setImageView(spotlight->shadowmap[i].framebuffer[0].view())
 				.setSampler(spotlight->shadowmap[i].depthSampler);
@@ -276,6 +271,77 @@ void RtSceneDescriptor::WritePointlights(const std::vector<ScenePointlight*>& po
 			.setBufferInfo(bufInfo);
 
 		Device->updateDescriptorSets({ bufWriteSet }, nullptr);
+	}
+}
+
+void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& reflprobes)
+{
+	reflprobeCount = reflprobes.size();
+
+	uint32 uboSize = sizeof(Reflprobe_UBO) + sizeof(Reflprobe_UBO) % 8;
+
+	reflprobesBuffer = { (uboSize * reflprobeCount),
+		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer
+			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+		vk::MemoryAllocateFlagBits::eDeviceAddress };
+
+	byte* mapCursor = reinterpret_cast<byte*>(Device->mapMemory(reflprobesBuffer.memory(), 0, reflprobesBuffer.size));
+
+	for (auto reflprobe : reflprobes) {
+		memcpy(mapCursor, &reflprobe->ubo, sizeof(Reflprobe_UBO));
+		mapCursor += uboSize;
+	}
+
+	Device->unmapMemory(reflprobesBuffer.memory());
+
+
+	vk::DescriptorBufferInfo bufInfo{};
+	bufInfo
+		.setOffset(0) //
+		.setRange(VK_WHOLE_SIZE)
+		.setBuffer(reflprobesBuffer.handle());
+
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+		vk::WriteDescriptorSet bufWriteSet{};
+		bufWriteSet
+			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
+			.setDstBinding(0u)
+			.setDstSet(descSetReflprobes[i])
+			.setDstArrayElement(0u)
+			.setBufferInfo(bufInfo);
+
+		Device->updateDescriptorSets({ bufWriteSet }, nullptr);
+	}
+
+	auto quadSampler = GpuAssetManager->GetDefaultSampler();
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+		std::vector<vk::DescriptorImageInfo> cubeImages;
+		vk::DescriptorImageInfo viewInfoDefault;
+
+		viewInfoDefault
+			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+			.setSampler(quadSampler);
+
+		for (auto reflprobe : reflprobes) {
+			viewInfoDefault.setImageView(reflprobe->envmap.Lock().irradiance.Lock().cubemap.view());
+			cubeImages.emplace_back(viewInfoDefault);
+			viewInfoDefault.setImageView(reflprobe->envmap.Lock().prefiltered.Lock().cubemap.view());
+			cubeImages.emplace_back(viewInfoDefault);
+			// viewInfoDefault.setImageView(reflprobe->envmap.Lock().brdfLut.Lock().image.view());
+			// cubeImages.emplace_back(viewInfoDefault);
+		}
+
+		vk::WriteDescriptorSet depthWrite{};
+		depthWrite
+			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler) //
+			.setImageInfo(cubeImages)
+			.setDstBinding(1u)
+			.setDstSet(descSetReflprobes[i])
+			.setDstArrayElement(0u);
+		Device->updateDescriptorSets(depthWrite, nullptr);
 	}
 }
 

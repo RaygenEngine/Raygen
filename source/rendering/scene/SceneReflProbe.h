@@ -1,14 +1,14 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
 
-struct Ambient_Ubo {
-	glm::vec4 color{};
+struct Reflprobe_UBO {
+	glm::vec4 position{};
 };
 
-struct SceneReflProbe : SceneStruct {
-	SCENE_STRUCT(SceneReflProbe);
+struct SceneReflprobe : SceneStruct {
+	SCENE_STRUCT(SceneReflprobe);
 
-	Ambient_Ubo ubo;
+	Reflprobe_UBO ubo;
 
 	vl::GpuHandle<EnvironmentMap> envmap;
 	glm::vec3 position;
