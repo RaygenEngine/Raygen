@@ -3,6 +3,8 @@
 
 struct Reflprobe_UBO {
 	glm::vec4 position{};
+	float innerRadius;
+	float outerRadius;
 };
 
 struct SceneReflprobe : SceneStruct {
@@ -11,7 +13,6 @@ struct SceneReflprobe : SceneStruct {
 	Reflprobe_UBO ubo;
 
 	vl::GpuHandle<EnvironmentMap> envmap;
-	glm::vec3 position;
 
 
 	void Build();

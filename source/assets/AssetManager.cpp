@@ -318,7 +318,7 @@ AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& default
 		}
 	});
 
-	LOG_INFO("Current working dir: {}", fs::current_path());
+	LOG_INFO("Current working dir: {}", fs::current_path().generic_string());
 	StdAssets::LoadAssets();
 
 	AssetRegistry::Get().LoadAllPodsInDirectory(defaultBinPath);

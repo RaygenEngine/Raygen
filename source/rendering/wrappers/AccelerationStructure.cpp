@@ -33,7 +33,7 @@ void RAccelerationStructure::AllocateMemory()
 
 	Device->bindAccelerationStructureMemoryKHR(bind);
 
-	LOG_REPORT("Accel size reqs {}KB", asMemReqs.memoryRequirements.size / 1000.0);
+	LOG_DEBUG("Accel size reqs {}KB", asMemReqs.memoryRequirements.size / 1000.0);
 }
 
 } // namespace vl

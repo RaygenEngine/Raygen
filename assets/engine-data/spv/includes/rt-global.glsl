@@ -83,6 +83,7 @@ layout(push_constant) uniform PC
 		mat4 viewInverse;
 		mat4 projInverse;
 		int pointlightCount;
+		float innerRadius;
 	#endif
 };
 

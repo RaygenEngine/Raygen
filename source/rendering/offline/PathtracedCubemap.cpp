@@ -16,12 +16,14 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/util/WriteDescriptorSets.h"
+#include "rendering/scene/SceneReflProbe.h"
 
 namespace {
 struct PushConstant {
 	glm::mat4 viewInverse;
 	glm::mat4 projInverse;
 	int32 pointlightCount;
+	float innerRadius;
 };
 
 // static_assert(sizeof(PushConstant) <= 128);
@@ -197,7 +199,7 @@ void PathtracedCubemap::CreateFaceAttachments()
 }
 
 void PathtracedCubemap::Calculate(vk::DescriptorSet sceneAsDescSet, vk::DescriptorSet sceneGeomDataDescSet,
-	vk::DescriptorSet ScenePointlightDescSet, int32 pointlightCount)
+	vk::DescriptorSet ScenePointlightDescSet, int32 pointlightCount, SceneReflprobe* rp)
 {
 	Device->waitIdle();
 
@@ -266,7 +268,7 @@ void PathtracedCubemap::Calculate(vk::DescriptorSet sceneAsDescSet, vk::Descript
 		projInverse = glm::inverse(projInverse);
 
 		for (int32 i = 0; i < 6; ++i) {
-			PushConstant pc{ glm::inverse(m_viewMats[i]), projInverse, pointlightCount };
+			PushConstant pc{ glm::inverse(m_viewMats[i]), projInverse, pointlightCount, rp->ubo.innerRadius };
 
 			cmdBuffer.pushConstants(m_pipelineLayout.get(),
 				vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant),

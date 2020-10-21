@@ -290,47 +290,47 @@ void BrdfLutCalculation::RecordAndSubmitCmdBuffers()
 
 void BrdfLutCalculation::EditPods()
 {
-	PodHandle<EnvironmentMap> envMap = m_envmapAsset->podHandle;
+	// PodHandle<EnvironmentMap> envMap = m_envmapAsset->podHandle;
 
-	if (envMap.IsDefault()) {
-		return;
-	}
-
-
-	//.. prefiltered and rest here (or other class)
-	PodHandle<Image> brdflut = envMap.Lock()->brdfLut;
-
-	if (brdflut.IsDefault()) {
-		PodEditor e(envMap);
-		auto& [entry, irr] = AssetRegistry::CreateEntry<::Image>("gen-data/generated/image");
-
-		e.pod->brdfLut = entry->GetHandleAs<::Image>();
-		brdflut = entry->GetHandleAs<::Image>();
-	}
+	// if (envMap.IsDefault()) {
+	//	return;
+	//}
 
 
-	PodHandle<::Image> imgHandle{ brdflut.uid };
+	////.. prefiltered and rest here (or other class)
+	// PodHandle<Image> brdflut = envMap.Lock()->brdfLut;
 
-	PodEditor imageEditor(imgHandle);
+	// if (brdflut.IsDefault()) {
+	//	PodEditor e(envMap);
+	//	auto& [entry, irr] = AssetRegistry::CreateEntry<::Image>("gen-data/generated/image");
 
-	auto& img = m_attachment;
+	//	e.pod->brdfLut = entry->GetHandleAs<::Image>();
+	//	brdflut = entry->GetHandleAs<::Image>();
+	//}
 
-	img.BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
 
-	RBuffer stagingbuffer{ m_resolution * m_resolution * 16u, vk::BufferUsageFlagBits::eTransferDst,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+	// PodHandle<::Image> imgHandle{ brdflut.uid };
 
-	img.CopyImageToBuffer(stagingbuffer);
+	// PodEditor imageEditor(imgHandle);
 
-	void* data = Device->mapMemory(stagingbuffer.memory(), 0, VK_WHOLE_SIZE, {});
+	// auto& img = m_attachment;
 
-	imageEditor->data.resize(m_resolution * m_resolution * 16u);
-	imageEditor->width = m_resolution;
-	imageEditor->height = m_resolution;
-	imageEditor->format = ImageFormat::Hdr;
-	memcpy(imageEditor->data.data(), data, m_resolution * m_resolution * 16u);
+	// img.BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
 
-	Device->unmapMemory(stagingbuffer.memory());
+	// RBuffer stagingbuffer{ m_resolution * m_resolution * 16u, vk::BufferUsageFlagBits::eTransferDst,
+	//	vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+
+	// img.CopyImageToBuffer(stagingbuffer);
+
+	// void* data = Device->mapMemory(stagingbuffer.memory(), 0, VK_WHOLE_SIZE, {});
+
+	// imageEditor->data.resize(m_resolution * m_resolution * 16u);
+	// imageEditor->width = m_resolution;
+	// imageEditor->height = m_resolution;
+	// imageEditor->format = ImageFormat::Hdr;
+	// memcpy(imageEditor->data.data(), data, m_resolution * m_resolution * 16u);
+
+	// Device->unmapMemory(stagingbuffer.memory());
 }
 
 } // namespace vl

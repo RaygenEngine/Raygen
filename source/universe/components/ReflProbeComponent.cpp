@@ -7,7 +7,9 @@
 DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)
 {
 	return [=, position = bc.world().position](SceneReflprobe& rp) {
-		rp.position = position;
+		rp.ubo.position = glm::vec4(position, 1.f);
+		rp.ubo.innerRadius = innerRadius;
+		rp.ubo.outerRadius = outerRadius;
 
 		if (FullDirty) {
 			rp.envmap = vl::GpuAssetManager->GetGpuHandle(environmentMap);

@@ -243,10 +243,10 @@ void main() {
 	vec3 N = Ns;
 	float NoV = max(dot(N, V), BIAS);
 
-	vec3 brdfLUT = (texture(textureSamplers[nonuniformEXT(21)], vec2(NoV, brdfInfo.a))).rgb;
+	vec3 brdfLUT = (texture(textureSamplers[nonuniformEXT(18)], vec2(NoV, brdfInfo.a))).rgb;
 
 	// next mirror event
-	if(brdfInfo.a < SPECULAR_THRESH){
+	if(brdfInfo.a < SPEC_THRESHOLD){
 		// diffuse
 		for(int i = 0; i < reflprobeCount; ++i){
 			Reflprobe reflprobe = reflprobes.reflprobe[i];
