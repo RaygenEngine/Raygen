@@ -39,6 +39,11 @@
 #define BIAS 1e-4
 #endif
 
+#ifndef SPECULAR_THRESH
+#define SPECULAR_THRESH 1e-6
+#endif
+
+
 float saturate(float v)
 {
 	return clamp(v, 0.0, 1.0);

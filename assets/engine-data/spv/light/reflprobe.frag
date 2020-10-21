@@ -86,6 +86,9 @@ void main( ) {
 	vec3 diffuse = diffuseLight * frag.albedo;
 	vec3 specular = specularLight * (frag.f0 * brdf.x + brdf.y);
 
+	if(frag.a < SPECULAR_THRESH)
+		specular = vec3(0);
+
 	vec3 iblContribution = diffuse + specular;
 
 	outColor =  vec4(iblContribution, 1.0f);

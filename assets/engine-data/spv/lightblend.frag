@@ -1,9 +1,8 @@
-#version 450
+#version 460
 #extension GL_GOOGLE_include_directive: enable
 #include "global.glsl"
 
 #include "attachments.glsl"
-#include "fragment.glsl"
 
 // out
 
@@ -17,11 +16,5 @@ layout(location = 0) in vec2 uv;
 
 void main() {
 
-	float a = texture(g_SpecularSampler, uv).a;
-	a = a * a;
-	if (a >= 0.001)
-		outColor =  texture(rasterDirectSampler, uv);
-	else
-	 	outColor = texture(rtIndirectSampler, uv); 
-
+	outColor = vec4(texture(rtIndirectSampler, uv).rgb +  texture(rasterDirectSampler, uv).rgb, 1.0);
 }                               

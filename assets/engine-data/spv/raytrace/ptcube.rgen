@@ -55,7 +55,7 @@ void main() {
 
 	vec3 accumColor = vec3(0.f);
 	uint actualSamples = 1;
-	uint bounces = 2;
+	uint bounces = 3;
 	for(uint smpl = 0; smpl < actualSamples; ++smpl){
 		// NOTE: Don't forget to initialize the ray here. 
 		prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, actualSamples + smpl);
