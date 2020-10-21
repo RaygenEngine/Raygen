@@ -13,7 +13,7 @@
 namespace {
 struct PushConstant {
 	glm::mat4 reflVolMatVP;
-	glm::vec3 reflPosition;
+	glm::vec4 reflPosition;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -99,7 +99,7 @@ vk::UniquePipelineLayout ReflprobeBlend::MakePipelineLayout()
 
 	vk::PushConstantRange pushConstantRange{};
 	pushConstantRange
-		.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eVertex) //
+		.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment) //
 		.setSize(sizeof(PushConstant))
 		.setOffset(0u);
 
@@ -256,7 +256,7 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &rp->envmap.Lock().descriptorSet, 0u, nullptr);
 
 		PushConstant pc{ sceneDesc.viewer->ubo.viewProj * glm::translate(rp->position) * glm::scale(glm::vec3(5.f)),
-			rp->position };
+			glm::vec4(rp->position, 1.f) };
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,
 			sizeof(PushConstant), &pc);
