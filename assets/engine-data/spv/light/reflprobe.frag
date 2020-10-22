@@ -5,6 +5,7 @@
 #include "bsdf.glsl"
 #include "fragment.glsl"
 #include "attachments.glsl"
+#include "sky.glsl"
 
 // out
 
@@ -50,8 +51,10 @@ void main( ) {
 	if(depth == 1.0) {
 		// TODO: discard here like in spotlights
 		vec3 V = normalize(reconstructWorldPosition(depth, uv, cam.viewProjInv) - cam.position);
-		outColor = sampleCubemapLH(skyboxSampler, V);
 		
+		// PERF:
+		outColor = vec4(GetSkyColor(cam.position, V), 1.0);
+		//outColor = sampleCubemapLH(skyboxSampler, V);
 		return;
 	}
 
@@ -90,6 +93,7 @@ void main( ) {
 
 	outColor =  vec4(iblContribution, 1.0f);
 }
+
 
 
 

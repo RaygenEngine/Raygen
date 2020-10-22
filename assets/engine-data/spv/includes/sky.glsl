@@ -6,7 +6,7 @@ vec3 GetSkyColor(vec3 orig, vec3 dir) {
 	// PERF: this should be baked into a cubemap?
 	vec3 sunColor = vec3(1,1,1);
 	float sunIntensity = 40;
-	vec3 sunDirection = normalize(-vec3(0,-1,0));     
+	vec3 sunDirection = normalize(-vec3(-1,-1,0));     
 	float earthRadius = 6360e3;       
 	float atmosphereRadius = 6420e3; 
 	// Thickness of the atmosphere if density was uniform (Hr)
