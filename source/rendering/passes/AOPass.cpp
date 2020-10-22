@@ -1,4 +1,4 @@
-#include "RaytracingPass.h"
+#include "AOPass.h"
 
 #include "engine/console/ConsoleVariable.h"
 #include "engine/Input.h"
@@ -11,33 +11,28 @@
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/util/WriteDescriptorSets.h"
 
-ConsoleVariable<int32> console_rtDepth{ "rt.mirrorDepth", 2, "Set mirror depth" };
+ConsoleVariable<int32> console_rtSamples{ "ao.samples", 2, "Set ao sample count" };
 
 namespace {
 struct PushConstant {
-	int32 mirrorDepth;
-	int32 pointlightCount;
-	int32 reflprobeCount;
+	int32 samples;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
-void RaytracingPass::MakeRtPipeline()
+void AOPass::MakeRtPipeline()
 {
 	std::array layouts{
-		Layouts->renderAttachmentsLayout.handle(),     // gbuffer and stuff
-		Layouts->singleUboDescLayout.handle(),         // camera
-		Layouts->singleStorageImage.handle(),          // image target
-		Layouts->accelLayout.handle(),                 // accel structure
-		Layouts->bufferAndSamplersDescLayout.handle(), // geometry groups
-		Layouts->singleStorageBuffer.handle(),         // point lights
-		Layouts->bufferAndSamplersDescLayout.handle(), // refl probes
+		Layouts->renderAttachmentsLayout.handle(), // gbuffer and stuff
+		Layouts->singleUboDescLayout.handle(),     // camera
+		Layouts->singleStorageImage.handle(),      // image target
+		Layouts->accelLayout.handle(),             // accel structure
 	};
 
 	// all rt shaders here
-	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/mirror/mirror.shader");
+	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/ao/ao.shader");
 	shader.onCompileRayTracing = [&]() {
 		MakeRtPipeline();
 	};
@@ -117,7 +112,7 @@ void RaytracingPass::MakeRtPipeline()
 	CreateRtShaderBindingTable();
 }
 
-void RaytracingPass::CreateRtShaderBindingTable()
+void AOPass::CreateRtShaderBindingTable()
 {
 	auto groupCount = static_cast<uint32>(m_rtShaderGroups.size());     // 3 shaders: raygen, miss, chit
 	uint32 groupHandleSize = Device->pd.rtProps.shaderGroupHandleSize;  // Size of a program identifier
@@ -148,8 +143,7 @@ void RaytracingPass::CreateRtShaderBindingTable()
 	Device->unmapMemory(mem);
 }
 
-void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
-	Renderer_* renderer) // TODO: remove renderer parameter
+void AOPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	m_indirectResult[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
 		vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
@@ -174,19 +168,8 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 3u, 1u,
 		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr); // as
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 4u, 1u,
-		&sceneDesc.scene->tlas.sceneDesc.descSet[sceneDesc.frameIndex], 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 5u, 1u,
-		&sceneDesc.scene->tlas.sceneDesc.descSetPointlights[sceneDesc.frameIndex], 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 6u, 1u,
-		&sceneDesc.scene->tlas.sceneDesc.descSetReflprobes[sceneDesc.frameIndex], 0u, nullptr);
-
 	PushConstant pc{
-		std::max(0, *console_rtDepth),
-		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
-		sceneDesc.scene->tlas.sceneDesc.reflprobeCount,
+		std::max(0, *console_rtSamples),
 	};
 
 	cmdBuffer.pushConstants(m_rtPipelineLayout.get(),
@@ -223,7 +206,7 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 		= { m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
 	const vk::StridedBufferRegionKHR callableShaderBindingTable;
 
-	auto& extent = renderer->m_extent;
+	auto& extent = m_indirectResult[sceneDesc.frameIndex].extent;
 
 	cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
 		&callableShaderBindingTable, extent.width, extent.height, 1);
@@ -234,7 +217,7 @@ void RaytracingPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 		vk::PipelineStageFlagBits::eFragmentShader);
 } // namespace vl
 
-void RaytracingPass::Resize(vk::Extent2D extent)
+void AOPass::Resize(vk::Extent2D extent)
 {
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
 		m_indirectResult[i]

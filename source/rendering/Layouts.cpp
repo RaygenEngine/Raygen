@@ -70,14 +70,26 @@ void Layouts_::MakeRenderPassLayouts()
 	}
 
 	AttRef rasterDirectAtt;
-	// RasterDirect
+	// RasterDirectLight
 	{
-		rasterDirectAtt = rasterDirectPassLayout.CreateAttachment("RasterDirect", vk::Format::eR32G32B32A32Sfloat);
-		rasterDirectPassLayout.AddSubpass({}, { rasterDirectAtt }); // Write Direct Lighting
+		rasterDirectAtt
+			= rasterDirectLightPassLayout.CreateAttachment("RasterDirectLight", vk::Format::eR32G32B32A32Sfloat);
+		rasterDirectLightPassLayout.AddSubpass({}, { rasterDirectAtt }); // Write Direct Lighting
 
-		rasterDirectPassLayout.AttachmentFinalLayout(rasterDirectAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+		rasterDirectLightPassLayout.AttachmentFinalLayout(rasterDirectAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		rasterDirectPassLayout.Generate();
+		rasterDirectLightPassLayout.Generate();
+	}
+
+	AttRef rasterIblAtt;
+	// RasterDirectLight
+	{
+		rasterIblAtt = rasterIblPassLayout.CreateAttachment("RasterIbl", vk::Format::eR32G32B32A32Sfloat);
+		rasterIblPassLayout.AddSubpass({}, { rasterIblAtt }); // Write Direct Lighting
+
+		rasterIblPassLayout.AttachmentFinalLayout(rasterIblAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		rasterIblPassLayout.Generate();
 	}
 
 
@@ -108,7 +120,7 @@ void Layouts_::MakeRenderPassLayouts()
 Layouts_::Layouts_()
 {
 
-	for (uint32 i = 0u; i < colorAttachments.size() + 4; ++i) {
+	for (uint32 i = 0u; i < colorAttachments.size() + 6; ++i) {
 		renderAttachmentsLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
 			vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR
 				| vk::ShaderStageFlagBits::eClosestHitKHR);
@@ -169,7 +181,8 @@ Layouts_::Layouts_()
 	imageDebugDescLayout.Generate();
 
 
-	singleStorageBuffer.AddBinding(eStorageBuffer, eRaygenKHR | eClosestHitKHR | eAnyHitKHR, 1024u, eVariableDescriptorCount);
+	singleStorageBuffer.AddBinding(
+		eStorageBuffer, eRaygenKHR | eClosestHitKHR | eAnyHitKHR, 1024u, eVariableDescriptorCount);
 	singleStorageBuffer.Generate();
 
 	bufferAndSamplersDescLayout.AddBinding(eStorageBuffer, eRaygenKHR | eClosestHitKHR | eAnyHitKHR);

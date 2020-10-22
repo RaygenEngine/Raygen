@@ -7,9 +7,8 @@
 struct SceneRenderDesc;
 
 namespace vl {
-class Renderer_;
 
-class RaytracingPass {
+class MirrorPass {
 public:
 	vk::UniquePipeline m_rtPipeline;
 	vk::UniquePipelineLayout m_rtPipelineLayout;
@@ -24,7 +23,7 @@ public:
 
 	void CreateRtShaderBindingTable();
 
-	void RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Renderer_* renderer);
+	void RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 
 	void Resize(vk::Extent2D extent);
 };

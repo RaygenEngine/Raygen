@@ -50,7 +50,10 @@ inline struct Layouts_ {
 
 
 	RRenderPassLayout gbufferPassLayout;
-	RRenderPassLayout rasterDirectPassLayout; // PERF: subpass of gbuffer
+
+	// WIP: probably same
+	RRenderPassLayout rasterDirectLightPassLayout; // PERF: subpass of gbuffer
+	RRenderPassLayout rasterIblPassLayout;         // PERF: subpass of gbuffer
 
 
 	RRenderPassLayout svgfPassLayout;
