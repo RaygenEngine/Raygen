@@ -2,7 +2,8 @@
 #include "engine/Listener.h"
 #include "rendering/Device.h"
 #include "rendering/output/OutputPassBase.h"
-#include "rendering/passes/RaytracingPass.h"
+#include "rendering/passes/AOPass.h"
+#include "rendering/passes/MirrorPass.h"
 #include "rendering/ppt/PtCollection.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
 #include "rendering/scene/Scene.h"
@@ -52,7 +53,8 @@ public:
 	InFlightResources<vk::ImageView> GetOutputViews() const;
 
 	InFlightResources<RenderingPassInstance> m_gbufferInst;
-	InFlightResources<RenderingPassInstance> m_rasterDirectPass;
+	InFlightResources<RenderingPassInstance> m_rasterDirectLightPass;
+	InFlightResources<RenderingPassInstance> m_rasterIblPass;
 
 	InFlightResources<RenderingPassInstance> m_ptPass;
 
@@ -62,7 +64,8 @@ public:
 
 	PtLightBlend lightblendPass;
 
-	RaytracingPass m_raytracingPass;
+	MirrorPass m_mirrorPass;
+	AOPass m_aoPass;
 
 
 	void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, OutputPassBase& outputPass);

@@ -48,7 +48,7 @@ vk::UniquePipeline DirlightBlend::MakePipeline()
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	return rvk::makePostProcPipeline(gpuShader.shaderStages, StaticPipes::GetLayout<DirlightBlend>(),
-		*Layouts->rasterDirectPassLayout.compatibleRenderPass, colorBlending);
+		*Layouts->rasterDirectLightPassLayout.compatibleRenderPass, colorBlending);
 }
 
 void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const

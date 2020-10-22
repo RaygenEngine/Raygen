@@ -19,7 +19,6 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/Layer.h"
 #include "rendering/Renderer.h"
-#include "rendering/passes/RaytracingPass.h"
 
 
 #include <imguicolortextedit/TextEditor.h>

@@ -228,7 +228,7 @@ vk::UniquePipeline PointlightBlend::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(*Layouts->rasterDirectPassLayout.compatibleRenderPass)
+		.setRenderPass(*Layouts->rasterDirectLightPassLayout.compatibleRenderPass)
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);

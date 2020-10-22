@@ -64,7 +64,7 @@ vec3 toOnbSpaceReturn(Onb orthoBasis, vec3 v)
 }
 
 
-// CHECK: are those normalized
+// SMATH: are those normalized
 void outOnbSpace(Onb orthoBasis, inout vec3 v)
 {
 	v = vec3(orthoBasis.tangent.x * v.x + orthoBasis.bitangent.x * v.y + orthoBasis.normal.x * v.z,

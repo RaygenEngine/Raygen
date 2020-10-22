@@ -47,7 +47,8 @@ void Renderer_::InitPipelines()
 	lightblendPass.MakeLayout();
 	lightblendPass.MakePipeline();
 
-	m_raytracingPass.MakeRtPipeline();
+	m_mirrorPass.MakeRtPipeline();
+	m_aoPass.MakeRtPipeline();
 }
 
 void Renderer_::RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
@@ -113,12 +114,14 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRen
 
 void Renderer_::RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	m_rasterDirectPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
+	m_rasterDirectLightPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 		StaticPipes::Get<SpotlightBlend>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<PointlightBlend>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<DirlightBlend>().Draw(cmdBuffer, sceneDesc);
-		StaticPipes::Get<ReflprobeBlend>().Draw(cmdBuffer, sceneDesc);
 	});
+
+	m_rasterIblPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline,
+		[&]() { StaticPipes::Get<ReflprobeBlend>().Draw(cmdBuffer, sceneDesc); });
 }
 
 void Renderer_::RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
@@ -148,14 +151,17 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		// Generate Passes
 		m_gbufferInst[i] = Layouts->gbufferPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
 
-		m_rasterDirectPass[i] = Layouts->rasterDirectPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
+		m_rasterDirectLightPass[i]
+			= Layouts->rasterDirectLightPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
 
+		m_rasterIblPass[i] = Layouts->rasterIblPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
 
 		m_ptPass[i] = Layouts->ptPassLayout.CreatePassInstance(
 			fbSize.width, fbSize.height, { &m_gbufferInst[i].framebuffer[GDepth] });
 	}
 
-	m_raytracingPass.Resize(fbSize);
+	m_mirrorPass.Resize(fbSize);
+	m_aoPass.Resize(fbSize);
 
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
@@ -167,18 +173,25 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 			views.emplace_back(att.view());
 		}
 
-		views.emplace_back(m_rasterDirectPass[i].framebuffer[0].view()); // rasterDirectSampler
-		views.emplace_back(m_raytracingPass.m_indirectResult[i].view()); // rtIndirectSampler
-		views.emplace_back(m_ptPass[i].framebuffer[0].view());           // sceneColorSampler
+		views.emplace_back(m_rasterDirectLightPass[i].framebuffer[0].view()); // rasterDirectSampler
+		views.emplace_back(m_rasterIblPass[i].framebuffer[0].view());         // rasterIblSampler
+		views.emplace_back(m_mirrorPass.m_indirectResult[i].view());          // rtIndirectSampler
+		views.emplace_back(m_aoPass.m_indirectResult[i].view());              // rtAOSampler
+		views.emplace_back(m_ptPass[i].framebuffer[0].view());                // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_attachmentsDesc[i], 0u, std::move(views));
 	}
 
 	// RT images
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		m_raytracingPass.m_rtDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
+		m_mirrorPass.m_rtDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
 
-		rvk::writeDescriptorImages(m_raytracingPass.m_rtDescSet[i], 0u, { m_raytracingPass.m_indirectResult[i].view() },
+		rvk::writeDescriptorImages(m_mirrorPass.m_rtDescSet[i], 0u, { m_mirrorPass.m_indirectResult[i].view() },
+			vk::DescriptorType::eStorageImage, nullptr, vk::ImageLayout::eGeneral);
+
+		m_aoPass.m_rtDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
+
+		rvk::writeDescriptorImages(m_aoPass.m_rtDescSet[i], 0u, { m_aoPass.m_indirectResult[i].view() },
 			vk::DescriptorType::eStorageImage, nullptr, vk::ImageLayout::eGeneral);
 	}
 }
@@ -206,15 +219,8 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 	RecordRasterDirectPass(cmdBuffer, sceneDesc);
 
 
-	static bool raytrace = true;
-
-	if (Input.IsJustPressed(Key::V)) {
-		raytrace = !raytrace;
-	}
-
-	if (raytrace) {
-		m_raytracingPass.RecordPass(cmdBuffer, sceneDesc, this);
-	}
+	m_mirrorPass.RecordPass(cmdBuffer, sceneDesc);
+	m_aoPass.RecordPass(cmdBuffer, sceneDesc);
 
 
 	RecordPostProcessPass(cmdBuffer, sceneDesc);

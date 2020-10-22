@@ -49,7 +49,7 @@ vk::UniquePipeline SpotlightBlend::MakePipeline()
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	return rvk::makePostProcPipeline(gpuShader.shaderStages, StaticPipes::GetLayout<SpotlightBlend>(),
-		*Layouts->rasterDirectPassLayout.compatibleRenderPass, colorBlending);
+		*Layouts->rasterDirectLightPassLayout.compatibleRenderPass, colorBlending);
 }
 
 void SpotlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const

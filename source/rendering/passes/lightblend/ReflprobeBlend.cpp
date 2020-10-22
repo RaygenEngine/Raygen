@@ -229,7 +229,7 @@ vk::UniquePipeline ReflprobeBlend::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(*Layouts->rasterDirectPassLayout.compatibleRenderPass)
+		.setRenderPass(*Layouts->rasterIblPassLayout.compatibleRenderPass)
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
