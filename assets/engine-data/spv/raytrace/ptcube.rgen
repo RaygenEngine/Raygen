@@ -53,7 +53,7 @@ void main() {
 	origin = origin + innerRadius * direction;
 
 	vec3 accumColor = vec3(0.f);
-	uint actualSamples = 1;
+	uint actualSamples = 1024;
 	uint bounces = 3;
 	for(uint smpl = 0; smpl < actualSamples; ++smpl){
 		// NOTE: Don't forget to initialize the ray here. 
