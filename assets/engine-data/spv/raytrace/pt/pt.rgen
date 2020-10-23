@@ -1,10 +1,9 @@
 #version 460
 #extension GL_GOOGLE_include_directive : enable
 #extension GL_EXT_ray_tracing : require
-#include "global.glsl"
 
-#define TEST_CUBE
-#include "rt-global.glsl"
+#include "global.glsl"
+#include "raytrace/pt/pt.glsl"
 
 #include "random.glsl"
 
@@ -13,7 +12,7 @@ layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 layout(location = 0) rayPayloadEXT hitPayload prd;
 
-vec3 RadianceOfRay2(vec3 nextOrigin, vec3 nextDirection) {
+vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 	prd.radiance = vec3(0);
 	prd.depth += 1;
 
@@ -53,15 +52,14 @@ void main() {
 	origin = origin + innerRadius * direction;
 
 	vec3 accumColor = vec3(0.f);
-	uint actualSamples = 1024;
+	uint actualSamples = 1024u;
 	uint bounces = 3;
 	for(uint smpl = 0; smpl < actualSamples; ++smpl){
-		// NOTE: Don't forget to initialize the ray here. 
 		prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, actualSamples + smpl);
-		prd.depth = 0;
+		prd.depth = 1; // gbuffer 
 		prd.accumThroughput = vec3(1.f);
 
-		accumColor += RadianceOfRay2(origin.xyz, direction.xyz);	 
+		accumColor += RadianceOfRay(origin.xyz, direction.xyz);	 
 	}
 
 	vec3 curColor = (accumColor / actualSamples);

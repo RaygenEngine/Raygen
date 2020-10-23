@@ -1,7 +1,7 @@
 #version 460
 #extension GL_GOOGLE_include_directive: enable
-#include "global.glsl"
 
+#include "global.glsl"
 #include "attachments.glsl"
 
 // out
@@ -42,8 +42,7 @@ void main() {
 	vec3 ray_AO = simpleBlurAO();
 
 	vec3 finalRes = raster_DirectLight + (raster_IBLminusMirrorReflections + ray_MirrorReflections) * ray_AO;
-	//finalRes = raster_DirectLight + (raster_IBLminusMirrorReflections + ray_MirrorReflections);
-	//finalRes = (raster_DirectLight + raster_IBLminusMirrorReflections + ray_MirrorReflections)* ray_AO;
+
 	outColor = vec4(finalRes, 1.0);
 }                               
 

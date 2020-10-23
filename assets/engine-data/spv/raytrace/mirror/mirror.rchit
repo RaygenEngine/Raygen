@@ -7,7 +7,7 @@
 #extension GL_EXT_ray_query: require
 
 #include "global.glsl"
-#include "mirror.glsl"
+#include "raytrace/mirror/mirror.glsl"
 
 #include "sampling.glsl"
 #include "bsdf.glsl"
@@ -243,6 +243,7 @@ void main() {
 	vec3 N = Ns;
 	float NoV = max(dot(N, V), BIAS);
 
+	// WIP:
 	vec3 brdfLUT = (texture(textureSamplers[nonuniformEXT(18)], vec2(NoV, brdfInfo.a))).rgb;
 
 	// next mirror event

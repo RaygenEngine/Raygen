@@ -1,17 +1,13 @@
 #version 460
 #extension GL_GOOGLE_include_directive : enable
 #extension GL_EXT_ray_tracing : require
-#extension GL_EXT_scalar_block_layout : enable
-#extension GL_EXT_nonuniform_qualifier : enable
-#extension GL_EXT_buffer_reference2 : enable
 
 #include "global.glsl"
-#include "ao.glsl"
+#include "raytrace/ao/ao.glsl"
 
 #include "attachments.glsl"
 #include "fragment.glsl"
 #include "onb.glsl"
-#include "bsdf.glsl"
 #include "sampling.glsl"
 #include "random.glsl"
 
@@ -32,7 +28,7 @@ layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 layout(location = 0) rayPayloadEXT hitPayload prd;
 
-float RadianceOfRay2(vec3 nextOrigin, vec3 nextDirection) {
+float VisibilityOfRay(vec3 nextOrigin, vec3 nextDirection) {
 
     uint  rayFlags = gl_RayFlagsOpaqueEXT | gl_RayFlagsCullFrontFacingTrianglesEXT;
     float tMin     = 0.001;
@@ -79,7 +75,7 @@ void main() {
 		vec3 L = uniformSampleHemisphere(u);
 
 		outOnbSpace(orthoBasis, L);
-		color += vec3(RadianceOfRay2(frag.position, L)); // just visibility
+		color += vec3(VisibilityOfRay(frag.position, L)); // just visibility
 	}
 	
 	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color / samples, 1.0));

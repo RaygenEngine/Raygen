@@ -3,7 +3,7 @@
 #extension GL_EXT_ray_tracing : require
 
 #include "global.glsl"
-#include "ao.glsl"
+#include "raytrace/ao/ao.glsl"
 
 layout(location = 0) rayPayloadInEXT hitPayload inPrd;
 
