@@ -59,7 +59,7 @@ void PathtracedCubemap::MakeRtPipeline()
 	};
 
 	// all rt shaders here
-	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/ptcube.shader");
+	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/pt/pt.shader");
 	shader.onCompileRayTracing = [&]() {
 		MakeRtPipeline();
 	};

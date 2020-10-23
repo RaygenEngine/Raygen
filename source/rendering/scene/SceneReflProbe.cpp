@@ -33,4 +33,6 @@ void SceneReflprobe::Build()
 
 	vl::PrefilteredMapCalculation calcPrefiltered(&envmap.Lock(), 256);
 	calcPrefiltered.Calculate();
+
+	vl::Device->waitIdle();
 }

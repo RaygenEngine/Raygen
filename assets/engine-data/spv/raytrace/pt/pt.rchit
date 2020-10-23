@@ -7,9 +7,7 @@
 #extension GL_EXT_ray_query: require
 
 #include "global.glsl"
-
-#define TEST_CUBE
-#include "rt-global.glsl"
+#include "raytrace/pt/pt.glsl"
 
 #include "random.glsl"
 #include "sampling.glsl"
@@ -19,6 +17,8 @@
 hitAttributeEXT vec2 baryCoord;
 layout(location = 0) rayPayloadInEXT hitPayload prd;
 
+// TODO:
+layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAs;
 #include "raytrace/rt-indirect.glsl"
 
 struct samplerRef {
@@ -234,12 +234,10 @@ void main() {
 		}
 	}
 
-	if(prd.depth + 1 > 2){
-		// TODO: radiance += sky;
+	if(prd.depth > 2){
 		prd.radiance = radiance;
 		return;
 	}
-
 
 	radiance += TraceIndirect(fragSpace, brdfInfo);
 	prd.radiance = radiance;

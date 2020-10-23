@@ -3,13 +3,6 @@
 
 // META:
 // Expects pre declared variable prd before the inclusion of the file
-	
-#ifndef TEST_CUBE
-    layout(set = 3, binding = 0) 
-#else
-    layout(set = 1, binding = 0) 
-#endif
-    uniform accelerationStructureEXT topLevelAs;
 
 // Handle just radiance here (no throughput). 
 // This function should be able to  be used without throughput (eg: a debug ray directly from the camera that invokes hit shaders)
@@ -118,9 +111,9 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
         float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
         pdf = max(pdf, BIAS); // CHECK: pbr-book stops tracing if pdf == 0
 
-        if(a < 0.0001){
-            // SMATH: H is wrong here
+        if(a < SPEC_THRESHOLD){
             L = reflect(-V);
+            H = normalize(V + L);
             NoL = max(Ndot(L), BIAS); 
            
             NoH = max(Ndot(H), BIAS); 

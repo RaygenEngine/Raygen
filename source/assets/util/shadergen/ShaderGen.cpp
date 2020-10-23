@@ -20,7 +20,7 @@ std::string shd::GenerateShaderGeneric(const std::string& inOutCode, const std::
 
 	ss << "// Raygen: Auto Generated Shader Code";
 	ss << R"(
-#version 450
+#version 460
 #extension GL_GOOGLE_include_directive : enable
 )";
 

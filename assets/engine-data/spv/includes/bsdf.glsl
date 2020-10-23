@@ -128,7 +128,7 @@ vec3 CookTorranceGGXSmithCorrelatedSpecular(float NoV, float NoL, float NoH, flo
 vec3 SpecularTerm(float NoV, float NoL, float NoH, float a, vec3 ks)
 {
     // CHECK: ks = F should probably be inside the brdfs and omitted here
-    if(a < 0.0001){   
+    if(a < SPEC_THRESHOLD){   
 		return ks *  PhongSpecular(NoH, a);
     }
 

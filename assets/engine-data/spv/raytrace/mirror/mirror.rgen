@@ -6,12 +6,11 @@
 #extension GL_EXT_buffer_reference2 : enable
 
 #include "global.glsl"
-#include "mirror.glsl"
+#include "raytrace/mirror/mirror.glsl"
 
 #include "attachments.glsl"
 #include "fragment.glsl"
 #include "onb.glsl"
-#include "bsdf.glsl"
 
 layout(set = 1, binding = 0) uniform UBO_Camera {   
 	vec3 position;
@@ -31,7 +30,7 @@ layout(set = 4, binding = 1) uniform sampler2D textureSamplers[];
 
 layout(location = 0) rayPayloadEXT hitPayload prd;
 
-vec3 RadianceOfRay2(vec3 nextOrigin, vec3 nextDirection) {
+vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 	prd.radiance = vec3(0);
 	prd.depth += 1;
 
@@ -71,22 +70,21 @@ void main() {
 		g_EmissiveSampler,
 		uv);
 
-	// Extract SpaceInfo
 	vec3 color = vec3(0);
 
-	// specular
+	// specular 		// TODO: without SPEC_THRESHOLD
 	if(frag.a < SPEC_THRESHOLD){
 		vec3 V = normalize(cam.position - frag.position);
 		vec3 N = frag.normal;
 		float NoV = max(dot(N, V), BIAS);
 
+		// WIP:
 		vec3 brdfLUT = (texture(textureSamplers[nonuniformEXT(18)], vec2(NoV, frag.a))).rgb;
 
 		vec3 L = normalize(reflect(-V, N));
 
 		prd.depth = 1; // start from depth = 1 due to gbuffer
-		prd.radiance = vec3(0);
-		vec3 specularLight = RadianceOfRay2(frag.position, L);
+		vec3 specularLight = RadianceOfRay(frag.position, L);
 
 		vec3 specular = specularLight * (frag.f0 * brdfLUT.x + brdfLUT.y);
 
