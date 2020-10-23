@@ -33,27 +33,19 @@ Layer_::Layer_()
 {
 	VulkanLoader::InitLoaderBase();
 
+	// TODO: use static init / destroy scheme?
 	Instance = new Instance_(Platform::GetVulkanExtensions(), Platform::GetMainHandle());
-
 	Device = new Device_(Instance->physicalDevices[0]);
-
 	CmdPoolManager = new CmdPoolManager_();
-
 	GpuResources::Init();
 	GpuAssetManager = new GpuAssetManager_();
-
 	Layouts = new Layouts_();
-
 	StaticPipes::InitRegistered();
-
 	swapOutput = new SwapchainOutputPass();
-
 	mainScene = new Scene();
-	currentScene = mainScene;
-
 	Renderer = new Renderer_();
-	swapOutput->SetAttachedRenderer(Renderer);
 
+	swapOutput->SetAttachedRenderer(Renderer);
 	Renderer->InitPipelines();
 
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
@@ -70,15 +62,12 @@ Layer_::Layer_()
 
 Layer_::~Layer_()
 {
+	// TODO: use static init / destroy scheme?
 	delete Renderer;
-
 	delete swapOutput;
 	delete mainScene;
-
 	StaticPipes::DestroyAll();
-
 	delete Layouts;
-
 	delete GpuAssetManager;
 	GpuResources::Destroy();
 
@@ -88,22 +77,19 @@ Layer_::~Layer_()
 	m_cmdBuffer = {};
 
 	delete CmdPoolManager;
-
 	delete Device;
 	delete Instance;
 }
 
 void Layer_::DrawFrame()
 {
-	currentScene = mainScene;
-
+	// DOC:
 	if (!AssetRegistry::GetGpuUpdateRequests().empty()) {
-		currentScene->forceUpdateAccel = true;
-		// vl::Renderer->m_raytracingPass.m_rtFrame = 0;
+		mainScene->forceUpdateAccel = true;
 	}
 
 	GpuAssetManager->ConsumeAssetUpdates();
-	currentScene->ConsumeCmdQueue();
+	mainScene->ConsumeCmdQueue();
 
 	if (!swapOutput->ShouldRenderThisFrame())
 		[[unlikely]] { return; }
@@ -119,19 +105,20 @@ void Layer_::DrawFrame()
 		Device->waitForFences({ *m_frameFence[m_currentFrame] }, true, UINT64_MAX);
 		Device->resetFences({ *m_frameFence[m_currentFrame] });
 
-		currentScene->UploadDirty(m_currentFrame);
-		currentScene->forceUpdateAccel = false;
+		mainScene->UploadDirty(m_currentFrame);
+		mainScene->forceUpdateAccel = false;
 	}
 
 	uint32 imageIndex;
 
+	// TODO: could this be a swapOut func?
 	Device->acquireNextImageKHR(
 		swapOutput->GetSwapchain(), UINT64_MAX, { m_imageAvailSem[m_currentFrame].get() }, {}, &imageIndex);
 
 	swapOutput->SetOutputImageIndex(imageIndex);
 
 	// TODO: 0 = editor camera
-	SceneRenderDesc sceneDesc{ currentScene, 0, m_currentFrame };
+	SceneRenderDesc sceneDesc{ mainScene, 0, m_currentFrame };
 
 	currentCmdBuffer.begin();
 	{
@@ -151,6 +138,8 @@ void Layer_::DrawFrame()
 
 	currentCmdBuffer.submit(submitInfo, m_frameFence[m_currentFrame].get());
 
+
+	// TODO: could present be a swapOut func?
 	vk::SwapchainKHR swapchain = swapOutput->GetSwapchain();
 
 	vk::PresentInfoKHR presentInfo{};

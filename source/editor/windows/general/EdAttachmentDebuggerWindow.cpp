@@ -84,13 +84,11 @@ void AttachmentDebuggerWindow::ImguiDraw()
 	auto& rasterDirectPassFramebuffer = vl::Renderer->m_rasterDirectLightPass.at(0).framebuffer;
 	auto& rasterIblPassFramebuffer = vl::Renderer->m_rasterIblPass.at(0).framebuffer;
 	auto& ptPassFramebuffer = vl::Renderer->m_ptPass.at(0).framebuffer;
-	// auto& rtPassProgImage = vl::Renderer->m_raytracingPass.m_progressiveResult;
 
 	showFramebuffer(gbufferFramebuffer);
 	showFramebuffer(rasterDirectPassFramebuffer);
 	showFramebuffer(rasterIblPassFramebuffer);
 	showFramebuffer(ptPassFramebuffer);
-	// showImage(rtPassProgImage);
 
 
 	for (auto sl : vl::Layer->mainScene->Get<SceneSpotlight>()) {
