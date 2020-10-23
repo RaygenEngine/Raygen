@@ -43,8 +43,8 @@ void Renderer_::InitPipelines()
 {
 	// m_postprocCollection.RegisterTechniques();
 
-	lightblendPass.MakeLayout();
-	lightblendPass.MakePipeline();
+	m_lightblendPass.MakeLayout();
+	m_lightblendPass.MakePipeline();
 
 	m_mirrorPass.MakeRtPipeline();
 	m_aoPass.MakeRtPipeline();
@@ -129,7 +129,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRe
 
 	m_ptPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&] {
 		// Post proc pass
-		lightblendPass.Draw(cmdBuffer, sceneDesc); // TODO: from post proc
+		m_lightblendPass.Draw(cmdBuffer, sceneDesc); // TODO: from post proc
 
 		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc);
 		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);

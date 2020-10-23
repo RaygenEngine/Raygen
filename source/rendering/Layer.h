@@ -10,6 +10,17 @@ class SwapchainOutputPass;
 
 inline class Layer_ : public Listener {
 
+public:
+	Layer_();
+	~Layer_();
+
+	void DrawFrame();
+
+	// TODO:
+	SwapchainOutputPass* swapOutput{ nullptr };
+	Scene* mainScene{ nullptr };
+
+private:
 	InFlightResources<vk::UniqueFence> m_frameFence;
 	InFlightResources<vk::UniqueSemaphore> m_renderFinishedSem;
 	InFlightResources<vk::UniqueSemaphore> m_imageAvailSem;
@@ -17,18 +28,6 @@ inline class Layer_ : public Listener {
 	InFlightCmdBuffers<Graphics> m_cmdBuffer;
 
 	uint32 m_currentFrame{ 0 };
-
-public:
-	Layer_();
-	~Layer_();
-
-	void DrawFrame();
-
-
-	SwapchainOutputPass* swapOutput;
-
-	Scene* mainScene{ nullptr };
-	Scene* currentScene{ nullptr };
 
 } * Layer{};
 } // namespace vl

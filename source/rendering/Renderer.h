@@ -1,4 +1,5 @@
 #pragma once
+
 #include "engine/Listener.h"
 #include "rendering/Device.h"
 #include "rendering/output/OutputPassBase.h"
@@ -14,12 +15,26 @@ namespace vl {
 
 inline class Renderer_ : public Listener {
 
+public:
+	void InitPipelines();
+
+	void ResizeBuffers(uint32 width, uint32 height);
+
+	void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, OutputPassBase& outputPass);
+
+	InFlightResources<vk::ImageView> GetOutputViews() const;
+
+	// TODO: private
+	InFlightResources<RenderingPassInstance> m_gbufferInst;
+	InFlightResources<RenderingPassInstance> m_rasterDirectLightPass;
+	InFlightResources<RenderingPassInstance> m_rasterIblPass;
+	InFlightResources<RenderingPassInstance> m_ptPass;
+
 private:
 	void RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 
-	// PtCollection m_postprocCollection;
 
 	struct SecondaryBufferPool {
 
@@ -40,33 +55,16 @@ private:
 
 	} m_secondaryBuffersPool;
 
-
-public:
 	vk::Extent2D m_extent{};
-
-	void ResizeBuffers(uint32 width, uint32 height);
-	InFlightResources<vk::ImageView> GetOutputViews() const;
-
-	InFlightResources<RenderingPassInstance> m_gbufferInst;
-	InFlightResources<RenderingPassInstance> m_rasterDirectLightPass;
-	InFlightResources<RenderingPassInstance> m_rasterIblPass;
-
-	InFlightResources<RenderingPassInstance> m_ptPass;
 
 	// Global descriptor set
 	InFlightResources<vk::DescriptorSet> m_attachmentsDesc;
 
-
-	PtLightBlend lightblendPass;
-
+	// TODO: tidy
+	PtLightBlend m_lightblendPass;
 	MirrorPass m_mirrorPass;
 	AOPass m_aoPass;
-
-
-	void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, OutputPassBase& outputPass);
-
-	void InitPipelines();
-
+	// PtCollection m_postprocCollection;
 
 } * Renderer{};
 } // namespace vl

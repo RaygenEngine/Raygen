@@ -8,7 +8,6 @@
 namespace vl {
 class SwapchainOutputPass : public OutputPassBase {
 
-
 public:
 	SwapchainOutputPass();
 
