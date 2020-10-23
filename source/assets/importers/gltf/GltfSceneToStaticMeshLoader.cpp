@@ -67,8 +67,12 @@ GltfSceneToStaticMeshLoader::GltfSceneToStaticMeshLoader(GltfCache& cache, tg::S
 
 				for (auto& prim : gltfMesh.primitives) {
 
-					CLOG_ABORT(prim.mode != TINYGLTF_MODE_TRIANGLES, "Unsupported primitive data mode {}", //
-						m_cache.filename);
+					if (prim.mode != TINYGLTF_MODE_TRIANGLES) {
+						LOG_WARN("Unsupported primitive data mode, filename: {}, mesh name: {}", m_cache.filename,
+							gltfMesh.name);
+						continue;
+					}
+
 
 					// material
 					// If material is -1, we use default material.

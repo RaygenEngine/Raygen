@@ -1,16 +1,15 @@
 #pragma once
 
-namespace vl {
-struct QueueFamily {
-	vk::QueueFamilyProperties props;
-	uint32 index{ UINT_MAX };
-	bool supportsPresent{ false };
-};
+#include "rendering/wrappers/Queue.h"
 
+namespace vl {
 // Info about a physical device and a given surface (support details)
 struct RPhysicalDevice : vk::PhysicalDevice {
 
-	std::vector<QueueFamily> queueFamilies;
+	RQueue::Family graphicsFamily;
+	RQueue::Family dmaFamily;
+	RQueue::Family computeFamily;
+	RQueue::Family presentFamily;
 
 	vk::PhysicalDeviceProperties2 genProps;
 	vk::PhysicalDeviceRayTracingPropertiesKHR rtProps;

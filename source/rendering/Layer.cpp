@@ -37,6 +37,8 @@ Layer_::Layer_()
 
 	Device = new Device_(Instance->physicalDevices[0]);
 
+	CmdPoolManager = new CmdPoolManager_();
+
 	GpuResources::Init();
 	GpuAssetManager = new GpuAssetManager_();
 
@@ -63,14 +65,7 @@ Layer_::Layer_()
 		DEBUG_NAME(m_imageAvailSem[i], "Image Available" + std::to_string(i));
 	}
 
-	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
-		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(c_framesInFlight);
-
-	m_cmdBuffer = Device->allocateCommandBuffers(allocInfo);
-
-
+	m_cmdBuffer = InFlightCmdBuffers<Graphics>(vk::CommandBufferLevel::ePrimary);
 } // namespace vl
 
 Layer_::~Layer_()
@@ -90,6 +85,9 @@ Layer_::~Layer_()
 	m_frameFence = {};
 	m_renderFinishedSem = {};
 	m_imageAvailSem = {};
+	m_cmdBuffer = {};
+
+	delete CmdPoolManager;
 
 	delete Device;
 	delete Instance;
@@ -113,7 +111,7 @@ void Layer_::DrawFrame()
 	swapOutput->OnPreRender();
 
 	m_currentFrame = (m_currentFrame + 1) % c_framesInFlight;
-	auto currentCmdBuffer = m_cmdBuffer[m_currentFrame];
+	auto& currentCmdBuffer = m_cmdBuffer[m_currentFrame];
 
 	{
 		PROFILE_SCOPE(Renderer);
@@ -135,32 +133,23 @@ void Layer_::DrawFrame()
 	// TODO: 0 = editor camera
 	SceneRenderDesc sceneDesc{ currentScene, 0, m_currentFrame };
 
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo
-		.setFlags(vk::CommandBufferUsageFlags(0)) //
-		.setPInheritanceInfo(nullptr);
-
-	currentCmdBuffer.begin(beginInfo);
+	currentCmdBuffer.begin();
 	{
 		Renderer->DrawFrame(currentCmdBuffer, sceneDesc, *swapOutput);
 	}
 	currentCmdBuffer.end();
 
-
 	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
 	std::array waitSems = { *m_imageAvailSem[m_currentFrame] };
 	std::array signalSems = { *m_renderFinishedSem[m_currentFrame] };
-
-	std::array bufs = { m_cmdBuffer[m_currentFrame] };
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo
 		.setWaitSemaphores(waitSems) //
 		.setWaitDstStageMask(waitStage)
-		.setSignalSemaphores(signalSems)
-		.setCommandBuffers(bufs);
+		.setSignalSemaphores(signalSems);
 
-	Device->graphicsQueue.submit(1u, &submitInfo, *m_frameFence[m_currentFrame]);
+	currentCmdBuffer.submit(submitInfo, m_frameFence[m_currentFrame].get());
 
 	vk::SwapchainKHR swapchain = swapOutput->GetSwapchain();
 
@@ -170,6 +159,6 @@ void Layer_::DrawFrame()
 		.setSwapchains(swapchain)
 		.setImageIndices(imageIndex);
 
-	Device->presentQueue.presentKHR(presentInfo);
+	CmdPoolManager->presentQueue.presentKHR(presentInfo);
 }
 } // namespace vl

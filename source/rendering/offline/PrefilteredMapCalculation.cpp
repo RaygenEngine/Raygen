@@ -13,6 +13,7 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/wrappers/CmdBuffer.h"
 
 namespace {
 struct PushConstant {
@@ -54,8 +55,6 @@ void PrefilteredMapCalculation::Calculate()
 	MakeDesciptors();
 
 	MakeRenderPass();
-
-	AllocateCommandBuffers();
 
 	AllocateCubeVertexBuffer();
 
@@ -134,16 +133,6 @@ void PrefilteredMapCalculation::MakeRenderPass()
 		.setDependencies(dependency);
 
 	m_renderPass = Device->createRenderPassUnique(renderPassInfo);
-}
-
-void PrefilteredMapCalculation::AllocateCommandBuffers()
-{
-	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
-		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(6u);
-
-	m_cmdBuffers = Device->allocateCommandBuffers(allocInfo);
 }
 
 void PrefilteredMapCalculation::AllocateCubeVertexBuffer()
@@ -375,6 +364,8 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 	for (uint32 mip = 0; mip < 6; ++mip) {
 		for (uint32 i = 0; i < 6; ++i) {
 
+			CmdBuffer<Graphics> cmdBuffer{ vk::CommandBufferLevel::ePrimary };
+
 			uint32 mipResolution = static_cast<uint32>(m_resolution * std::pow(0.5, mip));
 
 			vk::Rect2D scissor{};
@@ -402,19 +393,17 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 			clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
 			renderPassInfo.setClearValues(clearValues);
 
-			vk::CommandBufferBeginInfo beginInfo{};
-			beginInfo.setFlags(vk::CommandBufferUsageFlags(0)).setPInheritanceInfo(nullptr);
-			m_cmdBuffers[i].begin(beginInfo);
+			cmdBuffer.begin();
 			{
 				// begin render pass
-				m_cmdBuffers[i].beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+				cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 				{
 					// Dynamic viewport & scissor
-					m_cmdBuffers[i].setViewport(0, { viewport });
-					m_cmdBuffers[i].setScissor(0, { scissor });
+					cmdBuffer.setViewport(0, { viewport });
+					cmdBuffer.setScissor(0, { scissor });
 
 					// bind the graphics pipeline
-					m_cmdBuffers[i].bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+					cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 
 					float roughness = (float)mip / (float)(6 - 1);
@@ -427,33 +416,31 @@ void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
 					};
 
 					// Submit via push constant (rather than a UBO)
-					m_cmdBuffers[i].pushConstants(m_pipelineLayout.get(),
+					cmdBuffer.pushConstants(m_pipelineLayout.get(),
 						vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant),
 						&pc);
 
 					// geom
-					m_cmdBuffers[i].bindVertexBuffers(0u, { m_cubeVertexBuffer.handle() }, { vk::DeviceSize(0) });
+					cmdBuffer.bindVertexBuffers(0u, { m_cubeVertexBuffer.handle() }, { vk::DeviceSize(0) });
 
 					// descriptor sets
-					m_cmdBuffers[i].bindDescriptorSets(
+					cmdBuffer.bindDescriptorSets(
 						vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, { m_descSet }, nullptr);
 
 					// draw call (cube)
-					m_cmdBuffers[i].draw(static_cast<uint32>(vertices.size() / 3), 1u, 0u, 0u);
+					cmdBuffer.draw(static_cast<uint32>(vertices.size() / 3), 1u, 0u, 0u);
 				}
 				// end render pass
-				m_cmdBuffers[i].endRenderPass();
+				cmdBuffer.endRenderPass();
 			}
-			m_cmdBuffers[i].end();
+			cmdBuffer.end();
 
-			vk::SubmitInfo submitInfo{};
-			submitInfo.setCommandBuffers(m_cmdBuffers[i]);
-
-			Device->graphicsQueue.submit(submitInfo, {});
+			cmdBuffer.submit();
 			// CHECK:
 			Device->waitIdle();
 		}
 	}
+	Device->waitIdle();
 }
 
 void PrefilteredMapCalculation::EditPods()

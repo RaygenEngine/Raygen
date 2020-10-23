@@ -24,7 +24,8 @@ void SceneReflprobe::Build()
 
 	auto scene = vl::Layer->mainScene;
 	calcSourceSkybox.Calculate(vl::Layer->mainScene->sceneAsDescSet, scene->tlas.sceneDesc.descSet[0],
-		scene->tlas.sceneDesc.descSetPointlights[0], vl::Layer->mainScene->Get<ScenePointlight>().size(), this);
+		scene->tlas.sceneDesc.descSetPointlights[0],
+		static_cast<int32>(vl::Layer->mainScene->Get<ScenePointlight>().size()), this);
 
 	vl::IrradianceMapCalculation calcIrradiance(&envmap.Lock(), 32);
 	calcIrradiance.Calculate();

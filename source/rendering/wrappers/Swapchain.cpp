@@ -86,8 +86,8 @@ RSwapchain::RSwapchain(vk::SurfaceKHR surface)
 		.setClipped(VK_TRUE);
 
 	// graphics and present families for swapchain image concurrency
-	auto mainQueueFamily = Device->graphicsQueue.familyIndex;
-	auto presentQueueFamily = Device->presentQueue.familyIndex;
+	auto mainQueueFamily = CmdPoolManager->graphicsQueue.family.index;
+	auto presentQueueFamily = CmdPoolManager->presentQueue.family.index;
 
 	if (mainQueueFamily != presentQueueFamily) {
 		createInfo

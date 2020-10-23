@@ -7,6 +7,7 @@
 #include "rendering/ppt/PtCollection.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/wrappers/CmdBuffer.h"
 #include "rendering/wrappers/passlayout/RenderPassLayout.h"
 
 namespace vl {
@@ -22,18 +23,12 @@ private:
 
 	struct SecondaryBufferPool {
 
-		std::vector<InFlightResources<vk::CommandBuffer>> sBuffers;
+		std::vector<InFlightCmdBuffers<Graphics>> sBuffers;
 
 		vk::CommandBuffer Get(uint32 frameIndex)
 		{
 			if (currBuffer > (int32(sBuffers.size()) - 1)) {
-
-				vk::CommandBufferAllocateInfo allocInfo{};
-				allocInfo.setCommandPool(Device->graphicsCmdPool.get())
-					.setLevel(vk::CommandBufferLevel::eSecondary)
-					.setCommandBufferCount(c_framesInFlight);
-
-				sBuffers.emplace_back(Device->allocateCommandBuffers(allocInfo));
+				sBuffers.emplace_back(InFlightCmdBuffers<Graphics>(vk::CommandBufferLevel::eSecondary));
 			}
 
 			return sBuffers[currBuffer++][frameIndex];

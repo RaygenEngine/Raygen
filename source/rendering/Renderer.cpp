@@ -30,7 +30,6 @@
 #include "rendering/util/WriteDescriptorSets.h"
 #include "rendering/wrappers/Swapchain.h"
 
-
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 {

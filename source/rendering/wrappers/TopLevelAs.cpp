@@ -2,6 +2,8 @@
 
 #include "assets/StdAssets.h"
 #include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuCubemap.h"
+#include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/assets/GpuImage.h"
 #include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/assets/GpuMesh.h"
@@ -9,10 +11,9 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/ScenePointlight.h"
-#include "rendering/scene/SceneSpotlight.h"
 #include "rendering/scene/SceneReflProbe.h"
-#include "rendering/assets/GpuEnvironmentMap.h"
-#include "rendering/assets/GpuCubemap.h"
+#include "rendering/scene/SceneSpotlight.h"
+#include "rendering/wrappers/CmdBuffer.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -64,13 +65,13 @@ std::vector<RtGeometryGroup> g_tempGeometryGroups;
 namespace vl {
 TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 {
-	sceneDesc.descSetSpotlights
-		= Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(scene->Get<SceneSpotlight>().size());
+	sceneDesc.descSetSpotlights = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
+		static_cast<int32>(scene->Get<SceneSpotlight>().size()));
 
 	sceneDesc.descSetPointlights
-		= Layouts->singleStorageBuffer.AllocDescriptorSet(scene->Get<ScenePointlight>().size());
-	sceneDesc.descSetReflprobes
-		= Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(scene->Get<SceneReflprobe>().size());
+		= Layouts->singleStorageBuffer.AllocDescriptorSet(static_cast<int32>(scene->Get<ScenePointlight>().size()));
+	sceneDesc.descSetReflprobes = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
+		static_cast<int32>(scene->Get<SceneReflprobe>().size()));
 
 	int32 totalGroups = 0;
 
@@ -163,7 +164,7 @@ void RtSceneDescriptor::WriteImages()
 
 void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spotlights)
 {
-	spotlightCount = spotlights.size();
+	spotlightCount = static_cast<int32>(spotlights.size());
 
 	uint32 uboSize = sizeof(Spotlight_Ubo) + sizeof(Spotlight_Ubo) % 8;
 
@@ -234,7 +235,7 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 
 void RtSceneDescriptor::WritePointlights(const std::vector<ScenePointlight*>& pointlights)
 {
-	pointlightCount = pointlights.size();
+	pointlightCount = static_cast<int32>(pointlights.size());
 
 	uint32 uboSize = sizeof(Pointlight_Ubo) + sizeof(Pointlight_Ubo) % 8;
 
@@ -276,7 +277,7 @@ void RtSceneDescriptor::WritePointlights(const std::vector<ScenePointlight*>& po
 
 void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& reflprobes)
 {
-	reflprobeCount = reflprobes.size();
+	reflprobeCount = static_cast<int32>(reflprobes.size());
 
 	uint32 uboSize = sizeof(Reflprobe_UBO) + sizeof(Reflprobe_UBO) % 8;
 
@@ -477,31 +478,20 @@ void TopLevelAs::Build()
 	std::vector<const vk::AccelerationStructureBuildOffsetInfoKHR*> pBuildOffset;
 	pBuildOffset.push_back(&buildOffsetInfo);
 
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+	{
+		ScopedOneTimeSubmitCmdBuffer<Compute> cmdBuffer;
 
-	Device->computeCmdBuffer.begin(beginInfo);
+		// Make sure the copy of the instance buffer are copied before triggering the
+		// acceleration structure build
+		vk::MemoryBarrier barrier{};
+		barrier
+			.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite) //
+			.setDstAccessMask(vk::AccessFlagBits::eAccelerationStructureWriteKHR);
 
-	// Make sure the copy of the instance buffer are copied before triggering the
-	// acceleration structure build
-	vk::MemoryBarrier barrier{};
-	barrier
-		.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite) //
-		.setDstAccessMask(vk::AccessFlagBits::eAccelerationStructureWriteKHR);
+		cmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
+			vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::DependencyFlags{ 0 }, barrier, {}, {});
 
-	Device->computeCmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
-		vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::DependencyFlags{ 0 }, barrier, {}, {});
-
-	Device->computeCmdBuffer.buildAccelerationStructureKHR(asBuildGeomInfo, pBuildOffset);
-
-	Device->computeCmdBuffer.end();
-
-	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBuffers(Device->computeCmdBuffer);
-
-	Device->computeQueue.submit(submitInfo, {});
-
-	Device->computeQueue.waitIdle(); // NEXT:
+		cmdBuffer.buildAccelerationStructureKHR(asBuildGeomInfo, pBuildOffset);
+	}
 }
-
 } // namespace vl

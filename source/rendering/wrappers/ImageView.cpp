@@ -6,6 +6,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/wrappers/Buffer.h"
+#include "rendering/wrappers/CmdBuffer.h"
 
 namespace vl {
 RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
@@ -70,10 +71,8 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 
 void RImage::CopyBufferToImage(const RBuffer& buffer)
 {
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-
-	Device->dmaCmdBuffer.begin(beginInfo);
+	// WIP:
+	ScopedOneTimeSubmitCmdBuffer<Dma> cmdBuffer{};
 
 	vk::BufferImageCopy region{};
 	region
@@ -89,27 +88,13 @@ void RImage::CopyBufferToImage(const RBuffer& buffer)
 		.setBaseArrayLayer(0u)
 		.setLayerCount(arrayLayers);
 
-	Device->dmaCmdBuffer.copyBufferToImage(
-		buffer.handle(), uHandle.get(), vk::ImageLayout::eTransferDstOptimal, region);
-
-	Device->dmaCmdBuffer.end();
-
-	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBuffers(Device->dmaCmdBuffer);
-
-	Device->dmaQueue.submit(submitInfo, {});
-	// PERF:
-	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
-	// instead of executing one at a time. That may give the driver more opportunities to optimize.
-	Device->dmaQueue.waitIdle();
+	cmdBuffer.copyBufferToImage(buffer.handle(), uHandle.get(), vk::ImageLayout::eTransferDstOptimal, region);
 }
 
 void RImage::CopyImageToBuffer(const RBuffer& buffer)
 {
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-
-	Device->dmaCmdBuffer.begin(beginInfo);
+	// WIP:
+	ScopedOneTimeSubmitCmdBuffer<Dma> cmdBuffer{};
 
 	vk::BufferImageCopy region{};
 	region
@@ -125,19 +110,7 @@ void RImage::CopyImageToBuffer(const RBuffer& buffer)
 		.setBaseArrayLayer(0u)
 		.setLayerCount(arrayLayers);
 
-	Device->dmaCmdBuffer.copyImageToBuffer(
-		uHandle.get(), vk::ImageLayout::eTransferSrcOptimal, buffer.handle(), region);
-
-	Device->dmaCmdBuffer.end();
-
-	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBuffers(Device->dmaCmdBuffer);
-
-	Device->dmaQueue.submit(submitInfo, {});
-	// PERF:
-	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
-	// instead of executing one at a time. That may give the driver more opportunities to optimize.
-	Device->dmaQueue.waitIdle();
+	cmdBuffer.copyImageToBuffer(uHandle.get(), vk::ImageLayout::eTransferSrcOptimal, buffer.handle(), region);
 }
 
 vk::ImageMemoryBarrier RImage::CreateTransitionBarrier(
@@ -172,23 +145,12 @@ void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayo
 void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
 	vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage)
 {
+	// WIP:
+	ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
+
 	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
 
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-
-	Device->graphicsCmdBuffer.begin(beginInfo);
-
-	Device->graphicsCmdBuffer.pipelineBarrier(sourceStage, destStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
-
-	Device->graphicsCmdBuffer.end();
-
-	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBuffers(Device->graphicsCmdBuffer);
-
-	Device->graphicsQueue.submit(submitInfo, {});
-
-	Device->graphicsQueue.waitIdle();
+	cmdBuffer.pipelineBarrier(sourceStage, destStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
 }
 
 void RImage::TransitionToLayout(vk::CommandBuffer cmdBuffer, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const
@@ -207,6 +169,9 @@ void RImage::TransitionToLayout(vk::CommandBuffer cmdBuffer, vk::ImageLayout old
 
 void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
+	// WIP:
+	ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
+
 	// Check if image format supports linear blitting
 	vk::FormatProperties formatProperties = Device->pd.getFormatProperties(format);
 
@@ -219,11 +184,6 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 	// base level to improve loading speed.
 	CLOG_ABORT(!(formatProperties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear),
 		"Image format does not support linear blitting!");
-
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-
-	Device->graphicsCmdBuffer.begin(beginInfo);
 
 	for (uint32 layer = 0u; layer < arrayLayers; ++layer) {
 
@@ -258,8 +218,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 				.setDstAccessMask(rvk::accessFlagsForImageLayout(intermediateLayout));
 
 			// old to intermediate
-			Device->graphicsCmdBuffer.pipelineBarrier(
-				oldStage, intermediateStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
+			cmdBuffer.pipelineBarrier(oldStage, intermediateStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
 
 			vk::ImageBlit blit{};
 			blit.srcOffsets[0] = vk::Offset3D{ 0, 0, 0 };
@@ -277,8 +236,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 				.setBaseArrayLayer(layer)
 				.setLayerCount(1u);
 
-			Device->graphicsCmdBuffer.blitImage(
-				uHandle.get(), intermediateLayout, uHandle.get(), oldLayout, blit, vk::Filter::eLinear);
+			cmdBuffer.blitImage(uHandle.get(), intermediateLayout, uHandle.get(), oldLayout, blit, vk::Filter::eLinear);
 
 			barrier
 				.setOldLayout(intermediateLayout) //
@@ -288,8 +246,7 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 
 
 			// intermediate to final
-			Device->graphicsCmdBuffer.pipelineBarrier(
-				intermediateStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
+			cmdBuffer.pipelineBarrier(intermediateStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
 
 			if (mipWidth > 1)
 				mipWidth /= 2;
@@ -306,17 +263,8 @@ void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::Ima
 			.setSrcAccessMask(rvk::accessFlagsForImageLayout(oldLayout))
 			.setDstAccessMask(rvk::accessFlagsForImageLayout(newLayout));
 
-		Device->graphicsCmdBuffer.pipelineBarrier(oldStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
+		cmdBuffer.pipelineBarrier(oldStage, finalStage, vk::DependencyFlags{ 0 }, {}, {}, barrier);
 	}
-
-	Device->graphicsCmdBuffer.end();
-
-	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBuffers(Device->graphicsCmdBuffer);
-
-	Device->graphicsQueue.submit(submitInfo, {});
-
-	Device->graphicsQueue.waitIdle();
 }
 
 vk::DescriptorSet RImage::GetDebugDescriptor()
@@ -348,10 +296,8 @@ vk::DescriptorSet RImage::GetDebugDescriptor()
 
 void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCount)
 {
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-
-	Device->dmaCmdBuffer.begin(beginInfo);
+	// WIP:
+	ScopedOneTimeSubmitCmdBuffer<Dma> cmdBuffer{};
 
 	std::vector<vk::BufferImageCopy> regions;
 	size_t offset{ 0llu };
@@ -379,19 +325,7 @@ void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCou
 		offset += res * res * pixelSize * 6llu;
 	}
 
-	Device->dmaCmdBuffer.copyBufferToImage(
-		buffer.handle(), uHandle.get(), vk::ImageLayout::eTransferDstOptimal, regions);
-
-	Device->dmaCmdBuffer.end();
-
-	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBuffers(Device->dmaCmdBuffer);
-
-	Device->dmaQueue.submit(submitInfo, {});
-	// PERF:
-	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
-	// instead of executing one at a time. That may give the driver more opportunities to optimize.
-	Device->dmaQueue.waitIdle();
+	cmdBuffer.copyBufferToImage(buffer.handle(), uHandle.get(), vk::ImageLayout::eTransferDstOptimal, regions);
 }
 
 

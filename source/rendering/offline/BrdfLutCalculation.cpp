@@ -15,6 +15,7 @@
 #include "rendering/Device.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/wrappers/Buffer.h"
+#include "rendering/wrappers/CmdBuffer.h"
 
 namespace vl {
 BrdfLutCalculation::BrdfLutCalculation(GpuEnvironmentMap* envmapAsset, uint32 calculationResolution)
@@ -26,8 +27,6 @@ BrdfLutCalculation::BrdfLutCalculation(GpuEnvironmentMap* envmapAsset, uint32 ca
 void BrdfLutCalculation::Calculate()
 {
 	MakeRenderPass();
-
-	AllocateCommandBuffers();
 
 	MakePipeline();
 
@@ -78,16 +77,6 @@ void BrdfLutCalculation::MakeRenderPass()
 		.setDependencies(dependency);
 
 	m_renderPass = Device->createRenderPassUnique(renderPassInfo);
-}
-
-void BrdfLutCalculation::AllocateCommandBuffers()
-{
-	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
-		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(1u);
-
-	m_cmdBuffer = Device->allocateCommandBuffers(allocInfo)[0];
 }
 
 void BrdfLutCalculation::MakePipeline()
@@ -231,6 +220,8 @@ void BrdfLutCalculation::RecordAndSubmitCmdBuffers()
 {
 	Device->waitIdle();
 
+	CmdBuffer<Graphics> cmdBuffer{ vk::CommandBufferLevel::ePrimary };
+
 	PROFILE_SCOPE(Renderer);
 
 	vk::Rect2D scissor{};
@@ -258,31 +249,27 @@ void BrdfLutCalculation::RecordAndSubmitCmdBuffers()
 	clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
 	renderPassInfo.setClearValues(clearValues);
 
-	vk::CommandBufferBeginInfo beginInfo{};
-	m_cmdBuffer.begin(beginInfo);
+	cmdBuffer.begin();
 	{
 		// begin render pass
-		m_cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+		cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		{
 			// Dynamic viewport & scissor
-			m_cmdBuffer.setViewport(0, { viewport });
-			m_cmdBuffer.setScissor(0, { scissor });
+			cmdBuffer.setViewport(0, { viewport });
+			cmdBuffer.setScissor(0, { scissor });
 
 			// bind the graphics pipeline
-			m_cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 			// draw call (triangle)
-			m_cmdBuffer.draw(3u, 1u, 0u, 0u);
+			cmdBuffer.draw(3u, 1u, 0u, 0u);
 		}
 		// end render pass
-		m_cmdBuffer.endRenderPass();
+		cmdBuffer.endRenderPass();
 	}
-	m_cmdBuffer.end();
+	cmdBuffer.end();
 
-	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBuffers(m_cmdBuffer);
-
-	Device->graphicsQueue.submit(1u, &submitInfo, {});
+	cmdBuffer.submit();
 
 	// CHECK:
 	Device->waitIdle();
