@@ -3,7 +3,7 @@
 #include "assets/shared/GeometryShared.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/Device.h"
-
+#include "rendering/wrappers/CmdBuffer.h"
 
 namespace vl {
 
@@ -122,30 +122,19 @@ void BottomLevelAs::Build(vk::BuildAccelerationStructureFlagsKHR buildFlags,
 		pBuildOffset[i] = &asBuildOffsetInfos[i];
 	}
 
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+	{
+		ScopedOneTimeSubmitCmdBuffer<Compute> cmdBuffer{};
 
-	Device->computeCmdBuffer.begin(beginInfo);
+		cmdBuffer.buildAccelerationStructureKHR(asBuildGeomInfo, pBuildOffset);
 
-	Device->computeCmdBuffer.buildAccelerationStructureKHR(asBuildGeomInfo, pBuildOffset);
+		vk::MemoryBarrier memoryBarrier{};
+		memoryBarrier
+			.setSrcAccessMask(vk::AccessFlagBits::eAccelerationStructureWriteKHR) //
+			.setDstAccessMask(vk::AccessFlagBits::eAccelerationStructureReadKHR);
 
-	vk::MemoryBarrier memoryBarrier{};
-	memoryBarrier
-		.setSrcAccessMask(vk::AccessFlagBits::eAccelerationStructureWriteKHR) //
-		.setDstAccessMask(vk::AccessFlagBits::eAccelerationStructureReadKHR);
-
-	Device->computeCmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR,
-		vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::DependencyFlags{ 0 }, memoryBarrier, {}, {});
-
-	Device->computeCmdBuffer.end();
-
-	// TODO: compacting
-
-	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBuffers(Device->computeCmdBuffer);
-
-	Device->computeQueue.submit(submitInfo, {});
-
-	Device->computeQueue.waitIdle(); // NEXT:
+		cmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR,
+			vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::DependencyFlags{ 0 }, memoryBarrier, {}, {});
+		// TODO: compacting
+	}
 }
 } // namespace vl

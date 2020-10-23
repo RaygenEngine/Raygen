@@ -9,12 +9,12 @@
 #include "reflection/PodTools.h"
 #include "rendering/Device.h"
 #include "rendering/Instance.h"
+#include "rendering/Layer.h"
+#include "rendering/output/SwapchainOutputPass.h"
 #include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
+#include "rendering/wrappers/CmdBuffer.h"
 #include "rendering/wrappers/Swapchain.h"
-
-#include "rendering/output/SwapchainOutputPass.h"
-#include "rendering/Layer.h"
 
 #include <imgui/imgui.h>
 #include <imgui/examples/imgui_impl_glfw.h>
@@ -288,8 +288,8 @@ void InitVulkan()
 	init.Instance = *Instance;
 	init.PhysicalDevice = physDev;
 	init.Device = device;
-	init.QueueFamily = Device->graphicsQueue.familyIndex;
-	init.Queue = Device->graphicsQueue;
+	init.QueueFamily = CmdPoolManager->graphicsQueue.family.index;
+	init.Queue = CmdPoolManager->graphicsQueue;
 	init.PipelineCache = VK_NULL_HANDLE;
 	init.DescriptorPool = GpuResources::GetImguiPool();
 	init.ImageCount = c_framesInFlight;
@@ -298,28 +298,12 @@ void InitVulkan()
 	init.CheckVkResultFn = nullptr;
 	ImGui_ImplVulkan_Init(&init, Layer->swapOutput->GetRenderPass());
 
-	// CHECK: which buffer
-	auto cmdBuffer = Device->graphicsCmdBuffer;
+	// WIP: this scope is weird
+	{
+		ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
 
-	//	vkCall(vkResetCommandPool(m_device, m_commandPool, 0));
-
-	VkCommandBufferBeginInfo begin_info = {};
-	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	cmdBuffer.begin(begin_info);
-
-	ImGui_ImplVulkan_CreateFontsTexture(cmdBuffer);
-
-	vk::SubmitInfo end_info = {};
-	end_info.commandBufferCount = 1;
-	end_info.pCommandBuffers = &cmdBuffer;
-
-	cmdBuffer.end();
-
-	Device->graphicsQueue.submit(1, &end_info, {});
-	Device->graphicsQueue.waitIdle();
-
+		ImGui_ImplVulkan_CreateFontsTexture(cmdBuffer);
+	}
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
 

@@ -10,8 +10,6 @@ class IrradianceMapCalculation {
 
 	vk::UniqueRenderPass m_renderPass;
 
-	std::vector<vk::CommandBuffer> m_cmdBuffers;
-
 	RBuffer m_cubeVertexBuffer;
 
 	vk::UniquePipeline m_pipeline;
@@ -32,7 +30,6 @@ class IrradianceMapCalculation {
 
 	void MakeDesciptors();
 	void MakeRenderPass();
-	void AllocateCommandBuffers();
 	void AllocateCubeVertexBuffer();
 	void MakePipeline();
 	void PrepareFaceInfo();

@@ -1,6 +1,7 @@
 #include "Buffer.h"
 
 #include "rendering/Device.h"
+#include "rendering/wrappers/CmdBuffer.h"
 
 namespace vl {
 
@@ -60,21 +61,9 @@ void RBuffer::CopyBuffer(const RBuffer& other)
 
 void RBuffer::CopyBufferWithRegion(const RBuffer& other, vk::BufferCopy copyRegion)
 {
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-
-	Device->dmaCmdBuffer.begin(beginInfo);
-	Device->dmaCmdBuffer.copyBuffer(other.handle(), uHandle.get(), copyRegion);
-	Device->dmaCmdBuffer.end();
-
-	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBuffers(Device->dmaCmdBuffer);
-
-	Device->dmaQueue.submit(submitInfo, {});
-	// PERF:
-	// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
-	// instead of executing one at a time. That may give the driver more opportunities to optimize.
-	Device->dmaQueue.waitIdle();
+	// WIP:
+	ScopedOneTimeSubmitCmdBuffer<Dma> cmdBuffer{};
+	cmdBuffer.copyBuffer(other.handle(), uHandle.get(), copyRegion);
 }
 
 size_t RBuffer::CopyBufferAt(const RBuffer& other, size_t offset, size_t copySize)

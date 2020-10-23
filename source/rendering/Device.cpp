@@ -23,44 +23,12 @@ namespace vl {
 Device_::Device_(RPhysicalDevice& pd)
 	: pd(pd)
 {
-	QueueFamily graphicsQueueFamily;
-	QueueFamily dmaQueueFamily;
-	QueueFamily computeQueueFamily;
-	QueueFamily presentQueueFamily;
-
-	for (auto& fam : pd.queueFamilies) {
-
-		auto supportsGraphics = bool(fam.props.queueFlags & vk::QueueFlagBits::eGraphics);
-		auto supportsTransfer = bool(fam.props.queueFlags & vk::QueueFlagBits::eTransfer);
-		auto supportsCompute = bool(fam.props.queueFlags & vk::QueueFlagBits::eCompute);
-
-		// graphics queue, must support graphics
-		if (supportsGraphics) {
-			graphicsQueueFamily = fam;
-		}
-
-		// dma queue, must support transfer and not graphics/compute/present
-		if (supportsTransfer && !supportsGraphics && !supportsCompute && !fam.supportsPresent) {
-			dmaQueueFamily = fam;
-		}
-
-		// compute queue, deticated compute (no graphics)
-		if (supportsCompute && !supportsGraphics) {
-			computeQueueFamily = fam;
-		}
-
-		// present queue, CHECK: benchmark (queue count, graphics vs compute, etc)
-		if (fam.supportsPresent && supportsGraphics) {
-			presentQueueFamily = fam;
-		}
-	}
-
 	std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
 	std::set<uint32> uniqueQueueFamilies = {
-		graphicsQueueFamily.index,
-		dmaQueueFamily.index,
-		computeQueueFamily.index,
-		presentQueueFamily.index,
+		pd.graphicsFamily.index,
+		pd.dmaFamily.index,
+		pd.computeFamily.index,
+		pd.presentFamily.index,
 	};
 
 	std::array qps{ 1.0f };
@@ -84,7 +52,6 @@ Device_::Device_(RPhysicalDevice& pd)
 	deviceFeatures.features.setSamplerAnisotropy(VK_TRUE);
 	deviceFeatures.features.setFragmentStoresAndAtomics(VK_TRUE);
 	deviceBufferAddressFeatures.setBufferDeviceAddress(VK_TRUE);
-
 
 	pDeviceFeaturesChain.get<vk::PhysicalDeviceDescriptorIndexingFeatures>()
 		.setRuntimeDescriptorArray(true) //
@@ -113,48 +80,6 @@ Device_::Device_(RPhysicalDevice& pd)
 
 	vk::Device::operator=(pd.createDevice(deviceCreateInfo));
 	VulkanLoader::InitLoaderWithDevice(*this);
-
-	// Device queues
-	graphicsQueue.familyIndex = graphicsQueueFamily.index;
-	graphicsQueue.SetHandle(getQueue(graphicsQueueFamily.index, 0));
-
-	dmaQueue.familyIndex = dmaQueueFamily.index;
-	dmaQueue.SetHandle(getQueue(dmaQueueFamily.index, 0));
-
-	computeQueue.familyIndex = computeQueueFamily.index;
-	computeQueue.SetHandle(getQueue(computeQueueFamily.index, 0));
-
-	presentQueue.familyIndex = presentQueueFamily.index;
-	presentQueue.SetHandle(getQueue(presentQueueFamily.index, 0));
-
-	vk::CommandPoolCreateInfo poolInfo{};
-	poolInfo.setQueueFamilyIndex(graphicsQueue.familyIndex);
-	poolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
-
-	graphicsCmdPool = createCommandPoolUnique(poolInfo);
-
-	poolInfo.setQueueFamilyIndex(dmaQueue.familyIndex);
-	poolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
-
-	dmaCmdPool = createCommandPoolUnique(poolInfo);
-
-	poolInfo.setQueueFamilyIndex(computeQueue.familyIndex);
-	poolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
-
-	computeCmdPool = createCommandPoolUnique(poolInfo);
-
-	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setLevel(vk::CommandBufferLevel::ePrimary).setCommandPool(dmaCmdPool.get()).setCommandBufferCount(1u);
-
-	dmaCmdBuffer = allocateCommandBuffers(allocInfo)[0];
-
-	allocInfo.setCommandPool(graphicsCmdPool.get());
-
-	graphicsCmdBuffer = allocateCommandBuffers(allocInfo)[0];
-
-	allocInfo.setCommandPool(computeCmdPool.get());
-
-	computeCmdBuffer = allocateCommandBuffers(allocInfo)[0];
 }
 
 uint32 Device_::FindMemoryType(uint32 typeFilter, vk::MemoryPropertyFlags properties) const
@@ -213,10 +138,18 @@ SwapchainSupportDetails Device_::GetSwapchainSupportDetails() const
 
 Device_::~Device_()
 {
-	dmaCmdPool.reset();
-	graphicsCmdPool.reset();
-	computeCmdPool.reset();
-
 	destroy();
+}
+
+CmdPoolManager_::CmdPoolManager_()
+	// CHECK: yikes
+	: graphicsQueue(Device->pd.graphicsFamily)
+	, dmaQueue(Device->pd.dmaFamily)
+	, computeQueue(Device->pd.computeFamily)
+	, presentQueue(Device->pd.presentFamily)
+	, graphicsCmdPool(graphicsQueue)
+	, dmaCmdPool(dmaQueue)
+	, computeCmdPool(computeQueue)
+{
 }
 } // namespace vl

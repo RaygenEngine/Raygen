@@ -1,14 +1,9 @@
 #pragma once
 #include "rendering/wrappers/PhysicalDevice.h"
+#include "rendering/wrappers/Queue.h"
+#include "rendering/wrappers/CmdPool.h"
 
 namespace vl {
-struct DeviceQueue : public vk::Queue {
-	uint32 familyIndex;
-
-private:
-	friend struct Device_;
-	void SetHandle(vk::Queue queue) { vk::Queue::operator=(queue); }
-};
 
 struct SwapchainSupportDetails {
 	std::vector<vk::SurfaceFormatKHR> formats;
@@ -18,25 +13,7 @@ struct SwapchainSupportDetails {
 
 inline struct Device_ : public vk::Device {
 
-	// graphics / transfer / compute / present
-	DeviceQueue graphicsQueue;
-	// async dma between host and device, PERF: should be used only for host to device transfers, device to device
-	// transfers may be faster using the graphicsQueue
-	DeviceQueue dmaQueue;
-	// compute dedicated
-	DeviceQueue computeQueue;
-	// present queue
-	DeviceQueue presentQueue;
-
 	RPhysicalDevice& pd;
-
-	vk::UniqueCommandPool graphicsCmdPool;
-	vk::UniqueCommandPool dmaCmdPool;
-	vk::UniqueCommandPool computeCmdPool;
-
-	vk::CommandBuffer graphicsCmdBuffer;
-	vk::CommandBuffer dmaCmdBuffer;
-	vk::CommandBuffer computeCmdBuffer;
 
 	Device_(RPhysicalDevice& pd);
 	~Device_();
@@ -52,5 +29,26 @@ inline struct Device_ : public vk::Device {
 	[[nodiscard]] vk::Format FindDepthStencilFormat() const;
 
 	[[nodiscard]] SwapchainSupportDetails GetSwapchainSupportDetails() const;
-} * Device{};
+} * Device{ nullptr };
+
+inline struct CmdPoolManager_ {
+
+	// graphics / transfer / compute / present
+	RQueue graphicsQueue;
+	// async dma between host and device, PERF: should be used only for host to device transfers, device to device
+	// transfers may be faster using the graphicsQueue
+	RQueue dmaQueue;
+	// compute dedicated
+	RQueue computeQueue;
+	// present queue
+	RQueue presentQueue;
+
+	CmdPool graphicsCmdPool;
+	CmdPool dmaCmdPool;
+	CmdPool computeCmdPool;
+
+	CmdPoolManager_();
+
+} * CmdPoolManager{ nullptr };
+
 } // namespace vl

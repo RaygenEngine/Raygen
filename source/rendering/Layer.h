@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/Listener.h"
+#include "rendering/wrappers/CmdBuffer.h"
 
 struct Scene;
 
@@ -13,7 +14,7 @@ inline class Layer_ : public Listener {
 	InFlightResources<vk::UniqueSemaphore> m_renderFinishedSem;
 	InFlightResources<vk::UniqueSemaphore> m_imageAvailSem;
 
-	InFlightResources<vk::CommandBuffer> m_cmdBuffer;
+	InFlightCmdBuffers<Graphics> m_cmdBuffer;
 
 	uint32 m_currentFrame{ 0 };
 

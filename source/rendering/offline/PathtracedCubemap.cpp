@@ -15,8 +15,9 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/util/WriteDescriptorSets.h"
 #include "rendering/scene/SceneReflProbe.h"
+#include "rendering/util/WriteDescriptorSets.h"
+#include "rendering/wrappers/CmdBuffer.h"
 
 namespace {
 struct PushConstant {
@@ -203,17 +204,10 @@ void PathtracedCubemap::Calculate(vk::DescriptorSet sceneAsDescSet, vk::Descript
 {
 	Device->waitIdle();
 
-	vk::CommandBufferAllocateInfo allocInfo{};
-	allocInfo.setCommandPool(Device->graphicsCmdPool.get())
-		.setLevel(vk::CommandBufferLevel::ePrimary)
-		.setCommandBufferCount(1u);
+	CmdBuffer<Graphics> cmdBuffer{ vk::CommandBufferLevel::ePrimary };
 
-	auto cmdBuffer = std::move(Device->allocateCommandBuffers(allocInfo)[0]);
-
-	vk::CommandBufferBeginInfo beginInfo{};
-	cmdBuffer.begin(beginInfo);
+	cmdBuffer.begin();
 	{
-
 		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_pipeline.get());
 
 
@@ -287,10 +281,7 @@ void PathtracedCubemap::Calculate(vk::DescriptorSet sceneAsDescSet, vk::Descript
 	}
 	cmdBuffer.end();
 
-	vk::SubmitInfo submitInfo{};
-	submitInfo.setCommandBuffers(cmdBuffer);
-
-	Device->graphicsQueue.submit(submitInfo, {});
+	cmdBuffer.submit();
 
 	Device->waitIdle();
 
