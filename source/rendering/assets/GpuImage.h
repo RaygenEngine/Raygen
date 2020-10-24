@@ -4,7 +4,7 @@
 
 
 namespace vl {
-struct GpuImage : public GpuAssetTemplate<::Image> {
+struct GpuImage : public GpuAssetTemplate<Image> {
 	RImage2D image;
 
 	GpuImage(PodHandle<Image> podHandle);

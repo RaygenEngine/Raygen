@@ -37,7 +37,6 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 layout(set = 2, binding = 0) uniform samplerCube skyboxSampler;
 layout(set = 2, binding = 1) uniform samplerCube irradianceSampler;
 layout(set = 2, binding = 2) uniform samplerCube prefilteredSampler;
-layout(set = 2, binding = 3) uniform sampler2D brdfLutSampler;
 
 void main( ) {
 
@@ -81,14 +80,14 @@ void main( ) {
 	// SMATH: which roughness should go here
 	float lod = (frag.a * MAX_REFLECTION_LOD); 
 	
-	vec3 brdf = (texture(brdfLutSampler, vec2(NoV, frag.a))).rgb;
+	vec3 brdfLut = (texture(std_BrdfLut, vec2(NoV, frag.a))).rgb;
 
 	// SMATH: math of those
 	vec3 diffuseLight = texture(irradianceSampler, N).rgb;
 	vec3 specularLight = textureLod(prefilteredSampler, R, lod).rgb;
 
 	vec3 diffuse = diffuseLight * frag.albedo;
-	vec3 specular = frag.a < SPEC_THRESHOLD ? vec3(0) : specularLight * (frag.f0 * brdf.x + brdf.y);
+	vec3 specular = frag.a < SPEC_THRESHOLD ? vec3(0) : specularLight * (frag.f0 * brdfLut.x + brdfLut.y);
 
 	vec3 iblContribution = diffuse + specular;
 

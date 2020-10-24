@@ -23,23 +23,26 @@ inline constexpr static std::array colorAttachments = {
 
 /*
 // GBuffer
-layout(set = 0, binding = 0) uniform Sampler2d g_DepthSampler;
-layout(set = 0, binding = 1) uniform Sampler2d g_NormalSampler;
-layout(set = 0, binding = 2) uniform Sampler2d g_AlbedoSampler;
-layout(set = 0, binding = 3) uniform Sampler2d g_SpecularSampler;
-layout(set = 0, binding = 4) uniform Sampler2d g_EmissiveSampler;
-layout(set = 0, binding = 5) uniform Sampler2d g_VelocitySampler;
-layout(set = 0, binding = 6) uniform sampler2D g_GUVDrawIndexSampler;
+layout(set = 0, binding = 0) uniform sampler2D g_DepthSampler;
+layout(set = 0, binding = 1) uniform sampler2D g_NormalSampler;
+layout(set = 0, binding = 2) uniform sampler2D g_AlbedoSampler;
+layout(set = 0, binding = 3) uniform sampler2D g_SpecularSampler;
+layout(set = 0, binding = 4) uniform sampler2D g_EmissiveSampler;
+layout(set = 0, binding = 5) uniform sampler2D g_VelocitySampler;
+layout(set = 0, binding = 6) uniform sampler2D g_UVDrawIndexSampler;
 
+layout(set = 0, binding = 7) uniform sampler2D std_BrdfLut;
 
-// Raster Direct
-layout(set = 0, binding = 7) uniform Sampler2d rasterDirectSampler;
+layout(set = 0, binding = 8) uniform sampler2D raster_DirectLightSampler;
 
-// RayTracing
-layout(set = 0, binding = 8) uniform Sampler2d rtIndirectSampler;
+layout(set = 0, binding = 9) uniform sampler2D raster_IBLminusMirrorReflectionsSampler;
+
+layout(set = 0, binding = 10) uniform sampler2D ray_MirrorReflectionsSampler;
+
+layout(set = 0, binding = 11) uniform sampler2D ray_AOSampler;
 
 // Blend Rast + Ray
-layout(set = 0, binding = 9) uniform Sampler2d sceneColorSampler;
+layout(set = 0, binding = 12) uniform sampler2D sceneColorSampler;
 */
 
 void Layouts_::MakeRenderPassLayouts()
@@ -119,8 +122,7 @@ void Layouts_::MakeRenderPassLayouts()
 
 Layouts_::Layouts_()
 {
-
-	for (uint32 i = 0u; i < colorAttachments.size() + 6; ++i) {
+	for (uint32 i = 0u; i < colorAttachments.size() + 7; ++i) {
 		renderAttachmentsLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
 			vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR
 				| vk::ShaderStageFlagBits::eClosestHitKHR);
