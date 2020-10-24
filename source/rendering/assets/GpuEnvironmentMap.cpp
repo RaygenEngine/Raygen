@@ -8,7 +8,7 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
-#include "assets/StdAssets.h"
+#include "rendering/util/WriteDescriptorSets.h"
 
 using namespace vl;
 
@@ -16,11 +16,6 @@ GpuEnvironmentMap::GpuEnvironmentMap(PodHandle<EnvironmentMap> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
 	Update({});
-}
-
-vl::GpuEnvironmentMap::~GpuEnvironmentMap()
-{
-	GpuResources::ReleaseSampler(brdfSampler);
 }
 
 void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
@@ -31,78 +26,20 @@ void GpuEnvironmentMap::Update(const AssetUpdateInfo&)
 
 	skybox = GpuAssetManager->GetGpuHandle(envmapPod->skybox);
 
+	// CHECK: is this needed?
 	skybox.Lock().cubemap.GenerateMipmapsAndTransitionEach(
 		vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	irradiance = GpuAssetManager->GetGpuHandle(envmapPod->irradiance);
 	prefiltered = GpuAssetManager->GetGpuHandle(envmapPod->prefiltered);
-	// WIP: standard gpu asset?
-	brdfLut = GpuAssetManager->GetGpuHandle(StdAssets::BrdfLut());
 
 	descriptorSet = Layouts->envmapLayout.AllocDescriptorSet();
 
-	auto quadSampler = GpuAssetManager->GetDefaultSampler();
-
-	std::array cubemaps = {
-		skybox,
-		irradiance,
-		prefiltered,
+	std::vector<vk::ImageView> cubemapsViews = {
+		skybox.Lock().cubemap.view(),
+		irradiance.Lock().cubemap.view(),
+		prefiltered.Lock().cubemap.view(),
 	};
 
-	// PERF:
-	std::array<vk::WriteDescriptorSet, 4> descriptorWrites;
-	std::array<vk::DescriptorImageInfo, 4> imageInfos;
-
-	for (uint32 i = 0u; i < 3u; ++i) {
-		auto& cubemapPod = cubemaps[i].Lock();
-
-		imageInfos[i]
-			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-			.setImageView(cubemapPod.cubemap.view())
-			.setSampler(quadSampler);
-
-		descriptorWrites[i]
-			.setDstSet(descriptorSet) //
-			.setDstBinding(i)
-			.setDstArrayElement(0u)
-			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-			.setImageInfo(imageInfos[i]);
-	}
-
-	// sampler
-	vk::SamplerCreateInfo samplerInfo{};
-	samplerInfo
-		.setMagFilter(vk::Filter::eLinear) //
-		.setMinFilter(vk::Filter::eLinear)
-		.setAddressModeU(vk::SamplerAddressMode::eClampToEdge)
-		.setAddressModeV(vk::SamplerAddressMode::eClampToEdge)
-		.setAddressModeW(vk::SamplerAddressMode::eClampToEdge)
-		.setAnisotropyEnable(VK_TRUE)
-		.setMaxAnisotropy(1u)
-		.setBorderColor(vk::BorderColor::eIntOpaqueBlack)
-		.setUnnormalizedCoordinates(VK_FALSE)
-		.setCompareEnable(VK_FALSE)
-		.setCompareOp(vk::CompareOp::eAlways)
-		.setMipmapMode(vk::SamplerMipmapMode::eLinear)
-		.setMipLodBias(0.f)
-		.setMinLod(0.f)
-		.setMaxLod(32.f);
-
-
-	brdfSampler = GpuResources::AcquireSampler(samplerInfo);
-
-	imageInfos[3]
-		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(brdfLut.Lock().image.view())
-		.setSampler(brdfSampler);
-
-	descriptorWrites[3]
-		.setDstSet(descriptorSet) //
-		.setDstBinding(3u)
-		.setDstArrayElement(0u)
-		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setImageInfo(imageInfos[3u]);
-
-	// single call to update all descriptor sets with the new depth image
-	Device->updateDescriptorSets(descriptorWrites, {});
+	rvk::writeDescriptorImages(descriptorSet, 0u, std::move(cubemapsViews));
 }

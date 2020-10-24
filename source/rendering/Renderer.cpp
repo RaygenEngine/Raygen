@@ -1,11 +1,13 @@
 #include "Renderer.h"
 
+#include "assets/StdAssets.h"
 #include "engine/console/ConsoleVariable.h"
 #include "engine/Engine.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
+#include "rendering/assets/GpuImage.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
@@ -21,6 +23,7 @@
 #include "rendering/passes/lightblend/SpotlightBlend.h"
 #include "rendering/passes/UnlitPass.h"
 #include "rendering/ppt/techniques/PtDebug.h"
+#include "rendering/resource/GpuResources.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneDirlight.h"
@@ -172,13 +175,39 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 			views.emplace_back(att.view());
 		}
 
-		views.emplace_back(m_rasterDirectLightPass[i].framebuffer[0].view()); // rasterDirectSampler
-		views.emplace_back(m_rasterIblPass[i].framebuffer[0].view());         // rasterIblSampler
-		views.emplace_back(m_mirrorPass.m_indirectResult[i].view());          // rtIndirectSampler
-		views.emplace_back(m_aoPass.m_indirectResult[i].view());              // rtAOSampler
+		// WIP: standard gpu asset?
+		auto brdfLutImg = GpuAssetManager->GetGpuHandle(StdAssets::BrdfLut());
+		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
+		views.emplace_back(m_rasterDirectLightPass[i].framebuffer[0].view()); // raster_DirectLightSampler
+		views.emplace_back(m_rasterIblPass[i].framebuffer[0].view());         // raster_IBLminusMirrorReflectionsSampler
+		views.emplace_back(m_mirrorPass.m_indirectResult[i].view());          // ray_MirrorReflectionsSampler
+		views.emplace_back(m_aoPass.m_indirectResult[i].view());              // ray_AOSampler
 		views.emplace_back(m_ptPass[i].framebuffer[0].view());                // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_attachmentsDesc[i], 0u, std::move(views));
+
+		// WIP: find an owner
+		vk::SamplerCreateInfo samplerInfo{};
+		samplerInfo
+			.setMagFilter(vk::Filter::eLinear) //
+			.setMinFilter(vk::Filter::eLinear)
+			.setAddressModeU(vk::SamplerAddressMode::eClampToEdge)
+			.setAddressModeV(vk::SamplerAddressMode::eClampToEdge)
+			.setAddressModeW(vk::SamplerAddressMode::eClampToEdge)
+			.setAnisotropyEnable(VK_TRUE)
+			.setMaxAnisotropy(1u)
+			.setBorderColor(vk::BorderColor::eIntOpaqueBlack)
+			.setUnnormalizedCoordinates(VK_FALSE)
+			.setCompareEnable(VK_FALSE)
+			.setCompareOp(vk::CompareOp::eAlways)
+			.setMipmapMode(vk::SamplerMipmapMode::eLinear)
+			.setMipLodBias(0.f)
+			.setMinLod(0.f)
+			.setMaxLod(32.f);
+		auto brdfSampler = GpuResources::AcquireSampler(samplerInfo);
+
+		rvk::writeDescriptorImages(m_attachmentsDesc[i], 7u, { brdfLutImg.Lock().image.view() },
+			vk::DescriptorType::eCombinedImageSampler, brdfSampler);
 	}
 
 	// RT images

@@ -12,6 +12,7 @@
 #include "sampling.glsl"
 #include "bsdf.glsl"
 #include "onb.glsl"
+#include "attachments.glsl"
 
 hitAttributeEXT vec2 baryCoord;
 layout(location = 0) rayPayloadInEXT hitPayload prd;
@@ -243,8 +244,7 @@ void main() {
 	vec3 N = Ns;
 	float NoV = max(dot(N, V), BIAS);
 
-	// WIP:
-	vec3 brdfLUT = (texture(textureSamplers[nonuniformEXT(18)], vec2(NoV, brdfInfo.a))).rgb;
+	vec3 brdfLut = (texture(std_BrdfLut, vec2(NoV, brdfInfo.a))).rgb;
 
 	// next mirror event
 	if(brdfInfo.a < SPEC_THRESHOLD){
@@ -263,7 +263,7 @@ void main() {
 		vec3 L = normalize(reflect(-V, N));
 		vec3 specularLight = RadianceOfRay2(hitPoint, L);
 
-		vec3 specular = specularLight * (brdfInfo.f0 * brdfLUT.x + brdfLUT.y);
+		vec3 specular = specularLight * (brdfInfo.f0 * brdfLut.x + brdfLut.y);
 
 		radiance += specular;
 	}
@@ -285,7 +285,7 @@ void main() {
 			vec3 specularLight = textureLod(relfprobeTextures[nonuniformEXT(i+1)], R, lod).rgb; // prefiltered
 
 			vec3 diffuse = diffuseLight * brdfInfo.albedo;
-			vec3 specular = specularLight * (brdfInfo.f0 * brdfLUT.x + brdfLUT.y);
+			vec3 specular = specularLight * (brdfInfo.f0 * brdfLut.x + brdfLut.y);
 
 			vec3 iblContribution = diffuse + specular;
 
