@@ -13,7 +13,6 @@ layout (location = 0) in vec3 pos;
 layout(push_constant) uniform PC {
 	mat4 rotVp;
     float a;
-    float skyboxRes;
 } push;
 
 void main() 

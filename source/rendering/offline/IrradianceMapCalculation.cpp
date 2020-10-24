@@ -14,6 +14,7 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneReflProbe.h"
 #include "rendering/util/WriteDescriptorSets.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
@@ -46,32 +47,115 @@ std::array vertices = {
 
 
 namespace vl {
-IrradianceMapCalculation::IrradianceMapCalculation(GpuEnvironmentMap* envmapAsset, uint32 calculationResolution)
-	: m_envmapAsset(envmapAsset)
-	, m_resolution(calculationResolution)
-{
-}
-
-void IrradianceMapCalculation::Calculate()
+IrradianceMapCalculation::IrradianceMapCalculation(SceneReflprobe* rp)
+	: m_reflprobe(rp)
 {
 	MakeRenderPass();
-
 	AllocateCubeVertexBuffer();
-
 	MakePipeline();
+}
 
-	PrepareFaceInfo();
+void IrradianceMapCalculation::RecordPass(
+	vk::CommandBuffer cmdBuffer, vk::DescriptorSet surroundingCubeDescSet, uint32 resolution)
+{
+	vk::Rect2D scissor{};
 
-	RecordAndSubmitCmdBuffers();
+	scissor
+		.setOffset({ 0, 0 }) //
+		.setExtent({ resolution, resolution });
 
-	EditPods();
+	vk::Viewport viewport{};
+
+	viewport
+		.setWidth(static_cast<float>(resolution)) //
+		.setHeight(static_cast<float>(resolution));
+
+	auto projInverse = glm::perspective(glm::radians(90.0f), 1.f, 1.f, 25.f);
+	projInverse[1][1] *= -1;
+
+	std::array viewMats{
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)),   // right
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)),  // left
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)),   // up
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)), // down
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, 1.0, 0.0)),  // front
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0)),   // back
+	};
+
+	// for each framebuffer / face
+	for (uint32 i = 0; i < 6; ++i) {
+		vk::RenderPassBeginInfo renderPassInfo{};
+		renderPassInfo
+			.setRenderPass(m_renderPass.get()) //
+			.setFramebuffer(m_framebuffer[i].get());
+		renderPassInfo.renderArea
+			.setOffset({ 0, 0 }) //
+			.setExtent(scissor.extent);
+
+		std::array<vk::ClearValue, 1> clearValues = {};
+		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+		renderPassInfo.setClearValues(clearValues);
+
+
+		// begin render pass
+		cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+		{
+			// Dynamic viewport & scissor
+			cmdBuffer.setViewport(0, { viewport });
+			cmdBuffer.setScissor(0, { scissor });
+
+			// bind the graphics pipeline
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+
+
+			PushConstant pc{ //
+				projInverse * glm::mat4(glm::mat3(viewMats[i]))
+			};
+
+			// Submit via push constant (rather than a UBO)
+			cmdBuffer.pushConstants(
+				m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+			// geom
+			cmdBuffer.bindVertexBuffers(0u, { m_cubeVertexBuffer.handle() }, { vk::DeviceSize(0) });
+
+			// descriptor sets
+			cmdBuffer.bindDescriptorSets(
+				vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, surroundingCubeDescSet, nullptr);
+
+			// draw call (cube)
+			cmdBuffer.draw(static_cast<uint32>(vertices.size() / 3), 1u, 0u, 0u);
+		}
+		// end render pass
+		cmdBuffer.endRenderPass();
+	}
+}
+
+void IrradianceMapCalculation::Resize(const RCubemap& sourceCubemap, uint32 resolution)
+{
+	m_faceViews = sourceCubemap.GetFaceViews();
+
+	// create framebuffers for each face
+	for (uint32 i = 0; i < 6; ++i) {
+		std::array attachments{ m_faceViews[i].get() };
+
+		vk::FramebufferCreateInfo createInfo{};
+		createInfo
+			.setRenderPass(m_renderPass.get()) //
+			.setAttachments(attachments)
+			.setWidth(resolution)
+			.setHeight(resolution)
+			.setLayers(1);
+
+		m_framebuffer[i] = Device->createFramebufferUnique(createInfo);
+	}
 }
 
 void IrradianceMapCalculation::MakeRenderPass()
 {
 	vk::AttachmentDescription colorAttachmentDesc{};
 	colorAttachmentDesc
-		.setFormat(m_envmapAsset->skybox.Lock().cubemap.format) //
+		.setFormat(vk::Format::eR32G32B32A32Sfloat) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -275,185 +359,4 @@ void IrradianceMapCalculation::MakePipeline()
 
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
-
-void IrradianceMapCalculation::PrepareFaceInfo()
-{
-	// create framebuffers for each face
-	for (uint32 i = 0; i < 6; ++i) {
-
-		m_faceAttachments[i] = RImageAttachment{ m_resolution, m_resolution,
-			m_envmapAsset->skybox.Lock().cubemap.format, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
-			vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc,
-			vk::MemoryPropertyFlagBits::eDeviceLocal, "face" + i };
-		m_faceAttachments[i].BlockingTransitionToLayout(
-			vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-
-		std::array attachments{ m_faceAttachments[i].view() };
-
-		vk::FramebufferCreateInfo createInfo{};
-		createInfo
-			.setRenderPass(m_renderPass.get()) //
-			.setAttachments(attachments)
-			.setWidth(m_resolution)
-			.setHeight(m_resolution)
-			.setLayers(1);
-
-		m_framebuffer[i] = Device->createFramebufferUnique(createInfo);
-	}
-
-	m_captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, 10.0f);
-	m_captureProjection[1][1] *= -1;
-
-
-	m_captureViews
-
-		= {
-			  // right
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
-			  // left
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
-			  // up
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-			  // down
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-			  // front
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
-			  // back
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
-		  };
-}
-
-void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
-{
-	Device->waitIdle();
-
-	PROFILE_SCOPE(Renderer);
-
-	vk::Rect2D scissor{};
-
-	scissor
-		.setOffset({ 0, 0 }) //
-		.setExtent({ m_resolution, m_resolution });
-
-	vk::Viewport viewport{};
-
-	viewport
-		.setWidth(static_cast<float>(m_resolution)) //
-		.setHeight(static_cast<float>(m_resolution));
-
-
-	// for each framebuffer / face
-	for (uint32 i = 0; i < 6; ++i) {
-
-		CmdBuffer<Graphics> cmdBuffer{ vk::CommandBufferLevel::ePrimary };
-
-		vk::RenderPassBeginInfo renderPassInfo{};
-		renderPassInfo
-			.setRenderPass(m_renderPass.get()) //
-			.setFramebuffer(m_framebuffer[i].get());
-		renderPassInfo.renderArea
-			.setOffset({ 0, 0 }) //
-			.setExtent(scissor.extent);
-
-		std::array<vk::ClearValue, 1> clearValues = {};
-		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-		renderPassInfo.setClearValues(clearValues);
-
-		cmdBuffer.begin();
-		{
-
-			// begin render pass
-			cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-			{
-				// Dynamic viewport & scissor
-				cmdBuffer.setViewport(0, { viewport });
-				cmdBuffer.setScissor(0, { scissor });
-
-				// bind the graphics pipeline
-				cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
-
-
-				PushConstant pc{ //
-					m_captureProjection * glm::mat4(glm::mat3(m_captureViews[i]))
-				};
-
-				// Submit via push constant (rather than a UBO)
-				cmdBuffer.pushConstants(
-					m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-				// geom
-				cmdBuffer.bindVertexBuffers(0u, { m_cubeVertexBuffer.handle() }, { vk::DeviceSize(0) });
-
-				// descriptor sets
-				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u,
-					{ m_envmapAsset->skybox.Lock().descriptorSet }, nullptr);
-
-				// draw call (cube)
-				cmdBuffer.draw(static_cast<uint32>(vertices.size() / 3), 1u, 0u, 0u);
-			}
-			// end render pass
-			cmdBuffer.endRenderPass();
-		}
-		cmdBuffer.end();
-
-		cmdBuffer.submit();
-
-		Device->waitIdle();
-	}
-
-	Device->waitIdle();
-}
-
-void IrradianceMapCalculation::EditPods()
-{
-	PodHandle<EnvironmentMap> envMap = m_envmapAsset->podHandle;
-
-	if (envMap.IsDefault()) {
-		return;
-	}
-
-
-	//.. prefiltered and rest here (or other class)
-	PodHandle<Cubemap> irradiance = envMap.Lock()->irradiance;
-
-	if (irradiance.IsDefault()) {
-		PodEditor e(envMap);
-		auto& [entry, irr] = AssetRegistry::CreateEntry<Cubemap>("gen-data/generated/cubemap");
-
-		e.pod->irradiance = entry->GetHandleAs<Cubemap>();
-		irradiance = entry->GetHandleAs<Cubemap>();
-	}
-
-
-	PodEditor cubemapEditor(irradiance);
-
-	cubemapEditor->resolution = m_resolution;
-	cubemapEditor->format = m_envmapAsset->skybox.Lock().podHandle.Lock()->format;
-
-	auto bytesPerPixel = cubemapEditor->format == ImageFormat::Hdr ? 4u * 4u : 4u;
-	auto size = m_resolution * m_resolution * bytesPerPixel * 6;
-
-	cubemapEditor->data.resize(size);
-
-
-	for (uint32 i = 0; i < 6; ++i) {
-
-		auto& img = m_faceAttachments[i];
-
-		img.BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
-
-
-		RBuffer stagingbuffer{ m_resolution * m_resolution * bytesPerPixel, vk::BufferUsageFlagBits::eTransferDst,
-			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
-
-		img.CopyImageToBuffer(stagingbuffer);
-
-		void* data = Device->mapMemory(stagingbuffer.memory(), 0, VK_WHOLE_SIZE, {});
-
-		memcpy(cubemapEditor->data.data() + size * i / 6, data, m_resolution * m_resolution * bytesPerPixel);
-
-		Device->unmapMemory(stagingbuffer.memory());
-	}
-}
-
 } // namespace vl

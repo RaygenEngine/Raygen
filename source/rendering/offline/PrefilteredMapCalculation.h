@@ -3,41 +3,34 @@
 #include "rendering/wrappers/DescriptorSetLayout.h"
 #include "rendering/wrappers/ImageView.h"
 
-namespace vl {
+struct SceneReflprobe;
 
+namespace vl {
 struct CubemapMipFrames {
 	std::array<vk::UniqueFramebuffer, 6> framebuffers;
-	std::array<RImageAttachment, 6> faceAttachments;
+	std::vector<vk::UniqueImageView> faceViews;
 };
 
 class PrefilteredMapCalculation {
+public:
+	PrefilteredMapCalculation(SceneReflprobe* rp);
+
+	void RecordPass(vk::CommandBuffer cmdBuffer, vk::DescriptorSet surroundingCubeDescSet, uint32 resolution);
+	void Resize(const RCubemap& sourceCubemap, uint32 resolution);
+
+private:
+	SceneReflprobe* m_reflprobe{ nullptr };
 
 	vk::UniqueRenderPass m_renderPass;
-
-	RBuffer m_cubeVertexBuffer;
-
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;
 
+	RBuffer m_cubeVertexBuffer;
+
 	std::array<CubemapMipFrames, 6> m_cubemapMips;
-
-	glm::mat4 m_captureProjection;
-	std::array<glm::mat4, 6> m_captureViews;
-
-	GpuEnvironmentMap* m_envmapAsset;
-
-	uint32 m_resolution;
 
 	void MakeRenderPass();
 	void AllocateCubeVertexBuffer();
 	void MakePipeline();
-	void PrepareFaceInfo();
-	void RecordAndSubmitCmdBuffers();
-	void EditPods();
-
-public:
-	PrefilteredMapCalculation(GpuEnvironmentMap* envmapAsset, uint32 calculationResolution);
-
-	void Calculate();
 };
 } // namespace vl

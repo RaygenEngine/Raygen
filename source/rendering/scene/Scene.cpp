@@ -30,6 +30,8 @@ void Scene::BuildAll()
 	for (auto reflProb : Get<SceneReflprobe>()) {
 		reflProb->Build();
 	}
+
+	UpdateTopLevelAs();
 }
 
 void Scene::ConsumeCmdQueue()

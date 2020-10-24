@@ -14,13 +14,13 @@
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneReflProbe.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
 namespace {
 struct PushConstant {
 	glm::mat4 rotVp;
 	float a;
-	float skyboxRes;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -45,32 +45,132 @@ std::array vertices = { // positions
 
 
 namespace vl {
-PrefilteredMapCalculation::PrefilteredMapCalculation(GpuEnvironmentMap* envmapAsset, uint32 calculationResolution)
-	: m_envmapAsset(envmapAsset)
-	, m_resolution(calculationResolution)
-{
-}
-
-void PrefilteredMapCalculation::Calculate()
+PrefilteredMapCalculation::PrefilteredMapCalculation(SceneReflprobe* rp)
+	: m_reflprobe(rp)
 {
 	MakeRenderPass();
-
 	AllocateCubeVertexBuffer();
-
 	MakePipeline();
+}
 
-	PrepareFaceInfo();
+void PrefilteredMapCalculation::RecordPass(
+	vk::CommandBuffer cmdBuffer, vk::DescriptorSet surroundingCubeDescSet, uint32 resolution)
+{
+	auto projInverse = glm::perspective(glm::radians(90.0f), 1.f, 1.f, 25.f);
+	projInverse[1][1] *= -1;
 
-	RecordAndSubmitCmdBuffers();
+	std::array viewMats{
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)),   // right
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)),  // left
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)),   // up
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)), // down
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, 1.0, 0.0)),  // front
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0)),   // back
+	};
 
-	EditPods();
+	// for each mip / framebuffer / face
+	for (uint32 mip = 0; mip < 6; ++mip) {
+		for (uint32 i = 0; i < 6; ++i) {
+
+			uint32 mipResolution = static_cast<uint32>(resolution * std::pow(0.5, mip));
+
+			vk::Rect2D scissor{};
+
+			scissor
+				.setOffset({ 0, 0 }) //
+				.setExtent({ mipResolution, mipResolution });
+
+			vk::Viewport viewport{};
+
+			viewport
+				.setWidth(static_cast<float>(mipResolution)) //
+				.setHeight(static_cast<float>(mipResolution));
+
+
+			vk::RenderPassBeginInfo renderPassInfo{};
+			renderPassInfo
+				.setRenderPass(m_renderPass.get()) //
+				.setFramebuffer(m_cubemapMips[mip].framebuffers[i].get());
+			renderPassInfo.renderArea
+				.setOffset({ 0, 0 }) //
+				.setExtent(scissor.extent);
+
+			std::array<vk::ClearValue, 1> clearValues{};
+			clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+			renderPassInfo.setClearValues(clearValues);
+
+			// begin render pass
+			cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+			{
+				// Dynamic viewport & scissor
+				cmdBuffer.setViewport(0, { viewport });
+				cmdBuffer.setScissor(0, { scissor });
+
+				// bind the graphics pipeline
+				cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+
+
+				float roughness = (float)mip / (float)(6 - 1);
+				float a = roughness * roughness;
+				LOG_DEBUG("Prefiltered mip a = roughness = {}", a);
+
+				PushConstant pc{ //
+					projInverse * glm::mat4(glm::mat3(viewMats[i])), a
+				};
+
+				// Submit via push constant (rather than a UBO)
+				cmdBuffer.pushConstants(m_pipelineLayout.get(),
+					vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant),
+					&pc);
+
+				// geom
+				cmdBuffer.bindVertexBuffers(0u, { m_cubeVertexBuffer.handle() }, { vk::DeviceSize(0) });
+
+				// descriptor sets
+				cmdBuffer.bindDescriptorSets(
+					vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, surroundingCubeDescSet, nullptr);
+
+				// draw call (cube)
+				cmdBuffer.draw(static_cast<uint32>(vertices.size() / 3), 1u, 0u, 0u);
+			}
+			// end render pass
+			cmdBuffer.endRenderPass();
+		}
+	}
+}
+
+void PrefilteredMapCalculation::Resize(const RCubemap& sourceCubemap, uint32 resolution)
+{ // create framebuffers for each lod/face
+	for (uint32 mip = 0; mip < 6; ++mip) {
+
+		m_cubemapMips[mip].faceViews = sourceCubemap.GetFaceViews(mip);
+
+		for (uint32 i = 0; i < 6; ++i) {
+
+			// reisze framebuffer according to mip-level size.
+			uint32 mipResolution = resolution / static_cast<uint32>(std::round((std::pow(2, mip))));
+
+
+			std::array attachments{ m_cubemapMips[mip].faceViews[i].get() };
+
+			vk::FramebufferCreateInfo createInfo{};
+			createInfo
+				.setRenderPass(m_renderPass.get()) //
+				.setAttachments(attachments)
+				.setWidth(mipResolution)
+				.setHeight(mipResolution)
+				.setLayers(1);
+
+			m_cubemapMips[mip].framebuffers[i] = Device->createFramebufferUnique(createInfo);
+		}
+	}
 }
 
 void PrefilteredMapCalculation::MakeRenderPass()
 {
 	vk::AttachmentDescription colorAttachmentDesc{};
 	colorAttachmentDesc
-		.setFormat(m_envmapAsset->skybox.Lock().cubemap.format) //
+		.setFormat(vk::Format::eR32G32B32A32Sfloat) //
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -273,214 +373,4 @@ void PrefilteredMapCalculation::MakePipeline()
 
 	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
-
-void PrefilteredMapCalculation::PrepareFaceInfo()
-{
-	// create framebuffers for each lod/face
-	for (uint32 mip = 0; mip < 6; ++mip) {
-		for (uint32 i = 0; i < 6; ++i) {
-
-			// reisze framebuffer according to mip-level size.
-			uint32 mipResolution = m_resolution / static_cast<uint32>(std::round((std::pow(2, mip))));
-
-			m_cubemapMips[mip].faceAttachments[i] = RImageAttachment{ mipResolution, mipResolution,
-				m_envmapAsset->skybox.Lock().cubemap.format, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
-				vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc,
-				vk::MemoryPropertyFlagBits::eDeviceLocal, "face" + i };
-			m_cubemapMips[mip].faceAttachments[i].BlockingTransitionToLayout(
-				vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-
-			std::array attachments{ m_cubemapMips[mip].faceAttachments[i].view() };
-
-			vk::FramebufferCreateInfo createInfo{};
-			createInfo
-				.setRenderPass(m_renderPass.get()) //
-				.setAttachments(attachments)
-				.setWidth(mipResolution)
-				.setHeight(mipResolution)
-				.setLayers(1);
-
-			m_cubemapMips[mip].framebuffers[i] = Device->createFramebufferUnique(createInfo);
-		}
-	}
-
-	m_captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, 10.0f);
-	m_captureProjection[1][1] *= -1;
-
-
-	m_captureViews
-
-		= {
-			  // right
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
-			  // left
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
-			  // up
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-			  // down
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-			  // front
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
-			  // back
-			  glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f)),
-		  };
-}
-
-void PrefilteredMapCalculation::RecordAndSubmitCmdBuffers()
-{
-	Device->waitIdle();
-
-	PROFILE_SCOPE(Renderer);
-
-
-	// for each mip / framebuffer / face
-	for (uint32 mip = 0; mip < 6; ++mip) {
-		for (uint32 i = 0; i < 6; ++i) {
-
-			CmdBuffer<Graphics> cmdBuffer{ vk::CommandBufferLevel::ePrimary };
-
-			uint32 mipResolution = static_cast<uint32>(m_resolution * std::pow(0.5, mip));
-
-			vk::Rect2D scissor{};
-
-			scissor
-				.setOffset({ 0, 0 }) //
-				.setExtent({ mipResolution, mipResolution });
-
-			vk::Viewport viewport{};
-
-			viewport
-				.setWidth(static_cast<float>(mipResolution)) //
-				.setHeight(static_cast<float>(mipResolution));
-
-
-			vk::RenderPassBeginInfo renderPassInfo{};
-			renderPassInfo
-				.setRenderPass(m_renderPass.get()) //
-				.setFramebuffer(m_cubemapMips[mip].framebuffers[i].get());
-			renderPassInfo.renderArea
-				.setOffset({ 0, 0 }) //
-				.setExtent(scissor.extent);
-
-			std::array<vk::ClearValue, 1> clearValues{};
-			clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-			renderPassInfo.setClearValues(clearValues);
-
-			cmdBuffer.begin();
-			{
-				// begin render pass
-				cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-				{
-					// Dynamic viewport & scissor
-					cmdBuffer.setViewport(0, { viewport });
-					cmdBuffer.setScissor(0, { scissor });
-
-					// bind the graphics pipeline
-					cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
-
-
-					float roughness = (float)mip / (float)(6 - 1);
-					float a = roughness * roughness;
-					LOG_DEBUG("Prefiltered mip a = roughness = {}", a);
-
-					PushConstant pc{ //
-						m_captureProjection * glm::mat4(glm::mat3(m_captureViews[i])), a,
-						static_cast<float>(m_envmapAsset->skybox.Lock().cubemap.extent.width)
-					};
-
-					// Submit via push constant (rather than a UBO)
-					cmdBuffer.pushConstants(m_pipelineLayout.get(),
-						vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant),
-						&pc);
-
-					// geom
-					cmdBuffer.bindVertexBuffers(0u, { m_cubeVertexBuffer.handle() }, { vk::DeviceSize(0) });
-
-					// descriptor sets
-					cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u,
-						{ m_envmapAsset->skybox.Lock().descriptorSet }, nullptr);
-
-					// draw call (cube)
-					cmdBuffer.draw(static_cast<uint32>(vertices.size() / 3), 1u, 0u, 0u);
-				}
-				// end render pass
-				cmdBuffer.endRenderPass();
-			}
-			cmdBuffer.end();
-
-			cmdBuffer.submit();
-			// CHECK:
-			Device->waitIdle();
-		}
-	}
-	Device->waitIdle();
-}
-
-void PrefilteredMapCalculation::EditPods()
-{
-	PodHandle<EnvironmentMap> envMap = m_envmapAsset->podHandle;
-
-	if (envMap.IsDefault()) {
-		return;
-	}
-
-
-	//.. prefiltered and rest here (or other class)
-	PodHandle<Cubemap> pref = envMap.Lock()->prefiltered;
-
-	if (pref.IsDefault()) {
-		PodEditor e(envMap);
-		auto& [entry, irr] = AssetRegistry::CreateEntry<Cubemap>("gen-data/generated/cubemap");
-
-		e.pod->prefiltered = entry->GetHandleAs<Cubemap>();
-		pref = entry->GetHandleAs<Cubemap>();
-	}
-
-	PodHandle<Cubemap> cubemapHandle{ pref.uid };
-
-	PodEditor cubemapEditor(cubemapHandle);
-
-	cubemapEditor->resolution = m_resolution;
-	cubemapEditor->format = m_envmapAsset->skybox.Lock().podHandle.Lock()->format;
-
-
-	size_t bufferSize{ 0llu };
-	auto bytesPerPixel = cubemapEditor->format == ImageFormat::Hdr ? 4u * 4u : 4u;
-	for (uint32 mip = 0; mip < 6; ++mip) {
-
-		uint32 res = m_resolution / static_cast<uint32>(std::pow(2, mip));
-		bufferSize += res * res * bytesPerPixel * 6;
-	}
-
-	cubemapEditor->data.resize(bufferSize);
-	cubemapEditor->mipCount = 6u;
-
-	size_t offset{ 0llu };
-	for (uint32 mip = 0; mip < 6; ++mip) {
-		for (uint32 i = 0; i < 6; ++i) {
-
-			size_t res = m_resolution / static_cast<uint32>(std::pow(2, mip));
-			size_t size = res * res * bytesPerPixel;
-
-			auto& img = m_cubemapMips[mip].faceAttachments[i];
-
-			img.BlockingTransitionToLayout(
-				vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::eTransferSrcOptimal);
-
-			RBuffer stagingbuffer{ vk::DeviceSize(size), vk::BufferUsageFlagBits::eTransferDst,
-				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
-
-			img.CopyImageToBuffer(stagingbuffer);
-
-			void* data = Device->mapMemory(stagingbuffer.memory(), 0, VK_WHOLE_SIZE, {});
-
-			memcpy(cubemapEditor->data.data() + offset, data, size);
-
-			Device->unmapMemory(stagingbuffer.memory());
-
-			offset += size;
-		}
-	}
-}
-
 } // namespace vl

@@ -18,6 +18,7 @@
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/util/WriteDescriptorSets.h"
 #include "rendering/wrappers/CmdBuffer.h"
+#include "rendering/wrappers/Buffer.h"
 
 namespace {
 struct PushConstant {
@@ -31,23 +32,99 @@ struct PushConstant {
 } // namespace
 
 namespace vl {
-PathtracedCubemap::PathtracedCubemap(GpuEnvironmentMap* envmapAsset, glm::vec3 position, uint32 res)
-	: m_envmapAsset(envmapAsset)
-	, m_resolution(res)
+PathtracedCubemap::PathtracedCubemap(SceneReflprobe* rp)
+	: m_reflprobe(rp)
 {
 	MakeRtPipeline();
-	CreateMatrices(position);
-	CreateFaceAttachments();
+}
+
+void PathtracedCubemap::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, uint32 resolution)
+{
+	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_pipeline.get());
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 1u, 1u,
+		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 2u, 1u,
+		&sceneDesc.scene->tlas.sceneDesc.descSet[0], 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 3u, 1u,
+		&sceneDesc.scene->tlas.sceneDesc.descSetPointlights[0], 0u, nullptr);
+
+	vk::DeviceSize progSize = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of a program identifier
+
+	// RayGen index
+	vk::DeviceSize rayGenOffset = 0u * progSize; // Start at the beginning of m_sbtBuffer
+
+	// Miss index
+	vk::DeviceSize missOffset = 1u * progSize; // Jump over raygen
+	vk::DeviceSize missStride = progSize;
+
+	// Hit index
+	vk::DeviceSize hitGroupOffset = 2u * progSize; // Jump over the previous shaders
+	vk::DeviceSize hitGroupStride = progSize;
+
+
+	// We can finally call traceRaysKHR that will add the ray tracing launch in the command buffer. Note that the
+	// SBT buffer is mentioned several times. This is due to the possibility of separating the SBT into several
+	// buffers, one for each type: ray generation, miss shaders, hit groups, and callable shaders (outside the scope
+	// of this tutorial). The last three parameters are equivalent to the grid size of a compute launch, and
+	// represent the total number of threads. Since we want to trace one ray per pixel, the grid size has the width
+	// and height of the output image, and a depth of 1.
+
+	vk::DeviceSize sbtSize = progSize * (vk::DeviceSize)m_rtShaderGroups.size();
+
+	const vk::StridedBufferRegionKHR raygenShaderBindingTable{ m_rtSBTBuffer.handle(), rayGenOffset, progSize,
+		sbtSize };
+	const vk::StridedBufferRegionKHR missShaderBindingTable{ m_rtSBTBuffer.handle(), missOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR hitShaderBindingTable{ m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR callableShaderBindingTable;
+
+	auto projInverse = glm::perspective(glm::radians(90.0f), 1.f, 1.f, 25.f);
+	projInverse[1][1] *= -1;
+
+	auto reflprobePos = glm::vec3(m_reflprobe->ubo.position);
+
+	std::array viewMats{
+		glm::lookAt(reflprobePos, reflprobePos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)),   // right
+		glm::lookAt(reflprobePos, reflprobePos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)),  // left
+		glm::lookAt(reflprobePos, reflprobePos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)),   // up
+		glm::lookAt(reflprobePos, reflprobePos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)), // down
+		glm::lookAt(reflprobePos, reflprobePos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, 1.0, 0.0)),  // front
+		glm::lookAt(reflprobePos, reflprobePos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0)),   // back
+	};
+
+	for (int32 i = 0; i < 6; ++i) {
+		PushConstant pc{
+			glm::inverse(viewMats[i]),
+			glm::inverse(projInverse),
+			sceneDesc.scene->tlas.sceneDesc.pointlightCount,
+			m_reflprobe->ubo.innerRadius,
+		};
+
+		cmdBuffer.pushConstants(m_pipelineLayout.get(),
+			vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant),
+			&pc);
+
+		cmdBuffer.bindDescriptorSets(
+			vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 0u, 1u, &m_faceDescSets[i], 0u, nullptr);
+
+		cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
+			&callableShaderBindingTable, resolution, resolution, 1);
+	}
+}
+
+void PathtracedCubemap::Resize(const RCubemap& sourceCubemap, uint32 resolution)
+{
+	m_faceViews = sourceCubemap.GetFaceViews();
 
 	for (int32 i = 0; i < 6; ++i) {
 		m_faceDescSets[i] = Layouts->singleStorageImage.AllocDescriptorSet();
 
-		rvk::writeDescriptorImages(m_faceDescSets[i], 0u, { m_faceAttachments[i].view() }, nullptr,
+		rvk::writeDescriptorImages(m_faceDescSets[i], 0u, { m_faceViews[i].get() }, nullptr,
 			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
-
-		DEBUG_NAME_AUTO(m_faceDescSets[i]); // WIP: bad
 	}
-} // namespace vl
+}
 
 void PathtracedCubemap::MakeRtPipeline()
 {
@@ -169,169 +246,4 @@ void PathtracedCubemap::CreateRtShaderBindingTable()
 	}
 	Device->unmapMemory(mem);
 }
-
-void PathtracedCubemap::CreateMatrices(const glm::vec3& reflprobePos)
-{
-	// right
-	m_viewMats[0] = glm::lookAt(reflprobePos, reflprobePos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-	// left
-	m_viewMats[1] = glm::lookAt(reflprobePos, reflprobePos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
-	// up
-	m_viewMats[2] = glm::lookAt(reflprobePos, reflprobePos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0));
-	// down
-	m_viewMats[3] = glm::lookAt(reflprobePos, reflprobePos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0));
-	// front
-	m_viewMats[4] = glm::lookAt(reflprobePos, reflprobePos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, 1.0, 0.0));
-	// back
-	m_viewMats[5] = glm::lookAt(reflprobePos, reflprobePos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0));
-}
-
-void PathtracedCubemap::CreateFaceAttachments()
-{
-	for (int32 i = 0; i < 6; ++i) {
-		m_faceAttachments[i] = RImageAttachment(m_resolution, m_resolution, vk::Format::eR32G32B32A32Sfloat,
-			vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
-			vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc,
-			vk::MemoryPropertyFlagBits::eDeviceLocal, "ptCubeFace" + i);
-
-		m_faceAttachments[i].BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
-			vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
-	}
-}
-
-void PathtracedCubemap::Calculate(vk::DescriptorSet sceneAsDescSet, vk::DescriptorSet sceneGeomDataDescSet,
-	vk::DescriptorSet ScenePointlightDescSet, int32 pointlightCount, SceneReflprobe* rp)
-{
-	Device->waitIdle();
-
-	CmdBuffer<Graphics> cmdBuffer{ vk::CommandBufferLevel::ePrimary };
-
-	cmdBuffer.begin();
-	{
-		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_pipeline.get());
-
-
-		DEBUG_NAME_AUTO(sceneAsDescSet);
-		DEBUG_NAME_AUTO(sceneGeomDataDescSet);
-		DEBUG_NAME_AUTO(ScenePointlightDescSet);
-
-
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 1u, 1u, &sceneAsDescSet, 0u, nullptr);
-
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 2u, 1u, &sceneGeomDataDescSet, 0u, nullptr);
-
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 3u, 1u,
-			&ScenePointlightDescSet, 0u, nullptr);
-
-		vk::DeviceSize progSize = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of a program identifier
-
-		// RayGen index
-		vk::DeviceSize rayGenOffset = 0u * progSize; // Start at the beginning of m_sbtBuffer
-
-		// Miss index
-		vk::DeviceSize missOffset = 1u * progSize; // Jump over raygen
-		vk::DeviceSize missStride = progSize;
-
-		// Hit index
-		vk::DeviceSize hitGroupOffset = 2u * progSize; // Jump over the previous shaders
-		vk::DeviceSize hitGroupStride = progSize;
-
-
-		// We can finally call traceRaysKHR that will add the ray tracing launch in the command buffer. Note that the
-		// SBT buffer is mentioned several times. This is due to the possibility of separating the SBT into several
-		// buffers, one for each type: ray generation, miss shaders, hit groups, and callable shaders (outside the scope
-		// of this tutorial). The last three parameters are equivalent to the grid size of a compute launch, and
-		// represent the total number of threads. Since we want to trace one ray per pixel, the grid size has the width
-		// and height of the output image, and a depth of 1.
-
-		vk::DeviceSize sbtSize = progSize * (vk::DeviceSize)m_rtShaderGroups.size();
-
-		const vk::StridedBufferRegionKHR raygenShaderBindingTable
-			= { m_rtSBTBuffer.handle(), rayGenOffset, progSize, sbtSize };
-		const vk::StridedBufferRegionKHR missShaderBindingTable
-			= { m_rtSBTBuffer.handle(), missOffset, progSize, sbtSize };
-		const vk::StridedBufferRegionKHR hitShaderBindingTable
-			= { m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
-		const vk::StridedBufferRegionKHR callableShaderBindingTable;
-
-
-		auto projInverse = glm::perspective(glm::radians(90.0f), 1.f, 1.f, 25.f);
-		projInverse[1][1] *= -1;
-		projInverse = glm::inverse(projInverse);
-
-		for (int32 i = 0; i < 6; ++i) {
-			PushConstant pc{ glm::inverse(m_viewMats[i]), projInverse, pointlightCount, rp->ubo.innerRadius };
-
-			cmdBuffer.pushConstants(m_pipelineLayout.get(),
-				vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant),
-				&pc);
-
-			cmdBuffer.bindDescriptorSets(
-				vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 0u, 1u, &m_faceDescSets[i], 0u, nullptr);
-
-			cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
-				&callableShaderBindingTable, m_resolution, m_resolution, 1);
-
-			m_faceAttachments[i].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
-				vk::ImageLayout::eTransferSrcOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
-				vk::PipelineStageFlagBits::eTransfer);
-		}
-	}
-	cmdBuffer.end();
-
-	cmdBuffer.submit();
-
-	Device->waitIdle();
-
-	EditPods();
-}
-
-void PathtracedCubemap::EditPods()
-{
-	PodHandle<EnvironmentMap> envMap = m_envmapAsset->podHandle;
-
-	if (envMap.IsDefault()) {
-		return;
-	}
-
-	PodHandle<Cubemap> ptcube = envMap.Lock()->skybox;
-
-	if (ptcube.IsDefault()) {
-		PodEditor e(envMap);
-		auto& [entry, irr] = AssetRegistry::CreateEntry<Cubemap>("gen-data/generated/cubemap");
-
-		e.pod->skybox = entry->GetHandleAs<Cubemap>();
-		ptcube = entry->GetHandleAs<Cubemap>();
-	}
-
-	PodEditor cubemapEditor(ptcube);
-
-	cubemapEditor->resolution = m_resolution;
-	cubemapEditor->format = ImageFormat::Hdr;
-
-	auto bytesPerPixel = cubemapEditor->format == ImageFormat::Hdr ? 4u * 4u : 4u;
-	auto size = m_resolution * m_resolution * bytesPerPixel * 6;
-
-	cubemapEditor->data.resize(size);
-
-
-	for (uint32 i = 0; i < 6; ++i) {
-
-		auto& img = m_faceAttachments[i];
-
-		RBuffer stagingbuffer{ m_resolution * m_resolution * bytesPerPixel, vk::BufferUsageFlagBits::eTransferDst,
-			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
-
-		img.CopyImageToBuffer(stagingbuffer);
-
-		void* data = Device->mapMemory(stagingbuffer.memory(), 0, VK_WHOLE_SIZE, {});
-
-		memcpy(cubemapEditor->data.data() + size * i / 6, data, m_resolution * m_resolution * bytesPerPixel);
-
-		Device->unmapMemory(stagingbuffer.memory());
-	}
-}
-
 } // namespace vl

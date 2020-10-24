@@ -21,7 +21,6 @@ layout(set = 0, binding = 0) uniform samplerCube skyboxSampler;
 layout(push_constant) uniform PC {
 	mat4 rotVp;
     float a; // roughness * roughness?
-    float skyboxRes;
 } push;
 
 vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)

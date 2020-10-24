@@ -62,60 +62,6 @@ vk::DescriptorSet DescPoolAllocator::AllocateDescriptorSet(
 	return Device->allocateDescriptorSets(allocInfo)[0];
 }
 
-// TODO: tidy
-vk::UniqueDescriptorSet DescPoolAllocator::AllocateDescriptorSetUnique(
-	size_t hash, const RDescriptorSetLayout& layout, int32 bindingSize)
-{
-	auto addPool = [&](Entry& entry) {
-		vk::DescriptorPoolCreateInfo poolInfo{};
-		poolInfo
-			.setPoolSizes(entry.poolSizes) //
-			.setMaxSets(c_setsPerPool);
-
-		entry.pools.emplace_back(std::move(Device->createDescriptorPoolUnique(poolInfo)));
-		entry.allocated = 0;
-		m_allocCount++;
-	};
-
-	auto it = m_entries.find(hash);
-
-	if (it == m_entries.end()) {
-		Entry e{};
-		e.poolSizes = layout.GetPerSetPoolSizes();
-		for (auto& poolSize : e.poolSizes) {
-			poolSize.descriptorCount *= c_setsPerPool;
-		}
-		addPool(e);
-		it = m_entries.emplace(hash, std::move(e)).first;
-	}
-
-	auto& entry = it->second;
-
-	entry.allocated++;
-	if (entry.allocated >= c_setsPerPool) {
-		addPool(entry);
-	}
-
-	std::array layouts{ layout.handle() };
-
-	vk::DescriptorSetVariableDescriptorCountAllocateInfo descCountInfo;
-
-	uint32 count = uint32(bindingSize);
-	descCountInfo.setDescriptorCounts(count);
-
-	vk::DescriptorSetAllocateInfo allocInfo{};
-	allocInfo //
-		.setDescriptorPool(entry.pools.back().get())
-		.setSetLayouts(layouts);
-
-
-	if (bindingSize >= 0) {
-		allocInfo.setPNext(&descCountInfo);
-	}
-
-	return std::move(Device->allocateDescriptorSetsUnique(allocInfo)[0]);
-}
-
 vk::DescriptorPool DescPoolAllocator::GetImguiPool()
 {
 	if (!m_imguiPool) {
