@@ -1,15 +1,15 @@
 #pragma once
 
 #include "engine/Listener.h"
-#include "rendering/Device.h"
-#include "rendering/output/OutputPassBase.h"
 #include "rendering/passes/AOPass.h"
 #include "rendering/passes/MirrorPass.h"
-#include "rendering/ppt/PtCollection.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
-#include "rendering/scene/Scene.h"
 #include "rendering/wrappers/CmdBuffer.h"
-#include "rendering/wrappers/passlayout/RenderPassLayout.h"
+
+namespace vl {
+class OutputPassBase;
+}
+struct SceneRenderDesc;
 
 namespace vl {
 
