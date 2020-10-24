@@ -315,6 +315,32 @@ void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCou
 	cmdBuffer.copyBufferToImage(buffer.handle(), uHandle.get(), vk::ImageLayout::eTransferDstOptimal, regions);
 }
 
+// WIP: get face array
+std::vector<vk::UniqueImageView> RCubemap::GetFaceViews(uint32 atMip) const
+{
+	std::vector<vk::UniqueImageView> faceViews;
+
+	vk::ImageViewCreateInfo viewInfo{};
+	viewInfo
+		.setImage(uHandle.get()) //
+		.setViewType(vk::ImageViewType::e2D)
+		.setFormat(format);
+
+	for (uint32 i = 0u; i < arrayLayers; ++i) {
+
+		viewInfo.subresourceRange
+			.setAspectMask(aspectMask) //
+			.setBaseMipLevel(atMip)
+			.setLevelCount(1u)
+			.setBaseArrayLayer(i)
+			.setLayerCount(1u);
+
+		faceViews.emplace_back(Device->createImageViewUnique(viewInfo));
+	}
+
+	return faceViews;
+}
+
 
 vl::RImage2D vl::RImage2D::Create(const std::string& name, vk::Extent2D extent, vk::Format format,
 	vk::ImageLayout finalLayout, vk::ImageUsageFlags usageFlags, uint32 mipLevels, vk::MemoryPropertyFlags memoryFlags,

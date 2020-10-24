@@ -14,6 +14,7 @@
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/wrappers/CmdBuffer.h"
+#include "rendering/offline/AmbientBaker.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -327,12 +328,10 @@ void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& refl
 			.setSampler(quadSampler);
 
 		for (auto reflprobe : reflprobes) {
-			viewInfoDefault.setImageView(reflprobe->envmap.Lock().irradiance.Lock().cubemap.view());
+			viewInfoDefault.setImageView(reflprobe->ab->m_irradiance.view());
 			cubeImages.emplace_back(viewInfoDefault);
-			viewInfoDefault.setImageView(reflprobe->envmap.Lock().prefiltered.Lock().cubemap.view());
+			viewInfoDefault.setImageView(reflprobe->ab->m_prefiltered.view());
 			cubeImages.emplace_back(viewInfoDefault);
-			// viewInfoDefault.setImageView(reflprobe->envmap.Lock().brdfLut.Lock().image.view());
-			// cubeImages.emplace_back(viewInfoDefault);
 		}
 
 		vk::WriteDescriptorSet depthWrite{};

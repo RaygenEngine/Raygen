@@ -10,15 +10,6 @@ namespace vl {
 
 class MirrorPass {
 public:
-	vk::UniquePipeline m_rtPipeline;
-	vk::UniquePipelineLayout m_rtPipelineLayout;
-	RBuffer m_rtSBTBuffer;
-	std::vector<vk::RayTracingShaderGroupCreateInfoKHR> m_rtShaderGroups;
-
-	InFlightResources<RImageAttachment> m_indirectResult;
-
-	InFlightResources<vk::DescriptorSet> m_rtDescSet;
-
 	void MakeRtPipeline();
 
 	void CreateRtShaderBindingTable();
@@ -26,6 +17,17 @@ public:
 	void RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 
 	void Resize(vk::Extent2D extent);
+
+	// WIP:
+	InFlightResources<RImageAttachment> m_indirectResult;
+	InFlightResources<vk::DescriptorSet> m_rtDescSet;
+
+private:
+	vk::UniquePipeline m_rtPipeline;
+	vk::UniquePipelineLayout m_rtPipelineLayout;
+
+	RBuffer m_rtSBTBuffer;
+	std::vector<vk::RayTracingShaderGroupCreateInfoKHR> m_rtShaderGroups;
 };
 
 } // namespace vl

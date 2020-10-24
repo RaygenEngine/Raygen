@@ -93,6 +93,8 @@ struct RCubemap : RImage {
 			properties, vk::ImageViewType::eCube, name){};
 
 	void RCubemap::CopyBuffer(const RBuffer& buffers, size_t pixelSize, uint32 mipCount);
+
+	std::vector<vk::UniqueImageView> GetFaceViews(uint32 atMip = 0u) const;
 };
 
 struct RImageAttachment : RImage {

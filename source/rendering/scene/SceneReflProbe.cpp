@@ -1,10 +1,9 @@
 #include "SceneReflprobe.h"
 
 #include "rendering/assets/GpuEnvironmentMap.h"
-#include "rendering/offline/BrdfLutCalculation.h"
-#include "rendering/offline/IrradianceMapCalculation.h"
-#include "rendering/offline/PathtracedCubemap.h"
-#include "rendering/offline/PrefilteredMapCalculation.h"
+#include "rendering/offline/AmbientBaker.h"
+#include "rendering/wrappers/CmdBuffer.h"
+#include "rendering/util/WriteDescriptorSets.h"
 
 #include "engine/Timer.h"
 
@@ -14,25 +13,57 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/Device.h"
 
+using namespace vl;
+
+SceneReflprobe::SceneReflprobe()
+	: SceneStruct(sizeof(decltype(ubo)))
+{
+	reflDescSet = Layouts->envmapLayout.AllocDescriptorSet();
+	ab = new AmbientBaker(this);
+	ab->Resize(256);
+
+	reflDescSet = Layouts->envmapLayout.AllocDescriptorSet();
+
+	ab->m_surroundingEnv.BlockingTransitionToLayout(vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
+		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
+
+	ab->m_irradiance.BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal,
+		vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eColorAttachmentOutput,
+		vk::PipelineStageFlagBits::eFragmentShader);
+
+	ab->m_prefiltered.BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal,
+		vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eColorAttachmentOutput,
+		vk::PipelineStageFlagBits::eFragmentShader);
+
+	rvk::writeDescriptorImages(reflDescSet, 0u,
+		{
+			ab->m_surroundingEnv.view(),
+			ab->m_irradiance.view(),
+			ab->m_prefiltered.view(),
+		});
+}
+
+SceneReflprobe::~SceneReflprobe()
+{
+	delete ab;
+}
+
+
 void SceneReflprobe::Build()
 {
-	vl::Device->waitIdle();
+	Device->waitIdle();
+	TIMER_SCOPE("pt + irr + pref");
 
-	TIMER_SCOPE("pt + irr + pref")
+	ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
 
-	vl::PathtracedCubemap calcSourceSkybox(&envmap.Lock(), ubo.position, 256);
+	ab->Resize(256);
+	SceneRenderDesc sceneDesc{ Layer->mainScene, 0, 0 };
+	ab->RecordPass(cmdBuffer, sceneDesc);
 
-	auto scene = vl::Layer->mainScene;
-	calcSourceSkybox.Calculate(vl::Layer->mainScene->sceneAsDescSet, scene->tlas.sceneDesc.descSet[0],
-		scene->tlas.sceneDesc.descSetPointlights[0],
-		static_cast<int32>(vl::Layer->mainScene->Get<ScenePointlight>().size()), this);
-
-	vl::IrradianceMapCalculation calcIrradiance(&envmap.Lock(), 32);
-	calcIrradiance.Calculate();
-
-
-	vl::PrefilteredMapCalculation calcPrefiltered(&envmap.Lock(), 256);
-	calcPrefiltered.Calculate();
-
-	vl::Device->waitIdle();
+	rvk::writeDescriptorImages(reflDescSet, 0u,
+		{
+			ab->m_surroundingEnv.view(),
+			ab->m_irradiance.view(),
+			ab->m_prefiltered.view(),
+		});
 }

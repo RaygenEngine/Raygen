@@ -12,7 +12,7 @@ DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)
 		rp.ubo.outerRadius = outerRadius;
 
 		if (FullDirty) {
-			rp.envmap = vl::GpuAssetManager->GetGpuHandle(environmentMap);
+			// rp.envmap = vl::GpuAssetManager->GetGpuHandle(environmentMap);
 		}
 	};
 }

@@ -3,38 +3,34 @@
 #include "rendering/wrappers/DescriptorSetLayout.h"
 #include "rendering/wrappers/ImageView.h"
 
+
+struct SceneRenderDesc;
+struct SceneReflprobe;
+
 namespace vl {
 
-// CHECK: there sure is a better way but since this is an offline calculation we don't care for now
 class IrradianceMapCalculation {
 
+public:
+	IrradianceMapCalculation(SceneReflprobe* rp);
+
+	void RecordPass(vk::CommandBuffer cmdBuffer, vk::DescriptorSet surroundingCubeDescSet, uint32 resolution);
+	void Resize(const RCubemap& sourceCubemap, uint32 resolution);
+
+private:
+	SceneReflprobe* m_reflprobe{ nullptr };
+
 	vk::UniqueRenderPass m_renderPass;
-
-	RBuffer m_cubeVertexBuffer;
-
 	vk::UniquePipeline m_pipeline;
 	vk::UniquePipelineLayout m_pipelineLayout;
 
+	RBuffer m_cubeVertexBuffer;
+
 	std::array<vk::UniqueFramebuffer, 6> m_framebuffer;
-	std::array<RImageAttachment, 6> m_faceAttachments;
-
-	glm::mat4 m_captureProjection;
-	std::array<glm::mat4, 6> m_captureViews;
-
-	GpuEnvironmentMap* m_envmapAsset;
-
-	uint32 m_resolution;
+	std::vector<vk::UniqueImageView> m_faceViews;
 
 	void MakeRenderPass();
 	void AllocateCubeVertexBuffer();
 	void MakePipeline();
-	void PrepareFaceInfo();
-	void RecordAndSubmitCmdBuffers();
-	void EditPods();
-
-public:
-	IrradianceMapCalculation(GpuEnvironmentMap* envmapAsset, uint32 calculationResolution);
-
-	void Calculate();
 };
 } // namespace vl
