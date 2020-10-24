@@ -11,8 +11,10 @@
 #include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
+#include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/util/WriteDescriptorSets.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
 namespace {
@@ -52,8 +54,6 @@ IrradianceMapCalculation::IrradianceMapCalculation(GpuEnvironmentMap* envmapAsse
 
 void IrradianceMapCalculation::Calculate()
 {
-	MakeDesciptors();
-
 	MakeRenderPass();
 
 	AllocateCubeVertexBuffer();
@@ -65,32 +65,6 @@ void IrradianceMapCalculation::Calculate()
 	RecordAndSubmitCmdBuffers();
 
 	EditPods();
-}
-
-void IrradianceMapCalculation::MakeDesciptors()
-{
-	m_skyboxDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
-	m_skyboxDescLayout.Generate();
-
-	m_descSet = m_skyboxDescLayout.AllocDescriptorSet();
-
-	auto quadSampler = GpuAssetManager->GetDefaultSampler();
-
-	vk::DescriptorImageInfo imageInfo{};
-	imageInfo
-		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(m_envmapAsset->skybox.Lock().cubemap.view())
-		.setSampler(quadSampler);
-
-	vk::WriteDescriptorSet descriptorWrite{};
-	descriptorWrite
-		.setDstSet(m_descSet) //
-		.setDstBinding(0u)    // 0 is for the Ubo
-		.setDstArrayElement(0u)
-		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setImageInfo(imageInfo);
-
-	Device->updateDescriptorSets(descriptorWrite, {});
 }
 
 void IrradianceMapCalculation::MakeRenderPass()
@@ -260,7 +234,7 @@ void IrradianceMapCalculation::MakePipeline()
 		.setSize(sizeof(PushConstant))
 		.setOffset(0u);
 
-	std::array layouts{ m_skyboxDescLayout.handle() };
+	std::array layouts{ Layouts->cubemapLayout.handle() };
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
 		.setSetLayouts(layouts) //
@@ -411,8 +385,8 @@ void IrradianceMapCalculation::RecordAndSubmitCmdBuffers()
 				cmdBuffer.bindVertexBuffers(0u, { m_cubeVertexBuffer.handle() }, { vk::DeviceSize(0) });
 
 				// descriptor sets
-				cmdBuffer.bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, { m_descSet }, nullptr);
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u,
+					{ m_envmapAsset->skybox.Lock().descriptorSet }, nullptr);
 
 				// draw call (cube)
 				cmdBuffer.draw(static_cast<uint32>(vertices.size() / 3), 1u, 0u, 0u);

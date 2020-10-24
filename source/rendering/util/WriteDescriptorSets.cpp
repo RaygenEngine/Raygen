@@ -3,11 +3,13 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
 
+using namespace vl;
+
 void rvk::writeDescriptorImages(vk::DescriptorSet descSet, uint32 firstBinding, std::vector<vk::ImageView>&& imageViews,
-	vk::DescriptorType descriptorType, vk::Sampler sampler, vk::ImageLayout layout)
+	vk::Sampler sampler, vk::DescriptorType descriptorType, vk::ImageLayout layout)
 {
 	if (!sampler) {
-		sampler = vl::GpuAssetManager->GetDefaultSampler();
+		sampler = GpuAssetManager->GetDefaultSampler();
 	}
 
 	std::vector<vk::DescriptorImageInfo> imageInfos;
@@ -42,5 +44,5 @@ void rvk::writeDescriptorImages(vk::DescriptorSet descSet, uint32 firstBinding, 
 		++i;
 	}
 
-	vl::Device->updateDescriptorSets(descWrites, nullptr);
+	Device->updateDescriptorSets(descWrites, nullptr);
 }
