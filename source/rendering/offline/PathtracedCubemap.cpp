@@ -42,8 +42,8 @@ PathtracedCubemap::PathtracedCubemap(GpuEnvironmentMap* envmapAsset, glm::vec3 p
 	for (int32 i = 0; i < 6; ++i) {
 		m_faceDescSets[i] = Layouts->singleStorageImage.AllocDescriptorSet();
 
-		rvk::writeDescriptorImages(m_faceDescSets[i], 0u, { m_faceAttachments[i].view() },
-			vk::DescriptorType::eStorageImage, nullptr, vk::ImageLayout::eGeneral);
+		rvk::writeDescriptorImages(m_faceDescSets[i], 0u, { m_faceAttachments[i].view() }, nullptr,
+			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
 		DEBUG_NAME_AUTO(m_faceDescSets[i]); // WIP: bad
 	}

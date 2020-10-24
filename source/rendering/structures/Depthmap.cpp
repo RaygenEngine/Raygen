@@ -4,6 +4,7 @@
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/resource/GpuResources.h"
+#include "rendering/util/WriteDescriptorSets.h"
 
 namespace vl {
 Depthmap::Depthmap(uint32 width, uint32 height, const char* name)
@@ -14,7 +15,6 @@ Depthmap::Depthmap(uint32 width, uint32 height, const char* name)
 
 	framebuffer.Generate(Layouts->depthRenderPass.get());
 
-	// description set
 	descSet = Layouts->singleSamplerDescLayout.AllocDescriptorSet();
 
 	// sampler2DShadow
@@ -38,21 +38,7 @@ Depthmap::Depthmap(uint32 width, uint32 height, const char* name)
 
 	depthSampler = GpuResources::AcquireSampler(samplerInfo);
 
-	vk::DescriptorImageInfo imageInfo{};
-	imageInfo
-		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(framebuffer[0].view())
-		.setSampler(depthSampler);
-
-	vk::WriteDescriptorSet descriptorWrite{};
-	descriptorWrite
-		.setDstSet(descSet) //
-		.setDstBinding(0u)
-		.setDstArrayElement(0u)
-		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setImageInfo(imageInfo);
-
-	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+	rvk::writeDescriptorImages(descSet, 0u, { framebuffer[0].view() }, depthSampler);
 }
 
 Depthmap& Depthmap::operator=(Depthmap&& other)
@@ -67,6 +53,7 @@ Depthmap& Depthmap::operator=(Depthmap&& other)
 
 Depthmap::~Depthmap()
 {
+	// CHECK:
 	if (depthSampler) {
 		GpuResources::ReleaseSampler(depthSampler);
 	}

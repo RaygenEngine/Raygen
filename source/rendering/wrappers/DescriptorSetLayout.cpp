@@ -108,4 +108,15 @@ vk::DescriptorSet RDescriptorSetLayout::AllocDescriptorSet(int32 variableBinding
 	return GpuResources::AllocateDescriptorSet(poolSizeHash, *this, variableBindingSize);
 }
 
+vk::UniqueDescriptorSet RDescriptorSetLayout::AllocDescriptorSetUnique(int32 variableBindingSize) const
+{
+	CLOG_ABORT(variableBindingSize >= 0 && !hasVariableDescriptorCountBinding,
+		"Passed size parameter to allocation of descriptor set that does not have variable descriptor binding.");
+
+	CLOG_ABORT(variableBindingSize < 0 && hasVariableDescriptorCountBinding,
+		"Did not give a variable binding size for descriptor that has a variable count binding.");
+	CLOG_ABORT(!hasBeenGenerated, "Attempting to get a descriptor set from a non generated DescriptorLayout");
+	return GpuResources::AllocateDescriptorSetUnique(poolSizeHash, *this, variableBindingSize);
+}
+
 } // namespace vl

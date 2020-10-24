@@ -1,12 +1,10 @@
 #include "GpuCubemap.h"
 
-#include "assets/pods/Cubemap.h"
-#include "rendering/assets/GpuAssetManager.h"
-#include "rendering/Device.h"
-#include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
-#include "rendering/wrappers/Buffer.h"
 #include "assets/AssetRegistry.h"
+#include "assets/pods/Cubemap.h"
+#include "rendering/Layouts.h"
+#include "rendering/util/WriteDescriptorSets.h"
+#include "rendering/wrappers/Buffer.h"
 
 using namespace vl;
 
@@ -22,7 +20,6 @@ void GpuCubemap::Update(const AssetUpdateInfo&)
 	ClearDependencies();
 
 	vk::Format format = rvk::getFormat(cubemapPod->format);
-
 
 	cubemap = RCubemap(cubemapPod->resolution, cubemapPod->mipCount, format, //
 		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
@@ -46,22 +43,5 @@ void GpuCubemap::Update(const AssetUpdateInfo&)
 
 	descriptorSet = Layouts->cubemapLayout.AllocDescriptorSet();
 
-	auto quadSampler = GpuAssetManager->GetDefaultSampler();
-
-	vk::DescriptorImageInfo imageInfo{};
-	imageInfo
-		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(cubemap.view())
-		.setSampler(quadSampler);
-
-	vk::WriteDescriptorSet descriptorWrite{};
-	descriptorWrite
-		.setDstSet(descriptorSet) //
-		.setDstBinding(0u)
-		.setDstArrayElement(0u)
-		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setImageInfo(imageInfo);
-
-	// single call to update all descriptor sets with the new depth image
-	Device->updateDescriptorSets({ descriptorWrite }, {});
+	rvk::writeDescriptorImages(descriptorSet, 0u, { cubemap.view() });
 }

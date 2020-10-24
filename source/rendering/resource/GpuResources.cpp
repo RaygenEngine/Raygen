@@ -22,6 +22,12 @@ vk::DescriptorSet GpuResources::AllocateDescriptorSet(
 	return descPools->AllocateDescriptorSet(hash, layout, variableBindingSize);
 }
 
+vk::UniqueDescriptorSet GpuResources::AllocateDescriptorSetUnique(
+	size_t hash, const RDescriptorSetLayout& layout, int32 variableBindingSize)
+{
+	return descPools->AllocateDescriptorSetUnique(hash, layout, variableBindingSize);
+}
+
 vk::DescriptorPool GpuResources::GetImguiPool()
 {
 	return descPools->GetImguiPool();

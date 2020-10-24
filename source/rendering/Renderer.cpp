@@ -206,8 +206,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 			.setMaxLod(32.f);
 		auto brdfSampler = GpuResources::AcquireSampler(samplerInfo);
 
-		rvk::writeDescriptorImages(m_attachmentsDesc[i], 7u, { brdfLutImg.Lock().image.view() },
-			vk::DescriptorType::eCombinedImageSampler, brdfSampler);
+		rvk::writeDescriptorImages(m_attachmentsDesc[i], 7u, { brdfLutImg.Lock().image.view() }, brdfSampler);
 	}
 
 	// RT images
@@ -215,12 +214,12 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		m_mirrorPass.m_rtDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
 
 		rvk::writeDescriptorImages(m_mirrorPass.m_rtDescSet[i], 0u, { m_mirrorPass.m_indirectResult[i].view() },
-			vk::DescriptorType::eStorageImage, nullptr, vk::ImageLayout::eGeneral);
+			nullptr, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
 		m_aoPass.m_rtDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
 
-		rvk::writeDescriptorImages(m_aoPass.m_rtDescSet[i], 0u, { m_aoPass.m_indirectResult[i].view() },
-			vk::DescriptorType::eStorageImage, nullptr, vk::ImageLayout::eGeneral);
+		rvk::writeDescriptorImages(m_aoPass.m_rtDescSet[i], 0u, { m_aoPass.m_indirectResult[i].view() }, nullptr,
+			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 	}
 }
 

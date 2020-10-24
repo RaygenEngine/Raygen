@@ -21,14 +21,10 @@ class IrradianceMapCalculation {
 	glm::mat4 m_captureProjection;
 	std::array<glm::mat4, 6> m_captureViews;
 
-	RDescriptorSetLayout m_skyboxDescLayout;
-	vk::DescriptorSet m_descSet;
-
 	GpuEnvironmentMap* m_envmapAsset;
 
 	uint32 m_resolution;
 
-	void MakeDesciptors();
 	void MakeRenderPass();
 	void AllocateCubeVertexBuffer();
 	void MakePipeline();

@@ -2,7 +2,6 @@
 #include "rendering/assets/GpuAssetBase.h"
 #include "rendering/wrappers/ImageView.h"
 
-
 namespace vl {
 struct GpuCubemap : public GpuAssetTemplate<Cubemap> {
 	RCubemap cubemap{};

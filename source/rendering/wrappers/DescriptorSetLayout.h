@@ -16,6 +16,7 @@ struct RDescriptorSetLayout {
 	[[nodiscard]] vk::DescriptorSetLayout handle() const { return uHandle.get(); };
 
 	[[nodiscard]] vk::DescriptorSet AllocDescriptorSet(int32 dynamicBindingSize = -1) const;
+	[[nodiscard]] vk::UniqueDescriptorSet AllocDescriptorSetUnique(int32 dynamicBindingSize = -1) const;
 	[[nodiscard]] bool IsEmpty() const { return bindings.empty(); }
 	[[nodiscard]] bool HasUbo() const { return hasUbo; }
 	[[nodiscard]] bool HasBeenGenerated() const { return hasBeenGenerated; }

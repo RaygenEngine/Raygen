@@ -5,6 +5,7 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
+#include "rendering/util/WriteDescriptorSets.h"
 #include "rendering/wrappers/Buffer.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
@@ -275,21 +276,7 @@ vk::DescriptorSet RImage::GetDebugDescriptor()
 
 	debugDescriptorSet = Layouts->imageDebugDescLayout.AllocDescriptorSet();
 
-	vk::DescriptorImageInfo imageInfo{};
-	imageInfo
-		.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-		.setImageView(uView.get())
-		.setSampler(GpuAssetManager->GetDefaultSampler());
-
-	vk::WriteDescriptorSet descriptorWrite{};
-	descriptorWrite
-		.setDstSet(*debugDescriptorSet) //
-		.setDstBinding(0u)
-		.setDstArrayElement(0u)
-		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setImageInfo(imageInfo);
-
-	Device->updateDescriptorSets(descriptorWrite, nullptr);
+	rvk::writeDescriptorImages(*debugDescriptorSet, 0u, { uView.get() });
 
 	return *debugDescriptorSet;
 }
