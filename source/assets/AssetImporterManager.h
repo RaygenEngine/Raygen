@@ -148,11 +148,14 @@ public:
 			fs::path searchPath;
 			auto cwd = fs::current_path();
 
-			if (relativeFilePath.is_absolute() && !std::equal(cwd.begin(), cwd.end(), relativeFilePath.begin())) {
-				searchPath = relativeFilePath / path;
+			auto relativePathNoFilename
+				= relativeFilePath.has_filename() ? relativeFilePath.parent_path() : relativeFilePath;
+
+			if (relativePathNoFilename.is_absolute() && !std::equal(cwd.begin(), cwd.end(), relativeFilePath.begin())) {
+				searchPath = relativePathNoFilename / path;
 			}
 			else {
-				searchPath = fs::relative(relativeFilePath) / path;
+				searchPath = fs::relative(relativePathNoFilename) / path;
 			}
 			return AssetImporterManager->ImportRequest<T>(searchPath);
 		}
