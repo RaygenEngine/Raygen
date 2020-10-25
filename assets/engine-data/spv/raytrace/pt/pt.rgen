@@ -52,7 +52,7 @@ void main() {
 	origin = origin + innerRadius * direction;
 
 	vec3 accumColor = vec3(0.f);
-	uint actualSamples = 1024u;
+	uint actualSamples = 16u;
 	uint bounces = 3;
 	for(uint smpl = 0; smpl < actualSamples; ++smpl){
 		prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, actualSamples + smpl);

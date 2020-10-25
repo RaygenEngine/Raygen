@@ -32,14 +32,16 @@ struct PushConstant {
 } // namespace
 
 namespace vl {
-PathtracedCubemap::PathtracedCubemap(SceneReflprobe* rp)
-	: m_reflprobe(rp)
+PathtracedCubemap::PathtracedCubemap()
 {
 	MakeRtPipeline();
 }
 
-void PathtracedCubemap::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, uint32 resolution)
+void PathtracedCubemap::RecordPass(
+	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const SceneReflprobe& rp)
 {
+	uint32 resolution = rp.surroundingEnv.extent.width;
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_pipeline.get());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 1u, 1u,
@@ -83,7 +85,7 @@ void PathtracedCubemap::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRende
 	auto projInverse = glm::perspective(glm::radians(90.0f), 1.f, 1.f, 25.f);
 	projInverse[1][1] *= -1;
 
-	auto reflprobePos = glm::vec3(m_reflprobe->ubo.position);
+	auto reflprobePos = glm::vec3(rp.ubo.position);
 
 	std::array viewMats{
 		glm::lookAt(reflprobePos, reflprobePos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)),   // right
@@ -99,30 +101,18 @@ void PathtracedCubemap::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRende
 			glm::inverse(viewMats[i]),
 			glm::inverse(projInverse),
 			sceneDesc.scene->tlas.sceneDesc.pointlightCount,
-			m_reflprobe->ubo.innerRadius,
+			rp.ubo.innerRadius,
 		};
 
 		cmdBuffer.pushConstants(m_pipelineLayout.get(),
 			vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant),
 			&pc);
 
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 0u, 1u, &m_faceDescSets[i], 0u, nullptr);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 0u, 1u,
+			&rp.ptcube_faceDescSets[i], 0u, nullptr);
 
 		cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
 			&callableShaderBindingTable, resolution, resolution, 1);
-	}
-}
-
-void PathtracedCubemap::Resize(const RCubemap& sourceCubemap, uint32 resolution)
-{
-	m_faceViews = sourceCubemap.GetFaceViews();
-
-	for (int32 i = 0; i < 6; ++i) {
-		m_faceDescSets[i] = Layouts->singleStorageImage.AllocDescriptorSet();
-
-		rvk::writeDescriptorImages(m_faceDescSets[i], 0u, { m_faceViews[i].get() }, nullptr,
-			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 	}
 }
 

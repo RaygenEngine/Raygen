@@ -50,6 +50,7 @@ inline struct Layouts_ {
 
 
 	RRenderPassLayout gbufferPassLayout;
+	RRenderPassLayout singleFloatColorAttPassLayout;
 
 	// WIP: probably same
 	RRenderPassLayout rasterDirectLightPassLayout; // PERF: subpass of gbuffer

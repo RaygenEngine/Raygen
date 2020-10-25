@@ -14,7 +14,6 @@
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/wrappers/CmdBuffer.h"
-#include "rendering/offline/AmbientBaker.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -328,9 +327,9 @@ void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& refl
 			.setSampler(quadSampler);
 
 		for (auto reflprobe : reflprobes) {
-			viewInfoDefault.setImageView(reflprobe->ab->m_irradiance.view());
+			viewInfoDefault.setImageView(reflprobe->irradiance.view());
 			cubeImages.emplace_back(viewInfoDefault);
-			viewInfoDefault.setImageView(reflprobe->ab->m_prefiltered.view());
+			viewInfoDefault.setImageView(reflprobe->prefiltered.view());
 			cubeImages.emplace_back(viewInfoDefault);
 		}
 
