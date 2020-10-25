@@ -42,6 +42,7 @@ void Universe::LoadPendingWorlds()
 {
 	if (worldToLoad.has_value()) {
 		delete MainWorld;
+		delete vl::Layer->mainScene;
 		vl::Layer->mainScene = new Scene();
 
 		MainWorld = new World(*worldToLoad);

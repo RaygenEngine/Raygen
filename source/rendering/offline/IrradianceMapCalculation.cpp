@@ -209,6 +209,7 @@ void IrradianceMapCalculation::AllocateCubeVertexBuffer()
 		= RBuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
 			  vk::MemoryPropertyFlagBits::eDeviceLocal };
 
+	DEBUG_NAME_AUTO(m_cubeVertexBuffer);
 
 	// copy from host to device local
 	m_cubeVertexBuffer.CopyBuffer(vertexStagingbuffer);

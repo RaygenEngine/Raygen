@@ -175,6 +175,8 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
 		vk::MemoryAllocateFlagBits::eDeviceAddress };
 
+	DEBUG_NAME_AUTO(spotlightsBuffer);
+
 	byte* mapCursor = reinterpret_cast<byte*>(Device->mapMemory(spotlightsBuffer.memory(), 0, spotlightsBuffer.size));
 
 	for (auto spotlight : spotlights) {
@@ -246,6 +248,8 @@ void RtSceneDescriptor::WritePointlights(const std::vector<ScenePointlight*>& po
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
 		vk::MemoryAllocateFlagBits::eDeviceAddress };
 
+	DEBUG_NAME_AUTO(pointlightsBuffer);
+
 	byte* mapCursor = reinterpret_cast<byte*>(Device->mapMemory(pointlightsBuffer.memory(), 0, pointlightsBuffer.size));
 
 	for (auto pointlight : pointlights) {
@@ -272,6 +276,8 @@ void RtSceneDescriptor::WritePointlights(const std::vector<ScenePointlight*>& po
 			.setDstArrayElement(0u)
 			.setBufferInfo(bufInfo);
 
+		DEBUG_NAME_AUTO(descSetPointlights[i]);
+
 		Device->updateDescriptorSets({ bufWriteSet }, nullptr);
 	}
 }
@@ -287,6 +293,9 @@ void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& refl
 			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
 		vk::MemoryAllocateFlagBits::eDeviceAddress };
+
+	DEBUG_NAME_AUTO(reflprobesBuffer);
+
 
 	byte* mapCursor = reinterpret_cast<byte*>(Device->mapMemory(reflprobesBuffer.memory(), 0, reflprobesBuffer.size));
 
