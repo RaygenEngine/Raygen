@@ -46,10 +46,6 @@
             }
           }
         },
-        "CReflectionProbe": {
-          "environmentMap": "gen-data/skyb",
-          "environmentMap_importHint_": "engine-data/default-skybox/skyb.env"
-        },
         "~": []
       },
       {
@@ -58,7 +54,7 @@
           "trs": {
             "euler_rot": {
               "x": -168.49729919433594,
-              "y": 28.387325286865234,
+              "y": 28.38732147216797,
               "z": -123.18170928955078
             },
             "pos": {
@@ -72,6 +68,24 @@
               "z": 1.000003695487976
             }
           }
+        },
+        "CPointlight": {
+          "color": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "constantTerm": 1.0,
+          "hasShadow": true,
+          "intensity": 30.0,
+          "linearTerm": 1.0,
+          "quadraticTerm": 1.0
+        },
+        "CReflprobe": {
+          "environmentMap": "~EnvironmentMap",
+          "environmentMap_importHint_": "",
+          "innerRadius": 1.0,
+          "outerRadius": 1.0
         },
         "CSpotlight": {
           "color": {
@@ -102,7 +116,7 @@
           "trs": {
             "euler_rot": {
               "x": -99.06314849853516,
-              "y": -4.979900360107422,
+              "y": -4.979901313781738,
               "z": 21.018924713134766
             },
             "pos": {
@@ -116,28 +130,6 @@
               "z": 1.0000028610229492
             }
           }
-        },
-        "CDirectionalLight": {
-          "bottom": -20.0,
-          "color": {
-            "x": 1.0,
-            "y": 1.0,
-            "z": 1.0
-          },
-          "far_": 30.0,
-          "hasShadow": true,
-          "intensity": 30.0,
-          "left": -20.0,
-          "maxShadowBias": 0.004999999888241291,
-          "near_": 0.05000000074505806,
-          "right": 20.0,
-          "sampleInvSpread": 1000.0,
-          "samples": 24,
-          "shadowMapHeight": 2048,
-          "shadowMapWidth": 2048,
-          "skyInstance": "~MaterialInstance",
-          "skyInstance_importHint_": "",
-          "top": 20.0
         },
         "~": []
       }
