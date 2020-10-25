@@ -17,6 +17,6 @@ struct CReflprobe : CSceneBase {
 
 	PodHandle<EnvironmentMap> environmentMap;
 
-	float innerRadius;
-	float outerRadius;
+	float innerRadius{ 10.f };
+	float outerRadius{ 15.f };
 };

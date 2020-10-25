@@ -317,6 +317,7 @@ void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& refl
 		Device->updateDescriptorSets({ bufWriteSet }, nullptr);
 	}
 
+
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
@@ -333,6 +334,16 @@ void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& refl
 			viewInfoDefault.setImageView(reflprobe->ab->m_prefiltered.view());
 			cubeImages.emplace_back(viewInfoDefault);
 		}
+
+		if (reflprobes.empty()) {
+			auto view = GpuAssetManager->GetGpuHandle(PodHandle<Cubemap>()).Lock().cubemap.view();
+			viewInfoDefault.setImageView(view);
+			cubeImages.emplace_back(viewInfoDefault);
+			viewInfoDefault.setImageView(view);
+			cubeImages.emplace_back(viewInfoDefault);
+		}
+		DEBUG_NAME_AUTO(descSetReflprobes[i]);
+
 
 		vk::WriteDescriptorSet depthWrite{};
 		depthWrite
