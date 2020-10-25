@@ -44,7 +44,6 @@ RBuffer::RBuffer(vk::DeviceSize inSize, vk::BufferUsageFlags usage, vk::MemoryPr
 
 	Device->bindBufferMemory(uHandle.get(), uMemory.get(), 0);
 
-
 	const bool needsDeviceAddr = (allocFlags & vk::MemoryAllocateFlagBits::eDeviceAddress).operator bool();
 
 	if (needsDeviceAddr) {
