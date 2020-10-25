@@ -81,6 +81,8 @@ void Scene::EnqueueCreateDestoryCmds(std::vector<size_t>&& destructions, std::ve
 			type.condensedToUid.emplace_back(uid);
 			type.condensedLocation[uid] = type.condensed.size() - 1;
 		}
+
+		forceUpdateAccel = true;
 	});
 }
 

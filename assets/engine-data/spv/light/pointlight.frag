@@ -129,9 +129,6 @@ void main()
 	vec3 finalContribution = DirectLightBRDF(NoL, NoV, NoH, LoH, frag.a, frag.albedo, frag.f0)  * Li * NoL;
 
 	outColor = vec4(finalContribution, 1);
-
-	// WIP: remove after tests
-	//outColor = vec4 (uv, 0, 1);
 }                               
 
 

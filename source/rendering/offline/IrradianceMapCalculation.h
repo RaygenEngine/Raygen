@@ -1,36 +1,21 @@
 #pragma once
 #include "rendering/wrappers/Buffer.h"
-#include "rendering/wrappers/DescriptorSetLayout.h"
-#include "rendering/wrappers/ImageView.h"
+#include "rendering/StaticPipeBase.h"
 
-
-struct SceneRenderDesc;
 struct SceneReflprobe;
 
 namespace vl {
 
-class IrradianceMapCalculation {
+struct IrradianceMapCalculation : public StaticPipeBase {
+	vk::UniquePipelineLayout MakePipelineLayout() override;
+	vk::UniquePipeline MakePipeline() override;
 
 public:
-	IrradianceMapCalculation(SceneReflprobe* rp);
+	IrradianceMapCalculation();
 
-	void RecordPass(vk::CommandBuffer cmdBuffer, vk::DescriptorSet surroundingCubeDescSet, uint32 resolution);
-	void Resize(const RCubemap& sourceCubemap, uint32 resolution);
+	void RecordPass(vk::CommandBuffer cmdBuffer, const SceneReflprobe& rp) const;
 
 private:
-	SceneReflprobe* m_reflprobe{ nullptr };
-
-	vk::UniqueRenderPass m_renderPass;
-	vk::UniquePipeline m_pipeline;
-	vk::UniquePipelineLayout m_pipelineLayout;
-
 	RBuffer m_cubeVertexBuffer;
-
-	std::array<vk::UniqueFramebuffer, 6> m_framebuffer;
-	std::vector<vk::UniqueImageView> m_faceViews;
-
-	void MakeRenderPass();
-	void AllocateCubeVertexBuffer();
-	void MakePipeline();
 };
 } // namespace vl

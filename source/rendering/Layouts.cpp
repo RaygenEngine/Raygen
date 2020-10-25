@@ -198,6 +198,17 @@ Layouts_::Layouts_()
 
 
 	MakeRenderPassLayouts();
+
+	{
+		auto colorAtt
+			= singleFloatColorAttPassLayout.CreateAttachment("FloatColorAtt", vk::Format::eR32G32B32A32Sfloat);
+
+		singleFloatColorAttPassLayout.AddSubpass({}, { colorAtt });
+
+		singleFloatColorAttPassLayout.AttachmentFinalLayout(colorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		singleFloatColorAttPassLayout.Generate();
+	}
 }
 
 RDescriptorSetLayout Layouts_::GenerateStorageImageDescSet(size_t Count)
