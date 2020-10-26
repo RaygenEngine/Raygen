@@ -22,13 +22,14 @@
 
 namespace {
 struct PushConstant {
-	glm::mat4 viewInverse;
-	glm::mat4 projInverse;
+	glm::vec4 reflPos;
 	int32 pointlightCount;
 	float innerRadius;
+	int32 samples;
+	int32 bounces;
 };
 
-// static_assert(sizeof(PushConstant) <= 128);
+static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
@@ -82,44 +83,29 @@ void PathtracedCubemap::RecordPass(
 	const vk::StridedBufferRegionKHR hitShaderBindingTable{ m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
 	const vk::StridedBufferRegionKHR callableShaderBindingTable;
 
-	auto projInverse = glm::perspective(glm::radians(90.0f), 1.f, 1.f, 25.f);
-	projInverse[1][1] *= -1;
 
-	auto reflprobePos = glm::vec3(rp.ubo.position);
-
-	std::array viewMats{
-		glm::lookAt(reflprobePos, reflprobePos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)),   // right
-		glm::lookAt(reflprobePos, reflprobePos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0)),  // left
-		glm::lookAt(reflprobePos, reflprobePos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)),   // up
-		glm::lookAt(reflprobePos, reflprobePos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)), // down
-		glm::lookAt(reflprobePos, reflprobePos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, 1.0, 0.0)),  // front
-		glm::lookAt(reflprobePos, reflprobePos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0)),   // back
+	PushConstant pc{
+		rp.position,
+		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
+		rp.innerRadius,
+		rp.ptSamples,
+		rp.ptBounces,
 	};
 
-	for (int32 i = 0; i < 6; ++i) {
-		PushConstant pc{
-			glm::inverse(viewMats[i]),
-			glm::inverse(projInverse),
-			sceneDesc.scene->tlas.sceneDesc.pointlightCount,
-			rp.ubo.innerRadius,
-		};
+	cmdBuffer.pushConstants(m_pipelineLayout.get(),
+		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant), &pc);
 
-		cmdBuffer.pushConstants(m_pipelineLayout.get(),
-			vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant),
-			&pc);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 0u, 1u,
+		&rp.ptcube_faceArrayDescSet, 0u, nullptr);
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 0u, 1u,
-			&rp.ptcube_faceDescSets[i], 0u, nullptr);
-
-		cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
-			&callableShaderBindingTable, resolution, resolution, 1);
-	}
+	cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
+		&callableShaderBindingTable, resolution, resolution, 1);
 }
 
 void PathtracedCubemap::MakeRtPipeline()
 {
 	std::array layouts{
-		Layouts->singleStorageImage.handle(),
+		Layouts->storageImageArray6.handle(),
 		Layouts->accelLayout.handle(),
 		Layouts->bufferAndSamplersDescLayout.handle(),
 		Layouts->singleStorageBuffer.handle(),

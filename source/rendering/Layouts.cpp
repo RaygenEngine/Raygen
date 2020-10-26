@@ -197,6 +197,10 @@ Layouts_::Layouts_()
 	depthRenderPass = DepthmapPass::CreateCompatibleRenderPass();
 
 
+	storageImageArray6.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll, 6u);
+	storageImageArray6.Generate();
+
+
 	MakeRenderPassLayouts();
 
 	{

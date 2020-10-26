@@ -315,7 +315,6 @@ void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCou
 	cmdBuffer.copyBufferToImage(buffer.handle(), uHandle.get(), vk::ImageLayout::eTransferDstOptimal, regions);
 }
 
-// WIP: get face array
 std::vector<vk::UniqueImageView> RCubemap::GetFaceViews(uint32 atMip) const
 {
 	std::vector<vk::UniqueImageView> faceViews;

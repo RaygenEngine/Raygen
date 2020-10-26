@@ -254,9 +254,11 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &rp->reflDescSet, 0u, nullptr);
 
-		PushConstant pc{ sceneDesc.viewer->ubo.viewProj * glm::translate(glm::vec3(rp->ubo.position))
-							 * glm::scale(glm::vec3(rp->ubo.outerRadius)),
-			rp->ubo.position };
+		PushConstant pc{
+			sceneDesc.viewer->ubo.viewProj * glm::translate(glm::vec3(rp->position))
+				* glm::scale(glm::vec3(rp->outerRadius)),
+			rp->position,
+		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,
 			sizeof(PushConstant), &pc);
