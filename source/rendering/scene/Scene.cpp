@@ -207,9 +207,6 @@ void Scene::UploadDirty(uint32 frameIndex)
 		}
 	}
 
-	if (requireUpdateAccel) {
-		UpdateTopLevelAs();
-	}
 
 	for (auto dl : Get<SceneDirlight>()) {
 
@@ -234,5 +231,9 @@ void Scene::UploadDirty(uint32 frameIndex)
 			an->UploadSsbo(frameIndex);
 			an->isDirty[frameIndex] = false;
 		}
+	}
+
+	if (requireUpdateAccel) {
+		UpdateTopLevelAs();
 	}
 }
