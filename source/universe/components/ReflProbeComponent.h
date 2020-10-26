@@ -18,8 +18,9 @@ struct CReflprobe : CSceneBase {
 		REFLECT_VAR(shouldBuild);
 	}
 
-	float innerRadius;
-	float outerRadius;
+
+	float innerRadius{ 1.5f };
+	float outerRadius{ 70.f };
 
 	int32 ptSamples{ 16u };
 	int32 ptBounces{ 3u };

@@ -226,7 +226,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 		m_aoPass.m_rtDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
 
-		rvk::writeDescriptorImages(m_aoPass.m_rtDescSet[i], 0u, { m_aoPass.m_indirectResult[i].view() }, nullptr,
+		rvk::writeDescriptorImages(m_aoPass.m_rtDescSet[i], 0u, { m_aoPass.m_indirectResult[i].view() },
 			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 	}
 }

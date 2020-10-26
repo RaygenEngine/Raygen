@@ -36,7 +36,7 @@ void MaterialInstance::Export(const fs::path& path)
 
 	for (int32 samplerIndex = 0; auto& samplerName : archPod->descriptorSetLayout.samplers2d) {
 		AssetRegistry::GenerateRelativeExportJsonObject(
-			jsonSamplers[samplerName], path, descriptorSet.samplers2d[samplerIndex]);
+			jsonSamplers[samplerName], path, descriptorSet.samplers2d[samplerIndex++]);
 	}
 
 	std::ofstream file(path);

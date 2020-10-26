@@ -41,7 +41,7 @@ void SceneReflprobe::ShouldResize(int32 resolution)
 
 	rvk::writeDescriptorImages(surroundingEnvSamplerDescSet, 0u, { surroundingEnv.view() });
 
-	rvk::writeDescriptorImages(surroundingEnvStorageDescSet, 0u, { surroundingEnv.view() }, nullptr,
+	rvk::writeDescriptorImages(surroundingEnvStorageDescSet, 0u, { surroundingEnv.view() },
 		vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
 	ptcube_faceViews = surroundingEnv.GetFaceViews();

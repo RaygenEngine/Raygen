@@ -63,6 +63,9 @@ void Scene::EnqueueCreateDestoryCmds(std::vector<size_t>&& destructions, std::ve
 	}
 
 	currentCmdBuffer->emplace_back([&, destr = std::move(destructions), constr = std::move(constructions)]() {
+		if (!destr.empty() || !constr.empty()) {
+			forceUpdateAccel = true;
+		}
 		// TODO: deferred deleting of scene objects
 		vl::Device->waitIdle();
 		for (auto uid : destr) {
