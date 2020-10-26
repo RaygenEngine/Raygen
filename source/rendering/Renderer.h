@@ -1,6 +1,9 @@
 #pragma once
 
 #include "engine/Listener.h"
+#include "rendering/offline/IrradianceMapCalculation.h"
+#include "rendering/offline/PathtracedCubemap.h"
+#include "rendering/offline/PrefilteredMapCalculation.h"
 #include "rendering/passes/AOPass.h"
 #include "rendering/passes/MirrorPass.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
@@ -32,6 +35,7 @@ public:
 
 private:
 	void RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 
@@ -64,6 +68,10 @@ private:
 	PtLightBlend m_lightblendPass;
 	MirrorPass m_mirrorPass;
 	AOPass m_aoPass;
+
+	PathtracedCubemap m_ptCube;
+
+
 	// PtCollection m_postprocCollection;
 
 } * Renderer{};

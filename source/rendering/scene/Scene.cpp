@@ -27,9 +27,9 @@ void Scene::EnqueueActiveCameraCmd(size_t uid)
 
 void Scene::BuildAll()
 {
-	for (auto reflProb : Get<SceneReflprobe>()) {
-		reflProb->Build();
-	}
+	// for (auto reflProb : Get<SceneReflprobe>()) {
+	// reflProb->Build();
+	//}
 
 	UpdateTopLevelAs();
 }

@@ -1,22 +1,9 @@
 #include "IrradianceMapCalculation.h"
 
-#include "assets/AssetRegistry.h"
-#include "assets/PodEditor.h"
-#include "assets/pods/Cubemap.h"
-#include "assets/pods/EnvironmentMap.h"
-#include "engine/Input.h"
-#include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuCubemap.h"
-#include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
-#include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
-#include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneReflProbe.h"
-#include "rendering/util/WriteDescriptorSets.h"
-#include "rendering/wrappers/CmdBuffer.h"
 
 namespace {
 struct PushConstant {
@@ -47,17 +34,15 @@ std::array vertices = {
 
 
 namespace vl {
-IrradianceMapCalculation::IrradianceMapCalculation(SceneReflprobe* rp)
-	: m_reflprobe(rp)
+IrradianceMapCalculation::IrradianceMapCalculation()
 {
-	MakeRenderPass();
-	AllocateCubeVertexBuffer();
-	MakePipeline();
+	m_cubeVertexBuffer = RBuffer::CreateTransfer("Cube Vertex", vertices, vk::BufferUsageFlagBits::eVertexBuffer);
 }
 
-void IrradianceMapCalculation::RecordPass(
-	vk::CommandBuffer cmdBuffer, vk::DescriptorSet surroundingCubeDescSet, uint32 resolution)
+void IrradianceMapCalculation::RecordPass(vk::CommandBuffer cmdBuffer, const SceneReflprobe& rp) const
 {
+	uint32 resolution = rp.irradiance.extent.width;
+
 	vk::Rect2D scissor{};
 
 	scissor
@@ -86,8 +71,8 @@ void IrradianceMapCalculation::RecordPass(
 	for (uint32 i = 0; i < 6; ++i) {
 		vk::RenderPassBeginInfo renderPassInfo{};
 		renderPassInfo
-			.setRenderPass(m_renderPass.get()) //
-			.setFramebuffer(m_framebuffer[i].get());
+			.setRenderPass(Layouts->singleFloatColorAttPassLayout.compatibleRenderPass.get()) //
+			.setFramebuffer(rp.irr_framebuffer[i].get());
 		renderPassInfo.renderArea
 			.setOffset({ 0, 0 }) //
 			.setExtent(scissor.extent);
@@ -105,7 +90,7 @@ void IrradianceMapCalculation::RecordPass(
 			cmdBuffer.setScissor(0, { scissor });
 
 			// bind the graphics pipeline
-			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 
 			PushConstant pc{ //
@@ -113,15 +98,14 @@ void IrradianceMapCalculation::RecordPass(
 			};
 
 			// Submit via push constant (rather than a UBO)
-			cmdBuffer.pushConstants(
-				m_pipelineLayout.get(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+			cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 			// geom
 			cmdBuffer.bindVertexBuffers(0u, { m_cubeVertexBuffer.handle() }, { vk::DeviceSize(0) });
 
 			// descriptor sets
 			cmdBuffer.bindDescriptorSets(
-				vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, surroundingCubeDescSet, nullptr);
+				vk::PipelineBindPoint::eGraphics, layout(), 0u, rp.surroundingEnvSamplerDescSet, nullptr);
 
 			// draw call (cube)
 			cmdBuffer.draw(static_cast<uint32>(vertices.size() / 3), 1u, 0u, 0u);
@@ -131,97 +115,31 @@ void IrradianceMapCalculation::RecordPass(
 	}
 }
 
-void IrradianceMapCalculation::Resize(const RCubemap& sourceCubemap, uint32 resolution)
+vk::UniquePipelineLayout IrradianceMapCalculation::MakePipelineLayout()
 {
-	m_faceViews = sourceCubemap.GetFaceViews();
+	// pipeline layout
+	vk::PushConstantRange pushConstantRange{};
+	pushConstantRange
+		.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
+		.setSize(sizeof(PushConstant))
+		.setOffset(0u);
 
-	// create framebuffers for each face
-	for (uint32 i = 0; i < 6; ++i) {
-		std::array attachments{ m_faceViews[i].get() };
+	std::array layouts{ Layouts->cubemapLayout.handle() };
+	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo
+		.setSetLayouts(layouts) //
+		.setPushConstantRanges(pushConstantRange);
 
-		vk::FramebufferCreateInfo createInfo{};
-		createInfo
-			.setRenderPass(m_renderPass.get()) //
-			.setAttachments(attachments)
-			.setWidth(resolution)
-			.setHeight(resolution)
-			.setLayers(1);
-
-		m_framebuffer[i] = Device->createFramebufferUnique(createInfo);
-	}
+	return Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
 
-void IrradianceMapCalculation::MakeRenderPass()
-{
-	vk::AttachmentDescription colorAttachmentDesc{};
-	colorAttachmentDesc
-		.setFormat(vk::Format::eR32G32B32A32Sfloat) //
-		.setSamples(vk::SampleCountFlagBits::e1)
-		.setLoadOp(vk::AttachmentLoadOp::eClear)
-		.setStoreOp(vk::AttachmentStoreOp::eStore)
-		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal)
-		.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-	vk::AttachmentReference colorAttachmentRef{};
-	colorAttachmentRef
-		.setAttachment(0u) //
-		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-	vk::SubpassDescription subpass{};
-	subpass
-		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setColorAttachments(colorAttachmentRef);
-
-	vk::SubpassDependency dependency{};
-	dependency
-		.setSrcSubpass(VK_SUBPASS_EXTERNAL) //
-		.setDstSubpass(0u)
-		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setSrcAccessMask(vk::AccessFlags(0)) // 0
-		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
-
-	std::array attachments{ colorAttachmentDesc };
-	vk::RenderPassCreateInfo renderPassInfo{};
-	renderPassInfo
-		.setAttachments(attachments) //
-		.setSubpasses(subpass)
-		.setDependencies(dependency);
-
-	m_renderPass = Device->createRenderPassUnique(renderPassInfo);
-}
-
-void IrradianceMapCalculation::AllocateCubeVertexBuffer()
-{
-	vk::DeviceSize vertexBufferSize = sizeof(vertices[0]) * vertices.size();
-
-	RBuffer vertexStagingbuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferSrc,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
-
-	// copy data to buffer
-	vertexStagingbuffer.UploadData(vertices.data(), vertexBufferSize);
-
-
-	// device local
-	m_cubeVertexBuffer
-		= RBuffer{ vertexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-			  vk::MemoryPropertyFlagBits::eDeviceLocal };
-
-	DEBUG_NAME_AUTO(m_cubeVertexBuffer);
-
-	// copy from host to device local
-	m_cubeVertexBuffer.CopyBuffer(vertexStagingbuffer);
-}
-
-void IrradianceMapCalculation::MakePipeline()
+vk::UniquePipeline IrradianceMapCalculation::MakePipeline()
 {
 	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/offline/irradiance.shader");
 
 	if (!gpuShader.HasValidModule()) {
-		LOG_ERROR("Geometry Pipeline skipped due to shader compilation errors.");
-		return;
+		LOG_ERROR("Irradiancemapcalc Pipeline skipped due to shader compilation errors.");
+		return {};
 	}
 	std::vector shaderStages = gpuShader.shaderStages;
 
@@ -312,20 +230,6 @@ void IrradianceMapCalculation::MakePipeline()
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
 	dynamicStateInfo.setDynamicStates(dynamicStates);
 
-	// pipeline layout
-	vk::PushConstantRange pushConstantRange{};
-	pushConstantRange
-		.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
-		.setSize(sizeof(PushConstant))
-		.setOffset(0u);
-
-	std::array layouts{ Layouts->cubemapLayout.handle() };
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo
-		.setSetLayouts(layouts) //
-		.setPushConstantRanges(pushConstantRange);
-
-	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
@@ -352,12 +256,12 @@ void IrradianceMapCalculation::MakePipeline()
 		.setPDepthStencilState(&depthStencil)
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
-		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(m_renderPass.get())
+		.setLayout(layout())
+		.setRenderPass(Layouts->singleFloatColorAttPassLayout.compatibleRenderPass.get())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 
-	m_pipeline = Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 } // namespace vl

@@ -1,6 +1,33 @@
 [
   {
     "+": {
+      "name": "StaticMesh Entity",
+      "trs": {
+        "euler_rot": {
+          "x": 0.0,
+          "y": -0.0,
+          "z": 0.0
+        },
+        "pos": {
+          "x": -0.767981767654419,
+          "y": 3.26365327835083,
+          "z": -0.04488632082939148
+        },
+        "scl": {
+          "x": 0.20000000298023224,
+          "y": 0.20000000298023224,
+          "z": 0.20000000298023224
+        }
+      }
+    },
+    "CStaticMesh": {
+      "mesh": "gen-data/MetalRoughSpheres",
+      "mesh_importHint_": "gltf-samples/2.0/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf"
+    },
+    "~": []
+  },
+  {
+    "+": {
       "name": "Sponza",
       "trs": {
         "euler_rot": {
@@ -10,7 +37,7 @@
         },
         "pos": {
           "x": 0.0,
-          "y": -7.614935874938965,
+          "y": 0.0,
           "z": 0.0
         },
         "scl": {
@@ -24,115 +51,124 @@
       "mesh": "gen-data/Sponza",
       "mesh_importHint_": "gltf-samples/2.0/Sponza/glTF/Sponza.gltf"
     },
-    "~": [
-      {
-        "+": {
-          "name": "IBL",
-          "trs": {
-            "euler_rot": {
-              "x": 0.0,
-              "y": -0.0,
-              "z": 0.0
-            },
-            "pos": {
-              "x": 0.0,
-              "y": 30.45974349975586,
-              "z": 0.0
-            },
-            "scl": {
-              "x": 1.0,
-              "y": 1.0,
-              "z": 1.0
-            }
-          }
+    "~": []
+  },
+  {
+    "+": {
+      "name": "ReflProbe Entity",
+      "trs": {
+        "euler_rot": {
+          "x": 169.81849670410156,
+          "y": -88.65171813964844,
+          "z": 179.98155212402344
         },
-        "~": []
-      },
-      {
-        "+": {
-          "name": "Spotlight",
-          "trs": {
-            "euler_rot": {
-              "x": -168.49729919433594,
-              "y": 28.38732147216797,
-              "z": -123.18170928955078
-            },
-            "pos": {
-              "x": 6.75658655166626,
-              "y": 0.24791574478149414,
-              "z": -2.696686029434204
-            },
-            "scl": {
-              "x": 1.000001072883606,
-              "y": 1.0,
-              "z": 1.000003695487976
-            }
-          }
+        "pos": {
+          "x": 0.48242831230163574,
+          "y": 2.0020148754119873,
+          "z": -0.37938645482063293
         },
-        "CPointlight": {
-          "color": {
-            "x": 1.0,
-            "y": 1.0,
-            "z": 1.0
-          },
-          "constantTerm": 1.0,
-          "hasShadow": true,
-          "intensity": 30.0,
-          "linearTerm": 1.0,
-          "quadraticTerm": 1.0
-        },
-        "CReflprobe": {
-          "environmentMap": "~EnvironmentMap",
-          "environmentMap_importHint_": "",
-          "innerRadius": 1.0,
-          "outerRadius": 1.0
-        },
-        "CSpotlight": {
-          "color": {
-            "x": 1.0,
-            "y": 1.0,
-            "z": 1.0
-          },
-          "constantTerm": 1.0,
-          "far_": 11.100000381469727,
-          "hasShadow": true,
-          "innerAperture": 0.7752752304077148,
-          "intensity": 30.0,
-          "linearTerm": 1.0,
-          "maxShadowBias": 0.004999999888241291,
-          "near_": 1.0,
-          "outerAperture": 1.919862151145935,
-          "quadraticTerm": 1.0,
-          "sampleInvSpread": 1000.0,
-          "samples": 4,
-          "shadowMapHeight": 2048,
-          "shadowMapWidth": 2048
-        },
-        "~": []
-      },
-      {
-        "+": {
-          "name": "Directional",
-          "trs": {
-            "euler_rot": {
-              "x": -99.06314849853516,
-              "y": -4.979901313781738,
-              "z": 21.018924713134766
-            },
-            "pos": {
-              "x": 1.988189458847046,
-              "y": 19.202648162841797,
-              "z": 0.9137922525405884
-            },
-            "scl": {
-              "x": 0.9999791383743286,
-              "y": 1.0000020265579224,
-              "z": 1.0000028610229492
-            }
-          }
-        },
-        "~": []
+        "scl": {
+          "x": 1.0000001192092896,
+          "y": 1.0,
+          "z": 1.0000001192092896
+        }
       }
-    ]
+    },
+    "CReflprobe": {
+      "environmentMap": "gen-data/EnTvironmentMap",
+      "environmentMap_importHint_": "",
+      "innerRadius": 1.5199999809265137,
+      "outerRadius": 73.7300033569336
+    },
+    "~": []
+  },
+  {
+    "+": {
+      "name": "sponzamini",
+      "trs": {
+        "euler_rot": {
+          "x": -28.799978256225586,
+          "y": -39.90006637573242,
+          "z": 0.0001023863660520874
+        },
+        "pos": {
+          "x": -2.196608781814575,
+          "y": 3.9547433853149414,
+          "z": -0.8564898371696472
+        },
+        "scl": {
+          "x": 0.019999999552965164,
+          "y": 0.019999999552965164,
+          "z": 0.019999997690320015
+        }
+      }
+    },
+    "CStaticMesh": {
+      "mesh": "gen-data/Sponza",
+      "mesh_importHint_": "gltf-samples/2.0/Sponza/glTF/Sponza.gltf"
+    },
+    "~": []
+  },
+  {
+    "+": {
+      "name": "StaticMesh Entity",
+      "trs": {
+        "euler_rot": {
+          "x": 175.50038146972656,
+          "y": 73.49920654296875,
+          "z": -179.9999542236328
+        },
+        "pos": {
+          "x": 8.779548645019531,
+          "y": 4.772158622741699,
+          "z": -3.9661502838134766
+        },
+        "scl": {
+          "x": 0.20000000298023224,
+          "y": 0.20000000298023224,
+          "z": 0.20000004768371582
+        }
+      }
+    },
+    "CStaticMesh": {
+      "mesh": "gen-data/MetalRoughSpheres",
+      "mesh_importHint_": "gltf-samples/2.0/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf"
+    },
+    "~": []
+  },
+  {
+    "+": {
+      "name": "Pointlight Entity",
+      "trs": {
+        "euler_rot": {
+          "x": -20.995603561401367,
+          "y": 85.50146484375,
+          "z": 0.004408546723425388
+        },
+        "pos": {
+          "x": 5.176583290100098,
+          "y": 12.514460563659668,
+          "z": -0.18141932785511017
+        },
+        "scl": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      }
+    },
+    "CPointlight": {
+      "color": {
+        "x": 1.0,
+        "y": 0.9839848875999451,
+        "z": 0.8078292012214661
+      },
+      "constantTerm": 0.30000001192092896,
+      "hasShadow": true,
+      "intensity": 77.5,
+      "linearTerm": 0.5099999904632568,
+      "quadraticTerm": 0.14000000059604645
+    },
+    "~": []
   }
 ]

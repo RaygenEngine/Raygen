@@ -341,6 +341,28 @@ std::vector<vk::UniqueImageView> RCubemap::GetFaceViews(uint32 atMip) const
 	return faceViews;
 }
 
+vk::UniqueImageView RCubemap::GetFaceArrayView(uint32 atMip) const
+{
+	vk::UniqueImageView faceArrayView;
+
+	vk::ImageViewCreateInfo viewInfo{};
+	viewInfo
+		.setImage(uHandle.get()) //
+		.setViewType(vk::ImageViewType::e2DArray)
+		.setFormat(format);
+
+	viewInfo.subresourceRange
+		.setAspectMask(aspectMask) //
+		.setBaseMipLevel(atMip)
+		.setLevelCount(1u)
+		.setBaseArrayLayer(0u)
+		.setLayerCount(arrayLayers);
+
+	faceArrayView = Device->createImageViewUnique(viewInfo);
+
+	return faceArrayView;
+}
+
 
 vl::RImage2D vl::RImage2D::Create(const std::string& name, vk::Extent2D extent, vk::Format format,
 	vk::ImageLayout finalLayout, vk::ImageUsageFlags usageFlags, uint32 mipLevels, vk::MemoryPropertyFlags memoryFlags,
