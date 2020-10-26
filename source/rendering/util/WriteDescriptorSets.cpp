@@ -5,8 +5,9 @@
 
 using namespace vl;
 
+//
 void rvk::writeDescriptorImages(vk::DescriptorSet descSet, uint32 firstBinding, std::vector<vk::ImageView>&& imageViews,
-	vk::Sampler sampler, vk::DescriptorType descriptorType, vk::ImageLayout layout)
+	vk::DescriptorType descriptorType, vk::ImageLayout layout, vk::Sampler sampler)
 {
 	if (!sampler) {
 		sampler = GpuAssetManager->GetDefaultSampler();
@@ -45,4 +46,10 @@ void rvk::writeDescriptorImages(vk::DescriptorSet descSet, uint32 firstBinding, 
 	}
 
 	Device->updateDescriptorSets(descWrites, nullptr);
+}
+
+void rvk::writeDescriptorImages(vk::DescriptorSet descSet, uint32 firstBinding, std::vector<vk::ImageView>&& imageViews,
+	vk::Sampler sampler, vk::DescriptorType descriptorType, vk::ImageLayout layout)
+{
+	rvk::writeDescriptorImages(descSet, firstBinding, std::move(imageViews), descriptorType, layout, sampler);
 }

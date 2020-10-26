@@ -1,13 +1,29 @@
 #pragma once
 
 namespace rvk {
-// void writeDescriptorImages(vk::DescriptorSet descSet, uint32 firstBinding, std::vector<vk::ImageView>&& imageViews,
-//	vk::Sampler sampler = vk::Sampler(nullptr));
+// clang-format off
 
-
-void writeDescriptorImages(vk::DescriptorSet descSet, uint32 firstBinding, std::vector<vk::ImageView>&& imageViews,
-	vk::Sampler sampler = vk::Sampler(nullptr),
+// Same sampler for all images. Passing sampler if image is not sampled will assert
+void writeDescriptorImages(
+	vk::DescriptorSet descSet, 
+	uint32 firstBinding, 
+	std::vector<vk::ImageView>&& imageViews,
 	vk::DescriptorType descriptorType = vk::DescriptorType::eCombinedImageSampler,
-	vk::ImageLayout layout = vk::ImageLayout::eShaderReadOnlyOptimal);
+	vk::ImageLayout layout = vk::ImageLayout::eShaderReadOnlyOptimal, 
+	vk::Sampler sampler = vk::Sampler(nullptr)
+);
 
+
+// Sampler first version, same sampler for all images
+void writeDescriptorImages(
+	vk::DescriptorSet descSet, 
+	uint32 firstBinding, 
+	std::vector<vk::ImageView>&& imageViews,
+	vk::Sampler sampler,
+	vk::DescriptorType descriptorType = vk::DescriptorType::eCombinedImageSampler,
+	vk::ImageLayout layout = vk::ImageLayout::eShaderReadOnlyOptimal
+);
+
+
+// clang-format on
 } // namespace rvk

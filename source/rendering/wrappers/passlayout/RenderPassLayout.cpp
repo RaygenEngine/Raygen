@@ -314,7 +314,7 @@ RenderingPassInstance RRenderPassLayout::CreatePassInstance(
 			}
 
 			rvk::writeDescriptorImages(
-				rpInstance.internalDescSet, 0, std::move(views), nullptr, vk::DescriptorType::eInputAttachment);
+				rpInstance.internalDescSet, 0, std::move(views), vk::DescriptorType::eInputAttachment);
 		}
 	}
 
