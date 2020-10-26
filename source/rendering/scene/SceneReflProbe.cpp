@@ -1,17 +1,7 @@
 #include "SceneReflprobe.h"
 
-#include "rendering/assets/GpuEnvironmentMap.h"
-#include "rendering/offline/AmbientBaker.h"
-#include "rendering/wrappers/CmdBuffer.h"
 #include "rendering/util/WriteDescriptorSets.h"
-
-#include "engine/Timer.h"
-
-
-// WIP:
-#include "rendering/Layer.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/Device.h"
 
 using namespace vl;
 
@@ -19,51 +9,92 @@ SceneReflprobe::SceneReflprobe()
 	: SceneStruct(sizeof(decltype(ubo)))
 {
 	reflDescSet = Layouts->envmapLayout.AllocDescriptorSet();
-	ab = new AmbientBaker(this);
-	ab->Resize(256);
+	surroundingEnvSamplerDescSet = Layouts->cubemapLayout.AllocDescriptorSet();
+	surroundingEnvStorageDescSet = Layouts->singleStorageImage.AllocDescriptorSet();
 
-	reflDescSet = Layouts->envmapLayout.AllocDescriptorSet();
-
-	ab->m_surroundingEnv.BlockingTransitionToLayout(vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
-		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
-
-	ab->m_irradiance.BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal,
-		vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eColorAttachmentOutput,
-		vk::PipelineStageFlagBits::eFragmentShader);
-
-	ab->m_prefiltered.BlockingTransitionToLayout(vk::ImageLayout::eColorAttachmentOptimal,
-		vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eColorAttachmentOutput,
-		vk::PipelineStageFlagBits::eFragmentShader);
-
-	rvk::writeDescriptorImages(reflDescSet, 0u,
-		{
-			ab->m_surroundingEnv.view(),
-			ab->m_irradiance.view(),
-			ab->m_prefiltered.view(),
-		});
+	for (int32 i = 0; i < 6; ++i) {
+		ptcube_faceDescSets[i] = Layouts->singleStorageImage.AllocDescriptorSet();
+	}
 }
 
-SceneReflprobe::~SceneReflprobe()
+void SceneReflprobe::ShouldResize(int32 resolution)
 {
-	delete ab;
-}
+	if (resolution == surroundingEnv.extent.width) {
+		return;
+	}
 
-
-void SceneReflprobe::Build()
-{
 	Device->waitIdle();
-	TIMER_SCOPE("pt + irr + pref");
 
-	ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
+	surroundingEnv = RCubemap(resolution, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
+		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("SurrCube: WIP:reflprobenamehere"));
 
-	ab->Resize(256);
-	SceneRenderDesc sceneDesc{ Layer->mainScene, 0, 0 };
-	ab->RecordPass(cmdBuffer, sceneDesc);
+	irradiance = RCubemap(resolution, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
+		vk::ImageLayout::eUndefined,
+		vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("IrrCube: WIP:reflprobenamehere"));
 
-	rvk::writeDescriptorImages(reflDescSet, 0u,
-		{
-			ab->m_surroundingEnv.view(),
-			ab->m_irradiance.view(),
-			ab->m_prefiltered.view(),
-		});
+	prefiltered = RCubemap(resolution, 6u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
+		vk::ImageLayout::eUndefined,
+		vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("PreCube: WIP:reflprobenamehere"));
+
+	rvk::writeDescriptorImages(reflDescSet, 0u, { surroundingEnv.view(), irradiance.view(), prefiltered.view() });
+
+	rvk::writeDescriptorImages(surroundingEnvSamplerDescSet, 0u, { surroundingEnv.view() });
+
+	rvk::writeDescriptorImages(surroundingEnvStorageDescSet, 0u, { surroundingEnv.view() }, nullptr,
+		vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
+
+	ptcube_faceViews = surroundingEnv.GetFaceViews();
+
+	for (int32 i = 0; i < 6; ++i) {
+		rvk::writeDescriptorImages(ptcube_faceDescSets[i], 0u, { ptcube_faceViews[i].get() }, nullptr,
+			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
+	}
+
+	irr_faceViews = irradiance.GetFaceViews();
+
+	// create framebuffers for each face
+	for (uint32 i = 0; i < 6; ++i) {
+		std::array attachments{ irr_faceViews[i].get() };
+
+		vk::FramebufferCreateInfo createInfo{};
+		createInfo
+			.setRenderPass(Layouts->singleFloatColorAttPassLayout.compatibleRenderPass.get()) //
+			.setAttachments(attachments)
+			.setWidth(resolution)
+			.setHeight(resolution)
+			.setLayers(1);
+
+		irr_framebuffer[i] = Device->createFramebufferUnique(createInfo);
+	}
+
+
+	///////////////////////////////
+
+	// create framebuffers for each lod/face
+	for (uint32 mip = 0; mip < 6; ++mip) {
+
+		pref_cubemapMips[mip].faceViews = prefiltered.GetFaceViews(mip);
+
+		for (uint32 i = 0; i < 6; ++i) {
+
+			// reisze framebuffer according to mip-level size.
+			uint32 mipResolution = resolution / static_cast<uint32>(std::round((std::pow(2, mip))));
+
+
+			std::array attachments{ pref_cubemapMips[mip].faceViews[i].get() };
+
+			vk::FramebufferCreateInfo createInfo{};
+			createInfo
+				.setRenderPass(Layouts->singleFloatColorAttPassLayout.compatibleRenderPass.get()) //
+				.setAttachments(attachments)
+				.setWidth(mipResolution)
+				.setHeight(mipResolution)
+				.setLayers(1);
+
+			pref_cubemapMips[mip].framebuffers[i] = Device->createFramebufferUnique(createInfo);
+		}
+	}
 }

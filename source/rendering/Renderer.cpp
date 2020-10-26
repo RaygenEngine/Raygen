@@ -14,6 +14,7 @@
 #include "rendering/passes/UnlitPass.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/scene/SceneDirlight.h"
+#include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/StaticPipes.h"
 #include "rendering/util/WriteDescriptorSets.h"
@@ -96,6 +97,26 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRen
 
 	for (auto dl : sceneDesc->Get<SceneDirlight>()) {
 		shadowmapRenderpass(dl);
+	}
+}
+
+void Renderer_::RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+{
+	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
+		if (rp->shouldBuild.Access()) {
+
+			rp->surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+				vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+
+			m_ptCube.RecordPass(cmdBuffer, sceneDesc, *rp);
+
+			rp->surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
+				vk::PipelineStageFlagBits::eFragmentShader);
+
+			StaticPipes::Get<IrradianceMapCalculation>().RecordPass(cmdBuffer, *rp);
+			StaticPipes::Get<PrefilteredMapCalculation>().RecordPass(cmdBuffer, *rp);
+		}
 	}
 }
 
@@ -227,6 +248,8 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 	sceneDesc.attDesc = m_attachmentsDesc[sceneDesc.frameIndex];
 
 	// passes
+	RecordRelfprobeEnvmapPasses(cmdBuffer, sceneDesc);
+
 	RecordGeometryPasses(cmdBuffer, sceneDesc);
 	RecordRasterDirectPass(cmdBuffer, sceneDesc);
 

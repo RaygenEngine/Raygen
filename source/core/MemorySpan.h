@@ -24,7 +24,7 @@ public:
 	template<typename T, size_t Size>
 	MemorySpan(std::array<T, Size>& ar)
 		: ptr(reinterpret_cast<byte*>(ar.data()))
-		, sisizze(sizeof(T) * ar.size())
+		, siz(sizeof(T) * ar.size())
 	{
 	}
 

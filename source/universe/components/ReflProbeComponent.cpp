@@ -6,14 +6,21 @@
 
 DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)
 {
+	auto build = shouldBuild;
+	shouldBuild = false;
+
 	return [=, position = bc.world().position](SceneReflprobe& rp) {
 		rp.ubo.position = glm::vec4(position, 1.f);
-		rp.ubo.innerRadius = innerRadius;
-		rp.ubo.outerRadius = outerRadius;
 
 		if (FullDirty) {
 			// NEXT:
 			// rp.envmap = vl::GpuAssetManager->GetGpuHandle(environmentMap);
+			rp.ubo.innerRadius = innerRadius;
+			rp.ubo.outerRadius = outerRadius;
+
+			rp.shouldBuild.Assign(build);
+
+			rp.ShouldResize(resolution);
 		}
 	};
 }
