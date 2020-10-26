@@ -12,17 +12,19 @@ struct CReflprobe : CSceneBase {
 		// REFLECT_CATEGORY("Rendering");
 		REFLECT_VAR(innerRadius);
 		REFLECT_VAR(outerRadius);
-		// REFLECT_VAR(environmentMap);
+		REFLECT_VAR(ptSamples);
+		REFLECT_VAR(ptBounces);
 		REFLECT_VAR(resolution);
 		REFLECT_VAR(shouldBuild);
 	}
 
-	// PodHandle<EnvironmentMap> environmentMap;
-
 	float innerRadius;
 	float outerRadius;
 
-	bool shouldBuild{ true };
+	int32 ptSamples{ 16u };
+	int32 ptBounces{ 3u };
 
 	int32 resolution{ 128 };
+
+	bool shouldBuild{ true };
 };

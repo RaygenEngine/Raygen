@@ -6,15 +6,13 @@
 using namespace vl;
 
 SceneReflprobe::SceneReflprobe()
-	: SceneStruct(sizeof(decltype(ubo)))
+	: SceneStruct(sizeof(Reflprobe_UBO))
 {
 	reflDescSet = Layouts->envmapLayout.AllocDescriptorSet();
 	surroundingEnvSamplerDescSet = Layouts->cubemapLayout.AllocDescriptorSet();
 	surroundingEnvStorageDescSet = Layouts->singleStorageImage.AllocDescriptorSet();
 
-	for (int32 i = 0; i < 6; ++i) {
-		ptcube_faceDescSets[i] = Layouts->singleStorageImage.AllocDescriptorSet();
-	}
+	ptcube_faceArrayDescSet = Layouts->storageImageArray6.AllocDescriptorSet();
 }
 
 void SceneReflprobe::ShouldResize(int32 resolution)
@@ -48,10 +46,8 @@ void SceneReflprobe::ShouldResize(int32 resolution)
 
 	ptcube_faceViews = surroundingEnv.GetFaceViews();
 
-	for (int32 i = 0; i < 6; ++i) {
-		rvk::writeDescriptorImages(ptcube_faceDescSets[i], 0u, { ptcube_faceViews[i].get() }, nullptr,
-			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
-	}
+	rvk::writeDescriptorImageArray(ptcube_faceArrayDescSet, 0u, vk::uniqueToRaw(ptcube_faceViews), nullptr,
+		vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
 	irr_faceViews = irradiance.GetFaceViews();
 

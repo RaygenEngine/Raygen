@@ -10,12 +10,15 @@ DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)
 	shouldBuild = false;
 
 	return [=, position = bc.world().position](SceneReflprobe& rp) {
-		rp.ubo.position = glm::vec4(position, 1.f);
+		rp.position = glm::vec4(position, 1.f);
 
 		if (FullDirty) {
-			// rp.envmap = vl::GpuAssetManager->GetGpuHandle(environmentMap);
-			rp.ubo.innerRadius = innerRadius;
-			rp.ubo.outerRadius = outerRadius;
+
+			rp.innerRadius = innerRadius;
+			rp.outerRadius = outerRadius;
+
+			rp.ptSamples = ptSamples;
+			rp.ptBounces = ptBounces;
 
 			rp.shouldBuild.Assign(build);
 

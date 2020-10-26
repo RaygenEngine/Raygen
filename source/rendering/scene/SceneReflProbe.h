@@ -3,9 +3,7 @@
 #include "rendering/wrappers/ImageView.h"
 
 struct Reflprobe_UBO {
-	glm::vec4 position{};
-	float innerRadius;
-	float outerRadius;
+	glm::vec4 wipRemove;
 };
 
 struct CubemapMipFrames {
@@ -13,20 +11,17 @@ struct CubemapMipFrames {
 	std::vector<vk::UniqueImageView> faceViews;
 };
 
-struct SceneReflprobe : SceneStruct {
-	// SCENE_STRUCT(SceneReflprobe);
+struct SceneReflprobe : public SceneStruct {
 
 	SceneReflprobe();
 
-	Reflprobe_UBO ubo;
-
-	// UniquePtr<vl::AmbientBaker> ambientBaker;
+	Reflprobe_UBO ubo{};
 
 	vk::DescriptorSet reflDescSet;
 	vk::DescriptorSet surroundingEnvStorageDescSet;
 	vk::DescriptorSet surroundingEnvSamplerDescSet;
 
-	std::array<vk::DescriptorSet, 6> ptcube_faceDescSets;
+	vk::DescriptorSet ptcube_faceArrayDescSet;
 	std::vector<vk::UniqueImageView> ptcube_faceViews;
 
 	std::array<vk::UniqueFramebuffer, 6> irr_framebuffer;
@@ -38,8 +33,15 @@ struct SceneReflprobe : SceneStruct {
 	vl::RCubemap irradiance;
 	vl::RCubemap prefiltered;
 
-	// WIP: store/load from asset
-	// vl::GpuHandle<EnvironmentMap> envmap;
+	glm::vec4 position{};
+
+	float innerRadius;
+	float outerRadius;
+
+	int32 ptSamples{ 16u };
+	int32 ptBounces{ 3u };
+
+	int32 resolution{ 128 };
 
 	BoolFlag shouldBuild{ true };
 

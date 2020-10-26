@@ -46,3 +46,39 @@ void rvk::writeDescriptorImages(vk::DescriptorSet descSet, uint32 firstBinding, 
 
 	Device->updateDescriptorSets(descWrites, nullptr);
 }
+
+void rvk::writeDescriptorImageArray(vk::DescriptorSet descSet, uint32 targetBinding,
+	std::vector<vk::ImageView>&& imageViews, vk::Sampler sampler, vk::DescriptorType descriptorType,
+	vk::ImageLayout layout)
+{
+	if (!sampler) {
+		sampler = GpuAssetManager->GetDefaultSampler();
+	}
+
+	std::vector<vk::DescriptorImageInfo> imageInfos;
+	imageInfos.reserve(imageViews.size());
+
+	for (auto& view : imageViews) {
+		auto& info = imageInfos.emplace_back();
+		info //
+			.setImageLayout(layout)
+			.setImageView(view);
+
+		if (descriptorType == vk::DescriptorType::eCombinedImageSampler
+			|| descriptorType == vk::DescriptorType::eSampledImage) {
+			info.setSampler(sampler);
+		}
+	}
+
+	// NOTE: this has to be a seperate loop to not invalidate PImageInfo parameter
+	vk::WriteDescriptorSet descriptorWrite{};
+	descriptorWrite
+		.setDstSet(descSet) //
+		.setDstBinding(targetBinding)
+		.setDstArrayElement(0u)
+		.setDescriptorType(descriptorType)
+		.setImageInfo(imageInfos);
+
+
+	Device->updateDescriptorSets(descriptorWrite, nullptr);
+}

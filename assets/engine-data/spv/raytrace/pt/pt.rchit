@@ -234,7 +234,7 @@ void main() {
 		}
 	}
 
-	if(prd.depth > 2){
+	if(prd.depth > bounces){
 		prd.radiance = radiance;
 		return;
 	}

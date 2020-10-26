@@ -50,10 +50,11 @@ struct hitPayload
 layout(push_constant) uniform PC
 {
 // WIP: > 128 !
-	mat4 viewInverse;
-	mat4 projInverse;
+	vec4 reflPos;
 	int pointlightCount;
 	float innerRadius;
+	int samples;
+	int bounces;
 };
 
 
