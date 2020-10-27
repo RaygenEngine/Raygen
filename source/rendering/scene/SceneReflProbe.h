@@ -3,7 +3,7 @@
 #include "rendering/wrappers/ImageView.h"
 
 struct Reflprobe_UBO {
-	int32 lodCount;
+	int32 lodCount{ 1 };
 };
 
 struct CubemapMipFrames {

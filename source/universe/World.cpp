@@ -15,6 +15,7 @@
 #include "universe/components/StaticMeshComponent.h"
 #include "universe/ComponentsDb.h"
 #include "universe/systems/AnimatorSystem.h"
+#include "universe/systems/ScriptlikeRunnerSystem.h"
 
 #include <nlohmann/json.hpp>
 #include <fstream>
@@ -86,6 +87,11 @@ void World::UpdateWorld(Scene& scene)
 	// Game Systems
 	//
 
+	if (playState == PlayState::Playing) {
+		ScriptlikeRunnerSystem::TickRegistry(reg, clock.deltaSeconds);
+	}
+
+
 	Editor::Update();
 
 	//
@@ -115,4 +121,39 @@ void World::UpdateWorld(Scene& scene)
 
 
 	scene.EnqueueEndFrame();
+}
+
+void World::BeginPlay()
+{
+	// CHECK: Log failed requirements for play/pause/stop
+	if (playState != PlayState::Stopped) {
+		return;
+	}
+	playState = PlayState::Playing;
+	clock.Restart();
+	ScriptlikeRunnerSystem::BeginPlay(reg);
+}
+
+void World::Pause()
+{
+	if (playState == PlayState::Playing) {
+		playState = PlayState::Paused;
+	}
+}
+
+void World::Unpause()
+{
+	if (playState == PlayState::Paused) {
+		playState = PlayState::Playing;
+	}
+}
+
+void World::EndPlay()
+{
+	const bool canEndPlay = playState == PlayState::Playing || playState == PlayState::Paused;
+	if (!canEndPlay) {
+		return;
+	}
+	playState = PlayState::Stopped;
+	ScriptlikeRunnerSystem::EndPlay(reg);
 }

@@ -13,7 +13,7 @@ struct Scene {
 public:
 	vl::TopLevelAs tlas;
 
-	bool forceUpdateAccel; // NEXT: Remove
+	bool forceUpdateAccel{ true }; // NEXT: Remove
 
 	size_t activeCamera{ 0 };
 
