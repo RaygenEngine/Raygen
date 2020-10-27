@@ -14,18 +14,17 @@ struct CReflprobe : CSceneBase {
 		REFLECT_VAR(outerRadius);
 		REFLECT_VAR(ptSamples);
 		REFLECT_VAR(ptBounces);
-		REFLECT_VAR(resolution);
+		REFLECT_VAR(prefLodCount);
 		REFLECT_VAR(shouldBuild);
 	}
-
 
 	float innerRadius{ 1.5f };
 	float outerRadius{ 70.f };
 
-	int32 ptSamples{ 16u };
-	int32 ptBounces{ 3u };
+	int32 ptSamples{ 16 };
+	int32 ptBounces{ 3 };
 
-	int32 resolution{ 128 };
+	int32 prefLodCount{ 6 };
 
 	bool shouldBuild{ true };
 };

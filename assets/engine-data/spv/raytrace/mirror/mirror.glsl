@@ -63,8 +63,7 @@ struct GltfMat {
 };
 
 struct Reflprobe {
-	vec3 position;
-	float pad;
+	int lodCount;
 };
 
 struct hitPayload

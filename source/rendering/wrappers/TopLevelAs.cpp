@@ -161,7 +161,6 @@ void RtSceneDescriptor::WriteImages()
 	}
 }
 
-
 void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spotlights)
 {
 	spotlightCount = static_cast<int32>(spotlights.size());

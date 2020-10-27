@@ -10,7 +10,8 @@ layout(location = 0) in vec3 position;
 
 layout(push_constant) uniform PC {
 	mat4 reflVolMatVP;
-    vec3 reflPosition;
+    vec4 reflPosition;
+    int lodCount;
 } push;
 
 

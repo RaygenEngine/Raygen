@@ -18,8 +18,8 @@ layout(location = 0) out vec4 outColor;
 
 layout(push_constant) uniform PC {
 	mat4 reflVolMatVP;
-    vec3 reflPosition;
-	float pad;
+    vec4 reflPosition;
+    int lodCount;
 } push;
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
@@ -76,9 +76,8 @@ void main( ) {
 
     float NoV = abs(dot(N, V)) + 1e-5;
 	
-	const float MAX_REFLECTION_LOD = 4.0;
 	// SMATH: which roughness should go here
-	float lod = (frag.a * MAX_REFLECTION_LOD); 
+	float lod = frag.a * push.lodCount; 
 	
 	vec3 brdfLut = (texture(std_BrdfLut, vec2(NoV, frag.a))).rgb;
 

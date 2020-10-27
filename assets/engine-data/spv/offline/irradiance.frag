@@ -15,6 +15,11 @@ layout(location = 0) in vec3 localPos;
 
 layout(set = 0, binding = 0) uniform samplerCube skyboxSampler;
 
+layout(push_constant) uniform PC
+{
+	mat4 rotVp;
+};
+
 void main( ) {
     // the sample direction equals the hemisphere's orientation 
     vec3 normal = normalize(localPos); // dir to cubemap texel pos = actual sample dir
@@ -25,7 +30,7 @@ void main( ) {
 	vec3 right = cross(up, normal);
 	up         = cross(normal, right);
 	
-	float sampleDelta = 0.025;
+    float sampleDelta = 0.025;
 	float nrSamples = 0.0; 
 	for(float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
 	{
