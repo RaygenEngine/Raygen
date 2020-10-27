@@ -276,9 +276,8 @@ void main() {
 
 			float NoV = abs(dot(N, V)) + 1e-5;
 	
-			const float MAX_REFLECTION_LOD = 4.0;
 			// SMATH: which roughness should go here
-			float lod = (brdfInfo.a * MAX_REFLECTION_LOD); 
+			float lod = brdfInfo.a * reflprobe.lodCount; 
 			
 			// SMATH: math of those
 			vec3 diffuseLight =  texture(relfprobeTextures[nonuniformEXT(i)], N).rgb; // irradiance

@@ -49,7 +49,6 @@ struct hitPayload
 
 layout(push_constant) uniform PC
 {
-// WIP: > 128 !
 	vec4 reflPos;
 	int pointlightCount;
 	float innerRadius;

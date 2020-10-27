@@ -4,6 +4,7 @@
 #include "rendering/scene/Scene.h"
 
 struct Scene_;
+struct CReflprobe;
 
 namespace scenecmds {
 
@@ -30,6 +31,7 @@ void EnqueueCreateDestroyCmds(Scene* scene, entt::registry& reg)
 	scene->EnqueueCreateDestoryCmds<typename T::RenderSceneType>(std::move(destructions), std::move(constructions));
 }
 
+
 template<typename T>
 void EnqueueDirtyCmds(Scene* scene, entt::registry& reg)
 {
@@ -38,6 +40,10 @@ void EnqueueDirtyCmds(Scene* scene, entt::registry& reg)
 	auto view = reg.view<BasicComponent, T, typename T::Dirty>();
 	for (auto& [ent, basic, sc] : view.each()) {
 		scene->EnqueueCmdInCtx<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<true>(basic));
+
+		if constexpr (std::is_same_v<T, typename CReflprobe>) {
+			scene->forceUpdateAccel = true;
+		}
 	}
 }
 

@@ -93,12 +93,13 @@ void IrradianceMapCalculation::RecordPass(vk::CommandBuffer cmdBuffer, const Sce
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 
-			PushConstant pc{ //
-				projInverse * glm::mat4(glm::mat3(viewMats[i]))
+			PushConstant pc{
+				projInverse * glm::mat4(glm::mat3(viewMats[i])),
 			};
 
 			// Submit via push constant (rather than a UBO)
-			cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+			cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,
+				sizeof(PushConstant), &pc);
 
 			// geom
 			cmdBuffer.bindVertexBuffers(0u, { m_cubeVertexBuffer.handle() }, { vk::DeviceSize(0) });
@@ -120,7 +121,7 @@ vk::UniquePipelineLayout IrradianceMapCalculation::MakePipelineLayout()
 	// pipeline layout
 	vk::PushConstantRange pushConstantRange{};
 	pushConstantRange
-		.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
+		.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment) //
 		.setSize(sizeof(PushConstant))
 		.setOffset(0u);
 

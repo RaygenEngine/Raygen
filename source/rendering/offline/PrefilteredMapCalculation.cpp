@@ -56,7 +56,7 @@ void PrefilteredMapCalculation::RecordPass(vk::CommandBuffer cmdBuffer, const Sc
 	};
 
 	// for each mip / framebuffer / face
-	for (uint32 mip = 0; mip < 6; ++mip) {
+	for (uint32 mip = 0; mip < rp.ubo.lodCount; ++mip) {
 		for (uint32 i = 0; i < 6; ++i) {
 
 			uint32 mipResolution = static_cast<uint32>(resolution * std::pow(0.5, mip));
@@ -97,12 +97,14 @@ void PrefilteredMapCalculation::RecordPass(vk::CommandBuffer cmdBuffer, const Sc
 				cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 
-				float roughness = (float)mip / (float)(6 - 1);
+				float roughness = (float)mip / (float)(rp.ubo.lodCount - 1);
 				float a = roughness * roughness;
 				LOG_DEBUG("Prefiltered mip a = roughness = {}", a);
 
-				PushConstant pc{ //
-					projInverse * glm::mat4(glm::mat3(viewMats[i])), a
+				PushConstant pc{
+					//
+					projInverse * glm::mat4(glm::mat3(viewMats[i])),
+					a,
 				};
 
 				// Submit via push constant (rather than a UBO)

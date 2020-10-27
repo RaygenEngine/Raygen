@@ -3,7 +3,7 @@
 #include "rendering/wrappers/ImageView.h"
 
 struct Reflprobe_UBO {
-	glm::vec4 wipRemove;
+	int32 lodCount;
 };
 
 struct CubemapMipFrames {
@@ -27,7 +27,7 @@ struct SceneReflprobe : public SceneStruct {
 	std::array<vk::UniqueFramebuffer, 6> irr_framebuffer;
 	std::vector<vk::UniqueImageView> irr_faceViews;
 
-	std::array<CubemapMipFrames, 6> pref_cubemapMips;
+	std::vector<CubemapMipFrames> pref_cubemapMips;
 
 	vl::RCubemap surroundingEnv;
 	vl::RCubemap irradiance;
@@ -35,15 +35,13 @@ struct SceneReflprobe : public SceneStruct {
 
 	glm::vec4 position{};
 
-	float innerRadius;
-	float outerRadius;
+	float innerRadius{ 1.5f };
+	float outerRadius{ 70.f };
 
-	int32 ptSamples{ 16u };
-	int32 ptBounces{ 3u };
-
-	int32 resolution{ 128 };
+	int32 ptSamples{ 16 };
+	int32 ptBounces{ 3 };
 
 	BoolFlag shouldBuild{ true };
 
-	void ShouldResize(int32 resolution);
+	void ShouldResize();
 };

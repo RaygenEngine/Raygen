@@ -14,6 +14,7 @@ namespace {
 struct PushConstant {
 	glm::mat4 reflVolMatVP;
 	glm::vec4 reflPosition;
+	int32 lodCount;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -258,6 +259,7 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 			sceneDesc.viewer->ubo.viewProj * glm::translate(glm::vec3(rp->position))
 				* glm::scale(glm::vec3(rp->outerRadius)),
 			rp->position,
+			rp->ubo.lodCount,
 		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,

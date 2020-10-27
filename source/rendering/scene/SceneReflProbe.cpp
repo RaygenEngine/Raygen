@@ -15,8 +15,10 @@ SceneReflprobe::SceneReflprobe()
 	ptcube_faceArrayDescSet = Layouts->storageImageArray6.AllocDescriptorSet();
 }
 
-void SceneReflprobe::ShouldResize(int32 resolution)
+void SceneReflprobe::ShouldResize()
 {
+	int32 resolution = std::pow(2, ubo.lodCount);
+
 	if (resolution == surroundingEnv.extent.width) {
 		return;
 	}
@@ -27,12 +29,12 @@ void SceneReflprobe::ShouldResize(int32 resolution)
 		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("SurrCube: WIP:reflprobenamehere"));
 
-	irradiance = RCubemap(resolution, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
+	irradiance = RCubemap(32, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
 		vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("IrrCube: WIP:reflprobenamehere"));
 
-	prefiltered = RCubemap(resolution, 6u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
+	prefiltered = RCubemap(resolution, ubo.lodCount, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
 		vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("PreCube: WIP:reflprobenamehere"));
@@ -59,8 +61,8 @@ void SceneReflprobe::ShouldResize(int32 resolution)
 		createInfo
 			.setRenderPass(Layouts->singleFloatColorAttPassLayout.compatibleRenderPass.get()) //
 			.setAttachments(attachments)
-			.setWidth(resolution)
-			.setHeight(resolution)
+			.setWidth(32)
+			.setHeight(32)
 			.setLayers(1);
 
 		irr_framebuffer[i] = Device->createFramebufferUnique(createInfo);
@@ -68,10 +70,11 @@ void SceneReflprobe::ShouldResize(int32 resolution)
 
 
 	///////////////////////////////
-
+	pref_cubemapMips.clear();
 	// create framebuffers for each lod/face
-	for (uint32 mip = 0; mip < 6; ++mip) {
+	for (uint32 mip = 0; mip < ubo.lodCount; ++mip) {
 
+		pref_cubemapMips.emplace_back();
 		pref_cubemapMips[mip].faceViews = prefiltered.GetFaceViews(mip);
 
 		for (uint32 i = 0; i < 6; ++i) {
@@ -93,4 +96,6 @@ void SceneReflprobe::ShouldResize(int32 resolution)
 			pref_cubemapMips[mip].framebuffers[i] = Device->createFramebufferUnique(createInfo);
 		}
 	}
+
+	shouldBuild.Set();
 }

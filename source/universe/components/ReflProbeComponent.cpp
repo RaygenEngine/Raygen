@@ -20,9 +20,11 @@ DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)
 			rp.ptSamples = ptSamples;
 			rp.ptBounces = ptBounces;
 
+			rp.ubo.lodCount = prefLodCount;
+
 			rp.shouldBuild.Assign(build);
 
-			rp.ShouldResize(resolution);
+			rp.ShouldResize();
 		}
 	};
 }
