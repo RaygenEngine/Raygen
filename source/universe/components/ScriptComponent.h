@@ -4,14 +4,25 @@
 #include "universe/SceneComponentBase.h"
 
 struct CScript {
+	// WIP: Tickable, Begin, End play detection
 	COMP_DIRTABLE;
 	COMP_CREATEDESTROY;
+	COMP_TICKABLE;
+	COMP_BEGINENDPLAY;
+
 	REFLECTED_COMP(CScript)
 	{
 		REFLECT_ICON(FA_PRESCRIPTION);
+
 		REFLECT_CATEGORY("Gameplay");
-		REFLECT_VAR(code);
+		REFLECT_VAR(movementSpeed);
 	}
 
-	std::string code;
+	float movementSpeed{ 1.f };
+
+	void BeginPlay();
+	void EndPlay();
+	void Tick(float deltaSeconds);
+
+	Entity self; // WIP: Begin End play at construction/destruction
 };

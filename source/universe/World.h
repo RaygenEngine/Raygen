@@ -9,10 +9,22 @@ struct HiddenFlagComp {
 
 struct Scene;
 
+
 class World {
+public:
+	enum class PlayState
+	{
+		Stopped,
+		Playing,
+		Paused,
+	};
+
 private:
 	void LoadFromSrcPath();
-	FrameClock clock;
+
+	FrameClock clock; // TODO: Not using working properly with dilation/pause
+
+	PlayState playState{ PlayState::Stopped };
 
 public:
 	entt::registry reg;
@@ -29,4 +41,14 @@ public:
 	Entity CreateEntity(const std::string& name = "");
 
 	void UpdateWorld(Scene& scene);
+
+	[[nodiscard]] World::PlayState GetPlayState() const { return playState; }
+
+
+public:
+	void TogglePause() { playState == PlayState::Paused ? Unpause() : Pause(); }
+	void BeginPlay();
+	void Pause();
+	void Unpause();
+	void EndPlay();
 };
