@@ -13,6 +13,7 @@ SceneReflprobe::SceneReflprobe()
 	surroundingEnvStorageDescSet = Layouts->singleStorageImage.AllocDescriptorSet();
 
 	ptcube_faceArrayDescSet = Layouts->storageImageArray6.AllocDescriptorSet();
+	ShouldResize();
 }
 
 void SceneReflprobe::ShouldResize()

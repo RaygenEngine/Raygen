@@ -182,8 +182,7 @@ Layouts_::Layouts_()
 	imageDebugDescLayout.Generate();
 
 
-	singleStorageBuffer.AddBinding(
-		eStorageBuffer, eRaygenKHR | eClosestHitKHR | eAnyHitKHR, 1024u, eVariableDescriptorCount);
+	singleStorageBuffer.AddBinding(eStorageBuffer, eRaygenKHR | eClosestHitKHR | eAnyHitKHR);
 	singleStorageBuffer.Generate();
 
 	bufferAndSamplersDescLayout.AddBinding(eStorageBuffer, eRaygenKHR | eClosestHitKHR | eAnyHitKHR);

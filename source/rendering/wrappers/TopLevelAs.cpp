@@ -68,8 +68,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 	sceneDesc.descSetSpotlights = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
 		static_cast<int32>(scene->Get<SceneSpotlight>().size()));
 
-	sceneDesc.descSetPointlights
-		= Layouts->singleStorageBuffer.AllocDescriptorSet(static_cast<int32>(scene->Get<ScenePointlight>().size()));
+	sceneDesc.descSetPointlights = Layouts->singleStorageBuffer.AllocDescriptorSet();
 	sceneDesc.descSetReflprobes = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
 		static_cast<int32>(scene->Get<SceneReflprobe>().size()));
 
@@ -160,6 +159,7 @@ void RtSceneDescriptor::WriteImages()
 		Device->updateDescriptorSets({ imgWriteSet }, nullptr);
 	}
 }
+
 
 void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spotlights)
 {
