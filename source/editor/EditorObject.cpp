@@ -161,6 +161,17 @@ void EditorObject_::UpdateEditor()
 			OpenLoadDialog();
 		}
 
+		auto worldState = m_currentWorld->GetPlayState();
+		using enum World::PlayState;
+
+		// TODO: pause
+		if (worldState == Stopped && ImEd::Button(ETXT(FA_PLAY, "Play"))) {
+			m_currentWorld->BeginPlay();
+		}
+		if (worldState == Playing && ImEd::Button(ETXT(FA_STOP, "Stop"))) {
+			m_currentWorld->EndPlay();
+		}
+
 		std::string s
 			= fmt::format("{:.1f} FPS : Rt Index: {}", Engine.GetFPS(), 0 /*vl::Renderer->m_raytracingPass.m_rtFrame*/);
 		ImGui::Text(s.c_str());

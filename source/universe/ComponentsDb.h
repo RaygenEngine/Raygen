@@ -3,6 +3,7 @@
 #include "universe/ComponentDetail.h"
 #include "universe/BasicComponent.h"
 #include "universe/systems/SceneCmdSystem.h"
+#include "universe/systems/ScriptlikeRunnerSystem.h"
 
 #include <nlohmann/json_fwd.hpp>
 
@@ -56,12 +57,15 @@ public:
 		entry.entType = entt::type_info<T>().id();
 
 		entry.emplace = [](registry& r, entity e) {
-			r.emplace<T>(e);
+			auto& component = r.emplace<T>(e);
 			if constexpr (HasCreateDestroySubstructsV<T>) {
 				r.emplace<typename T::Create>(e);
 			}
 			if constexpr (HasDirtySubstructV<T>) {
 				r.emplace<typename T::Dirty>(e);
+			}
+			if constexpr (HasSelfMemberVariableEntity<T> && !std::is_same_v<T, BasicComponent>) {
+				component.self = Entity{ e, &r };
 			}
 		};
 
@@ -168,6 +172,10 @@ private:
 
 		if constexpr (componentdetail::IsSceneComponent<T>) {
 			SceneCmdSystem::Z_Register<T>();
+		}
+
+		if constexpr (componentdetail::IsScriptlikeComponent<T>) {
+			ScriptlikeRunnerSystem::Z_Register<T>();
 		}
 	}
 

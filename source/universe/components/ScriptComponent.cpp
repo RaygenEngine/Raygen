@@ -1,1 +1,21 @@
 #include "ScriptComponent.h"
+
+#include "engine/Input.h"
+#include "universe/ComponentDetail.h"
+
+void CScript::BeginPlay()
+{
+	LOG_REPORT("Begin Play: {}", self->name);
+}
+
+void CScript::EndPlay()
+{
+	LOG_REPORT("End Play");
+}
+
+void CScript::Tick(float deltaSeconds)
+{
+	if (Input.IsDown(Key::Shift)) {
+		LOG_REPORT("DeltaTime: {}", deltaSeconds);
+	}
+}

@@ -42,14 +42,18 @@ public:
 	T& Add(Args&&... args)
 	{
 		using namespace componentdetail;
-
+		// TODO: Code duplicate of ComponentsDb emplace
 		if constexpr (HasCreateDestroySubstructsV<T>) {
 			registry->emplace<typename T::Create>(entity);
 		}
 		if constexpr (HasDirtySubstructV<T>) {
 			registry->emplace<typename T::Dirty>(entity);
 		}
-		return registry->emplace<T>(entity, std::forward<Args>(args)...);
+		auto& component = registry->emplace<T>(entity, std::forward<Args>(args)...);
+		if constexpr (HasSelfMemberVariableEntity<T> && !std::is_same_v<T, BasicComponent>) {
+			component.self = *this;
+		}
+		return component;
 	}
 
 	// Adds a component to the entity if it does not exist, returns the existing otherwise
@@ -105,7 +109,7 @@ public:
 	template<CComponent T>
 	void MarkDirty()
 	{
-		if constexpr (componentdetail::HasDirtySubstruct<T>) {
+		if constexpr (componentdetail::HasDirtySubstructV<T>) {
 			registry->get_or_emplace<typename T::Dirty>(entity);
 		}
 	}
