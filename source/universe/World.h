@@ -49,6 +49,10 @@ public:
 		return reg.view<T...>(excl);
 	}
 
+	[[nodiscard]] bool IsPlaying() const { return playState == PlayState::Playing; }
+	[[nodiscard]] bool IsPaused() const { return playState == PlayState::Paused; }
+	[[nodiscard]] bool IsStopped() const { return playState == PlayState::Stopped; }
+
 public:
 	void TogglePause() { playState == PlayState::Paused ? Unpause() : Pause(); }
 	void BeginPlay();

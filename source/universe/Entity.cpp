@@ -32,3 +32,9 @@ void Entity::Destroy()
 
 	registry->get_or_emplace<CDestroyFlag>(entity);
 }
+
+
+bool Entity::ShouldBeginEndPlayDueToWorldState()
+{
+	return world->IsPlaying() || world->IsPaused();
+}

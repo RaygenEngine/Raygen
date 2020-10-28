@@ -102,6 +102,7 @@ private:
 	template<CComponent T>
 	void UnsafeRemove();
 
+	[[nodiscard]] bool ShouldBeginEndPlayDueToWorldState();
 
 	// Essentially with this constructor being private we ensure only "World" is allowed to construct real entities.
 	// Default constructor exists and acts as a nullptr to entities.

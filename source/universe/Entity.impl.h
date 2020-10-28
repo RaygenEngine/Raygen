@@ -37,7 +37,7 @@ T& Entity::Add(Args&&... args)
 	}
 
 	if constexpr (CBeginPlayComp<T>) {
-		if (world.IsPlaying()) {
+		if (ShouldBeginEndPlayDueToWorldState()) {
 			component.BeginPlay();
 		}
 	}
@@ -95,7 +95,9 @@ void Entity::SafeRemove()
 	}
 
 	if constexpr (componentdetail::CEndPlayComp<T>) {
-		GetNonDirty<T>().EndPlay();
+		if (ShouldBeginEndPlayDueToWorldState()) {
+			GetNonDirty<T>().EndPlay();
+		}
 	}
 
 	if constexpr (componentdetail::CCreateDestoryComp<T>) {
