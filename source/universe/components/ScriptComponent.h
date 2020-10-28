@@ -21,5 +21,5 @@ struct CScript {
 	void EndPlay();
 	void Tick(float deltaSeconds);
 
-	Entity self; // WIP: Begin End play at construction/destruction
+	Entity self;
 };
