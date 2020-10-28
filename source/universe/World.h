@@ -39,7 +39,7 @@ public:
 
 	Entity CreateEntity(const std::string& name = "");
 
-	void UpdateWorld(Scene& scene);
+	void UpdateWorld(Scene* scene);
 
 	[[nodiscard]] World::PlayState GetPlayState() const { return playState; }
 
