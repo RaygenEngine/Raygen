@@ -79,7 +79,7 @@ Entity World::CreateEntity(const std::string& name)
 	return ent;
 }
 
-void World::UpdateWorld(Scene& scene)
+void World::UpdateWorld(Scene* scene)
 {
 	clock.UpdateFrame();
 
@@ -105,9 +105,11 @@ void World::UpdateWorld(Scene& scene)
 
 	AnimatorSystem::UpdateAnimations(reg, clock.deltaSeconds);
 
-	SceneCmdSystem::WriteSceneCmds(&scene, reg);
-
-	AnimatorSystem::UploadAnimationsToScene(reg, scene);
+	if (scene) {
+		SceneCmdSystem::WriteSceneCmds(scene, reg);
+		AnimatorSystem::UploadAnimationsToScene(reg, *scene);
+		scene->EnqueueEndFrame();
+	}
 
 	// Clean Up
 	reg.clear<DirtyMovedComp, DirtySrtComp>();
@@ -118,9 +120,6 @@ void World::UpdateWorld(Scene& scene)
 		reg.destroy(ent);
 	}
 	CLOG_ERROR(reg.view<CDestroyFlag>().size(), "Error deleting");
-
-
-	scene.EnqueueEndFrame();
 }
 
 void World::BeginPlay()
