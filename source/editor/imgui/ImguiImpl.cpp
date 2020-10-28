@@ -298,10 +298,8 @@ void InitVulkan()
 	init.CheckVkResultFn = nullptr;
 	ImGui_ImplVulkan_Init(&init, Layer->swapOutput->GetRenderPass());
 
-	// WIP: this scope is weird
 	{
 		ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
-
 		ImGui_ImplVulkan_CreateFontsTexture(cmdBuffer);
 	}
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
