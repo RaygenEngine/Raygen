@@ -4,11 +4,8 @@
 #include "universe/SceneComponentBase.h"
 
 struct CScript {
-	// WIP: Tickable, Begin, End play detection
 	COMP_DIRTABLE;
 	COMP_CREATEDESTROY;
-	COMP_TICKABLE;
-	COMP_BEGINENDPLAY;
 
 	REFLECTED_COMP(CScript)
 	{

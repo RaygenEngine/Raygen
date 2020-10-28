@@ -2,6 +2,14 @@
 
 #include "universe/BasicComponent.h"
 #include "universe/ComponentsDb.h"
+#include "universe/World.h"
+
+Entity::Entity(entt::entity entity_, World* world_, entt::registry& registry_)
+	: entity(entity_)
+	, registry(&registry_)
+	, world(world_)
+{
+}
 
 BasicComponent* Entity::operator->()
 {
@@ -13,7 +21,7 @@ void Entity::Destroy()
 	auto& basic = Get<BasicComponent>();
 	basic.SetParent();
 
-	ComponentsDb::VisitWithType(*this, [&](const ComponentMetaEntry& ent) { ent.markDestroy(*registry, entity); });
+	ComponentsDb::VisitWithType(*this, [&](const ComponentMetaEntry& ent) { ent.markDestroy(*this); });
 
 	auto current = basic.firstChild;
 	while (current) {

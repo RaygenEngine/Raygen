@@ -16,8 +16,8 @@ template<typename T> concept CCreateDestoryComp = requires { typename T::Create;
 
 
 template<typename T> concept CTickableComp = requires (T t) { { t.Tick(1.f) }; };
-template<typename T> concept CBeginPlayComp = requires (T t){ t.BeginPlay(); };
-template<typename T> concept CEndPlayComp = requires (T t){ t.EndPlay(); };
+template<typename T> concept CBeginPlayComp = requires (T t) { t.BeginPlay(); };
+template<typename T> concept CEndPlayComp = requires (T t) { t.EndPlay(); };
 template<typename T> concept CSelfEntityMember = requires (T t) { { t.self } -> std::convertible_to<Entity>; };
 
 template<typename T> concept CScriptlikeComp = CTickableComp<T> || CBeginPlayComp<T> || CEndPlayComp<T>;
