@@ -19,3 +19,8 @@ void CScript::Tick(float deltaSeconds)
 		LOG_REPORT("DeltaTime: {}", deltaSeconds);
 	}
 }
+
+static_assert(componentdetail::CBeginPlayComp<CScript>);
+static_assert(componentdetail::CEndPlayComp<CScript>);
+static_assert(componentdetail::CTickableComp<CScript>);
+static_assert(componentdetail::CSelfEntityMember<CScript>);

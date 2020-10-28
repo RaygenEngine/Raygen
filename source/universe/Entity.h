@@ -43,14 +43,14 @@ public:
 	{
 		using namespace componentdetail;
 		// TODO: Code duplicate of ComponentsDb emplace
-		if constexpr (HasCreateDestroySubstructsV<T>) {
+		if constexpr (CCreateDestoryComp<T>) {
 			registry->emplace<typename T::Create>(entity);
 		}
-		if constexpr (HasDirtySubstructV<T>) {
+		if constexpr (CDirtableComp<T>) {
 			registry->emplace<typename T::Dirty>(entity);
 		}
 		auto& component = registry->emplace<T>(entity, std::forward<Args>(args)...);
-		if constexpr (HasSelfMemberVariableEntity<T> && !std::is_same_v<T, BasicComponent>) {
+		if constexpr (CSelfEntityMember<T> && !std::is_same_v<T, BasicComponent>) {
 			component.self = *this;
 		}
 		return component;
@@ -90,7 +90,7 @@ public:
 	// Returns T& or const T& based on if the substruct supports dirty.
 	// Always prefer this if you will not write to the component to save performance.
 	template<CComponent T>
-	auto Get() const -> std::conditional_t<componentdetail::HasDirtySubstructV<T>, const T&, T&>
+	auto Get() const -> std::conditional_t<componentdetail::CDirtableComp<T>, const T&, T&>
 	{
 		static_assert(!std::is_empty_v<T>, "Attempting to get an empty structure. This is not allowed by entt.");
 		return registry->get<T>(entity);
@@ -106,12 +106,10 @@ public:
 
 	// TODO: Probably private
 	// Just use GetDirty if you intend to write instead of forgetting to manually call this
-	template<CComponent T>
+	template<componentdetail::CDirtableComp T>
 	void MarkDirty()
 	{
-		if constexpr (componentdetail::HasDirtySubstructV<T>) {
-			registry->get_or_emplace<typename T::Dirty>(entity);
-		}
+		registry->get_or_emplace<typename T::Dirty>(entity);
 	}
 
 	// Safely removes a component if it exists.
@@ -123,7 +121,7 @@ public:
 			return;
 		}
 
-		if constexpr (componentdetail::HasCreateDestroySubstructsV<T>) {
+		if constexpr (componentdetail::CCreateDestoryComp<T>) {
 			registry->get_or_emplace<typename T::Destroy>(entity);
 		}
 		else {
