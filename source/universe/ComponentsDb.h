@@ -58,13 +58,13 @@ public:
 
 		entry.emplace = [](registry& r, entity e) {
 			auto& component = r.emplace<T>(e);
-			if constexpr (HasCreateDestroySubstructsV<T>) {
+			if constexpr (CCreateDestoryComp<T>) {
 				r.emplace<typename T::Create>(e);
 			}
-			if constexpr (HasDirtySubstructV<T>) {
+			if constexpr (CDirtableComp<T>) {
 				r.emplace<typename T::Dirty>(e);
 			}
-			if constexpr (HasSelfMemberVariableEntity<T> && !std::is_same_v<T, BasicComponent>) {
+			if constexpr (CSelfEntityMember<T> && !std::is_same_v<T, BasicComponent>) {
 				component.self = Entity{ e, &r };
 			}
 		};
@@ -74,13 +74,13 @@ public:
 		};
 
 		entry.markDestroy = [](registry& r, entity e) {
-			if constexpr (HasCreateDestroySubstructsV<T>) {
+			if constexpr (CCreateDestoryComp<T>) {
 				r.emplace<typename T::Destroy>(e);
 			}
 		};
 
 		entry.safeRemove = [](registry& r, entity e) {
-			if constexpr (HasCreateDestroySubstructsV<T>) {
+			if constexpr (CCreateDestoryComp<T>) {
 				r.emplace<typename T::Destroy>(e);
 			}
 			else {
@@ -97,7 +97,7 @@ public:
 		};
 
 		entry.markDirty = [](registry& r, entity e) {
-			if constexpr (HasDirtySubstructV<T>) {
+			if constexpr (CDirtableComp<T>) {
 				r.get_or_emplace<typename T::Dirty>(e);
 			}
 		};
@@ -109,16 +109,16 @@ public:
 	static void RegisterToClearDirties(std::vector<void (*)(entt::registry&)>& clearFunctions)
 	{
 		using namespace componentdetail;
-		if constexpr (HasDirtySubstructV<T> || HasCreateDestroySubstructsV<T>) {
+		if constexpr (CDirtableComp<T> || CCreateDestoryComp<T>) {
 
 			clearFunctions.emplace_back([](entt::registry& r) {
-				if constexpr (HasCreateDestroySubstructsV<T>) {
+				if constexpr (CCreateDestoryComp<T>) {
 					for (auto& [ent, comp] : r.view<T, typename T::Destroy>().each()) {
 						r.remove<T>(ent);
 					}
 					r.clear<typename T::Create, typename T::Destroy>();
 				}
-				if constexpr (HasDirtySubstructV<T>) {
+				if constexpr (CDirtableComp<T>) {
 					r.clear<typename T::Dirty>();
 				}
 			});
@@ -170,11 +170,11 @@ private:
 
 		ComponentMetaEntry::RegisterToClearDirties<T>(m_clearFuncs);
 
-		if constexpr (componentdetail::IsSceneComponent<T>) {
+		if constexpr (CSceneComp<T>) {
 			SceneCmdSystem::Z_Register<T>();
 		}
 
-		if constexpr (componentdetail::IsScriptlikeComponent<T>) {
+		if constexpr (CScriptlikeComp<T>) {
 			ScriptlikeRunnerSystem::Z_Register<T>();
 		}
 	}
