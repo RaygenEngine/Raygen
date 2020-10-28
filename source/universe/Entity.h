@@ -18,16 +18,41 @@ struct CDestroyFlag {
 struct BasicComponent;
 
 class Entity {
+	friend class ComponentsDb;
+	friend struct ComponentMetaEntry;
+	friend struct BasicComponent;
+	friend class World;
+
+	template<CComponent T>
+	T& GetNonDirty()
+	{
+		static_assert(!std::is_empty_v<T>, "Attempting to get an empty structure. This is not allowed by entt.");
+		return registry->get<T>(entity);
+	}
+
+	template<CComponent T>
+	void UnsafeRemove() const
+	{
+		return registry->remove<T>(entity);
+	}
+
+
+	// Essentially with this constructor being private we ensure only "World" is allowed to construct real entities.
+	// Default constructor exists and acts as a nullptr to entities.
+	// CHECK: duplicate data here (world & registry) for performance
+	Entity(entt::entity entity_, World* world_, entt::registry& registry_);
+
+	entt::registry* registry{ nullptr };
+	World* world{ nullptr };
+	entt::entity entity{ entt::null };
 
 public:
-	entt::entity entity{ entt::null };
-	entt::registry* registry{ nullptr };
-
 	Entity() = default;
-	Entity(entt::entity ent, entt::registry* reg)
-		: entity(ent)
-		, registry(reg)
+
+	[[nodiscard]] World& GetWorld() const
 	{
+		CLOG_ABORT(!world, "Requesting world from null entity!");
+		return *world;
 	}
 
 	// Adds a component to the entity.
@@ -112,6 +137,13 @@ public:
 		registry->get_or_emplace<typename T::Dirty>(entity);
 	}
 
+	// Mark this component for destruction, requires a CreateDestroy component
+	template<componentdetail::CCreateDestoryComp T>
+	void MarkDestroy()
+	{
+		registry->get_or_emplace<typename T::Destroy>(entity);
+	}
+
 	// Safely removes a component if it exists.
 	// If T::Destroy exists, the actual deletion of the component is deferred and the T::Destroy component flag is added
 	template<CComponent T>
@@ -137,10 +169,17 @@ public:
 
 	[[nodiscard]] constexpr bool operator!=(const Entity& rhs) const noexcept { return !(operator==(rhs)); }
 
+
 	// Provide a "nice" interface to the common component
-	BasicComponent* operator->();
+	[[nodiscard]] BasicComponent& Basic() { return *operator->(); }
+
+	// Provide a "nice" interface to the common component
+	[[nodiscard]] BasicComponent* operator->();
 
 	// Mark the entity for destruction. (It will be deleted at the end of the frame)
 	// Also destroys all attached children
 	void Destroy();
+
+	// Entt ID of the entity. (Used much like a UID for now)
+	uint32 EntID() const { return static_cast<uint32>(entity); }
 };

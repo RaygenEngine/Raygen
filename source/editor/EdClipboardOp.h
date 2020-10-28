@@ -11,7 +11,7 @@ struct ClipboardOp {
 	static void StoreEntity(Entity ent);
 
 	// Returns null entity if paste was invalid
-	static Entity LoadEntity(entt::registry& reg);
+	static Entity LoadEntity(World& reg);
 
 
 	// CHECK: Const without const cast here, fix the const-correctness in void* reflection functions

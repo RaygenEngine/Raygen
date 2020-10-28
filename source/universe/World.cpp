@@ -39,7 +39,7 @@ void World::LoadFromSrcPath()
 	nlohmann::json j;
 	file >> j;
 
-	ComponentsDb::JsonToRegistry(j, reg);
+	ComponentsDb::JsonToRegistry(j, *this);
 }
 
 void World::SaveToDisk(const fs::path& path, bool updateSrcPath)
@@ -58,7 +58,7 @@ void World::SaveToDisk(const fs::path& path, bool updateSrcPath)
 	}
 
 	nlohmann::json j;
-	ComponentsDb::RegistryToJson(reg, j);
+	ComponentsDb::RegistryToJson(*this, j);
 
 	std::ofstream file(srcPath);
 	CLOG_ERROR(!file.is_open(), "Failed to open file: {} when saving world", srcPath);
@@ -70,7 +70,7 @@ void World::SaveToDisk(const fs::path& path, bool updateSrcPath)
 
 Entity World::CreateEntity(const std::string& name)
 {
-	Entity ent{ reg.create(), &reg };
+	Entity ent{ reg.create(), this, reg };
 
 	auto& basic = ent.Add<BasicComponent>();
 	basic.self = ent;
@@ -111,7 +111,7 @@ void World::UpdateWorld(Scene& scene)
 
 	// Clean Up
 	reg.clear<DirtyMovedComp, DirtySrtComp>();
-	ComponentsDb::ClearDirties(reg); // Also destroyes all pairs T, T::Destroy
+	ComponentsDb::ClearDirties(*this); // Also destroyes all pairs T, T::Destroy
 
 
 	for (const auto ent : reg.view<CDestroyFlag>()) {

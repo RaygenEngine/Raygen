@@ -38,11 +38,11 @@ namespace {
 void ClipboardOp::StoreEntity(Entity ent)
 {
 	nlohmann::json j;
-	ComponentsDb::EntityHierarchyToJson(*ent.registry, ent.entity, j);
+	ComponentsDb::EntityHierarchyToJson(ent, j);
 	SetClipboard(j.dump());
 }
 
-Entity ClipboardOp::LoadEntity(entt::registry& reg)
+Entity ClipboardOp::LoadEntity(World& reg)
 {
 	auto clipboard = GetClipboard();
 	if (!clipboard) {

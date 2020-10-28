@@ -29,7 +29,7 @@ namespace {
 				name = name.substr(1) + " Entity";
 
 				ent = world.CreateEntity(name);
-				entityType->emplace(*ent.registry, ent.entity);
+				entityType->emplace(ent);
 			}
 			ImGui::EndMenu();
 		}
@@ -44,7 +44,7 @@ namespace {
 
 void OutlinerWindow::DrawRecurseEntity(World& world, Entity ent, int32 depth)
 {
-	ImGui::PushID(static_cast<uint32>(ent.entity));
+	ImGui::PushID(ent.EntID());
 
 	ImGui::Selectable(U8(u8" " FA_EYE u8" "), false, 0, ImVec2(18.f, 0));
 	ImGui::SameLine();
@@ -99,10 +99,9 @@ void OutlinerWindow::ImguiDraw()
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3.f, 6.f));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.f, 6.f));
 
-
-	for (auto& [ent, bs] : world.reg.view<BasicComponent>().each()) {
+	for (auto& [ent, bs] : world.GetView<BasicComponent>().each()) {
 		if (!bs.parent) {
-			DrawRecurseEntity(world, { ent, &world.reg });
+			DrawRecurseEntity(world, bs.self);
 		}
 	}
 
@@ -134,7 +133,7 @@ void OutlinerWindow::Run_ContextPopup(World& world, Entity entity)
 	// TODO: ECS hide components already in entity
 	if (ImGui::BeginMenu(ETXT(FA_PLUS, " Add Component"))) {
 		if (auto compType = ImEd::ComponentClassMenu(); compType) {
-			compType->emplace(*entity.registry, entity.entity);
+			compType->emplace(entity);
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndMenu();
@@ -152,13 +151,13 @@ void OutlinerWindow::Run_ContextPopup(World& world, Entity entity)
 		ed::ClipboardOp::StoreEntity(entity);
 	}
 	if (ImGui::MenuItem(ETXT(FA_PASTE, " Paste"), "Ctrl+V")) {
-		ed::ClipboardOp::LoadEntity(world.reg)->SetParent(entity);
+		ed::ClipboardOp::LoadEntity(world)->SetParent(entity);
 	}
 	ImGui::Separator();
 	if (ImGui::MenuItem(ETXT(FA_COPY, " Duplicate"), "Ctrl+W")) {
 		// TODO: ECS: Actual duplicate instead of copy paste
 		ed::ClipboardOp::StoreEntity(entity);
-		auto loaded = ed::ClipboardOp::LoadEntity(world.reg);
+		auto loaded = ed::ClipboardOp::LoadEntity(world);
 		loaded->SetParent(entity->parent);
 	}
 	if (ImGui::MenuItem(ETXT(FA_TRASH, " Delete"), "Del")) {
@@ -169,7 +168,7 @@ void OutlinerWindow::Run_ContextPopup(World& world, Entity entity)
 	if (ImGui::MenuItem(ETXT(FA_CERTIFICATE, " Make Prefab"))) {
 		std::string name = "gen-data/Prefab " + entity->name;
 		auto [entry, ptr] = AssetRegistry::CreateEntry<Prefab>(name);
-		ptr->MakeFrom(world.reg, entity.entity);
+		ptr->MakeFrom(entity);
 		ed::AssetsWindow::RefreshEntries();
 	}
 	ImGui::Separator();
@@ -190,14 +189,14 @@ void OutlinerWindow::Run_SpaceContextPopup(World& world)
 		ImGui::CloseCurrentPopup();
 	}
 	if (ImGui::MenuItem(ETXT(FA_PASTE, " Paste"), "Ctrl+V")) {
-		ed::ClipboardOp::LoadEntity(world.reg);
+		ed::ClipboardOp::LoadEntity(world);
 	}
 
 
 	if (ImGui::BeginMenu(ETXT(FA_BOXES, " From Prefab"))) {
 		PodHandle<Prefab> prefab;
 		if (ImEd::AssetSlot("", prefab)) {
-			prefab.Lock()->InsertInto(world.reg);
+			prefab.Lock()->InsertInto(world);
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndMenu();

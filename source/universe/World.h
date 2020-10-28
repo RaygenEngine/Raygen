@@ -1,6 +1,5 @@
 #pragma once
 #include "universe/BasicComponent.h"
-#include "universe/Entity.h"
 
 #include "core/FrameClock.h"
 
@@ -25,11 +24,11 @@ private:
 	FrameClock clock; // TODO: Not using working properly with dilation/pause
 
 	PlayState playState{ PlayState::Stopped };
-
-public:
 	entt::registry reg;
 
+	friend class ComponentsDb;
 
+public:
 	fs::path srcPath;
 	World(const fs::path& path = {});
 
@@ -44,6 +43,11 @@ public:
 
 	[[nodiscard]] World::PlayState GetPlayState() const { return playState; }
 
+	template<CComponent... T, CComponent... Exclude>
+	auto GetView(entt::exclude_t<Exclude...> excl = {})
+	{
+		return reg.view<T...>(excl);
+	}
 
 public:
 	void TogglePause() { playState == PlayState::Paused ? Unpause() : Pause(); }

@@ -13,16 +13,6 @@
 	struct Destroy {                                                                                                   \
 	}
 
-#define COMP_BEGINENDPLAY                                                                                              \
-	struct BeginPlay {                                                                                                 \
-	};                                                                                                                 \
-	struct EndPlay {                                                                                                   \
-	}
-
-#define COMP_TICKABLE                                                                                                  \
-	struct Tickable {                                                                                                  \
-	};
-
 
 struct DirtyMovedComp {
 };
