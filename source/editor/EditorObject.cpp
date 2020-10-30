@@ -150,33 +150,14 @@ void EditorObject_::UpdateEditor()
 		m_windowsComponent.Draw();
 
 		// Attempt to predict the viewport size for the first run, might be a bit off.
-		ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
-		ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_NoScrollbar);
+		// ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
+		// ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_NoScrollbar);
 
-		if (ImEd::Button(ETXT(FA_SAVE, "Save"))) {
-			SaveLevel();
-		}
-		ImGui::SameLine();
-		if (ImEd::Button(ETXT(FA_FOLDER_OPEN, "Load"))) {
-			OpenLoadDialog();
-		}
 
-		auto worldState = m_currentWorld->GetPlayState();
-		using enum World::PlayState;
+		// std::string s = fmt::format("{:.1f} FPS", Engine.GetFPS());
+		// ImGui::Text(s.c_str());
 
-		// TODO: pause
-		if (worldState == Stopped && ImEd::Button(ETXT(FA_PLAY, "Play"))) {
-			m_currentWorld->BeginPlay();
-		}
-		if (worldState == Playing && ImEd::Button(ETXT(FA_STOP, "Stop"))) {
-			m_currentWorld->EndPlay();
-		}
-
-		std::string s
-			= fmt::format("{:.1f} FPS : Rt Index: {}", Engine.GetFPS(), 0 /*vl::Renderer->m_raytracingPass.m_rtFrame*/);
-		ImGui::Text(s.c_str());
-
-		ImGui::End();
+		// ImGui::End();
 	}
 	ImguiImpl::EndFrame();
 
@@ -266,6 +247,7 @@ void EditorObject_::SaveLevel()
 {
 	if (m_currentWorld && !m_currentWorld->srcPath.empty()) {
 		m_currentWorld->SaveToDisk();
+		LOG_REPORT("Level saved at: {}", m_currentWorld->srcPath);
 	}
 	else if (m_currentWorld) {
 		SaveLevelAs();

@@ -29,10 +29,12 @@ public:
 
 	void MakeMainMenu();
 
+
 private:
 	void DrawBar();
 
 	BoolFlag openPopupDeleteLocal{ false };
+	BoolFlag openPopupNewLevel{ false };
 
 
 	bool isMaximised{ false };

@@ -216,6 +216,52 @@ bool EnumDropDown(const char* label, T& enumval)
 }
 
 
+template<typename T>
+void OkCancelModal(const char* title, const char* text, T& onOk)
+{
+	if (ImGui::BeginPopupModal(title, 0, ImGuiWindowFlags_AlwaysAutoResize)) {
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetFontSize() / 4.f);
+		ImGui::Text(text);
+		ImGui::Separator();
+
+		if (ImGui::Button("OK", ImVec2(120, 40))) {
+			onOk();
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(120, 40))) {
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+}
+
+template<typename T>
+void OkCancelModal(const char* title, const char* text, BoolFlag& openFlag, T& onOk)
+{
+	if (openFlag.Access()) {
+		ImGui::OpenPopup(title);
+	}
+
+	OkCancelModal(title, text, onOk);
+}
+
+template<typename T>
+void OkCancelModal(BoolFlag& openFlag, const char* text, T& onOk)
+{
+	fmt::basic_memory_buffer<char, 64> memory;
+	fmt::format_to(memory, "##{}\0", (void*)&openFlag);
+	OkCancelModal(memory.data(), text, openFlag, onOk);
+}
+
+bool ButtonNoBorderText(const char* text, ImVec2 extraPad = ImVec2(4.f, 2.f), bool padIsSize = false);
+
+
+bool ButtonIcon(const char8_t* icon, ImVec2 size = ImVec2(18.f, 0));
+
+
+bool ButtonMediumIcon(const char8_t* icon, ImVec2 size = ImVec2(34.f, 0));
+
 const ComponentMetaEntry* ComponentClassMenu();
 
 } // namespace ImEd
