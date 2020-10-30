@@ -40,6 +40,22 @@ void AddLargeAssetIconsFont(ImFontAtlas* atlas)
 		= atlas->AddFontFromFileTTF("engine-data/fonts/Font-Awesome-5-Free-Solid-900.ttf", 52.f, nullptr, ranges.Data);
 }
 
+void AddMediumSizeIconsFont(ImFontAtlas* atlas)
+{
+	static ImVector<ImWchar> ranges;
+	ImFontAtlas::GlyphRangesBuilder builder;
+
+	builder.AddText(" .!?");
+	builder.AddText(U8(FA_SAVE));
+	builder.AddText(U8(FA_FOLDER_OPEN));
+	builder.AddText(U8(FA_PLAY));
+	builder.AddText(U8(FA_PAUSE));
+	builder.AddText(U8(FA_STOP));
+	builder.BuildRanges(&ranges); // Build the final result (ordered ranges with all the unique characters submitted)
+
+	ImguiImpl::s_MediumSizeIconFont
+		= atlas->AddFontFromFileTTF("engine-data/fonts/Font-Awesome-5-Free-Solid-900.ttf", 36.f, nullptr, ranges.Data);
+}
 
 inline void CorporateStyle()
 {
@@ -268,6 +284,7 @@ void SetStyle()
 		= io.Fonts->AddFontFromFileTTF("engine-data/fonts/SourceCodePro-Semibold.ttf", 18.f, nullptr, ranges);
 
 	AddLargeAssetIconsFont(io.Fonts);
+	AddMediumSizeIconsFont(io.Fonts);
 
 	io.FontAllowUserScaling = true;
 	io.Fonts->Build();

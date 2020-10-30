@@ -7,6 +7,7 @@
 #include "universe/Universe.h"
 #include "universe/World.h"
 #include "engine/Events.h"
+#include "engine/Engine.h"
 
 
 #include <glfw/glfw3.h>
@@ -25,7 +26,7 @@ void CaptionMenuBar::MakeMainMenu()
 
 	auto& sceneMenu = mainMenu.AddSubMenu("Scene");
 
-	sceneMenu.AddEntry(U8(FA_FILE u8"  New"), [&]() { editor.NewLevel(); });
+	sceneMenu.AddEntry(U8(FA_FILE u8"  New"), [&]() { openPopupNewLevel.Set(); });
 	sceneMenu.AddEntry(U8(FA_SAVE u8"  Save"), [&]() { editor.SaveLevel(); });
 	sceneMenu.AddEntry(U8(FA_SAVE u8"  Save As"), [&]() { editor.SaveLevelAs(); });
 	sceneMenu.AddEntry(U8(FA_SAVE u8"  Save All"), [&]() { editor.SaveAll(); });
@@ -53,6 +54,28 @@ void CaptionMenuBar::MakeMainMenu()
 	}
 }
 
+namespace {
+	void DrawPlayStopFpsWidget(EditorObject_& editor, ImVec2 scaledSize)
+	{
+		auto world = editor.m_currentWorld;
+		const char* icon = world->IsStopped() ? U8(FA_PLAY) : U8(FA_STOP);
+
+		fmt::basic_memory_buffer<char, 100> s;
+		fmt::format_to(s, " {}  Raygen - {:.1f} FPS ###PlayStopCaptionTxt", icon, Engine.GetFPS());
+		auto size = ImGui::CalcTextSize(s.data(), nullptr, true);
+		float sizeW = std::round(size.x * 0.1f) / 0.1f; // Round some pixels to avoid resizing everyframe
+
+		ImGui::SetCursorPosX((scaledSize.x / 2.f) - size.x / 2.f);
+		if (ImEd::ButtonNoBorderText(s.data(), ImVec2(sizeW, size.y), true)) {
+			if (world->IsPlaying()) {
+				world->EndPlay();
+			}
+			else if (world->IsStopped()) {
+				world->BeginPlay();
+			}
+		}
+	}
+} // namespace
 void CaptionMenuBar::DrawBar()
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.f, 6.f)); // On edit update imextras.h c_MenuPaddingY
@@ -64,10 +87,20 @@ void CaptionMenuBar::DrawBar()
 	ImGui::SetCursorPosX(
 		ImGui::GetCursorPosX() - 1.f); // Offset to draw at left most pixel (allow clicking at 0,0 pixel when maximized)
 
+	// Draw Menus
 	auto initialCursorPos = ImGui::GetCursorPos();
 	ImVec2 scaledSize = ImGui::GetCurrentWindow()->MenuBarRect().GetSize();
 	mainMenu.DrawOptions(glm::vec2{ 1.f, 7.f }, glm::vec2{ 10.f, 7.f });
 
+	// Additional save button after the last menu.
+	if (ImEd::ButtonIcon(FA_SAVE)) {
+		editor.SaveLevel();
+	}
+
+	// Draw FPS & play/stop widget in the middle:
+	DrawPlayStopFpsWidget(editor, scaledSize);
+
+	// Draw window buttons (minimize, resize exit)
 	constexpr float c_menuItemWidth = 30.f;
 	auto rightSideCursPos = initialCursorPos;
 	rightSideCursPos.x = initialCursorPos.x + scaledSize.x - (3.f * (c_menuItemWidth + 20.f));
@@ -110,30 +143,17 @@ void CaptionMenuBar::Draw()
 {
 	DrawBar();
 
-	if (openPopupDeleteLocal.Access()) {
-		ImGui::OpenPopup("Delete Local");
-	}
-
-	if (ImGui::BeginPopupModal("Delete Local", 0, ImGuiWindowFlags_AlwaysAutoResize)) {
-		ImGui::Text("Local scene will be lost. Are you sure?\n");
-		ImGui::Separator();
-
-		if (ImGui::Button("OK", ImVec2(120, 40))) {
-			fs::remove("local.json");
-			if (!fs::copy_file("engine-data/default.json", "local.json")) {
-				LOG_ERROR("Failed to copy default world file to local.");
-			}
-			else {
-				Universe::LoadMainWorld("local.json");
-			}
-			ImGui::CloseCurrentPopup();
+	ImEd::OkCancelModal("Delete Local", "Local scene will be lost. Are you sure?\n", openPopupDeleteLocal, []() {
+		fs::remove("local.json");
+		if (!fs::copy_file("engine-data/default.json", "local.json")) {
+			LOG_ERROR("Failed to copy default world file to local.");
 		}
-		ImGui::SetItemDefaultFocus();
-		ImGui::SameLine();
-		if (ImGui::Button("Cancel", ImVec2(120, 40))) {
-			ImGui::CloseCurrentPopup();
+		else {
+			Universe::LoadMainWorld("local.json");
 		}
-		ImGui::EndPopup();
-	}
+	});
+
+	ImEd::OkCancelModal(
+		"New Level", "Unsaved changes will be lost.\nAre you sure?", openPopupNewLevel, [&]() { editor.NewLevel(); });
 }
 } // namespace ed
