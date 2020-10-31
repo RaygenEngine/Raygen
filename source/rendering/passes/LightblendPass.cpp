@@ -1,26 +1,5 @@
 #include "LightblendPass.h"
 
-#include "engine/Engine.h"
-#include "engine/Input.h"
-#include "engine/profiler/ProfileScope.h"
-#include "rendering/assets/GpuMaterialArchetype.h"
-#include "rendering/assets/GpuMaterialInstance.h"
-#include "rendering/assets/GpuMesh.h"
-#include "rendering/assets/GpuSkinnedMesh.h"
-#include "rendering/Device.h"
-#include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
-#include "rendering/scene/Scene.h"
-#include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneGeometry.h"
-#include "rendering/passes/lightblend/DirlightBlend.h"
-#include "rendering/passes/lightblend/PointlightBlend.h"
-#include "rendering/passes/lightblend/ReflprobeBlend.h"
-#include "rendering/passes/lightblend/SpotlightBlend.h"
-
-#include <glm/gtc/matrix_inverse.hpp>
-
-#include "assets/shared/GeometryShared.h"
 
 namespace vl {
 

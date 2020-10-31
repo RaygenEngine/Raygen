@@ -1,7 +1,5 @@
 #include "PodExport.h"
 
-#include "core/StringConversions.h"
-#include "core/StringUtl.h"
 #include "reflection/PodTools.h"
 #include "reflection/ReflectionTools.h"
 

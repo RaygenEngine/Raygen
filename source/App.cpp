@@ -6,7 +6,6 @@
 #include "platform/Platform.h"
 #include "rendering/Rendering.h"
 #include "universe/Universe.h"
-#include "editor/Editor.h"
 #include "rendering/Layer.h"
 
 #include <glfw/glfw3.h>

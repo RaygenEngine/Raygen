@@ -1,6 +1,5 @@
 #include "NativeFileBrowser.h"
 
-#include "engine/Logger.h"
 
 #include <nativefiledialog/src/include/nfd.h>
 

@@ -1,8 +1,6 @@
 #include "GpuSampler.h"
 
 #include "assets/pods/Sampler.h"
-#include "rendering/Device.h"
-#include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
 
 using namespace vl;

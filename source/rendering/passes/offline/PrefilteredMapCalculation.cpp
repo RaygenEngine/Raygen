@@ -56,7 +56,7 @@ void PrefilteredMapCalculation::RecordPass(vk::CommandBuffer cmdBuffer, const Sc
 	};
 
 	// for each mip / framebuffer / face
-	for (uint32 mip = 0; mip < rp.ubo.lodCount; ++mip) {
+	for (int32 mip = 0; mip < rp.ubo.lodCount; ++mip) {
 		for (uint32 i = 0; i < 6; ++i) {
 
 			uint32 mipResolution = static_cast<uint32>(resolution * std::pow(0.5, mip));

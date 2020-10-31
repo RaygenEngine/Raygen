@@ -1,7 +1,5 @@
 #include "ReflProbeComponent.h"
 
-#include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/scene/SceneReflprobe.h"
 
 DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)

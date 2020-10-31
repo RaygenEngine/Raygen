@@ -1,7 +1,6 @@
 #include "SpotlightBlend.h"
 
 #include "rendering/core/PipeUtl.h"
-#include "rendering/Layouts.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/StaticPipes.h"

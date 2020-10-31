@@ -3,7 +3,6 @@
 #include "assets/AssetManager.h"
 #include "assets/pods/Image.h"
 #include "assets/pods/Mesh.h"
-#include "assets/AssetManager.h"
 
 #include "assets/pods/MaterialArchetype.h"
 

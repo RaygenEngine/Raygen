@@ -2,9 +2,7 @@
 
 #include "assets/AssetRegistry.h"
 #include "assets/pods/Image.h"
-#include "rendering/Device.h"
 #include "rendering/Renderer.h"
-#include "rendering/wrappers/Buffer.h"
 
 using namespace vl;
 

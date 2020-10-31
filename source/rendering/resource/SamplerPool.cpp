@@ -2,10 +2,7 @@
 
 #include "rendering/Device.h"
 
-
 namespace vl {
-
-
 vk::Sampler SamplerPool::AcquireSampler(const vk::SamplerCreateInfo& createInfo)
 {
 	SamplerParams state;

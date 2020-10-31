@@ -1,12 +1,8 @@
 #include "MaterialInstance.h"
 
 
-#include "assets/pods/MaterialArchetype.h"
 #include "reflection/ReflectionTools.h"
 #include "assets/PodEditor.h"
-
-#include <nlohmann/json.hpp>
-#include <fstream>
 
 
 void MaterialInstance::Export(const fs::path& path)

@@ -1,6 +1,5 @@
 #include "UnlitVolumePass.h"
 
-#include "assets/shared/GeometryShared.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Renderer.h"

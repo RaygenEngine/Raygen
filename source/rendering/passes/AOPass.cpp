@@ -1,15 +1,10 @@
 #include "AOPass.h"
 
 #include "engine/console/ConsoleVariable.h"
-#include "engine/Input.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
-#include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
-#include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/util/WriteDescriptorSets.h"
 
 ConsoleVariable<int32> console_rtSamples{ "ao.samples", 2, "Set ao sample count" };
 

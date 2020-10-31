@@ -6,7 +6,6 @@
 #include "assets/pods/Animation.h"
 #include "assets/pods/SkinnedMesh.h"
 
-#include <glm/gtx/matrix_decompose.hpp>
 #include <nlohmann/json.hpp>
 #include <queue>
 

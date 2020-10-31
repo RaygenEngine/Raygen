@@ -1,6 +1,5 @@
 #include "Entity.h"
 
-#include "universe/BasicComponent.h"
 #include "universe/ComponentsDb.h"
 
 BasicComponent* Entity::operator->()

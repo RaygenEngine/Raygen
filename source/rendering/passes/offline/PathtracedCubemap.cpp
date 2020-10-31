@@ -1,24 +1,10 @@
 #include "PathtracedCubemap.h"
 
-#include "assets/AssetRegistry.h"
-#include "assets/PodEditor.h"
-#include "assets/pods/Cubemap.h"
-#include "assets/pods/EnvironmentMap.h"
-#include "engine/console/ConsoleVariable.h"
-#include "engine/Input.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuCubemap.h"
-#include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
-#include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
-#include "rendering/scene/Scene.h"
-#include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneReflProbe.h"
-#include "rendering/util/WriteDescriptorSets.h"
-#include "rendering/wrappers/CmdBuffer.h"
-#include "rendering/wrappers/Buffer.h"
 
 namespace {
 struct PushConstant {

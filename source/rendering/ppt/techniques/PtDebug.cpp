@@ -3,7 +3,6 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Renderer.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/Device.h"
 #include "rendering/Layouts.h"
 
 namespace vl {

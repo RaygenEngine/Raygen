@@ -1,17 +1,11 @@
 #include "EdAttachmentDebuggerWindow.h"
 
-#include "editor/DataStrings.h"
 #include "editor/EditorObject.h"
-#include "editor/imgui/ImEd.h"
-#include "editor/imgui/ImguiUtil.h"
 #include "rendering/Renderer.h"
-#include "rendering/scene/Scene.h"
-#include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "engine/Events.h"
 #include "rendering/Layer.h"
 
-#include <imgui/imgui.h>
 
 namespace ed {
 
