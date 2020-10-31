@@ -11,6 +11,8 @@
 #include "rendering/passes/lightblend/PointlightBlend.h"
 #include "rendering/passes/lightblend/ReflprobeBlend.h"
 #include "rendering/passes/lightblend/SpotlightBlend.h"
+#include "rendering/passes/unlit/UnlitBillboardPass.h"
+#include "rendering/passes/unlit/UnlitVolumePass.h"
 #include "rendering/passes/UnlitPass.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/scene/SceneDirlight.h"
@@ -106,7 +108,6 @@ void Renderer_::RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const S
 		if (rp->shouldBuild.Access())
 			[[unlikely]]
 			{
-
 				rp->surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 					vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
@@ -144,6 +145,8 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRe
 
 		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc);
 		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
+		StaticPipes::Get<UnlitVolumePass>().Draw(cmdBuffer, sceneDesc);
+		StaticPipes::Get<UnlitBillboardPass>().Draw(cmdBuffer, sceneDesc);
 	});
 }
 

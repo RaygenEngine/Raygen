@@ -1,9 +1,9 @@
 #pragma once
 
 #include "engine/Listener.h"
-#include "rendering/offline/IrradianceMapCalculation.h"
-#include "rendering/offline/PathtracedCubemap.h"
-#include "rendering/offline/PrefilteredMapCalculation.h"
+#include "rendering/passes/offline/IrradianceMapCalculation.h"
+#include "rendering/passes/offline/PathtracedCubemap.h"
+#include "rendering/passes/offline/PrefilteredMapCalculation.h"
 #include "rendering/passes/AOPass.h"
 #include "rendering/passes/MirrorPass.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
