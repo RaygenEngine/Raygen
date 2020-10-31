@@ -2,7 +2,6 @@
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/scene/SceneGeometry.h"
-#include "assets/pods/Animation.h"
 #include "assets/pods/SkinnedMesh.h"
 #include "rendering/assets/GpuSkinnedMesh.h"
 

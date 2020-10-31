@@ -1,9 +1,7 @@
 #include "ImguiImpl.h"
 
 #include "assets/PodIncludes.h"
-#include "editor/imgui/ImGuizmo.h"
 #include "engine/console/ConsoleVariable.h"
-#include "engine/Engine.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
 #include "reflection/PodTools.h"
@@ -11,15 +9,10 @@
 #include "rendering/Instance.h"
 #include "rendering/Layer.h"
 #include "rendering/output/SwapchainOutputPass.h"
-#include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
-#include "rendering/wrappers/CmdBuffer.h"
-#include "rendering/wrappers/Swapchain.h"
 
-#include <imgui/imgui.h>
 #include <imgui/examples/imgui_impl_glfw.h>
 #include <imgui/examples/imgui_impl_vulkan.h>
-#include <glfw/glfw3.h>
 
 namespace imguistyle {
 void AddLargeAssetIconsFont(ImFontAtlas* atlas)

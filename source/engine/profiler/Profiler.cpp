@@ -1,6 +1,5 @@
 #include "Profiler.h"
 
-#include "engine/Logger.h"
 #include "engine/profiler/ProfileScope.h"
 
 #include <fstream>

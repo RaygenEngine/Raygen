@@ -1,9 +1,6 @@
 #include "BasicComponent.h"
 
 
-#include <glm/gtx/matrix_decompose.hpp>
-
-
 void BasicComponent::SetParent(Entity newParent, bool preserveWorldTransform, int32 index)
 {
 	auto maybePreserveWT = [&, originalWt = world_.transform]() {

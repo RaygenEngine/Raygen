@@ -1,16 +1,10 @@
 #include "CaptionMenuBar.h"
 
-#include "editor/imgui/ImEd.h"
 #include "editor/EditorObject.h"
-#include "editor/EdComponentWindows.h"
 #include "platform/Platform.h"
 #include "universe/Universe.h"
-#include "universe/World.h"
-#include "engine/Events.h"
-
 
 #include <glfw/glfw3.h>
-
 
 namespace ed {
 

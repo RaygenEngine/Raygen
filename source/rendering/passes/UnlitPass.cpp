@@ -1,20 +1,12 @@
 #include "UnlitPass.h"
 
-#include "engine/Engine.h"
-#include "engine/Input.h"
-#include "engine/profiler/ProfileScope.h"
+#include "assets/shared/GeometryShared.h"
+#include "engine/console/ConsoleVariable.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/assets/GpuMesh.h"
-#include "rendering/assets/GpuSkinnedMesh.h"
-#include "rendering/Device.h"
-#include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
-#include "rendering/scene/Scene.h"
-#include "engine/console/ConsoleVariable.h"
-#include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/SceneCamera.h"
-#include "assets/shared/GeometryShared.h"
+#include "rendering/scene/SceneGeometry.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
 
@@ -180,8 +172,6 @@ vk::UniquePipeline UnlitPass::CreatePipeline(
 
 void UnlitPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	PROFILE_SCOPE(Renderer);
-
 	for (auto geom : sceneDesc->Get<SceneGeometry>()) {
 		PushConstant pc{ //
 			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
@@ -190,9 +180,8 @@ void UnlitPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
-			if (!arch.isUnlit) [[likely]] {
-				continue;
-			}
+			if (!arch.isUnlit)
+				[[likely]] { continue; }
 
 			auto& plLayout = *arch.unlit.pipelineLayout;
 

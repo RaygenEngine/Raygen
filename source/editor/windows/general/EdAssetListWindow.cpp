@@ -1,15 +1,8 @@
 #include "EdAssetListWindow.h"
 
-#include "core/StringUtl.h"
 #include "editor/EditorObject.h"
-#include "editor/imgui/ImEd.h"
-#include "editor/imgui/ImguiImpl.h"
-#include "editor/imgui/ImguiUtil.h"
 #include "editor/utl/EdAssetUtils.h"
-#include "reflection/ReflectionTools.h"
 
-#include <spdlog/fmt/fmt.h>
-#include <imgui/imgui_internal.h>
 
 namespace ed {
 AssetListWindow::AssetListWindow(std::string_view name)

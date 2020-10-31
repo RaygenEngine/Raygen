@@ -1,6 +1,5 @@
 #include "PhysicalDevice.h"
 
-#include "engine/Logger.h"
 
 namespace vl {
 RPhysicalDevice::RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inSurface)

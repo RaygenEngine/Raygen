@@ -1,9 +1,6 @@
 #include "PtBase.h"
 
-#include "assets/pods/Shader.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/Device.h"
-#include "rendering/wrappers/Swapchain.h"
 #include "rendering/Layouts.h"
 
 namespace vl {

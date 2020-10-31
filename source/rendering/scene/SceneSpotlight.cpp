@@ -1,6 +1,5 @@
 #include "SceneSpotlight.h"
 
-#include "rendering/structures/Depthmap.h"
 
 void SceneSpotlight::MaybeResizeShadowmap(uint32 width, uint32 height)
 {

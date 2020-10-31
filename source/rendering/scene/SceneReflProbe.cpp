@@ -18,7 +18,7 @@ SceneReflprobe::SceneReflprobe()
 
 void SceneReflprobe::ShouldResize()
 {
-	int32 resolution = std::pow(2, ubo.lodCount);
+	uint32 resolution = static_cast<uint32>(std::pow(2, ubo.lodCount));
 
 	if (resolution == surroundingEnv.extent.width) {
 		return;
@@ -73,7 +73,7 @@ void SceneReflprobe::ShouldResize()
 	///////////////////////////////
 	pref_cubemapMips.clear();
 	// create framebuffers for each lod/face
-	for (uint32 mip = 0; mip < ubo.lodCount; ++mip) {
+	for (int32 mip = 0; mip < ubo.lodCount; ++mip) {
 
 		pref_cubemapMips.emplace_back();
 		pref_cubemapMips[mip].faceViews = prefiltered.GetFaceViews(mip);

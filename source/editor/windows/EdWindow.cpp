@@ -1,12 +1,7 @@
 #include "EdWindow.h"
 
-#include "engine/Logger.h"
-#include "assets/AssetManager.h"
 #include "editor/imgui/ImEd.h"
 
-#include "reflection/ReflClass.h"
-
-#include <imgui/imgui.h>
 
 namespace ed {
 

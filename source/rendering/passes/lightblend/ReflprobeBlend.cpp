@@ -1,13 +1,10 @@
 #include "ReflprobeBlend.h"
 
-#include "rendering/core/PipeUtl.h"
-#include "rendering/Layouts.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/StaticPipes.h"
 #include "rendering/scene/SceneReflprobe.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/scene/Scene.h"
 
 namespace {

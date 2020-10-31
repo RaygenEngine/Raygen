@@ -1,6 +1,5 @@
 #include "FindPodUsers.h"
 
-#include "assets/AssetRegistry.h"
 #include "reflection/ReflectionTools.h"
 
 struct IsUserOfPodVisitor {

@@ -1,11 +1,6 @@
 #include "World.h"
 
-#include "assets/AssetManager.h"
 #include "editor/Editor.h"
-#include "engine/Engine.h"
-#include "engine/Input.h"
-#include "rendering/scene/Scene.h"
-#include "rendering/scene/SceneCamera.h"
 #include "universe/components/CameraComponent.h"
 #include "universe/components/DirlightComponent.h"
 #include "universe/components/PointlightComponent.h"
@@ -13,9 +8,7 @@
 #include "universe/components/ScriptComponent.h"
 #include "universe/components/SpotlightComponent.h"
 #include "universe/components/StaticMeshComponent.h"
-#include "universe/ComponentsDb.h"
 #include "universe/systems/AnimatorSystem.h"
-#include "universe/systems/ScriptlikeRunnerSystem.h"
 
 #include <nlohmann/json.hpp>
 #include <fstream>

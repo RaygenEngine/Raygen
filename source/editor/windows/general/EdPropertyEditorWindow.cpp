@@ -2,18 +2,11 @@
 
 #include "assets/PodEditor.h"
 #include "universe/ComponentsDb.h"
-#include "editor/DataStrings.h"
-#include "editor/Editor.h"
 #include "editor/imgui/ImAssetSlot.h"
-#include "editor/imgui/ImguiUtil.h"
-#include "editor/imgui/ImGuizmo.h"
 #include "editor/windows/general/EdOutlinerWindow.h"
 #include "engine/profiler/ProfileScope.h"
-#include "reflection/PodTools.h"
 #include "reflection/ReflectionTools.h"
-#include "universe/Universe.h"
 
-#include <glm/gtc/type_ptr.hpp>
 
 inline float* FromVec4(glm::vec4& vec4)
 {

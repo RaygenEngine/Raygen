@@ -1,18 +1,12 @@
 #include "Scene.h"
 
-#include "assets/shared/GeometryShared.h"
 #include "engine/console/ConsoleVariable.h"
-#include "rendering/assets/GpuMesh.h"
-#include "rendering/Device.h"
-#include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/ScenePointlight.h"
 #include "rendering/scene/SceneReflprobe.h"
 #include "rendering/scene/SceneSpotlight.h"
-#include "rendering/scene/ScenePointlight.h"
-
 
 void Scene::EnqueueEndFrame()
 {

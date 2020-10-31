@@ -1,7 +1,6 @@
 #include "SwapchainOutputPass.h"
 
 #include "rendering/Instance.h"
-#include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"

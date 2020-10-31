@@ -1,13 +1,11 @@
 #include "UnlitBillboardPass.h"
 
-#include "assets/shared/GeometryShared.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneReflprobe.h"
 #include "rendering/StaticPipes.h"
-#include "rendering/passes/lightblend/PointlightBlend.h"
 
 
 namespace {

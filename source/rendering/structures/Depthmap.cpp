@@ -1,6 +1,5 @@
 #include "Depthmap.h"
 
-#include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/resource/GpuResources.h"

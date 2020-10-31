@@ -1,10 +1,6 @@
 #include "Layouts.h"
 
-#include "rendering/Device.h"
 #include "rendering/passes/DepthmapPass.h"
-#include "rendering/passes/GbufferPass.h"
-#include "rendering/passes/LightblendPass.h"
-#include "rendering/passes/UnlitPass.h"
 
 struct AttachmentDeclaration {
 };

@@ -2,11 +2,6 @@
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/Device.h"
-#include "rendering/Renderer.h"
-#include "rendering/scene/Scene.h"
-#include "rendering/scene/SceneSpotlight.h"
-#include "rendering/structures/Depthmap.h"
 #include "rendering/scene/SceneCamera.h"
 
 namespace vl {
