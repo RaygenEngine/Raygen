@@ -62,17 +62,31 @@ namespace {
 
 		fmt::basic_memory_buffer<char, 100> s;
 		fmt::format_to(s, " {}  Raygen - {:.1f} FPS ###PlayStopCaptionTxt", icon, Engine.GetFPS());
+
+		bool hasPushedStyle = false;
+		if (world->IsPlaying()) {
+			hasPushedStyle = true;
+			// ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.061f, 0.347f, 0.179f, 1.000f));
+			ImGui::PushStyleColor(ImGuiCol_Header, EdColor::LightGreen);
+			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, EdColor::Green);
+		}
+
 		auto size = ImGui::CalcTextSize(s.data(), nullptr, true);
 		float sizeW = std::round(size.x * 0.1f) / 0.1f; // Round some pixels to avoid resizing everyframe
 
 		ImGui::SetCursorPosX((scaledSize.x / 2.f) - size.x / 2.f);
-		if (ImEd::ButtonNoBorderText(s.data(), ImVec2(sizeW, size.y), true)) {
+
+		if (ImEd::ButtonNoBorderText(s.data(), ImVec2(sizeW, size.y), hasPushedStyle)) {
 			if (world->IsPlaying()) {
 				world->EndPlay();
 			}
 			else if (world->IsStopped()) {
 				world->BeginPlay();
 			}
+		}
+
+		if (hasPushedStyle) {
+			ImGui::PopStyleColor(2);
 		}
 	}
 } // namespace

@@ -254,7 +254,9 @@ void OkCancelModal(BoolFlag& openFlag, const char* text, T& onOk)
 	OkCancelModal(memory.data(), text, openFlag, onOk);
 }
 
-bool ButtonNoBorderText(const char* text, ImVec2 extraPad = ImVec2(4.f, 2.f), bool padIsSize = false);
+// Uses Header style colors.
+bool ButtonNoBorderText(
+	const char* text, ImVec2 extraPad = ImVec2(0.f, 0.f), bool drawBg = false, ImGuiSelectableFlags flags = 0);
 
 
 bool ButtonIcon(const char8_t* icon, ImVec2 size = ImVec2(18.f, 0));
