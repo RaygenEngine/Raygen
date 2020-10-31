@@ -416,20 +416,15 @@ ed::Menu MakeMenu(const ComponentMetaEntry** outEntryPtr)
 	return menu;
 }
 
-bool ButtonNoBorderText(const char* text, ImVec2 extraPad, bool padIsSize)
+bool ButtonNoBorderText(const char* text, ImVec2 size, bool drawBg, ImGuiSelectableFlags flags)
 {
-	ImVec2 size;
-	if (!padIsSize) {
+	if (size.x == 0 && size.y == 0) {
 		size = ImGui::CalcTextSize(text, nullptr, true);
-		size += extraPad;
-		size += extraPad;
-	}
-	else {
-		size = extraPad;
 	}
 
-	return ImGui::Selectable(text, false, 0, size);
+	return ImGui::Selectable(text, drawBg, flags, size);
 }
+
 
 bool ButtonIcon(const char8_t* icon, ImVec2 size)
 {
