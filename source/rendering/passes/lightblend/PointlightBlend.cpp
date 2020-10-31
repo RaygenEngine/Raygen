@@ -1,7 +1,5 @@
 #include "PointlightBlend.h"
 
-#include "rendering/core/PipeUtl.h"
-#include "rendering/Layouts.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/StaticPipes.h"
@@ -216,9 +214,8 @@ vk::UniquePipeline PointlightBlend::MakePipeline()
 		.setBack({}); // Optional
 
 	vk::GraphicsPipelineCreateInfo pipelineInfo{};
-	pipelineInfo
-		.setStageCount(static_cast<uint32>(gpuShader.shaderStages.size())) //
-		.setPStages(gpuShader.shaderStages.data())
+	pipelineInfo //
+		.setStages(gpuShader.shaderStages)
 		.setPVertexInputState(&vertexInputInfo)
 		.setPInputAssemblyState(&inputAssembly)
 		.setPViewportState(&viewportState)
