@@ -24,7 +24,7 @@ struct SceneReflprobe : public SceneStruct {
 	vk::DescriptorSet ptcube_faceArrayDescSet;
 	std::vector<vk::UniqueImageView> ptcube_faceViews;
 
-	std::array<vk::UniqueFramebuffer, 6> irr_framebuffer;
+	std::vector<vk::UniqueFramebuffer> irr_framebuffer;
 	std::vector<vk::UniqueImageView> irr_faceViews;
 
 	std::vector<CubemapMipFrames> pref_cubemapMips;

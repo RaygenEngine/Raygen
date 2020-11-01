@@ -4,9 +4,9 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/SceneCamera.h"
+#include "rendering/scene/SceneIrradianceGrid.h"
 #include "rendering/scene/SceneReflprobe.h"
 #include "rendering/StaticPipes.h"
-
 
 namespace {
 struct PushConstant {
@@ -170,7 +170,7 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 	glm::vec4 cameraRight{ view[0][0], view[1][0], view[2][0], 0.f };
 	glm::vec4 cameraUp{ view[0][1], view[1][1], view[2][1], 0.f };
 
-	// WIP: specific billboards for each entity etc...
+	// WIP: specific billboards for each COMPONENT etc...
 	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
 		PushConstant pc{
 			sceneDesc.viewer.ubo.viewProj,
@@ -184,6 +184,24 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 
 		// draw rectangle
 		cmdBuffer.draw(4u, 1u, 0u, 0u);
+	}
+
+	for (auto ig : sceneDesc->Get<SceneIrradianceGrid>()) {
+
+		for (auto& p : ig->probes) {
+			PushConstant pc{
+				sceneDesc.viewer.ubo.viewProj,
+				p.pos,
+				cameraRight,
+				cameraUp,
+				0.2f,
+			};
+
+			cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+			// draw rectangle
+			cmdBuffer.draw(4u, 1u, 0u, 0u);
+		}
 	}
 }
 

@@ -39,21 +39,19 @@ IrradianceMapCalculation::IrradianceMapCalculation()
 	m_cubeVertexBuffer = RBuffer::CreateTransfer("Cube Vertex", vertices, vk::BufferUsageFlagBits::eVertexBuffer);
 }
 
-void IrradianceMapCalculation::RecordPass(vk::CommandBuffer cmdBuffer, const SceneReflprobe& rp) const
+void IrradianceMapCalculation::RecordPass(vk::CommandBuffer cmdBuffer, const CalcIrrInfo& info) const
 {
-	uint32 resolution = rp.irradiance.extent.width;
-
 	vk::Rect2D scissor{};
 
 	scissor
 		.setOffset({ 0, 0 }) //
-		.setExtent({ resolution, resolution });
+		.setExtent({ info.resolution, info.resolution });
 
 	vk::Viewport viewport{};
 
 	viewport
-		.setWidth(static_cast<float>(resolution)) //
-		.setHeight(static_cast<float>(resolution));
+		.setWidth(static_cast<float>(info.resolution)) //
+		.setHeight(static_cast<float>(info.resolution));
 
 	auto projInverse = glm::perspective(glm::radians(90.0f), 1.f, 1.f, 25.f);
 	projInverse[1][1] *= -1;
@@ -72,7 +70,7 @@ void IrradianceMapCalculation::RecordPass(vk::CommandBuffer cmdBuffer, const Sce
 		vk::RenderPassBeginInfo renderPassInfo{};
 		renderPassInfo
 			.setRenderPass(Layouts->singleFloatColorAttPassLayout.compatibleRenderPass.get()) //
-			.setFramebuffer(rp.irr_framebuffer[i].get());
+			.setFramebuffer(info.faceFramebuffers[i]);
 		renderPassInfo.renderArea
 			.setOffset({ 0, 0 }) //
 			.setExtent(scissor.extent);
@@ -105,8 +103,7 @@ void IrradianceMapCalculation::RecordPass(vk::CommandBuffer cmdBuffer, const Sce
 			cmdBuffer.bindVertexBuffers(0u, { m_cubeVertexBuffer.handle() }, { vk::DeviceSize(0) });
 
 			// descriptor sets
-			cmdBuffer.bindDescriptorSets(
-				vk::PipelineBindPoint::eGraphics, layout(), 0u, rp.surroundingEnvSamplerDescSet, nullptr);
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, info.envmapDescSet, nullptr);
 
 			// draw call (cube)
 			cmdBuffer.draw(static_cast<uint32>(vertices.size() / 3), 1u, 0u, 0u);

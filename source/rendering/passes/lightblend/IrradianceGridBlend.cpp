@@ -1,17 +1,15 @@
-#include "ReflprobeBlend.h"
+#include "IrradianceGridBlend.h"
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/StaticPipes.h"
-#include "rendering/scene/SceneReflprobe.h"
-#include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneCamera.h"
+#include "rendering/scene/SceneIrradianceGrid.h"
+#include "rendering/StaticPipes.h"
 
 namespace {
 struct PushConstant {
-	glm::mat4 reflVolMatVP;
-	glm::vec4 reflPosition;
-	int32 lodCount;
+	glm::vec4 pos[6];
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -21,78 +19,12 @@ static_assert(sizeof(PushConstant) <= 128);
 
 namespace vl {
 
-void ReflprobeBlend::MakeSphere(int32 sectorCount, int32 stackCount, float radius)
-{
-	std::vector<float> vertices;
-	std::vector<int32> indices;
-
-	float x, y, z, xy; // vertex position
-
-	float sectorStep = 2.f * glm::pi<float>() / sectorCount;
-	float stackStep = glm::pi<float>() / stackCount;
-	float sectorAngle, stackAngle;
-
-	for (int32 i = 0; i <= stackCount; ++i) {
-		stackAngle = glm::pi<float>() / 2 - i * stackStep; // starting from pi/2 to -pi/2
-		xy = radius * cosf(stackAngle);                    // r * cos(u)
-		z = radius * sinf(stackAngle);                     // r * sin(u)
-
-		// add (sectorCount+1) vertices per stack
-		// the first and last vertices have same position and normal, but different tex coords
-		for (int32 j = 0; j <= sectorCount; ++j) {
-			sectorAngle = j * sectorStep; // starting from 0 to 2pi
-
-			// vertex position (x, y, z)
-			x = xy * cosf(sectorAngle); // r * cos(u) * cos(v)
-			y = xy * sinf(sectorAngle); // r * cos(u) * sin(v)
-			vertices.push_back(x);
-			vertices.push_back(y);
-			vertices.push_back(z);
-		}
-	}
-
-	int32 k1, k2;
-	for (int32 i = 0; i < stackCount; ++i) {
-		k1 = i * (sectorCount + 1); // beginning of current stack
-		k2 = k1 + sectorCount + 1;  // beginning of next stack
-
-		for (int32 j = 0; j < sectorCount; ++j, ++k1, ++k2) {
-			// 2 triangles per sector excluding first and last stacks
-			// k1 => k2 => k1+1
-			if (i != 0) {
-				indices.push_back(k1);
-				indices.push_back(k2);
-				indices.push_back(k1 + 1);
-			}
-
-			// k1+1 => k2 => k2+1
-			if (i != (stackCount - 1)) {
-				indices.push_back(k1 + 1);
-				indices.push_back(k2);
-				indices.push_back(k2 + 1);
-			}
-		}
-	}
-
-
-	m_sphereVertexBuffer
-		= RBuffer::CreateTransfer("Pointlight Sphere Vertex", vertices, vk::BufferUsageFlagBits::eVertexBuffer);
-	m_sphereIndexBuffer.buffer
-		= RBuffer::CreateTransfer("Pointlight Sphere Index", indices, vk::BufferUsageFlagBits::eIndexBuffer);
-	m_sphereIndexBuffer.count = static_cast<uint32>(indices.size());
-}
-
-ReflprobeBlend::ReflprobeBlend()
-{
-	MakeSphere(18, 9);
-}
-
-vk::UniquePipelineLayout ReflprobeBlend::MakePipelineLayout()
+vk::UniquePipelineLayout IrradianceGridBlend::MakePipelineLayout()
 {
 	auto layouts = {
 		Layouts->renderAttachmentsLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
-		Layouts->envmapLayout.handle(),
+		Layouts->cubemapArray6.handle(),
 	};
 
 	vk::PushConstantRange pushConstantRange{};
@@ -110,11 +42,11 @@ vk::UniquePipelineLayout ReflprobeBlend::MakePipelineLayout()
 	return Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
 
-vk::UniquePipeline ReflprobeBlend::MakePipeline()
+vk::UniquePipeline IrradianceGridBlend::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/reflprobe.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/irragrid.shader");
 	gpuShader.onCompile = [&]() {
-		StaticPipes::Recompile<ReflprobeBlend>();
+		StaticPipes::Recompile<IrradianceGridBlend>();
 	};
 
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
@@ -137,24 +69,8 @@ vk::UniquePipeline ReflprobeBlend::MakePipeline()
 		.setPAttachments(&colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
-	vk::VertexInputBindingDescription bindingDescription{};
-	bindingDescription
-		.setBinding(0u) //
-		.setStride(sizeof(glm::vec3))
-		.setInputRate(vk::VertexInputRate::eVertex);
-
-	vk::VertexInputAttributeDescription attributeDescription{};
-
-	attributeDescription.binding = 0u;
-	attributeDescription.location = 0u;
-	attributeDescription.format = vk::Format::eR32G32B32Sfloat;
-	attributeDescription.offset = 0u;
-
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
-	vertexInputInfo
-		.setVertexBindingDescriptions(bindingDescription) //
-		.setVertexAttributeDescriptions(attributeDescription);
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly
@@ -235,7 +151,7 @@ vk::UniquePipeline ReflprobeBlend::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void IrradianceGridBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
 	auto camDescSet = sceneDesc.viewer.descSet[sceneDesc.frameIndex];
 
@@ -246,24 +162,24 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
 
-	// bind unit sphere once
-	cmdBuffer.bindVertexBuffers(0u, m_sphereVertexBuffer.handle(), vk::DeviceSize(0));
-	cmdBuffer.bindIndexBuffer(m_sphereIndexBuffer.buffer.handle(), vk::DeviceSize(0), vk::IndexType::eUint32);
+	for (auto ig : sceneDesc->Get<SceneIrradianceGrid>()) {
 
-	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &rp->reflDescSet, 0u, nullptr);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &ig->gridDescSet, 0u, nullptr);
 
-		PushConstant pc{
-			sceneDesc.viewer.ubo.viewProj * glm::translate(glm::vec3(rp->position))
-				* glm::scale(glm::vec3(rp->outerRadius)),
-			rp->position,
-			rp->ubo.lodCount,
-		};
+		PushConstant pc{ {
+			ig->probes[0].pos,
+			ig->probes[1].pos,
+			ig->probes[2].pos,
+			ig->probes[3].pos,
+			ig->probes[4].pos,
+			ig->probes[5].pos,
+		} };
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,
 			sizeof(PushConstant), &pc);
 
-		cmdBuffer.drawIndexed(m_sphereIndexBuffer.count, 1u, 0u, 0u, 0u);
+		// big triangle
+		cmdBuffer.draw(3u, 1u, 0u, 0u);
 	}
 }
 
