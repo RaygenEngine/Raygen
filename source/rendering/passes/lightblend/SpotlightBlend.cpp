@@ -53,7 +53,7 @@ vk::UniquePipeline SpotlightBlend::MakePipeline()
 
 void SpotlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
-	auto camDescSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
+	auto camDescSet = sceneDesc.viewer.descSet[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 

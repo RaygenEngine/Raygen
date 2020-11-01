@@ -7,6 +7,26 @@
 #include <mutex>
 
 struct SceneCamera;
+struct Scene;
+struct SceneRenderDesc {
+	Scene* scene{ nullptr };
+	SceneCamera& viewer;
+
+	uint32 frameIndex{ 0 };
+
+	vk::DescriptorSet attDesc;
+
+	// TODO: Scene description should only contain the required scene structs for current frame rendering
+	// apart from occlusion etc
+	SceneRenderDesc(Scene* scene_, SceneCamera& viewer_, uint32 frameIndex)
+		: scene(scene_)
+		, viewer(viewer_)
+		, frameIndex(frameIndex)
+	{
+	}
+
+	Scene* operator->() const { return scene; }
+};
 
 struct Scene {
 
@@ -58,6 +78,7 @@ public:
 
 	void UploadDirty(uint32 frameIndex);
 
+	SceneRenderDesc GetRenderDesc(int32 frameIndex);
 
 	~Scene();
 	void UpdateTopLevelAs();
@@ -78,26 +99,6 @@ private:
 
 	size_t ctxHash;
 	SceneCollectionBase* ctxCollection;
-};
-
-struct SceneRenderDesc {
-	Scene* scene{ nullptr };
-	SceneCamera* viewer{ nullptr };
-
-	uint32 frameIndex{ 0 };
-
-	vk::DescriptorSet attDesc;
-
-	// TODO: Scene description should only contain the required scene structs for current frame rendering
-	// apart from occlusion etc
-	SceneRenderDesc(Scene* scene_, size_t viewerIndex, uint32 frameIndex)
-		: scene(scene_)
-		, viewer(scene_->GetElement<SceneCamera>(viewerIndex))
-		, frameIndex(frameIndex)
-	{
-	}
-
-	Scene* operator->() const { return scene; }
 };
 
 #include "Scene.impl.h"

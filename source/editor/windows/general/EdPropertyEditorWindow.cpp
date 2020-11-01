@@ -246,7 +246,7 @@ void PropertyEditorWindow::ImguiDraw()
 
 	Entity ent = OutlinerWindow::selected;
 
-	if (!ent || !ent.registry->valid(ent.entity)) {
+	if (!ent) {
 		ImGui::Text("No entity selected.");
 		return;
 	}
@@ -286,9 +286,6 @@ void PropertyEditorWindow::Run_BaseProperties(Entity ent)
 
 void PropertyEditorWindow::Run_Components(Entity entity)
 {
-	auto& reg = *entity.registry;
-	auto ent = entity.entity;
-
 	if (ImGui::BeginChild("PropEditor_ComponentsChildWindow")) {
 		ReflectionToImguiVisitor visitor;
 		visitor.fullDisplayMat4 = m_displayMatrix;
@@ -300,7 +297,7 @@ void PropertyEditorWindow::Run_Components(Entity entity)
 
 			ImGui::PushID(comp.entType);
 			auto& cl = *comp.clPtr;
-			auto data = comp.get(reg, ent);
+			auto data = comp.get(entity);
 			CLOG_ERROR(!data, "Visited with type that was not present in the entity.");
 
 			ImGui::SeparatorEx(ImGuiSeparatorFlags_Horizontal);
@@ -308,7 +305,7 @@ void PropertyEditorWindow::Run_Components(Entity entity)
 
 			bool remove = ImGui::Button(U8(FA_TIMES));
 			if (remove) {
-				comp.safeRemove(reg, ent);
+				comp.safeRemove(entity);
 				ImGui::PopID();
 				return;
 			}
@@ -321,7 +318,7 @@ void PropertyEditorWindow::Run_Components(Entity entity)
 				ImGui::Unindent(44.f);
 
 				if (visitor.didEditFlag) {
-					comp.markDirty(reg, ent);
+					comp.markDirty(entity);
 					visitor.didEditFlag = false;
 				}
 			}
@@ -333,7 +330,7 @@ void PropertyEditorWindow::Run_Components(Entity entity)
 			if (ImGui::BeginPopupContextWindow(nullptr, ImGuiMouseButton_Right, false)) {
 				for (auto& [id, entry] : map) {
 					if (ImGui::MenuItem(entry.clPtr->GetNameStr().c_str())) {
-						entry.emplace(reg, ent);
+						entry.emplace(entity);
 					}
 				}
 				ImGui::EndPopup();
@@ -346,7 +343,9 @@ void PropertyEditorWindow::Run_Components(Entity entity)
 void PropertyEditorWindow::Run_ImGuizmo(Entity node)
 {
 	auto& camera = EditorObject->edCamera;
-
+	if (!EditorObject->m_currentWorld->IsStopped()) {
+		return;
+	}
 
 	auto cameraView = camera.view;
 	auto cameraProj = camera.proj;

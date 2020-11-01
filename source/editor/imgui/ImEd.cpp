@@ -413,6 +413,34 @@ ed::Menu MakeMenu(const ComponentMetaEntry** outEntryPtr)
 	return menu;
 }
 
+bool ButtonNoBorderText(const char* text, ImVec2 size, bool drawBg, ImGuiSelectableFlags flags)
+{
+	if (size.x == 0 && size.y == 0) {
+		size = ImGui::CalcTextSize(text, nullptr, true);
+	}
+
+	return ImGui::Selectable(text, drawBg, flags, size);
+}
+
+
+bool ButtonIcon(const char8_t* icon, ImVec2 size)
+{
+	char8_t txt[] = u8" ???? ";
+	txt[1] = icon[0];
+	txt[2] = icon[1];
+	txt[3] = icon[2];
+	txt[4] = icon[3];
+	return ImGui::Selectable(U8(txt), false, 0, size);
+}
+
+bool ButtonMediumIcon(const char8_t* icon, ImVec2 size)
+{
+	ImGui::PushFont(ImguiImpl::s_MediumSizeIconFont);
+	const bool result = ImGui::Selectable(U8(icon), false, 0, size);
+	ImGui::PopFont();
+	return result;
+}
+
 const ComponentMetaEntry* ComponentClassMenu()
 {
 	static const ComponentMetaEntry* entry;

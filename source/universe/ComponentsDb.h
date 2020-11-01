@@ -4,6 +4,7 @@
 #include "universe/BasicComponent.h"
 #include "universe/systems/SceneCmdSystem.h"
 #include "universe/systems/ScriptlikeRunnerSystem.h"
+#include "universe/Entity.h"
 
 #include <nlohmann/json_fwd.hpp>
 
@@ -13,7 +14,7 @@ struct ComponentMetaEntry {
 	entt::id_type entType{};
 
 	template<typename ReturnType>
-	using FnPtr = ReturnType (*)(entt::registry&, entt::entity);
+	using FnPtr = ReturnType (*)(Entity);
 
 	using VoidFnPtr = FnPtr<void>;
 
@@ -46,7 +47,7 @@ private:
 
 
 public:
-	template<typename T>
+	template<CComponent T>
 	static ComponentMetaEntry Make()
 	{
 		using namespace componentdetail;
@@ -56,69 +57,55 @@ public:
 		entry.clPtr = &T::StaticClass();
 		entry.entType = entt::type_info<T>().id();
 
-		entry.emplace = [](registry& r, entity e) {
-			auto& component = r.emplace<T>(e);
-			if constexpr (HasCreateDestroySubstructsV<T>) {
-				r.emplace<typename T::Create>(e);
-			}
-			if constexpr (HasDirtySubstructV<T>) {
-				r.emplace<typename T::Dirty>(e);
-			}
-			if constexpr (HasSelfMemberVariableEntity<T> && !std::is_same_v<T, BasicComponent>) {
-				component.self = Entity{ e, &r };
-			}
+		entry.emplace = [](Entity ent) {
+			ent.Add<T>();
 		};
 
-		entry.remove = [](registry& r, entity e) {
-			r.remove<T>(e);
+		entry.remove = [](Entity ent) {
+			ent.UnsafeRemove<T>();
 		};
 
-		entry.markDestroy = [](registry& r, entity e) {
-			if constexpr (HasCreateDestroySubstructsV<T>) {
-				r.emplace<typename T::Destroy>(e);
+		entry.markDestroy = [](Entity ent) {
+			if constexpr (CCreateDestoryComp<T>) {
+				ent.MarkDestroy<T>();
 			}
 		};
 
-		entry.safeRemove = [](registry& r, entity e) {
-			if constexpr (HasCreateDestroySubstructsV<T>) {
-				r.emplace<typename T::Destroy>(e);
-			}
-			else {
-				r.remove<T>(e);
-			}
+		entry.safeRemove = [](Entity ent) {
+			ent.SafeRemove<T>();
 		};
 
-		entry.get = [](registry& r, entity e) -> void* {
-			return &r.get<T>(e);
+		entry.get = [](Entity ent) -> void* {
+			return &ent.GetNonDirty<T>();
 		};
 
-		entry.has = [](registry& r, entity e) -> bool {
-			return r.has<T>(e);
+		entry.has = [](Entity ent) -> bool {
+			return ent.Has<T>();
 		};
 
-		entry.markDirty = [](registry& r, entity e) {
-			if constexpr (HasDirtySubstructV<T>) {
-				r.get_or_emplace<typename T::Dirty>(e);
+		entry.markDirty = [](Entity ent) {
+			if constexpr (CDirtableComp<T>) {
+				ent.MarkDirty<T>();
 			}
 		};
 
 		return entry;
 	}
 
-	template<typename T>
+	template<CComponent T>
 	static void RegisterToClearDirties(std::vector<void (*)(entt::registry&)>& clearFunctions)
 	{
 		using namespace componentdetail;
-		if constexpr (HasDirtySubstructV<T> || HasCreateDestroySubstructsV<T>) {
+		if constexpr (CDirtableComp<T> || CCreateDestoryComp<T>) {
 
 			clearFunctions.emplace_back([](entt::registry& r) {
-				if constexpr (HasCreateDestroySubstructsV<T>) {
+				if constexpr (CCreateDestoryComp<T>) {
 					for (auto& [ent, comp] : r.view<T, typename T::Destroy>().each()) {
 						r.remove<T>(ent);
 					}
 					r.clear<typename T::Create, typename T::Destroy>();
 				}
-				if constexpr (HasDirtySubstructV<T>) {
+				if constexpr (CDirtableComp<T>) {
 					r.clear<typename T::Dirty>();
 				}
 			});
@@ -170,11 +157,11 @@ private:
 
 		ComponentMetaEntry::RegisterToClearDirties<T>(m_clearFuncs);
 
-		if constexpr (componentdetail::IsSceneComponent<T>) {
+		if constexpr (CSceneComp<T>) {
 			SceneCmdSystem::Z_Register<T>();
 		}
 
-		if constexpr (componentdetail::IsScriptlikeComponent<T>) {
+		if constexpr (CScriptlikeComp<T>) {
 			ScriptlikeRunnerSystem::Z_Register<T>();
 		}
 	}
@@ -201,12 +188,7 @@ public:
 		return nullptr;
 	}
 
-	static void ClearDirties(entt::registry& reg)
-	{
-		for (auto func : Get().m_clearFuncs) {
-			func(reg);
-		}
-	}
+	static void ClearDirties(World& reg);
 
 	template<typename T>
 	static void Z_RegisterComponentClass()
@@ -223,33 +205,27 @@ public:
 	}
 
 
-	static void RegistryToJson(entt::registry& reg, nlohmann::json& json);
-	static void JsonToRegistry(const nlohmann::json& json, entt::registry& reg);
+	static void RegistryToJson(World& reg, nlohmann::json& json);
+	static void JsonToRegistry(const nlohmann::json& json, World& reg);
 
 	// Exports an entity and all its children entities to a json object.
-	static void EntityHierarchyToJson(entt::registry& reg, entt::entity ent, nlohmann::json& json);
+	static void EntityHierarchyToJson(Entity ent, nlohmann::json& json);
 
 	// Imports an entity hierarchy from json
 	// TODO: ECS: Robustness. This is now used from clipboard and should NEVER ever crash with any json data.
 	// param: parent must be present to get proper world positions
-	static Entity JsonToEntityHierarchy(entt::registry& reg, const nlohmann::json& json);
+	static Entity JsonToEntityHierarchy(World& reg, const nlohmann::json& json);
 
 
 	// Function signature is: void(const ComponentMetaEntry&, entt::registry&, entt::entity)
 	template<typename T>
-	static void VisitWithType(entt::registry& reg, entt::entity ent, T function)
+	static void VisitWithType(Entity ent, T function)
 	{
-		reg.visit(ent, [&](entt::id_type idtype) {
+		ent.registry->visit(ent.entity, [&](entt::id_type idtype) {
 			if (const ComponentMetaEntry* type = GetType(idtype); type) {
 				function(*type);
 			}
 		});
-	}
-
-	template<typename T>
-	static void VisitWithType(Entity ent, T function)
-	{
-		VisitWithType(*ent.registry, ent.entity, function);
 	}
 };
 

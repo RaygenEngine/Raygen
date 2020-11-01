@@ -83,8 +83,9 @@ void Layer_::DrawFrame()
 	GpuAssetManager->ConsumeAssetUpdates();
 	mainScene->ConsumeCmdQueue();
 
-	if (!swapOutput->ShouldRenderThisFrame())
-		[[unlikely]] { return; }
+	if (!swapOutput->ShouldRenderThisFrame()) [[unlikely]] {
+		return;
+	}
 
 	swapOutput->OnPreRender();
 
@@ -109,12 +110,10 @@ void Layer_::DrawFrame()
 
 	swapOutput->SetOutputImageIndex(imageIndex);
 
-	// TODO: 0 = editor camera
-	SceneRenderDesc sceneDesc{ mainScene, 0, m_currentFrame };
 
 	currentCmdBuffer.begin();
 	{
-		Renderer->DrawFrame(currentCmdBuffer, sceneDesc, *swapOutput);
+		Renderer->DrawFrame(currentCmdBuffer, mainScene->GetRenderDesc(m_currentFrame), *swapOutput);
 	}
 	currentCmdBuffer.end();
 

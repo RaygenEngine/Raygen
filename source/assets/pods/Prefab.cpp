@@ -19,11 +19,11 @@ void Prefab::InsertInto(entt::registry& into) const
 	ComponentsDb::JsonToEntityHierarchy(into, j);
 }
 
-void Prefab::MakeFrom(entt::registry& reg, const entt::entity& entity)
+void Prefab::MakeFrom(Entity entity)
 {
 	nlohmann::json j;
 
-	ComponentsDb::EntityHierarchyToJson(reg, entity, j);
+	ComponentsDb::EntityHierarchyToJson(entity, j);
 
 	std::stringstream stream;
 	stream << j;
