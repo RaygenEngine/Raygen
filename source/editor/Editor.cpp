@@ -15,11 +15,12 @@ void Editor::Destroy()
 
 Entity Editor::GetSelection()
 {
-
 	return ed::OutlinerWindow::selected;
 }
 
 void Editor::Update()
 {
-	EditorObject->UpdateEditor();
+	if (EditorObject) {
+		EditorObject->UpdateEditor();
+	}
 }

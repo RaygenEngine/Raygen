@@ -154,14 +154,28 @@ void Scene::UpdateTopLevelAs()
 	vl::Device->waitIdle();
 }
 
+SceneRenderDesc Scene::GetRenderDesc(int32 frameIndex)
+{
+	auto camera = GetElement<SceneCamera>(activeCamera);
+	if (!camera) {
+		// If you get this error, the primary camera in the world is not setup correctly. (eg: a deleted active camera)
+		// This is a bug and should be handled at world code properly.
+		LOG_ERROR("Failed to find primary camera for scene. Using last camera for now.");
+
+		CLOG_ABORT(
+			Get<SceneCamera>().empty(), "Failed to find any camera. This for now is not handled, aborting execution");
+
+		camera = *(Get<SceneCamera>().end() - 1);
+	}
+
+	return SceneRenderDesc{ this, *camera, static_cast<uint32>(frameIndex) };
+}
+
 ConsoleVariable<int32> cons_sceneUpdateRt{ "rt.minFrames", 10,
 	"Min frames to do progressive before reseting due to scene update" };
 
 void Scene::UploadDirty(uint32 frameIndex)
 {
-	auto primaryCamera = GetElement<SceneCamera>(activeCamera);
-
-	const bool primaryDirty = activeCamera > 0 && primaryCamera->isDirty[frameIndex];
 	bool anyDirty = false;
 
 	bool requireUpdateAccel = false || forceUpdateAccel;
@@ -204,9 +218,9 @@ void Scene::UploadDirty(uint32 frameIndex)
 
 	for (auto dl : Get<SceneDirlight>()) {
 
-		if (primaryDirty) {
-			dl->UpdateBox(primaryCamera->frustum, primaryCamera->ubo.position);
-		}
+		// if (primaryDirty) {
+		//	dl->UpdateBox(primaryCamera->frustum, primaryCamera->ubo.position);
+		//}
 
 		if (dl->isDirty[frameIndex]) {
 			dl->UploadUbo(frameIndex);

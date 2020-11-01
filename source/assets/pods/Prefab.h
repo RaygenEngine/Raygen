@@ -13,10 +13,10 @@ struct Prefab : AssetPod {
 	std::string data{ "{}" };
 
 
-	void InsertInto(entt::registry& into) const;
+	void InsertInto(World& into) const;
 
 
 	// In the future support multiple entities bundled together? or force dummy parent entity for easier "reload from
 	// prefab" functions
-	void MakeFrom(entt::registry& reg, const entt::entity& entity);
+	void MakeFrom(Entity entity);
 };

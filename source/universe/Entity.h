@@ -17,18 +17,12 @@ struct CDestroyFlag {
 
 struct BasicComponent;
 
+// Entity handle. Prefer pass by copy for this type.
 class Entity {
-
 public:
-	entt::entity entity{ entt::null };
-	entt::registry* registry{ nullptr };
-
 	Entity() = default;
-	Entity(entt::entity ent, entt::registry* reg)
-		: entity(ent)
-		, registry(reg)
-	{
-	}
+
+	[[nodiscard]] World& GetWorld();
 
 	// Adds a component to the entity.
 	// Forwards arguments to construct in-place (like emplace)
@@ -39,110 +33,85 @@ public:
 	//
 	// Returns a reference to the created component
 	template<CComponent T, typename... Args>
-	T& Add(Args&&... args)
-	{
-		using namespace componentdetail;
-		// TODO: Code duplicate of ComponentsDb emplace
-		if constexpr (HasCreateDestroySubstructsV<T>) {
-			registry->emplace<typename T::Create>(entity);
-		}
-		if constexpr (HasDirtySubstructV<T>) {
-			registry->emplace<typename T::Dirty>(entity);
-		}
-		auto& component = registry->emplace<T>(entity, std::forward<Args>(args)...);
-		if constexpr (HasSelfMemberVariableEntity<T> && !std::is_same_v<T, BasicComponent>) {
-			component.self = *this;
-		}
-		return component;
-	}
+	T& Add(Args&&... args);
 
 	// Adds a component to the entity if it does not exist, returns the existing otherwise
 	// Forwards arguments to construct in-place (like emplace)
 	//
 	// Automatically registers T::Create and T::Dirty if supported by the component when adding
 	// Automatically registers T::Dirty if the component already existed
+	// Automatically runs .BeginPlay() if world is in playing state.
 	//
 	// Returns a reference to the created / existing component
 	template<CComponent T, typename... Args>
-	T& AddOrGet(Args&&... args)
-	{
-		if (Has<T>()) {
-			return GetDirty<T>();
-		}
-		return Add<T>(std::forward(args)...);
-	}
+	T& AddOrGet(Args&&... args);
 
 	template<CComponent T>
-	[[nodiscard]] bool Has() const
-	{
-		return registry->has<T>(entity);
-	}
-
-	template<CComponent T, typename... Args>
-	void AddOrGet(Args&&... args)
-	{
-		if (Has<T>()) {
-			return GetDirty<T>();
-		}
-		return Add<T>(std::forward(args)...);
-	}
+	[[nodiscard]] bool Has() const;
 
 	// Returns T& or const T& based on if the substruct supports dirty.
 	// Always prefer this if you will not write to the component to save performance.
 	template<CComponent T>
-	auto Get() const -> std::conditional_t<componentdetail::HasDirtySubstructV<T>, const T&, T&>
-	{
-		static_assert(!std::is_empty_v<T>, "Attempting to get an empty structure. This is not allowed by entt.");
-		return registry->get<T>(entity);
-	}
+	auto Get() const -> std::conditional_t<componentdetail::CDirtableComp<T>, const T&, T&>;
 
 	// Always returns T& and marks the component as dirty. Use this when you intend to write to the component.
 	template<CComponent T>
-	T& GetDirty()
-	{
-		MarkDirty<T>();
-		return registry->get<T>(entity);
-	}
+	[[nodiscard("Use mark dirty if you want to just dirty the component")]] //
+	T& GetDirty();
 
 	// TODO: Probably private
 	// Just use GetDirty if you intend to write instead of forgetting to manually call this
-	template<CComponent T>
-	void MarkDirty()
-	{
-		if constexpr (componentdetail::HasDirtySubstructV<T>) {
-			registry->get_or_emplace<typename T::Dirty>(entity);
-		}
-	}
+	template<componentdetail::CDirtableComp T>
+	void MarkDirty();
+
+	// Mark this component for destruction, requires a CreateDestroy component
+	template<componentdetail::CCreateDestoryComp T>
+	void MarkDestroy();
 
 	// Safely removes a component if it exists.
 	// If T::Destroy exists, the actual deletion of the component is deferred and the T::Destroy component flag is added
 	template<CComponent T>
-	void SafeRemove()
-	{
-		if (!Has<T>()) {
-			return;
-		}
+	void SafeRemove();
 
-		if constexpr (componentdetail::HasCreateDestroySubstructsV<T>) {
-			registry->get_or_emplace<typename T::Destroy>(entity);
-		}
-		else {
-			registry->remove<T>(entity);
-		}
-	}
-
-	[[nodiscard]] constexpr operator bool() const noexcept { return entity != entt::null && registry->valid(entity); }
-	[[nodiscard]] constexpr bool operator==(const Entity& rhs) const noexcept
-	{
-		return entity == rhs.entity && registry == rhs.registry;
-	}
-
-	[[nodiscard]] constexpr bool operator!=(const Entity& rhs) const noexcept { return !(operator==(rhs)); }
+	[[nodiscard]] constexpr operator bool() const noexcept;
+	[[nodiscard]] constexpr bool operator==(const Entity& rhs) const noexcept;
+	[[nodiscard]] constexpr bool operator!=(const Entity& rhs) const noexcept;
 
 	// Provide a "nice" interface to the common component
-	BasicComponent* operator->();
+	[[nodiscard]] BasicComponent& Basic();
+
+	// Provide a "nice" interface to the common component
+	[[nodiscard]] BasicComponent* operator->();
 
 	// Mark the entity for destruction. (It will be deleted at the end of the frame)
 	// Also destroys all attached children
 	void Destroy();
+
+	// Entt ID of the entity. (Used much like a UID for now)
+	[[nodiscard]] uint32 EntID();
+
+private:
+	friend class ComponentsDb;
+	friend struct ComponentMetaEntry;
+	friend struct BasicComponent;
+	friend class World;
+
+	template<CComponent T>
+	T& GetNonDirty();
+
+	template<CComponent T>
+	void UnsafeRemove();
+
+	[[nodiscard]] bool ShouldBeginEndPlayDueToWorldState();
+
+	// Essentially with this constructor being private we ensure only "World" is allowed to construct real entities.
+	// Default constructor exists and acts as a nullptr to entities.
+	// CHECK: duplicate data here (world & registry) for performance
+	Entity(entt::entity entity_, World* world_, entt::registry& registry_);
+
+	entt::registry* registry{ nullptr };
+	World* world{ nullptr };
+	entt::entity entity{ entt::null };
 };
+
+#include "Entity.impl.h"

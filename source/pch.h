@@ -66,4 +66,8 @@ struct InFlightResources : std::array<T, c_framesInFlight> {
 #include "rendering/DebugName.h"
 #include "rendering/core/img.h"
 
+class World;
+#include "universe/Entity.h"
+
+
 #define IMGUI_DEFINE_MATH_OPERATORS

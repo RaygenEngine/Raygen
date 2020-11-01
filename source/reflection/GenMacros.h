@@ -9,7 +9,7 @@ private:                                                                        
 	using Z_ThisType = Class;                                                                                          \
 	friend class ReflClass;                                                                                            \
 	friend class AssetImporterManager_;                                                                                \
-	friend class AssetRegistry;                                                                                  \
+	friend class AssetRegistry;                                                                                        \
 	friend void DeserializePodFromBinary(PodEntry*);                                                                   \
                                                                                                                        \
 public:                                                                                                                \
@@ -74,7 +74,7 @@ private:                                                                        
 	static bool RegisterT();                                                                                           \
 	static bool RegistrarSelect()                                                                                      \
 	{                                                                                                                  \
-		if constexpr (componentdetail::HasSceneTypeV<ComponentClass>) {                                                \
+		if constexpr (CSceneComp<ComponentClass>) {                                                                    \
 			return RegisterT();                                                                                        \
 		}                                                                                                              \
 		else {                                                                                                         \

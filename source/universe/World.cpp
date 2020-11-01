@@ -32,7 +32,7 @@ void World::LoadFromSrcPath()
 	nlohmann::json j;
 	file >> j;
 
-	ComponentsDb::JsonToRegistry(j, reg);
+	ComponentsDb::JsonToRegistry(j, *this);
 }
 
 void World::SaveToDisk(const fs::path& path, bool updateSrcPath)
@@ -51,7 +51,7 @@ void World::SaveToDisk(const fs::path& path, bool updateSrcPath)
 	}
 
 	nlohmann::json j;
-	ComponentsDb::RegistryToJson(reg, j);
+	ComponentsDb::RegistryToJson(*this, j);
 
 	std::ofstream file(srcPath);
 	CLOG_ERROR(!file.is_open(), "Failed to open file: {} when saving world", srcPath);
@@ -63,7 +63,7 @@ void World::SaveToDisk(const fs::path& path, bool updateSrcPath)
 
 Entity World::CreateEntity(const std::string& name)
 {
-	Entity ent{ reg.create(), &reg };
+	Entity ent{ reg.create(), this, reg };
 
 	auto& basic = ent.Add<BasicComponent>();
 	basic.self = ent;
@@ -72,7 +72,7 @@ Entity World::CreateEntity(const std::string& name)
 	return ent;
 }
 
-void World::UpdateWorld(Scene& scene)
+void World::UpdateWorld(Scene* scene)
 {
 	clock.UpdateFrame();
 
@@ -83,7 +83,6 @@ void World::UpdateWorld(Scene& scene)
 	if (playState == PlayState::Playing) {
 		ScriptlikeRunnerSystem::TickRegistry(reg, clock.deltaSeconds);
 	}
-
 
 	Editor::Update();
 
@@ -98,22 +97,22 @@ void World::UpdateWorld(Scene& scene)
 
 	AnimatorSystem::UpdateAnimations(reg, clock.deltaSeconds);
 
-	SceneCmdSystem::WriteSceneCmds(&scene, reg);
-
-	AnimatorSystem::UploadAnimationsToScene(reg, scene);
+	if (scene) {
+		SceneCmdSystem::WriteSceneCmds(scene, reg);
+		AnimatorSystem::UploadAnimationsToScene(reg, *scene);
+		scene->EnqueueActiveCameraCmd(activeCameraUid);
+		scene->EnqueueEndFrame();
+	}
 
 	// Clean Up
 	reg.clear<DirtyMovedComp, DirtySrtComp>();
-	ComponentsDb::ClearDirties(reg); // Also destroyes all pairs T, T::Destroy
+	ComponentsDb::ClearDirties(*this); // Also destroyes all pairs T, T::Destroy
 
 
 	for (const auto ent : reg.view<CDestroyFlag>()) {
 		reg.destroy(ent);
 	}
 	CLOG_ERROR(reg.view<CDestroyFlag>().size(), "Error deleting");
-
-
-	scene.EnqueueEndFrame();
 }
 
 void World::BeginPlay()
@@ -125,6 +124,12 @@ void World::BeginPlay()
 	playState = PlayState::Playing;
 	clock.Restart();
 	ScriptlikeRunnerSystem::BeginPlay(reg);
+
+	auto v = reg.view<CCamera>();
+	for (auto& [bc, camera] : v.each()) {
+		SetActiveCamera(camera);
+		break;
+	}
 }
 
 void World::Pause()
@@ -149,4 +154,11 @@ void World::EndPlay()
 	}
 	playState = PlayState::Stopped;
 	ScriptlikeRunnerSystem::EndPlay(reg);
+
+	activeCameraUid = 0;
+}
+
+void World::SetActiveCamera(CCamera& camera)
+{
+	activeCameraUid = camera.sceneUid;
 }

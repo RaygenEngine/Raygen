@@ -237,7 +237,7 @@ vk::UniquePipeline ReflprobeBlend::MakePipeline()
 
 void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
-	auto camDescSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
+	auto camDescSet = sceneDesc.viewer.descSet[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
@@ -253,7 +253,7 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &rp->reflDescSet, 0u, nullptr);
 
 		PushConstant pc{
-			sceneDesc.viewer->ubo.viewProj * glm::translate(glm::vec3(rp->position))
+			sceneDesc.viewer.ubo.viewProj * glm::translate(glm::vec3(rp->position))
 				* glm::scale(glm::vec3(rp->outerRadius)),
 			rp->position,
 			rp->ubo.lodCount,

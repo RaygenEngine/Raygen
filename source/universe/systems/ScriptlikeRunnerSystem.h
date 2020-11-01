@@ -23,7 +23,7 @@ void ExecuteEndPlayCmds(entt::registry& reg)
 	}
 }
 
-template<CTickableComp T>
+template<componentdetail::CTickableComp T>
 void ExecuteTickCmds(entt::registry& reg, float deltaSeconds)
 {
 	auto view = reg.view<T>();
@@ -66,12 +66,15 @@ class ScriptlikeRunnerSystem {
 		namespace cd = componentdetail;
 		using namespace entt;
 
-		if constexpr (cd::IsBeginEndPlayComponent<T>) {
+		if constexpr (cd::CBeginPlayComp<T>) {
 			m_beginPlayCmds.emplace_back(&scriptlikecmd::ExecuteBeginPlayCmds<T>);
+		}
+
+		if constexpr (cd::CEndPlayComp<T>) {
 			m_endPlayCmds.emplace_back(&scriptlikecmd::ExecuteEndPlayCmds<T>);
 		}
 
-		if constexpr (cd::IsTickableComponent<T>) {
+		if constexpr (cd::CTickableComp<T>) {
 			m_tickCmds.emplace_back(&scriptlikecmd::ExecuteTickCmds<T>);
 		}
 	}
