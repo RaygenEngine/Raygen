@@ -6,6 +6,12 @@ struct SceneReflprobe;
 
 namespace vl {
 
+struct CalcIrrInfo {
+	uint32 resolution;
+	std::vector<vk::Framebuffer> faceFramebuffers;
+	vk::DescriptorSet envmapDescSet;
+};
+
 struct IrradianceMapCalculation : public StaticPipeBase {
 	vk::UniquePipelineLayout MakePipelineLayout() override;
 	vk::UniquePipeline MakePipeline() override;
@@ -13,7 +19,7 @@ struct IrradianceMapCalculation : public StaticPipeBase {
 public:
 	IrradianceMapCalculation();
 
-	void RecordPass(vk::CommandBuffer cmdBuffer, const SceneReflprobe& rp) const;
+	void RecordPass(vk::CommandBuffer cmdBuffer, const CalcIrrInfo& info) const;
 
 private:
 	RBuffer m_cubeVertexBuffer;

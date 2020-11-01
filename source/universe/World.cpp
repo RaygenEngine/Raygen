@@ -3,6 +3,7 @@
 #include "editor/Editor.h"
 #include "universe/components/CameraComponent.h"
 #include "universe/components/DirlightComponent.h"
+#include "universe/components/IrradianceGridComponent.h"
 #include "universe/components/PointlightComponent.h"
 #include "universe/components/ReflProbeComponent.h"
 #include "universe/components/ScriptComponent.h"

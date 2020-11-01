@@ -8,6 +8,7 @@
 #include "rendering/passes/DepthmapPass.h"
 #include "rendering/passes/GBufferPass.h"
 #include "rendering/passes/lightblend/DirlightBlend.h"
+#include "rendering/passes/lightblend/IrradianceGridBlend.h"
 #include "rendering/passes/lightblend/PointlightBlend.h"
 #include "rendering/passes/lightblend/ReflprobeBlend.h"
 #include "rendering/passes/lightblend/SpotlightBlend.h"
@@ -16,6 +17,7 @@
 #include "rendering/passes/UnlitPass.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/scene/SceneDirlight.h"
+#include "rendering/scene/SceneIrradianceGrid.h"
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/StaticPipes.h"
@@ -37,8 +39,8 @@ void Renderer_::InitPipelines()
 	m_lightblendPass.MakeLayout();
 	m_lightblendPass.MakePipeline();
 
-	m_mirrorPass.MakeRtPipeline();
-	m_aoPass.MakeRtPipeline();
+	// m_mirrorPass.MakeRtPipeline();
+	// m_aoPass.MakeRtPipeline();
 }
 
 void Renderer_::RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
@@ -111,14 +113,65 @@ void Renderer_::RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const S
 				rp->surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 					vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
-				m_ptCube.RecordPass(cmdBuffer, sceneDesc, *rp);
+				PtCubeInfo ptInfo{
+					rp->surroundingEnv.extent.width,
+					rp->position,
+					rp->innerRadius,
+					rp->ptSamples,
+					rp->ptBounces,
+					rp->ptcube_faceArrayDescSet,
+				};
+
+				m_ptCube.RecordPass(cmdBuffer, sceneDesc, ptInfo);
 
 				rp->surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 					vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
 					vk::PipelineStageFlagBits::eFragmentShader);
 
-				StaticPipes::Get<IrradianceMapCalculation>().RecordPass(cmdBuffer, *rp);
+				CalcIrrInfo info{
+					rp->irradiance.extent.width,
+					vk::uniqueToRaw(rp->irr_framebuffer),
+					rp->surroundingEnvSamplerDescSet,
+				};
+
+				StaticPipes::Get<IrradianceMapCalculation>().RecordPass(cmdBuffer, info);
 				StaticPipes::Get<PrefilteredMapCalculation>().RecordPass(cmdBuffer, *rp);
+			}
+	}
+
+	for (auto ig : sceneDesc->Get<SceneIrradianceGrid>()) {
+		if (ig->shouldBuild.Access())
+			[[unlikely]]
+			{
+				for (int32 i = 0; i < 6; ++i) {
+					ig->probes[i].surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
+						vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
+						vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+
+					PtCubeInfo ptInfo{
+						ig->probes[i].surroundingEnv.extent.width,
+						ig->probes[i].pos, // grid block centers
+						0.f,
+						16u,
+						2u,
+						ig->probes[i].ptcube_faceArrayDescSet,
+					};
+
+
+					m_ptCube.RecordPass(cmdBuffer, sceneDesc, ptInfo);
+
+					ig->probes[i].surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+						vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
+						vk::PipelineStageFlagBits::eFragmentShader);
+
+					CalcIrrInfo info{
+						ig->probes[i].surroundingEnv.extent.width,
+						vk::uniqueToRaw(ig->probes[i].irr_framebuffer),
+						ig->probes[i].surroundingEnvSamplerDescSet,
+					};
+
+					StaticPipes::Get<IrradianceMapCalculation>().RecordPass(cmdBuffer, info);
+				}
 			}
 	}
 }
@@ -129,6 +182,7 @@ void Renderer_::RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneR
 		StaticPipes::Get<SpotlightBlend>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<PointlightBlend>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<DirlightBlend>().Draw(cmdBuffer, sceneDesc);
+		StaticPipes::Get<IrradianceGridBlend>().Draw(cmdBuffer, sceneDesc);
 	});
 
 	m_rasterIblPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline,
@@ -173,8 +227,8 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 			fbSize.width, fbSize.height, { &m_gbufferInst[i].framebuffer[GDepth] });
 	}
 
-	m_mirrorPass.Resize(fbSize);
-	m_aoPass.Resize(fbSize);
+	// m_mirrorPass.Resize(fbSize);
+	// m_aoPass.Resize(fbSize);
 
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
@@ -191,8 +245,8 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
 		views.emplace_back(m_rasterDirectLightPass[i].framebuffer[0].view()); // raster_DirectLightSampler
 		views.emplace_back(m_rasterIblPass[i].framebuffer[0].view());         // raster_IBLminusMirrorReflectionsSampler
-		views.emplace_back(m_mirrorPass.m_indirectResult[i].view());          // ray_MirrorReflectionsSampler
-		views.emplace_back(m_aoPass.m_indirectResult[i].view());              // ray_AOSampler
+		views.emplace_back(m_rasterIblPass[i].framebuffer[0].view());         // WIP:ray_MirrorReflectionsSampler
+		views.emplace_back(m_rasterIblPass[i].framebuffer[0].view());         // WIP:ray_AOSampler
 		views.emplace_back(m_ptPass[i].framebuffer[0].view());                // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_attachmentsDesc[i], 0u, std::move(views));
@@ -221,7 +275,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 	}
 
 	// RT images
-	for (size_t i = 0; i < c_framesInFlight; i++) {
+	/*for (size_t i = 0; i < c_framesInFlight; i++) {
 		m_mirrorPass.m_rtDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
 
 		rvk::writeDescriptorImages(m_mirrorPass.m_rtDescSet[i], 0u, { m_mirrorPass.m_indirectResult[i].view() },
@@ -231,7 +285,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 		rvk::writeDescriptorImages(m_aoPass.m_rtDescSet[i], 0u, { m_aoPass.m_indirectResult[i].view() },
 			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
-	}
+	}*/
 }
 
 InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
@@ -250,7 +304,7 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 	m_secondaryBuffersPool.Top();
 
 
-	sceneDesc.attDesc = m_attachmentsDesc[sceneDesc.frameIndex];
+	sceneDesc.attachmentsDescSet = m_attachmentsDesc[sceneDesc.frameIndex];
 
 	// passes
 	RecordRelfprobeEnvmapPasses(cmdBuffer, sceneDesc);
@@ -259,8 +313,8 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 	RecordRasterDirectPass(cmdBuffer, sceneDesc);
 
 
-	m_mirrorPass.RecordPass(cmdBuffer, sceneDesc);
-	m_aoPass.RecordPass(cmdBuffer, sceneDesc);
+	// m_mirrorPass.RecordPass(cmdBuffer, sceneDesc);
+	// m_aoPass.RecordPass(cmdBuffer, sceneDesc);
 
 
 	RecordPostProcessPass(cmdBuffer, sceneDesc);

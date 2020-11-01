@@ -43,6 +43,9 @@ layout(set = 2, binding = 0) uniform UBO_Pointlight {
 		float constantTerm;
 		float linearTerm;
 		float quadraticTerm;
+
+		int samples;
+		int hasShadow;
 } light;
 
 
@@ -53,19 +56,23 @@ layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 
 float ShadowRayQuery(Fragment frag){ 
+	
+	// PERF:
+	if(light.hasShadow == 0){
+		return 0.0;
+	}
+
 	vec3  L = normalize(light.position - frag.position); 
 	Onb lightOrthoBasis = branchlessOnb(L);
 	// sample a disk aligned to the L dir
-
 
 	float dist = distance(frag.position, light.position);
 	float lightRadius = 0.2;
 
 	float res = 0.f;
-	#define samples 10u
-	for(uint smpl = 0; smpl < samples; ++smpl){
+	for(uint smpl = 0; smpl < light.samples; ++smpl){
 
-		uint seed = tea16(uint(gl_FragCoord.y * 1024u + gl_FragCoord.x), samples + smpl);
+		uint seed = tea16(uint(gl_FragCoord.y * 1024u + gl_FragCoord.x), light.samples + smpl);
 		vec2 u = rand2(seed);
 
 		vec3 lightSampleV = vec3(uniformSampleDisk(u) * lightRadius, 0.f); 
@@ -94,7 +101,7 @@ float ShadowRayQuery(Fragment frag){
 		}
 	}
 
-	return res / samples;
+	return res / light.samples;
 }
 
 void main()

@@ -2,16 +2,24 @@
 #include "rendering/wrappers/Buffer.h"
 #include "rendering/wrappers/ImageView.h"
 
-struct SceneReflprobe;
 struct SceneRenderDesc;
 
 namespace vl {
+
+struct PtCubeInfo {
+	uint32 resolution;
+	glm::vec4 worldPos;
+	float traceOffset;
+	int32 samples;
+	int32 bounces;
+	vk::DescriptorSet faceArrayDescSet;
+};
 
 class PathtracedCubemap {
 public:
 	PathtracedCubemap();
 
-	void RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const SceneReflprobe& rp);
+	void RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const PtCubeInfo& info);
 
 private:
 	vk::UniquePipeline m_pipeline;

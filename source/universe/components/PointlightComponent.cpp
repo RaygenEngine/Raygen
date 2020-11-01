@@ -24,6 +24,8 @@ DECLARE_DIRTY_FUNC(CPointlight)(BasicComponent& bc)
 			pl.ubo.constantTerm = constantTerm;
 			pl.ubo.linearTerm = linearTerm;
 			pl.ubo.quadraticTerm = quadraticTerm;
+			pl.ubo.hasShadow = hasShadow;
+			pl.ubo.samples = samples;
 		}
 	};
 }

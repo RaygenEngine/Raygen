@@ -66,8 +66,8 @@ private:
 
 	// TODO: tidy
 	PtLightBlend m_lightblendPass;
-	MirrorPass m_mirrorPass;
-	AOPass m_aoPass;
+	// MirrorPass m_mirrorPass;
+	// AOPass m_aoPass;
 
 	PathtracedCubemap m_ptCube;
 
