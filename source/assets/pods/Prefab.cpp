@@ -4,7 +4,7 @@
 
 #include <nlohmann/json.hpp>
 
-void Prefab::InsertInto(entt::registry& into) const
+void Prefab::InsertInto(World& into) const
 {
 	if (data.empty()) {
 		return;
