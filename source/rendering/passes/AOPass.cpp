@@ -153,14 +153,14 @@ void AOPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scen
 
 	DEBUG_NAME_AUTO(m_rtDescSet[sceneDesc.frameIndex]);
 	DEBUG_NAME_AUTO(sceneDesc.scene->sceneAsDescSet);
-	DEBUG_NAME_AUTO(sceneDesc.viewer->descSet[sceneDesc.frameIndex]);
+	DEBUG_NAME_AUTO(sceneDesc.viewer.descSet[sceneDesc.frameIndex]);
 	DEBUG_NAME_AUTO(sceneDesc.scene->tlas.sceneDesc.descSet[sceneDesc.frameIndex]);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 0u, 1u,
 		&sceneDesc.attDesc, 0u, nullptr); // gbuffer and stuff
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 1u, 1u,
-		&sceneDesc.viewer->descSet[sceneDesc.frameIndex], 0u, nullptr); // camera
+		&sceneDesc.viewer.descSet[sceneDesc.frameIndex], 0u, nullptr); // camera
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 2u, 1u,
 		&m_rtDescSet[sceneDesc.frameIndex], 0u, nullptr); // image

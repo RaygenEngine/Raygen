@@ -7,7 +7,7 @@ struct HiddenFlagComp {
 };
 
 struct Scene;
-
+struct CCamera;
 
 class World {
 public:
@@ -18,17 +18,14 @@ public:
 		Paused,
 	};
 
-private:
-	void LoadFromSrcPath();
-
-	FrameClock clock; // TODO: Not using working properly with dilation/pause
-
-	PlayState playState{ PlayState::Stopped };
-	entt::registry reg;
-
-	friend class ComponentsDb;
-
 public:
+	void TogglePause() { playState == PlayState::Paused ? Unpause() : Pause(); }
+	void BeginPlay();
+	void Pause();
+	void Unpause();
+	void EndPlay();
+
+
 	fs::path srcPath;
 	World(const fs::path& path = {});
 
@@ -53,10 +50,16 @@ public:
 	[[nodiscard]] bool IsPaused() const { return playState == PlayState::Paused; }
 	[[nodiscard]] bool IsStopped() const { return playState == PlayState::Stopped; }
 
-public:
-	void TogglePause() { playState == PlayState::Paused ? Unpause() : Pause(); }
-	void BeginPlay();
-	void Pause();
-	void Unpause();
-	void EndPlay();
+	void SetActiveCamera(CCamera& camera);
+
+private:
+	size_t activeCameraUid{ 0 };
+	void LoadFromSrcPath();
+
+	FrameClock clock; // TODO: Not using working properly with dilation/pause
+
+	PlayState playState{ PlayState::Stopped };
+	entt::registry reg;
+
+	friend class ComponentsDb;
 };

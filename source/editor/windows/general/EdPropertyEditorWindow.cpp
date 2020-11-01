@@ -350,7 +350,9 @@ void PropertyEditorWindow::Run_Components(Entity entity)
 void PropertyEditorWindow::Run_ImGuizmo(Entity node)
 {
 	auto& camera = EditorObject->edCamera;
-
+	if (!EditorObject->m_currentWorld->IsStopped()) {
+		return;
+	}
 
 	auto cameraView = camera.view;
 	auto cameraProj = camera.proj;

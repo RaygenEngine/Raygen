@@ -205,7 +205,7 @@ void UnlitPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 			}
 
 			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u,
-				&sceneDesc.viewer->descSet[sceneDesc.frameIndex], 0u, nullptr);
+				&sceneDesc.viewer.descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 			auto& gpuMesh = geom->mesh.Lock();
 			cmdBuffer.bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
