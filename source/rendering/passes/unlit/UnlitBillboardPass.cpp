@@ -166,14 +166,14 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 	cmdBuffer.bindVertexBuffers(0u, m_rectangleVertexBuffer.handle(), vk::DeviceSize(0));
 
 	// WIP:
-	auto view = sceneDesc.viewer->ubo.view;
+	auto view = sceneDesc.viewer.ubo.view;
 	glm::vec4 cameraRight{ view[0][0], view[1][0], view[2][0], 0.f };
 	glm::vec4 cameraUp{ view[0][1], view[1][1], view[2][1], 0.f };
 
 	// WIP: specific billboards for each entity etc...
 	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
 		PushConstant pc{
-			sceneDesc.viewer->ubo.viewProj,
+			sceneDesc.viewer.ubo.viewProj,
 			rp->position,
 			cameraRight,
 			cameraUp,
