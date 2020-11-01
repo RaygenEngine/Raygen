@@ -232,7 +232,7 @@ vk::UniquePipeline GbufferPass::CreateAnimPipeline(
 void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	// PROFILE_SCOPE(Renderer);
-	auto descSet = sceneDesc.viewer->descSet[sceneDesc.frameIndex];
+	auto descSet = sceneDesc.viewer.descSet[sceneDesc.frameIndex];
 
 
 	for (auto& geom : sceneDesc->Get<SceneGeometry>()) {
@@ -240,7 +240,7 @@ void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 			//
 			geom->transform,
 			glm::inverseTranspose(glm::mat3(geom->transform)),
-			sceneDesc.viewer->prevViewProj * geom->prevTransform,
+			sceneDesc.viewer.prevViewProj * geom->prevTransform,
 			0.f,
 		};
 

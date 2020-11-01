@@ -28,10 +28,11 @@ protected:
 template<CSceneElem T>
 struct SceneCollection : public SceneCollectionBase {
 	// provides sequential access to the valid elements with unspecified order (non uid order)
-	auto begin() const { return condensed.cbegin(); }
-	auto end() const { return condensed.cend(); }
+	[[nodiscard]] auto begin() const { return condensed.cbegin(); }
+	[[nodiscard]] auto end() const { return condensed.cend(); }
 
-	size_t size() const { return condensed.size(); }
+	[[nodiscard]] size_t size() const { return condensed.size(); }
+	[[nodiscard]] bool empty() const { return condensed.empty(); }
 
 private:
 	friend struct Scene;

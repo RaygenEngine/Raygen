@@ -91,7 +91,6 @@ void World::UpdateWorld(Scene* scene)
 		ScriptlikeRunnerSystem::TickRegistry(reg, clock.deltaSeconds);
 	}
 
-
 	Editor::Update();
 
 	//
@@ -108,6 +107,7 @@ void World::UpdateWorld(Scene* scene)
 	if (scene) {
 		SceneCmdSystem::WriteSceneCmds(scene, reg);
 		AnimatorSystem::UploadAnimationsToScene(reg, *scene);
+		scene->EnqueueActiveCameraCmd(activeCameraUid);
 		scene->EnqueueEndFrame();
 	}
 
@@ -131,6 +131,12 @@ void World::BeginPlay()
 	playState = PlayState::Playing;
 	clock.Restart();
 	ScriptlikeRunnerSystem::BeginPlay(reg);
+
+	auto v = reg.view<CCamera>();
+	for (auto& [bc, camera] : v.each()) {
+		SetActiveCamera(camera);
+		break;
+	}
 }
 
 void World::Pause()
@@ -155,4 +161,11 @@ void World::EndPlay()
 	}
 	playState = PlayState::Stopped;
 	ScriptlikeRunnerSystem::EndPlay(reg);
+
+	activeCameraUid = 0;
+}
+
+void World::SetActiveCamera(CCamera& camera)
+{
+	activeCameraUid = camera.sceneUid;
 }
