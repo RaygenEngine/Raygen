@@ -7,6 +7,9 @@
 #include "rendering/scene/SceneIrradianceGrid.h"
 #include "rendering/scene/SceneReflprobe.h"
 #include "rendering/StaticPipes.h"
+#include "universe/components/IrradianceGridComponent.h"
+#include "universe/components/ReflProbeComponent.h"
+#include "universe/Universe.h"
 
 namespace {
 struct PushConstant {
@@ -170,11 +173,12 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 	glm::vec4 cameraRight{ view[0][0], view[1][0], view[2][0], 0.f };
 	glm::vec4 cameraUp{ view[0][1], view[1][1], view[2][1], 0.f };
 
-	// WIP: specific billboards for each COMPONENT etc...
-	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
+	for (auto& [ent, rp, bc] : Universe::MainWorld->GetView<CReflprobe, BasicComponent>().each()) {
+
+
 		PushConstant pc{
 			sceneDesc.viewer.ubo.viewProj,
-			rp->position,
+			glm::vec4(bc.world().position, 1.f),
 			cameraRight,
 			cameraUp,
 			0.2f,
@@ -186,12 +190,15 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 		cmdBuffer.draw(4u, 1u, 0u, 0u);
 	}
 
-	for (auto ig : sceneDesc->Get<SceneIrradianceGrid>()) {
+	for (auto& [ent, ig, bc] : Universe::MainWorld->GetView<CIrradianceGrid, BasicComponent>().each()) {
 
-		for (auto& p : ig->probes) {
+		for (uint32 i = 0u; i < 6u; ++i) {
+			// WIP: calculate at component
+			auto pos = glm::vec4(bc.local().position + glm::vec3(i % 3, 0.f, i / 3) * ig.distToAdjacent, 1.f);
+
 			PushConstant pc{
 				sceneDesc.viewer.ubo.viewProj,
-				p.pos,
+				pos,
 				cameraRight,
 				cameraUp,
 				0.2f,

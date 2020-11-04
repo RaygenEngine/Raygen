@@ -27,4 +27,6 @@ struct CPointlight : CLightBase {
 	float constantTerm{ 1.f };
 	float linearTerm{ 1.f };
 	float quadraticTerm{ 1.f };
+
+	glm::mat4 volumeTransform{ glm::identity<glm::mat4>() };
 };

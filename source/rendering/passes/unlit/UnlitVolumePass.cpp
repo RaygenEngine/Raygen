@@ -1,13 +1,14 @@
 #include "UnlitVolumePass.h"
 
+#include "editor/Editor.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
+#include "rendering/passes/lightblend/PointlightBlend.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/ScenePointlight.h"
 #include "rendering/StaticPipes.h"
-#include "rendering/passes/lightblend/PointlightBlend.h"
-
+#include "universe/components/PointlightComponent.h"
 
 namespace {
 struct PushConstant {
@@ -157,21 +158,23 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	// WIP:
-	const auto& relPipe = StaticPipes::Get<PointlightBlend>();
+	auto selEnt = Editor::GetSelection();
 
-	// bind unit sphere once
-	cmdBuffer.bindVertexBuffers(0u, relPipe.m_sphereVertexBuffer.handle(), vk::DeviceSize(0));
-	cmdBuffer.bindIndexBuffer(relPipe.m_sphereIndexBuffer.buffer.handle(), vk::DeviceSize(0), vk::IndexType::eUint32);
+	if (selEnt && selEnt.Has<CPointlight>()) {
+		auto pl = selEnt.Get<CPointlight>();
+		// WIP:
+		const auto& relPipe = StaticPipes::Get<PointlightBlend>();
 
-	for (auto pl : sceneDesc->Get<ScenePointlight>()) {
-		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * pl->volumeTransform };
+		// bind unit sphere once
+		cmdBuffer.bindVertexBuffers(0u, relPipe.m_sphereVertexBuffer.handle(), vk::DeviceSize(0));
+		cmdBuffer.bindIndexBuffer(
+			relPipe.m_sphereIndexBuffer.buffer.handle(), vk::DeviceSize(0), vk::IndexType::eUint32);
+
+		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * pl.volumeTransform };
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 		cmdBuffer.drawIndexed(relPipe.m_sphereIndexBuffer.count, 1u, 0u, 0u, 0u);
 	}
-	// for spotlights -> cones
-	// for geoms -> aabb/bvh enable by console...
 }
 } // namespace vl
