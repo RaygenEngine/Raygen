@@ -20,6 +20,8 @@ public:
 	SwapchainOutputPass* swapOutput{ nullptr };
 	Scene* mainScene{ nullptr };
 
+	void ResetMainScene();
+
 private:
 	InFlightResources<vk::UniqueFence> m_frameFence;
 	InFlightResources<vk::UniqueSemaphore> m_renderFinishedSem;

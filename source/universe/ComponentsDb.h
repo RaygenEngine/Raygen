@@ -204,7 +204,7 @@ public:
 		return Get().m_categoryToTypes;
 	}
 
-
+	// Export a world to json. Note that json is not reset, but appended on.
 	static void RegistryToJson(World& reg, nlohmann::json& json);
 	static void JsonToRegistry(const nlohmann::json& json, World& reg);
 

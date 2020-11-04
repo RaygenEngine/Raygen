@@ -19,6 +19,7 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/Layer.h"
 #include "rendering/Renderer.h"
+#include "universe/ComponentsDb.h"
 
 
 #include <imguicolortextedit/TextEditor.h>
@@ -188,6 +189,23 @@ void EditorObject_::OpenLoadDialog()
 	if (auto file = ed::NativeFileBrowser::OpenFile({ "json" })) {
 		ed::OutlinerWindow::selected = {};
 		Universe::LoadMainWorld(*file);
+	}
+}
+
+void EditorObject_::BeforePlayWorld(World& world)
+{
+	if (&world == m_currentWorld) {
+		m_lastPlayedWorld.clear();
+		ComponentsDb::RegistryToJson(world, m_lastPlayedWorld);
+	}
+}
+
+void EditorObject_::AfterStopWorld(World& world)
+{
+	if (&world == m_currentWorld) {
+		world.ResetWorld();
+		ComponentsDb::JsonToRegistry(m_lastPlayedWorld, world);
+		vl::Layer->ResetMainScene();
 	}
 }
 
