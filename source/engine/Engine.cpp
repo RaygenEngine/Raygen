@@ -14,7 +14,7 @@
 
 #include <glfw/glfw3.h>
 
-ConsoleFunction<> debugCoords{ "d.viewport", //
+static ConsoleFunction<> debugCoords{ "d.viewport", //
 	[]() {
 		auto& c = g_ViewportCoordinates;
 		LOG_REPORT("\n viewport.Size: {}, {}\n viewport.Pos: {} {}", c.size.x, c.size.y, c.position.x, c.position.y);
@@ -25,16 +25,16 @@ Engine_::~Engine_()
 	// Destruction of objects is done at Deinit
 }
 
-void Engine_::InitEngine(App* app)
+void Engine_::InitEngine(App_* app)
 {
 	m_initToFrameTimer.Start();
 
-	m_app = app;
+	fs::current_path(fs::current_path() / app->workingDirPath);
 
 	Assets::Init();
 
 	WindowCreationParams mainWindowParams;
-	mainWindowParams.size = { m_app->m_windowWidth, m_app->m_windowHeight };
+	mainWindowParams.size = { app->windowSize.x, app->windowSize.y };
 	Platform::Init(mainWindowParams);
 
 	Rendering::Init();
@@ -42,7 +42,7 @@ void Engine_::InitEngine(App* app)
 	Editor::Init();
 
 
-	Universe::Init(m_app->m_initialScene, "local.json");
+	Universe::Init(app->templateScene, app->localScene);
 }
 
 float Engine_::GetFPS()
@@ -60,7 +60,7 @@ void Engine_::ReportFrameDrawn()
 
 		if (titleCounter == 1) {
 			std::string s_title;
-			s_title = fmt::format("{} - {:4.2f}", m_app->m_windowTitle, m_gameThreadFps.GetSteadyFps());
+			s_title = fmt::format("{} - {:4.2f}", App->windowTitle, m_gameThreadFps.GetSteadyFps());
 			Platform::GetMainWindow()->SetTitle(s_title.c_str());
 		}
 	}

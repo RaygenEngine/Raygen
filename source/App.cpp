@@ -11,33 +11,25 @@
 
 #include <glfw/glfw3.h>
 
-App::App()
+App_::App_()
 {
-	m_name = "Raygen Engine";
-	m_initialScene = "engine-data/default.json";
-	m_assetPath = "assets";
-
-	m_windowTitle = "Raygen";
-
-	m_windowWidth = 2304;
-	m_windowHeight = 1296;
-
-	m_argc = 1;
-	m_argv = nullptr;
+	CLOG_ABORT(App, "Two app instances found.");
+	App = this;
 }
 
-void App::PreMainInit(int32 argc, char* argv[])
+App_::~App_()
+{
+	App = nullptr;
+}
+
+void App_::PreMainInit(int32 argc_, char* argv_[])
 {
 	// Copy the arguments for later use.
-	m_argc = argc;
-	m_argv = argv;
-
-	if (argc > 1) {
-		m_initialScene = argv[1];
-	}
+	argc = argc_;
+	argv = argv_;
 }
 
-int32 App::Main(int32 argc, char* argv[])
+int32 App_::Main(int32 argc_, char* argv_[])
 {
 	Engine.InitEngine(this);
 
@@ -48,7 +40,7 @@ int32 App::Main(int32 argc, char* argv[])
 	return 0;
 }
 
-void App::MainLoop()
+void App_::MainLoop()
 {
 	while (!glfwWindowShouldClose(Platform::GetMainHandle())) {
 		Profiler.BeginFrame();
@@ -67,7 +59,7 @@ void App::MainLoop()
 	}
 }
 
-void App::WhileResizing()
+void App_::WhileResizing()
 {
 	Universe::LoadPendingWorlds();
 	Universe::MainWorld->UpdateWorld(vl::Layer->mainScene);

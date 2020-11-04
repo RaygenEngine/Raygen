@@ -7,36 +7,36 @@
 // Game class provides overrides for the most important classes, functions and settings of the base engine.
 
 
-class App {
+inline class App_ {
+public:
+	fs::path workingDirPath{ "assets" };
+
+	// The following paths are relative to workingDirPath
+	fs::path fileDialogPath{ "." };
+	fs::path templateScene{ "engine-data/default.json" };
+	// If left empty, template Scene gets used as primary scene
+	fs::path localScene{ "local.json" };
+
+	std::string windowTitle{ "Raygen" };
+
+	glm::ivec2 windowSize{ 2304, 1296 };
+
 protected:
-	std::string m_name;
-	std::string m_initialScene;
-	std::string m_assetPath;
-
-
-	std::string m_windowTitle;
-	int32 m_windowHeight;
-	int32 m_windowWidth;
-
-	bool m_handleControllers;
-
-	bool m_lockMouse;
-
-	int32 m_argc;
-	char** m_argv;
+	int32 argc{ 1 };
+	char** argv{ nullptr };
 
 public:
-	App();
+	App_();
 
-	virtual ~App() = default;
+	virtual ~App_();
 
 public:
-	virtual void PreMainInit(int32 argc, char* argv[]);
-	virtual int32 Main(int32 argc, char* argv[]);
+	virtual void PreMainInit(int32 argc_, char* argv_[]);
+	virtual int32 Main(int32 argc_, char* argv_[]);
 
 	virtual void MainLoop();
 
 	virtual void WhileResizing();
 
 	friend class Engine_;
-};
+} * App{ nullptr };

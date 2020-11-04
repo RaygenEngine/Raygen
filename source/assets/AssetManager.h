@@ -24,7 +24,7 @@
 
 inline class AssetManager_ {
 public:
-	AssetManager_(const fs::path& workingDir = "assets/", const fs::path& defaultBinPath = "gen-data/");
+	AssetManager_(const fs::path& defaultBinPath = "gen-data/");
 
 	void Import(const fs::path& path) { AssetImporterManager->m_importerRegistry.ImportFile(path); }
 

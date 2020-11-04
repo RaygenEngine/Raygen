@@ -27,19 +27,18 @@ public:
 	//
 
 	// See example usage in NativeFileBrowser.h
-	[[nodiscard]] static auto OpenFile(const ExtensionFilter& extensions = {},
-		const fs::path& initialPath = fs::current_path()) -> std::optional<fs::path>;
-
-	// See example usage in NativeFileBrowser.h
-	[[nodiscard]] static auto OpenFileMultiple(const ExtensionFilter& extensions = {},
-		const fs::path& initialPath = fs::current_path()) -> std::optional<std::vector<fs::path>>;
-
-	// See example usage in NativeFileBrowser.h
-	[[nodiscard]] static auto SelectFolder(const fs::path& initialPath = fs::current_path()) //
+	[[nodiscard]] static auto OpenFile(const ExtensionFilter& extensions = {}, const fs::path& initialPath = {})
 		-> std::optional<fs::path>;
 
 	// See example usage in NativeFileBrowser.h
-	[[nodiscard]] static auto SaveFile(const ExtensionFilter& extensions = {},
-		const fs::path& initialPath = fs::current_path()) -> std::optional<fs::path>;
+	[[nodiscard]] static auto OpenFileMultiple(const ExtensionFilter& extensions = {}, const fs::path& initialPath = {})
+		-> std::optional<std::vector<fs::path>>;
+
+	// See example usage in NativeFileBrowser.h
+	[[nodiscard]] static auto SelectFolder(const fs::path& initialPath = {}) -> std::optional<fs::path>;
+
+	// See example usage in NativeFileBrowser.h
+	[[nodiscard]] static auto SaveFile(const ExtensionFilter& extensions = {}, const fs::path& initialPath = {})
+		-> std::optional<fs::path>;
 };
 } // namespace ed
