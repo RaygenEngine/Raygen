@@ -149,4 +149,10 @@ void Layer_::DrawFrame()
 
 	CmdPoolManager->presentQueue.presentKHR(presentInfo);
 }
+
+void Layer_::ResetMainScene()
+{
+	delete mainScene;
+	mainScene = new Scene();
+}
 } // namespace vl

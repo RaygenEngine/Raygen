@@ -10,6 +10,7 @@
 #include "editor/CaptionMenuBar.h"
 
 
+#include <nlohmann/json.hpp>
 #include <memory>
 #include <functional>
 
@@ -65,8 +66,15 @@ public:
 
 	void OpenLoadDialog();
 
+
 private:
+	void BeforePlayWorld(World& world);
+	void AfterStopWorld(World& world);
+	friend class Editor;
 	friend struct ed::CaptionMenuBar;
+
+	// PERF: use some faster representation.
+	nlohmann::json m_lastPlayedWorld;
 
 	void HandleInput();
 	void Dockspace();

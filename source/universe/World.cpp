@@ -28,6 +28,14 @@ World::World(const fs::path& path)
 	}
 }
 
+void World::ResetWorld()
+{
+	activeCameraUid = 0;
+	clock.Restart();
+	playState = PlayState::Stopped;
+	reg.clear();
+}
+
 
 void World::LoadFromSrcPath()
 {
@@ -81,6 +89,12 @@ Entity World::CreateEntity(const std::string& name)
 
 void World::UpdateWorld(Scene* scene)
 {
+	if (beginPlayFlag.Access()) [[unlikely]] {
+		BeginPlay();
+	}
+	if (endPlayFlag.Access()) [[unlikely]] {
+		EndPlay();
+	}
 	clock.UpdateFrame();
 
 	//
@@ -128,6 +142,7 @@ void World::BeginPlay()
 	if (playState != PlayState::Stopped) {
 		return;
 	}
+	Editor::BeforePlayWorld(*this);
 	playState = PlayState::Playing;
 	clock.Restart();
 	ScriptlikeRunnerSystem::BeginPlay(reg);
@@ -163,6 +178,17 @@ void World::EndPlay()
 	ScriptlikeRunnerSystem::EndPlay(reg);
 
 	activeCameraUid = 0;
+	Editor::AfterStopWorld(*this);
+}
+
+void World::FlagBeginPlay()
+{
+	beginPlayFlag.Set();
+}
+
+void World::FlagEndPlay()
+{
+	endPlayFlag.Set();
 }
 
 void World::SetActiveCamera(CCamera& camera)

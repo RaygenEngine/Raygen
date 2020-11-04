@@ -19,11 +19,23 @@ public:
 	};
 
 public:
+	// Empties this world & restarts timers etc. (keeps srcPath)
+	void ResetWorld();
+
+
 	void TogglePause() { playState == PlayState::Paused ? Unpause() : Pause(); }
+	// Instantly begins play
 	void BeginPlay();
+	// Instantly ends play
+	void EndPlay();
+
+	// Sets the flag to begin play whenever possible (preferred version)
+	void FlagBeginPlay();
+	// Sets the flag to end play whenever possible (preferred version)
+	void FlagEndPlay();
+
 	void Pause();
 	void Unpause();
-	void EndPlay();
 
 
 	fs::path srcPath;
@@ -52,6 +64,7 @@ public:
 
 	void SetActiveCamera(CCamera& camera);
 
+
 private:
 	size_t activeCameraUid{ 0 };
 	void LoadFromSrcPath();
@@ -62,4 +75,7 @@ private:
 	entt::registry reg;
 
 	friend class ComponentsDb;
+
+	BoolFlag beginPlayFlag;
+	BoolFlag endPlayFlag;
 };

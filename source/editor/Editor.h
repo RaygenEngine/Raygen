@@ -1,6 +1,7 @@
 #pragma once
 #include "universe/Entity.h"
 
+
 class Editor {
 	friend class Engine_;
 
@@ -11,4 +12,7 @@ class Editor {
 public:
 	static void Update();
 	static Entity GetSelection();
+
+	static void BeforePlayWorld(World& world);
+	static void AfterStopWorld(World& world);
 };
