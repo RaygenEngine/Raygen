@@ -46,7 +46,7 @@ void WindowCloseCb(GLFWwindow* window) {}
 // Is called during resize & moving and can be used to keep rendering
 void WindowRefreshCb(GLFWwindow* window)
 {
-	Engine.GetApp()->WhileResizing();
+	App->WhileResizing();
 }
 
 void WindowFocusCb(GLFWwindow* window, int32 isFocused) // Unfortunately we can't implicit convert to bool here

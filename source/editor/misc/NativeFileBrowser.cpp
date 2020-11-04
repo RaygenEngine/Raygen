@@ -1,6 +1,7 @@
 #include "NativeFileBrowser.h"
 
 #include "engine/Logger.h"
+#include "App.h"
 
 #include <nativefiledialog/src/include/nfd.h>
 
@@ -18,12 +19,24 @@ fs::path ToForwardSlashPath(nfdchar_t* txt)
 	return { txt };
 }
 
+std::string ResolvePath(const fs::path& initialPath)
+{
+	std::string path
+		= fs::weakly_canonical(initialPath.empty() ? (fs::current_path() / App->fileDialogPath) : initialPath).string();
+	return path;
+}
+
+
 } // namespace
+
+
 namespace ed {
 std::optional<fs::path> NativeFileBrowser::OpenFile(const ExtensionFilter& extensions, const fs::path& initialPath)
 {
+	auto openPath = ResolvePath(initialPath);
+
 	nfdchar_t* outPath = NULL;
-	nfdresult_t result = NFD_OpenDialog(extensions.filter.c_str(), U8(initialPath.u8string().c_str()), &outPath);
+	nfdresult_t result = NFD_OpenDialog(extensions.filter.c_str(), openPath.c_str(), &outPath);
 
 	if (result == NFD_CANCEL) {
 		return {};
@@ -41,9 +54,10 @@ std::optional<fs::path> NativeFileBrowser::OpenFile(const ExtensionFilter& exten
 std::optional<std::vector<fs::path>> NativeFileBrowser::OpenFileMultiple(
 	const ExtensionFilter& extensions, const fs::path& initialPath)
 {
+	auto openPath = ResolvePath(initialPath);
+
 	nfdpathset_t pathSet;
-	nfdresult_t result
-		= NFD_OpenDialogMultiple(extensions.filter.c_str(), U8(initialPath.u8string().c_str()), &pathSet);
+	nfdresult_t result = NFD_OpenDialogMultiple(extensions.filter.c_str(), openPath.c_str(), &pathSet);
 
 	if (result == NFD_CANCEL) {
 		return {};
@@ -66,8 +80,10 @@ std::optional<std::vector<fs::path>> NativeFileBrowser::OpenFileMultiple(
 
 std::optional<fs::path> NativeFileBrowser::SelectFolder(const fs::path& initialPath)
 {
+	auto openPath = ResolvePath(initialPath);
+
 	nfdchar_t* outPath = NULL;
-	nfdresult_t result = NFD_PickFolder(U8(initialPath.u8string().c_str()), &outPath);
+	nfdresult_t result = NFD_PickFolder(openPath.c_str(), &outPath);
 
 	if (result == NFD_CANCEL) {
 		return {};
@@ -83,8 +99,10 @@ std::optional<fs::path> NativeFileBrowser::SelectFolder(const fs::path& initialP
 
 std::optional<fs::path> NativeFileBrowser::SaveFile(const ExtensionFilter& extensions, const fs::path& initialPath)
 {
+	auto openPath = ResolvePath(initialPath);
+
 	nfdchar_t* outPath = NULL;
-	nfdresult_t result = NFD_SaveDialog(extensions.filter.c_str(), U8(initialPath.u8string().c_str()), &outPath);
+	nfdresult_t result = NFD_SaveDialog(extensions.filter.c_str(), openPath.c_str(), &outPath);
 
 	if (result == NFD_CANCEL) {
 		return {};

@@ -129,12 +129,10 @@ void AssetRegistry::LoadAllPodsInDirectory(const fs::path& path)
 			for (size_t i = start; i < stop; ++i) {
 				LoadFromDiskTypelessInternal(m_pods[i].get());
 
-				if (m_pods[i].get()->metadata.reimportOnLoad)
-					[[unlikely]]
-					{
-						// reimportEntries[threadIndex].push_back(m_pods[i].get());
-						AssetRegistry::ReimportFromOriginal(m_pods[i].get());
-					}
+				if (m_pods[i].get()->metadata.reimportOnLoad) [[unlikely]] {
+					// reimportEntries[threadIndex].push_back(m_pods[i].get());
+					AssetRegistry::ReimportFromOriginal(m_pods[i].get());
+				}
 			}
 			return true;
 		};
@@ -299,11 +297,10 @@ PathReferenceType GenerateExportDependencyPath(
 }
 } // namespace detail
 
-AssetManager_::AssetManager_(const fs::path& workingDir, const fs::path& defaultBinPath)
+AssetManager_::AssetManager_(const fs::path& defaultBinPath)
 {
 	AssetRegistry::Get().m_pods.push_back(std::make_unique<PodEntry>());
 
-	fs::current_path(fs::current_path() / workingDir);
 
 	if (!fs::is_directory(defaultBinPath)) {
 		fs::create_directory(defaultBinPath);

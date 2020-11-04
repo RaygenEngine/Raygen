@@ -2,7 +2,7 @@
 #include "engine/Listener.h"
 #include "engine/Timer.h"
 
-class App;
+class App_;
 
 inline struct ViewportCoordinates {
 	glm::ivec2 position{};
@@ -23,9 +23,6 @@ public:
 	Engine_& operator=(Engine_&&) = delete;
 
 private:
-	// Non owning pointer, expected to be valid for the whole program execution
-	App* m_app{ nullptr };
-
 	timer::Timer m_initToFrameTimer{};
 
 
@@ -53,14 +50,11 @@ public:
 	//
 	// Expects a non-owning pointer to the external App object.
 	//
-	void InitEngine(App* app);
+	void InitEngine(App_* app);
 
 	[[nodiscard]] float GetFPS();
 
 	void ReportFrameDrawn();
 
 	void DeinitEngine();
-
-	[[nodiscard]] App* GetApp() const { return m_app; }
-
 } Engine{};
