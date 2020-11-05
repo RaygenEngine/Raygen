@@ -12,12 +12,12 @@ struct CIrradianceGrid : CSceneBase {
 		// REFLECT_CATEGORY("Rendering");
 		REFLECT_VAR(distToAdjacent);
 		REFLECT_VAR(blendProportion);
-		REFLECT_VAR(shouldBuild, PropertyFlags::Transient);
+		REFLECT_VAR(notifyBuild, PropertyFlags::Transient);
 	}
 
 
 	float distToAdjacent{ 1.f };
 	float blendProportion{ 0.2f };
 
-	bool shouldBuild{ true };
+	bool notifyBuild{ true };
 };

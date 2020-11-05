@@ -8,6 +8,7 @@
 #include "rendering/scene/SceneReflprobe.h"
 #include "rendering/StaticPipes.h"
 #include "universe/components/IrradianceGridComponent.h"
+#include "universe/components/PointlightComponent.h"
 #include "universe/components/ReflProbeComponent.h"
 #include "universe/Universe.h"
 
@@ -209,6 +210,23 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 			// draw rectangle
 			cmdBuffer.draw(4u, 1u, 0u, 0u);
 		}
+	}
+
+	for (auto& [ent, rp, bc] : Universe::MainWorld->GetView<CPointlight, BasicComponent>().each()) {
+
+
+		PushConstant pc{
+			sceneDesc.viewer.ubo.viewProj,
+			glm::vec4(bc.world().position, 1.f),
+			cameraRight,
+			cameraUp,
+			0.4f,
+		};
+
+		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+		// draw rectangle
+		cmdBuffer.draw(4u, 1u, 0u, 0u);
 	}
 }
 
