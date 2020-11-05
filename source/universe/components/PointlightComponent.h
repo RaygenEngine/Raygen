@@ -20,6 +20,8 @@ struct CPointlight : CLightBase {
 		REFLECT_VAR(linearTerm);
 		REFLECT_VAR(quadraticTerm);
 
+		REFLECT_VAR(radius);
+
 		REFLECT_VAR(samples);
 		REFLECT_VAR(hasShadow);
 	}

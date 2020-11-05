@@ -5,6 +5,8 @@
 struct IrradianceGrid_UBO {
 };
 
+#define IRRGRID_PROBE_COUNT 1024u
+
 struct SceneIrradianceGrid : public SceneStruct {
 
 	SceneIrradianceGrid();
@@ -23,18 +25,16 @@ struct SceneIrradianceGrid : public SceneStruct {
 
 		vl::RCubemap surroundingEnv;
 		vl::RCubemap irradiance;
-
-		glm::vec4 pos;
 	};
 
 	vk::DescriptorSet gridDescSet;
 
-	std::array<probe, 6> probes;
+	std::array<probe, IRRGRID_PROBE_COUNT> probes;
 
 	BoolFlag shouldBuild{ true };
 
 	float distToAdjacent{ 1.f };
 	float blendProportion{ 0.2f };
 
-	void ShouldRecalculatePositions(const glm::vec3& newPos);
+	glm::vec4 pos;
 };

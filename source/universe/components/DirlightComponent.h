@@ -20,7 +20,7 @@ struct CDirlight : CLightBase {
 		REFLECT_VAR(shadowMapHeight);
 		REFLECT_VAR(maxShadowBias);
 		REFLECT_VAR(samples);
-		REFLECT_VAR(sampleInvSpread);
+		REFLECT_VAR(radius);
 
 		REFLECT_VAR(hasShadow);
 

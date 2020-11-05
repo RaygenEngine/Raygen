@@ -143,14 +143,22 @@ void Renderer_::RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const S
 		if (ig->shouldBuild.Access())
 			[[unlikely]]
 			{
-				for (int32 i = 0; i < 6; ++i) {
+				for (int32 i = 0; i < IRRGRID_PROBE_COUNT; ++i) {
+
+
 					ig->probes[i].surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
 						vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
 						vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
+					int32 x = i % 16;
+					int32 y = (i / 16) % 16;
+					int32 z = i / (16 * 16);
+
+					auto worldPos = ig->pos + glm::vec4(glm::vec3(x, y, z) * ig->distToAdjacent, 1.f);
+
 					PtCubeInfo ptInfo{
 						ig->probes[i].surroundingEnv.extent.width,
-						ig->probes[i].pos, // grid block centers
+						worldPos, // grid block centers
 						0.f,
 						16u,
 						2u,
@@ -173,7 +181,7 @@ void Renderer_::RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const S
 					StaticPipes::Get<IrradianceMapCalculation>().RecordPass(cmdBuffer, info);
 				}
 			}
-	}
+	} // namespace vl
 }
 
 void Renderer_::RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)

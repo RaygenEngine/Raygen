@@ -9,7 +9,7 @@
 
 namespace {
 struct PushConstant {
-	glm::vec4 pos[6];
+	glm::vec4 pos;
 	float distToAdjacent;
 	float blendProportion;
 };
@@ -26,7 +26,7 @@ vk::UniquePipelineLayout IrradianceGridBlend::MakePipelineLayout()
 	auto layouts = {
 		Layouts->renderAttachmentsLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
-		Layouts->cubemapArray6.handle(),
+		Layouts->cubemapArray1024.handle(),
 	};
 
 	vk::PushConstantRange pushConstantRange{};
@@ -169,16 +169,7 @@ void IrradianceGridBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &ig->gridDescSet, 0u, nullptr);
 
 		PushConstant pc{
-			{
-				ig->probes[0].pos,
-				ig->probes[1].pos,
-				ig->probes[2].pos,
-				ig->probes[3].pos,
-				ig->probes[4].pos,
-				ig->probes[5].pos,
-
-			},
-
+			ig->pos,
 			ig->distToAdjacent,
 			ig->blendProportion,
 		};
