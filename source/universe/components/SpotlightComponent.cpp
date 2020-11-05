@@ -15,7 +15,7 @@ DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 		innerCutOff = glm::cos(innerAperture / 2.f);
 
 		const auto ar = static_cast<float>(shadowMapWidth) / static_cast<float>(shadowMapHeight);
-		proj = glm::perspective(outerAperture, ar, near_, far_);
+		proj = glm::perspective(outerAperture, ar, _near, _far);
 		// Vulkan's inverted y
 		proj[1][1] *= -1.f;
 	}
@@ -31,8 +31,8 @@ DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 		if constexpr (FullDirty) {
 			sl.ubo.color = glm::vec4(color, 1.f);
 			sl.ubo.intensity = intensity;
-			sl.ubo.near_ = near_;
-			sl.ubo.far_ = far_;
+			sl.ubo._near = _near;
+			sl.ubo._far = _far;
 			sl.ubo.outerCutOff = outerCutOff;
 			sl.ubo.innerCutOff = innerCutOff;
 			sl.ubo.constantTerm = constantTerm;

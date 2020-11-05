@@ -7,6 +7,7 @@
 
 struct SceneSpotlight;
 
+// TODO:
 struct CSpotlight : CLightBase {
 	REFLECTED_SCENE_COMP(CSpotlight, SceneSpotlight)
 	{
@@ -15,8 +16,8 @@ struct CSpotlight : CLightBase {
 
 		REFLECT_VAR(color, PropertyFlags::Color);
 		REFLECT_VAR(intensity);
-		REFLECT_VAR(near_);
-		REFLECT_VAR(far_);
+		REFLECT_VAR(_near);
+		REFLECT_VAR(_far);
 		REFLECT_VAR(shadowMapWidth);
 		REFLECT_VAR(shadowMapHeight);
 		REFLECT_VAR(maxShadowBias);

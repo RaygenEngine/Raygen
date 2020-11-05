@@ -6,6 +6,7 @@
 
 struct SceneAnimatedGeometry;
 
+// TODO:
 struct CSkinnedMesh : CSceneBase {
 
 	REFLECTED_SCENE_COMP(CSkinnedMesh, SceneAnimatedGeometry)

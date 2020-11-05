@@ -170,7 +170,12 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 		cmdBuffer.bindIndexBuffer(
 			relPipe.m_sphereIndexBuffer.buffer.handle(), vk::DeviceSize(0), vk::IndexType::eUint32);
 
-		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * pl.volumeTransform };
+		auto volumeTransform = math::transformMat(
+			glm::vec3{ pl.CalculateEffectiveRadius() }, selEnt->world().orientation, selEnt->world().position);
+
+		PushConstant pc{
+			sceneDesc.viewer.ubo.viewProj * volumeTransform,
+		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
