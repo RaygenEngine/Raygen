@@ -10,6 +10,7 @@
 #include "bsdf.glsl"
 #include "onb.glsl"
 #include "attachments.glsl"
+#include "random.glsl"
 
 // out
 
@@ -42,34 +43,65 @@ layout(set = 2, binding = 0) uniform UBO_Pointlight {
 		float constantTerm;
 		float linearTerm;
 		float quadraticTerm;
+
+		int samples;
+		int hasShadow;
 } light;
 
 
 
 layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
+
+
+
 float ShadowRayQuery(Fragment frag){ 
+	
+	// PERF:
+	if(light.hasShadow == 0){
+		return 0.0;
+	}
+
 	vec3  L = normalize(light.position - frag.position); 
-	vec3  origin    = frag.position;
-	vec3  direction = L;  // vector to light
-	float tMin      = 0.01f;
-	float tMax      = distance(frag.position, light.position);
+	Onb lightOrthoBasis = branchlessOnb(L);
+	// sample a disk aligned to the L dir
 
-	// Initializes a ray query object but does not start traversal
-	rayQueryEXT rayQuery;
-	rayQueryInitializeEXT(rayQuery, topLevelAs, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, origin, tMin,
-                      direction, tMax);
+	float dist = distance(frag.position, light.position);
+	float lightRadius = 0.2;
 
-	// Start traversal: return false if traversal is complete
-	while(rayQueryProceedEXT(rayQuery)) {
-	}
+	float res = 0.f;
+	for(uint smpl = 0; smpl < light.samples; ++smpl){
+
+		uint seed = tea16(uint(gl_FragCoord.y * 1024u + gl_FragCoord.x), light.samples + smpl);
+		vec2 u = rand2(seed);
+
+		vec3 lightSampleV = vec3(uniformSampleDisk(u) * lightRadius, 0.f); 
+
+		vec3 origin = frag.position;
+
+		outOnbSpace(lightOrthoBasis, lightSampleV);
+		vec3 sampledLpos = light.position + lightSampleV;
+		vec3  direction = normalize(sampledLpos - frag.position);  
+		float tMin      = 0.01f;
+		float tMax      = dist + lightRadius;
+
+		// Initializes a ray query object but does not start traversal
+		rayQueryEXT rayQuery;
+		rayQueryInitializeEXT(rayQuery, topLevelAs, gl_RayFlagsTerminateOnFirstHitEXT, 0xFF, origin, tMin,
+						  direction, tMax);
+
+		// Start traversal: return false if traversal is complete
+		while(rayQueryProceedEXT(rayQuery)) {
+		}
       
-	// Returns type of committed (true) intersection
-	if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
-	  // Got an intersection == Shadow
-	  return 1.0;
+		// Returns type of committed (true) intersection
+		if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
+			// Got an intersection == Shadow
+			res+= 1.0;
+		}
 	}
-	return 0.0;
+
+	return res / light.samples;
 }
 
 void main()

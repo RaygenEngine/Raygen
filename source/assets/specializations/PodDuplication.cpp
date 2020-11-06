@@ -2,17 +2,12 @@
 
 #include "reflection/ReflectionTools.h"
 #include "reflection/PodTools.h"
-#include "assets/pods/Image.h"
-#include "assets/pods/Mesh.h"
-#include "assets/pods/MaterialArchetype.h"
 #include "assets/StdAssets.h"
 #include "assets/PodEditor.h"
 
 #include <cereal/archives/binary.hpp>
-#include <cereal/cereal.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
-#include <ostream>
 
 namespace {
 

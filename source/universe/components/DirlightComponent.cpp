@@ -19,7 +19,7 @@ DECLARE_DIRTY_FUNC(CDirlight)(BasicComponent& bc)
 	auto view = glm::lookAt(bc.world().position, lookAt, bc.world().up());
 
 	if constexpr (FullDirty) {
-		proj = glm::ortho(left, right, bottom, top, near_, far_);
+		proj = glm::ortho(left, right, bottom, top, _near, _far);
 		// Vulkan's inverted y
 		proj[1][1] *= -1.f;
 	}

@@ -1,10 +1,6 @@
 #include "Layouts.h"
 
-#include "rendering/Device.h"
 #include "rendering/passes/DepthmapPass.h"
-#include "rendering/passes/GbufferPass.h"
-#include "rendering/passes/LightblendPass.h"
-#include "rendering/passes/UnlitPass.h"
 
 struct AttachmentDeclaration {
 };
@@ -198,6 +194,9 @@ Layouts_::Layouts_()
 
 	storageImageArray6.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll, 6u);
 	storageImageArray6.Generate();
+
+	cubemapArray6.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment, 6u);
+	cubemapArray6.Generate();
 
 
 	MakeRenderPassLayouts();

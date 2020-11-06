@@ -13,6 +13,9 @@ struct Pointlight {
 		float constantTerm;
 		float linearTerm;
 		float quadraticTerm;
+
+		int samples;
+		int hasShadow;
 };
 
 struct Vertex

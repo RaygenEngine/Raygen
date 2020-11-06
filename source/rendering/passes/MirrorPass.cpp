@@ -1,15 +1,10 @@
 #include "MirrorPass.h"
 
 #include "engine/console/ConsoleVariable.h"
-#include "engine/Input.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
-#include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
-#include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/util/WriteDescriptorSets.h"
 
 ConsoleVariable<int32> console_rtDepth{ "rt.mirrorDepth", 2, "Set mirror depth" };
 
@@ -162,7 +157,7 @@ void MirrorPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 	DEBUG_NAME_AUTO(sceneDesc.scene->tlas.sceneDesc.descSet[sceneDesc.frameIndex]);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 0u, 1u,
-		&sceneDesc.attDesc, 0u, nullptr); // gbuffer and stuff
+		&sceneDesc.attachmentsDescSet, 0u, nullptr); // gbuffer and stuff
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 1u, 1u,
 		&sceneDesc.viewer.descSet[sceneDesc.frameIndex], 0u, nullptr); // camera

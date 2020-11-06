@@ -1,10 +1,7 @@
 #include "ImEd.h"
 
-#include "assets/PodEntry.h"
-#include "assets/AssetRegistry.h"
 #include "editor/EdMenu.h"
 #include "reflection/PodTools.h"
-#include "assets/PodIncludes.h"
 #include "universe/ComponentsDb.h"
 
 namespace ImEd {

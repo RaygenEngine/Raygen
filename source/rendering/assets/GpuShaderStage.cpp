@@ -2,7 +2,6 @@
 
 #include "assets/AssetRegistry.h"
 #include "assets/pods/ShaderStage.h"
-#include "reflection/ReflEnum.h"
 #include "rendering/Device.h"
 #include "assets/util/SpirvCompiler.h"
 

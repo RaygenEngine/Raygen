@@ -3,7 +3,6 @@
 #include "platform/GlfwUtl.h"
 
 #include <glfw/glfw3.h>
-#include <memory>
 
 inline size_t g_currentWindows{ 0 };
 

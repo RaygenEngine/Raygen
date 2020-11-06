@@ -12,8 +12,8 @@ struct Spotlight_Ubo {
 
 	float intensity{};
 
-	float near_{};
-	float far_{};
+	float _near{};
+	float _far{};
 
 	float outerCutOff{};
 	float innerCutOff{};

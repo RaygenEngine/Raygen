@@ -5,7 +5,6 @@
 #include "editor/EdOperation.h"
 #include "editor/EditorCamera.h"
 
-
 #include <memory>
 #include <functional>
 

@@ -1,6 +1,5 @@
 #include "PodImporter.h"
 
-#include "reflection/ReflClass.h"
 #include "assets/PodEntry.h"
 
 

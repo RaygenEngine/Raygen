@@ -1,6 +1,5 @@
 #include "SceneStructs.h"
 
-#include "rendering/wrappers/Buffer.h"
 #include "rendering/Device.h"
 
 SceneStruct::SceneStruct(size_t uboSize)

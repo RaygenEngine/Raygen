@@ -1,17 +1,9 @@
 #include "GpuMesh.h"
 
 #include "assets/pods/Mesh.h"
-#include "rendering/assets/GpuAssetBase.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMaterialInstance.h"
-#include "rendering/Device.h"
-#include "rendering/Renderer.h"
-#include "rendering/wrappers/BottomLevelAs.h"
-#include "rendering/wrappers/Buffer.h"
 #include "assets/AssetRegistry.h"
-#include "rendering/Instance.h"
-#include "rendering/Device.h"
-#include "assets/pods/MaterialArchetype.h"
 
 using namespace vl;
 

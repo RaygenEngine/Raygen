@@ -3,16 +3,11 @@
 #include "App.h"
 #include "assets/Assets.h"
 #include "editor/Editor.h"
-#include "editor/imgui/ImguiImpl.h"
 #include "engine/console/ConsoleVariable.h"
-#include "engine/Input.h"
 #include "platform/Platform.h"
-#include "rendering/assets/GpuAssetManager.h"
-#include "rendering/Renderer.h"
 #include "rendering/Rendering.h"
 #include "universe/Universe.h"
 
-#include <glfw/glfw3.h>
 
 static ConsoleFunction<> debugCoords{ "d.viewport", //
 	[]() {

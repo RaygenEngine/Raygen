@@ -2,11 +2,6 @@
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/Device.h"
-#include "rendering/Renderer.h"
-#include "rendering/scene/Scene.h"
-#include "rendering/scene/SceneSpotlight.h"
-#include "rendering/structures/Depthmap.h"
 #include "rendering/scene/SceneCamera.h"
 
 namespace vl {
@@ -54,7 +49,7 @@ void PtLightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scen
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &sceneDesc.attDesc, 0u, nullptr);
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
 
 	// draw call (triangle)
 	cmdBuffer.draw(3u, 1u, 0u, 0u);

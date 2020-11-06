@@ -1,9 +1,6 @@
 #include "Editor.h"
 
-#include "editor/DataStrings.h"
 #include "editor/EdUserSettings.h"
-#include "editor/imgui/ImGuizmo.h"
-#include "editor/imgui/ImEd.h"
 #include "editor/misc/NativeFileBrowser.h"
 #include "editor/windows/general/EdAssetsWindow.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
@@ -14,21 +11,14 @@
 #include "platform/Platform.h"
 #include "universe/Universe.h"
 #include "editor/windows/general/EdOutlinerWindow.h"
-#include "universe/World.h"
 #include "engine/Events.h"
-#include "rendering/scene/Scene.h"
 #include "rendering/Layer.h"
 #include "rendering/Renderer.h"
 #include "universe/ComponentsDb.h"
 
 
-#include <imguicolortextedit/TextEditor.h>
-
-
-#include <nlohmann/json.hpp>
 #include <glfw/glfw3.h>
 
-#include <fstream>
 
 EditorObject_::EditorObject_()
 	: m_captionBar(*this)

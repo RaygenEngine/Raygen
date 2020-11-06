@@ -56,35 +56,32 @@ struct Spotlight
 	float sampleInvSpread;
 };
 
-struct Pointlight {
-		vec3 position;
-		float pad0;
+struct Pointlight 
+{
+	vec3 position;
+	float pad0;
 
-		vec3 color;
-		float pad3;
+	vec3 color;
+	float pad3;
 
-		float intensity;
+	float intensity;
 
-		float constantTerm;
-		float linearTerm;
-		float quadraticTerm;
+	float constantTerm;
+	float linearTerm;
+	float quadraticTerm;
+
+	int samples;
+	int hasShadow;
 };
 
 
 layout(push_constant) uniform PC
 {
-	#ifndef TEST_CUBE
-		int frame;
-		int depth;
-		int samples;
-		int convergeUntilFrame;
-		int spotlightCount;
-	#else
-		mat4 viewInverse;
-		mat4 projInverse;
-		int pointlightCount;
-		float innerRadius;
-	#endif
+	int frame;
+	int depth;
+	int samples;
+	int convergeUntilFrame;
+	int spotlightCount;
 };
 
 struct hitPayload

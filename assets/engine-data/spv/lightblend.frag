@@ -39,9 +39,9 @@ void main() {
 	vec3 raster_IBLminusMirrorReflections = texture(raster_IBLminusMirrorReflectionsSampler, uv).rgb;
 
 	vec3 ray_MirrorReflections = texture(ray_MirrorReflectionsSampler, uv).rgb;
-	vec3 ray_AO = simpleBlurAO();
+	//vec3 ray_AO = simpleBlurAO();
 
-	vec3 finalRes = raster_DirectLight + (raster_IBLminusMirrorReflections + ray_MirrorReflections) * ray_AO;
+	vec3 finalRes = raster_DirectLight + (raster_IBLminusMirrorReflections);// + ray_MirrorReflections) * ray_AO;
 
 	outColor = vec4(finalRes, 1.0);
 }                               

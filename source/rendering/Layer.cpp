@@ -3,11 +3,8 @@
 #include "assets/GpuAssetManager.h"
 #include "editor/EditorObject.h"
 #include "engine/console/ConsoleVariable.h"
-#include "engine/Events.h"
-#include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
-#include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/Layouts.h"
 #include "rendering/output/SwapchainOutputPass.h"
@@ -15,11 +12,6 @@
 #include "rendering/StaticPipes.h"
 #include "rendering/VulkanLoader.h"
 #include "resource/GpuResources.h"
-#include "scene/Scene.h"
-#include "scene/SceneSpotlight.h"
-#include "universe/systems/SceneCmdSystem.h"
-#include "universe/Universe.h"
-#include "wrappers/Swapchain.h"
 
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
 	"Builds all build-able scene nodes" };

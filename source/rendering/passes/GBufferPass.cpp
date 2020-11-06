@@ -1,17 +1,9 @@
 #include "GbufferPass.h"
 
 #include "assets/shared/GeometryShared.h"
-#include "engine/Engine.h"
-#include "engine/Input.h"
-#include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuMaterialInstance.h"
-#include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuSkinnedMesh.h"
-#include "rendering/Device.h"
-#include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
-#include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneGeometry.h"
 
@@ -130,7 +122,7 @@ namespace {
 			.setPColorBlendState(&colorBlending)
 			.setPDynamicState(&dynamicStateInfo)
 			.setLayout(pipelineLayout)
-			.setRenderPass(*Layouts->gbufferPassLayout.compatibleRenderPass)
+			.setRenderPass(Layouts->gbufferPassLayout.compatibleRenderPass.get())
 			.setSubpass(0u)
 			.setBasePipelineHandle({})
 			.setBasePipelineIndex(-1);
@@ -231,9 +223,7 @@ vk::UniquePipeline GbufferPass::CreateAnimPipeline(
 
 void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	// PROFILE_SCOPE(Renderer);
 	auto descSet = sceneDesc.viewer.descSet[sceneDesc.frameIndex];
-
 
 	for (auto& geom : sceneDesc->Get<SceneGeometry>()) {
 		PushConstant pc{
@@ -245,14 +235,12 @@ void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 		};
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
-			PROFILE_SCOPE(Renderer);
 
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
 
-			if (arch.isUnlit) [[unlikely]] {
-				continue;
-			}
+			if (arch.isUnlit)
+				[[unlikely]] { continue; }
 			auto& plLayout = *arch.gbuffer.pipelineLayout;
 
 			pc.drawIndex = float(gg.material.uid);
@@ -287,9 +275,8 @@ void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
-			if (arch.isUnlit) [[unlikely]] {
-				continue;
-			}
+			if (arch.isUnlit)
+				[[unlikely]] { continue; }
 
 			auto& plLayout = *arch.gbufferAnimated.pipelineLayout;
 

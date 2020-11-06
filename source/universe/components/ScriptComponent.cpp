@@ -1,7 +1,6 @@
 #include "ScriptComponent.h"
 
 #include "engine/Input.h"
-#include "universe/ComponentDetail.h"
 
 void CScript::BeginPlay()
 {

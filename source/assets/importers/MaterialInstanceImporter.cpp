@@ -1,13 +1,7 @@
 #include "MaterialInstanceImporter.h"
 
-#include "assets/AssetImporterManager.h"
-#include "assets/pods/MaterialInstance.h"
-#include "assets/pods/MaterialArchetype.h"
 #include "assets/PodEditor.h"
 #include "reflection/ReflectionTools.h"
-
-#include <nlohmann/json.hpp>
-#include <fstream>
 
 
 BasePodHandle MaterialInstanceImporter::Import(const fs::path& path)

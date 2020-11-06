@@ -1,10 +1,7 @@
 #include "GpuAssetManager.h"
 
-#include "assets/AssetRegistry.h"
 #include "assets/Assets.h"
 #include "core/iterable/IterableSafeVector.h"
-#include "rendering/assets/GpuImage.h"
-#include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuSampler.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"

@@ -9,13 +9,9 @@
 #include "engine/console/ConsoleVariable.h"
 #include "engine/Timer.h"
 #include "reflection/PodTools.h"
-#include "assets/PodEditor.h"
-#include "engine/Events.h"
-#include "assets/pods/ShaderStage.h"
 
 #include <nlohmann/json.hpp>
 #include <thread>
-#include <vector>
 
 
 ConsoleFunction<> console_SaveAll{ "a.saveAll", []() { AssetRegistry::SaveAll(); },

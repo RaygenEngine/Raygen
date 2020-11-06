@@ -1,11 +1,8 @@
 #include "ComponentsDb.h"
 
-#include "universe/BasicComponent.h"
 #include "reflection/ReflectionTools.h"
 #include "universe/World.h"
 
-#include <nlohmann/json.hpp>
-#include <iostream>
 
 void ComponentsDb::EntityHierarchyToJson(Entity ent, nlohmann::json& json)
 {

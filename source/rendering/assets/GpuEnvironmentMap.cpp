@@ -3,7 +3,6 @@
 #include "assets/pods/EnvironmentMap.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuCubemap.h"
-#include "rendering/assets/GpuImage.h"
 #include "rendering/Layouts.h"
 #include "rendering/util/WriteDescriptorSets.h"
 

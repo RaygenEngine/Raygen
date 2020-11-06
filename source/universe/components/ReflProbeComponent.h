@@ -15,7 +15,7 @@ struct CReflprobe : CSceneBase {
 		REFLECT_VAR(ptSamples);
 		REFLECT_VAR(ptBounces);
 		REFLECT_VAR(prefLodCount);
-		REFLECT_VAR(shouldBuild);
+		REFLECT_VAR(notifyBuild, PropertyFlags::Transient);
 	}
 
 	float innerRadius{ 1.5f };
@@ -26,5 +26,5 @@ struct CReflprobe : CSceneBase {
 
 	int32 prefLodCount{ 6 };
 
-	bool shouldBuild{ true };
+	bool notifyBuild{ true };
 };

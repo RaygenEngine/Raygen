@@ -30,6 +30,8 @@ inline struct Layouts_ {
 
 	RDescriptorSetLayout rtTriangleGeometry;
 
+	RDescriptorSetLayout cubemapArray6;
+
 	RDescriptorSetLayout storageImageArray6;
 
 	RDescriptorSetLayout singleStorageImage = GenerateStorageImageDescSet(1);

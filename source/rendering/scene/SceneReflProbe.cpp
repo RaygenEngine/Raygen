@@ -18,7 +18,7 @@ SceneReflprobe::SceneReflprobe()
 
 void SceneReflprobe::ShouldResize()
 {
-	int32 resolution = std::pow(2, ubo.lodCount);
+	uint32 resolution = static_cast<uint32>(std::pow(2, ubo.lodCount));
 
 	if (resolution == surroundingEnv.extent.width) {
 		return;
@@ -55,6 +55,7 @@ void SceneReflprobe::ShouldResize()
 	irr_faceViews = irradiance.GetFaceViews();
 
 	// create framebuffers for each face
+	irr_framebuffer.clear();
 	for (uint32 i = 0; i < 6; ++i) {
 		std::array attachments{ irr_faceViews[i].get() };
 
@@ -66,6 +67,7 @@ void SceneReflprobe::ShouldResize()
 			.setHeight(32)
 			.setLayers(1);
 
+		irr_framebuffer.emplace_back();
 		irr_framebuffer[i] = Device->createFramebufferUnique(createInfo);
 	}
 
@@ -73,7 +75,7 @@ void SceneReflprobe::ShouldResize()
 	///////////////////////////////
 	pref_cubemapMips.clear();
 	// create framebuffers for each lod/face
-	for (uint32 mip = 0; mip < ubo.lodCount; ++mip) {
+	for (int32 mip = 0; mip < ubo.lodCount; ++mip) {
 
 		pref_cubemapMips.emplace_back();
 		pref_cubemapMips[mip].faceViews = prefiltered.GetFaceViews(mip);

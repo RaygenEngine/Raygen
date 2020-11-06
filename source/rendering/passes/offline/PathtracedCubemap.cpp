@@ -1,24 +1,10 @@
 #include "PathtracedCubemap.h"
 
-#include "assets/AssetRegistry.h"
-#include "assets/PodEditor.h"
-#include "assets/pods/Cubemap.h"
-#include "assets/pods/EnvironmentMap.h"
-#include "engine/console/ConsoleVariable.h"
-#include "engine/Input.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuCubemap.h"
-#include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
-#include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
-#include "rendering/scene/Scene.h"
-#include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneReflProbe.h"
-#include "rendering/util/WriteDescriptorSets.h"
-#include "rendering/wrappers/CmdBuffer.h"
-#include "rendering/wrappers/Buffer.h"
 
 namespace {
 struct PushConstant {
@@ -39,9 +25,8 @@ PathtracedCubemap::PathtracedCubemap()
 }
 
 void PathtracedCubemap::RecordPass(
-	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const SceneReflprobe& rp)
+	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const PtCubeInfo& info)
 {
-	uint32 resolution = rp.surroundingEnv.extent.width;
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_pipeline.get());
 
@@ -49,10 +34,10 @@ void PathtracedCubemap::RecordPass(
 		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 2u, 1u,
-		&sceneDesc.scene->tlas.sceneDesc.descSet[0], 0u, nullptr);
+		&sceneDesc.scene->tlas.sceneDesc.descSet[sceneDesc.frameIndex], 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 3u, 1u,
-		&sceneDesc.scene->tlas.sceneDesc.descSetPointlights[0], 0u, nullptr);
+		&sceneDesc.scene->tlas.sceneDesc.descSetPointlights[sceneDesc.frameIndex], 0u, nullptr);
 
 	vk::DeviceSize progSize = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of a program identifier
 
@@ -85,21 +70,21 @@ void PathtracedCubemap::RecordPass(
 
 
 	PushConstant pc{
-		rp.position,
+		info.worldPos,
 		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
-		rp.innerRadius,
-		rp.ptSamples,
-		rp.ptBounces,
+		info.traceOffset,
+		info.samples,
+		info.bounces,
 	};
 
 	cmdBuffer.pushConstants(m_pipelineLayout.get(),
 		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant), &pc);
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 0u, 1u,
-		&rp.ptcube_faceArrayDescSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 0u, 1u, &info.faceArrayDescSet, 0u, nullptr);
 
 	cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
-		&callableShaderBindingTable, resolution, resolution, 1);
+		&callableShaderBindingTable, info.resolution, info.resolution, 1);
 }
 
 void PathtracedCubemap::MakeRtPipeline()

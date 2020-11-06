@@ -2,20 +2,13 @@
 #include "EdAssetsWindow.h"
 
 #include "assets/Assets.h"
-#include "core/StringUtl.h"
-#include "editor/imgui/ImEd.h"
-#include "editor/imgui/ImguiImpl.h"
-#include "editor/imgui/ImguiUtil.h"
 #include "editor/misc/NativeFileBrowser.h"
 #include "editor/utl/EdAssetUtils.h"
 #include "reflection/ReflectionTools.h"
-#include "reflection/ReflEnum.h"
 #include "reflection/PodTools.h"
 #include "editor/EditorObject.h"
 #include "engine/Input.h"
 
-#include <imgui/imgui_internal.h>
-#include <spdlog/fmt/fmt.h>
 
 namespace ed {
 using namespace assetentry;

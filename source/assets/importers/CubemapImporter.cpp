@@ -2,7 +2,6 @@
 
 #include "assets/AssetImporterManager.h"
 #include "assets/pods/Cubemap.h"
-#include "assets/shared/ImageShared.h"
 #include "assets/util/ImageUtl.h"
 
 #include <fstream>

@@ -1,13 +1,11 @@
 #include "ReflProbeComponent.h"
 
-#include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuEnvironmentMap.h"
 #include "rendering/scene/SceneReflprobe.h"
 
 DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)
 {
-	auto build = shouldBuild;
-	shouldBuild = false;
+	auto build = notifyBuild;
+	notifyBuild = false;
 
 	return [=, position = bc.world().position](SceneReflprobe& rp) {
 		rp.position = glm::vec4(position, 1.f);
