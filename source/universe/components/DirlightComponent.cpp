@@ -40,7 +40,7 @@ DECLARE_DIRTY_FUNC(CDirlight)(BasicComponent& bc)
 
 			dl.ubo.maxShadowBias = maxShadowBias;
 			dl.ubo.samples = samples;
-			dl.ubo.sampleInvSpread = sampleInvSpread;
+			dl.ubo.sampleInvSpread = radius;
 
 			dl.MaybeResizeShadowmap(shadowMapWidth, shadowMapHeight);
 		}

@@ -13,6 +13,7 @@ struct CIrradianceGrid : CSceneBase {
 		REFLECT_VAR(distToAdjacent);
 		REFLECT_VAR(blendProportion);
 		REFLECT_VAR(notifyBuild, PropertyFlags::Transient);
+		REFLECT_VAR(hideBillboards, PropertyFlags::Transient);
 	}
 
 
@@ -20,4 +21,5 @@ struct CIrradianceGrid : CSceneBase {
 	float blendProportion{ 0.2f };
 
 	bool notifyBuild{ true };
+	bool hideBillboards{ false };
 };

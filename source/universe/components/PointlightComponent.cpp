@@ -4,11 +4,12 @@
 
 DECLARE_DIRTY_FUNC(CPointlight)(BasicComponent& bc)
 {
-	float radius = CalculateEffectiveRadius();
+	float effectiveRadius = CalculateEffectiveRadius();
 
 	return [=, position = bc.world().position, orientation = bc.world().orientation](ScenePointlight& pl) {
 		pl.ubo.position = glm::vec4(position, 1.f);
-		pl.volumeTransform = math::transformMat(glm::vec3{ radius }, bc.world().orientation, bc.world().position);
+		pl.volumeTransform
+			= math::transformMat(glm::vec3{ effectiveRadius }, bc.world().orientation, bc.world().position);
 
 		if constexpr (FullDirty) {
 			pl.ubo.color = glm::vec4(color, 1.f);
@@ -18,6 +19,7 @@ DECLARE_DIRTY_FUNC(CPointlight)(BasicComponent& bc)
 			pl.ubo.quadraticTerm = quadraticTerm;
 			pl.ubo.hasShadow = hasShadow;
 			pl.ubo.samples = samples;
+			pl.ubo.radius = radius;
 		}
 	};
 }

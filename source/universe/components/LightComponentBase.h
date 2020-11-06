@@ -17,5 +17,5 @@ struct CLightBase : CSceneBase {
 	float maxShadowBias{ 0.005f };
 
 	int32 samples{ 4 };
-	float sampleInvSpread{ 1000.f };
+	float radius{ 0.02f };
 };

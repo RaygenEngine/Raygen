@@ -31,6 +31,8 @@ inline struct Layouts_ {
 	RDescriptorSetLayout rtTriangleGeometry;
 
 	RDescriptorSetLayout cubemapArray6;
+	RDescriptorSetLayout cubemapArray64;
+	RDescriptorSetLayout cubemapArray1024;
 
 	RDescriptorSetLayout storageImageArray6;
 

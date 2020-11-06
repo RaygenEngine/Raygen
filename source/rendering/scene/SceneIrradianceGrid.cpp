@@ -10,9 +10,10 @@ SceneIrradianceGrid::SceneIrradianceGrid()
 {
 	Device->waitIdle();
 
-	gridDescSet = Layouts->cubemapArray6.AllocDescriptorSet();
+	gridDescSet = Layouts->cubemapArray1024.AllocDescriptorSet();
 
-	for (uint32 i = 0u; i < 6u; ++i) {
+	std::vector<vk::ImageView> views;
+	for (uint32 i = 0u; i < IRRGRID_PROBE_COUNT; ++i) {
 
 		probes[i].surroundingEnvSamplerDescSet = Layouts->cubemapLayout.AllocDescriptorSet();
 		probes[i].surroundingEnvStorageDescSet = Layouts->singleStorageImage.AllocDescriptorSet();
@@ -58,24 +59,11 @@ SceneIrradianceGrid::SceneIrradianceGrid()
 			probes[i].irr_framebuffer.emplace_back();
 			probes[i].irr_framebuffer[f] = Device->createFramebufferUnique(createInfo);
 		}
+
+		views.push_back(probes[i].irradiance.view());
 	}
 
-	rvk::writeDescriptorImageArray(gridDescSet, 0u,
-		{
-			probes[0].irradiance.view(),
-			probes[1].irradiance.view(),
-			probes[2].irradiance.view(),
-			probes[3].irradiance.view(),
-			probes[4].irradiance.view(),
-			probes[5].irradiance.view(),
-		});
+	rvk::writeDescriptorImageArray(gridDescSet, 0u, std::move(views));
 
 	shouldBuild.Set();
-}
-
-void SceneIrradianceGrid::ShouldRecalculatePositions(const glm::vec3& newPos)
-{
-	for (uint32 i = 0u; i < 6u; ++i) {
-		probes[i].pos = glm::vec4(newPos + glm::vec3(i % 3, 0.f, i / 3) * distToAdjacent, 1.f);
-	}
 }
