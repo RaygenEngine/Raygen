@@ -5,6 +5,8 @@
 namespace vl {
 
 struct PointlightBlend : public StaticPipeBase {
+	friend struct UnlitVolumePass;
+
 	vk::UniquePipelineLayout MakePipelineLayout() override;
 	vk::UniquePipeline MakePipeline() override;
 

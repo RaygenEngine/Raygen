@@ -3,7 +3,6 @@
 #include "assets/AssetManager.h"
 #include "reflection/PodTools.h"
 #include "editor/EdUserSettings.h"
-#include "engine/Logger.h"
 #include "assets/PodIncludes.h"
 #include "editor/windows/editors/EdGenericAssetEditorWindow.h"
 

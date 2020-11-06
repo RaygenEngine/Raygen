@@ -3,7 +3,6 @@
 #include "assets/AssetImporterManager.h"
 #include "assets/pods/MaterialArchetype.h"
 #include "assets/util/SpirvCompiler.h"
-#include "assets/util/SpirvReflector.h"
 
 #include <fstream>
 

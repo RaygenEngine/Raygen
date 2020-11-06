@@ -1,6 +1,5 @@
-#include "PrefilteredMapCalculation.h"
+#include "IrradianceMapCalculation.h"
 
-#include "engine/console/ConsoleVariable.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
@@ -9,12 +8,13 @@
 namespace {
 struct PushConstant {
 	glm::mat4 rotVp;
-	float a;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
 
-std::array vertices = { // positions
+
+std::array vertices = {
+	// positions
 	-1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f,
 	-1.0f,
 
@@ -34,14 +34,24 @@ std::array vertices = { // positions
 
 
 namespace vl {
-PrefilteredMapCalculation::PrefilteredMapCalculation()
+IrradianceMapCalculation::IrradianceMapCalculation()
 {
 	m_cubeVertexBuffer = RBuffer::CreateTransfer("Cube Vertex", vertices, vk::BufferUsageFlagBits::eVertexBuffer);
 }
 
-void PrefilteredMapCalculation::RecordPass(vk::CommandBuffer cmdBuffer, const SceneReflprobe& rp) const
+void IrradianceMapCalculation::RecordPass(vk::CommandBuffer cmdBuffer, const CalcIrrInfo& info) const
 {
-	uint32 resolution = rp.prefiltered.extent.width;
+	vk::Rect2D scissor{};
+
+	scissor
+		.setOffset({ 0, 0 }) //
+		.setExtent({ info.resolution, info.resolution });
+
+	vk::Viewport viewport{};
+
+	viewport
+		.setWidth(static_cast<float>(info.resolution)) //
+		.setHeight(static_cast<float>(info.resolution));
 
 	auto projInverse = glm::perspective(glm::radians(90.0f), 1.f, 1.f, 25.f);
 	projInverse[1][1] *= -1;
@@ -55,80 +65,55 @@ void PrefilteredMapCalculation::RecordPass(vk::CommandBuffer cmdBuffer, const Sc
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0)),   // back
 	};
 
-	// for each mip / framebuffer / face
-	for (uint32 mip = 0; mip < rp.ubo.lodCount; ++mip) {
-		for (uint32 i = 0; i < 6; ++i) {
+	// for each framebuffer / face
+	for (uint32 i = 0; i < 6; ++i) {
+		vk::RenderPassBeginInfo renderPassInfo{};
+		renderPassInfo
+			.setRenderPass(Layouts->singleFloatColorAttPassLayout.compatibleRenderPass.get()) //
+			.setFramebuffer(info.faceFramebuffers[i]);
+		renderPassInfo.renderArea
+			.setOffset({ 0, 0 }) //
+			.setExtent(scissor.extent);
 
-			uint32 mipResolution = static_cast<uint32>(resolution * std::pow(0.5, mip));
-
-			vk::Rect2D scissor{};
-
-			scissor
-				.setOffset({ 0, 0 }) //
-				.setExtent({ mipResolution, mipResolution });
-
-			vk::Viewport viewport{};
-
-			viewport
-				.setWidth(static_cast<float>(mipResolution)) //
-				.setHeight(static_cast<float>(mipResolution));
+		std::array<vk::ClearValue, 1> clearValues = {};
+		clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
+		renderPassInfo.setClearValues(clearValues);
 
 
-			vk::RenderPassBeginInfo renderPassInfo{};
-			renderPassInfo
-				.setRenderPass(Layouts->singleFloatColorAttPassLayout.compatibleRenderPass.get()) //
-				.setFramebuffer(rp.pref_cubemapMips[mip].framebuffers[i].get());
-			renderPassInfo.renderArea
-				.setOffset({ 0, 0 }) //
-				.setExtent(scissor.extent);
+		// begin render pass
+		cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+		{
+			// Dynamic viewport & scissor
+			cmdBuffer.setViewport(0, { viewport });
+			cmdBuffer.setScissor(0, { scissor });
 
-			std::array<vk::ClearValue, 1> clearValues{};
-			clearValues[0].setColor(std::array{ 0.0f, 0.0f, 0.0f, 1.0f });
-			renderPassInfo.setClearValues(clearValues);
-
-			// begin render pass
-			cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-			{
-				// Dynamic viewport & scissor
-				cmdBuffer.setViewport(0, { viewport });
-				cmdBuffer.setScissor(0, { scissor });
-
-				// bind the graphics pipeline
-				cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
+			// bind the graphics pipeline
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 
-				float roughness = (float)mip / (float)(rp.ubo.lodCount - 1);
-				float a = roughness * roughness;
-				LOG_DEBUG("Prefiltered mip a = roughness = {}", a);
+			PushConstant pc{
+				projInverse * glm::mat4(glm::mat3(viewMats[i])),
+			};
 
-				PushConstant pc{
-					//
-					projInverse * glm::mat4(glm::mat3(viewMats[i])),
-					a,
-				};
+			// Submit via push constant (rather than a UBO)
+			cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,
+				sizeof(PushConstant), &pc);
 
-				// Submit via push constant (rather than a UBO)
-				cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
-					0u, sizeof(PushConstant), &pc);
+			// geom
+			cmdBuffer.bindVertexBuffers(0u, { m_cubeVertexBuffer.handle() }, { vk::DeviceSize(0) });
 
-				// geom
-				cmdBuffer.bindVertexBuffers(0u, { m_cubeVertexBuffer.handle() }, { vk::DeviceSize(0) });
+			// descriptor sets
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, info.envmapDescSet, nullptr);
 
-				// descriptor sets
-				cmdBuffer.bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, layout(), 0u, rp.surroundingEnvSamplerDescSet, nullptr);
-
-				// draw call (cube)
-				cmdBuffer.draw(static_cast<uint32>(vertices.size() / 3), 1u, 0u, 0u);
-			}
-			// end render pass
-			cmdBuffer.endRenderPass();
+			// draw call (cube)
+			cmdBuffer.draw(static_cast<uint32>(vertices.size() / 3), 1u, 0u, 0u);
 		}
+		// end render pass
+		cmdBuffer.endRenderPass();
 	}
 }
 
-
-vk::UniquePipelineLayout PrefilteredMapCalculation::MakePipelineLayout()
+vk::UniquePipelineLayout IrradianceMapCalculation::MakePipelineLayout()
 {
 	// pipeline layout
 	vk::PushConstantRange pushConstantRange{};
@@ -146,12 +131,12 @@ vk::UniquePipelineLayout PrefilteredMapCalculation::MakePipelineLayout()
 	return Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
 
-vk::UniquePipeline PrefilteredMapCalculation::MakePipeline()
+vk::UniquePipeline IrradianceMapCalculation::MakePipeline()
 {
-	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/offline/prefiltered.shader");
+	auto& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/offline/irradiance.shader");
 
 	if (!gpuShader.HasValidModule()) {
-		LOG_ERROR("Pref Pipeline skipped due to shader compilation errors.");
+		LOG_ERROR("Irradiancemapcalc Pipeline skipped due to shader compilation errors.");
 		return {};
 	}
 	std::vector shaderStages = gpuShader.shaderStages;
@@ -159,6 +144,8 @@ vk::UniquePipeline PrefilteredMapCalculation::MakePipeline()
 	auto& fragShaderModule = gpuShader.frag;
 	auto& vertShaderModule = gpuShader.vert;
 
+
+	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 
 	vk::VertexInputBindingDescription bindingDescription{};
@@ -193,13 +180,11 @@ vk::UniquePipeline PrefilteredMapCalculation::MakePipeline()
 		.setViewports(viewport) //
 		.setScissors(scissor);
 
-	static ConsoleVariable<uint> fillmode{ "fillmode", 0 };
-
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer
 		.setDepthClampEnable(VK_FALSE) //
 		.setRasterizerDiscardEnable(VK_FALSE)
-		.setPolygonMode(static_cast<vk::PolygonMode>(fillmode.Get()))
+		.setPolygonMode(static_cast<vk::PolygonMode>(vk::PolygonMode::eFill))
 		.setLineWidth(1.f)
 		.setCullMode(vk::CullModeFlagBits::eBack)
 		.setFrontFace(vk::FrontFace::eCounterClockwise)
@@ -243,6 +228,7 @@ vk::UniquePipeline PrefilteredMapCalculation::MakePipeline()
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
 	dynamicStateInfo.setDynamicStates(dynamicStates);
 
+
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
 	depthStencil
@@ -258,7 +244,8 @@ vk::UniquePipeline PrefilteredMapCalculation::MakePipeline()
 
 	vk::GraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo
-		.setStages(shaderStages) //
+		.setStageCount(static_cast<uint32>(shaderStages.size())) //
+		.setPStages(shaderStages.data())
 		.setPVertexInputState(&vertexInputInfo)
 		.setPInputAssemblyState(&inputAssembly)
 		.setPViewportState(&viewportState)

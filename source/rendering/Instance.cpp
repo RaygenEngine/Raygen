@@ -23,7 +23,7 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(
 }
 
 ConsoleVariable<bool> showValidationErrors{ "r.validation.show", true, "Enables vulkan validation layer errors" };
-ConsoleVariable<bool> validationBreakOnError{ "r.validation.breakOnError", true,
+ConsoleVariable<bool> validationBreakOnError{ "r.validation.breakOnError", false,
 	"Breaks to allow the debugger to get a call stack." };
 
 namespace {

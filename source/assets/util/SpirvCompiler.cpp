@@ -1,20 +1,12 @@
 #include "SpirvCompiler.h"
 
-#include "engine/Logger.h"
-#include "engine/Timer.h"
 #include "core/StringConversions.h"
-#include "assets/util/SpirvReflector.h"
-#include "assets/AssetRegistry.h"
-#include "engine/console/ConsoleVariable.h"
 
-#include <glslang/OSDependent/osinclude.h>
-#include <glslang/Public/ShaderLang.h>
 #include <SPIRV/GlslangToSpv.h>
 #include <StandAlone/DirStackFileIncluder.h>
 #include <StandAlone/ResourceLimits.h>
 
 
-#include <thread>
 #include <mutex>
 
 EShLanguage FindLanguage(const std::string& filename);

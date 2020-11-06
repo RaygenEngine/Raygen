@@ -1,6 +1,5 @@
 #include "DescriptorSetLayout.h"
 
-#include "engine/Logger.h"
 #include "rendering/Device.h"
 #include "rendering/resource/GpuResources.h"
 

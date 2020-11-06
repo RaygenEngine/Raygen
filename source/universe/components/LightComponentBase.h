@@ -11,10 +11,11 @@ struct CLightBase : CSceneBase {
 	int32 shadowMapWidth{ 2048 };
 	int32 shadowMapHeight{ 2048 };
 
-	float near_{ 0.05f };
-	float far_{ 20.0f };
+	float _near{ 0.05f };
+	float _far{ 20.0f };
 
 	float maxShadowBias{ 0.005f };
+
 	int32 samples{ 4 };
 	float sampleInvSpread{ 1000.f };
 };

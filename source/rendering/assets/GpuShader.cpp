@@ -3,7 +3,6 @@
 #include "assets/pods/Shader.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShaderStage.h"
-#include "rendering/Device.h"
 
 
 using namespace vl;

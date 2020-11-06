@@ -1,21 +1,14 @@
 #include "EdOutlinerWindow.h"
 
-#include "assets/pods/Mesh.h"
 #include "assets/pods/Prefab.h"
-#include "assets/PodEditor.h"
-#include "assets/util/ParsingUtl.h"
 #include "universe/ComponentsDb.h"
-#include "editor/DataStrings.h"
 #include "editor/EditorObject.h"
 #include "universe/Universe.h"
 
 
-#include "editor/EdMenu.h"
 #include "editor/EdClipboardOp.h"
 #include "editor/imgui/ImAssetSlot.h"
 #include "editor/windows/general/EdAssetsWindow.h"
-
-#include <imgui/imgui.h>
 
 
 namespace ed {

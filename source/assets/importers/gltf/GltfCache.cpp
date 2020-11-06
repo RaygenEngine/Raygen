@@ -9,7 +9,6 @@
 #include "assets/StdAssets.h"
 
 #include <nlohmann/json.hpp>
-#include <tinygltf/tiny_gltf.h>
 
 namespace gltfutl {
 GltfCache::GltfCache(const fs::path& path)

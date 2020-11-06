@@ -1,11 +1,9 @@
 #include "EdShaderStageEditorWindow.h"
 
-#include "assets/AssetRegistry.h"
 #include "assets/PodEditor.h"
 #include "assets/pods/ShaderStage.h"
 #include "assets/util/SpirvCompiler.h"
 #include "editor/imgui/ImEd.h"
-#include "engine/Input.h"
 
 #include <imguicolortextedit/TextEditor.h>
 

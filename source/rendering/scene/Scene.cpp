@@ -1,18 +1,13 @@
 #include "Scene.h"
 
-#include "assets/shared/GeometryShared.h"
 #include "engine/console/ConsoleVariable.h"
-#include "rendering/assets/GpuMesh.h"
-#include "rendering/Device.h"
-#include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/SceneIrradianceGrid.h"
+#include "rendering/scene/ScenePointlight.h"
 #include "rendering/scene/SceneReflprobe.h"
 #include "rendering/scene/SceneSpotlight.h"
-#include "rendering/scene/ScenePointlight.h"
-
 
 void Scene::EnqueueEndFrame()
 {
@@ -104,7 +99,7 @@ void Register(std::unordered_map<size_t, UniquePtr<SceneCollectionBase>>& collec
 Scene::Scene()
 {
 	Register<SceneGeometry, SceneAnimatedGeometry, SceneCamera, SceneSpotlight, ScenePointlight, SceneDirlight,
-		SceneReflprobe>(collections);
+		SceneReflprobe, SceneIrradianceGrid>(collections);
 
 
 	EnqueueEndFrame();
@@ -131,6 +126,7 @@ Scene::~Scene()
 	destroyVec(Get<ScenePointlight>().condensed);
 	destroyVec(Get<SceneDirlight>().condensed);
 	destroyVec(Get<SceneReflprobe>().condensed);
+	destroyVec(Get<SceneIrradianceGrid>().condensed);
 
 	// NEXT: proper type erased cleanup here.
 }

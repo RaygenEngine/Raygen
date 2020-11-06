@@ -1,19 +1,16 @@
 #pragma once
 #include "core/iterable/IterableSafeVector.h"
+#include "editor/CaptionMenuBar.h"
 #include "editor/EdComponentWindows.h"
-#include "editor/imgui/ImEd.h"
-#include "editor/windows/EdWindow.h"
-
+#include "editor/EditorCamera.h"
 #include "editor/EdMenu.h"
 #include "editor/EdOperation.h"
-#include "editor/EditorCamera.h"
-#include "editor/CaptionMenuBar.h"
-
+#include "editor/imgui/ImEd.h"
+#include "editor/windows/EdWindow.h"
 
 #include <nlohmann/json.hpp>
 #include <memory>
 #include <functional>
-
 
 class World;
 

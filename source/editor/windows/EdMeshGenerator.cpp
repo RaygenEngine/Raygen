@@ -1,13 +1,9 @@
 #include "EdMeshGenerator.h"
 
 #include "assets/PodEditor.h"
-#include "assets/pods/MaterialInstance.h"
 #include "assets/pods/Mesh.h"
 #include "editor/imgui/ImAssetSlot.h"
-#include "editor/imgui/ImEd.h"
-#include "engine/console/Console.h"
 
-#include <imgui/imgui.h>
 
 namespace {
 

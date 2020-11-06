@@ -1,6 +1,5 @@
 #include "BottomLevelAs.h"
 
-#include "assets/shared/GeometryShared.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/Device.h"
 #include "rendering/wrappers/CmdBuffer.h"

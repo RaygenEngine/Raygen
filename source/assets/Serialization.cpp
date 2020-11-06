@@ -1,12 +1,10 @@
 #include "Serialization.h"
 
-#include "assets/PodIncludes.h"
 #include "assets/PodSerializers.h"
 #include "reflection/PodTools.h"
 #include "reflection/ReflectionTools.h"
 
 #include <cereal/archives/binary.hpp>
-#include <cereal/cereal.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
 

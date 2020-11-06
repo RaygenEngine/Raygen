@@ -10,6 +10,9 @@ struct Pointlight_Ubo {
 	float constantTerm{};
 	float linearTerm{};
 	float quadraticTerm{};
+
+	int32 samples{};
+	int32 hasShadow{};
 };
 
 struct ScenePointlight : SceneStruct {

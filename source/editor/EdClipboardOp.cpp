@@ -4,7 +4,6 @@
 
 #include "reflection/ReflectionTools.h"
 
-#include <nlohmann/json.hpp>
 #include <GLFW/glfw3.h>
 
 namespace ed {

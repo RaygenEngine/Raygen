@@ -4,12 +4,9 @@
 #include "editor/EditorObject.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
-#include "engine/Logger.h"
 #include "engine/Engine.h"
 
-#include <imgui/imgui.h>
 #include <glfw/glfw3.h>
-#include <vector>
 
 Key ToEngineKey(int32 glfwKey, Key& outSpecialKey);
 Key MouseToEngineKey(int32 glfwMouse);

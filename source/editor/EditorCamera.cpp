@@ -133,7 +133,7 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 
 	projInv = glm::inverse(proj);
 	viewProj = proj * view;
-	viewProjInv = glm::inverse(viewProj);
+	viewProjInv = viewInv * projInv;
 
 	worldScene->EnqueueCmd<SceneCamera>(sceneUid, [=, pos = transform.position](SceneCamera& cam) {
 		cam.prevViewProj = cam.ubo.viewProj;

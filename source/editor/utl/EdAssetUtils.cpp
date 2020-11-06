@@ -1,9 +1,7 @@
 #include "EdAssetUtils.h"
 
-#include "editor/imgui/ImEd.h"
 #include "editor/EditorObject.h"
 #include "reflection/ReflectionTools.h"
-#include "reflection/ReflEnum.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuImage.h"
 

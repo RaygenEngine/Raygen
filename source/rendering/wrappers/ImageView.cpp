@@ -1,13 +1,8 @@
 #include "ImageView.h"
 
-#include "rendering/assets/GpuAssetManager.h"
-#include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
-#include "rendering/resource/GpuResources.h"
 #include "rendering/util/WriteDescriptorSets.h"
-#include "rendering/wrappers/Buffer.h"
-#include "rendering/wrappers/CmdBuffer.h"
 
 namespace vl {
 RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,

@@ -1,17 +1,10 @@
 #include "DepthmapPass.h"
 
 #include "assets/shared/GeometryShared.h"
-#include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuMaterialInstance.h"
-#include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuSkinnedMesh.h"
-#include "rendering/Device.h"
-#include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
-#include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneGeometry.h"
-
 
 namespace {
 struct PushConstant {
@@ -237,8 +230,6 @@ vk::UniquePipeline DepthmapPass::CreateAnimPipeline(
 void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport, vk::Rect2D scissor,
 	const glm::mat4& viewProj, const SceneRenderDesc& sceneDesc)
 {
-	PROFILE_SCOPE(Renderer);
-
 	vk::CommandBufferInheritanceInfo ii{};
 	ii.setRenderPass(Layouts->depthRenderPass.get()) //
 		.setFramebuffer({})                          // VK_NULL_HANDLE
@@ -263,9 +254,8 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 			for (auto& gg : geom->mesh.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
-				if (arch.isUnlit) [[unlikely]] {
-					continue;
-				}
+				if (arch.isUnlit)
+					[[unlikely]] { continue; }
 				auto& plLayout = *arch.depth.pipelineLayout;
 
 				// bind the graphics pipeline
@@ -296,9 +286,8 @@ void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport
 			for (auto& gg : geom->mesh.Lock().geometryGroups) {
 				auto& mat = gg.material.Lock();
 				auto& arch = mat.archetype.Lock();
-				if (arch.isUnlit) [[unlikely]] {
-					continue;
-				}
+				if (arch.isUnlit)
+					[[unlikely]] { continue; }
 				auto& plLayout = *arch.depthAnimated.pipelineLayout;
 
 				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.depthAnimated.pipeline);

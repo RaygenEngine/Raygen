@@ -4,9 +4,6 @@
 
 #include <nlohmann/json.hpp>
 
-
-#include <sstream>
-
 void Prefab::InsertInto(World& into) const
 {
 	if (data.empty()) {

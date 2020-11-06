@@ -20,10 +20,13 @@ struct CPointlight : CLightBase {
 		REFLECT_VAR(linearTerm);
 		REFLECT_VAR(quadraticTerm);
 
+		REFLECT_VAR(samples);
 		REFLECT_VAR(hasShadow);
 	}
 
 	float constantTerm{ 1.f };
 	float linearTerm{ 1.f };
 	float quadraticTerm{ 1.f };
+
+	float CalculateEffectiveRadius() const;
 };

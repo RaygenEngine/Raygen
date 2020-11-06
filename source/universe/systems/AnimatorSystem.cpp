@@ -4,7 +4,6 @@
 #include "engine/profiler/ProfileScope.h"
 #include "assets/pods/Animation.h"
 #include "assets/pods/SkinnedMesh.h"
-#include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneGeometry.h"
 
 namespace {
