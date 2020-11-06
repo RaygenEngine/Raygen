@@ -181,11 +181,11 @@ void BasicComponent::UpdateWorldTransforms()
 	MarkDirtySrt();
 	local_.Compose();
 
-	auto current = firstChild;
 	world_.transform = parent ? parent->world_.transform * local_.transform : local_.transform;
 
 	world_.Decompose();
 
+	auto current = firstChild;
 	while (current) {
 		current->UpdateWorldTransforms();
 		current = current->next;

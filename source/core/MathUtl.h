@@ -114,9 +114,12 @@ struct TransformCache {
 	[[nodiscard]] glm::vec3 up() const { return orientation * engineSpaceUp; }
 	[[nodiscard]] glm::vec3 front() const { return orientation * engineSpaceFront; };
 	[[nodiscard]] glm::vec3 right() const { return orientation * engineSpaceRight; };
+
 	// pitch, yaw, roll, in degrees
 	[[nodiscard]] glm::vec3 pyr() const { return glm::degrees(glm::eulerAngles(orientation)); }
-	[[nodiscard]] void setPyr(glm::vec3 pyr) { orientation = glm::quat(glm::radians(pyr)); }
+	[[nodiscard]] float pitch() const { return glm::degrees(glm::pitch(orientation)); }
+	[[nodiscard]] float yaw() const { return glm::degrees(glm::yaw(orientation)); }
+	[[nodiscard]] float roll() const { return glm::degrees(glm::roll(orientation)); }
 
 	// TODO: Move compose/decompose from BasicComponent.cpp
 	// Updates transform from TRS

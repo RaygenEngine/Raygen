@@ -89,7 +89,7 @@ void EditorCamera::ResizeViewport(glm::uvec2 newSize)
 
 void EditorCamera::ResetRotation()
 {
-	float oldYaw = transform.pyr().y;
+	float oldYaw = transform.yaw();
 	transform.orientation = glm::angleAxis(glm::radians(oldYaw), engineSpaceUp);
 	transform.Compose();
 
