@@ -115,7 +115,7 @@ vk::UniquePipeline UnlitBillboardPass::MakePipeline()
 		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
 						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
 		.setBlendEnable(VK_TRUE)
-		.setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
+		.setSrcColorBlendFactor(vk::BlendFactor::eOne)
 		.setDstColorBlendFactor(vk::BlendFactor::eOne)
 		.setColorBlendOp(vk::BlendOp::eAdd)
 		.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
@@ -193,13 +193,20 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 
 	for (auto& [ent, ig, bc] : Universe::MainWorld->GetView<CIrradianceGrid, BasicComponent>().each()) {
 
-		for (uint32 i = 0u; i < 6u; ++i) {
-			// WIP: calculate at component
-			auto pos = glm::vec4(bc.local().position + glm::vec3(i % 3, 0.f, i / 3) * ig.distToAdjacent, 1.f);
+		if (ig.hideBillboards) {
+			continue;
+		}
+
+		for (int32 i = 0; i < IRRGRID_PROBE_COUNT; ++i) {
+			int32 x = i % 16;
+			int32 y = (i / 16) % 16;
+			int32 z = i / (16 * 16);
+
+			auto pos = bc.world().position + glm::vec3(x, y, z) * ig.distToAdjacent;
 
 			PushConstant pc{
 				sceneDesc.viewer.ubo.viewProj,
-				pos,
+				glm::vec4(pos, 1.f),
 				cameraRight,
 				cameraUp,
 				0.2f,

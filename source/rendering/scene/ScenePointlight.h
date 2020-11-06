@@ -11,6 +11,8 @@ struct Pointlight_Ubo {
 	float linearTerm{};
 	float quadraticTerm{};
 
+	float radius{};
+
 	int32 samples{};
 	int32 hasShadow{};
 };

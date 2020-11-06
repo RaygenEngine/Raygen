@@ -198,6 +198,12 @@ Layouts_::Layouts_()
 	cubemapArray6.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment, 6u);
 	cubemapArray6.Generate();
 
+	cubemapArray64.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment, 64u);
+	cubemapArray64.Generate();
+
+	cubemapArray1024.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment, 1024u);
+	cubemapArray1024.Generate();
+
 
 	MakeRenderPassLayouts();
 

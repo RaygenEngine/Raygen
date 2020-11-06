@@ -44,6 +44,8 @@ layout(set = 2, binding = 0) uniform UBO_Pointlight {
 		float linearTerm;
 		float quadraticTerm;
 
+		float radius;
+
 		int samples;
 		int hasShadow;
 } light;
@@ -67,7 +69,6 @@ float ShadowRayQuery(Fragment frag){
 	// sample a disk aligned to the L dir
 
 	float dist = distance(frag.position, light.position);
-	float lightRadius = 0.2;
 
 	float res = 0.f;
 	for(uint smpl = 0; smpl < light.samples; ++smpl){
@@ -75,7 +76,7 @@ float ShadowRayQuery(Fragment frag){
 		uint seed = tea16(uint(gl_FragCoord.y * 1024u + gl_FragCoord.x), light.samples + smpl);
 		vec2 u = rand2(seed);
 
-		vec3 lightSampleV = vec3(uniformSampleDisk(u) * lightRadius, 0.f); 
+		vec3 lightSampleV = vec3(uniformSampleDisk(u) * light.radius, 0.f); 
 
 		vec3 origin = frag.position;
 
@@ -83,7 +84,7 @@ float ShadowRayQuery(Fragment frag){
 		vec3 sampledLpos = light.position + lightSampleV;
 		vec3  direction = normalize(sampledLpos - frag.position);  
 		float tMin      = 0.01f;
-		float tMax      = dist + lightRadius;
+		float tMax      = dist + light.radius;
 
 		// Initializes a ray query object but does not start traversal
 		rayQueryEXT rayQuery;
