@@ -19,15 +19,13 @@ layout(location = 0) in vec2 uv;
 void main()
 {
 	vec2 center = vec2(1.);
-	vec2 d = (uv - center + 0.5);
+	vec2 d = (uv - center);
 	d *= d;
 
-	outColor = 
-	 d.x + d.y < 0.25 ? 
+	outColor = d.x + d.y < 0.5 ? 
 	vec4(0.4, 0.4, 0.5, 1.0) : vec4(0);
 	
 }                               
-
 
 
 

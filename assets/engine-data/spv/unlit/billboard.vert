@@ -27,8 +27,7 @@ void main()
 
     gl_Position = vp * vec4(pos, 1.0);
     
-    uv = position.xy + 0.5;
+    uv = vec2(((gl_VertexIndex) << 1) & 2, (gl_VertexIndex) & 2);
 }                
                 
-
 
