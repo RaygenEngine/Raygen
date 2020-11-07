@@ -160,8 +160,8 @@ void Renderer_::RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const S
 						ig->probes[i].surroundingEnv.extent.width,
 						worldPos, // grid block centers
 						0.f,
-						16u,
-						2u,
+						ig->ptSamples,
+						ig->ptBounces,
 						ig->probes[i].ptcube_faceArrayDescSet,
 					};
 
@@ -173,7 +173,7 @@ void Renderer_::RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const S
 						vk::PipelineStageFlagBits::eFragmentShader);
 
 					CalcIrrInfo info{
-						ig->probes[i].surroundingEnv.extent.width,
+						ig->probes[i].irradiance.extent.width,
 						vk::uniqueToRaw(ig->probes[i].irr_framebuffer),
 						ig->probes[i].surroundingEnvSamplerDescSet,
 					};
@@ -237,7 +237,6 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 	// m_mirrorPass.Resize(fbSize);
 	// m_aoPass.Resize(fbSize);
-
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_attachmentsDesc[i] = Layouts->renderAttachmentsLayout.AllocDescriptorSet();
