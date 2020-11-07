@@ -34,7 +34,8 @@ struct SceneIrradianceGrid : public SceneStruct {
 	BoolFlag shouldBuild{ true };
 
 	float distToAdjacent{ 1.f };
-	float blendProportion{ 0.2f };
+	int32 ptSamples{ 2 };
+	int32 ptBounces{ 2 };
 
 	glm::vec4 pos;
 };

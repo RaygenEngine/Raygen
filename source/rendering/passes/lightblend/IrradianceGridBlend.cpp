@@ -11,7 +11,6 @@ namespace {
 struct PushConstant {
 	glm::vec4 pos;
 	float distToAdjacent;
-	float blendProportion;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -171,7 +170,6 @@ void IrradianceGridBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 		PushConstant pc{
 			ig->pos,
 			ig->distToAdjacent,
-			ig->blendProportion,
 		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,

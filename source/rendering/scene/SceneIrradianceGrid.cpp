@@ -21,12 +21,12 @@ SceneIrradianceGrid::SceneIrradianceGrid()
 		probes[i].ptcube_faceArrayDescSet = Layouts->storageImageArray6.AllocDescriptorSet();
 
 
-		probes[i].surroundingEnv = RCubemap(32u, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
+		probes[i].surroundingEnv = RCubemap(64u, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
 			vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
 			vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("SurrCube: WIP:irradiancegrid"));
 
 		probes[i].irradiance
-			= RCubemap(32u, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+			= RCubemap(64u, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 				vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled
 					| vk::ImageUsageFlagBits::eColorAttachment,
 				vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("IrrCube: WIP:irradiancegrid"));
@@ -52,8 +52,8 @@ SceneIrradianceGrid::SceneIrradianceGrid()
 			createInfo
 				.setRenderPass(Layouts->singleFloatColorAttPassLayout.compatibleRenderPass.get()) //
 				.setAttachments(attachments)
-				.setWidth(32u)
-				.setHeight(32u)
+				.setWidth(probes[i].irradiance.extent.width)
+				.setHeight(probes[i].irradiance.extent.width)
 				.setLayers(1);
 
 			probes[i].irr_framebuffer.emplace_back();
