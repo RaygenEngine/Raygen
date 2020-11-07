@@ -5,7 +5,6 @@
 #include "rendering/Renderer.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneIrradianceGrid.h"
-#include "rendering/scene/SceneReflprobe.h"
 #include "rendering/StaticPipes.h"
 #include "universe/components/IrradianceGridComponent.h"
 #include "universe/components/PointlightComponent.h"
@@ -114,7 +113,7 @@ vk::UniquePipeline UnlitBillboardPass::MakePipeline()
 	colorBlendAttachment
 		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
 						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
-		.setBlendEnable(VK_TRUE)
+		.setBlendEnable(VK_FALSE)
 		.setSrcColorBlendFactor(vk::BlendFactor::eOne)
 		.setDstColorBlendFactor(vk::BlendFactor::eOne)
 		.setColorBlendOp(vk::BlendOp::eAdd)
