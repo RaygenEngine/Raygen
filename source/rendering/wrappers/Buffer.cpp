@@ -60,7 +60,6 @@ void RBuffer::CopyBuffer(const RBuffer& other)
 
 void RBuffer::CopyBufferWithRegion(const RBuffer& other, vk::BufferCopy copyRegion)
 {
-	// WIP:
 	ScopedOneTimeSubmitCmdBuffer<Dma> cmdBuffer{};
 	cmdBuffer.copyBuffer(other.handle(), uHandle.get(), copyRegion);
 }

@@ -164,7 +164,7 @@ void PtBase_SinglePipeline::Utl_CreatePipelineLightPass(
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(*Layouts->rasterDirectLightPassLayout.compatibleRenderPass) // TODO: ?
+		.setRenderPass(*Layouts->directLightPassLayout.compatibleRenderPass)
 		.setSubpass(subpassIndex)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);

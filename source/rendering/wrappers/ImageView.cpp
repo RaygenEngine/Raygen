@@ -67,7 +67,6 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 
 void RImage::CopyBufferToImage(const RBuffer& buffer)
 {
-	// WIP:
 	ScopedOneTimeSubmitCmdBuffer<Dma> cmdBuffer{};
 
 	vk::BufferImageCopy region{};
@@ -89,7 +88,6 @@ void RImage::CopyBufferToImage(const RBuffer& buffer)
 
 void RImage::CopyImageToBuffer(const RBuffer& buffer)
 {
-	// WIP:
 	ScopedOneTimeSubmitCmdBuffer<Dma> cmdBuffer{};
 
 	vk::BufferImageCopy region{};
@@ -141,7 +139,6 @@ void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayo
 void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
 	vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage)
 {
-	// WIP:
 	ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
 
 	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
@@ -165,7 +162,6 @@ void RImage::TransitionToLayout(vk::CommandBuffer cmdBuffer, vk::ImageLayout old
 
 void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
-	// WIP:
 	ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
 
 	// Check if image format supports linear blitting
@@ -278,7 +274,6 @@ vk::DescriptorSet RImage::GetDebugDescriptor()
 
 void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCount)
 {
-	// WIP:
 	ScopedOneTimeSubmitCmdBuffer<Dma> cmdBuffer{};
 
 	std::vector<vk::BufferImageCopy> regions;
@@ -358,18 +353,18 @@ vk::UniqueImageView RCubemap::GetFaceArrayView(uint32 atMip) const
 }
 
 
-vl::RImage2D vl::RImage2D::Create(const std::string& name, vk::Extent2D extent, vk::Format format,
-	vk::ImageLayout finalLayout, vk::ImageUsageFlags usageFlags, uint32 mipLevels, vk::MemoryPropertyFlags memoryFlags,
-	vk::ImageTiling tiling)
-{
-	auto img = RImage2D(extent.width, extent.height, mipLevels, format, tiling, vk::ImageLayout::eUndefined, usageFlags,
-		memoryFlags, name);
-
-	if (finalLayout != vk::ImageLayout::eUndefined) {
-		img.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, finalLayout, vk::PipelineStageFlagBits::eTopOfPipe,
-			vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eRayTracingShaderKHR);
-	}
-	return img;
-}
+// vl::RImage2D vl::RImage2D::Create(const std::string& name, vk::Extent2D extent, vk::Format format,
+//	vk::ImageLayout finalLayout, vk::ImageUsageFlags usageFlags, uint32 mipLevels, vk::MemoryPropertyFlags memoryFlags,
+//	vk::ImageTiling tiling)
+//{
+//	auto img = RImage2D(extent.width, extent.height, mipLevels, format, tiling, vk::ImageLayout::eUndefined, usageFlags,
+//		memoryFlags, name);
+//
+//	if (finalLayout != vk::ImageLayout::eUndefined) {
+//		img.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, finalLayout, vk::PipelineStageFlagBits::eTopOfPipe,
+//			vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+//	}
+//	return img;
+//}
 
 } // namespace vl

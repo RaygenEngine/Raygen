@@ -28,17 +28,17 @@ void SceneReflprobe::ShouldResize()
 
 	surroundingEnv = RCubemap(resolution, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
 		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("SurrCube: WIP:reflprobenamehere"));
+		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("SurrCube: CHECK:reflprobenamehere"));
 
 	irradiance = RCubemap(32, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
 		vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("IrrCube: WIP:reflprobenamehere"));
+		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("IrrCube: CHECK:reflprobenamehere"));
 
 	prefiltered = RCubemap(resolution, ubo.lodCount, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
 		vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("PreCube: WIP:reflprobenamehere"));
+		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("PreCube: CHECK:reflprobenamehere"));
 
 	rvk::writeDescriptorImages(reflDescSet, 0u, { surroundingEnv.view(), irradiance.view(), prefiltered.view() });
 

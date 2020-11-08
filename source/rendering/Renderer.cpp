@@ -186,15 +186,16 @@ void Renderer_::RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const S
 
 void Renderer_::RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	m_rasterDirectLightPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
+	m_directLightPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 		StaticPipes::Get<SpotlightBlend>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<PointlightBlend>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<DirlightBlend>().Draw(cmdBuffer, sceneDesc);
-		StaticPipes::Get<IrradianceGridBlend>().Draw(cmdBuffer, sceneDesc);
 	});
 
-	m_rasterIblPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline,
-		[&]() { StaticPipes::Get<ReflprobeBlend>().Draw(cmdBuffer, sceneDesc); });
+	m_indirectLightPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
+		StaticPipes::Get<ReflprobeBlend>().Draw(cmdBuffer, sceneDesc);
+		StaticPipes::Get<IrradianceGridBlend>().Draw(cmdBuffer, sceneDesc);
+	});
 }
 
 void Renderer_::RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
@@ -225,14 +226,10 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		// Generate Passes
 		m_gbufferInst[i] = Layouts->gbufferPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
-
-		m_rasterDirectLightPass[i]
-			= Layouts->rasterDirectLightPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
-
-		m_rasterIblPass[i] = Layouts->rasterIblPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
-
+		m_directLightPass[i] = Layouts->directLightPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
+		m_indirectLightPass[i] = Layouts->indirectLightPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
 		m_ptPass[i] = Layouts->ptPassLayout.CreatePassInstance(
-			fbSize.width, fbSize.height, { &m_gbufferInst[i].framebuffer[GDepth] });
+			fbSize.width, fbSize.height, { &m_gbufferInst[i].framebuffer[0] }); // TODO: indices and stuff
 	}
 
 	// m_mirrorPass.Resize(fbSize);
@@ -247,18 +244,18 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 			views.emplace_back(att.view());
 		}
 
-		// WIP: standard gpu asset?
+		// TODO: std gpu asset
 		auto brdfLutImg = GpuAssetManager->GetGpuHandle(StdAssets::BrdfLut());
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
-		views.emplace_back(m_rasterDirectLightPass[i].framebuffer[0].view()); // raster_DirectLightSampler
-		views.emplace_back(m_rasterIblPass[i].framebuffer[0].view());         // raster_IBLminusMirrorReflectionsSampler
-		views.emplace_back(m_rasterIblPass[i].framebuffer[0].view());         // WIP:ray_MirrorReflectionsSampler
-		views.emplace_back(m_rasterIblPass[i].framebuffer[0].view());         // WIP:ray_AOSampler
-		views.emplace_back(m_ptPass[i].framebuffer[0].view());                // sceneColorSampler
+		views.emplace_back(m_directLightPass[i].framebuffer[0].view());   // directLightSampler
+		views.emplace_back(m_indirectLightPass[i].framebuffer[0].view()); // indirectLightSampler
+		views.emplace_back(m_indirectLightPass[i].framebuffer[0].view()); // TODO: reserved
+		views.emplace_back(m_indirectLightPass[i].framebuffer[0].view()); // TODO: reserved
+		views.emplace_back(m_ptPass[i].framebuffer[0].view());            // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_attachmentsDesc[i], 0u, std::move(views));
 
-		// WIP: find an owner
+		// TODO: find an owner - std gpu asset
 		vk::SamplerCreateInfo samplerInfo{};
 		samplerInfo
 			.setMagFilter(vk::Filter::eLinear) //

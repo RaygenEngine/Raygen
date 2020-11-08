@@ -48,7 +48,7 @@ vk::UniquePipeline SpotlightBlend::MakePipeline()
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	return rvk::makePostProcPipeline(gpuShader.shaderStages, StaticPipes::GetLayout<SpotlightBlend>(),
-		*Layouts->rasterDirectLightPassLayout.compatibleRenderPass, colorBlending);
+		*Layouts->directLightPassLayout.compatibleRenderPass, colorBlending);
 }
 
 void SpotlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
@@ -57,7 +57,8 @@ void SpotlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
 
 	for (auto sp : sceneDesc->Get<SceneSpotlight>()) {

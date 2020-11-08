@@ -89,9 +89,9 @@ void main( ) {
 	//return;
 	
 	// SMATH:
-	float su = uvw.x * size.x + 0.5;
-	float sv = uvw.y * size.y + 0.5;
-	float sw = uvw.z * size.z + 0.5;
+	float su = uvw.x * size.x;
+	float sv = uvw.y * size.y;
+	float sw = uvw.z * size.z;
 	
 	vec3 FTL = SampleIrrad(floor(su), floor(sv), floor(sw), N);
 	vec3 FTR = SampleIrrad(ceil (su), floor(sv), floor(sw), N);
@@ -119,6 +119,7 @@ void main( ) {
 
 	outColor = vec4(diffuseLight * frag.albedo, 1.0);
 }
+
 
 
 

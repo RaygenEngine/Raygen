@@ -17,7 +17,7 @@ struct PushConstant {
 	float drawIndex;
 };
 
-// NEXT:
+// TODO:
 // static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
@@ -74,9 +74,11 @@ namespace {
 			.setAlphaToCoverageEnable(VK_FALSE)
 			.setAlphaToOneEnable(VK_FALSE);
 
-		// NEXT:
-		std::array<vk::PipelineColorBlendAttachmentState, GCount - 1> colorBlendAttachment{};
-		for (uint32 i = 0u; i < GCount - 1; ++i) {
+		auto colorAttCount = Layouts->gbufferPassLayout.internalAttachments.size() - 1;
+
+		std::vector<vk::PipelineColorBlendAttachmentState> colorBlendAttachment{};
+		for (uint32 i = 0u; i < colorAttCount; ++i) {
+			colorBlendAttachment.emplace_back();
 			colorBlendAttachment[i]
 				.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
 								   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
@@ -128,7 +130,7 @@ namespace {
 			.setBasePipelineIndex(-1);
 
 		return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
-	}
+	} // namespace
 } // namespace
 
 vk::UniquePipeline GbufferPass::CreatePipeline(

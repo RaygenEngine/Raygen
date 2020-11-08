@@ -18,7 +18,7 @@ public:
 
 	void Resize(vk::Extent2D extent);
 
-	// WIP:
+	// WIP: RT_PASSES
 	InFlightResources<RImageAttachment> m_indirectResult;
 	InFlightResources<vk::DescriptorSet> m_rtDescSet;
 

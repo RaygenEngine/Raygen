@@ -165,10 +165,8 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	// bind unit sphere once
 	cmdBuffer.bindVertexBuffers(0u, m_rectangleVertexBuffer.handle(), vk::DeviceSize(0));
 
-	// WIP:
 	auto view = sceneDesc.viewer.ubo.view;
 	glm::vec4 cameraRight{ view[0][0], view[1][0], view[2][0], 0.f };
 	glm::vec4 cameraUp{ view[0][1], view[1][1], view[2][1], 0.f };
@@ -238,6 +236,7 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 
 UnlitBillboardPass::UnlitBillboardPass()
 {
+	// TODO: std gpu asset
 	// clang-format off
 	std::array vertices{
 		  -0.5f,  0.5f,  0.0f,

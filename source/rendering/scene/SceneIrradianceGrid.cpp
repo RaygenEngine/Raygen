@@ -23,13 +23,13 @@ SceneIrradianceGrid::SceneIrradianceGrid()
 
 		probes[i].surroundingEnv = RCubemap(64u, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
 			vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
-			vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("SurrCube: WIP:irradiancegrid"));
+			vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("SurrCube: CHECK:irradiancegrid"));
 
 		probes[i].irradiance
 			= RCubemap(64u, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 				vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled
 					| vk::ImageUsageFlagBits::eColorAttachment,
-				vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("IrrCube: WIP:irradiancegrid"));
+				vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("IrrCube: CHECK:irradiancegrid"));
 
 		rvk::writeDescriptorImages(probes[i].surroundingEnvSamplerDescSet, 0u, { probes[i].surroundingEnv.view() });
 		rvk::writeDescriptorImages(probes[i].surroundingEnvStorageDescSet, 0u, { probes[i].surroundingEnv.view() },
