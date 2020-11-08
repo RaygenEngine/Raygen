@@ -29,15 +29,15 @@ layout(set = 0, binding = 6) uniform sampler2D g_UVDrawIndexSampler;
 
 layout(set = 0, binding = 7) uniform sampler2D std_BrdfLut;
 
-layout(set = 0, binding = 8) uniform sampler2D raster_DirectLightSampler;
+layout(set = 0, binding = 8) uniform sampler2D directLightSampler;
 
-layout(set = 0, binding = 9) uniform sampler2D raster_IBLminusMirrorReflectionsSampler;
+layout(set = 0, binding = 9) uniform sampler2D indirectLightSampler;
 
-layout(set = 0, binding = 10) uniform sampler2D ray_MirrorReflectionsSampler;
+layout(set = 0, binding = 10) uniform sampler2D reserved0;
 
-layout(set = 0, binding = 11) uniform sampler2D ray_AOSampler;
+layout(set = 0, binding = 11) uniform sampler2D reserved1;
 
-// Blend Rast + Ray
+// Blend
 layout(set = 0, binding = 12) uniform sampler2D sceneColorSampler;
 */
 
@@ -68,27 +68,25 @@ void Layouts_::MakeRenderPassLayouts()
 		gbufferPassLayout.Generate();
 	}
 
-	AttRef rasterDirectAtt;
-	// RasterDirectLight
+	AttRef directAtt;
 	{
-		rasterDirectAtt
-			= rasterDirectLightPassLayout.CreateAttachment("RasterDirectLight", vk::Format::eR32G32B32A32Sfloat);
-		rasterDirectLightPassLayout.AddSubpass({}, { rasterDirectAtt }); // Write Direct Lighting
+		directAtt = directLightPassLayout.CreateAttachment("DirectLight", vk::Format::eR32G32B32A32Sfloat);
 
-		rasterDirectLightPassLayout.AttachmentFinalLayout(rasterDirectAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+		directLightPassLayout.AddSubpass({}, { directAtt });
 
-		rasterDirectLightPassLayout.Generate();
+		directLightPassLayout.AttachmentFinalLayout(directAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		directLightPassLayout.Generate();
 	}
 
-	AttRef rasterIblAtt;
-	// RasterDirectLight
+	AttRef indirectAtt;
 	{
-		rasterIblAtt = rasterIblPassLayout.CreateAttachment("RasterIbl", vk::Format::eR32G32B32A32Sfloat);
-		rasterIblPassLayout.AddSubpass({}, { rasterIblAtt }); // Write Direct Lighting
+		indirectAtt = indirectLightPassLayout.CreateAttachment("Indirect", vk::Format::eR32G32B32A32Sfloat);
+		indirectLightPassLayout.AddSubpass({}, { indirectAtt });
 
-		rasterIblPassLayout.AttachmentFinalLayout(rasterIblAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+		indirectLightPassLayout.AttachmentFinalLayout(indirectAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		rasterIblPassLayout.Generate();
+		indirectLightPassLayout.Generate();
 	}
 
 

@@ -29,8 +29,8 @@ public:
 
 	// TODO: private
 	InFlightResources<RenderingPassInstance> m_gbufferInst;
-	InFlightResources<RenderingPassInstance> m_rasterDirectLightPass;
-	InFlightResources<RenderingPassInstance> m_rasterIblPass;
+	InFlightResources<RenderingPassInstance> m_directLightPass;
+	InFlightResources<RenderingPassInstance> m_indirectLightPass;
 	InFlightResources<RenderingPassInstance> m_ptPass;
 
 private:

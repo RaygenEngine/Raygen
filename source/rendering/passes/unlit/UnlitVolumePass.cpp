@@ -162,7 +162,7 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 
 	if (selEnt && selEnt.Has<CPointlight>()) {
 		auto pl = selEnt.Get<CPointlight>();
-		// WIP:
+		// TODO: std gpu asset
 		const auto& relPipe = StaticPipes::Get<PointlightBlend>();
 
 		// bind unit sphere once

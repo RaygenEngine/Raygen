@@ -144,7 +144,7 @@ vk::UniquePipeline IrradianceGridBlend::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(*Layouts->rasterIblPassLayout.compatibleRenderPass)
+		.setRenderPass(*Layouts->indirectLightPassLayout.compatibleRenderPass)
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);

@@ -4,20 +4,6 @@
 
 namespace vl {
 
-// NEXT:
-enum GColorAttachment : uint32
-{
-	GDepth = 0,
-	GNormal = 1,
-	GAlbedo = 2,
-	GSpecularColor = 3,
-	GEmissive = 4,
-	GVelocity = 5,
-	GUVDrawIndex = 6,
-	GCount
-};
-
-
 inline struct Layouts_ {
 
 	RDescriptorSetLayout gltfMaterialDescLayout;
@@ -58,16 +44,14 @@ inline struct Layouts_ {
 	RRenderPassLayout gbufferPassLayout;
 	RRenderPassLayout singleFloatColorAttPassLayout;
 
-	// WIP: probably same
-	RRenderPassLayout rasterDirectLightPassLayout; // PERF: subpass of gbuffer
-	RRenderPassLayout rasterIblPassLayout;         // PERF: subpass of gbuffer
-
+	// CHECK: check if those can be only one - tho some techniques will require this split for sure
+	RRenderPassLayout directLightPassLayout;   // PERF: subpass of gbuffer
+	RRenderPassLayout indirectLightPassLayout; // PERF: subpass of gbuffer
 
 	RRenderPassLayout svgfPassLayout;
 	// Ray Trace Here
 	RRenderPassLayout ptPassLayout;
 	// Output pass
-
 
 	void MakeRenderPassLayouts();
 

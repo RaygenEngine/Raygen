@@ -18,7 +18,8 @@ static_assert(sizeof(PushConstant) <= 128);
 
 
 namespace vl {
-// WIP: standard assets generator?
+
+// TODO: std gpu asset
 void PointlightBlend::MakeSphere(int32 sectorCount, int32 stackCount, float radius)
 {
 	std::vector<float> vertices;
@@ -225,7 +226,7 @@ vk::UniquePipeline PointlightBlend::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(*Layouts->rasterDirectLightPassLayout.compatibleRenderPass)
+		.setRenderPass(*Layouts->directLightPassLayout.compatibleRenderPass)
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);

@@ -75,13 +75,13 @@ void AttachmentDebuggerWindow::ImguiDraw()
 	};
 
 	auto& gbufferFramebuffer = vl::Renderer->m_gbufferInst.at(0).framebuffer;
-	auto& rasterDirectPassFramebuffer = vl::Renderer->m_rasterDirectLightPass.at(0).framebuffer;
-	auto& rasterIblPassFramebuffer = vl::Renderer->m_rasterIblPass.at(0).framebuffer;
+	auto& directPassFramebuffer = vl::Renderer->m_directLightPass.at(0).framebuffer;
+	auto& indirectPassFramebuffer = vl::Renderer->m_indirectLightPass.at(0).framebuffer;
 	auto& ptPassFramebuffer = vl::Renderer->m_ptPass.at(0).framebuffer;
 
 	showFramebuffer(gbufferFramebuffer);
-	showFramebuffer(rasterDirectPassFramebuffer);
-	showFramebuffer(rasterIblPassFramebuffer);
+	showFramebuffer(directPassFramebuffer);
+	showFramebuffer(indirectPassFramebuffer);
 	showFramebuffer(ptPassFramebuffer);
 
 
