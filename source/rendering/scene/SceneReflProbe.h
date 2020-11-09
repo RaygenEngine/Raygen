@@ -11,6 +11,7 @@ struct CubemapMipFrames {
 	std::vector<vk::UniqueImageView> faceViews;
 };
 
+// WIP: this enity should only capture specular lods
 struct SceneReflprobe : public SceneStruct {
 
 	SceneReflprobe();

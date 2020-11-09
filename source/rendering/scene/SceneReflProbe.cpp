@@ -35,7 +35,8 @@ void SceneReflprobe::ShouldResize()
 		vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("IrrCube: CHECK:reflprobenamehere"));
 
-	prefiltered = RCubemap(resolution, ubo.lodCount, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
+	// WIP: resolution
+	prefiltered = RCubemap(32, ubo.lodCount, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
 		vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("PreCube: CHECK:reflprobenamehere"));
@@ -63,8 +64,8 @@ void SceneReflprobe::ShouldResize()
 		createInfo
 			.setRenderPass(Layouts->singleFloatColorAttPassLayout.compatibleRenderPass.get()) //
 			.setAttachments(attachments)
-			.setWidth(32)
-			.setHeight(32)
+			.setWidth(irradiance.extent.width)
+			.setHeight(irradiance.extent.width)
 			.setLayers(1);
 
 		irr_framebuffer.emplace_back();

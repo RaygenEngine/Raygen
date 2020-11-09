@@ -54,7 +54,7 @@ void main( ) {
 		
 		// PERF:
 		outColor = vec4(GetSkyColor(cam.position, V), 1.0);
-		//outColor = sampleCubemapLH(skyboxSampler, V);
+		outColor = sampleCubemapLH(skyboxSampler, V);
 		return;
 	}
 
@@ -86,7 +86,7 @@ void main( ) {
 	vec3 specularLight = textureLod(prefilteredSampler, R, lod).rgb;
 
 	vec3 diffuse = diffuseLight * frag.albedo;
-	vec3 specular = frag.a < SPEC_THRESHOLD ? vec3(0) : specularLight * (frag.f0 * brdfLut.x + brdfLut.y);
+	vec3 specular = specularLight * (frag.f0 * brdfLut.x + brdfLut.y);
 
 	vec3 iblContribution = diffuse + specular;
 
