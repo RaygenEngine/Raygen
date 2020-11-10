@@ -4,6 +4,7 @@
 #include "engine/Engine.h"
 #include "platform/Platform.h"
 #include "universe/Universe.h"
+#include "App.h"
 
 #include <glfw/glfw3.h>
 
@@ -55,7 +56,7 @@ namespace {
 		const char* icon = world->IsStopped() ? U8(FA_PLAY) : U8(FA_STOP);
 
 		fmt::basic_memory_buffer<char, 100> s;
-		fmt::format_to(s, " {}  Raygen - {:.1f} FPS ###PlayStopCaptionTxt", icon, Engine.GetFPS());
+		fmt::format_to(s, " {}  {} - {:.1f} FPS ###PlayStopCaptionTxt", icon, App->windowTitle, Engine.GetFPS());
 
 		bool hasPushedStyle = false;
 		if (world->IsPlaying()) {
