@@ -40,14 +40,57 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 
 layout(set = 2, binding = 0) uniform samplerCube irradianceSampler[1024];
 
-vec3 SampleIrrad(float x, float y, float z, vec3 N) {
+float IntersectAABB(vec3 rayOrigin, vec3 rayDir, vec3 boxMin, vec3 boxMax) {
+    vec3 tMin = (boxMin - rayOrigin) / rayDir;
+    vec3 tMax = (boxMax - rayOrigin) / rayDir;
+    vec3 t1 = min(tMin, tMax);
+    vec3 t2 = max(tMin, tMax);
+    float tNear = max(max(t1.x, t1.y), t1.z);
+    float tFar = min(min(t2.x, t2.y), t2.z);
+    return vec2(tNear, tFar).y;
+};
+
+vec3 SampleIrrad2(float x, float y, float z, vec3 N) {
 
 	float i = 0;
 	i += x;
 	i += y * 16;
 	i += z * 16 * 16;
+
 	return texture(irradianceSampler[int(i)], N).rgb;
 }
+
+
+vec3 SampleIrrad(float x, float y, float z, vec3 fragPos, vec3 N) {
+	//return SampleIrrad2(x,y,z,N);
+
+	float i = 0;
+	i += x;
+	i += y * 16;
+	i += z * 16 * 16;
+
+	vec3 irrPos = firstPos + vec3(x * distToAdjacent, y * distToAdjacent, z * distToAdjacent);
+
+	
+
+	
+
+	vec3 halfSize = 1 * vec3(distToAdjacent);
+	vec3 pmin = irrPos - halfSize;
+	vec3 pmax = irrPos + halfSize;
+
+	vec3 reprojNormal = 2 * fragPos - irrPos + IntersectAABB(fragPos, N, pmin, pmax) * N;
+
+	return texture(irradianceSampler[int(i)], normalize(reprojNormal)).rgb
+		 * saturate(dot(N, irrPos - fragPos));
+	;
+}
+
+
+
+
+
+
 
 void main( ) {
 	//discard;
@@ -59,7 +102,8 @@ void main( ) {
 		// TODO: discard here like in spotlights
 		vec3 V = normalize(reconstructWorldPosition(depth1, uv, cam.viewProjInv) - cam.position);
 		
-		outColor = vec4(SampleIrrad(4, 0, 1, V).xyz, 1);
+		outColor = vec4(SampleIrrad2(15, 0, 1, V).xyz, 1);
+
 		return;
 	}
 
@@ -80,7 +124,7 @@ void main( ) {
 	
 	vec3 uvw = (frag.position - firstPos) / size; 
 
-	vec3 delim = 0.5 / size; 
+	vec3 delim = 1.0 / size; 
 	
 
 
@@ -100,15 +144,15 @@ void main( ) {
 	float sv = uvw.y * probeCount.y;
 	float sw = uvw.z * probeCount.z;
 	
-	vec3 FTL = SampleIrrad(floor(su), floor(sv), floor(sw), N);
-	vec3 FTR = SampleIrrad(ceil (su), floor(sv), floor(sw), N);
-	vec3 FBL = SampleIrrad(floor(su), ceil (sv), floor(sw), N);
-	vec3 FBR = SampleIrrad(ceil (su), ceil (sv), floor(sw), N);
+	vec3 FTL = SampleIrrad(floor(su), floor(sv), floor(sw), frag.position, N);
+	vec3 FTR = SampleIrrad(ceil (su), floor(sv), floor(sw), frag.position, N);
+	vec3 FBL = SampleIrrad(floor(su), ceil (sv), floor(sw), frag.position, N);
+	vec3 FBR = SampleIrrad(ceil (su), ceil (sv), floor(sw), frag.position, N);
 
-	vec3 BTL = SampleIrrad(floor(su), floor(sv), ceil (sw), N);
-	vec3 BTR = SampleIrrad(ceil (su), floor(sv), ceil (sw), N);
-	vec3 BBL = SampleIrrad(floor(su), ceil (sv), ceil (sw), N);
-	vec3 BBR = SampleIrrad(ceil (su), ceil (sv), ceil (sw), N);
+	vec3 BTL = SampleIrrad(floor(su), floor(sv), ceil (sw), frag.position, N);
+	vec3 BTR = SampleIrrad(ceil (su), floor(sv), ceil (sw), frag.position, N);
+	vec3 BBL = SampleIrrad(floor(su), ceil (sv), ceil (sw), frag.position, N);
+	vec3 BBR = SampleIrrad(ceil (su), ceil (sv), ceil (sw), frag.position, N);
 
 	float rightPercent = fract(su);
 	float bottomPercent = fract(sv);
@@ -126,6 +170,8 @@ void main( ) {
 
 	outColor = vec4(diffuseLight * frag.albedo, 1.0);
 }
+
+
 
 
 
