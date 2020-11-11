@@ -52,7 +52,7 @@ vk::UniquePipeline DirlightBlend::MakePipeline()
 
 void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
-	auto camDescSet = sceneDesc.viewer.descSet[sceneDesc.frameIndex];
+	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
 
 	auto& pipeLayout = StaticPipes::GetLayout<DirlightBlend>();
 
@@ -65,7 +65,7 @@ void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sce
 
 	for (auto dl : sceneDesc->Get<SceneDirlight>()) {
 		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, pipeLayout, 2u, 1u, &dl->descSet[sceneDesc.frameIndex], 0u, nullptr);
+			vk::PipelineBindPoint::eGraphics, pipeLayout, 2u, 1u, &dl->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 3u, 1u,
 			&dl->shadowmap[sceneDesc.frameIndex].descSet, 0u, nullptr);

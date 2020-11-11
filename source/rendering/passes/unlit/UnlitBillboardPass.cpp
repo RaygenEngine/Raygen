@@ -194,25 +194,27 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 			continue;
 		}
 
-		for (int32 i = 0; i < IRRGRID_PROBE_COUNT; ++i) {
-			int32 x = i % 16;
-			int32 y = (i / 16) % 16;
-			int32 z = i / (16 * 16);
+		for (int32 x = 0; x < ig.width; ++x) {
+			for (int32 y = 0; y < ig.height; ++y) {
+				for (int32 z = 0; z < ig.depth; ++z) {
 
-			auto pos = bc.world().position + glm::vec3(x, y, z) * ig.distToAdjacent;
 
-			PushConstant pc{
-				sceneDesc.viewer.ubo.viewProj,
-				glm::vec4(pos, 1.f),
-				cameraRight,
-				cameraUp,
-				0.2f,
-			};
+					auto pos = bc.world().position + glm::vec3(x, y, z) * ig.distToAdjacent;
 
-			cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+					PushConstant pc{
+						sceneDesc.viewer.ubo.viewProj,
+						glm::vec4(pos, 1.f),
+						cameraRight,
+						cameraUp,
+						0.2f,
+					};
 
-			// draw rectangle
-			cmdBuffer.draw(4u, 1u, 0u, 0u);
+					cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+					// draw rectangle
+					cmdBuffer.draw(4u, 1u, 0u, 0u);
+				}
+			}
 		}
 	}
 

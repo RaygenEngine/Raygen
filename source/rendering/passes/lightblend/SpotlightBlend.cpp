@@ -53,7 +53,7 @@ vk::UniquePipeline SpotlightBlend::MakePipeline()
 
 void SpotlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
-	auto camDescSet = sceneDesc.viewer.descSet[sceneDesc.frameIndex];
+	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
@@ -63,7 +63,7 @@ void SpotlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 
 	for (auto sp : sceneDesc->Get<SceneSpotlight>()) {
 		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &sp->descSet[sceneDesc.frameIndex], 0u, nullptr);
+			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &sp->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u,
 			&sp->shadowmap[sceneDesc.frameIndex].descSet, 0u, nullptr);

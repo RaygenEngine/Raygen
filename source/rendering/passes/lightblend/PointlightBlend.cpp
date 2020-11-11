@@ -236,7 +236,7 @@ vk::UniquePipeline PointlightBlend::MakePipeline()
 
 void PointlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
-	auto camDescSet = sceneDesc.viewer.descSet[sceneDesc.frameIndex];
+	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
@@ -256,7 +256,7 @@ void PointlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &pl->descSet[sceneDesc.frameIndex], 0u, nullptr);
+			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &pl->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 		cmdBuffer.drawIndexed(m_sphereIndexBuffer.count, 1u, 0u, 0u, 0u);
 	}

@@ -3,14 +3,20 @@
 #include "rendering/wrappers/ImageView.h"
 
 struct IrradianceGrid_UBO {
+	int32 width{ 3 };
+	int32 height{ 3 };
+	int32 depth{ 3 };
+	int32 builtCount{ 0 };
+
+	glm::vec4 posAndDist;
 };
 
-#define IRRGRID_PROBE_COUNT 1024u
 
 struct SceneIrradianceGrid : public SceneStruct {
+	SCENE_STRUCT(SceneIrradianceGrid);
 
-	SceneIrradianceGrid();
-
+	// WIP: this should be defined from the gridDescSet dynamic count
+	static constexpr size_t gridProbeCount = 1024;
 	IrradianceGrid_UBO ubo{};
 
 	struct probe {
@@ -29,13 +35,12 @@ struct SceneIrradianceGrid : public SceneStruct {
 
 	vk::DescriptorSet gridDescSet;
 
-	std::array<probe, IRRGRID_PROBE_COUNT> probes;
+	std::array<probe, gridProbeCount> probes;
 
 	BoolFlag shouldBuild{ true };
-
-	float distToAdjacent{ 1.f };
 	int32 ptSamples{ 2 };
 	int32 ptBounces{ 2 };
 
-	glm::vec4 pos;
+	// PERF: this should only allocate if need be
+	void Allocate();
 };
