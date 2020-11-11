@@ -54,7 +54,7 @@ layout(set = 6, binding = 0) uniform UBO_Irragrid {
 
 layout(set = 7, binding = 0) uniform samplerCube irradianceSampler[];
 
-vec3 RadianceOfRay2(vec3 nextOrigin, vec3 nextDirection) {
+vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 	prd.radiance = vec3(0);
 	prd.depth += 1;
 
@@ -220,8 +220,6 @@ void main() {
 			prd.radiance = sampledEmissive.xyz;
 			return;
 		}
-		
-		// DIRECT
 
 		// for each light
 		for(int i = 0; i < pointlightCount; ++i) {
@@ -268,48 +266,46 @@ void main() {
 
 		vec3 delim = 1.0 / size; 
 
-		if(uvw.x > 1 + delim.x || 
+		if(!(uvw.x > 1 + delim.x || 
 		   uvw.y > 1 + delim.y || 
 		   uvw.z > 1 + delim.z ||
 		   uvw.x < -delim.x || 
 		   uvw.y < -delim.y || 
-		   uvw.z < -delim.z) {
-			prd.radiance = radiance;
-			return;
-		}
-	
-		uvw = saturate(uvw);
+		   uvw.z < -delim.z)) {
 
-		// SMATH:
-		float su = uvw.x * probeCount.x;
-		float sv = uvw.y * probeCount.y;
-		float sw = uvw.z * probeCount.z;
+			uvw = saturate(uvw);
+
+			// SMATH:
+			float su = uvw.x * probeCount.x;
+			float sv = uvw.y * probeCount.y;
+			float sw = uvw.z * probeCount.z;
 	
-		vec3 FTL = SampleIrrad(floor(su), floor(sv), floor(sw), hitPoint, Ns);
-		vec3 FTR = SampleIrrad(ceil (su), floor(sv), floor(sw), hitPoint, Ns);
-		vec3 FBL = SampleIrrad(floor(su), ceil (sv), floor(sw), hitPoint, Ns);
-		vec3 FBR = SampleIrrad(ceil (su), ceil (sv), floor(sw), hitPoint, Ns);
+			vec3 FTL = SampleIrrad(floor(su), floor(sv), floor(sw), hitPoint, Ns);
+			vec3 FTR = SampleIrrad(ceil (su), floor(sv), floor(sw), hitPoint, Ns);
+			vec3 FBL = SampleIrrad(floor(su), ceil (sv), floor(sw), hitPoint, Ns);
+			vec3 FBR = SampleIrrad(ceil (su), ceil (sv), floor(sw), hitPoint, Ns);
 																		   
-		vec3 BTL = SampleIrrad(floor(su), floor(sv), ceil (sw), hitPoint, Ns);
-		vec3 BTR = SampleIrrad(ceil (su), floor(sv), ceil (sw), hitPoint, Ns);
-		vec3 BBL = SampleIrrad(floor(su), ceil (sv), ceil (sw), hitPoint, Ns);
-		vec3 BBR = SampleIrrad(ceil (su), ceil (sv), ceil (sw), hitPoint, Ns);
+			vec3 BTL = SampleIrrad(floor(su), floor(sv), ceil (sw), hitPoint, Ns);
+			vec3 BTR = SampleIrrad(ceil (su), floor(sv), ceil (sw), hitPoint, Ns);
+			vec3 BBL = SampleIrrad(floor(su), ceil (sv), ceil (sw), hitPoint, Ns);
+			vec3 BBR = SampleIrrad(ceil (su), ceil (sv), ceil (sw), hitPoint, Ns);
 
-		float rightPercent = fract(su);
-		float bottomPercent = fract(sv);
-		float backPercent = fract(sw);
+			float rightPercent = fract(su);
+			float bottomPercent = fract(sv);
+			float backPercent = fract(sw);
 
-		vec3 topInterpolF  = mix(FTL, FTR, rightPercent);
-		vec3 botInterpolF  = mix(FBL, FBR, rightPercent);
-		vec3 topInterpolB  = mix(BTL, BTR, rightPercent);
-		vec3 botInterpolB  = mix(BBL, BBR, rightPercent);
+			vec3 topInterpolF  = mix(FTL, FTR, rightPercent);
+			vec3 botInterpolF  = mix(FBL, FBR, rightPercent);
+			vec3 topInterpolB  = mix(BTL, BTR, rightPercent);
+			vec3 botInterpolB  = mix(BBL, BBR, rightPercent);
 	
-		vec3 frontInt = mix(topInterpolF, botInterpolF, bottomPercent);
-		vec3 backInt  = mix(topInterpolB, botInterpolB, bottomPercent);	
+			vec3 frontInt = mix(topInterpolF, botInterpolF, bottomPercent);
+			vec3 backInt  = mix(topInterpolB, botInterpolB, bottomPercent);	
 
-		vec3 diffuseLight = mix(frontInt, backInt, backPercent);
+			vec3 diffuseLight = mix(frontInt, backInt, backPercent);
 
-		radiance += diffuseLight * brdfInfo.albedo;
+			radiance += diffuseLight * brdfInfo.albedo;
+		}
     }
 
 	if(prd.depth > depth){
@@ -317,22 +313,30 @@ void main() {
 		return;
 	}
 
-
-	vec3 brdfLut = (texture(std_BrdfLut, vec2(NoV, brdfInfo.a))).rgb;
-
 	// INDIRECT Specular
 	{
-		vec2 u = rand2(prd.seed);
-		vec3 H = importanceSampleGGX(u, brdfInfo.a);
+		vec3 brdfLut = (texture(std_BrdfLut, vec2(NoV, brdfInfo.a))).rgb;
 
-		vec3 L = reflect(-V, H);
+		vec3 L;
+		if(brdfInfo.a < 0.001){
+			L = reflect(-V);
+		}
+		else{
+			vec2 u = rand2(prd.seed);
+			vec3 H = importanceSampleGGX(u, brdfInfo.a);
+			L = reflect(-V, H);
+		}
+
+		// SMATH: is nol here legit?
+		float NoL = max(Ndot(L), BIAS);
 
 		outOnbSpace(shadingBasis, L);
-		radiance += RadianceOfRay2(hitPoint, L) * (brdfInfo.f0 * brdfLut.x + brdfLut.y);
+		radiance += RadianceOfRay(hitPoint, L) * (brdfInfo.f0 * brdfLut.x + brdfLut.y) * NoL;
 	}
 
 	prd.radiance = radiance;
 }
+
 
 
 

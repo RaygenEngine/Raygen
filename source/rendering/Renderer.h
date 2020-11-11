@@ -32,6 +32,7 @@ public:
 	InFlightResources<RenderingPassInstance> m_directLightPass;
 	InFlightResources<RenderingPassInstance> m_indirectLightPass;
 	InFlightResources<RenderingPassInstance> m_ptPass;
+	IndirectSpecularPass m_indirectSpecPass;
 
 private:
 	void RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
@@ -66,7 +67,7 @@ private:
 
 	// TODO: tidy
 	PtLightBlend m_lightblendPass;
-	IndirectSpecularPass m_indirectSpecPass;
+
 	// AOPass m_aoPass;
 
 	PathtracedCubemap m_ptCube;

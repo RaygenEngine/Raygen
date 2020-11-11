@@ -63,6 +63,11 @@ void main() {
 
 	float fragDepth = texture(g_DepthSampler, uv).r;
 
+	if(fragDepth >= 1.) {
+		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(0.0, 0.0, 0.0, 1.0));
+		return; 
+	}
+
 	Fragment frag = getFragmentFromGBuffer(
 		fragDepth,
 		cam.viewProjInv,
@@ -87,14 +92,23 @@ void main() {
 		prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, samples + smpl);
 		prd.depth = 1; // gbuffer
 
-		vec2 u = rand2(prd.seed);
-		vec3 H = importanceSampleGGX(u, frag.a);
+		vec3 L;
+		if( frag.a < 0.001){
+			L = reflect(-V);
+		}
+		else{
+			vec2 u = rand2(prd.seed);
+			vec3 H = importanceSampleGGX(u, frag.a);
+			L = reflect(-V, H);
+		}
 
-		vec3 L = reflect(-V, H);
+		// SMATH: is nol here legit?
+		float NoL = max(Ndot(L), BIAS);
 
 		outOnbSpace(shadingBasis, L);
-		radiance += RadianceOfRay(frag.position, L) * (frag.f0 * brdfLut.x + brdfLut.y);
+		radiance += RadianceOfRay(frag.position, L) * (frag.f0 * brdfLut.x + brdfLut.y) * NoL;
 	}
     
 	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(radiance / float(samples), 1.0));
 }
+
