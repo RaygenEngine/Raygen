@@ -6,7 +6,7 @@
 #include "rendering/assets/GpuShaderStage.h"
 #include "rendering/scene/SceneCamera.h"
 
-ConsoleVariable<int32> console_rtSamples{ "ao.samples", 2, "Set ao sample count" };
+ConsoleVariable<int32> console_rtSamples2{ "ao.samples", 2, "Set ao sample count" };
 
 namespace {
 struct PushConstant {
@@ -164,7 +164,7 @@ void AOPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scen
 		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr); // as
 
 	PushConstant pc{
-		std::max(0, *console_rtSamples),
+		std::max(0, *console_rtSamples2),
 	};
 
 	cmdBuffer.pushConstants(m_rtPipelineLayout.get(),

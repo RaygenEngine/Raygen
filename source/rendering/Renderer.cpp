@@ -39,7 +39,7 @@ void Renderer_::InitPipelines()
 	m_lightblendPass.MakeLayout();
 	m_lightblendPass.MakePipeline();
 
-	// m_mirrorPass.MakeRtPipeline();
+	m_indirectSpecPass.MakeRtPipeline();
 	// m_aoPass.MakeRtPipeline();
 }
 
@@ -238,7 +238,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 			fbSize.width, fbSize.height, { &m_gbufferInst[i].framebuffer[0] }); // TODO: indices and stuff
 	}
 
-	// m_mirrorPass.Resize(fbSize);
+	m_indirectSpecPass.Resize(fbSize);
 	// m_aoPass.Resize(fbSize);
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
@@ -255,7 +255,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
 		views.emplace_back(m_directLightPass[i].framebuffer[0].view());   // directLightSampler
 		views.emplace_back(m_indirectLightPass[i].framebuffer[0].view()); // indirectLightSampler
-		views.emplace_back(m_indirectLightPass[i].framebuffer[0].view()); // TODO: reserved
+		views.emplace_back(m_indirectSpecPass.m_result[i].view());        // indirectRaytracedSpecular
 		views.emplace_back(m_indirectLightPass[i].framebuffer[0].view()); // TODO: reserved
 		views.emplace_back(m_ptPass[i].framebuffer[0].view());            // sceneColorSampler
 
@@ -285,17 +285,17 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 	}
 
 	// RT images
-	/*for (size_t i = 0; i < c_framesInFlight; i++) {
-		m_mirrorPass.m_rtDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
+	for (size_t i = 0; i < c_framesInFlight; i++) {
+		m_indirectSpecPass.m_rtDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
 
-		rvk::writeDescriptorImages(m_mirrorPass.m_rtDescSet[i], 0u, { m_mirrorPass.m_indirectResult[i].view() },
+		rvk::writeDescriptorImages(m_indirectSpecPass.m_rtDescSet[i], 0u, { m_indirectSpecPass.m_result[i].view() },
 			nullptr, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
-		m_aoPass.m_rtDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
+		// m_aoPass.m_rtDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
 
-		rvk::writeDescriptorImages(m_aoPass.m_rtDescSet[i], 0u, { m_aoPass.m_indirectResult[i].view() },
-			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
-	}*/
+		// rvk::writeDescriptorImages(m_aoPass.m_rtDescSet[i], 0u, { m_aoPass.m_indirectResult[i].view() },
+		//	vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
+	}
 }
 
 InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
@@ -323,7 +323,7 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 	RecordRasterDirectPass(cmdBuffer, sceneDesc);
 
 
-	// m_mirrorPass.RecordPass(cmdBuffer, sceneDesc);
+	m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
 	// m_aoPass.RecordPass(cmdBuffer, sceneDesc);
 
 

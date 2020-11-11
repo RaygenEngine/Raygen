@@ -5,7 +5,7 @@
 #include "rendering/passes/offline/PathtracedCubemap.h"
 #include "rendering/passes/offline/PrefilteredMapCalculation.h"
 #include "rendering/passes/AOPass.h"
-#include "rendering/passes/MirrorPass.h"
+#include "rendering/passes/IndirectSpecularPass.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
@@ -66,7 +66,7 @@ private:
 
 	// TODO: tidy
 	PtLightBlend m_lightblendPass;
-	// MirrorPass m_mirrorPass;
+	IndirectSpecularPass m_indirectSpecPass;
 	// AOPass m_aoPass;
 
 	PathtracedCubemap m_ptCube;

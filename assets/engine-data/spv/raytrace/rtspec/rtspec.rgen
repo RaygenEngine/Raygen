@@ -6,11 +6,13 @@
 #extension GL_EXT_buffer_reference2 : enable
 
 #include "global.glsl"
-#include "raytrace/mirror/mirror.glsl"
+#include "raytrace/rtspec/rtspec.glsl"
 
 #include "attachments.glsl"
 #include "fragment.glsl"
 #include "onb.glsl"
+#include "random.glsl"
+#include "bsdf.glsl"
 
 layout(set = 1, binding = 0) uniform UBO_Camera {   
 	vec3 position;
@@ -70,25 +72,29 @@ void main() {
 		g_EmissiveSampler,
 		uv);
 
-	vec3 color = vec3(0);
+	Onb shadingBasis = branchlessOnb(frag.normal);
+	vec3 V = normalize(cam.position - frag.position);
+	toOnbSpace(shadingBasis, V);
 
-	// specular 		// TODO: without SPEC_THRESHOLD
-	if(frag.a < SPEC_THRESHOLD){
-		vec3 V = normalize(cam.position - frag.position);
-		vec3 N = frag.normal;
-		float NoV = max(dot(N, V), BIAS);
+	float NoV = max(Ndot(V), BIAS);
 
-		vec3 brdfLut = (texture(std_BrdfLut, vec2(NoV, frag.a))).rgb;
+	vec3 brdfLut = (texture(std_BrdfLut, vec2(NoV, frag.a))).rgb;
 
-		vec3 L = normalize(reflect(-V, N));
+	vec3 radiance = vec3(0);
 
-		prd.depth = 1; // start from depth = 1 due to gbuffer
-		vec3 specularLight = RadianceOfRay(frag.position, L);
+	for(uint smpl = 0; smpl < samples; ++smpl){
 
-		vec3 specular = specularLight * (frag.f0 * brdfLut.x + brdfLut.y);
+		prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, samples + smpl);
+		prd.depth = 1; // gbuffer
 
-		color += specular;
+		vec2 u = rand2(prd.seed);
+		vec3 H = importanceSampleGGX(u, frag.a);
+
+		vec3 L = reflect(-V, H);
+
+		outOnbSpace(shadingBasis, L);
+		radiance += RadianceOfRay(frag.position, L) * (frag.f0 * brdfLut.x + brdfLut.y);
 	}
-	
-	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.0));
+    
+	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(radiance / float(samples), 1.0));
 }

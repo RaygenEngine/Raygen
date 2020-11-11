@@ -16,7 +16,7 @@ layout(set = 0, binding = 8) uniform sampler2D directLightSampler;
 											                       
 layout(set = 0, binding = 9) uniform sampler2D indirectLightSampler;
 
-layout(set = 0, binding = 10) uniform sampler2D reserved0;
+layout(set = 0, binding = 10) uniform sampler2D indirectRaytracedSpecular;
 
 layout(set = 0, binding = 11) uniform sampler2D reserved1;
 

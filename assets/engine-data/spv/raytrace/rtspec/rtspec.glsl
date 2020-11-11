@@ -1,5 +1,5 @@
-#ifndef mirror_glsl
-#define mirror_glsl
+#ifndef rtspec_glsl
+#define rtspec_glsl
 
 struct Pointlight {
 		vec3 position;
@@ -19,6 +19,17 @@ struct Pointlight {
 		int samples;
 		int hasShadow;
 };
+
+struct Irragrid {
+	int width;
+	int height;
+	int depth;
+	int builtCount;
+
+	vec3 firstPos;
+	float distToAdjacent;
+};
+
 
 struct Vertex
 {
@@ -67,22 +78,18 @@ struct GltfMat {
 	samplerRef emissive;
 };
 
-struct Reflprobe {
-	int lodCount;
-};
-
 struct hitPayload
 {
 	vec3 radiance;
 	int depth;
+	uint seed;
 };
 
 layout(push_constant) uniform PC
 {
-		int mirrorDepth;
-		int pointlightCount;
-        int reflprobeCount;
+	int depth;
+	int samples;
+	int pointlightCount;
 };
-
 
 #endif

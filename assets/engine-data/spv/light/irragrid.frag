@@ -62,7 +62,6 @@ vec3 SampleIrrad(float x, float y, float z, vec3 fragPos, vec3 N) {
 void main( ) {
 	float depth = texture(g_DepthSampler, uv).r;
 
-
 //	if(depth == 1.0) {
 //		// TODO: discard here like in spotlights
 //		vec3 V = normalize(reconstructWorldPosition(depth, uv, cam.viewProjInv) - cam.position);

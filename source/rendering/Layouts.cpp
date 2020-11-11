@@ -33,7 +33,7 @@ layout(set = 0, binding = 8) uniform sampler2D directLightSampler;
 
 layout(set = 0, binding = 9) uniform sampler2D indirectLightSampler;
 
-layout(set = 0, binding = 10) uniform sampler2D reserved0;
+layout(set = 0, binding = 10) uniform sampler2D indirectRaytracedSpecular;
 
 layout(set = 0, binding = 11) uniform sampler2D reserved1;
 
@@ -202,8 +202,8 @@ Layouts_::Layouts_()
 	cubemapArray1024.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment, 1024u);
 	cubemapArray1024.Generate();
 
-	dynamicSamplerArray.AddBinding(
-		vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment, 1024u, eVariableDescriptorCount);
+	dynamicSamplerArray.AddBinding(vk::DescriptorType::eCombinedImageSampler,
+		vk::ShaderStageFlagBits::eFragment | eRaygenKHR | eClosestHitKHR | eAnyHitKHR, 1024u, eVariableDescriptorCount);
 	dynamicSamplerArray.Generate();
 
 
