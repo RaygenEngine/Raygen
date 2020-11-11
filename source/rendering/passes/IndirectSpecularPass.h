@@ -8,7 +8,7 @@ struct SceneRenderDesc;
 
 namespace vl {
 
-class MirrorPass {
+class IndirectSpecularPass {
 public:
 	void MakeRtPipeline();
 
@@ -19,7 +19,7 @@ public:
 	void Resize(vk::Extent2D extent);
 
 	// WIP: RT_PASSES
-	InFlightResources<RImageAttachment> m_indirectResult;
+	InFlightResources<RImageAttachment> m_result;
 	InFlightResources<vk::DescriptorSet> m_rtDescSet;
 
 private:

@@ -7,12 +7,14 @@
 #extension GL_EXT_ray_query: require
 
 #include "global.glsl"
-#include "raytrace/mirror/mirror.glsl"
+#include "raytrace/rtspec/rtspec.glsl"
 
 #include "sampling.glsl"
 #include "bsdf.glsl"
 #include "onb.glsl"
 #include "attachments.glsl"
+#include "aabb.glsl"
+#include "random.glsl"
 
 hitAttributeEXT vec2 baryCoord;
 layout(location = 0) rayPayloadInEXT hitPayload prd;
@@ -40,9 +42,17 @@ layout(set = 4, binding = 1) uniform sampler2D textureSamplers[];
 
 layout(set = 5, binding = 0, std430) readonly buffer Pointlights { Pointlight light[]; } pointlights;
 
-layout(set = 6, binding = 0, std430) readonly buffer Reflprobes { Reflprobe reflprobe[]; } reflprobes;
-layout(set = 6, binding = 1) uniform samplerCube relfprobeTextures[];
+layout(set = 6, binding = 0) uniform UBO_Irragrid {
+	int width;
+	int height;
+	int depth;
+	int builtCount;
 
+	vec3 firstPos;
+	float distToAdjacent;
+} grid;
+
+layout(set = 7, binding = 0) uniform samplerCube irradianceSampler[];
 
 vec3 RadianceOfRay2(vec3 nextOrigin, vec3 nextDirection) {
 	prd.radiance = vec3(0);
@@ -109,6 +119,24 @@ float ShadowRayQuery(vec3 lightPos, vec3 fragPos){
 	  return 1.0;
 	}
 	return 0.0;
+}
+
+vec3 SampleIrrad(float x, float y, float z, vec3 fragPos, vec3 N) {
+	float c = 0;
+	c += x;
+	c += y * grid.width;
+	c += z * grid.width * grid.height;
+	int i = int(c) % grid.builtCount;
+
+	vec3 irrPos = grid.firstPos + vec3(x * grid.distToAdjacent, y * grid.distToAdjacent, z * grid.distToAdjacent);
+
+	Aabb aabb = createAabb(irrPos, grid.distToAdjacent);
+
+	vec3 reprojNormal = (fragPos - irrPos) + (fragPos + intersectionDistanceAabb(aabb, fragPos, N) * N);
+
+	return texture(irradianceSampler[nonuniformEXT(i)], normalize(reprojNormal)).rgb
+	//	 * saturate(dot(N, irrPos - fragPos));
+	;
 }
 
 void main() {
@@ -179,19 +207,15 @@ void main() {
 
 	FsSpaceInfo fragSpace = GetFragSpace_World(Ns, hitPoint, gl_WorldRayOriginEXT);
 
+	Onb shadingBasis = branchlessOnb(Ns);			
+	vec3 V = -gl_WorldRayDirectionEXT;
+	toOnbSpace(shadingBasis, V);
+	
+	float NoV = max(Ndot(V), BIAS);
+
 	vec3 radiance = vec3(0);
-	// OLD DIRECT
+	// DIRECT
 	{
-		// TODO: Refactor
-		vec3 V = -gl_WorldRayDirectionEXT;
-		float a = brdfInfo.a;
-
-		Onb shadingOrthoBasis = branchlessOnb(Ns);
-		toOnbSpace(shadingOrthoBasis, V);
-
-		// same hemisphere
-		float NoV = max(Ndot(V), BIAS);
-
 		if (sum(sampledEmissive.xyz) > BIAS) {
 			prd.radiance = sampledEmissive.xyz;
 			return;
@@ -205,7 +229,7 @@ void main() {
 			vec3 lightPos = light.position;
 
 			vec3 L = normalize(lightPos - hitPoint);
-			toOnbSpace(shadingOrthoBasis, L);
+			toOnbSpace(shadingBasis, L);
 
 			float NoL = max(Ndot(L), BIAS);
 
@@ -235,61 +259,76 @@ void main() {
 		}
 	}
 
-	if(prd.depth > mirrorDepth){
+	// INDIRECT Diffuse 
+    {
+		vec3 probeCount  = vec3(grid.width - 1, grid.height - 1, grid.depth - 1);
+		vec3 size = probeCount * grid.distToAdjacent;
+	
+		vec3 uvw = (hitPoint - grid.firstPos) / size; 
+
+		vec3 delim = 1.0 / size; 
+
+		if(uvw.x > 1 + delim.x || 
+		   uvw.y > 1 + delim.y || 
+		   uvw.z > 1 + delim.z ||
+		   uvw.x < -delim.x || 
+		   uvw.y < -delim.y || 
+		   uvw.z < -delim.z) {
+			prd.radiance = radiance;
+			return;
+		}
+	
+		uvw = saturate(uvw);
+
+		// SMATH:
+		float su = uvw.x * probeCount.x;
+		float sv = uvw.y * probeCount.y;
+		float sw = uvw.z * probeCount.z;
+	
+		vec3 FTL = SampleIrrad(floor(su), floor(sv), floor(sw), hitPoint, Ns);
+		vec3 FTR = SampleIrrad(ceil (su), floor(sv), floor(sw), hitPoint, Ns);
+		vec3 FBL = SampleIrrad(floor(su), ceil (sv), floor(sw), hitPoint, Ns);
+		vec3 FBR = SampleIrrad(ceil (su), ceil (sv), floor(sw), hitPoint, Ns);
+																		   
+		vec3 BTL = SampleIrrad(floor(su), floor(sv), ceil (sw), hitPoint, Ns);
+		vec3 BTR = SampleIrrad(ceil (su), floor(sv), ceil (sw), hitPoint, Ns);
+		vec3 BBL = SampleIrrad(floor(su), ceil (sv), ceil (sw), hitPoint, Ns);
+		vec3 BBR = SampleIrrad(ceil (su), ceil (sv), ceil (sw), hitPoint, Ns);
+
+		float rightPercent = fract(su);
+		float bottomPercent = fract(sv);
+		float backPercent = fract(sw);
+
+		vec3 topInterpolF  = mix(FTL, FTR, rightPercent);
+		vec3 botInterpolF  = mix(FBL, FBR, rightPercent);
+		vec3 topInterpolB  = mix(BTL, BTR, rightPercent);
+		vec3 botInterpolB  = mix(BBL, BBR, rightPercent);
+	
+		vec3 frontInt = mix(topInterpolF, botInterpolF, bottomPercent);
+		vec3 backInt  = mix(topInterpolB, botInterpolB, bottomPercent);	
+
+		vec3 diffuseLight = mix(frontInt, backInt, backPercent);
+
+		radiance += diffuseLight * brdfInfo.albedo;
+    }
+
+	if(prd.depth > depth){
 		prd.radiance = radiance;
 		return;
 	}
 
-	vec3 V = -gl_WorldRayDirectionEXT;
-	vec3 N = Ns;
-	float NoV = max(dot(N, V), BIAS);
 
 	vec3 brdfLut = (texture(std_BrdfLut, vec2(NoV, brdfInfo.a))).rgb;
 
-	// next mirror event
-	if(brdfInfo.a < SPEC_THRESHOLD){
-		// diffuse
-		for(int i = 0; i < reflprobeCount; ++i){
-			Reflprobe reflprobe = reflprobes.reflprobe[i];
+	// INDIRECT Specular
+	{
+		vec2 u = rand2(prd.seed);
+		vec3 H = importanceSampleGGX(u, brdfInfo.a);
 
-			vec3 diffuseLight =  texture(relfprobeTextures[nonuniformEXT(i)], N).rgb; // irradiance
+		vec3 L = reflect(-V, H);
 
-			vec3 diffuse = diffuseLight * brdfInfo.albedo;
-
-			radiance += diffuse;
-		}
-
-		// specular
-		vec3 L = normalize(reflect(-V, N));
-		vec3 specularLight = RadianceOfRay2(hitPoint, L);
-
-		vec3 specular = specularLight * (brdfInfo.f0 * brdfLut.x + brdfLut.y);
-
-		radiance += specular;
-	}
-	// sample appropriate reflprobe
-	else{
-		for(int i = 0; i < reflprobeCount; ++i){
-			Reflprobe reflprobe = reflprobes.reflprobe[i];
-
-			vec3 R = normalize(reflect(-V, N));
-
-			float NoV = abs(dot(N, V)) + 1e-5;
-	
-			// SMATH: which roughness should go here
-			float lod = brdfInfo.a * reflprobe.lodCount; 
-			
-			// SMATH: math of those
-			vec3 diffuseLight =  texture(relfprobeTextures[nonuniformEXT(i)], N).rgb; // irradiance
-			vec3 specularLight = textureLod(relfprobeTextures[nonuniformEXT(i+1)], R, lod).rgb; // prefiltered
-
-			vec3 diffuse = diffuseLight * brdfInfo.albedo;
-			vec3 specular = specularLight * (brdfInfo.f0 * brdfLut.x + brdfLut.y);
-
-			vec3 iblContribution = diffuse + specular;
-
-			radiance += iblContribution;
-		}
+		outOnbSpace(shadingBasis, L);
+		radiance += RadianceOfRay2(hitPoint, L) * (brdfInfo.f0 * brdfLut.x + brdfLut.y);
 	}
 
 	prd.radiance = radiance;

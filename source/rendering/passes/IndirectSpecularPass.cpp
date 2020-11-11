@@ -1,25 +1,27 @@
-#include "MirrorPass.h"
+#include "IndirectSpecularPass.h"
 
 #include "engine/console/ConsoleVariable.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
 #include "rendering/scene/SceneCamera.h"
+#include <rendering/scene/SceneIrradianceGrid.h>
 
-ConsoleVariable<int32> console_rtDepth{ "rt.mirrorDepth", 2, "Set mirror depth" };
+ConsoleVariable<int32> console_rtDepth{ "rt.depth", 1, "Set rt depth" };
+ConsoleVariable<int32> console_rtSamples{ "rt.samples", 2, "Set rt samples" };
 
 namespace {
 struct PushConstant {
-	int32 mirrorDepth;
+	int32 depth;
+	int32 samples;
 	int32 pointlightCount;
-	int32 reflprobeCount;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
-void MirrorPass::MakeRtPipeline()
+void IndirectSpecularPass::MakeRtPipeline()
 {
 	std::array layouts{
 		Layouts->renderAttachmentsLayout.handle(),     // gbuffer and stuff
@@ -28,11 +30,12 @@ void MirrorPass::MakeRtPipeline()
 		Layouts->accelLayout.handle(),                 // accel structure
 		Layouts->bufferAndSamplersDescLayout.handle(), // geometry groups
 		Layouts->singleStorageBuffer.handle(),         // point lights
-		Layouts->bufferAndSamplersDescLayout.handle(), // refl probes
+		Layouts->singleUboDescLayout.handle(),         // irragrid
+		Layouts->dynamicSamplerArray.handle(),         // irragrid's textures
 	};
 
 	// all rt shaders here
-	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/mirror/mirror.shader");
+	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/rtspec/rtspec.shader");
 	shader.onCompileRayTracing = [&]() {
 		MakeRtPipeline();
 	};
@@ -112,7 +115,7 @@ void MirrorPass::MakeRtPipeline()
 	CreateRtShaderBindingTable();
 }
 
-void MirrorPass::CreateRtShaderBindingTable()
+void IndirectSpecularPass::CreateRtShaderBindingTable()
 {
 	auto groupCount = static_cast<uint32>(m_rtShaderGroups.size());     // 3 shaders: raygen, miss, chit
 	uint32 groupHandleSize = Device->pd.rtProps.shaderGroupHandleSize;  // Size of a program identifier
@@ -143,11 +146,10 @@ void MirrorPass::CreateRtShaderBindingTable()
 	Device->unmapMemory(mem);
 }
 
-void MirrorPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void IndirectSpecularPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	m_indirectResult[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
-		vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
-		vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+	m_result[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipeline.get());
 
@@ -174,13 +176,21 @@ void MirrorPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 5u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSetPointlights[sceneDesc.frameIndex], 0u, nullptr);
 
+	// WIP:
+	auto irragrid = *sceneDesc.scene->Get<SceneIrradianceGrid>().begin();
+	// if (!irragrid) {
+
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 6u, 1u,
-		&sceneDesc.scene->tlas.sceneDesc.descSetReflprobes[sceneDesc.frameIndex], 0u, nullptr);
+		&irragrid->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 7u, 1u, &irragrid->gridDescSet, 0u, nullptr);
+	//}
 
 	PushConstant pc{
 		std::max(0, *console_rtDepth),
+		std::max(0, *console_rtSamples),
 		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
-		sceneDesc.scene->tlas.sceneDesc.reflprobeCount,
 	};
 
 	cmdBuffer.pushConstants(m_rtPipelineLayout.get(),
@@ -217,26 +227,26 @@ void MirrorPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 		= { m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
 	const vk::StridedBufferRegionKHR callableShaderBindingTable;
 
-	auto& extent = m_indirectResult[sceneDesc.frameIndex].extent;
+	auto& extent = m_result[sceneDesc.frameIndex].extent;
 
 	cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
 		&callableShaderBindingTable, extent.width, extent.height, 1);
 
 
-	m_indirectResult[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+	m_result[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 		vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
 		vk::PipelineStageFlagBits::eFragmentShader);
 } // namespace vl
 
-void MirrorPass::Resize(vk::Extent2D extent)
+void IndirectSpecularPass::Resize(vk::Extent2D extent)
 {
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
-		m_indirectResult[i]
+		m_result[i]
 			= RImageAttachment(extent.width, extent.height, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
 				vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
 				vk::MemoryPropertyFlagBits::eDeviceLocal, "rtIndirectResult");
 
-		m_indirectResult[i].BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+		m_result[i].BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 			vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 	}
 }

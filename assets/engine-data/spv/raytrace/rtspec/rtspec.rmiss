@@ -3,7 +3,7 @@
 #extension GL_EXT_ray_tracing : require
 
 #include "global.glsl"
-#include "raytrace/mirror/mirror.glsl"
+#include "raytrace/rtspec/rtspec.glsl"
 
 #include "sky.glsl"
 
