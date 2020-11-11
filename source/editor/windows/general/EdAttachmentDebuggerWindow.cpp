@@ -82,8 +82,8 @@ void AttachmentDebuggerWindow::ImguiDraw()
 	showFramebuffer(gbufferFramebuffer);
 	showFramebuffer(directPassFramebuffer);
 	showFramebuffer(indirectPassFramebuffer);
+	showImage(vl::Renderer->m_indirectSpecPass.m_result.at(0));
 	showFramebuffer(ptPassFramebuffer);
-
 
 	for (auto sl : vl::Layer->mainScene->Get<SceneSpotlight>()) {
 		showImage(sl->shadowmap.at(0).framebuffer.ownedAttachments.at(0));
