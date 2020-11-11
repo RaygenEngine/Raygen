@@ -62,7 +62,7 @@ public:
 	[[nodiscard]] bool IsPaused() const { return playState == PlayState::Paused; }
 	[[nodiscard]] bool IsStopped() const { return playState == PlayState::Stopped; }
 
-	void SetActiveCamera(CCamera& camera);
+	void SetActiveCamera(const CCamera& camera);
 
 
 private:

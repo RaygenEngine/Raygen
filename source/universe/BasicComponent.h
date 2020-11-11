@@ -46,6 +46,10 @@ struct BasicComponent {
 	[[nodiscard]] const TransformCache& local() const { return local_; }
 	[[nodiscard]] const TransformCache& world() const { return world_; }
 
+
+	[[nodiscard]] TransformCache& GetEditableLocal() { return local_; }
+	[[nodiscard]] TransformCache& GetEditableWorld() { return world_; }
+
 private:
 	TransformCache local_;
 	TransformCache world_;

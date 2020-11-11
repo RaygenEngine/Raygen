@@ -185,7 +185,7 @@ void World::FlagEndPlay()
 	endPlayFlag.Set();
 }
 
-void World::SetActiveCamera(CCamera& camera)
+void World::SetActiveCamera(const CCamera& camera)
 {
 	activeCameraUid = camera.sceneUid;
 }
