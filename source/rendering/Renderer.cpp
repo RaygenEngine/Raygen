@@ -143,42 +143,48 @@ void Renderer_::RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const S
 		if (ig->shouldBuild.Access())
 			[[unlikely]]
 			{
-				for (int32 i = 0; i < IRRGRID_PROBE_COUNT; ++i) {
+				for (int32 x = 0; x < ig->ubo.width; ++x) {
+					for (int32 y = 0; y < ig->ubo.height; ++y) {
+						for (int32 z = 0; z < ig->ubo.depth; ++z) {
+
+							int32 i = 0;
+							i += x;
+							i += y * ig->ubo.width;
+							i += z * ig->ubo.width * ig->ubo.height;
 
 
-					ig->probes[i].surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
-						vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
-						vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+							ig->probes[i].surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
+								vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
+								vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
-					int32 x = i % 16;
-					int32 y = (i / 16) % 16;
-					int32 z = i / (16 * 16);
+							auto worldPos = glm::vec3(ig->ubo.posAndDist) + (glm::vec3(x, y, z) * ig->ubo.posAndDist.w);
 
-					auto worldPos = ig->pos + glm::vec4(glm::vec3(x, y, z) * ig->distToAdjacent, 1.f);
-
-					PtCubeInfo ptInfo{
-						ig->probes[i].surroundingEnv.extent.width,
-						worldPos, // grid block centers
-						0.f,
-						ig->ptSamples,
-						ig->ptBounces,
-						ig->probes[i].ptcube_faceArrayDescSet,
-					};
+							PtCubeInfo ptInfo{
+								ig->probes[i].surroundingEnv.extent.width,
+								glm::vec4(worldPos, 1.f), // grid block centers
+								0.f,
+								ig->ptSamples,
+								ig->ptBounces,
+								ig->probes[i].ptcube_faceArrayDescSet,
+							};
 
 
-					m_ptCube.RecordPass(cmdBuffer, sceneDesc, ptInfo);
+							m_ptCube.RecordPass(cmdBuffer, sceneDesc, ptInfo);
 
-					ig->probes[i].surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
-						vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
-						vk::PipelineStageFlagBits::eFragmentShader);
+							ig->probes[i].surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+								vk::ImageLayout::eShaderReadOnlyOptimal,
+								vk::PipelineStageFlagBits::eRayTracingShaderKHR,
+								vk::PipelineStageFlagBits::eFragmentShader);
 
-					CalcIrrInfo info{
-						ig->probes[i].irradiance.extent.width,
-						vk::uniqueToRaw(ig->probes[i].irr_framebuffer),
-						ig->probes[i].surroundingEnvSamplerDescSet,
-					};
+							CalcIrrInfo info{
+								ig->probes[i].irradiance.extent.width,
+								vk::uniqueToRaw(ig->probes[i].irr_framebuffer),
+								ig->probes[i].surroundingEnvSamplerDescSet,
+							};
 
-					StaticPipes::Get<IrradianceMapCalculation>().RecordPass(cmdBuffer, info);
+							StaticPipes::Get<IrradianceMapCalculation>().RecordPass(cmdBuffer, info);
+						}
+					}
 				}
 			}
 	} // namespace vl

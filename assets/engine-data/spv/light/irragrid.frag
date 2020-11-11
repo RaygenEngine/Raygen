@@ -1,10 +1,12 @@
 #version 460 
 #extension GL_GOOGLE_include_directive: enable
+#extension GL_EXT_nonuniform_qualifier : enable
 
 #include "global.glsl"
 
 #include "fragment.glsl"
 #include "attachments.glsl"
+#include "aabb.glsl"
 
 // out
 
@@ -15,16 +17,6 @@ layout(location = 0) out vec4 outColor;
 layout (location = 0) in vec2 uv;
 
 // uniform
-
-layout(push_constant) uniform PC {
-	vec3 firstPos;
-	float pad;
-	float distToAdjacent;
-	float blendProportion;
-	int width;
-	int height;
-	int depth;
-};
 
 layout(set = 1, binding = 0) uniform UBO_Camera {
 	vec3 position;
@@ -37,79 +29,52 @@ layout(set = 1, binding = 0) uniform UBO_Camera {
 	mat4 viewProjInv;
 } cam;
 
+layout(set = 2, binding = 0) uniform UBO_Irragrid {
+	int width;
+	int height;
+	int depth;
+	int builtCount;
 
-layout(set = 2, binding = 0) uniform samplerCube irradianceSampler[1024];
+	vec3 firstPos;
+	float distToAdjacent;
+} grid;
 
-float IntersectAABB(vec3 rayOrigin, vec3 rayDir, vec3 boxMin, vec3 boxMax) {
-    vec3 tMin = (boxMin - rayOrigin) / rayDir;
-    vec3 tMax = (boxMax - rayOrigin) / rayDir;
-    vec3 t1 = min(tMin, tMax);
-    vec3 t2 = max(tMin, tMax);
-    float tNear = max(max(t1.x, t1.y), t1.z);
-    float tFar = min(min(t2.x, t2.y), t2.z);
-    return vec2(tNear, tFar).y;
-};
-
-vec3 SampleIrrad2(float x, float y, float z, vec3 N) {
-
-	float i = 0;
-	i += x;
-	i += y * 16;
-	i += z * 16 * 16;
-
-	return texture(irradianceSampler[int(i)], N).rgb;
-}
-
+layout(set = 3, binding = 0) uniform samplerCube irradianceSampler[];
 
 vec3 SampleIrrad(float x, float y, float z, vec3 fragPos, vec3 N) {
-	//return SampleIrrad2(x,y,z,N);
+	float c = 0;
+	c += x;
+	c += y * grid.width;
+	c += z * grid.width * grid.height;
+	int i = int(c) % grid.builtCount;
 
-	float i = 0;
-	i += x;
-	i += y * 16;
-	i += z * 16 * 16;
+	vec3 irrPos = grid.firstPos + vec3(x * grid.distToAdjacent, y * grid.distToAdjacent, z * grid.distToAdjacent);
 
-	vec3 irrPos = firstPos + vec3(x * distToAdjacent, y * distToAdjacent, z * distToAdjacent);
+	Aabb aabb = createAabb(irrPos, grid.distToAdjacent);
 
-	
+	vec3 reprojNormal = (fragPos - irrPos) + (fragPos + intersectionDistanceAabb(aabb, fragPos, N) * N);
 
-	
-
-	vec3 halfSize = 1 * vec3(distToAdjacent);
-	vec3 pmin = irrPos - halfSize;
-	vec3 pmax = irrPos + halfSize;
-
-	vec3 reprojNormal = 2 * fragPos - irrPos + IntersectAABB(fragPos, N, pmin, pmax) * N;
-
-	return texture(irradianceSampler[int(i)], normalize(reprojNormal)).rgb
-		 * saturate(dot(N, irrPos - fragPos));
+	return texture(irradianceSampler[nonuniformEXT(i)], normalize(reprojNormal)).rgb
+	//	 * saturate(dot(N, irrPos - fragPos));
 	;
 }
 
-
-
-
-
-
-
 void main( ) {
-	//discard;
-
-	float depth1 = texture(g_DepthSampler, uv).r;
+	float depth = texture(g_DepthSampler, uv).r;
 
 
-	if(depth1 == 1.0) {
-		// TODO: discard here like in spotlights
-		vec3 V = normalize(reconstructWorldPosition(depth1, uv, cam.viewProjInv) - cam.position);
-		
-		outColor = vec4(SampleIrrad2(15, 0, 1, V).xyz, 1);
-
-		return;
-	}
+//	if(depth == 1.0) {
+//		// TODO: discard here like in spotlights
+//		vec3 V = normalize(reconstructWorldPosition(depth, uv, cam.viewProjInv) - cam.position);
+//		
+//		outColor = vec4(SampleIrrad2(15, 0, 1, V).xyz, 1);
+//
+//		return;
+//	}
 
 	// PERF:
 	Fragment frag = getFragmentFromGBuffer(
-		depth1,
+		depth,
 		cam.viewProjInv,
 		g_NormalSampler,
 		g_AlbedoSampler,
@@ -119,14 +84,13 @@ void main( ) {
 	
 	vec3 N = frag.normal;
 
-	vec3 probeCount  = vec3(15, 15, 3);
-	vec3 size = probeCount * distToAdjacent;
+	vec3 probeCount  = vec3(grid.width - 1, grid.height - 1, grid.depth - 1);
+	vec3 size = probeCount * grid.distToAdjacent;
 	
-	vec3 uvw = (frag.position - firstPos) / size; 
+	vec3 uvw = (frag.position - grid.firstPos) / size; 
 
 	vec3 delim = 1.0 / size; 
 	
-
 
 	if(uvw.x > 1 + delim.x || 
 	   uvw.y > 1 + delim.y || 
@@ -138,7 +102,7 @@ void main( ) {
 	}
 	
 	uvw = saturate(uvw);
-	
+
 	// SMATH:
 	float su = uvw.x * probeCount.x;
 	float sv = uvw.y * probeCount.y;
@@ -170,6 +134,13 @@ void main( ) {
 
 	outColor = vec4(diffuseLight * frag.albedo, 1.0);
 }
+
+
+
+
+
+
+
 
 
 

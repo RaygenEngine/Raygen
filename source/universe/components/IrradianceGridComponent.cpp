@@ -8,13 +8,19 @@ DECLARE_DIRTY_FUNC(CIrradianceGrid)(BasicComponent& bc)
 	notifyBuild = false;
 
 	return [=, position = bc.world().position](SceneIrradianceGrid& ig) {
-		ig.pos = glm::vec4(position, 1.f);
+		ig.ubo.posAndDist = glm::vec4(position, distToAdjacent);
 
 		if (FullDirty) {
-			ig.distToAdjacent = distToAdjacent;
+			ig.ubo.width = width;
+			ig.ubo.height = height;
+			ig.ubo.depth = depth;
+
 			ig.ptSamples = ptSamples;
 			ig.ptBounces = ptBounces;
-			ig.shouldBuild.Assign(build);
+			if (build) {
+				// PERF:
+				ig.Allocate();
+			}
 		}
 	};
 }

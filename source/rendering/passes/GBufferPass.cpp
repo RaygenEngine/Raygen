@@ -225,7 +225,7 @@ vk::UniquePipeline GbufferPass::CreateAnimPipeline(
 
 void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	auto descSet = sceneDesc.viewer.descSet[sceneDesc.frameIndex];
+	auto descSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
 
 	for (auto& geom : sceneDesc->Get<SceneGeometry>()) {
 		PushConstant pc{

@@ -199,6 +199,14 @@ void Scene::UploadDirty(uint32 frameIndex)
 		}
 	}
 
+	for (auto ig : Get<SceneIrradianceGrid>()) {
+		if (ig->isDirty[frameIndex]) {
+			ig->UploadUbo(frameIndex);
+			ig->isDirty[frameIndex] = false;
+			// anyDirty = true;
+		}
+	}
+
 	for (auto sl : Get<SceneSpotlight>()) {
 		if (sl->isDirty[frameIndex]) {
 			sl->UploadUbo(frameIndex);

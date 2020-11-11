@@ -2,45 +2,22 @@
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
+#include "rendering/core/PipeUtl.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneIrradianceGrid.h"
 #include "rendering/StaticPipes.h"
 
-namespace {
-struct PushConstant {
-	glm::vec4 pos;
-	float distToAdjacent;
-};
-
-static_assert(sizeof(PushConstant) <= 128);
-
-} // namespace
-
-
 namespace vl {
 
 vk::UniquePipelineLayout IrradianceGridBlend::MakePipelineLayout()
 {
-	auto layouts = {
+	return rvk::makeLayoutNoPC({
 		Layouts->renderAttachmentsLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
-		Layouts->cubemapArray1024.handle(),
-	};
-
-	vk::PushConstantRange pushConstantRange{};
-	pushConstantRange
-		.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment) //
-		.setSize(sizeof(PushConstant))
-		.setOffset(0u);
-
-	// pipeline layout
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo
-		.setSetLayouts(layouts) //
-		.setPushConstantRanges(pushConstantRange);
-
-	return Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+		Layouts->singleUboDescLayout.handle(),
+		Layouts->dynamicSamplerArray.handle(),
+	});
 }
 
 vk::UniquePipeline IrradianceGridBlend::MakePipeline()
@@ -154,7 +131,7 @@ vk::UniquePipeline IrradianceGridBlend::MakePipeline()
 
 void IrradianceGridBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
-	auto camDescSet = sceneDesc.viewer.descSet[sceneDesc.frameIndex];
+	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
@@ -165,15 +142,11 @@ void IrradianceGridBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 
 	for (auto ig : sceneDesc->Get<SceneIrradianceGrid>()) {
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &ig->gridDescSet, 0u, nullptr);
+		cmdBuffer.bindDescriptorSets(
+			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &ig->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
-		PushConstant pc{
-			ig->pos,
-			ig->distToAdjacent,
-		};
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u, &ig->gridDescSet, 0u, nullptr);
 
-		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,
-			sizeof(PushConstant), &pc);
 
 		// big triangle
 		cmdBuffer.draw(3u, 1u, 0u, 0u);
