@@ -11,5 +11,4 @@ layout(push_constant) uniform PC
 	int samples;
 };
 
-
 #endif

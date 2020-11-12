@@ -1,4 +1,6 @@
 #version 460
+#extension GL_GOOGLE_include_directive : enable
+#include "global.glsl"
 
 // out
 
@@ -28,16 +30,7 @@ layout(push_constant) uniform PC {
 	float drawIndex;
 } push;
 
-layout(set = 1, binding = 0) uniform UBO_Camera {
-	vec3 position;
-	float pad0;
-	mat4 view;
-	mat4 proj;
-	mat4 viewProj;
-	mat4 viewInv;
-	mat4 projInv;
-	mat4 viewProjInv;
-} cam;
+layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 
 void main() {
 	vec4 posWCS = push.modelMat * vec4(position, 1.0);

@@ -6,22 +6,12 @@
 #include "raytrace/ao/ao.glsl"
 
 #include "attachments.glsl"
-#include "fragment.glsl"
+#include "surface.glsl"
 #include "onb.glsl"
 #include "sampling.glsl"
 #include "random.glsl"
 
-layout(set = 1, binding = 0) uniform UBO_Camera {   
-	vec3 position;
-	float pad0;
-	mat4 view;
-	mat4 proj;
-	mat4 viewProj;
-	mat4 viewInv;
-	mat4 projInv;
-	mat4 viewProjInv; 
-} cam;
-
+layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 layout(set = 2, binding = 0, rgba32f) uniform image2D image;
 layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 

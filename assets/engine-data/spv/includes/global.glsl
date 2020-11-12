@@ -91,4 +91,103 @@ float luminance(vec3 rgb) {
 	return dot(rgb, vec3(0.2126f, 0.7152f, 0.0722f));
 }
 
+struct Pointlight {                                                                                                                  
+	vec3 position;                                                                                               
+	float pad0;  
+	
+	vec3 color;                                                                                                  
+	float pad3; 
+	
+	float intensity;                                                                                             
+	float constantTerm;                                                                                          
+	float linearTerm;                                                                                            
+	float quadraticTerm;  
+	
+	float radius;                                                                                                
+	int samples;                                                                                                 
+	int hasShadow;                                                                                               
+};
+
+struct Camera {
+	vec3 position;
+	float pad0;
+
+	mat4 view;
+	mat4 proj;
+	mat4 viewProj;
+	mat4 viewInv;
+	mat4 projInv;
+	mat4 viewProjInv;
+};
+
+struct GltfMaterial {
+	// factors
+    vec4 baseColorFactor;
+	vec4 emissiveFactor;
+	float metallicFactor;
+	float roughnessFactor;
+	float normalScale;
+	float occlusionStrength;
+
+	// alpha mask
+	float alphaCutoff;
+	int mask;
+};
+
+struct Dirlight {
+	vec3 front;
+	float pad0;
+
+	mat4 viewProj;
+
+	vec3 color;
+	float pad3;
+
+	float intensity;
+	float maxShadowBias;
+	int samples;
+	float sampleInvSpread; 
+};
+
+struct Spotlight {
+		vec3 position;
+		float pad0;
+
+		vec3 front;
+		float pad1;
+
+		// Lightmap
+		mat4 viewProj;
+
+		vec3 color;
+		float pad3;
+
+		float intensity;
+		float near;
+		float far;
+		float outerCutOff;
+
+		float innerCutOff;
+		float constantTerm;
+		float linearTerm;
+		float quadraticTerm;
+
+		float maxShadowBias;
+		int samples;
+		float sampleInvSpread;
+};
+
+struct Irragrid {
+	int width;
+	int height;
+	int depth;
+	int builtCount;
+
+	vec3 firstPos;
+	float distToAdjacent;
+};
+
+
+
+
 #endif

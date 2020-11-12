@@ -55,16 +55,7 @@ layout(location = 0) in Data
     vec3 fragPos;
 };
 
-layout(set = 1, binding = 0) uniform UBO_Camera {
-	vec3 position;
-	float pad0;
-	mat4 view;
-	mat4 proj;
-	mat4 viewProj;
-	mat4 viewInv;
-	mat4 projInv;
-	mat4 viewProjInv;
-} camera;
+layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 )",
 		descSetCode, sharedFunctions, mainCode);
 }
@@ -127,16 +118,7 @@ layout(push_constant) uniform PC {
 	mat4 normalMat;
 } push;
 
-layout(set = 1, binding = 0) uniform UBO_Camera {
-	vec3 position;
-	float pad0;
-	mat4 view;
-	mat4 proj;
-	mat4 viewProj;
-	mat4 viewInv;
-	mat4 projInv;
-	mat4 viewProjInv;
-} camera;
+layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 
 )",
 		descSetCode, sharedFunctions, main);
@@ -202,16 +184,7 @@ layout(location = 0) in Data
     vec3 fragPos;
 };
 
-layout(set = 1, binding = 0) uniform UBO_Camera {
-	vec3 position;
-	float pad0;
-	mat4 view;
-	mat4 proj;
-	mat4 viewProj;
-	mat4 viewInv;
-	mat4 projInv;
-	mat4 viewProjInv;
-} camera;
+layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 )",
 		descSetCode, sharedFunctions, mainCode);
 }
