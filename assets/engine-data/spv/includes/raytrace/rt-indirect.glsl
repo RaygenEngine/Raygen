@@ -1,6 +1,8 @@
 #ifndef rt_indirect_glsl
 #define rt_indirect_glsl
 
+#include "surface.glsl"
+
 // META:
 // Expects pre declared variable prd before the inclusion of the file
 
@@ -55,8 +57,8 @@ vec3 TraceNext(vec3 thisRayThroughput, vec3 L_shadingSpace, FsSpaceInfo fragSpac
     // Update accum throughput for the remaining of the recursion
     prd.accumThroughput = prevCumulativeThroughput * thisRayThroughput;
 
-    outOnbSpace(fragSpace.orthoBasis, L_shadingSpace); // NOTE: not shading space after the function, make onb return values for better names
-    vec3 result = thisRayThroughput * RadianceOfRay(fragSpace.worldPos, L_shadingSpace); 
+    outOnbSpace(surface.basis, L_shadingSpace); // NOTE: not shading space after the function, make onb return values for better names
+    vec3 result = thisRayThroughput * RadianceOfRay(surface.position, L_shadingSpace); 
 
     // Restore accum throughput
     prd.accumThroughput = prevCumulativeThroughput;
@@ -81,13 +83,13 @@ vec3 TraceNext(vec3 thisRayThroughput, vec3 L_shadingSpace, FsSpaceInfo fragSpac
 //}
  
 
-vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
+vec3 TraceIndirect(Surface surface) {
     vec3 radiance = vec3(0.f);
 
-    vec3 V = fragSpace.V;
-    vec3 albedo = brdfInfo.albedo;
-    vec3 f0 = brdfInfo.f0;
-    float a = brdfInfo.a;
+    vec3 V = surface.wo;
+    vec3 albedo = surface.albedo;
+    vec3 f0 =  surface.f0;
+    float a = surface.a;
 
     float NoV = max(Ndot(V), BIAS);
 
@@ -125,7 +127,7 @@ vec3 TraceIndirect(FsSpaceInfo fragSpace, FragBrdfInfo brdfInfo) {
 
         vec3 brdf_r = SpecularTerm(NoV, NoL, NoH, a, ks) / p_specular;
 
-        radiance += TraceNext(brdf_r * NoL / pdf, L, fragSpace);
+        radiance += TraceNext(brdf_r * NoL / pdf, L, surface);
     }
 
     // Diffuse reflection

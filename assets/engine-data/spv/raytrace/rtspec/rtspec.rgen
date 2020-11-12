@@ -9,25 +9,13 @@
 #include "raytrace/rtspec/rtspec.glsl"
 
 #include "attachments.glsl"
-#include "fragment.glsl"
+#include "surface.glsl"
 #include "onb.glsl"
-#include "random.glsl"
 #include "bsdf.glsl"
 
-layout(set = 1, binding = 0) uniform UBO_Camera {   
-	vec3 position;
-	float pad0;
-	mat4 view;
-	mat4 proj;
-	mat4 viewProj;
-	mat4 viewInv;
-	mat4 projInv;
-	mat4 viewProjInv; 
-} cam;
-
+layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 layout(set = 2, binding = 0, rgba32f) uniform image2D image;
 layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
-
 layout(set = 4, binding = 1) uniform sampler2D textureSamplers[];
 
 layout(location = 0) rayPayloadEXT hitPayload prd;
@@ -63,52 +51,36 @@ void main() {
 
 	float fragDepth = texture(g_DepthSampler, uv).r;
 
-	if(fragDepth >= 1.) {
-		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(0.0, 0.0, 0.0, 1.0));
-		return; 
-	}
-
-	Fragment frag = getFragmentFromGBuffer(
-		fragDepth,
-		cam.viewProjInv,
+	Surface surface = surfaceFromGBuffer(
+	    cam,
+		g_DepthSampler,
 		g_NormalSampler,
 		g_AlbedoSampler,
 		g_SpecularSampler,
 		g_EmissiveSampler,
-		uv);
+		uv
+		);
 
-	Onb shadingBasis = branchlessOnb(frag.normal);
-	vec3 V = normalize(cam.position - frag.position);
-	toOnbSpace(shadingBasis, V);
-
-	float NoV = max(Ndot(V), BIAS);
-
-	vec3 brdfLut = (texture(std_BrdfLut, vec2(NoV, frag.a))).rgb;
+	if(surface.depth == 1.0) {
+		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(0.0, 0.0, 0.0, 1.0));
+		return; 
+	}
 
 	vec3 radiance = vec3(0);
-
 	for(uint smpl = 0; smpl < samples; ++smpl){
 
 		prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, samples + smpl);
 		prd.depth = 1; // gbuffer
 
 		vec3 L;
-		if( frag.a < 0.001){
-			L = reflect(-V);
-		}
-		else{
-			vec2 u = rand2(prd.seed);
-			vec3 H = importanceSampleGGX(u, frag.a);
-			L = reflect(-V, H);
-		}
+		vec3 brdf_NoL_pdf = SampleSpecularDirection(surface, prd.seed);
 
-		// SMATH: is nol here legit?
-		float NoL = max(Ndot(L), BIAS);
-
-		outOnbSpace(shadingBasis, L);
-		radiance += RadianceOfRay(frag.position, L) * (frag.f0 * brdfLut.x + brdfLut.y) * NoL;
+		outOnbSpace(surface.basis, surface.wi);
+		radiance += RadianceOfRay(surface.position, L) * brdf_NoL_pdf;
 	}
     
 	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(radiance / float(samples), 1.0));
 }
+
+
 
