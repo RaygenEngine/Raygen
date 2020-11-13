@@ -8,6 +8,8 @@
 
 #include <nlohmann/json_fwd.hpp>
 
+struct ReflClass;
+
 // Holds type erased function pointers for a component of generic type
 struct ComponentMetaEntry {
 	const ReflClass* clPtr{ nullptr };
@@ -100,7 +102,7 @@ public:
 
 			clearFunctions.emplace_back([](entt::registry& r) {
 				if constexpr (CCreateDestoryComp<T>) {
-					for (auto& [ent, comp] : r.view<T, typename T::Destroy>().each()) {
+					for (auto [ent, comp] : r.view<T, typename T::Destroy>().each()) {
 						r.remove<T>(ent);
 					}
 					r.clear<typename T::Create, typename T::Destroy>();

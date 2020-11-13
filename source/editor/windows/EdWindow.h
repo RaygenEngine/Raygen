@@ -6,7 +6,8 @@
 #include <concepts>
 #include <string>
 
-struct PodEntry;
+//@ MODULES:
+#include "assets/PodEntry.h"
 
 // Code example for imgui drawing:
 //

@@ -2,8 +2,6 @@
 #include "assets/AssetManager.h"
 #include "reflection/ReflEnum.h"
 
-#include <nlohmann/json.hpp>
-
 namespace parsingaux {
 // Default is taken by copy and deduces the template argument
 template<typename T>

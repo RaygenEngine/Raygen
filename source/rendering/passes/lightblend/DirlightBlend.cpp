@@ -54,7 +54,7 @@ void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sce
 {
 	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
 
-	auto& pipeLayout = StaticPipes::GetLayout<DirlightBlend>();
+	auto pipeLayout = StaticPipes::GetLayout<DirlightBlend>();
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 

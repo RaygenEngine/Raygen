@@ -8,8 +8,6 @@
 #include "assets/pods/Sampler.h"
 #include "assets/StdAssets.h"
 
-#include <nlohmann/json.hpp>
-
 namespace gltfutl {
 GltfCache::GltfCache(const fs::path& path)
 	: gltfFilePath(path.generic_string())
@@ -65,7 +63,7 @@ void GltfCache::LoadSamplers()
 
 		std::string name = sampler.name.empty() ? filename + "_Sampler_" + std::to_string(samplerIndex) : sampler.name;
 
-		auto& [handle, pod] = AssetImporterManager->CreateEntry<Sampler>(samplerPath, name);
+		auto [handle, pod] = AssetImporterManager->CreateEntry<Sampler>(samplerPath, name);
 
 		pod->minFilter = GetTextureFiltering(sampler.minFilter);
 		pod->magFilter = GetTextureFiltering(sampler.magFilter);
@@ -171,7 +169,7 @@ void GltfCache::LoadMaterials()
 		auto matPath = uri::MakeChildJson(gltfFilePath, data);
 
 		std::string name = mat.name.empty() ? filename + "_Mat_" + std::to_string(matIndex) : mat.name;
-		auto& [handleInst, podInst] = AssetImporterManager->CreateEntry<MaterialInstance>(matPath, name);
+		auto [handleInst, podInst] = AssetImporterManager->CreateEntry<MaterialInstance>(matPath, name);
 
 		LoadMaterial(podInst, matIndex);
 

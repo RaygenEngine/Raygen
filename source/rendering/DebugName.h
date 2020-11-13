@@ -15,7 +15,7 @@ struct HasCType<T, std::void_t<typename T::CType>> : std::true_type {
 };
 
 template<typename T>
-void RegisterDebugName(const T& handle, const std::string& name)
+void RegisterDebugName(T handle, const std::string& name)
 {
 	vk::DebugUtilsObjectNameInfoEXT debugNameInfo{};
 
@@ -33,4 +33,6 @@ void RegisterDebugName(const T& handle, const std::string& name)
 	debugNameInfo.setPObjectName(name.c_str());
 	SetDebugUtilsObjectName(std::move(debugNameInfo));
 }
+
+
 } // namespace detail

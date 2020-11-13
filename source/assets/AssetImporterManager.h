@@ -3,6 +3,7 @@
 #include "assets/ImporterRegistry.h"
 #include "assets/UriLibrary.h"
 
+
 inline class AssetImporterManager_ {
 	friend class AssetManager_;
 	friend class AssetRegistry;
@@ -126,51 +127,7 @@ public:
 	// matching binary file is found.
 	template<CAssetPod T>
 	PodHandle<T> ImportFromMaybeRelative(PathReferenceType pathType, const fs::path& path,
-		const fs::path& relativeFilePath = "", bool useBinaries = true)
-	{
-		if (pathType == PathReferenceType::FullPath) {
-			return AssetImporterManager->ImportRequest<T>(fs::absolute(path));
-		}
-
-		if (pathType == PathReferenceType::WorkingDir) {
-			// NOTE: pass just the path because whatever passed here is written as the original import location (and
-			// we want that to be as relative as possible)
-			return AssetImporterManager->ImportRequest<T>(path);
-		}
-
-
-		if (pathType == PathReferenceType::FileRelative) {
-			// TODO: If file not found, search as if pathType was WorkingDir
-			if (relativeFilePath.empty()) {
-				LOG_ERROR("File relative import had relative File Path empty! {}", path);
-				return {};
-			}
-			fs::path searchPath;
-			auto cwd = fs::current_path();
-
-			auto relativePathNoFilename
-				= relativeFilePath.has_filename() ? relativeFilePath.parent_path() : relativeFilePath;
-
-			if (relativePathNoFilename.is_absolute() && !std::equal(cwd.begin(), cwd.end(), relativeFilePath.begin())) {
-				searchPath = relativePathNoFilename / path;
-			}
-			else {
-				searchPath = fs::relative(relativePathNoFilename) / path;
-			}
-			return AssetImporterManager->ImportRequest<T>(searchPath);
-		}
-
-		if (pathType == PathReferenceType::BinaryAsset) {
-			auto handle = AssetRegistry::GetAsyncHandle<T>(path.generic_string());
-			if (!handle.IsDefault()) {
-				return handle;
-			}
-			return {};
-		}
-
-		LOG_ABORT("Unhandled enum case");
-		return {};
-	}
+		const fs::path& relativeFilePath = "", bool useBinaries = true);
 
 
 private:
@@ -178,7 +135,7 @@ private:
 	[[nodiscard]] std::pair<PodHandle<PodType>, PodType*> CreateEntryFromImportImpl(
 		const uri::Uri& importPath, const uri::Uri& name, bool transient, bool reimportOnLoad, bool exportOnSave)
 	{
-		auto& [entry, ptr] = AssetRegistry::CreateEntry<PodType>(
+		auto [entry, ptr] = AssetRegistry::CreateEntry<PodType>(
 			transient ? AssetRegistry::SuggestPath(name) : GeneratePath(importPath, name), transient, importPath,
 			reimportOnLoad, exportOnSave);
 
@@ -190,3 +147,53 @@ private:
 		return std::make_pair(handle, ptr);
 	}
 } * AssetImporterManager{};
+
+//@ TODO: impl
+template<CAssetPod T>
+inline PodHandle<T> AssetImporterManager_::ImportFromMaybeRelative(
+	PathReferenceType pathType, const fs::path& path, const fs::path& relativeFilePath, bool useBinaries)
+
+{
+	if (pathType == PathReferenceType::FullPath) {
+		return AssetImporterManager->ImportRequest<T>(fs::absolute(path));
+	}
+
+	if (pathType == PathReferenceType::WorkingDir) {
+		// NOTE: pass just the path because whatever passed here is written as the original import location (and
+		// we want that to be as relative as possible)
+		return AssetImporterManager->ImportRequest<T>(path);
+	}
+
+
+	if (pathType == PathReferenceType::FileRelative) {
+		// TODO: If file not found, search as if pathType was WorkingDir
+		if (relativeFilePath.empty()) {
+			LOG_ERROR("File relative import had relative File Path empty! {}", path);
+			return {};
+		}
+		fs::path searchPath;
+		auto cwd = fs::current_path();
+
+		auto relativePathNoFilename
+			= relativeFilePath.has_filename() ? relativeFilePath.parent_path() : relativeFilePath;
+
+		if (relativePathNoFilename.is_absolute() && !std::equal(cwd.begin(), cwd.end(), relativeFilePath.begin())) {
+			searchPath = relativePathNoFilename / path;
+		}
+		else {
+			searchPath = fs::relative(relativePathNoFilename) / path;
+		}
+		return AssetImporterManager->ImportRequest<T>(searchPath);
+	}
+
+	if (pathType == PathReferenceType::BinaryAsset) {
+		auto handle = AssetRegistry::GetAsyncHandle<T>(path.generic_string());
+		if (!handle.IsDefault()) {
+			return handle;
+		}
+		return {};
+	}
+
+	LOG_ABORT("Unhandled enum case");
+	return {};
+}

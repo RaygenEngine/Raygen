@@ -30,7 +30,6 @@ inline const ImVec4& LightRed = LightFailure;
 inline const ImVec4 LightText = ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
 } // namespace EdColor
 
-class Node;
 struct ComponentMetaEntry;
 
 // ImGui wrapper for calls that use different styles. (bigger buttons etc)
@@ -217,7 +216,7 @@ bool EnumDropDown(const char* label, T& enumval)
 
 
 template<typename T>
-void OkCancelModal(const char* title, const char* text, T& onOk)
+void OkCancelModal(const char* title, const char* text, T&& onOk)
 {
 	if (ImGui::BeginPopupModal(title, 0, ImGuiWindowFlags_AlwaysAutoResize)) {
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetFontSize() / 4.f);
@@ -237,7 +236,7 @@ void OkCancelModal(const char* title, const char* text, T& onOk)
 }
 
 template<typename T>
-void OkCancelModal(const char* title, const char* text, BoolFlag& openFlag, T& onOk)
+void OkCancelModal(const char* title, const char* text, BoolFlag& openFlag, T&& onOk)
 {
 	if (openFlag.Access()) {
 		ImGui::OpenPopup(title);
@@ -247,7 +246,7 @@ void OkCancelModal(const char* title, const char* text, BoolFlag& openFlag, T& o
 }
 
 template<typename T>
-void OkCancelModal(BoolFlag& openFlag, const char* text, T& onOk)
+void OkCancelModal(BoolFlag& openFlag, const char* text, T&& onOk)
 {
 	fmt::basic_memory_buffer<char, 64> memory;
 	fmt::format_to(memory, "##{}\0", (void*)&openFlag);

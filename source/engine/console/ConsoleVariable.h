@@ -114,14 +114,14 @@ struct ConsoleVarFunc : public ConsoleVariable<T> {
 	std::function<void()> updateFunc;
 
 	ConsoleVarFunc(const char* name, std::function<void()>&& function, T defValue = {}, const char* inTooltip = "")
-		: ConsoleVariable(name, defValue, inTooltip)
+		: ConsoleVariable<T>(name, defValue, inTooltip)
 		, updateFunc(function)
 	{
 	}
 
 	void Execute(std::string_view command) override
 	{
-		if (TryUpdateValue(command)) {
+		if (ConsoleVariable<T>::TryUpdateValue(command)) {
 			updateFunc();
 		}
 	}

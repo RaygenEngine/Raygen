@@ -1,6 +1,7 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
 
+
 struct SceneGeometry {
 	glm::mat4 transform;
 	glm::mat4 prevTransform;
@@ -22,12 +23,7 @@ struct SceneAnimatedGeometry {
 
 	void UploadSsbo(uint32 curFrame);
 
-	SceneAnimatedGeometry()
-	{
-		for (size_t i = 0; i < c_framesInFlight; ++i) {
-			descSet[i] = vl::Layouts->jointsDescLayout.AllocDescriptorSet();
-		}
-	}
+	SceneAnimatedGeometry();
 
 	void ResizeJoints(uint32 curFrame);
 

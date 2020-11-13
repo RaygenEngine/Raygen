@@ -9,6 +9,13 @@ void SceneAnimatedGeometry::UploadSsbo(uint32 curFrame)
 	}
 }
 
+SceneAnimatedGeometry::SceneAnimatedGeometry()
+{
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
+		descSet[i] = vl::Layouts->jointsDescLayout.AllocDescriptorSet();
+	}
+}
+
 void SceneAnimatedGeometry::ResizeJoints(uint32 curFrame)
 {
 	auto i = curFrame;

@@ -8,8 +8,6 @@
 #include <unordered_set>
 #include <vector>
 
-class Node;
-
 // Object that describes a reflected class.
 class ReflClass {
 protected:
@@ -23,9 +21,6 @@ protected:
 	const ReflClass* m_parentClass{ nullptr };
 
 	std::unordered_set<const ReflClass*> m_childClasses;
-
-	// Currently hardcoded for nodes only
-	std::function<Node*()> m_createInstanceFunction{};
 
 	NodeFlags::Type m_classFlags{ 0 };
 
@@ -72,9 +67,7 @@ public:
 		ReflClass reflClass;
 		reflClass.m_type = refl::GetId<T>();
 		T::GenerateReflection(reflClass);
-		if constexpr (std::is_base_of_v<Node, T> && !std::is_same_v<Node, T>) {
-			reflClass.m_createInstanceFunction = &T::NewInstance;
-		}
+
 		reflClass.ReplaceIfDefaultIcon(replaceIcon);
 		return reflClass;
 	}
@@ -85,9 +78,7 @@ public:
 		ReflClass reflClass;
 		reflClass.m_type = refl::GetId<This>();
 		This::GenerateReflection(reflClass);
-		if constexpr (std::is_base_of_v<Node, This> && !std::is_same_v<Node, This>) {
-			reflClass.m_createInstanceFunction = &This::NewInstance;
-		}
+
 		reflClass.AppendProperties(Parent::StaticClass());
 		Parent::Z_MutableClass().AddChildClass(thisLoc);
 		return reflClass;
@@ -115,33 +106,6 @@ public:
 		}
 		return false;
 	}
-
-
-	// Attempts to create an instance of this class.
-	// This will abort if HasCreateInstance returns false.
-	template<typename T>
-	[[nodiscard]] T* CreateInstance() const
-	{
-		CLOG_ABORT(!m_createInstanceFunction,
-			"Attempting to create an instance of a ReflClass that has no instance function.");
-
-		CLOG_ERROR(!IsA<T>(), "Attempting to create an instance of a ReflClass of incorrect type.");
-		if (!IsA<T>()) {
-			return nullptr;
-		}
-		return static_cast<T*>(m_createInstanceFunction());
-	}
-
-	[[nodiscard]] Node* CreateNodeInstance() const
-	{
-		CLOG_ABORT(!m_createInstanceFunction,
-			"Attempting to create an instance of a ReflClass that has no instance function.");
-
-		return m_createInstanceFunction();
-	}
-
-	[[nodiscard]] bool HasCreateInstance() const { return !(!m_createInstanceFunction); }
-
 
 	// Grabs the compiletime type id of the reflected class
 	[[nodiscard]] TypeId GetTypeId() const { return m_type; }

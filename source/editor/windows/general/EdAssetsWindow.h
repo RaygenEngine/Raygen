@@ -85,7 +85,7 @@ namespace assetentry {
 
 		// Recurse all files *& files in subfolders under this directory
 		template<typename Lambda>
-		void ForEachFile(Lambda& function)
+		void ForEachFile(Lambda&& function)
 		{
 			for (auto& file : files) {
 				function(file.second);
@@ -97,7 +97,7 @@ namespace assetentry {
 
 		// Recurse all folders & subfolders under this directory
 		template<typename Lambda>
-		void ForEachFolder(Lambda& function)
+		void ForEachFolder(Lambda&& function)
 		{
 			for (auto& folder : folders) {
 				function(folder.second.get());

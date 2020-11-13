@@ -10,16 +10,17 @@ template<typename T>
 typename StdAssets::StdAsset<T>::ConstHandleAssigner Load(const char* path)
 {
 	auto handle = AssetManager->ImportAs<T>(fs::path(path), true);
-	return StdAssets::StdAsset<T>::ConstHandleAssigner{ handle.uid };
+	return StdAssets::StdAsset<T>::ConstHandleAssigner(handle.uid);
 }
 
 
 template<typename T>
 typename StdAssets::StdAsset<T>::ConstHandleAssigner Generate(void (*l)(T&), const char* name = "^gen")
 {
-	auto& [handle, pod] = AssetImporterManager->CreateTransientEntry<T>(name);
+	// NEXT: & vs &&
+	auto [handle, pod] = AssetImporterManager->CreateTransientEntry<T>(name);
 	l(*pod);
-	return StdAssets::StdAsset<T>::ConstHandleAssigner{ handle.uid };
+	return StdAssets::StdAsset<T>::ConstHandleAssigner(handle.uid);
 }
 
 void StdAssets::LoadAssets()

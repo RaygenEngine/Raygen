@@ -143,10 +143,6 @@ public:
 private:
 	void ConstructUniqueIfNotExists(mti::Hash hash);
 
-
-	template<typename DrawFunc>
-	void InternalDraw(DrawFunc&& func);
-
 	void LoadWindowFromSettings(const std::string& name, mti::Hash hash);
 	void UpdateSettingsForWindow(const std::string& name, bool currentIsOpen);
 };

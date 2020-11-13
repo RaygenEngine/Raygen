@@ -1,8 +1,7 @@
 #include "Prefab.h"
 
+#include "universe/World.h"
 #include "universe/ComponentsDb.h"
-
-#include <nlohmann/json.hpp>
 
 void Prefab::InsertInto(World& into) const
 {

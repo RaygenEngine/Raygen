@@ -4,7 +4,8 @@
 #include "rendering/scene/Scene.h"
 
 struct Scene_;
-struct CReflprobe;
+//@ MODULES:
+#include "universe/components/ReflProbeComponent.h"
 
 namespace scenecmds {
 
@@ -41,9 +42,9 @@ void EnqueueDirtyCmds(Scene* scene, entt::registry& reg)
 	for (auto& [ent, basic, sc] : view.each()) {
 		scene->EnqueueCmdInCtx<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<true>(basic));
 
-		if constexpr (std::is_same_v<T, typename CReflprobe>) {
-			scene->forceUpdateAccel = true;
-		}
+		/*	if constexpr (std::is_same_v<T, typename CReflprobe>) {
+				scene->forceUpdateAccel = true;
+			}*/
 	}
 }
 

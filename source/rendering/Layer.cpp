@@ -45,8 +45,8 @@ Layer_::Layer_()
 		m_imageAvailSem[i] = Device->createSemaphoreUnique({});
 		m_frameFence[i] = Device->createFenceUnique({ vk::FenceCreateFlagBits::eSignaled });
 
-		DEBUG_NAME(m_renderFinishedSem[i], "Renderer Finished" + std::to_string(i));
-		DEBUG_NAME(m_imageAvailSem[i], "Image Available" + std::to_string(i));
+		// DEBUG_NAME(m_renderFinishedSem[i], "Renderer Finished" + std::to_string(i));
+		// DEBUG_NAME(m_imageAvailSem[i], "Image Available" + std::to_string(i));
 	}
 
 	m_cmdBuffer = InFlightCmdBuffers<Graphics>(vk::CommandBufferLevel::ePrimary);
@@ -83,9 +83,8 @@ void Layer_::DrawFrame()
 	GpuAssetManager->ConsumeAssetUpdates();
 	mainScene->ConsumeCmdQueue();
 
-	if (!swapOutput->ShouldRenderThisFrame()) [[unlikely]] {
-		return;
-	}
+	if (!swapOutput->ShouldRenderThisFrame())
+		[[unlikely]] { return; }
 
 	swapOutput->OnPreRender();
 
@@ -113,7 +112,8 @@ void Layer_::DrawFrame()
 
 	currentCmdBuffer.begin();
 	{
-		Renderer->DrawFrame(currentCmdBuffer, mainScene->GetRenderDesc(m_currentFrame), *swapOutput);
+		auto sceneDesc = mainScene->GetRenderDesc(m_currentFrame);
+		Renderer->DrawFrame(currentCmdBuffer, sceneDesc, *swapOutput); //@ NEXT: const and copy if you want?
 	}
 	currentCmdBuffer.end();
 

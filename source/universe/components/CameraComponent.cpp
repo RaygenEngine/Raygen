@@ -12,13 +12,13 @@ DECLARE_DIRTY_FUNC(CCamera)(BasicComponent& bc)
 	const auto ar = static_cast<float>(viewportWidth) / static_cast<float>(viewportHeight);
 	hFov = 2 * atan(ar * tan(vFov * 0.5f));
 
-	const auto top = tan(vFov / 2.f + vFovOffset) * near;
-	const auto bottom = tan(-vFov / 2.f - vFovOffset) * near;
+	const auto top = tan(vFov / 2.f + vFovOffset) * _near;
+	const auto bottom = tan(-vFov / 2.f - vFovOffset) * _near;
 
-	const auto right = tan(hFov / 2.f + hFovOffset) * near;
-	const auto left = tan(-hFov / 2.f - hFovOffset) * near;
+	const auto right = tan(hFov / 2.f + hFovOffset) * _near;
+	const auto left = tan(-hFov / 2.f - hFovOffset) * _near;
 
-	auto proj = glm::frustum(left, right, bottom, top, near, far);
+	auto proj = glm::frustum(left, right, bottom, top, _near, _far);
 	// Vulkan's inverted y
 	proj[1][1] *= -1.f;
 
