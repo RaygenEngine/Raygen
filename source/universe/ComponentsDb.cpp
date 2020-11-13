@@ -26,7 +26,8 @@ void ComponentsDb::EntityHierarchyToJson(Entity ent, nlohmann::json& json)
 		auto current = bs.firstChild;
 
 		while (current) {
-			EntityHierarchyToJson(current, jchildren.emplace_back(json::object()));
+			jchildren.emplace_back(json::object());
+			EntityHierarchyToJson(current, jchildren.back());
 			current = current->next;
 		}
 	}
@@ -115,7 +116,8 @@ void ComponentsDb::RegistryToJson(World& world, nlohmann::json& json)
 
 		// Only do root entities, the rest will be done recursively by their respective parent
 		if (!bs.parent) {
-			EntityHierarchyToJson(bs.self, json.emplace_back(nlohmann::json::object()));
+			json.emplace_back(nlohmann::json::object());
+			EntityHierarchyToJson(bs.self, json.back());
 		}
 	});
 }

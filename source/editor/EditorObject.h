@@ -8,7 +8,6 @@
 #include "editor/imgui/ImEd.h"
 #include "editor/windows/EdWindow.h"
 
-#include <nlohmann/json.hpp>
 #include <memory>
 #include <functional>
 
@@ -80,16 +79,3 @@ private:
 	std::vector<std::function<void()>> m_deferredCommands;
 
 } * EditorObject{};
-
-template<typename Lambda>
-void RecurseNodes(Node* root, Lambda f, int32 depth = 0)
-{
-	if (!root) {
-		return;
-	}
-
-	f(root, depth);
-	for (auto& c : root->GetChildren()) {
-		RecurseNodes(c.get(), f, depth + 1);
-	}
-}

@@ -5,7 +5,6 @@
 #include "assets/util/ImageUtl.h"
 
 #include <fstream>
-#include <nlohmann/json.hpp>
 
 BasePodHandle CubemapImporter::Import(const fs::path& path)
 {
@@ -33,7 +32,7 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 
 	};
 
-	auto& [handle, pod] = AssetImporterManager->CreateEntry<Cubemap>(
+	auto [handle, pod] = AssetImporterManager->CreateEntry<Cubemap>(
 		path.generic_string(), path.filename().replace_extension().string());
 
 	AssetImporterManager->PushPath(path.filename().replace_extension());

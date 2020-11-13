@@ -99,7 +99,7 @@ RBuffer RBuffer::CreateTransfer(const char* name, MemorySpan memory, vk::BufferU
 	vl::RBuffer stagingbuffer{ bufferSize, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
-	DEBUG_NAME(stagingbuffer, "[StagingBuffer]" + std::string(name));
+	// DEBUG_NAME(stagingbuffer, "[StagingBuffer]" + std::string(name));
 
 
 	// copy data to buffer
@@ -110,7 +110,7 @@ RBuffer RBuffer::CreateTransfer(const char* name, MemorySpan memory, vk::BufferU
 	auto buffer = vl::RBuffer{ memory.size(), vk::BufferUsageFlagBits::eTransferDst | usageFlags,
 		vk::MemoryPropertyFlagBits::eDeviceLocal };
 
-	DEBUG_NAME(buffer, name);
+	// DEBUG_NAME(buffer, name);
 
 	// copy from host to device local
 	buffer.CopyBuffer(stagingbuffer);

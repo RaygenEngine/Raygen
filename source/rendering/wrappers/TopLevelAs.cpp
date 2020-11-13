@@ -15,6 +15,8 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#undef MemoryBarrier
+
 namespace {
 vk::AccelerationStructureInstanceKHR AsInstanceToVkGeometryInstanceKHR(const vl::AsInstance& instance)
 {
@@ -171,7 +173,7 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
 		vk::MemoryAllocateFlagBits::eDeviceAddress };
 
-	DEBUG_NAME_AUTO(spotlightsBuffer);
+	// DEBUG_NAME_AUTO(spotlightsBuffer);
 
 	byte* mapCursor = reinterpret_cast<byte*>(Device->mapMemory(spotlightsBuffer.memory(), 0, spotlightsBuffer.size));
 
@@ -244,7 +246,7 @@ void RtSceneDescriptor::WritePointlights(const std::vector<ScenePointlight*>& po
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
 		vk::MemoryAllocateFlagBits::eDeviceAddress };
 
-	DEBUG_NAME_AUTO(pointlightsBuffer);
+	// DEBUG_NAME_AUTO(pointlightsBuffer);
 
 	byte* mapCursor = reinterpret_cast<byte*>(Device->mapMemory(pointlightsBuffer.memory(), 0, pointlightsBuffer.size));
 
@@ -290,7 +292,7 @@ void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& refl
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
 		vk::MemoryAllocateFlagBits::eDeviceAddress };
 
-	DEBUG_NAME_AUTO(reflprobesBuffer);
+	// DEBUG_NAME_AUTO(reflprobesBuffer);
 
 
 	byte* mapCursor = reinterpret_cast<byte*>(Device->mapMemory(reflprobesBuffer.memory(), 0, reflprobesBuffer.size));
@@ -347,7 +349,7 @@ void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& refl
 			viewInfoDefault.setImageView(view);
 			cubeImages.emplace_back(viewInfoDefault);
 		}
-		DEBUG_NAME_AUTO(descSetReflprobes[i]);
+		// DEBUG_NAME_AUTO(descSetReflprobes[i]);
 
 
 		vk::WriteDescriptorSet depthWrite{};
@@ -420,7 +422,7 @@ void TopLevelAs::Build()
 
 	auto instanceAddress = Device->getBufferAddress(instanceBuffer.handle());
 
-	DEBUG_NAME(instanceBuffer, "TLASInstances");
+	// DEBUG_NAME(instanceBuffer, "TLASInstances");
 
 	vk::AccelerationStructureGeometryDataKHR geometry{};
 	geometry.instances.setArrayOfPointers(VK_FALSE);
@@ -446,7 +448,7 @@ void TopLevelAs::Build()
 
 	uHandle = Device->createAccelerationStructureKHRUnique(asCreateInfo);
 
-	DEBUG_NAME(uHandle, "Scene Tlas");
+	// DEBUG_NAME(uHandle, "Scene Tlas");
 
 	AllocateMemory();
 

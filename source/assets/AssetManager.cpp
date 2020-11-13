@@ -10,7 +10,6 @@
 #include "engine/Timer.h"
 #include "reflection/PodTools.h"
 
-#include <nlohmann/json.hpp>
 #include <thread>
 
 
@@ -125,10 +124,12 @@ void AssetRegistry::LoadAllPodsInDirectory(const fs::path& path)
 			for (size_t i = start; i < stop; ++i) {
 				LoadFromDiskTypelessInternal(m_pods[i].get());
 
-				if (m_pods[i].get()->metadata.reimportOnLoad) [[unlikely]] {
-					// reimportEntries[threadIndex].push_back(m_pods[i].get());
-					AssetRegistry::ReimportFromOriginal(m_pods[i].get());
-				}
+				if (m_pods[i].get()->metadata.reimportOnLoad)
+					[[unlikely]]
+					{
+						// reimportEntries[threadIndex].push_back(m_pods[i].get());
+						AssetRegistry::ReimportFromOriginal(m_pods[i].get());
+					}
 			}
 			return true;
 		};
@@ -215,7 +216,7 @@ PodEntry* AssetRegistry::DuplicateImpl(PodEntry* entry)
 
 	PodEntry* result = nullptr;
 	podtools::VisitPodHash(entry->GetClass()->GetTypeId().hash(), [&]<typename PodType> {
-		auto& [newEntry, newPod]
+		auto [newEntry, newPod]
 			= CreateEntry<PodType>(entry->path, false, entry->metadata.originalImportLocation, false, false);
 		podspec::Duplicate(entry->ptr.get(), newPod, entry, newEntry);
 		result = newEntry;
@@ -303,7 +304,7 @@ AssetManager_::AssetManager_(const fs::path& defaultBinPath)
 	}
 
 	podtools::ForEachPodType([]<typename PodType>() {
-		auto& [handle, pod]
+		auto [handle, pod]
 			= AssetImporterManager->CreateTransientEntry<PodType>(fmt::format("~{}", mti::GetName<PodType>()));
 
 		if constexpr (std::is_same_v<PodType, MaterialArchetype>) {

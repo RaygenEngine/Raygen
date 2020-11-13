@@ -11,8 +11,8 @@ struct CCamera : CSceneBase {
 		REFLECT_ICON(FA_CAMERA_RETRO);
 		// REFLECT_CATEGORY("Rendering");
 
-		REFLECT_VAR(near);
-		REFLECT_VAR(far);
+		REFLECT_VAR(_near);
+		REFLECT_VAR(_far);
 		REFLECT_VAR(focalLength);
 		REFLECT_VAR(vFov, PropertyFlags::Rads);
 		REFLECT_VAR(hFov, PropertyFlags::Rads);
@@ -30,8 +30,8 @@ struct CCamera : CSceneBase {
 	// horizontal fov depends on the vertical and the aspect ratio
 	float hFov{ glm::radians(106.f) };
 
-	float near{ 0.1f };
-	float far{ 1000.f };
+	float _near{ 0.1f };
+	float _far{ 1000.f };
 
 	float vFovOffset{ 0.f };
 	float hFovOffset{ 0.f };

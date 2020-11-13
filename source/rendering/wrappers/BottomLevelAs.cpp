@@ -4,6 +4,8 @@
 #include "rendering/Device.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
+#undef MemoryBarrier
+
 namespace vl {
 
 
@@ -76,7 +78,7 @@ void BottomLevelAs::Build(vk::BuildAccelerationStructureFlagsKHR buildFlags,
 
 	uHandle = Device->createAccelerationStructureKHRUnique(asCreateInfo);
 
-	DEBUG_NAME(uHandle, "Blas");
+	// DEBUG_NAME(uHandle, "Blas");
 
 	AllocateMemory();
 

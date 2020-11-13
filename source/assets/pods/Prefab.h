@@ -1,5 +1,8 @@
 #pragma once
 #include "assets/AssetPod.h"
+#include "universe/Entity.h"
+
+class World;
 
 struct Prefab : AssetPod {
 

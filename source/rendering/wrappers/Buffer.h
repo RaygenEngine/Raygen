@@ -45,14 +45,14 @@ private:
 };
 } // namespace vl
 
-
-namespace detail {
-template<>
-inline void RegisterDebugName<vl::RBuffer>(const vl::RBuffer& buffer, const std::string& name)
-{
-	vk::DebugUtilsObjectNameInfoEXT debugNameInfo{};
-
-	detail::RegisterDebugName(buffer.handle(), name + " [buffer]");
-	detail::RegisterDebugName(buffer.memory(), name + " [memory]");
-}
-} // namespace detail
+//
+// namespace detail {
+// template<>
+// inline void RegisterDebugName<vl::RBuffer>(const vl::RBuffer& buffer, const std::string& name)
+//{
+//	vk::DebugUtilsObjectNameInfoEXT debugNameInfo{};
+//
+//	detail::RegisterDebugName(buffer.handle(), name + " [buffer]");
+//	detail::RegisterDebugName(buffer.memory(), name + " [memory]");
+//}
+//} // namespace detail

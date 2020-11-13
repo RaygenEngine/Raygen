@@ -9,9 +9,10 @@ struct SceneStruct {
 	InFlightResources<vk::DescriptorSet> uboDescSet;
 	InFlightResources<vl::RBuffer> buffer;
 
-	InFlightResources<bool> isDirty{ true };
+	InFlightResources<bool> isDirty;
 
 	SceneStruct(size_t uboSize);
+
 
 	void UploadDataToUbo(uint32 curFrame, void* data, size_t size);
 };

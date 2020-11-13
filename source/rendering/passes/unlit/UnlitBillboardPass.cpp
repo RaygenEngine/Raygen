@@ -171,7 +171,7 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 	glm::vec4 cameraRight{ view[0][0], view[1][0], view[2][0], 0.f };
 	glm::vec4 cameraUp{ view[0][1], view[1][1], view[2][1], 0.f };
 
-	for (auto& [ent, rp, bc] : Universe::MainWorld->GetView<CReflprobe, BasicComponent>().each()) {
+	for (auto [ent, rp, bc] : Universe::MainWorld->GetView<CReflprobe, BasicComponent>().each()) {
 
 
 		PushConstant pc{
@@ -188,7 +188,7 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 		cmdBuffer.draw(4u, 1u, 0u, 0u);
 	}
 
-	for (auto& [ent, ig, bc] : Universe::MainWorld->GetView<CIrradianceGrid, BasicComponent>().each()) {
+	for (auto [ent, ig, bc] : Universe::MainWorld->GetView<CIrradianceGrid, BasicComponent>().each()) {
 
 		if (ig.hideBillboards) {
 			continue;
@@ -218,7 +218,7 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 		}
 	}
 
-	for (auto& [ent, rp, bc] : Universe::MainWorld->GetView<CPointlight, BasicComponent>().each()) {
+	for (auto [ent, rp, bc] : Universe::MainWorld->GetView<CPointlight, BasicComponent>().each()) {
 
 
 		PushConstant pc{

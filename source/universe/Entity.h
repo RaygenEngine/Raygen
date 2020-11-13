@@ -2,6 +2,8 @@
 
 #include "universe/ComponentDetail.h"
 
+class World;
+
 #define COMP_DIRTABLE                                                                                                  \
 	struct Dirty {                                                                                                     \
 	}

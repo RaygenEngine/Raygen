@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stb/stb_image.h>
-
 namespace stbaux {
 
 inline void LoadImage(

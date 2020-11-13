@@ -43,7 +43,7 @@ void GpuShaderStage::Update(const AssetUpdateInfo& info)
 	module = Device->createShaderModuleUnique(createInfo);
 	shaderStageCreateInfo.setStage(shd::StageToVulkan(podPtr->stage)).setModule(*module).setPName("main");
 
-	DEBUG_NAME(module, AssetRegistry::GetPodUri(podHandle));
+	// DEBUG_NAME(module, AssetRegistry::GetPodUri(podHandle));
 
 	lastCompileSuccess = true;
 }

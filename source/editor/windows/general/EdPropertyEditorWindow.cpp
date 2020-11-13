@@ -161,18 +161,6 @@ namespace {
 		}
 
 		template<typename PodType>
-		bool PodDropTarget(PodHandle<PodType>& pod)
-		{
-			bool result = false;
-			if (PodEntry* entry = ImEd::AcceptTypedPodDrop<PodType>()) {
-				pod.uid = entry->uid;
-				dirtyFlags.set(Node::DF::Properties);
-				result = true;
-			}
-			return result;
-		}
-
-		template<typename PodType>
 		bool InjectPodCode(PodHandle<PodType>& pod, const Property& p, bool isInVector = false, uint64 extraId = 1)
 		{
 			auto entry = AssetRegistry::GetEntry(pod);

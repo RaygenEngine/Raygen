@@ -11,7 +11,6 @@
 #include "universe/components/StaticMeshComponent.h"
 #include "universe/systems/AnimatorSystem.h"
 
-#include <nlohmann/json.hpp>
 #include <fstream>
 
 World::World(const fs::path& path)
@@ -83,12 +82,10 @@ Entity World::CreateEntity(const std::string& name)
 
 void World::UpdateWorld(Scene* scene)
 {
-	if (beginPlayFlag.Access()) [[unlikely]] {
-		BeginPlay();
-	}
-	if (endPlayFlag.Access()) [[unlikely]] {
-		EndPlay();
-	}
+	if (beginPlayFlag.Access())
+		[[unlikely]] { BeginPlay(); }
+	if (endPlayFlag.Access())
+		[[unlikely]] { EndPlay(); }
 	clock.UpdateFrame();
 
 	//
@@ -142,7 +139,7 @@ void World::BeginPlay()
 	ScriptlikeRunnerSystem::BeginPlay(reg);
 
 	auto v = reg.view<CCamera>();
-	for (auto& [bc, camera] : v.each()) {
+	for (auto [bc, camera] : v.each()) {
 		SetActiveCamera(camera);
 		break;
 	}
