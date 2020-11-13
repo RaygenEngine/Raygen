@@ -3,7 +3,7 @@
 
 namespace math {
 
-struct AABB {
+constexpr struct AABB {
 	glm::vec3 min{};
 	glm::vec3 max{};
 
@@ -30,7 +30,7 @@ struct AABB {
 	}
 
 	// TEST:
-	[[nodiscard]] bool Intersects(const AABB& other) const
+	[[nodiscard]] constexpr bool Intersects(const AABB& other)
 	{
 		if (other.min.x > max.x || other.max.x < min.x) {
 			return false;
@@ -43,6 +43,31 @@ struct AABB {
 		}
 
 		return true;
+	}
+
+
+	[[nodiscard]] constexpr bool IsInside(glm::vec3 point) const
+	{
+		// PERF: if used a lot, benchmark branch predictor
+		// Check if the point is less than max and greater than min
+		if (point.x >= min.x
+			&& point.x <= max.x
+			//
+			&& point.y >= min.y
+			&& point.y <= max.y
+			//
+			&& point.z >= min.z && point.z <= max.z
+			//
+		) {
+			return true;
+		}
+
+		return false;
+	}
+
+	[[nodiscard]] glm::vec3 ClampInside(glm::vec3 point, glm::vec3 margin = glm::vec3{ 0.f }) const
+	{
+		return glm::clamp(point, min + margin, max - margin);
 	}
 };
 
