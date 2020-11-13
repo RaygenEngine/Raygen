@@ -78,13 +78,13 @@ T& Entity::GetDirty()
 template<componentdetail::CDirtableComp T>
 void Entity::MarkDirty()
 {
-	registry->get_or_emplace<typename T::Dirty>(entity);
+	registry->emplace_or_replace<typename T::Dirty>(entity);
 }
 
 template<componentdetail::CCreateDestoryComp T>
 void Entity::MarkDestroy()
 {
-	registry->get_or_emplace<typename T::Destroy>(entity);
+	registry->emplace_or_replace<typename T::Destroy>(entity);
 }
 
 template<CComponent T>
@@ -101,7 +101,7 @@ void Entity::SafeRemove()
 	}
 
 	if constexpr (componentdetail::CCreateDestoryComp<T>) {
-		registry->get_or_emplace<typename T::Destroy>(entity);
+		registry->emplace_or_replace<typename T::Destroy>(entity);
 	}
 	else {
 		registry->remove<T>(entity);

@@ -118,7 +118,7 @@ void AnimatorSystem::UpdateAnimations(entt::registry& reg, float deltaSeconds)
 	PROFILE_SCOPE(World);
 
 	auto view = reg.view<CSkinnedMesh, CSkinnedMesh::Dirty>();
-	for (auto [ent, sm] : view.each()) {
+	for (auto&& [ent, sm] : view.each()) {
 		auto size = sm.skinnedMesh.Lock()->joints.size();
 		if (size != sm.joints.size()) {
 			sm.joints.resize(sm.skinnedMesh.Lock()->joints.size());
@@ -126,7 +126,7 @@ void AnimatorSystem::UpdateAnimations(entt::registry& reg, float deltaSeconds)
 	}
 
 	auto view2 = reg.view<CSkinnedMesh>();
-	for (auto [ent, sm] : view2.each()) {
+	for (auto&& [ent, sm] : view2.each()) {
 		UpdateComponent(sm, deltaSeconds);
 	}
 }
