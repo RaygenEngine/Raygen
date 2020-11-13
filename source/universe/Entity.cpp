@@ -29,7 +29,7 @@ void Entity::Destroy()
 		current = next;
 	}
 
-	registry->get_or_emplace<CDestroyFlag>(entity);
+	registry->emplace_or_replace<CDestroyFlag>(entity);
 }
 
 

@@ -16,7 +16,7 @@ void EnqueueCreateDestroyCmds(Scene* scene, entt::registry& reg)
 	auto destroyView = reg.view<T, typename T::Destroy>();
 
 
-	for (auto& [ent, sc] : destroyView.each()) {
+	for (auto&& [ent, sc] : destroyView.each()) {
 		destructions.emplace_back(sc.sceneUid);
 		reg.remove<T>(ent);
 	}
@@ -25,7 +25,7 @@ void EnqueueCreateDestroyCmds(Scene* scene, entt::registry& reg)
 	std::vector<size_t*> constructions;
 	auto createView = reg.view<T, typename T::Create>(entt::exclude<typename T::Destroy>);
 
-	for (auto& [ent, sc] : createView.each()) {
+	for (auto&& [ent, sc] : createView.each()) {
 		constructions.emplace_back(&sc.sceneUid);
 	}
 
@@ -39,12 +39,8 @@ void EnqueueDirtyCmds(Scene* scene, entt::registry& reg)
 	scene->SetCtx<typename T::RenderSceneType>();
 
 	auto view = reg.view<BasicComponent, T, typename T::Dirty>();
-	for (auto& [ent, basic, sc] : view.each()) {
+	for (auto&& [ent, basic, sc] : view.each()) {
 		scene->EnqueueCmdInCtx<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<true>(basic));
-
-		/*	if constexpr (std::is_same_v<T, typename CReflprobe>) {
-				scene->forceUpdateAccel = true;
-			}*/
 	}
 }
 
@@ -55,7 +51,7 @@ void EnqueueTransformCmds(Scene* scene, entt::registry& reg)
 	scene->SetCtx<typename T::RenderSceneType>();
 	auto view = reg.view<BasicComponent, T, DirtySrtComp>(entt::exclude<typename T::Dirty>);
 
-	for (auto& [ent, basic, sc] : view.each()) {
+	for (auto&& [ent, basic, sc] : view.each()) {
 		scene->EnqueueCmdInCtx<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<false>(basic));
 	}
 }
@@ -67,7 +63,7 @@ void EnqueueRecreateCmds(Scene* scene, entt::registry& reg)
 		std::vector<size_t*> constructions;
 		auto createView = reg.view<T>(entt::exclude<typename T::Destroy>);
 
-		for (auto& [ent, sc] : createView.each()) {
+		for (auto&& [ent, sc] : createView.each()) {
 			constructions.emplace_back(&sc.sceneUid);
 		}
 
@@ -78,7 +74,7 @@ void EnqueueRecreateCmds(Scene* scene, entt::registry& reg)
 	{
 		scene->SetCtx<typename T::RenderSceneType>();
 		auto view = reg.view<BasicComponent, T>();
-		for (auto& [ent, basic, sc] : view.each()) {
+		for (auto&& [ent, basic, sc] : view.each()) {
 			scene->EnqueueCmdInCtx<typename T::RenderSceneType>(sc.sceneUid, sc.DirtyCmd<true>(basic));
 		}
 	}

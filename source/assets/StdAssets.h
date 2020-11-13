@@ -14,6 +14,11 @@ struct StdAssets {
 		void operator=(const PodHandle<T>&) = delete;
 
 		struct ConstHandleAssigner {
+			ConstHandleAssigner(size_t inUid)
+				: uid(inUid)
+			{
+			}
+
 			size_t uid;
 		};
 
