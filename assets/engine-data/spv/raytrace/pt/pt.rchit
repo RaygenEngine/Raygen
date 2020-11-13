@@ -44,13 +44,7 @@ struct OldVertex
 };
 
 layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAs;
-#ifndef rt_indirect_glsl
-#define rt_indirect_glsl
 
-#include "surface.glsl"
-
-// META:
-// Expects pre declared variable prd before the inclusion of the file
 
 // Handle just radiance here (no throughput). 
 // This function should be able to  be used without throughput (eg: a debug ray directly from the camera that invokes hit shaders)
@@ -128,86 +122,6 @@ vec3 TraceNext(vec3 thisRayThroughput, vec3 L_shadingSpace, Surface surface) {
 //	return texture(blueNoiseSampler, vec2(p)).r;
 //}
  
-
-vec3 TraceIndirect(Surface surface) {
-    vec3 radiance = vec3(0.f);
-
-    vec3 V = surface.wo;
-    vec3 albedo = surface.albedo;
-    vec3 f0 =  surface.f0;
-    float a = surface.a;
-
-    float NoV = max(Ndot(V), BIAS);
-
-    float p_specular = 0.5;
-
-    // Glossy reflection
-    if(rand(prd.seed) > p_specular)
-    {
-        // Ideally specular
-        vec2 u = rand2(prd.seed);
-        vec3 H = importanceSampleGGX(u, a);
-
-        vec3 L = reflect(-V, H);
-
-        float NoL = max(Ndot(L), BIAS); 
-
-        float NoH = max(Ndot(H), BIAS); 
-        float LoH = max(dot(L, H), BIAS);
-
-        
-        float pdf = D_GGX(NoH, a) * NoH /  (4.0 * LoH);
-        pdf = max(pdf, BIAS); // CHECK: pbr-book stops tracing if pdf == 0
-
-        if(a < SPEC_THRESHOLD){
-            L = reflect(-V);
-            H = normalize(V + L);
-            NoL = max(Ndot(L), BIAS); 
-           
-            NoH = max(Ndot(H), BIAS); 
-            LoH = max(dot(L, H), BIAS);
-            pdf = 1.0;
-        }   
-
-        vec3 ks = F_Schlick(LoH, f0);
-
-		addSurfaceIncomingLightDirectionInBasis(surface, L);
-        vec3 brdf_r = SpecularTerm(surface, ks) / p_specular;
-
-        radiance += TraceNext(brdf_r * NoL / pdf, L, surface);
-    }
-
-    // Diffuse reflection
-    else
-    {
-        vec2 u = rand2(prd.seed); 
-        vec3 L = cosineSampleHemisphere(u);
-
-        float NoL = max(Ndot(L), BIAS); 
-
-        vec3 H = normalize(V + L);
-        float LoH = max(dot(L, H), BIAS);
-
-        float pdf = NoL * INV_PI;
-
-        vec3 kd = 1 - F_Schlick(LoH, f0);
-				addSurfaceIncomingLightDirectionInBasis(surface, L);
-        vec3 brdf_d = DiffuseTerm(surface, kd) / (1 - p_specular);
-
-
-
-
-        radiance += TraceNext(brdf_d * NoL / pdf, L, surface);
-    }
-
-    return radiance;
-}
-
-#else
-#error "RT Indirect glsl header should have no reason to be included twice (it declares descriptors). Check if what you are trying to do is correct."
-#endif
-
-
 struct samplerRef {
 	int index;
 };
@@ -351,15 +265,10 @@ void main() {
 	vec3 radiance = vec3(0);
 	// DIRECT
 	{
-		if (sum(surface.emissive) > BIAS) {
-			prd.radiance = surface.emissive.xyz;
-			return;
-		}
-
 		// for each light
 		for(int i = 0; i < pointlightCount; ++i) {
 			Pointlight pl = pointlights.light[i];
-			radiance +=  Pointlight_Contribution(topLevelAs, pl, surface);
+			radiance += Pointlight_Contribution(topLevelAs, pl, surface);
 		}
 	}
 
@@ -368,7 +277,17 @@ void main() {
 		return;
 	}
 
-	radiance += TraceIndirect(surface);
+	// INDIRECT
+	{
+		float p_specular = 0.5;
+
+		vec3 L;
+		vec3 brdf_NoL_pdf = rand(prd.seed) > p_specular ? SampleSpecularDirection(surface, prd.seed) / p_specular
+														: SampleDiffuseDirection(surface, prd.seed) / (1 - p_specular);
+
+		radiance += TraceNext(brdf_NoL_pdf, L, surface);
+	}
+
 	prd.radiance = radiance;
 }
 
