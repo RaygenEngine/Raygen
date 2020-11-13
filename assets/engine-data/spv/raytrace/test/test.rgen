@@ -18,10 +18,6 @@ layout(set = 2, binding = 1, rgba32f) uniform image2D progressiveResult;
 layout(set = 2, binding = 2, rgba32f) uniform image2D momentsBuffer;
 
 layout(location = 0) rayPayloadEXT hitPayload prd;
-
-
-#include "raytrace/rt-indirect.glsl"
-
 void WriteSky(); 
 
 struct ReprojectionData {

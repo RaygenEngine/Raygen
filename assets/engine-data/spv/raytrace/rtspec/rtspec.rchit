@@ -249,11 +249,6 @@ void main() {
 	vec3 radiance = vec3(0);
 	// DIRECT
 	{
-		if (sum(surface.emissive) > BIAS) {
-			prd.radiance = surface.emissive.xyz;
-			return;
-		}
-
 		// for each light
 		for(int i = 0; i < pointlightCount; ++i) {
 			Pointlight pl = pointlights.light[i];

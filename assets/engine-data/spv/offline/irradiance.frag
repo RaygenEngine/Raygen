@@ -41,6 +41,7 @@ void main( ) {
 			// tangent space to world
 			vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * normal; 
 
+            // cos(theta) = NoL, sin(Theta) to account for the smaller sample areas in the higher hemisphere areas.
 			irradiance += texture(skyboxSampler, sampleVec).rgb * cos(theta) * sin(theta);
 			nrSamples++;
 		}

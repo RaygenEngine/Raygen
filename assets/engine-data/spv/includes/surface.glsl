@@ -4,6 +4,7 @@
 #include "onb.glsl"
 #include "random.glsl"
 #include "bsdf.glsl"
+#include "sampling.glsl"
 
 struct Surface
 {
@@ -27,6 +28,8 @@ struct Surface
     float a;
     float opacity;
     float occlusion;
+
+    uint tseed;
 };
 
 void addSurfaceIncomingLightDirection(inout Surface surface, vec3 L)
@@ -108,6 +111,8 @@ Surface surfaceFromGBuffer(
     surface.emissive = emissiveOcclusion.rgb;
     surface.occlusion = emissiveOcclusion.a;
 
+    surface.tseed = uint(uv.y * 2160 * 4096 + uv.x * 4096);
+
     return surface;
 }
 
@@ -158,6 +163,20 @@ vec3 SampleSpecularDirection(inout Surface surface, inout uint seed)
     return brdf_r * surface.NoL / pdf;
 }
 
+vec3 SampleDiffuseDirection(inout Surface surface, inout uint seed)
+{
+    vec2 u = rand2(seed); 
+    vec3 L = cosineSampleHemisphere(u);
+
+    addSurfaceIncomingLightDirectionInBasis(surface, L);
+
+    float pdf = surface.NoL * INV_PI;
+
+	vec3 kd = 1 - F_Schlick(surface.LoH, surface.f0);
+    vec3 brdf_d = DiffuseTerm(surface, kd);
+	
+	return brdf_d * surface.NoL / pdf;
+}
 
 
 #endif

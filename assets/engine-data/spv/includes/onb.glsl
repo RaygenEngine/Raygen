@@ -75,6 +75,13 @@ void outOnbSpace(Onb orthoBasis, inout vec3 v)
 			 orthoBasis.tangent.z * v.x + orthoBasis.bitangent.z * v.y + orthoBasis.normal.z * v.z);
 }
 
+vec3 outOnbSpaceReturn(Onb orthoBasis, vec3 v)
+{
+	return vec3(orthoBasis.tangent.x * v.x + orthoBasis.bitangent.x * v.y + orthoBasis.normal.x * v.z,
+			 orthoBasis.tangent.y * v.x + orthoBasis.bitangent.y * v.y + orthoBasis.normal.y * v.z,
+			 orthoBasis.tangent.z * v.x + orthoBasis.bitangent.z * v.y + orthoBasis.normal.z * v.z);
+}
+
 // math here are in onb space 
 // i.e. change basis of vectors using the normal of the surface
 
@@ -138,17 +145,6 @@ bool sameHemisphere(vec3 w, vec3 wp)
 vec3 reflect(vec3 wo) 
 {
     return vec3(wo.x, wo.y, -wo.z);
-}
-
-vec3 importanceSampleGGX(vec2 u, float a) 
-{
-    float phi = 2.0f * PI * u.x;
-    // (aa-1) == (a-1)(a+1) produces better fp accuracy
-    float cosTheta2 = (1 - u.y) / (1 + (a + 1) * ((a - 1) * u.y));
-    float cosTheta = sqrt(cosTheta2);
-    float sinTheta = sqrt(1 - cosTheta2);
-
-    return vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
 }
 
 
