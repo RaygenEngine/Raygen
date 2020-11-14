@@ -9,9 +9,9 @@
 #include "raytrace/rtspec/rtspec.glsl"
 
 #include "attachments.glsl"
-#include "surface.glsl"
-#include "onb.glsl"
 #include "bsdf.glsl"
+#include "onb.glsl"
+#include "surface.glsl"
 
 layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 layout(set = 2, binding = 0, rgba32f) uniform image2D image;
@@ -72,11 +72,10 @@ void main() {
 		prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, samples + smpl);
 		prd.depth = 1; // gbuffer
 
-		vec3 L;
-		vec3 brdf_NoL_pdf = SampleSpecularDirection(surface, prd.seed);
+		vec3 brdf_NoL_invpdf = SampleSpecularDirection(surface, prd.seed);
 
-		outOnbSpace(surface.basis, surface.wi);
-		radiance += RadianceOfRay(surface.position, L) * brdf_NoL_pdf;
+		vec3 L = surfaceIncidentLightDir(surface);
+		radiance += RadianceOfRay(surface.position, L) * brdf_NoL_invpdf;
 	}
     
 	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(radiance / float(samples), 1.0));

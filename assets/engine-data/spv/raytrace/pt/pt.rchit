@@ -9,12 +9,14 @@
 #include "global.glsl"
 #include "raytrace/pt/pt.glsl"
 
+#include "bsdf.glsl"
+#include "lights/dirlight.glsl"
+#include "lights/pointlight.glsl"
+#include "lights/spotlight.glsl"
+#include "onb.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
-#include "bsdf.glsl"
-#include "onb.glsl"
 #include "surface.glsl"
-#include "lights/pointlight.glsl"
 
 hitAttributeEXT vec2 baryCoord;
 layout(location = 0) rayPayloadInEXT hitPayload prd;
@@ -81,7 +83,7 @@ vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 }
 
 // Handle Termination and throughput in this function, handle radiance in the above
-vec3 TraceNext(vec3 thisRayThroughput, vec3 L_shadingSpace, Surface surface) {
+vec3 TraceNext(vec3 thisRayThroughput, Surface surface) {
 
     vec3 prevCumulativeThroughput = prd.accumThroughput;
     // RR termination
@@ -97,8 +99,8 @@ vec3 TraceNext(vec3 thisRayThroughput, vec3 L_shadingSpace, Surface surface) {
     // Update accum throughput for the remaining of the recursion
     prd.accumThroughput = prevCumulativeThroughput * thisRayThroughput;
 
-    outOnbSpace(surface.basis, L_shadingSpace); // NOTE: not shading space after the function, make onb return values for better names
-    vec3 result = thisRayThroughput * RadianceOfRay(surface.position, L_shadingSpace); 
+    vec3 L = surfaceIncidentLightDir(surface);
+    vec3 result = thisRayThroughput * RadianceOfRay(surface.position, L); 
 
     // Restore accum throughput
     prd.accumThroughput = prevCumulativeThroughput;
@@ -165,8 +167,11 @@ struct GeometryGroup {
 
 layout(set = 2, binding = 0, std430) readonly buffer GeometryGroups { GeometryGroup g[]; } geomGroups;
 layout(set = 2, binding = 1) uniform sampler2D textureSamplers[];
-
 layout(set = 3, binding = 0, std430) readonly buffer Pointlights { Pointlight light[]; } pointlights;
+layout(set = 4, binding = 0, std430) readonly buffer Spotlights { Spotlight light[]; } spotlights;
+layout(set = 4, binding = 1) uniform sampler2DShadow spotlightShadowmap[];
+layout(set = 5, binding = 0, std430) readonly buffer Dirlights { Dirlight light[]; } dirlights;
+layout(set = 5, binding = 1) uniform sampler2DShadow dirlightShadowmap[];
 
 vec4 texture(samplerRef s, vec2 uv) {
 	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
@@ -239,8 +244,9 @@ Surface surfaceFromGeometryGroup(
 	surface.position = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 	surface.basis = branchlessOnb(ns);
 
-	vec3 V = -gl_WorldRayDirectionEXT;
-	addSurfaceOutgoingLightDirection(surface, V);
+	vec3 V = normalize(-gl_WorldRayDirectionEXT);
+    surface.v = normalize(toOnbSpaceReturn(surface.basis, V));
+    surface.nov = max(Ndot(surface.v), BIAS);
 
 	surface.albedo = (1.0 - metallic) * baseColor;
     surface.opacity = sampledBaseColor.a;
@@ -265,10 +271,19 @@ void main() {
 	vec3 radiance = vec3(0);
 	// DIRECT
 	{
-		// for each light
 		for(int i = 0; i < pointlightCount; ++i) {
 			Pointlight pl = pointlights.light[i];
-			radiance += Pointlight_Contribution(topLevelAs, pl, surface);
+			radiance += Pointlight_FastContribution(topLevelAs, pl, surface);
+		}
+
+		for(int i = 0; i < spotlightCount; ++i) {
+			Spotlight sl = spotlights.light[i];
+			radiance += Spotlight_FastContribution(sl, spotlightShadowmap[nonuniformEXT(i)], surface);
+		}
+
+		for(int i = 0; i < dirlightCount; ++i) {
+			Dirlight dl = dirlights.light[i];
+			radiance += Dirlight_FastContribution(dl, dirlightShadowmap[nonuniformEXT(i)], surface);
 		}
 	}
 
@@ -281,11 +296,12 @@ void main() {
 	{
 		float p_specular = 0.5;
 
-		vec3 L;
-		vec3 brdf_NoL_pdf = rand(prd.seed) > p_specular ? SampleSpecularDirection(surface, prd.seed) / p_specular
-														: SampleDiffuseDirection(surface, prd.seed) / (1 - p_specular);
 
-		radiance += TraceNext(brdf_NoL_pdf, L, surface);
+		vec3 brdf_NoL_invpdf = rand(prd.seed) > p_specular ? SampleSpecularDirection(surface, prd.seed) / p_specular
+														   : SampleDiffuseDirection(surface, prd.seed) / (1 - p_specular);
+
+
+		radiance += TraceNext(brdf_NoL_invpdf, surface);
 	}
 
 	prd.radiance = radiance;

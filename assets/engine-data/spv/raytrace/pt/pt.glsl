@@ -14,10 +14,12 @@ struct hitPayload
 layout(push_constant) uniform PC
 {
 	vec4 reflPos;
-	int pointlightCount;
 	float innerRadius;
 	int samples;
 	int bounces;
+	int pointlightCount;
+	int spotlightCount;
+	int dirlightCount;
 };
 
 #endif

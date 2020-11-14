@@ -1,25 +1,24 @@
 #ifndef surface_glsl
 #define surface_glsl
 
+#include "bsdf.glsl"
 #include "onb.glsl"
 #include "random.glsl"
-#include "bsdf.glsl"
 #include "sampling.glsl"
 
-struct Surface
-{
+struct Surface {
+    
+    // surface
     Onb basis;
 
-    // cached
-    vec3 wo; // surface space
-    vec3 wi; // surface space
+    vec3 v;
+    vec3 l; 
     vec3 h;
-    float NoV;
-    float NoH;
-    float LoH;
-    float NoL;
-    vec3 position; // p 
-    float depth;
+    float nov;
+    float noh;
+    float loh;
+    float nol;
+
 
     // material
     vec3 albedo;
@@ -29,35 +28,35 @@ struct Surface
     float opacity;
     float occlusion;
 
-    uint tseed;
+    // surface
+    vec3 position; 
+    float depth;
+    vec2 uv;
 };
 
-void addSurfaceIncomingLightDirection(inout Surface surface, vec3 L)
+vec3 surfaceIncidentLightDir(Surface surface)
 {
-    surface.wi = toOnbSpaceReturn(surface.basis, L);
-
-    surface.h = normalize(surface.wo + surface.wi); 
-    surface.NoV = max(Ndot(surface.wo), BIAS);
-    surface.NoH = max(Ndot(surface.h), BIAS);
-    surface.LoH = max(dot(surface.wi, surface.h), BIAS);
-    surface.NoL = max(Ndot(surface.wi), BIAS);
+    return outOnbSpaceReturn(surface.basis, surface.l);
 }
 
-void addSurfaceIncomingLightDirectionInBasis(inout Surface surface, vec3 L)
+vec3 surfaceOutgoingLightDir(Surface surface)
 {
-    surface.wi = L;
-
-    surface.h = normalize(surface.wo + surface.wi); 
-    surface.NoV = max(Ndot(surface.wo), BIAS);
-    surface.NoH = max(Ndot(surface.h), BIAS);
-    surface.LoH = max(dot(surface.wi, surface.h), BIAS);
-    surface.NoL = max(Ndot(surface.wi), BIAS);
+    return outOnbSpaceReturn(surface.basis, surface.v);
 }
 
-
-void addSurfaceOutgoingLightDirection(inout Surface surface, vec3 V)
+// PERF:?
+void cacheSurfaceDots(inout Surface surface)
 {
-    surface.wo = toOnbSpaceReturn(surface.basis, V);
+    surface.h = normalize(surface.v + surface.l); 
+    surface.noh = max(Ndot(surface.h), BIAS);
+    surface.loh = max(dot(surface.l, surface.h), BIAS);
+    surface.nol = max(Ndot(surface.l), BIAS);
+}
+
+void addIncomingLightDirection(inout Surface surface, vec3 L)
+{
+    surface.l = normalize(toOnbSpaceReturn(surface.basis, L));
+    cacheSurfaceDots(surface);
 }
 
 vec3 reconstructWorldPosition(float depth, vec2 uv, mat4 viewProjInv)
@@ -89,11 +88,11 @@ Surface surfaceFromGBuffer(
     surface.position = reconstructWorldPosition(surface.depth, uv, cam.viewProjInv);
     
 	vec3 normal = texture(normalsSampler, uv).rgb;
-
     surface.basis = branchlessOnb(normal);
 
     vec3 V = normalize(cam.position - surface.position);
-	addSurfaceOutgoingLightDirection(surface, V);
+    surface.v = normalize(toOnbSpaceReturn(surface.basis, V));
+    surface.nov = max(Ndot(surface.v), BIAS);
 
     // rgb: albedo a: opacity
     vec4 albedoOpacity = texture(albedoOpacitySampler, uv);
@@ -111,7 +110,7 @@ Surface surfaceFromGBuffer(
     surface.emissive = emissiveOcclusion.rgb;
     surface.occlusion = emissiveOcclusion.a;
 
-    surface.tseed = uint(uv.y * 2160 * 4096 + uv.x * 4096);
+    surface.uv = uv;
 
     return surface;
 }
@@ -120,10 +119,10 @@ vec3 SpecularTerm(Surface surface, vec3 ks)
 {
     // CHECK: ks = F should probably be inside the brdfs and omitted here
     if(surface.a < SPEC_THRESHOLD){   
-		return ks *  PhongSpecular(surface.NoH, surface.a);
+		return ks *  PhongSpecular(surface.noh, surface.a);
     }
 
-    return ks * CookTorranceGGXSmithCorrelatedSpecular(surface.NoV, surface.NoL, surface.NoH, surface.a);
+    return ks * CookTorranceGGXSmithCorrelatedSpecular(surface.nov, surface.nol, surface.noh, surface.a);
 }
 
 vec3 DiffuseTerm(Surface surface, vec3 kd)
@@ -134,7 +133,7 @@ vec3 DiffuseTerm(Surface surface, vec3 kd)
 // same Li and L for both brdfs
 vec3 DirectLightBRDF(Surface surface)
 {
-    vec3 ks = F_Schlick(surface.LoH, surface.f0);
+    vec3 ks = F_Schlick(surface.loh, surface.f0);
     vec3 kd = 1 - ks;
      
     return DiffuseTerm(surface, kd) + SpecularTerm(surface, ks);
@@ -143,39 +142,38 @@ vec3 DirectLightBRDF(Surface surface)
 // PERF:
 vec3 SampleSpecularDirection(inout Surface surface, inout uint seed)
 {
-    vec3 L = reflect(-surface.wo);
-    addSurfaceIncomingLightDirectionInBasis(surface, L);
+    surface.l = reflect(-surface.v);
+    cacheSurfaceDots(surface);
     float pdf = 1;
 
     if(surface.a >= SPEC_THRESHOLD)
     {
         vec2 u = rand2(seed);
         vec3 H = importanceSampleGGX(u, surface.a);
-        L = reflect(-surface.wo, H);
-        addSurfaceIncomingLightDirectionInBasis(surface, L);
-        pdf = D_GGX(surface.NoH, surface.a) * surface.NoH /  (4.0 * surface.LoH);
+        surface.l =  reflect(-surface.v, H);
+        cacheSurfaceDots(surface);
+        pdf = D_GGX(surface.noh, surface.a) * surface.noh /  (4.0 * surface.loh);
         pdf = max(pdf, BIAS);
     }
 
-    vec3 ks = F_Schlick(surface.LoH, surface.f0);
+    vec3 ks = F_Schlick(surface.loh, surface.f0);
     vec3 brdf_r = SpecularTerm(surface, ks);
 
-    return brdf_r * surface.NoL / pdf;
+    return brdf_r * surface.nol / pdf;
 }
 
 vec3 SampleDiffuseDirection(inout Surface surface, inout uint seed)
 {
     vec2 u = rand2(seed); 
-    vec3 L = cosineSampleHemisphere(u);
+    surface.l = cosineSampleHemisphere(u);
+    cacheSurfaceDots(surface);
 
-    addSurfaceIncomingLightDirectionInBasis(surface, L);
+    float pdf = surface.nol * INV_PI;
 
-    float pdf = surface.NoL * INV_PI;
-
-	vec3 kd = 1 - F_Schlick(surface.LoH, surface.f0);
+	vec3 kd = 1 - F_Schlick(surface.loh, surface.f0);
     vec3 brdf_d = DiffuseTerm(surface, kd);
 	
-	return brdf_d * surface.NoL / pdf;
+	return brdf_d * surface.nol / pdf;
 }
 
 

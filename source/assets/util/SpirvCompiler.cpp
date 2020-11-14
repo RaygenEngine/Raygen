@@ -5,8 +5,6 @@
 #include <SPIRV/GlslangToSpv.h>
 #include <StandAlone/DirStackFileIncluder.h>
 #include <StandAlone/ResourceLimits.h>
-
-
 #include <mutex>
 
 EShLanguage FindLanguage(const std::string& filename);

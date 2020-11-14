@@ -5,7 +5,7 @@
 #include "onb.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
-#include "hammersley.glsl"
+#include "surface.glsl"
 
 float ShadowRayQuery(accelerationStructureEXT topLevelAs, vec3 origin, vec3 direction, float tMin, float tMax)
 { 
@@ -43,7 +43,7 @@ float ShadowRayQueryRadius(accelerationStructureEXT topLevelAs, Pointlight pl, S
 	float res = 0.f;
 	for(uint smpl = 0; smpl < pl.samples; ++smpl){
 
-		uint seed = tea16(surface.tseed, pl.samples + smpl);
+		uint seed = tea16(uint(surface.uv.y * 2160 * 4096 + surface.uv.x * 4096), pl.samples + smpl);
 		vec2 u = rand2(seed);
 
 		vec3 lightSampleV = vec3(uniformSampleDisk(u) * pl.radius, 0.f); 
@@ -68,7 +68,7 @@ float ShadowRaySimple(accelerationStructureEXT topLevelAs, Pointlight pl, Surfac
 vec3 Pointlight_Contribution(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface, float shadow)
 {
 	vec3 L = normalize(pl.position - surface.position);
-	addSurfaceIncomingLightDirection(surface, L);
+	addIncomingLightDirection(surface, L);
 
 	float dist = distance(pl.position, surface.position);
 	float attenuation = 1.0 / (pl.constantTerm + pl.linearTerm * dist + 
@@ -76,17 +76,17 @@ vec3 Pointlight_Contribution(accelerationStructureEXT topLevelAs, Pointlight pl,
 
 	vec3 Li = (1.0 - shadow) * pl.color * pl.intensity * attenuation; 
 
-	return DirectLightBRDF(surface)  * Li * surface.NoL;
+	return DirectLightBRDF(surface)  * Li * surface.nol;
 }
 
-vec3 Pointlight_Contribution(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)
+vec3 Pointlight_FastContribution(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)
 {
 	float shadow = pl.hasShadow != 0 ? ShadowRaySimple(topLevelAs, pl, surface) : 0;
 	return Pointlight_Contribution(topLevelAs, pl, surface, shadow);
 
 }
 
-vec3 Pointlight_RadiusContribution(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)
+vec3 Pointlight_SmoothContribution(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)
 {
 	float shadow = pl.hasShadow != 0 ? ShadowRayQueryRadius(topLevelAs, pl, surface) : 0;
 	return Pointlight_Contribution(topLevelAs, pl, surface, shadow);

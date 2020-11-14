@@ -2,11 +2,13 @@
 
 #include "assets/StdAssets.h"
 #include "engine/profiler/ProfileScope.h"
+#include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuImage.h"
 #include "rendering/output/OutputPassBase.h"
 #include "rendering/passes/DepthmapPass.h"
 #include "rendering/passes/GBufferPass.h"
+#include "rendering/passes/UnlitPass.h"
 #include "rendering/passes/lightblend/DirlightBlend.h"
 #include "rendering/passes/lightblend/IrradianceGridBlend.h"
 #include "rendering/passes/lightblend/PointlightBlend.h"
@@ -14,13 +16,11 @@
 #include "rendering/passes/lightblend/SpotlightBlend.h"
 #include "rendering/passes/unlit/UnlitBillboardPass.h"
 #include "rendering/passes/unlit/UnlitVolumePass.h"
-#include "rendering/passes/UnlitPass.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneIrradianceGrid.h"
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
-#include "rendering/StaticPipes.h"
 #include "rendering/util/WriteDescriptorSets.h"
 
 namespace {
@@ -96,97 +96,96 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRen
 	};
 
 	for (auto sl : sceneDesc->Get<SceneSpotlight>()) {
-		shadowmapRenderpass(sl);
+		if (sl->ubo.hasShadow) {
+			shadowmapRenderpass(sl);
+		}
 	}
 
 	for (auto dl : sceneDesc->Get<SceneDirlight>()) {
-		shadowmapRenderpass(dl);
+		if (dl->ubo.hasShadow) {
+			shadowmapRenderpass(dl);
+		}
 	}
 }
 
 void Renderer_::RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
-		if (rp->shouldBuild.Access())
-			[[unlikely]]
-			{
-				rp->surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
-					vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+		if (rp->shouldBuild.Access()) [[unlikely]] {
+			rp->surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+				vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
-				PtCubeInfo ptInfo{
-					rp->surroundingEnv.extent.width,
-					rp->position,
-					rp->innerRadius,
-					rp->ptSamples,
-					rp->ptBounces,
-					rp->ptcube_faceArrayDescSet,
-				};
+			PtCubeInfo ptInfo{
+				rp->surroundingEnv.extent.width,
+				rp->position,
+				rp->innerRadius,
+				rp->ptSamples,
+				rp->ptBounces,
+				rp->ptcube_faceArrayDescSet,
+			};
 
-				m_ptCube.RecordPass(cmdBuffer, sceneDesc, ptInfo);
+			m_ptCube.RecordPass(cmdBuffer, sceneDesc, ptInfo);
 
-				rp->surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
-					vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
-					vk::PipelineStageFlagBits::eFragmentShader);
+			rp->surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
+				vk::PipelineStageFlagBits::eFragmentShader);
 
-				CalcIrrInfo info{
-					rp->irradiance.extent.width,
-					vk::uniqueToRaw(rp->irr_framebuffer),
-					rp->surroundingEnvSamplerDescSet,
-				};
+			CalcIrrInfo info{
+				rp->irradiance.extent.width,
+				vk::uniqueToRaw(rp->irr_framebuffer),
+				rp->surroundingEnvSamplerDescSet,
+			};
 
-				StaticPipes::Get<IrradianceMapCalculation>().RecordPass(cmdBuffer, info);
-				StaticPipes::Get<PrefilteredMapCalculation>().RecordPass(cmdBuffer, *rp);
-			}
+			StaticPipes::Get<IrradianceMapCalculation>().RecordPass(cmdBuffer, info);
+			StaticPipes::Get<PrefilteredMapCalculation>().RecordPass(cmdBuffer, *rp);
+		}
 	}
 
 	for (auto ig : sceneDesc->Get<SceneIrradianceGrid>()) {
-		if (ig->shouldBuild.Access())
-			[[unlikely]]
-			{
-				for (int32 x = 0; x < ig->ubo.width; ++x) {
-					for (int32 y = 0; y < ig->ubo.height; ++y) {
-						for (int32 z = 0; z < ig->ubo.depth; ++z) {
+		if (ig->shouldBuild.Access()) [[unlikely]] {
+			for (int32 x = 0; x < ig->ubo.width; ++x) {
+				for (int32 y = 0; y < ig->ubo.height; ++y) {
+					for (int32 z = 0; z < ig->ubo.depth; ++z) {
 
-							int32 i = 0;
-							i += x;
-							i += y * ig->ubo.width;
-							i += z * ig->ubo.width * ig->ubo.height;
+						int32 i = 0;
+						i += x;
+						i += y * ig->ubo.width;
+						i += z * ig->ubo.width * ig->ubo.height;
 
 
-							ig->probes[i].surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
-								vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
-								vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+						ig->probes[i].surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
+							vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
+							vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
-							auto worldPos = glm::vec3(ig->ubo.posAndDist) + (glm::vec3(x, y, z) * ig->ubo.posAndDist.w);
+						auto worldPos = glm::vec3(ig->ubo.posAndDist) + (glm::vec3(x, y, z) * ig->ubo.posAndDist.w);
 
-							PtCubeInfo ptInfo{
-								ig->probes[i].surroundingEnv.extent.width,
-								glm::vec4(worldPos, 1.f), // grid block centers
-								0.f,
-								ig->ptSamples,
-								ig->ptBounces,
-								ig->probes[i].ptcube_faceArrayDescSet,
-							};
+						PtCubeInfo ptInfo{
+							ig->probes[i].surroundingEnv.extent.width,
+							glm::vec4(worldPos, 1.f), // grid block centers
+							0.f,
+							ig->ptSamples,
+							ig->ptBounces,
+							ig->probes[i].ptcube_faceArrayDescSet,
+						};
 
 
-							m_ptCube.RecordPass(cmdBuffer, sceneDesc, ptInfo);
+						m_ptCube.RecordPass(cmdBuffer, sceneDesc, ptInfo);
 
-							ig->probes[i].surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
-								vk::ImageLayout::eShaderReadOnlyOptimal,
-								vk::PipelineStageFlagBits::eRayTracingShaderKHR,
-								vk::PipelineStageFlagBits::eFragmentShader);
+						ig->probes[i].surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+							vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
+							vk::PipelineStageFlagBits::eFragmentShader);
 
-							CalcIrrInfo info{
-								ig->probes[i].irradiance.extent.width,
-								vk::uniqueToRaw(ig->probes[i].irr_framebuffer),
-								ig->probes[i].surroundingEnvSamplerDescSet,
-							};
+						CalcIrrInfo info{
+							ig->probes[i].irradiance.extent.width,
+							vk::uniqueToRaw(ig->probes[i].irr_framebuffer),
+							ig->probes[i].surroundingEnvSamplerDescSet,
+						};
 
-							StaticPipes::Get<IrradianceMapCalculation>().RecordPass(cmdBuffer, info);
-						}
+						StaticPipes::Get<IrradianceMapCalculation>().RecordPass(cmdBuffer, info);
 					}
 				}
 			}
+		}
 	} // namespace vl
 }
 

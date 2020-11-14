@@ -13,6 +13,8 @@ layout(push_constant) uniform PC
 	int depth;
 	int samples;
 	int pointlightCount;
+	int spotlightCount;
+	int dirlightCount;
 };
 
 #endif

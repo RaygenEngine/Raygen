@@ -7,6 +7,7 @@ namespace math {
 struct Frustum;
 } // namespace math
 
+
 struct Dirlight_Ubo {
 	glm::vec4 front{};
 
@@ -19,6 +20,7 @@ struct Dirlight_Ubo {
 	float maxShadowBias{};
 	int32 samples{};
 	float sampleInvSpread{};
+	int32 hasShadow{};
 };
 
 struct SceneDirlight : SceneStruct {

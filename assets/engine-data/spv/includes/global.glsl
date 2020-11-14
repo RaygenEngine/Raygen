@@ -147,6 +147,7 @@ struct Dirlight {
 	float maxShadowBias;
 	int samples;
 	float sampleInvSpread; 
+	int hasShadow;    
 };
 
 struct Spotlight {
@@ -175,6 +176,7 @@ struct Spotlight {
 		float maxShadowBias;
 		int samples;
 		float sampleInvSpread;
+		int hasShadow;    
 };
 
 struct Irragrid {
