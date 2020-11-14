@@ -1,18 +1,20 @@
 #include "PathtracedCubemap.h"
 
+#include "rendering/Renderer.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
-#include "rendering/Renderer.h"
 #include "rendering/scene/SceneReflProbe.h"
 
 namespace {
 struct PushConstant {
 	glm::vec4 reflPos;
-	int32 pointlightCount;
 	float innerRadius;
 	int32 samples;
 	int32 bounces;
+	int32 pointlightCount;
+	int32 spotlightCount;
+	int32 dirlightCount;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -38,6 +40,12 @@ void PathtracedCubemap::RecordPass(
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 3u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSetPointlights[sceneDesc.frameIndex], 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 4u, 1u,
+		&sceneDesc.scene->tlas.sceneDesc.descSetSpotlights[sceneDesc.frameIndex], 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 5u, 1u,
+		&sceneDesc.scene->tlas.sceneDesc.descSetDirlights[sceneDesc.frameIndex], 0u, nullptr);
 
 	vk::DeviceSize progSize = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of a program identifier
 
@@ -71,10 +79,12 @@ void PathtracedCubemap::RecordPass(
 
 	PushConstant pc{
 		info.worldPos,
-		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
 		info.traceOffset,
 		info.samples,
 		info.bounces,
+		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
+		sceneDesc.scene->tlas.sceneDesc.spotlightCount,
+		sceneDesc.scene->tlas.sceneDesc.dirlightCount,
 	};
 
 	cmdBuffer.pushConstants(m_pipelineLayout.get(),
@@ -94,6 +104,8 @@ void PathtracedCubemap::MakeRtPipeline()
 		Layouts->accelLayout.handle(),
 		Layouts->bufferAndSamplersDescLayout.handle(),
 		Layouts->singleStorageBuffer.handle(),
+		Layouts->bufferAndSamplersDescLayout.handle(),
+		Layouts->bufferAndSamplersDescLayout.handle(),
 	};
 
 	// all rt shaders here

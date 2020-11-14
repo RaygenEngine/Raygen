@@ -3,12 +3,13 @@
 
 #include "global.glsl"
 
-#include "bsdf.glsl"
-#include "surface.glsl"
-#include "shadow.glsl"
-#include "sampling.glsl"
-#include "onb.glsl"
 #include "attachments.glsl"
+#include "bsdf.glsl"
+#include "lights/dirlight.glsl"
+#include "onb.glsl"
+#include "sampling.glsl"
+#include "shadow.glsl"
+#include "surface.glsl"
 
 // out
 
@@ -24,46 +25,20 @@ layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 layout(set = 2, binding = 0) uniform UBO_Dirlight { Dirlight light; };
 layout(set = 3, binding = 0) uniform sampler2DShadow shadowmap;
 
-void main() {
+void main() 
+{
+	Surface surface = surfaceFromGBuffer(
+	    cam,
+		g_DepthSampler,
+		g_NormalSampler,
+		g_AlbedoSampler,
+		g_SpecularSampler,
+		g_EmissiveSampler,
+		uv
+	);
 
-//	float depth = texture(g_DepthSampler, uv).r;
-//
-//	if(depth == 1.0) {
-//		discard;
-//	}
-//
-//	// PERF:
-//	Fragment frag = getFragmentFromGBuffer(
-//		depth,
-//		cam.viewProjInv,
-//		g_NormalSampler,
-//		g_AlbedoSampler,
-//		g_SpecularSampler,
-//		g_EmissiveSampler,
-//		uv);
-//
-//	Onb shadingOrthoBasis = branchlessOnb(frag.normal);
-//
-//	vec3 V = normalize(cam.position - frag.position);
-//	vec3 L = normalize(-light.front); // explicit light dir
-//
-//	toOnbSpace(shadingOrthoBasis, V);
-//	toOnbSpace(shadingOrthoBasis, L);
-//
-//	vec3 H = normalize(V + L); 
-//	float NoL = max(Ndot(L), BIAS);
-//	float NoV = max(Ndot(V), BIAS);
-//	float NoH = max(Ndot(H), BIAS); 
-//	float LoH = max(dot(L, H), BIAS);
-//
-//	float shadow = ShadowCalculation(shadowmap, light.viewProj, frag.position, light.maxShadowBias, NoL, light.samples, light.sampleInvSpread);
-//
-//	vec3 Li = (1.0 - shadow) * light.color * light.intensity;     
-//
-//	// Li comes from direct light path
-//	vec3 finalContribution = DirectLightBRDF(NoL, NoV, NoH, LoH, frag.a, frag.albedo, frag.f0) * Li * NoL;
-//
-//	outColor = vec4(finalContribution, 1);
+	vec3 finalContribution = Dirlight_SmoothContribution(light, shadowmap, surface);
+	outColor = vec4(finalContribution, 1);
 }                               
                                 
                                  

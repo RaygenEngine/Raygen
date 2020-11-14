@@ -5,6 +5,7 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
 #include "rendering/scene/SceneCamera.h"
+
 #include <rendering/scene/SceneIrradianceGrid.h>
 
 ConsoleVariable<int32> console_rtDepth{ "rt.depth", 1, "Set rt depth" };
@@ -15,6 +16,8 @@ struct PushConstant {
 	int32 depth;
 	int32 samples;
 	int32 pointlightCount;
+	int32 spotlightCount;
+	int32 dirlightCount;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -29,7 +32,9 @@ void IndirectSpecularPass::MakeRtPipeline()
 		Layouts->singleStorageImage.handle(),          // image target
 		Layouts->accelLayout.handle(),                 // accel structure
 		Layouts->bufferAndSamplersDescLayout.handle(), // geometry groups
-		Layouts->singleStorageBuffer.handle(),         // point lights
+		Layouts->singleStorageBuffer.handle(),         // pointlights
+		Layouts->bufferAndSamplersDescLayout.handle(), // spotlights
+		Layouts->bufferAndSamplersDescLayout.handle(), // dirlights
 		Layouts->singleUboDescLayout.handle(),         // irragrid
 		Layouts->dynamicSamplerArray.handle(),         // irragrid's textures
 	};
@@ -176,21 +181,29 @@ void IndirectSpecularPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRe
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 5u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSetPointlights[sceneDesc.frameIndex], 0u, nullptr);
 
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 6u, 1u,
+		&sceneDesc.scene->tlas.sceneDesc.descSetSpotlights[sceneDesc.frameIndex], 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 7u, 1u,
+		&sceneDesc.scene->tlas.sceneDesc.descSetDirlights[sceneDesc.frameIndex], 0u, nullptr);
+
 	// WIP:
 	auto irragrid = *sceneDesc.scene->Get<SceneIrradianceGrid>().begin();
 	// if (!irragrid) {
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 6u, 1u,
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 8u, 1u,
 		&irragrid->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 7u, 1u, &irragrid->gridDescSet, 0u, nullptr);
+		vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 9u, 1u, &irragrid->gridDescSet, 0u, nullptr);
 	//}
 
 	PushConstant pc{
 		std::max(0, *console_rtDepth),
 		std::max(0, *console_rtSamples),
 		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
+		sceneDesc.scene->tlas.sceneDesc.spotlightCount,
+		sceneDesc.scene->tlas.sceneDesc.dirlightCount,
 	};
 
 	cmdBuffer.pushConstants(m_rtPipelineLayout.get(),

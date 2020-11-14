@@ -1,10 +1,11 @@
 #include "EdAttachmentDebuggerWindow.h"
 
 #include "editor/EditorObject.h"
-#include "rendering/Renderer.h"
-#include "rendering/scene/SceneSpotlight.h"
 #include "engine/Events.h"
 #include "rendering/Layer.h"
+#include "rendering/Renderer.h"
+#include "rendering/scene/SceneDirlight.h"
+#include "rendering/scene/SceneSpotlight.h"
 
 
 namespace ed {
@@ -84,6 +85,10 @@ void AttachmentDebuggerWindow::ImguiDraw()
 	showFramebuffer(indirectPassFramebuffer);
 	showImage(vl::Renderer->m_indirectSpecPass.m_result.at(0));
 	showFramebuffer(ptPassFramebuffer);
+
+	for (auto dl : vl::Layer->mainScene->Get<SceneDirlight>()) {
+		showImage(dl->shadowmap.at(0).framebuffer.ownedAttachments.at(0));
+	}
 
 	for (auto sl : vl::Layer->mainScene->Get<SceneSpotlight>()) {
 		showImage(sl->shadowmap.at(0).framebuffer.ownedAttachments.at(0));

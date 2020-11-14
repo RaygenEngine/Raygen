@@ -25,6 +25,7 @@ struct Spotlight_Ubo {
 	float maxShadowBias{};
 	int32 samples{};
 	float sampleInvSpread{};
+	int32 hasShadow{};
 };
 
 struct SceneSpotlight : SceneStruct {

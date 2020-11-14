@@ -3,10 +3,10 @@
 
 #include "global.glsl"
 
-#include "bsdf.glsl"
-#include "surface.glsl"
 #include "attachments.glsl"
+#include "bsdf.glsl"
 #include "sky.glsl"
+#include "surface.glsl"
 
 // out
 
@@ -27,8 +27,8 @@ layout(set = 2, binding = 0) uniform samplerCube skyboxSampler;
 layout(set = 2, binding = 1) uniform samplerCube irradianceSampler;
 layout(set = 2, binding = 2) uniform samplerCube prefilteredSampler;
 
-void main( ) {
-
+void main( ) 
+{
 	vec2 iuv = gl_FragCoord.xy;
 	ivec2 screenSize = textureSize(g_AlbedoSampler, 0);
 
@@ -44,15 +44,18 @@ void main( ) {
 		uv
 	);
 
-	vec3 V = //outOnbSpaceReturn(surface.basis, surface.wo);
-	normalize(cam.position - surface.position);
+	vec3 V = normalize(surfaceOutgoingLightDir(surface));
 
 	// PERF:
 	if(surface.depth == 1.0) {
+	
+		// Don't use surfaceOutgoingLightDirDir, change of basis breaks at inf depth
+		V = normalize(cam.position - surface.position);
+	
 		outColor = sampleCubemapLH(skyboxSampler, normalize(-V));
 		return; 
 	}
-
+	
 	vec3 N = surface.basis.normal;
 	vec3 R = normalize(reflect(-V, N));
 
@@ -76,6 +79,9 @@ void main( ) {
 
 	outColor =  vec4(iblContribution, 1.0f);
 }
+
+
+
 
 
 

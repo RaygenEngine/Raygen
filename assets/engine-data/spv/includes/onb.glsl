@@ -64,8 +64,8 @@ void toOnbSpace(Onb orthoBasis, inout vec3 v)
 vec3 toOnbSpaceReturn(Onb orthoBasis, vec3 v)
 {
 	return vec3(dot(v, orthoBasis.tangent), 
-	         dot(v, orthoBasis.bitangent), 
-			 dot(v, orthoBasis.normal)); 
+	            dot(v, orthoBasis.bitangent), 
+			    dot(v, orthoBasis.normal)); 
 }
 
 void outOnbSpace(Onb orthoBasis, inout vec3 v)
@@ -78,8 +78,8 @@ void outOnbSpace(Onb orthoBasis, inout vec3 v)
 vec3 outOnbSpaceReturn(Onb orthoBasis, vec3 v)
 {
 	return vec3(orthoBasis.tangent.x * v.x + orthoBasis.bitangent.x * v.y + orthoBasis.normal.x * v.z,
-			 orthoBasis.tangent.y * v.x + orthoBasis.bitangent.y * v.y + orthoBasis.normal.y * v.z,
-			 orthoBasis.tangent.z * v.x + orthoBasis.bitangent.z * v.y + orthoBasis.normal.z * v.z);
+			    orthoBasis.tangent.y * v.x + orthoBasis.bitangent.y * v.y + orthoBasis.normal.y * v.z,
+			    orthoBasis.tangent.z * v.x + orthoBasis.bitangent.z * v.y + orthoBasis.normal.z * v.z);
 }
 
 // math here are in onb space 

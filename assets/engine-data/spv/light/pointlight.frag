@@ -2,11 +2,12 @@
 #extension GL_GOOGLE_include_directive: enable
 #extension GL_EXT_ray_tracing : require
 #extension GL_EXT_ray_query: require
+
 #include "global.glsl"
 
-#include "surface.glsl"
 #include "attachments.glsl"
 #include "lights/pointlight.glsl"
+#include "surface.glsl"
 
 // out
 
@@ -35,13 +36,9 @@ void main()
 		g_SpecularSampler,
 		g_EmissiveSampler,
 		uv
-		);
+	);
 
-	if(surface.depth == 1.0) {
-		discard;
-	}
-
-	vec3 finalContribution = Pointlight_RadiusContribution(topLevelAs, pl, surface);
+	vec3 finalContribution = Pointlight_SmoothContribution(topLevelAs, pl, surface);
 	outColor = vec4(finalContribution, 1);
 }                               
 

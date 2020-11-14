@@ -6,10 +6,10 @@
 #include "raytrace/ao/ao.glsl"
 
 #include "attachments.glsl"
-#include "surface.glsl"
 #include "onb.glsl"
-#include "sampling.glsl"
 #include "random.glsl"
+#include "sampling.glsl"
+#include "surface.glsl"
 
 layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 layout(set = 2, binding = 0, rgba32f) uniform image2D image;

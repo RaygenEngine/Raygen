@@ -1,6 +1,6 @@
 #ifndef tonemapping_glsl
 #define tonemapping_glsl
-
+ 
 // Gamma Correction in Computer Graphics
 // see https://www.teamten.com/lawrence/graphics/gamma/
 vec3 gammaCorrection(vec3 color, float gamma)

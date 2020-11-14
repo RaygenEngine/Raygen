@@ -1,8 +1,8 @@
 #ifndef shadow_glsl
 #define shadow_glsl
 
-#include "random.glsl"
 #include "poisson.glsl"
+#include "random.glsl"
 
 float ShadowCalculation(sampler2DShadow shadowmap, mat4 lightMatrix, vec3 fragPos, float maxBias, float cosTheta, int samples, float invSpread)
 {
@@ -24,7 +24,7 @@ float ShadowCalculation(sampler2DShadow shadowmap, mat4 lightMatrix, vec3 fragPo
 		vec3 jitteredProjCoords = vec3((projCoords.xy + poissonDisk16[index] / invSpread) * 0.5 + 0.5, projCoords.z);
 	
 		// Hardware implemented PCF on sample
-		shadow += 1.0 - texture(shadowmap, jitteredProjCoords, 0.0);
+		shadow += 1.0 - texture(shadowmap, jitteredProjCoords);
 	}
 		
     return shadow / samples;
@@ -37,7 +37,7 @@ float ShadowCalculationFast(sampler2DShadow shadowmap, mat4 lightMatrix, vec3 fr
  	
 	projCoords = vec3(projCoords.xy * 0.5 + 0.5, projCoords.z - bias);
 
-    return 1.0 - texture(shadowmap, projCoords, 0.0);
+    return 1.0 - texture(shadowmap, projCoords);
 } 
 
 #endif
