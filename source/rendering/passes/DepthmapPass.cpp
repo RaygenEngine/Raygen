@@ -15,38 +15,6 @@ static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
-vk::UniqueRenderPass DepthmapPass::CreateCompatibleRenderPass()
-{
-	vk::AttachmentDescription depthAttachmentDesc{};
-	depthAttachmentDesc
-		.setFormat(Device->FindDepthFormat()) //
-		.setSamples(vk::SampleCountFlagBits::e1)
-		.setLoadOp(vk::AttachmentLoadOp::eClear)
-		.setStoreOp(vk::AttachmentStoreOp::eStore)
-		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setInitialLayout(vk::ImageLayout::eUndefined)
-		.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-	vk::AttachmentReference depthAttachmentRef{};
-	depthAttachmentRef
-		.setAttachment(0u) //
-		.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-	vk::SubpassDescription subpass{};
-	subpass
-		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics) //
-		.setPDepthStencilAttachment(&depthAttachmentRef);
-
-
-	std::array attachments{ depthAttachmentDesc };
-	vk::RenderPassCreateInfo renderPassInfo{};
-	renderPassInfo
-		.setAttachments(attachments) //
-		.setSubpasses(subpass);
-
-	return Device->createRenderPassUnique(renderPassInfo);
-}
 
 size_t DepthmapPass::GetPushConstantSize()
 {
@@ -127,7 +95,7 @@ namespace {
 			.setPColorBlendState(nullptr)
 			.setPDynamicState(&dynamicStateInfo)
 			.setLayout(pipelineLayout)
-			.setRenderPass(Layouts->depthRenderPass.get())
+			.setRenderPass(*Layouts->shadowPassLayout.compatibleRenderPass)
 			.setSubpass(0u)
 			.setBasePipelineHandle({})
 			.setBasePipelineIndex(-1);
@@ -227,93 +195,76 @@ vk::UniquePipeline DepthmapPass::CreateAnimPipeline(
 	return CreatePipelineFromVtxInfo(pipelineLayout, shaderStages, vertexInputInfo);
 }
 
-void DepthmapPass::RecordCmd(vk::CommandBuffer* cmdBuffer, vk::Viewport viewport, vk::Rect2D scissor,
-	const glm::mat4& viewProj, const SceneRenderDesc& sceneDesc)
+void DepthmapPass::RecordCmd(vk::CommandBuffer cmdBuffer, const glm::mat4& viewProj, const SceneRenderDesc& sceneDesc)
 {
-	vk::CommandBufferInheritanceInfo ii{};
-	ii.setRenderPass(Layouts->depthRenderPass.get()) //
-		.setFramebuffer({})                          // VK_NULL_HANDLE
-		.setSubpass(0u);
+	for (auto geom : sceneDesc->Get<SceneGeometry>()) {
+		PushConstant pc{ //
+			viewProj * geom->transform
+		};
 
-	vk::CommandBufferBeginInfo beginInfo{};
-	beginInfo
-		.setFlags(vk::CommandBufferUsageFlagBits::eRenderPassContinue) //
-		.setPInheritanceInfo(&ii);
-
-	cmdBuffer->begin(beginInfo);
-	{
-
-		cmdBuffer->setViewport(0, { viewport });
-		cmdBuffer->setScissor(0, { scissor });
-
-		for (auto geom : sceneDesc->Get<SceneGeometry>()) {
-			PushConstant pc{ //
-				viewProj * geom->transform
-			};
-
-			for (auto& gg : geom->mesh.Lock().geometryGroups) {
-				auto& mat = gg.material.Lock();
-				auto& arch = mat.archetype.Lock();
-				if (arch.isUnlit)
-					[[unlikely]] { continue; }
-				auto& plLayout = *arch.depth.pipelineLayout;
-
-				// bind the graphics pipeline
-				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.depth.pipeline);
-
-				// Submit via push constant (rather than a UBO)
-				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-				auto& gpuMesh = geom->mesh.Lock();
-				cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
-				cmdBuffer->bindIndexBuffer(
-					gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
-
-
-				if (mat.hasDescriptorSet) {
-					cmdBuffer->bindDescriptorSets(
-						vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
-				}
-
-				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+		for (auto& gg : geom->mesh.Lock().geometryGroups) {
+			auto& mat = gg.material.Lock();
+			auto& arch = mat.archetype.Lock();
+			if (arch.isUnlit) [[unlikely]] {
+				continue;
 			}
-		}
+			auto& plLayout = *arch.depth.pipelineLayout;
 
-		for (auto geom : sceneDesc->Get<SceneAnimatedGeometry>()) {
-			PushConstant pc{ //
-				viewProj * geom->transform
-			};
+			// bind the graphics pipeline
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.depth.pipeline);
 
-			for (auto& gg : geom->mesh.Lock().geometryGroups) {
-				auto& mat = gg.material.Lock();
-				auto& arch = mat.archetype.Lock();
-				if (arch.isUnlit)
-					[[unlikely]] { continue; }
-				auto& plLayout = *arch.depthAnimated.pipelineLayout;
-
-				cmdBuffer->bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.depthAnimated.pipeline);
-				cmdBuffer->pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-				if (mat.hasDescriptorSet) {
-					cmdBuffer->bindDescriptorSets(
-						vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
-				}
-
-				// cmdBuffer->bindDescriptorSets(
-				//	vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
-
-				cmdBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u,
-					&geom->descSet[sceneDesc.frameIndex], 0u, nullptr);
-
-				auto& gpuMesh = geom->mesh.Lock();
-				cmdBuffer->bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
-				cmdBuffer->bindIndexBuffer(
-					gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
+			// Submit via push constant (rather than a UBO)
+			cmdBuffer.pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+			auto& gpuMesh = geom->mesh.Lock();
+			cmdBuffer.bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
+			cmdBuffer.bindIndexBuffer(
+				gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
 
 
-				cmdBuffer->drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+			if (mat.hasDescriptorSet) {
+				cmdBuffer.bindDescriptorSets(
+					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
 			}
+
+			cmdBuffer.drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 		}
 	}
-	cmdBuffer->end();
+
+	for (auto geom : sceneDesc->Get<SceneAnimatedGeometry>()) {
+		PushConstant pc{ //
+			viewProj * geom->transform
+		};
+
+		for (auto& gg : geom->mesh.Lock().geometryGroups) {
+			auto& mat = gg.material.Lock();
+			auto& arch = mat.archetype.Lock();
+			if (arch.isUnlit) [[unlikely]] {
+				continue;
+			}
+			auto& plLayout = *arch.depthAnimated.pipelineLayout;
+
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.depthAnimated.pipeline);
+			cmdBuffer.pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+			if (mat.hasDescriptorSet) {
+				cmdBuffer.bindDescriptorSets(
+					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
+			}
+
+			// cmdBuffer->bindDescriptorSets(
+			//	vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
+
+			cmdBuffer.bindDescriptorSets(
+				vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u, &geom->descSet[sceneDesc.frameIndex], 0u, nullptr);
+
+			auto& gpuMesh = geom->mesh.Lock();
+			cmdBuffer.bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
+			cmdBuffer.bindIndexBuffer(
+				gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
+
+
+			cmdBuffer.drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+		}
+	}
 }
 } // namespace vl

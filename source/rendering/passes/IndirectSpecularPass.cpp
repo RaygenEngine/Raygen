@@ -9,7 +9,7 @@
 #include <rendering/scene/SceneIrradianceGrid.h>
 
 ConsoleVariable<int32> console_rtDepth{ "rt.depth", 1, "Set rt depth" };
-ConsoleVariable<int32> console_rtSamples{ "rt.samples", 2, "Set rt samples" };
+ConsoleVariable<int32> console_rtSamples{ "rt.samples", 0, "Set rt samples" };
 
 namespace {
 struct PushConstant {

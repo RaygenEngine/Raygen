@@ -52,63 +52,26 @@ void Renderer_::RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRen
 		GbufferPass::RecordCmd(cmdBuffer, sceneDesc);
 	});
 
-	auto shadowmapRenderpass = [&](auto light) {
-		auto& extent = light->shadowmap[sceneDesc.frameIndex].framebuffer.extent;
-
-		vk::Rect2D scissor{};
-
-		scissor
-			.setOffset({ 0, 0 }) //
-			.setExtent(extent);
-
-		auto vpSize = extent;
-
-		vk::Viewport viewport{};
-		viewport
-			.setX(0) //
-			.setY(0)
-			.setWidth(static_cast<float>(vpSize.width))
-			.setHeight(static_cast<float>(vpSize.height))
-			.setMinDepth(0.f)
-			.setMaxDepth(1.f);
-
-		vk::RenderPassBeginInfo renderPassInfo{};
-		renderPassInfo
-			.setRenderPass(Layouts->depthRenderPass.get()) //
-			.setFramebuffer(light->shadowmap[sceneDesc.frameIndex].framebuffer.handle());
-		renderPassInfo.renderArea
-			.setOffset({ 0, 0 }) //
-			.setExtent(extent);
-
-		vk::ClearValue clearValues{};
-		clearValues.setDepthStencil({ 1.0f, 0 });
-		renderPassInfo.setClearValues(clearValues);
-
-		cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eSecondaryCommandBuffers);
-		{
-			auto buffers = m_secondaryBuffersPool.Get(sceneDesc.frameIndex);
-
-			DepthmapPass::RecordCmd(&buffers, viewport, scissor, light->ubo.viewProj, sceneDesc);
-
-			cmdBuffer.executeCommands({ buffers });
-		}
-		cmdBuffer.endRenderPass();
-	};
-
 	for (auto sl : sceneDesc->Get<SceneSpotlight>()) {
 		if (sl->ubo.hasShadow) {
-			shadowmapRenderpass(sl);
+			sl->shadowmapPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
+				//
+				DepthmapPass::RecordCmd(cmdBuffer, sl->ubo.viewProj, sceneDesc);
+			});
 		}
 	}
 
 	for (auto dl : sceneDesc->Get<SceneDirlight>()) {
 		if (dl->ubo.hasShadow) {
-			shadowmapRenderpass(dl);
+			dl->shadowmapPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
+				//
+				DepthmapPass::RecordCmd(cmdBuffer, dl->ubo.viewProj, sceneDesc);
+			});
 		}
 	}
 }
 
-void Renderer_::RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void Renderer_::RecordGiPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
 		if (rp->shouldBuild.Access()) [[unlikely]] {
@@ -189,14 +152,17 @@ void Renderer_::RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const S
 	} // namespace vl
 }
 
-void Renderer_::RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void Renderer_::RecordDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	m_directLightPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 		StaticPipes::Get<SpotlightBlend>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<PointlightBlend>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<DirlightBlend>().Draw(cmdBuffer, sceneDesc);
 	});
+}
 
+void Renderer_::RecordIndirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+{
 	m_indirectLightPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 		StaticPipes::Get<ReflprobeBlend>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<IrradianceGridBlend>().Draw(cmdBuffer, sceneDesc);
@@ -310,17 +276,21 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 {
 	PROFILE_SCOPE(Renderer);
 
-	m_secondaryBuffersPool.Top();
-
-
 	sceneDesc.attachmentsDescSet = m_attachmentsDesc[sceneDesc.frameIndex];
 
-	// passes
-	RecordRelfprobeEnvmapPasses(cmdBuffer, sceneDesc);
-
+	// input: geometry | output: gbuffer, shadowmaps
 	RecordGeometryPasses(cmdBuffer, sceneDesc);
-	RecordRasterDirectPass(cmdBuffer, sceneDesc);
 
+	// input: geometry, shadowmaps | output: gi maps
+	RecordGiPasses(cmdBuffer, sceneDesc);
+
+	// input: gbuffer, shadowmaps, | output: direct light texture
+	RecordDirectPass(cmdBuffer, sceneDesc);
+
+	// input: gbuffer, gi maps, | output: indirect pass
+	RecordIndirectPass(cmdBuffer, sceneDesc);
+
+	// other passes are experimental...
 
 	m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
 	// m_aoPass.RecordPass(cmdBuffer, sceneDesc);

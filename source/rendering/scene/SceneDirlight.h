@@ -1,6 +1,5 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
-#include "rendering/structures/Depthmap.h"
 
 namespace math {
 // awful
@@ -28,7 +27,11 @@ struct SceneDirlight : SceneStruct {
 
 	Dirlight_Ubo ubo;
 
-	InFlightResources<vl::Depthmap> shadowmap;
+	InFlightResources<vl::RenderingPassInstance> shadowmapPass;
+	InFlightResources<vk::DescriptorSet> shadowmapDescSet;
+
+	// TODO: gpu std asset
+	vk::Sampler depthSampler;
 
 	glm::vec3 up;
 

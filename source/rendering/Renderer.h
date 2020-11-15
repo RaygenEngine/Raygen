@@ -1,11 +1,11 @@
 #pragma once
 
 #include "engine/Listener.h"
+#include "rendering/passes/AOPass.h"
+#include "rendering/passes/IndirectSpecularPass.h"
 #include "rendering/passes/offline/IrradianceMapCalculation.h"
 #include "rendering/passes/offline/PathtracedCubemap.h"
 #include "rendering/passes/offline/PrefilteredMapCalculation.h"
-#include "rendering/passes/AOPass.h"
-#include "rendering/passes/IndirectSpecularPass.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
@@ -36,29 +36,10 @@ public:
 
 private:
 	void RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordGiPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordIndirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-
-
-	struct SecondaryBufferPool {
-
-		std::vector<InFlightCmdBuffers<Graphics>> sBuffers;
-
-		vk::CommandBuffer Get(uint32 frameIndex)
-		{
-			if (currBuffer > (int32(sBuffers.size()) - 1)) {
-				sBuffers.emplace_back(InFlightCmdBuffers<Graphics>(vk::CommandBufferLevel::eSecondary));
-			}
-
-			return sBuffers[currBuffer++][frameIndex];
-		}
-
-		void Top() { currBuffer = 0; }
-
-		int32 currBuffer{ 0 };
-
-	} m_secondaryBuffersPool;
 
 	vk::Extent2D m_extent{};
 

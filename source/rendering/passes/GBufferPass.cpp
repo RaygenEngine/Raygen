@@ -124,7 +124,7 @@ namespace {
 			.setPColorBlendState(&colorBlending)
 			.setPDynamicState(&dynamicStateInfo)
 			.setLayout(pipelineLayout)
-			.setRenderPass(Layouts->gbufferPassLayout.compatibleRenderPass.get())
+			.setRenderPass(*Layouts->gbufferPassLayout.compatibleRenderPass)
 			.setSubpass(0u)
 			.setBasePipelineHandle({})
 			.setBasePipelineIndex(-1);
@@ -241,8 +241,9 @@ void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
 
-			if (arch.isUnlit)
-				[[unlikely]] { continue; }
+			if (arch.isUnlit) [[unlikely]] {
+				continue;
+			}
 			auto& plLayout = *arch.gbuffer.pipelineLayout;
 
 			pc.drawIndex = float(gg.material.uid);
@@ -277,8 +278,9 @@ void GbufferPass::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
-			if (arch.isUnlit)
-				[[unlikely]] { continue; }
+			if (arch.isUnlit) [[unlikely]] {
+				continue;
+			}
 
 			auto& plLayout = *arch.gbufferAnimated.pipelineLayout;
 

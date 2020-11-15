@@ -68,6 +68,17 @@ void Layouts_::MakeRenderPassLayouts()
 		gbufferPassLayout.Generate();
 	}
 
+	// Shadow Pass
+	{
+		AttRef shadowAtt = shadowPassLayout.CreateAttachment("Shadowmap", Device->FindDepthFormat());
+
+		shadowPassLayout.AddSubpass({}, { shadowAtt });
+
+		shadowPassLayout.AttachmentFinalLayout(shadowAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		shadowPassLayout.Generate();
+	}
+
 	AttRef directAtt;
 	{
 		directAtt = directLightPassLayout.CreateAttachment("DirectLight", vk::Format::eR32G32B32A32Sfloat);
@@ -185,10 +196,6 @@ Layouts_::Layouts_()
 		eCombinedImageSampler, eRaygenKHR | eClosestHitKHR | eAnyHitKHR, 1024u, eVariableDescriptorCount);
 
 	bufferAndSamplersDescLayout.Generate();
-
-
-	depthRenderPass = DepthmapPass::CreateCompatibleRenderPass();
-
 
 	storageImageArray6.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll, 6u);
 	storageImageArray6.Generate();

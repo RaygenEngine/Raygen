@@ -1,12 +1,12 @@
 #include "DirlightBlend.h"
 
+#include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/core/PipeUtl.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneDirlight.h"
-#include "rendering/StaticPipes.h"
 
 namespace vl {
 vk::UniquePipelineLayout DirlightBlend::MakePipelineLayout()
@@ -68,7 +68,7 @@ void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sce
 			vk::PipelineBindPoint::eGraphics, pipeLayout, 2u, 1u, &dl->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 3u, 1u,
-			&dl->shadowmap[sceneDesc.frameIndex].descSet, 0u, nullptr);
+			&dl->shadowmapDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 		// big triangle
 		cmdBuffer.draw(3u, 1u, 0u, 0u);
