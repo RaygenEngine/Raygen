@@ -6,15 +6,16 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuImage.h"
 #include "rendering/output/OutputPassBase.h"
-#include "rendering/passes/DepthmapPass.h"
-#include "rendering/passes/GBufferPass.h"
-#include "rendering/passes/UnlitPass.h"
-#include "rendering/passes/lightblend/DirlightBlend.h"
-#include "rendering/passes/lightblend/IrradianceGridBlend.h"
-#include "rendering/passes/lightblend/PointlightBlend.h"
-#include "rendering/passes/lightblend/ReflprobeBlend.h"
-#include "rendering/passes/lightblend/SpotlightBlend.h"
+#include "rendering/passes/direct/DirlightBlend.h"
+#include "rendering/passes/direct/PointlightBlend.h"
+#include "rendering/passes/direct/SpotlightBlend.h"
+#include "rendering/passes/geometry/DepthmapPass.h"
+#include "rendering/passes/geometry/GBufferPass.h"
+#include "rendering/passes/gi/AoBlend.h"
+#include "rendering/passes/gi/IrradianceGridBlend.h"
+#include "rendering/passes/gi/ReflprobeBlend.h"
 #include "rendering/passes/unlit/UnlitBillboardPass.h"
+#include "rendering/passes/unlit/UnlitGeometryPass.h"
 #include "rendering/passes/unlit/UnlitVolumePass.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/scene/SceneDirlight.h"
@@ -40,7 +41,6 @@ void Renderer_::InitPipelines()
 	m_lightblendPass.MakePipeline();
 
 	m_indirectSpecPass.MakeRtPipeline();
-	// m_aoPass.MakeRtPipeline();
 }
 
 void Renderer_::RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
@@ -163,9 +163,10 @@ void Renderer_::RecordDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderD
 
 void Renderer_::RecordIndirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	m_indirectLightPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
+	m_giLightPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 		StaticPipes::Get<ReflprobeBlend>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<IrradianceGridBlend>().Draw(cmdBuffer, sceneDesc);
+		StaticPipes::Get<AoBlend>().Draw(cmdBuffer, sceneDesc);
 	});
 }
 
@@ -178,7 +179,7 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRe
 		m_lightblendPass.Draw(cmdBuffer, sceneDesc); // TODO: from post proc
 
 		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc);
-		UnlitPass::RecordCmd(cmdBuffer, sceneDesc);
+		UnlitGeometryPass::RecordCmd(cmdBuffer, sceneDesc);
 		StaticPipes::Get<UnlitVolumePass>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<UnlitBillboardPass>().Draw(cmdBuffer, sceneDesc);
 	});
@@ -198,13 +199,12 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		// Generate Passes
 		m_gbufferInst[i] = Layouts->gbufferPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
 		m_directLightPass[i] = Layouts->directLightPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
-		m_indirectLightPass[i] = Layouts->indirectLightPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
+		m_giLightPass[i] = Layouts->indirectLightPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
 		m_ptPass[i] = Layouts->ptPassLayout.CreatePassInstance(
 			fbSize.width, fbSize.height, { &m_gbufferInst[i].framebuffer[0] }); // TODO: indices and stuff
 	}
 
 	m_indirectSpecPass.Resize(fbSize);
-	// m_aoPass.Resize(fbSize);
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_attachmentsDesc[i] = Layouts->renderAttachmentsLayout.AllocDescriptorSet();
@@ -218,11 +218,11 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		// TODO: std gpu asset
 		auto brdfLutImg = GpuAssetManager->GetGpuHandle(StdAssets::BrdfLut());
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
-		views.emplace_back(m_directLightPass[i].framebuffer[0].view());   // directLightSampler
-		views.emplace_back(m_indirectLightPass[i].framebuffer[0].view()); // indirectLightSampler
-		views.emplace_back(m_indirectSpecPass.m_result[i].view());        // indirectRaytracedSpecular
-		views.emplace_back(m_indirectLightPass[i].framebuffer[0].view()); // TODO: reserved
-		views.emplace_back(m_ptPass[i].framebuffer[0].view());            // sceneColorSampler
+		views.emplace_back(m_directLightPass[i].framebuffer[0].view()); // directLightSampler
+		views.emplace_back(m_giLightPass[i].framebuffer[0].view());     // giSampler
+		views.emplace_back(m_indirectSpecPass.m_result[i].view());      // indirectRaytracedSpecular
+		views.emplace_back(m_giLightPass[i].framebuffer[0].view());     // TODO: reserved
+		views.emplace_back(m_ptPass[i].framebuffer[0].view());          // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_attachmentsDesc[i], 0u, std::move(views));
 
@@ -255,11 +255,6 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 		rvk::writeDescriptorImages(m_indirectSpecPass.m_rtDescSet[i], 0u, { m_indirectSpecPass.m_result[i].view() },
 			nullptr, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
-
-		// m_aoPass.m_rtDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
-
-		// rvk::writeDescriptorImages(m_aoPass.m_rtDescSet[i], 0u, { m_aoPass.m_indirectResult[i].view() },
-		//	vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 	}
 }
 
@@ -293,7 +288,6 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 	// other passes are experimental...
 
 	m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
-	// m_aoPass.RecordPass(cmdBuffer, sceneDesc);
 
 
 	RecordPostProcessPass(cmdBuffer, sceneDesc);

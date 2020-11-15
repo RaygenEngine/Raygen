@@ -1,13 +1,13 @@
 #include "GpuMaterialArchetype.h"
 
 #include "assets/pods/MaterialArchetype.h"
+#include "rendering/Layouts.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
-#include "rendering/Layouts.h"
-#include "rendering/passes/DepthmapPass.h"
-#include "rendering/passes/GBufferPass.h"
-#include "rendering/passes/UnlitPass.h"
+#include "rendering/passes/geometry/DepthmapPass.h"
+#include "rendering/passes/geometry/GBufferPass.h"
+#include "rendering/passes/unlit/UnlitGeometryPass.h"
 
 using namespace vl;
 
@@ -205,14 +205,14 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 		isUnlit = arch->unlitFragBinary.size() > 0;
 
 		if (isUnlit) {
-			size_t pushConstantSize = UnlitPass::GetPushConstantSize();
+			size_t pushConstantSize = UnlitGeometryPass::GetPushConstantSize();
 
 			GpuMaterialArchetype::PassInfo info;
 			info.shaderModules.emplace_back(CreateShaderModule(arch->unlitFragBinary));
 			info.shaderStages = CreateShaderStages("engine-data/spv/geometry/gbuffer.shader", *info.shaderModules[0]);
 			info.pipelineLayout = CreatePipelineLayout(pushConstantSize, descLayouts);
 
-			info.pipeline = UnlitPass::CreatePipeline(*info.pipelineLayout, info.shaderStages);
+			info.pipeline = UnlitGeometryPass::CreatePipeline(*info.pipelineLayout, info.shaderStages);
 
 			unlit = std::move(info);
 		}
