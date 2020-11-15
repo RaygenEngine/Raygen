@@ -87,11 +87,11 @@ void AttachmentDebuggerWindow::ImguiDraw()
 	showFramebuffer(ptPassFramebuffer);
 
 	for (auto dl : vl::Layer->mainScene->Get<SceneDirlight>()) {
-		showImage(dl->shadowmap.at(0).framebuffer.ownedAttachments.at(0));
+		showFramebuffer(dl->shadowmapPass.at(0).framebuffer);
 	}
 
 	for (auto sl : vl::Layer->mainScene->Get<SceneSpotlight>()) {
-		showImage(sl->shadowmap.at(0).framebuffer.ownedAttachments.at(0));
+		showFramebuffer(sl->shadowmapPass.at(0).framebuffer);
 	}
 }
 

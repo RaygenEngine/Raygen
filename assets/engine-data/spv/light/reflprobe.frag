@@ -4,8 +4,7 @@
 #include "global.glsl"
 
 #include "attachments.glsl"
-#include "bsdf.glsl"
-#include "sky.glsl"
+#include "lights/reflprobe.glsl"
 #include "surface.glsl"
 
 // out
@@ -44,40 +43,18 @@ void main( )
 		uv
 	);
 
-	vec3 V = normalize(surfaceOutgoingLightDir(surface));
-
-	// PERF:
-	if(surface.depth == 1.0) {
+	// for preview
+	///if(surface.depth == 1.0) {
 	
 		// Don't use surfaceOutgoingLightDirDir, change of basis breaks at inf depth
-		V = normalize(cam.position - surface.position);
+		//V = normalize(cam.position - surface.position);
 	
-		outColor = sampleCubemapLH(skyboxSampler, normalize(-V));
-		return; 
-	}
+		//outColor = sampleCubemapLH(skyboxSampler, normalize(-V));
+		//return; 
+	//}
 	
-	vec3 N = surface.basis.normal;
-	vec3 R = normalize(reflect(-V, N));
-
-    float NoV = abs(dot(N, V)) + 1e-5;
-	
-	// CHECK: roughness / a differences
-	float lod = surface.a * push.lodCount; 
-	
-	vec3 brdfLut = (texture(std_BrdfLut, vec2(NoV, surface.a))).rgb;
-
-	vec3 ks = F_SchlickRoughness(saturate(dot(N, V)), surface.f0, surface.a);
-	vec3 kd = 1.0 - ks;
-
-	vec3 diffuseLight = texture(irradianceSampler, N).rgb;
-	vec3 specularLight = textureLod(prefilteredSampler, R, lod).rgb;
-
-	vec3 diffuse = diffuseLight * surface.albedo;
-	vec3 specular = specularLight * (surface.f0 * brdfLut.x + brdfLut.y);
-
-	vec3 iblContribution = kd * diffuse + ks * specular;
-
-	outColor =  vec4(iblContribution, 1.0f);
+	vec3 finalContribution = Reflprobe_Contribution(irradianceSampler, prefilteredSampler, push.lodCount, surface);
+	outColor = vec4(finalContribution, 1);
 }
 
 

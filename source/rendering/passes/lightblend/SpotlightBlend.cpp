@@ -1,12 +1,12 @@
 #include "SpotlightBlend.h"
 
-#include "rendering/core/PipeUtl.h"
+#include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/StaticPipes.h"
-#include "rendering/scene/SceneSpotlight.h"
-#include "rendering/scene/SceneCamera.h"
+#include "rendering/core/PipeUtl.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneCamera.h"
+#include "rendering/scene/SceneSpotlight.h"
 
 namespace vl {
 
@@ -66,7 +66,7 @@ void SpotlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &sp->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u,
-			&sp->shadowmap[sceneDesc.frameIndex].descSet, 0u, nullptr);
+			&sp->shadowmapDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 		// big triangle
 		cmdBuffer.draw(3u, 1u, 0u, 0u);

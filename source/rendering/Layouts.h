@@ -38,10 +38,8 @@ inline struct Layouts_ {
 	// Global descriptor Set
 	RDescriptorSetLayout renderAttachmentsLayout;
 
-	vk::UniqueRenderPass depthRenderPass;
-
-
 	RRenderPassLayout gbufferPassLayout;
+	RRenderPassLayout shadowPassLayout;
 	RRenderPassLayout singleFloatColorAttPassLayout;
 
 	// CHECK: check if those can be only one - tho some techniques will require this split for sure
