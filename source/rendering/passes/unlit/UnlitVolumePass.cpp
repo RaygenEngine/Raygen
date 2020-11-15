@@ -1,13 +1,13 @@
 #include "UnlitVolumePass.h"
 
 #include "editor/Editor.h"
+#include "rendering/Renderer.h"
+#include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/passes/lightblend/PointlightBlend.h"
-#include "rendering/Renderer.h"
+#include "rendering/passes/direct/PointlightBlend.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/ScenePointlight.h"
-#include "rendering/StaticPipes.h"
 #include "universe/components/PointlightComponent.h"
 
 namespace {

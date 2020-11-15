@@ -1,11 +1,10 @@
 #pragma once
 
 #include "engine/Listener.h"
-#include "rendering/passes/AOPass.h"
-#include "rendering/passes/IndirectSpecularPass.h"
-#include "rendering/passes/offline/IrradianceMapCalculation.h"
-#include "rendering/passes/offline/PathtracedCubemap.h"
-#include "rendering/passes/offline/PrefilteredMapCalculation.h"
+#include "rendering/passes/bake/IrradianceMapCalculation.h"
+#include "rendering/passes/bake/PathtracedCubemap.h"
+#include "rendering/passes/bake/PrefilteredMapCalculation.h"
+#include "rendering/passes/gi/IndirectSpecularPass.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
@@ -30,7 +29,7 @@ public:
 	// TODO: private
 	InFlightResources<RenderingPassInstance> m_gbufferInst;
 	InFlightResources<RenderingPassInstance> m_directLightPass;
-	InFlightResources<RenderingPassInstance> m_indirectLightPass;
+	InFlightResources<RenderingPassInstance> m_giLightPass;
 	InFlightResources<RenderingPassInstance> m_ptPass;
 	IndirectSpecularPass m_indirectSpecPass;
 
@@ -48,9 +47,6 @@ private:
 
 	// TODO: tidy
 	PtLightBlend m_lightblendPass;
-
-	// AOPass m_aoPass;
-
 	PathtracedCubemap m_ptCube;
 
 

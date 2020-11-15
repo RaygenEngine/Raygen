@@ -77,7 +77,7 @@ void AttachmentDebuggerWindow::ImguiDraw()
 
 	auto& gbufferFramebuffer = vl::Renderer->m_gbufferInst.at(0).framebuffer;
 	auto& directPassFramebuffer = vl::Renderer->m_directLightPass.at(0).framebuffer;
-	auto& indirectPassFramebuffer = vl::Renderer->m_indirectLightPass.at(0).framebuffer;
+	auto& indirectPassFramebuffer = vl::Renderer->m_giLightPass.at(0).framebuffer;
 	auto& ptPassFramebuffer = vl::Renderer->m_ptPass.at(0).framebuffer;
 
 	showFramebuffer(gbufferFramebuffer);

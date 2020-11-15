@@ -2,7 +2,7 @@
 #include "rendering/scene/Scene.h"
 
 namespace vl {
-class UnlitPass {
+class UnlitGeometryPass {
 
 public:
 	static size_t GetPushConstantSize();
