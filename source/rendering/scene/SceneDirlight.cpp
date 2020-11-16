@@ -19,7 +19,7 @@ void SceneDirlight::UpdateBox(const math::Frustum& frustum, glm::vec3 apex)
 {
 	glm::mat4 view = glm::lookAt(glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f) + glm::vec3(ubo.front), up);
 	auto aabb = frustum.FrustumPyramidAABB(apex);
-	aabb.Transform(view);
+	aabb = aabb.Transform(view);
 
 	glm::mat4 proj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, aabb.min.z, aabb.max.z);
 

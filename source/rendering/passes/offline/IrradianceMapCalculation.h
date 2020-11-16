@@ -21,7 +21,6 @@ public:
 
 	void RecordPass(vk::CommandBuffer cmdBuffer, const CalcIrrInfo& info) const;
 
-private:
 	RBuffer m_cubeVertexBuffer;
 };
 } // namespace vl
