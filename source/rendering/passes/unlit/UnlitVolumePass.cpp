@@ -1,6 +1,7 @@
 #include "UnlitVolumePass.h"
 
 #include "editor/Editor.h"
+#include "core/math-ext/BVH.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/passes/lightblend/PointlightBlend.h"
@@ -9,14 +10,21 @@
 #include "rendering/scene/ScenePointlight.h"
 #include "rendering/StaticPipes.h"
 #include "universe/components/PointlightComponent.h"
+#include "universe/Universe.h"
+#include "universe/World.h"
+#include "engine/console/ConsoleVariable.h"
+#include "engine/Input.h"
+#include "editor/windows/general/EdOutlinerWindow.h"
 
 namespace {
 struct PushConstant {
 	glm::mat4 volumeMatVp;
+	glm::vec4 color;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
 } // namespace
+
 
 namespace vl {
 
@@ -154,6 +162,22 @@ vk::UniquePipeline UnlitVolumePass::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
+std::unique_ptr<math::BVH> bvh;
+
+// clang-format off
+ConsoleFunction<> buildBvh{ "s.bvh", []() {
+	using namespace math;
+	bvh = std::make_unique<math::BVH>();
+
+	glm::vec3 h = {1, 1, 1};
+	AABB cube = {-h, h};
+
+	auto world = Universe::MainWorld;
+	for (auto [entity, bc] : world->GetView<BasicComponent>().each()) {
+		bvh->InsertLeaf(bc.self, cube.Transform(bc.world().transform));
+	}
+} };
+// clang-format on
 void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
@@ -173,13 +197,47 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 		auto volumeTransform = math::transformMat(
 			glm::vec3{ pl.CalculateEffectiveRadius() }, selEnt->world().orientation, selEnt->world().position);
 
-		PushConstant pc{
-			sceneDesc.viewer.ubo.viewProj * volumeTransform,
-		};
+		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 		cmdBuffer.drawIndexed(relPipe.m_sphereIndexBuffer.count, 1u, 0u, 0u, 0u);
+	}
+
+	if (bvh) {
+		for (auto& node : bvh->nodes) {
+			const auto& cubeVtxBuf = StaticPipes::Get<IrradianceMapCalculation>().m_cubeVertexBuffer;
+
+
+			auto volumeTransform = math::transformMat(
+				glm::vec3{ node.aabb.GetExtend() }, glm::identity<glm::quat>(), node.aabb.GetCenter());
+
+			PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
+
+			if (node.isLeaf) {
+				pc.color.y = 0.f;
+
+				if (Editor::GetSelection().EntID() != node.data) {
+					pc.color.z = 0.f;
+				}
+			}
+
+			cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+			cmdBuffer.bindVertexBuffers(0u, { cubeVtxBuf.handle() }, { vk::DeviceSize(0) });
+			cmdBuffer.draw(static_cast<uint32>(108 / 3), 1u, 0u, 0u);
+		}
+	}
+
+	if (Input.IsJustPressed(Key::Space)) {
+		auto view = sceneDesc.viewer.ubo.view;
+		glm::vec4 cameraFwd{ -view[0][2], -view[1][2], -view[2][2], 0.f };
+
+		auto results = bvh->RayCastDirection(sceneDesc.viewer.ubo.position, cameraFwd, 1000.f);
+		if (!results.distanceSqToHitObject.empty()) {
+			auto entId = results.distanceSqToHitObject.begin()->second;
+
+			ed::OutlinerWindow::selected = entId;
+		}
 	}
 }
 } // namespace vl
