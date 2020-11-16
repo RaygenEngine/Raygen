@@ -72,11 +72,9 @@ float min(vec3 v) {
 	return min(v.x, min(v.y, v.z));
 }
 
-
 float sum(vec3 v) {
 	return v.x + v.y + v.z;
 }
-
 
 float abssum(vec3 v) {
 	return abs(v.x) + abs(v.y) + abs(v.z);

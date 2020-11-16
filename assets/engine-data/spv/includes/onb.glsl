@@ -4,6 +4,7 @@
 // normal - z axis, normal should be normalized
 // tangent - x axis
 // bitangent - y axis 
+
 // SMATH: ensure somehow that to and out of OnbSpace remain normalized
 struct Onb
 {
@@ -48,44 +49,31 @@ Onb computeOnb(vec3 n)
 
 	res.normal = n;
 	res.bitangent = normalize(res.bitangent);
-	// normal and bitangent are orthogonal therefore tangent is normalized
+	// normal and bitangent are orthogonal and normalized therefore tangent is normalized
 	res.tangent  = cross(res.bitangent, res.normal); 
 
 	return res;
 }
 
-void toOnbSpace(Onb orthoBasis, inout vec3 v)
-{
-	v = vec3(dot(v, orthoBasis.tangent), 
-	         dot(v, orthoBasis.bitangent), 
-			 dot(v, orthoBasis.normal)); 
-}
-
-vec3 toOnbSpaceReturn(Onb orthoBasis, vec3 v)
+vec3 toOnbSpace(Onb orthoBasis, vec3 v)
 {
 	return vec3(dot(v, orthoBasis.tangent), 
 	            dot(v, orthoBasis.bitangent), 
 			    dot(v, orthoBasis.normal)); 
 }
 
-void outOnbSpace(Onb orthoBasis, inout vec3 v)
-{
-	v = vec3(orthoBasis.tangent.x * v.x + orthoBasis.bitangent.x * v.y + orthoBasis.normal.x * v.z,
-			 orthoBasis.tangent.y * v.x + orthoBasis.bitangent.y * v.y + orthoBasis.normal.y * v.z,
-			 orthoBasis.tangent.z * v.x + orthoBasis.bitangent.z * v.y + orthoBasis.normal.z * v.z);
-}
 
-vec3 outOnbSpaceReturn(Onb orthoBasis, vec3 v)
+vec3 outOnbSpace(Onb orthoBasis, vec3 v)
 {
 	return vec3(orthoBasis.tangent.x * v.x + orthoBasis.bitangent.x * v.y + orthoBasis.normal.x * v.z,
 			    orthoBasis.tangent.y * v.x + orthoBasis.bitangent.y * v.y + orthoBasis.normal.y * v.z,
 			    orthoBasis.tangent.z * v.x + orthoBasis.bitangent.z * v.y + orthoBasis.normal.z * v.z);
 }
 
-// math here are in onb space 
+// math here are in surface space 
 // i.e. change basis of vectors using the normal of the surface
 
-// n is the normal in bsdf space and is equal to vec3(0,0,1)
+// n is the normal in surface space and is equal to vec3(0,0,1)
 // w is the omega direction | must be normalized, otherwise math may break
 
 // theta = angle between w and n (z-axis)

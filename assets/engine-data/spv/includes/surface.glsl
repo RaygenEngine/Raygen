@@ -36,12 +36,12 @@ struct Surface {
 
 vec3 surfaceIncidentLightDir(Surface surface)
 {
-    return outOnbSpaceReturn(surface.basis, surface.l);
+    return outOnbSpace(surface.basis, surface.l);
 }
 
 vec3 surfaceOutgoingLightDir(Surface surface)
 {
-    return outOnbSpaceReturn(surface.basis, surface.v);
+    return outOnbSpace(surface.basis, surface.v);
 }
 
 // PERF:?
@@ -55,7 +55,7 @@ void cacheSurfaceDots(inout Surface surface)
 
 void addIncomingLightDirection(inout Surface surface, vec3 L)
 {
-    surface.l = normalize(toOnbSpaceReturn(surface.basis, L));
+    surface.l = normalize(toOnbSpace(surface.basis, L));
     cacheSurfaceDots(surface);
 }
 
@@ -91,7 +91,7 @@ Surface surfaceFromGBuffer(
     surface.basis = branchlessOnb(normal);
 
     vec3 V = normalize(cam.position - surface.position);
-    surface.v = normalize(toOnbSpaceReturn(surface.basis, V));
+    surface.v = normalize(toOnbSpace(surface.basis, V));
     surface.nov = max(Ndot(surface.v), BIAS);
 
     // rgb: albedo a: opacity
