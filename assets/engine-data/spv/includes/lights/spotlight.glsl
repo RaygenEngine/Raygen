@@ -14,11 +14,8 @@ vec3 Spotlight_Contribution(Spotlight sl, sampler2DShadow shadowmap, Surface sur
 	float attenuation = 1.0 / (sl.constantTerm + sl.linearTerm * dist + 
   			     sl.quadraticTerm * (dist * dist));
 
-	vec3 lDir = -sl.front;	
-	toOnbSpace(surface.basis, lDir); 
-	
 	// spot effect (soft edges)
-	float theta = dot(surface.l, lDir);
+	float theta = dot(L, -sl.front);
     float epsilon = (sl.innerCutOff - sl.outerCutOff);
     float spotEffect = clamp((theta - sl.outerCutOff) / epsilon, 0.0, 1.0);
 

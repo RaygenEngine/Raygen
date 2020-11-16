@@ -180,7 +180,7 @@ Surface surfaceFromGeometryGroup(
 	surface.basis = branchlessOnb(ns);
 
 	vec3 V = normalize(-gl_WorldRayDirectionEXT);
-    surface.v = normalize(toOnbSpaceReturn(surface.basis, V));
+    surface.v = normalize(toOnbSpace(surface.basis, V));
     surface.nov = max(Ndot(surface.v), BIAS);
 
 	surface.albedo = (1.0 - metallic) * baseColor;
