@@ -162,12 +162,12 @@ vk::UniquePipeline UnlitVolumePass::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-std::unique_ptr<math::BVH> bvh;
+std::unique_ptr<math::BVH<Entity>> bvh;
 
 // clang-format off
-ConsoleFunction<> buildBvh{ "s.bvh", []() {
+ ConsoleFunction<> buildBvh{ "s.bvh", []() {
 	using namespace math;
-	bvh = std::make_unique<math::BVH>();
+	bvh = std::make_unique<math::BVH<Entity>>();
 
 	glm::vec3 h = {1, 1, 1};
 	AABB cube = {-h, h};
@@ -217,7 +217,7 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 			if (node.isLeaf) {
 				pc.color.y = 0.f;
 
-				if (Editor::GetSelection().EntID() != node.data) {
+				if (Editor::GetSelection() != node.data) {
 					pc.color.z = 0.f;
 				}
 			}
@@ -227,6 +227,25 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 			cmdBuffer.draw(static_cast<uint32>(108 / 3), 1u, 0u, 0u);
 		}
 	}
+
+	using namespace math;
+	bvh = std::make_unique<math::BVH<Entity>>();
+
+	glm::vec3 h = { 1, 1, 1 };
+	AABB cube = { -h, h };
+
+	bool debug{ false };
+	if (Input.IsJustPressed(Key::N)) {
+		debug = true;
+		LOG_REPORT("");
+	}
+
+	auto world = Universe::MainWorld;
+	for (auto [entity, bc] : world->GetView<BasicComponent>().each()) {
+		CLOG_REPORT(debug, "Inserting: {}", bc.name);
+		bvh->InsertLeaf(bc.self, cube.Transform(bc.world().transform));
+	}
+
 
 	if (Input.IsJustPressed(Key::Space)) {
 		auto view = sceneDesc.viewer.ubo.view;

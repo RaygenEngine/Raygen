@@ -5,13 +5,13 @@
 #include <queue>
 
 namespace math {
-
+template<typename T>
 struct BVH {
-	using DataT = Entity;
+	using DataT = T;
 
 	static constexpr int32 nullIndex = -1;
 
-	int32 rootIndex;
+	int32 rootIndex{ nullIndex };
 
 	struct Node {
 		Node() = default;
@@ -35,7 +35,6 @@ struct BVH {
 
 	std::vector<BVH::Node> nodes;
 
-
 	[[nodiscard]] RayCastResult RayCastDirection(glm::vec3 start, glm::vec3 direction, float distance) const
 	{
 		return RayCast(start, glm::normalize(direction) * distance);
@@ -45,6 +44,10 @@ struct BVH {
 	// PERF: really basic impl
 	[[nodiscard]] RayCastResult RayCast(glm::vec3 start, glm::vec3 end) const
 	{
+		if (rootIndex == nullIndex) {
+			return {};
+		}
+
 		RayCastResult results;
 		std::stack<int32> stack;
 
@@ -91,7 +94,6 @@ private:
 		return index;
 	}
 
-public:
 	int32 FindBestSibling(int32 node)
 	{
 		using pqdata = std::tuple<float, int32>;
@@ -149,6 +151,125 @@ public:
 		return bestIndex;
 	}
 
+	void RotateRebalance(int32 nodeIndex)
+	{
+		//      A
+		//    /   \
+		//   B     C
+		//  / \   / \
+		//  D E   F  G
+		//
+		// nodeIndex is A
+		// Possible rotations are:
+		// B <-> F
+		// B <-> G
+		// C <-> D
+		// C <-> E
+
+		// Determine costs and find best rotation
+		auto& nodeA = nodes[nodeIndex];
+
+		int32 nodeBIndex = nodeA.child1;
+		int32 nodeCIndex = nodeA.child2;
+
+		auto& nodeB = nodes[nodeA.child1];
+		auto& nodeC = nodes[nodeA.child2];
+
+		int32 nodeDIndex = nodeB.child1;
+		int32 nodeEIndex = nodeB.child2;
+		int32 nodeFIndex = nodeC.child1;
+		int32 nodeGIndex = nodeC.child2;
+
+
+		float cd_cost = 1.f;
+		float ce_cost = 1.f;
+
+		if (!nodeB.isLeaf) {
+			float b_cost = nodeB.aabb.GetArea();
+
+			// Costs (relative to the "original" cost. aka no rotation cost)
+
+			cd_cost = nodeC.aabb.Union(nodes[nodeEIndex].aabb).GetArea() - b_cost;
+			ce_cost = nodeC.aabb.Union(nodes[nodeDIndex].aabb).GetArea() - b_cost;
+		}
+
+		float bf_cost = 1.f;
+		float bg_cost = 1.f;
+
+		//
+		if (!nodeC.isLeaf) {
+			float c_cost = nodeC.aabb.GetArea();
+
+			bf_cost = nodeB.aabb.Union(nodes[nodeGIndex].aabb).GetArea() - c_cost;
+			bg_cost = nodeB.aabb.Union(nodes[nodeFIndex].aabb).GetArea() - c_cost;
+		}
+
+
+		int32 minIndex = 0;
+		float minCost = bf_cost;
+
+		if (bg_cost < minCost) {
+			minIndex = 1;
+			minCost = bg_cost;
+		}
+		if (cd_cost < minCost) {
+			minIndex = 2;
+			minCost = cd_cost;
+		}
+		if (ce_cost < minCost) {
+			minIndex = 3;
+			minCost = ce_cost;
+		}
+
+		// No rotation gives gain, do not rotate
+		if (minCost >= 0) {
+			return;
+		}
+
+		auto swap = [&](int32 child, int32 grandchild) {
+			auto otherChild = nodes[grandchild].parentIndex;
+			nodes[child].parentIndex = nodes[grandchild].parentIndex;
+			nodes[grandchild].parentIndex = nodeIndex;
+
+
+			if (nodeA.child1 == child) {
+				nodeA.child1 = grandchild;
+			}
+			else {
+				nodeA.child2 = grandchild;
+			}
+
+			if (nodes[otherChild].child1 == grandchild) {
+				nodes[otherChild].child1 = child;
+			}
+			else {
+				nodes[otherChild].child2 = child;
+			}
+
+			nodes[otherChild].aabb = nodes[nodes[otherChild].child1].aabb.Union(nodes[nodes[otherChild].child2].aabb);
+		};
+
+		switch (minIndex) {
+			case 0:
+				// BF
+				swap(nodeBIndex, nodeFIndex);
+				break;
+			case 1:
+				// BG
+				swap(nodeBIndex, nodeGIndex);
+				break;
+			case 2:
+				// CD
+				swap(nodeCIndex, nodeDIndex);
+				break;
+			case 3:
+				// CE
+				swap(nodeCIndex, nodeEIndex);
+				break;
+		}
+	}
+
+public:
 	void InsertLeaf(DataT data, AABB box)
 	{
 		int32 leafIndex = AllocateLeaf(data, box);
@@ -194,7 +315,6 @@ public:
 		}
 
 
-		// WIP: AVL-like rotate for better trees
 		// Refit parent aabbs
 		int index = nodes[leafIndex].parentIndex;
 		while (index != nullIndex) {
@@ -202,6 +322,9 @@ public:
 			int32 child2 = nodes[index].child2;
 
 			nodes[index].aabb = nodes[child1].aabb.Union(nodes[child2].aabb);
+
+			RotateRebalance(index);
+
 			index = nodes[index].parentIndex;
 		}
 	}
