@@ -18,10 +18,13 @@ void main()
 	vec3 indirectLight = texture(indirectLightSampler, uv).rgb;
 	vec3 indirectRtSpec = texture(indirectRaytracedSpecular, uv).rgb;
 	// ...
-	vec3 final = directLight + indirectLight;
+	vec3 final =  directLight + indirectLight;
 
 	outColor = vec4(final, 1.0);
 }
+
+
+
 
 
 

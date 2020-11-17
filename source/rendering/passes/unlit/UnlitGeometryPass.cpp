@@ -74,19 +74,18 @@ namespace {
 			.setAlphaToCoverageEnable(VK_FALSE)
 			.setAlphaToOneEnable(VK_FALSE);
 
-		std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachment{};
-		for (uint32 i = 0u; i < 1; ++i) {
-			colorBlendAttachment[i]
-				.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
-								   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
-				.setBlendEnable(VK_FALSE)
-				.setSrcColorBlendFactor(vk::BlendFactor::eOne)
-				.setDstColorBlendFactor(vk::BlendFactor::eZero)
-				.setColorBlendOp(vk::BlendOp::eAdd)
-				.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
-				.setDstAlphaBlendFactor(vk::BlendFactor::eZero)
-				.setAlphaBlendOp(vk::BlendOp::eAdd);
-		}
+		vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
+		colorBlendAttachment
+			.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
+							   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
+			.setBlendEnable(VK_FALSE)
+			.setSrcColorBlendFactor(vk::BlendFactor::eOne)
+			.setDstColorBlendFactor(vk::BlendFactor::eZero)
+			.setColorBlendOp(vk::BlendOp::eAdd)
+			.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
+			.setDstAlphaBlendFactor(vk::BlendFactor::eZero)
+			.setAlphaBlendOp(vk::BlendOp::eAdd);
+
 
 		vk::PipelineColorBlendStateCreateInfo colorBlending{};
 		colorBlending

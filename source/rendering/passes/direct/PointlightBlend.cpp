@@ -1,11 +1,11 @@
 #include "PointlightBlend.h"
 
+#include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/StaticPipes.h"
-#include "rendering/scene/ScenePointlight.h"
-#include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneCamera.h"
+#include "rendering/scene/ScenePointlight.h"
 
 namespace {
 struct PushConstant {
@@ -89,7 +89,7 @@ PointlightBlend::PointlightBlend()
 vk::UniquePipelineLayout PointlightBlend::MakePipelineLayout()
 {
 	auto layouts = {
-		Layouts->renderAttachmentsLayout.handle(),
+		Layouts->mainPassLayout.internalDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->accelLayout.handle(),
@@ -204,7 +204,7 @@ vk::UniquePipeline PointlightBlend::MakePipeline()
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
 	depthStencil
-		.setDepthTestEnable(VK_FALSE) //
+		.setDepthTestEnable(VK_TRUE) //
 		.setDepthWriteEnable(VK_FALSE)
 		.setDepthCompareOp(vk::CompareOp::eLess)
 		.setDepthBoundsTestEnable(VK_FALSE)
@@ -226,8 +226,8 @@ vk::UniquePipeline PointlightBlend::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(*Layouts->directLightPassLayout.compatibleRenderPass)
-		.setSubpass(0u)
+		.setRenderPass(*Layouts->mainPassLayout.compatibleRenderPass)
+		.setSubpass(1u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 
@@ -240,8 +240,6 @@ void PointlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);

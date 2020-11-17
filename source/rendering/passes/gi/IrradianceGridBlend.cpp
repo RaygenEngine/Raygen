@@ -1,19 +1,19 @@
 #include "IrradianceGridBlend.h"
 
+#include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/core/PipeUtl.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneIrradianceGrid.h"
-#include "rendering/StaticPipes.h"
 
 namespace vl {
 
 vk::UniquePipelineLayout IrradianceGridBlend::MakePipelineLayout()
 {
 	return rvk::makeLayoutNoPC({
-		Layouts->renderAttachmentsLayout.handle(),
+		Layouts->mainPassLayout.internalDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->dynamicSamplerArray.handle(),
@@ -22,7 +22,7 @@ vk::UniquePipelineLayout IrradianceGridBlend::MakePipelineLayout()
 
 vk::UniquePipeline IrradianceGridBlend::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/irragrid.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/gi/irragrid.shader");
 	gpuShader.onCompile = [&]() {
 		StaticPipes::Recompile<IrradianceGridBlend>();
 	};
@@ -43,8 +43,7 @@ vk::UniquePipeline IrradianceGridBlend::MakePipeline()
 	colorBlending
 		.setLogicOpEnable(VK_FALSE) //
 		.setLogicOp(vk::LogicOp::eCopy)
-		.setAttachmentCount(1u)
-		.setPAttachments(&colorBlendAttachment)
+		.setAttachments(colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	// fixed-function stage
@@ -121,8 +120,8 @@ vk::UniquePipeline IrradianceGridBlend::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(*Layouts->indirectLightPassLayout.compatibleRenderPass)
-		.setSubpass(0u)
+		.setRenderPass(*Layouts->mainPassLayout.compatibleRenderPass)
+		.setSubpass(2u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 
@@ -134,9 +133,6 @@ void IrradianceGridBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
-
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
 

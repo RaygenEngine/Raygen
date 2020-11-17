@@ -5,7 +5,7 @@
 
 #include "global.glsl"
 
-#include "attachments.glsl"
+#include "mainpass-inputs.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
 #include "surface.glsl"
@@ -19,6 +19,13 @@ layout(location = 0) out vec4 outColor;
 layout(location = 0) in vec2 uv;
 
 // uniform
+
+layout(push_constant) uniform PC {
+	float bias;
+	float strength;
+	float radius;
+	int samples;
+};
 
 layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
@@ -43,27 +50,31 @@ float VisibilityOfRay(vec3 origin, vec3 direction, float tMin, float tMax) {
 	// Returns type of committed (true) intersection
 	if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
 		// Got an intersection == Shadow
-		return 0.0;
+		return strength;
 	}
 
-	return 1.0;
+	return 0.0;
 }
 
 void main()
 {
 	Surface surface = surfaceFromGBuffer(
 	    cam,
-		g_DepthSampler,
-		g_NormalSampler,
-		g_AlbedoSampler,
-		g_SpecularSampler,
-		g_EmissiveSampler,
+		g_DepthInput,
+		g_NormalInput,
+		g_AlbedoInput,
+		g_SpecularInput,
+		g_EmissiveInput,
 		uv
 	);
 
+	// eye space
+	vec3 N       = (cam.view * vec4(surface.basis.normal, 0.0)).xyz;
+	vec3 center  = (cam.view * vec4(surface.position, 1.0)).xyz;
+
+	Onb view = branchlessOnb(N.xyz);
 
 	float occlusion = 0;
-	#define samples 1
 	for(uint smpl = 0; smpl < samples; ++smpl){
 
 		// WIP: seed
@@ -71,33 +82,37 @@ void main()
 
 		vec2 u = rand2(seed); 
 		float m = rand(seed); 
-		vec3 L = uniformSampleHemisphere(u) * m; // sample random direction, random magnitude (for screen space)
+		
+		// sample random direction, random magnitude (for screen space)
+		vec3 L = uniformSampleHemisphere(u) * m; 
+		// view space
+		L = normalize(outOnbSpace(view, L));
 
-		outOnbSpace(surface.basis, L);
-
-		float tMax = 1.0;
-		vec3 samplePos = surface.position + tMax * L;
-
-		vec4 clipPos = cam.viewProj * vec4(samplePos, 1.0); // clip space
+		vec3 samplePos = center + radius * L;
+	
+		vec4 clipPos = cam.proj * vec4(samplePos, 1.0); // clip space
 		vec3 ndc = clipPos.xyz / clipPos.w; // NDC
-		ndc.xy = ndc.xy * 0.5 + 0.5; // 0 to 1
-		float d = texture(g_DepthSampler, ndc.xy).r;
-		float sampleDepth = reconstructWorldPosition(d, ndc.xy, cam.viewProjInv).r;
+		ndc.y *= -1;
+		ndc.xyz = ndc.xyz * 0.5 + 0.5; // 0 to 1
+		float d = 1;// WIP: texture(g_DepthSampler, ndc.xy).r;
+		float sampleRealDepth = reconstructEyePosition(d, ndc.xy, cam.projInv).z;
 
-		float radius = tMax;
-		//float rangeCheck = smoothstep(0.0, 1.0, radius / abs(surface.position.z - sampleDepth));
+		float rangeCheck = smoothstep(0.0, 1.0, radius / abs(center.z - sampleRealDepth));
 
-		bool screenSpace =  ndc.x < 0 || ndc.x > 1 || ndc.y < 0 || ndc.y > 1;
-		occlusion += screenSpace ? (sampleDepth >= samplePos.z + .025 ? 1.0 : 0.0) 
-		                         : VisibilityOfRay(surface.position, L, 0.01, tMax);
+		bool screenSpace =  !(ndc.x < 0 || ndc.x > 1 || ndc.y < 0 || ndc.y > 1);
+		occlusion += screenSpace 
+		
+		? (sampleRealDepth >= samplePos.z + bias  ? strength : 0.0) * rangeCheck
+		: VisibilityOfRay(surface.position, (cam.viewInv * vec4(L, 0)).xyz, bias, radius);
 	}
 
 	// object occlusion
-	occlusion /= samples;
+	occlusion = 1 - (occlusion / samples);
 	occlusion *= surface.occlusion;
 
 	outColor = vec4(occlusion);
 }                               
+           
 
 
 

@@ -74,7 +74,8 @@ namespace {
 			.setAlphaToCoverageEnable(VK_FALSE)
 			.setAlphaToOneEnable(VK_FALSE);
 
-		auto colorAttCount = Layouts->gbufferPassLayout.internalAttachments.size() - 1;
+		// WIP:
+		auto colorAttCount = 6;
 
 		std::vector<vk::PipelineColorBlendAttachmentState> colorBlendAttachment{};
 		for (uint32 i = 0u; i < colorAttCount; ++i) {
@@ -124,7 +125,7 @@ namespace {
 			.setPColorBlendState(&colorBlending)
 			.setPDynamicState(&dynamicStateInfo)
 			.setLayout(pipelineLayout)
-			.setRenderPass(*Layouts->gbufferPassLayout.compatibleRenderPass)
+			.setRenderPass(*Layouts->mainPassLayout.compatibleRenderPass)
 			.setSubpass(0u)
 			.setBasePipelineHandle({})
 			.setBasePipelineIndex(-1);

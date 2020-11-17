@@ -27,15 +27,15 @@ layout(set = 0, binding = 4) uniform sampler2D g_EmissiveSampler;
 layout(set = 0, binding = 5) uniform sampler2D g_VelocitySampler;
 layout(set = 0, binding = 6) uniform sampler2D g_UVDrawIndexSampler;
 
-layout(set = 0, binding = 7) uniform sampler2D std_BrdfLut;
+layout(set = 0, binding = 7) uniform sampler2D directLightSampler;
 
-layout(set = 0, binding = 8) uniform sampler2D directLightSampler;
+layout(set = 0, binding = 8) uniform sampler2D indirectLightSampler;
 
-layout(set = 0, binding = 9) uniform sampler2D indirectLightSampler;
+layout(set = 0, binding = 9) uniform sampler2D AoSampler;
 
-layout(set = 0, binding = 10) uniform sampler2D indirectRaytracedSpecular;
+layout(set = 0, binding = 10) uniform sampler2D std_BrdfLut;
 
-layout(set = 0, binding = 11) uniform sampler2D reserved1;
+layout(set = 0, binding = 11) uniform sampler2D indirectRaytracedSpecular;
 
 // Blend
 layout(set = 0, binding = 12) uniform sampler2D sceneColorSampler;
@@ -48,24 +48,48 @@ void Layouts_::MakeRenderPassLayouts()
 
 	AttRef depthBuffer;
 
-	// GBuffer Pass
+	// Main Pass
 	{
 		std::vector<AttRef> gbufferAtts;
 
-		depthBuffer = gbufferPassLayout.CreateAttachment("GDepth", Device->FindDepthFormat());
+		depthBuffer = mainPassLayout.CreateAttachment("GDepth", Device->FindDepthFormat());
 		gbufferAtts.emplace_back(depthBuffer);
 
 		for (auto& [name, format] : colorAttachments) {
-			auto att = gbufferPassLayout.CreateAttachment(name, format);
-			gbufferPassLayout.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
+			auto att = mainPassLayout.CreateAttachment(name, format);
+			mainPassLayout.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
 			gbufferAtts.emplace_back(att);
 		}
 
-		gbufferPassLayout.AddSubpass({}, std::move(gbufferAtts)); // Write GBuffer
+		AttRef directAtt = mainPassLayout.CreateAttachment("DirectLight", vk::Format::eR32G32B32A32Sfloat);
+		AttRef indirectAtt = mainPassLayout.CreateAttachment("Indirect", vk::Format::eR32G32B32A32Sfloat);
+		AttRef aoAtt = mainPassLayout.CreateAttachment("AO", vk::Format::eR32G32B32A32Sfloat);
 
-		gbufferPassLayout.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
+		mainPassLayout.AddSubpass({}, std::vector{ gbufferAtts });              // Write GBuffer
+		mainPassLayout.AddSubpass(std::vector{ gbufferAtts }, { directAtt });   // Write DirectLights
+		mainPassLayout.AddSubpass(std::vector{ gbufferAtts }, { indirectAtt }); // Write Indirect
+		mainPassLayout.AddSubpass(std::vector{ gbufferAtts }, { aoAtt });       // Write Ao
 
-		gbufferPassLayout.Generate();
+
+		mainPassLayout.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
+		mainPassLayout.AttachmentFinalLayout(directAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+		mainPassLayout.AttachmentFinalLayout(indirectAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+		mainPassLayout.AttachmentFinalLayout(aoAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		mainPassLayout.Generate();
+	}
+
+	// Lightblend + PostProcess
+	{
+		auto renderOutAttachment
+			= ptPassLayout.CreateAttachment("LightBlend+PostProcess", vk::Format::eR32G32B32A32Sfloat);
+
+		ptPassLayout.AddSubpass({}, { depthBuffer, renderOutAttachment }); // LightBlend + Unlit Pass
+
+		ptPassLayout.AttachmentFinalLayout(renderOutAttachment, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		// Rest of post proc
+		ptPassLayout.Generate();
 	}
 
 	// Shadow Pass
@@ -79,49 +103,27 @@ void Layouts_::MakeRenderPassLayouts()
 		shadowPassLayout.Generate();
 	}
 
-	AttRef directAtt;
 	{
-		directAtt = directLightPassLayout.CreateAttachment("DirectLight", vk::Format::eR32G32B32A32Sfloat);
+		auto colorAtt
+			= singleFloatColorAttPassLayout.CreateAttachment("FloatColorAtt", vk::Format::eR32G32B32A32Sfloat);
 
-		directLightPassLayout.AddSubpass({}, { directAtt });
+		singleFloatColorAttPassLayout.AddSubpass({}, { colorAtt });
 
-		directLightPassLayout.AttachmentFinalLayout(directAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+		singleFloatColorAttPassLayout.AttachmentFinalLayout(colorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		directLightPassLayout.Generate();
-	}
 
-	AttRef indirectAtt;
-	{
-		indirectAtt = indirectLightPassLayout.CreateAttachment("Indirect", vk::Format::eR32G32B32A32Sfloat);
-		indirectLightPassLayout.AddSubpass({}, { indirectAtt });
-
-		indirectLightPassLayout.AttachmentFinalLayout(indirectAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
-
-		indirectLightPassLayout.Generate();
+		singleFloatColorAttPassLayout.Generate();
 	}
 
 
 	// Svgf Pass. Semi special case as we constantly swap 2 "framebuffers" internally.
-	{
-		auto att = svgfPassLayout.CreateAttachment("SVGF Result", vk::Format::eR32G32B32A32Sfloat);
+	//{
+	//	auto att = svgfPassLayout.CreateAttachment("SVGF Result", vk::Format::eR32G32B32A32Sfloat);
 
-		svgfPassLayout.AddSubpass({}, { att });
-		svgfPassLayout.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
-		svgfPassLayout.Generate();
-	}
-
-	// Lightblend + PostProcess
-	{
-		auto renderOutAttachment
-			= ptPassLayout.CreateAttachment("LightBlend+PostProcess", vk::Format::eR32G32B32A32Sfloat);
-
-		ptPassLayout.AddSubpass({ depthBuffer }, { renderOutAttachment }); // LightBlend + Unlit Pass
-
-		ptPassLayout.AttachmentFinalLayout(renderOutAttachment, vk::ImageLayout::eShaderReadOnlyOptimal);
-
-		// Rest of post proc
-		ptPassLayout.Generate();
-	}
+	//	svgfPassLayout.AddSubpass({}, std::vector{ att });
+	//	svgfPassLayout.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
+	//	svgfPassLayout.Generate();
+	//}
 }
 
 
@@ -215,17 +217,6 @@ Layouts_::Layouts_()
 
 
 	MakeRenderPassLayouts();
-
-	{
-		auto colorAtt
-			= singleFloatColorAttPassLayout.CreateAttachment("FloatColorAtt", vk::Format::eR32G32B32A32Sfloat);
-
-		singleFloatColorAttPassLayout.AddSubpass({}, { colorAtt });
-
-		singleFloatColorAttPassLayout.AttachmentFinalLayout(colorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
-
-		singleFloatColorAttPassLayout.Generate();
-	}
 }
 
 RDescriptorSetLayout Layouts_::GenerateStorageImageDescSet(size_t Count)

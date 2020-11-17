@@ -3,9 +3,9 @@
 
 #include "global.glsl"
 
-#include "attachments.glsl"
 #include "bsdf.glsl"
 #include "lights/dirlight.glsl"
+#include "mainpass-inputs.glsl"
 #include "onb.glsl"
 #include "sampling.glsl"
 #include "shadow.glsl"
@@ -29,11 +29,11 @@ void main()
 {
 	Surface surface = surfaceFromGBuffer(
 	    cam,
-		g_DepthSampler,
-		g_NormalSampler,
-		g_AlbedoSampler,
-		g_SpecularSampler,
-		g_EmissiveSampler,
+		g_DepthInput,
+		g_NormalInput,
+		g_AlbedoInput,
+		g_SpecularInput,
+		g_EmissiveInput,
 		uv
 	);
 

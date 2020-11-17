@@ -1,15 +1,15 @@
 #include "UnlitBillboardPass.h"
 
+#include "rendering/Renderer.h"
+#include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/Renderer.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneIrradianceGrid.h"
-#include "rendering/StaticPipes.h"
+#include "universe/Universe.h"
 #include "universe/components/IrradianceGridComponent.h"
 #include "universe/components/PointlightComponent.h"
 #include "universe/components/ReflProbeComponent.h"
-#include "universe/Universe.h"
 
 namespace {
 struct PushConstant {
@@ -132,7 +132,7 @@ vk::UniquePipeline UnlitBillboardPass::MakePipeline()
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
 	depthStencil
 		.setDepthTestEnable(VK_TRUE) //
-		.setDepthWriteEnable(VK_TRUE)
+		.setDepthWriteEnable(VK_FALSE)
 		.setDepthCompareOp(vk::CompareOp::eLess)
 		.setDepthBoundsTestEnable(VK_FALSE)
 		.setMinDepthBounds(0.0f) // Optional

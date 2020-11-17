@@ -12,7 +12,7 @@ vec3 Reflprobe_Contribution(samplerCube irradianceSampler, samplerCube prefilter
 	// CHECK: roughness / a differences
 	float lod = surface.a * lodCount; 
 	
-	vec3 brdfLut = (texture(std_BrdfLut, vec2(surface.nov, surface.a))).rgb;
+	vec3 brdfLut = vec3(1,1,1);// WIP:  (texture(std_BrdfLut, vec2(surface.nov, surface.a))).rgb;
 
 	vec3 ks = F_SchlickRoughness(surface.nov, surface.f0, surface.a);
 	vec3 kd = 1.0 - ks;

@@ -5,8 +5,8 @@
 
 #include "global.glsl"
 
-#include "attachments.glsl"
 #include "lights/pointlight.glsl"
+#include "mainpass-inputs.glsl"
 #include "surface.glsl"
 
 // out
@@ -24,18 +24,15 @@ layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 void main()
 {
 	vec2 iuv = gl_FragCoord.xy;
-	ivec2 screenSize = textureSize(g_AlbedoSampler, 0);
-
-	vec2 uv = iuv / screenSize; 
 
 	Surface surface = surfaceFromGBuffer(
 	    cam,
-		g_DepthSampler,
-		g_NormalSampler,
-		g_AlbedoSampler,
-		g_SpecularSampler,
-		g_EmissiveSampler,
-		uv
+		g_DepthInput,
+		g_NormalInput,
+		g_AlbedoInput,
+		g_SpecularInput,
+		g_EmissiveInput,
+		iuv
 	);
 
 	vec3 finalContribution = Pointlight_SmoothContribution(topLevelAs, pl, surface);

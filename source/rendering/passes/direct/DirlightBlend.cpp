@@ -12,7 +12,7 @@ namespace vl {
 vk::UniquePipelineLayout DirlightBlend::MakePipelineLayout()
 {
 	return rvk::makeLayoutNoPC({
-		Layouts->renderAttachmentsLayout.handle(),
+		Layouts->mainPassLayout.internalDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleSamplerDescLayout.handle(),
@@ -47,7 +47,7 @@ vk::UniquePipeline DirlightBlend::MakePipeline()
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	return rvk::makePostProcPipeline(gpuShader.shaderStages, StaticPipes::GetLayout<DirlightBlend>(),
-		*Layouts->directLightPassLayout.compatibleRenderPass, colorBlending);
+		*Layouts->mainPassLayout.compatibleRenderPass, colorBlending, 1u);
 }
 
 void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
@@ -57,9 +57,6 @@ void DirlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sce
 	auto& pipeLayout = StaticPipes::GetLayout<DirlightBlend>();
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
-
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, pipeLayout, 0u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 1u, 1u, &camDescSet, 0u, nullptr);
 

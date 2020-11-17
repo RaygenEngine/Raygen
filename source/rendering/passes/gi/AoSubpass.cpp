@@ -1,103 +1,41 @@
-#include "ReflprobeBlend.h"
+#include "AoSubpass.h"
 
+#include "engine/console/ConsoleVariable.h"
 #include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
+#include "rendering/core/PipeUtl.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneReflprobe.h"
+
+ConsoleVariable<float> console_aoBias{ "ao.bias", 0.025f, "Set ao bias" };
+ConsoleVariable<float> console_aoStrength{ "ao.strength", 1.0f, "Set ao strength" };
+ConsoleVariable<float> console_aoRadius{ "ao.radius", .1f, "Set ao radius" };
+ConsoleVariable<int32> console_aoSamples{ "ao.samples", 10, "Set ao samples" };
 
 namespace {
 struct PushConstant {
-	glm::mat4 reflVolMatVP;
-	glm::vec4 reflPosition;
-	int32 lodCount;
+	float bias;
+	float strength;
+	float radius;
+	int32 samples;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
-
 } // namespace
 
-
 namespace vl {
-
-void ReflprobeBlend::MakeSphere(int32 sectorCount, int32 stackCount, float radius)
-{
-	std::vector<float> vertices;
-	std::vector<int32> indices;
-
-	float x, y, z, xy; // vertex position
-
-	float sectorStep = 2.f * glm::pi<float>() / sectorCount;
-	float stackStep = glm::pi<float>() / stackCount;
-	float sectorAngle, stackAngle;
-
-	for (int32 i = 0; i <= stackCount; ++i) {
-		stackAngle = glm::pi<float>() / 2 - i * stackStep; // starting from pi/2 to -pi/2
-		xy = radius * cosf(stackAngle);                    // r * cos(u)
-		z = radius * sinf(stackAngle);                     // r * sin(u)
-
-		// add (sectorCount+1) vertices per stack
-		// the first and last vertices have same position and normal, but different tex coords
-		for (int32 j = 0; j <= sectorCount; ++j) {
-			sectorAngle = j * sectorStep; // starting from 0 to 2pi
-
-			// vertex position (x, y, z)
-			x = xy * cosf(sectorAngle); // r * cos(u) * cos(v)
-			y = xy * sinf(sectorAngle); // r * cos(u) * sin(v)
-			vertices.push_back(x);
-			vertices.push_back(y);
-			vertices.push_back(z);
-		}
-	}
-
-	int32 k1, k2;
-	for (int32 i = 0; i < stackCount; ++i) {
-		k1 = i * (sectorCount + 1); // beginning of current stack
-		k2 = k1 + sectorCount + 1;  // beginning of next stack
-
-		for (int32 j = 0; j < sectorCount; ++j, ++k1, ++k2) {
-			// 2 triangles per sector excluding first and last stacks
-			// k1 => k2 => k1+1
-			if (i != 0) {
-				indices.push_back(k1);
-				indices.push_back(k2);
-				indices.push_back(k1 + 1);
-			}
-
-			// k1+1 => k2 => k2+1
-			if (i != (stackCount - 1)) {
-				indices.push_back(k1 + 1);
-				indices.push_back(k2);
-				indices.push_back(k2 + 1);
-			}
-		}
-	}
-
-
-	m_sphereVertexBuffer
-		= RBuffer::CreateTransfer("Pointlight Sphere Vertex", vertices, vk::BufferUsageFlagBits::eVertexBuffer);
-	m_sphereIndexBuffer.buffer
-		= RBuffer::CreateTransfer("Pointlight Sphere Index", indices, vk::BufferUsageFlagBits::eIndexBuffer);
-	m_sphereIndexBuffer.count = static_cast<uint32>(indices.size());
-}
-
-ReflprobeBlend::ReflprobeBlend()
-{
-	MakeSphere(18, 9);
-}
-
-vk::UniquePipelineLayout ReflprobeBlend::MakePipelineLayout()
+vk::UniquePipelineLayout AoSubpass::MakePipelineLayout()
 {
 	auto layouts = {
 		Layouts->mainPassLayout.internalDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
-		Layouts->envmapLayout.handle(),
+		Layouts->accelLayout.handle(),
 	};
 
 	vk::PushConstantRange pushConstantRange{};
 	pushConstantRange
-		.setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment) //
+		.setStageFlags(vk::ShaderStageFlagBits::eFragment) //
 		.setSize(sizeof(PushConstant))
 		.setOffset(0u);
 
@@ -110,24 +48,25 @@ vk::UniquePipelineLayout ReflprobeBlend::MakePipelineLayout()
 	return Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
 
-vk::UniquePipeline ReflprobeBlend::MakePipeline()
+vk::UniquePipeline AoSubpass::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/gi/reflprobe.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/gi/ao.shader");
 	gpuShader.onCompile = [&]() {
-		StaticPipes::Recompile<ReflprobeBlend>();
+		StaticPipes::Recompile<AoSubpass>();
 	};
 
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
 	colorBlendAttachment
 		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
 						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
-		.setBlendEnable(VK_TRUE)
+		.setBlendEnable(VK_FALSE)
 		.setSrcColorBlendFactor(vk::BlendFactor::eOne)
 		.setDstColorBlendFactor(vk::BlendFactor::eOne)
 		.setColorBlendOp(vk::BlendOp::eAdd)
 		.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
 		.setDstAlphaBlendFactor(vk::BlendFactor::eOne)
 		.setAlphaBlendOp(vk::BlendOp::eAdd);
+
 
 	vk::PipelineColorBlendStateCreateInfo colorBlending{};
 	colorBlending
@@ -136,24 +75,8 @@ vk::UniquePipeline ReflprobeBlend::MakePipeline()
 		.setAttachments(colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
-	vk::VertexInputBindingDescription bindingDescription{};
-	bindingDescription
-		.setBinding(0u) //
-		.setStride(sizeof(glm::vec3))
-		.setInputRate(vk::VertexInputRate::eVertex);
-
-	vk::VertexInputAttributeDescription attributeDescription{};
-
-	attributeDescription.binding = 0u;
-	attributeDescription.location = 0u;
-	attributeDescription.format = vk::Format::eR32G32B32Sfloat;
-	attributeDescription.offset = 0u;
-
 	// fixed-function stage
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
-	vertexInputInfo
-		.setVertexBindingDescriptions(bindingDescription) //
-		.setVertexAttributeDescriptions(attributeDescription);
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly
@@ -227,40 +150,36 @@ vk::UniquePipeline ReflprobeBlend::MakePipeline()
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
 		.setRenderPass(*Layouts->mainPassLayout.compatibleRenderPass)
-		.setSubpass(2u)
+		.setSubpass(3u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void AoSubpass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
 	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
+	PushConstant pc{
+		console_aoBias,
+		console_aoStrength,
+		console_aoRadius,
+		console_aoSamples,
+	};
+
+	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant), &pc);
+
+
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
 
-	// bind unit sphere once
-	cmdBuffer.bindVertexBuffers(0u, m_sphereVertexBuffer.handle(), vk::DeviceSize(0));
-	cmdBuffer.bindIndexBuffer(m_sphereIndexBuffer.buffer.handle(), vk::DeviceSize(0), vk::IndexType::eUint32);
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
 
-	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &rp->reflDescSet, 0u, nullptr);
-
-		PushConstant pc{
-			sceneDesc.viewer.ubo.viewProj * glm::translate(glm::vec3(rp->position))
-				* glm::scale(glm::vec3(rp->outerRadius)),
-			rp->position,
-			rp->ubo.lodCount,
-		};
-
-		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,
-			sizeof(PushConstant), &pc);
-
-		cmdBuffer.drawIndexed(m_sphereIndexBuffer.count, 1u, 0u, 0u, 0u);
-	}
+	// big triangle
+	cmdBuffer.draw(3u, 1u, 0u, 0u);
 }
 
 } // namespace vl
