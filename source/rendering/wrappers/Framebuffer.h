@@ -12,9 +12,6 @@ struct RFramebuffer {
 	std::vector<RImageAttachment> ownedAttachments{};
 	std::vector<vk::ImageView> attachmentViews{};
 
-	vk::UniqueDescriptorSetLayout setLayout;
-
-
 	void AddAttachment(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling,
 		vk::ImageLayout initialLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties,
 		const std::string& name, vk::ImageLayout finalLayout);

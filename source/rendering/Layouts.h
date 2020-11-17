@@ -16,6 +16,8 @@ inline struct Layouts_ {
 
 	RDescriptorSetLayout rtTriangleGeometry;
 
+	RDescriptorSetLayout inputAttachment;
+
 	RDescriptorSetLayout cubemapArray6;
 	RDescriptorSetLayout cubemapArray64;
 	RDescriptorSetLayout cubemapArray1024;
@@ -38,13 +40,9 @@ inline struct Layouts_ {
 	// Global descriptor Set
 	RDescriptorSetLayout renderAttachmentsLayout;
 
-	RRenderPassLayout gbufferPassLayout;
+	RRenderPassLayout mainPassLayout;
 	RRenderPassLayout shadowPassLayout;
 	RRenderPassLayout singleFloatColorAttPassLayout;
-
-	// CHECK: check if those can be only one - tho some techniques will require this split for sure
-	RRenderPassLayout directLightPassLayout;   // PERF: subpass of gbuffer
-	RRenderPassLayout indirectLightPassLayout; // PERF: subpass of gbuffer
 
 	RRenderPassLayout svgfPassLayout;
 	// Ray Trace Here

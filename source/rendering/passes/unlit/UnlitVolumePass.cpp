@@ -125,7 +125,7 @@ vk::UniquePipeline UnlitVolumePass::MakePipeline()
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
 	depthStencil
 		.setDepthTestEnable(VK_TRUE) //
-		.setDepthWriteEnable(VK_TRUE)
+		.setDepthWriteEnable(VK_FALSE)
 		.setDepthCompareOp(vk::CompareOp::eLess)
 		.setDepthBoundsTestEnable(VK_FALSE)
 		.setMinDepthBounds(0.0f) // Optional

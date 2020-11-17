@@ -33,3 +33,5 @@ void main()
 
 	outColor = vec4(tonemap(hdrColor, TONEMAP_DEFAULT, gamma, exposure), 1.0);
 }
+
+

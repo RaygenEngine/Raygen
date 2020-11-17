@@ -3,7 +3,7 @@
 #extension GL_EXT_nonuniform_qualifier : enable
 #include "global.glsl"
 
-#include "attachments.glsl"
+#include "mainpass-inputs.glsl"
 #include "surface.glsl"
 
 // out
@@ -26,11 +26,11 @@ void main( ) {
 
 	Surface surface = surfaceFromGBuffer(
 	    cam,
-		g_DepthSampler,
-		g_NormalSampler,
-		g_AlbedoSampler,
-		g_SpecularSampler,
-		g_EmissiveSampler,
+		g_DepthInput,
+		g_NormalInput,
+		g_AlbedoInput,
+		g_SpecularInput,
+		g_EmissiveInput,
 		uv
 	);
 	

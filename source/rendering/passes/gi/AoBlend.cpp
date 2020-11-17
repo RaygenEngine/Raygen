@@ -1,49 +1,47 @@
 #include "AoBlend.h"
 
+#include "engine/console/ConsoleVariable.h"
+#include "rendering/Device.h"
+#include "rendering/Layouts.h"
 #include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/core/PipeUtl.h"
-#include "rendering/scene/Scene.h"
-#include "rendering/scene/SceneCamera.h"
+
 
 namespace vl {
-
 vk::UniquePipelineLayout AoBlend::MakePipelineLayout()
 {
 	return rvk::makeLayoutNoPC({
-		Layouts->renderAttachmentsLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
-		Layouts->accelLayout.handle(),
+		Layouts->mainPassLayout.internalDescLayout.handle(),
 	});
 }
 
 vk::UniquePipeline AoBlend::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/ao.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/gi/blend.shader");
 	gpuShader.onCompile = [&]() {
 		StaticPipes::Recompile<AoBlend>();
 	};
 
-	// final = srcColor * 0 + dstColor * srcAlpha
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
 	colorBlendAttachment
 		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
 						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
-		.setBlendEnable(VK_TRUE)
-		.setSrcColorBlendFactor(vk::BlendFactor::eZero)
-		.setDstColorBlendFactor(vk::BlendFactor::eSrcAlpha)
+		.setBlendEnable(VK_FALSE)
+		.setSrcColorBlendFactor(vk::BlendFactor::eOne)
+		.setDstColorBlendFactor(vk::BlendFactor::eOne)
 		.setColorBlendOp(vk::BlendOp::eAdd)
-		.setSrcAlphaBlendFactor(vk::BlendFactor::eZero)
+		.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
 		.setDstAlphaBlendFactor(vk::BlendFactor::eOne)
 		.setAlphaBlendOp(vk::BlendOp::eAdd);
+
 
 	vk::PipelineColorBlendStateCreateInfo colorBlending{};
 	colorBlending
 		.setLogicOpEnable(VK_FALSE) //
 		.setLogicOp(vk::LogicOp::eCopy)
-		.setAttachmentCount(1u)
-		.setPAttachments(&colorBlendAttachment)
+		.setAttachments(colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	// fixed-function stage
@@ -64,6 +62,7 @@ vk::UniquePipeline AoBlend::MakePipeline()
 		.setPViewports(&viewport)
 		.setScissorCount(1u)
 		.setPScissors(&scissor);
+
 
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer
@@ -120,27 +119,19 @@ vk::UniquePipeline AoBlend::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(*Layouts->indirectLightPassLayout.compatibleRenderPass)
-		.setSubpass(0u)
+		.setRenderPass(*Layouts->mainPassLayout.compatibleRenderPass)
+		.setSubpass(2u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void AoBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void AoBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputDescSet) const
 {
-	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
-
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &inputDescSet, 0u, nullptr);
 
 	// big triangle
 	cmdBuffer.draw(3u, 1u, 0u, 0u);

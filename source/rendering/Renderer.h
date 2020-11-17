@@ -27,17 +27,13 @@ public:
 	InFlightResources<vk::ImageView> GetOutputViews() const;
 
 	// TODO: private
-	InFlightResources<RenderingPassInstance> m_gbufferInst;
-	InFlightResources<RenderingPassInstance> m_directLightPass;
-	InFlightResources<RenderingPassInstance> m_giLightPass;
+	InFlightResources<RenderingPassInstance> m_mainPassInst;
 	InFlightResources<RenderingPassInstance> m_ptPass;
 	IndirectSpecularPass m_indirectSpecPass;
 
 private:
-	void RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordGiPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordIndirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 
 	vk::Extent2D m_extent{};

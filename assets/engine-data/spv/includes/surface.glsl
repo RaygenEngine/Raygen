@@ -72,6 +72,19 @@ vec3 reconstructWorldPosition(float depth, vec2 uv, mat4 viewProjInv)
 	return worldPos.xyz / worldPos.w; // return world space pos xyz
 }
 
+vec3 reconstructEyePosition(float depth, vec2 uv, mat4 projInv)
+{
+	// clip space reconstruction
+	vec4 clipPos; 
+	clipPos.xy = uv.xy * 2.0 - 1;
+	clipPos.z = depth;
+	clipPos.w = 1.0;
+	
+	vec4 eyePos = projInv * clipPos;
+
+	return eyePos.xyz / eyePos.w; // return eye space pos xyz
+}
+
 Surface surfaceFromGBuffer(
     Camera cam,
     sampler2D depthSampler,
@@ -114,6 +127,51 @@ Surface surfaceFromGBuffer(
 
     return surface;
 }
+
+#ifndef RAY
+Surface surfaceFromGBuffer(
+    Camera cam,
+    subpassInput depthSampler,
+    subpassInput normalsSampler, 
+    subpassInput albedoOpacitySampler,
+    subpassInput f0RoughnessSampler,
+    subpassInput emissiveOcclusionSampler,
+    vec2 uv)
+{
+    Surface surface;
+
+    surface.depth = subpassLoad(depthSampler).r;
+
+    surface.position = reconstructWorldPosition(surface.depth, uv, cam.viewProjInv);
+    
+	vec3 normal = subpassLoad(normalsSampler).rgb;
+    surface.basis = branchlessOnb(normal);
+
+    vec3 V = normalize(cam.position - surface.position);
+    surface.v = normalize(toOnbSpace(surface.basis, V));
+    surface.nov = max(Ndot(surface.v), BIAS);
+
+    // rgb: albedo a: opacity
+    vec4 albedoOpacity = subpassLoad(albedoOpacitySampler);
+    // rgb: f0, a: roughness^2
+    vec4 f0Roughness = subpassLoad(f0RoughnessSampler);
+    // rgb: emissive, a: occlusion
+    vec4 emissiveOcclusion = subpassLoad(emissiveOcclusionSampler);
+
+    surface.albedo = albedoOpacity.rgb;
+    surface.opacity = albedoOpacity.a;
+
+	surface.f0 = f0Roughness.rgb;
+	surface.a = f0Roughness.a;
+
+    surface.emissive = emissiveOcclusion.rgb;
+    surface.occlusion = emissiveOcclusion.a;
+
+    surface.uv = uv;
+
+    return surface;
+}
+#endif
 
 vec3 SpecularTerm(Surface surface, vec3 ks)
 {
