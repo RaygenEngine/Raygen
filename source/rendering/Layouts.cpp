@@ -117,13 +117,13 @@ void Layouts_::MakeRenderPassLayouts()
 
 
 	// Svgf Pass. Semi special case as we constantly swap 2 "framebuffers" internally.
-	//{
-	//	auto att = svgfPassLayout.CreateAttachment("SVGF Result", vk::Format::eR32G32B32A32Sfloat);
+	{
+		auto att = svgfPassLayout.CreateAttachment("SVGF Result", vk::Format::eR32G32B32A32Sfloat);
 
-	//	svgfPassLayout.AddSubpass({}, std::vector{ att });
-	//	svgfPassLayout.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
-	//	svgfPassLayout.Generate();
-	//}
+		svgfPassLayout.AddSubpass({}, std::vector{ att });
+		svgfPassLayout.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
+		svgfPassLayout.Generate();
+	}
 }
 
 

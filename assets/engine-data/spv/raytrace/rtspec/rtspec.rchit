@@ -271,8 +271,9 @@ void main() {
 		radiance += RadianceOfRay(surface.position, L) * brdf_NoL_invpdf;
 	}
 
-	prd.radiance = radiance;
+	prd.radiance = radiance  + 50;
 }
+
 
 
 

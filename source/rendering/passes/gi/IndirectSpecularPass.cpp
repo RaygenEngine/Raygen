@@ -5,14 +5,17 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
 #include "rendering/scene/SceneCamera.h"
-
-#include <rendering/scene/SceneIrradianceGrid.h>
+#include "rendering/scene/SceneIrradianceGrid.h"
+#include "rendering/util/WriteDescriptorSets.h"
 
 ConsoleVariable<int32> console_rtDepth{ "rt.depth", 1, "Set rt depth" };
-ConsoleVariable<int32> console_rtSamples{ "rt.samples", 0, "Set rt samples" };
+ConsoleVariable<int32> console_rtSamples{ "rt.samples", 2, "Set rt samples" };
+
+// ConsoleVariable<float> console_rtScale{ "rt.scale", 1.0, "Set rt buffer scale" };
 
 namespace {
 struct PushConstant {
+	int32 frame;
 	int32 depth;
 	int32 samples;
 	int32 pointlightCount;
@@ -24,12 +27,19 @@ static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
+IndirectSpecularPass::IndirectSpecularPass()
+{
+	for (size_t i = 0; i < c_framesInFlight; i++) {
+		m_rtDescSet[i] = Layouts->tripleStorageImage.AllocDescriptorSet();
+	}
+}
+
 void IndirectSpecularPass::MakeRtPipeline()
 {
 	std::array layouts{
 		Layouts->renderAttachmentsLayout.handle(),     // gbuffer and stuff
 		Layouts->singleUboDescLayout.handle(),         // camera
-		Layouts->singleStorageImage.handle(),          // image target
+		Layouts->tripleStorageImage.handle(),          // image result and progressive image
 		Layouts->accelLayout.handle(),                 // accel structure
 		Layouts->bufferAndSamplersDescLayout.handle(), // geometry groups
 		Layouts->singleStorageBuffer.handle(),         // pointlights
@@ -118,6 +128,9 @@ void IndirectSpecularPass::MakeRtPipeline()
 	m_rtPipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
 
 	CreateRtShaderBindingTable();
+	// NEXT:
+	svgfPass.MakeLayout();
+	svgfPass.MakePipeline();
 }
 
 void IndirectSpecularPass::CreateRtShaderBindingTable()
@@ -153,9 +166,6 @@ void IndirectSpecularPass::CreateRtShaderBindingTable()
 
 void IndirectSpecularPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	m_result[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
-		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
-
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipeline.get());
 
 	DEBUG_NAME_AUTO(m_rtDescSet[sceneDesc.frameIndex]);
@@ -198,7 +208,10 @@ void IndirectSpecularPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRe
 		vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 9u, 1u, &irragrid->gridDescSet, 0u, nullptr);
 	//}
 
+	static int32 frameIndex = 0;
+
 	PushConstant pc{
+		frameIndex++,
 		std::max(0, *console_rtDepth),
 		std::max(0, *console_rtSamples),
 		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
@@ -208,7 +221,6 @@ void IndirectSpecularPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRe
 
 	cmdBuffer.pushConstants(m_rtPipelineLayout.get(),
 		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant), &pc);
-
 
 	vk::DeviceSize progSize = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of a program identifier
 
@@ -240,27 +252,163 @@ void IndirectSpecularPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRe
 		= { m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
 	const vk::StridedBufferRegionKHR callableShaderBindingTable;
 
-	auto& extent = m_result[sceneDesc.frameIndex].extent;
+	auto& extent = m_progressiveResult.extent;
 
 	cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
 		&callableShaderBindingTable, extent.width, extent.height, 1);
 
-
-	m_result[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
-		vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
-		vk::PipelineStageFlagBits::eFragmentShader);
+	svgfPass.SvgfDraw(cmdBuffer, sceneDesc, m_svgfRenderPassInstance[sceneDesc.frameIndex]);
 } // namespace vl
 
 void IndirectSpecularPass::Resize(vk::Extent2D extent)
 {
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
-		m_result[i]
-			= RImageAttachment(extent.width, extent.height, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
-				vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
-				vk::MemoryPropertyFlagBits::eDeviceLocal, "rtIndirectResult");
+	// extent = vk::Extent2D(
+	//	math::roundToUInt(console_rtScale * extent.width), math::roundToUInt(console_rtScale * extent.height));
 
-		m_result[i].BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
-			vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+	m_progressiveResult = RImage2D(extent.width, extent.height, 1u, vk::Format::eR32G32B32A32Sfloat,
+		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, "ProgressiveResult");
+
+	m_progressiveResult.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+
+	m_momentsBuffer = RImage2D(extent.width, extent.height, 1u, vk::Format::eR32G32B32A32Sfloat,
+		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, "Moments Buffer");
+
+	m_momentsBuffer.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+
+		m_svgfRenderPassInstance[i] = Layouts->svgfPassLayout.CreatePassInstance(extent.width, extent.height);
+	}
+
+	// SVGF:
+	svgfPass.OnResize(extent, *this);
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+
+		rvk::writeDescriptorImages(m_rtDescSet[i], 0u,
+			{
+				svgfPass.swappingImages[0].view(),
+				m_progressiveResult.view(),
+				m_momentsBuffer.view(),
+			},
+			nullptr, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 	}
 }
+
+
+struct SvgfPC {
+	int32 iteration{ 0 };
+	int32 totalIter{ 0 };
+	int32 progressiveFeedbackIndex{ 0 };
+};
+static_assert(sizeof(SvgfPC) <= 128);
+
+ConsoleVariable<int32> console_SvgfIters{ "rt.svgf.iterations", 4,
+	"Controls how many times to apply svgf atrous filter." };
+
+ConsoleVariable<int32> console_SvgfProgressiveFeedback{ "rt.svgf.feedbackIndex", -1,
+	"Selects the index of the iteration to write onto the accumulation result (or do -1 to skip feedback)" };
+
+ConsoleVariable<bool> console_SvgfEnable{ "rt.svgf.enable", true, "Enable or disable svgf pass." };
+
+void IndirectSpecularPass::PtSvgf::SvgfDraw(
+	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, RenderingPassInstance& rpInstance)
+{
+	auto times = *console_SvgfIters;
+	for (int32 i = 0; i < std::max(times, 1); ++i) {
+		rpInstance.RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
+			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
+
+			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u,
+				&sceneDesc.attachmentsDescSet, 0u, nullptr);
+
+
+			cmdBuffer.bindDescriptorSets(
+				vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u, &descriptorSets[i % 2], 0u, nullptr);
+
+			SvgfPC pc{
+				.iteration = i,
+				.totalIter = (times < 1 || !console_SvgfEnable) ? 0 : times,
+				.progressiveFeedbackIndex = console_SvgfProgressiveFeedback,
+			};
+
+			cmdBuffer.pushConstants(
+				m_pipelineLayout.get(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(SvgfPC), &pc);
+			cmdBuffer.draw(3u, 1u, 0u, 0u);
+		});
+	}
+}
+
+void IndirectSpecularPass::PtSvgf::OnResize(vk::Extent2D extent, IndirectSpecularPass& rtPass)
+{
+	swappingImages[0] = RImage2D::Create(
+		"SVGF 0", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral, vk::ImageUsageFlagBits::eStorage);
+
+	swappingImages[1] = RImage2D::Create(
+		"SVGF 1", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral, vk::ImageUsageFlagBits::eStorage);
+
+	for (size_t j = 0; j < 2; ++j) {
+		descriptorSets[j] = Layouts->quadStorageImage.AllocDescriptorSet();
+
+		rvk::writeDescriptorImages(descriptorSets[j], 0u,
+			{
+				rtPass.m_progressiveResult.view(),
+				rtPass.m_momentsBuffer.view(),
+				swappingImages[(j + 0) % 2].view(),
+				swappingImages[(j + 1) % 2].view(),
+			},
+			nullptr, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
+	}
+}
+
+void IndirectSpecularPass::PtSvgf::MakeLayout()
+{
+	std::array layouts{
+		Layouts->renderAttachmentsLayout.handle(),
+		Layouts->quadStorageImage.handle(),
+	};
+
+	vk::PushConstantRange pcRange;
+	pcRange
+		.setSize(sizeof(SvgfPC)) //
+		.setStageFlags(vk::ShaderStageFlagBits::eFragment)
+		.setOffset(0);
+
+	// pipeline layout
+	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo
+		.setSetLayouts(layouts) //
+		.setPushConstantRanges(pcRange);
+
+	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+}
+
+void IndirectSpecularPass::PtSvgf::MakePipeline()
+{
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/test/svgf.shader");
+	gpuShader.onCompile = [&]() {
+		MakePipeline();
+	};
+
+	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
+	colorBlendAttachment
+		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
+						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
+		.setBlendEnable(VK_FALSE);
+
+	vk::PipelineColorBlendStateCreateInfo colorBlending{};
+	colorBlending
+		.setLogicOpEnable(VK_FALSE) //
+		.setLogicOp(vk::LogicOp::eCopy)
+		.setAttachments(colorBlendAttachment)
+		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
+
+
+	Utl_CreatePipelineCustomPass(gpuShader, colorBlending, *Layouts->svgfPassLayout.compatibleRenderPass);
+}
+
 } // namespace vl

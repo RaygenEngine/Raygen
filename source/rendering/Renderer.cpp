@@ -233,8 +233,8 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		auto brdfLutImg = GpuAssetManager->GetGpuHandle(StdAssets::BrdfLut());
 		views.emplace_back(m_secondaryPassInst[i].framebuffer[0].view());
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
-		views.emplace_back(m_indirectSpecPass.m_result[i].view()); // TODO: reserved0
-		views.emplace_back(m_ptPass[i].framebuffer[0].view());     // sceneColorSampler
+		views.emplace_back(m_indirectSpecPass.m_svgfRenderPassInstance[i].framebuffer[0].view()); // indirect spec pass
+		views.emplace_back(m_ptPass[i].framebuffer[0].view());                                    // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_attachmentsDesc[i], 0u, std::move(views));
 
@@ -259,14 +259,6 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		auto brdfSampler = GpuResources::AcquireSampler(samplerInfo);
 
 		rvk::writeDescriptorImages(m_attachmentsDesc[i], 10u, { brdfLutImg.Lock().image.view() }, brdfSampler);
-	}
-
-	// RT images
-	for (size_t i = 0; i < c_framesInFlight; i++) {
-		m_indirectSpecPass.m_rtDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
-
-		rvk::writeDescriptorImages(m_indirectSpecPass.m_rtDescSet[i], 0u, { m_indirectSpecPass.m_result[i].view() },
-			nullptr, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 	}
 }
 

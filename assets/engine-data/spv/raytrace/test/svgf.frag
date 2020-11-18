@@ -207,7 +207,7 @@ void OutputColor(vec4 color, bool mixAlbedo) {
 
 			vec4 p = max(mix(colorSampleAlbe, colorSampleSpec, metallic), vec4(0.1));
 	    	
-			color *= p;    	
+			//color *= p;    	
 	    	
 	    }
    	    outColor = color;
@@ -244,6 +244,9 @@ void DebugRenderPasses() {
 		imageStore(svgfOutput, iuv, vec4(color, 1.));
 	}
 }
+
+
+
 
 
 

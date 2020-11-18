@@ -82,7 +82,7 @@ void AttachmentDebuggerWindow::ImguiDraw()
 	showFramebuffer(mainFramebuffer);
 	showFramebuffer(secondaryFramebuffer);
 
-	showImage(vl::Renderer->m_indirectSpecPass.m_result.at(0));
+	// showImage(vl::Renderer->m_indirectSpecPass.m_result.at(0));
 	showFramebuffer(ptPassFramebuffer);
 
 	for (auto dl : vl::Layer->mainScene->Get<SceneDirlight>()) {
