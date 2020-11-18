@@ -94,7 +94,7 @@ void Layouts_::MakeRenderPassLayouts()
 	}
 
 	{
-		auto colorAtt = secondaryPassLayout.CreateAttachment("Ao", vk::Format::eR32Sfloat);
+		auto colorAtt = secondaryPassLayout.CreateAttachment("Ambient", vk::Format::eR32G32B32A32Sfloat);
 
 		secondaryPassLayout.AddSubpass({}, { colorAtt });
 

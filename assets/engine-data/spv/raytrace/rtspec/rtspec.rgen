@@ -52,8 +52,6 @@ vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 void main() {
 	vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
 
-	float fragDepth = texture(g_DepthSampler, uv).r;
-
 	Surface surface = surfaceFromGBuffer(
 	    cam,
 		g_DepthSampler,

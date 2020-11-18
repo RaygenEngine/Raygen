@@ -6,14 +6,15 @@
 #include "global.glsl"
 
 #include "attachments.glsl"
+#include "hammersley.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
+#include "sky.glsl"
 #include "surface.glsl"
-#include "hammersley.glsl"
 
 // out
 
-layout(location = 0) out float outColor;
+layout(location = 0) out vec4 outColor;
 
 // in 
 
@@ -69,6 +70,15 @@ void main()
 		uv
 	);
 
+	// WIP: could gather an approximation of the diffused sky light on surfaces during far ao queries
+	vec3 skyColor = vec3(0.0);
+	if(surface.depth == 1.0) {
+	
+		vec3 V = normalize(surface.position - cam.position);
+	
+		skyColor = GetSkyColor(cam.position, V);
+	}
+
 	// eye space
 	vec3 N       = (cam.view * vec4(surface.basis.normal, 0.0)).xyz;
 	vec3 center  = (cam.view * vec4(surface.position, 1.0)).xyz;
@@ -112,7 +122,7 @@ void main()
 	occlusion = 1 - (occlusion / samples);
 	occlusion *= surface.occlusion;
 
-	outColor = occlusion;
+	outColor = vec4(skyColor, occlusion);
 }                               
            
 

@@ -15,6 +15,8 @@ layout(location = 0) out vec4 outColor;
 
 // in 
 
+layout(location = 0) noperspective in vec2 uv;
+
 // uniform
 
 layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
@@ -23,8 +25,6 @@ layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 void main()
 {
-	vec2 iuv = gl_FragCoord.xy;
-
 	Surface surface = surfaceFromGBuffer(
 	    cam,
 		g_DepthInput,
@@ -32,12 +32,15 @@ void main()
 		g_AlbedoInput,
 		g_SpecularInput,
 		g_EmissiveInput,
-		iuv
+		uv
 	);
 
 	vec3 finalContribution = Pointlight_SmoothContribution(topLevelAs, pl, surface);
 	outColor = vec4(finalContribution, 1);
 }                               
+
+
+
 
 
 

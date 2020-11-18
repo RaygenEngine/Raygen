@@ -12,24 +12,24 @@ layout(location = 0) in vec2 uv;
 
 // uniform
 
-float simpleBlurAO()
+vec4 AmbientInfoBlurredOcclusion()
 {
 	float Offsets[4] = float[]( -1.5, -0.5, 0.5, 1.5 );
 
-    float color = 0.0;
+    vec4 color = texture(AoSampler, uv);
 
     for (int i = 0 ; i < 4 ; i++) {
         for (int j = 0 ; j < 4 ; j++) {
             vec2 tc = uv;
             tc.x = uv.x + Offsets[j] / textureSize(AoSampler, 0).x;
             tc.y = uv.y + Offsets[i] / textureSize(AoSampler, 0).y;
-            color += texture(AoSampler, tc).r;
+            color.a += texture(AoSampler, tc).a;
         }
     }
 
-    color /= 16.0;
+    color.a /= 16.0;
 
-    return texture(AoSampler, uv).r;
+    return color;
 }
 
 void main()
@@ -37,9 +37,9 @@ void main()
 	vec3 directLight = texture(directLightSampler, uv).rgb;
 	vec3 indirectLight = texture(indirectLightSampler, uv).rgb;
 	//vec3 indirectRtSpec = texture(indirectRaytracedSpecular, uv).rgb;
-    float AO = simpleBlurAO();
+    vec4 ambientInfo = AmbientInfoBlurredOcclusion();
 	// ...
-	vec3 final =  directLight + (indirectLight * AO);
+	vec3 final =  directLight + (indirectLight * ambientInfo.a) + ambientInfo.rgb;
 
 	outColor = vec4(final, 1.0);
 }

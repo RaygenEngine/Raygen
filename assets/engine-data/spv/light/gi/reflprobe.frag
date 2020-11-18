@@ -13,6 +13,8 @@ layout(location = 0) out vec4 outColor;
 
 // in 
 
+layout(location = 0) noperspective in vec2 uv;
+
 // uniform
 
 layout(push_constant) uniform PC {
@@ -28,8 +30,6 @@ layout(set = 2, binding = 2) uniform samplerCube prefilteredSampler;
 
 void main( ) 
 {
-	vec2 iuv = gl_FragCoord.xy;
-
 	Surface surface = surfaceFromGBuffer(
 	    cam,
 		g_DepthInput,
@@ -37,7 +37,7 @@ void main( )
 		g_AlbedoInput,
 		g_SpecularInput,
 		g_EmissiveInput,
-		iuv
+		uv
 	);
 
 	// for preview
