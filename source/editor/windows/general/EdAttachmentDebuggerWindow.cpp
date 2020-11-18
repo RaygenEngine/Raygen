@@ -76,9 +76,11 @@ void AttachmentDebuggerWindow::ImguiDraw()
 	};
 
 	auto& mainFramebuffer = vl::Renderer->m_mainPassInst.at(0).framebuffer;
+	auto& secondaryFramebuffer = vl::Renderer->m_secondaryPassInst.at(0).framebuffer;
 	auto& ptPassFramebuffer = vl::Renderer->m_ptPass.at(0).framebuffer;
 
 	showFramebuffer(mainFramebuffer);
+	showFramebuffer(secondaryFramebuffer);
 
 	showImage(vl::Renderer->m_indirectSpecPass.m_result.at(0));
 	showFramebuffer(ptPassFramebuffer);

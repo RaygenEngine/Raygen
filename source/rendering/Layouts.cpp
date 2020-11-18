@@ -8,14 +8,7 @@ struct AttachmentDeclaration {
 AttachmentDeclaration rendererFinalAttachment = {};
 
 namespace vl {
-inline constexpr static std::array colorAttachments = {
-	std::pair{ "GNormal", vk::Format::eR16G16B16A16Snorm },
-	std::pair{ "GAlbedo", vk::Format::eR32G32B32A32Sfloat },
-	std::pair{ "GSpecularColor", vk::Format::eR32G32B32A32Sfloat },
-	std::pair{ "GEmissive", vk::Format::eR8G8B8A8Srgb },
-	std::pair{ "GVelocity", vk::Format::eR32G32B32A32Sfloat },
-	std::pair{ "GUVDrawIndex", vk::Format::eR32G32B32A32Sfloat },
-};
+
 
 /*
 // GBuffer
@@ -55,7 +48,7 @@ void Layouts_::MakeRenderPassLayouts()
 		depthBuffer = mainPassLayout.CreateAttachment("GDepth", Device->FindDepthFormat());
 		gbufferAtts.emplace_back(depthBuffer);
 
-		for (auto& [name, format] : colorAttachments) {
+		for (auto& [name, format] : gBufferColorAttachments) {
 			auto att = mainPassLayout.CreateAttachment(name, format);
 			mainPassLayout.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
 			gbufferAtts.emplace_back(att);
@@ -63,18 +56,15 @@ void Layouts_::MakeRenderPassLayouts()
 
 		AttRef directAtt = mainPassLayout.CreateAttachment("DirectLight", vk::Format::eR32G32B32A32Sfloat);
 		AttRef indirectAtt = mainPassLayout.CreateAttachment("Indirect", vk::Format::eR32G32B32A32Sfloat);
-		AttRef aoAtt = mainPassLayout.CreateAttachment("AO", vk::Format::eR32G32B32A32Sfloat);
 
 		mainPassLayout.AddSubpass({}, std::vector{ gbufferAtts });              // Write GBuffer
 		mainPassLayout.AddSubpass(std::vector{ gbufferAtts }, { directAtt });   // Write DirectLights
 		mainPassLayout.AddSubpass(std::vector{ gbufferAtts }, { indirectAtt }); // Write Indirect
-		mainPassLayout.AddSubpass(std::vector{ gbufferAtts }, { aoAtt });       // Write Ao
 
 
 		mainPassLayout.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
 		mainPassLayout.AttachmentFinalLayout(directAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 		mainPassLayout.AttachmentFinalLayout(indirectAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
-		mainPassLayout.AttachmentFinalLayout(aoAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		mainPassLayout.Generate();
 	}
@@ -104,6 +94,16 @@ void Layouts_::MakeRenderPassLayouts()
 	}
 
 	{
+		auto colorAtt = secondaryPassLayout.CreateAttachment("Ao", vk::Format::eR32Sfloat);
+
+		secondaryPassLayout.AddSubpass({}, { colorAtt });
+
+		secondaryPassLayout.AttachmentFinalLayout(colorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		secondaryPassLayout.Generate();
+	}
+
+	{
 		auto colorAtt
 			= singleFloatColorAttPassLayout.CreateAttachment("FloatColorAtt", vk::Format::eR32G32B32A32Sfloat);
 
@@ -129,7 +129,8 @@ void Layouts_::MakeRenderPassLayouts()
 
 Layouts_::Layouts_()
 {
-	for (uint32 i = 0u; i < colorAttachments.size() + 7; ++i) {
+	// WIP: + 7
+	for (uint32 i = 0u; i < gBufferColorAttachments.size() + 7; ++i) {
 		renderAttachmentsLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
 			vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR
 				| vk::ShaderStageFlagBits::eClosestHitKHR);

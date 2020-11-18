@@ -28,12 +28,14 @@ public:
 
 	// TODO: private
 	InFlightResources<RenderingPassInstance> m_mainPassInst;
+	InFlightResources<RenderingPassInstance> m_secondaryPassInst;
 	InFlightResources<RenderingPassInstance> m_ptPass;
 	IndirectSpecularPass m_indirectSpecPass;
 
 private:
 	void RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordSecondaryPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 
 	vk::Extent2D m_extent{};

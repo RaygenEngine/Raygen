@@ -1,3 +1,4 @@
+
 #ifndef mainpass_inputs_glsl
 #define mainpass_inputs_glsl
 
