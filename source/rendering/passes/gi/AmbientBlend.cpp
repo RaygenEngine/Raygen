@@ -1,27 +1,58 @@
-#include "AoBlend.h"
+#include "AmbientBlend.h"
 
 #include "engine/console/ConsoleVariable.h"
-#include "rendering/Device.h"
-#include "rendering/Layouts.h"
 #include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/core/PipeUtl.h"
+#include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneCamera.h"
 
+ConsoleVariable<float> console_aoBias{ "ao.bias", 0.025f, "Set ao bias" };
+ConsoleVariable<float> console_aoStrength{ "ao.strength", 1.0f, "Set ao strength" };
+ConsoleVariable<float> console_aoRadius{ "ao.radius", .1f, "Set ao radius" };
+ConsoleVariable<int32> console_aoSamples{ "ao.samples", 10, "Set ao samples" };
+
+namespace {
+struct PushConstant {
+	float bias;
+	float strength;
+	float radius;
+	int32 samples;
+};
+
+static_assert(sizeof(PushConstant) <= 128);
+} // namespace
 
 namespace vl {
-vk::UniquePipelineLayout AoBlend::MakePipelineLayout()
+vk::UniquePipelineLayout AmbientBlend::MakePipelineLayout()
 {
-	return rvk::makeLayoutNoPC({
-		Layouts->mainPassLayout.internalDescLayout.handle(),
-	});
+	auto layouts = {
+		Layouts->renderAttachmentsLayout.handle(),
+		Layouts->singleUboDescLayout.handle(),
+		Layouts->accelLayout.handle(),
+	};
+
+	vk::PushConstantRange pushConstantRange{};
+	pushConstantRange
+		.setStageFlags(vk::ShaderStageFlagBits::eFragment) //
+		.setSize(sizeof(PushConstant))
+		.setOffset(0u);
+
+	// pipeline layout
+	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo
+		.setSetLayouts(layouts) //
+		.setPushConstantRanges(pushConstantRange);
+
+	return Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
 
-vk::UniquePipeline AoBlend::MakePipeline()
+vk::UniquePipeline AmbientBlend::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/gi/blend.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/gi/ambient.shader");
 	gpuShader.onCompile = [&]() {
-		StaticPipes::Recompile<AoBlend>();
+		StaticPipes::Recompile<AmbientBlend>();
 	};
 
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
@@ -62,7 +93,6 @@ vk::UniquePipeline AoBlend::MakePipeline()
 		.setPViewports(&viewport)
 		.setScissorCount(1u)
 		.setPScissors(&scissor);
-
 
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer
@@ -119,19 +149,36 @@ vk::UniquePipeline AoBlend::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(*Layouts->mainPassLayout.compatibleRenderPass)
-		.setSubpass(2u)
+		.setRenderPass(*Layouts->secondaryPassLayout.compatibleRenderPass)
+		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void AoBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputDescSet) const
+void AmbientBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
+	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &inputDescSet, 0u, nullptr);
+	PushConstant pc{
+		console_aoBias,
+		console_aoStrength,
+		console_aoRadius,
+		console_aoSamples,
+	};
+
+	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant), &pc);
+
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
 
 	// big triangle
 	cmdBuffer.draw(3u, 1u, 0u, 0u);

@@ -117,6 +117,7 @@ vk::UniquePipeline PointlightBlend::MakePipeline()
 		StaticPipes::Recompile<PointlightBlend>();
 	};
 
+	// additive blending
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
 	colorBlendAttachment
 		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
@@ -167,10 +168,8 @@ vk::UniquePipeline PointlightBlend::MakePipeline()
 
 	vk::PipelineViewportStateCreateInfo viewportState{};
 	viewportState
-		.setViewportCount(1u) //
-		.setPViewports(&viewport)
-		.setScissorCount(1u)
-		.setPScissors(&scissor);
+		.setViewports(viewport) //
+		.setScissors(scissor);
 
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer
@@ -178,8 +177,8 @@ vk::UniquePipeline PointlightBlend::MakePipeline()
 		.setRasterizerDiscardEnable(VK_FALSE)
 		.setPolygonMode(vk::PolygonMode::eFill)
 		.setLineWidth(1.f)
-		.setCullMode(vk::CullModeFlagBits::eBack)
-		.setFrontFace(vk::FrontFace::eClockwise)
+		.setCullMode(vk::CullModeFlagBits::eFront)
+		.setFrontFace(vk::FrontFace::eCounterClockwise)
 		.setDepthBiasEnable(VK_FALSE)
 		.setDepthBiasConstantFactor(0.f)
 		.setDepthBiasClamp(0.f)
@@ -195,16 +194,14 @@ vk::UniquePipeline PointlightBlend::MakePipeline()
 		.setAlphaToOneEnable(VK_FALSE);
 
 	// dynamic states
-	vk::DynamicState dynamicStates[] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	std::array dynamicStates = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo
-		.setDynamicStateCount(2u) //
-		.setPDynamicStates(dynamicStates);
+	dynamicStateInfo.setDynamicStates(dynamicStates);
 
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
 	depthStencil
-		.setDepthTestEnable(VK_TRUE) //
+		.setDepthTestEnable(VK_FALSE) //
 		.setDepthWriteEnable(VK_FALSE)
 		.setDepthCompareOp(vk::CompareOp::eLess)
 		.setDepthBoundsTestEnable(VK_FALSE)

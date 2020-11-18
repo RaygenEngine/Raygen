@@ -11,8 +11,7 @@
 #include "rendering/passes/direct/SpotlightBlend.h"
 #include "rendering/passes/geometry/DepthmapPass.h"
 #include "rendering/passes/geometry/GBufferPass.h"
-#include "rendering/passes/gi/AoBlend.h"
-#include "rendering/passes/gi/AoSubpass.h"
+#include "rendering/passes/gi/AmbientBlend.h"
 #include "rendering/passes/gi/IrradianceGridBlend.h"
 #include "rendering/passes/gi/ReflprobeBlend.h"
 #include "rendering/passes/unlit/UnlitBillboardPass.h"
@@ -183,8 +182,8 @@ void Renderer_::RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 
 void Renderer_::RecordSecondaryPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	m_secondaryPassInst[sceneDesc.frameIndex].RecordPass(
-		cmdBuffer, vk::SubpassContents::eInline, [&]() { StaticPipes::Get<AoSubpass>().Draw(cmdBuffer, sceneDesc); });
+	m_secondaryPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline,
+		[&]() { StaticPipes::Get<AmbientBlend>().Draw(cmdBuffer, sceneDesc); });
 }
 
 void Renderer_::RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)

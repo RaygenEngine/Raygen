@@ -5,8 +5,7 @@
 #include "rendering/passes/direct/DirlightBlend.h"
 #include "rendering/passes/direct/PointlightBlend.h"
 #include "rendering/passes/direct/SpotlightBlend.h"
-#include "rendering/passes/gi/AoBlend.h"
-#include "rendering/passes/gi/AoSubpass.h"
+#include "rendering/passes/gi/AmbientBlend.h"
 #include "rendering/passes/gi/IrradianceGridBlend.h"
 #include "rendering/passes/gi/ReflprobeBlend.h"
 #include "rendering/passes/unlit/UnlitBillboardPass.h"
@@ -24,7 +23,6 @@ void StaticPipes::InternalInitRegistered()
 	StaticPipes::Init<PrefilteredMapCalculation>();
 	StaticPipes::Init<UnlitVolumePass>();
 	StaticPipes::Init<UnlitBillboardPass>();
-	StaticPipes::Init<AoSubpass>();
-	StaticPipes::Init<AoBlend>();
+	StaticPipes::Init<AmbientBlend>();
 }
 } // namespace vl

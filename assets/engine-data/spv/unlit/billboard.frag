@@ -1,7 +1,5 @@
 #version 460
 #extension GL_GOOGLE_include_directive: enable
-#extension GL_EXT_ray_tracing : require
-#extension GL_EXT_ray_query: require
 
 #include "global.glsl"
 
@@ -25,7 +23,6 @@ void main()
 	outColor = 
 	 d.x + d.y < 0.25 ? 
 	vec4(0.4, 0.4, 0.5, 1.0) : vec4(0);
-	
 }                               
 
 
