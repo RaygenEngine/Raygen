@@ -102,6 +102,13 @@ int32 roundToInt(T number)
 {
 	return static_cast<int32>(glm::round(number));
 }
+
+
+template<typename T>
+int32 roundToUInt(T number)
+{
+	return static_cast<uint32>(glm::round(number));
+}
 } // namespace math
 
 struct TransformCache {

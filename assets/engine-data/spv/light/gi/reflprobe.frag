@@ -2,7 +2,8 @@
 #extension GL_GOOGLE_include_directive: enable
 
 #include "global.glsl"
-
+// WIP:
+layout(set = 3, binding = 10) uniform sampler2D std_BrdfLut;
 #include "lights/reflprobe.glsl"
 #include "mainpass-inputs.glsl"
 #include "surface.glsl"

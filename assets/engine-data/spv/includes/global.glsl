@@ -40,7 +40,7 @@
 #endif
 
 #ifndef SPEC_THRESHOLD
-#define SPEC_THRESHOLD 1e-6
+#define SPEC_THRESHOLD 0.001
 #endif
 
 

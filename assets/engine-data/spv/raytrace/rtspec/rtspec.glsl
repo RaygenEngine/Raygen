@@ -10,6 +10,7 @@ struct hitPayload
 
 layout(push_constant) uniform PC
 {
+	int frame;
 	int depth;
 	int samples;
 	int pointlightCount;

@@ -90,9 +90,9 @@ void main()
 
 		// WIP: seed
 		uint seed = tea16(uint(surface.uv.y * 2160 * 4096 + surface.uv.x * 4096), samples + smpl);
-		//vec2 u = rand2(seed);
+		vec2 u = rand2(seed);
 		
-		vec2 u = hammersley(smpl, samples); 
+		//vec2 u = hammersley(smpl, samples); 
 		float m = rand(seed); 
 		
 		// sample random direction, random magnitude (for screen space)
@@ -125,6 +125,7 @@ void main()
 	outColor = vec4(skyColor, occlusion);
 }                               
            
+
 
 
 

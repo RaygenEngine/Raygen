@@ -77,11 +77,11 @@ struct RImage2D : RImage {
 
 	// TODO: Refactor to constructor and cleanup old constructors
 	// This will transition the image to final layout unless final layout is eUndefined
-	/*static RImage2D Create(const std::string& name, vk::Extent2D extent, vk::Format format,
+	static RImage2D Create(const std::string& name, vk::Extent2D extent, vk::Format format,
 		vk::ImageLayout finalLayout = vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlags usageFlags = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eStorage,
 		uint32 mipLevels = 1, vk::MemoryPropertyFlags memoryFlags = vk::MemoryPropertyFlagBits::eDeviceLocal,
-		vk::ImageTiling tiling = vk::ImageTiling::eOptimal);*/
+		vk::ImageTiling tiling = vk::ImageTiling::eOptimal);
 };
 
 struct RCubemap : RImage {

@@ -91,8 +91,9 @@ vk::UniquePipelineLayout ReflprobeBlend::MakePipelineLayout()
 {
 	auto layouts = {
 		Layouts->mainPassLayout.internalDescLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
-		Layouts->envmapLayout.handle(),
+
+		Layouts->singleUboDescLayout.handle(), Layouts->envmapLayout.handle(),
+		Layouts->renderAttachmentsLayout.handle(), // WIP:
 	};
 
 	vk::PushConstantRange pushConstantRange{};
@@ -241,6 +242,8 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
 
 	// bind unit sphere once
 	cmdBuffer.bindVertexBuffers(0u, m_sphereVertexBuffer.handle(), vk::DeviceSize(0));

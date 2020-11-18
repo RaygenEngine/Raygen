@@ -134,8 +134,7 @@ vk::UniquePipeline PointlightBlend::MakePipeline()
 	colorBlending
 		.setLogicOpEnable(VK_FALSE) //
 		.setLogicOp(vk::LogicOp::eCopy)
-		.setAttachmentCount(1u)
-		.setPAttachments(&colorBlendAttachment)
+		.setAttachments(colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	vk::VertexInputBindingDescription bindingDescription{};
