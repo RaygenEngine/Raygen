@@ -28,7 +28,7 @@ namespace vl {
 vk::UniquePipelineLayout AoSubpass::MakePipelineLayout()
 {
 	auto layouts = {
-		Layouts->mainPassLayout.internalDescLayout.handle(),
+		Layouts->renderAttachmentsLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->accelLayout.handle(),
 	};
@@ -149,8 +149,8 @@ vk::UniquePipeline AoSubpass::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(*Layouts->mainPassLayout.compatibleRenderPass)
-		.setSubpass(3u)
+		.setRenderPass(*Layouts->secondaryPassLayout.compatibleRenderPass)
+		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 
@@ -172,6 +172,8 @@ void AoSubpass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDe
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant), &pc);
 
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
 

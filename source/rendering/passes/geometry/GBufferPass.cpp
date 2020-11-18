@@ -74,8 +74,7 @@ namespace {
 			.setAlphaToCoverageEnable(VK_FALSE)
 			.setAlphaToOneEnable(VK_FALSE);
 
-		// WIP:
-		auto colorAttCount = 6;
+		auto colorAttCount = Layouts->gBufferColorAttachments.size();
 
 		std::vector<vk::PipelineColorBlendAttachmentState> colorBlendAttachment{};
 		for (uint32 i = 0u; i < colorAttCount; ++i) {

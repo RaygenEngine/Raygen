@@ -198,7 +198,6 @@ vec3 DirectLightBRDF(Surface surface)
 }
 
 // PERF:
-// WIP: names
 vec3 SampleSpecularDirection(inout Surface surface, inout uint seed)
 {
     surface.l = reflect(-surface.v);
@@ -221,7 +220,6 @@ vec3 SampleSpecularDirection(inout Surface surface, inout uint seed)
     return brdf_r * surface.nol / pdf;
 }
 
-// WIP: names
 vec3 SampleDiffuseDirection(inout Surface surface, inout uint seed)
 {
     vec2 u = rand2(seed); 

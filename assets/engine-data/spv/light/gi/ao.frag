@@ -5,14 +5,15 @@
 
 #include "global.glsl"
 
-#include "mainpass-inputs.glsl"
+#include "attachments.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
 #include "surface.glsl"
+#include "hammersley.glsl"
 
 // out
 
-layout(location = 0) out vec4 outColor;
+layout(location = 0) out float outColor;
 
 // in 
 
@@ -60,11 +61,11 @@ void main()
 {
 	Surface surface = surfaceFromGBuffer(
 	    cam,
-		g_DepthInput,
-		g_NormalInput,
-		g_AlbedoInput,
-		g_SpecularInput,
-		g_EmissiveInput,
+		g_DepthSampler,
+		g_NormalSampler,
+		g_AlbedoSampler,
+		g_SpecularSampler,
+		g_EmissiveSampler,
 		uv
 	);
 
@@ -79,8 +80,9 @@ void main()
 
 		// WIP: seed
 		uint seed = tea16(uint(surface.uv.y * 2160 * 4096 + surface.uv.x * 4096), samples + smpl);
-
-		vec2 u = rand2(seed); 
+		//vec2 u = rand2(seed);
+		
+		vec2 u = hammersley(smpl, samples); 
 		float m = rand(seed); 
 		
 		// sample random direction, random magnitude (for screen space)
@@ -94,7 +96,7 @@ void main()
 		vec3 ndc = clipPos.xyz / clipPos.w; // NDC
 		ndc.y *= -1;
 		ndc.xyz = ndc.xyz * 0.5 + 0.5; // 0 to 1
-		float d = 1;// WIP: texture(g_DepthSampler, ndc.xy).r;
+		float d = texture(g_DepthSampler, ndc.xy).r;
 		float sampleRealDepth = reconstructEyePosition(d, ndc.xy, cam.projInv).z;
 
 		float rangeCheck = smoothstep(0.0, 1.0, radius / abs(center.z - sampleRealDepth));
@@ -103,16 +105,20 @@ void main()
 		occlusion += screenSpace 
 		
 		? (sampleRealDepth >= samplePos.z + bias  ? strength : 0.0) * rangeCheck
-		: VisibilityOfRay(surface.position, (cam.viewInv * vec4(L, 0)).xyz, bias, radius);
+		: VisibilityOfRay(surface.position, (cam.viewInv * vec4(normalize(L), 0)).xyz, bias, radius);
 	}
 
 	// object occlusion
 	occlusion = 1 - (occlusion / samples);
 	occlusion *= surface.occlusion;
 
-	outColor = vec4(occlusion);
+	outColor = occlusion;
 }                               
            
+
+
+
+
 
 
 

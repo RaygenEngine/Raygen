@@ -6,6 +6,15 @@ namespace vl {
 
 inline struct Layouts_ {
 
+	inline constexpr static std::array gBufferColorAttachments = {
+		std::pair{ "GNormal", vk::Format::eR16G16B16A16Snorm },
+		std::pair{ "GAlbedo", vk::Format::eR32G32B32A32Sfloat },
+		std::pair{ "GSpecularColor", vk::Format::eR32G32B32A32Sfloat },
+		std::pair{ "GEmissive", vk::Format::eR8G8B8A8Srgb },
+		std::pair{ "GVelocity", vk::Format::eR32G32B32A32Sfloat },
+		std::pair{ "GUVDrawIndex", vk::Format::eR32G32B32A32Sfloat },
+	};
+
 	RDescriptorSetLayout gltfMaterialDescLayout;
 	RDescriptorSetLayout singleUboDescLayout;
 	RDescriptorSetLayout jointsDescLayout;
@@ -41,6 +50,7 @@ inline struct Layouts_ {
 	RDescriptorSetLayout renderAttachmentsLayout;
 
 	RRenderPassLayout mainPassLayout;
+	RRenderPassLayout secondaryPassLayout;
 	RRenderPassLayout shadowPassLayout;
 	RRenderPassLayout singleFloatColorAttPassLayout;
 

@@ -94,6 +94,6 @@ vec3 importanceSampleGGX(vec2 u, float a)
     return vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
 }
 
-// WIP:pdf
+// TODO: pdf
 
 #endif

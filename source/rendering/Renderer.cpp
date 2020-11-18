@@ -178,14 +178,13 @@ void Renderer_::RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 			0u, 1u, &m_mainPassInst[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
 
 		StaticPipes::Get<IrradianceGridBlend>().Draw(cmdBuffer, sceneDesc);
-
-		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
-
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<AoSubpass>().layout(), 0u, 1u,
-			&m_mainPassInst[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
-
-		StaticPipes::Get<AoSubpass>().Draw(cmdBuffer, sceneDesc);
 	});
+}
+
+void Renderer_::RecordSecondaryPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+{
+	m_secondaryPassInst[sceneDesc.frameIndex].RecordPass(
+		cmdBuffer, vk::SubpassContents::eInline, [&]() { StaticPipes::Get<AoSubpass>().Draw(cmdBuffer, sceneDesc); });
 }
 
 void Renderer_::RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
@@ -215,6 +214,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		// Generate Passes
 		m_mainPassInst[i] = Layouts->mainPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
+		m_secondaryPassInst[i] = Layouts->secondaryPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
 		m_ptPass[i] = Layouts->ptPassLayout.CreatePassInstance(
 			fbSize.width, fbSize.height, { &m_mainPassInst[i].framebuffer[0] }); // TODO: indices and stuff
 	}
@@ -232,7 +232,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 		// TODO: std gpu asset
 		auto brdfLutImg = GpuAssetManager->GetGpuHandle(StdAssets::BrdfLut());
-
+		views.emplace_back(m_secondaryPassInst[i].framebuffer[0].view());
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
 		views.emplace_back(m_indirectSpecPass.m_result[i].view()); // TODO: reserved0
 		views.emplace_back(m_ptPass[i].framebuffer[0].view());     // sceneColorSampler
@@ -290,10 +290,9 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 
 	RecordMainPass(cmdBuffer, sceneDesc);
 
-	// other passes are experimental...
+	RecordSecondaryPass(cmdBuffer, sceneDesc);
 
 	m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
-
 
 	RecordPostProcessPass(cmdBuffer, sceneDesc);
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
