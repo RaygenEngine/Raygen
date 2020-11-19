@@ -162,22 +162,6 @@ vk::UniquePipeline UnlitVolumePass::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-std::unique_ptr<math::BVH<Entity>> bvh;
-
-// clang-format off
- ConsoleFunction<> buildBvh{ "s.bvh", []() {
-	using namespace math;
-	bvh = std::make_unique<math::BVH<Entity>>();
-
-	glm::vec3 h = {1, 1, 1};
-	AABB cube = {-h, h};
-
-	auto world = Universe::MainWorld;
-	for (auto [entity, bc] : world->GetView<BasicComponent>().each()) {
-		bvh->InsertLeaf(bc.self, cube.Transform(bc.world().transform));
-	}
-} };
-// clang-format on
 void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
@@ -204,8 +188,9 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 		cmdBuffer.drawIndexed(relPipe.m_sphereIndexBuffer.count, 1u, 0u, 0u, 0u);
 	}
 
-	if (bvh) {
-		for (auto& node : bvh->nodes) {
+
+	if (Universe::MainWorld->physics.tree) {
+		for (auto& node : Universe::MainWorld->physics.tree->nodes) {
 			const auto& cubeVtxBuf = StaticPipes::Get<IrradianceMapCalculation>().m_cubeVertexBuffer;
 
 
@@ -233,26 +218,14 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 	}
 
 	using namespace math;
-	bvh = std::make_unique<math::BVH<Entity>>();
 
 	glm::vec3 h = { 1, 1, 1 };
 	AABB cube = { -h, h };
 
-	bool debug{ false };
-	if (Input.IsJustPressed(Key::N)) {
-		debug = true;
-		LOG_REPORT("");
-	}
-
-	auto world = Universe::MainWorld;
-	for (auto [entity, bc] : world->GetView<BasicComponent>().each()) {
-		CLOG_REPORT(debug, "Inserting: {}", bc.name);
-		bvh->InsertLeaf(bc.self, cube.Transform(bc.world().transform));
-	}
-
-
 	if (Input.IsJustPressed(Key::Mouse_LeftClick) && Input.IsMouseInViewport()) {
-
+		if (!Universe::MainWorld->physics.tree) {
+			return;
+		}
 		auto view = sceneDesc.viewer.ubo.view;
 		glm::vec3 cameraFwd{ -view[0][2], -view[1][2], -view[2][2] };
 		auto mouseUv = Input.GetMouseViewportUV();
@@ -265,13 +238,13 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 		auto dir = glm::normalize(glm::vec3(
 			glm::inverse(camUbo.proj * camUbo.view) * glm::vec4(remappedMouse.x, -remappedMouse.y, 1.0f, 1.0f)));
 
-		LOG_REPORT(
-			"Shooting at: {:>5.4f}, {:>5.4f}, {:>5.4f} | dot: {:>5.4f}", dir.x, dir.y, dir.z, glm::dot(cameraFwd, dir));
-		auto results = bvh->RayCastDirection(sceneDesc.viewer.ubo.position, dir, 1000.f);
+		// LOG_REPORT(
+		//	"Shooting at: {:>5.4f}, {:>5.4f}, {:>5.4f} | dot: {:>5.4f}", dir.x, dir.y, dir.z, glm::dot(cameraFwd, dir));
 
-		if (!results.distanceSqToHitObject.empty()) {
-			auto entId = results.distanceSqToHitObject.begin()->second;
+		auto results = Universe::MainWorld->physics.RayCastDirection(sceneDesc.viewer.ubo.position, dir, 1000.f);
 
+		if (!results.entitiesHit.empty()) {
+			auto entId = results.entitiesHit.begin()->second;
 			ed::OutlinerWindow::selected = entId;
 		}
 		else {

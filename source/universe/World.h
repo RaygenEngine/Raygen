@@ -2,6 +2,7 @@
 #include "universe/BasicComponent.h"
 
 #include "core/FrameClock.h"
+#include "universe/PhysicsIntersection.h"
 
 struct HiddenFlagComp {
 };
@@ -64,6 +65,7 @@ public:
 
 	void SetActiveCamera(const CCamera& camera);
 
+	PhysicsIntersection physics;
 
 private:
 	size_t activeCameraUid{ 0 };
