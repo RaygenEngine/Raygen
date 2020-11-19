@@ -139,16 +139,6 @@ void EditorObject_::UpdateEditor()
 		UpdateViewportCoordsFromDockspace();
 
 		m_windowsComponent.Draw();
-
-		// Attempt to predict the viewport size for the first run, might be a bit off.
-		// ImGui::SetNextWindowSize(ImVec2(450, 1042), ImGuiCond_FirstUseEver);
-		// ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_NoScrollbar);
-
-
-		// std::string s = fmt::format("{:.1f} FPS", Engine.GetFPS());
-		// ImGui::Text(s.c_str());
-
-		// ImGui::End();
 	}
 	ImguiImpl::EndFrame();
 

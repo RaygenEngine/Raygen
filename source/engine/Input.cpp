@@ -1,4 +1,5 @@
 #include "Input.h"
+#include "engine/Engine.h"
 
 void Input::ReleaseSpecialKey(Key released, Key special)
 {
@@ -66,4 +67,27 @@ void Input::Z_FocusLostKeyRelease(Key key, Key special)
 	if (keyStates[static_cast<int32>(key)]) {
 		Z_UpdateKeyReleased(key, special);
 	}
+}
+
+glm::vec2 Input::GetMouseViewportPosition() const noexcept
+{
+	return glm::ivec2(cursorPosition) - g_ViewportCoordinates.position;
+}
+
+bool Input::IsMouseInViewport() const noexcept
+{
+	auto pos = GetMouseViewportPosition();
+	return pos.x >= 0 && pos.y >= 0 && pos.x < g_ViewportCoordinates.size.x && pos.y < g_ViewportCoordinates.size.y;
+}
+
+glm::vec2 Input::GetMouseViewportUV() const noexcept
+{
+	if (g_ViewportCoordinates.size.x == 0 || g_ViewportCoordinates.size.y == 0) {
+		return {};
+	}
+
+	return glm::vec2(
+		//
+		GetMouseViewportPosition().x / g_ViewportCoordinates.size.x,
+		GetMouseViewportPosition().y / g_ViewportCoordinates.size.y);
 }
