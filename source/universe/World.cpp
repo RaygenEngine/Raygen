@@ -10,6 +10,7 @@
 #include "universe/components/SpotlightComponent.h"
 #include "universe/components/StaticMeshComponent.h"
 #include "universe/systems/AnimatorSystem.h"
+#include "engine/Input.h"
 
 #include <nlohmann/json.hpp>
 #include <fstream>
@@ -117,6 +118,10 @@ void World::UpdateWorld(Scene* scene)
 		AnimatorSystem::UploadAnimationsToScene(reg, *scene);
 		scene->EnqueueActiveCameraCmd(activeCameraUid);
 		scene->EnqueueEndFrame();
+	}
+
+	if (Input.IsJustPressed(Key::Space)) {
+		physics.Create(*this);
 	}
 
 	// Clean Up
