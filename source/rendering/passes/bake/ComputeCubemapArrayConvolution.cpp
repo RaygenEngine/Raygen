@@ -10,7 +10,9 @@
 
 namespace {
 struct PushConstant {
-	int32 samples;
+	int32 x;
+	int32 y;
+	int32 z;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -27,12 +29,6 @@ void ComputeCubemapArrayConvolution::RecordPass(
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, m_pipeline.get());
 
-	PushConstant pc{
-		ig.ptSamples, // WIP: convolution samples here
-	};
-
-	cmdBuffer.pushConstants(m_pipelineLayout.get(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);
-
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eCompute, m_pipelineLayout.get(), 0u, 1u, &ig.irradianceStorageDescSet, 0u, nullptr);
 
@@ -42,7 +38,24 @@ void ComputeCubemapArrayConvolution::RecordPass(
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eCompute, m_pipelineLayout.get(), 2u, 1u, &ig.environmentSamplerDescSet, 0u, nullptr);
 
-	cmdBuffer.dispatch(ig.resolution / 32, ig.resolution / 32, 1);
+	for (int32 x = 0; x < ig.ubo.width; ++x) {
+		for (int32 y = 0; y < ig.ubo.height; ++y) {
+			for (int32 z = 0; z < ig.ubo.depth; ++z) {
+
+				PushConstant pc{
+					x,
+					y,
+					z,
+				};
+
+				cmdBuffer.pushConstants(
+					m_pipelineLayout.get(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);
+
+
+				cmdBuffer.dispatch(ig.resolution / 32, ig.resolution / 32, 1);
+			}
+		}
+	}
 }
 
 void ComputeCubemapArrayConvolution::MakeCompPipeline()
