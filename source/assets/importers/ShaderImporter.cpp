@@ -95,5 +95,7 @@ BasePodHandle ShaderImporter::Import(const fs::path& path)
 
 	loadStage(pod->callable, ".rcall");
 
+	loadStage(pod->compute, ".comp");
+
 	return handle;
 }

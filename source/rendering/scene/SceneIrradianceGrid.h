@@ -13,33 +13,25 @@ struct IrradianceGrid_UBO {
 
 
 struct SceneIrradianceGrid : public SceneStruct {
-	SCENE_STRUCT(SceneIrradianceGrid);
+	SceneIrradianceGrid();
+	void UploadUbo(uint32 curFrame) { UploadDataToUbo(curFrame, &ubo, sizeof(decltype(ubo))); }
 
-	// WIP: this should be defined from the gridDescSet dynamic count
-	static constexpr size_t gridProbeCount = 1024;
 	IrradianceGrid_UBO ubo{};
 
-	struct probe {
-		vk::DescriptorSet surroundingEnvStorageDescSet;
-		vk::DescriptorSet surroundingEnvSamplerDescSet;
+	vk::DescriptorSet environmentSamplerDescSet;
+	vk::DescriptorSet environmentStorageDescSet;
 
-		vk::DescriptorSet ptcube_faceArrayDescSet;
-		std::vector<vk::UniqueImageView> ptcube_faceViews;
+	vk::DescriptorSet irradianceSamplerDescSet;
+	vk::DescriptorSet irradianceStorageDescSet;
 
-		std::vector<vk::UniqueFramebuffer> irr_framebuffer;
-		std::vector<vk::UniqueImageView> irr_faceViews;
-
-		vl::RCubemap surroundingEnv;
-		vl::RCubemap irradiance;
-	};
-
-	vk::DescriptorSet gridDescSet;
-
-	std::array<probe, gridProbeCount> probes;
+	vl::RCubemapArray environmentCubemaps;
+	vl::RCubemapArray irradianceCubemaps;
 
 	BoolFlag shouldBuild{ true };
 	int32 ptSamples{ 2 };
 	int32 ptBounces{ 2 };
+
+	int32 resolution{ 32 };
 
 	// PERF: this should only allocate if need be
 	void Allocate();

@@ -30,7 +30,8 @@ inline struct Layouts_ {
 	RDescriptorSetLayout cubemapArray6;
 	RDescriptorSetLayout cubemapArray64;
 	RDescriptorSetLayout cubemapArray1024;
-	RDescriptorSetLayout dynamicSamplerArray;
+	RDescriptorSetLayout cubemapArray;
+	RDescriptorSetLayout cubemapArrayStorage;
 
 	RDescriptorSetLayout storageImageArray6;
 

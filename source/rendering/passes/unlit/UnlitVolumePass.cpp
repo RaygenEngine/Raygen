@@ -68,7 +68,10 @@ vk::UniquePipeline UnlitVolumePass::MakePipeline()
 		.setPrimitiveRestartEnable(VK_FALSE);
 
 	// Dynamic vieport
-	std::array dynamicStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	std::array dynamicStates{
+		vk::DynamicState::eViewport,
+		vk::DynamicState::eScissor,
+	};
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
 	dynamicStateInfo.setDynamicStates(dynamicStates);
 

@@ -15,6 +15,8 @@ struct CIrradianceGrid : CSceneBase {
 		REFLECT_VAR(height);
 		REFLECT_VAR(depth);
 
+		REFLECT_VAR(resolution);
+
 		REFLECT_VAR(distToAdjacent);
 
 		REFLECT_VAR(ptSamples);
@@ -27,6 +29,8 @@ struct CIrradianceGrid : CSceneBase {
 	int32 width{ 3 };
 	int32 height{ 3 };
 	int32 depth{ 3 };
+
+	int32 resolution{ 32 };
 
 	float distToAdjacent{ 1.f };
 	int32 ptSamples{ 2 };

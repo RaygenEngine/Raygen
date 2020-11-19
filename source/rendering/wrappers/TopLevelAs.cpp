@@ -9,6 +9,7 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/SceneIrradianceGrid.h"
 #include "rendering/scene/ScenePointlight.h"
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
@@ -73,6 +74,9 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 	sceneDesc.descSetReflprobes = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
 		static_cast<int32>(scene->Get<SceneReflprobe>().size()));
 
+	sceneDesc.descSetIrragrids = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
+		static_cast<int32>(scene->Get<SceneIrradianceGrid>().size()));
+
 	int32 totalGroups = 0;
 
 
@@ -107,6 +111,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 	sceneDesc.WriteSpotlights(scene->Get<SceneSpotlight>().condensed);
 	sceneDesc.WriteDirlights(scene->Get<SceneDirlight>().condensed);
 	sceneDesc.WriteReflprobes(scene->Get<SceneReflprobe>().condensed);
+	sceneDesc.WriteIrragrids(scene->Get<SceneIrradianceGrid>().condensed);
 	sceneDesc.WriteGeomGroups();
 	Build();
 	Device->waitIdle();
@@ -432,6 +437,85 @@ void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& refl
 			.setImageInfo(cubeImages)
 			.setDstBinding(1u)
 			.setDstSet(descSetReflprobes[i])
+			.setDstArrayElement(0u);
+		Device->updateDescriptorSets(depthWrite, nullptr);
+	}
+}
+
+void RtSceneDescriptor::WriteIrragrids(const std::vector<SceneIrradianceGrid*>& irragrids)
+{
+	irragridCount = static_cast<int32>(irragrids.size());
+
+	uint32 uboSize = sizeof(IrradianceGrid_UBO) + sizeof(IrradianceGrid_UBO) % 8;
+
+	irragridsBuffer = { (uboSize * irragridCount),
+		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer
+			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+		vk::MemoryAllocateFlagBits::eDeviceAddress };
+
+	DEBUG_NAME_AUTO(irragridsBuffer);
+
+
+	byte* mapCursor = reinterpret_cast<byte*>(Device->mapMemory(irragridsBuffer.memory(), 0, irragridsBuffer.size));
+
+	for (auto ig : irragrids) {
+		memcpy(mapCursor, &ig->ubo, sizeof(IrradianceGrid_UBO));
+		mapCursor += uboSize;
+	}
+
+	Device->unmapMemory(irragridsBuffer.memory());
+
+
+	vk::DescriptorBufferInfo bufInfo{};
+	bufInfo
+		.setOffset(0) //
+		.setRange(VK_WHOLE_SIZE)
+		.setBuffer(irragridsBuffer.handle());
+
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+		vk::WriteDescriptorSet bufWriteSet{};
+		bufWriteSet
+			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
+			.setDstBinding(0u)
+			.setDstSet(descSetIrragrids[i])
+			.setDstArrayElement(0u)
+			.setBufferInfo(bufInfo);
+
+		Device->updateDescriptorSets({ bufWriteSet }, nullptr);
+	}
+
+
+	auto quadSampler = GpuAssetManager->GetDefaultSampler();
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+		std::vector<vk::DescriptorImageInfo> cubeArrayImages;
+		vk::DescriptorImageInfo viewInfoDefault;
+
+		viewInfoDefault
+			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+			.setSampler(quadSampler);
+
+		for (auto ig : irragrids) {
+			viewInfoDefault.setImageView(ig->irradianceCubemaps.view());
+			cubeArrayImages.emplace_back(viewInfoDefault);
+		}
+
+		if (irragrids.empty()) {
+			auto view = GpuAssetManager->GetGpuHandle(PodHandle<Cubemap>()).Lock().cubemap.view();
+			viewInfoDefault.setImageView(view);
+			cubeArrayImages.emplace_back(viewInfoDefault);
+		}
+		DEBUG_NAME_AUTO(descSetIrragrids[i]);
+
+
+		vk::WriteDescriptorSet depthWrite{};
+		depthWrite
+			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler) //
+			.setImageInfo(cubeArrayImages)
+			.setDstBinding(1u)
+			.setDstSet(descSetIrragrids[i])
 			.setDstArrayElement(0u);
 		Device->updateDescriptorSets(depthWrite, nullptr);
 	}

@@ -199,9 +199,11 @@ void Scene::UploadDirty(uint32 frameIndex)
 		}
 	}
 
+	// WIP: update when we build
 	for (auto ig : Get<SceneIrradianceGrid>()) {
 		if (ig->isDirty[frameIndex]) {
 			ig->UploadUbo(frameIndex);
+			requireUpdateAccel = true;
 			ig->isDirty[frameIndex] = false;
 			// anyDirty = true;
 		}

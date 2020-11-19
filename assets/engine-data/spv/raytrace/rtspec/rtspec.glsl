@@ -16,6 +16,7 @@ layout(push_constant) uniform PC
 	int pointlightCount;
 	int spotlightCount;
 	int dirlightCount;
+	int irragridCount;
 };
 
 #endif
