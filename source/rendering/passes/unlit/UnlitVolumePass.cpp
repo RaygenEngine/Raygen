@@ -222,9 +222,13 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 				}
 			}
 
-			cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-			cmdBuffer.bindVertexBuffers(0u, { cubeVtxBuf.handle() }, { vk::DeviceSize(0) });
-			cmdBuffer.draw(static_cast<uint32>(108 / 3), 1u, 0u, 0u);
+			static ConsoleVariable<bool> drawAll{ "s.bvhDebug", false };
+
+			if (drawAll || node.isLeaf) {
+				cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+				cmdBuffer.bindVertexBuffers(0u, { cubeVtxBuf.handle() }, { vk::DeviceSize(0) });
+				cmdBuffer.draw(static_cast<uint32>(108 / 3), 1u, 0u, 0u);
+			}
 		}
 	}
 
@@ -247,15 +251,31 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 	}
 
 
-	if (Input.IsJustPressed(Key::Space)) {
-		auto view = sceneDesc.viewer.ubo.view;
-		glm::vec4 cameraFwd{ -view[0][2], -view[1][2], -view[2][2], 0.f };
+	if (Input.IsJustPressed(Key::Mouse_LeftClick) && Input.IsMouseInViewport()) {
 
-		auto results = bvh->RayCastDirection(sceneDesc.viewer.ubo.position, cameraFwd, 1000.f);
+		auto view = sceneDesc.viewer.ubo.view;
+		glm::vec3 cameraFwd{ -view[0][2], -view[1][2], -view[2][2] };
+		auto mouseUv = Input.GetMouseViewportUV();
+
+		auto remappedMouse = mouseUv * 2.f - 1.f;
+
+		auto& camUbo = sceneDesc.viewer.ubo;
+
+
+		auto dir = glm::normalize(glm::vec3(
+			glm::inverse(camUbo.proj * camUbo.view) * glm::vec4(remappedMouse.x, -remappedMouse.y, 1.0f, 1.0f)));
+
+		LOG_REPORT(
+			"Shooting at: {:>5.4f}, {:>5.4f}, {:>5.4f} | dot: {:>5.4f}", dir.x, dir.y, dir.z, glm::dot(cameraFwd, dir));
+		auto results = bvh->RayCastDirection(sceneDesc.viewer.ubo.position, dir, 1000.f);
+
 		if (!results.distanceSqToHitObject.empty()) {
 			auto entId = results.distanceSqToHitObject.begin()->second;
 
 			ed::OutlinerWindow::selected = entId;
+		}
+		else {
+			ed::OutlinerWindow::selected = {};
 		}
 	}
 }

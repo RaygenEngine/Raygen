@@ -93,4 +93,14 @@ public:
 	{
 		return IsDown(key) && AreKeysDown(keys...);
 	}
+
+
+	// Pixels in game viewport coordinates from top left
+	// uses g_viewportCoordinates
+	[[nodiscard]] glm::vec2 GetMouseViewportPosition() const noexcept;
+	[[nodiscard]] bool IsMouseInViewport() const noexcept;
+
+	// Percentage from top left of the mouse position relative to the viewport
+	[[nodiscard]] glm::vec2 GetMouseViewportUV() const noexcept;
+
 } Input{};
