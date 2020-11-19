@@ -11,8 +11,6 @@
 ConsoleVariable<int32> console_rtDepth{ "rt.depth", 1, "Set rt depth" };
 ConsoleVariable<int32> console_rtSamples{ "rt.samples", 2, "Set rt samples" };
 
-// ConsoleVariable<float> console_rtScale{ "rt.scale", 1.0, "Set rt buffer scale" };
-
 namespace {
 struct PushConstant {
 	int32 frame;
@@ -21,6 +19,7 @@ struct PushConstant {
 	int32 pointlightCount;
 	int32 spotlightCount;
 	int32 dirlightCount;
+	int32 irragridCount;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -45,8 +44,7 @@ void IndirectSpecularPass::MakeRtPipeline()
 		Layouts->singleStorageBuffer.handle(),         // pointlights
 		Layouts->bufferAndSamplersDescLayout.handle(), // spotlights
 		Layouts->bufferAndSamplersDescLayout.handle(), // dirlights
-		Layouts->singleUboDescLayout.handle(),         // irragrid
-		Layouts->dynamicSamplerArray.handle(),         // irragrid's textures
+		Layouts->bufferAndSamplersDescLayout.handle(), // irragrids
 	};
 
 	// all rt shaders here
@@ -197,16 +195,8 @@ void IndirectSpecularPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRe
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 7u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSetDirlights[sceneDesc.frameIndex], 0u, nullptr);
 
-	// WIP:
-	auto irragrid = *sceneDesc.scene->Get<SceneIrradianceGrid>().begin();
-	// if (!irragrid) {
-
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 8u, 1u,
-		&irragrid->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eRayTracingKHR, m_rtPipelineLayout.get(), 9u, 1u, &irragrid->gridDescSet, 0u, nullptr);
-	//}
+		&sceneDesc.scene->tlas.sceneDesc.descSetIrragrids[sceneDesc.frameIndex], 0u, nullptr);
 
 	static int32 frameIndex = 0;
 
@@ -217,6 +207,7 @@ void IndirectSpecularPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRe
 		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
 		sceneDesc.scene->tlas.sceneDesc.spotlightCount,
 		sceneDesc.scene->tlas.sceneDesc.dirlightCount,
+		sceneDesc.scene->tlas.sceneDesc.irragridCount,
 	};
 
 	cmdBuffer.pushConstants(m_rtPipelineLayout.get(),

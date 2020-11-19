@@ -96,50 +96,28 @@ void Renderer_::RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 
 	for (auto ig : sceneDesc->Get<SceneIrradianceGrid>()) {
 		if (ig->shouldBuild.Access()) [[unlikely]] {
-			for (int32 x = 0; x < ig->ubo.width; ++x) {
-				for (int32 y = 0; y < ig->ubo.height; ++y) {
-					for (int32 z = 0; z < ig->ubo.depth; ++z) {
 
-						int32 i = 0;
-						i += x;
-						i += y * ig->ubo.width;
-						i += z * ig->ubo.width * ig->ubo.height;
+			ig->environmentCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
+				vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
+				vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
+			m_ptCubeArray.RecordPass(cmdBuffer, sceneDesc, *ig);
 
-						ig->probes[i].surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
-							vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
-							vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+			ig->environmentCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
+				vk::PipelineStageFlagBits::eComputeShader);
 
-						auto worldPos = glm::vec3(ig->ubo.posAndDist) + (glm::vec3(x, y, z) * ig->ubo.posAndDist.w);
+			ig->irradianceCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+				vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eComputeShader);
 
-						PtCubeInfo ptInfo{
-							ig->probes[i].surroundingEnv.extent.width,
-							glm::vec4(worldPos, 1.f), // grid block centers
-							0.f,
-							ig->ptSamples,
-							ig->ptBounces,
-							ig->probes[i].ptcube_faceArrayDescSet,
-						};
+			// TODO: use compute buffer
+			m_compCubeArrayConvolution.RecordPass(cmdBuffer, sceneDesc, *ig);
 
-
-						m_ptCube.RecordPass(cmdBuffer, sceneDesc, ptInfo);
-
-						ig->probes[i].surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
-							vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
-							vk::PipelineStageFlagBits::eFragmentShader);
-
-						CalcIrrInfo info{
-							ig->probes[i].irradiance.extent.width,
-							vk::uniqueToRaw(ig->probes[i].irr_framebuffer),
-							ig->probes[i].surroundingEnvSamplerDescSet,
-						};
-
-						StaticPipes::Get<IrradianceMapCalculation>().RecordPass(cmdBuffer, info);
-					}
-				}
-			}
+			ig->irradianceCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eComputeShader,
+				vk::PipelineStageFlagBits::eFragmentShader);
 		}
-	} // namespace vl
+	}
 }
 
 void Renderer_::RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)

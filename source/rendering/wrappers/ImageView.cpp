@@ -367,4 +367,45 @@ vl::RImage2D vl::RImage2D::Create(const std::string& name, vk::Extent2D extent, 
 	return img;
 }
 
+std::vector<vk::UniqueImageView> RCubemapArray::GetFaceViews(uint32 atArrayIndex, uint32 atMip) const
+{
+	std::vector<vk::UniqueImageView> faceViews;
+
+	vk::ImageViewCreateInfo viewInfo{};
+	viewInfo
+		.setImage(uHandle.get()) //
+		.setViewType(vk::ImageViewType::e2D)
+		.setFormat(format);
+
+	for (uint32 i = 0u; i < 6u; ++i) {
+
+		viewInfo.subresourceRange
+			.setAspectMask(aspectMask) //
+			.setBaseMipLevel(atMip)
+			.setLevelCount(1u)
+			.setBaseArrayLayer(atArrayIndex * 6u + i)
+			.setLayerCount(1u);
+
+		faceViews.emplace_back(Device->createImageViewUnique(viewInfo));
+	}
+
+	return faceViews;
+}
+
+vk::UniqueImageView RCubemapArray::GetCubemapView(uint32 atArrayIndex, uint32 atMip) const
+{
+	vk::ImageViewCreateInfo viewInfo{};
+	viewInfo
+		.setImage(uHandle.get()) //
+		.setViewType(vk::ImageViewType::eCube)
+		.setFormat(format);
+
+	viewInfo.subresourceRange
+		.setAspectMask(aspectMask) //
+		.setBaseMipLevel(atMip)
+		.setLevelCount(1u)
+		.setBaseArrayLayer(atArrayIndex * 6u)
+		.setLayerCount(6u);
+	return Device->createImageViewUnique(viewInfo);
+}
 } // namespace vl

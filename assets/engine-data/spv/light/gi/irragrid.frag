@@ -1,8 +1,8 @@
 #version 460 
 #extension GL_GOOGLE_include_directive: enable
-#extension GL_EXT_nonuniform_qualifier : enable
 #include "global.glsl"
 
+#include "lights/irragrid.glsl"
 #include "mainpass-inputs.glsl"
 #include "surface.glsl"
 
@@ -18,9 +18,9 @@ layout (location = 0) in vec2 uv;
 
 layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 layout(set = 2, binding = 0) uniform UBO_Irragrid { Irragrid grid; };
-layout(set = 3, binding = 0) uniform samplerCube irradianceSamplers[];
+layout(set = 3, binding = 0) uniform samplerCubeArray irradianceSamplers;
 
-#include "lights/irragrid.glsl"
+
 
 void main( ) {
 
@@ -36,9 +36,16 @@ void main( ) {
 	
 	// PERF: remove when volume based rendering
 	if(surface.depth == 1.0) {
+
+		//vec3 V = normalize(surface.position - cam.position);
+	
+		//outColor = texture(irradianceSamplers, vec4(V, 1));
+		//return; 
 		discard;
 	}
 
-	vec3 finalContribution = Irragrid_Contribution(grid, surface);
+	vec3 finalContribution = Irragrid_Contribution(grid, irradianceSamplers, surface);
 	outColor = vec4(finalContribution, 1);
 }
+
+

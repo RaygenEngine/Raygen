@@ -1,8 +1,10 @@
 #pragma once
 
 #include "engine/Listener.h"
+#include "rendering/passes/bake/ComputeCubemapArrayConvolution.h"
 #include "rendering/passes/bake/IrradianceMapCalculation.h"
 #include "rendering/passes/bake/PathtracedCubemap.h"
+#include "rendering/passes/bake/PathtracedCubemapArray.h"
 #include "rendering/passes/bake/PrefilteredMapCalculation.h"
 #include "rendering/passes/gi/IndirectSpecularPass.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
@@ -46,6 +48,8 @@ private:
 	// TODO: tidy
 	PtLightBlend m_lightblendPass;
 	PathtracedCubemap m_ptCube;
+	PathtracedCubemapArray m_ptCubeArray;
+	ComputeCubemapArrayConvolution m_compCubeArrayConvolution;
 
 
 	// PtCollection m_postprocCollection;

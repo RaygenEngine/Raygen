@@ -52,6 +52,7 @@ Device_::Device_(RPhysicalDevice& pd)
 	deviceFeatures.features.setSamplerAnisotropy(VK_TRUE);
 	deviceFeatures.features.setFragmentStoresAndAtomics(VK_TRUE);
 	deviceFeatures.features.setFillModeNonSolid(VK_TRUE);
+	deviceFeatures.features.setImageCubeArray(VK_TRUE);
 	deviceBufferAddressFeatures.setBufferDeviceAddress(VK_TRUE);
 
 	pDeviceFeaturesChain.get<vk::PhysicalDeviceDescriptorIndexingFeatures>()

@@ -98,6 +98,19 @@ struct RCubemap : RImage {
 	vk::UniqueImageView GetFaceArrayView(uint32 atMip = 0u) const;
 };
 
+struct RCubemapArray : RImage {
+	RCubemapArray() = default;
+	RCubemapArray(uint32 dims, uint32 mipCount, uint32 arraySize, vk::Format format, vk::ImageTiling tiling,
+		vk::ImageLayout initalLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties,
+		const std::string& name)
+		: RImage(vk::ImageType::e2D, { dims, dims, 1u }, mipCount, arraySize * 6u, format, tiling, initalLayout, usage,
+			vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, vk::ImageCreateFlagBits::eCubeCompatible,
+			properties, vk::ImageViewType::eCubeArray, name){};
+
+	std::vector<vk::UniqueImageView> GetFaceViews(uint32 atArrayIndex, uint32 atMip = 0u) const;
+	vk::UniqueImageView GetCubemapView(uint32 atArrayIndex, uint32 atMip = 0u) const;
+};
+
 struct RImageAttachment : RImage {
 	RImageAttachment() = default;
 	RImageAttachment(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling,

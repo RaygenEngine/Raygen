@@ -14,6 +14,7 @@ DECLARE_DIRTY_FUNC(CIrradianceGrid)(BasicComponent& bc)
 			ig.ubo.width = width;
 			ig.ubo.height = height;
 			ig.ubo.depth = depth;
+			ig.resolution = resolution;
 
 			ig.ptSamples = ptSamples;
 			ig.ptBounces = ptBounces;

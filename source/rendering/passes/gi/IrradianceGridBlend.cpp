@@ -16,7 +16,7 @@ vk::UniquePipelineLayout IrradianceGridBlend::MakePipelineLayout()
 		Layouts->mainPassLayout.internalDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
-		Layouts->dynamicSamplerArray.handle(),
+		Layouts->cubemapArray.handle(),
 	});
 }
 
@@ -138,10 +138,12 @@ void IrradianceGridBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 
 	for (auto ig : sceneDesc->Get<SceneIrradianceGrid>()) {
 
+
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &ig->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u, &ig->gridDescSet, 0u, nullptr);
+		cmdBuffer.bindDescriptorSets(
+			vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u, &ig->irradianceSamplerDescSet, 0u, nullptr);
 
 
 		// big triangle

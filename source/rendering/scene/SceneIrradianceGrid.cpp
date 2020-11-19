@@ -7,92 +7,41 @@
 
 using namespace vl;
 
+SceneIrradianceGrid::SceneIrradianceGrid()
+	: SceneStruct(sizeof(decltype(ubo)))
+{
+	environmentSamplerDescSet = Layouts->cubemapArray.AllocDescriptorSet();
+	environmentStorageDescSet = Layouts->cubemapArrayStorage.AllocDescriptorSet();
+	irradianceSamplerDescSet = Layouts->cubemapArray.AllocDescriptorSet();
+	irradianceStorageDescSet = Layouts->cubemapArrayStorage.AllocDescriptorSet();
+}
+
 void SceneIrradianceGrid::Allocate()
 {
 	Device->waitIdle();
 
-	gridDescSet = Layouts->dynamicSamplerArray.AllocDescriptorSet(ubo.width * ubo.height * ubo.depth);
+	uint32 arraySize = ubo.width * ubo.height * ubo.depth;
+	ubo.builtCount = arraySize;
 
-	ubo.builtCount = 0;
+	irradianceCubemaps = RCubemapArray(resolution, 1u, arraySize, vk::Format::eR32G32B32A32Sfloat,
+		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+		vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("IrrCubes: CHECK:irradiancegrid"));
 
-	for (int32 x = 0; x < ubo.width; ++x) {
-		for (int32 y = 0; y < ubo.height; ++y) {
-			for (int32 z = 0; z < ubo.depth; ++z) {
+	environmentCubemaps
+		= RCubemapArray(resolution, 1u, arraySize, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
+			vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
+			vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("EnvCubes: CHECK:irradiancegrid"));
 
-				ubo.builtCount++;
+	rvk::writeDescriptorImages(environmentSamplerDescSet, 0u, { environmentCubemaps.view() });
 
-				int32 i = 0;
-				i += x;
-				i += y * ubo.width;
-				i += z * ubo.width * ubo.height;
+	rvk::writeDescriptorImages(environmentStorageDescSet, 0u, { environmentCubemaps.view() },
+		vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
-				probes[i].surroundingEnvSamplerDescSet = Layouts->cubemapLayout.AllocDescriptorSet();
-				probes[i].surroundingEnvStorageDescSet = Layouts->singleStorageImage.AllocDescriptorSet();
+	rvk::writeDescriptorImages(irradianceSamplerDescSet, 0u, { irradianceCubemaps.view() });
 
-				probes[i].ptcube_faceArrayDescSet = Layouts->storageImageArray6.AllocDescriptorSet();
-
-
-				probes[i].surroundingEnv = RCubemap(32u, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
-					vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
-					vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("SurrCube: CHECK:irradiancegrid"));
-
-				probes[i].irradiance = RCubemap(32u, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
-					vk::ImageLayout::eUndefined,
-					vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled
-						| vk::ImageUsageFlagBits::eColorAttachment,
-					vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("IrrCube: CHECK:irradiancegrid"));
-
-				rvk::writeDescriptorImages(
-					probes[i].surroundingEnvSamplerDescSet, 0u, { probes[i].surroundingEnv.view() });
-				rvk::writeDescriptorImages(probes[i].surroundingEnvStorageDescSet, 0u,
-					{ probes[i].surroundingEnv.view() }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
-
-				probes[i].ptcube_faceViews = probes[i].surroundingEnv.GetFaceViews();
-
-				rvk::writeDescriptorImageArray(probes[i].ptcube_faceArrayDescSet, 0u,
-					vk::uniqueToRaw(probes[i].ptcube_faceViews), nullptr, vk::DescriptorType::eStorageImage,
-					vk::ImageLayout::eGeneral);
-
-				probes[i].irr_faceViews = probes[i].irradiance.GetFaceViews();
-
-				// create framebuffers for each face
-				probes[i].irr_framebuffer.clear();
-				for (uint32 f = 0; f < 6; ++f) {
-					std::array attachments{ probes[i].irr_faceViews[f].get() };
-
-					vk::FramebufferCreateInfo createInfo{};
-					createInfo
-						.setRenderPass(Layouts->singleFloatColorAttPassLayout.compatibleRenderPass.get()) //
-						.setAttachments(attachments)
-						.setWidth(probes[i].irradiance.extent.width)
-						.setHeight(probes[i].irradiance.extent.width)
-						.setLayers(1);
-
-					probes[i].irr_framebuffer.emplace_back();
-					probes[i].irr_framebuffer[f] = Device->createFramebufferUnique(createInfo);
-				}
-
-
-				vk::DescriptorImageInfo viewInfo{};
-				viewInfo
-					.setImageView(probes[i].irradiance.view()) //
-					.setSampler(GpuAssetManager->GetDefaultSampler())
-					.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-
-				// PERF:
-				vk::WriteDescriptorSet depthWrite{};
-				depthWrite
-					.setDescriptorType(vk::DescriptorType::eCombinedImageSampler) //
-					.setImageInfo(viewInfo)
-					.setDstBinding(0u)
-					.setDstSet(gridDescSet)
-					.setDstArrayElement(i); // PERF:
-				Device->updateDescriptorSets({ depthWrite }, nullptr);
-			}
-		}
-	}
-
+	rvk::writeDescriptorImages(irradianceStorageDescSet, 0u, { irradianceCubemaps.view() },
+		vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
 	shouldBuild.Set();
 }

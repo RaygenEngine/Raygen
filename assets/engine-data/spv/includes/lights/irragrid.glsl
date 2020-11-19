@@ -9,7 +9,7 @@
 #include "sampling.glsl"
 #include "surface.glsl"
 
-vec3 SampleIrrad(Irragrid grid, Surface surface, float x, float y, float z) 
+vec3 SampleIrrad(Irragrid grid, samplerCubeArray irradianceSamplers, Surface surface, float x, float y, float z) 
 {
 	float c = 0;
 	c += x;
@@ -27,12 +27,12 @@ vec3 SampleIrrad(Irragrid grid, Surface surface, float x, float y, float z)
 	// SMATH: which normal
 	vec3 kd = 1.0 - F_SchlickRoughness(surface.nov, surface.f0, surface.a);
 
-	return kd * texture(irradianceSamplers[nonuniformEXT(i)], normalize(reprojN)).rgb
+	return kd * texture(irradianceSamplers, vec4(normalize(reprojN), i)).rgb
 	//	 * saturate(dot(N, irrPos - surface.position));
 	;
 }
 
-vec3 Irragrid_Contribution(Irragrid grid, Surface surface)
+vec3 Irragrid_Contribution(Irragrid grid, samplerCubeArray irradianceSamplers, Surface surface)
 {
 	vec3 probeCount  = vec3(grid.width - 1, grid.height - 1, grid.depth - 1);
 	vec3 size = probeCount * grid.distToAdjacent;
@@ -57,15 +57,15 @@ vec3 Irragrid_Contribution(Irragrid grid, Surface surface)
 	float sv = uvw.y * probeCount.y;
 	float sw = uvw.z * probeCount.z;
 	
-	vec3 FTL = SampleIrrad(grid, surface, floor(su), floor(sv), floor(sw));
-	vec3 FTR = SampleIrrad(grid, surface, ceil (su), floor(sv), floor(sw));
-	vec3 FBL = SampleIrrad(grid, surface, floor(su), ceil (sv), floor(sw));
-	vec3 FBR = SampleIrrad(grid, surface, ceil (su), ceil (sv), floor(sw));
-	 				  
-	vec3 BTL = SampleIrrad(grid, surface, floor(su), floor(sv), ceil (sw));
-	vec3 BTR = SampleIrrad(grid, surface, ceil (su), floor(sv), ceil (sw));
-	vec3 BBL = SampleIrrad(grid, surface, floor(su), ceil (sv), ceil (sw));
-	vec3 BBR = SampleIrrad(grid, surface, ceil (su), ceil (sv), ceil (sw));
+	vec3 FTL = SampleIrrad(grid, irradianceSamplers, surface, floor(su), floor(sv), floor(sw));
+	vec3 FTR = SampleIrrad(grid, irradianceSamplers, surface, ceil (su), floor(sv), floor(sw));
+	vec3 FBL = SampleIrrad(grid, irradianceSamplers, surface, floor(su), ceil (sv), floor(sw));
+	vec3 FBR = SampleIrrad(grid, irradianceSamplers, surface, ceil (su), ceil (sv), floor(sw));
+								 
+	vec3 BTL = SampleIrrad(grid, irradianceSamplers, surface, floor(su), floor(sv), ceil (sw));
+	vec3 BTR = SampleIrrad(grid, irradianceSamplers, surface, ceil (su), floor(sv), ceil (sw));
+	vec3 BBL = SampleIrrad(grid, irradianceSamplers, surface, floor(su), ceil (sv), ceil (sw));
+	vec3 BBR = SampleIrrad(grid, irradianceSamplers, surface, ceil (su), ceil (sv), ceil (sw));
 
 	float rightPercent = fract(su);
 	float bottomPercent = fract(sv);
