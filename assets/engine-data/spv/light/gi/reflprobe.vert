@@ -11,15 +11,12 @@ layout(location = 0) in vec3 position;
 // uniforms
 
 layout(push_constant) uniform PC {
-	mat4 reflVolMatVP;
-    vec4 reflPosition;
-    int lodCount;
-} push;
-
+	mat4 sphereVolMatVp;
+};
 
 void main() 
 {
-    gl_Position = push.reflVolMatVP * vec4(position, 1.0);
+    gl_Position = sphereVolMatVp * vec4(position, 1.0);
 
     uv = gl_Position.xy / gl_Position.w;
 	uv = uv.xy * 0.5 + 0.5;

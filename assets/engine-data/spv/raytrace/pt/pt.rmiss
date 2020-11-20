@@ -3,9 +3,17 @@
 #extension GL_EXT_ray_tracing : require
 
 #include "global.glsl"
-#include "raytrace/pt/pt.glsl"
 
 #include "sky.glsl"
+
+struct hitPayload
+{
+	vec3 radiance;
+	vec3 accumThroughput;
+
+	int depth;
+	uint seed;
+};
 
 layout(location = 0) rayPayloadInEXT hitPayload inPrd;
 

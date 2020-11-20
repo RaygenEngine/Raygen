@@ -177,6 +177,15 @@ struct Spotlight {
 		int hasShadow;    
 };
 
+struct Reflprobe {
+	int lodCount;
+	float innerRadius;
+	float outerRadius;
+	float pad0;
+	vec3 position;
+	float pad1;
+};
+
 struct Irragrid {
 	int width;
 	int height;

@@ -23,13 +23,13 @@ void SceneIrragrid::Allocate()
 	uint32 arraySize = ubo.width * ubo.height * ubo.depth;
 	ubo.builtCount = arraySize;
 
-	irradianceCubemaps = RCubemapArray(resolution, 1u, arraySize, vk::Format::eR32G32B32A32Sfloat,
+	irradianceCubemaps = RCubemapArray(irrResolution, 1u, arraySize, vk::Format::eR32G32B32A32Sfloat,
 		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("IrrCubes: CHECK:Irragrid"));
 
 	environmentCubemaps
-		= RCubemapArray(resolution, 1u, arraySize, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
+		= RCubemapArray(irrResolution, 1u, arraySize, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
 			vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
 			vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("EnvCubes: CHECK:Irragrid"));
 

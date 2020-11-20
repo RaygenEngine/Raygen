@@ -8,9 +8,7 @@
 
 // TODO:
 #define RAY
-
 #include "global.glsl"
-#include "raytrace/pt/pt.glsl"
 
 #include "bsdf.glsl"
 #include "lights/dirlight.glsl"
@@ -20,6 +18,24 @@
 #include "random.glsl"
 #include "sampling.glsl"
 #include "surface.glsl"
+
+struct hitPayload
+{
+	vec3 radiance;
+	vec3 accumThroughput;
+
+	int depth;
+	uint seed;
+};
+
+layout(push_constant) uniform PC
+{
+	int samples;
+	int bounces;
+	int pointlightCount;
+	int spotlightCount;
+	int dirlightCount;
+};
 
 hitAttributeEXT vec2 baryCoord;
 layout(location = 0) rayPayloadInEXT hitPayload prd;
@@ -48,7 +64,7 @@ struct OldVertex
 	vec2 uv;
 };
 
-layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAs;
+layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 
 // Handle just radiance here (no throughput). 
@@ -168,13 +184,13 @@ struct GeometryGroup {
 	mat4 invTransform;
 };
 
-layout(set = 2, binding = 0, std430) readonly buffer GeometryGroups { GeometryGroup g[]; } geomGroups;
-layout(set = 2, binding = 1) uniform sampler2D textureSamplers[];
-layout(set = 3, binding = 0, std430) readonly buffer Pointlights { Pointlight light[]; } pointlights;
-layout(set = 4, binding = 0, std430) readonly buffer Spotlights { Spotlight light[]; } spotlights;
-layout(set = 4, binding = 1) uniform sampler2DShadow spotlightShadowmap[];
-layout(set = 5, binding = 0, std430) readonly buffer Dirlights { Dirlight light[]; } dirlights;
-layout(set = 5, binding = 1) uniform sampler2DShadow dirlightShadowmap[];
+layout(set = 3, binding = 0, std430) readonly buffer GeometryGroups { GeometryGroup g[]; } geomGroups;
+layout(set = 3, binding = 1) uniform sampler2D textureSamplers[];
+layout(set = 4, binding = 0, std430) readonly buffer Pointlights { Pointlight light[]; } pointlights;
+layout(set = 5, binding = 0, std430) readonly buffer Spotlights { Spotlight light[]; } spotlights;
+layout(set = 5, binding = 1) uniform sampler2DShadow spotlightShadowmap[];
+layout(set = 6, binding = 0, std430) readonly buffer Dirlights { Dirlight light[]; } dirlights;
+layout(set = 6, binding = 1) uniform sampler2DShadow dirlightShadowmap[];
 
 vec4 texture(samplerRef s, vec2 uv) {
 	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
@@ -297,7 +313,7 @@ void main() {
 
 	// INDIRECT
 	{
-		float p_specular = 0.5;
+		float p_specular = 0.5; // WIP:
 
 
 		vec3 brdf_NoL_invpdf = rand(prd.seed) > p_specular ? SampleSpecularDirection(surface, prd.seed) / p_specular

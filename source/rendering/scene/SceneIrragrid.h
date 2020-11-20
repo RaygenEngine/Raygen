@@ -31,8 +31,7 @@ struct SceneIrragrid : public SceneStruct {
 	int32 ptSamples{ 2 };
 	int32 ptBounces{ 2 };
 
-	int32 resolution{ 32 };
+	int32 irrResolution{ 32 };
 
-	// PERF: this should only allocate if need be
 	void Allocate();
 };

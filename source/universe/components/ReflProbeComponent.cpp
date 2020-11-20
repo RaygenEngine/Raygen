@@ -8,21 +8,24 @@ DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)
 	notifyBuild = false;
 
 	return [=, position = bc.world().position](SceneReflprobe& rp) {
-		rp.position = glm::vec4(position, 1.f);
+		rp.ubo.position = glm::vec4(position, 1.f);
 
 		if (FullDirty) {
 
-			rp.innerRadius = innerRadius;
-			rp.outerRadius = outerRadius;
+			rp.ubo.innerRadius = innerRadius;
+			rp.ubo.outerRadius = outerRadius;
 
 			rp.ptSamples = ptSamples;
 			rp.ptBounces = ptBounces;
 
+			rp.irrResolution = irrResolution;
+
 			rp.ubo.lodCount = prefLodCount;
+			rp.prefSamples = prefSamples;
 
-			rp.shouldBuild.Assign(build);
-
-			rp.ShouldResize();
+			if (build) {
+				rp.Allocate();
+			}
 		}
 	};
 }

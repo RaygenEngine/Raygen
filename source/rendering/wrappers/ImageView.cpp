@@ -330,6 +330,49 @@ std::vector<vk::UniqueImageView> RCubemap::GetFaceViews(uint32 atMip) const
 	return faceViews;
 }
 
+std::vector<vk::UniqueImageView> RCubemap::GetMipViews() const
+{
+	std::vector<vk::UniqueImageView> mipViews;
+
+	vk::ImageViewCreateInfo viewInfo{};
+	viewInfo
+		.setImage(uHandle.get()) //
+		.setViewType(vk::ImageViewType::eCube)
+		.setFormat(format);
+
+	for (uint32 i = 0u; i < mipLevels; ++i) {
+
+		viewInfo.subresourceRange
+			.setAspectMask(aspectMask) //
+			.setBaseMipLevel(i)
+			.setLevelCount(1u)
+			.setBaseArrayLayer(0u)
+			.setLayerCount(VK_REMAINING_ARRAY_LAYERS);
+
+		mipViews.emplace_back(Device->createImageViewUnique(viewInfo));
+	}
+
+	return mipViews;
+}
+
+vk::UniqueImageView RCubemap::GetMipView(uint32 atMip) const
+{
+	vk::ImageViewCreateInfo viewInfo{};
+	viewInfo
+		.setImage(uHandle.get()) //
+		.setViewType(vk::ImageViewType::eCube)
+		.setFormat(format);
+
+	viewInfo.subresourceRange
+		.setAspectMask(aspectMask) //
+		.setBaseMipLevel(atMip)
+		.setLevelCount(1u)
+		.setBaseArrayLayer(0u)
+		.setLayerCount(6u);
+
+	return Device->createImageViewUnique(viewInfo);
+}
+
 vk::UniqueImageView RCubemap::GetFaceArrayView(uint32 atMip) const
 {
 	vk::UniqueImageView faceArrayView;

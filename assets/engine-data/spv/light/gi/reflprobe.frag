@@ -2,8 +2,6 @@
 #extension GL_GOOGLE_include_directive: enable
 
 #include "global.glsl"
-// WIP:
-layout(set = 3, binding = 10) uniform sampler2D std_BrdfLut;
 #include "lights/reflprobe.glsl"
 #include "mainpass-inputs.glsl"
 #include "surface.glsl"
@@ -18,16 +16,12 @@ layout(location = 0) noperspective in vec2 uv;
 
 // uniform
 
-layout(push_constant) uniform PC {
-	mat4 reflVolMatVP;
-    vec4 reflPosition;
-    int lodCount;
-} push;
-
 layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
-layout(set = 2, binding = 0) uniform samplerCube skyboxSampler;
-layout(set = 2, binding = 1) uniform samplerCube irradianceSampler;
-layout(set = 2, binding = 2) uniform samplerCube prefilteredSampler;
+layout(set = 2, binding = 0) uniform UBO_Reflprobe { Reflprobe rp; };
+layout(set = 3, binding = 0) uniform samplerCube environmentSampler;
+layout(set = 4, binding = 0) uniform samplerCube irradianceSampler;
+layout(set = 5, binding = 0) uniform samplerCube prefilteredSampler;
+layout(set = 6, binding = 10) uniform sampler2D std_BrdfLut; // WIP: globally accessible?
 
 void main( ) 
 {
@@ -42,18 +36,24 @@ void main( )
 	);
 
 	// for preview
-	///if(surface.depth == 1.0) {
+	//if(surface.depth == 1.0) {
 	
 		// Don't use surfaceOutgoingLightDirDir, change of basis breaks at inf depth
-		//V = normalize(cam.position - surface.position);
+	//	vec3 V = normalize(surface.position - cam.position);
 	
-		//outColor = sampleCubemapLH(skyboxSampler, normalize(-V));
-		//return; 
+	//	outColor = textureLod(prefilteredSampler, V, 0);
+	//	return; 
 	//}
 	
-	vec3 finalContribution = Reflprobe_Contribution(irradianceSampler, prefilteredSampler, push.lodCount, surface);
+	vec3 finalContribution = Reflprobe_Contribution(rp, std_BrdfLut, irradianceSampler, prefilteredSampler, surface);
 	outColor = vec4(finalContribution, 1);
 }
+
+
+
+
+
+
 
 
 

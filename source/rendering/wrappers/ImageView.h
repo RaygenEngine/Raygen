@@ -95,6 +95,8 @@ struct RCubemap : RImage {
 	void RCubemap::CopyBuffer(const RBuffer& buffers, size_t pixelSize, uint32 mipCount);
 
 	std::vector<vk::UniqueImageView> GetFaceViews(uint32 atMip = 0u) const;
+	std::vector<vk::UniqueImageView> GetMipViews() const;
+	vk::UniqueImageView GetMipView(uint32 atMip = 0u) const;
 	vk::UniqueImageView GetFaceArrayView(uint32 atMip = 0u) const;
 };
 

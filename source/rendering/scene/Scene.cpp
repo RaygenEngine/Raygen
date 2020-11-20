@@ -199,12 +199,20 @@ void Scene::UploadDirty(uint32 frameIndex)
 		}
 	}
 
-	// WIP: update when we build
 	for (auto ig : Get<SceneIrragrid>()) {
 		if (ig->isDirty[frameIndex]) {
 			ig->UploadUbo(frameIndex);
 			requireUpdateAccel = true;
 			ig->isDirty[frameIndex] = false;
+			// anyDirty = true;
+		}
+	}
+
+	for (auto rp : Get<SceneReflprobe>()) {
+		if (rp->isDirty[frameIndex]) {
+			rp->UploadUbo(frameIndex);
+			requireUpdateAccel = true;
+			rp->isDirty[frameIndex] = false;
 			// anyDirty = true;
 		}
 	}

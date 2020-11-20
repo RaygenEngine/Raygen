@@ -2,10 +2,10 @@
 
 #include "engine/Listener.h"
 #include "rendering/passes/bake/ComputeCubemapArrayConvolution.h"
-#include "rendering/passes/bake/IrradianceMapCalculation.h"
+#include "rendering/passes/bake/ComputeCubemapConvolution.h"
+#include "rendering/passes/bake/ComputePrefilteredConvolution.h"
 #include "rendering/passes/bake/PathtracedCubemap.h"
 #include "rendering/passes/bake/PathtracedCubemapArray.h"
-#include "rendering/passes/bake/PrefilteredMapCalculation.h"
 #include "rendering/passes/gi/IndirectSpecularPass.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
 #include "rendering/wrappers/CmdBuffer.h"
@@ -47,10 +47,11 @@ private:
 
 	// TODO: tidy
 	PtLightBlend m_lightblendPass;
-	PathtracedCubemap m_ptCube;
-	PathtracedCubemapArray m_ptCubeArray;
-	ComputeCubemapArrayConvolution m_compCubeArrayConvolution;
-
+	PathtracedCubemap m_ptCubemap;
+	PathtracedCubemapArray m_ptCubemapArray;
+	ComputeCubemapArrayConvolution m_compCubemapArrayConvolution;
+	ComputeCubemapConvolution m_compCubemapConvolution;
+	ComputePrefilteredConvolution m_compPrefilteredConvolution;
 
 	// PtCollection m_postprocCollection;
 
