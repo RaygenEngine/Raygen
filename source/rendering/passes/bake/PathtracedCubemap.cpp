@@ -8,8 +8,6 @@
 
 namespace {
 struct PushConstant {
-	glm::vec4 reflPos;
-	float innerRadius;
 	int32 samples;
 	int32 bounces;
 	int32 pointlightCount;
@@ -27,24 +25,23 @@ PathtracedCubemap::PathtracedCubemap()
 }
 
 void PathtracedCubemap::RecordPass(
-	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const PtCubeInfo& info)
+	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const SceneReflprobe& rp)
 {
-
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_pipeline.get());
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 1u, 1u,
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 2u, 1u,
 		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 2u, 1u,
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 3u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSet[sceneDesc.frameIndex], 0u, nullptr);
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 3u, 1u,
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 4u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSetPointlights[sceneDesc.frameIndex], 0u, nullptr);
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 4u, 1u,
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 5u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSetSpotlights[sceneDesc.frameIndex], 0u, nullptr);
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 5u, 1u,
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 6u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSetDirlights[sceneDesc.frameIndex], 0u, nullptr);
 
 	vk::DeviceSize progSize = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of a program identifier
@@ -78,10 +75,8 @@ void PathtracedCubemap::RecordPass(
 
 
 	PushConstant pc{
-		info.worldPos,
-		info.traceOffset,
-		info.samples,
-		info.bounces,
+		rp.ptSamples,
+		rp.ptBounces,
 		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
 		sceneDesc.scene->tlas.sceneDesc.spotlightCount,
 		sceneDesc.scene->tlas.sceneDesc.dirlightCount,
@@ -90,17 +85,21 @@ void PathtracedCubemap::RecordPass(
 	cmdBuffer.pushConstants(m_pipelineLayout.get(),
 		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant), &pc);
 
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 0u, 1u, &info.faceArrayDescSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 0u, 1u,
+		&rp.environmentStorageDescSet, 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 1u, 1u,
+		&rp.uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 	cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
-		&callableShaderBindingTable, info.resolution, info.resolution, 1);
+		&callableShaderBindingTable, rp.environment.extent.width, rp.environment.extent.height, 1);
 }
 
 void PathtracedCubemap::MakeRtPipeline()
 {
 	std::array layouts{
-		Layouts->storageImageArray6.handle(),
+		Layouts->singleStorageImage.handle(),
+		Layouts->singleUboDescLayout.handle(),
 		Layouts->accelLayout.handle(),
 		Layouts->bufferAndSamplersDescLayout.handle(),
 		Layouts->singleStorageBuffer.handle(),

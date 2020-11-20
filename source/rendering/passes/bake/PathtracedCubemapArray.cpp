@@ -100,7 +100,7 @@ void PathtracedCubemapArray::RecordPass(
 			&ig->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 		cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
-			&callableShaderBindingTable, ig->resolution, ig->resolution, 1);
+			&callableShaderBindingTable, ig->irrResolution, ig->irrResolution, 1);
 	}
 }
 

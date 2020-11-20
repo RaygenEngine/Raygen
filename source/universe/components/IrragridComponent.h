@@ -15,12 +15,12 @@ struct CIrragrid : CSceneBase {
 		REFLECT_VAR(height);
 		REFLECT_VAR(depth);
 
-		REFLECT_VAR(resolution);
-
 		REFLECT_VAR(distToAdjacent);
 
 		REFLECT_VAR(ptSamples);
 		REFLECT_VAR(ptBounces);
+
+		REFLECT_VAR(irrResolution);
 
 		REFLECT_VAR(notifyBuild, PropertyFlags::Transient);
 		REFLECT_VAR(hideBillboards, PropertyFlags::Transient);
@@ -30,11 +30,12 @@ struct CIrragrid : CSceneBase {
 	int32 height{ 3 };
 	int32 depth{ 3 };
 
-	int32 resolution{ 32 };
-
 	float distToAdjacent{ 1.f };
+
 	int32 ptSamples{ 2 };
 	int32 ptBounces{ 2 };
+
+	int32 irrResolution{ 32 };
 
 	bool notifyBuild{ true };
 	bool hideBillboards{ false };

@@ -160,7 +160,7 @@ Layouts_::Layouts_()
 
 	// single sampler
 	singleSamplerDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
-		vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR);
+		vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eCompute);
 	singleSamplerDescLayout.Generate();
 
 	// cubemap
@@ -202,6 +202,9 @@ Layouts_::Layouts_()
 
 	storageImageArray6.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll, 6u);
 	storageImageArray6.Generate();
+
+	storageImageArray10.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll, 10u);
+	storageImageArray10.Generate();
 
 	cubemapArray.AddBinding(eCombinedImageSampler, eFragment | eRaygenKHR | eClosestHitKHR | eCompute);
 	cubemapArray.Generate();

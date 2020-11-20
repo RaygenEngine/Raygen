@@ -14,7 +14,7 @@ DECLARE_DIRTY_FUNC(CIrragrid)(BasicComponent& bc)
 			ig.ubo.width = width;
 			ig.ubo.height = height;
 			ig.ubo.depth = depth;
-			ig.resolution = resolution;
+			ig.irrResolution = irrResolution;
 
 			ig.ptSamples = ptSamples;
 			ig.ptBounces = ptBounces;

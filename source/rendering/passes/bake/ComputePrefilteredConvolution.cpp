@@ -1,78 +1,70 @@
-#include "ComputeCubemapArrayConvolution.h"
+#include "ComputePrefilteredConvolution.h"
 
 #include "rendering/Renderer.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
-#include "rendering/scene/SceneIrragrid.h"
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/wrappers/ImageView.h"
 
 namespace {
 struct PushConstant {
-	int32 x;
-	int32 y;
-	int32 z;
+	int32 mip;
+	int32 samples;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
-ComputeCubemapArrayConvolution::ComputeCubemapArrayConvolution()
+ComputePrefilteredConvolution::ComputePrefilteredConvolution()
 {
 	MakeCompPipeline();
 }
 
-void ComputeCubemapArrayConvolution::RecordPass(
-	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const SceneIrragrid& ig)
+void ComputePrefilteredConvolution::RecordPass(
+	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const SceneReflprobe& rp)
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, m_pipeline.get());
 
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eCompute, m_pipelineLayout.get(), 0u, 1u, &ig.irradianceStorageDescSet, 0u, nullptr);
+		vk::PipelineBindPoint::eCompute, m_pipelineLayout.get(), 0u, 1u, &rp.prefilteredStorageDescSet, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, m_pipelineLayout.get(), 1u, 1u,
-		&ig.uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
+		&rp.uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eCompute, m_pipelineLayout.get(), 2u, 1u, &ig.environmentSamplerDescSet, 0u, nullptr);
+		vk::PipelineBindPoint::eCompute, m_pipelineLayout.get(), 2u, 1u, &rp.environmentSamplerDescSet, 0u, nullptr);
 
-	for (int32 x = 0; x < ig.ubo.width; ++x) {
-		for (int32 y = 0; y < ig.ubo.height; ++y) {
-			for (int32 z = 0; z < ig.ubo.depth; ++z) {
+	for (int mip = 0; mip < rp.ubo.lodCount; ++mip) {
 
-				PushConstant pc{
-					x,
-					y,
-					z,
-				};
+		PushConstant pc{
+			mip,
+			rp.prefSamples,
+		};
 
-				cmdBuffer.pushConstants(
-					m_pipelineLayout.get(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);
+		cmdBuffer.pushConstants(
+			m_pipelineLayout.get(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);
 
+		uint32 mipResolution = static_cast<uint32>(rp.prefiltered.extent.width * std::pow(0.5, mip));
 
-				cmdBuffer.dispatch(ig.irrResolution / 32, ig.irrResolution / 32, 1);
-			}
-		}
+		cmdBuffer.dispatch(mipResolution / 32, mipResolution / 32, 1);
 	}
 }
 
-void ComputeCubemapArrayConvolution::MakeCompPipeline()
+void ComputePrefilteredConvolution::MakeCompPipeline()
 {
 	std::array layouts{
-		Layouts->cubemapArrayStorage.handle(),
+		Layouts->storageImageArray10.handle(),
 		Layouts->singleUboDescLayout.handle(),
-		Layouts->cubemapArray.handle(),
+		Layouts->singleSamplerDescLayout.handle(),
 	};
 
 	// all rt shaders here
-	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/compute/irradiance-array.shader");
+	GpuAsset<Shader>& shader = GpuAssetManager->CompileShader("engine-data/spv/compute/prefiltered.shader");
 	shader.onCompileRayTracing = [&]() {
 		MakeCompPipeline();
 	};
-
-	std::vector<vk::PipelineShaderStageCreateInfo> stages;
 
 	// pipeline layout
 	vk::PushConstantRange pushConstantRange{};

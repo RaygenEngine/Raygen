@@ -65,32 +65,33 @@ void Renderer_::RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 
 	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
 		if (rp->shouldBuild.Access()) [[unlikely]] {
-			rp->surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+			rp->environment.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 				vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
-			PtCubeInfo ptInfo{
-				rp->surroundingEnv.extent.width,
-				rp->position,
-				rp->innerRadius,
-				rp->ptSamples,
-				rp->ptBounces,
-				rp->ptcube_faceArrayDescSet,
-			};
+			m_ptCubemap.RecordPass(cmdBuffer, sceneDesc, *rp);
 
-			m_ptCube.RecordPass(cmdBuffer, sceneDesc, ptInfo);
-
-			rp->surroundingEnv.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+			rp->environment.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
+				vk::PipelineStageFlagBits::eComputeShader);
+
+			rp->irradiance.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+				vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eComputeShader);
+
+			// CHECK: use compute buffer
+			m_compCubemapConvolution.RecordPass(cmdBuffer, sceneDesc, *rp);
+
+			rp->irradiance.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eComputeShader,
 				vk::PipelineStageFlagBits::eFragmentShader);
 
-			CalcIrrInfo info{
-				rp->irradiance.extent.width,
-				vk::uniqueToRaw(rp->irr_framebuffer),
-				rp->surroundingEnvSamplerDescSet,
-			};
+			rp->prefiltered.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
+				vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eComputeShader);
 
-			StaticPipes::Get<IrradianceMapCalculation>().RecordPass(cmdBuffer, info);
-			StaticPipes::Get<PrefilteredMapCalculation>().RecordPass(cmdBuffer, *rp);
+			m_compPrefilteredConvolution.RecordPass(cmdBuffer, sceneDesc, *rp);
+
+			rp->prefiltered.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eComputeShader,
+				vk::PipelineStageFlagBits::eFragmentShader);
 		}
 	}
 
@@ -101,7 +102,7 @@ void Renderer_::RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 				vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
 				vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
-			m_ptCubeArray.RecordPass(cmdBuffer, sceneDesc, *ig);
+			m_ptCubemapArray.RecordPass(cmdBuffer, sceneDesc, *ig);
 
 			ig->environmentCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
@@ -110,8 +111,8 @@ void Renderer_::RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 			ig->irradianceCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 				vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eComputeShader);
 
-			// TODO: use compute buffer
-			m_compCubeArrayConvolution.RecordPass(cmdBuffer, sceneDesc, *ig);
+			// CHECK: use compute buffer
+			m_compCubemapArrayConvolution.RecordPass(cmdBuffer, sceneDesc, *ig);
 
 			ig->irradianceCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eComputeShader,
