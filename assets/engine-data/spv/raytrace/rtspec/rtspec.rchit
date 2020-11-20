@@ -253,19 +253,19 @@ void main() {
 		}
 	}
 
-
-	if(prd.depth > depth){
-		prd.radiance = radiance;
-		return;
-	}
-
-	// INDIRECT Diffuse 
+	// INDIRECT Diffuse
     {
 		for(int i = 0; i < irragridCount; ++i) {
 			Irragrid ig = irragrids.grid[i];
 			radiance += Irragrid_Contribution(ig, irradianceSamplers[nonuniformEXT(i)], surface);
 		}
     }
+
+	// this depth refers to indirect specular/ glossy bounces
+	if(prd.depth > depth){
+		prd.radiance = radiance;
+		return;
+	}
 
 	// INDIRECT Specular
 	{
@@ -275,7 +275,7 @@ void main() {
 		radiance += RadianceOfRay(surface.position, L) * brdf_NoL_invpdf;
 	}
 
-	prd.radiance = radiance  + 50;
+	prd.radiance = radiance;
 }
 
 
