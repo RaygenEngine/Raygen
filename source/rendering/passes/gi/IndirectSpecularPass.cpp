@@ -5,7 +5,7 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneIrradianceGrid.h"
+#include "rendering/scene/SceneIrragrid.h"
 #include "rendering/util/WriteDescriptorSets.h"
 
 ConsoleVariable<int32> console_rtDepth{ "rt.depth", 1, "Set rt depth" };

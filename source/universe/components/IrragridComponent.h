@@ -3,10 +3,10 @@
 #include "universe/ComponentsDb.h"
 #include "universe/SceneComponentBase.h"
 
-struct SceneIrradianceGrid;
+struct SceneIrragrid;
 
-struct CIrradianceGrid : CSceneBase {
-	REFLECTED_SCENE_COMP(CIrradianceGrid, SceneIrradianceGrid)
+struct CIrragrid : CSceneBase {
+	REFLECTED_SCENE_COMP(CIrragrid, SceneIrragrid)
 	{
 		// REFLECT_ICON(FA_CUBE);
 		// REFLECT_CATEGORY("Rendering");

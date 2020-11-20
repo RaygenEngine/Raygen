@@ -9,7 +9,7 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneGeometry.h"
-#include "rendering/scene/SceneIrradianceGrid.h"
+#include "rendering/scene/SceneIrragrid.h"
 #include "rendering/scene/ScenePointlight.h"
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
@@ -75,7 +75,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 		static_cast<int32>(scene->Get<SceneReflprobe>().size()));
 
 	sceneDesc.descSetIrragrids = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
-		static_cast<int32>(scene->Get<SceneIrradianceGrid>().size()));
+		static_cast<int32>(scene->Get<SceneIrragrid>().size()));
 
 	int32 totalGroups = 0;
 
@@ -111,7 +111,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 	sceneDesc.WriteSpotlights(scene->Get<SceneSpotlight>().condensed);
 	sceneDesc.WriteDirlights(scene->Get<SceneDirlight>().condensed);
 	sceneDesc.WriteReflprobes(scene->Get<SceneReflprobe>().condensed);
-	sceneDesc.WriteIrragrids(scene->Get<SceneIrradianceGrid>().condensed);
+	sceneDesc.WriteIrragrids(scene->Get<SceneIrragrid>().condensed);
 	sceneDesc.WriteGeomGroups();
 	Build();
 	Device->waitIdle();
@@ -442,11 +442,11 @@ void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& refl
 	}
 }
 
-void RtSceneDescriptor::WriteIrragrids(const std::vector<SceneIrradianceGrid*>& irragrids)
+void RtSceneDescriptor::WriteIrragrids(const std::vector<SceneIrragrid*>& irragrids)
 {
 	irragridCount = static_cast<int32>(irragrids.size());
 
-	uint32 uboSize = sizeof(IrradianceGrid_UBO) + sizeof(IrradianceGrid_UBO) % 8;
+	uint32 uboSize = sizeof(Irragrid_UBO) + sizeof(Irragrid_UBO) % 8;
 
 	irragridsBuffer = { (uboSize * irragridCount),
 		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer
@@ -460,7 +460,7 @@ void RtSceneDescriptor::WriteIrragrids(const std::vector<SceneIrradianceGrid*>& 
 	byte* mapCursor = reinterpret_cast<byte*>(Device->mapMemory(irragridsBuffer.memory(), 0, irragridsBuffer.size));
 
 	for (auto ig : irragrids) {
-		memcpy(mapCursor, &ig->ubo, sizeof(IrradianceGrid_UBO));
+		memcpy(mapCursor, &ig->ubo, sizeof(Irragrid_UBO));
 		mapCursor += uboSize;
 	}
 

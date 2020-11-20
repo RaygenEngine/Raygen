@@ -1,4 +1,4 @@
-#include "IrradianceGridBlend.h"
+#include "IrragridBlend.h"
 
 #include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
@@ -6,11 +6,11 @@
 #include "rendering/core/PipeUtl.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneIrradianceGrid.h"
+#include "rendering/scene/SceneIrragrid.h"
 
 namespace vl {
 
-vk::UniquePipelineLayout IrradianceGridBlend::MakePipelineLayout()
+vk::UniquePipelineLayout IrragridBlend::MakePipelineLayout()
 {
 	return rvk::makeLayoutNoPC({
 		Layouts->mainPassLayout.internalDescLayout.handle(),
@@ -20,11 +20,11 @@ vk::UniquePipelineLayout IrradianceGridBlend::MakePipelineLayout()
 	});
 }
 
-vk::UniquePipeline IrradianceGridBlend::MakePipeline()
+vk::UniquePipeline IrragridBlend::MakePipeline()
 {
 	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/gi/irragrid.shader");
 	gpuShader.onCompile = [&]() {
-		StaticPipes::Recompile<IrradianceGridBlend>();
+		StaticPipes::Recompile<IrragridBlend>();
 	};
 
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
@@ -128,7 +128,7 @@ vk::UniquePipeline IrradianceGridBlend::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void IrradianceGridBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void IrragridBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
 	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
 
@@ -136,7 +136,7 @@ void IrradianceGridBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
 
-	for (auto ig : sceneDesc->Get<SceneIrradianceGrid>()) {
+	for (auto ig : sceneDesc->Get<SceneIrragrid>()) {
 
 
 		cmdBuffer.bindDescriptorSets(

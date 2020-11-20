@@ -2,7 +2,7 @@
 #include "rendering/scene/SceneStructs.h"
 #include "rendering/wrappers/ImageView.h"
 
-struct IrradianceGrid_UBO {
+struct Irragrid_UBO {
 	int32 width{ 3 };
 	int32 height{ 3 };
 	int32 depth{ 3 };
@@ -12,11 +12,11 @@ struct IrradianceGrid_UBO {
 };
 
 
-struct SceneIrradianceGrid : public SceneStruct {
-	SceneIrradianceGrid();
+struct SceneIrragrid : public SceneStruct {
+	SceneIrragrid();
 	void UploadUbo(uint32 curFrame) { UploadDataToUbo(curFrame, &ubo, sizeof(decltype(ubo))); }
 
-	IrradianceGrid_UBO ubo{};
+	Irragrid_UBO ubo{};
 
 	vk::DescriptorSet environmentSamplerDescSet;
 	vk::DescriptorSet environmentStorageDescSet;

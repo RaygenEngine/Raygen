@@ -4,7 +4,7 @@
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneGeometry.h"
-#include "rendering/scene/SceneIrradianceGrid.h"
+#include "rendering/scene/SceneIrragrid.h"
 #include "rendering/scene/ScenePointlight.h"
 #include "rendering/scene/SceneReflprobe.h"
 #include "rendering/scene/SceneSpotlight.h"
@@ -99,7 +99,7 @@ void Register(std::unordered_map<size_t, UniquePtr<SceneCollectionBase>>& collec
 Scene::Scene()
 {
 	Register<SceneGeometry, SceneAnimatedGeometry, SceneCamera, SceneSpotlight, ScenePointlight, SceneDirlight,
-		SceneReflprobe, SceneIrradianceGrid>(collections);
+		SceneReflprobe, SceneIrragrid>(collections);
 
 
 	EnqueueEndFrame();
@@ -126,7 +126,7 @@ Scene::~Scene()
 	destroyVec(Get<ScenePointlight>().condensed);
 	destroyVec(Get<SceneDirlight>().condensed);
 	destroyVec(Get<SceneReflprobe>().condensed);
-	destroyVec(Get<SceneIrradianceGrid>().condensed);
+	destroyVec(Get<SceneIrragrid>().condensed);
 
 	// NEXT: proper type erased cleanup here.
 }
@@ -200,7 +200,7 @@ void Scene::UploadDirty(uint32 frameIndex)
 	}
 
 	// WIP: update when we build
-	for (auto ig : Get<SceneIrradianceGrid>()) {
+	for (auto ig : Get<SceneIrragrid>()) {
 		if (ig->isDirty[frameIndex]) {
 			ig->UploadUbo(frameIndex);
 			requireUpdateAccel = true;

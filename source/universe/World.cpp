@@ -3,7 +3,7 @@
 #include "editor/Editor.h"
 #include "universe/components/CameraComponent.h"
 #include "universe/components/DirlightComponent.h"
-#include "universe/components/IrradianceGridComponent.h"
+#include "universe/components/IrragridComponent.h"
 #include "universe/components/PointlightComponent.h"
 #include "universe/components/ReflProbeComponent.h"
 #include "universe/components/ScriptComponent.h"
@@ -11,8 +11,8 @@
 #include "universe/components/StaticMeshComponent.h"
 #include "universe/systems/AnimatorSystem.h"
 
-#include <nlohmann/json.hpp>
 #include <fstream>
+#include <nlohmann/json.hpp>
 
 World::World(const fs::path& path)
 	: srcPath(path)

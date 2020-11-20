@@ -4,7 +4,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
-#include "rendering/scene/SceneIrradianceGrid.h"
+#include "rendering/scene/SceneIrragrid.h"
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/wrappers/ImageView.h"
 
@@ -27,7 +27,7 @@ PathtracedCubemapArray::PathtracedCubemapArray()
 }
 
 void PathtracedCubemapArray::RecordPass(
-	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const SceneIrradianceGrid& ig)
+	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const SceneIrragrid& ig)
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, m_pipeline.get());
 
@@ -75,7 +75,7 @@ void PathtracedCubemapArray::RecordPass(
 	const vk::StridedBufferRegionKHR hitShaderBindingTable{ m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
 	const vk::StridedBufferRegionKHR callableShaderBindingTable;
 
-	for (auto ig : sceneDesc->Get<SceneIrradianceGrid>()) {
+	for (auto ig : sceneDesc->Get<SceneIrragrid>()) {
 
 		ig->environmentCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 			vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);

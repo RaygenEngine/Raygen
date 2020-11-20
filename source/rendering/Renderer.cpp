@@ -12,14 +12,14 @@
 #include "rendering/passes/geometry/DepthmapPass.h"
 #include "rendering/passes/geometry/GBufferPass.h"
 #include "rendering/passes/gi/AmbientBlend.h"
-#include "rendering/passes/gi/IrradianceGridBlend.h"
+#include "rendering/passes/gi/IrragridBlend.h"
 #include "rendering/passes/gi/ReflprobeBlend.h"
 #include "rendering/passes/unlit/UnlitBillboardPass.h"
 #include "rendering/passes/unlit/UnlitGeometryPass.h"
 #include "rendering/passes/unlit/UnlitVolumePass.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/scene/SceneDirlight.h"
-#include "rendering/scene/SceneIrradianceGrid.h"
+#include "rendering/scene/SceneIrragrid.h"
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/util/WriteDescriptorSets.h"
@@ -94,7 +94,7 @@ void Renderer_::RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 		}
 	}
 
-	for (auto ig : sceneDesc->Get<SceneIrradianceGrid>()) {
+	for (auto ig : sceneDesc->Get<SceneIrragrid>()) {
 		if (ig->shouldBuild.Access()) [[unlikely]] {
 
 			ig->environmentCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
@@ -151,10 +151,10 @@ void Renderer_::RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 
 		StaticPipes::Get<ReflprobeBlend>().Draw(cmdBuffer, sceneDesc);
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<IrradianceGridBlend>().layout(),
-			0u, 1u, &m_mainPassInst[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<IrragridBlend>().layout(), 0u,
+			1u, &m_mainPassInst[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
 
-		StaticPipes::Get<IrradianceGridBlend>().Draw(cmdBuffer, sceneDesc);
+		StaticPipes::Get<IrragridBlend>().Draw(cmdBuffer, sceneDesc);
 	});
 }
 
