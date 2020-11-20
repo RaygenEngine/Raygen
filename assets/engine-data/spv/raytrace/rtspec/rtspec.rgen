@@ -78,7 +78,7 @@ void main() {
 		);
 		
 	
-	if(surface.depth == 1.0 || surface.a < SPEC_THRESHOLD || surface.a > 0.3) {
+	if(surface.depth == 1.0) {
 		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(0.0, 0.0, 0.0, 1.0));
 		return; 
 	}
@@ -101,8 +101,6 @@ void main() {
 		prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples + smpl);
 		prd.depth = 1; // gbuffer
 
-		//vec3 divs = max(surface.f0, texture(g_UVDrawIndexSampler, uv).a), vec3(0.1));
-		
 		vec3 brdf_NoL_invpdf = SampleSpecularDirection(surface, prd.seed);
 
 		vec3 L = surfaceIncidentLightDir(surface);

@@ -4,7 +4,7 @@
 
 namespace vl {
 
-struct IrradianceGridBlend : public StaticPipeBase {
+struct IrragridBlend : public StaticPipeBase {
 	vk::UniquePipelineLayout MakePipelineLayout() override;
 	vk::UniquePipeline MakePipeline() override;
 

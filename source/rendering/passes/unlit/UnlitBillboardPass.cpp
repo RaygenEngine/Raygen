@@ -5,9 +5,9 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneIrradianceGrid.h"
+#include "rendering/scene/SceneIrragrid.h"
 #include "universe/Universe.h"
-#include "universe/components/IrradianceGridComponent.h"
+#include "universe/components/IrragridComponent.h"
 #include "universe/components/PointlightComponent.h"
 #include "universe/components/ReflProbeComponent.h"
 
@@ -188,7 +188,7 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 		cmdBuffer.draw(4u, 1u, 0u, 0u);
 	}
 
-	for (auto& [ent, ig, bc] : Universe::MainWorld->GetView<CIrradianceGrid, BasicComponent>().each()) {
+	for (auto& [ent, ig, bc] : Universe::MainWorld->GetView<CIrragrid, BasicComponent>().each()) {
 
 		if (ig.hideBillboards) {
 			continue;

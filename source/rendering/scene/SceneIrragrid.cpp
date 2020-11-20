@@ -1,4 +1,4 @@
-#include "SceneIrradianceGrid.h"
+#include "SceneIrragrid.h"
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/scene/Scene.h"
@@ -7,7 +7,7 @@
 
 using namespace vl;
 
-SceneIrradianceGrid::SceneIrradianceGrid()
+SceneIrragrid::SceneIrragrid()
 	: SceneStruct(sizeof(decltype(ubo)))
 {
 	environmentSamplerDescSet = Layouts->cubemapArray.AllocDescriptorSet();
@@ -16,7 +16,7 @@ SceneIrradianceGrid::SceneIrradianceGrid()
 	irradianceStorageDescSet = Layouts->cubemapArrayStorage.AllocDescriptorSet();
 }
 
-void SceneIrradianceGrid::Allocate()
+void SceneIrragrid::Allocate()
 {
 	Device->waitIdle();
 
@@ -26,12 +26,12 @@ void SceneIrradianceGrid::Allocate()
 	irradianceCubemaps = RCubemapArray(resolution, 1u, arraySize, vk::Format::eR32G32B32A32Sfloat,
 		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("IrrCubes: CHECK:irradiancegrid"));
+		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("IrrCubes: CHECK:Irragrid"));
 
 	environmentCubemaps
 		= RCubemapArray(resolution, 1u, arraySize, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
 			vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
-			vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("EnvCubes: CHECK:irradiancegrid"));
+			vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("EnvCubes: CHECK:Irragrid"));
 
 	rvk::writeDescriptorImages(environmentSamplerDescSet, 0u, { environmentCubemaps.view() });
 

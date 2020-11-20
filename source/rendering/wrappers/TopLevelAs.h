@@ -7,7 +7,7 @@ struct SceneSpotlight;
 struct ScenePointlight;
 struct SceneReflprobe;
 struct SceneDirlight;
-struct SceneIrradianceGrid;
+struct SceneIrragrid;
 struct Scene;
 
 
@@ -38,7 +38,7 @@ struct RtSceneDescriptor {
 	void WriteSpotlights(const std::vector<SceneSpotlight*>& spotlights);
 	void WriteDirlights(const std::vector<SceneDirlight*>& dirlights);
 	void WriteReflprobes(const std::vector<SceneReflprobe*>& reflprobes);
-	void WriteIrragrids(const std::vector<SceneIrradianceGrid*>& irragrids);
+	void WriteIrragrids(const std::vector<SceneIrragrid*>& irragrids);
 	void WriteGeomGroups();
 
 	int32 spotlightCount{ 0 };

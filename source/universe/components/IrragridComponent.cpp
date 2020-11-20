@@ -1,13 +1,13 @@
-#include "IrradianceGridComponent.h"
+#include "IrragridComponent.h"
 
-#include "rendering/scene/SceneIrradianceGrid.h"
+#include "rendering/scene/SceneIrragrid.h"
 
-DECLARE_DIRTY_FUNC(CIrradianceGrid)(BasicComponent& bc)
+DECLARE_DIRTY_FUNC(CIrragrid)(BasicComponent& bc)
 {
 	auto build = notifyBuild;
 	notifyBuild = false;
 
-	return [=, position = bc.world().position](SceneIrradianceGrid& ig) {
+	return [=, position = bc.world().position](SceneIrragrid& ig) {
 		ig.ubo.posAndDist = glm::vec4(position, distToAdjacent);
 
 		if (FullDirty) {

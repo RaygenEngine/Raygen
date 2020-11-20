@@ -4,7 +4,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
-#include "rendering/scene/SceneIrradianceGrid.h"
+#include "rendering/scene/SceneIrragrid.h"
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/wrappers/ImageView.h"
 
@@ -25,7 +25,7 @@ ComputeCubemapArrayConvolution::ComputeCubemapArrayConvolution()
 }
 
 void ComputeCubemapArrayConvolution::RecordPass(
-	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const SceneIrradianceGrid& ig)
+	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const SceneIrragrid& ig)
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, m_pipeline.get());
 

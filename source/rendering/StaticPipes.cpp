@@ -6,7 +6,7 @@
 #include "rendering/passes/direct/PointlightBlend.h"
 #include "rendering/passes/direct/SpotlightBlend.h"
 #include "rendering/passes/gi/AmbientBlend.h"
-#include "rendering/passes/gi/IrradianceGridBlend.h"
+#include "rendering/passes/gi/IrragridBlend.h"
 #include "rendering/passes/gi/ReflprobeBlend.h"
 #include "rendering/passes/unlit/UnlitBillboardPass.h"
 #include "rendering/passes/unlit/UnlitVolumePass.h"
@@ -18,7 +18,7 @@ void StaticPipes::InternalInitRegistered()
 	StaticPipes::Init<PointlightBlend>();
 	StaticPipes::Init<SpotlightBlend>();
 	StaticPipes::Init<ReflprobeBlend>();
-	StaticPipes::Init<IrradianceGridBlend>();
+	StaticPipes::Init<IrragridBlend>();
 	StaticPipes::Init<IrradianceMapCalculation>();
 	StaticPipes::Init<PrefilteredMapCalculation>();
 	StaticPipes::Init<UnlitVolumePass>();

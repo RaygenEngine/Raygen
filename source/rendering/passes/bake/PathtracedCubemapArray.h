@@ -2,7 +2,7 @@
 #include "rendering/wrappers/Buffer.h"
 
 struct SceneRenderDesc;
-struct SceneIrradianceGrid;
+struct SceneIrragrid;
 
 namespace vl {
 
@@ -10,7 +10,7 @@ class PathtracedCubemapArray {
 public:
 	PathtracedCubemapArray();
 
-	void RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const SceneIrradianceGrid& ig);
+	void RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const SceneIrragrid& ig);
 
 private:
 	vk::UniquePipeline m_pipeline;
