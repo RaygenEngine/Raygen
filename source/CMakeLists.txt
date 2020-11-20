@@ -5,6 +5,7 @@ project (Raygen)
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS "*.cpp")
 list(REMOVE_ITEM SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/AppMain.cpp")
 list(REMOVE_ITEM SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/empty.cpp")
+list(REMOVE_ITEM SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/dynlib/*") # WIP: Does not work. Fix me 
 file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS "*.h")
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Raygen" FILES ${HEADER_FILES} ${SOURCE_FILES})
 
@@ -12,6 +13,14 @@ set(APP_SOURCES
 	AppMain.cpp
 )
 
+project (Raygen-Dynlib)
+file(GLOB_RECURSE SOURCE_FILES_DYN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/dynlib/*.cpp")
+file(GLOB_RECURSE HEADER_FILES_DYN CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/dynlib/*.h")
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Raygen-Dynlib" FILES ${HEADER_FILES_DYN} ${SOURCE_FILES_DYN})
+set ( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON )
+add_library(Raygen-Dynlib SHARED ${SOURCE_FILES_DYN} ${HEADER_FILES_DYN})
+# Hacked below to build with optimisations on debug config.
+set ( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS OFF )
 
 # Include shaders to a separate project
 project (Raygen-Shaders)
@@ -57,7 +66,7 @@ target_link_libraries(Raygen
 	${GLFW_LIBRARIES}
 	${RAYGEN_SPIRV_CROSS_MODULES}
 	ImGuiColorTextEdit
-
+    Raygen-Dynlib
 )
 
 target_link_libraries(Raygen-App
@@ -74,6 +83,20 @@ add_dependencies(Raygen
 	glfw
 	spdlog
 )
+
+# should figure out a cross platform way to build the dynamic lib on release always. 
+if (MSVC) 
+	# also remove this stupid rtc removal hack
+	#
+	# the scope of regex removal seems to be for this folder only so we should not need to re-add it to all the 
+	# dependencies but who knows what happens in the future
+	STRING (REGEX REPLACE "/RTC[^ ]*" "" CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG}")
+	target_compile_options(Raygen-Dynlib PRIVATE "/O2 /Ob2")
+	foreach(target_var Raygen-App Raygen)
+		target_compile_options(${target_var} PRIVATE $<$<CONFIG:Debug>: /RTC1>)
+	endforeach()
+endif()
+
 
 target_include_directories(Raygen PUBLIC ${INCLUDE_DEPENDENCIES_DIRECTORY})
 target_include_directories(Raygen PUBLIC ${INCLUDE_DEPENDENCIES_DIRECTORY}/nlohmann)
