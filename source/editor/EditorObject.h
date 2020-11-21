@@ -76,8 +76,12 @@ private:
 	void HandleInput();
 	void Dockspace();
 
+	void HandleClickSelection();
+
 	IterableSafeVector<std::function<void()>> m_postDrawCommands;
 	std::vector<std::function<void()>> m_deferredCommands;
+
+	BasePodHandle lastClickAssetSelected{};
 
 } * EditorObject{};
 

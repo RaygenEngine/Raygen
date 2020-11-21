@@ -6,39 +6,24 @@
 #include "universe/World.h"
 
 using RayCastResult = PhysicsIntersection::RayCastResult;
+using RayCastGeomChit = PhysicsIntersection::RayCastGeomChit;
 
-static bool RayTriangleIntersect(
-	glm::vec3 rayOrig, glm::vec3 rayDir, glm::vec3 vertex0, glm::vec3 vertex1, glm::vec3 vertex2, float& t)
+namespace {
+std::pair<glm::vec3, glm::vec3> RayToEntityMeshSpace(Entity ent, glm::vec3 start, glm::vec3 end)
 {
-	glm::vec3 edge1 = vertex1 - vertex0;
-	glm::vec3 edge2 = vertex2 - vertex0;
+	const Mesh& mesh = *ent.Get<CStaticMesh>().mesh.Lock();
+	glm::mat4 invTransform = glm::inverse(ent->world().transform);
 
-	glm::vec3 h = glm::cross(rayDir, edge2);
-	float a = glm::dot(edge1, h);
+	glm::vec4 trStart = invTransform * glm::vec4(start, 1.f);
+	glm::vec4 trEnd = invTransform * glm::vec4(end, 1.f);
+	return { glm::vec3(trStart), glm::normalize(glm::vec3(trEnd - trStart)) };
+}
+} // namespace
 
-	if (math::equalsZero(a)) {
-		return false;
-	}
-
-	float f = 1.0 / a;
-	glm::vec3 s = rayOrig - vertex0;
-
-	float u = f * (glm::dot(s, h));
-
-	// PERF: Optimize branch prediction here
-	if (u < 0.0 || u > 1.0) {
-		return false;
-	}
-
-	glm::vec3 q = glm::cross(s, edge1);
-	float v = f * glm::dot(rayDir, q);
-
-	if (v < 0.0 || u + v > 1.0) {
-		return false;
-	}
-
-	t = f * glm::dot(edge2, q);
-	return !math::equalsZero(t);
+PhysicsIntersection::PhysicsIntersection()
+{
+	AnyHitFunc = loader.LibLoadFunc(LIBLOAD_FUNC(RayAnyHitGeometry));
+	ClosestHitFunc = loader.LibLoadFunc(LIBLOAD_FUNC(RayClosestHitGeometry));
 }
 
 RayCastResult PhysicsIntersection::RayCastDirection(glm::vec3 start, glm::vec3 direction, float distance) const
@@ -58,13 +43,8 @@ RayCastResult PhysicsIntersection::RayCast(glm::vec3 start, glm::vec3 end) const
 			return false;
 		}
 		const Mesh& mesh = *ent.Get<CStaticMesh>().mesh.Lock();
-		glm::mat4 invTransform = glm::inverse(ent->world().transform);
 
-		glm::vec4 trStart = invTransform * glm::vec4(start, 1.f);
-		glm::vec4 trEnd = invTransform * glm::vec4(end, 1.f);
-
-		glm::vec3 dir = glm::vec3(trEnd - trStart);
-
+		auto [rayOrigin, rayDir] = RayToEntityMeshSpace(ent, start, end - start);
 
 		for (const GeometrySlot& geom : mesh.geometrySlots) {
 			// NOTE: using raw ptrs for debug performance here. (no index debugging)
@@ -73,20 +53,10 @@ RayCastResult PhysicsIntersection::RayCast(glm::vec3 start, glm::vec3 end) const
 
 			const auto size = geom.indices.size();
 			LOG_REPORT("Vtx: {}", size / 3);
-			for (int32 i = 0; i < size; i += 3) {
-				float outT = 0.f;
-				if (RayTriangleIntersect(         //
-						trStart,                  //
-						dir,                      //
-						vtx[ind[i]].position,     //
-						vtx[ind[i + 1]].position, //
-						vtx[ind[i + 2]].position, //
-						outT)) {
 
-					// Break lambda
-					return false;
-				}
-			}
+			if (AnyHitFunc(rayOrigin, rayDir, ind, vtx, size)) {
+				return false;
+			};
 		}
 		// Did not hit anything in static mesh
 		return true;
@@ -94,6 +64,44 @@ RayCastResult PhysicsIntersection::RayCast(glm::vec3 start, glm::vec3 end) const
 
 
 	return { std::move(results.distanceSqToHitObject) };
+}
+
+RayCastGeomChit PhysicsIntersection::RayCastChitGeometry(glm::vec3 start, glm::vec3 end) const
+{
+	RayCastGeomChit result;
+	TIMER_SCOPE("RayCast");
+	auto originalHits = tree->RayCastExactHit(start, end);
+
+	result.distance = std::numeric_limits<float>::max();
+
+	for (auto [distanceSq, ent] : originalHits.distanceSqToHitObject) {
+		if (distanceSq > 0 && glm::sqrt(distanceSq) > result.distance) {
+			// return result; WIP:
+		}
+
+		if (!ent.Has<CStaticMesh>()) {
+			continue;
+		}
+
+
+		auto [rayOrigin, rayDir] = RayToEntityMeshSpace(ent, start, end);
+
+		const Mesh& mesh = *ent.Get<CStaticMesh>().mesh.Lock();
+		for (int32 i = 0; const GeometrySlot& geom : mesh.geometrySlots) {
+			auto thisDist
+				= ClosestHitFunc(rayOrigin, rayDir, geom.indices.data(), geom.vertices.data(), geom.indices.size());
+
+			if (thisDist < result.distance) {
+				result.entity = ent;
+				result.geomGroupIndex = i;
+				result.distance = thisDist;
+			}
+			++i;
+		}
+	}
+
+
+	return result;
 }
 
 void PhysicsIntersection::Create(World& world)

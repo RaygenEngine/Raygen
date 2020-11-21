@@ -178,6 +178,19 @@ void ComponentWindows::CloseAsset(PodEntry* entry)
 	m_assetWindows.Remove(entry);
 }
 
+
+void ComponentWindows::OpenAsset(BasePodHandle handle)
+{
+	OpenAsset(AssetRegistry::GetEntry(handle));
+}
+
+
+void ComponentWindows::CloseAsset(BasePodHandle handle)
+{
+	CloseAsset(AssetRegistry::GetEntry(handle));
+}
+
+
 UniquePtr<AssetEditorWindow> ComponentWindows::CreateAssetEditorWindow(PodEntry* entry)
 {
 	size_t outIndex = 0;

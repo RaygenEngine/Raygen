@@ -216,40 +216,5 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 			}
 		}
 	}
-
-	using namespace math;
-
-	glm::vec3 h = { 1, 1, 1 };
-	AABB cube = { -h, h };
-
-	if (Input.IsJustPressed(Key::Mouse_LeftClick) && Input.IsMouseInViewport()) {
-		if (!Universe::MainWorld->physics.tree) {
-			return;
-		}
-		auto view = sceneDesc.viewer.ubo.view;
-		glm::vec3 cameraFwd{ -view[0][2], -view[1][2], -view[2][2] };
-		auto mouseUv = Input.GetMouseViewportUV();
-
-		auto remappedMouse = mouseUv * 2.f - 1.f;
-
-		auto& camUbo = sceneDesc.viewer.ubo;
-
-
-		auto dir = glm::normalize(glm::vec3(
-			glm::inverse(camUbo.proj * camUbo.view) * glm::vec4(remappedMouse.x, -remappedMouse.y, 1.0f, 1.0f)));
-
-		// LOG_REPORT(
-		//	"Shooting at: {:>5.4f}, {:>5.4f}, {:>5.4f} | dot: {:>5.4f}", dir.x, dir.y, dir.z, glm::dot(cameraFwd, dir));
-
-		auto results = Universe::MainWorld->physics.RayCastDirection(sceneDesc.viewer.ubo.position, dir, 1000.f);
-
-		if (!results.entitiesHit.empty()) {
-			auto entId = results.entitiesHit.begin()->second;
-			ed::OutlinerWindow::selected = entId;
-		}
-		else {
-			ed::OutlinerWindow::selected = {};
-		}
-	}
 }
 } // namespace vl
