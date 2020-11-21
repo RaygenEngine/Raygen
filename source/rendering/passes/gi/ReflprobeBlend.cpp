@@ -81,7 +81,7 @@ void ReflprobeBlend::MakeSphere(int32 sectorCount, int32 stackCount, float radiu
 
 ReflprobeBlend::ReflprobeBlend()
 {
-	MakeSphere(18, 9);
+	MakeSphere(36, 18);
 }
 
 vk::UniquePipelineLayout ReflprobeBlend::MakePipelineLayout()
@@ -180,8 +180,8 @@ vk::UniquePipeline ReflprobeBlend::MakePipeline()
 		.setRasterizerDiscardEnable(VK_FALSE)
 		.setPolygonMode(vk::PolygonMode::eFill)
 		.setLineWidth(1.f)
-		.setCullMode(vk::CullModeFlagBits::eBack)
-		.setFrontFace(vk::FrontFace::eClockwise)
+		.setCullMode(vk::CullModeFlagBits::eFront)
+		.setFrontFace(vk::FrontFace::eCounterClockwise)
 		.setDepthBiasEnable(VK_FALSE)
 		.setDepthBiasConstantFactor(0.f)
 		.setDepthBiasClamp(0.f)

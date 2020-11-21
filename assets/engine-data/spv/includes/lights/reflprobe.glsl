@@ -5,7 +5,12 @@
 #include "surface.glsl"
 
 vec3 Reflprobe_Contribution(Reflprobe rp, sampler2D brdfLutSampler, samplerCube irradianceSampler, samplerCube prefilteredSampler, Surface surface)
-{		
+{	
+	// PERF:
+	if(distance(surface.position, rp.position) > rp.outerRadius) {
+		return vec3(0);
+	}
+
 	vec3 R = outOnbSpace(surface.basis, reflect(-surface.v));
 	
 	// CHECK: roughness / a differences

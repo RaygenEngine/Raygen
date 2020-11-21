@@ -262,7 +262,7 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 
 	RecordSecondaryPass(cmdBuffer, sceneDesc);
 
-	m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
+	// m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
 
 	RecordPostProcessPass(cmdBuffer, sceneDesc);
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
