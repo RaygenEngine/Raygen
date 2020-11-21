@@ -26,11 +26,6 @@ App_::~App_()
 
 void App_::PreMainInit(int32 argc_, char* argv_[])
 {
-	DynLibLoader lib("Raygen-Dynlib");
-	auto sumFnPtr = lib.GetProcAddrExt<int, int, int>("Sum");
-	auto result = sumFnPtr(1, 2);
-	LOG_REPORT("Result: {}", result);
-
 	// Copy the arguments for later use.
 	argc = argc_;
 	argv = argv_;

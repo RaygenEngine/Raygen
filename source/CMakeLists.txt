@@ -1,11 +1,24 @@
 project (Raygen-App)
 project (Raygen)
 
+function (filter_items aItems aRegEx)
+    # For each item in our list
+    foreach (item ${${aItems}})
+        # Check if our items matches our regular expression
+        if ("${item}" MATCHES ${aRegEx})
+            # Remove current item from our list
+            list (REMOVE_ITEM ${aItems} ${item})
+        endif ("${item}" MATCHES ${aRegEx})
+    endforeach(item)
+    # Provide output parameter
+    set(${aItems} ${${aItems}} PARENT_SCOPE)
+endfunction (filter_items)
 
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS "*.cpp")
 list(REMOVE_ITEM SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/AppMain.cpp")
 list(REMOVE_ITEM SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/empty.cpp")
-list(REMOVE_ITEM SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/dynlib/*") # WIP: Does not work. Fix me 
+filter_items(SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/dynlib/.*.cpp")
+list(REMOVE_ITEM SOURCE_FILES DYNLIB_FILES)
 file(GLOB_RECURSE HEADER_FILES CONFIGURE_DEPENDS "*.h")
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Raygen" FILES ${HEADER_FILES} ${SOURCE_FILES})
 
@@ -24,7 +37,7 @@ set ( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS OFF )
 
 # Include shaders to a separate project
 project (Raygen-Shaders)
-set(SHADER_DIR "${CMAKE_SOURCE_DIR}/assets/engine-data/spv/")
+set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../assets/engine-data/spv/")
 file(GLOB_RECURSE SHADER_SOURCES CONFIGURE_DEPENDS "${SHADER_DIR}/*.*")
 list(FILTER SHADER_SOURCES EXCLUDE REGEX ".spv$")
 source_group(TREE ${SHADER_DIR} PREFIX "Shaders" FILES ${SHADER_SOURCES})
@@ -32,7 +45,7 @@ set (DUMMY_CPP "${CMAKE_CURRENT_SOURCE_DIR}/empty.cpp")
 add_library(Raygen-Shaders ${SHADER_SOURCES} ${DUMMY_CPP})
 
 
-# add pch for msvc 
+# add Icon for windows binary
 if(MSVC)
 	list(APPEND APP_SOURCES platform/windows/resources/WinResource.rc)
 endif()
@@ -43,7 +56,8 @@ add_executable(Raygen-App ${APP_SOURCES})
 
 # Must be used after add_library because CMake needs to know that pch.h is used in the particlar project
 target_precompile_headers(Raygen PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/pch.h") 
- 
+target_precompile_headers(Raygen-Dynlib PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/pch.h")  
+
 if(MSVC)
 	set_property(TARGET Raygen-App PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
@@ -73,6 +87,12 @@ target_link_libraries(Raygen-App
 	Raygen
 )
 
+# Instead of slapping everything in the dll specifically add what is used, when required
+# This might be problematic when we mix debug/release libs in the dll
+target_link_libraries(Raygen-Dynlib
+	Vulkan::Vulkan
+)
+
 # instruct glfw to globaly include vulkan headers
 add_compile_definitions(GLFW_INCLUDE_VULKAN)
 add_compile_definitions(GLFW_INCLUDE_NONE)
@@ -91,7 +111,7 @@ if (MSVC)
 	# the scope of regex removal seems to be for this folder only so we should not need to re-add it to all the 
 	# dependencies but who knows what happens in the future
 	STRING (REGEX REPLACE "/RTC[^ ]*" "" CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG}")
-	target_compile_options(Raygen-Dynlib PRIVATE "/O2 /Ob2")
+	target_compile_options(Raygen-Dynlib PRIVATE "/O2" "/Ob2")
 	foreach(target_var Raygen-App Raygen)
 		target_compile_options(${target_var} PRIVATE $<$<CONFIG:Debug>: /RTC1>)
 	endforeach()
@@ -118,11 +138,9 @@ target_include_directories(Raygen PUBLIC ${Vulkan_INCLUDE_DIR}/../glslang)
 target_include_directories(Raygen PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(Raygen PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
-#include_directories(RAYGEN_INCLUDE_DIRS_LOCAL)
-
 # enforce cpp20
-set_property(TARGET Raygen Raygen-App PROPERTY CXX_STANDARD 20)
-set_property(TARGET Raygen Raygen-App PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET Raygen Raygen-App Raygen-Dynlib PROPERTY CXX_STANDARD 20)
+set_property(TARGET Raygen Raygen-App Raygen-Dynlib PROPERTY CXX_STANDARD_REQUIRED ON)
 
 
 #definitions (WINDOWS)
@@ -138,6 +156,6 @@ if(MSVC)
 	
 endif()
 
-
-set(RAYGEN_INCLUDE_DIRS ${RAYGEN_INCLUDE_DIRS_LOCAL}
-    CACHE INTERNAL "Engine Include Directories" FORCE)
+# Copy all includes from "Raygen" target to "Raygen-Dynlib"
+get_target_property(RAYGEN_INCLUDE_DIRS Raygen INCLUDE_DIRECTORIES)
+target_include_directories(Raygen-Dynlib PRIVATE ${RAYGEN_INCLUDE_DIRS})

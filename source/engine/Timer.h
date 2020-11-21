@@ -29,6 +29,9 @@ struct Timer {
 		return ch::duration_cast<DurationType>(ch::system_clock::now() - startTime).count();
 	}
 
+	// Avoid for precission, prefer Get with integers
+	[[nodiscard]] float GetDeltaSeconds() const { return Get<ch::microseconds>() / 1000.f * 1000.f; }
+
 
 	[[nodiscard]] auto GetTimeDiff() const { return ch::system_clock::now() - startTime; }
 };

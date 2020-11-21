@@ -56,6 +56,64 @@ namespace detail {
 
 		return false;
 	}
+
+	// Return exact hitpoint
+	inline bool CheckLineBoxExact(glm::vec3 B1, glm::vec3 B2, glm::vec3 L1, glm::vec3 L2, glm::vec3& Hit)
+	{
+		if (L2.x <= B1.x && L1.x <= B1.x)
+			return false;
+		if (L2.x >= B2.x && L1.x >= B2.x)
+			return false;
+		if (L2.y <= B1.y && L1.y <= B1.y)
+			return false;
+		if (L2.y >= B2.y && L1.y >= B2.y)
+			return false;
+		if (L2.z <= B1.z && L1.z <= B1.z)
+			return false;
+		if (L2.z >= B2.z && L1.z >= B2.z)
+			return false;
+		if (L1.x >= B1.x && L1.x <= B2.x && L1.y >= B1.y && L1.y <= B2.y && L1.z >= B1.z && L1.z <= B2.z) {
+			Hit = L1;
+			return true;
+		}
+
+		glm::vec3 tempHit;
+		float dstSq = std::numeric_limits<float>::max();
+
+		// PERF: super dumb way to find correct hitpoint
+		if (GetIntersection(L1.x - B1.x, L2.x - B1.x, L1, L2, tempHit) && InBox(tempHit, B1, B2, 1)
+			&& glm::distance2(L1, tempHit) < dstSq) {
+			Hit = tempHit;
+			dstSq = glm::distance2(L1, tempHit);
+		}
+		if (GetIntersection(L1.y - B1.y, L2.y - B1.y, L1, L2, tempHit) && InBox(tempHit, B1, B2, 2)
+			&& glm::distance2(L1, tempHit) < dstSq) {
+			Hit = tempHit;
+			dstSq = glm::distance2(L1, tempHit);
+		}
+		if (GetIntersection(L1.z - B1.z, L2.z - B1.z, L1, L2, tempHit) && InBox(tempHit, B1, B2, 3)
+			&& glm::distance2(L1, tempHit) < dstSq) {
+			Hit = tempHit;
+			dstSq = glm::distance2(L1, tempHit);
+		}
+		if (GetIntersection(L1.x - B2.x, L2.x - B2.x, L1, L2, tempHit) && InBox(tempHit, B1, B2, 1)
+			&& glm::distance2(L1, tempHit) < dstSq) {
+			Hit = tempHit;
+			dstSq = glm::distance2(L1, tempHit);
+		}
+		if (GetIntersection(L1.y - B2.y, L2.y - B2.y, L1, L2, tempHit) && InBox(tempHit, B1, B2, 2)
+			&& glm::distance2(L1, tempHit) < dstSq) {
+			Hit = tempHit;
+			dstSq = glm::distance2(L1, tempHit);
+		}
+		if (GetIntersection(L1.z - B2.z, L2.z - B2.z, L1, L2, tempHit) && InBox(tempHit, B1, B2, 3)
+			&& glm::distance2(L1, tempHit) < dstSq) {
+			Hit = tempHit;
+			dstSq = glm::distance2(L1, tempHit);
+		}
+
+		return dstSq < std::numeric_limits<float>::max();
+	}
 } // namespace detail
 
 
@@ -167,6 +225,20 @@ struct AABB {
 		}
 
 		return detail::CheckLineBox(min, max, a, b, hitPoint);
+	}
+
+	[[nodiscard]] bool OverlapsExactHitPoint(glm::vec3 a, glm::vec3 b, glm::vec3& hitPoint) const
+	{
+		if (IsInside(a)) {
+			hitPoint = a;
+			return true;
+		}
+		if (IsInside(b)) {
+			hitPoint = b;
+			return true;
+		}
+
+		return detail::CheckLineBoxExact(min, max, a, b, hitPoint);
 	}
 };
 

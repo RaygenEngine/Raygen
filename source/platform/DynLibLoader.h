@@ -1,5 +1,7 @@
 #pragma once
 
+#define LIBLOAD_FUNC(FunctionName) &FunctionName, #FunctionName
+
 class DynLibLoader {
 
 public:
@@ -32,6 +34,16 @@ public:
 
 	template<class R, class... Args>
 	[[nodiscard]] R (*GetProcAddrExt(const char* functionName) const)(Args...)
+	{
+		typedef R (*ptr)(Args...);
+		return GetProcAddr<ptr>(functionName);
+	}
+
+	// Use the provided LIBLOAD_FUNC() macro like this:
+	// dynlib.LibLoadFunc(LIBLOAD_FUNC(sum));
+	// the macro automatically fills type and name
+	template<typename R, class... Args>
+	[[nodiscard]] auto LibLoadFunc(R (*dummyPtr)(Args...), const char* functionName) const
 	{
 		typedef R (*ptr)(Args...);
 		return GetProcAddr<ptr>(functionName);

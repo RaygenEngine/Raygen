@@ -15,6 +15,8 @@
 #include "rendering/Layer.h"
 #include "rendering/Renderer.h"
 #include "universe/ComponentsDb.h"
+#include "universe/components/StaticMeshComponent.h"
+#include "assets/pods/Mesh.h"
 
 
 #include <glfw/glfw3.h>
@@ -89,6 +91,37 @@ void EditorObject_::Dockspace()
 	m_captionBar.Draw();
 
 	ImGui::End();
+}
+
+void EditorObject_::HandleClickSelection()
+{
+	m_currentWorld->physics.Create(*m_currentWorld);
+	glm::vec3 cameraFwd = edCamera.transform.front();
+	auto mouseUv = Input.GetMouseViewportUV();
+
+	auto remappedMouse = mouseUv * 2.f - 1.f;
+
+
+	auto dir = glm::normalize(glm::vec3(
+		glm::inverse(edCamera.proj * edCamera.view) * glm::vec4(remappedMouse.x, -remappedMouse.y, 1.0f, 1.0f)));
+
+
+	LOG_REPORT("TraceDir: {}, {}, {}", dir.x, dir.y, dir.z);
+
+	//	if (Input.IsDown(Key::Ctrl)) {
+	auto result = Universe::MainWorld->physics.RayCastChitGeometry(edCamera.transform.position, dir * (edCamera.far));
+
+	ed::OutlinerWindow::selected = result.entity;
+
+	m_windowsComponent.CloseAsset(lastClickAssetSelected);
+	if (result.entity && result.geomGroupIndex >= 0) {
+		// Detect and open material in this geometry group for editing
+		auto matHandle = result.entity.Get<CStaticMesh>().mesh.Lock()->materials[result.geomGroupIndex];
+		m_windowsComponent.OpenAsset(matHandle);
+		lastClickAssetSelected = matHandle;
+	}
+
+	//	}
 }
 
 void EditorObject_::UpdateViewportCoordsFromDockspace()
@@ -191,6 +224,21 @@ void EditorObject_::AfterStopWorld(World& world)
 
 void EditorObject_::HandleInput()
 {
+	static timer::Timer clickTimer;
+
+	if (Input.IsJustPressed(Key::Mouse_LeftClick)) {
+		// TODO: move timers to input
+		// TODO: implement MouseHasDragged() returns true if mouse did drag during this click (query from just released)
+		clickTimer.Start();
+	}
+
+	if (Input.IsJustReleased(Key::Mouse_LeftClick) && Input.IsMouseInViewport()) {
+		if (clickTimer.Get<ch::milliseconds>() < 250) {
+			HandleClickSelection();
+		}
+	}
+
+
 	if (!Input.IsDown(Key::Mouse_RightClick)) {
 		using op = ed::ManipOperationMode::Operation;
 

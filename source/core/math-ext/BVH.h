@@ -77,6 +77,41 @@ struct BVH {
 		return results;
 	}
 
+	[[nodiscard]] RayCastResult RayCastExactHit(glm::vec3 start, glm::vec3 end) const
+	{
+		if (rootIndex == nullIndex) {
+			return {};
+		}
+
+		RayCastResult results;
+		std::stack<int32> stack;
+
+		stack.push(rootIndex);
+
+		while (!stack.empty()) {
+			const BVH::Node& node = nodes[stack.top()];
+			stack.pop();
+
+			glm::vec3 hitPoint;
+			if (!node.aabb.OverlapsExactHitPoint(start, end, hitPoint)) {
+				continue;
+			}
+
+			if (node.isLeaf) {
+				// Overlapping leaf, add to results
+				// WIP: should implement DataT intersect for exact geometry casting)
+				// WIP: proper calculation of distance (detect hit point / ... )
+				results.distanceSqToHitObject.emplace(glm::distance2(start, hitPoint), node.data);
+			}
+			else {
+				stack.push(node.child1);
+				stack.push(node.child2);
+			}
+		}
+
+		return results;
+	}
+
 private:
 	int32 AllocateLeaf(DataT data, AABB box)
 	{
@@ -128,7 +163,7 @@ private:
 
 		float surfaceAdded = nodes[node].aabb.GetArea();
 
-		float bestCost = 999999999.f;
+		float bestCost = std::numeric_limits<float>::max();
 		int32 bestIndex = rootIndex;
 		// Push root
 		queue_push(rootIndex);

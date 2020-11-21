@@ -138,6 +138,11 @@ public:
 	bool IsOpenAsset(PodEntry* entry) const;
 	void CloseAsset(PodEntry* entry);
 
+
+	void OpenAsset(BasePodHandle handle);
+	void CloseAsset(BasePodHandle handle);
+
+
 	UniquePtr<AssetEditorWindow> CreateAssetEditorWindow(PodEntry* entry);
 
 private:
