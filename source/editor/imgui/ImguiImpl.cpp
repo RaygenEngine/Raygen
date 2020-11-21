@@ -14,6 +14,9 @@
 #include <imgui/examples/imgui_impl_glfw.h>
 #include <imgui/examples/imgui_impl_vulkan.h>
 
+#include <imgui/imgui_internal.h>
+
+
 namespace imguistyle {
 void AddLargeAssetIconsFont(ImFontAtlas* atlas)
 {
@@ -366,4 +369,96 @@ void ImguiImpl::RenderVulkan(vk::CommandBuffer drawCommandBuffer)
 {
 	PROFILE_SCOPE(Editor);
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), drawCommandBuffer);
+}
+
+// WIP:
+namespace {
+int TextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end)
+{
+	unsigned int c = (unsigned int)-1;
+	const unsigned char* str = (const unsigned char*)in_text;
+	if (!(*str & 0x80)) {
+		c = (unsigned int)(*str++);
+		*out_char = c;
+		return 1;
+	}
+	if ((*str & 0xe0) == 0xc0) {
+		*out_char = IM_UNICODE_CODEPOINT_INVALID; // will be invalid but not end of string
+		if (in_text_end && in_text_end - (const char*)str < 2)
+			return 1;
+		if (*str < 0xc2)
+			return 2;
+		c = (unsigned int)((*str++ & 0x1f) << 6);
+		if ((*str & 0xc0) != 0x80)
+			return 2;
+		c += (*str++ & 0x3f);
+		*out_char = c;
+		return 2;
+	}
+	if ((*str & 0xf0) == 0xe0) {
+		*out_char = IM_UNICODE_CODEPOINT_INVALID; // will be invalid but not end of string
+		if (in_text_end && in_text_end - (const char*)str < 3)
+			return 1;
+		if (*str == 0xe0 && (str[1] < 0xa0 || str[1] > 0xbf))
+			return 3;
+		if (*str == 0xed && str[1] > 0x9f)
+			return 3; // str[1] < 0x80 is checked below
+		c = (unsigned int)((*str++ & 0x0f) << 12);
+		if ((*str & 0xc0) != 0x80)
+			return 3;
+		c += (unsigned int)((*str++ & 0x3f) << 6);
+		if ((*str & 0xc0) != 0x80)
+			return 3;
+		c += (*str++ & 0x3f);
+		*out_char = c;
+		return 3;
+	}
+	if ((*str & 0xf8) == 0xf0) {
+		*out_char = IM_UNICODE_CODEPOINT_INVALID; // will be invalid but not end of string
+		if (in_text_end && in_text_end - (const char*)str < 4)
+			return 1;
+		if (*str > 0xf4)
+			return 4;
+		if (*str == 0xf0 && (str[1] < 0x90 || str[1] > 0xbf))
+			return 4;
+		if (*str == 0xf4 && str[1] > 0x8f)
+			return 4; // str[1] < 0x80 is checked below
+		c = (unsigned int)((*str++ & 0x07) << 18);
+		if ((*str & 0xc0) != 0x80)
+			return 4;
+		c += (unsigned int)((*str++ & 0x3f) << 12);
+		if ((*str & 0xc0) != 0x80)
+			return 4;
+		c += (unsigned int)((*str++ & 0x3f) << 6);
+		if ((*str & 0xc0) != 0x80)
+			return 4;
+		c += (*str++ & 0x3f);
+		// utf-8 encodings of values used in surrogate pairs are invalid
+		if ((c & 0xFFFFF800) == 0xD800)
+			return 4;
+		// If codepoint does not fit in ImWchar, use replacement character U+FFFD instead
+		if (c > IM_UNICODE_CODEPOINT_MAX)
+			c = IM_UNICODE_CODEPOINT_INVALID;
+		*out_char = c;
+		return 4;
+	}
+	*out_char = 0;
+	return 0;
+}
+} // namespace
+
+
+std::pair<glm::vec2, glm::vec2> ImguiImpl::GetIconUV(const char8* icon)
+{
+	unsigned int c = 0;
+	TextCharFromUtf8(&c, U8(icon), U8(icon) + strlen(U8(icon)));
+
+	s_AssetIconFont->BuildLookupTable();
+	auto glyph = s_AssetIconFont->FindGlyph(c);
+	return { { glyph->U0, glyph->V0 }, { glyph->U1, glyph->V1 } };
+}
+
+vk::DescriptorSet ImguiImpl::GetIconFontDescriptorSet()
+{
+	return { static_cast<VkDescriptorSet>(ImGui::GetIO().Fonts->TexID) };
 }

@@ -6,7 +6,7 @@
 #include "universe/World.h"
 
 using RayCastResult = PhysicsIntersection::RayCastResult;
-using RayCastGeomChit = PhysicsIntersection::RayCastGeomChit;
+using RayCastEntityHit = PhysicsIntersection::RayCastEntityHit;
 
 namespace {
 std::pair<glm::vec3, glm::vec3> RayToEntityMeshSpace(Entity ent, glm::vec3 start, glm::vec3 end)
@@ -66,20 +66,25 @@ RayCastResult PhysicsIntersection::RayCast(glm::vec3 start, glm::vec3 end) const
 	return { std::move(results.distanceSqToHitObject) };
 }
 
-RayCastGeomChit PhysicsIntersection::RayCastChitGeometry(glm::vec3 start, glm::vec3 end) const
+RayCastEntityHit PhysicsIntersection::RayCastChitSelection(glm::vec3 start, glm::vec3 end) const
 {
-	RayCastGeomChit result;
+	RayCastEntityHit result;
 	TIMER_SCOPE("RayCast");
 	auto originalHits = tree->RayCastExactHit(start, end);
 
 	result.distance = std::numeric_limits<float>::max();
 
 	for (auto [distanceSq, ent] : originalHits.distanceSqToHitObject) {
-		if (distanceSq > 0 && glm::sqrt(distanceSq) > result.distance) {
-			// return result; WIP:
+		if (distanceSq > 0 && distanceSq > result.distance * result.distance) {
+			return result;
 		}
 
 		if (!ent.Has<CStaticMesh>()) {
+			if (distanceSq < result.distance * result.distance) {
+				result.entity = ent;
+				result.geomGroupIndex = -1;
+				result.distance = glm::sqrt(distanceSq);
+			}
 			continue;
 		}
 
@@ -100,6 +105,43 @@ RayCastGeomChit PhysicsIntersection::RayCastChitGeometry(glm::vec3 start, glm::v
 		}
 	}
 
+
+	return result;
+}
+
+// WIP: remove copy paste
+RayCastEntityHit PhysicsIntersection::RayCastChitGeom(glm::vec3 start, glm::vec3 end) const
+{
+	RayCastEntityHit result;
+	TIMER_SCOPE("RayCast");
+	auto originalHits = tree->RayCastExactHit(start, end);
+
+	result.distance = std::numeric_limits<float>::max();
+
+	for (auto [distanceSq, ent] : originalHits.distanceSqToHitObject) {
+		if (distanceSq > 0 && distanceSq > result.distance * result.distance) {
+			return result;
+		}
+
+		if (!ent.Has<CStaticMesh>()) {
+			continue;
+		}
+
+		auto [rayOrigin, rayDir] = RayToEntityMeshSpace(ent, start, end);
+
+		const Mesh& mesh = *ent.Get<CStaticMesh>().mesh.Lock();
+		for (int32 i = 0; const GeometrySlot& geom : mesh.geometrySlots) {
+			auto thisDist
+				= ClosestHitFunc(rayOrigin, rayDir, geom.indices.data(), geom.vertices.data(), geom.indices.size());
+
+			if (thisDist < result.distance) {
+				result.entity = ent;
+				result.geomGroupIndex = i;
+				result.distance = thisDist;
+			}
+			++i;
+		}
+	}
 
 	return result;
 }

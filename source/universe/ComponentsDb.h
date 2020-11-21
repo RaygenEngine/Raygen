@@ -169,6 +169,20 @@ private:
 	void LoadComponentInto(Entity ent, const std::string& componentName, const nlohmann::json& json);
 
 public:
+	template<CComponent T>
+	static entt::id_type GetIdType()
+	{
+		return entt::type_info<T>().id();
+	}
+
+	// Returns null if type is not found,
+	template<CComponent T>
+	static const ComponentMetaEntry* GetType()
+	{
+		return GetType(GetIdType<T>());
+	}
+
+
 	// Returns null if type is not found,
 	// Can be used with if init statement: if (auto type = GetType; type)
 	static const ComponentMetaEntry* GetType(entt::id_type type)
