@@ -103,7 +103,7 @@ void BasicComponent::MarkDirtyMoved()
 
 void BasicComponent::DetachFromParent()
 {
-	// REMOVE:
+	// TODO: REMOVE:
 	//	Remove from siblings list
 	//	Update firstChild of parent if required
 	//  Clear our prev + next

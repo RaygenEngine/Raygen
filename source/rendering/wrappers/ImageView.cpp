@@ -67,7 +67,6 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 
 void RImage::CopyBufferToImage(const RBuffer& buffer)
 {
-	// WIP:
 	ScopedOneTimeSubmitCmdBuffer<Dma> cmdBuffer{};
 
 	vk::BufferImageCopy region{};
@@ -89,7 +88,6 @@ void RImage::CopyBufferToImage(const RBuffer& buffer)
 
 void RImage::CopyImageToBuffer(const RBuffer& buffer)
 {
-	// WIP:
 	ScopedOneTimeSubmitCmdBuffer<Dma> cmdBuffer{};
 
 	vk::BufferImageCopy region{};
@@ -141,7 +139,6 @@ void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayo
 void RImage::BlockingTransitionToLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
 	vk::PipelineStageFlags sourceStage, vk::PipelineStageFlags destStage)
 {
-	// WIP:
 	ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
 
 	auto barrier = CreateTransitionBarrier(oldLayout, newLayout);
@@ -165,7 +162,6 @@ void RImage::TransitionToLayout(vk::CommandBuffer cmdBuffer, vk::ImageLayout old
 
 void RImage::GenerateMipmapsAndTransitionEach(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
-	// WIP:
 	ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
 
 	// Check if image format supports linear blitting
@@ -278,7 +274,6 @@ vk::DescriptorSet RImage::GetDebugDescriptor()
 
 void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCount)
 {
-	// WIP:
 	ScopedOneTimeSubmitCmdBuffer<Dma> cmdBuffer{};
 
 	std::vector<vk::BufferImageCopy> regions;
@@ -335,6 +330,49 @@ std::vector<vk::UniqueImageView> RCubemap::GetFaceViews(uint32 atMip) const
 	return faceViews;
 }
 
+std::vector<vk::UniqueImageView> RCubemap::GetMipViews() const
+{
+	std::vector<vk::UniqueImageView> mipViews;
+
+	vk::ImageViewCreateInfo viewInfo{};
+	viewInfo
+		.setImage(uHandle.get()) //
+		.setViewType(vk::ImageViewType::eCube)
+		.setFormat(format);
+
+	for (uint32 i = 0u; i < mipLevels; ++i) {
+
+		viewInfo.subresourceRange
+			.setAspectMask(aspectMask) //
+			.setBaseMipLevel(i)
+			.setLevelCount(1u)
+			.setBaseArrayLayer(0u)
+			.setLayerCount(VK_REMAINING_ARRAY_LAYERS);
+
+		mipViews.emplace_back(Device->createImageViewUnique(viewInfo));
+	}
+
+	return mipViews;
+}
+
+vk::UniqueImageView RCubemap::GetMipView(uint32 atMip) const
+{
+	vk::ImageViewCreateInfo viewInfo{};
+	viewInfo
+		.setImage(uHandle.get()) //
+		.setViewType(vk::ImageViewType::eCube)
+		.setFormat(format);
+
+	viewInfo.subresourceRange
+		.setAspectMask(aspectMask) //
+		.setBaseMipLevel(atMip)
+		.setLevelCount(1u)
+		.setBaseArrayLayer(0u)
+		.setLayerCount(6u);
+
+	return Device->createImageViewUnique(viewInfo);
+}
+
 vk::UniqueImageView RCubemap::GetFaceArrayView(uint32 atMip) const
 {
 	vk::UniqueImageView faceArrayView;
@@ -372,4 +410,45 @@ vl::RImage2D vl::RImage2D::Create(const std::string& name, vk::Extent2D extent, 
 	return img;
 }
 
+std::vector<vk::UniqueImageView> RCubemapArray::GetFaceViews(uint32 atArrayIndex, uint32 atMip) const
+{
+	std::vector<vk::UniqueImageView> faceViews;
+
+	vk::ImageViewCreateInfo viewInfo{};
+	viewInfo
+		.setImage(uHandle.get()) //
+		.setViewType(vk::ImageViewType::e2D)
+		.setFormat(format);
+
+	for (uint32 i = 0u; i < 6u; ++i) {
+
+		viewInfo.subresourceRange
+			.setAspectMask(aspectMask) //
+			.setBaseMipLevel(atMip)
+			.setLevelCount(1u)
+			.setBaseArrayLayer(atArrayIndex * 6u + i)
+			.setLayerCount(1u);
+
+		faceViews.emplace_back(Device->createImageViewUnique(viewInfo));
+	}
+
+	return faceViews;
+}
+
+vk::UniqueImageView RCubemapArray::GetCubemapView(uint32 atArrayIndex, uint32 atMip) const
+{
+	vk::ImageViewCreateInfo viewInfo{};
+	viewInfo
+		.setImage(uHandle.get()) //
+		.setViewType(vk::ImageViewType::eCube)
+		.setFormat(format);
+
+	viewInfo.subresourceRange
+		.setAspectMask(aspectMask) //
+		.setBaseMipLevel(atMip)
+		.setLevelCount(1u)
+		.setBaseArrayLayer(atArrayIndex * 6u)
+		.setLayerCount(6u);
+	return Device->createImageViewUnique(viewInfo);
+}
 } // namespace vl

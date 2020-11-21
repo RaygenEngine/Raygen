@@ -12,9 +12,15 @@ struct CReflprobe : CSceneBase {
 		// REFLECT_CATEGORY("Rendering");
 		REFLECT_VAR(innerRadius);
 		REFLECT_VAR(outerRadius);
+
 		REFLECT_VAR(ptSamples);
 		REFLECT_VAR(ptBounces);
+
+		REFLECT_VAR(irrResolution);
+
 		REFLECT_VAR(prefLodCount);
+		REFLECT_VAR(prefSamples);
+
 		REFLECT_VAR(notifyBuild, PropertyFlags::Transient);
 	}
 
@@ -24,7 +30,10 @@ struct CReflprobe : CSceneBase {
 	int32 ptSamples{ 16 };
 	int32 ptBounces{ 3 };
 
-	int32 prefLodCount{ 6 };
+	int32 irrResolution{ 32 };
+
+	int32 prefLodCount{ 5 };
+	int32 prefSamples{ 1024 };
 
 	bool notifyBuild{ true };
 };

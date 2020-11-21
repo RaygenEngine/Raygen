@@ -1,7 +1,7 @@
 #pragma once
 
-#include "rendering/wrappers/Framebuffer.h"
 #include "rendering/wrappers/DescriptorSetLayout.h"
+#include "rendering/wrappers/Framebuffer.h"
 
 namespace vl {
 struct RRenderPassLayout;
@@ -44,10 +44,13 @@ struct RRenderPassLayout {
 	struct Attachment {
 		enum class State
 		{
-			ShaderRead,
+			ShaderRead, // CHECK: currently only used for depth
 			Depth,
 			Color,
 		} state; // current subpass state.
+
+		// CHECK:
+		int32 previousOutputSubpassIndex{ -1 };
 
 		vk::ImageUsageFlags additionalFlags{};
 
@@ -65,6 +68,7 @@ struct RRenderPassLayout {
 		RRenderPassLayout* thisOwner{ nullptr };
 		int32 thisIndex{ -1 };
 		int32 firstUseIndex{ -1 };
+
 
 		[[nodiscard]] Attachment& Get() const { return originalOwner->internalAttachments[originalIndex]; }
 
@@ -120,7 +124,7 @@ public:
 
 		std::vector<vk::AttachmentReference> vkInputs;
 		std::vector<vk::AttachmentReference> vkColors;
-		vk::AttachmentReference vkDepth;
+		std::unique_ptr<vk::AttachmentReference> vkDepth;
 	};
 
 	//

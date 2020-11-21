@@ -1,10 +1,11 @@
 #include "EdAttachmentDebuggerWindow.h"
 
 #include "editor/EditorObject.h"
-#include "rendering/Renderer.h"
-#include "rendering/scene/SceneSpotlight.h"
 #include "engine/Events.h"
 #include "rendering/Layer.h"
+#include "rendering/Renderer.h"
+#include "rendering/scene/SceneDirlight.h"
+#include "rendering/scene/SceneSpotlight.h"
 
 
 namespace ed {
@@ -74,19 +75,22 @@ void AttachmentDebuggerWindow::ImguiDraw()
 		}
 	};
 
-	auto& gbufferFramebuffer = vl::Renderer->m_gbufferInst.at(0).framebuffer;
-	auto& rasterDirectPassFramebuffer = vl::Renderer->m_rasterDirectLightPass.at(0).framebuffer;
-	auto& rasterIblPassFramebuffer = vl::Renderer->m_rasterIblPass.at(0).framebuffer;
+	auto& mainFramebuffer = vl::Renderer->m_mainPassInst.at(0).framebuffer;
+	auto& secondaryFramebuffer = vl::Renderer->m_secondaryPassInst.at(0).framebuffer;
 	auto& ptPassFramebuffer = vl::Renderer->m_ptPass.at(0).framebuffer;
 
-	showFramebuffer(gbufferFramebuffer);
-	showFramebuffer(rasterDirectPassFramebuffer);
-	showFramebuffer(rasterIblPassFramebuffer);
+	showFramebuffer(mainFramebuffer);
+	showFramebuffer(secondaryFramebuffer);
+
+	// showImage(vl::Renderer->m_indirectSpecPass.m_result.at(0));
 	showFramebuffer(ptPassFramebuffer);
 
+	for (auto dl : vl::Layer->mainScene->Get<SceneDirlight>()) {
+		showFramebuffer(dl->shadowmapPass.at(0).framebuffer);
+	}
 
 	for (auto sl : vl::Layer->mainScene->Get<SceneSpotlight>()) {
-		showImage(sl->shadowmap.at(0).framebuffer.ownedAttachments.at(0));
+		showFramebuffer(sl->shadowmapPass.at(0).framebuffer);
 	}
 }
 

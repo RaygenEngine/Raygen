@@ -76,9 +76,8 @@ namespace impl {
 		end();
 
 		submit();
-		pool.queue.waitIdle(); // WIP:
-							   // old comment : 	// PERF:
-		// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them complete,
+		pool.queue.waitIdle(); // PERF:
+		// A fence would allow you to schedule multiple transfers simultaneously and wait for all of them to complete,
 		// instead of executing one at a time. That may give the driver more opportunities to optimize.
 	}
 } // namespace impl

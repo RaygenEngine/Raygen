@@ -4,33 +4,20 @@
 #include "global.glsl"
 #include "rt-global.glsl"
 
+#include "attachments.glsl"
+#include "bsdf.glsl"
+#include "onb.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
-#include "fragment.glsl"
-#include "bsdf.glsl"
-#include "attachments.glsl"
-#include "onb.glsl"
 #include "sky.glsl"
-layout(set = 1, binding = 0) uniform UBO_Camera {   
-	vec3 position;
-	float pad0;
-	mat4 view;
-	mat4 proj;
-	mat4 viewProj;
-	mat4 viewInv;
-	mat4 projInv;
-	mat4 viewProjInv; 
-} cam;
+#include "surface.glsl"
 
+layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 layout(set = 2, binding = 0, rgba32f) uniform image2D image;
 layout(set = 2, binding = 1, rgba32f) uniform image2D progressiveResult;
 layout(set = 2, binding = 2, rgba32f) uniform image2D momentsBuffer;
 
 layout(location = 0) rayPayloadEXT hitPayload prd;
-
-
-#include "raytrace/rt-indirect.glsl"
-
 void WriteSky(); 
 
 struct ReprojectionData {

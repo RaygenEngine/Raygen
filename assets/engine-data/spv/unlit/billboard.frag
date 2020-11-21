@@ -1,7 +1,5 @@
 #version 460
 #extension GL_GOOGLE_include_directive: enable
-#extension GL_EXT_ray_tracing : require
-#extension GL_EXT_ray_query: require
 
 #include "global.glsl"
 
@@ -19,13 +17,14 @@ layout(location = 0) in vec2 uv;
 void main()
 {
 	vec2 center = vec2(1.);
-	vec2 d = (uv - center);
+	vec2 d = (uv - center + 0.5);
 	d *= d;
 
-	outColor = d.x + d.y < 0.5 ? 
+	outColor = 
+	 d.x + d.y < 0.25 ? 
 	vec4(0.4, 0.4, 0.5, 1.0) : vec4(0);
-	
 }                               
+
 
 
 

@@ -16,8 +16,6 @@
 hitAttributeEXT vec2 baryCoord;
 layout(location = 0) rayPayloadInEXT hitPayload prd;
 
-#include "raytrace/rt-indirect.glsl"
-
 struct samplerRef {
 	int index;
 };
