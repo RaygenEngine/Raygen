@@ -2,13 +2,13 @@
 
 #include "editor/Editor.h"
 #include "core/math-ext/BVH.h"
+#include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/passes/lightblend/PointlightBlend.h"
-#include "rendering/Renderer.h"
+#include "rendering/passes/direct/PointlightBlend.h"
 #include "rendering/scene/SceneCamera.h"
+#include "rendering/passes/gi/IrragridBlend.h"
 #include "rendering/scene/ScenePointlight.h"
-#include "rendering/StaticPipes.h"
 #include "universe/components/PointlightComponent.h"
 #include "universe/Universe.h"
 #include "universe/World.h"
@@ -76,7 +76,10 @@ vk::UniquePipeline UnlitVolumePass::MakePipeline()
 		.setPrimitiveRestartEnable(VK_FALSE);
 
 	// Dynamic vieport
-	std::array dynamicStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	std::array dynamicStates{
+		vk::DynamicState::eViewport,
+		vk::DynamicState::eScissor,
+	};
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
 	dynamicStateInfo.setDynamicStates(dynamicStates);
 
@@ -133,7 +136,7 @@ vk::UniquePipeline UnlitVolumePass::MakePipeline()
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
 	depthStencil
 		.setDepthTestEnable(VK_TRUE) //
-		.setDepthWriteEnable(VK_TRUE)
+		.setDepthWriteEnable(VK_FALSE)
 		.setDepthCompareOp(vk::CompareOp::eLess)
 		.setDepthBoundsTestEnable(VK_FALSE)
 		.setMinDepthBounds(0.0f) // Optional
@@ -170,7 +173,7 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 
 	if (selEnt && selEnt.Has<CPointlight>()) {
 		auto pl = selEnt.Get<CPointlight>();
-		// WIP:
+		// TODO: std gpu asset
 		const auto& relPipe = StaticPipes::Get<PointlightBlend>();
 
 		// bind unit sphere once
@@ -190,36 +193,37 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 	}
 
 
-	static ConsoleVariable<bool> cons_drawLeaves{ "s.bvh.Children", false };
-	if (!cons_drawLeaves) {
-		return;
-	}
+	// TODO:
+	// static ConsoleVariable<bool> cons_drawLeaves{ "s.bvh.Children", false };
+	// if (!cons_drawLeaves) {
+	//	return;
+	//}
 
-	if (Universe::MainWorld->physics.tree) {
-		for (auto& node : Universe::MainWorld->physics.tree->nodes) {
-			const auto& cubeVtxBuf = StaticPipes::Get<IrradianceMapCalculation>().m_cubeVertexBuffer;
+	// if (Universe::MainWorld->physics.tree) {
+	//	for (auto& node : Universe::MainWorld->physics.tree->nodes) {
+	//		const auto& cubeVtxBuf = StaticPipes::Get<IrragridBlend>().m_cubeVertexBuffer;
 
-			auto volumeTransform = math::transformMat(
-				glm::vec3{ node.aabb.GetExtend() }, glm::identity<glm::quat>(), node.aabb.GetCenter());
+	//		auto volumeTransform = math::transformMat(
+	//			glm::vec3{ node.aabb.GetExtend() }, glm::identity<glm::quat>(), node.aabb.GetCenter());
 
-			PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
+	//		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
 
-			if (node.isLeaf) {
-				pc.color.y = 0.f;
+	//		if (node.isLeaf) {
+	//			pc.color.y = 0.f;
 
-				if (Editor::GetSelection() != node.data) {
-					pc.color.z = 0.f;
-				}
-			}
+	//			if (Editor::GetSelection() != node.data) {
+	//				pc.color.z = 0.f;
+	//			}
+	//		}
 
-			static ConsoleVariable<bool> cons_draw{ "s.bvh.Debug", false };
+	//		static ConsoleVariable<bool> cons_draw{ "s.bvh.Debug", false };
 
-			if (cons_draw || node.isLeaf) {
-				cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-				cmdBuffer.bindVertexBuffers(0u, { cubeVtxBuf.handle() }, { vk::DeviceSize(0) });
-				cmdBuffer.draw(static_cast<uint32>(108 / 3), 1u, 0u, 0u);
-			}
-		}
-	}
+	//		if (cons_draw || node.isLeaf) {
+	//			cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+	//			cmdBuffer.bindVertexBuffers(0u, { cubeVtxBuf.handle() }, { vk::DeviceSize(0) });
+	//			cmdBuffer.draw(static_cast<uint32>(108 / 3), 1u, 0u, 0u);
+	//		}
+	//	}
+	//}
 }
 } // namespace vl

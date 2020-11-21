@@ -1,16 +1,15 @@
 #include "UnlitBillboardPass.h"
 
+#include "rendering/Renderer.h"
+#include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/Renderer.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneIrradianceGrid.h"
-#include "rendering/scene/SceneReflprobe.h"
-#include "rendering/StaticPipes.h"
-#include "universe/components/IrradianceGridComponent.h"
+#include "rendering/scene/SceneIrragrid.h"
+#include "universe/Universe.h"
+#include "universe/components/IrragridComponent.h"
 #include "universe/components/PointlightComponent.h"
 #include "universe/components/ReflProbeComponent.h"
-#include "universe/Universe.h"
 
 namespace {
 struct PushConstant {
@@ -114,7 +113,7 @@ vk::UniquePipeline UnlitBillboardPass::MakePipeline()
 	colorBlendAttachment
 		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
 						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
-		.setBlendEnable(VK_TRUE)
+		.setBlendEnable(VK_FALSE)
 		.setSrcColorBlendFactor(vk::BlendFactor::eOne)
 		.setDstColorBlendFactor(vk::BlendFactor::eOne)
 		.setColorBlendOp(vk::BlendOp::eAdd)
@@ -133,7 +132,7 @@ vk::UniquePipeline UnlitBillboardPass::MakePipeline()
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
 	depthStencil
 		.setDepthTestEnable(VK_TRUE) //
-		.setDepthWriteEnable(VK_TRUE)
+		.setDepthWriteEnable(VK_FALSE)
 		.setDepthCompareOp(vk::CompareOp::eLess)
 		.setDepthBoundsTestEnable(VK_FALSE)
 		.setMinDepthBounds(0.0f) // Optional
@@ -166,10 +165,8 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	// bind unit sphere once
 	cmdBuffer.bindVertexBuffers(0u, m_rectangleVertexBuffer.handle(), vk::DeviceSize(0));
 
-	// WIP:
 	auto view = sceneDesc.viewer.ubo.view;
 	glm::vec4 cameraRight{ view[0][0], view[1][0], view[2][0], 0.f };
 	glm::vec4 cameraUp{ view[0][1], view[1][1], view[2][1], 0.f };
@@ -191,31 +188,33 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 		cmdBuffer.draw(4u, 1u, 0u, 0u);
 	}
 
-	for (auto& [ent, ig, bc] : Universe::MainWorld->GetView<CIrradianceGrid, BasicComponent>().each()) {
+	for (auto& [ent, ig, bc] : Universe::MainWorld->GetView<CIrragrid, BasicComponent>().each()) {
 
 		if (ig.hideBillboards) {
 			continue;
 		}
 
-		for (int32 i = 0; i < IRRGRID_PROBE_COUNT; ++i) {
-			int32 x = i % 16;
-			int32 y = (i / 16) % 16;
-			int32 z = i / (16 * 16);
+		for (int32 x = 0; x < ig.width; ++x) {
+			for (int32 y = 0; y < ig.height; ++y) {
+				for (int32 z = 0; z < ig.depth; ++z) {
 
-			auto pos = bc.world().position + glm::vec3(x, y, z) * ig.distToAdjacent;
 
-			PushConstant pc{
-				sceneDesc.viewer.ubo.viewProj,
-				glm::vec4(pos, 1.f),
-				cameraRight,
-				cameraUp,
-				0.2f,
-			};
+					auto pos = bc.world().position + glm::vec3(x, y, z) * ig.distToAdjacent;
 
-			cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+					PushConstant pc{
+						sceneDesc.viewer.ubo.viewProj,
+						glm::vec4(pos, 1.f),
+						cameraRight,
+						cameraUp,
+						0.2f,
+					};
 
-			// draw rectangle
-			cmdBuffer.draw(4u, 1u, 0u, 0u);
+					cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+					// draw rectangle
+					cmdBuffer.draw(4u, 1u, 0u, 0u);
+				}
+			}
 		}
 	}
 
@@ -239,12 +238,13 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 
 UnlitBillboardPass::UnlitBillboardPass()
 {
+	// TODO: std gpu asset
 	// clang-format off
 	std::array vertices{
-		 -0.5f, -0.5f,  0.0f,
-		  0.5f, -0.5f,  0.0f,
-		 -0.5f,  0.5f,  0.0f,
-		  0.5f,  0.5f,  0.0f,
+		  -0.5f,  0.5f,  0.0f,
+		  -0.5f, -0.5f,  0.0f,
+		   0.5f,  0.5f,  0.0f,
+		   0.5f, -0.5f,  0.0f,
 	};
 
 	// clang-format on

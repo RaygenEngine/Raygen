@@ -44,6 +44,7 @@ void GpuShader::Update(const AssetUpdateInfo& info)
 	MAKE_SHADER(anyHit);
 	MAKE_SHADER(closestHit);
 	MAKE_SHADER(miss);
+	MAKE_SHADER(compute);
 #undef MAKE_SHADER
 
 	if (onCompileRayTracing) {

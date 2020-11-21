@@ -1,7 +1,7 @@
 #include "WriteDescriptorSets.h"
 
-#include "rendering/assets/GpuAssetManager.h"
 #include "rendering/Device.h"
+#include "rendering/assets/GpuAssetManager.h"
 
 using namespace vl;
 

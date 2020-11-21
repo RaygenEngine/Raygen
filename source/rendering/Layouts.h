@@ -4,21 +4,16 @@
 
 namespace vl {
 
-// NEXT:
-enum GColorAttachment : uint32
-{
-	GDepth = 0,
-	GNormal = 1,
-	GAlbedo = 2,
-	GSpecularColor = 3,
-	GEmissive = 4,
-	GVelocity = 5,
-	GUVDrawIndex = 6,
-	GCount
-};
-
-
 inline struct Layouts_ {
+
+	inline constexpr static std::array gBufferColorAttachments = {
+		std::pair{ "GNormal", vk::Format::eR16G16B16A16Snorm },
+		std::pair{ "GAlbedo", vk::Format::eR32G32B32A32Sfloat },
+		std::pair{ "GSpecularColor", vk::Format::eR32G32B32A32Sfloat },
+		std::pair{ "GEmissive", vk::Format::eR8G8B8A8Srgb },
+		std::pair{ "GVelocity", vk::Format::eR32G32B32A32Sfloat },
+		std::pair{ "GUVDrawIndex", vk::Format::eR32G32B32A32Sfloat },
+	};
 
 	RDescriptorSetLayout gltfMaterialDescLayout;
 	RDescriptorSetLayout singleUboDescLayout;
@@ -30,9 +25,13 @@ inline struct Layouts_ {
 
 	RDescriptorSetLayout rtTriangleGeometry;
 
+	RDescriptorSetLayout inputAttachment;
+
 	RDescriptorSetLayout cubemapArray6;
 	RDescriptorSetLayout cubemapArray64;
 	RDescriptorSetLayout cubemapArray1024;
+	RDescriptorSetLayout cubemapArray;
+	RDescriptorSetLayout cubemapArrayStorage;
 
 	RDescriptorSetLayout storageImageArray6;
 
@@ -40,6 +39,8 @@ inline struct Layouts_ {
 	RDescriptorSetLayout doubleStorageImage = GenerateStorageImageDescSet(2);
 	RDescriptorSetLayout tripleStorageImage = GenerateStorageImageDescSet(3);
 	RDescriptorSetLayout quadStorageImage = GenerateStorageImageDescSet(4);
+	RDescriptorSetLayout tenStorageImage = GenerateStorageImageDescSet(10);
+	RDescriptorSetLayout storageImageArray10;
 
 	RDescriptorSetLayout singleStorageBuffer;
 
@@ -51,22 +52,15 @@ inline struct Layouts_ {
 	// Global descriptor Set
 	RDescriptorSetLayout renderAttachmentsLayout;
 
-	vk::UniqueRenderPass depthRenderPass;
-
-
-	RRenderPassLayout gbufferPassLayout;
+	RRenderPassLayout mainPassLayout;
+	RRenderPassLayout secondaryPassLayout;
+	RRenderPassLayout shadowPassLayout;
 	RRenderPassLayout singleFloatColorAttPassLayout;
-
-	// WIP: probably same
-	RRenderPassLayout rasterDirectLightPassLayout; // PERF: subpass of gbuffer
-	RRenderPassLayout rasterIblPassLayout;         // PERF: subpass of gbuffer
-
 
 	RRenderPassLayout svgfPassLayout;
 	// Ray Trace Here
 	RRenderPassLayout ptPassLayout;
 	// Output pass
-
 
 	void MakeRenderPassLayouts();
 

@@ -1,11 +1,11 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
-#include "rendering/structures/Depthmap.h"
 
 namespace math {
 // awful
 struct Frustum;
 } // namespace math
+
 
 struct Dirlight_Ubo {
 	glm::vec4 front{};
@@ -19,6 +19,7 @@ struct Dirlight_Ubo {
 	float maxShadowBias{};
 	int32 samples{};
 	float sampleInvSpread{};
+	int32 hasShadow{};
 };
 
 struct SceneDirlight : SceneStruct {
@@ -26,7 +27,11 @@ struct SceneDirlight : SceneStruct {
 
 	Dirlight_Ubo ubo;
 
-	InFlightResources<vl::Depthmap> shadowmap;
+	InFlightResources<vl::RenderingPassInstance> shadowmapPass;
+	InFlightResources<vk::DescriptorSet> shadowmapDescSet;
+
+	// TODO: gpu std asset
+	vk::Sampler depthSampler;
 
 	glm::vec3 up;
 

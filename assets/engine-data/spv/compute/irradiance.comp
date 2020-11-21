@@ -1,0 +1,110 @@
+#version 460
+#extension GL_GOOGLE_include_directive : enable
+
+#include "global.glsl"
+
+layout (local_size_x = 32, local_size_y = 32) in;
+
+layout(set = 0, binding = 0, rgba32f) uniform imageCube irradianceCube;
+layout(set = 1, binding = 0) uniform samplerCube envmapSampler;
+
+mat4 lookAtRH(vec3 eye, vec3 center, vec3 up)
+{
+	vec3 f = normalize(center - eye);
+	vec3 s = normalize(cross(f, up));
+	vec3 u = cross(s, f);
+
+	mat4 Result = mat4(1);
+	Result[0][0] = s.x;
+	Result[1][0] = s.y;
+	Result[2][0] = s.z;
+	Result[0][1] = u.x;
+	Result[1][1] = u.y;
+	Result[2][1] = u.z;
+	Result[0][2] =-f.x;
+	Result[1][2] =-f.y;
+	Result[2][2] =-f.z;
+	Result[3][0] =-dot(s, eye);
+	Result[3][1] =-dot(u, eye);
+	Result[3][2] = dot(f, eye);
+	return Result;
+}
+
+mat4 perspectiveRH_ZO(float fovy, float aspect, float zNear, float zFar)
+{
+	float tanHalfFovy = tan(fovy / 2.f);
+
+	mat4 Result = mat4(0);
+	Result[0][0] = 1.f / (aspect * tanHalfFovy);
+	Result[1][1] = 1.f / (tanHalfFovy);
+	Result[2][2] = zFar / (zNear - zFar);
+	Result[2][3] = -1.f;
+	Result[3][2] = -(zFar * zNear) / (zFar - zNear);
+	return Result;
+}
+
+vec3 envmapColorConvolution(vec3 dir) 
+{
+    // the sample direction equals the hemisphere's orientation 
+    vec3 normal = normalize(dir); // dir to cubemap texel pos = actual sample dir
+  
+    vec3 irradiance = vec3(0.0);
+  
+	vec3 up    = vec3(0.0, 1.0, 0.0);
+	vec3 right = cross(up, normal);
+	up         = cross(normal, right);
+	
+    float sampleDelta = 0.025;
+	float nrSamples = 0.0; 
+	for(float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
+	{
+		for(float theta = 0.0; theta < 0.5 * PI; theta += sampleDelta)
+		{
+			// spherical to cartesian (in tangent space)
+			vec3 tangentSample = vec3(sin(theta) * cos(phi),  sin(theta) * sin(phi), cos(theta));
+			// tangent space to world
+			vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * normal; 
+
+            // cos(theta) = NoL, sin(Theta) to account for the smaller sample areas in the higher hemisphere areas.
+			irradiance += texture(envmapSampler, sampleVec).rgb * cos(theta) * sin(theta);
+			nrSamples++;
+		}
+	}
+	irradiance = PI * irradiance * (1.0 / float(nrSamples));
+  
+	return irradiance;
+}                                                                                                                          
+                 
+
+void main() 
+{
+	// PERF:
+	mat4 projInverse = inverse(perspectiveRH_ZO(1.5708f, 1.f, 1.f, 25.f));
+	projInverse[1][1] *= -1;
+
+	// PERF:
+	mat4 viewInverses[] = {
+		inverse(lookAtRH(vec3(0.0, 0.0, 0.0), vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0))),   // right
+		inverse(lookAtRH(vec3(0.0, 0.0, 0.0), vec3(-1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0))),  // left
+		inverse(lookAtRH(vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 1.0))),   // up
+		inverse(lookAtRH(vec3(0.0, 0.0, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0, 0.0, -1.0))), // down
+		inverse(lookAtRH(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, -1.0), vec3(0.0, 1.0, 0.0))),  // front
+		inverse(lookAtRH(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), vec3(0.0, 1.0, 0.0))),   // back
+	};
+
+	// for each face
+	for (int f = 0; f < 6; ++f) {
+
+		const vec2 pixelCenter = vec2(gl_GlobalInvocationID.xy) + vec2(0.5);
+		const vec2 inUV        = pixelCenter / vec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
+		vec2       d           = inUV * 2.0 - 1.0;
+
+		vec4 target    = projInverse * vec4(d.x, d.y, 1, 1);
+		vec4 direction = viewInverses[f] * vec4(normalize(target.xyz), 0);
+
+		vec3 accumColor = envmapColorConvolution(direction.xyz);
+
+		imageStore(irradianceCube, ivec3(gl_GlobalInvocationID.xy, f), vec4(accumColor, 1.0));
+	}
+		
+}

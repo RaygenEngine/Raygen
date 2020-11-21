@@ -1,6 +1,6 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
-#include "rendering/structures/Depthmap.h"
+#include "rendering/wrappers/passlayout/RenderPassLayout.h"
 
 struct Spotlight_Ubo {
 	glm::vec4 position{};
@@ -25,14 +25,18 @@ struct Spotlight_Ubo {
 	float maxShadowBias{};
 	int32 samples{};
 	float sampleInvSpread{};
+	int32 hasShadow{};
 };
 
 struct SceneSpotlight : SceneStruct {
 	SCENE_STRUCT(SceneSpotlight);
 	Spotlight_Ubo ubo;
 
-	InFlightResources<vl::Depthmap> shadowmap;
+	InFlightResources<vl::RenderingPassInstance> shadowmapPass;
+	InFlightResources<vk::DescriptorSet> shadowmapDescSet;
 
+	// TODO: gpu std asset
+	vk::Sampler depthSampler;
 
 	std::string name;
 	void MaybeResizeShadowmap(uint32 width, uint32 height);

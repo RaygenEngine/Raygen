@@ -1,11 +1,13 @@
 #pragma once
-#include "rendering/wrappers/Buffer.h"
 #include "rendering/wrappers/AccelerationStructure.h"
+#include "rendering/wrappers/Buffer.h"
 
 struct SceneGeometry;
 struct SceneSpotlight;
 struct ScenePointlight;
 struct SceneReflprobe;
+struct SceneDirlight;
+struct SceneIrragrid;
 struct Scene;
 
 
@@ -24,24 +26,32 @@ struct AsInstance {
 
 struct RtSceneDescriptor {
 	InFlightResources<vk::DescriptorSet> descSet;
-	InFlightResources<vk::DescriptorSet> descSetSpotlights;
 	InFlightResources<vk::DescriptorSet> descSetPointlights;
+	InFlightResources<vk::DescriptorSet> descSetSpotlights;
+	InFlightResources<vk::DescriptorSet> descSetDirlights;
 	InFlightResources<vk::DescriptorSet> descSetReflprobes;
+	InFlightResources<vk::DescriptorSet> descSetIrragrids;
 
 	void AddGeomGroup(const GpuGeometryGroup& group, const GpuMesh& mesh, const glm::mat4& transform);
 	void WriteImages();
-	void WriteSpotlights(const std::vector<SceneSpotlight*>& spotlights);
 	void WritePointlights(const std::vector<ScenePointlight*>& pointlights);
+	void WriteSpotlights(const std::vector<SceneSpotlight*>& spotlights);
+	void WriteDirlights(const std::vector<SceneDirlight*>& dirlights);
 	void WriteReflprobes(const std::vector<SceneReflprobe*>& reflprobes);
+	void WriteIrragrids(const std::vector<SceneIrragrid*>& irragrids);
 	void WriteGeomGroups();
 
 	int32 spotlightCount{ 0 };
 	int32 pointlightCount{ 0 };
+	int32 dirlightCount{ 0 };
 	int32 reflprobeCount{ 0 };
+	int32 irragridCount{ 0 };
 
 	RBuffer spotlightsBuffer;
 	RBuffer pointlightsBuffer;
+	RBuffer dirlightsBuffer;
 	RBuffer reflprobesBuffer;
+	RBuffer irragridsBuffer;
 
 	RBuffer geomGroupsBuffer;
 };

@@ -40,7 +40,8 @@ DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 			sl.ubo.quadraticTerm = quadraticTerm;
 			sl.ubo.maxShadowBias = maxShadowBias;
 			sl.ubo.samples = samples;
-			sl.ubo.sampleInvSpread = radius;
+			sl.ubo.sampleInvSpread = 1 / radius;
+			sl.ubo.hasShadow = hasShadow;
 
 			sl.MaybeResizeShadowmap(shadowMapWidth, shadowMapHeight);
 		}

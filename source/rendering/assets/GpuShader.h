@@ -17,6 +17,8 @@ struct GpuShader : public GpuAssetTemplate<Shader> {
 
 	GpuHandle<ShaderStage> callable;
 
+	GpuHandle<ShaderStage> compute;
+
 	// ONLY includes vert & frag. DOES NOT include raytracing stages. Just use the handles directly for ray tracing.
 	std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
 

@@ -1,7 +1,7 @@
 #include "Instance.h"
 
-#include "engine/console/ConsoleVariable.h"
 #include "engine/Input.h"
+#include "engine/console/ConsoleVariable.h"
 #include "rendering/VulkanLoader.h"
 
 #include <glfw/glfw3.h>
@@ -22,8 +22,8 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(
 	return pfnVkDestroyDebugUtilsMessengerEXT(instance, messenger, pAllocator);
 }
 
-ConsoleVariable<bool> showValidationErrors{ "r.validation.show", false, "Enables vulkan validation layer errors" };
-ConsoleVariable<bool> validationBreakOnError{ "r.validation.breakOnError", false,
+ConsoleVariable<bool> showValidationErrors{ "r.validation.show", true, "Enables vulkan validation layer errors" };
+ConsoleVariable<bool> validationBreakOnError{ "r.validation.breakOnError", true,
 	"Breaks to allow the debugger to get a call stack." };
 
 namespace {

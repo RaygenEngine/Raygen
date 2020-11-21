@@ -4,44 +4,43 @@
 
 struct Reflprobe_UBO {
 	int32 lodCount{ 1 };
+	float innerRadius{ 1.5f };
+	float outerRadius{ 70.f };
+	float pad;
+	glm::vec4 position{};
 };
 
-struct CubemapMipFrames {
-	std::array<vk::UniqueFramebuffer, 6> framebuffers;
-	std::vector<vk::UniqueImageView> faceViews;
-};
-
+// WIP: this enity should only capture specular lods
 struct SceneReflprobe : public SceneStruct {
-
 	SceneReflprobe();
+	void UploadUbo(uint32 curFrame) { UploadDataToUbo(curFrame, &ubo, sizeof(decltype(ubo))); }
 
 	Reflprobe_UBO ubo{};
 
-	vk::DescriptorSet reflDescSet;
-	vk::DescriptorSet surroundingEnvStorageDescSet;
-	vk::DescriptorSet surroundingEnvSamplerDescSet;
+	vk::DescriptorSet environmentSamplerDescSet;
+	vk::DescriptorSet environmentStorageDescSet;
 
-	vk::DescriptorSet ptcube_faceArrayDescSet;
-	std::vector<vk::UniqueImageView> ptcube_faceViews;
+	vk::DescriptorSet irradianceSamplerDescSet;
+	vk::DescriptorSet irradianceStorageDescSet;
 
-	std::vector<vk::UniqueFramebuffer> irr_framebuffer;
-	std::vector<vk::UniqueImageView> irr_faceViews;
+	// convolution based on roughness
+	vk::DescriptorSet prefilteredSamplerDescSet;
+	vk::DescriptorSet prefilteredStorageDescSet;
 
-	std::vector<CubemapMipFrames> pref_cubemapMips;
-
-	vl::RCubemap surroundingEnv;
+	vl::RCubemap environment;
 	vl::RCubemap irradiance;
 	vl::RCubemap prefiltered;
 
-	glm::vec4 position{};
-
-	float innerRadius{ 1.5f };
-	float outerRadius{ 70.f };
+	std::vector<vk::UniqueImageView> prefilteredMipViews;
 
 	int32 ptSamples{ 16 };
 	int32 ptBounces{ 3 };
 
-	BoolFlag shouldBuild{ true };
+	int32 irrResolution{ 32 };
 
-	void ShouldResize();
+	int32 prefSamples{ 1024 };
+
+
+	BoolFlag shouldBuild{ true };
+	void Allocate();
 };

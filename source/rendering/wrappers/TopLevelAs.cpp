@@ -7,7 +7,9 @@
 #include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneGeometry.h"
+#include "rendering/scene/SceneIrragrid.h"
 #include "rendering/scene/ScenePointlight.h"
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
@@ -65,10 +67,15 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 {
 	sceneDesc.descSetSpotlights = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
 		static_cast<int32>(scene->Get<SceneSpotlight>().size()));
+	sceneDesc.descSetDirlights = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
+		static_cast<int32>(scene->Get<SceneDirlight>().size()));
 
 	sceneDesc.descSetPointlights = Layouts->singleStorageBuffer.AllocDescriptorSet();
 	sceneDesc.descSetReflprobes = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
 		static_cast<int32>(scene->Get<SceneReflprobe>().size()));
+
+	sceneDesc.descSetIrragrids = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
+		static_cast<int32>(scene->Get<SceneIrragrid>().size()));
 
 	int32 totalGroups = 0;
 
@@ -100,10 +107,11 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 
 	sceneDesc.WriteImages();
 
-
-	// sceneDesc.WriteSpotlights(scene->Get<SceneSpotlight>().condensed);
 	sceneDesc.WritePointlights(scene->Get<ScenePointlight>().condensed);
+	sceneDesc.WriteSpotlights(scene->Get<SceneSpotlight>().condensed);
+	sceneDesc.WriteDirlights(scene->Get<SceneDirlight>().condensed);
 	sceneDesc.WriteReflprobes(scene->Get<SceneReflprobe>().condensed);
+	sceneDesc.WriteIrragrids(scene->Get<SceneIrragrid>().condensed);
 	sceneDesc.WriteGeomGroups();
 	Build();
 	Device->waitIdle();
@@ -215,8 +223,8 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 
 		for (auto spotlight : spotlights) {
 			viewInfoDefault //
-				.setImageView(spotlight->shadowmap[i].framebuffer[0].view())
-				.setSampler(spotlight->shadowmap[i].depthSampler);
+				.setImageView(spotlight->shadowmapPass[i].framebuffer[0].view())
+				.setSampler(spotlight->depthSampler);
 
 			depthImages.emplace_back(viewInfoDefault);
 		}
@@ -227,6 +235,79 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 			.setImageInfo(depthImages)
 			.setDstBinding(1u)
 			.setDstSet(descSetSpotlights[i])
+			.setDstArrayElement(0u);
+		Device->updateDescriptorSets({ depthWrite }, nullptr);
+	}
+}
+
+void RtSceneDescriptor::WriteDirlights(const std::vector<SceneDirlight*>& dirlights)
+{
+	dirlightCount = static_cast<int32>(dirlights.size());
+
+	uint32 uboSize = sizeof(Dirlight_Ubo) + sizeof(Dirlight_Ubo) % 8;
+
+	dirlightsBuffer = { (uboSize * dirlightCount),
+		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer
+			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+		vk::MemoryAllocateFlagBits::eDeviceAddress };
+
+	DEBUG_NAME_AUTO(dirlightsBuffer);
+
+	byte* mapCursor = reinterpret_cast<byte*>(Device->mapMemory(dirlightsBuffer.memory(), 0, dirlightsBuffer.size));
+
+	for (auto dirlight : dirlights) {
+		memcpy(mapCursor, &dirlight->ubo, sizeof(Dirlight_Ubo));
+		mapCursor += uboSize;
+	}
+
+	Device->unmapMemory(dirlightsBuffer.memory());
+
+
+	vk::DescriptorBufferInfo bufInfo{};
+	bufInfo
+		.setOffset(0) //
+		.setRange(VK_WHOLE_SIZE)
+		.setBuffer(dirlightsBuffer.handle());
+
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+		vk::WriteDescriptorSet bufWriteSet{};
+		bufWriteSet
+			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
+			.setDstBinding(0u)
+			.setDstSet(descSetDirlights[i])
+			.setDstArrayElement(0u)
+			.setBufferInfo(bufInfo);
+
+		Device->updateDescriptorSets({ bufWriteSet }, nullptr);
+	}
+
+
+	if (dirlightCount == 0) {
+		return;
+	}
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+		std::vector<vk::DescriptorImageInfo> depthImages;
+		vk::DescriptorImageInfo viewInfoDefault;
+
+		viewInfoDefault.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal); //
+
+		for (auto dirlight : dirlights) {
+			viewInfoDefault //
+				.setImageView(dirlight->shadowmapPass[i].framebuffer[0].view())
+				.setSampler(dirlight->depthSampler);
+
+			depthImages.emplace_back(viewInfoDefault);
+		}
+
+		vk::WriteDescriptorSet depthWrite{};
+		depthWrite
+			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler) //
+			.setImageInfo(depthImages)
+			.setDstBinding(1u)
+			.setDstSet(descSetDirlights[i])
 			.setDstArrayElement(0u);
 		Device->updateDescriptorSets({ depthWrite }, nullptr);
 	}
@@ -356,6 +437,85 @@ void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& refl
 			.setImageInfo(cubeImages)
 			.setDstBinding(1u)
 			.setDstSet(descSetReflprobes[i])
+			.setDstArrayElement(0u);
+		Device->updateDescriptorSets(depthWrite, nullptr);
+	}
+}
+
+void RtSceneDescriptor::WriteIrragrids(const std::vector<SceneIrragrid*>& irragrids)
+{
+	irragridCount = static_cast<int32>(irragrids.size());
+
+	uint32 uboSize = sizeof(Irragrid_UBO) + sizeof(Irragrid_UBO) % 8;
+
+	irragridsBuffer = { (uboSize * irragridCount),
+		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer
+			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+		vk::MemoryAllocateFlagBits::eDeviceAddress };
+
+	DEBUG_NAME_AUTO(irragridsBuffer);
+
+
+	byte* mapCursor = reinterpret_cast<byte*>(Device->mapMemory(irragridsBuffer.memory(), 0, irragridsBuffer.size));
+
+	for (auto ig : irragrids) {
+		memcpy(mapCursor, &ig->ubo, sizeof(Irragrid_UBO));
+		mapCursor += uboSize;
+	}
+
+	Device->unmapMemory(irragridsBuffer.memory());
+
+
+	vk::DescriptorBufferInfo bufInfo{};
+	bufInfo
+		.setOffset(0) //
+		.setRange(VK_WHOLE_SIZE)
+		.setBuffer(irragridsBuffer.handle());
+
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+		vk::WriteDescriptorSet bufWriteSet{};
+		bufWriteSet
+			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
+			.setDstBinding(0u)
+			.setDstSet(descSetIrragrids[i])
+			.setDstArrayElement(0u)
+			.setBufferInfo(bufInfo);
+
+		Device->updateDescriptorSets({ bufWriteSet }, nullptr);
+	}
+
+
+	auto quadSampler = GpuAssetManager->GetDefaultSampler();
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+		std::vector<vk::DescriptorImageInfo> cubeArrayImages;
+		vk::DescriptorImageInfo viewInfoDefault;
+
+		viewInfoDefault
+			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
+			.setSampler(quadSampler);
+
+		for (auto ig : irragrids) {
+			viewInfoDefault.setImageView(ig->irradianceCubemaps.view());
+			cubeArrayImages.emplace_back(viewInfoDefault);
+		}
+
+		if (irragrids.empty()) {
+			auto view = GpuAssetManager->GetGpuHandle(PodHandle<Cubemap>()).Lock().cubemap.view();
+			viewInfoDefault.setImageView(view);
+			cubeArrayImages.emplace_back(viewInfoDefault);
+		}
+		DEBUG_NAME_AUTO(descSetIrragrids[i]);
+
+
+		vk::WriteDescriptorSet depthWrite{};
+		depthWrite
+			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler) //
+			.setImageInfo(cubeArrayImages)
+			.setDstBinding(1u)
+			.setDstSet(descSetIrragrids[i])
 			.setDstArrayElement(0u);
 		Device->updateDescriptorSets(depthWrite, nullptr);
 	}

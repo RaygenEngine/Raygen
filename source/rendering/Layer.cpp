@@ -7,10 +7,10 @@
 #include "platform/Platform.h"
 #include "rendering/Instance.h"
 #include "rendering/Layouts.h"
-#include "rendering/output/SwapchainOutputPass.h"
 #include "rendering/Renderer.h"
 #include "rendering/StaticPipes.h"
 #include "rendering/VulkanLoader.h"
+#include "rendering/output/SwapchainOutputPass.h"
 #include "resource/GpuResources.h"
 
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
@@ -140,6 +140,7 @@ void Layer_::DrawFrame()
 		.setImageIndices(imageIndex);
 
 	CmdPoolManager->presentQueue.presentKHR(presentInfo);
+	Device->waitIdle();
 }
 
 void Layer_::ResetMainScene()

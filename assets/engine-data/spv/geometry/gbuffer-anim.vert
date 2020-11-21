@@ -1,4 +1,6 @@
 #version 460
+#extension GL_GOOGLE_include_directive : enable
+#include "global.glsl"
 
 // out
 
@@ -25,16 +27,7 @@ layout(push_constant) uniform PC {
 	mat4 normalMat;
 } push;
 
-layout(set = 1, binding = 0) uniform UBO_Camera {
-	vec3 position;
-	float pad0;
-	mat4 view;
-	mat4 proj;
-	mat4 viewProj;
-	mat4 viewInv;
-	mat4 projInv;
-	mat4 viewProjInv;
-} camera;
+layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 
 layout(std430, set = 2, binding = 0) readonly buffer SSBO_Joints {
 	mat4 invBindMatrix[];
@@ -49,7 +42,7 @@ void main() {
 
 
 	vec4 posWCS = push.modelMat * skinMat * vec4(position, 1.0);
-	gl_Position = camera.viewProj * posWCS;
+	gl_Position = cam.viewProj * posWCS;
 	fragPos = posWCS.xyz;
 
 	uv = textCoord;

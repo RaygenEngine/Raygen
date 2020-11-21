@@ -1,11 +1,12 @@
 #pragma once
 
 #include "engine/Listener.h"
-#include "rendering/passes/offline/IrradianceMapCalculation.h"
-#include "rendering/passes/offline/PathtracedCubemap.h"
-#include "rendering/passes/offline/PrefilteredMapCalculation.h"
-#include "rendering/passes/AOPass.h"
-#include "rendering/passes/MirrorPass.h"
+#include "rendering/passes/bake/ComputeCubemapArrayConvolution.h"
+#include "rendering/passes/bake/ComputeCubemapConvolution.h"
+#include "rendering/passes/bake/ComputePrefilteredConvolution.h"
+#include "rendering/passes/bake/PathtracedCubemap.h"
+#include "rendering/passes/bake/PathtracedCubemapArray.h"
+#include "rendering/passes/gi/IndirectSpecularPass.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
@@ -28,36 +29,16 @@ public:
 	InFlightResources<vk::ImageView> GetOutputViews() const;
 
 	// TODO: private
-	InFlightResources<RenderingPassInstance> m_gbufferInst;
-	InFlightResources<RenderingPassInstance> m_rasterDirectLightPass;
-	InFlightResources<RenderingPassInstance> m_rasterIblPass;
+	InFlightResources<RenderingPassInstance> m_mainPassInst;
+	InFlightResources<RenderingPassInstance> m_secondaryPassInst;
 	InFlightResources<RenderingPassInstance> m_ptPass;
+	IndirectSpecularPass m_indirectSpecPass;
 
 private:
-	void RecordGeometryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordRelfprobeEnvmapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordRasterDirectPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordSecondaryPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-
-
-	struct SecondaryBufferPool {
-
-		std::vector<InFlightCmdBuffers<Graphics>> sBuffers;
-
-		vk::CommandBuffer Get(uint32 frameIndex)
-		{
-			if (currBuffer > (int32(sBuffers.size()) - 1)) {
-				sBuffers.emplace_back(InFlightCmdBuffers<Graphics>(vk::CommandBufferLevel::eSecondary));
-			}
-
-			return sBuffers[currBuffer++][frameIndex];
-		}
-
-		void Top() { currBuffer = 0; }
-
-		int32 currBuffer{ 0 };
-
-	} m_secondaryBuffersPool;
 
 	vk::Extent2D m_extent{};
 
@@ -66,11 +47,11 @@ private:
 
 	// TODO: tidy
 	PtLightBlend m_lightblendPass;
-	// MirrorPass m_mirrorPass;
-	// AOPass m_aoPass;
-
-	PathtracedCubemap m_ptCube;
-
+	PathtracedCubemap m_ptCubemap;
+	PathtracedCubemapArray m_ptCubemapArray;
+	ComputeCubemapArrayConvolution m_compCubemapArrayConvolution;
+	ComputeCubemapConvolution m_compCubemapConvolution;
+	ComputePrefilteredConvolution m_compPrefilteredConvolution;
 
 	// PtCollection m_postprocCollection;
 

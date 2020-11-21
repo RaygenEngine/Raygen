@@ -108,14 +108,57 @@ void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vec
 	uint32 srcSubpass = subpassIndex == 0 ? VK_SUBPASS_EXTERNAL : subpassIndex - 1;
 
 	for (auto& attParam : inputs) {
-		if (IsExternal(attParam) && !attParam.IsDepth()) {
-			LOG_ABORT("External non depth inputs are not supported");
+		if (IsExternal(attParam)) {
+			LOG_ABORT("External attachment as input is not yet supported");
 		}
 
-		if (IsExternal(attParam)) {
-			auto extDepthAtt = UseExternal(attParam, subpassIndex);
+		// CHECK:
+		// CLOG_ABORT(attParam.IsDepth(), "Depth as input from the same renderpass not supported.");
+
+		subpass.inputs.emplace_back(attParam);
+
+		if (!attParam.Get().isInputAttachment) {
+			internalDescLayout.AddBinding(vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment);
+			internalInputAttachmentOrder.emplace_back(attParam);
+		}
+		attParam.Get().isInputAttachment = true;
+
+
+		auto& dep = subpassDependencies.emplace_back();
+
+		dep.setSrcSubpass(attParam.Get().previousOutputSubpassIndex) //
+			.setDstSubpass(subpassIndex);
+
+		if (attParam.Get().state == Attachment::State::Color) {
+
+			dep.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+				.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
+		}
+		else if (attParam.Get().state == Attachment::State::Depth) {
+
+			dep.setSrcStageMask(vk::PipelineStageFlagBits::eEarlyFragmentTests)
+				.setSrcAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite);
+		}
+
+		dep.setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader)
+			.setDstAccessMask(vk::AccessFlagBits::eShaderRead)
+			.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
+
+		auto& attRef = subpass.vkInputs.emplace_back();
+		attRef
+			.setAttachment(attParam.GetAttachmentIndex()) //
+			.setLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+	}
+
+	for (auto& att : outputs) {
+		if (IsExternal(att) && !att.IsDepth()) {
+			LOG_ABORT("External non depth outputs are not yet supported");
+		}
+
+		if (IsExternal(att)) {
+			auto extDepthAtt = UseExternal(att, subpassIndex);
 			if (extDepthAtt.firstUseIndex != subpassIndex) {
-				LOG_ABORT("External depth as input for multiple subpasses is not supported");
+				LOG_ABORT("External depth as output for multiple subpasses is not supported");
 			}
 
 			auto prevState = extDepthAtt.Get().state;
@@ -135,57 +178,27 @@ void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vec
 			extDepthAtt.Get().state = Attachment::State::Depth;
 
 			subpass.depth = extDepthAtt;
+			subpass.vkDepth = std::make_unique<vk::AttachmentReference>();
 			subpass.vkDepth
-				.setAttachment(extDepthAtt.GetAttachmentIndex()) //
+				->setAttachment(extDepthAtt.GetAttachmentIndex()) //
 				.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
 			continue;
 		}
 
-		CLOG_ABORT(attParam.IsDepth(), "Depth as input from the same renderpass not supported.");
-
-		subpass.inputs.emplace_back(attParam);
-
-		if (!attParam.Get().isInputAttachment) {
-			internalDescLayout.AddBinding(vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment);
-			internalInputAttachmentOrder.emplace_back(attParam);
-		}
-		attParam.Get().isInputAttachment = true;
-
-		if (attParam.Get().state != Attachment::State::ShaderRead) {
-			auto& dep = subpassDependencies.emplace_back();
-			dep.setSrcSubpass(srcSubpass)
-				.setDstSubpass(subpassIndex)
-				.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-				.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
-				.setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader)
-				.setDstAccessMask(vk::AccessFlagBits::eShaderRead)
-				.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
-		}
-		auto& attRef = subpass.vkInputs.emplace_back();
-		attRef
-			.setAttachment(attParam.GetAttachmentIndex()) //
-			.setLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-		attParam.Get().state = Attachment::State::ShaderRead;
-	}
-
-	for (auto& att : outputs) {
-		if (IsExternal(att)) {
-			LOG_ABORT("External attachment as output is not supported");
-		}
-
 		if (att.IsDepth()) {
 			CLOG_ABORT(att.Get().state != Attachment::State::Depth,
-				"Found depth as output attachemt but its state was not Depth Write");
+				"Found depth as output attachment but its state was not Depth Write");
 
 			subpass.depth = att;
+			subpass.vkDepth = std::make_unique<vk::AttachmentReference>();
 			subpass.vkDepth
-				.setAttachment(att.GetAttachmentIndex()) //
+				->setAttachment(att.GetAttachmentIndex()) //
 				.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 		}
 		else {
 			if (att.Get().state != Attachment::State::Color) {
+				// CHECK: doesn't work because of subpass dependency index changes
 				LOG_WARN("Reading and writting at the same attachment in the same render pass");
 
 				auto& dep = subpassDependencies.emplace_back();
@@ -205,6 +218,8 @@ void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vec
 				.setAttachment(att.GetAttachmentIndex()) //
 				.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
 		}
+
+		att.Get().previousOutputSubpassIndex = subpassIndex;
 	}
 
 
@@ -213,7 +228,7 @@ void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vec
 		.setColorAttachments(subpass.vkColors);
 
 	if (subpass.depth.originalOwner != nullptr) {
-		subpass.descr.setPDepthStencilAttachment(&subpass.vkDepth);
+		subpass.descr.setPDepthStencilAttachment(subpass.vkDepth.get());
 	}
 }
 

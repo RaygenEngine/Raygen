@@ -1,7 +1,7 @@
 #include "PtBase.h"
 
-#include "rendering/assets/GpuShader.h"
 #include "rendering/Layouts.h"
+#include "rendering/assets/GpuShader.h"
 
 namespace vl {
 
@@ -164,7 +164,7 @@ void PtBase_SinglePipeline::Utl_CreatePipelineLightPass(
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(*Layouts->rasterDirectLightPassLayout.compatibleRenderPass) // TODO: ?
+		.setRenderPass(*Layouts->mainPassLayout.compatibleRenderPass)
 		.setSubpass(subpassIndex)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);

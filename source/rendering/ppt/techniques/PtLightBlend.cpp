@@ -44,7 +44,7 @@ void PtLightBlend::MakePipeline()
 
 void PtLightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	auto descSet = sceneDesc.viewer.descSet[sceneDesc.frameIndex];
+	auto descSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 

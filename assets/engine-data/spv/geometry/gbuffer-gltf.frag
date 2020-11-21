@@ -29,20 +29,7 @@ layout(location=0) in Data
 
 // uniforms
 
-layout(set = 0, binding = 0) uniform UBO_Material {
-	// factors
-    vec4 baseColorFactor;
-	vec4 emissiveFactor;
-	float metallicFactor;
-	float roughnessFactor;
-	float normalScale;
-	float occlusionStrength;
-
-	// alpha mask
-	float alphaCutoff;
-	int mask;
-} mat;
-
+layout(set = 0, binding = 0) uniform UBO_Material { GltfMaterial mat; };
 layout(set = 0, binding = 1) uniform sampler2D baseColorSampler;
 layout(set = 0, binding = 2) uniform sampler2D metallicRoughnessSampler;
 layout(set = 0, binding = 3) uniform sampler2D occlusionSampler;
@@ -78,7 +65,7 @@ void main() {
 	// albedo = (1.0 - metallic) * baseColor;
 	gAlbedo = vec4((1.0 - metallic) * baseColor, opacity);
 
-	// SMATH: reflectance
+	// CHECK: reflectance
 	// f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + albedo * metallic;
 	gSpecularColor = vec4(vec3(0.16 * 0.5 * 0.5 * (1.0 - metallic)) + baseColor * metallic, roughness * roughness);
 	
