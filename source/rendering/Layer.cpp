@@ -140,7 +140,6 @@ void Layer_::DrawFrame()
 		.setImageIndices(imageIndex);
 
 	CmdPoolManager->presentQueue.presentKHR(presentInfo);
-	Device->waitIdle();
 }
 
 void Layer_::ResetMainScene()
