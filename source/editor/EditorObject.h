@@ -76,7 +76,7 @@ private:
 	void HandleInput();
 	void Dockspace();
 
-	void HandleClickSelection();
+	void HandleClickSelection(bool wasCtrl);
 
 	IterableSafeVector<std::function<void()>> m_postDrawCommands;
 	std::vector<std::function<void()>> m_deferredCommands;

@@ -178,6 +178,7 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 		cmdBuffer.bindIndexBuffer(
 			relPipe.m_sphereIndexBuffer.buffer.handle(), vk::DeviceSize(0), vk::IndexType::eUint32);
 
+
 		auto volumeTransform = math::transformMat(
 			glm::vec3{ pl.CalculateEffectiveRadius() }, selEnt->world().orientation, selEnt->world().position);
 
@@ -189,10 +190,14 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 	}
 
 
+	static ConsoleVariable<bool> cons_drawLeaves{ "s.bvh.Children", false };
+	if (!cons_drawLeaves) {
+		return;
+	}
+
 	if (Universe::MainWorld->physics.tree) {
 		for (auto& node : Universe::MainWorld->physics.tree->nodes) {
 			const auto& cubeVtxBuf = StaticPipes::Get<IrradianceMapCalculation>().m_cubeVertexBuffer;
-
 
 			auto volumeTransform = math::transformMat(
 				glm::vec3{ node.aabb.GetExtend() }, glm::identity<glm::quat>(), node.aabb.GetCenter());
@@ -207,9 +212,9 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 				}
 			}
 
-			static ConsoleVariable<bool> drawAll{ "s.bvhDebug", false };
+			static ConsoleVariable<bool> cons_draw{ "s.bvh.Debug", false };
 
-			if (drawAll || node.isLeaf) {
+			if (cons_draw || node.isLeaf) {
 				cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 				cmdBuffer.bindVertexBuffers(0u, { cubeVtxBuf.handle() }, { vk::DeviceSize(0) });
 				cmdBuffer.draw(static_cast<uint32>(108 / 3), 1u, 0u, 0u);

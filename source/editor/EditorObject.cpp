@@ -93,7 +93,7 @@ void EditorObject_::Dockspace()
 	ImGui::End();
 }
 
-void EditorObject_::HandleClickSelection()
+void EditorObject_::HandleClickSelection(bool wasCtrl)
 {
 	m_currentWorld->physics.Create(*m_currentWorld);
 	glm::vec3 cameraFwd = edCamera.transform.front();
@@ -105,23 +105,24 @@ void EditorObject_::HandleClickSelection()
 	auto dir = glm::normalize(glm::vec3(
 		glm::inverse(edCamera.proj * edCamera.view) * glm::vec4(remappedMouse.x, -remappedMouse.y, 1.0f, 1.0f)));
 
+	if (wasCtrl) {
+		auto result = Universe::MainWorld->physics.RayCastChitGeom(edCamera.transform.position, dir * (edCamera.far));
 
-	LOG_REPORT("TraceDir: {}, {}, {}", dir.x, dir.y, dir.z);
+		ed::OutlinerWindow::selected = result.entity;
 
-	//	if (Input.IsDown(Key::Ctrl)) {
-	auto result = Universe::MainWorld->physics.RayCastChitGeometry(edCamera.transform.position, dir * (edCamera.far));
-
-	ed::OutlinerWindow::selected = result.entity;
-
-	m_windowsComponent.CloseAsset(lastClickAssetSelected);
-	if (result.entity && result.geomGroupIndex >= 0) {
-		// Detect and open material in this geometry group for editing
-		auto matHandle = result.entity.Get<CStaticMesh>().mesh.Lock()->materials[result.geomGroupIndex];
-		m_windowsComponent.OpenAsset(matHandle);
-		lastClickAssetSelected = matHandle;
+		m_windowsComponent.CloseAsset(lastClickAssetSelected);
+		if (result.entity && result.geomGroupIndex >= 0) {
+			// Detect and open material in this geometry group for editing
+			auto matHandle = result.entity.Get<CStaticMesh>().mesh.Lock()->materials[result.geomGroupIndex];
+			m_windowsComponent.OpenAsset(matHandle);
+			lastClickAssetSelected = matHandle;
+		}
 	}
-
-	//	}
+	else {
+		auto result
+			= Universe::MainWorld->physics.RayCastChitSelection(edCamera.transform.position, dir * (edCamera.far));
+		ed::OutlinerWindow::selected = result.entity;
+	}
 }
 
 void EditorObject_::UpdateViewportCoordsFromDockspace()
@@ -224,17 +225,20 @@ void EditorObject_::AfterStopWorld(World& world)
 
 void EditorObject_::HandleInput()
 {
+	// WIP: remove statics when done with input system
 	static timer::Timer clickTimer;
+	static bool wasCtrlDown{ false };
 
 	if (Input.IsJustPressed(Key::Mouse_LeftClick)) {
 		// TODO: move timers to input
 		// TODO: implement MouseHasDragged() returns true if mouse did drag during this click (query from just released)
 		clickTimer.Start();
+		wasCtrlDown = Input.IsDown(Key::Ctrl);
 	}
 
 	if (Input.IsJustReleased(Key::Mouse_LeftClick) && Input.IsMouseInViewport()) {
 		if (clickTimer.Get<ch::milliseconds>() < 250) {
-			HandleClickSelection();
+			HandleClickSelection(wasCtrlDown);
 		}
 	}
 
