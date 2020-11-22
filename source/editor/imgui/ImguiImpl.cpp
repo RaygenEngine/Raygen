@@ -10,6 +10,7 @@
 #include "rendering/Layer.h"
 #include "rendering/output/SwapchainOutputPass.h"
 #include "rendering/resource/GpuResources.h"
+#include "universe/ComponentsDb.h"
 
 #include <imgui/examples/imgui_impl_glfw.h>
 #include <imgui/examples/imgui_impl_vulkan.h>
@@ -29,9 +30,13 @@ void AddLargeAssetIconsFont(ImFontAtlas* atlas)
 		builder.AddText(U8(cl.GetIcon()));
 	});
 	builder.AddText(U8(FA_FOLDER));
+
+
+	for (auto&& [id, metaEntry] : ComponentsDb::Z_GetTypes()) {
+		builder.AddText(U8(metaEntry.clPtr->GetIcon()));
+	}
+
 	builder.BuildRanges(&ranges); // Build the final result (ordered ranges with all the unique characters submitted)
-
-
 	ImguiImpl::s_AssetIconFont
 		= atlas->AddFontFromFileTTF("engine-data/fonts/Font-Awesome-5-Free-Solid-900.ttf", 52.f, nullptr, ranges.Data);
 }
@@ -65,10 +70,11 @@ inline void CorporateStyle()
 	int is3D = 1;
 
 	colors[ImGuiCol_Text] = ImVec4(brighness, brighness, brighness, 1.00f);
-	colors[ImGuiCol_TextDisabled] = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
+	colors[ImGuiCol_TextDisabled] = ImVec4(0.58f, 0.58f, 0.58f, 1.00f);
 	colors[ImGuiCol_ChildBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
 	colors[ImGuiCol_WindowBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
-	colors[ImGuiCol_PopupBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+	//	colors[ImGuiCol_PopupBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+	colors[ImGuiCol_PopupBg] = ImVec4(0.35f, 0.35f, 0.35f, 1.00f);
 	colors[ImGuiCol_Border] = ImVec4(0.12f, 0.12f, 0.12f, 0.71f);
 	colors[ImGuiCol_BorderShadow] = ImVec4(1.00f, 1.00f, 1.00f, 0.06f);
 	colors[ImGuiCol_FrameBg] = ImVec4(0.42f, 0.42f, 0.42f, 0.54f);
@@ -108,7 +114,6 @@ inline void CorporateStyle()
 	colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
 	colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 
-	style.PopupRounding = 3;
 
 	style.WindowPadding = ImVec2(4, 4);
 	style.FramePadding = ImVec2(6, 4);
@@ -121,15 +126,44 @@ inline void CorporateStyle()
 	style.PopupBorderSize = 1;
 	style.FrameBorderSize = static_cast<float>(is3D);
 
-	style.WindowRounding = 3;
-	style.ChildRounding = 3;
-	style.FrameRounding = 3;
-	style.ScrollbarRounding = 2;
-	style.GrabRounding = 3;
 
+	constexpr enum { Rounded, Hybrid, Box } roundedTheme = Hybrid;
+
+	if (roundedTheme == Rounded) {
+		style.PopupRounding = 3;
+
+		style.WindowRounding = 3;
+		style.ChildRounding = 3;
+		style.FrameRounding = 3;
+		style.ScrollbarRounding = 2;
+		style.GrabRounding = 3;
+	}
+	else if (roundedTheme == Hybrid) {
+		style.PopupRounding = 0;
+
+		style.WindowRounding = 3;
+		style.ChildRounding = 3;
+		style.FrameRounding = 0;
+		style.ScrollbarRounding = 0;
+		style.GrabRounding = 0;
+	}
+	else {
+		style.PopupRounding = 0;
+
+		style.WindowRounding = 0;
+		style.ChildRounding = 0;
+		style.FrameRounding = 0;
+		style.ScrollbarRounding = 0;
+		style.GrabRounding = 0;
+	}
 #ifdef IMGUI_HAS_DOCK
 	style.TabBorderSize = static_cast<float>(is3D);
-	style.TabRounding = 3;
+	if (roundedTheme == Rounded) {
+		style.TabRounding = 3;
+	}
+	else {
+		style.TabRounding = 0;
+	}
 
 	colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
 	colors[ImGuiCol_Tab] = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
@@ -373,88 +407,86 @@ void ImguiImpl::RenderVulkan(vk::CommandBuffer drawCommandBuffer)
 
 // WIP:
 namespace {
-int TextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end)
+unsigned int TextCharFromUtf8(const char* in_text, const char* in_text_end)
 {
 	unsigned int c = (unsigned int)-1;
+
 	const unsigned char* str = (const unsigned char*)in_text;
 	if (!(*str & 0x80)) {
 		c = (unsigned int)(*str++);
-		*out_char = c;
-		return 1;
+		return c;
 	}
 	if ((*str & 0xe0) == 0xc0) {
-		*out_char = IM_UNICODE_CODEPOINT_INVALID; // will be invalid but not end of string
+		c = IM_UNICODE_CODEPOINT_INVALID; // will be invalid but not end of string
 		if (in_text_end && in_text_end - (const char*)str < 2)
-			return 1;
+			return c;
 		if (*str < 0xc2)
-			return 2;
+			return c;
 		c = (unsigned int)((*str++ & 0x1f) << 6);
 		if ((*str & 0xc0) != 0x80)
-			return 2;
+			return c;
 		c += (*str++ & 0x3f);
-		*out_char = c;
-		return 2;
+		return c;
 	}
 	if ((*str & 0xf0) == 0xe0) {
-		*out_char = IM_UNICODE_CODEPOINT_INVALID; // will be invalid but not end of string
+		c = IM_UNICODE_CODEPOINT_INVALID; // will be invalid but not end of string
 		if (in_text_end && in_text_end - (const char*)str < 3)
-			return 1;
+			return c;
 		if (*str == 0xe0 && (str[1] < 0xa0 || str[1] > 0xbf))
-			return 3;
+			return c;
 		if (*str == 0xed && str[1] > 0x9f)
-			return 3; // str[1] < 0x80 is checked below
+			return c; // str[1] < 0x80 is checked below
 		c = (unsigned int)((*str++ & 0x0f) << 12);
 		if ((*str & 0xc0) != 0x80)
-			return 3;
+			return c;
 		c += (unsigned int)((*str++ & 0x3f) << 6);
 		if ((*str & 0xc0) != 0x80)
-			return 3;
+			return c;
 		c += (*str++ & 0x3f);
-		*out_char = c;
-		return 3;
+		return c;
 	}
 	if ((*str & 0xf8) == 0xf0) {
-		*out_char = IM_UNICODE_CODEPOINT_INVALID; // will be invalid but not end of string
+		c = IM_UNICODE_CODEPOINT_INVALID; // will be invalid but not end of string
 		if (in_text_end && in_text_end - (const char*)str < 4)
-			return 1;
+			return c;
 		if (*str > 0xf4)
-			return 4;
+			return c;
 		if (*str == 0xf0 && (str[1] < 0x90 || str[1] > 0xbf))
-			return 4;
+			return c;
 		if (*str == 0xf4 && str[1] > 0x8f)
-			return 4; // str[1] < 0x80 is checked below
+			return c; // str[1] < 0x80 is checked below
 		c = (unsigned int)((*str++ & 0x07) << 18);
 		if ((*str & 0xc0) != 0x80)
-			return 4;
+			return c;
 		c += (unsigned int)((*str++ & 0x3f) << 12);
 		if ((*str & 0xc0) != 0x80)
-			return 4;
+			return c;
 		c += (unsigned int)((*str++ & 0x3f) << 6);
 		if ((*str & 0xc0) != 0x80)
-			return 4;
+			return c;
 		c += (*str++ & 0x3f);
 		// utf-8 encodings of values used in surrogate pairs are invalid
 		if ((c & 0xFFFFF800) == 0xD800)
-			return 4;
+			return c;
 		// If codepoint does not fit in ImWchar, use replacement character U+FFFD instead
 		if (c > IM_UNICODE_CODEPOINT_MAX)
 			c = IM_UNICODE_CODEPOINT_INVALID;
-		*out_char = c;
-		return 4;
+		return c;
 	}
-	*out_char = 0;
 	return 0;
 }
 } // namespace
 
 
-std::pair<glm::vec2, glm::vec2> ImguiImpl::GetIconUV(const char8* icon)
+std::pair<glm::vec2, glm::vec2> ImguiImpl::GetIconUV(const char* icon)
 {
-	unsigned int c = 0;
-	TextCharFromUtf8(&c, U8(icon), U8(icon) + strlen(U8(icon)));
+	ImWchar c = TextCharFromUtf8(icon, icon + 10);
 
-	s_AssetIconFont->BuildLookupTable();
 	auto glyph = s_AssetIconFont->FindGlyph(c);
+	if (!glyph) {
+		LOG_WARN("Failed to find glyph for uv: {}", icon);
+		return { { 0, 0 }, { 1, 1 } };
+	}
 	return { { glyph->U0, glyph->V0 }, { glyph->U1, glyph->V1 } };
 }
 

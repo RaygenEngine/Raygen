@@ -22,7 +22,7 @@ public:
 	inline static ImFont* s_MediumSizeIconFont{ nullptr };
 
 
-	static std::pair<glm::vec2, glm::vec2> GetIconUV(const char8* icon);
+	static std::pair<glm::vec2, glm::vec2> GetIconUV(const char* icon);
 
 	static vk::DescriptorSet GetIconFontDescriptorSet();
 };
