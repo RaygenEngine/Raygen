@@ -1189,10 +1189,10 @@ static void DrawRotationGizmo(int type)
 		if (radiusAxis > gContext.mRadiusSquareCenter)
 			gContext.mRadiusSquareCenter = radiusAxis;
 
-		drawList->AddPolyline(circlePos, halfCircleSegmentCount, colors[3 - axis], false, 2);
+		drawList->AddPolyline(circlePos, halfCircleSegmentCount, colors[3 - axis], false, 2 * lineThickness);
 	}
 	drawList->AddCircle(worldToPos(gContext.mModel.v.position, gContext.mViewProjection), gContext.mRadiusSquareCenter,
-		colors[0], 64, 3.f);
+		colors[0], 64, 2.f * lineThickness);
 
 	if (gContext.mbUsing) {
 		ImVec2 circlePos[halfCircleSegmentCount + 1];
