@@ -163,6 +163,11 @@ Layouts_::Layouts_()
 		vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eCompute);
 	singleSamplerDescLayout.Generate();
 
+	singleSamplerFragOnlyLayout.AddBinding(
+		vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+	singleSamplerFragOnlyLayout.Generate();
+
+
 	// cubemap
 	cubemapLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	cubemapLayout.Generate();
