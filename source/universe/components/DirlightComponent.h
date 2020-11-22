@@ -10,7 +10,7 @@ struct CDirlight : CLightBase {
 
 	REFLECTED_SCENE_COMP(CDirlight, SceneDirlight)
 	{
-		REFLECT_ICON(FA_LIGHTBULB);
+		REFLECT_ICON(FA_LOCATION_ARROW);
 
 		REFLECT_VAR(color, PropertyFlags::Color);
 		REFLECT_VAR(intensity);
