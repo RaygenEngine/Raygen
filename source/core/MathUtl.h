@@ -97,6 +97,12 @@ inline glm::quat findLookAt(glm::vec3 source, glm::vec3 target)
 	return glm::normalize(glm::quatLookAt(direction, glm::vec3(0.f, 1.f, 0.f)));
 }
 
+// "decompose" aka return the proper column
+inline glm::vec3 decomposePos(const glm::mat4& matrix)
+{
+	return glm::vec3(matrix[3]);
+}
+
 template<typename T>
 int32 roundToInt(T number)
 {
