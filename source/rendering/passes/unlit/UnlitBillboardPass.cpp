@@ -4,12 +4,14 @@
 #include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
+#include "rendering/core/PipeUtl.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneIrragrid.h"
 #include "universe/Universe.h"
 #include "universe/components/IrragridComponent.h"
 #include "universe/components/PointlightComponent.h"
 #include "universe/components/ReflProbeComponent.h"
+#include "editor/imgui/ImguiImpl.h"
 
 namespace {
 struct PushConstant {
@@ -17,7 +19,8 @@ struct PushConstant {
 	glm::vec4 position;
 	glm::vec4 cameraRight;
 	glm::vec4 cameraUp;
-	float scale;
+	glm::vec2 uvMin{ 0.f, 0.f };
+	glm::vec2 uvMax{ 1.f, 1.f };
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -29,17 +32,9 @@ namespace vl {
 
 vk::UniquePipelineLayout UnlitBillboardPass::MakePipelineLayout()
 {
-	vk::PushConstantRange pushConstantRange{};
-	pushConstantRange
-		.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
-		.setSize(sizeof(PushConstant))
-		.setOffset(0u);
-
-	// pipeline layout
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.setPushConstantRanges(pushConstantRange);
-
-	return Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+	return rvk::makePipelineLayout<PushConstant>({
+		Layouts->singleSamplerFragOnlyLayout.handle(),
+	});
 }
 
 vk::UniquePipeline UnlitBillboardPass::MakePipeline()
@@ -161,33 +156,54 @@ vk::UniquePipeline UnlitBillboardPass::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
+namespace {
+	// Unoptimized, we should do views & ubo batching, but we also need to keep track of double draws or iterate per
+	// entity and draw first Component found from list (slow), we should also do basic visiblity testing (eg behind view
+	// plane, or too far, maybe even frustum testing)
+	template<CComponent T>
+	void DrawComponent(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::PipelineLayout layout)
+	{
+		auto view = sceneDesc.viewer.ubo.view;
+		glm::vec4 cameraRight{ view[0][0], view[1][0], view[2][0], 0.f };
+		glm::vec4 cameraUp{ view[0][1], view[1][1], view[2][1], 0.f };
+		for (auto& [ent, comp, bc] : Universe::MainWorld->GetView<T, BasicComponent>().each()) {
+			auto icon = ComponentsDb::GetType<T>()->clPtr->GetIcon();
+			auto uv = ImguiImpl::GetIconUV(U8(icon));
+
+			PushConstant pc{
+				sceneDesc.viewer.ubo.viewProj,
+				glm::vec4(bc.world().position, 1.f),
+				cameraRight,
+				cameraUp,
+				uv.first,
+				uv.second,
+			};
+
+			cmdBuffer.pushConstants(layout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,
+				sizeof(PushConstant), &pc);
+
+			// draw rectangle
+			cmdBuffer.draw(4u, 1u, 0u, 0u);
+		}
+	};
+} // namespace
+
 void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
-
 	cmdBuffer.bindVertexBuffers(0u, m_rectangleVertexBuffer.handle(), vk::DeviceSize(0));
+
+	auto fontDescSet = ImguiImpl::GetIconFontDescriptorSet();
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &fontDescSet, 0u, nullptr);
+
+
+	DrawComponent<CReflprobe>(cmdBuffer, sceneDesc, layout());
+	DrawComponent<CPointlight>(cmdBuffer, sceneDesc, layout());
+
 
 	auto view = sceneDesc.viewer.ubo.view;
 	glm::vec4 cameraRight{ view[0][0], view[1][0], view[2][0], 0.f };
 	glm::vec4 cameraUp{ view[0][1], view[1][1], view[2][1], 0.f };
-
-	for (auto& [ent, rp, bc] : Universe::MainWorld->GetView<CReflprobe, BasicComponent>().each()) {
-
-
-		PushConstant pc{
-			sceneDesc.viewer.ubo.viewProj,
-			glm::vec4(bc.world().position, 1.f),
-			cameraRight,
-			cameraUp,
-			0.2f,
-		};
-
-		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-		// draw rectangle
-		cmdBuffer.draw(4u, 1u, 0u, 0u);
-	}
-
 	for (auto& [ent, ig, bc] : Universe::MainWorld->GetView<CIrragrid, BasicComponent>().each()) {
 
 		if (ig.hideBillboards) {
@@ -197,8 +213,6 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 		for (int32 x = 0; x < ig.width; ++x) {
 			for (int32 y = 0; y < ig.height; ++y) {
 				for (int32 z = 0; z < ig.depth; ++z) {
-
-
 					auto pos = bc.world().position + glm::vec3(x, y, z) * ig.distToAdjacent;
 
 					PushConstant pc{
@@ -206,7 +220,6 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 						glm::vec4(pos, 1.f),
 						cameraRight,
 						cameraUp,
-						0.2f,
 					};
 
 					cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
@@ -216,23 +229,6 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 				}
 			}
 		}
-	}
-
-	for (auto& [ent, rp, bc] : Universe::MainWorld->GetView<CPointlight, BasicComponent>().each()) {
-
-
-		PushConstant pc{
-			sceneDesc.viewer.ubo.viewProj,
-			glm::vec4(bc.world().position, 1.f),
-			cameraRight,
-			cameraUp,
-			0.4f,
-		};
-
-		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-		// draw rectangle
-		cmdBuffer.draw(4u, 1u, 0u, 0u);
 	}
 }
 

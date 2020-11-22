@@ -13,35 +13,12 @@ layout(location = 0) in vec2 uv;
 
 // uniform
 
+layout(set = 0, binding = 0) uniform sampler2D f;
 
 void main()
 {
-	vec2 center = vec2(1.);
-	vec2 d = (uv - center + 0.5);
-	d *= d;
-
-	outColor = 
-	 d.x + d.y < 0.25 ? 
-	vec4(0.4, 0.4, 0.5, 1.0) : vec4(0);
+	outColor = vec4(texture(f, uv).a);
 }                               
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

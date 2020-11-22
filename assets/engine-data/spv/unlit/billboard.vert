@@ -15,20 +15,24 @@ layout(push_constant) uniform PC {
     vec4 centerPos;
     vec4 cameraRight;
     vec4 cameraUp;
-    float scale;
+    vec2 uvstart;
+    vec2 uvend;
 };
 
 
 void main() 
 {
+	float scale = 1; // Calculate from camera distance
     vec3 pos = centerPos.xyz
     + cameraRight.xyz * position.x * scale
     + cameraUp.xyz * position.y * scale;
 
     gl_Position = vp * vec4(pos, 1.0);
-    
-    uv = position.xy + 0.5;
+
+
+    float u = sign(position.x) < 0 ? uvstart.x : uvend.x;
+    float v = sign(position.y) > 0 ? uvstart.y : uvend.y;
+    uv = vec2(u, v);
 }                
-                
 
 
