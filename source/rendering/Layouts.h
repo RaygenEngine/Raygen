@@ -19,6 +19,7 @@ inline struct Layouts_ {
 	RDescriptorSetLayout singleUboDescLayout;
 	RDescriptorSetLayout jointsDescLayout;
 	RDescriptorSetLayout singleSamplerDescLayout;
+	RDescriptorSetLayout singleSamplerFragOnlyLayout;
 	RDescriptorSetLayout cubemapLayout;
 	RDescriptorSetLayout envmapLayout;
 	RDescriptorSetLayout accelLayout;

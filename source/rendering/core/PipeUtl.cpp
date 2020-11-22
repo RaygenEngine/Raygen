@@ -122,6 +122,25 @@ vk::UniquePipelineLayout makeLayoutNoPC(std::vector<vk::DescriptorSetLayout> lay
 	return vl::Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
 
+vk::UniquePipelineLayout makePipelineLayoutEx(
+	std::initializer_list<vk::DescriptorSetLayout> layoutsIn, vk::ShaderStageFlags pcStageFlags, uint32 pcStructSize)
+{
+	vk::PushConstantRange pushConstantRange{};
+	pushConstantRange
+		.setStageFlags(pcStageFlags) //
+		.setSize(pcStructSize)
+		.setOffset(0u);
+
+	// pipeline layout
+	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo
+		.setSetLayouts(layoutsIn) //
+		.setPushConstantRanges(pushConstantRange);
+
+	return vl::Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+}
+
+
 // vk::UniquePipeline makeFullscreenPipeline(vk::PipelineShaderStageCreateInfo fragStage,
 //	vk::PipelineColorBlendStateCreateInfo colorBlending, vk::PipelineLayout pipeLayout, vk::RenderPass renderPass,
 //	uint32 subpassIndex)
