@@ -8,7 +8,7 @@ struct SceneIrragrid;
 struct CIrragrid : CSceneBase {
 	REFLECTED_SCENE_COMP(CIrragrid, SceneIrragrid)
 	{
-		// REFLECT_ICON(FA_CUBE);
+		REFLECT_ICON(FA_CIRCLE);
 		// REFLECT_CATEGORY("Rendering");
 
 		REFLECT_VAR(width);

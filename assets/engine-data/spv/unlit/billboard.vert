@@ -22,7 +22,7 @@ layout(push_constant) uniform PC {
 
 void main() 
 {
-	float scale = 1; // Calculate from camera distance
+	float scale = 0.2; // TODO: Calculate from camera distance
     vec3 pos = centerPos.xyz
     + cameraRight.xyz * position.x * scale
     + cameraUp.xyz * position.y * scale;
