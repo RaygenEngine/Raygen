@@ -41,6 +41,7 @@ void Renderer_::InitPipelines()
 	m_lightblendPass.MakePipeline();
 
 	m_indirectSpecPass.MakeRtPipeline();
+	m_mirorPass.MakeRtPipeline();
 }
 
 void Renderer_::RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
@@ -159,13 +160,18 @@ void Renderer_::RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 	});
 }
 
-void Renderer_::RecordSecondaryPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void Renderer_::RecordSecondaryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	m_secondaryPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline,
 		[&]() { StaticPipes::Get<AmbientBlend>().Draw(cmdBuffer, sceneDesc); });
+
+	m_mirorPass.RecordPass(cmdBuffer, sceneDesc);
+
+	// WIP: decide, also can it be merged with mirror pass?
+	// m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
 }
 
-void Renderer_::RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void Renderer_::RecordPostProcessPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -198,6 +204,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 	}
 
 	m_indirectSpecPass.Resize(fbSize);
+	m_mirorPass.Resize(fbSize);
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_attachmentsDesc[i] = Layouts->renderAttachmentsLayout.AllocDescriptorSet();
@@ -213,6 +220,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		views.emplace_back(m_secondaryPassInst[i].framebuffer[0].view());
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
 		views.emplace_back(m_indirectSpecPass.m_svgfRenderPassInstance[i].framebuffer[0].view()); // indirect spec pass
+		views.emplace_back(m_mirorPass.m_result[i].view());                                       // mirror buffer
 		views.emplace_back(m_ptPass[i].framebuffer[0].view());                                    // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_attachmentsDesc[i], 0u, std::move(views));
@@ -256,15 +264,18 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 
 	sceneDesc.attachmentsDescSet = m_attachmentsDesc[sceneDesc.frameIndex];
 
+	// shadowmaps and baked indirect light
 	RecordMapPasses(cmdBuffer, sceneDesc);
 
+	// gbuffer, direct light and baked indirect light
 	RecordMainPass(cmdBuffer, sceneDesc);
 
-	RecordSecondaryPass(cmdBuffer, sceneDesc);
+	// additional gi passes
+	RecordSecondaryPasses(cmdBuffer, sceneDesc);
 
-	// m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
+	// post process
+	RecordPostProcessPasses(cmdBuffer, sceneDesc);
 
-	RecordPostProcessPass(cmdBuffer, sceneDesc);
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 }
 } // namespace vl

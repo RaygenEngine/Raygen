@@ -220,6 +220,17 @@ vec3 SampleSpecularDirection(inout Surface surface, inout uint seed)
     return brdf_r * surface.nol / pdf;
 }
 
+vec3 SampleMirrorDirection(inout Surface surface)
+{
+    surface.l = reflect(-surface.v);
+    cacheSurfaceDots(surface);
+
+    vec3 ks = F_Schlick(surface.loh, surface.f0);
+    vec3 brdf_r = SpecularTerm(surface, ks);
+
+    return brdf_r * surface.nol;
+}
+
 vec3 SampleDiffuseDirection(inout Surface surface, inout uint seed)
 {
     vec2 u = rand2(seed); 

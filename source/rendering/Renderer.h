@@ -7,6 +7,7 @@
 #include "rendering/passes/bake/PathtracedCubemap.h"
 #include "rendering/passes/bake/PathtracedCubemapArray.h"
 #include "rendering/passes/gi/IndirectSpecularPass.h"
+#include "rendering/passes/gi/MirrorPass.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
@@ -33,12 +34,13 @@ public:
 	InFlightResources<RenderingPassInstance> m_secondaryPassInst;
 	InFlightResources<RenderingPassInstance> m_ptPass;
 	IndirectSpecularPass m_indirectSpecPass;
+	MirrorPass m_mirorPass;
 
 private:
 	void RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordSecondaryPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordSecondaryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordPostProcessPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 
 	vk::Extent2D m_extent{};
 

@@ -1,0 +1,87 @@
+#version 460
+#extension GL_GOOGLE_include_directive : enable
+#extension GL_EXT_ray_tracing : require
+#extension GL_EXT_scalar_block_layout : enable
+#extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_EXT_buffer_reference2 : enable
+
+// TODO:
+#define RAY
+
+#include "global.glsl"
+#include "raytrace/mirror/mirror.glsl"
+
+#include "attachments.glsl"
+#include "bsdf.glsl"
+#include "onb.glsl"
+#include "surface.glsl"
+
+layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
+layout(set = 2, binding = 0, rgba32f) uniform image2D image;
+layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
+layout(set = 4, binding = 1) uniform sampler2D textureSamplers[];
+
+layout(location = 0) rayPayloadEXT hitPayload prd;
+
+vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
+	prd.radiance = vec3(0);
+	prd.depth += 1;
+
+    uint  rayFlags = gl_RayFlagsOpaqueEXT | gl_RayFlagsCullFrontFacingTrianglesEXT;
+    float tMin     = 0.001;
+    float tMax     = 10000.0;
+
+	// trace ray
+	traceRayEXT(topLevelAs,     // acceleration structure
+				rayFlags,       // rayFlags
+				0xFF,           // cullMask
+				0,              // sbtRecordOffset
+				0,              // sbtRecordStride
+				0,              // missIndex
+				nextOrigin,     // ray origin
+				tMin,           // ray min range
+				nextDirection,  // ray direction
+				tMax,           // ray max range
+				0               // payload (location = 0)
+	);
+	
+    prd.depth -= 1;
+    
+	// WIP: nans
+    if(isnan(prd.radiance.x) || isnan(prd.radiance.y) || isnan(prd.radiance.z)){
+    	prd.radiance = vec3(0,0,0);
+    }
+	return prd.radiance;
+}
+
+void main() {
+	vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
+
+	Surface surface = surfaceFromGBuffer(
+	    cam,
+		g_DepthSampler,
+		g_NormalSampler,
+		g_AlbedoSampler,
+		g_SpecularSampler,
+		g_EmissiveSampler,
+		uv
+		);
+		
+	
+	if(surface.depth == 1.0 || surface.a >= SPEC_THRESHOLD) {
+		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(0.0, 0.0, 0.0, 1.0));
+		return; 
+	}
+
+	prd.depth = 1;
+
+
+	// PERF: you can calculate reflection UVs here and use them later for ssr and skip some rays here
+	vec3 brdf_NoL = SampleMirrorDirection(surface);
+	vec3 L = surfaceIncidentLightDir(surface);
+	
+
+	vec3 color = RadianceOfRay(surface.position, L) * brdf_NoL;
+
+	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
+}
