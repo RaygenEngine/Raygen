@@ -49,6 +49,16 @@ inline glm::mat4 transformMat(glm::vec3 scale, glm::vec3 raxis, float rads, glm:
 	return t * r * s;
 }
 
+inline glm::mat4 transformMat(float uniformScale, glm::vec3 translation)
+{
+	auto t = glm::translate(translation);
+	t[0][0] = uniformScale;
+	t[1][1] = uniformScale;
+	t[2][2] = uniformScale;
+	t[3][3] = 1.f;
+	return t;
+}
+
 inline glm::mat4 transformMat2(
 	glm::vec3 translation, glm::quat orientation = { glm::identity<glm::quat>() }, glm::vec3 scale = { 1.f, 1.f, 1.f })
 {

@@ -21,11 +21,12 @@ struct CReflprobe : CSceneBase {
 		REFLECT_VAR(prefLodCount);
 		REFLECT_VAR(prefSamples);
 
+		REFLECT_VAR(applyIrradiance);
 		REFLECT_VAR(notifyBuild, PropertyFlags::Transient);
 	}
 
 	float innerRadius{ 1.5f };
-	float outerRadius{ 70.f };
+	float outerRadius{ 5.f };
 
 	int32 ptSamples{ 16 };
 	int32 ptBounces{ 3 };
@@ -35,5 +36,7 @@ struct CReflprobe : CSceneBase {
 	int32 prefLodCount{ 5 };
 	int32 prefSamples{ 1024 };
 
+	// TODO: remove irradiance from reflprobes alltogether
+	bool applyIrradiance{ true };
 	bool notifyBuild{ true };
 };

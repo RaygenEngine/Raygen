@@ -16,6 +16,14 @@ Aabb createAabb(vec3 center, float halfsize)
 	return aabb;
 }
 
+bool containsPointAabb(Aabb aabb, vec3 p)
+{
+// SMATH: =
+	return p.x >= aabb.pmin.x && p.x <= aabb.pmax.x
+		&& p.y >= aabb.pmin.y && p.y <= aabb.pmax.y
+		&& p.z >= aabb.pmin.z && p.z <= aabb.pmax.z;
+}
+
 // returns distance from ray origin to aabb
 float intersectionDistanceAabb(Aabb aabb, vec3 rayOrigin, vec3 rayDirection) {
     vec3 tMin = (aabb.pmin - rayOrigin) / rayDirection;

@@ -13,13 +13,7 @@ struct ReflprobeBlend : public StaticPipeBase {
 	ReflprobeBlend();
 
 private:
-	void MakeSphere(int32 sectorCount, int32 stackCount, float radius = 1.0f);
-	RBuffer m_sphereVertexBuffer;
-
-	struct indices {
-		RBuffer buffer;
-		uint32 count;
-	} m_sphereIndexBuffer;
+	RBuffer m_cubeVertexBuffer; // strip
 };
 
 } // namespace vl

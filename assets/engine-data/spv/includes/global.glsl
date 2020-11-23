@@ -181,7 +181,7 @@ struct Reflprobe {
 	int lodCount;
 	float innerRadius;
 	float outerRadius;
-	float pad0;
+	float irradianceFactor;
 	vec3 position;
 	float pad1;
 };
