@@ -21,7 +21,6 @@ layout(set = 0, binding = 5) uniform sampler2D g_VelocitySampler;
 layout(set = 0, binding = 6) uniform sampler2D g_UVDrawIndexSampler;
 
 layout(set = 0, binding = 7) uniform sampler2D directLightSampler;
-
 layout(set = 0, binding = 8) uniform sampler2D indirectLightSampler;
 
 layout(set = 0, binding = 9) uniform sampler2D AoSampler;
@@ -30,8 +29,10 @@ layout(set = 0, binding = 10) uniform sampler2D std_BrdfLut;
 
 layout(set = 0, binding = 11) uniform sampler2D indirectRaytracedSpecular;
 
+layout(set = 0, binding = 12) uniform sampler2D mirrorSampler;
+
 // Blend
-layout(set = 0, binding = 12) uniform sampler2D sceneColorSampler;
+layout(set = 0, binding = 13) uniform sampler2D sceneColorSampler;
 */
 
 void Layouts_::MakeRenderPassLayouts()
@@ -129,8 +130,8 @@ void Layouts_::MakeRenderPassLayouts()
 
 Layouts_::Layouts_()
 {
-	// WIP: + 7
-	for (uint32 i = 0u; i < gBufferColorAttachments.size() + 7; ++i) {
+	// WIP: + 8, gDepth + rest
+	for (uint32 i = 0u; i < gBufferColorAttachments.size() + 8; ++i) {
 		renderAttachmentsLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
 			vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR
 				| vk::ShaderStageFlagBits::eClosestHitKHR);

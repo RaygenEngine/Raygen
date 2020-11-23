@@ -78,11 +78,13 @@ void AttachmentDebuggerWindow::ImguiDraw()
 	auto& mainFramebuffer = vl::Renderer->m_mainPassInst.at(0).framebuffer;
 	auto& secondaryFramebuffer = vl::Renderer->m_secondaryPassInst.at(0).framebuffer;
 	auto& ptPassFramebuffer = vl::Renderer->m_ptPass.at(0).framebuffer;
+	auto& mirrorRes = vl::Renderer->m_mirorPass.m_result.at(0);
+
 
 	showFramebuffer(mainFramebuffer);
 	showFramebuffer(secondaryFramebuffer);
+	showImage(mirrorRes);
 
-	// showImage(vl::Renderer->m_indirectSpecPass.m_result.at(0));
 	showFramebuffer(ptPassFramebuffer);
 
 	for (auto dl : vl::Layer->mainScene->Get<SceneDirlight>()) {

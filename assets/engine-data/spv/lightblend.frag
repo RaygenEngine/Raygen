@@ -38,9 +38,10 @@ void main()
 	vec3 directLight = texture(directLightSampler, uv).rgb;
 	vec3 indirectLight = texture(indirectLightSampler, uv).rgb;
 	//vec3 indirectRtSpec = texture(indirectRaytracedSpecular, uv).rgb;
+    vec3 mirror = texture(mirrorSampler, uv).rgb;
     vec4 ambientInfo = AmbientInfoBlurredOcclusion();
 	// ...
-	vec3 final =  directLight + (indirectLight * ambientInfo.a) + ambientInfo.rgb + emissive /* + indirectRtSpec */;
+	vec3 final =  directLight + (indirectLight * ambientInfo.a) + ambientInfo.rgb + emissive + mirror /* + indirectRtSpec */;
 
 	outColor = vec4(final, 1.0);
 }
