@@ -165,7 +165,7 @@ void Renderer_::RecordSecondaryPasses(vk::CommandBuffer cmdBuffer, const SceneRe
 	m_secondaryPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline,
 		[&]() { StaticPipes::Get<AmbientBlend>().Draw(cmdBuffer, sceneDesc); });
 
-	m_mirorPass.RecordPass(cmdBuffer, sceneDesc);
+	// m_mirorPass.RecordPass(cmdBuffer, sceneDesc);
 
 	// WIP: decide, also can it be merged with mirror pass?
 	// m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
