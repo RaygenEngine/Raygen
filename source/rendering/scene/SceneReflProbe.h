@@ -5,8 +5,8 @@
 struct Reflprobe_UBO {
 	int32 lodCount{ 1 };
 	float innerRadius{ 1.5f };
-	float outerRadius{ 70.f };
-	float pad;
+	float outerRadius{ 5.f };
+	float irradianceFactor{ 1.f };
 	glm::vec4 position{};
 };
 

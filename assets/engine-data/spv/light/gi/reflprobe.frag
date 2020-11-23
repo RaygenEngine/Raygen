@@ -47,7 +47,20 @@ void main( )
 	
 	vec3 finalContribution = Reflprobe_Contribution(rp, std_BrdfLut, irradianceSampler, prefilteredSampler, surface);
 	outColor = vec4(finalContribution, 1);
+	//outColor = vec4(uv,0, 1);
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

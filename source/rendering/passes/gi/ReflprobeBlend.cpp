@@ -1,5 +1,6 @@
 #include "ReflprobeBlend.h"
 
+#include "assets/StdAssets.h"
 #include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
@@ -9,79 +10,40 @@
 
 namespace {
 struct PushConstant {
-	glm::mat4 sphereVolMat;
+	glm::mat4 volumeMat;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
+
+// clang-format off
+
+// outerRadius = center of cube to a center of side (the aabb halfsize)
+// so to scale this multiply by uniform scale factor equal to outerRadius
+static std::vector<float> cube_strip = {
+	-1.f,  1.f,  1.f,  // Front-top-left
+	 1.f,  1.f,  1.f,  // Front-top-right
+	-1.f, -1.f,  1.f,  // Front-bottom-left
+	 1.f, -1.f,  1.f,  // Front-bottom-right
+	 1.f, -1.f, -1.f,  // Back-bottom-right
+	 1.f,  1.f,  1.f,  // Front-top-right
+	 1.f,  1.f, -1.f,  // Back-top-right
+	-1.f,  1.f,  1.f,  // Front-top-left
+	-1.f,  1.f, -1.f,  // Back-top-left
+	-1.f, -1.f,  1.f,  // Front-bottom-left
+	-1.f, -1.f, -1.f,  // Back-bottom-left
+	 1.f, -1.f, -1.f,  // Back-bottom-right
+	-1.f,  1.f, -1.f,  // Back-top-left
+	 1.f,  1.f, -1.f,  // Back-top-right
+};
+// clang-format on
 } // namespace
 
 
 namespace vl {
-
-void ReflprobeBlend::MakeSphere(int32 sectorCount, int32 stackCount, float radius)
-{
-	std::vector<float> vertices;
-	std::vector<int32> indices;
-
-	float x, y, z, xy; // vertex position
-
-	float sectorStep = 2.f * glm::pi<float>() / sectorCount;
-	float stackStep = glm::pi<float>() / stackCount;
-	float sectorAngle, stackAngle;
-
-	for (int32 i = 0; i <= stackCount; ++i) {
-		stackAngle = glm::pi<float>() / 2 - i * stackStep; // starting from pi/2 to -pi/2
-		xy = radius * cosf(stackAngle);                    // r * cos(u)
-		z = radius * sinf(stackAngle);                     // r * sin(u)
-
-		// add (sectorCount+1) vertices per stack
-		// the first and last vertices have same position and normal, but different tex coords
-		for (int32 j = 0; j <= sectorCount; ++j) {
-			sectorAngle = j * sectorStep; // starting from 0 to 2pi
-
-			// vertex position (x, y, z)
-			x = xy * cosf(sectorAngle); // r * cos(u) * cos(v)
-			y = xy * sinf(sectorAngle); // r * cos(u) * sin(v)
-			vertices.push_back(x);
-			vertices.push_back(y);
-			vertices.push_back(z);
-		}
-	}
-
-	int32 k1, k2;
-	for (int32 i = 0; i < stackCount; ++i) {
-		k1 = i * (sectorCount + 1); // beginning of current stack
-		k2 = k1 + sectorCount + 1;  // beginning of next stack
-
-		for (int32 j = 0; j < sectorCount; ++j, ++k1, ++k2) {
-			// 2 triangles per sector excluding first and last stacks
-			// k1 => k2 => k1+1
-			if (i != 0) {
-				indices.push_back(k1);
-				indices.push_back(k2);
-				indices.push_back(k1 + 1);
-			}
-
-			// k1+1 => k2 => k2+1
-			if (i != (stackCount - 1)) {
-				indices.push_back(k1 + 1);
-				indices.push_back(k2);
-				indices.push_back(k2 + 1);
-			}
-		}
-	}
-
-
-	m_sphereVertexBuffer
-		= RBuffer::CreateTransfer("Pointlight Sphere Vertex", vertices, vk::BufferUsageFlagBits::eVertexBuffer);
-	m_sphereIndexBuffer.buffer
-		= RBuffer::CreateTransfer("Pointlight Sphere Index", indices, vk::BufferUsageFlagBits::eIndexBuffer);
-	m_sphereIndexBuffer.count = static_cast<uint32>(indices.size());
-}
-
 ReflprobeBlend::ReflprobeBlend()
 {
-	MakeSphere(36, 18);
+	m_cubeVertexBuffer
+		= RBuffer::CreateTransfer("Cube strip Vertex", cube_strip, vk::BufferUsageFlagBits::eVertexBuffer);
 }
 
 vk::UniquePipelineLayout ReflprobeBlend::MakePipelineLayout()
@@ -160,7 +122,7 @@ vk::UniquePipeline ReflprobeBlend::MakePipeline()
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly
-		.setTopology(vk::PrimitiveTopology::eTriangleList) //
+		.setTopology(vk::PrimitiveTopology::eTriangleStrip) //
 		.setPrimitiveRestartEnable(VK_FALSE);
 
 	// those are dynamic so they will be updated when needed
@@ -181,7 +143,7 @@ vk::UniquePipeline ReflprobeBlend::MakePipeline()
 		.setPolygonMode(vk::PolygonMode::eFill)
 		.setLineWidth(1.f)
 		.setCullMode(vk::CullModeFlagBits::eFront)
-		.setFrontFace(vk::FrontFace::eCounterClockwise)
+		.setFrontFace(vk::FrontFace::eClockwise)
 		.setDepthBiasEnable(VK_FALSE)
 		.setDepthBiasConstantFactor(0.f)
 		.setDepthBiasClamp(0.f)
@@ -247,9 +209,7 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics, layout(), 6u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
 
-	// bind unit sphere once
-	cmdBuffer.bindVertexBuffers(0u, m_sphereVertexBuffer.handle(), vk::DeviceSize(0));
-	cmdBuffer.bindIndexBuffer(m_sphereIndexBuffer.buffer.handle(), vk::DeviceSize(0), vk::IndexType::eUint32);
+	cmdBuffer.bindVertexBuffers(0u, m_cubeVertexBuffer.handle(), vk::DeviceSize(0));
 
 	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
 
@@ -266,14 +226,11 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 			vk::PipelineBindPoint::eGraphics, layout(), 5u, 1u, &rp->prefilteredSamplerDescSet, 0u, nullptr);
 
 		PushConstant pc{
-			sceneDesc.viewer.ubo.viewProj * glm::translate(glm::vec3(rp->ubo.position))
-				* glm::scale(glm::vec3(rp->ubo.outerRadius)),
+			sceneDesc.viewer.ubo.viewProj * math::transformMat(rp->ubo.outerRadius, rp->ubo.position),
 		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-
-		cmdBuffer.drawIndexed(m_sphereIndexBuffer.count, 1u, 0u, 0u, 0u);
+		cmdBuffer.draw(static_cast<uint32>(cube_strip.size() / 3), 1u, 0u, 0u);
 	}
 }
 

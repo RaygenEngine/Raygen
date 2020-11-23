@@ -23,6 +23,8 @@ DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)
 			rp.ubo.lodCount = prefLodCount;
 			rp.prefSamples = prefSamples;
 
+			rp.ubo.irradianceFactor = applyIrradiance;
+
 			if (build) {
 				rp.Allocate();
 			}

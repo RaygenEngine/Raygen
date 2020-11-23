@@ -1,13 +1,14 @@
 #ifndef reflprobe_glsl
 #define reflprobe_glsl
 
+#include "aabb.glsl"
 #include "fresnel.glsl"
 #include "surface.glsl"
 
 vec3 Reflprobe_Contribution(Reflprobe rp, sampler2D brdfLutSampler, samplerCube irradianceSampler, samplerCube prefilteredSampler, Surface surface)
 {	
-	// PERF:
-	if(distance(surface.position, rp.position) > rp.outerRadius) {
+	Aabb aabb = createAabb(rp.position, rp.outerRadius);
+	if(!containsPointAabb(aabb, surface.position)) {
 		return vec3(0);
 	}
 
@@ -27,7 +28,7 @@ vec3 Reflprobe_Contribution(Reflprobe rp, sampler2D brdfLutSampler, samplerCube 
 	
 	vec3 specularLight = textureLod(prefilteredSampler, R, lod).rgb;
 
-	vec3 diffuse = diffuseLight * surface.albedo;
+	vec3 diffuse = diffuseLight * surface.albedo * rp.irradianceFactor;
 	vec3 specular = specularLight * (surface.f0 * brdfLut.x + brdfLut.y);
 
 	return kd * diffuse + ks * specular;

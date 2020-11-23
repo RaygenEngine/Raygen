@@ -90,7 +90,7 @@ vk::UniquePipeline UnlitBillboardPass::MakePipeline()
 		.setRasterizerDiscardEnable(VK_FALSE)
 		.setPolygonMode(vk::PolygonMode::eFill)
 		.setLineWidth(1.f)
-		.setCullMode(vk::CullModeFlagBits::eNone)
+		.setCullMode(vk::CullModeFlagBits::eBack)
 		.setFrontFace(vk::FrontFace::eCounterClockwise)
 		.setDepthBiasEnable(VK_FALSE)
 		.setDepthBiasConstantFactor(0.f)
@@ -112,10 +112,10 @@ vk::UniquePipeline UnlitBillboardPass::MakePipeline()
 						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
 		.setBlendEnable(VK_TRUE)
 		.setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
-		.setDstColorBlendFactor(vk::BlendFactor::eDstAlpha)
+		.setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
 		.setColorBlendOp(vk::BlendOp::eAdd)
-		.setSrcAlphaBlendFactor(vk::BlendFactor::eSrcAlpha)
-		.setDstAlphaBlendFactor(vk::BlendFactor::eDstAlpha)
+		.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
+		.setDstAlphaBlendFactor(vk::BlendFactor::eOne)
 		.setAlphaBlendOp(vk::BlendOp::eAdd);
 
 	vk::PipelineColorBlendStateCreateInfo colorBlending{};

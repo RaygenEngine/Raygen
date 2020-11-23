@@ -12,6 +12,9 @@ layout (location = 2) out vec4 gSpecularColor;
 // rgb: emissive, a: occlusion
 layout (location = 3) out vec4 gEmissive;
 
+layout (location = 4) out vec4 gVelocity;
+layout (location = 5) out vec4 gUVDrawIndex;
+
 // in
 
 layout(location=0) in Data
@@ -30,5 +33,8 @@ void main() {
 	gAlbedo = vec4(0.3, 0.3, 0.3, 1.0);
 	gSpecularColor = vec4(vec3(0.17), 0.25);
 	gEmissive = vec4(0.0, 0.0, 0.0, 1.0);
+
+	gVelocity = vec4(0.0, 0.0, 0.0, 1.0);
+	gUVDrawIndex = vec4(0.0, 0.0, 0.0, 1.0);
 }                                                                                        
 
