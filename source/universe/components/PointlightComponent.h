@@ -13,8 +13,8 @@ struct CPointlight : CLightBase {
 		REFLECT_ICON(FA_CIRCLE);
 		// REFLECT_CATEGORY("Rendering");
 
-		REFLECT_VAR(color, PropertyFlags::Color);
-		REFLECT_VAR(intensity);
+		REFLECT_VAR(color, PropertyFlags::Color).Clamp();
+		REFLECT_VAR(intensity).Clamp();
 
 		REFLECT_VAR(constantTerm);
 		REFLECT_VAR(linearTerm);

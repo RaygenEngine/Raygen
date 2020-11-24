@@ -6,6 +6,7 @@
 #include "reflection/TypeId.h"
 
 #include <string_view>
+#include <variant>
 
 struct SerializedProperty {
 	std::string type;
@@ -26,6 +27,7 @@ class Property {
 	friend class ReflClass;
 	friend class RuntimeClass;
 
+
 protected:
 	TypeId m_type;
 	PropertyFlags::Type m_flags;
@@ -38,7 +40,10 @@ protected:
 	// Non owning pointer to the static ReflEnum structure generated for this enum class
 	const ReflEnum* m_enum{ nullptr };
 
-	int32 m_dirtyFlagIndex{ -1 };
+
+	float m_editorSpeed{ 1.f };
+	float m_editorMin{ 0.f };
+	float m_editorMax{ std::numeric_limits<float>::max() };
 
 	// Returns real memory address from the offsetof for a specific instance.
 	void* GetRealMemoryAddr(void* objInstance) const
@@ -73,7 +78,6 @@ public:
 		serial.flags = m_flags;
 		serial.offset_of = m_offset;
 		CLOG_ABORT(m_enum != nullptr, "Attempting to serialize enum property, unsupported yet.");
-		CLOG_ABORT(m_dirtyFlagIndex != -1, "Attempting to serialize property with dirty flags, unsupported yet.");
 		return serial;
 	}
 
@@ -83,7 +87,6 @@ public:
 	[[nodiscard]] TypeId GetType() const { return m_type; }
 	[[nodiscard]] const ReflEnum* GetEnum() const { return m_enum; }
 	[[nodiscard]] bool IsEnum() const { return m_enum != nullptr; }
-	[[nodiscard]] int32 GetDirtyFlagIndex() const { return m_dirtyFlagIndex; }
 
 
 	// Check if this property is of this type.
@@ -120,9 +123,47 @@ public:
 	// True only when the flags match exactly
 	[[nodiscard]] bool HasSameFlags(const Property& other) const { return other.m_flags == m_flags; }
 
-	Property& OnDirty(int32 setFlagIndex)
+
+public:
+	//
+	// Editor Meta Data stuff
+	//
+	[[nodiscard]] float Editor_GetSpeed() const { return m_editorSpeed; }
+
+	// This will be float or T
+	template<typename T>
+	using Editor_MinMaxRetType = std::conditional_t<std::is_integral_v<T>, T, float>;
+
+	template<typename T>
+	[[nodiscard]] Editor_MinMaxRetType<T> Editor_GetMin() const
 	{
-		m_dirtyFlagIndex = setFlagIndex;
+		if constexpr (std::is_integral_v<T>) {
+			return static_cast<T>(m_editorMin);
+		}
+		return m_editorMin;
+	}
+
+	template<typename T>
+	[[nodiscard]] Editor_MinMaxRetType<T> Editor_GetMax() const
+	{
+		if (m_editorMax == std::numeric_limits<float>::max()) {
+			if constexpr (std::is_same_v<decltype(std::numeric_limits<T>::max()), T>) {
+				if constexpr (std::is_integral_v<T>) {
+					return std::numeric_limits<T>::max();
+				}
+			}
+		}
+		if constexpr (std::is_integral_v<T>) {
+			return static_cast<T>(m_editorMax);
+		}
+		return m_editorMax;
+	}
+
+	Property& Clamp(float min = 0.f, float max = std::numeric_limits<float>::max())
+	{
+		m_flags |= PropertyFlags::EditorClamp;
+		m_editorMax = max;
+		m_editorMin = min;
 		return *this;
 	}
 };

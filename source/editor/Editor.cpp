@@ -18,6 +18,16 @@ Entity Editor::GetSelection()
 	return ed::OutlinerWindow::selected;
 }
 
+void Editor::SetSelection(Entity ent)
+{
+	ed::OutlinerWindow::selected = ent;
+}
+
+void Editor::ClearSelection()
+{
+	SetSelection({});
+}
+
 
 void Editor::Update()
 {

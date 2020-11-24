@@ -253,3 +253,14 @@ constexpr size_t index_of_type_v = detail::index_of_type<Search, Variadics...>::
 
 template<typename T, typename... Types>
 constexpr bool is_any_of_v = (std::is_same_v<T, Types> || ...);
+
+
+// Typical overloaded useless boilerplate for std::visit lambdas:
+// std::visit(overloaded { [](){} }, var);
+template<class... Ts>
+struct overloaded : Ts... {
+	using Ts::operator()...;
+};
+
+template<class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
