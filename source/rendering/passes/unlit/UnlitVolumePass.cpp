@@ -1,20 +1,21 @@
 #include "UnlitVolumePass.h"
 
-#include "editor/Editor.h"
 #include "core/math-ext/BVH.h"
+#include "editor/Editor.h"
+#include "editor/windows/general/EdOutlinerWindow.h"
+#include "engine/Input.h"
+#include "engine/console/ConsoleVariable.h"
 #include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/passes/direct/PointlightBlend.h"
-#include "rendering/scene/SceneCamera.h"
 #include "rendering/passes/gi/IrragridBlend.h"
+#include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/ScenePointlight.h"
-#include "universe/components/PointlightComponent.h"
 #include "universe/Universe.h"
 #include "universe/World.h"
-#include "engine/console/ConsoleVariable.h"
-#include "engine/Input.h"
-#include "editor/windows/general/EdOutlinerWindow.h"
+#include "universe/components/PointlightComponent.h"
+#include "universe/components/ReflprobeComponent.h"
 
 namespace {
 struct PushConstant {
@@ -184,6 +185,27 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 
 		auto volumeTransform = math::transformMat(
 			glm::vec3{ pl.CalculateEffectiveRadius() }, selEnt->world().orientation, selEnt->world().position);
+
+		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
+
+		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+		cmdBuffer.drawIndexed(relPipe.m_sphereIndexBuffer.count, 1u, 0u, 0u, 0u);
+	}
+
+	if (selEnt && selEnt.Has<CReflprobe>()) {
+		auto rp = selEnt.Get<CReflprobe>();
+		// TODO: std gpu asset
+		const auto& relPipe = StaticPipes::Get<PointlightBlend>();
+
+		// bind unit sphere once
+		cmdBuffer.bindVertexBuffers(0u, relPipe.m_sphereVertexBuffer.handle(), vk::DeviceSize(0));
+		cmdBuffer.bindIndexBuffer(
+			relPipe.m_sphereIndexBuffer.buffer.handle(), vk::DeviceSize(0), vk::IndexType::eUint32);
+
+
+		auto volumeTransform
+			= math::transformMat(glm::vec3{ rp.radius }, selEnt->world().orientation, selEnt->world().position);
 
 		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
 

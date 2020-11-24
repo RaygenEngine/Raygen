@@ -5,15 +5,39 @@
 #include "fresnel.glsl"
 #include "surface.glsl"
 
+// PERF:
+float hit_sphere(vec3 center, float radius, vec3 orig, vec3 dir)
+{
+	vec3 oc = orig - center;
+	float a = dot(dir, dir);
+	float b = 2.0 * dot(oc, dir);
+	float c = dot(oc, oc) - radius * radius;
+	float discriminant = b * b - 4 * a * c;
+	if (discriminant < 0.0) {
+		return -1.0;
+	}
+	else {
+		float numerator = -b - sqrt(discriminant);
+		if (numerator
+			> 0.0) { return numerator / (2.0 * a); }
+
+		numerator = -b + sqrt(discriminant);
+		if (numerator
+			> 0.0) { return numerator / (2.0 * a); }
+		else {
+			return -1;
+		}
+	}
+}
+
 vec3 Reflprobe_Contribution(Reflprobe rp, sampler2D brdfLutSampler, samplerCube irradianceSampler, samplerCube prefilteredSampler, Surface surface)
 {	
-	Aabb aabb = createAabb(rp.position, rp.outerRadius);
-	if(!containsPointAabb(aabb, surface.position)) {
+	if(distance(rp.position, surface.position) > rp.radius) {
 		return vec3(0);
 	}
 
 	vec3 R = outOnbSpace(surface.basis, reflect(-surface.v));
-	vec3 reprojR = (surface.position - rp.position) + (surface.position + intersectionDistanceAabb(aabb, surface.position,  R) *  R);
+	vec3 reprojR = (surface.position - rp.position) + hit_sphere(rp.position, rp.radius, surface.position,  R) *  R;
 
 	// CHECK: roughness / a differences
 	float lod = sqrt(surface.a) * rp.lodCount; 

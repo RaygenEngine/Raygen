@@ -10,8 +10,7 @@ struct CReflprobe : CSceneBase {
 	{
 		// REFLECT_ICON(FA_CUBE);
 		// REFLECT_CATEGORY("Rendering");
-		REFLECT_VAR(innerRadius);
-		REFLECT_VAR(outerRadius);
+		REFLECT_VAR(radius);
 
 		REFLECT_VAR(ptSamples);
 		REFLECT_VAR(ptBounces);
@@ -25,8 +24,7 @@ struct CReflprobe : CSceneBase {
 		REFLECT_VAR(notifyBuild, PropertyFlags::Transient);
 	}
 
-	float innerRadius{ 1.5f };
-	float outerRadius{ 5.f };
+	float radius{ 1.5f };
 
 	int32 ptSamples{ 16 };
 	int32 ptBounces{ 3 };
