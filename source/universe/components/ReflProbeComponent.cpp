@@ -12,8 +12,7 @@ DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)
 
 		if (FullDirty) {
 
-			rp.ubo.innerRadius = innerRadius;
-			rp.ubo.outerRadius = outerRadius;
+			rp.ubo.radius = radius;
 
 			rp.ptSamples = ptSamples;
 			rp.ptBounces = ptBounces;

@@ -4,9 +4,10 @@
 #include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
+#include "rendering/passes/direct/PointlightBlend.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneReflprobe.h"
+#include "rendering/scene/SceneReflProbe.h"
 
 namespace {
 struct PushConstant {
@@ -17,8 +18,8 @@ static_assert(sizeof(PushConstant) <= 128);
 
 // clang-format off
 
-// outerRadius = center of cube to a center of side (the aabb halfsize)
-// so to scale this multiply by uniform scale factor equal to outerRadius
+// radius = center of cube to a center of side (the aabb halfsize)
+// so to scale this multiply by uniform scale factor equal to radius
 static std::vector<float> cube_strip = {
 	-1.f,  1.f,  1.f,  // Front-top-left
 	 1.f,  1.f,  1.f,  // Front-top-right
@@ -122,7 +123,7 @@ vk::UniquePipeline ReflprobeBlend::MakePipeline()
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly
-		.setTopology(vk::PrimitiveTopology::eTriangleStrip) //
+		.setTopology(vk::PrimitiveTopology::eTriangleList) //
 		.setPrimitiveRestartEnable(VK_FALSE);
 
 	// those are dynamic so they will be updated when needed
@@ -142,7 +143,7 @@ vk::UniquePipeline ReflprobeBlend::MakePipeline()
 		.setRasterizerDiscardEnable(VK_FALSE)
 		.setPolygonMode(vk::PolygonMode::eFill)
 		.setLineWidth(1.f)
-		.setCullMode(vk::CullModeFlagBits::eFront)
+		.setCullMode(vk::CullModeFlagBits::eBack)
 		.setFrontFace(vk::FrontFace::eClockwise)
 		.setDepthBiasEnable(VK_FALSE)
 		.setDepthBiasConstantFactor(0.f)
@@ -209,7 +210,14 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics, layout(), 6u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
 
-	cmdBuffer.bindVertexBuffers(0u, m_cubeVertexBuffer.handle(), vk::DeviceSize(0));
+	// cmdBuffer.bindVertexBuffers(0u, m_cubeVertexBuffer.handle(), vk::DeviceSize(0));
+
+	// TODO: std gpu asset
+	const auto& relPipe = StaticPipes::Get<PointlightBlend>();
+
+	// bind unit sphere once
+	cmdBuffer.bindVertexBuffers(0u, relPipe.m_sphereVertexBuffer.handle(), vk::DeviceSize(0));
+	cmdBuffer.bindIndexBuffer(relPipe.m_sphereIndexBuffer.buffer.handle(), vk::DeviceSize(0), vk::IndexType::eUint32);
 
 	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
 
@@ -226,11 +234,12 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 			vk::PipelineBindPoint::eGraphics, layout(), 5u, 1u, &rp->prefilteredSamplerDescSet, 0u, nullptr);
 
 		PushConstant pc{
-			sceneDesc.viewer.ubo.viewProj * math::transformMat(rp->ubo.outerRadius, rp->ubo.position),
+			sceneDesc.viewer.ubo.viewProj * math::transformMat(rp->ubo.radius, rp->ubo.position),
 		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-		cmdBuffer.draw(static_cast<uint32>(cube_strip.size() / 3), 1u, 0u, 0u);
+		// cmdBuffer.draw(static_cast<uint32>(cube_strip.size() / 3), 1u, 0u, 0u);
+		cmdBuffer.drawIndexed(relPipe.m_sphereIndexBuffer.count, 1u, 0u, 0u, 0u);
 	}
 }
 
