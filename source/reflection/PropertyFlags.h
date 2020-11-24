@@ -29,6 +29,11 @@ constexpr Type Multiline = (1 << 10);
 // Note: currently does not apply to scene json files.
 constexpr Type Rads = (1 << 11);
 
+// When used the editor will clamp min, max values to the given values.
+// Default values in the editor are 0, float_max so if you just use this flag without specifying min/max you will get a
+// value > 0. Use the relevant functions for better control instead of setting this flag directly.
+constexpr Type EditorClamp = (1 << 12);
+
 
 template<typename... Flags>
 constexpr PropertyFlags::Type Pack(Flags... f)

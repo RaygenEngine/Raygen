@@ -13,6 +13,9 @@ public:
 	static void Update();
 	static Entity GetSelection();
 
+	static void SetSelection(Entity ent);
+	static void ClearSelection();
+
 	static void BeforePlayWorld(World& world);
 	static void AfterStopWorld(World& world);
 };
