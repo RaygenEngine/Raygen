@@ -38,4 +38,7 @@ struct CCamera : CSceneBase {
 
 	int32 viewportWidth{ 1280 };
 	int32 viewportHeight{ 720 };
+
+	glm::mat4 view;
+	glm::mat4 proj;
 };

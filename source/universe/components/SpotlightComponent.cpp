@@ -5,7 +5,7 @@
 DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 {
 	auto lookAt = bc.world().position + bc.world().front();
-	auto view = glm::lookAt(bc.world().position, lookAt, bc.world().up());
+	view = glm::lookAt(bc.world().position, lookAt, bc.world().up());
 
 	[[maybe_unused]] float outerCutOff;
 	[[maybe_unused]] float innerCutOff;

@@ -9,6 +9,7 @@
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneIrragrid.h"
 #include "universe/Universe.h"
+#include "universe/components/CameraComponent.h"
 #include "universe/components/DirlightComponent.h"
 #include "universe/components/IrragridComponent.h"
 #include "universe/components/PointlightComponent.h"
@@ -110,9 +111,9 @@ vk::UniquePipeline UnlitBillboardPass::MakePipeline()
 	colorBlendAttachment
 		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
 						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
-		.setBlendEnable(VK_TRUE)
-		.setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
-		.setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
+		.setBlendEnable(VK_FALSE)
+		.setSrcColorBlendFactor(vk::BlendFactor::eOne)
+		.setDstColorBlendFactor(vk::BlendFactor::eOne)
 		.setColorBlendOp(vk::BlendOp::eAdd)
 		.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
 		.setDstAlphaBlendFactor(vk::BlendFactor::eOne)
@@ -246,12 +247,12 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 	auto fontDescSet = ImguiImpl::GetIconFontDescriptorSet();
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &fontDescSet, 0u, nullptr);
 
-
 	DrawComponent<CReflprobe>(cmdBuffer, sceneDesc, layout());
 	DrawComponent<CPointlight>(cmdBuffer, sceneDesc, layout());
 	DrawComponent<CSpotlight>(cmdBuffer, sceneDesc, layout());
 	DrawComponent<CDirlight>(cmdBuffer, sceneDesc, layout());
 	DrawComponent<CIrragrid>(cmdBuffer, sceneDesc, layout());
+	DrawComponent<CCamera>(cmdBuffer, sceneDesc, layout());
 }
 
 UnlitBillboardPass::UnlitBillboardPass()

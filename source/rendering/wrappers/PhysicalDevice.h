@@ -17,6 +17,7 @@ struct RPhysicalDevice : vk::PhysicalDevice {
 	vk::PhysicalDeviceFeatures2 genFeats;
 	vk::PhysicalDeviceBufferDeviceAddressFeatures bufferFeats;
 	vk::PhysicalDeviceRayTracingFeaturesKHR rtFeats;
+	vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT dynStateFeats;
 
 	vk::SurfaceKHR surface;
 

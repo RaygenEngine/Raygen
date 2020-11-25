@@ -5,7 +5,7 @@
 DECLARE_DIRTY_FUNC(CCamera)(BasicComponent& bc)
 {
 	auto lookAt = bc.world().position + bc.world().front() * focalLength;
-	auto view = glm::lookAt(bc.world().position, lookAt, bc.world().up());
+	view = glm::lookAt(bc.world().position, lookAt, bc.world().up());
 
 	auto viewInv = glm::inverse(view);
 
@@ -18,7 +18,7 @@ DECLARE_DIRTY_FUNC(CCamera)(BasicComponent& bc)
 	const auto right = tan(hFov / 2.f + hFovOffset) * near;
 	const auto left = tan(-hFov / 2.f - hFovOffset) * near;
 
-	auto proj = glm::frustum(left, right, bottom, top, near, far);
+	proj = glm::frustum(left, right, bottom, top, near, far);
 	// Vulkan's inverted y
 	proj[1][1] *= -1.f;
 

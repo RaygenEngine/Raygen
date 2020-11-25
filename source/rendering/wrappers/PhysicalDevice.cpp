@@ -24,7 +24,6 @@ RPhysicalDevice::RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inS
 
 		i++;
 	}
-
 	auto propertiesChain = getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceRayTracingPropertiesKHR>();
 	genProps = propertiesChain.get<vk::PhysicalDeviceProperties2>();
 	rtProps = propertiesChain.get<vk::PhysicalDeviceRayTracingPropertiesKHR>();
@@ -35,10 +34,13 @@ RPhysicalDevice::RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inS
 	bufferFeats = featuresChain.get<vk::PhysicalDeviceBufferDeviceAddressFeatures>();
 	rtFeats = featuresChain.get<vk::PhysicalDeviceRayTracingFeaturesKHR>();
 
+
 	auto rtSupport = rtFeats.rayTracing && rtFeats.rayQuery && rtProps.shaderGroupHandleSize == 32u
 					 && rtProps.maxRecursionDepth >= 1 && bufferFeats.bufferDeviceAddress;
 
 	CLOG_ABORT(!rtSupport || !supportsPresent, "Rendering Device not supported!");
+
+	// CLOG_ABORT(!dynStateFeats.extendedDynamicState, "Device doesn't support extended pipeline dynamic state");
 
 	for (auto& fam : queueFamilies) {
 

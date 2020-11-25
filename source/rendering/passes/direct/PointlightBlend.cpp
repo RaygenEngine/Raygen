@@ -6,6 +6,7 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/ScenePointlight.h"
+#include "rendering/util/DrawShapes.h"
 
 namespace {
 struct PushConstant {
@@ -18,73 +19,6 @@ static_assert(sizeof(PushConstant) <= 128);
 
 
 namespace vl {
-
-// TODO: std gpu asset
-void PointlightBlend::MakeSphere(int32 sectorCount, int32 stackCount, float radius)
-{
-	std::vector<float> vertices;
-	std::vector<int32> indices;
-
-	float x, y, z, xy; // vertex position
-
-	float sectorStep = 2.f * glm::pi<float>() / sectorCount;
-	float stackStep = glm::pi<float>() / stackCount;
-	float sectorAngle, stackAngle;
-
-	for (int32 i = 0; i <= stackCount; ++i) {
-		stackAngle = glm::pi<float>() / 2 - i * stackStep; // starting from pi/2 to -pi/2
-		xy = radius * cosf(stackAngle);                    // r * cos(u)
-		z = radius * sinf(stackAngle);                     // r * sin(u)
-
-		// add (sectorCount+1) vertices per stack
-		// the first and last vertices have same position and normal, but different tex coords
-		for (int32 j = 0; j <= sectorCount; ++j) {
-			sectorAngle = j * sectorStep; // starting from 0 to 2pi
-
-			// vertex position (x, y, z)
-			x = xy * cosf(sectorAngle); // r * cos(u) * cos(v)
-			y = xy * sinf(sectorAngle); // r * cos(u) * sin(v)
-			vertices.push_back(x);
-			vertices.push_back(y);
-			vertices.push_back(z);
-		}
-	}
-
-	int32 k1, k2;
-	for (int32 i = 0; i < stackCount; ++i) {
-		k1 = i * (sectorCount + 1); // beginning of current stack
-		k2 = k1 + sectorCount + 1;  // beginning of next stack
-
-		for (int32 j = 0; j < sectorCount; ++j, ++k1, ++k2) {
-			// 2 triangles per sector excluding first and last stacks
-			// k1 => k2 => k1+1
-			if (i != 0) {
-				indices.push_back(k1);
-				indices.push_back(k2);
-				indices.push_back(k1 + 1);
-			}
-
-			// k1+1 => k2 => k2+1
-			if (i != (stackCount - 1)) {
-				indices.push_back(k1 + 1);
-				indices.push_back(k2);
-				indices.push_back(k2 + 1);
-			}
-		}
-	}
-
-
-	m_sphereVertexBuffer
-		= RBuffer::CreateTransfer("Pointlight Sphere Vertex", vertices, vk::BufferUsageFlagBits::eVertexBuffer);
-	m_sphereIndexBuffer.buffer
-		= RBuffer::CreateTransfer("Pointlight Sphere Index", indices, vk::BufferUsageFlagBits::eIndexBuffer);
-	m_sphereIndexBuffer.count = static_cast<uint32>(indices.size());
-}
-
-PointlightBlend::PointlightBlend()
-{
-	MakeSphere(18, 9);
-}
 
 vk::UniquePipelineLayout PointlightBlend::MakePipelineLayout()
 {
@@ -241,8 +175,7 @@ void PointlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 		vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
 
 	// bind unit sphere once
-	cmdBuffer.bindVertexBuffers(0u, m_sphereVertexBuffer.handle(), vk::DeviceSize(0));
-	cmdBuffer.bindIndexBuffer(m_sphereIndexBuffer.buffer.handle(), vk::DeviceSize(0), vk::IndexType::eUint32);
+	rvk::bindSphere18x9(cmdBuffer);
 
 	for (auto pl : sceneDesc->Get<ScenePointlight>()) {
 		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * pl->volumeTransform };
@@ -252,7 +185,7 @@ void PointlightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &pl->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
-		cmdBuffer.drawIndexed(m_sphereIndexBuffer.count, 1u, 0u, 0u, 0u);
+		rvk::drawSphere18x9(cmdBuffer);
 	}
 }
 

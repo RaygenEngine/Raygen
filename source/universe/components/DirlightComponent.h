@@ -41,6 +41,6 @@ struct CDirlight : CLightBase {
 
 	PodHandle<MaterialInstance> skyInstance;
 
-private:
+	glm::mat4 view;
 	glm::mat4 proj;
 };
