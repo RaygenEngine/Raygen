@@ -42,12 +42,15 @@ Device_::Device_(RPhysicalDevice& pd)
 	}
 
 	vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceBufferDeviceAddressFeatures,
-		vk::PhysicalDeviceDescriptorIndexingFeatures, vk::PhysicalDeviceRayTracingFeaturesKHR>
+		vk::PhysicalDeviceDescriptorIndexingFeatures, vk::PhysicalDeviceRayTracingFeaturesKHR,
+		vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
 		pDeviceFeaturesChain;
 
 	auto& deviceFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceFeatures2>();
 	auto& deviceBufferAddressFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceBufferDeviceAddressFeatures>();
+	auto& deviceDescriptorIndexingFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceDescriptorIndexingFeatures>();
 	auto& deviceRayTracingFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceRayTracingFeaturesKHR>();
+	auto& deviceDynStateExtFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
 
 	deviceFeatures.features.setSamplerAnisotropy(VK_TRUE);
 	deviceFeatures.features.setFragmentStoresAndAtomics(VK_TRUE);
@@ -55,10 +58,14 @@ Device_::Device_(RPhysicalDevice& pd)
 	deviceFeatures.features.setImageCubeArray(VK_TRUE);
 	deviceBufferAddressFeatures.setBufferDeviceAddress(VK_TRUE);
 
-	pDeviceFeaturesChain.get<vk::PhysicalDeviceDescriptorIndexingFeatures>()
+	deviceDescriptorIndexingFeatures
 		.setRuntimeDescriptorArray(true) //
 		.setShaderSampledImageArrayNonUniformIndexing(true)
 		.setDescriptorBindingVariableDescriptorCount(true);
+
+	// NEXT: validation layers
+	deviceDynStateExtFeatures.setExtendedDynamicState(VK_TRUE);
+
 
 	// get all available rt extensions from gpu
 	// careful pNext here is lost
@@ -70,6 +77,7 @@ Device_::Device_(RPhysicalDevice& pd)
 		VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
 		VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
 		VK_KHR_RAY_TRACING_EXTENSION_NAME,
+		VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
 	};
 
 	CheckExtensions(deviceExtensions, pd.enumerateDeviceExtensionProperties());

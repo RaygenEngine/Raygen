@@ -10,8 +10,6 @@ struct ReflprobeBlend : public StaticPipeBase {
 
 	void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const;
 
-	ReflprobeBlend();
-
 private:
 	RBuffer m_cubeVertexBuffer; // strip
 };

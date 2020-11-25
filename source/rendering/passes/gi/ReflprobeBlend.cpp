@@ -4,10 +4,10 @@
 #include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/passes/direct/PointlightBlend.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneReflProbe.h"
+#include "rendering/util/DrawShapes.h"
 
 namespace {
 struct PushConstant {
@@ -15,38 +15,10 @@ struct PushConstant {
 };
 
 static_assert(sizeof(PushConstant) <= 128);
-
-// clang-format off
-
-// radius = center of cube to a center of side (the aabb halfsize)
-// so to scale this multiply by uniform scale factor equal to radius
-static std::vector<float> cube_strip = {
-	-1.f,  1.f,  1.f,  // Front-top-left
-	 1.f,  1.f,  1.f,  // Front-top-right
-	-1.f, -1.f,  1.f,  // Front-bottom-left
-	 1.f, -1.f,  1.f,  // Front-bottom-right
-	 1.f, -1.f, -1.f,  // Back-bottom-right
-	 1.f,  1.f,  1.f,  // Front-top-right
-	 1.f,  1.f, -1.f,  // Back-top-right
-	-1.f,  1.f,  1.f,  // Front-top-left
-	-1.f,  1.f, -1.f,  // Back-top-left
-	-1.f, -1.f,  1.f,  // Front-bottom-left
-	-1.f, -1.f, -1.f,  // Back-bottom-left
-	 1.f, -1.f, -1.f,  // Back-bottom-right
-	-1.f,  1.f, -1.f,  // Back-top-left
-	 1.f,  1.f, -1.f,  // Back-top-right
-};
-// clang-format on
 } // namespace
 
 
 namespace vl {
-ReflprobeBlend::ReflprobeBlend()
-{
-	m_cubeVertexBuffer
-		= RBuffer::CreateTransfer("Cube strip Vertex", cube_strip, vk::BufferUsageFlagBits::eVertexBuffer);
-}
-
 vk::UniquePipelineLayout ReflprobeBlend::MakePipelineLayout()
 {
 	auto layouts = {
@@ -210,14 +182,8 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics, layout(), 6u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
 
-	// cmdBuffer.bindVertexBuffers(0u, m_cubeVertexBuffer.handle(), vk::DeviceSize(0));
-
-	// TODO: std gpu asset
-	const auto& relPipe = StaticPipes::Get<PointlightBlend>();
-
 	// bind unit sphere once
-	cmdBuffer.bindVertexBuffers(0u, relPipe.m_sphereVertexBuffer.handle(), vk::DeviceSize(0));
-	cmdBuffer.bindIndexBuffer(relPipe.m_sphereIndexBuffer.buffer.handle(), vk::DeviceSize(0), vk::IndexType::eUint32);
+	rvk::bindSphere18x9(cmdBuffer);
 
 	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
 
@@ -238,8 +204,8 @@ void vl::ReflprobeBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-		// cmdBuffer.draw(static_cast<uint32>(cube_strip.size() / 3), 1u, 0u, 0u);
-		cmdBuffer.drawIndexed(relPipe.m_sphereIndexBuffer.count, 1u, 0u, 0u, 0u);
+
+		rvk::drawSphere18x9(cmdBuffer);
 	}
 }
 

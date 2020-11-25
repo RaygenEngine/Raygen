@@ -2,7 +2,6 @@
 #include "universe/BasicComponent.h"
 #include "universe/ComponentsDb.h"
 #include "universe/SceneComponentBase.h"
-
 #include "universe/components/LightComponentBase.h"
 
 struct SceneSpotlight;
@@ -43,6 +42,6 @@ struct CSpotlight : CLightBase {
 	// inner
 	float innerAperture{ glm::radians(22.5f) };
 
-private:
+	glm::mat4 view;
 	glm::mat4 proj;
 };
