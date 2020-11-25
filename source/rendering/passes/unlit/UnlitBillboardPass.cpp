@@ -11,6 +11,7 @@
 #include "universe/components/IrragridComponent.h"
 #include "universe/components/PointlightComponent.h"
 #include "universe/components/ReflProbeComponent.h"
+#include "universe/components/CameraComponent.h"
 #include "editor/imgui/ImguiImpl.h"
 
 namespace {
@@ -198,6 +199,7 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 
 
 	DrawComponent<CReflprobe>(cmdBuffer, sceneDesc, layout());
+	DrawComponent<CCamera>(cmdBuffer, sceneDesc, layout());
 	DrawComponent<CPointlight>(cmdBuffer, sceneDesc, layout());
 
 

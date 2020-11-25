@@ -1,0 +1,189 @@
+#include "ShaderRegistry.h"
+
+#include "assets/pods/Shader.h"
+#include "assets/pods/ShaderHeader.h"
+#include "assets/pods/ShaderStage.h"
+#include "assets/util/shadergen/ShaderPreprocess.h"
+#include "assets/AssetImporterManager.h"
+
+const std::string& ShaderRegistry::KNode::GetCode() const
+{
+	if (!isLeaf) {
+		return GetHeaderPod().Lock()->code;
+	}
+	return GetLeafPod().Lock()->code;
+}
+
+// ShaderRegistry::NSet ShaderRegistry::KNode::DetectNewDependencies()
+//{
+//	auto& tree = Get().m_tree;
+//
+//	auto& code = GetCode();
+//	auto includes = shd::ExtractIncludes(code);
+//
+//
+//	return {};
+//}
+
+// void ShaderRegistry::OnEdited(KNode* node)
+//{
+//	// check for new dependencies
+//	NSet newDep = node->DetectNewDependencies();
+//
+//	//
+//}
+void ShaderRegistry::KNode::FullyCacheSelf()
+{
+	// Slow remove & readd, this can be avoided
+	for (auto dependency : directDependencies) {
+		dependency->directDependees.erase(this);
+	}
+	directDependencies.clear();
+
+	auto& code = GetCode();
+	auto includes = shd::ExtractIncludes(code);
+
+	for (auto& include : includes) {
+		auto node = ShaderRegistry::FindOrAdd(include);
+		if (!node) {
+			continue;
+		}
+		directDependencies.insert(node);
+		node->directDependees.insert(this);
+	}
+}
+
+
+ShaderRegistry::~ShaderRegistry()
+{
+	for (auto&& [str, ptr] : m_tree) {
+		delete ptr;
+	}
+}
+
+void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
+{
+	auto entry = AssetRegistry::GetEntry(baseHandle);
+
+	LOG_INFO("Begin Edit: {}", AssetRegistry::GetPodUri(baseHandle));
+
+	// Find or update cached stuff. The whole upper part of the tree will be properly updated and cached when this
+	// function returns.
+
+	auto filename = ShaderRegistry::NormalizeFilenameForSearch(entry->metadata.originalImportLocation);
+	auto initialNode = Get().FindOrAdd_Internal(filename, true);
+
+	if (!initialNode) {
+		LOG_REPORT("Failed to find: {}", filename);
+		return;
+	}
+
+	initialNode->FullyCacheSelf();
+
+	if (initialNode->isLeaf) {
+		LOG_REPORT("Compiling: {}", entry->name);
+		return;
+	}
+	// Go down the tree and compile all leaves from here. (Later we should cache everything on each step to paste them)
+
+	NSet addedSet;
+	NSet workingList;
+
+	workingList.insert(initialNode);
+	addedSet.insert(initialNode);
+	while (!workingList.empty()) {
+		KNode* node = *workingList.begin();
+		workingList.erase(node);
+
+		if (node->isLeaf) {
+			LOG_REPORT("Compiling Leaf: {}", AssetRegistry::GetPodUri(node->pod));
+		}
+		else {
+			LOG_REPORT("Updating Header File: {}", AssetRegistry::GetPodUri(node->pod));
+			for (auto dep : node->directDependees) {
+				if (addedSet.insert(dep).second) {
+					workingList.insert(dep);
+				}
+			}
+		}
+	}
+	LOG_INFO("End Edit: {}", AssetRegistry::GetPodUri(baseHandle));
+}
+
+std::string ShaderRegistry::NormalizeFilenameForSearch(std::string_view filename)
+{
+	if (filename.starts_with(c_shaderDir)) {
+		filename = filename.substr(c_shaderDir.size());
+		if (filename.starts_with(c_shaderIncludeDir)) {
+			return std::string{ filename.substr(c_shaderIncludeDir.size()) };
+		}
+	}
+	return std::string{ filename };
+}
+
+ShaderRegistry::KNode* ShaderRegistry::FindOrAdd_Internal(const std::string& shaderFilename, bool forceRecache)
+{
+	if (shaderFilename.empty()) {
+		LOG_ERROR(
+			"Empty filename requested form shader registry. Currently not supported. (All shaders are expected to be "
+			"disk assets at this time)");
+	}
+
+	if (m_tree.contains(shaderFilename)) {
+		auto ptr = m_tree[shaderFilename];
+		if (forceRecache) {
+			ptr->FullyCacheSelf();
+		}
+		return ptr;
+	}
+
+	return Add(shaderFilename);
+}
+
+ShaderRegistry::KNode* ShaderRegistry::Add(const std::string& filename)
+{
+	if (filename.ends_with(".glsl")) {
+		auto path = fs::path(c_shaderDir) / fs::path(c_shaderIncludeDir) / filename;
+
+		auto handle = AssetRegistry::GetFromImportPathVerified<ShaderHeader>(path.generic_string());
+		if (handle.IsDefault()) {
+
+			AssetImporterManager->SetPushPath("gen-data/shaders/includes/");
+			handle = AssetImporterManager->ImportRequest<ShaderHeader>(path);
+			AssetImporterManager->PopPath();
+
+			if (handle.IsDefault()) {
+				LOG_WARN("Failed to find shader include: {}", path.generic_string());
+				return nullptr;
+			}
+		}
+
+		auto createdNode = new ShaderRegistry::KNode();
+		createdNode->isLeaf = false;
+		createdNode->pod = handle;
+		createdNode->FullyCacheSelf();
+		m_tree[filename] = createdNode;
+		return createdNode;
+	}
+
+	// Non header file:
+
+	auto path = fs::path(c_shaderDir) / filename;
+	auto handle = AssetRegistry::GetFromImportPathVerified<ShaderStage>(path.generic_string());
+	if (handle.IsDefault()) {
+		AssetImporterManager->SetPushPath("gen-data/shaders/");
+		handle = AssetImporterManager->ImportRequest<ShaderStage>(path.generic_string());
+		AssetImporterManager->PopPath();
+		if (handle.IsDefault()) {
+			LOG_ERROR("Attempted to add shader file: {}. Not found in known assets or on disk.", path.generic_string());
+			return nullptr;
+		}
+	}
+
+	auto createdNode = new ShaderRegistry::KNode();
+	createdNode->isLeaf = true;
+	createdNode->pod = handle;
+	createdNode->FullyCacheSelf();
+	m_tree[filename] = createdNode;
+	return createdNode;
+}

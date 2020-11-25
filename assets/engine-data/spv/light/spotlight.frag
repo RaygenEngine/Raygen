@@ -7,6 +7,8 @@
 #include "mainpass-inputs.glsl"
 #include "surface.glsl"
 
+#pragma begin
+
 // out
 
 layout(location = 0) out vec4 outColor;

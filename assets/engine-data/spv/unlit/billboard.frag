@@ -17,8 +17,13 @@ layout(set = 0, binding = 0) uniform sampler2D f;
 
 void main()
 {
-	outColor = vec4(texture(f, uv).a);
-}                               
-
-
-
+	if (texture(f, uv).a < 0.15) {
+		discard;
+	}
+	if (texture(f, uv).a < 0.9) {
+		outColor = vec4(0);
+	}
+	else {
+		outColor = vec4(1); //vec4(texture(f, uv).a);
+	}
+}

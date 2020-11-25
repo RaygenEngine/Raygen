@@ -44,3 +44,18 @@ struct ShaderImporter : public PodImporter<Shader> {
 	[[nodiscard]] BasePodHandle Import(const fs::path& path) override;
 	// void Reimport(PodEntry* intoEntry, const uri::Uri& uri) override;
 };
+
+
+struct ShaderHeaderImporter : public PodImporter<ShaderHeader> {
+	ShaderHeaderImporter(std::string_view name)
+		: PodImporter<ShaderHeader>(
+			{
+				".glsl",
+			},
+			name)
+	{
+	}
+
+	[[nodiscard]] BasePodHandle Import(const fs::path& path) override;
+	void Reimport(PodEntry* intoEntry, const uri::Uri& uri) override;
+};
