@@ -3,6 +3,7 @@
 #include "assets/AssetImporterManager.h"
 #include "assets/pods/Shader.h"
 #include "assets/pods/ShaderStage.h"
+#include "assets/pods/ShaderHeader.h"
 
 #include <fstream>
 
@@ -21,7 +22,7 @@ std::string StringFromFile(const std::string& path)
 
 std::string rtrim(const std::string& s)
 {
-	size_t end = s.find_last_not_of(' ');
+	size_t end = s.find_last_not_of(" \r\n");
 	return (end == std::string::npos) ? "" : s.substr(0, end + 1);
 }
 
@@ -98,4 +99,20 @@ BasePodHandle ShaderImporter::Import(const fs::path& path)
 	loadStage(pod->compute, ".comp");
 
 	return handle;
+}
+
+BasePodHandle ShaderHeaderImporter::Import(const fs::path& path)
+{
+	auto& [handle, pod] = AssetImporterManager->CreateEntry<ShaderStage>(path.generic_string(),
+		path.filename().replace_extension().generic_string() + "_" + path.extension().string().substr(1), true, true);
+
+	pod->code = rtrim(StringFromFile(path.generic_string()));
+	return handle;
+}
+
+void ShaderHeaderImporter::Reimport(PodEntry* intoEntry, const uri::Uri& uri)
+{
+	if (intoEntry->IsA<ShaderHeader>()) {
+		intoEntry->UnsafeGet<ShaderHeader>()->code = rtrim(StringFromFile(uri));
+	}
 }

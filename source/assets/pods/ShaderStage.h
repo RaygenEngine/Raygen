@@ -9,10 +9,12 @@ struct ShaderStage : public AssetPod {
 
 		REFLECT_VAR(stage);
 		REFLECT_VAR(code, PropertyFlags::Multiline);
-		REFLECT_VAR(headers, PropertyFlags::Advanced);
+		REFLECT_VAR(headers /*, PropertyFlags::Advanced*/); // WIP: make this advanced
 	}
 
+	void PreprocessIncludes();
 	std::vector<PodHandle<ShaderHeader>> headers;
+
 
 	ShaderStageType stage{};
 

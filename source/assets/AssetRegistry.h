@@ -80,6 +80,7 @@ private:
 
 	std::vector<UniquePtr<PodEntry>> m_pods;
 	std::unordered_map<uri::Uri, size_t, str::HashInsensitive> m_pathCache;
+	std::unordered_map<uri::Uri, size_t, str::HashInsensitive> m_originalImportPathCache;
 
 	std::vector<std::pair<size_t, AssetUpdateInfo>> m_gpuPodUpdateRequests;
 
@@ -128,10 +129,36 @@ private:
 
 	PodEntry* DuplicateImpl(PodEntry* entry);
 
-public:
-	static void RegisterPathCache(PodEntry* entry) { Get().m_pathCache.emplace(entry->path, entry->uid); }
-	static void RemoveFromPathCache(PodEntry* entry) { Get().m_pathCache.erase(entry->path); }
+	// TODO: BUG: metadata.originalImportLocation can be changed during runtime from the user.
+	// Currently the path will not get updated here. This may lead to strange behavior. We use GetFromImportPathVerified
+	// for now, that tests if entry that matched is the proper one by looking at its own metadata. This fails to fix the
+	// case where: a path updated by the user and then requested through cache. Cache will return no result. (most
+	// use-cases here would just reimport the file)
+	static void RegisterImportPathCache(PodEntry* entry)
+	{
+		if (!entry->metadata.originalImportLocation.empty()) {
+			Get().m_originalImportPathCache.emplace(entry->metadata.originalImportLocation, entry->uid);
+		}
+	}
 
+	static void RemoveFromImportPathCache(PodEntry* entry)
+	{
+		Get().m_originalImportPathCache.erase(entry->metadata.originalImportLocation);
+	}
+
+
+	static void RegisterPathCache(PodEntry* entry)
+	{
+		Get().m_pathCache.emplace(entry->path, entry->uid);
+		RegisterImportPathCache(entry);
+	}
+	static void RemoveFromPathCache(PodEntry* entry)
+	{
+		Get().m_pathCache.erase(entry->path);
+		RemoveFromImportPathCache(entry);
+	}
+
+public:
 	// Exports the asset directly to the specified location without taking into account ANY metadata / asset flags.
 	template<CUidConvertible T>
 	static void ExportToLocation(T asset, const fs::path& diskLocation)
@@ -140,15 +167,31 @@ public:
 		return Get().ExportToLocationImpl(Get().m_pods[uid].get(), diskLocation);
 	}
 
-	// There is no fast version of this function, it is just O(N) for loaded assets doing string comparisons
+	// This is the slow version of this function, it is just O(N) for loaded assets doing string comparisons, but does
+	// not suffer from the bug documented at AssetRegistry::RegisterImportPathCache.
+	// Also allows to do ending comparison. (will find both relitive/non relative paths)
+	// Prefer GetFromImportPathVerified.
 	template<CAssetPod T>
 	static PodHandle<T> SearchForAssetFromImportPathSlow(std::string_view endsWith)
 	{
 		for (auto& entry : Get().m_pods) {
-			[[unlikely]] //
-			if (entry->IsA<T>() && entry->metadata.originalImportLocation.ends_with(endsWith))
-			{
+			if (entry->IsA<T>() && entry->metadata.originalImportLocation.ends_with(endsWith)) [[unlikely]] {
 				return entry->GetHandleAs<T>();
+			}
+		}
+		return {};
+	}
+
+	// See AssetRegistry::RegisterImportPathCache for bugs.
+	// Find a loaded asset from a specific import path (exact path). (hashed version)
+	// Returns default handle on failure.
+	template<CAssetPod T>
+	static PodHandle<T> GetFromImportPathVerified(const std::string& exactPath)
+	{
+		if (auto it = Get().m_originalImportPathCache.find(exactPath); it != Get().m_originalImportPathCache.end()) {
+			PodEntry* matchingEntry = Get().m_pods[it->second].get();
+			if (matchingEntry->IsA<T>() && matchingEntry->metadata.originalImportLocation == exactPath) {
+				return matchingEntry->GetHandleAs<T>();
 			}
 		}
 		return {};

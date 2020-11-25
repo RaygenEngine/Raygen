@@ -5,6 +5,7 @@
 #include "assets/specializations/PodDuplication.h"
 #include "assets/specializations/PodExport.h"
 #include "assets/util/FindPodUsers.h"
+#include "assets/ShaderRegistry.h" // TODO: Remove
 #include "assets/StdAssets.h"
 #include "engine/console/ConsoleVariable.h"
 #include "engine/Timer.h"
@@ -153,6 +154,17 @@ void AssetRegistry::LoadAllPodsInDirectory(const fs::path& path)
 		//		AssetHandlerManager::ReimportFromOriginal(reimportEntry);
 		//	}
 		//}
+	}
+	for (auto& pod : m_pods) {
+		if (!pod->metadata.originalImportLocation.empty()) {
+			RegisterImportPathCache(pod.get());
+		}
+	}
+
+	for (auto& pod : m_pods) {
+		if (pod->IsA<ShaderStage>() && !pod->transient) {
+			ShaderRegistry::OnEdited({ pod->uid });
+		}
 	}
 }
 

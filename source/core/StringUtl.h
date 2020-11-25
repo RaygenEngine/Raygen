@@ -121,6 +121,28 @@ std::vector<std::string_view> split(const T& str, std::string_view delims = " ")
 	return output;
 }
 
+// Returns times iterated.
+// "function" signature: bool(std::string_view)
+//		return whether you want to continue iterating (returning false instantly stops and returns current iteration
+// count)
+template<CCharSeq T, typename Lambda>
+int32 splitForEach(const T& str, Lambda&& function, std::string_view delims = " ")
+{
+	int32 count = 0;
+	for (auto first = str.data(), second = str.data(), last = first + str.size(); second != last && first != last;
+		 first = second + 1) {
+		second = std::find_first_of(first, last, std::cbegin(delims), std::cend(delims));
+
+		if (first != second) {
+			count++;
+			if (!function(std::string_view(first, second - first))) {
+				return count;
+			}
+		}
+	}
+	return count;
+}
+
 //
 // Starts With Insensitive. (for sensitive use std)
 //
