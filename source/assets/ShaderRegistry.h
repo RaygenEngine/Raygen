@@ -92,6 +92,8 @@ private:
 
 	// void OnEdited(KNode* node);
 
+	bool isSelfIterating{ false };
+
 	~ShaderRegistry();
 };
 

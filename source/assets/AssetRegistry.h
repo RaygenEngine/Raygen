@@ -317,6 +317,8 @@ public:
 
 
 private:
+	static PodEntry* Debug(int32 uid) { return Get().m_pods[uid].get(); }
+
 	// This probably should reside in AssetHandlerManager.
 	template<CAssetPod PodType>
 	[[nodiscard]] std::pair<PodEntry*, PodType*> CreateEntryImpl(const uri::Uri& desiredPath, bool transient = false,

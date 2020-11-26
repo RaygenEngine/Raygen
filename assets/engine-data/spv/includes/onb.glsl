@@ -131,8 +131,8 @@ bool sameHemisphere(vec3 w, vec3 wp)
 // refl (wo, n) = -wo + 2 * dot(wo, n) * n =
 //  = vec3(-wo.x, -wo.y, wo.z); note: opposite signs for consistency with glsl reflect
 vec3 reflect(vec3 wo) 
-{
-    return vec3(wo.x, wo.y, -wo.z);
+{    
+	return vec3(wo.x, wo.y, -wo.z);
 }
 
 

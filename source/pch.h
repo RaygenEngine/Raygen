@@ -63,6 +63,13 @@ struct InFlightResources : std::array<T, c_framesInFlight> {
 	void operator=(const std::vector<T>& data) { std::move(data.begin(), data.begin() + c_framesInFlight, begin()); }
 };
 
+// Should be in some header probably
+struct TextCompilerErrors {
+	std::map<int, std::string> errors;
+	bool wasSuccessful{ false };
+};
+
+
 #include "rendering/DebugName.h"
 #include "rendering/core/img.h"
 

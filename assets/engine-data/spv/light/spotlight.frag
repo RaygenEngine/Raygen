@@ -37,23 +37,4 @@ void main()
 
 	vec3 finalContribution = Spotlight_SmoothContribution(light, shadowmap, surface);
 	outColor = vec4(finalContribution, 1);
-}                               
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}

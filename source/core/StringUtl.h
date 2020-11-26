@@ -162,4 +162,13 @@ inline bool stripIfStartsWithInsensitive(std::string& inoutString, std::string_v
 	return false;
 }
 
+
+template<CCharSeq T>
+T rtrim(const T& s, std::string_view charsToTrim = " ")
+{
+	size_t end = s.find_last_not_of(charsToTrim);
+	return (end == std::string::npos) ? "" : s.substr(0, end + 1);
+}
+
+
 } // namespace str
