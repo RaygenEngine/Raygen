@@ -7,6 +7,7 @@
 #include "rendering/passes/gi/IrragridBlend.h"
 #include "rendering/passes/gi/ReflprobeBlend.h"
 #include "rendering/passes/unlit/UnlitBillboardPass.h"
+#include "rendering/passes/unlit/UnlitSelectionStencilPass.h"
 #include "rendering/passes/unlit/UnlitVolumePass.h"
 
 namespace vl {
@@ -20,5 +21,6 @@ void StaticPipes::InternalInitRegistered()
 	StaticPipes::Init<UnlitVolumePass>();
 	StaticPipes::Init<UnlitBillboardPass>();
 	StaticPipes::Init<AmbientBlend>();
+	StaticPipes::Init<UnlitSelectionStencilPass>();
 }
 } // namespace vl

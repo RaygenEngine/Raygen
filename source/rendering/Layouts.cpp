@@ -46,7 +46,7 @@ void Layouts_::MakeRenderPassLayouts()
 	{
 		std::vector<AttRef> gbufferAtts;
 
-		depthBuffer = mainPassLayout.CreateAttachment("GDepth", Device->FindDepthFormat());
+		depthBuffer = mainPassLayout.CreateAttachment("GDepth", Device->FindDepthStencilFormat());
 		gbufferAtts.emplace_back(depthBuffer);
 
 		for (auto& [name, format] : gBufferColorAttachments) {
@@ -71,9 +71,9 @@ void Layouts_::MakeRenderPassLayouts()
 	}
 
 	// Lightblend + PostProcess
+	AttRef renderOutAttachment;
 	{
-		auto renderOutAttachment
-			= ptPassLayout.CreateAttachment("LightBlend+PostProcess", vk::Format::eR32G32B32A32Sfloat);
+		renderOutAttachment = ptPassLayout.CreateAttachment("LightBlend+PostProcess", vk::Format::eR32G32B32A32Sfloat);
 
 		ptPassLayout.AddSubpass({}, { depthBuffer, renderOutAttachment }); // LightBlend + Unlit Pass
 

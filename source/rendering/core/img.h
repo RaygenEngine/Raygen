@@ -44,7 +44,7 @@ inline vk::Format getFormat(ImageFormat format)
 	}
 }
 
-inline vk::ImageAspectFlags getAspectMask(vk::ImageUsageFlags usage, vk::Format format)
+inline vk::ImageAspectFlags getImageAspectMask(vk::ImageUsageFlags usage, vk::Format format)
 {
 	auto aspectMask = vk::ImageAspectFlagBits::eColor;
 
@@ -55,6 +55,22 @@ inline vk::ImageAspectFlags getAspectMask(vk::ImageUsageFlags usage, vk::Format 
 		if (format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint) {
 			return aspectMask | vk::ImageAspectFlagBits::eStencil;
 		}
+	}
+
+	return aspectMask;
+}
+
+inline vk::ImageAspectFlags getViewAspectMask(vk::ImageUsageFlags usage, vk::Format format)
+{
+	auto aspectMask = vk::ImageAspectFlagBits::eColor;
+
+	if (usage & vk::ImageUsageFlagBits::eDepthStencilAttachment) {
+		aspectMask = vk::ImageAspectFlagBits::eDepth;
+
+		//// if has stencil component WIP:
+		// if (format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint) {
+		//	return aspectMask | vk::ImageAspectFlagBits::eStencil;
+		//}
 	}
 
 	return aspectMask;

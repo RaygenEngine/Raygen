@@ -16,6 +16,7 @@
 #include "rendering/passes/gi/ReflprobeBlend.h"
 #include "rendering/passes/unlit/UnlitBillboardPass.h"
 #include "rendering/passes/unlit/UnlitGeometryPass.h"
+#include "rendering/passes/unlit/UnlitSelectionStencilPass.h"
 #include "rendering/passes/unlit/UnlitVolumePass.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/scene/SceneDirlight.h"
@@ -181,7 +182,24 @@ void Renderer_::RecordPostProcessPasses(vk::CommandBuffer cmdBuffer, const Scene
 		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc);
 		UnlitGeometryPass::RecordCmd(cmdBuffer, sceneDesc);
 		StaticPipes::Get<UnlitVolumePass>().Draw(cmdBuffer, sceneDesc);
+		StaticPipes::Get<UnlitSelectionStencilPass>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<UnlitBillboardPass>().Draw(cmdBuffer, sceneDesc);
+
+		// vk::ClearDepthStencilValue ccv{};
+		// ccv.depth = 1.f;
+		// ccv.stencil = 0;
+
+		// vk::ImageSubresourceRange is{};
+		// is.setAspectMask(vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil) //
+		//	.setBaseMipLevel(0u)
+		//	.setLevelCount(1u)
+		//	.setBaseArrayLayer(0u)
+		//	.setLayerCount(1u);
+
+		// cmdBuffer.clearDepthStencilImage(m_mainPassInst[sceneDesc.frameIndex].framebuffer[0].handle(),
+		//	vk::ImageLayout::eShaderReadOnlyOptimal, ccv, is);
+
+		StaticPipes::Get<UnlitSelectionStencilPass>().Draw(cmdBuffer, sceneDesc);
 	});
 }
 
@@ -253,7 +271,7 @@ InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
 {
 	InFlightResources<vk::ImageView> views;
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		views[i] = m_ptPass[i].framebuffer[0].view();
+		views[i] = m_ptPass[i].framebuffer[0].view(); // WIP: [0]
 	}
 	return views;
 }
