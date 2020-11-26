@@ -11,7 +11,7 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 	vk::ImageViewType viewType, const std::string& name)
 	: format(format)
 	, extent(extent)
-	, aspectMask(rvk::getAspectMask(usage, format))
+	, aspectMask(rvk::getImageAspectMask(usage, format))
 	, samples(samples)
 	, flags(flags)
 	, arrayLayers(arrayLayers)
@@ -52,7 +52,7 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 		.setFormat(format);
 
 	viewInfo.subresourceRange
-		.setAspectMask(aspectMask) //
+		.setAspectMask(rvk::getViewAspectMask(usage, format)) //
 		.setBaseMipLevel(0u)
 		.setLevelCount(mipLevels)
 		.setBaseArrayLayer(0u)

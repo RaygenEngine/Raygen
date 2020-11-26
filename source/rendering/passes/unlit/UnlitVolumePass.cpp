@@ -13,6 +13,7 @@
 #include "universe/components/IrragridComponent.h"
 #include "universe/components/PointlightComponent.h"
 #include "universe/components/ReflprobeComponent.h"
+#include "universe/components/SkinnedMeshComponent.h"
 #include "universe/components/SpotlightComponent.h"
 
 
@@ -244,7 +245,7 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 
 		// ndc cube transformed by viewProjInv = frustum
 		rvk::bindCubeLines(cmdBuffer);
-		rvk::drawCubeLines(cmdBuffer); // NEXT: cone
+		rvk::drawCubeLines(cmdBuffer); // TODO: cone from frustum and spot effect
 	}
 
 	if (selEnt && selEnt.Has<CDirlight>()) {
@@ -287,6 +288,7 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 		rvk::drawCubeLines(cmdBuffer);
 	}
 
+	// TODO: draw SkinnedMesh skeleton
 
 	// TODO:
 	static ConsoleVariable<bool> cons_drawLeaves{ "s.bvh.Children", false };

@@ -135,6 +135,12 @@ vk::Format Device_::FindDepthStencilFormat() const
 		vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 }
 
+vk::Format Device_::FindStencilFormat() const
+{
+	return FindSupportedFormat(
+		{ vk::Format::eS8Uint }, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+}
+
 
 SwapchainSupportDetails Device_::GetSwapchainSupportDetails() const
 {

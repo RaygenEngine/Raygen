@@ -1,7 +1,7 @@
 #pragma once
+#include "rendering/wrappers/CmdPool.h"
 #include "rendering/wrappers/PhysicalDevice.h"
 #include "rendering/wrappers/Queue.h"
-#include "rendering/wrappers/CmdPool.h"
 
 namespace vl {
 
@@ -27,6 +27,8 @@ inline struct Device_ : public vk::Device {
 	[[nodiscard]] vk::Format FindDepthFormat() const;
 
 	[[nodiscard]] vk::Format FindDepthStencilFormat() const;
+
+	[[nodiscard]] vk::Format FindStencilFormat() const;
 
 	[[nodiscard]] SwapchainSupportDetails GetSwapchainSupportDetails() const;
 } * Device{ nullptr };
