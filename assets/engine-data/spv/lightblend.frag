@@ -43,25 +43,3 @@ void main()
 
 	outColor = vec4(final, 1.0);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -10,7 +10,16 @@ template<>
 inline void ExportPod(ShaderStage* src, const fs::path& path)
 {
 	std::ofstream f(path);
-	f << src->code;
+	f << str::rtrim(src->code, " \n\r");
+	f << std::endl;
+}
+
+template<>
+inline void ExportPod(ShaderHeader* src, const fs::path& path)
+{
+	std::ofstream f(path);
+	f << str::rtrim(src->code, " \n\r");
+	f << std::endl;
 }
 
 

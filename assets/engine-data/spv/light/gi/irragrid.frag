@@ -47,5 +47,3 @@ void main( ) {
 	vec3 finalContribution = Irragrid_Contribution(grid, irradianceSamplers, surface);
 	outColor = vec4(finalContribution, 1);
 }
-
-

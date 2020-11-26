@@ -20,5 +20,4 @@ void main()
 
     uv = gl_Position.xy / gl_Position.w;
 	uv = uv.xy * 0.5 + 0.5;
-}                
-                
+}

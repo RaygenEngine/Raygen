@@ -3,6 +3,7 @@
 #include "assets/pods/Shader.h"
 #include "assets/pods/ShaderHeader.h"
 #include "assets/pods/ShaderStage.h"
+#include "assets/PodEditor.h"
 #include "assets/util/shadergen/ShaderPreprocess.h"
 #include "assets/AssetImporterManager.h"
 
@@ -63,6 +64,10 @@ ShaderRegistry::~ShaderRegistry()
 
 void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 {
+	// Remember callstack to not call this on subsequent calls (maybe we should just recursively edit?)
+	if (Get().isSelfIterating) {
+		return;
+	}
 	auto entry = AssetRegistry::GetEntry(baseHandle);
 
 	LOG_INFO("Begin Edit: {}", AssetRegistry::GetPodUri(baseHandle));
@@ -75,6 +80,7 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 
 	if (!initialNode) {
 		LOG_REPORT("Failed to find: {}", filename);
+		Get().isSelfIterating = false;
 		return;
 	}
 
@@ -85,6 +91,11 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 		return;
 	}
 	// Go down the tree and compile all leaves from here. (Later we should cache everything on each step to paste them)
+	Get().isSelfIterating = true;
+
+	// @HACK: explicitly export the header to filesystem here because we need to use external include still and the
+	// header will contain the old code otherwise
+	AssetRegistry::SaveToDisk(baseHandle);
 
 	NSet addedSet;
 	NSet workingList;
@@ -96,7 +107,23 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 		workingList.erase(node);
 
 		if (node->isLeaf) {
-			LOG_REPORT("Compiling Leaf: {}", AssetRegistry::GetPodUri(node->pod));
+			PodEditor ed(node->GetLeafPod());
+
+			TextCompilerErrors errors;
+			if (!ed->Compile(errors)) {
+				const auto& name = AssetRegistry::GetEntry(node->pod)->name;
+
+				std::string errString;
+				// TODO: should have a generic way to report these errors? maybe we already have?
+				for (auto&& [line, error] : errors.errors) {
+					errString += fmt::format("{}: Line {:>3}: {}", name, line, error);
+				}
+
+				LOG_ERROR(
+					"Errors when compiling shader from header edit: {} \nHeader that caused recompile was: "
+					"{}\n=================\n{}",
+					AssetRegistry::GetPodUri(node->pod), entry->name, errString);
+			}
 		}
 		else {
 			LOG_REPORT("Updating Header File: {}", AssetRegistry::GetPodUri(node->pod));
@@ -108,6 +135,7 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 		}
 	}
 	LOG_INFO("End Edit: {}", AssetRegistry::GetPodUri(baseHandle));
+	Get().isSelfIterating = false;
 }
 
 std::string ShaderRegistry::NormalizeFilenameForSearch(std::string_view filename)

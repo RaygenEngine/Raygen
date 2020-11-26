@@ -33,6 +33,4 @@ void main()
     float u = sign(position.x) < 0 ? uvstart.x : uvend.x;
     float v = sign(position.y) > 0 ? uvstart.y : uvend.y;
     uv = vec2(u, v);
-}                
-
-
+}

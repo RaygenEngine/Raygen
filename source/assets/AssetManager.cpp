@@ -233,6 +233,8 @@ PodEntry* AssetRegistry::DuplicateImpl(PodEntry* entry)
 		result = newEntry;
 	});
 
+	// CHECK: hack, used to force an address for this function
+	Debug(0);
 	return result;
 }
 

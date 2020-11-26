@@ -34,6 +34,4 @@ void main() {
 	gl_Position = push.mvp * skinMat * vec4(position, 1.0);
 
 	uv = textCoord;
-}                                       
-                                      
-
+}
