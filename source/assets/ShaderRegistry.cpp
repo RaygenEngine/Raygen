@@ -70,7 +70,6 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 	}
 	auto entry = AssetRegistry::GetEntry(baseHandle);
 
-	LOG_INFO("Begin Edit: {}", AssetRegistry::GetPodUri(baseHandle));
 
 	// Find or update cached stuff. The whole upper part of the tree will be properly updated and cached when this
 	// function returns.
@@ -80,14 +79,13 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 
 	if (!initialNode) {
 		LOG_REPORT("Failed to find: {}", filename);
-		Get().isSelfIterating = false;
 		return;
 	}
 
 	initialNode->FullyCacheSelf();
 
 	if (initialNode->isLeaf) {
-		LOG_REPORT("Compiling: {}", entry->name);
+		// LOG_REPORT("Compiling: {}", entry->name);
 		return;
 	}
 	// Go down the tree and compile all leaves from here. (Later we should cache everything on each step to paste them)
@@ -126,7 +124,7 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 			}
 		}
 		else {
-			LOG_REPORT("Updating Header File: {}", AssetRegistry::GetPodUri(node->pod));
+			// LOG_REPORT("Updating Header File: {}", AssetRegistry::GetPodUri(node->pod));
 			for (auto dep : node->directDependees) {
 				if (addedSet.insert(dep).second) {
 					workingList.insert(dep);
@@ -134,7 +132,6 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 			}
 		}
 	}
-	LOG_INFO("End Edit: {}", AssetRegistry::GetPodUri(baseHandle));
 	Get().isSelfIterating = false;
 }
 
