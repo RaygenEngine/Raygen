@@ -2,11 +2,6 @@
 #include "assets/shared/ShaderStageShared.h"
 #include "assets/util/DynamicDescriptorSet.h"
 
-struct TextCompilerErrors {
-	std::map<int, std::string> errors;
-	bool wasSuccessful{ false };
-};
-
 struct ShaderCompiler {
 	static std::vector<uint32> Compile(
 		const std::string& code, const std::string& shadername, TextCompilerErrors* outError = nullptr);

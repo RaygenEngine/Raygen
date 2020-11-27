@@ -37,26 +37,4 @@ void main()
 
 	vec3 finalContribution = Pointlight_SmoothContribution(topLevelAs, pl, surface);
 	outColor = vec4(finalContribution, 1);
-}                               
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}

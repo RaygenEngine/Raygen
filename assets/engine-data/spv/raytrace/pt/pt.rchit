@@ -332,13 +332,3 @@ void main() {
 
 	prd.radiance = radiance;
 }
-
-
-
-
-
-
-
-
-
-

@@ -45,6 +45,7 @@ public:
 	Node* m_prevNode{ nullptr };
 
 	bool m_lookAtMode{ false };
+
 	glm::vec3 m_lookAtPos{ 0.f, 0.f, 0.f };
 
 	ed::ManipOperationMode m_manipMode{};
@@ -57,5 +58,9 @@ public:
 	void Run_Components(Entity entity);
 
 	void Run_ImGuizmo(Entity ent);
+
+private:
+	bool m_gizmoWasUsingLastFrame{};
+	bool m_mouseLockedLastFrame{};
 };
 } // namespace ed

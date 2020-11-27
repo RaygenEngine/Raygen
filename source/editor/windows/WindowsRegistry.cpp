@@ -59,6 +59,7 @@ void RegisterWindows(ed::ComponentWindows& windowsComponent)
 
 	windowsComponent.RegisterAssetWindowEditor<ImageEditorTest>();
 	windowsComponent.RegisterAssetWindowEditor<ShaderStageEditorWindow>();
+	windowsComponent.RegisterAssetWindowEditor<ShaderHeaderEditorWindow>();
 	windowsComponent.RegisterAssetWindowEditor<MaterialArchetypeEditorWindow>();
 	windowsComponent.RegisterAssetWindowEditor<MaterialInstanceEditorWindow>();
 }

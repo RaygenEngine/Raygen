@@ -1,5 +1,8 @@
 #include "Input.h"
 #include "engine/Engine.h"
+#include "platform/Platform.h"
+
+#include <glfw/glfw3.h>
 
 void Input::ReleaseSpecialKey(Key released, Key special)
 {
@@ -90,4 +93,19 @@ glm::vec2 Input::GetMouseViewportUV() const noexcept
 		//
 		GetMouseViewportPosition().x / g_ViewportCoordinates.size.x,
 		GetMouseViewportPosition().y / g_ViewportCoordinates.size.y);
+}
+
+void Input::SetMousePos(glm::vec2 newPos)
+{
+	glfwSetCursorPos(Platform::GetMainHandle(), newPos.x, newPos.y);
+}
+
+void Input::LockMouse()
+{
+	glfwSetInputMode(Platform::GetMainHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+void Input::UnlockMouse()
+{
+	glfwSetInputMode(Platform::GetMainHandle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }

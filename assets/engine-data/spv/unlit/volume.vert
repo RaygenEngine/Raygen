@@ -20,5 +20,4 @@ void main()
 {
     gl_Position = volumeMatVp * vec4(position, 1.0);
     color = pccolor;
-}                
-                
+}

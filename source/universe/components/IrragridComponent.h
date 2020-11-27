@@ -17,7 +17,7 @@ struct CIrragrid : CSceneBase {
 
 		REFLECT_VAR(distToAdjacent);
 
-		REFLECT_VAR(ptSamples);
+		REFLECT_VAR(ptSamples).Clamp(1);
 		REFLECT_VAR(ptBounces);
 
 		REFLECT_VAR(irrResolution);

@@ -103,4 +103,18 @@ public:
 	// Percentage from top left of the mouse position relative to the viewport
 	[[nodiscard]] glm::vec2 GetMouseViewportUV() const noexcept;
 
+
+	//
+	// State modification functions
+	//
+
+
+	// Locks to main window
+	// TODO: only used in editor drag, but current implementation disallows usage anywhere else. fix this
+	void LockMouse();
+	void UnlockMouse();
+	void SetMouseLock(bool setLocked) { setLocked ? LockMouse() : UnlockMouse(); }
+
+	// Relative to main window coordinates (GetMousePosition())
+	void SetMousePos(glm::vec2 newPos);
 } Input{};

@@ -244,19 +244,3 @@ void DebugRenderPasses() {
 		imageStore(svgfOutput, iuv, vec4(color, 1.));
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -75,6 +75,8 @@ public:
 	void TeleportToCamera(Entity entity);
 	void Pilot(Entity entity);
 
+	// Move the camera the specific offset in world space
+	void MovePosition(glm::vec3 offsetPos);
 
 private:
 	Entity pilotEntity{};

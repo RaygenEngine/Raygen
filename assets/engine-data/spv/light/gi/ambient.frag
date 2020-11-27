@@ -123,30 +123,4 @@ void main()
 	occlusion *= surface.occlusion;
 
 	outColor = vec4(skyColor, occlusion);
-}                               
-           
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}

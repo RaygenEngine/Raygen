@@ -3,6 +3,7 @@
 #include "assets/AssetImporterManager.h"
 #include "assets/pods/Shader.h"
 #include "assets/pods/ShaderStage.h"
+#include "assets/pods/ShaderHeader.h"
 
 #include <fstream>
 
@@ -18,12 +19,6 @@ std::string StringFromFile(const std::string& path)
 	return buffer;
 }
 } // namespace
-
-std::string rtrim(const std::string& s)
-{
-	size_t end = s.find_last_not_of(' ');
-	return (end == std::string::npos) ? "" : s.substr(0, end + 1);
-}
 
 
 BasePodHandle ShaderStageImporter::Import(const fs::path& path)
@@ -45,7 +40,7 @@ void ShaderStageImporter::Reimport(PodEntry* intoEntry, const uri::Uri& uri)
 
 void ShaderStageImporter::CompilePod(ShaderStage* pod, const uri::Uri& uri)
 {
-	pod->code = rtrim(StringFromFile(uri));
+	pod->code = str::rtrim(StringFromFile(uri), " \r\n") + "\n";
 	pod->stage = shd::ExtToStage(uri::GetDiskExtension(uri));
 	TextCompilerErrors errors;
 	// PERF: Copying data, can pass by ref and avoid editing in compiler
@@ -98,4 +93,20 @@ BasePodHandle ShaderImporter::Import(const fs::path& path)
 	loadStage(pod->compute, ".comp");
 
 	return handle;
+}
+
+BasePodHandle ShaderHeaderImporter::Import(const fs::path& path)
+{
+	auto& [handle, pod] = AssetImporterManager->CreateEntry<ShaderHeader>(path.generic_string(),
+		path.filename().replace_extension().generic_string() + "_" + path.extension().string().substr(1), true, true);
+
+	pod->code = str::rtrim(StringFromFile(path.generic_string()), " \n\r") + "\n";
+	return handle;
+}
+
+void ShaderHeaderImporter::Reimport(PodEntry* intoEntry, const uri::Uri& uri)
+{
+	if (intoEntry->IsA<ShaderHeader>()) {
+		intoEntry->UnsafeGet<ShaderHeader>()->code = str::rtrim(StringFromFile(uri), " \n\r") + "\n";
+	}
 }

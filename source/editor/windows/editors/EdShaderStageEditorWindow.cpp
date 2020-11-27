@@ -2,6 +2,7 @@
 
 #include "assets/PodEditor.h"
 #include "assets/pods/ShaderStage.h"
+#include "assets/pods/ShaderHeader.h"
 #include "assets/util/SpirvCompiler.h"
 #include "editor/imgui/ImEd.h"
 
@@ -99,6 +100,59 @@ void ed::ShaderStageEditorWindow::UpdateForGpu()
 }
 
 void ed::ShaderStageEditorWindow::SaveInternal()
+{
+	UpdateForGpu();
+	SaveToDisk();
+}
+
+
+ed::ShaderHeaderEditorWindow::ShaderHeaderEditorWindow(PodEntry* inEntry)
+	: AssetEditorWindowTemplate(inEntry)
+{
+	filepathCache = fs::relative(entry->metadata.originalImportLocation).generic_string();
+
+	editor.reset(new GenericShaderEditor(
+		entry->GetHandleAs<ShaderHeader>().Lock()->code,
+		filepathCache,             //
+		[&]() { SaveInternal(); }, //
+		[&]() { UpdateForGpu(); }));
+
+	CLOG_ERROR(filepathCache.empty(),
+		"Editing glsl shader header that does not exist on real filesystem. This is currently not supported and you "
+		"will probably encounter bugs.");
+}
+
+void ed::ShaderHeaderEditorWindow::ImguiDraw()
+{
+	editor->ImguiDraw();
+}
+
+void ed::ShaderHeaderEditorWindow::UpdateForGpu()
+{
+	PodEditor pod(podHandle);
+
+	pod.GetUpdateInfoRef().AddFlag("editor");
+
+	pod->code = editor->editor->GetText();
+
+
+	TextCompilerErrors errors;
+
+	// Dummy boilerplate to compile code
+	auto compileCode = R"(
+#extension GL_GOOGLE_include_directive : enable
+#include "global.glsl"
+#line 1
+)" + pod->code + "\nvoid main() {}";
+
+	// Compile as fragment shader, this should give decent error results (otherwise update it below)
+	// Output from the compilation is discarded here. (we don't really need all the steps in the compilation here and
+	// its possible to save performance)
+	ShaderCompiler::Compile(compileCode, ShaderStageType::Fragment, entry->name, &errors);
+	editor->editor->SetErrorMarkers(errors.errors);
+}
+
+void ed::ShaderHeaderEditorWindow::SaveInternal()
 {
 	UpdateForGpu();
 	SaveToDisk();

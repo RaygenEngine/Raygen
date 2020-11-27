@@ -11,8 +11,8 @@
 
 ImporterRegistry::ImporterRegistry()
 {
-	RegisterImporters<ImageImporter, GltfImporter, ShaderStageImporter, ShaderImporter, CubemapImporter,
-		EnvironmentMapImporter, MaterialArchetypeImporter, MaterialInstanceImporter>();
+	RegisterImporters<ImageImporter, GltfImporter, ShaderStageImporter, ShaderImporter, ShaderHeaderImporter,
+		CubemapImporter, EnvironmentMapImporter, MaterialArchetypeImporter, MaterialInstanceImporter>();
 }
 
 void ImporterRegistry::ReimportEntry(PodEntry* entry)
