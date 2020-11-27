@@ -46,7 +46,7 @@ void PathtracedCubemapArray::RecordPass(
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, m_pipelineLayout.get(), 6u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSetDirlights[sceneDesc.frameIndex], 0u, nullptr);
 
-	vk::DeviceSize progSize = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of a program identifier
+	vk::DeviceSize progSize = Device->pd.raytracingProperties.shaderGroupBaseAlignment; // Size of a program identifier
 
 	// RayGen index
 	vk::DeviceSize rayGenOffset = 0u * progSize; // Start at the beginning of m_sbtBuffer
@@ -199,9 +199,9 @@ void PathtracedCubemapArray::MakeRtPipeline()
 
 void PathtracedCubemapArray::CreateRtShaderBindingTable()
 {
-	auto groupCount = static_cast<uint32>(m_rtShaderGroups.size());     // 3 shaders: raygen, miss, chit
-	uint32 groupHandleSize = Device->pd.rtProps.shaderGroupHandleSize;  // Size of a program identifier
-	uint32 baseAlignment = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of shader alignment
+	auto groupCount = static_cast<uint32>(m_rtShaderGroups.size());                  // 3 shaders: raygen, miss, chit
+	uint32 groupHandleSize = Device->pd.raytracingProperties.shaderGroupHandleSize;  // Size of a program identifier
+	uint32 baseAlignment = Device->pd.raytracingProperties.shaderGroupBaseAlignment; // Size of shader alignment
 
 	// Fetch all the shader handles used in the pipeline, so that they can be written in the SBT
 	uint32 sbtSize = groupCount * baseAlignment;
