@@ -19,6 +19,3 @@ layout(location = 0) rayPayloadInEXT hitPayload inPrd;
 void main() {
 	inPrd.radiance = GetSkyColor(gl_WorldRayOriginEXT, gl_WorldRayDirectionEXT);
 }
-
-
-

@@ -788,11 +788,14 @@ static const char* scaleInfoMask[] = { "X : %5.2f", "Y : %5.2f", "Z : %5.2f", "X
 static const char* rotationInfoMask[] = { "X : %5.2f deg %5.2f rad", "Y : %5.2f deg %5.2f rad",
 	"Z : %5.2f deg %5.2f rad", "Screen : %5.2f deg %5.2f rad" };
 static const int translationInfoIndex[] = { 0, 0, 0, 1, 0, 0, 2, 0, 0, 1, 2, 0, 0, 2, 0, 0, 1, 0, 0, 1, 2 };
-static const float quadMin = 0.5f;
+static const float quadMin = 0.3f;
 static const float quadMax = 0.8f;
 static const float quadUV[8] = { quadMin, quadMin, quadMin, quadMax, quadMax, quadMax, quadMax, quadMin };
 static const int halfCircleSegmentCount = 64;
 static const float snapTension = 0.5f;
+
+static const float lineThickness = 3.f;
+static const float widgetScale = 1.f;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -1186,10 +1189,10 @@ static void DrawRotationGizmo(int type)
 		if (radiusAxis > gContext.mRadiusSquareCenter)
 			gContext.mRadiusSquareCenter = radiusAxis;
 
-		drawList->AddPolyline(circlePos, halfCircleSegmentCount, colors[3 - axis], false, 2);
+		drawList->AddPolyline(circlePos, halfCircleSegmentCount, colors[3 - axis], false, 2 * lineThickness);
 	}
 	drawList->AddCircle(worldToPos(gContext.mModel.v.position, gContext.mViewProjection), gContext.mRadiusSquareCenter,
-		colors[0], 64, 3.f);
+		colors[0], 64, 2.f * lineThickness);
 
 	if (gContext.mbUsing) {
 		ImVec2 circlePos[halfCircleSegmentCount + 1];
@@ -1205,7 +1208,7 @@ static void DrawRotationGizmo(int type)
 			circlePos[i] = worldToPos(pos + gContext.mModel.v.position, gContext.mViewProjection);
 		}
 		drawList->AddConvexPolyFilled(circlePos, halfCircleSegmentCount, 0x801080FF);
-		drawList->AddPolyline(circlePos, halfCircleSegmentCount, 0xFF1080FF, true, 2);
+		drawList->AddPolyline(circlePos, halfCircleSegmentCount, 0xFF1080FF, true, 2 * lineThickness);
 
 		ImVec2 destinationPosOnScreen = circlePos[1];
 		char tmps[512];
@@ -1251,12 +1254,12 @@ static void DrawScaleGizmo(int type)
 			ImVec2 worldDirSSpace = worldToPos((dirAxis * scaleDisplay[i]) * gContext.mScreenFactor, gContext.mMVP);
 
 			if (gContext.mbUsing) {
-				drawList->AddLine(baseSSpace, worldDirSSpaceNoScale, 0xFF404040, 3.f);
-				drawList->AddCircleFilled(worldDirSSpaceNoScale, 6.f, 0xFF404040);
+				drawList->AddLine(baseSSpace, worldDirSSpaceNoScale, 0xFF404040, 3.f * lineThickness);
+				drawList->AddCircleFilled(worldDirSSpaceNoScale, 5.f * lineThickness * 1.5f, 0xFF404040);
 			}
 
-			drawList->AddLine(baseSSpace, worldDirSSpace, colors[i + 1], 3.f);
-			drawList->AddCircleFilled(worldDirSSpace, 6.f, colors[i + 1]);
+			drawList->AddLine(baseSSpace, worldDirSSpace, colors[i + 1], 3.f * lineThickness);
+			drawList->AddCircleFilled(worldDirSSpace, 5.f * lineThickness, colors[i + 1]);
 
 			if (gContext.mAxisFactor[i] < 0.f)
 				DrawHatchedAxis(dirAxis * scaleDisplay[i]);
@@ -1313,14 +1316,14 @@ static void DrawTranslationGizmo(int type)
 			ImVec2 baseSSpace = worldToPos(dirAxis * 0.1f * gContext.mScreenFactor, gContext.mMVP);
 			ImVec2 worldDirSSpace = worldToPos(dirAxis * gContext.mScreenFactor, gContext.mMVP);
 
-			drawList->AddLine(baseSSpace, worldDirSSpace, colors[i + 1], 3.f);
+			drawList->AddLine(baseSSpace, worldDirSSpace, colors[i + 1], 3.f * lineThickness);
 
 			// Arrow head begin
 			ImVec2 dir(origin - worldDirSSpace);
 
 			float d = sqrtf(ImLengthSqr(dir));
 			dir /= d; // Normalize
-			dir *= 6.0f;
+			dir *= 6.0f * lineThickness / 2.f;
 
 			ImVec2 ortogonalDir(dir.y, -dir.x); // Perpendicular vector
 			ImVec2 a(worldDirSSpace + dir);
@@ -1339,7 +1342,7 @@ static void DrawTranslationGizmo(int type)
 					= (dirPlaneX * quadUV[j * 2] + dirPlaneY * quadUV[j * 2 + 1]) * gContext.mScreenFactor;
 				screenQuadPts[j] = worldToPos(cornerWorldPos, gContext.mMVP);
 			}
-			drawList->AddPolyline(screenQuadPts, 4, directionColor[i], true, 1.0f);
+			drawList->AddPolyline(screenQuadPts, 4, directionColor[i], true, 1.0f * lineThickness);
 			drawList->AddConvexPolyFilled(screenQuadPts, 4, colors[i + 4]);
 		}
 	}
@@ -1356,7 +1359,8 @@ static void DrawTranslationGizmo(int type)
 		drawList->AddCircle(sourcePosOnScreen, 6.f, translationLineColor);
 		drawList->AddCircle(destinationPosOnScreen, 6.f, translationLineColor);
 		drawList->AddLine(ImVec2(sourcePosOnScreen.x + dif.x, sourcePosOnScreen.y + dif.y),
-			ImVec2(destinationPosOnScreen.x - dif.x, destinationPosOnScreen.y - dif.y), translationLineColor, 2.f);
+			ImVec2(destinationPosOnScreen.x - dif.x, destinationPosOnScreen.y - dif.y), translationLineColor,
+			2.f * lineThickness);
 
 		char tmps[512];
 		vec_t deltaInfo = gContext.mModel.v.position - gContext.mMatrixOrigin;
@@ -1470,7 +1474,7 @@ static void HandleAndDrawLocalBounds(float* bounds, matrix_t* matrix, float* sna
 				ImVec2 worldBoundSS1 = ImLerp(worldBound1, worldBound2, ImVec2(t1, t1));
 				ImVec2 worldBoundSS2 = ImLerp(worldBound1, worldBound2, ImVec2(t2, t2));
 				// drawList->AddLine(worldBoundSS1, worldBoundSS2, 0x000000 + anchorAlpha, 3.f);
-				drawList->AddLine(worldBoundSS1, worldBoundSS2, 0xAAAAAA + anchorAlpha, 2.f);
+				drawList->AddLine(worldBoundSS1, worldBoundSS2, 0xAAAAAA + anchorAlpha, 2.f * lineThickness);
 			}
 			vec_t midPoint = (aabb[i] + aabb[(i + 1) % 4]) * 0.5f;
 			ImVec2 midBound = worldToPos(midPoint, boundsMVP);
@@ -2135,10 +2139,10 @@ void DrawGrid(const float* view, const float* projection, const float* matrix, c
 	matrix_t res = *(matrix_t*)matrix * *(matrix_t*)view * *(matrix_t*)projection;
 
 	for (float f = -gridSize; f <= gridSize; f += 1.f) {
-		gContext.mDrawList->AddLine(
-			worldToPos(makeVect(f, 0.f, -gridSize), res), worldToPos(makeVect(f, 0.f, gridSize), res), 0xFF808080);
-		gContext.mDrawList->AddLine(
-			worldToPos(makeVect(-gridSize, 0.f, f), res), worldToPos(makeVect(gridSize, 0.f, f), res), 0xFF808080);
+		gContext.mDrawList->AddLine(worldToPos(makeVect(f, 0.f, -gridSize), res),
+			worldToPos(makeVect(f, 0.f, gridSize), res), 0xFF808080, lineThickness);
+		gContext.mDrawList->AddLine(worldToPos(makeVect(-gridSize, 0.f, f), res),
+			worldToPos(makeVect(gridSize, 0.f, f), res), 0xFF808080, lineThickness);
 	}
 }
 

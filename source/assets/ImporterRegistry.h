@@ -23,11 +23,18 @@ public:
 	{
 		mti::TypeId type{};
 		BasePodHandle baseHandle = ImportImpl(path, type);
+
+
+		CLOG_WARN(AssetRegistry::GetEntry(baseHandle)->type != type,
+			"Importer returned pod type did not match the expected pod type for import: {}", path);
+
 		if (type == mti::GetTypeId<T>()) {
 			if (baseHandle.IsDefault()) {
 				return PodHandle<T>{};
 			}
 			return PodHandle<T>{ baseHandle.uid };
+		}
+		else {
 		}
 		return PodHandle<T>{};
 	}

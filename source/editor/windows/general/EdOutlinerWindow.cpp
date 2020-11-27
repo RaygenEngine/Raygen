@@ -7,13 +7,14 @@
 
 
 #include "editor/EdClipboardOp.h"
+#include "editor/Editor.h"
 #include "editor/imgui/ImAssetSlot.h"
 #include "editor/windows/general/EdAssetsWindow.h"
 
 
 namespace ed {
 namespace {
-	Entity AddEntityMenu(World& world, const char* menuName)
+	Entity AddEntityMenu(World& world, const char* menuName, bool shouldAutoSelect = true)
 	{
 		Entity ent;
 		if (ImGui::BeginMenu(menuName)) {
@@ -23,12 +24,18 @@ namespace {
 
 				ent = world.CreateEntity(name);
 				entityType->emplace(ent);
+				if (shouldAutoSelect) {
+					Editor::SetSelection(ent);
+				}
 			}
 			ImGui::EndMenu();
 		}
 
 		if (ImGui::IsItemClicked()) {
 			ent = world.CreateEntity();
+			if (shouldAutoSelect) {
+				Editor::SetSelection(ent);
+			}
 			ImGui::CloseCurrentPopup();
 		}
 		return ent;
@@ -99,7 +106,7 @@ void OutlinerWindow::ImguiDraw()
 	}
 
 	if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered()) {
-		OutlinerWindow::selected = {};
+		Editor::ClearSelection();
 	}
 
 
@@ -130,6 +137,16 @@ void OutlinerWindow::Run_ContextPopup(World& world, Entity entity)
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndMenu();
+	}
+	ImGui::Separator();
+	if (ImGui::MenuItem(ETXT(FA_PLANE, " Pilot"), "Shift+F")) {
+		EditorObject->edCamera.Pilot(entity);
+	}
+	if (ImGui::MenuItem(ETXT(FA_EMPTY, " Focus"), "F")) {
+		EditorObject->edCamera.Focus(entity);
+	}
+	if (ImGui::MenuItem(ETXT(FA_HAND_POINT_DOWN, " Teleport To Camera"))) {
+		EditorObject->edCamera.TeleportToCamera(entity);
 	}
 	ImGui::Separator();
 	if (ImGui::MenuItem(ETXT(FA_EDIT, " Rename"), "F2")) {
@@ -163,16 +180,6 @@ void OutlinerWindow::Run_ContextPopup(World& world, Entity entity)
 		auto [entry, ptr] = AssetRegistry::CreateEntry<Prefab>(name);
 		ptr->MakeFrom(entity);
 		ed::AssetsWindow::RefreshEntries();
-	}
-	ImGui::Separator();
-	if (ImGui::MenuItem(ETXT(FA_EMPTY, " Focus"), "F")) {
-		EditorObject->edCamera.Focus(entity);
-	}
-	if (ImGui::MenuItem(ETXT(FA_EMPTY, " Teleport To Camera"))) {
-		EditorObject->edCamera.TeleportToCamera(entity);
-	}
-	if (ImGui::MenuItem(ETXT(FA_PLANE, " Pilot"), "Shift+F")) {
-		EditorObject->edCamera.Pilot(entity);
 	}
 }
 

@@ -39,8 +39,4 @@ void main()
 
 	vec3 finalContribution = Dirlight_SmoothContribution(light, shadowmap, surface);
 	outColor = vec4(finalContribution, 1);
-}                               
-                                
-                                 
-
-
+}

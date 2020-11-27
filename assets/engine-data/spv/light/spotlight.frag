@@ -7,6 +7,8 @@
 #include "mainpass-inputs.glsl"
 #include "surface.glsl"
 
+#pragma begin
+
 // out
 
 layout(location = 0) out vec4 outColor;
@@ -35,23 +37,4 @@ void main()
 
 	vec3 finalContribution = Spotlight_SmoothContribution(light, shadowmap, surface);
 	outColor = vec4(finalContribution, 1);
-}                               
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}

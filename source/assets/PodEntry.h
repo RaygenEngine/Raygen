@@ -40,6 +40,7 @@ struct PodEntry {
 		return static_cast<T*>(ptr.get());
 	}
 
+	// Will abort on cast failure.
 	template<CAssetPod T>
 	[[nodiscard]] PodHandle<T> GetHandleAs()
 	{

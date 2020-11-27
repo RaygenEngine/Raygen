@@ -8,7 +8,7 @@ struct SceneCamera;
 struct CCamera : CSceneBase {
 	REFLECTED_SCENE_COMP(CCamera, SceneCamera)
 	{
-		REFLECT_ICON(FA_CAMERA_RETRO);
+		REFLECT_ICON(FA_CAMERA);
 		// REFLECT_CATEGORY("Rendering");
 
 		REFLECT_VAR(near);

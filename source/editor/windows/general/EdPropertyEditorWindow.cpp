@@ -7,6 +7,8 @@
 #include "reflection/ReflectionTools.h"
 #include "universe/ComponentsDb.h"
 #include "universe/World.h"
+#include "engine/Input.h"
+#include "editor/EdClipboardOp.h"
 
 
 inline float* FromVec4(glm::vec4& vec4)
@@ -17,6 +19,21 @@ inline float* FromVec4(glm::vec4& vec4)
 namespace ed {
 
 namespace {
+	template<typename T>
+	concept CanBeClamped = requires(T a)
+	{
+		{
+			glm::clamp(a, Property::Editor_MinMaxRetType<T>{}, Property::Editor_MinMaxRetType<T>{})
+		}
+		->std::convertible_to<T>;
+	};
+
+	static_assert(CanBeClamped<float>);
+	static_assert(CanBeClamped<int32>);
+	static_assert(CanBeClamped<glm::vec3>);
+	static_assert(!CanBeClamped<std::string>);
+
+
 	using namespace PropertyFlags;
 
 	struct ReflectionToImguiVisitor {
@@ -54,11 +71,12 @@ namespace {
 			}
 			if (!p.HasFlags(NoEdit)) {
 				if (Inner(t, p)) {
-					didEditFlag = true;
-					if (p.GetDirtyFlagIndex() >= 0) {
-						// dirtyFlags.set(p.GetDirtyFlagIndex());
+					if constexpr (CanBeClamped<T>) {
+						if (p.HasFlags(EditorClamp) && !ImGui::GetIO().KeyCtrl) {
+							t = glm::clamp(t, p.Editor_GetMin<T>(), p.Editor_GetMax<T>());
+						}
 					}
-					// dirtyFlags.set(Node::DF::Properties);
+					didEditFlag = true;
 				}
 			}
 			else { // No edit version, just copy twice
@@ -69,7 +87,7 @@ namespace {
 			}
 		}
 
-		bool Inner(int32& t, const Property& p) { return ImGui::DragInt(name, &t, 0.1f); }
+		bool Inner(int32& t, const Property& p) { return ImGui::DragInt(name, &t, p.Editor_GetSpeed() * 0.1f); }
 
 		bool Inner(bool& t, const Property& p) { return ImGui::Checkbox(name, &t); }
 
@@ -77,14 +95,14 @@ namespace {
 		{
 			if (p.HasFlags(Rads)) {
 				auto degrees = glm::degrees(t);
-				if (ImGui::DragFloat(name, &degrees, 0.01f)) {
+				if (ImGui::DragFloat(name, &degrees, p.Editor_GetSpeed() * 0.01f)) {
 					t = glm::radians(degrees);
 					return true;
 				}
 				TEXT_TOOLTIP("Converted to degrees for the editor, actual value is: {}", t);
 				return false;
 			}
-			return ImGui::DragFloat(name, &t, 0.01f);
+			return ImGui::DragFloat(name, &t, p.Editor_GetSpeed() * 0.01f);
 		}
 
 		bool Inner(glm::vec3& t, const Property& p)
@@ -95,7 +113,7 @@ namespace {
 						| ImGuiColorEditFlags_Float);
 			}
 
-			return ImGui::DragFloat3(name, glm::value_ptr(t), 0.01f);
+			return ImGui::DragFloat3(name, glm::value_ptr(t), p.Editor_GetSpeed() * 0.01f);
 		}
 
 		bool Inner(glm::vec4& t, const Property& p)
@@ -106,7 +124,7 @@ namespace {
 						| ImGuiColorEditFlags_Float | ImGuiColorEditFlags_AlphaBar);
 			}
 
-			return ImGui::DragFloat4(name, glm::value_ptr(t), 0.01f);
+			return ImGui::DragFloat4(name, glm::value_ptr(t), p.Editor_GetSpeed() * 0.01f);
 		}
 
 		bool Inner(std::string& ref, const Property& p)
@@ -149,10 +167,10 @@ namespace {
 			buffers[3] = p.GetNameStr() + "[3]";
 
 
-			edited |= ImGui::DragFloat4(buffers[0].c_str(), FromVec4(rowMajor[0]), 0.01f);
-			edited |= ImGui::DragFloat4(buffers[1].c_str(), FromVec4(rowMajor[1]), 0.01f);
-			edited |= ImGui::DragFloat4(buffers[2].c_str(), FromVec4(rowMajor[2]), 0.01f);
-			edited |= ImGui::DragFloat4(buffers[3].c_str(), FromVec4(rowMajor[3]), 0.01f);
+			edited |= ImGui::DragFloat4(buffers[0].c_str(), FromVec4(rowMajor[0]), p.Editor_GetSpeed() * 0.01f);
+			edited |= ImGui::DragFloat4(buffers[1].c_str(), FromVec4(rowMajor[1]), p.Editor_GetSpeed() * 0.01f);
+			edited |= ImGui::DragFloat4(buffers[2].c_str(), FromVec4(rowMajor[2]), p.Editor_GetSpeed() * 0.01f);
+			edited |= ImGui::DragFloat4(buffers[3].c_str(), FromVec4(rowMajor[3]), p.Editor_GetSpeed() * 0.01f);
 			ImGui::Separator();
 			if (edited) {
 				t = glm::transpose(rowMajor);
@@ -166,7 +184,6 @@ namespace {
 			bool result = false;
 			if (PodEntry* entry = ImEd::AcceptTypedPodDrop<PodType>()) {
 				pod.uid = entry->uid;
-				dirtyFlags.set(Node::DF::Properties);
 				result = true;
 			}
 			return result;
@@ -313,7 +330,9 @@ void PropertyEditorWindow::Run_Components(Entity entity)
 
 
 			ImGui::SameLine();
-			if (ImGui::CollapsingHeader(cl.GetNameStr().c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+			std::string name = std::string(" " + std::string(U8(cl.GetIcon())) + "  " + cl.GetNameStr());
+
+			if (ImGui::CollapsingHeader(name.data(), ImGuiTreeNodeFlags_DefaultOpen)) {
 				ImGui::Indent(44.f);
 				refltools::CallVisitorOnEveryPropertyEx(data, cl, visitor);
 				ImGui::Unindent(44.f);
@@ -348,21 +367,53 @@ void PropertyEditorWindow::Run_ImGuizmo(Entity node)
 		return;
 	}
 
-	auto cameraView = camera.view;
-	auto cameraProj = camera.proj;
 
 	auto nodeMatrix = node->world().transform;
-
+	auto originalPos = math::decomposePos(nodeMatrix);
 	// auto i = glm::identity<glm::mat4>();
 	// ImGuizmo::DrawGrid(glm::value_ptr(cameraView), glm::value_ptr(cameraProj), glm::value_ptr(i), 10.f);
+
+	// TODO: Crappy way to simulate free drag in imguizmo, should probably implement internally
+	static auto cameraView = camera.view;
+	static auto cameraProj = camera.proj;
+	if (!m_mouseLockedLastFrame) {
+		cameraView = camera.view;
+		cameraProj = camera.proj;
+	}
 
 	ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProj),
 		static_cast<ImGuizmo::OPERATION>(m_manipMode.op), static_cast<ImGuizmo::MODE>(m_manipMode.mode),
 		glm::value_ptr(nodeMatrix));
 
+	bool shouldMouseLock = false;
 	if (ImGuizmo::IsUsing()) {
+		if (!m_gizmoWasUsingLastFrame) {
+			// ALT + DRAG duplicate
+			if (Input.IsDown(Key::Alt)
+				&& (m_manipMode.op == ManipOperationMode::Operation::Rotate
+					|| m_manipMode.op == ManipOperationMode::Operation::Translate)) {
+				ed::ClipboardOp::StoreEntity(node);
+				auto loaded = ed::ClipboardOp::LoadEntity(node.GetWorld());
+				OutlinerWindow::selected = loaded;
+			}
+		}
+		if (Input.IsDown(Key::Shift)) {
+			auto deltaPos = math::decomposePos(nodeMatrix) - originalPos;
+			camera.MovePosition(deltaPos);
+			shouldMouseLock = true;
+		}
 		node->SetNodeTransformWCS(nodeMatrix);
 	}
+
+	if (shouldMouseLock && !m_mouseLockedLastFrame) {
+		Input.LockMouse();
+	}
+	else if (!shouldMouseLock && m_mouseLockedLastFrame) {
+		Input.UnlockMouse();
+	}
+	m_mouseLockedLastFrame = shouldMouseLock;
+
+	m_gizmoWasUsingLastFrame = ImGuizmo::IsUsing();
 }
 
 // HACK:

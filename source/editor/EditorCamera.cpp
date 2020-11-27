@@ -174,6 +174,7 @@ void EditorCamera::TeleportToCamera(Entity entity)
 	if (!entity) {
 		return;
 	}
+	// BUG: filter scale
 	entity->SetNodeTransformWCS(transform.transform);
 }
 
@@ -195,6 +196,17 @@ void EditorCamera::Pilot(Entity entity)
 	pilotEntity = entity;
 }
 
+void EditorCamera::MovePosition(glm::vec3 offsetPos)
+{
+	transform.position += offsetPos;
+	transform.Compose();
+
+	if (useOrbitalMode) {
+		orbitalCenter = transform.position + transform.front() * orbitalLength;
+		OrbitalCenterChanged();
+	}
+	dirtyThisFrame = true;
+}
 
 void EditorCamera::OrbitalCenterChanged()
 {
@@ -205,6 +217,7 @@ void EditorCamera::OrbitalCenterChanged()
 
 void EditorCamera::UpdatePiloting()
 {
+	// BUG: filter scale
 	pilotEntity->SetNodeTransformWCS(transform.transform);
 }
 

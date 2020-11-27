@@ -27,7 +27,7 @@ public:
 	virtual ~PodImporterBase() = default;
 };
 
-template<typename T>
+template<CAssetPod T>
 struct PodImporter : public PodImporterBase {
 public:
 	PodImporter(const std::vector<const char*>& supportedExt, std::string_view name)

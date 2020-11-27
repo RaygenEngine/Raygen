@@ -39,4 +39,20 @@ public:
 };
 
 
+class ShaderHeaderEditorWindow : public AssetEditorWindowTemplate<ShaderHeader> {
+
+	UniquePtr<GenericShaderEditor> editor;
+
+	std::string filepathCache;
+	void SaveInternal();
+
+	void UpdateForGpu();
+
+public:
+	ShaderHeaderEditorWindow(PodEntry* inEntry);
+
+	void ImguiDraw() override;
+};
+
+
 } // namespace ed
