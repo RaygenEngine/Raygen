@@ -160,7 +160,7 @@ struct ShapesData {
 		cube_lineList.vertexBuffer
 			= vl::RBuffer::CreateTransfer("Cube vertices", cube_verticesData, vk::BufferUsageFlagBits::eVertexBuffer);
 		cube_lineList.indexBuffer = vl::RBuffer::CreateTransfer(
-			"Cube line list indices", cube_lineList_indicesData, vk::BufferUsageFlagBits::eVertexBuffer);
+			"Cube line list indices", cube_lineList_indicesData, vk::BufferUsageFlagBits::eIndexBuffer);
 		cube_lineList.indexCount = cube_lineList_indicesData.size();
 
 		MakeSphere(18, 9, 1.f, sphere18x9);

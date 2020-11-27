@@ -73,7 +73,7 @@ vk::UniquePipeline UnlitVolumePass::MakePipeline()
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly
-		.setTopology(vk::PrimitiveTopology::eTriangleList) //
+		.setTopology(vk::PrimitiveTopology::eLineList) //
 		.setPrimitiveRestartEnable(VK_FALSE);
 
 	// Dynamic vieport

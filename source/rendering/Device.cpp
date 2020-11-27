@@ -4,21 +4,6 @@
 
 #include <set>
 
-namespace {
-void CheckExtensions(std::vector<char const*> const& extensions, std::vector<vk::ExtensionProperties> const& properties)
-{
-	std::for_each(extensions.begin(), extensions.end(), [&properties](char const* name) {
-		auto found = std::find_if(properties.begin(), properties.end(),
-						 [&name](vk::ExtensionProperties const& property) {
-							 return strcmp(property.extensionName, name) == 0;
-						 })
-					 != properties.end();
-		CLOG_ABORT(!found, "Requested Vulkan device extension not found: {}", name);
-		return found;
-	});
-}
-} // namespace
-
 namespace vl {
 Device_::Device_(RPhysicalDevice& pd)
 	: pd(pd)
@@ -41,52 +26,11 @@ Device_::Device_(RPhysicalDevice& pd)
 		queueCreateInfos.push_back(createInfo);
 	}
 
-	vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceBufferDeviceAddressFeatures,
-		vk::PhysicalDeviceDescriptorIndexingFeatures, vk::PhysicalDeviceRayTracingFeaturesKHR,
-		vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
-		pDeviceFeaturesChain;
-
-	auto& deviceFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceFeatures2>();
-	auto& deviceBufferAddressFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceBufferDeviceAddressFeatures>();
-	auto& deviceDescriptorIndexingFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceDescriptorIndexingFeatures>();
-	auto& deviceRayTracingFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceRayTracingFeaturesKHR>();
-	auto& deviceDynStateExtFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
-
-	deviceFeatures.features.setSamplerAnisotropy(VK_TRUE);
-	deviceFeatures.features.setFragmentStoresAndAtomics(VK_TRUE);
-	deviceFeatures.features.setFillModeNonSolid(VK_TRUE);
-	deviceFeatures.features.setImageCubeArray(VK_TRUE);
-	deviceBufferAddressFeatures.setBufferDeviceAddress(VK_TRUE);
-
-	deviceDescriptorIndexingFeatures
-		.setRuntimeDescriptorArray(true) //
-		.setShaderSampledImageArrayNonUniformIndexing(true)
-		.setDescriptorBindingVariableDescriptorCount(true);
-
-	// NEXT: validation layers
-	deviceDynStateExtFeatures.setExtendedDynamicState(VK_TRUE);
-
-
-	// get all available rt extensions from gpu
-	// careful pNext here is lost
-	deviceRayTracingFeatures = pd.rtFeats;
-
-
-	const std::vector<const char*> deviceExtensions = {
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-		VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
-		VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
-		VK_KHR_RAY_TRACING_EXTENSION_NAME,
-		VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
-	};
-
-	CheckExtensions(deviceExtensions, pd.enumerateDeviceExtensionProperties());
-
 	vk::DeviceCreateInfo deviceCreateInfo{};
 	deviceCreateInfo
 		.setQueueCreateInfos(queueCreateInfos) //
-		.setPEnabledExtensionNames(deviceExtensions)
-		.setPNext(&deviceFeatures);
+		.setPEnabledExtensionNames(pd.extensions)
+		.setPNext(&pd.featuresChain.get<vk::PhysicalDeviceFeatures2>());
 
 	vk::Device::operator=(pd.createDevice(deviceCreateInfo));
 	VulkanLoader::InitLoaderWithDevice(*this);

@@ -133,9 +133,9 @@ void IndirectSpecularPass::MakeRtPipeline()
 
 void IndirectSpecularPass::CreateRtShaderBindingTable()
 {
-	auto groupCount = static_cast<uint32>(m_rtShaderGroups.size());     // 3 shaders: raygen, miss, chit
-	uint32 groupHandleSize = Device->pd.rtProps.shaderGroupHandleSize;  // Size of a program identifier
-	uint32 baseAlignment = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of shader alignment
+	auto groupCount = static_cast<uint32>(m_rtShaderGroups.size());                  // 3 shaders: raygen, miss, chit
+	uint32 groupHandleSize = Device->pd.raytracingProperties.shaderGroupHandleSize;  // Size of a program identifier
+	uint32 baseAlignment = Device->pd.raytracingProperties.shaderGroupBaseAlignment; // Size of shader alignment
 
 	// Fetch all the shader handles used in the pipeline, so that they can be written in the SBT
 	uint32 sbtSize = groupCount * baseAlignment;
@@ -213,7 +213,7 @@ void IndirectSpecularPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRe
 	cmdBuffer.pushConstants(m_rtPipelineLayout.get(),
 		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u, sizeof(PushConstant), &pc);
 
-	vk::DeviceSize progSize = Device->pd.rtProps.shaderGroupBaseAlignment; // Size of a program identifier
+	vk::DeviceSize progSize = Device->pd.raytracingProperties.shaderGroupBaseAlignment; // Size of a program identifier
 
 	// RayGen index
 	vk::DeviceSize rayGenOffset = 0u * progSize; // Start at the beginning of m_sbtBuffer
