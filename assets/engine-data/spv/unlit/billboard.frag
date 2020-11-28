@@ -25,9 +25,4 @@ void main()
 	}
 	
 	outColor = a < 1 - thres ? vec4(0) : vec4(1);
-}                               
-
-
-
-
-
+}

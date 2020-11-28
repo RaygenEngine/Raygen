@@ -19,5 +19,4 @@ layout(push_constant) uniform PC {
 
 void main() {
 	gl_Position = mvp * vec4(position, 1.f);
-}                                       
-
+}
