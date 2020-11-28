@@ -166,10 +166,10 @@ public:
 
 
 	[[nodiscard]] RenderingPassInstance CreatePassInstance(
-		uint32 width, uint32 height, std::vector<const RImage2D*> externalAttachmentInstances = {});
+		uint32 width, uint32 height, std::vector<const RImageAttachment*> externalAttachmentInstances = {});
 
 	[[nodiscard]] RenderingPassInstance CreatePassInstanceHack(
-		uint32 width, uint32 height, std::vector<const RImage2D*> externalAttachmentInstances = {});
+		uint32 width, uint32 height, std::vector<const RImageAttachment*> externalAttachmentInstances = {});
 };
 
 

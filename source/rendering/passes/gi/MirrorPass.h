@@ -16,7 +16,7 @@ public:
 
 	void Resize(vk::Extent2D extent);
 
-	InFlightResources<RImage2D> m_result;
+	InFlightResources<RImageAttachment> m_result;
 
 	void MakeRtPipeline();
 	void CreateRtShaderBindingTable();

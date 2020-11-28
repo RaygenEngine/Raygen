@@ -12,7 +12,8 @@ bool IsEqual(const vk::Extent3D lhs, const vk::Extent2D rhs)
 namespace vl {
 
 void RFramebuffer::AddAttachment(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling,
-	vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, const std::string& name, vk::ImageLayout finalLayout)
+	vk::ImageLayout initialLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties,
+	const std::string& name, vk::ImageLayout finalLayout)
 {
 	if (extent.width == 0 && extent.height == 0) {
 		extent.width = width;
@@ -22,12 +23,13 @@ void RFramebuffer::AddAttachment(uint32 width, uint32 height, vk::Format format,
 	CLOG_ABORT(extent.width != width || extent.height != height,
 		"Attempting to add attachment with different dimensions to a Framebuffer");
 
-	ownedAttachments.emplace_back(name, extent, format, finalLayout, 1u, usage, properties);
+	ownedAttachments.emplace_back(width, height, format, tiling, initialLayout, usage, properties, name);
+	ownedAttachments.back().BlockingTransitionToLayout(initialLayout, finalLayout);
 
 	attachmentViews.emplace_back(ownedAttachments.back().view());
 }
 
-void RFramebuffer::AddExistingAttachment(const RImage2D& attachment)
+void RFramebuffer::AddExistingAttachment(const RImageAttachment& attachment)
 {
 	CLOG_ERROR(!IsEqual(attachment.extent, extent),
 		"Incompatible sizes for attachment to framebuffer: Attachment name: {}", attachment.name);

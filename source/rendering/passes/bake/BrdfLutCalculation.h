@@ -12,7 +12,7 @@ class BrdfLutCalculation {
 	vk::UniquePipelineLayout m_pipelineLayout;
 
 	vk::UniqueFramebuffer m_framebuffer;
-	RImage2D m_attachment;
+	RImageAttachment m_attachment;
 
 	GpuEnvironmentMap* m_envmapAsset;
 

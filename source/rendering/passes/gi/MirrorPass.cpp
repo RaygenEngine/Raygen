@@ -254,10 +254,13 @@ void MirrorPass::RecordPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 void MirrorPass::Resize(vk::Extent2D extent)
 {
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
-		m_result[i] = RImage2D("MirrorBuffer",
-			vk::Extent2D{ static_cast<uint32>(console_miScale * extent.width),
-				static_cast<uint32>(console_miScale * extent.height) },
-			vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eShaderReadOnlyOptimal);
+		m_result[i] = RImageAttachment(console_miScale * extent.width, console_miScale * extent.height,
+			vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+			vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
+			vk::MemoryPropertyFlagBits::eDeviceLocal, "MirrorBuffer");
+
+		m_result[i].BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eShaderReadOnlyOptimal,
+			vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eFragmentShader);
 
 		rvk::writeDescriptorImages(
 			m_rtDescSet[i], 0u, { m_result[i].view() }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
