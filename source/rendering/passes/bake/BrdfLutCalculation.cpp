@@ -2,9 +2,9 @@
 
 #include "engine/console/ConsoleVariable.h"
 #include "engine/profiler/ProfileScope.h"
+#include "rendering/Device.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/Device.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
 namespace vl {
@@ -187,11 +187,11 @@ void BrdfLutCalculation::MakePipeline()
 
 void BrdfLutCalculation::PrepareFaceInfo()
 {
-	m_attachment = RImageAttachment{ m_resolution, m_resolution, vk::Format::eR32G32B32A32Sfloat,
-		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
-		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, "face" };
-	m_attachment.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+	// WIP: remove this class
+	// m_attachment = RImage2D{ m_resolution, m_resolution, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
+	//	vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc,
+	//	vk::MemoryPropertyFlagBits::eDeviceLocal, "face" };
+	// m_attachment.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
 
 	std::array attachments{ m_attachment.view() };
 
