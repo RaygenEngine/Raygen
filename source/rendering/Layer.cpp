@@ -11,7 +11,8 @@
 #include "rendering/StaticPipes.h"
 #include "rendering/VulkanLoader.h"
 #include "rendering/output/SwapchainOutputPass.h"
-#include "resource/GpuResources.h"
+#include "rendering/resource/GpuResources.h"
+#include "rendering/util/DrawShapes.h"
 
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
 	"Builds all build-able scene nodes" };
@@ -35,6 +36,9 @@ Layer_::Layer_()
 	StaticPipes::InitRegistered();
 	swapOutput = new SwapchainOutputPass();
 	mainScene = new Scene();
+
+	rvk::Shapes::InitShapes();
+
 	Renderer = new Renderer_();
 
 	swapOutput->SetAttachedRenderer(Renderer);
@@ -55,6 +59,8 @@ Layer_::Layer_()
 Layer_::~Layer_()
 {
 	// TODO: use static init / destroy scheme?
+	rvk::Shapes::DeinitShapes();
+
 	delete Renderer;
 	delete swapOutput;
 	delete mainScene;

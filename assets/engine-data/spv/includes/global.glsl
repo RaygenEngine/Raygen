@@ -179,9 +179,9 @@ struct Spotlight {
 
 struct Reflprobe {
 	int lodCount;
-	float innerRadius;
-	float outerRadius;
-	float pad0;
+	float radius;
+	float irradianceFactor;
+	float pad;
 	vec3 position;
 	float pad1;
 };

@@ -19,7 +19,9 @@ layout(set = 0, binding = 10) uniform sampler2D std_BrdfLut;
 
 layout(set = 0, binding = 11) uniform sampler2D indirectRaytracedSpecular;
 
+layout(set = 0, binding = 12) uniform sampler2D mirrorSampler;
+
 // Blend
-layout(set = 0, binding = 12) uniform sampler2D sceneColorSampler;
+layout(set = 0, binding = 13) uniform sampler2D sceneColorSampler;
 
 #endif

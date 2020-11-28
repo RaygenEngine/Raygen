@@ -2,7 +2,7 @@
 #define spotlight_glsl
 
 #include "bsdf.glsl"
-#include "shadow.glsl"
+#include "shadowmap.glsl"
 #include "surface.glsl"
 
 vec3 Spotlight_Contribution(Spotlight sl, sampler2DShadow shadowmap, Surface surface, float shadow)

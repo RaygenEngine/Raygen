@@ -4,21 +4,6 @@
 
 #include <set>
 
-namespace {
-void CheckExtensions(std::vector<char const*> const& extensions, std::vector<vk::ExtensionProperties> const& properties)
-{
-	std::for_each(extensions.begin(), extensions.end(), [&properties](char const* name) {
-		auto found = std::find_if(properties.begin(), properties.end(),
-						 [&name](vk::ExtensionProperties const& property) {
-							 return strcmp(property.extensionName, name) == 0;
-						 })
-					 != properties.end();
-		CLOG_ABORT(!found, "Requested Vulkan device extension not found: {}", name);
-		return found;
-	});
-}
-} // namespace
-
 namespace vl {
 Device_::Device_(RPhysicalDevice& pd)
 	: pd(pd)
@@ -41,44 +26,11 @@ Device_::Device_(RPhysicalDevice& pd)
 		queueCreateInfos.push_back(createInfo);
 	}
 
-	vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceBufferDeviceAddressFeatures,
-		vk::PhysicalDeviceDescriptorIndexingFeatures, vk::PhysicalDeviceRayTracingFeaturesKHR>
-		pDeviceFeaturesChain;
-
-	auto& deviceFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceFeatures2>();
-	auto& deviceBufferAddressFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceBufferDeviceAddressFeatures>();
-	auto& deviceRayTracingFeatures = pDeviceFeaturesChain.get<vk::PhysicalDeviceRayTracingFeaturesKHR>();
-
-	deviceFeatures.features.setSamplerAnisotropy(VK_TRUE);
-	deviceFeatures.features.setFragmentStoresAndAtomics(VK_TRUE);
-	deviceFeatures.features.setFillModeNonSolid(VK_TRUE);
-	deviceFeatures.features.setImageCubeArray(VK_TRUE);
-	deviceBufferAddressFeatures.setBufferDeviceAddress(VK_TRUE);
-
-	pDeviceFeaturesChain.get<vk::PhysicalDeviceDescriptorIndexingFeatures>()
-		.setRuntimeDescriptorArray(true) //
-		.setShaderSampledImageArrayNonUniformIndexing(true)
-		.setDescriptorBindingVariableDescriptorCount(true);
-
-	// get all available rt extensions from gpu
-	// careful pNext here is lost
-	deviceRayTracingFeatures = pd.rtFeats;
-
-
-	const std::vector<const char*> deviceExtensions = {
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-		VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
-		VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
-		VK_KHR_RAY_TRACING_EXTENSION_NAME,
-	};
-
-	CheckExtensions(deviceExtensions, pd.enumerateDeviceExtensionProperties());
-
 	vk::DeviceCreateInfo deviceCreateInfo{};
 	deviceCreateInfo
 		.setQueueCreateInfos(queueCreateInfos) //
-		.setPEnabledExtensionNames(deviceExtensions)
-		.setPNext(&deviceFeatures);
+		.setPEnabledExtensionNames(pd.extensions)
+		.setPNext(&pd.featuresChain.get<vk::PhysicalDeviceFeatures2>());
 
 	vk::Device::operator=(pd.createDevice(deviceCreateInfo));
 	VulkanLoader::InitLoaderWithDevice(*this);
@@ -125,6 +77,12 @@ vk::Format Device_::FindDepthStencilFormat() const
 	return FindSupportedFormat(
 		{ vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint, vk::Format::eD16UnormS8Uint },
 		vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+}
+
+vk::Format Device_::FindStencilFormat() const
+{
+	return FindSupportedFormat(
+		{ vk::Format::eS8Uint }, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 }
 
 

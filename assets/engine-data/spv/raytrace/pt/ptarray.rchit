@@ -289,6 +289,13 @@ void main() {
 	Surface surface = surfaceFromGeometryGroup(gg);
 
 	vec3 radiance = vec3(0);
+
+	// if this is any emissive surface
+	if(any(greaterThan(surface.emissive, vec3(BIAS)))) {
+		prd.radiance = surface.emissive;
+		return;
+	}
+
 	// DIRECT
 	{
 		for(int i = 0; i < pointlightCount; ++i) {

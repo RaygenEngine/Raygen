@@ -1,20 +1,21 @@
 #include "UnlitVolumePass.h"
 
 #include "editor/Editor.h"
-#include "core/math-ext/BVH.h"
+#include "engine/console/ConsoleVariable.h"
 #include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/passes/direct/PointlightBlend.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/passes/gi/IrragridBlend.h"
-#include "rendering/scene/ScenePointlight.h"
-#include "universe/components/PointlightComponent.h"
+#include "rendering/util/DrawShapes.h"
 #include "universe/Universe.h"
-#include "universe/World.h"
-#include "engine/console/ConsoleVariable.h"
-#include "engine/Input.h"
-#include "editor/windows/general/EdOutlinerWindow.h"
+#include "universe/components/CameraComponent.h"
+#include "universe/components/DirlightComponent.h"
+#include "universe/components/IrragridComponent.h"
+#include "universe/components/PointlightComponent.h"
+#include "universe/components/ReflprobeComponent.h"
+#include "universe/components/SkinnedMeshComponent.h"
+#include "universe/components/SpotlightComponent.h"
+
 
 namespace {
 struct PushConstant {
@@ -72,14 +73,17 @@ vk::UniquePipeline UnlitVolumePass::MakePipeline()
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly
-		.setTopology(vk::PrimitiveTopology::eTriangleList) //
+		.setTopology(vk::PrimitiveTopology::eLineList) //
 		.setPrimitiveRestartEnable(VK_FALSE);
 
 	// Dynamic vieport
 	std::array dynamicStates{
 		vk::DynamicState::eViewport,
 		vk::DynamicState::eScissor,
+		vk::DynamicState::ePrimitiveTopologyEXT,
+		vk::DynamicState::eDepthTestEnableEXT,
 	};
+
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
 	dynamicStateInfo.setDynamicStates(dynamicStates);
 
@@ -173,14 +177,6 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 
 	if (selEnt && selEnt.Has<CPointlight>()) {
 		auto pl = selEnt.Get<CPointlight>();
-		// TODO: std gpu asset
-		const auto& relPipe = StaticPipes::Get<PointlightBlend>();
-
-		// bind unit sphere once
-		cmdBuffer.bindVertexBuffers(0u, relPipe.m_sphereVertexBuffer.handle(), vk::DeviceSize(0));
-		cmdBuffer.bindIndexBuffer(
-			relPipe.m_sphereIndexBuffer.buffer.handle(), vk::DeviceSize(0), vk::IndexType::eUint32);
-
 
 		auto volumeTransform = math::transformMat(
 			glm::vec3{ pl.CalculateEffectiveRadius() }, selEnt->world().orientation, selEnt->world().position);
@@ -189,41 +185,146 @@ void UnlitVolumePass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
-		cmdBuffer.drawIndexed(relPipe.m_sphereIndexBuffer.count, 1u, 0u, 0u, 0u);
+		cmdBuffer.setDepthTestEnableEXT(VK_TRUE);
+		cmdBuffer.setPrimitiveTopologyEXT(vk::PrimitiveTopology::eTriangleList);
+
+		rvk::bindSphere18x9(cmdBuffer);
+		rvk::drawSphere18x9(cmdBuffer);
 	}
 
+	if (selEnt && selEnt.Has<CReflprobe>()) {
+		auto rp = selEnt.Get<CReflprobe>();
+
+		auto volumeTransform
+			= math::transformMat(glm::vec3{ rp.radius }, selEnt->world().orientation, selEnt->world().position);
+
+		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
+
+		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+		cmdBuffer.setDepthTestEnableEXT(VK_TRUE);
+		cmdBuffer.setPrimitiveTopologyEXT(vk::PrimitiveTopology::eTriangleList);
+
+		rvk::bindSphere18x9(cmdBuffer);
+		rvk::drawSphere18x9(cmdBuffer);
+	}
+
+	if (selEnt && selEnt.Has<CCamera>()) {
+		auto cm = selEnt.Get<CCamera>();
+
+
+		auto volumeTransform
+			= math::transformMat(glm::vec3{ 0.3 }, selEnt->world().orientation, selEnt->world().position);
+
+		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * glm::inverse(cm.proj * cm.view),
+			glm::vec4(1.f, 1.f, 1.f, 1.f) };
+
+		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+		cmdBuffer.setDepthTestEnableEXT(VK_TRUE);
+		cmdBuffer.setPrimitiveTopologyEXT(vk::PrimitiveTopology::eLineList);
+
+		// ndc cube transformed by viewProjInv = frustum
+		rvk::bindCubeLines(cmdBuffer);
+		rvk::drawCubeLines(cmdBuffer);
+	}
+
+	if (selEnt && selEnt.Has<CSpotlight>()) {
+		auto sl = selEnt.Get<CSpotlight>();
+
+		auto volumeTransform
+			= math::transformMat(glm::vec3{ 1 }, selEnt->world().orientation, selEnt->world().position);
+
+		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * glm::inverse(sl.proj * sl.view),
+			glm::vec4(1.f, 1.f, 1.f, 1.f) };
+
+		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+		cmdBuffer.setDepthTestEnableEXT(VK_TRUE);
+		cmdBuffer.setPrimitiveTopologyEXT(vk::PrimitiveTopology::eLineList);
+
+		// ndc cube transformed by viewProjInv = frustum
+		rvk::bindCubeLines(cmdBuffer);
+		rvk::drawCubeLines(cmdBuffer); // TODO: cone from frustum and spot effect
+	}
+
+	if (selEnt && selEnt.Has<CDirlight>()) {
+		auto dl = selEnt.Get<CDirlight>();
+
+		auto volumeTransform
+			= math::transformMat(glm::vec3{ 1 }, selEnt->world().orientation, selEnt->world().position);
+
+		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * glm::inverse(dl.proj * dl.view),
+			glm::vec4(1.f, 1.f, 1.f, 1.f) };
+
+		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+		cmdBuffer.setDepthTestEnableEXT(VK_TRUE);
+		cmdBuffer.setPrimitiveTopologyEXT(vk::PrimitiveTopology::eLineList);
+
+		rvk::bindCubeLines(cmdBuffer);
+		rvk::drawCubeLines(cmdBuffer);
+	}
+
+	if (selEnt && selEnt.Has<CIrragrid>()) {
+		auto ig = selEnt.Get<CIrragrid>();
+
+		math::AABB igAabb{
+			selEnt->world().position,
+			selEnt->world().position + glm::vec3(ig.width - 1, ig.height - 1, ig.depth - 1) * ig.distToAdjacent,
+		};
+
+		auto volumeTransform
+			= math::transformMat(glm::vec3{ igAabb.GetExtend() }, glm::identity<glm::quat>(), igAabb.GetCenter());
+
+		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 0.3f, 1.f) };
+
+		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+		cmdBuffer.setDepthTestEnableEXT(VK_FALSE);
+		cmdBuffer.setPrimitiveTopologyEXT(vk::PrimitiveTopology::eLineList);
+
+		rvk::bindCubeLines(cmdBuffer);
+		rvk::drawCubeLines(cmdBuffer);
+	}
+
+	// TODO: draw SkinnedMesh skeleton
 
 	// TODO:
-	// static ConsoleVariable<bool> cons_drawLeaves{ "s.bvh.Children", false };
-	// if (!cons_drawLeaves) {
-	//	return;
-	//}
+	static ConsoleVariable<bool> cons_drawLeaves{ "s.bvh.Children", false };
+	if (!cons_drawLeaves) {
+		return;
+	}
 
-	// if (Universe::MainWorld->physics.tree) {
-	//	for (auto& node : Universe::MainWorld->physics.tree->nodes) {
-	//		const auto& cubeVtxBuf = StaticPipes::Get<IrragridBlend>().m_cubeVertexBuffer;
+	if (Universe::MainWorld->physics.tree) {
+		cmdBuffer.setDepthTestEnableEXT(VK_FALSE);
+		cmdBuffer.setPrimitiveTopologyEXT(vk::PrimitiveTopology::eLineList);
 
-	//		auto volumeTransform = math::transformMat(
-	//			glm::vec3{ node.aabb.GetExtend() }, glm::identity<glm::quat>(), node.aabb.GetCenter());
+		rvk::bindCubeLines(cmdBuffer);
 
-	//		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
+		for (auto& node : Universe::MainWorld->physics.tree->nodes) {
 
-	//		if (node.isLeaf) {
-	//			pc.color.y = 0.f;
+			auto volumeTransform = math::transformMat(
+				glm::vec3{ node.aabb.GetExtend() }, glm::identity<glm::quat>(), node.aabb.GetCenter());
 
-	//			if (Editor::GetSelection() != node.data) {
-	//				pc.color.z = 0.f;
-	//			}
-	//		}
+			PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
 
-	//		static ConsoleVariable<bool> cons_draw{ "s.bvh.Debug", false };
+			if (node.isLeaf) {
+				pc.color.y = 0.f;
 
-	//		if (cons_draw || node.isLeaf) {
-	//			cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-	//			cmdBuffer.bindVertexBuffers(0u, { cubeVtxBuf.handle() }, { vk::DeviceSize(0) });
-	//			cmdBuffer.draw(static_cast<uint32>(108 / 3), 1u, 0u, 0u);
-	//		}
-	//	}
-	//}
+				if (Editor::GetSelection() != node.data) {
+					pc.color.z = 0.f;
+				}
+			}
+
+			static ConsoleVariable<bool> cons_draw{ "s.bvh.Debug", false };
+
+			if (cons_draw || node.isLeaf) {
+				cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+				rvk::drawCubeLines(cmdBuffer);
+			}
+		}
+	}
 }
+
 } // namespace vl

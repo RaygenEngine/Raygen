@@ -51,9 +51,9 @@ mat4 perspectiveRH_ZO(float fovy, float aspect, float zNear, float zFar)
 	return Result;
 }
 
-vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float a)
+vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
 {	
-	a *= a;
+	float a = roughness * roughness;
 
 	float phi = 2.0 * PI * Xi.x;
 	float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a*a - 1.0) * Xi.y));
@@ -74,7 +74,7 @@ vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float a)
 	return normalize(sampleVec);
 }      
 
-vec3 envmapColorConvolution(vec3 dir, float a)
+vec3 envmapColorConvolution(vec3 dir, float roughness)
 {
     vec3 N = normalize(dir);    
     vec3 R = N;
@@ -86,7 +86,7 @@ vec3 envmapColorConvolution(vec3 dir, float a)
     for(uint i = 0u; i < SAMPLE_COUNT; ++i)
     {
         vec2 Xi = hammersley(i, SAMPLE_COUNT);
-        vec3 H  = ImportanceSampleGGX(Xi, N, a);
+        vec3 H  = ImportanceSampleGGX(Xi, N, roughness);
         vec3 L  = normalize(2.0 * dot(V, H) * H - V);
 
         float NdotL = max(dot(N, L), 0.0);
