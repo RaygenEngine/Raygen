@@ -11,16 +11,16 @@ struct CIrragrid : CSceneBase {
 		REFLECT_ICON(FA_CIRCLE);
 		// REFLECT_CATEGORY("Rendering");
 
-		REFLECT_VAR(width);
-		REFLECT_VAR(height);
-		REFLECT_VAR(depth);
+		REFLECT_VAR(width).Clamp(3.f);
+		REFLECT_VAR(height).Clamp(3.f);
+		REFLECT_VAR(depth).Clamp(3.f);
 
-		REFLECT_VAR(distToAdjacent);
+		REFLECT_VAR(distToAdjacent).Clamp(0.001f);
 
-		REFLECT_VAR(ptSamples).Clamp(1);
-		REFLECT_VAR(ptBounces);
+		REFLECT_VAR(ptSamples).Clamp(1.f);
+		REFLECT_VAR(ptBounces).Clamp();
 
-		REFLECT_VAR(irrResolution);
+		REFLECT_VAR(irrResolution).Clamp(1.f);
 
 		REFLECT_VAR(notifyBuild, PropertyFlags::Transient);
 		REFLECT_VAR(hideBillboards, PropertyFlags::Transient);

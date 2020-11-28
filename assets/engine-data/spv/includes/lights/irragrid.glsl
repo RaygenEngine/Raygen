@@ -39,9 +39,7 @@ vec3 Irragrid_Contribution(Irragrid grid, samplerCubeArray irradianceSamplers, S
 	
 	vec3 uvw = (surface.position - grid.firstPos) / size;
 	
-	const float delim_ws = 1.0; 
-
-	vec3 delim = delim_ws / size; 
+	vec3 delim = 1 / probeCount; 
 	
 	if(any(greaterThan(uvw, 1 + delim)) || 
 	   any(lessThan(uvw, -delim))) {
@@ -53,7 +51,8 @@ vec3 Irragrid_Contribution(Irragrid grid, samplerCubeArray irradianceSamplers, S
 	   any(lessThan(uvw, vec3(0)))) {
 	   // PERF: probably
 	   Aabb aabb = createAabb(vec3(grid.firstPos), vec3(grid.firstPos + size));
-	   Aabb aabb2 = createAabb(vec3(grid.firstPos - delim_ws), vec3(grid.firstPos + size + delim_ws));
+	   Aabb aabb2 = createAabb(vec3(grid.firstPos - grid.distToAdjacent), 
+	                           vec3(grid.firstPos + size + grid.distToAdjacent));
 	   
 	   float sdist = distanceFromOutside(aabb, surface.position);
 	   float bdist = distanceFromInside(aabb2, surface.position);

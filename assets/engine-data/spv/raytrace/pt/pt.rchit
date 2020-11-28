@@ -320,7 +320,7 @@ void main() {
 
 	// INDIRECT
 	{
-		float p_specular = 0.5; // WIP:
+		float p_specular = 0.5; // CHECK:
 
 
 		vec3 brdf_NoL_invpdf = rand(prd.seed) > p_specular ? SampleSpecularDirection(surface, prd.seed) / p_specular
