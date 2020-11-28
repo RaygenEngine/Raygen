@@ -22,18 +22,10 @@ struct RImage {
 	std::string name{};
 
 	RImage() = default;
-
-	// clang-format off
-	RImage(vk::ImageType imageType, const std::string& name, vk::Extent3D extent, vk::Format format, uint32 mipLevels, uint32 arrayLayers, 
-		vk::ImageLayout finalLayout = vk::ImageLayout::eUndefined,
-		vk::MemoryPropertyFlags properties = vk::MemoryPropertyFlagBits::eDeviceLocal,
-		vk::ImageUsageFlags usageFlags = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eStorage,
-		vk::ImageCreateFlags flags = {},
-		vk::ImageLayout initialLayout = vk::ImageLayout::eUndefined,
-		vk::SampleCountFlagBits samples = vk::SampleCountFlagBits::e1,
-		vk::SharingMode sharingMode = vk::SharingMode::eExclusive,
-		vk::ImageTiling tiling = vk::ImageTiling::eOptimal);
-	// clang-format on
+	RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
+		vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage,
+		vk::SampleCountFlagBits samples, vk::SharingMode sharingMode, vk::ImageCreateFlags flags,
+		vk::MemoryPropertyFlags properties, vk::ImageViewType viewType, const std::string& name);
 
 	RImage(RImage const&) = delete;
 	RImage(RImage&&) = default;
@@ -77,29 +69,28 @@ protected:
 
 struct RImage2D : RImage {
 	RImage2D() = default;
-	RImage2D(const std::string& name, vk::Extent2D extent, vk::Format format,
-		vk::ImageLayout finalLayout = vk::ImageLayout::eUndefined, uint32 mipLevels = 1,
+	RImage2D(uint32 width, uint32 height, uint32 mipLevels, vk::Format format, vk::ImageTiling tiling,
+		vk::ImageLayout initalLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties,
+		const std::string& name)
+		: RImage(vk::ImageType::e2D, { width, height, 1u }, mipLevels, 1u, format, tiling, initalLayout, usage,
+			vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, {}, properties, vk::ImageViewType::e2D, name){};
+
+	// TODO: Refactor to constructor and cleanup old constructors
+	// This will transition the image to final layout unless final layout is eUndefined
+	static RImage2D Create(const std::string& name, vk::Extent2D extent, vk::Format format,
+		vk::ImageLayout finalLayout = vk::ImageLayout::eUndefined,
 		vk::ImageUsageFlags usageFlags = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eStorage,
-		vk::MemoryPropertyFlags memoryFlags = vk::MemoryPropertyFlagBits::eDeviceLocal)
-		: RImage(vk::ImageType::e2D, name, vk::Extent3D{ extent, 1u }, format, mipLevels, 1u, finalLayout, memoryFlags,
-			usageFlags){};
+		uint32 mipLevels = 1, vk::MemoryPropertyFlags memoryFlags = vk::MemoryPropertyFlagBits::eDeviceLocal,
+		vk::ImageTiling tiling = vk::ImageTiling::eOptimal);
 };
 
 struct RCubemap : RImage {
 	RCubemap() = default;
-	RCubemap(const std::string& name, uint32 res, vk::Format format,
-		vk::ImageLayout finalLayout = vk::ImageLayout::eUndefined, uint32 mipLevels = 1u,
-		vk::ImageUsageFlags usageFlags = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eStorage,
-		vk::MemoryPropertyFlags memoryFlags = vk::MemoryPropertyFlagBits::eDeviceLocal)
-		: RImage(vk::ImageType::e2D, name, vk::Extent3D{ res, res, 1u }, format, mipLevels, 6u, finalLayout,
-			memoryFlags, usageFlags, vk::ImageCreateFlagBits::eCubeCompatible){};
-
-	RCubemap(const std::string& name, uint32 res, vk::Format format, uint32 mipLevels,
-		vk::ImageLayout finalLayout = vk::ImageLayout::eUndefined,
-		vk::ImageUsageFlags usageFlags = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eStorage,
-		vk::MemoryPropertyFlags memoryFlags = vk::MemoryPropertyFlagBits::eDeviceLocal)
-		: RImage(vk::ImageType::e2D, name, vk::Extent3D{ res, res, 1u }, format, mipLevels, 6u, finalLayout,
-			memoryFlags, usageFlags, vk::ImageCreateFlagBits::eCubeCompatible){};
+	RCubemap(uint32 dims, uint32 mipCount, vk::Format format, vk::ImageTiling tiling, vk::ImageLayout initalLayout,
+		vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, const std::string& name)
+		: RImage(vk::ImageType::e2D, { dims, dims, 1u }, mipCount, 6u, format, tiling, initalLayout, usage,
+			vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, vk::ImageCreateFlagBits::eCubeCompatible,
+			properties, vk::ImageViewType::eCube, name){};
 
 	void RCubemap::CopyBuffer(const RBuffer& buffers, size_t pixelSize, uint32 mipCount);
 
@@ -111,15 +102,29 @@ struct RCubemap : RImage {
 
 struct RCubemapArray : RImage {
 	RCubemapArray() = default;
-	RCubemapArray(const std::string& name, uint32 res, vk::Format format, uint32 arrayCount,
-		vk::ImageLayout finalLayout = vk::ImageLayout::eUndefined, uint32 mipLevels = 1u,
-		vk::ImageUsageFlags usageFlags = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eStorage,
-		vk::MemoryPropertyFlags memoryFlags = vk::MemoryPropertyFlagBits::eDeviceLocal)
-		: RImage(vk::ImageType::e2D, name, vk::Extent3D{ res, res, 1u }, format, mipLevels, arrayCount * 6u,
-			finalLayout, memoryFlags, usageFlags, vk::ImageCreateFlagBits::eCubeCompatible){};
+	RCubemapArray(uint32 dims, uint32 mipCount, uint32 arraySize, vk::Format format, vk::ImageTiling tiling,
+		vk::ImageLayout initalLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties,
+		const std::string& name)
+		: RImage(vk::ImageType::e2D, { dims, dims, 1u }, mipCount, arraySize * 6u, format, tiling, initalLayout, usage,
+			vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, vk::ImageCreateFlagBits::eCubeCompatible,
+			properties, vk::ImageViewType::eCubeArray, name){};
 
 	std::vector<vk::UniqueImageView> GetFaceViews(uint32 atArrayIndex, uint32 atMip = 0u) const;
 	vk::UniqueImageView GetCubemapView(uint32 atArrayIndex, uint32 atMip = 0u) const;
+};
+
+struct RImageAttachment : RImage {
+	RImageAttachment() = default;
+	RImageAttachment(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling,
+		vk::ImageLayout initalLayout, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties,
+		const std::string& name)
+		: RImage(vk::ImageType::e2D, { width, height, 1u }, 1u, 1u, format, tiling, initalLayout, usage,
+			vk::SampleCountFlagBits::e1, vk::SharingMode::eExclusive, {}, properties, vk::ImageViewType::e2D, name){};
+
+	RImageAttachment(RImageAttachment const&) = delete;
+	RImageAttachment(RImageAttachment&&) = default;
+	RImageAttachment& operator=(RImageAttachment const&) = delete;
+	RImageAttachment& operator=(RImageAttachment&&) = default;
 };
 
 } // namespace vl

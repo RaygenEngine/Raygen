@@ -283,7 +283,7 @@ void RRenderPassLayout::Generate()
 }
 
 RenderingPassInstance RRenderPassLayout::CreatePassInstance(
-	uint32 width, uint32 height, std::vector<const RImage2D*> externalAttachmentInstances)
+	uint32 width, uint32 height, std::vector<const RImageAttachment*> externalAttachmentInstances)
 {
 	RenderingPassInstance rpInstance;
 	rpInstance.parentPassIndex = uidIndex;
@@ -304,8 +304,8 @@ RenderingPassInstance RRenderPassLayout::CreatePassInstance(
 
 		usageBits |= att.additionalFlags;
 
-		framebuffer.AddAttachment(width, height, att.format, vk::ImageTiling::eOptimal, usageBits,
-			vk::MemoryPropertyFlagBits::eDeviceLocal, att.name, initialLayout);
+		framebuffer.AddAttachment(width, height, att.format, vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
+			usageBits, vk::MemoryPropertyFlagBits::eDeviceLocal, att.name, initialLayout);
 	}
 
 	CLOG_ABORT(externalAttachmentInstances.size() != externalAttachments.size(),

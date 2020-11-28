@@ -46,7 +46,7 @@ void Layouts_::MakeRenderPassLayouts()
 	{
 		std::vector<AttRef> gbufferAtts;
 
-		depthBuffer = mainPassLayout.CreateAttachment("GDepth", Device->FindDepthFormat());
+		depthBuffer = mainPassLayout.CreateAttachment("GDepth", Device->FindDepthStencilFormat());
 		gbufferAtts.emplace_back(depthBuffer);
 
 		for (auto& [name, format] : gBufferColorAttachments) {
