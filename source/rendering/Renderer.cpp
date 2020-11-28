@@ -169,7 +169,7 @@ void Renderer_::RecordSecondaryPasses(vk::CommandBuffer cmdBuffer, const SceneRe
 	// m_mirorPass.RecordPass(cmdBuffer, sceneDesc);
 
 	// WIP: decide, also can it be merged with mirror pass?
-	// m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
+	m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
 }
 
 void Renderer_::RecordPostProcessPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
