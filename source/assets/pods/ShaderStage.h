@@ -14,6 +14,8 @@ struct ShaderStage : public AssetPod {
 
 	// Returns true if compilation was successful
 	bool Compile(TextCompilerErrors& outErrors);
+	// Compile from specific code. Intented to be used from shader registry, or at most shader editor.
+	bool Compile(TextCompilerErrors& outErrors, const std::string& processedCode);
 	// Returns true if compilation was successful, errors are reported inline with errorCtxFilename as the filename
 	bool CompileInlineErrors(const std::string& errorCtxFilename);
 
@@ -29,5 +31,6 @@ struct ShaderStage : public AssetPod {
 
 private:
 	// Returns true on success
-	bool Compile(const std::string& errorCtxFilename, TextCompilerErrors* outErrors = nullptr);
+	bool CompileInternal(const std::string& errorCtxFilename, TextCompilerErrors* outErrors = nullptr,
+		const std::string* processedCode = nullptr);
 };

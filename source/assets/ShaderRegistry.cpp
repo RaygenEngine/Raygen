@@ -6,6 +6,7 @@
 #include "assets/PodEditor.h"
 #include "assets/util/shadergen/ShaderPreprocess.h"
 #include "assets/AssetImporterManager.h"
+#include "engine/Timer.h"
 
 const std::string& ShaderRegistry::KNode::GetCode() const
 {
@@ -15,45 +16,25 @@ const std::string& ShaderRegistry::KNode::GetCode() const
 	return GetLeafPod().Lock()->code;
 }
 
-// ShaderRegistry::NSet ShaderRegistry::KNode::DetectNewDependencies()
-//{
-//	auto& tree = Get().m_tree;
-//
-//	auto& code = GetCode();
-//	auto includes = shd::ExtractIncludes(code);
-//
-//
-//	return {};
-//}
-
-// void ShaderRegistry::OnEdited(KNode* node)
-//{
-//	// check for new dependencies
-//	NSet newDep = node->DetectNewDependencies();
-//
-//	//
-//}
 void ShaderRegistry::KNode::FullyCacheSelf()
 {
-	// Slow remove & readd, this can be avoided
+	// Slow remove & re-add, this can be avoided
 	for (auto dependency : directDependencies) {
 		dependency->directDependees.erase(this);
 	}
 	directDependencies.clear();
 
 	auto& code = GetCode();
-	auto includes = shd::ExtractIncludes(code);
 
-	for (auto& include : includes) {
-		auto node = ShaderRegistry::FindOrAdd(include);
-		if (!node) {
-			continue;
-		}
+	std::vector<std::tuple<int32, std::string, ShaderRegistry::KNode*>> outIncludes;
+
+	processedCode = shd::PreprocessCode(code, outIncludes);
+
+	for (auto&& [line, filename, node] : outIncludes) {
 		directDependencies.insert(node);
 		node->directDependees.insert(this);
 	}
 }
-
 
 ShaderRegistry::~ShaderRegistry()
 {
@@ -68,38 +49,41 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 	if (Get().isSelfIterating) {
 		return;
 	}
+	TIMER_SCOPE("Shader Update");
 	auto entry = AssetRegistry::GetEntry(baseHandle);
 
 
 	// Find or update cached stuff. The whole upper part of the tree will be properly updated and cached when this
 	// function returns.
-
 	auto filename = ShaderRegistry::NormalizeFilenameForSearch(entry->metadata.originalImportLocation);
-	auto initialNode = Get().FindOrAdd_Internal(filename, true);
+	KNode* initialNode;
+	{
+		TIMER_SCOPE("Upward Search (Forced)");
+		initialNode = Get().FindOrAdd_Internal(filename, true);
+	}
 
 	if (!initialNode) {
 		LOG_REPORT("Failed to find: {}", filename);
 		return;
 	}
 
-	initialNode->FullyCacheSelf();
+	{
+		TIMER_SCOPE("Fully Cache Self Initial");
+		initialNode->FullyCacheSelf();
+	}
 
 	if (initialNode->isLeaf) {
-		// LOG_REPORT("Compiling: {}", entry->name);
 		return;
 	}
 	// Go down the tree and compile all leaves from here. (Later we should cache everything on each step to paste them)
 	Get().isSelfIterating = true;
-
-	// @HACK: explicitly export the header to filesystem here because we need to use external include still and the
-	// header will contain the old code otherwise
-	AssetRegistry::SaveToDisk(baseHandle);
 
 	NSet addedSet;
 	NSet workingList;
 
 	workingList.insert(initialNode);
 	addedSet.insert(initialNode);
+	TIMER_SCOPE("Working List");
 	while (!workingList.empty()) {
 		KNode* node = *workingList.begin();
 		workingList.erase(node);
@@ -108,11 +92,19 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 			PodEditor ed(node->GetLeafPod());
 
 			TextCompilerErrors errors;
-			if (!ed->Compile(errors)) {
+			int32 total = 0;
+			for (auto c : node->processedCode) {
+				total += c == '\n' ? 1 : 0;
+			}
+			TIMER_SCOPE("Shader Actual Compile");
+			// LOG_REPORT("======================={}\n====================", node->processedCode);
+			LOG_REPORT("Compiling Shader Characters: {} Lines: {}", node->processedCode.size(), total);
+			if (!ed->Compile(errors, node->processedCode)) {
 				const auto& name = AssetRegistry::GetEntry(node->pod)->name;
 
 				std::string errString;
 				// TODO: should have a generic way to report these errors? maybe we already have?
+				// WIP: Decode headers
 				for (auto&& [line, error] : errors.errors) {
 					errString += fmt::format("{}: Line {:>3}: {}", name, line, error);
 				}

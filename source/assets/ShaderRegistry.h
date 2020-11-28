@@ -46,7 +46,7 @@ public:
 		//	}
 		//}
 
-		// std::string processedCode;
+		std::string processedCode;
 
 		// bool CanPreprocessCode(NSet& knownDirty)
 		//{
