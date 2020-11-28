@@ -36,15 +36,48 @@ void main( )
 	);
 
 	// for preview
-	//if(surface.depth == 1.0) {
-	
-		// Don't use surfaceOutgoingLightDirDir, change of basis breaks at inf depth
-	//	vec3 V = normalize(surface.position - cam.position);
-	
-	//	outColor = textureLod(prefilteredSampler, V, 0);
-	//	return; 
-	//}
+//	if(surface.depth == 1.0) {
+//	
+//		// Don't use surfaceOutgoingLightDirDir, change of basis breaks at inf depth
+//		vec3 V = normalize(surface.position - cam.position);
+//		outColor = textureLod(prefilteredSampler, V, 0);
+//		return; 
+//	}
 	
 	vec3 finalContribution = Reflprobe_Contribution(rp, std_BrdfLut, irradianceSampler, prefilteredSampler, surface);
 	outColor = vec4(finalContribution, 1);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -16,7 +16,7 @@ DECLARE_DIRTY_FUNC(CDirlight)(BasicComponent& bc)
 	}
 
 	auto lookAt = bc.world().position + bc.world().front();
-	auto view = glm::lookAt(bc.world().position, lookAt, bc.world().up());
+	view = glm::lookAt(bc.world().position, lookAt, bc.world().up());
 
 	if constexpr (FullDirty) {
 		proj = glm::ortho(left, right, bottom, top, _near, _far);

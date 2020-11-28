@@ -16,6 +16,7 @@
 #include "rendering/passes/gi/ReflprobeBlend.h"
 #include "rendering/passes/unlit/UnlitBillboardPass.h"
 #include "rendering/passes/unlit/UnlitGeometryPass.h"
+#include "rendering/passes/unlit/UnlitSelectionStencilPass.h"
 #include "rendering/passes/unlit/UnlitVolumePass.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/scene/SceneDirlight.h"
@@ -41,6 +42,7 @@ void Renderer_::InitPipelines()
 	m_lightblendPass.MakePipeline();
 
 	m_indirectSpecPass.MakeRtPipeline();
+	m_mirorPass.MakeRtPipeline();
 }
 
 void Renderer_::RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
@@ -159,13 +161,18 @@ void Renderer_::RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 	});
 }
 
-void Renderer_::RecordSecondaryPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void Renderer_::RecordSecondaryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	m_secondaryPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline,
 		[&]() { StaticPipes::Get<AmbientBlend>().Draw(cmdBuffer, sceneDesc); });
+
+	// m_mirorPass.RecordPass(cmdBuffer, sceneDesc);
+
+	// WIP: decide, also can it be merged with mirror pass?
+	// m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
 }
 
-void Renderer_::RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void Renderer_::RecordPostProcessPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	PROFILE_SCOPE(Renderer);
 
@@ -175,7 +182,24 @@ void Renderer_::RecordPostProcessPass(vk::CommandBuffer cmdBuffer, const SceneRe
 		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc);
 		UnlitGeometryPass::RecordCmd(cmdBuffer, sceneDesc);
 		StaticPipes::Get<UnlitVolumePass>().Draw(cmdBuffer, sceneDesc);
+		StaticPipes::Get<UnlitSelectionStencilPass>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<UnlitBillboardPass>().Draw(cmdBuffer, sceneDesc);
+
+		// vk::ClearDepthStencilValue ccv{};
+		// ccv.depth = 1.f;
+		// ccv.stencil = 0;
+
+		// vk::ImageSubresourceRange is{};
+		// is.setAspectMask(vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil) //
+		//	.setBaseMipLevel(0u)
+		//	.setLevelCount(1u)
+		//	.setBaseArrayLayer(0u)
+		//	.setLayerCount(1u);
+
+		// cmdBuffer.clearDepthStencilImage(m_mainPassInst[sceneDesc.frameIndex].framebuffer[0].handle(),
+		//	vk::ImageLayout::eShaderReadOnlyOptimal, ccv, is);
+
+		StaticPipes::Get<UnlitSelectionStencilPass>().Draw(cmdBuffer, sceneDesc);
 	});
 }
 
@@ -198,6 +222,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 	}
 
 	m_indirectSpecPass.Resize(fbSize);
+	m_mirorPass.Resize(fbSize);
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_attachmentsDesc[i] = Layouts->renderAttachmentsLayout.AllocDescriptorSet();
@@ -213,6 +238,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		views.emplace_back(m_secondaryPassInst[i].framebuffer[0].view());
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
 		views.emplace_back(m_indirectSpecPass.m_svgfRenderPassInstance[i].framebuffer[0].view()); // indirect spec pass
+		views.emplace_back(m_mirorPass.m_result[i].view());                                       // mirror buffer
 		views.emplace_back(m_ptPass[i].framebuffer[0].view());                                    // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_attachmentsDesc[i], 0u, std::move(views));
@@ -245,7 +271,7 @@ InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
 {
 	InFlightResources<vk::ImageView> views;
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		views[i] = m_ptPass[i].framebuffer[0].view();
+		views[i] = m_ptPass[i].framebuffer[0].view(); // WIP: [0]
 	}
 	return views;
 }
@@ -256,15 +282,18 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 
 	sceneDesc.attachmentsDescSet = m_attachmentsDesc[sceneDesc.frameIndex];
 
+	// shadowmaps and baked indirect light
 	RecordMapPasses(cmdBuffer, sceneDesc);
 
+	// gbuffer, direct light and baked indirect light
 	RecordMainPass(cmdBuffer, sceneDesc);
 
-	RecordSecondaryPass(cmdBuffer, sceneDesc);
+	// additional gi passes
+	RecordSecondaryPasses(cmdBuffer, sceneDesc);
 
-	// m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
+	// post process
+	RecordPostProcessPasses(cmdBuffer, sceneDesc);
 
-	RecordPostProcessPass(cmdBuffer, sceneDesc);
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 }
 } // namespace vl

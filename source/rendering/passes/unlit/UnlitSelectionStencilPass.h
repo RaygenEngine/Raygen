@@ -3,8 +3,8 @@
 #include "rendering/wrappers/Buffer.h"
 
 namespace vl {
+struct UnlitSelectionStencilPass : public StaticPipeBase {
 
-struct PointlightBlend : public StaticPipeBase {
 	vk::UniquePipelineLayout MakePipelineLayout() override;
 	vk::UniquePipeline MakePipeline() override;
 

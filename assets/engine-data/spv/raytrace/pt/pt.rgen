@@ -119,7 +119,7 @@ void main() {
 		vec4 target    = projInverse * vec4(d.x, d.y, 1, 1);
 		vec4 direction = viewInverses[f] * vec4(normalize(target.xyz), 0);
 
-		origin = origin + probe.innerRadius * direction;
+		origin = origin + probe.radius * direction;
 
 		vec3 accumColor = vec3(0.f);
 

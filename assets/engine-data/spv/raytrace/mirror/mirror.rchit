@@ -10,7 +10,7 @@
 #define RAY
 
 #include "global.glsl"
-#include "raytrace/rtspec/rtspec.glsl"
+#include "raytrace/mirror/mirror.glsl"
 
 #include "aabb.glsl"
 #include "attachments.glsl"
@@ -268,19 +268,42 @@ void main() {
 		}
     }
 
-	// this depth refers to indirect specular/ glossy bounces
+	// if roughness...
+	// INDIRECT Specular -> reflprobe
+	if(surface.a >= SPEC_THRESHOLD) {
+		prd.radiance = radiance;
+		return;
+	}
+
+
+	// this depth refers to indirect mirror bounces
 	if(prd.depth > depth){
 		prd.radiance = radiance;
 		return;
 	}
 
-	// INDIRECT Specular
-	{
-		vec3 brdf_NoL_invpdf = SampleSpecularDirection(surface, prd.seed);
+	// INDIRECT Mirror
+	{		
+		vec3 brdf_NoL = SampleMirrorDirection(surface);
 
 		vec3 L = surfaceIncidentLightDir(surface);
-		radiance += RadianceOfRay(surface.position, L) * brdf_NoL_invpdf;
+		radiance += RadianceOfRay(surface.position, L) * brdf_NoL;
 	}
 
 	prd.radiance = radiance;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

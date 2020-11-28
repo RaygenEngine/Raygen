@@ -2,7 +2,6 @@
 #include "universe/BasicComponent.h"
 #include "universe/ComponentsDb.h"
 #include "universe/SceneComponentBase.h"
-
 #include "universe/components/LightComponentBase.h"
 
 struct ScenePointlight;
@@ -10,7 +9,7 @@ struct ScenePointlight;
 struct CPointlight : CLightBase {
 	REFLECTED_SCENE_COMP(CPointlight, ScenePointlight)
 	{
-		REFLECT_ICON(FA_CIRCLE);
+		REFLECT_ICON(FA_SUN);
 		// REFLECT_CATEGORY("Rendering");
 
 		REFLECT_VAR(color, PropertyFlags::Color).Clamp();

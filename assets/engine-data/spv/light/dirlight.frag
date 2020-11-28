@@ -8,7 +8,7 @@
 #include "mainpass-inputs.glsl"
 #include "onb.glsl"
 #include "sampling.glsl"
-#include "shadow.glsl"
+#include "shadowmap.glsl"
 #include "surface.glsl"
 
 // out

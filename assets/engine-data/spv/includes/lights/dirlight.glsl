@@ -2,7 +2,7 @@
 #define dirlight_glsl
 
 #include "bsdf.glsl"
-#include "shadow.glsl"
+#include "shadowmap.glsl"
 #include "surface.glsl"
 
 vec3 Dirlight_Contribution(Dirlight dl, sampler2DShadow shadowmap, Surface surface, float shadow)

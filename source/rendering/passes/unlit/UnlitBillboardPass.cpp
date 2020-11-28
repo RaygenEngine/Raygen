@@ -1,5 +1,6 @@
 #include "UnlitBillboardPass.h"
 
+#include "editor/imgui/ImguiImpl.h"
 #include "rendering/Renderer.h"
 #include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
@@ -8,11 +9,12 @@
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneIrragrid.h"
 #include "universe/Universe.h"
+#include "universe/components/CameraComponent.h"
+#include "universe/components/DirlightComponent.h"
 #include "universe/components/IrragridComponent.h"
 #include "universe/components/PointlightComponent.h"
 #include "universe/components/ReflProbeComponent.h"
-#include "universe/components/CameraComponent.h"
-#include "editor/imgui/ImguiImpl.h"
+#include "universe/components/SpotlightComponent.h"
 
 namespace {
 struct PushConstant {
@@ -89,7 +91,7 @@ vk::UniquePipeline UnlitBillboardPass::MakePipeline()
 		.setRasterizerDiscardEnable(VK_FALSE)
 		.setPolygonMode(vk::PolygonMode::eFill)
 		.setLineWidth(1.f)
-		.setCullMode(vk::CullModeFlagBits::eNone)
+		.setCullMode(vk::CullModeFlagBits::eBack)
 		.setFrontFace(vk::FrontFace::eCounterClockwise)
 		.setDepthBiasEnable(VK_FALSE)
 		.setDepthBiasConstantFactor(0.f)
@@ -127,8 +129,9 @@ vk::UniquePipeline UnlitBillboardPass::MakePipeline()
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
 	depthStencil
-		.setDepthTestEnable(VK_TRUE) //
-		.setDepthWriteEnable(VK_FALSE)
+		.setDepthTestEnable(VK_TRUE)  //
+		.setDepthWriteEnable(VK_TRUE) // CHECK: write to depth, this is probably the last pass so we don't care for the
+									  // state of the depth buffer
 		.setDepthCompareOp(vk::CompareOp::eLess)
 		.setDepthBoundsTestEnable(VK_FALSE)
 		.setMinDepthBounds(0.0f) // Optional
@@ -167,9 +170,11 @@ namespace {
 		auto view = sceneDesc.viewer.ubo.view;
 		glm::vec4 cameraRight{ view[0][0], view[1][0], view[2][0], 0.f };
 		glm::vec4 cameraUp{ view[0][1], view[1][1], view[2][1], 0.f };
+
+		auto icon = ComponentsDb::GetType<T>()->clPtr->GetIcon();
+		auto uv = ImguiImpl::GetIconUV(U8(icon));
+
 		for (auto& [ent, comp, bc] : Universe::MainWorld->GetView<T, BasicComponent>().each()) {
-			auto icon = ComponentsDb::GetType<T>()->clPtr->GetIcon();
-			auto uv = ImguiImpl::GetIconUV(U8(icon));
 
 			PushConstant pc{
 				sceneDesc.viewer.ubo.viewProj,
@@ -187,6 +192,51 @@ namespace {
 			cmdBuffer.draw(4u, 1u, 0u, 0u);
 		}
 	};
+
+
+	template<>
+	void DrawComponent<CIrragrid>(
+		vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::PipelineLayout layout)
+	{
+		auto view = sceneDesc.viewer.ubo.view;
+		glm::vec4 cameraRight{ view[0][0], view[1][0], view[2][0], 0.f };
+		glm::vec4 cameraUp{ view[0][1], view[1][1], view[2][1], 0.f };
+
+		auto icon = ComponentsDb::GetType<CIrragrid>()->clPtr->GetIcon();
+		auto uv = ImguiImpl::GetIconUV(U8(icon));
+
+
+		for (auto& [ent, ig, bc] : Universe::MainWorld->GetView<CIrragrid, BasicComponent>().each()) {
+
+			if (ig.hideBillboards) {
+				continue;
+			}
+
+			for (int32 x = 0; x < ig.width; ++x) {
+				for (int32 y = 0; y < ig.height; ++y) {
+					for (int32 z = 0; z < ig.depth; ++z) {
+						auto pos = bc.world().position + glm::vec3(x, y, z) * ig.distToAdjacent;
+
+						PushConstant pc{
+							sceneDesc.viewer.ubo.viewProj,
+							glm::vec4(pos, 1.f),
+							cameraRight,
+							cameraUp,
+							uv.first,
+							uv.second,
+						};
+
+						cmdBuffer.pushConstants(layout,
+							vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,
+							sizeof(PushConstant), &pc);
+
+						// draw rectangle
+						cmdBuffer.draw(4u, 1u, 0u, 0u);
+					}
+				}
+			}
+		}
+	};
 } // namespace
 
 void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
@@ -197,41 +247,12 @@ void UnlitBillboardPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 	auto fontDescSet = ImguiImpl::GetIconFontDescriptorSet();
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &fontDescSet, 0u, nullptr);
 
-
 	DrawComponent<CReflprobe>(cmdBuffer, sceneDesc, layout());
-	DrawComponent<CCamera>(cmdBuffer, sceneDesc, layout());
 	DrawComponent<CPointlight>(cmdBuffer, sceneDesc, layout());
-
-
-	auto view = sceneDesc.viewer.ubo.view;
-	glm::vec4 cameraRight{ view[0][0], view[1][0], view[2][0], 0.f };
-	glm::vec4 cameraUp{ view[0][1], view[1][1], view[2][1], 0.f };
-	for (auto& [ent, ig, bc] : Universe::MainWorld->GetView<CIrragrid, BasicComponent>().each()) {
-
-		if (ig.hideBillboards) {
-			continue;
-		}
-
-		for (int32 x = 0; x < ig.width; ++x) {
-			for (int32 y = 0; y < ig.height; ++y) {
-				for (int32 z = 0; z < ig.depth; ++z) {
-					auto pos = bc.world().position + glm::vec3(x, y, z) * ig.distToAdjacent;
-
-					PushConstant pc{
-						sceneDesc.viewer.ubo.viewProj,
-						glm::vec4(pos, 1.f),
-						cameraRight,
-						cameraUp,
-					};
-
-					cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-					// draw rectangle
-					cmdBuffer.draw(4u, 1u, 0u, 0u);
-				}
-			}
-		}
-	}
+	DrawComponent<CSpotlight>(cmdBuffer, sceneDesc, layout());
+	DrawComponent<CDirlight>(cmdBuffer, sceneDesc, layout());
+	DrawComponent<CIrragrid>(cmdBuffer, sceneDesc, layout());
+	DrawComponent<CCamera>(cmdBuffer, sceneDesc, layout());
 }
 
 UnlitBillboardPass::UnlitBillboardPass()

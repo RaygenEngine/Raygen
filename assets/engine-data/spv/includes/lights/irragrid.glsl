@@ -22,7 +22,7 @@ vec3 SampleIrrad(Irragrid grid, samplerCubeArray irradianceSamplers, Surface sur
 	Aabb aabb = createAabb(irrPos, grid.distToAdjacent);
 
 	vec3 N = surface.basis.normal;
-	vec3 reprojN = (surface.position - irrPos) + (surface.position + intersectionDistanceAabb(aabb, surface.position, N) * N);
+	vec3 reprojN = (surface.position - irrPos) + intersectionDistanceAabb(aabb, surface.position, N) * N;
 
 	// SMATH: which normal
 	vec3 kd = 1.0 - F_SchlickRoughness(surface.nov, surface.f0, surface.a);
