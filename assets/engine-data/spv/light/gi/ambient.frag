@@ -70,7 +70,7 @@ void main()
 		uv
 	);
 
-	// WIP: could gather an approximation of the diffused sky light on surfaces during far ao queries
+	// CHECK: could gather an approximation of the diffused sky light on surfaces during far ao queries
 	vec3 skyColor = vec3(0.0);
 	if(surface.depth == 1.0) {
 	
@@ -88,7 +88,7 @@ void main()
 	float occlusion = 0;
 	for(uint smpl = 0; smpl < samples; ++smpl){
 
-		// WIP: seed
+	    // TODO: get res from global desc set -> render scale also should be factored here
 		uint seed = tea16(uint(surface.uv.y * 2160 * 4096 + surface.uv.x * 4096), samples + smpl);
 		vec2 u = rand2(seed);
 		

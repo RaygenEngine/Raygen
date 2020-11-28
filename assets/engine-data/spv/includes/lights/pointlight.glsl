@@ -42,7 +42,7 @@ float ShadowRayQueryRadius(accelerationStructureEXT topLevelAs, Pointlight pl, S
 
 	float res = 0.f;
 	for(uint smpl = 0; smpl < pl.samples; ++smpl){
-		// WIP: seed
+		// TODO: get res from global desc set -> render scale also should be factored here
 		uint seed = tea16(uint(surface.uv.y * 2160 * 4096 + surface.uv.x * 4096), pl.samples + smpl);
 		vec2 u = rand2(seed);
 

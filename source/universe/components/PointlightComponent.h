@@ -15,13 +15,13 @@ struct CPointlight : CLightBase {
 		REFLECT_VAR(color, PropertyFlags::Color).Clamp();
 		REFLECT_VAR(intensity).Clamp();
 
-		REFLECT_VAR(constantTerm);
-		REFLECT_VAR(linearTerm);
-		REFLECT_VAR(quadraticTerm);
+		REFLECT_VAR(constantTerm).Clamp(1.f);
+		REFLECT_VAR(linearTerm).Clamp();
+		REFLECT_VAR(quadraticTerm).Clamp();
 
-		REFLECT_VAR(radius);
+		REFLECT_VAR(radius).Clamp();
 
-		REFLECT_VAR(samples);
+		REFLECT_VAR(samples).Clamp(1.f);
 		REFLECT_VAR(hasShadow);
 	}
 
