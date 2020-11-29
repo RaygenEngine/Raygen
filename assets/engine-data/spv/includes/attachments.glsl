@@ -24,4 +24,7 @@ layout(set = 0, binding = 12) uniform sampler2D mirrorSampler;
 // Blend
 layout(set = 0, binding = 13) uniform sampler2D sceneColorSampler;
 
+// Stencil
+layout(set = 0, binding = 14) uniform sampler2D stencilDepthSampler;
+layout(set = 0, binding = 15) uniform usampler2D stencilValueSampler;
 #endif

@@ -33,6 +33,10 @@ layout(set = 0, binding = 12) uniform sampler2D mirrorSampler;
 
 // Blend
 layout(set = 0, binding = 13) uniform sampler2D sceneColorSampler;
+
+// Stencil
+layout(set = 0, binding = 14) uniform sampler2D stencilDepthSampler;
+layout(set = 0, binding = 15) uniform usampler2D stencilValueSampler;
 */
 
 void Layouts_::MakeRenderPassLayouts()
@@ -68,6 +72,19 @@ void Layouts_::MakeRenderPassLayouts()
 		mainPassLayout.AttachmentFinalLayout(indirectAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		mainPassLayout.Generate();
+	}
+
+	AttRef generalPurposeStencilBuffer;
+
+	// Stencil Pass
+	{
+		generalPurposeStencilBuffer
+			= gpStencilPassLayout.CreateAttachment("GeneralPurposeStencilBuffer", Device->FindDepthStencilFormat());
+
+		gpStencilPassLayout.AddSubpass({}, { generalPurposeStencilBuffer });
+		gpStencilPassLayout.AttachmentFinalLayout(
+			generalPurposeStencilBuffer, vk::ImageLayout::eDepthStencilReadOnlyOptimal);
+		gpStencilPassLayout.Generate();
 	}
 
 	// Lightblend + PostProcess
@@ -130,12 +147,15 @@ void Layouts_::MakeRenderPassLayouts()
 
 Layouts_::Layouts_()
 {
-	// WIP: + 8, gDepth + rest
-	for (uint32 i = 0u; i < gBufferColorAttachments.size() + 8; ++i) {
+	// WIP: + 9, gDepth + rest
+	for (uint32 i = 0u; i < gBufferColorAttachments.size() + 9; ++i) {
 		renderAttachmentsLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
 			vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR
 				| vk::ShaderStageFlagBits::eClosestHitKHR);
 	}
+	renderAttachmentsLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
+		vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR
+			| vk::ShaderStageFlagBits::eClosestHitKHR);
 	renderAttachmentsLayout.Generate();
 
 	using enum vk::ShaderStageFlagBits;

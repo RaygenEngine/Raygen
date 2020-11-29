@@ -58,6 +58,9 @@ inline struct Layouts_ {
 	RRenderPassLayout shadowPassLayout;
 	RRenderPassLayout singleFloatColorAttPassLayout;
 
+	// Depth Stencil Pass
+	RRenderPassLayout gpStencilPassLayout;
+
 	RRenderPassLayout svgfPassLayout;
 	// Ray Trace Here
 	RRenderPassLayout ptPassLayout;

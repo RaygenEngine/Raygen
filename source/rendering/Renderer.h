@@ -33,11 +33,15 @@ public:
 	InFlightResources<RenderingPassInstance> m_mainPassInst;
 	InFlightResources<RenderingPassInstance> m_secondaryPassInst;
 	InFlightResources<RenderingPassInstance> m_ptPass;
+	InFlightResources<RenderingPassInstance> m_selectionStencilPassInst;
 	IndirectSpecularPass m_indirectSpecPass;
 	MirrorPass m_mirorPass;
 
+	InFlightResources<vk::UniqueImageView> m_stencilImageView;
+
 private:
 	void RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordPrePasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordSecondaryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordPostProcessPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
@@ -54,6 +58,7 @@ private:
 	ComputeCubemapArrayConvolution m_compCubemapArrayConvolution;
 	ComputeCubemapConvolution m_compCubemapConvolution;
 	ComputePrefilteredConvolution m_compPrefilteredConvolution;
+
 
 	// PtCollection m_postprocCollection;
 

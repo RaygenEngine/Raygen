@@ -86,6 +86,7 @@ void AttachmentDebuggerWindow::ImguiDraw()
 	showImage(mirrorRes);
 
 	showFramebuffer(ptPassFramebuffer);
+	showFramebuffer(vl::Renderer->m_selectionStencilPassInst.at(0).framebuffer);
 
 	for (auto dl : vl::Layer->mainScene->Get<SceneDirlight>()) {
 		showFramebuffer(dl->shadowmapPass.at(0).framebuffer);

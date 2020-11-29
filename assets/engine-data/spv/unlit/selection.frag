@@ -4,12 +4,12 @@
 
 // out
 
-layout (location = 0) out vec4 outColor;
+//layout (location = 0) out vec4 outColor;
 
 // in
 
 // uniforms
 
 void main() {
-	outColor = vec4(0.04, 0.28, 0.26, 1.0);
-}                                                                                        
+//	outColor = vec4(0.04, 0.28, 0.26, 1.0);
+}

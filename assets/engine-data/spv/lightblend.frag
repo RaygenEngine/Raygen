@@ -43,31 +43,6 @@ void main()
 	// ...
 	vec3 final =  directLight + (indirectLight * ambientInfo.a) + ambientInfo.rgb + emissive /* + mirror  + indirectRtSpec */;
 
-	outColor = vec4(final, 1.0);
+	vec4 stencil = texture(stencilDepthSampler, uv);
+	outColor = vec4(stencil.a / 2.f, 0, 0, 1.0);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

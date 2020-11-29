@@ -16,6 +16,7 @@ RRenderPassLayout::Attachment::State StateFromLayout(vk::ImageLayout layout)
 		case eShaderReadOnlyOptimal: return ShaderRead;
 		case eColorAttachmentOptimal: return Color;
 		case eDepthStencilAttachmentOptimal: return Depth;
+		case eDepthStencilReadOnlyOptimal: return ShaderRead;
 	}
 	LOG_ABORT("Unfinished enum detector");
 }
@@ -292,7 +293,8 @@ RenderingPassInstance RRenderPassLayout::CreatePassInstance(
 
 	for (auto& att : internalAttachments) {
 		vk::ImageUsageFlags usageBits
-			= att.isDepth ? vk::ImageUsageFlagBits::eDepthStencilAttachment : vk::ImageUsageFlagBits::eColorAttachment;
+			= att.isDepth ? vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eTransferDst
+						  : vk::ImageUsageFlagBits::eColorAttachment;
 		usageBits |= vk::ImageUsageFlagBits::eSampled;
 
 		if (att.isInputAttachment) {

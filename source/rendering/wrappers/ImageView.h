@@ -56,6 +56,8 @@ struct RImage {
 
 	[[nodiscard]] vk::DescriptorSet GetDebugDescriptor();
 
+	vk::UniqueImageView GenerateNewView(vk::ImageUsageFlags usage, vk::ImageViewType viewType) const;
+
 protected:
 	vk::UniqueImage uHandle;
 	vk::UniqueImageView uView;

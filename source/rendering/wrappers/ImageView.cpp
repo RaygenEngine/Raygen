@@ -272,6 +272,24 @@ vk::DescriptorSet RImage::GetDebugDescriptor()
 	return *debugDescriptorSet;
 }
 
+vk::UniqueImageView RImage::GenerateNewView(vk::ImageUsageFlags usage, vk::ImageViewType viewType) const
+{
+	vk::ImageViewCreateInfo viewInfo{};
+	viewInfo
+		.setImage(uHandle.get()) //
+		.setViewType(viewType)
+		.setFormat(format);
+
+	viewInfo.subresourceRange
+		.setAspectMask(rvk::getViewAspectMask(usage, format)) //
+		.setBaseMipLevel(0u)
+		.setLevelCount(mipLevels)
+		.setBaseArrayLayer(0u)
+		.setLayerCount(arrayLayers);
+
+	return Device->createImageViewUnique(viewInfo);
+}
+
 void RCubemap::CopyBuffer(const RBuffer& buffer, size_t pixelSize, uint32 mipCount)
 {
 	ScopedOneTimeSubmitCmdBuffer<Dma> cmdBuffer{};

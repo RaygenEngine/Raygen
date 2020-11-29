@@ -172,7 +172,7 @@ vk::UniquePipeline UnlitSelectionStencilPass::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(Layouts->ptPassLayout.compatibleRenderPass.get())
+		.setRenderPass(Layouts->gpStencilPassLayout.compatibleRenderPass.get())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
@@ -208,41 +208,41 @@ void UnlitSelectionStencilPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRen
 			cmdBuffer.setStencilOpEXT(vk::StencilFaceFlagBits::eFrontAndBack, vk::StencilOp::eReplace,
 				vk::StencilOp::eReplace, vk::StencilOp::eReplace, vk::CompareOp::eAlways);
 
-			cmdBuffer.setStencilReference(vk::StencilFaceFlagBits::eFrontAndBack, 1);
+			cmdBuffer.setStencilReference(vk::StencilFaceFlagBits::eFrontAndBack, 0x01);
 			cmdBuffer.setStencilCompareMask(
-				vk::StencilFaceFlagBits::eFrontAndBack, 0xFF); // all fragments should pass the stencil test
+				vk::StencilFaceFlagBits::eFrontAndBack, 0x00); // all fragments should pass the stencil test
 			cmdBuffer.setStencilWriteMask(
 				vk::StencilFaceFlagBits::eFrontAndBack, 0xFF); // enable writing to the stencil buffer
-
-			cmdBuffer.setDepthTestEnableEXT(VK_TRUE);
-			cmdBuffer.setDepthWriteEnableEXT(VK_TRUE);
-
-			cmdBuffer.drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
-		}
-
-		pc = {
-			sceneDesc.viewer.ubo.viewProj * geom->transform * glm::scale(glm::vec3(1.05f)),
-		};
-
-		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-		for (auto& gg : geom->mesh.Lock().geometryGroups) {
-			auto& gpuMesh = geom->mesh.Lock();
-			cmdBuffer.bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
-			cmdBuffer.bindIndexBuffer(
-				gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
-
-			cmdBuffer.setStencilOpEXT(vk::StencilFaceFlagBits::eFrontAndBack, vk::StencilOp::eKeep,
-				vk::StencilOp::eReplace, vk::StencilOp::eKeep, vk::CompareOp::eNotEqual);
-
-			cmdBuffer.setStencilWriteMask(
-				vk::StencilFaceFlagBits::eFrontAndBack, 0x00); // disable writing to the stencil buffer
 
 			cmdBuffer.setDepthTestEnableEXT(VK_FALSE);
 			cmdBuffer.setDepthWriteEnableEXT(VK_FALSE);
 
 			cmdBuffer.drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 		}
+
+		// pc = {
+		//	sceneDesc.viewer.ubo.viewProj * geom->transform * glm::scale(glm::vec3(1.05f)),
+		//};
+
+		// cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+		// for (auto& gg : geom->mesh.Lock().geometryGroups) {
+		//	auto& gpuMesh = geom->mesh.Lock();
+		//	cmdBuffer.bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
+		//	cmdBuffer.bindIndexBuffer(
+		//		gpuMesh.combinedIndexBuffer.handle(), gg.indexBufferOffset, vk::IndexType::eUint32);
+
+		//	cmdBuffer.setStencilOpEXT(vk::StencilFaceFlagBits::eFrontAndBack, vk::StencilOp::eKeep,
+		//		vk::StencilOp::eReplace, vk::StencilOp::eKeep, vk::CompareOp::eNotEqual);
+
+		//	cmdBuffer.setStencilWriteMask(
+		//		vk::StencilFaceFlagBits::eFrontAndBack, 0x00); // disable writing to the stencil buffer
+
+		//	cmdBuffer.setDepthTestEnableEXT(VK_FALSE);
+		//	cmdBuffer.setDepthWriteEnableEXT(VK_FALSE);
+
+		//	cmdBuffer.drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
+		//}
 	}
 }
 
