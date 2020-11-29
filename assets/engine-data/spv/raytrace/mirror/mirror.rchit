@@ -125,7 +125,7 @@ layout(set = 8, binding = 1) uniform samplerCubeArray irradianceSamplers[];
 
 
 vec4 texture(samplerRef s, vec2 uv) {
-	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
+	return texture(textureSamplers[nonuniformEXT(s.index)], uv); // WIP: find correct lod - ray differentials
 }
 
 Surface surfaceFromGeometryGroup(
@@ -235,11 +235,6 @@ void main() {
 
 	vec3 radiance = vec3(0);
 
-	// if this is any emissive surface
-	if(any(greaterThan(surface.emissive, vec3(BIAS)))) {
-		prd.radiance = surface.emissive;
-		return;
-	}
 
 	// DIRECT
 	{
@@ -271,14 +266,14 @@ void main() {
 	// if roughness...
 	// INDIRECT Specular -> reflprobe
 	if(surface.a >= SPEC_THRESHOLD) {
-		prd.radiance = radiance;
+		prd.radiance = radiance + surface.emissive;
 		return;
 	}
 
 
 	// this depth refers to indirect mirror bounces
 	if(prd.depth > depth){
-		prd.radiance = radiance;
+		prd.radiance = radiance + surface.emissive;
 		return;
 	}
 
@@ -290,5 +285,5 @@ void main() {
 		radiance += RadianceOfRay(surface.position, L) * brdf_NoL;
 	}
 
-	prd.radiance = radiance;
+	prd.radiance = radiance + surface.emissive;
 }

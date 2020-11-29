@@ -2,6 +2,9 @@
 #extension GL_GOOGLE_include_directive : enable
 
 #include "global.glsl"
+#include "sampling.glsl"
+#include "hammersley.glsl"
+#include "onb.glsl"
 
 layout (local_size_x = 32, local_size_y = 32) in;
 
@@ -55,31 +58,24 @@ vec3 envmapColorConvolution(vec3 dir, int index)
     // the sample direction equals the hemisphere's orientation 
     vec3 normal = normalize(dir); // dir to cubemap texel pos = actual sample dir
   
+  	Onb nonb = branchlessOnb(normal);
+  
     vec3 irradiance = vec3(0.0);
-  
-	vec3 up    = vec3(0.0, 1.0, 0.0);
-	vec3 right = cross(up, normal);
-	up         = cross(normal, right);
-	
-    float sampleDelta = 0.025;
-	float nrSamples = 0.0; 
-	for(float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
-	{
-		for(float theta = 0.0; theta < 0.5 * PI; theta += sampleDelta)
-		{
-			// spherical to cartesian (in tangent space)
-			vec3 tangentSample = vec3(sin(theta) * cos(phi),  sin(theta) * sin(phi), cos(theta));
-			// tangent space to world
-			vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * normal; 
+    
+	const uint samples = 4096;
+	for(uint smpl = 0; smpl < samples; ++smpl){
 
-            // cos(theta) = NoL, sin(Theta) to account for the smaller sample areas in the higher hemisphere areas.
-			irradiance += texture(envmapArraySampler, vec4(sampleVec, index)).rgb * cos(theta) * sin(theta);
-			nrSamples++;
-		}
+		vec2 u = hammersley(smpl, samples); 
+		
+		vec3 L = cosineSampleHemisphere(u); 
+
+		vec3 sampleVec = outOnbSpace(nonb, L);
+		irradiance += texture(envmapArraySampler, vec4(sampleVec, index)).rgb;
 	}
-	irradiance = PI * irradiance * (1.0 / float(nrSamples));
+	
+	irradiance = irradiance * (1.0 / float(samples)) * PI;
   
-	return irradiance;
+	return irradiance; 
 }                                                                                                                          
                  
 
