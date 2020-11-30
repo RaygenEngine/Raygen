@@ -9,7 +9,7 @@ struct ShaderStage : public AssetPod {
 
 		REFLECT_VAR(stage);
 		REFLECT_VAR(code, PropertyFlags::Multiline);
-		REFLECT_VAR(headers /*, PropertyFlags::Advanced*/); // WIP: make this advanced
+		REFLECT_VAR(headers /*, PropertyFlags::Advanced*/); // CHECK: remove
 	}
 
 	// Returns true if compilation was successful

@@ -77,8 +77,6 @@ struct GltfMat {
 };
 
 
-
-
 OldVertex fromVertex(Vertex p) {
 	OldVertex vtx;
 	
@@ -91,12 +89,9 @@ OldVertex fromVertex(Vertex p) {
 	return vtx;
 }
 
-
-
 layout(buffer_reference, std430) buffer Vertices { Vertex v[]; };
 layout(buffer_reference, std430) buffer Indicies { uint i[]; };
 layout(buffer_reference, std430) buffer Material { GltfMat m; };
-
 
 struct GeometryGroup {
 	Vertices vtxBuffer;
@@ -125,7 +120,7 @@ layout(set = 8, binding = 1) uniform samplerCubeArray irradianceSamplers[];
 
 
 vec4 texture(samplerRef s, vec2 uv) {
-	return texture(textureSamplers[nonuniformEXT(s.index)], uv); // WIP: find correct lod - ray differentials
+	return texture(textureSamplers[nonuniformEXT(s.index)], uv); // TODO: find correct lod - ray differentials
 }
 
 Surface surfaceFromGeometryGroup(

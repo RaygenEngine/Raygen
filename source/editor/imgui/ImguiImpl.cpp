@@ -14,7 +14,6 @@
 
 #include <imgui/examples/imgui_impl_glfw.h>
 #include <imgui/examples/imgui_impl_vulkan.h>
-
 #include <imgui/imgui_internal.h>
 
 
@@ -405,7 +404,6 @@ void ImguiImpl::RenderVulkan(vk::CommandBuffer drawCommandBuffer)
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), drawCommandBuffer);
 }
 
-// WIP:
 namespace {
 unsigned int TextCharFromUtf8(const char* in_text, const char* in_text_end)
 {

@@ -1,23 +1,21 @@
 #include "Editor.h"
-
+#include "assets/pods/Mesh.h"
 #include "editor/EdUserSettings.h"
 #include "editor/misc/NativeFileBrowser.h"
-#include "editor/windows/general/EdAssetsWindow.h"
-#include "editor/windows/general/EdPropertyEditorWindow.h"
 #include "editor/windows/WindowsRegistry.h"
+#include "editor/windows/general/EdAssetsWindow.h"
+#include "editor/windows/general/EdOutlinerWindow.h"
+#include "editor/windows/general/EdPropertyEditorWindow.h"
 #include "engine/Engine.h"
+#include "engine/Events.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
-#include "universe/Universe.h"
-#include "editor/windows/general/EdOutlinerWindow.h"
-#include "engine/Events.h"
 #include "rendering/Layer.h"
 #include "rendering/Renderer.h"
 #include "universe/ComponentsDb.h"
+#include "universe/Universe.h"
 #include "universe/components/StaticMeshComponent.h"
-#include "assets/pods/Mesh.h"
-
 
 #include <glfw/glfw3.h>
 
@@ -225,7 +223,7 @@ void EditorObject_::AfterStopWorld(World& world)
 
 void EditorObject_::HandleInput()
 {
-	// WIP: remove statics when done with input system
+	// TODO: remove statics when done with input system
 	static timer::Timer clickTimer;
 	static bool wasCtrlDown{ false };
 

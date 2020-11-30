@@ -76,7 +76,7 @@ RImage::RImage(vk::ImageType imageType, const std::string& name, vk::Extent3D ex
 		.setFormat(format);
 
 	viewInfo.subresourceRange
-		.setAspectMask(aspectMask) // WIP: this aspect mask wont work for depth stencil attachment
+		.setAspectMask(aspectMask) // TODO: this aspect mask wont work for depth stencil attachment
 		.setBaseMipLevel(0u)
 		.setLevelCount(mipLevels)
 		.setBaseArrayLayer(0u)

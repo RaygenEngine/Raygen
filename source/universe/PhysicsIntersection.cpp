@@ -1,9 +1,9 @@
 #include "PhysicsIntersection.h"
 
-#include "universe/components/StaticMeshComponent.h"
 #include "assets/pods/Mesh.h"
 #include "engine/Timer.h"
 #include "universe/World.h"
+#include "universe/components/StaticMeshComponent.h"
 
 using RayCastResult = PhysicsIntersection::RayCastResult;
 using RayCastEntityHit = PhysicsIntersection::RayCastEntityHit;

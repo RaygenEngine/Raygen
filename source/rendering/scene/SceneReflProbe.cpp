@@ -22,7 +22,7 @@ void SceneReflprobe::Allocate()
 
 	CLOG_ABORT(ubo.lodCount > maxLods, "Lod count for reflprobe exceeds maximum lod count of {}", maxLods);
 
-	// resolution >= 32 WIP:
+	// resolution >= 32 CHECK:
 	uint32 resolution = static_cast<uint32>(std::pow(2, ubo.lodCount + 5));
 
 	Device->waitIdle();
