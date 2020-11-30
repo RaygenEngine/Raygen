@@ -28,7 +28,7 @@ vk::UniquePipelineLayout ReflprobeBlend::MakePipelineLayout()
 		Layouts->singleSamplerDescLayout.handle(),
 		Layouts->singleSamplerDescLayout.handle(),
 		Layouts->singleSamplerDescLayout.handle(),
-		// WIP: std brd flut
+		// TODO: std brd flut
 		Layouts->renderAttachmentsLayout.handle(),
 	};
 

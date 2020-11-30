@@ -126,7 +126,7 @@ void IndirectSpecularPass::MakeRtPipeline()
 	m_rtPipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
 
 	CreateRtShaderBindingTable();
-	// NEXT:
+
 	svgfPass.MakeLayout();
 	svgfPass.MakePipeline();
 }

@@ -20,7 +20,7 @@ public:
 
 	void Resize(vk::Extent2D extent);
 
-	// WIP: RT passes/pipes
+	// TODO: techniques
 	InFlightResources<RenderingPassInstance> m_svgfRenderPassInstance;
 
 
@@ -33,8 +33,6 @@ public:
 	RImage2D m_progressiveResult;
 	RImage2D m_momentsBuffer;
 	InFlightResources<vk::DescriptorSet> m_rtDescSet;
-
-	// WIP: add mirror attachment
 
 public:
 	class PtSvgf : public PtBase_SinglePipeline {

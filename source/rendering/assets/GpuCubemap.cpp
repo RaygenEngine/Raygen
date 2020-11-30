@@ -36,8 +36,4 @@ void GpuCubemap::Update(const AssetUpdateInfo&)
 	cubemap.CopyBuffer(stagingbuffer, cubemapPod->format == ImageFormat::Hdr ? 16llu : 4llu, cubemapPod->mipCount);
 
 	cubemap.BlockingTransitionToLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
-
-	descriptorSet = Layouts->cubemapLayout.AllocDescriptorSet();
-
-	rvk::writeDescriptorImages(descriptorSet, 0u, { cubemap.view() });
 }

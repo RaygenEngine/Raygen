@@ -23,7 +23,7 @@ struct RFramebuffer {
 
 	[[nodiscard]] vk::Framebuffer handle() const { return uHandle.get(); }
 
-	// WIP: differentiate between depth attachments and color attachments
+	// TODO: differentiate between depth attachments and color attachments
 	[[nodiscard]] const RImage2D& operator[](size_t i) const { return ownedAttachments[i]; }
 
 	// auto begin() { return std::begin(attachments); }

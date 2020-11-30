@@ -57,7 +57,6 @@ vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 	
     prd.depth -= 1;
     
-	// WIP: nans
     if(isnan(prd.radiance.x) || isnan(prd.radiance.y) || isnan(prd.radiance.z)){
     	prd.radiance = vec3(0,0,0);
     }

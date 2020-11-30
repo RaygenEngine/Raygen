@@ -128,7 +128,7 @@ Scene::~Scene()
 	destroyVec(Get<SceneReflprobe>().condensed);
 	destroyVec(Get<SceneIrragrid>().condensed);
 
-	// NEXT: proper type erased cleanup here.
+	// CHECK: proper type erased cleanup here.
 }
 
 void Scene::UpdateTopLevelAs()

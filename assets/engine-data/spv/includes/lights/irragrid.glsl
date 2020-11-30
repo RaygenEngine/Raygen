@@ -43,7 +43,7 @@ vec3 Irragrid_Contribution(Irragrid grid, samplerCubeArray irradianceSamplers, S
 	
 	if(any(greaterThan(uvw, 1 + delim)) || 
 	   any(lessThan(uvw, -delim))) {
-		return vec3(0); // WIP: matrix based volume
+		return vec3(0); // TODO: matrix based volume
 	}
 	
 	float attenfactor = 1.f;
