@@ -14,21 +14,21 @@ struct CSpotlight : CLightBase {
 		// REFLECT_CATEGORY("Rendering");
 
 		REFLECT_VAR(color, PropertyFlags::Color).Clamp();
-		REFLECT_VAR(intensity);
-		REFLECT_VAR(_near);
-		REFLECT_VAR(_far);
-		REFLECT_VAR(shadowMapWidth);
-		REFLECT_VAR(shadowMapHeight);
-		REFLECT_VAR(maxShadowBias);
-		REFLECT_VAR(samples);
-		REFLECT_VAR(radius).Clamp(0.1f);
+		REFLECT_VAR(intensity).Clamp();
+		REFLECT_VAR(_near).Clamp(0.001f);
+		REFLECT_VAR(_far).Clamp(0.001f);
+		REFLECT_VAR(shadowMapWidth).Clamp(1.f);
+		REFLECT_VAR(shadowMapHeight).Clamp(1.f);
+		REFLECT_VAR(maxShadowBias).Clamp(0.001f);
+		REFLECT_VAR(samples).Clamp(1.f);
+		REFLECT_VAR(radius).Clamp();
 
-		REFLECT_VAR(outerAperture, PropertyFlags::Rads).Clamp();
-		REFLECT_VAR(innerAperture, PropertyFlags::Rads).Clamp();
+		REFLECT_VAR(outerAperture, PropertyFlags::Rads).Clamp(0.001f);
+		REFLECT_VAR(innerAperture, PropertyFlags::Rads).Clamp(0.001f);
 
-		REFLECT_VAR(constantTerm);
-		REFLECT_VAR(linearTerm);
-		REFLECT_VAR(quadraticTerm);
+		REFLECT_VAR(constantTerm).Clamp(1.f);
+		REFLECT_VAR(linearTerm).Clamp();
+		REFLECT_VAR(quadraticTerm).Clamp();
 
 		REFLECT_VAR(hasShadow);
 	}

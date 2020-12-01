@@ -21,13 +21,9 @@ void GpuCubemap::Update(const AssetUpdateInfo&)
 
 	vk::Format format = rvk::getFormat(cubemapPod->format);
 
-	cubemap = RCubemap(cubemapPod->resolution, cubemapPod->mipCount, format, //
-		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined,
-		vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("Cubemap: {}", AssetRegistry::GetPodUri(podHandle)));
-
-	// transiton all mips to transfer optimal
-	cubemap.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+	cubemap = RCubemap(fmt::format("Cubemap: {}", AssetRegistry::GetPodUri(podHandle)), cubemapPod->resolution, format,
+		vk::ImageLayout::eTransferDstOptimal, cubemapPod->mipCount,
+		vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled);
 
 	vk::DeviceSize bufferSize = cubemapPod->data.size();
 
@@ -40,8 +36,4 @@ void GpuCubemap::Update(const AssetUpdateInfo&)
 	cubemap.CopyBuffer(stagingbuffer, cubemapPod->format == ImageFormat::Hdr ? 16llu : 4llu, cubemapPod->mipCount);
 
 	cubemap.BlockingTransitionToLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
-
-	descriptorSet = Layouts->cubemapLayout.AllocDescriptorSet();
-
-	rvk::writeDescriptorImages(descriptorSet, 0u, { cubemap.view() });
 }

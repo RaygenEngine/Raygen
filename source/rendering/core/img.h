@@ -44,7 +44,7 @@ inline vk::Format getFormat(ImageFormat format)
 	}
 }
 
-inline vk::ImageAspectFlags getImageAspectMask(vk::ImageUsageFlags usage, vk::Format format)
+inline vk::ImageAspectFlags getAspectMask(vk::ImageUsageFlags usage, vk::Format format)
 {
 	auto aspectMask = vk::ImageAspectFlagBits::eColor;
 
@@ -60,21 +60,6 @@ inline vk::ImageAspectFlags getImageAspectMask(vk::ImageUsageFlags usage, vk::Fo
 	return aspectMask;
 }
 
-inline vk::ImageAspectFlags getViewAspectMask(vk::ImageUsageFlags usage, vk::Format format)
-{
-	auto aspectMask = vk::ImageAspectFlagBits::eColor;
-
-	if (usage & vk::ImageUsageFlagBits::eDepthStencilAttachment) {
-		aspectMask = vk::ImageAspectFlagBits::eDepth;
-
-		//// if has stencil component WIP:
-		// if (format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint) {
-		//	return aspectMask | vk::ImageAspectFlagBits::eStencil;
-		//}
-	}
-
-	return aspectMask;
-}
 
 inline bool isDepthFormat(vk::Format format)
 {
@@ -110,7 +95,9 @@ inline vk::PipelineStageFlags pipelineStageForLayout(vk::ImageLayout layout)
 		case vk::ImageLayout::eTransferSrcOptimal: return vk::PipelineStageFlagBits::eTransfer;
 		case vk::ImageLayout::eColorAttachmentOptimal: return vk::PipelineStageFlagBits::eColorAttachmentOutput;
 		case vk::ImageLayout::eDepthStencilAttachmentOptimal: return vk::PipelineStageFlagBits::eEarlyFragmentTests;
-		case vk::ImageLayout::eShaderReadOnlyOptimal: return vk::PipelineStageFlagBits::eFragmentShader;
+		case vk::ImageLayout::eShaderReadOnlyOptimal:
+			return vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eRayTracingShaderKHR
+				   | vk::PipelineStageFlagBits::eComputeShader;
 		case vk::ImageLayout::ePreinitialized: return vk::PipelineStageFlagBits::eHost;
 		case vk::ImageLayout::eUndefined: return vk::PipelineStageFlagBits::eTopOfPipe;
 		default: return vk::PipelineStageFlagBits::eBottomOfPipe;

@@ -1,8 +1,8 @@
 #pragma once
 // MAINT: Remove
 #include "rendering/Device.h"
-#include "rendering/wrappers/TopLevelAs.h"
 #include "rendering/scene/SceneCollection.h"
+#include "rendering/wrappers/TopLevelAs.h"
 
 #include <mutex>
 
@@ -33,7 +33,7 @@ struct Scene {
 public:
 	vl::TopLevelAs tlas;
 
-	bool forceUpdateAccel{ true }; // NEXT: Remove
+	bool forceUpdateAccel{ true }; // TODO: Remove
 
 	size_t activeCamera{ 0 };
 

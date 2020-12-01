@@ -126,7 +126,7 @@ void IndirectSpecularPass::MakeRtPipeline()
 	m_rtPipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
 
 	CreateRtShaderBindingTable();
-	// NEXT:
+
 	svgfPass.MakeLayout();
 	svgfPass.MakePipeline();
 }
@@ -256,19 +256,11 @@ void IndirectSpecularPass::Resize(vk::Extent2D extent)
 	// extent = vk::Extent2D(
 	//	math::roundToUInt(console_rtScale * extent.width), math::roundToUInt(console_rtScale * extent.height));
 
-	m_progressiveResult = RImage2D(extent.width, extent.height, 1u, vk::Format::eR32G32B32A32Sfloat,
-		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, "ProgressiveResult");
+	m_progressiveResult
+		= RImage2D("ProgressiveResult", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 
-	m_progressiveResult.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
-		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
-	m_momentsBuffer = RImage2D(extent.width, extent.height, 1u, vk::Format::eR32G32B32A32Sfloat,
-		vk::ImageTiling::eOptimal, vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, "Moments Buffer");
-
-	m_momentsBuffer.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
-		vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+	m_momentsBuffer = RImage2D("Moments Buffer", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
 
@@ -336,11 +328,9 @@ void IndirectSpecularPass::PtSvgf::SvgfDraw(
 
 void IndirectSpecularPass::PtSvgf::OnResize(vk::Extent2D extent, IndirectSpecularPass& rtPass)
 {
-	swappingImages[0] = RImage2D::Create(
-		"SVGF 0", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral, vk::ImageUsageFlagBits::eStorage);
+	swappingImages[0] = RImage2D("SVGF 0", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 
-	swappingImages[1] = RImage2D::Create(
-		"SVGF 1", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral, vk::ImageUsageFlagBits::eStorage);
+	swappingImages[1] = RImage2D("SVGF 1", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 
 	for (size_t j = 0; j < 2; ++j) {
 		descriptorSets[j] = Layouts->quadStorageImage.AllocDescriptorSet();

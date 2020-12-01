@@ -24,6 +24,9 @@ protected:
 	}
 };
 
+namespace vl {
+struct TopLevelAs;
+}
 //
 template<CSceneElem T>
 struct SceneCollection : public SceneCollectionBase {

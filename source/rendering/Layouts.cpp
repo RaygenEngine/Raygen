@@ -46,7 +46,7 @@ void Layouts_::MakeRenderPassLayouts()
 	{
 		std::vector<AttRef> gbufferAtts;
 
-		depthBuffer = mainPassLayout.CreateAttachment("GDepth", Device->FindDepthStencilFormat());
+		depthBuffer = mainPassLayout.CreateAttachment("GDepth", Device->FindDepthFormat());
 		gbufferAtts.emplace_back(depthBuffer);
 
 		for (auto& [name, format] : gBufferColorAttachments) {
@@ -130,7 +130,7 @@ void Layouts_::MakeRenderPassLayouts()
 
 Layouts_::Layouts_()
 {
-	// WIP: + 8, gDepth + rest
+	// TODO: + 8, gDepth + rest
 	for (uint32 i = 0u; i < gBufferColorAttachments.size() + 8; ++i) {
 		renderAttachmentsLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
 			vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR
