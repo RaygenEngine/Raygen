@@ -71,7 +71,7 @@ struct TextCompilerErrors {
 
 
 #include "rendering/DebugName.h"
-#include "rendering/core/img.h"
+#include "rendering/core/ImageUtl.h"
 
 class World;
 #include "universe/Entity.h"

@@ -13,6 +13,9 @@ struct Shapes {
 void bindCubeLines(vk::CommandBuffer cmdBuffer);
 void drawCubeLines(vk::CommandBuffer cmdBuffer);
 
+void bindUnitRect(vk::CommandBuffer cmdBuffer);
+void drawUnitRect(vk::CommandBuffer cmdBuffer);
+
 void bindCube(vk::CommandBuffer cmdBuffer);
 void drawCube(vk::CommandBuffer cmdBuffer);
 

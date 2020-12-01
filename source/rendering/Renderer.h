@@ -1,15 +1,13 @@
 #pragma once
 
 #include "engine/Listener.h"
-#include "rendering/passes/bake/ComputeCubemapArrayConvolution.h"
-#include "rendering/passes/bake/ComputeCubemapConvolution.h"
-#include "rendering/passes/bake/ComputePrefilteredConvolution.h"
-#include "rendering/passes/bake/PathtracedCubemap.h"
-#include "rendering/passes/bake/PathtracedCubemapArray.h"
-#include "rendering/passes/gi/IndirectSpecularPass.h"
-#include "rendering/passes/gi/MirrorPass.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
+#include "rendering/techniques/CalculateIrragrids.h"
+#include "rendering/techniques/CalculateReflprobes.h"
+#include "rendering/techniques/CalculateShadowmaps.h"
+#include "rendering/techniques/RaytraceMirrorReflections.h"
 #include "rendering/wrappers/CmdBuffer.h"
+#include "rendering/wrappers/passlayout/RenderPassLayout.h"
 
 namespace vl {
 class OutputPassBase;
@@ -29,13 +27,13 @@ public:
 
 	InFlightResources<vk::ImageView> GetOutputViews() const;
 
-	// TODO: private
 	InFlightResources<RenderingPassInstance> m_mainPassInst;
 	InFlightResources<RenderingPassInstance> m_secondaryPassInst;
-	InFlightResources<RenderingPassInstance> m_ptPass;
-	IndirectSpecularPass m_indirectSpecPass;
-	MirrorPass m_mirorPass;
 
+	// TODO: ppt
+	PtLightBlend m_ptLightBlend;
+	InFlightResources<RenderingPassInstance> m_ptPass;
+	//
 private:
 	void RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
@@ -47,15 +45,12 @@ private:
 	// Global descriptor set
 	InFlightResources<vk::DescriptorSet> m_attachmentsDesc;
 
-	// TODO: tidy
-	PtLightBlend m_lightblendPass;
-	PathtracedCubemap m_ptCubemap;
-	PathtracedCubemapArray m_ptCubemapArray;
-	ComputeCubemapArrayConvolution m_compCubemapArrayConvolution;
-	ComputeCubemapConvolution m_compCubemapConvolution;
-	ComputePrefilteredConvolution m_compPrefilteredConvolution;
+	// techniques
+	CalculateShadowmaps m_calculateShadowmaps;
+	CalculateReflprobes m_calculateReflprobes;
+	CalculateIrragrids m_calculateIrragrids;
+	RaytraceMirrorReflections m_raytraceMirrorReflections;
 
-	// PtCollection m_postprocCollection;
 
 } * Renderer{};
 } // namespace vl

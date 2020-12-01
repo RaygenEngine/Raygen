@@ -8,9 +8,9 @@
 #include "rendering/Instance.h"
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
-#include "rendering/StaticPipes.h"
 #include "rendering/VulkanLoader.h"
 #include "rendering/output/SwapchainOutputPass.h"
+#include "rendering/pipes/StaticPipes.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/util/DrawShapes.h"
 
