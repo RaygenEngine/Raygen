@@ -54,7 +54,7 @@ protected:
 	// Make the pipeline layout here. This will be called once after PPT registration finishes
 	virtual void MakeLayout() = 0;
 
-	// Make the pipeline here, will be called on shader recompiles (WIP:)
+	// Make the pipeline here, will be called on shader recompiles (CHECK:)
 	// MakeLayout will get called at least once before this.
 	virtual void MakePipeline() = 0;
 

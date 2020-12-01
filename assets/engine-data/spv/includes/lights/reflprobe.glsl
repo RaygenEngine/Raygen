@@ -42,7 +42,7 @@ vec3 Reflprobe_Contribution(Reflprobe rp, sampler2D brdfLutSampler, samplerCube 
 	// CHECK: roughness / a differences
 	float lod = sqrt(surface.a) * rp.lodCount; 
 	
-	// WIP: accesible 
+	// TODO: brdf lut accesible from global desc set
 	vec3 brdfLut = (texture(brdfLutSampler, vec2(surface.nov, surface.a))).rgb;
 
 	vec3 ks = F_SchlickRoughness(surface.nov, surface.f0, surface.a);
@@ -53,7 +53,7 @@ vec3 Reflprobe_Contribution(Reflprobe rp, sampler2D brdfLutSampler, samplerCube 
 	
 	vec3 specularLight = textureLod(prefilteredSampler, reprojR, lod).rgb;
 
-	vec3 diffuse = diffuseLight * surface.albedo * rp.irradianceFactor;
+	vec3 diffuse = diffuseLight * DiffuseTerm(surface, kd) * rp.irradianceFactor;
 	vec3 specular = specularLight * (surface.f0 * brdfLut.x + brdfLut.y);
 
 	return kd * diffuse + ks * specular;

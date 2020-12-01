@@ -37,19 +37,32 @@ vec3 Irragrid_Contribution(Irragrid grid, samplerCubeArray irradianceSamplers, S
 	vec3 probeCount  = vec3(grid.width - 1, grid.height - 1, grid.depth - 1);
 	vec3 size = probeCount * grid.distToAdjacent;
 	
-	vec3 uvw = (surface.position - grid.firstPos) / size; 
-
-	vec3 delim = 1.0 / size; 
+	vec3 uvw = (surface.position - grid.firstPos) / size;
 	
-	if(uvw.x > 1 + delim.x || 
-	   uvw.y > 1 + delim.y || 
-	   uvw.z > 1 + delim.z ||
-	   uvw.x < -delim.x || 
-	   uvw.y < -delim.y || 
-	   uvw.z < -delim.z) {
-		return vec3(0); // WIP: matrix based volume
+	vec3 delim = 1 / probeCount; 
+	
+	if(any(greaterThan(uvw, 1 + delim)) || 
+	   any(lessThan(uvw, -delim))) {
+		return vec3(0); // TODO: matrix based volume
 	}
 	
+	float attenfactor = 1.f;
+	if(any(greaterThan(uvw, vec3(1))) || 
+	   any(lessThan(uvw, vec3(0)))) {
+	   // PERF: probably
+	   Aabb aabb = createAabb(vec3(grid.firstPos), vec3(grid.firstPos + size));
+	   Aabb aabb2 = createAabb(vec3(grid.firstPos - grid.distToAdjacent), 
+	                           vec3(grid.firstPos + size + grid.distToAdjacent));
+	   
+	   float sdist = distanceFromOutside(aabb, surface.position);
+	   float bdist = distanceFromInside(aabb2, surface.position);
+	  
+	   attenfactor = (bdist * bdist) / ((sdist + bdist) * (sdist + bdist));
+	  
+	   //return vec3(attenfactor);
+	}
+
+	// if you don't saturate it will wrap arround
 	uvw = saturate(uvw);
 
 	// SMATH: interpolation
@@ -80,8 +93,8 @@ vec3 Irragrid_Contribution(Irragrid grid, samplerCubeArray irradianceSamplers, S
 	vec3 backInt  = mix(topInterpolB, botInterpolB, bottomPercent);	
 
 	vec3 diffuseLight = mix(frontInt, backInt, backPercent);
-
-	return diffuseLight * surface.albedo;
+	
+	return diffuseLight * LambertianDiffuse(surface.albedo) * attenfactor;
 }
 
 #endif

@@ -10,15 +10,15 @@ struct CReflprobe : CSceneBase {
 	{
 		// REFLECT_ICON(FA_CUBE);
 		// REFLECT_CATEGORY("Rendering");
-		REFLECT_VAR(radius);
+		REFLECT_VAR(radius).Clamp();
 
-		REFLECT_VAR(ptSamples);
-		REFLECT_VAR(ptBounces);
+		REFLECT_VAR(ptSamples).Clamp(1.f);
+		REFLECT_VAR(ptBounces).Clamp(0.f);
 
-		REFLECT_VAR(irrResolution);
+		REFLECT_VAR(irrResolution).Clamp(1.f);
 
-		REFLECT_VAR(prefLodCount);
-		REFLECT_VAR(prefSamples);
+		REFLECT_VAR(prefLodCount).Clamp(1.f, 5.f);
+		REFLECT_VAR(prefSamples).Clamp(1.f);
 
 		REFLECT_VAR(applyIrradiance);
 		REFLECT_VAR(notifyBuild, PropertyFlags::Transient);

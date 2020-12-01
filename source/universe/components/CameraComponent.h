@@ -11,15 +11,15 @@ struct CCamera : CSceneBase {
 		REFLECT_ICON(FA_CAMERA);
 		// REFLECT_CATEGORY("Rendering");
 
-		REFLECT_VAR(near);
-		REFLECT_VAR(far);
-		REFLECT_VAR(focalLength);
-		REFLECT_VAR(vFov, PropertyFlags::Rads);
-		REFLECT_VAR(hFov, PropertyFlags::Rads);
+		REFLECT_VAR(near).Clamp(0.001f);
+		REFLECT_VAR(far).Clamp(0.001f);
+		REFLECT_VAR(focalLength).Clamp(0.001f);
+		REFLECT_VAR(vFov, PropertyFlags::Rads).Clamp(0.001f, glm::pi<float>());
+		REFLECT_VAR(hFov, PropertyFlags::Rads).Clamp(0.001f, glm::pi<float>());
 		REFLECT_VAR(vFovOffset, PropertyFlags::Rads);
 		REFLECT_VAR(hFovOffset, PropertyFlags::Rads);
-		REFLECT_VAR(viewportWidth, PropertyFlags::Transient);
-		REFLECT_VAR(viewportHeight, PropertyFlags::Transient);
+		REFLECT_VAR(viewportWidth, PropertyFlags::Transient).Clamp(1.f);
+		REFLECT_VAR(viewportHeight, PropertyFlags::Transient).Clamp(1.f);
 	}
 
 	// distance to film plane

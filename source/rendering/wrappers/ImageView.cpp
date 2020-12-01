@@ -5,13 +5,13 @@
 #include "rendering/util/WriteDescriptorSets.h"
 
 namespace vl {
-RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, uint32 arrayLayers, vk::Format format,
-	vk::ImageTiling tiling, vk::ImageLayout initialLayout, vk::ImageUsageFlags usage, vk::SampleCountFlagBits samples,
-	vk::SharingMode sharingMode, vk::ImageCreateFlags flags, vk::MemoryPropertyFlags properties,
-	vk::ImageViewType viewType, const std::string& name)
+RImage::RImage(vk::ImageType imageType, const std::string& name, vk::Extent3D extent, vk::Format format,
+	uint32 mipLevels, uint32 arrayLayers, vk::ImageLayout finalLayout, vk::MemoryPropertyFlags properties,
+	vk::ImageUsageFlags usageFlags, vk::ImageCreateFlags flags, vk::ImageLayout initialLayout,
+	vk::SampleCountFlagBits samples, vk::SharingMode sharingMode, vk::ImageTiling tiling)
 	: format(format)
 	, extent(extent)
-	, aspectMask(rvk::getImageAspectMask(usage, format))
+	, aspectMask(rvk::getAspectMask(usageFlags, format))
 	, samples(samples)
 	, flags(flags)
 	, arrayLayers(arrayLayers)
@@ -28,7 +28,7 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 		.setFormat(format)
 		.setTiling(tiling)
 		.setInitialLayout(initialLayout)
-		.setUsage(usage)
+		.setUsage(usageFlags)
 		.setSamples(samples)
 		.setSharingMode(sharingMode)
 		.setFlags(flags);
@@ -45,6 +45,30 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 
 	Device->bindImageMemory(uHandle.get(), uMemory.get(), 0);
 
+	if (finalLayout != vk::ImageLayout::eUndefined) {
+		BlockingTransitionToLayout(initialLayout, finalLayout);
+	}
+
+	vk::ImageViewType viewType;
+	switch (imageType) {
+
+		case vk::ImageType::e2D:
+
+			if (flags & vk::ImageCreateFlagBits::eCubeCompatible) {
+				viewType = arrayLayers == 6u ? vk::ImageViewType::eCube : vk::ImageViewType::eCubeArray;
+			}
+			else {
+				if (flags & vk::ImageCreateFlagBits::e2DArrayCompatible) {
+					viewType = vk::ImageViewType::e2DArray;
+				}
+
+				viewType = vk::ImageViewType::e2D;
+			}
+			break;
+		case vk::ImageType::e1D:
+		case vk::ImageType::e3D: LOG_ABORT("unhandled image type"); break;
+	}
+
 	vk::ImageViewCreateInfo viewInfo{};
 	viewInfo
 		.setImage(uHandle.get()) //
@@ -52,7 +76,7 @@ RImage::RImage(vk::ImageType imageType, vk::Extent3D extent, uint32 mipLevels, u
 		.setFormat(format);
 
 	viewInfo.subresourceRange
-		.setAspectMask(rvk::getViewAspectMask(usage, format)) //
+		.setAspectMask(aspectMask) // TODO: this aspect mask wont work for depth stencil attachment
 		.setBaseMipLevel(0u)
 		.setLevelCount(mipLevels)
 		.setBaseArrayLayer(0u)
@@ -393,21 +417,6 @@ vk::UniqueImageView RCubemap::GetFaceArrayView(uint32 atMip) const
 	faceArrayView = Device->createImageViewUnique(viewInfo);
 
 	return faceArrayView;
-}
-
-
-vl::RImage2D vl::RImage2D::Create(const std::string& name, vk::Extent2D extent, vk::Format format,
-	vk::ImageLayout finalLayout, vk::ImageUsageFlags usageFlags, uint32 mipLevels, vk::MemoryPropertyFlags memoryFlags,
-	vk::ImageTiling tiling)
-{
-	auto img = RImage2D(extent.width, extent.height, mipLevels, format, tiling, vk::ImageLayout::eUndefined, usageFlags,
-		memoryFlags, name);
-
-	if (finalLayout != vk::ImageLayout::eUndefined) {
-		img.BlockingTransitionToLayout(vk::ImageLayout::eUndefined, finalLayout, vk::PipelineStageFlagBits::eTopOfPipe,
-			vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eRayTracingShaderKHR);
-	}
-	return img;
 }
 
 std::vector<vk::UniqueImageView> RCubemapArray::GetFaceViews(uint32 atArrayIndex, uint32 atMip) const

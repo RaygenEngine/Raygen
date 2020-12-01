@@ -10,7 +10,6 @@ struct Reflprobe_UBO {
 	glm::vec4 position{};
 };
 
-// WIP: this enity should only capture specular lods
 struct SceneReflprobe : public SceneStruct {
 	SceneReflprobe();
 	void UploadUbo(uint32 curFrame) { UploadDataToUbo(curFrame, &ubo, sizeof(decltype(ubo))); }

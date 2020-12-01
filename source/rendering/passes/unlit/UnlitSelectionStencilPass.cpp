@@ -190,7 +190,7 @@ void UnlitSelectionStencilPass::Draw(vk::CommandBuffer cmdBuffer, const SceneRen
 	if (selEnt && selEnt.Has<CStaticMesh>()) {
 		auto pl = selEnt.Get<CStaticMesh>();
 
-		auto geom = sceneDesc->GetElement<SceneGeometry>(pl.sceneUid); // WIP: missing?
+		auto geom = sceneDesc->GetElement<SceneGeometry>(pl.sceneUid);
 
 		PushConstant pc{
 			sceneDesc.viewer.ubo.viewProj * geom->transform,

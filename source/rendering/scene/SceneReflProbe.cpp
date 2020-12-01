@@ -22,24 +22,19 @@ void SceneReflprobe::Allocate()
 
 	CLOG_ABORT(ubo.lodCount > maxLods, "Lod count for reflprobe exceeds maximum lod count of {}", maxLods);
 
-	// resolution >= 32 WIP:
+	// resolution >= 32 CHECK:
 	uint32 resolution = static_cast<uint32>(std::pow(2, ubo.lodCount + 5));
 
 	Device->waitIdle();
 
-	environment = RCubemap(resolution, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
-		vk::ImageLayout::eUndefined, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("SurrCube: CHECK:reflprobenamehere"));
+	environment
+		= RCubemap(fmt::format("SurrCube: CHECK:reflprobenamehere"), resolution, vk::Format::eR32G32B32A32Sfloat);
 
-	irradiance = RCubemap(irrResolution, 1u, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
-		vk::ImageLayout::eUndefined,
-		vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("IrrCube: CHECK:reflprobenamehere"));
+	irradiance
+		= RCubemap(fmt::format("IrrCube: CHECK:reflprobenamehere"), irrResolution, vk::Format::eR32G32B32A32Sfloat);
 
-	prefiltered = RCubemap(resolution, ubo.lodCount, vk::Format::eR32G32B32A32Sfloat, vk::ImageTiling::eOptimal,
-		vk::ImageLayout::eUndefined,
-		vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, fmt::format("PreCube: CHECK:reflprobenamehere"));
+	prefiltered = RCubemap(
+		fmt::format("PreCube: CHECK:reflprobenamehere"), resolution, vk::Format::eR32G32B32A32Sfloat, ubo.lodCount);
 
 	rvk::writeDescriptorImages(environmentSamplerDescSet, 0u, { environment.view() });
 	rvk::writeDescriptorImages(irradianceSamplerDescSet, 0u, { irradiance.view() });

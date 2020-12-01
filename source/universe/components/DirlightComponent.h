@@ -12,15 +12,15 @@ struct CDirlight : CLightBase {
 	{
 		REFLECT_ICON(FA_LOCATION_ARROW);
 
-		REFLECT_VAR(color, PropertyFlags::Color);
-		REFLECT_VAR(intensity);
-		REFLECT_VAR(_near);
-		REFLECT_VAR(_far);
-		REFLECT_VAR(shadowMapWidth);
-		REFLECT_VAR(shadowMapHeight);
-		REFLECT_VAR(maxShadowBias);
-		REFLECT_VAR(samples);
-		REFLECT_VAR(radius);
+		REFLECT_VAR(color, PropertyFlags::Color).Clamp();
+		REFLECT_VAR(intensity).Clamp();
+		REFLECT_VAR(_near).Clamp(0.001f);
+		REFLECT_VAR(_far).Clamp(0.001f);
+		REFLECT_VAR(shadowMapWidth).Clamp(1.f);
+		REFLECT_VAR(shadowMapHeight).Clamp(1.f);
+		REFLECT_VAR(maxShadowBias).Clamp(0.001f);
+		REFLECT_VAR(samples).Clamp(1.f);
+		REFLECT_VAR(radius).Clamp();
 
 		REFLECT_VAR(hasShadow);
 

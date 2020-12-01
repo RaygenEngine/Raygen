@@ -166,9 +166,8 @@ void Renderer_::RecordSecondaryPasses(vk::CommandBuffer cmdBuffer, const SceneRe
 	m_secondaryPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline,
 		[&]() { StaticPipes::Get<AmbientBlend>().Draw(cmdBuffer, sceneDesc); });
 
-	// m_mirorPass.RecordPass(cmdBuffer, sceneDesc);
+	m_mirorPass.RecordPass(cmdBuffer, sceneDesc);
 
-	// WIP: decide, also can it be merged with mirror pass?
 	// m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
 }
 
@@ -182,9 +181,7 @@ void Renderer_::RecordPostProcessPasses(vk::CommandBuffer cmdBuffer, const Scene
 		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc);
 		UnlitGeometryPass::RecordCmd(cmdBuffer, sceneDesc);
 		StaticPipes::Get<UnlitVolumePass>().Draw(cmdBuffer, sceneDesc);
-		StaticPipes::Get<UnlitSelectionStencilPass>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<UnlitBillboardPass>().Draw(cmdBuffer, sceneDesc);
-
 		// vk::ClearDepthStencilValue ccv{};
 		// ccv.depth = 1.f;
 		// ccv.stencil = 0;
@@ -199,7 +196,7 @@ void Renderer_::RecordPostProcessPasses(vk::CommandBuffer cmdBuffer, const Scene
 		// cmdBuffer.clearDepthStencilImage(m_mainPassInst[sceneDesc.frameIndex].framebuffer[0].handle(),
 		//	vk::ImageLayout::eShaderReadOnlyOptimal, ccv, is);
 
-		StaticPipes::Get<UnlitSelectionStencilPass>().Draw(cmdBuffer, sceneDesc);
+		// StaticPipes::Get<UnlitSelectionStencilPass>().Draw(cmdBuffer, sceneDesc);
 	});
 }
 
