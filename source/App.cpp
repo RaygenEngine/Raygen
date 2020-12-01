@@ -10,9 +10,6 @@
 
 #include <glfw/glfw3.h>
 
-#include "platform/DynLibLoader.h"
-
-
 App_::App_()
 {
 	CLOG_ABORT(App, "Two app instances found.");

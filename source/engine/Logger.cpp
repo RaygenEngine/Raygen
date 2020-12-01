@@ -77,6 +77,20 @@ void Log_::Flush()
 	g_logger->flush();
 }
 
+void Log_::Replay(LogTransactions& trans)
+{
+	for (auto& [level, str] : trans.logs) {
+		switch (level) {
+			case LogLevel::Debug: g_logger->debug(str); break;
+			case LogLevel::Info: g_logger->info(str); break;
+			case LogLevel::Warn: g_logger->warn(str); break;
+			case LogLevel::Error: g_logger->error(str); break;
+			case LogLevel::Critical: g_logger->critical(str); break;
+		}
+	}
+	trans.logs.clear();
+}
+
 void Log_::BasicSetup()
 {
 	spdlog::set_pattern("%^[%T] %n: %v%$");
@@ -86,4 +100,11 @@ void Log_::BasicSetup()
 	auto editorOssSink = std::make_shared<spdlog::sinks::ostream_sink_mt>(s_editorLogStream);
 	editorOssSink->set_pattern("[%T.%e] %L:\t%v");
 	g_logger->sinks().push_back(editorOssSink);
+}
+
+LogTransactions::~LogTransactions()
+{
+	if (!logs.empty()) {
+		Log.Replay(*this);
+	}
 }

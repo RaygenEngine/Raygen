@@ -1,163 +1,40 @@
 #include "SpirvCompiler.h"
 
 #include "core/StringConversions.h"
+#include "engine/Timer.h"
 
-#include <SPIRV/GlslangToSpv.h>
-#include <StandAlone/DirStackFileIncluder.h>
-#include <StandAlone/ResourceLimits.h>
-#include <mutex>
+#include "dynlib/GlslCompiler.h"
 
-EShLanguage FindLanguage(const std::string& filename);
-EShLanguage LangFromStage(ShaderStageType type);
-
-std::vector<uint32> CompileImpl(
-	const std::string& code, const std::string& shadername, TextCompilerErrors* outError, EShLanguage stage)
-{
-	using namespace glslang;
-
-	auto reportError = [&](TShader& shader) {
-		if (!outError) {
-			auto er = fmt::format("\nGLSL Compiler Error: {}.\n===\n{}\n====", shadername, shader.getInfoLog());
-			LOG_ERROR("{}", er);
-		}
-		else {
-			// auto er = fmt::format("\nGLSL Compiler Error: {}.\n===\n{}\n====", shadername, shader.getInfoLog());
-
-			// PERF: can be done with just string_views
-
-			std::stringstream ss;
-			ss.str(shader.getInfoLog());
-			std::string item;
-
-			// Parsing example:
-			// ERROR: gbuffer.frag:39: '' :  syntax error, unexpected IDENTIFIER
-			// We want to parse the line number
-
-			while (std::getline(ss, item)) {
-				using namespace std::literals;
-				constexpr std::string_view errorStr = "ERROR: "sv;
-				constexpr size_t size = errorStr.size();
-
-				if (item.starts_with(errorStr)) {
-					std::string_view view{ item.c_str() };
-					view = view.substr(size);
-
-					auto loc = view.find_first_of(':');
-					if (loc == std::string::npos) {
-						continue;
-					}
-
-					view = view.substr(loc + 1);
-
-					// Find Next ':'
-					loc = view.find_first_of(':');
-					if (loc == std::string::npos) {
-						continue;
-					}
-
-					auto numView = view.substr(0, loc);
-					int32 errorLine = str::fromStrView<int32>(numView);
-
-					view = view.substr(loc + 1);
-					outError->errors.emplace(errorLine, std::string(view));
-				}
-			}
-		}
-	};
-
-	std::vector<uint32> outCode;
-
-	static bool HasInitGlslLang = false;
-	if (!HasInitGlslLang) {
-		static std::mutex m;
-		std::lock_guard lock(m);
-		if (!HasInitGlslLang) {
-			HasInitGlslLang = true;
-			glslang::InitializeProcess();
-		}
-	}
-
-	const char* InputCString = code.c_str();
-	const char* fname = shadername.c_str();
-	EShLanguage ShaderType = stage;
-	glslang::TShader Shader(ShaderType);
-	Shader.setStringsWithLengthsAndNames(&InputCString, nullptr, &fname, 1);
+#include <fstream>
 
 
-	const int ShaderLanguageVersion = 460;
-	const EShTargetClientVersion VulkanVersion = glslang::EShTargetVulkan_1_2;
-	const EShTargetLanguageVersion SPIRVVersion = glslang::EShTargetSpv_1_5;
-
-	Shader.setEnvInput(EShSourceGlsl, ShaderType, EShClientVulkan, VulkanVersion);
-	Shader.setEnvClient(EShClientVulkan, VulkanVersion);
-	Shader.setEnvTarget(EShTargetSpv, SPIRVVersion);
-
-
-	DirStackFileIncluder Includer;
-
-	// CHECK: Shader
-	// use std::filesystem
-	Includer.pushExternalLocalDirectory("");
-	Includer.pushExternalLocalDirectory("./engine-data/spv/");
-	Includer.pushExternalLocalDirectory("./engine-data/spv/includes");
-
-	if (!Shader.parse(&DefaultTBuiltInResource, ShaderLanguageVersion, true,
-			(EShMessages)(EShMsgSpvRules | EShMsgVulkanRules), Includer)) {
-		reportError(Shader);
-		return {};
-	}
-
-	TProgram Program;
-	Program.addShader(&Shader);
-
-	if (!Program.link((EShMessages)(EShMsgSpvRules | EShMsgVulkanRules))) {
-		auto er = fmt::format(
-			"\nGLSL linking failed: {}.\n{}\n{}\n", shadername, Shader.getInfoLog(), Shader.getInfoDebugLog());
-		LOG_ERROR("{}", er);
-		return {};
-	}
-
-
-	spv::SpvBuildLogger spvLogger;
-	glslang::SpvOptions spvOptions;
-	spvOptions.disableOptimizer = true;
-	spvOptions.generateDebugInfo = false;
-	spvOptions.validate = false;
-	spvOptions.optimizeSize = false;
-
-	glslang::GlslangToSpv(*Program.getIntermediate(ShaderType), outCode, &spvLogger, &spvOptions);
-
-	for (auto msg : spvLogger.getAllMessages()) {
-		LOG_REPORT("Shader Compiling: {}", msg);
-	}
-
-	// AppendErrors += fmt::format("{}...\n", filename);
-
-	// CHECK: FIX glslang::FinalizeProcess
-
-	if (outError && outCode.size() > 0) {
-		outError->wasSuccessful = true;
-	}
-
-	return outCode;
-}
-
+ShaderStageType FindLanguage(const std::string& filename);
 
 std::vector<uint32> ShaderCompiler::Compile(
 	const std::string& code, const std::string& shadername, TextCompilerErrors* outError)
 {
-	return CompileImpl(code, shadername, outError, FindLanguage(shadername));
+	std::vector<uint32> result;
+	LogTransactions log;
+	CompileGlslImpl(&log, &result, &code, &shadername, outError, FindLanguage(shadername));
+	return result;
 }
 
 std::vector<uint32> ShaderCompiler::Compile(
 	const std::string& code, ShaderStageType type, const std::string& shadername, TextCompilerErrors* outError)
 {
-	return CompileImpl(code, shadername, outError, LangFromStage(type));
+	std::vector<uint32> result;
+	LogTransactions log;
+	CompileGlslImpl(&log, &result, &code, &shadername, outError, type);
+	return result;
 }
 
 std::vector<uint32> ShaderCompiler::Compile(const std::string& code, ShaderStageType type, TextCompilerErrors* outError)
 {
-	return CompileImpl(code, "custom", outError, LangFromStage(type));
+	std::vector<uint32> result;
+	std::string name = "custom";
+	LogTransactions log;
+	CompileGlslImpl(&log, &result, &code, &name, outError, type);
+	return result;
 }
 
 std::string StringFromFile(const std::string& path)
@@ -173,11 +50,12 @@ std::string StringFromFile(const std::string& path)
 
 std::vector<uint32> ShaderCompiler::Compile(const std::string& filepath, TextCompilerErrors* outError)
 {
-	return Compile(StringFromFile(filepath), filepath, outError);
+	auto str = StringFromFile(filepath);
+	return Compile(str, filepath, outError);
 }
 
 
-EShLanguage FindLanguage(const std::string& filename)
+ShaderStageType FindLanguage(const std::string& filename)
 {
 	std::string stageName;
 	// Note: "first" extension means "first from the end", i.e.
@@ -204,60 +82,41 @@ EShLanguage FindLanguage(const std::string& filename)
 	}
 	else {
 		LOG_ERROR("Failed to determine shader stage: {}", filename);
-		return EShLangVertex;
+		return ShaderStageType::Vertex;
 	}
 
 
 	if (stageName == "vert")
-		return EShLangVertex;
+		return ShaderStageType::Vertex;
 	else if (stageName == "tesc")
-		return EShLangTessControl;
+		return ShaderStageType::TessControl;
 	else if (stageName == "tese")
-		return EShLangTessEvaluation;
+		return ShaderStageType::TessEvaluation;
 	else if (stageName == "geom")
-		return EShLangGeometry;
+		return ShaderStageType::Geometry;
 	else if (stageName == "frag")
-		return EShLangFragment;
+		return ShaderStageType::Fragment;
 	else if (stageName == "comp")
-		return EShLangCompute;
+		return ShaderStageType::Compute;
 	else if (stageName == "rgen")
-		return EShLangRayGenNV;
+		return ShaderStageType::RayGen;
 	else if (stageName == "rint")
-		return EShLangIntersectNV;
+		return ShaderStageType::Intersect;
 	else if (stageName == "rahit")
-		return EShLangAnyHitNV;
+		return ShaderStageType::AnyHit;
 	else if (stageName == "rchit")
-		return EShLangClosestHitNV;
+		return ShaderStageType::ClosestHit;
 	else if (stageName == "rmiss")
-		return EShLangMissNV;
+		return ShaderStageType::Miss;
 	else if (stageName == "rcall")
-		return EShLangCallableNV;
-	else if (stageName == "mesh")
-		return EShLangMeshNV;
-	else if (stageName == "task")
-		return EShLangTaskNV;
+		return ShaderStageType::Callable;
+	// else if (stageName == "mesh")
+	//	return EShLangMeshNV;
+	// else if (stageName == "task")
+	//	return EShLangTaskNV;
 
 	LOG_ERROR("Failed to determine shader stage: {}", filename);
-	return EShLangVertex;
-}
-
-EShLanguage LangFromStage(ShaderStageType type)
-{
-	switch (type) {
-		case ShaderStageType::Vertex: return EShLangVertex;
-		case ShaderStageType::TessControl: return EShLangTessControl;
-		case ShaderStageType::TessEvaluation: return EShLangTessEvaluation;
-		case ShaderStageType::Geometry: return EShLangGeometry;
-		case ShaderStageType::Fragment: return EShLangFragment;
-		case ShaderStageType::Compute: return EShLangCompute;
-		case ShaderStageType::RayGen: return EShLangRayGen;
-		case ShaderStageType::Intersect: return EShLangIntersect;
-		case ShaderStageType::AnyHit: return EShLangAnyHit;
-		case ShaderStageType::ClosestHit: return EShLangClosestHit;
-		case ShaderStageType::Miss: return EShLangMiss;
-		case ShaderStageType::Callable: return EShLangCallable;
-	}
-	return EShLangVertex;
+	return ShaderStageType::Vertex;
 }
 
 

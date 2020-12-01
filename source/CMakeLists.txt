@@ -72,10 +72,6 @@ target_link_libraries(Raygen
 	Vulkan::Vulkan
 	ImGui
 	spdlog
-	# shader compiler
-	SPIRV
-	glslang-default-resource-limits
-	#end of shader compiler
 	glfw
 	${GLFW_LIBRARIES}
 	${RAYGEN_SPIRV_CROSS_MODULES}
@@ -91,6 +87,10 @@ target_link_libraries(Raygen-App
 # This might be problematic when we mix debug/release libs in the dll
 target_link_libraries(Raygen-Dynlib
 	Vulkan::Vulkan
+	# shader compiler
+	SPIRV
+	glslang-default-resource-limits
+	#end of shader compiler
 )
 
 # instruct glfw to globaly include vulkan headers

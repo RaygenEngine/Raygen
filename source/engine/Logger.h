@@ -15,6 +15,25 @@ enum class LogLevel
 	Off
 };
 
+// Enables logging through dll. (Intented to hold all logs and then be replayed when out of the dll)
+// Dll warning: uses containers/strings
+// Also, this does not get to use macros, so formatting will ALWAYS occur even if log level is disabled through macros
+//
+// Flushes automatically when going out of scope
+struct LogTransactions {
+	std::vector<std::pair<LogLevel, std::string>> logs;
+
+	void Debug(std::string&& str) { logs.emplace_back(LogLevel::Debug, std::move(str)); }
+	void Info(std::string&& str) { logs.emplace_back(LogLevel::Info, std::move(str)); }
+	void Warn(std::string&& str) { logs.emplace_back(LogLevel::Warn, std::move(str)); }
+	void Report(std::string&& str) { logs.emplace_back(LogLevel::Warn, std::move(str)); }
+	void Error(std::string&& str) { logs.emplace_back(LogLevel::Error, std::move(str)); }
+	void Critical(std::string&& str) { logs.emplace_back(LogLevel::Critical, std::move(str)); }
+
+	// RAII flush (will be skipped automatically if replay is called manually)
+	~LogTransactions();
+};
+
 inline class Log_ {
 public:
 	// NOTE: logging and levels my be discarded by build configuration
@@ -32,9 +51,12 @@ public:
 
 	void Flush();
 
+	void Replay(LogTransactions& trans);
+
 private:
 	void BasicSetup();
 } Log;
+
 
 #define _RGN_DO_NOTHING_REQUIRE_SEMICOL()                                                                              \
 	do {                                                                                                               \
