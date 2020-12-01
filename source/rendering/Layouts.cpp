@@ -1,6 +1,6 @@
 #include "Layouts.h"
 
-#include "rendering/passes/geometry/DepthmapPass.h"
+#include "rendering/Device.h"
 
 struct AttachmentDeclaration {
 };

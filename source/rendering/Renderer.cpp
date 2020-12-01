@@ -2,22 +2,10 @@
 
 #include "assets/StdAssets.h"
 #include "engine/profiler/ProfileScope.h"
-#include "rendering/StaticPipes.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuImage.h"
 #include "rendering/output/OutputPassBase.h"
-#include "rendering/passes/direct/DirlightBlend.h"
-#include "rendering/passes/direct/PointlightBlend.h"
-#include "rendering/passes/direct/SpotlightBlend.h"
-#include "rendering/passes/geometry/DepthmapPass.h"
-#include "rendering/passes/geometry/GBufferPass.h"
-#include "rendering/passes/gi/AmbientBlend.h"
-#include "rendering/passes/gi/IrragridBlend.h"
-#include "rendering/passes/gi/ReflprobeBlend.h"
-#include "rendering/passes/unlit/UnlitBillboardPass.h"
-#include "rendering/passes/unlit/UnlitGeometryPass.h"
-#include "rendering/passes/unlit/UnlitSelectionStencilPass.h"
-#include "rendering/passes/unlit/UnlitVolumePass.h"
+#include "rendering/pipes/geometry/DepthmapPipe.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneIrragrid.h"
@@ -38,89 +26,15 @@ void Renderer_::InitPipelines()
 {
 	// m_postprocCollection.RegisterTechniques();
 
-	m_lightblendPass.MakeLayout();
-	m_lightblendPass.MakePipeline();
-
-	m_indirectSpecPass.MakeRtPipeline();
-	m_mirorPass.MakeRtPipeline();
+	m_ptLightBlend.MakeLayout();
+	m_ptLightBlend.MakePipeline();
 }
 
 void Renderer_::RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	for (auto sl : sceneDesc->Get<SceneSpotlight>()) {
-		if (sl->ubo.hasShadow) {
-			sl->shadowmapPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
-				//
-				DepthmapPass::RecordCmd(cmdBuffer, sl->ubo.viewProj, sceneDesc);
-			});
-		}
-	}
-
-	for (auto dl : sceneDesc->Get<SceneDirlight>()) {
-		if (dl->ubo.hasShadow) {
-			dl->shadowmapPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
-				//
-				DepthmapPass::RecordCmd(cmdBuffer, dl->ubo.viewProj, sceneDesc);
-			});
-		}
-	}
-
-	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
-		if (rp->shouldBuild.Access()) [[unlikely]] {
-			rp->environment.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
-				vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
-
-			m_ptCubemap.RecordPass(cmdBuffer, sceneDesc, *rp);
-
-			rp->environment.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
-				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
-				vk::PipelineStageFlagBits::eComputeShader);
-
-			rp->irradiance.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
-				vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eComputeShader);
-
-			// CHECK: use compute buffer
-			m_compCubemapConvolution.RecordPass(cmdBuffer, sceneDesc, *rp);
-
-			rp->irradiance.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
-				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eComputeShader,
-				vk::PipelineStageFlagBits::eFragmentShader);
-
-			rp->prefiltered.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
-				vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eComputeShader);
-
-			m_compPrefilteredConvolution.RecordPass(cmdBuffer, sceneDesc, *rp);
-
-			rp->prefiltered.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
-				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eComputeShader,
-				vk::PipelineStageFlagBits::eFragmentShader);
-		}
-	}
-
-	for (auto ig : sceneDesc->Get<SceneIrragrid>()) {
-		if (ig->shouldBuild.Access()) [[unlikely]] {
-
-			ig->environmentCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined,
-				vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eTopOfPipe,
-				vk::PipelineStageFlagBits::eRayTracingShaderKHR);
-
-			m_ptCubemapArray.RecordPass(cmdBuffer, sceneDesc, *ig);
-
-			ig->environmentCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
-				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
-				vk::PipelineStageFlagBits::eComputeShader);
-
-			ig->irradianceCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
-				vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eComputeShader);
-
-			// CHECK: use compute buffer
-			m_compCubemapArrayConvolution.RecordPass(cmdBuffer, sceneDesc, *ig);
-
-			ig->irradianceCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
-				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eComputeShader,
-				vk::PipelineStageFlagBits::eFragmentShader);
-		}
-	}
+	m_calculateShadowmaps.RecordCmd(cmdBuffer, sceneDesc);
+	m_calculateReflprobes.RecordCmd(cmdBuffer, sceneDesc);
+	m_calculateIrragrids.RecordCmd(cmdBuffer, sceneDesc);
 }
 
 void Renderer_::RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
@@ -166,7 +80,7 @@ void Renderer_::RecordSecondaryPasses(vk::CommandBuffer cmdBuffer, const SceneRe
 	m_secondaryPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline,
 		[&]() { StaticPipes::Get<AmbientBlend>().Draw(cmdBuffer, sceneDesc); });
 
-	m_mirorPass.RecordPass(cmdBuffer, sceneDesc);
+	m_raytraceMirrorReflections.RecordCmd(cmdBuffer, sceneDesc);
 
 	// m_indirectSpecPass.RecordPass(cmdBuffer, sceneDesc);
 }
@@ -176,27 +90,12 @@ void Renderer_::RecordPostProcessPasses(vk::CommandBuffer cmdBuffer, const Scene
 	PROFILE_SCOPE(Renderer);
 
 	m_ptPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&] {
-		m_lightblendPass.Draw(cmdBuffer, sceneDesc); // TODO: from post proc
+		m_ptLightBlend.Draw(cmdBuffer, sceneDesc); // TODO: from post proc
 
 		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc);
 		UnlitGeometryPass::RecordCmd(cmdBuffer, sceneDesc);
 		StaticPipes::Get<UnlitVolumePass>().Draw(cmdBuffer, sceneDesc);
 		StaticPipes::Get<UnlitBillboardPass>().Draw(cmdBuffer, sceneDesc);
-		// vk::ClearDepthStencilValue ccv{};
-		// ccv.depth = 1.f;
-		// ccv.stencil = 0;
-
-		// vk::ImageSubresourceRange is{};
-		// is.setAspectMask(vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil) //
-		//	.setBaseMipLevel(0u)
-		//	.setLevelCount(1u)
-		//	.setBaseArrayLayer(0u)
-		//	.setLayerCount(1u);
-
-		// cmdBuffer.clearDepthStencilImage(m_mainPassInst[sceneDesc.frameIndex].framebuffer[0].handle(),
-		//	vk::ImageLayout::eShaderReadOnlyOptimal, ccv, is);
-
-		// StaticPipes::Get<UnlitSelectionStencilPass>().Draw(cmdBuffer, sceneDesc);
 	});
 }
 
@@ -218,8 +117,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 			fbSize.width, fbSize.height, { &m_mainPassInst[i].framebuffer[0] }); // TODO: indices and stuff
 	}
 
-	m_indirectSpecPass.Resize(fbSize);
-	m_mirorPass.Resize(fbSize);
+	m_raytraceMirrorReflections.Resize(fbSize);
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_attachmentsDesc[i] = Layouts->renderAttachmentsLayout.AllocDescriptorSet();
@@ -234,9 +132,9 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		auto brdfLutImg = GpuAssetManager->GetGpuHandle(StdAssets::BrdfLut());
 		views.emplace_back(m_secondaryPassInst[i].framebuffer[0].view());
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
-		views.emplace_back(m_indirectSpecPass.m_svgfRenderPassInstance[i].framebuffer[0].view()); // indirect spec pass
-		views.emplace_back(m_mirorPass.m_result[i].view());                                       // mirror buffer
-		views.emplace_back(m_ptPass[i].framebuffer[0].view());                                    // sceneColorSampler
+		views.emplace_back(brdfLutImg.Lock().image.view()); // reserved
+		views.emplace_back(m_raytraceMirrorReflections.result[i].view()); // mirror buffer
+		views.emplace_back(m_ptPass[i].framebuffer[0].view());            // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_attachmentsDesc[i], 0u, std::move(views));
 

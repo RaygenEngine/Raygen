@@ -5,9 +5,9 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
-#include "rendering/passes/geometry/DepthmapPass.h"
-#include "rendering/passes/geometry/GBufferPass.h"
-#include "rendering/passes/unlit/UnlitGeometryPass.h"
+#include "rendering/pipes/geometry/DepthmapPipe.h"
+#include "rendering/pipes/geometry/GBufferPipe.h"
+#include "rendering/pipes/geometry/UnlitPipe.h"
 
 using namespace vl;
 
@@ -161,10 +161,10 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 		Layouts->singleUboDescLayout.handle(),
 	};
 
-	depth = CreatePassInfoOptional<DepthmapPass>(
+	depth = CreatePassInfoOptional<DepthmapPipe>(
 		"engine-data/spv/geometry/depth_map.shader", arch->depthVertBinary, arch->depthFragBinary, descLayouts);
 
-	gbuffer = CreatePassInfoOptional<GbufferPass>(
+	gbuffer = CreatePassInfoOptional<GbufferPipe>(
 		"engine-data/spv/geometry/gbuffer.shader", arch->gbufferVertBinary, arch->gbufferFragBinary, descLayouts);
 
 
@@ -176,25 +176,25 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 
 	// GBufferAnim Pass
 	{
-		size_t pushConstantSize = GbufferPass::GetPushConstantSize();
+		size_t pushConstantSize = GbufferPipe::GetPushConstantSize();
 		GpuMaterialArchetype::PassInfo info;
 		info.shaderModules.emplace_back(CreateShaderModule(arch->gbufferFragBinary));
 		info.shaderStages = CreateShaderStages("engine-data/spv/geometry/gbuffer-anim.shader", *info.shaderModules[0]);
 		info.pipelineLayout = CreatePipelineLayout(pushConstantSize, descLayoutsAnim);
-		info.pipeline = GbufferPass::CreateAnimPipeline(*info.pipelineLayout, info.shaderStages);
+		info.pipeline = GbufferPipe::CreateAnimPipeline(*info.pipelineLayout, info.shaderStages);
 
 		gbufferAnimated = std::move(info);
 	}
 
 	// DepthAnim Pass
 	{
-		size_t pushConstantSize = DepthmapPass::GetPushConstantSize();
+		size_t pushConstantSize = DepthmapPipe::GetPushConstantSize();
 
 		GpuMaterialArchetype::PassInfo info;
 		info.shaderModules.emplace_back(CreateShaderModule(arch->depthFragBinary));
 		info.shaderStages = CreateShaderStages("engine-data/spv/geometry/depthmap-anim.shader", *info.shaderModules[0]);
 		info.pipelineLayout = CreatePipelineLayout(pushConstantSize, descLayoutsAnim);
-		info.pipeline = DepthmapPass::CreateAnimPipeline(*info.pipelineLayout, info.shaderStages);
+		info.pipeline = DepthmapPipe::CreateAnimPipeline(*info.pipelineLayout, info.shaderStages);
 
 		depthAnimated = std::move(info);
 	}
@@ -205,14 +205,14 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 		isUnlit = arch->unlitFragBinary.size() > 0;
 
 		if (isUnlit) {
-			size_t pushConstantSize = UnlitGeometryPass::GetPushConstantSize();
+			size_t pushConstantSize = UnlitPipe::GetPushConstantSize();
 
 			GpuMaterialArchetype::PassInfo info;
 			info.shaderModules.emplace_back(CreateShaderModule(arch->unlitFragBinary));
 			info.shaderStages = CreateShaderStages("engine-data/spv/geometry/gbuffer.shader", *info.shaderModules[0]);
 			info.pipelineLayout = CreatePipelineLayout(pushConstantSize, descLayouts);
 
-			info.pipeline = UnlitGeometryPass::CreatePipeline(*info.pipelineLayout, info.shaderStages);
+			info.pipeline = UnlitPipe::CreatePipeline(*info.pipelineLayout, info.shaderStages);
 
 			unlit = std::move(info);
 		}

@@ -49,6 +49,13 @@ namespace {
 		5u, 7u, // btr - bbr
 	};
 
+	static std::vector<float> unitRectangle_triangleStripData = {
+	  -0.5f,  0.5f,  0.0f,
+	  -0.5f, -0.5f,  0.0f,
+	   0.5f,  0.5f,  0.0f,
+	   0.5f, -0.5f,  0.0f,
+	};
+
 // clang-format on
 
 struct IndexedShapeBuffer {
@@ -146,6 +153,7 @@ void MakeSphere(int32 sectorCount, int32 stackCount, float radius, IndexedShapeB
 
 struct ShapesData {
 	ShapeBuffer cube_triangleStrip;
+	ShapeBuffer unitRectangle_triangleStrip;
 
 	IndexedShapeBuffer cube_lineList;
 
@@ -156,6 +164,8 @@ struct ShapesData {
 	{
 		cube_triangleStrip.vertexBuffer = vl::RBuffer::CreateTransfer(
 			"Box triangle strip vertices", cube_triangleStripData, vk::BufferUsageFlagBits::eVertexBuffer);
+		unitRectangle_triangleStrip.vertexBuffer = vl::RBuffer::CreateTransfer(
+			"Unit rectangle vertices", unitRectangle_triangleStripData, vk::BufferUsageFlagBits::eVertexBuffer);
 		cube_triangleStrip.vertexCount = static_cast<uint32>(cube_triangleStripData.size() / 3);
 		cube_lineList.vertexBuffer
 			= vl::RBuffer::CreateTransfer("Cube vertices", cube_verticesData, vk::BufferUsageFlagBits::eVertexBuffer);
@@ -179,6 +189,16 @@ void rvk::bindCubeLines(vk::CommandBuffer cmdBuffer)
 void rvk::drawCubeLines(vk::CommandBuffer cmdBuffer)
 {
 	DrawShape(cmdBuffer, shapesData->cube_lineList);
+}
+
+void rvk::bindUnitRect(vk::CommandBuffer cmdBuffer)
+{
+	BindShapeBuffer(cmdBuffer, shapesData->unitRectangle_triangleStrip);
+}
+
+void rvk::drawUnitRect(vk::CommandBuffer cmdBuffer)
+{
+	DrawShape(cmdBuffer, shapesData->unitRectangle_triangleStrip);
 }
 
 void rvk::bindCube(vk::CommandBuffer cmdBuffer)
