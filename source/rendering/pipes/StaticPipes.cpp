@@ -34,6 +34,8 @@ void StaticPipes::InternalInitRegistered()
 	StaticPipes::Init<ReflprobePipe>();
 	StaticPipes::Init<SelectionStencilPipe>();
 	StaticPipes::Init<SpotlightPipe>();
-	StaticPipes::Init<VolumePipe>();
+	// StaticPipes::Init<VolumePointsPipe>();
+	StaticPipes::Init<VolumeLinesPipe>();
+	StaticPipes::Init<VolumeTrianglesPipe>();
 }
 } // namespace vl

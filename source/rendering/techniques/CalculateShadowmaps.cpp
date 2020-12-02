@@ -7,7 +7,7 @@
 #include "rendering/scene/SceneSpotlight.h"
 
 namespace vl {
-void CalculateShadowmaps::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void CalculateShadowmaps::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	for (auto sl : sceneDesc->Get<SceneSpotlight>()) {
 		if (sl->ubo.hasShadow) {

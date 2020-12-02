@@ -8,8 +8,8 @@ struct MirrorPipe : public StaticPipeBase {
 	vk::UniquePipelineLayout MakePipelineLayout() override;
 	vk::UniquePipeline MakePipeline() override;
 
-	void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const;
-
+	void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
+		vk::DescriptorSet mirrorImageStorageDescSet, const vk::Extent3D& extent) const;
 
 private:
 	// TODO: wrap those and inner boilerplate

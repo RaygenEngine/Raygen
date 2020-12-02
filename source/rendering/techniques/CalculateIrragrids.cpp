@@ -7,7 +7,7 @@
 #include "rendering/scene/SceneIrragrid.h"
 
 namespace vl {
-void CalculateIrragrids::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void CalculateIrragrids::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	for (auto ig : sceneDesc->Get<SceneIrragrid>()) {
 		if (ig->shouldBuild.Access()) [[unlikely]] {

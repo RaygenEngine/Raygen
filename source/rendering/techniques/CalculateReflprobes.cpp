@@ -8,7 +8,7 @@
 #include "rendering/scene/SceneReflProbe.h"
 
 namespace vl {
-void CalculateReflprobes::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void CalculateReflprobes::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
 		if (rp->shouldBuild.Access()) [[unlikely]] {

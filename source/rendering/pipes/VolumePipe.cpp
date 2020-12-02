@@ -23,10 +23,8 @@ struct PushConstant {
 };
 
 static_assert(sizeof(PushConstant) <= 128);
-} // namespace
 
-namespace vl {
-vk::UniquePipelineLayout VolumePipe::MakePipelineLayout()
+vk::UniquePipelineLayout MakePipelineLayout()
 {
 	vk::PushConstantRange pushConstantRange{};
 	pushConstantRange
@@ -38,14 +36,15 @@ vk::UniquePipelineLayout VolumePipe::MakePipelineLayout()
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.setPushConstantRanges(pushConstantRange);
 
-	return Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+	return vl::Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
 
-vk::UniquePipeline VolumePipe::MakePipeline()
+template<typename PipeType>
+vk::UniquePipeline MakePipeline(vk::PipelineLayout layout)
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/unlit/volume.shader");
+	GpuAsset<Shader>& gpuShader = vl::GpuAssetManager->CompileShader("engine-data/spv/unlit/volume.shader");
 	gpuShader.onCompile = [&]() {
-		StaticPipes::Recompile<VolumePipe>();
+		vl::StaticPipes::Recompile<PipeType>();
 	};
 
 	vk::VertexInputBindingDescription bindingDescription{};
@@ -69,9 +68,16 @@ vk::UniquePipeline VolumePipe::MakePipeline()
 		.setVertexAttributeDescriptions(attributeDescription);
 
 	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
-	inputAssembly
-		.setTopology(vk::PrimitiveTopology::eLineList) //
-		.setPrimitiveRestartEnable(VK_FALSE);
+	if constexpr (std::is_base_of_v<vl::VolumePointsPipe, PipeType>) {
+		inputAssembly.setTopology(vk::PrimitiveTopology::ePointList);
+	}
+	if constexpr (std::is_base_of_v<vl::VolumeLinesPipe, PipeType>) {
+		inputAssembly.setTopology(vk::PrimitiveTopology::eLineList);
+	}
+	if constexpr (std::is_base_of_v<vl::VolumeTrianglesPipe, PipeType>) {
+		inputAssembly.setTopology(vk::PrimitiveTopology::eTriangleList);
+	}
+	inputAssembly.setPrimitiveRestartEnable(VK_FALSE);
 
 	// Dynamic vieport
 	std::array dynamicStates{
@@ -157,61 +163,51 @@ vk::UniquePipeline VolumePipe::MakePipeline()
 		.setPDepthStencilState(&depthStencil)
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
-		.setLayout(layout())
-		.setRenderPass(Layouts->ptPassLayout.compatibleRenderPass.get())
+		.setLayout(layout)
+		.setRenderPass(vl::Layouts->ptPassLayout.compatibleRenderPass.get())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
 
-	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+	return vl::Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void VolumePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+} // namespace
+
+namespace vl {
+
+vk::UniquePipelineLayout VolumePointsPipe::MakePipelineLayout()
+{
+	return ::MakePipelineLayout();
+}
+
+vk::UniquePipeline VolumePointsPipe::MakePipeline()
+{
+	return ::MakePipeline<VolumePointsPipe>(layout());
+}
+
+void VolumePointsPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Entity& entity) const {}
+
+vk::UniquePipelineLayout VolumeLinesPipe::MakePipelineLayout()
+{
+	return ::MakePipelineLayout();
+}
+
+vk::UniquePipeline VolumeLinesPipe::MakePipeline()
+{
+	return ::MakePipeline<VolumeLinesPipe>(layout());
+}
+
+void VolumeLinesPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Entity& entity) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	auto selEnt = Editor::GetSelection();
-
-	if (selEnt && selEnt.Has<CPointlight>()) {
-		auto pl = selEnt.Get<CPointlight>();
-
-		auto volumeTransform = math::transformMat(
-			glm::vec3{ pl.CalculateEffectiveRadius() }, selEnt->world().orientation, selEnt->world().position);
-
-		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
-
-		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-		cmdBuffer.setDepthTestEnableEXT(VK_TRUE);
-		cmdBuffer.setPrimitiveTopologyEXT(vk::PrimitiveTopology::eTriangleList);
-
-		rvk::bindSphere18x9(cmdBuffer);
-		rvk::drawSphere18x9(cmdBuffer);
-	}
-
-	if (selEnt && selEnt.Has<CReflprobe>()) {
-		auto rp = selEnt.Get<CReflprobe>();
-
-		auto volumeTransform
-			= math::transformMat(glm::vec3{ rp.radius }, selEnt->world().orientation, selEnt->world().position);
-
-		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
-
-		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
-
-		cmdBuffer.setDepthTestEnableEXT(VK_TRUE);
-		cmdBuffer.setPrimitiveTopologyEXT(vk::PrimitiveTopology::eTriangleList);
-
-		rvk::bindSphere18x9(cmdBuffer);
-		rvk::drawSphere18x9(cmdBuffer);
-	}
-
-	if (selEnt && selEnt.Has<CCamera>()) {
-		auto cm = selEnt.Get<CCamera>();
+	if (entity.Has<CCamera>()) {
+		auto cm = entity.Get<CCamera>();
 
 
 		auto volumeTransform
-			= math::transformMat(glm::vec3{ 0.3 }, selEnt->world().orientation, selEnt->world().position);
+			= math::transformMat(glm::vec3{ 0.3 }, entity->world().orientation, entity->world().position);
 
 		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * glm::inverse(cm.proj * cm.view),
 			glm::vec4(1.f, 1.f, 1.f, 1.f) };
@@ -226,11 +222,11 @@ void VolumePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneD
 		rvk::drawCubeLines(cmdBuffer);
 	}
 
-	if (selEnt && selEnt.Has<CSpotlight>()) {
-		auto sl = selEnt.Get<CSpotlight>();
+	if (entity.Has<CSpotlight>()) {
+		auto sl = entity.Get<CSpotlight>();
 
 		auto volumeTransform
-			= math::transformMat(glm::vec3{ 1 }, selEnt->world().orientation, selEnt->world().position);
+			= math::transformMat(glm::vec3{ 1 }, entity->world().orientation, entity->world().position);
 
 		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * glm::inverse(sl.proj * sl.view),
 			glm::vec4(1.f, 1.f, 1.f, 1.f) };
@@ -245,11 +241,11 @@ void VolumePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneD
 		rvk::drawCubeLines(cmdBuffer); // TODO: cone from frustum and spot effect
 	}
 
-	if (selEnt && selEnt.Has<CDirlight>()) {
-		auto dl = selEnt.Get<CDirlight>();
+	if (entity.Has<CDirlight>()) {
+		auto dl = entity.Get<CDirlight>();
 
 		auto volumeTransform
-			= math::transformMat(glm::vec3{ 1 }, selEnt->world().orientation, selEnt->world().position);
+			= math::transformMat(glm::vec3{ 1 }, entity->world().orientation, entity->world().position);
 
 		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * glm::inverse(dl.proj * dl.view),
 			glm::vec4(1.f, 1.f, 1.f, 1.f) };
@@ -263,12 +259,12 @@ void VolumePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneD
 		rvk::drawCubeLines(cmdBuffer);
 	}
 
-	if (selEnt && selEnt.Has<CIrragrid>()) {
-		auto ig = selEnt.Get<CIrragrid>();
+	if (entity.Has<CIrragrid>()) {
+		auto ig = entity.Get<CIrragrid>();
 
 		math::AABB igAabb{
-			selEnt->world().position,
-			selEnt->world().position + glm::vec3(ig.width - 1, ig.height - 1, ig.depth - 1) * ig.distToAdjacent,
+			entity->world().position,
+			entity->world().position + glm::vec3(ig.width - 1, ig.height - 1, ig.depth - 1) * ig.distToAdjacent,
 		};
 
 		auto volumeTransform
@@ -284,8 +280,6 @@ void VolumePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneD
 		rvk::bindCubeLines(cmdBuffer);
 		rvk::drawCubeLines(cmdBuffer);
 	}
-
-	// TODO: draw SkinnedMesh skeleton
 
 	// TODO:
 	static ConsoleVariable<bool> cons_drawLeaves{ "s.bvh.Children", false };
@@ -322,6 +316,57 @@ void VolumePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneD
 			}
 		}
 	}
+}
+
+vk::UniquePipelineLayout VolumeTrianglesPipe::MakePipelineLayout()
+{
+	return ::MakePipelineLayout();
+}
+
+vk::UniquePipeline VolumeTrianglesPipe::MakePipeline()
+{
+	return ::MakePipeline<VolumeTrianglesPipe>(layout());
+}
+
+void VolumeTrianglesPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Entity& entity) const
+{
+	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
+
+	if (entity.Has<CPointlight>()) {
+		auto pl = entity.Get<CPointlight>();
+
+		auto volumeTransform = math::transformMat(
+			glm::vec3{ pl.CalculateEffectiveRadius() }, entity->world().orientation, entity->world().position);
+
+		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
+
+		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+		cmdBuffer.setDepthTestEnableEXT(VK_TRUE);
+		cmdBuffer.setPrimitiveTopologyEXT(vk::PrimitiveTopology::eTriangleList);
+
+		rvk::bindSphere18x9(cmdBuffer);
+		rvk::drawSphere18x9(cmdBuffer);
+	}
+
+	if (entity.Has<CReflprobe>()) {
+		auto rp = entity.Get<CReflprobe>();
+
+		auto volumeTransform
+			= math::transformMat(glm::vec3{ rp.radius }, entity->world().orientation, entity->world().position);
+
+		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
+
+		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+		cmdBuffer.setDepthTestEnableEXT(VK_TRUE);
+		cmdBuffer.setPrimitiveTopologyEXT(vk::PrimitiveTopology::eTriangleList);
+
+		rvk::bindSphere18x9(cmdBuffer);
+		rvk::drawSphere18x9(cmdBuffer);
+	}
+
+	// TODO: draw SkinnedMesh skeleton
 }
 
 } // namespace vl

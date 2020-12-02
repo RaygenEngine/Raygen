@@ -11,8 +11,7 @@
 #include "rendering/scene/SceneIrragrid.h"
 #include "rendering/util/WriteDescriptorSets.h"
 
-ConsoleVariable<int32> console_miDepth{ "mi.depth", 1, "Set mirror depth" };
-ConsoleVariable<float> console_miScale{ "mi.scale", 1.f, "Set mirror scale" };
+ConsoleVariable<int32> cons_mirrorDepth{ "r.mirror.depth", 1, "Set mirror depth" };
 
 namespace {
 struct PushConstant {
@@ -153,14 +152,10 @@ vk::UniquePipeline MirrorPipe::MakePipeline()
 	return pipeline;
 }
 
-void MirrorPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void MirrorPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
+	vk::DescriptorSet mirrorImageStorageDescSet, const vk::Extent3D& extent) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, pipeline());
-
-
-	DEBUG_NAME_AUTO(sceneDesc.scene->sceneAsDescSet);
-	DEBUG_NAME_AUTO(sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex]);
-	DEBUG_NAME_AUTO(sceneDesc.scene->tlas.sceneDesc.descSet[sceneDesc.frameIndex]);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 0u, 1u, &sceneDesc.attachmentsDescSet,
 		0u, nullptr); // gbuffer and stuff
@@ -168,8 +163,8 @@ void MirrorPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneD
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 1u, 1u,
 		&sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex], 0u, nullptr); // camera
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 2u, 1u,
-		&m_rtDescSet[sceneDesc.frameIndex], 0u, nullptr); // image
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eRayTracingKHR, layout(), 2u, 1u, &mirrorImageStorageDescSet, 0u, nullptr); // image
 
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eRayTracingKHR, layout(), 3u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr); // as
@@ -192,7 +187,7 @@ void MirrorPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneD
 	static int32 frameIndex = 0;
 
 	PushConstant pc{
-		std::max(0, *console_miDepth),
+		std::max(0, *cons_mirrorDepth),
 		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
 		sceneDesc.scene->tlas.sceneDesc.spotlightCount,
 		sceneDesc.scene->tlas.sceneDesc.dirlightCount,
@@ -232,10 +227,8 @@ void MirrorPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneD
 		= { m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
 	const vk::StridedBufferRegionKHR callableShaderBindingTable;
 
-	auto& extent = m_result[sceneDesc.frameIndex].extent;
-
 	cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
-		&callableShaderBindingTable, console_miScale * extent.width, console_miScale * extent.height, 1);
+		&callableShaderBindingTable, extent.width, extent.height, 1);
 }
 
 } // namespace vl
