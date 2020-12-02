@@ -62,11 +62,26 @@ struct IndexedShapeBuffer {
 	vl::RBuffer vertexBuffer;
 	vl::RBuffer indexBuffer;
 	uint32 indexCount;
+
+	IndexedShapeBuffer() = default;
+	IndexedShapeBuffer(const std::string& name, std::vector<float>& vertexData, std::vector<uint32>& indexData)
+	{
+		vertexBuffer = vl::RBuffer::CreateTransfer(name.c_str(), vertexData, vk::BufferUsageFlagBits::eVertexBuffer);
+		indexBuffer = vl::RBuffer::CreateTransfer(name.c_str(), indexData, vk::BufferUsageFlagBits::eIndexBuffer);
+		indexCount = indexData.size();
+	}
 };
 
 struct ShapeBuffer {
 	vl::RBuffer vertexBuffer;
 	uint32 vertexCount;
+
+	ShapeBuffer() = default;
+	ShapeBuffer(const std::string& name, std::vector<float>& data)
+	{
+		vertexBuffer = vl::RBuffer::CreateTransfer(name.c_str(), data, vk::BufferUsageFlagBits::eVertexBuffer);
+		vertexCount = static_cast<uint32>(data.size() / 3);
+	}
 };
 
 void BindShapeBuffer(vk::CommandBuffer cmdBuffer, const IndexedShapeBuffer& b)
@@ -93,7 +108,7 @@ void DrawShape(vk::CommandBuffer cmdBuffer, const ShapeBuffer& b)
 void MakeSphere(int32 sectorCount, int32 stackCount, float radius, IndexedShapeBuffer& sphereBuf)
 {
 	std::vector<float> vertices;
-	std::vector<int32> indices;
+	std::vector<uint32> indices;
 
 	float x, y, z, xy; // vertex position
 
@@ -143,12 +158,7 @@ void MakeSphere(int32 sectorCount, int32 stackCount, float radius, IndexedShapeB
 		}
 	}
 
-
-	sphereBuf.vertexBuffer
-		= vl::RBuffer::CreateTransfer("Pointlight Sphere Vertex", vertices, vk::BufferUsageFlagBits::eVertexBuffer);
-	sphereBuf.indexBuffer
-		= vl::RBuffer::CreateTransfer("Pointlight Sphere Index", indices, vk::BufferUsageFlagBits::eIndexBuffer);
-	sphereBuf.indexCount = static_cast<uint32>(indices.size());
+	sphereBuf = IndexedShapeBuffer("SphereShape", vertices, indices);
 }
 
 struct ShapesData {
@@ -162,16 +172,10 @@ struct ShapesData {
 
 	ShapesData()
 	{
-		cube_triangleStrip.vertexBuffer = vl::RBuffer::CreateTransfer(
-			"Box triangle strip vertices", cube_triangleStripData, vk::BufferUsageFlagBits::eVertexBuffer);
-		unitRectangle_triangleStrip.vertexBuffer = vl::RBuffer::CreateTransfer(
-			"Unit rectangle vertices", unitRectangle_triangleStripData, vk::BufferUsageFlagBits::eVertexBuffer);
-		cube_triangleStrip.vertexCount = static_cast<uint32>(cube_triangleStripData.size() / 3);
-		cube_lineList.vertexBuffer
-			= vl::RBuffer::CreateTransfer("Cube vertices", cube_verticesData, vk::BufferUsageFlagBits::eVertexBuffer);
-		cube_lineList.indexBuffer = vl::RBuffer::CreateTransfer(
-			"Cube line list indices", cube_lineList_indicesData, vk::BufferUsageFlagBits::eIndexBuffer);
-		cube_lineList.indexCount = cube_lineList_indicesData.size();
+		cube_triangleStrip = ShapeBuffer("BoxShape", cube_triangleStripData);
+		unitRectangle_triangleStrip = ShapeBuffer("UnitRectangleShape", unitRectangle_triangleStripData);
+
+		cube_lineList = IndexedShapeBuffer("CubeShape", cube_verticesData, cube_lineList_indicesData);
 
 		MakeSphere(18, 9, 1.f, sphere18x9);
 		MakeSphere(36, 18, 1.f, sphere36x18);

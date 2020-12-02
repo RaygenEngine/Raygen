@@ -1,4 +1,5 @@
 #pragma once
+#include "rendering/wrappers/ImageView.h"
 
 struct SceneRenderDesc;
 
@@ -11,7 +12,7 @@ struct RaytraceMirrorReflections {
 	InFlightResources<vk::DescriptorSet> descSet;
 
 	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const;
-	void Resize(vk::Extent2D extent) const;
+	void Resize(vk::Extent2D extent);
 };
 
 } // namespace vl

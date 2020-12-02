@@ -2,9 +2,6 @@
 
 #include "engine/Listener.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
-#include "rendering/techniques/CalculateIrragrids.h"
-#include "rendering/techniques/CalculateReflprobes.h"
-#include "rendering/techniques/CalculateShadowmaps.h"
 #include "rendering/techniques/RaytraceMirrorReflections.h"
 #include "rendering/wrappers/CmdBuffer.h"
 #include "rendering/wrappers/passlayout/RenderPassLayout.h"
@@ -27,30 +24,27 @@ public:
 
 	InFlightResources<vk::ImageView> GetOutputViews() const;
 
-	InFlightResources<RenderingPassInstance> m_mainPassInst;
-	InFlightResources<RenderingPassInstance> m_secondaryPassInst;
 
 	// TODO: ppt
 	PtLightBlend m_ptLightBlend;
 	InFlightResources<RenderingPassInstance> m_ptPass;
 	//
-private:
-	void RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordSecondaryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordPostProcessPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 
-	vk::Extent2D m_extent{};
+	// TODO: geometry + core light
+	InFlightResources<RenderingPassInstance> m_mainPassInst;
+	InFlightResources<RenderingPassInstance> m_secondaryPassInst;
+	//
 
-	// Global descriptor set
-	InFlightResources<vk::DescriptorSet> m_attachmentsDesc;
-
-	// techniques
-	CalculateShadowmaps m_calculateShadowmaps;
-	CalculateReflprobes m_calculateReflprobes;
-	CalculateIrragrids m_calculateIrragrids;
+	// non-static techniques
 	RaytraceMirrorReflections m_raytraceMirrorReflections;
 
+private:
+	vk::Extent2D m_extent{};
+
+	// TODO: Global descriptor set
+	InFlightResources<vk::DescriptorSet> m_attachmentsDesc;
+
+	void DrawGeometryAndLights(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc);
 
 } * Renderer{};
 } // namespace vl

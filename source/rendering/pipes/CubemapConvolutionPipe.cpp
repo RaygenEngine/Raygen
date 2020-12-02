@@ -13,7 +13,7 @@
 namespace vl {
 vk::UniquePipelineLayout CubemapConvolutionPipe::MakePipelineLayout()
 {
-	rvk::makeLayoutNoPC({
+	return rvk::makeLayoutNoPC({
 		Layouts->singleStorageImage.handle(),
 		Layouts->singleSamplerDescLayout.handle(),
 	});
