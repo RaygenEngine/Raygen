@@ -8,6 +8,7 @@
 #include "rendering/scene/SceneIrragrid.h"
 #include "rendering/util/WriteDescriptorSets.h"
 
+// TODO: use specific for each technique instance and waitIdle() resize
 ConsoleVariable<float> cons_mirrorScale{ "r.mirror.scale", 1.f, "Set mirror scale" };
 
 namespace vl {
@@ -26,8 +27,6 @@ void RaytraceMirrorReflections::RecordCmd(vk::CommandBuffer cmdBuffer, const Sce
 		vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
 	auto extent = result[sceneDesc.frameIndex].extent;
-	extent.width *= cons_mirrorScale;
-	extent.height *= cons_mirrorScale;
 
 	StaticPipes::Get<MirrorPipe>().Draw(cmdBuffer, sceneDesc, descSet[sceneDesc.frameIndex], extent);
 
