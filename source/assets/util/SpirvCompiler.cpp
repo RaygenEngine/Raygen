@@ -50,90 +50,10 @@ static SpirvSharedLib lib;
 
 void ReportError(const char* infoLog, const std::string& shadername, TextCompilerErrors* outError);
 
-////
-//// NOTE: might be beneficial to use the already provided c api (defined in glsl_c_interface)
-//// when they enable spv options. Or implement it and pull request.
-////
-// struct ShaderCompileInfo {
-//	//
-//	// Create Info Section
-//	//
-//	EShLanguage shaderType;
-//	const char* inputCode;
-//	const char* shadername;
-//
-//	// Defaults tailored for most up-to-dateL: glsl -> spv vulkan.
-//	int shaderLanguageVersion = 460;
-//	glslang::EShSource language = glslang::EShSourceGlsl;
-//	glslang::EShClient client = glslang::EShClientVulkan;
-//	glslang::EShTargetClientVersion targetClientVersion = glslang::EShTargetVulkan_1_2;
-//	glslang::EShTargetLanguage targetLanguage = glslang::EshTargetSpv;
-//	glslang::EShTargetLanguageVersion targetLanguageVersion = glslang::EShTargetSpv_1_5;
-//	//
-//	// Parse Info Section (uses DefaultTBuiltInResource for now)
-//	//
-//	const char* const* localIncludeDirs = nullptr;
-//	int localIncludeDirCount = 0;
-//
-//	// Used for parse & link
-//	EShMessages errorMessages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules);
-//
-//	// Link has everything from above
-//
-//	//
-//	// Generate SPV Section
-//	//
-//
-//	// spvOptions is a struct that contains booleans only and can be passed through C api
-//	glslang::SpvOptions spvOptions;
-//};
-//
-//
-// struct InstancedData;
-// struct ShaderCompileResult {
-//	InstancedData* data; // Don't touch this over dll boundary
-//
-//	unsigned int* spvResult = nullptr;
-//	// in unsigned int count (not bytes)
-//	int spvResultSize = 0;
-//
-//	bool parseSuccess = false;
-//	bool linkSuccess = false;
-//
-//	const char* infoLog = nullptr;
-//	const char* infoDebugLog = nullptr;
-//	const char* allMessages = nullptr;
-//};
-//
-// struct InstancedData {
-//	DirStackFileIncluder includer;
-//	glslang::TShader shader;
-//	glslang::TProgram program;
-//
-//	spv::SpvBuildLogger spvLogger;
-//	std::string getAllMessages;
-//	ShaderCompileResult result;
-//	std::vector<unsigned int> outCode;
-//
-//	InstancedData(EShLanguage shaderType)
-//		: shader(shaderType)
-//	{
-//	}
-//};
-//
-// using Handle = ShaderCompileResult*;
-//
-// Handle spirvc_compile(ShaderCompileInfo* compileInfo);
-// void spirvc_free_compilation(Handle handle);
-
-
 std::vector<uint32> CompileImplDLL(
 	const std::string& code, const std::string& shadername, TextCompilerErrors* outError, EShLanguage stage)
 {
 	using namespace glslang;
-	TIMER_STATIC_SCOPE("Shader Compilation Time (DLL)");
-
-
 	constexpr std::array includes = { "", "./engine-data/spv/", "./engine-data/spv/includes" };
 
 	ShaderCompileInfo info;
@@ -202,7 +122,6 @@ std::vector<uint32> CompileImplDLL(
 std::vector<uint32> CompileImplStaticLink(
 	const std::string& code, const std::string& shadername, TextCompilerErrors* outError, EShLanguage stage)
 {
-	TIMER_STATIC_SCOPE("Shader Compilation Time (Static Link)");
 	using namespace glslang;
 
 
