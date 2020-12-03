@@ -1,6 +1,8 @@
 #pragma once
 
 #define LIBLOAD_FUNC(FunctionName) &FunctionName, #FunctionName
+#define PFN_FUNC(FunctionName)     decltype(&FunctionName) pfn_##FunctionName = nullptr
+#define LIBLOAD_INTO(FunctionName) pfn_##FunctionName = LibLoadFunc(pfn_##FunctionName, #FunctionName)
 
 class DynLibLoader {
 
@@ -9,11 +11,13 @@ public:
 	DynLibLoader() = default;
 
 	// Automatically opens the library requested. Extension auto added per platform.
-	DynLibLoader(const char* filenameNoExt);
+	// If allow missing is true, there will be no error handling if loading fails. (HasLoadedLibrary will remain false)
+	DynLibLoader(const char* filenameNoExt, bool allowMissing = false);
 
 	// Loads the library requested. Extension auto added per platform. (This will unload the previous library if one
 	// exists)
-	void LoadDynLibrary(const char* filenameNoExt);
+	// If allow missing is true, there will be no error handling if loading fails. (HasLoadedLibrary will remain false)
+	void LoadDynLibrary(const char* filenameNoExt, bool allowMissing = false);
 
 
 	[[nodiscard]] bool HasLoadedLibrary() const { return m_platformData != nullptr; }

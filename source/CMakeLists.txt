@@ -59,6 +59,7 @@ target_precompile_headers(Raygen PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/pch.h")
 target_precompile_headers(Raygen-Dynlib PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/pch.h")  
 
 if(MSVC)
+	# TODO: this does not work anymore?
 	set_property(TARGET Raygen-App PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 

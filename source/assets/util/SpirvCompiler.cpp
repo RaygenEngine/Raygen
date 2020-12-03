@@ -1,69 +1,210 @@
 #include "SpirvCompiler.h"
 
 #include "core/StringConversions.h"
+#include "engine/Timer.h"
+#include "platform/DynLibLoader.h"
 
 #include <SPIRV/GlslangToSpv.h>
 #include <StandAlone/DirStackFileIncluder.h>
 #include <StandAlone/ResourceLimits.h>
+#include <StandAlone/SharedLibCombined/SharedLibCombined.h>
 #include <mutex>
+#include <iostream>
+
 
 EShLanguage FindLanguage(const std::string& filename);
 EShLanguage LangFromStage(ShaderStageType type);
 
-std::vector<uint32> CompileImpl(
+
+namespace {
+struct SpirvSharedLib : DynLibLoader {
+	SpirvSharedLib()
+		: DynLibLoader("../Release/SPIRV-SharedLib", true)
+	{
+		if (HasLoadedLibrary()) {
+			std::cout << "===== RAYGEN: USING DLL SHADER COMPILER ====\n";
+			LIBLOAD_INTO(spirvc_init_process);
+			LIBLOAD_INTO(spirvc_finalize_process);
+			LIBLOAD_INTO(spirvc_compile);
+			LIBLOAD_INTO(spirvc_free_compilation);
+			pfn_spirvc_init_process();
+		}
+	}
+
+	~SpirvSharedLib()
+	{
+		if (pfn_spirvc_finalize_process) {
+			pfn_spirvc_finalize_process();
+		}
+	}
+
+	PFN_FUNC(spirvc_init_process);
+	PFN_FUNC(spirvc_finalize_process);
+	PFN_FUNC(spirvc_compile);
+	PFN_FUNC(spirvc_free_compilation);
+};
+// TODO: move this outside of global scope
+static SpirvSharedLib lib;
+} // namespace
+
+
+void ReportError(const char* infoLog, const std::string& shadername, TextCompilerErrors* outError);
+
+////
+//// NOTE: might be beneficial to use the already provided c api (defined in glsl_c_interface)
+//// when they enable spv options. Or implement it and pull request.
+////
+// struct ShaderCompileInfo {
+//	//
+//	// Create Info Section
+//	//
+//	EShLanguage shaderType;
+//	const char* inputCode;
+//	const char* shadername;
+//
+//	// Defaults tailored for most up-to-dateL: glsl -> spv vulkan.
+//	int shaderLanguageVersion = 460;
+//	glslang::EShSource language = glslang::EShSourceGlsl;
+//	glslang::EShClient client = glslang::EShClientVulkan;
+//	glslang::EShTargetClientVersion targetClientVersion = glslang::EShTargetVulkan_1_2;
+//	glslang::EShTargetLanguage targetLanguage = glslang::EshTargetSpv;
+//	glslang::EShTargetLanguageVersion targetLanguageVersion = glslang::EShTargetSpv_1_5;
+//	//
+//	// Parse Info Section (uses DefaultTBuiltInResource for now)
+//	//
+//	const char* const* localIncludeDirs = nullptr;
+//	int localIncludeDirCount = 0;
+//
+//	// Used for parse & link
+//	EShMessages errorMessages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules);
+//
+//	// Link has everything from above
+//
+//	//
+//	// Generate SPV Section
+//	//
+//
+//	// spvOptions is a struct that contains booleans only and can be passed through C api
+//	glslang::SpvOptions spvOptions;
+//};
+//
+//
+// struct InstancedData;
+// struct ShaderCompileResult {
+//	InstancedData* data; // Don't touch this over dll boundary
+//
+//	unsigned int* spvResult = nullptr;
+//	// in unsigned int count (not bytes)
+//	int spvResultSize = 0;
+//
+//	bool parseSuccess = false;
+//	bool linkSuccess = false;
+//
+//	const char* infoLog = nullptr;
+//	const char* infoDebugLog = nullptr;
+//	const char* allMessages = nullptr;
+//};
+//
+// struct InstancedData {
+//	DirStackFileIncluder includer;
+//	glslang::TShader shader;
+//	glslang::TProgram program;
+//
+//	spv::SpvBuildLogger spvLogger;
+//	std::string getAllMessages;
+//	ShaderCompileResult result;
+//	std::vector<unsigned int> outCode;
+//
+//	InstancedData(EShLanguage shaderType)
+//		: shader(shaderType)
+//	{
+//	}
+//};
+//
+// using Handle = ShaderCompileResult*;
+//
+// Handle spirvc_compile(ShaderCompileInfo* compileInfo);
+// void spirvc_free_compilation(Handle handle);
+
+
+std::vector<uint32> CompileImplDLL(
 	const std::string& code, const std::string& shadername, TextCompilerErrors* outError, EShLanguage stage)
 {
 	using namespace glslang;
+	TIMER_STATIC_SCOPE("Shader Compilation Time (DLL)");
 
-	auto reportError = [&](TShader& shader) {
-		if (!outError) {
-			auto er = fmt::format("\nGLSL Compiler Error: {}.\n===\n{}\n====", shadername, shader.getInfoLog());
-			LOG_ERROR("{}", er);
-		}
-		else {
-			// auto er = fmt::format("\nGLSL Compiler Error: {}.\n===\n{}\n====", shadername, shader.getInfoLog());
 
-			// PERF: can be done with just string_views
+	constexpr std::array includes = { "", "./engine-data/spv/", "./engine-data/spv/includes" };
 
-			std::stringstream ss;
-			ss.str(shader.getInfoLog());
-			std::string item;
+	ShaderCompileInfo info;
+	info.shaderType = stage;
+	info.inputCode = code.c_str();
+	info.shadername = shadername.c_str();
+	// The rest are defaults
 
-			// Parsing example:
-			// ERROR: gbuffer.frag:39: '' :  syntax error, unexpected IDENTIFIER
-			// We want to parse the line number
+	info.shaderLanguageVersion = 460;
+	info.language = glslang::EShSourceGlsl;
+	info.client = glslang::EShClientVulkan;
+	info.targetClientVersion = glslang::EShTargetVulkan_1_2;
+	info.targetLanguage = glslang::EShTargetSpv;
+	info.targetLanguageVersion = glslang::EShTargetSpv_1_5;
 
-			while (std::getline(ss, item)) {
-				using namespace std::literals;
-				constexpr std::string_view errorStr = "ERROR: "sv;
-				constexpr size_t size = errorStr.size();
+	info.localIncludeDirs = includes.data();
+	info.localIncludeDirCount = includes.size();
 
-				if (item.starts_with(errorStr)) {
-					std::string_view view{ item.c_str() };
-					view = view.substr(size);
+	info.errorMessages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules);
 
-					auto loc = view.find_first_of(':');
-					if (loc == std::string::npos) {
-						continue;
-					}
+	auto& options = info.spvOptions;
+	options.generateDebugInfo = false;
+	options.disableOptimizer = true;
+	options.validate = false;
+	options.optimizeSize = false;
 
-					view = view.substr(loc + 1);
+	// Handle spirvc_compile(ShaderCompileInfo * compileInfo);
+	// void spirvc_free_compilation(Handle handle);
 
-					// Find Next ':'
-					loc = view.find_first_of(':');
-					if (loc == std::string::npos) {
-						continue;
-					}
+	Handle result = lib.pfn_spirvc_compile(&info);
 
-					auto numView = view.substr(0, loc);
-					int32 errorLine = str::fromStrView<int32>(numView);
+	if (!result->parseSuccess) {
+		ReportError(result->infoLog, shadername, outError);
+		lib.pfn_spirvc_free_compilation(result);
+		return {};
+	}
+	if (!result->linkSuccess) {
+		auto er
+			= fmt::format("\nGLSL linking failed: {}.\n{}\n{}\n", shadername, result->infoLog, result->infoDebugLog);
+		LOG_ERROR("{}", er);
+		lib.pfn_spirvc_free_compilation(result);
+		return {};
+	}
 
-					view = view.substr(loc + 1);
-					outError->errors.emplace(errorLine, std::string(view));
-				}
-			}
-		}
-	};
+	if (result->allMessages) {
+		LOG_REPORT("Shader Compiling Messages: {}", result->allMessages);
+	}
+
+
+	// Copy code back
+	std::vector<uint32> outCode(result->spvResultSize);
+
+
+	if (result->spvResultSize != 0) {
+		memcpy(outCode.data(), result->spvResult, outCode.size() * sizeof(uint32));
+	}
+
+	if (outError && outCode.size() > 0) {
+		outError->wasSuccessful = true;
+	}
+
+	lib.pfn_spirvc_free_compilation(result);
+	return outCode;
+}
+
+std::vector<uint32> CompileImplStaticLink(
+	const std::string& code, const std::string& shadername, TextCompilerErrors* outError, EShLanguage stage)
+{
+	TIMER_STATIC_SCOPE("Shader Compilation Time (Static Link)");
+	using namespace glslang;
+
 
 	std::vector<uint32> outCode;
 
@@ -103,7 +244,7 @@ std::vector<uint32> CompileImpl(
 
 	if (!Shader.parse(&DefaultTBuiltInResource, ShaderLanguageVersion, true,
 			(EShMessages)(EShMsgSpvRules | EShMsgVulkanRules), Includer)) {
-		reportError(Shader);
+		ReportError(Shader.getInfoLog(), shadername, outError);
 		return {};
 	}
 
@@ -127,8 +268,10 @@ std::vector<uint32> CompileImpl(
 
 	glslang::GlslangToSpv(*Program.getIntermediate(ShaderType), outCode, &spvLogger, &spvOptions);
 
-	for (auto msg : spvLogger.getAllMessages()) {
-		LOG_REPORT("Shader Compiling: {}", msg);
+
+	auto messages = spvLogger.getAllMessages();
+	if (!messages.empty()) {
+		LOG_REPORT("Shader Compiling: {}", messages);
 	}
 
 	// AppendErrors += fmt::format("{}...\n", filename);
@@ -143,21 +286,31 @@ std::vector<uint32> CompileImpl(
 }
 
 
+std::vector<uint32> CompileImplSelect(
+	const std::string& code, const std::string& shadername, TextCompilerErrors* outError, EShLanguage stage)
+{
+
+	if (lib.HasLoadedLibrary()) {
+		return CompileImplDLL(code, shadername, outError, stage);
+	}
+	return CompileImplStaticLink(code, shadername, outError, stage);
+}
+
 std::vector<uint32> ShaderCompiler::Compile(
 	const std::string& code, const std::string& shadername, TextCompilerErrors* outError)
 {
-	return CompileImpl(code, shadername, outError, FindLanguage(shadername));
+	return CompileImplSelect(code, shadername, outError, FindLanguage(shadername));
 }
 
 std::vector<uint32> ShaderCompiler::Compile(
 	const std::string& code, ShaderStageType type, const std::string& shadername, TextCompilerErrors* outError)
 {
-	return CompileImpl(code, shadername, outError, LangFromStage(type));
+	return CompileImplSelect(code, shadername, outError, LangFromStage(type));
 }
 
 std::vector<uint32> ShaderCompiler::Compile(const std::string& code, ShaderStageType type, TextCompilerErrors* outError)
 {
-	return CompileImpl(code, "custom", outError, LangFromStage(type));
+	return CompileImplSelect(code, "custom", outError, LangFromStage(type));
 }
 
 std::string StringFromFile(const std::string& path)
@@ -176,6 +329,55 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& filepath, TextCom
 	return Compile(StringFromFile(filepath), filepath, outError);
 }
 
+void ReportError(const char* infoLog, const std::string& shadername, TextCompilerErrors* outError)
+{
+	if (!outError) {
+		auto er = fmt::format("\nGLSL Compiler Error: {}.\n===\n{}\n====", shadername, infoLog);
+		LOG_ERROR("{}", er);
+		return;
+	}
+	// auto er = fmt::format("\nGLSL Compiler Error: {}.\n===\n{}\n====", shadername, shader.getInfoLog());
+
+	// PERF: can be done with just string_views
+
+	std::stringstream ss;
+	ss.str(infoLog);
+	std::string item;
+
+	// Parsing example:
+	// ERROR: gbuffer.frag:39: '' :  syntax error, unexpected IDENTIFIER
+	// We want to parse the line number
+
+	while (std::getline(ss, item)) {
+		using namespace std::literals;
+		constexpr std::string_view errorStr = "ERROR: "sv;
+		constexpr size_t size = errorStr.size();
+
+		if (item.starts_with(errorStr)) {
+			std::string_view view{ item.c_str() };
+			view = view.substr(size);
+
+			auto loc = view.find_first_of(':');
+			if (loc == std::string::npos) {
+				continue;
+			}
+
+			view = view.substr(loc + 1);
+
+			// Find Next ':'
+			loc = view.find_first_of(':');
+			if (loc == std::string::npos) {
+				continue;
+			}
+
+			auto numView = view.substr(0, loc);
+			int32 errorLine = str::fromStrView<int32>(numView);
+
+			view = view.substr(loc + 1);
+			outError->errors.emplace(errorLine, std::string(view));
+		}
+	}
+}
 
 EShLanguage FindLanguage(const std::string& filename)
 {

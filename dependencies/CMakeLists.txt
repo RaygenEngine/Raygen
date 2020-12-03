@@ -1,4 +1,3 @@
-
 # GLFW options
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "Glfw Docs")
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Glfw Examples")
@@ -26,10 +25,13 @@ set(SPIRV_CROSS_ENABLE_UTIL OFF CACHE BOOL "SPIRV-Cross")
 add_subdirectory(spirv-cross)
 set(RAYGEN_SPIRV_CROSS_MODULES spirv-cross-core spirv-cross-glsl spirv-cross-reflect PARENT_SCOPE)
 
+# Prefer the included spirv-headers dir, it will usually be a more recent version
+# than the one included in vulkan sdk.
+unset(SPIRV-Headers_SOURCE_DIR CACHE)
+add_subdirectory(glslang glslang/)
 
 # Vulkan
 find_package(Vulkan REQUIRED)
-add_subdirectory(${Vulkan_INCLUDE_DIR}/../glslang glslang/ EXCLUDE_FROM_ALL)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
