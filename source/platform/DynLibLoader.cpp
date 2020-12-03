@@ -16,12 +16,12 @@ struct DynLibLoader::PlatformData {
 #endif
 };
 
-DynLibLoader::DynLibLoader(const char* filenameNoExt)
+DynLibLoader::DynLibLoader(const char* filenameNoExt, bool allowMissing)
 {
-	LoadDynLibrary(filenameNoExt);
+	LoadDynLibrary(filenameNoExt, allowMissing);
 }
 
-void DynLibLoader::LoadDynLibrary(const char* filenameNoExt)
+void DynLibLoader::LoadDynLibrary(const char* filenameNoExt, bool allowMissing)
 {
 	if (m_platformData) {
 		UnloadDynLibrary();
@@ -46,7 +46,14 @@ void DynLibLoader::LoadDynLibrary(const char* filenameNoExt)
 #elif defined(_WIN32)
 	m_platformData->library = LoadLibrary(filename.c_str());
 #endif
-	assert(m_platformData->library && "Failed to open library");
+
+	if (!allowMissing) {
+		assert(m_platformData->library && "Failed to open library");
+	}
+	else if (allowMissing && !m_platformData->library) {
+		delete m_platformData;
+		m_platformData = nullptr;
+	}
 }
 
 void DynLibLoader::UnloadDynLibrary()
