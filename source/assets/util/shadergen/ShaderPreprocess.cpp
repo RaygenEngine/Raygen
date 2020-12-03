@@ -67,7 +67,8 @@ std::vector<std::pair<int, std::string>> ExtractIncludes(const std::string& code
 std::string PreprocessCode(
 	const std::string& code, std::vector<std::tuple<int32, std::string, ShaderRegistry::KNode*>>& outIncludesReplaced)
 {
-	TIMER_SCOPE("Preprocess Code");
+	// TIMER_STATIC_SCOPE("Preprocess Code");
+	// ^^ results to around 50ms on boot up time 3/12/2020.
 
 	std::stringstream result;
 	using namespace std::literals;

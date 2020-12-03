@@ -49,7 +49,6 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 	if (Get().isSelfIterating) {
 		return;
 	}
-	TIMER_SCOPE("Shader Update");
 	auto entry = AssetRegistry::GetEntry(baseHandle);
 
 
@@ -58,19 +57,14 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 	auto filename = ShaderRegistry::NormalizeFilenameForSearch(entry->metadata.originalImportLocation);
 	KNode* initialNode;
 	{
-		TIMER_SCOPE("Upward Search (Forced)");
 		initialNode = Get().FindOrAdd_Internal(filename, true);
 	}
 
 	if (!initialNode) {
-		LOG_REPORT("Failed to find: {}", filename);
 		return;
 	}
 
-	{
-		TIMER_SCOPE("Fully Cache Self Initial");
-		initialNode->FullyCacheSelf();
-	}
+	initialNode->FullyCacheSelf();
 
 	if (initialNode->isLeaf) {
 		return;
@@ -83,7 +77,6 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 
 	workingList.insert(initialNode);
 	addedSet.insert(initialNode);
-	TIMER_SCOPE("Working List");
 	while (!workingList.empty()) {
 		KNode* node = *workingList.begin();
 		workingList.erase(node);
@@ -96,9 +89,7 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 			for (auto c : node->processedCode) {
 				total += c == '\n' ? 1 : 0;
 			}
-			TIMER_SCOPE("Shader Actual Compile");
-			// LOG_REPORT("======================={}\n====================", node->processedCode);
-			LOG_REPORT("Compiling Shader Characters: {} Lines: {}", node->processedCode.size(), total);
+			// LOG_REPORT("Compiling Shader Characters: {} Lines: {}", node->processedCode.size(), total);
 			if (!ed->Compile(errors, node->processedCode)) {
 				const auto& name = AssetRegistry::GetEntry(node->pod)->name;
 
