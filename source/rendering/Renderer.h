@@ -1,15 +1,10 @@
 #pragma once
 
 #include "engine/Listener.h"
-#include "rendering/passes/bake/ComputeCubemapArrayConvolution.h"
-#include "rendering/passes/bake/ComputeCubemapConvolution.h"
-#include "rendering/passes/bake/ComputePrefilteredConvolution.h"
-#include "rendering/passes/bake/PathtracedCubemap.h"
-#include "rendering/passes/bake/PathtracedCubemapArray.h"
-#include "rendering/passes/gi/IndirectSpecularPass.h"
-#include "rendering/passes/gi/MirrorPass.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
+#include "rendering/techniques/RaytraceMirrorReflections.h"
 #include "rendering/wrappers/CmdBuffer.h"
+#include "rendering/wrappers/passlayout/RenderPassLayout.h"
 
 namespace vl {
 class OutputPassBase;
@@ -21,6 +16,8 @@ namespace vl {
 inline class Renderer_ : public Listener {
 
 public:
+	Renderer_();
+
 	void InitPipelines();
 
 	void ResizeBuffers(uint32 width, uint32 height);
@@ -29,33 +26,28 @@ public:
 
 	InFlightResources<vk::ImageView> GetOutputViews() const;
 
-	// TODO: private
+
+	// TODO: ppt
+	PtLightBlend m_ptLightBlend;
+	InFlightResources<RenderingPassInstance> m_ptPass;
+	//
+
+	// TODO: geometry + core light
 	InFlightResources<RenderingPassInstance> m_mainPassInst;
 	InFlightResources<RenderingPassInstance> m_secondaryPassInst;
-	InFlightResources<RenderingPassInstance> m_ptPass;
-	IndirectSpecularPass m_indirectSpecPass;
-	MirrorPass m_mirorPass;
+	//
+
+	// non-static techniques
+	RaytraceMirrorReflections m_raytraceMirrorReflections;
 
 private:
-	void RecordMapPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordMainPass(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordSecondaryPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-	void RecordPostProcessPasses(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
-
 	vk::Extent2D m_extent{};
 
-	// Global descriptor set
-	InFlightResources<vk::DescriptorSet> m_attachmentsDesc;
+	InFlightResources<size_t> viewerId{ ~0llu };
+	InFlightResources<vk::DescriptorSet> m_globalDesc;
 
-	// TODO: tidy
-	PtLightBlend m_lightblendPass;
-	PathtracedCubemap m_ptCubemap;
-	PathtracedCubemapArray m_ptCubemapArray;
-	ComputeCubemapArrayConvolution m_compCubemapArrayConvolution;
-	ComputeCubemapConvolution m_compCubemapConvolution;
-	ComputePrefilteredConvolution m_compPrefilteredConvolution;
-
-	// PtCollection m_postprocCollection;
+	void UpdateGlobalDescSet(SceneRenderDesc& sceneDesc);
+	void DrawGeometryAndLights(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc);
 
 } * Renderer{};
 } // namespace vl

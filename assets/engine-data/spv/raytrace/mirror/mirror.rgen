@@ -4,22 +4,33 @@
 #extension GL_EXT_scalar_block_layout : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 #extension GL_EXT_buffer_reference2 : enable
-
 // TODO:
 #define RAY
-
 #include "global.glsl"
-#include "raytrace/mirror/mirror.glsl"
 
-#include "attachments.glsl"
+#include "global-descset.glsl"
+
 #include "bsdf.glsl"
 #include "onb.glsl"
 #include "surface.glsl"
 
-layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
-layout(set = 2, binding = 0, rgba32f) uniform image2D image;
-layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
-layout(set = 4, binding = 1) uniform sampler2D textureSamplers[];
+struct hitPayload
+{
+	vec3 radiance;
+	int depth;
+};
+
+layout(push_constant) uniform PC
+{
+	int depth;
+	int pointlightCount;
+	int spotlightCount;
+	int dirlightCount;
+	int irragridCount;
+};
+
+layout(set = 1, binding = 0, rgba32f) uniform image2D image;
+layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 layout(location = 0) rayPayloadEXT hitPayload prd;
 

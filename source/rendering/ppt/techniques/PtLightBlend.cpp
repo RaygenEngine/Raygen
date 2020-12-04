@@ -8,7 +8,7 @@ namespace vl {
 void PtLightBlend::MakeLayout()
 {
 	std::array layouts{
-		Layouts->renderAttachmentsLayout.handle(),
+		Layouts->globalDescLayout.handle(),
 	};
 
 	// pipeline layout
@@ -44,12 +44,10 @@ void PtLightBlend::MakePipeline()
 
 void PtLightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	auto descSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
-
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
+		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
 
 	// draw call (triangle)
 	cmdBuffer.draw(3u, 1u, 0u, 0u);
