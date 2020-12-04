@@ -46,8 +46,6 @@ Renderer_::Renderer_()
 
 void Renderer_::InitPipelines()
 {
-
-
 	// m_postprocCollection.RegisterTechniques();
 
 	m_ptLightBlend.MakeLayout();
@@ -83,8 +81,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 			views.emplace_back(att.view());
 		}
 
-		// TODO: std gpu asset
-		auto brdfLutImg = GpuAssetManager->GetGpuHandle(StdAssets::BrdfLut());
+		auto [brdfLutImg, brdfLutSampler] = GpuAssetManager->GetBrdfLutImageSampler();
 		views.emplace_back(m_secondaryPassInst[i].framebuffer[0].view());
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
 		views.emplace_back(brdfLutImg.Lock().image.view()); // reserved
@@ -92,28 +89,8 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		views.emplace_back(m_ptPass[i].framebuffer[0].view());            // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_globalDesc[i], 0u, std::move(views));
-
-		// TODO: find an owner - std gpu asset
-		vk::SamplerCreateInfo samplerInfo{};
-		samplerInfo
-			.setMagFilter(vk::Filter::eLinear) //
-			.setMinFilter(vk::Filter::eLinear)
-			.setAddressModeU(vk::SamplerAddressMode::eClampToEdge)
-			.setAddressModeV(vk::SamplerAddressMode::eClampToEdge)
-			.setAddressModeW(vk::SamplerAddressMode::eClampToEdge)
-			.setAnisotropyEnable(VK_TRUE)
-			.setMaxAnisotropy(1u)
-			.setBorderColor(vk::BorderColor::eIntOpaqueBlack)
-			.setUnnormalizedCoordinates(VK_FALSE)
-			.setCompareEnable(VK_FALSE)
-			.setCompareOp(vk::CompareOp::eAlways)
-			.setMipmapMode(vk::SamplerMipmapMode::eLinear)
-			.setMipLodBias(0.f)
-			.setMinLod(0.f)
-			.setMaxLod(32.f);
-		auto brdfSampler = GpuResources::AcquireSampler(samplerInfo);
-
-		rvk::writeDescriptorImages(m_globalDesc[i], 10u, { brdfLutImg.Lock().image.view() }, brdfSampler);
+		// TODO: should not rewrite, instead pass pairs with their sampler, if sampler is empty then default
+		rvk::writeDescriptorImages(m_globalDesc[i], 10u, { brdfLutImg.Lock().image.view() }, brdfLutSampler);
 	}
 }
 

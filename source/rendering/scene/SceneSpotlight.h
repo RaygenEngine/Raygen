@@ -35,7 +35,6 @@ struct SceneSpotlight : SceneStruct {
 	InFlightResources<vl::RenderingPassInstance> shadowmapPass;
 	InFlightResources<vk::DescriptorSet> shadowmapDescSet;
 
-	// TODO: gpu std asset
 	vk::Sampler depthSampler;
 
 	std::string name;
