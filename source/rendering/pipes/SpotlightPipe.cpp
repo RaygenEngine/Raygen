@@ -13,8 +13,8 @@ namespace vl {
 vk::UniquePipelineLayout SpotlightPipe::MakePipelineLayout()
 {
 	return rvk::makeLayoutNoPC({
+		Layouts->globalDescLayout.handle(),
 		Layouts->mainPassLayout.internalDescLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleSamplerDescLayout.handle(),
 	});
@@ -53,11 +53,10 @@ vk::UniquePipeline SpotlightPipe::MakePipeline()
 
 void SpotlightPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
-	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
-
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
 
 	for (auto sp : sceneDesc->Get<SceneSpotlight>()) {
 		cmdBuffer.bindDescriptorSets(

@@ -9,12 +9,14 @@
 struct SceneCamera;
 struct Scene;
 struct SceneRenderDesc {
+
+
 	Scene* scene{ nullptr };
 	SceneCamera& viewer;
 
 	uint32 frameIndex{ 0 };
 
-	vk::DescriptorSet attachmentsDescSet;
+	vk::DescriptorSet globalDesc;
 
 	// TODO: Scene description should only contain the required scene structs for current frame rendering
 	// apart from occlusion etc

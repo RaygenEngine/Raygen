@@ -17,6 +17,7 @@
 #include "rendering/pipes/geometry/GBufferPipe.h"
 #include "rendering/pipes/geometry/UnlitPipe.h"
 #include "rendering/resource/GpuResources.h"
+#include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneIrragrid.h"
 #include "rendering/scene/SceneReflProbe.h"
@@ -36,8 +37,17 @@ vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 
 namespace vl {
 
+Renderer_::Renderer_()
+{
+	for (uint32 i = 0; i < c_framesInFlight; ++i) {
+		m_globalDesc[i] = Layouts->globalDescLayout.AllocDescriptorSet();
+	}
+}
+
 void Renderer_::InitPipelines()
 {
+
+
 	// m_postprocCollection.RegisterTechniques();
 
 	m_ptLightBlend.MakeLayout();
@@ -66,7 +76,6 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 	}
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_attachmentsDesc[i] = Layouts->renderAttachmentsLayout.AllocDescriptorSet();
 
 		std::vector<vk::ImageView> views;
 
@@ -82,7 +91,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		views.emplace_back(m_raytraceMirrorReflections.result[i].view()); // mirror buffer
 		views.emplace_back(m_ptPass[i].framebuffer[0].view());            // sceneColorSampler
 
-		rvk::writeDescriptorImages(m_attachmentsDesc[i], 0u, std::move(views));
+		rvk::writeDescriptorImages(m_globalDesc[i], 0u, std::move(views));
 
 		// TODO: find an owner - std gpu asset
 		vk::SamplerCreateInfo samplerInfo{};
@@ -104,7 +113,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 			.setMaxLod(32.f);
 		auto brdfSampler = GpuResources::AcquireSampler(samplerInfo);
 
-		rvk::writeDescriptorImages(m_attachmentsDesc[i], 10u, { brdfLutImg.Lock().image.view() }, brdfSampler);
+		rvk::writeDescriptorImages(m_globalDesc[i], 10u, { brdfLutImg.Lock().image.view() }, brdfSampler);
 	}
 }
 
@@ -117,6 +126,33 @@ InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
 	return views;
 }
 
+void Renderer_::UpdateGlobalDescSet(SceneRenderDesc& sceneDesc)
+{
+	// if camera changed
+	if (sceneDesc.scene->activeCamera != viewerId[sceneDesc.frameIndex]) [[unlikely]] {
+
+		vk::DescriptorBufferInfo bufferInfo{};
+
+		bufferInfo
+			.setBuffer(sceneDesc.viewer.buffer[sceneDesc.frameIndex].handle()) //
+			.setOffset(0u)
+			.setRange(sceneDesc.viewer.uboSize);
+		vk::WriteDescriptorSet descriptorWrite{};
+
+		descriptorWrite
+			.setDstSet(m_globalDesc[sceneDesc.frameIndex]) //
+			.setDstBinding(14u)                            // WIP:
+			.setDstArrayElement(0u)
+			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+			.setBufferInfo(bufferInfo);
+
+		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+		viewerId[sceneDesc.frameIndex] = sceneDesc.scene->activeCamera;
+	}
+
+	sceneDesc.globalDesc = m_globalDesc[sceneDesc.frameIndex];
+}
+
 void Renderer_::DrawGeometryAndLights(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc)
 {
 	m_mainPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
@@ -124,29 +160,29 @@ void Renderer_::DrawGeometryAndLights(vk::CommandBuffer cmdBuffer, SceneRenderDe
 
 		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<SpotlightPipe>().layout(), 0u,
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<SpotlightPipe>().layout(), 1u,
 			1u, &m_mainPassInst[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
 
 		StaticPipes::Get<SpotlightPipe>().Draw(cmdBuffer, sceneDesc);
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<PointlightPipe>().layout(), 0u,
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<PointlightPipe>().layout(), 1u,
 			1u, &m_mainPassInst[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
 
 		StaticPipes::Get<PointlightPipe>().Draw(cmdBuffer, sceneDesc);
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<DirlightPipe>().layout(), 0u,
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<DirlightPipe>().layout(), 1u,
 			1u, &m_mainPassInst[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
 
 		StaticPipes::Get<DirlightPipe>().Draw(cmdBuffer, sceneDesc);
 
 		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<ReflprobePipe>().layout(), 0u,
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<ReflprobePipe>().layout(), 1u,
 			1u, &m_mainPassInst[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
 
 		StaticPipes::Get<ReflprobePipe>().Draw(cmdBuffer, sceneDesc);
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<IrragridPipe>().layout(), 0u,
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<IrragridPipe>().layout(), 1u,
 			1u, &m_mainPassInst[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
 
 		StaticPipes::Get<IrragridPipe>().Draw(cmdBuffer, sceneDesc);
@@ -160,7 +196,7 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 {
 	PROFILE_SCOPE(Renderer);
 
-	sceneDesc.attachmentsDescSet = m_attachmentsDesc[sceneDesc.frameIndex];
+	UpdateGlobalDescSet(sceneDesc);
 
 	// calculates: shadowmaps, gi maps
 	// requires: -

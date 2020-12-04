@@ -2,7 +2,8 @@
 
 #include "rendering/Device.h"
 
-SceneStruct::SceneStruct(size_t uboSize)
+SceneStruct::SceneStruct(size_t _uboSize)
+	: uboSize(_uboSize)
 {
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		uboDescSet[i] = vl::Layouts->singleUboDescLayout.AllocDescriptorSet();
