@@ -122,6 +122,8 @@ std::string PreprocessCode(
 			result << lineView << nl;
 		}
 	}
-	return result.str();
+	return code;
+
+	//	return result.str();
 }
 } // namespace shd

@@ -34,37 +34,8 @@ public:
 		const std::string& GetCode() const;
 
 
-		//// Mark all direct
-		// void MarkDirty(NSet& workingStack, NSet& knownDirty)
-		//{
-		//	processedCode = {};
-		//	for (auto dependee : directDependees) {
-		//		if (knownDirty.insert(dependee).second) {
-		//			workingStack.insert(dependee);
-		//			processedCode = {};
-		//		}
-		//	}
-		//}
-
 		std::string processedCode;
 
-		// bool CanPreprocessCode(NSet& knownDirty)
-		//{
-		//	for (auto dirty : knownDirty) {
-		//		if (directDependencies.contains(dirty)) {
-		//			// We cannot compile this yet.
-		//			return false;
-		//		}
-		//	}
-		//	return true;
-		//}
-
-		// Assumes all direct dependencies have been process
-		// void GenerateProcessedCode();
-
-		// NSet DetectNewDependencies();
-
-		// Update all dependencies and dependees and code. (called on init)
 		void FullyCacheSelf();
 	};
 
