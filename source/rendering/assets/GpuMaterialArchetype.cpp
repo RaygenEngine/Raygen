@@ -157,8 +157,8 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 	}
 
 	std::vector descLayouts{
-		descLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
+		Layouts->globalDescLayout.handle(),
+		descLayout.handle(), // mat
 	};
 
 	depth = CreatePassInfoOptional<DepthmapPipe>(
@@ -169,8 +169,8 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 
 
 	std::vector descLayoutsAnim{
+		Layouts->globalDescLayout.handle(),
 		descLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
 		Layouts->jointsDescLayout.handle(),
 	};
 

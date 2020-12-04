@@ -51,7 +51,7 @@ inline struct Layouts_ {
 	RDescriptorSetLayout imageDebugDescLayout;
 
 	// Global descriptor Set
-	RDescriptorSetLayout renderAttachmentsLayout;
+	RDescriptorSetLayout globalDescLayout;
 
 	RRenderPassLayout mainPassLayout;
 	RRenderPassLayout secondaryPassLayout;

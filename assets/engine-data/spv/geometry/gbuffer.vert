@@ -2,6 +2,8 @@
 #extension GL_GOOGLE_include_directive : enable
 #include "global.glsl"
 
+#include "global-descset.glsl"
+
 // out
 
 layout(location=0) out Data
@@ -29,8 +31,6 @@ layout(push_constant) uniform PC {
 	mat4 mvpPrev;
 	float drawIndex;
 } push;
-
-layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 
 void main() {
 	vec4 posWCS = push.modelMat * vec4(position, 1.0);

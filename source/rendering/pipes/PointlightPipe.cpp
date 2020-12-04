@@ -22,8 +22,8 @@ namespace vl {
 vk::UniquePipelineLayout PointlightPipe::MakePipelineLayout()
 {
 	auto layouts = {
+		Layouts->globalDescLayout.handle(),
 		Layouts->mainPassLayout.internalDescLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->accelLayout.handle(),
 	};
@@ -165,11 +165,11 @@ vk::UniquePipeline PointlightPipe::MakePipeline()
 
 void PointlightPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
-	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
-
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
+
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
 

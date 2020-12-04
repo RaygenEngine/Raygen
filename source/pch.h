@@ -1,5 +1,5 @@
 #pragma once
-
+// clang-format off
 
 // ALWAYS, ALWAYS keep this before ANY of Raygen's header includes
 #include "FeatureMacros.h"
@@ -78,3 +78,5 @@ class World;
 
 
 #define IMGUI_DEFINE_MATH_OPERATORS
+
+// clang-format on

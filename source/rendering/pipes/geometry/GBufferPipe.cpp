@@ -225,8 +225,6 @@ vk::UniquePipeline GbufferPipe::CreateAnimPipeline(
 
 void GbufferPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	auto descSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
-
 	for (auto& geom : sceneDesc->Get<SceneGeometry>()) {
 		PushConstant pc{
 			//
@@ -246,17 +244,19 @@ void GbufferPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 			}
 			auto& plLayout = *arch.gbuffer.pipelineLayout;
 
+
 			pc.drawIndex = float(gg.material.uid);
 
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbuffer.pipeline);
 			cmdBuffer.pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
+			cmdBuffer.bindDescriptorSets(
+				vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
+
 			if (mat.hasDescriptorSet) {
 				cmdBuffer.bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
+					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &mat.descSet, 0u, nullptr);
 			}
-
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
 
 			auto& gpuMesh = geom->mesh.Lock();
 			cmdBuffer.bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
@@ -287,12 +287,14 @@ void GbufferPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.gbufferAnimated.pipeline);
 			cmdBuffer.pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
+			cmdBuffer.bindDescriptorSets(
+				vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
+
+
 			if (mat.hasDescriptorSet) {
 				cmdBuffer.bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
+					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &mat.descSet, 0u, nullptr);
 			}
-
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &descSet, 0u, nullptr);
 
 			cmdBuffer.bindDescriptorSets(
 				vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u, &geom->descSet[sceneDesc.frameIndex], 0u, nullptr);

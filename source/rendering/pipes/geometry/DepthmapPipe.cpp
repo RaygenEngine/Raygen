@@ -223,7 +223,7 @@ void DepthmapPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const glm::mat4& viewP
 
 			if (mat.hasDescriptorSet) {
 				cmdBuffer.bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
+					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &mat.descSet, 0u, nullptr);
 			}
 
 			cmdBuffer.drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
@@ -248,11 +248,8 @@ void DepthmapPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const glm::mat4& viewP
 
 			if (mat.hasDescriptorSet) {
 				cmdBuffer.bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
+					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &mat.descSet, 0u, nullptr);
 			}
-
-			// cmdBuffer->bindDescriptorSets(
-			//	vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &Scene->GetActiveCameraDescSet(), 0u, nullptr);
 
 			cmdBuffer.bindDescriptorSets(
 				vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u, &geom->descSet[sceneDesc.frameIndex], 0u, nullptr);

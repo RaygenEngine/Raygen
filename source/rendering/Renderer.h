@@ -16,6 +16,8 @@ namespace vl {
 inline class Renderer_ : public Listener {
 
 public:
+	Renderer_();
+
 	void InitPipelines();
 
 	void ResizeBuffers(uint32 width, uint32 height);
@@ -41,9 +43,10 @@ public:
 private:
 	vk::Extent2D m_extent{};
 
-	// TODO: Global descriptor set
-	InFlightResources<vk::DescriptorSet> m_attachmentsDesc;
+	InFlightResources<size_t> viewerId{ ~0llu };
+	InFlightResources<vk::DescriptorSet> m_globalDesc;
 
+	void UpdateGlobalDescSet(SceneRenderDesc& sceneDesc);
 	void DrawGeometryAndLights(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc);
 
 } * Renderer{};

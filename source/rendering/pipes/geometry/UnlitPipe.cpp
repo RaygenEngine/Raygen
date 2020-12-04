@@ -189,13 +189,13 @@ void UnlitPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *arch.unlit.pipeline);
 			cmdBuffer.pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
+			cmdBuffer.bindDescriptorSets(
+				vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
+
 			if (mat.hasDescriptorSet) {
 				cmdBuffer.bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &mat.descSet, 0u, nullptr);
+					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &mat.descSet, 0u, nullptr);
 			}
-
-			cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u,
-				&sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
 
 			auto& gpuMesh = geom->mesh.Lock();
 			cmdBuffer.bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });
@@ -205,8 +205,9 @@ void UnlitPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 
 			cmdBuffer.drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
 		}
-		// CHECK: Unlit Animations
 	}
+
+	// CHECK: Unlit Animations
 }
 
 

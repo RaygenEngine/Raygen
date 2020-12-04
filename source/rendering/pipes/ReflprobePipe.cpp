@@ -22,14 +22,12 @@ namespace vl {
 vk::UniquePipelineLayout ReflprobePipe::MakePipelineLayout()
 {
 	auto layouts = {
+		Layouts->globalDescLayout.handle(),
 		Layouts->mainPassLayout.internalDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleSamplerDescLayout.handle(),
 		Layouts->singleSamplerDescLayout.handle(),
 		Layouts->singleSamplerDescLayout.handle(),
-		// TODO: std brd flut
-		Layouts->renderAttachmentsLayout.handle(),
 	};
 
 	// pipeline layout
@@ -174,13 +172,10 @@ vk::UniquePipeline ReflprobePipe::MakePipeline()
 
 void ReflprobePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
-	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
-
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, layout(), 6u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
+		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
 
 	// bind unit sphere once
 	rvk::bindSphere18x9(cmdBuffer);

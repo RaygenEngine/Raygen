@@ -13,8 +13,8 @@ namespace vl {
 vk::UniquePipelineLayout IrragridPipe::MakePipelineLayout()
 {
 	return rvk::makeLayoutNoPC({
+		Layouts->globalDescLayout.handle(),
 		Layouts->mainPassLayout.internalDescLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->cubemapArray.handle(),
 	});
@@ -130,11 +130,10 @@ vk::UniquePipeline IrragridPipe::MakePipeline()
 
 void IrragridPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
-	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
-
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
 
 	for (auto ig : sceneDesc->Get<SceneIrragrid>()) {
 

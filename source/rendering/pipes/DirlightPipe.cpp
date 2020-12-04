@@ -12,8 +12,8 @@ namespace vl {
 vk::UniquePipelineLayout DirlightPipe::MakePipelineLayout()
 {
 	return rvk::makeLayoutNoPC({
+		Layouts->globalDescLayout.handle(),
 		Layouts->mainPassLayout.internalDescLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleUboDescLayout.handle(),
 		Layouts->singleSamplerDescLayout.handle(),
 	});
@@ -52,13 +52,12 @@ vk::UniquePipeline DirlightPipe::MakePipeline()
 
 void DirlightPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
-	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
-
 	auto& pipeLayout = StaticPipes::GetLayout<DirlightPipe>();
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 1u, 1u, &camDescSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics, pipeLayout, 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
 
 	for (auto dl : sceneDesc->Get<SceneDirlight>()) {
 		cmdBuffer.bindDescriptorSets(

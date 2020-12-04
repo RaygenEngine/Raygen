@@ -28,8 +28,7 @@ namespace vl {
 vk::UniquePipelineLayout AmbientPipe::MakePipelineLayout()
 {
 	auto layouts = {
-		Layouts->renderAttachmentsLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
+		Layouts->globalDescLayout.handle(),
 		Layouts->accelLayout.handle(),
 	};
 
@@ -159,8 +158,6 @@ vk::UniquePipeline AmbientPipe::MakePipeline()
 
 void AmbientPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
-	auto camDescSet = sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex];
-
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 	PushConstant pc{
@@ -173,12 +170,10 @@ void AmbientPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scene
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant), &pc);
 
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.attachmentsDescSet, 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &camDescSet, 0u, nullptr);
+		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
+		vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
 
 	// big triangle
 	cmdBuffer.draw(3u, 1u, 0u, 0u);
