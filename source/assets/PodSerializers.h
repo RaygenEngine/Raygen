@@ -73,6 +73,12 @@ void serialize(Archive& ar, Vertex& vtx)
 template<typename Archive>
 void serialize(Archive& ar, GeometrySlot& gs)
 {
+	// PERF: Loading is bottlenecked here in debug builds. Cereal maybe does pushback + move>
+	// Even in debug loading a 16mb model should not take 400ms.
+	// Probable causes here are:
+	//  * Cereal does emplace_back when filling these vectors (bottlenecked on iterator debugging, unlikely)
+	//  * Debug callstack is excessive (because of templates required to instantiate this call)
+
 	ar(gs.indices, gs.vertices);
 }
 
