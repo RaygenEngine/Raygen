@@ -3,6 +3,7 @@
 #include "core/StringConversions.h"
 #include "engine/Timer.h"
 #include "platform/DynLibLoader.h"
+#include "engine/console/ConsoleVariable.h"
 
 #include <SPIRV/GlslangToSpv.h>
 #include <StandAlone/DirStackFileIncluder.h>
@@ -248,12 +249,18 @@ std::vector<uint32> ShaderCompiler::Compile(const std::string& filepath, TextCom
 	return Compile(StringFromFile(filepath), filepath, outError);
 }
 
+ConsoleVariable<bool> cons_compilerReportAll{ "a.shaders.compiler.reportAllErrors", false,
+	"Enable error reporting in console for ALL shaders compiled at all times." };
+
 void ReportError(const char* infoLog, const std::string& shadername, TextCompilerErrors* outError)
 {
-	if (!outError) {
+	if (!outError || cons_compilerReportAll) {
 		auto er = fmt::format("\nGLSL Compiler Error: {}.\n===\n{}\n====", shadername, infoLog);
 		LOG_ERROR("{}", er);
-		return;
+
+		if (!outError) {
+			return;
+		}
 	}
 	// auto er = fmt::format("\nGLSL Compiler Error: {}.\n===\n{}\n====", shadername, shader.getInfoLog());
 
