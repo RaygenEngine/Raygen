@@ -2,10 +2,10 @@
 #extension GL_GOOGLE_include_directive: enable
 #extension GL_EXT_ray_tracing : require
 #extension GL_EXT_ray_query: require
-
 #include "global.glsl"
 
-#include "attachments.glsl"
+#include "global-descset.glsl"
+
 #include "hammersley.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
@@ -29,8 +29,7 @@ layout(push_constant) uniform PC {
 	int samples;
 };
 
-layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
-layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
+layout(set = 1, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 float VisibilityOfRay(vec3 origin, vec3 direction, float tMin, float tMax) {
 

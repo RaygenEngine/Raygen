@@ -1,6 +1,6 @@
 #include "Layouts.h"
 
-#include "rendering/passes/geometry/DepthmapPass.h"
+#include "rendering/Device.h"
 
 struct AttachmentDeclaration {
 };
@@ -132,11 +132,14 @@ Layouts_::Layouts_()
 {
 	// TODO: + 8, gDepth + rest
 	for (uint32 i = 0u; i < gBufferColorAttachments.size() + 8; ++i) {
-		renderAttachmentsLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
+		globalDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
 			vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR
 				| vk::ShaderStageFlagBits::eClosestHitKHR);
 	}
-	renderAttachmentsLayout.Generate();
+	globalDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer,
+		vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute
+			| vk::ShaderStageFlagBits::eRaygenKHR);
+	globalDescLayout.Generate();
 
 	using enum vk::ShaderStageFlagBits;
 	using enum vk::DescriptorType;

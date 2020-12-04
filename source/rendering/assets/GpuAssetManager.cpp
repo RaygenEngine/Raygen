@@ -1,10 +1,13 @@
 #include "GpuAssetManager.h"
 
 #include "assets/Assets.h"
+#include "assets/StdAssets.h"
 #include "core/iterable/IterableSafeVector.h"
+#include "rendering/Device.h"
+#include "rendering/assets/GpuImage.h"
 #include "rendering/assets/GpuSampler.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/Device.h"
+#include "rendering/resource/GpuResources.h"
 
 
 namespace vl {
@@ -18,6 +21,53 @@ GpuAssetManager_::~GpuAssetManager_()
 vk::Sampler GpuAssetManager_::GetDefaultSampler()
 {
 	return LockHandle(GetGpuHandle<Sampler>({})).sampler;
+}
+
+vk::Sampler GpuAssetManager_::GetShadow2dSampler()
+{
+	// sampler2DShadow
+	vk::SamplerCreateInfo samplerInfo{};
+	samplerInfo
+		.setMagFilter(vk::Filter::eLinear) //
+		.setMinFilter(vk::Filter::eLinear)
+		.setAddressModeU(vk::SamplerAddressMode::eClampToEdge)
+		.setAddressModeV(vk::SamplerAddressMode::eClampToEdge)
+		.setAddressModeW(vk::SamplerAddressMode::eClampToEdge)
+		.setAnisotropyEnable(VK_FALSE)
+		.setMaxAnisotropy(1u)
+		.setBorderColor(vk::BorderColor::eIntOpaqueBlack)
+		.setUnnormalizedCoordinates(VK_FALSE)
+		.setCompareEnable(VK_TRUE)
+		.setCompareOp(vk::CompareOp::eLess)
+		.setMipmapMode(vk::SamplerMipmapMode::eNearest)
+		.setMipLodBias(0.f)
+		.setMinLod(0.f)
+		.setMaxLod(32.f);
+
+	return GpuResources::AcquireSampler(samplerInfo);
+}
+
+std::pair<GpuHandle<Image>, vk::Sampler> GpuAssetManager_::GetBrdfLutImageSampler()
+{
+	vk::SamplerCreateInfo samplerInfo{};
+	samplerInfo
+		.setMagFilter(vk::Filter::eLinear) //
+		.setMinFilter(vk::Filter::eLinear)
+		.setAddressModeU(vk::SamplerAddressMode::eClampToEdge)
+		.setAddressModeV(vk::SamplerAddressMode::eClampToEdge)
+		.setAddressModeW(vk::SamplerAddressMode::eClampToEdge)
+		.setAnisotropyEnable(VK_TRUE)
+		.setMaxAnisotropy(1u)
+		.setBorderColor(vk::BorderColor::eIntOpaqueBlack)
+		.setUnnormalizedCoordinates(VK_FALSE)
+		.setCompareEnable(VK_FALSE)
+		.setCompareOp(vk::CompareOp::eAlways)
+		.setMipmapMode(vk::SamplerMipmapMode::eLinear)
+		.setMipLodBias(0.f)
+		.setMinLod(0.f)
+		.setMaxLod(32.f);
+
+	return { GetGpuHandle(StdAssets::BrdfLut()), GpuResources::AcquireSampler(samplerInfo) };
 }
 
 void GpuAssetManager_::AllocForAll()

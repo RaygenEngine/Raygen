@@ -2,6 +2,8 @@
 #extension GL_GOOGLE_include_directive : enable
 #include "global.glsl"
 
+#include "global-descset.glsl"
+
 // out
 
 layout(location=0) out Data
@@ -26,8 +28,6 @@ layout(push_constant) uniform PC {
 	mat4 modelMat;
 	mat4 normalMat;
 } push;
-
-layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 
 layout(std430, set = 2, binding = 0) readonly buffer SSBO_Joints {
 	mat4 invBindMatrix[];

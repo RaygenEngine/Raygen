@@ -5,15 +5,13 @@
 #extension GL_EXT_nonuniform_qualifier : enable
 #extension GL_EXT_buffer_reference2 : enable
 #extension GL_EXT_ray_query: require
-
 // TODO:
 #define RAY
-
 #include "global.glsl"
-#include "raytrace/mirror/mirror.glsl"
+
+#include "global-descset.glsl"
 
 #include "aabb.glsl"
-#include "attachments.glsl"
 #include "bsdf.glsl"
 #include "lights/dirlight.glsl"
 #include "lights/irragrid.glsl"
@@ -23,6 +21,21 @@
 #include "random.glsl"
 #include "sampling.glsl"
 #include "surface.glsl"
+
+struct hitPayload
+{
+	vec3 radiance;
+	int depth;
+};
+
+layout(push_constant) uniform PC
+{
+	int depth;
+	int pointlightCount;
+	int spotlightCount;
+	int dirlightCount;
+	int irragridCount;
+};
 
 hitAttributeEXT vec2 baryCoord;
 layout(location = 0) rayPayloadInEXT hitPayload prd;
@@ -106,16 +119,16 @@ struct GeometryGroup {
 };
 
 
-layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
-layout(set = 4, binding = 0, std430) readonly buffer GeometryGroups { GeometryGroup g[]; } geomGroups;
-layout(set = 4, binding = 1) uniform sampler2D textureSamplers[];
-layout(set = 5, binding = 0, std430) readonly buffer Pointlights { Pointlight light[]; } pointlights;
-layout(set = 6, binding = 0, std430) readonly buffer Spotlights { Spotlight light[]; } spotlights;
-layout(set = 6, binding = 1) uniform sampler2DShadow spotlightShadowmap[];
-layout(set = 7, binding = 0, std430) readonly buffer Dirlights { Dirlight light[]; } dirlights;
-layout(set = 7, binding = 1) uniform sampler2DShadow dirlightShadowmap[];
-layout(set = 8, binding = 0, std430) readonly buffer Irragrids { Irragrid grid[]; } irragrids;
-layout(set = 8, binding = 1) uniform samplerCubeArray irradianceSamplers[];
+layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
+layout(set = 3, binding = 0, std430) readonly buffer GeometryGroups { GeometryGroup g[]; } geomGroups;
+layout(set = 3, binding = 1) uniform sampler2D textureSamplers[];
+layout(set = 4, binding = 0, std430) readonly buffer Pointlights { Pointlight light[]; } pointlights;
+layout(set = 5, binding = 0, std430) readonly buffer Spotlights { Spotlight light[]; } spotlights;
+layout(set = 5, binding = 1) uniform sampler2DShadow spotlightShadowmap[];
+layout(set = 6, binding = 0, std430) readonly buffer Dirlights { Dirlight light[]; } dirlights;
+layout(set = 6, binding = 1) uniform sampler2DShadow dirlightShadowmap[];
+layout(set = 7, binding = 0, std430) readonly buffer Irragrids { Irragrid grid[]; } irragrids;
+layout(set = 7, binding = 1) uniform samplerCubeArray irradianceSamplers[];
 
 
 

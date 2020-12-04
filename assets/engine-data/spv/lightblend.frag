@@ -1,7 +1,9 @@
 #version 460
 #extension GL_GOOGLE_include_directive : enable
-#include "attachments.glsl"
 #include "global.glsl"
+
+#include "global-descset.glsl"
+
 // out
 
 layout(location = 0) out vec4 outColor;
@@ -16,14 +18,14 @@ vec4 AmbientInfoBlurredOcclusion()
 {
 	float Offsets[4] = float[]( -1.5, -0.5, 0.5, 1.5 );
 
-    vec4 color = texture(AoSampler, uv);
+    vec4 color = texture(aoSampler, uv);
 
     for (int i = 0 ; i < 4 ; i++) {
         for (int j = 0 ; j < 4 ; j++) {
             vec2 tc = uv;
-            tc.x = uv.x + Offsets[j] / textureSize(AoSampler, 0).x;
-            tc.y = uv.y + Offsets[i] / textureSize(AoSampler, 0).y;
-            color.a += texture(AoSampler, tc).a;
+            tc.x = uv.x + Offsets[j] / textureSize(aoSampler, 0).x;
+            tc.y = uv.y + Offsets[i] / textureSize(aoSampler, 0).y;
+            color.a += texture(aoSampler, tc).a;
         }
     }
 

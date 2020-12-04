@@ -1,5 +1,5 @@
 #pragma once
-
+// clang-format off
 
 // ALWAYS, ALWAYS keep this before ANY of Raygen's header includes
 #include "FeatureMacros.h"
@@ -71,10 +71,12 @@ struct TextCompilerErrors {
 
 
 #include "rendering/DebugName.h"
-#include "rendering/core/img.h"
+#include "rendering/core/ImageUtl.h"
 
 class World;
 #include "universe/Entity.h"
 
 
 #define IMGUI_DEFINE_MATH_OPERATORS
+
+// clang-format on
