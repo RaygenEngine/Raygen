@@ -66,6 +66,8 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		m_mainPassInst[i] = Layouts->mainPassLayout.CreatePassInstance(width, height);
 		m_secondaryPassInst[i] = Layouts->secondaryPassLayout.CreatePassInstance(width, height);
 	}
+
+	m_raytraceArealights.Resize(fbSize);
 	m_raytraceMirrorReflections.Resize(fbSize);
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
@@ -84,7 +86,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		auto [brdfLutImg, brdfLutSampler] = GpuAssetManager->GetBrdfLutImageSampler();
 		views.emplace_back(m_secondaryPassInst[i].framebuffer[0].view());
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
-		views.emplace_back(brdfLutImg.Lock().image.view()); // reserved
+		views.emplace_back(m_raytraceArealights.result[i].view());        // reserved
 		views.emplace_back(m_raytraceMirrorReflections.result[i].view()); // mirror buffer
 		views.emplace_back(m_ptPass[i].framebuffer[0].view());            // sceneColorSampler
 
@@ -184,6 +186,10 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 	// calculates: gbuffer, direct lights, gi, ambient
 	// requires: shadowmaps, gi maps
 	DrawGeometryAndLights(cmdBuffer, sceneDesc);
+
+	// calculates: total of arealights - wip: denoise
+	// requires: -
+	m_raytraceArealights.RecordCmd(cmdBuffer, sceneDesc);
 
 	// calculates: specular reflections (mirror)
 	// requires: gbuffer, shadowmaps, gi maps

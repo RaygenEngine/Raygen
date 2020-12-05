@@ -1,21 +1,18 @@
-#include "PathtraceCubemapArrayPipe.h"
+#include "ArealightsPipe.h"
 
-#include "rendering/Renderer.h"
+#include "engine/console/ConsoleVariable.h"
+#include "rendering/Device.h"
+#include "rendering/Layouts.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
 #include "rendering/pipes/StaticPipes.h"
-#include "rendering/scene/SceneIrragrid.h"
-#include "rendering/scene/SceneReflProbe.h"
-#include "rendering/wrappers/ImageView.h"
+#include "rendering/scene/Scene.h"
+#include "rendering/util/WriteDescriptorSets.h"
 
 namespace {
 struct PushConstant {
-	int32 samples;
-	int32 bounces;
 	int32 pointlightCount;
-	int32 spotlightCount;
-	int32 dirlightCount;
 	int32 quadlightCount;
 };
 
@@ -23,17 +20,13 @@ static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
-vk::UniquePipelineLayout PathtraceCubemapArrayPipe::MakePipelineLayout()
+vk::UniquePipelineLayout ArealightsPipe::MakePipelineLayout()
 {
 	std::array layouts{
-		Layouts->cubemapArrayStorage.handle(),
-		Layouts->singleUboDescLayout.handle(),
-		Layouts->accelLayout.handle(),
-		Layouts->bufferAndSamplersDescLayout.handle(),
-		Layouts->singleStorageBuffer.handle(),
-		Layouts->bufferAndSamplersDescLayout.handle(),
-		Layouts->bufferAndSamplersDescLayout.handle(),
-		Layouts->singleStorageBuffer.handle(),
+		Layouts->globalDescLayout.handle(),    // gbuffer and stuff
+		Layouts->singleStorageImage.handle(),  // image result
+		Layouts->accelLayout.handle(),         // accel structure
+		Layouts->singleStorageBuffer.handle(), // quadlights
 	};
 
 	// pipeline layout
@@ -43,7 +36,6 @@ vk::UniquePipelineLayout PathtraceCubemapArrayPipe::MakePipelineLayout()
 		.setSize(sizeof(PushConstant))
 		.setOffset(0u);
 
-
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo
 		.setPushConstantRanges(pushConstantRange) //
@@ -52,12 +44,12 @@ vk::UniquePipelineLayout PathtraceCubemapArrayPipe::MakePipelineLayout()
 	return Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
 
-vk::UniquePipeline PathtraceCubemapArrayPipe::MakePipeline()
+vk::UniquePipeline ArealightsPipe::MakePipeline()
 {
-	// all rt shaders here
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/pt/ptarray.shader");
-	gpuShader.onCompile = [&]() {
-		StaticPipes::Recompile<PathtraceCubemapArrayPipe>();
+	GpuAsset<Shader>& gpuShader
+		= GpuAssetManager->CompileShader("engine-data/spv/raytrace/arealights/arealights.shader");
+	gpuShader.onCompileRayTracing = [&]() {
+		StaticPipes::Recompile<ArealightsPipe>();
 	};
 
 	m_rtShaderGroups.clear();
@@ -110,8 +102,8 @@ vk::UniquePipeline PathtraceCubemapArrayPipe::MakePipeline()
 	rayPipelineInfo
 		// 1-raygen, n-miss, n-(hit[+anyhit+intersect])
 		.setGroups(m_rtShaderGroups)
-		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop formulation
-		// instead.
+		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop
+		// formulation instead.
 
 		.setMaxRecursionDepth(10) // Ray depth TODO:
 		.setLayout(layout());
@@ -134,7 +126,6 @@ vk::UniquePipeline PathtraceCubemapArrayPipe::MakePipeline()
 
 	DEBUG_NAME(m_rtSBTBuffer.handle(), "Shader Binding Table");
 
-
 	// TODO: Tidy
 	auto mem = m_rtSBTBuffer.memory();
 
@@ -150,28 +141,32 @@ vk::UniquePipeline PathtraceCubemapArrayPipe::MakePipeline()
 	return pipeline;
 }
 
-void PathtraceCubemapArrayPipe::Draw(
-	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const SceneIrragrid& ig) const
+void ArealightsPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
+	vk::DescriptorSet imageStorageDescSet, const vk::Extent3D& extent) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, pipeline());
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 0u, 1u, &sceneDesc.globalDesc, 0u,
+		nullptr); // gbuffer and stuff
+
+	cmdBuffer.bindDescriptorSets(
+		vk::PipelineBindPoint::eRayTracingKHR, layout(), 1u, 1u, &imageStorageDescSet, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eRayTracingKHR, layout(), 2u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 3u, 1u,
-		&sceneDesc.scene->tlas.sceneDesc.descSet[sceneDesc.frameIndex], 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 4u, 1u,
-		&sceneDesc.scene->tlas.sceneDesc.descSetPointlights[sceneDesc.frameIndex], 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 5u, 1u,
-		&sceneDesc.scene->tlas.sceneDesc.descSetSpotlights[sceneDesc.frameIndex], 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 6u, 1u,
-		&sceneDesc.scene->tlas.sceneDesc.descSetDirlights[sceneDesc.frameIndex], 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 7u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSetQuadlights[sceneDesc.frameIndex], 0u, nullptr);
+
+	static int32 frameIndex = 0;
+
+	PushConstant pc{
+		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
+		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
+	};
+
+	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u,
+		sizeof(PushConstant), &pc);
 
 	vk::DeviceSize progSize = Device->pd.raytracingProperties.shaderGroupBaseAlignment; // Size of a program identifier
 
@@ -196,39 +191,15 @@ void PathtraceCubemapArrayPipe::Draw(
 
 	vk::DeviceSize sbtSize = progSize * (vk::DeviceSize)m_rtShaderGroups.size();
 
-	const vk::StridedBufferRegionKHR raygenShaderBindingTable{ m_rtSBTBuffer.handle(), rayGenOffset, progSize,
-		sbtSize };
-	const vk::StridedBufferRegionKHR missShaderBindingTable{ m_rtSBTBuffer.handle(), missOffset, progSize, sbtSize };
-	const vk::StridedBufferRegionKHR hitShaderBindingTable{ m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR raygenShaderBindingTable
+		= { m_rtSBTBuffer.handle(), rayGenOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR missShaderBindingTable = { m_rtSBTBuffer.handle(), missOffset, progSize, sbtSize };
+	const vk::StridedBufferRegionKHR hitShaderBindingTable
+		= { m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
 	const vk::StridedBufferRegionKHR callableShaderBindingTable;
 
-	for (auto ig : sceneDesc->Get<SceneIrragrid>()) {
-
-		ig->environmentCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
-			vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
-
-
-		PushConstant pc{
-			ig->ptSamples,
-			ig->ptBounces,
-			sceneDesc.scene->tlas.sceneDesc.pointlightCount,
-			sceneDesc.scene->tlas.sceneDesc.spotlightCount,
-			sceneDesc.scene->tlas.sceneDesc.dirlightCount,
-			sceneDesc.scene->tlas.sceneDesc.quadlightCount,
-		};
-
-		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR,
-			0u, sizeof(PushConstant), &pc);
-
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eRayTracingKHR, layout(), 0u, 1u, &ig->environmentStorageDescSet, 0u, nullptr);
-
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 1u, 1u,
-			&ig->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
-
-		cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
-			&callableShaderBindingTable, ig->irrResolution, ig->irrResolution, 1);
-	}
+	cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
+		&callableShaderBindingTable, extent.width, extent.height, 1);
 }
 
 } // namespace vl

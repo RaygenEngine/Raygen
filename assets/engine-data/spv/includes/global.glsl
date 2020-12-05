@@ -196,7 +196,31 @@ struct Irragrid {
 	float distToAdjacent;
 };
 
+struct Quadlight {
+	vec3 position;
+	float pad0;
 
+	vec3 front;
+	float pad1;
+
+	float scaleX;
+	float scaleY;
+	float pad2;
+	float pad3;
+
+	vec3 color;
+	float pad4;
+
+	float intensity;
+	float constantTerm;
+	float linearTerm;
+	float quadraticTerm;
+
+	float radius;
+
+	int samples;
+	int hasShadow;
+};
 
 
 #endif

@@ -21,6 +21,7 @@ layout(push_constant) uniform PC
 	int pointlightCount;
 	int spotlightCount;
 	int dirlightCount;
+	int quadlightCount;
 };
 
 layout(set = 0, binding = 0, rgba32f) uniform imageCube cube;

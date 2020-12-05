@@ -7,7 +7,7 @@
 #include "sampling.glsl"
 #include "surface.glsl"
 
-float ShadowRayQuery(accelerationStructureEXT topLevelAs, vec3 origin, vec3 direction, float tMin, float tMax)
+float Pointlight_ShadowRayQuery(accelerationStructureEXT topLevelAs, vec3 origin, vec3 direction, float tMin, float tMax)
 { 
 	// Initializes a ray query object but does not start traversal
 	rayQueryEXT rayQuery;
@@ -32,64 +32,62 @@ float ShadowRayQuery(accelerationStructureEXT topLevelAs, vec3 origin, vec3 dire
 	return 0.0;
 }
 
-float ShadowRayQueryRadius(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)
+vec3 Pointlight_Sample(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)
 {
-	vec3  L = normalize(pl.position - surface.position); 
-	Onb lightOrthoBasis = branchlessOnb(L);
-	// sample a disk aligned to the L dir
-
-	float dist = distance(surface.position, pl.position);
-
-	float res = 0.f;
-	for(uint smpl = 0; smpl < pl.samples; ++smpl){
-		// TODO: get res from global desc set -> render scale also should be factored here
-		uint seed = tea16(uint(surface.uv.y * 2160 * 4096 + surface.uv.x * 4096), pl.samples + smpl);
-		vec2 u = rand2(seed);
-
-		vec3 lightSampleV = vec3(uniformSampleDisk(u) * pl.radius, 0.f); 
-
-		outOnbSpace(lightOrthoBasis, lightSampleV);
-
-		vec3 sampledLpos = pl.position + lightSampleV;
-		vec3  direction = normalize(sampledLpos - surface.position);  
-
-		res += ShadowRayQuery(topLevelAs, surface.position, direction, 0.01, dist + pl.radius);
-	}
-
-	return res / pl.samples;
-}
-
-float ShadowRaySimple(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)
-{
-	vec3 L = normalize(pl.position - surface.position);
-	return ShadowRayQuery(topLevelAs, surface.position, L, 0.01, distance(pl.position, surface.position));
-}
-
-vec3 Pointlight_Contribution(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface, float shadow)
-{
-	vec3 L = normalize(pl.position - surface.position);
-	addIncomingLightDirection(surface, L);
-
 	float dist = distance(pl.position, surface.position);
 	float attenuation = 1.0 / (pl.constantTerm + pl.linearTerm * dist + 
   			     pl.quadraticTerm * (dist * dist));
 
-	vec3 Li = (1.0 - shadow) * pl.color * pl.intensity * attenuation; 
+	vec3 Le = pl.color * pl.intensity * attenuation; 
 
-	return DirectLightBRDF(surface)  * Li * surface.nol;
+	return Le * DirectLightBRDF(surface) * surface.nol;
+}
+
+vec3 Pointlight_MultipleSamples(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)
+{
+	float inv_pdf = PI * pl.radius * pl.radius;
+
+	vec3 plFront = normalize(pl.position - surface.position); 
+	Onb lightOrthoBasis = branchlessOnb(plFront);
+
+	// TODO: get res from global desc set -> render scale also should be factored here
+	uint seed = tea16(uint(surface.uv.y * 2160 * 4096 + surface.uv.x * 4096), pl.samples);
+
+	vec3 res = vec3(0);
+
+
+	for(uint smpl = 0; smpl < pl.samples; ++smpl){
+
+		vec2 u = rand2(seed);
+
+		vec3 samplePoint = vec3(uniformSampleDisk(u) * pl.radius, 0.f); 
+		samplePoint = pl.position + outOnbSpace(lightOrthoBasis, samplePoint);
+
+		vec3 L = normalize(samplePoint - surface.position);  
+		addIncomingLightDirection(surface, L);
+
+		float shadow = pl.hasShadow != 0 ? Pointlight_ShadowRayQuery(topLevelAs, surface.position, L, 0.01, distance(pl.position, surface.position)) : 0;
+
+		res += Pointlight_Sample(topLevelAs, pl, surface) * (1 - shadow) * inv_pdf;
+	}
+
+	return res / float(pl.samples);
 }
 
 vec3 Pointlight_FastContribution(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)
 {
-	float shadow = pl.hasShadow != 0 ? ShadowRaySimple(topLevelAs, pl, surface) : 0;
-	return Pointlight_Contribution(topLevelAs, pl, surface, shadow);
+	vec3 L = normalize(pl.position - surface.position);
+	addIncomingLightDirection(surface, L);
 
+	float shadow = pl.hasShadow != 0 ? Pointlight_ShadowRayQuery(topLevelAs, surface.position, L, 0.01, distance(pl.position, surface.position)) : 0;
+
+	// single sample
+	return Pointlight_Sample(topLevelAs, pl, surface) * (1 - shadow);
 }
 
 vec3 Pointlight_SmoothContribution(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)
 {
-	float shadow = pl.hasShadow != 0 ? ShadowRayQueryRadius(topLevelAs, pl, surface) : 0;
-	return Pointlight_Contribution(topLevelAs, pl, surface, shadow);
+	return Pointlight_MultipleSamples(topLevelAs, pl, surface);
 }
 
 
