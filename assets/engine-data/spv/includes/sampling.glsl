@@ -71,7 +71,8 @@ vec3 uniformSampleCone(vec2 u, float cosThetaMax)
     return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
 }
 
-float uniformConePdf(float cosThetaMax) {
+float uniformConePdf(float cosThetaMax) 
+{
     return 1 / (2 * PI * (1 - cosThetaMax));
 }
 

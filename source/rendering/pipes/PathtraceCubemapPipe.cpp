@@ -14,6 +14,7 @@ struct PushConstant {
 	int32 pointlightCount;
 	int32 spotlightCount;
 	int32 dirlightCount;
+	int32 quadlightCount;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -30,6 +31,7 @@ vk::UniquePipelineLayout PathtraceCubemapPipe::MakePipelineLayout()
 		Layouts->singleStorageBuffer.handle(),
 		Layouts->bufferAndSamplersDescLayout.handle(),
 		Layouts->bufferAndSamplersDescLayout.handle(),
+		Layouts->singleStorageBuffer.handle(),
 	};
 
 	// pipeline layout
@@ -167,6 +169,9 @@ void PathtraceCubemapPipe::Draw(
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 6u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSetDirlights[sceneDesc.frameIndex], 0u, nullptr);
 
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 7u, 1u,
+		&sceneDesc.scene->tlas.sceneDesc.descSetQuadlights[sceneDesc.frameIndex], 0u, nullptr);
+
 	vk::DeviceSize progSize = Device->pd.raytracingProperties.shaderGroupBaseAlignment; // Size of a program identifier
 
 	// RayGen index
@@ -203,6 +208,7 @@ void PathtraceCubemapPipe::Draw(
 		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
 		sceneDesc.scene->tlas.sceneDesc.spotlightCount,
 		sceneDesc.scene->tlas.sceneDesc.dirlightCount,
+		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u,

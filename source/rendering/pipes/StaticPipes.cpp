@@ -1,6 +1,7 @@
 #include "StaticPipes.h"
 
 #include "rendering/pipes/AmbientPipe.h"
+#include "rendering/pipes/ArealightsPipe.h"
 #include "rendering/pipes/BillboardPipe.h"
 #include "rendering/pipes/CubemapArrayConvolutionPipe.h"
 #include "rendering/pipes/CubemapConvolutionPipe.h"
@@ -37,5 +38,6 @@ void StaticPipes::InternalInitRegistered()
 	// StaticPipes::Init<VolumePointsPipe>();
 	StaticPipes::Init<VolumeLinesPipe>();
 	StaticPipes::Init<VolumeTrianglesPipe>();
+	StaticPipes::Init<ArealightsPipe>();
 }
 } // namespace vl

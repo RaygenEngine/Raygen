@@ -11,6 +11,7 @@
 #include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/SceneIrragrid.h"
 #include "rendering/scene/ScenePointlight.h"
+#include "rendering/scene/SceneQuadlight.h"
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/wrappers/CmdBuffer.h"
@@ -77,6 +78,8 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 	sceneDesc.descSetIrragrids = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
 		static_cast<int32>(scene->Get<SceneIrragrid>().size()));
 
+	sceneDesc.descSetQuadlights = Layouts->singleStorageBuffer.AllocDescriptorSet();
+
 	int32 totalGroups = 0;
 
 
@@ -112,6 +115,8 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 	sceneDesc.WriteDirlights(scene->Get<SceneDirlight>().condensed);
 	sceneDesc.WriteReflprobes(scene->Get<SceneReflprobe>().condensed);
 	sceneDesc.WriteIrragrids(scene->Get<SceneIrragrid>().condensed);
+	sceneDesc.WriteQuadlights(scene->Get<SceneQuadlight>().condensed);
+
 	sceneDesc.WriteGeomGroups();
 	Build();
 	Device->waitIdle();
@@ -518,6 +523,52 @@ void RtSceneDescriptor::WriteIrragrids(const std::vector<SceneIrragrid*>& irragr
 			.setDstSet(descSetIrragrids[i])
 			.setDstArrayElement(0u);
 		Device->updateDescriptorSets(depthWrite, nullptr);
+	}
+}
+
+void RtSceneDescriptor::WriteQuadlights(const std::vector<SceneQuadlight*>& quadlights)
+{
+	quadlightCount = static_cast<int32>(quadlights.size());
+
+	uint32 uboSize = sizeof(Quadlight_Ubo) + sizeof(Quadlight_Ubo) % 8;
+
+	quadlightsBuffer = { (uboSize * quadlightCount),
+		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer
+			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+		vk::MemoryAllocateFlagBits::eDeviceAddress };
+
+	DEBUG_NAME_AUTO(quadlightsBuffer);
+
+	byte* mapCursor = reinterpret_cast<byte*>(Device->mapMemory(quadlightsBuffer.memory(), 0, quadlightsBuffer.size));
+
+	for (auto quadlight : quadlights) {
+		memcpy(mapCursor, &quadlight->ubo, sizeof(Quadlight_Ubo));
+		mapCursor += uboSize;
+	}
+
+	Device->unmapMemory(quadlightsBuffer.memory());
+
+
+	vk::DescriptorBufferInfo bufInfo{};
+	bufInfo
+		.setOffset(0) //
+		.setRange(VK_WHOLE_SIZE)
+		.setBuffer(quadlightsBuffer.handle());
+
+
+	for (int32 i = 0; i < c_framesInFlight; ++i) {
+		vk::WriteDescriptorSet bufWriteSet{};
+		bufWriteSet
+			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
+			.setDstBinding(0u)
+			.setDstSet(descSetQuadlights[i])
+			.setDstArrayElement(0u)
+			.setBufferInfo(bufInfo);
+
+		DEBUG_NAME_AUTO(descSetQuadlights[i]);
+
+		Device->updateDescriptorSets({ bufWriteSet }, nullptr);
 	}
 }
 

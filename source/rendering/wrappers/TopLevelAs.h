@@ -8,6 +8,7 @@ struct ScenePointlight;
 struct SceneReflprobe;
 struct SceneDirlight;
 struct SceneIrragrid;
+struct SceneQuadlight;
 struct Scene;
 
 
@@ -31,6 +32,7 @@ struct RtSceneDescriptor {
 	InFlightResources<vk::DescriptorSet> descSetDirlights;
 	InFlightResources<vk::DescriptorSet> descSetReflprobes;
 	InFlightResources<vk::DescriptorSet> descSetIrragrids;
+	InFlightResources<vk::DescriptorSet> descSetQuadlights;
 
 	void AddGeomGroup(const GpuGeometryGroup& group, const GpuMesh& mesh, const glm::mat4& transform);
 	void WriteImages();
@@ -39,6 +41,7 @@ struct RtSceneDescriptor {
 	void WriteDirlights(const std::vector<SceneDirlight*>& dirlights);
 	void WriteReflprobes(const std::vector<SceneReflprobe*>& reflprobes);
 	void WriteIrragrids(const std::vector<SceneIrragrid*>& irragrids);
+	void WriteQuadlights(const std::vector<SceneQuadlight*>& quadlights);
 	void WriteGeomGroups();
 
 	int32 spotlightCount{ 0 };
@@ -46,12 +49,14 @@ struct RtSceneDescriptor {
 	int32 dirlightCount{ 0 };
 	int32 reflprobeCount{ 0 };
 	int32 irragridCount{ 0 };
+	int32 quadlightCount{ 0 };
 
 	RBuffer spotlightsBuffer;
 	RBuffer pointlightsBuffer;
 	RBuffer dirlightsBuffer;
 	RBuffer reflprobesBuffer;
 	RBuffer irragridsBuffer;
+	RBuffer quadlightsBuffer;
 
 	RBuffer geomGroupsBuffer;
 };

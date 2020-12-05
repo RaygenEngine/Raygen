@@ -6,6 +6,7 @@
 #include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/SceneIrragrid.h"
 #include "rendering/scene/ScenePointlight.h"
+#include "rendering/scene/SceneQuadlight.h"
 #include "rendering/scene/SceneReflprobe.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/util/WriteDescriptorSets.h"
@@ -100,7 +101,7 @@ void Register(std::unordered_map<size_t, UniquePtr<SceneCollectionBase>>& collec
 Scene::Scene()
 {
 	Register<SceneGeometry, SceneAnimatedGeometry, SceneCamera, SceneSpotlight, ScenePointlight, SceneDirlight,
-		SceneReflprobe, SceneIrragrid>(collections);
+		SceneReflprobe, SceneIrragrid, SceneQuadlight>(collections);
 
 
 	EnqueueEndFrame();
@@ -128,6 +129,7 @@ Scene::~Scene()
 	destroyVec(Get<SceneDirlight>().condensed);
 	destroyVec(Get<SceneReflprobe>().condensed);
 	destroyVec(Get<SceneIrragrid>().condensed);
+	destroyVec(Get<SceneQuadlight>().condensed);
 
 	// CHECK: proper type erased cleanup here.
 }
@@ -236,6 +238,14 @@ void Scene::UploadDirty(uint32 frameIndex)
 		}
 	}
 
+	for (auto ql : Get<SceneQuadlight>()) {
+		if (ql->isDirty[frameIndex]) {
+			ql->UploadUbo(frameIndex);
+			ql->isDirty[frameIndex] = false;
+			requireUpdateAccel = true;
+			anyDirty = true;
+		}
+	}
 
 	for (auto dl : Get<SceneDirlight>()) {
 

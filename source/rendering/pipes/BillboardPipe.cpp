@@ -14,6 +14,7 @@
 #include "universe/components/DirlightComponent.h"
 #include "universe/components/IrragridComponent.h"
 #include "universe/components/PointlightComponent.h"
+#include "universe/components/QuadlightComponent.h"
 #include "universe/components/ReflProbeComponent.h"
 #include "universe/components/SpotlightComponent.h"
 
@@ -252,6 +253,7 @@ void BillboardPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sce
 	DrawComponent<CDirlight>(cmdBuffer, sceneDesc, layout());
 	DrawComponent<CIrragrid>(cmdBuffer, sceneDesc, layout());
 	DrawComponent<CCamera>(cmdBuffer, sceneDesc, layout());
+	DrawComponent<CQuadlight>(cmdBuffer, sceneDesc, layout());
 }
 
 } // namespace vl

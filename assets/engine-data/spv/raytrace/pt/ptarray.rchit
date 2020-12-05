@@ -14,6 +14,7 @@
 #include "bsdf.glsl"
 #include "lights/dirlight.glsl"
 #include "lights/pointlight.glsl"
+#include "lights/quadlight.glsl"
 #include "lights/spotlight.glsl"
 #include "onb.glsl"
 #include "random.glsl"
@@ -36,6 +37,7 @@ layout(push_constant) uniform PC
 	int pointlightCount;
 	int spotlightCount;
 	int dirlightCount;
+	int quadlightCount;
 };
 
 hitAttributeEXT vec2 baryCoord;
@@ -192,6 +194,7 @@ layout(set = 5, binding = 0, std430) readonly buffer Spotlights { Spotlight ligh
 layout(set = 5, binding = 1) uniform sampler2DShadow spotlightShadowmap[];
 layout(set = 6, binding = 0, std430) readonly buffer Dirlights { Dirlight light[]; } dirlights;
 layout(set = 6, binding = 1) uniform sampler2DShadow dirlightShadowmap[];
+layout(set = 7, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
 
 vec4 texture(samplerRef s, vec2 uv) {
 	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
@@ -311,6 +314,16 @@ void main() {
 		for(int i = 0; i < dirlightCount; ++i) {
 			Dirlight dl = dirlights.light[i];
 			radiance += Dirlight_FastContribution(dl, dirlightShadowmap[nonuniformEXT(i)], surface);
+		}
+
+		for(int i = 0; i < dirlightCount; ++i) {
+			Dirlight dl = dirlights.light[i];
+			radiance += Dirlight_FastContribution(dl, dirlightShadowmap[nonuniformEXT(i)], surface);
+		}
+
+		for(int i = 0; i < quadlightCount; ++i) {
+			Quadlight ql = quadlights.light[i];
+			radiance += Quadlight_FastContribution(topLevelAs, ql, surface);
 		}
 	}
 

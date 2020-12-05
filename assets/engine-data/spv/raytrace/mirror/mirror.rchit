@@ -16,6 +16,7 @@
 #include "lights/dirlight.glsl"
 #include "lights/irragrid.glsl"
 #include "lights/pointlight.glsl"
+#include "lights/quadlight.glsl"
 #include "lights/spotlight.glsl"
 #include "onb.glsl"
 #include "random.glsl"
@@ -35,6 +36,7 @@ layout(push_constant) uniform PC
 	int spotlightCount;
 	int dirlightCount;
 	int irragridCount;
+	int quadlightCount;
 };
 
 hitAttributeEXT vec2 baryCoord;
@@ -129,6 +131,7 @@ layout(set = 6, binding = 0, std430) readonly buffer Dirlights { Dirlight light[
 layout(set = 6, binding = 1) uniform sampler2DShadow dirlightShadowmap[];
 layout(set = 7, binding = 0, std430) readonly buffer Irragrids { Irragrid grid[]; } irragrids;
 layout(set = 7, binding = 1) uniform samplerCubeArray irradianceSamplers[];
+layout(set = 8, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
 
 
 
@@ -260,6 +263,11 @@ void main() {
 		for(int i = 0; i < dirlightCount; ++i) {
 			Dirlight dl = dirlights.light[i];
 			radiance += Dirlight_FastContribution(dl, dirlightShadowmap[nonuniformEXT(i)], surface);
+		}
+
+		for(int i = 0; i < quadlightCount; ++i) {
+			Quadlight ql = quadlights.light[i];
+			radiance += Quadlight_FastContribution(topLevelAs, ql, surface);
 		}
 	}
 
