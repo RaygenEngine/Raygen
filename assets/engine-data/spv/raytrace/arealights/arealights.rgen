@@ -8,8 +8,6 @@
 
 #include "global-descset.glsl"
 
-
-
 #include "lights/quadlight.glsl"
 #include "random.glsl"
 #include "surface.glsl"

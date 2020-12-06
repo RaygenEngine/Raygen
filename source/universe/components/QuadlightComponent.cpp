@@ -4,12 +4,12 @@
 
 DECLARE_DIRTY_FUNC(CQuadlight)(BasicComponent& bc)
 {
-	return [=, position = bc.world().position, orientation = bc.world().orientation, scale = bc.world().scale](
-			   SceneQuadlight& ql) {
-		ql.ubo.position = glm::vec4(position, 1.f);
-		ql.ubo.front = glm::vec4(bc.world().front(), 0.f);
-		ql.ubo.scaleX = scale.x;
-		ql.ubo.scaleY = scale.y;
+	return [=, center = bc.world().position, front = bc.world().front(), up = bc.world().up(),
+			   right = bc.world().right(), scale = bc.world().scale](SceneQuadlight& ql) {
+		ql.ubo.center = glm::vec4(center, 1.f);
+		ql.ubo.right = glm::vec4(right, width);
+		ql.ubo.up = glm::vec4(up, height);
+		ql.ubo.normal = glm::vec4(front, 0.f);
 
 		if constexpr (FullDirty) {
 			ql.ubo.color = glm::vec4(color, 1.f);
