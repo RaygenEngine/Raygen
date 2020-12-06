@@ -30,7 +30,7 @@ struct Timer {
 	}
 
 	// Avoid for precission, prefer Get with integers
-	[[nodiscard]] float GetDeltaSeconds() const { return Get<ch::microseconds>() / 1000.f * 1000.f; }
+	[[nodiscard]] float GetDeltaSeconds() const { return Get<ch::microseconds>() / (1000.f * 1000.f); }
 
 
 	[[nodiscard]] auto GetTimeDiff() const { return ch::system_clock::now() - startTime; }

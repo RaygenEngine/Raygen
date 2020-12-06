@@ -13,6 +13,7 @@
 
 #include <nlohmann/json.hpp>
 #include <thread>
+#include <set>
 
 
 ConsoleFunction<> console_SaveAll{ "a.saveAll", []() { AssetRegistry::SaveAll(); },
@@ -86,24 +87,56 @@ void AssetRegistry::SaveToDiskInternal(PodEntry* entry)
 
 void AssetRegistry::LoadAllPodsInDirectory(const fs::path& path)
 {
+	auto addPodFromPath = [&](const fs::path& path) {
+		auto key = fs::relative(path).replace_extension().generic_string();
+		size_t uid = m_pods.size();
+		m_pathCache.emplace(key, uid);
+
+		PodEntry e;
+		e.uid = uid;
+		e.path = std::move(key);
+		e.requiresSave = false;
+		m_pods.emplace_back(std::make_unique<PodEntry>(std::move(e)));
+		assetdetail::podAccessor.emplace_back(nullptr);
+		return uid;
+	};
+
+
+	TIMER_SCOPE("Total load & cache gen-data");
 	size_t beginUid = m_pods.size();
+	size_t jobCount = std::max(std::thread::hardware_concurrency(), static_cast<uint>(2));
+
+	std::vector<size_t> threadSpecificUid;
 	{
+		// For performance, we try to load pods in the root path directory (gen-data) in different threads.
+		// These will usually be geometry files which are slow to load currently.
+		std::set<fs::path> rootAssets;
+
+		for (const auto& entry : fs::directory_iterator(path)) {
+			if (entry.is_directory() || entry.path().extension() != ".bin") {
+				continue;
+			}
+			rootAssets.insert(entry.path());
+
+			threadSpecificUid.emplace_back(addPodFromPath(entry.path()));
+
+			if (rootAssets.size() == jobCount) {
+				break;
+			}
+		}
+
 		for (const auto& entry : fs::recursive_directory_iterator(path)) {
 			if (entry.is_directory()) {
 				continue;
 			}
 
-			if (entry.path().extension() == ".bin") {
-				auto key = fs::relative(entry.path()).replace_extension().generic_string();
-				size_t uid = m_pods.size();
-				m_pathCache.emplace(key, uid);
 
-				PodEntry e;
-				e.uid = uid;
-				e.path = std::move(key);
-				e.requiresSave = false;
-				m_pods.emplace_back(std::make_unique<PodEntry>(std::move(e)));
-				assetdetail::podAccessor.emplace_back(nullptr);
+			if (entry.path().extension() == ".bin") {
+				if (rootAssets.contains(entry.path())) {
+					continue;
+				}
+
+				addPodFromPath(entry.path());
 			}
 		}
 	}
@@ -111,10 +144,10 @@ void AssetRegistry::LoadAllPodsInDirectory(const fs::path& path)
 	LOG_REPORT("Found {} binary pods.", m_pods.size() - beginUid);
 
 	{
-		TIMER_SCOPE("Loading pods");
+		// Offset by our special load uids
+		beginUid += threadSpecificUid.size();
 
 		size_t podsToLoad = m_pods.size() - beginUid;
-		size_t jobCount = std::max(std::thread::hardware_concurrency(), static_cast<uint>(2));
 		size_t podsPerJob
 			= static_cast<size_t>(std::ceil(static_cast<float>(podsToLoad) / static_cast<float>(jobCount)));
 
@@ -122,6 +155,17 @@ void AssetRegistry::LoadAllPodsInDirectory(const fs::path& path)
 		reimportEntries.resize(jobCount);
 
 		auto loadRange = [&](size_t start, size_t stop, size_t threadIndex) {
+			size_t extraUid = threadSpecificUid.size() > threadIndex ? threadSpecificUid[threadIndex] : 0;
+
+			if (extraUid > 0) {
+				LoadFromDiskTypelessInternal(m_pods[extraUid].get());
+
+				if (m_pods[extraUid].get()->metadata.reimportOnLoad) [[unlikely]] {
+					// reimportEntries[threadIndex].push_back(m_pods[i].get());
+					AssetRegistry::ReimportFromOriginal(m_pods[extraUid].get());
+				}
+			}
+
 			stop = std::min(stop, m_pods.size());
 			for (size_t i = start; i < stop; ++i) {
 				LoadFromDiskTypelessInternal(m_pods[i].get());
@@ -155,6 +199,7 @@ void AssetRegistry::LoadAllPodsInDirectory(const fs::path& path)
 		//	}
 		//}
 	}
+
 	for (auto& pod : m_pods) {
 		if (!pod->metadata.originalImportLocation.empty()) {
 			RegisterImportPathCache(pod.get());
