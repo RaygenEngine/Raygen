@@ -197,19 +197,17 @@ struct Irragrid {
 };
 
 struct Quadlight {
-	vec3 position;
+	vec3 center;
 	float pad0;
-
-	vec3 front;
+	vec3 normal; // WIP: pass quat
 	float pad1;
-
-	float scaleX;
-	float scaleY;
-	float pad2;
-	float pad3;
+	vec3 right;
+	float width;
+	vec3 up;
+	float height;
 
 	vec3 color;
-	float pad4;
+	float pad2;
 
 	float intensity;
 	float constantTerm;

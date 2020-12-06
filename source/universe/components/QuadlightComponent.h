@@ -15,6 +15,9 @@ struct CQuadlight : CLightBase {
 		REFLECT_VAR(color, PropertyFlags::Color).Clamp();
 		REFLECT_VAR(intensity).Clamp();
 
+		REFLECT_VAR(width).Clamp();
+		REFLECT_VAR(height).Clamp();
+
 		REFLECT_VAR(constantTerm).Clamp(1.f);
 		REFLECT_VAR(linearTerm).Clamp();
 		REFLECT_VAR(quadraticTerm).Clamp();
@@ -22,6 +25,9 @@ struct CQuadlight : CLightBase {
 		REFLECT_VAR(samples).Clamp(1.f);
 		REFLECT_VAR(hasShadow);
 	}
+
+	float width{ 0.5f };
+	float height{ 0.5f };
 
 	float constantTerm{ 1.f };
 	float linearTerm{ 1.f };
