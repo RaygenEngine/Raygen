@@ -71,6 +71,9 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 	}
 	// Go down the tree and compile all leaves from here. (Later we should cache everything on each step to paste them)
 	Get().isSelfIterating = true;
+	// @HACK: explicitly export the header to filesystem here because we need to use external include still and the
+	// header will contain the old code otherwise
+	AssetRegistry::SaveToDisk(baseHandle);
 
 	NSet addedSet;
 	NSet workingList;
