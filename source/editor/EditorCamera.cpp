@@ -4,6 +4,7 @@
 #include "engine/Engine.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
+#include "rendering/Renderer.h" // WIP: remove
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 
@@ -14,6 +15,7 @@ EditorCamera::EditorCamera()
 	orbitalCenter = transform.position + transform.front() * orbitalLength;
 	Event::OnViewportUpdated.Bind(this, [&]() { ResizeViewport(g_ViewportCoordinates.size); });
 }
+
 
 void EditorCamera::Update(float deltaSeconds)
 {
@@ -73,8 +75,14 @@ void EditorCamera::Update(float deltaSeconds)
 	if (pilotEntity && dirtyThisFrame) {
 		UpdatePiloting();
 	}
+
+	// WIP : remove
+	if (dirtyThisFrame)
+		vl::Renderer->m_raytraceArealights.frame = 0;
+
 	dirtyThisFrame = true;
 }
+
 
 void EditorCamera::ResizeViewport(glm::uvec2 newSize)
 {

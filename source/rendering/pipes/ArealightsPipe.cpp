@@ -12,6 +12,7 @@
 
 namespace {
 struct PushConstant {
+	int32 frame;
 	int32 pointlightCount;
 	int32 quadlightCount;
 };
@@ -24,7 +25,7 @@ vk::UniquePipelineLayout ArealightsPipe::MakePipelineLayout()
 {
 	std::array layouts{
 		Layouts->globalDescLayout.handle(),    // gbuffer and stuff
-		Layouts->singleStorageImage.handle(),  // image result
+		Layouts->doubleStorageImage.handle(),  // image result
 		Layouts->accelLayout.handle(),         // accel structure
 		Layouts->singleStorageBuffer.handle(), // quadlights
 	};
@@ -142,7 +143,7 @@ vk::UniquePipeline ArealightsPipe::MakePipeline()
 }
 
 void ArealightsPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
-	vk::DescriptorSet imageStorageDescSet, const vk::Extent3D& extent) const
+	vk::DescriptorSet storageImagesDescSet, const vk::Extent3D& extent, int32 frame) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, pipeline());
 
@@ -150,7 +151,7 @@ void ArealightsPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 		nullptr); // gbuffer and stuff
 
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eRayTracingKHR, layout(), 1u, 1u, &imageStorageDescSet, 0u, nullptr);
+		vk::PipelineBindPoint::eRayTracingKHR, layout(), 1u, 1u, &storageImagesDescSet, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eRayTracingKHR, layout(), 2u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
@@ -161,6 +162,7 @@ void ArealightsPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 	static int32 frameIndex = 0;
 
 	PushConstant pc{
+		frame,
 		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
 		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
 	};

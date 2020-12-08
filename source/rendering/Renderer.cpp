@@ -1,6 +1,7 @@
 #include "Renderer.h"
 
 #include "assets/StdAssets.h"
+#include "engine/console/ConsoleVariable.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuImage.h"
@@ -13,6 +14,7 @@
 #include "rendering/pipes/ReflprobePipe.h"
 #include "rendering/pipes/SpotlightPipe.h"
 #include "rendering/pipes/StaticPipes.h"
+#include "rendering/pipes/VolumePipe.h"
 #include "rendering/pipes/geometry/DepthmapPipe.h"
 #include "rendering/pipes/geometry/GBufferPipe.h"
 #include "rendering/pipes/geometry/UnlitPipe.h"
@@ -27,6 +29,10 @@
 #include "rendering/techniques/CalculateShadowmaps.h"
 #include "rendering/techniques/DrawSelectedEntityDebugVolume.h"
 #include "rendering/util/WriteDescriptorSets.h"
+
+
+ConsoleFunction<> cons_arealightsReset{ "r.arealights.reset", []() { vl::Renderer->m_raytraceArealights.frame = 0; },
+	"Reset arealights prog" };
 
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
