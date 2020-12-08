@@ -9,6 +9,7 @@
 #include "rendering/scene/SceneQuadlight.h"
 #include "rendering/scene/SceneReflprobe.h"
 #include "rendering/scene/SceneSpotlight.h"
+#include "rendering/util/DrawShapes.h"
 #include "rendering/util/WriteDescriptorSets.h"
 
 void Scene::EnqueueEndFrame()
@@ -103,11 +104,15 @@ Scene::Scene()
 	Register<SceneGeometry, SceneAnimatedGeometry, SceneCamera, SceneSpotlight, ScenePointlight, SceneDirlight,
 		SceneReflprobe, SceneIrragrid, SceneQuadlight>(collections);
 
-
 	EnqueueEndFrame();
 	size_t uid;
 	EnqueueCreateDestoryCmds<SceneCamera>({}, { &uid }); // TODO: Editor camera
 	sceneAsDescSet = vl::Layouts->accelLayout.AllocDescriptorSet();
+
+	auto unitRectData = rvk::getUnitRectTriangleListInfo();
+
+	quadlightBlas = vl::BottomLevelAs(*unitRectData.vertexBuffer, unitRectData.vertexCount, *unitRectData.indexBuffer,
+		unitRectData.indexCount, vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace);
 }
 
 Scene::~Scene()
@@ -137,7 +142,7 @@ Scene::~Scene()
 void Scene::UpdateTopLevelAs()
 {
 	// TODO:
-	tlas = vl::TopLevelAs(Get<SceneGeometry>().condensed, this);
+	tlas = vl::TopLevelAs(Get<SceneGeometry>().condensed, Get<SceneQuadlight>().condensed, quadlightBlas, this);
 
 	std::array accelStructs{ tlas.handle() };
 

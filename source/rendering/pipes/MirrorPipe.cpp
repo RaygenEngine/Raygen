@@ -64,6 +64,12 @@ vk::UniquePipeline MirrorPipe::MakePipeline()
 		StaticPipes::Recompile<MirrorPipe>();
 	};
 
+	GpuAsset<Shader>& gpuShader2
+		= GpuAssetManager->CompileShader("engine-data/spv/raytrace/mirror/mirror-arealights.shader");
+	gpuShader2.onCompileRayTracing = [&]() {
+		StaticPipes::Recompile<MirrorPipe>();
+	};
+
 	m_rtShaderGroups.clear();
 
 	// Indices within this vector will be used as unique identifiers for the shaders in the Shader Binding Table.
@@ -104,6 +110,17 @@ vk::UniquePipeline MirrorPipe::MakePipeline()
 
 	m_rtShaderGroups.push_back(hg);
 
+	vk::RayTracingShaderGroupCreateInfoKHR hg2{};
+	hg2.setType(vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup) //
+		.setGeneralShader(VK_SHADER_UNUSED_KHR)
+		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
+		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
+		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eClosestHitKHR, *gpuShader2.closestHit.Lock().module, "main" });
+	hg2.setClosestHitShader(static_cast<uint32>(stages.size() - 1));
+
+	m_rtShaderGroups.push_back(hg2);
+
 
 	// Assemble the shader stages and recursion depth info into the ray tracing pipeline
 	vk::RayTracingPipelineCreateInfoKHR rayPipelineInfo{};
@@ -122,7 +139,7 @@ vk::UniquePipeline MirrorPipe::MakePipeline()
 
 	auto pipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
 
-	auto groupCount = static_cast<uint32>(m_rtShaderGroups.size());                  // 3 shaders: raygen, miss, chit
+	auto groupCount = static_cast<uint32>(m_rtShaderGroups.size()); // 4 shaders: raygen, miss, chit, chit2
 	uint32 groupHandleSize = Device->pd.raytracingProperties.shaderGroupHandleSize;  // Size of a program identifier
 	uint32 baseAlignment = Device->pd.raytracingProperties.shaderGroupBaseAlignment; // Size of shader alignment
 

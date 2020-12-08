@@ -4,6 +4,12 @@
 
 namespace rvk {
 
+struct ShapeDataInfo {
+	vl::RBuffer* vertexBuffer;
+	uint32 vertexCount;
+	vl::RBuffer* indexBuffer;
+	uint32 indexCount;
+};
 
 struct Shapes {
 	static void InitShapes();
@@ -13,8 +19,12 @@ struct Shapes {
 void bindCubeLines(vk::CommandBuffer cmdBuffer);
 void drawCubeLines(vk::CommandBuffer cmdBuffer);
 
-void bindUnitRect(vk::CommandBuffer cmdBuffer);
-void drawUnitRect(vk::CommandBuffer cmdBuffer);
+void bindUnitRectTriangleStrip(vk::CommandBuffer cmdBuffer);
+void drawUnitRectTriangleStrip(vk::CommandBuffer cmdBuffer);
+
+ShapeDataInfo getUnitRectTriangleListInfo();
+void bindUnitRectTriangleList(vk::CommandBuffer cmdBuffer);
+void drawUnitRectTriangleList(vk::CommandBuffer cmdBuffer);
 
 void bindCube(vk::CommandBuffer cmdBuffer);
 void drawCube(vk::CommandBuffer cmdBuffer);

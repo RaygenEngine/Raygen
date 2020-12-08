@@ -23,4 +23,6 @@ struct Quadlight_Ubo {
 struct SceneQuadlight : SceneStruct {
 	SCENE_STRUCT(SceneQuadlight);
 	Quadlight_Ubo ubo;
+
+	glm::mat4 transform;
 };
