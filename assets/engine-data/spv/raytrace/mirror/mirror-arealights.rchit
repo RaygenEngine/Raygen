@@ -238,67 +238,6 @@ vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 
 void main() {
 	
-	int matId = gl_InstanceID;
-
-	GeometryGroup gg = geomGroups.g[nonuniformEXT(matId)];
-
-	Surface surface = surfaceFromGeometryGroup(gg);
-
-	vec3 radiance = vec3(0);
-
-	// DIRECT
-	{
-		// for each light
-		for(int i = 0; i < pointlightCount; ++i) {
-			Pointlight pl = pointlights.light[i];
-			radiance +=  Pointlight_FastContribution(topLevelAs, pl, surface);
-		}
-
-		for(int i = 0; i < spotlightCount; ++i) {
-			Spotlight sl = spotlights.light[i];
-			radiance += Spotlight_FastContribution(sl, spotlightShadowmap[nonuniformEXT(i)], surface);
-		}
-
-		for(int i = 0; i < dirlightCount; ++i) {
-			Dirlight dl = dirlights.light[i];
-			radiance += Dirlight_FastContribution(dl, dirlightShadowmap[nonuniformEXT(i)], surface);
-		}
-
-		for(int i = 0; i < quadlightCount; ++i) {
-			Quadlight ql = quadlights.light[i];
-			radiance += Quadlight_FastContribution(topLevelAs, ql, surface);
-		}
-	}
-
-	// INDIRECT Diffuse
-    {
-		for(int i = 0; i < irragridCount; ++i) {
-			Irragrid ig = irragrids.grid[i];
-			radiance += Irragrid_Contribution(ig, irradianceSamplers[nonuniformEXT(i)], surface);
-		}
-    }
-
-	// if roughness...
-	// INDIRECT Specular -> reflprobe
-	if(surface.a >= SPEC_THRESHOLD) {
-		prd.radiance = radiance + surface.emissive;
-		return;
-	}
-
-
-	// this depth refers to indirect mirror bounces
-	if(prd.depth > depth){
-		prd.radiance = radiance + surface.emissive;
-		return;
-	}
-
-	// INDIRECT Mirror
-	{		
-		vec3 brdf_NoL = SampleMirrorDirection(surface);
-
-		vec3 L = surfaceIncidentLightDir(surface);
-		radiance += RadianceOfRay(surface.position, L) * brdf_NoL;
-	}
-
-	prd.radiance = radiance + surface.emissive;
+	prd.radiance = vec3(1);
 }
+

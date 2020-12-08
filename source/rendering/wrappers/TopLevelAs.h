@@ -14,6 +14,7 @@ struct Scene;
 
 namespace vl {
 
+struct BottomLevelAs;
 
 struct AsInstance {
 	uint64 blas;
@@ -63,7 +64,8 @@ struct RtSceneDescriptor {
 
 struct TopLevelAs : RAccelerationStructure {
 	TopLevelAs() = default;
-	TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene);
+	TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vector<SceneQuadlight*>& quadlights,
+		const BottomLevelAs& quadlightBlas, Scene* scene);
 
 
 	void AddAsInstance(AsInstance&& instance);

@@ -50,25 +50,47 @@ namespace {
 	};
 
 	static std::vector<float> unitRectangle_triangleStripData = {
-	  -0.5f,  0.5f,  0.0f,
-	  -0.5f, -0.5f,  0.0f,
-	   0.5f,  0.5f,  0.0f,
-	   0.5f, -0.5f,  0.0f,
+	  -0.5f,  0.5f,  0.0f, // tl
+	  -0.5f, -0.5f,  0.0f, // bl
+	   0.5f,  0.5f,  0.0f, // tr
+	   0.5f, -0.5f,  0.0f, // br
+	};
+
+	// points to data from unitRectangle_triangleStripData
+	static std::vector<uint32> unitRectangle_indices = {
+		1u, 0u, 2u, // bl - tl - tr
+		2u, 3u, 1u, // tr - br - bl
 	};
 
 // clang-format on
 
 struct IndexedShapeBuffer {
 	vl::RBuffer vertexBuffer;
+	uint32 vertexCount;
 	vl::RBuffer indexBuffer;
 	uint32 indexCount;
 
 	IndexedShapeBuffer() = default;
-	IndexedShapeBuffer(const std::string& name, std::vector<float>& vertexData, std::vector<uint32>& indexData)
+	IndexedShapeBuffer(const std::string& name, std::vector<float>& vertexData, std::vector<uint32>& indexData,
+		vk::BufferUsageFlags flags = {})
 	{
-		vertexBuffer = vl::RBuffer::CreateTransfer(name.c_str(), vertexData, vk::BufferUsageFlagBits::eVertexBuffer);
-		indexBuffer = vl::RBuffer::CreateTransfer(name.c_str(), indexData, vk::BufferUsageFlagBits::eIndexBuffer);
-		indexCount = indexData.size();
+		vertexBuffer
+			= vl::RBuffer::CreateTransfer(name.c_str(), vertexData, vk::BufferUsageFlagBits::eVertexBuffer | flags);
+		vertexCount = static_cast<uint32>(vertexData.size() / 3);
+		indexBuffer
+			= vl::RBuffer::CreateTransfer(name.c_str(), indexData, vk::BufferUsageFlagBits::eIndexBuffer | flags);
+		indexCount = static_cast<uint32>(indexData.size());
+	}
+
+	operator rvk::ShapeDataInfo()
+	{
+		rvk::ShapeDataInfo d;
+		d.vertexBuffer = &vertexBuffer;
+		d.vertexCount = vertexCount;
+		d.indexBuffer = &indexBuffer;
+		d.indexCount = indexCount;
+
+		return d;
 	}
 };
 
@@ -77,10 +99,21 @@ struct ShapeBuffer {
 	uint32 vertexCount;
 
 	ShapeBuffer() = default;
-	ShapeBuffer(const std::string& name, std::vector<float>& data)
+	ShapeBuffer(const std::string& name, std::vector<float>& data, vk::BufferUsageFlagBits flags = {})
 	{
-		vertexBuffer = vl::RBuffer::CreateTransfer(name.c_str(), data, vk::BufferUsageFlagBits::eVertexBuffer);
+		vertexBuffer = vl::RBuffer::CreateTransfer(name.c_str(), data, vk::BufferUsageFlagBits::eVertexBuffer | flags);
 		vertexCount = static_cast<uint32>(data.size() / 3);
+	}
+
+	operator rvk::ShapeDataInfo()
+	{
+		rvk::ShapeDataInfo d;
+		d.vertexBuffer = &vertexBuffer;
+		d.vertexCount = vertexCount;
+		d.indexBuffer = nullptr;
+		d.indexCount = 0;
+
+		return d;
 	}
 };
 
@@ -167,15 +200,20 @@ struct ShapesData {
 
 	IndexedShapeBuffer cube_lineList;
 
+	IndexedShapeBuffer unitRectangle_triangleList;
+
 	IndexedShapeBuffer sphere18x9;
 	IndexedShapeBuffer sphere36x18;
 
 	ShapesData()
 	{
-		cube_triangleStrip = ShapeBuffer("BoxShape", cube_triangleStripData);
-		unitRectangle_triangleStrip = ShapeBuffer("UnitRectangleShape", unitRectangle_triangleStripData);
+		cube_triangleStrip = ShapeBuffer("BoxShape triangleStrip", cube_triangleStripData);
+		unitRectangle_triangleStrip = ShapeBuffer("UnitRectangleShape triangleStrip", unitRectangle_triangleStripData);
 
-		cube_lineList = IndexedShapeBuffer("CubeShape", cube_verticesData, cube_lineList_indicesData);
+		cube_lineList = IndexedShapeBuffer("CubeShape lineList", cube_verticesData, cube_lineList_indicesData);
+
+		unitRectangle_triangleList = IndexedShapeBuffer("UnitRectangleShape triangleList",
+			unitRectangle_triangleStripData, unitRectangle_indices, vk::BufferUsageFlagBits::eShaderDeviceAddress);
 
 		MakeSphere(18, 9, 1.f, sphere18x9);
 		MakeSphere(36, 18, 1.f, sphere36x18);
@@ -195,14 +233,29 @@ void rvk::drawCubeLines(vk::CommandBuffer cmdBuffer)
 	DrawShape(cmdBuffer, shapesData->cube_lineList);
 }
 
-void rvk::bindUnitRect(vk::CommandBuffer cmdBuffer)
+void rvk::bindUnitRectTriangleStrip(vk::CommandBuffer cmdBuffer)
 {
 	BindShapeBuffer(cmdBuffer, shapesData->unitRectangle_triangleStrip);
 }
 
-void rvk::drawUnitRect(vk::CommandBuffer cmdBuffer)
+void rvk::drawUnitRectTriangleStrip(vk::CommandBuffer cmdBuffer)
 {
 	DrawShape(cmdBuffer, shapesData->unitRectangle_triangleStrip);
+}
+
+rvk::ShapeDataInfo rvk::getUnitRectTriangleListInfo()
+{
+	return shapesData->unitRectangle_triangleList;
+}
+
+void rvk::bindUnitRectTriangleList(vk::CommandBuffer cmdBuffer)
+{
+	BindShapeBuffer(cmdBuffer, shapesData->unitRectangle_triangleList);
+}
+
+void rvk::drawUnitRectTriangleList(vk::CommandBuffer cmdBuffer)
+{
+	DrawShape(cmdBuffer, shapesData->unitRectangle_triangleList);
 }
 
 void rvk::bindCube(vk::CommandBuffer cmdBuffer)

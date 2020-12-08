@@ -33,11 +33,11 @@ Layer_::Layer_()
 	GpuResources::Init();
 	GpuAssetManager = new GpuAssetManager_();
 	Layouts = new Layouts_();
+	rvk::Shapes::InitShapes();
 	StaticPipes::InitRegistered();
 	swapOutput = new SwapchainOutputPass();
 	mainScene = new Scene();
 
-	rvk::Shapes::InitShapes();
 
 	Renderer = new Renderer_();
 

@@ -2,6 +2,7 @@
 // MAINT: Remove
 #include "rendering/Device.h"
 #include "rendering/scene/SceneCollection.h"
+#include "rendering/wrappers/BottomLevelAs.h"
 #include "rendering/wrappers/TopLevelAs.h"
 
 #include <mutex>
@@ -34,6 +35,8 @@ struct Scene {
 
 public:
 	vl::TopLevelAs tlas;
+
+	vl::BottomLevelAs quadlightBlas;
 
 	bool forceUpdateAccel{ true }; // TODO: Remove
 

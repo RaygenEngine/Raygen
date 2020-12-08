@@ -190,7 +190,7 @@ namespace {
 			cmdBuffer.pushConstants(layout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,
 				sizeof(PushConstant), &pc);
 
-			rvk::drawUnitRect(cmdBuffer);
+			rvk::drawUnitRectTriangleStrip(cmdBuffer);
 		}
 	};
 
@@ -231,7 +231,7 @@ namespace {
 							vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,
 							sizeof(PushConstant), &pc);
 
-						rvk::drawUnitRect(cmdBuffer);
+						rvk::drawUnitRectTriangleStrip(cmdBuffer);
 					}
 				}
 			}
@@ -242,7 +242,7 @@ namespace {
 void BillboardPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
-	rvk::bindUnitRect(cmdBuffer);
+	rvk::bindUnitRectTriangleStrip(cmdBuffer);
 
 	auto fontDescSet = ImguiImpl::GetIconFontDescriptorSet();
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &fontDescSet, 0u, nullptr);

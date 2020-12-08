@@ -64,7 +64,8 @@ std::vector<RtGeometryGroup> g_tempGeometryGroups;
 } // namespace
 
 namespace vl {
-TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
+TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vector<SceneQuadlight*>& quadlights,
+	const vl::BottomLevelAs& quadlightBlas, Scene* scene)
 {
 	sceneDesc.descSetSpotlights = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
 		static_cast<int32>(scene->Get<SceneSpotlight>().size()));
@@ -102,6 +103,23 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, Scene* scene)
 			sceneDesc.AddGeomGroup(gg, geom->mesh.Lock(), transform);
 			totalGroups++;
 		}
+	}
+
+	int32 totalQuadlights = 0;
+
+	for (auto ql : quadlights) {
+
+		auto transform = ql->transform;
+
+		AsInstance inst{};
+		inst.transform = transform;        // Position of the instance
+		inst.instanceId = totalQuadlights; // gl_InstanceID
+		inst.blas = Device->getAccelerationStructureAddressKHR(quadlightBlas.handle());
+		inst.materialId = 1; // WIP:
+		inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise;
+		instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
+
+		totalQuadlights++;
 	}
 
 	auto imgSize = GpuAssetManager->Z_GetSize();

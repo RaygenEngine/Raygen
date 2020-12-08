@@ -1,7 +1,7 @@
 #include "BottomLevelAs.h"
 
-#include "rendering/assets/GpuMesh.h"
 #include "rendering/Device.h"
+#include "rendering/assets/GpuMesh.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
 namespace vl {
@@ -62,6 +62,61 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const RBuffer& combinedVertexB
 
 	Build(buildFlags, asCreateGeomInfos, asGeoms, asBuildOffsetInfos);
 }
+
+BottomLevelAs::BottomLevelAs(const RBuffer& combinedVertexBuffer, uint32 vertexCount,
+	const RBuffer& combinedIndexBuffer, uint32 indexCount, vk::BuildAccelerationStructureFlagsKHR buildFlags)
+{
+	std::vector<vk::AccelerationStructureCreateGeometryTypeInfoKHR> asCreateGeomInfos{};
+	std::vector<vk::AccelerationStructureGeometryKHR> asGeoms{};
+	std::vector<vk::AccelerationStructureBuildOffsetInfoKHR> asBuildOffsetInfos{};
+
+
+	// Setting up the creation info of acceleration structure
+	vk::AccelerationStructureCreateGeometryTypeInfoKHR asCreate{};
+	asCreate
+		.setGeometryType(vk::GeometryTypeKHR::eTriangles) //
+		.setIndexType(vk::IndexType::eUint32)
+		.setVertexFormat(vk::Format::eR32G32B32Sfloat)
+		.setMaxPrimitiveCount(indexCount / 3) // WIP:
+		.setMaxVertexCount(vertexCount)       // WIP:
+		.setAllowsTransforms(VK_FALSE);       // No adding transformation matrices
+
+	// Building part
+	auto vertexAddress = Device->getBufferAddress(combinedVertexBuffer.handle());
+	auto indexAddress = Device->getBufferAddress(combinedIndexBuffer.handle());
+
+	vk::AccelerationStructureGeometryTrianglesDataKHR triangles{};
+	triangles
+		.setVertexFormat(asCreate.vertexFormat) //
+		.setVertexData(vertexAddress)
+		.setVertexStride(sizeof(glm::vec3))
+		.setIndexType(asCreate.indexType)
+		.setIndexData(indexAddress)
+		.setTransformData({});
+
+	// Setting up the build info of the acceleration
+	vk::AccelerationStructureGeometryKHR asGeom{};
+	asGeom
+		.setGeometryType(asCreate.geometryType) //
+		.setFlags(vk::GeometryFlagBitsKHR::eOpaque);
+
+	asGeom.geometry.setTriangles(triangles);
+
+	// The primitive itself
+	vk::AccelerationStructureBuildOffsetInfoKHR offset{};
+	offset
+		.setPrimitiveCount(asCreate.maxPrimitiveCount) //
+		.setPrimitiveOffset(0u)                        // WIP:
+		.setFirstVertex(0u)                            // WIP:
+		.setTransformOffset(0);
+
+	asGeoms.emplace_back(asGeom);
+	asCreateGeomInfos.emplace_back(asCreate);
+	asBuildOffsetInfos.emplace_back(offset);
+
+	Build(buildFlags, asCreateGeomInfos, asGeoms, asBuildOffsetInfos);
+}
+
 
 void BottomLevelAs::Build(vk::BuildAccelerationStructureFlagsKHR buildFlags,
 	const std::vector<vk::AccelerationStructureCreateGeometryTypeInfoKHR>& asCreateGeomInfos,
@@ -136,4 +191,5 @@ void BottomLevelAs::Build(vk::BuildAccelerationStructureFlagsKHR buildFlags,
 		// TODO: compacting
 	}
 }
+
 } // namespace vl

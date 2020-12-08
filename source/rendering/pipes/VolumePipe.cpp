@@ -385,8 +385,8 @@ void VolumeTrianglesPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 		cmdBuffer.setDepthTestEnableEXT(VK_TRUE);
 		cmdBuffer.setPrimitiveTopologyEXT(vk::PrimitiveTopology::eTriangleStrip);
 
-		rvk::bindUnitRect(cmdBuffer);
-		rvk::drawUnitRect(cmdBuffer);
+		rvk::bindUnitRectTriangleStrip(cmdBuffer);
+		rvk::drawUnitRectTriangleStrip(cmdBuffer);
 	}
 }
 

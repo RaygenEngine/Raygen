@@ -108,7 +108,9 @@ RBuffer RBuffer::CreateTransfer(const char* name, MemorySpan memory, vk::BufferU
 
 	// device local
 	auto buffer = vl::RBuffer{ memory.size(), vk::BufferUsageFlagBits::eTransferDst | usageFlags,
-		vk::MemoryPropertyFlagBits::eDeviceLocal };
+		vk::MemoryPropertyFlagBits::eDeviceLocal,
+		(usageFlags & vk::BufferUsageFlagBits::eShaderDeviceAddress ? vk::MemoryAllocateFlagBits::eDeviceAddress
+																	: vk::MemoryAllocateFlagBits{}) };
 
 	DEBUG_NAME(buffer, name);
 
