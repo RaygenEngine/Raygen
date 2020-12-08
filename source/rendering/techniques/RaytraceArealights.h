@@ -8,10 +8,13 @@ struct RaytraceArealights {
 
 	RaytraceArealights();
 
+	RImage2D progressive;
 	InFlightResources<RImage2D> result;
 	InFlightResources<vk::DescriptorSet> descSet;
 
-	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const;
+	int32 frame{ 0 };
+
+	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void Resize(vk::Extent2D extent);
 };
 

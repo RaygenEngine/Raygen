@@ -6,12 +6,14 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneCamera.h"
+#include "rendering/scene/SceneQuadlight.h"
 #include "rendering/util/DrawShapes.h"
 #include "universe/Universe.h"
 #include "universe/components/CameraComponent.h"
 #include "universe/components/DirlightComponent.h"
 #include "universe/components/IrragridComponent.h"
 #include "universe/components/PointlightComponent.h"
+#include "universe/components/QuadlightComponent.h"
 #include "universe/components/ReflprobeComponent.h"
 #include "universe/components/SkinnedMeshComponent.h"
 #include "universe/components/SpotlightComponent.h"
@@ -316,6 +318,9 @@ void VolumeLinesPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 			}
 		}
 	}
+
+
+	// TODO: draw SkinnedMesh animated skeleton
 }
 
 vk::UniquePipelineLayout VolumeTrianglesPipe::MakePipelineLayout()
@@ -366,7 +371,23 @@ void VolumeTrianglesPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 		rvk::drawSphere18x9(cmdBuffer);
 	}
 
-	// TODO: draw SkinnedMesh skeleton
+	// TODO: this should change later to light volume
+	if (entity.Has<CQuadlight>()) {
+		auto ql = entity.Get<CQuadlight>();
+
+		auto volumeTransform = math::transformMat(
+			glm::vec3{ ql.width, ql.height, 1.f }, entity->world().orientation, entity->world().position);
+
+		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
+
+		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
+
+		cmdBuffer.setDepthTestEnableEXT(VK_TRUE);
+		cmdBuffer.setPrimitiveTopologyEXT(vk::PrimitiveTopology::eTriangleStrip);
+
+		rvk::bindUnitRect(cmdBuffer);
+		rvk::drawUnitRect(cmdBuffer);
+	}
 }
 
 } // namespace vl

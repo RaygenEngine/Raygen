@@ -179,6 +179,7 @@ SceneRenderDesc Scene::GetRenderDesc(int32 frameIndex)
 ConsoleVariable<int32> cons_sceneUpdateRt{ "rt.minFrames", 10,
 	"Min frames to do progressive before reseting due to scene update" };
 
+
 void Scene::UploadDirty(uint32 frameIndex)
 {
 	bool anyDirty = false;

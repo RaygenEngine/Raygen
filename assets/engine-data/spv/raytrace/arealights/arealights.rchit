@@ -12,6 +12,7 @@ struct hitPayload
 
 layout(push_constant) uniform PC
 {
+	int frame;
 	int pointlightCount;
 	int quadlightCount;
 };

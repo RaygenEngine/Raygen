@@ -43,6 +43,6 @@ void main()
     vec3 mirror = texture(mirrorSampler, uv).rgb;
     vec4 ambientInfo = AmbientInfoBlurredOcclusion();
 	// ...
-	vec3 final =  directLight + (indirectLight * ambientInfo.a) + ambientInfo.rgb + emissive + arealights;
+	vec3 final =  directLight + (indirectLight * ambientInfo.a) + ambientInfo.rgb + emissive + arealights + mirror;
 	outColor = vec4(final, 1.0);
 }
