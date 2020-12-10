@@ -69,16 +69,17 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		// Generate Passes
-		m_mainPassInst[i] = Layouts->mainPassLayout.CreatePassInstance(width, height);
-		m_secondaryPassInst[i] = Layouts->secondaryPassLayout.CreatePassInstance(width, height);
+		m_mainPassInst[i] = Layouts->mainPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
+		m_secondaryPassInst[i] = Layouts->secondaryPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
+		m_ptPass[i] = Layouts->ptPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
 	}
 
 	m_raytraceArealights.Resize(fbSize);
 	m_raytraceMirrorReflections.Resize(fbSize);
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_ptPass[i] = Layouts->ptPassLayout.CreatePassInstance(
-			fbSize.width, fbSize.height, { &m_mainPassInst[i].framebuffer[0] }); // TODO: indices and stuff
+		m_unlitPassInst[i] = Layouts->unlitPassLayout.CreatePassInstance(fbSize.width, fbSize.height,
+			{ &m_mainPassInst[i].framebuffer[0], &m_ptPass[i].framebuffer[0] }); // TODO: indices and stuff
 	}
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
@@ -203,9 +204,13 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 
 	// TODO: post process
 	m_ptPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&] {
-		m_ptLightBlend.Draw(cmdBuffer, sceneDesc); // TODO: from post proc
+		m_ptLightBlend.Draw(cmdBuffer, sceneDesc); // fixed
 
+		// TODO: from post proc
 		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc);
+	});
+
+	m_unlitPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&] {
 		UnlitPipe::RecordCmd(cmdBuffer, sceneDesc);
 		DrawSelectedEntityDebugVolume::RecordCmd(cmdBuffer, sceneDesc);
 		StaticPipes::Get<BillboardPipe>().Draw(cmdBuffer, sceneDesc);

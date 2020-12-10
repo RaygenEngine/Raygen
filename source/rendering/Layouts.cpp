@@ -62,7 +62,6 @@ void Layouts_::MakeRenderPassLayouts()
 		mainPassLayout.AddSubpass(std::vector{ gbufferAtts }, { directAtt });   // Write DirectLights
 		mainPassLayout.AddSubpass(std::vector{ gbufferAtts }, { indirectAtt }); // Write Indirect
 
-
 		mainPassLayout.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
 		mainPassLayout.AttachmentFinalLayout(directAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 		mainPassLayout.AttachmentFinalLayout(indirectAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
@@ -70,17 +69,23 @@ void Layouts_::MakeRenderPassLayouts()
 		mainPassLayout.Generate();
 	}
 
-	// Lightblend + PostProcess
-	AttRef renderOutAttachment;
+	AttRef ptColorAtt;
 	{
-		renderOutAttachment = ptPassLayout.CreateAttachment("LightBlend+PostProcess", vk::Format::eR32G32B32A32Sfloat);
+		ptColorAtt = ptPassLayout.CreateAttachment("Pt color", vk::Format::eR32G32B32A32Sfloat);
 
-		ptPassLayout.AddSubpass({}, { depthBuffer, renderOutAttachment }); // LightBlend + Unlit Pass
+		ptPassLayout.AddSubpass({}, { ptColorAtt });
 
-		ptPassLayout.AttachmentFinalLayout(renderOutAttachment, vk::ImageLayout::eShaderReadOnlyOptimal);
+		ptPassLayout.AttachmentFinalLayout(ptColorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		// Rest of post proc
 		ptPassLayout.Generate();
+	}
+
+	{
+		unlitPassLayout.AddSubpass({}, { depthBuffer, ptColorAtt }); // Unlit Pass
+
+		unlitPassLayout.AttachmentFinalLayout(ptColorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		unlitPassLayout.Generate();
 	}
 
 	// Shadow Pass
@@ -199,7 +204,7 @@ Layouts_::Layouts_()
 	imageDebugDescLayout.Generate();
 
 
-	singleStorageBuffer.AddBinding(eStorageBuffer, eRaygenKHR | eClosestHitKHR | eAnyHitKHR);
+	singleStorageBuffer.AddBinding(eStorageBuffer, eFragment | eRaygenKHR | eClosestHitKHR | eAnyHitKHR);
 	singleStorageBuffer.Generate();
 
 	bufferAndSamplersDescLayout.AddBinding(eStorageBuffer, eRaygenKHR | eClosestHitKHR | eAnyHitKHR);

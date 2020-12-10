@@ -36,6 +36,7 @@ public:
 	// TODO: geometry + core light
 	InFlightResources<RenderingPassInstance> m_mainPassInst;
 	InFlightResources<RenderingPassInstance> m_secondaryPassInst;
+	InFlightResources<RenderingPassInstance> m_unlitPassInst;
 	//
 
 	// non-static techniques

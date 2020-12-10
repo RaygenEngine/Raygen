@@ -57,24 +57,28 @@ void main() {
 	Quadlight ql = quadlights.light[i];
 
 	
-	vec3 color;
+	float val;
 
 	// RR  
-	if(rand(seed) > p_selectLight) {
-		color = Quadlight_BrdfSample(topLevelAs, ql, surface, seed) / (1.0 - p_selectLight); 
-	}
-	else {
-		color = Quadlight_LightSample(topLevelAs, ql, surface, seed) / p_selectLight; 
-	}
+	//if(rand(seed) > p_selectLight) {
+		val = Quadlight_BrdfSample(topLevelAs, ql, surface, seed) ; 
+	//}
+	//else {
+		val += Quadlight_LightSample(topLevelAs, ql, surface, seed) ; 
+	//}
+
+	vec4 finalColor = vec4(0);
 
 	// Do accumulation
 	if(frame > 0)
 	{
 		float a = 1.0f / float(frame);
-		vec3 old_color = imageLoad(progressive, ivec2(gl_LaunchIDEXT.xy)).xyz;
-		color = mix(old_color, color, a);
+		finalColor = imageLoad(progressive, ivec2(gl_LaunchIDEXT.xy));
+		val = mix(finalColor[i], val, a);
 	}
+	
+	finalColor[i] = val;
 
-	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
-	imageStore(progressive, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
+	imageStore(image, ivec2(gl_LaunchIDEXT.xy), finalColor);
+	imageStore(progressive, ivec2(gl_LaunchIDEXT.xy), finalColor);
 }

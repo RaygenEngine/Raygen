@@ -166,7 +166,7 @@ vk::UniquePipeline MakePipeline(vk::PipelineLayout layout)
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout)
-		.setRenderPass(vl::Layouts->ptPassLayout.compatibleRenderPass.get())
+		.setRenderPass(vl::Layouts->unlitPassLayout.compatibleRenderPass.get())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
